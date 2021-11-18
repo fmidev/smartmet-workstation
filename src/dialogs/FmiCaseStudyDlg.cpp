@@ -263,12 +263,19 @@ static NFmiColor GetStoredDataStatusColor(bool storeData)
 	return storeData ? storedFileColor : nonStoredFileColor;
 }
 
-static std::string MakeFinalFilePathTooltipText(const std::string& finalFilePath, int index, bool storeData)
+static std::string MakeFinalFilePathTooltipText(const std::string& finalFilePath, int index, bool storeData, bool latestDataOnlyCase)
 {
 	auto filePathColor = ::GetStoredDataStatusColor(storeData);
 	std::string str = "<br>";
-	str += std::to_string(index);
-	str += ". ";
+	if(latestDataOnlyCase)
+	{
+		str += storeData ? "On  " : "Off ";
+	}
+	else
+	{
+		str += std::to_string(index);
+		str += ".  ";
+	}
 	str += finalFilePath;
 	return ::GetColoredBoldTextForTooltip(str, true, true, filePathColor);
 }
@@ -316,7 +323,7 @@ static std::string MakeModelDataStoredFileListText(const NFmiCaseStudyDataFile& 
 	{
 		auto finalFilePath = fileInfo.first;
 		auto isModelRunStored = ::IsModelRunDataStored(dataFile, index);
-		str += ::MakeFinalFilePathTooltipText(finalFilePath, index, isModelRunStored);
+		str += ::MakeFinalFilePathTooltipText(finalFilePath, index, isModelRunStored, dataFile.StoreLastDataOnly());
 		str += ::MakeModelRunText(finalFilePath, isModelRunStored);
 		index++;
 	}
@@ -358,7 +365,7 @@ static std::string AddPossibleSelectedModelRunTexts(const NFmiCaseStudyDataFile&
 					str += "<br><br>";
 					str += ::GetColoredBoldTextForTooltip("Only the newest file can be stored from this data:", true, false, NFmiColor());
 					auto finalFilePath = timeSortedFiles.front().first;
-					str += ::MakeFinalFilePathTooltipText(finalFilePath, 1, dataFile.DataFileWinRegValues().Store());
+					str += ::MakeFinalFilePathTooltipText(finalFilePath, 1, dataFile.DataFileWinRegValues().Store(), true);
 				}
 				else
 				{
