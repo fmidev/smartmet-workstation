@@ -506,7 +506,12 @@ NFmiPoint NFmiStationView::GetSpaceOutFontFactor(void)
 // OLETUS!! itsInfo on grid-dataa.
 NFmiPoint NFmiStationView::CalcUsedSpaceOutFactors(int theSpaceOutFactor)
 {
-    if(!fUseAlReadySpacedOutData)
+	if(fUseAlReadySpacedOutData || theSpaceOutFactor == 0)
+	{
+		// 0. Return no space-out factor value
+		return NFmiPoint(1, 1);
+	}
+	else
     {
         unsigned long centerX = itsInfo->GridXNumber() / 2;
         unsigned long centerY = itsInfo->GridYNumber() / 2;
@@ -544,8 +549,6 @@ NFmiPoint NFmiStationView::CalcUsedSpaceOutFactors(int theSpaceOutFactor)
                 return NFmiPoint(::ceil(xFactor) + 1, ::ceil(yFactor) + 1);
         }
     }
-	// 7. make point and return
-	return NFmiPoint(1, 1);
 }
 
 static std::vector<float> matrixToVector(const NFmiDataMatrix<float> &matrix)
@@ -639,7 +642,6 @@ bool NFmiStationView::IsSpaceOutDrawingUsed()
 
 NFmiPoint NFmiStationView::CalcUsedSpaceOutFactors()
 {
-	bool drawStationPlot = IsAccessoryStationDataDrawn();
 	int spacingOutFactor = itsCtrlViewDocumentInterface->Registry_SpacingOutFactor(itsMapViewDescTopIndex);
 	return CalcUsedSpaceOutFactors(spacingOutFactor);
 }
