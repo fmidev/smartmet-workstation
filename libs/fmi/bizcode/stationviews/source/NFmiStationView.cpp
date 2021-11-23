@@ -470,7 +470,7 @@ int NFmiStationView::GetApproxmationOfDataTextLength(std::vector<float> *sampleV
     {
         if(sampleValues)
             return CalcApproxmationOfDataTextLength(*sampleValues);
-		else if(itsDrawParam->DoSparseSymbolVisualization())
+		else if(itsDrawParam->DoSparseSymbolVisualization() && itsInfo->IsGrid())
 		{
 			NFmiDataMatrix<float> valueMatrix;
 			if(CalcViewFloatValueMatrix(valueMatrix, 0, 0, 0, 0))
