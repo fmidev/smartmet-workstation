@@ -79,5 +79,7 @@ namespace CtrlViewUtils
 
    using FileNameWithTimeList = std::list<std::pair<std::string, std::time_t>>;
    FileNameWithTimeList TimeSortFiles(FileNameWithTimeList filesWithTimesCopy, bool descending = true);
+   double CalcAngle(const NFmiPoint& point1, const NFmiPoint& point2);
+   double CalcAngle(double x, double y);
 
 } // namespace CtrlViewUtils
