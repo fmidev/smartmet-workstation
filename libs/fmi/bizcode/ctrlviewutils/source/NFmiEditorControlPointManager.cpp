@@ -29,6 +29,7 @@
 #include "NFmiSettings.h"
 #include "NFmiFileString.h"
 #include "NFmiFastQueryInfo.h"
+#include "CtrlViewFunctions.h"
 
 #include <iterator>
 #include <fstream>
@@ -902,22 +903,6 @@ bool NFmiEditorControlPointManager::ActivateFirstCp()
         return false;
 }
 
-// Calculate direction from point1 to point2.
-// Result is in degrees (0 -> 360), 'north' is 0 and goes clockwise (east 90, south 180, west 270).
-// If points are the same, result is 0.
-static double CalcDirection(const NFmiPoint &point1, const NFmiPoint &point2)
-{
-    auto x = point2.X() - point1.X();
-    auto y = point2.Y() - point1.Y();
-    if(x == 0 && y == 0)
-        return 0;
-    auto origDirection = atan2(x, y) * 180 / kPii;
-    if(origDirection < 0)
-        return 360 + origDirection;
-    else
-        return origDirection;
-}
-
 static double GetAngleTowardsDirection(ControlPointAcceleratorActions direction)
 {
     switch(direction)
@@ -939,7 +924,7 @@ static double CalcDirectionalFactor(const NFmiPoint &activeCpRelativePoint, cons
 {
     const double angleDivider = 90.;
     auto directionAngle = ::GetAngleTowardsDirection(direction);
-    auto directionToCurrentPoint = ::CalcDirection(activeCpRelativePoint, currentCpRelativePoint);
+    auto directionToCurrentPoint = CtrlViewUtils::CalcAngle(activeCpRelativePoint, currentCpRelativePoint);
     auto factor = 1.;
     if(std::fabs(directionAngle - directionToCurrentPoint) > 180.)
     {
