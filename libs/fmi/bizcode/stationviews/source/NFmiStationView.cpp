@@ -69,6 +69,7 @@
 #include "NFmiCountryBorderDrawUtils.h"
 #include "CombinedMapHandlerInterface.h"
 #include "GdiplusStationBulkDraw.h"
+#include "SparseDataGrid.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -339,6 +340,7 @@ void NFmiStationView::Draw(NFmiToolBox* theGTB)
 	SetupUsedDrawParam();
 	CalculateGeneralStationRect();
 	itsSymbolBulkDrawData.clear();
+	itsCachedSpaceOutFactors = NFmiPoint::gMissingLatlon;
 	itsEnlargedDrawArea = SbdCalcEnlargedDrawArea();
 
 	MakeDrawedInfoVector();
@@ -443,6 +445,21 @@ static std::vector<unsigned long> FillLocationIndexies(boost::shared_ptr<NFmiFas
 	return std::vector<unsigned long>();
 }
 
+static std::vector<float> MatrixToVector(const NFmiDataMatrix<float>& matrix)
+{
+	std::vector<float> vec(matrix.NX() * matrix.NY(), kFloatMissing);
+	size_t totalIndex = 0;
+	for(size_t yIndex = 0; yIndex < matrix.NY(); yIndex++)
+	{
+		for(size_t xIndex = 0; xIndex < matrix.NX(); xIndex++)
+		{
+			vec[totalIndex] = matrix[xIndex][yIndex];
+			totalIndex++;
+		}
+	}
+	return vec;
+}
+
 // käy läpi muutaman pisteen datassa ja etsii sieltä edustavimman teksti pituuden
 int NFmiStationView::GetApproxmationOfDataTextLength(std::vector<float> *sampleValues)
 {
@@ -452,8 +469,17 @@ int NFmiStationView::GetApproxmationOfDataTextLength(std::vector<float> *sampleV
     {
         if(sampleValues)
             return CalcApproxmationOfDataTextLength(*sampleValues);
-        else
-            return CalcApproxmationOfDataTextLength(GetSampleDataForDataTextLengthApproxmation());
+		else if(itsDrawParam->DoSparseSymbolVisualization())
+		{
+			NFmiDataMatrix<float> valueMatrix;
+			if(CalcViewFloatValueMatrix(valueMatrix, 0, 0, 0, 0))
+			{
+				std::vector<float> fullFieldValues = ::MatrixToVector(valueMatrix);
+				return CalcApproxmationOfDataTextLength(fullFieldValues);
+			}
+		}
+
+		return CalcApproxmationOfDataTextLength(GetSampleDataForDataTextLengthApproxmation());
     }
 }
 
@@ -478,7 +504,7 @@ int NFmiStationView::CalcApproxmationOfDataTextLength(const std::vector<float> &
         else // muuten palauta maksimi arvo
             return static_cast<int>(minmaxCalc.MaxValue());
     }
-    return 1;
+    return 2;
 }
 
 std::vector<float> NFmiStationView::GetSampleDataForDataTextLengthApproxmation()
@@ -491,8 +517,8 @@ std::vector<float> NFmiStationView::GetSampleDataForDataTextLengthApproxmation()
         itsInfo->LocationIndex(locationIndex);
         values.push_back(ViewFloatValue());
     }
-    itsInfo->LocationIndex(oldLocationIndex);
 
+    itsInfo->LocationIndex(oldLocationIndex);
     return values;
 }
 
@@ -641,8 +667,12 @@ bool NFmiStationView::IsSpaceOutDrawingUsed()
 
 NFmiPoint NFmiStationView::CalcUsedSpaceOutFactors()
 {
-	int spacingOutFactor = itsCtrlViewDocumentInterface->Registry_SpacingOutFactor(itsMapViewDescTopIndex);
-	return CalcUsedSpaceOutFactors(spacingOutFactor);
+	if(itsCachedSpaceOutFactors == NFmiPoint::gMissingLatlon)
+	{
+		int spacingOutFactor = itsCtrlViewDocumentInterface->Registry_SpacingOutFactor(itsMapViewDescTopIndex);
+		itsCachedSpaceOutFactors = CalcUsedSpaceOutFactors(spacingOutFactor);
+	}
+	return itsCachedSpaceOutFactors;
 }
 
 CtrlViewUtils::GraphicalInfo& NFmiStationView::GetGraphicalInfo() const
@@ -650,14 +680,59 @@ CtrlViewUtils::GraphicalInfo& NFmiStationView::GetGraphicalInfo() const
 	return itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
 }
 
+// Seek-rangeja laskettaessa halutaan että alihilat eivät mene päälekkäin vierekkäisissä piirrettävissä pisteissä.
+// Rajoitetaan mieluummin kurkkauksia alas ja vasemmalle (x/y tapaukset).
+// Parin first on kurkkaus vasemmalle/alas (0 tai negatiivinen luku) ja second on kurkkaus oikealle/ylös (0 tai positiivinen luku).
+static std::pair<double, double> CalcSparsePeekRange(int spaceOutFactor)
+{
+	int halfFactor = spaceOutFactor / 2;
+	if(spaceOutFactor % 2 == 0)
+	{
+		// Pariton tapaus
+		return std::make_pair(-(halfFactor - 1.), halfFactor);
+	}
+	else
+	{
+		return std::make_pair(-halfFactor, halfFactor);
+	}
+}
+
+// Spase symbol draw tapauksessa pitää laskea harvennuksen mukainen alihila, jolla
+// etsitään piirrettävän hilapisteen ympäriltä peekxy komentojen avulla ei-puuttuvaa arvoa.
+static NFmiRect CalcSparsePeekRect(int spaceOutFactorX, int spaceOutFactorY)
+{
+	auto peekRangeX = ::CalcSparsePeekRange(spaceOutFactorX);
+	auto peekRangeY = ::CalcSparsePeekRange(spaceOutFactorY);
+	return NFmiRect(peekRangeX.first, peekRangeY.second, peekRangeX.second, peekRangeY.first);
+}
+
+static int CalcSparseGridSize(int spaceOutFactor, unsigned long gridSize)
+{
+	if(gridSize % spaceOutFactor == 0)
+		return gridSize / spaceOutFactor;
+	else
+		return (gridSize / spaceOutFactor) + 1;
+}
+
 void NFmiStationView::SbdCollectSpaceOutSymbolDrawData(bool doStationPlotOnly)
 {
 	auto spaceOutFactors = CalcUsedSpaceOutFactors();
 	int spaceOutFactorX = static_cast<int>(spaceOutFactors.X());
 	int spaceOutFactorY = static_cast<int>(spaceOutFactors.Y());
+	auto sparseDrawPeekRect = ::CalcSparsePeekRect(spaceOutFactorX, spaceOutFactorY);
+	auto doSparseCase = itsDrawParam->DoSparseSymbolVisualization() && !doStationPlotOnly;
+	SparseDataGrid sparseDataGrid;
+	if(doSparseCase)
+	{
+		int xSize = ::CalcSparseGridSize(spaceOutFactorX, itsInfo->GridXNumber());
+		int ySize = ::CalcSparseGridSize(spaceOutFactorY, itsInfo->GridYNumber());
+		sparseDataGrid = SparseDataGrid(xSize, ySize);
+	}
 
 	int skippinCounter = 0;
 	int currentLine = 0;
+	int currentSkipColumn = 0;
+	int currentSkipRow = 0;
 	int lastLine = 0;
 	int gridXSize = itsInfo->Grid()->XNumber(); // gridin olemassaa olo on tarkitettu jo aiemmin
 	if(gridXSize == 0)
@@ -671,19 +746,48 @@ void NFmiStationView::SbdCollectSpaceOutSymbolDrawData(bool doStationPlotOnly)
 			skippinCounter = 0;
 		}
 
-		if(currentLine % spaceOutFactorY == 0) // jos spaceOutFactorY on 0, tehdään joka rivi
+		if(currentLine % spaceOutFactorY == 0) // jos spaceOutFactorY on 1, tehdään joka rivi
 		{
-			if(skippinCounter % spaceOutFactorX == 0) // jos spaceOutFactorX on 0, tehdään joka sarake
+			if(skippinCounter % spaceOutFactorX == 0) // jos spaceOutFactorX on 1, tehdään joka sarake
 			{
 				if(SbdIsInsideEnlargedDrawArea())
 				{
-					NFmiFastInfoUtils::SetSoundingDataLevel(itsDrawParam->Level(), *itsInfo); // Tämä tehdään vain luotaus datalle: tämä level pitää asettaa joka pisteelle erikseen, koska vakio painepinnat eivät ole kaikille luotaus parametreille samoilla leveleillä
-					SbdCollectStationData(doStationPlotOnly);
+					currentSkipColumn = itsInfo->LocationIndex() % gridXSize / spaceOutFactorX;
+					currentSkipRow = itsInfo->LocationIndex() / gridXSize / spaceOutFactorY;
+					// Tämä tehdään vain luotaus datalle: tämä level pitää asettaa joka pisteelle erikseen, koska vakio painepinnat eivät ole kaikille luotaus parametreille samoilla leveleillä
+					NFmiFastInfoUtils::SetSoundingDataLevel(itsDrawParam->Level(), *itsInfo);
+					if(doSparseCase)
+						SbdSearchForSparseSymbolDrawData(doStationPlotOnly, sparseDrawPeekRect, sparseDataGrid, currentSkipColumn, currentSkipRow);
+					else
+						SbdCollectStationData(doStationPlotOnly);
 				}
 			}
 		}
 		skippinCounter++;
 		lastLine = currentLine;
+	}
+
+	if(doSparseCase)
+		SbdDoFinalSparseCaseWork(doStationPlotOnly, sparseDataGrid);
+}
+
+void NFmiStationView::SbdDoFinalSparseCaseWork(bool doStationPlotOnly, SparseDataGrid& sparseDataGrid)
+{
+	auto nonMissingCounter1 = sparseDataGrid.calcNonMissingValues();
+	sparseDataGrid.cleanTooCloseHits();
+	auto nonMissingCounter2 = sparseDataGrid.calcNonMissingValues();
+	const auto& sparseDataMatrix = sparseDataGrid.sparseDataMatrix();
+	for(size_t yIndex = 0; yIndex < sparseDataMatrix.NY(); yIndex++)
+	{
+		for(size_t xIndex = 0; xIndex < sparseDataMatrix.NX(); xIndex++)
+		{
+			const auto& sparseData = sparseDataMatrix[xIndex][yIndex];
+			if(sparseData.insideZoomedArea())
+			{
+				itsInfo->LocationIndex(sparseData.visualizedLocationIndex());
+				SbdCollectStationData(doStationPlotOnly, sparseData.value());
+			}
+		}
 	}
 }
 
@@ -3492,10 +3596,6 @@ void NFmiStationView::SbdCollectSymbolDrawData(bool doStationPlotOnly)
 			// ja silloin halutaan piirtää kaikki datan pisteet näkyviin.
 			SbdCollectNormalSymbolDrawData(doStationPlotOnly);
 		}
-		else if(itsDrawParam->DoSparseSymbolVisualization())
-		{
-			SbdCollectSparseSymbolDrawData(doStationPlotOnly);
-		}
 		else if(IsSpaceOutDrawingUsed())
 		{
 			SbdCollectSpaceOutSymbolDrawData(doStationPlotOnly);
@@ -3569,12 +3669,12 @@ bool NFmiStationView::SbdIsInsideEnlargedDrawArea() const
 	return itsEnlargedDrawArea.IsInside(CurrentStationPosition());
 }
 
-void NFmiStationView::SbdCollectStationData(bool doStationPlotOnly)
+void NFmiStationView::SbdCollectStationData(bool doStationPlotOnly, float overrideValue)
 {
 	itsSymbolBulkDrawData.addRelativeStationPointPosition(CurrentStationPosition());
 	if(!doStationPlotOnly)
 	{
-		float value = ViewFloatValue();
+		float value = (overrideValue == kFloatMissing) ? ViewFloatValue() : overrideValue;
 		itsSymbolBulkDrawData.addValue(value);
 
 		// Jos arvo puuttuvaa, lisätään tekstiksi tyhjä stringi, jota ei piirretä.
@@ -3602,6 +3702,96 @@ void NFmiStationView::SbdCollectStationData(bool doStationPlotOnly)
 			itsSymbolBulkDrawData.addSymbolSize(SbdCalcChangingSymbolSize(value));
 		}
 	}
+}
+
+#ifdef max
+#undef max
+#undef min
+#endif max
+
+void NFmiStationView::SbdPeekSparseValue(int peekIndexX, int peekIndexY, const NFmiRect& peekRect, PeekSparseValueDistanceList& nonMissingValuesWithDistance)
+{
+	NFmiPoint peekIndexPoint(peekIndexX, peekIndexY);
+	if(peekRect.IsInside(peekIndexPoint))
+	{
+		auto oldLocationIndex = itsInfo->LocationIndex();
+		auto peekedLocationIndex = itsInfo->PeekLocationIndex(peekIndexX, peekIndexY);
+		if(itsInfo->LocationIndex(peekedLocationIndex))
+		{
+			auto value = ViewFloatValue();
+			if(value != kFloatMissing)
+			{
+				double distanceApproximation = peekIndexX * peekIndexX + peekIndexY * peekIndexY;
+				nonMissingValuesWithDistance.push_back(std::make_tuple(value, distanceApproximation, NFmiPoint(peekIndexX, peekIndexY)));
+			}
+		}
+		itsInfo->LocationIndex(oldLocationIndex);
+	}
+}
+
+static NFmiPoint CalcGridPoint(boost::shared_ptr<NFmiFastQueryInfo>& fastInfo)
+{
+	auto locationIndex = fastInfo->LocationIndex();
+	if(fastInfo->IsGrid())
+	{
+		long xIndex = locationIndex % fastInfo->GridXNumber();
+		long yIndex = locationIndex / fastInfo->GridXNumber();
+		return NFmiPoint(xIndex, yIndex);
+	}
+	else
+	{
+		return NFmiPoint(locationIndex, 1);
+	}
+}
+
+void NFmiStationView::SbdSearchForSparseSymbolDrawData(bool doStationPlotOnly, const NFmiRect& peekRect, SparseDataGrid& sparseDataGrid, int currentSkipColumn, int currentSkipLine)
+{
+	auto value = ViewFloatValue();
+	auto drawedGridPoint = ::CalcGridPoint(itsInfo);
+	if(value == kFloatMissing)
+	{
+		// piirtopisteestä ei löytynyt arvoa, sitten etsitään ei-puuttuvaa arvoa 
+		// hakualihilasta kunnes sellainen löytyy.
+		int maxIndex = std::max(int(peekRect.Right()), int(peekRect.Bottom()));
+		// Käydään etsintäalihila läpi sisimmästä 'renkaasta' uloimpaan eli alkaen 1:stä. 0,0 -pistettä ei tarvitse käydä enää läpi.
+		for(int ringIndex = 1; ringIndex <= maxIndex; ringIndex++)
+		{
+			PeekSparseValueDistanceList nonMissingValuesWithDistance;
+			// Kierretään kukin 'rengas' läpi alkaen vasen-alakulmasta vastapäivään.
+			// Käydään koko rengas läpi ja katsotaan löytyikö ei puuttuvia arvoja. 
+			// Katsotaan vielä mikä piste (jos ei-puuttuvia oli useassa pisteessä) oli lähimpänä keskipistettä ja valitaan sen arvo.
+			for(int index = -ringIndex; index <= ringIndex; index++)
+			{
+				// Alareuna tapaus
+				SbdPeekSparseValue(index, -ringIndex, peekRect, nonMissingValuesWithDistance);
+				// Yläreuna tapaus
+				SbdPeekSparseValue(index, ringIndex, peekRect, nonMissingValuesWithDistance);
+				// Kulmatapauksia ei tarvitse käydä läpi kahdesti
+				if(index != -ringIndex && index != ringIndex)
+				{
+					// Vasen reuna tapaus
+					SbdPeekSparseValue(-ringIndex, index, peekRect, nonMissingValuesWithDistance);
+					// Oikea reuna tapaus
+					SbdPeekSparseValue(ringIndex, index, peekRect, nonMissingValuesWithDistance);
+				}
+			}
+			if(!nonMissingValuesWithDistance.empty())
+			{
+				nonMissingValuesWithDistance.sort([](const auto& valueDist1, const auto& valueDist2) {return std::get<1>(valueDist1) < std::get<1>(valueDist2); });
+				const auto& tupleValue = nonMissingValuesWithDistance.front();
+				value = std::get<0>(tupleValue);
+				auto peekIndexPoint = std::get<2>(tupleValue);
+				SparseData sparseData(value, drawedGridPoint, peekIndexPoint, itsInfo->LocationIndex());
+				sparseDataGrid.setData(currentSkipColumn, currentSkipLine, sparseData);
+				return;
+			}
+		}
+	}
+
+	// Ei löytynyt arvoja alihilasta, laitetaan puuttuvan arvon tietoja sitten datapakettiin (tarvitaan ainakin station point piirroissa)
+	NFmiPoint peekIndexPoint(0, 0);
+	SparseData sparseData(value, drawedGridPoint, peekIndexPoint, itsInfo->LocationIndex());
+	sparseDataGrid.setData(currentSkipColumn, currentSkipLine, sparseData);
 }
 
 NFmiPoint NFmiStationView::SbdCalcDrawObjectOffset() const
