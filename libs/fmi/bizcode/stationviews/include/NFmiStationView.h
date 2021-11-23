@@ -27,6 +27,7 @@ class NFmiHelpDataInfo;
 class NFmiGriddingProperties;
 class NFmiExtraMacroParamData;
 class NFmiIsoLineData;
+class SparseDataGrid;
 
 namespace CtrlViewUtils
 {
@@ -147,7 +148,7 @@ protected:
    NFmiRect SbdCalcBaseStationRelativeRect();
    NFmiRect SbdCalcEnlargedDrawArea();
    bool SbdIsInsideEnlargedDrawArea() const;
-   void SbdCollectStationData(bool doStationPlotOnly);
+   void SbdCollectStationData(bool doStationPlotOnly, float overrideValue = kFloatMissing);
    virtual NFmiPoint SbdCalcDrawObjectOffset() const;
    void SbdSetPossibleFixedSymbolColor();
    virtual bool SbdIsFixedSymbolSize() const;
@@ -166,6 +167,10 @@ protected:
    void SbdDoFixedSymbolDrawSettings();
    void SbdDoSymbolDraw(bool doStationPlotOnly);
    void SbdDoImageBasedSymbolDraw();
+   void SbdSearchForSparseSymbolDrawData(bool doStationPlotOnly, const NFmiRect &peekRect, SparseDataGrid& sparseDataGrid, int currentSkipColumn, int currentskipLine);
+   using PeekSparseValueDistanceList = std::list<std::tuple<float, double, NFmiPoint>>;
+   void SbdPeekSparseValue(int peekIndexX, int peekIndexY, const NFmiRect& peekRect, PeekSparseValueDistanceList& nonMissingValuesWithDistance);
+   void SbdDoFinalSparseCaseWork(bool doStationPlotOnly, SparseDataGrid& sparseDataGrid);
 
    // ******** Symbol-Bulk-Draw toimintojen loppu *********
 
@@ -296,5 +301,7 @@ protected:
    // Symbolipiirtoa halutaan v‰h‰n venytt‰‰ zoomatun karttaalueen ulkopuolelle, 
    // jolloin voidaan piirt‰‰ n‰kyviin edes osia kartta-alueen ulkopuolelle j‰‰vist‰ pisteist‰7asemista.
    NFmiRect itsEnlargedDrawArea;
+   // Lasketaan joka piirtokerralla vain kerran mahdolliset spaceout kertoimet, laitetaan se t‰h‰n cacheen
+   NFmiPoint itsCachedSpaceOutFactors = NFmiPoint::gMissingLatlon;
 };
 
