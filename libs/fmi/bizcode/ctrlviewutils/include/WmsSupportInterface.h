@@ -35,8 +35,8 @@ public:
     virtual std::vector<NFmiImageHolder> getLegends(int row, int col, int descTop) = 0;
     virtual void registerDynamicLayer(int row, int col, int descTop, const NFmiDataIdent& dataIdent) = 0;
     virtual void unregisterDynamicLayer(int row, int col, int descTop, const NFmiDataIdent& dataIdent) = 0;
-    virtual std::string getFullLayerName(long producerId, long paramId) const = 0;
-    virtual NFmiImageHolder getDynamicImage(long producerId, long paramId, const NFmiArea& area, const NFmiMetTime& time, int resolutionX, int resolutionY, int editorTimeStepInMinutes) = 0;
+    virtual std::string getFullLayerName(const NFmiDataIdent& dataIdent) const = 0;
+    virtual NFmiImageHolder getDynamicImage(const NFmiDataIdent &dataIdent, const NFmiArea& area, const NFmiMetTime& time, int resolutionX, int resolutionY, int editorTimeStepInMinutes) = 0;
     virtual void kill() = 0;
     virtual bool isDead(std::chrono::milliseconds wait) const = 0;
     virtual Wms::StaticMapClientState& getStaticMapClientState(unsigned int mapViewIndex, unsigned int mapAreaIndex) = 0;

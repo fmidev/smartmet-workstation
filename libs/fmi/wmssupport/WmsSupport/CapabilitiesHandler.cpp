@@ -3,6 +3,7 @@
 #include "wmssupport/SetupParser.h"
 #include "xmlliteutils/XmlHelperFunctions.h"
 #include "../../q2clientlib/include/NFmiQ2Client.h"
+#include "NFmiFileSystem.h"
 
 #include <webclient/Client.h>
 
@@ -28,10 +29,18 @@ namespace Wms
                 auto baseUriStr = toBaseUri(query);
                 auto requestStr = toRequest(query);
                 if(doLogging)
+                {
                     CatLog::logMessage(std::string("fetchCapabilitiesXml Wms request, base-uri: ") + baseUriStr + " , request: " + requestStr, CatLog::Severity::Debug, CatLog::Category::NetRequest);
+                }
+                std::string responseStr;
                 auto httpResponseFut = client.queryFor(baseUriStr, requestStr, getCapabilitiesTimeoutInSeconds);
                 httpResponseFut.wait();
-                auto responseStr = httpResponseFut.get();
+                responseStr = httpResponseFut.get();
+
+                // Lisätty testauskoodeja sekä olemassa olevan getCapabilities responsin tiedostotalletukseen että sieltä lukuun. Pidä normaalisti kommenteissa!!
+//                NFmiFileSystem::SafeFileSave("D:\\data\\wms\\dynamicServer_flat.xml", responseStr);
+//                NFmiFileSystem::ReadFile2String("D:\\data\\wms\\dynamicServer_flat_mst.xml", responseStr);
+
                 if(doLogging)
                 {
                     const size_t maxLength = 1000;

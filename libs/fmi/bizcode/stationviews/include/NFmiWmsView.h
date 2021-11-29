@@ -37,9 +37,6 @@ protected:
 	double itsScreenPixelSizeInMM; // t‰h‰n pit‰‰ saada talteen pikselin koko mm:eiss‰ silloin kun ei olla printtaamassa, 
 								// koska viivan paksuu on annettu ruudulla n‰kyviss‰ pikselikoossa.
 
-    long itsLatestParam = -1;
-    long itsLatestProducer = -1;
-
 };
 
 #endif // DISABLE_CPPRESTSDK
