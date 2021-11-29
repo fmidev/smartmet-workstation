@@ -9,8 +9,6 @@
 #include <codecvt>
 #include <regex>
 
-using namespace boost::property_tree;
-
 namespace Wms
 {
 	namespace
@@ -43,21 +41,6 @@ namespace Wms
 			return *result.begin();
 		}
 
-		std::pair<std::string, std::string> parseLegendUrl(const ptree& legendTree)
-		{
-			auto legendUrlString = legendTree
-				.get_child("OnlineResource")
-				.get_child("<xmlattr>")
-				.get<std::string>("xlink:href");
-
-			auto domainRequest = std::pair<std::string, std::string>{};
-
-			domainRequest.first = parseDomain(legendUrlString);
-			domainRequest.second = std::regex_replace(legendUrlString, domainRegex, "");
-
-			return domainRequest;
-		}
-
 		std::string wstring2string(const std::wstring& wstr)
 		{
 			using convert_typeX = std::codecvt_utf8<wchar_t>;
@@ -85,17 +68,6 @@ namespace Wms
 			return domainRequest;
 		}
 
-		Style parseStyle(const ptree& styleTree)
-		{
-			auto domainRequest = parseLegendUrl(styleTree.get_child("LegendURL"));
-			return Style
-			{
-			styleTree.get<std::string>("Name"),
-			domainRequest.first,
-			domainRequest.second
-			};
-		}
-
 		Style parseStyle(LPXNode styleNode)
 		{
 			if(styleNode)
@@ -118,34 +90,7 @@ namespace Wms
 			return Style{};
 		}
 
-		std::set<Style> lookForStyles(const ptree& layerTree)
-		{
-			auto styles = std::set<Style>();
-			for(const auto& attributeKV : layerTree)
-			{
-				try
-				{
-					if(attributeKV.first == "Style")
-					{
-						styles.insert(parseStyle(attributeKV.second));
-					}
-				}
-				catch(...)
-				{
-					continue;
-				}
-			}
-			if(styles.size() == 1 && styles.begin()->name == "Default")
-			{
-				return std::set<Style>{};
-			}
-			else
-			{
-				return styles;
-			}
-		}
-
-		std::set<Style> lookForStyles(LPXNode layerNode)
+		std::set<Style> lookForStyles(LPXNode layerNode, bool &useAlsoAlternateFmiDefaultLayerNameOut)
 		{
 			auto styles = std::set<Style>();
 			if(layerNode == nullptr)
@@ -169,33 +114,13 @@ namespace Wms
 			}
 			if(styles.size() == 1 && (styles.begin()->name == "Default" || styles.begin()->name == "default"))
 			{
+				useAlsoAlternateFmiDefaultLayerNameOut = (styles.begin()->name == "default");
 				return std::set<Style>{};
 			}
 			else
 			{
 				return styles;
 			}
-		}
-
-		ptree lookForSubLayer(const ptree& layerTree)
-		{
-			auto pTree = ptree{};
-			for(const auto& attributeKV : layerTree)
-			{
-				try
-				{
-					if(attributeKV.first == "Layer")
-					{
-						pTree = attributeKV.second;
-						return pTree.get_child("Layer");
-					}
-				}
-				catch(...)
-				{
-					continue;
-				}
-			}
-			return pTree;
 		}
 
 		//Checks whether given time is a table and not range ( 2019-06-06T13:00:00.000Z/2019-06-06T13:00:00.000Z/PT1H )
@@ -316,42 +241,6 @@ namespace Wms
 			return beginEnd;
 		}
 
-		std::string parseTimeWindow(const ptree& layerTree)
-		{
-			try
-			{
-				const auto& dimensionNode = layerTree.get_child("Dimension");
-				const auto& xmlattrNode = dimensionNode.get_child("<xmlattr>");
-				auto dimensionName = xmlattrNode.get<std::string>("name");
-
-				if(dimensionName == "time")
-				{
-					return layerTree.get<std::string>("Dimension");
-				}
-				return "";
-			}
-			catch(...)
-			{
-				return "";
-			}
-		}
-
-		std::string getNameOrTitle(const std::pair<const std::string, ptree>& layerKV)
-		{
-			auto name = layerKV.second.get_optional<std::string>("Name");
-			auto title = layerKV.second.get_optional<std::string>("Title");
-
-			if(name)
-			{
-				return layerKV.second.get<std::string>("Name");
-			}
-			else if(title)
-			{
-				return layerKV.second.get<std::string>("Title");
-			}
-			return std::string{};
-		}
-
 		bool IsNameStringNumeric(const std::string& nameString)
 		{
 			try
@@ -408,59 +297,6 @@ namespace Wms
 		, delimiter_{ delimiter }
 		, cacheHitCallback_{ cacheHitCallback }
 	{}
-
-	std::unique_ptr<CapabilityTree> CapabilityTreeParser::parse(const ptree& layerTree, std::map<long, std::map<long, LayerInfo>>& hashes
-		, ChangedLayers& changedLayers) const
-	{
-		auto subTree = std::make_unique<CapabilityNode>();
-		subTree->value = Capability{ producer_, kFmiLastParameter, std::string(producer_.GetName()) };
-		changedLayers.setProducerId(producer_.GetIdent());
-		auto path = std::list<std::string>{};
-
-		for(const auto& layerKV : layerTree)
-		{
-			parseNodes(subTree, layerKV, path, hashes, changedLayers);
-		}
-
-		return std::move(subTree);
-	}
-
-	std::unique_ptr<CapabilityTree> CapabilityTreeParser::parseXml(std::string& xml, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers)
-	{
-		auto subTree = std::make_unique<CapabilityNode>();
-		subTree->value = Capability{ producer_, kFmiLastParameter, std::string(producer_.GetName()) };
-		changedLayers.setProducerId(producer_.GetIdent());
-		auto path = std::list<std::string>{};
-
-		XNode xmlRoot;
-		CString sxmlU_(CA2T(xml.c_str()));
-		if(xmlRoot.Load(sxmlU_) == false)
-		{
-			throw std::runtime_error(std::string("CapabilityTreeParser::parseXml - xmlRoot.Load(sxmlU_) failed for string: \n") + xml);
-		}
-
-		try
-		{
-			auto nodes = xmlRoot.GetChilds(_TEXT("Capability"));
-			for(size_t i = 0; i < nodes.size(); i++)
-			{
-				auto aNode = nodes[i];
-				for(size_t i = 0; i < aNode->GetChilds().size(); i++)
-				{
-					auto childNode = aNode->GetChild(static_cast<int>(i));
-					if(childNode)
-					{
-						parseNodes(subTree, childNode, path, hashes, changedLayers);
-					}
-				}
-			}
-		}
-		catch(...)
-		{
-		}
-
-		return std::move(subTree);
-	}
 
 	std::unique_ptr<CapabilityTree> CapabilityTreeParser::parseXmlGeneral(std::string& xml, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers)
 	{
@@ -549,30 +385,32 @@ namespace Wms
 				if(dimensionNodeValue == "time")
 				{
 					auto timeWindow = XmlHelper::ChildNodeValue(layerNode, "Dimension");
-					DoGeneralPathHandling(layerNode, path);
+					auto hasFlatFmiLayerStructure = DoGeneralPathHandling(layerNode, path);
 					auto name = XmlHelper::GetChildNodeText(layerNode, "Name");
 					cacheHitCallback_(producer_.GetIdent(), name);
 					auto startEnd = parseDimension(timeWindow);
-					addWithPossibleStyles(layerNode, subTree, path, timeWindow, changedLayers, hashes, startEnd, name);
+					addWithPossibleStyles(layerNode, subTree, path, timeWindow, changedLayers, hashes, startEnd, name, hasFlatFmiLayerStructure);
 				}
 			}
 		}
 	}
 
 
-	void CapabilityTreeParser::DoGeneralPathHandling(LPXNode layerNode, std::list<std::string>& path)
+	bool CapabilityTreeParser::DoGeneralPathHandling(LPXNode layerNode, std::list<std::string>& path)
 	{
 		if(HasFlatWmsStructure(layerNode, path))
 		{
 			// Fmi flat structure handling
 			std::string pathName = XmlHelper::GetChildNodeText(layerNode, "Name");
 			splitToList(pathName, delimiter_, path);
+			return true;
 		}
 		else
 		{
 			// Normal recursive structure handling
 			std::string title = GetStrippedSubPathName(layerNode, delimiter_, false);
 			addToList(title, path);
+			return false;
 		}
 	}
 
@@ -588,107 +426,16 @@ namespace Wms
 		return false;
 	}
 
-	void CapabilityTreeParser::parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, const std::pair<const std::string, ptree>& layerKV
-		, std::list<std::string>& path, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const
-	{
-		if (layerKV.first != "Layer") return;
-
-		std::list<std::string> layerPath = path;
-		auto name = getNameOrTitle(layerKV);
-		auto timeWindow = std::string{};
-
-		auto tmpTimeWindow = parseTimeWindow(layerKV.second);
-		if (cacheHitCallback_(producer_.GetIdent(), name))
-		{
-			timeWindow = tmpTimeWindow;
-		}
-		auto startEnd = parseDimension(tmpTimeWindow);
-
-		splitToList(name, delimiter_, layerPath);
-
-		// If timeWindow is empty, check child layers, but still add this name to the path.
-		if (tmpTimeWindow.empty()) {
-			try
-			{
-				ptree& subLayerTree = lookForSubLayer(layerKV.second);
-				for (const auto& layer : subLayerTree)
-				{
-					parseNodes(subTree, layer, layerPath, hashes, changedLayers);
-				}
-			}
-			catch (...)
-			{
-				return;
-			}
-		}
-		else
-		{
-			addWithPossibleStyles(layerKV, subTree, layerPath, timeWindow, changedLayers, hashes, startEnd, name);
-		}
-	}
-
-	void CapabilityTreeParser::parseNodes(std::unique_ptr<Wms::CapabilityNode>& subTree, LPXNode layerNode
-		, std::list<std::string>& path, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers) const
-	{
-		if(layerNode == nullptr)
-			return;
-		if (layerNode->name != "Layer") 
-			return;
-
-		std::list<std::string> layerPath = path;
-		std::string title = XmlHelper::GetChildNodeText(layerNode, "Title");
-		addToList(title, layerPath);
-
-		auto timeWindow = std::string{};
-		auto dimensionNode = layerNode->GetChilds(_TEXT("Dimension")); 
-		
-		if (dimensionNode.empty()) //No dimension, no leaf node!
-		{
-			for (size_t i = 0; i < layerNode->GetChilds().size(); i++)
-			{
-				auto childNode = layerNode->GetChild(static_cast<int>(i));
-				if(childNode)
-				{
-					parseNodes(subTree, childNode, layerPath, hashes, changedLayers);
-				}
-			}			
-		}
-		else
-		{
-			auto dNode = dimensionNode.at(0);
-			std::string dimensionNodeValue = XmlHelper::AttributeValue(dNode, "name");
-			if (dimensionNodeValue == "time")
-			{
-				auto tmpTimeWindow = XmlHelper::ChildNodeValue(layerNode, "Dimension");
-				auto name = XmlHelper::GetChildNodeText(layerNode, "Name");
-				if (cacheHitCallback_(producer_.GetIdent(), name))
-				{
-					timeWindow = tmpTimeWindow;
-				}
-				auto startEnd = parseDimension(tmpTimeWindow);
-				addWithPossibleStyles(layerNode, subTree, layerPath, timeWindow, changedLayers, hashes, startEnd, name);
-			}
-		}
-	}
-
-	void CapabilityTreeParser::addWithPossibleStyles(const std::pair<const std::string, ptree>& layerKV, std::unique_ptr<CapabilityNode>& subTree,
-		std::list<std::string>& path, std::string& timeWindow, ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes
-		, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name) const
-	{
-		//Check if layer has multiple styles (then add all possibilities)
-		auto styles = lookForStyles(layerKV.second);
-		addWithStyles(subTree, path, timeWindow, changedLayers, hashes, startEnd, name, styles);
-	}
-
 	void CapabilityTreeParser::addWithPossibleStyles(LPXNode layerNode, std::unique_ptr<CapabilityNode>& subTree,
 		std::list<std::string>& path, std::string& timeWindow, ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes
-		, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name) const
+		, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name, bool hasFlatFmiLayerStructure) const
 	{
 		if(layerNode)
 		{
+			bool useAlsoAlternateFmiDefaultLayerName = false;
 			// Check if layer has multiple styles (then add all possibilities)
-			auto styles = lookForStyles(layerNode);
-			addWithStyles(subTree, path, timeWindow, changedLayers, hashes, startEnd, name, styles);
+			auto styles = lookForStyles(layerNode, useAlsoAlternateFmiDefaultLayerName);
+			addWithStyles(subTree, path, timeWindow, changedLayers, hashes, startEnd, name, styles, hasFlatFmiLayerStructure, useAlsoAlternateFmiDefaultLayerName);
 		}
 	}
 
@@ -713,7 +460,7 @@ namespace Wms
 
 	void CapabilityTreeParser::addWithStyles(std::unique_ptr<CapabilityNode>& subTree,
 		std::list<std::string>& path, std::string& timeWindow, ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes
-		, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name, std::set<Wms::Style>& styles) const
+		, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name, std::set<Wms::Style>& styles, bool hasFlatFmiLayerStructure, bool useAlsoAlternateFmiDefaultLayerName) const
 	{
 		if (styles.empty())
 		{
@@ -729,6 +476,13 @@ namespace Wms
 			layerInfo.endTime = startEnd.second;
 			changedLayers.update(hashedName, layerInfo, timeWindow);
 			hashes[producer_.GetIdent()][hashedName] = layerInfo;
+			if(hasFlatFmiLayerStructure && useAlsoAlternateFmiDefaultLayerName)
+			{
+				// hashed-name pit‰‰ rakentaa ilman ':' erotinta!
+				auto nameWithDefaultStyle = name + "default";
+				auto hashedNameWithDefaultStyle = static_cast<long>(std::hash<std::string>{}(nameWithDefaultStyle));
+				hashes[producer_.GetIdent()][hashedNameWithDefaultStyle] = layerInfo;
+			}
 		}
 		else
 		{
