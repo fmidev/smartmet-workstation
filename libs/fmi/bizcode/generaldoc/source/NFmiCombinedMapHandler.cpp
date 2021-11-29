@@ -2404,7 +2404,7 @@ const NFmiTimeDescriptor& NFmiCombinedMapHandler::timeControlViewTimes(unsigned 
 // Oikeat karttarivit alkavat siis 1:stä.
 unsigned int NFmiCombinedMapHandler::getRealRowNumber(unsigned int mapViewDescTopIndex, int rowIndex)
 {
-	if(rowIndex >= CtrlViewUtils::kFmiTimeSerialView || mapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
+	if(mapViewDescTopIndex >= CtrlViewUtils::kFmiSoundingView)
 		return rowIndex;
 	else
 		return rowIndex + getMapViewDescTop(mapViewDescTopIndex)->MapRowStartingIndex() - 1;
