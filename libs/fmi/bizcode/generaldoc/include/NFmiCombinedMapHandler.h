@@ -131,6 +131,7 @@ public:
     void addCrossSectionView(const NFmiMenuItem& menuItem, int viewRowIndex, bool treatAsViewMacro) override;
     void addView(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void addAsOnlyView(const NFmiMenuItem& menuItem, int viewRowIndex) override;
+    void changeParamLevel(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void removeView(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void removeAllViews(unsigned int mapViewDescTopIndex, int viewRowIndex) override;
     void addAsOnlyCrossSectionView(const NFmiMenuItem& menuItem, int viewRowIndex) override;

@@ -121,7 +121,8 @@ typedef enum
 	kFmiSelectOverlayMapLayer = 93,
 	kFmiAddTimeSerialSideParam = 94,
 	kFmiRemoveSelectedTimeSerialSideParam = 95,
-	kFmiRemoveAllTimeSerialRowSideParams = 96
+	kFmiRemoveAllTimeSerialRowSideParams = 96,
+	kFmiChangeParam = 97
 }FmiMenuCommandType;
 
 // s‰‰ koodi annetaan t‰nne. Jos se on AWS wawa koodia (arvo 100-199), konvertoidaan se WW-koodiksi, muuten

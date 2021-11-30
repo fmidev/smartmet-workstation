@@ -2868,6 +2868,7 @@ void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, c
 	DoSpecialDataInitializations(drawParam, normalParameterAdd, menuItem);
 	::setDrawMacroSettings(menuItem, drawParam, macroParamInitFileName);
 	bool insertParamCase = (menuItem.CommandType() == kFmiInsertParamLayer);
+	bool changeParamCase = (menuItem.CommandType() == kFmiChangeParam);
 
 	if(!activeDrawParamWithRealRowNumber(menuItem.MapViewDescTopIndex(), realRowIndex))
 	{
@@ -2880,6 +2881,8 @@ void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, c
 	if(drawParamList)
 	{
 		std::string logStr(insertParamCase ? "Insert to specific point into map view " : "Added to map view ");
+		if(changeParamCase)
+			logStr = "Changed parameter to selected ";
 		if(NFmiDrawParam::IsMacroParamCase(drawParam->DataType()))
 		{
 			logStr += "macro parameter '";
@@ -2892,7 +2895,7 @@ void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, c
 			logStr += menuItem.DataIdent().GetParamName();
 		logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Visualization);
 
-		if(insertParamCase)
+		if(insertParamCase || changeParamCase)
 			drawParamList->Add(drawParam, menuItem.IndexInViewRow());
 		else if(!normalParameterAdd)
 		{
@@ -2950,13 +2953,17 @@ void NFmiCombinedMapHandler::addCrossSectionView(const NFmiMenuItem& menuItem, i
 	auto* crossSectionViewDrawParamList = getCrossSectionViewDrawParamList(viewRowIndex);
 	if(crossSectionViewDrawParamList)
 	{
-		std::string logStr("Adding to crosssection-view ");
+		bool changeParamCase = (menuItem.CommandType() == kFmiChangeParam);
+		std::string logStr(changeParamCase ? "Changing selected param to " : "Adding to crosssection-view ");
 		if(info)
 			logStr += getSelectedParamInfoString(info, true);
 		else
 			logStr += "??????"; // tämä on virhe tilanne
 		logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Visualization);
-		crossSectionViewDrawParamList->Add(drawParam);
+		if(changeParamCase)
+			crossSectionViewDrawParamList->Add(drawParam, menuItem.IndexInViewRow());
+		else
+			crossSectionViewDrawParamList->Add(drawParam);
 		crossSectionViewDrawParamList->ActivateOnlyOne(); // varmistaa, että yksi ja vain yksi paramtri listassa on aktiivinen
 	}
 	drawParamSettingsChangedDirtyActions(menuItem.MapViewDescTopIndex(), getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), drawParam);
@@ -2972,6 +2979,25 @@ void NFmiCombinedMapHandler::addAsOnlyView(const NFmiMenuItem& menuItem, int vie
 		::getMacroParamDataCache().clearMacroParamCacheRow(menuItem.MapViewDescTopIndex(), getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex));
 	}
 	addView(menuItem, viewRowIndex);
+}
+
+void NFmiCombinedMapHandler::changeParamLevel(const NFmiMenuItem& menuItem, int viewRowIndex)
+{
+	auto* drawParamList = getDrawParamList(menuItem.MapViewDescTopIndex(), viewRowIndex);
+	if(drawParamList)
+	{
+		auto changedParamIndex = menuItem.IndexInViewRow();
+		if(drawParamList->Index(changedParamIndex))
+		{
+			if(drawParamList->Remove())
+			{
+				if(menuItem.MapViewDescTopIndex() == CtrlViewUtils::kFmiCrossSectionView)
+					addCrossSectionView(menuItem, viewRowIndex, false);
+				else
+					addViewWithRealRowNumber(true, menuItem, getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), false, nullptr);
+			}
+		}
+	}
 }
 
 void NFmiCombinedMapHandler::removeView(const NFmiMenuItem& menuItem, int viewRowIndex)

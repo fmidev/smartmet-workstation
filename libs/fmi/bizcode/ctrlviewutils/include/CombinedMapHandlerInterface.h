@@ -108,6 +108,7 @@ public:
     virtual void addCrossSectionView(const NFmiMenuItem& menuItem, int viewRowIndex, bool treatAsViewMacro) = 0;
     virtual void addView(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void addAsOnlyView(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
+    virtual void changeParamLevel(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void removeView(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void removeAllViews(unsigned int mapViewDescTopIndex, int viewRowIndex) = 0;
     virtual void addAsOnlyCrossSectionView(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
