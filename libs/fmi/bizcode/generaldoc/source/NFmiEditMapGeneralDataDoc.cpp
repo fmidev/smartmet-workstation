@@ -4175,6 +4175,44 @@ void AddInsertParamLayerSectionIntoPopupMenu(NFmiMenuItemList *thePopupMenu, uns
 	SetLayerIndexForWantedMenucommandItems(*thePopupMenu, kFmiInsertParamLayer, wantedLayerIndex);
 }
 
+void AddChangeParamSectionIntoPopupMenu(NFmiMenuItemList* thePopupMenu, unsigned int theDescTopIndex, int layerIndex, boost::shared_ptr<NFmiDrawParam>& drawParam)
+{
+	if(drawParam)
+	{
+		auto crossSectionCase = theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView;
+		auto smartInfo = InfoOrganizer()->Info(drawParam, crossSectionCase, false);
+		if(smartInfo)
+		{
+			auto menuCommand = kFmiChangeParam;
+			auto dataType = drawParam->DataType();
+			auto menuTitleStr = ::GetDictionaryString("Change parameter/level");
+			auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuTitleStr, NFmiDataIdent(), menuCommand, g_DefaultParamView, nullptr, dataType);
+			NFmiLevelBag levels;
+			if(!crossSectionCase && smartInfo->SizeLevels() > 1)
+			{
+				levels = smartInfo->VPlaceDescriptor().LevelBag();
+			}
+			auto paramBag = smartInfo->ParamBag();
+			bool allowStreamlineParameter = theDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex;
+			auto possibleWindMetaParams = NFmiFastInfoUtils::MakePossibleWindMetaParams(*smartInfo, allowStreamlineParameter);
+			NFmiMenuItemList* menuList = nullptr;
+			// Poikkileikkaus menun yhteydessä ei halutakaan laittaa level tietoja menu-popupiin, vain parametrit
+			if(crossSectionCase == false && levels.GetSize() > 1)
+				menuList = new NFmiMenuItemList(theDescTopIndex, &paramBag, menuCommand, g_DefaultParamView, &levels, dataType, kFmiLastParameter, &possibleWindMetaParams);
+			else
+				menuList = new NFmiMenuItemList(theDescTopIndex, &paramBag, menuCommand, g_DefaultParamView, dataType, &possibleWindMetaParams);
+
+			if(menuList && menuList->NumberOfMenuItems() > 0)
+			{
+				SetLayerIndexForWantedMenucommandItems(*menuList, menuCommand, layerIndex);
+
+				menuItem->AddSubMenu(menuList);
+				thePopupMenu->Add(std::move(menuItem));
+			}
+		}
+	}
+}
+
 bool IsMapLayerSelectionCase(unsigned int theDescTopIndex, int theRowIndex, int layerIndex)
 {
 	return (theDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex) && (layerIndex == 0);
@@ -4207,6 +4245,7 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int la
 			std::unique_ptr<NFmiMenuItem> menuItem;
 
 			AddInsertParamLayerSectionIntoPopupMenu(itsPopupMenu.get(), theDescTopIndex, theRowIndex, layerIndex, layerIndexRealValue);
+			AddChangeParamSectionIntoPopupMenu(itsPopupMenu.get(), theDescTopIndex, layerIndex, drawParam);
 
 			if(crossSectionPopup == false)
 			{ // poikkileikkaus-näyttö ei tue tekstimuotoista piirtoa
@@ -4434,6 +4473,12 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		case kFmiAddAsOnlyView:
 			GetCombinedMapHandler()->addAsOnlyView(*menuItem, itsCurrentViewRowIndex);
 			break;
+		case kFmiChangeParam:
+		{
+			auto crossSectionCase = menuItem->MapViewDescTopIndex() == CtrlViewUtils::kFmiCrossSectionView;
+			GetCombinedMapHandler()->changeParamLevel(*menuItem, crossSectionCase ? itsCurrentCrossSectionRowIndex : itsCurrentViewRowIndex);
+			break;
+		}
 		case kFmiAddAsOnlyParamCrossSectionView:
 			GetCombinedMapHandler()->addAsOnlyCrossSectionView(*menuItem, itsCurrentCrossSectionRowIndex);
 			break;
