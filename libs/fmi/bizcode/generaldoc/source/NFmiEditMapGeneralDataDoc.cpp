@@ -1173,6 +1173,11 @@ void InitAutoComplete(void)
 void InitCombinedMapHandler()
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
+	// parameterSelectionUpdateCallback varmistaa ett‰ kun kaikki Wms serverit on k‰yty 1. kerran l‰pi, 
+	// t‰m‰n j‰lkeen p‰ivitet‰‰n Parameter selection dialogi, jotta siell‰ n‰kyy Wms datat (jos dialogi avattu
+	// ennen t‰t‰, j‰i dialogi ilman Wms datoja ennen kuin jokin muu eventti teki kunnon updaten).
+	std::function<void()> parameterSelectionUpdateCallback = [&]() {this->PrepareForParamAddSystemUpdate(); };
+	Wms::CapabilitiesHandler::setParameterSelectionUpdateCallback(parameterSelectionUpdateCallback);
 	// NFmiCombinedMapHandler luokka hanskaa itse kaikki poikkeukset ja mahdolliset k‰ytt‰j‰n tekem‰t ohjelman lopetukset.
 	itsCombinedMapHandler.initialize(itsBasicConfigurations.ControlPath());
 }
