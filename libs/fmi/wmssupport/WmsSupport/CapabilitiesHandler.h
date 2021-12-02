@@ -36,6 +36,7 @@ namespace Wms
         std::unique_ptr<Web::Client> client_;
         std::function<void(long, const std::set<LayerInfo>&)> cacheDirtyCallback_;
         std::function<bool(long, const std::string&)> cacheHitCallback_;
+        static std::function<void()> parameterSelectionUpdateCallback_;
         std::shared_ptr<cppback::BackgroundManager> bManager_;
 
         std::unordered_map<int, Wms::DynamicServerSetup> servers_;
@@ -57,5 +58,7 @@ namespace Wms
         void startFetchingCapabilitiesInBackground();
 		const std::map<long, std::map<long, LayerInfo>>& peekHashes() const;
         const CapabilityTree& peekCapabilityTree() const;
+        static void setParameterSelectionUpdateCallback(std::function<void()>& parameterSelectionUpdateCallback);
+
     };
 }

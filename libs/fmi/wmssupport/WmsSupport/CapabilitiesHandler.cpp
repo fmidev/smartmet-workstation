@@ -15,6 +15,8 @@ namespace Wms
 {
     namespace
     {
+        std::once_flag parameterSelectionUpdateFlag;
+
         boost::property_tree::ptree parseXmlToPropertyTree(const std::string& xml)
         {
             auto pTree = boost::property_tree::ptree{};
@@ -64,6 +66,8 @@ namespace Wms
 
     } // unnamed namespace ends
 
+    std::function<void()> CapabilitiesHandler::parameterSelectionUpdateCallback_ = nullptr;
+
     CapabilitiesHandler::CapabilitiesHandler(
         std::unique_ptr<Web::Client> client,
         const std::shared_ptr<cppback::BackgroundManager> &bManager,
@@ -83,6 +87,11 @@ namespace Wms
         , getCapabilitiesTimeoutInSeconds{capabilitiesTimeoutInSeconds}
         , cacheHitCallback_{ cacheHitCallback }
     {}
+
+    void CapabilitiesHandler::setParameterSelectionUpdateCallback(std::function<void()>& parameterSelectionUpdateCallback)
+    {
+        parameterSelectionUpdateCallback_ = parameterSelectionUpdateCallback;
+    }
 
     const std::map<long, std::map<long, LayerInfo>>& CapabilitiesHandler::peekHashes() const
     {
@@ -104,7 +113,8 @@ namespace Wms
         {
             while(true)
             {
-                auto children = std::vector<std::unique_ptr<CapabilityTree>>{};			
+                auto children = std::vector<std::unique_ptr<CapabilityTree>>{};
+                bool foundAnyWmsServerData = false;
 
                 for(auto& serverKV : servers_)
                 {
@@ -127,6 +137,7 @@ namespace Wms
                         children.push_back(capabilityTreeParser.parseXmlGeneral(xml, hashes_, changedLayers_));
                         if(!changedLayers_.changedLayers.empty())
                         {
+                            foundAnyWmsServerData = true;
                             cacheDirtyCallback_(server.producer.GetIdent(), changedLayers_.changedLayers);
                         }
                     }
@@ -144,6 +155,10 @@ namespace Wms
                     }
                 }
                 capabilityTree_ = std::make_unique<CapabilityNode>(rootValue_, std::move(children));
+                if(foundAnyWmsServerData && parameterSelectionUpdateCallback_)
+                {
+                    std::call_once(parameterSelectionUpdateFlag, parameterSelectionUpdateCallback_);
+                }
 
                 using namespace std::literals;
                 bManager_->sleepInIntervals(intervalToPollGetCapabilities_, 500ms, "CapabilitiesHandler::BackgroundFetching");
