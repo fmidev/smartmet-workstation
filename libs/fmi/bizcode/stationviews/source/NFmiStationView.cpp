@@ -71,6 +71,7 @@
 #include "NFmiAreaTools.h"
 #include "GdiplusStationBulkDraw.h"
 #include "SparseDataGrid.h"
+#include "NFmiSymbolTextMapping.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -3049,121 +3050,11 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
 	return str;
 }
 
-class SymbolTextMapping
-{
-    std::string totalFilePath_;
-    std::map<float, std::string> symbolTextMap_;
-    std::string initializationMessage_;
-public:
-    SymbolTextMapping() = default;
-
-    bool initialize(const std::string &totalFilePath)
-    {
-        return initialize_impl(totalFilePath);
-    }
-
-    bool wasInitializationOk() const
-    {
-        return initializationMessage_.empty();
-    }
-
-    std::string getSymbolText(float symbolValue) const
-    {
-        // Jos initialisointi on epäonnistunut, palautetaan sen virheilmoitus varoituksena, että tätä yritetään käyttää
-        if(!wasInitializationOk())
-            return initializationMessage_;
-        else
-        {
-            auto iter = symbolTextMap_.find(symbolValue);
-            if(iter != symbolTextMap_.end())
-                return iter->second;
-            else
-            {
-                if(symbolValue == kFloatMissing)
-                {
-                    static const std::string missingValueText = "missing value";
-                    return missingValueText;
-                }
-                else
-                {
-                    std::string errorText = "Value ";
-                    errorText += std::to_string(symbolValue);
-                    errorText += " was not found from mappings from file:\n";
-                    errorText += totalFilePath_;
-                    return errorText;
-                }
-            }
-        }
-    }
-
-private:
-    // Seuraavat line formaatit ovat ok:
-    // 1. key-value;string-value  ==> lineParts.size() == 2
-    // 2. key-value;string-value; (eli puolipiste on rivin lopussa)  ==> lineParts.size() == 3 and lineParts[2] on tyhjä stringi
-    void parseLine(const std::string &line)
-    {
-        auto strippedLine = line;
-        NFmiStringTools::TrimAll(strippedLine);
-        auto lineParts = NFmiStringTools::Split(strippedLine, ";");
-        if(lineParts.size() == 2 || (lineParts.size() == 3 && lineParts[2].empty()))
-        {
-            try
-            {
-                float value = std::stof(lineParts[0]);
-                symbolTextMap_.insert(std::make_pair(value, lineParts[1]));
-            }
-            catch(...)
-            { }
-        }
-    }
-
-    bool initialize_impl(const std::string &totalFilePath)
-    {
-        initializationMessage_.clear();
-        totalFilePath_ = totalFilePath;
-        symbolTextMap_.clear();
-        NFmiCommentStripper commentStripper;
-        if(commentStripper.ReadAndStripFile(totalFilePath_))
-        {
-            std::istringstream in(commentStripper.GetString());
-            std::string line;
-            do
-            {
-                std::getline(in, line);
-                parseLine(line);
-            } while(in);
-        }
-        else
-        {
-            initializationMessage_ = std::string("Unable to read symbol text mappings from file: ") + totalFilePath_;
-        }
-
-        return false;
-    }
-};
-
 std::string NFmiStationView::GetPossibleMacroParamSymbolText(float value, const std::string &possibleSymbolTooltipFile)
 {
-    if(!possibleSymbolTooltipFile.empty())
-    {
-        static std::map<std::string, SymbolTextMapping> symbolMappingsCache;
+	static NFmiSymbolTextMappingCache symbolMappingsCache;
 
-        std::string str = " (";
-        // Katsotaan löytyykö haluttu tiedosto jo luettuna cache:en
-        auto iter = symbolMappingsCache.find(possibleSymbolTooltipFile);
-        if(iter != symbolMappingsCache.end())
-            str += iter->second.getSymbolText(value);
-        else
-        {
-            // Jos ei löytynyt, luodaan uusi cache otus, alustetaan se ja palautetaan siitä haluttu arvo
-            auto iter = symbolMappingsCache.insert(std::make_pair(possibleSymbolTooltipFile, SymbolTextMapping()));
-            iter.first->second.initialize(possibleSymbolTooltipFile);
-            str += iter.first->second.getSymbolText(value);
-        }
-        str += ")";
-        return str;
-    }
-    return "";
+	return symbolMappingsCache.getPossibleMacroParamSymbolText(value, possibleSymbolTooltipFile);
 }
 
 void NFmiStationView::AddLatestObsInfoToString(std::string &tooltipString)
