@@ -4177,7 +4177,7 @@ void AddInsertParamLayerSectionIntoPopupMenu(NFmiMenuItemList *thePopupMenu, uns
 
 void AddChangeParamSectionIntoPopupMenu(NFmiMenuItemList* thePopupMenu, unsigned int theDescTopIndex, int layerIndex, boost::shared_ptr<NFmiDrawParam>& drawParam)
 {
-	if(drawParam)
+	if(drawParam && !NFmiDrawParam::IsMacroParamCase(drawParam->DataType()))
 	{
 		auto crossSectionCase = theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView;
 		auto smartInfo = InfoOrganizer()->Info(drawParam, crossSectionCase, false);
