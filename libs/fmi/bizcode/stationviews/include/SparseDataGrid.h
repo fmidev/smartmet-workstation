@@ -11,13 +11,17 @@ class SparseData
 	std::list<NFmiPoint> peekIndexList_;
 	unsigned long visualizedLocationIndex_ = gMissingIndex;
 	bool insideZoomedArea_ = false;
+	bool hasCausedElimination_ = false;
 public:
 	SparseData();
 	SparseData(float value, const NFmiPoint& drawGridPoint, const std::list<NFmiPoint> &peekIndexList, unsigned long visualizedLocationIndex);
 	
-	void clearData();
+	void eliminateFromSparseData(SparseData &dataThatCausesElimination);
+	bool hasCausedElimination() const { return hasCausedElimination_; }
+	void causedElimination() { hasCausedElimination_ = true; }
 	bool hasValue() const;
 	bool peekIndexIsCloserToCenter(const SparseData& otherData) const;
+	bool peekIndexAreAtEqualDistance(const SparseData& otherData) const;
 	double calcPeekDistance() const;
 	NFmiPoint seekPeekIndexFromDirection(FmiDirection wantedDirection) const;
 	const std::list<NFmiPoint>& peekIndexList() const { return peekIndexList_; }
@@ -27,7 +31,7 @@ public:
 	static FmiDirection horizontalElimination(const SparseData &leftData, const SparseData &rightData);
 	static FmiDirection verticalElimination(const SparseData& lowerData, const SparseData& upperData);
 	static double drawGridPointDistance(const SparseData &data1, const SparseData &data2);
-	static FmiDirection calcPeekIndexDirection(const NFmiPoint& peekIndex);
+	static std::pair<FmiDirection, FmiDirection> calcPeekIndexDirections(const NFmiPoint& peekIndex);
 };
 
 class SparseDataGrid

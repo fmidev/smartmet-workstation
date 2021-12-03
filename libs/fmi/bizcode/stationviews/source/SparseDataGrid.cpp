@@ -12,9 +12,15 @@ SparseData::SparseData(float value, const NFmiPoint & drawGridPoint, const std::
 {
 }
 
-void SparseData::clearData()
+void SparseData::eliminateFromSparseData(SparseData& dataThatCausesElimination)
 {
-	*this = SparseData();
+	// Huom! ei voi eliminoida sellaista dataa, joka on itse aiheuttanut eliminoinnin toisille pisteille (voi harventaa liikaa datapisteitä)
+	if(!hasCausedElimination_)
+	{
+		value_ = kFloatMissing;
+		peekIndexList_.clear();
+		dataThatCausesElimination.causedElimination();
+	}
 }
 
 bool SparseData::hasValue() const
@@ -37,23 +43,54 @@ bool SparseData::peekIndexIsCloserToCenter(const SparseData& otherData) const
 	return distance1 < distance2;
 }
 
-FmiDirection SparseData::calcPeekIndexDirection(const NFmiPoint& peekIndex)
+bool SparseData::peekIndexAreAtEqualDistance(const SparseData& otherData) const
+{
+	auto distance1 = calcPeekDistance();
+	auto distance2 = otherData.calcPeekDistance();
+	return CtrlViewUtils::IsEqualEnough(distance1, distance2, std::numeric_limits<double>::epsilon() * 5.);
+}
+
+// Lasketaan mihin mahdollisesti kahteen suuntaan osoittaa annettu peekIndex point.
+// Kaksi avoa tulee reunoilla, kun peekIndex:in arvot ovat itseisarvoiltaan samoja esim. 1,1 tai -1,1, jne.
+std::pair<FmiDirection, FmiDirection> SparseData::calcPeekIndexDirections(const NFmiPoint& peekIndex)
 {
 	auto peekIndexAngle = CtrlViewUtils::CalcAngle(peekIndex.X(), peekIndex.Y());
 	if(peekIndexAngle >= 45 && peekIndexAngle <= 135)
-		return kRight;
+	{
+		if(peekIndexAngle == 45)
+			return std::make_pair(kRight, kUp);
+		else if(peekIndexAngle == 135)
+			return std::make_pair(kRight, kDown);
+		else
+			return std::make_pair(kRight, kNoDirection);
+	}
 	if(peekIndexAngle >= 135 && peekIndexAngle <= 225)
-		return kDown;
+	{
+		// Huom! down+right tapaus (= 135 astetta) on jo käsitelty edellä
+		if(peekIndexAngle == 225)
+			return std::make_pair(kDown, kLeft);
+		else
+			return std::make_pair(kDown, kNoDirection);
+	}
 	if(peekIndexAngle >= 225 && peekIndexAngle <= 315)
-		return kLeft;
-	return kUp;
+	{
+		// Huom! left+down tapaus (= 225 astetta) on jo käsitelty edellä
+		if(peekIndexAngle == 315)
+			return std::make_pair(kLeft, kUp);
+		else
+			return std::make_pair(kLeft, kNoDirection);
+	}
+
+	// Huom! up+left (= 315 astetta) ja up+right (= 45 astetta) tapaukset on jo käsitelty edellä
+	return std::make_pair(kUp, kNoDirection);
 }
 
 NFmiPoint SparseData::seekPeekIndexFromDirection(FmiDirection wantedDirection) const
 {
 	for(const auto& peekIndex : peekIndexList_)
 	{
-		if(wantedDirection == calcPeekIndexDirection(peekIndex))
+		auto possibleDirections = calcPeekIndexDirections(peekIndex);
+		if(wantedDirection == possibleDirections.first || wantedDirection == possibleDirections.second)
 			return peekIndex;
 	}
 	return NFmiPoint::gMissingLatlon;
@@ -84,6 +121,14 @@ FmiDirection SparseData::horizontalElimination(const SparseData& leftData, const
 			auto peekIndex = leftData.seekPeekIndexFromDirection(kRight);
 			if(peekIndex != NFmiPoint::gMissingLatlon)
 				return ::doFinalElimination(totalDistance, peekIndex.X(), kLeft);
+
+			// Testataan vielä, jos peekIndeksit olivat yhtä etäällä, se tutkimatta jäänyt tapaus
+			if(leftData.peekIndexAreAtEqualDistance(rightData))
+			{
+				auto peekIndex = rightData.seekPeekIndexFromDirection(kLeft);
+				if(peekIndex != NFmiPoint::gMissingLatlon)
+					return ::doFinalElimination(totalDistance, peekIndex.X(), kRight);
+			}
 		}
 	}
 	return kNoDirection;
@@ -105,6 +150,14 @@ FmiDirection SparseData::verticalElimination(const SparseData& lowerData, const 
 			auto peekIndex = lowerData.seekPeekIndexFromDirection(kUp);
 			if(peekIndex != NFmiPoint::gMissingLatlon)
 				return ::doFinalElimination(totalDistance, peekIndex.X(), kDown);
+
+			// Testataan vielä, jos peekIndeksit olivat yhtä etäällä, se tutkimatta jäänyt tapaus
+			if(lowerData.peekIndexAreAtEqualDistance(upperData))
+			{
+				auto peekIndex = upperData.seekPeekIndexFromDirection(kDown);
+				if(peekIndex != NFmiPoint::gMissingLatlon)
+					return ::doFinalElimination(totalDistance, peekIndex.Y(), kUp);
+			}
 		}
 	}
 	return kNoDirection;
@@ -148,14 +201,14 @@ void SparseDataGrid::cleanTooCloseHits()
 			auto& sparseDataUp = sparseDataMatrix_[xIndex][yIndex + 1];
 			auto horizontalClean = SparseData::horizontalElimination(sparseData, sparseDataRight);
 			if(horizontalClean == kLeft)
-				sparseData.clearData();
-			if(horizontalClean == kRight)
-				sparseDataRight.clearData();
+				sparseData.eliminateFromSparseData(sparseDataRight);
+			else if(horizontalClean == kRight)
+				sparseDataRight.eliminateFromSparseData(sparseData);
 			auto verticalClean = SparseData::verticalElimination(sparseData, sparseDataUp);
 			if(verticalClean == kDown)
-				sparseData.clearData();
-			if(verticalClean == kUp)
-				sparseDataUp.clearData();
+				sparseData.eliminateFromSparseData(sparseDataUp);
+			else if(verticalClean == kUp)
+				sparseDataUp.eliminateFromSparseData(sparseData);
 		}
 	}
 }
