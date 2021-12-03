@@ -3670,10 +3670,15 @@ void NFmiStationView::SbdSearchForSparseSymbolDrawData(bool doStationPlotOnly, c
 			if(!nonMissingValuesWithDistance.empty())
 			{
 				nonMissingValuesWithDistance.sort([](const auto& valueDist1, const auto& valueDist2) {return std::get<1>(valueDist1) < std::get<1>(valueDist2); });
-				const auto& tupleValue = nonMissingValuesWithDistance.front();
-				value = std::get<0>(tupleValue);
-				auto peekIndexPoint = std::get<2>(tupleValue);
-				SparseData sparseData(value, drawedGridPoint, peekIndexPoint, itsInfo->LocationIndex());
+				auto minDistance = std::get<1>(nonMissingValuesWithDistance.front());
+				auto value = std::get<0>(nonMissingValuesWithDistance.front());
+				std::list<NFmiPoint> peekIndexList;
+				for(const auto& tupleValue : nonMissingValuesWithDistance)
+				{
+					if(minDistance >= std::get<1>(tupleValue))
+						peekIndexList.push_back(std::get<2>(tupleValue));
+				}
+				SparseData sparseData(value, drawedGridPoint, peekIndexList, itsInfo->LocationIndex());
 				sparseDataGrid.setData(currentSkipColumn, currentSkipLine, sparseData);
 				return;
 			}
@@ -3681,8 +3686,8 @@ void NFmiStationView::SbdSearchForSparseSymbolDrawData(bool doStationPlotOnly, c
 	}
 
 	// Ei löytynyt arvoja alihilasta, laitetaan puuttuvan arvon tietoja sitten datapakettiin (tarvitaan ainakin station point piirroissa)
-	NFmiPoint peekIndexPoint(0, 0);
-	SparseData sparseData(value, drawedGridPoint, peekIndexPoint, itsInfo->LocationIndex());
+	std::list<NFmiPoint> peekIndexList{ NFmiPoint(0, 0) };
+	SparseData sparseData(value, drawedGridPoint, peekIndexList, itsInfo->LocationIndex());
 	sparseDataGrid.setData(currentSkipColumn, currentSkipLine, sparseData);
 }
 

@@ -3,10 +3,10 @@
 
 SparseData::SparseData() = default;
 
-SparseData::SparseData(float value, const NFmiPoint & drawGridPoint, const NFmiPoint& peekIndex, unsigned long visualizedLocationIndex)
+SparseData::SparseData(float value, const NFmiPoint & drawGridPoint, const std::list<NFmiPoint>& peekIndexList, unsigned long visualizedLocationIndex)
 :value_(value)
 , drawGridPoint_(drawGridPoint)
-,peekIndex_(peekIndex)
+,peekIndexList_(peekIndexList)
 ,visualizedLocationIndex_(visualizedLocationIndex)
 ,insideZoomedArea_(true) // Jos käytetty tätä konstruktoria, laitetaan tämä true:ksi
 {
@@ -24,8 +24,9 @@ bool SparseData::hasValue() const
 
 double SparseData::calcPeekDistance() const
 {
-	auto x = peekIndex_.X();
-	auto y = peekIndex_.Y();
+	const auto& firstPeekIndex = peekIndexList_.front();
+	auto x = firstPeekIndex.X();
+	auto y = firstPeekIndex.Y();
 	return std::sqrt(x * x + y * y);
 }
 
@@ -36,9 +37,9 @@ bool SparseData::peekIndexIsCloserToCenter(const SparseData& otherData) const
 	return distance1 < distance2;
 }
 
-FmiDirection SparseData::peekIndexDirection() const
+FmiDirection SparseData::calcPeekIndexDirection(const NFmiPoint& peekIndex)
 {
-	auto peekIndexAngle = CtrlViewUtils::CalcAngle(peekIndex_.X(), peekIndex_.Y());
+	auto peekIndexAngle = CtrlViewUtils::CalcAngle(peekIndex.X(), peekIndex.Y());
 	if(peekIndexAngle >= 45 && peekIndexAngle <= 135)
 		return kRight;
 	if(peekIndexAngle >= 135 && peekIndexAngle <= 225)
@@ -48,11 +49,21 @@ FmiDirection SparseData::peekIndexDirection() const
 	return kUp;
 }
 
+NFmiPoint SparseData::seekPeekIndexFromDirection(FmiDirection wantedDirection) const
+{
+	for(const auto& peekIndex : peekIndexList_)
+	{
+		if(wantedDirection == calcPeekIndexDirection(peekIndex))
+			return peekIndex;
+	}
+	return NFmiPoint::gMissingLatlon;
+}
+
 static FmiDirection doFinalElimination(double totalDistance, double directionalPeekDistance, FmiDirection eliminationDirection)
 {
 	// Eliminoidaan arvo, jos se on n. 70 % etäisyydellä piirrettävien hilojen rajalta (totalDistance on 2x matka rajalle).
 	// Etäisyystarkastelu pitää vielä tehdä vain x-suunnassa, jotta etäisyys vastaa total-etäisyyteen
-	if(directionalPeekDistance >= totalDistance * 0.2)
+	if(std::fabs(directionalPeekDistance) >= totalDistance * 0.2)
 		return eliminationDirection;
 	return kNoDirection;
 }
@@ -64,15 +75,15 @@ FmiDirection SparseData::horizontalElimination(const SparseData& leftData, const
 		auto totalDistance = drawGridPointDistance(leftData, rightData);
 		if(leftData.peekIndexIsCloserToCenter(rightData))
 		{
-			auto peekDirection = rightData.peekIndexDirection();
-			if(peekDirection == kLeft)
-				return ::doFinalElimination(totalDistance, rightData.peekIndex().X(), kRight);
+			auto peekIndex = rightData.seekPeekIndexFromDirection(kLeft);
+			if(peekIndex != NFmiPoint::gMissingLatlon)
+				return ::doFinalElimination(totalDistance, peekIndex.X(), kRight);
 		}
 		else
 		{
-			auto peekDirection = leftData.peekIndexDirection();
-			if(peekDirection == kRight)
-				return ::doFinalElimination(totalDistance, leftData.peekIndex().X(), kLeft);
+			auto peekIndex = leftData.seekPeekIndexFromDirection(kRight);
+			if(peekIndex != NFmiPoint::gMissingLatlon)
+				return ::doFinalElimination(totalDistance, peekIndex.X(), kLeft);
 		}
 	}
 	return kNoDirection;
@@ -85,15 +96,15 @@ FmiDirection SparseData::verticalElimination(const SparseData& lowerData, const 
 		auto totalDistance = drawGridPointDistance(lowerData, upperData);
 		if(lowerData.peekIndexIsCloserToCenter(upperData))
 		{
-			auto peekDirection = upperData.peekIndexDirection();
-			if(peekDirection == kDown)
-				return ::doFinalElimination(totalDistance, upperData.peekIndex().Y(), kUp);
+			auto peekIndex = upperData.seekPeekIndexFromDirection(kDown);
+			if(peekIndex != NFmiPoint::gMissingLatlon)
+				return ::doFinalElimination(totalDistance, peekIndex.Y(), kUp);
 		}
 		else
 		{
-			auto peekDirection = lowerData.peekIndexDirection();
-			if(peekDirection == kUp)
-				return ::doFinalElimination(totalDistance, lowerData.peekIndex().X(), kDown);
+			auto peekIndex = lowerData.seekPeekIndexFromDirection(kUp);
+			if(peekIndex != NFmiPoint::gMissingLatlon)
+				return ::doFinalElimination(totalDistance, peekIndex.X(), kDown);
 		}
 	}
 	return kNoDirection;
