@@ -27,8 +27,8 @@ class NFmiSymbolTextMapping
     std::string totalFilePath_;
     std::map<float, std::string> singleValueTextMap_;
     std::list<NFmiRangedValueText> rangedValueTextList_;
-    std::string missingValueText_ = "No 'missing' value text";
-    std::string defaultValueText_ = "No 'default' value text";
+    std::string missingValueText_;
+    std::string defaultValueText_;
     std::string initializationMessage_;
 public:
     NFmiSymbolTextMapping();
