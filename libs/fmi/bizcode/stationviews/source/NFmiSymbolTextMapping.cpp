@@ -313,6 +313,6 @@ std::string NFmiSymbolTextMappingCache::getPossibleMacroParamSymbolText(float va
         str += ")";
         return str;
     }
-    return "SymbolTooltipFile filename was empty";
+    return "";
 }
 

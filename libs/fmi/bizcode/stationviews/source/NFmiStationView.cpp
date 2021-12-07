@@ -1608,6 +1608,8 @@ void NFmiStationView::CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFm
     }
 }
 
+const float g_MacroParamValueWasNotInCache = -987654321.123456789f;
+
 float NFmiStationView::GetMacroParamTooltipValueFromCache(const NFmiExtraMacroParamData& extraMacroParamData)
 {
     NFmiPoint latlon = itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
@@ -1632,11 +1634,16 @@ float NFmiStationView::GetMacroParamTooltipValueFromCache(const NFmiExtraMacroPa
 		else
 		{
 			// normi reaaliluku interpolaatio lämpötila parametri on vain dummy arvo tavalliselle reaaliluvulle
-			return dataMatrix.InterpolatedValue(LatLonToViewPoint(latlon), itsArea->XYArea(), kFmiTemperature);
+			auto interpolatedValue = dataMatrix.InterpolatedValue(LatLonToViewPoint(latlon), itsArea->XYArea(), kFmiTemperature);
+			if(interpolatedValue != kFloatMissing)
+				return interpolatedValue;
+
+			// Monissa macroParameissa on paljon puuttuvia arvoja, ja normaali interpolaatio ei toimi, kokeillaan vielä saadaanko nearest menetelmällä arvoa
+			return dataMatrix.InterpolatedValue(LatLonToViewPoint(latlon), itsArea->XYArea(), kFmiTemperature, false, kNearestPoint);
 		}
 	}
 
-    return kFloatMissing;
+    return g_MacroParamValueWasNotInCache;
 }
 
 // Pelkän tooltipin lasku macroParamista.
@@ -2949,14 +2956,20 @@ std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<
 	else
 	{
 		usedInfo = itsInfo;
-		std::string str = GetToolTipValueStr(value, usedInfo, itsDrawParam);
-		str += " (crude) ";
-		str += GetPossibleMacroParamSymbolText(value, extraMacroParamData.SymbolTooltipFile());
-		str += ", ";
+		std::string str;
 		float cacheValue = GetMacroParamTooltipValueFromCache(extraMacroParamData);
-		str += GetToolTipValueStr(cacheValue, usedInfo, itsDrawParam);
-		str += " (cache) ";
-		str += GetPossibleMacroParamSymbolText(cacheValue, extraMacroParamData.SymbolTooltipFile());
+		if(cacheValue == g_MacroParamValueWasNotInCache)
+		{
+			str = GetToolTipValueStr(value, usedInfo, itsDrawParam);
+			str += " (crude) ";
+			str += GetPossibleMacroParamSymbolText(value, extraMacroParamData.SymbolTooltipFile());
+		}
+		else
+		{
+			str += GetToolTipValueStr(cacheValue, usedInfo, itsDrawParam);
+			str += " (cache) ";
+			str += GetPossibleMacroParamSymbolText(cacheValue, extraMacroParamData.SymbolTooltipFile());
+		}
 		str += MakeMacroParamDescriptionTooltipText(extraMacroParamData);
 		return str;
 	}
