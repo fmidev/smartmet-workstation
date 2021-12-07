@@ -3066,7 +3066,18 @@ std::string NFmiStationView::GetPossibleMacroParamSymbolText(float value, const 
 {
 	static NFmiSymbolTextMappingCache symbolMappingsCache;
 
-	return symbolMappingsCache.getPossibleMacroParamSymbolText(value, possibleSymbolTooltipFile);
+	auto str = symbolMappingsCache.getPossibleMacroParamSymbolText(value, possibleSymbolTooltipFile);
+	if(str.empty())
+		return str;
+	else
+	{
+		std::string decoratedStr = "(<b><font color=";
+		decoratedStr += CtrlViewUtils::Color2HtmlColorStr(NFmiColor(0, .75f, 0.2f));
+		decoratedStr += ">";
+		decoratedStr += str;
+		decoratedStr += "</font></b>)";
+		return decoratedStr;
+	}
 }
 
 void NFmiStationView::AddLatestObsInfoToString(std::string &tooltipString)

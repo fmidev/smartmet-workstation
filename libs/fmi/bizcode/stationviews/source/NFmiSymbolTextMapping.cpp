@@ -98,13 +98,7 @@ std::string NFmiSymbolTextMapping::getSymbolText(float symbolValue) const
     // 2) Missing arvon teksti.
     if(symbolValue == kFloatMissing)
     {
-        if(missingValueText_.empty())
-        {
-            static const std::string defaultMissingValueText = "missing value";
-            return defaultMissingValueText;
-        }
-        else
-            return missingValueText_;
+        return missingValueText_;
     }
 
     // 3) Single value teksti, jos sellainen löytyy singleValueTextMap_:ista.
@@ -298,20 +292,19 @@ std::string NFmiSymbolTextMappingCache::getPossibleMacroParamSymbolText(float va
 {
     if(!possibleSymbolTooltipFile.empty())
     {
-        std::string str = " (";
+        std::string valueStr;
         // Katsotaan löytyykö haluttu tiedosto jo luettuna cache:en
         auto iter = symbolTextMapCache_.find(possibleSymbolTooltipFile);
         if(iter != symbolTextMapCache_.end())
-            str += iter->second.getSymbolText(value);
+            valueStr += iter->second.getSymbolText(value);
         else
         {
             // Jos ei löytynyt, luodaan uusi cache otus, alustetaan se ja palautetaan siitä haluttu arvo
             auto iter = symbolTextMapCache_.insert(std::make_pair(possibleSymbolTooltipFile, NFmiSymbolTextMapping()));
             iter.first->second.initialize(possibleSymbolTooltipFile);
-            str += iter.first->second.getSymbolText(value);
+            valueStr += iter.first->second.getSymbolText(value);
         }
-        str += ")";
-        return str;
+        return valueStr;
     }
     return "";
 }
