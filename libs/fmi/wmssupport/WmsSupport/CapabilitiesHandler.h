@@ -59,6 +59,6 @@ namespace Wms
 		const std::map<long, std::map<long, LayerInfo>>& peekHashes() const;
         const CapabilityTree& peekCapabilityTree() const;
         static void setParameterSelectionUpdateCallback(std::function<void()>& parameterSelectionUpdateCallback);
-
+        static void firstTimeUpdateCallbackWrapper();
     };
 }

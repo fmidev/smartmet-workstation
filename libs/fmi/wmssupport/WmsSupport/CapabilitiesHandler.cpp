@@ -15,8 +15,6 @@ namespace Wms
 {
     namespace
     {
-        std::once_flag parameterSelectionUpdateFlag;
-
         boost::property_tree::ptree parseXmlToPropertyTree(const std::string& xml)
         {
             auto pTree = boost::property_tree::ptree{};
@@ -135,9 +133,9 @@ namespace Wms
 						auto xml = fetchCapabilitiesXml(*client_, query, server.logFetchCapabilitiesRequest, server.doVerboseLogging, getCapabilitiesTimeoutInSeconds);
 						changedLayers_.changedLayers.clear();
                         children.push_back(capabilityTreeParser.parseXmlGeneral(xml, hashes_, changedLayers_));
+                        foundAnyWmsServerData = true;
                         if(!changedLayers_.changedLayers.empty())
                         {
-                            foundAnyWmsServerData = true;
                             cacheDirtyCallback_(server.producer.GetIdent(), changedLayers_.changedLayers);
                         }
                     }
@@ -155,15 +153,27 @@ namespace Wms
                     }
                 }
                 capabilityTree_ = std::make_unique<CapabilityNode>(rootValue_, std::move(children));
-                if(foundAnyWmsServerData && parameterSelectionUpdateCallback_)
+                if(foundAnyWmsServerData)
                 {
-                    std::call_once(parameterSelectionUpdateFlag, parameterSelectionUpdateCallback_);
+                    firstTimeUpdateCallbackWrapper();
                 }
 
                 using namespace std::literals;
                 bManager_->sleepInIntervals(intervalToPollGetCapabilities_, 500ms, "CapabilitiesHandler::BackgroundFetching");
             }
         });
+    }
+
+    void CapabilitiesHandler::firstTimeUpdateCallbackWrapper()
+    {
+        static bool firstTime = true;
+
+        if(firstTime && parameterSelectionUpdateCallback_ != nullptr)
+        {
+            firstTime = false;
+            CatLog::logMessage("CapabilitiesHandler::firstTimeUpdateCallbackWrapper activated", CatLog::Severity::Debug, CatLog::Category::NetRequest);
+            parameterSelectionUpdateCallback_();
+        }
     }
 
 }

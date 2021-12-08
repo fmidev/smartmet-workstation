@@ -309,3 +309,8 @@ std::pair<HICON, HICON> ApplicationInterfaceForSmartMet::GetUsedIcons()
     else
         return std::pair<HICON, HICON>();
 }
+
+void ApplicationInterfaceForSmartMet::SetToDoFirstTimeWmsDataBasedUpdate()
+{
+    CMainFrame::SetToDoFirstTimeWmsDataBasedUpdate();
+}

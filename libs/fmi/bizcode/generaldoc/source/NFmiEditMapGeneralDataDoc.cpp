@@ -1175,10 +1175,15 @@ void InitCombinedMapHandler()
 	// parameterSelectionUpdateCallback varmistaa että kun kaikki Wms serverit on käyty 1. kerran läpi, 
 	// tämän jälkeen päivitetään Parameter selection dialogi, jotta siellä näkyy Wms datat (jos dialogi avattu
 	// ennen tätä, jäi dialogi ilman Wms datoja ennen kuin jokin muu eventti teki kunnon updaten).
-	std::function<void()> parameterSelectionUpdateCallback = [&]() {this->PrepareForParamAddSystemUpdate(); };
+	std::function<void()> parameterSelectionUpdateCallback = []() {ApplicationInterface::GetApplicationInterfaceImplementation()->SetToDoFirstTimeWmsDataBasedUpdate(); };
 	Wms::CapabilitiesHandler::setParameterSelectionUpdateCallback(parameterSelectionUpdateCallback);
 	// NFmiCombinedMapHandler luokka hanskaa itse kaikki poikkeukset ja mahdolliset käyttäjän tekemät ohjelman lopetukset.
 	itsCombinedMapHandler.initialize(itsBasicConfigurations.ControlPath());
+	if(!itsCombinedMapHandler.getWmsSupport().isConfigured())
+	{
+		// Jos wms systeemiä ei oteta käyttöön, pitää lopettaa timer joka odottaa 1. data päivitystä joka 3. sekunti
+		parameterSelectionUpdateCallback();
+	}
 }
 
 void InitProducerSystem(NFmiProducerSystem &producerSystem, const std::string &baseConfigurationKey, const std::string &callingFunctionName)
