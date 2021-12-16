@@ -691,8 +691,6 @@ void NFmiTempView::Draw(NFmiToolBox *theToolBox)
             itsDrawingEnvironment->SetFillColor(NFmiColor(0.9f, 0.9f, 0.9f)); // laitetaan harmaa tausta teksteille, että ne erottuu
             itsDrawingEnvironment->SetFontSize(NFmiPoint(18 * itsDrawSizeFactor.X(), 18 * itsDrawSizeFactor.Y()));
             itsDrawingEnvironment->SetPenSize(NFmiPoint(1 * itsDrawSizeFactor.X(), 1 * itsDrawSizeFactor.Y()));
-			// Resetoidaan itsFirstSoundingData, muuten tulee ongelmia viimeisen 'hyvän' 1. datan piirrossa tekstimuotoisiin ikkunoihin, jos tässä piirrossa ei löydy dataa ollenkaan (esim. ollaan 1. datan aikaikkunan ulkopuolella)
-			itsFirstSoundingData = NFmiSoundingData(); 
 			DrawSoundingsInMTAMode();
 
             // siivotaan piirto ominaisuudet takaisin
@@ -1970,6 +1968,15 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
         bool onSouthernHemiSphere = usedTempInfo.Latlon().Y() < 0;
 		DrawSounding(sounding, theIndex, usedColor, mainCurve, onSouthernHemiSphere);
         itsSoundingDataCacheForTooltips.insert(std::make_pair(NFmiMTATempSystem::SoundingDataCacheMapKey(usedTempInfo, theProducer, theModelRunIndex), sounding));
+	}
+	else
+	{
+		if(theIndex == 0)
+		{
+			// Jos ei löytynyt mitään dataa ja kyse oli 1. piirrettävästä luotausdatasta, pitää itsFirstSoundingData dataosa nollata,
+			// jotta tekstimuotoisiin sivunäyttöihin ei jäisi vanha data 'kummittelemaan'
+			itsFirstSoundingData = NFmiSoundingData();
+		}
 	}
 }
 
