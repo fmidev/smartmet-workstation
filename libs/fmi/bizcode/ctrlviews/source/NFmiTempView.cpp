@@ -1971,7 +1971,7 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 	}
 	else
 	{
-		if(theIndex == 0)
+		if(theIndex == 0 && theModelRunIndex == 0)
 		{
 			// Jos ei löytynyt mitään dataa ja kyse oli 1. piirrettävästä luotausdatasta, pitää itsFirstSoundingData dataosa nollata,
 			// jotta tekstimuotoisiin sivunäyttöihin ei jäisi vanha data 'kummittelemaan'
@@ -3405,7 +3405,7 @@ std::string NFmiTempView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
                     str += "<b><font color=";
                     str += CtrlViewUtils::Color2HtmlColorStr(mtaTempSystem.SoundingColor(index));
                     str += ">";
-                    str += ::GetSoundingToolTipText(itsSoundingDataCacheForTooltips, selectedProducer, usedTempInfo, modelRunCount, pressure, index, true, usedLocationWithName.GetName());
+                    str += ::GetSoundingToolTipText(itsSoundingDataCacheForTooltips, selectedProducer, usedTempInfo, 0, pressure, index, true, usedLocationWithName.GetName());
                     if(modelRunCount > 0 && NFmiDrawParam::IsModelRunDataType(info->DataType()))
                     { 
                         // lisätään edelliset malliajo -osio tooltippiin 

@@ -159,6 +159,7 @@ void CFmiTempView::OnInitialUpdate()
 	fViewDirty = true;
 
 	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, TEMPVIEW_TOOLTIP_ID);
+	m_tooltip.SetMaxTipWidth(750);
 	CRect winRec;
 	GetWindowRect(winRec);
 	OnSize(SW_RESTORE, winRec.Width(), winRec.Height()); // jostain syystä on pakko tehdä onsize, että tooltip toimii varmasti koko ikkunan alueella?!?!?
