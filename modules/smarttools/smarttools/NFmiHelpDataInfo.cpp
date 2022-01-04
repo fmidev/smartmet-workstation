@@ -367,6 +367,7 @@ void NFmiHelpDataInfoSystem::InitFromSettings(const std::string &theBaseNameSpac
     helpDataInfo.Name(theHelpDataName);
     helpDataInfo.FileNameFilter(theHelpEditorFileNameFilter);
     helpDataInfo.DataType(NFmiInfoData::kEditingHelpData);
+    helpDataInfo.NonFixedTimeGab(true);
     AddDynamic(helpDataInfo);
   }
 
