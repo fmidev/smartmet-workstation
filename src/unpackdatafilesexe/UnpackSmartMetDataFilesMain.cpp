@@ -544,7 +544,8 @@ int main(int argc, const char* argv[])
 
     return 0;
 }
-
+*/
+/*
 #include "NFmiQueryData.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiValueString.h"
@@ -558,15 +559,22 @@ int main(int argc, const char* argv[])
     auto amdarCase = (fastInfo.SizeLocations() == 1);
     std::string soundingName = amdarCase ? "amdar sounding" : "sounding";
     int hasDataSoundingCounter = 1;
+    int soundingCounter = 1;
 
     std::string outputTxtFileName = argv[2];
+    bool printMissingSoundingLine = false;
+    if(argc > 3)
+    {
+        int fourthArgumentValue = std::stoi(std::string(argv[3]));
+        if(fourthArgumentValue != 0)
+            printMissingSoundingLine = true;
+    }
     std::ofstream output(outputTxtFileName.c_str(), std::ios::binary);
     if(output)
     {
         const size_t usedWitdth = 10;
         output.fill(' ');
         output << "Print out separate non-missing " << soundingName << "(s) from given '" << dataFileName << "' querydata file\n";
-        int amdarsWithHeightData = 0;
         for(fastInfo.ResetTime(); fastInfo.NextTime(); )
         {
             for(fastInfo.ResetLocation(); fastInfo.NextLocation(); )
@@ -575,7 +583,11 @@ int main(int argc, const char* argv[])
                 std::stringstream temporaryOutput;
                 temporaryOutput << std::setprecision(1) << std::fixed;
 
-                temporaryOutput << "\n" << std::to_string(hasDataSoundingCounter) << ". " << soundingName << " from time " << fastInfo.Time().ToStr("YYYY MM.DD. HH:mm:SS Utc", kEnglish).CharPtr() << std::endl;
+                temporaryOutput << "\n";
+                temporaryOutput << std::to_string(printMissingSoundingLine ? soundingCounter : hasDataSoundingCounter);
+                temporaryOutput << ". " << soundingName << " from time " << fastInfo.Time().ToStr("YYYY MM.DD. HH:mm:SS Utc", kEnglish).CharPtr() << std::endl;
+                auto headerLineStr = temporaryOutput.str();
+                headerLineStr.pop_back();
                 if(!amdarCase)
                 {
                     auto location = fastInfo.Location();
@@ -588,7 +600,7 @@ int main(int argc, const char* argv[])
                     std::string usedName = fastInfo.Param().GetParamName().CharPtr();
                     if(usedName.size() > usedWitdth)
                         usedName.resize(usedWitdth);
-                    temporaryOutput << std::setw(10) << usedName << "|";
+                    temporaryOutput << std::setw(usedWitdth) << usedName << "|";
                 }
                 temporaryOutput << std::endl;
 
@@ -601,11 +613,11 @@ int main(int argc, const char* argv[])
                     {
                         auto value = fastInfo.FloatValue();
                         if(value == kFloatMissing)
-                            temporaryOutput << std::setw(10) << "-" << " ";
+                            temporaryOutput << std::setw(usedWitdth) << "-" << " ";
                         else
                         {
                             soundingHasData = true;
-                            temporaryOutput << std::setw(10) << value << " ";
+                            temporaryOutput << std::setw(usedWitdth) << value << " ";
                         }
                     }
                     temporaryOutput << std::endl;
@@ -615,6 +627,12 @@ int main(int argc, const char* argv[])
                     hasDataSoundingCounter++;
                     output << temporaryOutput.str();
                 }
+                else if(printMissingSoundingLine)
+                {
+                    output << headerLineStr << " was completely missing...";
+
+                }
+                soundingCounter++;
             }
         }
         return 0;
