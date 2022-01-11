@@ -2201,18 +2201,67 @@ void NFmiTempView::DrawHodograf(NFmiSoundingDataOpt1 & theData, int theIndex)
 //
 // u_downwind = 2 * u_cloud_layer - u_llj
 // v_downwind = 2 * v_cloud_layer - v_llj
+// 
+// HUOM! Paavo Korpelalta tuli viesti‰, ett‰ down_wind lasketaankin seuraavalla tavalla:
+// Paavo: u_downwind = u_cloud_layer + u_upwind (Poikkeaa huomattavasti originaalista)
+// Lis‰ksi pari pienemp‰‰, virityst‰:
+// Paavo: u_cloud_layer = vertz_avg(u, LCL, 0.6 * EL)  // T‰st‰ seuraa ongelma, koska EL:n arvot ovat puuttuvaa monissa tilanteissa, lis‰ksi n‰it‰ LCL+EL arvoja ei ole k‰ytˆss‰ t‰‰ll‰, ellei niit‰ lasketa erikseen
+// Paavo: u_llj = u-komponentti(p_max_wind), miss‰ p_max_wind on on maksimi tuulennopeus 0 ja 1500 metrin v‰liss‰
+
+class UpDownWindCalculationBaseData
+{
+public:
+	double lclPressure = kFloatMissing;
+	double elPressure = kFloatMissing;
+	double h1 = kFloatMissing;
+	double h2 = kFloatMissing;
+};
+
+static UpDownWindCalculationBaseData CalcUpDownWindBaseData(NFmiSoundingDataOpt1& theData)
+{
+	UpDownWindCalculationBaseData baseData;
+	// Yritet‰‰n laskea EL:lle ei-puuttuvaa arvoa eri laskutyypeill‰ tietyss‰ priorisointij‰rjestyksess‰
+	FmiLCLCalcType usedLclCalcType = kLCLCalcMostUnstable;
+	theData.CalcLFCIndex(usedLclCalcType, baseData.elPressure);
+	if(baseData.elPressure == kFloatMissing)
+	{
+		usedLclCalcType = kLCLCalc500m2;
+		theData.CalcLFCIndex(usedLclCalcType, baseData.elPressure);
+		if(baseData.elPressure == kFloatMissing)
+		{
+			usedLclCalcType = kLCLCalcSurface;
+			theData.CalcLFCIndex(usedLclCalcType, baseData.elPressure);
+			if(baseData.elPressure == kFloatMissing)
+			{
+				// Jos surface tyyppikin palautti puuttuvaa, lasketaan jatkossa LCL kuitenkin mostUnstable tyyliin
+				usedLclCalcType = kLCLCalcMostUnstable;
+			}
+		}
+	}
+
+	baseData.lclPressure = theData.CalcLCLIndex(usedLclCalcType);
+	bool elPressureMissing = (baseData.elPressure == kFloatMissing);
+	baseData.h1 = theData.GetValueAtPressure(kFmiGeopHeight, static_cast<float>(baseData.lclPressure));
+	double usedEndPressure = elPressureMissing ? 300 : baseData.elPressure;
+	baseData.h2 = theData.GetValueAtPressure(kFmiGeopHeight, static_cast<float>(usedEndPressure));
+	return baseData;
+}
+
 void NFmiTempView::DrawHodografUpAndDownWinds(NFmiSoundingDataOpt1 & theData, int theIndex)
 {
-	double h1 = theData.GetValueAtPressure(kFmiGeopHeight, 850);
-	double h2 = theData.GetValueAtPressure(kFmiGeopHeight, 300);
-	if(h1 != kFloatMissing && h2 != kFloatMissing)
+	auto upDownWindBaseData = ::CalcUpDownWindBaseData(theData);
+	bool elPressureMissing = (upDownWindBaseData.elPressure == kFloatMissing);
+	if(upDownWindBaseData.h1 != kFloatMissing && upDownWindBaseData.h2 != kFloatMissing)
 	{
+		double usedUpperLimitHeight = upDownWindBaseData.h2 * 0.6;
 		double u_cloud_layer = kFloatMissing;
 		double v_cloud_layer = kFloatMissing;
-		theData.CalcAvgWindComponentValues(h1, h2, u_cloud_layer, v_cloud_layer);
+		theData.CalcAvgWindComponentValues(upDownWindBaseData.h1, usedUpperLimitHeight, u_cloud_layer, v_cloud_layer);
 		if(u_cloud_layer != kFloatMissing && v_cloud_layer != kFloatMissing)
 		{
-			float maxWSPressure = theData.FindPressureWhereHighestValue(kFmiWindSpeedMS, 1100, 850);
+			float lowPressureLimitForMaxWind = theData.GetValueAtHeight(kFmiPressure, 0);
+			float highPressureLimitForMaxWind = theData.GetValueAtHeight(kFmiPressure, 1500);
+			float maxWSPressure = theData.FindPressureWhereHighestValue(kFmiWindSpeedMS, lowPressureLimitForMaxWind, highPressureLimitForMaxWind);
 			if(maxWSPressure != kFloatMissing)
 			{
 				double u_llj = kFloatMissing;
@@ -2235,10 +2284,9 @@ void NFmiTempView::DrawHodografUpAndDownWinds(NFmiSoundingDataOpt1 & theData, in
 					NFmiPoint scale(markWidth, markHeight);
 
 					// piirr‰ nuoli (0, 0) -> (u_upwind, v_upwind) ja laita label "upwind"
+					double u_upwind = u_cloud_layer - u_llj;
+					double v_upwind = v_cloud_layer - v_llj;
 					{
-						double u_upwind = u_cloud_layer - u_llj;
-						double v_upwind = v_cloud_layer - v_llj;
-
 						NFmiPoint relP1(GetRelativePointFromHodograf(0, 0));
 						NFmiPoint relP2(GetRelativePointFromHodograf(u_upwind, v_upwind));
 
@@ -2257,13 +2305,15 @@ void NFmiTempView::DrawHodografUpAndDownWinds(NFmiSoundingDataOpt1 & theData, in
 						markerPolyLine1.AddPoint(::RotatePoint(NFmiPoint(0, -1), vdir1));
 						markerPolyLine1.AddPoint(::RotatePoint(NFmiPoint(1, 1), vdir1));
 						itsToolBox->DrawPolyline(&markerPolyLine1, relP2, scale);
-						DrawHodografTextWithMarker("U", static_cast<float>(u_upwind), static_cast<float>(v_upwind), textColor, markerFrameColor, markerFillColor, 5, 18, kLeft, kNone);
+						std::string upWindMarker = elPressureMissing ? "U*" : "U";
+						DrawHodografTextWithMarker(upWindMarker, static_cast<float>(u_upwind), static_cast<float>(v_upwind), textColor, markerFrameColor, markerFillColor, 5, 18, kLeft, kNone);
 					}
 
 					// sitten downwind
 					{
 						double u_downwind = 2 * u_cloud_layer - u_llj;
 						double v_downwind = 2 * v_cloud_layer - v_llj;
+
 						// piirr‰ nuoli (0, 0) -> (u_downwind, v_downwind) ja laita label "downwind"
 						NFmiPoint relP1(GetRelativePointFromHodograf(0, 0));
 						NFmiPoint relP2(GetRelativePointFromHodograf(u_downwind, v_downwind));
@@ -2283,7 +2333,8 @@ void NFmiTempView::DrawHodografUpAndDownWinds(NFmiSoundingDataOpt1 & theData, in
 						markerPolyLine1.AddPoint(::RotatePoint(NFmiPoint(0, -1), vdir1));
 						markerPolyLine1.AddPoint(::RotatePoint(NFmiPoint(1, 1), vdir1));
 						itsToolBox->DrawPolyline(&markerPolyLine1, relP2, scale);
-						DrawHodografTextWithMarker("D", static_cast<float>(u_downwind), static_cast<float>(v_downwind), textColor, markerFrameColor, markerFillColor, 5, 18, kLeft, kNone);
+						std::string downWindMarker = elPressureMissing ? "D*" : "D";
+						DrawHodografTextWithMarker(downWindMarker, static_cast<float>(u_downwind), static_cast<float>(v_downwind), textColor, markerFrameColor, markerFillColor, 5, 18, kLeft, kNone);
 					}
 				}
 			}
