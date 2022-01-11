@@ -544,7 +544,8 @@ int main(int argc, const char* argv[])
 
     return 0;
 }
-
+*/
+/*
 #include "NFmiQueryData.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiValueString.h"
@@ -555,45 +556,83 @@ int main(int argc, const char* argv[])
     std::string dataFileName = argv[1];
     NFmiQueryData data(dataFileName);
     NFmiFastQueryInfo fastInfo(&data);
+    auto amdarCase = (fastInfo.SizeLocations() == 1);
+    std::string soundingName = amdarCase ? "amdar sounding" : "sounding";
+    int hasDataSoundingCounter = 1;
+    int soundingCounter = 1;
 
     std::string outputTxtFileName = argv[2];
+    bool printMissingSoundingLine = false;
+    if(argc > 3)
+    {
+        int fourthArgumentValue = std::stoi(std::string(argv[3]));
+        if(fourthArgumentValue != 0)
+            printMissingSoundingLine = true;
+    }
     std::ofstream output(outputTxtFileName.c_str(), std::ios::binary);
     if(output)
     {
         const size_t usedWitdth = 10;
         output.fill(' ');
-        output << "Print out separate amdar sounding from given '" << dataFileName << "' querydata file\n";
-        int amdarsWithHeightData = 0;
-        // Amdar datan luotauskohtainen (aikakohtainen) tulostus
-        // Location:ia ei tarvitse juoksuttaa, koska jokainen erillinen aika on erillinen luotaus
+        output << "Print out separate non-missing " << soundingName << "(s) from given '" << dataFileName << "' querydata file\n";
         for(fastInfo.ResetTime(); fastInfo.NextTime(); )
         {
-            output << "\n" << std::to_string(fastInfo.TimeIndex() + 1) << ". amdar sounding from time " << fastInfo.Time().ToStr("YYYYMMDDHHmmSS").CharPtr() << std::endl;
-            output << "      ";
-            for(fastInfo.ResetParam(); fastInfo.NextParam(); )
+            for(fastInfo.ResetLocation(); fastInfo.NextLocation(); )
             {
-                // Tulostetaan jokaiselle amdarille oma parametri otsikko rivi
-                std::string usedName = fastInfo.Param().GetParamName().CharPtr();
-                if(usedName.size() > usedWitdth)
-                    usedName.resize(usedWitdth);
-                output << std::setw(10) << usedName << "|";
-            }
-            output << std::endl;
+                bool soundingHasData = false;
+                std::stringstream temporaryOutput;
+                temporaryOutput << std::setprecision(1) << std::fixed;
 
-            for(fastInfo.ResetLevel(); fastInfo.NextLevel(); )
-            {
-                output << "L-" << std::to_string(fastInfo.LevelIndex()) << ": ";
-                if(fastInfo.LevelIndex() < 10)
-                    output << " ";
+                temporaryOutput << "\n";
+                temporaryOutput << std::to_string(printMissingSoundingLine ? soundingCounter : hasDataSoundingCounter);
+                temporaryOutput << ". " << soundingName << " from time " << fastInfo.Time().ToStr("YYYY MM.DD. HH:mm:SS Utc", kEnglish).CharPtr() << std::endl;
+                auto headerLineStr = temporaryOutput.str();
+                headerLineStr.pop_back();
+                if(!amdarCase)
+                {
+                    auto location = fastInfo.Location();
+                    temporaryOutput << "Location: " << location->GetName().CharPtr() << " (id = " << location->GetIdent() << ")" << std::endl;
+                }
+                temporaryOutput << "      ";
                 for(fastInfo.ResetParam(); fastInfo.NextParam(); )
                 {
-                    auto value = fastInfo.FloatValue();
-                    if(value == kFloatMissing)
-                        output << std::setw(10) << "-" << " ";
-                    else
-                        output << std::setw(10) << NFmiValueString::GetStringWithMaxDecimalsSmartWay(value, 1).CharPtr() << " ";
+                    // Tulostetaan jokaiselle amdarille oma parametri otsikko rivi
+                    std::string usedName = fastInfo.Param().GetParamName().CharPtr();
+                    if(usedName.size() > usedWitdth)
+                        usedName.resize(usedWitdth);
+                    temporaryOutput << std::setw(usedWitdth) << usedName << "|";
                 }
-                output << std::endl;
+                temporaryOutput << std::endl;
+
+                for(fastInfo.ResetLevel(); fastInfo.NextLevel(); )
+                {
+                    temporaryOutput << "L-" << std::to_string(fastInfo.LevelIndex()) << ": ";
+                    if(fastInfo.LevelIndex() < 10)
+                        temporaryOutput << " ";
+                    for(fastInfo.ResetParam(); fastInfo.NextParam(); )
+                    {
+                        auto value = fastInfo.FloatValue();
+                        if(value == kFloatMissing)
+                            temporaryOutput << std::setw(usedWitdth) << "-" << " ";
+                        else
+                        {
+                            soundingHasData = true;
+                            temporaryOutput << std::setw(usedWitdth) << value << " ";
+                        }
+                    }
+                    temporaryOutput << std::endl;
+                }
+                if(soundingHasData)
+                {
+                    hasDataSoundingCounter++;
+                    output << temporaryOutput.str();
+                }
+                else if(printMissingSoundingLine)
+                {
+                    output << headerLineStr << " was completely missing...";
+
+                }
+                soundingCounter++;
             }
         }
         return 0;
@@ -679,5 +718,69 @@ int main(int argc, const char* argv[])
     timer.restart();
 
     return 0;
+}
+*/
+/*
+#include "NFmiCmdLine.h"
+#include "NFmiQueryData.h"
+#include "NFmiWindFix.h"
+
+using namespace std;
+
+string getUsageString()
+{
+    string usageString = "Usage: recalculatewindparameters input output";
+    usageString += "\n\nPurpose: recalculate wind related parameters with WD and WS,";
+    usageString += "\npossible recalculated parameters are: u, v and wind-vector";
+    return usageString;
+}
+
+void usage()
+{
+    cerr << getUsageString() << endl;
+}
+
+int run(int argc, const char* argv[])
+{
+    NFmiCmdLine cmdline(argc, argv, "");
+
+    // Tarkistetaan optioiden oikeus:
+    if(cmdline.Status().IsError())
+    {
+        string errorString = "Invalid command line:\n";
+        errorString += cmdline.Status().ErrorLog().CharPtr();
+        errorString += "\n";
+        errorString += getUsageString();
+        throw runtime_error(errorString);
+    }
+
+    if(cmdline.NumberofParameters() != 2)
+    {
+        string errorString = "Invalid number of command line arguments (2 needed):\n";
+        errorString += getUsageString();
+        throw runtime_error(errorString);
+    }
+
+    string inputfile = cmdline.Parameter(1);
+    string outputfile = cmdline.Parameter(2);
+    // Tässä queryData halutaan lukea ilman memory-mappausta (joka olisi read-only), koska dataan tehdään 
+    // muutoksia ja se talletetaan lopuksi eri tiedostoon.
+    NFmiQueryData qd(inputfile, false);
+    if(NFmiWindFix::FixWinds(qd))
+        qd.Write(outputfile);
+    return 0;
+}
+
+int main(int argc, const char* argv[])
+{
+    try
+    {
+        return run(argc, argv);
+    }
+    catch(exception& e)
+    {
+        cerr << "Error: " << e.what() << endl;
+        return 1;
+    }
 }
 */
