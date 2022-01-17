@@ -246,20 +246,24 @@ bool IsModelClimatologyData(const boost::shared_ptr<NFmiFastQueryInfo> &info)
 NFmiMetTime GetUsedTimeIfModelClimatologyData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                               const NFmiMetTime &theTime)
 {
-  if (NFmiFastInfoUtils::IsModelClimatologyData(theInfo))
+  if (theInfo)
   {
-    // For year long climatology data, used time must be fixed to data's own year
-    auto usedTime(theTime);
-    usedTime.SetYear(theInfo->TimeDescriptor().FirstTime().GetYear());
-    return usedTime;
+    if (NFmiFastInfoUtils::IsModelClimatologyData(theInfo))
+    {
+      // For year long climatology data, used time must be fixed to data's own year
+      auto usedTime(theTime);
+      usedTime.SetYear(theInfo->TimeDescriptor().FirstTime().GetYear());
+      return usedTime;
+    }
+    else if (theInfo->DataType() == NFmiInfoData::kStationary)
+    {
+      // Stationaarisissa datoissa (esim. topograafiset datat) on vain 1. aika, joka on fiksattu kun
+      // data on tehty
+      return theInfo->TimeDescriptor().FirstTime();
+    }
   }
-  else if (theInfo->DataType() == NFmiInfoData::kStationary)
-  {
-      // Stationaarisissa datoissa (esim. topograafiset datat) on vain 1. aika, joka on fiksattu kun data on tehty
-    return theInfo->TimeDescriptor().FirstTime();
-  }
-  else
-    return theTime;
+
+  return theTime;
 }
 
 bool IsMovingSoundingData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
