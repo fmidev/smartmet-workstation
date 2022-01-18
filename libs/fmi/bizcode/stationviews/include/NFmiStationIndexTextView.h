@@ -40,7 +40,7 @@ public:
 protected:
    int GetApproxmationOfDataTextLength(std::vector<float>* sampleValues = nullptr) override;
    bool PrepareForStationDraw(void) override;
-   float ViewFloatValue(void) override;
+   float ViewFloatValue(bool doTooltipValue) override;
    void ModifyTextEnvironment (void) override;
    NFmiString GetPrintedText (float theValue) override;
    NFmiPoint SbdCalcFixedSymbolSize() const override;

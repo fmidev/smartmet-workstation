@@ -78,7 +78,7 @@ int NFmiStationIndexTextView::GetApproxmationOfDataTextLength(std::vector<float>
 	return 1;
 }
 
-float NFmiStationIndexTextView::ViewFloatValue(void)
+float NFmiStationIndexTextView::ViewFloatValue(bool doTooltipValue)
 {
 	float value = kFloatMissing;
     bool specialValueRetrieved = false;
@@ -95,7 +95,7 @@ float NFmiStationIndexTextView::ViewFloatValue(void)
 		}
 	}
     if(!specialValueRetrieved)
-        value = NFmiStationView::ViewFloatValue();
+        value = NFmiStationView::ViewFloatValue(doTooltipValue);
 	if(itsDrawParam->Param().GetParamIdent() == kFmiPresentWeather)
 		value = ::ConvertPossible_WaWa_2_WW(value);
 	return value;

@@ -32,7 +32,7 @@ public:
    void Draw(NFmiToolBox * theGTB) override;
 
 protected:
-   float ViewFloatValue(void) override;
+   float ViewFloatValue(bool doTooltipValue) override;
    bool PrepareForStationDraw(void) override;
    NFmiPoint GetSpaceOutFontFactor(void) override;
    void ModifyTextEnvironment(void) override;

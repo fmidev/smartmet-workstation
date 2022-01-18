@@ -42,7 +42,7 @@ protected:
    NFmiSymbolBulkDrawType SbdGetDrawType() const override;
    NFmiPoint SbdCalcFixedRelativeDrawObjectSize() const override;
    int SbdCalcFixedPenSize() const override;
-   float ViewFloatValue(void) override;
+   float ViewFloatValue(bool doTooltipValue) override;
    NFmiPoint SbdCalcDrawObjectOffset() const override;
    NFmiSymbolColorChangingType SbdGetSymbolColorChangingType() const override;
 

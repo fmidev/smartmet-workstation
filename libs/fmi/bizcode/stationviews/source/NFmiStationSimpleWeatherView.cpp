@@ -61,7 +61,7 @@ bool NFmiStationSimpleWeatherView::PrepareForStationDraw(void)
 	return status;
 }
 
-float NFmiStationSimpleWeatherView::ViewFloatValue(void)
+float NFmiStationSimpleWeatherView::ViewFloatValue(bool )
 {
 	float value = kFloatMissing;
 	if(itsInfo)

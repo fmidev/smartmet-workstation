@@ -517,7 +517,7 @@ std::vector<float> NFmiStationView::GetSampleDataForDataTextLengthApproxmation()
     for(auto locationIndex : locationIndexies)
     {
         itsInfo->LocationIndex(locationIndex);
-        values.push_back(ViewFloatValue());
+        values.push_back(ViewFloatValue(false));
     }
 
     itsInfo->LocationIndex(oldLocationIndex);
@@ -1309,7 +1309,7 @@ float NFmiStationView::GetValueFromLocalInfo()
 }
 
 // tämä hakee näytettävän datan riippuen asetuksista
-float NFmiStationView::ViewFloatValue(void)
+float NFmiStationView::ViewFloatValue(bool )
 {
     if(itsInfo)
         NFmiFastInfoUtils::SetSoundingDataLevel(itsDrawParam->Level(), *itsInfo);  // pitää varmistaa että jos kyse on sounding datasta, että level on kohdallaan
@@ -2743,7 +2743,7 @@ float NFmiStationView::ToolTipValue(const NFmiPoint& theRelativePoint, boost::sh
 		SetMapViewSettings(info); // tämän voisi varmaan optimoida
 		PrepareForStationDraw(); // tämä pitää kutsua, että mm. parametrit on asetettu oikein itsInfo-olioon
 		itsNearestTooltipLocation = *(itsInfo->Location());
-		return ViewFloatValue();
+		return ViewFloatValue(true);
 	}
 }
 
@@ -3590,7 +3590,7 @@ void NFmiStationView::SbdCollectStationData(bool doStationPlotOnly, float overri
 	itsSymbolBulkDrawData.addRelativeStationPointPosition(CurrentStationPosition());
 	if(!doStationPlotOnly)
 	{
-		float value = (overrideValue == kFloatMissing) ? ViewFloatValue() : overrideValue;
+		float value = (overrideValue == kFloatMissing) ? ViewFloatValue(false) : overrideValue;
 		itsSymbolBulkDrawData.addValue(value);
 
 		// Jos arvo puuttuvaa, lisätään tekstiksi tyhjä stringi, jota ei piirretä.
@@ -3634,7 +3634,7 @@ void NFmiStationView::SbdPeekSparseValue(int peekIndexX, int peekIndexY, const N
 		auto peekedLocationIndex = itsInfo->PeekLocationIndex(peekIndexX, peekIndexY);
 		if(itsInfo->LocationIndex(peekedLocationIndex))
 		{
-			auto value = ViewFloatValue();
+			auto value = ViewFloatValue(false);
 			if(value != kFloatMissing)
 			{
 				double distanceApproximation = peekIndexX * peekIndexX + peekIndexY * peekIndexY;
@@ -3662,7 +3662,7 @@ static NFmiPoint CalcGridPoint(boost::shared_ptr<NFmiFastQueryInfo>& fastInfo)
 
 void NFmiStationView::SbdSearchForSparseSymbolDrawData(bool doStationPlotOnly, const NFmiRect& peekRect, SparseDataGrid& sparseDataGrid, int currentSkipColumn, int currentSkipLine)
 {
-	auto value = ViewFloatValue();
+	auto value = ViewFloatValue(false);
 	auto drawedGridPoint = ::CalcGridPoint(itsInfo);
 	if(value == kFloatMissing)
 	{

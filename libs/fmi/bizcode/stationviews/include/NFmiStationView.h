@@ -126,7 +126,8 @@ protected:
    NFmiRect CurrentDataRect () const;
    virtual float InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, const NFmiPoint& theLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
    virtual std::string Value2ToolTipString(float theValue, int theDigitCount, FmiInterpolationMethod theInterpolationMethod, FmiParamType theParamType);
-   virtual float ViewFloatValue(void); // tämä hakee näytettävän datan riippuen asetuksista
+   // Tämä hakee näytettävän datan riippuen asetuksista
+   virtual float ViewFloatValue(bool doTooltipValue); 
    virtual void SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo); // tarvittavat jutut optimointia varten
    bool CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2);
    virtual int GetApproxmationOfDataTextLength(std::vector<float> *sampleValues = nullptr);
