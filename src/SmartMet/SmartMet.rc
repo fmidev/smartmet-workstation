@@ -1088,7 +1088,7 @@ BEGIN
             VALUE "FileDescription", "SmartMet meteorological workstation"
             VALUE "FileVersion", "5.13.21.0"
             VALUE "InternalName", "SmartMet"
-            VALUE "LegalCopyright", "(C) 1999-2021 FMI (Finnish Meteorological Instituet).  All rights reserved"
+            VALUE "LegalCopyright", "(C) 1999-2022 FMI (Finnish Meteorological Instituet).  All rights reserved"
             VALUE "OriginalFilename", "SmartMet.exe"
             VALUE "ProductName", "SmartMet"
             VALUE "ProductVersion", "5.13.21.0"
