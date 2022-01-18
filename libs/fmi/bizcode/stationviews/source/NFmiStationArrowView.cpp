@@ -47,20 +47,23 @@ NFmiStationArrowView::~NFmiStationArrowView(void)
 double gSizeFactor = 0.6; // Muunnan kokoja ja offsetteja tällä kertoimella jotta symbolin koko olisi paremmin yhteensopiva muiden symbolien säätöjen kanssa
 NFmiPoint gSizeFactorPoint(gSizeFactor, gSizeFactor);
 
-float NFmiStationArrowView::ViewFloatValue(void)
+float NFmiStationArrowView::ViewFloatValue(bool doTooltipValue)
 {
-	float angle = NFmiStationView::ViewFloatValue();
+	float angle = NFmiStationView::ViewFloatValue(doTooltipValue);
 	if(angle != kFloatMissing)
 	{
-		// Tehdään pohjois korjaus tuuliviirin piirtoon
-		NFmiAngle ang(itsArea->TrueNorthAzimuth(CurrentLatLon()));
-		angle += static_cast<float>(ang.Value());
-		FmiParameterName parId = static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent());
-		if(parId == kFmiWindDirection || parId == kFmiWaveDirection || parId == kFmiWaveDirectionBandB || parId == kFmiWaveDirectionBandC || parId == kFmiWaveDirectionSwell0 || parId == kFmiWaveDirectionSwell1 || parId == kFmiWaveDirectionSwell2)
+		if(!doTooltipValue)
 		{
-			// Tuulensuunta kuvaa siis aina mistä tullaan, eikä mihin mennään..., 
-			// aaltojen suunta halutaan myös tuulen suuntaiseksi
-			angle += 180; 
+			// Tehdään pohjoissuunta korjaus tuuliviirin piirtoon, paitsi jos kyse tooltip arvosta
+			NFmiAngle ang(itsArea->TrueNorthAzimuth(CurrentLatLon()));
+			angle += static_cast<float>(ang.Value());
+			FmiParameterName parId = static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent());
+			if(parId == kFmiWindDirection || parId == kFmiWaveDirection || parId == kFmiWaveDirectionBandB || parId == kFmiWaveDirectionBandC || parId == kFmiWaveDirectionSwell0 || parId == kFmiWaveDirectionSwell1 || parId == kFmiWaveDirectionSwell2)
+			{
+				// Tuulensuunta kuvaa siis aina mistä tullaan, eikä mihin mennään..., 
+				// aaltojen suunta halutaan myös tuulen suuntaiseksi
+				angle += 180;
+			}
 		}
 	}
 	return angle;

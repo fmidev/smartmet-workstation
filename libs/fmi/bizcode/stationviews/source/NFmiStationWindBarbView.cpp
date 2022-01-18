@@ -66,19 +66,22 @@ void AdjustWindBarbSizeAndPlace(NFmiRect &rect)
     rect.Place(NFmiPoint(rect.Place().X() - change, rect.Place().Y()));
 }
 
-float NFmiStationWindBarbView::ViewFloatValue(void)
+float NFmiStationWindBarbView::ViewFloatValue(bool doTooltipValue)
 {
-	float windVector = NFmiStationView::ViewFloatValue();
+	float windVector = NFmiStationView::ViewFloatValue(doTooltipValue);
 	if(windVector == kFloatMissing)
 		return kFloatMissing;
 	else
 	{
 		float ws, wd;
 		std::tie(ws, wd) = NFmiToolBox::GetWsAndWdFromWindVector(windVector);
-		// tehdään pohjois korjaus tuuliviirin piirtoon
-		NFmiPoint latlon = CurrentLatLon();
-		NFmiAngle ang(itsArea->TrueNorthAzimuth(latlon));
-		wd += static_cast<float>(ang.Value());
+		if(!doTooltipValue)
+		{
+			// Tehdään pohjoissuunta korjaus tuuliviirin piirtoon, paitsi ei tooltip arvoa laskettaessa
+			NFmiPoint latlon = CurrentLatLon();
+			NFmiAngle ang(itsArea->TrueNorthAzimuth(latlon));
+			wd += static_cast<float>(ang.Value());
+		}
 		return NFmiFastInfoUtils::CalcWindVectorFromSpeedAndDirection(ws, wd);
 	}
 }
