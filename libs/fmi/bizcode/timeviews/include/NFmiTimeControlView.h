@@ -127,24 +127,24 @@ public:
 						,bool theShowSelectedTimes
 						,bool theDrawTimeFilterTimesInNormalDraw
 						,double theAxisShrinkFactor = 0.02);
-   virtual  ~NFmiTimeControlView (void);
+   ~NFmiTimeControlView (void);
 
-   void Draw (NFmiToolBox * theGTB);
+   void Draw (NFmiToolBox * theGTB) override;
  
-   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-   bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey);
-   bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-   bool MiddleButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-   bool MouseMove(const NFmiPoint& thePlace, unsigned long theKey);
+   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool RightButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool MiddleButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool MouseMove(const NFmiPoint& thePlace, unsigned long theKey) override;
    bool IsMouseCaptured(void){return (fMouseCaptured || fMouseCapturedMoveTimeLine || fMouseCapturedMoveSelectedTime || fMouseCapturedAnimationBox);};
    void MouseCaptured(bool newState){fMouseCaptured = newState;};
    void Initialize(bool theShowSelectedTimes, bool theUseActiveMapTime); // HUOM! älä kutsu konstruktorissa, kutsu sen jälkeen yritys korjata konstruktorissa olevaa virtuaalisuus ongelmaa 
    void DrawOverBitmapThings(NFmiToolBox * theGTB, bool dummy, int dummy2, float dummy3, void* dummy4);// tällä piirretään tavara, joka tulee myös bitmapin päälle
    bool SetTime(const NFmiPoint & thePlace, bool fStayInsideAnimationTimes = false);
-   std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
+   std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
    MouseStatusInfo GetMouseStatusInfo(void);
    void SetMouseStatusInfo(const MouseStatusInfo &theMouseStatusInfo);
-   bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta);
+   bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta) override;
    virtual CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(void);
 
 protected:
@@ -265,8 +265,8 @@ public:
 								,bool theShowSelectedTimes);
    ~NFmiTimeSerialTimeControlView(void);
 
-   bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey);
-   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
+   bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey) override;
+   bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
 
 protected:
 	NFmiPoint GetViewSizeInPixels(void);

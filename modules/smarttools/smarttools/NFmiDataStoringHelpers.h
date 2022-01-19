@@ -100,7 +100,7 @@ std::string GetTimeBagOffSetStr(const NFmiMetTime &theUsedCurrentTime,
 NFmiTimeBag GetTimeBagOffSetFromStr(const NFmiMetTime &theUsedCurrentTime,
                                     const std::string &theTimeBagStr);
 void SetUsedViewMacroTime(const NFmiMetTime &theTime);
-NFmiMetTime GetUsedViewMacroTime(void);
+NFmiMetTime GetUsedViewMacroTime();
 
 // Luokka jota käyttetään itsensä kirjoittavien luokkien
 // tulevaisuudessa lisättyjen datojen tallettamiseen.
@@ -110,7 +110,7 @@ NFmiMetTime GetUsedViewMacroTime(void);
 // kuin löytää vanhasta versiosta.
 struct NFmiExtraDataStorage
 {
-  void Clear(void);
+  void Clear();
   void Add(double theValue);
   void Add(const std::string &theValue);
 

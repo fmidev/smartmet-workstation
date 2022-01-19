@@ -106,7 +106,7 @@ void NFmiViewParamsView::DrawBackgroundMapLayerText(int& zeroBasedRowIndexInOut,
 		itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, itsCtrlViewDocumentInterface));
 		NFmiString mapLayerText = itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().getCurrentMapLayerGuiText(itsMapViewDescTopIndex, true);
 		// map-layer rivin indeksi on 0 ja se annetaan LineTextPlace -metodille.
-		NFmiText text(LineTextPlace(zeroBasedRowIndexInOut, parameterRowRect, false), mapLayerText, 0, itsDrawingEnvironment);
+		NFmiText text(LineTextPlace(zeroBasedRowIndexInOut, parameterRowRect, false), mapLayerText, false, 0, itsDrawingEnvironment);
 		itsToolBox->Convert(&text);
 		zeroBasedRowIndexInOut++;
 	}
@@ -139,7 +139,7 @@ void NFmiViewParamsView::DrawData(void)
 					itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(drawParam->DataType(), drawParam->UseArchiveModelData(), itsCtrlViewDocumentInterface));
 
 					NFmiString paramNameStr(CtrlViewUtils::GetParamNameString(drawParam, crossSectionView, false, false, 0, false));
-					NFmiText text(LineTextPlace(zeroBasedRowIndex, parameterRowRect, true), paramNameStr, 0, itsDrawingEnvironment);
+					NFmiText text(LineTextPlace(zeroBasedRowIndex, parameterRowRect, true), paramNameStr, true, 0, itsDrawingEnvironment);
 					itsToolBox->Convert(&text);
 					DrawCheckBox(parameterRowRect, !drawParam->IsParamHidden());
 					DrawModelSelectorButtons(drawParam, parameterRowRect);

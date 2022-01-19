@@ -755,12 +755,14 @@ bool NFmiIsoLineView::FillIsoLineVisualizationInfo(boost::shared_ptr<NFmiDrawPar
         return false;
 
     auto viewType = theDrawParam->GetViewType(fStationData);
+    bool initializationStatus = false;
     if(NFmiDrawParam::IsColorContourType(viewType))
     {
         if(theDrawParam->UseSimpleIsoLineDefinitions())
             FillSimpleColorContourInfo(theDrawParam, theIsoLineData, fStationData, fToolMasterUsed);
         else
             FillCustomColorContourInfo(theDrawParam, theIsoLineData, fStationData, fToolMasterUsed);
+        initializationStatus = theIsoLineData->itsColorContouringData.isCorrectlyInitialized();
     }
     if(NFmiDrawParam::IsIsolineType(viewType))
     {
@@ -768,10 +770,11 @@ bool NFmiIsoLineView::FillIsoLineVisualizationInfo(boost::shared_ptr<NFmiDrawPar
             FillIsoLineInfoSimple(theDrawParam, theIsoLineData, fToolMasterUsed, fStationData);
         else // custom isoviivat tähän
             FillIsoLineInfoCustom(theDrawParam, theIsoLineData, fToolMasterUsed, fStationData);
+        initializationStatus = theIsoLineData->itsIsolineVizualizationData.isCorrectlyInitialized();
     }
 
     FillHatchInfo(theDrawParam, theIsoLineData);
-    return true;
+    return initializationStatus;
 }
 
 // Presumption: theDrawParam and theIsoLineData parameters are not nullptr's 
@@ -1805,7 +1808,7 @@ void NFmiIsoLineView::DrawAllLabels(const NFmiPoint &theOffSet)
             if(itsExistingLabels[i].LabelString().size() == 1) // yhden kokoinen teksti pitää kohdistaa erikseen laatikon keskelle
                 textLocation.X(textLocation.X() + itsExistingLabels[i].LabelBoxRect().Width() / 5.);
 
-            NFmiText aText(textLocation, itsExistingLabels[i].LabelString(), 0, &env);
+            NFmiText aText(textLocation, itsExistingLabels[i].LabelString(), false, 0, &env);
             itsToolBox->Convert(&aText);
         }
     }
@@ -1842,7 +1845,7 @@ void NFmiIsoLineView::DrawAllLabels(const NFmiPoint &theOffSet)
             if(itsExistingLabels[i].LabelString().size() == 1) // yhden kokoinen teksti pitää kohdistaa erikseen laatikon keskelle
                 textLocation.X(textLocation.X() + itsExistingLabels[i].LabelBoxRect().Width() / 5.);
 
-            NFmiText aText(textLocation, itsExistingLabels[i].LabelString(), 0, &env);
+            NFmiText aText(textLocation, itsExistingLabels[i].LabelString(), false, 0, &env);
             itsToolBox->Convert(&aText);
         }
     }

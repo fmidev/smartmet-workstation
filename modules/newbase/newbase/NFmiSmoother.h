@@ -13,7 +13,7 @@
 #include <string>
 
 //! Undocumented
-class _FMI_DLL NFmiSmoother
+class NFmiSmoother
 {
  public:
   //! Different smoothening methods
@@ -34,9 +34,9 @@ class _FMI_DLL NFmiSmoother
   static NFmiSmootherMethod SmootherValue(const std::string& theName);
   static const std::string SmootherName(NFmiSmootherMethod theSmoother);
 
-  NFmiSmootherMethod Smoother(void) const;
-  int Factor(void) const;
-  float Radius(void) const;
+  NFmiSmootherMethod Smoother() const;
+  int Factor() const;
+  float Radius() const;
 
   void Smoother(NFmiSmootherMethod smoother);
   void Factor(int factor);
@@ -47,20 +47,20 @@ class _FMI_DLL NFmiSmoother
   const NFmiDataMatrix<float> Smoothen(const NFmiDataMatrix<NFmiPoint>& thePts,
                                        const NFmiDataMatrix<float>& theValues) const;
 
-  const checkedVector<float> Smoothen(const checkedVector<float>& theX,
-                                      const checkedVector<float>& theY) const;
+  const std::vector<float> Smoothen(const std::vector<float>& theX,
+                                      const std::vector<float>& theY) const;
 
   float Weight(float distance) const;
 
  private:
   // Disable void constructor
-  NFmiSmoother(void);
+  NFmiSmoother();
 
   const NFmiDataMatrix<float> SmoothenKernel(const NFmiDataMatrix<NFmiPoint>& thePts,
                                              const NFmiDataMatrix<float>& theValues) const;
 
-  const checkedVector<float> SmoothenKernel(const checkedVector<float>& theX,
-                                            const checkedVector<float>& theY) const;
+  const std::vector<float> SmoothenKernel(const std::vector<float>& theX,
+                                            const std::vector<float>& theY) const;
 
   // Data members
 
@@ -76,21 +76,21 @@ class _FMI_DLL NFmiSmoother
  */
 // ----------------------------------------------------------------------
 
-inline NFmiSmoother::NFmiSmootherMethod NFmiSmoother::Smoother(void) const { return itsSmoother; }
+inline NFmiSmoother::NFmiSmootherMethod NFmiSmoother::Smoother() const { return itsSmoother; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline int NFmiSmoother::Factor(void) const { return itsFactor; }
+inline int NFmiSmoother::Factor() const { return itsFactor; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline float NFmiSmoother::Radius(void) const { return itsRadius; }
+inline float NFmiSmoother::Radius() const { return itsRadius; }
 // ----------------------------------------------------------------------
 /*!
  * \param smoother Undocumented

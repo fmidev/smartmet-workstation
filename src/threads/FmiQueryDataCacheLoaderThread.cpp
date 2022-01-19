@@ -14,6 +14,8 @@
 #include "execute-command-in-separate-process.h"
 #include "NFmiSettings.h"
 #include "catlog/catlog.h"
+#include "SmartMetDocumentInterface.h"
+#include "NFmiCaseStudySystem.h"
 
 #include <boost/filesystem.hpp> 
 #include <mutex> 
@@ -49,6 +51,13 @@ namespace
     // Teen systeemin, jolla varmistetaan ett‰ kaikki kolme worker threadia ajetaan l‰pi ensin ja sitten vasta k‰ynnistet‰‰n historian ker‰ys threadi.
     // Eli DoHistoryThread:ia ei ajeta en‰‰ CMainFrame:sta ollenkaan automaattisesti, vaan vasta kun kolmas normaali worker threadi on mennyt kokonaan l‰pi.
     std::set<std::string> gLoaderThreadsThatHasRunOnceThrough;
+    // Aletaan pit‰m‰‰n kirjaa mitk‰ tiedostot on jo kerran kopioitu (tai yritetty kopioida) serverilt‰ lokaali cacheen.
+    // On tilanteita, miss‰ samaa tiedostoa yritet‰‰n ladata uudestaan ja uudestaan cacheen ja n‰in kulutetaan turhaan
+    // verkkoa ja mahdollisesti puretaan zipattua tiedostoa jolloin kulutetaan turhaan CPU:ta.
+    std::set<std::string> gOnceLoadedFilePathsOnServer;
+    // T‰m‰n avulla k‰ytet‰‰n gOnceLoadedFilePathsOnServer containeria thread turvallisesti
+    CSemaphore gOnceLoadedFilePathsOnServerSemaphore;
+    NFmiNanoSecondTimer gOnceLoadedFilePathsOnServerTimer;
 
 	enum CFmiCopyingStatus
 	{
@@ -400,9 +409,37 @@ static CFmiCopyingStatus CheckTmpFileStatus(const std::string &theTmpFileName)
     return kFmiGoOnWithCopying;
 }
 
+static bool CheckIfFileHasBeenLoadedEarlier(CachedDataFileInfo& theCachedDataFileInfo)
+{
+    const double resetIntervalInSeconds = 12 * 60 * 60;
+
+    CSingleLock lock(&gOnceLoadedFilePathsOnServerSemaphore);
+    if(gOnceLoadedFilePathsOnServerTimer.elapsedTimeInSeconds() > resetIntervalInSeconds)
+    {
+        // Tyhjennet‰‰n tiedostonimilista aika ajoin (esim. 12 h v‰lein), jotta sen k‰sittely ei rupea hidastelemaan
+        // t‰t‰ toimintaa, jos SmartMet on k‰ynniss‰ vaikka viikkoja (jos sill‰ ei tee juuri mit‰‰n ei kaatumisia juuri tapahdu).
+        gOnceLoadedFilePathsOnServer.clear();
+        // timer pit‰‰ myˆs k‰ynnist‰‰ uudestaan
+        gOnceLoadedFilePathsOnServerTimer.restart();
+    }
+
+    if(gOnceLoadedFilePathsOnServer.find(theCachedDataFileInfo.itsTotalServerFileName) == gOnceLoadedFilePathsOnServer.end())
+    {
+        gOnceLoadedFilePathsOnServer.insert(theCachedDataFileInfo.itsTotalServerFileName);
+        return false;
+    }
+    else
+        return true;
+}
+
 static CFmiCopyingStatus CopyFileToLocalCache(CachedDataFileInfo& theCachedDataFileInfo, CFmiCacheLoaderData* theCacheLoaderData, const NFmiHelpDataInfo& theDataInfo)
 {
     if(NFmiFileSystem::FileExists(theCachedDataFileInfo.itsTotalCacheFileName))
+    {
+        return kFmiNoCopyNeeded;
+    }
+
+    if(::CheckIfFileHasBeenLoadedEarlier(theCachedDataFileInfo))
     {
         return kFmiNoCopyNeeded;
     }
@@ -642,10 +679,12 @@ static void StartHistoryLoaderThreadOnce(const std::string &theThreadName)
 static std::string DeletedFilesStr(const std::list<std::string> &theDeletedFiles)
 {
 	std::string str;
-	for(std::list<std::string>::const_iterator it = theDeletedFiles.begin(); it != theDeletedFiles.end(); ++it)
+	for(auto filePath : theDeletedFiles)
 	{
-		str += *it;
-		str += "\n";
+        if(!str.empty())
+            str += "\n";
+        boost::replace_all(filePath, "\\/", "\\");
+		str += filePath;
 	}
 	return str;
 }
@@ -683,9 +722,9 @@ void CleanFilePattern(const std::string &theFilePattern, int theKeepMaxFiles)
 		{
 			std::string logStr("CFmiQueryDataCacheLoaderThread - CleanFilePattern: ");
 			logStr += theFilePattern;
-			logStr += ", keep-max-files: ";
+			logStr += ",\n keep-max-files: ";
 			logStr += NFmiStringTools::Convert(theKeepMaxFiles);
-			logStr += "\nDeleted files:\n";
+			logStr += ",\n Deleted files: \n";
 			logStr += ::DeletedFilesStr(deletedFiles);
 			CatLog::logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Data);
 		}
@@ -724,47 +763,52 @@ static void CleanCombineDataCache(void)
 	}
 }
 
-static int CalcMaxKeepFileCount(const NFmiHelpDataInfo &helpDataInfo, NFmiHelpDataInfoSystem &workerHelpDataSystem)
+static int CalcMaxKeepFileCount(const NFmiHelpDataInfo &helpDataInfo, NFmiCaseStudySystem & caseStudySystem)
 {
     NFmiInfoData::Type dataType = helpDataInfo.DataType();
     if(dataType == NFmiInfoData::kObservations || dataType == NFmiInfoData::kSingleStationRadarData || dataType == NFmiInfoData::kTrajectoryHistoryData || dataType == NFmiInfoData::kFlashData || dataType == NFmiInfoData::kAnalyzeData)
     {
-        return 3; // n‰it‰ datatyyppeja on turhaa s‰ilˆ‰ montaa, koska vain viimeist‰ niist‰ on j‰rkev‰ k‰ytt‰‰
+        return 1; // n‰it‰ datatyyppeja on turhaa s‰ilˆ‰ 1 enemp‰‰
     }
     else
-        return workerHelpDataSystem.CacheMaxFilesPerPattern() + helpDataInfo.AdditionalArchiveFileCount();
+    {
+        auto localCacheFileCount = 3;
+        auto *caseStudyDataFile = caseStudySystem.FindCaseStudyDataFile(helpDataInfo.Name());
+        if(caseStudyDataFile)
+            localCacheFileCount = caseStudyDataFile->DataFileWinRegValues().LocalCacheDataCount();
+        return localCacheFileCount;
+    }
 }
 
 // HUOM! siivouksessa ei tarkisteta onko jokin data k‰ytˆss‰ vai ei (NFmiHelpDataInfo:n IsEnabled-metodi tarkistus), vanhoja tiedostoja ei 
 // j‰tet‰ levyille lojumaan, vaikka joku data on joskus otettu pois k‰ytˆst‰.
 static void CleanCache(void)
 {
-	if(gWorkerHelpDataSystem.DoCleanCache())
-	{
-		NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-		// 1. siivotaan ensin pois kaikki yli halutun aikam‰‰reen olevat tiedostot
-		if(gWorkerHelpDataSystem.CacheFileKeepMaxDays() > 0)
-			::CleanDirectory(gWorkerHelpDataSystem.CacheDirectory(), gWorkerHelpDataSystem.CacheFileKeepMaxDays()*24);
-		// 2. siivotaan tmp-hakemistosta kaikki yli puoli tuntia vanhemmat tiedostot (jos ne eiv‰t lukossa), oletetaan
-		// ett‰ yhden tiedoston kopiointi ei kest‰ yli puolta tuntia, vaan kyse on jostain virheest‰.
-		NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-		::CleanDirectory(gWorkerHelpDataSystem.CacheTmpDirectory(), 0.5);
+    if(gWorkerHelpDataSystem.DoCleanCache())
+    {
+        NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
+        // 1. siivotaan ensin pois kaikki yli halutun aikam‰‰reen olevat tiedostot
+        if(gWorkerHelpDataSystem.CacheFileKeepMaxDays() > 0)
+            ::CleanDirectory(gWorkerHelpDataSystem.CacheDirectory(), gWorkerHelpDataSystem.CacheFileKeepMaxDays() * 24);
+        // 2. siivotaan tmp-hakemistosta kaikki yli puoli tuntia vanhemmat tiedostot (jos ne eiv‰t lukossa), oletetaan
+        // ett‰ yhden tiedoston kopiointi ei kest‰ yli puolta tuntia, vaan kyse on jostain virheest‰.
+        NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
+        ::CleanDirectory(gWorkerHelpDataSystem.CacheTmpDirectory(), 0.5);
 
-		// 3. siivotaan pois file-pattern -kohtaisesti ylim‰‰r‰iset tiedostot n-kpl
-		if(gWorkerHelpDataSystem.CacheMaxFilesPerPattern() > 0)
-		{
-			for(size_t i=0; i < gWorkerHelpDataSystem.DynamicHelpDataInfos().size(); i++)
-			{
-				NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-				NFmiHelpDataInfo &helpDataInfo = gWorkerHelpDataSystem.DynamicHelpDataInfo(static_cast<int>(i));
-				// HUOM! yhdistelm‰ datoja ei siivota t‰ss‰ yleisill‰ asetuksilla, vaan ne 
-				// pit‰‰ siivota eri lailla ja sit‰ varten on oma funktio (CleanCombineDataCache).
-				if(::IsDataCached(helpDataInfo) && helpDataInfo.IsCombineData() == false)
-					::CleanFilePattern(helpDataInfo.UsedFileNameFilter(gWorkerHelpDataSystem), ::CalcMaxKeepFileCount(helpDataInfo, gWorkerHelpDataSystem));
-			}
-		}
-	}
-	::CleanCombineDataCache();
+        auto& caseStudySystem = SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->CaseStudySystem();
+
+        // 3. siivotaan pois file-pattern -kohtaisesti ylim‰‰r‰iset tiedostot n-kpl
+        for(size_t i = 0; i < gWorkerHelpDataSystem.DynamicHelpDataInfos().size(); i++)
+        {
+            NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
+            NFmiHelpDataInfo& helpDataInfo = gWorkerHelpDataSystem.DynamicHelpDataInfo(static_cast<int>(i));
+            // HUOM! yhdistelm‰ datoja ei siivota t‰ss‰ yleisill‰ asetuksilla, vaan ne 
+            // pit‰‰ siivota eri lailla ja sit‰ varten on oma funktio (CleanCombineDataCache).
+            if(::IsDataCached(helpDataInfo) && helpDataInfo.IsCombineData() == false)
+                ::CleanFilePattern(helpDataInfo.UsedFileNameFilter(gWorkerHelpDataSystem), ::CalcMaxKeepFileCount(helpDataInfo, caseStudySystem));
+        }
+    }
+    ::CleanCombineDataCache();
 }
 
 static bool IsCacheCleaningDoneAtAll(CFmiCacheLoaderData &cacheLoaderData)
@@ -783,7 +827,7 @@ static int GoThroughAllHelpDataInfos(const NFmiHelpDataInfoSystem &theHelpDataSy
 {
     ::ApplyChangedSettings(); // katsotaan onko asetuksia muutettu
     CFmiCopyingStatus status = kFmiNoCopyNeeded;
-    const checkedVector<NFmiHelpDataInfo> &helpInfos = theHelpDataSystem.DynamicHelpDataInfos();
+    const auto &helpInfos = theHelpDataSystem.DynamicHelpDataInfos();
     for(size_t i = 0; i < helpInfos.size(); i++)
     {
         NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);

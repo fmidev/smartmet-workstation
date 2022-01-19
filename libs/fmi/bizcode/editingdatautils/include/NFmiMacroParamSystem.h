@@ -1,6 +1,5 @@
 #pragma once
 
-#include "NFmiDataMatrix.h"
 #include "boost/shared_ptr.hpp"
 #include <vector>
 #include "NFmiMacroParamItem.h"
@@ -47,9 +46,10 @@ public:
     boost::shared_ptr<NFmiMacroParamFolder> GetFolder(int index) const;
 	bool SetCurrentToWantedMacroPath(const std::string &theTotalFileName); // tietyn nimistä tiedosto nimeä
 	bool FindMacroFromCurrentFolder(const std::string &theMacroName);
+	bool FindMacroParamPath(const std::string& theRelativeMacroParamPath);
 	int CurrentFolderIndex(void) const {return itsCurrentFolderIndex;}
     boost::shared_ptr<NFmiMacroParam> GetWantedMacro(const std::string& theTotalFileName) const;
-
+	const std::vector<std::string>& MacroParamSpeedSearchPathNames(bool updateList);
 	const std::string& CurrentPath(void) const {return itsCurrentPath;}
 	std::string RelativePath(void) const;
     void CurrentPath(const std::string& newValue); // tämä on alihakemistoon siirtymis metodi
@@ -62,7 +62,7 @@ public:
 	void EnsureRootFolderInitialized();
 private:
 
-	void AddToMacroParamItemTree(std::vector<NFmiMacroParamItem> &theMacroItemList, const checkedVector<boost::shared_ptr<NFmiMacroParam> >& theMacroParams, NFmiStopFunctor *theStopFunctor);
+	void AddToMacroParamItemTree(std::vector<NFmiMacroParamItem> &theMacroItemList, const std::vector<boost::shared_ptr<NFmiMacroParam> >& theMacroParams, NFmiStopFunctor *theStopFunctor);
 	int FindPath(const std::string &thePathName) const; // etsii folder-otusta polku nimellä
 	int SeekMacroFolder(const std::string &theTotalFileName);
 	void ClearMacros(void);
@@ -71,13 +71,15 @@ private:
     void SetWantedPath(const std::string& wantedPath);
     CurrentMacroPointerData FindCurrentMacroPointerData(const std::string& theTotalFileName) const;
 	void InitializeRootFolder();
+	void MakeMacroParamSpeedSearchPathNames();
 
 	std::string itsCurrentPath; // mihin paikkaan on macroparamit talletettu
 	std::string itsRootPath; // tämän avulla saadaan kansio systeemille root kansio, josta ylöspäin ei voi mennä ..-hakiksen kautta
-	checkedVector<boost::shared_ptr<NFmiMacroParamFolder> > itsMacroParamFolders; // tässä on kaikki macroParamit omissa foldereissaa vectorissa, siis kaikki ali hakemistot omina foldereinaan, eikä ne ole hierarkkisessa systeemissä vaan ihan vektorissa vierekkäin
+	std::vector<boost::shared_ptr<NFmiMacroParamFolder> > itsMacroParamFolders; // tässä on kaikki macroParamit omissa foldereissaa vectorissa, siis kaikki ali hakemistot omina foldereinaan, eikä ne ole hierarkkisessa systeemissä vaan ihan vektorissa vierekkäin
 	std::vector<NFmiMacroParamItem> itsMacroItemTree; // tämän rakenteen avulla lisätään macroParamit mm. popup-valikkoon
 	int itsCurrentFolderIndex; // currenttia macroparamia osoitetaan tällä indeksillä (=paikka itsMacroParamFolders vektorissa), alkaa 0:sta ja -1 kun ei osoita mihinkään
 	boost::shared_ptr<NFmiMacroParam> itsFoundMacroParam; // Find(path, name)::lla löydetty macroParam
 	bool fUpdateMacroParamListView; // tämän lipun avulla voidaan päivittää smartTool-dialogia ja sen päivityksiä
+	std::vector<std::string> itsMacroParamSpeedSearchPathNames;
 };
 

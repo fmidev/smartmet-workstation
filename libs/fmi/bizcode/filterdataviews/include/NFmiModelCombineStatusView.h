@@ -19,18 +19,18 @@ class NFmiModelCombineStatusView : public NFmiZoomView
 {
 
 public:
-   void Draw(NFmiToolBox * theGTB);
+   void Draw(NFmiToolBox * theGTB) override;
    NFmiModelCombineStatusView(NFmiToolBox * theToolBox
 							 ,NFmiDrawingEnvironment * theDrawingEnvi
 							 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 							 ,const NFmiRect& theRect);
-	virtual  ~NFmiModelCombineStatusView();
-	void Update(void);
+	~NFmiModelCombineStatusView();
+	void Update(void) override;
 
-	bool LeftButtonDown(const NFmiPoint &thePlace, unsigned long theKey);
-	bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-	bool RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-	bool MouseMove(const NFmiPoint & thePlace, unsigned long theKey);
+	bool LeftButtonDown(const NFmiPoint &thePlace, unsigned long theKey) override;
+	bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool MouseMove(const NFmiPoint & thePlace, unsigned long theKey) override;
 
 protected:
 	virtual bool IsViewDrawed(void);

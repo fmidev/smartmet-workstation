@@ -11,7 +11,7 @@
 #include <string>
 
 //! Undocumented
-class _FMI_DLL NFmiLogger
+class NFmiLogger
 {
  public:
   //! loggerissa käytettyjä viestien tasoja
@@ -50,15 +50,15 @@ class _FMI_DLL NFmiLogger
         4  // lokitiedostosta tehdään tallenne (renametaan log-file) aina kun kuukausi on vaihtunut
   };
 
-  ~NFmiLogger(void);
-  NFmiLogger(void);
+  ~NFmiLogger();
+  NFmiLogger();
   NFmiLogger(const std::string &theLogFilePath,
              const std::string &theLogFileBaseName,
              bool theUseBackupSystem,
              bool theCleanBackupFiles,
              Period theLoggingPeriod);
   void InitFromSettings(const std::string &theBaseNameSpace);
-  void StoreToSettings(void);
+  void StoreToSettings();
   //  bool Init(const std::string & theFileName);
   //  bool Store(const std::string & theFileName);
   bool LogMessage(const std::string &theMessage, Level theMessageLevel);
@@ -66,36 +66,36 @@ class _FMI_DLL NFmiLogger
   void AddLevel(Level theAddedLevel);
   void RemoveLevel(Level theRemovedLevel);
   void UsedLoggingLevels(int value);
-  int UsedLoggingLevels(void) const;
+  int UsedLoggingLevels() const;
   void LogFilePath(const std::string &value);
-  const std::string &LogFilePath(void) const;
+  const std::string &LogFilePath() const;
   void LogFileBaseName(const std::string &value);
-  const std::string &LogFileBaseName(void) const;
+  const std::string &LogFileBaseName() const;
   void Operational(bool value);
-  bool Operational(void) const;
-  bool UseLocalTime(void) const;
+  bool Operational() const;
+  bool UseLocalTime() const;
   void UseLocalTime(bool newValue);
   void LogFileBackupTimePeriod(Period value);
-  Period LogFileBackupTimePeriod(void) const;
+  Period LogFileBackupTimePeriod() const;
   void UsedLoggingDevices(int value);
-  int UsedLoggingDevices(void) const;
-  const std::string &TimeStampStringFormat(void) const;
+  int UsedLoggingDevices() const;
+  const std::string &TimeStampStringFormat() const;
   void TimeStampStringFormat(const std::string &newFormat);
-  bool IsLoggerInitialized(void) const { return fLoggerInitialized; }
-  const std::string &CurrentLogFileName(void) const { return itsCurrentLogFileName; }
-  bool LogJustMessages(void) const { return fLogJustMessages; }
+  bool IsLoggerInitialized() const { return fLoggerInitialized; }
+  const std::string &CurrentLogFileName() const { return itsCurrentLogFileName; }
+  bool LogJustMessages() const { return fLogJustMessages; }
   void LogJustMessages(bool newValue) { fLogJustMessages = newValue; }
-  bool NewLogFileInUse(void) { return fNewLogFileInUse; }
+  bool NewLogFileInUse() { return fNewLogFileInUse; }
   void NewLogFileInUse(bool newState) { fNewLogFileInUse = newState; }
 
  private:
   void UpdateFileNamesAndPaths(
       bool updatePath);  // tämä päivittää itsAbsolutLogFilePath:in ja itsCurrentLogFileName:n
-  void MakeCurrentLogFileName(void);
-  const std::string MakeBackupFileFilter(void);
+  void MakeCurrentLogFileName();
+  const std::string MakeBackupFileFilter();
   bool CheckBackupSystem(
-      void);  // tekee kaiken mahdollisen liittyen mahdollisiin backup systeemeihin
-  bool CleanBackupFiles(void);
+      );  // tekee kaiken mahdollisen liittyen mahdollisiin backup systeemeihin
+  bool CleanBackupFiles();
   bool LogMessage(const std::string &theMessage, Level theMessageLevel, int theDevices);
   std::string MakeFinalMessage(const std::string &theMessage, Level theMessageLevel);
   bool Log2Gsm(const std::string &theFinalMessage);
@@ -106,15 +106,15 @@ class _FMI_DLL NFmiLogger
   bool OpenFile(const std::string &theFullFileName,
                 const std::string &thePath,
                 std::ofstream &theFile);
-  bool IsFileBackUpTime(void);
-  bool IsCleaningTime(void);
-  bool MakeBackupFile(void);
+  bool IsFileBackUpTime();
+  bool IsCleaningTime();
+  bool MakeBackupFile();
   bool DirectoryExist(const std::string &thePath);
   bool TooOldBackupFileTimeStamp(std::time_t theFileTimeStamp);
 
   void GetLastLoggetTimeFromLogFile(
-      void);  // kun logger käynnistyy, katsotaan loki-tiedostosta, milloin on viimeksi tehty lokia
-  const std::string MakeBackupFileNameTimeStamp(void);
+      );  // kun logger käynnistyy, katsotaan loki-tiedostosta, milloin on viimeksi tehty lokia
+  const std::string MakeBackupFileNameTimeStamp();
 
   // Tähän voidaan biteillä tallettaa eritasoiset käytettävät logattavat viestitasot ks. enum Level.
   // esim. kImportantInfo + kError (2 + 64 = 66)
@@ -187,21 +187,21 @@ inline void NFmiLogger::UsedLoggingLevels(int value) { itsUsedLoggingLevels = va
  */
 // ----------------------------------------------------------------------
 
-inline int NFmiLogger::UsedLoggingLevels(void) const { return itsUsedLoggingLevels; }
+inline int NFmiLogger::UsedLoggingLevels() const { return itsUsedLoggingLevels; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline const std::string &NFmiLogger::LogFilePath(void) const { return itsLogFilePath; }
+inline const std::string &NFmiLogger::LogFilePath() const { return itsLogFilePath; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline const std::string &NFmiLogger::LogFileBaseName(void) const { return itsLogFileBaseName; }
+inline const std::string &NFmiLogger::LogFileBaseName() const { return itsLogFileBaseName; }
 // ----------------------------------------------------------------------
 /*!
  * \param value Undocumented
@@ -215,14 +215,14 @@ inline void NFmiLogger::Operational(bool value) { fOperational = value; }
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiLogger::Operational(void) const { return fOperational; }
+inline bool NFmiLogger::Operational() const { return fOperational; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiLogger::UseLocalTime(void) const { return fUseLocalTime; }
+inline bool NFmiLogger::UseLocalTime() const { return fUseLocalTime; }
 // ----------------------------------------------------------------------
 /*!
  * \param newValue Undocumented
@@ -247,7 +247,7 @@ inline void NFmiLogger::LogFileBackupTimePeriod(Period value)
  */
 // ----------------------------------------------------------------------
 
-inline NFmiLogger::Period NFmiLogger::LogFileBackupTimePeriod(void) const
+inline NFmiLogger::Period NFmiLogger::LogFileBackupTimePeriod() const
 {
   return itsLogFileBackupTimePeriod;
 }
@@ -265,14 +265,14 @@ inline void NFmiLogger::UsedLoggingDevices(int value) { itsUsedLoggingDevices = 
  */
 // ----------------------------------------------------------------------
 
-inline int NFmiLogger::UsedLoggingDevices(void) const { return itsUsedLoggingDevices; }
+inline int NFmiLogger::UsedLoggingDevices() const { return itsUsedLoggingDevices; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline const std::string &NFmiLogger::TimeStampStringFormat(void) const
+inline const std::string &NFmiLogger::TimeStampStringFormat() const
 {
   return itsTimeStampStringFormat;
 }

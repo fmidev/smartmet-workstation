@@ -10,11 +10,11 @@
 #include "NFmiStatusString.h"
 
 //! Undocumented
-class _FMI_DLL NFmiStatusPositionString : public NFmiStatusString
+class NFmiStatusPositionString : public NFmiStatusString
 {
  public:
-  ~NFmiStatusPositionString(void);
-  NFmiStatusPositionString(void);
+  ~NFmiStatusPositionString();
+  NFmiStatusPositionString();
   NFmiStatusPositionString(const NFmiStatusPositionString& theStatusPositionString);
   NFmiStatusPositionString(const NFmiString& theString,
                            long theStatus,
@@ -24,9 +24,9 @@ class _FMI_DLL NFmiStatusPositionString : public NFmiStatusString
 
   NFmiStatusPositionString& operator=(const NFmiStatusPositionString& theStatusPositionString);
 
-  long StartPosition(void);
-  long EndPosition(void);
-  virtual unsigned long ClassId(void) const;
+  long StartPosition();
+  long EndPosition();
+  virtual unsigned long ClassId() const;
   virtual NFmiString* Clone() const;
 
   virtual std::ostream& Write(std::ostream& file) const;
@@ -44,7 +44,7 @@ class _FMI_DLL NFmiStatusPositionString : public NFmiStatusString
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiStatusPositionString::ClassId(void) const
+inline unsigned long NFmiStatusPositionString::ClassId() const
 {
   return kNFmiStatusPositionString;
 }

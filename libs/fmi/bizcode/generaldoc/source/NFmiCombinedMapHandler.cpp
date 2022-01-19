@@ -345,7 +345,7 @@ namespace
 		return false;
 	}
 
-	void setInfosMask(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> >& infoVector, unsigned long usedMask)
+	void setInfosMask(std::vector<boost::shared_ptr<NFmiFastQueryInfo> >& infoVector, unsigned long usedMask)
 	{
 		for(const auto& info : infoVector)
 		{
@@ -430,7 +430,7 @@ namespace
 		return CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->MacroPathSettings();
 	}
 
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > getSortedSynopInfoVector(int producerId, int producerId2 = -1, int producerId3 = -1, int producerId4 = -1)
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > getSortedSynopInfoVector(int producerId, int producerId2 = -1, int producerId3 = -1, int producerId4 = -1)
 	{
 		return CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->GetSortedSynopInfoVector(producerId, producerId2, producerId3, producerId4);
 	}
@@ -604,16 +604,29 @@ namespace
 		changedDrawParam->Init(newDrawParamSettings);
 	}
 
+	bool areDrawParamsSimilarType(boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiDrawParam>& targetDrawParam, bool useWithViewMacros)
+	{
+		if(useWithViewMacros || targetDrawParam->ViewMacroDrawParam() == false)
+		{
+			if(drawParam->IsMacroParamCase(true))
+			{
+				if(targetDrawParam->IsMacroParamCase(true) && drawParam->ParameterAbbreviation() == targetDrawParam->ParameterAbbreviation())
+					return true;
+			}
+			else if(drawParam->Param().GetParamIdent() == targetDrawParam->Param().GetParamIdent() && drawParam->Level() == targetDrawParam->Level())
+				return true;
+		}
+
+		return false;
+	}
+
 	void initializeWantedDrawParams(NFmiFastDrawParamList& drawParamList, boost::shared_ptr<NFmiDrawParam>& drawParam, bool useWithViewMacros)
 	{
 		for(auto iter = drawParamList.Begin(); iter != drawParamList.End(); ++iter)
 		{
 			boost::shared_ptr<NFmiDrawParam> aDrawParam = iter->second;
-			if(useWithViewMacros || aDrawParam->ViewMacroDrawParam() == false)
-			{
-				if(drawParam->Param().GetParamIdent() == aDrawParam->Param().GetParamIdent() && drawParam->Level() == aDrawParam->Level())
-					aDrawParam->Init(drawParam, true);
-			}
+			if(::areDrawParamsSimilarType(drawParam, aDrawParam, useWithViewMacros))
+				aDrawParam->Init(drawParam, true);
 		}
 	}
 
@@ -622,11 +635,8 @@ namespace
 		for(drawParamList.Reset(); drawParamList.Next(); )
 		{
 			boost::shared_ptr<NFmiDrawParam> aDrawParam = drawParamList.Current();
-			if(useWithViewMacros || aDrawParam->ViewMacroDrawParam() == false)
-			{
-				if(drawParam->Param().GetParamIdent() == aDrawParam->Param().GetParamIdent() && drawParam->Level() == aDrawParam->Level())
-					aDrawParam->Init(drawParam, true);
-			}
+			if(::areDrawParamsSimilarType(drawParam, aDrawParam, useWithViewMacros))
+				aDrawParam->Init(drawParam, true);
 		}
 	}
 
@@ -1607,7 +1617,7 @@ bool NFmiCombinedMapHandler::findLastObservation(unsigned long mapViewDescTopInd
 						// Ignooraa toistaiseksi tuottaja kFmiTEMP, koska niiden par haku tuottaa ajallisesti liian pitkälle meneviä datoja (viimeinen aika on tyhjää).
 						if(!NFmiInfoOrganizer::IsTempData(drawParam->Param().GetProducer()->GetIdent(), true))
 						{
-							checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
+							std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
 							makeDrawedInfoVectorForMapView(infoVector, drawParam, mapViewDescTop.MapHandler()->Area());
 							for(size_t i = 0; i < infoVector.size(); i++)
 							{
@@ -1683,7 +1693,7 @@ bool NFmiCombinedMapHandler::findEarliestLastObservation(unsigned long mapViewDe
 						// Ignooraa toistaiseksi tuottaja kFmiTEMP, koska niiden par haku tuottaa ajallisesti liian pitkälle meneviä datoja (viimeinen aika on tyhjää).
 						if(!NFmiInfoOrganizer::IsTempData(drawParam->Param().GetProducer()->GetIdent(), true))
 						{
-							checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
+							std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
 							makeDrawedInfoVectorForMapView(infoVector, drawParam, mapViewDescTop.MapHandler()->Area());
 							NFmiMetTime lastTimeOfThisDataType; // mm. synop datan tapauksessa haetaan ehkä jopa 6:sta datat tiedostosta viimeisintä aikaa
 							bool lastTimeOfThisDataTypeFoundYet = false;
@@ -1764,7 +1774,7 @@ void NFmiCombinedMapHandler::centerTimeControlView(unsigned int mapViewDescTopIn
 
 SmartMetViewId NFmiCombinedMapHandler::getUpdatedViewIdMaskForChangingTime()
 {
-	SmartMetViewId updatedViewIds = SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView | SmartMetViewId::DataFilterToolDlg | SmartMetViewId::CrossSectionView | SmartMetViewId::StationDataTableView | SmartMetViewId::WarningCenterDlg | SmartMetViewId::SeaIcingDlg;
+	SmartMetViewId updatedViewIds = SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView | SmartMetViewId::DataFilterToolDlg | SmartMetViewId::CrossSectionView | SmartMetViewId::StationDataTableView | SmartMetViewId::WarningCenterDlg;
 	if(::getMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().SoundingTimeLockWithMapView())
 		updatedViewIds = updatedViewIds | SmartMetViewId::SoundingView;
 	if(::getWindTableSystem().UseMapTime())
@@ -1880,7 +1890,7 @@ void NFmiCombinedMapHandler::clearAllViewRowsWithEditedData()
 		timeSerialViewDirty_ = true;
 }
 
-void NFmiCombinedMapHandler::makeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> >& infoVectorOut, boost::shared_ptr<NFmiDrawParam>& drawParam, const boost::shared_ptr<NFmiArea>& area)
+void NFmiCombinedMapHandler::makeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> >& infoVectorOut, boost::shared_ptr<NFmiDrawParam>& drawParam, const boost::shared_ptr<NFmiArea>& area)
 {
 	infoVectorOut.clear();
 	auto dataType = drawParam->DataType();
@@ -2321,7 +2331,7 @@ const NFmiTimeDescriptor& NFmiCombinedMapHandler::timeControlViewTimes(unsigned 
 // Oikeat karttarivit alkavat siis 1:stä.
 unsigned int NFmiCombinedMapHandler::getRealRowNumber(unsigned int mapViewDescTopIndex, int rowIndex)
 {
-	if(rowIndex >= CtrlViewUtils::kFmiTimeSerialView || mapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
+	if(mapViewDescTopIndex >= CtrlViewUtils::kFmiSoundingView)
 		return rowIndex;
 	else
 		return rowIndex + getMapViewDescTop(mapViewDescTopIndex)->MapRowStartingIndex() - 1;
@@ -2785,6 +2795,7 @@ void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, c
 	DoSpecialDataInitializations(drawParam, normalParameterAdd, menuItem);
 	::setDrawMacroSettings(menuItem, drawParam, macroParamInitFileName);
 	bool insertParamCase = (menuItem.CommandType() == kFmiInsertParamLayer);
+	bool changeParamCase = (menuItem.CommandType() == kFmiChangeParam);
 
 	if(!activeDrawParamWithRealRowNumber(menuItem.MapViewDescTopIndex(), realRowIndex))
 	{
@@ -2797,6 +2808,8 @@ void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, c
 	if(drawParamList)
 	{
 		std::string logStr(insertParamCase ? "Insert to specific point into map view " : "Added to map view ");
+		if(changeParamCase)
+			logStr = "Changed parameter to selected ";
 		if(NFmiDrawParam::IsMacroParamCase(drawParam->DataType()))
 		{
 			logStr += "macro parameter '";
@@ -2809,7 +2822,7 @@ void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, c
 			logStr += menuItem.DataIdent().GetParamName();
 		logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Visualization);
 
-		if(insertParamCase)
+		if(insertParamCase || changeParamCase)
 			drawParamList->Add(drawParam, menuItem.IndexInViewRow());
 		else if(!normalParameterAdd)
 		{
@@ -2867,13 +2880,17 @@ void NFmiCombinedMapHandler::addCrossSectionView(const NFmiMenuItem& menuItem, i
 	auto* crossSectionViewDrawParamList = getCrossSectionViewDrawParamList(viewRowIndex);
 	if(crossSectionViewDrawParamList)
 	{
-		std::string logStr("Adding to crosssection-view ");
+		bool changeParamCase = (menuItem.CommandType() == kFmiChangeParam);
+		std::string logStr(changeParamCase ? "Changing selected param to " : "Adding to crosssection-view ");
 		if(info)
 			logStr += getSelectedParamInfoString(info, true);
 		else
 			logStr += "??????"; // tämä on virhe tilanne
 		logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Visualization);
-		crossSectionViewDrawParamList->Add(drawParam);
+		if(changeParamCase)
+			crossSectionViewDrawParamList->Add(drawParam, menuItem.IndexInViewRow());
+		else
+			crossSectionViewDrawParamList->Add(drawParam);
 		crossSectionViewDrawParamList->ActivateOnlyOne(); // varmistaa, että yksi ja vain yksi paramtri listassa on aktiivinen
 	}
 	drawParamSettingsChangedDirtyActions(menuItem.MapViewDescTopIndex(), getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), drawParam);
@@ -2889,6 +2906,25 @@ void NFmiCombinedMapHandler::addAsOnlyView(const NFmiMenuItem& menuItem, int vie
 		::getMacroParamDataCache().clearMacroParamCacheRow(menuItem.MapViewDescTopIndex(), getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex));
 	}
 	addView(menuItem, viewRowIndex);
+}
+
+void NFmiCombinedMapHandler::changeParamLevel(const NFmiMenuItem& menuItem, int viewRowIndex)
+{
+	auto* drawParamList = getDrawParamList(menuItem.MapViewDescTopIndex(), viewRowIndex);
+	if(drawParamList)
+	{
+		auto changedParamIndex = menuItem.IndexInViewRow();
+		if(drawParamList->Index(changedParamIndex))
+		{
+			if(drawParamList->Remove())
+			{
+				if(menuItem.MapViewDescTopIndex() == CtrlViewUtils::kFmiCrossSectionView)
+					addCrossSectionView(menuItem, viewRowIndex, false);
+				else
+					addViewWithRealRowNumber(true, menuItem, getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), false, nullptr);
+			}
+		}
+	}
 }
 
 void NFmiCombinedMapHandler::removeView(const NFmiMenuItem& menuItem, int viewRowIndex)
@@ -3108,6 +3144,7 @@ boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::getUsedMacroDrawParam(c
 // muokataan macroParametrin asetuksia
 bool NFmiCombinedMapHandler::modifyMacroDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex, bool crossSectionCase)
 {
+	bool updateStatus = false;
 	boost::shared_ptr<NFmiDrawParam> usedDrawParam = getUsedMacroDrawParam(menuItem);
 	if(usedDrawParam)
 	{
@@ -3115,11 +3152,15 @@ bool NFmiCombinedMapHandler::modifyMacroDrawParam(const NFmiMenuItem& menuItem, 
 		CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), usedDrawParam, ::getMacroPathSettings().DrawParamPath(), true, false, menuItem.MapViewDescTopIndex(), parentView);
 		if(dlg.DoModal() == IDOK)
 		{
-			updateMacroDrawParam(menuItem, viewRowIndex, crossSectionCase, usedDrawParam);
-			return true;
+			updateStatus = true;
 		}
+		else
+			updateStatus = dlg.RefreshPressed(); // myös false:lla halutaan ruudun päivitys, koska jos painettu päivitä-nappia ja sitten cancelia, pitää ruutu päivittää
+
+		if(updateStatus)
+			updateMacroDrawParam(menuItem, viewRowIndex, crossSectionCase, usedDrawParam);
 	}
-	return false;
+	return updateStatus;
 }
 
 void NFmiCombinedMapHandler::modifyCrossSectionDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex)
@@ -3359,10 +3400,105 @@ NFmiDrawParamList& NFmiCombinedMapHandler::getTimeSerialViewDrawParamList()
 	return *timeSerialViewDrawParamList_;
 }
 
+NFmiCombinedMapHandler::SideParametersIterator NFmiCombinedMapHandler::getTimeSerialViewSideParameterIterator(int viewRowIndex)
+{
+	auto actualListIndex = viewRowIndex - 1;
+	if(actualListIndex >= 0 && actualListIndex < timeSerialViewSideParameters_.size())
+	{
+		auto iter = timeSerialViewSideParameters_.begin();
+		std::advance(iter, actualListIndex);
+		return iter;
+	}
+
+	return timeSerialViewSideParameters_.end();
+}
+
+// viewRowIndex parametri on 1:stä alkava rivi indeksi.
+NFmiDrawParamList* NFmiCombinedMapHandler::getTimeSerialViewSideParameters(int viewRowIndex)
+{
+	auto sideParameterIter = getTimeSerialViewSideParameterIterator(viewRowIndex);
+	if(sideParameterIter != timeSerialViewSideParameters_.end())
+	{
+		return sideParameterIter->get();
+	}
+	else
+		return nullptr;
+}
+
+CombinedMapHandlerInterface::SideParametersContainer& NFmiCombinedMapHandler::getTimeSerialViewSideParameterList()
+{
+	return timeSerialViewSideParameters_;
+}
+
+// viewRowIndex parametri on 1:stä alkava rivi indeksi
+void NFmiCombinedMapHandler::addEmptySideParamList(int viewRowIndex)
+{
+	auto sideParameterIter = getTimeSerialViewSideParameterIterator(viewRowIndex);
+	timeSerialViewSideParameters_.insert(sideParameterIter, std::make_unique<NFmiDrawParamList>());
+}
+
+void NFmiCombinedMapHandler::removeSideParamList(int viewRowIndex)
+{
+	auto sideParameterIter = getTimeSerialViewSideParameterIterator(viewRowIndex);
+	if(sideParameterIter != timeSerialViewSideParameters_.end())
+	{
+		timeSerialViewSideParameters_.erase(sideParameterIter);
+	}
+}
+
+void NFmiCombinedMapHandler::addTimeSerialViewSideParameter(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam)
+{
+	auto rowSideParameters = getTimeSerialViewSideParameters(timeSerialViewIndex_);
+	if(rowSideParameters)
+	{
+		auto drawParam = createTimeSerialViewDrawParam(menuItem, isViewMacroDrawParam);
+		if(drawParam)
+		{
+			std::string logStr("Adding to time-serial-view row #");
+			logStr += std::to_string(timeSerialViewIndex_);
+			logStr += " a side parameter: ";
+			auto info = ::getInfoOrganizer().Info(drawParam, false, false);
+			if(info)
+				logStr += getSelectedParamInfoString(info, false);
+			else
+				logStr += getSelectedParamInfoString(&drawParam->Param(), &drawParam->Level());
+			logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Visualization);
+
+			rowSideParameters->Add(drawParam);
+			timeSerialViewDirty(true);
+		}
+	}
+}
+
+void NFmiCombinedMapHandler::removeTimeSerialViewSideParameter(const NFmiMenuItem& menuItem)
+{
+	auto rowSideParameters = getTimeSerialViewSideParameters(timeSerialViewIndex_);
+	if(rowSideParameters)
+	{
+		if(rowSideParameters->Find(menuItem.DataIdent(), menuItem.Level(), menuItem.DataType()))
+		{
+			rowSideParameters->Remove();
+			timeSerialViewDirty(true);
+		}
+	}
+}
+
+void NFmiCombinedMapHandler::removeAllTimeSerialViewSideParameters(int viewRowIndex)
+{
+	auto rowSideParameters = getTimeSerialViewSideParameters(viewRowIndex);
+	if(rowSideParameters)
+	{
+		rowSideParameters->Clear();
+		timeSerialViewDirty(true);
+	}
+}
+
 void NFmiCombinedMapHandler::removeAllTimeSerialViews()
 {
 	timeSerialViewDirty(true);
 	timeSerialViewDrawParamList_->Clear();
+	// Tyhjennetään samalla side-parameter lista
+	timeSerialViewSideParameters_.clear();
 }
 
 void NFmiCombinedMapHandler::showCrossSectionDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex, bool showParam)
@@ -3411,24 +3547,35 @@ bool NFmiCombinedMapHandler::modifyDrawParam(const NFmiMenuItem& menuItem, int v
 	}
 }
 
+boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::createTimeSerialViewDrawParam(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam)
+{
+	auto& infoOrganizer = ::getInfoOrganizer();
+	boost::shared_ptr<NFmiDrawParam> drawParam = infoOrganizer.CreateDrawParam(menuItem.DataIdent(), menuItem.Level(), menuItem.DataType());
+	if(drawParam)
+	{
+		drawParam->ViewMacroDrawParam(isViewMacroDrawParam);
+	}
+	return drawParam;
+}
+
 // laitetaan drawparam aikasarjan omaan listaa ja jos vertailutila käytössä, lisätää
 // vielä eri tuottajien drawparamit erilliseen listaan
 void NFmiCombinedMapHandler::addTimeSerialView(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam)
 {
 	timeSerialViewDirty(true);
-	auto& infoOrganizer = ::getInfoOrganizer();
-	boost::shared_ptr<NFmiDrawParam> drawParam = infoOrganizer.CreateDrawParam(menuItem.DataIdent(), menuItem.Level(), menuItem.DataType());
+	auto drawParam = createTimeSerialViewDrawParam(menuItem, isViewMacroDrawParam);
 	if(drawParam)
 	{
 		std::string logStr("Adding to time-serial-view ");
-		boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer.Info(drawParam, false, false);
+		boost::shared_ptr<NFmiFastQueryInfo> info = ::getInfoOrganizer().Info(drawParam, false, false);
 		if(info)
-			logStr += getSelectedParamInfoString(info, true);
+			logStr += getSelectedParamInfoString(info, false);
+		else
+			logStr += getSelectedParamInfoString(&drawParam->Param(), &drawParam->Level());
 		logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Visualization);
-		if(isViewMacroDrawParam)
-			drawParam->ViewMacroDrawParam(true); // asetetaan tarvittaessa viewmacrodrawparam-flagi päälle
 
 		timeSerialViewDrawParamList_->Add(drawParam, timeSerialViewIndex_);
+		addEmptySideParamList(timeSerialViewIndex_);
 
 		bool groundData = ::isGroundDataType(drawParam);
 		updateFromModifiedDrawParam(drawParam, groundData);
@@ -3438,21 +3585,24 @@ void NFmiCombinedMapHandler::addTimeSerialView(const NFmiMenuItem& menuItem, boo
 void NFmiCombinedMapHandler::removeTimeSerialView(const NFmiMenuItem& menuItem)
 {
 	timeSerialViewDirty(true);
-	if(timeSerialViewDrawParamList_->Index(menuItem.IndexInViewRow()))
+	if(timeSerialViewDrawParamList_->Index(timeSerialViewIndex_))
+	{
 		timeSerialViewDrawParamList_->Remove();
+		removeSideParamList(timeSerialViewIndex_);
+	}
 }
 
-void NFmiCombinedMapHandler::timeSerialViewModelRunCountSet(const NFmiMenuItem& menuItem, int viewRowIndex)
+void NFmiCombinedMapHandler::timeSerialViewModelRunCountSet(const NFmiMenuItem& menuItem)
 {
-	NFmiDrawParamList* drawParamList = getDrawParamList(menuItem.MapViewDescTopIndex(), viewRowIndex);
-	if(drawParamList && drawParamList->Index(menuItem.IndexInViewRow()))
+	if(timeSerialViewDrawParamList_->Index(timeSerialViewIndex_))
 	{
-		drawParamList->Current()->TimeSerialModelRunCount(static_cast<int>(menuItem.ExtraParam()));
+		auto drawParam = timeSerialViewDrawParamList_->Current();
+		drawParam->TimeSerialModelRunCount(static_cast<int>(menuItem.ExtraParam()));
 
-		drawParamList->Dirty(true);
+		timeSerialViewDrawParamList_->Dirty(true);
 		checkAnimationLockedModeTimeBags(menuItem.MapViewDescTopIndex(), false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
 		mapViewDirty(menuItem.MapViewDescTopIndex(), false, false, true, false, false, false);
-		updateToModifiedDrawParam(menuItem.MapViewDescTopIndex(), drawParamList->Current(), viewRowIndex);
+		updateToModifiedDrawParam(menuItem.MapViewDescTopIndex(), drawParam, timeSerialViewIndex_);
 		if(menuItem.MapViewDescTopIndex() == CtrlViewUtils::kFmiTimeSerialView)
 			timeSerialViewDirty(true);
 	}
@@ -3520,14 +3670,6 @@ void NFmiCombinedMapHandler::selectCombinedMapModeIndices(unsigned int mapViewDe
 	auto& combinedOverlayMapModeState = getCombinedOverlayMapModeState(mapViewDescTopIndex, mapAreaIndex);
 	combinedOverlayMapModeState.combinedModeMapIndex(usedCombinedModeOverlayMapIndex);
 	setWantedLayerIndex(combinedOverlayMapModeState, mapViewDescTopIndex, mapAreaIndex, false);
-}
-
-void NFmiCombinedMapHandler::updateAllMapViewsSingleMapSizes()
-{
-	for(unsigned int mapViewDescTopIndex = 0; mapViewDescTopIndex < mapViewDescTops_.size(); mapViewDescTopIndex++)
-	{
-		mapViewDescTops_[mapViewDescTopIndex]->UpdateOneMapViewSize();
-	}
 }
 
 int NFmiCombinedMapHandler::getSelectedCombinedModeMapIndex(int mapViewDescTopIndex, const std::string& mapLayerName, bool backgroundMapCase, bool wmsCase)
@@ -3747,7 +3889,7 @@ void NFmiCombinedMapHandler::clearDesctopsAllParams(unsigned int mapViewDescTopI
 	}
 }
 
-void NFmiCombinedMapHandler::makeApplyViewMacroDirtyActions()
+void NFmiCombinedMapHandler::makeApplyViewMacroDirtyActions(double drawObjectScaleFactor)
 {
 	// läjä dirty funktio kutsuja, ota nyt tästä selvää. Pitäisi laittaa uuteen uskoon koko päivitys asetus juttu.
 	mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, true);
@@ -3756,6 +3898,11 @@ void NFmiCombinedMapHandler::makeApplyViewMacroDirtyActions()
 		NFmiMapViewDescTop* mapDescTop = getMapViewDescTop(mapViewDescTopIndex);
 		mapDescTop->MapViewBitmapDirty(true);
 		mapDescTop->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
+
+		// Päivitetään väkisin tämä pixelSize juttu ja siihen liittyvät laskut
+		auto currentPixelSize = mapDescTop->MapViewSizeInPixels();
+		mapDescTop->MapViewSizeInPixels(currentPixelSize, nullptr, drawObjectScaleFactor, !mapDescTop->IsTimeControlViewVisible());
+		mapDescTop->UpdateOneMapViewSize();
 	}
 	::getMacroParamDataCache().clearAllLayers();
 }

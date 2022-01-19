@@ -230,7 +230,7 @@ void NFmiAnalyzeToolData::StoreToSettings(void)
 
 void NFmiAnalyzeToolData::SeekPotentialProducersFileFilters(const NFmiHelpDataInfoSystem &theHelpDataInfoSystem)
 {
-	const checkedVector<NFmiHelpDataInfo> &dynamicHelpDataInfos = theHelpDataInfoSystem.DynamicHelpDataInfos();
+	const std::vector<NFmiHelpDataInfo> &dynamicHelpDataInfos = theHelpDataInfoSystem.DynamicHelpDataInfos();
 	itsPotentialProducersFileFilters.clear();
 	for(size_t i = 0; i < dynamicHelpDataInfos.size(); i++)
 	{
@@ -249,7 +249,7 @@ void NFmiAnalyzeToolData::SeekProducers(NFmiInfoOrganizer &theInfoOrganizer)
 	itsProducers.clear();
 	for(size_t i = 0; i < itsPotentialProducersFileFilters.size(); i++)
 	{
-		checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infos = theInfoOrganizer.GetInfos(itsPotentialProducersFileFilters[i]);
+		std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infos = theInfoOrganizer.GetInfos(itsPotentialProducersFileFilters[i]);
 		if(infos.size() && infos[0]->Producer())
 		{
 			if(infos[0]->SizeLevels() == 1) // ainakin aluksi tähän hyväksytään vain ns. pintadatat
@@ -387,7 +387,7 @@ static NFmiMetTime FindLatestAcceptableTime(boost::shared_ptr<NFmiFastQueryInfo>
     return NFmiMetTime::gMissingTime;
 }
 
-static NFmiMetTime GetLatestInfoTime(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, const boost::shared_ptr<NFmiArea> &checkedObservationArea)
+static NFmiMetTime GetLatestInfoTime(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, const boost::shared_ptr<NFmiArea> &checkedObservationArea)
 {
     NFmiMetTime latestTime = NFmiMetTime::gMissingTime;
     for(auto &info : infos)
@@ -452,7 +452,7 @@ static NFmiMetTime GetSuitableAnalyzeToolInfoTime(const NFmiMetTime &latestInfoT
 }
 
 // Palauttaa sekä todellisen viimeisen ajan (esim. 10.20), että pyöristetyn editoituun datan sopivan ajan (esim. 10.00)
-std::pair<NFmiMetTime, NFmiMetTime> NFmiAnalyzeToolData::GetLatestSuitableAnalyzeToolInfoTime(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, const boost::shared_ptr<NFmiArea> &checkedObservationArea, bool useObservationBlenderTool, const std::string &usedProducerName)
+std::pair<NFmiMetTime, NFmiMetTime> NFmiAnalyzeToolData::GetLatestSuitableAnalyzeToolInfoTime(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, const boost::shared_ptr<NFmiArea> &checkedObservationArea, bool useObservationBlenderTool, const std::string &usedProducerName)
 {
     if(infos.empty())
         throw std::runtime_error(std::string("Error in ") + __FUNCTION__ + ": given infos vector was empty, can't search latest analyze tool time");

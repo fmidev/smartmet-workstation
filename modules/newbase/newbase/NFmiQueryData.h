@@ -21,7 +21,7 @@
 class NFmiQueryInfo;
 
 //! Undocumented
-class _FMI_DLL NFmiQueryData
+class NFmiQueryData
 {
  public:
  public:

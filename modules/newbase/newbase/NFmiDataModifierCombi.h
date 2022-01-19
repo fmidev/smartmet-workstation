@@ -13,10 +13,10 @@
 class NFmiIntegrationSelector;
 
 //! Undocumented
-class _FMI_DLL NFmiDataModifierCombi : public NFmiDataModifier
+class NFmiDataModifierCombi : public NFmiDataModifier
 {
  public:
-  virtual ~NFmiDataModifierCombi(void);
+  virtual ~NFmiDataModifierCombi();
   NFmiDataModifierCombi(const NFmiDataModifierCombi& other);
 
   NFmiDataModifierCombi(unsigned int theNumberOfValues = 0,
@@ -25,7 +25,7 @@ class _FMI_DLL NFmiDataModifierCombi : public NFmiDataModifier
                         bool missingValuesAllowed = true,
                         NFmiCombinedParam* theCombinedParam = 0);
 
-  void Clear(void);
+  void Clear();
   using NFmiDataModifier::Calculate;
   void Calculate(float theValue);
   float CalcResult(const NFmiIntegrationSelector& theSelector);

@@ -9,17 +9,17 @@
 
 #include "NFmiDataModifierAvg.h"
 
-class _FMI_DLL NFmiDataModifierSingleExtremeValuesFilter : public NFmiDataModifier
+class NFmiDataModifierSingleExtremeValuesFilter : public NFmiDataModifier
 {
  public:
-  virtual ~NFmiDataModifierSingleExtremeValuesFilter(void);
-  NFmiDataModifierSingleExtremeValuesFilter(void);
+  virtual ~NFmiDataModifierSingleExtremeValuesFilter();
+  NFmiDataModifierSingleExtremeValuesFilter();
   NFmiDataModifierSingleExtremeValuesFilter(float thePointValue, float theLimit);
-  void Clear(void);
+  void Clear();
   using NFmiDataModifier::Calculate;
   using NFmiDataModifier::CalculationResult;
   virtual void Calculate(float theValue);
-  virtual float CalculationResult(void);
+  virtual float CalculationResult();
 
  private:
   NFmiDataModifierAvg itsAvgModifier;

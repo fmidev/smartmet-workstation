@@ -4,7 +4,6 @@
 #include <vector>
 #include "GridCtrl.h"
 #include "NFmiMetTime.h"
-#include "NFmiDataMatrix.h"
 #include "NFmiProducerSystem.h"
 #include "NFmiViewSettingMacro.h"
 #include "afxwin.h"
@@ -76,7 +75,7 @@ struct CountryFilter
 
 	std::string itsShortName;  // FI
 	std::string itsLongName;  // FINLAND
-	checkedVector<IdRange> itsWmoIdRanges; // piti laittaa wmo id ranget vektoriin koska esim. suomella on kaksi numero id v‰li‰, milla Suomen asemat ovat
+	std::vector<IdRange> itsWmoIdRanges; // piti laittaa wmo id ranget vektoriin koska esim. suomella on kaksi numero id v‰li‰, milla Suomen asemat ovat
 	bool fSelected;
 	bool fSharesIdRange; // joillain alueilla voi olla yhten‰inen ID v‰li, joka pit‰‰ ottaa huomioon optimoinnissa, esim. IsInRange
 	int itsRow; // t‰m‰ on t‰m‰n maan sijainti filtteri taulukossa
@@ -141,7 +140,7 @@ public:
 	void SetSelectedCountryAbbrStr(const std::string &theStr);
 private:
 	bool fAllSelected; // t‰m‰ overridaa muut valinnat, jos p‰‰ll‰
-	checkedVector<CountryFilter> itsCountryFilters;
+	std::vector<CountryFilter> itsCountryFilters;
     SmartMetDocumentInterface *itsSmartMetDocumentInterface; // ei omista/tuhoa
 };
 
@@ -158,7 +157,7 @@ class SynopDataGridViewUsedFileNames
     NFmiMetTime itsValidTime = NFmiMetTime::gMissingTime;
 public:
     SynopDataGridViewUsedFileNames() = default;
-    SynopDataGridViewUsedFileNames(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const NFmiMetTime &validTime);
+    SynopDataGridViewUsedFileNames(const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const NFmiMetTime &validTime);
     SynopDataGridViewUsedFileNames(const SynopDataGridViewUsedFileNames &other) = default;
 
     bool IsUpdateNeeded(const SynopDataGridViewUsedFileNames &other, bool modelDataCase, bool minMaxModeUsed) const;
@@ -168,7 +167,7 @@ public:
     std::string GetChangedFileNames(const SynopDataGridViewUsedFileNames &other, bool modelDataCase) const;
 private:
     void ClearNames();
-    void UpdateNames(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo);
+    void UpdateNames(const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo);
     std::string GetChangedFileNames(const std::vector<std::string> &otherObsDataFileNames) const;
 };
 
@@ -242,7 +241,7 @@ public:
 	void SetDocument(SmartMetDocumentInterface *smartMetDocumentInterface){itsSmartMetDocumentInterface = smartMetDocumentInterface;};
 	void SetWmoIdFilterManager(WmoIdFilterManager *theWmoIdFilterManager){itsWmoIdFilterManager = theWmoIdFilterManager;};
 	void SetProducerString(const std::string &theStr) {itsProducerString = theStr;}
-	void SetUsedHeaders(checkedVector<HeaderParInfo> *theUsedHeaders){itsUsedHeaders = theUsedHeaders;};
+	void SetUsedHeaders(std::vector<HeaderParInfo> *theUsedHeaders){itsUsedHeaders = theUsedHeaders;};
 
 	void DoLastSort(void);
 	void LastDataTime(const NFmiMetTime &theTime)
@@ -282,7 +281,7 @@ private:
 	int itsLastStationCount; // k‰ytet‰‰n printtauksessa otsikossa
 	bool fEnableFixedColumnSelection; // t‰m‰ on pikku kikka mill‰ estet‰‰n valittujen ruutujen sekoittuminen kun tehd‰‰n DoLastSort
 	std::string itsProducerString;
-	checkedVector<HeaderParInfo> *itsUsedHeaders; // ei omista/tuhoa
+	std::vector<HeaderParInfo> *itsUsedHeaders; // ei omista/tuhoa
 	BOOL fMinMaxModeOn;
 	double itsDayRangeValue;
 	int itsMapViewDescTopIndex;
@@ -355,7 +354,7 @@ private:
 	CRect CalcOtherArea(void);
 	void DoWhenClosing(void);
 	boost::shared_ptr<NFmiFastQueryInfo> GetWantedInfo(bool fGetObsStationData);
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetWantedSynopInfos(void);
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetWantedSynopInfos(void);
 	void InitSynopHeaders(void);
 	void InitForecastSynopHeaders(void);
 	void InitMinMaxDataHeaders(void);
@@ -364,9 +363,9 @@ private:
 	void InitWmoIdFilterManager(void);
 	void WhenProducerRadioButtonClikked(void);
 	const std::string& GetProducerString(void) const;
-	void FillGridWithSynopData(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, const NFmiMetTime &theTime, boost::shared_ptr<NFmiFastQueryInfo> &theSadeInfo, int &theRealStationCount);
-	void FillGridWithForecastData(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, boost::shared_ptr<NFmiFastQueryInfo> &theForInfo, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, const NFmiMetTime &theTime, int &theRealStationCount);
-	void FillGridWithMinMaxData(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, boost::shared_ptr<NFmiFastQueryInfo> &theForInfo, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, boost::shared_ptr<NFmiFastQueryInfo> &theSadeInfo, int &theRealStationCount);
+	void FillGridWithSynopData(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, const NFmiMetTime &theTime, boost::shared_ptr<NFmiFastQueryInfo> &theSadeInfo, int &theRealStationCount);
+	void FillGridWithForecastData(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, boost::shared_ptr<NFmiFastQueryInfo> &theForInfo, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, const NFmiMetTime &theTime, int &theRealStationCount);
+	void FillGridWithMinMaxData(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, boost::shared_ptr<NFmiFastQueryInfo> &theForInfo, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, boost::shared_ptr<NFmiFastQueryInfo> &theSadeInfo, int &theRealStationCount);
 	void InitProducerSelector(void);
 	void EnableDisableControls(void);
 	void UpdateMinMaxRangeStartTime(void);
@@ -374,7 +373,7 @@ private:
 	bool IsSadeDataUsed(void);
 	void InitDialogTexts(void);
 	void SelectProducer(const NFmiProducer &theProducer);
-    bool GridControlNeedsUpdate(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo);
+    bool GridControlNeedsUpdate(const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo);
     bool IsSelectedProducerModelData() const;
     void ForcedUpdate();
     const NFmiMetTime& GetMainMapViewTime() const;
@@ -388,17 +387,17 @@ private:
 	CFont itsTimeAndStationTextFont;
 	int itsMapViewDescTopIndex;
 
-	checkedVector<HeaderParInfo> itsSynopHeaders;
-	checkedVector<HeaderParInfo> itsForecastSynopHeaders;
-	checkedVector<HeaderParInfo> itsMinMaxDataHeaders;
-	checkedVector<HeaderParInfo> itsForecastMinMaxDataHeaders;
+	std::vector<HeaderParInfo> itsSynopHeaders;
+	std::vector<HeaderParInfo> itsForecastSynopHeaders;
+	std::vector<HeaderParInfo> itsMinMaxDataHeaders;
+	std::vector<HeaderParInfo> itsForecastMinMaxDataHeaders;
 
-	checkedVector<HeaderParInfo> *itsUsedHeaders;
+	std::vector<HeaderParInfo> *itsUsedHeaders;
 
 	WmoIdFilterManager itsWmoIdFilterManager;
 	// Tuottajan valinta, Synop, Hirlam, Ec jne.
 	CComboBox itsProducerSelector;
-	checkedVector<NFmiProducerHelperInfo> itsProducerList;
+	std::vector<NFmiProducerHelperInfo> itsProducerList;
 	NFmiMetTime itsMinMaxRangeStartTime; // t‰t‰  s‰‰det‰‰n aika ja kalenteri kontrollien avulla
 	bool fUseSadeData; // jos katsellaan synop-tuottajaa, silloin laitetaan myˆs sadedataa mukaan
 	bool fUpdateHeadersAfterViewMacroLoad;

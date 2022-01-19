@@ -23,7 +23,7 @@
 
 namespace Imagine
 {
-class _FMI_DLL NFmiEsriPolygon : public NFmiEsriElement
+class NFmiEsriPolygon : public NFmiEsriElement
 {
  public:
   // Constructors, destructors

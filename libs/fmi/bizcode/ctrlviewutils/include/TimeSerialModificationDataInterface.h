@@ -3,7 +3,6 @@
 #include "NFmiInfoData.h"
 #include "NFmiTimeDescriptor.h"
 #include "FmiSmartMetEditingMode.h"
-#include "NFmiDataMatrix.h"
 #include "boost/shared_ptr.hpp"
 
 class NFmiFastQueryInfo;
@@ -99,12 +98,12 @@ public:
     virtual bool StoreData(bool fDoSaveTmpRename, const std::string& theFileName, NFmiQueryData *theData) = 0;
     virtual NFmiHelpDataInfoSystem* HelpDataInfoSystem(void) = 0;
     virtual bool DataLoadingOK(bool noError) = 0;
-    virtual void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern, NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState = false) = 0;
+    virtual void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern, NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState, bool& dataWasDeleted) = 0;
     virtual bool WarnIfCantSaveWorkingFile(void) = 0;
     virtual NFmiHPlaceDescriptor* PossibleUsedDataLoadingGrid(void) = 0;
     virtual bool UseEditedDataParamDescriptor(void) = 0;
     virtual NFmiParamDescriptor& EditedDataParamDescriptor(void) = 0;
-    virtual checkedVector<int>& DataLoadingProducerIndexVector(void) = 0;
+    virtual std::vector<int>& DataLoadingProducerIndexVector(void) = 0;
     virtual void EditedDataNeedsToBeLoaded(bool newValue) = 0;
     virtual bool CheckEditedDataAfterAutoLoad(void) = 0;
     virtual void PutWarningFlagTimerOn(void) = 0;

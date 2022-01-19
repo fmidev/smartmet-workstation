@@ -9,22 +9,22 @@
 
 #include "NFmiDataModifier.h"
 
-class _FMI_DLL NFmiDataModifierAvg : public NFmiDataModifier
+class NFmiDataModifierAvg : public NFmiDataModifier
 {
  public:
-  virtual ~NFmiDataModifierAvg(void);
-  NFmiDataModifierAvg(void);
+  virtual ~NFmiDataModifierAvg();
+  NFmiDataModifierAvg();
   NFmiDataModifierAvg(const NFmiDataModifierAvg& theOther);
-  NFmiDataModifier* Clone(void) const;
+  NFmiDataModifier* Clone() const;
 
-  float Avg(void);
+  float Avg();
   virtual void Calculate(float theValue);
   virtual void Calculate(NFmiQueryInfo* theQI);
 
-  void Clear(void);
+  void Clear();
   using NFmiDataModifier::CalculationResult;
-  virtual float CalculationResult(void);
-  long Counter(void);
+  virtual float CalculationResult();
+  long Counter();
 
  protected:
   long itsCounter;

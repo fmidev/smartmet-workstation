@@ -54,9 +54,9 @@ public:
         int theArgumentCount,
         const NFmiGrid &theCalculationGrid,
         unsigned long thePossibleMetaParamId);
-    ~NFmiLocalAreaMinMaxMask(void);
+    ~NFmiLocalAreaMinMaxMask();
     NFmiLocalAreaMinMaxMask(const NFmiLocalAreaMinMaxMask &theOther);
-    NFmiAreaMask *Clone(void) const override;
+    NFmiAreaMask *Clone() const override;
     NFmiLocalAreaMinMaxMask &operator=(const NFmiLocalAreaMinMaxMask &theMask) = delete;
 
     double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
@@ -70,7 +70,7 @@ protected:
     std::vector<NFmiRect> CalculateLocalAreaCalculationBoundaries(int subGridCountX, int subGridCountY);
     std::vector<NFmiRect> CalculateLocalAreaCalculationBoundaries(int subGridCountX, int subGridCountY, const NFmiPoint &subGridBaseSize, int subGridDecreaseIndexX, int subGridDecreaseIndexY);
     void FillResultMatrixWithLocalExtremePlaces(std::vector<LocalExtreme> &localExtremeResults, NFmiDataMatrix<float> &resultMatrix, float localAreaSearchRangeInKm);
-    bool InitializeFromArguments(void);
+    bool InitializeFromArguments();
 
     // Vertikaali funktion loput argumentit
     std::vector<float> itsArgumentVector;

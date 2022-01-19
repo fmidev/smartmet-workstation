@@ -33,11 +33,11 @@ const unsigned long kMMDDHH = kMonth + kDay + kHour;
 const unsigned long kDDHHMM = kDay + kHour + kMinute;
 
 //! Undocumented
-class _FMI_DLL NFmiStaticTime : public NFmiSortable
+class NFmiStaticTime : public NFmiSortable
 {
  public:
   virtual ~NFmiStaticTime() {}
-  NFmiStaticTime(void);
+  NFmiStaticTime();
   NFmiStaticTime(const NFmiStaticTime& theTime);
   NFmiStaticTime(short year, short month, short day);
   NFmiStaticTime(short year, short month, short day, short hour, short minute = 0, short sec = 0);
@@ -53,21 +53,21 @@ class _FMI_DLL NFmiStaticTime : public NFmiSortable
   void SetTime(short hour, short minute = 0, short sec = 0);
   void GetTime(short& hour, short& minute, short& sec) const;
 
-  short GetYear(void) const;
-  short GetMonth(void) const;
-  short GetDay(void) const;
-  short GetHour(void) const;
-  short GetMin(void) const;
-  short GetSec(void) const;
+  short GetYear() const;
+  short GetMonth() const;
+  short GetDay() const;
+  short GetHour() const;
+  short GetMin() const;
+  short GetSec() const;
 
-  void ReadDateTime(void);
-  void XPrint(void) const;
+  void ReadDateTime();
+  void XPrint() const;
   void XPrint(const char* str) const;
-  virtual void Print(void) const;
+  virtual void Print() const;
 
   const NFmiString ToStr(const unsigned long theTimeMask) const;
   void FromStr(const NFmiString theTimeString, const unsigned long theTimeMask = kYYYYMMDDHHMMSS);
-  double CalcHourOfDay(void) const;
+  double CalcHourOfDay() const;
 
   void SetYear(short year);
   void SetMonth(short month);
@@ -75,10 +75,10 @@ class _FMI_DLL NFmiStaticTime : public NFmiSortable
   void SetHour(short hour);
   void SetMin(short minute);
   void SetSec(short sec);
-  void SetMissing(void);
-  bool IsMissing(void);
+  void SetMissing();
+  bool IsMissing();
 
-  virtual const char* ClassName(void) const;
+  virtual const char* ClassName() const;
 
   virtual std::ostream& Write(std::ostream& file) const;
 
@@ -86,9 +86,9 @@ class _FMI_DLL NFmiStaticTime : public NFmiSortable
   static std::time_t my_timegm(struct ::tm* t);
 
  protected:
-  void _setCurrent(void);
+  void _setCurrent();
   void _set2CurrentLocalTime(std::time_t theTime);
-  virtual struct std::tm GetSystemTime(void);
+  virtual struct std::tm GetSystemTime();
 
  private:
   short fYear;
@@ -112,49 +112,49 @@ typedef NFmiStaticTime TFmiStaticTime;
  */
 // ----------------------------------------------------------------------
 
-inline short NFmiStaticTime::GetYear(void) const { return fYear; }
+inline short NFmiStaticTime::GetYear() const { return fYear; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline short NFmiStaticTime::GetMonth(void) const { return fMonth; }
+inline short NFmiStaticTime::GetMonth() const { return fMonth; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline short NFmiStaticTime::GetDay(void) const { return fDay; }
+inline short NFmiStaticTime::GetDay() const { return fDay; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline short NFmiStaticTime::GetHour(void) const { return fHour; }
+inline short NFmiStaticTime::GetHour() const { return fHour; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline short NFmiStaticTime::GetMin(void) const { return fMin; }
+inline short NFmiStaticTime::GetMin() const { return fMin; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline short NFmiStaticTime::GetSec(void) const { return fSec; }
+inline short NFmiStaticTime::GetSec() const { return fSec; }
 // ----------------------------------------------------------------------
 /*!
  * \return Meneillään olevan vuorokauden tunti desimaalilukuna
  */
 // ----------------------------------------------------------------------
 
-inline double NFmiStaticTime::CalcHourOfDay(void) const
+inline double NFmiStaticTime::CalcHourOfDay() const
 {
   return GetHour() + GetMin() / 60. + GetSec() / 3600.;
 }
@@ -165,7 +165,7 @@ inline double NFmiStaticTime::CalcHourOfDay(void) const
  */
 // ----------------------------------------------------------------------
 
-inline const char* NFmiStaticTime::ClassName(void) const { return "NFmiStaticTime"; }
+inline const char* NFmiStaticTime::ClassName() const { return "NFmiStaticTime"; }
 // ----------------------------------------------------------------------
 /*!
  * Output operator for class NFmiStaticTime

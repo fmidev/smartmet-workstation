@@ -24,6 +24,7 @@ target_link_libraries(
     CatLog
     EditingDataUtils
     CtrlViews
+    Processes
     )
 
 target_include_directories( 
@@ -39,6 +40,7 @@ target_include_directories(
     PUBLIC ${CatLog_INCLUDE_DIRS}
     PUBLIC ${EditingDataUtils_INCLUDE_DIRS}
     PUBLIC ${CtrlViews_INCLUDE_DIRS}
+    PUBLIC ${Processes_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
     )
 
@@ -55,6 +57,7 @@ set(
     ${CatLog_INCLUDE_DIRS}
     ${EditingDataUtils_INCLUDE_DIRS}
     ${CtrlViews_INCLUDE_DIRS}
+    ${Processes_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIR}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )

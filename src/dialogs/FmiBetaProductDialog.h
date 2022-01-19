@@ -71,6 +71,7 @@ private:
     void DoAllBetaProductUpdates();
     void UpdateSynopStationEditColors();
     void UpdateBetaProductName();
+    void DoImagePacking(const std::string &directoryPath);
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface; // ei omista, ei tuhoa
     NFmiBetaProductionSystem *itsBetaProductionSystem; // ei omista, ei tuhoa
@@ -111,6 +112,7 @@ private:
     int itsTotalImagesGenerated;
     std::string itsBetaProductFullFilePath;
     CString itsBetaProductNameU_;
+    BOOL fPackImages;
 
     std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> *itsDueAutomations; // Tähän laitetaan väliaikaisesti tehtävien automaatioiden lista silloin kun SmartMet on automaatio moodissa ja se on huomannut että on tehtäviä töitä
 
@@ -158,4 +160,5 @@ public:
     afx_msg void OnEnChangeEditSynopStationIdString();
     afx_msg void OnBnClickedButtonSaveAsBetaProduct();
     afx_msg void OnBnClickedCheckShowModelOriginTime();
+    afx_msg void OnBnClickedCheckPackImages();
 };

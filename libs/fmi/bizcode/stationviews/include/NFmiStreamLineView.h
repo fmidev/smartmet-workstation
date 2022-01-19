@@ -198,9 +198,9 @@ public:
 							,FmiParameterName theParamId
 							,int theRowIndex
                             ,int theColumnIndex);
-    virtual ~NFmiStreamLineView(void);
-	void Draw (NFmiToolBox * theGTB);
-	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
+    ~NFmiStreamLineView(void);
+	void Draw (NFmiToolBox * theGTB) override;
+	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
 
 protected:
     void DrawStreamLineData(void);

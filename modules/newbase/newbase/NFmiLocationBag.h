@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "NFmiDataMatrix.h"
 #include "NFmiGeoTools.h"
 #include "NFmiLocation.h"
 #include "NFmiNearTree.h"
@@ -23,11 +22,11 @@ class NFmiStation;
 class NFmiArea;
 
 //! Undocumented
-class _FMI_DLL NFmiLocationBag : public NFmiSize
+class NFmiLocationBag : public NFmiSize
 {
  public:
-  virtual ~NFmiLocationBag(void);
-  NFmiLocationBag(void);
+  virtual ~NFmiLocationBag();
+  NFmiLocationBag();
   NFmiLocationBag(const NFmiLocationBag &theBag);
   NFmiLocationBag(const NFmiLocation &theLocation);
   NFmiLocationBag(const NFmiLocation *theLocationArray, unsigned long theNumberOfLocations);
@@ -36,13 +35,13 @@ class _FMI_DLL NFmiLocationBag : public NFmiSize
   NFmiLocationBag &operator=(const NFmiLocationBag &theLocationBag);
   bool operator==(const NFmiLocationBag &theLocationBag) const;
 
-  virtual void Destroy(void);
+  virtual void Destroy();
 
   virtual bool Location(const NFmiLocation &theLocation);
-  virtual const NFmiLocation *Location(void) const;
+  virtual const NFmiLocation *Location() const;
   virtual const NFmiLocation *Location(unsigned long theIndex) const;
   virtual bool AddLocation(const NFmiLocation &theLocation, bool theChecking = true);
-  virtual bool IsLocations(void) const;
+  virtual bool IsLocations() const;
   virtual bool NearestLocation(const NFmiLocation &theLocation,
                                double theMaxDistance = kFloatMissing * 1000.);
   virtual bool NearestLocation(const NFmiLocation &theLocation,
@@ -51,15 +50,15 @@ class _FMI_DLL NFmiLocationBag : public NFmiSize
 
   //! Hakee listan paikkaindeksi/etäisyys metreinä pareja. Listaan haetaan annettua paikkaa lähimmat
   //! datapisteet.
-  const checkedVector<std::pair<int, double> > NearestLocations(
+  const std::vector<std::pair<int, double> > NearestLocations(
       const NFmiLocation &theLocation,
       int theMaxWantedLocations,
       double theMaxDistance = kFloatMissing) const;
 
   virtual const NFmiLocationBag Combine(const NFmiLocationBag &theBag);
-  virtual NFmiLocationBag *Clone(void) const;
+  virtual NFmiLocationBag *Clone() const;
 
-  virtual unsigned long ClassId(void) const { return kNFmiLocationBag; }
+  virtual unsigned long ClassId() const { return kNFmiLocationBag; }
   virtual std::ostream &Write(std::ostream &file) const;
   virtual std::istream &Read(std::istream &file);
 
@@ -72,7 +71,7 @@ class _FMI_DLL NFmiLocationBag : public NFmiSize
 
   void Add(const NFmiLocation &theLocation);
 
-  typedef checkedVector<NFmiLocation *> StorageType;
+  typedef std::vector<NFmiLocation *> StorageType;
   StorageType itsLocations;
 
  private:
@@ -141,7 +140,7 @@ inline const NFmiLocation *NFmiLocationBag::Location(unsigned long theIndex) con
  */
 // ----------------------------------------------------------------------
 
-inline NFmiLocationBag *NFmiLocationBag::Clone(void) const { return new NFmiLocationBag(*this); }
+inline NFmiLocationBag *NFmiLocationBag::Clone() const { return new NFmiLocationBag(*this); }
 // ----------------------------------------------------------------------
 /*!
  * Test if the bag contains any locations
@@ -150,6 +149,6 @@ inline NFmiLocationBag *NFmiLocationBag::Clone(void) const { return new NFmiLoca
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiLocationBag::IsLocations(void) const { return (!itsLocations.empty()); }
+inline bool NFmiLocationBag::IsLocations() const { return (!itsLocations.empty()); }
 
 // ======================================================================

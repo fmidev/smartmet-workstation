@@ -1,7 +1,6 @@
 #include "SettingsFunctions.h"
 #include "NFmiStringTools.h"
 #include "NFmiSettings.h"
-#include "NFmiDataMatrix.h"
 
 namespace SettingsFunctions
 {
@@ -54,7 +53,7 @@ namespace SettingsFunctions
             return *theOptionalPoint;
         else
         {
-            checkedVector<double> gridValues = NFmiStringTools::Split<checkedVector<double> >(gridStr, ",");
+            auto gridValues = NFmiStringTools::Split<std::vector<double> >(gridStr, ",");
             if(gridValues.size() != 2)
                 throw std::runtime_error(std::string("GetCommaSeparatedPointFromSettings had invalid setting with key: ") + theKey + "\nand value: " + gridStr + "\n, has to be to numbers (e.g. x,y).");
 

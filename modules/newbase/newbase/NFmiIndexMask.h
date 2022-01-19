@@ -25,21 +25,21 @@ class NFmiIndexMask
   typedef std::vector<value_type> storage_type;
   typedef storage_type::const_iterator const_iterator;
 
-  ~NFmiIndexMask(void);
-  NFmiIndexMask(void);
+  ~NFmiIndexMask();
+  NFmiIndexMask();
   NFmiIndexMask(size_type theXSize, size_type theYSize);
   NFmiIndexMask(const NFmiIndexMask& theMask);
   NFmiIndexMask& operator=(const NFmiIndexMask& theMask);
 
-  void clear(void);
-  bool empty(void) const;
-  size_type size(void) const;
+  void clear();
+  bool empty() const;
+  size_type size() const;
 
   void insert(value_type theIndex);
   const_iterator find(value_type theIndex) const;
 
-  const_iterator begin(void) const;
-  const_iterator end(void) const;
+  const_iterator begin() const;
+  const_iterator end() const;
 
   bool operator==(const NFmiIndexMask& theMask) const;
   bool operator!=(const NFmiIndexMask& theMask) const;
@@ -49,8 +49,8 @@ class NFmiIndexMask
   NFmiIndexMask& operator-=(const NFmiIndexMask& theMask);
   NFmiIndexMask& operator^=(const NFmiIndexMask& theMask);
 
-  size_type XSize(void) const { return itsXSize; }
-  size_type YSize(void) const { return itsYSize; }
+  size_type XSize() const { return itsXSize; }
+  size_type YSize() const { return itsYSize; }
   void XSize(size_type newSize) { itsXSize = newSize; }
   void YSize(size_type newSize) { itsYSize = newSize; }
   void Move(int theXMove, int theYMove);  //! raaka hila määräinen siirto maskille

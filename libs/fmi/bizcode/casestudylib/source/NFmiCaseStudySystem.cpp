@@ -14,12 +14,16 @@
 #include "CtrlViewFunctions.h"
 #include "NFmiMacroParamfunctions.h"
 #include "NFmiPathUtils.h"
+#include "NFmiQueryData.h"
+#include "NFmiQueryDataUtil.h"
 
 #include "boost/shared_ptr.hpp"
 #include <boost/filesystem/operations.hpp>
+#include <boost/algorithm/string.hpp>
 #include "json_spirit_writer.h"
 #include "json_spirit_reader.h"
 #include "json_spirit_writer_options.h"
+#include <mutex>
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4503 ) // t‰m‰ est‰‰ varoituksen joka tulee VC++ 2012 k‰‰nt‰j‰ll‰, kun jonkun boost-luokan nimi merkkein‰ ylitt‰‰ jonkun rajan
@@ -41,8 +45,10 @@ static const std::string gJsonName_ProducerName = "ProducerName";
 static const std::string gJsonName_ProducerId = "ProducerId";
 static const std::string gJsonName_FileFilter = "FileFilter";
 static const std::string gJsonName_RelativeStoredFileFilter = "RelativeStoredFileFilter";
-static const std::string gJsonName_StartOffsetInMinutes = "StartOffsetInMinutes";
-static const std::string gJsonName_EndOffsetInMinutes = "EndOffsetInMinutes";
+static const std::string gJsonName_StartOffsetInMinutes_legacy = "StartOffsetInMinutes";
+static const std::string gJsonName_EndOffsetInMinutes_legacy = "EndOffsetInMinutes";
+static const std::string gJsonName_CaseStudyDataIndexRange = "CaseStudyDataIndexRange";
+static const std::string gJsonName_LocalCacheDataCount = "LocalCacheDataCount";
 static const std::string gJsonName_DataType = "DataType";
 static const std::string gJsonName_Store = "Store";
 static const std::string gJsonName_ImageFile = "ImageFile";
@@ -60,6 +66,160 @@ static const std::string gJsonName_NotificationLabel = "NotificationLabel";
 static const std::string gJsonName_CustomMenuFolder = "CustomMenuFolder";
 static const std::string gJsonName_AdditionalArchiveFileCount = "AdditionalArchiveFileCount";
 
+static std::string NormalizePathDelimiters(const std::string& thePath)
+{
+	std::string fixedPath = thePath;
+	return NFmiStringTools::ReplaceChars(fixedPath, '/', '\\');
+}
+
+static void DoCsDataFileWinRegValuesInitializingChecks(NFmiCsDataFileWinReg& csDataValues)
+{
+	// Jos saatu ainakin yksi dataCount arvo joka ei ole puuttuva (-1), laitetaan alustus 'kunnolliseksi'.
+	if(csDataValues.CaseStudyDataIndexRange() != gMissingIndexRange || csDataValues.LocalCacheDataCount() >= 0)
+		csDataValues.ProperlyInitialized(true);
+}
+
+// ************************************************************
+// *****   NFmiCsDataFileWinReg alkaa  ************************
+// ************************************************************
+
+NFmiCsDataFileWinReg::NFmiCsDataFileWinReg() = default;
+
+NFmiCsDataFileWinReg::NFmiCsDataFileWinReg(const std::pair<int, int>& caseStudyDataIndexRange, bool fixedValueForCaseStudyDataCount, int localCacheDataCount, bool fixedValueForLocalCacheDataCount, bool store)
+:itsCaseStudyDataIndexRange(caseStudyDataIndexRange)
+,fFixedValueForCaseStudyDataCount(fixedValueForCaseStudyDataCount)
+,itsLocalCacheDataCount(localCacheDataCount)
+,fFixedValueForLocalCacheDataCount(fixedValueForLocalCacheDataCount)
+,fStore(store)
+,fProperlyInitialized(false)
+{
+}
+
+bool NFmiCsDataFileWinReg::StoreLastDataOnly() const
+{
+	return itsCaseStudyDataIndexRange.first == 1 && itsCaseStudyDataIndexRange.second == 1;
+}
+
+bool NFmiCsDataFileWinReg::LatestDataIncluded() const
+{
+	return itsCaseStudyDataIndexRange.second == 1;
+}
+
+std::vector<int> NFmiCsDataFileWinReg::GetWantedModelRunIndexList() const
+{
+	std::vector<int> indexList;
+	for(int index = itsCaseStudyDataIndexRange.second; index <= itsCaseStudyDataIndexRange.first; index++)
+	{
+		indexList.push_back(index);
+	}
+	return indexList;
+}
+
+void NFmiCsDataFileWinReg::FixCaseStudyDataIndexRange(std::pair<int, int>& caseStudyDataIndexRange)
+{
+	if(caseStudyDataIndexRange.first < 1)
+		caseStudyDataIndexRange.first = 1;
+	if(caseStudyDataIndexRange.second < 1)
+		caseStudyDataIndexRange.second = 1;
+	if(caseStudyDataIndexRange.second > caseStudyDataIndexRange.first)
+		caseStudyDataIndexRange.second = caseStudyDataIndexRange.first;
+}
+
+void NFmiCsDataFileWinReg::CaseStudyDataIndexRange(std::pair<int, int> caseStudyDataIndexRange)
+{
+	FixCaseStudyDataIndexRange(caseStudyDataIndexRange);
+	if(!fFixedValueForCaseStudyDataCount)
+		itsCaseStudyDataIndexRange = caseStudyDataIndexRange; 
+}
+
+void NFmiCsDataFileWinReg::FixedValueForCaseStudyDataCount(bool newValue) 
+{ 
+	fFixedValueForCaseStudyDataCount = newValue; 
+}
+
+void NFmiCsDataFileWinReg::LocalCacheDataCount(int newValue) 
+{ 
+	if(newValue < 1)
+		newValue = 1;
+	if(!fFixedValueForLocalCacheDataCount)
+		itsLocalCacheDataCount = newValue; 
+}
+
+void NFmiCsDataFileWinReg::FixedValueForLocalCacheDataCount(bool newValue) 
+{ 
+	fFixedValueForLocalCacheDataCount = newValue; 
+}
+
+void NFmiCsDataFileWinReg::Store(bool newValue) 
+{ 
+	fStore = newValue; 
+}
+
+void NFmiCsDataFileWinReg::ProperlyInitialized(bool newValue) 
+{ 
+	fProperlyInitialized = newValue; 
+}
+
+int NFmiCsDataFileWinReg::CalcCaseStudyDataCount() const
+{
+	return (itsCaseStudyDataIndexRange.first - itsCaseStudyDataIndexRange.second) + 1;
+}
+
+bool NFmiCsDataFileWinReg::AreDataCountsFixed() const
+{
+	return fFixedValueForCaseStudyDataCount && fFixedValueForLocalCacheDataCount;
+}
+
+void NFmiCsDataFileWinReg::FixToLastDataOnlyType()
+{
+	itsCaseStudyDataIndexRange = std::make_pair(1, 1);
+	fFixedValueForCaseStudyDataCount = true;
+	itsLocalCacheDataCount = 1;
+	fFixedValueForLocalCacheDataCount = true;
+	fProperlyInitialized = true;
+}
+
+// Otetaan other:ista asetuksia, mutta vain ei-fiksatuissa tapauksissa.
+void NFmiCsDataFileWinReg::DoCheckedAssignment(const NFmiCsDataFileWinReg& other)
+{
+	if(!fFixedValueForCaseStudyDataCount)
+		itsCaseStudyDataIndexRange = other.itsCaseStudyDataIndexRange;
+	if(!fFixedValueForLocalCacheDataCount)
+		itsLocalCacheDataCount = other.itsLocalCacheDataCount;
+	fStore = other.fStore;
+	fProperlyInitialized = true;
+}
+
+// Otetaan other:ista mahdolliset fiksatut asetukset
+void NFmiCsDataFileWinReg::AdaptFixedSettings(const NFmiCsDataFileWinReg& other)
+{
+	if(other.fFixedValueForCaseStudyDataCount)
+	{
+		itsCaseStudyDataIndexRange = other.itsCaseStudyDataIndexRange;
+		fFixedValueForCaseStudyDataCount = other.fFixedValueForCaseStudyDataCount;
+	}
+	if(other.fFixedValueForLocalCacheDataCount)
+	{
+		itsLocalCacheDataCount = other.itsLocalCacheDataCount;
+		fFixedValueForLocalCacheDataCount = other.fFixedValueForLocalCacheDataCount;
+	}
+}
+
+bool NFmiCsDataFileWinReg::operator != (const NFmiCsDataFileWinReg & other) const
+{
+	if(itsCaseStudyDataIndexRange != other.itsCaseStudyDataIndexRange)
+		return true;
+	if(itsLocalCacheDataCount != other.itsLocalCacheDataCount)
+		return true;
+	if(fStore != other.fStore)
+		return true;
+
+	// fProperlyInitialized data osio ei kiinnosta t‰ss‰ vertailussa
+
+	return false;
+}
+
+
 // ************************************************************
 // *****   NFmiCaseStudyDataFile alkaa  ***********************
 // ************************************************************
@@ -69,20 +229,17 @@ NFmiCaseStudyDataFile::NFmiCaseStudyDataFile(void)
 ,itsProducer()
 ,itsFileFilter()
 ,itsRelativeStoredFileFilter()
-,itsStartOffsetInMinutes(0)
-,itsEndOffsetInMinutes(0)
+,itsDataFileWinRegValues()
 ,itsDataIntervalInMinutes(0)
 ,itsSingleFileSize(0)
 ,itsTotalFileSize(0)
 ,itsMaxFileSize(0)
-,itsCategory(kFmiCategoryError)
+,itsCategory(NFmiCaseStudyDataCategory::Error)
 ,itsDataType(NFmiInfoData::kNoDataType)
 ,itsLevelCount(0)
 ,itsImageAreaStr()
 ,itsImageParam()
-,fStore(false)
 ,fImageFile(false)
-,fStoreLastDataOnly(false)
 ,fCategoryHeader(false)
 ,fProducerHeader(false)
 ,fOnlyOneData(false)
@@ -106,22 +263,11 @@ void NFmiCaseStudyDataFile::Reset(void)
 
 static boost::shared_ptr<NFmiFastQueryInfo> GetInfo(NFmiInfoOrganizer &theInfoOrganizer, const std::string &theFileNameFilter)
 {
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = theInfoOrganizer.GetInfos(theFileNameFilter);
+	auto infoVector = theInfoOrganizer.GetInfos(theFileNameFilter);
 	if(infoVector.size())
 		return infoVector[0];
 	else
 		return boost::shared_ptr<NFmiFastQueryInfo>();
-}
-
-static bool StoreLastDataOnly(const NFmiHelpDataInfo &theDataInfo)
-{
-	if(theDataInfo.IsCombineData())
-		return true;
-	NFmiInfoData::Type dataType = theDataInfo.DataType();
-	if(dataType == NFmiInfoData::kAnalyzeData || dataType == NFmiInfoData::kObservations || dataType == NFmiInfoData::kFlashData || dataType == NFmiInfoData::kSingleStationRadarData || dataType == NFmiInfoData::kTrajectoryHistoryData)
-		return true;
-	else
-		return false;
 }
 
 int NFmiCaseStudyDataFile::GetModelRunTimeGapInMinutes(NFmiQueryInfo *theInfo, NFmiInfoData::Type theType, NFmiHelpDataInfo *theHelpDataInfo)
@@ -133,8 +279,15 @@ int NFmiCaseStudyDataFile::GetModelRunTimeGapInMinutes(NFmiQueryInfo *theInfo, N
 		return -1; // Jos datan konffissa on erikseen m‰‰r‰tty m‰‰rittelem‰tˆn aikav‰li, niin k‰ytet‰‰n sit‰.
 	if(theType == NFmiInfoData::kKepaData)
 		return -1; // editoidulla datalla ei ole vakio ajov‰li‰, niit‰ editoidaan ja l‰hetet‰‰n milloin vain
-	if(theHelpDataInfo && theHelpDataInfo->ModelRunTimeGapInHours())
-		return static_cast<int>(std::round(theHelpDataInfo->ModelRunTimeGapInHours() * 60)); // Jos datan konffissa on erikseen m‰‰r‰tty malliajov‰li, niin k‰ytet‰‰n sit‰.
+	
+	if(theHelpDataInfo)
+	{
+		auto modelRunTimeGapInHours = theHelpDataInfo->ModelRunTimeGapInHours();
+		if(modelRunTimeGapInHours < 0)
+			return -1;
+		if(modelRunTimeGapInHours > 0)
+			return static_cast<int>(std::round(theHelpDataInfo->ModelRunTimeGapInHours() * 60)); // Jos datan konffissa on erikseen m‰‰r‰tty malliajov‰li, niin k‰ytet‰‰n sit‰.
+	}
 
 	int modelRunTimeGap = 0; // defaultti on 0, joka p‰tee kaikkiin datoihin, mist‰ ei ole arkistodataa k‰ytˆss‰, kuten analyysi, havainnot jne.
 	if(NFmiDrawParam::IsModelRunDataType(theType))
@@ -211,22 +364,11 @@ static double FastFileByteCount(const std::string & theFilePattern, const NFmiCa
 
 double NFmiCaseStudyDataFile::EvaluateTotalDataSize(void)
 {
-	if(fStoreLastDataOnly)
+	if(StoreLastDataOnly())
 		return itsSingleFileSize;
 	else
 	{
-		if(itsDataIntervalInMinutes == -1)
-			itsDataIntervalInMinutes = 180; // tehd‰‰n sellainen olettamus ett‰ editoiduille datoille eli ep‰m‰'‰r‰inen ilmestymis aika (= -1) dataa oletetaan tulevan kerran 3 tunnissa
-		if((itsEndOffsetInMinutes < itsStartOffsetInMinutes) || itsDataIntervalInMinutes <= 0)
-			return 0; // t‰m‰ on virhetilanne
-		else
-		{
-			int timeDiffInMinutes = itsEndOffsetInMinutes - itsStartOffsetInMinutes;
-			int dataCount = static_cast<int>(::round(timeDiffInMinutes / static_cast<double>(itsDataIntervalInMinutes)));
-			if(dataCount == 0)
-				dataCount = 1;
-			return dataCount * itsSingleFileSize;
-		}
+		return DataFileWinRegValues().CalcCaseStudyDataCount() * itsSingleFileSize;
 	}
 }
 
@@ -236,32 +378,31 @@ void NFmiCaseStudyDataFile::Update(const NFmiCaseStudySystem &theCaseStudySystem
 	itsTotalFileSize = EvaluateTotalDataSize();
 }
 
-static NFmiCaseStudyDataFile::DataCategory GetDataCategory(const NFmiHelpDataInfo &theDataInfo)
+static NFmiCaseStudyDataCategory GetDataCategory(const NFmiHelpDataInfo &theDataInfo)
 {
 	NFmiInfoData::Type type = theDataInfo.DataType();
 	if(type == NFmiInfoData::kViewable || type == NFmiInfoData::kHybridData|| type == NFmiInfoData::kModelHelpData || type == NFmiInfoData::kTrajectoryHistoryData)
-		return NFmiCaseStudyDataFile::kFmiCategoryModel;
+		return NFmiCaseStudyDataCategory::Model;
     else if(type == NFmiInfoData::kClimatologyData)
-        return NFmiCaseStudyDataFile::kFmiCategoryModel; // Kaikki fraktiili mallidatat on laitettu t‰h‰n kategoriaan. Miten erotella havainto fraktiilit?
+        return NFmiCaseStudyDataCategory::Model; // Kaikki fraktiili mallidatat on laitettu t‰h‰n kategoriaan. Miten erotella havainto fraktiilit?
     else if(type == NFmiInfoData::kAnalyzeData)
-		return NFmiCaseStudyDataFile::kFmiCategoryAnalyze;
+		return NFmiCaseStudyDataCategory::Analyze;
 	else if(type == NFmiInfoData::kObservations || type == NFmiInfoData::kFlashData || type == NFmiInfoData::kSingleStationRadarData)
-		return NFmiCaseStudyDataFile::kFmiCategoryObservation;
+		return NFmiCaseStudyDataCategory::Observation;
 	else if(type == NFmiInfoData::kKepaData || type == NFmiInfoData::kEditingHelpData)
-		return NFmiCaseStudyDataFile::kFmiCategoryEdited;
+		return NFmiCaseStudyDataCategory::Edited;
 	else if(type == NFmiInfoData::kSatelData)
-		return NFmiCaseStudyDataFile::kFmiCategorySatelImage;
+		return NFmiCaseStudyDataCategory::SatelImage;
 	else
-		return NFmiCaseStudyDataFile::kFmiCategoryError;
+		return NFmiCaseStudyDataCategory::Error;
 }
 
-bool NFmiCaseStudyDataFile::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, const NFmiHelpDataInfo &theDataInfo, NFmiInfoOrganizer &theInfoOrganizer, int theStartOffsetInMinutes, int theEndOffsetInMinutes, bool isStored, const NFmiCaseStudySystem &theCaseStudySystem)
+bool NFmiCaseStudyDataFile::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, const NFmiHelpDataInfo &theDataInfo, NFmiInfoOrganizer &theInfoOrganizer, const NFmiCsDataFileWinReg& theDataFileWinRegValues, const NFmiCaseStudySystem &theCaseStudySystem)
 {
 	Reset();
 
-	fStore = isStored;
-	itsStartOffsetInMinutes = theStartOffsetInMinutes;
-	itsEndOffsetInMinutes = theEndOffsetInMinutes;
+	itsHelpDataInfoName = theDataInfo.Name();
+	itsDataFileWinRegValues = theDataFileWinRegValues;
 	itsCategory = GetDataCategory(theDataInfo);
 	itsDataType = theDataInfo.DataType();
 	fNotifyOnLoad = theDataInfo.NotifyOnLoad();
@@ -272,12 +413,13 @@ bool NFmiCaseStudyDataFile::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, cons
 
 
 	if(theDataInfo.DataType() == NFmiInfoData::kSatelData)
-	{ // kyse on kuva datasta
-		itsFileFilter = theDataInfo.FileNameFilter(); // kuvia ei viel‰ cacheteta, joten pit‰‰ pyyt‰‰ 'originaali' polkua, ei UsedFileNameFilter -polkua
+	{ 
+		// Kyse on kuva datasta.
+		// Kuvia ei cacheteta, joten pit‰‰ pyyt‰‰ 'originaali' polkua, ei UsedFileNameFilter -polkua
+		itsFileFilter = ::NormalizePathDelimiters(theDataInfo.FileNameFilter()); 
 		itsName = theDataInfo.ImageDataIdent().GetParamName();
 		itsProducer = *(theDataInfo.ImageDataIdent().GetProducer());
 		fImageFile = true;
-		fStoreLastDataOnly = false;
 		itsDataIntervalInMinutes = ::GetImageGapInMinutes(theDataInfo);
 		itsSingleFileSize = static_cast<double>(::FastFileByteCount(itsFileFilter, theCaseStudySystem));
 		itsTotalFileSize = EvaluateTotalDataSize();
@@ -289,16 +431,20 @@ bool NFmiCaseStudyDataFile::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, cons
 		return true;
 	}
 	else
-	{ // kyse on queryDatasta
+	{ 
+		// Kyse on queryDatasta.
 		if(theDataInfo.IsCombineData())
-			itsFileFilter = theDataInfo.CombineDataPathAndFileName(); // yhdistelm‰ datoille otetaan yhdistelm‰n fileFilter
+		{
+			// Yhdistelm‰datoille otetaan yhdistelm‰n fileFilter
+			itsFileFilter = ::NormalizePathDelimiters(theDataInfo.CombineDataPathAndFileName());
+		}
 		else
-			itsFileFilter = theDataInfo.UsedFileNameFilter(theDataInfoSystem);
+			itsFileFilter = ::NormalizePathDelimiters(theDataInfo.UsedFileNameFilter(theDataInfoSystem));
 
 		itsName = theDataInfo.GetCleanedName();
 		fImageFile = false;
-		fStoreLastDataOnly = ::StoreLastDataOnly(theDataInfo);
-//		itsSingleFileSize = static_cast<double>(::LatestFileByteCount(itsFileFilter));
+		if(theDataInfo.IsCombineData())
+			itsDataFileWinRegValues.FixToLastDataOnlyType();
 		itsSingleFileSize = static_cast<double>(::FastFileByteCount(itsFileFilter, theCaseStudySystem));
 
         UpdateWithInfo(theInfoOrganizer, theDataInfoSystem);
@@ -334,8 +480,11 @@ json_spirit::Object NFmiCaseStudyDataFile::MakeJsonObject(const NFmiCaseStudyDat
 	jsonObject.push_back(json_spirit::Pair(gJsonName_ProducerId, static_cast<int>(theData.Producer().GetIdent())));
 	jsonObject.push_back(json_spirit::Pair(gJsonName_FileFilter, theData.FileFilter()));
 	jsonObject.push_back(json_spirit::Pair(gJsonName_RelativeStoredFileFilter, theData.RelativeStoredFileFilter()));
-	jsonObject.push_back(json_spirit::Pair(gJsonName_StartOffsetInMinutes, theData.StartOffsetInMinutes()));
-	jsonObject.push_back(json_spirit::Pair(gJsonName_EndOffsetInMinutes, theData.EndOffsetInMinutes()));
+	// start ja end offsetit laitetaan vain, jotta systeemi olisi taaksep‰in vanhoihin versioihin n‰hden mahdollisimman yhteensopiva
+	jsonObject.push_back(json_spirit::Pair(gJsonName_StartOffsetInMinutes_legacy, 10 * 60));
+	jsonObject.push_back(json_spirit::Pair(gJsonName_EndOffsetInMinutes_legacy, 0));
+	jsonObject.push_back(json_spirit::Pair(gJsonName_CaseStudyDataIndexRange, NFmiCaseStudySystem::MakeIndexRangeString(theData.DataFileWinRegValues().CaseStudyDataIndexRange())));
+	jsonObject.push_back(json_spirit::Pair(gJsonName_LocalCacheDataCount, theData.DataFileWinRegValues().LocalCacheDataCount()));
 //	int itsDataIntervalInMinutes;	// ei ole hyˆty‰ tallettaa case-study metadataan? johdettavissa?
 //	double itsSingleFileSize;		// ei ole hyˆty‰ tallettaa case-study metadataan? johdettavissa?
 //	double itsTotalFileSize;		// ei ole hyˆty‰ tallettaa case-study metadataan? johdettavissa?
@@ -343,7 +492,7 @@ json_spirit::Object NFmiCaseStudyDataFile::MakeJsonObject(const NFmiCaseStudyDat
 //	DataCategory itsCategory;		// ei ole hyˆty‰ tallettaa case-study metadataan? johdettavissa?
 	jsonObject.push_back(json_spirit::Pair(gJsonName_DataType, static_cast<int>(theData.itsDataType)));
 //	int itsLevelCount;				// ei ole hyˆty‰ tallettaa case-study metadataan? johdettavissa?
-	jsonObject.push_back(json_spirit::Pair(gJsonName_Store, theData.Store()));
+	jsonObject.push_back(json_spirit::Pair(gJsonName_Store, theData.DataFileWinRegValues().Store()));
 	jsonObject.push_back(json_spirit::Pair(gJsonName_ImageFile, theData.ImageFile()));
 	jsonObject.push_back(json_spirit::Pair(gJsonName_StoreLastDataOnly, theData.StoreLastDataOnly()));
 	jsonObject.push_back(json_spirit::Pair(gJsonName_IsCategoryHeader, theData.CategoryHeader()));
@@ -374,6 +523,7 @@ void NFmiCaseStudyDataFile::ParseJsonValue(json_spirit::Value &theValue)
 		{
 			ParseJsonPair(*it);
 		}
+		::DoCsDataFileWinRegValuesInitializingChecks(itsDataFileWinRegValues);
 	}
 }
 
@@ -388,26 +538,35 @@ void NFmiCaseStudyDataFile::ParseJsonPair(json_spirit::Pair &thePair)
 		itsProducer.SetIdent(thePair.value_.get_int());
 	else if(thePair.name_ == gJsonName_FileFilter)
 	{
-		itsFileFilter = thePair.value_.get_str();
-		NFmiStringTools::ReplaceChars(itsFileFilter, '/', '\\'); // muutetaan luetut polut niin ett‰ SHFileOperation-funktio ymm‰rt‰‰ ne varmasti
+		// Muutetaan viel‰ luetut polut niin ett‰ SHFileOperation-funktio ymm‰rt‰‰ ne varmasti
+		itsFileFilter = ::NormalizePathDelimiters(thePair.value_.get_str());
 	}
 	else if(thePair.name_ == gJsonName_RelativeStoredFileFilter)
 	{
-		itsRelativeStoredFileFilter = thePair.value_.get_str();
-		NFmiStringTools::ReplaceChars(itsFileFilter, '/', '\\'); // muutetaan luetut polut niin ett‰ SHFileOperation-funktio ymm‰rt‰‰ ne varmasti
+		// Muutetaan viel‰ luetut polut niin ett‰ SHFileOperation-funktio ymm‰rt‰‰ ne varmasti
+		itsRelativeStoredFileFilter = ::NormalizePathDelimiters(thePair.value_.get_str());
 	}
-	else if(thePair.name_ == gJsonName_StartOffsetInMinutes)
-		itsStartOffsetInMinutes = thePair.value_.get_int();
-	else if(thePair.name_ == gJsonName_EndOffsetInMinutes)
-		itsEndOffsetInMinutes = thePair.value_.get_int();
+	else if(thePair.name_ == gJsonName_CaseStudyDataIndexRange)
+	{
+		auto indexRange = gMissingIndexRange;
+		try
+		{
+			indexRange = NFmiCaseStudySystem::MakeIndexRange(thePair.value_.get_str());
+		}
+		catch(...)
+		{ }
+		DataFileWinRegValues().CaseStudyDataIndexRange(indexRange);
+	}
+	else if(thePair.name_ == gJsonName_LocalCacheDataCount)
+		DataFileWinRegValues().LocalCacheDataCount(thePair.value_.get_int());
 	else if(thePair.name_ == gJsonName_DataType)
 		itsDataType = static_cast<NFmiInfoData::Type>(thePair.value_.get_int());
 	else if(thePair.name_ == gJsonName_Store)
-		fStore = thePair.value_.get_bool();
+		DataFileWinRegValues().Store(thePair.value_.get_bool());
 	else if(thePair.name_ == gJsonName_ImageFile)
 		fImageFile = thePair.value_.get_bool();
 	else if(thePair.name_ == gJsonName_StoreLastDataOnly)
-		fStoreLastDataOnly = thePair.value_.get_bool();
+		; // tyhj‰‰ legacy koodia, ei tehd‰ mit‰‰n, voisi varmaan poistaa
 	else if(thePair.name_ == gJsonName_IsCategoryHeader)
 		fCategoryHeader = thePair.value_.get_bool();
 	else if(thePair.name_ == gJsonName_IsProducerHeader)
@@ -430,12 +589,49 @@ void NFmiCaseStudyDataFile::ParseJsonPair(json_spirit::Pair &thePair)
 		itsAdditionalArchiveFileCount = thePair.value_.get_int();
 }
 
-void NFmiCaseStudyDataFile::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath)
+bool NFmiCaseStudyDataFile::StoreLastDataOnly(void) const 
+{ 
+	return itsDataFileWinRegValues.CalcCaseStudyDataCount() == 1 && itsDataFileWinRegValues.FixedValueForCaseStudyDataCount();
+}
+
+bool NFmiCaseStudyDataFile::IsReadOnlyDataCount(bool theCaseStudyCase) const
+{
+	if(StoreLastDataOnly())
+		return true;
+	if(itsDataType == NFmiInfoData::kSatelData && !theCaseStudyCase)
+		return true;
+
+	return false;
+}
+
+int NFmiCaseStudyDataFile::GetMinDataCount(bool theCaseStudyCase) const
+{
+	if(itsDataType == NFmiInfoData::kSatelData && !theCaseStudyCase)
+		return 0;
+
+	return 1;
+}
+
+static void DoFinalSetupsFromOriginalHelpDataInfo(NFmiHelpDataInfo& currentHelpDataInfo, const std::string &currentFileFilter, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem)
+{
+	auto helpDataInfo = theOriginalHelpDataInfoSystem.FindHelpDataInfo(currentFileFilter);
+	if(helpDataInfo)
+	{
+		currentHelpDataInfo.NonFixedTimeGab(helpDataInfo->NonFixedTimeGab());
+		currentHelpDataInfo.ModelRunTimeGapInHours(helpDataInfo->ModelRunTimeGapInHours());
+		currentHelpDataInfo.TimeInterpolationRangeInMinutes(helpDataInfo->TimeInterpolationRangeInMinutes());
+		currentHelpDataInfo.AllowCombiningToSurfaceDataInSoundingView(helpDataInfo->AllowCombiningToSurfaceDataInSoundingView());
+		if(currentHelpDataInfo.Name().empty())
+			currentHelpDataInfo.Name(helpDataInfo->Name());
+	}
+}
+
+void NFmiCaseStudyDataFile::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem)
 {
 	NFmiHelpDataInfo helpDataInfo;
 	helpDataInfo.FileNameFilter(theBasePath + RelativeStoredFileFilter(), true); // true = fiksataan filefilter--polku
 	helpDataInfo.DataType(itsDataType);
-	helpDataInfo.Name(Name());
+	helpDataInfo.Name(HelpDataInfoName());
 	helpDataInfo.NotifyOnLoad(NotifyOnLoad());
 	helpDataInfo.NotificationLabel(NotificationLabel());
 	helpDataInfo.CustomMenuFolder(CustomMenuFolder());
@@ -456,31 +652,17 @@ void NFmiCaseStudyDataFile::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHe
 	if(itsDataType == NFmiInfoData::kKepaData || itsDataType == NFmiInfoData::kEditingHelpData || itsDataType == NFmiInfoData::kSingleStationRadarData)
 		helpDataInfo.FakeProducerId(static_cast<int>(Producer().GetIdent())); // n‰ill‰ datatyypeill‰ on poikkeus tuottajat, siis eri tuottaja smartmetissa kuin mit‰ lˆytyy itse datasta
 
+	::DoFinalSetupsFromOriginalHelpDataInfo(helpDataInfo, FileFilter(), theOriginalHelpDataInfoSystem);
 	theHelpDataInfoSystem->AddDynamic(helpDataInfo);
-}
-
-bool NFmiCaseStudyDataFile::FindSuitableCaseStudyTime(NFmiMetTime &theTimeOut)
-{
-	if(Store() && OnlyOneData() == false) // jos data on tarkoitus tallettaa ja se ei ole "vain viimeinen  data talletetaan" -tyyppi‰
-	{
-		if(StartOffsetInMinutes() < 0) // jos alkuajan offset on pienempi kuin 0
-		{
-			NFmiMetTime aTime(1);
-			aTime.ChangeByMinutes(StartOffsetInMinutes());
-			aTime.SetTimeStep(60);
-			theTimeOut = aTime;
-			return true;
-		}
-	}
-	return false;
 }
 
 // otetaan talteen vain offsetit ja store
 void NFmiCaseStudyDataFile::InitDataWithStoredSettings(NFmiCaseStudyDataFile &theOriginalDataFile)
 {
-	StartOffsetInMinutes(theOriginalDataFile.StartOffsetInMinutes());
-	EndOffsetInMinutes(theOriginalDataFile.EndOffsetInMinutes());
-	Store(theOriginalDataFile.Store());
+	if(!itsDataFileWinRegValues.ProperlyInitialized())
+	{
+		itsDataFileWinRegValues.DoCheckedAssignment(theOriginalDataFile.DataFileWinRegValues());
+	}
 }
 
 bool NFmiCaseStudyDataFile::operator==(const NFmiCaseStudyDataFile &other) const
@@ -493,11 +675,9 @@ bool NFmiCaseStudyDataFile::operator==(const NFmiCaseStudyDataFile &other) const
         return false;
     if(itsRelativeStoredFileFilter != other.itsRelativeStoredFileFilter)
         return false;
-    if(itsStartOffsetInMinutes != other.itsStartOffsetInMinutes)
+    if(itsDataFileWinRegValues != other.itsDataFileWinRegValues)
         return false;
-    if(itsEndOffsetInMinutes != other.itsEndOffsetInMinutes)
-        return false;
-    if(itsCategory != other.itsCategory)
+	if(itsCategory != other.itsCategory)
         return false;
     if(itsDataType != other.itsDataType)
         return false;
@@ -505,11 +685,7 @@ bool NFmiCaseStudyDataFile::operator==(const NFmiCaseStudyDataFile &other) const
         return false;
     if(itsImageParam != other.itsImageParam)
         return false;
-    if(fStore != other.fStore)
-        return false;
     if(fImageFile != other.fImageFile)
-        return false;
-    if(fStoreLastDataOnly != other.fStoreLastDataOnly)
         return false;
     if(fCategoryHeader != other.fCategoryHeader)
         return false;
@@ -570,11 +746,6 @@ void NFmiCaseStudyProducerData::AddData(const NFmiCaseStudyDataFile &theData)
 	itsFilesData.push_back(theData);
 }
 
-void NFmiCaseStudyProducerData::OrganizeDatas(void)
-{
-	SortDatas();
-}
-
 // updeittaa kaikki tuottajan data koot ja paivitt‰‰ totalSize ja maxSize-koot
 void NFmiCaseStudyProducerData::Update(const NFmiCaseStudySystem &theCaseStudySystem)
 {
@@ -585,7 +756,7 @@ void NFmiCaseStudyProducerData::Update(const NFmiCaseStudySystem &theCaseStudySy
 		NFmiCaseStudyDataFile &fileData = itsFilesData[i];
 		fileData.Update(theCaseStudySystem);
 		maxFileSize += fileData.TotalFileSize();
-		if(fileData.Store())
+		if(fileData.DataFileWinRegValues().Store())
 			totalFileSize += fileData.TotalFileSize();
 	}
 	ProducerHeaderInfo().TotalFileSize(totalFileSize);
@@ -594,10 +765,10 @@ void NFmiCaseStudyProducerData::Update(const NFmiCaseStudySystem &theCaseStudySy
 
 void NFmiCaseStudyProducerData::ProducerStore(bool newValue)
 {
-	ProducerHeaderInfo().Store(newValue);
+	ProducerHeaderInfo().DataFileWinRegValues().Store(newValue);
 	for(size_t i = 0; i < itsFilesData.size(); i++)
 	{
-		itsFilesData[i].Store(newValue);
+		itsFilesData[i].DataFileWinRegValues().Store(newValue);
 	}
 }
 
@@ -610,24 +781,50 @@ void NFmiCaseStudyProducerData::ProducerEnable(NFmiHelpDataInfoSystem &theDataIn
 	}
 }
 
-void NFmiCaseStudyProducerData::ProducerOffset(bool startOffset, int theOffsetInMinutes)
+static int FixGivenDataCount(const NFmiCaseStudyDataFile& dataFile, int theDataCount, bool theCaseStudyCase)
 {
-	if(startOffset)
-		ProducerHeaderInfo().StartOffsetInMinutes(theOffsetInMinutes);
-	else
-		ProducerHeaderInfo().EndOffsetInMinutes(theOffsetInMinutes);
-	for(size_t i = 0; i < itsFilesData.size(); i++)
+	auto minDataCount = dataFile.GetMinDataCount(theCaseStudyCase);
+	if(theDataCount < minDataCount)
+		theDataCount = minDataCount;
+	return theDataCount;
+}
+
+void NFmiCaseStudyProducerData::ProducerLocalCacheDataCount(int theDataCount)
+{
+	if(!ProducerHeaderInfo().IsReadOnlyDataCount(false))
 	{
-		if(startOffset)
-			itsFilesData[i].StartOffsetInMinutes(theOffsetInMinutes);
-		else
-			itsFilesData[i].EndOffsetInMinutes(theOffsetInMinutes);
+		theDataCount = ::FixGivenDataCount(ProducerHeaderInfo(), theDataCount, false);
+		ProducerHeaderInfo().DataFileWinRegValues().LocalCacheDataCount(theDataCount);
+
+		for(size_t i = 0; i < itsFilesData.size(); i++)
+		{
+			itsFilesData[i].DataFileWinRegValues().LocalCacheDataCount(theDataCount);
+		}
 	}
 }
 
-void NFmiCaseStudyProducerData::SortDatas(void)
+static void FixGivenIndexRange(const NFmiCaseStudyDataFile& dataFile, std::pair<int, int> &theIndexRange)
 {
-	// prioriteetti j‰rjestys?
+	theIndexRange.first = ::FixGivenDataCount(dataFile, theIndexRange.first, true);
+	if(theIndexRange.second < 1)
+		theIndexRange.second = 1;
+	if(theIndexRange.second > theIndexRange.first)
+		theIndexRange.second = theIndexRange.first;
+}
+
+void NFmiCaseStudyProducerData::ProducerCaseStudyIndexRange(const std::pair<int, int>& theIndexRange)
+{
+	if(!ProducerHeaderInfo().IsReadOnlyDataCount(false))
+	{
+		auto finalIndexRange = theIndexRange;
+		::FixGivenIndexRange(ProducerHeaderInfo(), finalIndexRange);
+		ProducerHeaderInfo().DataFileWinRegValues().CaseStudyDataIndexRange(finalIndexRange);
+
+		for(size_t i = 0; i < itsFilesData.size(); i++)
+		{
+			itsFilesData[i].DataFileWinRegValues().CaseStudyDataIndexRange(finalIndexRange);
+		}
+	}
 }
 
 json_spirit::Object NFmiCaseStudyProducerData::MakeJsonObject(const NFmiCaseStudyProducerData &theData, bool fMakeFullStore)
@@ -636,7 +833,7 @@ json_spirit::Object NFmiCaseStudyProducerData::MakeJsonObject(const NFmiCaseStud
 	const std::vector<NFmiCaseStudyDataFile> &dataVector = theData.FilesData();
 	for(size_t i = 0; i < dataVector.size(); i++)
 	{
-		if(fMakeFullStore || dataVector[i].Store())
+		if(fMakeFullStore || dataVector[i].DataFileWinRegValues().Store())
 		{ // vain talletettavat datat laitetaan listaan
 			json_spirit::Object tmpObject = NFmiCaseStudyDataFile::MakeJsonObject(dataVector[i]);
 			if(tmpObject.size())
@@ -691,27 +888,17 @@ void NFmiCaseStudyProducerData::ParseJsonPair(json_spirit::Pair &thePair)
 	}
 }
 
-void NFmiCaseStudyProducerData::SetCategory(NFmiCaseStudyDataFile::DataCategory theCategory)
+void NFmiCaseStudyProducerData::SetCategory(NFmiCaseStudyDataCategory theCategory)
 {
 	itsProducerHeaderInfo.Category(theCategory);
 	for(size_t i = 0; i < itsFilesData.size(); i++)
 		itsFilesData[i].Category(theCategory);
 }
 
-void NFmiCaseStudyProducerData::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath)
+void NFmiCaseStudyProducerData::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem)
 {
 	for(size_t i = 0; i < itsFilesData.size(); i++)
-		itsFilesData[i].AddDataToHelpDataInfoSystem(theHelpDataInfoSystem, theBasePath);
-}
-
-bool NFmiCaseStudyProducerData::FindSuitableCaseStudyTime(NFmiMetTime &theTimeOut)
-{
-	for(size_t i = 0; i < itsFilesData.size(); i++)
-	{
-		if(itsFilesData[i].FindSuitableCaseStudyTime(theTimeOut))
-			return true;
-	}
-	return false;
+		itsFilesData[i].AddDataToHelpDataInfoSystem(theHelpDataInfoSystem, theBasePath, theOriginalHelpDataInfoSystem);
 }
 
 // Joskus kun tehd‰‰n UpdateNoProducerData -p‰ˆivityksi‰, tulee samalle tuottajelle useampi kuin yksi data. T‰llˆin 
@@ -730,9 +917,7 @@ void NFmiCaseStudyProducerData::UpdateOnlyOneDataStates()
 void NFmiCaseStudyProducerData::InitDataWithStoredSettings(NFmiCaseStudyProducerData &theOriginalProducerData)
 {
 	// otetaan talteen header-osiosta offsetit ja store -tieto
-	ProducerHeaderInfo().StartOffsetInMinutes(theOriginalProducerData.ProducerHeaderInfo().StartOffsetInMinutes());
-	ProducerHeaderInfo().EndOffsetInMinutes(theOriginalProducerData.ProducerHeaderInfo().EndOffsetInMinutes());
-	ProducerHeaderInfo().Store(theOriginalProducerData.ProducerHeaderInfo().Store());
+	ProducerHeaderInfo().DataFileWinRegValues().DoCheckedAssignment(theOriginalProducerData.ProducerHeaderInfo().DataFileWinRegValues());
 
 	// Lis‰ksi jokaisen lˆytyneen vastin parin tiedot p‰ivitet‰‰n
 	std::vector<NFmiCaseStudyDataFile> &origDataFiles = theOriginalProducerData.FilesData();
@@ -747,6 +932,11 @@ void NFmiCaseStudyProducerData::InitDataWithStoredSettings(NFmiCaseStudyProducer
 			}
 		}
 	}
+}
+
+long NFmiCaseStudyProducerData::GetProducerIdent() const
+{
+	return ProducerHeaderInfo().Producer().GetIdent();
 }
 
 NFmiCaseStudyDataFile* NFmiCaseStudyProducerData::GetDataFile(const std::string &theFileFilter)
@@ -786,18 +976,17 @@ bool NFmiCaseStudyProducerData::operator!=(const NFmiCaseStudyProducerData &othe
 NFmiCaseStudyCategoryData::NFmiCaseStudyCategoryData(void)
 :itsCategoryHeaderInfo()
 ,itsProducersData()
-,itsParsingCategory(NFmiCaseStudyDataFile::kFmiCategoryError)
+,itsParsingCategory(NFmiCaseStudyDataCategory::Error)
 {
 	CategoryHeaderInfo().CategoryHeader(true);
 }
 
-NFmiCaseStudyCategoryData::NFmiCaseStudyCategoryData(const std::string &theName, NFmiCaseStudyDataFile::DataCategory theCategory, bool theLatestDataOnly)
+NFmiCaseStudyCategoryData::NFmiCaseStudyCategoryData(const std::string &theName, NFmiCaseStudyDataCategory theCategory)
 :itsCategoryHeaderInfo()
 ,itsProducersData()
 {
 	CategoryHeaderInfo().Name(theName);
 	CategoryHeaderInfo().Category(theCategory);
-	CategoryHeaderInfo().StoreLastDataOnly(theLatestDataOnly);
 	CategoryHeaderInfo().CategoryHeader(true);
 }
 
@@ -808,21 +997,22 @@ NFmiCaseStudyCategoryData::~NFmiCaseStudyCategoryData(void)
 static void SetProducerHeaderInfoValues(NFmiCaseStudyProducerData &theProducerData, const NFmiCaseStudyDataFile &theFileData)
 {
 	theProducerData.ProducerHeaderInfo().Category(theFileData.Category());
-	theProducerData.ProducerHeaderInfo().StartOffsetInMinutes(theFileData.StartOffsetInMinutes());
-	theProducerData.ProducerHeaderInfo().EndOffsetInMinutes(theFileData.EndOffsetInMinutes());
-	theProducerData.ProducerHeaderInfo().Store(theFileData.Store());
-	theProducerData.ProducerHeaderInfo().StoreLastDataOnly(theFileData.StoreLastDataOnly());
+	if(theProducerData.ProducerHeaderInfo().Category() == NFmiCaseStudyDataCategory::SatelImage)
+	{
+		theProducerData.ProducerHeaderInfo().DataType(NFmiInfoData::kSatelData);
+	}
+	theProducerData.ProducerHeaderInfo().DataFileWinRegValues(theFileData.DataFileWinRegValues());
 }
 
-void NFmiCaseStudyCategoryData::AddData(const NFmiCaseStudyDataFile &theData)
+void NFmiCaseStudyCategoryData::AddData(NFmiCaseStudyDataFile &theData)
 {
+	theData.DataFileWinRegValues().AdaptFixedSettings(CategoryHeaderInfo().DataFileWinRegValues());
 	// onko tuotttajalle jo omaa datasetti, jos ei ole, luo ensin se ja lis‰‰ data sitten tuottajelle
-	for(size_t i = 0; i < itsProducersData.size(); i++)
+	for(auto& producerData : itsProducersData)
 	{
-		NFmiCaseStudyProducerData &prodData = itsProducersData[i];
-		if(prodData.ProducerHeaderInfo().Producer().GetIdent() == theData.Producer().GetIdent())
+		if(producerData.GetProducerIdent() == theData.Producer().GetIdent())
 		{
-			prodData.AddData(theData);
+			producerData.AddData(theData);
 			return;
 		}
 	}
@@ -837,7 +1027,7 @@ void NFmiCaseStudyCategoryData::AddData(const NFmiCaseStudyDataFile &theData)
 // Jos lˆytyy, poista se vektorista ja palauta. Muuten palauta tyhj‰ otus.
 NFmiCaseStudyProducerData NFmiCaseStudyCategoryData::RemoveNoProducerData()
 {
-    auto iter = std::find_if(itsProducersData.begin(), itsProducersData.end(), [](const auto &producerData) {return producerData.ProducerHeaderInfo().Producer().GetIdent() == 0; });
+    auto iter = std::find_if(itsProducersData.begin(), itsProducersData.end(), [](const auto &producerData) {return producerData.GetProducerIdent() == 0; });
     if(iter != itsProducersData.end())
     {
         NFmiCaseStudyProducerData tmp = *iter;
@@ -873,9 +1063,8 @@ void NFmiCaseStudyCategoryData::Update(const NFmiCaseStudySystem &theCaseStudySy
 {
 	double totalFileSize = 0;
 	double maxFileSize = 0;
-	for(size_t i = 0; i < itsProducersData.size(); i++)
+	for(auto& producerData : itsProducersData)
 	{
-		NFmiCaseStudyProducerData &producerData = itsProducersData[i];
 		producerData.Update(theCaseStudySystem);
 		totalFileSize += producerData.ProducerHeaderInfo().TotalFileSize();
 		maxFileSize += producerData.ProducerHeaderInfo().MaxFileSize();
@@ -889,10 +1078,9 @@ void NFmiCaseStudyCategoryData::Update(unsigned long theProdId, const NFmiCaseSt
 {
 	double totalFileSize = 0;
 	double maxFileSize = 0;
-	for(size_t i = 0; i < itsProducersData.size(); i++)
+	for(auto& producerData : itsProducersData)
 	{
-		NFmiCaseStudyProducerData &producerData = itsProducersData[i];
-		if(producerData.ProducerHeaderInfo().Producer().GetIdent() == static_cast<long>(theProdId))
+		if(producerData.GetProducerIdent() == static_cast<long>(theProdId))
 			producerData.Update(theCaseStudySystem);
 		totalFileSize += producerData.ProducerHeaderInfo().TotalFileSize();
 		maxFileSize += producerData.ProducerHeaderInfo().MaxFileSize();
@@ -903,28 +1091,28 @@ void NFmiCaseStudyCategoryData::Update(unsigned long theProdId, const NFmiCaseSt
 
 void NFmiCaseStudyCategoryData::ProducerStore(unsigned long theProdId, bool newValue, const NFmiCaseStudySystem &theCaseStudySystem)
 {
-	for(size_t i = 0; i < itsProducersData.size(); i++)
+	for(auto& producerData : itsProducersData)
 	{
-		if(itsProducersData[i].ProducerHeaderInfo().Producer().GetIdent() == static_cast<long>(theProdId))
-			itsProducersData[i].ProducerStore(newValue);
+		if(producerData.GetProducerIdent() == static_cast<long>(theProdId))
+			producerData.ProducerStore(newValue);
 	}
 	Update(theProdId, theCaseStudySystem);
 }
 
 void NFmiCaseStudyCategoryData::CategoryStore(bool newValue, const NFmiCaseStudySystem &theCaseStudySystem)
 {
-	itsCategoryHeaderInfo.Store(newValue);
-	for(size_t i = 0; i < itsProducersData.size(); i++)
-		itsProducersData[i].ProducerStore(newValue);
+	itsCategoryHeaderInfo.DataFileWinRegValues().Store(newValue);
+	for(auto& producerData : itsProducersData)
+		producerData.ProducerStore(newValue);
 	Update(theCaseStudySystem);
 }
 
 void NFmiCaseStudyCategoryData::ProducerEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, unsigned long theProdId, bool newValue, const NFmiCaseStudySystem &theCaseStudySystem)
 {
-	for(size_t i = 0; i < itsProducersData.size(); i++)
+	for(auto& producerData : itsProducersData)
 	{
-		if(itsProducersData[i].ProducerHeaderInfo().Producer().GetIdent() == static_cast<long>(theProdId))
-			itsProducersData[i].ProducerEnable(theDataInfoSystem, newValue);
+		if(producerData.GetProducerIdent() == static_cast<long>(theProdId))
+			producerData.ProducerEnable(theDataInfoSystem, newValue);
 	}
 	Update(theProdId, theCaseStudySystem);
 }
@@ -932,57 +1120,71 @@ void NFmiCaseStudyCategoryData::ProducerEnable(NFmiHelpDataInfoSystem &theDataIn
 void NFmiCaseStudyCategoryData::CategoryEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, bool newValue, const NFmiCaseStudySystem &theCaseStudySystem)
 {
     itsCategoryHeaderInfo.DataEnabled(theDataInfoSystem, newValue);
-	for(size_t i = 0; i < itsProducersData.size(); i++)
-		itsProducersData[i].ProducerEnable(theDataInfoSystem, newValue);
+	for(auto& producerData : itsProducersData)
+		producerData.ProducerEnable(theDataInfoSystem, newValue);
 	Update(theCaseStudySystem);
 }
 
-void NFmiCaseStudyCategoryData::ProducerOffset(unsigned long theProdId, bool startOffset, int theOffsetInMinutes, const NFmiCaseStudySystem &theCaseStudySystem)
+void NFmiCaseStudyCategoryData::ProducerLocalCacheDataCount(unsigned long theProdId, int theDataCount, const NFmiCaseStudySystem& theCaseStudySystem)
 {
-	for(size_t i = 0; i < itsProducersData.size(); i++)
+	for(auto& producerData : itsProducersData)
 	{
-		if(itsProducersData[i].ProducerHeaderInfo().Producer().GetIdent() == static_cast<long>(theProdId))
-			itsProducersData[i].ProducerOffset(startOffset, theOffsetInMinutes);
+		if(producerData.GetProducerIdent() == static_cast<long>(theProdId))
+		{
+			producerData.ProducerLocalCacheDataCount(theDataCount);
+		}
+	}
+}
+
+void NFmiCaseStudyCategoryData::CategoryLocalCacheDataCount(int theDataCount, const NFmiCaseStudySystem& theCaseStudySystem)
+{
+	if(!itsCategoryHeaderInfo.IsReadOnlyDataCount(false))
+	{
+		theDataCount = ::FixGivenDataCount(CategoryHeaderInfo(), theDataCount, false);
+		itsCategoryHeaderInfo.DataFileWinRegValues().LocalCacheDataCount(theDataCount);
+
+		for(auto& producerData : itsProducersData)
+		{
+			producerData.ProducerLocalCacheDataCount(theDataCount);
+		}
+	}
+}
+
+void NFmiCaseStudyCategoryData::ProducerCaseStudyIndexRange(unsigned long theProdId, const std::pair<int, int>& theIndexRange, const NFmiCaseStudySystem& theCaseStudySystem)
+{
+	for(auto& producerData : itsProducersData)
+	{
+		if(producerData.GetProducerIdent() == static_cast<long>(theProdId))
+		{
+			producerData.ProducerCaseStudyIndexRange(theIndexRange);
+		}
 	}
 	Update(theProdId, theCaseStudySystem);
 }
 
-void NFmiCaseStudyCategoryData::CategoryOffset(bool startOffset, int theOffsetInMinutes, const NFmiCaseStudySystem &theCaseStudySystem)
+void NFmiCaseStudyCategoryData::CategoryCaseStudyIndexRange(const std::pair<int, int>& theIndexRange, const NFmiCaseStudySystem& theCaseStudySystem)
 {
-	if(startOffset)
-		itsCategoryHeaderInfo.StartOffsetInMinutes(theOffsetInMinutes);
-	else
-		itsCategoryHeaderInfo.EndOffsetInMinutes(theOffsetInMinutes);
-
-	for(size_t i = 0; i < itsProducersData.size(); i++)
-		itsProducersData[i].ProducerOffset(startOffset, theOffsetInMinutes);
-	Update(theCaseStudySystem);
-}
-
-void NFmiCaseStudyCategoryData::OrganizeDatas(void)
-{
-	SortDatas();
-	for(size_t i = 0; i < itsProducersData.size(); i++)
+	if(!itsCategoryHeaderInfo.IsReadOnlyDataCount(true))
 	{
-		itsProducersData[i].OrganizeDatas();
-	}
-}
+		auto finalIndexRange = theIndexRange;
+		::FixGivenIndexRange(CategoryHeaderInfo(), finalIndexRange);
+		itsCategoryHeaderInfo.DataFileWinRegValues().CaseStudyDataIndexRange(finalIndexRange);
 
-void NFmiCaseStudyCategoryData::SortDatas(void)
-{
-	// miten producer datat sortataan? mik‰ on prioriteetti j‰rjestys?
-	for(size_t i = 0; i < itsProducersData.size(); i++)
-	{
+		for(auto& producerData : itsProducersData)
+		{
+			producerData.ProducerCaseStudyIndexRange(finalIndexRange);
+		}
+		Update(theCaseStudySystem);
 	}
 }
 
 json_spirit::Object NFmiCaseStudyCategoryData::MakeJsonObject(const NFmiCaseStudyCategoryData &theData, bool fMakeFullStore)
 {
 	json_spirit::Array dataArray;
-	const std::vector<NFmiCaseStudyProducerData> &dataVector = theData.ProducersData();
-	for(size_t i = 0; i < dataVector.size(); i++)
+	const auto &dataList = theData.ProducersData();
+	for(const auto &data : dataList)
 	{
-		json_spirit::Object tmpObject = NFmiCaseStudyProducerData::MakeJsonObject(dataVector[i], fMakeFullStore);
+		json_spirit::Object tmpObject = NFmiCaseStudyProducerData::MakeJsonObject(data, fMakeFullStore);
 		if(tmpObject.size())
 		{
 			json_spirit::Value tmpVal(tmpObject);
@@ -994,7 +1196,7 @@ json_spirit::Object NFmiCaseStudyCategoryData::MakeJsonObject(const NFmiCaseStud
 	if(dataArray.size())
 	{ // t‰ytet‰‰n objekti vain jos lˆytyi yht‰‰n talletettua tuottajaa
 		json_spirit::Object jsonHeaderObject = NFmiCaseStudyDataFile::MakeJsonObject(theData.CategoryHeaderInfo());
-		jsonObject.push_back(json_spirit::Pair(gJsonName_Category, theData.CategoryHeaderInfo().Category()));
+		jsonObject.push_back(json_spirit::Pair(gJsonName_Category, (int)theData.CategoryHeaderInfo().Category()));
 		jsonObject.push_back(json_spirit::Pair(gJsonName_CategoryHeader, jsonHeaderObject));
 		jsonObject.push_back(json_spirit::Pair(gJsonName_CategoryDataArray, dataArray));
 	}
@@ -1019,7 +1221,7 @@ void NFmiCaseStudyCategoryData::ParseJsonPair(json_spirit::Pair &thePair)
 	// T‰ss‰ puret‰‰n CaseStudySystem luokan p‰‰tason pareja.
 	if(thePair.name_ == gJsonName_Category)
 	{
-		itsParsingCategory = static_cast<NFmiCaseStudyDataFile::DataCategory>(thePair.value_.get_int());
+		itsParsingCategory = static_cast<NFmiCaseStudyDataCategory>(thePair.value_.get_int());
 	}
 	else if(thePair.name_ == gJsonName_CategoryHeader)
 	{
@@ -1041,50 +1243,47 @@ void NFmiCaseStudyCategoryData::ParseJsonPair(json_spirit::Pair &thePair)
 	}
 }
 
-void NFmiCaseStudyCategoryData::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath)
+void NFmiCaseStudyCategoryData::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem)
 {
-	for(size_t i = 0; i < itsProducersData.size(); i++)
-		itsProducersData[i].AddDataToHelpDataInfoSystem(theHelpDataInfoSystem, theBasePath);
+	for(auto& producerData : itsProducersData)
+		producerData.AddDataToHelpDataInfoSystem(theHelpDataInfoSystem, theBasePath, theOriginalHelpDataInfoSystem);
 }
 
-bool NFmiCaseStudyCategoryData::FindSuitableCaseStudyTime(NFmiMetTime &theTimeOut)
+void NFmiCaseStudyCategoryData::InitDataWithStoredSettings(NFmiCaseStudyCategoryData& theOriginalCategoryData)
 {
-	for(size_t i = 0; i < itsProducersData.size(); i++)
-	{
-		if(itsProducersData[i].FindSuitableCaseStudyTime(theTimeOut))
-			return true;
-	}
-	return false;
-}
-
-void NFmiCaseStudyCategoryData::InitDataWithStoredSettings(NFmiCaseStudyCategoryData &theOriginalCategoryData)
-{
-	// otetaan talteen header-osiosta offsetit ja store -tieto
-	CategoryHeaderInfo().StartOffsetInMinutes(theOriginalCategoryData.CategoryHeaderInfo().StartOffsetInMinutes());
-	CategoryHeaderInfo().EndOffsetInMinutes(theOriginalCategoryData.CategoryHeaderInfo().EndOffsetInMinutes());
-	CategoryHeaderInfo().Store(theOriginalCategoryData.CategoryHeaderInfo().Store());
+	// otetaan talteen header-osiosta DataFileWinRegValues -tieto
+	CategoryHeaderInfo().DataFileWinRegValues().DoCheckedAssignment(theOriginalCategoryData.CategoryHeaderInfo().DataFileWinRegValues());
 
 	// Lis‰ksi jokaisen lˆytyneen producerDatan vastin parin tiedot p‰ivitet‰‰n
-	std::vector<NFmiCaseStudyProducerData> &origProducerData = theOriginalCategoryData.ProducersData();
-	if(origProducerData.size() > 0)
+	auto& originalProducersData = theOriginalCategoryData.ProducersData();
+	for(auto& originalProducerData : originalProducersData)
 	{
-		for(size_t i = 0; i < origProducerData.size(); i++)
+		NFmiCaseStudyProducerData* producerData = GetProducerData(originalProducerData.GetProducerIdent());
+		if(producerData)
 		{
-			NFmiCaseStudyProducerData *producerData = GetProducerData(origProducerData[i].ProducerHeaderInfo().Producer().GetIdent());
-			if(producerData)
-			{
-				producerData->InitDataWithStoredSettings(origProducerData[i]);
-			}
+			producerData->InitDataWithStoredSettings(originalProducerData);
 		}
+	}
+}
+
+void NFmiCaseStudyCategoryData::PutNoneProducerDataToEndFix()
+{
+	auto iter = std::find_if(itsProducersData.begin(), itsProducersData.end(),
+		[](const auto& producerData) {return producerData.GetProducerIdent() == 0; }
+	);
+	if(iter != itsProducersData.end())
+	{
+		// Jos lˆytyi ns. None producer, siirret‰‰n se listan loppuun
+		itsProducersData.splice(itsProducersData.end(), itsProducersData, iter);
 	}
 }
 
 NFmiCaseStudyProducerData* NFmiCaseStudyCategoryData::GetProducerData(unsigned long theProdId)
 {
-	for(size_t i = 0; i < itsProducersData.size(); i++)
+	for(auto &producerData : itsProducersData)
 	{
-		if(itsProducersData[i].ProducerHeaderInfo().Producer().GetIdent() == static_cast<long>(theProdId))
-			return &itsProducersData[i];
+		if(producerData.GetProducerIdent() == static_cast<long>(theProdId))
+			return &producerData;
 	}
 	return 0;
 }
@@ -1108,6 +1307,14 @@ bool NFmiCaseStudyCategoryData::operator!=(const NFmiCaseStudyCategoryData &othe
 // *****   NFmiCaseStudyCategoryData loppuu  ******************
 // ************************************************************
 
+NFmiCategoryHeaderInitData::NFmiCategoryHeaderInitData() = default;
+
+NFmiCategoryHeaderInitData::NFmiCategoryHeaderInitData(const std::string name, NFmiInfoData::Type type, NFmiCaseStudyDataCategory category)
+	:uniqueName(name)
+	,dataType(type)
+	,dataCategory(category)
+{}
+
 
 // ************************************************************
 // *****   NFmiCaseStudySystem alkaa  *************************
@@ -1121,6 +1328,7 @@ NFmiCaseStudySystem::NFmiCaseStudySystem(void)
 ,itsTime()
 ,fZipFiles()
 ,fStoreWarningMessages()
+,fCropDataToZoomedMapArea()
 ,fDeleteTmpFiles(true)
 ,fApproximateOnlyLocalDataSize(true)
 ,itsCategoriesData()
@@ -1133,6 +1341,7 @@ NFmiCaseStudySystem::NFmiCaseStudySystem(void)
     itsCaseStudyPath = ::CreateRegValue<CachedRegString>(baseRegistryPath, sectionName, "\\CaseStudyPath", usedKey, "D:\\data\\case");
     fZipFiles = ::CreateRegValue<CachedRegBool>(baseRegistryPath, sectionName, "\\ZipFiles", usedKey, true);
 	fStoreWarningMessages = ::CreateRegValue<CachedRegBool>(baseRegistryPath, sectionName, "\\StoreWarningMessages", usedKey, true);
+	fCropDataToZoomedMapArea = ::CreateRegValue<CachedRegBool>(baseRegistryPath, sectionName, "\\CropDataToZoomedMapArea", usedKey, false);
 }
 
 NFmiCaseStudySystem::~NFmiCaseStudySystem(void)
@@ -1144,96 +1353,167 @@ void NFmiCaseStudySystem::Reset(void)
 	*this = NFmiCaseStudySystem();
 }
 
-static void SetCategoryHeaderInfoValues(NFmiCaseStudyCategoryData &theCategory, int theStartOffsetInMinutes, int theEndOffsetInMinutes, bool isStored)
+static void SetCategoryHeaderInfoValues(NFmiCaseStudyCategoryData &theCategory, const NFmiCsDataFileWinReg &categoryDefaultValues)
 {
-	theCategory.CategoryHeaderInfo().StartOffsetInMinutes(theStartOffsetInMinutes);
-	theCategory.CategoryHeaderInfo().EndOffsetInMinutes(theEndOffsetInMinutes);
-	theCategory.CategoryHeaderInfo().Store(isStored);
+	if(theCategory.CategoryHeaderInfo().Category() == NFmiCaseStudyDataCategory::SatelImage)
+	{
+		theCategory.CategoryHeaderInfo().DataType(NFmiInfoData::kSatelData);
+	}
+	theCategory.CategoryHeaderInfo().DataFileWinRegValues(categoryDefaultValues);
+	theCategory.CategoryHeaderInfo().HelpDataInfoName(theCategory.CategoryHeaderInfo().Name());
 }
 
-bool NFmiCaseStudySystem::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiInfoOrganizer &theInfoOrganizer)
+static NFmiCsDataFileWinReg MakeCsDataFileWinRegValues(const std::string& uniqueName, NFmiInfoData::Type dataType, NFmiCaseStudySettingsWinRegistry& theCaseStudySettingsWinRegistry)
 {
-	const int defaultStartOffsetInMinutes = -12*60;
-	const int defaultEndOffsetInMinutes = 0;
-	const bool defaultStoreDataSetting = true;
+	const int defaultModelDataCaseStudyCount = NFmiCaseStudySettingsWinRegistry::GetDefaultCaseStudyCountValue(dataType);
+	const int defaultModelLocalCacheCount = NFmiCaseStudySettingsWinRegistry::GetDefaultLocalCacheCountValue(dataType);
+	bool fixedValueForCaseStudyCount = defaultModelDataCaseStudyCount <= 1;
+	bool fixedValueForLocalCacheCount = defaultModelLocalCacheCount <= 1;
+	auto caseStudyIndexRange = theCaseStudySettingsWinRegistry.GetHelpDataCaseStudyIndexRange(uniqueName);
+	int localCacheDataCount = theCaseStudySettingsWinRegistry.GetHelpDataLocalCacheCount(uniqueName);
+	bool store = theCaseStudySettingsWinRegistry.GetStoreDataState(uniqueName);
+	return NFmiCsDataFileWinReg(caseStudyIndexRange, fixedValueForCaseStudyCount, localCacheDataCount, fixedValueForLocalCacheCount, store);
+}
 
-	std::vector<NFmiCaseStudyCategoryData> originalCategoriesData;
-	originalCategoriesData.swap(itsCategoriesData); // otetaan talteen valmiiksi konffitiedostosta ladatut asetukset, ett‰ voidaan lopuksi s‰‰t‰‰ asetuksia niiden mukaan
+static NFmiCsDataFileWinReg MakeCsDataFileWinRegValues(const NFmiHelpDataInfo& info, NFmiCaseStudySettingsWinRegistry& theCaseStudySettingsWinRegistry)
+{
+	return ::MakeCsDataFileWinRegValues(info.Name(), info.DataType(), theCaseStudySettingsWinRegistry);
+}
 
-	NFmiCaseStudyCategoryData category1(::GetDictionaryString("Model data"), NFmiCaseStudyDataFile::kFmiCategoryModel, false);
-	::SetCategoryHeaderInfoValues(category1, defaultStartOffsetInMinutes, defaultEndOffsetInMinutes, defaultStoreDataSetting);
-	itsCategoriesData.push_back(category1);
-	NFmiCaseStudyCategoryData category2(::GetDictionaryString("Observation data"), NFmiCaseStudyDataFile::kFmiCategoryObservation, true);
-	::SetCategoryHeaderInfoValues(category2, defaultStartOffsetInMinutes, defaultEndOffsetInMinutes, defaultStoreDataSetting);
-	itsCategoriesData.push_back(category2);
-	NFmiCaseStudyCategoryData category3(::GetDictionaryString("Analyze data"), NFmiCaseStudyDataFile::kFmiCategoryAnalyze, true);
-	::SetCategoryHeaderInfoValues(category3, defaultStartOffsetInMinutes, defaultEndOffsetInMinutes, defaultStoreDataSetting);
-	itsCategoriesData.push_back(category3);
-	NFmiCaseStudyCategoryData category4(::GetDictionaryString("Edited data"), NFmiCaseStudyDataFile::kFmiCategoryEdited, false);
-	::SetCategoryHeaderInfoValues(category4, defaultStartOffsetInMinutes, defaultEndOffsetInMinutes, defaultStoreDataSetting);
-	itsCategoriesData.push_back(category4);
-	NFmiCaseStudyCategoryData category5(::GetDictionaryString("Satellite image data"), NFmiCaseStudyDataFile::kFmiCategorySatelImage, false);
-	::SetCategoryHeaderInfoValues(category5, defaultStartOffsetInMinutes, defaultEndOffsetInMinutes, defaultStoreDataSetting);
-	itsCategoriesData.push_back(category5);
+static void InitCategoryHeaders(std::vector<NFmiCategoryHeaderInitData>& categoryHeaders)
+{
+	categoryHeaders.push_back(NFmiCategoryHeaderInitData(::GetDictionaryString("Model data"), NFmiInfoData::kViewable, NFmiCaseStudyDataCategory::Model));
+	categoryHeaders.push_back(NFmiCategoryHeaderInitData(::GetDictionaryString("Observation data"), NFmiInfoData::kObservations, NFmiCaseStudyDataCategory::Observation));
+	categoryHeaders.push_back(NFmiCategoryHeaderInitData(::GetDictionaryString("Analyze data"), NFmiInfoData::kAnalyzeData, NFmiCaseStudyDataCategory::Analyze));
+	categoryHeaders.push_back(NFmiCategoryHeaderInitData(::GetDictionaryString("Edited data"), NFmiInfoData::kKepaData, NFmiCaseStudyDataCategory::Edited));
+	categoryHeaders.push_back(NFmiCategoryHeaderInitData(::GetDictionaryString("Satellite image data"), NFmiInfoData::kSatelData, NFmiCaseStudyDataCategory::SatelImage));
+}
 
-	const checkedVector<NFmiHelpDataInfo> &infos = theDataInfoSystem.DynamicHelpDataInfos();
-	for(size_t i = 0; i < infos.size(); i++)
+const std::vector<NFmiCategoryHeaderInitData>& NFmiCaseStudySystem::GetCategoryHeaders()
+{
+	static std::once_flag categoryHeadersFlag;
+	static std::vector<NFmiCategoryHeaderInitData> categoryHeaders;
+	std::call_once(categoryHeadersFlag, ::InitCategoryHeaders, categoryHeaders);
+
+	return categoryHeaders;
+}
+
+bool NFmiCaseStudySystem::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiInfoOrganizer &theInfoOrganizer, NFmiCaseStudySettingsWinRegistry& theCaseStudySettingsWinRegistry)
+{
+	const auto& categoryHeaders = NFmiCaseStudySystem::GetCategoryHeaders();
+	for(const auto &categoryHeaderData : categoryHeaders)
+	{
+		auto categoryInitValues = ::MakeCsDataFileWinRegValues(categoryHeaderData.uniqueName, categoryHeaderData.dataType, theCaseStudySettingsWinRegistry);
+		NFmiCaseStudyCategoryData category(categoryHeaderData.uniqueName, categoryHeaderData.dataCategory);
+		::SetCategoryHeaderInfoValues(category, categoryInitValues);
+		itsCategoriesData.push_back(category);
+	}
+
+	for(const auto& info : theDataInfoSystem.DynamicHelpDataInfos())
 	{
 		NFmiCaseStudyDataFile data;
-		data.Init(theDataInfoSystem, infos[i], theInfoOrganizer, defaultStartOffsetInMinutes, defaultEndOffsetInMinutes, defaultStoreDataSetting, *this);
-		NFmiStringTools::ReplaceChars(data.FileFilter(), '/', '\\');
+		data.Init(theDataInfoSystem, info, theInfoOrganizer, ::MakeCsDataFileWinRegValues(info, theCaseStudySettingsWinRegistry), *this);
 		AddData(data);
 	}
-	OrganizeDatas();
-	InitDataWithStoredSettings(originalCategoriesData);
+
+	PutNoneProducerDataToEndFix();
 	Update();
 	return true;
 }
 
-void NFmiCaseStudySystem::InitDataWithStoredSettings(std::vector<NFmiCaseStudyCategoryData> &theOriginalCategoriesData)
+// Kun data on alustettu 1. kerran, laitetaan tuntemattomien datojen (None) producer osio aina viimeiseksi kategorian listoissa.
+void NFmiCaseStudySystem::PutNoneProducerDataToEndFix()
 {
-	if(theOriginalCategoriesData.size() > 0)
+	for(auto& categoryData : itsCategoriesData)
 	{
-		for(size_t i = 0; i < theOriginalCategoriesData.size(); i++)
+		categoryData.PutNoneProducerDataToEndFix();
+	}
+}
+
+template<typename T, typename U>
+static void UpdateDataCountValueBackToMap(T& updatedMap, U value, const std::string& mapKey)
+{
+	auto updatedMapIter = updatedMap.find(mapKey);
+	if(updatedMapIter != updatedMap.end())
+		*updatedMapIter->second.second = value;
+}
+
+template<typename T, typename U>
+static void UpdateStoredValueBackToMap(T& updatedMap, U value, const std::string& mapKey)
+{
+	auto updatedMapIter = updatedMap.find(mapKey);
+	if(updatedMapIter != updatedMap.end())
+		*updatedMapIter->second = value;
+}
+
+static void StoreDataFileValuesToWinRegistry(const NFmiCaseStudyDataFile &dataFile, NFmiCaseStudySettingsWinRegistry& theCaseStudySettingsWinRegistry)
+{
+	// 1. CaseStudy data count
+	auto& caseStudyIndex1Map = theCaseStudySettingsWinRegistry.GetHelpDataCaseStudyIndex1Map();
+	auto& caseStudyIndex2Map = theCaseStudySettingsWinRegistry.GetHelpDataCaseStudyIndex2Map();
+	// 2. Local cache data count
+	auto& localCacheDataCountMap = theCaseStudySettingsWinRegistry.GetHelpDataLocalCacheCountMap();
+	// 3. CaseStudy store
+	auto& caseStudyStoreMap = theCaseStudySettingsWinRegistry.GetCaseStudyStoreDataMap();
+	const auto& helpDataInfoName = dataFile.HelpDataInfoName();
+	const auto& indexRange = dataFile.DataFileWinRegValues().CaseStudyDataIndexRange();
+	::UpdateDataCountValueBackToMap(caseStudyIndex1Map, indexRange.first, helpDataInfoName);
+	::UpdateDataCountValueBackToMap(caseStudyIndex2Map, indexRange.second, helpDataInfoName);
+	::UpdateDataCountValueBackToMap(localCacheDataCountMap, dataFile.DataFileWinRegValues().LocalCacheDataCount(), helpDataInfoName);
+	::UpdateStoredValueBackToMap(caseStudyStoreMap, dataFile.DataFileWinRegValues().Store(), helpDataInfoName);
+}
+
+
+void NFmiCaseStudySystem::UpdateValuesBackToWinRegistry(NFmiCaseStudySettingsWinRegistry& theCaseStudySettingsWinRegistry)
+{
+	// Laitetaan CaseStudy dialogissa tehdyt muutokset talteen Windows rekisteriin
+	for(auto& categoryData : itsCategoriesData)
+	{
+		::StoreDataFileValuesToWinRegistry(categoryData.CategoryHeaderInfo(), theCaseStudySettingsWinRegistry);
+		for(auto& producerData : categoryData.ProducersData())
 		{
-			NFmiCaseStudyCategoryData *categoryData = GetCategoryData(theOriginalCategoriesData[i].CategoryHeaderInfo().Category());
-			if(categoryData)
+			for(auto& dataFile : producerData.FilesData())
 			{
-				categoryData->InitDataWithStoredSettings(theOriginalCategoriesData[i]);
+				::StoreDataFileValuesToWinRegistry(dataFile, theCaseStudySettingsWinRegistry);
 			}
 		}
 	}
 }
 
-NFmiCaseStudyCategoryData* NFmiCaseStudySystem::GetCategoryData(NFmiCaseStudyDataFile::DataCategory theCategory)
+void NFmiCaseStudySystem::InitDataWithStoredSettings(std::vector<NFmiCaseStudyCategoryData>& theOriginalCategoriesData)
 {
-	for(size_t i = 0; i < itsCategoriesData.size(); i++)
+	for(auto &originalCategoryData : theOriginalCategoriesData)
 	{
-		if(itsCategoriesData[i].CategoryHeaderInfo().Category() == theCategory)
-			return &itsCategoriesData[i];
-	}
-	return 0;
-}
-
-void NFmiCaseStudySystem::AddData(const NFmiCaseStudyDataFile &theData)
-{
-	// miten jaetaan eri kategorioihin? onko jokaiselle kategorialle oma lista? lis‰ksi pit‰‰ jakaa tuottaja kohtaisesti
-	for(size_t i = 0; i < itsCategoriesData.size(); i++)
-	{
-		if(itsCategoriesData[i].CategoryHeaderInfo().Category() == theData.Category())
+		auto categoryData = GetCategoryData(originalCategoryData.CategoryHeaderInfo().Category());
+		if(categoryData)
 		{
-			itsCategoriesData[i].AddData(theData);
-			break;
+			categoryData->InitDataWithStoredSettings(originalCategoryData);
 		}
 	}
+}
+
+NFmiCaseStudyCategoryData* NFmiCaseStudySystem::GetCategoryData(NFmiCaseStudyDataCategory theCategory)
+{
+	for(auto &categoryData : itsCategoriesData)
+	{
+		if(categoryData.CategoryHeaderInfo().Category() == theCategory)
+			return &categoryData;
+	}
+	return nullptr;
+}
+
+void NFmiCaseStudySystem::AddData(NFmiCaseStudyDataFile &theData)
+{
+	auto categoryData = GetCategoryData(theData.Category());
+	if(categoryData)
+		categoryData->AddData(theData);
 }
 
 // updeittaa kaikki kategorian tuottajien data koot ja paivitt‰‰ omat totalSize ja maxSize-koot
 void NFmiCaseStudySystem::Update(void)
 {
-	for(size_t i = 0; i < itsCategoriesData.size(); i++)
+	for(auto& categoryData : itsCategoriesData)
 	{
-		NFmiCaseStudyCategoryData &categoryData = itsCategoriesData[i];
 		categoryData.Update(*this);
 	}
 }
@@ -1244,32 +1524,27 @@ void NFmiCaseStudySystem::Update(void)
 // se menee oikeaan lokeroon.
 void NFmiCaseStudySystem::UpdateNoProducerData(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiInfoOrganizer &theInfoOrganizer)
 {
-    for(size_t i = 0; i < itsCategoriesData.size(); i++)
-    {
-        NFmiCaseStudyCategoryData &categoryData = itsCategoriesData[i];
+	for(auto& categoryData : itsCategoriesData)
+	{
         categoryData.UpdateNoProducerData(theDataInfoSystem, theInfoOrganizer);
     }
+	Update();
+	PutNoneProducerDataToEndFix();
 }
 
 // updeittaa halutun kategorian halutun tuottajien data koot ja paivitt‰‰ omat totalSize ja maxSize-koot
-void NFmiCaseStudySystem::Update(NFmiCaseStudyDataFile::DataCategory theCategory, unsigned long theProdId)
+void NFmiCaseStudySystem::Update(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId)
 {
-	for(size_t i = 0; i < itsCategoriesData.size(); i++)
-	{
-		NFmiCaseStudyCategoryData &categoryData = itsCategoriesData[i];
-		if(categoryData.CategoryHeaderInfo().Category() == theCategory)
-		{
-			categoryData.Update(theProdId, *this);
-			break;
-		}
-	}
+	auto categoryData = GetCategoryData(theCategory);
+	if(categoryData)
+		categoryData->Update(theProdId, *this);
 }
 
 static std::string NormalizeWindowsPathString(const std::string &thePath)
 {
 	std::string pathStr(thePath);
 	NFmiStringTools::LowerCase(pathStr);
-	NFmiStringTools::ReplaceChars(pathStr, '/', '\\');
+	pathStr = ::NormalizePathDelimiters(pathStr);
 	return pathStr;
 }
 
@@ -1303,101 +1578,71 @@ bool NFmiCaseStudySystem::DoApproximateDataSize(const std::string &thePath) cons
 		return true;
 }
 
-void NFmiCaseStudySystem::ProducerStore(NFmiCaseStudyDataFile::DataCategory theCategory, unsigned long theProdId, bool newValue)
+void NFmiCaseStudySystem::ProducerStore(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, bool newValue)
 {
-	for(size_t i = 0; i < itsCategoriesData.size(); i++)
-	{
-		NFmiCaseStudyCategoryData &categoryData = itsCategoriesData[i];
-		if(categoryData.CategoryHeaderInfo().Category() == theCategory)
-		{
-			categoryData.ProducerStore(theProdId, newValue, *this);
-			break;
-		}
-	}
+	auto categoryData = GetCategoryData(theCategory);
+	if(categoryData)
+		categoryData->ProducerStore(theProdId, newValue, *this);
 }
 
-void NFmiCaseStudySystem::CategoryStore(NFmiCaseStudyDataFile::DataCategory theCategory, bool newValue)
+void NFmiCaseStudySystem::CategoryStore(NFmiCaseStudyDataCategory theCategory, bool newValue)
 {
-	for(size_t i = 0; i < itsCategoriesData.size(); i++)
-	{
-		NFmiCaseStudyCategoryData &categoryData = itsCategoriesData[i];
-		if(categoryData.CategoryHeaderInfo().Category() == theCategory)
-		{
-			categoryData.CategoryStore(newValue, *this);
-			break;
-		}
-	}
+	auto categoryData = GetCategoryData(theCategory);
+	if(categoryData)
+		categoryData->CategoryStore(newValue, *this);
 }
 
-void NFmiCaseStudySystem::ProducerEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataFile::DataCategory theCategory, unsigned long theProdId, bool newValue)
+void NFmiCaseStudySystem::ProducerEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, bool newValue)
 {
-	for(size_t i = 0; i < itsCategoriesData.size(); i++)
-	{
-		NFmiCaseStudyCategoryData &categoryData = itsCategoriesData[i];
-		if(categoryData.CategoryHeaderInfo().Category() == theCategory)
-		{
-			categoryData.ProducerEnable(theDataInfoSystem, theProdId, newValue, *this);
-			break;
-		}
-	}
+	auto categoryData = GetCategoryData(theCategory);
+	if(categoryData)
+		categoryData->ProducerEnable(theDataInfoSystem, theProdId, newValue, *this);
 }
 
-void NFmiCaseStudySystem::CategoryEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataFile::DataCategory theCategory, bool newValue)
+void NFmiCaseStudySystem::CategoryEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataCategory theCategory, bool newValue)
 {
-	for(size_t i = 0; i < itsCategoriesData.size(); i++)
-	{
-		NFmiCaseStudyCategoryData &categoryData = itsCategoriesData[i];
-		if(categoryData.CategoryHeaderInfo().Category() == theCategory)
-		{
-			categoryData.CategoryEnable(theDataInfoSystem, newValue, *this);
-			break;
-		}
-	}
+	auto categoryData = GetCategoryData(theCategory);
+	if(categoryData)
+		categoryData->CategoryEnable(theDataInfoSystem, newValue, *this);
 }
 
-void NFmiCaseStudySystem::ProducerOffset(NFmiCaseStudyDataFile::DataCategory theCategory, unsigned long theProdId, bool startOffset, int theOffsetInMinutes)
+void NFmiCaseStudySystem::ProducerLocalCacheDataCount(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, int theDataCount)
 {
-	for(size_t i = 0; i < itsCategoriesData.size(); i++)
-	{
-		NFmiCaseStudyCategoryData &categoryData = itsCategoriesData[i];
-		if(categoryData.CategoryHeaderInfo().Category() == theCategory)
-		{
-			categoryData.ProducerOffset(theProdId, startOffset, theOffsetInMinutes, *this);
-			break;
-		}
-	}
+	auto categoryData = GetCategoryData(theCategory);
+	if(categoryData)
+		categoryData->ProducerLocalCacheDataCount(theProdId, theDataCount, *this);
 }
 
-void NFmiCaseStudySystem::CategoryOffset(NFmiCaseStudyDataFile::DataCategory theCategory, bool startOffset, int theOffsetInMinutes)
+void NFmiCaseStudySystem::CategoryLocalCacheDataCount(NFmiCaseStudyDataCategory theCategory, int theDataCount)
 {
-	for(size_t i = 0; i < itsCategoriesData.size(); i++)
-	{
-		NFmiCaseStudyCategoryData &categoryData = itsCategoriesData[i];
-		if(categoryData.CategoryHeaderInfo().Category() == theCategory)
-		{
-			categoryData.CategoryOffset(startOffset, theOffsetInMinutes, *this);
-			break;
-		}
-	}
+	auto categoryData = GetCategoryData(theCategory);
+	if(categoryData)
+		categoryData->CategoryLocalCacheDataCount(theDataCount, *this);
 }
 
-void NFmiCaseStudySystem::OrganizeDatas(void)
+void NFmiCaseStudySystem::ProducerCaseStudyIndexRange(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, const std::pair<int, int>& theIndexRange)
 {
-	for(size_t i = 0; i < itsCategoriesData.size(); i++)
-	{
-		itsCategoriesData[i].OrganizeDatas();
-	}
+	auto categoryData = GetCategoryData(theCategory);
+	if(categoryData)
+		categoryData->ProducerCaseStudyIndexRange(theProdId, theIndexRange, *this);
 }
 
-static NFmiProducerSystem* GetProducerSystem(NFmiProducerSystemsHolder &theProducerSystemsHolder, NFmiCaseStudyDataFile::DataCategory theCategory)
+void NFmiCaseStudySystem::CategoryCaseStudyIndexRange(NFmiCaseStudyDataCategory theCategory, const std::pair<int, int>& theIndexRange)
 {
-	if(theCategory == NFmiCaseStudyDataFile::kFmiCategoryModel)
+	auto categoryData = GetCategoryData(theCategory);
+	if(categoryData)
+		categoryData->CategoryCaseStudyIndexRange(theIndexRange, *this);
+}
+
+static NFmiProducerSystem* GetProducerSystem(NFmiProducerSystemsHolder &theProducerSystemsHolder, NFmiCaseStudyDataCategory theCategory)
+{
+	if(theCategory == NFmiCaseStudyDataCategory::Model)
 		return theProducerSystemsHolder.itsModelProducerSystem;
-	else if(theCategory == NFmiCaseStudyDataFile::kFmiCategoryObservation)
+	else if(theCategory == NFmiCaseStudyDataCategory::Observation)
 		return theProducerSystemsHolder.itsObsProducerSystem;
-	else if(theCategory == NFmiCaseStudyDataFile::kFmiCategoryAnalyze)
+	else if(theCategory == NFmiCaseStudyDataCategory::Analyze)
 		return theProducerSystemsHolder.itsObsProducerSystem; // analyysi tuottajat on sijoitettu myˆs obs-tuottaja listaan
-	else if(theCategory == NFmiCaseStudyDataFile::kFmiCategorySatelImage)
+	else if(theCategory == NFmiCaseStudyDataCategory::SatelImage)
 		return theProducerSystemsHolder.itsSatelImageProducerSystem;
 
 	return 0;
@@ -1439,10 +1684,9 @@ void NFmiCaseStudySystem::FillCaseStudyDialogData(NFmiProducerSystemsHolder &the
 		itsCaseStudyDialogData.push_back(&categoryData.CategoryHeaderInfo());
 		itsTreePatternArray.push_back(1); // p‰‰taso puussa
 
-		std::vector<NFmiCaseStudyProducerData> &producersDataVec = categoryData.ProducersData();
-		for(size_t j = 0; j < producersDataVec.size(); j++)
+		auto &producersData = categoryData.ProducersData();
+		for(auto & producerData : producersData)
 		{
-			NFmiCaseStudyProducerData &producerData = producersDataVec[j];
 			std::vector<NFmiCaseStudyDataFile> &filesDataVec = producerData.FilesData();
 			bool hasOnlyOneData = filesDataVec.size() <= 1;
 			if(hasOnlyOneData == false)
@@ -1523,19 +1767,6 @@ static bool DoErrorActions(CWnd *theParentWindow, const std::string &theErrorStr
 	return false;
 }
 
-// Etsii 1. datan, mill‰ on startTimeOffset jotain muuta kuin 0:aa ja kyse ei ole obs/analyysi tms datoista, joilla otetaan vain viimeisin data.
-NFmiMetTime NFmiCaseStudySystem::FindSuitableCaseStudyTime(void)
-{
-	NFmiMetTime aTime;
-	std::vector<NFmiCaseStudyCategoryData> &dataVector = CategoriesData();
-	for(size_t i = 0; i < dataVector.size(); i++)
-	{
-		if(dataVector[i].FindSuitableCaseStudyTime(aTime))
-			break; // jos t‰st‰ categoriasta lˆytyi sopiva aika kandidaatti, lopetetaan
-	}
-	return aTime;
-}
-
 // fMakeFullStore -parametri tarkoittaa ett‰ talletetaanko tiedot myˆs ei talletettavista datoista. Kun tehd‰‰n CaseStudy-dataa, t‰t‰ ei haluta tehd‰,
 // mutta kun talletetaan CaseStudy-muistia halutaan myˆs ei talletettujen datojen tiedot talteen.
 // Lis‰ksi jos fMakeFullStore on true, k‰ytet‰‰n suoraan theMetaDataTotalFileNameInOut -parametria tallennustiedoston polku+nimen‰,
@@ -1579,9 +1810,8 @@ bool NFmiCaseStudySystem::StoreMetaData(CWnd *theParentWindow, std::string &theM
 		return ::DoErrorActions(theParentWindow, errStr, captionStr);
 	}
 
-	// otetaan currentti aika CaseStudy-ajaksi, ei kannatakaan etsi‰ CaseStudyn alku aikaa, koska viimeiset mallit tulev‰t n‰kyviin vain 
-	// loppu ajalle eli kannattaa tallettaa t‰h‰n caseStudy-aikahaarukan loppuaika.
-	itsTime = NFmiMetTime(); // FindSuitableCaseStudyTime();
+	// Otetaan currentti aika CaseStudy-ajaksi.
+	itsTime = NFmiMetTime();
 	json_spirit::Object jsonObject = NFmiCaseStudySystem::MakeJsonObject(*this, fMakeFullStore);
 	if(jsonObject.size() == 0)
 	{
@@ -1733,11 +1963,9 @@ static std::string GetDirectory(const std::string &theFileFilter)
 
 std::string NFmiCaseStudySystem::MakeBaseDataDirectory(const std::string& theMetaDataFilePath, const std::string& theCaseStudyName)
 {
-	std::string basePath = ::GetDirectory(theMetaDataFilePath);
+	std::string basePath = ::NormalizePathDelimiters(::GetDirectory(theMetaDataFilePath));
 	std::string dataDir = basePath;
-	NFmiStringTools::ReplaceChars(dataDir, '/', '\\');
-	if(dataDir.size() && dataDir[dataDir.size()-1] != '\\')
-		dataDir += "\\";
+	PathUtils::addDirectorySeparatorAtEnd(dataDir);
 	dataDir += theCaseStudyName;
 	dataDir += "_data";
 	return dataDir;
@@ -1751,50 +1979,64 @@ std::string NFmiCaseStudySystem::MakeCaseStudyDataHakeDirectory(const std::strin
 	return caseStudyDataHakeDirectory;
 }
 
+static std::list<std::string> GetFinalFileList(const std::list<std::pair<std::string, std::time_t>>& filesWithTimes)
+{
+	std::list<std::string> files;
+	for(const auto& fileTimePair : filesWithTimes)
+		files.push_back(fileTimePair.first);
+	return files;
+}
+
 // 1. Tekee listan kopioitavista tiedostoista.
 // 2. Ottaa huomioon aikarajoitteet.
 // 3. Jos endOffset on 0 tai positiivinen, ei ole rajoitusta tiedoston aikaleiman 'uutuuteen' n‰hden, 
 // eli silloin kopsataan uusimmat tiedostot, vaikka niiss‰ olisi sein‰kelloa uudempi aika.
 // 4. Mukana on koko polku ja tiedoston nimi.
-static std::list<std::string> GetWantedFileList(NFmiCaseStudyDataFile &theDataFile)
+static std::list<std::string> GetWantedFileList(NFmiCaseStudyDataFile& theDataFile)
 {
-	std::list<std::string> copyedFiles;
-	if(theDataFile.StoreLastDataOnly())
+	const auto& dataFileWinRegValues = theDataFile.DataFileWinRegValues();
+	if(dataFileWinRegValues.Store())
 	{
-		std::string fileName = NFmiFileSystem::NewestPatternFileName(theDataFile.FileFilter());
-		copyedFiles.push_back(fileName);
-	}
-	else
-	{
-		NFmiMetTime startTime;
-		startTime.ChangeByMinutes(theDataFile.StartOffsetInMinutes());
-		time_t timeLimit = startTime.EpochTime();
-		std::list<std::pair<std::string, time_t> > filesWithTimes = NFmiFileSystem::PatternFiles(theDataFile.FileFilter(), timeLimit);
-
-		NFmiMetTime endTime;
-		endTime.ChangeByMinutes(theDataFile.EndOffsetInMinutes());
-		time_t endTimeLimit = endTime.EpochTime();
-		// viel‰ pit‰‰ erottaa mahdolliset liian tuoreet tiedostot pois ja tehd‰ lopullinen lista
-		bool keepAllFiles = theDataFile.EndOffsetInMinutes() >= 0; // jos end-offset on positiivinen/0, pidet‰‰n kaikki tiedostot
-		for(std::list<std::pair<std::string, time_t> >::iterator it = filesWithTimes.begin(); it != filesWithTimes.end(); ++it)
+		if(theDataFile.StoreLastDataOnly() || dataFileWinRegValues.StoreLastDataOnly())
 		{
-			if(keepAllFiles)
-				copyedFiles.push_back((*it).first);
-			else if(endTimeLimit > (*it).second)
-				copyedFiles.push_back((*it).first);
+			std::list<std::string> copyedFileList;
+			std::string fileName = NFmiFileSystem::NewestPatternFileName(theDataFile.FileFilter());
+			copyedFileList.push_back(fileName);
+			return copyedFileList;
+		}
+		else // Muuten talletetaan aina 1-n kpl tiedostoja
+		{
+			// Haetaan kaikki tiedostot mit‰ FileFilter:ill‰ lˆytyy (annettu aikaraja 1 on 1970.01.01 00:00:01)
+			time_t earliestTimeLimit = 1;
+			auto filesWithTimes = NFmiFileSystem::PatternFiles(theDataFile.FileFilter(), earliestTimeLimit);
+			if(!filesWithTimes.empty())
+			{
+				// J‰rjestet‰‰n tiedostot ajan suhteen laskevassa j‰rjestyksess‰, jolloin uusimmat ovat listan k‰rjess‰
+				auto timeSortedFiles = CtrlViewUtils::TimeSortFiles(filesWithTimes);
+
+				std::list<std::string> copyedFileList;
+				for(auto modelRunIndex : dataFileWinRegValues.GetWantedModelRunIndexList())
+				{
+					auto iter = timeSortedFiles.begin();
+					// modelRunIndex indeksit alkavat 1:st‰ (= uusin data tiedosto joka lˆytyy), joten siit‰ pit‰‰ v‰hent‰‰ 1, jotta voidaan liikuttaa iteraattoria oikein
+					std::advance(iter, modelRunIndex - 1);
+					if(iter != timeSortedFiles.end())
+						copyedFileList.push_back(iter->first);
+				}
+				return copyedFileList;
+			}
 		}
 	}
-
-	return copyedFiles;
+	return std::list<std::string>();
 }
 
 // t‰m‰ ottaa viimeisen polun osion annetusta polusta. Esim.
 // "C:\\data\case1_data" -> "case1_data"
 static std::string GetRelativeDataDirectory(const std::string &theDataDir)
 {
-	std::string tmpStr(theDataDir);
-	NFmiStringTools::ReplaceChars(tmpStr, '/', '\\');
-	NFmiStringTools::TrimR(tmpStr, '\\'); // poistetaan varmuuden vuoksi per‰ss‰ olevat kenoviivat
+	std::string tmpStr = ::NormalizePathDelimiters(theDataDir);
+	// Pit‰‰ poistaa per‰ss‰ mahdollisesti oleva(t) kenoviiva(t)
+	NFmiStringTools::TrimR(tmpStr, '\\'); 
 	std::string::size_type pos = tmpStr.find_last_of("\\");
 	if(pos != std::string::npos)
 	{
@@ -1805,6 +2047,186 @@ static std::string GetRelativeDataDirectory(const std::string &theDataDir)
 		return "";
 }
 
+static double DoFixesToGridPointValue(double value, bool horizontalCase, const NFmiGrid& dataGrid)
+{
+	auto bottomLeftGridPoint = dataGrid.FirstGridPoint();
+	auto topRightGridPoint = dataGrid.LastGridPoint();
+	if(horizontalCase)
+	{
+		if(value < bottomLeftGridPoint.X())
+			return bottomLeftGridPoint.X();
+		if(value > topRightGridPoint.X())
+			return topRightGridPoint.X();
+	}
+	else
+	{
+		if(value < bottomLeftGridPoint.Y())
+			return bottomLeftGridPoint.Y();
+		if(value > topRightGridPoint.Y())
+			return topRightGridPoint.Y();
+	}
+
+	return value;
+}
+
+static std::pair<NFmiRect, NFmiGrid> CalcPossibleCropGrid(NFmiAreaFactory::return_type& mapViewArea, const NFmiGrid& dataGrid)
+{
+	auto gridPointBottomLeft = dataGrid.LatLonToGrid(mapViewArea->BottomLeftLatLon());
+	auto gridPointBottomRight = dataGrid.LatLonToGrid(mapViewArea->BottomRightLatLon());
+	auto gridPointTopLeft = dataGrid.LatLonToGrid(mapViewArea->TopLeftLatLon());
+	auto gridPointTopRight = dataGrid.LatLonToGrid(mapViewArea->TopRightLatLon());
+	auto left = std::floor(gridPointBottomLeft.X());
+	left = ::DoFixesToGridPointValue(left, true, dataGrid);
+	auto bottom = std::floor(gridPointBottomLeft.Y());
+	bottom = ::DoFixesToGridPointValue(bottom, false, dataGrid);
+	auto right = std::ceil(gridPointTopRight.X());
+	right = ::DoFixesToGridPointValue(right, true, dataGrid);
+	auto top = std::ceil(gridPointTopRight.Y());
+	top = ::DoFixesToGridPointValue(top, false, dataGrid);
+	auto width = (right - left) + 1;
+	auto height = (top - bottom) + 1;
+	auto croppedGridPointArea = width * height;
+	auto dataGridArea = static_cast<double>(dataGrid.XNumber() * dataGrid.YNumber());
+	auto croppedToOrigGridAreaRatio = croppedGridPointArea / dataGridArea;
+	if(croppedToOrigGridAreaRatio > 0 && croppedToOrigGridAreaRatio < 0.8)
+	{
+		NFmiPoint croppedBottomLeftGridPoint(left, bottom);
+		NFmiPoint croppedTopRightGridPoint(right, top);
+		auto croppedBottomLeftLatlonPoint = dataGrid.GridToLatLon(croppedBottomLeftGridPoint);
+		auto croppedTopRightLatlonPoint = dataGrid.GridToLatLon(croppedTopRightGridPoint);
+		auto newCroppedArea = dataGrid.Area()->CreateNewArea(croppedBottomLeftLatlonPoint, croppedTopRightLatlonPoint);
+		if(newCroppedArea)
+		{
+			NFmiRect cropGridPointRect(left, top, right, bottom);
+			NFmiGrid croppedGrid(newCroppedArea, static_cast<unsigned long>(width), static_cast<unsigned long>(height));
+			return std::make_pair(cropGridPointRect, croppedGrid);
+		}
+	}
+
+	return std::make_pair(NFmiRect(), NFmiGrid());
+}
+
+static std::unique_ptr<NFmiQueryData> CreateCroppedQueryData(NFmiFastQueryInfo &sourceFastInfo, const NFmiRect& croppedGridRect, const NFmiGrid& croppedGrid)
+{
+	NFmiHPlaceDescriptor hplaceDescriptor(croppedGrid);
+	NFmiQueryInfo croppedMetaInfo(sourceFastInfo.ParamDescriptor(), sourceFastInfo.TimeDescriptor(), hplaceDescriptor, sourceFastInfo.VPlaceDescriptor());
+	std::unique_ptr<NFmiQueryData> croppedQueryData(NFmiQueryDataUtil::CreateEmptyData(croppedMetaInfo));
+	if(croppedQueryData)
+	{
+		NFmiFastQueryInfo croppedFastInfo(croppedQueryData.get());
+		int x1 = static_cast<int>(croppedGridRect.Left());
+		int x2 = static_cast<int>(croppedGridRect.Right());
+		int y1 = static_cast<int>(croppedGridRect.Top());
+		int y2 = static_cast<int>(croppedGridRect.Bottom());
+		for(sourceFastInfo.ResetParam(), croppedFastInfo.ResetParam(); sourceFastInfo.NextParam() && croppedFastInfo.NextParam();)
+		{
+			for(sourceFastInfo.ResetLevel(), croppedFastInfo.ResetLevel(); sourceFastInfo.NextLevel() && croppedFastInfo.NextLevel();)
+			{
+				for(sourceFastInfo.ResetTime(), croppedFastInfo.ResetTime(); sourceFastInfo.NextTime() && croppedFastInfo.NextTime();)
+				{
+					NFmiDataMatrix<float> matrix;
+					sourceFastInfo.CroppedValues(matrix, x1, y1, x2, y2);
+					croppedFastInfo.SetValues(matrix);
+				}
+			}
+		}
+	}
+	return croppedQueryData;
+}
+
+static bool IsAnyAreaCornersInsideOtherArea(const NFmiArea* theArea1, const NFmiArea* theArea2)
+{
+	if(theArea1 && theArea2)
+	{
+		if(theArea2->IsInside(theArea1->BottomLeftLatLon()))
+			return true;
+		if(theArea2->IsInside(theArea1->BottomRightLatLon()))
+			return true;
+		if(theArea2->IsInside(theArea1->TopLeftLatLon()))
+			return true;
+		if(theArea2->IsInside(theArea1->TopRightLatLon()))
+			return true;
+	}
+	return false;
+}
+
+static bool AreAreasOverlapping(const NFmiArea* theArea1, const NFmiArea* theArea2)
+{
+	if(theArea1 && theArea2)
+	{
+		if(::IsAnyAreaCornersInsideOtherArea(theArea1, theArea2))
+			return true;
+		if(::IsAnyAreaCornersInsideOtherArea(theArea2, theArea1))
+			return true;
+	}
+	return false;
+}
+
+static bool CropDataToDestination(const std::string& filePath, const std::string& theDestDir, NFmiAreaFactory::return_type& mapViewArea)
+{
+	try
+	{
+		NFmiQueryData sourceData(filePath);
+		NFmiFastQueryInfo sourceFastInfo(&sourceData);
+		if(sourceFastInfo.IsGrid())
+		{
+			if(NFmiQueryDataUtil::AreAreasSameKind(sourceFastInfo.Area(), mapViewArea.get()))
+			{
+				auto cropRectAndGrid = ::CalcPossibleCropGrid(mapViewArea, *sourceFastInfo.Grid());
+				if(cropRectAndGrid.first.Width())
+				{
+					auto croppedQueryData = ::CreateCroppedQueryData(sourceFastInfo, cropRectAndGrid.first, cropRectAndGrid.second);
+					if(croppedQueryData)
+					{
+						NFmiFileString fileString(filePath);
+						std::string destFilePath = theDestDir + '\\';
+						destFilePath += fileString.FileName();
+						croppedQueryData->Write(destFilePath);
+						return true;
+					}
+				}
+			}
+
+			if(!::AreAreasOverlapping(sourceFastInfo.Area(), mapViewArea.get()))
+			{
+				// Jos kartan ja datan alueet eiv‰t ole p‰‰llekk‰in mill‰‰n tavalla, palautetaan t‰ss‰ true, jotta 
+				// kyseist‰ dataa ei talleteta 'turhaan' case-studyyn.
+				// Esimerkkitapaus: 
+				// Maailmadatasta tehd‰‰n Australian alueelle caseStudy-data. Kartalla on latlon-projektio.
+				// Halutaan ett‰ euro-alueen stereograafiset (hirlam jne.) datat j‰‰v‰t pois.
+				return true;
+			}
+		}
+	}
+	catch(...)
+	{
+	}
+	return false;
+}
+
+static std::list<std::string> DoCropDataToZoomedAreaOperations(const std::list<std::string>& theCopyedFiles, const std::string& theDestDir, const std::string& theCropDataAreaString)
+{
+	std::list<std::string> remainingFiles = theCopyedFiles;
+	if(!theCropDataAreaString.empty())
+	{
+		try
+		{
+			auto mapViewArea = NFmiAreaFactory::Create(theCropDataAreaString);
+			if(mapViewArea)
+			{
+				for(const auto &filePath : theCopyedFiles)
+				{
+					if(CropDataToDestination(filePath, theDestDir, mapViewArea))
+						remainingFiles.remove(filePath);
+				}
+			}
+		}
+		catch(...)
+		{ }
+	}
+	return remainingFiles;
+}
+
 
 #ifdef CopyFile // winkkari makro pit‰‰ disabloida ensin ennen kuin voi k‰ytt‰‰ NFmiFileSystem:in FileCopy-funktiota
 #undef CopyFile
@@ -1812,15 +2234,18 @@ static std::string GetRelativeDataDirectory(const std::string &theDataDir)
 
 // 1. kopioi annetut tiedostot theDestDir-hakemistoon.
 // 2. Pit‰‰kˆ muokata NFmiCaseStudyDataFile:en uusi suhteellinen polku, ett‰ myˆhemmin sit‰ voidaan k‰ytt‰‰ kun dataa ladataan katsottavaksi?
-static void CopyFilesToDestination(const std::list<std::string> &theCopyedFiles, const std::string &theDestDir, int theProgressDialogMaxCount, int &theProgressCounter, CWnd *theCopyWindowPos)
+static void CopyFilesToDestination(const std::list<std::string> &theCopyedFiles, const std::string &theDestDir, int theProgressDialogMaxCount, int &theProgressCounter, CWnd *theCopyWindowPos, const std::string& theCropDataAreaString)
 {
-	if(theCopyedFiles.size() == 0)
+	auto remainingCopyedFiles = theCopyedFiles;
+	if(!theCropDataAreaString.empty())
+		remainingCopyedFiles = ::DoCropDataToZoomedAreaOperations(remainingCopyedFiles, theDestDir, theCropDataAreaString);
+	if(remainingCopyedFiles.size() == 0)
 		return ;
 
 	CShellFileOp sfo;
 	BOOL bAPICalled = FALSE;
 	int nAPIReturnVal = 0;
-	for(std::list<std::string>::const_iterator it = theCopyedFiles.begin(); it != theCopyedFiles.end(); ++it)
+	for(std::list<std::string>::const_iterator it = remainingCopyedFiles.begin(); it != remainingCopyedFiles.end(); ++it)
 	{
         sfo.AddSourceFile(CA2T((*it).c_str()));
 	}
@@ -1896,7 +2321,7 @@ static std::string GetDataFileDir(const std::string &theBaseDir, NFmiCaseStudyDa
 	return usedDir;
 }
 
-static void StoreFileData(const std::string &theProducerDir, const std::string &theRelativeProducerDir, NFmiCaseStudyDataFile &theDataFile, int theProgressDialogMaxCount, int &theProgressCounter, CWnd *theCopyWindowPos)
+static void StoreFileData(const std::string &theProducerDir, const std::string &theRelativeProducerDir, NFmiCaseStudyDataFile &theDataFile, int theProgressDialogMaxCount, int &theProgressCounter, CWnd *theCopyWindowPos, const std::string& theCropDataAreaString)
 {
 	std::string usedDestDir = ::GetDataFileDir(theProducerDir, theDataFile);
 	std::string usedRelativeDestDir = ::GetDataFileDir(theRelativeProducerDir, theDataFile);
@@ -1907,7 +2332,7 @@ static void StoreFileData(const std::string &theProducerDir, const std::string &
 	if(NFmiFileSystem::CreateDirectory(usedDestDir))
 	{
 		std::list<std::string> copyedFiles = ::GetWantedFileList(theDataFile);
-		::CopyFilesToDestination(copyedFiles, usedDestDir, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos);
+		::CopyFilesToDestination(copyedFiles, usedDestDir, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos, theCropDataAreaString);
 	}
 }
 
@@ -1941,7 +2366,7 @@ static std::string GetProducerDir(const std::string &theBaseDir, NFmiCaseStudyPr
 	return producerDir;
 }
 
-static void StoreProducerData(const std::string &theCategoryDir, const std::string &theRelativeCategoryDir, NFmiCaseStudyProducerData &theProducerData, int theProgressDialogMaxCount, int &theProgressCounter, CWnd *theCopyWindowPos)
+static void StoreProducerData(const std::string &theCategoryDir, const std::string &theRelativeCategoryDir, NFmiCaseStudyProducerData &theProducerData, int theProgressDialogMaxCount, int &theProgressCounter, CWnd *theCopyWindowPos, const std::string& theCropDataAreaString)
 {
 	std::string producerDir = ::GetProducerDir(theCategoryDir, theProducerData);
 	std::string relativeProducerDir = ::GetProducerDir(theRelativeCategoryDir, theProducerData);
@@ -1957,7 +2382,7 @@ static void StoreProducerData(const std::string &theCategoryDir, const std::stri
 			{
 				if(dataFile.ImageFile())
 				{
-					::StoreFileData(producerDir, relativeProducerDir, dataFile, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos);
+					::StoreFileData(producerDir, relativeProducerDir, dataFile, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos, theCropDataAreaString);
 					imageFiles = true;
 				}
 				else
@@ -1965,7 +2390,7 @@ static void StoreProducerData(const std::string &theCategoryDir, const std::stri
 			}
 		}
 		if(imageFiles == false)
-			::CopyFilesToDestination(copyedFiles, producerDir, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos);
+			::CopyFilesToDestination(copyedFiles, producerDir, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos, theCropDataAreaString);
 	}
 }
 
@@ -1977,7 +2402,7 @@ static std::string GetCategoryDir(const std::string &theBaseDir, NFmiCaseStudyCa
 	return categoryDir;
 }
 
-static void StoreCategoryData(const std::string &theDataDir, const std::string &theRelativeDataDir, NFmiCaseStudyCategoryData &theCategory, int theProgressDialogMaxCount, int &theProgressCounter, CWnd *theCopyWindowPos)
+static void StoreCategoryData(const std::string &theDataDir, const std::string &theRelativeDataDir, NFmiCaseStudyCategoryData &theCategory, int theProgressDialogMaxCount, int &theProgressCounter, CWnd *theCopyWindowPos, const std::string& theCropDataAreaString)
 {
 	std::string categoryDir = ::GetCategoryDir(theDataDir, theCategory);
 	std::string relativeCategoryDir = ::GetCategoryDir(theRelativeDataDir, theCategory);
@@ -1985,38 +2410,35 @@ static void StoreCategoryData(const std::string &theDataDir, const std::string &
 	{
 		bool storeLastDataOnlyCategory = theCategory.CategoryHeaderInfo().StoreLastDataOnly();
 		std::list<std::string> copyedFiles;
-		std::vector<NFmiCaseStudyProducerData> &producerDataVec = theCategory.ProducersData();
-		for(size_t i=0; i < producerDataVec.size(); i++)
+		auto &producersData = theCategory.ProducersData();
+		for(auto & producerData : producersData)
 		{
 			if(storeLastDataOnlyCategory)
-				::AddProducerDataFilesToList(categoryDir, relativeCategoryDir, producerDataVec[i], copyedFiles);
+				::AddProducerDataFilesToList(categoryDir, relativeCategoryDir, producerData, copyedFiles);
 			else
-				::StoreProducerData(categoryDir, relativeCategoryDir, producerDataVec[i], theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos);
+				::StoreProducerData(categoryDir, relativeCategoryDir, producerData, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos, theCropDataAreaString);
 		}
 		if(storeLastDataOnlyCategory)
-			::CopyFilesToDestination(copyedFiles, categoryDir, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos);
+			::CopyFilesToDestination(copyedFiles, categoryDir, theProgressDialogMaxCount, theProgressCounter, theCopyWindowPos, theCropDataAreaString);
 	}
 }
 
 int NFmiCaseStudySystem::CalculateProgressDialogCount(void) const
 {
 	int counter = 0;
-	for(size_t i=0; i < itsCategoriesData.size(); i++)
+	for(const auto &categoryData : itsCategoriesData)
 	{
-		const NFmiCaseStudyCategoryData &categoryData = itsCategoriesData[i];
-		const std::vector<NFmiCaseStudyProducerData> &producerDataVec = categoryData.ProducersData();
-		for(size_t j=0; j < producerDataVec.size(); j++)
+		const auto &producersData = categoryData.ProducersData();
+		for(const auto & producerData : producersData)
 		{
 			bool storeLastDataOnlyCategory = categoryData.CategoryHeaderInfo().StoreLastDataOnly();
-			const NFmiCaseStudyProducerData &producerData = producerDataVec[j];
 			if(producerData.FilesData().size())
 			{
-				const std::vector<NFmiCaseStudyDataFile> &fileDataVec = producerData.FilesData();
+				const auto &fileDataVec = producerData.FilesData();
 				bool imageProducer = fileDataVec[0].ImageFile();
-				for(size_t k=0; k < fileDataVec.size(); k++)
+				for(const auto &fileData : fileDataVec)
 				{
-					const NFmiCaseStudyDataFile &fileData = fileDataVec[k];
-					if(fileData.Store())
+					if(fileData.DataFileWinRegValues().Store())
 					{
 						counter++;
 						if(imageProducer == false)
@@ -2041,7 +2463,7 @@ storeLastDataOnlyBailOut: ;
 // 5. Tee image datoille viel‰ jokaiselle parametrille oma hakemisto
 // 6. Kopioi halutut datat omiin hakemistoihinha annetuista poluista annetuilla fileFiltereill‰ ja aikav‰lill‰
 // HUOM! Voi heitt‰‰ CaseStudyOperationCanceledException -poikkeuksen!!!
-bool NFmiCaseStudySystem::MakeCaseStudyData(const std::string &theFullPathMetaDataFileName, CWnd *theParentWindow, CWnd *theCopyWindowPos)
+bool NFmiCaseStudySystem::MakeCaseStudyData(const std::string &theFullPathMetaDataFileName, CWnd *theParentWindow, CWnd *theCopyWindowPos, const std::string& theCropDataAreaString)
 {
 	if(ReadMetaData(theFullPathMetaDataFileName, theParentWindow))
 	{
@@ -2052,7 +2474,7 @@ bool NFmiCaseStudySystem::MakeCaseStudyData(const std::string &theFullPathMetaDa
 		if(NFmiFileSystem::CreateDirectory(dataDir))
 		{
 			for(size_t i=0; i < itsCategoriesData.size(); i++)
-				::StoreCategoryData(dataDir, relativeDataDir, itsCategoriesData[i], progressDialogMaxCount, progressCounter, theCopyWindowPos);
+				::StoreCategoryData(dataDir, relativeDataDir, itsCategoriesData[i], progressDialogMaxCount, progressCounter, theCopyWindowPos, theCropDataAreaString);
 		}
 
 		// TODO pit‰‰kˆ metadata tallettaa nyt uusilla poluilla?
@@ -2066,21 +2488,39 @@ bool NFmiCaseStudySystem::MakeCaseStudyData(const std::string &theFullPathMetaDa
 
 // Tekee nyt ladattuna olevasta caseStudy-datasta NFmiHelpDataInfoSystem -olion. Staattinen data-osio annetaan argumenttina, 
 // koska niit‰ ei talleteta CaseStudy-dataan.
-boost::shared_ptr<NFmiHelpDataInfoSystem> NFmiCaseStudySystem::MakeHelpDataInfoSystem(const NFmiHelpDataInfoSystem &theOriginalHelpDataInfoSystem, const std::string &theBasePath)
+boost::shared_ptr<NFmiHelpDataInfoSystem> NFmiCaseStudySystem::MakeHelpDataInfoSystem(NFmiHelpDataInfoSystem &theOriginalHelpDataInfoSystem, const std::string &theBasePath)
 {
 	boost::shared_ptr<NFmiHelpDataInfoSystem> helpDataInfoSystem;
 	if(itsCategoriesData.size())
 	{
-		const checkedVector<NFmiHelpDataInfo> &staticHelpDataInfos =  theOriginalHelpDataInfoSystem.StaticHelpDataInfos();
+		const auto &staticHelpDataInfos =  theOriginalHelpDataInfoSystem.StaticHelpDataInfos();
 		helpDataInfoSystem = boost::shared_ptr<NFmiHelpDataInfoSystem>(new NFmiHelpDataInfoSystem());
 		for(size_t i = 0; i < staticHelpDataInfos.size(); i++)
 			helpDataInfoSystem->AddStatic(staticHelpDataInfos[i]);
-		helpDataInfoSystem->CacheMaxFilesPerPattern(theOriginalHelpDataInfoSystem.CacheMaxFilesPerPattern()); // t‰m‰ on otettava talteen, muuten ei lokaali CaseStudyn arkisto toimi
 
 		for(size_t i = 0; i < itsCategoriesData.size(); i++)
-			itsCategoriesData[i].AddDataToHelpDataInfoSystem(helpDataInfoSystem, theBasePath);
+			itsCategoriesData[i].AddDataToHelpDataInfoSystem(helpDataInfoSystem, theBasePath, theOriginalHelpDataInfoSystem);
 	}
 	return helpDataInfoSystem;
+}
+
+NFmiCaseStudyDataFile* NFmiCaseStudySystem::FindCaseStudyDataFile(const std::string& theUniqueHelpDataInfoName)
+{
+	if(!theUniqueHelpDataInfoName.empty())
+	{
+		for(auto& categoryData : itsCategoriesData)
+		{
+			for(auto& producerData : categoryData.ProducersData())
+			{
+				for(auto& dataFile : producerData.FilesData())
+				{
+					if(dataFile.HelpDataInfoName() == theUniqueHelpDataInfoName)
+						return &dataFile;
+				}
+			}
+		}
+	}
+	return nullptr;
 }
 
 std::string NFmiCaseStudySystem::MakeCaseStudyFilePattern(const std::string &theFilePattern, const std::string &theBasePath, bool fMakeOnlyPath)
@@ -2088,17 +2528,14 @@ std::string NFmiCaseStudySystem::MakeCaseStudyFilePattern(const std::string &the
 	std::string patternWithoutPath = NFmiFileSystem::FileNameFromPath(theFilePattern);
 	if(patternWithoutPath.empty() == false)
 	{
-		for(size_t i = 0; i < itsCategoriesData.size(); i++)
+		for(auto categoryData : itsCategoriesData)
 		{
-			NFmiCaseStudyCategoryData &categoryData = itsCategoriesData[i];
-			std::vector<NFmiCaseStudyProducerData> &producerDataVector = categoryData.ProducersData();
-			for(size_t j = 0; j < producerDataVector.size(); j++)
+			auto &producersData = categoryData.ProducersData();
+			for(auto &producerData : producersData)
 			{
-				NFmiCaseStudyProducerData &producerData = producerDataVector[j];
-				std::vector<NFmiCaseStudyDataFile> &dataFileVector = producerData.FilesData();
-				for(size_t k = 0; k < dataFileVector.size(); k++)
+				auto &dataFileVector = producerData.FilesData();
+				for(auto & dataFile : dataFileVector)
 				{
-					NFmiCaseStudyDataFile &dataFile = dataFileVector[k];
 					auto pos = MacroParam::ci_find_substr(dataFile.RelativeStoredFileFilter(), patternWithoutPath); // t‰m‰ etsint‰ tyˆ pit‰‰ tehd‰ case-insensitiivisti, tai muuten kaikkien eri konffeissa olevien juttujen pit‰‰ olla tarkalleen samalla lailla kirjoitettu
 					if(pos != MacroParam::ci_string_not_found)
 					{ // lˆytyi haluttu data, rakenna nyt siihen sopiva file-filter
@@ -2167,6 +2604,50 @@ bool NFmiCaseStudySystem::StoreWarningMessages(void) const
 void NFmiCaseStudySystem::StoreWarningMessages(bool newValue)
 {
 	*fStoreWarningMessages = newValue;
+}
+
+bool NFmiCaseStudySystem::CropDataToZoomedMapArea(void) const
+{
+	return *fCropDataToZoomedMapArea;
+}
+
+void NFmiCaseStudySystem::CropDataToZoomedMapArea(bool newValue)
+{
+	*fCropDataToZoomedMapArea = newValue;
+}
+
+std::string NFmiCaseStudySystem::MakeIndexRangeString(const std::pair<int, int>& indexRange)
+{
+	std::string text = std::to_string(indexRange.first);
+	text += "-";
+	text += std::to_string(indexRange.second);
+	return text;
+}
+
+std::pair<int, int> NFmiCaseStudySystem::MakeIndexRange(const std::string& str)
+{
+	std::vector<std::string> parts;
+	// Tehd‰‰n varmuuden vuoksi splittaus kaikilla mahdollisilla erotinmerkeill‰, vaikka virallinen onkin '-' merkki.
+	boost::split(parts, str, boost::is_any_of(",-:;/|\\"));
+	if(parts.size() == 1)
+	{
+		auto index1 = boost::lexical_cast<int>(parts.back());
+		// Vain yksi mahdollinen luku, toinen indeksi on t‰llˆin aina 1
+		return std::make_pair(index1, 1);
+	}
+	else if(parts.size() == 2)
+	{
+		auto index1 = boost::lexical_cast<int>(parts.front());
+		auto index2 = boost::lexical_cast<int>(parts.back());
+		return std::make_pair(index1, index2);
+	}
+	else
+	{
+		std::string errorMessage = "Too many 'index' splits from given cellText '";
+		errorMessage += str;
+		errorMessage += "'";
+		throw std::runtime_error(errorMessage);
+	}
 }
 
 // ************************************************************

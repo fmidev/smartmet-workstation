@@ -19,14 +19,14 @@ class NFmiModifiableQDatasBookKeeping;
 class NFmiSmartInfo : public NFmiOwnerInfo
 {
  public:
-  NFmiSmartInfo(void);
+  NFmiSmartInfo();
   NFmiSmartInfo(const NFmiOwnerInfo &theInfo);  // matala kopio, eli jaettu data
   NFmiSmartInfo(const NFmiSmartInfo &theInfo);  // matala kopio, eli jaettu data
   NFmiSmartInfo(NFmiQueryData *theOwnedData,
                 NFmiInfoData::Type theDataType,
                 const std::string &theDataFileName,
                 const std::string &theDataFilePattern);  // ottaa datan omistukseensa emossa
-  ~NFmiSmartInfo(void);
+  ~NFmiSmartInfo();
 
   NFmiSmartInfo &operator=(const NFmiSmartInfo &theInfo);  // matala kopio, eli jaettu data
   NFmiSmartInfo *Clone(
@@ -37,24 +37,24 @@ class NFmiSmartInfo : public NFmiOwnerInfo
   // myös)
   static boost::shared_ptr<NFmiFastQueryInfo> CreateShallowCopyOfHighestInfo(
       const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
-  bool NextLocation(void);
+  bool NextLocation();
 
   bool SnapShotData(const std::string &theAction);
-  bool Undo(void);
-  bool Redo(void);
+  bool Undo();
+  bool Redo();
   bool UndoData(std::string &modificationDescription);
   bool RedoData(std::string &modificationDescription);
   void UndoLevel(long theDepth);
 
-  bool LocationSelectionSnapShot(void);                  // ota maskit talteen
-  bool LocationSelectionUndo(void);                      // kysyy onko undo mahdollinen
-  bool LocationSelectionRedo(void);                      // kysyy onko redo mahdollinen
-  bool LocationSelectionUndoData(void);                  // suorittaa todellisen undon
-  bool LocationSelectionRedoData(void);                  // suorittaa todellisen redon
+  bool LocationSelectionSnapShot();                  // ota maskit talteen
+  bool LocationSelectionUndo();                      // kysyy onko undo mahdollinen
+  bool LocationSelectionRedo();                      // kysyy onko redo mahdollinen
+  bool LocationSelectionUndoData();                  // suorittaa todellisen undon
+  bool LocationSelectionRedoData();                  // suorittaa todellisen redon
   void LocationSelectionUndoLevel(int theNewUndoLevel);  // undolevel asetetaan tällä
-  bool LoadedFromFile(void);
+  bool LoadedFromFile();
   void LoadedFromFile(bool loadedFromFile);
-  bool IsDirty(void) const;
+  bool IsDirty() const;
   void Dirty(bool newState);
 
   int MaskedCount(unsigned long theMaskType, unsigned long theIndex, const NFmiRect &theSearchArea);
@@ -65,7 +65,7 @@ class NFmiSmartInfo : public NFmiOwnerInfo
   const NFmiBitMask &Mask(unsigned long theMaskType) const;
   void MaskLocation(const bool &newState, unsigned long theMaskType);
   void MaskType(unsigned long theMaskType);
-  unsigned long MaskType(void);
+  unsigned long MaskType();
 
  protected:
   void CopyClonedDatas(const NFmiSmartInfo &theOther);

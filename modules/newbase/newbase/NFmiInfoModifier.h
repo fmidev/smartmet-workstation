@@ -12,7 +12,7 @@
 class NFmiQueryInfo;
 
 //! Undocumented
-class _FMI_DLL NFmiInfoModifier : public NFmiParamDataModifier
+class NFmiInfoModifier : public NFmiParamDataModifier
 {
  public:
   virtual ~NFmiInfoModifier();
@@ -20,8 +20,8 @@ class _FMI_DLL NFmiInfoModifier : public NFmiParamDataModifier
                    NFmiLevel* theLevel,
                    NFmiQueryInfo* theData = 0,
                    FmiJoinOperator theJoinOperator = kFmiAdd);
-  NFmiQueryInfo* Info(void);
-  virtual double FloatValue(void);
+  NFmiQueryInfo* Info();
+  virtual double FloatValue();
   virtual double PeekValue(long dx, long dy, long dt);
 
  protected:

@@ -2,14 +2,14 @@
 
 namespace Wms
 {
-    BackgroundFetcher::BackgroundFetcher(std::shared_ptr<cppback::BackgroundManager> bManager, int howManyBackward, int howManyForward)
+    BackgroundFetcher::BackgroundFetcher(const std::shared_ptr<cppback::BackgroundManager> &bManager, int howManyBackward, int howManyForward)
         :bManager_{ bManager }
         , forwardQueries_(howManyForward)
         , backwardQueries_(howManyBackward)
     {
     }
 
-    void BackgroundFetcher::fetch(WmsClient& client, QueryBuilder qb, const NFmiMetTime& time, int editorTimeStepInMinutes)
+    void BackgroundFetcher::fetch(WmsClient& client, const QueryBuilder &qb, const NFmiMetTime& time, int editorTimeStepInMinutes)
     {
         if(shouldNotDoBackgroundFetching(client, qb))
         {
@@ -20,7 +20,7 @@ namespace Wms
         fetchQueriesInTheBackground(client, backwardQueries_);
     }
 
-    void BackgroundFetcher::fetchQueriesInTheBackground(WmsClient& client, std::vector<WmsQuery> queries)
+    void BackgroundFetcher::fetchQueriesInTheBackground(WmsClient& client, const std::vector<WmsQuery> &queries)
     {
         for(const auto& query : queries)
         {
@@ -39,12 +39,14 @@ namespace Wms
         createQueries(qb, time, -timeStepInMinutes, backwardQueries_);
     }
 
-    void BackgroundFetcher::createQueries(QueryBuilder qb, NFmiMetTime time, int timeStepInMinutes, std::vector<WmsQuery>& queries)
+    void BackgroundFetcher::createQueries(const QueryBuilder &qb, const NFmiMetTime &time, int timeStepInMinutes, std::vector<WmsQuery>& queries)
     {
+        auto usedTime = time;
+        auto usedQueryBuilder = qb;
         for(auto& query : queries)
         {
-            time.ChangeByMinutes(timeStepInMinutes);
-            query = qb.setTime(time).build();
+            usedTime.ChangeByMinutes(timeStepInMinutes);
+            query = usedQueryBuilder.setTime(usedTime).build();
         }
     }
 

@@ -54,7 +54,7 @@ public:
     NFmiTrajectorySystem* TrajectorySystem(void) override;
     const NFmiColor& GeneralColor(int theIndex) override;
     const NFmiMetTime& ActiveMapTime(void) override;
-    void MakeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override;
+    void MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override;
     NFmiMetTime GetModelOrigTime(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theIndex = 0) override;
     void UpdateCrossSectionMacroParamDataSize(void) override;
     NFmiMTATempSystem& GetMTATempSystem(void) override;
@@ -107,7 +107,7 @@ public:
     NFmiHelpEditorSystem& HelpEditorSystem(void) override;
     NFmiMetEditorOptionsData& MetEditorOptionsData(void) override;
     boost::shared_ptr<NFmiEditorControlPointManager> CPManager(bool getOldSchoolCPManager = false) override;
-    boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing) override;
+    boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing) override;
     bool IsMasksUsedInTimeSerialViews(void) override;
     NFmiAnalyzeToolData& AnalyzeToolData(void) override;
     const NFmiPoint& OutOfEditedAreaTimeSerialPoint(void) const override;
@@ -117,7 +117,7 @@ public:
     void TimeSerialViewDirty(bool newValue) override;
     bool CreateTimeSerialDialogPopup(int index) override;
     bool CreateTimeSerialDialogOnViewPopup(int index) override;
-    bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, checkedVector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1) override;
+    bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1) override;
     void UpdateToModifiedDrawParam(unsigned int mapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam>& drawParam, int viewRowIndex) override;
     bool UseTimeSerialAxisAutoAdjust(void) override;
     bool UseQ2Server(void) override;
@@ -154,7 +154,7 @@ public:
         , bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) override;
     NFmiEditMapDataListHandler* DataLists(void) override;
     bool ShowObsComparisonOnMap(int theDescTopIndex) override;
-    checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) override;
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) override;
     int AbsoluteActiveViewRow(unsigned int theDescTopIndex) override;
     void AbsoluteActiveViewRow(unsigned int theDescTopIndex, int theAbsoluteActiveRowIndex) override;
 	NFmiSynopPlotSettings* SynopPlotSettings(void) override;
@@ -207,7 +207,6 @@ public:
     bool IsCPGridCropNotPlausible(void) override;
     boost::shared_ptr<NFmiArea> CPGridCropInnerLatlonArea(void) override;
     NFmiWindTableSystem& WindTableSystem(void) override;
-    NFmiSeaIcingWarningSystem& SeaIcingWarningSystem(void) override;
     NFmiProjectionCurvatureInfo* ProjectionCurvatureInfo(void) override;
     bool DrawLandBorders(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) override;
     const NFmiColor& LandBorderColor(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) override;

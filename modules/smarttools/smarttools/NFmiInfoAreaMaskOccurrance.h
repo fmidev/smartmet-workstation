@@ -7,10 +7,10 @@ class NFmiDrawParam;
 // Näitä kolmea areamaks luokkaa yhdistää se että ne kaikki voivat käsitellä havaintoja (nearest tekniikalla) ja 
 // havaintodatat voivat tulla multi-data-sourcesta (esim. synop voi koostua jopa viidesta eri datasta suomi/euro/maailma/ship/poiju).
 
-class _FMI_DLL NFmiInfoAreaMaskOccurrance : public NFmiInfoAreaMaskProbFunc
+class NFmiInfoAreaMaskOccurrance : public NFmiInfoAreaMaskProbFunc
 {
  public:
-  ~NFmiInfoAreaMaskOccurrance(void);
+  ~NFmiInfoAreaMaskOccurrance();
   NFmiInfoAreaMaskOccurrance(const NFmiCalculationCondition &theOperation,
                              Type theMaskType,
                              NFmiInfoData::Type theDataType,
@@ -22,22 +22,22 @@ class _FMI_DLL NFmiInfoAreaMaskOccurrance : public NFmiInfoAreaMaskProbFunc
                              bool synopXCase,
                              unsigned long thePossibleMetaParamId);
   NFmiInfoAreaMaskOccurrance(const NFmiInfoAreaMaskOccurrance &theOther);
-  void Initialize(void) override;  // Tätä kutsutaan konstruktorin jälkeen, tässä alustetaan tietyille
+  void Initialize() override;  // Tätä kutsutaan konstruktorin jälkeen, tässä alustetaan tietyille
                           // datoille mm. käytetyt aikaindeksit ja käytetyt locaaion indeksit
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
   NFmiInfoAreaMaskProbFunc &operator=(const NFmiInfoAreaMaskProbFunc &theMask) = delete;
 
   static void SetMultiSourceDataGetterCallback(
-      const std::function<void(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &,
+      const std::function<void(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &,
                                boost::shared_ptr<NFmiDrawParam> &,
                                const boost::shared_ptr<NFmiArea> &)> &theCallbackFunction);
-  static std::function<void(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &,
+  static std::function<void(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &,
       boost::shared_ptr<NFmiDrawParam> &,
       const boost::shared_ptr<NFmiArea> &)> GetMultiSourceDataGetterCallback() { return itsMultiSourceDataGetter; }
   // Nyt ainakin synop ja salama datat ovat tälläisiä
   static bool IsKnownMultiSourceData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
-  static checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> GetMultiSourceData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &calculationArea, bool getSynopXData);
-  static checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> CreateShallowCopyOfInfoVector(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector);
+  static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> GetMultiSourceData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &calculationArea, bool getSynopXData);
+  static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> CreateShallowCopyOfInfoVector(const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector);
 
   // tätä kaytetaan smarttool-modifierin yhteydessä
   double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
@@ -63,7 +63,7 @@ class _FMI_DLL NFmiInfoAreaMaskOccurrance : public NFmiInfoAreaMaskProbFunc
   boost::shared_ptr<NFmiArea> itsCalculationArea;  
   // Tähän laitetaan laskuissa käytettävät datat, joko se joko on jo emoluokassa
   // oleva itsInfo, tai multisource tapauksissa joukko datoja  
-  checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> itsInfoVector;  
+  std::vector<boost::shared_ptr<NFmiFastQueryInfo>> itsInfoVector;  
 
   // Jokaiselle käytössä olevalle datalle lasketaan locationIndex cache, eli kaikki ne pisteet
   // kustakin datasta,
@@ -73,16 +73,16 @@ class _FMI_DLL NFmiInfoAreaMaskOccurrance : public NFmiInfoAreaMaskProbFunc
   // Tämä alustetaan Initialize -metodissa.
   std::vector<std::vector<unsigned long>> itsCalculatedLocationIndexies;
 
-  static std::function<void(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &,
+  static std::function<void(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &,
                             boost::shared_ptr<NFmiDrawParam> &,
                             const boost::shared_ptr<NFmiArea> &)> itsMultiSourceDataGetter;
 
 };
 
-class _FMI_DLL NFmiInfoAreaMaskOccurranceSimpleCondition : public NFmiInfoAreaMaskOccurrance
+class NFmiInfoAreaMaskOccurranceSimpleCondition : public NFmiInfoAreaMaskOccurrance
 {
 public:
-    ~NFmiInfoAreaMaskOccurranceSimpleCondition(void);
+    ~NFmiInfoAreaMaskOccurranceSimpleCondition();
     NFmiInfoAreaMaskOccurranceSimpleCondition(const NFmiCalculationCondition &theOperation,
         Type theMaskType,
         NFmiInfoData::Type theDataType,
@@ -94,7 +94,7 @@ public:
         bool synopXCase,
         unsigned long thePossibleMetaParamId);
     NFmiInfoAreaMaskOccurranceSimpleCondition(const NFmiInfoAreaMaskOccurranceSimpleCondition &theOther);
-    NFmiAreaMask *Clone(void) const override;
+    NFmiAreaMask *Clone() const override;
     NFmiInfoAreaMaskOccurranceSimpleCondition &operator=(const NFmiInfoAreaMaskOccurranceSimpleCondition &theMask) = delete;
 
     double Value(const NFmiCalculationParams &theCalculationParams,
@@ -120,10 +120,10 @@ public:
         int theArgumentCount,
         double observationRadiusInKm,
         unsigned long thePossibleMetaParamId);
-    ~NFmiPeekTimeMask(void);
+    ~NFmiPeekTimeMask();
     NFmiPeekTimeMask(const NFmiPeekTimeMask &theOther);
-    NFmiAreaMask *Clone(void) const override;
-    void Initialize(void) override;
+    NFmiAreaMask *Clone() const override;
+    void Initialize() override;
 
     double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
     void SetArguments(std::vector<float> &theArgumentVector) override;
@@ -136,16 +136,16 @@ protected:
     bool fUseMultiSourceData;
     // Tähän laitetaan havainto laskuissa käytettävät datat, joko se joko on jo emoluokassa
     // oleva itsInfo, tai multisource tapauksissa joukko datoja  
-    checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> itsInfoVector;
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> itsInfoVector;
     // Lähintä havaintodataa etsitään tämän säteen sisältä. 
     // Jos arvo on kFloatMissing, etsinnässä ei ole rajoja.
     double itsObservationRadiusInKm;
 };
 
-class _FMI_DLL NFmiInfoAreaMaskTimeRange : public NFmiPeekTimeMask
+class NFmiInfoAreaMaskTimeRange : public NFmiPeekTimeMask
 {
 public:
-    ~NFmiInfoAreaMaskTimeRange(void);
+    ~NFmiInfoAreaMaskTimeRange();
     NFmiInfoAreaMaskTimeRange(const NFmiCalculationCondition &theOperation,
         Type theMaskType,
         NFmiInfoData::Type theDataType,
@@ -155,7 +155,7 @@ public:
         double observationRadiusInKm,
         unsigned long thePossibleMetaParamId);
     NFmiInfoAreaMaskTimeRange(const NFmiInfoAreaMaskTimeRange &theOther);
-    NFmiAreaMask *Clone(void) const override;
+    NFmiAreaMask *Clone() const override;
     NFmiInfoAreaMaskTimeRange &operator=(const NFmiInfoAreaMaskTimeRange &theMask) = delete;
     void SetArguments(std::vector<float> &theArgumentVector) override;
 
@@ -163,7 +163,7 @@ public:
     double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
 
 protected:
-    virtual void InitializeFromArguments(void);
+    virtual void InitializeFromArguments();
     void InitializeIntegrationValues() override;
     virtual void CalcValueFromGridData(const NFmiCalculationParams &theCalculationParams);
     virtual void CalcValueFromObservationData(const NFmiCalculationParams &theCalculationParams);
@@ -189,10 +189,10 @@ protected:
 // Jos valittu parametri on hiladataa, käytetään sitä. 
 // Jos valittu parametri asema dataa, lasketaan arvot lähimmästä asemasta kustakin pisteeseen. 
 // Havainto hakuja voidaan rajoittaa halutulla kilometri säteellä.
-class _FMI_DLL NFmiInfoAreaMaskPreviousFullDays : public NFmiInfoAreaMaskTimeRange
+class NFmiInfoAreaMaskPreviousFullDays : public NFmiInfoAreaMaskTimeRange
 {
 public:
-    ~NFmiInfoAreaMaskPreviousFullDays(void);
+    ~NFmiInfoAreaMaskPreviousFullDays();
     NFmiInfoAreaMaskPreviousFullDays(const NFmiCalculationCondition &theOperation,
         Type theMaskType,
         NFmiInfoData::Type theDataType,
@@ -202,11 +202,11 @@ public:
         double observationRadiusInKm,
         unsigned long thePossibleMetaParamId);
     NFmiInfoAreaMaskPreviousFullDays(const NFmiInfoAreaMaskPreviousFullDays &theOther);
-    NFmiAreaMask *Clone(void) const override;
+    NFmiAreaMask *Clone() const override;
     NFmiInfoAreaMaskPreviousFullDays &operator=(const NFmiInfoAreaMaskPreviousFullDays &theMask) = delete;
 
 protected:
-    void InitializeFromArguments(void) override;
+    void InitializeFromArguments() override;
     void CalcValueFromGridData(const NFmiCalculationParams &theCalculationParams) override;
     void CalcValueFromObservationData(const NFmiCalculationParams &theCalculationParams) override;
 
@@ -216,10 +216,10 @@ protected:
 
 // Tutkitaan kuinka kauan haluttu simple-condition on voimassa alkaen laskentahetkestä joko
 // eteen/taaksepäin.
-class _FMI_DLL NFmiInfoAreaMaskTimeDuration : public NFmiInfoAreaMaskTimeRange
+class NFmiInfoAreaMaskTimeDuration : public NFmiInfoAreaMaskTimeRange
 {
 public:
-    ~NFmiInfoAreaMaskTimeDuration(void);
+    ~NFmiInfoAreaMaskTimeDuration();
     NFmiInfoAreaMaskTimeDuration(const NFmiCalculationCondition &theOperation,
         Type theMaskType,
         NFmiInfoData::Type theDataType,
@@ -228,13 +228,13 @@ public:
         double observationRadiusInKm,
         unsigned long thePossibleMetaParamId);
     NFmiInfoAreaMaskTimeDuration(const NFmiInfoAreaMaskTimeDuration &theOther);
-    NFmiAreaMask *Clone(void) const override;
+    NFmiAreaMask *Clone() const override;
     NFmiInfoAreaMaskTimeDuration &operator=(const NFmiInfoAreaMaskTimeDuration &theMask) = delete;
 
     // tätä kaytetaan smarttool-modifierin yhteydessä
     double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways);
 protected:
-    void InitializeFromArguments(void) override;
+    void InitializeFromArguments() override;
     void InitializeIntegrationValues() override;
     void CalcValueFromGridData(const NFmiCalculationParams &theCalculationParams) override;
     void CalcValueFromObservationData(const NFmiCalculationParams &theCalculationParams) override;

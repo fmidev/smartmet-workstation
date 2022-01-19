@@ -27,9 +27,9 @@ class NFmiTimeView: public NFmiCtrlView
 				,const NFmiTimeDescriptor &theTimeDescriptor
                 ,int theRowIndex);
 	NFmiTimeView( NFmiTimeView &theTimeView);
-	virtual ~NFmiTimeView(void);
+	~NFmiTimeView(void);
 
-	void Draw(NFmiToolBox * theToolBox);
+	void Draw(NFmiToolBox * theToolBox) override;
 	NFmiTimeDescriptor& EditedDataTimeDescriptor(void);
 	NFmiTimeBag& EditedDataTimeBag(void);
 	NFmiTimeDescriptor& ZoomedTimeDescriptor(void);

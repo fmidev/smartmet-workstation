@@ -13,7 +13,6 @@
 #include "NFmiCalculationCondition.h"
 #include "NFmiProjectionCurvatureInfo.h"
 #include "NFmiPtrList.h"
-#include "NFmiDataMatrix.h"
 #include "NFmiMTATempSystem.h"
 #include "NFmiTrajectorySystem.h"
 #include "NFmiCrossSectionSystem.h"
@@ -141,12 +140,12 @@ public:
 	{
 	public:
 		MaskSettings(void);
-		MaskSettings(const checkedVector<Mask> &theMasks, bool theShowMasksOnMapView, bool theUseMasksInTimeSerialViews, bool theUseMasksWithFilterTool, bool theUseMaskWithBrush);
+		MaskSettings(const std::vector<Mask> &theMasks, bool theShowMasksOnMapView, bool theUseMasksInTimeSerialViews, bool theUseMasksWithFilterTool, bool theUseMaskWithBrush);
 		~MaskSettings(void);
 
 		void SetAllMasks(NFmiAreaMaskList &theMasks);
-		const checkedVector<Mask>& Masks(void) const {return itsMasks;}
-		void Masks(const checkedVector<Mask>& newValue) {itsMasks = newValue;}
+		const std::vector<Mask>& Masks(void) const {return itsMasks;}
+		void Masks(const std::vector<Mask>& newValue) {itsMasks = newValue;}
 		bool ShowMasksOnMapView(void) const {return fShowMasksOnMapView;}
 		void ShowMasksOnMapView(bool newValue) {fShowMasksOnMapView = newValue;}
 		bool UseMasksInTimeSerialViews(void) const {return fUseMasksInTimeSerialViews;}
@@ -162,7 +161,7 @@ public:
 		void Clear(void);
 		void Add(const Mask &theMask);
 
-		checkedVector<Mask> itsMasks;
+		std::vector<Mask> itsMasks;
 		bool fShowMasksOnMapView;
 		bool fUseMasksInTimeSerialViews;
 		bool fUseMasksWithFilterTool;
@@ -173,11 +172,11 @@ public:
 	{
 	public:
 		MapRow(void);
-		MapRow(const checkedVector<Param>& theParams);
+		MapRow(const std::vector<NFmiViewSettingMacro::Param>& theParams);
 		~MapRow(void);
 
-		const checkedVector<Param>& RowParams(void) const {return itsRowParams;}
-		void RowParams(const checkedVector<Param>& newValue) {itsRowParams = newValue;}
+		const std::vector<NFmiViewSettingMacro::Param>& RowParams(void) const {return itsRowParams;}
+		void RowParams(const std::vector<NFmiViewSettingMacro::Param>& newValue) {itsRowParams = newValue;}
 		void Clear(void);
 		void Add(const Param &theParam);
 		void SetMacroParamInitFileNames(const std::string &theRootPath);
@@ -185,7 +184,7 @@ public:
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);
 	private:
-		checkedVector<Param> itsRowParams;
+		std::vector<NFmiViewSettingMacro::Param> itsRowParams;
 	};
 
 	class TimeViewRow
@@ -197,11 +196,14 @@ public:
 
 		const NFmiViewSettingMacro::Param& Param(void) const {return itsParam;}
 		void Param(const NFmiViewSettingMacro::Param& newValue) {itsParam = newValue;}
+		const std::vector<NFmiViewSettingMacro::Param>& SideParameters(void) const { return itsSideParameters; }
+		void SideParameters(const std::vector<NFmiViewSettingMacro::Param>& newValue) { itsSideParameters = newValue; }
 
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);
 	private:
 		NFmiViewSettingMacro::Param itsParam;
+		std::vector<NFmiViewSettingMacro::Param> itsSideParameters;
 	};
 
 	class GeneralDoc
@@ -212,15 +214,15 @@ public:
 
 		const NFmiProjectionCurvatureInfo& ProjectionCurvatureInfo(void) const {return itsProjectionCurvatureInfo;}
 		void ProjectionCurvatureInfo(const NFmiProjectionCurvatureInfo& newValue) {itsProjectionCurvatureInfo = newValue;}
-		const checkedVector<NFmiPoint>& CPLocationVector(void) const {return itsCPLocationVector;}
-		void CPLocationVector(const checkedVector<NFmiPoint>& newValue) {itsCPLocationVector = newValue;}
+		const std::vector<NFmiPoint>& CPLocationVector(void) const {return itsCPLocationVector;}
+		void CPLocationVector(const std::vector<NFmiPoint>& newValue) {itsCPLocationVector = newValue;}
 
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);
 	private:
 
 		NFmiProjectionCurvatureInfo itsProjectionCurvatureInfo; // kartan päälle piirrettävät lat-lon apuviivasto asetukset
-		checkedVector<NFmiPoint> itsCPLocationVector; // controllipisteet talteen (latlon pisteet)
+		std::vector<NFmiPoint> itsCPLocationVector; // controllipisteet talteen (latlon pisteet)
 	};
 
 	class TimeView
@@ -229,10 +231,11 @@ public:
 		TimeView(void);
 		~TimeView(void);
 
-		void SetAllParams(NFmiDrawParamList *theDrawParamList);
+		void SetAllParams(NFmiDrawParamList* theDrawParamList);
+		void SetAllSideParameters(CombinedMapHandlerInterface::SideParametersContainer &theSideParameterList);
 
-		const checkedVector<TimeViewRow>& Rows(void) const {return itsRows;}
-		void Rows(const checkedVector<TimeViewRow>& newValue) {itsRows = newValue;}
+		const std::vector<TimeViewRow>& Rows(void) const {return itsRows;}
+		void Rows(const std::vector<TimeViewRow>& newValue) {itsRows = newValue;}
 		const NFmiRect& AbsolutRect(void) const {return itsAbsolutRect;}
 		void AbsolutRect(const NFmiRect& newValue) {itsAbsolutRect = newValue;}
         const MfcViewStatus& ViewStatus() const { return itsViewStatus; }
@@ -260,7 +263,7 @@ public:
 		void Clear(void);
 		void Add(const TimeViewRow &theTimeViewRow);
 
-		checkedVector<TimeViewRow> itsRows; //  kaikkien karttanäyttörivien asetukset
+		std::vector<TimeViewRow> itsRows; //  kaikkien karttanäyttörivien asetukset
 		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
         MfcViewStatus itsViewStatus;
         bool fShowHelpData; // näytetäänkö malli+havainto+klimatologiset data operatiivisessä käytössä aikasarjassa editoidun datan ohella
@@ -341,8 +344,8 @@ public:
 		~CrossSectionView(void);
 
 		void SetAllRowParams(NFmiPtrList<NFmiDrawParamList> *theDrawParamListVector, NFmiMacroParamSystem& theMacroParamSystem);
-		const checkedVector<MapRow>& MapRowSettings(void) const {return itsMapRowSettings;}
-		void MapRowSettings(const checkedVector<MapRow>& newValue) {itsMapRowSettings = newValue;}
+		const std::vector<MapRow>& MapRowSettings(void) const {return itsMapRowSettings;}
+		void MapRowSettings(const std::vector<MapRow>& newValue) {itsMapRowSettings = newValue;}
 		const NFmiRect& AbsolutRect(void) const {return itsAbsolutRect;}
 		void AbsolutRect(const NFmiRect& newValue) {itsAbsolutRect = newValue;}
         const MfcViewStatus& ViewStatus() const { return itsViewStatus; }
@@ -358,7 +361,7 @@ public:
 		void Clear(void);
 		void Add(const MapRow &theMapRow);
 
-		checkedVector<MapRow> itsMapRowSettings; //  kaikkien karttanäyttörivien asetukset
+		std::vector<MapRow> itsMapRowSettings; //  kaikkien karttanäyttörivien asetukset
 		NFmiCrossSectionSystem itsCrossSectionSystem;
 		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
         MfcViewStatus itsViewStatus;
@@ -372,8 +375,8 @@ public:
 		~MapViewDescTop(void);
 
 		void SetAllRowParams(NFmiPtrList<NFmiDrawParamList> *theDrawParamListVector, NFmiMacroParamSystem& theMacroParamSystem);
-		const checkedVector<MapRow>& MapRowSettings(void) const {return itsMapRowSettings;}
-		void MapRowSettings(const checkedVector<MapRow>& newValue) {itsMapRowSettings = newValue;}
+		const std::vector<MapRow>& MapRowSettings(void) const {return itsMapRowSettings;}
+		void MapRowSettings(const std::vector<MapRow>& newValue) {itsMapRowSettings = newValue;}
 		const NFmiRect& AbsolutRect(void) const {return itsAbsolutRect;}
 		void AbsolutRect(const NFmiRect& newValue) {itsAbsolutRect = newValue;}
         const MfcViewStatus& ViewStatus() const { return itsViewStatus; }
@@ -389,10 +392,10 @@ public:
 		void Read(std::istream& is);
 
 	private:
-		void Clear(checkedVector<MapRow> &theMapRowSettings);
-		void Add(checkedVector<MapRow> &theMapRowSettings, const MapRow &theMapRow);
+		void Clear(std::vector<MapRow> &theMapRowSettings);
+		void Add(std::vector<MapRow> &theMapRowSettings, const MapRow &theMapRow);
 
-		checkedVector<MapRow> itsMapRowSettings; //  kaikkien karttanäyttörivien asetukset
+		std::vector<MapRow> itsMapRowSettings; //  kaikkien karttanäyttörivien asetukset
 		NFmiMapViewDescTop itsMapViewDescTop;
 		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
         MfcViewStatus itsViewStatus;

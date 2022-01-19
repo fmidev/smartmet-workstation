@@ -174,7 +174,7 @@ BEGIN_MESSAGE_MAP(CFmiTempSettingsDlg, CDialog)
     ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
-static std::string MakeValueStr(const checkedVector<double> &theValues)
+static std::string MakeValueStr(const std::vector<double> &theValues)
 {
 	std::string str;
 	size_t ssize = theValues.size();
@@ -322,13 +322,13 @@ void CFmiTempSettingsDlg::GetSettingsFromDialog()
 	try
 	{
         std::string tmp = CT2A(itsHelpLineValuesPU_);
-		itsTempSystem->PressureValues() = NFmiStringTools::Split<checkedVector<double> >(tmp);
+		itsTempSystem->PressureValues() = NFmiStringTools::Split<std::vector<double> >(tmp);
         tmp = CT2A(itsHelpLineValuesDryU_);
-		itsTempSystem->DryAdiabaticValues() = NFmiStringTools::Split<checkedVector<double> >(tmp);
+		itsTempSystem->DryAdiabaticValues() = NFmiStringTools::Split<std::vector<double> >(tmp);
         tmp = CT2A(itsHelpLineValuesMoistU_);
-		itsTempSystem->MoistAdiabaticValues() = NFmiStringTools::Split<checkedVector<double> >(tmp);
+		itsTempSystem->MoistAdiabaticValues() = NFmiStringTools::Split<std::vector<double> >(tmp);
         tmp = CT2A(itsHelpLineValuesMixU_);
-		itsTempSystem->MixingRatioValues() = NFmiStringTools::Split<checkedVector<double> >(tmp);
+		itsTempSystem->MixingRatioValues() = NFmiStringTools::Split<std::vector<double> >(tmp);
 	}
 	catch(std::exception & /* e */)
 	{

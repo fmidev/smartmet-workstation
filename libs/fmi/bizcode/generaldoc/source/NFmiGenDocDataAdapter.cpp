@@ -166,7 +166,7 @@ public:
         :itsDoc(theDoc)
     {}
 
-    void MakeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override
+    void MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override
     {
         itsDoc->GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
     }
@@ -283,9 +283,9 @@ bool NFmiGenDocDataAdapter::DataLoadingOK(bool noError)
 	return itsDoc->DataLoadingOK(noError);
 }
 
-void NFmiGenDocDataAdapter::AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern, NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState)
+void NFmiGenDocDataAdapter::AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern, NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState, bool& dataWasDeleted)
 {
-	itsDoc->AddQueryData(theData, theDataFileName, theDataFilePattern, theType, theNotificationStr, loadFromFileState);
+	itsDoc->AddQueryData(theData, theDataFileName, theDataFilePattern, theType, theNotificationStr, loadFromFileState, dataWasDeleted);
 }
 
 bool NFmiGenDocDataAdapter::WarnIfCantSaveWorkingFile(void)
@@ -308,7 +308,7 @@ NFmiParamDescriptor& NFmiGenDocDataAdapter::EditedDataParamDescriptor(void)
 	return itsDoc->EditedDataParamDescriptor();
 }
 
-checkedVector<int>& NFmiGenDocDataAdapter::DataLoadingProducerIndexVector(void) 
+std::vector<int>& NFmiGenDocDataAdapter::DataLoadingProducerIndexVector(void) 
 {
 	return itsDoc->DataLoadingProducerIndexVector();
 }

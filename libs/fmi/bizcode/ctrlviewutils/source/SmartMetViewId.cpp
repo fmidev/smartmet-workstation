@@ -50,8 +50,6 @@ std::string SmartMetViewIdGetName(SmartMetViewId singleViewId)
         return "SynopPlotSettingsDlg";
     case SmartMetViewId::WarningCenterDlg:
         return "WarningCenterDlg";
-    case SmartMetViewId::SeaIcingDlg:
-        return "SeaIcingDlg";
     case SmartMetViewId::WindTableDlg:
         return "WindTableDlg";
     case SmartMetViewId::IgnoreStationsDlg:

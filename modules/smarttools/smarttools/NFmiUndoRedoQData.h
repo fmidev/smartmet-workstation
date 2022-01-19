@@ -8,14 +8,14 @@ class NFmiRawData;
 class NFmiUndoRedoQData
 {
  public:
-  NFmiUndoRedoQData(void);
-  ~NFmiUndoRedoQData(void);
+  NFmiUndoRedoQData();
+  ~NFmiUndoRedoQData();
 
   bool SnapShotData(const std::string& theAction,
                     const NFmiRawData& theRawData);
-  void RearrangeUndoTable(void);
-  bool Undo(void);
-  bool Redo(void);
+  void RearrangeUndoTable();
+  bool Undo();
+  bool Redo();
   bool UndoData(NFmiRawData& theRawData, std::string &modificationDescription);
   bool RedoData(NFmiRawData& theRawData, std::string &modificationDescription);
   void UndoLevel(long theDepth, const NFmiRawData& theRawData);

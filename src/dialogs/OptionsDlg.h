@@ -60,6 +60,7 @@ private:
     void SetLogLevelOnOk();
 public:
 	afx_msg void OnBnClickedCheckUseViewMode();
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 private:
     CString itsQ2ServerUrlStrU_;
     CString itsQ3ServerUrlStrU_;
@@ -80,7 +81,6 @@ private:
 	BOOL fUseLocalCache;
 	BOOL fDoCleanLocalCache;
 	double itsCacheKeepFilesMaxDays;
-	double itsCacheKeepFilesMax;
 	int itsSatelDataUpdateFrequenceInMinutes;
 	BOOL fAllowSending;
     CString itsSysInfoDbUrlU_;

@@ -1,7 +1,6 @@
 #pragma once
 #include "afxcmn.h"
 #include "NFmiProducerSystem.h"
-#include "NFmiDataMatrix.h"
 #include "SmartMetToolboxDep_resource.h"
 #include "NFmiViewPosRegistryInfo.h"
 
@@ -95,7 +94,7 @@ public:
 private:
 	void UpdateProducerList(void);
 	BOOL fCalcTempBalloonTrajectories;
-	checkedVector<NFmiProducerHelperInfo> itsProducerList;
+	std::vector<NFmiProducerHelperInfo> itsProducerList;
 	CComboBox itsProducerSelector;
 	bool fProducerSelectorUsedYet;
 public:

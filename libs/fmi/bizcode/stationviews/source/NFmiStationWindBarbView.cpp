@@ -6,6 +6,7 @@
 #include "NFmiArea.h"
 #include "CtrlViewDocumentInterface.h"
 #include "GraphicalInfo.h"
+#include "NFmiToolBox.h"
 #include "boost\math\special_functions\round.hpp"
 
 NFmiStationWindBarbView::NFmiStationWindBarbView
@@ -55,11 +56,6 @@ bool NFmiStationWindBarbView::PrepareForStationDraw(void)
 	return status;
 }
 
-void NFmiStationWindBarbView::DrawData(void)
-{
-	DrawSymbol();
-}
-
 void AdjustWindBarbSizeAndPlace(NFmiRect &rect)
 {
     // Increase width
@@ -70,34 +66,23 @@ void AdjustWindBarbSizeAndPlace(NFmiRect &rect)
     rect.Place(NFmiPoint(rect.Place().X() - change, rect.Place().Y()));
 }
 
-void NFmiStationWindBarbView::DrawSymbol(void)
+float NFmiStationWindBarbView::ViewFloatValue(bool doTooltipValue)
 {
-	NFmiRect rect(CurrentStationRect());
-    AdjustWindBarbSizeAndPlace(rect);
-
-	float windVector = ViewFloatValue();
-	if(windVector != kFloatMissing)
+	float windVector = NFmiStationView::ViewFloatValue(doTooltipValue);
+	if(windVector == kFloatMissing)
+		return kFloatMissing;
+	else
 	{
-		float windSpeed = static_cast<float>(static_cast<int>(windVector/100));
-		float windDir =float( ((int)windVector % 100) * 10);
-		// tehdään pohjois korjaus tuuliviirin piirtoon
-        NFmiPoint latlon = CurrentLatLon();
-		NFmiAngle ang(itsArea->TrueNorthAzimuth(latlon));
-		windDir += static_cast<float>(ang.Value());
-
-		NFmiPoint symbolSize(itsDrawParam->OnlyOneSymbolRelativeSize());
-        long pixelWidth = boost::math::iround(itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x * itsDrawParam->SimpleIsoLineWidth());
-		itsDrawingEnvironment->SetPenSize(NFmiPoint(pixelWidth, pixelWidth));
-		NFmiWindBarb(windSpeed
-					,windDir
-					,rect
-					,itsToolBox
-                    ,latlon.Y() < 0
-					,symbolSize.X() * 0.7
-					,symbolSize.Y() * 0.5
-					,0
-					,itsDrawingEnvironment).Build();
-		itsDrawingEnvironment->SetPenSize(NFmiPoint(1,1));
+		float ws, wd;
+		std::tie(ws, wd) = NFmiToolBox::GetWsAndWdFromWindVector(windVector);
+		if(!doTooltipValue)
+		{
+			// Tehdään pohjoissuunta korjaus tuuliviirin piirtoon, paitsi ei tooltip arvoa laskettaessa
+			NFmiPoint latlon = CurrentLatLon();
+			NFmiAngle ang(itsArea->TrueNorthAzimuth(latlon));
+			wd += static_cast<float>(ang.Value());
+		}
+		return NFmiFastInfoUtils::CalcWindVectorFromSpeedAndDirection(ws, wd);
 	}
 }
 
@@ -116,7 +101,42 @@ void NFmiStationWindBarbView::ModifyTextEnvironment(void)
     itsDrawingEnvironment->SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 48), itsCtrlViewDocumentInterface->Printing()));
 }
 
-int NFmiStationWindBarbView::GetApproxmationOfDataTextLength(void)
+NFmiPoint NFmiStationWindBarbView::SbdCalcFixedSymbolSize() const
+{
+	NFmiPoint symbolSize(itsDrawParam->OnlyOneSymbolRelativeSize());
+	symbolSize.X(symbolSize.X() * 0.7);
+	symbolSize.Y(symbolSize.Y() * 0.5);
+	return symbolSize;
+}
+
+int NFmiStationWindBarbView::SbdCalcFixedPenSize() const
+{
+	long pixelWidth = boost::math::iround(itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x * itsDrawParam->SimpleIsoLineWidth());
+	return pixelWidth;
+}
+
+NFmiSymbolBulkDrawType NFmiStationWindBarbView::SbdGetDrawType() const
+{
+	return NFmiSymbolBulkDrawType::WindBarb;
+}
+
+NFmiPoint NFmiStationWindBarbView::SbdCalcFixedRelativeDrawObjectSize() const
+{
+	NFmiRect rect(CurrentStationRect());
+	AdjustWindBarbSizeAndPlace(rect);
+	return rect.Size();
+}
+
+NFmiPoint NFmiStationWindBarbView::SbdCalcDrawObjectOffset() const
+{
+	NFmiRect rect(CurrentStationRect());
+	AdjustWindBarbSizeAndPlace(rect);
+	NFmiPoint offset(rect.Center());
+	offset -= CurrentStationPosition();
+	return offset;
+}
+
+int NFmiStationWindBarbView::GetApproxmationOfDataTextLength(std::vector<float>* )
 {
 	return 1;
 }
@@ -129,4 +149,9 @@ float NFmiStationWindBarbView::InterpolatedToolTipValue(const NFmiMetTime &theUs
     }
     else
         return NFmiStationView::InterpolatedToolTipValue(theUsedTime, theLatlon, theInfo);
+}
+
+NFmiSymbolColorChangingType NFmiStationWindBarbView::SbdGetSymbolColorChangingType() const
+{
+	return NFmiSymbolColorChangingType::Never;
 }

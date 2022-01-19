@@ -231,7 +231,7 @@ const NFmiMetTime& CtrlViewDocumentInterfaceForGeneralDataDoc::ActiveMapTime(voi
     return itsDoc->GetCombinedMapHandler()->activeMapTime();
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::MakeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea)
 {
     itsDoc->GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
 }
@@ -496,7 +496,7 @@ boost::shared_ptr<NFmiEditorControlPointManager> CtrlViewDocumentInterfaceForGen
     return itsDoc->CPManager(getOldSchoolCPManager);
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters)
+boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters)
 {
     return itsDoc->GetNearestSynopStationInfo(theLocation, theTime, ignoreTime, thePossibleInfoVector, maxDistanceInMeters);
 }
@@ -546,7 +546,7 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::CreateTimeSerialDialogOnViewPop
     return itsDoc->CreateTimeSerialDialogOnViewPopup(index);
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, checkedVector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue)
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue)
 {
     return itsDoc->DoTimeSeriesValuesModifying(theModifiedDrawParam, theUsedMask, theTimeDescriptor, theModificationFactorCurvePoints, theEditorTool, fUseSetForDiscreteData, theUnchangedValue);
 }
@@ -720,7 +720,7 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::ShowObsComparisonOnMap(int theD
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->ShowObsComparisonOnMap();
 }
 
-checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> CtrlViewDocumentInterfaceForGeneralDataDoc::GetSortedSynopInfoVector(int theProducerId, int theProducerId2, int theProducerId3, int theProducerId4)
+std::vector<boost::shared_ptr<NFmiFastQueryInfo>> CtrlViewDocumentInterfaceForGeneralDataDoc::GetSortedSynopInfoVector(int theProducerId, int theProducerId2, int theProducerId3, int theProducerId4)
 {
     return itsDoc->GetSortedSynopInfoVector(theProducerId, theProducerId2, theProducerId3, theProducerId4);
 }
@@ -983,11 +983,6 @@ boost::shared_ptr<NFmiArea> CtrlViewDocumentInterfaceForGeneralDataDoc::CPGridCr
 NFmiWindTableSystem& CtrlViewDocumentInterfaceForGeneralDataDoc::WindTableSystem(void)
 {
     return itsDoc->WindTableSystem();
-}
-
-NFmiSeaIcingWarningSystem& CtrlViewDocumentInterfaceForGeneralDataDoc::SeaIcingWarningSystem(void)
-{
-    return itsDoc->SeaIcingWarningSystem();
 }
 
 NFmiProjectionCurvatureInfo* CtrlViewDocumentInterfaceForGeneralDataDoc::ProjectionCurvatureInfo(void)

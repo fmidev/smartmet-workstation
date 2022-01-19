@@ -29,22 +29,22 @@ class NFmiTempView : public NFmiCtrlView
 
 	NFmiTempView( const NFmiRect& theRect
 				 ,NFmiToolBox* theToolBox);
-	virtual ~NFmiTempView(void);
-	void Draw(NFmiToolBox *theToolBox);
+	~NFmiTempView(void);
+	void Draw(NFmiToolBox *theToolBox) override;
 
-	bool LeftButtonUp(const NFmiPoint &thePlace, unsigned long theKey);
-	bool RightButtonUp(const NFmiPoint &thePlace, unsigned long theKey);
-	bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta);
+	bool LeftButtonUp(const NFmiPoint &thePlace, unsigned long theKey) override;
+	bool RightButtonUp(const NFmiPoint &thePlace, unsigned long theKey) override;
+	bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta) override;
 	void ResetScales(void);
 	void DrawOverBitmapThings(NFmiToolBox *theGTB, const NFmiPoint &thePlace);
 	bool MustResetFirstSoundingData(void) const {return fMustResetFirstSoundingData;}
 	void MustResetFirstSoundingData(bool newState) {fMustResetFirstSoundingData = newState;}
 	const std::string& SoundingIndexStr(void) const {return itsSoundingIndexStr;}
 
-	bool LeftButtonDown(const NFmiPoint &thePlace, unsigned long theKey);
-	bool RightButtonDown(const NFmiPoint &thePlace, unsigned long theKey);
-	bool MouseMove(const NFmiPoint &thePlace, unsigned long theKey);
-	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
+	bool LeftButtonDown(const NFmiPoint &thePlace, unsigned long theKey) override;
+	bool RightButtonDown(const NFmiPoint &thePlace, unsigned long theKey) override;
+	bool MouseMove(const NFmiPoint &thePlace, unsigned long theKey) override;
+	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
 
  private:
 	void DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theIndex, double theBrightningFactor, int theModelRunIndex);
@@ -84,7 +84,7 @@ class NFmiTempView : public NFmiCtrlView
 	void DrawCondensationTrailProbabilityLines(void);
 	void DrawCondensationTrailRHValues(NFmiSoundingDataOpt1 &theData, double startP, double endP, double theMixRatio);
 	void DrawMixingRatio(const NFmiTempLabelInfo &theLabelInfo, const NFmiTempLineInfo &theLineInfo,
-						   const checkedVector<double> &theValues, double startP, double endP, double deltaStartLevelP,
+						   const std::vector<double> &theValues, double startP, double endP, double deltaStartLevelP,
 						   NFmiDrawingEnvironment * theEnvi);
 	void DrawTemperatures(NFmiSoundingDataOpt1 &theData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo);
 	std::string MakeTextualSoundingLevelString(int levelIndex, std::deque<float>& pVec, std::deque<float>& tVec, std::deque<float>& tdVec, std::deque<float>& zVec, std::deque<float>& wsVec, std::deque<float>& wdVec);

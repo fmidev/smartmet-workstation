@@ -21,24 +21,24 @@ class NFmiTimeValueEditManagerView : public NFmiCtrlView
 								,NFmiToolBox * theToolBox
 								,NFmiDrawingEnvironment * theDrawingEnvi);
 	~NFmiTimeValueEditManagerView(void);
-	virtual void Update (const NFmiRect & theRect, NFmiToolBox * theToolBox = 0);
-	virtual void Update (void);
-	void Draw (NFmiToolBox* theToolBox);
+	virtual void Update (const NFmiRect & theRect, NFmiToolBox * theToolBox = 0) override;
+	virtual void Update (void) override;
+	void Draw (NFmiToolBox* theToolBox) override;
 	virtual void DrawData (void);
 	virtual void DrawBase (void);
 	void MaxStationShowed (const unsigned int & newCount);
-	bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey);
-	bool LeftDoubleClick(const NFmiPoint& thePlace, unsigned long theKey);
-	bool RightButtonUp(const NFmiPoint& thePlace, unsigned long theKey);
-	bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey);
-	bool RightButtonDown (const NFmiPoint & thePlace, unsigned long theKey);
-	bool MouseMove (const NFmiPoint &thePlace, unsigned long theKey);
-    bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta);
-	bool MiddleButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
+	bool LeftButtonUp (const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool LeftDoubleClick(const NFmiPoint& thePlace, unsigned long theKey) override;
+	bool RightButtonUp(const NFmiPoint& thePlace, unsigned long theKey) override;
+	bool LeftButtonDown (const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool RightButtonDown (const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool MouseMove (const NFmiPoint &thePlace, unsigned long theKey) override;
+    bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta) override;
+	bool MiddleButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
 	bool ChangeTimeSeriesValues(void);
 	void ResetAllModifyFactorValues(void);
 	NFmiCtrlView* ActiveView(void);
-	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
+	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
 	bool TimeScaleUpdated(void) const {return fTimeScaleUpdated;}
 	void TimeScaleUpdated(bool newValue) {fTimeScaleUpdated = newValue;}
 	bool AutoAdjustValueScales(bool fJustActive);
@@ -52,6 +52,7 @@ class NFmiTimeValueEditManagerView : public NFmiCtrlView
 	void DrawBackground (void);
 	virtual NFmiTimeSerialView* CreateTimeSerialView(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int index);
 	double CalcTimeAxisHeight(void);
+	int CalcRowIndex(const NFmiPoint& thePlace);
 
 	//laura siirsi seuraavat protectediksi
 	NFmiCtrlViewList *itsViewList;

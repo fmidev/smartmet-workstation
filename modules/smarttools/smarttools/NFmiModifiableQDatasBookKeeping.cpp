@@ -13,7 +13,7 @@ NFmiModifiableQDatasBookKeeping::NFmiModifiableQDatasBookKeeping(unsigned long t
 {
 }
 
-NFmiModifiableQDatasBookKeeping::~NFmiModifiableQDatasBookKeeping(void)
+NFmiModifiableQDatasBookKeeping::~NFmiModifiableQDatasBookKeeping()
 {
   delete itsAreaMask;
   delete itsUndoRedoQData;
@@ -93,7 +93,7 @@ void NFmiModifiableQDatasBookKeeping::MaskType(unsigned long theMaskType)
   (*itsAreaMask)->MaskType(theMaskType);
 }
 
-unsigned long NFmiModifiableQDatasBookKeeping::MaskType(void)
+unsigned long NFmiModifiableQDatasBookKeeping::MaskType()
 {
   return (*itsAreaMask)->MaskType();
 }
@@ -113,14 +113,14 @@ bool NFmiModifiableQDatasBookKeeping::SnapShotData(
     return false;
 }
 
-bool NFmiModifiableQDatasBookKeeping::Undo(void)
+bool NFmiModifiableQDatasBookKeeping::Undo()
 {
   if (itsUndoRedoQData)
     return itsUndoRedoQData->Undo();
   return false;
 }
 
-bool NFmiModifiableQDatasBookKeeping::Redo(void)
+bool NFmiModifiableQDatasBookKeeping::Redo()
 {
   if (itsUndoRedoQData)
     return itsUndoRedoQData->Redo();
@@ -172,27 +172,27 @@ void NFmiModifiableQDatasBookKeeping::UndoLevel(long theDepth, const NFmiRawData
   }
 }
 
-bool NFmiModifiableQDatasBookKeeping::LocationSelectionSnapShot(void)
+bool NFmiModifiableQDatasBookKeeping::LocationSelectionSnapShot()
 {
   return itsAreaMask->SnapShotData();
 }
 
-bool NFmiModifiableQDatasBookKeeping::LocationSelectionUndo(void)
+bool NFmiModifiableQDatasBookKeeping::LocationSelectionUndo()
 {
   return itsAreaMask->Undo();
 }
 
-bool NFmiModifiableQDatasBookKeeping::LocationSelectionRedo(void)
+bool NFmiModifiableQDatasBookKeeping::LocationSelectionRedo()
 {
   return itsAreaMask->Redo();
 }
 
-bool NFmiModifiableQDatasBookKeeping::LocationSelectionUndoData(void)
+bool NFmiModifiableQDatasBookKeeping::LocationSelectionUndoData()
 {
   return itsAreaMask->UndoData();
 }
 
-bool NFmiModifiableQDatasBookKeeping::LocationSelectionRedoData(void)
+bool NFmiModifiableQDatasBookKeeping::LocationSelectionRedoData()
 {
   return itsAreaMask->RedoData();
 }

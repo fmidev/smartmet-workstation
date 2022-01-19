@@ -32,6 +32,7 @@
 #include "catlog/catlog.h"
 #include "ModelDataServerConfiguration.h"
 #include "SoundingViewSettingsFromWindowsRegisty.h"
+#include "NFmiHelpDataInfo.h"
 
 #include <stdexcept>
 #include "boost\math\special_functions\round.hpp"
@@ -690,8 +691,6 @@ void NFmiTempView::Draw(NFmiToolBox *theToolBox)
             itsDrawingEnvironment->SetFillColor(NFmiColor(0.9f, 0.9f, 0.9f)); // laitetaan harmaa tausta teksteille, että ne erottuu
             itsDrawingEnvironment->SetFontSize(NFmiPoint(18 * itsDrawSizeFactor.X(), 18 * itsDrawSizeFactor.Y()));
             itsDrawingEnvironment->SetPenSize(NFmiPoint(1 * itsDrawSizeFactor.X(), 1 * itsDrawSizeFactor.Y()));
-			// Resetoidaan itsFirstSoundingData, muuten tulee ongelmia viimeisen 'hyvän' 1. datan piirrossa tekstimuotoisiin ikkunoihin, jos tässä piirrossa ei löydy dataa ollenkaan (esim. ollaan 1. datan aikaikkunan ulkopuolella)
-			itsFirstSoundingData = NFmiSoundingDataOpt1(); 
 			DrawSoundingsInMTAMode();
 
             // siivotaan piirto ominaisuudet takaisin
@@ -1040,7 +1039,7 @@ void NFmiTempView::DrawStabilityIndexData(void)
 
 	NFmiPoint p(CalcStabilityIndexStartPoint());
 
-	NFmiText text(p, NFmiString(""), 0, itsDrawingEnvironment);
+	NFmiText text(p, NFmiString(""), false, 0, itsDrawingEnvironment);
 	auto lineH = itsStabilityIndexRelativeLineHeight;
 	DrawNextLineToIndexView(lineH, text, ::GetNameText(itsFirstSoundingData), p, false);
 	DrawNextLineToIndexView(lineH, text, ::GetLatText(itsFirstSoundingData), p);
@@ -1160,7 +1159,7 @@ void NFmiTempView::DrawSoundingInTextFormat(NFmiSoundingDataOpt1 &theData)
 	std::deque<float> &wsVec = theData.GetParamData(kFmiWindSpeedMS);
 	std::deque<float> &wdVec = theData.GetParamData(kFmiWindDirection);
 	NFmiString str(::GetStationsShortName(theData));
-	NFmiText text(p, NFmiString(""), 0, itsDrawingEnvironment);
+	NFmiText text(p, NFmiString(""), false, 0, itsDrawingEnvironment);
 	auto lineH = itsTextualSoundingDataRelativeLineHeight;
 	DrawNextLineToIndexView(lineH, text, str, p, false);
 
@@ -1349,13 +1348,13 @@ void NFmiTempView::DrawYAxel(void)
 	labelInfo.StartPointPixelOffSet(ScaleOffsetPoint(labelInfo.StartPointPixelOffSet()));
 	Gdiplus::PointF moveLabelInPixels(static_cast<REAL>(labelInfo.StartPointPixelOffSet().X()), static_cast<REAL>(labelInfo.StartPointPixelOffSet().Y()));
 
-	checkedVector<double> &values = mtaTempSystem.PressureValues();
-	checkedVector<double>::const_iterator endIt = values.end();
+	const auto &values = mtaTempSystem.PressureValues();
+	auto endIt = values.cend();
     double x1 = usedDataRect.Left();
     double x2 = usedDataRect.Right();
 	// # Y-axel
 	std::vector<LineLabelDrawData> lineLabels;
-	for(checkedVector<double>::const_iterator it = values.begin(); it != endIt;  ++it)
+	for(auto it = values.cbegin(); it != endIt;  ++it)
 	{
 		std::vector<PointF> points;
 		double y = p2y(*it);
@@ -1470,7 +1469,7 @@ void NFmiTempView::DrawFlightLevelScale(void)
 		{
 			double unitStringY = CalcHelpScaleUnitStringYPos(dataRect, lastHeightInDataBox, unitStringYoffset, moveLabelRelatively.Y());
 			double unitStringX = dataRect.Right();
-			NFmiText txt1(NFmiPoint(unitStringX + moveLabelRelatively.X() - extraOffset, unitStringY), "FL", 0, &envi);
+			NFmiText txt1(NFmiPoint(unitStringX + moveLabelRelatively.X() - extraOffset, unitStringY), "FL", false, 0, &envi);
 			itsToolBox->Convert(&txt1);
 		}
 	}
@@ -1517,7 +1516,7 @@ void NFmiTempView::DrawHeightScale(void)
 		{
 			double unitStringY = CalcHelpScaleUnitStringYPos(dataRect, lastHeightInDataBox, unitStringYoffset, moveLabelRelatively.Y());
 			double unitStringX = dataRect.Right();
-			NFmiText txt1(NFmiPoint(unitStringX + moveLabelRelatively.X(), unitStringY), "KM", 0, itsDrawingEnvironment);
+			NFmiText txt1(NFmiPoint(unitStringX + moveLabelRelatively.X(), unitStringY), "KM", false, 0, itsDrawingEnvironment);
 			itsToolBox->Convert(&txt1);
 		}
 	}
@@ -1583,11 +1582,7 @@ void NFmiTempView::DrawCondensationTrailProbabilityLines(void)
 		lineInfo.LineType(FMI_SOLID);
 		lineInfo.Color(NFmiColor(0.99f, 0.5f, 0.f));
 		lineInfo.Thickness(boost::math::iround(2 * itsDrawSizeFactor.X()));
-		checkedVector<double> values;
-		values.push_back(0.11);
-		values.push_back(0.135);
-		values.push_back(0.17);
-		values.push_back(0.32);
+		std::vector<double> values{ 0.11, 0.135, 0.17, 0.32 };
 		double startP = CalcPressureAtHeight(6); // aloitetaan viivan piirto 6 km:sta
 
 		double deltaP = -15;
@@ -1599,17 +1594,13 @@ void NFmiTempView::DrawCondensationTrailProbabilityLines(void)
 		envi.SetFontSize(NFmiPoint(labelInfo.FontSize(), labelInfo.FontSize()));
 		envi.BoldFont(true);
 		labelInfo.StartPointPixelOffSet(NFmiPoint(-5* itsDrawSizeFactor.X(), 0 * itsDrawSizeFactor.Y()));
-		checkedVector<double> probValues;
-		probValues.push_back(0);
-		probValues.push_back(40);
-		probValues.push_back(70);
-		probValues.push_back(100);
+		std::vector<double> probValues{ 0, 40, 70, 100 };
 
 		NFmiPoint moveLabelRelatively(CalcReltiveMoveFromPixels(itsToolBox, labelInfo.StartPointPixelOffSet()));
-		checkedVector<double>::const_iterator itProb = probValues.begin();
-		checkedVector<double>::const_iterator endIt = values.end();
+		auto itProb = probValues.cbegin();
+		auto endIt = values.cend();
 		double P = startP;
-		for (checkedVector<double>::const_iterator it = values.begin(); it != endIt;  ++it, ++itProb)
+		for (auto it = values.cbegin(); it != endIt;  ++it, ++itProb)
 		{
 			double T = NFmiSoundingFunctions::TMR(*it, P);
 			double X = pt2x(P, T);
@@ -1623,7 +1614,7 @@ void NFmiTempView::DrawCondensationTrailProbabilityLines(void)
 
 // Tänne annetut labelInfo ja lineInfo on jo skaalattu niin että printtaus kertoimia ei tarvise käyttää täällä.
 void NFmiTempView::DrawMixingRatio(const NFmiTempLabelInfo &theLabelInfo, const NFmiTempLineInfo &theLineInfo,
-								   const checkedVector<double> &theValues, double startP, double endP, double deltaStartLevelP,
+								   const std::vector<double> &theValues, double startP, double endP, double deltaStartLevelP,
 								   NFmiDrawingEnvironment * /* theEnvi */ )
 {
 	if(theLineInfo.DrawLine() == false)
@@ -1633,10 +1624,10 @@ void NFmiTempView::DrawMixingRatio(const NFmiTempLabelInfo &theLabelInfo, const 
 	itsGdiPlusGraphics->SetClip(CtrlView::Relative2GdiplusRect(itsToolBox, dataRect));
 	Gdiplus::PointF moveLabelInPixels(static_cast<REAL>(theLabelInfo.StartPointPixelOffSet().X()), static_cast<REAL>(theLabelInfo.StartPointPixelOffSet().Y()));
 
-	checkedVector<double>::const_iterator endIt = theValues.end();
+	auto endIt = theValues.cend();
 	double deltap = 50;
 	std::vector<LineLabelDrawData> lineLabels;
-	for (checkedVector<double>::const_iterator it = theValues.begin(); it != endIt;  ++it)
+	for (auto it = theValues.cbegin(); it != endIt;  ++it)
 	{
 		std::vector<PointF> points;
 		for (double p = startP; p >= endP; p-=deltap)
@@ -1682,11 +1673,11 @@ void NFmiTempView::DrawDryAdiapaticks(void)
     NFmiTempLabelInfo labelInfo = mtaTempSystem.DryAdiabaticLabelInfo();
 	labelInfo.FontSize(boost::math::iround(labelInfo.FontSize() * itsDrawSizeFactor.Y()));
 	Gdiplus::PointF moveLabelInPixels(static_cast<REAL>(labelInfo.StartPointPixelOffSet().X() * itsDrawSizeFactor.X()), static_cast<REAL>(labelInfo.StartPointPixelOffSet().Y() * itsDrawSizeFactor.Y()));
-	checkedVector<double> &values = mtaTempSystem.DryAdiabaticValues();
-	checkedVector<double>::const_iterator endIt = values.end();
+	const auto &values = mtaTempSystem.DryAdiabaticValues();
+	auto endIt = values.cend();
 	double deltap = 50;
 	std::vector<LineLabelDrawData> lineLabels;
-	for (checkedVector<double>::const_iterator it = values.begin(); it != endIt;  ++it)
+	for (auto it = values.cbegin(); it != endIt;  ++it)
 	{
 		std::vector<PointF> points;
 		for (double p = pmax; p > 100; p-=deltap)
@@ -1719,10 +1710,10 @@ void NFmiTempView::DrawMoistAdiapaticks(void)
 	Gdiplus::PointF moveLabelInPixels(static_cast<REAL>(labelInfo.StartPointPixelOffSet().X() * itsDrawSizeFactor.X()), static_cast<REAL>(labelInfo.StartPointPixelOffSet().Y() * itsDrawSizeFactor.Y()));
 
 	std::vector<LineLabelDrawData> lineLabels;
-	checkedVector<double> &values = mtaTempSystem.MoistAdiabaticValues();
-	checkedVector<double>::const_iterator endIt = values.end();
+	const auto &values = mtaTempSystem.MoistAdiabaticValues();
+	auto endIt = values.cend();
 	double deltap = 50;
-	for (checkedVector<double>::const_iterator it = values.begin(); it != endIt;  ++it)
+	for (auto it = values.cbegin(); it != endIt;  ++it)
 	{
 		std::vector<PointF> points;
 		double P   = pmax;
@@ -1758,7 +1749,7 @@ void NFmiTempView::DrawHelpLineLabel(const NFmiPoint &p1, const NFmiPoint &theMo
         ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), theLabelInfo.ClipWithDataRect());
 		NFmiString str(NFmiStringTools::Convert<double>(theValue));
 		str += thePostStr; // jos joku loppu liite on haluttu laittaa labeliin, se tulee tässä
-		NFmiText txt(p1 + theMoveLabelRelatively, str, 0, theEnvi);
+		NFmiText txt(p1 + theMoveLabelRelatively, str, false, 0, theEnvi);
 		itsToolBox->Convert(&txt);
 	}
 }
@@ -1849,28 +1840,50 @@ static NFmiLocation GetSoundingLocation(boost::shared_ptr<NFmiFastQueryInfo> &th
 	return location;
 }
 
+static bool IsSurfaceDataCombiningAllowed(CtrlViewDocumentInterface* ctrlViewDocumentInterface, boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
+{
+	if(ctrlViewDocumentInterface && theInfo)
+	{
+		auto* helpInfoData = ctrlViewDocumentInterface->HelpDataInfoSystem()->FindHelpDataInfo(theInfo->DataFilePattern());
+		if(helpInfoData)
+		{
+			return helpInfoData->AllowCombiningToSurfaceDataInSoundingView();
+		}
+	}
+	return false;
+}
+
 // Haetaan painepinta datalle pinta-dataa, että luotauksia voidaan leikata maanpinnalle.
-static boost::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiProducer &theProducer, NFmiInfoOrganizer &theInfoOrganizer, NFmiInfoData::Type theDataType)
+static boost::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(CtrlViewDocumentInterface *ctrlViewDocumentInterface, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiProducer &theProducer, const std::vector<NFmiInfoData::Type> &theDataTypes)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> groundDataInfo;
-    if(theInfo)
+    if(ctrlViewDocumentInterface && theInfo)
     {
+		auto &infoOrganizer = *ctrlViewDocumentInterface->InfoOrganizer();
         theInfo->FirstLevel();
         if(theInfo->Level()->LevelType() == kFmiPressureLevel || theInfo->Level()->LevelType() == kFmiHybridLevel)
-        { // jos kyse on painepinta datasta ja löytyy vastaavan datan pinta data, josta löytyy paine aseman korkeudelta, fixataan luotaus dataa pintadatan avulla
-            checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVec = theInfoOrganizer.GetInfos(theDataType, true, theProducer.GetIdent());
-            if(infoVec.size())
-            {
-                for(size_t i = 0; i < infoVec.size(); i++)
-                {
-                    boost::shared_ptr<NFmiFastQueryInfo> tmpInfo = infoVec[i];
-                    if(tmpInfo && tmpInfo->Param(kFmiPressureAtStationLevel))
-                    {
-                        groundDataInfo = tmpInfo; // löytyi data ja siitä tarvittava parametri, otetaan se käyttöön
-                        break;
-                    }
-                }
-            }
+        { 
+			if(::IsSurfaceDataCombiningAllowed(ctrlViewDocumentInterface, theInfo))
+			{
+				// Käydään mahdolliset datatyypit läpi
+				for(auto dataType : theDataTypes)
+				{
+					// jos kyse on painepinta datasta ja löytyy vastaavan datan pinta data, josta löytyy paine aseman korkeudelta, fixataan luotaus dataa pintadatan avulla
+					auto infoVec = infoOrganizer.GetInfos(dataType, true, theProducer.GetIdent());
+					if(infoVec.size())
+					{
+						for(size_t i = 0; i < infoVec.size(); i++)
+						{
+							boost::shared_ptr<NFmiFastQueryInfo> tmpInfo = infoVec[i];
+							if(tmpInfo && tmpInfo->Param(kFmiPressureAtStationLevel))
+							{
+								groundDataInfo = tmpInfo; // löytyi data ja siitä tarvittava parametri, otetaan se käyttöön
+								break;
+							}
+						}
+					}
+				}
+			}
         }
     }
 	return groundDataInfo;
@@ -1929,6 +1942,8 @@ void NFmiTempView::ResetTextualScrollingIfSoundingDataChanged(const NFmiMTATempS
 	}
 }
 
+const std::vector<NFmiInfoData::Type> g_CombineSurfaceDataTypes{ NFmiInfoData::kViewable , NFmiInfoData::kAnalyzeData };
+
 void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theIndex, double theBrightningFactor, int theModelRunIndex)
 {
     auto usedTempInfo(theTempInfo);
@@ -1940,10 +1955,7 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 	{
         auto usedLocationWithName = ::GetSoundingLocation(info, theTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
         usedTempInfo.Latlon(usedLocationWithName.GetLocation());
-		boost::shared_ptr<NFmiFastQueryInfo> groundDataInfo = ::GetPossibleGroundData(info, theProducer, *itsCtrlViewDocumentInterface->InfoOrganizer(), NFmiInfoData::kViewable);
-		if(groundDataInfo == 0)
-			groundDataInfo = ::GetPossibleGroundData(info, theProducer, *itsCtrlViewDocumentInterface->InfoOrganizer(), NFmiInfoData::kAnalyzeData);  // tämä on siksi että LAPS data on nykyään analyysi dataa, pitää korjata tämä infoorganizer sotku joskus kunnolla!!!
-
+		auto groundDataInfo = ::GetPossibleGroundData(itsCtrlViewDocumentInterface, info, theProducer, g_CombineSurfaceDataTypes);
 		ResetTextualScrollingIfSoundingDataChanged(theProducer, usedTempInfo, info, theIndex);
 		NFmiSoundingDataOpt1 sounding;
 		FillSoundingData(info, sounding, usedTempInfo.Time(), usedLocationWithName, groundDataInfo, theProducer);
@@ -1956,6 +1968,15 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
         bool onSouthernHemiSphere = usedTempInfo.Latlon().Y() < 0;
 		DrawSounding(sounding, theIndex, usedColor, mainCurve, onSouthernHemiSphere);
         itsSoundingDataCacheForTooltips.insert(std::make_pair(NFmiMTATempSystem::SoundingDataCacheMapKey(usedTempInfo, theProducer, theModelRunIndex), sounding));
+	}
+	else
+	{
+		if(theIndex == 0 && theModelRunIndex == 0)
+		{
+			// Jos ei löytynyt mitään dataa ja kyse oli 1. piirrettävästä luotausdatasta, pitää itsFirstSoundingData dataosa nollata,
+			// jotta tekstimuotoisiin sivunäyttöihin ei jäisi vanha data 'kummittelemaan'
+			itsFirstSoundingData = NFmiSoundingDataOpt1();
+		}
 	}
 }
 
@@ -2180,18 +2201,67 @@ void NFmiTempView::DrawHodograf(NFmiSoundingDataOpt1 & theData, int theIndex)
 //
 // u_downwind = 2 * u_cloud_layer - u_llj
 // v_downwind = 2 * v_cloud_layer - v_llj
+// 
+// HUOM! Paavo Korpelalta tuli viestiä, että down_wind lasketaankin seuraavalla tavalla:
+// Paavo: u_downwind = u_cloud_layer + u_upwind (Poikkeaa huomattavasti originaalista)
+// Lisäksi pari pienempää, viritystä:
+// Paavo: u_cloud_layer = vertz_avg(u, LCL, 0.6 * EL)  // Tästä seuraa ongelma, koska EL:n arvot ovat puuttuvaa monissa tilanteissa, lisäksi näitä LCL+EL arvoja ei ole käytössä täällä, ellei niitä lasketa erikseen
+// Paavo: u_llj = u-komponentti(p_max_wind), missä p_max_wind on on maksimi tuulennopeus 0 ja 1500 metrin välissä
+
+class UpDownWindCalculationBaseData
+{
+public:
+	double lclPressure = kFloatMissing;
+	double elPressure = kFloatMissing;
+	double h1 = kFloatMissing;
+	double h2 = kFloatMissing;
+};
+
+static UpDownWindCalculationBaseData CalcUpDownWindBaseData(NFmiSoundingDataOpt1& theData)
+{
+	UpDownWindCalculationBaseData baseData;
+	// Yritetään laskea EL:lle ei-puuttuvaa arvoa eri laskutyypeillä tietyssä priorisointijärjestyksessä
+	FmiLCLCalcType usedLclCalcType = kLCLCalcMostUnstable;
+	theData.CalcLFCIndex(usedLclCalcType, baseData.elPressure);
+	if(baseData.elPressure == kFloatMissing)
+	{
+		usedLclCalcType = kLCLCalc500m2;
+		theData.CalcLFCIndex(usedLclCalcType, baseData.elPressure);
+		if(baseData.elPressure == kFloatMissing)
+		{
+			usedLclCalcType = kLCLCalcSurface;
+			theData.CalcLFCIndex(usedLclCalcType, baseData.elPressure);
+			if(baseData.elPressure == kFloatMissing)
+			{
+				// Jos surface tyyppikin palautti puuttuvaa, lasketaan jatkossa LCL kuitenkin mostUnstable tyyliin
+				usedLclCalcType = kLCLCalcMostUnstable;
+			}
+		}
+	}
+
+	baseData.lclPressure = theData.CalcLCLIndex(usedLclCalcType);
+	bool elPressureMissing = (baseData.elPressure == kFloatMissing);
+	baseData.h1 = theData.GetValueAtPressure(kFmiGeopHeight, static_cast<float>(baseData.lclPressure));
+	double usedEndPressure = elPressureMissing ? 300 : baseData.elPressure;
+	baseData.h2 = theData.GetValueAtPressure(kFmiGeopHeight, static_cast<float>(usedEndPressure));
+	return baseData;
+}
+
 void NFmiTempView::DrawHodografUpAndDownWinds(NFmiSoundingDataOpt1 & theData, int theIndex)
 {
-	double h1 = theData.GetValueAtPressure(kFmiGeopHeight, 850);
-	double h2 = theData.GetValueAtPressure(kFmiGeopHeight, 300);
-	if(h1 != kFloatMissing && h2 != kFloatMissing)
+	auto upDownWindBaseData = ::CalcUpDownWindBaseData(theData);
+	bool elPressureMissing = (upDownWindBaseData.elPressure == kFloatMissing);
+	if(upDownWindBaseData.h1 != kFloatMissing && upDownWindBaseData.h2 != kFloatMissing)
 	{
+		double usedUpperLimitHeight = upDownWindBaseData.h2 * 0.6;
 		double u_cloud_layer = kFloatMissing;
 		double v_cloud_layer = kFloatMissing;
-		theData.CalcAvgWindComponentValues(h1, h2, u_cloud_layer, v_cloud_layer);
+		theData.CalcAvgWindComponentValues(upDownWindBaseData.h1, usedUpperLimitHeight, u_cloud_layer, v_cloud_layer);
 		if(u_cloud_layer != kFloatMissing && v_cloud_layer != kFloatMissing)
 		{
-			float maxWSPressure = theData.FindPressureWhereHighestValue(kFmiWindSpeedMS, 1100, 850);
+			float lowPressureLimitForMaxWind = theData.GetValueAtHeight(kFmiPressure, 0);
+			float highPressureLimitForMaxWind = theData.GetValueAtHeight(kFmiPressure, 1500);
+			float maxWSPressure = theData.FindPressureWhereHighestValue(kFmiWindSpeedMS, lowPressureLimitForMaxWind, highPressureLimitForMaxWind);
 			if(maxWSPressure != kFloatMissing)
 			{
 				double u_llj = kFloatMissing;
@@ -2214,10 +2284,9 @@ void NFmiTempView::DrawHodografUpAndDownWinds(NFmiSoundingDataOpt1 & theData, in
 					NFmiPoint scale(markWidth, markHeight);
 
 					// piirrä nuoli (0, 0) -> (u_upwind, v_upwind) ja laita label "upwind"
+					double u_upwind = u_cloud_layer - u_llj;
+					double v_upwind = v_cloud_layer - v_llj;
 					{
-						double u_upwind = u_cloud_layer - u_llj;
-						double v_upwind = v_cloud_layer - v_llj;
-
 						NFmiPoint relP1(GetRelativePointFromHodograf(0, 0));
 						NFmiPoint relP2(GetRelativePointFromHodograf(u_upwind, v_upwind));
 
@@ -2236,13 +2305,15 @@ void NFmiTempView::DrawHodografUpAndDownWinds(NFmiSoundingDataOpt1 & theData, in
 						markerPolyLine1.AddPoint(::RotatePoint(NFmiPoint(0, -1), vdir1));
 						markerPolyLine1.AddPoint(::RotatePoint(NFmiPoint(1, 1), vdir1));
 						itsToolBox->DrawPolyline(&markerPolyLine1, relP2, scale);
-						DrawHodografTextWithMarker("U", static_cast<float>(u_upwind), static_cast<float>(v_upwind), textColor, markerFrameColor, markerFillColor, 5, 18, kLeft, kNone);
+						std::string upWindMarker = elPressureMissing ? "U*" : "U";
+						DrawHodografTextWithMarker(upWindMarker, static_cast<float>(u_upwind), static_cast<float>(v_upwind), textColor, markerFrameColor, markerFillColor, 5, 18, kLeft, kNone);
 					}
 
 					// sitten downwind
 					{
 						double u_downwind = 2 * u_cloud_layer - u_llj;
 						double v_downwind = 2 * v_cloud_layer - v_llj;
+
 						// piirrä nuoli (0, 0) -> (u_downwind, v_downwind) ja laita label "downwind"
 						NFmiPoint relP1(GetRelativePointFromHodograf(0, 0));
 						NFmiPoint relP2(GetRelativePointFromHodograf(u_downwind, v_downwind));
@@ -2262,7 +2333,8 @@ void NFmiTempView::DrawHodografUpAndDownWinds(NFmiSoundingDataOpt1 & theData, in
 						markerPolyLine1.AddPoint(::RotatePoint(NFmiPoint(0, -1), vdir1));
 						markerPolyLine1.AddPoint(::RotatePoint(NFmiPoint(1, 1), vdir1));
 						itsToolBox->DrawPolyline(&markerPolyLine1, relP2, scale);
-						DrawHodografTextWithMarker("D", static_cast<float>(u_downwind), static_cast<float>(v_downwind), textColor, markerFrameColor, markerFillColor, 5, 18, kLeft, kNone);
+						std::string downWindMarker = elPressureMissing ? "D*" : "D";
+						DrawHodografTextWithMarker(downWindMarker, static_cast<float>(u_downwind), static_cast<float>(v_downwind), textColor, markerFrameColor, markerFillColor, 5, 18, kLeft, kNone);
 					}
 				}
 			}
@@ -2325,7 +2397,7 @@ void NFmiTempView::DrawHodografBase(int theIndex)
 		// kirjoita hodografi teksti ylä nurkkaan
 		itsToolBox->SetTextAlignment(kLeft);
 		NFmiString titleStr(::GetDictionaryString("TempViewHodographTitle"));
-		NFmiText titleTxt(hodografRect.TopLeft(), titleStr, 0, itsDrawingEnvironment);
+		NFmiText titleTxt(hodografRect.TopLeft(), titleStr, false, 0, itsDrawingEnvironment);
 		itsToolBox->Convert(&titleTxt);
 
 		// piirrä apu ympyrät haalealla värillä
@@ -2363,7 +2435,7 @@ void NFmiTempView::DrawHodografBase(int theIndex)
 			NFmiLine lineU(uP1, uP2, 0, itsDrawingEnvironment);
 			itsToolBox->Convert(&lineU);
 			std::string str(NFmiStringTools::Convert<double>(x));
-			NFmiText txt(uP2, str.c_str(), 0, itsDrawingEnvironment);
+			NFmiText txt(uP2, str.c_str(), false, 0, itsDrawingEnvironment);
 			itsToolBox->Convert(&txt);
 		}
 		itsToolBox->SetTextAlignment(kLeft);
@@ -2379,7 +2451,7 @@ void NFmiTempView::DrawHodografBase(int theIndex)
 			{
 				std::string str(NFmiStringTools::Convert<double>(y));
 				NFmiPoint txtP(vP2.X(), vP2.Y() - yShift);
-				NFmiText txt(txtP, str.c_str(), 0, itsDrawingEnvironment);
+				NFmiText txt(txtP, str.c_str(), false, 0, itsDrawingEnvironment);
 				itsToolBox->Convert(&txt);
 			}
 		}
@@ -2485,7 +2557,7 @@ void NFmiTempView::DrawHodografTextWithMarker(const std::string &theText, float 
 			NFmiLine line2(markRect.TopLeft(), markRect.BottomRight(), 0, &markEnvi);
 			itsToolBox->Convert(&line2);
 		}
-		NFmiText txtObject(relP, theText.c_str(), 0, &fontEnvi);
+		NFmiText txtObject(relP, theText.c_str(), false, 0, &fontEnvi);
 		itsToolBox->Convert(&txtObject);
 	}
 }
@@ -2680,7 +2752,7 @@ void NFmiTempView::DrawLCL(NFmiSoundingDataOpt1 &theData, int theIndex, FmiLCLCa
 				str += ", ";
 				str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(T, 1);
 				str += ")";
-				NFmiText txt(p3, str, 0, itsDrawingEnvironment);
+				NFmiText txt(p3, str, false, 0, itsDrawingEnvironment);
 				itsToolBox->Convert(&txt);
 			}
 		}
@@ -2727,7 +2799,7 @@ void NFmiTempView::DrawHeightValues(NFmiSoundingDataOpt1 &theData, int theIndex)
 						NFmiPoint p(currentTextX, currentTextY);
 						NFmiString str(NFmiStringTools::Convert<int>(static_cast<int>(gValue)));
 						str += "m";
-						NFmiText txt(p, str, 0, itsDrawingEnvironment);
+						NFmiText txt(p, str, false, 0, itsDrawingEnvironment);
 						itsToolBox->Convert(&txt);
 						lastPrintedTextY = currentTextY;
 					}
@@ -2784,10 +2856,10 @@ void NFmiTempView::DrawStationInfo(NFmiSoundingDataOpt1 &theData, int theIndex)
 			timestr += " "; // täytetään nimeä spaceilla, että pohjaväritys peittää saman alan jokaiselle 'nimelle'
 		NFmiPoint timePoint(point);
 		timePoint.Y(point.Y() - fontY);
-		NFmiText text2(timePoint, timestr, 0, envi);
+		NFmiText text2(timePoint, timestr, false, 0, envi);
 		itsToolBox->Convert(&text2);
 	}
-	NFmiText text1(point, locationNameStr, 0, envi);
+	NFmiText text1(point, locationNameStr, true, 0, envi);
 	itsToolBox->Convert(&text1);
 
 	itsToolBox->SetTextAlignment(oldAligment);
@@ -3122,7 +3194,7 @@ void NFmiTempView::DrawAnimationControls(void)
 	NFmiRectangle rec1(animButtomRect, 0, &envi);
 	itsToolBox->Convert(&rec1);
 	NFmiString str1("Anim.");
-	NFmiText txt1(NFmiPoint(animButtomRect.TopLeft().X() + moveX, animButtomRect.TopLeft().Y()) , str1, 0, &envi);
+	NFmiText txt1(NFmiPoint(animButtomRect.TopLeft().X() + moveX, animButtomRect.TopLeft().Y()) , str1, false, 0, &envi);
 	itsToolBox->Convert(&txt1);
 
 	const auto& animStepButtomRect = itsTempViewDataRects.getAnimationStepButtonRect();
@@ -3135,7 +3207,7 @@ void NFmiTempView::DrawAnimationControls(void)
 	else if(step >= 60)
 		str2 += NFmiStringTools::Convert<int>(step/60);
 	str2 += "h";
-	NFmiText txt2(NFmiPoint(animStepButtomRect.TopLeft().X() + moveX, animStepButtomRect.TopLeft().Y()), str2, 0, &envi);
+	NFmiText txt2(NFmiPoint(animStepButtomRect.TopLeft().X() + moveX, animStepButtomRect.TopLeft().Y()), str2, false, 0, &envi);
 	itsToolBox->Convert(&txt2);
 }
 
@@ -3178,7 +3250,7 @@ void NFmiTempView::DrawOverBitmapThings(NFmiToolBox *theGTB, const NFmiPoint &th
 	{ // jos ollaan indeksinäytto tilassa, lasketaan kursorin kohdalle arvoja ja laitetaan ne indeksi ikkunaan
 		NFmiPoint p(CalcStabilityIndexStartPoint());
 
-		NFmiText text(p, NFmiString(""), 0, itsDrawingEnvironment);
+		NFmiText text(p, NFmiString(""), false, 0, itsDrawingEnvironment);
 		auto lineH = itsStabilityIndexRelativeLineHeight;
 		for(int i=0; i<4; i++)
 			DrawNextLineToIndexView(lineH, text, "", p, true, false); // näitä ei lisätä soundingIndex-stringiin
@@ -3384,7 +3456,7 @@ std::string NFmiTempView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
                     str += "<b><font color=";
                     str += CtrlViewUtils::Color2HtmlColorStr(mtaTempSystem.SoundingColor(index));
                     str += ">";
-                    str += ::GetSoundingToolTipText(itsSoundingDataCacheForTooltips, selectedProducer, usedTempInfo, modelRunCount, pressure, index, true, usedLocationWithName.GetName());
+                    str += ::GetSoundingToolTipText(itsSoundingDataCacheForTooltips, selectedProducer, usedTempInfo, 0, pressure, index, true, usedLocationWithName.GetName());
                     if(modelRunCount > 0 && NFmiDrawParam::IsModelRunDataType(info->DataType()))
                     { 
                         // lisätään edelliset malliajo -osio tooltippiin 

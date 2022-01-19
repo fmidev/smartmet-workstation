@@ -2,6 +2,7 @@
 #include "NFmiFileSystem.h"
 #include "NFmiDrawParam.h"
 #include "NFmiMacroParamfunctions.h"
+#include "NFmiStringTools.h"
 #include <fstream>
 
 using namespace std;

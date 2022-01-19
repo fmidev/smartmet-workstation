@@ -110,7 +110,6 @@
 #include "NFmiStationIndexTextView.h"
 #include "NFmiInfoAreaMaskOccurrance.h"
 #include "HakeMessage/Main.h"
-#include "NFmiSeaIcingWarningSystem.h"
 #include "NFmiExtraMacroParamData.h"
 #include "NFmiStation2GridMask.h"
 #include "ToolboxViewsInterfaceForGeneralDataDoc.h"
@@ -379,7 +378,6 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsDataToDBCheckMethod(2)
 ,itsOutOfEditedAreaTimeSerialPoint(kFloatMissing, kFloatMissing)
 ,itsConceptualModelData()
-,itsSeaIcingWarningSystem()
 ,itsTransparencyContourDrawView(0)
 ,itsSynopDataFilePatternSortOrderVector()
 ,itsShowToolTipTimeView(true)
@@ -534,7 +532,6 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 
 	InitEditedDataParamDescriptor(); // pitää olla itsDataLoadingInfoManager -otuksen luomisen jälkeen
 	InitWarningCenterSystem(); // tämän initialisointi pitää olla itsDataLoadingInfoManager-olion initialisoinnin perässä
-	InitSeaIcingWarningSystem();
 	InitWindTableSystem();
 	InitExtraSoundingProducerListFromSettings();
     InitMTATempSystem(); // pitää kutsua vasta InitProducerSystem- ja InitExtraSoundingProducerListFromSettings -kutsujen jälkeen
@@ -683,7 +680,7 @@ void InitDataLoadingInfo()
 {
     try
     {
-        itsDataLoadingInfoNormal.Configure();
+        itsDataLoadingInfoNormal.Configure(WorkingDirectory());
         AddWorkingDataPathToCleaner(); // HUOM! DataLoadingInfo ja FileCleanerSystem molemmat pitää olla initilaisoituina!!!!
         itsDataLoadingInfoCaseStudy = itsDataLoadingInfoNormal; // otetaan CaseStudy dataLoadingInfon pohjatiedot normaalista dataLoadingInfosta
     }
@@ -807,7 +804,7 @@ void InitBetaProductionSystem()
 	try
     {
         BetaProduct::SetLoggerFunction(GetLogAndWarnFunction());
-        itsBetaProductionSystem.Init(ApplicationWinRegistry().BaseConfigurationRegistryPath(), ControlDirectory());
+        itsBetaProductionSystem.Init(ApplicationWinRegistry().BaseConfigurationRegistryPath(), WorkingDirectory());
     }
     catch(std::exception &e)
     {
@@ -1012,11 +1009,12 @@ void InitCaseStudySystem(void)
 	try
 	{
 //		itsCaseStudySystem.InitFromSettings();
-		LoadCaseStudyMemory();
 		if(HelpDataInfoSystem()->UseQueryDataCache())
 		{
 			itsCaseStudySystem.SmartMetLocalCachePath(HelpDataInfoSystem()->CacheDirectory());
 		}
+		itsCaseStudySystem.Init(*HelpDataInfoSystem(), *InfoOrganizer(), ApplicationWinRegistry().CaseStudySettingsWinRegistry());
+
         itsCaseStudySystemOrig = itsCaseStudySystem;
 	}
 	catch(std::exception &e)
@@ -1118,7 +1116,7 @@ void InitApplicationWinRegistry(std::map<std::string, std::string> &mapViewsPosi
         if(shortAppVerStr.size() < 3)
             throw std::runtime_error(std::string("Invalid application's short version number: '") + shortAppVerStr + "', should be in format X.Y");
         // 3 = 3 eri karttanäyttöä, ei vieläkään missään asetusta tälle, koska pääkarttanäyttö poikkeaa kahdesta apukarttanäytöstä
-        itsApplicationWinRegistry.Init(ApplicationDataBase().appversion, shortAppVerStr, itsBasicConfigurations.GetShortConfigurationName(), 3, mapViewsPositionMap, otherViewsPositionPosMap, *HelpDataInfoSystem());
+        itsApplicationWinRegistry.Init(ApplicationDataBase().appversion, shortAppVerStr, itsBasicConfigurations.GetShortConfigurationName(), 3, mapViewsPositionMap, otherViewsPositionPosMap, *HelpDataInfoSystem(), NFmiCaseStudySystem::GetCategoryHeaders());
 
 		// Vähän nurinkurisesti tässä asetetaan rekisteristä yksi arvo edelleen pariin paikkaan (mm. takaisin itseensä, mutta modulaarisuus vaatii tämän)
 		ApplicationInterface::GetApplicationInterfaceImplementation()->SetHatchingToolmasterEpsilonFactor(itsApplicationWinRegistry.HatchingToolmasterEpsilonFactor());
@@ -1136,7 +1134,7 @@ void InitApplicationWinRegistry(std::map<std::string, std::string> &mapViewsPosi
 
 void UpdateEnableDataChangesToWinReg(void)
 {
-    itsApplicationWinRegistry.HelpDataEnableWinRegistry().Update(*HelpDataInfoSystem());
+    itsApplicationWinRegistry.CaseStudySettingsWinRegistry().HelpDataEnableWinRegistry().Update(*HelpDataInfoSystem());
 }
 
 void InitConceptualModelData(void)
@@ -1174,8 +1172,18 @@ void InitAutoComplete(void)
 void InitCombinedMapHandler()
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
+	// parameterSelectionUpdateCallback varmistaa että kun kaikki Wms serverit on käyty 1. kerran läpi, 
+	// tämän jälkeen päivitetään Parameter selection dialogi, jotta siellä näkyy Wms datat (jos dialogi avattu
+	// ennen tätä, jäi dialogi ilman Wms datoja ennen kuin jokin muu eventti teki kunnon updaten).
+	std::function<void()> parameterSelectionUpdateCallback = []() {ApplicationInterface::GetApplicationInterfaceImplementation()->SetToDoFirstTimeWmsDataBasedUpdate(); };
+	Wms::CapabilitiesHandler::setParameterSelectionUpdateCallback(parameterSelectionUpdateCallback);
 	// NFmiCombinedMapHandler luokka hanskaa itse kaikki poikkeukset ja mahdolliset käyttäjän tekemät ohjelman lopetukset.
 	itsCombinedMapHandler.initialize(itsBasicConfigurations.ControlPath());
+	if(!itsCombinedMapHandler.getWmsSupport().isConfigured())
+	{
+		// Jos wms systeemiä ei oteta käyttöön, pitää lopettaa timer joka odottaa 1. data päivitystä joka 3. sekunti
+		parameterSelectionUpdateCallback();
+	}
 }
 
 void InitProducerSystem(NFmiProducerSystem &producerSystem, const std::string &baseConfigurationKey, const std::string &callingFunctionName)
@@ -1225,21 +1233,6 @@ void InitWarningCenterSystem(void)
 #endif // DISABLE_CPPRESTSDK
 }
 
-void InitSeaIcingWarningSystem(void)
-{
-	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
-	try
-	{
-		itsSeaIcingWarningSystem.InitializeFromSettings("SmartMet::SeaIcingWarningSystem::");
-	}
-	catch(std::exception &e)
-	{
-		string errStr("InitSeaIcingWarningSystem - Initialization error in configurations: \n");
-		errStr += e.what();
-        LogAndWarnUser(errStr, "Problems in InitSeaIcingWarningSystem", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
-	}
-}
-
 void InitWindTableSystem(void)
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
@@ -1263,8 +1256,8 @@ void InitMacroParamData(void)
 		string minGridStr = NFmiSettings::Require<string>("MetEditor::MacroParamDataMinGridSize");
 		string maxGridStr = NFmiSettings::Require<string>("MetEditor::MacroParamDataMaxGridSize");
 
-		checkedVector<int> minGridValues = NFmiStringTools::Split<checkedVector<int> >(minGridStr, ",");
-		checkedVector<int> maxGridValues = NFmiStringTools::Split<checkedVector<int> >(maxGridStr, ",");
+		std::vector<int> minGridValues = NFmiStringTools::Split<std::vector<int> >(minGridStr, ",");
+		std::vector<int> maxGridValues = NFmiStringTools::Split<std::vector<int> >(maxGridStr, ",");
 		if(minGridValues.size() != 2)
 			throw runtime_error("MetEditor::MacroParamDataMinGridSize had invalid setting, has to be to numbers (e.g. x,y).");
 		if(maxGridValues.size() != 2)
@@ -1290,7 +1283,7 @@ NFmiPoint GetMacroParamGridSize(const std::string &theSettingsStr)
 	string gridStr = NFmiSettings::Require<string>(theSettingsStr.c_str()); // annetaan tyhjä defaultiksi
 	if(!gridStr.empty())
 	{
-		checkedVector<int> values = NFmiStringTools::Split<checkedVector<int> >(gridStr, ",");
+		std::vector<int> values = NFmiStringTools::Split<std::vector<int> >(gridStr, ",");
 		if(values.size() != 2)
 			throw runtime_error(theSettingsStr + " had invalid settings, has to be two numbers (e.g. x,y).");
 		sizeX = values[0];
@@ -1356,9 +1349,9 @@ void InitEditedDataParamDescriptor(void)
 			{
 				NFmiParamBag params;
 				// oletus: paramStr:ässä on parametreja muodossa parID1,nimi1,parID2,nimi2,....
-				checkedVector<std::string> valuesStr = NFmiStringTools::Split<checkedVector<std::string> >(paramsStr, ",");
-				checkedVector<std::string>::iterator it = valuesStr.begin();
-				checkedVector<std::string>::iterator endIt = valuesStr.end();
+				std::vector<std::string> valuesStr = NFmiStringTools::Split<std::vector<std::string> >(paramsStr, ",");
+				std::vector<std::string>::iterator it = valuesStr.begin();
+				std::vector<std::string>::iterator endIt = valuesStr.end();
 				for( ; it != endIt; ++it)
 				{
 					std::string parIdStr(*it);
@@ -1394,7 +1387,7 @@ void InitEditedDataParamDescriptor(void)
 // Esim. 2 Nimessä on interpolaatiotietoa (lopussa kaarisuluissa luku, joka myös jätetään nimestä pois), "Lämpötila{2}" -> "Lämpötila",kNearestPoint  (pari)
 std::pair<std::string, FmiInterpolationMethod> GetEditedParamFinalNameAndInterpolationMethod(const std::string &theParamName)
 {
-    checkedVector<std::string> nameParts = NFmiStringTools::Split<checkedVector<std::string> >(theParamName, "{");
+    std::vector<std::string> nameParts = NFmiStringTools::Split<std::vector<std::string> >(theParamName, "{");
     if(nameParts.size() < 2)
         return std::make_pair(theParamName, kLinearly);
     else
@@ -1505,7 +1498,7 @@ void InitUsedDataLoadingGrid(void)
 		try
 		{
 			boost::shared_ptr<NFmiArea> area = NFmiAreaFactory::Create(areaStr);
-			checkedVector<double> values = NFmiStringTools::Split<checkedVector<double> >(gridStr, ",");
+			std::vector<double> values = NFmiStringTools::Split<std::vector<double> >(gridStr, ",");
 			if(values.size() != 2)
 				throw runtime_error("MetEditor::DataLoadingGridSize was invlid, has to be two numbers (e.g. x,y).");
 			NFmiPoint gridSize(values[0], values[1]);
@@ -1534,7 +1527,7 @@ void InitSettingsFromConfFile(void)
 		fUseOnePressureLevelDrawParam = NFmiSettings::Optional("MetEditor::UseOnePressureLevelDrawParam", false);
 		fRawTempRoundSynopTimes = NFmiSettings::Optional("MetEditor::RawTempRoundSynopTimes", false);
 		string rawTempUnknownStartLonLatStr = NFmiSettings::Optional<string>("MetEditor::RawTempUnknownStartLonLat", "0,0");
-		checkedVector<double> rawTempUnknownStartLonLatStrVec = NFmiStringTools::Split<checkedVector<double> >(rawTempUnknownStartLonLatStr, ",");
+		std::vector<double> rawTempUnknownStartLonLatStrVec = NFmiStringTools::Split<std::vector<double> >(rawTempUnknownStartLonLatStr, ",");
 		if(rawTempUnknownStartLonLatStrVec.size() != 2)
 			throw runtime_error("InitSettingsFromConfFile MetEditor::RawTempUnknownStartLonLat was invlid, has to be two numbers (like x,y).");
 		itsRawTempUnknownStartLonLat = NFmiPoint(rawTempUnknownStartLonLatStrVec[0], rawTempUnknownStartLonLatStrVec[1]);
@@ -2176,15 +2169,22 @@ void NormalizeGridDataArea(NFmiQueryData* theData)
 	}
 }
 
-int GetMaxLatestDataCount(NFmiInfoData::Type theType, const std::string &theFileNameFilter)
+// CaseStudy systeemi tietää nykyään kuinka monta tiedostoa halutaan säilyttää lokaaleissa 
+// cache hakemistoissa.
+// HUOM! maxLatestDataCount on lukuna yhden pienempi kuin LocalCacheDataCount, joten se pitää vähentää.
+int GetMaxLatestDataCount(NFmiInfoData::Type theType, const std::string& theFileNameFilter)
 {
 	int maxLatestDataCount = 0;
-	if(NFmiDrawParam::IsModelRunDataType(theType))
+	auto* helpDataInfo = HelpDataInfoSystem()->FindHelpDataInfo(theFileNameFilter);
+	if(helpDataInfo)
 	{
-		maxLatestDataCount = HelpDataInfoSystem()->CacheMaxFilesPerPattern();
-		NFmiHelpDataInfo *hInfo = HelpDataInfoSystem()->FindHelpDataInfo(theFileNameFilter);
-		if(hInfo)
-			maxLatestDataCount += hInfo->AdditionalArchiveFileCount();
+		auto* caseStudyDataInfo = CaseStudySystem().FindCaseStudyDataFile(helpDataInfo->Name());
+		if(caseStudyDataInfo)
+		{
+			maxLatestDataCount = caseStudyDataInfo->DataFileWinRegValues().LocalCacheDataCount() - 1;
+			if(maxLatestDataCount < 0)
+				maxLatestDataCount = 0;
+		}
 	}
 
 	return maxLatestDataCount;
@@ -2240,7 +2240,7 @@ boost::shared_ptr<NFmiFastQueryInfo> GetMatchingFastInfo(NFmiInfoData::Type theT
 		foundFastInfo = itsSmartInfoOrganizer->FindInfo(NFmiInfoData::kCopyOfEdited);
 	else
 	{
-		checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > fastInfoVector = itsSmartInfoOrganizer->GetInfos(theDataFilePattern);
+		std::vector<boost::shared_ptr<NFmiFastQueryInfo> > fastInfoVector = itsSmartInfoOrganizer->GetInfos(theDataFilePattern);
 		if(fastInfoVector.empty() == false)
 			foundFastInfo = fastInfoVector[0]; // otetaan vain ensimmäinen vektorista, koska oikeasti siinä ei voi olla kuin yksi löytynyt fastInfo
 	}
@@ -2302,7 +2302,7 @@ bool IsDataReloadedInCaseStudyEvent(const std::string& theDataFilePattern)
 }
 
 void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern,
-			NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState = false)
+			NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState, bool& fDataWasDeletedOut)
 {
 	StoreLastLoadedFileNameToLog(theDataFileName);
 	if(theData == nullptr || theData->Info() == nullptr)
@@ -2331,9 +2331,8 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 			NFmiQueryInfo *aInfo = theData ? theData->Info() : 0;
 			int theModelRunTimeGap = NFmiCaseStudyDataFile::GetModelRunTimeGapInMinutes(aInfo, theType, HelpDataInfoSystem()->FindHelpDataInfo(theDataFilePattern));
 			auto reloadCaseStudyData = IsDataReloadedInCaseStudyEvent(theDataFilePattern);
-			bool dataWasDeleted = false;
-			itsSmartInfoOrganizer->AddData(theData, theDataFileName, theDataFilePattern, theType, undoredoDepth, theMaxLatestDataCount, theModelRunTimeGap, dataWasDeleted, reloadCaseStudyData);
-			if(dataWasDeleted)
+			itsSmartInfoOrganizer->AddData(theData, theDataFileName, theDataFilePattern, theType, undoredoDepth, theMaxLatestDataCount, theModelRunTimeGap, fDataWasDeletedOut, reloadCaseStudyData);
+			if(fDataWasDeletedOut)
 			{ // data on deletoitu, näin voi käydä jos esim. annetun datan origin aika on pielessä esim. 1900.0.0 jne (kuten on ollut mtl_ecmwf_aalto-datan kanssa joskus)
 				// tehdään raportti lokiin ja ei jatketa funktiota eteenpäin...
 				string errorStr("Following data was not accepted to SmartMet: ");
@@ -2417,9 +2416,10 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 		// Tämä on kTEMPCodeSoundingData-speciaali. Jos editori käyttää vain luotaus datan katseluun,
 		// eikä ole olemassa editoitua dataa, laitetaan tämän tyyppinen data myös editoitavaksi dataksi,
 		// jotta dataa voisi kätevästi katsella editorilla, ilman että tarvitsee erikseen tiputella editoitavia datoja
+		bool dataWasDeletedInInnerCall = false;
 		if(theType == NFmiInfoData::kTEMPCodeSoundingData && (EditedInfo() == nullptr || fIsTEMPCodeSoundingDataAlsoCopiedToEditedData))
 		{
-			AddQueryData(theData->Clone(), theDataFileName, "", NFmiInfoData::kEditable, "");
+			AddQueryData(theData->Clone(), theDataFileName, "", NFmiInfoData::kEditable, "", false, dataWasDeletedInInnerCall);
 			fIsTEMPCodeSoundingDataAlsoCopiedToEditedData = true;
 		}
 
@@ -2428,7 +2428,7 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 			if(theData->Info()->SizeLevels() == 1) // mutta vain pintadatalle, koska mahdollinen mallipintadata on niin jumalattoman iso
 			{
 				fChangingCaseStudyToNormalMode = false;
-				AddQueryData(theData->Clone(), theDataFileName, "", NFmiInfoData::kEditable, "");
+				AddQueryData(theData->Clone(), theDataFileName, "", NFmiInfoData::kEditable, "", false, dataWasDeletedInInnerCall);
 			}
 		}
         PrepareForParamAddSystemUpdate();
@@ -2684,7 +2684,7 @@ void WarnUserIfProblemWithEditedData(bool fCancelPossible)
 	}
 }
 
-bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, checkedVector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1)
+bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1)
 {
 	// Tehdään aikasarjamuokkauksille progress ja peruutus dialogi ja toiminnot.
 	// Aluksi vain control-point moodille!!!
@@ -3145,7 +3145,7 @@ void AddCustomFolderToMenuItemList(const MenuCreationSettings &theMenuSettings, 
 	// jokaisen info-datan avulla etsitää info-organizerilta siihen sopiva data fileNameFilterin avulla
 	for(size_t j=0; j < helpDataList.size(); j++)
 	{
-		checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoList = itsSmartInfoOrganizer->GetInfos(helpDataList[j].UsedFileNameFilter(*HelpDataInfoSystem()));
+		std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoList = itsSmartInfoOrganizer->GetInfos(helpDataList[j].UsedFileNameFilter(*HelpDataInfoSystem()));
 		for(size_t k=0; k < infoList.size(); k++)
 		{
 			AddSmartInfoToMenuList(usedMenuSettings, infoList[k], theCustomMenuList, infoList[k]->DataType());
@@ -3556,7 +3556,7 @@ bool WantedMetarPlotObsFound(void)
 // Lisätää ali-listaan kaikki tämän tyyppiset datat
 void AddToListAllThisDataTypes(const MenuCreationSettings &theMenuSettings, NFmiMenuItemList *theMenuList, NFmiInfoData::Type theDataType)
 {
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infos(itsSmartInfoOrganizer->GetInfos(theDataType));
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infos(itsSmartInfoOrganizer->GetInfos(theDataType));
 	int size = static_cast<int>(infos.size());
 	if(size > 0)
 	{
@@ -3728,7 +3728,7 @@ void AddProducerDataToParamSelectionPopup(const MenuCreationSettings &theMenuSet
 										  NFmiInfoData::Type theIgnoreDataType3 = NFmiInfoData::kNoDataType,
 										  bool fTakeOnlyFirst = false)
 {
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infos(itsSmartInfoOrganizer->GetInfos(theProducerId));
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infos(itsSmartInfoOrganizer->GetInfos(theProducerId));
 	int size = static_cast<int>(infos.size());
 	if(size > 0)
 	{
@@ -3765,7 +3765,7 @@ void AddConfiguredModelProducerDataToParamSelectionPopup(const MenuCreationSetti
 			string menuString(prodInfo.Name());
             CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, std::string(__FUNCTION__) + ": " + prodInfo.Name());
 
-			checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infos(itsSmartInfoOrganizer->GetInfos(prodInfo.ProducerId()));
+			std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infos(itsSmartInfoOrganizer->GetInfos(prodInfo.ProducerId()));
 			int size = static_cast<int>(infos.size());
 			int foundSize = 0;
 			if(size > 0)
@@ -3813,7 +3813,7 @@ bool AddMixDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings
 	bool foundAnyData = false;
 	for(size_t typeCounter = 0; typeCounter<dataTypes.size(); typeCounter++)
 	{
-		checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infos(itsSmartInfoOrganizer->GetInfos(dataTypes[typeCounter]));
+		std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infos(itsSmartInfoOrganizer->GetInfos(dataTypes[typeCounter]));
 		int ssize = static_cast<int>(infos.size());
 		if(ssize > 0)
 		{
@@ -3942,13 +3942,13 @@ bool CreateMaskSelectionPopup(void)
 	return false;
 }
 
-void AddMultiModelRunToMenu(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiMenuItemList &thePopupMenu, unsigned int theDescTopIndex, int index)
+void AddMultiModelRunToMenu(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiMenuItemList &thePopupMenu, unsigned int theDescTopIndex)
 {
 	if(theDrawParam)
 	{
 		NFmiDataIdent param = theDrawParam->Param();
 		std::string menuString = "SetMultiRunMode"; // ::GetDictionaryString("TimeSerialViewParamPopUpRemove");
-        auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuString, param, kFmiTimeSerialModelRunCountSet, g_DefaultParamView, nullptr, theDrawParam->DataType(), index);
+        auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuString, param, kFmiTimeSerialModelRunCountSet, g_DefaultParamView, nullptr, theDrawParam->DataType());
 
 		NFmiMenuItemList *menuList = new NFmiMenuItemList;
 		for(int i = 0; i <= 10; i++)
@@ -3959,7 +3959,7 @@ void AddMultiModelRunToMenu(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmi
 			else
 				multiModeStr += std::string("Count to ") + NFmiStringTools::Convert(i);
 
-            auto item1 = std::make_unique<NFmiMenuItem>(theDescTopIndex, multiModeStr, param, kFmiTimeSerialModelRunCountSet, g_DefaultParamView, nullptr, theDrawParam->DataType(), index);
+            auto item1 = std::make_unique<NFmiMenuItem>(theDescTopIndex, multiModeStr, param, kFmiTimeSerialModelRunCountSet, g_DefaultParamView, nullptr, theDrawParam->DataType());
 			item1->ExtraParam(i);
 			menuList->Add(std::move(item1));
 		}
@@ -3977,9 +3977,37 @@ bool CreateTimeSerialDialogOnViewPopup(int index)
 	GetCombinedMapHandler()->getTimeSerialViewIndexReference() = index;
 	fOpenPopup = false;
 	itsPopupMenu = std::make_unique<NFmiMenuItemList>();
+
+	MenuCreationSettings menuSettings;
+	menuSettings.SetTimeSerialSettings(kFmiAddTimeSerialSideParam);
+	CreateParamSelectionBasePopup(menuSettings, itsPopupMenu.get(), "Add side parameter");
+
+	auto sideParamList = GetCombinedMapHandler()->getTimeSerialViewSideParameters(index);
+	if(sideParamList && sideParamList->NumberOfItems() > 0)
+	{
+		// Yksittäisen side-paramin poistot
+		auto removeSideParamMenuItem = std::make_unique<NFmiMenuItem>(CtrlViewUtils::kFmiTimeSerialView, "Remove side parameter", kFmiBadParameter, kFmiRemoveSelectedTimeSerialSideParam, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+		auto removeSideParamMenuItemList = new NFmiMenuItemList();
+		for(sideParamList->Reset(); sideParamList->Next(); )
+		{
+			auto currentSideParam = sideParamList->Current();
+			auto paramNameInMenu = CtrlViewUtils::GetParamNameString(currentSideParam, false, false, false, 0, false, true);
+			const auto &dataIdent = currentSideParam->Param();
+			const auto &level = currentSideParam->Level();
+			auto sideParamMenuItem = std::make_unique<NFmiMenuItem>(CtrlViewUtils::kFmiTimeSerialView, paramNameInMenu, dataIdent, kFmiRemoveSelectedTimeSerialSideParam, g_DefaultParamView, &level, currentSideParam->DataType());
+			removeSideParamMenuItemList->Add(std::move(sideParamMenuItem));
+		}
+		removeSideParamMenuItem->AddSubMenu(removeSideParamMenuItemList);
+		itsPopupMenu->Add(std::move(removeSideParamMenuItem));
+
+		// Kaikkien side-paramien poisto kerralla
+		auto clearAllSideParamsMenuItem = std::make_unique<NFmiMenuItem>(CtrlViewUtils::kFmiTimeSerialView, "Clear side parameters", kFmiBadParameter, kFmiRemoveAllTimeSerialRowSideParams, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+		itsPopupMenu->Add(std::move(clearAllSideParamsMenuItem));
+	}
+
 	auto& timeSerialViewDrawParamList = GetCombinedMapHandler()->getTimeSerialViewDrawParamList();
 	if(timeSerialViewDrawParamList.Index(index))
-		AddMultiModelRunToMenu(timeSerialViewDrawParamList.Current(), *itsPopupMenu, CtrlViewUtils::kFmiTimeSerialView, index);
+		AddMultiModelRunToMenu(timeSerialViewDrawParamList.Current(), *itsPopupMenu, CtrlViewUtils::kFmiTimeSerialView);
 
 	if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
 		return false;
@@ -4059,7 +4087,7 @@ bool CreateTimeSerialDialogPopup(int index)
 	{
 		NFmiDataIdent param = timeSerialViewDrawParamList.Current()->Param();
 		std::string menuString = ::GetDictionaryString("TimeSerialViewParamPopUpRemove");
-		auto menuItem = std::make_unique<NFmiMenuItem>(-1, menuString, param, kFmiRemoveTimeSerialView, g_DefaultParamView, nullptr, infoDataType, index);
+		auto menuItem = std::make_unique<NFmiMenuItem>(-1, menuString, param, kFmiRemoveTimeSerialView, g_DefaultParamView, nullptr, infoDataType);
 		itsPopupMenu->Add(std::move(menuItem));
 		menuString = ::GetDictionaryString("TimeSerialViewParamPopUpRemoveAll");
 		menuItem.reset(new NFmiMenuItem(-1, menuString, param, kFmiRemoveAllTimeSerialViews, g_DefaultParamView, nullptr, infoDataType));
@@ -4157,6 +4185,44 @@ void AddInsertParamLayerSectionIntoPopupMenu(NFmiMenuItemList *thePopupMenu, uns
 	SetLayerIndexForWantedMenucommandItems(*thePopupMenu, kFmiInsertParamLayer, wantedLayerIndex);
 }
 
+void AddChangeParamSectionIntoPopupMenu(NFmiMenuItemList* thePopupMenu, unsigned int theDescTopIndex, int layerIndex, boost::shared_ptr<NFmiDrawParam>& drawParam)
+{
+	if(drawParam && !NFmiDrawParam::IsMacroParamCase(drawParam->DataType()))
+	{
+		auto crossSectionCase = theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView;
+		auto smartInfo = InfoOrganizer()->Info(drawParam, crossSectionCase, false);
+		if(smartInfo)
+		{
+			auto menuCommand = kFmiChangeParam;
+			auto dataType = drawParam->DataType();
+			auto menuTitleStr = ::GetDictionaryString("Change parameter/level");
+			auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuTitleStr, NFmiDataIdent(), menuCommand, g_DefaultParamView, nullptr, dataType);
+			NFmiLevelBag levels;
+			if(!crossSectionCase && smartInfo->SizeLevels() > 1)
+			{
+				levels = smartInfo->VPlaceDescriptor().LevelBag();
+			}
+			auto paramBag = smartInfo->ParamBag();
+			bool allowStreamlineParameter = theDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex;
+			auto possibleWindMetaParams = NFmiFastInfoUtils::MakePossibleWindMetaParams(*smartInfo, allowStreamlineParameter);
+			NFmiMenuItemList* menuList = nullptr;
+			// Poikkileikkaus menun yhteydessä ei halutakaan laittaa level tietoja menu-popupiin, vain parametrit
+			if(crossSectionCase == false && levels.GetSize() > 1)
+				menuList = new NFmiMenuItemList(theDescTopIndex, &paramBag, menuCommand, g_DefaultParamView, &levels, dataType, kFmiLastParameter, &possibleWindMetaParams);
+			else
+				menuList = new NFmiMenuItemList(theDescTopIndex, &paramBag, menuCommand, g_DefaultParamView, dataType, &possibleWindMetaParams);
+
+			if(menuList && menuList->NumberOfMenuItems() > 0)
+			{
+				SetLayerIndexForWantedMenucommandItems(*menuList, menuCommand, layerIndex);
+
+				menuItem->AddSubMenu(menuList);
+				thePopupMenu->Add(std::move(menuItem));
+			}
+		}
+	}
+}
+
 bool IsMapLayerSelectionCase(unsigned int theDescTopIndex, int theRowIndex, int layerIndex)
 {
 	return (theDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex) && (layerIndex == 0);
@@ -4189,6 +4255,7 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int la
 			std::unique_ptr<NFmiMenuItem> menuItem;
 
 			AddInsertParamLayerSectionIntoPopupMenu(itsPopupMenu.get(), theDescTopIndex, theRowIndex, layerIndex, layerIndexRealValue);
+			AddChangeParamSectionIntoPopupMenu(itsPopupMenu.get(), theDescTopIndex, layerIndex, drawParam);
 
 			if(crossSectionPopup == false)
 			{ // poikkileikkaus-näyttö ei tue tekstimuotoista piirtoa
@@ -4379,7 +4446,15 @@ bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theRowIndex, int /* the
 	case kFmiAddParamCrossSectionView:
 		GetCombinedMapHandler()->addCrossSectionView(theMenuItem, theRowIndex, false);
 		break;
-    default:
+	case kFmiAddTimeSerialView:
+		GetCombinedMapHandler()->getTimeSerialViewIndexReference() = theRowIndex;
+		GetCombinedMapHandler()->addTimeSerialView(theMenuItem, false);
+		break;
+	case kFmiAddTimeSerialSideParam:
+		GetCombinedMapHandler()->getTimeSerialViewIndexReference() = theRowIndex;
+		GetCombinedMapHandler()->addTimeSerialViewSideParameter(theMenuItem, false);
+		break;
+	default:
         return false;
     }
 
@@ -4408,6 +4483,12 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		case kFmiAddAsOnlyView:
 			GetCombinedMapHandler()->addAsOnlyView(*menuItem, itsCurrentViewRowIndex);
 			break;
+		case kFmiChangeParam:
+		{
+			auto crossSectionCase = menuItem->MapViewDescTopIndex() == CtrlViewUtils::kFmiCrossSectionView;
+			GetCombinedMapHandler()->changeParamLevel(*menuItem, crossSectionCase ? itsCurrentCrossSectionRowIndex : itsCurrentViewRowIndex);
+			break;
+		}
 		case kFmiAddAsOnlyParamCrossSectionView:
 			GetCombinedMapHandler()->addAsOnlyCrossSectionView(*menuItem, itsCurrentCrossSectionRowIndex);
 			break;
@@ -4535,8 +4616,17 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		case kFmiRemoveTimeSerialView:
 			GetCombinedMapHandler()->removeTimeSerialView(*menuItem);
 			break;
+		case kFmiAddTimeSerialSideParam:
+			GetCombinedMapHandler()->addTimeSerialViewSideParameter(*menuItem, false);
+			break;
+		case kFmiRemoveSelectedTimeSerialSideParam:
+			GetCombinedMapHandler()->removeTimeSerialViewSideParameter(*menuItem);
+			break;
+		case kFmiRemoveAllTimeSerialRowSideParams:
+			GetCombinedMapHandler()->removeAllTimeSerialViewSideParameters(GetCombinedMapHandler()->getTimeSerialViewIndexReference());
+			break;
 		case kFmiTimeSerialModelRunCountSet:
-			GetCombinedMapHandler()->timeSerialViewModelRunCountSet(*menuItem, itsCurrentViewRowIndex);
+			GetCombinedMapHandler()->timeSerialViewModelRunCountSet(*menuItem);
 			break;
 		case kFmiActivateView:
 			GetCombinedMapHandler()->activateView(*menuItem, itsCurrentViewRowIndex);
@@ -4907,7 +4997,7 @@ void SetCrossSectionTrajectoryTimes(int theRowIndex)
 	if(TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
 	{
 		const NFmiTrajectory &trajectory = TrajectorySystem()->Trajectory(theRowIndex-1);
-		const checkedVector<NFmiMetTime> &times = trajectory.CrossSectionTrajectoryTimes();
+		const std::vector<NFmiMetTime> &times = trajectory.CrossSectionTrajectoryTimes();
 		if(times.size())
 		{
 			NFmiTimeBag timeBag(times[0], times[times.size()-1], CrossSectionSystem()->CrossSectionTimeControlTimeBag().Resolution());
@@ -5261,7 +5351,8 @@ bool LoadHelpData(NFmiHelpDataInfo& theHelpDataInfo, bool fMustFindData, bool us
                 data->Info()->SetProducer(kepaProducer);
             }
 
-            AddQueryData(data.release(), latestFileName, fileFilter, theHelpDataInfo.DataType(), "", false);
+			bool dataWasDeleted = false;
+            AddQueryData(data.release(), latestFileName, fileFilter, theHelpDataInfo.DataType(), "", false, dataWasDeleted);
             theHelpDataInfo.LatestFileTimeStamp(timeStamp);
             theHelpDataInfo.LatestFileName(latestFileName);
             timer.StopTimer();
@@ -5661,7 +5752,7 @@ bool GetProducerIdsLister(NFmiQueryInfo *theInfo, NFmiProducerIdLister &theProdu
 
 // Tekee producerIdListan ladatun datan mukaisesti.
 // Tallettaa sen datan infon headeriin ProdIds-avaimen alle
-void PutProducerIdListInDataHeader(boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, checkedVector<NFmiFastQueryInfo*> &theSourceInfos, checkedVector<int> &theModelIndexVector)
+void PutProducerIdListInDataHeader(boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, std::vector<NFmiFastQueryInfo*> &theSourceInfos, std::vector<int> &theModelIndexVector)
 {
 	NFmiProducerIdLister workingDataIds;
 	bool workingDataIdsExist = GetProducerIdsLister(theSourceInfos[2], workingDataIds); // 2=working data indeksi
@@ -5777,7 +5868,7 @@ void AddObservationStationsToCpPointsCommands(NFmiMenuItemList *mainPopupMenu)
     AddObservationStationsToCpPointsCommands(mainPopupMenu, cpObsBlendingData.Producers(), NFmiInfoData::kObservations);
 }
 
-void AddObservationStationsToCpPointsCommands(NFmiMenuItemList *mainPopupMenu, const checkedVector<NFmiProducer> &producerList, NFmiInfoData::Type usedInfoData)
+void AddObservationStationsToCpPointsCommands(NFmiMenuItemList *mainPopupMenu, const std::vector<NFmiProducer> &producerList, NFmiInfoData::Type usedInfoData)
 {
     if(!producerList.empty())
     {
@@ -5918,7 +6009,7 @@ bool StoreAllCPDataToFiles(void)
 	return itsCPManagerSet.StoreAllCurrentCPDataToFiles();
 }
 
-void SetDataLoadingProducerIndexVector(const checkedVector<int>& theIndexVector)
+void SetDataLoadingProducerIndexVector(const std::vector<int>& theIndexVector)
 {
 	itsDataLoadingProducerIndexVector = theIndexVector;
 }
@@ -6069,15 +6160,35 @@ bool InitCPManagerSet(void)
 			string errStr("SmartTool-ohjausta ei saatu luettua asetuksista.");
 			LogMessage(errStr, CatLog::Severity::Error, CatLog::Category::Configuration);
 		}
-		string fileName2(itsBasicConfigurations.ControlPath());
-		fileName2 += "DBChecker.st";
+		string dbCheckerSettingsKey = "SmartMet::OptionalDBCheckerPath";
+		string fileName2 = NFmiSettings::Optional<string>(dbCheckerSettingsKey, "");
+		if(!fileName2.empty())
+		{
+			string augmentedFileName2 = PathUtils::makeFixedAbsolutePath(fileName2, itsBasicConfigurations.ControlPath());
+			if(!NFmiFileSystem::FileExists(augmentedFileName2))
+			{
+				string errorMessage = dbCheckerSettingsKey;
+				errorMessage += " was given with value: '";
+				errorMessage += fileName2;
+				errorMessage += "' but that path has no existing file to be read";
+				LogAndWarnUser(errorMessage, "", CatLog::Severity::Error, CatLog::Category::Configuration, true, false, true);
+			}
+			else
+				fileName2 = augmentedFileName2;
+		}
+		else
+		{
+			fileName2 = itsBasicConfigurations.ControlPath();
+			fileName2 += "DBChecker.st";
+		}
+
 		itsSmartToolInfo.DBCheckerFileName(fileName2);
 		bool status2 = itsSmartToolInfo.LoadDBChecker();
 		SetCurrentSmartToolMacro(itsSmartToolInfo.CurrentScript()); // laitetaan currentti skripti myös dociin
 
         // Alustetaan myös yksi smartTool kieleen liittyvät callback funktiot
         NFmiInfoAreaMaskOccurrance::SetMultiSourceDataGetterCallback(
-			[this](checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, 
+			[this](std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, 
 				boost::shared_ptr<NFmiDrawParam> &theDrawParam, 
 				const boost::shared_ptr<NFmiArea> &theArea) 
 			{
@@ -6127,6 +6238,7 @@ bool InitCPManagerSet(void)
 	{
 		NFmiViewSettingMacro::TimeView &timeView = theMacro.GetTimeView();
 		timeView.SetAllParams(&GetCombinedMapHandler()->getTimeSerialViewDrawParamList());
+		timeView.SetAllSideParameters(GetCombinedMapHandler()->getTimeSerialViewSideParameterList());
         timeView.ShowHelpData(ShowHelperDataInTimeSerialView() != 0);
         timeView.ShowHelpData2(ShowHelperData2InTimeSerialView());
         timeView.ShowHelpData3(ShowHelperData3InTimeSerialView());
@@ -6317,22 +6429,35 @@ bool InitCPManagerSet(void)
 
     void SetTimeViewParams(NFmiViewSettingMacro &theMacro, bool fTreatAsViewMacro)
 	{
-		GetCombinedMapHandler()->removeAllTimeSerialViews();
+		auto& combinedMapHandler = *GetCombinedMapHandler();
+		combinedMapHandler.removeAllTimeSerialViews();
 
-		const checkedVector<NFmiViewSettingMacro::TimeViewRow>& rows = theMacro.GetTimeView().Rows();
-		checkedVector<NFmiViewSettingMacro::TimeViewRow>::size_type ssize = rows.size();
-		checkedVector<NFmiViewSettingMacro::TimeViewRow>::size_type counter = 0;
-		auto& timeSerialViewIndexReference = GetCombinedMapHandler()->getTimeSerialViewIndexReference();
+		const std::vector<NFmiViewSettingMacro::TimeViewRow>& rows = theMacro.GetTimeView().Rows();
+		std::vector<NFmiViewSettingMacro::TimeViewRow>::size_type ssize = rows.size();
+		std::vector<NFmiViewSettingMacro::TimeViewRow>::size_type counter = 0;
+		auto& timeSerialViewIndexReference = combinedMapHandler.getTimeSerialViewIndexReference();
 		timeSerialViewIndexReference = 0;
 		for( ;counter < ssize ; counter++)
 		{
+			auto& macroTimeRow = rows[counter];
 			timeSerialViewIndexReference++; // tätä juoksuttamalla saan parametrit menemään aikasarja ikkunaan oikeaan järjestykseen
-			const NFmiViewSettingMacro::Param &par = rows[counter].Param();
+			const NFmiViewSettingMacro::Param &par = macroTimeRow.Param();
 			NFmiMenuItem menuItem(-1, "x", par.DataIdent(), kFmiAddTimeSerialView, g_DefaultParamView, &par.Level(), par.DataType());
-			GetCombinedMapHandler()->addTimeSerialView(menuItem, fTreatAsViewMacro);
+			combinedMapHandler.addTimeSerialView(menuItem, fTreatAsViewMacro);
             // Kaikki makroon talletetut drawparam asetukset pitää vielä ladata luotuun ja listoihin laitettuun drawparamiin
             // viimeinen 0 on feikki indeksi jota tarvitaan karttanäyttö tapauksessa
 			AdjustDrawParam(0, par, CtrlViewUtils::kFmiTimeSerialView, 0, fTreatAsViewMacro);
+
+			// Tehdään side-parameter osio tässä
+			const auto& sideParameters = macroTimeRow.SideParameters();
+			if(sideParameters.size())
+			{
+				for(const auto& sideParameter : sideParameters)
+				{
+					NFmiMenuItem sideParameterMenuItem(-1, "x", sideParameter.DataIdent(), kFmiAddTimeSerialSideParam, g_DefaultParamView, &sideParameter.Level(), sideParameter.DataType());
+					combinedMapHandler.addTimeSerialViewSideParameter(sideParameterMenuItem, fTreatAsViewMacro);
+				}
+			}
 		}
 
         if(theMacro.GetTimeView().ShowHelpData())
@@ -6401,7 +6526,7 @@ bool InitCPManagerSet(void)
 		GetCombinedMapHandler()->clearDesctopsAllParams(CtrlViewUtils::kFmiCrossSectionView);
 
 		// asetetaan poikkileikkaus parametrit riveilleen
-		const checkedVector<NFmiViewSettingMacro::MapRow>& mapRows = theMacro.GetCrossSectionView().MapRowSettings();
+		const std::vector<NFmiViewSettingMacro::MapRow>& mapRows = theMacro.GetCrossSectionView().MapRowSettings();
 		size_t ssize = mapRows.size();
 		for(size_t i = 0; i < ssize ; i++)
 		{
@@ -6409,7 +6534,7 @@ bool InitCPManagerSet(void)
 			if(dList)
 			{
 				dList->Clear();
-				const checkedVector<NFmiViewSettingMacro::Param>& params = mapRows[i].RowParams();
+				const std::vector<NFmiViewSettingMacro::Param>& params = mapRows[i].RowParams();
 				size_t psize = params.size();
 				for(size_t j=0 ;j < psize ; j++)
 				{
@@ -6428,7 +6553,7 @@ bool InitCPManagerSet(void)
     // fTreatAsViewMacro -parametria tarvitaan, koska ns. backupViewMacro:jen latauksien yhteydessä halutaan ladata parametreja näytöille
     // niin että niitä ei pidetä viewMacro -paramereina. Jos parametri on ladattu normaalista viewMacrosta, ja halutaan tehdä sen piirto-ominaisuuksiin
     // muutoksia, se ei onnistu Piirto-ominaisuus dialogista (dialogissa varoitus ja nappuloiden estot), vaan talletus pitää tehdä itse viewMacroon.
-	void SetMapViewRowsParams(const checkedVector<NFmiViewSettingMacro::MapRow>& theMapRows, unsigned int theDescTopIndex, bool fTreatAsViewMacro)
+	void SetMapViewRowsParams(const std::vector<NFmiViewSettingMacro::MapRow>& theMapRows, unsigned int theDescTopIndex, bool fTreatAsViewMacro)
 	{
         // Pitää tyhjentää aluksi karttanäytön kaikkien rivien parametrit, koska sen täyttö looppia (joka tyhjentää kulloisenkin rivin ensin) ei välttämättä edes ajeta
 		GetCombinedMapHandler()->clearDesctopsAllParams(theDescTopIndex);
@@ -6481,9 +6606,9 @@ bool InitCPManagerSet(void)
 	void SetMasksParams(NFmiViewSettingMacro &theMacro)
 	{
 		boost::shared_ptr<NFmiAreaMaskList> paramMaskList(new NFmiAreaMaskList());
-		const checkedVector<NFmiViewSettingMacro::Mask>& masks = theMacro.GetMaskSettings().Masks();
-		const checkedVector<NFmiViewSettingMacro::Mask>::size_type ssize = masks.size();
-		checkedVector<NFmiViewSettingMacro::Mask>::size_type counter = 0;
+		const std::vector<NFmiViewSettingMacro::Mask>& masks = theMacro.GetMaskSettings().Masks();
+		const std::vector<NFmiViewSettingMacro::Mask>::size_type ssize = masks.size();
+		std::vector<NFmiViewSettingMacro::Mask>::size_type counter = 0;
 		for( ;counter < ssize ; counter++)
 		{
 			const NFmiViewSettingMacro::Mask &mask = masks[counter];
@@ -6526,7 +6651,7 @@ bool InitCPManagerSet(void)
         ApplicationWinRegistry().KeepMapAspectRatio(theMacro.KeepMapAspectRatio());
         MetEditorOptionsData().ControlPointMode(theMacro.UseControlPoinTool());
 
-        GetCombinedMapHandler()->makeApplyViewMacroDirtyActions();
+        GetCombinedMapHandler()->makeApplyViewMacroDirtyActions(ApplicationWinRegistry().DrawObjectScaleFactor());
 
         // Lopuksi (jos poikkeuksia ei ole lentänyt) laitetaan ladatun macron nimi talteen pääkarttanäytön title tekstiä varten
         SetLastLoadedViewMacroName(theMacro, fTreatAsViewMacro, undoRedoAction);
@@ -6651,13 +6776,16 @@ bool InitCPManagerSet(void)
     // Jos näyttömakro oli korruptoitunut, palautetaan false, muuten true
 	bool LoadViewMacro(const std::string &theName)
 	{
+		std::string initFileName = itsViewMacroPath + theName + ".vmr";
+		std::string loggedLongMacroName = std::string("'") + theName + "' (" + initFileName + ")";
 		try
 		{
+			LogMessage(std::string("Starting to load viewMacro: ") + loggedLongMacroName, CatLog::Severity::Debug, CatLog::Category::Macro, true);
+
 			SnapshotViewMacro(true); // true = tyhjennetään redo-lista
 
 			// HUOM! tässä vaiheessa pitää näyttömakro lukea uudestaan, että ajat päivittyvät nykyhetkeen.
 			// Muuten ajat voivat olla lukittuna suunnilleen siihen aikaa kun editori on käynnistetty
-            std::string initFileName = itsViewMacroPath + theName + ".vmr";
             if(ReadViewMacro(*CurrentViewMacro(), initFileName))
             {
                 itsHelperViewMacro = *CurrentViewMacro();
@@ -6666,16 +6794,9 @@ bool InitCPManagerSet(void)
 
                 ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Loading view-macro in use"); // tämä sitten päivittää kaikki ruudut
 
-				// Tämä kutsu varmistaa että eri karttanäytöissä on oikeat kartan koko arvot tallessa.
-				// Jos näyttömakro lataa saman koon jollekin kartalle, ei oikeita päivitys juttuja kutsuta ollenkaan,
-				// koska kartan pikseli koko ei ole muuttunut. Tämä on todellinen ongelma, koska usein näyttöjen koot
-				// jäävät edellisesta saman näyttömakron latauksesta. Jos tätä päivitystä ei tehdä, vaikuttaa se
-				// joidenkin piirtoobjektien koon laskuihin (mm. värilegendat ja erilaiset symbolit).
-				GetCombinedMapHandler()->updateAllMapViewsSingleMapSizes();
-
                 // lokitetaan, mikä makro on ladattu käyttöön...
-                string logStr("Applying the view-macro: ");
-                logStr += CurrentViewMacro()->InitFileName();
+                string logStr("Finished loading the view-macro: ");
+                logStr += loggedLongMacroName;
                 LogMessage(logStr, CatLog::Severity::Info, CatLog::Category::Macro);
                 return true;
             }
@@ -6683,15 +6804,15 @@ bool InitCPManagerSet(void)
 		catch(exception &e)
 		{
 			string errStr("Unable to load view-macro: ");
-			errStr += theName;
-			errStr += "\nReason: ";
+			errStr += loggedLongMacroName;
+			errStr += ", Reason: ";
 			errStr += e.what();
 			LogAndWarnUser(errStr, "ViewMacro loading problem", CatLog::Severity::Error, CatLog::Category::Macro, false);
 		}
 		catch(...)
 		{
 			string errStr("Unable to load view-macro (reason unknown): ");
-			errStr += theName;
+			errStr += loggedLongMacroName;
 			LogAndWarnUser(errStr, "ViewMacro loading problem", CatLog::Severity::Error, CatLog::Category::Macro, false);
 		}
         return false;
@@ -7583,7 +7704,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		NFmiSilamStationList::Station closestLoc;
 		closestLoc.itsLatlon = kMissingLatlon;
-		checkedVector<NFmiSilamStationList::Station> &locList = theLocations.Locations();
+		std::vector<NFmiSilamStationList::Station> &locList = theLocations.Locations();
 		double minDist = 9999999999;
 		for(size_t i=0; i < locList.size(); i++)
 		{
@@ -7705,7 +7826,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		if(newData && fJustCheckTEMPCode == false)
 		{
 			// otetaan TEMP koodi data käyttöön jos löytyi ja  ei ollut pelkkä tarkistus operaatio
-			AddQueryData(newData, "TEMPData.sqd", "TEMPDataFilePattern", NFmiInfoData::kTEMPCodeSoundingData, "");
+			bool dataWasDeleted = false;
+			AddQueryData(newData, "TEMPData.sqd", "TEMPDataFilePattern", NFmiInfoData::kTEMPCodeSoundingData, "", false, dataWasDeleted);
 		}
 		else
 			delete newData;
@@ -7899,7 +8021,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			string producersStr = NFmiSettings::Optional<string>("MetEditor::ExtraSoundingProducers", "");
 			if(producersStr.empty() == false)
 			{
-				checkedVector<string> prodStrVec = NFmiStringTools::Split<checkedVector<string> >(producersStr, ",");
+				std::vector<string> prodStrVec = NFmiStringTools::Split<std::vector<string> >(producersStr, ",");
 				if(prodStrVec.size() % 2 != 0)
 					throw runtime_error(string("Odd number parameters in producer list, give 'id1,name1,id2,name2,...' type pairs.\n") + producersStr);
 
@@ -8017,10 +8139,10 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return theInfo.LocationIndex(minLocInd);
 	}
 
-	boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing)
+	boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing)
 	{
 		boost::shared_ptr<NFmiFastQueryInfo> info;
-		checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = (thePossibleInfoVector == 0) ? GetSortedSynopInfoVector(kFmiSYNOP, kFmiTestBed, kFmiSHIP, kFmiBUOY) : *thePossibleInfoVector;
+		std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = (thePossibleInfoVector == 0) ? GetSortedSynopInfoVector(kFmiSYNOP, kFmiTestBed, kFmiSHIP, kFmiBUOY) : *thePossibleInfoVector;
 
 		if(infoVector.size() > 0)
 		{ // etsitään useasta infosta lähintä asemaa
@@ -8061,16 +8183,15 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		LogMessage(message, CatLog::Severity::Info, CatLog::Category::Visualization);
 		GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, true, true, true); // laitetaan kartta likaiseksi
-		MacroParamDataCache().clearAllLayers();
 		WindTableSystem().MustaUpdateTable(true);
-		GetCombinedMapHandler()->setBorderDrawDirtyState(CtrlViewUtils::kDoAllMapViewDescTopIndex, CountryBorderDrawDirtyState::Geometry);
-		GetCombinedMapHandler()->updateAllMapViewsSingleMapSizes();
+		GetCombinedMapHandler()->makeApplyViewMacroDirtyActions(ApplicationWinRegistry().DrawObjectScaleFactor());
+
 		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(message);
 	}
 
-	void OnButtonRefresh(void)
+	void OnButtonRefresh(const std::string& message)
 	{
-		DoSmartMetRefreshActions("Refreshing all views (F5)");
+		DoSmartMetRefreshActions(message);
 	}
 
 	void ReloadAllDynamicHelpData()
@@ -8131,11 +8252,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsQ2Client;
 	}
 
-	NFmiSeaIcingWarningSystem& SeaIcingWarningSystem(void)
-	{
-		return itsSeaIcingWarningSystem;
-	}
-
 	int SoundingViewWindBarbSpaceOutFactor(void)
 	{
 		return itsMTATempSystem.WindBarbSpaceOutFactor();
@@ -8161,16 +8277,16 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	// info-vektorissa riippuu vähän siitä, milloin mikin datan on luettu viimeksi.
 	// Tästä seuraa että jos synop-datoja ei järjestetä, voi ei niin tärkeä automaatti asema
 	// peittää synop-plotissa tarkeän havaintoaseman.
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1)
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1)
 	{
-		checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = InfoOrganizer()->GetInfos(theProducerId, theProducerId2, theProducerId3, theProducerId4);
+		std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = InfoOrganizer()->GetInfos(theProducerId, theProducerId2, theProducerId3, theProducerId4);
 
 		if(itsSynopDataFilePatternSortOrderVector.size())
 		{ // jos on määrätty sorttaus järjestys, tehdään sorttaus
-			checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > copyOfInfoVector(infoVector); // tästä listasta otetaan sorttauksessa löydetyt infot pois,
+			std::vector<boost::shared_ptr<NFmiFastQueryInfo> > copyOfInfoVector(infoVector); // tästä listasta otetaan sorttauksessa löydetyt infot pois,
 																	// että lopuksi voidaan laittaa jäljelle jääneet tästä listasta lopulliseen
 																	// sortattuun listaan. Alkuperäisestä listasta ei voi poistaa infoja kesken loopin.
-			checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > sortedInfoVector;
+			std::vector<boost::shared_ptr<NFmiFastQueryInfo> > sortedInfoVector;
 			for(size_t i = 0; i < itsSynopDataFilePatternSortOrderVector.size(); i++)
 			{
 				for(size_t j = 0; j < infoVector.size(); j++)
@@ -8536,7 +8652,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		itsApplicationWinRegistry.UseTimeSerialAxisAutoAdjust(newValue);
 	}
 
-	NFmiMetTime GetNewerOriginTimeFromInfos(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfos, const NFmiMetTime &theCurrentLatestTime)
+	NFmiMetTime GetNewerOriginTimeFromInfos(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfos, const NFmiMetTime &theCurrentLatestTime)
 	{
 		NFmiMetTime latestTime = theCurrentLatestTime;
 		if(theInfos.size() > 0)
@@ -8560,11 +8676,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		{
 			unsigned long prodId = theDrawParam->Param().GetProducer()->GetIdent();
 			// haetaan halutun mallin eri datoista (pinta, painepinta ja mallipinta) viimeisin origin aika
-			checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > groundInfos = InfoOrganizer()->GetInfos(NFmiInfoData::kViewable, true, prodId);
+			std::vector<boost::shared_ptr<NFmiFastQueryInfo> > groundInfos = InfoOrganizer()->GetInfos(NFmiInfoData::kViewable, true, prodId);
 			latestTime = GetNewerOriginTimeFromInfos(groundInfos, latestTime);
-			checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > pressureInfos = InfoOrganizer()->GetInfos(NFmiInfoData::kViewable, false, prodId);
+			std::vector<boost::shared_ptr<NFmiFastQueryInfo> > pressureInfos = InfoOrganizer()->GetInfos(NFmiInfoData::kViewable, false, prodId);
 			latestTime = GetNewerOriginTimeFromInfos(pressureInfos, latestTime);
-			checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > hybridInfos = InfoOrganizer()->GetInfos(NFmiInfoData::kHybridData, false, prodId);
+			std::vector<boost::shared_ptr<NFmiFastQueryInfo> > hybridInfos = InfoOrganizer()->GetInfos(NFmiInfoData::kHybridData, false, prodId);
 			latestTime = GetNewerOriginTimeFromInfos(hybridInfos, latestTime);
 		}
 		else
@@ -9086,36 +9202,15 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		PrepareForParamAddSystemUpdate();
 	}
 
-	std::string MakeCaseStudyMemoryFilename(void)
-	{
-		std::string pathAndFileName = SpecialFileStoragePath();
-		pathAndFileName += "CaseStudyMemory.csmeta";
-
-		return pathAndFileName;
-	}
-
-	bool LoadCaseStudyMemory(void)
-	{
-		std::string caseStudyFileName = MakeCaseStudyMemoryFilename();
-		if(NFmiFileSystem::FileExists(caseStudyFileName))
-		{
-			if(itsCaseStudySystem.ReadMetaData(caseStudyFileName, ApplicationInterface::GetSmartMetViewAsCView()))
-				return true;
-		}
-		// jos ei ollut tiedostoa, tai siellä oli puppua, yritetään talllettaa tässä perus-setti tiedostoon
-		StoreCaseStudyMemory();
-
-		return false;
-	}
-
 	bool StoreCaseStudyMemory(void)
 	{
 		if(itsCaseStudySystem.CategoriesData().size() > 0) // turha tallettaa mitään, jos CaseStudy-systeemiä ei ole edes alustettu
 		{
             if(itsCaseStudySystem.AreStoredMetaDataChanged(itsCaseStudySystemOrig))
             {
-			    std::string caseStudyFileName = MakeCaseStudyMemoryFilename();
-			    return itsCaseStudySystem.StoreMetaData(ApplicationInterface::GetSmartMetViewAsCView(), caseStudyFileName, true);
+				itsCaseStudySystemOrig = itsCaseStudySystem;
+				itsCaseStudySystem.UpdateValuesBackToWinRegistry(ApplicationWinRegistry().CaseStudySettingsWinRegistry());
+			    return true;
             }
 		}
 		return false;
@@ -9156,7 +9251,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsEditedDataParamDescriptor;
 	}
 
-	checkedVector<int>& DataLoadingProducerIndexVector(void)
+	std::vector<int>& DataLoadingProducerIndexVector(void)
 	{
 		return itsDataLoadingProducerIndexVector;
 	}
@@ -9340,8 +9435,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             if(GetWantedMapViewIdFlag(theMapViewDescTopIndex) == SmartMetViewId::MainMapView)
             {
                 // Jos kyse pääkarttanäytön zoomista, pitää myös päivittää asemadatataulukkonäyttöä, koska siihen laitetaan
-                // vain päkartalla näkyvät synop asemat.
-                ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::StationDataTableView);
+                // vain päkartalla näkyvät synop asemat ja Warning dialogia (HAKE sanomat näytetään pääkartan zoomin mukaan).
+                ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::StationDataTableView | SmartMetViewId::WarningCenterDlg);
             }
         }
    }
@@ -10012,7 +10107,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     {
         if(data)
         {
-            AddQueryData(data.release(), filePath, filePattern, NFmiInfoData::kObservations, "");
+			bool dataWasDeleted = false;
+			AddQueryData(data.release(), filePath, filePattern, NFmiInfoData::kObservations, "", false, dataWasDeleted);
         }
     }
 
@@ -10410,7 +10506,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	NFmiDataQualityChecker itsDataQualityChecker;
 	NFmiAnalyzeToolData itsAnalyzeToolData;
 	NFmiModelDataBlender itsModelDataBlender;
-	checkedVector<NFmiColor> itsGeneralColors; // Erilaisissa paikoissa on aiemmin käytetty luotausnäytön värisettiä hyväkseen kuvaamaan eri käyriä (aikasarja, trajektori, jne)
+	std::vector<NFmiColor> itsGeneralColors; // Erilaisissa paikoissa on aiemmin käytetty luotausnäytön värisettiä hyväkseen kuvaamaan eri käyriä (aikasarja, trajektori, jne)
 												// Nyt teen oman väri setin tälläiseen käyttöön, koska esim. LENissä on väritetty kaikki luotaukset mustaksi
 
 	ObsDataLoadedReporter itsObsDataLoadedReporter;
@@ -10433,18 +10529,21 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	bool itsShowToolTipTrajectoryView;
 
 	std::vector<std::string> itsSynopDataFilePatternSortOrderVector; // tämä on määrätty asetuksissa helpdatainfo.conf-tiedostossa.
-
-	CWnd *itsTransparencyContourDrawView; // tämä pitää asettaa aina kun joku näyttö piirtää isoviiva/contoureja. Tämän avulla piirretään
-											// läpinäkyvät parametrit pinellä kikalla ja Gdiplus-piirtoa hyväksi käyttäen.
-	NFmiSeaIcingWarningSystem itsSeaIcingWarningSystem;
-	NFmiConceptualModelData itsConceptualModelData; // rintama piirto ominaisuudet on täällä
+	// tämä pitää asettaa aina kun joku näyttö piirtää isoviiva/contoureja. Tämän avulla piirretään
+	// läpinäkyvät parametrit pinellä kikalla ja Gdiplus-piirtoa hyväksi käyttäen.
+	CWnd *itsTransparencyContourDrawView; 
+	// rintama piirto ominaisuudet on täällä
+	NFmiConceptualModelData itsConceptualModelData;
 	NFmiPoint itsOutOfEditedAreaTimeSerialPoint;
-	NFmiVPlaceDescriptor itsSoundingPlotLevels; // luotauksia piirretään karttanäytölle vain tiettyihin vakio painepinnoille
-	int itsDataToDBCheckMethod; // kun dataa lähetetään tietokantaan, kysytään lähetys dialogissa, mitä tarkastuus metodia
-								// halutaan käyttää. 1=datavalidation, 2= niin kuin asetuksissa sanotaan
-								// DBChecker ohitetaan tässä.
-	std::vector<NFmiProducer> itsExtraSoundingProducerList; // settingseissa on lista mahdollisista ylimääräisistä tuottajista,
-															// joita on tarkoitus katsella luotaus-näytöllä
+	// luotauksia piirretään karttanäytölle vain tiettyihin vakio painepinnoille
+	NFmiVPlaceDescriptor itsSoundingPlotLevels; 
+	// kun dataa lähetetään tietokantaan, kysytään lähetys dialogissa, mitä tarkastuus metodia
+	// halutaan käyttää. 1=datavalidation, 2= niin kuin asetuksissa sanotaan
+	// DBChecker ohitetaan tässä.
+	int itsDataToDBCheckMethod; 
+	// settingseissa on lista mahdollisista ylimääräisistä tuottajista,
+	// joita on tarkoitus katsella luotaus-näytöllä
+	std::vector<NFmiProducer> itsExtraSoundingProducerList; 
 	NFmiQ2Client itsQ2Client;
 	NFmiPoint itsStationDataGridSize; // missä hilassa asema/piste datan hilaus lasketaan
 
@@ -10532,7 +10631,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	bool fCPDataBackupUsed; // Tarkistus bitti sille onko jostain syystä pitänyt lukea kÿnnistyksen yhteydessä CP-datan backup. Tiedon avulla ei tarvitse lukea uudestaan Init vaiheessa CP-pisteitä (ja tuhota muutos käyriä).
 
-	checkedVector<int> itsDataLoadingProducerIndexVector; // tässä on tiedot siitä, mitä tuottajaa käytetään milläkin ajan hetkellä latauksen yhteydessä
+	std::vector<int> itsDataLoadingProducerIndexVector; // tässä on tiedot siitä, mitä tuottajaa käytetään milläkin ajan hetkellä latauksen yhteydessä
 
 	bool Printing(void){return fPrinting;};
 
@@ -10707,9 +10806,9 @@ bool NFmiEditMapGeneralDataDoc::Init(const NFmiBasicSmartMetConfigurations &theB
 
 
 void NFmiEditMapGeneralDataDoc::AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern,
-										int theType, const std::string& theNotificationStr, bool loadFromFileState)
+										int theType, const std::string& theNotificationStr, bool loadFromFileState, bool& dataWasDeleted)
 {
-	pimpl->AddQueryData(theData, theDataFileName, theDataFilePattern, NFmiInfoData::Type(theType), theNotificationStr, loadFromFileState);
+	pimpl->AddQueryData(theData, theDataFileName, theDataFilePattern, NFmiInfoData::Type(theType), theNotificationStr, loadFromFileState, dataWasDeleted);
 }
 
 boost::shared_ptr<NFmiDrawParam> NFmiEditMapGeneralDataDoc::DefaultEditedDrawParam(void)
@@ -11018,7 +11117,7 @@ int NFmiEditMapGeneralDataDoc::FilterDialogUpdateStatus(void){return pimpl->Filt
 void NFmiEditMapGeneralDataDoc::FilterDialogUpdateStatus(int newState){pimpl->FilterDialogUpdateStatus(newState);};
 bool NFmiEditMapGeneralDataDoc::UseTimeInterpolation(void){return pimpl->fUseTimeInterpolation;};
 void NFmiEditMapGeneralDataDoc::UseTimeInterpolation(bool newState){pimpl->fUseTimeInterpolation = newState;};
-bool NFmiEditMapGeneralDataDoc::DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, checkedVector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue)
+bool NFmiEditMapGeneralDataDoc::DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue)
 {
 	return pimpl->DoTimeSeriesValuesModifying(theModifiedDrawParam, NFmiMetEditorTypes::Mask(theUsedMask), theTimeDescriptor, theModificationFactorCurvePoints, theEditorTool, fUseSetForDiscreteData, theUnchangedValue);
 }
@@ -11078,7 +11177,7 @@ void NFmiEditMapGeneralDataDoc::LogMessage(const std::string& theMessage, CatLog
 void NFmiEditMapGeneralDataDoc::LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption, bool flushLogger)
 { pimpl->LogAndWarnUser(theMessageStr, theDialogTitleStr, severity, category, justLog, addAbortOption, flushLogger); }
 
-void NFmiEditMapGeneralDataDoc::SetDataLoadingProducerIndexVector(const checkedVector<int>& theIndexVector)
+void NFmiEditMapGeneralDataDoc::SetDataLoadingProducerIndexVector(const std::vector<int>& theIndexVector)
 {
 	pimpl->SetDataLoadingProducerIndexVector(theIndexVector);
 }
@@ -11585,14 +11684,14 @@ void NFmiEditMapGeneralDataDoc::ResetOutOfEditedAreaTimeSerialPoint(void)
 	pimpl->ResetOutOfEditedAreaTimeSerialPoint();
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters)
+boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters)
 {
 	return pimpl->GetNearestSynopStationInfo(theLocation, theTime, ignoreTime, thePossibleInfoVector, maxDistanceInMeters);
 }
 
-void NFmiEditMapGeneralDataDoc::OnButtonRefresh(void)
+void NFmiEditMapGeneralDataDoc::OnButtonRefresh(const std::string& message)
 {
-	pimpl->OnButtonRefresh();
+	pimpl->OnButtonRefresh(message);
 }
 
 void NFmiEditMapGeneralDataDoc::OnChangeMapType(unsigned int theDescTopIndex, bool fForward)
@@ -11633,11 +11732,6 @@ NFmiQ2Client& NFmiEditMapGeneralDataDoc::Q2Client(void)
 bool NFmiEditMapGeneralDataDoc::UseQ2Server(void)
 {return pimpl->UseQ2Server();}
 
-NFmiSeaIcingWarningSystem& NFmiEditMapGeneralDataDoc::SeaIcingWarningSystem(void)
-{
-	return pimpl->SeaIcingWarningSystem();
-}
-
 NFmiWindTableSystem& NFmiEditMapGeneralDataDoc::WindTableSystem(void)
 {
 	return pimpl->WindTableSystem();
@@ -11663,7 +11757,7 @@ CWnd* NFmiEditMapGeneralDataDoc::TransparencyContourDrawView(void)
 	return pimpl->TransparencyContourDrawView();
 }
 
-checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > NFmiEditMapGeneralDataDoc::GetSortedSynopInfoVector(int theProducerId, int theProducerId2, int theProducerId3, int theProducerId4)
+std::vector<boost::shared_ptr<NFmiFastQueryInfo> > NFmiEditMapGeneralDataDoc::GetSortedSynopInfoVector(int theProducerId, int theProducerId2, int theProducerId3, int theProducerId4)
 {
 	return pimpl->GetSortedSynopInfoVector(theProducerId, theProducerId2, theProducerId3, theProducerId4);
 }
@@ -12097,7 +12191,7 @@ NFmiParamDescriptor& NFmiEditMapGeneralDataDoc::EditedDataParamDescriptor(void)
 	return pimpl->EditedDataParamDescriptor();
 }
 
-checkedVector<int>& NFmiEditMapGeneralDataDoc::DataLoadingProducerIndexVector(void)
+std::vector<int>& NFmiEditMapGeneralDataDoc::DataLoadingProducerIndexVector(void)
 {
 	return pimpl->DataLoadingProducerIndexVector();
 }

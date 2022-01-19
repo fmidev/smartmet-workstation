@@ -52,7 +52,7 @@
  * Respectively, resulting interpolated value is stored in an other private variable.
  *
  *_____________________________________________________________________________
- * 2.4	void First(void)
+ * 2.4	void First()
  *
  * Sets the current list item (=list sub range) index to zero
  *

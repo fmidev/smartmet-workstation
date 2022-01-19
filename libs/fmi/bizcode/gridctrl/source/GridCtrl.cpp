@@ -7517,7 +7517,7 @@ void CGridCtrl::EndEditing()
 void CGridCtrl::OnEndEditCell(int nRow, int nCol, CString str)
 {
     CString strCurrentText = GetItemText(nRow, nCol);
-    if (strCurrentText != str)
+    if (strCurrentText != str || m_bAllowNonChangingEdit_Marko)
     {
         SetItemText(nRow, nCol, str);
         if (ValidateEdit(nRow, nCol, str) && 

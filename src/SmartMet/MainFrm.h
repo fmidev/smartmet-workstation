@@ -41,6 +41,7 @@ const int kFmiGenerateBetaProductsTimer = 18;
 const int kFmiParameterSelectionSystemUpdateTimer = 19;
 const int kFmiLoggingSystemManagementTimer = 20;
 const int kFmiNewQueryDataReadUpdateViewsTimer = 21;
+const int kFmiOneTimeWmsBasedDataUpdateTimer = 22;
 
 class CMainFrame : public CFmiUsedFrameWndParent
 {
@@ -71,6 +72,7 @@ public:
 	void DoAppDataBaseCollection(int theAction);
     static std::string MakeUsedWinRegistryKeyStr(unsigned int /* theMapViewDescTopIndex */) {return ViewPosRegistryInfo().WinRegistryKeyStr();}
     void ParameterSelectionSystemUpdateTimerStart(int waitTimeInSeconds);
+	static void SetToDoFirstTimeWmsDataBasedUpdate();
 
 // Overrides
 public:
@@ -117,6 +119,7 @@ protected:  // control bar embedded members
     UINT itsGenerateBetaProductsTimer;
     UINT itsParameterSelectionSystemUpdateTimer;
     UINT itsLoggingSystemManagementTimer;
+	UINT itsOneTimeWmsBasedDataUpdateTimer;
     
 	NFmiEditMapGeneralDataDoc* itsDoc; // ei omista, ei tuhoa
 	CBitmap *itsRedFlagBitmap;
@@ -147,7 +150,6 @@ protected:
 	virtual BOOL OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult);
 	void OnWorkinThreadDataRead2(void);
 	void GetNewWarningMessages(void);
-	void GetNewSeaIcingMessages(void);
 	void DoMacroParamUpdate(void);
 
 #ifndef FMI_DISABLE_MFC_FEATURE_PACK

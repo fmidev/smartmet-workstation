@@ -12,7 +12,7 @@
 class NFmiInfoModifier;
 
 //! Undocumented
-class _FMI_DLL NFmiModifiedDataIterator : public NFmiRelativeDataIterator
+class NFmiModifiedDataIterator : public NFmiRelativeDataIterator
 {
  public:
   virtual ~NFmiModifiedDataIterator();

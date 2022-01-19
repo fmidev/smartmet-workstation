@@ -11,7 +11,7 @@
 
 //! Undocumented
 
-class _FMI_DLL NFmiRelativeDataIterator : public NFmiDataIterator
+class NFmiRelativeDataIterator : public NFmiDataIterator
 {
  public:
   virtual ~NFmiRelativeDataIterator();

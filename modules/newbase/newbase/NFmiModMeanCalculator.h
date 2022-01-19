@@ -8,7 +8,7 @@
 
 #include "NFmiGlobals.h"
 
-class _FMI_DLL NFmiModMeanCalculator
+class NFmiModMeanCalculator
 {
  public:
   NFmiModMeanCalculator(float theModulo = 360);

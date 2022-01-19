@@ -316,7 +316,7 @@ NFmiViewSettingMacro::MaskSettings::MaskSettings(void)
 {
 }
 
-NFmiViewSettingMacro::MaskSettings::MaskSettings(const checkedVector<Mask> &theMasks, bool theShowMasksOnMapView, bool theUseMasksInTimeSerialViews, bool theUseMasksWithFilterTool, bool theUseMaskWithBrush)
+NFmiViewSettingMacro::MaskSettings::MaskSettings(const std::vector<Mask> &theMasks, bool theShowMasksOnMapView, bool theUseMasksInTimeSerialViews, bool theUseMasksWithFilterTool, bool theUseMaskWithBrush)
 :itsMasks(theMasks)
 ,fShowMasksOnMapView(theShowMasksOnMapView)
 ,fUseMasksInTimeSerialViews(theUseMasksInTimeSerialViews)
@@ -358,7 +358,7 @@ void NFmiViewSettingMacro::MaskSettings::Add(const Mask &theMask)
 void NFmiViewSettingMacro::MaskSettings::Write(std::ostream& os) const
 {
 	os << "// NFmiViewSettingMacro::MaskSettings::Write..." << endl;
-	os << "// checkedVector<Mask>" << endl;
+	os << "// std::vector<Mask>" << endl;
 	NFmiDataStoringHelpers::WriteContainer(itsMasks, os, string("\n"));
 	os << "// ShowMasksOnMapView UseMasksInTimeSerialViews fUseMasksWithFilterTool fUseMaskWithBrush" << endl;
 	os << fShowMasksOnMapView << " " << fUseMasksInTimeSerialViews << " " << fUseMasksWithFilterTool << " " << fUseMaskWithBrush << endl;
@@ -396,7 +396,7 @@ NFmiViewSettingMacro::MapRow::MapRow(void)
 {
 }
 
-NFmiViewSettingMacro::MapRow::MapRow(const checkedVector<Param>& theParams)
+NFmiViewSettingMacro::MapRow::MapRow(const std::vector<NFmiViewSettingMacro::Param>& theParams)
 :itsRowParams(theParams)
 {
 }
@@ -436,7 +436,7 @@ void NFmiViewSettingMacro::MapRow::SetMacroParamInitFileNames(const std::string 
 void NFmiViewSettingMacro::MapRow::Write(std::ostream& os) const
 {
 	os << "// NFmiViewSettingMacro::MapRow::Write..." << endl;
-	os << "// checkedVector<Param> itsRowParams" << endl;
+	os << "// std::vector<Param> itsRowParams" << endl;
 	NFmiDataStoringHelpers::WriteContainer(itsRowParams, os, string("\n"));
 
 	if(os.fail())
@@ -464,6 +464,44 @@ NFmiViewSettingMacro::TimeViewRow::~TimeViewRow(void)
 {
 }
 
+std::string removeComments(const std::string &prgm)
+{
+	int n = static_cast<int>(prgm.length());
+	std::string res;
+
+	// Flags to indicate that single line and multiple line comments
+	// have started or not.
+	bool s_cmt = false;
+	bool m_cmt = false;
+
+
+	// Traverse the given program
+	for(int i = 0; i < n; i++)
+	{
+		// If single line comment flag is on, then check for end of it
+		if(s_cmt == true && prgm[i] == '\n')
+			s_cmt = false;
+
+		// If multiple line comment is on, then check for end of it
+		else if(m_cmt == true && prgm[i] == '*' && prgm[i + 1] == '/')
+			m_cmt = false, i++;
+
+		// If this character is in a comment, ignore it
+		else if(s_cmt || m_cmt)
+			continue;
+
+		// Check for beginning of comments and set the approproate flags
+		else if(prgm[i] == '/' && prgm[i + 1] == '/')
+			s_cmt = true, i++;
+		else if(prgm[i] == '/' && prgm[i + 1] == '*')
+			m_cmt = true, i++;
+
+		// If current character is a non-comment character, append it to res
+		else  res += prgm[i];
+	}
+	return res;
+}
+
 void NFmiViewSettingMacro::TimeViewRow::Write(std::ostream& os) const
 {
 	os << "// NFmiViewSettingMacro::TimeViewRow::Write..." << endl;
@@ -473,6 +511,13 @@ void NFmiViewSettingMacro::TimeViewRow::Write(std::ostream& os) const
 	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
 	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
 	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+
+	// 1. lisättynä ominaisuutena on lista side-parametereista yhtenä stringinä (HUOM! pakko lisätä myös tyhjä lista)
+	std::stringstream stringOut;
+	NFmiDataStoringHelpers::WriteContainer(itsSideParameters, stringOut, string("\n"));
+	// Huom! talletettavasta stringistä pitää myös poistaa kaikki kommentit ensin, muuten homma ei toimi!!!
+	extraData.Add(::removeComments(stringOut.str()));
+
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
@@ -493,6 +538,14 @@ void NFmiViewSettingMacro::TimeViewRow::Read(std::istream& is)
 	is >> extraData;
 	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
 	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+
+	// 1. lisättynä ominaisuutena on lista side-parametereista yhtenä stringinä
+	itsSideParameters.clear();
+	if(extraData.itsStringValues.size() >= 1)
+	{
+		std::stringstream stringIn(extraData.itsStringValues[0]);
+		NFmiDataStoringHelpers::ReadContainer(itsSideParameters, stringIn);
+	}
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -626,7 +679,7 @@ void NFmiViewSettingMacro::CrossSectionView::Write(std::ostream& os) const
 {
 
 	os << "// NFmiViewSettingMacro::CrossSectionView::Write..." << endl;
-	os << "// checkedVector<MapRow> itsMapRowSettings" << endl;
+	os << "// std::vector<MapRow> itsMapRowSettings" << endl;
 	NFmiDataStoringHelpers::WriteContainer(itsMapRowSettings, os, string("\n"));
 	os << "// AbsolutRect" << endl;
 	os << itsAbsolutRect;
@@ -705,6 +758,31 @@ void NFmiViewSettingMacro::TimeView::SetAllParams(NFmiDrawParamList *theDrawPara
 	}
 }
 
+static std::vector<NFmiViewSettingMacro::Param> MakeParamVector(NFmiDrawParamList& theDrawParamList)
+{
+	std::vector<NFmiViewSettingMacro::Param> paramVector;
+	for(theDrawParamList.Reset(); theDrawParamList.Next(); )
+	{
+		auto drawParam = theDrawParamList.Current();
+		NFmiViewSettingMacro::Param param(drawParam, drawParam->Level(), drawParam->DataType(), 0);
+		paramVector.push_back(param);
+	}
+	return paramVector;
+}
+
+void NFmiViewSettingMacro::TimeView::SetAllSideParameters(CombinedMapHandlerInterface::SideParametersContainer& theSideParameterList)
+{
+	size_t rowIndex = 0;
+	for(const auto& sideParameters : theSideParameterList)
+	{
+		if(rowIndex < itsRows.size())
+		{
+			itsRows[rowIndex].SideParameters(::MakeParamVector(*sideParameters));
+		}
+		rowIndex++;
+	}
+}
+
 void NFmiViewSettingMacro::TimeView::Clear(void)
 {
 	itsRows.clear();
@@ -718,7 +796,7 @@ void NFmiViewSettingMacro::TimeView::Add(const TimeViewRow &theTimeViewRow)
 void NFmiViewSettingMacro::TimeView::Write(std::ostream& os) const
 {
 	os << "// NFmiViewSettingMacro::TimeView::Write..." << endl;
-	os << "// checkedVector<TimeViewRow> itsRows" << endl;
+	os << "// std::vector<TimeViewRow> itsRows" << endl;
 	NFmiDataStoringHelpers::WriteContainer(itsRows, os, string("\n"));
 	os << "// AbsolutRect" << endl;
 	os << itsAbsolutRect;
@@ -754,6 +832,8 @@ void NFmiViewSettingMacro::TimeView::Read(std::istream& is)
 
     // toivottavasti olet poistanut kommentit luettavasta streamista!!
 	NFmiDataStoringHelpers::ReadContainer(itsRows, is);
+	if(is.fail())
+		throw runtime_error(exceptionErrorMessage);
 	is >> itsAbsolutRect;
     ::ReadMfcViewStatus(is, itsViewStatus);
 	is >> fShowHelpData;
@@ -1415,12 +1495,12 @@ void NFmiViewSettingMacro::MapViewDescTop::SetMacroParamInitFileNames(const std:
 	std::for_each(itsMapRowSettings.begin(), itsMapRowSettings.end(), SetMacroParamInitFileNamesFunctor(theRootPath));
 }
 
-void NFmiViewSettingMacro::MapViewDescTop::Clear(checkedVector<MapRow> &theMapRowSettings)
+void NFmiViewSettingMacro::MapViewDescTop::Clear(std::vector<MapRow> &theMapRowSettings)
 {
 	theMapRowSettings.clear();
 }
 
-void NFmiViewSettingMacro::MapViewDescTop::Add(checkedVector<MapRow> &theMapRowSettings, const MapRow &theMapRow)
+void NFmiViewSettingMacro::MapViewDescTop::Add(std::vector<MapRow> &theMapRowSettings, const MapRow &theMapRow)
 {
 	theMapRowSettings.push_back(theMapRow);
 }
@@ -1433,7 +1513,7 @@ void NFmiViewSettingMacro::MapViewDescTop::SetMapViewDescTop(const NFmiMapViewDe
 // tutkii missä näyttö rivissä on viimeiset parametrit. Tällä pyritään säästämään
 // talletuksissa, että jos vaikka 3. rivin jälkeen ei ole parametreja, ei tallleteta tyhjiä rivejä sen jälkeen,
 // koska tyhjätkin rivit vievät tilaa.
-static int CalcStoredMapRowCount(const checkedVector<NFmiViewSettingMacro::MapRow> &theMapRowSettings)
+static int CalcStoredMapRowCount(const std::vector<NFmiViewSettingMacro::MapRow> &theMapRowSettings)
 {
 	size_t totalSize = theMapRowSettings.size();
 	size_t lastRowWithParams = 0;
@@ -1459,7 +1539,7 @@ void NFmiViewSettingMacro::MapViewDescTop::Write(std::ostream& os) const
     NFmiDataStoringHelpers::WriteContainer(itsMapRowSettings, os, string("\n"), mapRowWriteSize);
 
 	os << "// vector<MapRow> ExtraMapRowSettings" << endl;
-    checkedVector<MapRow> emptyLegacyMapRowSettings; //  Pakko tallettaa tyhjä vektori näyttömakroon taaksepäin yhteensopivuuden takia
+    std::vector<MapRow> emptyLegacyMapRowSettings; //  Pakko tallettaa tyhjä vektori näyttömakroon taaksepäin yhteensopivuuden takia
     NFmiDataStoringHelpers::WriteContainer(emptyLegacyMapRowSettings, os, string("\n"), 0);
 
 	os << "// MapViewDescTop" << endl;
@@ -1482,7 +1562,7 @@ void NFmiViewSettingMacro::MapViewDescTop::Write(std::ostream& os) const
 // Tämä on legacy funktio, jolla siirretään legacy-extraMapRow:iin talletetut rivit päävektoriin.
 // Jos theLegacyExtraMapRowSettings vektorissa on tavaraa, siirretään ne theMapRowSettings:in perään.
 // Jos theMapRowSettings:in koko on pienempi kuin preferredSizeAfterExtraRowsAreAppended, kasvata sen kokoa annettuun lukuun.
-static void CombineMapRowSettings(checkedVector<NFmiViewSettingMacro::MapRow> &theMapRowSettings, checkedVector<NFmiViewSettingMacro::MapRow> &theLegacyExtraMapRowSettings, int preferredSizeAfterExtraRowsAreAppended)
+static void CombineMapRowSettings(std::vector<NFmiViewSettingMacro::MapRow> &theMapRowSettings, std::vector<NFmiViewSettingMacro::MapRow> &theLegacyExtraMapRowSettings, int preferredSizeAfterExtraRowsAreAppended)
 {
     if(theLegacyExtraMapRowSettings.size())
     {
@@ -1506,7 +1586,7 @@ void NFmiViewSettingMacro::MapViewDescTop::Read(std::istream& is)
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 
-    checkedVector<MapRow> legacyExtraMapRowSettings; //  Pakko lukea näyttömakroista mahdolliset extraParamit taaksepäin yhteensopivuuden takia
+    std::vector<MapRow> legacyExtraMapRowSettings; //  Pakko lukea näyttömakroista mahdolliset extraParamit taaksepäin yhteensopivuuden takia
 	NFmiDataStoringHelpers::ReadContainer(legacyExtraMapRowSettings, is);
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);

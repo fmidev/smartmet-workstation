@@ -53,32 +53,15 @@ bool NFmiStationSimpleWeatherView::PrepareForStationDraw(void)
 {
 	bool status = NFmiStationView::PrepareForStationDraw();
 	if(fDoTimeInterpolation)
-	{ // jos tarvitaan aikainterpolaatiota, pitää tehdä jippo tässä ja asettaa totalwind päälle
-		if(!itsInfo->Param(kFmiWeatherAndCloudiness)) // yritetään laittaa totalwind parametri päälle jos pitää tehdä aikainterpolaatiota
-			itsInfo->Param(itsParamId); // jos datassa ei ole totalwindiä, paluta windvector päälle
+	{ 
+		// jos tarvitaan aikainterpolaatiota, pitää tehdä jippo tässä ja asettaa totalwind päälle
+		if(!itsInfo->Param(kFmiWeatherAndCloudiness)) // yritetään laittaa WeatherAndCloudiness parametri päälle jos pitää tehdä aikainterpolaatiota
+			itsInfo->Param(itsParamId); // jos datassa ei ole totalwindiä, palauta originaali parametri takaisin
 	}
 	return status;
 }
 
-void NFmiStationSimpleWeatherView::DrawData(void)
-{
-	DrawSymbol();
-}
-
-void NFmiStationSimpleWeatherView::DrawSymbol(void)
-{
-	NFmiRect rect(CurrentDataRect());
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(1,0,0));
-	itsDrawingEnvironment->DisableFill();
-	float value = ViewFloatValue();
-	NFmiSimpleWeatherSymbol((short)value
-                          ,rect
-                          ,itsToolBox
-						  ,0
-						  ,itsDrawingEnvironment).Build();
-}
-
-float NFmiStationSimpleWeatherView::ViewFloatValue(void)
+float NFmiStationSimpleWeatherView::ViewFloatValue(bool )
 {
 	float value = kFloatMissing;
 	if(itsInfo)
@@ -111,4 +94,25 @@ void NFmiStationSimpleWeatherView::ModifyTextEnvironment(void)
     itsDrawingEnvironment->SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 48), itsCtrlViewDocumentInterface->Printing()));
 }
 
+NFmiPoint NFmiStationSimpleWeatherView::SbdCalcFixedSymbolSize() const
+{
+	return SbdBasicSymbolSizeCalculation(12, 48);
+}
 
+NFmiSymbolBulkDrawType NFmiStationSimpleWeatherView::SbdGetDrawType() const
+{
+	return NFmiSymbolBulkDrawType::HessaaSymbol;
+}
+
+NFmiSymbolColorChangingType NFmiStationSimpleWeatherView::SbdGetSymbolColorChangingType() const
+{
+	return NFmiSymbolColorChangingType::Never;
+}
+
+NFmiPoint NFmiStationSimpleWeatherView::SbdCalcDrawObjectOffset() const
+{
+	NFmiPoint offset = CurrentDataRect().Center();
+	// CurrentDataRect:issa on mukana symbolipiirtoon liittyvät offsetit.
+	offset -= CurrentStationPosition();
+	return offset;
+}

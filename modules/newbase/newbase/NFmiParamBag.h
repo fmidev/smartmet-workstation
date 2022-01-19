@@ -8,18 +8,17 @@
 #pragma once
 
 #include "NFmiDataIdent.h"
-#include "NFmiDataMatrix.h"
 #include "NFmiParameterName.h"
 #include "NFmiSize.h"
 
 //! Undocumented
-class _FMI_DLL NFmiParamBag : public NFmiSize
+class NFmiParamBag : public NFmiSize
 {
  public:
-  virtual ~NFmiParamBag(void);
-  void Destroy(void);
+  virtual ~NFmiParamBag();
+  void Destroy();
 
-  NFmiParamBag(void);
+  NFmiParamBag();
   NFmiParamBag(FmiParameterName *theParamArray, unsigned long numberOfParams);
   NFmiParamBag(NFmiDataIdent *theParamArray, unsigned long numberOfParams);
   NFmiParamBag(const NFmiParamBag &theBag);
@@ -28,22 +27,22 @@ class _FMI_DLL NFmiParamBag : public NFmiSize
   bool operator==(const NFmiParamBag &theParam) const;
 
   virtual void Reset(FmiDirection directionToIter = kForward);
-  virtual bool First(void);
-  bool Next(void);
+  virtual bool First();
+  bool Next();
   bool Next(bool fIgnoreSubParam);  // = true);
-  bool Previous(void);
+  bool Previous();
   bool Previous(bool fIgnoreSubParam);  // =true);
 
-  FmiParameterName CurrentParam(void) const;
-  const NFmiString CurrentParamName(void) const;
+  FmiParameterName CurrentParam() const;
+  const NFmiString CurrentParamName() const;
   bool SetCurrent(FmiParameterName theParam, bool fIgnoreSubParam = true);
   bool SetCurrent(unsigned long theParam, bool fIgnoreSubParam = true);
 
   bool Add(const NFmiDataIdent &theParam, bool fCheckNoDuplicateParams = false);
-  bool Remove(void);
+  bool Remove();
 
-  const NFmiDataIdent *GetFirst(void) const;
-  const NFmiDataIdent *GetLast(void) const;
+  const NFmiDataIdent *GetFirst() const;
+  const NFmiDataIdent *GetLast() const;
 
   NFmiDataIdent *Current(bool fIgnoreSubParam = true) const;
   NFmiDataIdent *Param(unsigned long theIndex, bool fIgnoreSubParam = true) const;
@@ -55,15 +54,15 @@ class _FMI_DLL NFmiParamBag : public NFmiSize
 
   void SetProducer(const NFmiProducer &newProducer);
 
-  bool IsSubParamUsed(void) const;
+  bool IsSubParamUsed() const;
   bool FindSubParam(const NFmiParam &theParam);
   bool FindSubParam(const NFmiDataIdent &theDataIdent);
 
   virtual const NFmiParamBag Combine(const NFmiParamBag &theBag);
 
   bool NextActive(bool fIgnoreSubParam = true);
-  bool NextData(void);
-  unsigned long SizeOfActive(void);
+  bool NextData();
+  unsigned long SizeOfActive();
   bool SetActive(const NFmiParam &theParam, bool isActive, bool fIgnoreSubParam = true);
   bool SetActive(unsigned long theIndex, bool isActive, bool fIgnoreSubParam = true);
   bool SetCurrentActive(bool isActive, bool fIgnoreSubParam = true);
@@ -78,11 +77,11 @@ class _FMI_DLL NFmiParamBag : public NFmiSize
   virtual std::ostream &Write(std::ostream &file) const;
   virtual std::istream &Read(std::istream &file);
 
-  virtual const char *ClassName(void) const { return "NFmiParamBag"; }
-  const checkedVector<NFmiDataIdent>& ParamsVector() const { return itsParamsVector; }
+  virtual const char *ClassName() const { return "NFmiParamBag"; }
+  const std::vector<NFmiDataIdent>& ParamsVector() const { return itsParamsVector; }
 
  private:
-  checkedVector<NFmiDataIdent> itsParamsVector;
+  std::vector<NFmiDataIdent> itsParamsVector;
   bool fIsSubParamUsed;
   NFmiDataIdent *itsUsedSubParam;
 
@@ -94,7 +93,7 @@ class _FMI_DLL NFmiParamBag : public NFmiSize
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiParamBag::First(void)
+inline bool NFmiParamBag::First()
 {
   fIsSubParamUsed = false;
   return NFmiSize::First();
@@ -106,7 +105,7 @@ inline bool NFmiParamBag::First(void)
  */
 // ----------------------------------------------------------------------
 
-inline const NFmiString NFmiParamBag::CurrentParamName(void) const
+inline const NFmiString NFmiParamBag::CurrentParamName() const
 {
   return itsParamsVector[itsIndex].GetParamName();
 }
@@ -117,7 +116,7 @@ inline const NFmiString NFmiParamBag::CurrentParamName(void) const
  */
 // ----------------------------------------------------------------------
 
-inline const NFmiDataIdent *NFmiParamBag::GetFirst(void) const
+inline const NFmiDataIdent *NFmiParamBag::GetFirst() const
 {
   return GetSize() ? &itsParamsVector[0] : 0;
 }
@@ -128,7 +127,7 @@ inline const NFmiDataIdent *NFmiParamBag::GetFirst(void) const
  */
 // ----------------------------------------------------------------------
 
-inline const NFmiDataIdent *NFmiParamBag::GetLast(void) const
+inline const NFmiDataIdent *NFmiParamBag::GetLast() const
 {
   return GetSize() ? &itsParamsVector[GetSize() - 1] : 0;
 }
@@ -139,7 +138,7 @@ inline const NFmiDataIdent *NFmiParamBag::GetLast(void) const
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiParamBag::IsSubParamUsed(void) const { return fIsSubParamUsed; }
+inline bool NFmiParamBag::IsSubParamUsed() const { return fIsSubParamUsed; }
 // ----------------------------------------------------------------------
 /*!
  * Output operator for class NFmiParamBag
@@ -172,7 +171,7 @@ inline std::istream &operator>>(std::istream &file, NFmiParamBag &ob) { return o
  */
 // ----------------------------------------------------------------------
 
-inline FmiParameterName NFmiParamBag::CurrentParam(void) const
+inline FmiParameterName NFmiParamBag::CurrentParam() const
 {
   return FmiParameterName(Current()->GetParam()->GetIdent());
 }

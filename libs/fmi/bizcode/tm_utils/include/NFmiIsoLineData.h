@@ -53,7 +53,7 @@ public:
 	// value matriisi
 	NFmiDataMatrix<float> itsUserDrawValuesMatrix;
 	// Vektori johon on sijoitettu kaikki matriisin arvot siin‰ j‰rjestyksess‰ kuin toolmaster userDraw funktio ne haluaa
-	checkedVector<float> itsUserDrawValues; 
+	std::vector<float> itsUserDrawValues; 
 
 	// UserDraw value matriisin min/max arvot
 	float itsDataMinValue = 3.4E+38f;
@@ -76,7 +76,7 @@ public:
 
 	// Data osiot on laitettu t‰‰ll‰ julkisiksi
 	// ========================================
-	checkedVector<float> itsVectorFloatGridData; // itsYNumber * itsXNumber float gridded data
+	std::vector<float> itsVectorFloatGridData; // itsYNumber * itsXNumber float gridded data
 	int itsXNumber = 0;
 	int itsYNumber = 0;
 

@@ -15,14 +15,15 @@
 
 #include <newbase/NFmiHPlaceDescriptor.h>
 #include <newbase/NFmiStation.h>
+#include <map>
 
 class NFmiRawTempStationInfoSystem
 {
  public:
-  NFmiRawTempStationInfoSystem(void) : itsInitLogMessage(), itsLocations() {}
+  NFmiRawTempStationInfoSystem() : itsInitLogMessage(), itsLocations() {}
   void Init(const std::string &theInitFileName);
-  NFmiHPlaceDescriptor &Locations(void) { return itsLocations; }
-  const std::string &InitLogMessage(void) const { return itsInitLogMessage; }
+  NFmiHPlaceDescriptor &Locations() { return itsLocations; }
+  const std::string &InitLogMessage() const { return itsInitLogMessage; }
  private:
   std::string
       itsInitLogMessage;  // onnistuneen initialisoinnin viesti, missä voi olla varoituksia lokiin.
@@ -41,15 +42,15 @@ class NFmiSilamStationList
     std::string itsInfo;
   };
 
-  NFmiSilamStationList(void) : itsInitLogMessage(), itsLocations() {}
+  NFmiSilamStationList() : itsInitLogMessage(), itsLocations() {}
   void Init(const std::string &theInitFileName);
-  void Clear(void);
-  checkedVector<NFmiSilamStationList::Station> &Locations(void) { return itsLocations; }
-  const std::string &InitLogMessage(void) const { return itsInitLogMessage; }
+  void Clear();
+  std::vector<NFmiSilamStationList::Station> &Locations() { return itsLocations; }
+  const std::string &InitLogMessage() const { return itsInitLogMessage; }
  private:
   std::string
       itsInitLogMessage;  // onnistuneen initialisoinnin viesti, missä voi olla varoituksia lokiin.
-  checkedVector<NFmiSilamStationList::Station> itsLocations;
+  std::vector<NFmiSilamStationList::Station> itsLocations;
 };
 
 // Tähän puretaan NOAA:n taulukost asema rivi, esim:
@@ -57,7 +58,7 @@ class NFmiSilamStationList
 class NFmiWmoStation
 {
  public:
-  NFmiWmoStation(void)
+  NFmiWmoStation()
       : itsWmoId(0)  // jostain syystä "Buckland, Buckland Airport" asemalla on 0 id, joten 0:aa ei
                      // voi pitää puuttuvan aseman arvona
         ,
@@ -70,7 +71,7 @@ class NFmiWmoStation
   {
   }
 
-  bool IsValid(void) const { return itsName.empty() == false; }
+  bool IsValid() const { return itsName.empty() == false; }
   long itsWmoId;           // wmo-id esim 2792 (= 02-974)
   std::string itsName;     // Helsinki-Vantaa
   std::string itsIcaoStr;  // icao tunnus EFHK
@@ -82,9 +83,9 @@ class NFmiWmoStation
 class NFmiWmoStationLookUpSystem
 {
  public:
-  NFmiWmoStationLookUpSystem(void);
+  NFmiWmoStationLookUpSystem();
   void Init(const std::string &theInitFileName, int theStationCountHint = -1);
-  const std::string &InitLogMessage(void) const { return itsInitLogMessage; }
+  const std::string &InitLogMessage() const { return itsInitLogMessage; }
   const NFmiWmoStation &GetStation(long theWmoId);
 
  private:

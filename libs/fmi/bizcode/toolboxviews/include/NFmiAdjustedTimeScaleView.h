@@ -7,7 +7,6 @@
 #pragma once
 
 #include "NFmiTimeScaleView.h"
-#include "NFmiDataMatrix.h"
 
 class ToolboxViewsInterface;
 //_________________________________________________________ NFmiAdjustedTimeScaleView
@@ -49,7 +48,7 @@ class NFmiAdjustedTimeScaleView : public NFmiTimeScaleView
 	int CalcSkipTickMarkValue(int theStepNumber);
 	int CalcSkipDaysValue(int theTotalDayCount);
 	double GetNormalToCurrentViewPixelRatio(void);
-	int GetFinalSkipValue(int theCurrentValue, checkedVector<int> &theValues, int theMaxValue);
+	int GetFinalSkipValue(int theCurrentValue, std::vector<int> &theValues, int theMaxValue);
 	double CalcTimeScaleWidthInMM(void);
 	void DrawWallClockRectangle(void);
 	double RelativeXToMM(double theRelativeXLength);

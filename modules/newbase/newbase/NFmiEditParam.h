@@ -17,7 +17,7 @@ enum FmiMaskMethod
 };
 
 //! Undocumented class, with stupid interface
-class _FMI_DLL NFmiEditParam : public NFmiParam
+class NFmiEditParam : public NFmiParam
 {
  public:
   virtual ~NFmiEditParam();

@@ -760,7 +760,7 @@ float NFmiSoundingIndexCalculator::Calc(const boost::shared_ptr<NFmiFastQueryInf
   return kFloatMissing;
 }
 
-static const NFmiParamDescriptor &GetSoundingIndexParams(void)
+static const NFmiParamDescriptor &GetSoundingIndexParams()
 {
   static bool firstTime = true;
   static NFmiParamDescriptor soundingParams;

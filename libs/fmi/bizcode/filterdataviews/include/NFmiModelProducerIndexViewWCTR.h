@@ -11,7 +11,6 @@
 #include "NFmiModelCombineStatusView.h"
 #include "NFmiTimeDescriptor.h"
 #include "NFmiPoint.h"
-#include "NFmiDataMatrix.h"
 
 class NFmiQueryInfo;
 class NFmiStepTimeScale;
@@ -23,33 +22,33 @@ class NFmiModelProducerIndexViewWCTR : public NFmiModelCombineStatusView
 {
 
 public:
-	void Draw(NFmiToolBox * theGTB);
+	void Draw(NFmiToolBox * theGTB) override;
 	NFmiModelProducerIndexViewWCTR(NFmiToolBox * theToolBox
 							 ,NFmiDrawingEnvironment * theDrawingEnvi
 							 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 							 ,const NFmiRect& theRect);
-	virtual  ~NFmiModelProducerIndexViewWCTR();
-	void Update(void);
-	void SetDataFromDialog(	 checkedVector<boost::shared_ptr<NFmiQueryInfo> > &theQueryInfoVector
+	~NFmiModelProducerIndexViewWCTR();
+	void Update(void) override;
+	void SetDataFromDialog(	 std::vector<boost::shared_ptr<NFmiQueryInfo> > &theQueryInfoVector
 							,const NFmiTimeDescriptor& theLoadedDataTimeDescriptor
-							,const checkedVector<int>& theSelectedProducerPriorityTable
-							,const checkedVector<NFmiColor>& theProducerColorTable
+							,const std::vector<int>& theSelectedProducerPriorityTable
+							,const std::vector<NFmiColor>& theProducerColorTable
 							,int theActiveProducerIndex);
 
 	void ActiveProducerIndex(int newValue){itsActiveProducerIndex = newValue;}
-	const checkedVector<int>& ProducerIndexInTimeVector(void) const {return itsProducerIndexInTimeVector;};
+	const std::vector<int>& ProducerIndexInTimeVector(void) const {return itsProducerIndexInTimeVector;};
 	bool IsProducerIndexInTimeVectorFilled(void);
 	bool SelectSecondProducerFromThisTimeOn(int theTimeIndex);
 
-	bool LeftButtonDown(const NFmiPoint &thePlace, unsigned long theKey);
-	bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-	bool RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-	bool MouseMove(const NFmiPoint & thePlace, unsigned long theKey);
+	bool LeftButtonDown(const NFmiPoint &thePlace, unsigned long theKey) override;
+	bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool MouseMove(const NFmiPoint & thePlace, unsigned long theKey) override;
 
 protected:
-	virtual NFmiRect CalcStatusGridViewSize(void);
-	virtual NFmiColor CheckStatusBoxColor(int theTimeIndex);
-	virtual bool IsViewDrawed(void);
+	NFmiRect CalcStatusGridViewSize(void) override;
+	NFmiColor CheckStatusBoxColor(int theTimeIndex) override;
+	bool IsViewDrawed(void) override;
     const NFmiTimeBag& MaximalCoverageTimeBag();
 private:
 	void DrawBlendingArea(void);
@@ -59,7 +58,7 @@ private:
 	void CalcSourceDataExistLimits(void);
 	void FillProducerIndexInTimeVector(void);
 	NFmiPoint CalcTimeIndexRange(NFmiTimeDescriptor& thePrimeTimeDescriptor, NFmiTimeDescriptor& theCheckedTimeDescriptor);
-	void FillNonMarkedRange(checkedVector<int>& theIndexVector, const NFmiPoint& theRange, int theIndex);
+	void FillNonMarkedRange(std::vector<int>& theIndexVector, const NFmiPoint& theRange, int theIndex);
 	NFmiRect CalcTimeAxisRect(void);
 	NFmiRect CalcHourValueAxisRect(void);
 	void CreateTimeAxis(void);
@@ -72,13 +71,13 @@ private:
 	double Time2Value(const NFmiMetTime& theTime);
 	NFmiMetTime Value2Time(const NFmiPoint& thePoint);
 
-	checkedVector<boost::shared_ptr<NFmiQueryInfo> > itsQueryInfoVector; // t‰ss‰ on ladattavien datojen tietoja
-	checkedVector<int> itsProducerIndexInTimeVector;
+	std::vector<boost::shared_ptr<NFmiQueryInfo> > itsQueryInfoVector; // t‰ss‰ on ladattavien datojen tietoja
+	std::vector<int> itsProducerIndexInTimeVector;
 	NFmiTimeDescriptor itsLoadedDataTimeDescriptor; // t‰m‰n mukaan elet‰‰n ja tehd‰‰n n‰yttˆ‰ (t‰lle ajalle ladataan dataa)
 	int itsActiveProducerIndex; // mill‰ tuottajalla t‰ytet‰‰n mahdollinen ei editoitava alue
-	checkedVector<int> itsSelectedProducerPriorityTable; // radio buttonien asetukset
-	checkedVector<NFmiColor> itsProducerColorTable; // eri tuottajille on eri v‰rit
-	checkedVector<NFmiPoint> itsSourceDataExistLimits; // t‰h‰n talletetaan eri datojen aika riitt‰vyydet lopullisessa vectorissa
+	std::vector<int> itsSelectedProducerPriorityTable; // radio buttonien asetukset
+	std::vector<NFmiColor> itsProducerColorTable; // eri tuottajille on eri v‰rit
+	std::vector<NFmiPoint> itsSourceDataExistLimits; // t‰h‰n talletetaan eri datojen aika riitt‰vyydet lopullisessa vectorissa
 													// Eli esim. arvo 3, 15 tarkoittaa ett‰ kyseinen data riitt‰‰ indekseille 3-15 (0:sta alkaa)
 
 	// t‰m‰ hoitelee normaalin aika-akselin

@@ -14,31 +14,31 @@ class NFmiCombinedParam;
 class NFmiQueryInfo;
 
 //! Undocumented
-class _FMI_DLL NFmiDataModifier : public NFmiDataModifierBase
+class NFmiDataModifier : public NFmiDataModifierBase
 {
  public:
-  virtual ~NFmiDataModifier(void);
+  virtual ~NFmiDataModifier();
   NFmiDataModifier(const NFmiDataModifier& theModier);
-  virtual NFmiDataModifier* Clone(void) const;
+  virtual NFmiDataModifier* Clone() const;
   NFmiDataModifier(FmiJoinOperator theJoinOperator = kFmiAdd,
                    bool missingValuesAllowed = true,
                    NFmiCombinedParam* thePotentialCombinedParam = 0);
 
   operator double();
 
-  virtual unsigned long ClassId(void) const;
-  virtual const char* ClassName(void) const;
-  bool IsCombinedParam(void);
+  virtual unsigned long ClassId() const;
+  virtual const char* ClassName() const;
+  bool IsCombinedParam();
 
   virtual bool BoolOperation(float theValue);
   virtual float FloatOperation(float theValue);
-  virtual float CalculationResult(void);
+  virtual float CalculationResult();
   virtual float CalculationResult(double theSomeValueThatAffectsResults);
-  virtual NFmiCombinedParam* CombinedCalculationResult(void);
+  virtual NFmiCombinedParam* CombinedCalculationResult();
   virtual void Calculate(float theValue);
   virtual void Calculate(NFmiQueryInfo* theQI);
-  virtual void Clear(void);
-  virtual double FloatValue(void);
+  virtual void Clear();
+  virtual double FloatValue();
   bool IsInside(float theValue);
   bool SetLimits(float theLowerLimit, float theUpperLimit);
   void SetMissingAllowed(bool OnOff);
@@ -51,7 +51,7 @@ class _FMI_DLL NFmiDataModifier : public NFmiDataModifierBase
   // alaisuudessa.
   virtual void SetLocationIndex(unsigned long theIndex);
   virtual void SetTimeIndex(unsigned long theIndex);
-  virtual void InitLatlonCache(void);  // jos datamodifierissa on fastInfoja tai maskeja joissa on
+  virtual void InitLatlonCache();  // jos datamodifierissa on fastInfoja tai maskeja joissa on
                                        // fastInfoja, niiden latlon-cache pitää alustaa ennen
                                        // multi-thread-ajoa
 
@@ -83,21 +83,21 @@ class _FMI_DLL NFmiDataModifier : public NFmiDataModifierBase
  */
 // ----------------------------------------------------------------------
 
-inline NFmiDataModifier::operator double(void) { return FloatValue(); }
+inline NFmiDataModifier::operator double() { return FloatValue(); }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiDataModifier::ClassId(void) const { return 0; }
+inline unsigned long NFmiDataModifier::ClassId() const { return 0; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline const char* NFmiDataModifier::ClassName(void) const { return "NFmiDataModifier"; }
+inline const char* NFmiDataModifier::ClassName() const { return "NFmiDataModifier"; }
 // ----------------------------------------------------------------------
 /*!
  * \param theValue Undocumented
@@ -120,7 +120,7 @@ inline float NFmiDataModifier::FloatOperation(float theValue) { return theValue;
  */
 // ----------------------------------------------------------------------
 
-inline float NFmiDataModifier::CalculationResult(void) { return kFloatMissing; }
+inline float NFmiDataModifier::CalculationResult() { return kFloatMissing; }
 // ----------------------------------------------------------------------
 /*!
  * \param theSomeValueThatAffectsResults
@@ -153,7 +153,7 @@ inline void NFmiDataModifier::Calculate(NFmiQueryInfo* /* theQI */) {}
  */
 // ----------------------------------------------------------------------
 
-inline void NFmiDataModifier::Clear(void) { itsNumberOfMissingValues = 0; }
+inline void NFmiDataModifier::Clear() { itsNumberOfMissingValues = 0; }
 // ----------------------------------------------------------------------
 /*!
  * \param theValue Undocumenetd

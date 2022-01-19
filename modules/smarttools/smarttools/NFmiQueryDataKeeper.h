@@ -1,7 +1,6 @@
 #pragma once
 
 #include <newbase/NFmiMilliSecondTimer.h>
-#include <newbase/NFmiDataMatrix.h>
 #include <newbase/NFmiMetTime.h>
 #include <newbase/NFmiInfoData.h>
 #include <boost/shared_ptr.hpp>
@@ -25,22 +24,22 @@ class NFmiQueryDataKeeper
   typedef std::mutex MutexType;
   typedef std::lock_guard<MutexType> WriteLock;
 
-  NFmiQueryDataKeeper(void);
+  NFmiQueryDataKeeper();
   NFmiQueryDataKeeper(boost::shared_ptr<NFmiOwnerInfo> &theOriginalData);
-  ~NFmiQueryDataKeeper(void);
+  ~NFmiQueryDataKeeper();
 
-  boost::shared_ptr<NFmiOwnerInfo> OriginalData(void);  // Tätä saa käyttää vain
+  boost::shared_ptr<NFmiOwnerInfo> OriginalData();  // Tätä saa käyttää vain
                                                         // NFmiInfoOrganizer-luokka sisäisesti,
                                                         // koska tätä ei ole tarkoitus palauttaa,
   // kun tarvitaan moni-säie turvallinen info-iteraattori kopio, käytetään mieluummin
   // GetIter-metodia.
   boost::shared_ptr<NFmiFastQueryInfo> GetIter(
       void);  // Tämä palauttaa vapaana olevan Info-iteraattori kopion dataan.
-  int Index(void) const { return itsIndex; }
+  int Index() const { return itsIndex; }
   void Index(int newValue) { itsIndex = newValue; }
-  const NFmiMetTime &OriginTime(void) const { return itsOriginTime; }
-  const std::string &DataFileName(void) { return itsDataFileName; }
-  int LastUsedInMS(void) const;
+  const NFmiMetTime &OriginTime() const { return itsOriginTime; }
+  const std::string &DataFileName() { return itsDataFileName; }
+  int LastUsedInMS() const;
 
  private:
   boost::shared_ptr<NFmiOwnerInfo> itsData;   // tämä on originaali data
@@ -49,7 +48,7 @@ class NFmiQueryDataKeeper
   // laskea, voidaanko kyseinen data siivota pois muistista (jos dataa ei ole käytetty tarpeeksi
   // pitkään aikaan)
   int itsIndex;  // malliajo datoissa 0 arvo tarkoittaa viimeisintä ja -1 sitä edellistä jne.
-  checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > itsIteratorList;  // originaali datasta
+  std::vector<boost::shared_ptr<NFmiFastQueryInfo> > itsIteratorList;  // originaali datasta
                                                                          // tehnään tarvittaessa n
                                                                          // kpl iteraattori
                                                                          // kopioita, ulkopuoliset
@@ -87,23 +86,23 @@ class NFmiQueryDataSetKeeper
                bool fFirstData,
                bool &fDataWasDeletedOut);
   boost::shared_ptr<NFmiQueryDataKeeper> GetDataKeeper(int theIndex = 0);
-  const std::string &FilePattern(void) const { return itsFilePattern; }
+  const std::string &FilePattern() const { return itsFilePattern; }
   void FilePattern(const std::string &newValue) { itsFilePattern = newValue; }
-  int MaxLatestDataCount(void) const { return itsMaxLatestDataCount; }
+  int MaxLatestDataCount() const { return itsMaxLatestDataCount; }
   void MaxLatestDataCount(int newValue);
-  int ModelRunTimeGap(void) const { return itsModelRunTimeGap; }
+  int ModelRunTimeGap() const { return itsModelRunTimeGap; }
   void ModelRunTimeGap(int newValue) { itsModelRunTimeGap = newValue; }
-  std::set<std::string> GetAllFileNames(void);
-  int CleanUnusedDataFromMemory(void);
-  int KeepInMemoryTime(void) const { return itsKeepInMemoryTime; }
+  std::set<std::string> GetAllFileNames();
+  int CleanUnusedDataFromMemory();
+  int KeepInMemoryTime() const { return itsKeepInMemoryTime; }
   void KeepInMemoryTime(int newValue) { itsKeepInMemoryTime = newValue; }
-  void ReadAllOldDatasInMemory(void);
+  void ReadAllOldDatasInMemory();
   int GetNearestUnRegularTimeIndex(const NFmiMetTime &theTime);
   bool ReloadCaseStudyData() const { return fReloadCaseStudyData; }
   void ReloadCaseStudyData(bool newValue) { fReloadCaseStudyData = newValue; }
 
-  size_t DataCount(void);
-  size_t DataByteCount(void);
+  size_t DataCount();
+  size_t DataByteCount();
 
   static void SetTraceLogMessageCallback(TraceLogMessageCallback &traceLogMessageCallback);
   static void SetIsTraceLoggingInUseCallback(IsTraceLoggingInUseCallback &isTraceLoggingInUseCallback);
@@ -111,7 +110,7 @@ class NFmiQueryDataSetKeeper
  private:
   void AddDataToSet(boost::shared_ptr<NFmiOwnerInfo> &theData, bool &fDataWasDeletedOut);
   void RecalculateIndexies(const NFmiMetTime &theLatestOrigTime);
-  void DeleteTooOldDatas(void);
+  void DeleteTooOldDatas();
   bool DoOnDemandOldDataLoad(int theIndex);
   bool ReadDataFileInUse(const std::string &theFileName);
   bool CheckKeepTime(ListType::iterator &it);

@@ -9,7 +9,7 @@
 
 #include "NFmiDataModifier.h"
 
-class _FMI_DLL NFmiDataModifierReplace : public NFmiDataModifier
+class NFmiDataModifierReplace : public NFmiDataModifier
 {
  public:
   NFmiDataModifierReplace(float theOrigValue, float theNewValue);

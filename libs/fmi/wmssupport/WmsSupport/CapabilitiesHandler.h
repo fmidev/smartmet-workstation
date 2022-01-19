@@ -36,6 +36,7 @@ namespace Wms
         std::unique_ptr<Web::Client> client_;
         std::function<void(long, const std::set<LayerInfo>&)> cacheDirtyCallback_;
         std::function<bool(long, const std::string&)> cacheHitCallback_;
+        static std::function<void()> parameterSelectionUpdateCallback_;
         std::shared_ptr<cppback::BackgroundManager> bManager_;
 
         std::unordered_map<int, Wms::DynamicServerSetup> servers_;
@@ -45,10 +46,10 @@ namespace Wms
     public:
         CapabilitiesHandler(
             std::unique_ptr<Web::Client> client,
-            std::shared_ptr<cppback::BackgroundManager> bManager,
+            const std::shared_ptr<cppback::BackgroundManager> &bManager,
             std::chrono::seconds intervalToPollGetCapabilities,
-            std::string proxyUrl,
-            std::unordered_map<int, DynamicServerSetup> servers,
+            const std::string &proxyUrl,
+            const std::unordered_map<int, DynamicServerSetup> &servers,
             std::function<void(long, const std::set<LayerInfo>&)> cacheDirtyCallback,
             std::function<bool(long, const std::string&)> cacheHitCallback,
             int capabilitiesTimeoutInSeconds
@@ -57,5 +58,7 @@ namespace Wms
         void startFetchingCapabilitiesInBackground();
 		const std::map<long, std::map<long, LayerInfo>>& peekHashes() const;
         const CapabilityTree& peekCapabilityTree() const;
+        static void setParameterSelectionUpdateCallback(std::function<void()>& parameterSelectionUpdateCallback);
+        static void firstTimeUpdateCallbackWrapper();
     };
 }

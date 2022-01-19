@@ -31,9 +31,9 @@ public:
 				,FmiParameterName theParamId
 				,int theRowIndex
                 ,int theColumnIndex);
-    virtual  ~NFmiSatelView(void);
-	void Draw (NFmiToolBox * theGTB);
-	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint);
+    ~NFmiSatelView(void);
+	void Draw (NFmiToolBox * theGTB) override;
+	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
     static long ImagesOffsetInMinutes(const NFmiDataIdent &theDataIdent);
 
 protected:

@@ -13,7 +13,7 @@ namespace NFmiColorSpaces
 {
 struct RGB_color
 {
-  RGB_color(void);
+  RGB_color();
   RGB_color(int r_, int g_, int b_);
   RGB_color(const NFmiColor &theColor);
 
@@ -24,7 +24,7 @@ struct RGB_color
 
 struct HSL_color
 {
-  HSL_color(void);
+  HSL_color();
   HSL_color(int h_, int s_, int l_);
 
   int h;  // 0-360

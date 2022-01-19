@@ -9,6 +9,7 @@
 #include "NFmiFileString.h"
 #include "NFmiFileSystem.h"
 #include "NFmiPathUtils.h"
+#include "MakeOptionalExePath.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -785,6 +786,7 @@ static const std::string gJsonName_CommandLine = "CommandLine";
 static const std::string gJsonName_DisplayRuntimeInfo = "DisplayRuntimeInfo";
 static const std::string gJsonName_ShowModelOriginTime = "ShowModelOriginTime";
 static const std::string gJsonName_SynopStationIdList = "SynopStationIdList";
+static const std::string gJsonName_PackImages = "PackImages";
 
 static void AddNonEmptyStringJsonPair(const std::string &value, const std::string &valueJsonName, json_spirit::Object &jsonObject)
 {
@@ -794,7 +796,7 @@ static void AddNonEmptyStringJsonPair(const std::string &value, const std::strin
 
 json_spirit::Object NFmiBetaProduct::MakeJsonObject(const NFmiBetaProduct &betaProduct)
 {
-    static NFmiBetaProduct defaultBetaProduct;
+    static const NFmiBetaProduct defaultBetaProduct;
 
     json_spirit::Object jsonObject;
     ::AddNonEmptyStringJsonPair(betaProduct.ImageStoragePath(), gJsonName_ImageStoragePath, jsonObject);
@@ -821,6 +823,8 @@ json_spirit::Object NFmiBetaProduct::MakeJsonObject(const NFmiBetaProduct &betaP
     ::AddNonEmptyStringJsonPair(betaProduct.CommandLineString(), gJsonName_CommandLine, jsonObject);
     jsonObject.push_back(json_spirit::Pair(gJsonName_SelectedViewIndex, betaProduct.SelectedViewIndex()));
     ::AddNonEmptyStringJsonPair(betaProduct.SynopStationIdListString(), gJsonName_SynopStationIdList, jsonObject);
+    if(defaultBetaProduct.PackImages() != betaProduct.PackImages())
+        jsonObject.push_back(json_spirit::Pair(gJsonName_PackImages, betaProduct.PackImages()));
 
     return jsonObject;
 }
@@ -884,6 +888,8 @@ void NFmiBetaProduct::ParseJsonPair(json_spirit::Pair &thePair)
         itsSelectedViewIndex = thePair.value_.get_int();
     else if(thePair.name_ == gJsonName_SynopStationIdList)
         itsSynopStationIdListString = thePair.value_.get_str();
+    else if(thePair.name_ == gJsonName_PackImages)
+        fPackImages = thePair.value_.get_bool();
 }
 
 bool NFmiBetaProduct::StoreInJsonFormat(const NFmiBetaProduct &betaProduct, const std::string &theFilePath, std::string &theErrorStringOut)
@@ -1976,6 +1982,7 @@ NFmiBetaProductionSystem::NFmiBetaProductionSystem()
 , mBetaProductShowModelOriginTime()
 , mBetaProductSaveInitialPath()
 , mBetaProductSynopStationIdListString()
+, mBetaProductPackImages()
 , mAutomationModeOn()
 , mUsedAutomationListPathString()
 , mBetaProductTabControlIndex()
@@ -1992,11 +1999,11 @@ NFmiBetaProductionSystem::NFmiBetaProductionSystem()
 {
 }
 
-bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, const std::string& theAbsoluteControlDirectory)
+bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, const std::string& theAbsoluteWorkingDirectory)
 {
     // N‰m‰ alustetaan vain ja ainoastaan konffeista ainakin toistaiseksi
     itsBetaProductionBaseDirectory = NFmiSettings::Optional<std::string>("BetaProduction::BaseDirectory", "C:\\smartmet\\BetaProducts\\");
-    itsBetaProductionBaseDirectory = PathUtils::makeFixedAbsolutePath(itsBetaProductionBaseDirectory, theAbsoluteControlDirectory);
+    itsBetaProductionBaseDirectory = PathUtils::makeFixedAbsolutePath(itsBetaProductionBaseDirectory, theAbsoluteWorkingDirectory);
     CatLog::logMessage(std::string("BetaProduction::BaseDirectory = ") + itsBetaProductionBaseDirectory, CatLog::Severity::Info, CatLog::Category::Configuration);
 
     mBaseRegistryPath = theBaseRegistryPath;
@@ -2022,6 +2029,7 @@ bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, cons
     mBetaProductDisplayRuntime = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, betaProductSectionName, "\\DisplayRuntime", usedKey, false);
     mBetaProductShowModelOriginTime = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, betaProductSectionName, "\\ShowModelOriginTime", usedKey, false);
     mBetaProductSynopStationIdListString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\SynopStationIdList", usedKey, "");
+    mBetaProductPackImages = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, betaProductSectionName, "\\PackImages", usedKey, false);
 
     mAutomationModeOn = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, betaProductSectionName, "\\AutomationModeOn", usedKey, false, "");
     mUsedAutomationListPathString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\UsedAutomationListPath", usedKey, "");
@@ -2046,8 +2054,45 @@ bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, cons
     std::function<std::string()> getterFunction = [this]() {return this->GetBetaProductionBaseDirectory(); };
     NFmiBetaProductAutomation::SetBetaProductionBaseDirectoryGetter(getterFunction);
     NFmiBetaProductAutomationList::SetBetaProductionBaseDirectoryGetter(getterFunction);
+    InitImagePackingExe(theAbsoluteWorkingDirectory);
 
     LoadUsedAutomationList(UsedAutomationListPathString());
+
+    return true;
+}
+
+std::string NFmiBetaProductionSystem::AddQuotationMarksToString(std::string paddedString)
+{
+    paddedString = "\"" + paddedString + "\"";
+    return paddedString;
+}
+
+bool NFmiBetaProductionSystem::InitImagePackingExe(const std::string& theAbsoluteWorkingDirectory)
+{
+    std::string exeNameInErrorMessages = "pngquant";
+    itsImagePackingExePath = ExePathHelper::MakeOptionalExePath(theAbsoluteWorkingDirectory, "SmartMet::OptionalImagePackingExePath", exeNameInErrorMessages);
+    if(itsImagePackingExePath.empty())
+    {
+        itsImagePackingExePath = ExePathHelper::MakeHardCodedExePath(theAbsoluteWorkingDirectory, "\\utils\\pngquant\\pngquant.exe", exeNameInErrorMessages);
+        // Jos ei ole tullut t‰h‰n menness‰ j‰rkev‰‰ arvoa exelle, ollaan jo tehty virheilmoituksia lokiin
+    }
+
+    if(itsImagePackingExePath.empty())
+        return false;
+    else
+    {
+        std::string usedPathString = "For ";
+        usedPathString += exeNameInErrorMessages;
+        usedPathString += " executable following path is used: ";
+        usedPathString += itsImagePackingExePath;
+        CatLog::logMessage(usedPathString, CatLog::Severity::Info, CatLog::Category::Configuration);
+    }
+
+    itsImagePackingExeCommandLine = NFmiSettings::Optional<std::string>("SmartMet::OptionalImagePackingExeCommandLine", "");
+    if(itsImagePackingExeCommandLine.empty())
+    {
+        itsImagePackingExeCommandLine = "--force --verbose --nofs --speed=1 --ext=.png 256 *.png";
+    }
 
     return true;
 }
@@ -2289,6 +2334,16 @@ std::string NFmiBetaProductionSystem::BetaProductSynopStationIdListString()
 void NFmiBetaProductionSystem::BetaProductSynopStationIdListString(const std::string &newValue)
 {
     *mBetaProductSynopStationIdListString = newValue;
+}
+
+bool NFmiBetaProductionSystem::BetaProductPackImages()
+{
+    return *mBetaProductPackImages;
+}
+
+void NFmiBetaProductionSystem::BetaProductPackImages(bool newValue)
+{
+    *mBetaProductPackImages = newValue;
 }
 
 std::string NFmiBetaProductionSystem::BetaProductSaveInitialPath()

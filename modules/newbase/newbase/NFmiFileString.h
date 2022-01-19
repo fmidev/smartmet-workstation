@@ -10,23 +10,23 @@
 #include "NFmiString.h"
 
 //! Undocumented
-class _FMI_DLL NFmiFileString : public NFmiString
+class NFmiFileString : public NFmiString
 {
  public:
-  ~NFmiFileString(void);
-  NFmiFileString(void);
+  ~NFmiFileString();
+  NFmiFileString();
   NFmiFileString(const NFmiFileString& theFileStr);
   NFmiFileString(const NFmiString& theStr);
 
-  const NFmiString Extension(void) const;
-  const NFmiString FileName(void) const;
-  const NFmiString Header(void) const;
-  const NFmiString Path(void) const;
-  const NFmiString Device(void) const;
-  const NFmiString Directory(void) const;
+  const NFmiString Extension() const;
+  const NFmiString FileName() const;
+  const NFmiString Header() const;
+  const NFmiString Path() const;
+  const NFmiString Device() const;
+  const NFmiString Directory() const;
 
-  bool HasExtension(void) const;
-  bool IsAbsolutePath(void) const;
+  bool HasExtension() const;
+  bool IsAbsolutePath() const;
 
   void Extension(const NFmiString& theExtension);
   void FileName(const NFmiString& theExtension);
@@ -35,7 +35,7 @@ class _FMI_DLL NFmiFileString : public NFmiString
   void Device(const NFmiString& theExtension);
 
   void AddDirectory(const NFmiString& theDirectory);
-  void DeleteDirectory(void);
+  void DeleteDirectory();
   void ReplaceDirectory(const NFmiString& theDirectory);
 
   void Extension(const char* theExtension);
@@ -44,10 +44,10 @@ class _FMI_DLL NFmiFileString : public NFmiString
   void Path(const char* theExtension);
   void Device(const char* theExtension);
 
-  void NormalizeDelimiter(void);
-  void ChangeScandinavian(void);
+  void NormalizeDelimiter();
+  void ChangeScandinavian();
 
-  const NFmiString PathWithoutLastDirectory(void);
+  const NFmiString PathWithoutLastDirectory();
 
 };  // class NFmiFileString
 

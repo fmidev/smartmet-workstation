@@ -101,10 +101,10 @@ class NFmiDataModifierCombi;
 class NFmiIntegrationSelector;
 
 //! Undocumented
-class _FMI_DLL NFmiCombinedParam
+class NFmiCombinedParam
 {
  public:
-  virtual ~NFmiCombinedParam(void);
+  virtual ~NFmiCombinedParam();
   NFmiCombinedParam(double theInfoVersion = 7.);
   NFmiCombinedParam(const NFmiCombinedParam& theParam);
   NFmiCombinedParam& operator=(const NFmiCombinedParam& theParam);
@@ -113,13 +113,13 @@ class _FMI_DLL NFmiCombinedParam
   virtual NFmiCombinedParam* CreateNew(float theInitValue);
 
   virtual bool TransformFromFloatValue(float theValue);
-  virtual float TransformedFloatValue(void);
+  virtual float TransformedFloatValue();
   virtual bool LongValue(unsigned long theValue) = 0;
-  virtual unsigned long LongValue(void) const = 0;
+  virtual unsigned long LongValue() const = 0;
   virtual bool SubValue(double theValue, FmiParameterName theParam) = 0;
   virtual double SubValue(FmiParameterName theParam, NFmiIntegrationSelector* theSelector = 0) = 0;
   virtual double RawSubValue(FmiParameterName theParam) = 0;
-  virtual NFmiCombinedParam* Clone(void) const = 0;
+  virtual NFmiCombinedParam* Clone() const = 0;
   virtual bool IsMemberParam(FmiParameterName type) const = 0;
   virtual bool SetToWeightedMean(NFmiCombinedParam* theWeatherAndCloudiness1,
                                  float fac1,
@@ -147,26 +147,26 @@ class _FMI_DLL NFmiCombinedParam
                                    float factor2 = 1.,
                                    float factor3 = 1.) = 0;
 
-  virtual void InitIntegration(void);
-  virtual void ClearIntegration(void);
+  virtual void InitIntegration();
+  virtual void ClearIntegration();
   virtual void Integrate(float theValue);
-  void EndIntegration(void);
+  void EndIntegration();
 
   bool SetSubIntegrator(FmiParameterName theSubParamName, NFmiDataModifierCombi* theModifier);
   NFmiDataModifierCombi* SubIntegrator(FmiParameterName theSubParamName);
 
-  double InfoVersion(void) const;
+  double InfoVersion() const;
   void InfoVersion(double newValue);
 
  protected:
   int FindSubParamIntegratorIndex(FmiParameterName theName);
-  virtual void DeleteIntegrators(void);
-  virtual void CreateIntegrators(void);
+  virtual void DeleteIntegrators();
+  virtual void CreateIntegrators();
 
  protected:
   virtual void CrossCheck(FmiParameterName theParam);
   NFmiDataModifierCombi* GetSubIntegrator(unsigned long theIndex);
-  virtual void CreateSubParams(void);
+  virtual void CreateSubParams();
   NFmiDataModifierCombi* FindSubParamIntegrator(FmiParameterName theName);
   NFmiParamBag* itsSubParams;
   NFmiDataModifierCombi** itsIntegrators;
@@ -191,7 +191,7 @@ class _FMI_DLL NFmiCombinedParam
  */
 // ----------------------------------------------------------------------
 
-inline double NFmiCombinedParam::InfoVersion(void) const { return itsInfoVersion; }
+inline double NFmiCombinedParam::InfoVersion() const { return itsInfoVersion; }
 // ----------------------------------------------------------------------
 /*!
  * \param newValue Undocumented

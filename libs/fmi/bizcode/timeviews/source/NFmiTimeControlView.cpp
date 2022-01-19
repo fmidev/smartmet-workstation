@@ -355,7 +355,7 @@ void NFmiTimeControlView::DrawNoDataAvailable(void)
 		NFmiPoint place = GetFrame().TopLeft();
 		place.X(place.X() + GetFrame().Width()/100.);
 		envi.SetFontSize(NFmiPoint(22,22));
-		NFmiText text(place, str, 0, &envi);
+		NFmiText text(place, str, false, 0, &envi);
 		itsToolBox->Convert(&text);
 	}
 	else
@@ -364,7 +364,7 @@ void NFmiTimeControlView::DrawNoDataAvailable(void)
 		NFmiPoint place = GetFrame().TopLeft();
 		place.X(place.X() + GetFrame().Width()/100.);
 		envi.SetFontSize(NFmiPoint(18,18));
-		NFmiText text(place, str, 0, &envi);
+		NFmiText text(place, str, false, 0, &envi);
 		itsToolBox->Convert(&text);
 	}
 }
@@ -435,7 +435,7 @@ void NFmiTimeControlView::DrawResolutionChangerBox(void)
 		int fontSize = static_cast<int>(fontSizeInMM * fontSizefactor * GetGraphicalInfo().itsPixelsPerMM_y * 1.88);
 
 		envi.SetFontSize(NFmiPoint(fontSize, fontSize));
-		NFmiText dummyText(NFmiPoint(-11111, -11111), "", 0, &envi); // printataa ntyhjä kerran lasketulla fontilla, että voidaan laskea tekstin vaatima tila
+		NFmiText dummyText(NFmiPoint(-11111, -11111), "", false, 0, &envi); // printataan tyhjä kerran lasketulla fontilla, että voidaan laskea tekstin vaatima tila
 		itsToolBox->Convert(&dummyText);
 		double measure = itsToolBox->MeasureText(resolutionStr) * 2.2;
 		double fontSizeFixFactor = 1;
@@ -445,7 +445,7 @@ void NFmiTimeControlView::DrawResolutionChangerBox(void)
 		envi.SetFontSize(NFmiPoint(fontSize, fontSize)); // asetetaan korjattu fontti koko voimaan
 
 		NFmiPoint strPlace(itsResolutionChangerBox.Center());
-		NFmiText text(strPlace, resolutionStr, 0, &envi);
+		NFmiText text(strPlace, resolutionStr, false, 0, &envi);
 		itsToolBox->Convert(&text);
 	}
 }
@@ -532,7 +532,7 @@ void NFmiTimeControlView::ChangeResolution(bool fLeftClicked)
     if(::IsMainMapViewDesctopIndex(itsMapViewDescTopIndex))
     {
         // Pääkarttanäytön aika-stepin vaihto vaikuttaa myös warning ja sea-icing ikkunoiden tiloihin
-        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::WarningCenterDlg | SmartMetViewId::SeaIcingDlg);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::WarningCenterDlg);
     }
 }
 

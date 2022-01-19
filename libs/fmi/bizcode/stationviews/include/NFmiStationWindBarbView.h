@@ -28,19 +28,23 @@ public:
 							,NFmiPoint theSize
 							,int theRowIndex
                             ,int theColumnIndex);
-    virtual  ~NFmiStationWindBarbView (void);
+   ~NFmiStationWindBarbView (void);
 
-   void Draw (NFmiToolBox * theGTB);
+   void Draw (NFmiToolBox * theGTB) override;
 
 protected:
    bool PrepareForStationDraw(void) override;
-   void DrawData (void);
-   NFmiPoint GetSpaceOutFontFactor(void);
-   void ModifyTextEnvironment(void);
-   int GetApproxmationOfDataTextLength(void);
+   NFmiPoint GetSpaceOutFontFactor(void) override;
+   void ModifyTextEnvironment(void) override;
+   int GetApproxmationOfDataTextLength(std::vector<float>* sampleValues = nullptr) override;
    float InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, const NFmiPoint& theLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theInfo) override;
+   NFmiPoint SbdCalcFixedSymbolSize() const override;
+   NFmiSymbolBulkDrawType SbdGetDrawType() const override;
+   NFmiPoint SbdCalcFixedRelativeDrawObjectSize() const override;
+   int SbdCalcFixedPenSize() const override;
+   float ViewFloatValue(bool doTooltipValue) override;
+   NFmiPoint SbdCalcDrawObjectOffset() const override;
+   NFmiSymbolColorChangingType SbdGetSymbolColorChangingType() const override;
 
-private:
-   void DrawSymbol (void);
 };
 

@@ -63,21 +63,21 @@ class NFmiViewParamsView : public NFmiParamCommandView
 
 
 	NFmiViewParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer);
-    bool LeftButtonDown(const NFmiPoint & thePlace, unsigned long theKey);
-    bool LeftButtonUp(const NFmiPoint &, unsigned long);
-	bool RightButtonUp(const NFmiPoint &, unsigned long);
-    bool MouseMove(const NFmiPoint& thePlace, unsigned long theKey);
-    bool LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey); // Marko lisäsi 3.4.2002
-    bool IsMouseDraggingOn(void);
+    bool LeftButtonDown(const NFmiPoint & thePlace, unsigned long theKey) override;
+    bool LeftButtonUp(const NFmiPoint &, unsigned long) override;
+	bool RightButtonUp(const NFmiPoint &, unsigned long) override;
+    bool MouseMove(const NFmiPoint& thePlace, unsigned long theKey) override;
+    bool LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey) override; // Marko lisäsi 3.4.2002
+    bool IsMouseDraggingOn(void) override;
 	NFmiRect CalcSize(void); // koko saattaa muuttua, ja uutta kokoa pitää voida kysyä oliolta
-	bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta);
+	bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta) override;
     bool IsMouseCaptured(void) { return fMouseCaptured; }
 
  protected:
     int GetParamCount(void);
 	bool LeftClickOnModelSelectionButtons(const NFmiPoint &thePlace, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theParameterRowIndex);
 	static ModelSelectorButtonImageHolder statModelSelectorButtonImages; // tämä on staattinen dataosa, koska näitä timekontrol-instansseja luodaan lennossa jatkuvasti uudelleen ja uudelleen eli bitmapit luetaan vain kerran kaikkien käyttöön
-	void DrawData(void);
+	void DrawData(void) override;
 	void DrawModelSelectorButtons(boost::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiRect& parameterRowRect);
 	NFmiPoint CalcModelSelectorButtonRelativeSize(Gdiplus::Bitmap *theImage);
 	NFmiRect CalcModelSelectorButtonRect(const NFmiRect& parameterRowRect, int theButtonIndex);

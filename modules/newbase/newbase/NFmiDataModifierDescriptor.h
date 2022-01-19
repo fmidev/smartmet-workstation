@@ -15,22 +15,22 @@ class NFmiDataIdent;
 class NFmiLevel;
 
 //! Undocumented
-class _FMI_DLL NFmiDataModifierDescriptor : public NFmiDataDescriptor
+class NFmiDataModifierDescriptor : public NFmiDataDescriptor
 {
  public:
-  virtual ~NFmiDataModifierDescriptor(void);
-  NFmiDataModifierDescriptor(void);
+  virtual ~NFmiDataModifierDescriptor();
+  NFmiDataModifierDescriptor();
 
   NFmiParamDataModifier* VarianceModifier(const NFmiDataIdent& theParam, const NFmiLevel* theLevel);
-  NFmiParamDataModifierList* GetVarianceModifiers(void);
+  NFmiParamDataModifierList* GetVarianceModifiers();
   void SetVarianceModifiers(NFmiParamDataModifierList* theList);
 
   // seuraavat on pakko kirjoittaa, koska ne on määritelty pure virtualiksi emossa
-  virtual unsigned long Index(void) const;
-  virtual unsigned long Size(void) const;
-  virtual bool IsActive(void) const;
+  virtual unsigned long Index() const;
+  virtual unsigned long Size() const;
+  virtual bool IsActive() const;
   virtual bool SetActivity(bool theActivityState);
-  virtual bool NextActive(void);
+  virtual bool NextActive();
   virtual std::ostream& Write(std::ostream& file) const;
   virtual std::istream& Read(std::istream& file);
 

@@ -48,13 +48,13 @@ namespace Wms
         WmsClient(std::unique_ptr<BitmapCache> cache,
             std::unique_ptr<BitmapHandler::BitmapParser> parser,
             std::unique_ptr<Web::Client> client,
-            std::shared_ptr<cppback::BackgroundManager> bManager,
+            const std::shared_ptr<cppback::BackgroundManager> &bManager,
             std::unique_ptr<QueryBuilder> qb,
             int imgTimeoutInSeconds,
             int lgndTimeoutInSeconds
             );
 
-        void setImageLoadedCallback(std::function<void()> imageLoadedCallback);
+        void setImageLoadedCallback(std::function<void()> &imageLoadedCallback);
         void initializeDynamic(const DynamicServerSetup& serverSetup, const std::string& proxyUrl);
         void initializeUserUrl(const UserUrlServerSetup& serverSetup, const std::string& proxyUrl);
         void kill();
@@ -66,13 +66,13 @@ namespace Wms
         NFmiImageHolder getImage(const WmsQuery& query);
 
         bool isCached(const std::string& key1) const;
-        bool isCached(WmsQuery key) const;
+        bool isCached(const WmsQuery &key) const;
         void dirtyLayer(const std::string& key);
     private:
-        NFmiImageHolder asyncWait(const WmsQuery& query, std::shared_future<std::string> response);
+        NFmiImageHolder asyncWait(const WmsQuery& query, std::shared_future<std::string> &response);
         NFmiImageHolder getFromServer(const WmsQuery& query);
-        void waitUntilReadyAndNotifyByCallback(const WmsQuery& query, std::shared_future<std::string> response);
-        NFmiImageHolder parseResponse(std::shared_future<std::string> fut) const;
+        void waitUntilReadyAndNotifyByCallback(const WmsQuery& query, std::shared_future<std::string> &response);
+        NFmiImageHolder parseResponse(std::shared_future<std::string> &fut) const;
         void putToCache(const WmsQuery& query, NFmiImageHolder image);
         bool isCached(const std::string& key1, const std::string& key2) const;
     };

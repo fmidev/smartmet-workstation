@@ -23,7 +23,7 @@ using namespace std;
 
 namespace
 {
-	void clearBitmapVector(checkedVector<Gdiplus::Bitmap*>& theBitmaps)
+	void clearBitmapVector(std::vector<Gdiplus::Bitmap*>& theBitmaps)
 	{
 		for(auto *bitmapPointer : theBitmaps)
 		{

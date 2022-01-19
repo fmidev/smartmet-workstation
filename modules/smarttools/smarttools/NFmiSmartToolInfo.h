@@ -8,31 +8,31 @@
  *
  */
 
-#include <newbase/NFmiDataMatrix.h>
 #include <string>
+#include <vector>
 
 class NFmiSmartToolInfo
 {
  public:
-  NFmiSmartToolInfo(void);
-  ~NFmiSmartToolInfo(void);
+  NFmiSmartToolInfo();
+  ~NFmiSmartToolInfo();
   bool Init(const std::string& theLoadDirectory);
 
   bool LoadScript(const std::string& theScriptName);
   bool SpeedLoadScript(const std::string& theScriptName);
   bool SaveScript(const std::string& theFullScriptPath);
   bool RemoveScript(const std::string& theScriptName);
-  bool LoadDBChecker(void);
-  bool SaveDBChecker(void);
+  bool LoadDBChecker();
+  bool SaveDBChecker();
 
-  const std::string& CurrentScript(void) const { return itsCurrentScript; }
-  const std::string& CurrentScriptName(void) const { return itsCurrentScriptName; }
-  const std::string& LoadDirectory(void) const { return itsLoadDirectory; }
-  const std::string& RootLoadDirectory(void) const { return itsRootLoadDirectory; }
-  const std::string& DBCheckerFileName(void) const { return itsDBCheckerFileName; }
-  const std::string& DBCheckerText(void) const { return itsDBCheckerText; }
-  bool MakeDBCheckAtSend(void) const { return fMakeDBCheckAtSend; }
-  bool IsThereDBCheckScript(void) const { return fIsThereDBCheckScript; }
+  const std::string& CurrentScript() const { return itsCurrentScript; }
+  const std::string& CurrentScriptName() const { return itsCurrentScriptName; }
+  const std::string& LoadDirectory() const { return itsLoadDirectory; }
+  const std::string& RootLoadDirectory() const { return itsRootLoadDirectory; }
+  const std::string& DBCheckerFileName() const { return itsDBCheckerFileName; }
+  const std::string& DBCheckerText() const { return itsDBCheckerText; }
+  bool MakeDBCheckAtSend() const { return fMakeDBCheckAtSend; }
+  bool IsThereDBCheckScript() const { return fIsThereDBCheckScript; }
   void CurrentScript(const std::string& newValue)
   {
     itsCurrentScript = newValue;
@@ -54,17 +54,17 @@ class NFmiSmartToolInfo
   }
   void IsThereDBCheckScript(bool newValue) { fIsThereDBCheckScript = newValue; }
   bool ScriptExist(const std::string& theScriptName);  // löytyykö tämän nimistä skriptiä
-  checkedVector<std::string> GetScriptNames(
+  std::vector<std::string> GetScriptNames(
       void);  // hae lista olemassa olevista skripteistä (pelkkä nimi lista)
-  const std::string& ScriptFileExtension(void) const { return itsScriptFileExtension; }
+  const std::string& ScriptFileExtension() const { return itsScriptFileExtension; }
   void ScriptFileExtension(const std::string& newValue) { itsScriptFileExtension = newValue; }
   std::string GetFullScriptFileName(const std::string& theScriptName);
   std::string GetRelativeLoadPath() const;
 
  private:
   bool WriteScript2File(const std::string& theFileName, const std::string& theScript);
-  bool LoadSettings(void);
-  bool SaveSettings(void);
+  bool LoadSettings();
+  bool SaveSettings();
 
   std::string itsCurrentScript;        //! Dialogissa oleva scripti.
   std::string itsScriptFileExtension;  //! smarttool-macrot talletetaan tiedostoihin tällä

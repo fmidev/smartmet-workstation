@@ -14,10 +14,10 @@
 //--------------------------------------------------------
 // Constructor/Destructor
 //--------------------------------------------------------
-NFmiSmartToolCalculationSectionInfo::NFmiSmartToolCalculationSectionInfo(void)
+NFmiSmartToolCalculationSectionInfo::NFmiSmartToolCalculationSectionInfo()
 {
 }
-NFmiSmartToolCalculationSectionInfo::~NFmiSmartToolCalculationSectionInfo(void)
+NFmiSmartToolCalculationSectionInfo::~NFmiSmartToolCalculationSectionInfo()
 {
 }
 
@@ -31,7 +31,7 @@ void NFmiSmartToolCalculationSectionInfo::AddCalculationInfo(
 // Lisätään set:iin kaikki parametrit, joita tässä sectioniossa voidaan muokata.
 void NFmiSmartToolCalculationSectionInfo::AddModifiedParams(std::map<int, std::string> &theModifiedParams)
 {
-  checkedVector<boost::shared_ptr<NFmiSmartToolCalculationInfo> >::size_type ssize =
+  std::vector<boost::shared_ptr<NFmiSmartToolCalculationInfo> >::size_type ssize =
       itsSmartToolCalculationInfoVector.size();
   for (size_t i = 0; i < ssize; i++)
   {

@@ -12,15 +12,15 @@
 
 //! Undocumented
 
-class _FMI_DLL NFmiStatus
+class NFmiStatus
 {
  public:
-  virtual ~NFmiStatus(void) {}
-  NFmiStatus(void);
+  virtual ~NFmiStatus() {}
+  NFmiStatus();
   NFmiStatus(const NFmiStatus& theStatus);
 
   NFmiStatus& operator=(const NFmiStatus& theStatus);
-  operator bool(void) const;
+  operator bool() const;
 
   void ErrorLog(NFmiString& theErrorLog);
   void WarningLog(NFmiString& theWarningLog);
@@ -30,13 +30,13 @@ class _FMI_DLL NFmiStatus
   void WarningLog(const char* theWarningLog);
   void MessageLog(const char* theMessageLog);
 
-  bool IsError(void) const;
-  bool IsWarning(void) const;
-  bool IsMessage(void) const;
+  bool IsError() const;
+  bool IsWarning() const;
+  bool IsMessage() const;
 
-  const NFmiString ErrorLog(void) const;
-  const NFmiString WarningLog(void) const;
-  const NFmiString MessageLog(void) const;
+  const NFmiString ErrorLog() const;
+  const NFmiString WarningLog() const;
+  const NFmiString MessageLog() const;
 
   virtual std::ostream& Write(std::ostream& file) const;
   virtual std::istream& Read(std::istream& file);
@@ -55,6 +55,6 @@ class _FMI_DLL NFmiStatus
  */
 // ----------------------------------------------------------------------
 
-inline NFmiStatus::operator bool(void) const { return !itsErrorLog.IsValue(); }
+inline NFmiStatus::operator bool() const { return !itsErrorLog.IsValue(); }
 
 // ======================================================================

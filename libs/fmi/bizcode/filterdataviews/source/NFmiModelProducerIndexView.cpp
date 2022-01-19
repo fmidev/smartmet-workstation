@@ -149,11 +149,11 @@ int NFmiModelProducerIndexView::GetPlaceIndexInProducerColorIndexView(const NFmi
 }
 
 // tuli hieman mega-luokan interface
-void NFmiModelProducerIndexView::SetDataFromDialog(	 checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theQueryInfoVector
+void NFmiModelProducerIndexView::SetDataFromDialog(	 std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theQueryInfoVector
 													,const NFmiTimeBag& theLoadedDataTimeBag
 													,const NFmiTimeBag& theNonModifieableDataTimeBag
-													,const checkedVector<int>& theSelectedProducerPriorityTable
-													,const checkedVector<NFmiColor>& theProducerColorTable
+													,const std::vector<int>& theSelectedProducerPriorityTable
+													,const std::vector<NFmiColor>& theProducerColorTable
 													,int theNonModifieableTimeRangeProducerIndex
 													,int theActiveProducerIndex)
 {
@@ -225,7 +225,7 @@ void NFmiModelProducerIndexView::FillProducerIndexInTimeVector(void)
 		FillNonMarkedRange(itsProducerIndexInTimeVector, itsSourceDataExistLimits[itsSelectedProducerPriorityTable[i]], itsSelectedProducerPriorityTable[i]);
 }
 
-void NFmiModelProducerIndexView::FillNonMarkedRange(checkedVector<int>& theIndexVector, const NFmiPoint& theRange, int theIndex)
+void NFmiModelProducerIndexView::FillNonMarkedRange(std::vector<int>& theIndexVector, const NFmiPoint& theRange, int theIndex)
 {
   if(theRange.X() >= 0)
     for(int i= static_cast<int>(theRange.X()); i <= theRange.Y(); i++)

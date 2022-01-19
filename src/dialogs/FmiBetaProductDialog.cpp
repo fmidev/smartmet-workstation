@@ -67,6 +67,7 @@ CFmiBetaProductDialog::CFmiBetaProductDialog(SmartMetDocumentInterface *smartMet
 , itsTotalImagesGenerated(0)
 , itsBetaProductFullFilePath()
 , itsBetaProductNameU_(_T(""))
+, fPackImages(FALSE)
 {
 
 }
@@ -106,6 +107,7 @@ void CFmiBetaProductDialog::DoDataExchange(CDataExchange* pDX)
     DDX_Check(pDX, IDC_CHECK_DISPLAY_RUNTIME_INFO, fDisplayRuntimeInfo);
     DDX_Check(pDX, IDC_CHECK_SHOW_MODEL_ORIGIN_TIME, fShowModelOriginTime);
     DDX_Text(pDX, IDC_STATIC_BETA_PRODUCT_NAME, itsBetaProductNameU_);
+    DDX_Check(pDX, IDC_CHECK_PACK_IMAGES, fPackImages);
 }
 
 
@@ -141,6 +143,7 @@ BEGIN_MESSAGE_MAP(CFmiBetaProductDialog, CTabPageSSL) //CDialogEx)
     ON_BN_CLICKED(IDC_RADIO_CROSS_SECTION_VIEW, &CFmiBetaProductDialog::OnBnClickedRadioCrossSectionView)
     ON_EN_CHANGE(IDC_EDIT_SYNOP_STATION_ID_STRING, &CFmiBetaProductDialog::OnEnChangeEditSynopStationIdString)
     ON_BN_CLICKED(IDC_BUTTON_SAVE_AS_BETA_PRODUCT, &CFmiBetaProductDialog::OnBnClickedButtonSaveAsBetaProduct)
+    ON_BN_CLICKED(IDC_CHECK_PACK_IMAGES, &CFmiBetaProductDialog::OnBnClickedCheckPackImages)
 END_MESSAGE_MAP()
 
 
@@ -189,6 +192,7 @@ void CFmiBetaProductDialog::InitControlsFromDocument()
     SetBoxLocationSelector(itsParamBoxLocationSelector, itsBetaProductionSystem->BetaProductParamBoxLocation());
     fDisplayRuntimeInfo = itsBetaProductionSystem->BetaProductDisplayRuntime();
     fShowModelOriginTime = itsBetaProductionSystem->BetaProductShowModelOriginTime();
+    fPackImages = itsBetaProductionSystem->BetaProductPackImages();
     try
     {
         itsTimeLengthInHoursStringU_ = CA2T(boost::lexical_cast<std::string>(itsBetaProductionSystem->BetaProductTimeLengthInHours()).c_str());
@@ -234,6 +238,7 @@ void CFmiBetaProductDialog::InitControlsFromLoadedBetaProduct()
     SetBoxLocationSelector(itsParamBoxLocationSelector, itsBetaProduct->ParamBoxLocation());
     fDisplayRuntimeInfo = itsBetaProduct->DisplayRunTimeInfo();
     fShowModelOriginTime = itsBetaProduct->ShowModelOriginTime();
+    fPackImages = itsBetaProduct->PackImages();
 
     itsTimeRangeInfoTextU_ = CA2T(itsBetaProduct->TimeRangeInfoText().c_str());
     itsRowIndexListInfoTextU_ = CA2T(itsBetaProduct->RowIndexListInfoText().c_str());
@@ -264,6 +269,7 @@ void CFmiBetaProductDialog::StoreControlValuesToDocument()
     itsBetaProductionSystem->BetaProductParamBoxLocation(GetSelectedBoxLocation(false));
     itsBetaProductionSystem->BetaProductDisplayRuntime(fDisplayRuntimeInfo == TRUE);
     itsBetaProductionSystem->BetaProductShowModelOriginTime(fShowModelOriginTime == TRUE);
+    itsBetaProductionSystem->BetaProductPackImages(fPackImages == TRUE);
 
     try
     {
@@ -329,6 +335,7 @@ void CFmiBetaProductDialog::InitDialogTexts()
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DISPLAY_RUNTIME_INFO, "Display runtime info");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_MODEL_ORIGIN_TIME, "Show model orig. time");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SYNOP_STATION_ID_VIEW_GROUP_TEXT, "Synop station ids: <empty> OR id1,id2,id3-id4,...");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_PACK_IMAGES, "Pack images (some quality loss)");
 
     InitLocationSelector(itsTimeBoxLocationSelector);
     InitLocationSelector(itsParamBoxLocationSelector);
@@ -378,6 +385,7 @@ void CFmiBetaProductDialog::Update()
     itsBetaProduct->ImageStoragePath(CFmiWin32Helpers::CT2std(itsImageStoragePathU_));
     itsBetaProduct->DisplayRunTimeInfo(fDisplayRuntimeInfo == TRUE);
     itsBetaProduct->ShowModelOriginTime(fShowModelOriginTime == TRUE);
+    itsBetaProduct->PackImages(fPackImages == TRUE);
     CheckForGenerateButtonActivation();
 
     UpdateData(FALSE);
@@ -996,10 +1004,10 @@ static bool SatelImageExist(SmartMetDocumentInterface *smartMetDocumentInterface
         return false;
 }
 
-static checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> MakeDrawedInfoVector(SmartMetDocumentInterface *smartMetDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theDrawParam, unsigned int theUsedMapViewDesktopIndex)
+static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> MakeDrawedInfoVector(SmartMetDocumentInterface *smartMetDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theDrawParam, unsigned int theUsedMapViewDesktopIndex)
 {
     boost::shared_ptr<NFmiArea> mapArea = smartMetDocumentInterface->MapViewDescTop(theUsedMapViewDesktopIndex)->MapHandler()->Area();
-    checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector;
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector;
     smartMetDocumentInterface->MakeDrawedInfoVectorForMapView(infoVector, theDrawParam, mapArea);
     return infoVector;
 }
@@ -1017,7 +1025,7 @@ static bool HasObservations(SmartMetDocumentInterface *smartMetDocumentInterface
             {
                 if(::IsObservationQdDataType(drawParam->DataType()))
                 {
-                    checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = ::MakeDrawedInfoVector(smartMetDocumentInterface, drawParam, theDescTopIndex);
+                    auto infoVector = ::MakeDrawedInfoVector(smartMetDocumentInterface, drawParam, theDescTopIndex);
                     for(const auto & info : infoVector)
                         if(info->Time(theValidTime))
                             return true;
@@ -1109,9 +1117,25 @@ void CFmiBetaProductDialog::MakeVisualizationImagesRowLoop(const NFmiBetaProduct
             UpdateGeneratedImagesText(++itsTotalImagesGenerated, totalImageCount);
             itsImageGenerationProgressControl.StepIt();
         }
+        DoImagePacking(rowImageBaseDirectory);
         MakeCommandLineExecution(rowImageBaseDirectory, theBetaProduct.CommandLineString(), justLogMessages);
     }
     mapScreenBitmap.DeleteObject();
+}
+
+void CFmiBetaProductDialog::DoImagePacking(const std::string& directoryPath)
+{
+    if(fPackImages && !directoryPath.empty())
+    {
+        // Huom! usedWorkingDirectory:ille ei saa laittaa lainausmerkkejä ympärille, CreateProcess (ExecuteCommandInSeparateProcess:issa)
+        // hanskaa mahd. spacet polussa jollain muulla tavalla, mutta homma ei toimi itse lisätyillä lainausmerkeillä!
+        std::string usedWorkingDirectory = directoryPath;
+        PathUtils::addDirectorySeparatorAtEnd(usedWorkingDirectory);
+        std::string usedPackingApplicationCommandLine = itsBetaProductionSystem->ImagePackingExeCommandLine();
+        std::string usedPackingApplicationPath = NFmiBetaProductionSystem::AddQuotationMarksToString(itsBetaProductionSystem->ImagePackingExePath());
+        std::string fullPackingCommandLineString = usedPackingApplicationPath + " " + usedPackingApplicationCommandLine;
+        CFmiProcessHelpers::ExecuteCommandInSeparateProcess(fullPackingCommandLineString, true, false, SW_HIDE, false, NORMAL_PRIORITY_CLASS, &usedWorkingDirectory);
+    }
 }
 
 // Oletus, jos tänne pääsee (= Generate nappi on enabloitu), ei tarvitse tehdä mitään tarkasteluja.
@@ -1574,4 +1598,11 @@ void CFmiBetaProductDialog::OnBnClickedCheckShowModelOriginTime()
 {
     UpdateData(TRUE);
     itsBetaProduct->ShowModelOriginTime(fShowModelOriginTime == TRUE);
+}
+
+
+void CFmiBetaProductDialog::OnBnClickedCheckPackImages()
+{
+    UpdateData(TRUE);
+    itsBetaProduct->PackImages(fPackImages == TRUE);
 }

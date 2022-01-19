@@ -18,11 +18,11 @@
 #include "NFmiGlobals.h"
 
 //! Undocumented
-class _FMI_DLL NFmiVoid
+class NFmiVoid
 {
  public:
-  ~NFmiVoid(void);
-  NFmiVoid(void);
+  ~NFmiVoid();
+  NFmiVoid();
   NFmiVoid& operator=(const NFmiVoid& theVoid);
 
   void* itsVoid;
@@ -41,7 +41,7 @@ class _FMI_DLL NFmiVoid
  */
 // ----------------------------------------------------------------------
 
-inline NFmiVoid::~NFmiVoid(void) {}
+inline NFmiVoid::~NFmiVoid() {}
 // ----------------------------------------------------------------------
 /*!
  * Void constructor does nothing special, meaning all member variables
@@ -49,7 +49,7 @@ inline NFmiVoid::~NFmiVoid(void) {}
  */
 // ----------------------------------------------------------------------
 
-inline NFmiVoid::NFmiVoid(void) : itsVoid(), itsNumber(), itsUnitSize(), itsSize() {}
+inline NFmiVoid::NFmiVoid() : itsVoid(), itsNumber(), itsUnitSize(), itsSize() {}
 // ----------------------------------------------------------------------
 /*!
  * Assignment operator performs a bitwise copy.

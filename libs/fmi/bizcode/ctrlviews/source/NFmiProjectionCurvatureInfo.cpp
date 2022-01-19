@@ -641,7 +641,7 @@ void NFmiProjectionCurvatureInfo::CreateLineLabel2List(double theLabelValue, Fmi
         break;
     }
     labelPos += move;
-    theLineLabels.push_back(std::make_shared<NFmiText>(labelPos, str, nullptr, itsPrimaryLineLabelEnvi));
+    theLineLabels.push_back(std::make_shared<NFmiText>(labelPos, str, false, nullptr, itsPrimaryLineLabelEnvi));
 }
 
 void NFmiProjectionCurvatureInfo::GetExtremeLatLonValues(const NFmiArea* theArea, double& theMinLon, double& theMaxLon, double& theMinLat, double& theMaxLat)

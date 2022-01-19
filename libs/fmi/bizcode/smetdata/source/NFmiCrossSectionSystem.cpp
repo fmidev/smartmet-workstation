@@ -170,16 +170,16 @@ void NFmiCrossSectionSystem::EndXYPoint(const NFmiPoint &thePoint)
 	itsMainXYPoints[2] = thePoint;
 }
 
-checkedVector<NFmiPoint> NFmiCrossSectionSystem::MakeMainPointsVector(void) const
+std::vector<NFmiPoint> NFmiCrossSectionSystem::MakeMainPointsVector(void) const
 {
-    checkedVector<NFmiPoint> points;
+    std::vector<NFmiPoint> points;
     points.push_back(itsStartPointWinReg);
     points.push_back(itsMiddlePointWinReg);
     points.push_back(itsEndPointWinReg);
     return points;
 }
 
-void NFmiCrossSectionSystem::SetMainPointsFromVector(const checkedVector<NFmiPoint> &theMainPointVector)
+void NFmiCrossSectionSystem::SetMainPointsFromVector(const std::vector<NFmiPoint> &theMainPointVector)
 {
     if(theMainPointVector.size() > 0)
         itsStartPointWinReg = theMainPointVector[0];
@@ -199,11 +199,11 @@ void NFmiCrossSectionSystem::CalcMinorPoints(const boost::shared_ptr<NFmiArea> &
 		itsMinorPoints = MakeMainPointsVector();
 		return ;
 	}
-	checkedVector<NFmiPoint> xyPoints;
+	std::vector<NFmiPoint> xyPoints;
 	int realMinorPointCount = itsWantedMinorPointCountWinReg;
 	if(itsCrossSectionMode == k2Point)
 	{
-		xyPoints = checkedVector<NFmiPoint>(realMinorPointCount);
+		xyPoints = std::vector<NFmiPoint>(realMinorPointCount);
 		// Poikkileikkausjana pit‰‰ jakaa ali pisteisiin xy-maailmassa
 		NFmiPoint xy1(theArea->ToXY(StartPoint()));
 		NFmiPoint xy2(theArea->ToXY(EndPoint()));
@@ -217,7 +217,7 @@ void NFmiCrossSectionSystem::CalcMinorPoints(const boost::shared_ptr<NFmiArea> &
 		realMinorPointCount = itsWantedMinorPointCountWinReg;
 		if(itsWantedMinorPointCountWinReg%2 == 0)
 			realMinorPointCount++; // pit‰‰ olla pariton luku
-		xyPoints = checkedVector<NFmiPoint>(realMinorPointCount);
+		xyPoints = std::vector<NFmiPoint>(realMinorPointCount);
 		// Poikkileikkausjana pit‰‰ jakaa ali pisteisiin xy-maailmassa
 		NFmiPoint xy1(theArea->ToXY(StartPoint()));
 		NFmiPoint xy2(theArea->ToXY(MiddlePoint()));
@@ -234,8 +234,8 @@ void NFmiCrossSectionSystem::CalcMinorPoints(const boost::shared_ptr<NFmiArea> &
 	}
 
 	itsMinorPoints.resize(realMinorPointCount);
-	checkedVector<NFmiPoint>::iterator xyIt = xyPoints.begin();
-	checkedVector<NFmiPoint>::iterator minorIt = itsMinorPoints.begin();
+	std::vector<NFmiPoint>::iterator xyIt = xyPoints.begin();
+	std::vector<NFmiPoint>::iterator minorIt = itsMinorPoints.begin();
 	// konvertoidaan sitten lista xy-pisteit‰ halutuiksi latlon-pisteiksi
 	for( ; minorIt != itsMinorPoints.end(); ++xyIt, ++minorIt)
 		*minorIt = theArea->ToLatLon(*xyIt);
@@ -284,7 +284,7 @@ void NFmiCrossSectionSystem::ActivateNearestMinorPoint(const NFmiPoint &thePlace
 	int minDistIndex = -1;
 	double tmpDist = 0; // et‰isyydet metreiss‰
 	double minDist = 9999999999.; // minimiksi aluksi joku iso luku
-	checkedVector<NFmiPoint>::iterator it = itsMinorPoints.begin();
+	std::vector<NFmiPoint>::iterator it = itsMinorPoints.begin();
 	NFmiLocation clickedLoc(thePlace);
 	for( ; it != itsMinorPoints.end(); ++it)
 	{
@@ -411,7 +411,7 @@ void NFmiCrossSectionSystem::CrossSectionTimeControlTimeBag(const NFmiTimeBag &n
 void NFmiCrossSectionSystem::CalcRouteTimes(void)
 {
 	itsRouteTimes.clear();
-	const checkedVector<NFmiPoint>& points = MinorPoints();
+	const std::vector<NFmiPoint>& points = MinorPoints();
 	int ssize = static_cast<int>(points.size());
 	int maxDiffInMinutes = CrossSectionTimeControlTimeBag().LastTime().DifferenceInMinutes(CrossSectionTimeControlTimeBag().FirstTime());
 	for(int i=0; i<ssize; i++)
@@ -490,7 +490,7 @@ NFmiCrossSectionSystem::ExtraRowInfo& NFmiCrossSectionSystem::GetRowInfo(int the
 		throw std::runtime_error("Error in NFmiCrossSectionSystem::GetRowInfo, invalid row index given, error in application...");
 }
 
-static std::string GetCrossSectionViewPressureLevelsStr(const checkedVector<NFmiCrossSectionSystem::ExtraRowInfo> &theExtraRowInfos)
+static std::string GetCrossSectionViewPressureLevelsStr(const std::vector<NFmiCrossSectionSystem::ExtraRowInfo> &theExtraRowInfos)
 {
 	std::string str;
 	size_t ssize = theExtraRowInfos.size();
@@ -589,7 +589,7 @@ void NFmiCrossSectionSystem::Read(std::istream& is)
 
 	if(is.fail())
 		throw std::runtime_error("NFmiCrossSectionSystem::Read failed");
-    checkedVector<NFmiPoint> mainPoints;
+    std::vector<NFmiPoint> mainPoints;
     NFmiDataStoringHelpers::ReadContainer(mainPoints, is);
 	if(is.fail())
 		throw std::runtime_error("NFmiCrossSectionSystem::Read failed");
@@ -702,7 +702,7 @@ void NFmiCrossSectionSystem::GetStartAndEndTimes(NFmiMetTime &theStartTimeOut, N
 	}
 	else if(GetCrossMode() == NFmiCrossSectionSystem::kRoute)
 	{
-		const checkedVector<NFmiMetTime> &times = RouteTimes();
+		const std::vector<NFmiMetTime> &times = RouteTimes();
 		if(times.size() > 0)
 		{
 			theStartTimeOut = times[0];

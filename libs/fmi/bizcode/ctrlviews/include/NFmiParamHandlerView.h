@@ -39,15 +39,15 @@ class NFmiParamHandlerView : public NFmiParamCommandView
    inline virtual ~NFmiParamHandlerView (void); 
    using NFmiParamCommandView::Update;
    void Update (const NFmiRect & theRect, NFmiToolBox * theToolBox, FmiDirection theViewPlacement, bool doIterativeFinalCalculations = false);
-   void Draw (NFmiToolBox * theGTB);
-   bool LeftButtonDown (const NFmiPoint& thePlace, unsigned long theKey);
-   bool LeftButtonUp (const NFmiPoint& thePlace, unsigned long theKey);
-   bool RightButtonDown (const NFmiPoint& /* thePlace */ , unsigned long /* theKey */ ){ return false; };
-   bool RightButtonUp (const NFmiPoint& thePlace, unsigned long theKey);
-   bool MouseMove (const NFmiPoint& thePlace, unsigned long theKey);
-   bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta);
-   bool LeftDoubleClick(const NFmiPoint& thePlace, unsigned long theKey); // Marko lisäsi 17.12.2001
-   bool IsMouseDraggingOn(void);
+   void Draw (NFmiToolBox * theGTB) override;
+   bool LeftButtonDown (const NFmiPoint& thePlace, unsigned long theKey) override;
+   bool LeftButtonUp (const NFmiPoint& thePlace, unsigned long theKey) override;
+   bool RightButtonDown (const NFmiPoint& /* thePlace */ , unsigned long /* theKey */ ) override { return false; };
+   bool RightButtonUp (const NFmiPoint& thePlace, unsigned long theKey) override;
+   bool MouseMove (const NFmiPoint& thePlace, unsigned long theKey) override;
+   bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta) override;
+   bool LeftDoubleClick(const NFmiPoint& thePlace, unsigned long theKey) override; // Marko lisäsi 17.12.2001
+   bool IsMouseDraggingOn(void) override;
    bool Init(void);
    bool IsMouseCaptured(void) { return fMouseCaptured; }
 

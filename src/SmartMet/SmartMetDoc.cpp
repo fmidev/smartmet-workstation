@@ -65,7 +65,6 @@
 #include "FmiExtraMapViewDlg.h"
 #include "FmiExtraMapView.h"
 #include "FmiGdiPlusHelpers.h"
-#include "FmiSeaIcingWarningsDlg.h"
 #include "FmiWindTableDlg.h"
 #include "NFmiWindTableSystem.h"
 #include "FmiLocationFinderDlg.h"
@@ -87,7 +86,6 @@
 #include "FmiBetaProductTabControlDialog.h"
 #include "FmiWin32TemplateHelpers.h"
 #include "FmiLogViewer.h"
-#include "NFmiSeaIcingWarningSystem.h"
 #include "CtrlViewFunctions.h"
 #include "NFmiFastInfoUtils.h"
 #include "HakeMessage/Main.h"
@@ -170,7 +168,6 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
 	ON_COMMAND(ID_FILE_OPEN, OnFileOpen)
 	ON_COMMAND(ID_FILE_NEW, OnFileNew)
 	ON_COMMAND(ID_BUTTON_ANIMATION, OnButtonAnimation)
-	ON_UPDATE_COMMAND_UI(ID_BUTTON_ANIMATION, OnUpdateButtonAnimation)
 	ON_COMMAND(ID_BUTTON_EDITOR_CONTROL_POINT_MODE, OnButtonEditorControlPointMode)
 	ON_UPDATE_COMMAND_UI(ID_BUTTON_EDITOR_CONTROL_POINT_MODE, OnUpdateButtonEditorControlPointMode)
 	ON_COMMAND(ID_BUTTON_DELETE, OnButtonDelete)
@@ -256,7 +253,6 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
 	ON_COMMAND(ID_VIEW_SET_TRAJECTORY_VIEW_PLACE_TO_DEFAULT, OnViewSetTrajectoryViewPlaceToDefault)
 	ON_COMMAND(ID_VIEW_EDITOR_LOG, &CSmartMetDoc::OnViewEditorLog)
 	ON_COMMAND(ID_BUTTON_WARNING_CENTER_DLG, OnButtonWarningCenterDlg)
-	ON_COMMAND(ID_BUTTON_SEA_ICING_WARNINGS_DLG, OnButtonSeaIcingWarningsDlg)
 	ON_COMMAND(ID_ACCELERATOR_TOGGLE_OVERMAP_FORE_BACK_GROUND, OnToggleOverMapBackForeGround)
 	ON_COMMAND(ID_ACCELERATOR_TOGGLE_TOOLTIP, OnAcceleratorToggleTooltip)
 	ON_COMMAND(ID_ACCELERATOR_TOGGLE_KEEP_MAP_RATIO, OnAcceleratorToggleKeepMapRatio)
@@ -264,7 +260,6 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
 	ON_COMMAND(ID_BUTTON_HELP_EDITOR_MODE, OnButtonHelpEditorMode)
 	ON_UPDATE_COMMAND_UI(ID_BUTTON_HELP_EDITOR_MODE, OnUpdateButtonHelpEditorMode)
 	ON_COMMAND(ID_VIEW_SET_WARNING_CENTER_DLG_PLACE_TO_DEFAULT, OnViewSetWarningCenterDlgPlaceToDefault)
-	ON_COMMAND(ID_VIEW_SET_SEA_ICING_WARNINGS_DLG_PLACE_TO_DEFAULT, OnViewSetSeaIcingWarningsDlgPlaceToDefault)
 	ON_COMMAND(ID_EXTRA_MAP_VIEW_1, OnExtraMapView1)
 	ON_UPDATE_COMMAND_UI(ID_EXTRA_MAP_VIEW_1, OnUpdateOnExtraMapView1)
 	ON_COMMAND(ID_EXTRA_MAP_VIEW_2, OnExtraMapView2)
@@ -355,7 +350,6 @@ CSmartMetDoc::CSmartMetDoc()
 ,itsSynopDataGridViewDlg(nullptr)
 ,itsTrajectoryDlg(nullptr)
 ,itsWarningCenterDlg(nullptr)
-,itsSeaIcingWarningsDlg(nullptr)
 ,itsWindTableDlg(nullptr)
 ,itsDataQualityCheckerDialog(nullptr)
 ,itsMapViewDescTopIndex(0)
@@ -422,7 +416,6 @@ CSmartMetDoc::~CSmartMetDoc()
 	::DestroyModalessDialog((CDialog **)(&itsSynopDataGridViewDlg));
 	::DestroyModalessDialog((CDialog **)(&itsTrajectoryDlg));
 	::DestroyModalessDialog((CDialog **)(&itsWarningCenterDlg));
-	::DestroyModalessDialog((CDialog **)(&itsSeaIcingWarningsDlg));
 	::DestroyModalessDialog((CDialog **)(&itsWindTableDlg));
 	::DestroyModalessDialog((CDialog **)(&itsDataQualityCheckerDialog));
 	::DestroyModalessDialog((CDialog **)(&itsExtraMapViewDlg1));
@@ -498,7 +491,7 @@ NFmiEditMapGeneralDataDoc* CSmartMetDoc::GetData()
 void CSmartMetDoc::OnButtonZoomDialog()
 {
 	ActivateZoomDialog(itsMapViewDescTopIndex);
-	GetData()->LogMessage("Opening Zoom dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
+	itsData->LogMessage("Opening Zoom dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
 }
 
 void CSmartMetDoc::ActivateZoomDialog(int theWantedDescTopIndex)
@@ -522,14 +515,14 @@ void CSmartMetDoc::OnButtonTimeEditValuesDlg()
 		if(itsData->TimeSerialDataViewOn())
 		{ // laitetaan aikasarjaikkuna kiinni
 			itsTimeSerialDataEditorDlg->ShowWindow(SW_HIDE);
-			GetData()->LogMessage("Closing time serial view.", CatLog::Severity::Info, CatLog::Category::Operational);
+			itsData->LogMessage("Closing time serial view.", CatLog::Severity::Info, CatLog::Category::Operational);
 		}
 		else
 		{ // laitetaan aikasarja ikkuna päälle
 			itsTimeSerialDataEditorDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
 			itsTimeSerialDataEditorDlg->SetActiveWindow();
 			itsTimeSerialDataEditorDlg->Update();
-			GetData()->LogMessage("Opening time serial view.", CatLog::Severity::Info, CatLog::Category::Operational);
+			itsData->LogMessage("Opening time serial view.", CatLog::Severity::Info, CatLog::Category::Operational);
 		}
 		itsData->TimeSerialDataViewOn(!itsData->TimeSerialDataViewOn());
 	}
@@ -548,7 +541,7 @@ void CSmartMetDoc::ActivateParameterSelectionDlg(unsigned int theDesktopIndex)
     itsParameterSelectionDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
     itsParameterSelectionDlg->SetActiveWindow();
 	itsParameterSelectionDlg->SetIndexes(theDesktopIndex);
-    GetData()->LogMessage("Parameter Selection dialog on", CatLog::Severity::Info, CatLog::Category::Operational);
+	itsData->LogMessage("Parameter Selection dialog on", CatLog::Severity::Info, CatLog::Category::Operational);
 }
 
 
@@ -556,14 +549,14 @@ void CSmartMetDoc::ActivateParameterSelectionDlg(unsigned int theDesktopIndex)
 // muuten laitetaan kurrentti kartta kokonaisuudessaan näkyviin.
 void CSmartMetDoc::OnButtonDataArea()
 {
-	GetData()->GetCombinedMapHandler()->onButtonDataArea(itsMapViewDescTopIndex);
+	itsData->GetCombinedMapHandler()->onButtonDataArea(itsMapViewDescTopIndex);
 }
 
 void CSmartMetDoc::LoadDataOnStartUp(void)
 {
-    CtrlViewUtils::FmiSmartMetEditingMode oldMode = GetData()->SmartMetEditingMode();
+    CtrlViewUtils::FmiSmartMetEditingMode oldMode = itsData->SmartMetEditingMode();
     // asetetaan alkulatauksen ajaksi sen oma moodi päälle
-	GetData()->SmartMetEditingMode(CtrlViewUtils::kFmiEditingModeStartUpLoading, false); // ei muutetä asetusta setting:eihin asti (false), koska tämä on vain väliaikainen muutos, lopussa palautetaan arvo takaisin
+	itsData->SmartMetEditingMode(CtrlViewUtils::kFmiEditingModeStartUpLoading, false); // ei muutetä asetusta setting:eihin asti (false), koska tämä on vain väliaikainen muutos, lopussa palautetaan arvo takaisin
 	try
 	{
 		OnButtonLoadData();
@@ -572,14 +565,14 @@ void CSmartMetDoc::LoadDataOnStartUp(void)
 	{
 		std::string errStr("Error while doing CSmartMetDoc::LoadDataOnStartUp:\n");
 		errStr += e.what();
-		GetData()->LogAndWarnUser(errStr, "Error while loading data at startup", CatLog::Severity::Error, CatLog::Category::Data, false);
+		itsData->LogAndWarnUser(errStr, "Error while loading data at startup", CatLog::Severity::Error, CatLog::Category::Data, false);
 	}
 	catch(...)
 	{
 		std::string errStr("Unknown error while doing CSmartMetDoc::LoadDataOnStartUp");
-		GetData()->LogAndWarnUser(errStr, "Error while loading data at startup", CatLog::Severity::Error, CatLog::Category::Data, false);
+		itsData->LogAndWarnUser(errStr, "Error while loading data at startup", CatLog::Severity::Error, CatLog::Category::Data, false);
 	}
-	GetData()->SmartMetEditingMode(oldMode, false);
+	itsData->SmartMetEditingMode(oldMode, false);
 }
 
 void CSmartMetDoc::PostMessageToDialog(SmartMetViewId theDestDlg, UINT theMessage)
@@ -610,42 +603,45 @@ void CSmartMetDoc::OnButtonLoadData()
 	BOOL stat = PrepareForLoadingDataFromFile();
 
 	CFmiLoadDataDialog dialog(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation());
-	bool fWasOnNormalMode = !GetData()->IsOperationalModeOn();
+	bool fWasOnNormalMode = !itsData->IsOperationalModeOn();
+	auto editorModeDataWCTR = itsData->EditorModeDataWCTR();
 	if(fWasOnNormalMode)
-	{ // Ikävää kikka vitoislua, tällä estetään kun ollaan normaali moodissa, ja vielä lataus dialogissa
+	{ 
+		// Ikävää kikka vitoislua, tällä estetään kun ollaan normaali moodissa, ja vielä lataus dialogissa
 		// ettei SmartMet mene laittamaan datan lataus threadeja päälle.
-		GetData()->EditorModeDataWCTR()->InNormalModeStillInDataLoadDialog(true);
+		editorModeDataWCTR->InNormalModeStillInDataLoadDialog(true);
 	}
 
-	bool oldValue = GetData()->EditorModeDataWCTR()->UseNormalModeForAWhile();
-	GetData()->EditorModeDataWCTR()->UseNormalModeForAWhile(false); // pitää laittaa varmuuden vuoksi pois päältä latauksen ajaksi
-	bool isViewMode = (GetData()->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal);
+	bool oldValue = editorModeDataWCTR->UseNormalModeForAWhile();
+	editorModeDataWCTR->UseNormalModeForAWhile(false); // pitää laittaa varmuuden vuoksi pois päältä latauksen ajaksi
+	bool isViewMode = (itsData->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal);
 	if(isViewMode || dialog.DoModal() == IDOK) // jos ollaan ns. view-moodissa, ei dialogia avata vaan mennaan oletus arvoilla eteenpain
 	{
-		GetData()->EditorModeDataWCTR()->InNormalModeStillInDataLoadDialog(false);
+		editorModeDataWCTR->InNormalModeStillInDataLoadDialog(false);
 		CWaitCursor cursor;
 		SetCursor(AfxGetApp()->LoadStandardCursor(IDC_WAIT)); // älä poista, muuten ei tule jostain syystä tiimalasia!?!?!?
-		if(GetData())
-			GetData()->LoadData(dialog.RemoveThundersOnLoad());
-		SetPathName(_TEXT("_"));
+		itsData->LoadData(dialog.RemoveThundersOnLoad());
+		if(!GetPathName().IsEmpty())
+			SetPathName(_TEXT("_"));
 		((CMainFrame*)AfxGetMainWnd())->StartDataLoadingWorkingThread(); // edellä load datassa ladattiin vain itse data, tässä käynnistetään apudatan lataus heti
 		UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": edited data loaded");
 	}
 	else
 	{
-		GetData()->EditorModeDataWCTR()->InNormalModeStillInDataLoadDialog(false);
-		GetData()->EditorModeDataWCTR()->UseNormalModeForAWhile(oldValue); // jos cancelilla ulos, voidaan laittaa vanha moodi päälle takaisin
+		editorModeDataWCTR->InNormalModeStillInDataLoadDialog(false);
+		editorModeDataWCTR->UseNormalModeForAWhile(oldValue); // jos cancelilla ulos, voidaan laittaa vanha moodi päälle takaisin
 
 		if(fWasOnNormalMode)
 		{
 			// TÄMÄ pikaviritys palauttaa vain timebag/editormode sekoilut paikallee, jos on ollut
 			// normaalisti dataa ladattuna ja painaa Lataa-nappulaa ja painaa Peruuta-nappia
-			boost::shared_ptr<NFmiFastQueryInfo> smart = GetData()->EditedSmartInfo();
+			boost::shared_ptr<NFmiFastQueryInfo> smart = itsData->EditedSmartInfo();
 			if(smart)
 			{
 				string dataFileName(smart->DataFileName());
 				string dataFilePattern(smart->DataFilePattern());
-				GetData()->AddQueryData(smart->RefQueryData()->Clone(), dataFileName, dataFilePattern, NFmiInfoData::kEditable, "", dynamic_cast<NFmiSmartInfo*>(smart.get())->LoadedFromFile());
+				bool dataWasDeleted = false;
+				itsData->AddQueryData(smart->RefQueryData()->Clone(), dataFileName, dataFilePattern, NFmiInfoData::kEditable, "", dynamic_cast<NFmiSmartInfo*>(smart.get())->LoadedFromFile(), dataWasDeleted);
 			}
 			UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": loading edited data canceled"); // näyttöä pitää päivittää, muuten ohjelma kaatuu kun drawparamit on tuhottu alta ja näyttöjä ei ole päivitetty oikein
 		}
@@ -660,7 +656,7 @@ BOOL CSmartMetDoc::PrepareForLoadingDataFromFile(void)
 
 BOOL CSmartMetDoc::CheckEditedDataAndStoreIfNeeded(void)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> smart = GetData()->EditedSmartInfo();
+	boost::shared_ptr<NFmiFastQueryInfo> smart = itsData->EditedSmartInfo();
 	BOOL status = TRUE;
 	if(smart != 0 && dynamic_cast<NFmiSmartInfo*>(smart.get())->IsDirty()) //jos on dataa jo ladattuna ja sitä on muutettu, talletetaan ensin
 	{
@@ -671,7 +667,7 @@ BOOL CSmartMetDoc::CheckEditedDataAndStoreIfNeeded(void)
 
 BOOL CSmartMetDoc::StoreEditedData(void)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> smart = GetData()->EditedSmartInfo();
+	boost::shared_ptr<NFmiFastQueryInfo> smart = itsData->EditedSmartInfo();
 	BOOL status = TRUE;
 	if(smart)
 	{
@@ -685,13 +681,13 @@ BOOL CSmartMetDoc::StoreEditedData(void)
 
 void CSmartMetDoc::OnButtonStoreData()
 {
-	GetData()->LogMessage("Saving edited data.", CatLog::Severity::Info, CatLog::Category::Editing);
+	itsData->LogMessage("Saving edited data.", CatLog::Severity::Info, CatLog::Category::Editing);
 	StoreEditedData();
 }
 
 BOOL CSmartMetDoc::StoreWorkingData(boost::shared_ptr<NFmiFastQueryInfo> &smart, bool askForSave)
 {
-	NFmiDataLoadingInfo& info = GetData()->GetUsedDataLoadingInfo();
+	NFmiDataLoadingInfo& info = itsData->GetUsedDataLoadingInfo();
 	info.InitFileNameLists();
 	NFmiString fileNameWithPath(info.CreateWorkingFileName(info.LatestWorkingVersion()+1));
 	return StoreData(fileNameWithPath, smart, askForSave);
@@ -699,7 +695,7 @@ BOOL CSmartMetDoc::StoreWorkingData(boost::shared_ptr<NFmiFastQueryInfo> &smart,
 
 void CSmartMetDoc::DoAutoSave(void)
 {
-	GetData()->DoAutoSaveData();
+	itsData->DoAutoSaveData();
 }
 
 BOOL CSmartMetDoc::StoreDataBaseDataMarko(boost::shared_ptr<NFmiFastQueryInfo> &smart)
@@ -710,11 +706,10 @@ BOOL CSmartMetDoc::StoreDataBaseDataMarko(boost::shared_ptr<NFmiFastQueryInfo> &
 	if(dlg.DoModal() == IDOK)
 	{
 		CWaitCursor waitCursor;
-		NFmiEditMapGeneralDataDoc* doc = GetData();
 		string forecasterId = CT2A(dlg.ForecasterIDStr());
-		doc->DataToDBCheckMethod(dlg.DataCheckMethod());
-		bool success = doc->StoreDataToDataBase(forecasterId);
-		if(success && doc->IsOperationalModeOn())
+		itsData->DataToDBCheckMethod(dlg.DataCheckMethod());
+		bool success = itsData->StoreDataToDataBase(forecasterId);
+		if(success && itsData->IsOperationalModeOn())
 		{
 		}
 		((CFrameWnd*)AfxGetMainWnd())->SetMessageText(AFX_IDS_IDLEMESSAGE); // LAURA!!!!!!!!
@@ -726,7 +721,7 @@ BOOL CSmartMetDoc::StoreDataBaseDataMarko(boost::shared_ptr<NFmiFastQueryInfo> &
 
 BOOL CSmartMetDoc::StoreData(bool newFile, bool askForSave)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> info = GetData()->EditedSmartInfo();
+	boost::shared_ptr<NFmiFastQueryInfo> info = itsData->EditedSmartInfo();
 	if(info)
 	{
 		if(newFile)
@@ -807,45 +802,33 @@ void CSmartMetDoc::OnMenuitemOptiot()
 
 void CSmartMetDoc::OnSelectAll()
 {
-	if(GetData())
+	if(itsData->SelectAllLocations(true))
 	{
-		if(GetData()->SelectAllLocations(true))
-		{
-			GetData()->LogMessage("Select all grid points for editing.", CatLog::Severity::Info, CatLog::Category::Editing);
-            GetData()->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // tämä pitäisi hoitaa järkevämmin, sillä tämä asetetaan true:ksi edellisessä funktiokutsussa
-            ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
-            UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": selected all edited data grid points");
-		}
+		itsData->LogMessage("Select all grid points for editing.", CatLog::Severity::Info, CatLog::Category::Editing);
+		itsData->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // tämä pitäisi hoitaa järkevämmin, sillä tämä asetetaan true:ksi edellisessä funktiokutsussa
+		ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
+		UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": selected all edited data grid points");
 	}
 }
 
 void CSmartMetDoc::OnDeselectAll()
 {
-	if(GetData())
+	if(itsData->SelectAllLocations(false))
 	{
-		if(GetData()->SelectAllLocations(false))
-		{
-            GetData()->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // tämä pitäisi hoitaa järkevämmin, sillä tämä asetetaan true:ksi edellisessä funktiokutsussa
-            ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
-            UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": deselected all edited data grid points");
-		}
+		itsData->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false); // tämä pitäisi hoitaa järkevämmin, sillä tämä asetetaan true:ksi edellisessä funktiokutsussa
+		ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
+		UpdateAllViewsAndDialogs(std::string(__FUNCTION__) + ": deselected all edited data grid points");
 	}
 }
 
 void CSmartMetDoc::OnEditUndo()
 {
-	if(GetData())
-	{
-		GetData()->OnButtonUndo();
-	}
+	itsData->OnButtonUndo();
 }
 
 void CSmartMetDoc::OnEditRedo()
 {
-	if(GetData())
-	{
-		GetData()->OnButtonRedo();
-	}
+	itsData->OnButtonRedo();
 }
 
 void CSmartMetDoc::OnButtonSelectionToolDlg()
@@ -854,21 +837,21 @@ void CSmartMetDoc::OnButtonSelectionToolDlg()
 		CreateLocationSelectionToolDialog(itsData);
 	if(itsLocationSelectionToolDlg->ShowWindow(SW_RESTORE ))	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
 		itsLocationSelectionToolDlg->SetActiveWindow();
-	GetData()->LogMessage("Opening editing grid point selector tool.", CatLog::Severity::Info, CatLog::Category::Operational);
+	itsData->LogMessage("Opening editing grid point selector tool.", CatLog::Severity::Info, CatLog::Category::Operational);
 }
 
 void CSmartMetDoc::OnMenuitemSaveAs()
 {
-	boost::shared_ptr<NFmiFastQueryInfo> info = GetData()->EditedSmartInfo();
+	boost::shared_ptr<NFmiFastQueryInfo> info = itsData->EditedSmartInfo();
 	if(info)
 	{
 		CFileDialog dlg(FALSE, _TEXT("sqd")); //muutin sqd:ksi
-        dlg.m_ofn.lpstrInitialDir = CA2T(GetData()->FileDialogDirectoryMemory().c_str());
+        dlg.m_ofn.lpstrInitialDir = CA2T(itsData->FileDialogDirectoryMemory().c_str());
 		if(dlg.DoModal() == IDOK)
 		{
 			NFmiString fileName = CT2A(dlg.GetPathName());
 			BOOL status = StoreData(fileName,info);
-			GetData()->LogMessage("Save as edited data...", CatLog::Severity::Info, CatLog::Category::Data);
+			itsData->LogMessage("Save as edited data...", CatLog::Severity::Info, CatLog::Category::Data);
 		}
 	}
 }
@@ -934,11 +917,6 @@ void CSmartMetDoc::CreateTrajectoryDlg(NFmiEditMapGeneralDataDoc * theDoc)
 void CSmartMetDoc::CreateWarningCenterDlg(NFmiEditMapGeneralDataDoc *theDoc)
 {
     CreateModalessDialog(&itsWarningCenterDlg, IDD_DIALOG_WARNING_CENTER_DLG, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), false);
-}
-
-void CSmartMetDoc::CreateSeaIcingWarningsDlg(NFmiEditMapGeneralDataDoc *theDoc)
-{
-    CreateModalessDialog(&itsSeaIcingWarningsDlg, IDD_DIALOG_WARNING_CENTER_DLG, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), false);
 }
 
 void CSmartMetDoc::CreateWindTableDlg(NFmiEditMapGeneralDataDoc *theDoc)
@@ -1017,7 +995,7 @@ void CSmartMetDoc::OnAcceleratorIgnoreStationsDlg()
 		{ // laitetaan aikasarjaikkuna kiinni
 			itsIgnoreStationsDlg->ShowWindow(SW_HIDE);
             itsData->IgnoreStationsData().IgnoreStationsDialogOn(false);
-            GetData()->LogMessage("Closes Ignore stations dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
+			itsData->LogMessage("Closes Ignore stations dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
 		}
 		else
 		{ // laitetaan aikasarja ikkuna päälle
@@ -1025,7 +1003,7 @@ void CSmartMetDoc::OnAcceleratorIgnoreStationsDlg()
 			itsIgnoreStationsDlg->SetActiveWindow();
 			itsData->IgnoreStationsData().IgnoreStationsDialogOn(true);
 //			itsIgnoreStationsDlg->Update();
-			GetData()->LogMessage("Open Ignore station dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
+			itsData->LogMessage("Open Ignore station dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
 		}
 		itsData->TimeSerialDataViewOn(!itsData->TimeSerialDataViewOn());
 	}
@@ -1094,37 +1072,28 @@ void CSmartMetDoc::CreateZoomDlg(NFmiEditMapGeneralDataDoc * theDoc)
 
 void CSmartMetDoc::OnButtonSelectEuropeMap()
 {
-	if(GetData())
-	{
-		GetData()->LogMessage("Map 3 selected.", CatLog::Severity::Info, CatLog::Category::Operational);
-		GetData()->GetCombinedMapHandler()->setSelectedMapHandler(itsMapViewDescTopIndex, 2);
-		UpdateAllViewsAndDialogs("Map area 3 selected in main map view");
-	}
+	itsData->LogMessage("Map 3 selected.", CatLog::Severity::Info, CatLog::Category::Operational);
+	itsData->GetCombinedMapHandler()->setSelectedMapHandler(itsMapViewDescTopIndex, 2);
+	UpdateAllViewsAndDialogs("Map area 3 selected in main map view");
 }
 
 void CSmartMetDoc::OnButtonSelectFinlandMap()
 {
-	if(GetData())
-	{
-		GetData()->LogMessage("Map 1 selected.", CatLog::Severity::Info, CatLog::Category::Operational);
-		GetData()->GetCombinedMapHandler()->setSelectedMapHandler(itsMapViewDescTopIndex, 0);
-		UpdateAllViewsAndDialogs("Map area 1 selected in main map view");
-	}
+	itsData->LogMessage("Map 1 selected.", CatLog::Severity::Info, CatLog::Category::Operational);
+	itsData->GetCombinedMapHandler()->setSelectedMapHandler(itsMapViewDescTopIndex, 0);
+	UpdateAllViewsAndDialogs("Map area 1 selected in main map view");
 }
 
 void CSmartMetDoc::OnButtonSelectScandinaviaMap()
 {
-	if(GetData())
-	{
-		GetData()->LogMessage("Map 2 selected.", CatLog::Severity::Info, CatLog::Category::Operational);
-		GetData()->GetCombinedMapHandler()->setSelectedMapHandler(itsMapViewDescTopIndex, 1);
-		UpdateAllViewsAndDialogs("Map area 2 selected in main map view");
-	}
+	itsData->LogMessage("Map 2 selected.", CatLog::Severity::Info, CatLog::Category::Operational);
+	itsData->GetCombinedMapHandler()->setSelectedMapHandler(itsMapViewDescTopIndex, 1);
+	UpdateAllViewsAndDialogs("Map area 2 selected in main map view");
 }
 
 bool CSmartMetDoc::IsMapSelected(int theMapIndex)
 {
-    return GetData()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(itsMapViewDescTopIndex)->SelectedMapIndex() == theMapIndex;
+    return itsData->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(itsMapViewDescTopIndex)->SelectedMapIndex() == theMapIndex;
 }
 
 void CSmartMetDoc::OnUpdateButtonSelectScandinaviaMap(CCmdUI *pCmdUI)
@@ -1134,17 +1103,14 @@ void CSmartMetDoc::OnUpdateButtonSelectScandinaviaMap(CCmdUI *pCmdUI)
 
 void CSmartMetDoc::OnButtonGlobe()
 {
-	if(GetData())
-	{
-		GetData()->LogMessage("Map 4 selected.", CatLog::Severity::Info, CatLog::Category::Operational);
-		GetData()->GetCombinedMapHandler()->setSelectedMapHandler(itsMapViewDescTopIndex, 3);
-		UpdateAllViewsAndDialogs("Map area 4 selected in main map view");
-	}
+	itsData->LogMessage("Map 4 selected.", CatLog::Severity::Info, CatLog::Category::Operational);
+	itsData->GetCombinedMapHandler()->setSelectedMapHandler(itsMapViewDescTopIndex, 3);
+	UpdateAllViewsAndDialogs("Map area 4 selected in main map view");
 }
 
 void CSmartMetDoc::OnButtonDataToDatabase()
 {
-	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = GetData()->EditedSmartInfo();
+	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = itsData->EditedSmartInfo();
 	NFmiSmartInfo *smart = dynamic_cast<NFmiSmartInfo*>(editedInfo.get());
 	if(smart == 0)
 	{
@@ -1168,7 +1134,7 @@ void CSmartMetDoc::OnButtonDataToDatabase()
 		}
 		if(!smart->LoadedFromFile()) //vain dataloadinginfon mukaiset smartit tiedostoon
 		{
-			if(GetData()->CheckEditedDataForStartUpLoadErrors(MB_OKCANCEL | MB_ICONERROR))
+			if(itsData->CheckEditedDataForStartUpLoadErrors(MB_OKCANCEL | MB_ICONERROR))
 			{
 				status = StoreDataBaseDataMarko(editedInfo);
 			}
@@ -1192,7 +1158,7 @@ void CSmartMetDoc::OnDataLoadFromFile()
 
 	static TCHAR BASED_CODE szFilter[] = _TEXT("QD-files (*.sqd;*.fqd)|*.sqd; *.fqd|all files (*.*)|*.*||");
 	CFileDialog dlg(TRUE, NULL, NULL, OFN_ALLOWMULTISELECT|OFN_EXPLORER, szFilter);
-    dlg.m_ofn.lpstrInitialDir = CA2T(GetData()->FileDialogDirectoryMemory().c_str());
+    dlg.m_ofn.lpstrInitialDir = CA2T(itsData->FileDialogDirectoryMemory().c_str());
 
 	// Allocate storage for szSelections
 	const int kBufferSize = 20000;
@@ -1220,7 +1186,7 @@ void CSmartMetDoc::OnDataLoadFromFile()
 			string fileName = CT2A(dlg.GetNextPathName(pos));
 			files.push_back(fileName);
 			if(i==0)
-				GetData()->MakeAndStoreFileDialogDirectoryMemory(fileName);
+				itsData->MakeAndStoreFileDialogDirectoryMemory(fileName);
 		}
 		LoadDataFromFilesAndAdd(files);
 		delete [] szSelections;
@@ -1233,10 +1199,11 @@ BOOL CSmartMetDoc::LoadDataFromFile(const char* theFileName)
     CString errorStringU_;
 	try
 	{
-        std::unique_ptr<NFmiQueryData> data = QueryDataReading::ReadDataFromFile(theFileName, GetData()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().DroppedDataEditable() == false);
+        std::unique_ptr<NFmiQueryData> data = QueryDataReading::ReadDataFromFile(theFileName, itsData->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().DroppedDataEditable() == false);
         if(data)
         {
-            GetData()->AddQueryData(data.release(), theFileName, "", NFmiInfoData::kEditable, "", true);
+			bool dataWasDeleted = false;
+			itsData->AddQueryData(data.release(), theFileName, "", NFmiInfoData::kEditable, "", true, dataWasDeleted);
             SetPathName(CA2T(theFileName)); // pitää laittaa AddData:n jälkeen, muuten tiedoston nimi ei tule oikein ohjelman otsikkoon.
             UpdateAllViewsAndDialogs("Loaded new edited data");
             return TRUE;
@@ -1288,11 +1255,11 @@ static void UpdateMapView(NFmiEditMapGeneralDataDoc *doc, View *extraMapView, un
 bool CSmartMetDoc::UpdateAllViewsAndDialogsIsAllowed()
 {
     // printatessa ruutujen päivitys voi aiheuttaa ongelmia
-    if(GetData()->Printing())
+    if(itsData->Printing())
         return false;
     // Uusien datan muokkaus rutiinien kanssa ruutujen päivitys voi aiheuttaa ongelmia 
     // Multi-thread ja/tai progress/cancel (-> erillinen muokkaus threadi) systeemit menevät jotenkin sekaisin
-    if(GetData()->DataModificationInProgress())
+    if(itsData->DataModificationInProgress())
         return false;
 
     return true;
@@ -1328,9 +1295,9 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string &reasonForUpdate, 
             if(fUpdateOnlyMapViews == false)
                 ::UpdateModalessDialog(itsZoomDlg);
 
-            ::UpdateMapView(GetData(), ApplicationInterface::GetSmartMetView(), 0);
-            ::UpdateMapView(GetData(), itsExtraMapViewDlg1, 1);
-            ::UpdateMapView(GetData(), itsExtraMapViewDlg2, 2);
+            ::UpdateMapView(itsData, ApplicationInterface::GetSmartMetView(), 0);
+            ::UpdateMapView(itsData, itsExtraMapViewDlg1, 1);
+            ::UpdateMapView(itsData, itsExtraMapViewDlg2, 2);
 
             if(fUpdateOnlyMapViews == false)
             {
@@ -1345,7 +1312,6 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string &reasonForUpdate, 
                 ::UpdateModalessDialog(itsSynopDataGridViewDlg);
                 ::UpdateModalessDialog(itsTrajectoryDlg);
                 ::UpdateModalessDialog(itsWarningCenterDlg);
-                ::UpdateModalessDialog(itsSeaIcingWarningsDlg);
                 ::UpdateModalessDialog(itsWindTableDlg);
                 //            ::UpdateModalessDialog(itsDataQualityCheckerDialog);
                 ::UpdateModalessDialog(itsBetaProductDialog);
@@ -1395,11 +1361,11 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string& reasonForUpdate, 
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::ZoomDlg))
             ::UpdateModalessDialog(itsZoomDlg);
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::MainMapView))
-            ::UpdateMapView(GetData(), ApplicationInterface::GetSmartMetView(), 0);
+            ::UpdateMapView(itsData, ApplicationInterface::GetSmartMetView(), 0);
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::MapView2))
-            ::UpdateMapView(GetData(), itsExtraMapViewDlg1, 1);
+            ::UpdateMapView(itsData, itsExtraMapViewDlg1, 1);
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::MapView3))
-            ::UpdateMapView(GetData(), itsExtraMapViewDlg2, 2);
+            ::UpdateMapView(itsData, itsExtraMapViewDlg2, 2);
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::TimeSerialView))
             ::UpdateModalessDialog(itsTimeSerialDataEditorDlg);
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::DataFilterToolDlg))
@@ -1421,8 +1387,6 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string& reasonForUpdate, 
             ::UpdateModalessDialog(itsTrajectoryDlg);
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::WarningCenterDlg))
             ::UpdateModalessDialog(itsWarningCenterDlg);
-        if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::SeaIcingDlg))
-            ::UpdateModalessDialog(itsSeaIcingWarningsDlg);
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::WindTableDlg))
             ::UpdateModalessDialog(itsWindTableDlg);
         //            ::UpdateModalessDialog(itsDataQualityCheckerDialog);
@@ -1438,10 +1402,10 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string& reasonForUpdate, 
 void CSmartMetDoc::UpdateOnlyExtraMapViews(bool updateMap1, bool updateMap2)
 {
 	if(updateMap1)
-        ::UpdateMapView(GetData(), itsExtraMapViewDlg1, 1);
+        ::UpdateMapView(itsData, itsExtraMapViewDlg1, 1);
 
 	if(updateMap2)
-        ::UpdateMapView(GetData(), itsExtraMapViewDlg2, 2);
+        ::UpdateMapView(itsData, itsExtraMapViewDlg2, 2);
 }
 
 void CSmartMetDoc::UpdateCrossSectionView(void)
@@ -1466,9 +1430,9 @@ void CSmartMetDoc::UpdateTrajectorySystem(void)
 
 void CSmartMetDoc::OnUpdateEditUndo(CCmdUI* pCmdUI)
 {
-	if(GetData()->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // eli jos ollaan edit-moodissa, asetetaan nappulan tilaa
+	if(itsData->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // eli jos ollaan edit-moodissa, asetetaan nappulan tilaa
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> editedInfo = GetData()->EditedSmartInfo();
+		boost::shared_ptr<NFmiFastQueryInfo> editedInfo = itsData->EditedSmartInfo();
 		if(editedInfo)
 		{
 			pCmdUI->Enable(dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->Undo());
@@ -1482,9 +1446,9 @@ void CSmartMetDoc::OnUpdateEditUndo(CCmdUI* pCmdUI)
 
 void CSmartMetDoc::OnUpdateEditRedo(CCmdUI* pCmdUI)
 {
-	if(GetData()->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // eli jos ollaan edit-moodissa, asetetaan nappulan tilaa
+	if(itsData->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // eli jos ollaan edit-moodissa, asetetaan nappulan tilaa
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> editedInfo = GetData()->EditedSmartInfo();
+		boost::shared_ptr<NFmiFastQueryInfo> editedInfo = itsData->EditedSmartInfo();
 		if(editedInfo)
 		{
 			pCmdUI->Enable(dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->Redo());
@@ -1498,32 +1462,26 @@ void CSmartMetDoc::OnUpdateEditRedo(CCmdUI* pCmdUI)
 
 void CSmartMetDoc::OnChangeParamWindowPositionForward()
 {
-	GetData()->GetCombinedMapHandler()->onChangeParamWindowPosition(itsMapViewDescTopIndex, true);
+	itsData->GetCombinedMapHandler()->onChangeParamWindowPosition(itsMapViewDescTopIndex, true);
 }
 
 void CSmartMetDoc::OnChangeParamWindowPositionBackward()
 {
-	GetData()->GetCombinedMapHandler()->onChangeParamWindowPosition(itsMapViewDescTopIndex, false);
+	itsData->GetCombinedMapHandler()->onChangeParamWindowPosition(itsMapViewDescTopIndex, false);
 }
 
 void CSmartMetDoc::OnMakeGridFile()
 {
-	if(GetData())
-	{
-		CWaitCursor cursor;
-		GetData()->MakeGridFile("grid.txt");
-		GetData()->LogMessage("Storing active grid data to file.", CatLog::Severity::Debug, CatLog::Category::Data);
-	}
+	CWaitCursor cursor;
+	itsData->MakeGridFile("grid.txt");
+	itsData->LogMessage("Storing active grid data to file.", CatLog::Severity::Debug, CatLog::Category::Data);
 }
 
 void CSmartMetDoc::OnButtonMakeEditedDataCopy()
 {
-	if(GetData())
-	{
-		GetData()->UpdateEditedDataCopy();
-		GetData()->LogMessage("Copy active grid data.", CatLog::Severity::Debug, CatLog::Category::Editing);
-		UpdateAllViewsAndDialogs("Updated edited data copy");
-	}
+	itsData->UpdateEditedDataCopy();
+	itsData->LogMessage("Copy active grid data.", CatLog::Severity::Debug, CatLog::Category::Editing);
+	UpdateAllViewsAndDialogs("Updated edited data copy");
 }
 
 void CSmartMetDoc::OnButtonFilterDialog()
@@ -1532,9 +1490,9 @@ void CSmartMetDoc::OnButtonFilterDialog()
 		CreateFilterDlg(itsData);
 	if(itsFilterDlg->ShowWindow(SW_RESTORE ))	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
 		itsFilterDlg->SetActiveWindow();
-	GetData()->FilterDialogUpdateStatus(2); // 2 = päivitä koko ruutu
+	itsData->FilterDialogUpdateStatus(2); // 2 = päivitä koko ruutu
 	itsFilterDlg->Update();
-	GetData()->LogMessage("Opening Data Filter tool.", CatLog::Severity::Info, CatLog::Category::Editing);
+	itsData->LogMessage("Opening Data Filter tool.", CatLog::Severity::Info, CatLog::Category::Editing);
 }
 
 void CSmartMetDoc::CreateFilterDlg(NFmiEditMapGeneralDataDoc * theDoc)
@@ -1577,7 +1535,7 @@ void CSmartMetDoc::LoadDataFromFilesAndAdd(std::vector<std::string> &theFileList
     {
         for(size_t i = 0; i < theFileList.size(); i++)
         {
-            LoadDataFromFileAndAdd(theFileList[i], datatype, GetData()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().DroppedDataEditable() == false);
+            LoadDataFromFileAndAdd(theFileList[i], datatype, itsData->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().DroppedDataEditable() == false);
             datatype = NFmiInfoData::kViewable; // loput ovat ns. apudatoja eli kViewable:ja (LoadDataFromFileAndAdd metodissa vielä lisää tarkasteluja)
 
             // Jos 1. data, joka laitetaan  editoitavaksi dataksi ja muitakin datoja on tiputettu,
@@ -1615,18 +1573,19 @@ void CSmartMetDoc::LoadDataFromFileAndAdd(const std::string &theFileName, NFmiIn
             }
 
             std::string filePattern = theFileName; // annetaan filepatterniksi tiputettujen datojen yhteydessä tiedoston nimi, muuten homma ei toimi kunnolla infoorganizerissa
-            GetData()->AddQueryData(data.release(), theFileName, filePattern, theDatatype, "", true);
+			bool dataWasDeleted = false;
+			itsData->AddQueryData(data.release(), theFileName, filePattern, theDatatype, "", true, dataWasDeleted);
 
             if(theDatatype == NFmiInfoData::kEditable)
             {
-                GetData()->EditedDataNotInPreferredState(false); // tämä pitää asettaa varmuuden vuoksi falseksi, oletetaan että kaikki tiputetut tai erikseen ladattavat editoitavat datat ovat 'halutussa' tilassa eli eivät ole liian vanhoja.
+				itsData->EditedDataNotInPreferredState(false); // tämä pitää asettaa varmuuden vuoksi falseksi, oletetaan että kaikki tiputetut tai erikseen ladattavat editoitavat datat ovat 'halutussa' tilassa eli eivät ole liian vanhoja.
                 SetPathName(CA2T(theFileName.c_str())); // pitää laittaa AddData:n jälkeen, muuten tiedoston nimi ei tule oikein ohjelman otsikkoon.
             }
         }
 	}
 	catch(char *msg)
 	{
-        GetData()->LogMessage(msg, CatLog::Severity::Error, CatLog::Category::Data);
+		itsData->LogMessage(msg, CatLog::Severity::Error, CatLog::Category::Data);
         errorStringU_ = CA2T(msg);
         CDataLoadingProblemsDlg dlg(errorStringU_);
 		if(dlg.DoModal() == IDOK)
@@ -1634,7 +1593,7 @@ void CSmartMetDoc::LoadDataFromFileAndAdd(const std::string &theFileName, NFmiIn
 	}
 	catch(exception &e)
 	{
-		GetData()->LogMessage(e.what() , CatLog::Severity::Error, CatLog::Category::Data);
+		itsData->LogMessage(e.what() , CatLog::Severity::Error, CatLog::Category::Data);
         errorStringU_ = CA2T(e.what());
         CDataLoadingProblemsDlg dlg(errorStringU_);
 		if(dlg.DoModal() == IDOK)
@@ -1643,7 +1602,7 @@ void CSmartMetDoc::LoadDataFromFileAndAdd(const std::string &theFileName, NFmiIn
 	catch(...)
 	{
         errorStringU_ = _TEXT("Unknown error while readin data file: ");
-        GetData()->LogMessage(std::string(CT2A(errorStringU_)), CatLog::Severity::Error, CatLog::Category::Data);
+		itsData->LogMessage(std::string(CT2A(errorStringU_)), CatLog::Severity::Error, CatLog::Category::Data);
         errorStringU_ += CA2T(theFileName.c_str());
         CDataLoadingProblemsDlg dlg(errorStringU_);
 		if(dlg.DoModal() == IDOK)
@@ -1655,25 +1614,21 @@ void CSmartMetDoc::LoadDataFromFileAndAdd(const std::string &theFileName, NFmiIn
 // laittaa sivellintyökalun päälle/pois
 void CSmartMetDoc::OnButtonBrushToolDlg()
 {
-	NFmiEditMapGeneralDataDoc * doc = GetData();
-	if(doc)
+	if(itsData->ModifyToolMode() != CtrlViewUtils::kFmiEditorModifyToolModeBrush)
 	{
-		if(doc->ModifyToolMode() != CtrlViewUtils::kFmiEditorModifyToolModeBrush)
-		{
-			doc->LogMessage("Opening brush tool.", CatLog::Severity::Info, CatLog::Category::Editing);
+		itsData->LogMessage("Opening brush tool.", CatLog::Severity::Info, CatLog::Category::Editing);
 
-			doc->ModifyToolMode(CtrlViewUtils::kFmiEditorModifyToolModeBrush);
-			if(!itsBrushToolDlg)
-				CreateBrushToolDlg(itsData);
-			itsBrushToolDlg->ShowWindow(SW_RESTORE);
-		}
-		else // Editor mode back to normal and hide dialog. This is not done when brush tool is closed from it's own window's close button!
-		{
-			doc->LogMessage("Closing brush tool.", CatLog::Severity::Info, CatLog::Category::Editing);
-			doc->ModifyToolMode(CtrlViewUtils::kFmiEditorModifyToolModeNormal);
-			if(itsBrushToolDlg)
-				itsBrushToolDlg->ShowWindow(SW_HIDE);
-		}
+		itsData->ModifyToolMode(CtrlViewUtils::kFmiEditorModifyToolModeBrush);
+		if(!itsBrushToolDlg)
+			CreateBrushToolDlg(itsData);
+		itsBrushToolDlg->ShowWindow(SW_RESTORE);
+	}
+	else // Editor mode back to normal and hide dialog. This is not done when brush tool is closed from it's own window's close button!
+	{
+		itsData->LogMessage("Closing brush tool.", CatLog::Severity::Info, CatLog::Category::Editing);
+		itsData->ModifyToolMode(CtrlViewUtils::kFmiEditorModifyToolModeNormal);
+		if(itsBrushToolDlg)
+			itsBrushToolDlg->ShowWindow(SW_HIDE);
 	}
 }
 
@@ -1703,36 +1658,32 @@ void CSmartMetDoc::CreateLocationFinderDlg(NFmiEditMapGeneralDataDoc* theDoc)
 
 void CSmartMetDoc::OnUpdateButtonBrushToolDlg(CCmdUI* pCmdUI)
 {
-	if(GetData()->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // eli jos ollaan edit-moodissa, asetetaan nappulan tilaa
-		pCmdUI->SetCheck(GetData()->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush);
+	if(itsData->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // eli jos ollaan edit-moodissa, asetetaan nappulan tilaa
+		pCmdUI->SetCheck(itsData->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush);
 	else	// jos ollaan ns. view-moodissa, disabloidaan koko nappula
 		pCmdUI->Enable(FALSE);
 }
 
 void CSmartMetDoc::OnButtonOpenSmartToolDlg()
 {
-    NFmiEditMapGeneralDataDoc * doc = GetData();
-    if(doc)
-    {
-        doc->LogMessage("Opening smarttool dialog.", CatLog::Severity::Info, CatLog::Category::Editing);
+	itsData->LogMessage("Opening smarttool dialog.", CatLog::Severity::Info, CatLog::Category::Editing);
 
-        bool openNewSmarttoolDialog = false;
+	bool openNewSmarttoolDialog = false;
 
-        if(openNewSmarttoolDialog)
-        {
-            if(!itsSmarttoolsTabControlDlg)
-                CreateSmartToolsTabControlDlg(itsData);
-            itsSmarttoolsTabControlDlg->ShowWindow(SW_RESTORE);
-            itsSmarttoolsTabControlDlg->SetActiveWindow();
-        }
-        else
-        {
-            if(!itsSmartToolDlg)
-                CreateSmartToolDlg(itsData);
-            itsSmartToolDlg->ShowWindow(SW_RESTORE);
-            itsSmartToolDlg->SetActiveWindow();
-        }
-    }
+	if(openNewSmarttoolDialog)
+	{
+		if(!itsSmarttoolsTabControlDlg)
+			CreateSmartToolsTabControlDlg(itsData);
+		itsSmarttoolsTabControlDlg->ShowWindow(SW_RESTORE);
+		itsSmarttoolsTabControlDlg->SetActiveWindow();
+	}
+	else
+	{
+		if(!itsSmartToolDlg)
+			CreateSmartToolDlg(itsData);
+		itsSmartToolDlg->ShowWindow(SW_RESTORE);
+		itsSmartToolDlg->SetActiveWindow();
+	}
 }
 
 void CSmartMetDoc::CreateTempDlg()
@@ -1780,13 +1731,13 @@ void CSmartMetDoc::MakeNextUpdateOnSynopDataGridViewDlgForced()
 void CSmartMetDoc::OnButtonRefresh()
 {
     MakeNextUpdateOnSynopDataGridViewDlgForced();
-	GetData()->OnButtonRefresh();
+	itsData->OnButtonRefresh("Refreshing all views (F5)");
 }
 
 void CSmartMetDoc::OnButtonReloadAllDynamicHelpData()
 {
     MakeNextUpdateOnSynopDataGridViewDlgForced();
-    GetData()->ReloadAllDynamicHelpData();
+	itsData->ReloadAllDynamicHelpData();
 	// Ensin tyhjennyksen jälkeen pitää ladata editoitava data muistiin
 	LoadDataOnStartUp();
 	// Sitten laitetaan normidatanlataus threadi taas toimimaan
@@ -1801,8 +1752,8 @@ void CSmartMetDoc::CaseStudyLoadingActions(const NFmiMetTime &theUsedTime, const
 	CFmiDataLoadingThread2::SettingsChanged(*itsData->HelpDataInfoSystem(), true); // Datan lataus threadille laitetaan tässä uusi CaseStudy-helpDataInfoSetting-olio käyttöön
 	CFmiDataLoadingThread2::ResetTimeStamps();
 	CFmiDataLoadingThread2::LoadDataNow();
-	GetData()->GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan kaikki kartta näytöt likaiseksi
-    GetData()->MacroParamDataCache().clearAllLayers();
+	itsData->GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan kaikki kartta näytöt likaiseksi
+	itsData->MacroParamDataCache().clearAllLayers();
 	UpdateAllViewsAndDialogs(updateReasonText);
 }
 
@@ -1833,7 +1784,6 @@ void CSmartMetDoc::SetAllViewIconsDynamically(void)
 	CFmiWin32Helpers::SetWindowIconDynamically(itsWarningCenterDlg, usedIcons);
 	CFmiWin32Helpers::SetWindowIconDynamically(itsExtraMapViewDlg1, usedIcons);
 	CFmiWin32Helpers::SetWindowIconDynamically(itsExtraMapViewDlg2, usedIcons);
-	CFmiWin32Helpers::SetWindowIconDynamically(itsSeaIcingWarningsDlg, usedIcons);
 	CFmiWin32Helpers::SetWindowIconDynamically(itsWindTableDlg, usedIcons);
 	CFmiWin32Helpers::SetWindowIconDynamically(itsDataQualityCheckerDialog, usedIcons);
 	CFmiWin32Helpers::SetWindowIconDynamically(itsIgnoreStationsDlg, usedIcons);
@@ -1848,45 +1798,38 @@ void CSmartMetDoc::SetAllViewIconsDynamically(void)
 // aukeaa vanha dialogi, koska citrix-linux yhdistelmällä uusi ruudukon valinta systeemi ei toimi
 void CSmartMetDoc::OnMenuitemViewGridSelectionDlg2()
 {
-	NFmiEditMapGeneralDataDoc *doc = GetData();
-	if(doc)
+	auto* combinedMapHandler = itsData->GetCombinedMapHandler();
+	NFmiPoint oldSize(combinedMapHandler->getMapViewDescTop(itsMapViewDescTopIndex)->ViewGridSize());
+	CFmiViewGridSelectorDlg dlg(itsMapViewDescTopIndex, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation());
+	if(dlg.DoModal() == IDOK)
 	{
-		auto *combinedMapHandler = doc->GetCombinedMapHandler();
-		NFmiPoint oldSize(combinedMapHandler->getMapViewDescTop(itsMapViewDescTopIndex)->ViewGridSize());
-		CFmiViewGridSelectorDlg dlg(itsMapViewDescTopIndex, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation());
-		if(dlg.DoModal() == IDOK)
-		{
-			if(combinedMapHandler->setMapViewGrid(itsMapViewDescTopIndex, dlg.SelectedGridSize()))
-				UpdateAllViewsAndDialogs("Changing main map view grid");
-		}
+		if(combinedMapHandler->setMapViewGrid(itsMapViewDescTopIndex, dlg.SelectedGridSize()))
+			UpdateAllViewsAndDialogs("Changing main map view grid");
 	}
 }
 
 void CSmartMetDoc::OnEditSpaceOut()
 {
-	GetData()->GetCombinedMapHandler()->onEditSpaceOut(itsMapViewDescTopIndex);
+	itsData->GetCombinedMapHandler()->onEditSpaceOut(itsMapViewDescTopIndex);
 }
 
 void CSmartMetDoc::OnButtonValidateData()
 {
-	if(GetData())
-	{
-		CWaitCursor cursor;
-		GetData()->LogMessage("Validation checking to edited data.", CatLog::Severity::Info, CatLog::Category::Editing);
-		GetData()->MakeDataValiditation();
-		UpdateAllViewsAndDialogs("Edited data validitation modifications");
-	}
+	CWaitCursor cursor;
+	itsData->LogMessage("Validation checking to edited data.", CatLog::Severity::Info, CatLog::Category::Editing);
+	itsData->MakeDataValiditation();
+	UpdateAllViewsAndDialogs("Edited data validitation modifications");
 }
 
 void CSmartMetDoc::OnUpdateButtonValidateData(CCmdUI* pCmdUI)
 {
-	if(GetData()->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
+	if(itsData->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
 		pCmdUI->Enable(FALSE);
 }
 
 void CSmartMetDoc::OnChangeMapType()
 {
-	GetData()->OnChangeMapType(itsMapViewDescTopIndex, true);
+	itsData->OnChangeMapType(itsMapViewDescTopIndex, true);
 }
 void CSmartMetDoc::OnUpdateButtonSelectEuropeMap(CCmdUI* pCmdUI)
 {
@@ -1905,33 +1848,33 @@ void CSmartMetDoc::OnUpdateButtonGlobe(CCmdUI* pCmdUI)
 
 void CSmartMetDoc::OnShowTimeString()
 {
-	GetData()->GetCombinedMapHandler()->onShowTimeString(itsMapViewDescTopIndex);
+	itsData->GetCombinedMapHandler()->onShowTimeString(itsMapViewDescTopIndex);
 }
 
 void CSmartMetDoc::OnShowGridPoints()
 {
-	GetData()->GetCombinedMapHandler()->onShowGridPoints(itsMapViewDescTopIndex);
+	itsData->GetCombinedMapHandler()->onShowGridPoints(itsMapViewDescTopIndex);
 }
 
 void CSmartMetDoc::OnToggleGridPointColor()
 {
-	GetData()->GetCombinedMapHandler()->onToggleGridPointColor(itsMapViewDescTopIndex);
+	itsData->GetCombinedMapHandler()->onToggleGridPointColor(itsMapViewDescTopIndex);
 }
 
 void CSmartMetDoc::OnToggleGridPointSize()
 {
-	GetData()->GetCombinedMapHandler()->onToggleGridPointSize(itsMapViewDescTopIndex);
+	itsData->GetCombinedMapHandler()->onToggleGridPointSize(itsMapViewDescTopIndex);
 }
 
 void CSmartMetDoc::OnToggleShowNamesOnMap()
 {
-	GetData()->GetCombinedMapHandler()->onToggleShowNamesOnMap(itsMapViewDescTopIndex, true);
+	itsData->GetCombinedMapHandler()->onToggleShowNamesOnMap(itsMapViewDescTopIndex, true);
 }
 
 // vaihtaaa "näytä maskit kartalla" -tilaa ja päivittää ruudut
 void CSmartMetDoc::OnShowMasksOnMap()
 {
-	GetData()->OnShowMasksOnMap(itsMapViewDescTopIndex);
+	itsData->OnShowMasksOnMap(itsMapViewDescTopIndex);
 }
 
 template<typename T>
@@ -2050,44 +1993,27 @@ void CSmartMetDoc::OnFileNew()
 
 void CSmartMetDoc::OnButtonAnimation()
 {
-	GetData()->ToggleTimeControlAnimationView(itsMapViewDescTopIndex);
-}
-
-void CSmartMetDoc::OnUpdateButtonAnimation(CCmdUI* pCmdUI)
-{
-	NFmiEditMapGeneralDataDoc *doc = GetData();
-	if(doc)
-	{
-//		pCmdUI->SetCheck(doc->DoAnimation());
-	}
+	itsData->ToggleTimeControlAnimationView(itsMapViewDescTopIndex);
 }
 
 void CSmartMetDoc::OnButtonEditorControlPointMode()
 {
-	NFmiEditMapGeneralDataDoc *doc = GetData();
-	if(doc)
-	{
-		doc->MetEditorOptionsData().ControlPointMode(!doc->MetEditorOptionsData().ControlPointMode());
-		if(doc->MetEditorOptionsData().ControlPointMode())
-			doc->LogMessage("Opening Control point tool.", CatLog::Severity::Info, CatLog::Category::Editing);
-		else
-			doc->LogMessage("Closing Control point tool.", CatLog::Severity::Info, CatLog::Category::Editing);
+	itsData->MetEditorOptionsData().ControlPointMode(!itsData->MetEditorOptionsData().ControlPointMode());
+	if(itsData->MetEditorOptionsData().ControlPointMode())
+		itsData->LogMessage("Opening Control point tool.", CatLog::Severity::Info, CatLog::Category::Editing);
+	else
+		itsData->LogMessage("Closing Control point tool.", CatLog::Severity::Info, CatLog::Category::Editing);
 
-		doc->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-        ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
-        UpdateAllViewsAndDialogs("Control point mode changed");
-	}
+	itsData->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
+	ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
+	UpdateAllViewsAndDialogs("Control point mode changed");
 }
 
 void CSmartMetDoc::OnUpdateButtonEditorControlPointMode(CCmdUI* pCmdUI)
 {
-	if(GetData()->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // eli jos ollaan edit-moodissa, asetetaan nappulan tilaa
+	if(itsData->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // eli jos ollaan edit-moodissa, asetetaan nappulan tilaa
 	{
-		NFmiEditMapGeneralDataDoc *doc = GetData();
-		if(doc)
-		{
-			pCmdUI->SetCheck(doc->MetEditorOptionsData().ControlPointMode());
-		}
+		pCmdUI->SetCheck(itsData->MetEditorOptionsData().ControlPointMode());
 	}
 	else	// jos ollaan ns. view-moodissa, disabloidaan koko nappula
 		pCmdUI->Enable(FALSE);
@@ -2096,12 +2022,11 @@ void CSmartMetDoc::OnUpdateButtonEditorControlPointMode(CCmdUI* pCmdUI)
 
 void CSmartMetDoc::OnButtonDelete()
 {
-	NFmiEditMapGeneralDataDoc *doc = GetData();
-	if(doc && doc->MetEditorOptionsData().ControlPointMode())
+	if(itsData->MetEditorOptionsData().ControlPointMode())
 	{
-		doc->CPManager()->RemoveCP();
-		doc->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-		GetData()->LogMessage("Deleting control point.", CatLog::Severity::Debug, CatLog::Category::Editing);
+		itsData->CPManager()->RemoveCP();
+		itsData->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
+		itsData->LogMessage("Deleting control point.", CatLog::Severity::Debug, CatLog::Category::Editing);
         ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView);
         UpdateAllViewsAndDialogs("Deleting control point");
 	}
@@ -2111,14 +2036,14 @@ void CSmartMetDoc::StoreBitmapImageToFile(const std::string &callingFunctionName
 {
     BOOL status = SaveViewToFilePicture(callingFunctionName, bitmap, theRelativeOutputArea);
     if(status)
-        GetData()->LogMessage(std::string("Stored ") + imageViewName + " to image file.", CatLog::Severity::Info, CatLog::Category::Operational);
+		itsData->LogMessage(std::string("Stored ") + imageViewName + " to image file.", CatLog::Severity::Info, CatLog::Category::Operational);
     else
-        GetData()->LogMessage(std::string("Storing ") + imageViewName + " to image file failed.", CatLog::Severity::Error, CatLog::Category::Operational);
+		itsData->LogMessage(std::string("Storing ") + imageViewName + " to image file failed.", CatLog::Severity::Error, CatLog::Category::Operational);
 }
 
 void CSmartMetDoc::OnDataStoreViewToPictureFile()
 {
-    StoreBitmapImageToFile(__FUNCTION__, "map view", ApplicationInterface::GetSmartMetView()->FinalMapViewImageBitmap(), &GetData()->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->RelativeMapRect());
+    StoreBitmapImageToFile(__FUNCTION__, "map view", ApplicationInterface::GetSmartMetView()->FinalMapViewImageBitmap(), &itsData->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->RelativeMapRect());
 }
 
 void CSmartMetDoc::OnUpdateDataStoreViewToPictureFile(CCmdUI* pCmdUI)
@@ -2130,7 +2055,7 @@ void CSmartMetDoc::OnDataStoreExtraMapViewToPictureFile(CFmiExtraMapViewDlg *the
 {
 	if(theExtraMapViewDlg)
 	{
-        StoreBitmapImageToFile(__FUNCTION__, "help map view", theExtraMapViewDlg->FinalMapViewImageBitmap(), &GetData()->GetCombinedMapHandler()->getMapViewDescTop(theExtraMapViewDlg->MapViewDescTopIndex())->RelativeMapRect());
+        StoreBitmapImageToFile(__FUNCTION__, "help map view", theExtraMapViewDlg->FinalMapViewImageBitmap(), &itsData->GetCombinedMapHandler()->getMapViewDescTop(theExtraMapViewDlg->MapViewDescTopIndex())->RelativeMapRect());
 	}
 }
 
@@ -2163,30 +2088,26 @@ void CSmartMetDoc::OnHelpShortCuts()
 		firstTime = false;
 		itsShortCutsDialog->DeselectTexts();
 	}
-	GetData()->LogMessage("Opening shortcuts dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
+	itsData->LogMessage("Opening shortcuts dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
 }
 
 void CSmartMetDoc::OnShowProjectionLines()
 {
-	GetData()->OnShowProjectionLines();
+	itsData->OnShowProjectionLines();
 }
 
 void CSmartMetDoc::OnMenuitemProjectionLineSetup()
 {
-	NFmiEditMapGeneralDataDoc * doc = GetData();
-	if(doc)
+	NFmiProjectionCurvatureInfo* projInfo = itsData->GetCombinedMapHandler()->projectionCurvatureInfo();
+	if(projInfo)
 	{
-		NFmiProjectionCurvatureInfo* projInfo = doc->GetCombinedMapHandler()->projectionCurvatureInfo();
-		if(projInfo)
+		CFmiProjectionLineSetupDlg dlg(projInfo);
+		if(dlg.DoModal() == IDOK)
 		{
-			CFmiProjectionLineSetupDlg dlg(projInfo);
-			if(dlg.DoModal() == IDOK)
-			{
-				projInfo->StoreToSettings();
-				doc->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
-                ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
-				UpdateAllViewsAndDialogs("Projection line drawing setup changed");
-			}
+			projInfo->StoreToSettings();
+			itsData->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
+			ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
+			UpdateAllViewsAndDialogs("Projection line drawing setup changed");
 		}
 	}
 }
@@ -2235,12 +2156,12 @@ void CSmartMetDoc::OnMenuitemGriddingOptions()
     CreateGriddingOptionsDialog(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation());
     itsGriddingOptionsDlg->ShowWindow(SW_RESTORE);
     itsGriddingOptionsDlg->SetActiveWindow();
-    GetData()->LogMessage("Opening ToolMaster gridding options dialog", CatLog::Severity::Info, CatLog::Category::Editing);
+	itsData->LogMessage("Opening ToolMaster gridding options dialog", CatLog::Severity::Info, CatLog::Category::Editing);
 }
 
 void CSmartMetDoc::OnUpdateButtonFilterDialog(CCmdUI* pCmdUI)
 {
-	if(GetData()->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
+	if(itsData->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
 		pCmdUI->Enable(FALSE);
 }
 
@@ -2309,16 +2230,16 @@ void CSmartMetDoc::OnUpdateButtonShowCrossSection(CCmdUI *pCmdUI)
 
 void CSmartMetDoc::OnButtonObservationComparisonMode()
 {
-	GetData()->ObsComparisonInfo().NextComparisonMode();
-	GetData()->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
-	GetData()->LogMessage("Toggling observation comparison mode.", CatLog::Severity::Info, CatLog::Category::Operational);
+	itsData->ObsComparisonInfo().NextComparisonMode();
+	itsData->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
+	itsData->LogMessage("Toggling observation comparison mode.", CatLog::Severity::Info, CatLog::Category::Operational);
     ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
     UpdateAllViewsAndDialogs("Changed Obs comparison mode");
 }
 
 void CSmartMetDoc::OnUpdateButtonObservationComparisonMode(CCmdUI* pCmdUI)
 {
-	pCmdUI->SetCheck(GetData()->ObsComparisonInfo().ComparisonMode() > 0);
+	pCmdUI->SetCheck(itsData->ObsComparisonInfo().ComparisonMode() > 0);
 }
 
 void CSmartMetDoc::OnButtonSynopDataGridView()
@@ -2331,12 +2252,12 @@ void CSmartMetDoc::OnButtonSynopDataGridView()
 				CreateSynopDataGridViewDlg(itsData);
 			itsSynopDataGridViewDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
 			itsSynopDataGridViewDlg->SetActiveWindow();
-			GetData()->LogMessage("Opening synop data table view.", CatLog::Severity::Info, CatLog::Category::Operational);
+			itsData->LogMessage("Opening synop data table view.", CatLog::Severity::Info, CatLog::Category::Operational);
 		}
 		else
 		{ // jos dialogi oli päällä, laitetaan se pois
 			itsSynopDataGridViewDlg->ShowWindow(SW_HIDE);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
-			GetData()->LogMessage("Closing synop data table view.", CatLog::Severity::Info, CatLog::Category::Operational);
+			itsData->LogMessage("Closing synop data table view.", CatLog::Severity::Info, CatLog::Category::Operational);
 		}
 		itsData->SynopDataGridViewOn(!itsData->SynopDataGridViewOn());
 		if(itsData->SynopDataGridViewOn())
@@ -2347,29 +2268,29 @@ void CSmartMetDoc::OnButtonSynopDataGridView()
 
 void CSmartMetDoc::OnUpdateSynopDataGridView(CCmdUI* pCmdUI)
 {
-	pCmdUI->SetCheck(GetData()->SynopDataGridViewOn());
+	pCmdUI->SetCheck(itsData->SynopDataGridViewOn());
 }
 
 void CSmartMetDoc::OnAcceleratorObsComparisonChangeSymbol()
 {
-	GetData()->ObsComparisonInfo().NextSymbolType();
-	GetData()->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
+	itsData->ObsComparisonInfo().NextSymbolType();
+	itsData->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
     ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
     UpdateAllViewsAndDialogs("Changed Obs comparison mode symbol");
 }
 
 void CSmartMetDoc::OnAcceleratorObsComparisonChangeSymbolSize()
 {
-	GetData()->ObsComparisonInfo().NextSymbolSize();
-	GetData()->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
+	itsData->ObsComparisonInfo().NextSymbolSize();
+	itsData->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
     ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
     UpdateAllViewsAndDialogs("Changed Obs comparison symbol size");
 }
 
 void CSmartMetDoc::OnAcceleratorObsComparisonToggleBorderDraw()
 {
-	GetData()->ObsComparisonInfo().DrawBorders(!GetData()->ObsComparisonInfo().DrawBorders());
-	GetData()->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
+	itsData->ObsComparisonInfo().DrawBorders(!itsData->ObsComparisonInfo().DrawBorders());
+	itsData->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
     ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
     UpdateAllViewsAndDialogs("Changed Obs comparison symbol border draw mode");
 }
@@ -2382,7 +2303,7 @@ void CSmartMetDoc::OnButtonShowSynopPlotSettings()
 	itsSynopPlotSettingsDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
 	itsSynopPlotSettingsDlg->SetActiveWindow();
 
-	GetData()->LogMessage("Opening synop plot settings dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
+	itsData->LogMessage("Opening synop plot settings dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
 }
 
 void CSmartMetDoc::OnDataStoreTempviewToPictureFile()
@@ -2403,53 +2324,53 @@ void CSmartMetDoc::OnDataStoreCrosssectionviewToPictureFile()
 
 void CSmartMetDoc::OnToggleLandBorderDrawColor()
 {
-	GetData()->GetCombinedMapHandler()->onToggleLandBorderDrawColor(itsMapViewDescTopIndex);
+	itsData->GetCombinedMapHandler()->onToggleLandBorderDrawColor(itsMapViewDescTopIndex);
 }
 
 void CSmartMetDoc::OnToggleLandBorderPenSize()
 {
-	GetData()->GetCombinedMapHandler()->onToggleLandBorderPenSize(itsMapViewDescTopIndex);
+	itsData->GetCombinedMapHandler()->onToggleLandBorderPenSize(itsMapViewDescTopIndex);
 }
 
 void CSmartMetDoc::OnAcceleratorBorrowParams1()
 {
-	GetData()->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 1);
+	itsData->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 1);
 }
 void CSmartMetDoc::OnAcceleratorBorrowParams2()
 {
-	GetData()->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 2);
+	itsData->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 2);
 }
 void CSmartMetDoc::OnAcceleratorBorrowParams3()
 {
-	GetData()->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 3);
+	itsData->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 3);
 }
 void CSmartMetDoc::OnAcceleratorBorrowParams4()
 {
-	GetData()->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 4);
+	itsData->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 4);
 }
 void CSmartMetDoc::OnAcceleratorBorrowParams5()
 {
-	GetData()->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 5);
+	itsData->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 5);
 }
 void CSmartMetDoc::OnAcceleratorBorrowParams6()
 {
-	GetData()->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 6);
+	itsData->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 6);
 }
 void CSmartMetDoc::OnAcceleratorBorrowParams7()
 {
-	GetData()->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 7);
+	itsData->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 7);
 }
 void CSmartMetDoc::OnAcceleratorBorrowParams8()
 {
-	GetData()->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 8);
+	itsData->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 8);
 }
 void CSmartMetDoc::OnAcceleratorBorrowParams9()
 {
-	GetData()->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 9);
+	itsData->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 9);
 }
 void CSmartMetDoc::OnAcceleratorBorrowParams10()
 {
-	GetData()->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 10);
+	itsData->GetCombinedMapHandler()->onAcceleratorBorrowParams(itsMapViewDescTopIndex, 10);
 }
 
 static CRect NFmiRect2CRect(const NFmiRect &theRect)
@@ -2552,58 +2473,54 @@ void CSmartMetDoc::LoadViewMacroSettingsForTimeSerialDataView(NFmiViewSettingMac
     if(::GenerateViewIfNeededAndContinueToInitializations(theViewMacro.GetTimeView(), &itsTimeSerialDataEditorDlg, createViewFunction))
     {
         CFmiWin32Helpers::SetWindowSettings(itsTimeSerialDataEditorDlg, ::NFmiRect2CRect(theViewMacro.GetTimeView().AbsolutRect()), theViewMacro.GetTimeView().ViewStatus(), theStartCornerCounter);
-        GetData()->TimeSerialDataViewOn(theViewMacro.GetTimeView().ViewStatus().ShowWindow());
+		itsData->TimeSerialDataViewOn(theViewMacro.GetTimeView().ViewStatus().ShowWindow());
         itsTimeSerialDataEditorDlg->fUseMaskInTimeSerialViews = theViewMacro.GetMaskSettings().UseMasksInTimeSerialViews();
         itsTimeSerialDataEditorDlg->UpdateData(FALSE);
     }
 }
 
-void CSmartMetDoc::LoadViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMacro)
+void CSmartMetDoc::LoadViewMacroWindowsSettings(NFmiViewSettingMacro& theViewMacro)
 {
-	NFmiEditMapGeneralDataDoc* doc = GetData();
-	if(doc)
+	if(itsData->MetEditorOptionsData().DisableWindowManipulations())
+		return;
+	try
 	{
-		if(doc->MetEditorOptionsData().DisableWindowManipulations())
-			return ;
-		try
-		{
-			if(theViewMacro.ViewMacroWasCorrupted())
-				return ; // ei tehdä mitään, jos korruptoitunut viewMacro
-			int startCornerCounter = 0;
-			// ** kartta eli mainframen sijainti **
-			NFmiViewSettingMacro::MapViewDescTop &mapViewDescTop0 = theViewMacro.ExtraMapViewDescTops()[0];
-			CFmiWin32Helpers::SetWindowSettings(AfxGetMainWnd(), ::NFmiRect2CRect(mapViewDescTop0.AbsolutRect()), mapViewDescTop0.ViewStatus(), startCornerCounter);
+		if(theViewMacro.ViewMacroWasCorrupted())
+			return; // ei tehdä mitään, jos korruptoitunut viewMacro
+		int startCornerCounter = 0;
+		// ** kartta eli mainframen sijainti **
+		NFmiViewSettingMacro::MapViewDescTop& mapViewDescTop0 = theViewMacro.ExtraMapViewDescTops()[0];
+		CFmiWin32Helpers::SetWindowSettings(AfxGetMainWnd(), ::NFmiRect2CRect(mapViewDescTop0.AbsolutRect()), mapViewDescTop0.ViewStatus(), startCornerCounter);
 
-            LoadViewMacroSettingsForTimeSerialDataView(theViewMacro, startCornerCounter);
-            LoadViewMacroSettingsForTempDialog(theViewMacro, startCornerCounter);
+		LoadViewMacroSettingsForTimeSerialDataView(theViewMacro, startCornerCounter);
+		LoadViewMacroSettingsForTempDialog(theViewMacro, startCornerCounter);
 
-			if(theViewMacro.OriginalLoadVersionNumber() > 1.)
-			{ // tietyt asetukset tehdään vain jos originaali macro-versio on tarpeeksi suuri
-                LoadViewMacroSettingsForTrajectoryDlg(theViewMacro, startCornerCounter);
-                LoadViewMacroSettingsForCrossSectionDlg(theViewMacro, startCornerCounter);
+		if(theViewMacro.OriginalLoadVersionNumber() > 1.)
+		{ // tietyt asetukset tehdään vain jos originaali macro-versio on tarpeeksi suuri
+			LoadViewMacroSettingsForTrajectoryDlg(theViewMacro, startCornerCounter);
+			LoadViewMacroSettingsForCrossSectionDlg(theViewMacro, startCornerCounter);
 
-				// ** synop-plot asetukset **
-                if(!itsSynopPlotSettingsDlg)
-                    CreateSynopPlotSettingsDlg(doc);
-                itsSynopPlotSettingsDlg->InitFromDoc();
+			// ** synop-plot asetukset **
+			if(!itsSynopPlotSettingsDlg)
+				CreateSynopPlotSettingsDlg(itsData);
+			itsSynopPlotSettingsDlg->InitFromDoc();
 
-				// ** obs-comparison asetukset **
-				// ei obscomparison näyttö asetuksia
+			// ** obs-comparison asetukset **
+			// ei obscomparison näyttö asetuksia
 
-                LoadViewMacroSettingsForWarningCenterView(theViewMacro, startCornerCounter);
-                LoadViewMacroSettingsForSynopDataGridView(theViewMacro, startCornerCounter);
-                LoadViewMacroSettingsForExtraMapViewDlg(&itsExtraMapViewDlg1, 1, theViewMacro, startCornerCounter);
-                LoadViewMacroSettingsForExtraMapViewDlg(&itsExtraMapViewDlg2, 2, theViewMacro, startCornerCounter);
-			}
-            MakeViewActivationAfterLoadingViewMacro();
-        }
-		catch(exception &e)
-		{
-			std::string errStr("Unable to load current view-macro, reason: \n");
-			errStr += e.what();
-			// pitäisikö raportoida message boxin avulla?
-			doc->LogAndWarnUser(errStr, "ViewMacro loading problem", CatLog::Severity::Error, CatLog::Category::Macro, false);
+			LoadViewMacroSettingsForWarningCenterView(theViewMacro, startCornerCounter);
+			LoadViewMacroSettingsForSynopDataGridView(theViewMacro, startCornerCounter);
+			LoadViewMacroSettingsForExtraMapViewDlg(&itsExtraMapViewDlg1, 1, theViewMacro, startCornerCounter);
+			LoadViewMacroSettingsForExtraMapViewDlg(&itsExtraMapViewDlg2, 2, theViewMacro, startCornerCounter);
 		}
+		MakeViewActivationAfterLoadingViewMacro();
+	}
+	catch(exception& e)
+	{
+		std::string errStr("Unable to load current view-macro, reason: \n");
+		errStr += e.what();
+		// pitäisikö raportoida message boxin avulla?
+		itsData->LogAndWarnUser(errStr, "ViewMacro loading problem", CatLog::Severity::Error, CatLog::Category::Macro, false);
 	}
 }
 
@@ -2621,10 +2538,10 @@ void CSmartMetDoc::MakeViewActivationAfterLoadingViewMacro()
 void CSmartMetDoc::OnAcceleratorStoreViewMacro()
 {
 	if(!itsViewMacroDlg)
-		CreateViewMacroDlg(GetData()); // pakko luoda tässä, koska muuten dialogin hndl jää nollaksi, nyt sitten jää leijumaan päänäytön päälle
+		CreateViewMacroDlg(itsData); // pakko luoda tässä, koska muuten dialogin hndl jää nollaksi, nyt sitten jää leijumaan päänäytön päälle
 	itsViewMacroDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
 	itsViewMacroDlg->SetActiveWindow();
-	GetData()->LogMessage("Opening view macro dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
+	itsData->LogMessage("Opening view macro dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
 }
 
 template<class Tview>
@@ -2685,8 +2602,8 @@ void CSmartMetDoc::StoreViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMa
 	bool showWindow = false;
 
 	std::vector<NFmiViewSettingMacro::MapViewDescTop>& extraMapViewDescTops = theViewMacro.ExtraMapViewDescTops();
-	extraMapViewDescTops.resize(GetData()->GetCombinedMapHandler()->getMapViewDescTops().size());
-    auto &applicationWinRegistry = GetData()->ApplicationWinRegistry();
+	extraMapViewDescTops.resize(itsData->GetCombinedMapHandler()->getMapViewDescTops().size());
+    auto &applicationWinRegistry = itsData->ApplicationWinRegistry();
 
 	// ** pääkartta eli mainframen sijainti **
     StoreViewRectToMacro(dynamic_cast<CMainFrame*>(AfxGetMainWnd()), extraMapViewDescTops[0], applicationWinRegistry, 0);
@@ -2725,127 +2642,127 @@ void CSmartMetDoc::StoreViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMa
 
 void CSmartMetDoc::OnUpdateButtonDataToDatabase(CCmdUI *pCmdUI)
 {
-	if(GetData()->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
+	if(itsData->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
 		pCmdUI->Enable(FALSE);
 }
 
 void CSmartMetDoc::OnUpdateButtonStoreData(CCmdUI *pCmdUI)
 {
-	if(GetData()->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
+	if(itsData->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
 		pCmdUI->Enable(FALSE);
 }
 
 void CSmartMetDoc::OnUpdateButtonSelectionToolDlg(CCmdUI *pCmdUI)
 {
-	if(GetData()->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
+	if(itsData->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
 		pCmdUI->Enable(FALSE);
 }
 
 void CSmartMetDoc::OnUpdateSelectAll(CCmdUI *pCmdUI)
 {
-	if(GetData()->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
+	if(itsData->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
 		pCmdUI->Enable(FALSE);
 }
 
 void CSmartMetDoc::OnUpdateMenuitemSaveAs(CCmdUI *pCmdUI)
 {
-	if(GetData()->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
+	if(itsData->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
 		pCmdUI->Enable(FALSE);
 }
 
 void CSmartMetDoc::OnUpdateMenuitemGriddingOptions(CCmdUI *pCmdUI)
 {
-	if(GetData()->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
+	if(itsData->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
 		pCmdUI->Enable(FALSE);
 }
 
 void CSmartMetDoc::OnUpdateDeselectAll(CCmdUI *pCmdUI)
 {
-	if(GetData()->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
+	if(itsData->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
 		pCmdUI->Enable(FALSE);
 }
 
 void CSmartMetDoc::OnUpdateButtonMakeEditedDataCopy(CCmdUI *pCmdUI)
 {
-	if(GetData()->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
+	if(itsData->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
 		pCmdUI->Enable(FALSE);
 }
 
 void CSmartMetDoc::OnUpdateMakeGridFile(CCmdUI *pCmdUI)
 {
-	if(GetData()->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
+	if(itsData->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
 		pCmdUI->Enable(FALSE);
 }
 
 void CSmartMetDoc::OnUpdateEditPaste(CCmdUI *pCmdUI)
 {
-	if(GetData()->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
+	if(itsData->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
 		pCmdUI->Enable(FALSE);
 }
 
 void CSmartMetDoc::OnUpdateEditCopy(CCmdUI *pCmdUI)
 {
-	if(GetData()->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
+	if(itsData->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa, disabloidaan koko nappula
 		pCmdUI->Enable(FALSE);
 }
 
 void CSmartMetDoc::OnAcceleratorCrossSectionMode()
 {
-	GetData()->LogMessage("Set cross section mode on map view.", CatLog::Severity::Info, CatLog::Category::Operational);
-	GetData()->CrossSectionSystem()->CrossSectionSystemActive(!GetData()->CrossSectionSystem()->CrossSectionSystemActive());
-	GetData()->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
+	itsData->LogMessage("Set cross section mode on map view.", CatLog::Severity::Info, CatLog::Category::Operational);
+	itsData->CrossSectionSystem()->CrossSectionSystemActive(!itsData->CrossSectionSystem()->CrossSectionSystemActive());
+	itsData->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
     ApplyUpdatedViewsFlag(SmartMetViewId::MainMapView);
     UpdateAllViewsAndDialogs("Set cross section mode on map view (F4)");
 }
 
 void CSmartMetDoc::OnAcceleratorMapRow1()
 {
-	GetData()->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 1);
+	itsData->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 1);
 }
 
 void CSmartMetDoc::OnAcceleratorMapRow2()
 {
-	GetData()->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 2);
+	itsData->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 2);
 }
 
 void CSmartMetDoc::OnAcceleratorMapRow3()
 {
-	GetData()->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 3);
+	itsData->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 3);
 }
 
 void CSmartMetDoc::OnAcceleratorMapRow4()
 {
-	GetData()->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 4);
+	itsData->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 4);
 }
 
 void CSmartMetDoc::OnAcceleratorMapRow5()
 {
-	GetData()->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 5);
+	itsData->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 5);
 }
 
 void CSmartMetDoc::OnAcceleratorMapRow6()
 {
-    GetData()->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 6);
+	itsData->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 6);
 }
 
 void CSmartMetDoc::OnAcceleratorMapRow7()
 {
-    GetData()->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 7);
+	itsData->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 7);
 }
 
 void CSmartMetDoc::OnAcceleratorMapRow8()
 {
-    GetData()->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 8);
+	itsData->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 8);
 }
 
 void CSmartMetDoc::OnAcceleratorMapRow9()
 {
-    GetData()->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 9);
+	itsData->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 9);
 }
 
 void CSmartMetDoc::OnAcceleratorMapRow10()
 {
-    GetData()->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 10);
+	itsData->GetCombinedMapHandler()->onAcceleratorMapRow(itsMapViewDescTopIndex, 10);
 }
 
 static const int g_missingViewIndex = -9999;
@@ -2889,7 +2806,6 @@ std::map<std::string, std::string> CSmartMetDoc::MakeOtherWindowPosMap(void)
     MakeMakeWindowPosMapInsert<CFmiSynopDataGridViewDlg>(windowPosMap);
     MakeMakeWindowPosMapInsert<CFmiViewMacroDlg>(windowPosMap);
     MakeMakeWindowPosMapInsert<CFmiWarningCenterDlg>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiSeaIcingWarningsDlg>(windowPosMap);
     MakeMakeWindowPosMapInsert<CFmiWindTableDlg>(windowPosMap);
     MakeMakeWindowPosMapInsert<CFmiDataQualityCheckerDialog>(windowPosMap);
     MakeMakeWindowPosMapInsert<CFmiCaseStudyDlg>(windowPosMap);
@@ -2929,7 +2845,6 @@ void CSmartMetDoc::SaveViewPositionsToRegistry(void)
     ::SaveViewPositionToRegistry(itsTrajectoryDlg, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsViewMacroDlg, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsWarningCenterDlg, applicationWinRegistry, dummyMapDescTopIndex);
-    ::SaveViewPositionToRegistry(itsSeaIcingWarningsDlg, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsWindTableDlg, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsExtraMapViewDlg1, applicationWinRegistry, 2);
     ::SaveViewPositionToRegistry(itsExtraMapViewDlg2, applicationWinRegistry, 3);
@@ -2955,12 +2870,12 @@ void CSmartMetDoc::OnCloseDocument()
 	{
 		std::string problemStr("Problems when trying to save the settings to the settings files:\n");
 		problemStr += e.what();
-		GetData()->LogAndWarnUser(problemStr, "Problems when saving settings.", CatLog::Severity::Error, CatLog::Category::Configuration, false);
+		itsData->LogAndWarnUser(problemStr, "Problems when saving settings.", CatLog::Severity::Error, CatLog::Category::Configuration, false);
 	}
 	catch(...)
 	{
 		std::string problemStr("Problems when trying to save the settings to the settings files:\n");
-		GetData()->LogAndWarnUser(problemStr, "Problems when saving settings.", CatLog::Severity::Error, CatLog::Category::Configuration, false);
+		itsData->LogAndWarnUser(problemStr, "Problems when saving settings.", CatLog::Severity::Error, CatLog::Category::Configuration, false);
 	}
 
 	CDocument::OnCloseDocument();
@@ -2985,85 +2900,53 @@ void CSmartMetDoc::OnOhjeVirhetesti()
 
 void CSmartMetDoc::OnMenuitemMuokkaaKieli()
 {
-	GetData()->SelectLanguage();
+	itsData->SelectLanguage();
 }
 
 void CSmartMetDoc::OnButtonTrajectory()
 {
-	if(GetData())
-	{
-		if(!itsTrajectoryDlg)
-			CreateTrajectoryDlg(GetData());
-		if(GetData()->TrajectorySystem()->TrajectoryViewOn())
-		{ // jos trajektori dialogi oli päällä, laitetaan se pois päältä
-			itsTrajectoryDlg->ShowWindow(SW_HIDE);
-			GetData()->LogMessage("Closing trajectory dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
-		}
-		else
-		{ // muuten laitetaan se päälle
-			itsTrajectoryDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
-			itsTrajectoryDlg->SetActiveWindow();
-			GetData()->LogMessage("Opening trajectory dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
-		}
-		GetData()->TrajectorySystem()->TrajectoryViewOn(!GetData()->TrajectorySystem()->TrajectoryViewOn());
-		// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
-		GetData()->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
-        ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TrajectoryView);
-        UpdateAllViewsAndDialogs("Opening/closing trajectory view");
+	if(!itsTrajectoryDlg)
+		CreateTrajectoryDlg(itsData);
+	if(itsData->TrajectorySystem()->TrajectoryViewOn())
+	{ // jos trajektori dialogi oli päällä, laitetaan se pois päältä
+		itsTrajectoryDlg->ShowWindow(SW_HIDE);
+		itsData->LogMessage("Closing trajectory dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
 	}
+	else
+	{ // muuten laitetaan se päälle
+		itsTrajectoryDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
+		itsTrajectoryDlg->SetActiveWindow();
+		itsData->LogMessage("Opening trajectory dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
+	}
+	itsData->TrajectorySystem()->TrajectoryViewOn(!itsData->TrajectorySystem()->TrajectoryViewOn());
+	// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
+	itsData->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
+	ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TrajectoryView);
+	UpdateAllViewsAndDialogs("Opening/closing trajectory view");
 }
 
 void CSmartMetDoc::OnButtonDataQualityChecker()
 {
-	if(GetData())
-	{
-		if(!itsDataQualityCheckerDialog)
-			CreateDataQualityCheckerDialog(GetData());
-		if(GetData()->DataQualityChecker().ViewOn())
-		{ // jos dialogi oli päällä, laitetaan se pois päältä
-			itsDataQualityCheckerDialog->ShowWindow(SW_HIDE);
-			GetData()->LogMessage("DataQualityChecker Dialog off.", CatLog::Severity::Info, CatLog::Category::Operational);
-		}
-		else
-		{ // muuten laitetaan se päälle
-			itsDataQualityCheckerDialog->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
-			itsDataQualityCheckerDialog->SetActiveWindow();
-			GetData()->LogMessage("DataQualityChecker Dialog on.", CatLog::Severity::Info, CatLog::Category::Operational);
-		}
-		GetData()->DataQualityChecker().ViewOn(!GetData()->DataQualityChecker().ViewOn());
+	if(!itsDataQualityCheckerDialog)
+		CreateDataQualityCheckerDialog(itsData);
+	if(itsData->DataQualityChecker().ViewOn())
+	{ // jos dialogi oli päällä, laitetaan se pois päältä
+		itsDataQualityCheckerDialog->ShowWindow(SW_HIDE);
+		itsData->LogMessage("DataQualityChecker Dialog off.", CatLog::Severity::Info, CatLog::Category::Operational);
 	}
-}
-
-
-void CSmartMetDoc::OnButtonSeaIcingWarningsDlg()
-{
-	if(GetData())
-	{
-		if(!itsSeaIcingWarningsDlg)
-			CreateSeaIcingWarningsDlg(GetData());
-		if(GetData()->SeaIcingWarningSystem().ViewVisible())
-		{ // jos dialogi oli päällä, laitetaan se pois päältä
-			itsSeaIcingWarningsDlg->ShowWindow(SW_HIDE);
-			GetData()->LogMessage("Closing Sea Icing dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
-		}
-		else
-		{ // muuten laitetaan se päälle
-			itsSeaIcingWarningsDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
-			itsSeaIcingWarningsDlg->SetActiveWindow();
-			GetData()->LogMessage("Opening Sea Icing dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
-		}
-		GetData()->SeaIcingWarningSystem().ViewVisible(!GetData()->SeaIcingWarningSystem().ViewVisible());
-		// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
-		GetData()->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
-        ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::SeaIcingDlg);
-        UpdateAllViewsAndDialogs("Opening/closing sea-icing warnings dialog");
+	else
+	{ // muuten laitetaan se päälle
+		itsDataQualityCheckerDialog->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
+		itsDataQualityCheckerDialog->SetActiveWindow();
+		itsData->LogMessage("DataQualityChecker Dialog on.", CatLog::Severity::Info, CatLog::Category::Operational);
 	}
+	itsData->DataQualityChecker().ViewOn(!itsData->DataQualityChecker().ViewOn());
 }
 
 void CSmartMetDoc::OnExtraMapView(unsigned int theMapViewDescTopIndex, CFmiExtraMapViewDlg** theExtraMapViewDlg)
 {
 	if(*theExtraMapViewDlg == 0)
-		*theExtraMapViewDlg = CreateExtraMapViewDlg(GetData(), theMapViewDescTopIndex);
+		*theExtraMapViewDlg = CreateExtraMapViewDlg(itsData, theMapViewDescTopIndex);
 
 	auto* mapViewDescTop = itsData->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex);
 	if(mapViewDescTop->DescTopOn())
@@ -3093,7 +2976,7 @@ void CSmartMetDoc::OnUpdateOnExtraMapView1(CCmdUI *pCmdUI)
 {
 	try
 	{
-	pCmdUI->SetCheck(GetData()->GetCombinedMapHandler()->getMapViewDescTop(1)->DescTopOn());
+	pCmdUI->SetCheck(itsData->GetCombinedMapHandler()->getMapViewDescTop(1)->DescTopOn());
 	}
 	catch(...)
 	{
@@ -3109,7 +2992,7 @@ void CSmartMetDoc::OnUpdateOnExtraMapView2(CCmdUI *pCmdUI)
 {
 	try
 	{
-	pCmdUI->SetCheck(GetData()->GetCombinedMapHandler()->getMapViewDescTop(2)->DescTopOn());
+	pCmdUI->SetCheck(itsData->GetCombinedMapHandler()->getMapViewDescTop(2)->DescTopOn());
 	}
 	catch(...)
 	{
@@ -3118,7 +3001,7 @@ void CSmartMetDoc::OnUpdateOnExtraMapView2(CCmdUI *pCmdUI)
 
 void CSmartMetDoc::OnUpdateButtonTrajectory(CCmdUI *pCmdUI)
 {
-	pCmdUI->SetCheck(GetData()->TrajectorySystem()->TrajectoryViewOn());
+	pCmdUI->SetCheck(itsData->TrajectorySystem()->TrajectoryViewOn());
 }
 
 void CSmartMetDoc::OnViewEditorLog()
@@ -3130,17 +3013,17 @@ void CSmartMetDoc::OnViewEditorLog()
 
 void CSmartMetDoc::OnToggleOverMapBackForeGround()
 {
-	GetData()->GetCombinedMapHandler()->onToggleOverMapBackForeGround(itsMapViewDescTopIndex);
+	itsData->GetCombinedMapHandler()->onToggleOverMapBackForeGround(itsMapViewDescTopIndex);
 }
 
 void CSmartMetDoc::OnAcceleratorToggleTooltip()
 {
-	GetData()->MetEditorOptionsData().ShowToolTipsOnMapView(!GetData()->MetEditorOptionsData().ShowToolTipsOnMapView());
+	itsData->MetEditorOptionsData().ShowToolTipsOnMapView(!itsData->MetEditorOptionsData().ShowToolTipsOnMapView());
 }
 
 void CSmartMetDoc::OnAcceleratorToggleKeepMapRatio()
 {
-	GetData()->GetCombinedMapHandler()->onAcceleratorToggleKeepMapRatio();
+	itsData->GetCombinedMapHandler()->onAcceleratorToggleKeepMapRatio();
 }
 
 void CSmartMetDoc::DoCrashTest(void)
@@ -3169,11 +3052,11 @@ void CSmartMetDoc::OnHelpExceptiontest()
 
 void CSmartMetDoc::OnMenuitemHelpEditorModeSettings()
 {
-	CFmiHelpEditorSettingsDlg dlg(GetData()->HelpEditorSystem());
+	CFmiHelpEditorSettingsDlg dlg(itsData->HelpEditorSystem());
 	if(dlg.DoModal() == IDOK)
 	{
-		GetData()->HelpEditorSystem().StoreSettings(false);
-		GetData()->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
+		itsData->HelpEditorSystem().StoreSettings(false);
+		itsData->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
         ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
         UpdateAllViewsAndDialogs("Help edit mode settings changed");
 	}
@@ -3181,18 +3064,18 @@ void CSmartMetDoc::OnMenuitemHelpEditorModeSettings()
 
 void CSmartMetDoc::OnButtonHelpEditorMode()
 {
-	GetData()->HelpEditorSystem().HelpEditor(!GetData()->HelpEditorSystem().HelpEditor());
-	GetData()->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
+	itsData->HelpEditorSystem().HelpEditor(!itsData->HelpEditorSystem().HelpEditor());
+	itsData->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
     ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
     UpdateAllViewsAndDialogs("Help edit mode changed");
 }
 
 void CSmartMetDoc::OnUpdateButtonHelpEditorMode(CCmdUI *pCmdUI)
 {
-	if(GetData()->HelpEditorSystem().Use())
+	if(itsData->HelpEditorSystem().Use())
 	{
 		pCmdUI->Enable(TRUE);
-		pCmdUI->SetCheck(GetData()->HelpEditorSystem().HelpEditor());
+		pCmdUI->SetCheck(itsData->HelpEditorSystem().HelpEditor());
 	}
 	else
 	{
@@ -3211,40 +3094,26 @@ void CSmartMetDoc::OnViewSetWarningCenterDlgPlaceToDefault()
 	}
 }
 
-void CSmartMetDoc::OnViewSetSeaIcingWarningsDlgPlaceToDefault()
-{
-	if(itsSeaIcingWarningsDlg)
-	{
-		itsSeaIcingWarningsDlg->SetDefaultValues();
-		itsSeaIcingWarningsDlg->Update();
-		itsSeaIcingWarningsDlg->SetActiveWindow();
-	}
-}
-
-
 void CSmartMetDoc::OnButtonWindTableDlg()
 {
-	if(GetData())
-	{
-		if(!itsWindTableDlg)
-			CreateWindTableDlg(GetData());
-		if(GetData()->WindTableSystem().ViewVisible())
-		{ // jos dialogi oli päällä, laitetaan se pois päältä
-			itsWindTableDlg->ShowWindow(SW_HIDE);
-			GetData()->LogMessage("Hide WindTable view.", CatLog::Severity::Info, CatLog::Category::Operational);
-		}
-		else
-		{ // muuten laitetaan se päälle
-			itsWindTableDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
-			itsWindTableDlg->SetActiveWindow();
-			GetData()->LogMessage("Show Wind table view.", CatLog::Severity::Info, CatLog::Category::Operational);
-		}
-		GetData()->WindTableSystem().ViewVisible(!GetData()->WindTableSystem().ViewVisible());
-		// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
-		GetData()->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
-        ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::WindTableDlg);
-        UpdateAllViewsAndDialogs("Opening/closing Wind table view");
+	if(!itsWindTableDlg)
+		CreateWindTableDlg(itsData);
+	if(itsData->WindTableSystem().ViewVisible())
+	{ // jos dialogi oli päällä, laitetaan se pois päältä
+		itsWindTableDlg->ShowWindow(SW_HIDE);
+		itsData->LogMessage("Hide WindTable view.", CatLog::Severity::Info, CatLog::Category::Operational);
 	}
+	else
+	{ // muuten laitetaan se päälle
+		itsWindTableDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
+		itsWindTableDlg->SetActiveWindow();
+		itsData->LogMessage("Show Wind table view.", CatLog::Severity::Info, CatLog::Category::Operational);
+	}
+	itsData->WindTableSystem().ViewVisible(!itsData->WindTableSystem().ViewVisible());
+	// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
+	itsData->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
+	ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::WindTableDlg);
+	UpdateAllViewsAndDialogs("Opening/closing Wind table view");
 }
 
 void CSmartMetDoc::OnViewSetWindTableDlgPlaceToDefault()
@@ -3259,22 +3128,21 @@ void CSmartMetDoc::OnViewSetWindTableDlgPlaceToDefault()
 
 void CSmartMetDoc::OnChangePreviousMapType()
 {
-	GetData()->OnChangeMapType(itsMapViewDescTopIndex, false);
+	itsData->OnChangeMapType(itsMapViewDescTopIndex, false);
 }
 
 void CSmartMetDoc::OnToggleShowPreviousNamesOnMap()
 {
-	GetData()->GetCombinedMapHandler()->onToggleShowNamesOnMap(itsMapViewDescTopIndex, false);
+	itsData->GetCombinedMapHandler()->onToggleShowNamesOnMap(itsMapViewDescTopIndex, false);
 }
 
 void CSmartMetDoc::OpenLocationFinderTool(CWnd *parentView)
 {
-    NFmiEditMapGeneralDataDoc * doc = GetData();
-    if(doc && doc->AutoComplete().Use())
+    if(itsData->AutoComplete().Use())
     {
         if(itsLocationFinderDlg == 0)
             CreateLocationFinderDlg(itsData);
-        doc->AutoComplete().AutoCompleteDialogOn(true);
+		itsData->AutoComplete().AutoCompleteDialogOn(true);
         itsLocationFinderDlg->ActivateDialog(parentView);
     }
 }
@@ -3293,13 +3161,13 @@ void CSmartMetDoc::SetMacroErrorText(const std::string &theErrorStr)
 
 void CSmartMetDoc::OnUpdateButtonDataQualityChecker(CCmdUI *pCmdUI)
 {
-	pCmdUI->SetCheck(GetData()->DataQualityChecker().ViewOn());
+	pCmdUI->SetCheck(itsData->DataQualityChecker().ViewOn());
 }
 
 // F7 -pressed
 void CSmartMetDoc::OnAcceleratorToggleHelpCursorOnMap()
 {
-	GetData()->ShowMouseHelpCursorsOnMap(!GetData()->ShowMouseHelpCursorsOnMap());
+	itsData->ShowMouseHelpCursorsOnMap(!itsData->ShowMouseHelpCursorsOnMap());
     ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
 }
 
@@ -3307,44 +3175,39 @@ void CSmartMetDoc::OnAcceleratorToggleHelpCursorOnMap()
 void CSmartMetDoc::OnButtonWarningCenterDlg()
 {
 #ifndef DISABLE_CPPRESTSDK
-    if(GetData())
-	{
-		if(!itsWarningCenterDlg)
-			CreateWarningCenterDlg(GetData());
-		if(GetData()->WarningCenterSystem().getLegacyData().WarningCenterViewOn())
-		{ // jos dialogi oli päällä, laitetaan se pois päältä
-			itsWarningCenterDlg->ShowWindow(SW_HIDE);
-			GetData()->LogMessage("Closing Warning Center dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
-		}
-		else
-		{ // muuten laitetaan se päälle
-			itsWarningCenterDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
-			itsWarningCenterDlg->SetActiveWindow();
-			GetData()->LogMessage("Opening Warning Center dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
-		}
-		GetData()->WarningCenterSystem().getLegacyData().WarningCenterViewOn(!GetData()->WarningCenterSystem().getLegacyData().WarningCenterViewOn());
-		// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
-		GetData()->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
-        ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::WarningCenterDlg);
-        UpdateAllViewsAndDialogs("Opening/closing Warning center dialog");
+
+	if(!itsWarningCenterDlg)
+		CreateWarningCenterDlg(itsData);
+	if(itsData->WarningCenterSystem().getLegacyData().WarningCenterViewOn())
+	{ // jos dialogi oli päällä, laitetaan se pois päältä
+		itsWarningCenterDlg->ShowWindow(SW_HIDE);
+		itsData->LogMessage("Closing Warning Center dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
 	}
+	else
+	{ // muuten laitetaan se päälle
+		itsWarningCenterDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
+		itsWarningCenterDlg->SetActiveWindow();
+		itsData->LogMessage("Opening Warning Center dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
+	}
+	itsData->WarningCenterSystem().getLegacyData().WarningCenterViewOn(!itsData->WarningCenterSystem().getLegacyData().WarningCenterViewOn());
+	// päivitetään kartta ja muutkin näytöt, koska luotaus asemien kolmioiden kartta piirto riippuu tästä
+	itsData->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
+	ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::WarningCenterDlg);
+	UpdateAllViewsAndDialogs("Opening/closing Warning center dialog");
+
 #endif // DISABLE_CPPRESTSDK
 }
 
 void CSmartMetDoc::OnViewCaseStudyDialog()
 {
-    if(GetData())
-    {
-        if(itsCaseStudyDlg == 0)
-        {
-            CreateCaseStudyDlg(GetData());
-        }
-        itsCaseStudyDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
-        itsCaseStudyDlg->SetActiveWindow();
-        itsCaseStudyDlg->AdjustDialogControls();
+	if(itsCaseStudyDlg == 0)
+	{
+		CreateCaseStudyDlg(itsData);
+	}
+	itsCaseStudyDlg->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
+	itsCaseStudyDlg->SetActiveWindow();
 
-        GetData()->LogMessage("Case Study Dialog on.", CatLog::Severity::Info, CatLog::Category::Operational);
-    }
+	itsData->LogMessage("Case Study Dialog on.", CatLog::Severity::Info, CatLog::Category::Operational);
 }
 
 static void PutTextToClipboard(const std::string &text)
@@ -3494,49 +3357,49 @@ void CSmartMetDoc::OnAcceleratorAreaInfoToClipboard()
 
 void CSmartMetDoc::OnTooltipstatusCrosssectionview()
 {
-    GetData()->CrossSectionSystem()->ShowTooltipOnCrossSectionView(!GetData()->CrossSectionSystem()->ShowTooltipOnCrossSectionView());
+	itsData->CrossSectionSystem()->ShowTooltipOnCrossSectionView(!itsData->CrossSectionSystem()->ShowTooltipOnCrossSectionView());
 }
 
 
 void CSmartMetDoc::OnUpdateTooltipstatusCrosssectionview(CCmdUI *pCmdUI)
 {
-    pCmdUI->SetCheck(GetData()->CrossSectionSystem()->ShowTooltipOnCrossSectionView());
+    pCmdUI->SetCheck(itsData->CrossSectionSystem()->ShowTooltipOnCrossSectionView());
 }
 
 
 void CSmartMetDoc::OnTooltipstatusMapviews()
 {
-	GetData()->MetEditorOptionsData().ShowToolTipsOnMapView(!GetData()->MetEditorOptionsData().ShowToolTipsOnMapView());
+	itsData->MetEditorOptionsData().ShowToolTipsOnMapView(!itsData->MetEditorOptionsData().ShowToolTipsOnMapView());
 }
 
 
 void CSmartMetDoc::OnUpdateTooltipstatusMapviews(CCmdUI *pCmdUI)
 {
-	pCmdUI->SetCheck(GetData()->MetEditorOptionsData().ShowToolTipsOnMapView());
+	pCmdUI->SetCheck(itsData->MetEditorOptionsData().ShowToolTipsOnMapView());
 }
 
 
 void CSmartMetDoc::OnTooltipstatusSoundingview()
 {
-    GetData()->ShowToolTipTempView(!GetData()->ShowToolTipTempView());
+	itsData->ShowToolTipTempView(!itsData->ShowToolTipTempView());
 }
 
 
 void CSmartMetDoc::OnUpdateTooltipstatusSoundingview(CCmdUI *pCmdUI)
 {
-	pCmdUI->SetCheck(GetData()->ShowToolTipTempView());
+	pCmdUI->SetCheck(itsData->ShowToolTipTempView());
 }
 
 
 void CSmartMetDoc::OnTooltipstatusTimeserialview()
 {
-    GetData()->ShowToolTipTimeView(!GetData()->ShowToolTipTimeView());
+	itsData->ShowToolTipTimeView(!itsData->ShowToolTipTimeView());
 }
 
 
 void CSmartMetDoc::OnUpdateTooltipstatusTimeserialview(CCmdUI *pCmdUI)
 {
-	pCmdUI->SetCheck(GetData()->ShowToolTipTimeView());
+	pCmdUI->SetCheck(itsData->ShowToolTipTimeView());
 }
 
 // HUOM! Tässä käytetään F12 pikanäppäintä laukaisemaan tämä toiminto.
@@ -3547,18 +3410,18 @@ void CSmartMetDoc::OnUpdateTooltipstatusTimeserialview(CCmdUI *pCmdUI)
 // Tätä breakpoint toimintoa ei voi mitenkään estää, se kuuluu VC++:n toimintaan.
 void CSmartMetDoc::OnAcceleratorApplyBackupViewMacro()
 {
-    GetData()->ApplyBackupViewMacro(true);
+	itsData->ApplyBackupViewMacro(true);
 }
 
 
 void CSmartMetDoc::OnAcceleratorApplyCrashBackupViewMacro()
 {
-    GetData()->ApplyBackupViewMacro(false);
+	itsData->ApplyBackupViewMacro(false);
 }
 
 void CSmartMetDoc::OnReloaddataReloadfailedsatelliteimages()
 {
-    GetData()->ReloadFailedSatelliteImages();
+	itsData->ReloadFailedSatelliteImages();
 }
 
 
@@ -3585,31 +3448,28 @@ void CSmartMetDoc::MakeVisualizationImages()
         std::string imageFileName = imageFileNameBase;
         imageFileName += currentTime.ToStr(kYYYYMMDDHHMM);
         imageFileName += imageFileExtension;
-        GetData()->CurrentTime(itsMapViewDescTopIndex, currentTime);
-        GetData()->MapView()->DoOffScreenDraw(mapScreenBitmap);
+        itsData->CurrentTime(itsMapViewDescTopIndex, currentTime);
+        itsData->MapView()->DoOffScreenDraw(mapScreenBitmap);
         
-        CFmiGdiPlusHelpers::SaveMfcBitmapToFile(&mapScreenBitmap, imageFileName, &(GetData()->MapViewDescTop(itsMapViewDescTopIndex)->RelativeMapRect()));
+        CFmiGdiPlusHelpers::SaveMfcBitmapToFile(&mapScreenBitmap, imageFileName, &(itsData->MapViewDescTop(itsMapViewDescTopIndex)->RelativeMapRect()));
         currentTime.ChangeByMinutes(timeStepInMinutes);
     }
 
     mapScreenBitmap.DeleteObject();
-    GetData()->ChangeTime(0, kBackward, 1, itsMapViewDescTopIndex, timeLenghtInMinutes); // asetus takaisin alkuaikaan
+    itsData->ChangeTime(0, kBackward, 1, itsMapViewDescTopIndex, timeLenghtInMinutes); // asetus takaisin alkuaikaan
     */
 }
 
 
 void CSmartMetDoc::OnViewBetaproduction()
 {
-    if(GetData())
-    {
-        if(itsBetaProductDialog == 0)
-            CreateBetaProductDialog(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation());
-        itsBetaProductDialog->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
-        itsBetaProductDialog->SetActiveWindow();
-        itsBetaProductDialog->Update();
+	if(itsBetaProductDialog == 0)
+		CreateBetaProductDialog(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation());
+	itsBetaProductDialog->ShowWindow(SW_SHOW);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
+	itsBetaProductDialog->SetActiveWindow();
+	itsBetaProductDialog->Update();
 
-        GetData()->LogMessage("Beta Production Dialog on.", CatLog::Severity::Info, CatLog::Category::Operational);
-    }
+	itsData->LogMessage("Beta Production Dialog on.", CatLog::Severity::Info, CatLog::Category::Operational);
 }
 
 void CSmartMetDoc::UpdateBetaProductDialog()
@@ -3679,7 +3539,7 @@ void CSmartMetDoc::UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopInde
 
 void CSmartMetDoc::OnAcceleratorResetTimeFilterTimes()
 {
-    GetData()->ResetTimeFilterTimes();
+	itsData->ResetTimeFilterTimes();
     ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::DataFilterToolDlg);
     UpdateAllViewsAndDialogs("Reset time filter times (data editing related)", true);
 }
@@ -3688,13 +3548,13 @@ void CSmartMetDoc::OnAcceleratorResetTimeFilterTimes()
 void CSmartMetDoc::OnAcceleratorLogViewer()
 {
     if(!itsLogViewer)
-        CreateLogViewer(GetData());
+        CreateLogViewer(itsData);
 
     itsLogViewer->ShowWindow(SW_SHOW);
     itsLogViewer->SetActiveWindow();
     itsLogViewer->Update();
 
-    GetData()->LogMessage("Log Viewer on.", CatLog::Severity::Info, CatLog::Category::Operational);
+	itsData->LogMessage("Log Viewer on.", CatLog::Severity::Info, CatLog::Category::Operational);
 }
 
 void CSmartMetDoc::OnEditSoundingDataFromServerSettings()
@@ -3705,7 +3565,7 @@ void CSmartMetDoc::OnEditSoundingDataFromServerSettings()
     itsSoundingDataServerConfigurationsDlg->SetActiveWindow();
     itsSoundingDataServerConfigurationsDlg->Update();
 
-    GetData()->LogMessage("Sounding data server configurations Dialog on.", CatLog::Severity::Info, CatLog::Category::Operational);
+	itsData->LogMessage("Sounding data server configurations Dialog on.", CatLog::Severity::Info, CatLog::Category::Operational);
 }
 
 static const std::string gCalculationPointStartStr = "calculationpoint = ";
@@ -3742,7 +3602,7 @@ static std::string CalculationPointInfo(NFmiMapViewDescTop *mapViewDecsTop, NFmi
                     if(zoomedArea)
                     {
                         std::string str;
-                        checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
+                        std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
                         generalDataDoc->GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(infoVector, activeDrawParam, zoomedArea);
                         for(auto &info : infoVector)
                         {
@@ -3790,7 +3650,7 @@ static std::string ActiveRowDataFilePaths(NFmiMapViewDescTop *mapViewDecsTop, NF
                     auto zoomedArea = mapViewDecsTop->MapHandler()->Area();
                     if(zoomedArea)
                     {
-                        checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
+                        std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
                         generalDataDoc->GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(infoVector, drawParam, zoomedArea);
                         for(auto &info : infoVector)
                         {
@@ -3830,7 +3690,7 @@ void CSmartMetDoc::OnAcceleratorMoveManyMapRowsDown()
 
 void CSmartMetDoc::OnAcceleratorApplyStartupViewMacro()
 {
-    GetData()->ApplyStartupViewMacro();
+	itsData->ApplyStartupViewMacro();
 }
 
 
@@ -3879,12 +3739,12 @@ void CSmartMetDoc::OnAcceleratorCpSelectDown()
 
 void CSmartMetDoc::HandleCpAccelerator(ControlPointAcceleratorActions action, const std::string &updateMessage)
 {
-    if(GetData()->MakeControlPointAcceleratorAction(action, updateMessage))
+    if(itsData->MakeControlPointAcceleratorAction(action, updateMessage))
     {
     }
 }
 
 void CSmartMetDoc::OnAcceleratorDoVisualizationProfiling()
 {
-	GetData()->StartProfiling();
+	itsData->StartProfiling();
 }

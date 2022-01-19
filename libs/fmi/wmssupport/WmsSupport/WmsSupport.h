@@ -27,6 +27,7 @@ namespace Wms
     class WmsSupportState;
     class LegendHandler;
     class DynamicServerSetup;
+    class LayerInfo;
 
     // Yhden karttanäytön (map-view 1-3), yhden kartta-alueen kokonaistila (suomi/skand/euro/maailma)
     class StaticMapClientState
@@ -77,8 +78,8 @@ namespace Wms
         std::vector<NFmiImageHolder> getLegends(int row, int col, int descTop) override;
         void registerDynamicLayer(int row, int col, int descTop, const NFmiDataIdent &dataIdent) override;
         void unregisterDynamicLayer(int row, int col, int descTop, const NFmiDataIdent &dataIdent) override;
-        std::string getFullLayerName(long producerId, long paramId) const override;
-        NFmiImageHolder getDynamicImage(long producerId, long paramId, const NFmiArea& area, const NFmiMetTime& time, int resolutionX, int resolutionY, int editorTimeStepInMinutes) override;
+        std::string getFullLayerName(const NFmiDataIdent& dataIdent) const override;
+        NFmiImageHolder getDynamicImage(const NFmiDataIdent& dataIdent, const NFmiArea& area, const NFmiMetTime& time, int resolutionX, int resolutionY, int editorTimeStepInMinutes) override;
         void kill() override;
         bool isDead(std::chrono::milliseconds wait) const override;
         StaticMapClientState& getStaticMapClientState(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
@@ -89,6 +90,7 @@ namespace Wms
     private:
         StaticMapClientState createStaticMapClientState();
         MapViewStaticMapClientState createMapViewStaticMapClientState(unsigned int mapAreaCount);
+        const LayerInfo* getHashedLayerInfo(const NFmiDataIdent& dataIdent) const;
     };
 }
 

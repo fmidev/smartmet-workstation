@@ -379,7 +379,7 @@ NFmiPoint NFmiCrossSectionManagerView::GetStartLatLonPoint(void)
 		static NFmiPoint dummy(kFloatMissing, kFloatMissing);
 
 		int usedRowIndex = itsCrossSectionSystem->LowestVisibleRowIndex();
-		const checkedVector<NFmiPoint> &points = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(usedRowIndex-1).CrossSectionTrajectoryPoints();
+		const auto &points = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(usedRowIndex-1).CrossSectionTrajectoryPoints();
 		if(points.size() > 0)
 			return points[0];
 		else
@@ -396,7 +396,7 @@ NFmiPoint NFmiCrossSectionManagerView::GetEndLatLonPoint(void)
 		static NFmiPoint dummy(kFloatMissing, kFloatMissing);
 
 		int usedRowIndex = itsCrossSectionSystem->LowestVisibleRowIndex();
-		const checkedVector<NFmiPoint> &points = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(usedRowIndex-1).CrossSectionTrajectoryPoints();
+		const auto &points = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(usedRowIndex-1).CrossSectionTrajectoryPoints();
 		if(points.size() > 0)
 			return points[points.size()-1];
 		else
@@ -413,7 +413,7 @@ NFmiPoint NFmiCrossSectionManagerView::GetMiddleLatLonPoint(void)
 		static NFmiPoint dummy(kFloatMissing, kFloatMissing);
 
 		int usedRowIndex = itsCrossSectionSystem->LowestVisibleRowIndex();
-		const checkedVector<NFmiPoint> &points = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(usedRowIndex-1).CrossSectionTrajectoryPoints();
+		const auto &points = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(usedRowIndex-1).CrossSectionTrajectoryPoints();
 		if(points.size() > 0)
 			return points[points.size()/2];
 		else
@@ -448,7 +448,7 @@ void NFmiCrossSectionManagerView::DrawFooter(void)
 	textPoint.Y(textPoint.Y() + moveDownward);
 	FmiDirection oldAlignment = itsToolBox->GetTextAlignment();
 	itsToolBox->SetTextAlignment(kTopLeft);
-	NFmiText text(textPoint, txt, 0, itsDrawingEnvironment);
+	NFmiText text(textPoint, txt, false, 0, itsDrawingEnvironment);
 	itsToolBox->Convert(&text);
 
 	// StartPoint : piirretään vielä kartan väri pallot tänne helpottamaan tunnistusta
@@ -474,7 +474,7 @@ void NFmiCrossSectionManagerView::DrawFooter(void)
 			txt2 += itsCrossSectionSystem->RouteTimes().operator [](itsCrossSectionSystem->RouteTimes().size()-1).ToStr(" HH:mm");
 		itsToolBox->SetTextAlignment(kTopRight);
 		textPoint.X(itsFooterRect.Right()); // TÄMÄ ON HUUHAATA!!!!
-		NFmiText text2(textPoint, txt2, 0, itsDrawingEnvironment);
+		NFmiText text2(textPoint, txt2, false, 0, itsDrawingEnvironment);
 		itsToolBox->Convert(&text2);
 
 		// EndPoint : piirretään vielä kartan väri pallot tänne helpottamaan tunnistusta
@@ -496,7 +496,7 @@ void NFmiCrossSectionManagerView::DrawFooter(void)
 				txt3 += itsCrossSectionSystem->RouteTimes().operator [](static_cast<int>(itsCrossSectionSystem->RouteTimes().size()/2)).ToStr(" HH:mm");
 			itsToolBox->SetTextAlignment(kTopCenter);
 			textPoint.X(itsFooterRect.Center().X()); // TÄMÄ ON HUUHAATA!!!!
-			NFmiText text3(textPoint, txt3, 0, itsDrawingEnvironment);
+			NFmiText text3(textPoint, txt3, false, 0, itsDrawingEnvironment);
 			itsToolBox->Convert(&text3);
 
 			// MiddlePoint : piirretään vielä kartan väri pallot tänne helpottamaan tunnistusta
@@ -541,7 +541,7 @@ void NFmiCrossSectionManagerView::DrawActivatedMinorPoint(void)
 		else if(index > 2*pointCount/3.)
 			alignm = kTopRight;
 		itsToolBox->SetTextAlignment(alignm);
-		NFmiText text(textPoint, txt, 0, itsDrawingEnvironment);
+		NFmiText text(textPoint, txt, false, 0, itsDrawingEnvironment);
 		itsToolBox->Convert(&text);
 		itsToolBox->SetTextAlignment(oldAlignment);
 	}
@@ -667,7 +667,7 @@ void NFmiCrossSectionManagerView::DrawHeader(void)
 	textPoint.X(textPoint.X() + 2*moveDownward); // siirretään myös pari pikseliä oikeaan
 	FmiDirection oldAlignment = itsToolBox->GetTextAlignment();
 	itsToolBox->SetTextAlignment(kTopLeft);
-	NFmiText text(textPoint, txt, 0, itsDrawingEnvironment);
+	NFmiText text(textPoint, txt, false, 0, itsDrawingEnvironment);
 	itsToolBox->Convert(&text);
 	itsToolBox->SetTextAlignment(oldAlignment);
 }

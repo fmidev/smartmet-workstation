@@ -174,6 +174,377 @@ int main(int argc, const char* argv[])
     return 1; // virheellinen ulostulo
 } 
 
+
+/*
+#include "NFmiQueryData.h"
+#include "NFmiFastQueryInfo.h"
+#include "NFmiFileSystem.h"
+#include "NFmiFileString.h"
+#include "NFmiPathUtils.h"
+#include "NFmiQueryDataUtil.h"
+#include "NFmiTimeList.h"
+#include "NFmiStringTools.h"
+#include "NFmiMilliSecondTimer.h"
+#include "NFmiProducerName.h"
+#include <fstream>
+#include <thread>
+#include "boost\algorithm\string\replace.hpp"
+#include "boost/filesystem.hpp"
+
+static std::string MakeNextSubDirectoryPath(const std::string& currentDirectory, const std::string& subDirectoryName)
+{
+    auto nextSubDirectoryPath = currentDirectory;
+    PathUtils::addDirectorySeparatorAtEnd(nextSubDirectoryPath);
+    nextSubDirectoryPath += subDirectoryName;
+    return nextSubDirectoryPath;
+}
+
+static void ChangeTime(NFmiMetTime& changedTime, int changeTimesByHour)
+{
+    changedTime.ChangeByHours(changeTimesByHour);
+}
+
+static NFmiTimeDescriptor MakeNewTimeDescrptor(NFmiTimeDescriptor copyOfSourceTimeDescriptor, int changeTimesByHour)
+{
+    if(copyOfSourceTimeDescriptor.UseTimeList())
+    {
+        auto &timeList = *copyOfSourceTimeDescriptor.ValidTimeList();
+        for(timeList.Reset(); timeList.Next(); )
+        {
+            ::ChangeTime(*timeList.Current(), changeTimesByHour);
+        }
+    }
+    else
+    {
+        auto &timebag = *copyOfSourceTimeDescriptor.ValidTimeBag();
+        timebag.MoveByMinutes(changeTimesByHour * 60);
+    }
+    auto changedOriginTime = copyOfSourceTimeDescriptor.OriginTime();
+    changedOriginTime.ChangeByHours(changeTimesByHour);
+    copyOfSourceTimeDescriptor.OriginTime(changedOriginTime);
+    return copyOfSourceTimeDescriptor;
+}
+
+std::unique_ptr<NFmiQueryData> CreateChangedQueryData(NFmiFastQueryInfo& sourceFastInfo, int changeTimesByHour)
+{
+    auto newTimeDescriptor = ::MakeNewTimeDescrptor(sourceFastInfo.TimeDescriptor(), changeTimesByHour);
+    auto newQueryData = std::make_unique<NFmiQueryData>(*sourceFastInfo.RefQueryData());
+    newQueryData->Info()->SetTimeDescriptor(newTimeDescriptor);
+    return newQueryData;
+}
+
+// Timestampissa pitää olla 12 numeroa peräkkäin, jotka on eroteltu muista nimen osista '_' merkillä.
+// Palautetaan pair, jossa korjattu polku string:ina ja uuden aikaleiman aika NFmiMetTime:na.
+static std::pair<std::string, NFmiStaticTime> MakeChangedTimeStampFilePath(std::string filePath, int changeTimesByHour)
+{
+    NFmiStaticTime usedTime = NFmiMetTime::gMissingTime;
+    NFmiStaticTime usedTimeWithDDHHMMss_mask = NFmiMetTime::gMissingTime;
+    std::string newFilePath = filePath;
+    NFmiFileString fileString(filePath);
+    std::string fileNameWithoutExtension = fileString.Header();
+    auto fileNameParts = NFmiStringTools::Split(fileNameWithoutExtension, "_");
+    for(auto fileNamePart : fileNameParts)
+    {
+        try
+        {
+            // Katsotaan voidaanko fileNamePart konvertoida numeroksi. Jos voidaan, silloin tarkastellaan
+            // kuinka eripituisista timestampeista voisi rakentaa ajan
+            double tmpValue = NFmiStringTools::Convert<double>(fileNamePart);
+            NFmiTime aTime;
+            auto fileNamePartSize = fileNamePart.size();
+            if(fileNamePartSize == 12 || fileNamePartSize == 14)
+            {
+                auto usedTimeMask = (fileNamePartSize == 12) ? kYYYYMMDDHHMM : kYYYYMMDDHHMMSS;
+                aTime.FromStr(fileNamePart, usedTimeMask);
+                // Valitettavasti ChangeByHours aina nolla sekunnit väkisin
+                auto currentSeconds = aTime.GetSec();
+                aTime.ChangeByHours(changeTimesByHour);
+                aTime.SetSec(currentSeconds);
+                std::string newTimeStamp = aTime.ToStr(usedTimeMask);
+                boost::replace_all(newFilePath, fileNamePart, newTimeStamp);
+                usedTime = aTime;
+                break; // lopetetaan kun on löytynyt 1. kunnon aikaleima tiedostonimestä
+            }
+            else if(fileNamePartSize == 8)
+            {
+                // Oletus maski on muotoa DDHHmmSS (näin ainakin smartmet_roadmodel_skandinavia -tiedostoissa),
+                // valitettavasti se ei toimi oikein FromStr metodin kanssa ja tässä pitää tehdä erillistä kikkailua.
+                auto YYYYMMstr = aTime.ToStr("YYYYMM");
+                auto totalTimeString = YYYYMMstr + fileNamePart;
+                aTime.FromStr(totalTimeString, kYYYYMMDDHHMMSS);
+                // Valitettavasti ChangeByHours aina nolla sekunnit väkisin
+                auto currentSeconds = aTime.GetSec();
+                aTime.ChangeByHours(changeTimesByHour);
+                aTime.SetSec(currentSeconds);
+                std::string newTimeStamp = aTime.ToStr("DDHHmmSS");
+                boost::replace_all(newFilePath, fileNamePart, newTimeStamp);
+                if(usedTimeWithDDHHMMss_mask == NFmiMetTime::gMissingTime)
+                    usedTimeWithDDHHMMss_mask = aTime;
+            }
+        }
+        catch(...)
+        {
+        }
+    }
+
+    if(usedTime == NFmiMetTime::gMissingTime)
+        return std::make_pair(newFilePath, usedTimeWithDDHHMMss_mask);
+    else
+        return std::make_pair(newFilePath, usedTime);
+}
+
+static time_t MakeTimeT(const NFmiStaticTime& newModifiedTime)
+{
+    struct tm timeStruct;
+    timeStruct.tm_sec = newModifiedTime.GetSec();
+    timeStruct.tm_min = newModifiedTime.GetMin();
+    timeStruct.tm_hour = newModifiedTime.GetHour();
+    timeStruct.tm_mday = newModifiedTime.GetDay();
+    timeStruct.tm_mon = newModifiedTime.GetMonth() - 1;     // tm months start from 0
+    timeStruct.tm_year = newModifiedTime.GetYear() - 1900;  // tm years start from 1900
+    timeStruct.tm_wday = -1;
+    timeStruct.tm_yday = -1;
+    timeStruct.tm_isdst = -1;
+
+    return ::mktime(&timeStruct);
+}
+
+static void StoreParallerQueryData(NFmiQueryData& newQueryData, const std::string& queryDataFilePath, const NFmiStaticTime & newModifiedTime)
+{
+    newQueryData.Write(queryDataFilePath);
+    // Muutetaan luodun tiedoston modified time annetun ajan mukaiseksi
+    boost::filesystem::path boostPath = queryDataFilePath;
+    boost::filesystem::last_write_time(boostPath, ::MakeTimeT(newModifiedTime));
+}
+
+static void DoQueryDataWork(const std::string& queryDataFileName, const std::string& currentDirectory, const std::string& parallerDirectory, int changeTimesByHour)
+{
+    auto queryDataFileSourcePath = ::MakeNextSubDirectoryPath(currentDirectory, queryDataFileName);
+    auto parallerQueryDataFileSourcePath = ::MakeNextSubDirectoryPath(parallerDirectory, queryDataFileName);
+    auto responsePair = ::MakeChangedTimeStampFilePath(parallerQueryDataFileSourcePath, changeTimesByHour);
+    parallerQueryDataFileSourcePath = responsePair.first;
+    try
+    {
+        std::cerr << "Doing queryData file " << queryDataFileSourcePath << std::endl;
+        NFmiQueryData sourceData(queryDataFileSourcePath);
+        NFmiFastQueryInfo sourceFastInfo(&sourceData);
+        auto newQueryData = ::CreateChangedQueryData(sourceFastInfo, changeTimesByHour);
+        if(newQueryData)
+            ::StoreParallerQueryData(*newQueryData, parallerQueryDataFileSourcePath, responsePair.second);
+        else
+            std::cerr << "Error: couldn't create newQueryData from " << queryDataFileSourcePath << std::endl;
+    }
+    catch(std::exception& e)
+    {
+        std::cerr << "Error with file: " << queryDataFileSourcePath << std::endl;
+        std::cerr << e.what() << std::endl;
+    }
+}
+
+static void DoFilesOnDirectory(const std::string& currentDirectory, const std::string& parallerDirectory, int changeTimesByHour)
+{
+    // Tiedostot tulevat aikajärjestyksessä vanhimmasta uusimpaan, johtuen tiedostonimissä olevista aikaleimoista.
+    auto files = NFmiFileSystem::DirectoryFiles(currentDirectory);
+    for(const auto& queryDataFileName : files)
+    {
+        ::DoQueryDataWork(queryDataFileName, currentDirectory, parallerDirectory, changeTimesByHour);
+    }
+}
+
+static void DoRecursiveDirectoryWork(const std::string& currentDirectory, const std::string& parallerDirectory, int changeTimesByHour)
+{
+    std::cerr << "Doing directory " << currentDirectory << std::endl;
+    if(NFmiFileSystem::DirectoryExists(currentDirectory))
+    {
+        if(NFmiFileSystem::CreateDirectory(parallerDirectory))
+        {
+            std::cerr << "Created paraller directory " << parallerDirectory << std::endl;
+            DoFilesOnDirectory(currentDirectory, parallerDirectory, changeTimesByHour);
+            auto subDirectories = NFmiFileSystem::Directories(currentDirectory);
+            for(const auto &subDirectoryName : subDirectories)
+            {
+                if(subDirectoryName != "." && subDirectoryName != "..")
+                {
+                    auto nextSubDirectoryPath = ::MakeNextSubDirectoryPath(currentDirectory, subDirectoryName);
+                    auto nextParallerSubDirectoryPath = ::MakeNextSubDirectoryPath(parallerDirectory, subDirectoryName);
+                    DoRecursiveDirectoryWork(nextSubDirectoryPath, nextParallerSubDirectoryPath, changeTimesByHour);
+                }
+            }
+        }
+        else
+            std::cerr << "Error: couldn't create paraller directory " << parallerDirectory << std::endl;
+    }
+    else
+        std::cerr << "Error: non existing given directory " << parallerDirectory << std::endl;
+}
+
+// Tutkitaan annetusta queryData hakemistosta local hakemistoa.
+// Käydään läpi sen kaikki qData tiedostot.
+// Tärkeimpiä ovat synop ja metar tiedostot, jos niitä löytyy, käytetään sen datasetin 'seinäkelloaikana'
+// minkä tahansa synop/metar datan viimeisintä validTimea. 
+// Jos tälläistä ei löydy, käytetään minkä tahansa hiladatan (oletetaan että on ennuste) myöhäisintä ensimmäistä validTimea.
+// Jos tälläistä ei löydy, käytetään minkä tahansa asemadatan (oletetaan että on havainto)  myöhäisintä viimeistä validTimea.
+static int CalculateActualChangeTimesByHourValue(const std::string& pathToQueryDataFiles, int changeTimesByHourAgainstWallClock)
+{
+    auto localDirectory = pathToQueryDataFiles;
+    PathUtils::addDirectorySeparatorAtEnd(localDirectory);
+    localDirectory += "local";
+    if(NFmiFileSystem::DirectoryExists(localDirectory))
+    {
+        PathUtils::addDirectorySeparatorAtEnd(localDirectory);
+        auto qDataFilePattern = localDirectory;
+        qDataFilePattern += "*.?qd";
+        auto files = NFmiFileSystem::PatternFiles(qDataFilePattern);
+        if(!files.empty())
+        {
+            NFmiMetTime wallClockTime;
+            NFmiMetTime synopBasedWallClock = NFmiMetTime::gMissingTime;
+            NFmiMetTime modelDataBasedWallClock = NFmiMetTime::gMissingTime;
+            NFmiMetTime obsDataBasedWallClock = NFmiMetTime::gMissingTime;
+            for(const auto& fileName : files)
+            {
+                try
+                {
+                    auto finalFilePath = localDirectory + fileName;
+                    NFmiQueryData qData(finalFilePath);
+                    NFmiFastQueryInfo fastInfo(&qData);
+                    if(fastInfo.IsGrid())
+                    {
+                        const auto& firstValidTime = fastInfo.TimeDescriptor().FirstTime();
+                        if(modelDataBasedWallClock < firstValidTime)
+                            modelDataBasedWallClock = firstValidTime;
+                    }
+                    else
+                    {
+                        const auto& lastValidTime = fastInfo.TimeDescriptor().LastTime();
+                        auto producerId = fastInfo.Producer()->GetIdent();
+                        if(producerId == kFmiSYNOP || producerId == kFmiMETAR)
+                        {
+                            if(synopBasedWallClock < lastValidTime)
+                                synopBasedWallClock = lastValidTime;
+                        }
+                        else
+                        {
+                            if(obsDataBasedWallClock < lastValidTime)
+                                obsDataBasedWallClock = lastValidTime;
+                        }
+                    }
+                }
+                catch(...)
+                { }
+            }
+            if(synopBasedWallClock != NFmiMetTime::gMissingTime)
+            {
+                int usedDifferenceInHours = wallClockTime.DifferenceInHours(synopBasedWallClock) + changeTimesByHourAgainstWallClock;
+                std::cerr << "Using synop/metar based qData as original wall-clock time and final change time in hours is " << std::to_string(usedDifferenceInHours) << std::endl;
+                return usedDifferenceInHours;
+            }
+            else if(modelDataBasedWallClock != NFmiMetTime::gMissingTime)
+            {
+                int usedDifferenceInHours = wallClockTime.DifferenceInHours(modelDataBasedWallClock) + changeTimesByHourAgainstWallClock;
+                std::cerr << "Using model based qData as original wall-clock time and final change time in hours is " << std::to_string(usedDifferenceInHours) << std::endl;
+                return usedDifferenceInHours;
+            }
+            else if(obsDataBasedWallClock != NFmiMetTime::gMissingTime)
+            {
+                int usedDifferenceInHours = wallClockTime.DifferenceInHours(obsDataBasedWallClock) + changeTimesByHourAgainstWallClock;
+                std::cerr << "Using other-observation based qData as original wall-clock time and final change time in hours is " << std::to_string(usedDifferenceInHours) << std::endl;
+                return usedDifferenceInHours;
+            }
+            else
+                std::cerr << "Warning: the 'local' sub-directory didn't contain any usable qdata files, using directly argument given changeTimesByHour value " << std::to_string(changeTimesByHourAgainstWallClock) << std::endl;
+        }
+        else
+            std::cerr << "Warning: the 'local' sub-directory didn't contain any qdata files, using directly argument given changeTimesByHour value " << std::to_string(changeTimesByHourAgainstWallClock) << std::endl;
+    }
+    else
+        std::cerr << "Warning: given directory didn't have 'local' sub-directory, using directly argument given changeTimesByHour value " << std::to_string(changeTimesByHourAgainstWallClock) << std::endl;
+
+    return changeTimesByHourAgainstWallClock;
+}
+
+int main(int argc, const char* argv[])
+{
+    // Ohjelma käy rekursiivisesti läpi kaikki tiedostot ja hakemistot, jotka ovat
+    // annetulla pathToQueryDataFiles -polulla ja ja tekee seuraavia asioita:
+    // 1) Luo uusi data muistiin, joissa on siirretty kaikkia aikoja annetulla aikasiirtymällä,
+    // suhteessa sainäkelloaikaan, elli -12 siirtää seinäkellosta 12 tuntia taaksepäin.
+    // 2) Talleta uusi data rinnakkaiseen puurakenteeseen, joka alkaa newBasePath -polusta.
+    // 3) Uuden datan nimessa oleva aikaleima on myös muokattu samalla siirtymällä.
+    std::string pathToQueryDataFiles = argv[1];
+    std::string newBasePath = argv[2];
+    int changeTimesByHourAgainstWallClock = std::stoi(argv[3]);
+    auto changeTimesByHour = ::CalculateActualChangeTimesByHourValue(pathToQueryDataFiles, changeTimesByHourAgainstWallClock);
+    DoRecursiveDirectoryWork(pathToQueryDataFiles, newBasePath, changeTimesByHour);
+
+    return 1;
+}
+*/
+
+/*
+#include "NFmiQueryData.h"
+#include "NFmiFastQueryInfo.h"
+#include "NFmiValueString.h"
+#include "NFmiMilliSecondTimer.h"
+
+#include <fstream>
+
+template<typename T>
+std::function<T> make_function(T* t) {
+    return { t };
+}
+
+static float conversionFast(float value, int)
+{
+    return value;
+}
+
+static float conversionSlow(float value, int)
+{
+    NFmiValueString valueStr(value, "%f.1");
+    return valueStr;
+}
+
+static void FillData(NFmiFastQueryInfo& fastInfo1, NFmiFastQueryInfo& fastInfo2, int precision, const std::string &name, std::function<float(float, int)> &conversionFunction)
+{
+    std::cout << name << " starts..." << std::endl;
+    NFmiNanoSecondTimer timer;
+    for(fastInfo1.ResetParam(), fastInfo2.ResetParam(); fastInfo1.NextParam(), fastInfo2.NextParam(); )
+    {
+        std::cout << "#Par";
+        for(fastInfo1.ResetLocation(), fastInfo2.ResetLocation(); fastInfo1.NextLocation(), fastInfo2.NextLocation(); )
+        {
+//            std::cout << "L";
+            auto latlonNew = fastInfo1.LatLon();
+            latlonNew.X(latlonNew.X() + 0.1);
+            for(fastInfo1.ResetLevel(), fastInfo2.ResetLevel(); fastInfo1.NextLevel(), fastInfo2.NextLevel(); )
+            {
+                for(fastInfo1.ResetTime(), fastInfo2.ResetTime(); fastInfo1.NextTime(), fastInfo2.NextTime(); )
+                {
+                    auto valueOrig = fastInfo1.InterpolatedValue(latlonNew);
+                    auto valueNew = conversionFunction(valueOrig, precision);
+                    fastInfo2.FloatValue(valueNew);
+                }
+            }
+        }
+    }
+    std::cout << std::endl << name << " took " << timer.elapsedTimeInSecondsString() << std::endl;
+}
+
+int main(int argc, const char* argv[])
+{
+    std::string dataFileName = "D:\\SmartMet\\wrk\\data\\local\\202106090853_hirlam_skandinavia_mallipinta.sqd";
+    NFmiQueryData data1(dataFileName);
+    NFmiFastQueryInfo fastInfo1(&data1);
+    std::unique_ptr<NFmiQueryData> data2(data1.Clone());
+    NFmiFastQueryInfo fastInfo2(data2.get());
+    ::FillData(fastInfo1, fastInfo2, 1, "fast", ::make_function(conversionFast));
+    ::FillData(fastInfo1, fastInfo2, 1, "slow", ::make_function(conversionSlow));
+    ::FillData(fastInfo1, fastInfo2, 1, "fast", ::make_function(conversionFast));
+
+    return 0;
+}
+*/
 /*
 #include "NFmiQueryData.h"
 #include "NFmiFastQueryInfo.h"
@@ -188,15 +559,22 @@ int main(int argc, const char* argv[])
     auto amdarCase = (fastInfo.SizeLocations() == 1);
     std::string soundingName = amdarCase ? "amdar sounding" : "sounding";
     int hasDataSoundingCounter = 1;
+    int soundingCounter = 1;
 
     std::string outputTxtFileName = argv[2];
+    bool printMissingSoundingLine = false;
+    if(argc > 3)
+    {
+        int fourthArgumentValue = std::stoi(std::string(argv[3]));
+        if(fourthArgumentValue != 0)
+            printMissingSoundingLine = true;
+    }
     std::ofstream output(outputTxtFileName.c_str(), std::ios::binary);
     if(output)
     {
         const size_t usedWitdth = 10;
         output.fill(' ');
         output << "Print out separate non-missing " << soundingName << "(s) from given '" << dataFileName << "' querydata file\n";
-        int amdarsWithHeightData = 0;
         for(fastInfo.ResetTime(); fastInfo.NextTime(); )
         {
             for(fastInfo.ResetLocation(); fastInfo.NextLocation(); )
@@ -205,7 +583,11 @@ int main(int argc, const char* argv[])
                 std::stringstream temporaryOutput;
                 temporaryOutput << std::setprecision(1) << std::fixed;
 
-                temporaryOutput << "\n" << std::to_string(hasDataSoundingCounter) << ". " << soundingName << " from time " << fastInfo.Time().ToStr("YYYY MM.DD. HH:mm:SS Utc", kEnglish).CharPtr() << std::endl;
+                temporaryOutput << "\n";
+                temporaryOutput << std::to_string(printMissingSoundingLine ? soundingCounter : hasDataSoundingCounter);
+                temporaryOutput << ". " << soundingName << " from time " << fastInfo.Time().ToStr("YYYY MM.DD. HH:mm:SS Utc", kEnglish).CharPtr() << std::endl;
+                auto headerLineStr = temporaryOutput.str();
+                headerLineStr.pop_back();
                 if(!amdarCase)
                 {
                     auto location = fastInfo.Location();
@@ -218,7 +600,7 @@ int main(int argc, const char* argv[])
                     std::string usedName = fastInfo.Param().GetParamName().CharPtr();
                     if(usedName.size() > usedWitdth)
                         usedName.resize(usedWitdth);
-                    temporaryOutput << std::setw(10) << usedName << "|";
+                    temporaryOutput << std::setw(usedWitdth) << usedName << "|";
                 }
                 temporaryOutput << std::endl;
 
@@ -231,11 +613,11 @@ int main(int argc, const char* argv[])
                     {
                         auto value = fastInfo.FloatValue();
                         if(value == kFloatMissing)
-                            temporaryOutput << std::setw(10) << "-" << " ";
+                            temporaryOutput << std::setw(usedWitdth) << "-" << " ";
                         else
                         {
                             soundingHasData = true;
-                            temporaryOutput << std::setw(10) << value << " ";
+                            temporaryOutput << std::setw(usedWitdth) << value << " ";
                         }
                     }
                     temporaryOutput << std::endl;
@@ -245,6 +627,12 @@ int main(int argc, const char* argv[])
                     hasDataSoundingCounter++;
                     output << temporaryOutput.str();
                 }
+                else if(printMissingSoundingLine)
+                {
+                    output << headerLineStr << " was completely missing...";
+
+                }
+                soundingCounter++;
             }
         }
         return 0;

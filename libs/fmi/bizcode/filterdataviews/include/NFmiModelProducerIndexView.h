@@ -11,7 +11,6 @@
 #include "NFmiModelCombineStatusView.h"
 #include "NFmiTimeBag.h"
 #include "NFmiPoint.h"
-#include "NFmiDataMatrix.h"
 
 class NFmiFastQueryInfo;
 class NFmiStepTimeScale;
@@ -23,36 +22,36 @@ class NFmiModelProducerIndexView : public NFmiModelCombineStatusView
 {
 
 public:
-	virtual void Draw(NFmiToolBox * theGTB);
+	void Draw(NFmiToolBox * theGTB) override;
 	NFmiModelProducerIndexView(NFmiToolBox * theToolBox
 							 ,NFmiDrawingEnvironment * theDrawingEnvi
 							 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 							 ,const NFmiRect& theRect);
-	virtual  ~NFmiModelProducerIndexView();
-	virtual void Update(void);
-	void SetDataFromDialog( checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theQueryInfoVector
+	~NFmiModelProducerIndexView();
+	virtual void Update(void) override;
+	void SetDataFromDialog( std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theQueryInfoVector
 							,const NFmiTimeBag& theLoadedDataTimeBag
 							,const NFmiTimeBag& theNonModifieableDataTimeBag
-							,const checkedVector<int>& theSelectedProducerPriorityTable
-							,const checkedVector<NFmiColor>& theProducerColorTable
+							,const std::vector<int>& theSelectedProducerPriorityTable
+							,const std::vector<NFmiColor>& theProducerColorTable
 							,int theNonModifieableTimeRangeProducerIndex
 							,int theActiveProducerIndex); // tuli hieman mega-luokan interface
 
 	void ActiveProducerIndex(int newValue){itsActiveProducerIndex = newValue;}
-	const checkedVector<int>& ProducerIndexInTimeVector(void) const {return itsProducerIndexInTimeVector;};
+	const std::vector<int>& ProducerIndexInTimeVector(void) const {return itsProducerIndexInTimeVector;};
 	bool IsProducerIndexInTimeVectorFilled(void);
 	void SetExtraShortRangeData(bool useExtraData, const NFmiTimeBag& theExtraShortRangeTimeBag, NFmiTimeBag& theLoadedDataTimeBag); // joutuu antamaan myˆs loadedtimebagin (huonon suunnittelun takia!!)
 
-	bool LeftButtonDown(const NFmiPoint &thePlace, unsigned long theKey);
-	bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-	bool RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey);
-	bool MouseMove(const NFmiPoint & thePlace, unsigned long theKey);
+	bool LeftButtonDown(const NFmiPoint &thePlace, unsigned long theKey) override;
+	bool LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey) override;
+	bool MouseMove(const NFmiPoint & thePlace, unsigned long theKey) override;
 
 protected:
-	virtual NFmiRect CalcStatusGridViewSize(void);
-	virtual NFmiColor CheckStatusBoxColor(int theTimeIndex);
-	virtual bool IsViewDrawed(void);
-	virtual NFmiTimeBag GetUsedTimeBag(void);
+	NFmiRect CalcStatusGridViewSize(void) override;
+	NFmiColor CheckStatusBoxColor(int theTimeIndex) override;
+	bool IsViewDrawed(void) override;
+	NFmiTimeBag GetUsedTimeBag(void) override;
 
 private:
 	void DrawBackground(void);
@@ -63,7 +62,7 @@ private:
 	void FillProducerIndexInTimeVector(void);
 	NFmiPoint CalcTimeIndexRange(NFmiTimeBag& thePrimeTimeBag, NFmiTimeBag& theCheckedTimeBag, bool fCalcNormalRange);
 	void CutWithNonEditableRange(NFmiPoint* theRange);
-	void FillNonMarkedRange(checkedVector<int>& theIndexVector, const NFmiPoint& theRange, int theIndex);
+	void FillNonMarkedRange(std::vector<int>& theIndexVector, const NFmiPoint& theRange, int theIndex);
 	NFmiRect CalcTimeAxisRect(void);
 	NFmiRect CalcHourValueAxisRect(void);
 	void CreateTimeAxis(void);
@@ -73,17 +72,17 @@ private:
 	int GetPlaceIndexInProducerColorIndexView(const NFmiPoint& thePlace);
 	bool IndexInsideRange(const NFmiPoint& theRange, int theIndex);
 
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > itsQueryInfoVector; // t‰ss‰ on ladattavien datojen tietoja
-	checkedVector<int> itsProducerIndexInTimeVector;
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > itsQueryInfoVector; // t‰ss‰ on ladattavien datojen tietoja
+	std::vector<int> itsProducerIndexInTimeVector;
 	NFmiTimeBag itsLoadedDataTimeBag; // t‰m‰n mukaan elet‰‰n ja tehd‰‰n n‰yttˆ‰ (t‰lle ajalle ladataan dataa)
 	bool fUseNonModifieableDataTimeBag; // onko estoja datan editoinnille olemassa?
 	NFmiTimeBag itsNonModifieableDataTimeBag; // t‰ss‰ kerrotaan mm. kepan esto 12 ensimm‰iselle tunnille
 	NFmiPoint itsNonModifieableTimeRange; // jos fUseModifieableDataTimeBag=false, tulee arvoiksi -1 - -1 
 	int itsNonModifieableTimeRangeProducerIndex; // mill‰ tuottajalla t‰ytet‰‰n mahdollinen ei editoitava alue
 	int itsActiveProducerIndex; // mill‰ tuottajalla t‰ytet‰‰n mahdollinen ei editoitava alue
-	checkedVector<int> itsSelectedProducerPriorityTable; // radio buttonien asetukset
-	checkedVector<NFmiColor> itsProducerColorTable; // eri tuottajille on eri v‰rit
-	checkedVector<NFmiPoint> itsSourceDataExistLimits; // t‰h‰n talletetaan eri datojen aika riitt‰vyydet lopullisessa vectorissa
+	std::vector<int> itsSelectedProducerPriorityTable; // radio buttonien asetukset
+	std::vector<NFmiColor> itsProducerColorTable; // eri tuottajille on eri v‰rit
+	std::vector<NFmiPoint> itsSourceDataExistLimits; // t‰h‰n talletetaan eri datojen aika riitt‰vyydet lopullisessa vectorissa
 													// Eli esim. arvo 3, 15 tarkoittaa ett‰ kyseinen data riitt‰‰ indekseille 3-15 (0:sta alkaa)
 
 	// Kepa-editorissa shortrange extra datan auto lataus kuvioiden hoitelu n‰iden kautta

@@ -91,7 +91,7 @@ double GetHeightValue(boost::shared_ptr<NFmiAreaMask> &mask,
 // **************   NFmiSimpleConditionPart   **********************
 // *****************************************************************
 
-    NFmiSimpleConditionPart::~NFmiSimpleConditionPart(void) = default;
+    NFmiSimpleConditionPart::~NFmiSimpleConditionPart() = default;
 
 NFmiSimpleConditionPart::NFmiSimpleConditionPart(boost::shared_ptr<NFmiAreaMask> &mask1,
     NFmiAreaMask::CalculationOperator calculationOperator,
@@ -112,13 +112,13 @@ NFmiSimpleConditionPart::NFmiSimpleConditionPart(const NFmiSimpleConditionPart &
 {
 }
 
-void NFmiSimpleConditionPart::Initialize(void)
+void NFmiSimpleConditionPart::Initialize()
 {
     isMask1StationaryData = ::CheckForStationaryData(itsMask1);
     isMask2StationaryData = ::CheckForStationaryData(itsMask2);
 }
 
-NFmiSimpleConditionPart* NFmiSimpleConditionPart::Clone(void) const
+NFmiSimpleConditionPart* NFmiSimpleConditionPart::Clone() const
 {
     return new NFmiSimpleConditionPart(*this);
 }
@@ -177,7 +177,7 @@ void NFmiSimpleConditionPart::ResetPreviousValue() { itsPreviousValue = kFloatMi
 // ****************   NFmiSingleCondition   ************************
 // *****************************************************************
 
-NFmiSingleCondition::~NFmiSingleCondition(void) = default;
+NFmiSingleCondition::~NFmiSingleCondition() = default;
 
 NFmiSingleCondition::NFmiSingleCondition(const boost::shared_ptr<NFmiSimpleConditionPart> &thePart1,
     FmiMaskOperation theConditionOperand1,
@@ -205,14 +205,14 @@ static void InitializePart(boost::shared_ptr<NFmiSimpleConditionPart> &part)
         part->Initialize();
 }
 
-void NFmiSingleCondition::Initialize(void)
+void NFmiSingleCondition::Initialize()
 {
     InitializePart(part1);
     InitializePart(part2);
     InitializePart(part3);
 }
 
-NFmiSingleCondition* NFmiSingleCondition::Clone(void) const
+NFmiSingleCondition* NFmiSingleCondition::Clone() const
 {
     return new NFmiSingleCondition(*this);
 }
@@ -350,7 +350,7 @@ void NFmiSingleCondition::ResetPreviousValue()
 // ****************   NFmiSimpleCondition   ************************
 // *****************************************************************
 
-NFmiSimpleCondition::~NFmiSimpleCondition(void) = default;
+NFmiSimpleCondition::~NFmiSimpleCondition() = default;
 
 NFmiSimpleCondition::NFmiSimpleCondition(const boost::shared_ptr<NFmiSingleCondition> &theCondition1,
     NFmiAreaMask::BinaryOperator theConditionOperator,
@@ -375,13 +375,13 @@ static void InitializePart(boost::shared_ptr<NFmiSingleCondition> &condition)
 }
 
 // Tätä kutsutaan konstruktorin jälkeen, tässä alustetaan ainakin tieto siitä onko maski ns. stationaaristä dataa
-void NFmiSimpleCondition::Initialize(void)
+void NFmiSimpleCondition::Initialize()
 {
     ::InitializePart(condition1);
     ::InitializePart(condition2);
 }
 
-NFmiSimpleCondition* NFmiSimpleCondition::Clone(void) const
+NFmiSimpleCondition* NFmiSimpleCondition::Clone() const
 {
     return new NFmiSimpleCondition(*this);
 }

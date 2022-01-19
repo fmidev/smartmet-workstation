@@ -19,14 +19,14 @@ namespace Wms
 
         std::atomic_int running_ = 0;
     public:
-        BackgroundFetcher(std::shared_ptr<cppback::BackgroundManager> bManager, int howManyBackward, int howManyForward);
+        BackgroundFetcher(const std::shared_ptr<cppback::BackgroundManager> &bManager, int howManyBackward, int howManyForward);
 
-        void fetch(WmsClient& client, QueryBuilder qb, const NFmiMetTime& time, int editorTimeStepInMinutes);
+        void fetch(WmsClient& client, const QueryBuilder &qb, const NFmiMetTime& time, int editorTimeStepInMinutes);
 
     private:
-        void fetchQueriesInTheBackground(WmsClient& client, std::vector<WmsQuery> queries);
+        void fetchQueriesInTheBackground(WmsClient& client, const std::vector<WmsQuery> &queries);
         void update(const QueryBuilder& qb, const NFmiMetTime& time, int timeStepInMinutes);
-        void createQueries(QueryBuilder qb, NFmiMetTime time, int timeStepInMinutes, std::vector<WmsQuery>& queries);
+        void createQueries(const QueryBuilder &qb, const NFmiMetTime &time, int timeStepInMinutes, std::vector<WmsQuery>& queries);
         bool shouldNotDoBackgroundFetching(const WmsClient& client, const QueryBuilder& qb) const;
     };
 }

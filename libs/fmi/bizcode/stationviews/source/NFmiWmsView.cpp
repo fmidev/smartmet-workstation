@@ -14,6 +14,7 @@
 #include "WmsSupport.h"
 #include "CtrlViewGdiPlusFunctions.h"
 #include "CtrlViewFunctions.h"
+#include "catlog/catlog.h"
 
 using namespace std;
 using namespace Gdiplus;
@@ -62,9 +63,7 @@ void NFmiWmsView::Draw(NFmiToolBox *theGTB)
 
         auto editorTimeStepInMinutes = static_cast<int>(::round(itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex) * 60));
 
-        itsLatestParam = dataIdent.GetParamIdent();
-        itsLatestProducer = dataIdent.GetProducer()->GetIdent();
-        auto holder = wmsSupport.getDynamicImage(itsLatestProducer, itsLatestParam, *itsArea, itsTime, int(bitmapSize.X()), int(bitmapSize.Y()), editorTimeStepInMinutes);
+        auto holder = wmsSupport.getDynamicImage(dataIdent, *itsArea, itsTime, int(bitmapSize.X()), int(bitmapSize.Y()), editorTimeStepInMinutes);
 
         if(holder)
         {
@@ -81,19 +80,23 @@ void NFmiWmsView::Draw(NFmiToolBox *theGTB)
             wmsSupport.unregisterDynamicLayer(itsRowIndex, itsColIndex, itsMapViewDescTopIndex, dataIdent);
         }
     }
-    catch(...)
+    catch(std::exception &e)
     {
+        CatLog::logMessage(e.what(), CatLog::Severity::Error, CatLog::Category::NetRequest, true);
     }
     this->CleanGdiplus();
 }
 
-std::string NFmiWmsView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
+std::string NFmiWmsView::ComposeToolTipText(const NFmiPoint& theRelativePoint)
 {
-    if (itsLatestParam != -1 && itsLatestProducer != -1)
+    try
     {
-        return  itsCtrlViewDocumentInterface->GetWmsSupport().getFullLayerName(itsLatestProducer, itsLatestParam);
+        return itsCtrlViewDocumentInterface->GetWmsSupport().getFullLayerName(itsDrawParam->Param());
     }
-    return "";
+    catch(std::exception& e)
+    {
+        return std::string("Tooltip error:\n") + e.what();
+    }
 }
 
 #endif // DISABLE_CPPRESTSDK

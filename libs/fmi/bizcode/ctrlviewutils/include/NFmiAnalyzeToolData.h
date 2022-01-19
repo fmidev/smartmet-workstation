@@ -10,7 +10,6 @@
 
 #include "NFmiProducer.h"
 #include "NFmiMetTime.h"
-#include "NFmiDataMatrix.h"
 #include "NFmiHelpDataInfo.h"
 
 #include <boost/function.hpp>
@@ -39,7 +38,7 @@ class NFmiControlPointObservationBlendingData
     bool fIsSelectionMadeYet = false; 
     bool fOverrideSelection = false;
     // Tähän kerätään käytössä olevat oikean tyyppiset observation tuottajat
-    checkedVector<NFmiProducer> itsProducers; 
+    std::vector<NFmiProducer> itsProducers; 
     std::string itsBaseNameSpace;
     // Kuinka vanhoja havaintoja sallitaan mukaan suhteessa aloitusaikaan itsActualFirstTime
     static long itsExpirationTimeInMinutes;
@@ -60,7 +59,7 @@ public:
     bool SelectProducer(unsigned long theProducerId);
     bool IsSelectionMadeYet(void) const { return fIsSelectionMadeYet; }
     void SeekProducers(NFmiInfoOrganizer &theInfoOrganizer);
-    const checkedVector<NFmiProducer>& Producers() const { return itsProducers; }
+    const std::vector<NFmiProducer>& Producers() const { return itsProducers; }
     static bool IsGoodObservationDataForCpPointConversion(boost::shared_ptr<NFmiFastQueryInfo> &info);
     bool OverrideSelection() const { return fOverrideSelection; }
     void OverrideSelection(bool newValue);
@@ -100,15 +99,15 @@ public:
 	void AnalyzeToolMode(bool newValue) {fAnalyzeToolMode = newValue;}
 	bool UseBothProducers(void) const {return fUseBothProducers;}
 	void UseBothProducers(bool newValue) {fUseBothProducers = newValue;}
-	const checkedVector<std::string>& PotentialProducersFileFilters(void) const {return itsPotentialProducersFileFilters;}
-	const checkedVector<NFmiProducer>& Producers(void) const {return itsProducers;}
+	const std::vector<std::string>& PotentialProducersFileFilters(void) const {return itsPotentialProducersFileFilters;}
+	const std::vector<NFmiProducer>& Producers(void) const {return itsProducers;}
 	bool IsSelectionsMadeYet(void) const {return fIsSelectionsMadeYet;}
 	bool SelectProducer1ByName(const std::string &theProducerName);
 	bool SelectProducer2ByName(const std::string &theProducerName);
 	bool EnableAnalyseTool(NFmiInfoOrganizer &theInfoOrganizer, const NFmiParam &theParam);
     NFmiControlPointObservationBlendingData& ControlPointObservationBlendingData() { return itsControlPointObservationBlendingData; }
 
-    static std::pair<NFmiMetTime, NFmiMetTime> GetLatestSuitableAnalyzeToolInfoTime(checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, const boost::shared_ptr<NFmiArea> &checkedObservationArea, bool useObservationBlenderTool, const std::string &usedProducerName);
+    static std::pair<NFmiMetTime, NFmiMetTime> GetLatestSuitableAnalyzeToolInfoTime(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, const boost::shared_ptr<NFmiArea> &checkedObservationArea, bool useObservationBlenderTool, const std::string &usedProducerName);
     static boost::shared_ptr<NFmiArea> GetUsedAreaForAnalyzeTool(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo);
     static boost::shared_ptr<NFmiAreaMaskList> GetUsedTimeSerialMaskList(TimeSerialModificationDataInterface &theAdapter);
 
@@ -129,8 +128,8 @@ private:
 								// mikä ei ollut valittuna viime seeiossa, valitaan se tuottajaksi. Mutta myöhemmin
 								// kun lisää dataa luetaan, tulee myös käyttöön viimeksi valittu, voidaan tämäbn muuttujan
 								// avulla säätää se käyttöön. Mutta jos joku on tehnyt valintoja jo, ei kosketa listojen valintaan.
-	checkedVector<NFmiProducer> itsProducers; // tähän kerätään filefilttereiden avullä ladatut ja siis käytössä olevat tuottajat
-	checkedVector<std::string> itsPotentialProducersFileFilters; // tähän kerätään kaikki potentiaaliset tuottajat helpdata-info konffeista. Mutta koska konffeista ei saa tuottajaa
+	std::vector<NFmiProducer> itsProducers; // tähän kerätään filefilttereiden avullä ladatut ja siis käytössä olevat tuottajat
+	std::vector<std::string> itsPotentialProducersFileFilters; // tähän kerätään kaikki potentiaaliset tuottajat helpdata-info konffeista. Mutta koska konffeista ei saa tuottajaa
 																// joudumme käyttämää tunnisteenä fileFilteriä
     NFmiControlPointObservationBlendingData itsControlPointObservationBlendingData;
 	std::string itsBaseNameSpace;

@@ -118,7 +118,7 @@ NFmiSatelliteImageCacheSystem& SmartMetDocumentInterfaceForGeneralDataDoc::Satel
     return itsDoc->SatelliteImageCacheSystem();
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::MakeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea)
+void SmartMetDocumentInterfaceForGeneralDataDoc::MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea)
 {
     itsDoc->GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
 }
@@ -333,7 +333,7 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::SmartMetEditingMode(CtrlViewUti
     itsDoc->SmartMetEditingMode(newValue, modifySettings);
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::SetDataLoadingProducerIndexVector(const checkedVector<int>& theIndexVector)
+void SmartMetDocumentInterfaceForGeneralDataDoc::SetDataLoadingProducerIndexVector(const std::vector<int>& theIndexVector)
 {
     itsDoc->SetDataLoadingProducerIndexVector(theIndexVector);
 }
@@ -631,9 +631,9 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::OnEditSpaceOut(unsigned int the
     itsDoc->GetCombinedMapHandler()->onEditSpaceOut(theDescTopIndex);
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::OnButtonRefresh()
+void SmartMetDocumentInterfaceForGeneralDataDoc::OnButtonRefresh(const std::string& message)
 {
-    itsDoc->OnButtonRefresh();
+    itsDoc->OnButtonRefresh(message);
 }
 
 void SmartMetDocumentInterfaceForGeneralDataDoc::OnShowProjectionLines()
@@ -1136,11 +1136,6 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::InvalidateMapView(bool bErase)
     itsDoc->InvalidateMapView(bErase);
 }
 
-NFmiSeaIcingWarningSystem& SmartMetDocumentInterfaceForGeneralDataDoc::SeaIcingWarningSystem()
-{
-    return itsDoc->SeaIcingWarningSystem();
-}
-
 CtrlViewUtils::GraphicalInfo& SmartMetDocumentInterfaceForGeneralDataDoc::GetGraphicalInfo(int theMapViewDescTopIndex)
 {
     return itsDoc->GetCombinedMapHandler()->getGraphicalInfo(theMapViewDescTopIndex);
@@ -1256,7 +1251,7 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::SynopDataGridViewOn(bool newSta
     itsDoc->SynopDataGridViewOn(newState);
 }
 
-checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> SmartMetDocumentInterfaceForGeneralDataDoc::GetSortedSynopInfoVector(int theProducerId, int theProducerId2, int theProducerId3, int theProducerId4)
+std::vector<boost::shared_ptr<NFmiFastQueryInfo>> SmartMetDocumentInterfaceForGeneralDataDoc::GetSortedSynopInfoVector(int theProducerId, int theProducerId2, int theProducerId3, int theProducerId4)
 {
     return itsDoc->GetSortedSynopInfoVector(theProducerId, theProducerId2, theProducerId3, theProducerId4);
 }

@@ -19,7 +19,7 @@ namespace Imagine
 class NFmiEsriPoint;  // introduce projector argument type
 class NFmiEsriBox;
 
-class _FMI_DLL NFmiEsriProjector
+class NFmiEsriProjector
 {
  public:
   virtual ~NFmiEsriProjector(void){};

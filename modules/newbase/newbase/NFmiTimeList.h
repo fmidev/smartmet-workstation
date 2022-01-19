@@ -7,17 +7,17 @@
 
 #pragma once
 
-#include "NFmiDataMatrix.h"
+#include "NFmiGlobals.h"
 
 class NFmiMetTime;
 class NFmiTimeBag;
 
 //! Undocumented
-class _FMI_DLL NFmiTimeList
+class NFmiTimeList
 {
  public:
-  virtual ~NFmiTimeList(void);
-  NFmiTimeList(void);
+  virtual ~NFmiTimeList();
+  NFmiTimeList();
   NFmiTimeList(const NFmiTimeList &theList);
   NFmiTimeList(const NFmiTimeBag &theTimes);
 
@@ -29,19 +29,19 @@ class _FMI_DLL NFmiTimeList
   virtual void Add(NFmiTimeList *theList);
   void Clear(bool fDeleteData = false);
 
-  bool Reset(void) const;
-  bool First(void) const;
+  bool Reset() const;
+  bool First() const;
   bool Next(NFmiMetTime **theItem) const;
-  bool Next(void) const;
-  bool Previous(void) const;
+  bool Next() const;
+  bool Previous() const;
   bool Find(const NFmiMetTime &theTime);
   bool FindNearestTime(const NFmiMetTime &theTime,
                        FmiDirection theDirection = kCenter,
                        unsigned long theTimeRangeInMinutes = kUnsignedLongMissing);
-  NFmiMetTime *Current(void) const;
-  const NFmiMetTime &FirstTime(void) const;
-  const NFmiMetTime &LastTime(void) const;
-  int CurrentResolution(void) const;
+  NFmiMetTime *Current() const;
+  const NFmiMetTime &FirstTime() const;
+  const NFmiMetTime &LastTime() const;
+  int CurrentResolution() const;
 
   const NFmiTimeList Combine(NFmiTimeList &theList,
                              int theStartTimeFunction = 0,
@@ -50,14 +50,14 @@ class _FMI_DLL NFmiTimeList
                                      const NFmiMetTime &theEndLimit);
   void PruneTimes(int theMaxTimeCount, bool fFromEnd = true);
 
-  int NumberOfItems(void) const;
+  int NumberOfItems() const;
 
   virtual std::ostream &Write(std::ostream &file) const;
   virtual std::istream &Read(std::istream &file);
 
   bool Index(int theIndex) const;
   const NFmiMetTime *Time(int theIndex) const;
-  int Index(void) const;
+  int Index() const;
   int FindNearestTimes(const NFmiMetTime &theTime,
                        int theMaxMinuteRange,
                        NFmiMetTime &theTime1,
@@ -69,24 +69,24 @@ class _FMI_DLL NFmiTimeList
   bool TimeInSearchRange(const NFmiMetTime &theTime,
                          unsigned long theTimeRangeInMinutes);  // apu funktio nearestTime:en
   bool IndexOk(int theIndex) const;
-  bool FindNearestBackwardTime(checkedVector<NFmiMetTime *>::iterator &firstNotLess,
+  bool FindNearestBackwardTime(std::vector<NFmiMetTime *>::iterator &firstNotLess,
                                const NFmiMetTime &theTime,
                                unsigned long theTimeRangeInMinutes);
-  bool FindNearestForwardTime(checkedVector<NFmiMetTime *>::iterator &firstNotLess,
+  bool FindNearestForwardTime(std::vector<NFmiMetTime *>::iterator &firstNotLess,
                               const NFmiMetTime &theTime,
                               unsigned long theTimeRangeInMinutes);
-  bool FindNearestTime(checkedVector<NFmiMetTime *>::iterator &firstNotLess,
+  bool FindNearestTime(std::vector<NFmiMetTime *>::iterator &firstNotLess,
                        const NFmiMetTime &theTime,
                        unsigned long theTimeRangeInMinutes);
-  int CalcTimeListIndex(const checkedVector<NFmiMetTime *>::iterator &theIter);
-  bool IsSearchedTimeInRange(checkedVector<NFmiMetTime *>::iterator &foundTimeIter,
+  int CalcTimeListIndex(const std::vector<NFmiMetTime *>::iterator &theIter);
+  bool IsSearchedTimeInRange(std::vector<NFmiMetTime *>::iterator &foundTimeIter,
                              const NFmiMetTime &theTime,
                              unsigned long theTimeRangeInMinutes);
-  bool CheckFoundTimeIter(checkedVector<NFmiMetTime *>::iterator &foundTimeIter,
+  bool CheckFoundTimeIter(std::vector<NFmiMetTime *>::iterator &foundTimeIter,
                           const NFmiMetTime &theTime,
                           unsigned long theTimeRangeInMinutes);
 
-  checkedVector<NFmiMetTime *> itsVectorList;  // muutin nimen, että se erottuu vanhasta
+  std::vector<NFmiMetTime *> itsVectorList;  // muutin nimen, että se erottuu vanhasta
                                                //  NFmiVoidPtrList *	itsList;
   mutable int itsIndex;
 
@@ -105,7 +105,7 @@ typedef NFmiTimeList *PNFmiTimeList;
  */
 // ----------------------------------------------------------------------
 
-inline NFmiTimeList::NFmiTimeList(void)
+inline NFmiTimeList::NFmiTimeList()
     : itsVectorList(),
       itsIndex(-1)
       //  : itsList(new NFmiVoidPtrList)
@@ -121,7 +121,7 @@ inline NFmiTimeList::NFmiTimeList(void)
  */
 // ----------------------------------------------------------------------
 
-inline int NFmiTimeList::NumberOfItems(void) const
+inline int NFmiTimeList::NumberOfItems() const
 {
   //  return itsList ? itsList->NumberOfItems() : 0;
   return static_cast<int>(itsVectorList.size());

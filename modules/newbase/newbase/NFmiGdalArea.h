@@ -15,7 +15,7 @@
 class OGRSpatialReference;
 class OGRCoordinateTransformation;
 
-class _FMI_DLL NFmiGdalArea : public NFmiArea
+class NFmiGdalArea : public NFmiArea
 {
  public:
   virtual ~NFmiGdalArea();

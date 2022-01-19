@@ -13,20 +13,20 @@ class NFmiCombinedParam;
 
 //! Undocumented
 
-class _FMI_DLL NFmiDataModifierCombinedParam : public NFmiDataModifier
+class NFmiDataModifierCombinedParam : public NFmiDataModifier
 {
  public:
   virtual ~NFmiDataModifierCombinedParam();
   NFmiDataModifierCombinedParam(const NFmiCombinedParam &theParam);
 
-  virtual void Clear(void);
+  virtual void Clear();
 
   using NFmiDataModifier::Calculate;
   using NFmiDataModifier::CalculationResult;
   virtual void Calculate(float theValue);
   virtual float CalculationResult();
 
-  virtual NFmiCombinedParam *CombinedCalculationResult(void);
+  virtual NFmiCombinedParam *CombinedCalculationResult();
 
  protected:
   NFmiCombinedParam *itsCombinedParam;

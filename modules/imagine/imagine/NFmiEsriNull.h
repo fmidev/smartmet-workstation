@@ -19,7 +19,7 @@ namespace Imagine
 {
 using namespace NFmiEsriBuffer;  // Conversion tools
 
-class _FMI_DLL NFmiEsriNull : public NFmiEsriElement
+class NFmiEsriNull : public NFmiEsriElement
 {
  public:
   // Constructors, destructors

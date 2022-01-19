@@ -16,6 +16,7 @@
 #include "NFmiAngle.h"
 #include "NFmiDataIdent.h"
 #include "NFmiParamBag.h"
+#include "NFmiInterpolation.h"
 
 #include <algorithm>
 #include <cmath>  // Mika: abs()

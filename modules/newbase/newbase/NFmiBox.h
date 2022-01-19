@@ -13,15 +13,15 @@
 
 //! Undocumented
 
-class _FMI_DLL NFmiBox
+class NFmiBox
 {
  public:
-  virtual ~NFmiBox(void);
+  virtual ~NFmiBox();
   NFmiBox(NFmiBox &theBox);
   NFmiBox(long theSize = 0);
 
   bool Initialize(unsigned long newSize = 0);
-  long GetSize(void) const;
+  long GetSize() const;
   void Fill(float theFillValue);
   float Value(unsigned long theIndex);
 
@@ -31,7 +31,7 @@ class _FMI_DLL NFmiBox
   virtual std::istream &Read(std::istream &file);
 
  protected:
-  virtual long CalcSize(void);
+  virtual long CalcSize();
   bool IsInside(unsigned long theIndex) const;
 
   float *itsValues;

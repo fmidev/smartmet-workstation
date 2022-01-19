@@ -49,7 +49,6 @@ COptionsDlg::COptionsDlg(CWnd* pParent /*=NULL*/)
 	, fUseLocalCache(FALSE)
 	, fDoCleanLocalCache(FALSE)
 	, itsCacheKeepFilesMaxDays(0)
-	, itsCacheKeepFilesMax(0)
 	, itsSatelDataUpdateFrequenceInMinutes(0)
 	, fAllowSending(FALSE)
     , itsSysInfoDbUrlU_(_T(""))
@@ -118,7 +117,6 @@ void COptionsDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Check(pDX, IDC_CHECK_CACHE_USE, fUseLocalCache);
     DDX_Check(pDX, IDC_CHECK_CLEAN_CACHE, fDoCleanLocalCache);
     DDX_Text(pDX, IDC_EDIT_CACHE_KEEP_FILES_DAYS, itsCacheKeepFilesMaxDays);
-    DDX_Text(pDX, IDC_EDIT_CACHE_KEEP_FILES_MAX, itsCacheKeepFilesMax);
     DDX_Text(pDX, IDC_EDIT_SATEL_DATA_UPDATE_FREQ_IN_MINUTES, itsSatelDataUpdateFrequenceInMinutes);
     DDX_Check(pDX, IDC_CHECK_ALLOW_SYSTEM_INFO_SEND_TO_DB, fAllowSending);
     DDX_Text(pDX, IDC_EDIT_FMI_SYS_INFO_DB_URL, itsSysInfoDbUrlU_);
@@ -141,6 +139,7 @@ BEGIN_MESSAGE_MAP(COptionsDlg, CDialog)
 	ON_BN_CLICKED(ID_BUTTON_VALIDATION_DIALOG, OnButtonValidationDialog)
 	//}}AFX_MSG_MAP
 	ON_BN_CLICKED(IDC_CHECK_USE_VIEW_MODE, OnBnClickedCheckUseViewMode)
+    ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -197,7 +196,6 @@ BOOL COptionsDlg::OnInitDialog()
 	fUseLocalCache = itsSmartMetDocumentInterface->HelpDataInfoSystem()->UseQueryDataCache();
 	fDoCleanLocalCache = itsSmartMetDocumentInterface->HelpDataInfoSystem()->DoCleanCache();
 	itsCacheKeepFilesMaxDays = itsSmartMetDocumentInterface->HelpDataInfoSystem()->CacheFileKeepMaxDays();
-	itsCacheKeepFilesMax = itsSmartMetDocumentInterface->HelpDataInfoSystem()->CacheMaxFilesPerPattern();
 	fAllowSending = itsSmartMetDocumentInterface->ApplicationDataBase().UseDataSending();
     itsSysInfoDbUrlU_ = CA2T(itsSmartMetDocumentInterface->ApplicationDataBase().BaseUrlString().c_str());
     fAutoLoadNewCacheData = applicationWinRegistry.ConfigurationRelatedWinRegistry().AutoLoadNewCacheData();
@@ -334,7 +332,6 @@ void COptionsDlg::OnOK()
     helpDataInfoSystem->UseQueryDataCache(fUseLocalCache == TRUE);
     helpDataInfoSystem->DoCleanCache(fDoCleanLocalCache == TRUE);
     helpDataInfoSystem->CacheFileKeepMaxDays(static_cast<float>(itsCacheKeepFilesMaxDays));
-    helpDataInfoSystem->CacheMaxFilesPerPattern(boost::math::iround(itsCacheKeepFilesMax));
     itsSmartMetDocumentInterface->SatelDataRefreshTimerInMinutes(itsSatelDataUpdateFrequenceInMinutes);
     itsSmartMetDocumentInterface->ApplicationDataBase().UseDataSending(fAllowSending == TRUE);
     tmpStr = CT2A(itsSysInfoDbUrlU_);
@@ -418,7 +415,7 @@ void COptionsDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_CACHE_USE, "Use local data cache");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_CLEAN_CACHE, "Clean local data cache");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_OPTIONS_CACHE_KEEP_FILES_DAYS, "Keep cache files max [days]");
-    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_OPTIONS_CACHE_KEEP_FILES_MAX, "Keep cache files max");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_OPTIONS_CACHE_KEEP_FILES_MAX, "Local cache data file cleaning has changed. Each\ndata has now LC CNT setting in CaseStudy-dlg.");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SYSTEM_INFO_TO_DB_GROUP, "System info sending to FMI database");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_ALLOW_SYSTEM_INFO_SEND_TO_DB, "Allow SmartMet to collect and send system information to the FMI's database for stability studies");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_URL1_STR, "Url");
@@ -443,4 +440,13 @@ void COptionsDlg::SetLogLevelOnOk()
 {
     itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().LogLevel(itsLogLevelComboBox.GetCurSel());
     CatLog::logLevel(static_cast<CatLog::Severity>(itsLogLevelComboBox.GetCurSel()));
+}
+
+HBRUSH COptionsDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+    HBRUSH hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
+
+    if(pWnd->GetDlgCtrlID() == IDC_STATIC_OPTIONS_CACHE_KEEP_FILES_MAX)
+        CFmiWin32Helpers::SetErrorColorForTextControl(pDC, false);
+    return hbr;
 }

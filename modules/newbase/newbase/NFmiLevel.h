@@ -12,11 +12,11 @@
 
 //! Undocumented
 
-class _FMI_DLL NFmiLevel : public NFmiIndividual
+class NFmiLevel : public NFmiIndividual
 {
  public:
-  ~NFmiLevel(void);
-  NFmiLevel(void);
+  ~NFmiLevel();
+  NFmiLevel();
   NFmiLevel(const NFmiLevel& theLevel);
   NFmiLevel(unsigned long theIdent, const NFmiString& theName, float theLevelValue);
   NFmiLevel(FmiLevelType theLevelType, float theLevelValue);
@@ -25,15 +25,15 @@ class _FMI_DLL NFmiLevel : public NFmiIndividual
   bool operator<(const NFmiLevel& theLevel) const;
   NFmiLevel& operator=(const NFmiLevel& theLevel);
 
-  unsigned long LevelTypeId(void) const;
-  float LevelValue(void) const;
+  unsigned long LevelTypeId() const;
+  float LevelValue() const;
   void LevelValue(float theLevelValue) { itsLevelValue = theLevelValue; }
-  FmiLevelType LevelType(void) const;
+  FmiLevelType LevelType() const;
 
   virtual std::ostream& Write(std::ostream& file) const;
   virtual std::istream& Read(std::istream& file);
 
-  virtual const char* ClassName(void) const;
+  virtual const char* ClassName() const;
 
   bool IsMissing() const;
 

@@ -33,7 +33,7 @@ class NFmiSoundingDataOpt1
   class LFCIndexCache
   {
    public:
-    LFCIndexCache(void)
+    LFCIndexCache()
         : itsSurfaceValue(kFloatMissing),
           itsSurfaceELValue(kFloatMissing),
           its500mValue(kFloatMissing),
@@ -49,7 +49,7 @@ class NFmiSoundingDataOpt1
     {
     }
 
-    void Clear(void) { *this = LFCIndexCache(); }
+    void Clear() { *this = LFCIndexCache(); }
     double itsSurfaceValue;
     double itsSurfaceELValue;
     double its500mValue;
@@ -83,7 +83,7 @@ class NFmiSoundingDataOpt1
       const NFmiMetTime &theTime,
       const NFmiLocation &theLocation,
       const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo);
-  void CutEmptyData(void);  // tämä leikkaa Fill.. -metodeissa laskettuja data vektoreita niin että
+  void CutEmptyData();  // tämä leikkaa Fill.. -metodeissa laskettuja data vektoreita niin että
                             // pelkät puuttuvat kerrokset otetaan pois
   static bool HasRealSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theSoundingLevelInfo);
   bool IsDataGood();
@@ -91,20 +91,20 @@ class NFmiSoundingDataOpt1
   // FillSoundingData-metodeilla täytetään kunkin parametrin vektorit ja tällä saa haluamansa
   // parametrin vektorin käyttöön
   std::deque<float> &GetParamData(FmiParameterName theId);
-  const NFmiLocation &Location(void) const { return itsLocation; }
+  const NFmiLocation &Location() const { return itsLocation; }
   void Location(const NFmiLocation &newValue) { itsLocation = newValue; }
-  const NFmiMetTime &Time(void) const { return itsTime; }
-  const NFmiMetTime &OriginTime(void) const { return itsOriginTime; }
+  const NFmiMetTime &Time() const { return itsTime; }
+  const NFmiMetTime &OriginTime() const { return itsOriginTime; }
   bool GetValuesStartingLookingFromPressureLevel(double &T, double &Td, double &P);
   float GetValueAtPressure(FmiParameterName theId, float P);
   float GetValueAtHeight(FmiParameterName theId, float H);
   bool CalcLCLAvgValues(
       double fromZ, double toZ, double &T, double &Td, double &P, bool fUsePotTandMix);
   bool CalcAvgWindComponentValues(double fromZ, double toZ, double &u, double &v);
-  bool ObservationData(void) const { return fObservationData; }
+  bool ObservationData() const { return fObservationData; }
   bool GetLowestNonMissingValues(float &H, float &U, float &V);
-  float ZeroHeight(void) const { return itsZeroHeight; }
-  int ZeroHeightIndex(void) const { return itsZeroHeightIndex; }
+  float ZeroHeight() const { return itsZeroHeight; }
+  int ZeroHeightIndex() const { return itsZeroHeightIndex; }
   bool IsSameSounding(const NFmiSoundingDataOpt1 &theOtherSounding);
   bool GetTandTdValuesFromNearestPressureLevel(double P,
                                                double &theFoundP,
@@ -122,17 +122,17 @@ class NFmiSoundingDataOpt1
                            float minValue,
                            float maxValue,
                            bool fCircularValue);
-  void UpdateUandVParams(void);
-  bool PressureDataAvailable(void) const { return fPressureDataAvailable; }
-  bool HeightDataAvailable(void) const { return fHeightDataAvailable; }
+  void UpdateUandVParams();
+  bool PressureDataAvailable() const { return fPressureDataAvailable; }
+  bool HeightDataAvailable() const { return fHeightDataAvailable; }
   void SetTandTdSurfaceValues(float T, float Td);
 
-  double CalcSHOWIndex(void);
-  double CalcLIFTIndex(void);
-  double CalcKINXIndex(void);
-  double CalcCTOTIndex(void);
-  double CalcVTOTIndex(void);
-  double CalcTOTLIndex(void);
+  double CalcSHOWIndex();
+  double CalcLIFTIndex();
+  double CalcKINXIndex();
+  double CalcCTOTIndex();
+  double CalcVTOTIndex();
+  double CalcTOTLIndex();
   double CalcLCLPressureLevel(FmiLCLCalcType theLCLCalcType);
   double CalcLCLIndex(FmiLCLCalcType theLCLCalcType);
   double CalcLCLHeightIndex(FmiLCLCalcType theLCLCalcType);
@@ -176,7 +176,7 @@ class NFmiSoundingDataOpt1
   unsigned long GetLowestNonMissingValueLevelIndex(FmiParameterName theParaId);
   bool CheckForMissingLowLevelData(FmiParameterName theParaId, unsigned long theMissingIndexLimit);
   float GetPressureAtHeight(double H);
-  void ClearDatas(void);
+  void ClearDatas();
   bool FillParamData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                      FmiParameterName theId,
                      NFmiQueryDataUtil::SignificantSoundingLevels &theSoungingLevels);
@@ -193,12 +193,12 @@ class NFmiSoundingDataOpt1
       const NFmiPoint &theLatlon);
   void FastFillWindData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
   void FillRestOfWindData(NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage);
-  void InitZeroHeight(void);  // tätä kutsutaan FillParamData-metodeista
-  void CalculateHumidityData(void);
+  void InitZeroHeight();  // tätä kutsutaan FillParamData-metodeista
+  void CalculateHumidityData();
   std::string MakeCacheString(double T, double Td, double fromP, double toP);
   bool FillHeightDataFromLevels(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
   bool FillPressureDataFromLevels(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
-  void SetVerticalParamStatus(void);
+  void SetVerticalParamStatus();
   bool LookForFilledParamFromInfo(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                   FmiParameterName theId);
   std::deque<float> &GetResizedParamData(

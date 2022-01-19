@@ -8,8 +8,8 @@
 #include <functional>
 #include "NFmiViewPosRegistryInfo.h"
 #include "PPTooltip.h"
-#include "NFmiDataMatrix.h" // t‰‰lt‰ tulee checkedVector-luokka
 #include "NFmiProducerSystem.h"
+#include "WndResizer.h"
 
 class SmartMetDocumentInterface;
 class NFmiFastQueryInfo;
@@ -73,7 +73,7 @@ private:
     std::string TooltipForMacroParamCategoryType(const AddParams::SingleRowItem &singleRowItem, const std::vector<AddParams::SingleRowItem> &singleRowItemVector, int rowNumber);
     std::string TooltipForParameterType(const AddParams::SingleRowItem &rowItem);
     std::string TooltipForDataType(const AddParams::SingleRowItem &singleRowItem);
-    std::string TooltipForProducerType(const AddParams::SingleRowItem &singleRowItem, const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector, const NFmiProducerInfo &producerInfo);
+    std::string TooltipForProducerType(const AddParams::SingleRowItem &singleRowItem, const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector, const NFmiProducerInfo &producerInfo);
     std::string DataTypeString(NFmiInfoData::Type dataType);
 public:
     DECLARE_MESSAGE_MAP()
@@ -116,7 +116,6 @@ private:
     void AdjustDialogControls(void);
     void AdjustGridControl(void);
     CRect CalcGridArea(void);
-    void AdjustControlWidth(int theControlId, int rightOffset, int maxWidth);
     void InitHeaders();
     void UpdateGridControlValues(bool collapseAll = false);
     void UpdateGridControlValuesInNormalMode(bool fFirstTime);
@@ -138,6 +137,8 @@ private:
     bool UpdateSearchIfNeeded();
     void CollapseAllButCategories();
     void UpdateAfterSearchText();
+    void DoResizerHooking();
+    void DoTimeSerialSideParametersCheckboxAdjustments();
 
     NFmiParameterSelectionGridCtrl itsGridCtrl;
     CTreeColumn itsTreeColumn;   // provides tree column support
@@ -150,6 +151,8 @@ private:
     int itsLastActivatedRowIndex; // Mik‰ oli viimeksi RowIndex, kun otsikon teksti‰ tehtiin
     CString itsSearchText;
     std::string itsPreviousSearchText;
+    BOOL fTimeSerialSideParameterCase;
+    CWndResizer m_resizer;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -163,8 +166,6 @@ public:
     afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
     afx_msg void OnSize(UINT nType, int cx, int cy);
     afx_msg void OnTimer(UINT_PTR nIDEvent);
-    afx_msg BOOL OnEraseBkgnd(CDC* pDC);
-    afx_msg void OnPaint();
 	void SetIndexes(unsigned int theDescTopIndex);
     virtual BOOL PreTranslateMessage(MSG* pMsg);
 };

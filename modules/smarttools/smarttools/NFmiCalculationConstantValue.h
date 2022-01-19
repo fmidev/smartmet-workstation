@@ -24,10 +24,10 @@ class NFmiCalculationConstantValue : public NFmiAreaMaskImpl
   NFmiCalculationConstantValue(double value = 0);
   ~NFmiCalculationConstantValue();
   NFmiCalculationConstantValue(const NFmiCalculationConstantValue &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
 
   void SetValue(double value) { itsValue = value; }
-  double GetValue(void) const { return itsValue; }
+  double GetValue() const { return itsValue; }
  private:
   double itsValue;
 };
@@ -45,10 +45,10 @@ class NFmiCalculationDeltaZValue : public NFmiAreaMaskImpl
     return NFmiCalculationDeltaZValue::itsHeightValue;
   }
 
-  NFmiCalculationDeltaZValue(void);
+  NFmiCalculationDeltaZValue();
   ~NFmiCalculationDeltaZValue(){};
   NFmiCalculationDeltaZValue(const NFmiCalculationDeltaZValue &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
 
   // tätä funktiota käyttämällä asetetaan korkeus 'siivun' paksuus. HUOM! se on staattinen kuten on
   // itsHeightValue-dataosakin, joten se tulee kaikille 'DeltaZ':oille yhteiseksi arvoksi.
@@ -65,9 +65,9 @@ class NFmiCalculationSpecialCase : public NFmiAreaMaskImpl
 {
  public:
   NFmiCalculationSpecialCase(NFmiAreaMask::CalculationOperator theValue = NotOperation);
-  ~NFmiCalculationSpecialCase(void){};
+  ~NFmiCalculationSpecialCase(){};
   NFmiCalculationSpecialCase(const NFmiCalculationSpecialCase &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
 
  private:
 };
@@ -84,9 +84,9 @@ class NFmiCalculationRampFuction : public NFmiInfoAreaMask
                              boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                               unsigned long thePossibleMetaParamId,
                               BinaryOperator thePostBinaryOperator);
-  ~NFmiCalculationRampFuction(void);
+  ~NFmiCalculationRampFuction();
   NFmiCalculationRampFuction(const NFmiCalculationRampFuction &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
 
  private:
 };
@@ -102,9 +102,9 @@ class NFmiCalculationRampFuctionWithAreaMask : public NFmiAreaMaskImpl
                                          NFmiInfoData::Type theDataType,
                                          boost::shared_ptr<NFmiAreaMask> &theAreaMask,
                                          BinaryOperator thePostBinaryOperator);
-  ~NFmiCalculationRampFuctionWithAreaMask(void);
+  ~NFmiCalculationRampFuctionWithAreaMask();
   NFmiCalculationRampFuctionWithAreaMask(const NFmiCalculationRampFuctionWithAreaMask &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
 
  private:
   boost::shared_ptr<NFmiAreaMask> itsAreaMask;
@@ -124,7 +124,7 @@ class NFmiCalculationIntegrationFuction : public NFmiInfoAreaMask
                                     NFmiInfoData::Type theDataType,
                                     boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                     unsigned long thePossibleMetaParamId);
-  ~NFmiCalculationIntegrationFuction(void);
+  ~NFmiCalculationIntegrationFuction();
 
  private:
   NFmiCalculationIntegrationFuction(const NFmiCalculationIntegrationFuction &theOther);

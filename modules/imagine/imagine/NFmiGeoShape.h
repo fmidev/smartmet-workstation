@@ -48,7 +48,7 @@ struct NFmiGeoShapeError : public std::runtime_error
   NFmiGeoShapeError(const std::string &s) : std::runtime_error(s) {}
 };
 
-class _FMI_DLL NFmiGeoShape
+class NFmiGeoShape
 #ifndef IMAGINE_WITH_CAIRO
     : public NFmiDrawable
 #endif

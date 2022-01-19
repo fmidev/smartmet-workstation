@@ -14,7 +14,7 @@
 
 struct PacificPointFixerData
 {
-  PacificPointFixerData(void) : itsBottomLeftLatlon(), itsTopRightLatlon(), fIsPacific(false) {}
+  PacificPointFixerData() : itsBottomLeftLatlon(), itsTopRightLatlon(), fIsPacific(false) {}
   PacificPointFixerData(const NFmiPoint &theBottomLeftLatlon,
                         const NFmiPoint &theTopRightLatlon,
                         bool isPacific)
@@ -30,7 +30,7 @@ struct PacificPointFixerData
 };
 
 //! Undocumented
-class _FMI_DLL NFmiArea
+class NFmiArea
 {
  public:
   virtual ~NFmiArea();
@@ -116,16 +116,16 @@ class _FMI_DLL NFmiArea
 
   virtual bool operator==(const NFmiArea &theArea) const;
   virtual bool operator!=(const NFmiArea &theArea) const;
-  bool PacificView(void) const { return fPacificView; }
+  bool PacificView() const { return fPacificView; }
   void PacificView(bool newValue) { fPacificView = newValue; }
-  void CheckForPacificView(void);
+  void CheckForPacificView();
 
   static PacificPointFixerData PacificPointFixer(const NFmiPoint &theBottomLeftLatlon,
                                                  const NFmiPoint &theTopRightLatlon);
   static bool IsPacificView(const NFmiPoint &bottomleftLatlon, const NFmiPoint &toprightLatlon);
   static bool IsPacificLongitude(double theLongitude);
-  NFmiArea *DoPossiblePacificFix(void) const;
-  NFmiArea *DoForcePacificFix(void) const;
+  NFmiArea *DoPossiblePacificFix() const;
+  NFmiArea *DoForcePacificFix() const;
 
   std::size_t HashValue() const;
 

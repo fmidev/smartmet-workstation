@@ -82,7 +82,6 @@
 #include "NFmiBetaProductSystem.h"
 #include "HakeMessage/HakeSystemConfigurations.h"
 #include "HakeMessage/HakeMsg.h"
-#include "NFmiSeaIcingWarningSystem.h"
 #include "CtrlViewDocumentInterface.h"
 #include "MapHandlerInterface.h"
 #include "CtrlViewGdiPlusFunctions.h"
@@ -209,7 +208,6 @@ void NFmiStationViewHandler::DoBasicDrawing(NFmiToolBox * theGTB, const NFmiRect
     DrawSilamStationMarkers();
     DrawTrajectories();
     DrawHALYMessageMarkers();
-    DrawSeaIcingMessageMarkers();
     DrawWindTableAreas();
 }
 
@@ -439,7 +437,7 @@ void NFmiStationViewHandler::DrawWindTableAreas(void)
     auto &windTableSystem = itsCtrlViewDocumentInterface->WindTableSystem();
 	if(windTableSystem.ViewVisible())
 	{
-		checkedVector<NFmiWindTableSystem::AreaMaskData>  &areaMaskDataList = windTableSystem.AreaMaskDataList();
+		auto  &areaMaskDataList = windTableSystem.AreaMaskDataList();
 		for(size_t i = 0; i < areaMaskDataList.size(); i++)
 		{
 			DrawAreaMask(*itsGdiPlusGraphics, areaMaskDataList[i]);
@@ -472,7 +470,7 @@ void NFmiStationViewHandler::DrawCrossSectionPoints(void)
 				itsDrawingEnvironment->SetFillColor(NFmiColor(0.9f,0.9f,0.9f));
 				itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
                 crossSectionSystem->CalcMinorPoints(itsMapArea);
-				const checkedVector<NFmiPoint> &points = crossSectionSystem->MinorPoints();
+				const auto &points = crossSectionSystem->MinorPoints();
 				for(unsigned int i=0 ; i < points.size(); i++)
 				{
 					littleCircleRect.Center(itsMapArea->ToXY(points[i]));
@@ -499,7 +497,7 @@ void NFmiStationViewHandler::DrawCrossSectionPoints(void)
 			NFmiPoint textPoint1(startPointXY);
 			textPoint1 += NFmiPoint(textPoint1.X() > 0.95 ? -0.03 : 0.02, textPoint1.Y() > 0.95 ? -0.03 : 0.02);
 			itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-			NFmiText text1(textPoint1, NFmiString("1."), 0, itsDrawingEnvironment);
+			NFmiText text1(textPoint1, NFmiString("1."), false, 0, itsDrawingEnvironment);
 			itsToolBox->Convert(&text1);
 
 			if(drawWholeLine)
@@ -510,7 +508,7 @@ void NFmiStationViewHandler::DrawCrossSectionPoints(void)
 				NFmiPoint textPoint2(endPointXY);
 				textPoint2 += NFmiPoint(textPoint2.X() > 0.95 ? -0.03 : 0.02, textPoint2.Y() > 0.95 ? -0.03 : 0.02);
 				itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-				NFmiText text2(textPoint2, NFmiString("2."), 0, itsDrawingEnvironment);
+				NFmiText text2(textPoint2, NFmiString("2."), false, 0, itsDrawingEnvironment);
 				itsToolBox->Convert(&text2);
 				if(crossSectionSystem->CrossSectionMode() == NFmiCrossSectionSystem::k3Point)
 				{ // piirret‰‰ viel‰ keski piste v‰ri pallolla
@@ -520,7 +518,7 @@ void NFmiStationViewHandler::DrawCrossSectionPoints(void)
 					NFmiPoint textPoint3(middlePointXY);
 					textPoint2 += NFmiPoint(textPoint2.X() > 0.95 ? -0.03 : 0.02, textPoint2.Y() > 0.95 ? -0.03 : 0.02);
 					itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-					NFmiText text3(textPoint3, NFmiString("M."), 0, itsDrawingEnvironment);
+					NFmiText text3(textPoint3, NFmiString("M."), false, 0, itsDrawingEnvironment);
 					itsToolBox->Convert(&text3);
 				}
 
@@ -1051,7 +1049,7 @@ bool NFmiStationViewHandler::ShowWarningMessages(void)
 
 void NFmiStationViewHandler::DrawSilamStationMarkers(NFmiSilamStationList &theStationList, NFmiDrawingEnvironment &theEnvi, const NFmiString &theSynopStr, double symbolXShift, double symbolYShift, NFmiRect &thePlaceRect)
 {
-	checkedVector<NFmiSilamStationList::Station> &locations = theStationList.Locations();
+	auto &locations = theStationList.Locations();
 	for(size_t i = 0; i< locations.size(); i++)
 	{
 		const NFmiPoint &latlon = locations[i].itsLatlon;
@@ -1062,7 +1060,7 @@ void NFmiStationViewHandler::DrawSilamStationMarkers(NFmiSilamStationList &theSt
 			// pelkk‰ toolbox-alignmentti center (eik‰ mik‰‰n muukaan) vie teksti‰ keskelle y-suunnassa, joten t‰m‰ siirros siirt‰‰ tekstin ihan keskelle
 			p2.Y(p2.Y() + symbolYShift);
 			p2.X(p2.X() - symbolXShift);
-			NFmiText txt(p2, theSynopStr, 0, &theEnvi);
+			NFmiText txt(p2, theSynopStr, false, 0, &theEnvi);
 			itsToolBox->Convert(&txt);
 		}
 	}
@@ -1718,139 +1716,12 @@ NFmiPoint NFmiStationViewHandler::CalcRelativeWarningIconSize(Gdiplus::Bitmap *t
 	return NFmiPoint(relativeWidth, relativeHeight);
 }
 
-bool NFmiStationViewHandler::ShowSeaIcingWarningMessages(void)
-{
-	if(itsCtrlViewDocumentInterface->SeaIcingWarningSystem().ViewVisible()) // jos seaicing-dialogi on p‰‰ll‰
-		if(itsViewGridRowNumber == itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).Y()) // piirret‰‰n seaicing symbolit vain viimeiselle riville
-			return true;
-	return false;
-}
-
-void NFmiStationViewHandler::DrawSeaIcingMessageMarkers(void)
-{
-	if(ShowSeaIcingWarningMessages() && itsCtrlViewDocumentInterface->ShowWarningMarkersOnMap(itsMapViewDescTopIndex))
-	{
-		NFmiDrawingEnvironment envi;
-		envi.EnableFill();
-		envi.SetFillColor(NFmiColor(1.f, 0.35f, 0.f));
-		envi.EnableFrame();
-		envi.SetFrameColor(NFmiColor(0.f, 0.f, 0.f));
-
-		NFmiPolyline marker1(itsRect, 0, &envi); // 1=suorakulmio
-		marker1.AddPoint(NFmiPoint(1, 1));
-		marker1.AddPoint(NFmiPoint(1, -1));
-		marker1.AddPoint(NFmiPoint(-1, -1));
-		marker1.AddPoint(NFmiPoint(-1, 1));
-
-		NFmiPolyline marker3(itsRect, 0, &envi); // 3=kolmio
-		marker3.AddPoint(NFmiPoint(-1, 1));
-		marker3.AddPoint(NFmiPoint(0, -1));
-		marker3.AddPoint(NFmiPoint(1, 1));
-
-		NFmiPolyline marker4(itsRect, 0, &envi); // 4=pentagon
-		marker4.AddPoint(NFmiPoint(0, -1));
-		marker4.AddPoint(NFmiPoint(1, -0.1));
-		marker4.AddPoint(NFmiPoint(0.65, 1));
-		marker4.AddPoint(NFmiPoint(-0.65, 1));
-		marker4.AddPoint(NFmiPoint(-1, -0.1));
-
-		NFmiPolyline marker5(itsRect, 0, &envi); // 5=+ -merkki
-		marker5.AddPoint(NFmiPoint(-0.35, -1));
-		marker5.AddPoint(NFmiPoint(0.35, -1));
-		marker5.AddPoint(NFmiPoint(0.35, -0.35));
-		marker5.AddPoint(NFmiPoint(1, -0.35));
-		marker5.AddPoint(NFmiPoint(1, 0.35));
-		marker5.AddPoint(NFmiPoint(0.35, 0.35));
-		marker5.AddPoint(NFmiPoint(0.35, 1));
-		marker5.AddPoint(NFmiPoint(-0.35, 1));
-		marker5.AddPoint(NFmiPoint(-0.35, 0.35));
-		marker5.AddPoint(NFmiPoint(-1, 0.35));
-		marker5.AddPoint(NFmiPoint(-1, -0.35));
-		marker5.AddPoint(NFmiPoint(-0.35, -0.35));
-
-		NFmiPolyline marker6(itsRect, 0, &envi); // 6=x -merkki
-		marker6.AddPoint(NFmiPoint(-0.5, -1));
-		marker6.AddPoint(NFmiPoint(0, -0.5));
-		marker6.AddPoint(NFmiPoint(0.5, -1));
-		marker6.AddPoint(NFmiPoint(1, -0.5));
-		marker6.AddPoint(NFmiPoint(0.5, 0));
-		marker6.AddPoint(NFmiPoint(1, 0.5));
-		marker6.AddPoint(NFmiPoint(0.5, 1));
-		marker6.AddPoint(NFmiPoint(0, 0.5));
-		marker6.AddPoint(NFmiPoint(-0.5, 1));
-		marker6.AddPoint(NFmiPoint(-1, 0.5));
-		marker6.AddPoint(NFmiPoint(-0.5, 0));
-		marker6.AddPoint(NFmiPoint(-1, -0.5));
-
-		NFmiPolyline marker7(itsRect, 0, &envi); // 7=salmiakki
-		marker7.AddPoint(NFmiPoint(0, 1));
-		marker7.AddPoint(NFmiPoint(-0.75, 0));
-		marker7.AddPoint(NFmiPoint(0, -1));
-		marker7.AddPoint(NFmiPoint(0.75, 0));
-
-		double scaleValueX = itsToolBox->SX(1); // yhden pikselin relatiivinen koko
-		double scaleValueY = itsToolBox->SY(1); // yhden pikselin relatiivinen koko
-
-        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsRect);
-
-		boost::shared_ptr<NFmiArea> zoomedArea = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex)->Area();
-		int editorTimeStep = static_cast<int>(::round(itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex) *60));
-        auto &seaIcingWarningSystem = itsCtrlViewDocumentInterface->SeaIcingWarningSystem();
-		std::vector<NFmiSeaIcingWarningMessage*> warningMessages = seaIcingWarningSystem.GetWantedWarningMessages(itsTime, editorTimeStep, zoomedArea);
-		HakeLegacySupport::WarningSymbolInfo &symbolInfo = seaIcingWarningSystem.DefaultSymbolInfo();
-
-		std::vector<NFmiSeaIcingWarningMessage*>::iterator it = warningMessages.begin();
-		std::vector<NFmiSeaIcingWarningMessage*>::iterator endIt = warningMessages.end();
-		for( ; it != endIt; ++it)
-		{
-			NFmiPoint viewPoint(LatLonToViewPoint((*it)->LatlonPoint())); // t‰m‰ on offset
-			NFmiPoint scale(scaleValueX * symbolInfo.SymbolSizeInPixels().X(), scaleValueY * symbolInfo.SymbolSizeInPixels().Y());
-			switch(symbolInfo.SymbolId())
-			{
-			case HakeLegacySupport::WarningSymbolInfo::kRectangle:
-				marker1.GetEnvironment()->SetFillColor(symbolInfo.Color());
-				itsToolBox->DrawPolyline(&marker1, viewPoint, scale);
-				break;
-			case HakeLegacySupport::WarningSymbolInfo::kEllipse:
-				{
-					envi.SetFillColor(symbolInfo.Color());
-					NFmiRect aRect(-scale.X(), -scale.Y(), scale.X(), scale.Y());
-					aRect.Center(viewPoint);
-					itsToolBox->DrawEllipse(aRect, &envi);
-					break;
-				}
-			case HakeLegacySupport::WarningSymbolInfo::kTriangle:
-				marker3.GetEnvironment()->SetFillColor(symbolInfo.Color());
-				itsToolBox->DrawPolyline(&marker3, viewPoint, scale);
-				break;
-			case HakeLegacySupport::WarningSymbolInfo::kPentagon:
-				marker4.GetEnvironment()->SetFillColor(symbolInfo.Color());
-				itsToolBox->DrawPolyline(&marker4, viewPoint, scale);
-				break;
-			case HakeLegacySupport::WarningSymbolInfo::kPlusSign:
-				marker5.GetEnvironment()->SetFillColor(symbolInfo.Color());
-				itsToolBox->DrawPolyline(&marker5, viewPoint, scale);
-				break;
-			case HakeLegacySupport::WarningSymbolInfo::kCross:
-				marker6.GetEnvironment()->SetFillColor(symbolInfo.Color());
-				itsToolBox->DrawPolyline(&marker6, viewPoint, scale);
-				break;
-			case HakeLegacySupport::WarningSymbolInfo::kDiamond:
-				marker7.GetEnvironment()->SetFillColor(symbolInfo.Color());
-				itsToolBox->DrawPolyline(&marker7, viewPoint, scale);
-				break;
-			}
-		}
-	}
-}
-
-
-NFmiPoint NFmiStationViewHandler::LatLonToViewPoint(const NFmiPoint& theLatLon)
+NFmiPoint NFmiStationViewHandler::LatLonToViewPoint(const NFmiPoint& theLatLon) const
 {
 	return itsMapArea->ToXY(theLatLon);
 }
 
-NFmiPoint NFmiStationViewHandler::ViewPointToLatLon(const NFmiPoint& theViewPoint)
+NFmiPoint NFmiStationViewHandler::ViewPointToLatLon(const NFmiPoint& theViewPoint) const
 {
 	return itsMapArea->ToLatLon(theViewPoint);
 }
@@ -2248,7 +2119,7 @@ void NFmiStationViewHandler::DrawTimeText(void)
 					place.X(place.X() + 0.004);
 					FmiDirection oldAlign = itsToolBox->GetTextAlignment();
 					itsToolBox->SetTextAlignment(static_cast<FmiDirection>(kBottom + 1000)); // + 1000 on viritys toolboxissa, laittaa l‰pin‰kym‰ttˆmyyden p‰‰lle, eli tekstille tulee pohjav‰ri alle
-					NFmiText text(place, timeStr, 0, &envi);
+					NFmiText text(place, timeStr, false, 0, &envi);
 					itsToolBox->Convert(&text);
 					itsToolBox->SetTextAlignment(oldAlign);
 				}
@@ -2821,24 +2692,24 @@ bool NFmiStationViewHandler::ShowParamHandlerView(void)
 	return false;
 }
 
-void NFmiStationViewHandler::DrawParamView(NFmiToolBox * theGTB)
+void NFmiStationViewHandler::DrawParamView(NFmiToolBox* theGTB)
 {
-    bool doBetaProductParameterBox = itsCtrlViewDocumentInterface->BetaProductGenerationRunning();
-    bool doBetaParamBoxDuePrinting = (itsCtrlViewDocumentInterface->Printing() && IsPrintedMapViewDesctop());
-    if(doBetaProductParameterBox || doBetaParamBoxDuePrinting)
-    {
-        const NFmiBetaProduct *optionalPrintingBetaProduct = doBetaParamBoxDuePrinting ? &StationViews::GetPrintingBetaProductForParamBoxDraw(itsMapViewDescTopIndex, *itsCtrlViewDocumentInterface) : nullptr;
-        
-        StationViews::DrawBetaProductParamBox(this, false, optionalPrintingBetaProduct);
-    }
-    else
-    {
-        if(ShowParamHandlerView())
-        {
-            UpdateParamHandlerView();
-            itsParamHandlerView->Draw(theGTB);
-        }
-    }
+	if(ShowParamHandlerView())
+	{
+		bool doBetaProductParameterBox = itsCtrlViewDocumentInterface->BetaProductGenerationRunning();
+		bool doBetaParamBoxDuePrinting = (itsCtrlViewDocumentInterface->Printing() && IsPrintedMapViewDesctop());
+		if(doBetaProductParameterBox || doBetaParamBoxDuePrinting)
+		{
+			const NFmiBetaProduct* optionalPrintingBetaProduct = doBetaParamBoxDuePrinting ? &StationViews::GetPrintingBetaProductForParamBoxDraw(itsMapViewDescTopIndex, *itsCtrlViewDocumentInterface) : nullptr;
+
+			StationViews::DrawBetaProductParamBox(this, false, optionalPrintingBetaProduct);
+		}
+		else
+		{
+			UpdateParamHandlerView();
+			itsParamHandlerView->Draw(theGTB);
+		}
+	}
 }
 
 bool NFmiStationViewHandler::ChangeSatelDataChannel(NFmiStationView* theView, short theDelta)
@@ -4421,7 +4292,6 @@ std::string NFmiStationViewHandler::ComposeToolTipText(const NFmiPoint& theRelat
 			str.pop_back();
 		}
 		str += ComposeWarningMessageToolTipText();
-		str += ComposeSeaIcingWarningMessageToolTipText();
 		str += ComposeSilamLocationsToolTipText();
 		// Lopuksi viel‰ mahdollinen kartta overlay layer teksti
 		str += ComposeMapLayerToolTipText(false);
@@ -4575,46 +4445,11 @@ std::string NFmiStationViewHandler::ComposeWarningMessageToolTipText(void)
 	return "";
 }
 
-// IKƒVƒƒ tupla koodia taas edellisen ComposeWarningMessageToolTipText-metodin kanssa
-std::string NFmiStationViewHandler::ComposeSeaIcingWarningMessageToolTipText(void)
-{
-	std::string str;
-	if(ShowSeaIcingWarningMessages())
-	{
-		NFmiLocation wantedLoc(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
-		boost::shared_ptr<NFmiArea> zoomedArea = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex)->Area();
-		int editorTimeStep = static_cast<int>(::round(itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex) *60));
-		std::vector<NFmiSeaIcingWarningMessage*> warningMessages = itsCtrlViewDocumentInterface->SeaIcingWarningSystem().GetWantedWarningMessages(itsTime, editorTimeStep, zoomedArea);
-
-		std::vector<NFmiSeaIcingWarningMessage*>::iterator it = warningMessages.begin();
-		std::vector<NFmiSeaIcingWarningMessage*>::iterator endIt = warningMessages.end();
-		double minDist = 9999999999;
-		std::vector<NFmiSeaIcingWarningMessage*>::iterator minIter = endIt; // iteraattori l‰himp‰‰n viestiin
-		for( ; it != endIt; ++it)
-		{
-			double currDist = wantedLoc.Distance((*it)->LatlonPoint());;
-			if(currDist < minDist)
-			{
-				minDist = currDist;
-				minIter = it;
-			}
-		}
-		if(minIter != endIt)
-		{
-			str += "\n";
-			str += (*minIter)->TotalMessageStr();
-			// Pit‰‰ korvata XML tagien < ja > merkit, ett‰ tooltip n‰ytt‰‰ tekstin sellaisenaan
-			::ConvertXML2PlainCode(str);
-		}
-	}
-	return str;
-}
-
 static NFmiSilamStationList::Station GetClosestSilamStation(NFmiSilamStationList &theLocations, const NFmiLocation &theSearchPlace)
 {
 	NFmiSilamStationList::Station closestLoc;
 	closestLoc.itsLatlon = NFmiPoint::gMissingLatlon;
-	checkedVector<NFmiSilamStationList::Station> &locList = theLocations.Locations();
+	auto &locList = theLocations.Locations();
 	double minDist = 9999999999;
 	for(size_t i=0; i < locList.size(); i++)
 	{

@@ -570,7 +570,8 @@ void CSmartMetApp::LoadFileAtStartUp(CCommandLineInfo *theCmdInfo)
 		try
 		{
             std::unique_ptr<NFmiQueryData> data = QueryDataReading::ReadDataFromFile(fileName, true);
-            itsGeneralData->AddQueryData(data.release(), fileName, "", NFmiInfoData::kEditable, "", true);
+            bool dataWasDeleted = false;
+            itsGeneralData->AddQueryData(data.release(), fileName, "", NFmiInfoData::kEditable, "", true, dataWasDeleted);
             ((CSmartMetDoc*)((CMainFrame*)m_pMainWnd)->GetActiveDocument())->SetPathName(CA2T(fileName.c_str())); // pit‰‰ laittaa AddData:n j‰lkeen, muuten tiedoston nimi ei tule oikein ohjelman otsikkoon.
         }
 		catch(...)

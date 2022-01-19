@@ -11,7 +11,6 @@
 
 #include <newbase/NFmiInfoData.h>
 #include <newbase/NFmiDataIdent.h>
-#include <newbase/NFmiDataMatrix.h>
 #include <newbase/NFmiProducerName.h>
 
 #include <boost/shared_ptr.hpp>
@@ -25,55 +24,55 @@ class NFmiHelpDataInfo
 {
 
  public:
-  NFmiHelpDataInfo(void) = default;
+  NFmiHelpDataInfo() = default;
   NFmiHelpDataInfo(const NFmiHelpDataInfo &theOther);
-  ~NFmiHelpDataInfo(void) = default;
+  ~NFmiHelpDataInfo() = default;
   void InitFromSettings(const std::string &theBaseKey,
                         const std::string &theName,
                         const NFmiHelpDataInfoSystem &theHelpDataSystem);
-  // void StoreToSettings(void);  // HUOM! ei toteuteta ainakaan vielä talletusta
+  // void StoreToSettings();  // HUOM! ei toteuteta ainakaan vielä talletusta
 
   NFmiHelpDataInfo &operator=(const NFmiHelpDataInfo &theOther);
 
-  bool IsCombineData(void) const { return itsCombineDataPathAndFileName.empty() == false; }
-  const std::string &Name(void) const { return itsName; }
+  bool IsCombineData() const { return itsCombineDataPathAndFileName.empty() == false; }
+  const std::string &Name() const { return itsName; }
   void Name(const std::string &newValue) { itsName = newValue; }
-  const std::string &FileNameFilter(void) const { return itsFileNameFilter; }
+  const std::string &FileNameFilter() const { return itsFileNameFilter; }
   void FileNameFilter(const std::string &newValue, bool forceFileNameFilter = false);
   // tämä on viritys, että olisi funktio, jolla voidaan pyytää käytetty fileFilter, riippuen siitä
   // onko cache käytössä vai ei
   const std::string UsedFileNameFilter(const NFmiHelpDataInfoSystem &theHelpDataInfoSystem) const;
-  const std::string &LatestFileName(void) const { return itsLatestFileName; }
+  const std::string &LatestFileName() const { return itsLatestFileName; }
   void LatestFileName(const std::string &newName) { itsLatestFileName = newName; }
-  std::string &LatestErroneousFileName(void) { return itsLatestErroneousFileName; }
+  std::string &LatestErroneousFileName() { return itsLatestErroneousFileName; }
   void LatestErroneousFileName(const std::string &newValue)
   {
     itsLatestErroneousFileName = newValue;
   }
-  NFmiInfoData::Type DataType(void) const { return itsDataType; }
+  NFmiInfoData::Type DataType() const { return itsDataType; }
   void DataType(NFmiInfoData::Type newValue) { itsDataType = newValue; }
-  time_t LatestFileTimeStamp(void) const { return itsLatestFileTimeStamp; }
+  time_t LatestFileTimeStamp() const { return itsLatestFileTimeStamp; }
   void LatestFileTimeStamp(time_t newValue) { itsLatestFileTimeStamp = newValue; }
-  int FakeProducerId(void) const { return itsFakeProducerId; }
+  int FakeProducerId() const { return itsFakeProducerId; }
   void FakeProducerId(int newValue) { itsFakeProducerId = newValue; }
-  const NFmiDataIdent &ImageDataIdent(void) const { return itsImageDataIdent; }
+  const NFmiDataIdent &ImageDataIdent() const { return itsImageDataIdent; }
   void ImageDataIdent(const NFmiDataIdent &newValue) { itsImageDataIdent = newValue; }
-  boost::shared_ptr<NFmiArea> ImageArea(void) const { return itsImageArea; }
+  boost::shared_ptr<NFmiArea> ImageArea() const { return itsImageArea; }
   void ImageArea(boost::shared_ptr<NFmiArea> &newValue);
-  bool NotifyOnLoad(void) const { return fNotifyOnLoad; }
+  bool NotifyOnLoad() const { return fNotifyOnLoad; }
   void NotifyOnLoad(bool newValue) { fNotifyOnLoad = newValue; }
-  const std::string &NotificationLabel(void) const { return itsNotificationLabel; }
+  const std::string &NotificationLabel() const { return itsNotificationLabel; }
   void NotificationLabel(const std::string &newValue) { itsNotificationLabel = newValue; }
-  const std::string &CustomMenuFolder(void) const { return itsCustomMenuFolder; }
+  const std::string &CustomMenuFolder() const { return itsCustomMenuFolder; }
   void CustomMenuFolder(const std::string &newValue) { itsCustomMenuFolder = newValue; }
-  int ReportNewDataTimeStepInMinutes(void) const { return itsReportNewDataTimeStepInMinutes; }
+  int ReportNewDataTimeStepInMinutes() const { return itsReportNewDataTimeStepInMinutes; }
   void ReportNewDataTimeStepInMinutes(int newValue)
   {
     itsReportNewDataTimeStepInMinutes = newValue;
   }
-  const std::string &ReportNewDataLabel(void) const { return itsReportNewDataLabel; }
+  const std::string &ReportNewDataLabel() const { return itsReportNewDataLabel; }
   void ReportNewDataLabel(const std::string &newValue) { itsReportNewDataLabel = newValue; }
-  const std::string &CombineDataPathAndFileName(void) const
+  const std::string &CombineDataPathAndFileName() const
   {
     return itsCombineDataPathAndFileName;
   }
@@ -81,26 +80,26 @@ class NFmiHelpDataInfo
   {
     itsCombineDataPathAndFileName = newValue;
   }
-  int CombineDataMaxTimeSteps(void) const { return itsCombineDataMaxTimeSteps; }
+  int CombineDataMaxTimeSteps() const { return itsCombineDataMaxTimeSteps; }
   void CombineDataMaxTimeSteps(int newValue) { itsCombineDataMaxTimeSteps = newValue; }
-  bool MakeSoundingIndexData(void) const { return fMakeSoundingIndexData; }
+  bool MakeSoundingIndexData() const { return fMakeSoundingIndexData; }
   void MakeSoundingIndexData(bool newValue) { fMakeSoundingIndexData = newValue; }
-  bool ForceFileFilterName(void) const { return fForceFileFilterName; }
+  bool ForceFileFilterName() const { return fForceFileFilterName; }
   void ForceFileFilterName(bool newValue) { fForceFileFilterName = newValue; }
-  int AdditionalArchiveFileCount(void) const { return itsAdditionalArchiveFileCount; }
+  int AdditionalArchiveFileCount() const { return itsAdditionalArchiveFileCount; }
   void AdditionalArchiveFileCount(int newValue) { itsAdditionalArchiveFileCount = newValue; }
-  bool IsEnabled(void) const { return fEnable; }
+  bool IsEnabled() const { return fEnable; }
   void Enable(bool newValue) { fEnable = newValue; }
-  bool NonFixedTimeGab(void) const { return fNonFixedTimeGab; }
+  bool NonFixedTimeGab() const { return fNonFixedTimeGab; }
   void NonFixedTimeGab(bool newValue) { fNonFixedTimeGab = newValue; }
-  float ModelRunTimeGapInHours(void) const { return itsModelRunTimeGapInHours; }
+  float ModelRunTimeGapInHours() const { return itsModelRunTimeGapInHours; }
   void ModelRunTimeGapInHours(float newValue) { itsModelRunTimeGapInHours = newValue; }
   long TimeInterpolationRangeInMinutes() const { return itsTimeInterpolationRangeInMinutes; }
   void TimeInterpolationRangeInMinutes(long newValue) { itsTimeInterpolationRangeInMinutes = newValue; }
   bool ReloadCaseStudyData() const { return fReloadCaseStudyData; }
   void ReloadCaseStudyData(bool newValue) { fReloadCaseStudyData = newValue; }
 
-  const std::string &PartialDataCacheFileNameFilter(void) const
+  const std::string &PartialDataCacheFileNameFilter() const
   {
     return itsPartialDataCacheFileNameFilter;
   }
@@ -112,6 +111,8 @@ class NFmiHelpDataInfo
   const std::string& RequiredGroundDataFileFilterForSoundingIndexCalculations() const { return itsRequiredGroundDataFileFilterForSoundingIndexCalculations; }
   void RequiredGroundDataFileFilterForSoundingIndexCalculations(const std::string &newValue) { itsRequiredGroundDataFileFilterForSoundingIndexCalculations = newValue; }
   void FixCombinedDataPath(const std::string &absoluteControlBasePath);
+  bool AllowCombiningToSurfaceDataInSoundingView() const { return fAllowCombiningToSurfaceDataInSoundingView; }
+  void AllowCombiningToSurfaceDataInSoundingView(bool newValue) { fAllowCombiningToSurfaceDataInSoundingView = newValue; }
 
  private:
   // tällä nimellä erotetaan konffi-tiedostoissa eri datat
@@ -195,12 +196,17 @@ class NFmiHelpDataInfo
   // Joitakin datoja ei haluta poistaa ja uudelleen ladata case-study tapauksissa, 
   // niille datoilla tämä pitää laittaa false:ksi konfiguraatioista. Esim. ERA-data, observed-climatology.
   bool fReloadCaseStudyData = true;
+  // Jos kyse level datasta, sallitaanko luotausnäytössä että vastaavan mallin/tuottajan pintadataa yhdistetään 
+  // tähän level-dataan, jos pintadatasta löytyy kFmiPressureAtStationLevel parametri.
+  // Oletusarvona ei sallita, koska yhdistelystä voi seurata epäjatkuvuuksia luotauskäyrissä, varsinkin, jos
+  // mallin/tuottajan pinta- ja leveldatat ovat eri horisontaali resoluutiossa.
+  bool fAllowCombiningToSurfaceDataInSoundingView = false;
 };
 
 class NFmiHelpDataInfoSystem
 {
  public:
-  NFmiHelpDataInfoSystem(void)
+  NFmiHelpDataInfoSystem()
       : itsDynamicHelpDataInfos(),
         itsStaticHelpDataInfos(),
         itsCacheDirectory(),
@@ -218,55 +224,55 @@ class NFmiHelpDataInfoSystem
   {
   }
 
-  void Clear(void) {}
+  void Clear() {}
   void InitFromSettings(const std::string &theInitNameSpace,
                         const std::string &absoluteControlBasePath,
                         std::string theHelpEditorFileNameFilter = "",
                         std::string theHelpDataName = "");
-  void StoreToSettings(void);
+  void StoreToSettings();
   void InitSettings(const NFmiHelpDataInfoSystem &theOther, bool fDoHelpDataInfo);
 
   NFmiHelpDataInfo &DynamicHelpDataInfo(int theIndex);
   NFmiHelpDataInfo &StaticHelpDataInfo(int theIndex);
-  int DynamicCount(void) const { return static_cast<int>(itsDynamicHelpDataInfos.size()); }
-  int StaticCount(void) const { return static_cast<int>(itsStaticHelpDataInfos.size()); }
+  int DynamicCount() const { return static_cast<int>(itsDynamicHelpDataInfos.size()); }
+  int StaticCount() const { return static_cast<int>(itsStaticHelpDataInfos.size()); }
   NFmiDataIdent GetNextSatelChannel(const NFmiDataIdent &theDataIdent, FmiDirection theDir);
   void AddDynamic(const NFmiHelpDataInfo &theInfo);
   void AddStatic(const NFmiHelpDataInfo &theInfo);
   void ResetAllDynamicDataTimeStamps();
   NFmiHelpDataInfo *FindHelpDataInfo(const std::string &theFileNameFilter);
-  std::vector<std::string> GetUniqueCustomMenuList(void);
+  std::vector<std::string> GetUniqueCustomMenuList();
   std::vector<NFmiHelpDataInfo> GetCustomMenuHelpDataList(const std::string &theCustomFolder);
-  const checkedVector<NFmiHelpDataInfo> &DynamicHelpDataInfos(void) const
+  const std::vector<NFmiHelpDataInfo> &DynamicHelpDataInfos() const
   {
     return itsDynamicHelpDataInfos;
   }
-  const checkedVector<NFmiHelpDataInfo> &StaticHelpDataInfos(void) const
+  const std::vector<NFmiHelpDataInfo> &StaticHelpDataInfos() const
   {
     return itsStaticHelpDataInfos;
   }
 
-  const std::string &CacheDirectory(void) const { return itsCacheDirectory; }
+  const std::string &CacheDirectory() const { return itsCacheDirectory; }
   void CacheDirectory(const std::string &newValue) { itsCacheDirectory = newValue; }
-  const std::string &CacheTmpDirectory(void) const { return itsCacheTmpDirectory; }
+  const std::string &CacheTmpDirectory() const { return itsCacheTmpDirectory; }
   void CacheTmpDirectory(const std::string &newValue) { itsCacheTmpDirectory = newValue; }
-  const std::string &CacheTmpFileNameFix(void) const { return itsCacheTmpFileNameFix; }
+  const std::string &CacheTmpFileNameFix() const { return itsCacheTmpFileNameFix; }
   void CacheTmpFileNameFix(const std::string &newValue) { itsCacheTmpFileNameFix = newValue; }
-  bool UseQueryDataCache(void) const { return fUseQueryDataCache; }
+  bool UseQueryDataCache() const { return fUseQueryDataCache; }
   void UseQueryDataCache(bool newvalue) { fUseQueryDataCache = newvalue; }
-  bool DoCleanCache(void) const { return fDoCleanCache; }
+  bool DoCleanCache() const { return fDoCleanCache; }
   void DoCleanCache(bool newValue) { fDoCleanCache = newValue; }
-  float CacheFileKeepMaxDays(void) const { return itsCacheFileKeepMaxDays; }
+  float CacheFileKeepMaxDays() const { return itsCacheFileKeepMaxDays; }
   void CacheFileKeepMaxDays(float newValue) { itsCacheFileKeepMaxDays = newValue; }
-  int CacheMaxFilesPerPattern(void) const { return itsCacheMaxFilesPerPattern; }
+  int CacheMaxFilesPerPattern() const { return itsCacheMaxFilesPerPattern; }
   void CacheMaxFilesPerPattern(int newValue) { itsCacheMaxFilesPerPattern = newValue; }
-  double CacheMediumFileSizeMB(void) const { return itsCacheMediumFileSizeMB; }
+  double CacheMediumFileSizeMB() const { return itsCacheMediumFileSizeMB; }
   void CacheMediumFileSizeMB(double newValue) { itsCacheMediumFileSizeMB = newValue; }
-  double CacheLargeFileSizeMB(void) const { return itsCacheLargeFileSizeMB; }
+  double CacheLargeFileSizeMB() const { return itsCacheLargeFileSizeMB; }
   void CacheLargeFileSizeMB(double newValue) { itsCacheLargeFileSizeMB = newValue; }
-  double CacheMaximumFileSizeMB(void) const { return itsCacheMaximumFileSizeMB; }
+  double CacheMaximumFileSizeMB() const { return itsCacheMaximumFileSizeMB; }
   void CacheMaximumFileSizeMB(double newValue) { itsCacheMaximumFileSizeMB = newValue; }
-  const std::string &CachePartialDataDirectory(void) const { return itsCachePartialDataDirectory; }
+  const std::string &CachePartialDataDirectory() const { return itsCachePartialDataDirectory; }
   void CachePartialDataDirectory(const std::string &newValue)
   {
     itsCachePartialDataDirectory = newValue;
@@ -274,14 +280,14 @@ class NFmiHelpDataInfoSystem
 
  private:
   void InitDataType(const std::string &theBaseKey,
-                    checkedVector<NFmiHelpDataInfo> &theHelpDataInfos,
+                    std::vector<NFmiHelpDataInfo> &theHelpDataInfos,
                     bool fStaticData);
   void FixCombinedDataPaths(const std::string &absoluteControlBasePath);
 
-  checkedVector<NFmiHelpDataInfo> itsDynamicHelpDataInfos;  // tähän tulee jatkuvasti päivitettävät
+  std::vector<NFmiHelpDataInfo> itsDynamicHelpDataInfos;  // tähän tulee jatkuvasti päivitettävät
                                                             // datat kuten havainnot, tutka ja
                                                             // analyysi datat
-  checkedVector<NFmiHelpDataInfo> itsStaticHelpDataInfos;  // tähän tulee kerran ladattavat jutut
+  std::vector<NFmiHelpDataInfo> itsStaticHelpDataInfos;  // tähän tulee kerran ladattavat jutut
                                                            // kuten maa/meri maskit ja
                                                            // klimatologiset jutut
 

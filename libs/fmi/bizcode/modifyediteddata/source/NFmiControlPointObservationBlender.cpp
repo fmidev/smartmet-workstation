@@ -19,7 +19,7 @@ NFmiControlPointObservationBlender::BlendingDataHelper::BlendingDataHelper()
 
 NFmiControlPointObservationBlender::NFmiControlPointObservationBlender(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
     unsigned long theAreaMask, boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager, const NFmiRect &theCPGridCropRect,
-    bool theUseGridCrop, const NFmiPoint &theCropMarginSize, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, const NFmiMetTime &actualFirstTime, const NFmiGriddingProperties &griddingProperties)
+    bool theUseGridCrop, const NFmiPoint &theCropMarginSize, std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, const NFmiMetTime &actualFirstTime, const NFmiGriddingProperties &griddingProperties)
     :NFmiDataParamControlPointModifier(theInfo, theDrawParam, theMaskList,
         theAreaMask, theCPManager, theCPGridCropRect,
         theUseGridCrop, theCropMarginSize, griddingProperties)
@@ -181,7 +181,7 @@ void NFmiControlPointObservationBlender::FillZeroChangeValuesForMissingCpPoints(
     }
 }
 
-bool NFmiControlPointObservationBlender::SeekClosestObsBlenderData(const NFmiLocation &cpLocation, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, const NFmiTimeDescriptor &allowedTimeRange, float &zValueOut, boost::shared_ptr<NFmiFastQueryInfo> &closestObsBlenderInfoOut)
+bool NFmiControlPointObservationBlender::SeekClosestObsBlenderData(const NFmiLocation &cpLocation, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, const NFmiTimeDescriptor &allowedTimeRange, float &zValueOut, boost::shared_ptr<NFmiFastQueryInfo> &closestObsBlenderInfoOut)
 {
     closestObsBlenderInfoOut.reset();
     double cpDistanceToStationInKm = g_missingDistanceToStationInKm;
@@ -232,7 +232,7 @@ bool NFmiControlPointObservationBlender::SeekClosestObsBlenderData(const NFmiLoc
 }
 
 // Hae muutosarvot originaali kent‰n arvoon sallituilta asemilta sallituilta ajoilta, jos ei arvoa, muutos kyseisess‰ CP-pisteess‰ on 0 (merkit‰‰n missing arvolla).
-bool NFmiControlPointObservationBlender::GetObservationsToChangeValueFields(boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, const NFmiTimeDescriptor &allowedTimeRange)
+bool NFmiControlPointObservationBlender::GetObservationsToChangeValueFields(boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, const NFmiTimeDescriptor &allowedTimeRange)
 {
     // 1. Haetaan k‰ytetyst‰ CP-managerista pohjat, eli x- ja y-koordinaatit ja jotkut pohja-arvot z eli muutoskent‰lle.
     if(NFmiDataParamControlPointModifier::GetChangeValues(theCPManager, xValues, yValues, zValues))

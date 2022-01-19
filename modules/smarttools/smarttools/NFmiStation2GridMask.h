@@ -35,9 +35,9 @@ class NFmiStation2GridMask : public NFmiInfoAreaMask
                        NFmiInfoData::Type theDataType,
                        boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                        unsigned long thePossibleMetaParamId);
-  ~NFmiStation2GridMask(void);
+  ~NFmiStation2GridMask();
   NFmiStation2GridMask(const NFmiStation2GridMask &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
   NFmiStation2GridMask &operator=(const NFmiStation2GridMask &theMask) = delete;
 
   double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
@@ -97,7 +97,7 @@ class NFmiStation2GridMask : public NFmiInfoAreaMask
   // Haetaan vain kerran käytetyt datat. Tätä muuttujaa käytetään siksi, että jos kyseistä dataa ei löydy 
   // ollenkaan, tiedetään että haku on tehty kuitenkin (nyt ei siis riitä itsUsedObservationInfoVector.empty -tarkastelu).
   bool fUsedObservationInfoVectorRetrieved = false;
-  checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > itsUsedObservationInfoVector;
+  std::vector<boost::shared_ptr<NFmiFastQueryInfo> > itsUsedObservationInfoVector;
 };
 
 // NFmiNearestObsValue2GridMask -luokka laskee havainto datasta sellaisen
@@ -117,9 +117,9 @@ class NFmiNearestObsValue2GridMask : public NFmiInfoAreaMask
                                boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                int theArgumentCount,
                                unsigned long thePossibleMetaParamId);
-  ~NFmiNearestObsValue2GridMask(void);
+  ~NFmiNearestObsValue2GridMask();
   NFmiNearestObsValue2GridMask(const NFmiNearestObsValue2GridMask &theOther);
-  NFmiAreaMask *Clone(void) const override;
+  NFmiAreaMask *Clone() const override;
   NFmiStation2GridMask &operator=(const NFmiStation2GridMask &theMask) = delete;
 
   double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
@@ -173,9 +173,9 @@ public:
         boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         int theArgumentCount,
         unsigned long thePossibleMetaParamId);
-    ~NFmiLastTimeValueMask(void);
+    ~NFmiLastTimeValueMask();
     NFmiLastTimeValueMask(const NFmiLastTimeValueMask &theOther);
-    NFmiAreaMask *Clone(void) const override;
+    NFmiAreaMask *Clone() const override;
     NFmiLastTimeValueMask &operator=(const NFmiLastTimeValueMask &theMask) = delete;
 
     double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
@@ -202,9 +202,9 @@ public:
         boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         float theTimeOffsetInHours,
         unsigned long thePossibleMetaParamId);
-    ~NFmiStation2GridTimeShiftMask(void);
+    ~NFmiStation2GridTimeShiftMask();
     NFmiStation2GridTimeShiftMask(const NFmiStation2GridTimeShiftMask &theOther);
-    NFmiAreaMask *Clone(void) const override;
+    NFmiAreaMask *Clone() const override;
     NFmiStation2GridTimeShiftMask &operator=(const NFmiStation2GridTimeShiftMask &theMask) = delete;
 
     double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;

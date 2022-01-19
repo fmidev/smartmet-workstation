@@ -17,7 +17,7 @@
 #define HEADERMAX 3
 
 //! Undocumented
-class _FMI_DLL NFmiMetBox
+class NFmiMetBox
 {
  public:
   virtual ~NFmiMetBox();
@@ -79,7 +79,7 @@ class _FMI_DLL NFmiMetBox
 };  // class NFmiMetBox
 
 //! Undocumented
-class _FMI_DLL NFmiMetBoxIterator
+class NFmiMetBoxIterator
 {
  public:
   virtual ~NFmiMetBoxIterator();

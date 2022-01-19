@@ -17,7 +17,7 @@
 #include "NFmiGlobals.h"
 
 //! Undocumented
-class _FMI_DLL NFmiSortable
+class NFmiSortable
 {
  public:
   virtual ~NFmiSortable() {}

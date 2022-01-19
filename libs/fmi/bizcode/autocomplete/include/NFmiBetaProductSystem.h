@@ -125,6 +125,8 @@ public:
     const std::string& SynopStationIdListString() const { return itsSynopStationIdListString; }
     void SynopStationIdListString(const std::string &newValue) { itsSynopStationIdListString = newValue; }
     const std::vector<int>& SynopStationIdList() const { return itsSynopStationIdList; }
+    bool PackImages() const { return fPackImages; }
+    void PackImages(bool newValue) { fPackImages = newValue; }
 
     static bool ContainsStringCaseInsensitive(const std::string &searchThis, const std::string &findThis);
 
@@ -185,6 +187,7 @@ private:
     std::string itsSynopStationIdListString; // Mistä kaikista synop asemista halutaan tehdä kuvia (käy vain tietyille näytöille ja moodeille)
     bool fSynopStationIdListInputOk;
     std::vector<int> itsSynopStationIdList; // Tähän puretaan synop station id:t itsSynopStationIdListString -muuttujasta
+    bool fPackImages = false; // Pakataanko tuotetut kuvat vai ei
 };
 
 // NFmiBetaProductAutomation -luokka pitää tietoa yhdestä automaatio tuotteesta. Se pitää tietoa mm. seuraavista asioista:
@@ -405,7 +408,7 @@ class NFmiBetaProductionSystem
 public:
 
     NFmiBetaProductionSystem();
-    bool Init(const std::string &theBaseRegistryPath, const std::string& theAbsoluteControlDirectory);
+    bool Init(const std::string &theBaseRegistryPath, const std::string& theAbsoluteWorkingDirectory);
     bool DoNeededBetaAutomation();
     bool DoOnDemandBetaAutomations(int selectedAutomationIndex, bool doOnlyEnabled);
 
@@ -420,6 +423,7 @@ public:
     static void RunTimeTitleString(const std::string &newValue) { itsRunTimeTitleString = newValue; }
     static const std::string& RunTimeFormatString() { return itsRunTimeFormatString; }
     static void RunTimeFormatString(const std::string &newValue) { itsRunTimeFormatString = newValue; }
+    static std::string AddQuotationMarksToString(std::string paddedString);
 
     static void SetGenerateBetaProductsCallback(std::function<void(std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> &, const NFmiMetTime &)> theCallback) { itsGenerateBetaProductsCallback = theCallback; }
 
@@ -488,6 +492,8 @@ public:
     void BetaProductShowModelOriginTime(bool newValue);
     std::string BetaProductSynopStationIdListString();
     void BetaProductSynopStationIdListString(const std::string &newValue);
+    bool BetaProductPackImages();
+    void BetaProductPackImages(bool newValue);
 
     // Beta Product Automation dialog tab control settings
     bool AutomationModeOn();
@@ -512,7 +518,14 @@ public:
     void EndTimeClockOffsetInHoursString(const std::string &newValue);
     std::string AutomationPath();
     void AutomationPath(const std::string &newValue);
+
+    const std::string& ImagePackingExePath() const { return itsImagePackingExePath; }
+    const std::string& ImagePackingExeCommandLine() const { return itsImagePackingExeCommandLine; }
+
 private:
+
+    bool InitImagePackingExe(const std::string& theAbsoluteWorkingDirectory);
+
     bool fBetaProductGenerationRunning; // Onko SmartMet juuri tekemässä kuvia Beta product systeemillä (vaikuttaa mm. joihinkin piirtoihin)
     NFmiMetTime itsBetaProductRuntime; // Millä hetkellä on kuvatuotantoa alettu tekemään (käytetään jos display runtime info käytössä)
     static std::string itsRunTimeTitleString;
@@ -533,6 +546,10 @@ private:
 
     // Perushakemisto, jonne talletetaan Beta-produt:eja ja automaatioita ja automaatiolistoja. Tämä voi olla jaetulla verkkolevyllä.
     std::string itsBetaProductionBaseDirectory;
+    // Kuvien pakkaukseen käytetyn ohjelman koko polku
+    std::string itsImagePackingExePath;
+    // Kuvien pakkaukseen käytetyn ohjelman peruskomentorivi
+    std::string itsImagePackingExeCommandLine;
 
     // General Beta Product dialog options
     std::string mBaseRegistryPath; // Perus smartmet polku Windows rekistereissä (tähän tulee SmartMetin konfiguraatio kohtainen polku)
@@ -560,6 +577,7 @@ private:
     boost::shared_ptr<CachedRegBool> mBetaProductDisplayRuntime;
     boost::shared_ptr<CachedRegBool> mBetaProductShowModelOriginTime;
     boost::shared_ptr<CachedRegString> mBetaProductSynopStationIdListString; // Mistä kaikista synop asemista halutaan tehdä kuvia (käy vain tietyille näytöille ja moodeille)
+    boost::shared_ptr<CachedRegBool> mBetaProductPackImages; // Pakataanko tuotetut kuvat vai ei
     // Beta Product Automation dialog tab control settings
     boost::shared_ptr<CachedRegBool> mAutomationModeOn; // Onko SmartMet ns. Beta tuotanto automaatio moodissa, jolloin kuvia tuotetaan säädösten mukaan haluttuina aikoina.
     boost::shared_ptr<CachedRegString> mBetaProductPath; // Polku mistä Beta-product-automation lataa Beta-product tuotteensa

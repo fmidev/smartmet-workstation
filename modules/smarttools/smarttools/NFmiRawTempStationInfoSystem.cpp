@@ -5,6 +5,7 @@
 #include <newbase/NFmiCommentStripper.h>
 #include <newbase/NFmiStation.h>
 #include <newbase/NFmiLocationBag.h>
+#include <newbase/NFmiStringTools.h>
 #include <fstream>
 
 using namespace std;
@@ -373,14 +374,14 @@ void NFmiSilamStationList::Init(const std::string &theInitFileName)
                              theInitFileName);
 }
 
-void NFmiSilamStationList::Clear(void)
+void NFmiSilamStationList::Clear()
 {
   itsLocations.clear();
 }
 
 // ****************   NFmiWmoStationLookUpSystem  *************************************
 
-NFmiWmoStationLookUpSystem::NFmiWmoStationLookUpSystem(void) : itsStations(), itsInitLogMessage()
+NFmiWmoStationLookUpSystem::NFmiWmoStationLookUpSystem() : itsStations(), itsInitLogMessage()
 {
 }
 

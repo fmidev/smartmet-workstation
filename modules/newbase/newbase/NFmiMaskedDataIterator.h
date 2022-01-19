@@ -13,7 +13,7 @@ class NFmiSuperSmartInfo;
 class NFmiIntegrationSelector;
 
 //! Undocumented
-class _FMI_DLL NFmiMaskedDataIterator : public NFmiDataIterator
+class NFmiMaskedDataIterator : public NFmiDataIterator
 {
  public:
   virtual ~NFmiMaskedDataIterator();

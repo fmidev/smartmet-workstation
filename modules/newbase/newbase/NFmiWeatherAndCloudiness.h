@@ -28,11 +28,11 @@ class NFmiQueryInfo;
 class NFmiIntegrationSelector;
 
 //! Undocumented
-class _FMI_DLL NFmiWeatherAndCloudiness : public NFmiCombinedParam
+class NFmiWeatherAndCloudiness : public NFmiCombinedParam
 {
  public:
-  virtual ~NFmiWeatherAndCloudiness(void);
-  NFmiWeatherAndCloudiness(void);
+  virtual ~NFmiWeatherAndCloudiness();
+  NFmiWeatherAndCloudiness();
   NFmiWeatherAndCloudiness(double theInfoVersion);
   NFmiWeatherAndCloudiness(const NFmiWeatherAndCloudiness& theWeather);
 
@@ -65,7 +65,7 @@ class _FMI_DLL NFmiWeatherAndCloudiness : public NFmiCombinedParam
                            float thePrecipitation = kFloatMissing,
                            double theInfoVersion = 7.);
 
-  virtual NFmiCombinedParam* Clone(void) const;
+  virtual NFmiCombinedParam* Clone() const;
 
   static bool IsFair(float precForm);
   static bool IsLiquid(float precForm);
@@ -73,19 +73,19 @@ class _FMI_DLL NFmiWeatherAndCloudiness : public NFmiCombinedParam
   static bool IsSolid(float precForm);
   static bool IsFreezing(float precForm);
 
-  bool IsLargeScale(void) const;
-  bool IsConvective(void) const;
-  bool IsRain(void) const;
-  bool IsSleet(void) const;
-  bool IsSnow(void) const;
-  bool IsDrizzle(void) const;
-  bool IsFreezingDrizzle(void) const;
-  bool IsFreezingRain(void) const;
-  bool IsHail(void) const;
-  bool OnlySomePrecipitation(void) const;
-  bool IsFair(void) const;
-  bool IsThunder(void) const;
-  bool IsPrecipitationOk(void) const;
+  bool IsLargeScale() const;
+  bool IsConvective() const;
+  bool IsRain() const;
+  bool IsSleet() const;
+  bool IsSnow() const;
+  bool IsDrizzle() const;
+  bool IsFreezingDrizzle() const;
+  bool IsFreezingRain() const;
+  bool IsHail() const;
+  bool OnlySomePrecipitation() const;
+  bool IsFair() const;
+  bool IsThunder() const;
+  bool IsPrecipitationOk() const;
   virtual bool IsMemberParam(FmiParameterName type) const;
 
   bool SubValue(double theValue, FmiParameterName theParam);
@@ -93,7 +93,7 @@ class _FMI_DLL NFmiWeatherAndCloudiness : public NFmiCombinedParam
   virtual double RawSubValue(FmiParameterName theParam);
 
   virtual bool LongValue(unsigned long theValue);
-  virtual unsigned long LongValue(void) const;
+  virtual unsigned long LongValue() const;
 
   NFmiDataIdent* CreateParam(const NFmiProducer& theProducer = NFmiProducer(),
                              NFmiVoidPtrList* theSecondaryProducerList = 0) const;
@@ -147,16 +147,16 @@ class _FMI_DLL NFmiWeatherAndCloudiness : public NFmiCombinedParam
                                    float factor2 = 1.,
                                    float factor3 = 1.);
 
-  int CrossCheckIndex(void) const;
+  int CrossCheckIndex() const;
 
-  bool DefaultPrecipitationTypeIsLargeScale(void) const;
+  bool DefaultPrecipitationTypeIsLargeScale() const;
 
   // NOTE NOTE NOTE NOTE!!!!!!!!!
   // This method is not thread safe since it modifies a global variable
   void DefaultPrecipitationTypeIsLargeScale(bool newState);
 
  protected:
-  virtual void CreateSubParams(void);
+  virtual void CreateSubParams();
 
   unsigned long PrecipitationFormFromWeightTable(double* formTable) const;
   unsigned long PrecipitationFormWeightedMean(unsigned long form1,
@@ -193,7 +193,7 @@ class _FMI_DLL NFmiWeatherAndCloudiness : public NFmiCombinedParam
                    int value4 = kShortMissing,
                    float factor4 = kFloatMissing) const;
 
-  virtual void CreateIntegrators(void);
+  virtual void CreateIntegrators();
 
  public:
   void SetPrecipitationProbabilityLimits(float firstLimit = -1, float secondLimit = -1);
@@ -209,15 +209,15 @@ class _FMI_DLL NFmiWeatherAndCloudiness : public NFmiCombinedParam
       const NFmiWeatherAndCloudiness& theWeatherAndCloudiness4 = NFmiWeatherAndCloudiness(),
       float factor4 = kFloatMissing);
 
-  unsigned long CalcTotalPrecipitation(void) const;
+  unsigned long CalcTotalPrecipitation() const;
   unsigned long CalcPrecipitationFromHessaa(unsigned long theValue);
 
-  unsigned long LowAndMiddleClouds(void) const;
+  unsigned long LowAndMiddleClouds() const;
   unsigned long CloudsToEighths(unsigned long tenProsents) const;
-  unsigned long ToHsade(void) const;
-  bool DataOk(void) const;
+  unsigned long ToHsade() const;
+  bool DataOk() const;
   void Temperature(float theTemperature);
-  float Temperature(void) const;
+  float Temperature() const;
 
   unsigned long PrecipitationScale(double theValue) const;
   unsigned long PrecipitationScaleV6(double theValue) const;
@@ -228,12 +228,12 @@ class _FMI_DLL NFmiWeatherAndCloudiness : public NFmiCombinedParam
   double PrecipitationScaleV7(unsigned long theValue) const;
 
  private:
-  double ThunderProbabilityValue(void) const;
-  double TotalCloudinessValue(void) const;
-  double Precipitation1hValue(void) const;
-  void CheckIfPrecipZeroAndCleanTypeAndForm(void);
+  double ThunderProbabilityValue() const;
+  double TotalCloudinessValue() const;
+  double Precipitation1hValue() const;
+  void CheckIfPrecipZeroAndCleanTypeAndForm();
   void CrossCheck(FmiParameterName theParam);
-  unsigned long CalcTotalCloudiness(void);
+  unsigned long CalcTotalCloudiness();
 
   bool TotalCloudiness(unsigned long theValue);
   bool LowClouds(unsigned long theValue);
@@ -253,13 +253,13 @@ class _FMI_DLL NFmiWeatherAndCloudiness : public NFmiCombinedParam
   unsigned long TotalPrecipitationFromHessaa(unsigned long theValue);
   unsigned long TotalCloudinessFromHessaa(unsigned long theValue);
 
-  unsigned long ToHessaa(void);
-  unsigned long TotalCloudinessToHessaa(void) const;
-  unsigned long ThunderToHessaa(void) const;
-  unsigned long TotalPrecipitationToHessaa(void) const;
-  unsigned long PartlyCloudyHessaa(void);
-  unsigned long HalfCloudyHessaa(void);
-  unsigned long OverCastHessaa(void);
+  unsigned long ToHessaa();
+  unsigned long TotalCloudinessToHessaa() const;
+  unsigned long ThunderToHessaa() const;
+  unsigned long TotalPrecipitationToHessaa() const;
+  unsigned long PartlyCloudyHessaa();
+  unsigned long HalfCloudyHessaa();
+  unsigned long OverCastHessaa();
 
   unsigned long CalcSynopPrecipitationAmount(unsigned theSynopWeatherCode) const;
   unsigned long CalcSynopThunderProb(unsigned long theSynopWeatherCode) const;
@@ -304,7 +304,7 @@ class _FMI_DLL NFmiWeatherAndCloudiness : public NFmiCombinedParam
   // TÄMÄ pitäisi olla private, mutta GSM-kirjasto käyttää 4.9.2000/Marko
 
  public:
-  unsigned long TotalCloudiness(void) const;
+  unsigned long TotalCloudiness() const;
   unsigned long IntegratedSubValue(FmiParameterName theParam,
                                    NFmiIntegrationSelector* theSelector = 0) const;
   unsigned long IntegratedLongValue(NFmiIntegrationSelector* theSelector = 0);
@@ -312,26 +312,26 @@ class _FMI_DLL NFmiWeatherAndCloudiness : public NFmiCombinedParam
   unsigned long IntegratedHessaa(NFmiIntegrationSelector* theSelector = 0);
 
  private:
-  unsigned long LowClouds(void) const;
-  unsigned long MiddleClouds(void) const;
-  unsigned long HighClouds(void) const;
+  unsigned long LowClouds() const;
+  unsigned long MiddleClouds() const;
+  unsigned long HighClouds() const;
 
-  unsigned long HighCloudsV6(void) const;
-  unsigned long HighCloudsV7(void) const;
-  unsigned long TotalPrecipitation(void) const;
+  unsigned long HighCloudsV6() const;
+  unsigned long HighCloudsV7() const;
+  unsigned long TotalPrecipitation() const;
 
-  unsigned long TotalPrecipitationV6(void) const;
-  unsigned long TotalPrecipitationV7(void) const;
-  unsigned long PrecipitationType(void) const;
-  unsigned long PrecipitationForm(void) const;
-  unsigned long FogIntensity(void) const;
-  unsigned long ThunderProbability(void) const;
+  unsigned long TotalPrecipitationV6() const;
+  unsigned long TotalPrecipitationV7() const;
+  unsigned long PrecipitationType() const;
+  unsigned long PrecipitationForm() const;
+  unsigned long FogIntensity() const;
+  unsigned long ThunderProbability() const;
 
   // puuttuvan arvon testit on syytä tehdä näiden funktioiden kautta muuttuneen version myötä
   // sateelle ja yläpilville
 
-  unsigned long TotalPrecipitationMissingValue(void) const;
-  unsigned long HighCloudsMissingValue(void) const;
+  unsigned long TotalPrecipitationMissingValue() const;
+  unsigned long HighCloudsMissingValue() const;
 
   unsigned long HighCloudsV7(double theValue) const;
   double HighCloudsV7(unsigned long theValue) const;
@@ -389,7 +389,7 @@ class _FMI_DLL NFmiWeatherAndCloudiness : public NFmiCombinedParam
  */
 // ----------------------------------------------------------------------
 
-inline NFmiCombinedParam* NFmiWeatherAndCloudiness::Clone(void) const
+inline NFmiCombinedParam* NFmiWeatherAndCloudiness::Clone() const
 {
   return new NFmiWeatherAndCloudiness(*this);
 }
@@ -400,14 +400,14 @@ inline NFmiCombinedParam* NFmiWeatherAndCloudiness::Clone(void) const
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiWeatherAndCloudiness::LongValue(void) const { return itsData.longType; }
+inline unsigned long NFmiWeatherAndCloudiness::LongValue() const { return itsData.longType; }
 // ----------------------------------------------------------------------
 /*!
  * \return Undocumented
  */
 // ----------------------------------------------------------------------
 
-inline int NFmiWeatherAndCloudiness::CrossCheckIndex(void) const { return itsCrossCheckIndex; }
+inline int NFmiWeatherAndCloudiness::CrossCheckIndex() const { return itsCrossCheckIndex; }
 // ----------------------------------------------------------------------
 /*!
  * \param tenProsents Undocumented
@@ -426,7 +426,7 @@ inline unsigned long NFmiWeatherAndCloudiness::CloudsToEighths(unsigned long ten
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiWeatherAndCloudiness::DataOk(void) const { return fDataOk; }
+inline bool NFmiWeatherAndCloudiness::DataOk() const { return fDataOk; }
 // ----------------------------------------------------------------------
 /*!
  * \param theTemperature Undocumented
@@ -444,7 +444,7 @@ inline void NFmiWeatherAndCloudiness::Temperature(float theTemperature)
  */
 // ----------------------------------------------------------------------
 
-inline float NFmiWeatherAndCloudiness::Temperature(void) const { return itsTemperature; }
+inline float NFmiWeatherAndCloudiness::Temperature() const { return itsTemperature; }
 // ----------------------------------------------------------------------
 /*!
  * \param theValue Undocumented
@@ -481,7 +481,7 @@ inline double NFmiWeatherAndCloudiness::PrecipitationScale(unsigned long theValu
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiWeatherAndCloudiness::TotalCloudiness(void) const
+inline unsigned long NFmiWeatherAndCloudiness::TotalCloudiness() const
 {
   return (itsData.longType & 0xF);
 }
@@ -492,7 +492,7 @@ inline unsigned long NFmiWeatherAndCloudiness::TotalCloudiness(void) const
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiWeatherAndCloudiness::LowClouds(void) const
+inline unsigned long NFmiWeatherAndCloudiness::LowClouds() const
 {
   return (itsData.longType >> 4 & 0xF);
 }
@@ -503,7 +503,7 @@ inline unsigned long NFmiWeatherAndCloudiness::LowClouds(void) const
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiWeatherAndCloudiness::MiddleClouds(void) const
+inline unsigned long NFmiWeatherAndCloudiness::MiddleClouds() const
 {
   return (itsData.longType >> 8 & 0xF);
 }
@@ -514,7 +514,7 @@ inline unsigned long NFmiWeatherAndCloudiness::MiddleClouds(void) const
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiWeatherAndCloudiness::HighCloudsV6(void) const
+inline unsigned long NFmiWeatherAndCloudiness::HighCloudsV6() const
 {
   return (itsData.longType >> 12 & 0xF);
 }
@@ -525,7 +525,7 @@ inline unsigned long NFmiWeatherAndCloudiness::HighCloudsV6(void) const
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiWeatherAndCloudiness::HighCloudsV7(void) const
+inline unsigned long NFmiWeatherAndCloudiness::HighCloudsV7() const
 {
   return (itsData.longType >> 12 & 0x7);
 }
@@ -536,7 +536,7 @@ inline unsigned long NFmiWeatherAndCloudiness::HighCloudsV7(void) const
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiWeatherAndCloudiness::HighClouds(void) const
+inline unsigned long NFmiWeatherAndCloudiness::HighClouds() const
 {
   if (itsInfoVersion >= 7.)
     return HighCloudsV7();
@@ -550,7 +550,7 @@ inline unsigned long NFmiWeatherAndCloudiness::HighClouds(void) const
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiWeatherAndCloudiness::TotalPrecipitationV6(void) const
+inline unsigned long NFmiWeatherAndCloudiness::TotalPrecipitationV6() const
 {
   return (itsData.longType >> 16 & 0x1F);
 }
@@ -561,7 +561,7 @@ inline unsigned long NFmiWeatherAndCloudiness::TotalPrecipitationV6(void) const
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiWeatherAndCloudiness::TotalPrecipitationV7(void) const
+inline unsigned long NFmiWeatherAndCloudiness::TotalPrecipitationV7() const
 {
   return (itsData.longType >> 15 & 0x3F);
 }
@@ -572,7 +572,7 @@ inline unsigned long NFmiWeatherAndCloudiness::TotalPrecipitationV7(void) const
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiWeatherAndCloudiness::TotalPrecipitation(void) const
+inline unsigned long NFmiWeatherAndCloudiness::TotalPrecipitation() const
 {
   if (itsInfoVersion >= 7.)
     return TotalPrecipitationV7();
@@ -586,7 +586,7 @@ inline unsigned long NFmiWeatherAndCloudiness::TotalPrecipitation(void) const
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiWeatherAndCloudiness::PrecipitationType(void) const
+inline unsigned long NFmiWeatherAndCloudiness::PrecipitationType() const
 {
   return TotalPrecipitation() > 0 ? (itsData.longType >> 21 & 0x3) : kT2BitMissing;
 }
@@ -597,7 +597,7 @@ inline unsigned long NFmiWeatherAndCloudiness::PrecipitationType(void) const
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiWeatherAndCloudiness::PrecipitationForm(void) const
+inline unsigned long NFmiWeatherAndCloudiness::PrecipitationForm() const
 {
   return TotalPrecipitation() > 0 ? (itsData.longType >> 23 & 0x7) : kT3BitMissing;
 }
@@ -608,7 +608,7 @@ inline unsigned long NFmiWeatherAndCloudiness::PrecipitationForm(void) const
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiWeatherAndCloudiness::FogIntensity(void) const
+inline unsigned long NFmiWeatherAndCloudiness::FogIntensity() const
 {
   return (itsData.longType >> 26 & 0x3);
 }
@@ -619,7 +619,7 @@ inline unsigned long NFmiWeatherAndCloudiness::FogIntensity(void) const
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiWeatherAndCloudiness::ThunderProbability(void) const
+inline unsigned long NFmiWeatherAndCloudiness::ThunderProbability() const
 {
   return (itsData.longType >> 28 & 0xF);
 }
@@ -630,7 +630,7 @@ inline unsigned long NFmiWeatherAndCloudiness::ThunderProbability(void) const
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiWeatherAndCloudiness::TotalPrecipitationMissingValue(void) const
+inline unsigned long NFmiWeatherAndCloudiness::TotalPrecipitationMissingValue() const
 {
   return (itsInfoVersion >= 7.) ? kT6BitMissing : kT5BitMissing;
 }
@@ -641,7 +641,7 @@ inline unsigned long NFmiWeatherAndCloudiness::TotalPrecipitationMissingValue(vo
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiWeatherAndCloudiness::HighCloudsMissingValue(void) const
+inline unsigned long NFmiWeatherAndCloudiness::HighCloudsMissingValue() const
 {
   return (itsInfoVersion >= 7.) ? kT3BitMissing : kT4BitMissing;
 }

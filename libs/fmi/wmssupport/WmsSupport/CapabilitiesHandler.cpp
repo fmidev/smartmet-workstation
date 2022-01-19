@@ -3,13 +3,13 @@
 #include "wmssupport/SetupParser.h"
 #include "xmlliteutils/XmlHelperFunctions.h"
 #include "../../q2clientlib/include/NFmiQ2Client.h"
+#include "NFmiFileSystem.h"
 
 #include <webclient/Client.h>
 
 #include <catlog/catlog.h>
 #include <cppback/background-manager.h>
 #include <boost/property_tree/xml_parser.hpp>
-
 
 namespace Wms
 {
@@ -29,10 +29,18 @@ namespace Wms
                 auto baseUriStr = toBaseUri(query);
                 auto requestStr = toRequest(query);
                 if(doLogging)
+                {
                     CatLog::logMessage(std::string("fetchCapabilitiesXml Wms request, base-uri: ") + baseUriStr + " , request: " + requestStr, CatLog::Severity::Debug, CatLog::Category::NetRequest);
+                }
+                std::string responseStr;
                 auto httpResponseFut = client.queryFor(baseUriStr, requestStr, getCapabilitiesTimeoutInSeconds);
                 httpResponseFut.wait();
-                auto responseStr = httpResponseFut.get();
+                responseStr = httpResponseFut.get();
+
+                // Lisätty testauskoodeja sekä olemassa olevan getCapabilities responsin tiedostotalletukseen että sieltä lukuun. Pidä normaalisti kommenteissa!!
+//                NFmiFileSystem::SafeFileSave("D:\\data\\wms\\dynamicServer_flat.xml", responseStr);
+//                NFmiFileSystem::ReadFile2String("D:\\data\\wms\\dynamicServer_flat_mst.xml", responseStr);
+
                 if(doLogging)
                 {
                     const size_t maxLength = 1000;
@@ -54,14 +62,16 @@ namespace Wms
             }
         }
 
-    }
+    } // unnamed namespace ends
+
+    std::function<void()> CapabilitiesHandler::parameterSelectionUpdateCallback_ = nullptr;
 
     CapabilitiesHandler::CapabilitiesHandler(
         std::unique_ptr<Web::Client> client,
-        std::shared_ptr<cppback::BackgroundManager> bManager,
+        const std::shared_ptr<cppback::BackgroundManager> &bManager,
         std::chrono::seconds intervalToPollGetCapabilities,
-        std::string proxyUrl,
-        std::unordered_map<int, DynamicServerSetup> servers,
+        const std::string &proxyUrl,
+        const std::unordered_map<int, DynamicServerSetup> &servers,
         std::function<void(long, const std::set<LayerInfo>&)> cacheDirtyCallback,
         std::function<bool(long, const std::string&)> cacheHitCallback,
         int capabilitiesTimeoutInSeconds
@@ -75,6 +85,11 @@ namespace Wms
         , getCapabilitiesTimeoutInSeconds{capabilitiesTimeoutInSeconds}
         , cacheHitCallback_{ cacheHitCallback }
     {}
+
+    void CapabilitiesHandler::setParameterSelectionUpdateCallback(std::function<void()>& parameterSelectionUpdateCallback)
+    {
+        parameterSelectionUpdateCallback_ = parameterSelectionUpdateCallback;
+    }
 
     const std::map<long, std::map<long, LayerInfo>>& CapabilitiesHandler::peekHashes() const
     {
@@ -96,7 +111,8 @@ namespace Wms
         {
             while(true)
             {
-                auto children = std::vector<std::unique_ptr<CapabilityTree>>{};			
+                auto children = std::vector<std::unique_ptr<CapabilityTree>>{};
+                bool foundAnyWmsServerData = false;
 
                 for(auto& serverKV : servers_)
                 {
@@ -115,19 +131,9 @@ namespace Wms
                     {
                         auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_ };
 						auto xml = fetchCapabilitiesXml(*client_, query, server.logFetchCapabilitiesRequest, server.doVerboseLogging, getCapabilitiesTimeoutInSeconds);
-
 						changedLayers_.changedLayers.clear();
-
-						// Two options on how to deal with wms capability xmls (parseXml/parseXmlToPropertyTree).
-						if (server.delimiter == "0") // Parser that is/should be used outside FMI
-						{				
-							children.push_back(capabilityTreeParser.parseXml(xml, hashes_, changedLayers_));
-						}
-						else // This second method suits FMI specific style
-						{
-							auto capabilities = parseXmlToPropertyTree(xml);
-							children.push_back(capabilityTreeParser.parse(capabilities.get_child("WMS_Capabilities.Capability.Layer"), hashes_, changedLayers_));
-						}
+                        children.push_back(capabilityTreeParser.parseXmlGeneral(xml, hashes_, changedLayers_));
+                        foundAnyWmsServerData = true;
                         if(!changedLayers_.changedLayers.empty())
                         {
                             cacheDirtyCallback_(server.producer.GetIdent(), changedLayers_.changedLayers);
@@ -147,11 +153,27 @@ namespace Wms
                     }
                 }
                 capabilityTree_ = std::make_unique<CapabilityNode>(rootValue_, std::move(children));
+                if(foundAnyWmsServerData)
+                {
+                    firstTimeUpdateCallbackWrapper();
+                }
 
                 using namespace std::literals;
                 bManager_->sleepInIntervals(intervalToPollGetCapabilities_, 500ms, "CapabilitiesHandler::BackgroundFetching");
             }
         });
+    }
+
+    void CapabilitiesHandler::firstTimeUpdateCallbackWrapper()
+    {
+        static bool firstTime = true;
+
+        if(firstTime && parameterSelectionUpdateCallback_ != nullptr)
+        {
+            firstTime = false;
+            CatLog::logMessage("CapabilitiesHandler::firstTimeUpdateCallbackWrapper activated", CatLog::Severity::Debug, CatLog::Category::NetRequest);
+            parameterSelectionUpdateCallback_();
+        }
     }
 
 }

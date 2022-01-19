@@ -60,12 +60,12 @@ public:
 	bool StoreData(bool fDoSaveTmpRename, const std::string& theFileName, NFmiQueryData *theData) override;
 	NFmiHelpDataInfoSystem* HelpDataInfoSystem(void) override;
 	bool DataLoadingOK(bool noError) override;
-	void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern, NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState = false) override;
+	void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern, NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState, bool& dataWasDeleted) override;
 	bool WarnIfCantSaveWorkingFile(void) override;
 	NFmiHPlaceDescriptor* PossibleUsedDataLoadingGrid(void) override;
 	bool UseEditedDataParamDescriptor(void) override;
 	NFmiParamDescriptor& EditedDataParamDescriptor(void) override;
-	checkedVector<int>& DataLoadingProducerIndexVector(void) override;
+	std::vector<int>& DataLoadingProducerIndexVector(void) override;
 	void EditedDataNeedsToBeLoaded(bool newValue) override;
 	bool CheckEditedDataAfterAutoLoad(void) override;
 	void PutWarningFlagTimerOn(void) override;

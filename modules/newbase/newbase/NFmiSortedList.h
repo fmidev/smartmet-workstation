@@ -19,16 +19,16 @@ enum FmiSortOrder
 class NFmiSortable;
 
 //! Undocumented
-class _FMI_DLL NFmiSortedList : public NFmiVoidPtrList
+class NFmiSortedList : public NFmiVoidPtrList
 {
  public:
-  virtual ~NFmiSortedList(void);
+  virtual ~NFmiSortedList();
   NFmiSortedList(NFmiSortedList& theList);
   NFmiSortedList(FmiSortOrder theSortOrder = kAscending);
 
   using NFmiVoidPtrList::Add;
   virtual bool Add(NFmiSortable* theItem, bool fAddDuplicates = true);
-  FmiSortOrder SortOrder(void);
+  FmiSortOrder SortOrder();
 
  private:
   bool AddAscending(NFmiSortable* theItem, bool fAddDuplicates = true);
@@ -48,4 +48,4 @@ typedef NFmiSortedList* PNFmiSortedList;
  */
 // ----------------------------------------------------------------------
 
-inline FmiSortOrder NFmiSortedList::SortOrder(void) { return itsSortOrder; }
+inline FmiSortOrder NFmiSortedList::SortOrder() { return itsSortOrder; }

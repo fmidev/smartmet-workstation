@@ -39,6 +39,7 @@
 #include "NFmiTimeDescriptor.h"
 #include "NFmiStringTools.h"
 #include "NFmiFileString.h"
+#include "NFmiPathUtils.h"
 
 float NFmiDataLoadingInfo::itsFileVersionNumber = 2.0;
 
@@ -225,7 +226,7 @@ static bool IsWallClockUsedWithTimeStamp(const std::string & theUsedTimeStampTem
     return pos != std::string::npos;
 }
 
-void NFmiDataLoadingInfo::Configure()  
+void NFmiDataLoadingInfo::Configure(const std::string& theAbsoluteWorkingDirectory)
 {
 	std::string temp;
 	NFmiString producerName;
@@ -291,11 +292,11 @@ void NFmiDataLoadingInfo::Configure()
 	::FixPathEndWithSeparator(tmpCacheDir);
 	itsCacheDir = tmpCacheDir;
 	fUseDataCache = NFmiSettings::Require<bool>(baseNameSpaceStr + "::UseQueryDataCache");
-	NormalizeAllPathDelimiters(); // t‰m‰ pit‰‰ tehd‰ ensin, ett‰ kenoviivat on oikein
+	NormalizeAllPathDelimiters(theAbsoluteWorkingDirectory); // t‰m‰ pit‰‰ tehd‰ ensin, ett‰ kenoviivat on oikein
 	itsModel1CacheFilePattern = MakeCacheFilePattern(itsModel1FilePattern);
 	itsModel2CacheFilePattern = MakeCacheFilePattern(itsModel2FilePattern);
 
-	NormalizeAllPathDelimiters(); // tehd‰‰n t‰m‰ viel‰ toistamiseen ett‰ varmasti kaikki kenot on oikein p‰in
+	NormalizeAllPathDelimiters(theAbsoluteWorkingDirectory); // tehd‰‰n t‰m‰ viel‰ toistamiseen ett‰ varmasti kaikki kenot on oikein p‰in
 	InitFileNameLists(); //luodaan tiedostonnimilistat valmiiksi, koska t‰m‰ on yleisin tapa luoda info
 	UpdatedTimeDescriptor();
 
@@ -309,26 +310,26 @@ NFmiString NFmiDataLoadingInfo::MakeCacheFilePattern(const NFmiString &theNormal
 	return cacheFileStr;
 }
 
-static NFmiString NormalizePathDelimeters(const NFmiString &thePath)
+static NFmiString DoTotalPathFix(const NFmiString &thePath, const std::string& theAbsoluteWorkingDirectory)
 {
-	NFmiFileString tmpStr = thePath;
-	tmpStr.NormalizeDelimiter();
-	return tmpStr;
+	std::string tmpPath = thePath;
+	tmpPath = PathUtils::makeFixedAbsolutePath(tmpPath, theAbsoluteWorkingDirectory, false);
+	return NFmiString(tmpPath);
 }
 
 // Joskus konffeissa voi menn‰ eri polkujen kanssa hakemisto erottimet eri suuntiin
 // ja sen j‰lkeen ei ehk‰ tietyt metodit mm. NFmiFileString-luokassa ehk‰ en‰‰ toimikaan toivotulla tavalla.
 // Siksi kun asetukset on luettu konfiguraatioista, laitetaan kaikki polku erottimet
 // samanlaisiksi varmuuden vuoksi.
-void NFmiDataLoadingInfo::NormalizeAllPathDelimiters(void)
+void NFmiDataLoadingInfo::NormalizeAllPathDelimiters(const std::string& theAbsoluteWorkingDirectory)
 {
-	itsModel1FilePattern = ::NormalizePathDelimeters(itsModel1FilePattern);
-	itsModel2FilePattern = ::NormalizePathDelimeters(itsModel2FilePattern);
-	itsWorkingPath = ::NormalizePathDelimeters(itsWorkingPath);
-	itsDataBaseInPath = ::NormalizePathDelimeters(itsDataBaseInPath);
-	itsDataBaseOutPath = ::NormalizePathDelimeters(itsDataBaseOutPath);
-	itsErrorFilePath = ::NormalizePathDelimeters(itsErrorFilePath);
-	itsCacheDir = ::NormalizePathDelimeters(itsCacheDir);
+	itsModel1FilePattern = ::DoTotalPathFix(itsModel1FilePattern, theAbsoluteWorkingDirectory);
+	itsModel2FilePattern = ::DoTotalPathFix(itsModel2FilePattern, theAbsoluteWorkingDirectory);
+	itsWorkingPath = ::DoTotalPathFix(itsWorkingPath, theAbsoluteWorkingDirectory);
+	itsDataBaseInPath = ::DoTotalPathFix(itsDataBaseInPath, theAbsoluteWorkingDirectory);
+	itsDataBaseOutPath = ::DoTotalPathFix(itsDataBaseOutPath, theAbsoluteWorkingDirectory);
+	itsErrorFilePath = ::DoTotalPathFix(itsErrorFilePath, theAbsoluteWorkingDirectory);
+	itsCacheDir = ::DoTotalPathFix(itsCacheDir, theAbsoluteWorkingDirectory);
 }
 
 NFmiString NFmiDataLoadingInfo::CreateWorkingFileNameFilter()

@@ -68,6 +68,9 @@
 #include "ToolMasterDrawingFunctions.h"
 #include "NFmiCountryBorderDrawUtils.h"
 #include "CombinedMapHandlerInterface.h"
+#include "GdiplusStationBulkDraw.h"
+#include "SparseDataGrid.h"
+#include "NFmiSymbolTextMapping.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -110,7 +113,7 @@ static bool NearestShipLocation(NFmiFastQueryInfo &theInfo, const NFmiLocation &
 	return theInfo.LocationIndex(minLocInd);
 }
 
-static boost::shared_ptr<NFmiFastQueryInfo> FindInfoWithNearestLocation(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, const NFmiPoint& theWantedLatLon)
+static boost::shared_ptr<NFmiFastQueryInfo> FindInfoWithNearestLocation(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, const NFmiPoint& theWantedLatLon)
 {
 	NFmiLocation wantedLocation(theWantedLatLon);
 	if(theInfoVector.empty() == false)
@@ -199,12 +202,12 @@ NFmiStationView::~NFmiStationView(void)
 {
 }
 
-double NFmiStationView::MaximumFontSizeFactor()
+double NFmiStationView::MaximumFontSizeFactor() const
 {
     return itsCtrlViewDocumentInterface->Registry_MaximumFontSizeFactor();
 }
 
-NFmiRect NFmiStationView::CalcSymbolRelativeRect(const NFmiPoint &theLatlon, double theSymbolSizeInMM)
+NFmiRect NFmiStationView::CalcSymbolRelativeRect(const NFmiPoint &theLatlon, double theSymbolSizeInMM) const
 {
     NFmiPoint viewPoint(LatLonToViewPoint(theLatlon));
     long pixelWidth = boost::math::iround(theSymbolSizeInMM * itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x);
@@ -335,8 +338,11 @@ void NFmiStationView::Draw(NFmiToolBox* theGTB)
 	}
 
 	ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
-
 	SetupUsedDrawParam();
+	CalculateGeneralStationRect();
+	itsSymbolBulkDrawData.clear();
+	itsCachedSpaceOutFactors = NFmiPoint::gMissingLatlon;
+	itsEnlargedDrawArea = SbdCalcEnlargedDrawArea();
 
 	MakeDrawedInfoVector();
 	for(auto& fastInfo : itsInfoVector)
@@ -345,19 +351,19 @@ void NFmiStationView::Draw(NFmiToolBox* theGTB)
 		fastInfo->FirstLocation();
 		SetMapViewSettings(fastInfo);
 		UpdateCachedParameterName();
-		CalculateGeneralStationRect();
 		FmiFontType oldFont = itsDrawingEnvironment->GetFontType();
 
 		ModifyTextEnvironment();
 		if(!PrepareForStationDraw())
 			continue;
-		DrawSymbols();
-		DrawObsComparison(); // vertailut havaintoihin piirretään vaikka data on piilossa
+		SbdCollectSymbolDrawData(false);
+		DrawObsComparison();
 
 		itsDrawingEnvironment->SetFontType(oldFont);
 		fDoTimeInterpolation = false;
-		itsInfo = boost::shared_ptr<NFmiFastQueryInfo>(); // nollataan lopuksi itsInfo-pointteri
+		itsInfo = nullptr;
 	}
+	SbdDoSymbolDraw(false);
 }
 
 void NFmiStationView::DrawCountryBordersToMapView()
@@ -366,7 +372,7 @@ void NFmiStationView::DrawCountryBordersToMapView()
 		NFmiCountryBorderDrawUtils::drawCountryBordersToMapView(this, itsToolBox, itsDrawParam.get());
 }
 
-void NFmiStationView::MakeDrawedInfoVector(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+void NFmiStationView::MakeDrawedInfoVector(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
 	itsCtrlViewDocumentInterface->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, GetArea());
 }
@@ -391,13 +397,13 @@ static int GetGridDataIndex(int xSize, int xInd, int yInd)
 	return (xSize * yInd) + xInd;
 }
 
-static checkedVector<unsigned long> FillLocationIndexies(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static std::vector<unsigned long> FillLocationIndexies(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	if(theInfo->IsGrid())
 	{ // hiladatalle palautetaan seuraavat paikkaindeksit
 		int xSize = theInfo->Grid()->XNumber();
 		int ySize = theInfo->Grid()->YNumber();
-		checkedVector<unsigned long> locationIndexies;
+		std::vector<unsigned long> locationIndexies;
 		if(xSize > 0 && ySize > 0)
 		{
 			locationIndexies.push_back(GetGridDataIndex(xSize, xSize/2, ySize/2)); // laitetaan ensimmäiseksi hilan puoliväli, koska reunoista puuttuu helposti dataa
@@ -437,7 +443,22 @@ static checkedVector<unsigned long> FillLocationIndexies(boost::shared_ptr<NFmiF
 		}
 		return locationIndexies;
 	}
-	return checkedVector<unsigned long>();
+	return std::vector<unsigned long>();
+}
+
+static std::vector<float> MatrixToVector(const NFmiDataMatrix<float>& matrix)
+{
+	std::vector<float> vec(matrix.NX() * matrix.NY(), kFloatMissing);
+	size_t totalIndex = 0;
+	for(size_t yIndex = 0; yIndex < matrix.NY(); yIndex++)
+	{
+		for(size_t xIndex = 0; xIndex < matrix.NX(); xIndex++)
+		{
+			vec[totalIndex] = matrix[xIndex][yIndex];
+			totalIndex++;
+		}
+	}
+	return vec;
 }
 
 // käy läpi muutaman pisteen datassa ja etsii sieltä edustavimman teksti pituuden
@@ -449,8 +470,17 @@ int NFmiStationView::GetApproxmationOfDataTextLength(std::vector<float> *sampleV
     {
         if(sampleValues)
             return CalcApproxmationOfDataTextLength(*sampleValues);
-        else
-            return CalcApproxmationOfDataTextLength(GetSampleDataForDataTextLengthApproxmation());
+		else if(itsDrawParam->DoSparseSymbolVisualization() && itsInfo->IsGrid())
+		{
+			NFmiDataMatrix<float> valueMatrix;
+			if(CalcViewFloatValueMatrix(valueMatrix, 0, 0, 0, 0))
+			{
+				std::vector<float> fullFieldValues = ::MatrixToVector(valueMatrix);
+				return CalcApproxmationOfDataTextLength(fullFieldValues);
+			}
+		}
+
+		return CalcApproxmationOfDataTextLength(GetSampleDataForDataTextLengthApproxmation());
     }
 }
 
@@ -475,21 +505,21 @@ int NFmiStationView::CalcApproxmationOfDataTextLength(const std::vector<float> &
         else // muuten palauta maksimi arvo
             return static_cast<int>(minmaxCalc.MaxValue());
     }
-    return 1;
+    return 2;
 }
 
 std::vector<float> NFmiStationView::GetSampleDataForDataTextLengthApproxmation()
 {
     unsigned long oldLocationIndex = itsInfo->LocationIndex();
-    checkedVector<unsigned long> locationIndexies(FillLocationIndexies(itsInfo));
+    std::vector<unsigned long> locationIndexies(FillLocationIndexies(itsInfo));
     std::vector<float> values;
     for(auto locationIndex : locationIndexies)
     {
         itsInfo->LocationIndex(locationIndex);
-        values.push_back(ViewFloatValue());
+        values.push_back(ViewFloatValue(false));
     }
-    itsInfo->LocationIndex(oldLocationIndex);
 
+    itsInfo->LocationIndex(oldLocationIndex);
     return values;
 }
 
@@ -502,7 +532,12 @@ NFmiPoint NFmiStationView::GetSpaceOutFontFactor(void)
 // OLETUS!! itsInfo on grid-dataa.
 NFmiPoint NFmiStationView::CalcUsedSpaceOutFactors(int theSpaceOutFactor)
 {
-    if(!fUseAlReadySpacedOutData)
+	if(fUseAlReadySpacedOutData || theSpaceOutFactor == 0)
+	{
+		// 0. Return no space-out factor value
+		return NFmiPoint(1, 1);
+	}
+	else
     {
         unsigned long centerX = itsInfo->GridXNumber() / 2;
         unsigned long centerY = itsInfo->GridYNumber() / 2;
@@ -540,8 +575,6 @@ NFmiPoint NFmiStationView::CalcUsedSpaceOutFactors(int theSpaceOutFactor)
                 return NFmiPoint(::ceil(xFactor) + 1, ::ceil(yFactor) + 1);
         }
     }
-	// 7. make point and return
-	return NFmiPoint(1, 1);
 }
 
 static std::vector<float> matrixToVector(const NFmiDataMatrix<float> &matrix)
@@ -620,61 +653,143 @@ bool NFmiStationView::IsStationDataMacroParam(void)
 // Sama pätee, jos ollaan käytetty calculationpoint:eja.
 bool NFmiStationView::IsSpaceOutDrawingUsed()
 {
-    int spacingOutFactor = itsCtrlViewDocumentInterface->Registry_SpacingOutFactor(itsMapViewDescTopIndex);
-    bool stationMacroParamData = IsStationDataMacroParam();
-    if(spacingOutFactor > 0 && itsInfo->Grid() && !stationMacroParamData) // asema dataa ei yritetä harventaa
-    {
-        if(itsDrawParam->DoSparseSymbolVisualization())
-            return false;
-        else
-            return true;
-    }
-    else
-        return false;
+	auto spaceOutFactors = CalcUsedSpaceOutFactors();
+	if(spaceOutFactors.X() > 1 || spaceOutFactors.Y() > 1)
+	{
+		bool stationMacroParamData = IsStationDataMacroParam();
+		if(itsInfo->Grid() && !stationMacroParamData) // asema dataa ei yritetä harventaa
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
-void NFmiStationView::DoSpaceOutSymbolDraw(NFmiDrawingEnvironment &theStationPointEnvi)
+NFmiPoint NFmiStationView::CalcUsedSpaceOutFactors()
 {
-    bool drawStationPlot = IsAccessoryStationDataDrawn();
-    int spacingOutFactor = itsCtrlViewDocumentInterface->Registry_SpacingOutFactor(itsMapViewDescTopIndex);
-    NFmiPoint spaceOutFactorPoint(CalcUsedSpaceOutFactors(spacingOutFactor));
-    int spaceOutFactorX = static_cast<int>(spaceOutFactorPoint.X());
-    int spaceOutFactorY = static_cast<int>(spaceOutFactorPoint.Y());
-    if(!(spaceOutFactorX == 0 && spaceOutFactorY == 0)) // jos molemmat ovat nollia, voidaan mennä normaaliin looppiin
-    {
-        int skippinCounter = 0;
-        int currentLine = 0;
-        int lastLine = 0;
-        int gridXSize = itsInfo->Grid()->XNumber(); // gridin olemassaa olo on tarkitettu jo aiemmin
-        if(gridXSize == 0)
-        {
-            return; // virhetilanne, ei tehdä mitään, pitäisi heittää poikkeus
-        }
-        for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
-        {
-            currentLine = itsInfo->LocationIndex() / gridXSize;
-            if(currentLine != lastLine) // jos rivi vaihtuu
-            {
-                skippinCounter = 0;
-            }
+	if(itsCachedSpaceOutFactors == NFmiPoint::gMissingLatlon)
+	{
+		int spacingOutFactor = itsCtrlViewDocumentInterface->Registry_SpacingOutFactor(itsMapViewDescTopIndex);
+		itsCachedSpaceOutFactors = CalcUsedSpaceOutFactors(spacingOutFactor);
+	}
+	return itsCachedSpaceOutFactors;
+}
 
-            if(spaceOutFactorY == 0 || currentLine % spaceOutFactorY == 0) // jos spaceOutFactorY on 0, tehdään joka rivi
-            {
-                if(spaceOutFactorX == 0 || skippinCounter % spaceOutFactorX == 0) // jos spaceOutFactorX on 0, tehdään joka sarake
-                {
-                    if(itsArea->IsInside(CurrentLatLon()))
-                    {
-                        NFmiFastInfoUtils::SetSoundingDataLevel(itsDrawParam->Level(), *itsInfo); // Tämä tehdään vain luotaus datalle: tämä level pitää asettaa joka pisteelle erikseen, koska vakio painepinnat eivät ole kaikille luotaus parametreille samoilla leveleillä
-                        DrawData();
-                        if(drawStationPlot)
-                            DrawStation(theStationPointEnvi);
-                    }
-                }
-            }
-            skippinCounter++;
-            lastLine = currentLine;
-        }
-    }
+CtrlViewUtils::GraphicalInfo& NFmiStationView::GetGraphicalInfo() const
+{
+	return itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+}
+
+// Seek-rangeja laskettaessa halutaan että alihilat eivät mene päälekkäin vierekkäisissä piirrettävissä pisteissä.
+// Rajoitetaan mieluummin kurkkauksia alas ja vasemmalle (x/y tapaukset).
+// Parin first on kurkkaus vasemmalle/alas (0 tai negatiivinen luku) ja second on kurkkaus oikealle/ylös (0 tai positiivinen luku).
+static std::pair<double, double> CalcSparsePeekRange(int spaceOutFactor)
+{
+	int halfFactor = spaceOutFactor / 2;
+	if(spaceOutFactor % 2 == 0)
+	{
+		// Pariton tapaus
+		return std::make_pair(-(halfFactor - 1.), halfFactor);
+	}
+	else
+	{
+		return std::make_pair(-halfFactor, halfFactor);
+	}
+}
+
+// Spase symbol draw tapauksessa pitää laskea harvennuksen mukainen alihila, jolla
+// etsitään piirrettävän hilapisteen ympäriltä peekxy komentojen avulla ei-puuttuvaa arvoa.
+static NFmiRect CalcSparsePeekRect(int spaceOutFactorX, int spaceOutFactorY)
+{
+	auto peekRangeX = ::CalcSparsePeekRange(spaceOutFactorX);
+	auto peekRangeY = ::CalcSparsePeekRange(spaceOutFactorY);
+	return NFmiRect(peekRangeX.first, peekRangeY.second, peekRangeX.second, peekRangeY.first);
+}
+
+static int CalcSparseGridSize(int spaceOutFactor, unsigned long gridSize)
+{
+	if(gridSize % spaceOutFactor == 0)
+		return gridSize / spaceOutFactor;
+	else
+		return (gridSize / spaceOutFactor) + 1;
+}
+
+void NFmiStationView::SbdCollectSpaceOutSymbolDrawData(bool doStationPlotOnly)
+{
+	auto spaceOutFactors = CalcUsedSpaceOutFactors();
+	int spaceOutFactorX = static_cast<int>(spaceOutFactors.X());
+	int spaceOutFactorY = static_cast<int>(spaceOutFactors.Y());
+	auto sparseDrawPeekRect = ::CalcSparsePeekRect(spaceOutFactorX, spaceOutFactorY);
+	auto doSparseCase = itsDrawParam->DoSparseSymbolVisualization() && !doStationPlotOnly;
+	SparseDataGrid sparseDataGrid;
+	if(doSparseCase)
+	{
+		int xSize = ::CalcSparseGridSize(spaceOutFactorX, itsInfo->GridXNumber());
+		int ySize = ::CalcSparseGridSize(spaceOutFactorY, itsInfo->GridYNumber());
+		sparseDataGrid = SparseDataGrid(xSize, ySize);
+	}
+
+	int skippinCounter = 0;
+	int currentLine = 0;
+	int currentSkipColumn = 0;
+	int currentSkipRow = 0;
+	int lastLine = 0;
+	int gridXSize = itsInfo->Grid()->XNumber(); // gridin olemassaa olo on tarkitettu jo aiemmin
+	if(gridXSize == 0)
+		return; // virhetilanne, ei tehdä mitään, pitäisi heittää poikkeus
+
+	for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
+	{
+		currentLine = itsInfo->LocationIndex() / gridXSize;
+		if(currentLine != lastLine) // jos rivi vaihtuu
+		{
+			skippinCounter = 0;
+		}
+
+		if(currentLine % spaceOutFactorY == 0) // jos spaceOutFactorY on 1, tehdään joka rivi
+		{
+			if(skippinCounter % spaceOutFactorX == 0) // jos spaceOutFactorX on 1, tehdään joka sarake
+			{
+				if(SbdIsInsideEnlargedDrawArea())
+				{
+					currentSkipColumn = itsInfo->LocationIndex() % gridXSize / spaceOutFactorX;
+					currentSkipRow = itsInfo->LocationIndex() / gridXSize / spaceOutFactorY;
+					// Tämä tehdään vain luotaus datalle: tämä level pitää asettaa joka pisteelle erikseen, koska vakio painepinnat eivät ole kaikille luotaus parametreille samoilla leveleillä
+					NFmiFastInfoUtils::SetSoundingDataLevel(itsDrawParam->Level(), *itsInfo);
+					if(doSparseCase)
+						SbdSearchForSparseSymbolDrawData(doStationPlotOnly, sparseDrawPeekRect, sparseDataGrid, currentSkipColumn, currentSkipRow);
+					else
+						SbdCollectStationData(doStationPlotOnly);
+				}
+			}
+		}
+		skippinCounter++;
+		lastLine = currentLine;
+	}
+
+	if(doSparseCase)
+		SbdDoFinalSparseCaseWork(doStationPlotOnly, sparseDataGrid);
+}
+
+void NFmiStationView::SbdDoFinalSparseCaseWork(bool doStationPlotOnly, SparseDataGrid& sparseDataGrid)
+{
+	auto nonMissingCounter1 = sparseDataGrid.calcNonMissingValues();
+	sparseDataGrid.cleanTooCloseHits();
+	auto nonMissingCounter2 = sparseDataGrid.calcNonMissingValues();
+	const auto& sparseDataMatrix = sparseDataGrid.sparseDataMatrix();
+	for(size_t yIndex = 0; yIndex < sparseDataMatrix.NY(); yIndex++)
+	{
+		for(size_t xIndex = 0; xIndex < sparseDataMatrix.NX(); xIndex++)
+		{
+			const auto& sparseData = sparseDataMatrix[xIndex][yIndex];
+			if(sparseData.insideZoomedArea())
+			{
+				itsInfo->LocationIndex(sparseData.visualizedLocationIndex());
+				SbdCollectStationData(doStationPlotOnly, sparseData.value());
+			}
+		}
+	}
 }
 
 static bool IsCurrentStationBlocked(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiIgnoreStationsData &ignoreStationData)
@@ -684,69 +799,18 @@ static bool IsCurrentStationBlocked(boost::shared_ptr<NFmiFastQueryInfo> &theInf
     return ignoreStationData.IsStationBlocked(*(theInfo->Location()), true);
 }
 
-void NFmiStationView::DoNormalSymbolDraw(NFmiDrawingEnvironment &theStationPointEnvi)
+void NFmiStationView::SbdCollectSparseSymbolDrawData(bool doStationPlotOnly)
 {
-    bool drawStationPlot = IsAccessoryStationDataDrawn();
-    NFmiIgnoreStationsData &ignorestationdata = itsCtrlViewDocumentInterface->IgnoreStationsData();
-    for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
-    {
-        if(itsArea->IsInside(CurrentLatLon()))
-        {
-            if(!::IsCurrentStationBlocked(itsInfo, ignorestationdata))
-            {
-                NFmiFastInfoUtils::SetSoundingDataLevel(itsDrawParam->Level(), *itsInfo); // Tämä tehdään vain luotaus datalle: tämä level pitää asettaa joka pisteelle erikseen, koska vakio painepinnat eivät ole kaikille luotaus parametreille samoilla leveleillä
-                DrawData();
-                if(drawStationPlot)
-                    DrawStation(theStationPointEnvi);
-            }
-        }
-    }
-}
-
-void NFmiStationView::DoSparseDataSymbolDraw(NFmiDrawingEnvironment &theStationPointEnvi)
-{
-    bool drawStationPlot = IsAccessoryStationDataDrawn();
-    for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
-    {
-        if(itsArea->IsInside(CurrentLatLon()))
-        {
-            NFmiFastInfoUtils::SetSoundingDataLevel(itsDrawParam->Level(), *itsInfo); // Tämä tehdään vain luotaus datalle: tämä level pitää asettaa joka pisteelle erikseen, koska vakio painepinnat eivät ole kaikille luotaus parametreille samoilla leveleillä
-            // Harvan datan symboli piirto vain niille pisteille missä on ei-puuttuva arvo
-            if(ViewFloatValue() != kFloatMissing)
-                DrawData();
-            // Asemapisteet piirretään haluttaessa kaikille pisteille, oli arvo puuttuvaa tai ei
-            if(drawStationPlot)
-                DrawStation(theStationPointEnvi);
-        }
-    }
-}
-
-void NFmiStationView::DrawSymbols(void)
-{
-	FmiDirection oldAlignment = itsToolBox->GetTextAlignment();
-	itsToolBox->SetTextAlignment(kCenter);
-
-	try
+	for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
 	{
-		NFmiDrawingEnvironment stationPointEnvi;
-		SetStationPointDrawingEnvi(stationPointEnvi);
-        if(IsSpaceOutDrawingUsed())
+		if(SbdIsInsideEnlargedDrawArea())
 		{
-            DoSpaceOutSymbolDraw(stationPointEnvi);
+			NFmiFastInfoUtils::SetSoundingDataLevel(itsDrawParam->Level(), *itsInfo); // Tämä tehdään vain luotaus datalle: tämä level pitää asettaa joka pisteelle erikseen, koska vakio painepinnat eivät ole kaikille luotaus parametreille samoilla leveleillä
+			// Harvan datan symboli piirto vain niille pisteille missä on ei-puuttuva arvo,
+			// ja SbdCollectStationData metodi toimii juuri niin oletusarvoisesti.
+			SbdCollectStationData(doStationPlotOnly);
 		}
-        else if(itsDrawParam->DoSparseSymbolVisualization())
-        {
-            DoSparseDataSymbolDraw(stationPointEnvi);
-        }
-        else
-        {
-            DoNormalSymbolDraw(stationPointEnvi);
-        }
 	}
-	catch(...)
-	{
-	}
-	itsToolBox->SetTextAlignment(oldAlignment);
 }
 
 void NFmiStationView::DrawAllAccessoryStationData(void)
@@ -754,6 +818,9 @@ void NFmiStationView::DrawAllAccessoryStationData(void)
 	if(!itsInfo)
 		return;
 	CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, "NFmiStationView: Drawing data's station/grid point markers");
+
+	itsSymbolBulkDrawData.clear();
+	itsEnlargedDrawArea = SbdCalcEnlargedDrawArea();
 	NFmiDrawingEnvironment stationPointEnvi;
 	SetStationPointDrawingEnvi(stationPointEnvi);
 	ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
@@ -763,18 +830,12 @@ void NFmiStationView::DrawAllAccessoryStationData(void)
 		// Varmistetaan että osoitetaan johon validiin asemaan/pisteeseen, muuten tulee ongelmia nan -pohjaisten point-olioiden kanssa
 		fastInfo->FirstLocation();
 		SetMapViewSettings(fastInfo);
-		PrepareForStationDraw();
-		for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
-		{
-			if(itsArea->IsInside(itsInfo->LatLonFast()))
-				DrawStation(stationPointEnvi);
-		}
+		if(!PrepareForStationDraw())
+			continue;
+		SbdCollectSymbolDrawData(true);
+		itsInfo = nullptr;
 	}
-}
-
-void NFmiStationView::DrawData(void)
-{
-	DrawText2();
+	SbdDoSymbolDraw(true);
 }
 
 bool NFmiStationView::GetLocation(const NFmiPoint& thePoint, NFmiLocation &theLocation)
@@ -784,26 +845,10 @@ bool NFmiStationView::GetLocation(const NFmiPoint& thePoint, NFmiLocation &theLo
 
 void NFmiStationView::DrawStation(NFmiDrawingEnvironment &theStationPointEnvi)
 {
-	NFmiPoint pointSize(itsCtrlViewDocumentInterface->StationPointSize(itsMapViewDescTopIndex));
-
-	NFmiRect stationRect(CurrentStationRect(.07));
-	NFmiRect plotRect(0,0, itsToolBox->SX(static_cast<long>(pointSize.X())), itsToolBox->SY(static_cast<long>(pointSize.Y())));
-	plotRect.Center(stationRect.Center());
+	auto plotRect(SbdCalcBaseStationRelativeRect());
+	plotRect.Center(CurrentStationPosition());
 
 	NFmiRectangle tmp(plotRect, 0, &theStationPointEnvi);
-	itsToolBox->Convert(&tmp);
-}
-
-// tämä pysyy aseman dataalueen piirroksena mutta DrawStation() pitää muuttaa jotenkin
-void NFmiStationView::DrawStationRect(void)
-{
-	NFmiRect stationRect(CurrentStationRect(.5));
-	itsDrawingEnvironment->DisableFill();
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.6f,0.6f,0.6f));
-	NFmiRectangle tmp(stationRect.TopLeft(),
-			  stationRect.BottomRight(),
-			  0,
-			  itsDrawingEnvironment);
 	itsToolBox->Convert(&tmp);
 }
 
@@ -993,12 +1038,12 @@ bool NFmiStationView::DrawAllSelectedStationsWithInvertStationRect(unsigned long
 	return false;
 }
 
-NFmiPoint NFmiStationView::LatLonToViewPoint(const NFmiPoint& theLatLon)
+NFmiPoint NFmiStationView::LatLonToViewPoint(const NFmiPoint& theLatLon) const
 {
 	return itsArea->ToXY(theLatLon);
 }
 
-NFmiPoint NFmiStationView::ViewPointToLatLon(const NFmiPoint& theViewPoint)
+NFmiPoint NFmiStationView::ViewPointToLatLon(const NFmiPoint& theViewPoint) const
 {
 	return itsArea->ToLatLon(theViewPoint);
 }
@@ -1122,12 +1167,12 @@ void NFmiStationView::CalculateGeneralStationRect(void)
 	}
 }
 
-const NFmiRect& NFmiStationView::GeneralStationRect()
+const NFmiRect& NFmiStationView::GeneralStationRect() const
 {
 	return itsGeneralStationRect;
 }
 
-NFmiRect NFmiStationView::CurrentStationRect(void)
+NFmiRect NFmiStationView::CurrentStationRect() const
 {
 	NFmiRect rect(GeneralStationRect());
 	rect.Center(CurrentStationPosition());
@@ -1143,7 +1188,7 @@ NFmiRect NFmiStationView::CurrentStationRect(double theSizeFactor)
 	return rect;
 }
 
-NFmiRect NFmiStationView::CurrentDataRect(void)
+NFmiRect NFmiStationView::CurrentDataRect() const
 {
 	NFmiRect stationRect(CurrentStationRect());
 	NFmiRect dataRect(stationRect.Left()
@@ -1158,18 +1203,10 @@ NFmiRect NFmiStationView::CurrentDataRect(void)
 	return dataRect;
 }
 
-NFmiPoint NFmiStationView::CurrentStationPosition(void)
+NFmiPoint NFmiStationView::CurrentStationPosition() const
 {
 	NFmiPoint xy(LatLonToViewPoint(CurrentLatLon()));
 	return xy;
-}
-
-//-------------------------------------------------------------------
-// ModifyTextColor			M.K. 27.4.99
-//-------------------------------------------------------------------
-
-void NFmiStationView::ModifyTextColor(float theValue)
-{
 }
 
 float NFmiStationView::GetSynopValueFromQ2Archive(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
@@ -1271,7 +1308,7 @@ float NFmiStationView::GetValueFromLocalInfo()
 }
 
 // tämä hakee näytettävän datan riippuen asetuksista
-float NFmiStationView::ViewFloatValue(void)
+float NFmiStationView::ViewFloatValue(bool )
 {
     if(itsInfo)
         NFmiFastInfoUtils::SetSoundingDataLevel(itsDrawParam->Level(), *itsInfo);  // pitää varmistaa että jos kyse on sounding datasta, että level on kohdallaan
@@ -1312,26 +1349,6 @@ static bool AreMatricesEqual(const NFmiDataMatrix<float> & m1, const NFmiDataMat
 		return true;
 	}
 	return false;
-}
-
-bool NFmiStationView::IsGridDataDrawnWithSpaceOutSymbols()
-{
-    if(itsDrawParam)
-    {
-        auto gridDataDrawStyle = itsDrawParam->GridDataPresentationStyle();
-        // Tyylit 2-5 ovat isoline, contour, isoline+contour, quickcontour
-        if(gridDataDrawStyle >= NFmiMetEditorTypes::View::kFmiIsoLineView && gridDataDrawStyle <= NFmiMetEditorTypes::View::kFmiQuickColorContourView)
-            return false;
-        else
-        {
-            // Jos macroParam laskee ns. 'harvaa' dataa ja se piirretään harvan-datan symboli piirrolla, ei pidä yrittää optimoida hilan kokoa
-            if(itsDrawParam->DoSparseSymbolVisualization())
-                return false;
-            if(itsCtrlViewDocumentInterface->Registry_SpacingOutFactor(itsMapViewDescTopIndex) != 0)
-                return true;
-        }
-    }
-    return false;
 }
 
 static boost::shared_ptr<NFmiFastQueryInfo> CalcPossibleResolutionInfoFromMacroParam(TimeSerialModificationDataInterface& theAdapter, boost::shared_ptr<NFmiDrawParam>& theDrawParam)
@@ -1502,6 +1519,26 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreateNewResizedMacroParam
 	return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(gridSizeX, gridSizeY, NFmiInfoData::kMacroParam, itsArea);
 }
 
+bool NFmiStationView::IsGridDataDrawnWithSpaceOutSymbols()
+{
+	if(itsDrawParam)
+	{
+		auto gridDataDrawStyle = itsDrawParam->GridDataPresentationStyle();
+		// Tyylit 2-5 ovat isoline, contour, isoline+contour, quickcontour
+		if(gridDataDrawStyle >= NFmiMetEditorTypes::View::kFmiIsoLineView && gridDataDrawStyle <= NFmiMetEditorTypes::View::kFmiQuickColorContourView)
+			return false;
+		else
+		{
+			// Jos macroParam laskee ns. 'harvaa' dataa ja se piirretään harvan-datan symboli piirrolla, ei pidä yrittää optimoida hilan kokoa
+			if(itsDrawParam->DoSparseSymbolVisualization())
+				return false;
+            if(itsCtrlViewDocumentInterface->Registry_SpacingOutFactor(itsMapViewDescTopIndex) != 0)
+                return true;
+		}
+	}
+	return false;
+}
+
 boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreatePossibleSpaceOutMacroParamData()
 {
     if(IsGridDataDrawnWithSpaceOutSymbols())
@@ -1571,6 +1608,8 @@ void NFmiStationView::CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFm
     }
 }
 
+const float g_MacroParamValueWasNotInCache = -987654321.123456789f;
+
 float NFmiStationView::GetMacroParamTooltipValueFromCache(const NFmiExtraMacroParamData& extraMacroParamData)
 {
     NFmiPoint latlon = itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
@@ -1595,11 +1634,16 @@ float NFmiStationView::GetMacroParamTooltipValueFromCache(const NFmiExtraMacroPa
 		else
 		{
 			// normi reaaliluku interpolaatio lämpötila parametri on vain dummy arvo tavalliselle reaaliluvulle
-			return dataMatrix.InterpolatedValue(LatLonToViewPoint(latlon), itsArea->XYArea(), kFmiTemperature);
+			auto interpolatedValue = dataMatrix.InterpolatedValue(LatLonToViewPoint(latlon), itsArea->XYArea(), kFmiTemperature);
+			if(interpolatedValue != kFloatMissing)
+				return interpolatedValue;
+
+			// Monissa macroParameissa on paljon puuttuvia arvoja, ja normaali interpolaatio ei toimi, kokeillaan vielä saadaanko nearest menetelmällä arvoa
+			return dataMatrix.InterpolatedValue(LatLonToViewPoint(latlon), itsArea->XYArea(), kFmiTemperature, false, kNearestPoint);
 		}
 	}
 
-    return kFloatMissing;
+    return g_MacroParamValueWasNotInCache;
 }
 
 // Pelkän tooltipin lasku macroParamista.
@@ -1611,12 +1655,12 @@ float NFmiStationView::CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extra
     return FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, fakeMatrixValues, true, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), usedTime, latlon, itsInfo, fUseCalculationPoints, nullptr, &extraMacroParamData);
 }
 
-static void MakeDrawedInfoVector(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+static void MakeDrawedInfoVector(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
     theGriddingHelper->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
 }
 
-static void SetXYZValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiArea &theArea, float theValue, checkedVector<float> &theXValues, checkedVector<float> &theYValues, checkedVector<float> &theZValues)
+static void SetXYZValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiArea &theArea, float theValue, std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues)
 {
 	if(theValue != kFloatMissing)
 	{
@@ -1631,7 +1675,7 @@ static void SetXYZValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, co
 	}
 }
 
-static void DoFinalGridding(const NFmiGriddingProperties &griddingProperties, const boost::shared_ptr<NFmiArea> &theArea, checkedVector<float> &theXValues, checkedVector<float> &theYValues, checkedVector<float> &theZValues, NFmiDataMatrix<float> &theValues)
+static void DoFinalGridding(const NFmiGriddingProperties &griddingProperties, const boost::shared_ptr<NFmiArea> &theArea, std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues, NFmiDataMatrix<float> &theValues)
 {
     auto stationRadiusRelative = static_cast<float>(NFmiGriddingProperties::ConvertLengthInKmToRelative(griddingProperties.rangeLimitInKm(), theArea.get()));
     auto_ptr<NFmiObsDataGridding> obsDataGridding(new NFmiObsDataGridding());
@@ -1640,13 +1684,13 @@ static void DoFinalGridding(const NFmiGriddingProperties &griddingProperties, co
 
 void NFmiStationView::GridStationData(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, const NFmiGriddingProperties &griddingProperties)
 {
-	checkedVector<float> xValues;
-	checkedVector<float> yValues;
-	checkedVector<float> zValues;
+	std::vector<float> xValues;
+	std::vector<float> yValues;
+	std::vector<float> zValues;
 
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
 	::MakeDrawedInfoVector(theGriddingHelper, theArea, infoVector, theDrawParam);
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> >::iterator iter = infoVector.begin();
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> >::iterator iter = infoVector.begin();
 	if(iter != infoVector.end())
 	{
 		NFmiIgnoreStationsData &ignorestationdata = theGriddingHelper->IgnoreStationsData();
@@ -1686,7 +1730,7 @@ public:
         :itsCtrlViewDocumentInterface(theCtrlViewDocumentInterface)
     {}
 
-    void MakeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override
+    void MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override
     {
         itsCtrlViewDocumentInterface->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
     }
@@ -1715,13 +1759,13 @@ void NFmiStationView::GridStationDataToMatrix(NFmiDataMatrix<float> &theValues, 
 
 void NFmiStationView::GridStationDataFromQ2(NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime)
 {
-	checkedVector<float> xValues;
-	checkedVector<float> yValues;
-	checkedVector<float> zValues;
+	std::vector<float> xValues;
+	std::vector<float> yValues;
+	std::vector<float> zValues;
 
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
 	MakeDrawedInfoVector(infoVector, itsDrawParam);
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> >::iterator iter = infoVector.begin();
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> >::iterator iter = infoVector.begin();
 	if(iter != infoVector.end())
 	{
 		NFmiIgnoreStationsData &ignorestationdata = itsCtrlViewDocumentInterface->IgnoreStationsData();
@@ -1785,7 +1829,7 @@ static string GetQ2ParamString(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 	return str;
 }
 
-static string GetQ2ParamString(checkedVector<FmiParameterName> &theWantedParamVector) 	
+static string GetQ2ParamString(std::vector<FmiParameterName> &theWantedParamVector) 	
 {
 	string str("paramId=");
 	for(size_t i = 0; i < theWantedParamVector.size(); i++)
@@ -1909,7 +1953,7 @@ static void GetSynopStationIds(const std::string &theExtraInfoStr, NFmiStationVi
 	}
 }
 
-static void SetSynopParamIds(NFmiStationView::ParamIdSeekContainer &theSynopPlotParamIndexies, checkedVector<FmiParameterName> &theWantedParamVector)
+static void SetSynopParamIds(NFmiStationView::ParamIdSeekContainer &theSynopPlotParamIndexies, std::vector<FmiParameterName> &theWantedParamVector)
 {
 	theSynopPlotParamIndexies.clear();
 	for(size_t i = 0; i < theWantedParamVector.size(); i++)
@@ -1921,7 +1965,7 @@ static void SetSynopParamIds(NFmiStationView::ParamIdSeekContainer &theSynopPlot
 // http://brainstormgw.fmi.fi/q2?requestType=stationData&paramId=4,1&producerId=1001&dataType=5&validTime=TODAY+3&projection=stereographic,25:21,62,27,66&maxDecimals=1
 // Lisäksi tooltippiä varten pitää tehdä haku (tehdään jos theStationId on eri kuin 0):
 // http://brainstormgw.fmi.fi/q2?requestType=stationData&paramId=4,1&producerId=1001&dataType=5&validTime=TODAY-12&stationId=2978,2929&maxDecimals=1
-bool NFmiStationView::GetQ2SynopData(unsigned long theStationId, checkedVector<FmiParameterName> theWantedParamVector)
+bool NFmiStationView::GetQ2SynopData(unsigned long theStationId, std::vector<FmiParameterName> theWantedParamVector)
 {
     auto &q2ServerInfo = itsCtrlViewDocumentInterface->GetQ2ServerInfo();
 	string urlStr = q2ServerInfo.Q2ServerURLStr();
@@ -2480,6 +2524,7 @@ void NFmiStationView::SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &t
 
 	DoTimeInterpolationSettingChecks(itsInfo);
 
+	if(itsDrawParam->ShowDifferenceToOriginalData() && itsDrawParam->DataType() == NFmiInfoData::kEditable)
 	{
 		//verrataan editdataa sittenkin vertailu dataan, jolloin voi ottaa 'valokuvia', ja vertailua voi suorittaa askel askeleelta
 		itsOriginalDataInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kCopyOfEdited);
@@ -2492,34 +2537,11 @@ void NFmiStationView::SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &t
 	}
 }
 
-void NFmiStationView::DrawText2(void)
-{	//  piirtää arvon sekä tekstinä että
-    // värillisenä ruutuna + piirtää kehyksen ruudun ympärille, jos piste
-    // on maskattu.
-    float value = ViewFloatValue();
-    if(value == kFloatMissing)
-        return;
-
-    NFmiString text(GetPrintedText(value));
-    if(text == NFmiString(""))
-        return;
-    NFmiRect rect(CurrentDataRect());
-    NFmiPoint place(rect.Center());
-    // pelkkä toolbox-alignmentti center (eikä mikään muukaan) vie tekstiä keskelle y-suunnassa, joten tämä siirros siirtää tekstin ihan keskelle
-    place.Y(place.Y() - itsToolBox->SY(static_cast<long>(itsDrawingEnvironment->GetFontSize().Y())) / 2.);
-
-    ModifyTextColor(value);
-
-    itsDrawingEnvironment->SetFrameColor(GetSymbolColor(value));
-    NFmiText tmp(place, text, 0, itsDrawingEnvironment);
-    itsToolBox->Convert(&tmp);
-}
-
 #ifdef min
 #undef min
 #endif
 
-static NFmiColor GetCustomClassColor(float value, boost::shared_ptr<NFmiDrawParam> &drawParam)
+static NFmiColor GetCustomClassColor(float value, const boost::shared_ptr<NFmiDrawParam> &drawParam)
 {
     const auto &classes = drawParam->SpecialIsoLineValues();
     const auto &colorIndices = drawParam->SpecialIsoLineColorIndexies();
@@ -2541,10 +2563,10 @@ static NFmiColor GetCustomClassColor(float value, boost::shared_ptr<NFmiDrawPara
     return NFmiColor();
 }
 
-NFmiColor NFmiStationView::GetColoredNumberColor(float theValue)
+NFmiColor NFmiStationView::GetColoredNumberColor(float theValue) const
 { 
     if(!itsDrawParam->UseSimpleIsoLineDefinitions())
-        return GetCustomClassColor(theValue, itsDrawParam);
+        return ::GetCustomClassColor(theValue, itsDrawParam);
 
 	NFmiColor color(0, 0, 0); // musta on default väri
 	float high = itsDrawParam->StationSymbolColorShadeHighValue();
@@ -2575,7 +2597,7 @@ NFmiColor NFmiStationView::GetColoredNumberColor(float theValue)
 	return color;
 }
 
-NFmiColor NFmiStationView::GetSymbolColor(float theValue)
+NFmiColor NFmiStationView::GetSymbolColor(float theValue) const
 {
     if(itsDrawParam->ShowColoredNumbers())	// Vaihtelevanväriset numerot tekstinäyttöön
         return GetColoredNumberColor(theValue);
@@ -2583,7 +2605,7 @@ NFmiColor NFmiStationView::GetSymbolColor(float theValue)
         return GetBasicParamRelatedSymbolColor(theValue);
 }
 
-NFmiColor NFmiStationView::GetBasicParamRelatedSymbolColor(float theValue)
+NFmiColor NFmiStationView::GetBasicParamRelatedSymbolColor(float theValue) const
 {
     return itsDrawParam->FrameColor();
 }
@@ -2624,7 +2646,7 @@ static double LaskeYSuoralla(double x, double x1, double x2, double y1, double y
 	return y;
 }
 
-NFmiPoint NFmiStationView::CalcFontSize(int theMinSize, int theMaxSize, bool fPrinting)
+NFmiPoint NFmiStationView::CalcFontSize(int theMinSize, int theMaxSize, bool fPrinting) const
 {
 	if(fPrinting)
 	{
@@ -2671,7 +2693,7 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::GetNearestQ2SynopStation(c
 		MakeDrawedInfoVector(); // joskus pitää varmistaa, että info vektor on rakennettu
 
 	// haetaan vain 2 ensimmäisestä datasta tooltip arvoja eli euro ja maailma datoista
-	checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > tempInfoVec;
+	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > tempInfoVec;
 	if(itsInfoVector.size() >= 1)
 		tempInfoVec.push_back(*itsInfoVector.begin());
 	if(itsInfoVector.size() >= 2)
@@ -2720,7 +2742,7 @@ float NFmiStationView::ToolTipValue(const NFmiPoint& theRelativePoint, boost::sh
 		SetMapViewSettings(info); // tämän voisi varmaan optimoida
 		PrepareForStationDraw(); // tämä pitää kutsua, että mm. parametrit on asetettu oikein itsInfo-olioon
 		itsNearestTooltipLocation = *(itsInfo->Location());
-		return ViewFloatValue();
+		return ViewFloatValue(true);
 	}
 }
 
@@ -2792,13 +2814,13 @@ void NFmiStationView::DrawControlPointData(void)
 					itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,1.f));
 				else
 					itsDrawingEnvironment->SetFrameColor(NFmiColor(0.3f,0.7f,0.2f));
-				NFmiText text1(textPoint, changeStr, 0, itsDrawingEnvironment);
+				NFmiText text1(textPoint, changeStr, false, 0, itsDrawingEnvironment);
 				FmiDirection oldAligment = itsToolBox->GetTextAlignment();
 				itsToolBox->SetTextAlignment((FmiDirection)(int(kBottomCenter) + 1000)); // + 1000 SUPERPIKAVIRITYS!!!!
 				itsToolBox->Convert(&text1);  // muutos teksti (+0.5)
 				textPoint.Y(textPoint.Y() + 0.6 * height);
 				itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-				NFmiText text2(textPoint, modifiedStr, 0, itsDrawingEnvironment);
+				NFmiText text2(textPoint, modifiedStr, false, 0, itsDrawingEnvironment);
 				itsToolBox->SetTextAlignment((FmiDirection)(int(kTopCenter) + 1000)); // + 1000 SUPERPIKAVIRITYS!!!!
 				itsToolBox->Convert(&text2); // tuleva arvo teksti (12.4)
 
@@ -2811,7 +2833,7 @@ void NFmiStationView::DrawControlPointData(void)
 					textPoint.Y(textPoint.Y() - 0.72 * height);
 					textPoint.X(textPoint.X() + 1.2 * height);
 					itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-					NFmiText text3(textPoint, indexStr, 0, itsDrawingEnvironment);
+					NFmiText text3(textPoint, indexStr, false, 0, itsDrawingEnvironment);
 					itsToolBox->Convert(&text3);
 				}
 				itsToolBox->SetTextAlignment(oldAligment);
@@ -2934,14 +2956,20 @@ std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<
 	else
 	{
 		usedInfo = itsInfo;
-		std::string str = GetToolTipValueStr(value, usedInfo, itsDrawParam);
-		str += " (crude) ";
-		str += GetPossibleMacroParamSymbolText(value, extraMacroParamData.SymbolTooltipFile());
-		str += ", ";
+		std::string str;
 		float cacheValue = GetMacroParamTooltipValueFromCache(extraMacroParamData);
-		str += GetToolTipValueStr(cacheValue, usedInfo, itsDrawParam);
-		str += " (cache) ";
-		str += GetPossibleMacroParamSymbolText(cacheValue, extraMacroParamData.SymbolTooltipFile());
+		if(cacheValue == g_MacroParamValueWasNotInCache)
+		{
+			str = GetToolTipValueStr(value, usedInfo, itsDrawParam);
+			str += " (crude) ";
+			str += GetPossibleMacroParamSymbolText(value, extraMacroParamData.SymbolTooltipFile());
+		}
+		else
+		{
+			str += GetToolTipValueStr(cacheValue, usedInfo, itsDrawParam);
+			str += " (cache) ";
+			str += GetPossibleMacroParamSymbolText(cacheValue, extraMacroParamData.SymbolTooltipFile());
+		}
 		str += MakeMacroParamDescriptionTooltipText(extraMacroParamData);
 		return str;
 	}
@@ -3010,7 +3038,7 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
                     if(fGetCurrentDataFromQ2Server == false) 
                     {
                         NFmiPoint latlon = itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
-                        auto usedTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(itsInfo, itsTime);
+                        auto usedTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(info, itsTime);
                         float interpValue = InterpolatedToolTipValue(usedTime, latlon, info);
                         str += " (intp: ";
                         str += Value2ToolTipString(interpValue, itsDrawParam->IsoLineLabelDigitCount(), itsDrawParam->Param().GetParam()->InterpolationMethod(), paramType);
@@ -3034,121 +3062,22 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
 	return str;
 }
 
-class SymbolTextMapping
-{
-    std::string totalFilePath_;
-    std::map<float, std::string> symbolTextMap_;
-    std::string initializationMessage_;
-public:
-    SymbolTextMapping() = default;
-
-    bool initialize(const std::string &totalFilePath)
-    {
-        return initialize_impl(totalFilePath);
-    }
-
-    bool wasInitializationOk() const
-    {
-        return initializationMessage_.empty();
-    }
-
-    std::string getSymbolText(float symbolValue) const
-    {
-        // Jos initialisointi on epäonnistunut, palautetaan sen virheilmoitus varoituksena, että tätä yritetään käyttää
-        if(!wasInitializationOk())
-            return initializationMessage_;
-        else
-        {
-            auto iter = symbolTextMap_.find(symbolValue);
-            if(iter != symbolTextMap_.end())
-                return iter->second;
-            else
-            {
-                if(symbolValue == kFloatMissing)
-                {
-                    static const std::string missingValueText = "missing value";
-                    return missingValueText;
-                }
-                else
-                {
-                    std::string errorText = "Value ";
-                    errorText += std::to_string(symbolValue);
-                    errorText += " was not found from mappings from file:\n";
-                    errorText += totalFilePath_;
-                    return errorText;
-                }
-            }
-        }
-    }
-
-private:
-    // Seuraavat line formaatit ovat ok:
-    // 1. key-value;string-value  ==> lineParts.size() == 2
-    // 2. key-value;string-value; (eli puolipiste on rivin lopussa)  ==> lineParts.size() == 3 and lineParts[2] on tyhjä stringi
-    void parseLine(const std::string &line)
-    {
-        auto strippedLine = line;
-        NFmiStringTools::TrimAll(strippedLine);
-        auto lineParts = NFmiStringTools::Split(strippedLine, ";");
-        if(lineParts.size() == 2 || (lineParts.size() == 3 && lineParts[2].empty()))
-        {
-            try
-            {
-                float value = std::stof(lineParts[0]);
-                symbolTextMap_.insert(std::make_pair(value, lineParts[1]));
-            }
-            catch(...)
-            { }
-        }
-    }
-
-    bool initialize_impl(const std::string &totalFilePath)
-    {
-        initializationMessage_.clear();
-        totalFilePath_ = totalFilePath;
-        symbolTextMap_.clear();
-        NFmiCommentStripper commentStripper;
-        if(commentStripper.ReadAndStripFile(totalFilePath_))
-        {
-            std::istringstream in(commentStripper.GetString());
-            std::string line;
-            do
-            {
-                std::getline(in, line);
-                parseLine(line);
-            } while(in);
-        }
-        else
-        {
-            initializationMessage_ = std::string("Unable to read symbol text mappings from file: ") + totalFilePath_;
-        }
-
-        return false;
-    }
-};
-
 std::string NFmiStationView::GetPossibleMacroParamSymbolText(float value, const std::string &possibleSymbolTooltipFile)
 {
-    if(!possibleSymbolTooltipFile.empty())
-    {
-        static std::map<std::string, SymbolTextMapping> symbolMappingsCache;
+	static NFmiSymbolTextMappingCache symbolMappingsCache;
 
-        std::string str = " (";
-        // Katsotaan löytyykö haluttu tiedosto jo luettuna cache:en
-        auto iter = symbolMappingsCache.find(possibleSymbolTooltipFile);
-        if(iter != symbolMappingsCache.end())
-            str += iter->second.getSymbolText(value);
-        else
-        {
-            // Jos ei löytynyt, luodaan uusi cache otus, alustetaan se ja palautetaan siitä haluttu arvo
-            auto iter = symbolMappingsCache.insert(std::make_pair(possibleSymbolTooltipFile, SymbolTextMapping()));
-            iter.first->second.initialize(possibleSymbolTooltipFile);
-            str += iter.first->second.getSymbolText(value);
-        }
-        str += ")";
-        return str;
-    }
-    return "";
+	auto str = symbolMappingsCache.getPossibleMacroParamSymbolText(value, possibleSymbolTooltipFile);
+	if(str.empty())
+		return str;
+	else
+	{
+		std::string decoratedStr = "(<b><font color=";
+		decoratedStr += CtrlViewUtils::Color2HtmlColorStr(NFmiColor(0, .75f, 0.2f));
+		decoratedStr += ">";
+		decoratedStr += str;
+		decoratedStr += "</font></b>)";
+		return decoratedStr;
+	}
 }
 
 void NFmiStationView::AddLatestObsInfoToString(std::string &tooltipString)
@@ -3217,7 +3146,8 @@ void NFmiStationView::SetupUsedDrawParam(void)
 {
 	if(itsDrawParam)
 	{
-		bool hide = itsDrawParam->IsParamHidden(); // Tämä hide/show pitää viritttää näin, koska parametrin piilotus/näyttö optio menee muuten hukkaan.
+		// Tämä hide/show pitää viritttää näin, koska parametrin piilotus/näyttö optio menee muuten hukkaan.
+		bool hide = itsDrawParam->IsParamHidden(); 
 		NFmiInfoData::Type dataType = itsDrawParam->DataType();
 		if(itsDrawParam->IsMacroParamCase(false))
 		{
@@ -3226,10 +3156,11 @@ void NFmiStationView::SetupUsedDrawParam(void)
             if(macroParamPtr)
 			{
 				itsDrawParam->Init(macroParamPtr->DrawParam());
-				itsDrawParam->DataType(dataType); // datatyypin pitää säilyä!! muuten poikkileikkausnäytössä ei tuleoikeaa tyyppiä
+				// datatyypin pitää säilyä!! muuten poikkileikkausnäytössä ei tule oikeaa tyyppiä
+				itsDrawParam->DataType(dataType); 
 			}
+			itsDrawParam->HideParam(hide);
 		}
-		itsDrawParam->HideParam(hide);
 	}
 }
 
@@ -3237,7 +3168,7 @@ void NFmiStationView::SetupUsedDrawParam(void)
 // viimeiset n kpl ei-puuttuvia arvoja aikoineen. Jos arvoja ei saada
 // kokoon ennen kuin theMaxTimeStepsBackWard lukema tulee vastaan, lopetetaan
 // ja palautetaan false. Jos onnistuu, palautetaan true.
-static bool GetValuesAndTimesFromBack(NFmiFastQueryInfo & theInfo, checkedVector<double> &theValues, checkedVector<NFmiMetTime> &theTimes, int theMaxTimeStepsBackWard, int theWantedValues)
+static bool GetValuesAndTimesFromBack(NFmiFastQueryInfo & theInfo, std::vector<double> &theValues, std::vector<NFmiMetTime> &theTimes, int theMaxTimeStepsBackWard, int theWantedValues)
 {
 	unsigned int oldTimeIndex = theInfo.TimeIndex();
 	theInfo.LastTime();
@@ -3273,7 +3204,7 @@ static bool GetValuesAndTimesFromBack(NFmiFastQueryInfo & theInfo, checkedVector
 
 // muuttaa kaikki ajat sopiviksi etäisyys kertoimiksi Lagrange funktiota varten.
 // theTimes-vektorin 1. aika on 0, theMapTime on 1, loput ajat lasketaan näiden suhteen
-static void ConvertTimesToDistanceFactors(checkedVector<NFmiMetTime> &theTimes, checkedVector<double> &theDistanceFactors, const NFmiMetTime &theMapTime, double &theMapTimeDistanceFactor)
+static void ConvertTimesToDistanceFactors(std::vector<NFmiMetTime> &theTimes, std::vector<double> &theDistanceFactors, const NFmiMetTime &theMapTime, double &theMapTimeDistanceFactor)
 {
 	theDistanceFactors[0] = 0.;
 	theMapTimeDistanceFactor = 1.;
@@ -3302,15 +3233,15 @@ static float GetObsComparisonValue(NFmiFastQueryInfo & theObsInfo, const NFmiObs
 		double maxMinutesBackWard = 12 * 60; // kuinka kauas kurkataan maksimissaan taaksepäin
 		double timeStepInMinutes = theObsInfo.TimeResolution();
         int maxTimeStepsBackWard = boost::math::iround(maxMinutesBackWard / timeStepInMinutes); // huom! oletus että havainnot tasavälein esim. 1h resoluutio
-		checkedVector<double> values(kWantedValuesCount);
-		checkedVector<NFmiMetTime> times(kWantedValuesCount);
+		std::vector<double> values(kWantedValuesCount);
+		std::vector<NFmiMetTime> times(kWantedValuesCount);
 		try
 		{
 			if(GetValuesAndTimesFromBack(theObsInfo, values, times, maxTimeStepsBackWard, kWantedValuesCount))
 			{
 				if(theMapTime.DifferenceInHours(times[kWantedValuesCount-1]) <= 6) // tuoreimman löydetyn havainnon pitää olla vähintään 6h etäisyydellä extrapoloitavasta ajasta
 				{
-					checkedVector<double> distanceFactors(kWantedValuesCount);
+					std::vector<double> distanceFactors(kWantedValuesCount);
 					double mapTimeDistanceFactor = 0;
 					ConvertTimesToDistanceFactors(times, distanceFactors, theMapTime, mapTimeDistanceFactor);
 
@@ -3380,7 +3311,7 @@ void NFmiStationView::DrawObsComparison(void)
 		const NFmiObsComparisonInfo::Param& tmpParam = obsComparisonInfo.GetParam(param);
 		if(tmpParam.itsId != kFmiBadParameter)
 		{
-			checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = itsCtrlViewDocumentInterface->GetSortedSynopInfoVector(kFmiSYNOP, kFmiTestBed, kFmiSHIP, kFmiBUOY);
+			std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = itsCtrlViewDocumentInterface->GetSortedSynopInfoVector(kFmiSYNOP, kFmiTestBed, kFmiSHIP, kFmiBUOY);
 			for(size_t i = 0; i<infoVector.size(); i++)
 			{
 				boost::shared_ptr<NFmiFastQueryInfo> &obsInfo = infoVector[i];
@@ -3524,12 +3455,12 @@ std::string NFmiStationView::GetCompareObservationToolTipString(boost::shared_pt
 	return str;
 }
 
-const NFmiPoint NFmiStationView::CurrentLatLon(void)
+const NFmiPoint NFmiStationView::CurrentLatLon() const
 {
     return CurrentLatLon(itsInfo);
 }
 
-const NFmiPoint NFmiStationView::CurrentLatLon(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+const NFmiPoint NFmiStationView::CurrentLatLon(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo) const
 {
 	if(fDoShipDataLocations)
         return theInfo->GetLatlonFromData();
@@ -3546,3 +3477,407 @@ bool NFmiStationView::IsAccessoryStationDataDrawn()
 {
     return itsCtrlViewDocumentInterface->Registry_ShowStationPlot(itsMapViewDescTopIndex) && IsActiveParam() && (IsSpecialMatrixDataDraw() == false);
 }
+
+// ******** Symbol-Bulk-Draw toimintojen alku *********
+
+// Tässä metodissa tehdään kaikki mahdolliset S-B-D asetukset, mitkä 
+// tehdään vain kerran ja ennen kuin datoja aletaan käydä läpi.
+void NFmiStationView::SbdDoFixedSymbolDrawSettings()
+{
+	itsSymbolBulkDrawData.relativePositionOffset(SbdCalcDrawObjectOffset());
+	itsSymbolBulkDrawData.isChangingSymbolColorsUsed(SbdIsChangingSymbolColorsUsed());
+	SbdGetStationDrawSettings();
+	SbdSetPossibleFixedSymbolColor();
+	SbdSetPossibleFixedSymbolSize();
+	SbdSetDrawType();
+	SbdSetFontName();
+	itsSymbolBulkDrawData.penSize(SbdCalcFixedPenSize());
+	itsSymbolBulkDrawData.printing(itsCtrlViewDocumentInterface->Printing());
+	itsSymbolBulkDrawData.mapViewSizeInPixels(itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex));
+}
+
+void NFmiStationView::SbdCollectSymbolDrawData(bool doStationPlotOnly)
+{
+	try
+	{
+		// Nämä haluttaisiin tehdä vain kerran, mutta koska monet asetukset vaativat 
+		// että itsInfo on jo asetettu, tämä joudutaan tekemään potentiaalisesti monen 
+		// fastInfon kanssa (synop data tapauksessa).
+		SbdDoFixedSymbolDrawSettings();
+
+		if(doStationPlotOnly)
+		{
+			// Tänne tullaan (doStationPlotOnly = true) kun piirretään isoviiva/contour juttuja
+			// ja silloin halutaan piirtää kaikki datan pisteet näkyviin.
+			SbdCollectNormalSymbolDrawData(doStationPlotOnly);
+		}
+		else if(IsSpaceOutDrawingUsed())
+		{
+			SbdCollectSpaceOutSymbolDrawData(doStationPlotOnly);
+		}
+		else
+		{
+			SbdCollectNormalSymbolDrawData(doStationPlotOnly);
+		}
+	}
+	catch(...)
+	{
+	}
+}
+
+void NFmiStationView::SbdCollectNormalSymbolDrawData(bool doStationPlotOnly)
+{
+	NFmiIgnoreStationsData& ignoreStationData = itsCtrlViewDocumentInterface->IgnoreStationsData();
+	for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
+	{
+		if(SbdIsInsideEnlargedDrawArea())
+		{
+			if(!::IsCurrentStationBlocked(itsInfo, ignoreStationData))
+			{
+				NFmiFastInfoUtils::SetSoundingDataLevel(itsDrawParam->Level(), *itsInfo); // Tämä tehdään vain luotaus datalle: tämä level pitää asettaa joka pisteelle erikseen, koska vakio painepinnat eivät ole kaikille luotaus parametreille samoilla leveleillä
+				SbdCollectStationData(doStationPlotOnly);
+			}
+		}
+	}
+}
+
+void NFmiStationView::SbdGetStationDrawSettings()
+{
+	itsSymbolBulkDrawData.drawStationPoint(IsAccessoryStationDataDrawn());
+	if(itsSymbolBulkDrawData.drawStationPoint())
+	{
+		itsSymbolBulkDrawData.stationPointColor(itsCtrlViewDocumentInterface->StationPointColor(itsMapViewDescTopIndex));
+		itsSymbolBulkDrawData.baseStationPointRect(SbdCalcBaseStationRelativeRect());
+	}
+}
+
+NFmiRect NFmiStationView::SbdCalcBaseStationRelativeRect()
+{
+	// Perus asemapisteen koon lasku
+	NFmiPoint pointSize(itsCtrlViewDocumentInterface->StationPointSize(itsMapViewDescTopIndex));
+	if(itsCtrlViewDocumentInterface->Printing())
+	{
+		// Mikä on näyttöruudulla olevan pikselin koko [mm]:ssä?
+		// Arvioidaan se karkeasti mittaamalla esimerkki näytöstä ja lasketaan sen avulla printtauksessa käytettyjen pikseleiden määrä.
+		const double monitorPixelHeightInMM = 0.2;
+		auto monitorPixelCount = pointSize.Y();
+		auto plotHeightInMM = monitorPixelCount * monitorPixelHeightInMM;
+		auto printerPixelCount = plotHeightInMM * GetGraphicalInfo().itsPixelsPerMM_y;
+		pointSize = NFmiPoint(printerPixelCount, printerPixelCount);
+	}
+	return NFmiRect(0, 0, itsToolBox->SX(static_cast<long>(pointSize.X())), itsToolBox->SY(static_cast<long>(pointSize.Y())));
+}
+
+// Symbolipiirto halutaan laajentaa hieman zoomatun kartta-alueen ulkopuolelle, jotta
+// pikkuisen zoomatun alueen ulkopuolelle olevien asemien/pisteiden arvoista saadaan jotain näkyviin.
+NFmiRect NFmiStationView::SbdCalcEnlargedDrawArea()
+{
+	NFmiRect enlargedRect = itsArea->XYArea();
+	const double fractionValue = 0.02;
+	enlargedRect.Inflate(enlargedRect.Width() * fractionValue, enlargedRect.Height() * fractionValue);
+	return enlargedRect;
+
+}
+
+bool NFmiStationView::SbdIsInsideEnlargedDrawArea() const
+{
+	return itsEnlargedDrawArea.IsInside(CurrentStationPosition());
+}
+
+void NFmiStationView::SbdCollectStationData(bool doStationPlotOnly, float overrideValue)
+{
+	itsSymbolBulkDrawData.addRelativeStationPointPosition(CurrentStationPosition());
+	if(!doStationPlotOnly)
+	{
+		float value = (overrideValue == kFloatMissing) ? ViewFloatValue(false) : overrideValue;
+		itsSymbolBulkDrawData.addValue(value);
+
+		// Jos arvo puuttuvaa, lisätään tekstiksi tyhjä stringi, jota ei piirretä.
+		// Puuttuvat on kuitenkin lisättävä listaan, koska mahdollinen asemapiste 
+		// piirretään myös puuttuvien arvojen kohdalle.
+		if(value == kFloatMissing)
+			itsSymbolBulkDrawData.addDrawnText(std::string(""));
+		else
+		{
+			NFmiString text(GetPrintedText(value));
+			itsSymbolBulkDrawData.addDrawnText(std::string(text));
+		}
+
+		itsSymbolBulkDrawData.addStationPointLatlons(CurrentLatLon());
+
+		if(itsSymbolBulkDrawData.isChangingSymbolColorsUsed())
+		{
+			// Vaihtelevan väriset numerot tekstipiirtoon
+			itsSymbolBulkDrawData.addColor(GetSymbolColor(value));
+		}
+
+		if(!SbdIsFixedSymbolSize())
+		{
+			// Symbolin arvosta riippuvan fontti koon lasku
+			itsSymbolBulkDrawData.addSymbolSize(SbdCalcChangingSymbolSize(value));
+		}
+	}
+}
+
+#ifdef max
+#undef max
+#undef min
+#endif max
+
+void NFmiStationView::SbdPeekSparseValue(int peekIndexX, int peekIndexY, const NFmiRect& peekRect, PeekSparseValueDistanceList& nonMissingValuesWithDistance)
+{
+	NFmiPoint peekIndexPoint(peekIndexX, peekIndexY);
+	if(peekRect.IsInside(peekIndexPoint))
+	{
+		auto oldLocationIndex = itsInfo->LocationIndex();
+		auto peekedLocationIndex = itsInfo->PeekLocationIndex(peekIndexX, peekIndexY);
+		if(itsInfo->LocationIndex(peekedLocationIndex))
+		{
+			auto value = ViewFloatValue(false);
+			if(value != kFloatMissing)
+			{
+				double distanceApproximation = peekIndexX * peekIndexX + peekIndexY * peekIndexY;
+				nonMissingValuesWithDistance.push_back(std::make_tuple(value, distanceApproximation, NFmiPoint(peekIndexX, peekIndexY)));
+			}
+		}
+		itsInfo->LocationIndex(oldLocationIndex);
+	}
+}
+
+static NFmiPoint CalcGridPoint(boost::shared_ptr<NFmiFastQueryInfo>& fastInfo)
+{
+	auto locationIndex = fastInfo->LocationIndex();
+	if(fastInfo->IsGrid())
+	{
+		long xIndex = locationIndex % fastInfo->GridXNumber();
+		long yIndex = locationIndex / fastInfo->GridXNumber();
+		return NFmiPoint(xIndex, yIndex);
+	}
+	else
+	{
+		return NFmiPoint(locationIndex, 1);
+	}
+}
+
+void NFmiStationView::SbdSearchForSparseSymbolDrawData(bool doStationPlotOnly, const NFmiRect& peekRect, SparseDataGrid& sparseDataGrid, int currentSkipColumn, int currentSkipLine)
+{
+	auto value = ViewFloatValue(false);
+	auto drawedGridPoint = ::CalcGridPoint(itsInfo);
+	if(value == kFloatMissing)
+	{
+		// piirtopisteestä ei löytynyt arvoa, sitten etsitään ei-puuttuvaa arvoa 
+		// hakualihilasta kunnes sellainen löytyy.
+		int maxIndex = std::max(int(peekRect.Right()), int(peekRect.Bottom()));
+		// Käydään etsintäalihila läpi sisimmästä 'renkaasta' uloimpaan eli alkaen 1:stä. 0,0 -pistettä ei tarvitse käydä enää läpi.
+		for(int ringIndex = 1; ringIndex <= maxIndex; ringIndex++)
+		{
+			PeekSparseValueDistanceList nonMissingValuesWithDistance;
+			// Kierretään kukin 'rengas' läpi alkaen vasen-alakulmasta vastapäivään.
+			// Käydään koko rengas läpi ja katsotaan löytyikö ei puuttuvia arvoja. 
+			// Katsotaan vielä mikä piste (jos ei-puuttuvia oli useassa pisteessä) oli lähimpänä keskipistettä ja valitaan sen arvo.
+			for(int index = -ringIndex; index <= ringIndex; index++)
+			{
+				// Alareuna tapaus
+				SbdPeekSparseValue(index, -ringIndex, peekRect, nonMissingValuesWithDistance);
+				// Yläreuna tapaus
+				SbdPeekSparseValue(index, ringIndex, peekRect, nonMissingValuesWithDistance);
+				// Kulmatapauksia ei tarvitse käydä läpi kahdesti
+				if(index != -ringIndex && index != ringIndex)
+				{
+					// Vasen reuna tapaus
+					SbdPeekSparseValue(-ringIndex, index, peekRect, nonMissingValuesWithDistance);
+					// Oikea reuna tapaus
+					SbdPeekSparseValue(ringIndex, index, peekRect, nonMissingValuesWithDistance);
+				}
+			}
+			if(!nonMissingValuesWithDistance.empty())
+			{
+				nonMissingValuesWithDistance.sort([](const auto& valueDist1, const auto& valueDist2) {return std::get<1>(valueDist1) < std::get<1>(valueDist2); });
+				auto minDistance = std::get<1>(nonMissingValuesWithDistance.front());
+				auto value = std::get<0>(nonMissingValuesWithDistance.front());
+				std::list<NFmiPoint> peekIndexList;
+				for(const auto& tupleValue : nonMissingValuesWithDistance)
+				{
+					if(minDistance >= std::get<1>(tupleValue))
+						peekIndexList.push_back(std::get<2>(tupleValue));
+				}
+				SparseData sparseData(value, drawedGridPoint, peekIndexList, itsInfo->LocationIndex());
+				sparseDataGrid.setData(currentSkipColumn, currentSkipLine, sparseData);
+				return;
+			}
+		}
+	}
+
+	// Ei löytynyt arvoja alihilasta, laitetaan puuttuvan arvon tietoja sitten datapakettiin (tarvitaan ainakin station point piirroissa)
+	std::list<NFmiPoint> peekIndexList{ NFmiPoint(0, 0) };
+	SparseData sparseData(value, drawedGridPoint, peekIndexList, itsInfo->LocationIndex());
+	sparseDataGrid.setData(currentSkipColumn, currentSkipLine, sparseData);
+}
+
+NFmiPoint NFmiStationView::SbdCalcDrawObjectOffset() const
+{
+	NFmiPoint offset = CurrentDataRect().Center();
+	// CurrentDataRect:issa on mukana symbolipiirtoon liittyvät offsetit.
+	offset -= CurrentStationPosition();
+
+	// Seuraava vertikaalisuunnassa tehtävä korjaus voidaan tehdä vain vakio kokoiselle tekstisymbolille.
+	// Muuttuva kokoinen tekstisymboli pitää korjata erikseen symbolikohtaisesti piirrossa.
+	if(SbdIsFixedSymbolSize())
+	{
+		// Normi tekstille pelkkä toolbox-alignmentti center (eikä mikään muukaan) vie tekstiä 
+		// keskelle y-suunnassa, joten tämä siirros siirtää tekstin ihan keskelle
+		auto moveInY = itsToolBox->SY(boost::math::iround(SbdCalcFixedSymbolSize().Y()/2.f));
+		offset.Y(offset.Y() - moveInY);
+	}
+	return offset;
+}
+
+void NFmiStationView::SbdSetPossibleFixedSymbolColor()
+{
+	if(!itsSymbolBulkDrawData.isChangingSymbolColorsUsed())
+		itsSymbolBulkDrawData.setColor(itsDrawParam->FrameColor());
+}
+
+bool NFmiStationView::SbdIsChangingSymbolColorsUsed() const
+{
+	auto symbolColorChangingType = SbdGetSymbolColorChangingType();
+	if(symbolColorChangingType == NFmiSymbolColorChangingType::Never)
+		return false;
+	else if(itsDrawParam->ShowColoredNumbers())
+		return true;
+	else if(symbolColorChangingType == NFmiSymbolColorChangingType::Mixed)
+		return true;
+	else
+		return false;
+}
+
+bool NFmiStationView::SbdIsFixedSymbolSize() const
+{
+	return true;
+}
+
+NFmiPoint NFmiStationView::SbdCalcFixedSymbolSize() const
+{
+	// Tämä emoluokan toteutus on dummy, palautetaan iso luku, niin mahd. bugit on helpompi huomata.
+	return NFmiPoint(100, 100);
+}
+
+NFmiPoint NFmiStationView::SbdCalcFixedRelativeDrawObjectSize() const
+{
+	return CurrentDataRect().Size();
+}
+
+int NFmiStationView::SbdCalcFixedPenSize() const
+{
+	// Oletus on aina 1:n kokoinen pen size, ei ruveta laittamaan sekopäisiä arvoja.
+	// Tätä arvoa käytetään lähinnä tuulinuoli ja windbarb piirroissa
+	return 1;
+}
+
+NFmiPoint NFmiStationView::SbdCalcChangingSymbolSize(float value) const
+{
+	// Tämä emoluokan toteutus on dummy, palautetaan vain fiksattu fontti koko.
+	return SbdCalcFixedSymbolSize();
+}
+
+void NFmiStationView::SbdSetPossibleFixedSymbolSize()
+{
+	if(SbdIsFixedSymbolSize())
+	{
+		itsSymbolBulkDrawData.setSymbolSize(SbdCalcFixedSymbolSize());
+	}
+
+	itsSymbolBulkDrawData.relativeDrawObjectSize(SbdCalcFixedRelativeDrawObjectSize());
+}
+
+NFmiPoint NFmiStationView::SbdBasicSymbolSizeCalculation(int minSize, int maxSize) const
+{
+	auto fontSize = CalcFontSize(minSize, boost::math::iround(MaximumFontSizeFactor() * maxSize), itsCtrlViewDocumentInterface->Printing()).Y();
+	return NFmiPoint(fontSize, fontSize);
+}
+
+void NFmiStationView::SbdSetDrawType()
+{
+	itsSymbolBulkDrawData.drawType(SbdGetDrawType());
+}
+
+NFmiSymbolBulkDrawType NFmiStationView::SbdGetDrawType() const
+{
+	return NFmiSymbolBulkDrawType::Text;
+}
+
+NFmiColor NFmiStationView::SbdGetChangingColor(float value) const
+{
+	return GetSymbolColor(value);
+}
+
+// Jotkut symbolit piirretään monivärisinä ja jotkut ei. Tämän tyypin 
+// perusteella voidaan päätellä symbolityypin tapaukset erikseen ja lopullinen
+// värien käyttö päätellä SbdIsChangingSymbolColorsUsed metodissa.
+NFmiSymbolColorChangingType NFmiStationView::SbdGetSymbolColorChangingType() const
+{
+	return NFmiSymbolColorChangingType::DrawParamSet;
+}
+ 
+void NFmiStationView::SbdSetFontName()
+{
+	itsSymbolBulkDrawData.fontName(L"Arial");
+}
+
+void NFmiStationView::SbdDoImageBasedSymbolDraw()
+{
+	try
+	{
+		// Varmistetaan itsGdiPlusGraphics:in alustus
+		if(itsGdiPlusGraphics == nullptr)
+			InitializeGdiplus(itsToolBox, &itsRect);
+		GdiplusStationBulkDraw::Draw(itsSymbolBulkDrawData, itsGdiPlusGraphics, *itsToolBox);
+	}
+	catch(std::exception &e)
+	{
+		std::string errorMessage = "Error in ";
+		errorMessage += __FUNCTION__;
+		errorMessage += " : ";
+		errorMessage += e.what();
+		CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::Visualization, true);
+	}
+	catch(...)
+	{
+		std::string errorMessage = "Unknown error in ";
+		errorMessage += __FUNCTION__;
+		CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::Visualization, true);
+	}
+	CleanGdiplus();
+	// Image pohjaisille symboleille pitää piirtää erikseen asemapisteet jos niin säädetty.
+	if(itsSymbolBulkDrawData.drawStationPoint())
+		itsToolBox->DoSymbolBulkDraw(itsSymbolBulkDrawData, true);
+}
+
+void NFmiStationView::SbdDoSymbolDraw(bool doStationPlotOnly)
+{
+	if(doStationPlotOnly)
+		itsToolBox->DoSymbolBulkDraw(itsSymbolBulkDrawData, true);
+	else if(itsSymbolBulkDrawData.isDataOk())
+	{
+		if(itsSymbolBulkDrawData.hasAnyData())
+		{
+			if(itsSymbolBulkDrawData.drawType() < NFmiSymbolBulkDrawType::BitmapSymbol1)
+			{
+				itsToolBox->DoSymbolBulkDraw(itsSymbolBulkDrawData, doStationPlotOnly);
+			}
+			else
+			{
+				SbdDoImageBasedSymbolDraw();
+			}
+		}
+	}
+	else
+	{
+		std::string errorMessage = __FUNCTION__;
+		errorMessage += " had error with SymbolBulkDrawData: ";
+		errorMessage += itsSymbolBulkDrawData.errorMessage();
+		CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::Visualization, true);
+	}
+}
+
+// ******** Symbol-Bulk-Draw toimintojen loppu *********

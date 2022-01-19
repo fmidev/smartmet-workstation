@@ -40,14 +40,14 @@ class NFmiUndoableMultiLevelMask
   NFmiUndoableMultiLevelMask(unsigned long theSize = 32);
   NFmiUndoableMultiLevelMask(const NFmiUndoableMultiLevelMask& theMask);
   NFmiUndoableMultiLevelMask& operator=(const NFmiUndoableMultiLevelMask& theMask);
-  ~NFmiUndoableMultiLevelMask(void);
-  NFmiMultiLevelMask* operator->(void) { return itsMultiLevelMask; };
-  operator NFmiMultiLevelMask*(void) { return itsMultiLevelMask; };
-  bool SnapShotData(void);  // ota maskit talteen
-  bool Undo(void);          // kysyy onko undo mahdollinen
-  bool Redo(void);          // kysyy onko redo mahdollinen
-  bool UndoData(void);      // suorittaa todellisen undon
-  bool RedoData(void);      // suorittaa todellisen redon
+  ~NFmiUndoableMultiLevelMask();
+  NFmiMultiLevelMask* operator->() { return itsMultiLevelMask; };
+  operator NFmiMultiLevelMask*() { return itsMultiLevelMask; };
+  bool SnapShotData();  // ota maskit talteen
+  bool Undo();          // kysyy onko undo mahdollinen
+  bool Redo();          // kysyy onko redo mahdollinen
+  bool UndoData();      // suorittaa todellisen undon
+  bool RedoData();      // suorittaa todellisen redon
 
   // HUOM! ei toimi aivan oikein, jos undoleveliksi annetaan 5, on todellinen undo
   // mahdollista vain 4 kertaa. En jaksa nyt ihmetellä sitä nyt (T:Marko).
@@ -56,7 +56,7 @@ class NFmiUndoableMultiLevelMask
   const NFmiBitMask& Mask(unsigned long theMaskType) const;
 
  private:
-  void RearrangeUndoTable(void);
+  void RearrangeUndoTable();
 
   NFmiMultiLevelMask* itsMultiLevelMask;  // oikeastaan masterpointer, koska data tuhotaan
   NFmiPtrList<NFmiMultiLevelMask> itsUndoList;

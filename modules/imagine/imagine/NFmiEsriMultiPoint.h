@@ -21,7 +21,7 @@
 
 namespace Imagine
 {
-class _FMI_DLL NFmiEsriMultiPoint : public NFmiEsriElement
+class NFmiEsriMultiPoint : public NFmiEsriElement
 {
  public:
   // Constructors, destructors

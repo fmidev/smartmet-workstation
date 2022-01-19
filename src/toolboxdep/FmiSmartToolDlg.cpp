@@ -99,6 +99,7 @@ void CFmiSmartToolDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Check(pDX, IDC_CHECK_Q3_MACRO, fQ3Macro);
     DDX_Radio(pDX, IDC_RADIO_VIEWMACRO_SELECTED_MAP1, itsSelectedMapViewDescTopIndex);
     DDX_Control(pDX, IDC_EDIT_SPEED_SEARCH_MACRO_CONTROL, itsSpeedSearchMacroControl);
+    DDX_Control(pDX, IDC_EDIT_SPEED_SEARCH_MACRO_PARAM_CONTROL, itsSpeedSearchMacroParamControl);
     DDX_Text(pDX, IDC_STATIC_LOADED_SMARTTOOL_PATH_TEXT, itsLoadedSmarttoolMacroPathU_);
     DDX_Text(pDX, IDC_STATIC_LOADED_MACRO_PARAM_TEXT, itsLoadedMacroParamPathTextU_);
     DDX_Check(pDX, IDC_CHECK_SHOW_TOOLTIP_ON_SMARTTOOL_DIALOG, fShowTooltipsOnSmarttoolDialog);
@@ -145,7 +146,8 @@ BEGIN_MESSAGE_MAP(CFmiSmartToolDlg, CDialog)
     ON_MESSAGE(WM_USER_GUS_ICONEDIT_CLICK_SEARCH_LIST, &CFmiSmartToolDlg::OnGUSIconEditSearchListClicked)
     ON_COMMAND(ID_SEARCHOPTION_CASESENSITIVE, &CFmiSmartToolDlg::OnSearchOptionCaseSesensitive)
     ON_COMMAND(ID_SEARCHOPTION_MATCHANYWHERE, &CFmiSmartToolDlg::OnSearchOptionMatchAnywhere)
-    ON_EN_CHANGE(IDC_EDIT_SPEED_SEARCH_MACRO_CONTROL, &CFmiSmartToolDlg::OnEnChangeEditSpeedSearchViewMacro)
+    ON_EN_CHANGE(IDC_EDIT_SPEED_SEARCH_MACRO_CONTROL, &CFmiSmartToolDlg::OnEnChangeEditSpeedSearchMacro)
+    ON_EN_CHANGE(IDC_EDIT_SPEED_SEARCH_MACRO_PARAM_CONTROL, &CFmiSmartToolDlg::OnEnChangeEditSpeedSearchMacroParam)
     ON_WM_SIZE()
     ON_WM_CTLCOLOR()
     ON_BN_CLICKED(IDC_BUTTON_MACRO_PARAM_SAVE, &CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave)
@@ -180,8 +182,8 @@ BOOL CFmiSmartToolDlg::OnInitDialog()
 	itsMacroParamDataGridSizeX = static_cast<int>(gridSize.X());
 	itsMacroParamDataGridSizeY = static_cast<int>(gridSize.Y());
     UpdateLoadedSmarttoolMacroPathString();
-    InitSpeedSearchControl();
-    ResetSearchResource();
+    InitSpeedSearchControls();
+    ResetSpeedSearchResources(true, false);
     DisableActionButtomIfInViewMode();
     EnableSaveButtons();
     InitTooltipControl();
@@ -251,6 +253,7 @@ void CFmiSmartToolDlg::InitTooltipControl()
     SetDialogControlTooltip(IDC_BUTTON_ACTION, "Will execute current Macro text to edited data");
     SetDialogControlTooltip(IDC_CHECK_MODIFY_ONLY_SELECTED_LOCATIONS, "Modify only selected locations setting.\nIf checked, and current Macro text is executed on edited data,\nwill do modifications only on selected grid points.\nOtherwise all edited data grid points are modified.");
     SetDialogControlTooltip(IDC_EDIT_SPEED_SEARCH_MACRO_CONTROL, "Speed search smarttools");
+    SetDialogControlTooltip(IDC_EDIT_SPEED_SEARCH_MACRO_PARAM_CONTROL, "Speed search macroParams");
     SetDialogControlTooltip(IDC_STATIC_LOADED_SMARTTOOL_PATH_TEXT, "Last loaded or saved smarttool's path.\nThis will be cleared if any macro-params are loaded or saved in between.\n(Clearing is meant to help users with this dual-purpose dialog with mixed smarttool and macro-param handling)");
 
     std::string dbCheckerString = "\nDBChecker means \"Send edited data to Database checker\"\nThis is smarttool script that can be set to be automatically do wanted checks before data is actually sent.";
@@ -591,11 +594,12 @@ void CFmiSmartToolDlg::DoResizerHooking(void)
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_EDIT_SPEED_SEARCH_MACRO_CONTROL, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
     ASSERT(bOk == TRUE);
+    bOk = m_resizer.SetAnchor(IDC_EDIT_SPEED_SEARCH_MACRO_PARAM_CONTROL, ANCHOR_BOTTOM | ANCHOR_HORIZONTALLY);
+    ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_STATIC_LOADED_SMARTTOOL_PATH_TEXT, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_STATIC_LOADED_MACRO_PARAM_TEXT, ANCHOR_BOTTOM | ANCHOR_HORIZONTALLY);
     ASSERT(bOk == TRUE);
-
 }
 
 void CFmiSmartToolDlg::SetDefaultValues(void)
@@ -826,7 +830,7 @@ void CFmiSmartToolDlg::OnButtonSmartToolSaveAs()
         if(itsSmartToolInfo->SaveScript(filePath))
         {
             CatLog::logMessage(string("Saved smartTool: ") + string(filePath), CatLog::Severity::Info, CatLog::Category::Macro);
-            ResetSearchResource();
+            ResetSpeedSearchResources(true, false);
             UpdateLoadedSmarttoolMacroPathString();
         }
         else
@@ -1102,6 +1106,29 @@ NFmiInfoData::Type CFmiSmartToolDlg::GetUsedMacroParamType()
 #undef max
 #endif
 
+void CFmiSmartToolDlg::UpdateMacroParamDisplayListAfterSpeedLoad()
+{
+    itsMacroParamList.ResetContent();
+    auto& mpSystem = itsSmartMetDocumentInterface->MacroParamSystem();
+    boost::shared_ptr<NFmiMacroParamFolder> currentFolder = mpSystem.GetCurrentFolder();
+    if(currentFolder)
+    {
+        currentFolder->RefreshMacroParams(); // t‰ss‰ p‰ivitet‰‰n vain smartTool-dialogin k‰ytt‰m‰ current-hakemisto, mutta ei esim. pop-up valikoiden k‰ytt‰m‰‰ puu rakennetta
+        std::vector<std::string> stringVector(currentFolder->GetDialogListStrings(this->fQ3Macro == TRUE));
+        std::vector<std::string>::iterator it = stringVector.begin();
+        for(; it != stringVector.end(); ++it)
+        {
+            itsMacroParamList.AddString(CA2T((*it).c_str()));
+        }
+        auto selectedMacroName = currentFolder->Current()->Name();
+        auto selectedNameIndex = itsMacroParamList.FindStringExact(0, CA2T(selectedMacroName.c_str()));
+        if(selectedNameIndex == LB_ERR)
+            itsMacroParamList.SetCurSel(currentFolder->CurrentIndex());
+        else
+            itsMacroParamList.SetCurSel(selectedNameIndex);
+    }
+}
+
 void CFmiSmartToolDlg::UpdateMacroParamDisplayList(bool fForceThreadUpdate)
 {
 	int currentSelection = itsMacroParamList.GetCurSel();
@@ -1129,6 +1156,7 @@ void CFmiSmartToolDlg::UpdateMacroParamDisplayList(bool fForceThreadUpdate)
 		CFmiMacroParamUpdateThread::ForceUpdate(); // t‰m‰ pakottaa ett‰ myˆs pop-up valikoiden k‰ytt‰m‰‰ puu rakennetta p‰ivitet‰‰n
         itsSmartMetDocumentInterface->UpdateParameterSelectionSystem();
     }
+    ResetSpeedSearchResources(false, true);
 }
 
 std::string CFmiSmartToolDlg::GetSelectedMacroParamName() const
@@ -1283,17 +1311,34 @@ std::string CFmiSmartToolDlg::GetMacroParamFilePath(NFmiMacroParamSystem &theMac
 void CFmiSmartToolDlg::OnLbnSelchangeListParamMacros()
 {
     auto macroParamName = GetSelectedMacroParamName();
-    if(!macroParamName.empty())
-    {
-		NFmiMacroParamSystem& mpSystem = itsSmartMetDocumentInterface->MacroParamSystem();
-		if(mpSystem.FindMacroFromCurrentFolder(macroParamName))
-		{
-            LoadFormulaFromMacroParam();
-		}
-	}
-	itsSmartToolInfo->CurrentScript(GetSmarttoolFormulaText()); // p‰ivitet‰‰n myˆs currentiksi macro-tekstiksi
+    DoMacroParamLoad(macroParamName, false);
+}
 
-	UpdateData(FALSE);
+void CFmiSmartToolDlg::DoMacroParamLoad(const std::string& theMacroParamName, bool fDoSpeedLoad)
+{
+    if(!theMacroParamName.empty())
+    {
+        NFmiMacroParamSystem& mpSystem = itsSmartMetDocumentInterface->MacroParamSystem();
+        bool macroParamFound = false;
+        if(fDoSpeedLoad)
+        {
+            macroParamFound = mpSystem.FindMacroParamPath(theMacroParamName);
+            if(macroParamFound)
+            {
+                UpdateMacroParamDisplayListAfterSpeedLoad();
+            }
+        }
+        else
+            macroParamFound = mpSystem.FindMacroFromCurrentFolder(theMacroParamName);
+
+        if(macroParamFound)
+        {
+            LoadFormulaFromMacroParam();
+            itsSmartToolInfo->CurrentScript(GetSmarttoolFormulaText()); // p‰ivitet‰‰n myˆs currentiksi macro-tekstiksi
+        }
+    }
+
+    UpdateData(FALSE);
 }
 
 void CFmiSmartToolDlg::OnLbnDblclkListParamMacros()
@@ -1327,7 +1372,7 @@ void CFmiSmartToolDlg::OnBnClickedButtonSmartToolRemove()
 
 	if(dlg.DoModal() == IDOK)
 	{
-        ResetSearchResource();
+        ResetSpeedSearchResources(true, false);
         bool status = itsSmartToolInfo->LoadScript(dlg.SelectedScriptName());
 		if(status)
 		{
@@ -1384,7 +1429,6 @@ void CFmiSmartToolDlg::OnBnClickedButtonRemoveAllFromRow5()
 
 void CFmiSmartToolDlg::OnBnClickedButtonMacroParamRefreshList()
 {
-    ResetSearchResource();
     auto& macroParamSystem = itsSmartMetDocumentInterface->MacroParamSystem();
     // Varmistetaan ett‰ root kansio on alustettu tai ett‰ edes se on 'valittuna', jos tausta-threadissa 
     // tehty MacroParamSystem olion alustus on jotenkin estynyt tai mennyt pieleen.
@@ -1505,6 +1549,16 @@ void CFmiSmartToolDlg::UpdateLoadedMacroParamPathString()
     }
 }
 
+static void DoSpeedSearchPopup(CWnd *view, CGUSIconEdit &speedSearchControl, CMenu &speedSearchControlMenu, BOOL searchOptionCaseSensitive, BOOL searchOptionMatchAnywhere)
+{
+    CRect rcEdit;
+    speedSearchControl.GetWindowRect(&rcEdit);
+
+    CMenu* pMenu = speedSearchControlMenu.GetSubMenu(0);
+    pMenu->CheckMenuItem(ID_SEARCHOPTION_CASESENSITIVE, searchOptionCaseSensitive ? MF_CHECKED : MF_UNCHECKED);
+    pMenu->CheckMenuItem(ID_SEARCHOPTION_MATCHANYWHERE, searchOptionMatchAnywhere ? MF_CHECKED : MF_UNCHECKED);
+    pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON, rcEdit.left, rcEdit.bottom, view);
+}
 
 LRESULT CFmiSmartToolDlg::OnGUSIconEditLeftIconClicked(WPARAM wParam, LPARAM lParam)
 {
@@ -1512,26 +1566,27 @@ LRESULT CFmiSmartToolDlg::OnGUSIconEditLeftIconClicked(WPARAM wParam, LPARAM lPa
 
     int nCtrlId = (int)wParam;
     if(IDC_EDIT_SPEED_SEARCH_MACRO_CONTROL == nCtrlId)
-    {
-        itsSpeedSearchMacroControl.GetWindowRect(&rcEdit);
-
-        CMenu* pMenu = itsSpeedSearchMacroControlMenu.GetSubMenu(0);
-        pMenu->CheckMenuItem(ID_SEARCHOPTION_CASESENSITIVE, fSearchOptionCaseSensitive ? MF_CHECKED : MF_UNCHECKED);
-        pMenu->CheckMenuItem(ID_SEARCHOPTION_MATCHANYWHERE, fSearchOptionMatchAnywhere ? MF_CHECKED : MF_UNCHECKED);
-        pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON, rcEdit.left, rcEdit.bottom, this);
-    }
+        ::DoSpeedSearchPopup(this, itsSpeedSearchMacroControl, itsSpeedSearchMacroControlMenu, fSearchOptionCaseSensitive, fSearchOptionMatchAnywhere);
+    else if(IDC_EDIT_SPEED_SEARCH_MACRO_PARAM_CONTROL == nCtrlId)
+        ::DoSpeedSearchPopup(this, itsSpeedSearchMacroParamControl, itsSpeedSearchMacroControlMenu, fSearchOptionCaseSensitive, fSearchOptionMatchAnywhere);
 
     return 1;
 }
+
+static void ClearSpeedSearchControl(CGUSIconEdit& speedSearchControl)
+{
+    if(speedSearchControl.GetEditTextLength() > 0)
+        speedSearchControl.ClearEditText();
+}
+
 
 LRESULT CFmiSmartToolDlg::OnGUSIconEditRightIconClicked(WPARAM wParam, LPARAM lParam)
 {
     int nCtrlId = (int)wParam;
     if(IDC_EDIT_SPEED_SEARCH_MACRO_CONTROL == nCtrlId)
-    {
-        if(itsSpeedSearchMacroControl.GetEditTextLength() > 0)
-            itsSpeedSearchMacroControl.ClearEditText();
-    }
+        ::ClearSpeedSearchControl(itsSpeedSearchMacroControl);
+    else if(IDC_EDIT_SPEED_SEARCH_MACRO_PARAM_CONTROL == nCtrlId)
+        ::ClearSpeedSearchControl(itsSpeedSearchMacroParamControl);
 
     return 1;
 }
@@ -1543,6 +1598,13 @@ LRESULT CFmiSmartToolDlg::OnGUSIconEditSearchListClicked(WPARAM wParam, LPARAM l
     {
         std::string selectedMacroName = CT2A(itsSpeedSearchMacroControl.GetSelectedString());
         DoSmartToolLoad(selectedMacroName, true);
+        itsSpeedSearchMacroParamControl.ClearEditText();
+    }
+    else if(IDC_EDIT_SPEED_SEARCH_MACRO_PARAM_CONTROL == nCtrlId)
+    {
+        std::string selectedMacroParamName = CT2A(itsSpeedSearchMacroParamControl.GetSelectedString());
+        DoMacroParamLoad(selectedMacroParamName, true);
+        itsSpeedSearchMacroControl.ClearEditText();
     }
 
     return 1;
@@ -1552,43 +1614,63 @@ void CFmiSmartToolDlg::OnSearchOptionCaseSesensitive()
 {
     fSearchOptionCaseSensitive = !fSearchOptionCaseSensitive;
     itsSpeedSearchMacroControl.SetSearchCaseSense(fSearchOptionCaseSensitive);
+    itsSpeedSearchMacroParamControl.SetSearchCaseSense(fSearchOptionCaseSensitive);
 }
 
 void CFmiSmartToolDlg::OnSearchOptionMatchAnywhere()
 {
     fSearchOptionMatchAnywhere = !fSearchOptionMatchAnywhere;
     itsSpeedSearchMacroControl.SetSearchAnywhere(fSearchOptionMatchAnywhere);
+    itsSpeedSearchMacroParamControl.SetSearchAnywhere(fSearchOptionMatchAnywhere);
 }
 
-
-void CFmiSmartToolDlg::OnEnChangeEditSpeedSearchViewMacro()
+static void DoEnChangeForSpeedSearchControl(CGUSIconEdit& speedSearchControl)
 {
-    if(itsSpeedSearchMacroControl.GetResultsCount() > 0)
+    if(speedSearchControl.GetResultsCount() > 0)
     {
-        itsSpeedSearchMacroControl.SetTextColor(RGB(0, 0, 0));
+        speedSearchControl.SetTextColor(RGB(0, 0, 0));
     }
     else
     {
-        itsSpeedSearchMacroControl.SetTextColor(RGB(255, 0, 0));
+        speedSearchControl.SetTextColor(RGB(255, 0, 0));
     }
 }
 
-void CFmiSmartToolDlg::ResetSearchResource()
+void CFmiSmartToolDlg::OnEnChangeEditSpeedSearchMacro()
 {
-    // Add data source from ViewMacroSystem
-    itsSpeedSearchMacroControl.RemoveAll();
-    const std::vector<std::string> smarttoolNames = itsSmartMetDocumentInterface->SmartToolFileNames(true);
-
-    for(const auto &name : smarttoolNames)
-        itsSpeedSearchMacroControl.AddSearchString(CA2T(name.c_str()));
+    ::DoEnChangeForSpeedSearchControl(itsSpeedSearchMacroControl);
 }
 
-void CFmiSmartToolDlg::InitSpeedSearchControl()
+void CFmiSmartToolDlg::OnEnChangeEditSpeedSearchMacroParam()
+{
+    ::DoEnChangeForSpeedSearchControl(itsSpeedSearchMacroParamControl);
+}
+
+static void ResetSpeedSearchResourcesForControl(CGUSIconEdit& speedSearchControl, const std::vector<std::string> &macroNames)
+{
+    speedSearchControl.RemoveAll();
+    for(const auto& name : macroNames)
+        speedSearchControl.AddSearchString(CA2T(name.c_str()));
+}
+
+void CFmiSmartToolDlg::ResetSpeedSearchResources(bool doSmartTools, bool doMacroParams)
+{
+    if(doSmartTools)
+    {
+        ::ResetSpeedSearchResourcesForControl(itsSpeedSearchMacroControl, itsSmartMetDocumentInterface->SmartToolFileNames(true));
+    }
+    if(doMacroParams)
+    {
+        ::ResetSpeedSearchResourcesForControl(itsSpeedSearchMacroParamControl, itsSmartMetDocumentInterface->MacroParamSystem().MacroParamSpeedSearchPathNames(true));
+    }
+}
+
+static void InitSpeedSearchControl(CGUSIconEdit& speedSearchControl, const std::string& startingText, BOOL searchOptionCaseSensitive, BOOL searchOptionMatchAnywhere)
 {
     // Init the first edit.
     // We just use default parameters.
     // You can find the skin rect from "GUSIconEditSkin.bmp" and "GUSIconEditSkin.offset.txt".
-    itsSpeedSearchMacroControl.InitializeResource(
+    auto initStatus = speedSearchControl.InitializeResource(
         IDB_BITMAP_GUS_ICON_EDIT_SKIN,
         CRect(3, 69, 27, 90),
         CRect(3, 69, 27, 90),
@@ -1600,21 +1682,27 @@ void CFmiSmartToolDlg::InitSpeedSearchControl()
         CRect(1, 4, 14, 17)
         );
 
-    itsSpeedSearchMacroControl.SetEmptyTips(CA2T((::GetDictionaryString("Search smarttool macros...").c_str())));
-    itsSpeedSearchMacroControl.SetSearchCaseSense(fSearchOptionCaseSensitive);
-    itsSpeedSearchMacroControl.SetSearchAnywhere(fSearchOptionMatchAnywhere);
-    itsSpeedSearchMacroControlMenu.LoadMenu(IDR_MENU_GUS_ICON_EDIT);
+    speedSearchControl.SetEmptyTips(CA2T((::GetDictionaryString(startingText.c_str()).c_str())));
+    speedSearchControl.SetSearchCaseSense(searchOptionCaseSensitive);
+    speedSearchControl.SetSearchAnywhere(searchOptionMatchAnywhere);
 
     // CGUSIconEdit -kontrollin muita mahdollisia optioita kommenteissa
-    //itsSpeedSearchViewMacroControl.SetMaxDisplayItem(20);
-    //itsSpeedSearchViewMacroControl.SetNormalItemsBKColor(RGB(201, 241, 238));
-    //itsSpeedSearchViewMacroControl.SetEvenItemsBKColor(RGB(201, 187, 234));
-    //itsSpeedSearchViewMacroControl.SetNonSelItemsKeywordsBKColor(RGB(248, 134, 151));
-    //itsSpeedSearchViewMacroControl.SetNormalItemsTextColor(RGB(104, 36, 94));
-    //itsSpeedSearchViewMacroControl.SetSelItemBKColor(RGB(221, 215, 89), TRUE);
-    //itsSpeedSearchViewMacroControl.SetSelItemTextColor(RGB(203, 7, 75));
-    //itsSpeedSearchViewMacroControl.SetRememberWindowNewSize(TRUE);
-    //itsSpeedSearchViewMacroControl.SetSortDisplayedSearchResults(TRUE, TRUE);
+    //speedSearchControl.SetMaxDisplayItem(20);
+    //speedSearchControl.SetNormalItemsBKColor(RGB(201, 241, 238));
+    //speedSearchControl.SetEvenItemsBKColor(RGB(201, 187, 234));
+    //speedSearchControl.SetNonSelItemsKeywordsBKColor(RGB(248, 134, 151));
+    //speedSearchControl.SetNormalItemsTextColor(RGB(104, 36, 94));
+    //speedSearchControl.SetSelItemBKColor(RGB(221, 215, 89), TRUE);
+    //speedSearchControl.SetSelItemTextColor(RGB(203, 7, 75));
+    //speedSearchControl.SetRememberWindowNewSize(TRUE);
+    //speedSearchControl.SetSortDisplayedSearchResults(TRUE, TRUE);
+}
+
+void CFmiSmartToolDlg::InitSpeedSearchControls()
+{
+    itsSpeedSearchMacroControlMenu.LoadMenu(IDR_MENU_GUS_ICON_EDIT);
+    ::InitSpeedSearchControl(itsSpeedSearchMacroControl, "Search smarttool macros...", fSearchOptionCaseSensitive, fSearchOptionMatchAnywhere);
+    ::InitSpeedSearchControl(itsSpeedSearchMacroParamControl, "Search macro-params...", fSearchOptionCaseSensitive, fSearchOptionMatchAnywhere);
 }
 
 // Tehd‰‰n ainakin 15 minuutin v‰lein pikahaku listan p‰ivityst‰, jos tulee uusia smarttool-macroja synkronoinnin kautta
@@ -1626,7 +1714,7 @@ void CFmiSmartToolDlg::DoTimedResetSearchResource()
 
     if(timer.CurrentTimeDiffInMSeconds() > 15 * 60 * 1000)
     {
-        ResetSearchResource();
+        ResetSpeedSearchResources(true, true);
         timer.StartTimer(); // k‰ynnistet‰‰n uusi laskuri
     }
 }

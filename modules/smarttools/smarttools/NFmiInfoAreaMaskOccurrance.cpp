@@ -12,12 +12,12 @@
 // *****    NFmiInfoAreaMaskOccurrance  *********************
 // **********************************************************
 
-std::function<void(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &,
+std::function<void(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &,
                    boost::shared_ptr<NFmiDrawParam> &,
                    const boost::shared_ptr<NFmiArea> &)>
     NFmiInfoAreaMaskOccurrance::itsMultiSourceDataGetter;  // Alustetaan tyhjäksi ensin
 
-NFmiInfoAreaMaskOccurrance::~NFmiInfoAreaMaskOccurrance(void)
+NFmiInfoAreaMaskOccurrance::~NFmiInfoAreaMaskOccurrance()
 {
 }
 NFmiInfoAreaMaskOccurrance::NFmiInfoAreaMaskOccurrance(
@@ -59,22 +59,22 @@ NFmiInfoAreaMaskOccurrance::NFmiInfoAreaMaskOccurrance(const NFmiInfoAreaMaskOcc
     itsInfoVector = NFmiInfoAreaMaskOccurrance::CreateShallowCopyOfInfoVector(theOther.itsInfoVector);
 }
 
-NFmiAreaMask *NFmiInfoAreaMaskOccurrance::Clone(void) const
+NFmiAreaMask *NFmiInfoAreaMaskOccurrance::Clone() const
 {
   return new NFmiInfoAreaMaskOccurrance(*this);
 }
 
 void NFmiInfoAreaMaskOccurrance::SetMultiSourceDataGetterCallback(
-    const std::function<void(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &,
+    const std::function<void(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &,
                              boost::shared_ptr<NFmiDrawParam> &,
                              const boost::shared_ptr<NFmiArea> &)> &theCallbackFunction)
 {
   NFmiInfoAreaMaskOccurrance::itsMultiSourceDataGetter = theCallbackFunction;
 }
 
-checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> NFmiInfoAreaMaskOccurrance::GetMultiSourceData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &calculationArea, bool getSynopXData)
+std::vector<boost::shared_ptr<NFmiFastQueryInfo>> NFmiInfoAreaMaskOccurrance::GetMultiSourceData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &calculationArea, bool getSynopXData)
 {
-    checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector;
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector;
     boost::shared_ptr<NFmiDrawParam> drawParam(
         new NFmiDrawParam(theInfo->Param(), *theInfo->Level(), 0, theInfo->DataType()));
     if(getSynopXData)
@@ -83,17 +83,17 @@ checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> NFmiInfoAreaMaskOccurrance::
     return infoVector;
 }
 
-checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> NFmiInfoAreaMaskOccurrance::CreateShallowCopyOfInfoVector(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector)
+std::vector<boost::shared_ptr<NFmiFastQueryInfo>> NFmiInfoAreaMaskOccurrance::CreateShallowCopyOfInfoVector(const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector)
 {
     // tehdään matala kopio info-vektorista
-    checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> shallowCopyVector;
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> shallowCopyVector;
     for(const auto & info : infoVector)
         shallowCopyVector.push_back(
             NFmiSmartInfo::CreateShallowCopyOfHighestInfo(info));
     return shallowCopyVector;
 }
 
-void NFmiInfoAreaMaskOccurrance::Initialize(void)
+void NFmiInfoAreaMaskOccurrance::Initialize()
 {
   // cachejen alustuksia tehdään vain asemadatoille. Hila datat hanskataan emoluokassa ja sitä en
   // lähde tässä vielä optinmoimaan.
@@ -298,7 +298,7 @@ bool NFmiInfoAreaMaskOccurrance::IsGridData() const
 // *****  NFmiInfoAreaMaskOccurranceSimpleCondition *********
 // **********************************************************
 
-NFmiInfoAreaMaskOccurranceSimpleCondition::~NFmiInfoAreaMaskOccurranceSimpleCondition(void) = default;
+NFmiInfoAreaMaskOccurranceSimpleCondition::~NFmiInfoAreaMaskOccurranceSimpleCondition() = default;
 
 NFmiInfoAreaMaskOccurranceSimpleCondition::NFmiInfoAreaMaskOccurranceSimpleCondition(const NFmiCalculationCondition &theOperation,
     Type theMaskType,
@@ -326,7 +326,7 @@ NFmiInfoAreaMaskOccurranceSimpleCondition::NFmiInfoAreaMaskOccurranceSimpleCondi
     :NFmiInfoAreaMaskOccurrance(theOther)
 {}
 
-NFmiAreaMask* NFmiInfoAreaMaskOccurranceSimpleCondition::Clone(void) const
+NFmiAreaMask* NFmiInfoAreaMaskOccurranceSimpleCondition::Clone() const
 {
     return new NFmiInfoAreaMaskOccurranceSimpleCondition(*this);
 }
@@ -408,7 +408,7 @@ NFmiPeekTimeMask::NFmiPeekTimeMask(Type theMaskType,
     fUseMultiSourceData = NFmiInfoAreaMaskOccurrance::IsKnownMultiSourceData(itsInfo);
 }
 
-NFmiPeekTimeMask::~NFmiPeekTimeMask(void)
+NFmiPeekTimeMask::~NFmiPeekTimeMask()
 {
 }
 
@@ -422,12 +422,12 @@ NFmiPeekTimeMask::NFmiPeekTimeMask(const NFmiPeekTimeMask &theOther)
     itsInfoVector = NFmiInfoAreaMaskOccurrance::CreateShallowCopyOfInfoVector(theOther.itsInfoVector);
 }
 
-NFmiAreaMask *NFmiPeekTimeMask::Clone(void) const
+NFmiAreaMask *NFmiPeekTimeMask::Clone() const
 {
     return new NFmiPeekTimeMask(*this);
 }
 
-void NFmiPeekTimeMask::Initialize(void)
+void NFmiPeekTimeMask::Initialize()
 {
     if(fUseMultiSourceData)
     {
@@ -620,7 +620,7 @@ void NFmiInfoAreaMaskTimeRange::DoTimeLoopCalculationsForGridData(unsigned long 
     }
 }
 
-static bool FindClosestStationData(const checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector, const NFmiPoint &latlon, double observationRadiusInKm, size_t &dataIndexOut, unsigned long &locationIndexOut)
+static bool FindClosestStationData(const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector, const NFmiPoint &latlon, double observationRadiusInKm, size_t &dataIndexOut, unsigned long &locationIndexOut)
 {
     NFmiLocation wantedLocation(latlon);
     double minDistanceInMetres = 99999999999;
@@ -686,7 +686,7 @@ void NFmiInfoAreaMaskTimeRange::DoTimeLoopCalculationsForObservationData(boost::
 // *****    NFmiInfoAreaMaskPreviousFullDays  ***************
 // **********************************************************
 
-NFmiInfoAreaMaskPreviousFullDays::~NFmiInfoAreaMaskPreviousFullDays(void) = default;
+NFmiInfoAreaMaskPreviousFullDays::~NFmiInfoAreaMaskPreviousFullDays() = default;
 NFmiInfoAreaMaskPreviousFullDays::NFmiInfoAreaMaskPreviousFullDays(const NFmiCalculationCondition &theOperation,
     Type theMaskType,
     NFmiInfoData::Type theDataType,
@@ -711,12 +711,12 @@ NFmiInfoAreaMaskPreviousFullDays::NFmiInfoAreaMaskPreviousFullDays(const NFmiInf
     , itsPreviousDayCount(theOther.itsPreviousDayCount)
 {}
 
-NFmiAreaMask* NFmiInfoAreaMaskPreviousFullDays::Clone(void) const
+NFmiAreaMask* NFmiInfoAreaMaskPreviousFullDays::Clone() const
 {
     return new NFmiInfoAreaMaskPreviousFullDays(*this);
 }
 
-void NFmiInfoAreaMaskPreviousFullDays::InitializeFromArguments(void)
+void NFmiInfoAreaMaskPreviousFullDays::InitializeFromArguments()
 {
     itsPreviousDayCount = static_cast<int>(itsArgumentVector[0]);
 }
@@ -792,7 +792,7 @@ void NFmiInfoAreaMaskPreviousFullDays::CalcValueFromObservationData(const NFmiCa
 // *****    NFmiInfoAreaMaskTimeDuration    *****************
 // **********************************************************
 
-NFmiInfoAreaMaskTimeDuration::~NFmiInfoAreaMaskTimeDuration(void) = default;
+NFmiInfoAreaMaskTimeDuration::~NFmiInfoAreaMaskTimeDuration() = default;
 
 NFmiInfoAreaMaskTimeDuration::NFmiInfoAreaMaskTimeDuration(const NFmiCalculationCondition &theOperation,
     Type theMaskType,
@@ -823,12 +823,12 @@ NFmiInfoAreaMaskTimeDuration::NFmiInfoAreaMaskTimeDuration(const NFmiInfoAreaMas
     , fUseCumulativeCalculation(theOther.fUseCumulativeCalculation)
 {}
 
-NFmiAreaMask* NFmiInfoAreaMaskTimeDuration::Clone(void) const
+NFmiAreaMask* NFmiInfoAreaMaskTimeDuration::Clone() const
 {
     return new NFmiInfoAreaMaskTimeDuration(*this);
 }
 
-void NFmiInfoAreaMaskTimeDuration::InitializeFromArguments(void)
+void NFmiInfoAreaMaskTimeDuration::InitializeFromArguments()
 {
     itsSeekTimeInHours = itsArgumentVector[0];
     itsSeekTimeInMinutes = boost::math::iround(itsSeekTimeInHours * 60.f);

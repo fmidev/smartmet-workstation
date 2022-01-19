@@ -11,28 +11,28 @@
 #include "boost/shared_ptr.hpp"
 #include <vector>
 
-class _FMI_DLL NFmiAreaMaskList
+class NFmiAreaMaskList
 {
  public:
-  NFmiAreaMaskList(void);
+  NFmiAreaMaskList();
   NFmiAreaMaskList(const NFmiAreaMaskList &theOther);
-  virtual ~NFmiAreaMaskList(void);
+  virtual ~NFmiAreaMaskList();
   static boost::shared_ptr<NFmiAreaMaskList> CreateShallowCopy(
       const boost::shared_ptr<NFmiAreaMaskList> &theOther);
 
   void Add(boost::shared_ptr<NFmiAreaMask> &theMask);
-  bool Remove(void);
-  void Clear(void);
-  unsigned long NumberOfItems(void);
+  bool Remove();
+  void Clear();
+  unsigned long NumberOfItems();
 
-  bool Reset(void);
-  bool Next(void);
-  boost::shared_ptr<NFmiAreaMask> Current(void);
+  bool Reset();
+  bool Next();
+  boost::shared_ptr<NFmiAreaMask> Current();
 
-  bool UseMask(void) { return fMaskInUse; }
+  bool UseMask() { return fMaskInUse; }
   bool IsMasked(const NFmiPoint &theLatLon);
   double MaskValue(const NFmiPoint &theLatLon);
-  bool CheckIfMaskUsed(void);
+  bool CheckIfMaskUsed();
   bool SyncronizeMaskTime(const NFmiMetTime &theTime);
 
   bool Index(unsigned long index);    // 1:sta alkava indeksi, sisäinen muuttuja itsCurrentIndex on

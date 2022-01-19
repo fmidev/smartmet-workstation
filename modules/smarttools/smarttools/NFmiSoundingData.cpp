@@ -597,7 +597,7 @@ unsigned int NFmiSoundingData::GetHighestNonMissingValueLevelIndex(FmiParameterN
 
 // tämä leikkaa Fill.. -metodeissa laskettuja data vektoreita niin että pelkät puuttuvat kerrokset
 // otetaan pois
-void NFmiSoundingData::CutEmptyData(void)
+void NFmiSoundingData::CutEmptyData()
 {
   std::vector<FmiParameterName> itsSoundingParameters;
   itsSoundingParameters.push_back(kFmiPressure);
@@ -835,7 +835,7 @@ void NFmiSoundingData::FixPressureDataSoundingWithGroundData(
 }
 
 // laskee jo laskettujen T ja Td avulla RH
-void NFmiSoundingData::CalculateHumidityData(void)
+void NFmiSoundingData::CalculateHumidityData()
 {
   size_t tVectorSize = itsTemperatureData.size();
   if (tVectorSize > 0 && itsDewPointData.size() == tVectorSize)
@@ -856,7 +856,7 @@ void NFmiSoundingData::CalculateHumidityData(void)
 // Se pinta, miltä kaikki löytyvät 1. kerran sekä paine, että korkeus arvot
 // ja lisäksi joko lämpötila tai tuulennopeus.
 // Tai jos sellaista ei löydy asetetaan arvoksi 0.
-void NFmiSoundingData::InitZeroHeight(void)
+void NFmiSoundingData::InitZeroHeight()
 {
   itsZeroHeight = 0;
   itsZeroHeightIndex = -1;
@@ -915,7 +915,7 @@ std::deque<float> &NFmiSoundingData::GetParamData(FmiParameterName theId)
   }
 }
 
-void NFmiSoundingData::ClearDatas(void)
+void NFmiSoundingData::ClearDatas()
 {
   std::deque<float>().swap(itsTemperatureData);
   std::deque<float>().swap(itsDewPointData);
@@ -1125,7 +1125,7 @@ static float CalcV(float WS, float WD)
   return value;
 }
 
-void NFmiSoundingData::UpdateUandVParams(void)
+void NFmiSoundingData::UpdateUandVParams()
 {
   std::deque<float> &wsV = GetParamData(kFmiWindSpeedMS);
   std::deque<float> &wdV = GetParamData(kFmiWindDirection);
@@ -1186,7 +1186,7 @@ bool NFmiSoundingData::HasRealSoundingData(NFmiFastQueryInfo &theSoundingLevelIn
 // SHOW	= T500 - Tparcel
 // T500 = Temperature in Celsius at 500 mb
 // Tparcel = Temperature in Celsius at 500 mb of a parcel lifted from 850 mb
-double NFmiSoundingData::CalcSHOWIndex(void)
+double NFmiSoundingData::CalcSHOWIndex()
 {
   double indexValue = kFloatMissing;
   double T_850 = GetValueAtPressure(kFmiTemperature, 850);
@@ -1207,7 +1207,7 @@ double NFmiSoundingData::CalcSHOWIndex(void)
 // T500 = temperature in Celsius of the environment at 500 mb
 // Tparcel = 500 mb temperature in Celsius of a lifted parcel with the average pressure,
 //			 temperature, and dewpoint of the layer 500 m above the surface.
-double NFmiSoundingData::CalcLIFTIndex(void)
+double NFmiSoundingData::CalcLIFTIndex()
 {
   double indexValue = kFloatMissing;
   double P_500m_avg = kFloatMissing;
@@ -1237,7 +1237,7 @@ double NFmiSoundingData::CalcLIFTIndex(void)
 //	TD850 = Dewpoint in Celsius at 850 mb
 //	T700 = Temperature in Celsius at 700 mb
 //	TD700 = Dewpoint in Celsius at 700 mb
-double NFmiSoundingData::CalcKINXIndex(void)
+double NFmiSoundingData::CalcKINXIndex()
 {
   double T850 = GetValueAtPressure(kFmiTemperature, 850);
   double T500 = GetValueAtPressure(kFmiTemperature, 500);
@@ -1254,7 +1254,7 @@ double NFmiSoundingData::CalcKINXIndex(void)
 //	CTOT	= TD850 - T500
 //		TD850 	= Dewpoint in Celsius at 850 mb
 //		T500 	= Temperature in Celsius at 500 mb
-double NFmiSoundingData::CalcCTOTIndex(void)
+double NFmiSoundingData::CalcCTOTIndex()
 {
   double T500 = GetValueAtPressure(kFmiTemperature, 500);
   double TD850 = GetValueAtPressure(kFmiDewPoint, 850);
@@ -1267,7 +1267,7 @@ double NFmiSoundingData::CalcCTOTIndex(void)
 //	VTOT	= T850 - T500
 //		T850	= Temperature in Celsius at 850 mb
 //		T500	= Temperature in Celsius at 500 mb
-double NFmiSoundingData::CalcVTOTIndex(void)
+double NFmiSoundingData::CalcVTOTIndex()
 {
   double T500 = GetValueAtPressure(kFmiTemperature, 500);
   double T850 = GetValueAtPressure(kFmiTemperature, 850);
@@ -1281,7 +1281,7 @@ double NFmiSoundingData::CalcVTOTIndex(void)
 //		T850 	= Temperature in Celsius at 850 mb
 //		TD850	= Dewpoint in Celsius at 850 mb
 //		T500 	= Temperature in Celsius at 500 mb
-double NFmiSoundingData::CalcTOTLIndex(void)
+double NFmiSoundingData::CalcTOTLIndex()
 {
   double T850 = GetValueAtPressure(kFmiTemperature, 850);
   double T500 = GetValueAtPressure(kFmiTemperature, 500);

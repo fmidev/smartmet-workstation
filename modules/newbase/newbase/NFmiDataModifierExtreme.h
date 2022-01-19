@@ -12,15 +12,15 @@
 #include "NFmiMetTime.h"
 
 //! Undocumented
-class _FMI_DLL NFmiDataModifierExtreme : public NFmiDataModifier
+class NFmiDataModifierExtreme : public NFmiDataModifier
 {
  public:
-  virtual ~NFmiDataModifierExtreme(void);
-  NFmiDataModifierExtreme(void);
+  virtual ~NFmiDataModifierExtreme();
+  NFmiDataModifierExtreme();
   NFmiDataModifierExtreme(const NFmiDataModifierExtreme &theOther);
 
   void SetTime(NFmiQueryInfo *theQI);
-  const NFmiTime GetTime(void);
+  const NFmiTime GetTime();
   virtual void Calculate(NFmiQueryInfo *theQI);
   virtual void Calculate(float theValue);
   virtual void Calculate(float theValue, NFmiQueryInfo *theQI);

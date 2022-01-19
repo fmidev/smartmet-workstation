@@ -32,7 +32,6 @@
 #pragma once
 
 #include "NFmiSortedPtrList.h"
-#include <newbase/NFmiDataMatrix.h>
 #include <newbase/NFmiInfoData.h>
 #include "NFmiDrawParam.h"
 #include <boost/shared_ptr.hpp>
@@ -56,48 +55,48 @@ class NFmiDrawParamList
   typedef std::list<DataType> ListType;
   typedef ListType::iterator IterType;
 
-  NFmiDrawParamList(void);
-  ~NFmiDrawParamList(void);
+  NFmiDrawParamList();
+  ~NFmiDrawParamList();
 
-  boost::shared_ptr<NFmiDrawParam> Current(void);
+  boost::shared_ptr<NFmiDrawParam> Current();
   void CopyList(NFmiDrawParamList& theList, bool clearFirst);
-  bool Reset(void);
-  bool Next(void);
-  void Clear(void);
+  bool Reset();
+  bool Next();
+  void Clear();
   void Clear(const NFmiProducer& theProducer,
-             checkedVector<int>& theParamIdsNotRemoved,
+             std::vector<int>& theParamIdsNotRemoved,
              NFmiLevel* theLevel = 0);
   void Clear(const NFmiProducer& theProducer,
              std::list<std::pair<int, NFmiLevel> >& theParamIdsAndLevelsNotRemoved);
   bool Add(boost::shared_ptr<NFmiDrawParam>& theParam);
   bool Add(boost::shared_ptr<NFmiDrawParam>& theParam, unsigned long theIndex);
   void BorrowParams(NFmiDrawParamList& theList);
-  void ClearBorrowedParams(void);
-  bool Remove(void);
+  void ClearBorrowedParams();
+  bool Remove();
   bool Index(unsigned long index);
   //	bool Find(NFmiDrawParam* item);
 
   void HideAllParams(bool newState);
-  void DisableEditing(void);
-  void DeactivateAll(void);
+  void DisableEditing();
+  void DeactivateAll();
   bool Find(const NFmiDataIdent& theParam,
             const NFmiLevel* theLevel,
             NFmiInfoData::Type theDataType,
             bool fUseOnlyParamId = false,
             bool fIgnoreLevelInfo = false);
 
-  void Update(void);
-  bool IsDirty(void) { return fDirtyList; };
+  void Update();
+  bool IsDirty() { return fDirtyList; };
   void Dirty(bool fDirty) { fDirtyList = fDirty; };
-  unsigned long NumberOfItems(void) { return static_cast<unsigned long>(itsList.size()); };
+  unsigned long NumberOfItems() { return static_cast<unsigned long>(itsList.size()); };
   bool RemoveMacroParam(const std::string& theName);
   bool MoveActiveParam(int theMovement);
   bool MoveParam(int theMovedParamIndex, int theMoveToPosition);
-  int FindActive(void);
-  int FindEdited(void);
-  bool HasBorrowedParams(void) const { return fHasBorrowedParams; }
+  int FindActive();
+  int FindEdited();
+  bool HasBorrowedParams() const { return fHasBorrowedParams; }
   void HasBorrowedParams(bool newValue) { fHasBorrowedParams = newValue; }
-  void ActivateOnlyOne(void);
+  void ActivateOnlyOne();
   ListType::iterator begin() { return itsList.begin(); }
   ListType::iterator end() { return itsList.end(); }
   void Swap(NFmiDrawParamList* otherList);

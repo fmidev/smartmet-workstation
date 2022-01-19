@@ -446,7 +446,7 @@ namespace CtrlViewUtils
             else
             {
                 boost::shared_ptr<NFmiArea> dummyArea;
-                checkedVector<boost::shared_ptr<NFmiFastQueryInfo>> infos;
+                std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infos;
                 theCtrlViewDocumentInterface->MakeDrawedInfoVectorForMapView(infos, theDrawParam, dummyArea);
                 if(infos.size())
                 {
@@ -567,6 +567,41 @@ namespace CtrlViewUtils
                 break;
             }
         }
+    }
+
+    FileNameWithTimeList TimeSortFiles(FileNameWithTimeList filesWithTimesCopy, bool descending)
+    {
+        filesWithTimesCopy.sort(
+            [=](const auto& pair1, const auto& pair2)
+            {
+                if(descending)
+                    return pair1.second > pair2.second;
+                else
+                    return pair1.second < pair2.second;
+            }
+        );
+        return filesWithTimesCopy;
+    }
+
+    // Calculate direction from point1 to point2.
+    // Result is in degrees (0 -> 360), 'north' is 0 and goes clockwise (east 90, south 180, west 270).
+    // If points are the same, result is 0.
+    double CalcAngle(const NFmiPoint& point1, const NFmiPoint& point2)
+    {
+        auto x = point2.X() - point1.X();
+        auto y = point2.Y() - point1.Y();
+        return CalcAngle(x, y);
+    }
+
+    double CalcAngle(double x, double y)
+    {
+        if(x == 0 && y == 0)
+            return 0;
+        auto origDirection = atan2(x, y) * 180 / kPii;
+        if(origDirection < 0)
+            return 360 + origDirection;
+        else
+            return origDirection;
     }
 
 } // namespace CtrlViewUtils

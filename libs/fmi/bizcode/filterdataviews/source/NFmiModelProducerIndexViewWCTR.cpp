@@ -221,10 +221,10 @@ int NFmiModelProducerIndexViewWCTR::GetPlaceIndexInProducerColorIndexView(const 
 }
 
 // tuli hieman mega-luokan interface
-void NFmiModelProducerIndexViewWCTR::SetDataFromDialog( checkedVector<boost::shared_ptr<NFmiQueryInfo> > &theQueryInfoVector
+void NFmiModelProducerIndexViewWCTR::SetDataFromDialog( std::vector<boost::shared_ptr<NFmiQueryInfo> > &theQueryInfoVector
 														,const NFmiTimeDescriptor& theLoadedDataTimeDescriptor
-														,const checkedVector<int>& theSelectedProducerPriorityTable
-														,const checkedVector<NFmiColor>& theProducerColorTable
+														,const std::vector<int>& theSelectedProducerPriorityTable
+														,const std::vector<NFmiColor>& theProducerColorTable
 														,int theActiveProducerIndex)
 {
 	itsQueryInfoVector = theQueryInfoVector; // onnistuuko pointteri datan kopio???
@@ -276,7 +276,7 @@ void NFmiModelProducerIndexViewWCTR::FillProducerIndexInTimeVector(void)
 		FillNonMarkedRange(itsProducerIndexInTimeVector, itsSourceDataExistLimits[itsSelectedProducerPriorityTable[i]], itsSelectedProducerPriorityTable[i]);
 }
 
-void NFmiModelProducerIndexViewWCTR::FillNonMarkedRange(checkedVector<int>& theIndexVector, const NFmiPoint& theRange, int theIndex)
+void NFmiModelProducerIndexViewWCTR::FillNonMarkedRange(std::vector<int>& theIndexVector, const NFmiPoint& theRange, int theIndex)
 {
   if(theRange.X() >= 0)
     for(int i= static_cast<int>(theRange.X()); i <= theRange.Y(); i++)

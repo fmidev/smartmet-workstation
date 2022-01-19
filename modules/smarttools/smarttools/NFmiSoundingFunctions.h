@@ -55,7 +55,7 @@ class MyPoint
 {
  public:
   MyPoint(double theX, double theY) : x(theX), y(theY) {}
-  bool IsValid(void) const { return (x != kFloatMissing) && (y != kFloatMissing); }
+  bool IsValid() const { return (x != kFloatMissing) && (y != kFloatMissing); }
   double x;
   double y;
 };

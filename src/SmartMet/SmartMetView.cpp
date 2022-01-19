@@ -107,6 +107,7 @@ BEGIN_MESSAGE_MAP(CSmartMetView, CView)
     ON_COMMAND(ID_ACCELERATOR_MAP_PAN_RIGHT, &CSmartMetView::OnAcceleratorMapPanRight)
     ON_COMMAND(ID_ACCELERATOR_MAP_PAN_UP, &CSmartMetView::OnAcceleratorMapPanUp)
     ON_WM_RBUTTONDBLCLK()
+	ON_WM_DISPLAYCHANGE()
 END_MESSAGE_MAP()
 
 // CSmartMetView construction/destruction
@@ -1364,3 +1365,7 @@ void CSmartMetView::OnAcceleratorMapPanUp()
     CFmiWin32TemplateHelpers::ArrowKeyMapPan(itsEditMapView, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), NFmiPoint(0, -0.05));
 }
 
+void CSmartMetView::OnDisplayChange(UINT, int, int)
+{
+	GetGeneralDoc()->OnButtonRefresh("Display settings have changed somehow, doing full update on all views");
+}

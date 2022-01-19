@@ -15,34 +15,34 @@
 // operandeja (n kpl) ja operaatioita (n-1 kpl).
 //**********************************************************
 
-#include <newbase/NFmiDataMatrix.h>
 #include <boost/shared_ptr.hpp>
+#include <vector>
 
 class NFmiAreaMaskInfo;
 
 class NFmiSmartToolCalculationInfo
 {
  public:
-  NFmiSmartToolCalculationInfo(void);
-  ~NFmiSmartToolCalculationInfo(void);
+  NFmiSmartToolCalculationInfo();
+  ~NFmiSmartToolCalculationInfo();
 
   void SetResultDataInfo(boost::shared_ptr<NFmiAreaMaskInfo>& value) { itsResultDataInfo = value; }
-  boost::shared_ptr<NFmiAreaMaskInfo> GetResultDataInfo(void) { return itsResultDataInfo; }
+  boost::shared_ptr<NFmiAreaMaskInfo> GetResultDataInfo() { return itsResultDataInfo; }
   void AddCalculationInfo(boost::shared_ptr<NFmiAreaMaskInfo>& theAreaMaskInfo);
-  checkedVector<boost::shared_ptr<NFmiAreaMaskInfo> >& GetCalculationOperandInfoVector(void)
+  std::vector<boost::shared_ptr<NFmiAreaMaskInfo> >& GetCalculationOperandInfoVector()
   {
     return itsCalculationOperandInfoVector;
   }
-  const std::string& GetCalculationText(void) { return itsCalculationText; }
+  const std::string& GetCalculationText() { return itsCalculationText; }
   void SetCalculationText(const std::string& theText) { itsCalculationText = theText; }
-  void CheckIfAllowMissingValueAssignment(void);
-  bool AllowMissingValueAssignment(void) { return fAllowMissingValueAssignment; };
+  void CheckIfAllowMissingValueAssignment();
+  bool AllowMissingValueAssignment() { return fAllowMissingValueAssignment; };
  private:
   // HUOM!! Tämä erillinen ResultInfo-systeemi oli huono ratkaisu, laita ne mielluummin
   // osaksi laskentaketjua (itsCalculationOperandInfoVector:iin).
   // Silloin voi mm. ottaa tämän luokan käyttöön NFmiAreaMaskSectionInfo-luokan sijasta.
   boost::shared_ptr<NFmiAreaMaskInfo> itsResultDataInfo;  // omistaa+tuhoaa
-  checkedVector<boost::shared_ptr<NFmiAreaMaskInfo> >
+  std::vector<boost::shared_ptr<NFmiAreaMaskInfo> >
       itsCalculationOperandInfoVector;  // omistaa+tuhoaa
   std::string itsCalculationText;       // originaali teksti, mistä tämä lasku on tulkittu
   bool fAllowMissingValueAssignment;

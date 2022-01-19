@@ -13,7 +13,7 @@
 class NFmiLocation;
 
 //! Undocumented
-class _FMI_DLL NFmiMetTime : public NFmiTime
+class NFmiMetTime : public NFmiTime
 {
  public:
   static const NFmiMetTime gMissingTime;  // Tätä missing aikaa voi käyttää, jos haluaa ilmaista
@@ -53,15 +53,15 @@ class _FMI_DLL NFmiMetTime : public NFmiTime
   virtual bool IsEqual(const NFmiSortable& aFmiTest) const;
 
   NFmiMetTime& operator=(const NFmiMetTime&);
-  NFmiMetTime& operator++(void);      // prefix
-  NFmiMetTime& operator--(void);      // prefix
+  NFmiMetTime& operator++();      // prefix
+  NFmiMetTime& operator--();      // prefix
   const NFmiMetTime operator++(int);  // postfix
   const NFmiMetTime operator--(int);  // postfix
 
-  void NextMetTime(void);
+  void NextMetTime();
   void NextMetTime(const long deltaInMinutes);
   void NextMetTime(const NFmiTimePerioid& perioid);
-  void PreviousMetTime(void);
+  void PreviousMetTime();
   void PreviousMetTime(const long deltaInMinutes);
   void PreviousMetTime(const NFmiTimePerioid& perioid);
   void NearestMetTime(FmiDirection theDirect = kNoDirection);
@@ -79,24 +79,24 @@ class _FMI_DLL NFmiMetTime : public NFmiTime
                    bool fSetTime = true,
                    FmiDirection theDirect = kNoDirection);
 
-  long GetTimeStep(void) const;
+  long GetTimeStep() const;
 
-  short GetLocalHour(void) const;
+  short GetLocalHour() const;
 
   virtual const NFmiTime UTCTime(float theLongitude = kFloatMissing) const;
   virtual const NFmiTime UTCTime(const NFmiLocation& theLocation) const;
   virtual const NFmiTime LocalTime(float theLongitude = kFloatMissing) const;
   virtual const NFmiTime LocalTime(const NFmiLocation& theLocation) const;
 
-  virtual const NFmiTime CorrectLocalTime(void) const;
+  virtual const NFmiTime CorrectLocalTime() const;
 
-  virtual const char* ClassName(void) const;
+  virtual const char* ClassName() const;
 
   virtual std::ostream& Write(std::ostream& file) const;
   virtual std::istream& Read(std::istream& file);
 
  protected:
-  virtual struct std::tm GetSystemTime(void);
+  virtual struct std::tm GetSystemTime();
 
  private:
   void ConstructMetTime(const long timeStepInMinutes, FmiDirection theDirect = kNoDirection);
@@ -168,7 +168,7 @@ inline NFmiMetTime::NFmiMetTime(const NFmiMetTime& aMetTime, short negRange, sho
  */
 // ----------------------------------------------------------------------
 
-inline long NFmiMetTime::GetTimeStep(void) const { return fTimeStepInMinutes; }
+inline long NFmiMetTime::GetTimeStep() const { return fTimeStepInMinutes; }
 // ----------------------------------------------------------------------
 /*!
  *
@@ -271,7 +271,7 @@ inline NFmiMetTime::NFmiMetTime(const short year,
  */
 // ----------------------------------------------------------------------
 
-inline void NFmiMetTime::PreviousMetTime(void) { PreviousMetTime(GetTimeStep()); }
+inline void NFmiMetTime::PreviousMetTime() { PreviousMetTime(GetTimeStep()); }
 // ----------------------------------------------------------------------
 /*!
  * \param thePerioid Undocumented
@@ -289,7 +289,7 @@ inline void NFmiMetTime::NearestMetTime(const NFmiTimePerioid& thePerioid, FmiDi
  */
 // ----------------------------------------------------------------------
 
-inline short NFmiMetTime::GetLocalHour(void) const
+inline short NFmiMetTime::GetLocalHour() const
 {
   return static_cast<short>((GetHour() - GetZoneDifferenceHour()) % 24);
 }
@@ -300,7 +300,7 @@ inline short NFmiMetTime::GetLocalHour(void) const
  */
 // ----------------------------------------------------------------------
 
-inline const char* NFmiMetTime::ClassName(void) const { return "NFmiMetTime"; }
+inline const char* NFmiMetTime::ClassName() const { return "NFmiMetTime"; }
 // ----------------------------------------------------------------------
 /*!
  * Output operator for class NFmiMetTime

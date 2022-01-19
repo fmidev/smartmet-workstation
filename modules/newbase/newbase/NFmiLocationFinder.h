@@ -13,20 +13,20 @@
 #include <string>
 
 //! Undocumented
-class _FMI_DLL NFmiLocationFinder
+class NFmiLocationFinder
 {
  public:
-  ~NFmiLocationFinder(void);
-  NFmiLocationFinder(void);
+  ~NFmiLocationFinder();
+  NFmiLocationFinder();
   NFmiLocationFinder(const NFmiLocationFinder& theLocationFinder);
 
   bool AddFile(const NFmiString& theFileName, bool lonFirst = true, bool optionalType = false);
   const NFmiPoint Find(const NFmiString& theName);
   unsigned long FindWmo(const NFmiString& theName);
 
-  bool Empty(void) const;
-  void Clear(void);
-  bool LastSearchFailed(void);
+  bool Empty() const;
+  void Clear();
+  bool LastSearchFailed();
 
  private:
   bool AddFileOfOptionalType(const NFmiString& theFileName, bool lonFirst = true);
@@ -49,7 +49,7 @@ class _FMI_DLL NFmiLocationFinder
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiLocationFinder::Empty(void) const
+inline bool NFmiLocationFinder::Empty() const
 {
   return (itsPrimaryPoints.empty() && itsSecondaryPoints.empty());
 }
@@ -60,7 +60,7 @@ inline bool NFmiLocationFinder::Empty(void) const
  */
 // ----------------------------------------------------------------------
 
-inline void NFmiLocationFinder::Clear(void)
+inline void NFmiLocationFinder::Clear()
 {
   itsPrimaryPoints.clear();
   itsSecondaryPoints.clear();
@@ -74,6 +74,6 @@ inline void NFmiLocationFinder::Clear(void)
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiLocationFinder::LastSearchFailed(void) { return itsLastSearchFailed; }
+inline bool NFmiLocationFinder::LastSearchFailed() { return itsLastSearchFailed; }
 
 // ======================================================================

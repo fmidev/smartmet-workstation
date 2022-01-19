@@ -4,7 +4,7 @@
 
 namespace Wms
 {
-    LegendBuffer::LegendBuffer(NFmiImageHolder legend)
+    LegendBuffer::LegendBuffer(const NFmiImageHolder &legend)
         :legend_{ legend }
         , width{ legend->mImage->GetWidth() }
         , height{ legend->mImage->GetHeight() }

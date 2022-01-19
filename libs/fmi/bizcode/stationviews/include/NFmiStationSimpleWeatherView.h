@@ -28,19 +28,18 @@ public:
 								 ,NFmiPoint theSize
                                  ,int theRowIndex
                                  ,int theColumnIndex);
-   virtual  ~NFmiStationSimpleWeatherView (void);
-   void Draw(NFmiToolBox * theGTB);
+   ~NFmiStationSimpleWeatherView (void);
+   void Draw(NFmiToolBox * theGTB) override;
 
 protected:
-   void DrawData (void);
-   float ViewFloatValue(void) override;
+   float ViewFloatValue(bool doTooltipValue) override;
    bool PrepareForStationDraw(void) override;
-   NFmiPoint GetSpaceOutFontFactor(void); 
-   void ModifyTextEnvironment(void);
-
-private:
-   void DrawSymbol (void);
-
+   NFmiPoint GetSpaceOutFontFactor(void) override;
+   void ModifyTextEnvironment(void) override;
+   NFmiPoint SbdCalcFixedSymbolSize() const override;
+   NFmiSymbolBulkDrawType SbdGetDrawType() const override;
+   NFmiSymbolColorChangingType SbdGetSymbolColorChangingType() const override;
+   NFmiPoint SbdCalcDrawObjectOffset() const override;
 
 };
 

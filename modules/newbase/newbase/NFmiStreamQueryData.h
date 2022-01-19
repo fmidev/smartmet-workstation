@@ -11,11 +11,11 @@
 #include "NFmiQueryData.h"
 
 //! Undocumented
-class _FMI_DLL NFmiStreamQueryData
+class NFmiStreamQueryData
 {
  public:
-  ~NFmiStreamQueryData(void);
-  NFmiStreamQueryData(void);
+  ~NFmiStreamQueryData();
+  NFmiStreamQueryData();
   NFmiStreamQueryData(NFmiQueryData* theQueryData, bool isOwnerData = false);
 
   // Marko Muutin rajapinnan niin, että theQueryData pointterita tuli pointterin pointteri.
@@ -33,10 +33,10 @@ class _FMI_DLL NFmiStreamQueryData
   bool ReadIn(NFmiQueryInfo* theQueryInfo);
   bool WriteCout(NFmiQueryData* theQueryData = 0) const;
 
-  bool IsData(void);
+  bool IsData();
 
   NFmiQueryData* QueryData(bool theOwnerData = false);
-  NFmiFastQueryInfo* QueryInfoIter(void);
+  NFmiFastQueryInfo* QueryInfoIter();
 
  private:
   NFmiStreamQueryData(const NFmiStreamQueryData& theData);

@@ -33,7 +33,7 @@ public:
     void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex) override;
     void DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut) override;
     NFmiSatelliteImageCacheSystem& SatelliteImageCacheSystem() override;
-    void MakeDrawedInfoVectorForMapView(checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override;
+    void MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override;
     NFmiApplicationWinRegistry& ApplicationWinRegistry() override;
     const NFmiPoint& BrushSize() override;
     void BrushSize(const NFmiPoint& theSize) override;
@@ -76,7 +76,7 @@ public:
     NFmiModelDataBlender& ModelDataBlender() override;
     CtrlViewUtils::FmiSmartMetEditingMode SmartMetEditingMode() override;
     void SmartMetEditingMode(CtrlViewUtils::FmiSmartMetEditingMode newValue, bool modifySettings) override;
-    void SetDataLoadingProducerIndexVector(const checkedVector<int>& theIndexVector) override;
+    void SetDataLoadingProducerIndexVector(const std::vector<int>& theIndexVector) override;
     bool Printing() override;
     void Printing(bool newStatus) override;
     void Printing(unsigned int theMapViewDescTopIndex, bool newStatus) override;
@@ -134,7 +134,7 @@ public:
     void OnToggleGridPointColor(unsigned int theDescTopIndex) override;
     void OnToggleGridPointSize(unsigned int theDescTopIndex) override;
     void OnEditSpaceOut(unsigned int theDescTopIndex) override;
-    void OnButtonRefresh() override;
+    void OnButtonRefresh(const std::string& message) override;
     void OnShowProjectionLines() override;
     void OnShowMasksOnMap(unsigned int theDescTopIndex) override;
     void OnToggleShowNamesOnMap(unsigned int theDescTopIndex, bool fForward) override;
@@ -235,7 +235,6 @@ public:
     const std::vector<std::string>& SmartToolFileNames(bool updateList) override;
     NFmiAutoComplete& AutoComplete() override;
     void InvalidateMapView(bool bErase = true) override;
-    NFmiSeaIcingWarningSystem& SeaIcingWarningSystem() override;
     CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(int theMapViewDescTopIndex) override;
     AddParams::ParameterSelectionSystem& ParameterSelectionSystem() override;
     void UpdateParameterSelectionSystem() override;
@@ -259,7 +258,7 @@ public:
     void SetHighlightedSynopStation(const NFmiPoint &theLatlon, int theWmoId, bool fShowHighlight) override;
     bool SynopDataGridViewOn() override;
     void SynopDataGridViewOn(bool newState) override;
-    checkedVector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) override;
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) override;
     void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews) override;
     NFmiLocationSelectionTool* LocationSelectionTool2() override;
     NFmiParamBag& AllStaticParams() override;

@@ -8,7 +8,7 @@ namespace
 		return ((yIndex * gridSizeX) + xIndex);
 	}
 
-	void GetMinAndMaxValues(const checkedVector<float>& values, float& minOut, float& maxOut)
+	void GetMinAndMaxValues(const std::vector<float>& values, float& minOut, float& maxOut)
 	{
 		minOut = 3.4E+38f;
 		maxOut = -3.4E+38f;
@@ -23,7 +23,7 @@ namespace
 		}
 	}
 
-	void DoMatrixDataInitialization(const NFmiDataMatrix<float>& valuesMatrix, checkedVector<float>& values, float& minOut, float& maxOut)
+	void DoMatrixDataInitialization(const NFmiDataMatrix<float>& valuesMatrix, std::vector<float>& values, float& minOut, float& maxOut)
 	{
 		values.resize(valuesMatrix.NX() * valuesMatrix.NY());
 		auto gridSizeX = valuesMatrix.NX();

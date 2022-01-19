@@ -42,10 +42,10 @@ boost::shared_ptr<NFmiAreaMask> NFmiAreaMask::DoShallowCopy(
     return theMask;
 }
 
-checkedVector<boost::shared_ptr<NFmiAreaMask> > NFmiAreaMask::DoShallowCopy(
-    const checkedVector<boost::shared_ptr<NFmiAreaMask> > &theMaskVector)
+std::vector<boost::shared_ptr<NFmiAreaMask> > NFmiAreaMask::DoShallowCopy(
+    const std::vector<boost::shared_ptr<NFmiAreaMask> > &theMaskVector)
 {
-  checkedVector<boost::shared_ptr<NFmiAreaMask> > returnVector(theMaskVector.size());
+  std::vector<boost::shared_ptr<NFmiAreaMask> > returnVector(theMaskVector.size());
   for (size_t i = 0; i < theMaskVector.size(); i++)
     returnVector[i] = NFmiAreaMask::DoShallowCopy(theMaskVector[i]);
   return returnVector;

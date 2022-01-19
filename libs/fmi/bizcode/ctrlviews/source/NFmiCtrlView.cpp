@@ -247,7 +247,7 @@ void NFmiCtrlView::CleanGdiplus(void)
 	if(itsGdiPlusGraphics)
 	{
 		delete itsGdiPlusGraphics;
-		itsGdiPlusGraphics = 0;
+		itsGdiPlusGraphics = nullptr;
 	}
 }
 
@@ -307,8 +307,25 @@ NFmiRect NFmiCtrlView::CalcWantedDirectionalPosition(const NFmiRect& positionalR
 	return finalRect;
 }
 
+const std::string& NFmiCtrlView::CachedParameterName(bool tooltipVersion) const
+{ 
+	if(tooltipVersion)
+		return itsCachedParameterNameForTooltip;
+	else
+		return itsCachedParameterName;
+}
+
+void NFmiCtrlView::CachedParameterName(const std::string& newName, bool tooltipVersion)
+{ 
+	if(tooltipVersion)
+		itsCachedParameterNameForTooltip = newName;
+	else
+		itsCachedParameterName = newName;
+}
+
 void NFmiCtrlView::UpdateCachedParameterName()
 {
 	// Tämä on normi karttanäytön alustus, josta tehtiin oletustoiminto (override jutut tehdään mm. aikasarjaan ja poikkileikkaus luokkiin).
-	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, false, true, itsInfo));
+	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, false, 0, false, true, itsInfo), false);
+	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, false, true, itsInfo), true);
 }

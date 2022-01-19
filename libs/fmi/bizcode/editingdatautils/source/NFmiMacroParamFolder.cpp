@@ -41,8 +41,8 @@ void NFmiMacroParamFolder::Clear(void)
 void NFmiMacroParamFolder::RefreshMacroParams(void)
 {
 	Clear();
-	checkedVector<string> names(GetNames(itsPath));
-	checkedVector<string>::iterator it = names.begin();
+	std::vector<string> names(GetNames(itsPath));
+	std::vector<string>::iterator it = names.begin();
 	for( ; it != names.end(); ++it)
 	{
 		Load(*it);
@@ -53,7 +53,7 @@ void NFmiMacroParamFolder::RefreshMacroParams(void)
 // etsii nimellä macroparamia ja asettaa currentin osoittamaan siihen
 bool NFmiMacroParamFolder::Find(const std::string &theName)
 {
-	checkedVector<boost::shared_ptr<NFmiMacroParam> >::iterator it = std::find_if(itsMacroParams.begin(), itsMacroParams.end(), MacroParamFinder(theName));
+	std::vector<boost::shared_ptr<NFmiMacroParam> >::iterator it = std::find_if(itsMacroParams.begin(), itsMacroParams.end(), MacroParamFinder(theName));
 	if(it != itsMacroParams.end())
 	{
 		itsCurrentIndex = static_cast<int>(it - itsMacroParams.begin());
@@ -92,9 +92,9 @@ boost::shared_ptr<NFmiMacroParam> NFmiMacroParamFolder::Current(void)
 // poistaa nimetyn macroParamin (= listalta ja tiedostot)
 bool NFmiMacroParamFolder::Remove(const std::string &theName)
 {
-	checkedVector<NFmiMacroParam>::size_type oldSize = itsMacroParams.size();
+	std::vector<NFmiMacroParam>::size_type oldSize = itsMacroParams.size();
 	itsMacroParams.erase(std::remove_if(itsMacroParams.begin(), itsMacroParams.end(), MacroParamFinder(theName)), itsMacroParams.end());
-	checkedVector<NFmiMacroParam>::size_type newSize = itsMacroParams.size();
+	std::vector<NFmiMacroParam>::size_type newSize = itsMacroParams.size();
 	RemoveFiles(theName);
     return oldSize != newSize;
 }
@@ -136,11 +136,11 @@ bool NFmiMacroParamFolder::Save(boost::shared_ptr<NFmiMacroParam> theMacroParam)
 
 // palauttaa macroParam-dialogin listaa varten stringi-listan, jossa näkyy kunkin
 // macroparamin nimi ja skripti
-checkedVector<std::string> NFmiMacroParamFolder::GetDialogListStrings(bool getQ3Macros)
+std::vector<std::string> NFmiMacroParamFolder::GetDialogListStrings(bool getQ3Macros)
 {
-	checkedVector<string> strList;
-	checkedVector<NFmiMacroParam>::size_type ssize = itsMacroParams.size();
-	checkedVector<NFmiMacroParam>::size_type counter = 0;
+	std::vector<string> strList;
+	std::vector<NFmiMacroParam>::size_type ssize = itsMacroParams.size();
+	std::vector<NFmiMacroParam>::size_type counter = 0;
 	for( ; counter < ssize; counter++)
 	{
 		if(itsMacroParams[counter]->IsMacroParamDirectory() == false) // jos kyseessä ei ollut hakemisto, tarkistetaan makron tyyppi
@@ -161,9 +161,9 @@ checkedVector<std::string> NFmiMacroParamFolder::GetDialogListStrings(bool getQ3
 
 // palauttaa listan macroparameita halutusta hakemistosta
 // ja myös siinä olevat hakemistot
-checkedVector<std::string> NFmiMacroParamFolder::GetNames(const std::string &thePath)
+std::vector<std::string> NFmiMacroParamFolder::GetNames(const std::string &thePath)
 {
-	checkedVector<string> returnVector;
+	std::vector<string> returnVector;
 
 	// listataan alkuun hakemistot ja jos ei olla rootissa, laitetaan vielä ..-hakemisto mukaan
 	std::list<std::string> directories = NFmiFileSystem::Directories(thePath);
@@ -240,8 +240,8 @@ bool NFmiMacroParamFolder::Load(const std::string &theName)
 
 void NFmiMacroParamFolder::StoreMacroParams(void)
 {
-	checkedVector<NFmiMacroParam>::size_type ssize = itsMacroParams.size();
-	checkedVector<NFmiMacroParam>::size_type i = 0;
+	std::vector<NFmiMacroParam>::size_type ssize = itsMacroParams.size();
+	std::vector<NFmiMacroParam>::size_type i = 0;
 	for( ; i < ssize; i++)
 		itsMacroParams[i]->Store(itsPath, "");
 }

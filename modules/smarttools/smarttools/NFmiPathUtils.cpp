@@ -9,14 +9,28 @@
 
 namespace
 {
-// min 3 characters in path that start with a-z letter, then comes ':' and third letter is slash
-// character in either way '\' or '/'
-bool hasDriveLetterInPath(const std::string &filePath)
+bool hasDriveLetterInPath(const std::string &filePath, bool mustHaveDriveLetter)
 {
+  // 1) Minimum of 3 characters in path that start with a-z letter, then comes ':' and third letter
+  // is slash character in either way '\' or '/'
   if (filePath.size() >= 3)
   {
     if (::isalpha(filePath[0]) && filePath[1] == ':' && filePath[2] == '\\' || filePath[2] == '/')
       return true;
+  }
+
+  // With 'source' paths set mustHaveDriveLetter to true and with 'destination' paths to false.
+  if (!mustHaveDriveLetter)
+  {
+    // 2) Minimum of 3 characters in path that starts with double slashes // or \\ and then a
+    // letter, that means in Windows that this is absolute network path (e.g.
+    // \\server\path_in_server) and it's treated like path with drive-letter in it.
+    if (filePath.size() >= 3)
+    {
+      if ((filePath[0] == '\\' || filePath[0] == '/') &&
+          (filePath[1] == '\\' || filePath[1] == '/') && ::isalpha(filePath[2]))
+        return true;
+    }
   }
   return false;
 }
@@ -81,7 +95,7 @@ namespace PathUtils
 std::string fixMissingDriveLetterToAbsolutePath(const std::string &filePath,
                                                 const std::string &usedAbsoluteBaseDirectory)
 {
-  if (!::hasDriveLetterInPath(filePath) && ::hasDriveLetterInPath(usedAbsoluteBaseDirectory))
+  if (!::hasDriveLetterInPath(filePath, false) && ::hasDriveLetterInPath(usedAbsoluteBaseDirectory, true))
   {
     std::string pathWithDriveLetter(usedAbsoluteBaseDirectory.begin(),
                                     usedAbsoluteBaseDirectory.begin() + 2);

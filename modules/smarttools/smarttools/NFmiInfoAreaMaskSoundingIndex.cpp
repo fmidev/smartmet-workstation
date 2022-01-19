@@ -8,7 +8,7 @@
 #include "NFmiInfoAreaMaskSoundingIndex.h"
 #include <newbase/NFmiFastQueryInfo.h>
 
-NFmiInfoAreaMaskSoundingIndex::~NFmiInfoAreaMaskSoundingIndex(void)
+NFmiInfoAreaMaskSoundingIndex::~NFmiInfoAreaMaskSoundingIndex()
 {
 }
 
@@ -25,7 +25,7 @@ NFmiInfoAreaMaskSoundingIndex::NFmiInfoAreaMaskSoundingIndex(
 {
 }
 
-NFmiAreaMask *NFmiInfoAreaMaskSoundingIndex::Clone(void) const
+NFmiAreaMask *NFmiInfoAreaMaskSoundingIndex::Clone() const
 {
   return new NFmiInfoAreaMaskSoundingIndex(*this);
 }

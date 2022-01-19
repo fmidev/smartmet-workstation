@@ -53,8 +53,19 @@ NFmiStationIndexTextView::~NFmiStationIndexTextView(void)
 void NFmiStationIndexTextView::ModifyTextEnvironment(void)
 {
 	NFmiStationTextView::ModifyTextEnvironment();
-    itsDrawingEnvironment->SetFontSize(CalcFontSize(16, boost::math::iround(MaximumFontSizeFactor() * 72), itsCtrlViewDocumentInterface->Printing())); // synop fontit pit‰‰ laittaa isommiksi kuin normaali teksti
+    itsDrawingEnvironment->SetFontSize(CalcFontSize(16, boost::math::iround(MaximumFontSizeFactor() * 72), itsCtrlViewDocumentInterface->Printing())); 
 	itsDrawingEnvironment->SetFontType(kSynop);
+}
+
+void NFmiStationIndexTextView::SbdSetFontName()
+{
+    itsSymbolBulkDrawData.fontName(L"Synop");
+}
+
+NFmiPoint NFmiStationIndexTextView::SbdCalcFixedSymbolSize() const
+{
+    // synop fontit pit‰‰ laittaa isommiksi kuin normaali teksti
+    return SbdBasicSymbolSizeCalculation(16, 72);
 }
 
 NFmiString NFmiStationIndexTextView::GetPrintedText(float theValue)
@@ -62,31 +73,12 @@ NFmiString NFmiStationIndexTextView::GetPrintedText(float theValue)
     return NFmiString(CtrlViewUtils::GetSynopCodeAsSynopFontText(theValue));
 }
 
-int NFmiStationIndexTextView::GetApproxmationOfDataTextLength(void)
+int NFmiStationIndexTextView::GetApproxmationOfDataTextLength(std::vector<float>* )
 {
 	return 1;
 }
 
-void NFmiStationIndexTextView::DrawData(void)
-{
-	float value = ViewFloatValue();
-	if(value == kFloatMissing)
-		return;
-
-	NFmiString text(GetPrintedText(value));
-	if(text == NFmiString(""))
-		return;
-	NFmiRect rect(CurrentDataRect());
-	NFmiPoint place(rect.Center());
-	// pelkk‰ toolbox-alignmentti center (eik‰ mik‰‰n muukaan) vie teksti‰ keskelle y-suunnassa, joten t‰m‰ siirros siirt‰‰ tekstin ihan keskelle
-	place.Y(place.Y() - itsToolBox->SY(static_cast<long>(itsDrawingEnvironment->GetFontSize().Y()))/2.);
-
-	ModifyTextColor(value);
-	NFmiText tmp(place, text, 0, itsDrawingEnvironment);
-	itsToolBox->Convert(&tmp);
-}
-
-float NFmiStationIndexTextView::ViewFloatValue(void)
+float NFmiStationIndexTextView::ViewFloatValue(bool doTooltipValue)
 {
 	float value = kFloatMissing;
     bool specialValueRetrieved = false;
@@ -103,36 +95,30 @@ float NFmiStationIndexTextView::ViewFloatValue(void)
 		}
 	}
     if(!specialValueRetrieved)
-        value = NFmiStationView::ViewFloatValue();
+        value = NFmiStationView::ViewFloatValue(doTooltipValue);
 	if(itsDrawParam->Param().GetParamIdent() == kFmiPresentWeather)
 		value = ::ConvertPossible_WaWa_2_WW(value);
 	return value;
 }
 
-NFmiColor NFmiStationIndexTextView::GetBasicParamRelatedSymbolColor(float theValue)
+NFmiColor NFmiStationIndexTextView::GetBasicParamRelatedSymbolColor(float theValue) const
 {
     return CtrlViewUtils::GetSynopCodeSymbolColor(theValue);
 }
 
-void NFmiStationIndexTextView::ModifyTextColor(float theValue)
+NFmiSymbolColorChangingType NFmiStationIndexTextView::SbdGetSymbolColorChangingType() const
 {
-	itsDrawingEnvironment->SetFrameColor(GetSymbolColor(theValue));
+    return NFmiSymbolColorChangingType::Mixed;
 }
 
 void NFmiStationIndexTextView::Draw(NFmiToolBox *theGTB)
 {
-    // ugly way to restore fonttype, other way would be that everytime
-    // somewhere is text printed, you have to set the fontType
-    FmiFontType oldFontType = itsDrawingEnvironment->GetFontType();
-    bool oldBoldState = itsDrawingEnvironment->BoldFont();
     NFmiStationTextView::Draw(theGTB);
-    itsDrawingEnvironment->BoldFont(oldBoldState);
-    itsDrawingEnvironment->SetFontType(oldFontType);
     // Tarkistetaan myˆs itsInfo pointer, koska kaatumisraportit vihjaisivat ett‰ SmartMet on kaatunut itsInfo->Param(itsParamId) -kutsuun
     // eli kyseess‰ on ilmeisesti ollut nullptr. itsInfo attribuutti kyll‰ nollataan tietyiss‰ paikoin piirtokoodia, mutta en saanut 
     // toistettua ongelmaa mitenk‰‰n.
     if(fDoTimeInterpolation && itsInfo)
-        itsInfo->Param(itsParamId);
+        itsInfo->Param(itsParamId); // Palautetaan jostain tuntemattomasta syyst‰ originaali parametri
 }
 
 bool NFmiStationIndexTextView::PrepareForStationDraw(void)
@@ -215,30 +201,6 @@ std::string NFmiStationIndexTextView::Value2ToolTipString(float theValue, int /*
 	return str;
 }
 
-void NFmiStationIndexTextView::DrawSymbolWithWantedBitmap(int minSymbolSize, int maxSymbolSize, NFmiImageMap& imageMap)
-{
-    float value = ViewFloatValue();
-    if(value == kFloatMissing)
-        return;
-    bool printing = itsCtrlViewDocumentInterface->Printing();
-    std::string codeStr = boost::lexical_cast<std::string>(value);
-
-    itsDrawingEnvironment->SetFontSize(CalcFontSize(minSymbolSize, boost::math::iround(MaximumFontSizeFactor() * maxSymbolSize), itsCtrlViewDocumentInterface->Printing()));
-
-    double dataRectFactor = 0.85; // Symbolia pit‰‰ hieman pienent‰‰ suhteessa DataRect:iin
-    if(printing)
-        dataRectFactor = 0.6; // Printatessa pit‰‰ pienent‰‰ viel‰ lis‰‰
-    double relativeSymbolSize = dataRectFactor * (CurrentDataRect().Width() + CurrentDataRect().Height()) / 2.;
-    auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
-    double symbolSizeInMM = itsToolBox->HY(relativeSymbolSize) / graphicalInfo.itsPixelsPerMM_y;
-    symbolSizeInMM *= ::CalcMMSizeFactor(static_cast<float>(graphicalInfo.itsViewHeightInMM), 1.1f);
-    double symbolSizeInPixels = graphicalInfo.itsPixelsPerMM_y * symbolSizeInMM;
-    Gdiplus::Bitmap* symbolBitmap = imageMap.GetRightSizeImage(symbolSizeInPixels, printing, codeStr);
-    NFmiRect symbolRect(CalcSymbolRelativeRect(CurrentLatLon(), symbolSizeInMM));
-    CtrlView::DrawAnimationButton(symbolRect, symbolBitmap, itsGdiPlusGraphics, *itsToolBox, printing, itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex), 1.f, true);
-}
-
-
 // ********************************************************************
 // ***************  NFmiStationFogTextView  ***************************
 // ********************************************************************
@@ -257,7 +219,7 @@ NFmiString NFmiStationFogTextView::GetPrintedText(float theValue)
 }
 
 // NoFog = 0, ModerateFog = 1, DenseFog = 2
-float NFmiStationFogTextView::FogValueToSymbolIndex(float theFogValue)
+float NFmiStationFogTextView::FogValueToSymbolIndex(float theFogValue) const
 {
 	switch(int(theFogValue))
 	{
@@ -271,9 +233,9 @@ float NFmiStationFogTextView::FogValueToSymbolIndex(float theFogValue)
 	return kFloatMissing;
 }
 
-void NFmiStationFogTextView::ModifyTextColor(float theValue)
+NFmiColor NFmiStationFogTextView::GetBasicParamRelatedSymbolColor(float theValue) const
 {
-	NFmiStationIndexTextView::ModifyTextColor(FogValueToSymbolIndex(static_cast<float>(theValue)));
+    return NFmiStationIndexTextView::GetBasicParamRelatedSymbolColor(FogValueToSymbolIndex(theValue));
 }
 
 // ********************************************************************
@@ -295,10 +257,15 @@ NFmiString NFmiTotalCloudinessSymbolTextView::GetPrintedText(float theValue)
 	return NFmiString();
 }
 
-NFmiColor NFmiTotalCloudinessSymbolTextView::GetBasicParamRelatedSymbolColor(float theValue)
+NFmiColor NFmiTotalCloudinessSymbolTextView::GetBasicParamRelatedSymbolColor(float theValue) const
 {
     // You must leap here over parent's method to grandparent's method
     return NFmiStationView::GetBasicParamRelatedSymbolColor(theValue);
+}
+
+NFmiSymbolColorChangingType NFmiTotalCloudinessSymbolTextView::SbdGetSymbolColorChangingType() const
+{
+    return NFmiSymbolColorChangingType::DrawParamSet;
 }
 
 // ********************************************************************
@@ -320,7 +287,7 @@ NFmiString NFmiPrecipitationFormSymbolTextView::GetPrintedText(float theValue)
 	return NFmiString();
 }
 
-NFmiColor NFmiPrecipitationFormSymbolTextView::GetBasicParamRelatedSymbolColor(float theValue)
+NFmiColor NFmiPrecipitationFormSymbolTextView::GetBasicParamRelatedSymbolColor(float theValue) const
 {
     switch(int(theValue))
     {
@@ -374,18 +341,27 @@ void NFmiRawMirriFontSymbolTextView::ModifyTextEnvironment(void)
     itsDrawingEnvironment->SetFontType(kMirri);
 }
 
+NFmiPoint NFmiRawMirriFontSymbolTextView::SbdCalcFixedSymbolSize() const
+{
+    return SbdBasicSymbolSizeCalculation(16, 48);
+}
+
+void NFmiRawMirriFontSymbolTextView::SbdSetFontName()
+{
+    itsSymbolBulkDrawData.fontName(L"Mirri");
+}
+
 NFmiString NFmiRawMirriFontSymbolTextView::GetPrintedText(float theValue)
 {
+    if(theValue != kFloatMissing)
     {
-        if(theValue != kFloatMissing)
-        {
-            char ch = static_cast<char>(theValue);
-            NFmiString str;
-            str += ch;
-            return str;
-        }
+        char ch = static_cast<char>(theValue);
+        NFmiString str;
+        str += ch;
+        return str;
     }
-    return NFmiString();
+    else
+        return "";
 }
 
 NFmiPoint NFmiRawMirriFontSymbolTextView::GetSpaceOutFontFactor(void)
@@ -393,10 +369,15 @@ NFmiPoint NFmiRawMirriFontSymbolTextView::GetSpaceOutFontFactor(void)
     return NFmiPoint(0.6, 0.7);
 }
 
-NFmiColor NFmiRawMirriFontSymbolTextView::GetBasicParamRelatedSymbolColor(float theValue)
+NFmiColor NFmiRawMirriFontSymbolTextView::GetBasicParamRelatedSymbolColor(float theValue) const
 {
     // You must leap here over parent's method to grandparent's method
     return NFmiStationView::GetBasicParamRelatedSymbolColor(theValue);
+}
+
+NFmiSymbolColorChangingType NFmiRawMirriFontSymbolTextView::SbdGetSymbolColorChangingType() const
+{
+    return NFmiSymbolColorChangingType::DrawParamSet;
 }
 
 // ********************************************************************
@@ -484,29 +465,6 @@ static double CalcFontSizeFactor(float theValue)
 	return sizeValue / 3.;
 }
 
-void NFmiCloudSymbolTextView::DrawData(void)
-{
-	float value = ViewFloatValue();
-	if(value == kFloatMissing)
-		return;
-
-	NFmiString text(GetPrintedText(value));
-	if(text == NFmiString(""))
-		return;
-	double fontSizeFactor = CalcFontSizeFactor(value);
-	NFmiPoint newFontSize(itsGeneralFontSize);
-	newFontSize.X(newFontSize.X() * fontSizeFactor);
-	newFontSize.Y(newFontSize.Y() * fontSizeFactor);
-	itsDrawingEnvironment->SetFontSize(newFontSize);
-	NFmiRect rect(CurrentDataRect());
-	NFmiPoint place(rect.Center());
-	place.Y(place.Y() - itsToolBox->SY(static_cast<long>(itsDrawingEnvironment->GetFontSize().Y()))/2.);
-
-	ModifyTextColor(value);
-	NFmiText tmp(place, text, 0, itsDrawingEnvironment);
-	itsToolBox->Convert(&tmp);
-}
-
 NFmiString NFmiCloudSymbolTextView::GetPrintedText(float theValue)
 {
 // t‰m‰ luokka ei k‰yt‰ itsIndexedWordList kuten perinn‰n mukaan pit‰isi, tuo lista on vain feikki
@@ -549,10 +507,100 @@ void NFmiCloudSymbolTextView::ModifyTextEnvironment(void)
 	itsGeneralFontSize = itsDrawingEnvironment->GetFontSize();
 }
 
-NFmiColor NFmiCloudSymbolTextView::GetBasicParamRelatedSymbolColor(float theValue)
+NFmiColor NFmiCloudSymbolTextView::GetBasicParamRelatedSymbolColor(float theValue) const
 {
     // You must leap here over parent's method to grandparent's method
     return NFmiStationView::GetBasicParamRelatedSymbolColor(theValue);
+}
+
+bool NFmiCloudSymbolTextView::SbdIsFixedSymbolSize() const
+{
+    return false;
+}
+
+NFmiPoint NFmiCloudSymbolTextView::SbdCalcChangingSymbolSize(float value) const
+{
+    auto baseFontSize = NFmiStationIndexTextView::SbdCalcFixedSymbolSize();
+    auto fontSizeFactor = CalcFontSizeFactor(value);
+    baseFontSize *= NFmiPoint(fontSizeFactor, fontSizeFactor);
+    return baseFontSize;
+}
+
+NFmiSymbolColorChangingType NFmiCloudSymbolTextView::SbdGetSymbolColorChangingType() const
+{
+    return NFmiSymbolColorChangingType::DrawParamSet;
+}
+
+// ********************************************************************
+// *************  NFmiImageBasedSymbolView  ***************************
+// ********************************************************************
+
+NFmiImageBasedSymbolView::NFmiImageBasedSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea>& theArea
+    , NFmiToolBox* theToolBox
+    , NFmiDrawingEnvironment* theDrawingEnvi
+    , boost::shared_ptr<NFmiDrawParam>& theDrawParam
+    , FmiParameterName theParamIdent
+    , NFmiIndexMessageList* theIndexedWordList
+    , NFmiPoint theOffSet
+    , NFmiPoint theSize
+    , int theRowIndex
+    , int theColumnIndex)
+    :NFmiStationIndexTextView(theMapViewDescTopIndex, theArea
+        , theToolBox
+        , theDrawingEnvi
+        , theDrawParam
+        , theParamIdent
+        , theIndexedWordList
+        , theOffSet
+        , theSize
+        , theRowIndex
+        , theColumnIndex)
+{
+}
+
+NFmiPoint NFmiImageBasedSymbolView::SbdCalcFixedRelativeDrawObjectSize() const
+{
+    auto symbolSizeInMM = CalcSymbolSizeInMM();
+    NFmiRect symbolRect(CalcSymbolRelativeRect(CurrentLatLon(), symbolSizeInMM));
+    return symbolRect.Size();
+}
+
+double NFmiImageBasedSymbolView::CalcSymbolSizeInMM() const
+{
+    double dataRectFactor = 0.85; // Symbolia pit‰‰ hieman pienent‰‰ suhteessa DataRect:iin
+    if(itsCtrlViewDocumentInterface->Printing())
+        dataRectFactor = 0.6; // Printatessa pit‰‰ pienent‰‰ viel‰ lis‰‰
+    auto currentDataRect = CurrentDataRect();
+    double relativeSymbolSize = dataRectFactor * (currentDataRect.Width() + currentDataRect.Height()) / 2.;
+    auto& graphicalInfo = GetGraphicalInfo();
+    double symbolSizeInMM = itsToolBox->HY(relativeSymbolSize) / graphicalInfo.itsPixelsPerMM_y;
+    symbolSizeInMM *= ::CalcMMSizeFactor(static_cast<float>(graphicalInfo.itsViewHeightInMM), 1.1f);
+    return symbolSizeInMM;
+}
+
+NFmiPoint NFmiImageBasedSymbolView::SbdCalcFixedSymbolSize() const
+{
+    // K‰ytet‰‰n image symbolien bulk piirrossa symbolin haluttua [mm] kokoa.
+    auto symbolSizeInMM = CalcSymbolSizeInMM();
+    return NFmiPoint(symbolSizeInMM, symbolSizeInMM);
+}
+
+NFmiPoint NFmiImageBasedSymbolView::GetSpaceOutFontFactor(void)
+{
+    return NFmiPoint(1, 1);
+}
+
+NFmiSymbolColorChangingType NFmiImageBasedSymbolView::SbdGetSymbolColorChangingType() const
+{
+    return NFmiSymbolColorChangingType::Never;
+}
+
+// t‰m‰kin on huono viritys, mutta harvennuskoodi ottaa t‰ss‰ vaiheessa fontti koon huomioon kun
+// se laskee miten harvennetaan hila dataa. Nyt pit‰‰ siis laskea fontti koko t‰‰ll‰kin, vaikka
+// tuuli vektori ei olekaan fontti pohjainen symboli.
+void NFmiImageBasedSymbolView::ModifyTextEnvironment(void)
+{
+    itsDrawingEnvironment->SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 48), itsCtrlViewDocumentInterface->Printing()));
 }
 
 // ********************************************************************
@@ -571,7 +619,7 @@ NFmiBetterWeatherSymbolView::NFmiBetterWeatherSymbolView(int theMapViewDescTopIn
     , NFmiPoint theSize
     , int theRowIndex
     , int theColumnIndex)
-:NFmiStationIndexTextView(theMapViewDescTopIndex, theArea
+:NFmiImageBasedSymbolView(theMapViewDescTopIndex, theArea
         , theToolBox
         , theDrawingEnvi
         , theDrawParam
@@ -584,23 +632,9 @@ NFmiBetterWeatherSymbolView::NFmiBetterWeatherSymbolView(int theMapViewDescTopIn
 {
 }
 
-void NFmiBetterWeatherSymbolView::DrawSymbols(void)
+NFmiSymbolBulkDrawType NFmiBetterWeatherSymbolView::SbdGetDrawType() const
 {
-    try
-    {
-        InitializeGdiplus(itsToolBox, 0);
-        NFmiStationIndexTextView::DrawSymbols();
-    }
-    catch(...)
-    {
-    }
-
-    CleanGdiplus();
-}
-
-void NFmiBetterWeatherSymbolView::DrawData(void)
-{
-    DrawSymbolWithWantedBitmap(12, 48, NFmiBetterWeatherSymbolView::itsBetterWeatherSymbolMap);
+    return NFmiSymbolBulkDrawType::BitmapSymbol1;
 }
 
 // HUOM! t‰t‰ pit‰‰ kutsua (GeneralDataDocissa) ennen kuin itse luokkaa saa k‰ytt‰‰!!!!
@@ -616,19 +650,6 @@ void NFmiBetterWeatherSymbolView::InitBetterWeatherSymbolMap(const std::string &
         initFile = NFmiFileSystem::MakeAbsolutePath(initFile, theWomlDirectory);
         NFmiBetterWeatherSymbolView::itsBetterWeatherSymbolMap.Initialize(baseFolder, initFile);
     }
-}
-
-NFmiPoint NFmiBetterWeatherSymbolView::GetSpaceOutFontFactor(void)
-{
-    return NFmiPoint(1, 1);
-}
-
-// t‰m‰kin on huono viritys, mutta harvennuskoodi ottaa t‰ss‰ vaiheessa fontti koon huomioon kun
-// se laskee miten harvennetaan hila dataa. Nyt pit‰‰ siis laskea fontti koko t‰‰ll‰kin, vaikka
-// tuuli vektori ei olekaan fontti pohjainen symboli.
-void NFmiBetterWeatherSymbolView::ModifyTextEnvironment(void)
-{
-    itsDrawingEnvironment->SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 48), itsCtrlViewDocumentInterface->Printing()));
 }
 
 // ************************************************************
@@ -647,7 +668,7 @@ NFmiSmartSymbolView::NFmiSmartSymbolView(int theMapViewDescTopIndex, boost::shar
     , NFmiPoint theSize
     , int theRowIndex
     , int theColumnIndex)
-    :NFmiStationIndexTextView(theMapViewDescTopIndex, theArea
+    :NFmiImageBasedSymbolView(theMapViewDescTopIndex, theArea
         , theToolBox
         , theDrawingEnvi
         , theDrawParam
@@ -660,23 +681,9 @@ NFmiSmartSymbolView::NFmiSmartSymbolView(int theMapViewDescTopIndex, boost::shar
 {
 }
 
-void NFmiSmartSymbolView::DrawSymbols(void)
+NFmiSymbolBulkDrawType NFmiSmartSymbolView::SbdGetDrawType() const
 {
-    try
-    {
-        InitializeGdiplus(itsToolBox, 0);
-        NFmiStationIndexTextView::DrawSymbols();
-    }
-    catch(...)
-    {
-    }
-
-    CleanGdiplus();
-}
-
-void NFmiSmartSymbolView::DrawData(void)
-{
-    DrawSymbolWithWantedBitmap(12, 128, NFmiSmartSymbolView::itsSmartSymbolMap);
+    return NFmiSymbolBulkDrawType::BitmapSymbol2;
 }
 
 // HUOM! t‰t‰ pit‰‰ kutsua (GeneralDataDocissa) ennen kuin itse luokkaa saa k‰ytt‰‰!!!!
@@ -692,16 +699,6 @@ void NFmiSmartSymbolView::InitSmartSymbolMap(const std::string &theWomlDirectory
         initFile = NFmiFileSystem::MakeAbsolutePath(initFile, theWomlDirectory);
         NFmiSmartSymbolView::itsSmartSymbolMap.Initialize(baseFolder, initFile);
     }
-}
-
-NFmiPoint NFmiSmartSymbolView::GetSpaceOutFontFactor(void)
-{
-    return NFmiPoint(1, 1);
-}
-
-void NFmiSmartSymbolView::ModifyTextEnvironment(void)
-{
-    itsDrawingEnvironment->SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 48), itsCtrlViewDocumentInterface->Printing()));
 }
 
 // ************************************************************
@@ -720,7 +717,7 @@ NFmiCustomSymbolView::NFmiCustomSymbolView(int theMapViewDescTopIndex, boost::sh
     , NFmiPoint theSize
     , int theRowIndex
     , int theColumnIndex)
-    :NFmiStationIndexTextView(theMapViewDescTopIndex, theArea
+    :NFmiImageBasedSymbolView(theMapViewDescTopIndex, theArea
         , theToolBox
         , theDrawingEnvi
         , theDrawParam
@@ -733,23 +730,9 @@ NFmiCustomSymbolView::NFmiCustomSymbolView(int theMapViewDescTopIndex, boost::sh
 {
 }
 
-void NFmiCustomSymbolView::DrawSymbols(void)
+NFmiSymbolBulkDrawType NFmiCustomSymbolView::SbdGetDrawType() const
 {
-    try
-    {
-        InitializeGdiplus(itsToolBox, 0);
-        NFmiStationIndexTextView::DrawSymbols();
-    }
-    catch(...)
-    {
-    }
-
-    CleanGdiplus();
-}
-
-void NFmiCustomSymbolView::DrawData(void)
-{
-    DrawSymbolWithWantedBitmap(12, 128, NFmiCustomSymbolView::itsCustomSymbolMap);
+    return NFmiSymbolBulkDrawType::BitmapSymbol3;
 }
 
 void NFmiCustomSymbolView::InitCustomSymbolMap(const std::string &theWomlDirectory)
@@ -766,12 +749,3 @@ void NFmiCustomSymbolView::InitCustomSymbolMap(const std::string &theWomlDirecto
     }
 }
 
-NFmiPoint NFmiCustomSymbolView::GetSpaceOutFontFactor(void)
-{
-    return NFmiPoint(1, 1);
-}
-
-void NFmiCustomSymbolView::ModifyTextEnvironment(void)
-{
-    itsDrawingEnvironment->SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 48), itsCtrlViewDocumentInterface->Printing()));
-}
