@@ -3444,9 +3444,9 @@ std::string NFmiTempView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
         const NFmiMTATempSystem::Container &tempInfos = mtaTempSystem.GetTemps();
         for(const auto &constantLoopTempInfo : tempInfos)
         {
-            NFmiMTATempSystem::TempInfo usedTempInfo = constantLoopTempInfo;
             for(const auto &selectedProducer : mtaTempSystem.SoundingComparisonProducers())
             {
+	            NFmiMTATempSystem::TempInfo usedTempInfo = constantLoopTempInfo;
                 usedTempInfo.Time(::GetUsedSoundingDataTime(itsCtrlViewDocumentInterface, usedTempInfo));
                 boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(selectedProducer, usedTempInfo.Time(), 0, NFmiInfoOrganizer::ParamCheckFlags(true));
                 if(selectedProducer.useServer() || info)
@@ -3471,8 +3471,8 @@ std::string NFmiTempView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
                     str += "</font></b>";
 
                     str += "<br><hr color=red><br>"; // väliviiva
-                    index++;
                 }
+                index++;
             }
         }
     }
