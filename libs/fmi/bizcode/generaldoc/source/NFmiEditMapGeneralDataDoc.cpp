@@ -5430,6 +5430,16 @@ void MapViewSizeChangedDoSymbolMacroParamCacheChecks(int mapViewDescTopIndex)
     }
 }
 
+void UpdateCrossSectionViewTrueSizeViewAfterViewMacro()
+{
+	auto drawObjectScaleFactor = ApplicationWinRegistry().DrawObjectScaleFactor();
+	auto& crossSectionSystem = *CrossSectionSystem();
+	auto& trueMapViewSizeInfo = crossSectionSystem.GetTrueMapViewSizeInfo();
+	auto& clientPixelSize = trueMapViewSizeInfo.clientAreaSizeInPixels();
+	NFmiPoint crossSectionViewGridSize(1, crossSectionSystem.RowCount());
+	trueMapViewSizeInfo.onSize(clientPixelSize, nullptr, crossSectionViewGridSize, true, drawObjectScaleFactor);
+}
+
 bool DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& clientPixelSize, CDC* pDC)
 {
 	auto isMapView = mapViewDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex;
@@ -6652,6 +6662,7 @@ bool InitCPManagerSet(void)
         MetEditorOptionsData().ControlPointMode(theMacro.UseControlPoinTool());
 
         GetCombinedMapHandler()->makeApplyViewMacroDirtyActions(ApplicationWinRegistry().DrawObjectScaleFactor());
+		UpdateCrossSectionViewTrueSizeViewAfterViewMacro();
 
         // Lopuksi (jos poikkeuksia ei ole lentänyt) laitetaan ladatun macron nimi talteen pääkarttanäytön title tekstiä varten
         SetLastLoadedViewMacroName(theMacro, fTreatAsViewMacro, undoRedoAction);
