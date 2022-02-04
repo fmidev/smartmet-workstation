@@ -89,6 +89,7 @@ public:
    static void GridStationData(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, const NFmiGriddingProperties &griddingProperties);
    static long GetTimeInterpolationRangeInMinutes(const NFmiHelpDataInfo *theHelpDataInfo);
    static bool AllowNearestTimeInterpolation(long theTimeInterpolationRangeInMinutes);
+   static float CalcUsedLegendSizeFactor(double singleMapViewHeightInMM, int visibleViewRowCount);
 
 protected:
    bool IsSpecialMatrixDataDraw(void) const;

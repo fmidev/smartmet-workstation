@@ -2257,6 +2257,22 @@ bool NFmiStationView::AllowNearestTimeInterpolation(long theTimeInterpolationRan
         return false;
 }
 
+float NFmiStationView::CalcUsedLegendSizeFactor(double singleMapViewHeightInMM, int visibleViewRowCount)
+{
+	float sizeFactor = ::CalcMMSizeFactor(static_cast<float>(singleMapViewHeightInMM), 1.1f);
+	if(sizeFactor < 1)
+		sizeFactor = std::pow(sizeFactor, 2.f);
+	if(visibleViewRowCount > 1)
+	{
+		// Halutaan kasvattaa kertointa riippuen näyttörivien määrästä, 
+		// sqrt olisi kasvattanut desimaaliosiota liian vähän, joten tässä otetaan 1.6:s juuri (pow(x, 1/y) -> y's juuri x:stä)
+		float decimalPart = std::pow(static_cast<float>(visibleViewRowCount), 1.f/1.6f) / 10.f;
+		float smallViewFactor = 1.f + decimalPart;
+		sizeFactor *= smallViewFactor;
+	}
+	return sizeFactor;
+}
+
 NFmiHelpDataInfo* NFmiStationView::GetHelpDataInfo(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
     return GetCtrlViewDocumentInterface()->HelpDataInfoSystem()->FindHelpDataInfo(theInfo->DataFilePattern());

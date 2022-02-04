@@ -1726,14 +1726,6 @@ NFmiPoint NFmiStationViewHandler::ViewPointToLatLon(const NFmiPoint& theViewPoin
 	return itsMapArea->ToLatLon(theViewPoint);
 }
 
-static float CalcUsedLegendSizeFactor(const CtrlViewUtils::GraphicalInfo &graphicalInfo)
-{
-    float sizeFactor = ::CalcMMSizeFactor(static_cast<float>(graphicalInfo.itsViewHeightInMM), 1.1f);
-    if(sizeFactor < 1)
-        sizeFactor = std::pow(sizeFactor, 2.f);
-    return sizeFactor;
-}
-
 void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
 {
 	if(DrawContourLegendOnThisMapRow())
@@ -1748,7 +1740,8 @@ void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
 		{
 			auto& colorContourLegendSettings = itsCtrlViewDocumentInterface->ColorContourLegendSettings();
 			auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
-			auto sizeFactor = ::CalcUsedLegendSizeFactor(graphicalInfo);
+			const auto& viewGridSize = itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex);
+			auto sizeFactor = NFmiStationView::CalcUsedLegendSizeFactor(itsCtrlViewDocumentInterface->SingleMapViewHeightInMilliMeters(itsMapViewDescTopIndex), static_cast<int>(viewGridSize.Y()));
 			auto lastLegendRelativeBottomRightCorner = CtrlView::CalcProjectedPointInRectsXyArea(itsMapArea->XYArea(), itsCtrlViewDocumentInterface->ColorContourLegendSettings().relativeStartPosition());
 
 			for(const auto& drawParam : *drawParamList)
