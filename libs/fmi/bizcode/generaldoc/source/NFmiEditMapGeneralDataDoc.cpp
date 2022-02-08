@@ -3232,6 +3232,15 @@ void AddMapLayerRelatedInfosToMapLayerSelectionPopup(unsigned int theDescTopInde
 	{
 		auto mainMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, finalMenuString, NFmiDataIdent(), menuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
 		auto menuItemList = std::make_unique<NFmiMenuItemList>();
+
+		// Lis‰t‰‰n overlay tapauksessa 'none' layer 1. vaihtoehdoksi
+		if(menuCommand == kFmiSelectOverlayMapLayer)
+		{
+			auto noneSelectionMenuString = CombinedMapHandlerInterface::getNoneOverlayName();
+			auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, noneSelectionMenuString, NFmiDataIdent(), menuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+			menuItemList->Add(std::move(menuItem));
+		}
+
 		for(const auto& mapLayerRelatedInfo : mapAreaMapLayerRelatedInfos)
 		{
 			auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, mapLayerRelatedInfo.guiName_, NFmiDataIdent(), menuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
@@ -3240,15 +3249,10 @@ void AddMapLayerRelatedInfosToMapLayerSelectionPopup(unsigned int theDescTopInde
 			menuItemList->Add(std::move(menuItem));
 		}
 
-		// Lis‰t‰‰n overlay tapauksessa 'none' layer vaihtoehdoksi
-		if(menuCommand == kFmiSelectOverlayMapLayer && menuItemList->NumberOfMenuItems() > 0)
-		{
-			auto noneSelectionMenuString = CombinedMapHandlerInterface::getNoneOverlayName();
-			auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, noneSelectionMenuString, NFmiDataIdent(), menuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
-			menuItemList->Add(std::move(menuItem));
-		}
+		// Kuinka monta ei none layeria lis‰tty
+		auto actualLayersAdded = (menuCommand == kFmiSelectOverlayMapLayer) ? menuItemList->NumberOfMenuItems() - 1 : menuItemList->NumberOfMenuItems();
 
-		if(menuItemList->NumberOfMenuItems() > 0)
+		if(actualLayersAdded > 0)
 		{
 			mainMenuItem->AddSubMenu(menuItemList.release());
 			theMenuItemList.Add(std::move(mainMenuItem));
