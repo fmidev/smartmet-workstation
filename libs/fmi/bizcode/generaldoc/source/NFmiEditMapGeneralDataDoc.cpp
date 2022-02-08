@@ -2401,13 +2401,7 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 			}
 			fIsTEMPCodeSoundingDataAlsoCopiedToEditedData = false;
 
-			if(editedInfo)
-			{
-				dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->LoadedFromFile(loadFromFileState);
-				// asetetaan viel‰ editorin currenttime sopivaksi
-				editedInfo->TimeToNearestStep(GetCombinedMapHandler()->currentTime(0), kCenter); // asetetaan current time p‰‰karttaikunan mukaan desctop-indeksi 0
-				GetCombinedMapHandler()->currentTime(CtrlViewUtils::kDoAllMapViewDescTopIndex, editedInfo->Time(), false);
-			}
+			DoEditedInfoTimeSetup(editedInfo, loadFromFileState);
 		}
 
         if(DataNotificationSettings().Use() && DataNotificationSettings().ShowIcon())
@@ -2423,15 +2417,70 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 			fIsTEMPCodeSoundingDataAlsoCopiedToEditedData = true;
 		}
 
-		if(EditedInfo() == nullptr && CaseStudyModeOn() || fChangingCaseStudyToNormalMode) // jos on ladattu caseStudy, eik‰ ollut pohjilla mit‰‰n dataan, laitetaan 1. ladattu data 'editoitavaksi dataksi'
+		DoPossibleCaseStudyEditedDataSetup(theData, theDataFileName, theType, fDataWasDeletedOut);
+        PrepareForParamAddSystemUpdate();
+	}
+}
+
+void DoEditedInfoTimeSetup(boost::shared_ptr<NFmiFastQueryInfo>& editedInfo, bool loadFromFileState)
+{
+	if(editedInfo)
+	{
+		dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->LoadedFromFile(loadFromFileState);
+		// asetetaan viel‰ editorin currenttime sopivaksi
+		bool foundTime = editedInfo->TimeToNearestStep(GetCombinedMapHandler()->currentTime(0), kCenter); // asetetaan current time p‰‰karttaikunan mukaan desctop-indeksi 0
+		if(foundTime)
 		{
-			if(theData->Info()->SizeLevels() == 1) // mutta vain pintadatalle, koska mahdollinen mallipintadata on niin jumalattoman iso
+			auto dataTime = editedInfo->Time();
+			if(dataTime.GetMin() != 0 || dataTime.GetSec() != 0)
 			{
-				fChangingCaseStudyToNormalMode = false;
-				AddQueryData(theData->Clone(), theDataFileName, "", NFmiInfoData::kEditable, "", false, dataWasDeletedInInnerCall);
+				std::string logMessage = "Loaded edited data: ";
+				logMessage += editedInfo->DataFileName();
+				logMessage += ", dataTime: ";
+				logMessage += dataTime.ToStr(kYYYYMMDDHHMMSS);
+				logMessage += " had to be fixed to have 0 minutes and seconds for user convienience";
+				CatLog::logMessage(logMessage, CatLog::Severity::Info, CatLog::Category::Operational);
+				// Sallitaan vain tasa minuutit ja sekunnit t‰ss‰ karttapohjien aika-asetuksessa
+				dataTime.SetMin(0);
+				dataTime.SetSec(0);
+			}
+			GetCombinedMapHandler()->currentTime(CtrlViewUtils::kDoAllMapViewDescTopIndex, dataTime, false);
+		}
+	}
+}
+
+// Jos on ladattu caseStudy, eik‰ ollut pohjilla mit‰‰n editoitavaa dataa, laitetaan 1. sopiva ladattu data 'editoitavaksi dataksi'
+void DoPossibleCaseStudyEditedDataSetup(NFmiQueryData* theData, const std::string& theDataFileName, NFmiInfoData::Type theType, bool fDataWasDeletedOut)
+{
+	// Jos ei ole editoitavaa dataa ja on jonkinn‰kˆinen case-study lataus/sulkeminen -tilanne
+	if(EditedInfo() == nullptr && CaseStudyModeOn() || fChangingCaseStudyToNormalMode)
+	{
+		// Jos data oli jo deletoitu, ei yritet‰ ‰nke‰ sit‰ en‰‰ t‰h‰n
+		if(fDataWasDeletedOut)
+			return;
+		// Vain tietyn tyyppiset datat kannattaa kelpuuttaa 'editoitavaksi' dataksi
+		if(theType == NFmiInfoData::kEditable || theType == NFmiInfoData::kCopyOfEdited || theType == NFmiInfoData::kEditingHelpData || 
+			theType == NFmiInfoData::kKepaData || theType == NFmiInfoData::kViewable || theType == NFmiInfoData::kModelHelpData || 
+			theType == NFmiInfoData::kObservations || theType == NFmiInfoData::kAnalyzeData)
+		{
+			if(theData->Info()->SizeLevels() == 1) // mutta vain pintadatalle, koska leveldatat voivat olla niin jumalattoman isoja
+			{
+				auto producerId = theData->Info()->Producer()->GetIdent();
+				// Havainnoista vain synop ja metar tuottaja kelp‰‰ t‰ss‰ tilanteessa
+				if(theType != NFmiInfoData::kObservations || (producerId == kFmiSYNOP || producerId == kFmiMETAR))
+				{
+					fChangingCaseStudyToNormalMode = false;
+					bool dataWasDeletedInInnerCall = false;
+					AddQueryData(theData->Clone(), theDataFileName, "", NFmiInfoData::kEditable, "", false, dataWasDeletedInInnerCall);
+					if(!dataWasDeletedInInnerCall)
+					{
+						std::string logMessage = "CaseStudy change situation (load/close), now using following as edited data: ";
+						logMessage += theDataFileName;
+						LogMessage(logMessage, CatLog::Severity::Info, CatLog::Category::Data);
+					}
+				}
 			}
 		}
-        PrepareForParamAddSystemUpdate();
 	}
 }
 
