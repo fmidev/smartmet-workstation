@@ -50,7 +50,8 @@ void NFmiMaskParamsView::DrawData(void)
     if(maskList)
     {
         itsDrawingEnvironment->SetFontSize(itsFontSize);
-		int zeroBasedRowIndex = 0;
+        itsDrawingEnvironment->SetFontType(kArial);
+        int zeroBasedRowIndex = 0;
 		for(maskList->Reset(); maskList->Next(); zeroBasedRowIndex++)
         {
             auto parameterRowRect = CalcParameterRowRect(zeroBasedRowIndex);
