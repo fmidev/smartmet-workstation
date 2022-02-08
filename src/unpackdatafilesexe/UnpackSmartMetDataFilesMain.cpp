@@ -178,6 +178,77 @@ int main(int argc, const char* argv[])
 /*
 #include "NFmiQueryData.h"
 #include "NFmiFastQueryInfo.h"
+#include "NFmiStringTools.h"
+#include <fstream>
+
+int main(int argc, const char* argv[])
+{
+    // Tulostetaan annetun 1. argumenttina annetun datan 2. parametrina annetun par-id:n arvot.
+    // Tulostetaan pilkulla erotettujen indeksien aika-askeleet (alkavat 0:sta).
+    try
+    {
+        std::string dataFileName = argv[1];
+        std::string parIdStr = argv[2];
+        auto parId = static_cast<FmiParameterName>(std::stoi(parIdStr));
+        std::string timeIndexListStr = argv[3];
+        auto timeIndexList = NFmiStringTools::Split<std::vector<int>>(timeIndexListStr, ",");
+        NFmiQueryData data(dataFileName);
+        NFmiFastQueryInfo fastInfo(&data);
+        if(!fastInfo.Param(parId))
+        {
+            std::string errorMessage = "par-id: ";
+            errorMessage += std::to_string(parId);
+            errorMessage += " was not found from given data";
+            throw std::runtime_error(errorMessage);
+        }
+
+        for(fastInfo.ResetLevel(); fastInfo.NextLevel(); )
+        {
+            for(auto timeIndex : timeIndexList)
+            {
+                if(!fastInfo.TimeIndex(timeIndex))
+                {
+                    std::cerr << "Time index " << timeIndex << " was not in given data" << std::endl;
+                }
+                else
+                {
+                    if(fastInfo.IsGrid())
+                    {
+                        int fieldWidth = 7;
+                        auto locationSize = fastInfo.SizeLocations();
+                        auto columnCount = fastInfo.GridXNumber();
+                        std::cout << std::endl;
+                        for(unsigned long locationIndex = 0; locationIndex < locationSize; locationIndex++)
+                        {
+                            fastInfo.LocationIndex(locationIndex);
+                            if(locationIndex > 0 && locationIndex % columnCount == 0)
+                            {
+                                std::cout << std::endl;
+                            }
+                            std::cout << std::setw(fieldWidth) << fastInfo.FloatValue();
+                        }
+                    }
+                    else
+                    {
+                        throw std::runtime_error("Station data output is not implemented yet");
+                    }
+                }
+            }
+        }
+
+        return 0;
+    }
+    catch(std::exception& e)
+    {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+    return 1;
+}
+*/
+
+/*
+#include "NFmiQueryData.h"
+#include "NFmiFastQueryInfo.h"
 #include "NFmiFileSystem.h"
 #include "NFmiFileString.h"
 #include "NFmiPathUtils.h"
