@@ -2302,7 +2302,7 @@ bool IsDataReloadedInCaseStudyEvent(const std::string& theDataFilePattern)
 }
 
 void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern,
-			NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState, bool& fDataWasDeletedOut)
+			NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState, bool& fDataWasDeletedOut, bool setCurrentTimeToNearestHour = false)
 {
 	StoreLastLoadedFileNameToLog(theDataFileName);
 	if(theData == nullptr || theData->Info() == nullptr)
@@ -2401,7 +2401,7 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 			}
 			fIsTEMPCodeSoundingDataAlsoCopiedToEditedData = false;
 
-			DoEditedInfoTimeSetup(editedInfo, loadFromFileState);
+			DoEditedInfoTimeSetup(editedInfo, loadFromFileState, setCurrentTimeToNearestHour);
 		}
 
         if(DataNotificationSettings().Use() && DataNotificationSettings().ShowIcon())
@@ -2422,7 +2422,7 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 	}
 }
 
-void DoEditedInfoTimeSetup(boost::shared_ptr<NFmiFastQueryInfo>& editedInfo, bool loadFromFileState)
+void DoEditedInfoTimeSetup(boost::shared_ptr<NFmiFastQueryInfo>& editedInfo, bool loadFromFileState, bool setCurrentTimeToNearestHour)
 {
 	if(editedInfo)
 	{
@@ -2432,7 +2432,7 @@ void DoEditedInfoTimeSetup(boost::shared_ptr<NFmiFastQueryInfo>& editedInfo, boo
 		if(foundTime)
 		{
 			auto dataTime = editedInfo->Time();
-			if(dataTime.GetMin() != 0 || dataTime.GetSec() != 0)
+			if(setCurrentTimeToNearestHour && (dataTime.GetMin() != 0 || dataTime.GetSec() != 0))
 			{
 				std::string logMessage = "Loaded edited data: ";
 				logMessage += editedInfo->DataFileName();
@@ -2471,7 +2471,7 @@ void DoPossibleCaseStudyEditedDataSetup(NFmiQueryData* theData, const std::strin
 				{
 					fChangingCaseStudyToNormalMode = false;
 					bool dataWasDeletedInInnerCall = false;
-					AddQueryData(theData->Clone(), theDataFileName, "", NFmiInfoData::kEditable, "", false, dataWasDeletedInInnerCall);
+					AddQueryData(theData->Clone(), theDataFileName, "", NFmiInfoData::kEditable, "", false, dataWasDeletedInInnerCall, true);
 					if(!dataWasDeletedInInnerCall)
 					{
 						std::string logMessage = "CaseStudy change situation (load/close), now using following as edited data: ";
