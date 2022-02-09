@@ -61,8 +61,29 @@ using namespace std;
 namespace
 {
 // Tähän laitetaan talteen multi-thread funktioissa olevat poikkeus viestit, jotta sanoma saadaan
-// ulos SmartMetille
-std::string g_lastExceptionMessageFromThreads;
+// ulos SmartMetille. Asetus ja pyynti funktiot pitää tehdä threadi turvallisiksi, crash-reporteista
+// on näkynyt monia kaatumisia, kun tähän on asetettu 'raakana' tekstiä.
+std::string g_lastExceptionMessageFromThreads_dontUseDirectly;
+std::mutex g_LastExceptionMessageMutex;
+
+void SetLastExceptionMessage(const std::string &message)
+{
+  std::lock_guard<std::mutex> lock(g_LastExceptionMessageMutex);
+  g_lastExceptionMessageFromThreads_dontUseDirectly = message;
+}
+
+std::string GetLastExceptionMessage()
+{
+  std::lock_guard<std::mutex> lock(g_LastExceptionMessageMutex);
+  return g_lastExceptionMessageFromThreads_dontUseDirectly;
+}
+
+void ClearLastExceptionMessage()
+{
+  std::lock_guard<std::mutex> lock(g_LastExceptionMessageMutex);
+  g_lastExceptionMessageFromThreads_dontUseDirectly.clear();
+}
+
 }  // namespace
 
 static std::vector<boost::shared_ptr<NFmiSmartToolCalculationBlock>> DoShallowCopy(
@@ -669,7 +690,7 @@ void NFmiSmartToolModifier::ModifyData_ver2(
   fMacroParamCalculation = isMacroParamCalculation;
   fModifySelectedLocationsOnly = fSelectedLocationsOnly;
   itsLastExceptionMessageFromThreads.clear();
-  g_lastExceptionMessageFromThreads.clear();
+  ::ClearLastExceptionMessage();
   try
   {
     std::vector<NFmiSmartToolCalculationBlockInfo> &smartToolCalculationBlockInfos =
@@ -692,13 +713,13 @@ void NFmiSmartToolModifier::ModifyData_ver2(
       }
     }
     ClearScriptVariableInfos();  // lopuksi nämä skripti-muuttujat tyhjennetään
-    itsLastExceptionMessageFromThreads = g_lastExceptionMessageFromThreads;
+    itsLastExceptionMessageFromThreads = ::GetLastExceptionMessage();
   }
   catch (...)
   {
     ClearScriptVariableInfos();  // lopuksi nämä skripti-muuttujat tyhjennetään
     fMacroRunnable = false;
-    itsLastExceptionMessageFromThreads = g_lastExceptionMessageFromThreads;
+    itsLastExceptionMessageFromThreads = GetLastExceptionMessage();
     throw;
   }
 }
@@ -991,12 +1012,14 @@ static void DoPartialGridCalculationInThread(
   }
   catch (std::exception &e)
   {
-    g_lastExceptionMessageFromThreads = "Smarttool calculation error: ";
-    g_lastExceptionMessageFromThreads += e.what();
+    std::string lastExceptionMessageFromThreads = "Smarttool calculation error: ";
+    lastExceptionMessageFromThreads += e.what();
+    ::SetLastExceptionMessage(lastExceptionMessageFromThreads);
   }
   catch (...)
   {
-    g_lastExceptionMessageFromThreads = "Unknown error in smarttool calculation";
+    std::string lastExceptionMessageFromThreads = "Unknown error in smarttool calculation";
+    ::SetLastExceptionMessage(lastExceptionMessageFromThreads);
   }
 }
 
