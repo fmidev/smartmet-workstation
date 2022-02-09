@@ -641,4 +641,20 @@ namespace CtrlViewUtils
             return origDirection;
     }
 
+    bool IsModularParameter(FmiParameterName theParam)
+    {
+        switch(theParam)
+        {
+        case kFmiWindDirection:
+        case kFmiWaveDirection:
+        case kFmiWaveDirectionBandB:
+        case kFmiWaveDirectionBandC:
+        case kFmiWaveDirectionSwell0:
+        case kFmiWaveDirectionSwell1:
+        case kFmiWaveDirectionSwell2:
+            return true;
+        default:
+            return false;
+        }
+    }
 } // namespace CtrlViewUtils
