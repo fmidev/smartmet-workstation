@@ -2302,7 +2302,7 @@ bool IsDataReloadedInCaseStudyEvent(const std::string& theDataFilePattern)
 }
 
 void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern,
-			NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState, bool& fDataWasDeletedOut)
+			NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState, bool& fDataWasDeletedOut, bool setCurrentTimeToNearestHour = false)
 {
 	StoreLastLoadedFileNameToLog(theDataFileName);
 	if(theData == nullptr || theData->Info() == nullptr)
@@ -2401,13 +2401,7 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 			}
 			fIsTEMPCodeSoundingDataAlsoCopiedToEditedData = false;
 
-			if(editedInfo)
-			{
-				dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->LoadedFromFile(loadFromFileState);
-				// asetetaan viel‰ editorin currenttime sopivaksi
-				editedInfo->TimeToNearestStep(GetCombinedMapHandler()->currentTime(0), kCenter); // asetetaan current time p‰‰karttaikunan mukaan desctop-indeksi 0
-				GetCombinedMapHandler()->currentTime(CtrlViewUtils::kDoAllMapViewDescTopIndex, editedInfo->Time(), false);
-			}
+			DoEditedInfoTimeSetup(editedInfo, loadFromFileState, setCurrentTimeToNearestHour);
 		}
 
         if(DataNotificationSettings().Use() && DataNotificationSettings().ShowIcon())
@@ -2423,15 +2417,70 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 			fIsTEMPCodeSoundingDataAlsoCopiedToEditedData = true;
 		}
 
-		if(EditedInfo() == nullptr && CaseStudyModeOn() || fChangingCaseStudyToNormalMode) // jos on ladattu caseStudy, eik‰ ollut pohjilla mit‰‰n dataan, laitetaan 1. ladattu data 'editoitavaksi dataksi'
+		DoPossibleCaseStudyEditedDataSetup(theData, theDataFileName, theType, fDataWasDeletedOut);
+        PrepareForParamAddSystemUpdate();
+	}
+}
+
+void DoEditedInfoTimeSetup(boost::shared_ptr<NFmiFastQueryInfo>& editedInfo, bool loadFromFileState, bool setCurrentTimeToNearestHour)
+{
+	if(editedInfo)
+	{
+		dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->LoadedFromFile(loadFromFileState);
+		// asetetaan viel‰ editorin currenttime sopivaksi
+		bool foundTime = editedInfo->TimeToNearestStep(GetCombinedMapHandler()->currentTime(0), kCenter); // asetetaan current time p‰‰karttaikunan mukaan desctop-indeksi 0
+		if(foundTime)
 		{
-			if(theData->Info()->SizeLevels() == 1) // mutta vain pintadatalle, koska mahdollinen mallipintadata on niin jumalattoman iso
+			auto dataTime = editedInfo->Time();
+			if(setCurrentTimeToNearestHour && (dataTime.GetMin() != 0 || dataTime.GetSec() != 0))
 			{
-				fChangingCaseStudyToNormalMode = false;
-				AddQueryData(theData->Clone(), theDataFileName, "", NFmiInfoData::kEditable, "", false, dataWasDeletedInInnerCall);
+				std::string logMessage = "Loaded edited data: ";
+				logMessage += editedInfo->DataFileName();
+				logMessage += ", dataTime: ";
+				logMessage += dataTime.ToStr(kYYYYMMDDHHMMSS);
+				logMessage += " had to be fixed to have 0 minutes and seconds for user convienience";
+				CatLog::logMessage(logMessage, CatLog::Severity::Info, CatLog::Category::Operational);
+				// Sallitaan vain tasa minuutit ja sekunnit t‰ss‰ karttapohjien aika-asetuksessa
+				dataTime.SetMin(0);
+				dataTime.SetSec(0);
+			}
+			GetCombinedMapHandler()->currentTime(CtrlViewUtils::kDoAllMapViewDescTopIndex, dataTime, false);
+		}
+	}
+}
+
+// Jos on ladattu caseStudy, eik‰ ollut pohjilla mit‰‰n editoitavaa dataa, laitetaan 1. sopiva ladattu data 'editoitavaksi dataksi'
+void DoPossibleCaseStudyEditedDataSetup(NFmiQueryData* theData, const std::string& theDataFileName, NFmiInfoData::Type theType, bool fDataWasDeletedOut)
+{
+	// Jos ei ole editoitavaa dataa ja on jonkinn‰kˆinen case-study lataus/sulkeminen -tilanne
+	if(EditedInfo() == nullptr && CaseStudyModeOn() || fChangingCaseStudyToNormalMode)
+	{
+		// Jos data oli jo deletoitu, ei yritet‰ ‰nke‰ sit‰ en‰‰ t‰h‰n
+		if(fDataWasDeletedOut)
+			return;
+		// Vain tietyn tyyppiset datat kannattaa kelpuuttaa 'editoitavaksi' dataksi
+		if(theType == NFmiInfoData::kEditable || theType == NFmiInfoData::kCopyOfEdited || theType == NFmiInfoData::kEditingHelpData || 
+			theType == NFmiInfoData::kKepaData || theType == NFmiInfoData::kViewable || theType == NFmiInfoData::kModelHelpData || 
+			theType == NFmiInfoData::kObservations || theType == NFmiInfoData::kAnalyzeData)
+		{
+			if(theData->Info()->SizeLevels() == 1) // mutta vain pintadatalle, koska leveldatat voivat olla niin jumalattoman isoja
+			{
+				auto producerId = theData->Info()->Producer()->GetIdent();
+				// Havainnoista vain synop ja metar tuottaja kelp‰‰ t‰ss‰ tilanteessa
+				if(theType != NFmiInfoData::kObservations || (producerId == kFmiSYNOP || producerId == kFmiMETAR))
+				{
+					fChangingCaseStudyToNormalMode = false;
+					bool dataWasDeletedInInnerCall = false;
+					AddQueryData(theData->Clone(), theDataFileName, "", NFmiInfoData::kEditable, "", false, dataWasDeletedInInnerCall, true);
+					if(!dataWasDeletedInInnerCall)
+					{
+						std::string logMessage = "CaseStudy change situation (load/close), now using following as edited data: ";
+						logMessage += theDataFileName;
+						LogMessage(logMessage, CatLog::Severity::Info, CatLog::Category::Data);
+					}
+				}
 			}
 		}
-        PrepareForParamAddSystemUpdate();
 	}
 }
 
@@ -3183,6 +3232,15 @@ void AddMapLayerRelatedInfosToMapLayerSelectionPopup(unsigned int theDescTopInde
 	{
 		auto mainMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, finalMenuString, NFmiDataIdent(), menuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
 		auto menuItemList = std::make_unique<NFmiMenuItemList>();
+
+		// Lis‰t‰‰n overlay tapauksessa 'none' layer 1. vaihtoehdoksi
+		if(menuCommand == kFmiSelectOverlayMapLayer)
+		{
+			auto noneSelectionMenuString = CombinedMapHandlerInterface::getNoneOverlayName();
+			auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, noneSelectionMenuString, NFmiDataIdent(), menuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+			menuItemList->Add(std::move(menuItem));
+		}
+
 		for(const auto& mapLayerRelatedInfo : mapAreaMapLayerRelatedInfos)
 		{
 			auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, mapLayerRelatedInfo.guiName_, NFmiDataIdent(), menuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
@@ -3191,15 +3249,10 @@ void AddMapLayerRelatedInfosToMapLayerSelectionPopup(unsigned int theDescTopInde
 			menuItemList->Add(std::move(menuItem));
 		}
 
-		// Lis‰t‰‰n overlay tapauksessa 'none' layer vaihtoehdoksi
-		if(menuCommand == kFmiSelectOverlayMapLayer && menuItemList->NumberOfMenuItems() > 0)
-		{
-			auto noneSelectionMenuString = CombinedMapHandlerInterface::getNoneOverlayName();
-			auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, noneSelectionMenuString, NFmiDataIdent(), menuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
-			menuItemList->Add(std::move(menuItem));
-		}
+		// Kuinka monta ei none layeria lis‰tty
+		auto actualLayersAdded = (menuCommand == kFmiSelectOverlayMapLayer) ? menuItemList->NumberOfMenuItems() - 1 : menuItemList->NumberOfMenuItems();
 
-		if(menuItemList->NumberOfMenuItems() > 0)
+		if(actualLayersAdded > 0)
 		{
 			mainMenuItem->AddSubMenu(menuItemList.release());
 			theMenuItemList.Add(std::move(mainMenuItem));
@@ -5430,6 +5483,16 @@ void MapViewSizeChangedDoSymbolMacroParamCacheChecks(int mapViewDescTopIndex)
     }
 }
 
+void UpdateCrossSectionViewTrueSizeViewAfterViewMacro()
+{
+	auto drawObjectScaleFactor = ApplicationWinRegistry().DrawObjectScaleFactor();
+	auto& crossSectionSystem = *CrossSectionSystem();
+	auto& trueMapViewSizeInfo = crossSectionSystem.GetTrueMapViewSizeInfo();
+	auto& clientPixelSize = trueMapViewSizeInfo.clientAreaSizeInPixels();
+	NFmiPoint crossSectionViewGridSize(1, crossSectionSystem.RowCount());
+	trueMapViewSizeInfo.onSize(clientPixelSize, nullptr, crossSectionViewGridSize, true, drawObjectScaleFactor);
+}
+
 bool DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& clientPixelSize, CDC* pDC)
 {
 	auto isMapView = mapViewDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex;
@@ -6652,6 +6715,7 @@ bool InitCPManagerSet(void)
         MetEditorOptionsData().ControlPointMode(theMacro.UseControlPoinTool());
 
         GetCombinedMapHandler()->makeApplyViewMacroDirtyActions(ApplicationWinRegistry().DrawObjectScaleFactor());
+		UpdateCrossSectionViewTrueSizeViewAfterViewMacro();
 
         // Lopuksi (jos poikkeuksia ei ole lent‰nyt) laitetaan ladatun macron nimi talteen p‰‰karttan‰ytˆn title teksti‰ varten
         SetLastLoadedViewMacroName(theMacro, fTreatAsViewMacro, undoRedoAction);

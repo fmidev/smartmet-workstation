@@ -46,6 +46,7 @@ void NFmiViewParamCommandView::DrawData(void)
 	NFmiString str(valuStr);
 	str += ".";
 	itsDrawingEnvironment->SetFontSize(itsFontSize);
+	itsDrawingEnvironment->SetFontType(kArial);
 	int zeroBasedRowIndex = 0;
 	auto parameterRowRect = CalcParameterRowRect(zeroBasedRowIndex);
 	NFmiText text(LineTextPlace(zeroBasedRowIndex, parameterRowRect, false), str, true, 0, itsDrawingEnvironment);

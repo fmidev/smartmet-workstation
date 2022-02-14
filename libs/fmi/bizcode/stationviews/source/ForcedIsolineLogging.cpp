@@ -63,6 +63,8 @@ namespace
         commonSetupStr += ::GetBoolString(theDrawParam->UseIsoLineFeathering());
         commonSetupStr += ", drawOnlyOverMasks=";
         commonSetupStr += ::GetBoolString(theDrawParam->DrawOnlyOverMask());
+        commonSetupStr += ", alpha=";
+        commonSetupStr += std::to_string(theDrawParam->Alpha());
         return commonSetupStr;
     }
 

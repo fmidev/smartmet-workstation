@@ -2,6 +2,7 @@
 #include "NFmiPoint.h"
 #include "NFmiTimeBag.h"
 #include "NFmiInfoData.h"
+#include "NFmiParameterName.h"
 #include <vector>
 #include <list>
 #include <boost/shared_ptr.hpp>
@@ -78,5 +79,5 @@ namespace CtrlViewUtils
    FileNameWithTimeList TimeSortFiles(FileNameWithTimeList filesWithTimesCopy, bool descending = true);
    double CalcAngle(const NFmiPoint& point1, const NFmiPoint& point2);
    double CalcAngle(double x, double y);
-
+   bool IsModularParameter(FmiParameterName theParam);
 } // namespace CtrlViewUtils
