@@ -6023,11 +6023,7 @@ void StoreSupplementaryData(void)
 		::_chdir(itsBasicConfigurations.WorkingDirectory().c_str()); // palautetaan alkuperäinen työhakemisto voimaan talletuksia varten
 		itsMTATempSystem.StoreSettings();
         // Nämä sounding dialogin asetukset pitää ottaa MTATempSystem:istä takaisin Win-registeriin, koska niitä on mahdollisesti latailtu näyttömakroista
-		auto& soundingSettingsForWinReg = itsMTATempSystem.GetSoundingViewSettingsFromWindowsRegisty();
-        ApplicationWinRegistry().SoundingTextUpward(soundingSettingsForWinReg.SoundingTextUpward());
-		ApplicationWinRegistry().SoundingTimeLockWithMapView(soundingSettingsForWinReg.SoundingTimeLockWithMapView());
-		ApplicationWinRegistry().ShowStabilityIndexSideView(soundingSettingsForWinReg.ShowStabilityIndexSideView());
-		ApplicationWinRegistry().ShowTextualSoundingDataSideView(soundingSettingsForWinReg.ShowTextualSoundingDataSideView());
+		ApplicationWinRegistry().SetSoundingViewSettings(itsMTATempSystem.GetSoundingViewSettingsFromWindowsRegisty());
 
         itsTrajectorySystem->StoreSettings();
 		GetCombinedMapHandler()->storeMapViewDescTopToSettings();
