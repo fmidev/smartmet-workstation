@@ -45,7 +45,7 @@ static void FixVersionNumber(boost::shared_ptr<CachedRegString> &cachedValue, co
 bool NFmiDataNotificationSettingsWinRegistry::Init(const std::string &baseRegistryPath, const std::string &fullAppVer)
 {
     if(mInitialized)
-        std::runtime_error("NFmiDataNotificationSettingsWinRegistry::Init: all ready initialized.");
+        throw std::runtime_error("NFmiDataNotificationSettingsWinRegistry::Init: all ready initialized.");
 
     mInitialized = true;
     mBaseRegistryPath = baseRegistryPath;
