@@ -1187,6 +1187,25 @@ BEGIN
     PUSHBUTTON      "Run enabled",IDC_BUTTON_RUN_ENABLED_AUTOMATIONS,215,388,56,12
 END
 
+IDD_DIALOG_VISUALIZATION_SETTINGS DIALOGEX 0, 0, 311, 153
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Visualization settings"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,199,132,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,254,132,50,14
+    LTEXT           "MinPixelToGridPointRatioValue variable is safety feature for isoline visualizations\nIt's min value is 1 and max is 20 (too dense data will be thinned)",IDC_STATIC_VISUALIZATIONS_PIXEL_TO_GRID_POINT_RATIO_STR,8,8,296,19
+    EDITTEXT        IDC_EDIT_VISUALIZATIONS_PIXEL_TO_GRID_POINT_RATIO,7,26,38,13,ES_AUTOHSCROLL
+    CONTROL         "This safety feature is on by default on restart, can't disable it permanently",IDC_CHECK_VISUALIZATIONS_USE_PIXEL_TO_GRID_POINT_RATIO_SAFETY_FEATURE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,53,27,249,10
+    LTEXT           "GlobalVisualizationSpaceoutFactor variable is used to speed up map visualization\nSetting factor between 1-10 results visual. grid size to be ~400x400 - 40x40",IDC_STATIC_GLOBAL_VISUALIZATIONS_SPACEOUT_FACTOR_STR,8,53,296,17
+    EDITTEXT        IDC_EDIT_GLOBAL_VISUALIZATIONS_SPACEOUT_FACTOR,7,71,38,13,ES_AUTOHSCROLL
+    CONTROL         "Use Spaceout optimizations",IDC_CHECK_GLOBAL_VISUALIZATIONS_SPACEOUT_FACTOR,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,53,72,249,10
+    COMBOBOX        IDC_COMBO_VISUALIZATIONS_SPACEOUT_DATA_GATHERING_METHOD,7,116,107,25,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "SpaceoutDataGatheringMethod variable (not implemented yet)\nUsed optimized grid data gathering methods: 1) linear interpolation, 2) median filter",IDC_STATIC_VISUALIZATIONS_SPACEOUT_DATA_GATHERING_METHOD_STR,8,97,296,18
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1219,6 +1238,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 399
     END
+
+    IDD_DIALOG_VISUALIZATION_SETTINGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 304
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 146
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -1242,6 +1269,11 @@ BEGIN
 END
 
 IDD_DIALOG_BETA_PRODUCT_AUTOMATION AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_DIALOG_VISUALIZATION_SETTINGS AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
