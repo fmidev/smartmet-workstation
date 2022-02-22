@@ -7,6 +7,7 @@
 #include "NFmiDataNotificationSettingsWinRegistry.h"
 #include "NFmiGriddingProperties.h"
 #include "NFmiInfoData.h"
+#include "NFmiVisualizationSpaceoutSettings.h"
 
 class NFmiHelpDataInfoSystem;
 class SoundingViewSettingsFromWindowsRegisty;
@@ -386,6 +387,8 @@ public:
     void HatchingToolmasterEpsilonFactor(float newEpsilon);
     float HatchingToolmasterEpsilonFactor() const;
 
+    NFmiVisualizationSpaceoutSettings& VisualizationSpaceoutSettings() { return mVisualizationSpaceoutSettings; }
+
     static std::string MakeBaseRegistryPath();
     static std::string MakeGeneralSectionName();
     
@@ -476,6 +479,8 @@ private:
     boost::shared_ptr<CachedRegBool> mShowTooltipOnSmarttoolDialog;
 
     boost::shared_ptr<CachedRegDouble> mHatchingToolmasterEpsilonFactor;
+
+    NFmiVisualizationSpaceoutSettings mVisualizationSpaceoutSettings;
 
     // HKEY_LOCAL_MACHINE -keys // HUOM! tämä vaatii ohjelmalta admin oikeuksia!!!!
 
