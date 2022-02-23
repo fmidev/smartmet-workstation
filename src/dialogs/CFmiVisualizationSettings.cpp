@@ -12,6 +12,7 @@
 #include "CombinedMapHandlerInterface.h"
 #include "persist2.h"
 #include "FmiWin32TemplateHelpers.h"
+#include "NFmiValueString.h"
 
 
 // CFmiVisualizationSettings dialog
@@ -26,6 +27,7 @@ CFmiVisualizationSettings::CFmiVisualizationSettings(CWnd* pParent)
 	, itsGlobalVisualizationSpaceoutFactor(0)
 	, itsUsePixelToGridPointRatioSafetyFeature(FALSE)
 	, itsUseGlobalVisualizationSpaceoutFactorOptimization(FALSE)
+	, itsPixelToGridPointRatioWarningStr(_T(""))
 {
 }
 
@@ -41,11 +43,15 @@ void CFmiVisualizationSettings::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_VISUALIZATIONS_USE_PIXEL_TO_GRID_POINT_RATIO_SAFETY_FEATURE, itsUsePixelToGridPointRatioSafetyFeature);
 	DDX_Check(pDX, IDC_CHECK_GLOBAL_VISUALIZATIONS_SPACEOUT_FACTOR, itsUseGlobalVisualizationSpaceoutFactorOptimization);
 	DDX_Control(pDX, IDC_COMBO_VISUALIZATIONS_SPACEOUT_DATA_GATHERING_METHOD, itsSpaceoutDataGatheringMethodComboBox);
+	DDX_Text(pDX, IDC_STATIC_VISUALIZATIONS_PIXEL_TO_GRID_POINT_RATIO_WARNING_STR, itsPixelToGridPointRatioWarningStr);
 }
 
 
 BEGIN_MESSAGE_MAP(CFmiVisualizationSettings, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_UPDATE, &CFmiVisualizationSettings::OnBnClickedButtonUpdate)
+	ON_WM_CTLCOLOR()
+	ON_BN_CLICKED(IDC_CHECK_VISUALIZATIONS_USE_PIXEL_TO_GRID_POINT_RATIO_SAFETY_FEATURE, &CFmiVisualizationSettings::OnBnClickedCheckVisualizationsUsePixelToGridPointRatioSafetyFeature)
+	ON_EN_CHANGE(IDC_EDIT_VISUALIZATIONS_PIXEL_TO_GRID_POINT_RATIO, &CFmiVisualizationSettings::OnEnChangeEditVisualizationsPixelToGridPointRatio)
 END_MESSAGE_MAP()
 
 
@@ -93,6 +99,8 @@ BOOL CFmiVisualizationSettings::OnInitDialog()
 
 	// Päivitetään muuttujien arvot dialogin kontrolleihin
 	UpdateData(FALSE); 
+	// Tehdään alustuksen jälkeen testit varoituksien suhteen
+	CheckInputAndDoWarningTexts();
 	// return TRUE unless you set the focus to a control
     // EXCEPTION: OCX Property Pages should return FALSE
 	return TRUE;  
@@ -146,7 +154,6 @@ void CFmiVisualizationSettings::InitDialogTexts()
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_VISUALIZATIONS_SPACEOUT_DATA_GATHERING_METHOD_STR, spaceoutDataGatheringMethodStr.c_str());
 }
 
-
 void CFmiVisualizationSettings::OnOK()
 {
 	UpdateValuesBackToDocument();
@@ -182,4 +189,46 @@ void CFmiVisualizationSettings::UpdateValuesBackToDocument()
 void CFmiVisualizationSettings::OnBnClickedButtonUpdate()
 {
 	UpdateValuesBackToDocument();
+}
+
+void CFmiVisualizationSettings::CheckInputAndDoWarningTexts()
+{
+	UpdateData(TRUE);
+	itsPixelToGridPointRatioWarningStr = "";
+	auto criticalLimit = itsApplicationWinRegistry->VisualizationSpaceoutSettings().criticalPixelToGridPointRatioLimit();
+	if(!itsUsePixelToGridPointRatioSafetyFeature)
+	{
+		std::string warningMessage = "Warning: Use-Pixel-To-Grid-Point-Ratio-Safety-Feature is set off, may cause isoline visualization crashes...";
+		itsPixelToGridPointRatioWarningStr = CA2T(warningMessage.c_str());
+	}
+	else if(itsPixelToGridPointRatio < criticalLimit)
+	{
+		std::string warningMessage = "Warning: Pixel-To-Grid-Point-Ratio is under critical value ";
+		warningMessage += NFmiValueString::GetStringWithMaxDecimalsSmartWay(criticalLimit, 1);
+		warningMessage += ", may cause isoline visualization crashes or other errors...";
+		itsPixelToGridPointRatioWarningStr = CA2T(warningMessage.c_str());
+	}
+	UpdateData(FALSE);
+}
+
+HBRUSH CFmiVisualizationSettings::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	if(pWnd->GetDlgCtrlID() == IDC_STATIC_VISUALIZATIONS_PIXEL_TO_GRID_POINT_RATIO_WARNING_STR)
+	{
+		CFmiWin32Helpers::SetErrorColorForTextControl(pDC, itsPixelToGridPointRatioWarningStr.IsEmpty());
+	}
+
+	return hbr;
+}
+
+void CFmiVisualizationSettings::OnBnClickedCheckVisualizationsUsePixelToGridPointRatioSafetyFeature()
+{
+	CheckInputAndDoWarningTexts();
+}
+
+void CFmiVisualizationSettings::OnEnChangeEditVisualizationsPixelToGridPointRatio()
+{
+	CheckInputAndDoWarningTexts();
 }
