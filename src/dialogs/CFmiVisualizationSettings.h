@@ -34,6 +34,7 @@ protected:
 private:
 	void InitDialogTexts();
 	void UpdateValuesBackToDocument();
+	void CheckInputAndDoWarningTexts();
 
 	NFmiApplicationWinRegistry* itsApplicationWinRegistry = nullptr;
 	double itsPixelToGridPointRatio;
@@ -41,8 +42,12 @@ private:
 	BOOL itsUsePixelToGridPointRatioSafetyFeature;
 	BOOL itsUseGlobalVisualizationSpaceoutFactorOptimization;
 	CComboBox itsSpaceoutDataGatheringMethodComboBox;
+	CString itsPixelToGridPointRatioWarningStr;
 public:
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
 	afx_msg void OnBnClickedButtonUpdate();
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+	afx_msg void OnBnClickedCheckVisualizationsUsePixelToGridPointRatioSafetyFeature();
+	afx_msg void OnEnChangeEditVisualizationsPixelToGridPointRatio();
 };

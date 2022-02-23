@@ -1284,6 +1284,7 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string &reasonForUpdate, 
 {
     if(UpdateAllViewsAndDialogsIsAllowed())
     {
+		itsData->ApplicationWinRegistry().VisualizationSpaceoutSettings().doViewUpdateWarningLogsIfNeeded();
         if(HasUpdatedViewsFlagSignificantValue())
         {
             // Jos haluttiin vain tietyt näytöt päivitykseen, tehdään se tässä

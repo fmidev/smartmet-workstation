@@ -60,6 +60,8 @@ public:
 	bool Init(const std::string& baseRegistryPath);
 
 	bool updateFromDialog(double pixelToGridPointRatio, bool usePixelToGridPointRatioSafetyFeature, double globalVisualizationSpaceoutFactor, bool useGlobalVisualizationSpaceoutFactorOptimization, int spaceoutDataGatheringMethod);
+	void doViewUpdateWarningLogsIfNeeded();
+
 	double criticalPixelToGridPointRatioLimit() const { return criticalPixelToGridPointRatioLimit_; }
 	double pixelToGridPointRatio() const;
 	void pixelToGridPointRatio(double newValue);

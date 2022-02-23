@@ -1,4 +1,6 @@
 #include "NFmiVisualizationSpaceoutSettings.h"
+#include "catlog/catlog.h"
+#include "NFmiValueString.h"
 
 NFmiVisualizationSpaceoutSettings::NFmiVisualizationSpaceoutSettings() = default;
 
@@ -51,6 +53,32 @@ bool NFmiVisualizationSpaceoutSettings::updateFromDialog(double pixelToGridPoint
         needsToUpdateViews = true;
     }
     return needsToUpdateViews;
+}
+
+void NFmiVisualizationSpaceoutSettings::doViewUpdateWarningLogsIfNeeded()
+{
+    // Tehdään varoitus lokiviestejä tarpeen mukaan.
+    // Tehdään maksimissaan yksi lokitus koskien PixelToGridPointRatio asetuksia (tehdään niitä 'pahemmuus' järjestyksessä).
+    if(usePixelToGridPointRatioSafetyFeature_ == false)
+    {
+        std::string warningMessage = "Pixel-To-Grid-Point-Ratio safety feature is set off, isoline visualizations may crash SmartMet, set it back on from Edit - Visualization settings...";
+        CatLog::logMessage(warningMessage, CatLog::Severity::Warning, CatLog::Category::Visualization, true);
+    }
+    else if(*pixelToGridPointRatio_ < criticalPixelToGridPointRatioLimit_)
+    {
+        std::string warningMessage = "Pixel-To-Grid-Point-Ratio safety feature is set under critical limit ";
+        warningMessage += NFmiValueString::GetStringWithMaxDecimalsSmartWay(criticalPixelToGridPointRatioLimit_, 1);
+        warningMessage += ", isoline visualizations may crash SmartMet, set it to or over critical limit from Edit - Visualization settings...";
+        CatLog::logMessage(warningMessage, CatLog::Severity::Warning, CatLog::Category::Visualization, true);
+    }
+
+    if(*useGlobalVisualizationSpaceoutFactorOptimization_)
+    {
+        std::string logMessage = "Global-Visualization-Spaceout-Factor optimization is set on, with value ";
+        logMessage += NFmiValueString::GetStringWithMaxDecimalsSmartWay(*globalVisualizationSpaceoutFactor_, 1);
+        logMessage += ", map visualizations are faster, but lose information. If you wan't to see full accuracy of data, set it off from Edit - Visualization settings...";
+        CatLog::logMessage(logMessage, CatLog::Severity::Info, CatLog::Category::Visualization);
+    }
 }
 
 double NFmiVisualizationSpaceoutSettings::pixelToGridPointRatio() const
