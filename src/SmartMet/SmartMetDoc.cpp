@@ -100,6 +100,7 @@
 #include "NFmiMacroParamDataCache.h"
 #include "FmiSoundingDataServerConfigurationsDlg.h"
 #include "NFmiApplicationDataBase.h"
+#include "CFmiVisualizationSettings.h"
 
 #include "AnimationProfiler.h"
 
@@ -312,6 +313,8 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
     ON_COMMAND(ID_VIEW_SET_LOG_VIEWER_DLG_PLACE_TO_DEFAULT, &CSmartMetDoc::OnViewSetLogViewerDlgPlaceToDefault)
 	ON_COMMAND(ID_VIEW_SET_CASE_STUDY_DLG_PLACE_TO_DEFAULT, &CSmartMetDoc::OnViewSetCaseStudyDlgPlaceToDefault)
 	ON_COMMAND(ID_VIEW_SET_BETA_PRODUCTION_DLG_PLACE_TO_DEFAULT, &CSmartMetDoc::OnViewSetBetaProductionDlgPlaceToDefault)
+	ON_COMMAND(ID_EDIT_VISUALIZATIONSETTINGS, &CSmartMetDoc::OnEditVisualizationsettings)
+	ON_COMMAND(ID_MOVEVIEWSVISIBLE_VISUALIZATIONSETTINGSPOSITION, &CSmartMetDoc::OnMoveviewsvisibleVisualizationsettingsposition)
 	END_MESSAGE_MAP()
 
 BEGIN_DISPATCH_MAP(CSmartMetDoc, CDocument)
@@ -362,6 +365,7 @@ CSmartMetDoc::CSmartMetDoc()
 ,itsSoundingDataServerConfigurationsDlg(nullptr)
 ,itsParameterSelectionDlg(nullptr)
 ,itsGriddingOptionsDlg(nullptr)
+,itsVisualizationSettings(nullptr)
 {
 	CSmartMetApp *app = (CSmartMetApp *)AfxGetApp();
 	itsData = app->GeneralDocData();
@@ -428,8 +432,9 @@ CSmartMetDoc::~CSmartMetDoc()
     // Better clear callback function before logviewer is destroyed, just in case
     CatLog::setLogViewerUpdateCallback(std::function<void()>());
     ::DestroyModalessDialog((CDialog **)(&itsLogViewer));
-    ::DestroyModalessDialog((CDialog **)(&itsSoundingDataServerConfigurationsDlg));
+	::DestroyModalessDialog((CDialog**)(&itsSoundingDataServerConfigurationsDlg));
     ::DestroyModalessDialog((CDialog **)(&itsParameterSelectionDlg));
+	::DestroyModalessDialog((CDialog **)(&itsVisualizationSettings));
 }
 
 BOOL CSmartMetDoc::OnNewDocument()
@@ -1790,8 +1795,9 @@ void CSmartMetDoc::SetAllViewIconsDynamically(void)
     CFmiWin32Helpers::SetWindowIconDynamically(itsCaseStudyDlg, usedIcons);
     CFmiWin32Helpers::SetWindowIconDynamically(itsBetaProductDialog, usedIcons);
     CFmiWin32Helpers::SetWindowIconDynamically(itsLogViewer, usedIcons);
-    CFmiWin32Helpers::SetWindowIconDynamically(itsSoundingDataServerConfigurationsDlg, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsSoundingDataServerConfigurationsDlg, usedIcons);
     CFmiWin32Helpers::SetWindowIconDynamically(itsParameterSelectionDlg, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsVisualizationSettings, usedIcons);
 }
 
 // piti tehdä uuden karttaruudukon valinnan lisäksi paikka mistä
@@ -1978,6 +1984,11 @@ void CSmartMetDoc::OnViewSetCaseStudyDlgPlaceToDefault()
 void CSmartMetDoc::OnViewSetBetaProductionDlgPlaceToDefault()
 {
 	::SetViewPlaceToDefault(this, itsBetaProductDialog, "Beta production dialog set to default size and position");
+}
+
+void CSmartMetDoc::OnMoveviewsvisibleVisualizationsettingsposition()
+{
+	::SetViewPlaceToDefault(this, itsVisualizationSettings, "Visualization settings dialog set to default size and position");
 }
 
 void CSmartMetDoc::OnFileOpen()
@@ -2814,7 +2825,8 @@ std::map<std::string, std::string> CSmartMetDoc::MakeOtherWindowPosMap(void)
     MakeMakeWindowPosMapInsert<CFmiLogViewer>(windowPosMap);
     MakeMakeWindowPosMapInsert<CFmiSoundingDataServerConfigurationsDlg>(windowPosMap);
     MakeMakeWindowPosMapInsert<CFmiParameterSelectionDlg>(windowPosMap);
-    MakeMakeWindowPosMapInsert<CFmiWarningMessageOptionsDlg>(windowPosMap);
+	MakeMakeWindowPosMapInsert<CFmiWarningMessageOptionsDlg>(windowPosMap);
+	MakeMakeWindowPosMapInsert<CFmiVisualizationSettings>(windowPosMap);
 
     return windowPosMap;
 }
@@ -2853,8 +2865,9 @@ void CSmartMetDoc::SaveViewPositionsToRegistry(void)
     ::SaveViewPositionToRegistry(itsSmartToolDlg, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsBetaProductDialog, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsLogViewer, applicationWinRegistry, dummyMapDescTopIndex);
-    ::SaveViewPositionToRegistry(itsSoundingDataServerConfigurationsDlg, applicationWinRegistry, dummyMapDescTopIndex);
+	::SaveViewPositionToRegistry(itsSoundingDataServerConfigurationsDlg, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsParameterSelectionDlg, applicationWinRegistry, dummyMapDescTopIndex);
+	::SaveViewPositionToRegistry(itsVisualizationSettings, applicationWinRegistry, dummyMapDescTopIndex);
 
     // Talletetaan myös tiettyjä GeneralDocissa olevia juttuja aika-ajoin WinRekisteriin
     itsData->StoreSettingsToWinRegistry();
@@ -3747,4 +3760,25 @@ void CSmartMetDoc::HandleCpAccelerator(ControlPointAcceleratorActions action, co
 void CSmartMetDoc::OnAcceleratorDoVisualizationProfiling()
 {
 	itsData->StartProfiling();
+}
+
+void CSmartMetDoc::CreateVisualizationSettingsDlg()
+{
+	if(itsVisualizationSettings)
+		return; // Ei luoda dialogia uudestaan
+
+	CWnd* desktopWindow = ApplicationInterface::GetSmartMetView()->GetDesktopWindow();
+	itsVisualizationSettings = new CFmiVisualizationSettings(desktopWindow);
+	BOOL status = itsVisualizationSettings->Create(IDD_DIALOG_VISUALIZATION_SETTINGS, desktopWindow);
+}
+
+void CSmartMetDoc::OnEditVisualizationsettings()
+{
+	CreateVisualizationSettingsDlg();
+
+	itsVisualizationSettings->ShowWindow(SW_SHOW);
+	itsVisualizationSettings->SetActiveWindow();
+	//itsVisualizationSettings->Update();
+
+	itsData->LogMessage("Visualization Settings dialog on", CatLog::Severity::Info, CatLog::Category::Operational);
 }

@@ -4,6 +4,7 @@
 #include "NFmiPtrList.h"
 #include "NFmiDataMatrix.h"
 #include "SmartMetViewId.h"
+#include "CtrlViewFunctions.h"
 
 #include "boost/shared_ptr.hpp"
 #include <string>

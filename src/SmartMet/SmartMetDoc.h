@@ -44,6 +44,7 @@ class SmartMetDocumentInterface;
 class CFmiGriddingOptionsDlg;
 class NFmiApplicationWinRegistry;
 class CFmiSoundingDataServerConfigurationsDlg;
+class CFmiVisualizationSettings;
 
 class CSmartMetDoc : public CDocument
 {
@@ -108,7 +109,8 @@ public:
     void CreateCaseStudyDlg(NFmiEditMapGeneralDataDoc *theDoc);
     void CreateBetaProductDialog(SmartMetDocumentInterface *smartMetDocumentInterface);
     void CreateLogViewer(NFmiEditMapGeneralDataDoc *theDoc);
-    void CreateSoundingDataServerConfigurationsDlg();
+	void CreateSoundingDataServerConfigurationsDlg();
+	void CreateVisualizationSettingsDlg();
     void CreateGriddingOptionsDialog(SmartMetDocumentInterface *smartMetDocumentInterface);
     void UpdateBetaProductDialog();
     CFmiExtraMapViewDlg* CreateExtraMapViewDlg(NFmiEditMapGeneralDataDoc *theDoc, unsigned int theMapViewDescTopIndex);
@@ -272,6 +274,7 @@ private:
     CFmiParameterSelectionDlg *itsParameterSelectionDlg;
     CFmiGriddingOptionsDlg *itsGriddingOptionsDlg;
     CFmiSoundingDataServerConfigurationsDlg *itsSoundingDataServerConfigurationsDlg;
+	CFmiVisualizationSettings* itsVisualizationSettings;
     unsigned int itsMapViewDescTopIndex;
     // Joskus halutaan sallia päivitys vain osalle näyttöjä (optimointia), vaikka lopulta 
     // käytetäänkin päivityksen aloitukseen yleistä CSmartMetDoc::UpdateAllViewsAndDialogs -metodia, jonka 
@@ -400,6 +403,8 @@ public:
 	afx_msg void OnViewSetLogViewerDlgPlaceToDefault();
 	afx_msg void OnViewSetCaseStudyDlgPlaceToDefault();
 	afx_msg void OnViewSetBetaProductionDlgPlaceToDefault();
+	afx_msg void OnEditVisualizationsettings();
+	afx_msg void OnMoveviewsvisibleVisualizationsettingsposition();
 };
 
 
