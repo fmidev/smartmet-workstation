@@ -41,6 +41,9 @@ class NFmiVisualizationSpaceoutSettings
 	boost::shared_ptr<CachedRegDouble> globalVisualizationSpaceoutFactor_;
 	const double minVisualizationSpaceoutFactor_ = 1.0;
 	const double maxVisualizationSpaceoutFactor_ = 10.0;
+	// Hilakoot menevät SpaceoutFactor:in kanssa käänteisessä järjestyksessä: minFactor -> maxGridSize ja maxFactor -> minGridSize
+	const double minVisualizationSpaceoutGridSize_ = 40.0;
+	const double maxVisualizationSpaceoutGridSize_ = 400.0;
 	// Halutaanko että harvennussysteemiä käytetään ollenkaan.
 	boost::shared_ptr<CachedRegBool> useGlobalVisualizationSpaceoutFactorOptimization_;
 	// Millä mekanismilla haetaan dataa harvennettuun hilaan:
@@ -56,6 +59,7 @@ public:
 	NFmiVisualizationSpaceoutSettings();
 	bool Init(const std::string& baseRegistryPath);
 
+	bool updateFromDialog(double pixelToGridPointRatio, bool usePixelToGridPointRatioSafetyFeature, double globalVisualizationSpaceoutFactor, bool useGlobalVisualizationSpaceoutFactorOptimization, int spaceoutDataGatheringMethod);
 	double criticalPixelToGridPointRatioLimit() const { return criticalPixelToGridPointRatioLimit_; }
 	double pixelToGridPointRatio() const;
 	void pixelToGridPointRatio(double newValue);
@@ -67,6 +71,8 @@ public:
 	void globalVisualizationSpaceoutFactor(double newValue);
 	double minVisualizationSpaceoutFactor() const { return minVisualizationSpaceoutFactor_; }
 	double maxVisualizationSpaceoutFactor() const { return maxVisualizationSpaceoutFactor_; }
+	double minVisualizationSpaceoutGridSize() const { return minVisualizationSpaceoutGridSize_; }
+	double maxVisualizationSpaceoutGridSize() const { return maxVisualizationSpaceoutGridSize_; }
 	bool useGlobalVisualizationSpaceoutFactorOptimization() const;
 	void useGlobalVisualizationSpaceoutFactorOptimization(bool newState);
 	int spaceoutDataGatheringMethod() const;

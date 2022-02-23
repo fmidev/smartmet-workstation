@@ -1417,6 +1417,12 @@ NFmiParameterInterpolationFixer& SmartMetDocumentInterfaceForGeneralDataDoc::Par
     return itsDoc->ParameterInterpolationFixer();
 }
 
+void SmartMetDocumentInterfaceForGeneralDataDoc::ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag)
+{
+    if(ApplicationInterface::GetApplicationInterfaceImplementation)
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(updatedViewsFlag);
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // =================================================
 

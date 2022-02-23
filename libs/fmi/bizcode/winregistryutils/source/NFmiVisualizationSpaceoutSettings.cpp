@@ -25,6 +25,34 @@ bool NFmiVisualizationSpaceoutSettings::Init(const std::string & baseRegistryPat
     return true;
 }
 
+// Metodi saa Visualization settings -dialogilta kaikki nykyiset asetukset.
+// Jos mitään asetus oikeasti muuttuu niin että karttanäyttöjä pitää päivittää ja tehdä dirty asetuksia, palautetaan true, muuten false.
+bool NFmiVisualizationSpaceoutSettings::updateFromDialog(double pixelToGridPointRatio, bool usePixelToGridPointRatioSafetyFeature, double globalVisualizationSpaceoutFactor, bool useGlobalVisualizationSpaceoutFactorOptimization, int spaceoutDataGatheringMethod)
+{
+    bool needsToUpdateViews = false;
+    if(*pixelToGridPointRatio_ != pixelToGridPointRatio)
+    {
+        *pixelToGridPointRatio_ = pixelToGridPointRatio;
+        needsToUpdateViews = true;
+    }
+    if(usePixelToGridPointRatioSafetyFeature_ != usePixelToGridPointRatioSafetyFeature)
+    {
+        usePixelToGridPointRatioSafetyFeature_ = usePixelToGridPointRatioSafetyFeature;
+        needsToUpdateViews = true;
+    }
+    if(*globalVisualizationSpaceoutFactor_ != globalVisualizationSpaceoutFactor)
+    {
+        *globalVisualizationSpaceoutFactor_ = globalVisualizationSpaceoutFactor;
+        needsToUpdateViews = true;
+    }
+    if(*useGlobalVisualizationSpaceoutFactorOptimization_ != useGlobalVisualizationSpaceoutFactorOptimization)
+    {
+        *useGlobalVisualizationSpaceoutFactorOptimization_ = useGlobalVisualizationSpaceoutFactorOptimization;
+        needsToUpdateViews = true;
+    }
+    return needsToUpdateViews;
+}
+
 double NFmiVisualizationSpaceoutSettings::pixelToGridPointRatio() const
 {
     return *pixelToGridPointRatio_;
@@ -68,11 +96,11 @@ int NFmiVisualizationSpaceoutSettings::spaceoutDataGatheringMethod() const
     return *spaceoutDataGatheringMethod_;
 }
 
-void NFmiVisualizationSpaceoutSettings::spaceoutDataGatheringMethod(int newValue)
+void NFmiVisualizationSpaceoutSettings::spaceoutDataGatheringMethod(int /* newValue */ )
 {
-    if(newValue < 0)
-        newValue = 0;
-    if(newValue > 1)
-        newValue = 1;
-    *spaceoutDataGatheringMethod_ = newValue;
+    //if(newValue < 0)
+    //    newValue = 0;
+    //if(newValue > 1)
+    //    newValue = 1;
+    *spaceoutDataGatheringMethod_ = 0; // newValue;
 }

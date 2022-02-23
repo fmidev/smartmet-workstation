@@ -247,6 +247,7 @@ BEGIN
         MENUITEM "Make comparison data",        ID_BUTTON_MAKE_EDITED_DATA_COPY
         MENUITEM SEPARATOR
         MENUITEM "Settings...",                 ID_MENUITEM_OPTIOT
+        MENUITEM "Visualization settings...",   ID_EDIT_VISUALIZATIONSETTINGS
         MENUITEM "Projection line settings",    ID_MENUITEM_PROJECTION_LINE_SETUP
         MENUITEM "View grid setting...",        ID_MENUITEM_VIEW_GRID_SELECTION_DLG2
         MENUITEM "CP gridding options",         ID_MENUITEM_GRIDDING_OPTIONS
@@ -330,6 +331,7 @@ BEGIN
             MENUITEM "Log Viewer position",         ID_VIEW_SET_LOG_VIEWER_DLG_PLACE_TO_DEFAULT
             MENUITEM "Case study dialog position",  ID_VIEW_SET_CASE_STUDY_DLG_PLACE_TO_DEFAULT
             MENUITEM "Beta production dialog position", ID_VIEW_SET_BETA_PRODUCTION_DLG_PLACE_TO_DEFAULT
+            MENUITEM "Visualization settings position", ID_MOVEVIEWSVISIBLE_VISUALIZATIONSETTINGSPOSITION
         END
         MENUITEM SEPARATOR
         POPUP "Notification settings"
