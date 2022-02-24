@@ -147,19 +147,6 @@ class NFmiCtrlView
    static Gdiplus::Graphics* CreateGdiplusGraphics(NFmiToolBox *theToolBox, const NFmiRect *theRelativeClipRect);
    static NFmiRect CalcWantedDirectionalPosition(const NFmiRect& positionalRect, const NFmiRect& movedRect, FmiDirection wantedPosition);
 
-	// suoran kaksi pistettä on annettu ja x:n arvo, laske y:n arvo
-	static double InterpolateWithTwoPoints(double x, double x1, double x2, double y1, double y2, double minY = kFloatMissing, double maxY = kFloatMissing)
-	{
-		double k = (y2-y1)/(x2-x1);
-		double b = (x1*y2 - y1*x2)/(x1-x2);
-		double y = k*x + b;
-		if(minY != kFloatMissing)
-			y = FmiMax(y, minY);
-		if(maxY != kFloatMissing)
-			y = FmiMin(y, maxY);
-		return y;
-	}
-
  protected:
 	NFmiRect CalcMaskRectSize(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
 	void InitializeGdiplus(NFmiToolBox *theToolBox, const NFmiRect *theRelativeClipRect);

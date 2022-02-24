@@ -27,6 +27,7 @@
 #include "NFmiValueString.h"
 #include "NFmiMacroParamfunctions.h"
 #include "catlog/catlog.h"
+#include "MathHelper.h"
 
 #include <gdiplus.h>
 #include <list>
@@ -956,9 +957,9 @@ static double CalcAreaSizeFactor(const boost::shared_ptr<NFmiArea> &theArea)
 
 	double widthInMeters = theArea->WorldRect().Width();
     // Jos leveys on alle 10000 km, lasketaan eri skaalalla (jykemmällä) kuin
-	double factor = NFmiCtrlView::InterpolateWithTwoPoints(widthInMeters, 10000*1000, 1000*1000, 0.4, 1., 0.4, 1.2);
+	double factor = MathHelper::InterpolateWithTwoPoints(widthInMeters, 10000*1000, 1000*1000, 0.4, 1., 0.4, 1.2);
     if(widthInMeters > 10000 * 1000)
-	    factor = NFmiCtrlView::InterpolateWithTwoPoints(widthInMeters, 40000*1000, 10000*1000, 0.25, 0.4, 0.3, 0.4);
+	    factor = MathHelper::InterpolateWithTwoPoints(widthInMeters, 40000*1000, 10000*1000, 0.25, 0.4, 0.3, 0.4);
 
 	return factor;
 }
@@ -975,7 +976,7 @@ float NFmiConceptualDataView::CalcScreenSizeFactor(CtrlViewDocumentInterface &th
 	float lenInMM = ::sqrt(widthInMM*widthInMM + heightInMM*heightInMM);
 
 	// Haetaan sopiva kerroin kokeilemalla erilaisia ala ja ylä rajoja
-	float factor = static_cast<float>(NFmiCtrlView::InterpolateWithTwoPoints(lenInMM, 50, 500, 0.3, 1.3, 0.2, 1.5));
+	float factor = static_cast<float>(MathHelper::InterpolateWithTwoPoints(lenInMM, 50, 500, 0.3, 1.3, 0.2, 1.5));
 
 	// lasketaan vielä toinen kerroin, joka riippuu valitusta maantieteellisestä alueesta
 	float areaFactor = static_cast<float>(::CalcAreaSizeFactor(theCtrlViewDocumentInterface.GetMapHandlerInterface(theMapViewDesctopIndex)->Area()));

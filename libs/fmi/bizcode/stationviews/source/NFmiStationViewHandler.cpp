@@ -107,6 +107,7 @@
 #include "CtrlViewColorContourLegendDrawingFunctions.h"
 #include "CombinedMapHandlerInterface.h"
 #include "ParamHandlerViewFunctions.h"
+#include "MathHelper.h"
 
 #ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupport.h"
@@ -2030,7 +2031,7 @@ void NFmiStationViewHandler::DrawTimeText(void)
                     NFmiString timeStr2(usedTimeboxTime.ToStr(formatStr2, itsCtrlViewDocumentInterface->Language()));
 					double singleViewGridHeightInMM = graphicalInfo.itsViewHeightInMM;
 					// lasketaan piirto alueen (yhden kartta ikkunan) mm koon mukainen koko kerroin, niin että aikateksteistä ei tule aina joka tapauksessa saman kokoisia
-					double sizeFactor = NFmiCtrlView::InterpolateWithTwoPoints(singleViewGridHeightInMM,
+					double sizeFactor = MathHelper::InterpolateWithTwoPoints(singleViewGridHeightInMM,
 											timeLabelInfo.ViewSize1(),
 											timeLabelInfo.ViewSize2(),
 											timeLabelInfo.SizeFactor1(),
