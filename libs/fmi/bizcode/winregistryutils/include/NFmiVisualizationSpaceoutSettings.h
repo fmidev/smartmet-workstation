@@ -79,4 +79,6 @@ public:
 	void useGlobalVisualizationSpaceoutFactorOptimization(bool newState);
 	int spaceoutDataGatheringMethod() const;
 	void spaceoutDataGatheringMethod(int newValue);
+
+	double CalcBasicOptimizedGridSize(double usedSpaceoutFactor) const;
 };

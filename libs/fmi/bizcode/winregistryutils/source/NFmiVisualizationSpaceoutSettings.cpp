@@ -1,6 +1,7 @@
 #include "NFmiVisualizationSpaceoutSettings.h"
 #include "catlog/catlog.h"
 #include "NFmiValueString.h"
+#include "MathHelper.h"
 
 NFmiVisualizationSpaceoutSettings::NFmiVisualizationSpaceoutSettings() = default;
 
@@ -131,4 +132,9 @@ void NFmiVisualizationSpaceoutSettings::spaceoutDataGatheringMethod(int /* newVa
     //if(newValue > 1)
     //    newValue = 1;
     *spaceoutDataGatheringMethod_ = 0; // newValue;
+}
+
+double NFmiVisualizationSpaceoutSettings::CalcBasicOptimizedGridSize(double usedSpaceoutFactor) const
+{
+    return MathHelper::InterpolateWithTwoPoints(usedSpaceoutFactor, minVisualizationSpaceoutFactor_, maxVisualizationSpaceoutFactor_, maxVisualizationSpaceoutGridSize_, minVisualizationSpaceoutGridSize_, minVisualizationSpaceoutGridSize_, maxVisualizationSpaceoutGridSize_);
 }

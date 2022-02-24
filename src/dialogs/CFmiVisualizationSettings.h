@@ -35,19 +35,31 @@ private:
 	void InitDialogTexts();
 	void UpdateValuesBackToDocument();
 	void CheckInputAndDoWarningTexts();
+	void InitPixelToGridPointRatioSlider();
+	void InitGlobalVisualizationSpaceoutFactorSlider();
+	int CalcPixelToGridPointRatioSliderPosition(double value);
+	int CalcGlobalVisualizationSpaceoutFactorSliderPosition(double value);
+	double GetPixelToGridPointRatioFromSlider();
+	double GetGlobalVisualizationSpaceoutFactorFromSlider();
+	void UpdatePixelToGridPointRatioFromSliderToStringCtrl();
+	void UpdateGlobalVisualizationSpaceoutFactorFromSliderToStringCtrl();
 
 	NFmiApplicationWinRegistry* itsApplicationWinRegistry = nullptr;
-	double itsPixelToGridPointRatio;
-	double itsGlobalVisualizationSpaceoutFactor;
+	double itsPixelToGridPointRatio_valueFromSlider;
+	double itsGlobalVisualizationSpaceoutFactor_valueFromSlider;
 	BOOL itsUsePixelToGridPointRatioSafetyFeature;
 	BOOL itsUseGlobalVisualizationSpaceoutFactorOptimization;
 	CComboBox itsSpaceoutDataGatheringMethodComboBox;
 	CString itsPixelToGridPointRatioWarningStr;
+	CSliderCtrl itsPixelToGridPointRatioSlider;
+	CString itsPixelToGridPointRatioValueStr;
+	CSliderCtrl itsGlobalVisualizationSpaceoutFactorSlider;
+	CString itsGlobalVisualizationSpaceoutFactorResultsStr;
 public:
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
 	afx_msg void OnBnClickedButtonUpdate();
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnBnClickedCheckVisualizationsUsePixelToGridPointRatioSafetyFeature();
-	afx_msg void OnEnChangeEditVisualizationsPixelToGridPointRatio();
+	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 };
