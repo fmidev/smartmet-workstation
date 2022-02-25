@@ -192,6 +192,8 @@ class NFmiIsoLineView : public NFmiStationView
 	void PrepareForTransparentDraw(void);
 	void EndTransparentDraw(void);
     bool FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect &zoomedAreaRect);
+	bool FillGridRelatedData_IsDataVisible(boost::shared_ptr<NFmiArea>& mapArea);
+	bool FillGridRelatedData_BetterVisualizationChecks(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, boost::shared_ptr<NFmiArea>& mapArea, bool &fillGridDataStatus);
     void DoGridRelatedVisualization(NFmiIsoLineData &isoLineData, NFmiRect &zoomedAreaRect);
 	ContouringJobData MakeContouringJobData(boost::shared_ptr<NFmiDrawParam>& theDrawParam);
 	bool IsIsoLinesDrawnWithImagine(void);
