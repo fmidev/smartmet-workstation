@@ -1972,32 +1972,17 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
     int y2 = 0;
     isoLineData.itsIsolineMinLengthFactor = itsCtrlViewDocumentInterface->ApplicationWinRegistry().IsolineMinLengthFactor();
     boost::shared_ptr<NFmiArea> mapArea = GetArea();
-    if(itsInfo->IsGrid())
-    {
-        // huom. q2serverilta data voi olla minne tahansa, joten sen käyttö on poikkeus
-        boost::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
-        if(IsQ2ServerUsed() == false && IsDataInView(infoArea, mapArea) == false)
-            return false; // ei tarvitse piirtää ollenkaan, koska data ei osu näytön alueelle ollenkaan.
-    }
+
+    if(!FillGridRelatedData_IsDataVisible(mapArea))
+        return false;
 
     bool fillGridDataStatus = false;
-    if(!fGetCurrentDataFromQ2Server && dataUtilitiesAdapter->isModifiedDataDrawingPossible())
+    if(FillGridRelatedData_BetterVisualizationChecks(isoLineData, zoomedAreaRect, mapArea, fillGridDataStatus))
     {
-        if(dataUtilitiesAdapter->isThereAnythingToDraw())
-        {
-            isoLineData.itsInfo = itsInfo;
-            isoLineData.itsParam = itsInfo->Param();
-            isoLineData.itsTime = this->itsTime; // Tähän pistetään kartalla oleva aika
-            // Mutta pitää varmistaa että data interpoloidaan oikealta ajalta myös klimatologisilta datoilta (kuten Era-5, tms.)
-            auto usedInterpolationTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(itsInfo, itsTime);
-
-            itsInfo->Values(*dataUtilitiesAdapter->getInterpolatedData(), isoLineData.itsIsolineData, usedInterpolationTime, kFloatMissing, kFloatMissing, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
-            itsIsolineValues = isoLineData.itsIsolineData;
-            fillGridDataStatus = initializeIsoLineData(isoLineData);
-            zoomedAreaRect = dataUtilitiesAdapter->getCroppedArea()->XYArea(mapArea.get());
-        }
+        return fillGridDataStatus;
     }
-    else if(itsInfo->IsGrid() && IsZoomingPossible(itsInfo, mapArea, zoomedAreaRect, x1, y1, x2, y2))
+
+    if(itsInfo->IsGrid() && IsZoomingPossible(itsInfo, mapArea, zoomedAreaRect, x1, y1, x2, y2))
     {
         CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + ": zoomed grid used (faster)", this);
         isoLineData.itsInfo = itsInfo;
@@ -2046,6 +2031,44 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
         }
     }
     return fillGridDataStatus;
+}
+
+// FillGridRelatedData metodin paloittelu osiin, tapaus jossa datan karttaporjektio ei sovi pohjakartan projektioon ja dataa 
+// pitää interpoloida suorakulmaiseen hilaan, mutta ilman harvennusoptimointi juttuja.
+// Palauttaa bool arvon: käsittelikö tämä funktio kyseisen datan tapauksen, eikä tarvitse tehdä enää muuta
+bool NFmiIsoLineView::FillGridRelatedData_BetterVisualizationChecks(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, boost::shared_ptr<NFmiArea>& mapArea, bool& fillGridDataStatus)
+{
+    fillGridDataStatus = false;
+    if(!fGetCurrentDataFromQ2Server && dataUtilitiesAdapter->isModifiedDataDrawingPossible())
+    {
+        if(dataUtilitiesAdapter->isThereAnythingToDraw())
+        {
+            isoLineData.itsInfo = itsInfo;
+            isoLineData.itsParam = itsInfo->Param();
+            isoLineData.itsTime = this->itsTime; // Tähän pistetään kartalla oleva aika
+            // Mutta pitää varmistaa että data interpoloidaan oikealta ajalta myös klimatologisilta datoilta (kuten Era-5, tms.)
+            auto usedInterpolationTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(itsInfo, itsTime);
+
+            itsInfo->Values(*dataUtilitiesAdapter->getInterpolatedData(), isoLineData.itsIsolineData, usedInterpolationTime, kFloatMissing, kFloatMissing, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
+            itsIsolineValues = isoLineData.itsIsolineData;
+            fillGridDataStatus = initializeIsoLineData(isoLineData);
+            zoomedAreaRect = dataUtilitiesAdapter->getCroppedArea()->XYArea(mapArea.get());
+        }
+        return true;
+    }
+    return false;
+}
+
+bool NFmiIsoLineView::FillGridRelatedData_IsDataVisible(boost::shared_ptr<NFmiArea> &mapArea)
+{
+    if(itsInfo->IsGrid())
+    {
+        // huom. q2serverilta data voi olla minne tahansa, joten sen käyttö on poikkeus
+        boost::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
+        if(IsQ2ServerUsed() == false && IsDataInView(infoArea, mapArea) == false)
+            return false; // ei tarvitse piirtää ollenkaan, koska data ei osu näytön alueelle ollenkaan.
+    }
+    return true;
 }
 
 static void ReportDataGridSize(NFmiCtrlView *view, NFmiIsoLineData &isoLineData)
