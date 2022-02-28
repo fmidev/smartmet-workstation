@@ -2,6 +2,8 @@
 #include "catlog/catlog.h"
 #include "NFmiValueString.h"
 #include "MathHelper.h"
+#include "NFmiFastQueryInfo.h"
+#include "NFmiQueryDataUtil.h"
 
 NFmiVisualizationSpaceoutSettings::NFmiVisualizationSpaceoutSettings() = default;
 
@@ -134,7 +136,160 @@ void NFmiVisualizationSpaceoutSettings::spaceoutDataGatheringMethod(int /* newVa
     *spaceoutDataGatheringMethod_ = 0; // newValue;
 }
 
-double NFmiVisualizationSpaceoutSettings::CalcBasicOptimizedGridSize(double usedSpaceoutFactor) const
+double NFmiVisualizationSpaceoutSettings::calcBaseOptimizedGridSize(double usedSpaceoutFactor) const
 {
     return MathHelper::InterpolateWithTwoPoints(usedSpaceoutFactor, minVisualizationSpaceoutFactor_, maxVisualizationSpaceoutFactor_, maxVisualizationSpaceoutGridSize_, minVisualizationSpaceoutGridSize_, minVisualizationSpaceoutGridSize_, maxVisualizationSpaceoutGridSize_);
+}
+
+static NFmiPoint calcApproximationDataGridSizeOverMapBoundingBox(NFmiFastQueryInfo& fastInfo, const NFmiRect& dataOverMapWorldXyBoundingBox)
+{
+    auto fastInfoWorldRect = fastInfo.Area()->WorldRect();
+    auto gridCellSizeInMetersX = fastInfoWorldRect.Width() / (fastInfo.GridXNumber() - 1);
+    auto gridCellSizeInMetersY = fastInfoWorldRect.Height() / (fastInfo.GridYNumber() - 1);
+    double gridSizeX = dataOverMapWorldXyBoundingBox.Width() / gridCellSizeInMetersX;
+    double gridSizeY = dataOverMapWorldXyBoundingBox.Height() / gridCellSizeInMetersY;
+    return NFmiPoint(gridSizeX, gridSizeY);
+}
+
+static NFmiPoint calcBaseGridSizeOverMapBoundingBox(NFmiPoint& baseGridSize, const NFmiRect& mapWorldXyRect, const NFmiRect& dataOverMapWorldXyBoundingBox)
+{
+    auto widthFactor = dataOverMapWorldXyBoundingBox.Width() / mapWorldXyRect.Width();
+    auto heigthFactor = dataOverMapWorldXyBoundingBox.Height() / mapWorldXyRect.Height();
+    return NFmiPoint(baseGridSize.X() * widthFactor, baseGridSize.Y() * heigthFactor);
+}
+
+static bool shouldOptimizedGridBeUsed(const NFmiPoint& baseGridSizeOverMapBoundingBox, const NFmiPoint& approximationDataGridSizeOverMapBoundingBox)
+{
+    auto widthRatio = std::round(baseGridSizeOverMapBoundingBox.X()) / std::round(approximationDataGridSizeOverMapBoundingBox.X());
+    auto heigthRatio = std::round(baseGridSizeOverMapBoundingBox.Y()) / std::round(approximationDataGridSizeOverMapBoundingBox.Y());
+    if((widthRatio + heigthRatio) < 0.9)
+        return true;
+    else
+        return false;
+}
+
+// Huom! On jo tarkastettu (NFmiIsoLineView::FillGridRelatedData metodissa), että näkyykö data kartta-alueella, joten sitä ei tavitse tarkastella enää.
+bool NFmiVisualizationSpaceoutSettings::checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, NFmiArea& mapArea) const
+{
+    if(useGlobalVisualizationSpaceoutFactorOptimization() && fastInfo.IsGrid())
+    {
+        auto baseGridSize = calcAreaGridSize(mapArea);
+        auto dataOverMapWorldXyBoundingBox = calcInfoAreaOverMapAreaWorldXyBoundingBox(fastInfo, mapArea);
+        auto approximationDataGridSizeOverMapBoundingBox = ::calcApproximationDataGridSizeOverMapBoundingBox(fastInfo, dataOverMapWorldXyBoundingBox);
+        auto baseGridSizeOverMapBoundingBox = ::calcBaseGridSizeOverMapBoundingBox(baseGridSize, mapArea.WorldRect(), dataOverMapWorldXyBoundingBox);
+        return ::shouldOptimizedGridBeUsed(baseGridSizeOverMapBoundingBox, approximationDataGridSizeOverMapBoundingBox);
+    }
+    return false;
+}
+
+NFmiPoint NFmiVisualizationSpaceoutSettings::calcAreaGridSize(NFmiArea& area) const
+{
+    auto baseGridSize = calcBaseOptimizedGridSize(globalVisualizationSpaceoutFactor());
+    auto areaWidthPerHeightFactor = area.WorldRect().Width() / area.WorldRect().Height();
+    if(areaWidthPerHeightFactor >= 1)
+        return NFmiPoint(baseGridSize, baseGridSize * areaWidthPerHeightFactor);
+    else
+        return NFmiPoint(baseGridSize * areaWidthPerHeightFactor, baseGridSize);
+}
+
+static NFmiRect makeBoundingBoxFromEdgePoints(const std::set<double>& leftValues, const std::set<double>& rightValues, const std::set<double>& bottomValues, const std::set<double>& topValues)
+{
+    double leftWorldXy = *leftValues.rbegin(); // rbegin = suurin arvo lefteistä
+    double rightWorldXy = *rightValues.begin(); // begin = pienin arvo righteista
+    double bottomWorldXy = *bottomValues.rbegin(); // rbegin = suurin arvo bottomeista
+    double topWorldXy = *topValues.begin(); // begin = pienin arvo topeista
+
+    return NFmiRect(leftWorldXy, topWorldXy, rightWorldXy, bottomWorldXy);
+}
+
+static bool doBoundingBoxWithSameKindAreas(NFmiFastQueryInfo& fastInfo, NFmiArea& mapArea, NFmiRect &worldXyBoundingBox)
+{
+    const auto& worldXyRect = fastInfo.Area()->WorldRect();
+    // Jos area-projektiot ovat saman tyylisiä, on boundingbox helppo laskea kahden pisteen avulla
+    if(NFmiQueryDataUtil::AreAreasSameKind(&mapArea, fastInfo.Area()))
+    {
+        auto bottomLeftWorldXyPoint = mapArea.LatLonToWorldXY(fastInfo.Area()->BottomLeftLatLon());
+        auto topRightWorldXyPoint = mapArea.LatLonToWorldXY(fastInfo.Area()->TopRightLatLon());
+
+        std::set<double> leftValues{ worldXyRect.Left(), bottomLeftWorldXyPoint.X() };
+        std::set<double> rightValues{ worldXyRect.Right(), topRightWorldXyPoint.X() };
+        std::set<double> bottomValues{ worldXyRect.Bottom(), bottomLeftWorldXyPoint.Y() };
+        std::set<double> topValues{ worldXyRect.Top(), topRightWorldXyPoint.Y() };
+
+        worldXyBoundingBox = ::makeBoundingBoxFromEdgePoints(leftValues, rightValues, bottomValues, topValues);
+        return true;
+    }
+    return false;
+}
+
+static unsigned long calcEdgePointSteppingCount(unsigned long gridSize)
+{
+    unsigned long step = boost::math::iround(gridSize / 30.);
+    if(step < 1)
+        step = 1;
+    return step;
+}
+
+// Käy hiladatan reunapisteet läpi ja katsoo miten data osuu mapArea:n WorldXy-arean avulla laskettuun boundinboxiin.
+// Boundingbox pidetään kuitenkin rajattuna mapArea:n sisälle.
+NFmiRect NFmiVisualizationSpaceoutSettings::calcInfoAreaOverMapAreaWorldXyBoundingBox(NFmiFastQueryInfo& fastInfo, NFmiArea& mapArea) const
+{
+    NFmiRect worldXyBoundingBox;
+    if(::doBoundingBoxWithSameKindAreas(fastInfo, mapArea, worldXyBoundingBox))
+        return worldXyBoundingBox;
+
+    const auto& worldXyRect = fastInfo.Area()->WorldRect();
+
+    // Mennään läpi ensin kulmapisteet, jos ne peittävä jo kartta-alueen, ei tarvitse tutkia pidemmälle
+    auto bottomLeftWorldXyPoint = mapArea.LatLonToWorldXY(fastInfo.Area()->BottomLeftLatLon());
+    auto bottomRightWorldXyPoint = mapArea.LatLonToWorldXY(fastInfo.Area()->BottomRightLatLon());
+    auto topLeftWorldXyPoint = mapArea.LatLonToWorldXY(fastInfo.Area()->TopLeftLatLon());
+    auto topRightWorldXyPoint = mapArea.LatLonToWorldXY(fastInfo.Area()->TopRightLatLon());
+    std::set<double> leftValues{ worldXyRect.Left(), bottomLeftWorldXyPoint.X(), topLeftWorldXyPoint.X() };
+    std::set<double> rightValues{ worldXyRect.Right(), bottomRightWorldXyPoint.X(), topRightWorldXyPoint.X() };
+    std::set<double> bottomValues{ worldXyRect.Bottom(), bottomLeftWorldXyPoint.Y(), bottomRightWorldXyPoint.Y() };
+    std::set<double> topValues{ worldXyRect.Top(), topLeftWorldXyPoint.Y(), topRightWorldXyPoint.Y() };
+
+    worldXyBoundingBox = ::makeBoundingBoxFromEdgePoints(leftValues, rightValues, bottomValues, topValues);
+    if(worldXyRect == worldXyBoundingBox)
+        return worldXyBoundingBox;
+
+    // Muuten aloitetaan iteroimaan hilan reunapisteitä läpi harvennetusti (ei viitsi turhaan tutkia 1000x1000 hilan jokaista reunapistettä)
+    auto gridSizeX = fastInfo.GridXNumber();
+    auto gridSizeY = fastInfo.GridYNumber();
+    unsigned long xStep = ::calcEdgePointSteppingCount(gridSizeX);
+    // Käydään ensin ylä- ja alarivit
+    for(unsigned long xIndex = xStep; xIndex < gridSizeX - 1; xIndex += xStep)
+    {
+        unsigned long latlonIndexBottom = xIndex;
+        auto worldXyPointBottom = mapArea.LatLonToWorldXY(fastInfo.LatLon(latlonIndexBottom));
+        bottomValues.insert(worldXyPointBottom.Y());
+        leftValues.insert(worldXyPointBottom.X());
+        rightValues.insert(worldXyPointBottom.X());
+
+        unsigned long latlonIndexTop = gridSizeX * (gridSizeY - 1) + xIndex;
+        auto worldXyPointTop = mapArea.LatLonToWorldXY(fastInfo.LatLon(latlonIndexTop));
+        topValues.insert(worldXyPointTop.Y());
+        leftValues.insert(worldXyPointTop.X());
+        rightValues.insert(worldXyPointTop.X());
+    }
+
+    unsigned long yStep = ::calcEdgePointSteppingCount(gridSizeY);
+    // Käydään reunimmaiset pystyrivit
+    for(unsigned long yIndex = yStep; yIndex < gridSizeY - 1; yIndex += yStep)
+    {
+        unsigned long latlonIndexLeft = yIndex * gridSizeX;
+        auto worldXyPointLeft = mapArea.LatLonToWorldXY(fastInfo.LatLon(latlonIndexLeft));
+        bottomValues.insert(worldXyPointLeft.Y());
+        topValues.insert(worldXyPointLeft.Y());
+        leftValues.insert(worldXyPointLeft.X());
+
+        unsigned long latlonIndexRight = (yIndex + 1) * gridSizeX - 1;
+        auto worldXyPointRight = mapArea.LatLonToWorldXY(fastInfo.LatLon(latlonIndexRight));
+        bottomValues.insert(worldXyPointRight.Y());
+        topValues.insert(worldXyPointRight.Y());
+        leftValues.insert(worldXyPointRight.X());
+    }
+
+    return ::makeBoundingBoxFromEdgePoints(leftValues, rightValues, bottomValues, topValues);
 }
