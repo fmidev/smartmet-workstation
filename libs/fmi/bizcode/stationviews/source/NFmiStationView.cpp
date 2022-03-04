@@ -1540,6 +1540,8 @@ bool NFmiStationView::IsGridDataDrawnWithSpaceOutSymbols()
 	return false;
 }
 
+// Tähän ei oteta mukaan VisualizationOptimization hilakokolaskuja, koska tässä lasketaan
+// jo harvennettuun laskentahilaan mahdollisen symbolipiirron takia.
 boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreatePossibleSpaceOutMacroParamData()
 {
     if(IsGridDataDrawnWithSpaceOutSymbols())
@@ -1896,7 +1898,8 @@ static NFmiGrid GetQ3ArchiveDataGrid(CtrlViewDocumentInterface *theCtrlViewDocum
 	}
 	else
 	{
-		NFmiPoint gridSize = theCtrlViewDocumentInterface->GetQ2ServerInfo().Q2ServerGridSize();
+		auto& visSettings = theCtrlViewDocumentInterface->ApplicationWinRegistry().VisualizationSpaceoutSettings();
+		NFmiPoint gridSize = visSettings.getCheckedPossibleOptimizedGridSize(theCtrlViewDocumentInterface->GetQ2ServerInfo().Q2ServerGridSize(), *theArea);
         return NFmiGrid(theArea.get(), static_cast<unsigned long>(gridSize.X()), static_cast<unsigned long>(gridSize.Y()));
 	}
 }
@@ -2188,7 +2191,8 @@ bool NFmiStationView::GetQ3ScriptData(NFmiDataMatrix<float> &theValues, NFmiGrid
 {
     try
     {
-        NFmiPoint usedGridSize = itsCtrlViewDocumentInterface->InfoOrganizer()->GetMacroParamDataGridSize();
+		auto& visSettings = itsCtrlViewDocumentInterface->ApplicationWinRegistry().VisualizationSpaceoutSettings();
+		NFmiPoint usedGridSize = visSettings.getCheckedPossibleOptimizedGridSize(itsCtrlViewDocumentInterface->InfoOrganizer()->GetMacroParamDataGridSize(), *itsArea);
         theUsedGrid = NFmiGrid(itsArea.get(), static_cast<unsigned long>(usedGridSize.X()), static_cast<unsigned long>(usedGridSize.Y()));
 
         string urlStr = theUsedBaseUrlStr;
@@ -2278,10 +2282,12 @@ NFmiHelpDataInfo* NFmiStationView::GetHelpDataInfo(boost::shared_ptr<NFmiFastQue
     return GetCtrlViewDocumentInterface()->HelpDataInfoSystem()->FindHelpDataInfo(theInfo->DataFilePattern());
 }
 
-void NFmiStationView::FinalFillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2)
+void NFmiStationView::FinalFillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid)
 {
-    if(useCropping)
-		theValues = theInfo->CroppedValues(usedTime, x1, y1, x2, y2, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
+	if(optimizedDataGrid)
+		theInfo->GridValues(theValues, *optimizedDataGrid, usedTime);
+	else if(useCropping)
+        theInfo->CroppedValues(theValues, usedTime, x1, y1, x2, y2, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
     else
 		theValues = theInfo->Values(usedTime, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
 }
@@ -2302,17 +2308,17 @@ bool NFmiStationView::DataIsDrawable(boost::shared_ptr<NFmiFastQueryInfo> &theIn
     return false;
 }
 
-void NFmiStationView::FinalFillWindMetaDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, unsigned long wantedParamId)
+void NFmiStationView::FinalFillWindMetaDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, unsigned long wantedParamId, NFmiGrid* optimizedDataGrid)
 {
     NFmiFastInfoUtils::QueryInfoParamStateRestorer restorer(*theInfo);
     if(metaWindParamUsage.HasWsAndWd())
     {
         theInfo->Param(kFmiWindSpeedMS);
         NFmiDataMatrix<float> WS;
-        FinalFillDataMatrix(theInfo, WS, usedTime, useCropping, x1, y1, x2, y2);
+        FinalFillDataMatrix(theInfo, WS, usedTime, useCropping, x1, y1, x2, y2, optimizedDataGrid);
         theInfo->Param(kFmiWindDirection);
         NFmiDataMatrix<float> WD;
-        FinalFillDataMatrix(theInfo, WD, usedTime, useCropping, x1, y1, x2, y2);
+        FinalFillDataMatrix(theInfo, WD, usedTime, useCropping, x1, y1, x2, y2, optimizedDataGrid);
         switch(wantedParamId)
         {
         case kFmiWindVectorMS:
@@ -2341,10 +2347,10 @@ void NFmiStationView::FinalFillWindMetaDataMatrix(boost::shared_ptr<NFmiFastQuer
     {
         theInfo->Param(kFmiWindUMS);
         NFmiDataMatrix<float> u;
-        FinalFillDataMatrix(theInfo, u, usedTime, useCropping, x1, y1, x2, y2);
+        FinalFillDataMatrix(theInfo, u, usedTime, useCropping, x1, y1, x2, y2, optimizedDataGrid);
         theInfo->Param(kFmiWindVMS);
         NFmiDataMatrix<float> v;
-        FinalFillDataMatrix(theInfo, v, usedTime, useCropping, x1, y1, x2, y2);
+        FinalFillDataMatrix(theInfo, v, usedTime, useCropping, x1, y1, x2, y2, optimizedDataGrid);
         switch(wantedParamId)
         {
         case kFmiWindVectorMS:
@@ -2362,7 +2368,7 @@ void NFmiStationView::FinalFillWindMetaDataMatrix(boost::shared_ptr<NFmiFastQuer
     }
 }
 
-void NFmiStationView::FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2)
+void NFmiStationView::FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid)
 {
 	if(theInfo == 0)
 		theValues = kFloatMissing;
@@ -2372,11 +2378,11 @@ void NFmiStationView::FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theIn
         auto paramId = itsDrawParam->Param().GetParamIdent();
         if(metaWindParamUsage.ParamNeedsMetaCalculations(paramId))
         {
-            FinalFillWindMetaDataMatrix(theInfo, theValues, usedTime, fUseCropping, x1, y1, x2, y2, paramId);
+            FinalFillWindMetaDataMatrix(theInfo, theValues, usedTime, fUseCropping, x1, y1, x2, y2, paramId, optimizedDataGrid);
         }
         else
         {
-            FinalFillDataMatrix(theInfo, theValues, usedTime, fUseCropping, x1, y1, x2, y2);
+            FinalFillDataMatrix(theInfo, theValues, usedTime, fUseCropping, x1, y1, x2, y2, optimizedDataGrid);
         }
     }
 }
@@ -2435,33 +2441,35 @@ bool NFmiStationView::IsStationDataGridded()
 
 void NFmiStationView::CalculateGriddedStationData(NFmiDataMatrix<float> &theValues, NFmiGrid &usedGrid)
 {
-    NFmiPoint usedGridSize = itsCtrlViewDocumentInterface->StationDataGridSize();
+	auto& visSettings = itsCtrlViewDocumentInterface->ApplicationWinRegistry().VisualizationSpaceoutSettings();
+	NFmiPoint usedGridSize = visSettings.getCheckedPossibleOptimizedGridSize(itsCtrlViewDocumentInterface->StationDataGridSize(), *itsArea);
     usedGrid = NFmiGrid(itsArea.get(), static_cast<unsigned long>(usedGridSize.X()), static_cast<unsigned long>(usedGridSize.Y()));
     theValues.Resize(static_cast<unsigned long>(usedGridSize.X()), static_cast<unsigned long>(usedGridSize.Y()), kFloatMissing);
     GridStationDataToMatrix(theValues, itsTime);
 }
 
-void NFmiStationView::CalculateDifferenceToOriginalDataMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2, bool useCropping)
+void NFmiStationView::CalculateDifferenceToOriginalDataMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2, bool useCropping, NFmiGrid* optimizedDataGrid)
 {
-    FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2);
+    FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2, optimizedDataGrid);
     if(itsOriginalDataInfo)
     {
         NFmiDataMatrix<float> values2;
-        FillDataMatrix(itsOriginalDataInfo, values2, itsTime, useCropping, x1, y1, x2, y2);
+        FillDataMatrix(itsOriginalDataInfo, values2, itsTime, useCropping, x1, y1, x2, y2, optimizedDataGrid);
         ::CalcDiffMatrix(theValues, values2);
     }
     else
         theValues = 0; // tehdään 0-arvoiset luvut tulosmatriisiin, koska ei ole originaali arvoja käytössä
 }
 
-
-bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2)
+// Otetaan visualizationOptimazation:in harvennetut hilakoot tarvittavissa kohdissa käyttöön
+bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid)
 {
 	bool status = true;
     NFmiGrid usedGrid; // tämän avulla lasketaan maski laskut
 
 	if(IsSpecialMatrixDataDraw())
 	{
+		// Tätä käytetään vain visualisoimaan editoidun datan valittuja pisteitä, täällä ei tehdä visualizationOptimazation harvennusta
 		theValues = itsSpecialMatrixData;
         usedGrid = NFmiGrid(itsArea.get(), static_cast<unsigned long>(itsSpecialMatrixData.NX()), static_cast<unsigned long>(itsSpecialMatrixData.NY()));
 	}
@@ -2485,28 +2493,41 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 		}
 		else
 		{
+			NFmiGrid optimizationGrid;
+			auto& visSettings = itsCtrlViewDocumentInterface->ApplicationWinRegistry().VisualizationSpaceoutSettings();
+			auto useVisualizationOptimization = visSettings.checkIsOptimizationsUsed(*itsInfo, *itsArea, optimizationGrid);
+			NFmiGrid* optimizationGridPtr = useVisualizationOptimization ? &optimizationGrid : nullptr;
 			bool useCropping = (x2 - x1 >= 1) && (y2 - y1 >= 1);
 			if(itsDrawParam->ShowDifferenceToOriginalData())
 			{
-                CalculateDifferenceToOriginalDataMatrix(theValues, x1, y1, x2, y2, useCropping);
+                CalculateDifferenceToOriginalDataMatrix(theValues, x1, y1, x2, y2, useCropping, optimizationGridPtr);
 			}
 			else
 			{
 				if(itsInfo->DataType() != NFmiInfoData::kStationary)
 				{
-                    FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2);
+                    FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2, optimizationGridPtr);
 				}
 				else
 				{
                     // Staattisille datoille (terrain datat jms.) ei tarvitse tehdä meta parametri tarkasteluja
-					if(useCropping)
-						theValues = itsInfo->CroppedValues(x1, y1, x2, y2); // stat data on jo ajallisesti kohdallaan
+					if(useVisualizationOptimization)
+					{
+						// GridValues metodista ei löydy kuin aikainterpolaatio menetelmä, joten pitää pyytää eka aika datasta
+						const auto& firstTime = itsInfo->TimeDescriptor().FirstTime();
+						itsInfo->GridValues(theValues, optimizationGrid, firstTime);
+					}
+					else if(useCropping)
+						itsInfo->CroppedValues(theValues, x1, y1, x2, y2); // stat data on jo ajallisesti kohdallaan
 					else
 						theValues = itsInfo->Values(); // stat data on jo ajallisesti kohdallaan
 				}
 			}
 
-			usedGrid = GetUsedGrid(usedGrid, itsInfo, theValues, useCropping, x1, y1, x2, y2);
+			if(useVisualizationOptimization)
+				usedGrid = optimizationGrid;
+			else
+				usedGrid = GetUsedGrid(usedGrid, itsInfo, theValues, useCropping, x1, y1, x2, y2);
 		}
 	}
 

@@ -367,6 +367,7 @@ public:
     virtual CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() = 0;
     virtual NFmiParameterInterpolationFixer& ParameterInterpolationFixer() = 0;
     virtual void ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag) = 0;
+    virtual void UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged() = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem() = 0;

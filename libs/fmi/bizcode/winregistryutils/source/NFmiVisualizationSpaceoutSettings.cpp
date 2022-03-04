@@ -162,14 +162,14 @@ static bool shouldOptimizedGridBeUsed(const NFmiPoint& baseGridSizeOverMapBoundi
 {
     auto widthRatio = std::round(baseGridSizeOverMapBoundingBox.X()) / std::round(approximationDataGridSizeOverMapBoundingBox.X());
     auto heigthRatio = std::round(baseGridSizeOverMapBoundingBox.Y()) / std::round(approximationDataGridSizeOverMapBoundingBox.Y());
-    if((widthRatio + heigthRatio) < 0.9)
+    if(((widthRatio + heigthRatio)/2.) < 0.9)
         return true;
     else
         return false;
 }
 
 // Huom! On jo tarkastettu (NFmiIsoLineView::FillGridRelatedData metodissa), että näkyykö data kartta-alueella, joten sitä ei tavitse tarkastella enää.
-bool NFmiVisualizationSpaceoutSettings::checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, NFmiArea& mapArea) const
+bool NFmiVisualizationSpaceoutSettings::checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, NFmiArea& mapArea, NFmiGrid& optimizedGridOut) const
 {
     if(useGlobalVisualizationSpaceoutFactorOptimization() && fastInfo.IsGrid())
     {
@@ -177,19 +177,52 @@ bool NFmiVisualizationSpaceoutSettings::checkIsOptimizationsUsed(NFmiFastQueryIn
         auto dataOverMapWorldXyBoundingBox = calcInfoAreaOverMapAreaWorldXyBoundingBox(fastInfo, mapArea);
         auto approximationDataGridSizeOverMapBoundingBox = ::calcApproximationDataGridSizeOverMapBoundingBox(fastInfo, dataOverMapWorldXyBoundingBox);
         auto baseGridSizeOverMapBoundingBox = ::calcBaseGridSizeOverMapBoundingBox(baseGridSize, mapArea.WorldRect(), dataOverMapWorldXyBoundingBox);
-        return ::shouldOptimizedGridBeUsed(baseGridSizeOverMapBoundingBox, approximationDataGridSizeOverMapBoundingBox);
+        if(::shouldOptimizedGridBeUsed(baseGridSizeOverMapBoundingBox, approximationDataGridSizeOverMapBoundingBox))
+        {
+            NFmiPoint bottomLeftLatlon = mapArea.WorldXYToLatLon(dataOverMapWorldXyBoundingBox.BottomLeft());
+            NFmiPoint topRightLatlon = mapArea.WorldXYToLatLon(dataOverMapWorldXyBoundingBox.TopRight());
+            auto optimizedArea = mapArea.CreateNewArea(bottomLeftLatlon, topRightLatlon);
+            optimizedGridOut = NFmiGrid(optimizedArea, boost::math::iround(baseGridSizeOverMapBoundingBox.X()), boost::math::iround(baseGridSizeOverMapBoundingBox.Y()));
+            return true;
+        }
     }
     return false;
 }
 
+static NFmiPoint getSmallerAreaPoint(const NFmiPoint& gridSize1, const NFmiPoint& gridSize2)
+{
+    auto area1 = gridSize1.X() * gridSize1.Y();
+    auto area2 = gridSize2.X() * gridSize2.Y();
+    if(area1 <= area2)
+        return gridSize1;
+    else
+        return gridSize2;
+}
+
+NFmiPoint NFmiVisualizationSpaceoutSettings::getCheckedPossibleOptimizedGridSize(const NFmiPoint& suggestedGridSize, NFmiArea& mapArea) const
+{
+    if(useGlobalVisualizationSpaceoutFactorOptimization())
+    {
+        auto baseGridSize = calcAreaGridSize(mapArea);
+        return ::getSmallerAreaPoint(suggestedGridSize, baseGridSize);
+    }
+    return suggestedGridSize;
+}
+
+// Lasketaan perus hilakoko nykyisillä harvennus asetuksilla ja katsotaan minkälainen
+// harvennettu hila saadaan annetun area:n avulla. Tässä otetaan huomioon alueen WorldXY rectin leveys/korkeus 
+// suhde, niin että metreissä leveämpi kantti saa maksimi hilakoon ja kapeampi saa jakosuhteessa vähemmän hilapisteita.
 NFmiPoint NFmiVisualizationSpaceoutSettings::calcAreaGridSize(NFmiArea& area) const
 {
     auto baseGridSize = calcBaseOptimizedGridSize(globalVisualizationSpaceoutFactor());
     auto areaWidthPerHeightFactor = area.WorldRect().Width() / area.WorldRect().Height();
+    double gridsizeX = std::round(baseGridSize);
+    double gridsizeY = std::round(baseGridSize);
     if(areaWidthPerHeightFactor >= 1)
-        return NFmiPoint(baseGridSize, baseGridSize * areaWidthPerHeightFactor);
+        gridsizeY = std::round(areaWidthPerHeightFactor / areaWidthPerHeightFactor);
     else
-        return NFmiPoint(baseGridSize * areaWidthPerHeightFactor, baseGridSize);
+        gridsizeX = std::round(areaWidthPerHeightFactor * areaWidthPerHeightFactor);
+    return NFmiPoint(gridsizeX, gridsizeY);
 }
 
 static NFmiRect makeBoundingBoxFromEdgePoints(const std::set<double>& leftValues, const std::set<double>& rightValues, const std::set<double>& bottomValues, const std::set<double>& topValues)

@@ -150,6 +150,7 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+	void UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();
 	NFmiParameterInterpolationFixer& ParameterInterpolationFixer();
 	int CurrentCrossSectionRowIndex();
 	void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea>& newArea, unsigned int mapViewDescTopIndex);

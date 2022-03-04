@@ -260,6 +260,7 @@ void CFmiVisualizationSettings::UpdateValuesBackToDocument()
 		auto* smartMetDocumentInterface = SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation();
 		if(smartMetDocumentInterface)
 		{
+			smartMetDocumentInterface->UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();
 			// Laitetaan kaikki kartat likaiseksi ja nollataan kaikki macroParam cachet
 			smartMetDocumentInterface->GetCombinedMapHandlerInterface().mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, true, true, true);
 			// Asetetaan vain karttanäytöt päivitettäviksi
@@ -374,14 +375,14 @@ void CFmiVisualizationSettings::UpdateGlobalVisualizationSpaceoutFactorFromSlide
 	globalVisualizationSpaceoutFactorResultsStr += ::to_string_with_fixed_precision(globalVisualizationSpaceoutFactor_fromSlider, 1);
 	globalVisualizationSpaceoutFactorResultsStr += "   which would result used data-grid size of ~ ";
 	auto& visSettings = itsApplicationWinRegistry->VisualizationSpaceoutSettings();
-	auto baseGridSize = boost::math::iround(visSettings.CalcBasicOptimizedGridSize(globalVisualizationSpaceoutFactor_fromSlider));
+	auto baseGridSize = boost::math::iround(visSettings.calcBaseOptimizedGridSize(globalVisualizationSpaceoutFactor_fromSlider));
 	globalVisualizationSpaceoutFactorResultsStr += std::to_string(baseGridSize);
 	globalVisualizationSpaceoutFactorResultsStr += "x";
 	globalVisualizationSpaceoutFactorResultsStr += std::to_string(baseGridSize);
 	globalVisualizationSpaceoutFactorResultsStr += "\nActual value in use is ";
 	auto usedFactor = visSettings.globalVisualizationSpaceoutFactor();
 	globalVisualizationSpaceoutFactorResultsStr += ::to_string_with_fixed_precision(usedFactor, 1);
-	auto usedBaseGridSize = boost::math::iround(visSettings.CalcBasicOptimizedGridSize(usedFactor));
+	auto usedBaseGridSize = boost::math::iround(visSettings.calcBaseOptimizedGridSize(usedFactor));
 	globalVisualizationSpaceoutFactorResultsStr += ", that results grid-size ~ ";
 	globalVisualizationSpaceoutFactorResultsStr += std::to_string(usedBaseGridSize);
 	globalVisualizationSpaceoutFactorResultsStr += "x";

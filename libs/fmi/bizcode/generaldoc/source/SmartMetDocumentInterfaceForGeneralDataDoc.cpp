@@ -1423,6 +1423,11 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::ApplyUpdatedViewsFlag(SmartMetV
         ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(updatedViewsFlag);
 }
 
+void SmartMetDocumentInterfaceForGeneralDataDoc::UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged()
+{
+    return itsDoc->UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // =================================================
 
