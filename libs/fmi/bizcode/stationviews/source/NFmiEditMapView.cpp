@@ -140,7 +140,45 @@ void NFmiEditMapView::Draw(NFmiToolBox * theGTB)
         DrawLastEditedDataSendTime();
 
         LogWarningForTooLongMapViewDrawTime(timer);
-    }
+
+		std::string spaceoutMessage1 = "Map-area size in km: ";
+		auto mapWorldRect = itsMapArea->WorldRect();
+		spaceoutMessage1 += std::to_string(mapWorldRect.Width() / 1000.);
+		spaceoutMessage1 += " x ";
+		spaceoutMessage1 += std::to_string(mapWorldRect.Height() / 1000.);
+		spaceoutMessage1 += " km";
+		itsCtrlViewDocumentInterface->LogAndWarnUser(spaceoutMessage1, "", CatLog::Severity::Info, CatLog::Category::Visualization, true);
+
+		auto editedInfo = itsCtrlViewDocumentInterface->EditedSmartInfo();
+		if(editedInfo)
+		{
+			auto dataWorldRect = editedInfo->Area()->WorldRect();
+			std::string spaceoutMessage2 = "Data-area size in km: ";
+			spaceoutMessage2 += std::to_string(dataWorldRect.Width() / 1000.);
+			spaceoutMessage2 += " x ";
+			spaceoutMessage2 += std::to_string(dataWorldRect.Height() / 1000.);
+			spaceoutMessage2 += " km";
+			itsCtrlViewDocumentInterface->LogAndWarnUser(spaceoutMessage2, "", CatLog::Severity::Info, CatLog::Category::Visualization, true);
+
+			std::string spaceoutMessage3 = "Data resolution in km: ";
+			spaceoutMessage3 += std::to_string(dataWorldRect.Width() / 1000. / editedInfo->GridXNumber());
+			spaceoutMessage3 += " x ";
+			spaceoutMessage3 += std::to_string(dataWorldRect.Height() / 1000. / editedInfo->GridYNumber());
+			spaceoutMessage3 += " km";
+			itsCtrlViewDocumentInterface->LogAndWarnUser(spaceoutMessage3, "", CatLog::Severity::Info, CatLog::Category::Visualization, true);
+		}
+
+		std::string spaceoutMessage4 = "view-grid factors: ";
+		for(float viewCount = 1; viewCount < 50; viewCount++)
+		{
+			spaceoutMessage4 += "\n" + std::to_string(viewCount);
+//			float factor = std::pow(1.f / viewCount, 0.25f);
+			float factor = -0.013265f * viewCount + 1.013265f;
+			spaceoutMessage4 += " -> " + std::to_string(factor);
+		}
+		itsCtrlViewDocumentInterface->LogAndWarnUser(spaceoutMessage4, "", CatLog::Severity::Info, CatLog::Category::Visualization, true);
+
+	}
     catch(...)
     {
     }

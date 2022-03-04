@@ -2039,9 +2039,11 @@ bool NFmiIsoLineView::FillGridRelatedData_VisualizationOptimizationChecks(NFmiIs
 {
     auto& visSettings = itsCtrlViewDocumentInterface->ApplicationWinRegistry().VisualizationSpaceoutSettings();
     auto mapArea = GetArea();
-    if(visSettings.checkIsOptimizationsUsed(*itsInfo, *mapArea))
+    NFmiGrid optimizedGrid;
+    if(visSettings.checkIsOptimizationsUsed(*itsInfo, *mapArea, optimizedGrid))
     {
-
+        fillGridDataStatus = FillIsoLineDataWithGridData(isoLineData, 0, 0, 0, 0, &optimizedGrid);
+        zoomedAreaRect = optimizedGrid.Area()->XYArea(mapArea.get());
     }
     return false;
 }
@@ -2155,9 +2157,9 @@ void NFmiIsoLineView::DrawIsoLinesWithToolMaster(void)
     }
 }
 
-bool NFmiIsoLineView::FillIsoLineDataWithGridData(NFmiIsoLineData& theIsoLineData, int x1, int y1, int x2, int y2)
+bool NFmiIsoLineView::FillIsoLineDataWithGridData(NFmiIsoLineData& theIsoLineData, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid)
 {
-    if(CalcViewFloatValueMatrix(itsIsolineValues, x1, y1, x2, y2) == false)
+    if(CalcViewFloatValueMatrix(itsIsolineValues, x1, y1, x2, y2, optimizedDataGrid) == false)
         return false;
 
     return initializeIsoLineData(theIsoLineData);

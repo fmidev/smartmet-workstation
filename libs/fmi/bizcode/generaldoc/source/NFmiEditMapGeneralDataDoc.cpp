@@ -7927,6 +7927,15 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsFileCleanerSystem;
 	}
 
+	void UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged()
+	{
+		auto& visSettings = ApplicationWinRegistry().VisualizationSpaceoutSettings();
+		auto baseOptimizedGridSize = visSettings.calcBaseOptimizedGridSize(visSettings.globalVisualizationSpaceoutFactor());
+		NFmiPoint optimizedVisualizationGridSize(baseOptimizedGridSize, baseOptimizedGridSize);
+		NFmiSmartToolModifier::UseVisualizationOptimazation(visSettings.useGlobalVisualizationSpaceoutFactorOptimization());
+		InfoOrganizer()->SetOptimizedVisualizationMacroParamDataGridSize(boost::math::iround(optimizedVisualizationGridSize.X()), boost::math::iround(optimizedVisualizationGridSize.Y()));
+	}
+
 	void SetMacroParamDataGridSize(int xSize, int ySize)
 	{
 		InfoOrganizer()->SetMacroParamDataGridSize(xSize, ySize);
@@ -12754,4 +12763,9 @@ int NFmiEditMapGeneralDataDoc::CurrentCrossSectionRowIndex()
 NFmiParameterInterpolationFixer& NFmiEditMapGeneralDataDoc::ParameterInterpolationFixer()
 {
 	return pimpl->ParameterInterpolationFixer();
+}
+
+void NFmiEditMapGeneralDataDoc::UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged()
+{
+	pimpl->UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();
 }

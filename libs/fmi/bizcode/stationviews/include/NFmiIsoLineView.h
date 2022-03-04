@@ -200,7 +200,7 @@ class NFmiIsoLineView : public NFmiStationView
     void DoGridRelatedVisualization(NFmiIsoLineData &isoLineData, NFmiRect &zoomedAreaRect);
 	ContouringJobData MakeContouringJobData(boost::shared_ptr<NFmiDrawParam>& theDrawParam);
 	bool IsIsoLinesDrawnWithImagine(void);
-	bool FillIsoLineDataWithGridData(NFmiIsoLineData& theIsoLineData, int x1, int y1, int x2, int y2);
+	bool FillIsoLineDataWithGridData(NFmiIsoLineData& theIsoLineData, int x1, int y1, int x2, int y2, NFmiGrid *optimizedDataGrid = nullptr);
 
     bool initializeIsoLineData(NFmiIsoLineData &theIsoLineData);
 

@@ -6,6 +6,7 @@
 
 class NFmiFastQueryInfo;
 class NFmiArea;
+class NFmiGrid;
 
 // Luokka joka pitää sisällään kahta isoviiva/contour piirtoihin liittyvää säätöä:
 // 1. Isoviivoihin liittyvä hilankoko vs näytön pikselikoko suhde 
@@ -66,7 +67,10 @@ public:
 
 	bool updateFromDialog(double pixelToGridPointRatio, bool usePixelToGridPointRatioSafetyFeature, double globalVisualizationSpaceoutFactor, bool useGlobalVisualizationSpaceoutFactorOptimization, int spaceoutDataGatheringMethod);
 	void doViewUpdateWarningLogsIfNeeded();
-	bool checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, NFmiArea& mapArea) const;
+	bool checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, NFmiArea& mapArea, NFmiGrid &optimizedGridOut) const;
+	NFmiPoint getCheckedPossibleOptimizedGridSize(const NFmiPoint& suggestedGridSize, NFmiArea& mapArea) const;
+	NFmiPoint calcAreaGridSize(NFmiArea& area) const;
+	double calcBaseOptimizedGridSize(double usedSpaceoutFactor) const;
 
 	double criticalPixelToGridPointRatioLimit() const { return criticalPixelToGridPointRatioLimit_; }
 	double pixelToGridPointRatio() const;
@@ -88,7 +92,5 @@ public:
 
 
 private:
-	double calcBaseOptimizedGridSize(double usedSpaceoutFactor) const;
-	NFmiPoint calcAreaGridSize(NFmiArea& area) const;
 	NFmiRect calcInfoAreaOverMapAreaWorldXyBoundingBox(NFmiFastQueryInfo& fastInfo, NFmiArea& mapArea) const;
 };
