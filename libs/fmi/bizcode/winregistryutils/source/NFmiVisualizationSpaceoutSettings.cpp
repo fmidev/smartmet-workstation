@@ -185,8 +185,8 @@ bool NFmiVisualizationSpaceoutSettings::checkIsOptimizationsUsed(NFmiFastQueryIn
         {
             NFmiPoint bottomLeftLatlon = normalizedAreaPtr->WorldXYToLatLon(dataOverMapWorldXyBoundingBox.BottomLeft());
             NFmiPoint topRightLatlon = normalizedAreaPtr->WorldXYToLatLon(dataOverMapWorldXyBoundingBox.TopRight());
-            auto optimizedArea = normalizedAreaPtr->CreateNewArea(bottomLeftLatlon, topRightLatlon);
-            optimizedGridOut = NFmiGrid(optimizedArea, boost::math::iround(baseGridSizeOverMapBoundingBox.X()), boost::math::iround(baseGridSizeOverMapBoundingBox.Y()));
+            std::unique_ptr<NFmiArea> optimizedArea(normalizedAreaPtr->CreateNewArea(bottomLeftLatlon, topRightLatlon));
+            optimizedGridOut = NFmiGrid(optimizedArea.get(), boost::math::iround(baseGridSizeOverMapBoundingBox.X()), boost::math::iround(baseGridSizeOverMapBoundingBox.Y()));
             return true;
         }
     }
@@ -241,17 +241,17 @@ static NFmiRect makeBoundingBoxFromEdgePoints(const std::set<double>& leftValues
 
 static bool doBoundingBoxWithSameKindAreas(NFmiFastQueryInfo& fastInfo, NFmiArea& mapArea, NFmiRect &worldXyBoundingBox)
 {
-    const auto& worldXyRect = fastInfo.Area()->WorldRect();
     // Jos area-projektiot ovat saman tyylisiä, on boundingbox helppo laskea kahden pisteen avulla
     if(NFmiQueryDataUtil::AreAreasSameKind(&mapArea, fastInfo.Area()))
     {
+        const auto& mapWorldXyRect = mapArea.WorldRect();
         auto bottomLeftWorldXyPoint = mapArea.LatLonToWorldXY(fastInfo.Area()->BottomLeftLatLon());
         auto topRightWorldXyPoint = mapArea.LatLonToWorldXY(fastInfo.Area()->TopRightLatLon());
 
-        std::set<double> leftValues{ worldXyRect.Left(), bottomLeftWorldXyPoint.X() };
-        std::set<double> rightValues{ worldXyRect.Right(), topRightWorldXyPoint.X() };
-        std::set<double> bottomValues{ worldXyRect.Bottom(), bottomLeftWorldXyPoint.Y() };
-        std::set<double> topValues{ worldXyRect.Top(), topRightWorldXyPoint.Y() };
+        std::set<double> leftValues{ mapWorldXyRect.Left(), bottomLeftWorldXyPoint.X() };
+        std::set<double> rightValues{ mapWorldXyRect.Right(), topRightWorldXyPoint.X() };
+        std::set<double> bottomValues{ mapWorldXyRect.Bottom(), bottomLeftWorldXyPoint.Y() };
+        std::set<double> topValues{ mapWorldXyRect.Top(), topRightWorldXyPoint.Y() };
 
         worldXyBoundingBox = ::makeBoundingBoxFromEdgePoints(leftValues, rightValues, bottomValues, topValues);
         return true;
