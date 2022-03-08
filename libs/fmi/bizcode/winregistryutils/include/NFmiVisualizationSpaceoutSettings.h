@@ -67,7 +67,7 @@ public:
 
 	bool updateFromDialog(double pixelToGridPointRatio, bool usePixelToGridPointRatioSafetyFeature, double globalVisualizationSpaceoutFactor, bool useGlobalVisualizationSpaceoutFactorOptimization, int spaceoutDataGatheringMethod);
 	void doViewUpdateWarningLogsIfNeeded();
-	bool checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, NFmiArea& mapArea, NFmiGrid &optimizedGridOut) const;
+	bool checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, const NFmiArea& mapArea, NFmiGrid &optimizedGridOut) const;
 	NFmiPoint getCheckedPossibleOptimizedGridSize(const NFmiPoint& suggestedGridSize, NFmiArea& mapArea) const;
 	NFmiPoint calcAreaGridSize(NFmiArea& area) const;
 	double calcBaseOptimizedGridSize(double usedSpaceoutFactor) const;
