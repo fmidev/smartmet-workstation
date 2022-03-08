@@ -2044,7 +2044,7 @@ bool NFmiIsoLineView::FillGridRelatedData_VisualizationOptimizationChecks(NFmiIs
     auto& visSettings = itsCtrlViewDocumentInterface->ApplicationWinRegistry().VisualizationSpaceoutSettings();
     auto mapArea = GetArea();
     NFmiGrid optimizedGrid;
-    if(visSettings.checkIsOptimizationsUsed(*itsInfo, *mapArea, optimizedGrid))
+    if(visSettings.checkIsOptimizationsUsed(*itsInfo, *mapArea, optimizedGrid, CalcViewGridSize()))
     {
         fillGridDataStatus = FillIsoLineDataWithGridData(isoLineData, 0, 0, 0, 0, &optimizedGrid);
         zoomedAreaRect = optimizedGrid.Area()->XYArea(mapArea.get());

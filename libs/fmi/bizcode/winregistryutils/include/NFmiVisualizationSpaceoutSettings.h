@@ -67,9 +67,9 @@ public:
 
 	bool updateFromDialog(double pixelToGridPointRatio, bool usePixelToGridPointRatioSafetyFeature, double globalVisualizationSpaceoutFactor, bool useGlobalVisualizationSpaceoutFactorOptimization, int spaceoutDataGatheringMethod);
 	void doViewUpdateWarningLogsIfNeeded();
-	bool checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, const NFmiArea& mapArea, NFmiGrid &optimizedGridOut) const;
-	NFmiPoint getCheckedPossibleOptimizedGridSize(const NFmiPoint& suggestedGridSize, NFmiArea& mapArea) const;
-	NFmiPoint calcAreaGridSize(NFmiArea& area) const;
+	bool checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, const NFmiArea& mapArea, NFmiGrid &optimizedGridOut, int viewSubGridSize) const;
+	NFmiPoint getCheckedPossibleOptimizedGridSize(const NFmiPoint& suggestedGridSize, NFmiArea& mapArea, int viewSubGridSize) const;
+	NFmiPoint calcAreaGridSize(NFmiArea& area, int viewSubGridSize) const;
 	double calcBaseOptimizedGridSize(double usedSpaceoutFactor) const;
 
 	double criticalPixelToGridPointRatioLimit() const { return criticalPixelToGridPointRatioLimit_; }
@@ -90,6 +90,7 @@ public:
 	int spaceoutDataGatheringMethod() const;
 	void spaceoutDataGatheringMethod(int newValue);
 
+	static double calcViewSubGridFactor(int viewSubGridSize);
 
 private:
 	NFmiRect calcInfoAreaOverMapAreaWorldXyBoundingBox(NFmiFastQueryInfo& fastInfo, NFmiArea& mapArea) const;
