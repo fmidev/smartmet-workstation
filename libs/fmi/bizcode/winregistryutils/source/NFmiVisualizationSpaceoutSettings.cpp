@@ -170,14 +170,14 @@ static bool shouldOptimizedGridBeUsed(const NFmiPoint& baseGridSizeOverMapBoundi
 }
 
 // Huom! On jo tarkastettu (NFmiIsoLineView::FillGridRelatedData metodissa), että näkyykö data kartta-alueella, joten sitä ei tavitse tarkastella enää.
-bool NFmiVisualizationSpaceoutSettings::checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, const NFmiArea& mapArea, NFmiGrid& optimizedGridOut) const
+bool NFmiVisualizationSpaceoutSettings::checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, const NFmiArea& mapArea, NFmiGrid& optimizedGridOut, int viewSubGridSize) const
 {
     if(useGlobalVisualizationSpaceoutFactorOptimization() && fastInfo.IsGrid())
     {
         std::unique_ptr<NFmiArea> normalizedAreaPtr(mapArea.Clone());
         // Käytetyssä optimoidussa gridissä pitää olla peruskartta-aluen suhteen 0,0 - 1,1 alue
         normalizedAreaPtr->SetXYArea(NFmiRect(0, 0, 1, 1));
-        auto baseGridSize = calcAreaGridSize(*normalizedAreaPtr);
+        auto baseGridSize = calcAreaGridSize(*normalizedAreaPtr, viewSubGridSize);
         auto dataOverMapWorldXyBoundingBox = calcInfoAreaOverMapAreaWorldXyBoundingBox(fastInfo, *normalizedAreaPtr);
         auto approximationDataGridSizeOverMapBoundingBox = ::calcApproximationDataGridSizeOverMapBoundingBox(fastInfo, dataOverMapWorldXyBoundingBox);
         auto baseGridSizeOverMapBoundingBox = ::calcBaseGridSizeOverMapBoundingBox(baseGridSize, normalizedAreaPtr->WorldRect(), dataOverMapWorldXyBoundingBox);
@@ -203,22 +203,34 @@ static NFmiPoint getSmallerAreaPoint(const NFmiPoint& gridSize1, const NFmiPoint
         return gridSize2;
 }
 
-NFmiPoint NFmiVisualizationSpaceoutSettings::getCheckedPossibleOptimizedGridSize(const NFmiPoint& suggestedGridSize, NFmiArea& mapArea) const
+NFmiPoint NFmiVisualizationSpaceoutSettings::getCheckedPossibleOptimizedGridSize(const NFmiPoint& suggestedGridSize, NFmiArea& mapArea, int viewSubGridSize) const
 {
     if(useGlobalVisualizationSpaceoutFactorOptimization())
     {
-        auto baseGridSize = calcAreaGridSize(mapArea);
+        auto baseGridSize = calcAreaGridSize(mapArea, viewSubGridSize);
         return ::getSmallerAreaPoint(suggestedGridSize, baseGridSize);
     }
     return suggestedGridSize;
 }
 
+double NFmiVisualizationSpaceoutSettings::calcViewSubGridFactor(int viewSubGridSize)
+{
+    // Lineaarien ratkaisu 1 -> 1, 2 -> 0.99, 50 -> 0.4
+//    double factor = -0.013265f * viewSubGridSize + 1.013265f;
+
+    // Käänteisluvun potenssi potenssi ratkaisu:
+    // 1 -> 1.0, 2 -> 0.812252,.., 4 -> 0.659754,.., 6 -> 0.584191,.., 9 -> 0.517282,.., 16 -> 0.435275,.., 50 -> 0.309249
+    double factor = std::pow(std::pow(1./viewSubGridSize, 0.2), 1.5);
+    return factor;
+}
+
 // Lasketaan perus hilakoko nykyisillä harvennus asetuksilla ja katsotaan minkälainen
 // harvennettu hila saadaan annetun area:n avulla. Tässä otetaan huomioon alueen WorldXY rectin leveys/korkeus 
 // suhde, niin että metreissä leveämpi kantti saa maksimi hilakoon ja kapeampi saa jakosuhteessa vähemmän hilapisteita.
-NFmiPoint NFmiVisualizationSpaceoutSettings::calcAreaGridSize(NFmiArea& area) const
+NFmiPoint NFmiVisualizationSpaceoutSettings::calcAreaGridSize(NFmiArea& area, int viewSubGridSize) const
 {
     auto baseGridSize = calcBaseOptimizedGridSize(globalVisualizationSpaceoutFactor());
+    baseGridSize *= calcViewSubGridFactor(viewSubGridSize);
     auto areaWidthPerHeightFactor = area.WorldRect().Width() / area.WorldRect().Height();
     double gridsizeX = std::round(baseGridSize);
     double gridsizeY = std::round(baseGridSize);
