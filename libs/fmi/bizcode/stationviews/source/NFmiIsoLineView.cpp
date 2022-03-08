@@ -1977,6 +1977,10 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
         return false;
 
     bool fillGridDataStatus = false;
+    if(FillGridRelatedData_VisualizationOptimizationChecks(isoLineData, zoomedAreaRect, fillGridDataStatus))
+    {
+        return fillGridDataStatus;
+    }
     if(FillGridRelatedData_BetterVisualizationChecks(isoLineData, zoomedAreaRect, fillGridDataStatus))
     {
         return fillGridDataStatus;
@@ -2044,6 +2048,7 @@ bool NFmiIsoLineView::FillGridRelatedData_VisualizationOptimizationChecks(NFmiIs
     {
         fillGridDataStatus = FillIsoLineDataWithGridData(isoLineData, 0, 0, 0, 0, &optimizedGrid);
         zoomedAreaRect = optimizedGrid.Area()->XYArea(mapArea.get());
+        return true;
     }
     return false;
 }

@@ -2492,29 +2492,25 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 		}
 		else
 		{
-			NFmiGrid optimizationGrid;
-			auto& visSettings = itsCtrlViewDocumentInterface->ApplicationWinRegistry().VisualizationSpaceoutSettings();
-			auto useVisualizationOptimization = visSettings.checkIsOptimizationsUsed(*itsInfo, *itsArea, optimizationGrid);
-			NFmiGrid* optimizationGridPtr = useVisualizationOptimization ? &optimizationGrid : nullptr;
 			bool useCropping = (x2 - x1 >= 1) && (y2 - y1 >= 1);
 			if(itsDrawParam->ShowDifferenceToOriginalData())
 			{
-                CalculateDifferenceToOriginalDataMatrix(theValues, x1, y1, x2, y2, useCropping, optimizationGridPtr);
+                CalculateDifferenceToOriginalDataMatrix(theValues, x1, y1, x2, y2, useCropping, optimizedDataGrid);
 			}
 			else
 			{
 				if(itsInfo->DataType() != NFmiInfoData::kStationary)
 				{
-                    FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2, optimizationGridPtr);
+                    FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2, optimizedDataGrid);
 				}
 				else
 				{
                     // Staattisille datoille (terrain datat jms.) ei tarvitse tehdä meta parametri tarkasteluja
-					if(useVisualizationOptimization)
+					if(optimizedDataGrid)
 					{
 						// GridValues metodista ei löydy kuin aikainterpolaatio menetelmä, joten pitää pyytää eka aika datasta
 						const auto& firstTime = itsInfo->TimeDescriptor().FirstTime();
-						itsInfo->GridValues(theValues, optimizationGrid, firstTime);
+						itsInfo->GridValues(theValues, *optimizedDataGrid, firstTime);
 					}
 					else if(useCropping)
 						itsInfo->CroppedValues(theValues, x1, y1, x2, y2); // stat data on jo ajallisesti kohdallaan
@@ -2523,8 +2519,8 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 				}
 			}
 
-			if(useVisualizationOptimization)
-				usedGrid = optimizationGrid;
+			if(optimizedDataGrid)
+				usedGrid = *optimizedDataGrid;
 			else
 				usedGrid = GetUsedGrid(usedGrid, itsInfo, theValues, useCropping, x1, y1, x2, y2);
 		}

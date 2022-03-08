@@ -4,6 +4,7 @@
 #include "MathHelper.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiQueryDataUtil.h"
+#include "NFmiArea.h"
 
 NFmiVisualizationSpaceoutSettings::NFmiVisualizationSpaceoutSettings() = default;
 
@@ -169,19 +170,22 @@ static bool shouldOptimizedGridBeUsed(const NFmiPoint& baseGridSizeOverMapBoundi
 }
 
 // Huom! On jo tarkastettu (NFmiIsoLineView::FillGridRelatedData metodissa), että näkyykö data kartta-alueella, joten sitä ei tavitse tarkastella enää.
-bool NFmiVisualizationSpaceoutSettings::checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, NFmiArea& mapArea, NFmiGrid& optimizedGridOut) const
+bool NFmiVisualizationSpaceoutSettings::checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, const NFmiArea& mapArea, NFmiGrid& optimizedGridOut) const
 {
     if(useGlobalVisualizationSpaceoutFactorOptimization() && fastInfo.IsGrid())
     {
-        auto baseGridSize = calcAreaGridSize(mapArea);
-        auto dataOverMapWorldXyBoundingBox = calcInfoAreaOverMapAreaWorldXyBoundingBox(fastInfo, mapArea);
+        std::unique_ptr<NFmiArea> normalizedAreaPtr(mapArea.Clone());
+        // Käytetyssä optimoidussa gridissä pitää olla peruskartta-aluen suhteen 0,0 - 1,1 alue
+        normalizedAreaPtr->SetXYArea(NFmiRect(0, 0, 1, 1));
+        auto baseGridSize = calcAreaGridSize(*normalizedAreaPtr);
+        auto dataOverMapWorldXyBoundingBox = calcInfoAreaOverMapAreaWorldXyBoundingBox(fastInfo, *normalizedAreaPtr);
         auto approximationDataGridSizeOverMapBoundingBox = ::calcApproximationDataGridSizeOverMapBoundingBox(fastInfo, dataOverMapWorldXyBoundingBox);
-        auto baseGridSizeOverMapBoundingBox = ::calcBaseGridSizeOverMapBoundingBox(baseGridSize, mapArea.WorldRect(), dataOverMapWorldXyBoundingBox);
+        auto baseGridSizeOverMapBoundingBox = ::calcBaseGridSizeOverMapBoundingBox(baseGridSize, normalizedAreaPtr->WorldRect(), dataOverMapWorldXyBoundingBox);
         if(::shouldOptimizedGridBeUsed(baseGridSizeOverMapBoundingBox, approximationDataGridSizeOverMapBoundingBox))
         {
-            NFmiPoint bottomLeftLatlon = mapArea.WorldXYToLatLon(dataOverMapWorldXyBoundingBox.BottomLeft());
-            NFmiPoint topRightLatlon = mapArea.WorldXYToLatLon(dataOverMapWorldXyBoundingBox.TopRight());
-            auto optimizedArea = mapArea.CreateNewArea(bottomLeftLatlon, topRightLatlon);
+            NFmiPoint bottomLeftLatlon = normalizedAreaPtr->WorldXYToLatLon(dataOverMapWorldXyBoundingBox.BottomLeft());
+            NFmiPoint topRightLatlon = normalizedAreaPtr->WorldXYToLatLon(dataOverMapWorldXyBoundingBox.TopRight());
+            auto optimizedArea = normalizedAreaPtr->CreateNewArea(bottomLeftLatlon, topRightLatlon);
             optimizedGridOut = NFmiGrid(optimizedArea, boost::math::iround(baseGridSizeOverMapBoundingBox.X()), boost::math::iround(baseGridSizeOverMapBoundingBox.Y()));
             return true;
         }
@@ -219,9 +223,9 @@ NFmiPoint NFmiVisualizationSpaceoutSettings::calcAreaGridSize(NFmiArea& area) co
     double gridsizeX = std::round(baseGridSize);
     double gridsizeY = std::round(baseGridSize);
     if(areaWidthPerHeightFactor >= 1)
-        gridsizeY = std::round(areaWidthPerHeightFactor / areaWidthPerHeightFactor);
+        gridsizeY = std::round(gridsizeY / areaWidthPerHeightFactor);
     else
-        gridsizeX = std::round(areaWidthPerHeightFactor * areaWidthPerHeightFactor);
+        gridsizeX = std::round(gridsizeX * areaWidthPerHeightFactor);
     return NFmiPoint(gridsizeX, gridsizeY);
 }
 
