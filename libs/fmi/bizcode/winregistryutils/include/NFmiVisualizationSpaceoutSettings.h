@@ -40,15 +40,15 @@ class NFmiVisualizationSpaceoutSettings
 	// 1) 400/40 arvot tulevat vain kartta-alueen sille kantille kummassa on pidempi reuna projektion omassa maailmassa (km).
 	//    - Lyhyemmälle reunalle tulee lyhyempi_reuna_km/pidempi_reuna_km kertoimella oleva määrä hilapisteitä.
 	// 2) Jos data ei peita koko kartta-aluetta, saa datasta laskettu hila vain sen suhteellisen osion koko ruudun saamasta hilakoosta.
-	// 3) Jos karttanäytöllä on yhden ruudun sijasta ruudukko, pienenee käytetty hilamäärä tietyn lineaarisen kaavan mukaan.
-	//    - 1 ruutu => 1.0 kerroin, 2 ruutua => 0.987, 4(2x2) => 0.96, 9(3x3) -> 0.89, 16(4x4) => 0.8, minimi 50(5x10) => 0.4
+	// 3) Jos karttanäytöllä on yhden ruudun sijasta ruudukko, pienenee käytetty hilamäärä tietyn käänteisluvun potenssikaavan mukaan:
+	//    1 -> 1.0, 2 -> 0.812252,.., 4 -> 0.659754,.., 6 -> 0.584191,.., 9 -> 0.517282,.., 16 -> 0.435275,.., 50 -> 0.309249
 	// 4) Jos laskettu harvennettu hila on lähellä datan oikeaa hilatarkkuutta (~10 % päässä), käytetään datan oikeaa hilaa.
 	// 5) Jos saatu hila on liian tarkka pixelToGridPointRatio:lle, lasketaan tietenkin datasta vilä lopullinen harvempi hila.
 	boost::shared_ptr<CachedRegDouble> globalVisualizationSpaceoutFactor_;
 	const double minVisualizationSpaceoutFactor_ = 1.0;
 	const double maxVisualizationSpaceoutFactor_ = 10.0;
 	// Hilakoot menevät SpaceoutFactor:in kanssa käänteisessä järjestyksessä: minFactor -> maxGridSize ja maxFactor -> minGridSize
-	const double minVisualizationSpaceoutGridSize_ = 40.0;
+	const double minVisualizationSpaceoutGridSize_ = 20.0;
 	const double maxVisualizationSpaceoutGridSize_ = 400.0;
 	// Halutaanko että harvennussysteemiä käytetään ollenkaan.
 	boost::shared_ptr<CachedRegBool> useGlobalVisualizationSpaceoutFactorOptimization_;

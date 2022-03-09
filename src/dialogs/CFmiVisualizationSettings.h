@@ -52,8 +52,10 @@ private:
 	CComboBox itsSpaceoutDataGatheringMethodComboBox;
 	CString itsPixelToGridPointRatioWarningStr;
 	CSliderCtrl itsPixelToGridPointRatioSlider;
+	const double itsPixelToGridPointRatioSliderTickStep = 0.1;
 	CString itsPixelToGridPointRatioValueStr;
 	CSliderCtrl itsGlobalVisualizationSpaceoutFactorSlider;
+	const double itsGlobalVisualizationSpaceoutFactorSliderTickStep = 0.02;
 	CString itsGlobalVisualizationSpaceoutFactorResultsStr;
 public:
 	virtual BOOL OnInitDialog();

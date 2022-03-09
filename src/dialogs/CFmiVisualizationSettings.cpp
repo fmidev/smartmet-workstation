@@ -118,7 +118,7 @@ void CFmiVisualizationSettings::InitPixelToGridPointRatioSlider()
 	// Tämä vastaa minPixelToGridPointRatio arvoa
 	int startIndex = 0; 
 	// Tämä vastaa maxPixelToGridPointRatio arvoa
-	int endIndex = boost::math::iround((maxPixelToGridPointRatio - minPixelToGridPointRatio) * 10);
+	int endIndex = boost::math::iround((maxPixelToGridPointRatio - minPixelToGridPointRatio) / itsPixelToGridPointRatioSliderTickStep);
 	itsPixelToGridPointRatioSlider.SetRange(startIndex, endIndex);
 	itsPixelToGridPointRatioSlider.SetPos(CalcPixelToGridPointRatioSliderPosition(pixelToGridPointRatio));
 	itsUsePixelToGridPointRatioSafetyFeature = visualizationSpaceoutSettings.usePixelToGridPointRatioSafetyFeature();
@@ -135,7 +135,7 @@ void CFmiVisualizationSettings::InitGlobalVisualizationSpaceoutFactorSlider()
 	// Tämä vastaa minVisualizationSpaceoutFactor arvoa
 	int startIndex = 0;
 	// Tämä vastaa maxVisualizationSpaceoutFactor arvoa
-	int endIndex = boost::math::iround((maxVisualizationSpaceoutFactor - minVisualizationSpaceoutFactor) * 10);
+	int endIndex = boost::math::iround((maxVisualizationSpaceoutFactor - minVisualizationSpaceoutFactor) / itsGlobalVisualizationSpaceoutFactorSliderTickStep);
 	itsGlobalVisualizationSpaceoutFactorSlider.SetRange(startIndex, endIndex);
 	itsGlobalVisualizationSpaceoutFactorSlider.SetPos(CalcGlobalVisualizationSpaceoutFactorSliderPosition(globalVisualizationSpaceoutFactor));
 	itsUseGlobalVisualizationSpaceoutFactorOptimization = visualizationSpaceoutSettings.useGlobalVisualizationSpaceoutFactorOptimization();
@@ -153,7 +153,7 @@ int CFmiVisualizationSettings::CalcPixelToGridPointRatioSliderPosition(double va
 	if(value >= maxPixelToGridPointRatio)
 		return itsPixelToGridPointRatioSlider.GetRangeMax();
 
-	return boost::math::iround((value - minPixelToGridPointRatio) * 10);
+	return boost::math::iround((value - minPixelToGridPointRatio) / itsPixelToGridPointRatioSliderTickStep);
 }
 
 int CFmiVisualizationSettings::CalcGlobalVisualizationSpaceoutFactorSliderPosition(double value)
@@ -166,13 +166,13 @@ int CFmiVisualizationSettings::CalcGlobalVisualizationSpaceoutFactorSliderPositi
 	if(value >= maxVisualizationSpaceoutFactor)
 		return itsGlobalVisualizationSpaceoutFactorSlider.GetRangeMax();
 
-	return boost::math::iround((value - minVisualizationSpaceoutFactor) * 10);
+	return boost::math::iround((value - minVisualizationSpaceoutFactor) / itsGlobalVisualizationSpaceoutFactorSliderTickStep);
 }
 
-static double GetActualValueFromSlider(CSliderCtrl &slider, double minValue)
+static double GetActualValueFromSlider(CSliderCtrl &slider, double minValue, double tickStepValue)
 {
 	auto sliderPos = slider.GetPos();
-	auto value = (sliderPos / 10.) + minValue;
+	auto value = (sliderPos * tickStepValue) + minValue;
 	if(std::abs(value - std::round(value)) <= std::numeric_limits<double>::epsilon() * 3)
 	{
 		value = std::round(value);
@@ -183,12 +183,12 @@ static double GetActualValueFromSlider(CSliderCtrl &slider, double minValue)
 
 double CFmiVisualizationSettings::GetPixelToGridPointRatioFromSlider()
 {
-	return GetActualValueFromSlider(itsPixelToGridPointRatioSlider, itsApplicationWinRegistry->VisualizationSpaceoutSettings().minPixelToGridPointRatioValue());
+	return GetActualValueFromSlider(itsPixelToGridPointRatioSlider, itsApplicationWinRegistry->VisualizationSpaceoutSettings().minPixelToGridPointRatioValue(), itsPixelToGridPointRatioSliderTickStep);
 }
 
 double CFmiVisualizationSettings::GetGlobalVisualizationSpaceoutFactorFromSlider()
 {
-	return GetActualValueFromSlider(itsGlobalVisualizationSpaceoutFactorSlider, itsApplicationWinRegistry->VisualizationSpaceoutSettings().minVisualizationSpaceoutFactor());
+	return GetActualValueFromSlider(itsGlobalVisualizationSpaceoutFactorSlider, itsApplicationWinRegistry->VisualizationSpaceoutSettings().minVisualizationSpaceoutFactor(), itsGlobalVisualizationSpaceoutFactorSliderTickStep);
 }
 
 // Tämä funktio alustaa kaikki dialogin tekstit editoriin valitulla kielellä.
@@ -370,9 +370,10 @@ void CFmiVisualizationSettings::UpdatePixelToGridPointRatioFromSliderToStringCtr
 void CFmiVisualizationSettings::UpdateGlobalVisualizationSpaceoutFactorFromSliderToStringCtrl()
 {
 	UpdateData(TRUE);
+	const int fixedFactorDecimals = 2;
 	std::string globalVisualizationSpaceoutFactorResultsStr = "Value: ";
 	auto globalVisualizationSpaceoutFactor_fromSlider = GetGlobalVisualizationSpaceoutFactorFromSlider();
-	globalVisualizationSpaceoutFactorResultsStr += ::to_string_with_fixed_precision(globalVisualizationSpaceoutFactor_fromSlider, 1);
+	globalVisualizationSpaceoutFactorResultsStr += ::to_string_with_fixed_precision(globalVisualizationSpaceoutFactor_fromSlider, fixedFactorDecimals);
 	globalVisualizationSpaceoutFactorResultsStr += "   which would result used data-grid size of ~ ";
 	auto& visSettings = itsApplicationWinRegistry->VisualizationSpaceoutSettings();
 	auto baseGridSize = boost::math::iround(visSettings.calcBaseOptimizedGridSize(globalVisualizationSpaceoutFactor_fromSlider));
@@ -381,7 +382,7 @@ void CFmiVisualizationSettings::UpdateGlobalVisualizationSpaceoutFactorFromSlide
 	globalVisualizationSpaceoutFactorResultsStr += std::to_string(baseGridSize);
 	globalVisualizationSpaceoutFactorResultsStr += "\nActual value in use is ";
 	auto usedFactor = visSettings.globalVisualizationSpaceoutFactor();
-	globalVisualizationSpaceoutFactorResultsStr += ::to_string_with_fixed_precision(usedFactor, 1);
+	globalVisualizationSpaceoutFactorResultsStr += ::to_string_with_fixed_precision(usedFactor, fixedFactorDecimals);
 	auto usedBaseGridSize = boost::math::iround(visSettings.calcBaseOptimizedGridSize(usedFactor));
 	globalVisualizationSpaceoutFactorResultsStr += ", that results grid-size ~ ";
 	globalVisualizationSpaceoutFactorResultsStr += std::to_string(usedBaseGridSize);
