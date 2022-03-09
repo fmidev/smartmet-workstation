@@ -36,17 +36,14 @@ private:
 	void UpdateValuesBackToDocument();
 	void CheckInputAndDoWarningTexts();
 	void InitPixelToGridPointRatioSlider();
-	void InitGlobalVisualizationSpaceoutFactorSlider();
+	void InitGlobalVisualizationSpaceoutGridSizeSlider();
 	int CalcPixelToGridPointRatioSliderPosition(double value);
-	int CalcGlobalVisualizationSpaceoutFactorSliderPosition(double value);
 	double GetPixelToGridPointRatioFromSlider();
-	double GetGlobalVisualizationSpaceoutFactorFromSlider();
 	void UpdatePixelToGridPointRatioFromSliderToStringCtrl();
-	void UpdateGlobalVisualizationSpaceoutFactorFromSliderToStringCtrl();
+	void UpdateGlobalVisualizationSpaceoutGridSizeFromSliderToStringCtrl();
 
 	NFmiApplicationWinRegistry* itsApplicationWinRegistry = nullptr;
 	double itsPixelToGridPointRatio_valueFromSlider;
-	double itsGlobalVisualizationSpaceoutFactor_valueFromSlider;
 	BOOL itsUsePixelToGridPointRatioSafetyFeature;
 	BOOL itsUseGlobalVisualizationSpaceoutFactorOptimization;
 	CComboBox itsSpaceoutDataGatheringMethodComboBox;
@@ -54,9 +51,8 @@ private:
 	CSliderCtrl itsPixelToGridPointRatioSlider;
 	const double itsPixelToGridPointRatioSliderTickStep = 0.1;
 	CString itsPixelToGridPointRatioValueStr;
-	CSliderCtrl itsGlobalVisualizationSpaceoutFactorSlider;
-	const double itsGlobalVisualizationSpaceoutFactorSliderTickStep = 0.02;
-	CString itsGlobalVisualizationSpaceoutFactorResultsStr;
+	CSliderCtrl itsGlobalVisualizationSpaceoutGridSizeSlider;
+	CString itsGlobalVisualizationSpaceoutGridSizeResultsStr;
 public:
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();

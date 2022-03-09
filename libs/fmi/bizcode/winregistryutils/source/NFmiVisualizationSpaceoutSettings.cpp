@@ -1,7 +1,6 @@
 #include "NFmiVisualizationSpaceoutSettings.h"
 #include "catlog/catlog.h"
 #include "NFmiValueString.h"
-#include "MathHelper.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiQueryDataUtil.h"
 #include "NFmiArea.h"
@@ -22,8 +21,8 @@ bool NFmiVisualizationSpaceoutSettings::Init(const std::string & baseRegistryPat
 
     pixelToGridPointRatio_ = ::CreateRegValue<CachedRegDouble>(baseRegistryPath_, sectionName_, "\\pixelToGridPointRatio", usedKey, criticalPixelToGridPointRatioLimit_);
     pixelToGridPointRatio(*pixelToGridPointRatio_); // Tarkistetään rekisteristä luetut arvot
-    globalVisualizationSpaceoutFactor_ = ::CreateRegValue<CachedRegDouble>(baseRegistryPath_, sectionName_, "\\globalVisualizationSpaceoutFactor", usedKey, 1.0);
-    globalVisualizationSpaceoutFactor(*globalVisualizationSpaceoutFactor_); // Tarkistetään rekisteristä luetut arvot
+    baseSpaceoutGridSize_ = ::CreateRegValue<CachedRegInt>(baseRegistryPath_, sectionName_, "\\baseSpaceoutGridSize", usedKey, 100);
+    baseSpaceoutGridSize(*baseSpaceoutGridSize_); // Tarkistetään rekisteristä luetut arvot
     useGlobalVisualizationSpaceoutFactorOptimization_ = ::CreateRegValue<CachedRegBool>(baseRegistryPath_, sectionName_, "\\useGlobalVisualizationSpaceoutFactorOptimization", usedKey, false);
     spaceoutDataGatheringMethod_ = ::CreateRegValue<CachedRegInt>(baseRegistryPath_, sectionName_, "\\spaceoutDataGatheringMethod", usedKey, 0);
     spaceoutDataGatheringMethod(*spaceoutDataGatheringMethod_); // Tarkistetään rekisteristä luetut arvot
@@ -31,31 +30,40 @@ bool NFmiVisualizationSpaceoutSettings::Init(const std::string & baseRegistryPat
     return true;
 }
 
+template<typename RegistryValue, typename CheckFunction>
+static bool IsRegistryValueChangedInUpdate(RegistryValue & registryValue, CheckFunction & checkFunction)
+{
+    // 1. Otetaan vanha arvo talteen
+    auto originalValue = *registryValue;
+    // 2. Tehdään uuden arvon asteus tarkastelufunktion avulla
+    checkFunction();
+    // 3. Jos arvo muuttui, verrattuna originaaliin (ei annettuun arvoon), pitää päivitys tehdä
+    return *registryValue != originalValue;
+}
+
 // Metodi saa Visualization settings -dialogilta kaikki nykyiset asetukset.
 // Jos mitään asetus oikeasti muuttuu niin että karttanäyttöjä pitää päivittää ja tehdä dirty asetuksia, palautetaan true, muuten false.
-bool NFmiVisualizationSpaceoutSettings::updateFromDialog(double pixelToGridPointRatio, bool usePixelToGridPointRatioSafetyFeature, double globalVisualizationSpaceoutFactor, bool useGlobalVisualizationSpaceoutFactorOptimization, int spaceoutDataGatheringMethod)
+bool NFmiVisualizationSpaceoutSettings::updateFromDialog(double newPixelToGridPointRatio, bool newUsePixelToGridPointRatioSafetyFeature, int newBaseSpaceoutGridSize, bool newUseGlobalVisualizationSpaceoutFactorOptimization, int newSpaceoutDataGatheringMethod)
 {
     bool needsToUpdateViews = false;
-    if(*pixelToGridPointRatio_ != pixelToGridPointRatio)
+    if(::IsRegistryValueChangedInUpdate(pixelToGridPointRatio_, [=](){this->pixelToGridPointRatio(newPixelToGridPointRatio); }))
     {
-        *pixelToGridPointRatio_ = pixelToGridPointRatio;
         needsToUpdateViews = true;
     }
-    if(usePixelToGridPointRatioSafetyFeature_ != usePixelToGridPointRatioSafetyFeature)
+    if(usePixelToGridPointRatioSafetyFeature() != newUsePixelToGridPointRatioSafetyFeature)
     {
-        usePixelToGridPointRatioSafetyFeature_ = usePixelToGridPointRatioSafetyFeature;
+        usePixelToGridPointRatioSafetyFeature(newUsePixelToGridPointRatioSafetyFeature);
         needsToUpdateViews = true;
     }
-    if(*globalVisualizationSpaceoutFactor_ != globalVisualizationSpaceoutFactor)
+    if(::IsRegistryValueChangedInUpdate(baseSpaceoutGridSize_, [=]() {this->baseSpaceoutGridSize(newBaseSpaceoutGridSize); }))
     {
-        *globalVisualizationSpaceoutFactor_ = globalVisualizationSpaceoutFactor;
         needsToUpdateViews = true;
     }
-    if(*useGlobalVisualizationSpaceoutFactorOptimization_ != useGlobalVisualizationSpaceoutFactorOptimization)
+    if(::IsRegistryValueChangedInUpdate(useGlobalVisualizationSpaceoutFactorOptimization_, [=]() {this->useGlobalVisualizationSpaceoutFactorOptimization(newUseGlobalVisualizationSpaceoutFactorOptimization); }))
     {
-        *useGlobalVisualizationSpaceoutFactorOptimization_ = useGlobalVisualizationSpaceoutFactorOptimization;
         needsToUpdateViews = true;
     }
+
     return needsToUpdateViews;
 }
 
@@ -78,8 +86,8 @@ void NFmiVisualizationSpaceoutSettings::doViewUpdateWarningLogsIfNeeded()
 
     if(*useGlobalVisualizationSpaceoutFactorOptimization_)
     {
-        std::string logMessage = "Global-Visualization-Spaceout-Factor optimization is set on, with value ";
-        logMessage += NFmiValueString::GetStringWithMaxDecimalsSmartWay(*globalVisualizationSpaceoutFactor_, 1);
+        std::string logMessage = "Global-Visualization-Spaceout-Grid-Size optimization is set on, with base size ";
+        logMessage += NFmiValueString::GetStringWithMaxDecimalsSmartWay(*baseSpaceoutGridSize_, 1);
         logMessage += ", map visualizations are faster, but lose information. If you wan't to see full accuracy of data, set it off from Edit - Visualization settings...";
         CatLog::logMessage(logMessage, CatLog::Severity::Info, CatLog::Category::Visualization);
     }
@@ -99,18 +107,18 @@ void NFmiVisualizationSpaceoutSettings::pixelToGridPointRatio(double newValue)
     *pixelToGridPointRatio_ = newValue;
 }
 
-double NFmiVisualizationSpaceoutSettings::globalVisualizationSpaceoutFactor() const
+int NFmiVisualizationSpaceoutSettings::baseSpaceoutGridSize() const
 {
-    return *globalVisualizationSpaceoutFactor_;
+    return *baseSpaceoutGridSize_;
 }
 
-void NFmiVisualizationSpaceoutSettings::globalVisualizationSpaceoutFactor(double newValue)
+void NFmiVisualizationSpaceoutSettings::baseSpaceoutGridSize(int newValue)
 {
-    if(newValue < minVisualizationSpaceoutFactor_)
-        newValue = minVisualizationSpaceoutFactor_;
-    if(newValue > maxVisualizationSpaceoutFactor_)
-        newValue = maxVisualizationSpaceoutFactor_;
-    *globalVisualizationSpaceoutFactor_ = newValue;
+    if(newValue < minBaseSpaceoutGridSize_)
+        newValue = minBaseSpaceoutGridSize_;
+    if(newValue > maxBaseSpaceoutGridSize_)
+        newValue = maxBaseSpaceoutGridSize_;
+    *baseSpaceoutGridSize_ = newValue;
 }
 
 bool NFmiVisualizationSpaceoutSettings::useGlobalVisualizationSpaceoutFactorOptimization() const
@@ -135,11 +143,6 @@ void NFmiVisualizationSpaceoutSettings::spaceoutDataGatheringMethod(int /* newVa
     //if(newValue > 1)
     //    newValue = 1;
     *spaceoutDataGatheringMethod_ = 0; // newValue;
-}
-
-double NFmiVisualizationSpaceoutSettings::calcBaseOptimizedGridSize(double usedSpaceoutFactor) const
-{
-    return MathHelper::InterpolateWithTwoPoints(usedSpaceoutFactor, minVisualizationSpaceoutFactor_, maxVisualizationSpaceoutFactor_, maxVisualizationSpaceoutGridSize_, minVisualizationSpaceoutGridSize_, minVisualizationSpaceoutGridSize_, maxVisualizationSpaceoutGridSize_);
 }
 
 static NFmiPoint calcApproximationDataGridSizeOverMapBoundingBox(NFmiFastQueryInfo& fastInfo, const NFmiRect& dataOverMapWorldXyBoundingBox)
@@ -229,7 +232,7 @@ double NFmiVisualizationSpaceoutSettings::calcViewSubGridFactor(int viewSubGridS
 // suhde, niin että metreissä leveämpi kantti saa maksimi hilakoon ja kapeampi saa jakosuhteessa vähemmän hilapisteita.
 NFmiPoint NFmiVisualizationSpaceoutSettings::calcAreaGridSize(NFmiArea& area, int viewSubGridSize) const
 {
-    auto baseGridSize = calcBaseOptimizedGridSize(globalVisualizationSpaceoutFactor());
+    double baseGridSize = baseSpaceoutGridSize();
     baseGridSize *= calcViewSubGridFactor(viewSubGridSize);
     auto areaWidthPerHeightFactor = area.WorldRect().Width() / area.WorldRect().Height();
     double gridsizeX = std::round(baseGridSize);
