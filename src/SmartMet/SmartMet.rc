@@ -247,7 +247,7 @@ BEGIN
         MENUITEM "Make comparison data",        ID_BUTTON_MAKE_EDITED_DATA_COPY
         MENUITEM SEPARATOR
         MENUITEM "Settings...",                 ID_MENUITEM_OPTIOT
-        MENUITEM "Visualization settings...",   ID_EDIT_VISUALIZATIONSETTINGS
+        MENUITEM "Visualization settings...\tF6", ID_EDIT_VISUALIZATIONSETTINGS
         MENUITEM "Projection line settings",    ID_MENUITEM_PROJECTION_LINE_SETUP
         MENUITEM "View grid setting...",        ID_MENUITEM_VIEW_GRID_SELECTION_DLG2
         MENUITEM "CP gridding options",         ID_MENUITEM_GRIDDING_OPTIONS
@@ -565,6 +565,7 @@ BEGIN
     "Z",            ID_ACCELERATOR_TOGGLE_ANIMATION_VIEW, VIRTKEY, NOINVERT
     "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
     "Z",            ID_EDIT_REDO,           VIRTKEY, SHIFT, CONTROL, NOINVERT
+    VK_F6,          ID_EDIT_VISUALIZATIONSETTINGS, VIRTKEY, NOINVERT
 END
 
 
