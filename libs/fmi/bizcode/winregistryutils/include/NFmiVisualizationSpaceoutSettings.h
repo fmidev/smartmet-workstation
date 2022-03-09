@@ -34,22 +34,19 @@ class NFmiVisualizationSpaceoutSettings
 	bool usePixelToGridPointRatioSafetyFeature_ = true;
 	
 	// Visualisointeja halutaan nopeuttaa, käyttämällä tilanteesta riippuen harvempaa hiladataa, kuin käytössä oikeasti olisi.
-	// globalVisualizationSpaceoutFactor_ on kerroin joka menee välillä 1-10 (?).
-	// Jos sen arvo on 1, mikä on tarkin hilanharvennuksessä käytetty arvo, tulee hilan maksimi tarkkuudeksi 400
-	// ja jos arvo on 10, tulee max tarkkuudeksi 40. Tästä on kuitenkin lukuisia pieniä säätöpoikkeamia:
-	// 1) 400/40 arvot tulevat vain kartta-alueen sille kantille kummassa on pidempi reuna projektion omassa maailmassa (km).
+	// baseSpaceoutGridSize_ on arvo joka menee välillä 20 - 400 (?).
+	// Minimi perus hilakoko on siis 20x20 hilapistettä ja maksi on 400x400.
+	// Lopullisen käytetyn hilakoon laskuissa on kuitenkin lukuisia pieniä säätöpoikkeamia:
+	// 1) 20-400 arvot tulevat vain kartta-alueen sille kantille kummassa on pidempi reuna projektion omassa maailmassa (km).
 	//    - Lyhyemmälle reunalle tulee lyhyempi_reuna_km/pidempi_reuna_km kertoimella oleva määrä hilapisteitä.
 	// 2) Jos data ei peita koko kartta-aluetta, saa datasta laskettu hila vain sen suhteellisen osion koko ruudun saamasta hilakoosta.
 	// 3) Jos karttanäytöllä on yhden ruudun sijasta ruudukko, pienenee käytetty hilamäärä tietyn käänteisluvun potenssikaavan mukaan:
 	//    1 -> 1.0, 2 -> 0.812252,.., 4 -> 0.659754,.., 6 -> 0.584191,.., 9 -> 0.517282,.., 16 -> 0.435275,.., 50 -> 0.309249
 	// 4) Jos laskettu harvennettu hila on lähellä datan oikeaa hilatarkkuutta (~10 % päässä), käytetään datan oikeaa hilaa.
-	// 5) Jos saatu hila on liian tarkka pixelToGridPointRatio:lle, lasketaan tietenkin datasta vilä lopullinen harvempi hila.
-	boost::shared_ptr<CachedRegDouble> globalVisualizationSpaceoutFactor_;
-	const double minVisualizationSpaceoutFactor_ = 1.0;
-	const double maxVisualizationSpaceoutFactor_ = 10.0;
-	// Hilakoot menevät SpaceoutFactor:in kanssa käänteisessä järjestyksessä: minFactor -> maxGridSize ja maxFactor -> minGridSize
-	const double minVisualizationSpaceoutGridSize_ = 20.0;
-	const double maxVisualizationSpaceoutGridSize_ = 400.0;
+	// 5) Jos saatu hila on liian tarkka pixelToGridPointRatio:lle, lasketaan tietenkin datasta vielä lopullinen harvempi hila.
+	boost::shared_ptr<CachedRegInt> baseSpaceoutGridSize_;
+	const int minBaseSpaceoutGridSize_ = 20;
+	const int maxBaseSpaceoutGridSize_ = 400;
 	// Halutaanko että harvennussysteemiä käytetään ollenkaan.
 	boost::shared_ptr<CachedRegBool> useGlobalVisualizationSpaceoutFactorOptimization_;
 	// Millä mekanismilla haetaan dataa harvennettuun hilaan:
@@ -65,12 +62,11 @@ public:
 	NFmiVisualizationSpaceoutSettings();
 	bool Init(const std::string& baseRegistryPath);
 
-	bool updateFromDialog(double pixelToGridPointRatio, bool usePixelToGridPointRatioSafetyFeature, double globalVisualizationSpaceoutFactor, bool useGlobalVisualizationSpaceoutFactorOptimization, int spaceoutDataGatheringMethod);
+	bool updateFromDialog(double newPixelToGridPointRatio, bool newUsePixelToGridPointRatioSafetyFeature, int newBaseSpaceoutGridSize, bool newUseGlobalVisualizationSpaceoutFactorOptimization, int newSpaceoutDataGatheringMethod);
 	void doViewUpdateWarningLogsIfNeeded();
 	bool checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, const NFmiArea& mapArea, NFmiGrid &optimizedGridOut, int viewSubGridSize) const;
 	NFmiPoint getCheckedPossibleOptimizedGridSize(const NFmiPoint& suggestedGridSize, NFmiArea& mapArea, int viewSubGridSize) const;
 	NFmiPoint calcAreaGridSize(NFmiArea& area, int viewSubGridSize) const;
-	double calcBaseOptimizedGridSize(double usedSpaceoutFactor) const;
 
 	double criticalPixelToGridPointRatioLimit() const { return criticalPixelToGridPointRatioLimit_; }
 	double pixelToGridPointRatio() const;
@@ -79,12 +75,10 @@ public:
 	double maxPixelToGridPointRatioValue() const { return maxPixelToGridPointRatioValue_; }
 	bool usePixelToGridPointRatioSafetyFeature() const { return usePixelToGridPointRatioSafetyFeature_; }
 	void usePixelToGridPointRatioSafetyFeature(bool newState) { usePixelToGridPointRatioSafetyFeature_ = newState; }
-	double globalVisualizationSpaceoutFactor() const;
-	void globalVisualizationSpaceoutFactor(double newValue);
-	double minVisualizationSpaceoutFactor() const { return minVisualizationSpaceoutFactor_; }
-	double maxVisualizationSpaceoutFactor() const { return maxVisualizationSpaceoutFactor_; }
-	double minVisualizationSpaceoutGridSize() const { return minVisualizationSpaceoutGridSize_; }
-	double maxVisualizationSpaceoutGridSize() const { return maxVisualizationSpaceoutGridSize_; }
+	int baseSpaceoutGridSize() const;
+	void baseSpaceoutGridSize(int newValue);
+	int minBaseSpaceoutGridSize() const { return minBaseSpaceoutGridSize_; }
+	int maxBaseSpaceoutGridSize() const { return maxBaseSpaceoutGridSize_; }
 	bool useGlobalVisualizationSpaceoutFactorOptimization() const;
 	void useGlobalVisualizationSpaceoutFactorOptimization(bool newState);
 	int spaceoutDataGatheringMethod() const;

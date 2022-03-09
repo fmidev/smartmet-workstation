@@ -7930,7 +7930,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged()
 	{
 		auto& visSettings = ApplicationWinRegistry().VisualizationSpaceoutSettings();
-		auto baseOptimizedGridSize = visSettings.calcBaseOptimizedGridSize(visSettings.globalVisualizationSpaceoutFactor());
+		auto baseOptimizedGridSize = visSettings.baseSpaceoutGridSize();
 		NFmiPoint optimizedVisualizationGridSize(baseOptimizedGridSize, baseOptimizedGridSize);
 		NFmiSmartToolModifier::UseVisualizationOptimazation(visSettings.useGlobalVisualizationSpaceoutFactorOptimization());
 		InfoOrganizer()->SetOptimizedVisualizationMacroParamDataGridSize(boost::math::iround(optimizedVisualizationGridSize.X()), boost::math::iround(optimizedVisualizationGridSize.Y()));
