@@ -143,6 +143,7 @@ protected:
    // ******** Symbol-Bulk-Draw toimintojen alku *********
    void SbdCollectSymbolDrawData(bool doStationPlotOnly);
    void SbdCollectNormalSymbolDrawData(bool doStationPlotOnly);
+   void SbdCollectOptimizedGridStationPoints();
    void SbdCollectSpaceOutSymbolDrawData(bool doStationPlotOnly);
    void SbdCollectSparseSymbolDrawData(bool doStationPlotOnly);
 
@@ -306,5 +307,9 @@ protected:
    NFmiRect itsEnlargedDrawArea;
    // Lasketaan joka piirtokerralla vain kerran mahdolliset spaceout kertoimet, laitetaan se t‰h‰n cacheen
    NFmiPoint itsCachedSpaceOutFactors = NFmiPoint::gMissingLatlon;
+   // Jos isoviiva/contour piirrossa menn‰‰n visualisoitavan hilan optimointiin, kyseinen hila talletetaan
+   // t‰h‰n, jotta mahdollinen hilapisteiden piirto rutiini osaa piirt‰‰ n‰m‰ tarvittaessa.
+   // Nollataan aina piirron aluksi.
+   std::unique_ptr<NFmiGrid> itsOptimizedGridPtr;
 };
 

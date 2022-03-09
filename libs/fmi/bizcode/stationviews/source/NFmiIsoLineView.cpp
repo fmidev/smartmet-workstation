@@ -418,6 +418,7 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
 
     itsIsolineValues = kFloatMissing; // varmistetaan että tämä on tyhjää täynnä
     fGetSynopDataFromQ2 = false; // aluksi laitetaan falseksi, haku tehdään kerran PrepareForStationDraw-metodissa jossa onnistumisen kanssa lippu laitetaan päälle
+    itsOptimizedGridPtr.reset();
     CalculateGeneralStationRect();
     MakeDrawedInfoVector();
     if(itsInfoVector.empty())
@@ -2103,6 +2104,7 @@ bool NFmiIsoLineView::FillGridRelatedData_VisualizationOptimizationChecks(NFmiIs
     {
         fillGridDataStatus = FillIsoLineDataWithGridData(isoLineData, 0, 0, 0, 0, &optimizedGrid);
         zoomedAreaRect = optimizedGrid.Area()->XYArea(mapArea.get());
+        itsOptimizedGridPtr.reset(new NFmiGrid(optimizedGrid));
         return true;
     }
     return false;

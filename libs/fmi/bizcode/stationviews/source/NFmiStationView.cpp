@@ -326,6 +326,7 @@ void NFmiStationView::Draw(NFmiToolBox* theGTB)
 
 	fUseMacroParamSpecialCalculations = false;
 	fGetSynopDataFromQ2 = false; // aluksi laitetaan falseksi, haku tehdään kerran PrepareForStationDraw-metodissa jossa onnistumisen kanssa lippu laitetaan päälle
+	itsOptimizedGridPtr.reset();
 	if(!theGTB)
 		return;
 
@@ -3549,7 +3550,10 @@ void NFmiStationView::SbdCollectSymbolDrawData(bool doStationPlotOnly)
 		{
 			// Tänne tullaan (doStationPlotOnly = true) kun piirretään isoviiva/contour juttuja
 			// ja silloin halutaan piirtää kaikki datan pisteet näkyviin.
-			SbdCollectNormalSymbolDrawData(doStationPlotOnly);
+			if(itsOptimizedGridPtr)
+				SbdCollectOptimizedGridStationPoints();
+			else
+				SbdCollectNormalSymbolDrawData(doStationPlotOnly);
 		}
 		else if(IsSpaceOutDrawingUsed())
 		{
@@ -3577,6 +3581,18 @@ void NFmiStationView::SbdCollectNormalSymbolDrawData(bool doStationPlotOnly)
 				NFmiFastInfoUtils::SetSoundingDataLevel(itsDrawParam->Level(), *itsInfo); // Tämä tehdään vain luotaus datalle: tämä level pitää asettaa joka pisteelle erikseen, koska vakio painepinnat eivät ole kaikille luotaus parametreille samoilla leveleillä
 				SbdCollectStationData(doStationPlotOnly);
 			}
+		}
+	}
+}
+
+void NFmiStationView::SbdCollectOptimizedGridStationPoints()
+{
+	if(itsOptimizedGridPtr)
+	{
+		for(itsOptimizedGridPtr->Reset(); itsOptimizedGridPtr->Next(); )
+		{
+			NFmiPoint xy(LatLonToViewPoint(itsOptimizedGridPtr->LatLon()));
+			itsSymbolBulkDrawData.addRelativeStationPointPosition(xy);
 		}
 	}
 }
