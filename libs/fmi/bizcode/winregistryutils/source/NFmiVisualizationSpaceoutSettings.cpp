@@ -4,6 +4,7 @@
 #include "NFmiFastQueryInfo.h"
 #include "NFmiQueryDataUtil.h"
 #include "NFmiArea.h"
+#include "NFmiWorldXyBoundingBoxCalculator.h"
 
 NFmiVisualizationSpaceoutSettings::NFmiVisualizationSpaceoutSettings() = default;
 
@@ -244,104 +245,9 @@ NFmiPoint NFmiVisualizationSpaceoutSettings::calcAreaGridSize(NFmiArea& area, in
     return NFmiPoint(gridsizeX, gridsizeY);
 }
 
-static NFmiRect makeBoundingBoxFromEdgePoints(const std::set<double>& leftValues, const std::set<double>& rightValues, const std::set<double>& bottomValues, const std::set<double>& topValues)
-{
-    double leftWorldXy = *leftValues.rbegin(); // rbegin = suurin arvo lefteistä
-    double rightWorldXy = *rightValues.begin(); // begin = pienin arvo righteista
-    double bottomWorldXy = *bottomValues.rbegin(); // rbegin = suurin arvo bottomeista
-    double topWorldXy = *topValues.begin(); // begin = pienin arvo topeista
-
-    return NFmiRect(leftWorldXy, topWorldXy, rightWorldXy, bottomWorldXy);
-}
-
-static bool doBoundingBoxWithSameKindAreas(NFmiFastQueryInfo& fastInfo, NFmiArea& mapArea, NFmiRect &worldXyBoundingBox)
-{
-    // Jos area-projektiot ovat saman tyylisiä, on boundingbox helppo laskea kahden pisteen avulla
-    if(NFmiQueryDataUtil::AreAreasSameKind(&mapArea, fastInfo.Area()))
-    {
-        const auto& mapWorldXyRect = mapArea.WorldRect();
-        auto bottomLeftWorldXyPoint = mapArea.LatLonToWorldXY(fastInfo.Area()->BottomLeftLatLon());
-        auto topRightWorldXyPoint = mapArea.LatLonToWorldXY(fastInfo.Area()->TopRightLatLon());
-
-        std::set<double> leftValues{ mapWorldXyRect.Left(), bottomLeftWorldXyPoint.X() };
-        std::set<double> rightValues{ mapWorldXyRect.Right(), topRightWorldXyPoint.X() };
-        std::set<double> bottomValues{ mapWorldXyRect.Bottom(), bottomLeftWorldXyPoint.Y() };
-        std::set<double> topValues{ mapWorldXyRect.Top(), topRightWorldXyPoint.Y() };
-
-        worldXyBoundingBox = ::makeBoundingBoxFromEdgePoints(leftValues, rightValues, bottomValues, topValues);
-        return true;
-    }
-    return false;
-}
-
-static unsigned long calcEdgePointSteppingCount(unsigned long gridSize)
-{
-    unsigned long step = boost::math::iround(gridSize / 30.);
-    if(step < 1)
-        step = 1;
-    return step;
-}
-
 // Käy hiladatan reunapisteet läpi ja katsoo miten data osuu mapArea:n WorldXy-arean avulla laskettuun boundinboxiin.
 // Boundingbox pidetään kuitenkin rajattuna mapArea:n sisälle.
 NFmiRect NFmiVisualizationSpaceoutSettings::calcInfoAreaOverMapAreaWorldXyBoundingBox(NFmiFastQueryInfo& fastInfo, NFmiArea& mapArea) const
 {
-    NFmiRect worldXyBoundingBox;
-    if(::doBoundingBoxWithSameKindAreas(fastInfo, mapArea, worldXyBoundingBox))
-        return worldXyBoundingBox;
-
-    const auto& worldXyRect = fastInfo.Area()->WorldRect();
-
-    // Mennään läpi ensin kulmapisteet, jos ne peittävä jo kartta-alueen, ei tarvitse tutkia pidemmälle
-    auto bottomLeftWorldXyPoint = mapArea.LatLonToWorldXY(fastInfo.Area()->BottomLeftLatLon());
-    auto bottomRightWorldXyPoint = mapArea.LatLonToWorldXY(fastInfo.Area()->BottomRightLatLon());
-    auto topLeftWorldXyPoint = mapArea.LatLonToWorldXY(fastInfo.Area()->TopLeftLatLon());
-    auto topRightWorldXyPoint = mapArea.LatLonToWorldXY(fastInfo.Area()->TopRightLatLon());
-    std::set<double> leftValues{ worldXyRect.Left(), bottomLeftWorldXyPoint.X(), topLeftWorldXyPoint.X() };
-    std::set<double> rightValues{ worldXyRect.Right(), bottomRightWorldXyPoint.X(), topRightWorldXyPoint.X() };
-    std::set<double> bottomValues{ worldXyRect.Bottom(), bottomLeftWorldXyPoint.Y(), bottomRightWorldXyPoint.Y() };
-    std::set<double> topValues{ worldXyRect.Top(), topLeftWorldXyPoint.Y(), topRightWorldXyPoint.Y() };
-
-    worldXyBoundingBox = ::makeBoundingBoxFromEdgePoints(leftValues, rightValues, bottomValues, topValues);
-    if(worldXyRect == worldXyBoundingBox)
-        return worldXyBoundingBox;
-
-    // Muuten aloitetaan iteroimaan hilan reunapisteitä läpi harvennetusti (ei viitsi turhaan tutkia 1000x1000 hilan jokaista reunapistettä)
-    auto gridSizeX = fastInfo.GridXNumber();
-    auto gridSizeY = fastInfo.GridYNumber();
-    unsigned long xStep = ::calcEdgePointSteppingCount(gridSizeX);
-    // Käydään ensin ylä- ja alarivit
-    for(unsigned long xIndex = xStep; xIndex < gridSizeX - 1; xIndex += xStep)
-    {
-        unsigned long latlonIndexBottom = xIndex;
-        auto worldXyPointBottom = mapArea.LatLonToWorldXY(fastInfo.LatLon(latlonIndexBottom));
-        bottomValues.insert(worldXyPointBottom.Y());
-        leftValues.insert(worldXyPointBottom.X());
-        rightValues.insert(worldXyPointBottom.X());
-
-        unsigned long latlonIndexTop = gridSizeX * (gridSizeY - 1) + xIndex;
-        auto worldXyPointTop = mapArea.LatLonToWorldXY(fastInfo.LatLon(latlonIndexTop));
-        topValues.insert(worldXyPointTop.Y());
-        leftValues.insert(worldXyPointTop.X());
-        rightValues.insert(worldXyPointTop.X());
-    }
-
-    unsigned long yStep = ::calcEdgePointSteppingCount(gridSizeY);
-    // Käydään reunimmaiset pystyrivit
-    for(unsigned long yIndex = yStep; yIndex < gridSizeY - 1; yIndex += yStep)
-    {
-        unsigned long latlonIndexLeft = yIndex * gridSizeX;
-        auto worldXyPointLeft = mapArea.LatLonToWorldXY(fastInfo.LatLon(latlonIndexLeft));
-        bottomValues.insert(worldXyPointLeft.Y());
-        topValues.insert(worldXyPointLeft.Y());
-        leftValues.insert(worldXyPointLeft.X());
-
-        unsigned long latlonIndexRight = (yIndex + 1) * gridSizeX - 1;
-        auto worldXyPointRight = mapArea.LatLonToWorldXY(fastInfo.LatLon(latlonIndexRight));
-        bottomValues.insert(worldXyPointRight.Y());
-        topValues.insert(worldXyPointRight.Y());
-        leftValues.insert(worldXyPointRight.X());
-    }
-
-    return ::makeBoundingBoxFromEdgePoints(leftValues, rightValues, bottomValues, topValues);
+    return NFmiWorldXyBoundingBoxCalculator::calcDataWorldXyBoundingBoxOverMapArea(fastInfo, mapArea);
 }

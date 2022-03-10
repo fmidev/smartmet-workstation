@@ -270,6 +270,7 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
     InitializeGdiplus(itsToolBox, &itsRect);
 	// Tyhjennetään aina piirron aluksi
 	itsExistingLabels.clear(); //EL
+	itsOptimizedGridPtr.reset();
 
 	CalculateViewRects();
 	itsDrawingEnvironment->EnableFill();
