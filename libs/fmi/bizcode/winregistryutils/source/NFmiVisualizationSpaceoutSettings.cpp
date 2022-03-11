@@ -251,3 +251,8 @@ NFmiRect NFmiVisualizationSpaceoutSettings::calcInfoAreaOverMapAreaWorldXyBoundi
 {
     return NFmiWorldXyBoundingBoxCalculator::calcDataWorldXyBoundingBoxOverMapArea(fastInfo, mapArea);
 }
+
+double NFmiVisualizationSpaceoutSettings::criticalPixelToGridPointRatioLimitForContours() const
+{
+    return criticalPixelToGridPointRatioLimitForContours_;
+}

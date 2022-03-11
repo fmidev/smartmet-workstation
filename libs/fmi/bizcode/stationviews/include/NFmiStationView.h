@@ -28,6 +28,7 @@ class NFmiGriddingProperties;
 class NFmiExtraMacroParamData;
 class NFmiIsoLineData;
 class SparseDataGrid;
+class NFmiVisualizationSpaceoutSettings;
 
 namespace CtrlViewUtils
 {
@@ -136,6 +137,7 @@ protected:
    virtual NFmiColor GetBasicParamRelatedSymbolColor(float theValue) const;
    NFmiPoint CalcUsedSpaceOutFactors();
    CtrlViewUtils::GraphicalInfo& GetGraphicalInfo() const;
+   NFmiVisualizationSpaceoutSettings& GetVisualizationSettings() const;
 
    // T‰h‰n tehd‰‰n kaikki metodit jotka liittyv‰t uuteen Symbol-Bulk-Draw toimintoon.
    // Metodien eteen laitetaan ainakin aluksi Sbd -etuliite, jotta tiedet‰‰n ett‰ ne liittyv‰t siihen.

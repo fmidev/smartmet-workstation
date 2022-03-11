@@ -53,6 +53,9 @@ class NFmiVisualizationSpaceoutSettings
 	// 0 = Lineaarisesti interpoloimalla (nopea mutta huono)
 	// 1 = Median filtterillä (hitaampi mutta paras tulos)
 	boost::shared_ptr<CachedRegInt> spaceoutDataGatheringMethod_;
+	// Contoureja on turha piirtää tarkasti, jos piirrettävä data hilatarkkuus lähestyy näytön pikseli tasoa.
+	// Jos piirrettävä hila menee tämän rajan alle, piirretään data quick-contour tavalla (nopea, eikä menetetä juuri näköä).
+	const double criticalPixelToGridPointRatioLimitForContours_ = 1.4;
 
 	// Windows rekisterin käyttöön liittyviä muuttujia
 	bool initialized_ = false;
@@ -83,6 +86,7 @@ public:
 	void useGlobalVisualizationSpaceoutFactorOptimization(bool newState);
 	int spaceoutDataGatheringMethod() const;
 	void spaceoutDataGatheringMethod(int newValue);
+	double criticalPixelToGridPointRatioLimitForContours() const;
 
 	static double calcViewSubGridFactor(int viewSubGridSize);
 
