@@ -44,6 +44,7 @@
 #include "catlog/catlog.h"
 #include "TimeSerialParameters.h"
 #include "NFmiFastInfoUtils.h"
+#include "ColorStringFunctions.h"
 
 #include "boost\math\special_functions\round.hpp"
 
@@ -4377,7 +4378,7 @@ static void AddValueLineString(std::string &theStr, const std::string &theTitle,
 	int digitCount = theDrawParam->IsoLineLabelDigitCount(); // tekstille pitäisi saada oma lukunsa ja isoviivoille oma
 
 	theStr += "<font color=";
-	theStr += CtrlViewUtils::Color2HtmlColorStr(theTitleColor);
+	theStr += ColorString::Color2HtmlColorStr(theTitleColor);
 	theStr += ">";
 	theStr += theTitle;
 	theStr += "</font>";
@@ -4385,7 +4386,7 @@ static void AddValueLineString(std::string &theStr, const std::string &theTitle,
 		theStr += "\t"; // tabulaattori
 	theStr += "<b><font color=";
 	NFmiColor tmpColor(0,0,1);
-	theStr += CtrlViewUtils::Color2HtmlColorStr(tmpColor);
+	theStr += ColorString::Color2HtmlColorStr(tmpColor);
 	theStr += ">";
 	theStr += ::Value2ToolTipString(theValue, digitCount, interpMethod, parType);
 	theStr += "</font></b>";
@@ -4796,7 +4797,7 @@ static std::string GetColoredLocationTooltipStr(CtrlViewDocumentInterface *theCt
 {
 	std::string str;
 	str += "<font color=";
-	str += CtrlViewUtils::Color2HtmlColorStr(theCtrlViewDocumentInterface->GeneralColor(theSelectedLocationCounter));
+	str += ColorString::Color2HtmlColorStr(theCtrlViewDocumentInterface->GeneralColor(theSelectedLocationCounter));
 	str += ">";
 	str += "Loc: ";
 	str += ::GetLatlonString(theLatlon);

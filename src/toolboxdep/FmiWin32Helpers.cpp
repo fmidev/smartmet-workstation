@@ -11,6 +11,7 @@
 #include "NFmiMapViewDescTop.h"
 #include "NFmiViewSettingMacro.h"
 #include "ApplicationInterface.h"
+#include "CtrlViewGdiPlusFunctions.h"
 
 #include <fstream>
 
@@ -630,6 +631,14 @@ void CFmiWin32Helpers::SetErrorColorForTextControl(CDC* pDC, bool statusOk, bool
         pDC->SetTextColor(RGB(160, 160, 160)); // Jos kontrolli 'merkityksetön', käytetään harmaata väriä
     else
         pDC->SetTextColor(RGB(0, 0, 0)); // Jos ok, käytetään mustaa väriä
+}
+
+void CFmiWin32Helpers::SetColorForTextControl(CDC* pDC, const NFmiColor& color)
+{
+    if(pDC)
+    {
+        pDC->SetTextColor(CtrlView::Color2ColorRef(color));
+    }
 }
 
 CFmiWin32Helpers::MemoryBitmapHelper::MemoryBitmapHelper(CWnd *usedWindow, CBitmap *usedMemoryBitmap)

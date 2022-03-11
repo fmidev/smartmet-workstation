@@ -1197,8 +1197,8 @@ BEGIN
     CONTROL         "This safety feature is on by default on restart, can't disable it permanently",IDC_CHECK_VISUALIZATIONS_USE_PIXEL_TO_GRID_POINT_RATIO_SAFETY_FEATURE,
                     "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,12,44,281,17
     CONTROL         "",IDC_SLIDER_PIXEL_TO_GRID_POINT_RATIO,
-                    "msctls_trackbar32",TBS_BOTH | WS_TABSTOP,8,61,213,13
-    LTEXT           "Static",IDC_STATIC_PIXEL_TO_GRID_POINT_RATIO_VALUE_STR,227,66,69,10
+                    "msctls_trackbar32",TBS_BOTH | WS_TABSTOP,8,61,202,13
+    LTEXT           "Static",IDC_STATIC_PIXEL_TO_GRID_POINT_RATIO_VALUE_STR,212,66,89,10
     LTEXT           "Possible warning text if safety features off",IDC_STATIC_VISUALIZATIONS_PIXEL_TO_GRID_POINT_RATIO_WARNING_STR,8,76,291,16
     LTEXT           "GlobalVisualizationSpaceoutFactor variable is used to speed up map visualization\nSetting factor between 1-10 results visual. grid size to be ~400x400 - 40x40",IDC_STATIC_GLOBAL_VISUALIZATIONS_SPACEOUT_FACTOR_STR,8,103,291,24
     CONTROL         "Use Spaceout optimizations",IDC_CHECK_GLOBAL_VISUALIZATIONS_SPACEOUT_FACTOR,

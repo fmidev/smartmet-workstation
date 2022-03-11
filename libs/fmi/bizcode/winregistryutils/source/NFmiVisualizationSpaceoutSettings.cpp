@@ -5,6 +5,8 @@
 #include "NFmiQueryDataUtil.h"
 #include "NFmiArea.h"
 #include "NFmiWorldXyBoundingBoxCalculator.h"
+#include "ColorStringFunctions.h"
+#include "NFmiColor.h"
 
 NFmiVisualizationSpaceoutSettings::NFmiVisualizationSpaceoutSettings() = default;
 
@@ -88,7 +90,7 @@ void NFmiVisualizationSpaceoutSettings::doViewUpdateWarningLogsIfNeeded()
     if(*useGlobalVisualizationSpaceoutFactorOptimization_)
     {
         std::string logMessage = "Global-Visualization-Spaceout-Grid-Size optimization is set on, with base size ";
-        logMessage += NFmiValueString::GetStringWithMaxDecimalsSmartWay(*baseSpaceoutGridSize_, 1);
+        logMessage += std::to_string(*baseSpaceoutGridSize_);
         logMessage += ", map visualizations are faster, but lose information. If you wan't to see full accuracy of data, set it off from Edit - Visualization settings...";
         CatLog::logMessage(logMessage, CatLog::Severity::Info, CatLog::Category::Visualization);
     }
@@ -255,4 +257,42 @@ NFmiRect NFmiVisualizationSpaceoutSettings::calcInfoAreaOverMapAreaWorldXyBoundi
 double NFmiVisualizationSpaceoutSettings::criticalPixelToGridPointRatioLimitForContours() const
 {
     return criticalPixelToGridPointRatioLimitForContours_;
+}
+
+std::string NFmiVisualizationSpaceoutSettings::composePossibleTooltipWarningText() const
+{
+    const NFmiColor redColor(1, 0, 0);
+    const NFmiColor orangeColor(0.87f, 0.44f, 0);
+    std::string str;
+    if(usePixelToGridPointRatioSafetyFeature_ == false)
+    {
+        str += "<b><font color=";
+        str += ColorString::Color2HtmlColorStr(redColor);
+        str += ">";
+        str += "[Isoline safety feature is OFF (F6)]";
+        str += "</font></b>\n";
+    }
+    else if(*pixelToGridPointRatio_ < criticalPixelToGridPointRatioLimit_)
+    {
+        str += "<b><font color=";
+        str += ColorString::Color2HtmlColorStr(redColor);
+        str += ">";
+        str += "[Isoline safety limit below critical (F6)]";
+        str += "</font></b>\n";
+    }
+
+    if(*useGlobalVisualizationSpaceoutFactorOptimization_)
+    {
+        str += "<b><font color=";
+        str += ColorString::Color2HtmlColorStr(orangeColor);
+        str += ">";
+        str += "[Visualizations optimized, grid ";
+        str += std::to_string(*baseSpaceoutGridSize_);
+        str += "x";
+        str += std::to_string(*baseSpaceoutGridSize_);
+        str += " (F6)]";
+        str += "</font></b>\n";
+    }
+
+    return str;
 }

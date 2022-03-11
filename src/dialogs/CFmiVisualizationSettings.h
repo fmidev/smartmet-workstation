@@ -4,6 +4,7 @@
 #include "NFmiViewPosRegistryInfo.h"
 
 class NFmiApplicationWinRegistry;
+class NFmiVisualizationSpaceoutSettings;
 
 // CFmiVisualizationSettings dialog
 
@@ -41,6 +42,9 @@ private:
 	double GetPixelToGridPointRatioFromSlider();
 	void UpdatePixelToGridPointRatioFromSliderToStringCtrl();
 	void UpdateGlobalVisualizationSpaceoutGridSizeFromSliderToStringCtrl();
+	bool PixelToGridPointRatioValueIsInUse();
+	bool GlobalVisualizationSpaceoutGridSizeValueIsInUse();
+	NFmiVisualizationSpaceoutSettings& GetVisualizationSettings();
 
 	NFmiApplicationWinRegistry* itsApplicationWinRegistry = nullptr;
 	double itsPixelToGridPointRatio_valueFromSlider;
