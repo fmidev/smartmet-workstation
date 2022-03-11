@@ -15,6 +15,7 @@
 #include "GraphicalInfo.h"
 #include "CtrlViewGdiPlusFunctions.h"
 #include "SynopCodeUtils.h"
+#include "ColorStringFunctions.h"
 
 #include "boost\math\special_functions\round.hpp"
 
@@ -187,7 +188,7 @@ std::string NFmiStationIndexTextView::Value2ToolTipString(float theValue, int /*
     str += " size = +6";
 	NFmiColor color(GetSymbolColor(theValue));
 	str += " color=";
-	str += CtrlViewUtils::Color2HtmlColorStr(color);
+	str += ColorString::Color2HtmlColorStr(color);
 	str += ">";
 
 	str += symbolStr;

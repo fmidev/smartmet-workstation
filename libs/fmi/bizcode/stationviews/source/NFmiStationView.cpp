@@ -72,6 +72,7 @@
 #include "GdiplusStationBulkDraw.h"
 #include "SparseDataGrid.h"
 #include "NFmiSymbolTextMapping.h"
+#include "ColorStringFunctions.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -3018,7 +3019,7 @@ std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<
 static std::string MakeMapLayerTooltipText(CtrlViewDocumentInterface* ctrlViewDocumentInterface, const boost::shared_ptr<NFmiDrawParam>& drawParam)
 {
 	std::string str = "<b><font color=";
-	str += CtrlViewUtils::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, ctrlViewDocumentInterface));
+	str += ColorString::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, ctrlViewDocumentInterface));
 	str += ">";
 	str += drawParam->ParameterAbbreviation();
 	str += "</font></b>";
@@ -3112,7 +3113,7 @@ std::string NFmiStationView::GetPossibleMacroParamSymbolText(float value, const 
 	else
 	{
 		std::string decoratedStr = "(<b><font color=";
-		decoratedStr += CtrlViewUtils::Color2HtmlColorStr(NFmiColor(0, .75f, 0.2f));
+		decoratedStr += ColorString::Color2HtmlColorStr(NFmiColor(0, .75f, 0.2f));
 		decoratedStr += ">";
 		decoratedStr += str;
 		decoratedStr += "</font></b>)";

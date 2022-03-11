@@ -108,6 +108,7 @@
 #include "CombinedMapHandlerInterface.h"
 #include "ParamHandlerViewFunctions.h"
 #include "MathHelper.h"
+#include "ColorStringFunctions.h"
 
 #ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupport.h"
@@ -4234,7 +4235,7 @@ std::string NFmiStationViewHandler::ComposeMapLayerToolTipText(bool beforeDataIs
 		if(!beforeDataIsDrawnCase)
 			str += "\n<hr color=red>";
 		str += "\n<b><font color=";
-		str += CtrlViewUtils::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, itsCtrlViewDocumentInterface));
+		str += ColorString::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, itsCtrlViewDocumentInterface));
 		str += ">";
 		if(addBackgroundText)
 			str += combinedMapHandlerInterface.getCurrentMapLayerGuiText(itsMapViewDescTopIndex, true);
@@ -4270,6 +4271,7 @@ std::string NFmiStationViewHandler::ComposeToolTipText(const NFmiPoint& theRelat
 		str += ComposeMapLayerToolTipText(true);
 		str += "<hr color=red>";
 		str += "\n";
+		str += itsCtrlViewDocumentInterface->ApplicationWinRegistry().VisualizationSpaceoutSettings().composePossibleTooltipWarningText();
 
 		if(!itsViewList->NumberOfItems())
 		{

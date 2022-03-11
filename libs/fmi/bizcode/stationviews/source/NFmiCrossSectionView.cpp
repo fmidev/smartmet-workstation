@@ -48,6 +48,7 @@
 #include "TimeSerialModification.h"
 #include "NFmiDataMatrixUtils.h"
 #include "ParamHandlerViewFunctions.h"
+#include "ColorStringFunctions.h"
 
 #include <stdexcept>
 #include "boost/math/special_functions/round.hpp"
@@ -418,7 +419,7 @@ std::string NFmiCrossSectionView::ComposeTrajectoryToolTipText()
 		const auto &trajectory = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1);
 		str += "<hr color=red><br>";
 		str += "<b><font color=";
-		str += CtrlViewUtils::Color2HtmlColorStr(itsCtrlViewDocumentInterface->GeneralColor(itsViewGridRowNumber - 1));
+		str += ColorString::Color2HtmlColorStr(itsCtrlViewDocumentInterface->GeneralColor(itsViewGridRowNumber - 1));
 		str += ">";
 
 		str += "Trajectory (";

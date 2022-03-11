@@ -4,6 +4,7 @@
 #include "NFmiFastQueryInfo.h"
 #include "CtrlViewFunctions.h"
 #include "catlog/catlog.h"
+#include "ColorStringFunctions.h"
 
 namespace
 {
@@ -18,26 +19,26 @@ namespace
         if(theDrawParam->UseSingleColorsWithSimpleIsoLines())
         {
             colorStr += ", lineColor=";
-            colorStr += CtrlViewUtils::Color2HtmlColorStr(theDrawParam->IsolineColor());
+            colorStr += ColorString::Color2HtmlColorStr(theDrawParam->IsolineColor());
         }
         else
         {
             colorStr += ", lowLimit=";
             colorStr += std::to_string(theDrawParam->SimpleIsoLineColorShadeLowValue());
             colorStr += ", lowColor=";
-            colorStr += CtrlViewUtils::Color2HtmlColorStr(theDrawParam->SimpleIsoLineColorShadeLowValueColor());
+            colorStr += ColorString::Color2HtmlColorStr(theDrawParam->SimpleIsoLineColorShadeLowValueColor());
             colorStr += ", midLimit=";
             colorStr += std::to_string(theDrawParam->SimpleIsoLineColorShadeMidValue());
             colorStr += ", midColor=";
-            colorStr += CtrlViewUtils::Color2HtmlColorStr(theDrawParam->SimpleIsoLineColorShadeMidValueColor());
+            colorStr += ColorString::Color2HtmlColorStr(theDrawParam->SimpleIsoLineColorShadeMidValueColor());
             colorStr += ", highLimit=";
             colorStr += std::to_string(theDrawParam->SimpleIsoLineColorShadeHighValue());
             colorStr += ", highColor=";
-            colorStr += CtrlViewUtils::Color2HtmlColorStr(theDrawParam->SimpleIsoLineColorShadeHighValueColor());
+            colorStr += ColorString::Color2HtmlColorStr(theDrawParam->SimpleIsoLineColorShadeHighValueColor());
             colorStr += ", topLimit=";
             colorStr += std::to_string(theDrawParam->SimpleIsoLineColorShadeHigh2Value());
             colorStr += ", topColor=";
-            colorStr += CtrlViewUtils::Color2HtmlColorStr(theDrawParam->SimpleIsoLineColorShadeHigh2ValueColor());
+            colorStr += ColorString::Color2HtmlColorStr(theDrawParam->SimpleIsoLineColorShadeHigh2ValueColor());
             colorStr += ", shadingCount=";
             colorStr += std::to_string(theDrawParam->SimpleIsoLineColorShadeClassCount());
         }
@@ -55,7 +56,7 @@ namespace
         if(doLabelFilling)
         {
             commonSetupStr += ", labelFillColor=";
-            commonSetupStr += CtrlViewUtils::Color2HtmlColorStr(theDrawParam->IsolineLabelBoxFillColor());
+            commonSetupStr += ColorString::Color2HtmlColorStr(theDrawParam->IsolineLabelBoxFillColor());
         }
         commonSetupStr += ", smoothingFactor=";
         commonSetupStr += std::to_string(theDrawParam->IsoLineSplineSmoothingFactor());

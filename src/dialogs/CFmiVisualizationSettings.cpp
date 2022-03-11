@@ -32,6 +32,7 @@ CFmiVisualizationSettings::CFmiVisualizationSettings(CWnd* pParent)
 	, itsPixelToGridPointRatioValueStr(_T(""))
 	, itsGlobalVisualizationSpaceoutGridSizeResultsStr(_T(""))
 {
+	itsApplicationWinRegistry = &SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->ApplicationWinRegistry();
 }
 
 CFmiVisualizationSettings::~CFmiVisualizationSettings()
@@ -85,16 +86,14 @@ BOOL CFmiVisualizationSettings::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	itsApplicationWinRegistry = &SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->ApplicationWinRegistry();
 	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 	InitDialogTexts();
-	auto& visualizationSpaceoutSettings = itsApplicationWinRegistry->VisualizationSpaceoutSettings();
 	InitPixelToGridPointRatioSlider();
 	InitGlobalVisualizationSpaceoutGridSizeSlider();
 
 	itsSpaceoutDataGatheringMethodComboBox.AddString(CA2T(::GetDictionaryString("Linear-interpolation").c_str()));
 	itsSpaceoutDataGatheringMethodComboBox.AddString(CA2T(::GetDictionaryString("Median-filter").c_str()));
-	itsSpaceoutDataGatheringMethodComboBox.SetCurSel(0); // itsVisualizationSpaceoutSettings->spaceoutDataGatheringMethod());
+	itsSpaceoutDataGatheringMethodComboBox.SetCurSel(0); // GetVisualizationSettings().spaceoutDataGatheringMethod());
 
 	// Tee paikan asetus vasta tooltipin alustuksen jälkeen, niin se toimii ilman OnSize-kutsua.
 	std::string errorBaseStr("Error in CFmiVisualizationSettings::OnInitDialog while reading dialog size and position values");
@@ -111,39 +110,39 @@ BOOL CFmiVisualizationSettings::OnInitDialog()
 
 void CFmiVisualizationSettings::InitPixelToGridPointRatioSlider()
 {
-	auto& visualizationSpaceoutSettings = itsApplicationWinRegistry->VisualizationSpaceoutSettings();
-	auto pixelToGridPointRatio = visualizationSpaceoutSettings.pixelToGridPointRatio();
-	auto minPixelToGridPointRatio = visualizationSpaceoutSettings.minPixelToGridPointRatioValue();
-	auto maxPixelToGridPointRatio = visualizationSpaceoutSettings.maxPixelToGridPointRatioValue();
+	auto& visualizationSettings = GetVisualizationSettings();
+	auto pixelToGridPointRatio = visualizationSettings.pixelToGridPointRatio();
+	auto minPixelToGridPointRatio = visualizationSettings.minPixelToGridPointRatioValue();
+	auto maxPixelToGridPointRatio = visualizationSettings.maxPixelToGridPointRatioValue();
 	// Tämä vastaa minPixelToGridPointRatio arvoa
 	int startIndex = 0; 
 	// Tämä vastaa maxPixelToGridPointRatio arvoa
 	int endIndex = boost::math::iround((maxPixelToGridPointRatio - minPixelToGridPointRatio) / itsPixelToGridPointRatioSliderTickStep);
 	itsPixelToGridPointRatioSlider.SetRange(startIndex, endIndex);
 	itsPixelToGridPointRatioSlider.SetPos(CalcPixelToGridPointRatioSliderPosition(pixelToGridPointRatio));
-	itsUsePixelToGridPointRatioSafetyFeature = visualizationSpaceoutSettings.usePixelToGridPointRatioSafetyFeature();
+	itsUsePixelToGridPointRatioSafetyFeature = visualizationSettings.usePixelToGridPointRatioSafetyFeature();
 	UpdateData(FALSE);
 	UpdatePixelToGridPointRatioFromSliderToStringCtrl();
 }
 
 void CFmiVisualizationSettings::InitGlobalVisualizationSpaceoutGridSizeSlider()
 {
-	auto& visualizationSpaceoutSettings = itsApplicationWinRegistry->VisualizationSpaceoutSettings();
-	auto baseSpaceoutGridSizeValue = visualizationSpaceoutSettings.baseSpaceoutGridSize();
-	auto minBaseSpaceoutGridSize = visualizationSpaceoutSettings.minBaseSpaceoutGridSize();
-	auto maxBaseSpaceoutGridSize = visualizationSpaceoutSettings.maxBaseSpaceoutGridSize();
+	auto& visualizationSettings = GetVisualizationSettings();
+	auto baseSpaceoutGridSizeValue = visualizationSettings.baseSpaceoutGridSize();
+	auto minBaseSpaceoutGridSize = visualizationSettings.minBaseSpaceoutGridSize();
+	auto maxBaseSpaceoutGridSize = visualizationSettings.maxBaseSpaceoutGridSize();
 	itsGlobalVisualizationSpaceoutGridSizeSlider.SetRange(minBaseSpaceoutGridSize, maxBaseSpaceoutGridSize);
 	itsGlobalVisualizationSpaceoutGridSizeSlider.SetPos(baseSpaceoutGridSizeValue);
-	itsUseGlobalVisualizationSpaceoutFactorOptimization = visualizationSpaceoutSettings.useGlobalVisualizationSpaceoutFactorOptimization();
+	itsUseGlobalVisualizationSpaceoutFactorOptimization = visualizationSettings.useGlobalVisualizationSpaceoutFactorOptimization();
 	UpdateData(FALSE);
 	UpdateGlobalVisualizationSpaceoutGridSizeFromSliderToStringCtrl();
 }
 
 int CFmiVisualizationSettings::CalcPixelToGridPointRatioSliderPosition(double value)
 {
-	auto& visualizationSpaceoutSettings = itsApplicationWinRegistry->VisualizationSpaceoutSettings();
-	auto minPixelToGridPointRatio = visualizationSpaceoutSettings.minPixelToGridPointRatioValue();
-	auto maxPixelToGridPointRatio = visualizationSpaceoutSettings.maxPixelToGridPointRatioValue();
+	auto& visualizationSettings = GetVisualizationSettings();
+	auto minPixelToGridPointRatio = visualizationSettings.minPixelToGridPointRatioValue();
+	auto maxPixelToGridPointRatio = visualizationSettings.maxPixelToGridPointRatioValue();
 	if(value <= minPixelToGridPointRatio)
 		return 0;
 	if(value >= maxPixelToGridPointRatio)
@@ -166,7 +165,7 @@ static double GetActualValueFromSlider(CSliderCtrl &slider, double minValue, dou
 
 double CFmiVisualizationSettings::GetPixelToGridPointRatioFromSlider()
 {
-	return GetActualValueFromSlider(itsPixelToGridPointRatioSlider, itsApplicationWinRegistry->VisualizationSpaceoutSettings().minPixelToGridPointRatioValue(), itsPixelToGridPointRatioSliderTickStep);
+	return GetActualValueFromSlider(itsPixelToGridPointRatioSlider, GetVisualizationSettings().minPixelToGridPointRatioValue(), itsPixelToGridPointRatioSliderTickStep);
 }
 
 // Tämä funktio alustaa kaikki dialogin tekstit editoriin valitulla kielellä.
@@ -179,15 +178,15 @@ void CFmiVisualizationSettings::InitDialogTexts()
     CFmiWin32Helpers::SetDialogItemText(this, IDOK, "IDOK");
     CFmiWin32Helpers::SetDialogItemText(this, IDCANCEL, "IDCANCEL");
 
-	auto& visualizationSpaceoutSettings = itsApplicationWinRegistry->VisualizationSpaceoutSettings();
+	auto& visualizationSettings = GetVisualizationSettings();
 
 	std::string pixelToGridPointRatioStr = "Pixel-To-Grid-Point-Ratio is safety feature for isoline visualizations, used to\nprevent crashes. It's min value is ";
-	pixelToGridPointRatioStr += std::to_string(boost::math::iround(visualizationSpaceoutSettings.minPixelToGridPointRatioValue()));
+	pixelToGridPointRatioStr += std::to_string(boost::math::iround(visualizationSettings.minPixelToGridPointRatioValue()));
 	pixelToGridPointRatioStr += " and max value is ";
-	pixelToGridPointRatioStr += std::to_string(boost::math::iround(visualizationSpaceoutSettings.maxPixelToGridPointRatioValue()));
+	pixelToGridPointRatioStr += std::to_string(boost::math::iround(visualizationSettings.maxPixelToGridPointRatioValue()));
 	pixelToGridPointRatioStr += " (too high-res data will\nbe 'thinned' to lower resolution grid).";
 	pixelToGridPointRatioStr += " 'Critical' limit for this is ";
-	pixelToGridPointRatioStr += std::to_string(boost::math::iround(visualizationSpaceoutSettings.criticalPixelToGridPointRatioLimit()));
+	pixelToGridPointRatioStr += std::to_string(boost::math::iround(visualizationSettings.criticalPixelToGridPointRatioLimit()));
 	pixelToGridPointRatioStr += ", if value is set\nlower, warning messages are issued in Log viewer and Map-view tooltips.";
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_VISUALIZATIONS_PIXEL_TO_GRID_POINT_RATIO_STR, pixelToGridPointRatioStr.c_str());
 
@@ -195,16 +194,16 @@ void CFmiVisualizationSettings::InitDialogTexts()
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_VISUALIZATIONS_USE_PIXEL_TO_GRID_POINT_RATIO_SAFETY_FEATURE, usePixelToGridPointRatioSafetyFeatureStr.c_str());
 
 	std::string globalVisualizationSpaceoutFactorStr = "Global-Visualization-Spaceout-Grid-Size variable is used to speed up map-view\nvisualizations. Setting base grid size between ";
-	globalVisualizationSpaceoutFactorStr += std::to_string(visualizationSpaceoutSettings.minBaseSpaceoutGridSize());
+	globalVisualizationSpaceoutFactorStr += std::to_string(visualizationSettings.minBaseSpaceoutGridSize());
 	globalVisualizationSpaceoutFactorStr += " - ";
-	globalVisualizationSpaceoutFactorStr += std::to_string(visualizationSpaceoutSettings.maxBaseSpaceoutGridSize());
+	globalVisualizationSpaceoutFactorStr += std::to_string(visualizationSettings.maxBaseSpaceoutGridSize());
 	globalVisualizationSpaceoutFactorStr += " yields visualized data grid sizes\n~ ";
-	auto maxGridSizeStr = std::to_string(visualizationSpaceoutSettings.minBaseSpaceoutGridSize());
+	auto maxGridSizeStr = std::to_string(visualizationSettings.minBaseSpaceoutGridSize());
 	globalVisualizationSpaceoutFactorStr += maxGridSizeStr;
 	globalVisualizationSpaceoutFactorStr += "x";
 	globalVisualizationSpaceoutFactorStr += maxGridSizeStr;
 	globalVisualizationSpaceoutFactorStr += " - ";
-	auto minGridSizeStr = std::to_string(visualizationSpaceoutSettings.maxBaseSpaceoutGridSize());
+	auto minGridSizeStr = std::to_string(visualizationSettings.maxBaseSpaceoutGridSize());
 	globalVisualizationSpaceoutFactorStr += minGridSizeStr;
 	globalVisualizationSpaceoutFactorStr += "x";
 	globalVisualizationSpaceoutFactorStr += minGridSizeStr;
@@ -229,7 +228,7 @@ void CFmiVisualizationSettings::UpdateValuesBackToDocument()
 
 	// Tarkista mitkä asetukset ovat oikeasti muuttuneet
 	int selectedSpaceoutDataGatheringMethod = 0; // itsSpaceoutDataGatheringMethodComboBox.GetCurSel();
-	auto needsToUpdateMapViews = itsApplicationWinRegistry->VisualizationSpaceoutSettings().updateFromDialog(GetPixelToGridPointRatioFromSlider(), itsUsePixelToGridPointRatioSafetyFeature, itsGlobalVisualizationSpaceoutGridSizeSlider.GetPos(), itsUseGlobalVisualizationSpaceoutFactorOptimization, selectedSpaceoutDataGatheringMethod);
+	auto needsToUpdateMapViews = GetVisualizationSettings().updateFromDialog(GetPixelToGridPointRatioFromSlider(), itsUsePixelToGridPointRatioSafetyFeature, itsGlobalVisualizationSpaceoutGridSizeSlider.GetPos(), itsUseGlobalVisualizationSpaceoutFactorOptimization, selectedSpaceoutDataGatheringMethod);
 	// Tee päätelmä oikeasti muuttuneista asetuksista että mitä likauksia ja näytön päivityksiä pitää tehdä
 	if(needsToUpdateMapViews)
 	{
@@ -249,6 +248,7 @@ void CFmiVisualizationSettings::UpdateValuesBackToDocument()
 	}
 	CheckInputAndDoWarningTexts();
 	UpdateGlobalVisualizationSpaceoutGridSizeFromSliderToStringCtrl();
+	UpdatePixelToGridPointRatioFromSliderToStringCtrl();
 }
 
 
@@ -261,10 +261,10 @@ void CFmiVisualizationSettings::CheckInputAndDoWarningTexts()
 {
 	UpdateData(TRUE);
 	itsPixelToGridPointRatioWarningStr = "";
-	auto& visSettings = itsApplicationWinRegistry->VisualizationSpaceoutSettings();
-	auto usePixelToGridPointRatioSafetyFeature_inUseNow = visSettings.usePixelToGridPointRatioSafetyFeature();
-	auto pixelToGridPointRatio_inUseNow = visSettings.pixelToGridPointRatio();
-	auto criticalLimit = visSettings.criticalPixelToGridPointRatioLimit();
+	auto& visualizationSettings = GetVisualizationSettings();
+	auto usePixelToGridPointRatioSafetyFeature_inUseNow = visualizationSettings.usePixelToGridPointRatioSafetyFeature();
+	auto pixelToGridPointRatio_inUseNow = visualizationSettings.pixelToGridPointRatio();
+	auto criticalLimit = visualizationSettings.criticalPixelToGridPointRatioLimit();
 	auto pixelToGridPointValueFromSlider = GetPixelToGridPointRatioFromSlider();
 	std::string warningMessage;
 	if(!usePixelToGridPointRatioSafetyFeature_inUseNow)
@@ -301,6 +301,9 @@ void CFmiVisualizationSettings::CheckInputAndDoWarningTexts()
 	UpdateData(FALSE);
 }
 
+const NFmiColor g_LightWarningTextColor(0.87f, 0.44f, 0);
+const NFmiColor g_NormalTextColor(0, 0, 0);
+
 HBRUSH CFmiVisualizationSettings::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
 	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
@@ -309,7 +312,20 @@ HBRUSH CFmiVisualizationSettings::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColo
 	{
 		CFmiWin32Helpers::SetErrorColorForTextControl(pDC, itsPixelToGridPointRatioWarningStr.IsEmpty());
 	}
-
+	else if(pWnd->GetDlgCtrlID() == IDC_STATIC_PIXEL_TO_GRID_POINT_RATIO_VALUE_STR)
+	{
+		if(PixelToGridPointRatioValueIsInUse())
+			CFmiWin32Helpers::SetColorForTextControl(pDC, g_NormalTextColor);
+		else
+			CFmiWin32Helpers::SetColorForTextControl(pDC, g_LightWarningTextColor);
+	}
+	else if(pWnd->GetDlgCtrlID() == IDC_STATIC_GLOBAL_VISUALIZATION_SPACEOUT_FACTOR_RESULTS_STR)
+	{
+		if(GlobalVisualizationSpaceoutGridSizeValueIsInUse())
+			CFmiWin32Helpers::SetColorForTextControl(pDC, g_NormalTextColor);
+		else
+			CFmiWin32Helpers::SetColorForTextControl(pDC, g_LightWarningTextColor);
+	}
 	return hbr;
 }
 
@@ -341,8 +357,24 @@ void CFmiVisualizationSettings::UpdatePixelToGridPointRatioFromSliderToStringCtr
 	UpdateData(TRUE);
 	std::string pixelToGridPointRatioValueStr = "Value: ";
 	pixelToGridPointRatioValueStr += ::to_string_with_fixed_precision(GetPixelToGridPointRatioFromSlider(), 1);
+	if(!PixelToGridPointRatioValueIsInUse())
+	{
+		pixelToGridPointRatioValueStr += " (in use ";
+		pixelToGridPointRatioValueStr += ::to_string_with_fixed_precision(GetVisualizationSettings().pixelToGridPointRatio(), 1);
+		pixelToGridPointRatioValueStr += ")";
+	}
 	itsPixelToGridPointRatioValueStr = CA2T(pixelToGridPointRatioValueStr.c_str());
 	UpdateData(FALSE);
+}
+
+bool CFmiVisualizationSettings::PixelToGridPointRatioValueIsInUse()
+{
+	return GetPixelToGridPointRatioFromSlider() == GetVisualizationSettings().pixelToGridPointRatio();
+}
+
+bool CFmiVisualizationSettings::GlobalVisualizationSpaceoutGridSizeValueIsInUse()
+{
+	return itsGlobalVisualizationSpaceoutGridSizeSlider.GetPos() == GetVisualizationSettings().baseSpaceoutGridSize();
 }
 
 void CFmiVisualizationSettings::UpdateGlobalVisualizationSpaceoutGridSizeFromSliderToStringCtrl()
@@ -352,12 +384,12 @@ void CFmiVisualizationSettings::UpdateGlobalVisualizationSpaceoutGridSizeFromSli
 	auto globalVisualizationSpaceoutGridSize_fromSlider = itsGlobalVisualizationSpaceoutGridSizeSlider.GetPos();
 	globalVisualizationSpaceoutFactorResultsStr += std::to_string(globalVisualizationSpaceoutGridSize_fromSlider);
 	globalVisualizationSpaceoutFactorResultsStr += "   which would result used data-grid size of ~ ";
-	auto& visSettings = itsApplicationWinRegistry->VisualizationSpaceoutSettings();
+	auto& visualizationSettings = GetVisualizationSettings();
 	globalVisualizationSpaceoutFactorResultsStr += std::to_string(globalVisualizationSpaceoutGridSize_fromSlider);
 	globalVisualizationSpaceoutFactorResultsStr += "x";
 	globalVisualizationSpaceoutFactorResultsStr += std::to_string(globalVisualizationSpaceoutGridSize_fromSlider);
 	globalVisualizationSpaceoutFactorResultsStr += "\nActual value in use is ";
-	auto usedBaseGridSize = visSettings.baseSpaceoutGridSize();
+	auto usedBaseGridSize = visualizationSettings.baseSpaceoutGridSize();
 	globalVisualizationSpaceoutFactorResultsStr += std::to_string(usedBaseGridSize);
 	globalVisualizationSpaceoutFactorResultsStr += ", that results grid-size ~ ";
 	globalVisualizationSpaceoutFactorResultsStr += std::to_string(usedBaseGridSize);
@@ -366,4 +398,9 @@ void CFmiVisualizationSettings::UpdateGlobalVisualizationSpaceoutGridSizeFromSli
 	globalVisualizationSpaceoutFactorResultsStr += ")";
 	itsGlobalVisualizationSpaceoutGridSizeResultsStr = CA2T(globalVisualizationSpaceoutFactorResultsStr.c_str());
 	UpdateData(FALSE);
+}
+
+NFmiVisualizationSpaceoutSettings& CFmiVisualizationSettings::GetVisualizationSettings()
+{
+	return itsApplicationWinRegistry->VisualizationSpaceoutSettings();
 }

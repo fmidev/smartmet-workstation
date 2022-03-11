@@ -41,19 +41,7 @@ namespace CtrlViewUtils
            theVector.erase(theVector.begin() + theRemovedItemIndex);
    }
 
-   std::string ColorFloat2HexStr(float value);
-   std::string Color2HtmlColorStr(const NFmiColor &theColor);
-
    bool AreVectorValuesInRisingOrder(const std::vector<float> &theValueVector);
-
-   template<class T>
-   std::string ToHex(const T &value, int minWidth = 0, char paddingchar = ' ')
-   {
-       std::ostringstream oss;
-       if(!(oss << std::setw(minWidth) << std::setfill(paddingchar) << std::hex << value))
-           throw std::exception("ToHex - Invalid argument");
-       return oss.str();
-   }
 
    NFmiPoint ConvertPointFromRect1ToRect2(const NFmiPoint &thePointInRect1, const NFmiRect &theRect1, const NFmiRect &theRect2);
    NFmiTimeBag GetAdjustedTimeBag(const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime, int theTimeStepInMinutes);

@@ -33,6 +33,7 @@
 #include "ModelDataServerConfiguration.h"
 #include "SoundingViewSettingsFromWindowsRegisty.h"
 #include "NFmiHelpDataInfo.h"
+#include "ColorStringFunctions.h"
 
 #include <stdexcept>
 #include "boost\math\special_functions\round.hpp"
@@ -3454,7 +3455,7 @@ std::string NFmiTempView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
                     auto usedLocationWithName = ::GetSoundingLocation(info, usedTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
                     usedTempInfo.Latlon(usedLocationWithName.GetLocation());
                     str += "<b><font color=";
-                    str += CtrlViewUtils::Color2HtmlColorStr(mtaTempSystem.SoundingColor(index));
+                    str += ColorString::Color2HtmlColorStr(mtaTempSystem.SoundingColor(index));
                     str += ">";
                     str += ::GetSoundingToolTipText(itsSoundingDataCacheForTooltips, selectedProducer, usedTempInfo, 0, pressure, index, true, usedLocationWithName.GetName());
                     if(modelRunCount > 0 && NFmiDrawParam::IsModelRunDataType(info->DataType()))

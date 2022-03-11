@@ -18,6 +18,7 @@
 #include "NFmiValueString.h"
 #include "CtrlViewFunctions.h"
 #include "NFmiGdiPlusImageMapHandler.h"
+#include "ColorStringFunctions.h"
 
 #include <boost/math/special_functions/round.hpp>
 #include <boost/algorithm/string.hpp>
@@ -157,7 +158,7 @@ namespace
 		if(useColor)
 		{
 			str += "<font color=";
-			str += CtrlViewUtils::Color2HtmlColorStr(color);
+			str += ColorString::Color2HtmlColorStr(color);
 			str += ">";
 		}
 		str += text;
