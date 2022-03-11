@@ -683,6 +683,11 @@ CtrlViewUtils::GraphicalInfo& NFmiStationView::GetGraphicalInfo() const
 	return itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
 }
 
+NFmiVisualizationSpaceoutSettings& NFmiStationView::GetVisualizationSettings() const
+{
+	return itsCtrlViewDocumentInterface->ApplicationWinRegistry().VisualizationSpaceoutSettings();
+}
+
 // Seek-rangeja laskettaessa halutaan että alihilat eivät mene päälekkäin vierekkäisissä piirrettävissä pisteissä.
 // Rajoitetaan mieluummin kurkkauksia alas ja vasemmalle (x/y tapaukset).
 // Parin first on kurkkaus vasemmalle/alas (0 tai negatiivinen luku) ja second on kurkkaus oikealle/ylös (0 tai positiivinen luku).
@@ -1413,7 +1418,7 @@ bool NFmiStationView::IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut
 			::SetupIsolineData(possibleMacroParamResolutionInfoOut, isoLineData);
 			NFmiPoint grid2PixelRatio = CalcGrid2PixelRatio(isoLineData);
 			NFmiPoint downSizeFactor;
-			if(IsolineDataDownSizingNeeded(isoLineData, grid2PixelRatio, downSizeFactor, itsDrawParam))
+			if(IsolineDataDownSizingNeeded(isoLineData, grid2PixelRatio, GetVisualizationSettings(), downSizeFactor, itsDrawParam))
 			{
 				// Tehdään tässä floor, koska muuten myöhemmin (tm_utils\source\ToolMasterDrawingFunctions.cpp:ssä) saatetaan luulla että tarvitsee harventaa lisää
 				auto newSizeX = std::floor(isoLineData.itsXNumber / downSizeFactor.X());
@@ -1440,7 +1445,7 @@ bool NFmiStationView::IsMacroParamContourDataDownSized(const boost::shared_ptr<N
 			::SetupIsolineData(possibleMacroParamResolutionInfo, isoLineData);
 			NFmiPoint grid2PixelRatio = CalcGrid2PixelRatio(isoLineData);
 			NFmiPoint downSizeFactor;
-			if(::IsDownSizingNeeded(grid2PixelRatio, GetCriticalGrid2PixelRatioForContour(), downSizeFactor))
+			if(::IsDownSizingNeeded(grid2PixelRatio, GetVisualizationSettings().criticalPixelToGridPointRatioLimitForContours(), downSizeFactor))
 			{
 				// Tehdään tässä ceil, koska muuten myöhemmin (tm_utils\source\ToolMasterDrawingFunctions.cpp:ssä) luullaan että ei tarvitse tarvitse laittaa quick-contour optiota päälle ollenkaan
 				auto newSizeX = std::ceil(isoLineData.itsXNumber / downSizeFactor.X());
@@ -2192,7 +2197,7 @@ bool NFmiStationView::GetQ3ScriptData(NFmiDataMatrix<float> &theValues, NFmiGrid
 {
     try
     {
-		auto& visSettings = itsCtrlViewDocumentInterface->ApplicationWinRegistry().VisualizationSpaceoutSettings();
+		auto& visSettings = GetVisualizationSettings();
 		NFmiPoint usedGridSize = visSettings.getCheckedPossibleOptimizedGridSize(itsCtrlViewDocumentInterface->InfoOrganizer()->GetMacroParamDataGridSize(), *itsArea, CalcViewGridSize());
         theUsedGrid = NFmiGrid(itsArea.get(), static_cast<unsigned long>(usedGridSize.X()), static_cast<unsigned long>(usedGridSize.Y()));
 
@@ -2442,7 +2447,7 @@ bool NFmiStationView::IsStationDataGridded()
 
 void NFmiStationView::CalculateGriddedStationData(NFmiDataMatrix<float> &theValues, NFmiGrid &usedGrid)
 {
-	auto& visSettings = itsCtrlViewDocumentInterface->ApplicationWinRegistry().VisualizationSpaceoutSettings();
+	auto& visSettings = GetVisualizationSettings();
 	NFmiPoint usedGridSize = visSettings.getCheckedPossibleOptimizedGridSize(itsCtrlViewDocumentInterface->StationDataGridSize(), *itsArea, CalcViewGridSize());
     usedGrid = NFmiGrid(itsArea.get(), static_cast<unsigned long>(usedGridSize.X()), static_cast<unsigned long>(usedGridSize.Y()));
     theValues.Resize(static_cast<unsigned long>(usedGridSize.X()), static_cast<unsigned long>(usedGridSize.Y()), kFloatMissing);

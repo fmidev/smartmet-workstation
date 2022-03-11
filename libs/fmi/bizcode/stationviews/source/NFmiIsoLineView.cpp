@@ -2097,7 +2097,7 @@ void NFmiIsoLineView::FillGridRelatedData_NormalDataCase(NFmiIsoLineData& isoLin
 // Huom! On jo tarkastettu, näkyykö data kartta-alueella, joten sitä ei tavitse tarkastella enää.
 bool NFmiIsoLineView::FillGridRelatedData_VisualizationOptimizationChecks(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, bool& fillGridDataStatus)
 {
-    auto& visSettings = itsCtrlViewDocumentInterface->ApplicationWinRegistry().VisualizationSpaceoutSettings();
+    auto& visSettings = GetVisualizationSettings();
     auto mapArea = GetArea();
     NFmiGrid optimizedGrid;
     if(visSettings.checkIsOptimizationsUsed(*itsInfo, *mapArea, optimizedGrid, CalcViewGridSize()))
@@ -2199,7 +2199,7 @@ void NFmiIsoLineView::DoGridRelatedVisualization(NFmiIsoLineData &isoLineData, N
             {
                 isoLineData.itsParam.GetParam()->SetName(itsDrawParam->ParameterAbbreviation());
             }
-            ::ToolMasterDraw(itsToolBox->GetDC(), &isoLineData, relRect, zoomedAreaRect, grid2PixelRatio, -1);
+            ::ToolMasterDraw(itsToolBox->GetDC(), &isoLineData, relRect, zoomedAreaRect, grid2PixelRatio, -1, GetVisualizationSettings());
         }
     }
     RestoreUpDifferenceDrawing(itsDrawParam);
