@@ -2291,7 +2291,7 @@ NFmiHelpDataInfo* NFmiStationView::GetHelpDataInfo(boost::shared_ptr<NFmiFastQue
 void NFmiStationView::FinalFillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid)
 {
 	if(optimizedDataGrid)
-		theInfo->GridValues(theValues, *optimizedDataGrid, usedTime);
+		theInfo->GridValues(theValues, *optimizedDataGrid, usedTime, itsTimeInterpolationRangeInMinutes);
 	else if(useCropping)
         theInfo->CroppedValues(theValues, usedTime, x1, y1, x2, y2, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
     else
