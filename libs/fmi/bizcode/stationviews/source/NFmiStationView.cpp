@@ -2292,9 +2292,9 @@ NFmiHelpDataInfo* NFmiStationView::GetHelpDataInfo(boost::shared_ptr<NFmiFastQue
 void NFmiStationView::FinalFillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid)
 {
 	if(optimizedDataGrid)
-		theInfo->GridValues(theValues, *optimizedDataGrid, usedTime);
+		theValues = theInfo->GridValues(*optimizedDataGrid, usedTime);
 	else if(useCropping)
-        theInfo->CroppedValues(theValues, usedTime, x1, y1, x2, y2, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
+		theValues = theInfo->CroppedValues(usedTime, x1, y1, x2, y2, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
     else
 		theValues = theInfo->Values(usedTime, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
 }
@@ -2518,10 +2518,10 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 					{
 						// GridValues metodista ei löydy kuin aikainterpolaatio menetelmä, joten pitää pyytää eka aika datasta
 						const auto& firstTime = itsInfo->TimeDescriptor().FirstTime();
-						itsInfo->GridValues(theValues, *optimizedDataGrid, firstTime);
+						theValues = itsInfo->GridValues(*optimizedDataGrid, firstTime);
 					}
 					else if(useCropping)
-						itsInfo->CroppedValues(theValues, x1, y1, x2, y2); // stat data on jo ajallisesti kohdallaan
+						theValues = itsInfo->CroppedValues(x1, y1, x2, y2); // stat data on jo ajallisesti kohdallaan
 					else
 						theValues = itsInfo->Values(); // stat data on jo ajallisesti kohdallaan
 				}

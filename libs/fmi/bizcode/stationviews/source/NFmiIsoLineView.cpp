@@ -2071,14 +2071,14 @@ void NFmiIsoLineView::FillGridRelatedData_NormalDataCase(NFmiIsoLineData& isoLin
             NFmiPoint blLatlon = origDataAreaClone->BottomLeftLatLon();
             NFmiPoint trLatlon = origDataAreaClone->TopRightLatLon();
             double origLongitudeDifference = trLatlon.X() - blLatlon.X();
-            NFmiLongitude lonFixer(blLatlon.X(), mapArea->PacificView());
+            NFmiLongitude lonFixer(blLatlon.X());
             blLatlon.X(lonFixer.Value());
             lonFixer.SetValue(trLatlon.X());
             trLatlon.X(lonFixer.Value());
             double newLongitudeDifference = trLatlon.X() - blLatlon.X();
             if(newLongitudeDifference < 0 || ::fabs(origLongitudeDifference - newLongitudeDifference) > 0.1)
                 trLatlon.X(blLatlon.X() + origLongitudeDifference);
-            origDataAreaClone->PacificView(mapArea->PacificView());
+            origDataAreaClone->PacificView_legacy(mapArea->PacificView_legacy());
             boost::shared_ptr<NFmiArea> newArea(origDataAreaClone->NewArea(blLatlon, trLatlon));
             zoomedAreaRect = newArea->XYArea(mapArea.get());
         }
@@ -2150,7 +2150,7 @@ bool NFmiIsoLineView::FillGridRelatedData_BetterVisualizationChecks(NFmiIsoLineD
             // Mutta pitää varmistaa että data interpoloidaan oikealta ajalta myös klimatologisilta datoilta (kuten Era-5, tms.)
             auto usedInterpolationTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(itsInfo, itsTime);
 
-            itsInfo->Values(*dataUtilitiesAdapter->getInterpolatedData(), isoLineData.itsIsolineData, usedInterpolationTime, kFloatMissing, kFloatMissing, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
+            isoLineData.itsIsolineData = itsInfo->Values(*dataUtilitiesAdapter->getInterpolatedData(), usedInterpolationTime, kFloatMissing, kFloatMissing, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
             itsIsolineValues = isoLineData.itsIsolineData;
             fillGridDataStatus = initializeIsoLineData(isoLineData);
             zoomedAreaRect = dataUtilitiesAdapter->getCroppedArea()->XYArea(GetArea().get());
