@@ -373,7 +373,10 @@ class NFmiFastQueryInfo : public NFmiQueryInfo
   void GridValues(NFmiDataMatrix<float> &theValues,
                   const NFmiGrid &theWantedGrid,
                   const NFmiMetTime &theInterpolatedTime);
-
+  void GridValues(NFmiDataMatrix<float> &theValues,
+                  const NFmiGrid &theWantedGrid,
+                  const NFmiMetTime &theInterpolatedTime,
+                  long theTimeRangeInMinutes);
   // 12.09.2013 Anssi.R changed methods to virtual to be able to override in NFmiMultiQueryInfo
   // Tämä hakee hilan sellaisenaan (datan originaali hila ja alue) halutulle painepinnalle.
   virtual void PressureValues(NFmiDataMatrix<float> &theValues,
