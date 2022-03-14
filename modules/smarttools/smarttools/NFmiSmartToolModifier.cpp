@@ -262,6 +262,8 @@ void NFmiSmartToolCalculationBlock::Calculate_ver2(
   }
 }
 
+bool NFmiSmartToolModifier::fUseVisualizationOptimazation = false;
+
 //--------------------------------------------------------
 // Constructor/Destructor
 //--------------------------------------------------------
@@ -2965,6 +2967,45 @@ const std::string &NFmiSmartToolModifier::GetStrippedMacroText() const
   return itsSmartToolIntepreter->GetStrippedMacroText();
 }
 
+static boost::shared_ptr<NFmiFastQueryInfo> GetOptimalResolutionMacroParamData(
+    bool useSpecialResolution,
+    boost::shared_ptr<NFmiFastQueryInfo> &resolutionMacroParamData,
+    boost::shared_ptr<NFmiFastQueryInfo> &macroParamData,
+    boost::shared_ptr<NFmiFastQueryInfo> &optimizedVisualizationMacroParamData)
+{
+  if (!NFmiSmartToolModifier::UseVisualizationOptimazation())
+  {
+    if (useSpecialResolution)
+      return resolutionMacroParamData;
+    else
+      return macroParamData;
+  }
+  else
+  {
+    auto gridsizeArea1 = macroParamData->GridXNumber() * macroParamData->GridYNumber();
+    auto gridsizeArea2 = optimizedVisualizationMacroParamData->GridXNumber() *
+                         optimizedVisualizationMacroParamData->GridYNumber();
+    if (!useSpecialResolution)
+    {
+      if (gridsizeArea1 <= gridsizeArea2)
+        return macroParamData;
+      else
+        return optimizedVisualizationMacroParamData;
+    }
+    else
+    {
+      auto gridsizeArea3 =
+          resolutionMacroParamData->GridXNumber() * resolutionMacroParamData->GridYNumber();
+      if (gridsizeArea1 <= gridsizeArea2 && gridsizeArea1 <= gridsizeArea3)
+        return macroParamData;
+      else if (gridsizeArea2 <= gridsizeArea3)
+        return optimizedVisualizationMacroParamData;
+      else
+        return resolutionMacroParamData;
+    }
+  }
+}
+
 // MacroParam data voi tilanteesta riippuen olla joku neljästä lähteestä:
 // 1. Jos ollaan poikkileikkaus laskuissa, käytetään sille tehtyä dataa
 // 2. Jos halutaan laskea harvennettua dataa symboli piirtoa varten, käytetään sitä
@@ -2979,10 +3020,14 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::UsedMacroParamData()
   {
     if (itsPossibleSpacedOutMacroInfo)
       return itsPossibleSpacedOutMacroInfo;
-    else if (itsExtraMacroParamData->UseSpecialResolution())
-      return itsExtraMacroParamData->ResolutionMacroParamData();
     else
-      return itsInfoOrganizer->MacroParamData();
+    {
+      return ::GetOptimalResolutionMacroParamData(
+          itsExtraMacroParamData->UseSpecialResolution(),
+          itsExtraMacroParamData->ResolutionMacroParamData(),
+          itsInfoOrganizer->MacroParamData(),
+          itsInfoOrganizer->OptimizedVisualizationMacroParamData());
+    }
   }
 }
 
@@ -3041,3 +3086,6 @@ const NFmiExtraMacroParamData &NFmiSmartToolModifier::ExtraMacroParamData() cons
     return emptyDummy;
   }
 }
+
+bool NFmiSmartToolModifier::UseVisualizationOptimazation() { return fUseVisualizationOptimazation; }
+void NFmiSmartToolModifier::UseVisualizationOptimazation(bool newState) {  fUseVisualizationOptimazation = newState; }

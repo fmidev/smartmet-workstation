@@ -43,6 +43,7 @@ NFmiInfoOrganizer::NFmiInfoOrganizer()
       itsDrawParamFactory(),
       itsWorkingDirectory(),
       itsMacroParamGridSize(50, 50),
+      itsOptimizedVisualizationGridSize(50, 50),
       itsMacroParamMinGridSize(5, 5),
       itsMacroParamMaxGridSize(2000, 2000),
       itsMacroParamData(),
@@ -65,6 +66,8 @@ bool NFmiInfoOrganizer::Init(const std::string &theDrawParamPath,
   itsDrawParamFactory->LoadDirectory(theDrawParamPath);
   UpdateMacroParamDataSize(static_cast<int>(itsMacroParamGridSize.X()),
                            static_cast<int>(itsMacroParamGridSize.Y()));
+  UpdateOptimizedVisualizationMacroParamDataSize(static_cast<int>(itsOptimizedVisualizationGridSize.X()),
+      static_cast<int>(itsOptimizedVisualizationGridSize.Y()));
   return itsDrawParamFactory->Init();
 }
 
@@ -1395,6 +1398,14 @@ void NFmiInfoOrganizer::SetMacroParamDataGridSize(int x, int y)
   itsMacroParamGridSize = NFmiPoint(x, y);
   UpdateMacroParamDataSize(x, y);
 }
+
+void NFmiInfoOrganizer::SetOptimizedVisualizationMacroParamDataGridSize(int x, int y)
+{
+  FixMacroParamDataGridSize(x, y);
+  itsOptimizedVisualizationGridSize = NFmiPoint(x, y);
+  UpdateOptimizedVisualizationMacroParamDataSize(x, y);
+}
+
 void NFmiInfoOrganizer::SetMacroParamDataMinGridSize(int x, int y)
 {
   itsMacroParamMinGridSize = NFmiPoint(x, y);
@@ -1453,6 +1464,13 @@ void NFmiInfoOrganizer::UpdateMacroParamDataSize(int x, int y)
   itsMacroParamData =
       NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(x, y, NFmiInfoData::kMacroParam);
 }
+
+void NFmiInfoOrganizer::UpdateOptimizedVisualizationMacroParamDataSize(int x, int y)
+{
+  itsOptimizedVisualizationMacroParamData =
+      NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(x, y, NFmiInfoData::kMacroParam);
+}
+
 
 void NFmiInfoOrganizer::UpdateCrossSectionMacroParamDataSize(int x, int y)
 {
