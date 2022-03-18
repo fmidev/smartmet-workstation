@@ -92,7 +92,7 @@
 #include "NFmiAviationStationInfoSystem.h"
 #include "NFmiGenDocDataAdapter.h"
 #include "TimeSerialModification.h"
-#include "FmiOperationProgressDlg.h"
+#include "CFmiOperationProgressAndCancellationDlg.h"
 #include "SmartMetToolboxDep_resource.h"
 #include "NFmiBasicSmartMetConfigurations.h"
 #include "NFmiCPManagerSet.h"
@@ -2747,7 +2747,7 @@ bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDr
             operationTextIsWarning = true;
         }
 		NFmiStopFunctor stopper;
-		CFmiOperationProgressDlg dlg(operationText, operationTextIsWarning, stopper, ApplicationInterface::GetSmartMetViewAsCView());
+		CFmiOperationProgressAndCancellationDlg dlg(operationText, operationTextIsWarning, stopper, ApplicationInterface::GetSmartMetViewAsCView());
 		NFmiThreadCallBacks threadCallBacks(&stopper, &dlg);
 
 		FmiModifyEditdData::ModifyFunctionParamHolder modifyFunctionParamHolder(GenDocDataAdapter());
@@ -2776,7 +2776,7 @@ bool DoSmartToolEditing(const std::string &theSmartToolText, const std::string &
     std::string operationText = ::GetDictionaryString("Doing smarttool modifications...");
     bool operationTextIsWarning = false;
     NFmiStopFunctor stopper;
-	CFmiOperationProgressDlg dlg(operationText, operationTextIsWarning, stopper, ApplicationInterface::GetSmartMetViewAsCView());
+	CFmiOperationProgressAndCancellationDlg dlg(operationText, operationTextIsWarning, stopper, ApplicationInterface::GetSmartMetViewAsCView());
 	NFmiThreadCallBacks threadCallBacks(&stopper, &dlg);
 
 	FmiModifyEditdData::ModifyFunctionParamHolder modifyFunctionParamHolder(GenDocDataAdapter());

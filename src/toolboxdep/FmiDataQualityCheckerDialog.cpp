@@ -8,7 +8,7 @@
 #include "SmartMetDocumentInterface.h"
 #include "NFmiDataQualityChecker.h"
 #include "NFmiQueryDataUtil.h"
-#include "FmiOperationProgressDlg.h"
+#include "CFmiOperationProgressAndCancellationDlg.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiQueryData.h"
 #include "FmiGdiPlusHelpers.h"
@@ -118,7 +118,7 @@ void CFmiDataQualityCheckerDialog::OnBnClickedButtonDoQualityCheck()
 
 	// Tehdään datan chekkaukselle progress ja peruutus dialogi ja toiminnot.
 	NFmiStopFunctor stopper;
-	CFmiOperationProgressDlg dlg(::GetDictionaryString("Calculating edited data's quality checks"), false, stopper, this);
+	CFmiOperationProgressAndCancellationDlg dlg(::GetDictionaryString("Calculating edited data's quality checks"), false, stopper, this);
 	NFmiThreadCallBacks threadCallBacks(&stopper, &dlg);
 
 	// Luodaaan ja laitetaan työ-threadi käyntiin.
