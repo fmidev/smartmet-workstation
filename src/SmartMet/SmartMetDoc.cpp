@@ -69,7 +69,6 @@
 #include "NFmiWindTableSystem.h"
 #include "FmiLocationFinderDlg.h"
 #include "NFmiAutoComplete.h"
-#include "FmiOperationProgressDlg.h"
 #include "NFmiDataQualityChecker.h"
 #include "FmiDataQualityCheckerDialog.h"
 #include "FmiDataLoadingThread2.h"
