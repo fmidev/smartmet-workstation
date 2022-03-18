@@ -34,6 +34,7 @@ void CFmiOperationProgressAndCancellationDlg::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CFmiOperationProgressAndCancellationDlg, CDialogEx)
+	ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
 
@@ -63,7 +64,7 @@ BOOL CFmiOperationProgressAndCancellationDlg::OnInitDialog()
 
 	itsOperationProgressBar.SetRange(0, 100);
 	itsOperationProgressBar.SetStep(1);
-//	itsOperationProgressBar.SetShowPercent(TRUE);
+	itsOperationProgressBar.SetShowPercent(TRUE);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
@@ -145,4 +146,22 @@ BOOL CFmiOperationProgressAndCancellationDlg::OnWndMsg(UINT message, WPARAM wPar
 		CDialog::OnCancel();
 
 	return CDialogEx::OnWndMsg(message, wParam, lParam, pResult);
+}
+
+HBRUSH CFmiOperationProgressAndCancellationDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	// Värjätään operaatioon liittyvä teksti punaisella, jos se on varoitus 
+	// ja mustalla, jos ei.
+	if(pWnd->GetDlgCtrlID() == IDC_STATIC_OPERATION_PROGRESS_STR)
+	{
+		if(fOperationTextIsWarning)
+			pDC->SetTextColor(RGB(255, 0, 0));
+		else
+			pDC->SetTextColor(RGB(0, 0, 0));
+	}
+
+	// TODO:  Return a different brush if the default is not desired
+	return hbr;
 }
