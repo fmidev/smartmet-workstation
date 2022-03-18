@@ -2,6 +2,7 @@
 
 #include "SmartMetToolboxDep_resource.h"
 #include "NFmiQueryDataUtil.h"
+#include "TextProgressCtrl.h"
 #include "afxdialogex.h"
 
 // CFmiOperationProgressAndCancellationDlg dialog
@@ -28,7 +29,7 @@ public:
 
 private:
 	CString itsOperationRelatedStrU_;
-	CProgressCtrl itsOperationProgressBar;
+	CTextProgressCtrl itsOperationProgressBar;
 	NFmiStopFunctor& itsStopper;
 	// Piirretäänkö operaatioon liittyvä teksti punaisella vai ei.
 	bool fOperationTextIsWarning;
@@ -42,4 +43,5 @@ protected:
 public:
 	virtual BOOL OnInitDialog();
 	virtual BOOL OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult);
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 };
