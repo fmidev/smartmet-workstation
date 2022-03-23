@@ -314,3 +314,8 @@ void ApplicationInterfaceForSmartMet::SetToDoFirstTimeWmsDataBasedUpdate()
 {
     CMainFrame::SetToDoFirstTimeWmsDataBasedUpdate();
 }
+
+void ApplicationInterfaceForSmartMet::OpenVisualizationsettingsDialog()
+{
+    GetDocument()->OnEditVisualizationsettings();
+}

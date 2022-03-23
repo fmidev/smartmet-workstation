@@ -154,4 +154,5 @@ public:
 	afx_msg void OnAcceleratorChangeTimeByStep3Backward();
 	afx_msg void OnAcceleratorChangeTimeByStep4Forward();
 	afx_msg void OnAcceleratorChangeTimeByStep4Backward();
+	afx_msg void OnEditVisualizationsettingsExtraMap();
 };

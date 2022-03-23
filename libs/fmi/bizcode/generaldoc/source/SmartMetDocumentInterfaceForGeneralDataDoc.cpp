@@ -1428,6 +1428,12 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::UpdateMacroParamDataGridSizeAft
     return itsDoc->UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();
 }
 
+void SmartMetDocumentInterfaceForGeneralDataDoc::OpenVisualizationsettingsDialog()
+{
+    if(ApplicationInterface::GetApplicationInterfaceImplementation)
+        ApplicationInterface::GetApplicationInterfaceImplementation()->OpenVisualizationsettingsDialog();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // =================================================
 
