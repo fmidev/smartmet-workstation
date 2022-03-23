@@ -213,7 +213,8 @@ class NFmiIsoLineView : public NFmiStationView
 	void SetUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam); // näitä on kutsuttava pareittain RestoreUpDifferenceDrawing-metodin kanssa
 	void RestoreUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam); // näitä on kutsuttava pareittain SetUpDifferenceDrawing-metodin kanssa
     CRect GetTrueClientRect();
- private:
+	void DoPossibleIsolineSafetyFeatureDownSizing(NFmiIsoLineData* theIsoLineDataInOut, const NFmiRect& zoomedAreaRect);
+private:
 	bool IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theCurrentZoomedMapArea, NFmiRect &theWantedNewZoomedAreaRect, int &theLeftIndex, int &theRightIndex, int &theTopIndex, int &theBottomIndex);
 	void DrawIsoLinesWithToolMaster(void);
 	void DrawIsoLines(void);
