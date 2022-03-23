@@ -2071,6 +2071,7 @@ bool NFmiIsoLineView::FillGridRelatedData_ZoomingChecks(NFmiIsoLineData& isoLine
         isoLineData.itsInfo = itsInfo;
         isoLineData.itsParam = itsInfo->Param();
         isoLineData.itsTime = this->itsTime;
+        isoLineData.fUseOriginalDataInPixelToGridRatioCalculations = true;
 
         EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // k‰yd‰‰n kaikki pisteet l‰pi
         fillGridDataStatus = FillIsoLineDataWithGridData(isoLineData, x1, y1, x2, y2);
@@ -2137,17 +2138,82 @@ void NFmiIsoLineView::DoGridRelatedVisualization(NFmiIsoLineData &isoLineData, N
         std::lock_guard<std::mutex> toolMasterLock(NFmiIsoLineView::sToolMasterOperationMutex);
         if(FillIsoLineVisualizationInfo(itsDrawParam, &isoLineData, true, itsInfo->IsGrid() == false))
         {
-            NFmiPoint grid2PixelRatio = CalcGrid2PixelRatio(isoLineData);
+            NFmiPoint pixelToGridRatio = CalcPixelToGridRatio(isoLineData, zoomedAreaRect);
             NFmiRect relRect(GetFrame());
             AdjustZoomedAreaRect(zoomedAreaRect);
             if(itsDrawParam->IsMacroParamCase(true))
             {
                 isoLineData.itsParam.GetParam()->SetName(itsDrawParam->ParameterAbbreviation());
             }
-            ::ToolMasterDraw(itsToolBox->GetDC(), &isoLineData, relRect, zoomedAreaRect, grid2PixelRatio, -1, GetVisualizationSettings());
+            ::ToolMasterDraw(itsToolBox->GetDC(), &isoLineData, relRect, zoomedAreaRect, pixelToGridRatio, -1, GetVisualizationSettings());
         }
     }
     RestoreUpDifferenceDrawing(itsDrawParam);
+}
+
+static void CalcDownSizedMatrix(const NFmiDataMatrix<float>& theOrigData, NFmiDataMatrix<float>& theDownSizedData, const NFmiParam& param)
+{
+    auto paramId = static_cast<FmiParameterName>(param.GetIdent());
+    auto interpolationMethod = param.InterpolationMethod();
+    auto dontInvertY = true;
+    double xDiff = 1.0 / (theDownSizedData.NX() - 1.0);
+    double yDiff = 1.0 / (theDownSizedData.NY() - 1.0);
+    for(size_t j = 0; j < theDownSizedData.NY(); j++)
+    {
+        for(size_t i = 0; i < theDownSizedData.NX(); i++)
+        {
+            NFmiPoint pt(i * xDiff, j * yDiff);
+            if(pt.X() > 1.)
+                pt.X(1.); // t‰m‰ on varmistus, jos laskenta tarkkuus ongelmat vie rajan yli
+            if(pt.Y() > 1.)
+                pt.Y(1.); // t‰m‰ on varmistus, jos laskenta tarkkuus ongelmat vie rajan yli
+            theDownSizedData[i][j] = theOrigData.InterpolatedValue(pt, paramId, dontInvertY, interpolationMethod);
+        }
+    }
+}
+
+static void BuildDownSizedData(NFmiIsoLineData& theOrigIsoLineData, NFmiIsoLineData& theDownSizedIsoLineData, const NFmiPoint& theDownSizeFactor)
+{
+    int newSizeX = boost::math::iround(theOrigIsoLineData.itsXNumber / theDownSizeFactor.X());
+    int newSizeY = boost::math::iround(theOrigIsoLineData.itsYNumber / theDownSizeFactor.Y());
+    // T‰ytet‰‰n uuden isolineDatan hila-arvot halutuille osaalueilleen.
+    NFmiDataMatrix<float> downSizedGridData(newSizeX, newSizeY, kFloatMissing);
+    ::CalcDownSizedMatrix(theOrigIsoLineData.itsIsolineData, downSizedGridData, *theOrigIsoLineData.itsParam.GetParam());
+
+    // Alustetaan uusi isolinedata harvennetulla matriisilla ja sen piirtoasetukset otetaan originaalista
+    theDownSizedIsoLineData.InitIsoLineData(downSizedGridData, &theOrigIsoLineData);
+}
+
+static std::string MakeIsoLineDataGridSizeString(NFmiIsoLineData* theIsoLineData)
+{
+    std::string str = std::to_string(theIsoLineData->itsXNumber);
+    str += " x ";
+    str += std::to_string(theIsoLineData->itsYNumber);
+    return str;
+}
+
+void NFmiIsoLineView::DoPossibleIsolineSafetyFeatureDownSizing(NFmiIsoLineData* theIsoLineDataInOut, const NFmiRect& zoomedAreaRect)
+{
+    NFmiPoint pixelToGridRatio = CalcPixelToGridRatio(*theIsoLineDataInOut, zoomedAreaRect);
+    NFmiPoint downSizeFactor;
+    // Toolmaster piirto bugi ilmenee kun hila vs. pikseli suhde on n. 1 tai alle. Kierr‰n siten ongelman niin ett‰ kun t‰m‰
+    // ratio on tarpeeksi pieni, lasken uuden hila koon, niin ett‰ sen suhdeluku on minimiss‰‰n 1.3 ja interpoloin t‰ll‰iseen
+    // uuteen hilaan datan. T‰m‰n j‰lkeen piirto onnistuu ilman ongelmia, eik‰ asiakas huomaa juuri mit‰‰n.
+    bool doDownSize = IsolineDataDownSizingNeeded(*theIsoLineDataInOut, pixelToGridRatio, downSizeFactor, itsDrawParam);
+    if(doDownSize)
+    {
+        NFmiIsoLineData downSizedIsoLineData;
+        ::BuildDownSizedData(*theIsoLineDataInOut, downSizedIsoLineData, downSizeFactor);
+        std::string logMessage = "Down-sizing isoline data for safety reasons from ";
+        logMessage += ::MakeIsoLineDataGridSizeString(theIsoLineDataInOut);
+        logMessage += " to ";
+        logMessage += ::MakeIsoLineDataGridSizeString(&downSizedIsoLineData);
+        itsCtrlViewDocumentInterface->LogAndWarnUser(logMessage, "dummy dialog title", CatLog::Severity::Debug, CatLog::Category::Visualization, true);
+        
+        // Korvataan havennetulla datalla piirrett‰v‰ data
+        *theIsoLineDataInOut = downSizedIsoLineData;
+        UpdateOptimizedGridValues(zoomedAreaRect, downSizedIsoLineData.itsXNumber, downSizedIsoLineData.itsYNumber);
+    }
 }
 
 void NFmiIsoLineView::DrawIsoLinesWithToolMaster(void)
@@ -2159,6 +2225,7 @@ void NFmiIsoLineView::DrawIsoLinesWithToolMaster(void)
         NFmiRect zoomedAreaRect;
         if(FillGridRelatedData(isoLineData, zoomedAreaRect))
         {
+            DoPossibleIsolineSafetyFeatureDownSizing(&isoLineData, zoomedAreaRect);
             DoGridRelatedVisualization(isoLineData, zoomedAreaRect);
         }
     }
@@ -2166,7 +2233,7 @@ void NFmiIsoLineView::DrawIsoLinesWithToolMaster(void)
 
 bool NFmiIsoLineView::FillIsoLineDataWithGridData(NFmiIsoLineData& theIsoLineData, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid)
 {
-    if(CalcViewFloatValueMatrix(itsIsolineValues, x1, y1, x2, y2, optimizedDataGrid) == false)
+    if(CalcViewFloatValueMatrix(itsIsolineValues, x1, y1, x2, y2, theIsoLineData.fUseOriginalDataInPixelToGridRatioCalculations, optimizedDataGrid) == false)
         return false;
 
     return initializeIsoLineData(theIsoLineData);

@@ -103,7 +103,10 @@ bool NFmiIsoLineData::InitIsoLineData(const NFmiDataMatrix<float>& theValueMatri
 	BaseInitialization(theValueMatrix);
 	::DoMatrixDataInitialization(itsIsolineData, itsVectorFloatGridData, itsDataMinValue, itsDataMaxValue);
 	if(otherIsoLineData)
+	{
 		InitDrawOptions(*otherIsoLineData);
+		itsInfo = otherIsoLineData->itsInfo;
+	}
 	return true;
 }
 

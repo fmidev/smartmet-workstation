@@ -131,7 +131,7 @@ protected:
    // Tämä hakee näytettävän datan riippuen asetuksista
    virtual float ViewFloatValue(bool doTooltipValue); 
    virtual void SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo); // tarvittavat jutut optimointia varten
-   bool CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid = nullptr);
+   bool CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2, bool & useOriginalDataInPixelToGridRatioCalculations, NFmiGrid* optimizedDataGrid = nullptr);
    virtual int GetApproxmationOfDataTextLength(std::vector<float> *sampleValues = nullptr);
    virtual NFmiPoint GetSpaceOutFontFactor(void);
    virtual NFmiColor GetBasicParamRelatedSymbolColor(float theValue) const;
@@ -239,9 +239,12 @@ protected:
    boost::shared_ptr<NFmiFastQueryInfo> CreateNewResizedMacroParamData(const NFmiPoint& newGridSize);
    bool IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut, boost::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfoOut);
    bool IsMacroParamContourDataDownSized(const boost::shared_ptr<NFmiFastQueryInfo> & possibleMacroParamResolutionInfo, NFmiPoint& newGridSizeOut);
-   NFmiPoint CalcGrid2PixelRatio(NFmiIsoLineData& theIsoLineData);
+   NFmiPoint CalcPixelToGridRatio(NFmiIsoLineData& theIsoLineData, const NFmiRect& zoomedAreaRect);
    void DrawCountryBordersToMapView();
    int CalcViewGridSize();
+   bool IsolineDataDownSizingNeeded(const NFmiIsoLineData& theIsoLineData, const NFmiPoint& thePixelToGridPointRatio, NFmiPoint& theDownSizeFactorOut, const boost::shared_ptr<NFmiDrawParam>& thePossibleDrawParam);
+   bool IsDownSizingNeeded(const NFmiPoint& thePixelToGridPointRatio, double usedPixelToGridPointRatio, NFmiPoint& theDownSizeFactorOut);
+   void UpdateOptimizedGridValues(const NFmiRect& dataAreaXyRect, int gridSizeX, int gridSizeY);
 
    NFmiRect itsGeneralStationRect;
    FmiParameterName itsParamId;

@@ -267,13 +267,14 @@ bool NFmiStationView::PrepareForStationDraw(void)
 	if(!itsInfo) // tämä alustetaan jo SetMapViewSettings-metodissa
 		return false;
     SetupPossibleWindMetaParamData();
+	bool dummyBoolNotUsed = false;
 	if(NFmiDrawParam::IsMacroParamCase(itsInfo->DataType()))
 	{
 		if(itsDrawParam->IsParamHidden() == false)
 		{
 			unsigned long currentLocationIndex = itsInfo->LocationIndex();
 			fUseMacroParamSpecialCalculations = true;
-			CalcViewFloatValueMatrix(itsMacroParamSpecialCalculationsValues, 0, 0, 0, 0); // datahila pitää laskea jo tässä
+			CalcViewFloatValueMatrix(itsMacroParamSpecialCalculationsValues, 0, 0, 0, 0, dummyBoolNotUsed); // datahila pitää laskea jo tässä
 			itsInfo->LocationIndex(currentLocationIndex); // CalcViewFloatValueMatrix nollaa paikan, joten se pitää asettaa tässä takaisin
 		}
 	}
@@ -285,7 +286,7 @@ bool NFmiStationView::PrepareForStationDraw(void)
 	}
 	else if(fGetCurrentDataFromQ2Server)
 	{
-		CalcViewFloatValueMatrix(itsQ2ServerDataValues, 0, 0, 0, 0);
+		CalcViewFloatValueMatrix(itsQ2ServerDataValues, 0, 0, 0, 0, dummyBoolNotUsed);
 	}
 	else if(!itsInfo->Time(itsTime))
 	{
@@ -474,8 +475,9 @@ int NFmiStationView::GetApproxmationOfDataTextLength(std::vector<float> *sampleV
             return CalcApproxmationOfDataTextLength(*sampleValues);
 		else if(itsDrawParam->DoSparseSymbolVisualization() && itsInfo->IsGrid())
 		{
+			bool dummyBoolNotUsed = false;
 			NFmiDataMatrix<float> valueMatrix;
-			if(CalcViewFloatValueMatrix(valueMatrix, 0, 0, 0, 0))
+			if(CalcViewFloatValueMatrix(valueMatrix, 0, 0, 0, 0, dummyBoolNotUsed))
 			{
 				std::vector<float> fullFieldValues = ::MatrixToVector(valueMatrix);
 				return CalcApproxmationOfDataTextLength(fullFieldValues);
@@ -1416,9 +1418,9 @@ bool NFmiStationView::IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut
 		{
 			NFmiIsoLineData isoLineData;
 			::SetupIsolineData(possibleMacroParamResolutionInfoOut, isoLineData);
-			NFmiPoint grid2PixelRatio = CalcGrid2PixelRatio(isoLineData);
+			NFmiPoint pixelToGridRatio = CalcPixelToGridRatio(isoLineData, NFmiRect(0, 0, 1, 1));
 			NFmiPoint downSizeFactor;
-			if(IsolineDataDownSizingNeeded(isoLineData, grid2PixelRatio, GetVisualizationSettings(), downSizeFactor, itsDrawParam))
+			if(IsolineDataDownSizingNeeded(isoLineData, pixelToGridRatio, downSizeFactor, itsDrawParam))
 			{
 				// Tehdään tässä floor, koska muuten myöhemmin (tm_utils\source\ToolMasterDrawingFunctions.cpp:ssä) saatetaan luulla että tarvitsee harventaa lisää
 				auto newSizeX = std::floor(isoLineData.itsXNumber / downSizeFactor.X());
@@ -1443,9 +1445,9 @@ bool NFmiStationView::IsMacroParamContourDataDownSized(const boost::shared_ptr<N
 		{
 			NFmiIsoLineData isoLineData;
 			::SetupIsolineData(possibleMacroParamResolutionInfo, isoLineData);
-			NFmiPoint grid2PixelRatio = CalcGrid2PixelRatio(isoLineData);
+			NFmiPoint pixelToGridRatio = CalcPixelToGridRatio(isoLineData, NFmiRect(0, 0, 1, 1));
 			NFmiPoint downSizeFactor;
-			if(::IsDownSizingNeeded(grid2PixelRatio, GetVisualizationSettings().criticalPixelToGridPointRatioLimitForContours(), downSizeFactor))
+			if(IsDownSizingNeeded(pixelToGridRatio, GetVisualizationSettings().criticalPixelToGridPointRatioLimitForContours(), downSizeFactor))
 			{
 				// Tehdään tässä ceil, koska muuten myöhemmin (tm_utils\source\ToolMasterDrawingFunctions.cpp:ssä) luullaan että ei tarvitse tarvitse laittaa quick-contour optiota päälle ollenkaan
 				auto newSizeX = std::ceil(isoLineData.itsXNumber / downSizeFactor.X());
@@ -1462,10 +1464,10 @@ bool NFmiStationView::IsMacroParamContourDataDownSized(const boost::shared_ptr<N
 // Lasketaan käytetyn datan hilan ja näytön pikseleiden suhdeluku x- ja y-suunnassa.
 // Jos kyse ei hiladatasta, tai esim. makrosta (smarttool/q3), lasketaan isolinedatan ja arean avulla kertoimet.
 // Jos x/y arvo on 0, jätetään tämä huomiotta.
-NFmiPoint NFmiStationView::CalcGrid2PixelRatio(NFmiIsoLineData& theIsoLineData)
+NFmiPoint NFmiStationView::CalcPixelToGridRatio(NFmiIsoLineData& theIsoLineData, const NFmiRect& zoomedAreaRect)
 {
 	NFmiPoint grid2PixelRatio(0, 0);
-	if(theIsoLineData.itsInfo && theIsoLineData.itsInfo->Grid())
+	if(theIsoLineData.fUseOriginalDataInPixelToGridRatioCalculations && theIsoLineData.itsInfo && theIsoLineData.itsInfo->Grid())
 	{
 		NFmiFastQueryInfo& usedInfo = *(theIsoLineData.itsInfo);
 		usedInfo.FirstLocation(); // laitetaan 1. hilapiste eli vasen alanurkka kohdalle
@@ -1487,9 +1489,9 @@ NFmiPoint NFmiStationView::CalcGrid2PixelRatio(NFmiIsoLineData& theIsoLineData)
 	}
 	else
 	{
-		double relGridPoinWidth = itsArea->Width() / (theIsoLineData.itsXNumber - 1.0);
+		double relGridPoinWidth = (zoomedAreaRect.Width() * itsArea->Width()) / (theIsoLineData.itsXNumber - 1.0);
 		grid2PixelRatio.X(itsToolBox->HXs(relGridPoinWidth));
-		double relGridPoinHeight = itsArea->Height() / (theIsoLineData.itsYNumber - 1.0);
+		double relGridPoinHeight = (zoomedAreaRect.Height() * itsArea->Height()) / (theIsoLineData.itsYNumber - 1.0);
 		grid2PixelRatio.Y(itsToolBox->HYs(relGridPoinHeight));
 	}
 
@@ -2468,7 +2470,7 @@ void NFmiStationView::CalculateDifferenceToOriginalDataMatrix(NFmiDataMatrix<flo
 }
 
 // Otetaan visualizationOptimazation:in harvennetut hilakoot tarvittavissa kohdissa käyttöön
-bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid)
+bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2, bool& useOriginalDataInPixelToGridRatioCalculations, NFmiGrid* optimizedDataGrid)
 {
 	bool status = true;
     NFmiGrid usedGrid; // tämän avulla lasketaan maski laskut
@@ -2529,7 +2531,10 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 			if(optimizedDataGrid)
 				usedGrid = *optimizedDataGrid;
 			else
+			{
 				usedGrid = GetUsedGrid(usedGrid, itsInfo, theValues, useCropping, x1, y1, x2, y2);
+				useOriginalDataInPixelToGridRatioCalculations = true;
+			}
 		}
 	}
 
@@ -3942,3 +3947,60 @@ void NFmiStationView::SbdDoSymbolDraw(bool doStationPlotOnly)
 }
 
 // ******** Symbol-Bulk-Draw toimintojen loppu *********
+
+static bool IsIsolinesDrawn(const NFmiIsoLineData& theOrigIsoLineData)
+{
+	if(theOrigIsoLineData.fUseIsoLines)
+		return true;
+	return false;
+}
+
+static bool IsIsolinesDrawn(const boost::shared_ptr<NFmiDrawParam>& thePossibleDrawParam)
+{
+	auto gridDataDrawStyle = thePossibleDrawParam->GridDataPresentationStyle();
+	return gridDataDrawStyle == NFmiMetEditorTypes::View::kFmiIsoLineView || gridDataDrawStyle == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView;
+}
+
+bool NFmiStationView::IsolineDataDownSizingNeeded(const NFmiIsoLineData& theIsoLineData, const NFmiPoint& thePixelToGridPointRatio, NFmiPoint& theDownSizeFactorOut, const boost::shared_ptr<NFmiDrawParam>& thePossibleDrawParam)
+{
+	auto& visSettings = GetVisualizationSettings();
+	if(!visSettings.usePixelToGridPointRatioSafetyFeature())
+		return false;
+
+	if(thePossibleDrawParam)
+	{
+		if(!::IsIsolinesDrawn(thePossibleDrawParam))
+			return false;
+	}
+	else if(!::IsIsolinesDrawn(theIsoLineData))
+		return false;
+
+	double usedPixelToGridPointRatio = visSettings.pixelToGridPointRatio();
+	return IsDownSizingNeeded(thePixelToGridPointRatio, usedPixelToGridPointRatio, theDownSizeFactorOut);
+}
+
+static double CalcFinalDownSizeRatio(double criticalRatio, double currentRatio)
+{
+	if(currentRatio)
+	{
+		if(currentRatio < criticalRatio)
+			return criticalRatio / currentRatio;
+	}
+	return 1.;
+}
+
+bool NFmiStationView::IsDownSizingNeeded(const NFmiPoint& thePixelToGridPointRatio, double usedPixelToGridPointRatio, NFmiPoint& theDownSizeFactorOut)
+{
+	const NFmiPoint zeroChangeFactor(1, 1);
+	theDownSizeFactorOut.X(::CalcFinalDownSizeRatio(usedPixelToGridPointRatio, thePixelToGridPointRatio.X()));
+	theDownSizeFactorOut.Y(::CalcFinalDownSizeRatio(usedPixelToGridPointRatio, thePixelToGridPointRatio.Y()));
+	return theDownSizeFactorOut != zeroChangeFactor;
+}
+
+void NFmiStationView::UpdateOptimizedGridValues(const NFmiRect& dataAreaXyRect, int gridSizeX, int gridSizeY)
+{
+	NFmiPoint bottomLeftLatlon = itsArea->ToLatLon(dataAreaXyRect.BottomLeft());
+	NFmiPoint topRightLatlon = itsArea->ToLatLon(dataAreaXyRect.TopRight());
+	std::unique_ptr<NFmiArea> dataGridArea(itsArea->CreateNewArea(bottomLeftLatlon, topRightLatlon));
+	itsOptimizedGridPtr.reset(new NFmiGrid(dataGridArea.get(), gridSizeX, gridSizeY));
+}
