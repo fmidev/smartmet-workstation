@@ -52,4 +52,5 @@ public:
     void ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag) override;
     std::pair<HICON, HICON> GetUsedIcons() override;
     void SetToDoFirstTimeWmsDataBasedUpdate() override;
+    void OpenVisualizationsettingsDialog() override;
 };

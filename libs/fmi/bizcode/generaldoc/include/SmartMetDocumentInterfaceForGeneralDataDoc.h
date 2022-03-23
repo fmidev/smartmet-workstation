@@ -294,6 +294,7 @@ public:
     NFmiParameterInterpolationFixer& ParameterInterpolationFixer() override;
     void ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag) override;
     void UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged() override;
+    void OpenVisualizationsettingsDialog() override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem() override;
