@@ -2716,23 +2716,6 @@ bool CheckEditedDataForStartUpLoadErrors(int theMessageBoxButtunOptions)
 	return true;
 }
 
-// Heitt‰‰ poikkeuksen, jos on tehty varoitus
-void WarnUserIfProblemWithEditedData(bool fCancelPossible)
-{
-	if(EditedDataNotInPreferredState())
-	{
-		std::string msgStr("Current edited data is not suitable to be sent to the database.\n\n");
-		if(fCancelPossible)
-			msgStr += "SmartMet won't do what you were going to do here now, but next time there is no warning and\nSmartMet wil do this even if it's not preferred action.\n\n";
-		else
-			msgStr += "SmartMet will do the modifications you were going to do here.\n\n";
-		msgStr += "YOU SHOULD do the data loading properly:\n\n => Press Load Data -button 'after' pressing OK button here.";
-		std::string dlgTitleStr("Problems with current edited data!");
-        ::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(msgStr.c_str()), CA2T(dlgTitleStr.c_str()), MB_OK | MB_ICONERROR);
-		throw std::runtime_error("Cancel editing action");
-	}
-}
-
 bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1)
 {
 	// Tehd‰‰n aikasarjamuokkauksille progress ja peruutus dialogi ja toiminnot.
