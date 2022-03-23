@@ -69,6 +69,7 @@
 #include "datautilities\DataUtilitiesAdapter.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "NFmiVisualizationSpaceoutSettings.h"
+#include "NFmiDataMatrixUtils.h"
 
 #include <limits>
 
@@ -2222,7 +2223,7 @@ static void CalcDownSizedMatrix(const NFmiDataMatrix<float>& theOrigData, NFmiDa
                 pt.X(1.); // tämä on varmistus, jos laskenta tarkkuus ongelmat vie rajan yli
             if(pt.Y() > 1.)
                 pt.Y(1.); // tämä on varmistus, jos laskenta tarkkuus ongelmat vie rajan yli
-            theDownSizedData[i][j] = theOrigData.InterpolatedValue(pt, paramId, dontInvertY, interpolationMethod);
+            theDownSizedData[i][j] = DataMatrixUtils::InterpolatedValue(theOrigData, pt, paramId, dontInvertY, interpolationMethod);
         }
     }
 }
