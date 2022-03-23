@@ -1583,8 +1583,11 @@ void CSmartMetDoc::LoadDataFromFileAndAdd(const std::string &theFileName, NFmiIn
 
             if(theDatatype == NFmiInfoData::kEditable)
             {
-				itsData->EditedDataNotInPreferredState(false); // t‰m‰ pit‰‰ asettaa varmuuden vuoksi falseksi, oletetaan ett‰ kaikki tiputetut tai erikseen ladattavat editoitavat datat ovat 'halutussa' tilassa eli eiv‰t ole liian vanhoja.
-                SetPathName(CA2T(theFileName.c_str())); // pit‰‰ laittaa AddData:n j‰lkeen, muuten tiedoston nimi ei tule oikein ohjelman otsikkoon.
+				if(ApplicationWinRegistry().ConfigurationRelatedWinRegistry().DroppedDataEditable())
+					itsData->EditedDataNotInPreferredState(false); // Tiputettu data ladataan editoitavaksi
+				else
+					itsData->EditedDataNotInPreferredState(true); // Tiputettu data on read-only modessa
+				SetPathName(CA2T(theFileName.c_str())); // pit‰‰ laittaa AddData:n j‰lkeen, muuten tiedoston nimi ei tule oikein ohjelman otsikkoon.
             }
         }
 	}
