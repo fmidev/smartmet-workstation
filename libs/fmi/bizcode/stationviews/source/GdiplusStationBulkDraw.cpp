@@ -19,10 +19,13 @@ namespace
 		for(size_t index = 0; index < sbdData.values().size(); index++)
 		{
 			auto value = sbdData.values()[index];
-			std::string codeStr = boost::lexical_cast<std::string>(value);
-			Gdiplus::Bitmap* symbolBitmap = usedSymbolMap.GetRightSizeImage(symbolSizeInPixels, printing, codeStr);
-			symbolRect.Center(sbdData.relativeStationPointPositions()[index]);
-			CtrlView::DrawAnimationButton(symbolRect, symbolBitmap, &gdiPlusGraphics, toolBox, printing, sbdData.mapViewSizeInPixels(), 1.f, true);
+			if(value != kFloatMissing)
+			{
+				std::string codeStr = boost::lexical_cast<std::string>(value);
+				Gdiplus::Bitmap* symbolBitmap = usedSymbolMap.GetRightSizeImage(symbolSizeInPixels, printing, codeStr);
+				symbolRect.Center(sbdData.relativeStationPointPositions()[index]);
+				CtrlView::DrawAnimationButton(symbolRect, symbolBitmap, &gdiPlusGraphics, toolBox, printing, sbdData.mapViewSizeInPixels(), 1.f, true);
+			}
 		}
 	}
 
