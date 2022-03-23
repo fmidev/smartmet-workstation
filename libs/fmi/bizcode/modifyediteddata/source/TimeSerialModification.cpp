@@ -192,34 +192,26 @@ static void ModifyTimesLocationData_FullMT(boost::shared_ptr<NFmiFastQueryInfo> 
 
 
 // Heitt‰‰ poikkeuksen, jos on tehty varoitus
-static void WarnUserIfProblemWithEditedData(TimeSerialModificationDataInterface &theAdapter, bool fCancelPossible)
+static void PreventEditingIfProblemWithEditedData(TimeSerialModificationDataInterface &theAdapter)
 {
 	if(theAdapter.EditedDataNotInPreferredState())
 	{
-		std::string msgStr("Current edited data is not suitable to be sent to the database.\n\n");
-		if(fCancelPossible)
-			msgStr += "SmartMet won't do what you were going to do here now, but next time there is no warning and\nSmartMet wil do this even if it's not preferred action.\n\n";
-		else
-			msgStr += "SmartMet will do the modifications you were going to do here.\n\n";
+		std::string msgStr("Current edited data is not suitable for editing or to be sent to the database.\n\n");
+		msgStr += "SmartMet won't let you to do the editing you were going to do here now, nor later.\n\n";
 		msgStr += "YOU SHOULD do the data loading properly:\n\n => Press Load Data -button 'after' pressing OK button here.";
-		std::string dlgTitleStr("Problems with current edited data!");
+		std::string dlgTitleStr("Current edited data not editable!");
 		theAdapter.DoMessageBox(msgStr, dlgTitleStr, FMI_MB_OK | FMI_MB_ICONERROR);
-		throw std::runtime_error("Cancel editing action");
+		throw std::runtime_error("Cancelled editing action due not suitable data, data was not loaded correctly");
 	}
 }
 
 // t‰ss‰ tehd‰‰n yhteiset perus toiminnot kaikille snapShot-funktioille
 // Heitt‰‰ poikkeuksen, jos on tehty varoitus
-static void SnapShotDataBaseAction(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const std::string &theModificationText
-				 , const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime)
+static void SnapShotDataBaseAction(TimeSerialModificationDataInterface& theAdapter, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const std::string& theModificationText
+	, const NFmiMetTime& theStartTime, const NFmiMetTime& theEndTime)
 {
-	static bool firstTime = true;
-	if(firstTime)
-	{
-		firstTime = false;
-		::WarnUserIfProblemWithEditedData(theAdapter, true);
-	}
-	NFmiSmartInfo *smartInfo = dynamic_cast<NFmiSmartInfo*>(theInfo.get());
+	::PreventEditingIfProblemWithEditedData(theAdapter);
+	NFmiSmartInfo* smartInfo = dynamic_cast<NFmiSmartInfo*>(theInfo.get());
 	if(smartInfo)
 	{
 		smartInfo->SnapShotData(theModificationText); // otetaan kuva datan nykytilasta
