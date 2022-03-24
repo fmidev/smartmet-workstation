@@ -4271,7 +4271,10 @@ std::string NFmiStationViewHandler::ComposeToolTipText(const NFmiPoint& theRelat
 		str += ComposeMapLayerToolTipText(true);
 		str += "<hr color=red>";
 		str += "\n";
-		str += itsCtrlViewDocumentInterface->ApplicationWinRegistry().VisualizationSpaceoutSettings().composePossibleTooltipWarningText();
+
+		auto viewGridSizePoint = itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex);
+		auto viewGridSize = int(viewGridSizePoint.X() * viewGridSizePoint.Y());
+		str += itsCtrlViewDocumentInterface->ApplicationWinRegistry().VisualizationSpaceoutSettings().composePossibleTooltipWarningText(*itsMapArea, viewGridSize);
 
 		if(!itsViewList->NumberOfItems())
 		{

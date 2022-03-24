@@ -259,7 +259,7 @@ double NFmiVisualizationSpaceoutSettings::criticalPixelToGridPointRatioLimitForC
     return criticalPixelToGridPointRatioLimitForContours_;
 }
 
-std::string NFmiVisualizationSpaceoutSettings::composePossibleTooltipWarningText() const
+std::string NFmiVisualizationSpaceoutSettings::composePossibleTooltipWarningText(NFmiArea& area, int viewSubGridSize) const
 {
     const NFmiColor redColor(1, 0, 0);
     const NFmiColor orangeColor(0.87f, 0.44f, 0);
@@ -286,10 +286,11 @@ std::string NFmiVisualizationSpaceoutSettings::composePossibleTooltipWarningText
         str += "<b><font color=";
         str += ColorString::Color2HtmlColorStr(orangeColor);
         str += ">";
-        str += "[Visualizations optimized, grid ";
-        str += std::to_string(*baseSpaceoutGridSize_);
+        str += "[Visualizations optimized, ~";
+        auto baseGridSize = calcAreaGridSize(area, viewSubGridSize);
+        str += std::to_string(boost::math::iround(baseGridSize.X()));
         str += "x";
-        str += std::to_string(*baseSpaceoutGridSize_);
+        str += std::to_string(boost::math::iround(baseGridSize.Y()));
         str += " (F6)]";
         str += "</font></b>\n";
     }
