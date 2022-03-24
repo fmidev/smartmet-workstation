@@ -70,7 +70,7 @@ public:
 	bool checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, const NFmiArea& mapArea, NFmiGrid &optimizedGridOut, int viewSubGridSize) const;
 	NFmiPoint getCheckedPossibleOptimizedGridSize(const NFmiPoint& suggestedGridSize, NFmiArea& mapArea, int viewSubGridSize) const;
 	NFmiPoint calcAreaGridSize(NFmiArea& area, int viewSubGridSize) const;
-	std::string composePossibleTooltipWarningText() const;
+	std::string composePossibleTooltipWarningText(NFmiArea& area, int viewSubGridSize) const;
 
 	double criticalPixelToGridPointRatioLimit() const { return criticalPixelToGridPointRatioLimit_; }
 	double pixelToGridPointRatio() const;
