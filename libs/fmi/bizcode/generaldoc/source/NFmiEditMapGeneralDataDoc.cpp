@@ -1063,6 +1063,9 @@ void InitSmartToolSystem(void)
 	{
 		// t‰m‰ pit‰‰ tehd‰ dokumentin initialisoinnin yhteydess‰, ett‰ smarttoolintepreterin tuottaja listat alustetaan varmasti oikein!!!!
         NFmiSmartToolIntepreter intepreter(&itsProducerSystem, &itsObsProducerSystem);
+		// T‰m‰ korjaa mm. SymbolTooltipFile asetukset kuntoon, jos skriptiss‰ polku annetaan ilman drive-letter:i‰,
+		// mik‰ onkin jatkossa suositeltavaa.
+		NFmiSmartToolIntepreter::SetAbsoluteBasePath(BasicSmartMetConfigurations().ControlPath());
 	}
 	catch(std::exception &e)
 	{
