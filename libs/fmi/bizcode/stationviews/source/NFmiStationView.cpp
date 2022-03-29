@@ -2823,6 +2823,7 @@ void NFmiStationView::DrawControlPointData(void)
 
 			float height = static_cast<float>(itsToolBox->SY(pixels));
 			// float width = itsToolBox->SX(pixels);
+			itsDrawingEnvironment->SetFontType(kArial);
 			NFmiPoint fontSize(pixels, pixels);
 			NFmiPoint oldFontSize(itsDrawingEnvironment->GetFontWidth(), itsDrawingEnvironment->GetFontHeight());
 			NFmiColor oldFillColor(itsDrawingEnvironment->GetFillColor());
@@ -2841,7 +2842,8 @@ void NFmiStationView::DrawControlPointData(void)
 				NFmiPoint xy(itsArea->ToXY(latLonPoint));
 
 				float changeValue = static_cast<float>(CPMan->ChangeValue());
-				float modifiedValue = changeValue + info->InterpolatedValue(latLonPoint);
+				float actualValue = info->InterpolatedValue(latLonPoint);
+				float modifiedValue = (actualValue != kFloatMissing) ? (changeValue + actualValue) : kFloatMissing;
 				NFmiValueString str(changeValue, "%0.1f");
 				NFmiValueString modifiedStr(modifiedValue, "%0.1f");
 				NFmiValueString changeStr;
@@ -2849,6 +2851,10 @@ void NFmiStationView::DrawControlPointData(void)
 					modifiedStr = NFmiString("  ") + modifiedStr;
 				else if(modifiedValue > -10) // jos positiivinen luku, laitetaan varmuuden vuoksi space eteen, että saadaan mahdollinen '-'-merkki peittoon (piirron optimoinnista johtuva juttu)
 					modifiedStr = NFmiString(" ") + modifiedStr;
+				if(actualValue == kFloatMissing)
+				{
+					modifiedStr = "  -  ";
+				}
 				if(changeValue>0)
 					changeStr = "+";
 				changeStr += str;
