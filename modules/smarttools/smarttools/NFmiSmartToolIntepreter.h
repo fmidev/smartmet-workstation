@@ -147,6 +147,7 @@ class NFmiSmartToolIntepreter
   static VertFunctionMap& GetTokenVertFunctions() { return NFmiSmartToolIntepreter::itsTokenVertFunctions; }
   static FunctionMap& GetTokenThreeArgumentFunctions() { return itsTokenThreeArgumentFunctions; }
   static bool IsWantedStart(const std::string &theText, const std::string &theWantedStart);
+  static void SetAbsoluteBasePath(const std::string &theAbsoluteBasePath);
 
  private:
 
@@ -445,4 +446,7 @@ class NFmiSmartToolIntepreter
 
   static std::string itsBaseDelimiterChars;
   static std::string itsFullDelimiterChars;
+  // Ainakin SymbolTooltipFile:ä määriteltäessä on hyvä olla tiedossa SmartMetin käytössä oleva
+  // perushakemisto, josta tietyissä tilanteissa käytetään vain sen drive-letter:ia
+  static std::string itsAbsoluteBasePath;
 };

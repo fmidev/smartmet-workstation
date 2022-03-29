@@ -19,6 +19,7 @@
 #include "NFmiSimpleConditionInfo.h"
 #include "NFmiSmartToolCalculationInfo.h"
 #include "NFmiSmartToolCalculationSectionInfo.h"
+#include "NFmiPathUtils.h"
 #include "boost/algorithm/string.hpp"
 
 #include <newbase/NFmiEnumConverter.h>
@@ -181,8 +182,9 @@ NFmiSmartToolIntepreter::ResolutionLevelTypesMap NFmiSmartToolIntepreter::itsRes
 std::string NFmiSmartToolIntepreter::itsBaseDelimiterChars = "+-*/%^=(){}<>&|!,";
 std::string NFmiSmartToolIntepreter::itsFullDelimiterChars =
     NFmiSmartToolIntepreter::itsBaseDelimiterChars + " \t\n\r\0";
+std::string NFmiSmartToolIntepreter::itsAbsoluteBasePath = "";
 
-//--------------------------------------------------------
+    //--------------------------------------------------------
 // Constructor/Destructor
 //--------------------------------------------------------
 NFmiSmartToolIntepreter::NFmiSmartToolIntepreter(NFmiProducerSystem *theProducerSystem,
@@ -2478,6 +2480,11 @@ bool NFmiSmartToolIntepreter::IsWantedStart(const std::string &theText,
   return false;
 }
 
+void NFmiSmartToolIntepreter::SetAbsoluteBasePath(const std::string& theAbsoluteBasePath) 
+{
+  itsAbsoluteBasePath = theAbsoluteBasePath;
+}
+
 bool NFmiSmartToolIntepreter::FindParamAndSetMaskInfo(
     const std::string &theVariableText,
     ParamMap &theParamMap,
@@ -3099,6 +3106,8 @@ bool NFmiSmartToolIntepreter::ExtractSymbolTooltipFile()
     string pathToSymbolFile = std::string(exp_ptr, exp_end);
     // otetään edessä ja mahdolliset perässä olevat spacet pois
     NFmiStringTools::Trim(pathToSymbolFile);
+    pathToSymbolFile = PathUtils::fixMissingDriveLetterToAbsolutePath(pathToSymbolFile,
+                                                                   itsAbsoluteBasePath);
     if (NFmiFileSystem::FileExists(pathToSymbolFile))
     {
       itsExtraMacroParamData->SymbolTooltipFile(pathToSymbolFile);
