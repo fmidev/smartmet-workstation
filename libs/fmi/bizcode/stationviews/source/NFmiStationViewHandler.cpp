@@ -2016,108 +2016,80 @@ void NFmiStationViewHandler::DrawTimeText(void)
 		{
 			if(DrawTimeTextInThisMapViewTile())
 			{
-                CtrlViewUtils::GraphicalInfo graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
-				NFmiMapViewTimeLabelInfo &timeLabelInfo = itsCtrlViewDocumentInterface->MapViewTimeLabelInfo();
-				if(timeLabelInfo.UseOldTimeLabel() == false)
-				{
-                    const NFmiBetaProduct *currentBetaProduct = itsCtrlViewDocumentInterface->GetCurrentGeneratedBetaProduct();
-                    if(currentBetaProduct && currentBetaProduct->TimeBoxLocation() == kNoDirection)
-                        return;
+				CtrlViewUtils::GraphicalInfo graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+				NFmiMapViewTimeLabelInfo& timeLabelInfo = itsCtrlViewDocumentInterface->MapViewTimeLabelInfo();
 
-                    NFmiMetTime usedTimeboxTime = ::CalcUsedTimeboxTime(itsTime, currentBetaProduct);
-					// Aikatekstien varsinainen piirtokoodi alkaa
-                    NFmiString formatStr1 = ::MakeUsedTimeboxTimeFormatString(timeLabelInfo.TimeStringInfo1().itsTimeFormat, currentBetaProduct);
-                    NFmiString timeStr1(usedTimeboxTime.ToStr(formatStr1, itsCtrlViewDocumentInterface->Language()));
-                    NFmiString formatStr2 = ::MakeUsedTimeboxTimeFormatString(timeLabelInfo.TimeStringInfo2().itsTimeFormat, currentBetaProduct);
-                    NFmiString timeStr2(usedTimeboxTime.ToStr(formatStr2, itsCtrlViewDocumentInterface->Language()));
-					double singleViewGridHeightInMM = graphicalInfo.itsViewHeightInMM;
-					// lasketaan piirto alueen (yhden kartta ikkunan) mm koon mukainen koko kerroin, niin että aikateksteistä ei tule aina joka tapauksessa saman kokoisia
-					double sizeFactor = MathHelper::InterpolateWithTwoPoints(singleViewGridHeightInMM,
-											timeLabelInfo.ViewSize1(),
-											timeLabelInfo.ViewSize2(),
-											timeLabelInfo.SizeFactor1(),
-											timeLabelInfo.SizeFactor2(),
-											timeLabelInfo.MinFactor(),
-											timeLabelInfo.MaxFactor()
-										);
-					double font1SizeInMM = timeLabelInfo.TimeStringInfo1().itsFontSizeInMM * sizeFactor;
-					font1SizeInMM = FmiMax(timeLabelInfo.AbsoluteMinFontSizeInMM() , FmiMin(font1SizeInMM, timeLabelInfo.AbsoluteMaxFontSizeInMM()));
-					int font1Size = static_cast<int>(font1SizeInMM * graphicalInfo.itsPixelsPerMM_y * 1.88);
-					double font2SizeInMM = timeLabelInfo.TimeStringInfo2().itsFontSizeInMM * sizeFactor;
-					font2SizeInMM = FmiMax(timeLabelInfo.AbsoluteMinFontSizeInMM() , FmiMin(font2SizeInMM, timeLabelInfo.AbsoluteMaxFontSizeInMM()));
-					int font2Size = static_cast<int>(font2SizeInMM * graphicalInfo.itsPixelsPerMM_y * 1.88);
+				const NFmiBetaProduct* currentBetaProduct = itsCtrlViewDocumentInterface->GetCurrentGeneratedBetaProduct();
+				if(currentBetaProduct && currentBetaProduct->TimeBoxLocation() == kNoDirection)
+					return;
 
-				    Gdiplus::StringFormat stringFormat;
-					stringFormat.SetAlignment(Gdiplus::StringAlignmentCenter);
-					stringFormat.SetLineAlignment(Gdiplus::StringAlignmentNear);
-					std::wstring fontNameStr1 = CtrlView::StringToWString(timeLabelInfo.TimeStringInfo1().itsFontName);
-					Gdiplus::Font aFont1(fontNameStr1.c_str(), static_cast<Gdiplus::REAL>(font1Size), timeLabelInfo.TimeStringInfo1().fBold ? Gdiplus::FontStyleBold : Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
-					std::wstring wString1 = CtrlView::StringToWString(std::string(static_cast<char*>(timeStr1)));
+				NFmiMetTime usedTimeboxTime = ::CalcUsedTimeboxTime(itsTime, currentBetaProduct);
+				// Aikatekstien varsinainen piirtokoodi alkaa
+				NFmiString formatStr1 = ::MakeUsedTimeboxTimeFormatString(timeLabelInfo.TimeStringInfo1().itsTimeFormat, currentBetaProduct);
+				NFmiString timeStr1(usedTimeboxTime.ToStr(formatStr1, itsCtrlViewDocumentInterface->Language()));
+				NFmiString formatStr2 = ::MakeUsedTimeboxTimeFormatString(timeLabelInfo.TimeStringInfo2().itsTimeFormat, currentBetaProduct);
+				NFmiString timeStr2(usedTimeboxTime.ToStr(formatStr2, itsCtrlViewDocumentInterface->Language()));
+				double singleViewGridHeightInMM = graphicalInfo.itsViewHeightInMM;
+				// lasketaan piirto alueen (yhden kartta ikkunan) mm koon mukainen koko kerroin, niin että aikateksteistä ei tule aina joka tapauksessa saman kokoisia
+				double sizeFactor = MathHelper::InterpolateWithTwoPoints(singleViewGridHeightInMM,
+					timeLabelInfo.ViewSize1(),
+					timeLabelInfo.ViewSize2(),
+					timeLabelInfo.SizeFactor1(),
+					timeLabelInfo.SizeFactor2(),
+					timeLabelInfo.MinFactor(),
+					timeLabelInfo.MaxFactor()
+				);
+				double font1SizeInMM = timeLabelInfo.TimeStringInfo1().itsFontSizeInMM * sizeFactor;
+				font1SizeInMM = FmiMax(timeLabelInfo.AbsoluteMinFontSizeInMM(), FmiMin(font1SizeInMM, timeLabelInfo.AbsoluteMaxFontSizeInMM()));
+				int font1Size = static_cast<int>(font1SizeInMM * graphicalInfo.itsPixelsPerMM_y * 1.88);
+				double font2SizeInMM = timeLabelInfo.TimeStringInfo2().itsFontSizeInMM * sizeFactor;
+				font2SizeInMM = FmiMax(timeLabelInfo.AbsoluteMinFontSizeInMM(), FmiMin(font2SizeInMM, timeLabelInfo.AbsoluteMaxFontSizeInMM()));
+				int font2Size = static_cast<int>(font2SizeInMM * graphicalInfo.itsPixelsPerMM_y * 1.88);
 
-					std::wstring fontNameStr2 = CtrlView::StringToWString(timeLabelInfo.TimeStringInfo2().itsFontName);
-					Gdiplus::Font aFont2(fontNameStr2.c_str(), static_cast<Gdiplus::REAL>(font2Size), timeLabelInfo.TimeStringInfo2().fBold ? Gdiplus::FontStyleBold : Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
-					std::wstring wString2 = CtrlView::StringToWString(std::string(static_cast<char*>(timeStr2)));
+				Gdiplus::StringFormat stringFormat;
+				stringFormat.SetAlignment(Gdiplus::StringAlignmentCenter);
+				stringFormat.SetLineAlignment(Gdiplus::StringAlignmentNear);
+				std::wstring fontNameStr1 = CtrlView::StringToWString(timeLabelInfo.TimeStringInfo1().itsFontName);
+				Gdiplus::Font aFont1(fontNameStr1.c_str(), static_cast<Gdiplus::REAL>(font1Size), timeLabelInfo.TimeStringInfo1().fBold ? Gdiplus::FontStyleBold : Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
+				std::wstring wString1 = CtrlView::StringToWString(std::string(static_cast<char*>(timeStr1)));
 
-					// lasketaan pikseli maailmassa aika boxin koko ja sijainti
-					Gdiplus::RectF boundingBox1;
-					itsGdiPlusGraphics->MeasureString(wString1.c_str(), INT(wString1.size()), &aFont1, Gdiplus::PointF(0, 0), &stringFormat, &boundingBox1);
-					Gdiplus::RectF boundingBox2;
-					itsGdiPlusGraphics->MeasureString(wString2.c_str(), INT(wString2.size()), &aFont2, Gdiplus::PointF(0, 0), &stringFormat, &boundingBox2);
-					NFmiRect timeBox;
-					timeBox.Size(NFmiPoint(FmiMax(boundingBox1.Width, boundingBox2.Width) * 1.1, (font1Size+font2Size) * 1.15));
-                    FmiDirection timeBoxLocation = currentBetaProduct ? currentBetaProduct->TimeBoxLocation() : kBottomLeft;
-                    StationViews::PlaceBoxIntoFrame(timeBox, GetFrame(), itsToolBox, timeBoxLocation);
+				std::wstring fontNameStr2 = CtrlView::StringToWString(timeLabelInfo.TimeStringInfo2().itsFontName);
+				Gdiplus::Font aFont2(fontNameStr2.c_str(), static_cast<Gdiplus::REAL>(font2Size), timeLabelInfo.TimeStringInfo2().fBold ? Gdiplus::FontStyleBold : Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
+				std::wstring wString2 = CtrlView::StringToWString(std::string(static_cast<char*>(timeStr2)));
 
-					Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(timeLabelInfo.BoxFillColor()));
-					Gdiplus::GraphicsPath aPath;
-					Gdiplus::Rect gdiRect(static_cast<INT>(timeBox.Left()), static_cast<INT>(timeBox.Top()), static_cast<INT>(timeBox.Width()), static_cast<INT>(timeBox.Height())); // = CFmiGdiPlusHelpers::Relative2GdiplusRect(itsToolBox, timeBox);
-					aPath.AddRectangle(gdiRect);
-					aPath.CloseFigure();
-					itsGdiPlusGraphics->FillPath(&aBrushBox, &aPath);
+				// lasketaan pikseli maailmassa aika boxin koko ja sijainti
+				Gdiplus::RectF boundingBox1;
+				itsGdiPlusGraphics->MeasureString(wString1.c_str(), INT(wString1.size()), &aFont1, Gdiplus::PointF(0, 0), &stringFormat, &boundingBox1);
+				Gdiplus::RectF boundingBox2;
+				itsGdiPlusGraphics->MeasureString(wString2.c_str(), INT(wString2.size()), &aFont2, Gdiplus::PointF(0, 0), &stringFormat, &boundingBox2);
+				NFmiRect timeBox;
+				timeBox.Size(NFmiPoint(FmiMax(boundingBox1.Width, boundingBox2.Width) * 1.1, (font1Size + font2Size) * 1.15));
+				FmiDirection timeBoxLocation = currentBetaProduct ? currentBetaProduct->TimeBoxLocation() : kBottomLeft;
+				StationViews::PlaceBoxIntoFrame(timeBox, GetFrame(), itsToolBox, timeBoxLocation);
 
-					Gdiplus::REAL penThickness = static_cast<Gdiplus::REAL>(timeLabelInfo.BoxFrameThicknessInMM() * graphicalInfo.itsPixelsPerMM_y);
-					Gdiplus::Pen penBox(CtrlView::NFmiColor2GdiplusColor(timeLabelInfo.BoxFrameColor()), penThickness);
-					itsGdiPlusGraphics->DrawPath(&penBox, &aPath);
+				Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(timeLabelInfo.BoxFillColor()));
+				Gdiplus::GraphicsPath aPath;
+				Gdiplus::Rect gdiRect(static_cast<INT>(timeBox.Left()), static_cast<INT>(timeBox.Top()), static_cast<INT>(timeBox.Width()), static_cast<INT>(timeBox.Height())); // = CFmiGdiPlusHelpers::Relative2GdiplusRect(itsToolBox, timeBox);
+				aPath.AddRectangle(gdiRect);
+				aPath.CloseFigure();
+				itsGdiPlusGraphics->FillPath(&aBrushBox, &aPath);
 
-					NFmiPoint center = timeBox.Center();
-					NFmiPoint topleft = timeBox.TopLeft();
+				Gdiplus::REAL penThickness = static_cast<Gdiplus::REAL>(timeLabelInfo.BoxFrameThicknessInMM() * graphicalInfo.itsPixelsPerMM_y);
+				Gdiplus::Pen penBox(CtrlView::NFmiColor2GdiplusColor(timeLabelInfo.BoxFrameColor()), penThickness);
+				itsGdiPlusGraphics->DrawPath(&penBox, &aPath);
 
-					Gdiplus::PointF timeString1OffSet(static_cast<Gdiplus::REAL>(center.X()), static_cast<Gdiplus::REAL>(topleft.Y())); // tämä offset on suhteellinen laskettuun aika-string boxiin
-					Gdiplus::PointF timeString2OffSet(timeString1OffSet);
-					timeString2OffSet.Y += font1Size;
+				NFmiPoint center = timeBox.Center();
+				NFmiPoint topleft = timeBox.TopLeft();
 
-					Gdiplus::SolidBrush aBrushText1(CtrlView::NFmiColor2GdiplusColor(timeLabelInfo.TimeStringInfo1().itsColor));
-					itsGdiPlusGraphics->DrawString(wString1.c_str(), static_cast<INT>(wString1.size()), &aFont1, timeString1OffSet, &stringFormat, &aBrushText1);
+				Gdiplus::PointF timeString1OffSet(static_cast<Gdiplus::REAL>(center.X()), static_cast<Gdiplus::REAL>(topleft.Y())); // tämä offset on suhteellinen laskettuun aika-string boxiin
+				Gdiplus::PointF timeString2OffSet(timeString1OffSet);
+				timeString2OffSet.Y += font1Size;
 
-					Gdiplus::SolidBrush aBrushText2(CtrlView::NFmiColor2GdiplusColor(timeLabelInfo.TimeStringInfo2().itsColor));
-					itsGdiPlusGraphics->DrawString(wString2.c_str(), static_cast<INT>(wString2.size()), &aFont2, timeString2OffSet, &stringFormat, &aBrushText2);
-				}
-				else // else:ssä vanhan tyylinen aikateksti printtaus
-				{
-					NFmiString formatStr("Www DD/MM HH:mm");
-					if(itsCtrlViewDocumentInterface->Language() == kFinnish)
-						formatStr = "Ww DD.MM.YYYY HH:mm";
-					NFmiString timeStr(itsTime.ToStr(formatStr, itsCtrlViewDocumentInterface->Language()));
+				Gdiplus::SolidBrush aBrushText1(CtrlView::NFmiColor2GdiplusColor(timeLabelInfo.TimeStringInfo1().itsColor));
+				itsGdiPlusGraphics->DrawString(wString1.c_str(), static_cast<INT>(wString1.size()), &aFont1, timeString1OffSet, &stringFormat, &aBrushText1);
 
-					NFmiDrawingEnvironment envi;
-
-					double fontSizeInMM = 3.5;
-					int fontSize = static_cast<int>(fontSizeInMM * graphicalInfo.itsPixelsPerMM_x * 1.88);
-
-					envi.SetFontSize(NFmiPoint(fontSize, fontSize));
-					envi.SetFrameColor(NFmiColor(.0, .0, .0));
-					envi.SetFillColor(NFmiColor(1.0, 1.0, 1.0));
-					envi.BoldFont(true);
-					envi.SetFontType(kArial);
-
-					NFmiPoint place = GetFrame().BottomLeft();
-					place.X(place.X() + 0.004);
-					FmiDirection oldAlign = itsToolBox->GetTextAlignment();
-					itsToolBox->SetTextAlignment(static_cast<FmiDirection>(kBottom + 1000)); // + 1000 on viritys toolboxissa, laittaa läpinäkymättömyyden päälle, eli tekstille tulee pohjaväri alle
-					NFmiText text(place, timeStr, false, 0, &envi);
-					itsToolBox->Convert(&text);
-					itsToolBox->SetTextAlignment(oldAlign);
-				}
+				Gdiplus::SolidBrush aBrushText2(CtrlView::NFmiColor2GdiplusColor(timeLabelInfo.TimeStringInfo2().itsColor));
+				itsGdiPlusGraphics->DrawString(wString2.c_str(), static_cast<INT>(wString2.size()), &aFont2, timeString2OffSet, &stringFormat, &aBrushText2);
 			}
 		}
 	}
@@ -3187,6 +3159,7 @@ void NFmiStationViewHandler::DrawControlPoints(void)
 		float height = static_cast<float>(itsToolBox->SY(pixels));
 		float width = static_cast<float>(itsToolBox->SX(pixels));
 		NFmiRect CPRect(NFmiPoint(0, 0), NFmiPoint(width, height));
+		itsDrawingEnvironment->SetFontType(kArial);
 		NFmiPoint oldPenSize = itsDrawingEnvironment->GetPenSize();
 		NFmiPoint normalRectPenSize(2,2);
 		NFmiPoint activeRectPenSize(3,3);
