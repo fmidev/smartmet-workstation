@@ -345,7 +345,7 @@ namespace AddParams
         }
     }
 
-    std::vector<SingleRowItem> CategoryData::makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory, NFmiInfoOrganizer &infoOrganizer) const
+    std::vector<SingleRowItem> CategoryData::makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory, NFmiInfoOrganizer &infoOrganizer, bool mapViewCase) const
     {
         std::vector<SingleRowItem> dialogRowData;
         for(const auto &producerData : producerDataVector_)
@@ -360,7 +360,7 @@ namespace AddParams
                 dialogRowData.insert(dialogRowData.end(), rowData.begin(), rowData.end());
             }
         }
-        if(categoryName() == "Observation data")
+        if(mapViewCase && categoryName() == "Observation data")
         {
             auto data = customObservationData(infoOrganizer);
             dialogRowData.insert(dialogRowData.end(), data.begin(), data.end());
@@ -379,7 +379,7 @@ namespace AddParams
     {
         int treeDepth = 2;
         AddParams::RowType rowType = kDataType;
-        std::vector<SingleRowItem> customObservationData;
+        std::vector<SingleRowItem> customData;
         
         // *** Sounding and sounding plot ***
         boost::shared_ptr<NFmiFastQueryInfo> soundingInfo = infoOrganizer.GetPrioritizedSoundingInfo(NFmiInfoOrganizer::ParamCheckFlags(true));
@@ -392,15 +392,15 @@ namespace AddParams
             std::string uniqueDataId = "Temp - " + menuString;
             SingleRowItem item = SingleRowItem(rowType, menuString, NFmiProducer(kFmiTEMP).GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", false, nullptr, treeDepth, menuString);
             auto paramBag = soundingInfo->ParamBag();
-            customObservationData.push_back(item);
+            customData.push_back(item);
             auto subMenuItems = ::soundingSubMenu(paramBag, soundingType, NFmiProducer(kFmiTEMP).GetIdent(), soundingLevels_, treeDepth, kParamType);
-            customObservationData.insert(customObservationData.end(), subMenuItems.begin(), subMenuItems.end());
+            customData.insert(customData.end(), subMenuItems.begin(), subMenuItems.end());
             
             menuString = "Sounding plot";
             auto param = NFmiParam(NFmiInfoData::kFmiSpSoundingPlot, "temp");
             uniqueDataId = "Temp - " + menuString;
             item = SingleRowItem(rowType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, defaultLevel, treeDepth, menuString);
-            customObservationData.push_back(item);
+            customData.push_back(item);
         } 
         // *** Lightning ***
         if(infoOrganizer.FindInfo(NFmiInfoData::kFlashData, 0))
@@ -409,7 +409,7 @@ namespace AddParams
             std::string menuString = ::GetDictionaryString("MapViewParamPopUpFlashData");
             std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
             SingleRowItem item = SingleRowItem(rowType, menuString, producer.GetIdent(), true, uniqueDataId, NFmiInfoData::kFlashData, 0, "", true, nullptr, treeDepth, menuString);
-            customObservationData.push_back(item);
+            customData.push_back(item);
         }
         // *** Synop plot ***
         if(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiSYNOP), true) != 0)
@@ -419,7 +419,7 @@ namespace AddParams
             std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
             auto param = NFmiParam(NFmiInfoData::kFmiSpSynoPlot, "synop");
             SingleRowItem item = SingleRowItem(rowType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, treeDepth, menuString);
-            customObservationData.push_back(item);
+            customData.push_back(item);
 
             // Add also a min/max synop plot
             NFmiProducer producer2(*(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiSYNOP), true)->Producer()));
@@ -427,7 +427,7 @@ namespace AddParams
             uniqueDataId = std::string(producer2.GetName()) + " - " + menuString;
             param = NFmiParam(NFmiInfoData::kFmiSpMinMaxPlot, "min/max");
             item = SingleRowItem(rowType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, treeDepth, menuString);
-            customObservationData.push_back(item);
+            customData.push_back(item);
         }
         // *** Metar plot ***
         if(infoOrganizer.FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiMETAR), true) != 0)
@@ -437,11 +437,10 @@ namespace AddParams
             std::string uniqueDataId = std::string(producer.GetName()) + " - " + menuString;
             auto param = NFmiParam(NFmiInfoData::kFmiSpMetarPlot, "metar");
             SingleRowItem item = SingleRowItem(rowType, menuString, param.GetIdent(), true, uniqueDataId, NFmiInfoData::kObservations, 0, "", true, nullptr, treeDepth, menuString);
-            customObservationData.push_back(item);
+            customData.push_back(item);
         }
 
-        return customObservationData;
+        return customData;
     }
-
 
 }

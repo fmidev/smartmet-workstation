@@ -252,11 +252,16 @@ namespace AddParams
             const std::string &uniqueId = category->categoryName();
             auto *categoryMemory = findDataRowItem(uniqueId, dialogRowDataMemory);
             dialogRowData_.push_back(::makeRowItem(*category, uniqueId, categoryMemory));
-            auto gategoryRowData = category->makeDialogRowData(dialogRowDataMemory, *infoOrganizer_);
+            auto gategoryRowData = category->makeDialogRowData(dialogRowDataMemory, *infoOrganizer_, isMapViewCase());
             dialogRowData_.insert(dialogRowData_.end(), gategoryRowData.begin(), gategoryRowData.end());
 			if (category->categoryName() == HelpDataStr) { otherHelpDataTodialog(); }
         }
 		trimDialogRowDataDependingOnActiveView();
+    }
+
+    bool ParameterSelectionSystem::isMapViewCase() const
+    {
+        return itsLastActivatedDesktopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex;
     }
 
 	void ParameterSelectionSystem::otherHelpDataTodialog()
@@ -513,7 +518,7 @@ namespace AddParams
     void ParameterSelectionSystem::SetLastActiveIndexes(unsigned int desktopIndex, int rowIndex)
     {
         itsLastActivatedDesktopIndex = desktopIndex;
-        if(itsLastActivatedDesktopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+        if(isMapViewCase())
             itsLastActivatedMapRowIndex = rowIndex;
         else if(itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiCrossSectionView)
             itsLastActivatedCrossSectionRowIndex = rowIndex;
@@ -523,7 +528,7 @@ namespace AddParams
 
     int ParameterSelectionSystem::GetLastActivatedRowIndexFromWantedDesktop(unsigned int desktopIndex) const
     {
-        if(desktopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+        if(isMapViewCase())
             return itsLastActivatedMapRowIndex;
         else if(desktopIndex == CtrlViewUtils::kFmiCrossSectionView)
             return itsLastActivatedCrossSectionRowIndex;
