@@ -152,7 +152,8 @@ class NFmiInfoOrganizer
       const NFmiMetTime &theDataTime,
       int theIndex = 0,
       ParamCheckFlags paramCheckFlags =
-      ParamCheckFlags());  // Hakee parhaan luotaus infon tuottajalle
+      ParamCheckFlags(),
+      int amdarDataStartOffsetInMinutes = 0);  // Hakee parhaan luotaus infon tuottajalle
   boost::shared_ptr<NFmiFastQueryInfo> GetPrioritizedSoundingInfo(
       ParamCheckFlags paramCheckFlags =
           ParamCheckFlags());  // Hakee tietyn prioriteetin mukaisesti parhaan luotaus-infon
