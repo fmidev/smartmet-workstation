@@ -1950,8 +1950,11 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
     auto usedTempInfo(theTempInfo);
     auto useServerData = theProducer.useServer();
     usedTempInfo.Time(::GetUsedSoundingDataTime(itsCtrlViewDocumentInterface, theTempInfo));
+	// Amdar datoilla (tuottaja id 1015) o nerikois aikaikkuna, mist‰ datoja etsit‰‰n, 
+	// sen alkuhaarukka pit‰‰ antaa FindSoundingInfo, kaikille muille datoille arvo on 0.
+	int amdarDataStartOffsetInMinutes = (theProducer.GetIdent() == 1015) ? 30 : 0;
     
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, usedTempInfo.Time(), theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true));
+	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, usedTempInfo.Time(), theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true), amdarDataStartOffsetInMinutes);
 	if(useServerData || info)
 	{
         auto usedLocationWithName = ::GetSoundingLocation(info, theTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
