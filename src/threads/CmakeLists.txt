@@ -18,7 +18,6 @@ target_link_libraries(
     ${PROJECT_NAME}
     Newbase
     SmartTools
-    Bzip2Util
     Processes
     AutoComplete
     EditingDataUtils
@@ -33,7 +32,6 @@ target_include_directories(
     PUBLIC ${Newbase_INCLUDE_DIRS}
     PUBLIC ${SmartTools_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
-    PUBLIC ${Bzip2Util_INCLUDE_DIRS}
     PUBLIC ${Processes_INCLUDE_DIRS}
     PUBLIC ${AutoComplete_INCLUDE_DIRS}
     PUBLIC ${EditingDataUtils_INCLUDE_DIRS}
@@ -52,7 +50,6 @@ set(
     ${PROJECT_SOURCE_DIR}
     ${Newbase_INCLUDE_DIRS}
     ${SmartTools_INCLUDE_DIRS}
-    ${Bzip2Util_INCLUDE_DIRS}
     ${Processes_INCLUDE_DIRS}
     ${AutoComplete_INCLUDE_DIRS}
     ${EditingDataUtils_INCLUDE_DIRS}
