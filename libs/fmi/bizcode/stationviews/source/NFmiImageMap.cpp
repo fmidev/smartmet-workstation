@@ -179,7 +179,7 @@ Gdiplus::Bitmap* NFmiImageMap::GetRightSizeImage(double drawedSymbolSizeInPixels
         Gdiplus::Bitmap *smallerSymbolImage = GetSymbolImage(theSymbolCode, false); // false = hae pienemp‰‰ kuvaa
         if(smallerSymbolImage)
         {
-            if(smallerSymbolImage->GetHeight()*1.3 >= drawedSymbolSizeInPixels) // Jos pienempi kuvista on tarpeeksi l‰hell‰ haluttua piirtokoko tai pienempi, k‰ytet‰‰n pient‰ kuvaa
+            if(smallerSymbolImage->GetHeight()*1.2 >= drawedSymbolSizeInPixels) // Jos pienempi kuvista on tarpeeksi l‰hell‰ haluttua piirtokoko tai pienempi, k‰ytet‰‰n pient‰ kuvaa
                 return smallerSymbolImage;
         }
     }
