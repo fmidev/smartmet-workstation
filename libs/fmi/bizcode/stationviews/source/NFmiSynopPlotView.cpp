@@ -134,8 +134,8 @@ NFmiRect NFmiSynopPlotView::CalcBaseEmptySoundingMarker(void)
 {
 	double circleSizeInMM = 1.5f;
     auto &graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
-	int pixelSizeX = static_cast<int>(circleSizeInMM * graphicalInfo.itsPixelsPerMM_x);
-	int pixelSizeY = static_cast<int>(circleSizeInMM * graphicalInfo.itsPixelsPerMM_y);
+	int pixelSizeX = boost::math::iround(circleSizeInMM * graphicalInfo.itsPixelsPerMM_x);
+	int pixelSizeY = boost::math::iround(circleSizeInMM * graphicalInfo.itsPixelsPerMM_y);
 	double xWidth = itsToolBox->SX(pixelSizeX);
 	double yWidth = itsToolBox->SY(pixelSizeY);
 	return NFmiRect(0, 0, xWidth, yWidth);
@@ -165,8 +165,8 @@ void NFmiSynopPlotView::Draw(NFmiToolBox * theGTB)
 	double fontSizeInMM_x = synopSettings.FontSize();
 	double fontSizeInMM_y = synopSettings.FontSize();
     auto &graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
-    itsFontSizeX = static_cast<int>(fontSizeInMM_x * graphicalInfo.itsPixelsPerMM_x * 1.88);
-	itsFontSizeY = static_cast<int>(fontSizeInMM_y * graphicalInfo.itsPixelsPerMM_y * 1.88);
+    itsFontSizeX = boost::math::iround(fontSizeInMM_x * graphicalInfo.itsPixelsPerMM_x * 1.88);
+	itsFontSizeY = boost::math::iround(fontSizeInMM_y * graphicalInfo.itsPixelsPerMM_y * 1.88);
 	double relativeFontSizeX = itsToolBox->SX(itsFontSizeX);
 	double relativeFontSizeY = itsToolBox->SY(itsFontSizeY);
 	double synopBoxRelWidth = relativeFontSizeX * 4.8 * 0.976;
@@ -327,8 +327,8 @@ void NFmiSynopPlotView::DrawSynopPlot(NFmiToolBox * theGTB, const NFmiLocation &
         SetMapViewSettings(info); // tämä asetus funktio pitää kutsua, että ei jää tiettyjä asetuksia normaali piirrosta päälle (esim. fDoShipDataLocations -lippu väärään tilaan, joka aiheutti epämääräisen tooltipissä olleen tuuliviiri piirron väännön)
 
         auto &graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
-        itsFontSizeX = static_cast<int>(theFontSize * graphicalInfo.itsPixelsPerMM_x * 1.88);
-		itsFontSizeY = static_cast<int>(theFontSize * graphicalInfo.itsPixelsPerMM_y * 1.88);
+        itsFontSizeX = boost::math::iround(theFontSize * graphicalInfo.itsPixelsPerMM_x * 1.88);
+		itsFontSizeY = boost::math::iround(theFontSize * graphicalInfo.itsPixelsPerMM_y * 1.88);
 
 		itsDrawingEnvironment->DisableFill();
 		// optimointia, nyt filli on disabloitu, mutta myöhemmin tarvitaan valkoista filliä
@@ -1859,7 +1859,7 @@ bool NFmiSynopPlotView::DrawWindVector(boost::shared_ptr<NFmiFastQueryInfo> &the
 
 			double fontSizeInMM = synopSettings.FontSize();
 			double windBarbLineWidthFactor = ::CalcLineValue(fontSizeInMM, 8., 2., 12., 7., 7., 13.);
-			int lineWidthInPixels = static_cast<int>(itsFontSizeX / windBarbLineWidthFactor);
+			int lineWidthInPixels = boost::math::iround(itsFontSizeX / windBarbLineWidthFactor);
 			NFmiPoint oldSize = itsDrawingEnvironment->GetPenSize();
 			itsDrawingEnvironment->SetPenSize(NFmiPoint(lineWidthInPixels, lineWidthInPixels));
 

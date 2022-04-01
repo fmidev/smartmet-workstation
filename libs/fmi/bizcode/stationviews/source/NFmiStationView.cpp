@@ -2724,10 +2724,10 @@ NFmiPoint NFmiStationView::CalcFontSize(int theMinSize, int theMaxSize, bool fPr
 	{
 		int x = static_cast<int>(itsToolBox->HX(CurrentDataRect().Width()/1.2));
 		int y = static_cast<int>(itsToolBox->HY(CurrentDataRect().Height()/1.2));
-		double tmp = static_cast<int>((y + x) / 2.);
+		double tmp = (y + x) / 2.;
 		tmp = tmp * ::LaskeYSuoralla(tmp, theMinSize, theMaxSize, 1, 0.9); // t‰m‰ funktio yritt‰‰ laittaa fontin kooksi l‰helle optimia
 
-		y = FmiMax(theMinSize, static_cast<int>(tmp));
+		y = FmiMax(theMinSize, boost::math::iround(tmp));
 		y = FmiMin(theMaxSize, y);
 		return NFmiPoint(y, y);
 	}
@@ -3383,8 +3383,8 @@ void NFmiStationView::DrawObsComparison(void)
 							extrapolateObs = IsThisTimeExtrapolated(itsTime, *obsInfo);
 						if(obsFound || (extrapolateObs && obsComparisonInfo.ComparisonMode() == 2))
 						{
-							const int boxSizeXInPixels = static_cast<int>(obsComparisonInfo.SymbolSize().X());
-							const int boxSizeYInPixels = static_cast<int>(obsComparisonInfo.SymbolSize().Y());
+							const int boxSizeXInPixels = boost::math::iround(obsComparisonInfo.SymbolSize().X());
+							const int boxSizeYInPixels = boost::math::iround(obsComparisonInfo.SymbolSize().Y());
 							double relativeBoxWidth = itsToolBox->SX(boxSizeXInPixels);
 							double relativeBoxHeight = itsToolBox->SY(boxSizeYInPixels);
 							if(obsComparisonInfo.DrawBorders())
@@ -3638,7 +3638,7 @@ NFmiRect NFmiStationView::SbdCalcBaseStationRelativeRect()
 		auto printerPixelCount = plotHeightInMM * GetGraphicalInfo().itsPixelsPerMM_y;
 		pointSize = NFmiPoint(printerPixelCount, printerPixelCount);
 	}
-	return NFmiRect(0, 0, itsToolBox->SX(static_cast<long>(pointSize.X())), itsToolBox->SY(static_cast<long>(pointSize.Y())));
+	return NFmiRect(0, 0, itsToolBox->SX(boost::math::iround(pointSize.X())), itsToolBox->SY(boost::math::iround(pointSize.Y())));
 }
 
 // Symbolipiirto halutaan laajentaa hieman zoomatun kartta-alueen ulkopuolelle, jotta
