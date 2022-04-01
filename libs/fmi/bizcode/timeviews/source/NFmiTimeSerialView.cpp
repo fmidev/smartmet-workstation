@@ -320,7 +320,7 @@ void NFmiTimeSerialView::DrawHelperData3LocationInTime(const NFmiPoint &theLatlo
 {
     if(itsCtrlViewDocumentInterface->ShowHelperData3InTimeSerialView())
     {
-        DrawAnnualModelFractileDataLocationInTime(static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent()), itsCtrlViewDocumentInterface->GetModelClimatologyData(itsDrawParam->Level()), theLatlon);
+        DrawAnnualModelFractileDataLocationInTime1(static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent()), itsCtrlViewDocumentInterface->GetModelClimatologyData(itsDrawParam->Level()), theLatlon);
     }
 }
 
@@ -453,7 +453,7 @@ namespace ModelClimatology
     }
 }
 
-void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime(FmiParameterName mainParameter, boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon)
+void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime1(FmiParameterName mainParameter, boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon)
 {
     if(climateInfo)
     {
@@ -467,13 +467,13 @@ void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime(FmiParameterN
 			{
 				// T‰ss‰ annetaan overrideEnvi -parametrille nullptr, koska haluamme piirt‰‰ tietyill‰ tyylill‰ (ominaisuudet 
 				// tulevat erilllisest‰ taulukosta) eri fraktiili parametrit.
-				DrawAnnualModelFractileDataLocationInTime(climateInfo, theLatlon, paramIds, nullptr);
+				DrawAnnualModelFractileDataLocationInTime2(climateInfo, theLatlon, paramIds, nullptr);
 			}
         }
     }
 }
 
-void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, NFmiDrawingEnvironment* overrideEnvi)
+void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime2(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, NFmiDrawingEnvironment* overrideEnvi)
 {
     // Seek start and end time to be drawn so that year doesn't matter. climate data doesn't care about years.
     // There may be two separate time ranges that has to be handled. This happens when time range goes from one year 
@@ -500,28 +500,30 @@ void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime(boost::shared
             if(startYearDiff != endYearDiff)
             {
                 // Let's split time range in two and draw them separate
-                DrawAnnualModelFractileDataLocationInTime(climateInfo, theLatlon, paramIds, startClimatologyDataTime, climateInfo->TimeDescriptor().LastTime(), startYearDiff, overrideEnvi);
-                DrawAnnualModelFractileDataLocationInTime(climateInfo, theLatlon, paramIds, climateInfo->TimeDescriptor().FirstTime(), endClimatologyDataTime, endYearDiff, overrideEnvi);
+                DrawAnnualModelFractileDataLocationInTime3(climateInfo, theLatlon, paramIds, startClimatologyDataTime, climateInfo->TimeDescriptor().LastTime(), startYearDiff, overrideEnvi);
+                DrawAnnualModelFractileDataLocationInTime3(climateInfo, theLatlon, paramIds, climateInfo->TimeDescriptor().FirstTime(), endClimatologyDataTime, endYearDiff, overrideEnvi);
                 // Also draw possible full years between start and end year
                 for(auto yearIndex = startYearDiff + 1; yearIndex < endYearDiff; yearIndex++)
-                    DrawAnnualModelFractileDataLocationInTime(climateInfo, theLatlon, paramIds, climateInfo->TimeDescriptor().FirstTime(), climateInfo->TimeDescriptor().LastTime(), yearIndex, overrideEnvi);
+                    DrawAnnualModelFractileDataLocationInTime3(climateInfo, theLatlon, paramIds, climateInfo->TimeDescriptor().FirstTime(), climateInfo->TimeDescriptor().LastTime(), yearIndex, overrideEnvi);
             }
             else
             {
-                DrawAnnualModelFractileDataLocationInTime(climateInfo, theLatlon, paramIds, startClimatologyDataTime, endClimatologyDataTime, startYearDiff, overrideEnvi);
+                DrawAnnualModelFractileDataLocationInTime3(climateInfo, theLatlon, paramIds, startClimatologyDataTime, endClimatologyDataTime, startYearDiff, overrideEnvi);
             }
         }
     }
 }
 
-void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, const NFmiMetTime &startTime, const NFmiMetTime &endTime, int climateDataYearDifference, NFmiDrawingEnvironment* overrideEnvi)
+void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime3(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, const NFmiMetTime &startTime, const NFmiMetTime &endTime, int climateDataYearDifference, NFmiDrawingEnvironment* overrideEnvi)
 {
     NFmiTimeBag drawedTimes(startTime, endTime, 60); // resoluutiolla ei merkityst‰
-    int timeWhenDrawedInMinutes = climateDataYearDifference * 365 * 24 * 60;
-    DrawAnnualModelFractileDataLocationInTime(climateInfo, theLatlon, paramIds, drawedTimes, timeWhenDrawedInMinutes, overrideEnvi);
+	auto viewStartTime = startTime;
+	viewStartTime.SetYear(viewStartTime.GetYear() + climateDataYearDifference);
+    int timeWhenDrawedInMinutes = viewStartTime.DifferenceInMinutes(startTime);
+    DrawAnnualModelFractileDataLocationInTime4(climateInfo, theLatlon, paramIds, drawedTimes, timeWhenDrawedInMinutes, overrideEnvi);
 }
 
-void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, const NFmiTimeBag &theDrawedTimes, int theTimeWhenDrawedInMinutes, NFmiDrawingEnvironment* overrideEnvi)
+void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime4(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, const NFmiTimeBag &theDrawedTimes, int theTimeWhenDrawedInMinutes, NFmiDrawingEnvironment* overrideEnvi)
 {
     NFmiDrawingEnvironment localEnvi;
 	localEnvi.SetFillPattern(FMI_DOT);
@@ -900,9 +902,12 @@ void NFmiTimeSerialView::DrawFraktiiliDataLocationInTime(NFmiDrawingEnvironment 
 			NFmiTimeBag timesInView(itsCtrlViewDocumentInterface->TimeSerialViewTimeBag());
 			if(timesInView.FirstTime().GetYear() == timesInView.LastTime().GetYear()) // pit‰‰ mietti se erikseen, miten hoidetaan kun aikaikkunan alku ja loppu ovat eri vuosilla (esim. vuoden vaihteessa)
 			{
+				auto firstViewTime = timesInView.FirstTime();
 				int viewYear = timesInView.FirstTime().GetYear();
 				NFmiTimeDescriptor fraktiiliTimes(fraktiiliInfo->TimeDescriptor());
 				int fraktiiliDataYear = fraktiiliTimes.FirstTime().GetYear(); // fraktiili data on jollekin vuodelle tehty pˆtkˆ, otetaan vuosi talteen, ett‰ voidaan rakentaa sopiva timebagi datan l‰pik‰ymiseen
+				auto similarFractileTime = firstViewTime;
+				similarFractileTime.SetYear(fraktiiliDataYear);
 				NFmiMetTime startTime(timesInView.FirstTime());
 				startTime.SetYear(fraktiiliDataYear);
 				NFmiMetTime endTime(timesInView.LastTime());
@@ -925,7 +930,7 @@ void NFmiTimeSerialView::DrawFraktiiliDataLocationInTime(NFmiDrawingEnvironment 
 
 					if(fraktiiliInfo->NearestPoint(theLatlon)) // asetetaan kepadata l‰himp‰‰n pisteeseen (t‰ss‰ kaupunkiin) piirtoa varten
 					{
-						int changeTimeWhenDrawedInMinutes = (viewYear - fraktiiliDataYear) * 365 * 24 * 60;
+						int changeTimeWhenDrawedInMinutes = firstViewTime.DifferenceInMinutes(similarFractileTime);
 						const NFmiLocation *loc = fraktiiliInfo->Location();
 						double distance = 999999999.;
 						if(loc)
@@ -4229,7 +4234,7 @@ void NFmiTimeSerialView::DrawEditedDataLocationInTime(const NFmiPoint &theLatLon
 		if(NFmiFastInfoUtils::IsModelClimatologyData(info))
 		{
 			ModelClimatology::ParamIds drawedParamVector{static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent())};
-			DrawAnnualModelFractileDataLocationInTime(info, theLatLonPoint, drawedParamVector, &theCurrentDataLineStyle);
+			DrawAnnualModelFractileDataLocationInTime2(info, theLatLonPoint, drawedParamVector, &theCurrentDataLineStyle);
 		}
 		else
 		{
