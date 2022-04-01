@@ -176,10 +176,6 @@ add_subdirectory(
     )
 
 add_subdirectory(
-    src/bzip2util
-    )
-
-add_subdirectory(
     libs/fmi/multiprocesstools
     )
 

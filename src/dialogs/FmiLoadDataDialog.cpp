@@ -17,7 +17,6 @@
 #include "FmiDataLoadingWarningDlg.h"
 #include "NFmiDictionaryFunction.h"
 #include "FmiWin32Helpers.h"
-#include "bzip2util.h"
 #include "FmiGdiPlusHelpers.h"
 #include "NFmiModelDataBlender.h"
 #include "CloneBitmap.h"
@@ -435,39 +434,29 @@ std::vector<string> CFmiLoadDataDialog::GetSelectedFileNames(void)
 	return names;
 }
 
-static boost::shared_ptr<NFmiQueryInfo> CreateInfoFromZippedQueryDataFile(const string &theFileName)
-{
-	return boost::shared_ptr<NFmiQueryInfo>(CFmiBzip2Helpers::ReadQueryInfoFromCompressedFile(theFileName));
-}
-
-boost::shared_ptr<NFmiQueryInfo> CFmiLoadDataDialog::ReadInfoFromFile(const string &theFileName)
+boost::shared_ptr<NFmiQueryInfo> CFmiLoadDataDialog::ReadInfoFromFile(const string& theFileName)
 {
 	if(NFmiFileSystem::FileExists(theFileName) == false)
 		return boost::shared_ptr<NFmiQueryInfo>();
 
 	string compareFileName(theFileName);
 	NFmiStringTools::LowerCase(compareFileName);
-	std::string::size_type pos = compareFileName.find("bz2"); // jos bz2-pakattu tiedosto, pit‰‰ lukea koko juttu ja purkaa, ett‰ saadaan info esille
-	if(pos != string::npos)
-		return ::CreateInfoFromZippedQueryDataFile(theFileName);
-	else
-	{ // muuten luetaan vain querydata-tiedoston alusta info-osio
-		ifstream in(theFileName.c_str(), ios::binary);
-		if(in)
+	// Luetaan querydata-tiedoston alusta info-osio
+	ifstream in(theFileName.c_str(), ios::binary);
+	if(in)
+	{
+		boost::shared_ptr<NFmiQueryInfo> info(new NFmiQueryInfo());
+		if(info)
 		{
-			boost::shared_ptr<NFmiQueryInfo> info(new NFmiQueryInfo());
-			if(info)
+			try
 			{
-				try
-				{
-					in >> *info;
-					return info;
-				}
-				catch(...)
-				{
-					info = boost::shared_ptr<NFmiQueryInfo>(); // tyhjennet‰‰n info pois kokonaan ennen palautusta
-					return info;
-				}
+				in >> *info;
+				return info;
+			}
+			catch(...)
+			{
+				info = boost::shared_ptr<NFmiQueryInfo>(); // tyhjennet‰‰n info pois kokonaan ennen palautusta
+				return info;
 			}
 		}
 	}
