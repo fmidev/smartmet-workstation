@@ -38,6 +38,7 @@ namespace CtrlView
     const NFmiPoint GdiplusPoint2Relative(NFmiToolBox *theToolBox, const Gdiplus::Point &theGdiplusPoint);
     const Gdiplus::PointF Relative2GdiplusPoint(NFmiToolBox *theToolBox, const NFmiPoint &theRelativePoint);
     std::vector<Gdiplus::PointF> Relative2GdiplusPolyLine(NFmiToolBox *theToolBox, const std::vector<NFmiPoint> &theRelativePolyLine, const NFmiPoint &theRelativeOffset);
+    NFmiPoint RelativeSizeToPixelSize(const NFmiPoint& relativeSize, NFmiToolBox& theToolBox);
     void MakePathFromRect(Gdiplus::GraphicsPath &thePath, NFmiToolBox *theToolBox, const NFmiRect &theRelativeRect);
     Gdiplus::RectF GetStringBoundingBox(Gdiplus::Graphics& theGdiPlusGraphics, const std::string& theString, float theFontSizeInPixels, const Gdiplus::PointF& theOringinInPixels, const std::wstring& theFontNameStr);
     Gdiplus::RectF GetStringBoundingBox(Gdiplus::Graphics &theGdiPlusGraphics, const std::string &theString, const Gdiplus::PointF &theOringinInPixels, const Gdiplus::Font &theFont);

@@ -26,7 +26,7 @@ namespace CtrlView
             return 0;
         else
         {
-            double brightningFactor = 20. + (60. / theModelRunCount)*(-theCurrentIndex + theStartIndex); // mit‰ isompi luku, sit‰ enemm‰n vaalenee (0-100), vanhemmat malliajot vaaleammalla
+            double brightningFactor = 20. + (60. / theModelRunCount) * (-theCurrentIndex + theStartIndex); // mit‰ isompi luku, sit‰ enemm‰n vaalenee (0-100), vanhemmat malliajot vaaleammalla
             return brightningFactor;
         }
     }
@@ -40,7 +40,7 @@ namespace CtrlView
         return tColor;
     }
 
-    COLORREF Color2ColorRef(const NFmiColor &theColor)
+    COLORREF Color2ColorRef(const NFmiColor& theColor)
     {
         return RGB(theColor.Red() * 255, theColor.Green() * 255, theColor.Blue() * 255);
     }
@@ -63,14 +63,14 @@ namespace CtrlView
         return ns;
     }
 
-    const Gdiplus::PointF Relative2GdiplusPoint(NFmiToolBox *theToolBox, const NFmiPoint &theRelativePoint)
+    const Gdiplus::PointF Relative2GdiplusPoint(NFmiToolBox* theToolBox, const NFmiPoint& theRelativePoint)
     {
         CPoint absolutePoint;
         theToolBox->ConvertPoint(theRelativePoint, absolutePoint);
         return Gdiplus::PointF(static_cast<Gdiplus::REAL>(absolutePoint.x), static_cast<Gdiplus::REAL>(absolutePoint.y));
     }
 
-    std::vector<Gdiplus::PointF> Relative2GdiplusPolyLine(NFmiToolBox *theToolBox, const std::vector<NFmiPoint> &theRelativePolyLine, const NFmiPoint &theRelativeOffset)
+    std::vector<Gdiplus::PointF> Relative2GdiplusPolyLine(NFmiToolBox* theToolBox, const std::vector<NFmiPoint>& theRelativePolyLine, const NFmiPoint& theRelativeOffset)
     {
         bool useOffset = theRelativeOffset != NFmiPoint();
         std::vector<Gdiplus::PointF> gdiplusPolyLine(theRelativePolyLine.size());
@@ -85,32 +85,32 @@ namespace CtrlView
         return gdiplusPolyLine;
     }
 
-    const Gdiplus::Rect CRect2GdiplusRect(const CRect &theCRect)
+    const Gdiplus::Rect CRect2GdiplusRect(const CRect& theCRect)
     {
         return Gdiplus::Rect(theCRect.left, theCRect.top, theCRect.Width(), theCRect.Height());
     }
 
-    const Gdiplus::RectF CRect2GdiplusRectF(const CRect &theCRect)
+    const Gdiplus::RectF CRect2GdiplusRectF(const CRect& theCRect)
     {
         return Gdiplus::RectF(static_cast<Gdiplus::REAL>(theCRect.left), static_cast<Gdiplus::REAL>(theCRect.top),
             static_cast<Gdiplus::REAL>(theCRect.Width()), static_cast<Gdiplus::REAL>(theCRect.Height()));
     }
 
-    const Gdiplus::Rect Relative2GdiplusRect(NFmiToolBox *theToolBox, const NFmiRect &theRelativeRect)
+    const Gdiplus::Rect Relative2GdiplusRect(NFmiToolBox* theToolBox, const NFmiRect& theRelativeRect)
     {
         CRect absoluteRect;
         theToolBox->ConvertRect(theRelativeRect, absoluteRect);
         return Gdiplus::Rect(absoluteRect.left, absoluteRect.top, absoluteRect.Width(), absoluteRect.Height());
     }
 
-    const Gdiplus::RectF Relative2GdiplusRectF(NFmiToolBox *theToolBox, const NFmiRect &theRelativeRect)
+    const Gdiplus::RectF Relative2GdiplusRectF(NFmiToolBox* theToolBox, const NFmiRect& theRelativeRect)
     {
         CRect absoluteRect;
         theToolBox->ConvertRect(theRelativeRect, absoluteRect);
         return Gdiplus::RectF(static_cast<Gdiplus::REAL>(absoluteRect.left), static_cast<Gdiplus::REAL>(absoluteRect.top), static_cast<Gdiplus::REAL>(absoluteRect.Width()), static_cast<Gdiplus::REAL>(absoluteRect.Height()));
     }
 
-    const NFmiRect GdiplusRect2Relative(NFmiToolBox *theToolBox, const Gdiplus::RectF &theGdiplusRect)
+    const NFmiRect GdiplusRect2Relative(NFmiToolBox* theToolBox, const Gdiplus::RectF& theGdiplusRect)
     {
         CRect absoluteRect;
         absoluteRect.top = boost::math::iround(theGdiplusRect.Y);
@@ -122,7 +122,7 @@ namespace CtrlView
         return relativeRect;
     }
 
-    const NFmiRect GdiplusRect2Relative(NFmiToolBox *theToolBox, const Gdiplus::Rect &theGdiplusRect)
+    const NFmiRect GdiplusRect2Relative(NFmiToolBox* theToolBox, const Gdiplus::Rect& theGdiplusRect)
     {
         CRect absoluteRect;
         absoluteRect.top = theGdiplusRect.Y;
@@ -142,14 +142,14 @@ namespace CtrlView
         return relativePoint;
     }
 
-    void MakePathFromRect(Gdiplus::GraphicsPath &thePath, NFmiToolBox *theToolBox, const NFmiRect &theRelativeRect)
+    void MakePathFromRect(Gdiplus::GraphicsPath& thePath, NFmiToolBox* theToolBox, const NFmiRect& theRelativeRect)
     {
         thePath.Reset();
         thePath.AddRectangle(Relative2GdiplusRect(theToolBox, theRelativeRect));
         thePath.CloseFigure();
     }
 
-    Gdiplus::RectF GetStringBoundingBox(Gdiplus::Graphics &theGdiPlusGraphics, const std::string &theString, float theFontSizeInPixels, const Gdiplus::PointF &theOringinInPixels, const std::wstring &theFontNameStr)
+    Gdiplus::RectF GetStringBoundingBox(Gdiplus::Graphics& theGdiPlusGraphics, const std::string& theString, float theFontSizeInPixels, const Gdiplus::PointF& theOringinInPixels, const std::wstring& theFontNameStr)
     {
         Gdiplus::Font aFont(theFontNameStr.c_str(), theFontSizeInPixels, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
         return GetStringBoundingBox(theGdiPlusGraphics, theString, theOringinInPixels, aFont);
@@ -176,7 +176,7 @@ namespace CtrlView
 
     // theAlpha: 0 on t‰ysin l‰pin‰kyv‰, 0.5 = semi transparent ja 1.0 = opaque
     // HUOM! CDC voi olla 0-pointteri.
-    void DrawBitmapToDC(CDC *theDC, Gdiplus::Bitmap &theBitmap, const NFmiRect &theSourcePixels, const Gdiplus::RectF &theDestPixels, Gdiplus::REAL theAlpha, bool fDoNearestInterpolation, Gdiplus::Graphics *theGdiPlusGraphics)
+    void DrawBitmapToDC(CDC* theDC, Gdiplus::Bitmap& theBitmap, const NFmiRect& theSourcePixels, const Gdiplus::RectF& theDestPixels, Gdiplus::REAL theAlpha, bool fDoNearestInterpolation, Gdiplus::Graphics* theGdiPlusGraphics)
     {
         Gdiplus::ImageAttributes imageAttr;
         Gdiplus::ColorMatrix colorMatrix = {
@@ -190,7 +190,7 @@ namespace CtrlView
         DrawBitmapToDC(theDC, theBitmap, theSourcePixels, theDestPixels, fDoNearestInterpolation, &imageAttr, theGdiPlusGraphics);
     }
 
-    void DrawBitmapToDC(CDC *theDC, Gdiplus::Bitmap &theBitmap, const NFmiRect &theSourcePixels, const Gdiplus::RectF &theDestPixels, const Gdiplus::Color &theTransparentColor, Gdiplus::REAL theAlpha, bool fDoNearestInterpolation)
+    void DrawBitmapToDC(CDC* theDC, Gdiplus::Bitmap& theBitmap, const NFmiRect& theSourcePixels, const Gdiplus::RectF& theDestPixels, const Gdiplus::Color& theTransparentColor, Gdiplus::REAL theAlpha, bool fDoNearestInterpolation)
     {
         Gdiplus::ImageAttributes imageAttr;
         Gdiplus::ColorMatrix colorMatrix = {
@@ -205,14 +205,14 @@ namespace CtrlView
         DrawBitmapToDC(theDC, theBitmap, theSourcePixels, theDestPixels, fDoNearestInterpolation, &imageAttr);
     }
 
-    void DrawBitmapToDC(CDC *theDC, Gdiplus::Bitmap &theBitmap, const NFmiRect &theSourcePixels, const Gdiplus::RectF &theDestPixels, const Gdiplus::Color &theTransparentColor, bool fDoNearestInterpolation)
+    void DrawBitmapToDC(CDC* theDC, Gdiplus::Bitmap& theBitmap, const NFmiRect& theSourcePixels, const Gdiplus::RectF& theDestPixels, const Gdiplus::Color& theTransparentColor, bool fDoNearestInterpolation)
     {
         Gdiplus::ImageAttributes imageAttr;
         imageAttr.SetColorKey(theTransparentColor, theTransparentColor);
         DrawBitmapToDC(theDC, theBitmap, theSourcePixels, theDestPixels, fDoNearestInterpolation, &imageAttr);
     }
 
-    static void DrawBitmapToDC(Gdiplus::Graphics *theGdiPlusGraphics, bool isPrinting, Gdiplus::Bitmap &theBitmap, const NFmiRect &theSourcePixels, const Gdiplus::RectF &theDestPixels, Gdiplus::ImageAttributes *theImageAttr, bool fDoNearestInterpolation)
+    static void DrawBitmapToDC(Gdiplus::Graphics* theGdiPlusGraphics, bool isPrinting, Gdiplus::Bitmap& theBitmap, const NFmiRect& theSourcePixels, const Gdiplus::RectF& theDestPixels, Gdiplus::ImageAttributes* theImageAttr, bool fDoNearestInterpolation)
     {
         if(isPrinting)
             theGdiPlusGraphics->SetPageUnit(Gdiplus::UnitPixel); // t‰h‰n asti on pelattu printatessa aina pikseli maailmassa, joten gdiplus:in pit‰‰ laittaa siihen
@@ -244,7 +244,7 @@ namespace CtrlView
     }
 
 
-    void DrawBitmapToDC(CDC *theDC, Gdiplus::Bitmap &theBitmap, const NFmiRect &theSourcePixels, const Gdiplus::RectF &theDestPixels, bool fDoNearestInterpolation, Gdiplus::ImageAttributes *theImageAttr, Gdiplus::Graphics *theGdiPlusGraphics)
+    void DrawBitmapToDC(CDC* theDC, Gdiplus::Bitmap& theBitmap, const NFmiRect& theSourcePixels, const Gdiplus::RectF& theDestPixels, bool fDoNearestInterpolation, Gdiplus::ImageAttributes* theImageAttr, Gdiplus::Graphics* theGdiPlusGraphics)
     {
         if(theGdiPlusGraphics)
             DrawBitmapToDC(theGdiPlusGraphics, (theDC->IsPrinting() == TRUE), theBitmap, theSourcePixels, theDestPixels, theImageAttr, fDoNearestInterpolation);
@@ -255,7 +255,7 @@ namespace CtrlView
         }
     }
 
-    Gdiplus::Bitmap* CreateBitmapFromFile(const std::string &thePath, const std::string &theFileName)
+    Gdiplus::Bitmap* CreateBitmapFromFile(const std::string& thePath, const std::string& theFileName)
     {
         if(theFileName.empty())
         {
@@ -281,7 +281,7 @@ namespace CtrlView
         return CreateBitmapFromFile(finalFileName);
     }
 
-    Gdiplus::Bitmap* CreateBitmapFromFile(const std::string &thePathAndFileName)
+    Gdiplus::Bitmap* CreateBitmapFromFile(const std::string& thePathAndFileName)
     {
         if(thePathAndFileName.empty())
         {
@@ -304,7 +304,7 @@ namespace CtrlView
             HRESULT hr = SHCreateStreamOnFileEx(filePathU_, STGM_READ | STGM_SHARE_DENY_WRITE | STGM_FAILIFTHERE, FILE_ATTRIBUTE_NORMAL, FALSE, NULL, &stream); // T‰m‰ lukitsee kuvatiedoston vain kirjoitukselta (esim. deletointi) ja sekin lukko vapautuu kun tiedosto on luettu muistiin.
             if(hr != S_OK)
                 throw std::runtime_error(std::string("SHCreateStreamOnFileEx '") + thePathAndFileName + "' - failed");
-            Gdiplus::Bitmap *aBitmap = Gdiplus::Bitmap::FromStream(stream);
+            Gdiplus::Bitmap* aBitmap = Gdiplus::Bitmap::FromStream(stream);
 
             if(aBitmap == 0)
                 throw std::runtime_error(std::string("Gdiplus::Bitmap::FromFile '") + thePathAndFileName + "' - failed");
@@ -319,7 +319,7 @@ namespace CtrlView
         }
     }
 
-    void SetGdiplusAlignment(FmiDirection theAlignment, Gdiplus::StringFormat &theStringFormat)
+    void SetGdiplusAlignment(FmiDirection theAlignment, Gdiplus::StringFormat& theStringFormat)
     {
         if(theAlignment == kLeft)
         {
@@ -368,14 +368,14 @@ namespace CtrlView
         }
     }
 
-    const Gdiplus::PointF ConvertLatlonToGdiPlusPoint(NFmiCtrlView *theView, const NFmiPoint &theLatLon)
+    const Gdiplus::PointF ConvertLatlonToGdiPlusPoint(NFmiCtrlView* theView, const NFmiPoint& theLatLon)
     {
-        const NFmiPoint &viewSizeInPix = theView->GetCtrlViewDocumentInterface()->MapViewSizeInPixels(theView->MapViewDescTopIndex());
+        const NFmiPoint& viewSizeInPix = theView->GetCtrlViewDocumentInterface()->MapViewSizeInPixels(theView->MapViewDescTopIndex());
         NFmiPoint xyPoint = theView->LatLonToViewPoint(theLatLon);
-        return Gdiplus::PointF(static_cast<Gdiplus::REAL>(xyPoint.X()*viewSizeInPix.X()), static_cast<Gdiplus::REAL>(xyPoint.Y()*viewSizeInPix.Y()));
+        return Gdiplus::PointF(static_cast<Gdiplus::REAL>(xyPoint.X() * viewSizeInPix.X()), static_cast<Gdiplus::REAL>(xyPoint.Y() * viewSizeInPix.Y()));
     }
 
-    std::vector<Gdiplus::PointF> ConvertLatLon2GdiPoints(NFmiCtrlView *theView, const std::vector<NFmiPoint> &theLatlonPath)
+    std::vector<Gdiplus::PointF> ConvertLatLon2GdiPoints(NFmiCtrlView* theView, const std::vector<NFmiPoint>& theLatlonPath)
     {
         std::vector<Gdiplus::PointF> gdiPoints;
         for(size_t i = 0; i < theLatlonPath.size(); i++)
@@ -385,20 +385,20 @@ namespace CtrlView
         return gdiPoints;
     }
 
-    const NFmiPoint ConvertGdiPlusPointToLatlon(NFmiCtrlView *theView, const Gdiplus::PointF &theGdiPlusPoint)
+    const NFmiPoint ConvertGdiPlusPointToLatlon(NFmiCtrlView* theView, const Gdiplus::PointF& theGdiPlusPoint)
     {
-        const NFmiPoint &viewSizeInPix = theView->GetCtrlViewDocumentInterface()->MapViewSizeInPixels(theView->MapViewDescTopIndex());
+        const NFmiPoint& viewSizeInPix = theView->GetCtrlViewDocumentInterface()->MapViewSizeInPixels(theView->MapViewDescTopIndex());
         NFmiPoint xyPoint(theGdiPlusPoint.X / viewSizeInPix.X(), theGdiPlusPoint.Y / viewSizeInPix.Y());
         return theView->ViewPointToLatLon(xyPoint);
     }
 
     // fillHatchStyle arvolla -1 tarkoittaa ett‰ fillauksen yhteydess‰ ei k‰ytet‰ hatchi‰.
-    void DrawGdiplusCurve(Gdiplus::Graphics &theGraphics, std::vector<Gdiplus::PointF> &thePoints, const GdiPlusLineInfo &theLineInfo, bool fFill, int fillHatchStyle, bool fPrinting, std::vector<Gdiplus::REAL> *theDashPatternVector)
+    void DrawGdiplusCurve(Gdiplus::Graphics& theGraphics, std::vector<Gdiplus::PointF>& thePoints, const GdiPlusLineInfo& theLineInfo, bool fFill, int fillHatchStyle, bool fPrinting, std::vector<Gdiplus::REAL>* theDashPatternVector)
     {
         DrawGdiplusCurve(theGraphics, thePoints, theLineInfo, fFill, theLineInfo.Color(), fillHatchStyle, fPrinting, theDashPatternVector);
     }
 
-    void DrawGdiplusCurve(Gdiplus::Graphics &theGraphics, std::vector<Gdiplus::PointF> &thePoints, const GdiPlusLineInfo &theLineInfo, bool fFill, const NFmiColor &fillColor, int fillHatchStyle, bool fPrinting, std::vector<Gdiplus::REAL> *theDashPatternVector)
+    void DrawGdiplusCurve(Gdiplus::Graphics& theGraphics, std::vector<Gdiplus::PointF>& thePoints, const GdiPlusLineInfo& theLineInfo, bool fFill, const NFmiColor& fillColor, int fillHatchStyle, bool fPrinting, std::vector<Gdiplus::REAL>* theDashPatternVector)
     {
         if(thePoints.size() > 1)
         {
@@ -409,7 +409,7 @@ namespace CtrlView
                 {
                     // GDI+ on bugi eli jos printtaa hatch fillattua juttua, se on t‰ysin opaque v‰litt‰m‰tt‰ mist‰‰n v‰ri-asetuksista
                     // eli jos printtaus p‰‰ll‰ ja k‰ytet‰‰n hatchi‰, otetaan hatchays pois ja lis‰t‰‰n fillauksessa alphaa, jolloin v‰rityksest‰ tulee 'vaaleampi'
-                    Gdiplus::Color fadedUsedColor(static_cast<BYTE>(gdiFillColor.GetAlpha()*0.35), gdiFillColor.GetRed(), gdiFillColor.GetGreen(), gdiFillColor.GetBlue());
+                    Gdiplus::Color fadedUsedColor(static_cast<BYTE>(gdiFillColor.GetAlpha() * 0.35), gdiFillColor.GetRed(), gdiFillColor.GetGreen(), gdiFillColor.GetBlue());
                     Gdiplus::SolidBrush brush(fadedUsedColor);
                     theGraphics.FillClosedCurve(&brush, &thePoints[0], static_cast<INT>(thePoints.size()),
                         Gdiplus::FillModeWinding, theLineInfo.Tension());
@@ -523,7 +523,7 @@ namespace CtrlView
         theGdiPlusGraphics.DrawString(theStr.c_str(), static_cast<INT>(theStr.size()), aFont.get(), aPlace, &stringFormat, &aBrush);
     }
 
-    void DrawSimpleText(Gdiplus::Graphics &theGdiPlusGraphics, const NFmiColor &theColor, float theFontSizeInPixels, const std::string &theStr, const NFmiPoint &theAbsPlace, const std::wstring &theFontNameStr, FmiDirection theAlingment, Gdiplus::FontStyle theFontStyle, const NFmiColor *theBkColor)
+    void DrawSimpleText(Gdiplus::Graphics& theGdiPlusGraphics, const NFmiColor& theColor, float theFontSizeInPixels, const std::string& theStr, const NFmiPoint& theAbsPlace, const std::wstring& theFontNameStr, FmiDirection theAlingment, Gdiplus::FontStyle theFontStyle, const NFmiColor* theBkColor)
     {
         Gdiplus::Color usedColor(NFmiColor2GdiplusColor(theColor));
         Gdiplus::SolidBrush aBrush(usedColor);
@@ -545,14 +545,14 @@ namespace CtrlView
         theGdiPlusGraphics.DrawString(wideStr.c_str(), static_cast<INT>(wideStr.size()), aFont.get(), aPlace, &stringFormat, &aBrush);
     }
 
-    void DrawLine(Gdiplus::Graphics &theGdiPlusGraphics, int x1, int y1, int x2, int y2, const NFmiColor &theColor, float thePenWidthInPixels, Gdiplus::DashStyle theDashStyle)
+    void DrawLine(Gdiplus::Graphics& theGdiPlusGraphics, int x1, int y1, int x2, int y2, const NFmiColor& theColor, float thePenWidthInPixels, Gdiplus::DashStyle theDashStyle)
     {
         Gdiplus::Pen aPen(NFmiColor2GdiplusColor(theColor), thePenWidthInPixels);
         aPen.SetDashStyle(theDashStyle);
         theGdiPlusGraphics.DrawLine(&aPen, x1, y1, x2, y2);
     }
 
-    void DrawRect(Gdiplus::Graphics &theGdiPlusGraphics, const Gdiplus::Rect &theRectInPixels, const NFmiColor &theRectFrameColor, const NFmiColor &theRectFillColor, bool doFill, bool doFrame, float theRectFrameWidthInPixels, Gdiplus::DashStyle theDashStyle)
+    void DrawRect(Gdiplus::Graphics& theGdiPlusGraphics, const Gdiplus::Rect& theRectInPixels, const NFmiColor& theRectFrameColor, const NFmiColor& theRectFillColor, bool doFill, bool doFrame, float theRectFrameWidthInPixels, Gdiplus::DashStyle theDashStyle)
     {
         Gdiplus::GraphicsPath aPath;
         aPath.AddRectangle(theRectInPixels);
@@ -571,7 +571,7 @@ namespace CtrlView
         }
     }
 
-    void DrawPath(Gdiplus::Graphics &theGdiPlusGraphics, const Gdiplus::GraphicsPath &thePathInPixels, const NFmiColor &theFrameColor, const NFmiColor &theFillColor, bool doFill, bool doFrame, float theFrameWidthInPixels)
+    void DrawPath(Gdiplus::Graphics& theGdiPlusGraphics, const Gdiplus::GraphicsPath& thePathInPixels, const NFmiColor& theFrameColor, const NFmiColor& theFillColor, bool doFill, bool doFrame, float theFrameWidthInPixels)
     {
         if(doFill)
         {
@@ -585,7 +585,7 @@ namespace CtrlView
         }
     }
 
-    void DrawAnimationButton(const NFmiRect &theRect, Gdiplus::Bitmap *theButtonImage, Gdiplus::Graphics *theGdiPlusGraphics, NFmiToolBox &theToolBox, bool isPrinting, const NFmiPoint &theViewSizeInPixels, Gdiplus::REAL theAlpha, bool fForceSize, bool fDoNearestInterpolation)
+    void DrawAnimationButton(const NFmiRect& theRect, Gdiplus::Bitmap* theButtonImage, Gdiplus::Graphics* theGdiPlusGraphics, NFmiToolBox& theToolBox, bool isPrinting, const NFmiPoint& theViewSizeInPixels, Gdiplus::REAL theAlpha, bool fForceSize, bool fDoNearestInterpolation)
     {
         if(theButtonImage == 0)
         {
@@ -611,7 +611,7 @@ namespace CtrlView
         }
     }
 
-    void DrawImageButton(const CRect &theAbsRect, Gdiplus::Bitmap *theButtonImage, Gdiplus::Graphics *theGdiPlusGraphics, Gdiplus::REAL theAlpha, bool isPrinting)
+    void DrawImageButton(const CRect& theAbsRect, Gdiplus::Bitmap* theButtonImage, Gdiplus::Graphics* theGdiPlusGraphics, Gdiplus::REAL theAlpha, bool isPrinting)
     {
         if(theButtonImage == 0)
         {
@@ -632,7 +632,7 @@ namespace CtrlView
     }
 
 
-    void DrawBitmap(Gdiplus::Bitmap &theBitmap, const NFmiRect &theSourcePixels, const Gdiplus::RectF &theDestPixels, Gdiplus::REAL theAlpha, Gdiplus::Graphics *theGdiPlusGraphics, bool isPrinting, bool fDoNearestInterpolation)
+    void DrawBitmap(Gdiplus::Bitmap& theBitmap, const NFmiRect& theSourcePixels, const Gdiplus::RectF& theDestPixels, Gdiplus::REAL theAlpha, Gdiplus::Graphics* theGdiPlusGraphics, bool isPrinting, bool fDoNearestInterpolation)
     {
         Gdiplus::ImageAttributes imageAttr;
         Gdiplus::ColorMatrix colorMatrix = {
@@ -646,4 +646,10 @@ namespace CtrlView
         DrawBitmapToDC(theGdiPlusGraphics, isPrinting, theBitmap, theSourcePixels, theDestPixels, &imageAttr, fDoNearestInterpolation);
     }
 
+    NFmiPoint RelativeSizeToPixelSize(const NFmiPoint& relativeSize, NFmiToolBox& theToolBox)
+    {
+        auto widthInPixels = theToolBox.HX(relativeSize.X());
+        auto heightInPixels = theToolBox.HY(relativeSize.Y());
+        return NFmiPoint(widthInPixels, heightInPixels);
+    }
 }
