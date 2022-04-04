@@ -2685,14 +2685,16 @@ bool NFmiTimeSerialView::ScanDataForMinAndMaxValues(boost::shared_ptr<NFmiFastQu
 //	if(theInfo->Location(theLatlon))
 	{
 		bool interpolateLocation = (theInfo->Grid() != 0);
-		theInfo->FindNearestTime(theLimitingTimes.FirstTime(), kBackward);
+		auto usedStartTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(theInfo, theLimitingTimes.FirstTime());
+		theInfo->FindNearestTime(usedStartTime, kBackward);
 		int timeIndex1 = theInfo->TimeIndex();
 		if(timeIndex1 == -1)
 		{
 			if(theLimitingTimes.IsInside(theInfo->TimeDescriptor().FirstTime()))
 				timeIndex1 = 0;
 		}
-		theInfo->FindNearestTime(theLimitingTimes.LastTime(), kForward);
+		auto usedLastTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(theInfo, theLimitingTimes.LastTime());
+		theInfo->FindNearestTime(usedLastTime, kForward);
 		int timeIndex2 = theInfo->TimeIndex();
 		if(timeIndex2 == -1)
 		{
