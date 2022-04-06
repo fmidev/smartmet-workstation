@@ -23,7 +23,7 @@ bool NFmiVisualizationSpaceoutSettings::Init(const std::string & baseRegistryPat
     HKEY usedKey = HKEY_CURRENT_USER;
 
     pixelToGridPointRatio_ = ::CreateRegValue<CachedRegDouble>(baseRegistryPath_, sectionName_, "\\pixelToGridPointRatio", usedKey, criticalPixelToGridPointRatioLimit_);
-    pixelToGridPointRatio(*pixelToGridPointRatio_); // Tarkistetään rekisteristä luetut arvot
+    pixelToGridPointRatio(*pixelToGridPointRatio_, true); // Tarkistetään rekisteristä luetut arvot
     baseSpaceoutGridSize_ = ::CreateRegValue<CachedRegInt>(baseRegistryPath_, sectionName_, "\\baseSpaceoutGridSize", usedKey, 100);
     baseSpaceoutGridSize(*baseSpaceoutGridSize_); // Tarkistetään rekisteristä luetut arvot
     useGlobalVisualizationSpaceoutFactorOptimization_ = ::CreateRegValue<CachedRegBool>(baseRegistryPath_, sectionName_, "\\useGlobalVisualizationSpaceoutFactorOptimization", usedKey, false);
@@ -101,12 +101,18 @@ double NFmiVisualizationSpaceoutSettings::pixelToGridPointRatio() const
     return *pixelToGridPointRatio_;
 }
 
-void NFmiVisualizationSpaceoutSettings::pixelToGridPointRatio(double newValue)
+void NFmiVisualizationSpaceoutSettings::pixelToGridPointRatio(double newValue, bool firstInitialization)
 {
     if(newValue < minPixelToGridPointRatioValue_)
         newValue = minPixelToGridPointRatioValue_;
     if(newValue > maxPixelToGridPointRatioValue_)
         newValue = maxPixelToGridPointRatioValue_;
+    if(firstInitialization && newValue < criticalPixelToGridPointRatioLimit_)
+    {
+        // Pakotetaan SmartMetin käynnistyksessä liian alhainen arvo kriittiselle rajalle takaisin
+        newValue = criticalPixelToGridPointRatioLimit_;
+    }
+
     *pixelToGridPointRatio_ = newValue;
 }
 

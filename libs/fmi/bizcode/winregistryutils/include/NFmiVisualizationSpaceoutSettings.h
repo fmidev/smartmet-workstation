@@ -74,7 +74,7 @@ public:
 
 	double criticalPixelToGridPointRatioLimit() const { return criticalPixelToGridPointRatioLimit_; }
 	double pixelToGridPointRatio() const;
-	void pixelToGridPointRatio(double newValue);
+	void pixelToGridPointRatio(double newValue, bool firstInitialization = false);
 	double minPixelToGridPointRatioValue() const { return minPixelToGridPointRatioValue_; }
 	double maxPixelToGridPointRatioValue() const { return maxPixelToGridPointRatioValue_; }
 	bool usePixelToGridPointRatioSafetyFeature() const { return usePixelToGridPointRatioSafetyFeature_; }
