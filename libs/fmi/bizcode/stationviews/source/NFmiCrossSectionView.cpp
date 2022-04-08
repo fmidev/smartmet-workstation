@@ -638,6 +638,11 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 	// tooltippiä ei piirretä, jos tooltip mode on pois päältä (HUOM!, tein funktion nimestä huolimatta universaalin on/off säätimen tooltipeille)
     if(crossSectionSystem->ShowTooltipOnCrossSectionView() == false)
 		return str;
+	else if(itsParamHandlerView && itsParamHandlerView->IsIn(theRelativePoint))
+	{
+		return itsParamHandlerView->ComposeToolTipText(theRelativePoint);
+	}
+
 	try
 	{
 		NFmiDrawParamList *dpList = itsCtrlViewDocumentInterface->CrossSectionViewDrawParamList(itsViewGridRowNumber);

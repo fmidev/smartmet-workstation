@@ -10,6 +10,8 @@
 #include "NFmiInfoOrganizer.h"
 #include "NFmiProducerSystem.h"
 #include "ColorStringFunctions.h"
+#include "NFmiMacroParamSystem.h"
+#include "NFmiMacroParam.h"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/round.hpp>
@@ -643,4 +645,13 @@ namespace CtrlViewUtils
             return false;
         }
     }
+
+    std::string GetMacroParamFormula(NFmiMacroParamSystem& macroParamSystem, boost::shared_ptr<NFmiDrawParam>& theDrawParam)
+    {
+        auto macroParamPtr = macroParamSystem.GetWantedMacro(theDrawParam->InitFileName());
+        if(macroParamPtr)
+            return macroParamPtr->MacroText();
+        throw std::runtime_error(std::string(__FUNCTION__) + ": couldn't found macro parameter: " + theDrawParam->ParameterAbbreviation());
+    }
+
 } // namespace CtrlViewUtils

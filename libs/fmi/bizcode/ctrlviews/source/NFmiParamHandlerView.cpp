@@ -268,3 +268,12 @@ void NFmiParamHandlerView::DrawBackground(void)
 			  itsDrawingEnvironment);
 	itsToolBox->Convert(&tmp);
 }
+
+std::string NFmiParamHandlerView::ComposeToolTipText(const NFmiPoint& thePlace)
+{
+	if(itsViewParamsView && itsViewParamsView->IsIn(thePlace))
+	{
+		return itsViewParamsView->ComposeToolTipText(thePlace);
+	}
+	return "";
+}

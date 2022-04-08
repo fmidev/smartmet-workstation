@@ -965,7 +965,7 @@ BOOL CFmiTMColorIndexDlg::OnInitDialog()
 	CDialog::OnInitDialog();
 
     CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
-    CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, COLOR_INDEX_VIEW_TOOLTIP_ID);
+    CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, COLOR_INDEX_VIEW_TOOLTIP_ID, 400);
     InitializeColorRects();
 	SetWindowText(CA2T(itsTitleStr.c_str()));
 	CFmiWin32Helpers::SetDialogItemText(this, IDOK, "IDOK");

@@ -72,6 +72,7 @@ class NFmiViewParamsView : public NFmiParamCommandView
 	NFmiRect CalcSize(void); // koko saattaa muuttua, ja uutta kokoa pit‰‰ voida kysy‰ oliolta
 	bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta) override;
     bool IsMouseCaptured(void) { return fMouseCaptured; }
+	std::string ComposeToolTipText(const NFmiPoint& thePlace) override;
 
  protected:
     int GetParamCount(void);

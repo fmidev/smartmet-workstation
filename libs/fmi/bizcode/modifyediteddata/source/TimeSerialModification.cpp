@@ -2583,14 +2583,6 @@ static bool LoadData(TimeSerialModificationDataInterface &theAdapter, bool fRemo
 	return status;
 }
 
-std::string FmiModifyEditdData::GetMacroParamFormula(NFmiMacroParamSystem &macroParamSystem, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
-{
-    auto macroParamPtr = macroParamSystem.GetWantedMacro(theDrawParam->InitFileName());
-    if(macroParamPtr)
-        return macroParamPtr->MacroText();
-    throw std::runtime_error(std::string(__FUNCTION__) + ": couldn't found macro parameter: " + theDrawParam->ParameterAbbreviation());
-}
-
 // Pit‰‰ tehd‰ alustuksia laskuissa k‰ytetyn fastInfon ja datamatriisin v‰lill‰.
 static void InitializeMacroParamData(const NFmiTimeDescriptor &theTimes, boost::shared_ptr<NFmiFastQueryInfo> &theMacroInfo, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue)
 {
@@ -2624,7 +2616,7 @@ void FmiModifyEditdData::InitializeSmartToolModifier(NFmiSmartToolModifier &theS
 	theSmartToolModifier.SetGriddingHelper(theAdapter.GetGriddingHelper());
 	theSmartToolModifier.IncludeDirectory(theAdapter.MacroParamSystem().RootPath());
 
-	std::string macroParamStr = FmiModifyEditdData::GetMacroParamFormula(theAdapter.MacroParamSystem(), theDrawParam);
+	std::string macroParamStr = CtrlViewUtils::GetMacroParamFormula(theAdapter.MacroParamSystem(), theDrawParam);
 	theSmartToolModifier.InitSmartTool(macroParamStr, true);
 }
 

@@ -181,10 +181,10 @@ END_MESSAGE_MAP()
 
 BOOL NFmiCaseStudyGridCtrl::OnInitDialog()
 {
-	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, CASE_STUDY_DIALOG_TOOLTIP_ID);
-	m_tooltip.SetMaxTipWidth(700);
-	m_tooltip.SetDelayTime(PPTOOLTIP_TIME_AUTOPOP, 30000); // kuinka kauan tooltippi viipyy, jos kursoria ei liikuteta [ms]
-	m_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 1000); // kuinka nopeasti tooltip ilmestyy näkyviin, jos kursoria ei liikuteta [ms]
+	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, CASE_STUDY_DIALOG_TOOLTIP_ID, 700);
+	// Kuinka nopeasti tooltip ilmestyy näkyviin, jos kursoria ei liikuteta [ms],
+	// Laitetaan tähän defaulttia 0.5 s isompi viive eli 1 s.
+	m_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 1000); 
 
 	return TRUE;
 }

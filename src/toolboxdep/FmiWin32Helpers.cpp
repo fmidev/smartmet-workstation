@@ -329,7 +329,7 @@ bool CFmiWin32Helpers::BitmapToPrinter(CDC *thePrinterDC // printterin device co
 	return status;
 }
 
-void CFmiWin32Helpers::InitializeCPPTooltip(CWnd *theParentView, CPPToolTip &theTooltip, int theTooltipID)
+void CFmiWin32Helpers::InitializeCPPTooltip(CWnd *theParentView, CPPToolTip &theTooltip, int theTooltipID, int maxWidthInPixels)
 {
 	theTooltip.Create(theParentView);
 	theTooltip.SetNotify();
@@ -348,8 +348,10 @@ void CFmiWin32Helpers::InitializeCPPTooltip(CWnd *theParentView, CPPToolTip &the
 	ti.sTooltip = "";
 	ti.nMask = PPTOOLTIP_MASK_BEHAVIOUR;
 	theTooltip.AddTool(theParentView, ti);
-	theTooltip.SetTransparency(20); // l‰pin‰kyvyys 0-100 asteikolla (100 t‰ysin l‰pin‰kyv‰)
-	theTooltip.SetMaxTipWidth(400); // max leveys esim. 400 pikseli‰, jonka j‰lkeen word-wrap p‰‰lle
+    // L‰pin‰kyvyys 0-100 asteikolla (100 t‰ysin l‰pin‰kyv‰)
+	theTooltip.SetTransparency(20); 
+     // Max leveys esim. 400 pikseli‰, jonka j‰lkeen word-wrap p‰‰lle
+	theTooltip.SetMaxTipWidth(maxWidthInPixels);
 }
 
 HBITMAP CFmiWin32Helpers::GetBitmapFromResources(DWORD dwID)

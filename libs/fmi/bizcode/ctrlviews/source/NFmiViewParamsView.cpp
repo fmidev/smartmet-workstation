@@ -20,6 +20,7 @@
 #include "ToolBoxStateRestorer.h"
 #include "NFmiMacroParamDataCache.h"
 #include "CombinedMapHandlerInterface.h"
+#include "NFmiFastInfoUtils.h"
 
 #include <gdiplus.h>
 #include "boost\math\special_functions\round.hpp"
@@ -500,6 +501,72 @@ bool NFmiViewParamsView::LeftButtonUp(const NFmiPoint &thePlace, unsigned long t
 		}
 	}
 	return false;
+}
+
+// Ainoa tapaus mikä kiinnostaa on macroParamit ja niiden kaavat
+std::string NFmiViewParamsView::ComposeToolTipText(const NFmiPoint& thePlace)
+{
+	NFmiDrawParamList* paramList = GetDrawParamList();
+	if(paramList)
+	{
+		int index = CalcParameterRowIndex(thePlace);
+		if(paramList->Index(index))
+		{
+			boost::shared_ptr<NFmiDrawParam> drawParam = paramList->Current();
+			if(drawParam)
+			{
+				auto dataType = drawParam->DataType();
+				if(dataType == NFmiInfoData::kMacroParam || dataType == NFmiInfoData::kCrossSectionMacroParam || dataType == NFmiInfoData::kQ3MacroParam)
+				{
+					try
+					{
+						return CtrlViewUtils::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), drawParam);
+					}
+					catch(...)
+					{
+					}
+				}
+				else
+				{
+					bool crossSectionCase = itsMapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView;
+					bool timeSerialCase = itsMapViewDescTopIndex == CtrlViewUtils::kFmiTimeSerialView;
+					std::string str = CtrlViewUtils::GetParamNameString(drawParam, crossSectionCase, true, true, 0, timeSerialCase);
+					std::string tmpLatestObsStr = CtrlViewUtils::GetLatestObservationTimeString(drawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("YYYY.MM.DD HH:mm"), crossSectionCase);
+					if(!tmpLatestObsStr.empty())
+					{
+						str += "\n";
+						str += tmpLatestObsStr;
+					}
+
+					if(itsMapViewDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+					{
+						std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector;
+						auto mapViewArea = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex)->Area();
+						itsCtrlViewDocumentInterface->MakeDrawedInfoVectorForMapView(infoVector, drawParam, mapViewArea);
+						if(!infoVector.empty())
+						{
+							for(const auto &info : infoVector)
+							{
+								str += "\n";
+								str += NFmiFastInfoUtils::GetTotalDataFilePath(info);
+							}
+						}
+					}
+					else
+					{
+						auto info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParam, crossSectionCase, true);
+						if(info)
+						{
+							str += "\n";
+							str += NFmiFastInfoUtils::GetTotalDataFilePath(info);
+						}
+					}
+					return str;
+				}
+			}
+		}
+	}
+	return "";
 }
 
 // HUOM! theRowIndex on parametrin rivi numero tällä karttanäyttö rivillä. Sillä lasketaan painonappien paikat.

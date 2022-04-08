@@ -13,6 +13,7 @@ class NFmiDrawParam;
 class CtrlViewDocumentInterface;
 class NFmiProducerSystem;
 class NFmiFastQueryInfo;
+class NFmiMacroParamSystem;
 
 namespace CtrlViewUtils
 {
@@ -20,6 +21,7 @@ namespace CtrlViewUtils
     const int MaxViewGridXSize = 10;
     const int MaxViewGridYSize = 5; // tämä on myös viewcachen max rivikoko
     const unsigned int kDoAllMapViewDescTopIndex = 999;
+    const int MaxMapViewTooltipWidthInPixels = 600;
 
    NFmiPoint CalcTimeScaleFontSizeInPixels(double thePixelsPerMMinX);
    // lat/lon-string helpers
@@ -71,4 +73,5 @@ namespace CtrlViewUtils
    double CalcAngle(const NFmiPoint& point1, const NFmiPoint& point2);
    double CalcAngle(double x, double y);
    bool IsModularParameter(FmiParameterName theParam);
+   std::string GetMacroParamFormula(NFmiMacroParamSystem& macroParamSystem, boost::shared_ptr<NFmiDrawParam>& theDrawParam);
 } // namespace CtrlViewUtils

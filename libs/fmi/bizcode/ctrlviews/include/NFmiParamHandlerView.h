@@ -50,6 +50,7 @@ class NFmiParamHandlerView : public NFmiParamCommandView
    bool IsMouseDraggingOn(void) override;
    bool Init(void);
    bool IsMouseCaptured(void) { return fMouseCaptured; }
+   std::string ComposeToolTipText(const NFmiPoint& thePlace) override;
 
  protected:
    void UpdateTextData(void);
