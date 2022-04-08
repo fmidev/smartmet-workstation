@@ -67,7 +67,7 @@ bool NFmiInfoOrganizer::Init(const std::string &theDrawParamPath,
   UpdateMacroParamDataSize(static_cast<int>(itsMacroParamGridSize.X()),
                            static_cast<int>(itsMacroParamGridSize.Y()));
   UpdateOptimizedVisualizationMacroParamDataSize(static_cast<int>(itsOptimizedVisualizationGridSize.X()),
-      static_cast<int>(itsOptimizedVisualizationGridSize.Y()));
+      static_cast<int>(itsOptimizedVisualizationGridSize.Y()), nullptr);
   return itsDrawParamFactory->Init();
 }
 
@@ -1418,7 +1418,7 @@ void NFmiInfoOrganizer::SetOptimizedVisualizationMacroParamDataGridSize(int x, i
 {
   FixMacroParamDataGridSize(x, y);
   itsOptimizedVisualizationGridSize = NFmiPoint(x, y);
-  UpdateOptimizedVisualizationMacroParamDataSize(x, y);
+  UpdateOptimizedVisualizationMacroParamDataSize(x, y, nullptr);
 }
 
 void NFmiInfoOrganizer::SetMacroParamDataMinGridSize(int x, int y)
@@ -1480,10 +1480,11 @@ void NFmiInfoOrganizer::UpdateMacroParamDataSize(int x, int y)
       NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(x, y, NFmiInfoData::kMacroParam);
 }
 
-void NFmiInfoOrganizer::UpdateOptimizedVisualizationMacroParamDataSize(int x, int y)
+void NFmiInfoOrganizer::UpdateOptimizedVisualizationMacroParamDataSize(
+    int x, int y, boost::shared_ptr<NFmiArea> wantedArea)
 {
   itsOptimizedVisualizationMacroParamData =
-      NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(x, y, NFmiInfoData::kMacroParam);
+      NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(x, y, NFmiInfoData::kMacroParam, wantedArea);
 }
 
 
