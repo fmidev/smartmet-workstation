@@ -245,6 +245,7 @@ protected:
    bool IsolineDataDownSizingNeeded(const NFmiIsoLineData& theIsoLineData, const NFmiPoint& thePixelToGridPointRatio, NFmiPoint& theDownSizeFactorOut, const boost::shared_ptr<NFmiDrawParam>& thePossibleDrawParam);
    bool IsDownSizingNeeded(const NFmiPoint& thePixelToGridPointRatio, double usedPixelToGridPointRatio, NFmiPoint& theDownSizeFactorOut);
    void UpdateOptimizedGridValues(const NFmiRect& dataAreaXyRect, int gridSizeX, int gridSizeY);
+   void UpdateOptimizedVisualizationMacroParamData();
 
    NFmiRect itsGeneralStationRect;
    FmiParameterName itsParamId;
