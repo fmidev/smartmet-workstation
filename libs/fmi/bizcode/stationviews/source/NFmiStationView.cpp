@@ -1549,10 +1549,19 @@ bool NFmiStationView::IsGridDataDrawnWithSpaceOutSymbols()
 	return false;
 }
 
+void NFmiStationView::UpdateOptimizedVisualizationMacroParamData()
+{
+	auto areaBasedGridSize = GetVisualizationSettings().calcAreaGridSize(*itsArea, CalcViewGridSize());
+	itsCtrlViewDocumentInterface->InfoOrganizer()->UpdateOptimizedVisualizationMacroParamDataSize(boost::math::iround(areaBasedGridSize.X()), boost::math::iround(areaBasedGridSize.Y()), itsArea);
+}
+
 // Tähän ei oteta mukaan VisualizationOptimization hilakokolaskuja, koska tässä lasketaan
 // jo harvennettuun laskentahilaan mahdollisen symbolipiirron takia.
 boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreatePossibleSpaceOutMacroParamData()
 {
+	// Huom! Tehdään valitettava kaksoistoiminto, mutta päivitetään aluksi myös OptimizedVisualizationMacroParamData:n
+	// area ja koko, jota tarvitaan myöhemmin.
+	UpdateOptimizedVisualizationMacroParamData();
     if(IsGridDataDrawnWithSpaceOutSymbols())
     {
         auto probingData = ::CreateProbingMacroParamData(itsArea);
