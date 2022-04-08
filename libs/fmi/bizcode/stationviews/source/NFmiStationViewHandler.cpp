@@ -4226,10 +4226,13 @@ std::string NFmiStationViewHandler::ComposeMapLayerToolTipText(bool beforeDataIs
 std::string NFmiStationViewHandler::ComposeToolTipText(const NFmiPoint& theRelativePoint)
 {
 	std::string str;
-	// Parametri laatikon päältä ei tehdä tooltippiä, koska jotkut tooltipien laskut ovat super hitaita ja saattavat häiritä parametrin valinta popupin avautumista.
-	// Tehdään param-boxille oma tooltip jos tarvis...
+	// Parametri laatikon päältä ei tehdä normi tooltippiä, koska jotkut tooltipien laskut ovat super hitaita ja saattavat häiritä parametrin valinta popupin avautumista.
+	// Tehdään param-boxille vain tiettyjen tapauksien käsittely kuten mikä on kohdalla olevan macroParamin kaava, tms.
 	if(IsMouseCursorOverParameterBox(theRelativePoint))
-		return str;
+	{
+		return itsParamHandlerView->ComposeToolTipText(theRelativePoint);
+	}
+
 	if(itsViewList)
 	{
 		NFmiString timeStr = itsTime.ToStr(::GetDictionaryString("TempViewLegendTimeFormat"), itsCtrlViewDocumentInterface->Language());

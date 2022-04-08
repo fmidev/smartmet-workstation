@@ -192,7 +192,7 @@ void CTimeEditValuesView::OnInitialUpdate()
 		itsManagerView = new NFmiTimeValueEditManagerView(rect
 														 ,itsToolBox
 														 ,&itsDrawingEnvironment);
-	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, TIMEVIEW_TOOLTIP_ID);
+	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, TIMEVIEW_TOOLTIP_ID, 500);
 	CRect winRec;
 	GetWindowRect(winRec);
 	OnSize(SW_RESTORE, winRec.Width(), winRec.Height()); // jostain syystä on pakko tehdä onsize, että tooltip toimii varmasti koko ikkunan alueella?!?!?

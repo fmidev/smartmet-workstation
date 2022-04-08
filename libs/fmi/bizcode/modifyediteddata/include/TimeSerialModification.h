@@ -65,7 +65,6 @@ namespace FmiModifyEditdData
 	bool UndoData(TimeSerialModificationDataInterface &theAdapter);
 	bool RedoData(TimeSerialModificationDataInterface &theAdapter);
     std::string GetModifiedParamsForLog(NFmiParamBag & modifiedParams);
-    std::string GetMacroParamFormula(NFmiMacroParamSystem &macroParamSystem, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
     std::string DataFilterToolsParamsForLog(TimeSerialModificationDataInterface &theAdapter);
     std::vector<boost::shared_ptr<NFmiFastQueryInfo>> GetAnalyzeToolInfos(NFmiInfoOrganizer &infoOrganizer, const NFmiParam &theParam, NFmiInfoData::Type theType, bool fGroundData, int theProducerId, int theProducerId2 = -1);
     bool SetupObsBlenderData(TimeSerialModificationDataInterface &theAdapter, const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, boost::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut);

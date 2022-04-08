@@ -1520,7 +1520,7 @@ std::string NFmiCombinedMapHandler::doGetMacroParamFormula(boost::shared_ptr<NFm
 	std::string logErrorMessage;
 	try
 	{
-		return FmiModifyEditdData::GetMacroParamFormula(getMacroParamSystem(), drawParam);
+		return CtrlViewUtils::GetMacroParamFormula(getMacroParamSystem(), drawParam);
 	}
 	catch(std::exception & e)
 	{

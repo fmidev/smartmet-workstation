@@ -143,7 +143,7 @@ BOOL CFmiDataQualityCheckerDialog::OnInitDialog()
 
     std::string titleStr = ::GetDictionaryString("Data quality checking");
     SetWindowText(CA2T(titleStr.c_str()));
-	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, DATA_QUALITY_VIEW_TOOLTIP_ID);
+	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, DATA_QUALITY_VIEW_TOOLTIP_ID, 400);
 
 	CWnd *doCheckButton = GetDlgItem(IDC_BUTTON_DO_QUALITY_CHECK);
 	if(doCheckButton)
