@@ -21,7 +21,7 @@ namespace CtrlViewUtils
     const int MaxViewGridXSize = 10;
     const int MaxViewGridYSize = 5; // tämä on myös viewcachen max rivikoko
     const unsigned int kDoAllMapViewDescTopIndex = 999;
-    const int MaxMapViewTooltipWidthInPixels = 600;
+    const int MaxMapViewTooltipWidthInPixels = 900;
 
    NFmiPoint CalcTimeScaleFontSizeInPixels(double thePixelsPerMMinX);
    // lat/lon-string helpers
