@@ -56,6 +56,8 @@ class NFmiVisualizationSpaceoutSettings
 	// Contoureja on turha piirtää tarkasti, jos piirrettävä data hilatarkkuus lähestyy näytön pikseli tasoa.
 	// Jos piirrettävä hila menee tämän rajan alle, piirretään data quick-contour tavalla (nopea, eikä menetetä juuri näköä).
 	const double criticalPixelToGridPointRatioLimitForContours_ = 1.4;
+	// Halutessa harvennusoptimoita voi käyttää myös Beta-tuote tuotannossa, mutta oletuksena se on pois päältä.
+	boost::shared_ptr<CachedRegBool> useSpaceoutOptimizationsForBetaProducts_;
 
 	// Windows rekisterin käyttöön liittyviä muuttujia
 	bool initialized_ = false;
@@ -65,12 +67,13 @@ public:
 	NFmiVisualizationSpaceoutSettings();
 	bool Init(const std::string& baseRegistryPath);
 
-	bool updateFromDialog(double newPixelToGridPointRatio, bool newUsePixelToGridPointRatioSafetyFeature, int newBaseSpaceoutGridSize, bool newUseGlobalVisualizationSpaceoutFactorOptimization, int newSpaceoutDataGatheringMethod);
+	bool updateFromDialog(double newPixelToGridPointRatio, bool newUsePixelToGridPointRatioSafetyFeature, int newBaseSpaceoutGridSize, bool newUseGlobalVisualizationSpaceoutFactorOptimization, int newSpaceoutDataGatheringMethod, bool newUseSpaceoutOptimizationsForBetaProducts);
 	void doViewUpdateWarningLogsIfNeeded();
-	bool checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, const NFmiArea& mapArea, NFmiGrid &optimizedGridOut, int viewSubGridSize) const;
-	NFmiPoint getCheckedPossibleOptimizedGridSize(const NFmiPoint& suggestedGridSize, NFmiArea& mapArea, int viewSubGridSize) const;
+	bool checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, const NFmiArea& mapArea, NFmiGrid &optimizedGridOut, int viewSubGridSize, bool betaProductRunning) const;
+	NFmiPoint getCheckedPossibleOptimizedGridSize(const NFmiPoint& suggestedGridSize, NFmiArea& mapArea, int viewSubGridSize, bool betaProductRunning) const;
 	NFmiPoint calcAreaGridSize(NFmiArea& area, int viewSubGridSize) const;
 	std::string composePossibleTooltipWarningText(NFmiArea& area, int viewSubGridSize) const;
+	bool preventOptimizationsForBetaProducts(bool betaProductRunning) const;
 
 	double criticalPixelToGridPointRatioLimit() const { return criticalPixelToGridPointRatioLimit_; }
 	double pixelToGridPointRatio() const;
@@ -88,6 +91,8 @@ public:
 	int spaceoutDataGatheringMethod() const;
 	void spaceoutDataGatheringMethod(int newValue);
 	double criticalPixelToGridPointRatioLimitForContours() const;
+	bool useSpaceoutOptimizationsForBetaProducts() const;
+	void useSpaceoutOptimizationsForBetaProducts(bool newState);
 
 	static double calcViewSubGridFactor(int viewSubGridSize);
 

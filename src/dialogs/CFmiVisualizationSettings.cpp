@@ -31,6 +31,7 @@ CFmiVisualizationSettings::CFmiVisualizationSettings(CWnd* pParent)
 	, itsPixelToGridPointRatioWarningStr(_T(""))
 	, itsPixelToGridPointRatioValueStr(_T(""))
 	, itsGlobalVisualizationSpaceoutGridSizeResultsStr(_T(""))
+	, fUseSpaceoutOptimizationsWithBetaProducts(FALSE)
 {
 	itsApplicationWinRegistry = &SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->ApplicationWinRegistry();
 }
@@ -50,6 +51,7 @@ void CFmiVisualizationSettings::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_STATIC_PIXEL_TO_GRID_POINT_RATIO_VALUE_STR, itsPixelToGridPointRatioValueStr);
 	DDX_Control(pDX, IDC_SLIDER_GLOBAL_VISUALIZATION_SPACEOUT_FACTOR, itsGlobalVisualizationSpaceoutGridSizeSlider);
 	DDX_Text(pDX, IDC_STATIC_GLOBAL_VISUALIZATION_SPACEOUT_FACTOR_RESULTS_STR, itsGlobalVisualizationSpaceoutGridSizeResultsStr);
+	DDX_Check(pDX, IDC_CHECK_USE_SPACE_OUT_OPTIMIZATIONS_WITH_BETA_PRODUCTS, fUseSpaceoutOptimizationsWithBetaProducts);
 }
 
 
@@ -94,6 +96,8 @@ BOOL CFmiVisualizationSettings::OnInitDialog()
 	itsSpaceoutDataGatheringMethodComboBox.AddString(CA2T(::GetDictionaryString("Linear-interpolation").c_str()));
 	itsSpaceoutDataGatheringMethodComboBox.AddString(CA2T(::GetDictionaryString("Median-filter").c_str()));
 	itsSpaceoutDataGatheringMethodComboBox.SetCurSel(0); // GetVisualizationSettings().spaceoutDataGatheringMethod());
+
+	fUseSpaceoutOptimizationsWithBetaProducts = GetVisualizationSettings().useSpaceoutOptimizationsForBetaProducts();
 
 	// Tee paikan asetus vasta tooltipin alustuksen jälkeen, niin se toimii ilman OnSize-kutsua.
 	std::string errorBaseStr("Error in CFmiVisualizationSettings::OnInitDialog while reading dialog size and position values");
@@ -214,6 +218,12 @@ void CFmiVisualizationSettings::InitDialogTexts()
 
 	std::string spaceoutDataGatheringMethodStr = "Spaceout-Data-Gathering-Method setting, Median-filter is not implemented yet.\nUsed grid data gathering methods: 1) Linear-interpolation, 2) Median-filter.";
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_VISUALIZATIONS_SPACEOUT_DATA_GATHERING_METHOD_STR, spaceoutDataGatheringMethodStr.c_str());
+
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_PIXEL_TO_GRID_POINT_RATIO_GROUP, "Pixel-to-grid-point ratio");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SPACE_OUT_FACTOR_GROUP, "Spaceout factor");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SPACE_OUT_DATA_GATHERING_GROUP, "Data gathering method");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_BETA_PRODUCT_OPTIONS_GROUP, "Beta product options");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_SPACE_OUT_OPTIMIZATIONS_WITH_BETA_PRODUCTS, "Use Spaceout optimizations with Beta products");
 }
 
 void CFmiVisualizationSettings::OnOK()
@@ -228,7 +238,7 @@ void CFmiVisualizationSettings::UpdateValuesBackToDocument()
 
 	// Tarkista mitkä asetukset ovat oikeasti muuttuneet
 	int selectedSpaceoutDataGatheringMethod = 0; // itsSpaceoutDataGatheringMethodComboBox.GetCurSel();
-	auto needsToUpdateMapViews = GetVisualizationSettings().updateFromDialog(GetPixelToGridPointRatioFromSlider(), itsUsePixelToGridPointRatioSafetyFeature, itsGlobalVisualizationSpaceoutGridSizeSlider.GetPos(), itsUseGlobalVisualizationSpaceoutFactorOptimization, selectedSpaceoutDataGatheringMethod);
+	auto needsToUpdateMapViews = GetVisualizationSettings().updateFromDialog(GetPixelToGridPointRatioFromSlider(), itsUsePixelToGridPointRatioSafetyFeature, itsGlobalVisualizationSpaceoutGridSizeSlider.GetPos(), itsUseGlobalVisualizationSpaceoutFactorOptimization, selectedSpaceoutDataGatheringMethod, fUseSpaceoutOptimizationsWithBetaProducts);
 	// Tee päätelmä oikeasti muuttuneista asetuksista että mitä likauksia ja näytön päivityksiä pitää tehdä
 	if(needsToUpdateMapViews)
 	{

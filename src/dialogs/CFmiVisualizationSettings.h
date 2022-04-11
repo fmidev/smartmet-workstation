@@ -57,6 +57,7 @@ private:
 	CString itsPixelToGridPointRatioValueStr;
 	CSliderCtrl itsGlobalVisualizationSpaceoutGridSizeSlider;
 	CString itsGlobalVisualizationSpaceoutGridSizeResultsStr;
+	BOOL fUseSpaceoutOptimizationsWithBetaProducts;
 public:
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
