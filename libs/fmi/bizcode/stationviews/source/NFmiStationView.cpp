@@ -1917,7 +1917,7 @@ static NFmiGrid GetQ3ArchiveDataGrid(CtrlViewDocumentInterface *theCtrlViewDocum
 	else
 	{
 		auto& visSettings = theCtrlViewDocumentInterface->ApplicationWinRegistry().VisualizationSpaceoutSettings();
-		NFmiPoint gridSize = visSettings.getCheckedPossibleOptimizedGridSize(theCtrlViewDocumentInterface->GetQ2ServerInfo().Q2ServerGridSize(), *theArea, viewGridSize);
+		NFmiPoint gridSize = visSettings.getCheckedPossibleOptimizedGridSize(theCtrlViewDocumentInterface->GetQ2ServerInfo().Q2ServerGridSize(), *theArea, viewGridSize, theCtrlViewDocumentInterface->BetaProductGenerationRunning());
         return NFmiGrid(theArea.get(), static_cast<unsigned long>(gridSize.X()), static_cast<unsigned long>(gridSize.Y()));
 	}
 }
@@ -2210,7 +2210,7 @@ bool NFmiStationView::GetQ3ScriptData(NFmiDataMatrix<float> &theValues, NFmiGrid
     try
     {
 		auto& visSettings = GetVisualizationSettings();
-		NFmiPoint usedGridSize = visSettings.getCheckedPossibleOptimizedGridSize(itsCtrlViewDocumentInterface->InfoOrganizer()->GetMacroParamDataGridSize(), *itsArea, CalcViewGridSize());
+		NFmiPoint usedGridSize = visSettings.getCheckedPossibleOptimizedGridSize(itsCtrlViewDocumentInterface->InfoOrganizer()->GetMacroParamDataGridSize(), *itsArea, CalcViewGridSize(), itsCtrlViewDocumentInterface->BetaProductGenerationRunning());
         theUsedGrid = NFmiGrid(itsArea.get(), static_cast<unsigned long>(usedGridSize.X()), static_cast<unsigned long>(usedGridSize.Y()));
 
         string urlStr = theUsedBaseUrlStr;
@@ -2460,7 +2460,7 @@ bool NFmiStationView::IsStationDataGridded()
 void NFmiStationView::CalculateGriddedStationData(NFmiDataMatrix<float> &theValues, NFmiGrid &usedGrid)
 {
 	auto& visSettings = GetVisualizationSettings();
-	NFmiPoint usedGridSize = visSettings.getCheckedPossibleOptimizedGridSize(itsCtrlViewDocumentInterface->StationDataGridSize(), *itsArea, CalcViewGridSize());
+	NFmiPoint usedGridSize = visSettings.getCheckedPossibleOptimizedGridSize(itsCtrlViewDocumentInterface->StationDataGridSize(), *itsArea, CalcViewGridSize(), itsCtrlViewDocumentInterface->BetaProductGenerationRunning());
     usedGrid = NFmiGrid(itsArea.get(), static_cast<unsigned long>(usedGridSize.X()), static_cast<unsigned long>(usedGridSize.Y()));
     theValues.Resize(static_cast<unsigned long>(usedGridSize.X()), static_cast<unsigned long>(usedGridSize.Y()), kFloatMissing);
     GridStationDataToMatrix(theValues, itsTime);

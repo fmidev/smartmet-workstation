@@ -29,6 +29,7 @@ bool NFmiVisualizationSpaceoutSettings::Init(const std::string & baseRegistryPat
     useGlobalVisualizationSpaceoutFactorOptimization_ = ::CreateRegValue<CachedRegBool>(baseRegistryPath_, sectionName_, "\\useGlobalVisualizationSpaceoutFactorOptimization", usedKey, false);
     spaceoutDataGatheringMethod_ = ::CreateRegValue<CachedRegInt>(baseRegistryPath_, sectionName_, "\\spaceoutDataGatheringMethod", usedKey, 0);
     spaceoutDataGatheringMethod(*spaceoutDataGatheringMethod_); // Tarkistetään rekisteristä luetut arvot
+    useSpaceoutOptimizationsForBetaProducts_ = ::CreateRegValue<CachedRegBool>(baseRegistryPath_, sectionName_, "\\useSpaceoutOptimizationsForBetaProducts", usedKey, false);
 
     return true;
 }
@@ -46,7 +47,7 @@ static bool IsRegistryValueChangedInUpdate(RegistryValue & registryValue, CheckF
 
 // Metodi saa Visualization settings -dialogilta kaikki nykyiset asetukset.
 // Jos mitään asetus oikeasti muuttuu niin että karttanäyttöjä pitää päivittää ja tehdä dirty asetuksia, palautetaan true, muuten false.
-bool NFmiVisualizationSpaceoutSettings::updateFromDialog(double newPixelToGridPointRatio, bool newUsePixelToGridPointRatioSafetyFeature, int newBaseSpaceoutGridSize, bool newUseGlobalVisualizationSpaceoutFactorOptimization, int newSpaceoutDataGatheringMethod)
+bool NFmiVisualizationSpaceoutSettings::updateFromDialog(double newPixelToGridPointRatio, bool newUsePixelToGridPointRatioSafetyFeature, int newBaseSpaceoutGridSize, bool newUseGlobalVisualizationSpaceoutFactorOptimization, int newSpaceoutDataGatheringMethod, bool newUseSpaceoutOptimizationsForBetaProducts)
 {
     bool needsToUpdateViews = false;
     if(::IsRegistryValueChangedInUpdate(pixelToGridPointRatio_, [=](){this->pixelToGridPointRatio(newPixelToGridPointRatio); }))
@@ -63,6 +64,10 @@ bool NFmiVisualizationSpaceoutSettings::updateFromDialog(double newPixelToGridPo
         needsToUpdateViews = true;
     }
     if(::IsRegistryValueChangedInUpdate(useGlobalVisualizationSpaceoutFactorOptimization_, [=]() {this->useGlobalVisualizationSpaceoutFactorOptimization(newUseGlobalVisualizationSpaceoutFactorOptimization); }))
+    {
+        needsToUpdateViews = true;
+    }
+    if(::IsRegistryValueChangedInUpdate(useSpaceoutOptimizationsForBetaProducts_, [=]() {this->useSpaceoutOptimizationsForBetaProducts(newUseSpaceoutOptimizationsForBetaProducts); }))
     {
         needsToUpdateViews = true;
     }
@@ -181,29 +186,44 @@ static bool shouldOptimizedGridBeUsed(const NFmiPoint& baseGridSizeOverMapBoundi
         return false;
 }
 
+bool NFmiVisualizationSpaceoutSettings::preventOptimizationsForBetaProducts(bool betaProductRunning) const
+{
+    if(betaProductRunning)
+    {
+        if(!useSpaceoutOptimizationsForBetaProducts())
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 // Huom! On jo tarkastettu (NFmiIsoLineView::FillGridRelatedData metodissa), että näkyykö data kartta-alueella, joten sitä ei tavitse tarkastella enää.
-bool NFmiVisualizationSpaceoutSettings::checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, const NFmiArea& mapArea, NFmiGrid& optimizedGridOut, int viewSubGridSize) const
+bool NFmiVisualizationSpaceoutSettings::checkIsOptimizationsUsed(NFmiFastQueryInfo& fastInfo, const NFmiArea& mapArea, NFmiGrid& optimizedGridOut, int viewSubGridSize, bool betaProductRunning) const
 {
     if(useGlobalVisualizationSpaceoutFactorOptimization() && fastInfo.IsGrid())
     {
-        // Optimointiharvennusta ei saa tehdä editoidulle datalle tai sen kopiolle!
-        auto dataType = fastInfo.DataType();
-        if(dataType != NFmiInfoData::kEditable && dataType != NFmiInfoData::kCopyOfEdited)
+        if(!preventOptimizationsForBetaProducts(betaProductRunning))
         {
-            std::unique_ptr<NFmiArea> normalizedAreaPtr(mapArea.Clone());
-            // Käytetyssä optimoidussa gridissä pitää olla peruskartta-aluen suhteen 0,0 - 1,1 alue
-            normalizedAreaPtr->SetXYArea(NFmiRect(0, 0, 1, 1));
-            auto baseGridSize = calcAreaGridSize(*normalizedAreaPtr, viewSubGridSize);
-            auto dataOverMapWorldXyBoundingBox = calcInfoAreaOverMapAreaWorldXyBoundingBox(fastInfo, *normalizedAreaPtr);
-            auto approximationDataGridSizeOverMapBoundingBox = ::calcApproximationDataGridSizeOverMapBoundingBox(fastInfo, dataOverMapWorldXyBoundingBox);
-            auto baseGridSizeOverMapBoundingBox = ::calcBaseGridSizeOverMapBoundingBox(baseGridSize, normalizedAreaPtr->WorldRect(), dataOverMapWorldXyBoundingBox);
-            if(::shouldOptimizedGridBeUsed(baseGridSizeOverMapBoundingBox, approximationDataGridSizeOverMapBoundingBox))
+            // Optimointiharvennusta ei saa tehdä editoidulle datalle tai sen kopiolle!
+            auto dataType = fastInfo.DataType();
+            if(dataType != NFmiInfoData::kEditable && dataType != NFmiInfoData::kCopyOfEdited)
             {
-                NFmiPoint bottomLeftLatlon = normalizedAreaPtr->WorldXYToLatLon(dataOverMapWorldXyBoundingBox.BottomLeft());
-                NFmiPoint topRightLatlon = normalizedAreaPtr->WorldXYToLatLon(dataOverMapWorldXyBoundingBox.TopRight());
-                std::unique_ptr<NFmiArea> optimizedArea(normalizedAreaPtr->CreateNewArea(bottomLeftLatlon, topRightLatlon));
-                optimizedGridOut = NFmiGrid(optimizedArea.get(), boost::math::iround(baseGridSizeOverMapBoundingBox.X()), boost::math::iround(baseGridSizeOverMapBoundingBox.Y()));
-                return true;
+                std::unique_ptr<NFmiArea> normalizedAreaPtr(mapArea.Clone());
+                // Käytetyssä optimoidussa gridissä pitää olla peruskartta-aluen suhteen 0,0 - 1,1 alue
+                normalizedAreaPtr->SetXYArea(NFmiRect(0, 0, 1, 1));
+                auto baseGridSize = calcAreaGridSize(*normalizedAreaPtr, viewSubGridSize);
+                auto dataOverMapWorldXyBoundingBox = calcInfoAreaOverMapAreaWorldXyBoundingBox(fastInfo, *normalizedAreaPtr);
+                auto approximationDataGridSizeOverMapBoundingBox = ::calcApproximationDataGridSizeOverMapBoundingBox(fastInfo, dataOverMapWorldXyBoundingBox);
+                auto baseGridSizeOverMapBoundingBox = ::calcBaseGridSizeOverMapBoundingBox(baseGridSize, normalizedAreaPtr->WorldRect(), dataOverMapWorldXyBoundingBox);
+                if(::shouldOptimizedGridBeUsed(baseGridSizeOverMapBoundingBox, approximationDataGridSizeOverMapBoundingBox))
+                {
+                    NFmiPoint bottomLeftLatlon = normalizedAreaPtr->WorldXYToLatLon(dataOverMapWorldXyBoundingBox.BottomLeft());
+                    NFmiPoint topRightLatlon = normalizedAreaPtr->WorldXYToLatLon(dataOverMapWorldXyBoundingBox.TopRight());
+                    std::unique_ptr<NFmiArea> optimizedArea(normalizedAreaPtr->CreateNewArea(bottomLeftLatlon, topRightLatlon));
+                    optimizedGridOut = NFmiGrid(optimizedArea.get(), boost::math::iround(baseGridSizeOverMapBoundingBox.X()), boost::math::iround(baseGridSizeOverMapBoundingBox.Y()));
+                    return true;
+                }
             }
         }
     }
@@ -220,12 +240,15 @@ static NFmiPoint getSmallerAreaPoint(const NFmiPoint& gridSize1, const NFmiPoint
         return gridSize2;
 }
 
-NFmiPoint NFmiVisualizationSpaceoutSettings::getCheckedPossibleOptimizedGridSize(const NFmiPoint& suggestedGridSize, NFmiArea& mapArea, int viewSubGridSize) const
+NFmiPoint NFmiVisualizationSpaceoutSettings::getCheckedPossibleOptimizedGridSize(const NFmiPoint& suggestedGridSize, NFmiArea& mapArea, int viewSubGridSize, bool betaProductRunning) const
 {
     if(useGlobalVisualizationSpaceoutFactorOptimization())
     {
-        auto baseGridSize = calcAreaGridSize(mapArea, viewSubGridSize);
-        return ::getSmallerAreaPoint(suggestedGridSize, baseGridSize);
+        if(!preventOptimizationsForBetaProducts(betaProductRunning))
+        {
+            auto baseGridSize = calcAreaGridSize(mapArea, viewSubGridSize);
+            return ::getSmallerAreaPoint(suggestedGridSize, baseGridSize);
+        }
     }
     return suggestedGridSize;
 }
@@ -268,6 +291,16 @@ NFmiRect NFmiVisualizationSpaceoutSettings::calcInfoAreaOverMapAreaWorldXyBoundi
 double NFmiVisualizationSpaceoutSettings::criticalPixelToGridPointRatioLimitForContours() const
 {
     return criticalPixelToGridPointRatioLimitForContours_;
+}
+
+bool NFmiVisualizationSpaceoutSettings::useSpaceoutOptimizationsForBetaProducts() const
+{
+    return *useSpaceoutOptimizationsForBetaProducts_;
+}
+
+void NFmiVisualizationSpaceoutSettings::useSpaceoutOptimizationsForBetaProducts(bool newState)
+{
+    *useSpaceoutOptimizationsForBetaProducts_ = newState;
 }
 
 std::string NFmiVisualizationSpaceoutSettings::composePossibleTooltipWarningText(NFmiArea& area, int viewSubGridSize) const
