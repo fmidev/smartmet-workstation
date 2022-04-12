@@ -14,6 +14,7 @@ class NFmiPoint;
 class NFmiRect;
 class MfcViewStatus;
 class CGridCtrl;
+class NFmiColor;
 namespace CtrlViewUtils
 {
     struct GraphicalInfo;
@@ -44,7 +45,7 @@ namespace CFmiWin32Helpers
 
 	// tooltip/statusbar string helper
 	void SetDescTopGraphicalInfo(bool mapViewCase, CtrlViewUtils::GraphicalInfo &theGraphicalInfo, CDC* pDC, const NFmiPoint &theViewGridSizeInPixels, double theScaleRatio, bool forceInitialization = false, const NFmiPoint *theActualSingleViewSizeInMilliMeters = nullptr);
-	void InitializeCPPTooltip(CWnd *theParentView, CPPToolTip &theTooltip, int theTooltipID);
+	void InitializeCPPTooltip(CWnd *theParentView, CPPToolTip &theTooltip, int theTooltipID, int maxWidthInPixels);
 	HBITMAP GetBitmapFromResources(DWORD dwID);
 
 	// printtaus apuja
@@ -87,7 +88,8 @@ namespace CFmiWin32Helpers
 	void SetUsedWindowIconDynamically(CWnd *theWindow);
 
     inline std::string CT2std(const CString &theStr)    { return std::string(CT2A(theStr)); }
-    void SetErrorColorForTextControl(CDC* pDC, bool statusOk, bool isControlUsed = true);
+	void SetErrorColorForTextControl(CDC* pDC, bool statusOk, bool isControlUsed = true);
+	void SetColorForTextControl(CDC* pDC, const NFmiColor &color);
 
     class MemoryBitmapHelper
     {

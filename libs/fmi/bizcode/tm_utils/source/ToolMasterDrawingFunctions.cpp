@@ -20,6 +20,7 @@
 #include "ToolmasterHatchingUtils.h"
 #include "ToolmasterHatchPolygonData.h"
 #include "ToolMasterColorCube.h"
+#include "NFmiVisualizationSpaceoutSettings.h"
 
 #include <fstream>
 #include "boost/math/special_functions/round.hpp"
@@ -738,84 +739,6 @@ static void DrawGridData(CDC* pDC, NFmiIsoLineData &theIsoLineData, const NFmiRe
     XuVariableGridNodesOption(XuGRID_DELETE);
 }
 
-static bool IsIsolinesDrawn(const NFmiIsoLineData &theOrigIsoLineData)
-{
-    if(theOrigIsoLineData.fUseIsoLines)
-        return true;
-    return false;
-}
-
-double CalcFinalDownSizeRatio(double criticalRatio, double currentRatio)
-{
-    if(currentRatio)
-    {
-        if(currentRatio < criticalRatio)
-            return criticalRatio / currentRatio;
-    }
-    return 1.;
-}
-
-static bool IsIsolinesDrawn(const boost::shared_ptr<NFmiDrawParam>& thePossibleDrawParam)
-{
-    auto gridDataDrawStyle = thePossibleDrawParam->GridDataPresentationStyle();
-    return gridDataDrawStyle == NFmiMetEditorTypes::View::kFmiIsoLineView || gridDataDrawStyle == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView;
-}
-
-bool IsDownSizingNeeded(const NFmiPoint& theGrid2PixelRatio, double criticalGrid2PixelRatio, NFmiPoint& theDownSizeFactorOut)
-{
-    const NFmiPoint zeroChangeFactor(1, 1);
-    theDownSizeFactorOut.X(::CalcFinalDownSizeRatio(criticalGrid2PixelRatio, theGrid2PixelRatio.X()));
-    theDownSizeFactorOut.Y(::CalcFinalDownSizeRatio(criticalGrid2PixelRatio, theGrid2PixelRatio.Y()));
-    return theDownSizeFactorOut != zeroChangeFactor;
-}
-
-bool IsolineDataDownSizingNeeded(const NFmiIsoLineData &theOrigIsoLineData, const NFmiPoint &theGrid2PixelRatio, NFmiPoint &theDownSizeFactorOut, const boost::shared_ptr<NFmiDrawParam>& thePossibleDrawParam)
-{
-    if(thePossibleDrawParam)
-    {
-        if(!::IsIsolinesDrawn(thePossibleDrawParam))
-            return false;
-    }
-    else if(!::IsIsolinesDrawn(theOrigIsoLineData))
-        return false;
-
-    const double criticalGrid2PixelRatio = 3.0;
-    return IsDownSizingNeeded(theGrid2PixelRatio, criticalGrid2PixelRatio, theDownSizeFactorOut);
-}
-
-static void CalcDownSizedMatrix(const NFmiDataMatrix<float> &theOrigData, NFmiDataMatrix<float> &theDownSizedData, const NFmiParam &param)
-{
-    auto paramId = static_cast<FmiParameterName>(param.GetIdent());
-    auto interpolationMethod = param.InterpolationMethod();
-    auto dontInvertY = true;
-    double xDiff = 1.0 / (theDownSizedData.NX() - 1.0);
-    double yDiff = 1.0 / (theDownSizedData.NY() - 1.0);
-    for(size_t j = 0; j < theDownSizedData.NY(); j++)
-    {
-        for(size_t i = 0; i < theDownSizedData.NX(); i++)
-        {
-            NFmiPoint pt(i * xDiff, j * yDiff);
-            if(pt.X() > 1.)
-                pt.X(1.); // t‰m‰ on varmistus, jos laskenta tarkkuus ongelmat vie rajan yli
-            if(pt.Y() > 1.)
-                pt.Y(1.); // t‰m‰ on varmistus, jos laskenta tarkkuus ongelmat vie rajan yli
-            theDownSizedData[i][j] = theOrigData.InterpolatedValue(pt, paramId, dontInvertY, interpolationMethod);
-        }
-    }
-}
-
-static void BuildDownSizedData(NFmiIsoLineData &theOrigIsoLineData, NFmiIsoLineData &theDownSizedIsoLineData, const NFmiPoint &theDownSizeFactor)
-{
-    int newSizeX = boost::math::iround(theOrigIsoLineData.itsXNumber / theDownSizeFactor.X());
-    int newSizeY = boost::math::iround(theOrigIsoLineData.itsYNumber / theDownSizeFactor.Y());
-    // T‰ytet‰‰n uuden isolineDatan hila-arvot halutuille osaalueilleen.
-    NFmiDataMatrix<float> downSizedGridData(newSizeX, newSizeY, kFloatMissing);
-    ::CalcDownSizedMatrix(theOrigIsoLineData.itsIsolineData, downSizedGridData, *theOrigIsoLineData.itsParam.GetParam());
-
-    // Alustetaan uusi isolinedata harvennetulla matriisilla ja sen piirtoasetukset otetaan originaalista
-    theDownSizedIsoLineData.InitIsoLineData(downSizedGridData, &theOrigIsoLineData);
-}
-
 static void DoTraceLogging(const std::string &message)
 {
     if(CatLog::doTraceLevelLogging())
@@ -824,19 +747,14 @@ static void DoTraceLogging(const std::string &message)
     }
 }
 
-double GetCriticalGrid2PixelRatioForContour()
-{
-    return 1.4;
-}
-
-static void DoPossibleQuickContourSetting(NFmiIsoLineData &theOrigIsoLineDataInOut, const NFmiPoint &theGrid2PixelRatio)
+static void DoPossibleQuickContourSetting(NFmiIsoLineData &theOrigIsoLineDataInOut, const NFmiPoint &thePixelToGridPointRatio, const NFmiVisualizationSpaceoutSettings& visualizationSettings)
 {
     if(theOrigIsoLineDataInOut.fUseColorContours == 1) // jos k‰ytˆss‰ tavallinen contouraus
     {
-        const double criticalGrid2PixelRatio = GetCriticalGrid2PixelRatioForContour();
-        if(theGrid2PixelRatio.X() != 0 && theGrid2PixelRatio.Y() != 0)
+        const auto criticalPixelToGridPointRatio = visualizationSettings.criticalPixelToGridPointRatioLimitForContours();
+        if(thePixelToGridPointRatio.X() != 0 && thePixelToGridPointRatio.Y() != 0)
         {
-            if(theGrid2PixelRatio.X() < criticalGrid2PixelRatio || theGrid2PixelRatio.Y() < criticalGrid2PixelRatio)
+            if(thePixelToGridPointRatio.X() < criticalPixelToGridPointRatio || thePixelToGridPointRatio.Y() < criticalPixelToGridPointRatio)
             { // jos hila koko on tarpeeksi l‰hell‰ n‰ytˆn pikseli kokoa, laitetaan quickcontour p‰‰lle
                 theOrigIsoLineDataInOut.fUseColorContours = 2;
                 ::DoTraceLogging(std::string("Changing to quick-contour draw with ") + ::MakeDataIdentString(theOrigIsoLineDataInOut.itsParam));
@@ -845,35 +763,12 @@ static void DoPossibleQuickContourSetting(NFmiIsoLineData &theOrigIsoLineDataInO
     }
 }
 
-static std::string MakeIsoLineDataGridSizeString(NFmiIsoLineData* theIsoLineData)
-{
-    std::string str = std::to_string(theIsoLineData->itsXNumber);
-    str += " x ";
-    str += std::to_string(theIsoLineData->itsYNumber);
-    return str;
-}
-
-int ToolMasterDraw(CDC* pDC, NFmiIsoLineData* theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiPoint &theGrid2PixelRatio, int theCrossSectionIsoLineDrawIndex)
+int ToolMasterDraw(CDC* pDC, NFmiIsoLineData* theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiPoint& thePixelToGridPointRatio, int theCrossSectionIsoLineDrawIndex, const NFmiVisualizationSpaceoutSettings& visualizationSettings)
 {
     NFmiRect gridArea(0, 0, 1, 1); // t‰m‰ on normaali yksi osaisen hilan alue (0,0 - 1,1)
-    NFmiPoint downSizeFactor;
-    // Toolmaster piirto bugi ilmenee kun hila vs. pikseli suhde on n. 1 tai alle. Kierr‰n siten ongelman niin ett‰ kun t‰m‰
-    // ratio on tarpeeksi pieni, lasken uuden hila koon, niin ett‰ sen suhdeluku on minimiss‰‰n 1.3 ja interpoloin t‰ll‰iseen
-    // uuteen hilaan datan. T‰m‰n j‰lkeen piirto onnistuu ilman ongelmia, eik‰ asiakas huomaa juuri mit‰‰n.
-    bool doDownSize = IsolineDataDownSizingNeeded(*theIsoLineData, theGrid2PixelRatio, downSizeFactor, nullptr);
-    if(doDownSize)
-    {
-        NFmiIsoLineData downSizedIsoLineData;
-        ::BuildDownSizedData(*theIsoLineData, downSizedIsoLineData, downSizeFactor);
-        ::DoTraceLogging(std::string("Down-sizing isoline data from ") + ::MakeIsoLineDataGridSizeString(theIsoLineData) + " to " + ::MakeIsoLineDataGridSizeString(&downSizedIsoLineData));
-        ::DrawGridData(pDC, downSizedIsoLineData, theRelViewRect, theZoomedViewRect, gridArea, theCrossSectionIsoLineDrawIndex);
-    }
-    else
-    {
         // Optimointia: jos piirret‰‰n contoureja, ja datan hilav‰li l‰hetyy pikseli kokoa, laitetaan quickcontour -optio p‰‰lle
-        ::DoPossibleQuickContourSetting(*theIsoLineData, theGrid2PixelRatio);
-        ::DrawGridData(pDC, *theIsoLineData, theRelViewRect, theZoomedViewRect, gridArea, theCrossSectionIsoLineDrawIndex);
-    }
+    ::DoPossibleQuickContourSetting(*theIsoLineData, thePixelToGridPointRatio, visualizationSettings);
+    ::DrawGridData(pDC, *theIsoLineData, theRelViewRect, theZoomedViewRect, gridArea, theCrossSectionIsoLineDrawIndex);
 
     return 0;
 }

@@ -8,7 +8,7 @@
 #include "SmartMetDocumentInterface.h"
 #include "NFmiDataQualityChecker.h"
 #include "NFmiQueryDataUtil.h"
-#include "FmiOperationProgressDlg.h"
+#include "CFmiOperationProgressAndCancellationDlg.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiQueryData.h"
 #include "FmiGdiPlusHelpers.h"
@@ -118,7 +118,7 @@ void CFmiDataQualityCheckerDialog::OnBnClickedButtonDoQualityCheck()
 
 	// Tehdään datan chekkaukselle progress ja peruutus dialogi ja toiminnot.
 	NFmiStopFunctor stopper;
-	CFmiOperationProgressDlg dlg(::GetDictionaryString("Calculating edited data's quality checks"), false, stopper, this);
+	CFmiOperationProgressAndCancellationDlg dlg(::GetDictionaryString("Calculating edited data's quality checks"), false, stopper, this);
 	NFmiThreadCallBacks threadCallBacks(&stopper, &dlg);
 
 	// Luodaaan ja laitetaan työ-threadi käyntiin.
@@ -143,7 +143,7 @@ BOOL CFmiDataQualityCheckerDialog::OnInitDialog()
 
     std::string titleStr = ::GetDictionaryString("Data quality checking");
     SetWindowText(CA2T(titleStr.c_str()));
-	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, DATA_QUALITY_VIEW_TOOLTIP_ID);
+	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, DATA_QUALITY_VIEW_TOOLTIP_ID, 400);
 
 	CWnd *doCheckButton = GetDlgItem(IDC_BUTTON_DO_QUALITY_CHECK);
 	if(doCheckButton)

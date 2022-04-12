@@ -49,7 +49,8 @@ bool NFmiStationWindBarbView::PrepareForStationDraw(void)
 	if(NFmiDrawParam::IsMacroParamCase(itsInfo->DataType()))
 	{
 		fUseMacroParamSpecialCalculations = true;
-		CalcViewFloatValueMatrix(itsMacroParamSpecialCalculationsValues, 0, 0, 0, 0); // datahila pit‰‰ laskea jo t‰ss‰
+		bool dummyBoolNotUsed = false;
+		CalcViewFloatValueMatrix(itsMacroParamSpecialCalculationsValues, 0, 0, 0, 0, dummyBoolNotUsed); // datahila pit‰‰ laskea jo t‰ss‰
 		status = true; // macroParam tapauksessa t‰m‰ menee false:ksi (NFmiStationView::PrepareForStationDraw),
 						// koska itsInfo:n aika-ayateemi rakennetaan vasta CalcViewFloatValueMatrix-metodin kutsun yhteydess‰
 	}

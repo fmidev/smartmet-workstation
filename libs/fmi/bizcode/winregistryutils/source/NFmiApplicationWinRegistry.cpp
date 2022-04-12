@@ -947,6 +947,7 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
 
     // Configuration related section
     mConfigurationRelatedWinRegistry.Init(mBaseConfigurationRegistryPath, mapViewCount, mapWindowPosMap);
+    mVisualizationSpaceoutSettings.Init(mBaseConfigurationRegistryPath);
 
     // OtherViewPosition section
     mOtherViewPositionsWinRegistry.Init(mBaseRegistryPath, otherWindowPosMap);

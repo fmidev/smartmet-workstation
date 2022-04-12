@@ -43,6 +43,7 @@ NFmiInfoOrganizer::NFmiInfoOrganizer()
       itsDrawParamFactory(),
       itsWorkingDirectory(),
       itsMacroParamGridSize(50, 50),
+      itsOptimizedVisualizationGridSize(50, 50),
       itsMacroParamMinGridSize(5, 5),
       itsMacroParamMaxGridSize(2000, 2000),
       itsMacroParamData(),
@@ -65,6 +66,8 @@ bool NFmiInfoOrganizer::Init(const std::string &theDrawParamPath,
   itsDrawParamFactory->LoadDirectory(theDrawParamPath);
   UpdateMacroParamDataSize(static_cast<int>(itsMacroParamGridSize.X()),
                            static_cast<int>(itsMacroParamGridSize.Y()));
+  UpdateOptimizedVisualizationMacroParamDataSize(static_cast<int>(itsOptimizedVisualizationGridSize.X()),
+      static_cast<int>(itsOptimizedVisualizationGridSize.Y()), nullptr);
   return itsDrawParamFactory->Init();
 }
 
@@ -861,13 +864,27 @@ int NFmiInfoOrganizer::IsGoodSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &
 }
 
 static bool IsGivenTimeInDataRange(const boost::shared_ptr<NFmiFastQueryInfo> &info,
-                                   const NFmiMetTime &wantedDataTime)
+                                   const NFmiMetTime &wantedDataTime,
+    int amdarDataStartOffsetInMinutes)
 {
   if (!info) return false;
   if (wantedDataTime == NFmiMetTime::gMissingTime)
     return true;  // with missing-time we don't care if time in data's range
   else
-    return info->TimeDescriptor().IsInside(wantedDataTime);
+  {
+    auto isInsideTimeRange = info->TimeDescriptor().IsInside(wantedDataTime);
+    if (isInsideTimeRange) return true;
+    else
+    {
+      if (amdarDataStartOffsetInMinutes == 0) return false;
+      else
+      {
+        auto startTimeOfTimeRange = wantedDataTime;
+        startTimeOfTimeRange.ChangeByMinutes(-amdarDataStartOffsetInMinutes);
+        return info->TimeDescriptor().IsInside(startTimeOfTimeRange);
+      }
+    }
+  }
 }
 
 // Hakee parhaan luotaus infon tuottajalle. Eli jos kyseessä esim hirlam tuottaja, katsotaan
@@ -883,14 +900,15 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiInfoOrganizer::FindSoundingInfo(
     const NFmiProducer &theProducer,
     const NFmiMetTime &theDataTime,
     int theIndex,
-    ParamCheckFlags paramCheckFlags)
+    ParamCheckFlags paramCheckFlags,
+    int amdarDataStartOffsetInMinutes)
 {
   boost::shared_ptr<NFmiFastQueryInfo> exceptableInfo;
   for (MapType::iterator iter = itsDataMap.begin(); iter != itsDataMap.end(); ++iter)
   {
     boost::shared_ptr<NFmiFastQueryInfo> aInfo = iter->second->GetDataKeeper()->GetIter();
     int result = IsGoodSoundingData(aInfo, theProducer, false, paramCheckFlags);
-    if (!::IsGivenTimeInDataRange(aInfo, theDataTime)) result = 0;
+    if (!::IsGivenTimeInDataRange(aInfo, theDataTime, amdarDataStartOffsetInMinutes)) result = 0;
     if (result != 0 && theIndex < 0)
     {  // haetaan vanhempaa malliajo dataa
       boost::shared_ptr<NFmiQueryDataKeeper> qDataKeeper = iter->second->GetDataKeeper(theIndex);
@@ -1395,6 +1413,14 @@ void NFmiInfoOrganizer::SetMacroParamDataGridSize(int x, int y)
   itsMacroParamGridSize = NFmiPoint(x, y);
   UpdateMacroParamDataSize(x, y);
 }
+
+void NFmiInfoOrganizer::SetOptimizedVisualizationMacroParamDataGridSize(int x, int y)
+{
+  FixMacroParamDataGridSize(x, y);
+  itsOptimizedVisualizationGridSize = NFmiPoint(x, y);
+  UpdateOptimizedVisualizationMacroParamDataSize(x, y, nullptr);
+}
+
 void NFmiInfoOrganizer::SetMacroParamDataMinGridSize(int x, int y)
 {
   itsMacroParamMinGridSize = NFmiPoint(x, y);
@@ -1453,6 +1479,14 @@ void NFmiInfoOrganizer::UpdateMacroParamDataSize(int x, int y)
   itsMacroParamData =
       NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(x, y, NFmiInfoData::kMacroParam);
 }
+
+void NFmiInfoOrganizer::UpdateOptimizedVisualizationMacroParamDataSize(
+    int x, int y, boost::shared_ptr<NFmiArea> wantedArea)
+{
+  itsOptimizedVisualizationMacroParamData =
+      NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(x, y, NFmiInfoData::kMacroParam, wantedArea);
+}
+
 
 void NFmiInfoOrganizer::UpdateCrossSectionMacroParamDataSize(int x, int y)
 {

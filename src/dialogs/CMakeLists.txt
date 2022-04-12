@@ -24,7 +24,6 @@ target_link_libraries(
     GridCtrl
     Newbase
     SmetUtils
-    Bzip2Util
     Processes
     StationViews
     ModifyEditedData
@@ -52,7 +51,6 @@ target_include_directories(
     PUBLIC ${GridCtrl_INCLUDE_DIRS}
     PUBLIC ${Newbase_INCLUDE_DIRS}
     PUBLIC ${SmetUtils_INCLUDE_DIRS}
-    PUBLIC ${Bzip2Util_INCLUDE_DIRS}
     PUBLIC ${Processes_INCLUDE_DIRS}
     PUBLIC ${StationViews_INCLUDE_DIRS}
     PUBLIC ${ModifyEditedData_INCLUDE_DIRS}
@@ -86,7 +84,6 @@ set(
     ${GridCtrl_INCLUDE_DIRS}
     ${Newbase_INCLUDE_DIRS}
     ${SmetUtils_INCLUDE_DIRS}
-    ${Bzip2Util_INCLUDE_DIRS}
     ${Processes_INCLUDE_DIRS}
     ${StationViews_INCLUDE_DIRS}
     ${ModifyEditedData_INCLUDE_DIRS}

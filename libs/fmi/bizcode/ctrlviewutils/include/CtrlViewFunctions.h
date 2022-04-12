@@ -13,6 +13,7 @@ class NFmiDrawParam;
 class CtrlViewDocumentInterface;
 class NFmiProducerSystem;
 class NFmiFastQueryInfo;
+class NFmiMacroParamSystem;
 
 namespace CtrlViewUtils
 {
@@ -20,6 +21,7 @@ namespace CtrlViewUtils
     const int MaxViewGridXSize = 10;
     const int MaxViewGridYSize = 5; // tämä on myös viewcachen max rivikoko
     const unsigned int kDoAllMapViewDescTopIndex = 999;
+    const int MaxMapViewTooltipWidthInPixels = 900;
 
    NFmiPoint CalcTimeScaleFontSizeInPixels(double thePixelsPerMMinX);
    // lat/lon-string helpers
@@ -38,19 +40,7 @@ namespace CtrlViewUtils
            theVector.erase(theVector.begin() + theRemovedItemIndex);
    }
 
-   std::string ColorFloat2HexStr(float value);
-   std::string Color2HtmlColorStr(const NFmiColor &theColor);
-
    bool AreVectorValuesInRisingOrder(const std::vector<float> &theValueVector);
-
-   template<class T>
-   std::string ToHex(const T &value, int minWidth = 0, char paddingchar = ' ')
-   {
-       std::ostringstream oss;
-       if(!(oss << std::setw(minWidth) << std::setfill(paddingchar) << std::hex << value))
-           throw std::exception("ToHex - Invalid argument");
-       return oss.str();
-   }
 
    NFmiPoint ConvertPointFromRect1ToRect2(const NFmiPoint &thePointInRect1, const NFmiRect &theRect1, const NFmiRect &theRect2);
    NFmiTimeBag GetAdjustedTimeBag(const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime, int theTimeStepInMinutes);
@@ -80,4 +70,5 @@ namespace CtrlViewUtils
    double CalcAngle(const NFmiPoint& point1, const NFmiPoint& point2);
    double CalcAngle(double x, double y);
    bool IsModularParameter(FmiParameterName theParam);
+   std::string GetMacroParamFormula(NFmiMacroParamSystem& macroParamSystem, boost::shared_ptr<NFmiDrawParam>& theDrawParam);
 } // namespace CtrlViewUtils

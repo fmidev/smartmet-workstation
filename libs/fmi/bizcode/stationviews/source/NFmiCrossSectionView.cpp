@@ -47,6 +47,7 @@
 #include "NFmiPathUtils.h"
 #include "TimeSerialModification.h"
 #include "ParamHandlerViewFunctions.h"
+#include "ColorStringFunctions.h"
 
 #include <stdexcept>
 #include "boost/math/special_functions/round.hpp"
@@ -269,6 +270,7 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
     InitializeGdiplus(itsToolBox, &itsRect);
 	// Tyhjennetään aina piirron aluksi
 	itsExistingLabels.clear(); //EL
+	itsOptimizedGridPtr.reset();
 
 	CalculateViewRects();
 	itsDrawingEnvironment->EnableFill();
@@ -416,7 +418,7 @@ std::string NFmiCrossSectionView::ComposeTrajectoryToolTipText()
 		const auto &trajectory = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1);
 		str += "<hr color=red><br>";
 		str += "<b><font color=";
-		str += CtrlViewUtils::Color2HtmlColorStr(itsCtrlViewDocumentInterface->GeneralColor(itsViewGridRowNumber - 1));
+		str += ColorString::Color2HtmlColorStr(itsCtrlViewDocumentInterface->GeneralColor(itsViewGridRowNumber - 1));
 		str += ">";
 
 		str += "Trajectory (";
@@ -635,6 +637,11 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 	// tooltippiä ei piirretä, jos tooltip mode on pois päältä (HUOM!, tein funktion nimestä huolimatta universaalin on/off säätimen tooltipeille)
     if(crossSectionSystem->ShowTooltipOnCrossSectionView() == false)
 		return str;
+	else if(itsParamHandlerView && itsParamHandlerView->IsIn(theRelativePoint))
+	{
+		return itsParamHandlerView->ComposeToolTipText(theRelativePoint);
+	}
+
 	try
 	{
 		NFmiDrawParamList *dpList = itsCtrlViewDocumentInterface->CrossSectionViewDrawParamList(itsViewGridRowNumber);
@@ -1066,7 +1073,7 @@ void NFmiCrossSectionView::DrawCrosssectionWithToolMaster(NFmiIsoLineData& theIs
 	if(theIsoLineData.fUseIsoLines)
 		itsCrossSectionIsoLineDrawIndex++;
 	NFmiPoint grid2PixelRatio(0, 0); // tätä ei käytetä vielä toistaiseksi poikkileikkaus näytössä, siksi alustetaan 0:ksi.
-	::ToolMasterDraw(itsToolBox->GetDC(), &theIsoLineData, relRect, zoomedAreaRect, grid2PixelRatio, itsCrossSectionIsoLineDrawIndex);
+	::ToolMasterDraw(itsToolBox->GetDC(), &theIsoLineData, relRect, zoomedAreaRect, grid2PixelRatio, itsCrossSectionIsoLineDrawIndex, GetVisualizationSettings());
 }
 
 void NFmiCrossSectionView::DrawCrosssectionWithImagine(NFmiIsoLineData& theIsoLineData, NFmiDataMatrix<float> &theValues, Imagine::NFmiDataHints &theHelper, NFmiDataMatrix<NFmiPoint> &theCoordinates)

@@ -1417,6 +1417,23 @@ NFmiParameterInterpolationFixer& SmartMetDocumentInterfaceForGeneralDataDoc::Par
     return itsDoc->ParameterInterpolationFixer();
 }
 
+void SmartMetDocumentInterfaceForGeneralDataDoc::ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag)
+{
+    if(ApplicationInterface::GetApplicationInterfaceImplementation)
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(updatedViewsFlag);
+}
+
+void SmartMetDocumentInterfaceForGeneralDataDoc::UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged()
+{
+    return itsDoc->UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();
+}
+
+void SmartMetDocumentInterfaceForGeneralDataDoc::OpenVisualizationsettingsDialog()
+{
+    if(ApplicationInterface::GetApplicationInterfaceImplementation)
+        ApplicationInterface::GetApplicationInterfaceImplementation()->OpenVisualizationsettingsDialog();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // =================================================
 

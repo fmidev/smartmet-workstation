@@ -122,6 +122,7 @@ public:
 	double itsDataGridToViewHeightRatio = 1.;
 	ColorContouringData itsColorContouringData;
 	IsolineVizualizationData itsIsolineVizualizationData;
+	bool fUseOriginalDataInPixelToGridRatioCalculations = false;
 private:
 	void BaseInitialization(const NFmiDataMatrix<float>& theValueMatrix);
 	void DoBaseInitializationReset();

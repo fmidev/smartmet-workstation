@@ -9,6 +9,9 @@
 #include "CtrlViewDocumentInterface.h"
 #include "NFmiInfoOrganizer.h"
 #include "NFmiProducerSystem.h"
+#include "ColorStringFunctions.h"
+#include "NFmiMacroParamSystem.h"
+#include "NFmiMacroParam.h"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/round.hpp>
@@ -129,21 +132,6 @@ namespace CtrlViewUtils
         {
             str += " (" + MakeSizeString(theSize) + " pix)";
         }
-        return str;
-    }
-
-    std::string ColorFloat2HexStr(float value)
-    {
-        int iValue = static_cast<unsigned char>(value*255.f);
-        return ToHex(iValue, 2, '0');
-    }
-
-    std::string Color2HtmlColorStr(const NFmiColor &theColor)
-    {
-        std::string str("#");
-        str += ColorFloat2HexStr(theColor.GetRed());
-        str += ColorFloat2HexStr(theColor.GetGreen());
-        str += ColorFloat2HexStr(theColor.GetBlue());
         return str;
     }
 
@@ -488,7 +476,7 @@ namespace CtrlViewUtils
         if(theDrawParam->UseArchiveModelData())
         {
             str += "<b><font color=";
-            str += Color2HtmlColorStr(NFmiColor(0.016f, 0.64f, 0.68f));
+            str += ColorString::Color2HtmlColorStr(NFmiColor(0.016f, 0.64f, 0.68f));
             str += ">";
             str += "\nOrigTime: ";
             NFmiMetTime archiveOrigTime;
@@ -620,4 +608,13 @@ namespace CtrlViewUtils
             return false;
         }
     }
+
+    std::string GetMacroParamFormula(NFmiMacroParamSystem& macroParamSystem, boost::shared_ptr<NFmiDrawParam>& theDrawParam)
+    {
+        auto macroParamPtr = macroParamSystem.GetWantedMacro(theDrawParam->InitFileName());
+        if(macroParamPtr)
+            return macroParamPtr->MacroText();
+        throw std::runtime_error(std::string(__FUNCTION__) + ": couldn't found macro parameter: " + theDrawParam->ParameterAbbreviation());
+    }
+
 } // namespace CtrlViewUtils

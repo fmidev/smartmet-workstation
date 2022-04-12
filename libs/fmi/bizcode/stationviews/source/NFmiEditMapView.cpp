@@ -140,7 +140,17 @@ void NFmiEditMapView::Draw(NFmiToolBox * theGTB)
         DrawLastEditedDataSendTime();
 
         LogWarningForTooLongMapViewDrawTime(timer);
-    }
+
+		//std::string spaceoutMessage = "view-grid factors: ";
+		//for(float viewCount = 1; viewCount <= 50; viewCount++)
+		//{
+		//	spaceoutMessage += "\n" + std::to_string(int(viewCount));
+		//	auto factor = NFmiVisualizationSpaceoutSettings::calcViewSubGridFactor(viewCount);
+		//	spaceoutMessage += " -> " + std::to_string(factor);
+		//}
+		//itsCtrlViewDocumentInterface->LogAndWarnUser(spaceoutMessage, "", CatLog::Severity::Info, CatLog::Category::Visualization, true);
+
+	}
     catch(...)
     {
     }

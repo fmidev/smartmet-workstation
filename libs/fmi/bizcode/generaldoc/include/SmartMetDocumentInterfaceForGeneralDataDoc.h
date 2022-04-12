@@ -292,6 +292,9 @@ public:
     void SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor) override;
     CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() override;
     NFmiParameterInterpolationFixer& ParameterInterpolationFixer() override;
+    void ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag) override;
+    void UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged() override;
+    void OpenVisualizationsettingsDialog() override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem() override;

@@ -92,7 +92,7 @@
 #include "NFmiAviationStationInfoSystem.h"
 #include "NFmiGenDocDataAdapter.h"
 #include "TimeSerialModification.h"
-#include "FmiOperationProgressDlg.h"
+#include "CFmiOperationProgressAndCancellationDlg.h"
 #include "SmartMetToolboxDep_resource.h"
 #include "NFmiBasicSmartMetConfigurations.h"
 #include "NFmiLatLonArea.h"
@@ -1062,6 +1062,9 @@ void InitSmartToolSystem(void)
 	{
 		// t‰m‰ pit‰‰ tehd‰ dokumentin initialisoinnin yhteydess‰, ett‰ smarttoolintepreterin tuottaja listat alustetaan varmasti oikein!!!!
         NFmiSmartToolIntepreter intepreter(&itsProducerSystem, &itsObsProducerSystem);
+		// T‰m‰ korjaa mm. SymbolTooltipFile asetukset kuntoon, jos skriptiss‰ polku annetaan ilman drive-letter:i‰,
+		// mik‰ onkin jatkossa suositeltavaa.
+		NFmiSmartToolIntepreter::SetAbsoluteBasePath(BasicSmartMetConfigurations().ControlPath());
 	}
 	catch(std::exception &e)
 	{
@@ -2716,23 +2719,6 @@ bool CheckEditedDataForStartUpLoadErrors(int theMessageBoxButtunOptions)
 	return true;
 }
 
-// Heitt‰‰ poikkeuksen, jos on tehty varoitus
-void WarnUserIfProblemWithEditedData(bool fCancelPossible)
-{
-	if(EditedDataNotInPreferredState())
-	{
-		std::string msgStr("Current edited data is not suitable to be sent to the database.\n\n");
-		if(fCancelPossible)
-			msgStr += "SmartMet won't do what you were going to do here now, but next time there is no warning and\nSmartMet wil do this even if it's not preferred action.\n\n";
-		else
-			msgStr += "SmartMet will do the modifications you were going to do here.\n\n";
-		msgStr += "YOU SHOULD do the data loading properly:\n\n => Press Load Data -button 'after' pressing OK button here.";
-		std::string dlgTitleStr("Problems with current edited data!");
-        ::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(msgStr.c_str()), CA2T(dlgTitleStr.c_str()), MB_OK | MB_ICONERROR);
-		throw std::runtime_error("Cancel editing action");
-	}
-}
-
 bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1)
 {
 	// Tehd‰‰n aikasarjamuokkauksille progress ja peruutus dialogi ja toiminnot.
@@ -2747,7 +2733,7 @@ bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDr
             operationTextIsWarning = true;
         }
 		NFmiStopFunctor stopper;
-		CFmiOperationProgressDlg dlg(operationText, operationTextIsWarning, stopper, ApplicationInterface::GetSmartMetViewAsCView());
+		CFmiOperationProgressAndCancellationDlg dlg(operationText, operationTextIsWarning, stopper, ApplicationInterface::GetSmartMetViewAsCView());
 		NFmiThreadCallBacks threadCallBacks(&stopper, &dlg);
 
 		FmiModifyEditdData::ModifyFunctionParamHolder modifyFunctionParamHolder(GenDocDataAdapter());
@@ -2776,7 +2762,7 @@ bool DoSmartToolEditing(const std::string &theSmartToolText, const std::string &
     std::string operationText = ::GetDictionaryString("Doing smarttool modifications...");
     bool operationTextIsWarning = false;
     NFmiStopFunctor stopper;
-	CFmiOperationProgressDlg dlg(operationText, operationTextIsWarning, stopper, ApplicationInterface::GetSmartMetViewAsCView());
+	CFmiOperationProgressAndCancellationDlg dlg(operationText, operationTextIsWarning, stopper, ApplicationInterface::GetSmartMetViewAsCView());
 	NFmiThreadCallBacks threadCallBacks(&stopper, &dlg);
 
 	FmiModifyEditdData::ModifyFunctionParamHolder modifyFunctionParamHolder(GenDocDataAdapter());
@@ -6023,11 +6009,7 @@ void StoreSupplementaryData(void)
 		::_chdir(itsBasicConfigurations.WorkingDirectory().c_str()); // palautetaan alkuper‰inen tyˆhakemisto voimaan talletuksia varten
 		itsMTATempSystem.StoreSettings();
         // N‰m‰ sounding dialogin asetukset pit‰‰ ottaa MTATempSystem:ist‰ takaisin Win-registeriin, koska niit‰ on mahdollisesti latailtu n‰yttˆmakroista
-		auto& soundingSettingsForWinReg = itsMTATempSystem.GetSoundingViewSettingsFromWindowsRegisty();
-        ApplicationWinRegistry().SoundingTextUpward(soundingSettingsForWinReg.SoundingTextUpward());
-		ApplicationWinRegistry().SoundingTimeLockWithMapView(soundingSettingsForWinReg.SoundingTimeLockWithMapView());
-		ApplicationWinRegistry().ShowStabilityIndexSideView(soundingSettingsForWinReg.ShowStabilityIndexSideView());
-		ApplicationWinRegistry().ShowTextualSoundingDataSideView(soundingSettingsForWinReg.ShowTextualSoundingDataSideView());
+		ApplicationWinRegistry().SetSoundingViewSettings(itsMTATempSystem.GetSoundingViewSettingsFromWindowsRegisty());
 
         itsTrajectorySystem->StoreSettings();
 		GetCombinedMapHandler()->storeMapViewDescTopToSettings();
@@ -7929,6 +7911,15 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	NFmiFileCleanerSystem& FileCleanerSystem (void)
 	{
 		return itsFileCleanerSystem;
+	}
+
+	void UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged()
+	{
+		auto& visSettings = ApplicationWinRegistry().VisualizationSpaceoutSettings();
+		auto baseOptimizedGridSize = visSettings.baseSpaceoutGridSize();
+		NFmiPoint optimizedVisualizationGridSize(baseOptimizedGridSize, baseOptimizedGridSize);
+		NFmiSmartToolModifier::UseVisualizationOptimazation(visSettings.useGlobalVisualizationSpaceoutFactorOptimization());
+		InfoOrganizer()->SetOptimizedVisualizationMacroParamDataGridSize(boost::math::iround(optimizedVisualizationGridSize.X()), boost::math::iround(optimizedVisualizationGridSize.Y()));
 	}
 
 	void SetMacroParamDataGridSize(int xSize, int ySize)
@@ -12758,4 +12749,9 @@ int NFmiEditMapGeneralDataDoc::CurrentCrossSectionRowIndex()
 NFmiParameterInterpolationFixer& NFmiEditMapGeneralDataDoc::ParameterInterpolationFixer()
 {
 	return pimpl->ParameterInterpolationFixer();
+}
+
+void NFmiEditMapGeneralDataDoc::UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged()
+{
+	pimpl->UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();
 }

@@ -81,8 +81,8 @@ void CFmiBetaProductTabControlDialog::SetDefaultValues(void)
 
     CRect oldRect(wndpl.rcNormalPosition);
     const CRect &defaultRect = CFmiBetaProductTabControlDialog::ViewPosRegistryInfo().DefaultWindowRect();
-
-    MoveWindow(defaultRect.left, defaultRect.top, oldRect.Width(), oldRect.Height()); // HUOM! dialogin kokoa ei saa muuttaa!!
+    // HUOM! dialogin kokoa ei saa muuttaa!!
+    MoveWindow(defaultRect.left, defaultRect.top, oldRect.Width(), oldRect.Height()); 
     Persist2::WriteWindowRectToWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), MakeUsedWinRegistryKeyStr(0), this);
 }
 

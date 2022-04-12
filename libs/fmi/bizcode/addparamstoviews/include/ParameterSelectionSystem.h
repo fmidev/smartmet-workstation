@@ -123,5 +123,6 @@ namespace AddParams
 		std::vector<SingleRowItem> addSubmenu(const SingleRowItem& row, int index);
 		std::vector<SingleRowItem> addAllChildNodes(const SingleRowItem& row, int index);
         void clearData();
+        bool isMapViewCase() const;
 	};
 }

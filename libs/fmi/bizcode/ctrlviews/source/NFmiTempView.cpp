@@ -33,6 +33,7 @@
 #include "ModelDataServerConfiguration.h"
 #include "SoundingViewSettingsFromWindowsRegisty.h"
 #include "NFmiHelpDataInfo.h"
+#include "ColorStringFunctions.h"
 
 #include <stdexcept>
 #include "boost\math\special_functions\round.hpp"
@@ -1949,8 +1950,11 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
     auto usedTempInfo(theTempInfo);
     auto useServerData = theProducer.useServer();
     usedTempInfo.Time(::GetUsedSoundingDataTime(itsCtrlViewDocumentInterface, theTempInfo));
+	// Amdar datoilla (tuottaja id 1015) o nerikois aikaikkuna, mist‰ datoja etsit‰‰n, 
+	// sen alkuhaarukka pit‰‰ antaa FindSoundingInfo, kaikille muille datoille arvo on 0.
+	int amdarDataStartOffsetInMinutes = (theProducer.GetIdent() == 1015) ? 30 : 0;
     
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, usedTempInfo.Time(), theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true));
+	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, usedTempInfo.Time(), theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true), amdarDataStartOffsetInMinutes);
 	if(useServerData || info)
 	{
         auto usedLocationWithName = ::GetSoundingLocation(info, theTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
@@ -3454,7 +3458,7 @@ std::string NFmiTempView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
                     auto usedLocationWithName = ::GetSoundingLocation(info, usedTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
                     usedTempInfo.Latlon(usedLocationWithName.GetLocation());
                     str += "<b><font color=";
-                    str += CtrlViewUtils::Color2HtmlColorStr(mtaTempSystem.SoundingColor(index));
+                    str += ColorString::Color2HtmlColorStr(mtaTempSystem.SoundingColor(index));
                     str += ">";
                     str += ::GetSoundingToolTipText(itsSoundingDataCacheForTooltips, selectedProducer, usedTempInfo, 0, pressure, index, true, usedLocationWithName.GetName());
                     if(modelRunCount > 0 && NFmiDrawParam::IsModelRunDataType(info->DataType()))

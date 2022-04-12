@@ -12,17 +12,20 @@ namespace
 	void DoFinalImageBulkDraw(const NFmiSymbolBulkDrawData& sbdData, Gdiplus::Graphics& gdiPlusGraphics, NFmiImageMap& usedSymbolMap, NFmiToolBox& toolBox)
 	{
 		auto printing = sbdData.printing();
-		auto symbolSize = sbdData.symbolSizes().front();
-		auto symbolSizeInPixels = symbolSize.Y();
 		NFmiRect symbolRect;
-		symbolRect.Size(sbdData.relativeDrawObjectSize());
+		auto relativeDrawObjectSize = sbdData.relativeDrawObjectSize();
+		symbolRect.Size(relativeDrawObjectSize);
+		auto symbolSizeInPixels = CtrlView::RelativeSizeToPixelSize(relativeDrawObjectSize, toolBox).Y();
 		for(size_t index = 0; index < sbdData.values().size(); index++)
 		{
 			auto value = sbdData.values()[index];
-			std::string codeStr = boost::lexical_cast<std::string>(value);
-			Gdiplus::Bitmap* symbolBitmap = usedSymbolMap.GetRightSizeImage(symbolSizeInPixels, printing, codeStr);
-			symbolRect.Center(sbdData.relativeStationPointPositions()[index]);
-			CtrlView::DrawAnimationButton(symbolRect, symbolBitmap, &gdiPlusGraphics, toolBox, printing, sbdData.mapViewSizeInPixels(), 1.f, true);
+			if(value != kFloatMissing)
+			{
+				std::string codeStr = boost::lexical_cast<std::string>(value);
+				Gdiplus::Bitmap* symbolBitmap = usedSymbolMap.GetRightSizeImage(symbolSizeInPixels, printing, codeStr);
+				symbolRect.Center(sbdData.relativeStationPointPositions()[index]);
+				CtrlView::DrawAnimationButton(symbolRect, symbolBitmap, &gdiPlusGraphics, toolBox, printing, sbdData.mapViewSizeInPixels(), 1.f, true);
+			}
 		}
 	}
 

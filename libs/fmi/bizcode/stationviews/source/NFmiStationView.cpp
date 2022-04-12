@@ -71,6 +71,7 @@
 #include "GdiplusStationBulkDraw.h"
 #include "SparseDataGrid.h"
 #include "NFmiSymbolTextMapping.h"
+#include "ColorStringFunctions.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -266,13 +267,14 @@ bool NFmiStationView::PrepareForStationDraw(void)
 	if(!itsInfo) // t‰m‰ alustetaan jo SetMapViewSettings-metodissa
 		return false;
     SetupPossibleWindMetaParamData();
+	bool dummyBoolNotUsed = false;
 	if(NFmiDrawParam::IsMacroParamCase(itsInfo->DataType()))
 	{
 		if(itsDrawParam->IsParamHidden() == false)
 		{
 			unsigned long currentLocationIndex = itsInfo->LocationIndex();
 			fUseMacroParamSpecialCalculations = true;
-			CalcViewFloatValueMatrix(itsMacroParamSpecialCalculationsValues, 0, 0, 0, 0); // datahila pit‰‰ laskea jo t‰ss‰
+			CalcViewFloatValueMatrix(itsMacroParamSpecialCalculationsValues, 0, 0, 0, 0, dummyBoolNotUsed); // datahila pit‰‰ laskea jo t‰ss‰
 			itsInfo->LocationIndex(currentLocationIndex); // CalcViewFloatValueMatrix nollaa paikan, joten se pit‰‰ asettaa t‰ss‰ takaisin
 		}
 	}
@@ -284,7 +286,7 @@ bool NFmiStationView::PrepareForStationDraw(void)
 	}
 	else if(fGetCurrentDataFromQ2Server)
 	{
-		CalcViewFloatValueMatrix(itsQ2ServerDataValues, 0, 0, 0, 0);
+		CalcViewFloatValueMatrix(itsQ2ServerDataValues, 0, 0, 0, 0, dummyBoolNotUsed);
 	}
 	else if(!itsInfo->Time(itsTime))
 	{
@@ -325,6 +327,7 @@ void NFmiStationView::Draw(NFmiToolBox* theGTB)
 
 	fUseMacroParamSpecialCalculations = false;
 	fGetSynopDataFromQ2 = false; // aluksi laitetaan falseksi, haku tehd‰‰n kerran PrepareForStationDraw-metodissa jossa onnistumisen kanssa lippu laitetaan p‰‰lle
+	itsOptimizedGridPtr.reset();
 	if(!theGTB)
 		return;
 
@@ -472,8 +475,9 @@ int NFmiStationView::GetApproxmationOfDataTextLength(std::vector<float> *sampleV
             return CalcApproxmationOfDataTextLength(*sampleValues);
 		else if(itsDrawParam->DoSparseSymbolVisualization() && itsInfo->IsGrid())
 		{
+			bool dummyBoolNotUsed = false;
 			NFmiDataMatrix<float> valueMatrix;
-			if(CalcViewFloatValueMatrix(valueMatrix, 0, 0, 0, 0))
+			if(CalcViewFloatValueMatrix(valueMatrix, 0, 0, 0, 0, dummyBoolNotUsed))
 			{
 				std::vector<float> fullFieldValues = ::MatrixToVector(valueMatrix);
 				return CalcApproxmationOfDataTextLength(fullFieldValues);
@@ -639,7 +643,7 @@ bool NFmiStationView::IsStationDataMacroParam(void)
     {
         if(fUseCalculationPoints)
             return true;
-    	std::string macroParamStr = FmiModifyEditdData::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), itsDrawParam);
+    	std::string macroParamStr = CtrlViewUtils::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), itsDrawParam);
         if(MacroParam::ci_find_substr(macroParamStr, std::string("closestvalue")) != MacroParam::ci_string_not_found)
             return true;
     }
@@ -679,6 +683,11 @@ NFmiPoint NFmiStationView::CalcUsedSpaceOutFactors()
 CtrlViewUtils::GraphicalInfo& NFmiStationView::GetGraphicalInfo() const
 {
 	return itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+}
+
+NFmiVisualizationSpaceoutSettings& NFmiStationView::GetVisualizationSettings() const
+{
+	return itsCtrlViewDocumentInterface->ApplicationWinRegistry().VisualizationSpaceoutSettings();
 }
 
 // Seek-rangeja laskettaessa halutaan ett‰ alihilat eiv‰t mene p‰‰lekk‰in vierekk‰isiss‰ piirrett‰viss‰ pisteiss‰.
@@ -1409,9 +1418,9 @@ bool NFmiStationView::IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut
 		{
 			NFmiIsoLineData isoLineData;
 			::SetupIsolineData(possibleMacroParamResolutionInfoOut, isoLineData);
-			NFmiPoint grid2PixelRatio = CalcGrid2PixelRatio(isoLineData);
+			NFmiPoint pixelToGridRatio = CalcPixelToGridRatio(isoLineData, NFmiRect(0, 0, 1, 1));
 			NFmiPoint downSizeFactor;
-			if(IsolineDataDownSizingNeeded(isoLineData, grid2PixelRatio, downSizeFactor, itsDrawParam))
+			if(IsolineDataDownSizingNeeded(isoLineData, pixelToGridRatio, downSizeFactor, itsDrawParam))
 			{
 				// Tehd‰‰n t‰ss‰ floor, koska muuten myˆhemmin (tm_utils\source\ToolMasterDrawingFunctions.cpp:ss‰) saatetaan luulla ett‰ tarvitsee harventaa lis‰‰
 				auto newSizeX = std::floor(isoLineData.itsXNumber / downSizeFactor.X());
@@ -1436,9 +1445,9 @@ bool NFmiStationView::IsMacroParamContourDataDownSized(const boost::shared_ptr<N
 		{
 			NFmiIsoLineData isoLineData;
 			::SetupIsolineData(possibleMacroParamResolutionInfo, isoLineData);
-			NFmiPoint grid2PixelRatio = CalcGrid2PixelRatio(isoLineData);
+			NFmiPoint pixelToGridRatio = CalcPixelToGridRatio(isoLineData, NFmiRect(0, 0, 1, 1));
 			NFmiPoint downSizeFactor;
-			if(::IsDownSizingNeeded(grid2PixelRatio, GetCriticalGrid2PixelRatioForContour(), downSizeFactor))
+			if(IsDownSizingNeeded(pixelToGridRatio, GetVisualizationSettings().criticalPixelToGridPointRatioLimitForContours(), downSizeFactor))
 			{
 				// Tehd‰‰n t‰ss‰ ceil, koska muuten myˆhemmin (tm_utils\source\ToolMasterDrawingFunctions.cpp:ss‰) luullaan ett‰ ei tarvitse tarvitse laittaa quick-contour optiota p‰‰lle ollenkaan
 				auto newSizeX = std::ceil(isoLineData.itsXNumber / downSizeFactor.X());
@@ -1455,10 +1464,10 @@ bool NFmiStationView::IsMacroParamContourDataDownSized(const boost::shared_ptr<N
 // Lasketaan k‰ytetyn datan hilan ja n‰ytˆn pikseleiden suhdeluku x- ja y-suunnassa.
 // Jos kyse ei hiladatasta, tai esim. makrosta (smarttool/q3), lasketaan isolinedatan ja arean avulla kertoimet.
 // Jos x/y arvo on 0, j‰tet‰‰n t‰m‰ huomiotta.
-NFmiPoint NFmiStationView::CalcGrid2PixelRatio(NFmiIsoLineData& theIsoLineData)
+NFmiPoint NFmiStationView::CalcPixelToGridRatio(NFmiIsoLineData& theIsoLineData, const NFmiRect& zoomedAreaRect)
 {
 	NFmiPoint grid2PixelRatio(0, 0);
-	if(theIsoLineData.itsInfo && theIsoLineData.itsInfo->Grid())
+	if(theIsoLineData.fUseOriginalDataInPixelToGridRatioCalculations && theIsoLineData.itsInfo && theIsoLineData.itsInfo->Grid())
 	{
 		NFmiFastQueryInfo& usedInfo = *(theIsoLineData.itsInfo);
 		usedInfo.FirstLocation(); // laitetaan 1. hilapiste eli vasen alanurkka kohdalle
@@ -1480,9 +1489,9 @@ NFmiPoint NFmiStationView::CalcGrid2PixelRatio(NFmiIsoLineData& theIsoLineData)
 	}
 	else
 	{
-		double relGridPoinWidth = itsArea->Width() / (theIsoLineData.itsXNumber - 1.0);
+		double relGridPoinWidth = (zoomedAreaRect.Width() * itsArea->Width()) / (theIsoLineData.itsXNumber - 1.0);
 		grid2PixelRatio.X(itsToolBox->HXs(relGridPoinWidth));
-		double relGridPoinHeight = itsArea->Height() / (theIsoLineData.itsYNumber - 1.0);
+		double relGridPoinHeight = (zoomedAreaRect.Height() * itsArea->Height()) / (theIsoLineData.itsYNumber - 1.0);
 		grid2PixelRatio.Y(itsToolBox->HYs(relGridPoinHeight));
 	}
 
@@ -1539,8 +1548,19 @@ bool NFmiStationView::IsGridDataDrawnWithSpaceOutSymbols()
 	return false;
 }
 
+void NFmiStationView::UpdateOptimizedVisualizationMacroParamData()
+{
+	auto areaBasedGridSize = GetVisualizationSettings().calcAreaGridSize(*itsArea, CalcViewGridSize());
+	itsCtrlViewDocumentInterface->InfoOrganizer()->UpdateOptimizedVisualizationMacroParamDataSize(boost::math::iround(areaBasedGridSize.X()), boost::math::iround(areaBasedGridSize.Y()), itsArea);
+}
+
+// T‰h‰n ei oteta mukaan VisualizationOptimization hilakokolaskuja, koska t‰ss‰ lasketaan
+// jo harvennettuun laskentahilaan mahdollisen symbolipiirron takia.
 boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreatePossibleSpaceOutMacroParamData()
 {
+	// Huom! Tehd‰‰n valitettava kaksoistoiminto, mutta p‰ivitet‰‰n aluksi myˆs OptimizedVisualizationMacroParamData:n
+	// area ja koko, jota tarvitaan myˆhemmin.
+	UpdateOptimizedVisualizationMacroParamData();
     if(IsGridDataDrawnWithSpaceOutSymbols())
     {
         auto probingData = ::CreateProbingMacroParamData(itsArea);
@@ -1885,7 +1905,7 @@ static std::unique_ptr<NFmiArea> GetQ2ToolTipArea(CtrlViewDocumentInterface *the
 	return std::make_unique<NFmiLatLonArea>(bl, tr);
 }
 
-static NFmiGrid GetQ3ArchiveDataGrid(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiArea> &theArea, bool doToolTipCalculation)
+static NFmiGrid GetQ3ArchiveDataGrid(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiArea> &theArea, bool doToolTipCalculation, int viewGridSize)
 {
 	if(doToolTipCalculation)
 	{
@@ -1895,7 +1915,8 @@ static NFmiGrid GetQ3ArchiveDataGrid(CtrlViewDocumentInterface *theCtrlViewDocum
 	}
 	else
 	{
-		NFmiPoint gridSize = theCtrlViewDocumentInterface->GetQ2ServerInfo().Q2ServerGridSize();
+		auto& visSettings = theCtrlViewDocumentInterface->ApplicationWinRegistry().VisualizationSpaceoutSettings();
+		NFmiPoint gridSize = visSettings.getCheckedPossibleOptimizedGridSize(theCtrlViewDocumentInterface->GetQ2ServerInfo().Q2ServerGridSize(), *theArea, viewGridSize, theCtrlViewDocumentInterface->BetaProductGenerationRunning());
         return NFmiGrid(theArea.get(), static_cast<unsigned long>(gridSize.X()), static_cast<unsigned long>(gridSize.Y()));
 	}
 }
@@ -2140,7 +2161,7 @@ bool NFmiStationView::GetArchiveDataFromQ3Server(NFmiDataMatrix<float> &theValue
         auto &q2ServerInfo = itsCtrlViewDocumentInterface->GetQ2ServerInfo();
         bool useBinaryData = true; // bin‰‰ri data on nopeampaa
         int usedCompression = q2ServerInfo.Q2ServerUsedZipMethod(); // 0=none, 1=zip, 2=bzip2
-        theUsedGridOut = ::GetQ3ArchiveDataGrid(itsCtrlViewDocumentInterface, itsArea, doToolTipCalculation);
+        theUsedGridOut = ::GetQ3ArchiveDataGrid(itsCtrlViewDocumentInterface, itsArea, doToolTipCalculation, CalcViewGridSize());
 
         string urlStr = q2ServerInfo.Q3ServerUrl();
 
@@ -2187,7 +2208,8 @@ bool NFmiStationView::GetQ3ScriptData(NFmiDataMatrix<float> &theValues, NFmiGrid
 {
     try
     {
-        NFmiPoint usedGridSize = itsCtrlViewDocumentInterface->InfoOrganizer()->GetMacroParamDataGridSize();
+		auto& visSettings = GetVisualizationSettings();
+		NFmiPoint usedGridSize = visSettings.getCheckedPossibleOptimizedGridSize(itsCtrlViewDocumentInterface->InfoOrganizer()->GetMacroParamDataGridSize(), *itsArea, CalcViewGridSize(), itsCtrlViewDocumentInterface->BetaProductGenerationRunning());
         theUsedGrid = NFmiGrid(itsArea.get(), static_cast<unsigned long>(usedGridSize.X()), static_cast<unsigned long>(usedGridSize.Y()));
 
         string urlStr = theUsedBaseUrlStr;
@@ -2195,7 +2217,7 @@ bool NFmiStationView::GetQ3ScriptData(NFmiDataMatrix<float> &theValues, NFmiGrid
         string baseParStr;
         baseParStr += "code=";
 
-        std::string macroParamStr = FmiModifyEditdData::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), itsDrawParam);
+        std::string macroParamStr = CtrlViewUtils::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), itsDrawParam);
         baseParStr += NFmiStringTools::UrlEncode(macroParamStr);
 
         string projectionStr("&projection=");
@@ -2277,9 +2299,11 @@ NFmiHelpDataInfo* NFmiStationView::GetHelpDataInfo(boost::shared_ptr<NFmiFastQue
     return GetCtrlViewDocumentInterface()->HelpDataInfoSystem()->FindHelpDataInfo(theInfo->DataFilePattern());
 }
 
-void NFmiStationView::FinalFillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2)
+void NFmiStationView::FinalFillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid)
 {
-    if(useCropping)
+	if(optimizedDataGrid)
+		theInfo->GridValues(theValues, *optimizedDataGrid, usedTime, itsTimeInterpolationRangeInMinutes);
+	else if(useCropping)
         theInfo->CroppedValues(theValues, usedTime, x1, y1, x2, y2, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
     else
         theInfo->Values(theValues, usedTime, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
@@ -2301,17 +2325,17 @@ bool NFmiStationView::DataIsDrawable(boost::shared_ptr<NFmiFastQueryInfo> &theIn
     return false;
 }
 
-void NFmiStationView::FinalFillWindMetaDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, unsigned long wantedParamId)
+void NFmiStationView::FinalFillWindMetaDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, unsigned long wantedParamId, NFmiGrid* optimizedDataGrid)
 {
     NFmiFastInfoUtils::QueryInfoParamStateRestorer restorer(*theInfo);
     if(metaWindParamUsage.HasWsAndWd())
     {
         theInfo->Param(kFmiWindSpeedMS);
         NFmiDataMatrix<float> WS;
-        FinalFillDataMatrix(theInfo, WS, usedTime, useCropping, x1, y1, x2, y2);
+        FinalFillDataMatrix(theInfo, WS, usedTime, useCropping, x1, y1, x2, y2, optimizedDataGrid);
         theInfo->Param(kFmiWindDirection);
         NFmiDataMatrix<float> WD;
-        FinalFillDataMatrix(theInfo, WD, usedTime, useCropping, x1, y1, x2, y2);
+        FinalFillDataMatrix(theInfo, WD, usedTime, useCropping, x1, y1, x2, y2, optimizedDataGrid);
         switch(wantedParamId)
         {
         case kFmiWindVectorMS:
@@ -2340,10 +2364,10 @@ void NFmiStationView::FinalFillWindMetaDataMatrix(boost::shared_ptr<NFmiFastQuer
     {
         theInfo->Param(kFmiWindUMS);
         NFmiDataMatrix<float> u;
-        FinalFillDataMatrix(theInfo, u, usedTime, useCropping, x1, y1, x2, y2);
+        FinalFillDataMatrix(theInfo, u, usedTime, useCropping, x1, y1, x2, y2, optimizedDataGrid);
         theInfo->Param(kFmiWindVMS);
         NFmiDataMatrix<float> v;
-        FinalFillDataMatrix(theInfo, v, usedTime, useCropping, x1, y1, x2, y2);
+        FinalFillDataMatrix(theInfo, v, usedTime, useCropping, x1, y1, x2, y2, optimizedDataGrid);
         switch(wantedParamId)
         {
         case kFmiWindVectorMS:
@@ -2361,7 +2385,7 @@ void NFmiStationView::FinalFillWindMetaDataMatrix(boost::shared_ptr<NFmiFastQuer
     }
 }
 
-void NFmiStationView::FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2)
+void NFmiStationView::FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid)
 {
 	if(theInfo == 0)
 		theValues = kFloatMissing;
@@ -2371,11 +2395,11 @@ void NFmiStationView::FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theIn
         auto paramId = itsDrawParam->Param().GetParamIdent();
         if(metaWindParamUsage.ParamNeedsMetaCalculations(paramId))
         {
-            FinalFillWindMetaDataMatrix(theInfo, theValues, usedTime, fUseCropping, x1, y1, x2, y2, paramId);
+            FinalFillWindMetaDataMatrix(theInfo, theValues, usedTime, fUseCropping, x1, y1, x2, y2, paramId, optimizedDataGrid);
         }
         else
         {
-            FinalFillDataMatrix(theInfo, theValues, usedTime, fUseCropping, x1, y1, x2, y2);
+            FinalFillDataMatrix(theInfo, theValues, usedTime, fUseCropping, x1, y1, x2, y2, optimizedDataGrid);
         }
     }
 }
@@ -2434,33 +2458,35 @@ bool NFmiStationView::IsStationDataGridded()
 
 void NFmiStationView::CalculateGriddedStationData(NFmiDataMatrix<float> &theValues, NFmiGrid &usedGrid)
 {
-    NFmiPoint usedGridSize = itsCtrlViewDocumentInterface->StationDataGridSize();
+	auto& visSettings = GetVisualizationSettings();
+	NFmiPoint usedGridSize = visSettings.getCheckedPossibleOptimizedGridSize(itsCtrlViewDocumentInterface->StationDataGridSize(), *itsArea, CalcViewGridSize(), itsCtrlViewDocumentInterface->BetaProductGenerationRunning());
     usedGrid = NFmiGrid(itsArea.get(), static_cast<unsigned long>(usedGridSize.X()), static_cast<unsigned long>(usedGridSize.Y()));
     theValues.Resize(static_cast<unsigned long>(usedGridSize.X()), static_cast<unsigned long>(usedGridSize.Y()), kFloatMissing);
     GridStationDataToMatrix(theValues, itsTime);
 }
 
-void NFmiStationView::CalculateDifferenceToOriginalDataMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2, bool useCropping)
+void NFmiStationView::CalculateDifferenceToOriginalDataMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2, bool useCropping, NFmiGrid* optimizedDataGrid)
 {
-    FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2);
+    FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2, optimizedDataGrid);
     if(itsOriginalDataInfo)
     {
         NFmiDataMatrix<float> values2;
-        FillDataMatrix(itsOriginalDataInfo, values2, itsTime, useCropping, x1, y1, x2, y2);
+        FillDataMatrix(itsOriginalDataInfo, values2, itsTime, useCropping, x1, y1, x2, y2, optimizedDataGrid);
         ::CalcDiffMatrix(theValues, values2);
     }
     else
         theValues = 0; // tehd‰‰n 0-arvoiset luvut tulosmatriisiin, koska ei ole originaali arvoja k‰ytˆss‰
 }
 
-
-bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2)
+// Otetaan visualizationOptimazation:in harvennetut hilakoot tarvittavissa kohdissa k‰yttˆˆn
+bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2, bool& useOriginalDataInPixelToGridRatioCalculations, NFmiGrid* optimizedDataGrid)
 {
 	bool status = true;
     NFmiGrid usedGrid; // t‰m‰n avulla lasketaan maski laskut
 
 	if(IsSpecialMatrixDataDraw())
 	{
+		// T‰t‰ k‰ytet‰‰n vain visualisoimaan editoidun datan valittuja pisteit‰, t‰‰ll‰ ei tehd‰ visualizationOptimazation harvennusta
 		theValues = itsSpecialMatrixData;
         usedGrid = NFmiGrid(itsArea.get(), static_cast<unsigned long>(itsSpecialMatrixData.NX()), static_cast<unsigned long>(itsSpecialMatrixData.NY()));
 	}
@@ -2487,25 +2513,37 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 			bool useCropping = (x2 - x1 >= 1) && (y2 - y1 >= 1);
 			if(itsDrawParam->ShowDifferenceToOriginalData())
 			{
-                CalculateDifferenceToOriginalDataMatrix(theValues, x1, y1, x2, y2, useCropping);
+                CalculateDifferenceToOriginalDataMatrix(theValues, x1, y1, x2, y2, useCropping, optimizedDataGrid);
 			}
 			else
 			{
 				if(itsInfo->DataType() != NFmiInfoData::kStationary)
 				{
-                    FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2);
+                    FillDataMatrix(itsInfo, theValues, itsTime, useCropping, x1, y1, x2, y2, optimizedDataGrid);
 				}
 				else
 				{
                     // Staattisille datoille (terrain datat jms.) ei tarvitse tehd‰ meta parametri tarkasteluja
-					if(useCropping)
+					if(optimizedDataGrid)
+					{
+						// GridValues metodista ei lˆydy kuin aikainterpolaatio menetelm‰, joten pit‰‰ pyyt‰‰ eka aika datasta
+						const auto& firstTime = itsInfo->TimeDescriptor().FirstTime();
+						itsInfo->GridValues(theValues, *optimizedDataGrid, firstTime);
+					}
+					else if(useCropping)
 						itsInfo->CroppedValues(theValues, x1, y1, x2, y2); // stat data on jo ajallisesti kohdallaan
 					else
 						itsInfo->Values(theValues); // stat data on jo ajallisesti kohdallaan
 				}
 			}
 
-			usedGrid = GetUsedGrid(usedGrid, itsInfo, theValues, useCropping, x1, y1, x2, y2);
+			if(optimizedDataGrid)
+				usedGrid = *optimizedDataGrid;
+			else
+			{
+				usedGrid = GetUsedGrid(usedGrid, itsInfo, theValues, useCropping, x1, y1, x2, y2);
+				useOriginalDataInPixelToGridRatioCalculations = true;
+			}
 		}
 	}
 
@@ -2694,10 +2732,10 @@ NFmiPoint NFmiStationView::CalcFontSize(int theMinSize, int theMaxSize, bool fPr
 	{
 		int x = static_cast<int>(itsToolBox->HX(CurrentDataRect().Width()/1.2));
 		int y = static_cast<int>(itsToolBox->HY(CurrentDataRect().Height()/1.2));
-		double tmp = static_cast<int>((y + x) / 2.);
+		double tmp = (y + x) / 2.;
 		tmp = tmp * ::LaskeYSuoralla(tmp, theMinSize, theMaxSize, 1, 0.9); // t‰m‰ funktio yritt‰‰ laittaa fontin kooksi l‰helle optimia
 
-		y = FmiMax(theMinSize, static_cast<int>(tmp));
+		y = FmiMax(theMinSize, boost::math::iround(tmp));
 		y = FmiMin(theMaxSize, y);
 		return NFmiPoint(y, y);
 	}
@@ -2793,6 +2831,7 @@ void NFmiStationView::DrawControlPointData(void)
 
 			float height = static_cast<float>(itsToolBox->SY(pixels));
 			// float width = itsToolBox->SX(pixels);
+			itsDrawingEnvironment->SetFontType(kArial);
 			NFmiPoint fontSize(pixels, pixels);
 			NFmiPoint oldFontSize(itsDrawingEnvironment->GetFontWidth(), itsDrawingEnvironment->GetFontHeight());
 			NFmiColor oldFillColor(itsDrawingEnvironment->GetFillColor());
@@ -2811,7 +2850,8 @@ void NFmiStationView::DrawControlPointData(void)
 				NFmiPoint xy(itsArea->ToXY(latLonPoint));
 
 				float changeValue = static_cast<float>(CPMan->ChangeValue());
-				float modifiedValue = changeValue + info->InterpolatedValue(latLonPoint);
+				float actualValue = info->InterpolatedValue(latLonPoint);
+				float modifiedValue = (actualValue != kFloatMissing) ? (changeValue + actualValue) : kFloatMissing;
 				NFmiValueString str(changeValue, "%0.1f");
 				NFmiValueString modifiedStr(modifiedValue, "%0.1f");
 				NFmiValueString changeStr;
@@ -2819,6 +2859,10 @@ void NFmiStationView::DrawControlPointData(void)
 					modifiedStr = NFmiString("  ") + modifiedStr;
 				else if(modifiedValue > -10) // jos positiivinen luku, laitetaan varmuuden vuoksi space eteen, ett‰ saadaan mahdollinen '-'-merkki peittoon (piirron optimoinnista johtuva juttu)
 					modifiedStr = NFmiString(" ") + modifiedStr;
+				if(actualValue == kFloatMissing)
+				{
+					modifiedStr = "  -  ";
+				}
 				if(changeValue>0)
 					changeStr = "+";
 				changeStr += str;
@@ -2994,7 +3038,7 @@ std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<
 static std::string MakeMapLayerTooltipText(CtrlViewDocumentInterface* ctrlViewDocumentInterface, const boost::shared_ptr<NFmiDrawParam>& drawParam)
 {
 	std::string str = "<b><font color=";
-	str += CtrlViewUtils::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, ctrlViewDocumentInterface));
+	str += ColorString::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, ctrlViewDocumentInterface));
 	str += ">";
 	str += drawParam->ParameterAbbreviation();
 	str += "</font></b>";
@@ -3088,7 +3132,7 @@ std::string NFmiStationView::GetPossibleMacroParamSymbolText(float value, const 
 	else
 	{
 		std::string decoratedStr = "(<b><font color=";
-		decoratedStr += CtrlViewUtils::Color2HtmlColorStr(NFmiColor(0, .75f, 0.2f));
+		decoratedStr += ColorString::Color2HtmlColorStr(NFmiColor(0, .75f, 0.2f));
 		decoratedStr += ">";
 		decoratedStr += str;
 		decoratedStr += "</font></b>)";
@@ -3347,8 +3391,8 @@ void NFmiStationView::DrawObsComparison(void)
 							extrapolateObs = IsThisTimeExtrapolated(itsTime, *obsInfo);
 						if(obsFound || (extrapolateObs && obsComparisonInfo.ComparisonMode() == 2))
 						{
-							const int boxSizeXInPixels = static_cast<int>(obsComparisonInfo.SymbolSize().X());
-							const int boxSizeYInPixels = static_cast<int>(obsComparisonInfo.SymbolSize().Y());
+							const int boxSizeXInPixels = boost::math::iround(obsComparisonInfo.SymbolSize().X());
+							const int boxSizeYInPixels = boost::math::iround(obsComparisonInfo.SymbolSize().Y());
 							double relativeBoxWidth = itsToolBox->SX(boxSizeXInPixels);
 							double relativeBoxHeight = itsToolBox->SY(boxSizeYInPixels);
 							if(obsComparisonInfo.DrawBorders())
@@ -3494,6 +3538,12 @@ bool NFmiStationView::IsAccessoryStationDataDrawn()
     return itsCtrlViewDocumentInterface->Registry_ShowStationPlot(itsMapViewDescTopIndex) && IsActiveParam() && (IsSpecialMatrixDataDraw() == false);
 }
 
+int NFmiStationView::CalcViewGridSize()
+{
+	auto viewGridSize = itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex);
+	return int(viewGridSize.X() * viewGridSize.Y());
+}
+
 // ******** Symbol-Bulk-Draw toimintojen alku *********
 
 // T‰ss‰ metodissa tehd‰‰n kaikki mahdolliset S-B-D asetukset, mitk‰ 
@@ -3525,7 +3575,10 @@ void NFmiStationView::SbdCollectSymbolDrawData(bool doStationPlotOnly)
 		{
 			// T‰nne tullaan (doStationPlotOnly = true) kun piirret‰‰n isoviiva/contour juttuja
 			// ja silloin halutaan piirt‰‰ kaikki datan pisteet n‰kyviin.
-			SbdCollectNormalSymbolDrawData(doStationPlotOnly);
+			if(itsOptimizedGridPtr)
+				SbdCollectOptimizedGridStationPoints();
+			else
+				SbdCollectNormalSymbolDrawData(doStationPlotOnly);
 		}
 		else if(IsSpaceOutDrawingUsed())
 		{
@@ -3557,6 +3610,18 @@ void NFmiStationView::SbdCollectNormalSymbolDrawData(bool doStationPlotOnly)
 	}
 }
 
+void NFmiStationView::SbdCollectOptimizedGridStationPoints()
+{
+	if(itsOptimizedGridPtr)
+	{
+		for(itsOptimizedGridPtr->Reset(); itsOptimizedGridPtr->Next(); )
+		{
+			NFmiPoint xy(LatLonToViewPoint(itsOptimizedGridPtr->LatLon()));
+			itsSymbolBulkDrawData.addRelativeStationPointPosition(xy);
+		}
+	}
+}
+
 void NFmiStationView::SbdGetStationDrawSettings()
 {
 	itsSymbolBulkDrawData.drawStationPoint(IsAccessoryStationDataDrawn());
@@ -3581,7 +3646,7 @@ NFmiRect NFmiStationView::SbdCalcBaseStationRelativeRect()
 		auto printerPixelCount = plotHeightInMM * GetGraphicalInfo().itsPixelsPerMM_y;
 		pointSize = NFmiPoint(printerPixelCount, printerPixelCount);
 	}
-	return NFmiRect(0, 0, itsToolBox->SX(static_cast<long>(pointSize.X())), itsToolBox->SY(static_cast<long>(pointSize.Y())));
+	return NFmiRect(0, 0, itsToolBox->SX(boost::math::iround(pointSize.X())), itsToolBox->SY(boost::math::iround(pointSize.Y())));
 }
 
 // Symbolipiirto halutaan laajentaa hieman zoomatun kartta-alueen ulkopuolelle, jotta
@@ -3897,3 +3962,60 @@ void NFmiStationView::SbdDoSymbolDraw(bool doStationPlotOnly)
 }
 
 // ******** Symbol-Bulk-Draw toimintojen loppu *********
+
+static bool IsIsolinesDrawn(const NFmiIsoLineData& theOrigIsoLineData)
+{
+	if(theOrigIsoLineData.fUseIsoLines)
+		return true;
+	return false;
+}
+
+static bool IsIsolinesDrawn(const boost::shared_ptr<NFmiDrawParam>& thePossibleDrawParam)
+{
+	auto gridDataDrawStyle = thePossibleDrawParam->GridDataPresentationStyle();
+	return gridDataDrawStyle == NFmiMetEditorTypes::View::kFmiIsoLineView || gridDataDrawStyle == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView;
+}
+
+bool NFmiStationView::IsolineDataDownSizingNeeded(const NFmiIsoLineData& theIsoLineData, const NFmiPoint& thePixelToGridPointRatio, NFmiPoint& theDownSizeFactorOut, const boost::shared_ptr<NFmiDrawParam>& thePossibleDrawParam)
+{
+	auto& visSettings = GetVisualizationSettings();
+	if(!visSettings.usePixelToGridPointRatioSafetyFeature())
+		return false;
+
+	if(thePossibleDrawParam)
+	{
+		if(!::IsIsolinesDrawn(thePossibleDrawParam))
+			return false;
+	}
+	else if(!::IsIsolinesDrawn(theIsoLineData))
+		return false;
+
+	double usedPixelToGridPointRatio = visSettings.pixelToGridPointRatio();
+	return IsDownSizingNeeded(thePixelToGridPointRatio, usedPixelToGridPointRatio, theDownSizeFactorOut);
+}
+
+static double CalcFinalDownSizeRatio(double criticalRatio, double currentRatio)
+{
+	if(currentRatio)
+	{
+		if(currentRatio < criticalRatio)
+			return criticalRatio / currentRatio;
+	}
+	return 1.;
+}
+
+bool NFmiStationView::IsDownSizingNeeded(const NFmiPoint& thePixelToGridPointRatio, double usedPixelToGridPointRatio, NFmiPoint& theDownSizeFactorOut)
+{
+	const NFmiPoint zeroChangeFactor(1, 1);
+	theDownSizeFactorOut.X(::CalcFinalDownSizeRatio(usedPixelToGridPointRatio, thePixelToGridPointRatio.X()));
+	theDownSizeFactorOut.Y(::CalcFinalDownSizeRatio(usedPixelToGridPointRatio, thePixelToGridPointRatio.Y()));
+	return theDownSizeFactorOut != zeroChangeFactor;
+}
+
+void NFmiStationView::UpdateOptimizedGridValues(const NFmiRect& dataAreaXyRect, int gridSizeX, int gridSizeY)
+{
+	NFmiPoint bottomLeftLatlon = itsArea->ToLatLon(dataAreaXyRect.BottomLeft());
+	NFmiPoint topRightLatlon = itsArea->ToLatLon(dataAreaXyRect.TopRight());
+	std::unique_ptr<NFmiArea> dataGridArea(itsArea->CreateNewArea(bottomLeftLatlon, topRightLatlon));
+	itsOptimizedGridPtr.reset(new NFmiGrid(dataGridArea.get(), gridSizeX, gridSizeY));
+}

@@ -132,7 +132,7 @@ void CFmiExtraMapView::OnInitialUpdate()
 	CreateEditMapView();
 	itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapView(this);
 
-	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, EXTRAMAPVIEW_TOOLTIP_ID);
+	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, EXTRAMAPVIEW_TOOLTIP_ID, CtrlViewUtils::MaxMapViewTooltipWidthInPixels);
 	CRect winRec;
 	GetWindowRect(winRec);
 	OnSize(SW_RESTORE, winRec.Width(), winRec.Height()); // jostain syystä on pakko tehdä onsize, että tooltip toimii varmasti koko ikkunan alueella?!?!?

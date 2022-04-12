@@ -69,6 +69,7 @@
 
 #include "datautilities\DataUtilitiesAdapter.h"
 #include "NFmiApplicationWinRegistry.h"
+#include "NFmiVisualizationSpaceoutSettings.h"
 
 #include <limits>
 
@@ -418,6 +419,7 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
 
     itsIsolineValues = kFloatMissing; // varmistetaan että tämä on tyhjää täynnä
     fGetSynopDataFromQ2 = false; // aluksi laitetaan falseksi, haku tehdään kerran PrepareForStationDraw-metodissa jossa onnistumisen kanssa lippu laitetaan päälle
+    itsOptimizedGridPtr.reset();
     CalculateGeneralStationRect();
     MakeDrawedInfoVector();
     if(itsInfoVector.empty())
@@ -1971,16 +1973,119 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
     int x2 = 0;
     int y2 = 0;
     isoLineData.itsIsolineMinLengthFactor = itsCtrlViewDocumentInterface->ApplicationWinRegistry().IsolineMinLengthFactor();
-    boost::shared_ptr<NFmiArea> mapArea = GetArea();
-    if(itsInfo->IsGrid())
-    {
-        // huom. q2serverilta data voi olla minne tahansa, joten sen käyttö on poikkeus
-        boost::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
-        if(IsQ2ServerUsed() == false && IsDataInView(infoArea, mapArea) == false)
-            return false; // ei tarvitse piirtää ollenkaan, koska data ei osu näytön alueelle ollenkaan.
-    }
+
+    if(!FillGridRelatedData_IsDataVisible())
+        return false;
 
     bool fillGridDataStatus = false;
+    if(FillGridRelatedData_VisualizationOptimizationChecks(isoLineData, zoomedAreaRect, fillGridDataStatus))
+    {
+        return fillGridDataStatus;
+    }
+    if(FillGridRelatedData_BetterVisualizationChecks(isoLineData, zoomedAreaRect, fillGridDataStatus))
+    {
+        return fillGridDataStatus;
+    }
+    if(FillGridRelatedData_ZoomingChecks(isoLineData, zoomedAreaRect, fillGridDataStatus))
+    {
+        return fillGridDataStatus;
+    }
+    FillGridRelatedData_NormalDataCase(isoLineData, zoomedAreaRect, fillGridDataStatus);
+    return fillGridDataStatus;
+}
+
+// FillGridRelatedData metodin paloittelu osiin, tapaus jossa käsitellään loput normi tapaukset.
+// Tämän ei tarvitse palauttaa tietoa että käsittelikö tämä asiat, koska tämä aina käsittelee loput tapaukset, mitä ei edellä saatu käsiteltyä.
+void NFmiIsoLineView::FillGridRelatedData_NormalDataCase(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, bool& fillGridDataStatus)
+{
+    isoLineData.itsInfo = itsInfo;
+    isoLineData.itsParam = itsInfo->Param();
+    isoLineData.itsTime = this->itsTime;
+
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // käydään kaikki pisteet läpi
+    fillGridDataStatus = FillIsoLineDataWithGridData(isoLineData, 0, 0, 0, 0);
+    if(IsQ2ServerUsed() && fGetCurrentDataFromQ2Server) // q2server tapauksessa haetaan vain ruudun alueelle dataa, joten poikkeaa normaali piirrosta
+        zoomedAreaRect = itsInfo->Area()->XYArea();
+    else if(itsInfo->IsGrid())
+    {
+        auto mapArea = GetArea();
+        auto origDataArea = itsInfo->Area();
+        if(DifferentWorldViews(origDataArea, mapArea.get()))
+        { // tehdään dataArea, joka on karttapohjan maailmassa
+            boost::shared_ptr<NFmiArea> origDataAreaClone(origDataArea->Clone());
+            NFmiPoint blLatlon = origDataAreaClone->BottomLeftLatLon();
+            NFmiPoint trLatlon = origDataAreaClone->TopRightLatLon();
+            double origLongitudeDifference = trLatlon.X() - blLatlon.X();
+            NFmiLongitude lonFixer(blLatlon.X(), mapArea->PacificView());
+            blLatlon.X(lonFixer.Value());
+            lonFixer.SetValue(trLatlon.X());
+            trLatlon.X(lonFixer.Value());
+            double newLongitudeDifference = trLatlon.X() - blLatlon.X();
+            if(newLongitudeDifference < 0 || ::fabs(origLongitudeDifference - newLongitudeDifference) > 0.1)
+                trLatlon.X(blLatlon.X() + origLongitudeDifference);
+            origDataAreaClone->PacificView(mapArea->PacificView());
+            boost::shared_ptr<NFmiArea> newArea(origDataAreaClone->NewArea(blLatlon, trLatlon));
+            zoomedAreaRect = newArea->XYArea(mapArea.get());
+        }
+        else
+            zoomedAreaRect = itsInfo->Area()->XYArea(mapArea.get());
+    }
+    else
+    {
+        zoomedAreaRect = NFmiRect(0, 0, 1, 1); // gridattu station data on aina 0,0 - 1,1 maailmassa
+    }
+}
+
+// FillGridRelatedData metodin paloittelu osiin, tapaus jossa on käytössä Visualization optimization systeemi.
+// Tällöin lasketaan dataan ja kartta-alueeseen sopiva harvennettu hila ja data täytetään siihen.
+// Palauttaa bool arvon: käsittelikö tämä funktio kyseisen datan tapauksen, eikä tarvitse tehdä enää muuta.
+// Huom! On jo tarkastettu, näkyykö data kartta-alueella, joten sitä ei tavitse tarkastella enää.
+bool NFmiIsoLineView::FillGridRelatedData_VisualizationOptimizationChecks(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, bool& fillGridDataStatus)
+{
+    auto& visSettings = GetVisualizationSettings();
+    auto mapArea = GetArea();
+    NFmiGrid optimizedGrid;
+    if(visSettings.checkIsOptimizationsUsed(*itsInfo, *mapArea, optimizedGrid, CalcViewGridSize(), itsCtrlViewDocumentInterface->BetaProductGenerationRunning()))
+    {
+        fillGridDataStatus = FillIsoLineDataWithGridData(isoLineData, 0, 0, 0, 0, &optimizedGrid);
+        zoomedAreaRect = optimizedGrid.Area()->XYArea(mapArea.get());
+        itsOptimizedGridPtr.reset(new NFmiGrid(optimizedGrid));
+        return true;
+    }
+    return false;
+}
+
+// FillGridRelatedData metodin paloittelu osiin, tapaus jossa datan karttaprojektio sopii yhteen pohjakartan projektioon ja dataa 
+// voidaan hakea croppaamalla pienempi pala visualisointeja varten.
+// Palauttaa bool arvon: käsittelikö tämä funktio kyseisen datan tapauksen, eikä tarvitse tehdä enää muuta.
+bool NFmiIsoLineView::FillGridRelatedData_ZoomingChecks(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, bool& fillGridDataStatus)
+{
+    fillGridDataStatus = false;
+    int x1 = 0;
+    int y1 = 0;
+    int x2 = 0;
+    int y2 = 0;
+    if(itsInfo->IsGrid() && IsZoomingPossible(itsInfo, GetArea(), zoomedAreaRect, x1, y1, x2, y2))
+    {
+        CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + ": zoomed grid used (faster)", this);
+        isoLineData.itsInfo = itsInfo;
+        isoLineData.itsParam = itsInfo->Param();
+        isoLineData.itsTime = this->itsTime;
+        isoLineData.fUseOriginalDataInPixelToGridRatioCalculations = true;
+
+        EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // käydään kaikki pisteet läpi
+        fillGridDataStatus = FillIsoLineDataWithGridData(isoLineData, x1, y1, x2, y2);
+        return true;
+    }
+    return false;
+}
+
+// FillGridRelatedData metodin paloittelu osiin, tapaus jossa datan karttaporjektio ei sovi pohjakartan projektioon ja dataa 
+// pitää interpoloida suorakulmaiseen hilaan, mutta ilman harvennusoptimointi juttuja.
+// Palauttaa bool arvon: käsittelikö tämä funktio kyseisen datan tapauksen, eikä tarvitse tehdä enää muuta.
+bool NFmiIsoLineView::FillGridRelatedData_BetterVisualizationChecks(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, bool& fillGridDataStatus)
+{
+    fillGridDataStatus = false;
     if(!fGetCurrentDataFromQ2Server && dataUtilitiesAdapter->isModifiedDataDrawingPossible())
     {
         if(dataUtilitiesAdapter->isThereAnythingToDraw())
@@ -1994,58 +2099,23 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
             itsInfo->Values(*dataUtilitiesAdapter->getInterpolatedData(), isoLineData.itsIsolineData, usedInterpolationTime, kFloatMissing, kFloatMissing, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
             itsIsolineValues = isoLineData.itsIsolineData;
             fillGridDataStatus = initializeIsoLineData(isoLineData);
-            zoomedAreaRect = dataUtilitiesAdapter->getCroppedArea()->XYArea(mapArea.get());
+            zoomedAreaRect = dataUtilitiesAdapter->getCroppedArea()->XYArea(GetArea().get());
         }
+        return true;
     }
-    else if(itsInfo->IsGrid() && IsZoomingPossible(itsInfo, mapArea, zoomedAreaRect, x1, y1, x2, y2))
-    {
-        CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + ": zoomed grid used (faster)", this);
-        isoLineData.itsInfo = itsInfo;
-        isoLineData.itsParam = itsInfo->Param();
-        isoLineData.itsTime = this->itsTime;
+    return false;
+}
 
-        EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // käydään kaikki pisteet läpi
-        fillGridDataStatus = FillIsoLineDataWithGridData(isoLineData, x1, y1, x2, y2);
-    }
-    else // normaali datan rakentelu ja täyttö
+bool NFmiIsoLineView::FillGridRelatedData_IsDataVisible()
+{
+    if(itsInfo->IsGrid())
     {
-        isoLineData.itsInfo = itsInfo;
-        isoLineData.itsParam = itsInfo->Param();
-        isoLineData.itsTime = this->itsTime;
-
-        EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // käydään kaikki pisteet läpi
-        fillGridDataStatus = FillIsoLineDataWithGridData(isoLineData, 0, 0, 0, 0);
-        if(IsQ2ServerUsed() && fGetCurrentDataFromQ2Server) // q2server tapauksessa haetaan vain ruudun alueelle dataa, joten poikkeaa normaali piirrosta
-            zoomedAreaRect = itsInfo->Area()->XYArea();
-        else if(itsInfo->IsGrid())
-        {
-            const NFmiArea *origDataArea = itsInfo->Area();
-            if(DifferentWorldViews(origDataArea, mapArea.get()))
-            { // tehdään dataArea, joka on karttapohjan maailmassa
-                boost::shared_ptr<NFmiArea> origDataAreaClone(origDataArea->Clone());
-                NFmiPoint blLatlon = origDataAreaClone->BottomLeftLatLon();
-                NFmiPoint trLatlon = origDataAreaClone->TopRightLatLon();
-                double origLongitudeDifference = trLatlon.X() - blLatlon.X();
-                NFmiLongitude lonFixer(blLatlon.X(), mapArea->PacificView());
-                blLatlon.X(lonFixer.Value());
-                lonFixer.SetValue(trLatlon.X());
-                trLatlon.X(lonFixer.Value());
-                double newLongitudeDifference = trLatlon.X() - blLatlon.X();
-                if(newLongitudeDifference < 0 || ::fabs(origLongitudeDifference - newLongitudeDifference) > 0.1)
-                    trLatlon.X(blLatlon.X() + origLongitudeDifference);
-                origDataAreaClone->PacificView(mapArea->PacificView());
-                boost::shared_ptr<NFmiArea> newArea(origDataAreaClone->NewArea(blLatlon, trLatlon));
-                zoomedAreaRect = newArea->XYArea(mapArea.get());
-            }
-            else
-                zoomedAreaRect = itsInfo->Area()->XYArea(mapArea.get());
-        }
-        else
-        {
-            zoomedAreaRect = NFmiRect(0, 0, 1, 1); // gridattu station data on aina 0,0 - 1,1 maailmassa
-        }
+        // huom. q2serverilta data voi olla minne tahansa, joten sen käyttö on poikkeus
+        boost::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
+        if(IsQ2ServerUsed() == false && IsDataInView(infoArea, GetArea()) == false)
+            return false; // ei tarvitse piirtää ollenkaan, koska data ei osu näytön alueelle ollenkaan.
     }
-    return fillGridDataStatus;
+    return true;
 }
 
 static void ReportDataGridSize(NFmiCtrlView *view, NFmiIsoLineData &isoLineData)
@@ -2068,17 +2138,82 @@ void NFmiIsoLineView::DoGridRelatedVisualization(NFmiIsoLineData &isoLineData, N
         std::lock_guard<std::mutex> toolMasterLock(NFmiIsoLineView::sToolMasterOperationMutex);
         if(FillIsoLineVisualizationInfo(itsDrawParam, &isoLineData, true, itsInfo->IsGrid() == false))
         {
-            NFmiPoint grid2PixelRatio = CalcGrid2PixelRatio(isoLineData);
+            NFmiPoint pixelToGridRatio = CalcPixelToGridRatio(isoLineData, zoomedAreaRect);
             NFmiRect relRect(GetFrame());
             AdjustZoomedAreaRect(zoomedAreaRect);
             if(itsDrawParam->IsMacroParamCase(true))
             {
                 isoLineData.itsParam.GetParam()->SetName(itsDrawParam->ParameterAbbreviation());
             }
-            ::ToolMasterDraw(itsToolBox->GetDC(), &isoLineData, relRect, zoomedAreaRect, grid2PixelRatio, -1);
+            ::ToolMasterDraw(itsToolBox->GetDC(), &isoLineData, relRect, zoomedAreaRect, pixelToGridRatio, -1, GetVisualizationSettings());
         }
     }
     RestoreUpDifferenceDrawing(itsDrawParam);
+}
+
+static void CalcDownSizedMatrix(const NFmiDataMatrix<float>& theOrigData, NFmiDataMatrix<float>& theDownSizedData, const NFmiParam& param)
+{
+    auto paramId = static_cast<FmiParameterName>(param.GetIdent());
+    auto interpolationMethod = param.InterpolationMethod();
+    auto dontInvertY = true;
+    double xDiff = 1.0 / (theDownSizedData.NX() - 1.0);
+    double yDiff = 1.0 / (theDownSizedData.NY() - 1.0);
+    for(size_t j = 0; j < theDownSizedData.NY(); j++)
+    {
+        for(size_t i = 0; i < theDownSizedData.NX(); i++)
+        {
+            NFmiPoint pt(i * xDiff, j * yDiff);
+            if(pt.X() > 1.)
+                pt.X(1.); // tämä on varmistus, jos laskenta tarkkuus ongelmat vie rajan yli
+            if(pt.Y() > 1.)
+                pt.Y(1.); // tämä on varmistus, jos laskenta tarkkuus ongelmat vie rajan yli
+            theDownSizedData[i][j] = theOrigData.InterpolatedValue(pt, paramId, dontInvertY, interpolationMethod);
+        }
+    }
+}
+
+static void BuildDownSizedData(NFmiIsoLineData& theOrigIsoLineData, NFmiIsoLineData& theDownSizedIsoLineData, const NFmiPoint& theDownSizeFactor)
+{
+    int newSizeX = boost::math::iround(theOrigIsoLineData.itsXNumber / theDownSizeFactor.X());
+    int newSizeY = boost::math::iround(theOrigIsoLineData.itsYNumber / theDownSizeFactor.Y());
+    // Täytetään uuden isolineDatan hila-arvot halutuille osaalueilleen.
+    NFmiDataMatrix<float> downSizedGridData(newSizeX, newSizeY, kFloatMissing);
+    ::CalcDownSizedMatrix(theOrigIsoLineData.itsIsolineData, downSizedGridData, *theOrigIsoLineData.itsParam.GetParam());
+
+    // Alustetaan uusi isolinedata harvennetulla matriisilla ja sen piirtoasetukset otetaan originaalista
+    theDownSizedIsoLineData.InitIsoLineData(downSizedGridData, &theOrigIsoLineData);
+}
+
+static std::string MakeIsoLineDataGridSizeString(NFmiIsoLineData* theIsoLineData)
+{
+    std::string str = std::to_string(theIsoLineData->itsXNumber);
+    str += " x ";
+    str += std::to_string(theIsoLineData->itsYNumber);
+    return str;
+}
+
+void NFmiIsoLineView::DoPossibleIsolineSafetyFeatureDownSizing(NFmiIsoLineData* theIsoLineDataInOut, const NFmiRect& zoomedAreaRect)
+{
+    NFmiPoint pixelToGridRatio = CalcPixelToGridRatio(*theIsoLineDataInOut, zoomedAreaRect);
+    NFmiPoint downSizeFactor;
+    // Toolmaster piirto bugi ilmenee kun hila vs. pikseli suhde on n. 1 tai alle. Kierrän siten ongelman niin että kun tämä
+    // ratio on tarpeeksi pieni, lasken uuden hila koon, niin että sen suhdeluku on minimissään 1.3 ja interpoloin tälläiseen
+    // uuteen hilaan datan. Tämän jälkeen piirto onnistuu ilman ongelmia, eikä asiakas huomaa juuri mitään.
+    bool doDownSize = IsolineDataDownSizingNeeded(*theIsoLineDataInOut, pixelToGridRatio, downSizeFactor, itsDrawParam);
+    if(doDownSize)
+    {
+        NFmiIsoLineData downSizedIsoLineData;
+        ::BuildDownSizedData(*theIsoLineDataInOut, downSizedIsoLineData, downSizeFactor);
+        std::string logMessage = "Down-sizing isoline data for safety reasons from ";
+        logMessage += ::MakeIsoLineDataGridSizeString(theIsoLineDataInOut);
+        logMessage += " to ";
+        logMessage += ::MakeIsoLineDataGridSizeString(&downSizedIsoLineData);
+        itsCtrlViewDocumentInterface->LogAndWarnUser(logMessage, "dummy dialog title", CatLog::Severity::Debug, CatLog::Category::Visualization, true);
+        
+        // Korvataan havennetulla datalla piirrettävä data
+        *theIsoLineDataInOut = downSizedIsoLineData;
+        UpdateOptimizedGridValues(zoomedAreaRect, downSizedIsoLineData.itsXNumber, downSizedIsoLineData.itsYNumber);
+    }
 }
 
 void NFmiIsoLineView::DrawIsoLinesWithToolMaster(void)
@@ -2090,14 +2225,15 @@ void NFmiIsoLineView::DrawIsoLinesWithToolMaster(void)
         NFmiRect zoomedAreaRect;
         if(FillGridRelatedData(isoLineData, zoomedAreaRect))
         {
+            DoPossibleIsolineSafetyFeatureDownSizing(&isoLineData, zoomedAreaRect);
             DoGridRelatedVisualization(isoLineData, zoomedAreaRect);
         }
     }
 }
 
-bool NFmiIsoLineView::FillIsoLineDataWithGridData(NFmiIsoLineData& theIsoLineData, int x1, int y1, int x2, int y2)
+bool NFmiIsoLineView::FillIsoLineDataWithGridData(NFmiIsoLineData& theIsoLineData, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid)
 {
-    if(CalcViewFloatValueMatrix(itsIsolineValues, x1, y1, x2, y2) == false)
+    if(CalcViewFloatValueMatrix(itsIsolineValues, x1, y1, x2, y2, theIsoLineData.fUseOriginalDataInPixelToGridRatioCalculations, optimizedDataGrid) == false)
         return false;
 
     return initializeIsoLineData(theIsoLineData);

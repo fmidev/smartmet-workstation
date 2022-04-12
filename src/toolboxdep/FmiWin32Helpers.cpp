@@ -11,6 +11,7 @@
 #include "NFmiMapViewDescTop.h"
 #include "NFmiViewSettingMacro.h"
 #include "ApplicationInterface.h"
+#include "CtrlViewGdiPlusFunctions.h"
 
 #include <fstream>
 
@@ -328,7 +329,7 @@ bool CFmiWin32Helpers::BitmapToPrinter(CDC *thePrinterDC // printterin device co
 	return status;
 }
 
-void CFmiWin32Helpers::InitializeCPPTooltip(CWnd *theParentView, CPPToolTip &theTooltip, int theTooltipID)
+void CFmiWin32Helpers::InitializeCPPTooltip(CWnd *theParentView, CPPToolTip &theTooltip, int theTooltipID, int maxWidthInPixels)
 {
 	theTooltip.Create(theParentView);
 	theTooltip.SetNotify();
@@ -347,8 +348,10 @@ void CFmiWin32Helpers::InitializeCPPTooltip(CWnd *theParentView, CPPToolTip &the
 	ti.sTooltip = "";
 	ti.nMask = PPTOOLTIP_MASK_BEHAVIOUR;
 	theTooltip.AddTool(theParentView, ti);
-	theTooltip.SetTransparency(20); // läpinäkyvyys 0-100 asteikolla (100 täysin läpinäkyvä)
-	theTooltip.SetMaxTipWidth(400); // max leveys esim. 400 pikseliä, jonka jälkeen word-wrap päälle
+    // Läpinäkyvyys 0-100 asteikolla (100 täysin läpinäkyvä)
+	theTooltip.SetTransparency(20); 
+     // Max leveys esim. 400 pikseliä, jonka jälkeen word-wrap päälle
+	theTooltip.SetMaxTipWidth(maxWidthInPixels);
 }
 
 HBITMAP CFmiWin32Helpers::GetBitmapFromResources(DWORD dwID)
@@ -630,6 +633,14 @@ void CFmiWin32Helpers::SetErrorColorForTextControl(CDC* pDC, bool statusOk, bool
         pDC->SetTextColor(RGB(160, 160, 160)); // Jos kontrolli 'merkityksetön', käytetään harmaata väriä
     else
         pDC->SetTextColor(RGB(0, 0, 0)); // Jos ok, käytetään mustaa väriä
+}
+
+void CFmiWin32Helpers::SetColorForTextControl(CDC* pDC, const NFmiColor& color)
+{
+    if(pDC)
+    {
+        pDC->SetTextColor(CtrlView::Color2ColorRef(color));
+    }
 }
 
 CFmiWin32Helpers::MemoryBitmapHelper::MemoryBitmapHelper(CWnd *usedWindow, CBitmap *usedMemoryBitmap)

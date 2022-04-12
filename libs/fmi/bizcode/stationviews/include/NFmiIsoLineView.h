@@ -192,10 +192,15 @@ class NFmiIsoLineView : public NFmiStationView
 	void PrepareForTransparentDraw(void);
 	void EndTransparentDraw(void);
     bool FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect &zoomedAreaRect);
+	bool FillGridRelatedData_IsDataVisible();
+	bool FillGridRelatedData_VisualizationOptimizationChecks(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, bool& fillGridDataStatus);
+	bool FillGridRelatedData_BetterVisualizationChecks(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, bool& fillGridDataStatus);
+	bool FillGridRelatedData_ZoomingChecks(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, bool& fillGridDataStatus);
+	void FillGridRelatedData_NormalDataCase(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, bool &fillGridDataStatus);
     void DoGridRelatedVisualization(NFmiIsoLineData &isoLineData, NFmiRect &zoomedAreaRect);
 	ContouringJobData MakeContouringJobData(boost::shared_ptr<NFmiDrawParam>& theDrawParam);
 	bool IsIsoLinesDrawnWithImagine(void);
-	bool FillIsoLineDataWithGridData(NFmiIsoLineData& theIsoLineData, int x1, int y1, int x2, int y2);
+	bool FillIsoLineDataWithGridData(NFmiIsoLineData& theIsoLineData, int x1, int y1, int x2, int y2, NFmiGrid *optimizedDataGrid = nullptr);
 
     bool initializeIsoLineData(NFmiIsoLineData &theIsoLineData);
 
@@ -208,7 +213,8 @@ class NFmiIsoLineView : public NFmiStationView
 	void SetUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam); // näitä on kutsuttava pareittain RestoreUpDifferenceDrawing-metodin kanssa
 	void RestoreUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam); // näitä on kutsuttava pareittain SetUpDifferenceDrawing-metodin kanssa
     CRect GetTrueClientRect();
- private:
+	void DoPossibleIsolineSafetyFeatureDownSizing(NFmiIsoLineData* theIsoLineDataInOut, const NFmiRect& zoomedAreaRect);
+private:
 	bool IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theCurrentZoomedMapArea, NFmiRect &theWantedNewZoomedAreaRect, int &theLeftIndex, int &theRightIndex, int &theTopIndex, int &theBottomIndex);
 	void DrawIsoLinesWithToolMaster(void);
 	void DrawIsoLines(void);

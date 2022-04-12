@@ -36,7 +36,7 @@ public:
 	void ShowIcon(bool newValue);
 
 private:
-    bool mInitialized; // ei sallita tupla initialisointia
+    bool mInitialized = false; // ei sallita tupla initialisointia
     std::string mBaseRegistryPath;
     std::string mSectionName; // tässä on  \\DataNotifications
 

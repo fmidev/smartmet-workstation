@@ -17,7 +17,6 @@
 #include "FmiWin32TemplateHelpers.h"
 #include "FmiNMeteditLibraryDefinitions.h"
 #include "FmiWin32Helpers.h"
-#include "FmiOperationProgressDlg.h"
 #include "NFmiAnalyzeToolData.h"
 #include "NFmiDrawParamList.h"
 #include "CloneBitmap.h"
@@ -206,55 +205,6 @@ NFmiPoint CTimeEditValuesDlg::CalcEditedDataGriddingResolutionInKM(void)
 	}
 	return resolution;
 }
-
-// Tämä Aikasarjamuokkaus toiminnon progress/peruutus ei toimi, niin että laitetaan
-// Muokkaus koodi threadiin ja Progress-Cancel-dialogi pääthreadiin osottamaan.
-// Tästä seurasi ongelmia, kun SmartMet lukee dataa taustalla ja päivittelee ruutuja.
-// Tällöin tulee väistämättä ongelmia, koska SmartMetin datanmuokkaus koodeja ei ole
-// tehty thread-turvallisesti.
-// Kokeile niin että datan muokkaus tapahtuu pääsäikeessä ja progress-cancel-dialogi on omassa threadissa.
-// Kokeilin ja tuomio on se että mitään GUI-juttuja ei voi ajaa main-threadin ulkopuolella, joten ainoa
-// oikea keino on tehdä SmartMetin datan muokkauksesta threadi turvallinen.
-/*
-static void DoTimeSerialModificationThread(NFmiThreadCallBacks &theThreadCallBacks, CTimeEditValuesView &theTimeModificationView)
-{
-	try
-	{
-		theTimeModificationView.ChangeTimeSeriesValues(theThreadCallBacks);
-		theThreadCallBacks.DoPostMessage(ID_MESSAGE_WORKING_THREAD_COMPLETED);
-		return ; // ei saa mennä catch:ien jälkeiseen viestin lähetykseen...
-	}
-	catch(NFmiStopThreadException & )
-	{
-	}
-	catch(...)
-	{
-	}
-	theThreadCallBacks.DoPostMessage(ID_MESSAGE_WORKING_THREAD_CANCELED);
-}
-*/
-/*
-void CTimeEditValuesDlg::OnButtonToiminto() 
-{
-	CWaitCursor waitCursor;
-	UpdateData(TRUE);
-
-	// Tehdään aikamuokkaukselle progress ja peruutus dialogi ja toiminnot.
-	NFmiStopFunctor stopper;
-	CFmiOperationProgressDlg dlg(stopper, this);
-	NFmiThreadCallBacks threadCallBacks(&stopper, &dlg);
-	CTimeEditValuesView &timeModifierView = *(CTimeEditValuesView*)itsClientView;
-	// Luodaaan ja laitetaan työ-threadi käyntiin.
-	boost::thread wrk_thread(::DoTimeSerialModificationThread, boost::ref(threadCallBacks), boost::ref(timeModifierView));
-	// käynnistetään sitten porgress ja cancel dialogi, että käyttäjä voi tarvittaessa keskeyttää työt.
-	int status = static_cast<int>(dlg.DoModal());
-	if(status == IDCANCEL) // Jos käyttäjä keskeytti työn, pitää tehdä undo.
-		OnButtonUndo();
-
-	EnableButtons();
-	RefreshApplicationViews();
-}
-*/
 
 void CTimeEditValuesDlg::OnButtonToiminto() 
 {

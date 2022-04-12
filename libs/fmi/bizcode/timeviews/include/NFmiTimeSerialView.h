@@ -154,10 +154,10 @@ class NFmiTimeSerialView : public NFmiTimeView
     void DrawHelperData2LocationInTime(const NFmiPoint &theLatlon);
     void DrawHelperData3LocationInTime(const NFmiPoint &theLatlon);
     void DrawHelperData4LocationInTime(const NFmiPoint &theLatlon);
-    void DrawAnnualModelFractileDataLocationInTime(FmiParameterName mainParameter, boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon);
-    void DrawAnnualModelFractileDataLocationInTime(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, NFmiDrawingEnvironment* overrideEnvi);
-    void DrawAnnualModelFractileDataLocationInTime(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, const NFmiMetTime &startTime, const NFmiMetTime &endTime, int climateDataYearDifference, NFmiDrawingEnvironment* overrideEnvi);
-    void DrawAnnualModelFractileDataLocationInTime(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, const NFmiTimeBag &theDrawedTimes, int theTimeWhenDrawedInMinutes, NFmiDrawingEnvironment *overrideEnvi);
+    void DrawAnnualModelFractileDataLocationInTime1(FmiParameterName mainParameter, boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon);
+    void DrawAnnualModelFractileDataLocationInTime2(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, NFmiDrawingEnvironment* overrideEnvi);
+    void DrawAnnualModelFractileDataLocationInTime3(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, const NFmiMetTime &startTime, const NFmiMetTime &endTime, int climateDataYearDifference, NFmiDrawingEnvironment* overrideEnvi);
+    void DrawAnnualModelFractileDataLocationInTime4(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, const NFmiTimeBag &theDrawedTimes, int theTimeWhenDrawedInMinutes, NFmiDrawingEnvironment *overrideEnvi);
     void DrawTemperatureMinAndMaxFromHelperData(FmiParameterName mainParameter, boost::shared_ptr<NFmiFastQueryInfo> &helperDataInfo, const NFmiPoint &theLatlon);
     void DrawModelDataLocationInTime(NFmiDrawingEnvironment &envi, const NFmiPoint &theLatlon);
     bool DrawModelDataLocationInTime(NFmiDrawingEnvironment &envi, const NFmiPoint &theLatlon, const NFmiProducer &theProducer);
