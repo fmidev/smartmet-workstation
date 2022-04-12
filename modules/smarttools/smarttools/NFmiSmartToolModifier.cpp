@@ -2982,23 +2982,21 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetOptimalResolutionMacroParamData(
   }
   else
   {
-    auto gridsizeArea1 = macroParamData->GridXNumber() * macroParamData->GridYNumber();
-    auto gridsizeArea2 = optimizedVisualizationMacroParamData->GridXNumber() *
+    auto gridSizeAreaOptimized = optimizedVisualizationMacroParamData->GridXNumber() *
                          optimizedVisualizationMacroParamData->GridYNumber();
     if (!useSpecialResolution)
     {
-      if (gridsizeArea1 <= gridsizeArea2)
+      auto gridSizeAreaMacroParam = macroParamData->GridXNumber() * macroParamData->GridYNumber();
+      if (gridSizeAreaMacroParam <= gridSizeAreaOptimized)
         return macroParamData;
       else
         return optimizedVisualizationMacroParamData;
     }
     else
     {
-      auto gridsizeArea3 =
+      auto gridsizeAreaSpecialResolution =
           resolutionMacroParamData->GridXNumber() * resolutionMacroParamData->GridYNumber();
-      if (gridsizeArea1 <= gridsizeArea2 && gridsizeArea1 <= gridsizeArea3)
-        return macroParamData;
-      else if (gridsizeArea2 <= gridsizeArea3)
+      if (gridSizeAreaOptimized <= gridsizeAreaSpecialResolution)
         return optimizedVisualizationMacroParamData;
       else
         return resolutionMacroParamData;
