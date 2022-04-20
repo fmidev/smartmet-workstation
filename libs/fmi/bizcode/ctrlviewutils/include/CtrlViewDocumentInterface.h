@@ -77,6 +77,7 @@ class NFmiFixedDrawParamSystem;
 class NFmiMacroPathSettings;
 class WmsSupportInterface;
 class CombinedMapHandlerInterface;
+class TrueMapViewSizeInfo;
 
 namespace Imagine
 {
@@ -397,7 +398,7 @@ public:
     virtual void SetBorderDrawDirtyState(int theDescTopIndex, CountryBorderDrawDirtyState newState) = 0;
     virtual double SingleMapViewHeightInMilliMeters(int theDescTopIndex) const = 0;
     virtual bool IsTimeControlViewVisible(int theDescTopIndex) const = 0;
-
+    virtual TrueMapViewSizeInfo&  GetTrueMapViewSizeInfo(int theDescTopIndex) const = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem(void) = 0;

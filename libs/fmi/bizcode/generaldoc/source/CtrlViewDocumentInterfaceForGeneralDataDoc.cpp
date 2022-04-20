@@ -1413,6 +1413,14 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsTimeControlViewVisible(int th
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->IsTimeControlViewVisible();
 }
 
+TrueMapViewSizeInfo& CtrlViewDocumentInterfaceForGeneralDataDoc::GetTrueMapViewSizeInfo(int theDescTopIndex) const
+{
+    if(theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
+        return itsDoc->CrossSectionSystem()->GetTrueMapViewSizeInfo();
+    else
+        return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->GetTrueMapViewSizeInfo();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // ===============================================
 
