@@ -291,6 +291,7 @@ public:
     void SetBorderDrawDirtyState(int theDescTopIndex, CountryBorderDrawDirtyState newState) override;
     double SingleMapViewHeightInMilliMeters(int theDescTopIndex) const override;
     bool IsTimeControlViewVisible(int theDescTopIndex) const override;
+    TrueMapViewSizeInfo& GetTrueMapViewSizeInfo(int theDescTopIndex) const override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;

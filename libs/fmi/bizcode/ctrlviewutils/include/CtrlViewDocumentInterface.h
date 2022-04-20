@@ -80,6 +80,7 @@ class WmsSupportInterface;
 class CombinedMapHandlerInterface;
 class NFmiRect;
 class OGRGeometry;
+class TrueMapViewSizeInfo;
 
 namespace HakeMessage
 {
@@ -407,7 +408,7 @@ public:
     virtual void SetBorderDrawDirtyState(int theDescTopIndex, CountryBorderDrawDirtyState newState) = 0;
     virtual double SingleMapViewHeightInMilliMeters(int theDescTopIndex) const = 0;
     virtual bool IsTimeControlViewVisible(int theDescTopIndex) const = 0;
-
+    virtual TrueMapViewSizeInfo&  GetTrueMapViewSizeInfo(int theDescTopIndex) const = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem(void) = 0;
