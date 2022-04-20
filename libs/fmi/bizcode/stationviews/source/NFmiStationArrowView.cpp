@@ -110,6 +110,9 @@ NFmiPoint NFmiStationArrowView::SbdCalcFixedSymbolSize() const
 	scale *= symbolSize;
 	// Originaali koodissa gSizeFactorPoint:illa skaalailtu kahdssa kohtaa koodia, pakko j‰tt‰‰ toistaiseksi
 	scale *= gSizeFactorPoint;
+	// T‰m‰ korjaa erilaisten karttaruudukko asetelmien aiheuttamia v‰‰ristymi‰, pahimpina
+	// ovat suuret erot x/y dimensioissa kuten 3x1 ja 2x4 tyyppiset ruudukot (3x1 on 3 saraketta ja 1 rivi)
+	scale = SbdCalcOldSchoolSymbolScaleFix(scale);
 	// Fiksattu symbol size eli nuolen originaali piirrossa k‰ytetty scale:n y komponentti.
 	return scale;
 }

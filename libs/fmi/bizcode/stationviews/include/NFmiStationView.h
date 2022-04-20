@@ -176,6 +176,7 @@ protected:
    using PeekSparseValueDistanceList = std::list<std::tuple<float, double, NFmiPoint>>;
    void SbdPeekSparseValue(int peekIndexX, int peekIndexY, const NFmiRect& peekRect, PeekSparseValueDistanceList& nonMissingValuesWithDistance);
    void SbdDoFinalSparseCaseWork(bool doStationPlotOnly, SparseDataGrid& sparseDataGrid);
+   NFmiPoint SbdCalcOldSchoolSymbolScaleFix(const NFmiPoint &symbolScale) const;
 
    // ******** Symbol-Bulk-Draw toimintojen loppu *********
 
