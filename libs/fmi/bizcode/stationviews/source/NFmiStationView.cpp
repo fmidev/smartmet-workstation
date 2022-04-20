@@ -801,6 +801,40 @@ void NFmiStationView::SbdDoFinalSparseCaseWork(bool doStationPlotOnly, SparseDat
 	}
 }
 
+NFmiPoint NFmiStationView::SbdCalcOldSchoolSymbolScaleFix(const NFmiPoint& symbolScale) const
+{
+	// Kokeillaan tiettyjen vanhojen symbol piirtojen litistymisen estoa, kun käytössä on karttaruudukko, 
+	// missä ruudukon dimensiot ovat eri kokoisia (esim. 1x3 tai 3x2). Tarkoittaa lähinnä nuolta ja simple-weather-symbol piirtoja.
+	// Tämä on siis aikamoinen viritys, mutta muuten pitäisi koko symbolipiirto juttua pitäisi vetää tämän suhteen uusiksi ja 
+	// siitä voisi olla outoja seuraamuksia.
+	auto viewGridSize = itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex);
+	// Jos karttaruudukon dimensiot ovat samoja, ei tehdä mitään.
+	if(viewGridSize.X() == viewGridSize.Y())
+	{
+		return symbolScale;
+	}
+	else
+	{
+		auto scale = symbolScale;
+		const double fixedFactor1 = 0.75;
+		const double fixedFactor2 = 0.875;
+		double xPerYRatio = viewGridSize.X() / viewGridSize.Y();
+		// Mitä isommaksi/pienemmäksi ratio-luku muuttaa, sitä enemmän liian suuriksi symbolit kasvavat, pitää hillitä ratiota potenssilaskulla
+		xPerYRatio = std::pow(xPerYRatio, 0.7);
+		if(xPerYRatio > 1)
+		{
+			scale.X(scale.X() * xPerYRatio * fixedFactor1);
+			scale.Y(scale.Y() * fixedFactor2);
+		}
+		else
+		{
+			scale.X(scale.X() * fixedFactor2);
+			scale.Y(scale.Y() * fixedFactor1 / xPerYRatio);
+		}
+		return scale;
+	}
+}
+
 static bool IsCurrentStationBlocked(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiIgnoreStationsData &ignoreStationData)
 {
     if(theInfo->IsGrid())
@@ -1170,8 +1204,10 @@ void NFmiStationView::CalculateGeneralStationRect(void)
 		sizeY = float(GetFrame().Height()/(itsObjectSize.Y()*2.));
 		sizeX *= sizeFactor;
 		sizeY *= sizeFactor;
-		NFmiPoint topLeft(place.X() - itsToolBox->SX(itsToolBox->HY(sizeX)), place.Y() - sizeY);
-		NFmiPoint bottomRight(place.X() + itsToolBox->SX(itsToolBox->HY(sizeX)), place.Y() + sizeY);
+		auto relativeOffsetX = itsToolBox->SX(itsToolBox->HX(sizeX));
+		auto relativeOffsetY = itsToolBox->SY(itsToolBox->HY(sizeY));
+		NFmiPoint topLeft(place.X() - relativeOffsetX, place.Y() - relativeOffsetY);
+		NFmiPoint bottomRight(place.X() + relativeOffsetX, place.Y() + relativeOffsetY);
 		itsGeneralStationRect = NFmiRect(topLeft,bottomRight);
 	}
 }

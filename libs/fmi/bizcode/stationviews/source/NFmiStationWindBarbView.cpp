@@ -57,16 +57,6 @@ bool NFmiStationWindBarbView::PrepareForStationDraw(void)
 	return status;
 }
 
-void AdjustWindBarbSizeAndPlace(NFmiRect &rect)
-{
-    // Increase width
-    double avgSize = (rect.Width() + rect.Height()) / 2.0f;
-    double change = (avgSize - rect.Width()) / 2;
-    rect.Size(NFmiPoint(avgSize, rect.Height()));
-    // Move rect back to it's correct position.
-    rect.Place(NFmiPoint(rect.Place().X() - change, rect.Place().Y()));
-}
-
 float NFmiStationWindBarbView::ViewFloatValue(bool doTooltipValue)
 {
 	float windVector = NFmiStationView::ViewFloatValue(doTooltipValue);
@@ -124,14 +114,13 @@ NFmiSymbolBulkDrawType NFmiStationWindBarbView::SbdGetDrawType() const
 NFmiPoint NFmiStationWindBarbView::SbdCalcFixedRelativeDrawObjectSize() const
 {
 	NFmiRect rect(CurrentStationRect());
-	AdjustWindBarbSizeAndPlace(rect);
-	return rect.Size();
+	auto scale = SbdCalcOldSchoolSymbolScaleFix(rect.Size());
+	return scale;
 }
 
 NFmiPoint NFmiStationWindBarbView::SbdCalcDrawObjectOffset() const
 {
 	NFmiRect rect(CurrentStationRect());
-	AdjustWindBarbSizeAndPlace(rect);
 	NFmiPoint offset(rect.Center());
 	offset -= CurrentStationPosition();
 	return offset;

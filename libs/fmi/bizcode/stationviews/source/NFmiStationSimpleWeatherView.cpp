@@ -116,3 +116,10 @@ NFmiPoint NFmiStationSimpleWeatherView::SbdCalcDrawObjectOffset() const
 	offset -= CurrentStationPosition();
 	return offset;
 }
+
+NFmiPoint NFmiStationSimpleWeatherView::SbdCalcFixedRelativeDrawObjectSize() const
+{
+	// T‰m‰ korjaa erilaisten karttaruudukko asetelmien aiheuttamia v‰‰ristymi‰, pahimpina
+	// ovat suuret erot x/y dimensioissa kuten 3x1 ja 2x4 tyyppiset ruudukot (3x1 on 3 saraketta ja 1 rivi)
+	return SbdCalcOldSchoolSymbolScaleFix(NFmiStationView::SbdCalcFixedRelativeDrawObjectSize());
+}

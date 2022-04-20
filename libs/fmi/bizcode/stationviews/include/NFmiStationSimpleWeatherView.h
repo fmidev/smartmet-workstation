@@ -40,6 +40,7 @@ protected:
    NFmiSymbolBulkDrawType SbdGetDrawType() const override;
    NFmiSymbolColorChangingType SbdGetSymbolColorChangingType() const override;
    NFmiPoint SbdCalcDrawObjectOffset() const override;
+   NFmiPoint SbdCalcFixedRelativeDrawObjectSize() const override;
 
 };
 
