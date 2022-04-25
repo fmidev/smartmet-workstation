@@ -1421,6 +1421,11 @@ TrueMapViewSizeInfo& CtrlViewDocumentInterfaceForGeneralDataDoc::GetTrueMapViewS
         return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->GetTrueMapViewSizeInfo();
 }
 
+NFmiSeaLevelPlumeData& CtrlViewDocumentInterfaceForGeneralDataDoc::SeaLevelPlumeData() const
+{
+    return itsDoc->SeaLevelPlumeData();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // ===============================================
 
