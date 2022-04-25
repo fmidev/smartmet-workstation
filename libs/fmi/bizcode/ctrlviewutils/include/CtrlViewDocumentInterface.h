@@ -81,6 +81,7 @@ class CombinedMapHandlerInterface;
 class NFmiRect;
 class OGRGeometry;
 class TrueMapViewSizeInfo;
+class NFmiSeaLevelPlumeData;
 
 namespace HakeMessage
 {
@@ -409,6 +410,7 @@ public:
     virtual double SingleMapViewHeightInMilliMeters(int theDescTopIndex) const = 0;
     virtual bool IsTimeControlViewVisible(int theDescTopIndex) const = 0;
     virtual TrueMapViewSizeInfo&  GetTrueMapViewSizeInfo(int theDescTopIndex) const = 0;
+    virtual NFmiSeaLevelPlumeData& SeaLevelPlumeData() const = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem(void) = 0;

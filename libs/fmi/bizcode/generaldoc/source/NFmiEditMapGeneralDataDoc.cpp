@@ -140,6 +140,7 @@
 #include "ogr_geometry.h"
 #include "NFmiParameterInterpolationFixer.h"
 #include "NFmiQueryDataKeeper.h"
+#include "NFmiSeaLevelPlumeData.h"
 
 #include "AnimationProfiler.h"
 
@@ -582,6 +583,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 	InitTimeSerialParameters();
     InitColorContourLegendSettings();
 	InitParameterInterpolationFixer();
+	InitSeaLevelPlumeData();
 
 #ifdef SETTINGS_DUMP // TODO enable this with a command line parameter
 	std::string str = NFmiSettings::ToString();
@@ -594,6 +596,20 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 	LogMessage("SmartMet document initialization ends...", CatLog::Severity::Info, CatLog::Category::Configuration);
 	return true;
 }
+
+void InitSeaLevelPlumeData()
+{
+	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
+	try
+	{
+		itsSeaLevelPlumeData.InitFromSettings("xxx");
+	}
+	catch(exception& e)
+	{
+		LogAndWarnUser(e.what(), "Problems with SeaLevelPlumeData initialization", CatLog::Severity::Error, CatLog::Category::Configuration, true, false, false);
+	}
+}
+
 
 void SetupQueryDataSetKeeperCallbacks()
 {
@@ -4071,16 +4087,13 @@ void AddShowHelperData1OntimeSerialViewPopup(const NFmiDataIdent &param, NFmiInf
         AddShowHelperDataOntimeSerialViewPopup(param, infoDataType, "TimeSerialViewParamPopUpHideHelpData1", kFmiDontShowHelperDataOnTimeSerialView, acceleratorHelpStr);
 }
 
-void AddShowHelperData2OntimeSerialViewPopup(const NFmiDataIdent &param, NFmiInfoData::Type infoDataType)
+void AddShowHelperData2OntimeSerialViewPopup(const NFmiDataIdent& param, NFmiInfoData::Type infoDataType)
 {
-    std::string acceleratorHelpStr(" (CTRL + F)");
-    if(GetFavoriteSurfaceModelFractileData())
-    {
-        if(!ShowHelperData2InTimeSerialView())
-            AddShowHelperDataOntimeSerialViewPopup(param, infoDataType, "TimeSerialViewParamPopUpShowHelpData2", kFmiShowHelperData2OnTimeSerialView, acceleratorHelpStr);
-        else
-            AddShowHelperDataOntimeSerialViewPopup(param, infoDataType, "TimeSerialViewParamPopUpHideHelpData2", kFmiDontShowHelperData2OnTimeSerialView, acceleratorHelpStr);
-    }
+	std::string acceleratorHelpStr(" (CTRL + F)");
+	if(!ShowHelperData2InTimeSerialView())
+		AddShowHelperDataOntimeSerialViewPopup(param, infoDataType, "TimeSerialViewParamPopUpShowHelpData2", kFmiShowHelperData2OnTimeSerialView, acceleratorHelpStr);
+	else
+		AddShowHelperDataOntimeSerialViewPopup(param, infoDataType, "TimeSerialViewParamPopUpHideHelpData2", kFmiDontShowHelperData2OnTimeSerialView, acceleratorHelpStr);
 }
 
 void AddShowHelperData3OntimeSerialViewPopup(const NFmiDataIdent &param, NFmiInfoData::Type infoDataType)
@@ -10468,6 +10481,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsParameterInterpolationFixer;
 	}
 
+	NFmiSeaLevelPlumeData& SeaLevelPlumeData()
+	{
+		return itsSeaLevelPlumeData;
+	}
+
+	NFmiSeaLevelPlumeData itsSeaLevelPlumeData;
 	NFmiParameterInterpolationFixer itsParameterInterpolationFixer;
 	NFmiCombinedMapHandler itsCombinedMapHandler;
 	bool fChangingCaseStudyToNormalMode = false;
@@ -12746,4 +12765,9 @@ NFmiParameterInterpolationFixer& NFmiEditMapGeneralDataDoc::ParameterInterpolati
 void NFmiEditMapGeneralDataDoc::UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged()
 {
 	pimpl->UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();
+}
+
+NFmiSeaLevelPlumeData& NFmiEditMapGeneralDataDoc::SeaLevelPlumeData()
+{
+	return pimpl->SeaLevelPlumeData();
 }

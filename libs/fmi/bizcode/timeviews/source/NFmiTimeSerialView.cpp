@@ -45,6 +45,7 @@
 #include "TimeSerialParameters.h"
 #include "NFmiFastInfoUtils.h"
 #include "ColorStringFunctions.h"
+#include "NFmiSeaLevelPlumeData.h"
 
 #include "boost\math\special_functions\round.hpp"
 
@@ -1031,119 +1032,9 @@ void NFmiTimeSerialView::DrawModelFractileDataLocationInTime(const NFmiPoint &th
 	}
 }
 
-namespace
-{
-    // SeaLevelProbData luokka pit‰‰ sis‰ll‰‰n sea-level parametriin liittyvien probability rajojen vakio arvoja.
-    // Jokaiselle tunnetulle seaLevel asemalle annetaan erikseen siihen liittyv‰t rajat.
-    // Kun Kartalta valitaan paikka, joka halutaan piirt‰‰ aikasarjaan, etsit‰‰n 300 km l‰heisyydest‰ l‰hin asema. Jos kyseisen aseman 
-    // stationId lˆytyy oliosta, k‰ytet‰‰n sen prob rajoja piirt‰m‰‰n rajat aikasarjaan.
-    class SeaLevelProbData
-    {
-    public:
-        SeaLevelProbData() = default;
-        SeaLevelProbData(const NFmiStation &station, float prob1, float prob2, float prob3, float prob4)
-            :station_(station),
-            prob1_(prob1),
-            prob2_(prob2),
-            prob3_(prob3),
-            prob4_(prob4)
-        {}
-
-        NFmiStation station_;
-        float prob1_ = 0;
-        float prob2_ = 0;
-        float prob3_ = 0;
-        float prob4_ = 0;
-    };
-
-    const NFmiProducer g_SeaLevelPlumeProducer(2168, "Hansen EPS");
-    std::vector<FmiParameterName> g_SeaLevelPlumeFractileParams{ static_cast<FmiParameterName>(1309), static_cast<FmiParameterName>(1310), static_cast<FmiParameterName>(1311) , static_cast<FmiParameterName>(1312) , static_cast<FmiParameterName>(1313) , static_cast<FmiParameterName>(1314) , static_cast<FmiParameterName>(1315) };
-    std::vector<std::string> g_SeaLevelPlumeFractileParamLabels{ "F95", "F90", "F75", "F50", "F25", "F10", "F5" };
-    std::vector<NFmiColor> g_SeaLevelPlumeFractileParamColors{ NFmiColor(1.f, 0.f, 0.f), NFmiColor(1.f, 0.25f, 0.25f), NFmiColor(1.f, 0.5f, 0.5f) , NFmiColor(0.f, 0.5f, 0.f), NFmiColor(0.4f, 0.4f, 1.f), NFmiColor(0.25f, 0.25f, 1.f), NFmiColor(0.f, 0.f, 1.f) };
-    std::vector<SeaLevelProbData> g_SeaLevelProbabilityStationData;
-    // ProbLimit parametrit 1-4
-    std::vector<FmiParameterName> g_SeaLevelProbLimitParams{ static_cast<FmiParameterName>(1305), static_cast<FmiParameterName>(1306), static_cast<FmiParameterName>(1307) , static_cast<FmiParameterName>(1308) };
-    // ProbLimit 1-4 viiva v‰rit: keltainen, keltainen, oranssi ja punainen
-    std::vector<NFmiColor> g_SeaLevelProbabilityLineColors{ NFmiColor(0.7f, 0.7f, 0.f), NFmiColor(0.7f, 0.7f, 0.f), NFmiColor(1.f, 0.5f, 0.f) , NFmiColor(1.f, 0.f, 0.f) };
-    double g_SeaLevelProbabilityMaxSearchRangeInMetres = 250 * 1000;
-
-    void InitSeaLevelProbabilityStationData()
-    {
-        if(g_SeaLevelProbabilityStationData.size() == 0)
-        {
-            // Hamina kuuluu Suomenlahden it‰osaan (prob arvot sielt‰)
-            g_SeaLevelProbabilityStationData.push_back(SeaLevelProbData(NFmiStation(100051, "Hamina", 27.2, 60.56), -70, 110, 145, 175));
-            // Porvoo ja Helsinki (Suomenlahden l‰nsiosaan)
-            g_SeaLevelProbabilityStationData.push_back(SeaLevelProbData(NFmiStation(100066, "Porvoo", 25.6251, 60.2058), -60, 80, 115, 130));
-            g_SeaLevelProbabilityStationData.push_back(SeaLevelProbData(NFmiStation(100052, "Helsinki", 24.95, 60.13), -60, 80, 115, 130));
-            // Turku ja Hanko (Saaristomeri ja Suomenlahden l‰nsiosa)
-            g_SeaLevelProbabilityStationData.push_back(SeaLevelProbData(NFmiStation(100054, "Turku", 22.22, 60.44), -50, 70, 95, 110));
-            g_SeaLevelProbabilityStationData.push_back(SeaLevelProbData(NFmiStation(100053, "Hanko", 22.95, 59.82), -50, 70, 95, 110));
-            // Degerby (Ahvenanmeri ja Saaristomeri)
-            g_SeaLevelProbabilityStationData.push_back(SeaLevelProbData(NFmiStation(100055, "Degerby", 20.38, 60.03), -50, 65, 85, 100));
-            // Rauma, M‰ntyluoto ja Kaskinen (Selk‰meri)
-            g_SeaLevelProbabilityStationData.push_back(SeaLevelProbData(NFmiStation(100056, "Rauma", 21.49, 61.13), -50, 75, 100, 120));
-            g_SeaLevelProbabilityStationData.push_back(SeaLevelProbData(NFmiStation(100057, "M‰ntyluoto", 21.49, 61.59), -50, 75, 100, 120));
-            g_SeaLevelProbabilityStationData.push_back(SeaLevelProbData(NFmiStation(100058, "Kaskinen", 21.21, 62.34), -50, 75, 100, 120));
-            // Vaasa (Merenkurkku)
-            g_SeaLevelProbabilityStationData.push_back(SeaLevelProbData(NFmiStation(100059, "Vaasa", 21.61, 63.1), -50, 85, 110, 130));
-            // Pietarsaari (Per‰meren etel‰osa)
-            g_SeaLevelProbabilityStationData.push_back(SeaLevelProbData(NFmiStation(100060, "Pietarsaari", 22.67, 63.68), -65, 85, 110, 130));
-            // Raahe, Oulu ja Kemi (Per‰meren pohjoisosa)
-            g_SeaLevelProbabilityStationData.push_back(SeaLevelProbData(NFmiStation(100061, "Raahe", 24.48, 64.68), -65, 85, 110, 130));
-            g_SeaLevelProbabilityStationData.push_back(SeaLevelProbData(NFmiStation(100062, "Oulu", 25.49, 65.02), -80, 115, 140, 170));
-            g_SeaLevelProbabilityStationData.push_back(SeaLevelProbData(NFmiStation(100063, "Kemi", 24.53, 65.68), -80, 115, 140, 170));
-        }
-    }
-
-    const SeaLevelProbData* FindSeaLevelProbabilityStationData(const NFmiLocation *location, const NFmiPoint &latlon)
-    {
-        if(location)
-        {
-            // Etsi joko tarkka location-id pohjaisen aseman data
-            for(const auto &probStationData : g_SeaLevelProbabilityStationData)
-            {
-                if(location->GetIdent() == probStationData.station_.GetIdent())
-                    return &probStationData;
-            }
-        }
-        else
-        {
-            // Tai etsi l‰himm‰n latlon pisteesen liittyv‰n aseman data, edellytt‰en ett‰ latlon piste on g_SeaLevelProbabilityMaxSearchRangeInMetres sis‰ll‰.
-            // T‰t‰ k‰ytet‰‰n, jos seaLevel data sattuu olemaan hiladataa.
-            double minDistanceInMetres = 999999999;
-            const SeaLevelProbData *minDistanceProbDataPtr = nullptr;
-            NFmiLocation searchedLocation(latlon);
-            for(const auto &probStationData : g_SeaLevelProbabilityStationData)
-            {
-                auto currentDistanceInMeters = searchedLocation.Distance(probStationData.station_);
-                if(currentDistanceInMeters < minDistanceInMetres)
-                {
-                    minDistanceInMetres = currentDistanceInMeters;
-                    minDistanceProbDataPtr = &probStationData;
-                }
-            }
-            if(minDistanceInMetres <= g_SeaLevelProbabilityMaxSearchRangeInMetres)
-                return minDistanceProbDataPtr;
-        }
-        return nullptr;
-    }
-}
-
-bool NFmiTimeSerialView::IsSeaLevelPlumeParam()
-{
-    return itsDrawParam->Param().GetParamIdent() == kFmiSeaLevel;
-}
-
-bool NFmiTimeSerialView::IsSeaLevelProbLimitParam()
-{
-    auto iter = std::find(g_SeaLevelProbLimitParams.begin(), g_SeaLevelProbLimitParams.end(), itsDrawParam->Param().GetParamIdent());
-    return iter != g_SeaLevelProbLimitParams.end();
-}
-
 boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetSeaLevelPlumeData()
 {
-    return itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kViewable, g_SeaLevelPlumeProducer, true);
+    return itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kViewable, itsCtrlViewDocumentInterface->SeaLevelPlumeData().producer(), true);
 }
 
 // Jos on ollut ShowHelperData2InTimeSerialView p‰‰ll‰ (= n‰yt‰ EC:n lyhyit‰ fraktiileja pluumina)
@@ -1151,7 +1042,8 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetSeaLevelPlumeData()
 // Hansenin meri fraktiili dataa (*_waterlevel_hansen_EPS.sqd).
 void NFmiTimeSerialView::DrawPossibleSeaLevelPlumeDataLocationInTime(const NFmiPoint &theLatlon)
 {
-    if(IsSeaLevelPlumeParam())
+	auto& seaLevelPlumeData = itsCtrlViewDocumentInterface->SeaLevelPlumeData();
+    if(seaLevelPlumeData.IsSeaLevelPlumeParam(itsDrawParam->Param()))
     {
         auto seaLevelFractileData = GetSeaLevelPlumeData();
         if(seaLevelFractileData)
@@ -1160,9 +1052,11 @@ void NFmiTimeSerialView::DrawPossibleSeaLevelPlumeDataLocationInTime(const NFmiP
             envi.SetFillPattern(FMI_DASHDOTDOT);
 
             // Piirr‰ sea-level fraktiilit
-            for(size_t i = 0; i < g_SeaLevelPlumeFractileParams.size(); i++)
+			const auto& fractileParams = seaLevelPlumeData.fractileParams();
+			const auto& fractileParamColors = seaLevelPlumeData.fractileParamColors();
+            for(size_t i = 0; i < fractileParams.size(); i++)
             {
-                DrawParamInTime(seaLevelFractileData, envi, theLatlon, g_SeaLevelPlumeFractileParams[i], g_SeaLevelPlumeFractileParamColors[i], NFmiPoint(1, 1));
+                DrawParamInTime(seaLevelFractileData, envi, theLatlon, fractileParams[i], fractileParamColors[i], NFmiPoint(1, 1));
             }
             DrawSeaLevelProbLines(theLatlon);
         }
@@ -1177,7 +1071,8 @@ void NFmiTimeSerialView::DrawPossibleSeaLevelPlumeDataLocationInTime(const NFmiP
 // vaan eri limittien todenn‰kˆisyys arvoista.
 void NFmiTimeSerialView::DrawPossibleSeaLevelForecastProbLimitDataPlume(const NFmiPoint &theLatlon)
 {
-    if(IsSeaLevelProbLimitParam())
+	auto& seaLevelPlumeData = itsCtrlViewDocumentInterface->SeaLevelPlumeData();
+	if(seaLevelPlumeData.IsSeaLevelProbLimitParam(itsDrawParam->Param()))
     {
         auto seaLevelFractileData = GetSeaLevelPlumeData();
         if(seaLevelFractileData)
@@ -1186,9 +1081,11 @@ void NFmiTimeSerialView::DrawPossibleSeaLevelForecastProbLimitDataPlume(const NF
             envi.SetPenSize(NFmiPoint(2, 2));
 
             // Piirr‰ sea-level fraktiilit
-            for(size_t i = 0; i < g_SeaLevelProbLimitParams.size(); i++)
+			const auto& probLimitParams = seaLevelPlumeData.probLimitParams();
+			const auto& probabilityLineColors = seaLevelPlumeData.probabilityLineColors();
+			for(size_t i = 0; i < probLimitParams.size(); i++)
             {
-                DrawParamInTime(seaLevelFractileData, envi, theLatlon, g_SeaLevelProbLimitParams[i], g_SeaLevelProbabilityLineColors[i], NFmiPoint(1, 1));
+                DrawParamInTime(seaLevelFractileData, envi, theLatlon, probLimitParams[i], probabilityLineColors[i], NFmiPoint(1, 1));
             }
         }
     }
@@ -1205,21 +1102,24 @@ void NFmiTimeSerialView::DrawSeaLevelProbLines(const NFmiPoint &theLatlon)
     if(fJustScanningForMinMaxValues)
         return;
 
-    auto oldLocationIndex = itsInfo->LocationIndex();
-    if(itsInfo->NearestLocation(theLatlon, g_SeaLevelProbabilityMaxSearchRangeInMetres))
+	auto& seaLevelPlumeData = itsCtrlViewDocumentInterface->SeaLevelPlumeData();
+	auto oldLocationIndex = itsInfo->LocationIndex();
+    if(itsInfo->NearestLocation(theLatlon, seaLevelPlumeData.probabilityMaxSearchRangeInMetres()))
     {
-        // Varmistetaan ett‰ taulukko on olemassa, t‰m‰ on ‰‰ri nopea toiminto, kun se on kerran alustettu
-        InitSeaLevelProbabilityStationData();
-        auto probStationData = ::FindSeaLevelProbabilityStationData(itsInfo->Location(), itsInfo->LatLon());
-        if(probStationData)
-        {
-            NFmiDrawingEnvironment envi;
-            envi.SetPenSize(NFmiPoint(2, 2));
-            DrawSeaLevelProbLine(envi, g_SeaLevelProbabilityLineColors[0], probStationData->prob1_);
-            DrawSeaLevelProbLine(envi, g_SeaLevelProbabilityLineColors[1], probStationData->prob2_);
-            DrawSeaLevelProbLine(envi, g_SeaLevelProbabilityLineColors[2], probStationData->prob3_);
-            DrawSeaLevelProbLine(envi, g_SeaLevelProbabilityLineColors[3], probStationData->prob4_);
-        }
+		if(seaLevelPlumeData.InitializationOk())
+		{
+			auto probStationData = seaLevelPlumeData.FindSeaLevelProbabilityStationData(itsInfo->Location(), itsInfo->LatLon());
+			const auto& probabilityLineColors = seaLevelPlumeData.probabilityLineColors();
+			if(probStationData && probabilityLineColors.size() >= 4)
+			{
+				NFmiDrawingEnvironment envi;
+				envi.SetPenSize(NFmiPoint(2, 2));
+				DrawSeaLevelProbLine(envi, probabilityLineColors[0], probStationData->prob1_);
+				DrawSeaLevelProbLine(envi, probabilityLineColors[1], probStationData->prob2_);
+				DrawSeaLevelProbLine(envi, probabilityLineColors[2], probStationData->prob3_);
+				DrawSeaLevelProbLine(envi, probabilityLineColors[3], probStationData->prob4_);
+			}
+		}
     }
     itsInfo->LocationIndex(oldLocationIndex);
 }
@@ -4600,39 +4500,46 @@ std::string NFmiTimeSerialView::GetSeaLevelPlumeDataToolTipText(boost::shared_pt
     auto seaLevelFractileData = GetSeaLevelPlumeData();
     if(itsCtrlViewDocumentInterface->ShowHelperData2InTimeSerialView() && seaLevelFractileData)
     {
-        if(IsSeaLevelPlumeParam())
-        {
-            // Jos lˆytyy 1. parametreista ja l‰hin asema piste on g_SeaLevelProbabilityMaxSearchRangeInMetres rajan sis‰ll‰
-            if(seaLevelFractileData->Param(g_SeaLevelPlumeFractileParams[0]) && seaLevelFractileData->NearestLocation(theLatlon, g_SeaLevelProbabilityMaxSearchRangeInMetres))
-            {
-                std::string paramName = "SeaLevel";
-                str += "<br><hr color=red><br>";
-                str += seaLevelFractileData->Producer()->GetName() + " " + paramName + "\n";
+		auto& seaLevelPlumeData = itsCtrlViewDocumentInterface->SeaLevelPlumeData();
+		if(seaLevelPlumeData.InitializationOk())
+		{
+			if(seaLevelPlumeData.IsSeaLevelPlumeParam(itsDrawParam->Param()))
+			{
+				const auto& fractileParams = seaLevelPlumeData.fractileParams();
+				const auto& fractileParamLabels = seaLevelPlumeData.fractileParamLabels();
+				// Jos lˆytyy 1. parametreista ja l‰hin asema piste on g_SeaLevelProbabilityMaxSearchRangeInMetres rajan sis‰ll‰
+				if(seaLevelFractileData->Param(fractileParams[0]) && seaLevelFractileData->NearestLocation(theLatlon, seaLevelPlumeData.probabilityMaxSearchRangeInMetres()))
+				{
+					std::string paramName = "SeaLevel";
+					str += "<br><hr color=red><br>";
+					str += seaLevelFractileData->Producer()->GetName() + " " + paramName + "\n";
 
-                for(size_t i = 0; i < g_SeaLevelPlumeFractileParams.size(); i++)
-                {
-                    seaLevelFractileData->Param(g_SeaLevelPlumeFractileParams[i]);
-                    ::AddValueLineString(str, paramName + "-" + g_SeaLevelPlumeFractileParamLabels[i], theColor, seaLevelFractileData->InterpolatedValue(theTime), itsDrawParam, true);
-                }
-            }
-            str += GetSeaLevelProbDataToolTipText(theViewedInfo, seaLevelFractileData, theLatlon, theTime, theColor);
-        }
-        else if(IsSeaLevelProbLimitParam())
-        {
-            // Jos lˆytyy 1. parametreista ja l‰hin asema piste on g_SeaLevelProbabilityMaxSearchRangeInMetres rajan sis‰ll‰
-            if(seaLevelFractileData->Param(g_SeaLevelProbLimitParams[0]) && seaLevelFractileData->NearestLocation(theLatlon, g_SeaLevelProbabilityMaxSearchRangeInMetres))
-            {
-                std::string paramName = "ProbLimit";
-                str += "<br><hr color=red><br>";
-                str += seaLevelFractileData->Producer()->GetName() + " " + paramName + "\n";
+					for(size_t i = 0; i < fractileParams.size(); i++)
+					{
+						seaLevelFractileData->Param(fractileParams[i]);
+						::AddValueLineString(str, paramName + "-" + fractileParamLabels[i], theColor, seaLevelFractileData->InterpolatedValue(theTime), itsDrawParam, true);
+					}
+				}
+				str += GetSeaLevelProbDataToolTipText(theViewedInfo, seaLevelFractileData, theLatlon, theTime, theColor);
+			}
+			else if(seaLevelPlumeData.IsSeaLevelProbLimitParam(itsDrawParam->Param()))
+			{
+				const auto& probLimitParams = seaLevelPlumeData.probLimitParams();
+				// Jos lˆytyy 1. parametreista ja l‰hin asema piste on g_SeaLevelProbabilityMaxSearchRangeInMetres rajan sis‰ll‰
+				if(seaLevelFractileData->Param(probLimitParams[0]) && seaLevelFractileData->NearestLocation(theLatlon, seaLevelPlumeData.probabilityMaxSearchRangeInMetres()))
+				{
+					std::string paramName = "ProbLimit";
+					str += "<br><hr color=red><br>";
+					str += seaLevelFractileData->Producer()->GetName() + " " + paramName + "\n";
 
-                for(size_t i = 0; i < g_SeaLevelProbLimitParams.size(); i++)
-                {
-                    seaLevelFractileData->Param(g_SeaLevelProbLimitParams[i]);
-                    ::AddValueLineString(str, paramName + std::to_string(i+1), theColor, seaLevelFractileData->InterpolatedValue(theTime), itsDrawParam, true);
-                }
-            }
-        }
+					for(size_t i = 0; i < probLimitParams.size(); i++)
+					{
+						seaLevelFractileData->Param(probLimitParams[i]);
+						::AddValueLineString(str, paramName + std::to_string(i + 1), theColor, seaLevelFractileData->InterpolatedValue(theTime), itsDrawParam, true);
+					}
+				}
+			}
+		}
     }
     return str;
 }
@@ -4662,11 +4569,10 @@ std::string NFmiTimeSerialView::GetSeaLevelProbDataToolTipText(boost::shared_ptr
     std::string str;
     std::string paramName = "ProbLimit";
     auto oldLocationIndex = theViewedInfo->LocationIndex();
-    if(theViewedInfo->NearestLocation(theLatlon, g_SeaLevelProbabilityMaxSearchRangeInMetres))
+	auto& seaLevelPlumeData = itsCtrlViewDocumentInterface->SeaLevelPlumeData();
+	if(seaLevelPlumeData.InitializationOk() && theViewedInfo->NearestLocation(theLatlon, seaLevelPlumeData.probabilityMaxSearchRangeInMetres()))
     {
-        // Varmistetaan ett‰ taulukko on olemassa, t‰m‰ on ‰‰ri nopea toiminto, kun se on kerran alustettu
-        InitSeaLevelProbabilityStationData();
-        auto probStationData = ::FindSeaLevelProbabilityStationData(theViewedInfo->Location(), theViewedInfo->LatLon());
+        auto probStationData = seaLevelPlumeData.FindSeaLevelProbabilityStationData(theViewedInfo->Location(), theViewedInfo->LatLon());
         if(probStationData)
         {
             str += "<br><hr color=red><br>";
