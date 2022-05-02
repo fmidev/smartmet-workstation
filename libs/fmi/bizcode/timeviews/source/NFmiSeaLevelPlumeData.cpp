@@ -1,46 +1,135 @@
 #include "NFmiSeaLevelPlumeData.h"
 #include "NFmiDataIdent.h"
+#include "NFmiSettings.h"
+#include "NFmiInfoData.h"
+
+namespace
+{
+    NFmiProducer getProducerFromSettings(const std::string& producerKey)
+    {
+        auto id = NFmiSettings::Require<unsigned long>(producerKey + "::Id");
+        auto name = NFmiSettings::Require<std::string>(producerKey + "::Name");
+        return NFmiProducer(id, name);
+    }
+
+    std::vector<NFmiParam> getFractileParametersFromSettings(const std::string& parametersKey)
+    {
+        auto idsStr = NFmiSettings::Require<std::string>(parametersKey + "::Ids");
+        auto idsVector = NFmiStringTools::Split<std::vector<int>>(idsStr, ",");
+        auto namesStr = NFmiSettings::Require<std::string>(parametersKey + "::Names");
+        auto namesVector = NFmiStringTools::Split<std::vector<std::string>>(namesStr, ",");
+        auto parameterCount = std::min(idsVector.size(), namesVector.size());
+        if(parameterCount == 0)
+            throw std::runtime_error(std::string("Sea-level configurations: getFractileParametersFromSettings failed, no parameters found"));
+
+        std::vector<NFmiParam> parameters;
+        for(size_t index = 0; index < parameterCount; index++)
+        {
+            parameters.push_back(NFmiParam(idsVector[index], namesVector[index]));
+        }
+
+        return parameters;
+    }
+
+    NFmiColor getColorFromString(const std::string& colorsString)
+    {
+        auto rgbValues = NFmiStringTools::Split<std::vector<float>>(colorsString, ",");
+        if(rgbValues.size() < 3)
+            throw std::runtime_error(std::string("Sea-level configurations: getColorFromString failed, not enough RGB values found"));
+        return NFmiColor(rgbValues[0], rgbValues[1], rgbValues[2]);
+    }
+
+    std::vector<NFmiColor> getColorsFromSettings(const std::string& colorsKey)
+    {
+        auto colorsStr = NFmiSettings::Require<std::string>(colorsKey);
+        auto colorsStrVector = NFmiStringTools::Split<std::vector<std::string>>(colorsStr, ";");
+        if(colorsStrVector.empty())
+            throw std::runtime_error(std::string("Sea-level configurations: getColorsFromSettings failed, no Fractile-Param-Colors found"));
+
+        std::vector<NFmiColor> colors;
+        for(const auto &colorStr : colorsStrVector)
+        {
+            colors.push_back(::getColorFromString(colorStr));
+        }
+
+        return colors;
+    }
+
+    NFmiSeaLevelProbData getSingleProbabilityStationDataFromSettings(const std::string& probabilityStationBaseKey, const std::string& stationName)
+    {
+        auto probabilityStationKey = probabilityStationBaseKey + "::" + stationName;
+        auto id = NFmiSettings::Require<long>(probabilityStationKey + "::Id");
+        auto latlonStr = NFmiSettings::Require<std::string>(probabilityStationKey + "::Latlon");
+        auto latlonValues = NFmiStringTools::Split<std::vector<float>>(latlonStr, ",");
+        if(latlonValues.size() != 2)
+            throw std::runtime_error(std::string("Sea-level configurations: getSingleProbabilityStationDataFromSettings failed, latlonValues had not 2 values"));
+
+        NFmiStation station(id, stationName, latlonValues[0], latlonValues[1]);
+        auto probabilityLimitsStr = NFmiSettings::Require<std::string>(probabilityStationKey + "::ProbabilityLimits");
+        auto probLimits = NFmiStringTools::Split<std::vector<float>>(probabilityLimitsStr, ",");
+        if(probLimits.size() < 4)
+            throw std::runtime_error(std::string("Sea-level configurations: getSingleProbabilityStationDataFromSettings failed, probabilityLimitValues had less than 4 values"));
+
+        return NFmiSeaLevelProbData(station, probLimits[0], probLimits[1], probLimits[2], probLimits[3]);
+    }
+
+    std::vector<NFmiSeaLevelProbData> getProbabilityStationDataFromSettings(const std::string& probabilityStationKey)
+    {
+        auto stationNameList = NFmiSettings::ListChildren(probabilityStationKey);
+        if(stationNameList.empty())
+            throw std::runtime_error(std::string("Sea-level configurations: getProbabilityStationDataFromSettings failed, no probability-Stations found"));
+
+        std::vector<NFmiSeaLevelProbData> probabilityStations;
+        for(const auto& stationName : stationNameList)
+        {
+            probabilityStations.push_back(::getSingleProbabilityStationDataFromSettings(probabilityStationKey, stationName));
+        }
+        return probabilityStations;
+    }
+}
+
 
 NFmiSeaLevelPlumeData::NFmiSeaLevelPlumeData() = default;
 
 void NFmiSeaLevelPlumeData::InitFromSettings(const std::string & baseKey)
 {
-    if(probabilityStationData_.empty())
+    if(!initialized_)
     {
-        producer_ = NFmiProducer(2168, "Hansen EPS");
-        dataType_ = NFmiInfoData::kViewable;
-        fractileParams_ = std::vector<FmiParameterName>{ static_cast<FmiParameterName>(1309), static_cast<FmiParameterName>(1310), static_cast<FmiParameterName>(1311) , static_cast<FmiParameterName>(1312) , static_cast<FmiParameterName>(1313) , static_cast<FmiParameterName>(1314) , static_cast<FmiParameterName>(1315) };
-        fractileParamLabels_ = std::vector<std::string>{ "F95", "F90", "F75", "F50", "F25", "F10", "F5" };
-        fractileParamColors_ = std::vector<NFmiColor>{ NFmiColor(1.f, 0.f, 0.f), NFmiColor(1.f, 0.25f, 0.25f), NFmiColor(1.f, 0.5f, 0.5f) , NFmiColor(0.f, 0.5f, 0.f), NFmiColor(0.4f, 0.4f, 1.f), NFmiColor(0.25f, 0.25f, 1.f), NFmiColor(0.f, 0.f, 1.f) };
+        initialized_ = true;
+        settingsBaseKey_ = baseKey;
+        auto childrenCheckList = NFmiSettings::ListChildren(baseKey);
+        if(childrenCheckList.empty())
+            return;
 
-        // Hamina kuuluu Suomenlahden itäosaan (prob arvot sieltä)
-        probabilityStationData_.push_back(NFmiSeaLevelProbData(NFmiStation(100051, "Hamina", 27.2, 60.56), -70, 110, 145, 175));
-        // Porvoo ja Helsinki (Suomenlahden länsiosaan)
-        probabilityStationData_.push_back(NFmiSeaLevelProbData(NFmiStation(100066, "Porvoo", 25.6251, 60.2058), -60, 80, 115, 130));
-        probabilityStationData_.push_back(NFmiSeaLevelProbData(NFmiStation(100052, "Helsinki", 24.95, 60.13), -60, 80, 115, 130));
-        // Turku ja Hanko (Saaristomeri ja Suomenlahden länsiosa)
-        probabilityStationData_.push_back(NFmiSeaLevelProbData(NFmiStation(100054, "Turku", 22.22, 60.44), -50, 70, 95, 110));
-        probabilityStationData_.push_back(NFmiSeaLevelProbData(NFmiStation(100053, "Hanko", 22.95, 59.82), -50, 70, 95, 110));
-        // Degerby (Ahvenanmeri ja Saaristomeri)
-        probabilityStationData_.push_back(NFmiSeaLevelProbData(NFmiStation(100055, "Degerby", 20.38, 60.03), -50, 65, 85, 100));
-        // Rauma, Mäntyluoto ja Kaskinen (Selkämeri)
-        probabilityStationData_.push_back(NFmiSeaLevelProbData(NFmiStation(100056, "Rauma", 21.49, 61.13), -50, 75, 100, 120));
-        probabilityStationData_.push_back(NFmiSeaLevelProbData(NFmiStation(100057, "Mäntyluoto", 21.49, 61.59), -50, 75, 100, 120));
-        probabilityStationData_.push_back(NFmiSeaLevelProbData(NFmiStation(100058, "Kaskinen", 21.21, 62.34), -50, 75, 100, 120));
-        // Vaasa (Merenkurkku)
-        probabilityStationData_.push_back(NFmiSeaLevelProbData(NFmiStation(100059, "Vaasa", 21.61, 63.1), -50, 85, 110, 130));
-        // Pietarsaari (Perämeren eteläosa)
-        probabilityStationData_.push_back(NFmiSeaLevelProbData(NFmiStation(100060, "Pietarsaari", 22.67, 63.68), -65, 85, 110, 130));
-        // Raahe, Oulu ja Kemi (Perämeren pohjoisosa)
-        probabilityStationData_.push_back(NFmiSeaLevelProbData(NFmiStation(100061, "Raahe", 24.48, 64.68), -65, 85, 110, 130));
-        probabilityStationData_.push_back(NFmiSeaLevelProbData(NFmiStation(100062, "Oulu", 25.49, 65.02), -80, 115, 140, 170));
-        probabilityStationData_.push_back(NFmiSeaLevelProbData(NFmiStation(100063, "Kemi", 24.53, 65.68), -80, 115, 140, 170));
+        try
+        {
+            foundAnySettings_ = true;
+            auto producerKey = settingsBaseKey_ + "::FractileProducer";
+            producer_ = ::getProducerFromSettings(producerKey);
+            dataType_ = static_cast<NFmiInfoData::Type>(NFmiSettings::Require<int>(producerKey + "::DataType"));
 
-        probLimitParams_ = std::vector<FmiParameterName>{ static_cast<FmiParameterName>(1305), static_cast<FmiParameterName>(1306), static_cast<FmiParameterName>(1307) , static_cast<FmiParameterName>(1308) };
-        probabilityLineColors_ = std::vector<NFmiColor>{ NFmiColor(0.7f, 0.7f, 0.f), NFmiColor(0.7f, 0.7f, 0.f), NFmiColor(1.f, 0.5f, 0.f) , NFmiColor(1.f, 0.f, 0.f) };
+            auto fractileParametersKey = settingsBaseKey_ + "::FractileParameters";
+            fractileParams_ = ::getFractileParametersFromSettings(fractileParametersKey);
+            fractileParamColors_ = ::getColorsFromSettings(fractileParametersKey + "::Colors");
 
-        initializationOk_ = true;
+            auto probabilityParametersKey = settingsBaseKey_ + "::ProbabilityParameters";
+            probLimitParams_ = ::getFractileParametersFromSettings(probabilityParametersKey);
+            probabilityLineColors_ = ::getColorsFromSettings(probabilityParametersKey + "::Colors");
+
+            auto probabilityStationDataKey = settingsBaseKey_ + "::Stations";
+            probabilityStationData_ = ::getProbabilityStationDataFromSettings(probabilityStationDataKey);
+            dataOk_ = true;
+        }
+        catch(std::exception &e)
+        { 
+            configurationErrorMessage_ = e.what();
+        }
     }
+}
+
+bool NFmiSeaLevelPlumeData::dataOk() const
+{ 
+    return dataOk_; 
 }
 
 const NFmiSeaLevelProbData* NFmiSeaLevelPlumeData::FindSeaLevelProbabilityStationData(const NFmiLocation* location, const NFmiPoint& latlon)
@@ -76,13 +165,15 @@ const NFmiSeaLevelProbData* NFmiSeaLevelPlumeData::FindSeaLevelProbabilityStatio
     return nullptr;
 }
 
-bool NFmiSeaLevelPlumeData::IsSeaLevelPlumeParam(const NFmiDataIdent& param)
+bool NFmiSeaLevelPlumeData::IsSeaLevelPlumeParam(const NFmiDataIdent& dataIdent)
 {
-    return param.GetParamIdent() == kFmiSeaLevel;
+    return dataIdent.GetParamIdent() == kFmiSeaLevel;
 }
 
-bool NFmiSeaLevelPlumeData::IsSeaLevelProbLimitParam(const NFmiDataIdent& param)
+bool NFmiSeaLevelPlumeData::IsSeaLevelProbLimitParam(const NFmiDataIdent& dataIdent)
 {
-    auto iter = std::find(probLimitParams_.begin(), probLimitParams_.end(), param.GetParamIdent());
+    auto iter = std::find_if(probLimitParams_.begin(), probLimitParams_.end(), 
+        [&](const auto& param) {return param.GetIdent() == dataIdent.GetParamIdent(); }
+    );
     return iter != probLimitParams_.end();
 }
