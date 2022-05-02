@@ -36,34 +36,37 @@ class NFmiSeaLevelPlumeData
 {
     NFmiProducer producer_;
     NFmiInfoData::Type dataType_;
-    std::vector<FmiParameterName> fractileParams_;
-    std::vector<std::string> fractileParamLabels_;
+    std::vector<NFmiParam> fractileParams_;
     std::vector<NFmiColor> fractileParamColors_;
     std::vector<NFmiSeaLevelProbData> probabilityStationData_;
     // ProbLimit parametrit 1-4
-    std::vector<FmiParameterName> probLimitParams_;
+    std::vector<NFmiParam> probLimitParams_;
     // ProbLimit 1-4 viiva värit: keltainen, keltainen, oranssi ja punainen
     std::vector<NFmiColor> probabilityLineColors_;
     const double probabilityMaxSearchRangeInMetres_ = 250 * 1000;
     std::string settingsBaseKey_;
-    bool initializationOk_ = false;
+    bool initialized_ = false;
+    bool dataOk_ = false;
+    bool foundAnySettings_ = false;
+    std::string configurationErrorMessage_;
 public:
     NFmiSeaLevelPlumeData();
     void InitFromSettings(const std::string& baseKey);
-    bool InitializationOk() const { return initializationOk_; }
+    bool dataOk() const;
+    bool foundAnySettings() const { return foundAnySettings_; }
+    const std::string& configurationErrorMessage() const { return configurationErrorMessage_; }
 
     const NFmiProducer& producer() const { return producer_; }
     NFmiInfoData::Type dataType() const { return dataType_; }
-    const std::vector<FmiParameterName>& fractileParams() const { return fractileParams_; }
-    const std::vector<std::string>& fractileParamLabels() const { return fractileParamLabels_; }
+    const std::vector<NFmiParam>& fractileParams() const { return fractileParams_; }
     const std::vector<NFmiColor>& fractileParamColors() const { return fractileParamColors_; }
-    const std::vector<FmiParameterName>& probLimitParams() const { return probLimitParams_; }
+    const std::vector<NFmiParam>& probLimitParams() const { return probLimitParams_; }
     const std::vector<NFmiColor>& probabilityLineColors() const { return probabilityLineColors_; }
     double probabilityMaxSearchRangeInMetres() const { return probabilityMaxSearchRangeInMetres_; }
 
     const NFmiSeaLevelProbData* FindSeaLevelProbabilityStationData(const NFmiLocation* location, const NFmiPoint& latlon);
 
-    bool IsSeaLevelPlumeParam(const NFmiDataIdent& param);
-    bool IsSeaLevelProbLimitParam(const NFmiDataIdent& param);
+    bool IsSeaLevelPlumeParam(const NFmiDataIdent& dataIdent);
+    bool IsSeaLevelProbLimitParam(const NFmiDataIdent& dataIdent);
 };
 

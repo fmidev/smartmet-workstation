@@ -1056,7 +1056,7 @@ void NFmiTimeSerialView::DrawPossibleSeaLevelPlumeDataLocationInTime(const NFmiP
 			const auto& fractileParamColors = seaLevelPlumeData.fractileParamColors();
             for(size_t i = 0; i < fractileParams.size(); i++)
             {
-                DrawParamInTime(seaLevelFractileData, envi, theLatlon, fractileParams[i], fractileParamColors[i], NFmiPoint(1, 1));
+                DrawParamInTime(seaLevelFractileData, envi, theLatlon, static_cast<FmiParameterName>(fractileParams[i].GetIdent()), fractileParamColors[i], NFmiPoint(1, 1));
             }
             DrawSeaLevelProbLines(theLatlon);
         }
@@ -1085,7 +1085,7 @@ void NFmiTimeSerialView::DrawPossibleSeaLevelForecastProbLimitDataPlume(const NF
 			const auto& probabilityLineColors = seaLevelPlumeData.probabilityLineColors();
 			for(size_t i = 0; i < probLimitParams.size(); i++)
             {
-                DrawParamInTime(seaLevelFractileData, envi, theLatlon, probLimitParams[i], probabilityLineColors[i], NFmiPoint(1, 1));
+                DrawParamInTime(seaLevelFractileData, envi, theLatlon, static_cast<FmiParameterName>(probLimitParams[i].GetIdent()), probabilityLineColors[i], NFmiPoint(1, 1));
             }
         }
     }
@@ -1106,7 +1106,7 @@ void NFmiTimeSerialView::DrawSeaLevelProbLines(const NFmiPoint &theLatlon)
 	auto oldLocationIndex = itsInfo->LocationIndex();
     if(itsInfo->NearestLocation(theLatlon, seaLevelPlumeData.probabilityMaxSearchRangeInMetres()))
     {
-		if(seaLevelPlumeData.InitializationOk())
+		if(seaLevelPlumeData.dataOk())
 		{
 			auto probStationData = seaLevelPlumeData.FindSeaLevelProbabilityStationData(itsInfo->Location(), itsInfo->LatLon());
 			const auto& probabilityLineColors = seaLevelPlumeData.probabilityLineColors();
@@ -4501,12 +4501,11 @@ std::string NFmiTimeSerialView::GetSeaLevelPlumeDataToolTipText(boost::shared_pt
     if(itsCtrlViewDocumentInterface->ShowHelperData2InTimeSerialView() && seaLevelFractileData)
     {
 		auto& seaLevelPlumeData = itsCtrlViewDocumentInterface->SeaLevelPlumeData();
-		if(seaLevelPlumeData.InitializationOk())
+		if(seaLevelPlumeData.dataOk())
 		{
 			if(seaLevelPlumeData.IsSeaLevelPlumeParam(itsDrawParam->Param()))
 			{
 				const auto& fractileParams = seaLevelPlumeData.fractileParams();
-				const auto& fractileParamLabels = seaLevelPlumeData.fractileParamLabels();
 				// Jos löytyy 1. parametreista ja lähin asema piste on g_SeaLevelProbabilityMaxSearchRangeInMetres rajan sisällä
 				if(seaLevelFractileData->Param(fractileParams[0]) && seaLevelFractileData->NearestLocation(theLatlon, seaLevelPlumeData.probabilityMaxSearchRangeInMetres()))
 				{
@@ -4517,7 +4516,7 @@ std::string NFmiTimeSerialView::GetSeaLevelPlumeDataToolTipText(boost::shared_pt
 					for(size_t i = 0; i < fractileParams.size(); i++)
 					{
 						seaLevelFractileData->Param(fractileParams[i]);
-						::AddValueLineString(str, paramName + "-" + fractileParamLabels[i], theColor, seaLevelFractileData->InterpolatedValue(theTime), itsDrawParam, true);
+						::AddValueLineString(str, paramName + "-" + std::string(fractileParams[i].GetName()), theColor, seaLevelFractileData->InterpolatedValue(theTime), itsDrawParam, true);
 					}
 				}
 				str += GetSeaLevelProbDataToolTipText(theViewedInfo, seaLevelFractileData, theLatlon, theTime, theColor);
@@ -4567,10 +4566,9 @@ static std::string GetSeaLevelProbLocationName(boost::shared_ptr<NFmiFastQueryIn
 std::string NFmiTimeSerialView::GetSeaLevelProbDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, boost::shared_ptr<NFmiFastQueryInfo> &theSeaLevelFractileData, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor)
 {
     std::string str;
-    std::string paramName = "ProbLimit";
     auto oldLocationIndex = theViewedInfo->LocationIndex();
 	auto& seaLevelPlumeData = itsCtrlViewDocumentInterface->SeaLevelPlumeData();
-	if(seaLevelPlumeData.InitializationOk() && theViewedInfo->NearestLocation(theLatlon, seaLevelPlumeData.probabilityMaxSearchRangeInMetres()))
+	if(seaLevelPlumeData.dataOk() && theViewedInfo->NearestLocation(theLatlon, seaLevelPlumeData.probabilityMaxSearchRangeInMetres()))
     {
         auto probStationData = seaLevelPlumeData.FindSeaLevelProbabilityStationData(theViewedInfo->Location(), theViewedInfo->LatLon());
         if(probStationData)
@@ -4580,7 +4578,8 @@ std::string NFmiTimeSerialView::GetSeaLevelProbDataToolTipText(boost::shared_ptr
             str += probStationData->station_.GetName();
             str += "\n";
 
-            ::AddValueLineString(str, paramName + "1", theColor, probStationData->prob1_, itsDrawParam, true);
+			std::string paramName = "ProbLimit";
+			::AddValueLineString(str, paramName + "1", theColor, probStationData->prob1_, itsDrawParam, true);
             ::AddValueLineString(str, paramName + "2", theColor, probStationData->prob2_, itsDrawParam, true);
             ::AddValueLineString(str, paramName + "3", theColor, probStationData->prob3_, itsDrawParam, true);
             ::AddValueLineString(str, paramName + "4", theColor, probStationData->prob4_, itsDrawParam, true);
@@ -4591,14 +4590,12 @@ std::string NFmiTimeSerialView::GetSeaLevelProbDataToolTipText(boost::shared_ptr
         str += ::GetSeaLevelProbLocationName(theViewedInfo);
         str += "\n";
 
-        theSeaLevelFractileData->Param(static_cast<FmiParameterName>(1305));
-        ::AddValueLineString(str, paramName + "1", theColor, theSeaLevelFractileData->InterpolatedValue(theTime), itsDrawParam, true);
-        theSeaLevelFractileData->Param(static_cast<FmiParameterName>(1306));
-        ::AddValueLineString(str, paramName + "2", theColor, theSeaLevelFractileData->InterpolatedValue(theTime), itsDrawParam, true);
-        theSeaLevelFractileData->Param(static_cast<FmiParameterName>(1307));
-        ::AddValueLineString(str, paramName + "3", theColor, theSeaLevelFractileData->InterpolatedValue(theTime), itsDrawParam, true);
-        theSeaLevelFractileData->Param(static_cast<FmiParameterName>(1308));
-        ::AddValueLineString(str, paramName + "4", theColor, theSeaLevelFractileData->InterpolatedValue(theTime), itsDrawParam, true);
+		const auto& probParams = seaLevelPlumeData.probLimitParams();
+		for(const auto& probParam : probParams)
+		{
+			theSeaLevelFractileData->Param(probParam);
+			::AddValueLineString(str, std::string(probParam.GetName()), theColor, theSeaLevelFractileData->InterpolatedValue(theTime), itsDrawParam, true);
+		}
     }
     theViewedInfo->LocationIndex(oldLocationIndex);
     return str;
