@@ -601,16 +601,12 @@ void InitSeaLevelPlumeData()
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	try
 	{
-		itsSeaLevelPlumeData.InitFromSettings("SeaLevelPlumeData::MSL");
-		if(!itsSeaLevelPlumeData.foundAnySettings())
-			LogMessage("SeaLevelPlumeData setting wasn't set in configurations (ok if intended)", CatLog::Severity::Debug, CatLog::Category::Configuration);
-		else if(itsSeaLevelPlumeData.dataOk())
-			LogMessage("SeaLevelPlumeData initialization was ok", CatLog::Severity::Debug, CatLog::Category::Configuration);
-		else
+		itsSeaLevelPlumeData.InitFromSettings("SeaLevelPlumeData");
+		LogMessage(itsSeaLevelPlumeData.baseConfigurationMessage(), CatLog::Severity::Debug, CatLog::Category::Configuration);
+		
+		if(!itsSeaLevelPlumeData.configurationErrorMessage().empty())
 		{
-			std::string errorMessage = "SeaLevelPlumeData initialization had errors: ";
-			errorMessage += itsSeaLevelPlumeData.configurationErrorMessage();
-			LogMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::Configuration);
+			LogMessage(itsSeaLevelPlumeData.configurationErrorMessage(), CatLog::Severity::Error, CatLog::Category::Configuration);
 		}
 	}
 	catch(exception& e)

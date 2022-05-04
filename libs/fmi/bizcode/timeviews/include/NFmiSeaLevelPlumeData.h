@@ -32,10 +32,11 @@ public:
     float prob4_ = 0;
 };
 
-class NFmiSeaLevelPlumeData
+class NFmiSingleSeaLevelPlumeData
 {
+    unsigned long seaLevelParameterId_ = kFmiBadParameter;
     NFmiProducer producer_;
-    NFmiInfoData::Type dataType_;
+    NFmiInfoData::Type dataType_ = NFmiInfoData::kNoDataType;
     std::vector<NFmiParam> fractileParams_;
     std::vector<NFmiColor> fractileParamColors_;
     std::vector<NFmiSeaLevelProbData> probabilityStationData_;
@@ -50,7 +51,7 @@ class NFmiSeaLevelPlumeData
     bool foundAnySettings_ = false;
     std::string configurationErrorMessage_;
 public:
-    NFmiSeaLevelPlumeData();
+    NFmiSingleSeaLevelPlumeData();
     void InitFromSettings(const std::string& baseKey);
     bool dataOk() const;
     bool foundAnySettings() const { return foundAnySettings_; }
@@ -64,9 +65,24 @@ public:
     const std::vector<NFmiColor>& probabilityLineColors() const { return probabilityLineColors_; }
     double probabilityMaxSearchRangeInMetres() const { return probabilityMaxSearchRangeInMetres_; }
 
-    const NFmiSeaLevelProbData* FindSeaLevelProbabilityStationData(const NFmiLocation* location, const NFmiPoint& latlon);
+    const NFmiSeaLevelProbData* FindSeaLevelProbabilityStationData(const NFmiLocation* location, const NFmiPoint& latlon) const;
 
-    bool IsSeaLevelPlumeParam(const NFmiDataIdent& dataIdent);
-    bool IsSeaLevelProbLimitParam(const NFmiDataIdent& dataIdent);
+    bool IsSeaLevelPlumeParam(unsigned long checkedParameterId) const;
+    bool IsSeaLevelProbLimitParam(const NFmiDataIdent& dataIdent) const;
 };
 
+class NFmiSeaLevelPlumeData
+{
+    std::vector<NFmiSingleSeaLevelPlumeData> plumeDataContainer_;
+    std::string settingsBaseKey_;
+    bool initialized_ = false;
+    std::string baseConfigurationMessage_;
+    std::string configurationErrorMessage_;
+public:
+    NFmiSeaLevelPlumeData();
+    void InitFromSettings(const std::string& baseKey);
+    const std::string& baseConfigurationMessage() const { return baseConfigurationMessage_; }
+    const std::string& configurationErrorMessage() const { return configurationErrorMessage_; }
+
+    const NFmiSingleSeaLevelPlumeData* getSeaLevelPlumeData(unsigned long checkedParameterId) const;
+};

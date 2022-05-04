@@ -88,10 +88,13 @@ namespace
     }
 }
 
+// *********************************************************************
+// ***************** NFmiSingleSeaLevelPlumeData ***********************
+// *********************************************************************
 
-NFmiSeaLevelPlumeData::NFmiSeaLevelPlumeData() = default;
+NFmiSingleSeaLevelPlumeData::NFmiSingleSeaLevelPlumeData() = default;
 
-void NFmiSeaLevelPlumeData::InitFromSettings(const std::string & baseKey)
+void NFmiSingleSeaLevelPlumeData::InitFromSettings(const std::string & baseKey)
 {
     if(!initialized_)
     {
@@ -104,6 +107,9 @@ void NFmiSeaLevelPlumeData::InitFromSettings(const std::string & baseKey)
         try
         {
             foundAnySettings_ = true;
+
+            seaLevelParameterId_ = NFmiSettings::Require<unsigned long>(settingsBaseKey_ + "::SeaLevelParameterId");
+
             auto producerKey = settingsBaseKey_ + "::FractileProducer";
             producer_ = ::getProducerFromSettings(producerKey);
             dataType_ = static_cast<NFmiInfoData::Type>(NFmiSettings::Require<int>(producerKey + "::DataType"));
@@ -127,12 +133,12 @@ void NFmiSeaLevelPlumeData::InitFromSettings(const std::string & baseKey)
     }
 }
 
-bool NFmiSeaLevelPlumeData::dataOk() const
+bool NFmiSingleSeaLevelPlumeData::dataOk() const
 { 
     return dataOk_; 
 }
 
-const NFmiSeaLevelProbData* NFmiSeaLevelPlumeData::FindSeaLevelProbabilityStationData(const NFmiLocation* location, const NFmiPoint& latlon)
+const NFmiSeaLevelProbData* NFmiSingleSeaLevelPlumeData::FindSeaLevelProbabilityStationData(const NFmiLocation* location, const NFmiPoint& latlon) const
 {
     if(location)
     {
@@ -165,15 +171,79 @@ const NFmiSeaLevelProbData* NFmiSeaLevelPlumeData::FindSeaLevelProbabilityStatio
     return nullptr;
 }
 
-bool NFmiSeaLevelPlumeData::IsSeaLevelPlumeParam(const NFmiDataIdent& dataIdent)
+bool NFmiSingleSeaLevelPlumeData::IsSeaLevelPlumeParam(unsigned long checkedParameterId) const
 {
-    return dataIdent.GetParamIdent() == kFmiSeaLevel;
+    return seaLevelParameterId_ == checkedParameterId;
 }
 
-bool NFmiSeaLevelPlumeData::IsSeaLevelProbLimitParam(const NFmiDataIdent& dataIdent)
+bool NFmiSingleSeaLevelPlumeData::IsSeaLevelProbLimitParam(const NFmiDataIdent& dataIdent) const
 {
     auto iter = std::find_if(probLimitParams_.begin(), probLimitParams_.end(), 
         [&](const auto& param) {return param.GetIdent() == dataIdent.GetParamIdent(); }
     );
     return iter != probLimitParams_.end();
+}
+
+// *********************************************************************
+// ***************** NFmiSeaLevelPlumeData *****************************
+// *********************************************************************
+
+NFmiSeaLevelPlumeData::NFmiSeaLevelPlumeData() = default;
+
+void NFmiSeaLevelPlumeData::InitFromSettings(const std::string& baseKey)
+{
+    if(!initialized_)
+    {
+        initialized_ = true;
+        settingsBaseKey_ = baseKey;
+        auto childrenCheckList = NFmiSettings::ListChildren(baseKey);
+        if(childrenCheckList.empty())
+        {
+            baseConfigurationMessage_ = "No configurations for Sea-level help data";
+            return;
+        }
+
+        baseConfigurationMessage_ = "Sea-level help data configurations count is " + std::to_string(childrenCheckList.size()) + ": ";
+        for(const auto &childrenName : childrenCheckList)
+        {
+            auto seaLevelPlumeDataKey = settingsBaseKey_ + "::" + childrenName;
+            NFmiSingleSeaLevelPlumeData seaLevelPlumeData;
+            seaLevelPlumeData.InitFromSettings(seaLevelPlumeDataKey);
+            if(!baseConfigurationMessage_.empty())
+            {
+                baseConfigurationMessage_ += ", ";
+            }
+
+            if(seaLevelPlumeData.dataOk())
+            {
+                plumeDataContainer_.push_back(seaLevelPlumeData);
+                baseConfigurationMessage_ += childrenName + " Ok";
+            }
+            else
+            {
+                baseConfigurationMessage_ += childrenName + " Error";
+                if(!configurationErrorMessage_.empty())
+                {
+                    configurationErrorMessage_ += ", ";
+                }
+                configurationErrorMessage_ += seaLevelPlumeData.configurationErrorMessage();
+            }
+        }
+    }
+}
+
+const NFmiSingleSeaLevelPlumeData* NFmiSeaLevelPlumeData::getSeaLevelPlumeData(unsigned long checkedParameterId) const
+{
+    auto iter = std::find_if(plumeDataContainer_.begin(), plumeDataContainer_.end(),
+        [&](const auto& singlePlumeData) {return singlePlumeData.IsSeaLevelPlumeParam(checkedParameterId); }
+    );
+
+    if(iter != plumeDataContainer_.end())
+    {
+        return &(*iter);
+    }
+    else
+    {
+        return nullptr;
+    }
 }
