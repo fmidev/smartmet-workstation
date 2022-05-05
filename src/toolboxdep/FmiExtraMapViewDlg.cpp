@@ -21,6 +21,7 @@
 #include "CtrlViewKeyboardFunctions.h"
 #include "persist2.h"
 #include "ApplicationInterface.h"
+#include "CombinedMapHandlerInterface.h"
 
 // CFmiExtraMapViewDlg dialog
 
@@ -139,6 +140,8 @@ ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP3_BACKWARD, &CFmiExtraMapViewDlg::O
 ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP4_FORWARD, &CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep4Forward)
 ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP4_BACKWARD, &CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep4Backward)
 ON_COMMAND(ID_EDIT_VISUALIZATIONSETTINGS_EXTRA_MAP, &CFmiExtraMapViewDlg::OnEditVisualizationsettingsExtraMap)
+ON_COMMAND(ID_ACCELERATOR_EM_CHANGE_ALL_MODEL_DATA_ON_ROW_TO_PREVIOUS_MODEL_RUN, &CFmiExtraMapViewDlg::OnAcceleratorEmChangeAllModelDataOnRowToPreviousModelRun)
+ON_COMMAND(ID_ACCELERATOR_EM_CHANGE_ALL_MODEL_DATA_ON_ROW_TO_NEXT_MODEL_RUN, &CFmiExtraMapViewDlg::OnAcceleratorEmChangeAllModelDataOnRowToNextModelRun)
 END_MESSAGE_MAP()
 
 
@@ -886,8 +889,17 @@ void CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep4Backward()
 	itsSmartMetDocumentInterface->ChangeTime(4, kBackward, itsMapViewDescTopIndex, 1);
 }
 
-
 void CFmiExtraMapViewDlg::OnEditVisualizationsettingsExtraMap()
 {
 	itsSmartMetDocumentInterface->OpenVisualizationsettingsDialog();
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorEmChangeAllModelDataOnRowToPreviousModelRun()
+{
+	itsSmartMetDocumentInterface->GetCombinedMapHandlerInterface().setModelRunOffsetForAllModelDataOnActiveRow(itsMapViewDescTopIndex, kBackward);
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorEmChangeAllModelDataOnRowToNextModelRun()
+{
+	itsSmartMetDocumentInterface->GetCombinedMapHandlerInterface().setModelRunOffsetForAllModelDataOnActiveRow(itsMapViewDescTopIndex, kForward);
 }
