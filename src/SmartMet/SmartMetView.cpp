@@ -108,6 +108,8 @@ BEGIN_MESSAGE_MAP(CSmartMetView, CView)
     ON_COMMAND(ID_ACCELERATOR_MAP_PAN_UP, &CSmartMetView::OnAcceleratorMapPanUp)
     ON_WM_RBUTTONDBLCLK()
 	ON_WM_DISPLAYCHANGE()
+	ON_COMMAND(ID_ACCELERATOR_CHANGE_ALL_MODEL_DATA_ON_ROW_TO_PREVIOUS_MODEL_RUN, &CSmartMetView::OnAcceleratorChangeAllModelDataOnRowToPreviousModelRun)
+	ON_COMMAND(ID_ACCELERATOR_CHANGE_ALL_MODEL_DATA_ON_ROW_TO_NEXT_MODEL_RUN, &CSmartMetView::OnAcceleratorChangeAllModelDataOnRowToNextModelRun)
 END_MESSAGE_MAP()
 
 // CSmartMetView construction/destruction
@@ -1317,6 +1319,16 @@ void CSmartMetView::OnAcceleratorChangeTimeByStep4Forward()
 void CSmartMetView::OnAcceleratorChangeTimeByStep4Backward()
 {
 	GetGeneralDoc()->GetCombinedMapHandler()->changeTime(4, kBackward, itsMapViewDescTopIndex, 1);
+}
+
+void CSmartMetView::OnAcceleratorChangeAllModelDataOnRowToPreviousModelRun()
+{
+	GetGeneralDoc()->GetCombinedMapHandler()->setModelRunOffsetForAllModelDataOnActiveRow(itsMapViewDescTopIndex, kBackward);
+}
+
+void CSmartMetView::OnAcceleratorChangeAllModelDataOnRowToNextModelRun()
+{
+	GetGeneralDoc()->GetCombinedMapHandler()->setModelRunOffsetForAllModelDataOnActiveRow(itsMapViewDescTopIndex, kForward);
 }
 
 void CSmartMetView::PutWarningFlagTimerOn(void)

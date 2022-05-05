@@ -4,6 +4,7 @@
 #include "catlog/catlog.h"
 #include "NFmiPtrList.h"
 #include "NFmiCombinedMapModeState.h"
+#include "FmiNMeteditLibraryDefinitions.h"
 
 #include <boost/shared_ptr.hpp>
 #include <vector>
@@ -129,6 +130,8 @@ public:
     unsigned int getRelativeRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex) override;
     void hideShowAllMapViewParams(unsigned int mapViewDescTopIndex, bool hideAllObservations, bool showAllObservations, bool hideAllForecasts, bool showAllForecasts) override;
     void setModelRunOffset(const NFmiMenuItem& menuItem, int viewRowIndex) override;
+    bool setModelRunOffset(boost::shared_ptr<NFmiDrawParam>& drawParam, FmiMenuCommandType command, unsigned int mapViewDescTopIndex, int viewRowIndex);
+    void setModelRunOffsetForAllModelDataOnActiveRow(unsigned int mapViewDescTopIndex, FmiDirection direction) override;
     void activateView(const NFmiMenuItem& menuItem, int rowIndex) override;
     void addViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& menuItem, int realRowIndex, bool isViewMacroDrawParam, const std::string* macroParamInitFileName) override;
     void addCrossSectionView(const NFmiMenuItem& menuItem, int viewRowIndex, bool treatAsViewMacro) override;

@@ -103,6 +103,7 @@ public:
     virtual unsigned int getRelativeRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex) = 0;
     virtual void hideShowAllMapViewParams(unsigned int mapViewDescTopIndex, bool hideAllObservations, bool showAllObservations, bool hideAllForecasts, bool showAllForecasts) = 0;
     virtual void setModelRunOffset(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
+    virtual void setModelRunOffsetForAllModelDataOnActiveRow(unsigned int mapViewDescTopIndex, FmiDirection direction) = 0;
     virtual void activateView(const NFmiMenuItem& menuItem, int rowIndex) = 0;
     virtual void addViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& menuItem, int realRowIndex, bool isViewMacroDrawParam, const std::string* macroParamInitFileName) = 0;
     virtual void addCrossSectionView(const NFmiMenuItem& menuItem, int viewRowIndex, bool treatAsViewMacro) = 0;

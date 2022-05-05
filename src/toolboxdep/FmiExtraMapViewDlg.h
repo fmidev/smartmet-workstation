@@ -155,4 +155,6 @@ public:
 	afx_msg void OnAcceleratorChangeTimeByStep4Forward();
 	afx_msg void OnAcceleratorChangeTimeByStep4Backward();
 	afx_msg void OnEditVisualizationsettingsExtraMap();
+	afx_msg void OnAcceleratorEmChangeAllModelDataOnRowToPreviousModelRun();
+	afx_msg void OnAcceleratorEmChangeAllModelDataOnRowToNextModelRun();
 };

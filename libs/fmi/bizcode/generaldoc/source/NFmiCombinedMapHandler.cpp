@@ -2711,23 +2711,62 @@ boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::getDrawParamFromViewLis
 
 void NFmiCombinedMapHandler::setModelRunOffset(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
-	boost::shared_ptr<NFmiDrawParam> modifiedDrawParam = getDrawParamFromViewLists(menuItem, viewRowIndex);
-	if(modifiedDrawParam)
+	auto modifiedDrawParam = getDrawParamFromViewLists(menuItem, viewRowIndex);
+	setModelRunOffset(modifiedDrawParam, menuItem.CommandType(), menuItem.MapViewDescTopIndex(), viewRowIndex);
+}
+
+bool NFmiCombinedMapHandler::setModelRunOffset(boost::shared_ptr<NFmiDrawParam> &drawParam, FmiMenuCommandType command, unsigned int mapViewDescTopIndex, int viewRowIndex)
+{
+	if(drawParam)
 	{
-		if(menuItem.CommandType() == kFmiModelRunOffsetPrevious)
+		auto oldModelRunIndex = drawParam->ModelRunIndex();
+		if(command == kFmiModelRunOffsetPrevious)
 		{
-			modifiedDrawParam->ModelOriginTime(NFmiMetTime::gMissingTime); // nollataan mahd. fiksattu origin aika
-			modifiedDrawParam->ModelRunIndex(modifiedDrawParam->ModelRunIndex() - 1); // siirretään offset edelliseen aikaan
+			drawParam->ModelOriginTime(NFmiMetTime::gMissingTime); // nollataan mahd. fiksattu origin aika
+			drawParam->ModelRunIndex(drawParam->ModelRunIndex() - 1); // siirretään offset edelliseen aikaan
 		}
-		else if(menuItem.CommandType() == kFmiModelRunOffsetNext)
+		else if(command == kFmiModelRunOffsetNext)
 		{
-			modifiedDrawParam->ModelOriginTime(NFmiMetTime::gMissingTime); // nollataan mahd. fiksattu origin aika
-			modifiedDrawParam->ModelRunIndex(modifiedDrawParam->ModelRunIndex() + 1); // siirretään offset seuraavaan aikaan
-			if(modifiedDrawParam->ModelRunIndex() > 0)
-				modifiedDrawParam->ModelRunIndex(0);
+			drawParam->ModelOriginTime(NFmiMetTime::gMissingTime); // nollataan mahd. fiksattu origin aika
+			drawParam->ModelRunIndex(drawParam->ModelRunIndex() + 1); // siirretään offset seuraavaan aikaan
+			if(drawParam->ModelRunIndex() > 0)
+				drawParam->ModelRunIndex(0);
 		}
 
-		makeMapViewRowDirty(menuItem.MapViewDescTopIndex(), viewRowIndex);
+		if(oldModelRunIndex != drawParam->ModelRunIndex())
+		{
+			makeMapViewRowDirty(mapViewDescTopIndex, viewRowIndex);
+			return true;
+		}
+	}
+	return false;
+}
+
+void NFmiCombinedMapHandler::setModelRunOffsetForAllModelDataOnActiveRow(unsigned int mapViewDescTopIndex, FmiDirection direction)
+{
+	NFmiDrawParamList* activeDrawParamList = getDrawParamListWithRealRowNumber(mapViewDescTopIndex, absoluteActiveViewRow(mapViewDescTopIndex));
+	if(activeDrawParamList)
+	{
+		bool needsUpdate = false;
+		auto command = (direction == kBackward) ? kFmiModelRunOffsetPrevious : kFmiModelRunOffsetNext;
+		auto relativeRowNumber = getRelativeRowNumber(mapViewDescTopIndex, absoluteActiveViewRow(mapViewDescTopIndex));
+		for(activeDrawParamList->Reset(); activeDrawParamList->Next(); )
+		{
+			boost::shared_ptr<NFmiDrawParam> drawParam = activeDrawParamList->Current();
+			if(drawParam && drawParam->IsModelRunDataType())
+			{
+				auto oldModelRunIndex = drawParam->ModelRunIndex();
+				if(setModelRunOffset(drawParam, command, mapViewDescTopIndex, relativeRowNumber))
+				{
+					needsUpdate = true;
+				}
+			}
+		}
+
+		if(needsUpdate)
+		{
+			ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: All active row model data model runs changed CTRL + SHIFT + left/right arrow key");
+		}
 	}
 }
 
