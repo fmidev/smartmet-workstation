@@ -387,15 +387,11 @@ namespace ModelClimatology
     {
         // There is allways 11 different fractile classes for ERA data (if that changes, code must be adjusted)
         eraFractileLabels.push_back("F100 ");
-        eraFractileLabels.push_back("F99  ");
         eraFractileLabels.push_back("F97.5");
-        eraFractileLabels.push_back("F95  ");
-        eraFractileLabels.push_back("F87.5");
+        eraFractileLabels.push_back("F90  ");
         eraFractileLabels.push_back("F50  ");
-        eraFractileLabels.push_back("F12.5");
-        eraFractileLabels.push_back("F5   ");
+        eraFractileLabels.push_back("F10  ");
         eraFractileLabels.push_back("F2.5 ");
-        eraFractileLabels.push_back("F1   ");
         eraFractileLabels.push_back("F0   ");
     }
 
@@ -431,27 +427,25 @@ namespace ModelClimatology
         // Init labels also
         initFractileLabelss();
 
-        AddRangeParamToMap(eraParamMap, kFmiCAPE, 4547, 4557, "Cape");
         // add both dewpoint params for same param range
-        AddRangeParamToMap(eraParamMap, kFmiDewPoint, 4536, 4546, "Td");
-        AddRangeParamToMap(eraParamMap, kFmiDewPoint2M, 4536, 4546, "Td");
-        AddRangeParamToMap(eraParamMap, kFmiIceCover, 4558, 4568, "IceCover");
-        AddRangeParamToMap(eraParamMap, kFmiMaximumTemperature, 4580, 4590, "T-max");
-        AddRangeParamToMap(eraParamMap, kFmiMinimumTemperature, 4591, 4601, "T-min");
-        AddRangeParamToMap(eraParamMap, kFmiPressure, 4613, 4623, "P");
-        AddRangeParamToMap(eraParamMap, kFmiSnowDepth, 4569, 4579, "SnowDepth");
-        AddRangeParamToMap(eraParamMap, kFmiTemperatureSea, 4602, 4612, "T-sea");
-        AddRangeParamToMap(eraParamMap, kFmiTotalColumnWater, 4624, 4634, "TCW");
+        //AddRangeParamToMap(eraParamMap, kFmiDewPoint, 4536, 4546, "Td");
+        //AddRangeParamToMap(eraParamMap, kFmiDewPoint2M, 4536, 4546, "Td");
+        //AddRangeParamToMap(eraParamMap, kFmiIceCover, 4558, 4568, "IceCover");
+        //AddRangeParamToMap(eraParamMap, kFmiMaximumTemperature, 4580, 4590, "T-max");
+        //AddRangeParamToMap(eraParamMap, kFmiMinimumTemperature, 4591, 4601, "T-min");
+        //AddRangeParamToMap(eraParamMap, kFmiPressure, 4613, 4623, "P");
+        //AddRangeParamToMap(eraParamMap, kFmiSnowDepth, 4569, 4579, "SnowDepth");
+        //AddRangeParamToMap(eraParamMap, kFmiTemperatureSea, 4602, 4612, "T-sea");
+        //AddRangeParamToMap(eraParamMap, kFmiTotalColumnWater, 4624, 4634, "TCW");
 
-        // Add 1h and 3h precipitations both for same fraktile indecies
-        AddInitializerListToMap(eraParamMap, { kFmiPrecipitation1h, kFmiPrecipitation3h, kFmiPrecipitationRate }, { 946, 945, 4516, 943, 4517, 935, 4518, 923, 4519, 921, 920 }, "rr3h");
         // Both temperatures also for same params
-        AddInitializerListToMap(eraParamMap, { kFmiTemperature, kFmiTemperature2M }, { 871, 4500, 4501, 4502, 4503, 874, 4504, 4505, 4506, 4507, 877 }, "T");
-        AddInitializerListToMap(eraParamMap, { kFmiTotalCloudCover }, { 881, 4508, 4509, 4510, 4511, 884, 4512, 4513, 4514, 4515, 887 }, "N");
+        AddInitializerListToMap(eraParamMap, { kFmiTemperature, kFmiTemperature2M }, { 871, 4501, 872, 874, 876, 4506, 877 }, "T");
         // all possible wind gusts added for same params
-        AddInitializerListToMap(eraParamMap, { kFmiWindGust, kFmiHourlyMaximumGust, kFmiWindGust2 }, { 1117, 4528, 4529, 4530, 4531, 1120, 4532, 4533, 4534, 4535, 1123 }, "WindGust");
-        AddInitializerListToMap(eraParamMap, { kFmiWindSpeedMS }, { 1110, 4520, 4521, 4522, 4523, 1113, 4524, 4525, 4526, 4527, 1116 }, "WS");
-    }
+        AddInitializerListToMap(eraParamMap, { kFmiWindGust, kFmiHourlyMaximumGust, kFmiWindGust2 }, { 1117, 4529, 1118, 1120 }, "WindGust");
+        AddInitializerListToMap(eraParamMap, { kFmiWindSpeedMS }, { 1110, 4521, 1111, 1113 }, "WS");
+		AddInitializerListToMap(eraParamMap, { kFmiCAPE}, { 4547, 4549, 4690, 4552 }, "CAPE");
+		AddInitializerListToMap(eraParamMap, { kFmiTemperatureSea }, { 4602, 4604, 4686, 4607, 4689, 4610, 4612 }, "Temperature Sea");
+	}
 }
 
 void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime1(FmiParameterName mainParameter, boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon)
