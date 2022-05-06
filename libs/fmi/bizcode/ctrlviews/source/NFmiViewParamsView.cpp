@@ -21,6 +21,7 @@
 #include "NFmiMacroParamDataCache.h"
 #include "CombinedMapHandlerInterface.h"
 #include "NFmiFastInfoUtils.h"
+#include "NFmiFileString.h"
 
 #include <gdiplus.h>
 #include "boost\math\special_functions\round.hpp"
@@ -520,7 +521,13 @@ std::string NFmiViewParamsView::ComposeToolTipText(const NFmiPoint& thePlace)
 				{
 					try
 					{
-						return CtrlViewUtils::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), drawParam);
+						std::string macroParamTooltip = "File: ";
+						NFmiFileString macroParamFilename = drawParam->InitFileName();
+						macroParamFilename.Extension("st");
+						macroParamTooltip += macroParamFilename;
+						macroParamTooltip += "<br><hr color=red><br>"; // väliviiva
+						macroParamTooltip += CtrlViewUtils::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), drawParam);
+						return macroParamTooltip;
 					}
 					catch(...)
 					{
