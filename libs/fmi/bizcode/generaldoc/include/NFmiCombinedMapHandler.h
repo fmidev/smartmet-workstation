@@ -136,11 +136,9 @@ public:
     void addViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& menuItem, int realRowIndex, bool isViewMacroDrawParam, const std::string* macroParamInitFileName) override;
     void addCrossSectionView(const NFmiMenuItem& menuItem, int viewRowIndex, bool treatAsViewMacro) override;
     void addView(const NFmiMenuItem& menuItem, int viewRowIndex) override;
-    void addAsOnlyView(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void changeParamLevel(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void removeView(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void removeAllViews(unsigned int mapViewDescTopIndex, int viewRowIndex) override;
-    void addAsOnlyCrossSectionView(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void removeAllCrossSectionViews(int viewRowIndex) override;
     void toggleShowDifferenceToOriginalData(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void changeAllProducersInMapRow(const NFmiMenuItem& menuItem, int viewRowIndex, bool useCrossSectionParams) override;
@@ -155,15 +153,13 @@ public:
     bool copyPasteCrossSectionDrawParamListUsedYet() const { return  copyPasteCrossSectionDrawParamListUsedYet_; }
     bool copyPasteDrawParamListVectorUsedYet() const  override { return  copyPasteDrawParamListVectorUsedYet_; }
     NFmiDrawParamList* getCrossSectionViewDrawParamList(int viewRowIndex) override;
-    void updateMacroDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex, bool crossSectionCase, boost::shared_ptr<NFmiDrawParam>& drawParam) override;
-    boost::shared_ptr<NFmiDrawParam> getUsedMacroDrawParam(const NFmiMenuItem& menuItem) override;
-    bool modifyMacroDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex, bool crossSectionCase) override;
     void modifyCrossSectionDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void activateCrossSectionParam(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void modifyView(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void toggleShowLegendState(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void swapViewRows(const NFmiMenuItem& menuItem) override;
     void saveDrawParamSettings(const NFmiMenuItem& menuItem, int viewRowIndex) override;
+    void saveDrawParamSettings(boost::shared_ptr<NFmiDrawParam>& drawParam) override;
     void forceStationViewRowUpdate(unsigned int mapViewDescTopIndex, unsigned int theRealRowIndex) override;
     void reloadDrawParamSettings(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void applyFixeDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex) override;

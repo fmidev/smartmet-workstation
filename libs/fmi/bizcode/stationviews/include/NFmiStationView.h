@@ -121,7 +121,6 @@ protected:
    std::string GetCompareObservationToolTipString(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
    NFmiPoint CalcFontSize(int theMinSize, int theMaxSize, bool fPrinting) const;
 
-   void SetupUsedDrawParam(void);
    virtual bool PrepareForStationDraw(void);
    virtual void ModifyTextEnvironment(void);
    virtual NFmiString GetPrintedText(float theValue);

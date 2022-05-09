@@ -341,7 +341,6 @@ void NFmiStationView::Draw(NFmiToolBox* theGTB)
 	}
 
 	ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
-	SetupUsedDrawParam();
 	CalculateGeneralStationRect();
 	itsSymbolBulkDrawData.clear();
 	itsCachedSpaceOutFactors = NFmiPoint::gMissingLatlon;
@@ -3232,32 +3231,6 @@ std::string NFmiStationView::GetToolTipValueStr(float theValue, boost::shared_pt
 	str += "</font></b>";
 
 	return str;
-}
-
-// palauttaa normaalin itsDrawParam datan osionsa (tai 0-pointterin) paitsi
-// jos kyseessä on macroParam-tyyppistä dataa ja parametrin nimi ei ole
-// default arvossa eli macroParam. Tällöin etsitään MacroParamSystemiltä
-// haluttu drawParam.
-void NFmiStationView::SetupUsedDrawParam(void)
-{
-	if(itsDrawParam)
-	{
-		// Tämä hide/show pitää viritttää näin, koska parametrin piilotus/näyttö optio menee muuten hukkaan.
-		bool hide = itsDrawParam->IsParamHidden(); 
-		NFmiInfoData::Type dataType = itsDrawParam->DataType();
-		if(itsDrawParam->IsMacroParamCase(false))
-		{
-			NFmiMacroParamSystem &mpSystem = itsCtrlViewDocumentInterface->MacroParamSystem();
-            auto macroParamPtr = mpSystem.GetWantedMacro(itsDrawParam->InitFileName());
-            if(macroParamPtr)
-			{
-				itsDrawParam->Init(macroParamPtr->DrawParam());
-				// datatyypin pitää säilyä!! muuten poikkileikkausnäytössä ei tule oikeaa tyyppiä
-				itsDrawParam->DataType(dataType); 
-			}
-			itsDrawParam->HideParam(hide);
-		}
-	}
 }
 
 // Hakee annetusta infosta annetusta paikasta, levelistä ja parametrista
