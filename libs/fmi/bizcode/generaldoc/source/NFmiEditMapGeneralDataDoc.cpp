@@ -583,6 +583,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitColorContourLegendSettings();
 	InitParameterInterpolationFixer();
 	InitSeaLevelPlumeData();
+	UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();
 
 #ifdef SETTINGS_DUMP // TODO enable this with a command line parameter
 	std::string str = NFmiSettings::ToString();
@@ -4538,18 +4539,12 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		case kFmiAddParamCrossSectionView:
 			GetCombinedMapHandler()->addCrossSectionView(*menuItem, itsCurrentCrossSectionRowIndex, false);
 			break;
-		case kFmiAddAsOnlyView:
-			GetCombinedMapHandler()->addAsOnlyView(*menuItem, itsCurrentViewRowIndex);
-			break;
 		case kFmiChangeParam:
 		{
 			auto crossSectionCase = menuItem->MapViewDescTopIndex() == CtrlViewUtils::kFmiCrossSectionView;
 			GetCombinedMapHandler()->changeParamLevel(*menuItem, crossSectionCase ? itsCurrentCrossSectionRowIndex : itsCurrentViewRowIndex);
 			break;
 		}
-		case kFmiAddAsOnlyParamCrossSectionView:
-			GetCombinedMapHandler()->addAsOnlyCrossSectionView(*menuItem, itsCurrentCrossSectionRowIndex);
-			break;
 		case kFmiRemoveView:
 			GetCombinedMapHandler()->removeView(*menuItem, itsCurrentViewRowIndex);
 			break;
