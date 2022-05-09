@@ -7,6 +7,7 @@
 #include "NFmiQueryDataUtil.h"
 #include "NFmiMacroParamFunctions.h"
 #include "NFmiPathUtils.h"
+#include "NFmiDrawParam.h"
 #include "boost/algorithm/string.hpp"
 #include <list>
 
@@ -287,6 +288,23 @@ boost::shared_ptr<NFmiMacroParam> NFmiMacroParamSystem::GetWantedMacro(const std
         return currentMacroPointerData.foundMacroParam;
     else
         return nullptr;
+}
+
+// theTotalFileName parametri viittaa drawParam tiedostoon.
+bool NFmiMacroParamSystem::ReloadDrawParamFromFile(const std::string& theTotalFileName)
+{
+	auto foundMacroParam = GetWantedMacro(theTotalFileName);
+	if(foundMacroParam)
+	{
+		// Pit‰‰ ladata erikseen originaali drawParam asetukset omaan olioon ja sen avulla initialisoida k‰ytˆss‰ olevan asetukset
+		NFmiDrawParam origDrawParam;
+		if(origDrawParam.Init(theTotalFileName))
+		{
+			foundMacroParam->DrawParam()->Init(&origDrawParam, true);
+			return true;
+		}
+	}
+	return false;
 }
 
 // T‰m‰ on hakemistoon siirtymis metodi, t‰t‰ k‰ytet‰‰n jos file-browserilla talletetaan

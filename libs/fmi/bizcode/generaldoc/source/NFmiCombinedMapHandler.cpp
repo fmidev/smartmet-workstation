@@ -1387,13 +1387,13 @@ void NFmiCombinedMapHandler::logMessage(const std::string& logMessage, CatLog::S
 {
 	// Kaikki warning/error/fatal tason viestit pitää flushata heti lokitiedostoon, jos ongelmista seuraa kaatuminen
 	auto flushLogger = severity > CatLog::Severity::Info;
-	CatLog::logMessage(logMessage, severity, category,flushLogger);
+	CatLog::logMessage(logMessage, severity, category, flushLogger);
 }
 
 // On kohdattu vakava virhe, laitetaan käyttäjälle kysely, että lopetetaanko suosiolla ohjelman ajo
 void NFmiCombinedMapHandler::logAndWarnUser(const std::string& logMessage, const std::string& titleString, CatLog::Severity severity, CatLog::Category category, bool addAbortOption)
 {
-	// Lopun parametrit false (kysy käyttäjältä dialogilla), true (laita mukaan abort optio), true (flushaa lokiviestit heti tiedostoon, jos vaikka kaatuu kohta)
+	// Lopun parametrit false (kysy käyttäjältä dialogilla) ja true (flushaa lokiviestit heti tiedostoon, jos vaikka kaatuu kohta)
 	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->LogAndWarnUser(logMessage, titleString, severity, category, false, addAbortOption, true);
 }
 
@@ -2521,10 +2521,9 @@ void NFmiCombinedMapHandler::drawParamSettingsChangedDirtyActions(unsigned int m
 	{
 	} // Jos jokin muu kuin karttanäyttö, MapViewDescTop(mapViewDescTopIndex) -kutsu heittää poikkeuksen ja se on ok tässä
 
-	if(drawParam)
+	if(drawParam && drawParam->IsMacroParamCase(true))
 	{
-		if(drawParam->IsMacroParamCase(true))
-			::getMacroParamDataCache().clearMacroParamCache(mapViewDescTopIndex, realRowIndex, drawParam->InitFileName());
+		::getMacroParamDataCache().clearMacroParamCache(mapViewDescTopIndex, realRowIndex, drawParam->InitFileName());
 	}
 	mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, true);
 }
@@ -2899,8 +2898,6 @@ void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, c
 {
 	auto& infoOrganizer = ::getInfoOrganizer();
 	boost::shared_ptr<NFmiDrawParam> drawParam = infoOrganizer.CreateDrawParam(menuItem.DataIdent(), menuItem.Level(), menuItem.DataType());
-	if(menuItem.MapViewDescTopIndex() == CtrlViewUtils::kFmiCrossSectionView)
-		drawParam = infoOrganizer.CreateCrossSectionDrawParam(menuItem.DataIdent(), menuItem.DataType());
 	if(!drawParam)
 		return; // HUOM!! Ei saisi mennä tähän!!!!!!!
 
@@ -2934,6 +2931,7 @@ void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, c
 			logStr += menuItem.DataIdent().GetParamName();
 		logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Visualization);
 
+		// ChangeParam tapauksessa vaihdettava parametri on jo poistettu listasta, ja siksi tässä vain uusi samaan paikkaan
 		if(insertParamCase || changeParamCase)
 			drawParamList->Add(drawParam, menuItem.IndexInViewRow());
 		else if(!normalParameterAdd)
@@ -3008,18 +3006,6 @@ void NFmiCombinedMapHandler::addCrossSectionView(const NFmiMenuItem& menuItem, i
 	drawParamSettingsChangedDirtyActions(menuItem.MapViewDescTopIndex(), getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), drawParam);
 }
 
-void NFmiCombinedMapHandler::addAsOnlyView(const NFmiMenuItem& menuItem, int viewRowIndex)
-{
-	auto *drawParamList = getDrawParamList(menuItem.MapViewDescTopIndex(), viewRowIndex);
-	if(drawParamList)
-	{
-		drawParamList->Clear();
-		// Tyhjennän macroParamDataCache rivin tässä, koska se on helpointa tässä vaiheessa
-		::getMacroParamDataCache().clearMacroParamCacheRow(menuItem.MapViewDescTopIndex(), getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex));
-	}
-	addView(menuItem, viewRowIndex);
-}
-
 void NFmiCombinedMapHandler::changeParamLevel(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
 	auto* drawParamList = getDrawParamList(menuItem.MapViewDescTopIndex(), viewRowIndex);
@@ -3076,14 +3062,6 @@ void NFmiCombinedMapHandler::removeAllViews(unsigned int mapViewDescTopIndex, in
 		makeViewRowDirtyActions(mapViewDescTopIndex, getRealRowNumber(mapViewDescTopIndex, viewRowIndex), drawParamList);
 		activeEditedParameterMayHaveChangedViewUpdateFlagSetting(mapViewDescTopIndex);
 	}
-}
-
-void NFmiCombinedMapHandler::addAsOnlyCrossSectionView(const NFmiMenuItem& menuItem, int viewRowIndex)
-{
-	auto *crossSectionViewDrawParamList = getCrossSectionViewDrawParamList(viewRowIndex);
-	if(crossSectionViewDrawParamList)
-		crossSectionViewDrawParamList->Clear();
-	addCrossSectionView(menuItem, viewRowIndex, false);
 }
 
 void NFmiCombinedMapHandler::removeAllCrossSectionViews(int viewRowIndex)
@@ -3171,14 +3149,6 @@ void NFmiCombinedMapHandler::pasteDrawParamOptions(const NFmiMenuItem& menuItem,
 		wantedDrawParamList->Dirty(true);
 		if(useCrossSectionParams == false)
 			updateToModifiedDrawParam(menuItem.MapViewDescTopIndex(), drawParam, viewRowIndex);
-		if(NFmiDrawParam::IsMacroParamCase(menuItem.DataType()))
-		{
-			// macroParam pitää vielä päivittää macroParamSystemiin!!
-			std::string macroParamName = menuItem.DataIdent().GetParamName(); // tässä tod. init fileName
-			auto macroParamPtr = ::getMacroParamSystem().GetWantedMacro(macroParamName);
-			if(macroParamPtr)
-				macroParamPtr->DrawParam()->Init(copyPasteDrawParam_.get(), true);
-		}
 	}
 }
 
@@ -3223,74 +3193,16 @@ NFmiDrawParamList* NFmiCombinedMapHandler::getCrossSectionViewDrawParamList(int 
 	return nullptr;
 }
 
-void NFmiCombinedMapHandler::updateMacroDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex, bool crossSectionCase, boost::shared_ptr<NFmiDrawParam>& drawParam)
-{
-	NFmiDrawParamList* drawParamList = crossSectionCase ? getCrossSectionViewDrawParamList(viewRowIndex) : getDrawParamList(menuItem.MapViewDescTopIndex(), viewRowIndex);
-	if(drawParamList)
-	{
-		if(drawParamList->Index(menuItem.IndexInViewRow()))
-		{
-			drawParamList->Current()->Init(drawParam);
-			drawParamList->Dirty(true);
-			drawParamSettingsChangedDirtyActions(menuItem.MapViewDescTopIndex(), getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), drawParam);
-		}
-	}
-}
-
-boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::getUsedMacroDrawParam(const NFmiMenuItem& menuItem)
-{
-	std::string macroParamName = menuItem.DataIdent().GetParamName(); // tässä tod. init fileName
-	auto macroParamPtr = ::getMacroParamSystem().GetWantedMacro(macroParamName);
-	if(macroParamPtr)
-	{
-		auto usedDrawParam = macroParamPtr->DrawParam();
-		if(usedDrawParam)
-		{
-			usedDrawParam->ViewMacroDrawParam(menuItem.ViewMacroDrawParam()); // tämä pitää vielä asettaa
-			return usedDrawParam;
-		}
-	}
-	throw std::runtime_error(std::string("Error in ") + __FUNCTION__ + ": couldn't find searched macroParam '" + macroParamName + "'");
-}
-
-// muokataan macroParametrin asetuksia
-bool NFmiCombinedMapHandler::modifyMacroDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex, bool crossSectionCase)
-{
-	bool updateStatus = false;
-	boost::shared_ptr<NFmiDrawParam> usedDrawParam = getUsedMacroDrawParam(menuItem);
-	if(usedDrawParam)
-	{
-		CWnd* parentView = ApplicationInterface::GetApplicationInterfaceImplementation()->GetView(menuItem.MapViewDescTopIndex());
-		CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), usedDrawParam, ::getMacroPathSettings().DrawParamPath(), true, false, menuItem.MapViewDescTopIndex(), parentView);
-		if(dlg.DoModal() == IDOK)
-		{
-			updateStatus = true;
-		}
-		else
-			updateStatus = dlg.RefreshPressed(); // myös false:lla halutaan ruudun päivitys, koska jos painettu päivitä-nappia ja sitten cancelia, pitää ruutu päivittää
-
-		if(updateStatus)
-			updateMacroDrawParam(menuItem, viewRowIndex, crossSectionCase, usedDrawParam);
-	}
-	return updateStatus;
-}
-
 void NFmiCombinedMapHandler::modifyCrossSectionDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
-	// TÄHÄN aluksi pika viritys macroParam asetukselle
-	if(menuItem.DataType() == NFmiInfoData::kCrossSectionMacroParam)
-		modifyMacroDrawParam(menuItem, viewRowIndex, true);
-	else
+	boost::shared_ptr<NFmiDrawParam> modifiedDrawParam = getCrosssectionDrawParamFromViewLists(menuItem, viewRowIndex);
+	if(modifiedDrawParam)
 	{
-		boost::shared_ptr<NFmiDrawParam> modifiedDrawParam = getCrosssectionDrawParamFromViewLists(menuItem, viewRowIndex);
-		if(modifiedDrawParam)
+		CWnd* parentView = ApplicationInterface::GetApplicationInterfaceImplementation()->GetView(menuItem.MapViewDescTopIndex());
+		CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), modifiedDrawParam, ::getMacroPathSettings().DrawParamPath(), false, true, menuItem.MapViewDescTopIndex(), parentView);
+		if(dlg.DoModal() == IDOK)
 		{
-			CWnd* parentView = ApplicationInterface::GetApplicationInterfaceImplementation()->GetView(menuItem.MapViewDescTopIndex());
-			CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), modifiedDrawParam, ::getMacroPathSettings().DrawParamPath(), false, true, menuItem.MapViewDescTopIndex(), parentView);
-			if(dlg.DoModal() == IDOK)
-			{
-				drawParamSettingsChangedDirtyActions(menuItem.MapViewDescTopIndex(), getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), modifiedDrawParam);
-			}
+			drawParamSettingsChangedDirtyActions(menuItem.MapViewDescTopIndex(), getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), modifiedDrawParam);
 		}
 	}
 }
@@ -3311,8 +3223,7 @@ void NFmiCombinedMapHandler::activateCrossSectionParam(const NFmiMenuItem& menuI
 
 void NFmiCombinedMapHandler::modifyView(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
-	bool macroParamCase = NFmiDrawParam::IsMacroParamCase(menuItem.DataType());
-	boost::shared_ptr<NFmiDrawParam> drawParam = macroParamCase ? getUsedMacroDrawParam(menuItem) : getUsedMapViewDrawParam(menuItem, viewRowIndex);
+	boost::shared_ptr<NFmiDrawParam> drawParam = getUsedMapViewDrawParam(menuItem, viewRowIndex);
 	if(drawParam)
 	{
 		NFmiMetEditorTypes::View viewType = menuItem.ViewType();
@@ -3322,36 +3233,18 @@ void NFmiCombinedMapHandler::modifyView(const NFmiMenuItem& menuItem, int viewRo
 			drawParam->StationDataViewType(viewType);
 		else
 			drawParam->GridDataPresentationStyle(viewType);
-		NFmiDrawParamList* drawParamList = getDrawParamList(menuItem.MapViewDescTopIndex(), viewRowIndex);
-		if(drawParamList)
-		{
-			drawParamList->Dirty(true);
-			if(macroParamCase)
-				updateMacroDrawParam(menuItem, viewRowIndex, false, drawParam);
-			else
-				updateToModifiedDrawParam(menuItem.MapViewDescTopIndex(), drawParam, viewRowIndex);
 
-			drawParamSettingsChangedDirtyActions(menuItem.MapViewDescTopIndex(), getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), drawParam);
-		}
+		updateToModifiedDrawParam(menuItem.MapViewDescTopIndex(), drawParam, viewRowIndex);
 	}
 }
 
 void NFmiCombinedMapHandler::toggleShowLegendState(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
-	bool macroParamCase = NFmiDrawParam::IsMacroParamCase(menuItem.DataType());
-	boost::shared_ptr<NFmiDrawParam> drawParam = macroParamCase ? getUsedMacroDrawParam(menuItem) : getUsedMapViewDrawParam(menuItem, viewRowIndex);
+	boost::shared_ptr<NFmiDrawParam> drawParam = getUsedMapViewDrawParam(menuItem, viewRowIndex);
 	if(drawParam)
 	{
 		drawParam->ShowColorLegend(!drawParam->ShowColorLegend());
-		NFmiDrawParamList* drawParamList = getDrawParamList(menuItem.MapViewDescTopIndex(), viewRowIndex);
-		if(drawParamList)
-		{
-			drawParamList->Dirty(true);
-			if(macroParamCase)
-				updateMacroDrawParam(menuItem, viewRowIndex, false, drawParam);
-			else
-				updateToModifiedDrawParam(menuItem.MapViewDescTopIndex(), drawParam, viewRowIndex);
-		}
+		updateToModifiedDrawParam(menuItem.MapViewDescTopIndex(), drawParam, viewRowIndex);
 	}
 }
 
@@ -3373,25 +3266,42 @@ void NFmiCombinedMapHandler::swapViewRows(const NFmiMenuItem& menuItem)
 	}
 }
 
-void NFmiCombinedMapHandler::saveDrawParamSettings(const NFmiMenuItem& menuItem, int viewRowIndex)
+void NFmiCombinedMapHandler::saveDrawParamSettings(boost::shared_ptr<NFmiDrawParam> &drawParam)
 {
-	bool macroParamCase = NFmiDrawParam::IsMacroParamCase(menuItem.DataType());
-	boost::shared_ptr<NFmiDrawParam> drawParam = macroParamCase ? getUsedMacroDrawParam(menuItem) : getUsedMapViewDrawParam(menuItem, viewRowIndex);
 	if(drawParam)
 	{
+		const auto& initFileName = drawParam->InitFileName();
 		if(drawParam->ViewMacroDrawParam())
 		{
-			std::string msgStr = ::GetDictionaryString("Cannot store drawParam");
-			std::string dialogTitleStr = ::GetDictionaryString("DrawParam was in viewmacro, you must save the changes made to viewMacro");
+			std::string msgStr = ::GetDictionaryString("the given DrawParam was in a viewmacro, cannot store directly, you must save the changes made to the viewMacro");
+			std::string dialogTitleStr = ::GetDictionaryString("Cannot store the drawParam");
 			logAndWarnUser(msgStr, dialogTitleStr, CatLog::Severity::Error, CatLog::Category::Macro, false);
 		}
-		else if(!drawParam->StoreData(drawParam->InitFileName()))
+		else if(drawParam->StoreData(initFileName))
 		{
-			std::string msgStr = ::GetDictionaryString("Error storing drawParam");
-			std::string dialogTitleStr = ::GetDictionaryString("Unknown error while trying to store drawParam settings");
+			::getMacroParamSystem().ReloadDrawParamFromFile(initFileName);
+		}
+		else
+		{
+			std::string msgStr = ::GetDictionaryString("Unknown error while trying to store drawParam settings to file: ");
+			auto initFileStr = initFileName.empty() ? drawParam->ParameterAbbreviation() : initFileName;
+			msgStr += initFileStr;
+			std::string dialogTitleStr = ::GetDictionaryString("Error storing the drawParam");
 			logAndWarnUser(msgStr, dialogTitleStr, CatLog::Severity::Error, CatLog::Category::Macro, false);
 		}
 	}
+	else
+	{
+		std::string msgStr = ::GetDictionaryString("Cannot store the given drawParam, it was empty, error in application logic?");
+		std::string dialogTitleStr = ::GetDictionaryString("Error storing the drawParam");
+		logAndWarnUser(msgStr, dialogTitleStr, CatLog::Severity::Error, CatLog::Category::Macro, false);
+	}
+}
+
+
+void NFmiCombinedMapHandler::saveDrawParamSettings(const NFmiMenuItem& menuItem, int viewRowIndex)
+{
+	saveDrawParamSettings(getUsedMapViewDrawParam(menuItem, viewRowIndex));
 }
 
 void NFmiCombinedMapHandler::forceStationViewRowUpdate(unsigned int mapViewDescTopIndex, unsigned int theRealRowIndex)
@@ -3406,8 +3316,7 @@ void NFmiCombinedMapHandler::forceStationViewRowUpdate(unsigned int mapViewDescT
 
 void NFmiCombinedMapHandler::reloadDrawParamSettings(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
-	bool macroParamCase = NFmiDrawParam::IsMacroParamCase(menuItem.DataType());
-	boost::shared_ptr<NFmiDrawParam> drawParam = macroParamCase ? getUsedMacroDrawParam(menuItem) : getUsedMapViewDrawParam(menuItem, viewRowIndex);
+	boost::shared_ptr<NFmiDrawParam> drawParam = getUsedMapViewDrawParam(menuItem, viewRowIndex);
 	if(drawParam)
 	{
 		// Pitää ladata erikseen originaali drawParam asetukset omaan olioon ja sen avulla initialisoida käytössä olevan asetukset
@@ -3426,20 +3335,11 @@ void NFmiCombinedMapHandler::applyFixeDrawParam(const NFmiMenuItem& menuItem, in
 
 void NFmiCombinedMapHandler::applyFixeDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex, const std::shared_ptr<NFmiDrawParam>& fixedDrawParam)
 {
-	bool macroParamCase = NFmiDrawParam::IsMacroParamCase(menuItem.DataType());
-	boost::shared_ptr<NFmiDrawParam> drawParam = macroParamCase ? getUsedMacroDrawParam(menuItem) : getUsedMapViewDrawParam(menuItem, viewRowIndex);
+	boost::shared_ptr<NFmiDrawParam> drawParam = getUsedMapViewDrawParam(menuItem, viewRowIndex);
 	if(drawParam && fixedDrawParam)
 	{
 		drawParam->Init(fixedDrawParam.get(), true);
-
-		NFmiDrawParamList* drawParamList = getDrawParamList(menuItem.MapViewDescTopIndex(), viewRowIndex);
-		if(drawParamList)
-			drawParamList->Dirty(true);
-
-		if(macroParamCase)
-			updateMacroDrawParam(menuItem, viewRowIndex, false, drawParam);
-		else
-			updateToModifiedDrawParam(menuItem.MapViewDescTopIndex(), drawParam, viewRowIndex);
+		updateToModifiedDrawParam(menuItem.MapViewDescTopIndex(), drawParam, viewRowIndex);
 	}
 }
 
@@ -3626,37 +3526,29 @@ void NFmiCombinedMapHandler::showCrossSectionDrawParam(const NFmiMenuItem& menuI
 bool NFmiCombinedMapHandler::modifyDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
 	auto mapViewDescTopIndex = menuItem.MapViewDescTopIndex();
-	// TÄHÄN aluksi pika viritys macroParam asetukselle
-	if(NFmiDrawParam::IsMacroParamCase(menuItem.DataType()) && menuItem.ViewMacroDrawParam() == false)
-		return modifyMacroDrawParam(menuItem, viewRowIndex, mapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView);
-	else
+	boost::shared_ptr<NFmiDrawParam> modifiedDrawParam = getDrawParamFromViewLists(menuItem, viewRowIndex);
+	if(modifiedDrawParam)
 	{
-		bool updateStatus = false;
-		boost::shared_ptr<NFmiDrawParam> modifiedDrawParam = getDrawParamFromViewLists(menuItem, viewRowIndex);
-		if(modifiedDrawParam)
+		CWnd* parentView = ApplicationInterface::GetApplicationInterfaceImplementation()->GetView(mapViewDescTopIndex);
+		CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), modifiedDrawParam, ::getMacroPathSettings().DrawParamPath(), true, false, mapViewDescTopIndex, parentView);
+		if(dlg.DoModal() == IDOK)
 		{
-			CWnd* parentView = ApplicationInterface::GetApplicationInterfaceImplementation()->GetView(mapViewDescTopIndex);
-			CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), modifiedDrawParam, ::getMacroPathSettings().DrawParamPath(), true, false, mapViewDescTopIndex, parentView);
-			if(dlg.DoModal() == IDOK)
-			{
-				updateToModifiedDrawParam(mapViewDescTopIndex, modifiedDrawParam, viewRowIndex);
-				updateStatus = true;
-			}
-			else
-				updateStatus = dlg.RefreshPressed(); // myös false:lla halutaan ruudun päivitys, koska jos painettu päivitä-nappia ja sitten cancelia, pitää ruutu päivittää
+			updateToModifiedDrawParam(mapViewDescTopIndex, modifiedDrawParam, viewRowIndex);
+			return true;
 		}
-
-		if(updateStatus)
+		else
 		{
+			bool updateStatus = dlg.RefreshPressed(); // myös false:lla halutaan ruudun päivitys, koska jos painettu päivitä-nappia ja sitten cancelia, pitää ruutu päivittää
 			drawParamSettingsChangedDirtyActions(mapViewDescTopIndex, getRealRowNumber(mapViewDescTopIndex, viewRowIndex), modifiedDrawParam);
+			return updateStatus;
 
 			// Huom! Jos on muutettu border-layer piirtoa niin että se muuttuisi kyseisellä näyttörivillä, niin älä kuitenkaan
 			// tyhjennä kuvaa cachesta. Jollain muulla parametri rivillä voi olla samat asetukset ja se voi niitä vielä käyttää.
 			// Kuvat eivät vie paljoa muistia nyky koneiden RAM määrillä ja aina kun kartta/alue/kuvan geometria muuttuu, ladataan 
 			// näyttömakro, menee kaikki nämä cachet uusiksi kuitenkin.
 		}
-		return updateStatus;
 	}
+	return false;
 }
 
 boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::createTimeSerialViewDrawParam(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam)

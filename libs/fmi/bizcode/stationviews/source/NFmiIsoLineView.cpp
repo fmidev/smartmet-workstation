@@ -1200,7 +1200,6 @@ static NFmiDataMatrix<NFmiPoint> ConvertCoordinateMatrixToDataMatrixPoint(const 
 void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
 {
     LabelBox::InitPixelPerMMRatio(itsToolBox);
-    SetupUsedDrawParam();
 
     NFmiIsoLineData isoLineData;
 
@@ -2276,7 +2275,6 @@ void NFmiIsoLineView::DrawIsoLinesWithToolMaster(void)
 {
     if(itsInfo)
     {
-        SetupUsedDrawParam();
         NFmiIsoLineData isoLineData;
         NFmiRect zoomedAreaRect;
         if(FillGridRelatedData(isoLineData, zoomedAreaRect))
