@@ -537,7 +537,7 @@ std::string NFmiViewParamsView::ComposeToolTipText(const NFmiPoint& thePlace)
 				{
 					bool crossSectionCase = itsMapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView;
 					bool timeSerialCase = itsMapViewDescTopIndex == CtrlViewUtils::kFmiTimeSerialView;
-					std::string str = CtrlViewUtils::GetParamNameString(drawParam, crossSectionCase, true, true, 0, timeSerialCase);
+					std::string str = CtrlViewUtils::GetParamNameString(drawParam, crossSectionCase, true, true, 30, timeSerialCase);
 					std::string tmpLatestObsStr = CtrlViewUtils::GetLatestObservationTimeString(drawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("YYYY.MM.DD HH:mm"), crossSectionCase);
 					if(!tmpLatestObsStr.empty())
 					{
