@@ -1795,26 +1795,26 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
         return;
     }
     itsToolBox = theGTB;
-
+	auto realRowIndex = CalcRealRowIndex();
     auto registeredLayers = itsCtrlViewDocumentInterface->GetWmsSupport()
-        .getRegisteredLayers(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex);
-    auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
+        .getRegisteredLayers(realRowIndex, itsViewGridColumnNumber, itsMapViewDescTopIndex);
+    auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, realRowIndex);
 
     for (const auto& registered : registeredLayers)
     {
         if(!drawParamList->Find(registered, nullptr, NFmiInfoData::kWmsData))
         {
-            itsCtrlViewDocumentInterface->GetWmsSupport().unregisterDynamicLayer(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
+            itsCtrlViewDocumentInterface->GetWmsSupport().unregisterDynamicLayer(realRowIndex, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
         }
         else
         {
             // Vielä jos piirto-optioissa ei ole legendan piirto päällä, poistetaan rekisteröidyistä (en ymmärrä logiikkaa, miten sen saa taas päälle)
             if(!drawParamList->Current()->ShowColorLegend())
-                itsCtrlViewDocumentInterface->GetWmsSupport().unregisterDynamicLayer(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
+                itsCtrlViewDocumentInterface->GetWmsSupport().unregisterDynamicLayer(realRowIndex, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
         }
     }
 
-    auto legends = itsCtrlViewDocumentInterface->GetWmsSupport().getLegends(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex);
+    auto legends = itsCtrlViewDocumentInterface->GetWmsSupport().getLegends(realRowIndex, itsViewGridColumnNumber, itsMapViewDescTopIndex);
     if(legends.empty())
     {
         return;
