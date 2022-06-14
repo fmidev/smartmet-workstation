@@ -1,4 +1,5 @@
 #include "wmssupport/LegendHandler.h"
+#include "catlog/catlog.h"
 
 namespace Wms
 {
@@ -33,7 +34,31 @@ namespace Wms
 
         void LegendHandler::unregisterLayer(int row, int col, int descTop, const NFmiDataIdent &dataIdent)
         {
-            registeredLayers_.at(descTop).at(row).at(col).erase(dataIdent);
+            try
+            {
+                registeredLayers_.at(descTop).at(row).at(col).erase(dataIdent);
+            }
+            catch(std::exception &)
+            { 
+                // Turha näitä on raportoida, en ymmärrä tätä koko systeemiä ja näitä unregisteroidaan jatkuvalla syötöllä ja mikään niistä ei näytä onnistuvan
+                /*  
+                std::string warningMessage = __FUNCTION__;
+                warningMessage += " failed with map-view: ";
+                warningMessage += std::to_string(descTop + 1);
+                warningMessage += ", row: ";
+                warningMessage += std::to_string(row);
+                warningMessage += ", col: ";
+                warningMessage += std::to_string(col);
+                warningMessage += ", param: ";
+                warningMessage += dataIdent.GetParamName();
+                warningMessage += " (id = ";
+                warningMessage += std::to_string(dataIdent.GetParamIdent());
+                warningMessage += "), with error message: \"";
+                warningMessage += e.what();
+                warningMessage += "\"";
+                CatLog::logMessage(warningMessage, CatLog::Severity::Warning, CatLog::Category::Visualization, true);
+                */
+            }
         }
 
         const LegendIdentSet& LegendHandler::getRegisteredLayers(int row, int col, int descTop)
