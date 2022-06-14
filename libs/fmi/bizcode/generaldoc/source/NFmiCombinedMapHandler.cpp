@@ -1990,8 +1990,12 @@ void NFmiCombinedMapHandler::makeDrawedInfoVectorForMapView(std::vector<boost::s
 		if(info)
 		{
 			if(dataType == NFmiInfoData::kMacroParam || dataType == NFmiInfoData::kQ3MacroParam)
-			{ // makroparamille pitää säätää laskettavan hilan alue vastaamaan karttanäytön aluetta
-				NFmiExtraMacroParamData::SetUsedAreaForData(info, area.get());
+			{ 
+				// makroparamille pitää säätää laskettavan hilan alue vastaamaan karttanäytön aluetta
+				if(area)
+				{
+					NFmiExtraMacroParamData::SetUsedAreaForData(info, area.get());
+				}
 			}
 
 			infoVectorOut.push_back(info);
