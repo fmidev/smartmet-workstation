@@ -172,24 +172,27 @@ namespace AddParams
 			auto& wmsSupport = getWmsCallback_();
 			if (!wmsSupport.isConfigured())
 				return;
-			const auto& layerTree = wmsSupport.peekCapabilityTree();
-			const auto& wmsLayerTree = dynamic_cast<const Wms::CapabilityNode&>(layerTree);
+			const auto* layerTree = wmsSupport.peekCapabilityTree();
+            if(layerTree)
+            {
+                const auto& wmsLayerTree = dynamic_cast<const Wms::CapabilityNode&>(*layerTree);
 
-			auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto& categoryData) {return categoryName == categoryData->categoryName(); });
-			if (iter != categoryDataVector_.end())
-			{
-				dialogDataNeedsUpdate_ |= (*iter)->updateWmsData(wmsLayerTree, dataCategory);
-			}
-			else
-			{
-				// Add wms layers as a new category
-				auto categoryDataPtr = std::make_unique<CategoryData>(categoryName, dataCategory);
-				categoryDataPtr->updateWmsData(wmsLayerTree, dataCategory);
-				categoryDataVector_.push_back(std::move(categoryDataPtr));
-				dialogDataNeedsUpdate_ = true;
-			}
+                auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto& categoryData) {return categoryName == categoryData->categoryName(); });
+                if(iter != categoryDataVector_.end())
+                {
+                    dialogDataNeedsUpdate_ |= (*iter)->updateWmsData(wmsLayerTree, dataCategory);
+                }
+                else
+                {
+                    // Add wms layers as a new category
+                    auto categoryDataPtr = std::make_unique<CategoryData>(categoryName, dataCategory);
+                    categoryDataPtr->updateWmsData(wmsLayerTree, dataCategory);
+                    categoryDataVector_.push_back(std::move(categoryDataPtr));
+                    dialogDataNeedsUpdate_ = true;
+                }
 
-			updatePending(false);
+                updatePending(false);
+            }
 		}
 		catch (...)
 		{
