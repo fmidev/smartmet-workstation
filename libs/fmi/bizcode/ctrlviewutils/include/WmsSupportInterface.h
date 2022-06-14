@@ -43,7 +43,7 @@ public:
     virtual const std::unique_ptr<Wms::Setup>& getSetup() const = 0;
 
 #ifndef DISABLE_CPPRESTSDK
-    virtual const Wms::CapabilityTree& peekCapabilityTree() const = 0;
+    virtual const Wms::CapabilityTree* peekCapabilityTree() const = 0;
 #endif // DISABLE_CPPRESTSDK
 
 };
