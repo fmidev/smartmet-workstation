@@ -26,6 +26,8 @@
 #include "NFmiCtrlViewList.h"
 #include "NFmiDrawParam.h"
 #include "SpecialDesctopIndex.h"
+#include "CtrlViewTimeConsumptionReporter.h"
+#include "catlog/catlog.h"
 
 //--------------------------------------------------------
 // Constructor/Destructor 
@@ -79,6 +81,26 @@ void NFmiCtrlViewList::Update (const NFmiRect& theRect, NFmiToolBox* theToolBox)
 	for(Reset();Next();)
 		Current()->Update(theRect, theToolBox);
 }
+
+static void DoCtrlViewDraw(NFmiCtrlView* ctrlView, NFmiToolBox* toolBox)
+{
+	if(ctrlView)
+	{
+		try
+		{
+			ctrlView->Draw(toolBox);
+		}
+		catch(std::exception& e)
+		{
+			std::string warningMessage = CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeCtrlViewIdentifier(ctrlView);
+			warningMessage += " drawing failed with following error message: \"";
+			warningMessage += e.what();
+			warningMessage += "\"";
+			CatLog::logMessage(warningMessage, CatLog::Severity::Warning, CatLog::Category::Visualization, true);
+		}
+	}
+}
+
 //--------------------------------------------------------
 // Draw 
 //--------------------------------------------------------
@@ -92,13 +114,15 @@ void NFmiCtrlViewList::Draw (NFmiToolBox* theToolBox)
         {
             auto ctrlView = Current();
             ctrlView->ViewRowLayerNumber(layerIndex++);
-            ctrlView->Draw(theToolBox);
+			::DoCtrlViewDraw(ctrlView, theToolBox);
         }
     }
     else
     {
-        for(Reset(); Next();)
-            Current()->Draw(theToolBox);
+		for(Reset(); Next();)
+		{
+			::DoCtrlViewDraw(Current(), theToolBox);
+		}
     }
 }
 //--------------------------------------------------------
