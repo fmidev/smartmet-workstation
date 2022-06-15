@@ -22,6 +22,7 @@
 #include "NFmiQueryDataUtil.h"
 #include "NFmiSimpleCondition.h"
 #include "NFmiFastInfoUtils.h"
+#include "NFmiProducerName.h"
 #include "boost/math/special_functions/round.hpp"
 
 #include <cassert>
@@ -101,6 +102,56 @@ static bool CheckProbabilityCondition(NFmiAreaMask::FunctionType condition,
     default:
       throw std::runtime_error("Internal error in SmartTool system, probability condition unknown");
   }
+}
+
+// Static data member initialization to empty
+NFmiInfoAreaMask::MultiSourceDataGetterType
+    NFmiInfoAreaMask::itsMultiSourceDataGetter;
+
+void NFmiInfoAreaMask::SetMultiSourceDataGetterCallback(
+    const MultiSourceDataGetterType &theCallbackFunction)
+{
+  itsMultiSourceDataGetter = theCallbackFunction;
+}
+
+std::vector<boost::shared_ptr<NFmiFastQueryInfo>> NFmiInfoAreaMask::GetMultiSourceData(
+    const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+    boost::shared_ptr<NFmiArea> &calculationArea,
+    bool getSynopXData)
+{
+  std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector;
+  NFmiDataIdent usedDataIdent = theInfo->Param();
+  if (getSynopXData) usedDataIdent.GetProducer()->SetIdent(NFmiInfoData::kFmiSpSynoXProducer);
+  itsMultiSourceDataGetter(infoVector, usedDataIdent, *theInfo->Level(), theInfo->DataType(), calculationArea);
+  return infoVector;
+}
+
+std::vector<boost::shared_ptr<NFmiFastQueryInfo>>
+NFmiInfoAreaMask::CreateShallowCopyOfInfoVector(
+    const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector)
+{
+  // tehdään matala kopio info-vektorista
+  std::vector<boost::shared_ptr<NFmiFastQueryInfo>> shallowCopyVector;
+  for (const auto &info : infoVector)
+    shallowCopyVector.push_back(boost::shared_ptr<NFmiFastQueryInfo>(new NFmiFastQueryInfo(*info)));
+  return shallowCopyVector;
+}
+
+// Nyt synop ja salama datat ovat tälläisiä. Tämä on yritys tehdä vähän optimointia muutenkin jo
+// pirun raskaaseen koodiin.
+// HUOM! Tämä on riippuvainen NFmiEditMapGeneralDataDoc::MakeDrawedInfoVectorForMapView -metodin
+// erikoistapauksista.
+bool NFmiInfoAreaMask::IsKnownMultiSourceData(
+    const boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+{
+  if (theInfo)
+  {
+    if (theInfo->DataType() == NFmiInfoData::kFlashData) return true;
+    // HUOM! kaikkien synop datojen käyttö on aivan liian hidasta, käytetään vain primääri synop
+    // dataa laskuissa.
+    if (theInfo->Producer()->GetIdent() == kFmiSYNOP) return true;
+  }
+  return false;
 }
 
 // ----------------------------------------------------------------------
@@ -2819,12 +2870,12 @@ double NFmiInfoAreaMaskProbFunc::Value(const NFmiCalculationParams &theCalculati
                                        bool /* fUseTimeInterpolationAlways */)
 {
   InitializeFromArguments();
+  InitializeIntegrationValues();
   if (itsGridPointRectSizeX && itsGridPointRectSizeY)
   {
     NFmiLocationCache locCache = itsInfo->CalcLocationCache(theCalculationParams.itsLatlon);
     if (!locCache.NoValue())
     {
-      InitializeIntegrationValues();
       NFmiLocation location(theCalculationParams.itsLatlon);
 
       // Lasketaan laatikon loopitus rajat, x1 on mistä x-suuntainen peek-indeksi
@@ -2873,17 +2924,114 @@ double NFmiInfoAreaMaskProbFunc::Value(const NFmiCalculationParams &theCalculati
           break;
       }
       itsInfo->TimeIndex(origTimeIndex);
-      if (itsTotalCalculatedGridPoints)
+    }
+    return CalcAreaProbability();
+  }
+  else
+  {
+    return DoObservationAreaMaskCalculations(theCalculationParams);
+  }
+}
+
+static bool IsSynopDataCase(const boost::shared_ptr<NFmiFastQueryInfo>& info)
+{
+  if (info)
+  {
+    return info->Producer()->GetIdent() == kFmiSYNOP;
+  }
+  return false;
+}
+
+double NFmiInfoAreaMaskProbFunc::DoObservationAreaMaskCalculations(
+    const NFmiCalculationParams &theCalculationParams)
+{
+  auto infoVector = NFmiInfoAreaMask::GetMultiSourceData(
+      itsInfo, boost::shared_ptr<NFmiArea>(nullptr), ::IsSynopDataCase(itsInfo));
+  for (auto &info : infoVector)
+  {
+    NFmiCalculationParams simpleConditionCalculationPointParams(theCalculationParams);
+    if (infoVector.size() > 1)
+    {
+      simpleConditionCalculationPointParams.itsCurrentMultiInfoData = info.get();
+    }
+    unsigned long startTimeIndex = 0;
+    unsigned long endTimeIndex = 0;
+    // Havaintojen kanssa ei tehdä aikainterpolaatioita koskaan!
+    bool allowTimeInterpolation = false;
+    bool doSpecialCalculation = false;
+    NFmiMetTime interpolationTime =
+        NFmiInfoAreaMaskProbFunc::CalcTimeLoopLimits(info,
+                                                     theCalculationParams,
+                                                     itsStartTimeOffsetInHours,
+                                                     itsEndTimeOffsetInHours,
+                                                     &startTimeIndex,
+                                                     &endTimeIndex,
+                                                     &doSpecialCalculation,
+                                                     allowTimeInterpolation);
+    int maxWantedLocations = 1000;
+    if (startTimeIndex != gMissingIndex && endTimeIndex != gMissingIndex)
+    {
+      auto searchRangeLocations = info->NearestLocations(
+          theCalculationParams.itsLatlon, maxWantedLocations, itsSearchRangeInKM * 1000.);
+      for (const auto &locationIndexAndDistanceValue : searchRangeLocations)
       {
-        // Kerrotaan 100:lla, jotta saadaan prosentteja.
-        // Em. luku on double, jotta jakolaskusta ei tulisi integer jakoa.
-        return (100. * itsConditionFullfilledGridPointCount) / itsTotalCalculatedGridPoints;
+        info->LocationIndex(locationIndexAndDistanceValue.first);
+        // Jos tarvitaan simple-condition laskuja, pitää niitä varten olla paikka tallessa
+        simpleConditionCalculationPointParams.itsLatlon = info->LatLon();
+
+        for (unsigned long timeIndex = startTimeIndex; timeIndex <= endTimeIndex; timeIndex++)
+        {
+          info->TimeIndex(timeIndex);
+          ::SetSimpleConditionCalculationTime(simpleConditionCalculationPointParams,
+                                              allowTimeInterpolation,
+                                              interpolationTime,
+                                              info);
+          if (simpleConditionCalculationPointParams.itsLatlon != NFmiPoint::gMissingLatlon)
+          {
+            float value = CalculationPointValueForObservation(info);
+            if (value != kFloatMissing)
+            {
+                // Jos kyse prob laskuista, joissa käytetään simple-condition ehtoa, 
+                // laskuria pitää kasvattaa tässä, en ole varma sotkeeko tämä jotain muuta tapausta.
+                // value != missing on huono tarkastus, koska simple-condition laskuissa voi olla 
+                // muita parametreja käytössä, mutta en tiedä mitä muuta tässä voisi tarkastella.
+              itsTotalCalculatedGridPoints++;
+            }
+            if (SimpleConditionCheck(simpleConditionCalculationPointParams))
+              DoIntegrationCalculations(value);
+          }
+        }
+        if (NFmiInfoAreaMaskProbFunc::CheckTimeIndicesForLoopBreak(startTimeIndex, endTimeIndex))
+          break;
       }
     }
   }
-  // Jos hilamuotoisia laskuja ei voida suorittaa, laitetaan osumien arvoksi missing
-  itsConditionFullfilledGridPointCount = static_cast<int>(kFloatMissing);
+  return CalcAreaProbability();
+}
+
+double NFmiInfoAreaMaskProbFunc::CalcAreaProbability()
+{
+  if (itsTotalCalculatedGridPoints)
+  {
+    // Kerrotaan 100:lla, jotta saadaan prosentteja.
+    // Em. luku on double, jotta jakolaskusta ei tulisi integer jakoa.
+    return (100. * itsConditionFullfilledGridPointCount) / itsTotalCalculatedGridPoints;
+  }
+
   return kFloatMissing;
+}
+
+float NFmiInfoAreaMaskProbFunc::CalculationPointValueForObservation(
+    const boost::shared_ptr<NFmiFastQueryInfo> &info)
+{
+  if (metaParamDataHolder.isMetaParameterCalculationNeeded())
+  {
+    return CalcMetaParamValueWithFunction([&]() { return info->FloatValue(); });
+  }
+  else
+  {
+    return info->FloatValue();
+  }
 }
 
 void NFmiInfoAreaMaskProbFunc::DoSubgridCalculations(
