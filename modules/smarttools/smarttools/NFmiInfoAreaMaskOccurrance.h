@@ -27,18 +27,6 @@ class NFmiInfoAreaMaskOccurrance : public NFmiInfoAreaMaskProbFunc
   NFmiAreaMask *Clone() const override;
   NFmiInfoAreaMaskProbFunc &operator=(const NFmiInfoAreaMaskProbFunc &theMask) = delete;
 
-  static void SetMultiSourceDataGetterCallback(
-      const std::function<void(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &,
-                               boost::shared_ptr<NFmiDrawParam> &,
-                               const boost::shared_ptr<NFmiArea> &)> &theCallbackFunction);
-  static std::function<void(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &,
-      boost::shared_ptr<NFmiDrawParam> &,
-      const boost::shared_ptr<NFmiArea> &)> GetMultiSourceDataGetterCallback() { return itsMultiSourceDataGetter; }
-  // Nyt ainakin synop ja salama datat ovat tälläisiä
-  static bool IsKnownMultiSourceData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
-  static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> GetMultiSourceData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &calculationArea, bool getSynopXData);
-  static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> CreateShallowCopyOfInfoVector(const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector);
-
   // tätä kaytetaan smarttool-modifierin yhteydessä
   double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
 
@@ -72,11 +60,6 @@ class NFmiInfoAreaMaskOccurrance : public NFmiInfoAreaMaskProbFunc
   // ei käytetä yhtään pistettä, on siihen kuuluvassa vektorissa vain yksi luku (gMissingIndex).
   // Tämä alustetaan Initialize -metodissa.
   std::vector<std::vector<unsigned long>> itsCalculatedLocationIndexies;
-
-  static std::function<void(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &,
-                            boost::shared_ptr<NFmiDrawParam> &,
-                            const boost::shared_ptr<NFmiArea> &)> itsMultiSourceDataGetter;
-
 };
 
 class NFmiInfoAreaMaskOccurranceSimpleCondition : public NFmiInfoAreaMaskOccurrance

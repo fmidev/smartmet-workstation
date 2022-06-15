@@ -1,4 +1,24 @@
 #include <NFmiSimpleConditionInfo.h>
+#include <NFmiAreaMaskInfo.h>
+
+void NFmiSimpleConditionPartInfo::SetStationDataUsage(const NFmiProducer& mainFunctionProducer)
+{
+  SetMaskStationDataUsage(itsMask1, mainFunctionProducer);
+  SetMaskStationDataUsage(itsMask2, mainFunctionProducer);
+}
+
+void NFmiSimpleConditionPartInfo::SetMaskStationDataUsage(boost::shared_ptr<NFmiAreaMaskInfo> &mask,
+                             const NFmiProducer &mainFunctionProducer)
+{
+  if (mask)
+  {
+    if (mask->GetDataIdent().GetProducer()->GetIdent() == mainFunctionProducer.GetIdent())
+    {
+      // Jos tuottajat olivat samoja, merkitään että kyseistä infoa käytetään kuten asemadataa, jos kyse on sitten oikeasti asemadatasta (ei tiedä tässä vaiheessa)
+      mask->SetSecondaryFunctionType(NFmiAreaMask::SimpleConditionUsedAsStationData);
+    }
+  }
+}
 
 NFmiSingleConditionInfo::NFmiSingleConditionInfo()
 :itsPart1()
@@ -24,6 +44,13 @@ NFmiSingleConditionInfo::NFmiSingleConditionInfo(const boost::shared_ptr<NFmiSim
 {
 }
 
+void NFmiSingleConditionInfo::SetStationDataUsage(const NFmiProducer &mainFunctionProducer)
+{
+  if (itsPart1) itsPart1->SetStationDataUsage(mainFunctionProducer);
+  if (itsPart2) itsPart2->SetStationDataUsage(mainFunctionProducer);
+  if (itsPart3) itsPart3->SetStationDataUsage(mainFunctionProducer);
+}
+
 
 NFmiSimpleConditionInfo::NFmiSimpleConditionInfo()
 {
@@ -38,4 +65,10 @@ NFmiSimpleConditionInfo::NFmiSimpleConditionInfo(const boost::shared_ptr<NFmiSin
     , itsConditionOperator(conditionOperator)
     , itsCondition2(condition2)
 {
+}
+
+void NFmiSimpleConditionInfo::SetStationDataUsage(const NFmiProducer& mainFunctionProducer)
+{
+  if (itsCondition1) itsCondition1->SetStationDataUsage(mainFunctionProducer);
+  if (itsCondition2) itsCondition2->SetStationDataUsage(mainFunctionProducer);
 }

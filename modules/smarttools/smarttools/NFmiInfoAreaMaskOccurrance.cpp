@@ -12,11 +12,6 @@
 // *****    NFmiInfoAreaMaskOccurrance  *********************
 // **********************************************************
 
-std::function<void(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &,
-                   boost::shared_ptr<NFmiDrawParam> &,
-                   const boost::shared_ptr<NFmiArea> &)>
-    NFmiInfoAreaMaskOccurrance::itsMultiSourceDataGetter;  // Alustetaan tyhjäksi ensin
-
 NFmiInfoAreaMaskOccurrance::~NFmiInfoAreaMaskOccurrance()
 {
 }
@@ -45,7 +40,7 @@ NFmiInfoAreaMaskOccurrance::NFmiInfoAreaMaskOccurrance(
       itsInfoVector(),
       itsCalculatedLocationIndexies()
 {
-  fUseMultiSourceData = NFmiInfoAreaMaskOccurrance::IsKnownMultiSourceData(itsInfo);
+  fUseMultiSourceData = NFmiInfoAreaMask::IsKnownMultiSourceData(itsInfo);
 }
 
 NFmiInfoAreaMaskOccurrance::NFmiInfoAreaMaskOccurrance(const NFmiInfoAreaMaskOccurrance &theOther)
@@ -56,41 +51,12 @@ NFmiInfoAreaMaskOccurrance::NFmiInfoAreaMaskOccurrance(const NFmiInfoAreaMaskOcc
       itsInfoVector(),
       itsCalculatedLocationIndexies(theOther.itsCalculatedLocationIndexies)
 {
-    itsInfoVector = NFmiInfoAreaMaskOccurrance::CreateShallowCopyOfInfoVector(theOther.itsInfoVector);
+    itsInfoVector = NFmiInfoAreaMask::CreateShallowCopyOfInfoVector(theOther.itsInfoVector);
 }
 
 NFmiAreaMask *NFmiInfoAreaMaskOccurrance::Clone() const
 {
   return new NFmiInfoAreaMaskOccurrance(*this);
-}
-
-void NFmiInfoAreaMaskOccurrance::SetMultiSourceDataGetterCallback(
-    const std::function<void(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &,
-                             boost::shared_ptr<NFmiDrawParam> &,
-                             const boost::shared_ptr<NFmiArea> &)> &theCallbackFunction)
-{
-  NFmiInfoAreaMaskOccurrance::itsMultiSourceDataGetter = theCallbackFunction;
-}
-
-std::vector<boost::shared_ptr<NFmiFastQueryInfo>> NFmiInfoAreaMaskOccurrance::GetMultiSourceData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &calculationArea, bool getSynopXData)
-{
-    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector;
-    boost::shared_ptr<NFmiDrawParam> drawParam(
-        new NFmiDrawParam(theInfo->Param(), *theInfo->Level(), 0, theInfo->DataType()));
-    if(getSynopXData)
-        drawParam->Param().GetProducer()->SetIdent(NFmiInfoData::kFmiSpSynoXProducer);
-    itsMultiSourceDataGetter(infoVector, drawParam, calculationArea);
-    return infoVector;
-}
-
-std::vector<boost::shared_ptr<NFmiFastQueryInfo>> NFmiInfoAreaMaskOccurrance::CreateShallowCopyOfInfoVector(const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector)
-{
-    // tehdään matala kopio info-vektorista
-    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> shallowCopyVector;
-    for(const auto & info : infoVector)
-        shallowCopyVector.push_back(
-            NFmiSmartInfo::CreateShallowCopyOfHighestInfo(info));
-    return shallowCopyVector;
 }
 
 void NFmiInfoAreaMaskOccurrance::Initialize()
@@ -101,7 +67,7 @@ void NFmiInfoAreaMaskOccurrance::Initialize()
     itsInfoVector.push_back(itsInfo);
   else
   {
-      itsInfoVector = NFmiInfoAreaMaskOccurrance::GetMultiSourceData(itsInfo, itsCalculationArea, fSynopXCase);
+      itsInfoVector = NFmiInfoAreaMask::GetMultiSourceData(itsInfo, itsCalculationArea, fSynopXCase);
   }
   InitializeLocationIndexCaches();
 }
@@ -136,24 +102,6 @@ std::vector<unsigned long> NFmiInfoAreaMaskOccurrance::CalcLocationIndexCache(
     // kokonaisuudessaa.
     return locationIndexCache;
   }
-}
-
-// Nyt synop ja salama datat ovat tälläisiä. Tämä on yritys tehdä vähän optimointia muutenkin jo
-// pirun raskaaseen koodiin.
-// HUOM! Tämä on riippuvainen NFmiEditMapGeneralDataDoc::MakeDrawedInfoVectorForMapView -metodin
-// erikoistapauksista.
-bool NFmiInfoAreaMaskOccurrance::IsKnownMultiSourceData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
-{
-  if (theInfo)
-  {
-    if (theInfo->DataType() == NFmiInfoData::kFlashData)
-      return true;
-    // HUOM! kaikkien synop datojen käyttö on aivan liian hidasta, käytetään vain primääri synop
-    // dataa laskuissa.
-    if (theInfo->Producer()->GetIdent() == kFmiSYNOP)
-      return true;
-  }
-  return false;
 }
 
 // tätä kaytetaan smarttool-modifierin yhteydessä
@@ -405,7 +353,7 @@ NFmiPeekTimeMask::NFmiPeekTimeMask(Type theMaskType,
     itsObservationRadiusInKm(observationRadiusInKm)
 {
     itsFunctionArgumentCount = theArgumentCount;
-    fUseMultiSourceData = NFmiInfoAreaMaskOccurrance::IsKnownMultiSourceData(itsInfo);
+    fUseMultiSourceData = NFmiInfoAreaMask::IsKnownMultiSourceData(itsInfo);
 }
 
 NFmiPeekTimeMask::~NFmiPeekTimeMask()
@@ -419,7 +367,7 @@ NFmiPeekTimeMask::NFmiPeekTimeMask(const NFmiPeekTimeMask &theOther)
     itsInfoVector(),
     itsObservationRadiusInKm(theOther.itsObservationRadiusInKm)
 {
-    itsInfoVector = NFmiInfoAreaMaskOccurrance::CreateShallowCopyOfInfoVector(theOther.itsInfoVector);
+    itsInfoVector = NFmiInfoAreaMask::CreateShallowCopyOfInfoVector(theOther.itsInfoVector);
 }
 
 NFmiAreaMask *NFmiPeekTimeMask::Clone() const
@@ -433,7 +381,7 @@ void NFmiPeekTimeMask::Initialize()
     {
         boost::shared_ptr<NFmiArea> dummyArea;
         bool getOnlyStationarySynopData = true;
-        itsInfoVector = NFmiInfoAreaMaskOccurrance::GetMultiSourceData(itsInfo, dummyArea, getOnlyStationarySynopData);
+        itsInfoVector = NFmiInfoAreaMask::GetMultiSourceData(itsInfo, dummyArea, getOnlyStationarySynopData);
     }
     else
         itsInfoVector.push_back(itsInfo);

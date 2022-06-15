@@ -2237,16 +2237,21 @@ void NFmiSmartToolModifier::DoFinalAreaMaskInitializations(
           NFmiAreaMask::TimeRange,
           NFmiAreaMask::LatestValue,
           NFmiAreaMask::PreviousFullDays,
-          NFmiAreaMask::TimeDuration};
+          NFmiAreaMask::TimeDuration,
+          NFmiAreaMask::AreaRect,
+          NFmiAreaMask::AreaCircle};
       NFmiAreaMask::FunctionType functionType = ::GetFunctionType(theAreaMaskInfo);
       auto allowedIter = std::find(functionsThatAllowObservations.begin(),
                                    functionsThatAllowObservations.end(),
                                    functionType);
-      auto isCalculationPointsUsed = !CalculationPoints().empty();
-      //auto isMultiDataSynopCase = IsMultiDataSynopCase(theAreaMaskInfo);
-      //auto keepStationDataForm = (!isMultiDataSynopCase) && (isCalculationPointsUsed ||
-      //                           itsExtraMacroParamData->ObservationRadiusInKm() != kFloatMissing);
-      if (allowedIter != functionsThatAllowObservations.end())
+      auto isCalculationPointsUsed = (!CalculationPoints().empty());
+      auto useSimpleConditionAreaMaskAsStationData =
+          (theAreaMaskInfo.GetSecondaryFunctionType() == NFmiAreaMask::SimpleConditionUsedAsStationData);
+      auto isStationDataAllowingFunction = (allowedIter != functionsThatAllowObservations.end());
+      auto keepStationDataForm =
+          (isCalculationPointsUsed || useSimpleConditionAreaMaskAsStationData ||
+           isStationDataAllowingFunction);
+      if (keepStationDataForm)
       {  // tämä on ok, ei tarvitse tehdä mitään
       }
       else if (maskType == NFmiAreaMask::InfoVariable)
