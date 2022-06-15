@@ -1110,6 +1110,7 @@ void CFmiSmartToolDlg::UpdateMacroParamDisplayListAfterSpeedLoad()
 {
     itsMacroParamList.ResetContent();
     auto& mpSystem = itsSmartMetDocumentInterface->MacroParamSystem();
+    auto foundMacroParamName = mpSystem.GetCurrentMacroParam()->Name();
     boost::shared_ptr<NFmiMacroParamFolder> currentFolder = mpSystem.GetCurrentFolder();
     if(currentFolder)
     {
@@ -1126,6 +1127,9 @@ void CFmiSmartToolDlg::UpdateMacroParamDisplayListAfterSpeedLoad()
             itsMacroParamList.SetCurSel(currentFolder->CurrentIndex());
         else
             itsMacroParamList.SetCurSel(selectedNameIndex);
+
+        // currentFolder->RefreshMacroParams operaation jälkeen palautetaan valittu macroParam taas oikeasti valituksi
+        currentFolder->Find(foundMacroParamName);
     }
 }
 
@@ -1325,15 +1329,7 @@ void CFmiSmartToolDlg::DoMacroParamLoad(const std::string& theMacroParamName, bo
             macroParamFound = mpSystem.FindMacroParamPath(theMacroParamName);
             if(macroParamFound)
             {
-                auto foundMacroParamName = mpSystem.GetCurrentMacroParam()->Name();
                 UpdateMacroParamDisplayListAfterSpeedLoad();
-
-                // Joku outo ongelma estää käyttämästä edellä löydettyä pikahaku macroParamia, 
-                // Siksi asetetaan haluttu macro vielä toisen kerran kun ollaan jo asetettu oikea
-                // hakemisto ja tiedetään siinä haluttu macroParamin nimi.
-                // Tämä korjaa bugin: pikavalintana valitun macroParamin kaavan muokkaus ei
-                // päivity karttanäytöllä olevan macroParamin laskuihin.
-                macroParamFound = mpSystem.FindMacroFromCurrentFolder(foundMacroParamName);
             }
         }
         else
