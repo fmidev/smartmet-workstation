@@ -1325,7 +1325,15 @@ void CFmiSmartToolDlg::DoMacroParamLoad(const std::string& theMacroParamName, bo
             macroParamFound = mpSystem.FindMacroParamPath(theMacroParamName);
             if(macroParamFound)
             {
+                auto foundMacroParamName = mpSystem.GetCurrentMacroParam()->Name();
                 UpdateMacroParamDisplayListAfterSpeedLoad();
+
+                // Joku outo ongelma estää käyttämästä edellä löydettyä pikahaku macroParamia, 
+                // Siksi asetetaan haluttu macro vielä toisen kerran kun ollaan jo asetettu oikea
+                // hakemisto ja tiedetään siinä haluttu macroParamin nimi.
+                // Tämä korjaa bugin: pikavalintana valitun macroParamin kaavan muokkaus ei
+                // päivity karttanäytöllä olevan macroParamin laskuihin.
+                macroParamFound = mpSystem.FindMacroFromCurrentFolder(foundMacroParamName);
             }
         }
         else
