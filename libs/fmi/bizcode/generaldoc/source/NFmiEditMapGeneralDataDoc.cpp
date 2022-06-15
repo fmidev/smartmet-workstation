@@ -3146,38 +3146,41 @@ void AddWmsDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings
             if(!wmsSupport.isConfigured())
                 return;
             CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, __FUNCTION__);
-            const auto& layerTree = wmsSupport.peekCapabilityTree();
-            auto menuItem = std::make_unique<NFmiMenuItem>(
-                theMenuSettings.itsDescTopIndex,
-                "WMS",
-                NFmiDataIdent(NFmiParam(layerTree.value.paramId, layerTree.value.name), layerTree.value.producer),
-                theMenuSettings.itsMenuCommand,
-                g_DefaultParamView,
-                nullptr,
-                theDataType
-            );
-            try
-            {
-                const auto& layerTreeCasted = dynamic_cast<const Wms::CapabilityNode&>(layerTree);
-                auto* subMenuList = menuItem->SubMenu();
-                if(!subMenuList)
-                {
-                    subMenuList = new NFmiMenuItemList;
-                }
+            const auto* layerTree = wmsSupport.peekCapabilityTree();
+			if(layerTree)
+			{
+				auto menuItem = std::make_unique<NFmiMenuItem>(
+					theMenuSettings.itsDescTopIndex,
+					"WMS",
+					NFmiDataIdent(NFmiParam(layerTree->value.paramId, layerTree->value.name), layerTree->value.producer),
+					theMenuSettings.itsMenuCommand,
+					g_DefaultParamView,
+					nullptr,
+					theDataType
+					);
+				try
+				{
+					const auto& layerTreeCasted = dynamic_cast<const Wms::CapabilityNode&>(*layerTree);
+					auto* subMenuList = menuItem->SubMenu();
+					if(!subMenuList)
+					{
+						subMenuList = new NFmiMenuItemList;
+					}
 
-                for(const auto& child : layerTreeCasted.children)
-                {
-                    AddAllWmsProducersToParamSelectionPopup(theMenuSettings, theDataType, subMenuList, *child);
-                }
-                menuItem->AddSubMenu(subMenuList);
-                theMenuItemList->Add(std::move(menuItem));
-            }
-            catch(const std::exception &e)
-            {
-                std::string errorMessage = "WMS popup menu section failed: ";
-                errorMessage += e.what();
-                LogMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
-            }
+					for(const auto& child : layerTreeCasted.children)
+					{
+						AddAllWmsProducersToParamSelectionPopup(theMenuSettings, theDataType, subMenuList, *child);
+					}
+					menuItem->AddSubMenu(subMenuList);
+					theMenuItemList->Add(std::move(menuItem));
+				}
+				catch(const std::exception& e)
+				{
+					std::string errorMessage = "WMS popup menu section failed: ";
+					errorMessage += e.what();
+					LogMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
+				}
+			}
         }
         catch(const std::exception & e)
         {
@@ -6246,12 +6249,15 @@ bool InitCPManagerSet(void)
 		SetCurrentSmartToolMacro(itsSmartToolInfo.CurrentScript()); // laitetaan currentti skripti myös dociin
 
         // Alustetaan myös yksi smartTool kieleen liittyvät callback funktiot
-        NFmiInfoAreaMaskOccurrance::SetMultiSourceDataGetterCallback(
+        NFmiInfoAreaMask::SetMultiSourceDataGetterCallback(
 			[this](std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, 
-				boost::shared_ptr<NFmiDrawParam> &theDrawParam, 
-				const boost::shared_ptr<NFmiArea> &theArea) 
+				const NFmiDataIdent& dataIdent,
+				const NFmiLevel &level,
+				NFmiInfoData::Type dataType,
+				const boost::shared_ptr<NFmiArea> &theArea)
 			{
-				GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea); 
+				boost::shared_ptr<NFmiDrawParam> drawParam(new NFmiDrawParam(dataIdent, level, 0, dataType));
+				GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(theInfoVector, drawParam, theArea); 
 			});
 
 		return status && status2;
