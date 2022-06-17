@@ -196,6 +196,14 @@ void CFmiShortCutsDlg2::InitDialogTexts(void)
     itsTextU_ += CA2T(::GetDictionaryString("- CTRL + F12 Apply crash backup viewMacro").c_str()) + CString(_TEXT("\r\n"));
     itsTextU_ += CA2T(::GetDictionaryString("- SHIFT + F12 Apply startup viewMacro").c_str()) + CString(_TEXT("\r\n"));
 
+    itsTextU_ += CA2T(::GetDictionaryString("- Pressing Y over map-view -> toggle show/hide map-view range options").c_str()) + CString(_TEXT("\r\n"));
+    itsTextU_ += CA2T(::GetDictionaryString("- CTRL + y = increase range (by current increment)").c_str()) + CString(_TEXT("\r\n"));
+    itsTextU_ += CA2T(::GetDictionaryString("- SHIFT + Y = decrease range (by current increment)").c_str()) + CString(_TEXT("\r\n"));
+    itsTextU_ += CA2T(::GetDictionaryString("- CTRL + SHIFT + Y = change increment mode (from 100 m -> 200 m -> 500 m -> 1 km -> 2 km -> 5 km -> 10 km -> 20 km -> 50 km -> 100 km -> 200 km -> 500 km)").c_str()) + CString(_TEXT("\r\n"));
+    itsTextU_ += CA2T(::GetDictionaryString("- ALT + Y = change colour (white -> black -> red -> green -> blue -> magenta -> yellow -> cyan)").c_str()) + CString(_TEXT("\r\n"));
+    itsTextU_ += CA2T(::GetDictionaryString("- If Range meter mode is on, following mouse wheel options are also available:").c_str()) + CString(_TEXT("\r\n"));
+    itsTextU_ += CA2T(::GetDictionaryString("- CTRL + SHIFT + mouse wheel increase/decrease selected range").c_str()) + CString(_TEXT("\r\n"));
+    itsTextU_ += CA2T(::GetDictionaryString("- SHIFT + mouse wheel increase/decrease Range increment").c_str()) + CString(_TEXT("\r\n"));
 
 	itsTextU_ += _TEXT("\r\n");
     itsTextU_ += CA2T(::GetDictionaryString("ShortCutsDlgMouseClickStr1").c_str()) + CString(_TEXT("\r\n"));
