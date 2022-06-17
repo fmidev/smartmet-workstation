@@ -8,6 +8,7 @@
 #include "NFmiGriddingProperties.h"
 #include "NFmiInfoData.h"
 #include "NFmiVisualizationSpaceoutSettings.h"
+#include "NFmiColor.h"
 
 class NFmiHelpDataInfoSystem;
 class SoundingViewSettingsFromWindowsRegisty;
@@ -15,6 +16,38 @@ class NFmiCategoryHeaderInitData;
 
 // En osaa laittaa tälläistä muuttujaa luokan muuttujaksi, koska siinä on tyhjä taulukko ja kääntäjä tekee erinäisiä valituksia sellaisen käytöstä luokan dataosana.
 const TCHAR BASED_CODE g_SaveImageFileFilter[] = _TEXT("PNG (*.png)|*.png|JPEG (*.jpg)|*.jpg|BMP (*.bmp)|*.bmp|TIFF (*.tiff)|*.tiff|GIF (*.gif)|*.gif|");
+
+class NFmiMapViewRangeMeterWinRegistry
+{
+    bool mInitialized = false; // ei sallita tupla initialisointia
+    std::string mBaseRegistryPath;
+    std::string mSectionName = "\\MapViewRangeMeter";
+
+    bool mModeOn = false;
+    boost::shared_ptr<CachedRegInt> mRangeInMeters;
+    boost::shared_ptr<CachedRegInt> mChangeIncrementInMeters;
+    boost::shared_ptr<CachedRegInt> mColorIndex;
+    static const std::vector<NFmiColor> mColors;
+public:
+    NFmiMapViewRangeMeterWinRegistry();
+    bool Init(const std::string& baseRegistryPath);
+
+    bool ModeOn() const;
+    void ModeOn(bool newValue);
+    void ModeOnToggle();
+    int RangeInMeters() const;
+    void RangeInMeters(int newValue);
+    bool AdjustRangeValue(FmiDirection direction);
+    int ChangeIncrementInMeters() const;
+    void ChangeIncrementInMeters(int newValue);
+    bool AdjustChangeIncrementInMeters(FmiDirection direction);
+    bool ToggleChangeIncrementInMeters();
+    int ColorIndex() const;
+    void ColorIndex(int newValue);
+    void ToggleColor();
+    const NFmiColor& GetSelectedColor() const;
+    static const std::vector<NFmiColor>& Colors() { return mColors; }
+};
 
 class NFmiGriddingPropertiesWinRegistry
 {
@@ -172,6 +205,7 @@ private:
     boost::shared_ptr<CachedRegString> mCombinedMapModeSelectedBackgroundIndicesStr; 
     // Vastaava teksti overlay kartta-alueiden indekseille
     boost::shared_ptr<CachedRegString> mCombinedMapModeSelectedOverlayIndicesStr;
+    // MapViewRangeMeter asetuksia omassa luokassa, jossa winReg tuki
 };
 
 // Poikkileikkausnäyttöjen asetuksia Windows rekisterissä, SmartMet konffi kohtaisia
@@ -280,6 +314,7 @@ public:
     bool UseCombinedMapMode();
     void UseCombinedMapMode(bool newValue);
     const NFmiViewPositionsWinRegistry::WindowRectStringMap& GetWindowRectStringMap() const { return mMapViewPositionsWinRegistry.GetWindowRectStringMap(); }
+    NFmiMapViewRangeMeterWinRegistry& MapViewRangeMeter() { return mMapViewRangeMeter; }
 private:
     bool mInitialized; // ei sallita tupla initialisointia
     std::string mBaseConfigurationRegistryPath;
@@ -305,6 +340,7 @@ private:
     boost::shared_ptr<CachedRegInt> mLogViewerCategory; // CFmiLogViever dialogissa näytetty categoria
     boost::shared_ptr<CachedRegBool> mDroppedDataEditable; // Pääkarttanäytölle pudotettua sqd tiedostoa voidaan editoida, tällöin tiedostot on hidas tiputtaa, koska data luetaan muistiin ja siitä tehdään monia kopioita
     boost::shared_ptr<CachedRegBool> mUseCombinedMapMode; // Käytetäänkö karttojen kanssa lokaaleja bitmappeja ja WMS palveluja yhdessä.
+    NFmiMapViewRangeMeterWinRegistry mMapViewRangeMeter;
 };
 
 

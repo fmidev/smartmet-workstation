@@ -109,6 +109,7 @@
 #include "ParamHandlerViewFunctions.h"
 #include "MathHelper.h"
 #include "ColorStringFunctions.h"
+#include "NFmiValueString.h"
 
 #ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupport.h"
@@ -2564,6 +2565,9 @@ bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long
 		}
 		if((theKey & kCtrlKey) && (theKey & kShiftKey))
 		{
+			if(DoRangeMeterMouseWheelAdjustRangeChecks(theDelta))
+				return true;
+
             // Säädetään kaikkia ruudulla olevia level/satel kanavia jne. kerrallaan
             bool status = false;
             for(itsViewList->Reset(); itsViewList->Next(); ) // hybrid data muutos ensin
@@ -2581,6 +2585,9 @@ bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long
 		}
 		else if(theKey & kShiftKey) // jos shift-nappi pohjassa muutetaan aktiivisen piirto-layerin hybrid-datojen leveliä ylös/alas tai satel datan kanavaa
 		{
+			if(DoRangeMeterMouseWheelAdjustIncrementChecks(theDelta))
+				return true;
+
 			bool status = false;
 			for(itsViewList->Reset(); itsViewList->Next(); ) // hybrid data muutos ensin
 			{
@@ -2601,6 +2608,36 @@ bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long
 			else
 				return itsCtrlViewDocumentInterface->ScrollViewRow(itsMapViewDescTopIndex, -1);
 		}
+	}
+	return false;
+}
+
+bool NFmiStationViewHandler::DoRangeMeterMouseWheelAdjustRangeChecks(short theDelta)
+{
+	auto &rangeMeter = itsCtrlViewDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	if(rangeMeter.ModeOn())
+	{
+		auto direction = (theDelta > 0) ? kUp : kDown;
+		if(rangeMeter.AdjustRangeValue(direction))
+		{
+			ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+		}
+		return true;
+	}
+	return false;
+}
+
+bool NFmiStationViewHandler::DoRangeMeterMouseWheelAdjustIncrementChecks(short theDelta)
+{
+	auto& rangeMeter = itsCtrlViewDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	if(rangeMeter.ModeOn())
+	{
+		auto direction = (theDelta > 0) ? kUp : kDown;
+		if(rangeMeter.AdjustChangeIncrementInMeters(direction))
+		{
+			ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+		}
+		return true;
 	}
 	return false;
 }
@@ -3764,6 +3801,7 @@ void NFmiStationViewHandler::StoreToolTipDataInDoc(const NFmiPoint& theRelativeP
     itsCtrlViewDocumentInterface->ToolTipTime(itsTime);
     itsCtrlViewDocumentInterface->ToolTipRealRowIndex(CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
     itsCtrlViewDocumentInterface->ToolTipColumnIndex(itsViewGridColumnNumber);
+	itsCtrlViewDocumentInterface->ToolTipMapViewDescTopIndex(itsMapViewDescTopIndex);
 }
 
 void NFmiStationViewHandler::DoBrushingUndoRituals(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
@@ -3889,11 +3927,129 @@ void NFmiStationViewHandler::DrawOverBitmapThings(NFmiToolBox * theGTB, bool /* 
 
     DrawMouseCursorHelperCrossHair();
     DrawSelectedSynopFromGridView();
+	DrawMapViewRangeMeterData();
 
     DrawParamView(theGTB); // piirrettävä viimeiseksi kartan päälle!!!
     DrawAutocompleteLocations(); // tämä ottaa huomioon, ettei piirrä parametri boxin päälle!
     DrawCurrentFrame(theGTB);
     CleanGdiplus();
+}
+
+#ifdef max
+#undef max
+#undef min
+#endif
+static int CalcPenWidthInPixels(float penSizeInMM, float pixelsPerMMOnScreen)
+{
+	return std::max(1, boost::math::iround(penSizeInMM * pixelsPerMMOnScreen));
+}
+
+void NFmiStationViewHandler::DrawMapViewRangeMeterData()
+{
+	auto &mapViewRangeMeter = itsCtrlViewDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	if(mapViewRangeMeter.ModeOn())
+	{
+		auto toolTipRealRowIndex = itsCtrlViewDocumentInterface->ToolTipRealRowIndex();
+		auto toolTipColumnIndex = itsCtrlViewDocumentInterface->ToolTipColumnIndex();
+		auto toolTipMapViewDescTopIndex = itsCtrlViewDocumentInterface->ToolTipMapViewDescTopIndex();
+		if(toolTipRealRowIndex == CalcRealRowIndex() && toolTipColumnIndex == itsViewGridColumnNumber && toolTipMapViewDescTopIndex == itsMapViewDescTopIndex)
+		{
+			double rangeInMeters = mapViewRangeMeter.RangeInMeters();
+			auto incrementInMeters = mapViewRangeMeter.ChangeIncrementInMeters();
+			const auto& color = mapViewRangeMeter.GetSelectedColor();
+			const auto& tooltipLatlon = itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
+			NFmiLocation tooltipLocation(tooltipLatlon);
+			std::vector<NFmiPoint> relativeCirclePoints;
+			double usedAngleStep = 10.;
+			relativeCirclePoints.reserve(boost::math::iround(360. / usedAngleStep) + 1);
+			for(auto currentAngle = 0.; currentAngle <= 360.; currentAngle += usedAngleStep)
+			{
+				auto currentLocation = tooltipLocation.GetLocation(currentAngle, rangeInMeters, itsMapArea->PacificView());
+				relativeCirclePoints.push_back(LatLonToViewPoint(currentLocation.GetLocation()));
+			}
+
+			// Piirrä range-ympyrä
+			auto pixelsPerMM = static_cast<float>(itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_y);
+			auto gdiPoints = CtrlView::Relative2GdiplusPolyLine(itsToolBox, relativeCirclePoints, NFmiPoint());
+			float lineWidthInMM = 0.3f;
+			float lineWidthInPixels = static_cast<float>(::CalcPenWidthInPixels(lineWidthInMM, pixelsPerMM));
+			int lineStyle = 0; // 0=yhtenäinen viiva
+			GdiPlusLineInfo lineInfo(lineWidthInPixels, color, lineStyle);
+			CtrlView::DrawGdiplusCurve(*itsGdiPlusGraphics, gdiPoints, lineInfo, false, 0, itsCtrlViewDocumentInterface->Printing());
+
+			// Piirrä hiiren osoittimen kohdalle pikku risti
+			auto tooltipRelativePosition = LatLonToViewPoint(tooltipLatlon);
+			auto tooltipGdiPosition = CtrlView::Relative2GdiplusPoint(itsToolBox, tooltipRelativePosition);
+			float crossHairLengthInMM = 2.5f;
+			float crossHairLengthInPixels = crossHairLengthInMM * pixelsPerMM;
+			// vaaka viiva
+			int line1_x1 = boost::math::iround(tooltipGdiPosition.X - crossHairLengthInPixels);
+			int line1_x2 = boost::math::iround(tooltipGdiPosition.X + crossHairLengthInPixels);
+			int line1_y1 = boost::math::iround(tooltipGdiPosition.Y);
+			int line1_y2 = boost::math::iround(tooltipGdiPosition.Y);
+			CtrlView::DrawLine(*itsGdiPlusGraphics, line1_x1, line1_y1, line1_x2, line1_y2, color, lineWidthInPixels);
+
+			// pysty viiva
+			int line2_x1 = boost::math::iround(tooltipGdiPosition.X);
+			int line2_x2 = boost::math::iround(tooltipGdiPosition.X);
+			int line2_y1 = boost::math::iround(tooltipGdiPosition.Y - crossHairLengthInPixels);
+			int line2_y2 = boost::math::iround(tooltipGdiPosition.Y + crossHairLengthInPixels);
+			CtrlView::DrawLine(*itsGdiPlusGraphics, line2_x1, line2_y1, line2_x2, line2_y2, color, lineWidthInPixels);
+
+			// Piirretään avustavaa tekstiä karttaruudun oikeaan alakulmaan
+			auto textRelativeLocation = GetFrame().BottomRight();
+			std::wstring fontName = L"arial";
+			double fontSizeInMM = 6.f;
+			double relativeTextLineHeight = itsToolBox->SY(boost::math::iround(fontSizeInMM * pixelsPerMM));
+
+			textRelativeLocation.Y(textRelativeLocation.Y() - relativeTextLineHeight);
+			std::string rangeIncrementStr = "Range increment: ";
+			double rangeIncrementInKm = mapViewRangeMeter.ChangeIncrementInMeters() / 1000.;
+			auto rangeIncrementInKmStr = NFmiValueString::GetStringWithMaxDecimalsSmartWay(rangeIncrementInKm, 1);
+			rangeIncrementStr += rangeIncrementInKmStr;
+			rangeIncrementStr += " km";
+			CtrlView::DrawTextToRelativeLocation(
+				*itsGdiPlusGraphics,
+				color,
+				fontSizeInMM,
+				rangeIncrementStr,
+				textRelativeLocation,
+				pixelsPerMM,
+				itsToolBox,
+				fontName,
+				kRight);
+
+			textRelativeLocation.Y(textRelativeLocation.Y() - relativeTextLineHeight);
+			std::string rangeStr = "Range from pointer: ";
+			double rangeInKm = rangeInMeters / 1000.;
+			auto rangeInKmStr = NFmiValueString::GetStringWithMaxDecimalsSmartWay(rangeInKm, 1);
+			rangeStr += rangeInKmStr;
+			rangeStr += " km";
+			CtrlView::DrawTextToRelativeLocation(
+				*itsGdiPlusGraphics,
+				color,
+				fontSizeInMM,
+				rangeStr,
+				textRelativeLocation,
+				pixelsPerMM,
+				itsToolBox,
+				fontName,
+				kRight);
+
+			textRelativeLocation.Y(textRelativeLocation.Y() - relativeTextLineHeight);
+			std::string rangeTitleStr = "Range meter (press Y on/off)";
+			CtrlView::DrawTextToRelativeLocation(
+				*itsGdiPlusGraphics,
+				color,
+				fontSizeInMM,
+				rangeTitleStr,
+				textRelativeLocation,
+				pixelsPerMM,
+				itsToolBox,
+				fontName,
+				kRight);
+		}
+	}
 }
 
 static bool IsRectIntersecting(const NFmiRect &theRect, std::vector<NFmiRect> &theExistingRects)

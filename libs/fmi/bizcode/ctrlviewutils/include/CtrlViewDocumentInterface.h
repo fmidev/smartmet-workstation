@@ -306,7 +306,10 @@ public:
     virtual std::vector<NFmiProducer>& ExtraSoundingProducerList(void) = 0;
     virtual bool ShowWarningMarkersOnMap(int theDescTopIndex) = 0;
     virtual CDC* MapBlitDC(int theDescTopIndex) = 0;
+    virtual int ToolTipColumnIndex() const = 0;
     virtual void ToolTipColumnIndex(int newIndex) = 0;
+    virtual int ToolTipMapViewDescTopIndex() const = 0;
+    virtual void ToolTipMapViewDescTopIndex(int newIndex) = 0;
     virtual bool HasActiveViewChanged(void) = 0;
     virtual void LastBrushedViewTime(const NFmiMetTime& newTime) = 0;
     virtual void LastBrushedViewRealRowIndex(int newRealRowIndex) = 0;

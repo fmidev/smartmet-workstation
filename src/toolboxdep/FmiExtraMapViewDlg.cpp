@@ -142,6 +142,11 @@ ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP4_BACKWARD, &CFmiExtraMapViewDlg::O
 ON_COMMAND(ID_EDIT_VISUALIZATIONSETTINGS_EXTRA_MAP, &CFmiExtraMapViewDlg::OnEditVisualizationsettingsExtraMap)
 ON_COMMAND(ID_ACCELERATOR_EM_CHANGE_ALL_MODEL_DATA_ON_ROW_TO_PREVIOUS_MODEL_RUN, &CFmiExtraMapViewDlg::OnAcceleratorEmChangeAllModelDataOnRowToPreviousModelRun)
 ON_COMMAND(ID_ACCELERATOR_EM_CHANGE_ALL_MODEL_DATA_ON_ROW_TO_NEXT_MODEL_RUN, &CFmiExtraMapViewDlg::OnAcceleratorEmChangeAllModelDataOnRowToNextModelRun)
+ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_MODE_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterModeToggle)
+ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_INCREASE_RANGE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterIncreaseRange)
+ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_DECREASE_RANGE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterDecreaseRange)
+ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_INCREMENT_MODE_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterIncrementModeToggle)
+ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_COLOR_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterColorToggle)
 END_MESSAGE_MAP()
 
 
@@ -902,4 +907,39 @@ void CFmiExtraMapViewDlg::OnAcceleratorEmChangeAllModelDataOnRowToPreviousModelR
 void CFmiExtraMapViewDlg::OnAcceleratorEmChangeAllModelDataOnRowToNextModelRun()
 {
 	itsSmartMetDocumentInterface->GetCombinedMapHandlerInterface().setModelRunOffsetForAllModelDataOnActiveRow(itsMapViewDescTopIndex, kForward);
+}
+
+
+void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterModeToggle()
+{
+	itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().ModeOnToggle();
+	ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+}
+
+
+void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterIncreaseRange()
+{
+	itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().AdjustRangeValue(kUp);
+	ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+}
+
+
+void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterDecreaseRange()
+{
+	itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().AdjustRangeValue(kDown);
+	ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+}
+
+
+void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterIncrementModeToggle()
+{
+	itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().ToggleChangeIncrementInMeters();
+	ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+}
+
+
+void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterColorToggle()
+{
+	itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().ToggleColor();
+	ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
 }

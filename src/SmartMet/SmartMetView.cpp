@@ -110,6 +110,11 @@ BEGIN_MESSAGE_MAP(CSmartMetView, CView)
 	ON_WM_DISPLAYCHANGE()
 	ON_COMMAND(ID_ACCELERATOR_CHANGE_ALL_MODEL_DATA_ON_ROW_TO_PREVIOUS_MODEL_RUN, &CSmartMetView::OnAcceleratorChangeAllModelDataOnRowToPreviousModelRun)
 	ON_COMMAND(ID_ACCELERATOR_CHANGE_ALL_MODEL_DATA_ON_ROW_TO_NEXT_MODEL_RUN, &CSmartMetView::OnAcceleratorChangeAllModelDataOnRowToNextModelRun)
+	ON_COMMAND(ID_ACCELERATOR_MAP_VIEW_RANGE_METER_MODE_TOGGLE, &CSmartMetView::OnAcceleratorMapViewRangeMeterModeToggle)
+	ON_COMMAND(ID_ACCELERATOR_MAP_VIEW_RANGE_METER_INCREASE_RANGE, &CSmartMetView::OnAcceleratorMapViewRangeMeterIncreaseRange)
+	ON_COMMAND(ID_ACCELERATOR_MAP_VIEW_RANGE_METER_DECREASE_RANGE, &CSmartMetView::OnAcceleratorMapViewRangeMeterDecreaseRange)
+	ON_COMMAND(ID_ACCELERATOR_MAP_VIEW_RANGE_METER_INCREMENT_MODE_TOGGLE, &CSmartMetView::OnAcceleratorMapViewRangeMeterIncrementModeToggle)
+	ON_COMMAND(ID_ACCELERATOR_MAP_VIEW_RANGE_METER_COLOR_TOGGLE, &CSmartMetView::OnAcceleratorMapViewRangeMeterColorToggle)
 END_MESSAGE_MAP()
 
 // CSmartMetView construction/destruction
@@ -713,8 +718,9 @@ void CSmartMetView::OnMouseMove(UINT nFlags, CPoint point)
 	else if(!(genData->MiddleMouseButtonDown() && genData->MouseCaptured())) // muuten ForceDrawOverBitmapThings, paitsi jos ollaan vetämässä kartan päälle zoomi laatikkoa, koska se peittyisi aina ForceDrawOverBitmapThings:n alle
 	{
         bool doIncreaseCurrentUpdateId = false;
+		bool rangeMeterModeOn = genData->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().ModeOn();
 
-		if(genData->ShowMouseHelpCursorsOnMap() || drawOverBitmapAnyway)
+		if(genData->ShowMouseHelpCursorsOnMap() || drawOverBitmapAnyway || rangeMeterModeOn)
 		{
             // Täältä ei haluta doIncreaseCurrentUpdateId asetusta, koska ei kiinnosta, jos kartalla päivitetään apukursoreita
             ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true); // hiiren apukursorit pitää joka tapauksessa piirtää aina
@@ -1380,4 +1386,39 @@ void CSmartMetView::OnAcceleratorMapPanUp()
 void CSmartMetView::OnDisplayChange(UINT, int, int)
 {
 	GetGeneralDoc()->OnButtonRefresh("Display settings have changed somehow, doing full update on all views");
+}
+
+
+void CSmartMetView::OnAcceleratorMapViewRangeMeterModeToggle()
+{
+	GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().ModeOnToggle();
+	ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+}
+
+
+void CSmartMetView::OnAcceleratorMapViewRangeMeterIncreaseRange()
+{
+	GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().AdjustRangeValue(kUp);
+	ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+}
+
+
+void CSmartMetView::OnAcceleratorMapViewRangeMeterDecreaseRange()
+{
+	GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().AdjustRangeValue(kDown);
+	ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+}
+
+
+void CSmartMetView::OnAcceleratorMapViewRangeMeterIncrementModeToggle()
+{
+	GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().ToggleChangeIncrementInMeters();
+	ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+}
+
+
+void CSmartMetView::OnAcceleratorMapViewRangeMeterColorToggle()
+{
+	GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().ToggleColor();
+	ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
 }
