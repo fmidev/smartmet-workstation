@@ -211,6 +211,11 @@ public:
 	afx_msg void OnDisplayChange(UINT, int, int);
 	afx_msg void OnAcceleratorChangeAllModelDataOnRowToPreviousModelRun();
 	afx_msg void OnAcceleratorChangeAllModelDataOnRowToNextModelRun();
+	afx_msg void OnAcceleratorMapViewRangeMeterModeToggle();
+	afx_msg void OnAcceleratorMapViewRangeMeterIncreaseRange();
+	afx_msg void OnAcceleratorMapViewRangeMeterDecreaseRange();
+	afx_msg void OnAcceleratorMapViewRangeMeterIncrementModeToggle();
+	afx_msg void OnAcceleratorMapViewRangeMeterColorToggle();
 };
 
 #ifndef _DEBUG  // debug version in SmartMetView.cpp

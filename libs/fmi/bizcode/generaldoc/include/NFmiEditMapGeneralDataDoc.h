@@ -537,6 +537,8 @@ public:
 	void ToolTipColumnIndex(int newIndex);
 	const NFmiPoint& ToolTipLatLonPoint(void) const;
 	void ToolTipLatLonPoint(const NFmiPoint& theLatLon);
+	int ToolTipMapViewDescTopIndex() const;
+	void ToolTipMapViewDescTopIndex(int newIndex);
 	void ToolTipTime(const NFmiMetTime& theTime);
 	const NFmiMetTime& ToolTipTime(void);
 	NFmiParamBag& AllStaticParams(void);

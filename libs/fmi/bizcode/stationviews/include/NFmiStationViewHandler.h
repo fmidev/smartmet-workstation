@@ -213,6 +213,9 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	bool HasSeparateCountryBorderLayer() const;
 	void SetThisAsActiveViewRow() const;
 	bool IsThisActiveViewRow() const;
+	void DrawMapViewRangeMeterData();
+	bool DoRangeMeterMouseWheelAdjustRangeChecks(short theDelta);
+	bool DoRangeMeterMouseWheelAdjustIncrementChecks(short theDelta);
 
     template<typename T>
     bool MakeParamHandlerViewActions(T action)

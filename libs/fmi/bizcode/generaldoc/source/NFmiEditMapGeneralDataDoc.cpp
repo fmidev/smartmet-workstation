@@ -10737,6 +10737,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	int itsToolTipColumnIndex; // hiiren kursorin lepopaikan näyttörivin sarake numero tooltippiä varten
 	NFmiPoint itsToolTipLatLonPoint; // hiiren kursorin lepopaikka tooltippiä varten (kartan koordinaatistossa latlon-piste)
 	NFmiMetTime itsToolTipTime; // tooltipillä voi olla mikä tahansa ruudukon aika, ja se talletetaan tähän
+	int itsToolTipMapViewDescTopIndex; // Mistä karttanäytöltä tooltip otettiin
 	boost::shared_ptr<NFmiDrawParam> itsDefaultEditedDrawParam; // tämän jouduin ottamaan käyttöön kun upudatat
 											  // alkoivat tuottaa ongelmia tälläinen luodaan aina
 											  // uudesta datasta (esim. 1. parametri). Jos käyttäjä
@@ -11130,6 +11131,8 @@ void NFmiEditMapGeneralDataDoc::ToolTipColumnIndex(int newIndex)
 
 const NFmiPoint& NFmiEditMapGeneralDataDoc::ToolTipLatLonPoint(void) const {return pimpl->itsToolTipLatLonPoint;};
 void NFmiEditMapGeneralDataDoc::ToolTipLatLonPoint(const NFmiPoint& theLatLon){pimpl->itsToolTipLatLonPoint = theLatLon;};
+int NFmiEditMapGeneralDataDoc::ToolTipMapViewDescTopIndex() const { return pimpl->itsToolTipMapViewDescTopIndex; }
+void NFmiEditMapGeneralDataDoc::ToolTipMapViewDescTopIndex(int newIndex) { pimpl->itsToolTipMapViewDescTopIndex = newIndex; }
 void NFmiEditMapGeneralDataDoc::ToolTipTime(const NFmiMetTime& theTime){pimpl->itsToolTipTime = theTime;};
 const NFmiMetTime& NFmiEditMapGeneralDataDoc::ToolTipTime(void){return pimpl->itsToolTipTime;};
 int NFmiEditMapGeneralDataDoc::FilterFunction(void){return pimpl->itsFilterFunction;};

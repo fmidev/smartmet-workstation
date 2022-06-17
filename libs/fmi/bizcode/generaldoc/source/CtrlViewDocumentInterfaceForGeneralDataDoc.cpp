@@ -651,6 +651,16 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipLatLonPoint(const NFmiPo
     itsDoc->ToolTipLatLonPoint(theLatLon);
 }
 
+int CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipMapViewDescTopIndex() const
+{
+    return itsDoc->ToolTipMapViewDescTopIndex();
+}
+
+void CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipMapViewDescTopIndex(int newIndex)
+{
+    itsDoc->ToolTipMapViewDescTopIndex(newIndex);
+}
+
 void CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipTime(const NFmiMetTime& theTime)
 {
     itsDoc->ToolTipTime(theTime);
@@ -938,6 +948,11 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::ShowWarningMarkersOnMap(int the
 CDC* CtrlViewDocumentInterfaceForGeneralDataDoc::MapBlitDC(int theDescTopIndex)
 {
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->MapBlitDC();
+}
+
+int CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipColumnIndex() const
+{
+    return itsDoc->ToolTipColumnIndex();
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipColumnIndex(int newIndex)

@@ -427,7 +427,8 @@ void CFmiExtraMapView::OnMouseMove(UINT nFlags, CPoint point)
 		Invalidate(FALSE);
 	else if(!(itsSmartMetDocumentInterface->MiddleMouseButtonDown() && itsSmartMetDocumentInterface->MouseCaptured())) // muuten ForceDrawOverBitmapThings, paitsi jos ollaan vetämässä kartan päälle zoomi laatikkoa, koska se peittyisi aina ForceDrawOverBitmapThings:n alle
 	{
-		if(itsSmartMetDocumentInterface->ShowMouseHelpCursorsOnMap() || drawOverBitmapAnyway)
+		bool rangeMeterModeOn = itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().ModeOn();
+		if(itsSmartMetDocumentInterface->ShowMouseHelpCursorsOnMap() || drawOverBitmapAnyway || rangeMeterModeOn)
 		{
             itsSmartMetDocumentInterface->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true); // hiiren apukursorit pitää joka tapauksessa piirtää aina ja joka karttanäyttöön
 		}
