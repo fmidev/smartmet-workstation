@@ -1398,27 +1398,43 @@ void CSmartMetView::OnAcceleratorMapViewRangeMeterModeToggle()
 
 void CSmartMetView::OnAcceleratorMapViewRangeMeterIncreaseRange()
 {
-	GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().AdjustRangeValue(kUp);
-	ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+	auto& mapViewRangeMeter = GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	if(mapViewRangeMeter.ModeOn())
+	{
+		mapViewRangeMeter.AdjustRangeValue(kUp);
+		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+	}
 }
 
 
 void CSmartMetView::OnAcceleratorMapViewRangeMeterDecreaseRange()
 {
-	GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().AdjustRangeValue(kDown);
-	ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+	auto& mapViewRangeMeter = GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	if(mapViewRangeMeter.ModeOn())
+	{
+		mapViewRangeMeter.AdjustRangeValue(kDown);
+		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+	}
 }
 
 
 void CSmartMetView::OnAcceleratorMapViewRangeMeterIncrementModeToggle()
 {
-	GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().ToggleChangeIncrementInMeters();
-	ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+	auto& mapViewRangeMeter = GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	if(mapViewRangeMeter.ModeOn())
+	{
+		mapViewRangeMeter.ToggleChangeIncrementInMeters();
+		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+	}
 }
 
 
 void CSmartMetView::OnAcceleratorMapViewRangeMeterColorToggle()
 {
-	GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().ToggleColor();
-	ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+	auto& mapViewRangeMeter = GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	if(mapViewRangeMeter.ModeOn())
+	{
+		mapViewRangeMeter.ToggleColor();
+		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+	}
 }
