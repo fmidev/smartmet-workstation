@@ -205,7 +205,6 @@ private:
     boost::shared_ptr<CachedRegString> mCombinedMapModeSelectedBackgroundIndicesStr; 
     // Vastaava teksti overlay kartta-alueiden indekseille
     boost::shared_ptr<CachedRegString> mCombinedMapModeSelectedOverlayIndicesStr;
-    // MapViewRangeMeter asetuksia omassa luokassa, jossa winReg tuki
 };
 
 // Poikkileikkausnäyttöjen asetuksia Windows rekisterissä, SmartMet konffi kohtaisia
