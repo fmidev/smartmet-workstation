@@ -216,6 +216,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	void DrawMapViewRangeMeterData();
 	bool DoRangeMeterMouseWheelAdjustRangeChecks(short theDelta);
 	bool DoRangeMeterMouseWheelAdjustIncrementChecks(short theDelta);
+	std::vector<NFmiPoint> ConvertLatlonToRelativePoints(const std::vector<NFmiPoint>& latlonPoints);
 
     template<typename T>
     bool MakeParamHandlerViewActions(T action)
