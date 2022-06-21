@@ -162,4 +162,5 @@ public:
 	afx_msg void OnAcceleratorExtraMapViewRangeMeterDecreaseRange();
 	afx_msg void OnAcceleratorExtraMapViewRangeMeterIncrementModeToggle();
 	afx_msg void OnAcceleratorExtraMapViewRangeMeterColorToggle();
+	afx_msg void OnAcceleratorExtraMapViewRangeMeterFixedLocationModeToggle();
 };

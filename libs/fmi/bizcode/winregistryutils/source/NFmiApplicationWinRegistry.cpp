@@ -187,6 +187,12 @@ const NFmiColor& NFmiMapViewRangeMeterWinRegistry::GetSelectedColor() const
     return mColors[*mColorIndex];
 }
 
+void NFmiMapViewRangeMeterWinRegistry::FixedLatlonPointModeToggle(const NFmiPoint& latlon)
+{ 
+    mUseFixedLatlonPoint = !mUseFixedLatlonPoint; 
+    mFixedLatlonPoint = latlon;
+}
+
 // ************************************************
 // ****   NFmiGriddingPropertiesWinRegistry *******
 // ************************************************

@@ -216,6 +216,7 @@ public:
 	afx_msg void OnAcceleratorMapViewRangeMeterDecreaseRange();
 	afx_msg void OnAcceleratorMapViewRangeMeterIncrementModeToggle();
 	afx_msg void OnAcceleratorMapViewRangeMeterColorToggle();
+	afx_msg void OnAcceleratorMapViewRangeMeterFixedLocationModeToggle();
 };
 
 #ifndef _DEBUG  // debug version in SmartMetView.cpp

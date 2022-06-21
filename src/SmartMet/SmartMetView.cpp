@@ -115,6 +115,7 @@ BEGIN_MESSAGE_MAP(CSmartMetView, CView)
 	ON_COMMAND(ID_ACCELERATOR_MAP_VIEW_RANGE_METER_DECREASE_RANGE, &CSmartMetView::OnAcceleratorMapViewRangeMeterDecreaseRange)
 	ON_COMMAND(ID_ACCELERATOR_MAP_VIEW_RANGE_METER_INCREMENT_MODE_TOGGLE, &CSmartMetView::OnAcceleratorMapViewRangeMeterIncrementModeToggle)
 	ON_COMMAND(ID_ACCELERATOR_MAP_VIEW_RANGE_METER_COLOR_TOGGLE, &CSmartMetView::OnAcceleratorMapViewRangeMeterColorToggle)
+	ON_COMMAND(ID_ACCELERATOR_MAP_VIEW_RANGE_METER_FIXED_LOCATION_MODE_TOGGLE, &CSmartMetView::OnAcceleratorMapViewRangeMeterFixedLocationModeToggle)
 END_MESSAGE_MAP()
 
 // CSmartMetView construction/destruction
@@ -1125,7 +1126,6 @@ void CSmartMetView::SetMapViewGridSize(const NFmiPoint &newSize)
 	}
 }
 
-
 // Malli SizeDemo-projektista CSizeDemoDlg::DefWindowProc
 LRESULT CSmartMetView::DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -1344,7 +1344,6 @@ void CSmartMetView::PutWarningFlagTimerOn(void)
 		pFrame->PutWarningFlagTimerOn();
 }
 
-
 void CSmartMetView::OnUpdateButtonDataToDatabase(CCmdUI *pCmdUI)
 {
 	pCmdUI->Enable(GetGeneralDoc()->CaseStudyModeOn() == false);
@@ -1365,18 +1364,15 @@ void CSmartMetView::OnAcceleratorMapPanDown()
     CFmiWin32TemplateHelpers::ArrowKeyMapPan(itsEditMapView, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), NFmiPoint(0, 0.05));
 }
 
-
 void CSmartMetView::OnAcceleratorMapPanLeft()
 {
     CFmiWin32TemplateHelpers::ArrowKeyMapPan(itsEditMapView, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), NFmiPoint(-0.05, 0));
 }
 
-
 void CSmartMetView::OnAcceleratorMapPanRight()
 {
     CFmiWin32TemplateHelpers::ArrowKeyMapPan(itsEditMapView, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), NFmiPoint(0.05, 0));
 }
-
 
 void CSmartMetView::OnAcceleratorMapPanUp()
 {
@@ -1388,13 +1384,11 @@ void CSmartMetView::OnDisplayChange(UINT, int, int)
 	GetGeneralDoc()->OnButtonRefresh("Display settings have changed somehow, doing full update on all views");
 }
 
-
 void CSmartMetView::OnAcceleratorMapViewRangeMeterModeToggle()
 {
 	GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().ModeOnToggle();
 	ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
 }
-
 
 void CSmartMetView::OnAcceleratorMapViewRangeMeterIncreaseRange()
 {
@@ -1406,7 +1400,6 @@ void CSmartMetView::OnAcceleratorMapViewRangeMeterIncreaseRange()
 	}
 }
 
-
 void CSmartMetView::OnAcceleratorMapViewRangeMeterDecreaseRange()
 {
 	auto& mapViewRangeMeter = GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
@@ -1416,7 +1409,6 @@ void CSmartMetView::OnAcceleratorMapViewRangeMeterDecreaseRange()
 		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
 	}
 }
-
 
 void CSmartMetView::OnAcceleratorMapViewRangeMeterIncrementModeToggle()
 {
@@ -1428,13 +1420,22 @@ void CSmartMetView::OnAcceleratorMapViewRangeMeterIncrementModeToggle()
 	}
 }
 
-
 void CSmartMetView::OnAcceleratorMapViewRangeMeterColorToggle()
 {
 	auto& mapViewRangeMeter = GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
 	if(mapViewRangeMeter.ModeOn())
 	{
 		mapViewRangeMeter.ToggleColor();
+		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+	}
+}
+
+void CSmartMetView::OnAcceleratorMapViewRangeMeterFixedLocationModeToggle()
+{
+	auto& mapViewRangeMeter = GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	if(mapViewRangeMeter.ModeOn())
+	{
+		mapViewRangeMeter.FixedLatlonPointModeToggle(GetGeneralDoc()->ToolTipLatLonPoint());
 		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
 	}
 }

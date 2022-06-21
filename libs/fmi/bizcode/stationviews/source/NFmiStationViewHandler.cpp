@@ -3957,14 +3957,14 @@ void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 			double rangeInMeters = mapViewRangeMeter.RangeInMeters();
 			auto incrementInMeters = mapViewRangeMeter.ChangeIncrementInMeters();
 			const auto& color = mapViewRangeMeter.GetSelectedColor();
-			const auto& tooltipLatlon = itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
-			NFmiLocation tooltipLocation(tooltipLatlon);
+			const auto& usedLatlon = mapViewRangeMeter.UseFixedLatlonPoint() ? mapViewRangeMeter.FixedLatlonPoint() : itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
+			NFmiLocation usedLocation(usedLatlon);
 			std::vector<NFmiPoint> relativeCirclePoints;
 			double usedAngleStep = 10.;
 			relativeCirclePoints.reserve(boost::math::iround(360. / usedAngleStep) + 1);
 			for(auto currentAngle = 0.; currentAngle <= 360.; currentAngle += usedAngleStep)
 			{
-				auto currentLocation = tooltipLocation.GetLocation(currentAngle, rangeInMeters, itsMapArea->PacificView());
+				auto currentLocation = usedLocation.GetLocation(currentAngle, rangeInMeters, itsMapArea->PacificView());
 				relativeCirclePoints.push_back(LatLonToViewPoint(currentLocation.GetLocation()));
 			}
 
@@ -3978,7 +3978,7 @@ void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 			CtrlView::DrawGdiplusCurve(*itsGdiPlusGraphics, gdiPoints, lineInfo, false, 0, itsCtrlViewDocumentInterface->Printing());
 
 			// Piirrä hiiren osoittimen kohdalle pikku risti
-			auto tooltipRelativePosition = LatLonToViewPoint(tooltipLatlon);
+			auto tooltipRelativePosition = LatLonToViewPoint(usedLatlon);
 			auto tooltipGdiPosition = CtrlView::Relative2GdiplusPoint(itsToolBox, tooltipRelativePosition);
 			float crossHairLengthInMM = 2.5f;
 			float crossHairLengthInPixels = crossHairLengthInMM * pixelsPerMM;
@@ -4001,6 +4001,35 @@ void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 			std::wstring fontName = L"arial";
 			double fontSizeInMM = 6.f;
 			double relativeTextLineHeight = itsToolBox->SY(boost::math::iround(fontSizeInMM * pixelsPerMM));
+
+			textRelativeLocation.Y(textRelativeLocation.Y() - relativeTextLineHeight);
+			std::string usedLatlonStr = "Used location: ";
+			usedLatlonStr += CtrlViewUtils::GetFixedLatlonStr(usedLatlon);
+			CtrlView::DrawTextToRelativeLocation(
+				*itsGdiPlusGraphics,
+				color,
+				fontSizeInMM,
+				usedLatlonStr,
+				textRelativeLocation,
+				pixelsPerMM,
+				itsToolBox,
+				fontName,
+				kRight);
+
+			textRelativeLocation.Y(textRelativeLocation.Y() - relativeTextLineHeight);
+			std::string fixedLatlonStr = "Fixed location mode: ";
+			fixedLatlonStr += mapViewRangeMeter.UseFixedLatlonPoint() ? "On" : "Off";
+			fixedLatlonStr += " (CTRL + ALT + Y)";
+			CtrlView::DrawTextToRelativeLocation(
+				*itsGdiPlusGraphics,
+				color,
+				fontSizeInMM,
+				fixedLatlonStr,
+				textRelativeLocation,
+				pixelsPerMM,
+				itsToolBox,
+				fontName,
+				kRight);
 
 			textRelativeLocation.Y(textRelativeLocation.Y() - relativeTextLineHeight);
 			std::string rangeIncrementStr = "Range increment: ";
