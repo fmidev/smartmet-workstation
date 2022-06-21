@@ -4005,7 +4005,7 @@ void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 			latlonCirclePoints.reserve(boost::math::iround(360. / usedAngleStep) + 1);
 			for(auto currentAngle = 0.; currentAngle <= 360.; currentAngle += usedAngleStep)
 			{
-				auto currentLocation = usedLocation.GetLocation(currentAngle, rangeInMeters, itsMapArea->PacificView());
+				auto currentLocation = usedLocation.GetLocation(currentAngle, rangeInMeters);
 				latlonCirclePoints.push_back(currentLocation.GetLocation());
 			}
 

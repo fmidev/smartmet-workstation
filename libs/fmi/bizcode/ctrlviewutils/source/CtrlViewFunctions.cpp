@@ -463,7 +463,6 @@ namespace CtrlViewUtils
         out << " ";
 
         double lon = theLatlon.X();
-        lon = FixLongitudeToEuropeCenteredValue(lon);
         out << std::fixed << std::setprecision(4) << std::setw(8) << std::setfill('0') << std::right << ::fabs(lon) << ((lon >= 0 && lon < 180) ? "E" : "W");
         return out.str();
     }
