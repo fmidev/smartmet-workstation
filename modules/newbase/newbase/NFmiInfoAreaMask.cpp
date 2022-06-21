@@ -3078,7 +3078,9 @@ bool NFmiInfoAreaMaskProbFunc::CheckTimeIndicesForLoopBreak(unsigned long theSta
 bool NFmiInfoAreaMaskProbFunc::IsCalculationPointInsideCircle(
     const NFmiLocation &theCalculationPointLocation, int theOffsetX, int theOffsetY)
 {
-  if (itsSecondaryFunc == NFmiAreaMask::AreaCircle)
+  if (itsSecondaryFunc == NFmiAreaMask::AreaCircle ||
+      itsSecondaryFunc == NFmiAreaMask::Occurrence ||
+      itsSecondaryFunc == NFmiAreaMask::Occurrence2)
   {
     // ympyrä tapauksessa tarkastetaan jokainen piste erikseen, onko se halutun säteisen ympyrän
     // sisällä
