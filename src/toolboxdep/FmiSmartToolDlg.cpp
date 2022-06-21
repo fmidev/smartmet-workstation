@@ -1129,7 +1129,7 @@ void CFmiSmartToolDlg::UpdateMacroParamDisplayListAfterSpeedLoad()
             itsMacroParamList.SetCurSel(selectedNameIndex);
 
         // currentFolder->RefreshMacroParams operaation jälkeen palautetaan valittu macroParam taas oikeasti valituksi
-        currentFolder->Find(foundMacroParamName);
+        mpSystem.FindMacroFromCurrentFolder(foundMacroParamName);
     }
 }
 
