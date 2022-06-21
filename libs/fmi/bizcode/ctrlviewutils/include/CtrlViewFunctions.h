@@ -53,7 +53,8 @@ namespace CtrlViewUtils
    std::string GetParamNameString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool fCrossSectionInfoWanted, bool fAddIdInfos, bool fMakeTooltipXmlEncode, size_t theLongerProducerNameMaxCharCount, bool fTimeSerialViewCase, bool fShowModelOriginTime = true, boost::shared_ptr<NFmiFastQueryInfo> possibleInfo = nullptr);
    NFmiColor GetParamTextColor(NFmiInfoData::Type dataType, bool useArchiveModelData, CtrlViewDocumentInterface *theCtrlViewDocumentInterface);
    std::string GetEditingDataString(const std::string &theNameStr, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiLanguage lang, const std::string &theOrigTimeFormat);
-   std::string GetTotalMapViewStatusBarStr(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, const NFmiPoint &theLatlon);
+   std::string GetTotalMapViewStatusBarStr(CtrlViewDocumentInterface* theCtrlViewDocumentInterface, const NFmiPoint& theLatlon);
+   std::string GetFixedLatlonStr(const NFmiPoint &theLatlon);
    boost::shared_ptr<NFmiFastQueryInfo> GetLatestLastTimeObservation(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, bool fCrossSectionInfoWanted);
    std::string GetArchiveOrigTimeString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, bool fGetCurrentDataFromQ2Server, const std::string &theDictionaryTokenForOrigTimeFormat);
    std::string GetLatestObservationTimeString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, const std::string &theTimeFormat, bool fCrossSectionInfoWanted);

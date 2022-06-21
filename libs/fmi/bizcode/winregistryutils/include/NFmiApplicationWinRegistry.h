@@ -28,6 +28,8 @@ class NFmiMapViewRangeMeterWinRegistry
     boost::shared_ptr<CachedRegInt> mChangeIncrementInMeters;
     boost::shared_ptr<CachedRegInt> mColorIndex;
     static const std::vector<NFmiColor> mColors;
+    bool mUseFixedLatlonPoint = false;
+    NFmiPoint mFixedLatlonPoint = NFmiPoint::gMissingLatlon;
 public:
     NFmiMapViewRangeMeterWinRegistry();
     bool Init(const std::string& baseRegistryPath);
@@ -47,6 +49,11 @@ public:
     void ToggleColor();
     const NFmiColor& GetSelectedColor() const;
     static const std::vector<NFmiColor>& Colors() { return mColors; }
+    bool UseFixedLatlonPoint() const { return mUseFixedLatlonPoint; }
+    void UseFixedLatlonPoint(bool newValue) { mUseFixedLatlonPoint = newValue; }
+    void FixedLatlonPointModeToggle(const NFmiPoint& latlon);
+    const NFmiPoint& FixedLatlonPoint() const { return mFixedLatlonPoint; }
+    void FixedLatlonPoint(const NFmiPoint& newValue) { mFixedLatlonPoint = newValue; }
 };
 
 class NFmiGriddingPropertiesWinRegistry
