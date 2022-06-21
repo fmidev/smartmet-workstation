@@ -3960,7 +3960,7 @@ void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 			const auto& usedLatlon = mapViewRangeMeter.UseFixedLatlonPoint() ? mapViewRangeMeter.FixedLatlonPoint() : itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
 			NFmiLocation usedLocation(usedLatlon);
 			std::vector<NFmiPoint> relativeCirclePoints;
-			double usedAngleStep = 10.;
+			double usedAngleStep = 2.;
 			relativeCirclePoints.reserve(boost::math::iround(360. / usedAngleStep) + 1);
 			for(auto currentAngle = 0.; currentAngle <= 360.; currentAngle += usedAngleStep)
 			{
