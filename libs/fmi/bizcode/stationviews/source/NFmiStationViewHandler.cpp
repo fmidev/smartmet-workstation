@@ -3944,6 +3944,47 @@ static int CalcPenWidthInPixels(float penSizeInMM, float pixelsPerMMOnScreen)
 	return std::max(1, boost::math::iround(penSizeInMM * pixelsPerMMOnScreen));
 }
 
+static std::vector<std::vector<NFmiPoint>> SplitPossibleOverEdgeLongitudeJumps(const std::vector<NFmiPoint>& latlonPolyline)
+{
+	std::vector<std::vector<NFmiPoint>> splitPolylines;
+	if(!latlonPolyline.empty())
+	{
+		size_t lastSplitIndex = 0;
+		for(size_t index = 0; index < latlonPolyline.size() - 1; index++)
+		{
+			const auto& p1 = latlonPolyline[index];
+			auto index2 = index + 1;
+			const auto& p2 = latlonPolyline[index2];
+			if(std::fabs(p1.X() - p2.X()) > 300.)
+			{
+				splitPolylines.push_back(std::vector<NFmiPoint>(latlonPolyline.begin() + lastSplitIndex, latlonPolyline.begin() + index2));
+				lastSplitIndex = index2;
+			}
+		}
+
+		if(splitPolylines.empty())
+		{
+			splitPolylines.push_back(latlonPolyline);
+		}
+		else
+		{
+			splitPolylines.push_back(std::vector<NFmiPoint>(latlonPolyline.begin() + lastSplitIndex, latlonPolyline.end()));
+		}
+	}
+	return splitPolylines;
+}
+
+std::vector<NFmiPoint> NFmiStationViewHandler::ConvertLatlonToRelativePoints(const std::vector<NFmiPoint>& latlonPoints)
+{
+	std::vector<NFmiPoint> relativePoints;
+	relativePoints.reserve(latlonPoints.size());
+	for(const auto& latlon : latlonPoints)
+	{
+		relativePoints.push_back(LatLonToViewPoint(latlon));
+	}
+	return relativePoints;
+}
+
 void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 {
 	auto &mapViewRangeMeter = itsCtrlViewDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
@@ -3959,23 +4000,29 @@ void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 			const auto& color = mapViewRangeMeter.GetSelectedColor();
 			const auto& usedLatlon = mapViewRangeMeter.UseFixedLatlonPoint() ? mapViewRangeMeter.FixedLatlonPoint() : itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
 			NFmiLocation usedLocation(usedLatlon);
-			std::vector<NFmiPoint> relativeCirclePoints;
+			std::vector<NFmiPoint> latlonCirclePoints;
 			double usedAngleStep = 2.;
-			relativeCirclePoints.reserve(boost::math::iround(360. / usedAngleStep) + 1);
+			latlonCirclePoints.reserve(boost::math::iround(360. / usedAngleStep) + 1);
 			for(auto currentAngle = 0.; currentAngle <= 360.; currentAngle += usedAngleStep)
 			{
 				auto currentLocation = usedLocation.GetLocation(currentAngle, rangeInMeters, itsMapArea->PacificView());
-				relativeCirclePoints.push_back(LatLonToViewPoint(currentLocation.GetLocation()));
+				latlonCirclePoints.push_back(currentLocation.GetLocation());
 			}
 
-			// Piirrä range-ympyrä
 			auto pixelsPerMM = static_cast<float>(itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_y);
-			auto gdiPoints = CtrlView::Relative2GdiplusPolyLine(itsToolBox, relativeCirclePoints, NFmiPoint());
 			float lineWidthInMM = 0.3f;
 			float lineWidthInPixels = static_cast<float>(::CalcPenWidthInPixels(lineWidthInMM, pixelsPerMM));
-			int lineStyle = 0; // 0=yhtenäinen viiva
-			GdiPlusLineInfo lineInfo(lineWidthInPixels, color, lineStyle);
-			CtrlView::DrawGdiplusCurve(*itsGdiPlusGraphics, gdiPoints, lineInfo, false, 0, itsCtrlViewDocumentInterface->Printing());
+
+			// Piirrä range-ympyrä
+			auto splitLatlonCirclePoints = ::SplitPossibleOverEdgeLongitudeJumps(latlonCirclePoints);
+			for(const auto &latlonCirclePoints : splitLatlonCirclePoints)
+			{
+				auto relativeCirclePoints = ConvertLatlonToRelativePoints(latlonCirclePoints);
+				auto gdiPoints = CtrlView::Relative2GdiplusPolyLine(itsToolBox, relativeCirclePoints, NFmiPoint());
+				int lineStyle = 0; // 0=yhtenäinen viiva
+				GdiPlusLineInfo lineInfo(lineWidthInPixels, color, lineStyle);
+				CtrlView::DrawGdiplusCurve(*itsGdiPlusGraphics, gdiPoints, lineInfo, false, 0, itsCtrlViewDocumentInterface->Printing());
+			}
 
 			// Piirrä hiiren osoittimen kohdalle pikku risti
 			auto tooltipRelativePosition = LatLonToViewPoint(usedLatlon);
@@ -3988,7 +4035,6 @@ void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 			int line1_y1 = boost::math::iround(tooltipGdiPosition.Y);
 			int line1_y2 = boost::math::iround(tooltipGdiPosition.Y);
 			CtrlView::DrawLine(*itsGdiPlusGraphics, line1_x1, line1_y1, line1_x2, line1_y2, color, lineWidthInPixels);
-
 			// pysty viiva
 			int line2_x1 = boost::math::iround(tooltipGdiPosition.X);
 			int line2_x2 = boost::math::iround(tooltipGdiPosition.X);
