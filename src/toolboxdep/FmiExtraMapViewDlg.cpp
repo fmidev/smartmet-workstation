@@ -148,6 +148,7 @@ ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_DECREASE_RANGE, &CFmiExtraM
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_INCREMENT_MODE_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterIncrementModeToggle)
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_COLOR_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterColorToggle)
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_FIXED_LOCATION_MODE_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterFixedLocationModeToggle)
+ON_COMMAND(ID_ACCELERATOR_LOG_VIEWER_TOOLBOXDEB, &CFmiExtraMapViewDlg::OnAcceleratorLogViewerToolboxdeb)
 END_MESSAGE_MAP()
 
 
@@ -958,4 +959,9 @@ void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterFixedLocationModeTo
 		mapViewRangeMeter.FixedLatlonPointModeToggle(itsSmartMetDocumentInterface->ToolTipLatLonPoint());
 		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
 	}
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorLogViewerToolboxdeb()
+{
+	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenLogViewer();
 }

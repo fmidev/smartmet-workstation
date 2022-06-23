@@ -130,6 +130,7 @@ public:
     SmartMetViewId GetUpdatedViewsFlag() const { return itsUpdatedViewsFlag; }
     SmartMetViewId GetAndResetUpdatedViewsFlag();
     bool HasUpdatedViewsFlagSignificantValue() const { return itsUpdatedViewsFlag != SmartMetViewId::NoViews; }
+	void OpenLogViewer();
 
 	NFmiEditMapGeneralDataDoc* GetData(void);
 	virtual ~CSmartMetDoc();
