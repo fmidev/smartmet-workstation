@@ -98,6 +98,7 @@ class NFmiSoundingDataOpt1
   bool GetValuesStartingLookingFromPressureLevel(double &T, double &Td, double &P);
   float GetValueAtPressure(FmiParameterName theId, float P);
   float GetValueAtHeight(FmiParameterName theId, float H);
+  float GetValueAtHeightHardWay(FmiParameterName theId, float H);
   bool CalcLCLAvgValues(
       double fromZ, double toZ, double &T, double &Td, double &P, bool fUsePotTandMix);
   bool CalcAvgWindComponentValues(double fromZ, double toZ, double &u, double &v);
