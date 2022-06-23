@@ -1963,6 +1963,7 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 		ResetTextualScrollingIfSoundingDataChanged(theProducer, usedTempInfo, info, theIndex);
 		NFmiSoundingDataOpt1 sounding;
 		FillSoundingData(info, sounding, usedTempInfo.Time(), usedLocationWithName, groundDataInfo, theProducer);
+		FillInPossibleMissingPressureData(sounding, theProducer, usedTempInfo.Time(), usedLocationWithName);
         NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
         NFmiColor usedColor(mtaTempSystem.SoundingColor(theIndex));
 		if(theBrightningFactor != 0)
@@ -1990,6 +1991,41 @@ bool NFmiTempView::FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInf
         return FillSoundingDataFromServer(theProducer, theSoundingData, theTime, theLocation);
     else
         return NFmiSoundingIndexCalculator::FillSoundingDataOpt1(theInfo, theSoundingData, theTime, theLocation, theGroundDataInfo);
+}
+
+void NFmiTempView::FillInPossibleMissingPressureData(NFmiSoundingDataOpt1& theSoundingData, const NFmiProducer &dataProducer, const NFmiMetTime& theTime, const NFmiLocation& theLocation)
+{
+	if(theSoundingData.HeightDataAvailable() && !theSoundingData.PressureDataAvailable())
+	{
+		for(const auto& selectedProducer : itsCtrlViewDocumentInterface->GetMTATempSystem().SoundingComparisonProducers())
+		{
+			if(selectedProducer.GetIdent() != dataProducer.GetIdent())
+			{
+				boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(selectedProducer, theTime, 0, NFmiInfoOrganizer::ParamCheckFlags(true));
+				if(info && info->IsGrid() && info->PressureDataAvailable() && info->TimeDescriptor().IsInside(theTime))
+				{
+					auto& pVector = theSoundingData.GetParamData(kFmiPressure);
+					auto& hVector = theSoundingData.GetParamData(kFmiGeomHeight);
+					if(pVector.size() == hVector.size())
+					{
+						info->Param(kFmiPressure);
+						const auto& latlon = theLocation.GetLocation();
+						for(size_t index = 0; index < hVector.size(); index++)
+						{
+							auto height = hVector[index];
+							if(height != kFloatMissing)
+							{
+								auto pressure = info->HeightValue(height, latlon, theTime);
+								pVector[index] = pressure;
+							}
+						}
+						theSoundingData.SetVerticalParamStatus();
+						break;
+					}
+				}
+			}
+		}
+	}
 }
 
 // palauttaa annetun laatikon sisältä pisteen, johon relatiivisessa 0,0 - 1,1 maailmassa

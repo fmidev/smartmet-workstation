@@ -124,6 +124,7 @@ class NFmiTempView : public NFmiCtrlView
 	void ResetTextualScrollingIfSoundingDataChanged(const NFmiMTATempSystem::SoundingProducer& theProducer, const NFmiMTATempSystem::TempInfo& theTempInfo, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, int theIndex);
 	void DrawTextualSideViewScrollingVisuals(NFmiPoint& p, double relativeLineHeight, int totalSoundingRows, int fullVisibleRows, int startingRowIndex, bool drawUpwardSounding);
 	bool DoTextualSideViewSetup(bool showSideView, const NFmiRect& sideViewRect, int fontSize, double fontHeightFactor, double& relativeLineHeightOut);
+	void FillInPossibleMissingPressureData(NFmiSoundingDataOpt1& theSoundingData, const NFmiProducer& dataProducer, const NFmiMetTime& theTime, const NFmiLocation& theLocation);
 
 	double Tpot2x(double tpot, double p);
 	double pt2x(double p, double t);
