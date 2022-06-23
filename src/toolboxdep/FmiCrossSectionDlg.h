@@ -92,4 +92,5 @@ public:
 	afx_msg void OnAcceleratorSaveCrossSectionDefaultAxis();
 	afx_msg void OnAcceleratorSaveCrossSectionSpecialAxis();
 	afx_msg void OnButtonOpenParameterSelection();
+	afx_msg void OnAcceleratorLogViewerToolboxdeb();
 };

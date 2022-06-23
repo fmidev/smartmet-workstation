@@ -122,6 +122,7 @@ BEGIN_MESSAGE_MAP(CFmiTempDlg, CDialog)
     ON_COMMAND(ID_ACCELERATOR_CHANGE_MAP_TYPE_EXTRA_MAP, &CFmiTempDlg::OnAcceleratorChangeMapTypeExtraMap)
     ON_BN_CLICKED(IDC_CHECK_SHOW_SECONDARY_DATA_VIEW, &CFmiTempDlg::OnBnClickedCheckShowSecondaryDataView)
 	ON_WM_GETMINMAXINFO()
+	ON_COMMAND(ID_ACCELERATOR_LOG_VIEWER_TOOLBOXDEB, &CFmiTempDlg::OnAcceleratorLogViewerToolboxdeb)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -723,7 +724,6 @@ void CFmiTempDlg::OnEnChangeEditModelRunCount()
 		firstTime = false;
 }
 
-
 void CFmiTempDlg::OnBnClickedCheckUseMapTimeWithSoundings()
 {
 	UpdateData(TRUE);
@@ -735,7 +735,6 @@ void CFmiTempDlg::OnBnClickedCheckUseMapTimeWithSoundings()
     ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::SoundingView);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Sounding view: Toggle Use map time");
 }
-
 
 void CFmiTempDlg::OnBnClickedCheckPutSoundingTextsUpward()
 {
@@ -756,7 +755,6 @@ void CFmiTempDlg::OnAcceleratorChangeMapTypeExtraMap()
     Invalidate(FALSE);
 }
 
-
 void CFmiTempDlg::OnBnClickedCheckShowSecondaryDataView()
 {
     UpdateData(TRUE);
@@ -765,10 +763,14 @@ void CFmiTempDlg::OnBnClickedCheckShowSecondaryDataView()
     Invalidate(FALSE);
 }
 
-
 void CFmiTempDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 {
 	// set the minimum tracking width and height of the window
 	lpMMI->ptMinTrackSize.x = 500;
 	lpMMI->ptMinTrackSize.y = 500;
+}
+
+void CFmiTempDlg::OnAcceleratorLogViewerToolboxdeb()
+{
+	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenLogViewer();
 }

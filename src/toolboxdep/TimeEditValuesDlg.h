@@ -143,6 +143,7 @@ public:
     afx_msg void OnAcceleratorCpSelectRight();
     afx_msg void OnAcceleratorCpSelectUp();
     afx_msg void OnAcceleratorCpSelectDown();
+	afx_msg void OnAcceleratorLogViewerToolboxdeb();
 };
 
 //{{AFX_INSERT_LOCATION}}

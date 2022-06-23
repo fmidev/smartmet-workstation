@@ -24,6 +24,7 @@
 #include "NFmiApplicationWinRegistry.h"
 #include "CtrlViewFunctions.h"
 #include "persist2.h"
+#include "ApplicationInterface.h"
 
 using namespace std::literals::string_literals;
 
@@ -129,6 +130,7 @@ BEGIN_MESSAGE_MAP(CTimeEditValuesDlg, CDialog)
     ON_COMMAND(ID_ACCELERATOR_CP_TIME_SERIAL_SELECT_UP, &CTimeEditValuesDlg::OnAcceleratorCpSelectUp)
     ON_COMMAND(ID_ACCELERATOR_CP_TIME_SERIAL_SELECT_DOWN, &CTimeEditValuesDlg::OnAcceleratorCpSelectDown)
 	ON_BN_CLICKED(IDC_BUTTON_TIME_SERIAL_PARAMETER_SELECTION, &CTimeEditValuesDlg::OnButtonOpenParameterSelection)
+	ON_COMMAND(ID_ACCELERATOR_LOG_VIEWER_TOOLBOXDEB, &CTimeEditValuesDlg::OnAcceleratorLogViewerToolboxdeb)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -910,4 +912,9 @@ void CTimeEditValuesDlg::OnAcceleratorCpSelectUp()
 void CTimeEditValuesDlg::OnAcceleratorCpSelectDown()
 {
     HandleCpAccelerator(ControlPointAcceleratorActions::Down, "TimeSerialDlg: Select nearest downward Control-point"s);
+}
+
+void CTimeEditValuesDlg::OnAcceleratorLogViewerToolboxdeb()
+{
+	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenLogViewer();
 }

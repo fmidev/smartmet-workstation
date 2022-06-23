@@ -968,9 +968,9 @@ void CSmartMetDoc::CreateLogViewer(NFmiEditMapGeneralDataDoc *theDoc)
     if(itsLogViewer)
         return; // Ei luoda dialogia uudestaan, tätä kutsutaan myös GeneralDataDocista, joka ei tieä onko dialogi jo olemassa
 
-    CSmartMetView *smartmetView = ApplicationInterface::GetSmartMetView();
-    itsLogViewer = new CFmiLogViewer(theDoc->ApplicationWinRegistry(), smartmetView);
-    BOOL status = itsLogViewer->Create(IDD_DIALOG_LOG_VIEWER, smartmetView->GetDesktopWindow());
+    auto *desktopView = ApplicationInterface::GetSmartMetView()->GetDesktopWindow();
+    itsLogViewer = new CFmiLogViewer(theDoc->ApplicationWinRegistry());
+    BOOL status = itsLogViewer->Create(IDD_DIALOG_LOG_VIEWER, desktopView);
     if(status)
     {
         auto refreshCallback = [this]() { this->itsLogViewer->StartRefreshTimer(); };
@@ -1020,7 +1020,7 @@ CFmiExtraMapViewDlg* CSmartMetDoc::CreateExtraMapViewDlg(NFmiEditMapGeneralDataD
 	POSITION pos = GetFirstViewPosition();	// annetaan aikasarjaikkunalle cview parentti-ikkunaksi näytön päivityksiä varten
 	CView* pView = GetNextView(pos);		// ei toimi jos tulevaisuudessa vaihdetaan näyttöä kesken kaiken (esim. multi-doc-view)
 
-	CFmiExtraMapViewDlg *extraMapViewDlg = new CFmiExtraMapViewDlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), theMapViewDescTopIndex, pView);
+	CFmiExtraMapViewDlg *extraMapViewDlg = new CFmiExtraMapViewDlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), theMapViewDescTopIndex);
 	BOOL status = extraMapViewDlg->Create(IDD_DIALOG_MAP_VIEW_EXTRA, pView->GetDesktopWindow());
 	if(status)
 	{
@@ -3571,6 +3571,11 @@ void CSmartMetDoc::OnAcceleratorLogViewer()
     itsLogViewer->Update();
 
 	itsData->LogMessage("Log Viewer on.", CatLog::Severity::Info, CatLog::Category::Operational);
+}
+
+void CSmartMetDoc::OpenLogViewer()
+{
+	OnAcceleratorLogViewer();
 }
 
 void CSmartMetDoc::OnEditSoundingDataFromServerSettings()

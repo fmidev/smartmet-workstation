@@ -136,6 +136,7 @@ public:
     afx_msg void OnAcceleratorChangeMapTypeExtraMap();
     afx_msg void OnBnClickedCheckShowSecondaryDataView();
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
+	afx_msg void OnAcceleratorLogViewerToolboxdeb();
 };
 
 
