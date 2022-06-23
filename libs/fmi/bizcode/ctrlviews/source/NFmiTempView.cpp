@@ -3392,10 +3392,15 @@ static float GetFinalTooltipValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         return theInfo->PressureLevelValue(P, theLatlon, usedTime);
 }
 
-static std::string GetTooltipValueStr(const std::string &theParStr, NFmiSoundingDataOpt1 &soundingData, FmiParameterName theParId, int theMaxDecimalCount, float P)
+static std::string GetTooltipValueStr(const std::string &theParStr, NFmiSoundingDataOpt1 &soundingData, FmiParameterName theParId, int theMaxDecimalCount, float P, float heigthInMetersInStaAth)
 {
 	std::string str = theParStr;
-	float value =  soundingData.GetValueAtPressure(theParId, P);
+	float value = soundingData.GetValueAtPressure(theParId, P);
+	if(value == kFloatMissing)
+	{
+		value = soundingData.GetValueAtHeight(theParId, heigthInMetersInStaAth);
+	}
+		
 	if(value == kFloatMissing)
 		str += " - ";
 	else
@@ -3403,7 +3408,7 @@ static std::string GetTooltipValueStr(const std::string &theParStr, NFmiSounding
 	return str;
 }
 
-static std::string GetSoundingToolTipText(NFmiTempView::SoundingDataCacheMap &soundingDataCache, const NFmiMTATempSystem::ServerProducer &producer, const NFmiMTATempSystem::TempInfo &theTempInfo, int modelRunIndex, float P, int theZeroBasedIndex, bool doNormalString, const NFmiString &locationName)
+static std::string GetSoundingToolTipText(NFmiTempView::SoundingDataCacheMap &soundingDataCache, const NFmiMTATempSystem::ServerProducer &producer, const NFmiMTATempSystem::TempInfo &theTempInfo, int modelRunIndex, float P, int theZeroBasedIndex, bool doNormalString, const NFmiString &locationName, float heigthInMetersInStaAth)
 {
 	std::string str;
 	if(doNormalString)
@@ -3424,16 +3429,30 @@ static std::string GetSoundingToolTipText(NFmiTempView::SoundingDataCacheMap &so
         // sitten laitetaan interpoloidut arvot annetun korkeuden mukaan eri parametreille
         str += "P: ";
         str += static_cast<char*>(NFmiValueString::GetStringWithMaxDecimalsSmartWay(P, 1));
-        str += ::GetTooltipValueStr(" T: ", soundingDataIter->second, kFmiTemperature, 1, P);
-        str += ::GetTooltipValueStr(" Td: ", soundingDataIter->second, kFmiDewPoint, 1, P);
-        str += ::GetTooltipValueStr(" WD: ", soundingDataIter->second, kFmiWindDirection, 0, P);
-        str += ::GetTooltipValueStr(" WS: ", soundingDataIter->second, kFmiWindSpeedMS, 1, P);
-        str += ::GetTooltipValueStr(" N: ", soundingDataIter->second, kFmiTotalCloudCover, 0, P);
-        str += ::GetTooltipValueStr(" RH: ", soundingDataIter->second, kFmiHumidity, 1, P);
+        str += ::GetTooltipValueStr(" T: ", soundingDataIter->second, kFmiTemperature, 1, P, heigthInMetersInStaAth);
+        str += ::GetTooltipValueStr(" Td: ", soundingDataIter->second, kFmiDewPoint, 1, P, heigthInMetersInStaAth);
+        str += ::GetTooltipValueStr(" WD: ", soundingDataIter->second, kFmiWindDirection, 0, P, heigthInMetersInStaAth);
+		str += ::GetTooltipValueStr(" WS: ", soundingDataIter->second, kFmiWindSpeedMS, 1, P, heigthInMetersInStaAth);
+		str += ::GetTooltipValueStr(" z: ", soundingDataIter->second, kFmiGeomHeight, 0, P, heigthInMetersInStaAth);
+        str += ::GetTooltipValueStr(" N: ", soundingDataIter->second, kFmiTotalCloudCover, 0, P, heigthInMetersInStaAth);
+        str += ::GetTooltipValueStr(" RH: ", soundingDataIter->second, kFmiHumidity, 1, P, heigthInMetersInStaAth);
     }
     else
         str += " P: - T: - Td: - WD: - WS: -";
     return str;
+}
+
+static float CalcHeightInMetersAtPressure(float pressure)
+{
+	if(pressure != kFloatMissing)
+	{
+		float heigthInKmInStaAth = static_cast<float>(CalcHeightAtPressure(pressure));
+		if(heigthInKmInStaAth != kFloatMissing)
+		{
+			return heigthInKmInStaAth * 1000.f;
+		}
+	}
+	return kFloatMissing;
 }
 
 std::string NFmiTempView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
@@ -3444,6 +3463,7 @@ std::string NFmiTempView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
         NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
         int modelRunCount = mtaTempSystem.ModelRunCount();
         float pressure = static_cast<float>(y2p(theRelativePoint.Y()));
+		float heigthInMetersInStaAth = ::CalcHeightInMetersAtPressure(pressure);
         int index = 0;
         const NFmiMTATempSystem::Container &tempInfos = mtaTempSystem.GetTemps();
         for(const auto &constantLoopTempInfo : tempInfos)
@@ -3460,7 +3480,7 @@ std::string NFmiTempView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
                     str += "<b><font color=";
                     str += ColorString::Color2HtmlColorStr(mtaTempSystem.SoundingColor(index));
                     str += ">";
-                    str += ::GetSoundingToolTipText(itsSoundingDataCacheForTooltips, selectedProducer, usedTempInfo, 0, pressure, index, true, usedLocationWithName.GetName());
+                    str += ::GetSoundingToolTipText(itsSoundingDataCacheForTooltips, selectedProducer, usedTempInfo, 0, pressure, index, true, usedLocationWithName.GetName(), heigthInMetersInStaAth);
                     if(modelRunCount > 0 && NFmiDrawParam::IsModelRunDataType(info->DataType()))
                     { 
                         // lis‰t‰‰n edelliset malliajo -osio tooltippiin 
@@ -3469,7 +3489,7 @@ std::string NFmiTempView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
                             str += "\n[";
                             str += NFmiStringTools::Convert(modelRunIndex);
                             str += "]\t";
-                            str += ::GetSoundingToolTipText(itsSoundingDataCacheForTooltips, selectedProducer, usedTempInfo, modelRunIndex, pressure, index, false, usedLocationWithName.GetName());
+                            str += ::GetSoundingToolTipText(itsSoundingDataCacheForTooltips, selectedProducer, usedTempInfo, modelRunIndex, pressure, index, false, usedLocationWithName.GetName(), heigthInMetersInStaAth);
                         }
                     }
                     str += "</font></b>";
