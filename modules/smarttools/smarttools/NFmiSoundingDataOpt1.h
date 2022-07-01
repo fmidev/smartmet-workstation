@@ -94,7 +94,9 @@ class NFmiSoundingDataOpt1
   const NFmiLocation &Location() const { return itsLocation; }
   void Location(const NFmiLocation &newValue) { itsLocation = newValue; }
   const NFmiMetTime &Time() const { return itsTime; }
+  void Time(const NFmiMetTime &newValue) { itsTime = newValue; }
   const NFmiMetTime &OriginTime() const { return itsOriginTime; }
+  void OriginTime(const NFmiMetTime &newValue) { itsOriginTime = newValue; }
   bool GetValuesStartingLookingFromPressureLevel(double &T, double &Td, double &P);
   float GetValueAtPressure(FmiParameterName theId, float P);
   float GetValueAtHeight(FmiParameterName theId, float H);
