@@ -47,7 +47,7 @@ class NFmiTempView : public NFmiCtrlView
 	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
 
  private:
-	void DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theIndex, double theBrightningFactor, int theModelRunIndex);
+	void DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theProducerIndex, double theBrightningFactor, int theModelRunIndex);
 	double ExtraPrintLineThicknesFactor(bool fMainCurve);
 	NFmiPoint ScaleOffsetPoint(const NFmiPoint &thePoint);
 	double CalcDataRectPressureScaleRatio(void);
@@ -58,21 +58,21 @@ class NFmiTempView : public NFmiCtrlView
 	void DrawAllLiftedAirParcels(NFmiSoundingData&theData);
 	void DrawLiftedAirParcel(NFmiSoundingData&theData, FmiLCLCalcType theLCLCalcType);
 	bool ModifySounding(NFmiSoundingData&theSoundingData, const NFmiPoint &thePlace, unsigned long theKey, FmiParameterName theParam, int theDistToleranceInPixels);
-	void DrawHodograf(NFmiSoundingData&theData, int theIndex);
+	void DrawHodograf(NFmiSoundingData &theData, int theProducerIndex);
 	void DrawHodografTextWithMarker(const std::string &theText, float u, float v, const NFmiColor &theTextColor, const NFmiColor &theMarkerColor, const NFmiColor &theMarkerFillColor, int theMarkerSizeInPixel, int theFontSize, FmiDirection theTextAlignment, MarkerShape theMarkerShape);
-	void DrawHodografUpAndDownWinds(NFmiSoundingData& theData, int theIndex);
-	void DrawHodografWindVectorMarkers(NFmiSoundingData& theData, int theIndex);
-	void DrawHodografBase(int theIndex);
-	void DrawHodografCurve(NFmiSoundingData&theData, int theIndex);
-	void DrawHodografHeightMarkers(NFmiSoundingData&theData, int theIndex);
+	void DrawHodografUpAndDownWinds(NFmiSoundingData & theData, int theProducerIndex);
+	void DrawHodografWindVectorMarkers(NFmiSoundingData & theData, int theProducerIndex);
+	void DrawHodografBase(int theProducerIndex);
+	void DrawHodografCurve(NFmiSoundingData &theData, int theProducerIndex);
+	void DrawHodografHeightMarkers(NFmiSoundingData &theData, int theProducerIndex);
 	NFmiPoint GetRelativePointFromHodograf(double u, double v);
-	void DrawSoundingInTextFormat(NFmiSoundingData&theData);
-	bool FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSoundingData&theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo, const NFmiMTATempSystem::SoundingProducer &theProducer);
-	void DrawSounding(NFmiSoundingData&theData, int theIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere);
+	void DrawSoundingInTextFormat(NFmiSoundingData &theData);
+	bool FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSoundingData &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo, const NFmiMTATempSystem::SoundingProducer &theProducer);
+	void DrawSounding(NFmiSoundingData & theUsedDataInOut, int theProducerIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere);
 	void DrawSoundingsInMTAMode(void);
 	void DrawBackground(void);
-	void DrawStabilityIndexData(void);
-	void DrawTextualSoundingData(void);
+	void DrawStabilityIndexData(NFmiSoundingDataOpt1& usedData);
+	void DrawTextualSoundingData(NFmiSoundingDataOpt1& usedData);
 	void DrawStabilityIndexBackground(const NFmiRect &sideViewRect);
 	void DrawDryAdiapaticks(void);
 	void DrawMoistAdiapaticks(void);
@@ -96,21 +96,21 @@ class NFmiTempView : public NFmiCtrlView
 	double GetPAxisChangeValue(double change);
 	void DrawLine(const NFmiPoint &p1, const NFmiPoint &p2, bool drawSpecialLines, int theTrueLineWidth, bool startWithXShift, int theHelpDotPixelSize, NFmiDrawingEnvironment * theEnvi);
 	void DrawHelpLineLabel(const NFmiPoint &p1, const NFmiPoint &theMoveLabelRelatively, double theValue, const NFmiTempLabelInfo &theLabelInfo, NFmiDrawingEnvironment * theEnvi, const NFmiString &thePostStr = NFmiString(""));
-	void DrawWind(NFmiSoundingData &theData, int theIndex, bool onSouthernHemiSphere);
-	void DrawStationInfo(NFmiSoundingData &theData, int theIndex);
-	void DrawHeightValues(NFmiSoundingData &theData, int theIndex);
+	void DrawWind(NFmiSoundingData &theData, int theProducerIndex, bool onSouthernHemiSphere);
+	void DrawStationInfo(NFmiSoundingData &theData, int theProducerIndex);
+	void DrawHeightValues(NFmiSoundingData &theData, int theProducerIndex);
 	void MoveToNextLine(double relativeLineHeight, NFmiPoint &theTextPoint);
 	void DrawNextLineToIndexView(double relativeLineHeight, NFmiText& theText, const NFmiString& theStr, NFmiPoint& theTextPoint, bool moveFirst = true, bool addToString = true);
-	void DrawLCL(NFmiSoundingData &theData, int theIndex, FmiLCLCalcType theLCLCalcType);
-	void DrawTrMw(NFmiSoundingData &theData, int theIndex);
+	void DrawLCL(NFmiSoundingData &theData, int theProducerIndex, FmiLCLCalcType theLCLCalcType);
+	void DrawTrMw(NFmiSoundingData &theData, int theProducerIndex);
 	NFmiString GetIndexText(double theValue, const NFmiString &theText, int theDecimalCount);
 	void InitializeHodografRect(void);
 	void DrawAnimationControls(void);
 	bool ModifySoundingWinds(const NFmiPoint &thePlace, unsigned long theKey, short theDelta);
     void DrawSecondaryDataRect();
     void DrawSecondaryDataHorizontalAxel(NFmiTempLabelInfo &theLabelInfo, NFmiTempLineInfo &theLineInfo, FmiDirection theLabelTextAlignment, double theYPosition, const NFmiPoint &theLabelOffset);
-    void DrawSecondaryData(NFmiSoundingData& theData, int theIndex, const NFmiColor &theUsedSoundingColor);
-    void DrawSecondaryData(NFmiSoundingData&theData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo);
+    void DrawSecondaryData(NFmiSoundingData &theUsedData, const NFmiColor &theUsedSoundingColor);
+    void DrawSecondaryData(NFmiSoundingData &theUsedData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo);
     double SecondaryDataFrameXoffset(double theValue);
     void DrawSecondaryVerticalHelpLine(double theBottom, double theTop, double theValue);
     bool FillSoundingDataFromServer(const NFmiMTATempSystem::SoundingProducer &theProducer, NFmiSoundingData&theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation);
@@ -121,10 +121,14 @@ class NFmiTempView : public NFmiCtrlView
 	void CalculateAllDataViewRelatedRects();
 	double ConvertFixedPixelSizeToRelativeWidth(long fixedPixelSize);
 	double ConvertFixedPixelSizeToRelativeHeight(long fixedPixelSize);
-	void ResetTextualScrollingIfSoundingDataChanged(const NFmiMTATempSystem::SoundingProducer& theProducer, const NFmiMTATempSystem::TempInfo& theTempInfo, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, int theIndex);
+	void ResetTextualScrollingIfSoundingDataChanged(const NFmiMTATempSystem::SoundingProducer& theProducer, const NFmiMTATempSystem::TempInfo& theTempInfo, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, int theProducerIndex);
 	void DrawTextualSideViewScrollingVisuals(NFmiPoint& p, double relativeLineHeight, int totalSoundingRows, int fullVisibleRows, int startingRowIndex, bool drawUpwardSounding);
 	bool DoTextualSideViewSetup(bool showSideView, const NFmiRect& sideViewRect, int fontSize, double fontHeightFactor, double& relativeLineHeightOut);
 	void FillInPossibleMissingPressureData(NFmiSoundingDataOpt1& theSoundingData, const NFmiProducer& dataProducer, const NFmiMetTime& theTime, const NFmiLocation& theLocation);
+	bool IsSelectedProducerIndex(int theProducerIndex) const;
+	void SetupUsedSoundingData(NFmiSoundingDataOpt1& theUsedDataInOut, int theProducerIndex, bool fMainCurve);
+	const NFmiColor& GetSelectedProducersColor() const;
+	NFmiPoint CalcStringRelativeSize(const std::string& str, double fontSize, const std::string& fontName);
 
 	double Tpot2x(double tpot, double p);
 	double pt2x(double p, double t);
@@ -151,8 +155,9 @@ class NFmiTempView : public NFmiCtrlView
 	int ypix; // kuinka monta pikseli‰ data alueella y-suunnassa
 	NFmiPoint _1PixelInRel; // kuinka paljon on yksi pikseli relatiivisessa maailmassa
 
-	// first-dataa k‰ytet‰‰n myˆs luotausten muokkauksessa!!!!
-	NFmiSoundingData itsFirstSoundingData; // t‰h‰n talletetaan 1. piirrett‰v‰n luotauksen datat, ett‰ niit‰ k‰ytet‰‰n indeksi osio laskuissa
+	// T‰h‰n talletetaan valitun tuottajan piirrett‰v‰n luotauksen datat, ett‰ niit‰ k‰ytet‰‰n indeksi osio laskuissa
+	// Valitun luotaustuottajan dataa k‰ytet‰‰n myˆs luotausten muokkauksessa!!!!
+	NFmiSoundingDataOpt1 itsSelectedProducerSoundingData;
 	bool fMustResetFirstSoundingData; // joskus k‰ytt‰j‰ haluaa resetoida muokattua luotausta
 	bool fHodografInitialized; // kun ikkuna piirret‰‰n 1. kerran, pit‰‰ laskea alkuarvaus, muutoin ei
 	double itsFirstSoundinWindBarbXPos;

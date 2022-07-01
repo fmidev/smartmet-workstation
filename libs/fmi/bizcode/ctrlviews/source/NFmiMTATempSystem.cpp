@@ -749,7 +749,7 @@ const NFmiProducer& NFmiMTATempSystem::CurrentProducer(void) const
 void NFmiMTATempSystem::CurrentProducer(const NFmiProducer &newValue)
 {
 	itsSelectedProducer = -1;
-	for(int i=0; i<static_cast<int>(itsPossibleProducerList.size()); i++)
+	for(int i=0; i < static_cast<int>(itsPossibleProducerList.size()); i++)
 	{
 		if(itsPossibleProducerList[i] == newValue)
 		{
@@ -810,6 +810,55 @@ static const NFmiMTATempSystem::SelectedProducerContainer MakeSoundingComparison
     }
 
     return finalComparisonProducers;
+}
+
+int NFmiMTATempSystem::GetSelectedProducerIndex(bool getLimitCheckedIndex) const 
+{ 
+	if(getLimitCheckedIndex)
+	{
+		if(itsSelectedProducerIndex >= itsSoundingComparisonProducers.size())
+		{
+			if(itsSoundingComparisonProducers.empty())
+				return 0;
+			else
+				return static_cast<int>(itsSoundingComparisonProducers.size() - 1);
+		}
+	}
+
+	return itsSelectedProducerIndex; 
+}
+
+void NFmiMTATempSystem::SetSelectedProducerIndex(int newValue, bool ignoreHighLimit)
+{ 
+	if(newValue < 0 || itsSoundingComparisonProducers.empty())
+		newValue = 0;
+	
+	// ignoreHighLimit tapaus kiinnostaa vain n‰yttˆmakron latauksen yhteydess‰
+	if(!ignoreHighLimit && newValue >= itsSoundingComparisonProducers.size())
+	{
+		newValue = static_cast<int>(itsSoundingComparisonProducers.size() - 1);
+	}
+
+	itsSelectedProducerIndex = newValue; 
+}
+
+void NFmiMTATempSystem::ToggleSelectedProducerIndex(FmiDirection direction)
+{
+	if(direction == kUp)
+		itsSelectedProducerIndex++;
+	else
+		itsSelectedProducerIndex--;
+
+	// Jos indeksi menee ali tai yli rajojen, menn‰‰n ymp‰ri toiseen p‰‰h‰n
+	if(itsSelectedProducerIndex < 0)
+	{
+		if(itsSoundingComparisonProducers.empty())
+			itsSelectedProducerIndex = 0;
+		else
+			itsSelectedProducerIndex = static_cast<int>(itsSoundingComparisonProducers.size() - 1);
+	}
+	else if(itsSelectedProducerIndex >= itsSoundingComparisonProducers.size())
+		itsSelectedProducerIndex = 0;
 }
 
 void NFmiMTATempSystem::Write(std::ostream& os) const

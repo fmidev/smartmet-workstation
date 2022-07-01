@@ -286,6 +286,9 @@ class NFmiMTATempSystem
     SoundingDataServerConfigurations& GetSoundingDataServerConfigurations() { return itsSoundingDataServerConfigurations; }
 	HodografViewData& GetHodografViewData() { return itsHodografViewData; }
 	SoundingViewSettingsFromWindowsRegisty& GetSoundingViewSettingsFromWindowsRegisty() { return itsSoundingViewSettingsFromWindowsRegisty; }
+	int GetSelectedProducerIndex(bool getLimitCheckedIndex) const;
+	void SetSelectedProducerIndex(int newValue, bool ignoreHighLimit);
+	void ToggleSelectedProducerIndex(FmiDirection direction);
 
 	void Write(std::ostream& os) const;
 	void Read(std::istream& is);
@@ -304,12 +307,18 @@ private:
 	void SetupSideViewsFromLegacyViewMacroValues(bool showIndexiesLegacyValue, bool showSideViewLegacyValue);
 
 	Container itsTempInfos;
-	int itsMaxTempsShowed; // MTA-moodissa t‰m‰n enemp‰‰ ei oteta listaan n‰ytett‰vi‰ temppej‰. Jos joku lis‰‰
-							// tempin ja listassa on jo n‰in monta, tyhjennet‰‰n ensin lista ja lis‰t‰‰n
-							// sitten t‰m‰ uusi luotaus tieto
-    SelectedProducerContainer itsPossibleProducerList; // lista kaikista mahdollisista luotaus tuottajista
-    SelectedProducerContainer itsSoundingComparisonProducers; // n‰yden tuottajien luotauksia n‰ytet‰‰n comp-moodissa luotaus n‰ytˆss‰
-	int itsSelectedProducer; // indeksi edelliseen listaan, -1 jos ei ole valittu mit‰‰n
+	// MTA-moodissa t‰m‰n enemp‰‰ ei oteta listaan n‰ytett‰vi‰ temppej‰. Jos joku lis‰‰ tempin ja 
+	// listassa on jo n‰in monta, tyhjennet‰‰n ensin lista ja lis‰t‰‰n sitten t‰m‰ uusi luotaus tieto
+	int itsMaxTempsShowed; 
+	// Lista kaikista mahdollisista luotaus tuottajista
+    SelectedProducerContainer itsPossibleProducerList; 
+	// N‰iden tuottajien luotauksia n‰ytet‰‰n comp-moodissa luotaus n‰ytˆss‰
+    SelectedProducerContainer itsSoundingComparisonProducers; 
+	// Indeksi edelliseen listaan, -1 jos ei ole valittu mit‰‰n
+	// HUOM! en muista miksi t‰m‰ on oikeasti tehty, mutta en uskalla muuttaa sit‰ siihen 
+	// k‰yttˆˆn mihin uusi itsSelectedProducerIndex dataosa otetaan k‰yttˆˆn.
+	// Siksi t‰m‰ itsSelectedProducer j‰‰ sellaisenaan olemaan t‰ss‰.
+	int itsSelectedProducer; 
 	bool fTempViewOn; // onko luotaus ikkuna auki vai kiinni
 	double itsSkewTDegree; // tuetaan ainakin 0 ja 45 astetta
 
@@ -407,6 +416,11 @@ private:
 	SoundingViewSettingsFromWindowsRegisty itsSoundingViewSettingsFromWindowsRegisty;
 	SoundingDataServerConfigurations itsSoundingDataServerConfigurations;
 	HodografViewData itsHodografViewData;
+	// Luotausn‰ytˆss‰ voidaan valita multi-select listasta tuottajat, jotka n‰ytet‰‰n eriv‰risill‰ viivoilla.
+	// T‰m‰ menness‰ 1. niist‰ on ollut ns. p‰‰luotaus, josta on piirretty mm. teksti ja indeksi tietoja luotaun‰ytˆlle.
+	// Nyt halutun luotauksen voi v‰lit‰ p‰‰luotaukseksi luotausn‰ytˆss‰ CTRL + SHIFT + rullalla.
+	// Indeksit alkavat 0:sta ja jos indeksi on isompi kuin valittujen luotausten m‰‰r‰, valituksi tulee viimeisin tuottaja listalta.
+	int itsSelectedProducerIndex = 0;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const NFmiMTATempSystem::TempInfo& item){item.Write(os); return os;}
