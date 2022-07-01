@@ -2912,8 +2912,8 @@ NFmiPoint NFmiTempView::CalcStringRelativeSize(const std::string &str, double fo
 void NFmiTempView::DrawStationInfo(NFmiSoundingDataOpt1 &theData, int theProducerIndex)
 {
 	static const NFmiString maxNameText("1: E00/05.12 62°23'N, 25°41'E    ");
-	NFmiColor normalBackGroundTextcolor(0.87f, 0.87f, 0.87f);
-	NFmiColor selectedBackGroundTextcolor(0.93f, 0.93f, 0.93f);
+	NFmiColor normalBackGroundTextcolor(0.86f, 0.86f, 0.86f);
+	NFmiColor selectedBackGroundTextcolor(0.92f, 0.92f, 0.92f);
 
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
     if(!mtaTempSystem.DrawLegendText())
