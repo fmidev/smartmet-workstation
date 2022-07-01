@@ -255,7 +255,7 @@ NFmiTempView::NFmiTempView(const NFmiRect& theRect
 ,dlogpperpix(1)
 ,xpix(1)
 ,ypix(1)
-,itsFirstSoundingData()
+,itsSelectedProducerSoundingData()
 ,fHodografInitialized(false)
 ,fMustResetFirstSoundingData(false)
 ,itsGdiplusScale(1,1)
@@ -466,7 +466,7 @@ void NFmiTempView::DrawSecondaryVerticalHelpLine(double theBottom, double theTop
     itsToolBox->Convert(&l1);
 }
 
-void NFmiTempView::DrawSecondaryData(NFmiSoundingDataOpt1 &theData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo)
+void NFmiTempView::DrawSecondaryData(NFmiSoundingDataOpt1 &theUsedData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo)
 {
     if(theLineInfo.DrawLine() == false)
         return;
@@ -474,13 +474,13 @@ void NFmiTempView::DrawSecondaryData(NFmiSoundingDataOpt1 &theData, FmiParameter
 	const auto& secondaryDataFrame = itsTempViewDataRects.getSecondaryDataFrame();
 	itsGdiPlusGraphics->SetClip(CtrlView::Relative2GdiplusRect(itsToolBox, secondaryDataFrame));
 
-    std::deque<float> &drawedParam = theData.GetParamData(theParId);
-    std::deque<float> &pressures = theData.GetParamData(kFmiPressure);
-    std::deque<float> &heights = theData.GetParamData(kFmiGeomHeight);
-    bool useHeight = (theData.PressureDataAvailable() == false && theData.HeightDataAvailable() == true);
+    auto &drawedParam = theUsedData.GetParamData(theParId);
+	auto &pressures = theUsedData.GetParamData(kFmiPressure);
+	auto &heights = theUsedData.GetParamData(kFmiGeomHeight);
+    bool useHeight = (theUsedData.PressureDataAvailable() == false && theUsedData.HeightDataAvailable() == true);
     if(drawedParam.size() > 1 && drawedParam.size() == pressures.size() && drawedParam.size() == heights.size())
     {
-        int maxMissingValues = theData.ObservationData() ? 15 : 1; // jos per‰kk‰in puuttuu enemm‰n kuin n‰in monta arvoa, ei yhdistet‰ viivoja, vaan katkaistaan
+        int maxMissingValues = theUsedData.ObservationData() ? 15 : 1; // jos per‰kk‰in puuttuu enemm‰n kuin n‰in monta arvoa, ei yhdistet‰ viivoja, vaan katkaistaan
         int consecutiveMissingValues = 0;
         int ssize = static_cast<int>(drawedParam.size());
         std::vector<PointF> points;
@@ -524,7 +524,7 @@ void NFmiTempView::DrawSecondaryData(NFmiSoundingDataOpt1 &theData, FmiParameter
     itsGdiPlusGraphics->ResetClip();
 }
 
-void NFmiTempView::DrawSecondaryData(NFmiSoundingDataOpt1 & theData, int theIndex, const NFmiColor &theUsedSoundingColor)
+void NFmiTempView::DrawSecondaryData(NFmiSoundingDataOpt1 &theUsedData, const NFmiColor &theUsedSoundingColor)
 {
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
     if(mtaTempSystem.DrawSecondaryData())
@@ -532,15 +532,15 @@ void NFmiTempView::DrawSecondaryData(NFmiSoundingDataOpt1 & theData, int theInde
         NFmiTempLineInfo lineInfo = mtaTempSystem.WSLineInfo();
         lineInfo.Color(theUsedSoundingColor);
         lineInfo.Thickness(boost::math::iround(lineInfo.Thickness() * itsDrawSizeFactor.X() * ExtraPrintLineThicknesFactor(true)));
-        DrawSecondaryData(theData, kFmiWindSpeedMS, lineInfo); // Piirret‰‰n l‰mpˆtila
+        DrawSecondaryData(theUsedData, kFmiWindSpeedMS, lineInfo); // Piirret‰‰n l‰mpˆtila
         lineInfo = mtaTempSystem.NLineInfo();
         lineInfo.Color(theUsedSoundingColor);
         lineInfo.Thickness(boost::math::iround(lineInfo.Thickness() * itsDrawSizeFactor.X() * ExtraPrintLineThicknesFactor(true)));
-        DrawSecondaryData(theData, kFmiTotalCloudCover, lineInfo); // Piirret‰‰n kokonaispilvisyys
+        DrawSecondaryData(theUsedData, kFmiTotalCloudCover, lineInfo); // Piirret‰‰n kokonaispilvisyys
         lineInfo = mtaTempSystem.RHLineInfo();
         lineInfo.Color(theUsedSoundingColor);
         lineInfo.Thickness(boost::math::iround(lineInfo.Thickness() * itsDrawSizeFactor.X() * ExtraPrintLineThicknesFactor(true)));
-        DrawSecondaryData(theData, kFmiHumidity, lineInfo); // Piirret‰‰n suhteellinen kosteus
+        DrawSecondaryData(theUsedData, kFmiHumidity, lineInfo); // Piirret‰‰n suhteellinen kosteus
     }
 }
 
@@ -765,8 +765,8 @@ void NFmiTempView::DrawTextualSideViewRelatedStuff()
 	itsSoundingIndexStr = ""; 
 	if(IsAnyTextualSideViewVisible())
 	{
-		DrawStabilityIndexData();
-		DrawTextualSoundingData();
+		DrawStabilityIndexData(itsSelectedProducerSoundingData);
+		DrawTextualSoundingData(itsSelectedProducerSoundingData);
 		// Lis‰t‰‰n varmuuden vuoksi rivinvaihto, niin n‰kee paremmin, miss‰ eri tekstiosuudet vaihtuvat
 		itsSoundingIndexStr += "\n"; 
 		DrawAnimationControls();
@@ -988,7 +988,7 @@ NFmiPoint NFmiTempView::CalcStabilityIndexStartPoint(void)
 	return p;
 }
 
-void NFmiTempView::DrawTextualSoundingData(void)
+void NFmiTempView::DrawTextualSoundingData(NFmiSoundingDataOpt1& usedData)
 {
 	auto doContinue = DoTextualSideViewSetup(
 		itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().ShowTextualSoundingDataSideView(),
@@ -999,8 +999,14 @@ void NFmiTempView::DrawTextualSoundingData(void)
 	if(doContinue)
 	{
 		// Printataan 1. piirretyn luotauksen data tekstimuodossa sivu n‰yttˆˆn.
-		DrawSoundingInTextFormat(itsFirstSoundingData);
+		DrawSoundingInTextFormat(usedData);
 	}
+}
+
+const NFmiColor& NFmiTempView::GetSelectedProducersColor() const
+{
+	auto& mtaSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
+	return mtaSystem.SoundingColor(mtaSystem.GetSelectedProducerIndex(true));
 }
 
 bool NFmiTempView::DoTextualSideViewSetup(bool showSideView, const NFmiRect &sideViewRect, int fontSize, double fontHeightFactor, double& relativeLineHeightOut)
@@ -1012,7 +1018,7 @@ bool NFmiTempView::DoTextualSideViewSetup(bool showSideView, const NFmiRect &sid
 
 	// Laitetaan toolboxin piirtoasetukset kuntoon ennen lopullisen piirto funktion kutsua.
 	// Piirret‰‰n vain 1. luotaukseen liittyv‰t indeksit ja ne piirret‰‰n samalla v‰rilla kuin 1. luotaus
-	itsDrawingEnvironment->SetFrameColor(itsCtrlViewDocumentInterface->GetMTATempSystem().SoundingColor(0));
+	itsDrawingEnvironment->SetFrameColor(GetSelectedProducersColor());
 	int usedFontSize = fontSize;
 	if(itsToolBox->GetDC()->IsPrinting())
 	{
@@ -1027,7 +1033,7 @@ bool NFmiTempView::DoTextualSideViewSetup(bool showSideView, const NFmiRect &sid
 }
 
 
-void NFmiTempView::DrawStabilityIndexData(void)
+void NFmiTempView::DrawStabilityIndexData(NFmiSoundingDataOpt1& usedData)
 {
 	auto doContinue = DoTextualSideViewSetup(
 		itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().ShowStabilityIndexSideView(),
@@ -1042,10 +1048,10 @@ void NFmiTempView::DrawStabilityIndexData(void)
 
 	NFmiText text(p, NFmiString(""), false, 0, itsDrawingEnvironment);
 	auto lineH = itsStabilityIndexRelativeLineHeight;
-	DrawNextLineToIndexView(lineH, text, ::GetNameText(itsFirstSoundingData), p, false);
-	DrawNextLineToIndexView(lineH, text, ::GetLatText(itsFirstSoundingData), p);
-	DrawNextLineToIndexView(lineH, text, ::GetLonText(itsFirstSoundingData), p);
-	DrawNextLineToIndexView(lineH, text, ::GetElevationText(itsFirstSoundingData, itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kStationary)), p);
+	DrawNextLineToIndexView(lineH, text, ::GetNameText(usedData), p, false);
+	DrawNextLineToIndexView(lineH, text, ::GetLatText(usedData), p);
+	DrawNextLineToIndexView(lineH, text, ::GetLonText(usedData), p);
+	DrawNextLineToIndexView(lineH, text, ::GetElevationText(usedData, itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kStationary)), p);
 
 	// pit‰‰ piirt‰‰ tyhj‰‰ alkuun ett‰ saadaan "kursori-arvoille" tilaa, ne piirret‰‰n DrawOverBitmap-kohdassa
 	DrawNextLineToIndexView(lineH, text, "Cursor values:", p);
@@ -1056,58 +1062,58 @@ void NFmiTempView::DrawStabilityIndexData(void)
 	DrawNextLineToIndexView(lineH, text, "", p);
 	DrawNextLineToIndexView(lineH, text, "-------------", p);
 
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcSHOWIndex(), "SHOW", 1), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcLIFTIndex(), "?LIFT", 1), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcKINXIndex(), "KINX", 1), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCTOTIndex(), "CTOT", 1), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcVTOTIndex(), "VTOT", 1), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcTOTLIndex(), "TOTL", 1), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcGDI(), "GDI", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcSHOWIndex(), "SHOW", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcLIFTIndex(), "?LIFT", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcKINXIndex(), "KINX", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcCTOTIndex(), "CTOT", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcVTOTIndex(), "VTOT", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcTOTLIndex(), "TOTL", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcGDI(), "GDI", 1), p);
 	DrawNextLineToIndexView(lineH, text, " ", p);
 
 	DrawNextLineToIndexView(lineH, text, "-- Surface --", p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcLCLIndex(kLCLCalcSurface), "LCL", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcLCLIndex(kLCLCalcSurface), "LCL", 0), p);
 	double ELsur = kFloatMissing;
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcLFCIndex(kLCLCalcSurface, ELsur), "LFC", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcLFCIndex(kLCLCalcSurface, ELsur), "LFC", 0), p);
 	DrawNextLineToIndexView(lineH, text, GetIndexText(ELsur, "EL", 0), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCAPE500Index(kLCLCalcSurface), "CAPE", 0), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCAPE500Index(kLCLCalcSurface, 3000), "0-3kmCAPE", 0), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCAPE_TT_Index(kLCLCalcSurface, -10, -40), "-10-40CAPE", 0), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCINIndex(kLCLCalcSurface), "CIN", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcCAPE500Index(kLCLCalcSurface), "CAPE", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcCAPE500Index(kLCLCalcSurface, 3000), "0-3kmCAPE", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcCAPE_TT_Index(kLCLCalcSurface, -10, -40), "-10-40CAPE", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcCINIndex(kLCLCalcSurface), "CIN", 0), p);
 	DrawNextLineToIndexView(lineH, text, " ", p);
 
 
 	DrawNextLineToIndexView(lineH, text, "-- 500m mix --", p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcLCLIndex(kLCLCalc500m2), "LCL", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcLCLIndex(kLCLCalc500m2), "LCL", 0), p);
 	double EL500m2 = kFloatMissing;
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcLFCIndex(kLCLCalc500m2, EL500m2), "LFC", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcLFCIndex(kLCLCalc500m2, EL500m2), "LFC", 0), p);
 	DrawNextLineToIndexView(lineH, text, GetIndexText(EL500m2, "EL", 0), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCAPE500Index(kLCLCalc500m2), "CAPE", 0), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCAPE500Index(kLCLCalc500m2, 3000), "0-3kmCAPE", 0), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCAPE_TT_Index(kLCLCalc500m2, -10, -40), "-10-40CAPE", 0), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCINIndex(kLCLCalc500m2), "CIN", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcCAPE500Index(kLCLCalc500m2), "CAPE", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcCAPE500Index(kLCLCalc500m2, 3000), "0-3kmCAPE", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcCAPE_TT_Index(kLCLCalc500m2, -10, -40), "-10-40CAPE", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcCINIndex(kLCLCalc500m2), "CIN", 0), p);
 	DrawNextLineToIndexView(lineH, text, " ", p);
 
 
 	DrawNextLineToIndexView(lineH, text, "-- Most unstable --", p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcLCLIndex(kLCLCalcMostUnstable), "LCL", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcLCLIndex(kLCLCalcMostUnstable), "LCL", 0), p);
 	double ELunst = kFloatMissing;
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcLFCIndex(kLCLCalcMostUnstable, ELunst), "LFC", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcLFCIndex(kLCLCalcMostUnstable, ELunst), "LFC", 0), p);
 	DrawNextLineToIndexView(lineH, text, GetIndexText(ELunst, "EL", 0), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCAPE500Index(kLCLCalcMostUnstable), "CAPE", 0), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCAPE_TT_Index(kLCLCalcMostUnstable, -10, -40), "-10-40CAPE", 0), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcCINIndex(kLCLCalcMostUnstable), "CIN", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcCAPE500Index(kLCLCalcMostUnstable), "CAPE", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcCAPE_TT_Index(kLCLCalcMostUnstable, -10, -40), "-10-40CAPE", 0), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcCINIndex(kLCLCalcMostUnstable), "CIN", 0), p);
 	DrawNextLineToIndexView(lineH, text, " ", p);
 
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcBulkShearIndex(0, 6), "0-6km BS", 1), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcBulkShearIndex(0, 1), "0-1km BS", 1), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcSRHIndex(0, 3), "0-3km SRH", 1), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcSRHIndex(0, 1), "0-1km SRH", 1), p);
-	DrawNextLineToIndexView(lineH, text, itsFirstSoundingData.Get_U_V_ID_IndexText("L-motion", kLeft), p);
-	DrawNextLineToIndexView(lineH, text, itsFirstSoundingData.Get_U_V_ID_IndexText("MeanWind", kCenter), p);
-	DrawNextLineToIndexView(lineH, text, itsFirstSoundingData.Get_U_V_ID_IndexText("R-motion", kRight), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcWSatHeightIndex(1500), "WS1500m", 1), p);
-	DrawNextLineToIndexView(lineH, text, GetIndexText(itsFirstSoundingData.CalcThetaEDiffIndex(0, 3), "0-3kmThetaE", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcBulkShearIndex(0, 6), "0-6km BS", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcBulkShearIndex(0, 1), "0-1km BS", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcSRHIndex(0, 3), "0-3km SRH", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcSRHIndex(0, 1), "0-1km SRH", 1), p);
+	DrawNextLineToIndexView(lineH, text, usedData.Get_U_V_ID_IndexText("L-motion", kLeft), p);
+	DrawNextLineToIndexView(lineH, text, usedData.Get_U_V_ID_IndexText("MeanWind", kCenter), p);
+	DrawNextLineToIndexView(lineH, text, usedData.Get_U_V_ID_IndexText("R-motion", kRight), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcWSatHeightIndex(1500), "WS1500m", 1), p);
+	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcThetaEDiffIndex(0, 3), "0-3kmThetaE", 1), p);
 }
 
 
@@ -1895,7 +1901,7 @@ void NFmiTempView::DrawSoundingsInMTAMode(void)
     itsSoundingDataCacheForTooltips.clear();
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
     int modelRunCount = mtaTempSystem.ModelRunCount();
-	int index = 0;
+	int producerIndex = 0;
 	const NFmiMTATempSystem::Container &temps = mtaTempSystem.GetTemps();
 	for(NFmiMTATempSystem::Container::const_iterator it = temps.begin() ; it != temps.end(); ++it)
 	{
@@ -1907,14 +1913,14 @@ void NFmiTempView::DrawSoundingsInMTAMode(void)
 				for(int modelRunIndex = startIndex; modelRunIndex <= 0; modelRunIndex++)
 				{
 					double brightningFactor = CtrlView::CalcBrightningFactor(0, modelRunCount, modelRunIndex); // mit‰ isompi luku, sit‰ enemm‰n vaalenee (0-100), vanhemmat malliajot vaaleammalla
-					DrawOneSounding(selectedProducer, *it, index, brightningFactor, modelRunIndex);
+					DrawOneSounding(selectedProducer, *it, producerIndex, brightningFactor, modelRunIndex);
 				}
 			}
 			else
 			{
-				DrawOneSounding(selectedProducer, *it, index, 0, 0);
+				DrawOneSounding(selectedProducer, *it, producerIndex, 0, 0);
 			}
-			index++;
+			producerIndex++;
 		}
 	}
 }
@@ -1928,10 +1934,15 @@ static NFmiMetTime GetUsedSoundingDataTime(CtrlViewDocumentInterface *documentIn
     return usedSoundingTime;
 }
 
-void NFmiTempView::ResetTextualScrollingIfSoundingDataChanged(const NFmiMTATempSystem::SoundingProducer& theProducer, const NFmiMTATempSystem::TempInfo& theTempInfo, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, int theIndex)
+bool NFmiTempView::IsSelectedProducerIndex(int theProducerIndex) const
 {
-	// Tarkastelut tehd‰‰n vain 1. sounding datalle.
-	if(theIndex == 0)
+	return theProducerIndex == itsCtrlViewDocumentInterface->GetMTATempSystem().GetSelectedProducerIndex(true);
+}
+
+void NFmiTempView::ResetTextualScrollingIfSoundingDataChanged(const NFmiMTATempSystem::SoundingProducer& theProducer, const NFmiMTATempSystem::TempInfo& theTempInfo, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, int theProducerIndex)
+{
+	// Tarkastelut tehd‰‰n vain valitulle sounding tuottaja datalle.
+	if(IsSelectedProducerIndex(theProducerIndex))
 	{
 		NFmiMetTime dataOriginTime = NFmiMetTime::gMissingTime;
 		if(theInfo)
@@ -1945,7 +1956,7 @@ void NFmiTempView::ResetTextualScrollingIfSoundingDataChanged(const NFmiMTATempS
 
 const std::vector<NFmiInfoData::Type> g_CombineSurfaceDataTypes{ NFmiInfoData::kViewable , NFmiInfoData::kAnalyzeData };
 
-void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theIndex, double theBrightningFactor, int theModelRunIndex)
+void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theProducerIndex, double theBrightningFactor, int theModelRunIndex)
 {
     auto usedTempInfo(theTempInfo);
     auto useServerData = theProducer.useServer();
@@ -1953,34 +1964,49 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 	// Amdar datoilla (tuottaja id 1015) o nerikois aikaikkuna, mist‰ datoja etsit‰‰n, 
 	// sen alkuhaarukka pit‰‰ antaa FindSoundingInfo, kaikille muille datoille arvo on 0.
 	int amdarDataStartOffsetInMinutes = (theProducer.GetIdent() == 1015) ? 30 : 0;
-    
+	bool mainCurve = theModelRunIndex == 0;
+
 	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, usedTempInfo.Time(), theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true), amdarDataStartOffsetInMinutes);
 	if(useServerData || info)
 	{
         auto usedLocationWithName = ::GetSoundingLocation(info, theTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
         usedTempInfo.Latlon(usedLocationWithName.GetLocation());
 		auto groundDataInfo = ::GetPossibleGroundData(itsCtrlViewDocumentInterface, info, theProducer, g_CombineSurfaceDataTypes);
-		ResetTextualScrollingIfSoundingDataChanged(theProducer, usedTempInfo, info, theIndex);
+		ResetTextualScrollingIfSoundingDataChanged(theProducer, usedTempInfo, info, theProducerIndex);
 		NFmiSoundingDataOpt1 sounding;
 		FillSoundingData(info, sounding, usedTempInfo.Time(), usedLocationWithName, groundDataInfo, theProducer);
 		FillInPossibleMissingPressureData(sounding, theProducer, usedTempInfo.Time(), usedLocationWithName);
         NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
-        NFmiColor usedColor(mtaTempSystem.SoundingColor(theIndex));
+        NFmiColor usedColor(mtaTempSystem.SoundingColor(theProducerIndex));
 		if(theBrightningFactor != 0)
 			usedColor = NFmiColorSpaces::GetBrighterColor(usedColor, theBrightningFactor);
 		itsDrawingEnvironment->SetFrameColor(usedColor);
-		bool mainCurve = theModelRunIndex == 0;
         bool onSouthernHemiSphere = usedTempInfo.Latlon().Y() < 0;
-		DrawSounding(sounding, theIndex, usedColor, mainCurve, onSouthernHemiSphere);
+		DrawSounding(sounding, theProducerIndex, usedColor, mainCurve, onSouthernHemiSphere);
         itsSoundingDataCacheForTooltips.insert(std::make_pair(NFmiMTATempSystem::SoundingDataCacheMapKey(usedTempInfo, theProducer, theModelRunIndex), sounding));
 	}
 	else
 	{
-		if(theIndex == 0 && theModelRunIndex == 0)
+		if(IsSelectedProducerIndex(theProducerIndex) && theModelRunIndex == 0)
 		{
 			// Jos ei lˆytynyt mit‰‰n dataa ja kyse oli 1. piirrett‰v‰st‰ luotausdatasta, pit‰‰ itsFirstSoundingData dataosa nollata,
 			// jotta tekstimuotoisiin sivun‰yttˆihin ei j‰isi vanha data 'kummittelemaan'
-			itsFirstSoundingData = NFmiSoundingDataOpt1();
+			itsSelectedProducerSoundingData = NFmiSoundingDataOpt1();
+		}
+
+		if(mainCurve)
+		{
+			// Vaikka dataa ei lˆytynyt, piirret‰‰n kuitenkin luotauksen legenda tiedot n‰kyviin
+			NFmiSoundingDataOpt1 emptySoundingData;
+			emptySoundingData.Location(NFmiLocation(usedTempInfo.Latlon()));
+			emptySoundingData.Time(usedTempInfo.Time());
+			// Haetaan luotausdata ilman aika hakuehtoa, jottaa saataisiin mahdollinen originTime datasta
+			boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true));
+			if(info)
+			{
+				emptySoundingData.OriginTime(info->OriginTime());
+			}
+			DrawStationInfo(emptySoundingData, theProducerIndex);
 		}
 	}
 }
@@ -2057,6 +2083,14 @@ bool NFmiTempView::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, s
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
 	auto& hodografViewData = mtaTempSystem.GetHodografViewData();
 	const auto& dataRect = itsTempViewDataRects.getSoundingCurveDataRect();
+	if(theKey & kCtrlKey && theKey & kShiftKey)
+	{
+		// CTRL + SHIFT + rullalla s‰‰det‰‰n kaikkialta ikkunasta valitun tuottaja indeksi‰
+		auto direction = (theDelta > 0) ? kUp : kDown;
+		mtaTempSystem.ToggleSelectedProducerIndex(direction);
+		return true;
+	}
+
 	if(mtaTempSystem.ShowHodograf() && hodografViewData.Rect().IsInside(thePlace))
 	{
 		// Jos hodografi n‰kyy ja hiiren kursori on sen sis‰ll‰
@@ -2136,9 +2170,10 @@ static const NFmiRect CalcGeneralWindBarbRect(const NFmiToolBox *theToolBox, con
 	return NFmiRect(0,0, theToolBox->SX(static_cast<long>(theWindvectorSizeInPixels.X()*2)), theToolBox->SY(static_cast<long>(theWindvectorSizeInPixels.Y()*2)));
 }
 
-static double CalcWindBarbXPos(const NFmiRect &theDataViewRect, const NFmiRect &theWindBarbSizeRect, int theIndex)
-{ // indeksiin pit‰‰ lis‰t‰ yksi
-	return theDataViewRect.Left() + theWindBarbSizeRect.Width() * 0.5 + theWindBarbSizeRect.Width() * 0.5 * (theIndex + 1);
+static double CalcWindBarbXPos(const NFmiRect &theDataViewRect, const NFmiRect &theWindBarbSizeRect, int theProducerIndex)
+{ 
+	// theProducerIndex pit‰‰ lis‰t‰ yksi
+	return theDataViewRect.Left() + theWindBarbSizeRect.Width() * 0.5 + theWindBarbSizeRect.Width() * 0.5 * (theProducerIndex + 1);
 }
 
 static const int gWindModificationAreaWidthInPixels = 11;
@@ -2175,7 +2210,8 @@ bool NFmiTempView::ModifySoundingWinds(const NFmiPoint &thePlace, unsigned long 
 		const auto& dataRect = itsTempViewDataRects.getSoundingCurveDataRect();
 		NFmiRect windModRect(itsFirstSoundinWindBarbXPos - width/2., dataRect.Top(), itsFirstSoundinWindBarbXPos + width/2., dataRect.Bottom());
 		if(windModRect.IsInside(thePlace))
-		{ // jos oltiin tarpeeksi l‰hell‰ 1. soundingdatan tuuliviiri rivistˆ‰, muokataan l‰hinn‰ olevaa viiri‰
+		{ 
+			// Jos oltiin tarpeeksi l‰hell‰ 1. soundingdatan tuuliviiri rivistˆ‰, muokataan l‰hinn‰ olevaa viiri‰
 			float P = static_cast<float>(y2p(thePlace.Y()));
 			bool windDirModified = theKey & kCtrlKey;
 			FmiParameterName parId = windDirModified ? kFmiWindDirection : kFmiWindSpeedMS;
@@ -2185,31 +2221,31 @@ bool NFmiTempView::ModifySoundingWinds(const NFmiPoint &thePlace, unsigned long 
 			float minValue = 0;
 			float maxValue = windDirModified ? 360 : kFloatMissing;
 			bool fCircularValue = windDirModified ? true : false;
-			bool status = itsFirstSoundingData.Add2ParamAtNearestP(P, parId, addValue, minValue, maxValue, fCircularValue);
-			itsFirstSoundingData.UpdateUandVParams();
+			bool status = itsSelectedProducerSoundingData.Add2ParamAtNearestP(P, parId, addValue, minValue, maxValue, fCircularValue);
+			itsSelectedProducerSoundingData.UpdateUandVParams();
 			return status;
 		}
 	}
 	return false;
 }
 
-void NFmiTempView::DrawHodograf(NFmiSoundingDataOpt1 & theData, int theIndex)
+void NFmiTempView::DrawHodograf(NFmiSoundingDataOpt1 & theData, int theProducerIndex)
 {
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
     if(!mtaTempSystem.ShowHodograf())
 		return ;
-	if(mtaTempSystem.ShowOnlyFirstSoundingInHodograf() && theIndex > 0)
+	if(mtaTempSystem.ShowOnlyFirstSoundingInHodograf() && !IsSelectedProducerIndex(theProducerIndex))
 		return ;
 
 	NFmiRect oldRect(itsToolBox->RelativeClipRect());
 	itsToolBox->RelativeClipRect(mtaTempSystem.GetHodografViewData().Rect(), true);
 	NFmiColor oldFillColor(itsDrawingEnvironment->GetFillColor());
 
-	DrawHodografBase(theIndex);
-	DrawHodografUpAndDownWinds(theData, theIndex);
-	DrawHodografCurve(theData, theIndex);
-	DrawHodografWindVectorMarkers(theData, theIndex);
-	DrawHodografHeightMarkers(theData, theIndex);
+	DrawHodografBase(theProducerIndex);
+	DrawHodografUpAndDownWinds(theData, theProducerIndex);
+	DrawHodografCurve(theData, theProducerIndex);
+	DrawHodografWindVectorMarkers(theData, theProducerIndex);
+	DrawHodografHeightMarkers(theData, theProducerIndex);
 
 	// lopuksi palautetaan vanhat v‰rit
 	itsDrawingEnvironment->SetFillColor(oldFillColor);
@@ -2287,7 +2323,7 @@ static UpDownWindCalculationBaseData CalcUpDownWindBaseData(NFmiSoundingDataOpt1
 	return baseData;
 }
 
-void NFmiTempView::DrawHodografUpAndDownWinds(NFmiSoundingDataOpt1 & theData, int theIndex)
+void NFmiTempView::DrawHodografUpAndDownWinds(NFmiSoundingDataOpt1 & theData, int theProducerIndex)
 {
 	auto upDownWindBaseData = ::CalcUpDownWindBaseData(theData);
 	bool elPressureMissing = (upDownWindBaseData.elPressure == kFloatMissing);
@@ -2313,7 +2349,7 @@ void NFmiTempView::DrawHodografUpAndDownWinds(NFmiSoundingDataOpt1 & theData, in
 					// s‰‰det‰‰n piirrett‰vien nuolien piirto ominaisuudet
 					NFmiColor markerFillColor(0.8f, 0.8f, 0.8f);
 					NFmiColor markerFrameColor(markerFillColor);
-					NFmiColor textColor(itsCtrlViewDocumentInterface->GetMTATempSystem().SoundingColor(theIndex));
+					NFmiColor textColor(itsCtrlViewDocumentInterface->GetMTATempSystem().SoundingColor(theProducerIndex));
 					NFmiDrawingEnvironment markEnvi; // laitetaan oma envi ympyr‰lle
 					markEnvi.SetFrameColor(markerFrameColor);
 					markEnvi.SetFillColor(markerFillColor);
@@ -2382,11 +2418,11 @@ void NFmiTempView::DrawHodografUpAndDownWinds(NFmiSoundingDataOpt1 & theData, in
 	}
 }
 
-void NFmiTempView::DrawHodografWindVectorMarkers(NFmiSoundingDataOpt1 & theData, int theIndex)
+void NFmiTempView::DrawHodografWindVectorMarkers(NFmiSoundingDataOpt1 & theData, int theProducerIndex)
 {
 	NFmiColor markFillColor(0,0,0);
 	NFmiColor markFrameColor(0,0,0);
-	NFmiColor textColor(itsCtrlViewDocumentInterface->GetMTATempSystem().SoundingColor(theIndex));
+	NFmiColor textColor(itsCtrlViewDocumentInterface->GetMTATempSystem().SoundingColor(theProducerIndex));
 
 	{
 		double u0_6 = kFloatMissing;
@@ -2419,16 +2455,16 @@ void NFmiTempView::DrawHodografWindVectorMarkers(NFmiSoundingDataOpt1 & theData,
 	}
 }
 
-void NFmiTempView::DrawHodografBase(int theIndex)
+void NFmiTempView::DrawHodografBase(int theProducerIndex)
 {
-	// piirr‰ pohja laatikko fillill‰
-	int fontSize = boost::math::iround(16 * itsDrawSizeFactor.Y());
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
-	itsDrawingEnvironment->SetFillColor(NFmiColor(0.99f,0.98f,0.92f));
-	itsDrawingEnvironment->SetFontSize(NFmiPoint(fontSize, fontSize));
-
-	if(theIndex == 0)
+	// Piirret‰‰n pohjat vain indeksille 0, koska se on 1. piirtokierroksessa
+	if(theProducerIndex == 0)
 	{
+		// piirr‰ pohja laatikko fillill‰
+		int fontSize = boost::math::iround(16 * itsDrawSizeFactor.Y());
+		itsDrawingEnvironment->SetFrameColor(NFmiColor(0, 0, 0));
+		itsDrawingEnvironment->SetFillColor(NFmiColor(0.99f, 0.98f, 0.92f));
+		itsDrawingEnvironment->SetFontSize(NFmiPoint(fontSize, fontSize));
 		auto& hodografViewData = itsCtrlViewDocumentInterface->GetMTATempSystem().GetHodografViewData();
 		const auto& hodografRect = hodografViewData.Rect();
 		NFmiRectangle rec(hodografRect, 0, itsDrawingEnvironment);
@@ -2451,7 +2487,7 @@ void NFmiTempView::DrawHodografBase(int theIndex)
 			itsToolBox->DrawEllipse(NFmiRect(relP1, relP2), itsDrawingEnvironment);
 		}
 
-		itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
+		itsDrawingEnvironment->SetFrameColor(NFmiColor(0, 0, 0));
 		// piirr‰ asteikot
 		NFmiPoint leftCenter(hodografRect.Left(), hodografRect.Center().Y());
 		NFmiPoint rightCenter(hodografRect.Right(), hodografRect.Center().Y());
@@ -2470,8 +2506,8 @@ void NFmiTempView::DrawHodografBase(int theIndex)
 		for(double x = -hodografScaleMaxValue; x <= hodografScaleMaxValue; x += 10)
 		{ // piirret‰‰n u-akselin sakarat
 			NFmiPoint relP(GetRelativePointFromHodograf(x, 0));
-			NFmiPoint uP1(relP.X(), relP.Y()-tickHeightRel);
-			NFmiPoint uP2(relP.X(), relP.Y()+tickHeightRel);
+			NFmiPoint uP1(relP.X(), relP.Y() - tickHeightRel);
+			NFmiPoint uP2(relP.X(), relP.Y() + tickHeightRel);
 			NFmiLine lineU(uP1, uP2, 0, itsDrawingEnvironment);
 			itsToolBox->Convert(&lineU);
 			std::string str(NFmiStringTools::Convert<double>(x));
@@ -2479,12 +2515,12 @@ void NFmiTempView::DrawHodografBase(int theIndex)
 			itsToolBox->Convert(&txt);
 		}
 		itsToolBox->SetTextAlignment(kLeft);
-		double yShift = itsToolBox->SY(fontSize/2);
+		double yShift = itsToolBox->SY(fontSize / 2);
 		for(double y = -hodografScaleMaxValue; y <= hodografScaleMaxValue; y += 10)
 		{ // piirret‰‰n v-akselin sakarat
 			NFmiPoint relP(GetRelativePointFromHodograf(0, y));
-			NFmiPoint vP1(relP.X()-tickWidthRel, relP.Y());
-			NFmiPoint vP2(relP.X()+tickWidthRel, relP.Y());
+			NFmiPoint vP1(relP.X() - tickWidthRel, relP.Y());
+			NFmiPoint vP2(relP.X() + tickWidthRel, relP.Y());
 			NFmiLine lineV(vP1, vP2, 0, itsDrawingEnvironment);
 			itsToolBox->Convert(&lineV);
 			if(y != 0)
@@ -2502,10 +2538,10 @@ void NFmiTempView::DrawHodografBase(int theIndex)
 	}
 }
 
-void NFmiTempView::DrawHodografCurve(NFmiSoundingDataOpt1 &theData, int theIndex)
+void NFmiTempView::DrawHodografCurve(NFmiSoundingDataOpt1 &theData, int theProducerIndex)
 {
 	// piirr‰ itse hodografi k‰yr‰
-	NFmiColor soundingColor(itsCtrlViewDocumentInterface->GetMTATempSystem().SoundingColor(theIndex));
+	NFmiColor soundingColor(itsCtrlViewDocumentInterface->GetMTATempSystem().SoundingColor(theProducerIndex));
 	itsDrawingEnvironment->SetFrameColor(soundingColor); // itse tuuli k‰ppyr‰ piirret‰‰n luotauksen omalla v‰rill‰
 	std::deque<float>&uV = theData.GetParamData(kFmiWindUMS);
 	std::deque<float>&vV = theData.GetParamData(kFmiWindVMS);
@@ -2602,7 +2638,7 @@ void NFmiTempView::DrawHodografTextWithMarker(const std::string &theText, float 
 	}
 }
 
-void NFmiTempView::DrawHodografHeightMarkers(NFmiSoundingDataOpt1 &theData, int theIndex)
+void NFmiTempView::DrawHodografHeightMarkers(NFmiSoundingDataOpt1 &theData, int theProducerIndex)
 {
 	// piirret‰‰n sitten halutut korkeudet hodografi k‰yr‰‰n
 	// piirret‰‰n merkkipiste k‰yr‰‰n aina tiettyihin korkeuksiin (interpoloituna)
@@ -2614,7 +2650,7 @@ void NFmiTempView::DrawHodografHeightMarkers(NFmiSoundingDataOpt1 &theData, int 
 
 	NFmiColor markFillColor(0,0,0);
 	NFmiColor markFrameColor(0,0,0);
-	NFmiColor textColor(itsCtrlViewDocumentInterface->GetMTATempSystem().SoundingColor(theIndex));
+	NFmiColor textColor(itsCtrlViewDocumentInterface->GetMTATempSystem().SoundingColor(theProducerIndex));
 	for(std::deque<std::pair<float, int> >::iterator markValuesIt = markValues.begin(); markValuesIt != markValues.end(); ++markValuesIt)
 	{
 		float h = (*markValuesIt).first;
@@ -2643,33 +2679,46 @@ void NFmiTempView::DrawHodografHeightMarkers(NFmiSoundingDataOpt1 &theData, int 
 	}
 }
 
-void NFmiTempView::DrawSounding(NFmiSoundingDataOpt1 &theData, int theIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere)
+
+void NFmiTempView::SetupUsedSoundingData(NFmiSoundingDataOpt1& theUsedDataInOut, int theProducerIndex, bool fMainCurve)
 {
-	if(theIndex == 0 && fMainCurve) // eka luotaus laitetaan talteen indeksi laskuja varten
+	// Valitun luotaus tuottajan data laitetaan talteen indeksi laskuja varten
+	if(IsSelectedProducerIndex(theProducerIndex) && fMainCurve) 
 	{
-		if(fMustResetFirstSoundingData || !itsFirstSoundingData.IsSameSounding(theData)) // laitetaan haettu luotausdata 'firstiksi' vain jos se on muuttunut
+		// Laitetaan haettu luotausdata valituksi vain jos se on muuttunut
+		if(fMustResetFirstSoundingData || !itsSelectedProducerSoundingData.IsSameSounding(theUsedDataInOut)) 
 		{
 			fMustResetFirstSoundingData = false;
-			itsFirstSoundingData = theData; // jos ei ole muuttunut (aika/origtime/tuottaja/paikka), sit‰ on saatettu modifioida ja muutoksia ei heitet‰ pois
+			// Jos ei ole muuttunut (aika/origtime/tuottaja/paikka), sit‰ on saatettu modifioida ja muutoksia ei heitet‰ pois
+			itsSelectedProducerSoundingData = theUsedDataInOut; 
 		}
 		else
-			theData = itsFirstSoundingData; // pit‰‰ sijoittaa t‰llessa ollut firsti piirrett‰v‰‰n theData:an
+		{
+			// Muuten pit‰‰ sijoittaa t‰llessa ollut valittutuottajadata piirrett‰v‰‰n dataan
+			theUsedDataInOut = itsSelectedProducerSoundingData; 
+		}
 	}
+}
+
+void NFmiTempView::DrawSounding(NFmiSoundingDataOpt1 &theUsedDataInOut, int theProducerIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere)
+{
+	SetupUsedSoundingData(theUsedDataInOut, theProducerIndex, fMainCurve);
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
-    if(theIndex >= mtaTempSystem.MaxTempsShowed())
+    if(theProducerIndex >= mtaTempSystem.MaxTempsShowed())
 		return ; // lopetetaan kun on piirretty maksi m‰‰r‰ luotauksia yhteen kuvaan
+
 	NFmiDrawingEnvironment* envi = itsDrawingEnvironment;
 	envi->SetPenSize(NFmiPoint(1 * itsDrawSizeFactor.X(), 1 * itsDrawSizeFactor.Y()));
 	envi->SetFrameColor(theUsedSoundingColor);
 	itsToolBox->UseClipping(true); // laitetaan clippaus taas p‰‰lle (huonoa koodia, mutta voi voi)
 
-    DrawSecondaryData(theData, theIndex, theUsedSoundingColor);
+    DrawSecondaryData(theUsedDataInOut, theUsedSoundingColor);
 
     if(fMainCurve)
-        DrawHodograf(theData, theIndex);
+        DrawHodograf(theUsedDataInOut, theProducerIndex);
 
-	if(theIndex == 0 && fMainCurve)
-		DrawAllLiftedAirParcels(itsFirstSoundingData); // piirret‰‰n ilmapakettien nostot vain 1. luotaukseen
+	if(IsSelectedProducerIndex(theProducerIndex) && fMainCurve)
+		DrawAllLiftedAirParcels(itsSelectedProducerSoundingData); // piirret‰‰n ilmapakettien nostot vain valitun tuottajan luotaukseen
 
 	// HUOM! ensin piirret‰‰n kastepiste ja sitten l‰mpˆtila, koska j‰lkimm‰isen‰ piirretty
 	// voi peitt‰‰ allleen toisen piirrot ja koska l‰mpˆtila on t‰rke‰mpi, sen pit‰‰ tulla pintaan.
@@ -2682,37 +2731,37 @@ void NFmiTempView::DrawSounding(NFmiSoundingDataOpt1 &theData, int theIndex, con
         NFmiTempLineInfo lineInfo = mtaTempSystem.DewPointLineInfo();
 		lineInfo.Color(theUsedSoundingColor);
 		lineInfo.Thickness(boost::math::iround(lineInfo.Thickness() * itsDrawSizeFactor.X() * ExtraPrintLineThicknesFactor(true)));
-		DrawTemperatures(theData, kFmiDewPoint, lineInfo);
+		DrawTemperatures(theUsedDataInOut, kFmiDewPoint, lineInfo);
 	}
 
 	{
         NFmiTempLineInfo lineInfo = mtaTempSystem.TemperatureLineInfo();
 		lineInfo.Color(theUsedSoundingColor);
 		lineInfo.Thickness(boost::math::iround(lineInfo.Thickness() * itsDrawSizeFactor.X() * ExtraPrintLineThicknesFactor(true)));
-		DrawTemperatures(theData, kFmiTemperature, lineInfo);
+		DrawTemperatures(theUsedDataInOut, kFmiTemperature, lineInfo);
 	}
 
 	// Draw height values
 	if(fMainCurve)
-		DrawHeightValues(theData, theIndex);
+		DrawHeightValues(theUsedDataInOut, theProducerIndex);
 
 	// laitetaan takaisin 'solid' kyn‰
 	envi->SetFillPattern(FMI_SOLID);
 	envi->SetPenSize(NFmiPoint(1, 1));
-	DrawWind(theData, theIndex, onSouthernHemiSphere);
+	DrawWind(theUsedDataInOut, theProducerIndex, onSouthernHemiSphere);
 
 	if(fMainCurve)
 	{
-		DrawLCL(theData, theIndex, kLCLCalcSurface);
-		DrawLCL(theData, theIndex, kLCLCalc500m2);
-		DrawLCL(theData, theIndex, kLCLCalcMostUnstable);
-		DrawTrMw(theData, theIndex);
+		DrawLCL(theUsedDataInOut, theProducerIndex, kLCLCalcSurface);
+		DrawLCL(theUsedDataInOut, theProducerIndex, kLCLCalc500m2);
+		DrawLCL(theUsedDataInOut, theProducerIndex, kLCLCalcMostUnstable);
+		DrawTrMw(theUsedDataInOut, theProducerIndex);
 	}
-	if(theIndex == 0 && fMainCurve && mtaTempSystem.ShowCondensationTrailProbabilityLines())
-		DrawCondensationTrailRHValues(theData, 400, 200, 0.32); // 0.32 on viimeinen apuviiva mik‰ piirret‰‰n, arvot laitetaan sen oikealle puolelle
+	if(IsSelectedProducerIndex(theProducerIndex) && fMainCurve && mtaTempSystem.ShowCondensationTrailProbabilityLines())
+		DrawCondensationTrailRHValues(theUsedDataInOut, 400, 200, 0.32); // 0.32 on viimeinen apuviiva mik‰ piirret‰‰n, arvot laitetaan sen oikealle puolelle
 
 	if(fMainCurve)
-		DrawStationInfo(theData, theIndex);
+		DrawStationInfo(theUsedDataInOut, theProducerIndex);
 }
 
 static void AddStringLabelData(const PointF &thePoint, const PointF &theOffsetPoint, const std::string &theStr, vector<LineLabelDrawData> &theLabels)
@@ -2725,7 +2774,7 @@ static void AddStringLabelData(const PointF &thePoint, const PointF &theOffsetPo
 }
 
 // Piirret‰‰n luotauksen Tropopaussi merkki ja maksimi tuuli
-void NFmiTempView::DrawTrMw(NFmiSoundingDataOpt1 &theData, int theIndex)
+void NFmiTempView::DrawTrMw(NFmiSoundingDataOpt1 &theData, int theProducerIndex)
 {
 	std::vector<LineLabelDrawData> lineLabels;
     NFmiTempLabelInfo labelInfo(NFmiPoint(4, 0), kLeft, 12, true, true);
@@ -2757,50 +2806,51 @@ void NFmiTempView::DrawTrMw(NFmiSoundingDataOpt1 &theData, int theIndex)
 	}
 
 	// 4. Piirr‰ TR ja MW merkki
-	::DrawGdiplusStringVector(*itsGdiPlusGraphics, lineLabels, labelInfo, CtrlView::Relative2GdiplusRect(itsToolBox, itsTempViewDataRects.getSoundingCurveDataRect()), itsCtrlViewDocumentInterface->GetMTATempSystem().SoundingColor(theIndex));
+	::DrawGdiplusStringVector(*itsGdiPlusGraphics, lineLabels, labelInfo, CtrlView::Relative2GdiplusRect(itsToolBox, itsTempViewDataRects.getSoundingCurveDataRect()), itsCtrlViewDocumentInterface->GetMTATempSystem().SoundingColor(theProducerIndex));
 }
 
-void NFmiTempView::DrawLCL(NFmiSoundingDataOpt1 &theData, int theIndex, FmiLCLCalcType theLCLCalcType)
+void NFmiTempView::DrawLCL(NFmiSoundingDataOpt1 &theData, int theProducerIndex, FmiLCLCalcType theLCLCalcType)
 {
-	if(theIndex != 0) // piirret‰‰n vain 1. luotaukseen
-		return ;
-
-    NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
-    const NFmiTempLineInfo &lineInfo = ::GetAirParcelLineInfo(mtaTempSystem, theLCLCalcType);
-	const NFmiTempLabelInfo &labelInfo = ::GetAirParcelLabelInfo(mtaTempSystem, theLCLCalcType);
-	if(labelInfo.DrawLabelText())
+	// piirret‰‰n vain valitun tuottajan luotaukseen
+	if(IsSelectedProducerIndex(theProducerIndex))
 	{
-		int trueLineWidth = 1;
-		bool drawSpecialLines = SetHelpLineDrawingAttributes(itsToolBox, itsDrawingEnvironment, labelInfo, lineInfo, trueLineWidth, true);
-
-		double pLCL = theData.CalcLCLPressureLevel(theLCLCalcType);
-		if(pLCL != kFloatMissing)
+		NFmiMTATempSystem& mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
+		const NFmiTempLineInfo& lineInfo = ::GetAirParcelLineInfo(mtaTempSystem, theLCLCalcType);
+		const NFmiTempLabelInfo& labelInfo = ::GetAirParcelLabelInfo(mtaTempSystem, theLCLCalcType);
+		if(labelInfo.DrawLabelText())
 		{
-			float T = theData.GetValueAtPressure(kFmiTemperature, static_cast<float>(pLCL));
-			if(T != kFloatMissing)
+			int trueLineWidth = 1;
+			bool drawSpecialLines = SetHelpLineDrawingAttributes(itsToolBox, itsDrawingEnvironment, labelInfo, lineInfo, trueLineWidth, true);
+
+			double pLCL = theData.CalcLCLPressureLevel(theLCLCalcType);
+			if(pLCL != kFloatMissing)
 			{
-				double x = pt2x(pLCL, T);
-				double y = p2y(pLCL);
-				double lclLineLength = ConvertFixedPixelSizeToRelativeWidth(30);
-				NFmiPoint p1(x - lclLineLength/2., y);
-				NFmiPoint p2(x + lclLineLength/2., y);
-				NFmiPoint p3(x + lclLineLength/1.8, y);
-				p3.Y(p3.Y() - itsToolBox->SY(static_cast<long>(itsDrawingEnvironment->GetFontHeight()/2.)));
-				DrawLine(p1, p2, drawSpecialLines, trueLineWidth, false, 0, itsDrawingEnvironment);
-				NFmiString str("LCL (");
-				str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(pLCL, 0);
-				str += ", ";
-				str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(T, 1);
-				str += ")";
-				NFmiText txt(p3, str, false, 0, itsDrawingEnvironment);
-				itsToolBox->Convert(&txt);
+				float T = theData.GetValueAtPressure(kFmiTemperature, static_cast<float>(pLCL));
+				if(T != kFloatMissing)
+				{
+					double x = pt2x(pLCL, T);
+					double y = p2y(pLCL);
+					double lclLineLength = ConvertFixedPixelSizeToRelativeWidth(30);
+					NFmiPoint p1(x - lclLineLength / 2., y);
+					NFmiPoint p2(x + lclLineLength / 2., y);
+					NFmiPoint p3(x + lclLineLength / 1.8, y);
+					p3.Y(p3.Y() - itsToolBox->SY(static_cast<long>(itsDrawingEnvironment->GetFontHeight() / 2.)));
+					DrawLine(p1, p2, drawSpecialLines, trueLineWidth, false, 0, itsDrawingEnvironment);
+					NFmiString str("LCL (");
+					str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(pLCL, 0);
+					str += ", ";
+					str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(T, 1);
+					str += ")";
+					NFmiText txt(p3, str, false, 0, itsDrawingEnvironment);
+					itsToolBox->Convert(&txt);
+				}
 			}
 		}
 	}
 }
 
 // piirret‰‰n paine asteikon viereen luotauksesta korkeus arvoja
-void NFmiTempView::DrawHeightValues(NFmiSoundingDataOpt1 &theData, int theIndex)
+void NFmiTempView::DrawHeightValues(NFmiSoundingDataOpt1 &theData, int theProducerIndex)
 {
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
     if(mtaTempSystem.HeightValueLabelInfo().DrawLabelText() == false)
@@ -2814,7 +2864,7 @@ void NFmiTempView::DrawHeightValues(NFmiSoundingDataOpt1 &theData, int theIndex)
 	SetHelpLineDrawingAttributes(itsToolBox, itsDrawingEnvironment, labelInfo, mtaTempSystem.MoistAdiabaticLineInfo(), trueLineWidth, false);
 	NFmiPoint moveLabelRelatively(CalcReltiveMoveFromPixels(itsToolBox, labelInfo.StartPointPixelOffSet()));
 
-	if(mtaTempSystem.DrawOnlyHeightValuesOfFirstDrawedSounding() && theIndex == 0 || mtaTempSystem.DrawOnlyHeightValuesOfFirstDrawedSounding() == false)
+	if(mtaTempSystem.DrawOnlyHeightValuesOfFirstDrawedSounding() && IsSelectedProducerIndex(theProducerIndex) || mtaTempSystem.DrawOnlyHeightValuesOfFirstDrawedSounding() == false)
 	{
 		std::deque<float> &geoms = theData.GetParamData(kFmiGeomHeight);
 		std::deque<float> &pressures = theData.GetParamData(kFmiPressure);
@@ -2850,9 +2900,20 @@ void NFmiTempView::DrawHeightValues(NFmiSoundingDataOpt1 &theData, int theIndex)
 	}
 }
 
-void NFmiTempView::DrawStationInfo(NFmiSoundingDataOpt1 &theData, int theIndex)
+NFmiPoint NFmiTempView::CalcStringRelativeSize(const std::string &str, double fontSize, const std::string& fontName)
+{
+	auto fontNameWide = CtrlView::StringToWString(fontName);
+	auto usedFont = CtrlView::CreateFontPtr(static_cast<float>(fontSize), fontNameWide, Gdiplus::FontStyleRegular);
+	Gdiplus::PointF oringinInPixels(0, 0);
+	auto stringBoundingRectInPixels = CtrlView::GetStringBoundingBox(*itsGdiPlusGraphics, str, oringinInPixels, *usedFont);
+	return CtrlView::GdiplusRect2Relative(itsToolBox, stringBoundingRectInPixels).Size();
+}
+
+void NFmiTempView::DrawStationInfo(NFmiSoundingDataOpt1 &theData, int theProducerIndex)
 {
 	static const NFmiString maxNameText("1: E00/05.12 62∞23'N, 25∞41'E    ");
+	NFmiColor normalBackGroundTextcolor(0.87f, 0.87f, 0.87f);
+	NFmiColor selectedBackGroundTextcolor(0.93f, 0.93f, 0.93f);
 
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
     if(!mtaTempSystem.DrawLegendText())
@@ -2865,23 +2926,21 @@ void NFmiTempView::DrawStationInfo(NFmiSoundingDataOpt1 &theData, int theIndex)
 	NFmiPoint fontSize = mtaTempSystem.LegendTextSize();
 	fontSize = ScaleOffsetPoint(fontSize);
 	itsDrawingEnvironment->SetFontSize(fontSize);
+
 	double maxNameLength = maxNameText.GetLen();
-	double maxNameLengthRel = itsToolBox->MeasureText(maxNameText);
+	double maxNameLengthRel = CalcStringRelativeSize(std::string(maxNameText), fontSize.Y(), "Consolas").X();
 
 	double mtaModeIndexFactor = 2;
 
 	NFmiString locationNameStr;
-	locationNameStr += NFmiValueString::GetStringWithMaxDecimalsSmartWay(theIndex+1, 0);
+	locationNameStr += NFmiValueString::GetStringWithMaxDecimalsSmartWay(theProducerIndex + 1, 0);
 	locationNameStr += ": ";
 	locationNameStr += ::GetNameText(theData);
 	for(int i = locationNameStr.GetLen(); i < maxNameLength; i++)
 		locationNameStr += " "; // t‰ytet‰‰n nime‰ spaceilla, ett‰ pohjav‰ritys peitt‰‰ saman alan jokaiselle 'nimelle'
 
-	// LAITA MY÷S TƒMƒ INDEKSI JUTTU KUNTOON!!!!!!!
-	long index = theIndex;//GetData()->GetSoundings()->GetColourIndex();
-	itsDrawingEnvironment->SetFrameColor(mtaTempSystem.SoundingColor(index));
-	NFmiDrawingEnvironment* envi = itsDrawingEnvironment;
-	double fontY = itsToolBox->SY(envi->GetFontHeight());
+	long index = theProducerIndex;
+	double fontY = itsToolBox->SY(itsDrawingEnvironment->GetFontHeight());
 
 	const auto& dataRect = itsTempViewDataRects.getSoundingCurveDataRect();
 	NFmiPoint point = dataRect.TopRight();
@@ -2889,25 +2948,62 @@ void NFmiTempView::DrawStationInfo(NFmiSoundingDataOpt1 &theData, int theIndex)
 	point.Y(point.Y() + fontY * 0.95 + 1.0 * index * mtaModeIndexFactor * fontY);
     point.X(std::max(point.X(), dataRect.Left()));
 
-	{ // vain 1. aseman aika kirjataan (paitsi MTA moodissa), loput asemat tulevat sitten allekkain
+	auto relativeLeftEdge = point.X() - maxNameLengthRel * 0.01;
+	auto relativeRightEdge = relativeLeftEdge + maxNameLengthRel * 1.02;
+	NFmiDrawingEnvironment separatorLineEnvi;
+
+	if(theProducerIndex == 0)
+	{
+		// Vain 1. legenda tekstin kanssa (sen yl‰puolelle) piirret‰‰n valitun tuottaja indeksin tekstit
+		point.Y(point.Y() - fontY);
+		itsDrawingEnvironment->SetFillColor(normalBackGroundTextcolor);
+		itsDrawingEnvironment->SetFrameColor(GetSelectedProducersColor());
+		NFmiString selectedProducerIndexText = ::GetDictionaryString("Producer ind:");
+		selectedProducerIndexText += std::to_string(mtaTempSystem.GetSelectedProducerIndex(true) + 1);
+		selectedProducerIndexText += " (CTRL+SHIFT+wheel)";
+		NFmiText text3(point, selectedProducerIndexText, false, 0, itsDrawingEnvironment);
+		itsToolBox->Convert(&text3);
+		// Piirret‰‰n viel‰ erottava viiva t‰m‰n tekstin muiden legenda tekstien v‰liin
+		NFmiPoint point1(relativeLeftEdge, point.Y() + fontY - itsToolBox->SY(1));
+		NFmiPoint point2(relativeRightEdge, point1.Y());
+		NFmiLine separatorLine(point1, point2, 0, &separatorLineEnvi);
+		itsToolBox->Convert(&separatorLine);
+		// Selected prod tekstin takia pit‰‰ lis‰t‰ yksi rivi loppuihin teksteihin t‰ss‰
+		point.Y(point.Y() + 2 * fontY);
+	}
+	else
+		point.Y(point.Y() + fontY);
+
+	auto relativeTopEdge = point.Y() - fontY - itsToolBox->SY(1);
+	auto relativeBottomEdge = relativeTopEdge + (2 * fontY) + itsToolBox->SY(1);
+	itsDrawingEnvironment->SetFillColor(IsSelectedProducerIndex(theProducerIndex) ? selectedBackGroundTextcolor : normalBackGroundTextcolor);
+
+	itsDrawingEnvironment->SetFrameColor(mtaTempSystem.SoundingColor(theProducerIndex));
+	{
+		// Vain 1. aseman aika kirjataan (paitsi MTA moodissa), loput asemat tulevat sitten allekkain
 		NFmiMetTime time(theData.Time());
 		NFmiString timestr(time.ToStr(::GetDictionaryString("TempViewLegendTimeFormat")));
 		for(int i = timestr.GetLen(); i < maxNameLength; i++)
 			timestr += " "; // t‰ytet‰‰n nime‰ spaceilla, ett‰ pohjav‰ritys peitt‰‰ saman alan jokaiselle 'nimelle'
 		NFmiPoint timePoint(point);
 		timePoint.Y(point.Y() - fontY);
-		NFmiText text2(timePoint, timestr, false, 0, envi);
+		NFmiText text2(timePoint, timestr, false, 0, itsDrawingEnvironment);
 		itsToolBox->Convert(&text2);
 	}
-	NFmiText text1(point, locationNameStr, true, 0, envi);
+	NFmiText text1(point, locationNameStr, true, 0, itsDrawingEnvironment);
 	itsToolBox->Convert(&text1);
+	//if(IsSelectedProducerIndex(theProducerIndex))
+	//{
+	//	NFmiRectangle selectedProducerFrame(NFmiPoint(relativeLeftEdge, relativeTopEdge), NFmiPoint(relativeRightEdge, relativeBottomEdge), 0, &separatorLineEnvi);
+	//	itsToolBox->Convert(&selectedProducerFrame);
+	//}
 
 	itsToolBox->SetTextAlignment(oldAligment);
 }
 
 static NFmiRect gMissingRect(0,0,0,0);
 
-void NFmiTempView::DrawWind(NFmiSoundingDataOpt1 &theData, int theIndex, bool onSouthernHemiSphere)
+void NFmiTempView::DrawWind(NFmiSoundingDataOpt1 &theData, int theProducerIndex, bool onSouthernHemiSphere)
 {
 	itsFirstSoundinWindBarbXPos = kFloatMissing;
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
@@ -2936,8 +3032,8 @@ void NFmiTempView::DrawWind(NFmiSoundingDataOpt1 &theData, int theIndex, bool on
 			NFmiPoint windVecSizeInPixels = mtaTempSystem.WindvectorSizeInPixels();
 			windVecSizeInPixels = ScaleOffsetPoint(windVecSizeInPixels);
 			NFmiRect windBarbRect(::CalcGeneralWindBarbRect(itsToolBox, windVecSizeInPixels));
-			double xPos = ::CalcWindBarbXPos(itsTempViewDataRects.getSoundingCurveDataRect(), windBarbRect, theIndex);
-			if(theIndex == 0)
+			double xPos = ::CalcWindBarbXPos(itsTempViewDataRects.getSoundingCurveDataRect(), windBarbRect, theProducerIndex);
+			if(IsSelectedProducerIndex(theProducerIndex))
 				itsFirstSoundinWindBarbXPos = xPos;
 			int ssize = static_cast<int>(wsValues.size());
 			for(int i=0;i<ssize; i++)
@@ -3050,7 +3146,8 @@ bool NFmiTempView::LeftButtonUp(const NFmiPoint &thePlace, unsigned long theKey)
     mtaTempSystem.LeftMouseDown(false);
 	const auto& dataRect = itsTempViewDataRects.getSoundingCurveDataRect();
 	if(dataRect.Bottom() < thePlace.Y() && dataRect.Left() < thePlace.X())
-	{ // nyt on klikattu l‰mpp‰ri asteikkoa
+	{ 
+		// Nyt on klikattu l‰mpp‰ri asteikkoa
 		double change = 5;
 		if(dataRect.Center().X() > thePlace.X())
             mtaTempSystem.TAxisStart(mtaTempSystem.TAxisStart() - change);
@@ -3059,7 +3156,8 @@ bool NFmiTempView::LeftButtonUp(const NFmiPoint &thePlace, unsigned long theKey)
 		return true;
 	}
 	else if(dataRect.Left() > thePlace.X() && dataRect.Bottom() > thePlace.Y())
-	{ // nyt on klikattu paine asteikkoa
+	{ 
+		// Nyt on klikattu paine asteikkoa
 		double change = 50.;
 		if(dataRect.Center().Y() > thePlace.Y())
 		{
@@ -3080,7 +3178,7 @@ bool NFmiTempView::LeftButtonUp(const NFmiPoint &thePlace, unsigned long theKey)
 			return true;
 		}
 		else
-			return ModifySounding(itsFirstSoundingData, thePlace, theKey, kFmiDewPoint, 3);
+			return ModifySounding(itsSelectedProducerSoundingData, thePlace, theKey, kFmiDewPoint, 3);
 	}
 	else if(itsTempViewDataRects.getAnimationButtonRect().IsInside(thePlace))
 	{
@@ -3102,7 +3200,8 @@ bool NFmiTempView::RightButtonUp(const NFmiPoint &thePlace, unsigned long theKey
     mtaTempSystem.RightMouseDown(false);
 	const auto& dataRect = itsTempViewDataRects.getSoundingCurveDataRect();
 	if(dataRect.Bottom() < thePlace.Y() && dataRect.Left() < thePlace.X())
-	{ // nyt on klikattu l‰mpp‰ri asteikkoa
+	{ 
+		// Nyt on klikattu l‰mpp‰ri asteikkoa
 		double change = 5;
 		if(dataRect.Center().X() > thePlace.X())
             mtaTempSystem.TAxisStart(mtaTempSystem.TAxisStart() + change);
@@ -3111,7 +3210,8 @@ bool NFmiTempView::RightButtonUp(const NFmiPoint &thePlace, unsigned long theKey
 		return true;
 	}
 	else if(dataRect.Left() > thePlace.X() && dataRect.Bottom() > thePlace.Y())
-	{ // nyt on klikattu paine asteikkoa
+	{ 
+		// Nyt on klikattu paine asteikkoa
 		double change = 50.;
 		if(dataRect.Center().Y() > thePlace.Y())
 		{
@@ -3124,7 +3224,7 @@ bool NFmiTempView::RightButtonUp(const NFmiPoint &thePlace, unsigned long theKey
 		return true;
 	}
 	else if(dataRect.IsInside(thePlace))
-		return ModifySounding(itsFirstSoundingData, thePlace, theKey, kFmiTemperature, 3);
+		return ModifySounding(itsSelectedProducerSoundingData, thePlace, theKey, kFmiTemperature, 3);
 	else if(itsTempViewDataRects.getAnimationButtonRect().IsInside(thePlace))
 	{
         mtaTempSystem.ChangeSoundingsInTime(kForward);
@@ -3263,7 +3363,7 @@ void NFmiTempView::DrawOverBitmapThings(NFmiToolBox *theGTB, const NFmiPoint &th
 	itsDrawSizeFactor.Y(1.);
 	itsDrawSizeFactor.X(1.);
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
-    itsDrawingEnvironment->SetFrameColor(mtaTempSystem.SoundingColor(0));
+    itsDrawingEnvironment->SetFrameColor(GetSelectedProducersColor());
 	int fontSize = itsTempViewDataRects.getStabilityIndexFontSize();
 	itsDrawingEnvironment->SetFontSize(NFmiPoint(fontSize * itsDrawSizeFactor.X(), fontSize * itsDrawSizeFactor.Y()));
 	itsToolBox->SetTextAlignment(kLeft);
@@ -3287,7 +3387,8 @@ void NFmiTempView::DrawOverBitmapThings(NFmiToolBox *theGTB, const NFmiPoint &th
 		}
 	}
 	if(mtaTempSystem.GetSoundingViewSettingsFromWindowsRegisty().ShowStabilityIndexSideView())
-	{ // jos ollaan indeksin‰ytto tilassa, lasketaan kursorin kohdalle arvoja ja laitetaan ne indeksi ikkunaan
+	{ 
+		// Jos ollaan indeksin‰ytto tilassa, lasketaan kursorin kohdalle arvoja ja laitetaan ne indeksi ikkunaan
 		NFmiPoint p(CalcStabilityIndexStartPoint());
 
 		NFmiText text(p, NFmiString(""), false, 0, itsDrawingEnvironment);
@@ -3304,7 +3405,8 @@ void NFmiTempView::DrawOverBitmapThings(NFmiToolBox *theGTB, const NFmiPoint &th
 
 	if(dataRect.IsInside(thePlace))
 	{
-		if(KEYDOWN(VK_SHIFT)) // jos shift pohjassa piirret‰‰n apu viivoja
+		// Jos pelkk‰ SHIFT pohjassa ja liikutellaan hiirt‰ luotausk‰yr‰ ikkunassa, piirret‰‰n apu viivoja (dry + moist adiapaatit ja mixing ratio)
+		if(KEYDOWN(VK_SHIFT) && !KEYDOWN(VK_CONTROL))
 		{
 			// PIIRRETƒƒN LUOTAUS IKKUNAAN APUVIIVOJA KURSORIN KOHDALLE, JOS shift-NƒPPƒIN ON POHJASSA (apuviivat=kuiva, kostea ja mix)
             ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &dataRect);
@@ -3399,9 +3501,9 @@ bool NFmiTempView::MouseMove(const NFmiPoint &thePlace, unsigned long  theKey)
 	{
         NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
         if(mtaTempSystem.RightMouseDown()) // oikea nappi on tarke‰mpi koska sill‰ muokataan l‰mpp‰ri‰ (vasen muokkaa kastepistett‰)
-			return ModifySounding(itsFirstSoundingData, thePlace, theKey, kFmiTemperature, 3);
+			return ModifySounding(itsSelectedProducerSoundingData, thePlace, theKey, kFmiTemperature, 3);
 		else if(mtaTempSystem.LeftMouseDown())
-			return ModifySounding(itsFirstSoundingData, thePlace, theKey, kFmiDewPoint, 3);
+			return ModifySounding(itsSelectedProducerSoundingData, thePlace, theKey, kFmiDewPoint, 3);
 	}
 	return false;
 }
