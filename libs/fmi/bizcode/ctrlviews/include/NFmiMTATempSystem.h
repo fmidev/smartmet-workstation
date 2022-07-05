@@ -305,6 +305,8 @@ private:
 	bool ShowIndexiesViewMacroLegacy() const;
 	bool ShowSideViewViewMacroLegacy() const;
 	void SetupSideViewsFromLegacyViewMacroValues(bool showIndexiesLegacyValue, bool showSideViewLegacyValue);
+	std::string MakeSelectedProducerStringForViewMacro() const;
+	void SetSelectedProducerFromViewMacroString(const std::string &str);
 
 	Container itsTempInfos;
 	// MTA-moodissa t‰m‰n enemp‰‰ ei oteta listaan n‰ytett‰vi‰ temppej‰. Jos joku lis‰‰ tempin ja 
