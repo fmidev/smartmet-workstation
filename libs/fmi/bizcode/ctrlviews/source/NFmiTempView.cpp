@@ -2005,6 +2005,11 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 			if(info)
 			{
 				emptySoundingData.OriginTime(info->OriginTime());
+				if(info->IsGrid())
+				{
+					auto usedLocationWithName = ::GetSoundingLocation(info, usedTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
+					emptySoundingData.Location(usedLocationWithName);
+				}
 			}
 			DrawStationInfo(emptySoundingData, theProducerIndex);
 		}
