@@ -541,7 +541,7 @@ void CFmiBetaProductDialog::MakeCommandLineExecution(const std::string &theDesti
     if(!finalCmdLine.empty())
     {
         bool showErrorMessageBox = !justLogMessages;
-        bool waitExecutionToStop = !justLogMessages;
+        bool waitExecutionToStop = true; // aina odotellaan loppuun, jotta ei tulisi rinnakkaisuus cannot-access-file ongelmia
         // Komento rivi ajetaan piilossa, eikä sen loppumista odoteta
         CFmiProcessHelpers::ExecuteCommandInSeparateProcess(finalCmdLine, true, showErrorMessageBox, SW_SHOW, waitExecutionToStop, NORMAL_PRIORITY_CLASS, &theDestinationDirectory);
     }
@@ -1134,7 +1134,7 @@ void CFmiBetaProductDialog::DoImagePacking(const std::string& directoryPath)
         std::string usedPackingApplicationCommandLine = itsBetaProductionSystem->ImagePackingExeCommandLine();
         std::string usedPackingApplicationPath = NFmiBetaProductionSystem::AddQuotationMarksToString(itsBetaProductionSystem->ImagePackingExePath());
         std::string fullPackingCommandLineString = usedPackingApplicationPath + " " + usedPackingApplicationCommandLine;
-        CFmiProcessHelpers::ExecuteCommandInSeparateProcess(fullPackingCommandLineString, true, false, SW_HIDE, false, NORMAL_PRIORITY_CLASS, &usedWorkingDirectory);
+        CFmiProcessHelpers::ExecuteCommandInSeparateProcess(fullPackingCommandLineString, true, false, SW_HIDE, true, NORMAL_PRIORITY_CLASS, &usedWorkingDirectory);
     }
 }
 
