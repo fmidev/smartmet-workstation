@@ -70,7 +70,7 @@ void NFmiWmsView::Draw(NFmiToolBox *theGTB)
             NFmiRect sourceRect(0, 0, holder->mImage->GetWidth(), holder->mImage->GetHeight());
             Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on täysin läpinäkyvä, 0.5 = semi transparent ja 1.0 = opaque
             bool doNearestInterpolation = alpha >= 1.f ? true : false;
-            CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *holder->mImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha));
+            CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *holder->mImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha), itsGdiPlusGraphics);
 
             wmsSupport.registerDynamicLayer(CalcRealRowIndex(), itsViewGridColumnNumber, itsMapViewDescTopIndex, dataIdent);
         }

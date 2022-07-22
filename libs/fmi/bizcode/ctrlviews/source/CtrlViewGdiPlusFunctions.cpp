@@ -257,12 +257,15 @@ namespace CtrlView
     static void DrawBitmapToGdiplus(Gdiplus::Graphics* theGdiPlusGraphics, bool isPrinting, Gdiplus::Bitmap& theBitmap, const NFmiRect& theSourcePixels, const Gdiplus::RectF& theDestPixels, Gdiplus::ImageAttributes* theImageAttr, bool fDoNearestInterpolation)
     {
         if(isPrinting)
-            theGdiPlusGraphics->SetPageUnit(Gdiplus::UnitPixel); // t‰h‰n asti on pelattu printatessa aina pikseli maailmassa, joten gdiplus:in pit‰‰ laittaa siihen
+        {
+            // t‰h‰n asti on pelattu printatessa aina pikseli maailmassa, joten gdiplus:in pit‰‰ laittaa siihen
+            theGdiPlusGraphics->SetPageUnit(Gdiplus::UnitPixel);
+        }
 
-                                                                 // T‰ss‰ on kaikki eri mahd. interpolaatio tavat kuvapiirrossa
-                                                                 // InterpolationModeInvalid, InterpolationModeDefault, InterpolationModeLowQuality, InterpolationModeHighQuality, InterpolationModeBilinear, InterpolationModeBicubic, InterpolationModeNearestNeighbor, InterpolationModeHighQualityBilinear, InterpolationModeHighQualityBicubic
-                                                                 // HUOM! Vain seuraavat toimivat satel-kuvien kanssa kunnolla, kun alpha-kerroin on alle 90% eli eiv‰t tee 'reiki‰' eik‰ muitakaan v‰rimuunnoksia 
-                                                                 // InterpolationModeHighQuality, InterpolationModeBicubic, InterpolationModeHighQualityBicubic
+        // T‰ss‰ on kaikki eri mahd. interpolaatio tavat kuvapiirrossa
+        // InterpolationModeInvalid, InterpolationModeDefault, InterpolationModeLowQuality, InterpolationModeHighQuality, InterpolationModeBilinear, InterpolationModeBicubic, InterpolationModeNearestNeighbor, InterpolationModeHighQualityBilinear, InterpolationModeHighQualityBicubic
+        // HUOM! Vain seuraavat toimivat satel-kuvien kanssa kunnolla, kun alpha-kerroin on alle 90% eli eiv‰t tee 'reiki‰' eik‰ muitakaan v‰rimuunnoksia 
+        // InterpolationModeHighQuality, InterpolationModeBicubic, InterpolationModeHighQualityBicubic
         if(fDoNearestInterpolation)
             theGdiPlusGraphics->SetInterpolationMode(Gdiplus::InterpolationModeNearestNeighbor); // t‰m‰ ei taas sotke kuvia tietyiss‰ tapauksissa, kuten tekee InterpolationModeHighQuality, esim. karttakuvien p‰‰lle heitetyt layerit eiv‰t sotkeennu t‰ll‰
         else
