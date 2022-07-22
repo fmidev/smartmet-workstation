@@ -10,6 +10,60 @@
 #include "NFmiDrawParam.h"
 #include "ToolMasterColorCube.h"
 
+NFmiImageAttributes::NFmiImageAttributes() = default;
+
+NFmiImageAttributes::NFmiImageAttributes(Gdiplus::REAL alpha)
+    :alpha_(alpha)
+    ,useAlpha_(true)
+{
+}
+
+NFmiImageAttributes::NFmiImageAttributes(COLORREF transparentColorRef)
+    : transparentColor_(transparentColorRef)
+    , useTransparentColor_(true)
+{
+}
+
+NFmiImageAttributes::NFmiImageAttributes(const Gdiplus::Color& transparentColor)
+    :transparentColor_(transparentColor)
+    ,useTransparentColor_(true)
+{
+}
+
+NFmiImageAttributes::NFmiImageAttributes(const Gdiplus::Color& transparentColor, Gdiplus::REAL alpha)
+    :transparentColor_(transparentColor)
+    ,alpha_(alpha)
+    ,useTransparentColor_(true)
+    ,useAlpha_(true)
+{
+}
+
+bool NFmiImageAttributes::IsAnyAttributeSet() const
+{
+    return IsTransparentColorUsed() || IsAlphaUsed();
+}
+
+bool NFmiImageAttributes::IsTransparentColorUsed() const
+{
+    return useTransparentColor_;
+}
+
+bool NFmiImageAttributes::IsAlphaUsed() const
+{
+    return useAlpha_;
+}
+
+const Gdiplus::Color& NFmiImageAttributes::TransparentColor() const
+{
+    return transparentColor_;
+}
+
+Gdiplus::REAL NFmiImageAttributes::Alpha() const
+{
+    return alpha_;
+}
+
+
 namespace CtrlView
 {
     // NFmiColor oliossa on alpha k‰‰nteinen (0.0 on full-opacity ja 1.0 on full-transparent)
@@ -174,45 +228,33 @@ namespace CtrlView
         return boundinBox;
     }
 
-    // theAlpha: 0 on t‰ysin l‰pin‰kyv‰, 0.5 = semi transparent ja 1.0 = opaque
-    // HUOM! CDC voi olla 0-pointteri.
-    void DrawBitmapToDC(CDC* theDC, Gdiplus::Bitmap& theBitmap, const NFmiRect& theSourcePixels, const Gdiplus::RectF& theDestPixels, Gdiplus::REAL theAlpha, bool fDoNearestInterpolation, Gdiplus::Graphics* theGdiPlusGraphics)
+    // theAlpha: 0 on t‰ysin l‰pin‰kyv‰, 0.5 = semi transparent ja 1.0 = opaque, voi olla puuttuva (nullptr)
+    static std::unique_ptr<Gdiplus::ImageAttributes> CreateImageAttributes(const NFmiImageAttributes& theImageAttr)
     {
-        Gdiplus::ImageAttributes imageAttr;
-        Gdiplus::ColorMatrix colorMatrix = {
-            1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, theAlpha, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f, 1.0f
-        };
-        imageAttr.SetColorMatrix(&colorMatrix);
-        DrawBitmapToDC(theDC, theBitmap, theSourcePixels, theDestPixels, fDoNearestInterpolation, &imageAttr, theGdiPlusGraphics);
+        if(theImageAttr.IsAnyAttributeSet())
+        {
+            auto imageAttributesPtr = std::make_unique<Gdiplus::ImageAttributes>();
+            if(theImageAttr.IsAlphaUsed())
+            {
+                Gdiplus::ColorMatrix colorMatrix = {
+                    1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+                    0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+                    0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+                    0.0f, 0.0f, 0.0f, theImageAttr.Alpha(), 0.0f,
+                    0.0f, 0.0f, 0.0f, 0.0f, 1.0f
+                };
+                imageAttributesPtr->SetColorMatrix(&colorMatrix);
+            }
+            const auto& transparentColor = theImageAttr.TransparentColor();
+            imageAttributesPtr->SetColorKey(transparentColor, transparentColor);
+            return imageAttributesPtr;
+        }
+        else
+            return nullptr;
     }
 
-    void DrawBitmapToDC(CDC* theDC, Gdiplus::Bitmap& theBitmap, const NFmiRect& theSourcePixels, const Gdiplus::RectF& theDestPixels, const Gdiplus::Color& theTransparentColor, Gdiplus::REAL theAlpha, bool fDoNearestInterpolation)
-    {
-        Gdiplus::ImageAttributes imageAttr;
-        Gdiplus::ColorMatrix colorMatrix = {
-            1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, theAlpha, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f, 1.0f
-        };
-        imageAttr.SetColorMatrix(&colorMatrix);
-        imageAttr.SetColorKey(theTransparentColor, theTransparentColor);
-        DrawBitmapToDC(theDC, theBitmap, theSourcePixels, theDestPixels, fDoNearestInterpolation, &imageAttr);
-    }
 
-    void DrawBitmapToDC(CDC* theDC, Gdiplus::Bitmap& theBitmap, const NFmiRect& theSourcePixels, const Gdiplus::RectF& theDestPixels, const Gdiplus::Color& theTransparentColor, bool fDoNearestInterpolation)
-    {
-        Gdiplus::ImageAttributes imageAttr;
-        imageAttr.SetColorKey(theTransparentColor, theTransparentColor);
-        DrawBitmapToDC(theDC, theBitmap, theSourcePixels, theDestPixels, fDoNearestInterpolation, &imageAttr);
-    }
-
-    static void DrawBitmapToDC(Gdiplus::Graphics* theGdiPlusGraphics, bool isPrinting, Gdiplus::Bitmap& theBitmap, const NFmiRect& theSourcePixels, const Gdiplus::RectF& theDestPixels, Gdiplus::ImageAttributes* theImageAttr, bool fDoNearestInterpolation)
+    static void DrawBitmapToGdiplus(Gdiplus::Graphics* theGdiPlusGraphics, bool isPrinting, Gdiplus::Bitmap& theBitmap, const NFmiRect& theSourcePixels, const Gdiplus::RectF& theDestPixels, Gdiplus::ImageAttributes* theImageAttr, bool fDoNearestInterpolation)
     {
         if(isPrinting)
             theGdiPlusGraphics->SetPageUnit(Gdiplus::UnitPixel); // t‰h‰n asti on pelattu printatessa aina pikseli maailmassa, joten gdiplus:in pit‰‰ laittaa siihen
@@ -243,15 +285,15 @@ namespace CtrlView
         }
     }
 
-
-    void DrawBitmapToDC(CDC* theDC, Gdiplus::Bitmap& theBitmap, const NFmiRect& theSourcePixels, const Gdiplus::RectF& theDestPixels, bool fDoNearestInterpolation, Gdiplus::ImageAttributes* theImageAttr, Gdiplus::Graphics* theGdiPlusGraphics)
+    void DrawBitmapToDC_4(CDC* theDC, Gdiplus::Bitmap& theBitmap, const NFmiRect& theSourcePixels, const Gdiplus::RectF& theDestPixels, bool fDoNearestInterpolation, const NFmiImageAttributes& theImageAttr, Gdiplus::Graphics* theGdiPlusGraphics)
     {
+        auto imageAttributesPtr = CreateImageAttributes(theImageAttr);
         if(theGdiPlusGraphics)
-            DrawBitmapToDC(theGdiPlusGraphics, (theDC->IsPrinting() == TRUE), theBitmap, theSourcePixels, theDestPixels, theImageAttr, fDoNearestInterpolation);
+            DrawBitmapToGdiplus(theGdiPlusGraphics, (theDC->IsPrinting() == TRUE), theBitmap, theSourcePixels, theDestPixels, imageAttributesPtr.get(), fDoNearestInterpolation);
         else
         {
             Gdiplus::Graphics graphics(theDC->GetSafeHdc());
-            DrawBitmapToDC(&graphics, (theDC->IsPrinting() == TRUE), theBitmap, theSourcePixels, theDestPixels, theImageAttr, fDoNearestInterpolation);
+            DrawBitmapToGdiplus(&graphics, (theDC->IsPrinting() == TRUE), theBitmap, theSourcePixels, theDestPixels, imageAttributesPtr.get(), fDoNearestInterpolation);
         }
     }
 
@@ -607,7 +649,7 @@ namespace CtrlView
             NFmiPoint startPoint(CtrlViewUtils::ConvertPointFromRect1ToRect2(theRect.TopLeft(), NFmiRect(0, 0, 1, 1), NFmiRect(NFmiPoint(0, 0), theViewSizeInPixels)));
             Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(startPoint.X()), static_cast<Gdiplus::REAL>(startPoint.Y()), static_cast<Gdiplus::REAL>(destBitmapSize.X()), static_cast<Gdiplus::REAL>(destBitmapSize.Y()));
             NFmiRect sourceRect(0, 0, bitmapSize.X(), bitmapSize.Y());
-            DrawBitmapToDC(theToolBox.GetDC(), *theButtonImage, sourceRect, destRect, theAlpha, fDoNearestInterpolation, theGdiPlusGraphics);
+            DrawBitmapToDC_4(theToolBox.GetDC(), *theButtonImage, sourceRect, destRect, fDoNearestInterpolation, NFmiImageAttributes(theAlpha), theGdiPlusGraphics);
         }
     }
 
@@ -643,7 +685,7 @@ namespace CtrlView
             0.0f, 0.0f, 0.0f, 0.0f, 1.0f
         };
         imageAttr.SetColorMatrix(&colorMatrix);
-        DrawBitmapToDC(theGdiPlusGraphics, isPrinting, theBitmap, theSourcePixels, theDestPixels, &imageAttr, fDoNearestInterpolation);
+        DrawBitmapToGdiplus(theGdiPlusGraphics, isPrinting, theBitmap, theSourcePixels, theDestPixels, &imageAttr, fDoNearestInterpolation);
     }
 
     NFmiPoint RelativeSizeToPixelSize(const NFmiPoint& relativeSize, NFmiToolBox& theToolBox)

@@ -13,6 +13,7 @@ class CWnd;
 namespace Gdiplus
 {
     class RectF;
+    class Graphics;
 }
 
 namespace MapDraw
@@ -21,10 +22,10 @@ namespace MapDraw
     CRect getMfcRect(const NFmiPoint& bitmapSize);
     CRect getMfcRect(const NFmiRect& relativeRect, NFmiToolBox *toolbox);
     bool drawOverlay(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, int wantedDrawOverMapMode);
-    void drawOverlayMap(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, int wantedDrawOverMapMode, CDC *theUsedCDC, Gdiplus::RectF& destRect, const NFmiPoint& bitmapSize);
+    void drawOverlayMap(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, int wantedDrawOverMapMode, CDC *theUsedCDC, Gdiplus::RectF& destRect, const NFmiPoint& bitmapSize, Gdiplus::Graphics *gdiplusGraphics);
     NFmiPoint getBitmapSize(CtrlViewDocumentInterface *docInterface, int theDescTopIndex);
     Gdiplus::RectF getDestRect(const CRect& mfcRect);
-    bool GenerateMapBitmap(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC);
+    bool GenerateMapBitmap(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC, Gdiplus::Graphics* gdiplusGraphics);
     bool stopDrawingTooSmallMapview(CWnd *mapView, int theDescTopIndex);
 
     template<typename DocumentInterface>

@@ -14,6 +14,26 @@ class NFmiCtrlView;
 class GdiPlusLineInfo;
 class NFmiDrawParam;
 
+class NFmiImageAttributes
+{
+    Gdiplus::Color transparentColor_ = Gdiplus::Color(Gdiplus::Color::Black);
+    Gdiplus::REAL alpha_ = 0.f;
+    bool useTransparentColor_ = false;
+    bool useAlpha_ = false;
+public:
+    NFmiImageAttributes();
+    NFmiImageAttributes(Gdiplus::REAL alpha);
+    NFmiImageAttributes(COLORREF transparentColorRef);
+    NFmiImageAttributes(const Gdiplus::Color &transparentColor);
+    NFmiImageAttributes(const Gdiplus::Color &transparentColor, Gdiplus::REAL alpha);
+
+    bool IsAnyAttributeSet() const;
+    bool IsTransparentColorUsed() const;
+    bool IsAlphaUsed() const;
+    const Gdiplus::Color& TransparentColor() const;
+    Gdiplus::REAL Alpha() const;
+};
+
 namespace CtrlView
 {
     // Color related functions
@@ -46,11 +66,7 @@ namespace CtrlView
     Gdiplus::RectF GetWStringBoundingBox(Gdiplus::Graphics& theGdiPlusGraphics, const std::wstring& theString, const Gdiplus::PointF& theOringinInPixels, const Gdiplus::Font& theFont);
 
     // Drawing functions
-    // theAlpha: 0 on täysin läpinäkyvä, 0.5 = semi transparent ja 1.0 = opaque
-    void DrawBitmapToDC(CDC *theDC, Gdiplus::Bitmap &theBitmap, const NFmiRect &theSourcePixels, const Gdiplus::RectF &theDestPixels, Gdiplus::REAL theAlpha, bool fDoNearestInterpolation, Gdiplus::Graphics *theGdiPlusGraphics = 0);
-    void DrawBitmapToDC(CDC *theDC, Gdiplus::Bitmap &theBitmap, const NFmiRect &theSourcePixels, const Gdiplus::RectF &theDestPixels, const Gdiplus::Color &theTransparentColor, bool fDoNearestInterpolation);
-    void DrawBitmapToDC(CDC *theDC, Gdiplus::Bitmap &theBitmap, const NFmiRect &theSourcePixels, const Gdiplus::RectF &theDestPixels, const Gdiplus::Color &theTransparentColor, Gdiplus::REAL theAlpha, bool fDoNearestInterpolation);
-    void DrawBitmapToDC(CDC *theDC, Gdiplus::Bitmap &theBitmap, const NFmiRect &theSourcePixels, const Gdiplus::RectF &theDestPixels, bool fDoNearestInterpolation, Gdiplus::ImageAttributes *theImageAttr = 0, Gdiplus::Graphics *theGdiPlusGraphics = 0);
+    void DrawBitmapToDC_4(CDC *theDC, Gdiplus::Bitmap &theBitmap, const NFmiRect &theSourcePixels, const Gdiplus::RectF &theDestPixels, bool fDoNearestInterpolation, const NFmiImageAttributes &theImageAttr = NFmiImageAttributes(), Gdiplus::Graphics *theGdiPlusGraphics = 0);
     Gdiplus::Bitmap* CreateBitmapFromFile(const std::string &thePath, const std::string &theFileName);
     Gdiplus::Bitmap* CreateBitmapFromFile(const std::string &thePathAndFileName);
     void SetGdiplusAlignment(FmiDirection theAlignment, Gdiplus::StringFormat &theStringFormat);

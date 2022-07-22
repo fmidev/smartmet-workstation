@@ -251,7 +251,7 @@ bool CFmiExtraMapView::GenerateMapBitmap(CBitmap* theUsedBitmap, CDC* theUsedCDC
 {
 	try
 	{
-		return MapDraw::GenerateMapBitmap(CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC);
+		return MapDraw::GenerateMapBitmap(CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC, nullptr);
 	}
 	catch(std::exception& e)
 	{

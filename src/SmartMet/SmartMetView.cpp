@@ -226,8 +226,8 @@ bool CSmartMetView::GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, C
 {
 	try
 	{
-		NFmiEditMapGeneralDataDoc* data = GetDocument()->GetData();
-		return MapDraw::GenerateMapBitmap(&data->GetCtrlViewDocumentInterface(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC);
+		NFmiEditMapGeneralDataDoc *data = GetDocument()->GetData();
+		return MapDraw::GenerateMapBitmap(&data->GetCtrlViewDocumentInterface(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC, nullptr);
 	}
 	catch(std::exception& e)
 	{
