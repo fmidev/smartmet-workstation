@@ -225,7 +225,7 @@ void CSmartMetView::DrawOverBitmapThings(NFmiToolBox * theGTB)
 bool CSmartMetView::GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC)
 {
 	NFmiEditMapGeneralDataDoc *data = GetDocument()->GetData();
-	return MapDraw::GenerateMapBitmap(&data->GetCtrlViewDocumentInterface(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC);
+	return MapDraw::GenerateMapBitmap(&data->GetCtrlViewDocumentInterface(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC, nullptr);
 }
 
 void CSmartMetView::DoGraphReportOnDraw(const CtrlViewUtils::GraphicalInfo &graphicalInfo, double scaleFactor)

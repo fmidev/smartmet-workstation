@@ -104,7 +104,8 @@ void NFmiSatelView::Draw(NFmiToolBox *theGTB)
             sourceRect.Right(sourceRect.Right() * usedImage->GetWidth());
             sourceRect.Bottom(sourceRect.Bottom() * usedImage->GetHeight());
             Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on t‰ysin l‰pin‰kyv‰, 0.5 = semi transparent ja 1.0 = opaque
-            CtrlView::DrawBitmapToDC(itsToolBox->GetDC(), *usedImage, sourceRect, destRect, alpha, alpha >= 1.f ? true : false);
+            bool doNearestInterpolation = alpha >= 1.f ? true : false;
+            CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *usedImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha));
         }
     }
 }
@@ -168,7 +169,8 @@ void NFmiSatelView::DrawImageOnDifferentProjection(boost::shared_ptr<NFmiArea> &
         sourceRect.Size(bitmapSize);
 
         Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on t‰ysin l‰pin‰kyv‰, 0.5 = semi transparent ja 1.0 = opaque
-        CtrlView::DrawBitmapToDC(itsToolBox->GetDC(), *projectedBitmap, sourceRect, destRect, transColor, alpha, alpha >= 1.f ? true : false);
+        bool doNearestInterpolation = alpha >= 1.f ? true : false;
+        CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *projectedBitmap, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(transColor, alpha));
         delete projectedBitmap; // t‰m‰ kuva pit‰‰ tuhota, mutta ei satelImagea
     }
 }

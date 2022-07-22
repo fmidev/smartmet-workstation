@@ -342,7 +342,7 @@ namespace
         // joten fiksaan t‰ss‰ piirtoalueen originaali bitmap kokoon, vaikka se ehk‰ onkin pikkuisen v‰‰rin.
         destPixels.Width = static_cast<Gdiplus::REAL>(landBorderMapBitmap->GetWidth());
         destPixels.Height = static_cast<Gdiplus::REAL>(landBorderMapBitmap->GetHeight());
-        CtrlView::DrawBitmapToDC(usedDc, *landBorderMapBitmap, sourcePixels, destPixels, g_transparentColorGdiplus, false);
+        CtrlView::DrawBitmapToDC_4(usedDc, *landBorderMapBitmap, sourcePixels, destPixels, false, NFmiImageAttributes(g_transparentColorGdiplus));
     }
 
     void drawLandBordersWithBitmap(NFmiCtrlView* mapView, NFmiToolBox* toolbox, NFmiDrawParam* separateBorderLayerDrawOptions)

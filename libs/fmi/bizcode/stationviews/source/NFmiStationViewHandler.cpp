@@ -1904,7 +1904,8 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
                 Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(startPoint.X() + bitmapSize.X() - hSelves.horizontalShift - legendW), static_cast<Gdiplus::REAL>(startPoint.Y() + bitmapSize.Y() - hSelves.verticalShift - legendH), static_cast<Gdiplus::REAL>(legendW), static_cast<Gdiplus::REAL>(legendH));
                 NFmiRect sourceRect(0, 0, legendW, legendH);
                 Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on täysin läpinäkyvä, 0.5 = semi transparent ja 1.0 = opaque
-                CtrlView::DrawBitmapToDC(itsToolBox->GetDC(), *legend.get()->mImage, sourceRect, destRect, alpha, alpha >= 1.f ? true : false);
+				bool doNearestInterpolation = alpha >= 1.f ? true : false;
+				CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *legend.get()->mImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha));
 
                 // shift
                 hSelves.horizontalShift += legendW;
@@ -1926,7 +1927,8 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
                 Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(startPoint.X() + bitmapSize.X() - vSelves.horizontalShift - legendW), static_cast<Gdiplus::REAL>(startPoint.Y() + vSelves.verticalShift), static_cast<Gdiplus::REAL>(legendW), static_cast<Gdiplus::REAL>(legendH));
                 NFmiRect sourceRect(0, 0, legendW, legendH);
                 Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on täysin läpinäkyvä, 0.5 = semi transparent ja 1.0 = opaque
-                CtrlView::DrawBitmapToDC(itsToolBox->GetDC(), *legend.get()->mImage, sourceRect, destRect, alpha, alpha >= 1.f ? true : false);
+				bool doNearestInterpolation = alpha >= 1.f ? true : false;
+				CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *legend.get()->mImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha));
 
                 // shift
                 vSelves.verticalShift += legendH;
@@ -3674,12 +3676,14 @@ void NFmiStationViewHandler::DrawMap(NFmiToolBox * theGTB, const NFmiRect& theRe
 {
 	if(theGTB)
 	{
-		if(itsCtrlViewDocumentInterface->Printing() == false && itsCtrlViewDocumentInterface->MapBlitDC(itsMapViewDescTopIndex))
+		auto* mapDc = itsCtrlViewDocumentInterface->MapBlitDC(itsMapViewDescTopIndex);
+		if(!itsCtrlViewDocumentInterface->Printing() && mapDc)
 		{
-			theGTB->DrawDC(itsCtrlViewDocumentInterface->MapBlitDC(itsMapViewDescTopIndex), theRect);
+			theGTB->DrawDC(mapDc, theRect);
 		}
-		else // else on hitaampi tapa piirtää kartta, joka poistunee
+		else 
 		{
+			// Else on hitaampi tapa , jota käytetään ainakin printtauksen yhteydessä
             auto mapHandler = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex);
 			Gdiplus::Bitmap *aBitmap = mapHandler->GetBitmap();
 			if(aBitmap)
@@ -3688,7 +3692,7 @@ void NFmiStationViewHandler::DrawMap(NFmiToolBox * theGTB, const NFmiRect& theRe
 				CRect mfcRect;
 				theGTB->ConvertRect(itsMapRect, mfcRect);
 				Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(mfcRect.left), static_cast<Gdiplus::REAL>(mfcRect.top), static_cast<Gdiplus::REAL>(mfcRect.Width()), static_cast<Gdiplus::REAL>(mfcRect.Height()));
-                CtrlView::DrawBitmapToDC(theGTB->GetDC(), *aBitmap, bitmapRect, destRect, true);
+                CtrlView::DrawBitmapToDC_4(theGTB->GetDC(), *aBitmap, bitmapRect, destRect, true);
 			}
 		}
 		if(itsCtrlViewDocumentInterface->ProjectionCurvatureInfo()->GetDrawingMode() == NFmiProjectionCurvatureInfo::kOverMap)
@@ -3708,7 +3712,7 @@ void NFmiStationViewHandler::DrawOverMap(NFmiToolBox * theGTB, const NFmiRect& t
         auto destRect = MapDraw::getDestRect(mfcRect);
 
         int wantedDrawOverMapMode = 1; // means overlay is drawn after all the dynamic data is drawn
-        MapDraw::drawOverlayMap(itsCtrlViewDocumentInterface, itsMapViewDescTopIndex, wantedDrawOverMapMode, theGTB->GetDC(), destRect, bitmapSize);
+        MapDraw::drawOverlayMap(itsCtrlViewDocumentInterface, itsMapViewDescTopIndex, wantedDrawOverMapMode, theGTB->GetDC(), destRect, bitmapSize, itsGdiPlusGraphics);
 	}
 }
 
@@ -3767,13 +3771,14 @@ void NFmiStationViewHandler::DrawMapInMouseMove(NFmiToolBox * theGTB, const NFmi
 {
 	if(theGTB)
 	{
-		if(itsCtrlViewDocumentInterface->MapBlitDC(itsMapViewDescTopIndex))
+		auto* mapDc = itsCtrlViewDocumentInterface->MapBlitDC(itsMapViewDescTopIndex);
+		if(mapDc)
 		{
 			NFmiPoint place(theRect.Place());
 			place -= GetFrame().Place();
 			NFmiPoint size(1,1); // koolla ei ole todellisuudessa merkitystä
 			NFmiRect sourceRect(place, size);
-			theGTB->DrawDC(itsCtrlViewDocumentInterface->MapBlitDC(itsMapViewDescTopIndex), theRect, sourceRect);
+			theGTB->DrawDC(mapDc, theRect, sourceRect);
 		}
 		else
 		{
