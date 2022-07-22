@@ -1905,7 +1905,7 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
                 NFmiRect sourceRect(0, 0, legendW, legendH);
                 Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on täysin läpinäkyvä, 0.5 = semi transparent ja 1.0 = opaque
 				bool doNearestInterpolation = alpha >= 1.f ? true : false;
-				CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *legend.get()->mImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha));
+				CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *legend.get()->mImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha), itsGdiPlusGraphics);
 
                 // shift
                 hSelves.horizontalShift += legendW;
@@ -1928,7 +1928,7 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
                 NFmiRect sourceRect(0, 0, legendW, legendH);
                 Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on täysin läpinäkyvä, 0.5 = semi transparent ja 1.0 = opaque
 				bool doNearestInterpolation = alpha >= 1.f ? true : false;
-				CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *legend.get()->mImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha));
+				CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *legend.get()->mImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha), itsGdiPlusGraphics);
 
                 // shift
                 vSelves.verticalShift += legendH;
@@ -3692,7 +3692,7 @@ void NFmiStationViewHandler::DrawMap(NFmiToolBox * theGTB, const NFmiRect& theRe
 				CRect mfcRect;
 				theGTB->ConvertRect(itsMapRect, mfcRect);
 				Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(mfcRect.left), static_cast<Gdiplus::REAL>(mfcRect.top), static_cast<Gdiplus::REAL>(mfcRect.Width()), static_cast<Gdiplus::REAL>(mfcRect.Height()));
-                CtrlView::DrawBitmapToDC_4(theGTB->GetDC(), *aBitmap, bitmapRect, destRect, true);
+                CtrlView::DrawBitmapToDC_4(theGTB->GetDC(), *aBitmap, bitmapRect, destRect, true, NFmiImageAttributes(), itsGdiPlusGraphics);
 			}
 		}
 		if(itsCtrlViewDocumentInterface->ProjectionCurvatureInfo()->GetDrawingMode() == NFmiProjectionCurvatureInfo::kOverMap)
