@@ -8,6 +8,8 @@
 #include "CtrlViewWin32Functions.h"
 #include "UnicodeStringConversions.h"
 #include "CtrlViewDocumentInterface.h"
+#include "MapDrawFunctions.h"
+#include "FmiWin32Helpers.h"
 
 namespace CFmiWin32TemplateHelpers
 {
@@ -39,7 +41,7 @@ namespace CFmiWin32TemplateHelpers
 	{
         SmartMetDocumentInterface *smartMetDocumentInterface = theView->GetSmartMetDocumentInterface();
 		NFmiToolBox *toolBox = theView->ToolBox();
-		if(smartMetDocumentInterface == 0 || toolBox == 0)
+		if(smartMetDocumentInterface == nullptr || toolBox == nullptr)
 			return ; // pit‰isi heitt‰‰ poikkeus
 
         GraphicalInfoRestorer<Tview> graphicalInfoRestorer(*theView);
@@ -109,7 +111,7 @@ namespace CFmiWin32TemplateHelpers
         // Try-catch varmistaa ett‰ lopun takaisinasetukset tehd‰‰n
 		theView->GetGraphicalInfo().fInitialized = false; // printtauksen j‰lkeen t‰m‰ pit‰‰ taas laittaa falseksi ett‰ piirto osaa initialisoida sen uudestaan
         smartMetDocumentInterface->Printing(mapViewDescTopIndex, false);
-        theView->SetPrintCopyCDC(0);
+        theView->SetPrintCopyCDC(nullptr);
 		theView->PrintViewSizeInPixels(oldSize);
 		CatLog::logMessage("Map view printed", CatLog::Severity::Info, CatLog::Category::Visualization);
 		theView->MakePrintViewDirty(true, true);
@@ -316,92 +318,104 @@ namespace CFmiWin32TemplateHelpers
     }
 
     template<class Tview>
-    void DoOffScreenDraw(Tview *theView, SmartMetDocumentInterface *smartMetDocumentInterface, CBitmap &theDrawedScreenBitmapOut)
+    class NFmiMapBlitDCHandler
+    {
+        Tview& mapView_;
+        CFmiWin32Helpers::DeviceContextHelper& usedDcHelper_;
+        CDC& compatibilityDc_;
+        NFmiMapViewDescTop& mapViewDesctop_;
+    public:
+        NFmiMapBlitDCHandler(Tview& mapView, CFmiWin32Helpers::DeviceContextHelper& usedDcHelper, CDC& compatibilityDc, NFmiMapViewDescTop& mapViewDesctop)
+            :mapView_(mapView)
+            , usedDcHelper_(usedDcHelper)
+            , compatibilityDc_(compatibilityDc)
+            , mapViewDesctop_(mapViewDesctop)
+        {
+            mapView_.GenerateMapBitmap(mapView_.MapBitmap(), &usedDcHelper_.getDc(), &compatibilityDc_);
+            mapViewDesctop_.MapBlitDC(&usedDcHelper_.getDc());
+        }
+
+        ~NFmiMapBlitDCHandler()
+        {
+            mapViewDesctop_.MapBlitDC(nullptr);
+        }
+    };
+
+    class NFmiCopyCDCHandler
+    {
+        CFmiWin32Helpers::DeviceContextHelper usedDcHelper_;
+        NFmiMapViewDescTop& mapViewDesctop_;
+    public:
+        NFmiCopyCDCHandler(CDC* usedDc, NFmiMapViewDescTop& mapViewDesctop)
+            :usedDcHelper_(usedDc)
+            , mapViewDesctop_(mapViewDesctop)
+        {
+            mapViewDesctop_.CopyCDC(&usedDcHelper_.getDc());
+        }
+
+        ~NFmiCopyCDCHandler()
+        {
+            mapViewDesctop_.CopyCDC(nullptr);
+        }
+    };
+
+    template<class Tview>
+    void SetupDrawnBitmap(Tview* theView, CDC *compatibleDC, CBitmap& theDrawnScreenBitmapOut, CFmiWin32Helpers::DeviceContextHelper &usedDC)
+    {
+        CRect clientArea;
+        theView->GetClientRect(&clientArea);
+        theDrawnScreenBitmapOut.DeleteObject();
+        theDrawnScreenBitmapOut.CreateCompatibleBitmap(compatibleDC, clientArea.Width(), clientArea.Height());
+        usedDC.SelectBitmap(&theDrawnScreenBitmapOut);
+        theView->ToolBox()->SetDC(&usedDC.getDc());
+    }
+
+    template<class Tview>
+    void DoOffScreenDraw(Tview *theView, SmartMetDocumentInterface *smartMetDocumentInterface, CBitmap &theDrawnScreenBitmapOut)
     {
         if(theView == nullptr)
             return;
 
         unsigned int mapViewDesktopIndex = theView->MapViewDescTopIndex();
+        if(MapDraw::stopDrawingTooSmallMapview(theView, mapViewDesktopIndex))
+            return;
 
         CClientDC dc(theView);
-        CDC dcMem;
-        dcMem.CreateCompatibleDC(&dc);
+        CFmiWin32Helpers::DeviceContextHelper dcMem(&dc);
 
-        CRect clientArea;
-        theView->GetClientRect(&clientArea);
-        if(clientArea.Height() < 4)
-        {
-            dcMem.DeleteDC();
-            return; // kun ruudun korkeus on tarpeeksi pieni, ohjelma voi kaatua ja turha n‰in pient‰ ruutua on edes piirt‰‰
-        }
+        auto* mapViewDesctop = smartMetDocumentInterface->MapViewDescTop(mapViewDesktopIndex);
+        // v‰limuistin apuna k‰ytetty dc
+        NFmiCopyCDCHandler copyCDCHandler(&dc, *mapViewDesctop);
 
-        CDC dcMemCopy; // v‰limuistin apuna k‰ytetty dc
-        dcMemCopy.CreateCompatibleDC(&dc);
-        smartMetDocumentInterface->MapViewDescTop(mapViewDesktopIndex)->CopyCDC(&dcMemCopy);
-
-        theDrawedScreenBitmapOut.DeleteObject();
-        theDrawedScreenBitmapOut.CreateCompatibleBitmap(&dc, clientArea.Width(), clientArea.Height());
-
-        CBitmap *oldBitmap = dcMem.SelectObject(&theDrawedScreenBitmapOut);
-        theView->ToolBox()->SetDC(&dcMem);
+        SetupDrawnBitmap(theView, &dc, theDrawnScreenBitmapOut, dcMem);
 
         // *** T‰ss‰ tehd‰‰n background kartta ***
-        CDC dcMem2;
-        dcMem2.CreateCompatibleDC(&dc);
-        theView->GenerateMapBitmap(theView->MapBitmap(), &dcMem2, &dc);
-        smartMetDocumentInterface->MapViewDescTop(mapViewDesktopIndex)->MapBlitDC(&dcMem2);
+        CFmiWin32Helpers::DeviceContextHelper dcMem2(&dc);
+        NFmiMapBlitDCHandler<Tview> mapBlitDC(*theView, dcMem2, dc, *mapViewDesctop);
         // *** T‰ss‰ tehd‰‰n background kartta ***
 
-        {
-            theView->SetToolsDCs(&dcMem);
-            theView->DoDraw();
-        }
-
-        // *** T‰ss‰ background kartan j‰lkihoito ***
-        smartMetDocumentInterface->MapViewDescTop(mapViewDesktopIndex)->MapBlitDC(0);
-        dcMem2.SelectObject(static_cast<CBitmap*>(nullptr));
-        dcMem2.DeleteDC();
-        // *** T‰ss‰ background kartan j‰lkihoito ***
-        smartMetDocumentInterface->MapViewDescTop(mapViewDesktopIndex)->CopyCDC(0);
-        dcMemCopy.DeleteDC();
-
+        theView->SetToolsDCs(&dcMem.getDc());
+        theView->DoDraw();
         theView->DrawOverBitmapThings(theView->ToolBox());
-        dcMem.SelectObject(oldBitmap);
-        dcMem.DeleteDC();
     }
 
     template<class Tview>
-    void DoOffScreenDrawForNonMapView(Tview *theView, SmartMetDocumentInterface *smartMetDocumentInterface, CBitmap &theDrawedScreenBitmapOut)
+    void DoOffScreenDrawForNonMapView(Tview *theView, SmartMetDocumentInterface *smartMetDocumentInterface, CBitmap & theDrawnScreenBitmapOut)
     {
         if(theView == nullptr)
             return;
 
         CClientDC dc(theView);
-        CDC dcMem;
-        dcMem.CreateCompatibleDC(&dc);
+        CFmiWin32Helpers::DeviceContextHelper dcMem(&dc);
 
-        CRect clientArea;
-        theView->GetClientRect(&clientArea);
-        if(clientArea.Height() < 4)
-        {
-            dcMem.DeleteDC();
-            return; // kun ruudun korkeus on tarpeeksi pieni, ohjelma voi kaatua ja turha n‰in pient‰ ruutua on edes piirt‰‰
-        }
+        if(MapDraw::stopDrawingTooSmallMapview(theView, theView->MapViewDescTopIndex()))
+            return;
 
-        theDrawedScreenBitmapOut.DeleteObject();
-        theDrawedScreenBitmapOut.CreateCompatibleBitmap(&dc, clientArea.Width(), clientArea.Height());
+        SetupDrawnBitmap(theView, &dc, theDrawnScreenBitmapOut, dcMem);
 
-        CBitmap *oldBitmap = dcMem.SelectObject(&theDrawedScreenBitmapOut);
-        theView->ToolBox()->SetDC(&dcMem);
-
-        {
-            theView->SetToolMastersDC(&dcMem);
-            theView->DoDraw();
-        }
-
+        theView->SetToolMastersDC(&dcMem.getDc());
+        theView->DoDraw();
         theView->DrawOverBitmapThings(theView->ToolBox());
-        dcMem.SelectObject(oldBitmap);
-        dcMem.DeleteDC();
     }
 
     template<class Tview>
@@ -508,17 +522,36 @@ namespace CFmiWin32TemplateHelpers
         }
     }
 
+    inline void DoBitBltOperation(CDC &destinyDc, CDC &sourceDc, const CRect &clientArea, DWORD drawOperation)
+    {
+        destinyDc.BitBlt(0
+            , 0
+            , clientArea.Width()
+            , clientArea.Height()
+            , &sourceDc
+            , 0
+            , 0
+            , drawOperation);
+    }
+
+    template<class Tview>
+    void DoGraphicalInfoSetup(Tview* mapView, CDC* pDC, SmartMetDocumentInterface* smartMetDocumentInterface)
+    {
+        auto mapViewDescTopIndex = mapView->MapViewDescTopIndex();
+        auto& gInfo = smartMetDocumentInterface->GetGraphicalInfo(mapViewDescTopIndex);
+        CFmiWin32Helpers::SetDescTopGraphicalInfo(mapView->IsMapView(), gInfo, pDC, mapView->PrintViewSizeInPixels(), smartMetDocumentInterface->DrawObjectScaleFactor());
+        CFmiWin32Helpers::DoGraphReportOnDraw(gInfo, smartMetDocumentInterface->DrawObjectScaleFactor());
+    }
+
+
     template<class Tview>
     void MapViewOnDraw(Tview *mapView, CDC* pDC, SmartMetDocumentInterface *smartMetDocumentInterface)
     {
         if(smartMetDocumentInterface->Printing())
             return; // tulee ongelmia, jos ruutua p‰ivitet‰‰n kun samalla printataan
 
+        DoGraphicalInfoSetup(mapView, pDC, smartMetDocumentInterface);
         auto mapViewDescTopIndex = mapView->MapViewDescTopIndex();
-        auto &gInfo = smartMetDocumentInterface->GetGraphicalInfo(mapViewDescTopIndex);
-        CFmiWin32Helpers::SetDescTopGraphicalInfo(mapView->IsMapView(), gInfo, pDC, mapView->PrintViewSizeInPixels(), smartMetDocumentInterface->DrawObjectScaleFactor());
-        CFmiWin32Helpers::DoGraphReportOnDraw(gInfo, smartMetDocumentInterface->DrawObjectScaleFactor());
-
         if(MapDraw::stopDrawingTooSmallMapview(mapView, mapViewDescTopIndex))
             return;
 
@@ -530,8 +563,7 @@ namespace CFmiWin32TemplateHelpers
         if(mapViewDesctop->RedrawMapView() || smartMetDocumentInterface->ViewBrushed())
         {
             // v‰limuistin apuna k‰ytetty dc
-            CFmiWin32Helpers::DeviceContextHelper dcMemCopy(&dc);
-            mapViewDesctop->CopyCDC(&dcMemCopy.getDc());
+            NFmiCopyCDCHandler copyCDCHandler(&dc, *mapViewDesctop);
 
             std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(smartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
             if(!smartMetDocumentInterface->ViewBrushed())
@@ -545,8 +577,7 @@ namespace CFmiWin32TemplateHelpers
 
             // *** T‰ss‰ tehd‰‰n background kartta ***
             CFmiWin32Helpers::DeviceContextHelper dcMem2(&dc);
-            mapView->GenerateMapBitmap(mapView->MapBitmap(), &dcMem2.getDc(), &dc);
-            mapViewDesctop->MapBlitDC(&dcMem2.getDc());
+            NFmiMapBlitDCHandler<Tview> mapBlitDC(*mapView, dcMem2, dc, *mapViewDesctop);
             // *** T‰ss‰ tehd‰‰n background kartta ***
 
             {
@@ -556,9 +587,6 @@ namespace CFmiWin32TemplateHelpers
             }
 
             // *** T‰ss‰ background kartan j‰lkihoito ***
-            mapViewDesctop->MapBlitDC(0);
-            // *** T‰ss‰ background kartan j‰lkihoito ***
-            mapViewDesctop->CopyCDC(0);
             mapViewDesctop->ClearRedrawMapView();
             smartMetDocumentInterface->ViewBrushed(false);
         }
@@ -573,14 +601,7 @@ namespace CFmiWin32TemplateHelpers
 
         CRect clientArea;
         mapView->GetClientRect(&clientArea);
-        finalImageDc.getDc().BitBlt(0
-            , 0
-            , clientArea.Width()
-            , clientArea.Height()
-            , &dcMem.getDc()
-            , 0
-            , 0
-            , SRCCOPY);
+        DoBitBltOperation(finalImageDc.getDc(), dcMem.getDc(), clientArea, SRCCOPY);
 
         auto toolbox = mapView->ToolBox();
         toolbox->SetDC(&finalImageDc.getDc());
@@ -589,14 +610,7 @@ namespace CFmiWin32TemplateHelpers
         mapViewDesctop->MapHandler()->ClearUpdateMapViewDrawingLayers();
 
         // Lopuksi viimeinen kuva pit‰‰ piirt‰‰ originaali piirtopinnalle kerrallaan
-        pDC->BitBlt(0
-            , 0
-            , clientArea.Width()
-            , clientArea.Height()
-            , &finalImageDc.getDc()
-            , 0
-            , 0
-            , SRCCOPY);
+        DoBitBltOperation(*pDC, finalImageDc.getDc(), clientArea, SRCCOPY);
     }
 };
 
