@@ -105,7 +105,7 @@
 #define IDC_TIME_SERIES_MOD_LIMIT       1094
 #define IDC_CONTOUR_GAP                 1095
 #define IDC_CONTOUR_ALPHA               1096
-#define IDC_F_HIDDEN2                   1097
+#define IDC_TREAT_WMS_LAYER_AS_OBSERVATION 1097
 #define IDC_ONE_RELATIVE_HEIGHT2        1098
 #define IDC_PARAM_ABBREVIATION          1100
 #define IDC_BUTTON_COLOR_SHOW_SYMB_LOW  1101

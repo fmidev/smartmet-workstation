@@ -301,6 +301,7 @@ private:
 	BOOL fSimpleContourTransparency3;
 	BOOL fSimpleContourTransparency4;
 	BOOL fSimpleContourTransparency5;
+	BOOL fTreatWmsLayerAsObservation;
 
 public:
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
