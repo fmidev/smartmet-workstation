@@ -1255,23 +1255,35 @@ bool NFmiTimeControlView::MouseWheel(const NFmiPoint &thePlace, unsigned long th
 		}
 		else if(CalcAnimationBoxRect().IsInside(thePlace) && CalcAnimationDelayButtonRect().IsInside(thePlace))
 		{
-			NFmiAnimationData &animData = itsCtrlViewDocumentInterface->AnimationData(itsMapViewDescTopIndex);
+			NFmiAnimationData& animData = itsCtrlViewDocumentInterface->AnimationData(itsMapViewDescTopIndex);
 			int currentDelayInMS = animData.FrameDelayInMS();
 			int usedDeltaValue = 10;
-			if(currentDelayInMS > 150)
-				usedDeltaValue = 20;
-			if(currentDelayInMS > 500)
-				usedDeltaValue = 50;
-			if(currentDelayInMS > 1000)
-				usedDeltaValue = 100;
+			if(theDelta > 0)
+			{
+				if(currentDelayInMS >= 1000)
+					usedDeltaValue = 100;
+				else if(currentDelayInMS >= 500)
+					usedDeltaValue = 50;
+				else if(currentDelayInMS >= 100)
+					usedDeltaValue = 20;
+			}
+			else
+			{
+				if(currentDelayInMS > 1000)
+					usedDeltaValue = 100;
+				else if(currentDelayInMS > 500)
+					usedDeltaValue = 50;
+				else if(currentDelayInMS > 100)
+					usedDeltaValue = 20;
+			}
 			currentDelayInMS += (theDelta > 0) ? usedDeltaValue : -usedDeltaValue;
 			if(currentDelayInMS < 0)
 				currentDelayInMS = 0;
 			else if(currentDelayInMS > 2000)
 				currentDelayInMS = 2000;
 			animData.FrameDelayInMS(currentDelayInMS);
-            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
-            return true;
+			ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
+			return true;
 		}
 		else if(CalcAnimationBoxRect().IsInside(thePlace) && CalcLastFrameDelayFactorButtonRect().IsInside(thePlace))
 		{
