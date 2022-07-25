@@ -11,6 +11,7 @@ namespace Wms
 {
     class StaticMapClientState;
     class Setup;
+    class LayerInfo;
 }
 
 // Interface that is meant to be used instead actual Wms::WmsSupport implementation class.
@@ -41,6 +42,7 @@ public:
     virtual bool isDead(std::chrono::milliseconds wait) const = 0;
     virtual Wms::StaticMapClientState& getStaticMapClientState(unsigned int mapViewIndex, unsigned int mapAreaIndex) = 0;
     virtual const std::unique_ptr<Wms::Setup>& getSetup() const = 0;
+    virtual const Wms::LayerInfo* getHashedLayerInfo(const NFmiDataIdent& dataIdent) const = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual const Wms::CapabilityTree* peekCapabilityTree() const = 0;
