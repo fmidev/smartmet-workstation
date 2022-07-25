@@ -41,6 +41,7 @@
 #include "wmssupport/WmsClient.h"
 #include "wmssupport/Setup.h"
 #include "CtrlViewTimeConsumptionReporter.h"
+#include "wmssupport/ChangedLayers.h"
 
 #ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupport.h"
@@ -852,6 +853,68 @@ namespace
 		return drawParam->Level().GetIdent() == 0;
 	}
 
+	bool checkLastObservationTime(bool *newerTimeFoundInOut, const NFmiMetTime & checkedTime, const NFmiMetTime& currentTime, NFmiMetTime *newLastTimeInOut, int timeStepInMinutes)
+	{
+		// Tarkasteltu aika pitää pyöristää animaatiossa käytetyn time-stepin kanssa ja vielä taaksepäin.
+		NFmiMetTime backwardRoundedCheckTime(checkedTime);
+		backwardRoundedCheckTime.SetTimeStep(timeStepInMinutes, true, kBackward);
+		if(*newerTimeFoundInOut == false || backwardRoundedCheckTime > *newLastTimeInOut)
+		{
+			*newerTimeFoundInOut = true;
+			*newLastTimeInOut = backwardRoundedCheckTime;
+			if(*newLastTimeInOut >= currentTime)
+			{
+				// Ei tarvitse enää jatkaa, koska aika joka löytyi on viimeisin mahdollinen.
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool isObservationLockModeQueryData(const boost::shared_ptr<NFmiDrawParam>& drawParam)
+	{
+		if(CtrlViewFastInfoFunctions::IsObservationLockModeDataType(drawParam->DataType()))
+		{
+			// Ignooraa toistaiseksi tuottaja kFmiTEMP, koska niiden par haku tuottaa ajallisesti liian pitkälle meneviä datoja (viimeinen aika on tyhjää).
+			if(!NFmiInfoOrganizer::IsTempData(drawParam->Param().GetProducer()->GetIdent(), true))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool isObservationLockModeSatelData(const boost::shared_ptr<NFmiDrawParam>& drawParam, bool ignoreSatelImages)
+	{
+		if(drawParam->DataType() == NFmiInfoData::kSatelData && ignoreSatelImages == false)
+		{
+			return true;
+		}
+		return false;
+	}
+
+	bool isObservationLockModeWmsData(const boost::shared_ptr<NFmiDrawParam>& drawParam)
+	{
+		if(drawParam->DataType() == NFmiInfoData::kWmsData && drawParam->TreatWmsLayerAsObservation())
+		{
+			return true;
+		}
+		return false;
+	}
+
+	void checkEarliestLastObservationTime(bool * anyTimeFoundInOut, const NFmiMetTime & checkedTime, NFmiMetTime* earliestLastTimeInOut, int timeStepInMinutes)
+	{
+		// Tarkasteltu aika pitää pyöristää animaatiossa käytetyn time-stepin kanssa ja vielä taaksepäin.
+		NFmiMetTime backwardRoundedCheckTime(checkedTime);
+		backwardRoundedCheckTime.SetTimeStep(timeStepInMinutes, true, kBackward);
+		if(*anyTimeFoundInOut == false || backwardRoundedCheckTime < *earliestLastTimeInOut)
+		{
+			*anyTimeFoundInOut = true;
+			*earliestLastTimeInOut = backwardRoundedCheckTime;
+		}
+	}
+
+
 } // nameless namespace ends
 
 
@@ -1590,7 +1653,8 @@ bool NFmiCombinedMapHandler::isAnimationTimebagCheckNeeded(unsigned int mapviewD
 
 bool NFmiCombinedMapHandler::findLastObservation(unsigned long mapViewDescTopIndex, int timeStepInMinutes, NFmiMetTime& newLastTime, bool ignoreSatelImages)
 {
-	NFmiMetTime currentTime(mapViewDescTopIndex); // tämä on jonkinlainen rajapyykki, eli tämän yli kun mennään (ei pitäisi mennä), lopetetaan havaintojen etsiminene siihen
+	// tämä on jonkinlainen rajapyykki, eli tämän yli kun mennään (ei pitäisi mennä), lopetetaan havaintojen etsiminene siihen
+	NFmiMetTime currentTime(1);
 	// haetaan min ja maksimi aika limitit, jotka on n. nykyhetki ja 2h - nykyhetki
 	NFmiMetTime timeLimit1;
 	NFmiMetTime timeLimit2;
@@ -1612,43 +1676,49 @@ bool NFmiCombinedMapHandler::findLastObservation(unsigned long mapViewDescTopInd
 				boost::shared_ptr<NFmiDrawParam> drawParam = aList->Current();
 				if(drawParam->IsParamHidden() == false)
 				{
-					if(CtrlViewFastInfoFunctions::IsObservationLockModeDataType(drawParam->DataType()))
+					if(::isObservationLockModeQueryData(drawParam))
 					{
-						// Ignooraa toistaiseksi tuottaja kFmiTEMP, koska niiden par haku tuottaa ajallisesti liian pitkälle meneviä datoja (viimeinen aika on tyhjää).
-						if(!NFmiInfoOrganizer::IsTempData(drawParam->Param().GetProducer()->GetIdent(), true))
+						std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
+						makeDrawedInfoVectorForMapView(infoVector, drawParam, mapViewDescTop.MapHandler()->Area());
+						for(size_t i = 0; i < infoVector.size(); i++)
 						{
-							std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
-							makeDrawedInfoVectorForMapView(infoVector, drawParam, mapViewDescTop.MapHandler()->Area());
-							for(size_t i = 0; i < infoVector.size(); i++)
+							bool demandExactTimeChecking = drawParam->DataType() != NFmiInfoData::kFlashData; // tässä vaiheessa salama data on sellainen jossa ei vaadita tarkkoja aika tarkasteluja
+							boost::shared_ptr<NFmiFastQueryInfo>& info = infoVector[i];
+							NFmiMetTime dataLastTime;
+							NFmiTimeDescriptor timeDesc = info->TimeDescriptor();
+							if(::getLatestValidTimeWithCorrectTimeStep(timeDesc, mapViewDescTopIndex, demandExactTimeChecking, timeLimit1, timeLimit2, dataLastTime))
 							{
-								bool demandExactTimeChecking = drawParam->DataType() != NFmiInfoData::kFlashData; // tässä vaiheessa salama data on sellainen jossa ei vaadita tarkkoja aika tarkasteluja
-								boost::shared_ptr<NFmiFastQueryInfo>& info = infoVector[i];
-								NFmiMetTime dataLastTime;
-								NFmiTimeDescriptor timeDesc = info->TimeDescriptor();
-								if(::getLatestValidTimeWithCorrectTimeStep(timeDesc, mapViewDescTopIndex, demandExactTimeChecking, timeLimit1, timeLimit2, dataLastTime))
+								if(::checkLastObservationTime(&newerTimeFound, dataLastTime, currentTime, &newLastTime, timeStepInMinutes))
 								{
-									if(newerTimeFound == false || dataLastTime > newLastTime)
-									{
-										newerTimeFound = true;
-										newLastTime = dataLastTime;
-										if(newLastTime >= currentTime)
-											return true; // ei tarvitse enää jatkaa, koska aika joka löytyi on viimeisin mahdollinen
-									}
+									// Ei tarvitse enää jatkaa, koska aika joka löytyi on viimeisin mahdollinen.
+									return true;
 								}
 							}
 						}
 					}
-					else if(drawParam->DataType() == NFmiInfoData::kSatelData && ignoreSatelImages == false)
-					{ // tutki löytyykö satel-data hakemistosta uudempia datoja, kuin annettu theLastTime
+					else if(::isObservationLockModeSatelData(drawParam, ignoreSatelImages))
+					{ 
+						// tutki löytyykö satel-data hakemistosta uudempia datoja, kuin annettu theLastTime
 						NFmiMetTime satelLastTime;
 						if(::getLatestSatelImageTime(drawParam->Param(), satelLastTime))
 						{
-							if(newerTimeFound == false || satelLastTime > newLastTime)
+							if(::checkLastObservationTime(&newerTimeFound, satelLastTime, currentTime, &newLastTime, timeStepInMinutes))
 							{
-								newerTimeFound = true;
-								newLastTime = satelLastTime;
-								if(newLastTime >= currentTime)
-									return true; // ei tarvitse enää jatkaa, koska aika joka löytyi on viimeisin mahdollinen
+								// Ei tarvitse enää jatkaa, koska aika joka löytyi on viimeisin mahdollinen.
+								return true;
+							}
+						}
+					}
+					else if(::isObservationLockModeWmsData(drawParam))
+					{ 
+						// tutki löytyykö wms-datasta aikoja datoja, kuin annettu theLastTime
+						NFmiMetTime wmsLastTime;
+						if(getLatestWmsImageTime(drawParam->Param(), wmsLastTime))
+						{
+							if(::checkLastObservationTime(&newerTimeFound, wmsLastTime, currentTime, &newLastTime, timeStepInMinutes))
+							{
+								// Ei tarvitse enää jatkaa, koska aika joka löytyi on viimeisin mahdollinen.
+								return true;
 							}
 						}
 					}
@@ -1657,6 +1727,17 @@ bool NFmiCombinedMapHandler::findLastObservation(unsigned long mapViewDescTopInd
 		}
 	}
 	return newerTimeFound;
+}
+
+bool NFmiCombinedMapHandler::getLatestWmsImageTime(const NFmiDataIdent& dataIdent, NFmiMetTime& foundTimeOut)
+{
+	auto* layerInfo = getWmsSupport().getHashedLayerInfo(dataIdent);
+	if(layerInfo)
+	{
+		foundTimeOut = layerInfo->endTime;
+		return true;
+	}
+	return false;
 }
 
 // Tutkii käikki näkyvät havainto datat ja etsii sen ajan, mikä on aikaisin eri datojen viimeisistä ajoista.
@@ -1688,51 +1769,52 @@ bool NFmiCombinedMapHandler::findEarliestLastObservation(unsigned long mapViewDe
 				boost::shared_ptr<NFmiDrawParam> drawParam = aList->Current();
 				if(drawParam->IsParamHidden() == false)
 				{
-					if(CtrlViewFastInfoFunctions::IsObservationLockModeDataType(drawParam->DataType()))
+					if(::isObservationLockModeQueryData(drawParam))
 					{
-						// Ignooraa toistaiseksi tuottaja kFmiTEMP, koska niiden par haku tuottaa ajallisesti liian pitkälle meneviä datoja (viimeinen aika on tyhjää).
-						if(!NFmiInfoOrganizer::IsTempData(drawParam->Param().GetProducer()->GetIdent(), true))
+						std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
+						makeDrawedInfoVectorForMapView(infoVector, drawParam, mapViewDescTop.MapHandler()->Area());
+						NFmiMetTime lastTimeOfThisDataType; // mm. synop datan tapauksessa haetaan ehkä jopa 6:sta datat tiedostosta viimeisintä aikaa
+						bool lastTimeOfThisDataTypeFoundYet = false;
+						for(size_t i = 0; i < infoVector.size(); i++)
 						{
-							std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
-							makeDrawedInfoVectorForMapView(infoVector, drawParam, mapViewDescTop.MapHandler()->Area());
-							NFmiMetTime lastTimeOfThisDataType; // mm. synop datan tapauksessa haetaan ehkä jopa 6:sta datat tiedostosta viimeisintä aikaa
-							bool lastTimeOfThisDataTypeFoundYet = false;
-							for(size_t i = 0; i < infoVector.size(); i++)
+							if(drawParam->DataType() != NFmiInfoData::kFlashData) // Salamadatoja ei oteta "Latest mutual time" tarkasteluihin
 							{
-								if(drawParam->DataType() != NFmiInfoData::kFlashData) // Salamadatoja ei oteta "Latest mutual time" tarkasteluihin
+								bool demandExactTimeChecking = true;
+								boost::shared_ptr<NFmiFastQueryInfo>& info = infoVector[i];
+								NFmiMetTime dataLastTime;
+								NFmiTimeDescriptor timeDesc = info->TimeDescriptor();
+								if(::getLatestValidTimeWithCorrectTimeStep(timeDesc, mapViewDescTopIndex, demandExactTimeChecking, timeLimit1, timeLimit2, dataLastTime))
 								{
-									bool demandExactTimeChecking = true;
-									boost::shared_ptr<NFmiFastQueryInfo>& info = infoVector[i];
-									NFmiMetTime dataLastTime;
-									NFmiTimeDescriptor timeDesc = info->TimeDescriptor();
-									if(::getLatestValidTimeWithCorrectTimeStep(timeDesc, mapViewDescTopIndex, demandExactTimeChecking, timeLimit1, timeLimit2, dataLastTime))
+									if(lastTimeOfThisDataTypeFoundYet == false || dataLastTime > lastTimeOfThisDataType)
 									{
-										if(lastTimeOfThisDataTypeFoundYet == false || dataLastTime > lastTimeOfThisDataType)
-										{
-											lastTimeOfThisDataTypeFoundYet = true;
-											lastTimeOfThisDataType = dataLastTime;
-										}
+										lastTimeOfThisDataTypeFoundYet = true;
+										lastTimeOfThisDataType = dataLastTime;
 									}
 								}
 							}
-							// tässä drawParam kohtaisten datojen aika tarkastelut
-							if(lastTimeOfThisDataTypeFoundYet && (anyTimeFound == false || lastTimeOfThisDataType < earliestLastTime))
-							{
-								anyTimeFound = true;
-								earliestLastTime = lastTimeOfThisDataType;
-							}
+						}
+						// tässä drawParam kohtaisten datojen aika tarkastelut
+						if(lastTimeOfThisDataTypeFoundYet)
+						{
+							::checkEarliestLastObservationTime(&anyTimeFound, lastTimeOfThisDataType, &earliestLastTime, timeStepInMinutes);
 						}
 					}
-					else if(drawParam->DataType() == NFmiInfoData::kSatelData && ignoreSatelImages == false)
-					{ // tutki löytyykö satel-data hakemistosta uudempia datoja, kuin annettu theLastTime
+					else if(::isObservationLockModeSatelData(drawParam, ignoreSatelImages))
+					{
+						// tutki löytyykö satel-data hakemistosta uudempia datoja, kuin annettu theLastTime
 						NFmiMetTime satelLastTime;
 						if(::getLatestSatelImageTime(drawParam->Param(), satelLastTime))
 						{
-							if(anyTimeFound == false || satelLastTime < earliestLastTime)
-							{
-								anyTimeFound = true;
-								earliestLastTime = satelLastTime;
-							}
+							::checkEarliestLastObservationTime(&anyTimeFound, satelLastTime, &earliestLastTime, timeStepInMinutes);
+						}
+					}
+					else if(::isObservationLockModeWmsData(drawParam))
+					{
+						// tutki löytyykö wms-datasta aikoja datoja, kuin annettu theLastTime
+						NFmiMetTime wmsLastTime;
+						if(getLatestWmsImageTime(drawParam->Param(), wmsLastTime))
+						{
+							::checkEarliestLastObservationTime(&anyTimeFound, wmsLastTime, &earliestLastTime, timeStepInMinutes);
 						}
 					}
 				}

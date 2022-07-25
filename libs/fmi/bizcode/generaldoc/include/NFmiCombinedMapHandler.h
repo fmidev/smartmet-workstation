@@ -331,4 +331,5 @@ private:
     void removeSideParamList(int viewRowIndex);
     SideParametersIterator getTimeSerialViewSideParameterIterator(int viewRowIndex);
     boost::shared_ptr<NFmiDrawParam> createTimeSerialViewDrawParam(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam);
+    bool getLatestWmsImageTime(const NFmiDataIdent& dataIdent, NFmiMetTime& foundTimeOut);
 };
