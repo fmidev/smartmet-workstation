@@ -706,7 +706,7 @@ bool NFmiMapViewDescTop::IsVisibleRow(int theRowIndex)
 {
 	if(theRowIndex < itsMapRowStartingIndex)
 		return false;
-	if(theRowIndex > itsMapRowStartingIndex + itsViewGridSizeVM.Y())
+	if(theRowIndex > (itsMapRowStartingIndex + itsViewGridSizeVM.Y() - 1))
 		return false;
 
 	return true;
