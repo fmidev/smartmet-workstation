@@ -631,6 +631,15 @@ boost::shared_ptr<NFmiDataModifier> NFmiInfoAreaMask::CreateIntegrationFuction(
       case NFmiAreaMask::Med:
         modifier = boost::shared_ptr<NFmiDataModifier>(new NFmiDataModifierMedian());
         break;
+      case NFmiAreaMask::ModAvg:
+        modifier = boost::shared_ptr<NFmiDataModifier>(new NFmiDataModifierModAvg());
+        break;
+      case NFmiAreaMask::ModMin:
+        modifier = boost::shared_ptr<NFmiDataModifier>(new NFmiDataModifierModMinMax(true));
+        break;
+      case NFmiAreaMask::ModMax:
+        modifier = boost::shared_ptr<NFmiDataModifier>(new NFmiDataModifierModMinMax(false));
+        break;
       case NFmiAreaMask::Get:
       case NFmiAreaMask::FindH:
       case NFmiAreaMask::FindC:

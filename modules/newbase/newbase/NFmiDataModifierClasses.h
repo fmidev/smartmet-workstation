@@ -28,5 +28,7 @@
 #include "NFmiDataModifierSingleExtremeValuesFilter.h"
 #include "NFmiDataModifierSum.h"
 #include "NFmiDataModifierWithModifier.h"
+#include "NFmiDataModifierModAvg.h"
+#include "NFmiDataModifierModMinMax.h"
 
 // ======================================================================
