@@ -140,6 +140,8 @@
 #include "NFmiParameterInterpolationFixer.h"
 #include "NFmiQueryDataKeeper.h"
 #include "NFmiSeaLevelPlumeData.h"
+#include "NFmiDataModifierModMinMax.h"
+#include "NFmiDataModifierModAvg.h"
 
 #include "AnimationProfiler.h"
 
@@ -471,6 +473,12 @@ NFmiMetEditorModeDataWCTR* EditorModeDataWCTR(void)
 	return GetUsedDataLoadingInfo().MetEditorModeDataWCTR();
 }
 
+void TestDataModifiers()
+{
+	NFmiDataModifierModMinMax::DoSomeTestRoutines();
+	NFmiDataModifierModAvg::DoSomeTestRoutines();
+}
+
 bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::map<std::string, std::string> &mapViewsPositionMap, std::map<std::string, std::string> &otherViewsPositionPosMap)
 {
 /* // tämä on remote debug sessiota varten MSVC71 feature
@@ -479,6 +487,8 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 		int x = 1;
 	}
 */
+//	TestDataModifiers();
+
 	itsBasicConfigurations = theBasicConfigurations; // kopsataan CSmartMetApp:issa alustettu perusasetus GenDocin dataosaan
 	CombinedMapHandlerInterface::verboseLogging(itsBasicConfigurations.Verbose());
 
