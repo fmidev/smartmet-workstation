@@ -3974,18 +3974,27 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsTokenFunctions.insert(FunctionMap::value_type(string("max"), NFmiAreaMask::Max));
     itsTokenFunctions.insert(FunctionMap::value_type(string("sum"), NFmiAreaMask::Sum));
     itsTokenFunctions.insert(FunctionMap::value_type(string("med"), NFmiAreaMask::Med));
+    itsTokenFunctions.insert(FunctionMap::value_type(string("modavg"), NFmiAreaMask::ModAvg));
+    itsTokenFunctions.insert(FunctionMap::value_type(string("modmin"), NFmiAreaMask::ModMin));
+    itsTokenFunctions.insert(FunctionMap::value_type(string("modmax"), NFmiAreaMask::ModMax));
 
     itsTokenThreeArgumentFunctions.insert(FunctionMap::value_type(string("sumt"), NFmiAreaMask::Sum));
     itsTokenThreeArgumentFunctions.insert(FunctionMap::value_type(string("maxt"), NFmiAreaMask::Max));
     itsTokenThreeArgumentFunctions.insert(FunctionMap::value_type(string("mint"), NFmiAreaMask::Min));
     itsTokenThreeArgumentFunctions.insert(FunctionMap::value_type(string("avgt"), NFmiAreaMask::Avg));
     itsTokenThreeArgumentFunctions.insert(FunctionMap::value_type(string("medt"), NFmiAreaMask::Med));
+    itsTokenThreeArgumentFunctions.insert(FunctionMap::value_type(string("modavgt"), NFmiAreaMask::ModAvg));
+    itsTokenThreeArgumentFunctions.insert(FunctionMap::value_type(string("modmint"), NFmiAreaMask::ModMin));
+    itsTokenThreeArgumentFunctions.insert(FunctionMap::value_type(string("modmaxt"), NFmiAreaMask::ModMax));
 
     itsTokenThreeArgumentFunctions.insert(FunctionMap::value_type(string("sumz"), NFmiAreaMask::Sum));
     itsTokenThreeArgumentFunctions.insert(FunctionMap::value_type(string("maxz"), NFmiAreaMask::Max));
     itsTokenThreeArgumentFunctions.insert(FunctionMap::value_type(string("minz"), NFmiAreaMask::Min));
     itsTokenThreeArgumentFunctions.insert(FunctionMap::value_type(string("avgz"), NFmiAreaMask::Avg));
     itsTokenThreeArgumentFunctions.insert(FunctionMap::value_type(string("medz"), NFmiAreaMask::Med));
+    itsTokenThreeArgumentFunctions.insert(FunctionMap::value_type(string("modavgz"), NFmiAreaMask::ModAvg));
+    itsTokenThreeArgumentFunctions.insert(FunctionMap::value_type(string("modminz"), NFmiAreaMask::ModMin));
+    itsTokenThreeArgumentFunctions.insert(FunctionMap::value_type(string("modmaxz"), NFmiAreaMask::ModMax));
 
     itsTokenThreeArgumentFunctions.insert(FunctionMap::value_type(string("maxh"), NFmiAreaMask::Max));
     itsTokenThreeArgumentFunctions.insert(FunctionMap::value_type(string("minh"), NFmiAreaMask::Min));
@@ -4034,6 +4043,9 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertp_avg"), VertFunctionMapValue(NFmiAreaMask::Avg, NFmiAreaMask::VertP, 3, string("vertp_avg(par, p1, p2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertp_sum"), VertFunctionMapValue(NFmiAreaMask::Sum, NFmiAreaMask::VertP, 3, string("vertp_sum(par, p1, p2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertp_med"), VertFunctionMapValue(NFmiAreaMask::Med, NFmiAreaMask::VertP, 3, string("vertp_med(par, p1, p2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertp_modavg"), VertFunctionMapValue(NFmiAreaMask::ModAvg, NFmiAreaMask::VertP, 3, string("vertp_modavg(par, p1, p2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertp_modmin"), VertFunctionMapValue(NFmiAreaMask::ModMin, NFmiAreaMask::VertP, 3, string("vertp_modmin(par, p1, p2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertp_modmax"), VertFunctionMapValue(NFmiAreaMask::ModMax, NFmiAreaMask::VertP, 3, string("vertp_modmax(par, p1, p2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertp_get"), VertFunctionMapValue(NFmiAreaMask::Get, NFmiAreaMask::VertP, 2, string("vertp_get(par, p)"), NFmiAreaMask::SimpleConditionRule::NotAllowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertp_findh"), VertFunctionMapValue(NFmiAreaMask::FindH,NFmiAreaMask::VertP, 5, string("vertp_findh(par, p1, p2, value, nth)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertp_findc"), VertFunctionMapValue(NFmiAreaMask::FindC, NFmiAreaMask::VertP, 4, string("vertp_findc(par, p1, p2, value)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
@@ -4050,6 +4062,9 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_avg"), VertFunctionMapValue(NFmiAreaMask::Avg, NFmiAreaMask::VertFL, 3, string("vertfl_avg(par, fl1, fl2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_sum"), VertFunctionMapValue(NFmiAreaMask::Sum, NFmiAreaMask::VertFL, 3, string("vertfl_sum(par, fl1, fl2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_med"), VertFunctionMapValue(NFmiAreaMask::Med, NFmiAreaMask::VertFL, 3, string("vertfl_med(par, fl1, fl2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_modavg"), VertFunctionMapValue(NFmiAreaMask::ModAvg, NFmiAreaMask::VertFL, 3, string("vertfl_modavg(par, fl1, fl2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_modmin"), VertFunctionMapValue(NFmiAreaMask::ModMin, NFmiAreaMask::VertFL, 3, string("vertfl_modmin(par, fl1, fl2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_modmax"), VertFunctionMapValue(NFmiAreaMask::ModMax, NFmiAreaMask::VertFL, 3, string("vertfl_modmax(par, fl1, fl2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_get"), VertFunctionMapValue(NFmiAreaMask::Get, NFmiAreaMask::VertFL, 2, string("vertfl_get(par, fl)"), NFmiAreaMask::SimpleConditionRule::NotAllowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_findh"), VertFunctionMapValue(NFmiAreaMask::FindH, NFmiAreaMask::VertFL,5, string("vertfl_findh(par, fl1, fl2, value, nth)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertfl_findc"), VertFunctionMapValue(NFmiAreaMask::FindC, NFmiAreaMask::VertFL, 4, string("vertfl_findc(par, fl1, fl2, value)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
@@ -4066,6 +4081,9 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_avg"), VertFunctionMapValue(NFmiAreaMask::Avg, NFmiAreaMask::VertZ, 3, string("vertz_avg(par, z1, z2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_sum"), VertFunctionMapValue(NFmiAreaMask::Sum, NFmiAreaMask::VertZ, 3, string("vertz_sum(par, z1, z2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_med"), VertFunctionMapValue(NFmiAreaMask::Med, NFmiAreaMask::VertZ, 3, string("vertz_med(par, z1, z2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_modavg"), VertFunctionMapValue(NFmiAreaMask::ModAvg, NFmiAreaMask::VertZ, 3, string("vertz_modavg(par, z1, z2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_modmin"), VertFunctionMapValue(NFmiAreaMask::ModMin, NFmiAreaMask::VertZ, 3, string("vertz_modmin(par, z1, z2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_modmax"), VertFunctionMapValue(NFmiAreaMask::ModMax, NFmiAreaMask::VertZ, 3, string("vertz_modmax(par, z1, z2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_get"), VertFunctionMapValue(NFmiAreaMask::Get, NFmiAreaMask::VertZ, 2, string("vertz_get(par, z)"), NFmiAreaMask::SimpleConditionRule::NotAllowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_findh"), VertFunctionMapValue(NFmiAreaMask::FindH, NFmiAreaMask::VertZ, 5, string("vertz_findh(par, z1, z2, value, nth)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertz_findc"), VertFunctionMapValue(NFmiAreaMask::FindC, NFmiAreaMask::VertZ, 4, string("vertz_findc(par, z1, z2, value)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
@@ -4082,6 +4100,9 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertlev_avg"), VertFunctionMapValue(NFmiAreaMask::Avg, NFmiAreaMask::VertHyb, 3, string("vertlev_avg(par, hyb1, hyb2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertlev_sum"), VertFunctionMapValue(NFmiAreaMask::Sum, NFmiAreaMask::VertHyb, 3, string("vertlev_sum(par, hyb1, hyb2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertlev_med"), VertFunctionMapValue(NFmiAreaMask::Med, NFmiAreaMask::VertHyb, 3, string("vertlev_med(par, hyb1, hyb2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertlev_modavg"), VertFunctionMapValue(NFmiAreaMask::ModAvg, NFmiAreaMask::VertHyb, 3, string("vertlev_modavg(par, hyb1, hyb2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertlev_modmin"), VertFunctionMapValue(NFmiAreaMask::ModMin, NFmiAreaMask::VertHyb, 3, string("vertlev_modmin(par, hyb1, hyb2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertlev_modmax"), VertFunctionMapValue(NFmiAreaMask::ModMax, NFmiAreaMask::VertHyb, 3, string("vertlev_modmax(par, hyb1, hyb2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertlev_get"), VertFunctionMapValue(NFmiAreaMask::Get, NFmiAreaMask::VertHyb, 2, string("vertlev_get(par, hyb)"), NFmiAreaMask::SimpleConditionRule::NotAllowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertlev_findh"), VertFunctionMapValue(NFmiAreaMask::FindH, NFmiAreaMask::VertHyb, 5, string("vertlev_findh(par, hyb1, hyb2, value, nth)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("vertlev_findc"), VertFunctionMapValue(NFmiAreaMask::FindC, NFmiAreaMask::VertHyb, 4, string("vertlev_findc(par, hyb1, hyb2, value)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
@@ -4173,6 +4194,9 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("time_avg"), VertFunctionMapValue(NFmiAreaMask::Avg, NFmiAreaMask::TimeRange, 3, string("time_avg(par, time_offset1, time_offset2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("time_sum"), VertFunctionMapValue(NFmiAreaMask::Sum, NFmiAreaMask::TimeRange, 3, string("time_sum(par, time_offset1, time_offset2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("time_med"), VertFunctionMapValue(NFmiAreaMask::Med, NFmiAreaMask::TimeRange, 3, string("time_med(par, time_offset1, time_offset2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("time_modavg"), VertFunctionMapValue(NFmiAreaMask::ModAvg, NFmiAreaMask::TimeRange, 3, string("time_modavg(par, time_offset1, time_offset2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("time_modmin"), VertFunctionMapValue(NFmiAreaMask::ModMin, NFmiAreaMask::TimeRange, 3, string("time_modmin(par, time_offset1, time_offset2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("time_modmax"), VertFunctionMapValue(NFmiAreaMask::ModMax, NFmiAreaMask::TimeRange, 3, string("time_modmax(par, time_offset1, time_offset2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
 
     // Tässä on time-range vertikaaliset-funktiot, jotka operoivat datan omassa aika ja level
     // resoluutiossa.
@@ -4184,6 +4208,9 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertp_avg"), VertFunctionMapValue(NFmiAreaMask::Avg, NFmiAreaMask::TimeVertP, 5, string("timevertp_avg(par, timeoffset1, timeoffset2, p1, p2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertp_sum"), VertFunctionMapValue(NFmiAreaMask::Sum, NFmiAreaMask::TimeVertP, 5, string("timevertp_sum(par, timeoffset1, timeoffset2, p1, p2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertp_med"), VertFunctionMapValue(NFmiAreaMask::Med, NFmiAreaMask::TimeVertP, 5, string("timevertp_med(par, timeoffset1, timeoffset2, p1, p2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertp_modavg"), VertFunctionMapValue(NFmiAreaMask::ModAvg, NFmiAreaMask::TimeVertP, 5, string("timevertp_modavg(par, timeoffset1, timeoffset2, p1, p2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertp_modmin"), VertFunctionMapValue(NFmiAreaMask::ModMin, NFmiAreaMask::TimeVertP, 5, string("timevertp_modmin(par, timeoffset1, timeoffset2, p1, p2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertp_modmax"), VertFunctionMapValue(NFmiAreaMask::ModMax, NFmiAreaMask::TimeVertP, 5, string("timevertp_modmax(par, timeoffset1, timeoffset2, p1, p2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
 
     // timevertfl-funktiot eli näitä operoidaan aina flight level pinnoilla [hft]
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertfl_max"), VertFunctionMapValue(NFmiAreaMask::Max, NFmiAreaMask::TimeVertFL, 5, string("timevertfl_max(par, timeoffset1, timeoffset2, fl1, fl2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
@@ -4191,6 +4218,9 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertfl_avg"), VertFunctionMapValue(NFmiAreaMask::Avg, NFmiAreaMask::TimeVertFL, 5, string("timevertfl_avg(par, timeoffset1, timeoffset2, fl1, fl2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertfl_sum"), VertFunctionMapValue(NFmiAreaMask::Sum, NFmiAreaMask::TimeVertFL, 5, string("timevertfl_sum(par, timeoffset1, timeoffset2, fl1, fl2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertfl_med"), VertFunctionMapValue(NFmiAreaMask::Med, NFmiAreaMask::TimeVertFL, 5, string("timevertfl_med(par, timeoffset1, timeoffset2, fl1, fl2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertfl_modavg"), VertFunctionMapValue(NFmiAreaMask::ModAvg, NFmiAreaMask::TimeVertFL, 5, string("timevertfl_modavg(par, timeoffset1, timeoffset2, fl1, fl2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertfl_modmin"), VertFunctionMapValue(NFmiAreaMask::ModMin, NFmiAreaMask::TimeVertFL, 5, string("timevertfl_modmin(par, timeoffset1, timeoffset2, fl1, fl2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertfl_modmax"), VertFunctionMapValue(NFmiAreaMask::ModMax, NFmiAreaMask::TimeVertFL, 5, string("timevertfl_modmax(par, timeoffset1, timeoffset2, fl1, fl2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
 
     // timevertz-funktiot eli näitä operoidaan aina metrisillä korkeuksilla [m]
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertz_max"), VertFunctionMapValue(NFmiAreaMask::Max, NFmiAreaMask::TimeVertZ, 5, string("timevertz_max(par, timeoffset1, timeoffset2, z1, z2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
@@ -4198,6 +4228,9 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertz_avg"), VertFunctionMapValue(NFmiAreaMask::Avg, NFmiAreaMask::TimeVertZ, 5, string("timevertz_avg(par, timeoffset1, timeoffset2, z1, z2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertz_sum"), VertFunctionMapValue(NFmiAreaMask::Sum, NFmiAreaMask::TimeVertZ, 5, string("timevertz_sum(par, timeoffset1, timeoffset2, z1, z2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertz_med"), VertFunctionMapValue(NFmiAreaMask::Med, NFmiAreaMask::TimeVertZ, 5, string("timevertz_med(par, timeoffset1, timeoffset2, z1, z2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertz_modavg"), VertFunctionMapValue(NFmiAreaMask::ModAvg, NFmiAreaMask::TimeVertZ, 5, string("timevertz_modavg(par, timeoffset1, timeoffset2, z1, z2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertz_modmin"), VertFunctionMapValue(NFmiAreaMask::ModMin, NFmiAreaMask::TimeVertZ, 5, string("timevertz_modmin(par, timeoffset1, timeoffset2, z1, z2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertz_modmax"), VertFunctionMapValue(NFmiAreaMask::ModMax, NFmiAreaMask::TimeVertZ, 5, string("timevertz_modmax(par, timeoffset1, timeoffset2, z1, z2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
 
     // timevertlev-funktiot eli näitä operoidaan aina mallipintadatan hybrid-level arvoilla esim.
     // hirlamissa arvot ovat 60 - 1
@@ -4206,6 +4239,9 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertlev_avg"), VertFunctionMapValue(NFmiAreaMask::Avg, NFmiAreaMask::TimeVertHyb, 5, string("timevertlev_avg(par, timeoffset1, timeoffset2, lev1, lev2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertlev_sum"), VertFunctionMapValue(NFmiAreaMask::Sum, NFmiAreaMask::TimeVertHyb, 5, string("timevertlev_sum(par, timeoffset1, timeoffset2, lev1, lev2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertlev_med"), VertFunctionMapValue(NFmiAreaMask::Med, NFmiAreaMask::TimeVertHyb, 5, string("timevertlev_med(par, timeoffset1, timeoffset2, lev1, lev2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertlev_modavg"), VertFunctionMapValue(NFmiAreaMask::ModAvg, NFmiAreaMask::TimeVertHyb, 5, string("timevertlev_modavg(par, timeoffset1, timeoffset2, lev1, lev2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertlev_modmin"), VertFunctionMapValue(NFmiAreaMask::ModMin, NFmiAreaMask::TimeVertHyb, 5, string("timevertlev_modmin(par, timeoffset1, timeoffset2, lev1, lev2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("timevertlev_modmax"), VertFunctionMapValue(NFmiAreaMask::ModMax, NFmiAreaMask::TimeVertHyb, 5, string("timevertlev_modmax(par, timeoffset1, timeoffset2, lev1, lev2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
 
     // area-kokooma funktioperhe, jotka toimivat annetun ympyrän säteellä
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("area_min"), VertFunctionMapValue(NFmiAreaMask::Min, NFmiAreaMask::AreaCircle, 4, string("area_min(par, radius_km, time_offset1, time_offset2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
@@ -4213,6 +4249,9 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("area_avg"), VertFunctionMapValue(NFmiAreaMask::Avg, NFmiAreaMask::AreaCircle, 4, string("area_avg(par, radius_km, time_offset1, time_offset2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("area_sum"), VertFunctionMapValue(NFmiAreaMask::Sum, NFmiAreaMask::AreaCircle, 4, string("area_sum(par, radius_km, time_offset1, time_offset2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("area_med"), VertFunctionMapValue(NFmiAreaMask::Med, NFmiAreaMask::AreaCircle, 4, string("area_med(par, radius_km, time_offset1, time_offset2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("area_modavg"), VertFunctionMapValue(NFmiAreaMask::ModAvg, NFmiAreaMask::AreaCircle, 4, string("area_modavg(par, radius_km, time_offset1, time_offset2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("area_modmin"), VertFunctionMapValue(NFmiAreaMask::ModMin, NFmiAreaMask::AreaCircle, 4, string("area_modmin(par, radius_km, time_offset1, time_offset2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("area_modmax"), VertFunctionMapValue(NFmiAreaMask::ModMax, NFmiAreaMask::AreaCircle, 4, string("area_modmax(par, radius_km, time_offset1, time_offset2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
 
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("area_prob"), VertFunctionMapValue(NFmiAreaMask::ProbSimpleCondition, NFmiAreaMask::AreaCircle, 4, string("area_prob(par, radius_km, time_offset1, time_offset2, \"x > y\")"), NFmiAreaMask::SimpleConditionRule::MustHave)));
 
@@ -4221,6 +4260,9 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("previousfulldays_avg"), VertFunctionMapValue(NFmiAreaMask::Avg, NFmiAreaMask::PreviousFullDays, 2, string("previousfulldays_avg(par, day_count)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("previousfulldays_sum"), VertFunctionMapValue(NFmiAreaMask::Sum, NFmiAreaMask::PreviousFullDays, 2, string("previousfulldays_sum(par, day_count)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("previousfulldays_med"), VertFunctionMapValue(NFmiAreaMask::Med, NFmiAreaMask::PreviousFullDays, 2, string("previousfulldays_med(par, day_count)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("previousfulldays_modavg"), VertFunctionMapValue(NFmiAreaMask::ModAvg, NFmiAreaMask::PreviousFullDays, 2, string("previousfulldays_modavg(par, day_count)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("previousfulldays_modmin"), VertFunctionMapValue(NFmiAreaMask::ModMin, NFmiAreaMask::PreviousFullDays, 2, string("previousfulldays_modmin(par, day_count)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("previousfulldays_modmax"), VertFunctionMapValue(NFmiAreaMask::ModMax, NFmiAreaMask::PreviousFullDays, 2, string("previousfulldays_modmax(par, day_count)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
 
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("duration"), VertFunctionMapValue(NFmiAreaMask::TimeDuration, NFmiAreaMask::TimeDuration, 3, string("duration(par, seek_time_in_hours, use_cumulative_calculation, \"x > y\")"), NFmiAreaMask::SimpleConditionRule::MustHave)));
 
