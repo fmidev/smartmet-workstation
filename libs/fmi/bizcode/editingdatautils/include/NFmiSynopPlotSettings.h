@@ -1,6 +1,7 @@
 #pragma once
 
 #include "NFmiColor.h"
+#include "NFmiMetarPlotSettings.h"
 
 class NFmiSynopPlotSettings
 {
@@ -56,6 +57,8 @@ public:
 	double PlotSpacing(void) const {return itsPlotSpacing;}
 	void PlotSpacing(double newValue) {itsPlotSpacing = newValue;}
 
+	NFmiMetarPlotSettings& MetarPlotSettings() { return itsMetarPlotSettings; }
+
 	// HUOM!! T‰m‰ laittaa kommentteja mukaan!
 	void Write(std::ostream& os) const;
 	// HUOM!! ennen kuin t‰m‰ luokka luetaan sis‰‰n tiedostosta, poista kommentit
@@ -81,14 +84,22 @@ private:
 	bool fShowW2;
 	bool fShowH; // h eli pilven korkeus
 	bool fShowRr;
-	bool fShowTw; // eli veden l‰mpˆtila
-	bool fUseSingleColor; // eli k‰ytet‰‰nkˆ yksiv‰rist‰ synop plottausta vai defaultti v‰ri koodattua
-	NFmiColor itsSingleColor; // jos piirret‰‰n plottaus yksi v‰risen‰, t‰ss‰ on se v‰ri
-	double itsFontSize; // [mm]
-	double itsPlotSpacing; // jos luku on 0, piirret‰‰n kaikki asemat n‰kyviin (sotkuinen),
-						   // jos luku 0 - 1, piirret‰‰n synoppeja jonkin verran p‰‰llekk‰in (tihe‰‰)
-						   // jos luku on 1, piirret‰‰n synopit juuri omille alueilleen
-						   // jos luku on 1 - 2, piirret‰‰n synoppeja isommill‰ v‰leill‰ (harvaa)
+	// eli veden l‰mpˆtila
+	bool fShowTw; 
+	// eli k‰ytet‰‰nkˆ yksiv‰rist‰ synop plottausta vai defaultti v‰ri koodattua
+	bool fUseSingleColor; 
+	// jos piirret‰‰n plottaus yksi v‰risen‰, t‰ss‰ on se v‰ri
+	NFmiColor itsSingleColor; 
+	// fontti koko [mm]
+	double itsFontSize; 
+	// PlotSpacing jos luku on 0, piirret‰‰n kaikki asemat n‰kyviin (sotkuinen),
+	// jos luku 0 - 1, piirret‰‰n synoppeja jonkin verran p‰‰llekk‰in (tihe‰‰)
+	// jos luku on 1, piirret‰‰n synopit juuri omille alueilleen
+	// jos luku on 1 - 2, piirret‰‰n synoppeja isommill‰ v‰leill‰ (harvaa)
+	double itsPlotSpacing; 
+	// Sijoitetaan Metar plottiin liittyv‰t asetukset t‰nne, jotta sen asetukset saadaan mukaan
+	// Synop plot asetuksien extra-datoihin n‰yttˆmakrojen yhteydess‰.
+	NFmiMetarPlotSettings itsMetarPlotSettings;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const NFmiSynopPlotSettings& item){item.Write(os); return os;}

@@ -25,6 +25,7 @@ NFmiSynopPlotSettings::NFmiSynopPlotSettings(void)
 ,itsSingleColor(0, 0, 0)
 ,itsFontSize(2.5)
 ,itsPlotSpacing(1)
+,itsMetarPlotSettings()
 {
 }
 
@@ -65,6 +66,8 @@ void NFmiSynopPlotSettings::Init(void)
 
 		itsFontSize = NFmiSettings::Require<double>("MetEditor::SynopPlotSettings::FontSize");
 		itsPlotSpacing = NFmiSettings::Require<double>("MetEditor::SynopPlotSettings::PlotSpacing");
+
+		itsMetarPlotSettings.Init();
 	}
 	catch(...)
 	{
@@ -108,6 +111,8 @@ void NFmiSynopPlotSettings::Store(void)
 
 		NFmiSettings::Set("MetEditor::SynopPlotSettings::FontSize", NFmiStringTools::Convert(itsFontSize), true);
 		NFmiSettings::Set("MetEditor::SynopPlotSettings::PlotSpacing", NFmiStringTools::Convert(itsPlotSpacing), true);
+
+		itsMetarPlotSettings.Store();
 	}
 	catch(...)
 	{
@@ -166,6 +171,10 @@ void NFmiSynopPlotSettings::Write(std::ostream& os) const
 	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
 	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
 	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+
+	// 1. uusi string data on metar-plot asetukset
+	extraData.Add(itsMetarPlotSettings.MakeViewMacroString());
+
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
@@ -199,6 +208,12 @@ void NFmiSynopPlotSettings::Read(std::istream& is)
 	is >> extraData;
 	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
 	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+
+	// 1. uusi string data on metar-plot asetukset
+	if(extraData.itsStringValues.size() >= 1)
+	{
+		itsMetarPlotSettings.InitFromViewMacroString(extraData.itsStringValues[0]);
+	}
 
 	if(is.fail())
 		throw std::runtime_error("NFmiSynopPlotSettings::Read failed");
