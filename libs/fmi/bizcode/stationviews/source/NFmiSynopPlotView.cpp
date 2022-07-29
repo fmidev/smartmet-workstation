@@ -527,7 +527,15 @@ NFmiString NFmiSynopPlotView::GetWindGustStr(boost::shared_ptr<NFmiFastQueryInfo
 {
 	float value = GetSynopPlotValue(theInfo, kFmiHourlyMaximumGust);
 	if(value == kFloatMissing)
+	{
+		// Datan puuska voi olla eri parametrien alla
+		value = GetSynopPlotValue(theInfo, kFmiWindGust);
+	}
+
+	if(value == kFloatMissing)
+	{
 		return NFmiString("");
+	}
 	else
 	{
         int intValue = boost::math::iround(value * 2); // muutetaan solmuiksi kertomalla kahdella
