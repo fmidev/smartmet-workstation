@@ -2,6 +2,8 @@
 
 #include "NFmiColor.h"
 
+class NFmiSynopPlotSettings;
+
 class NFmiMetarPlotSettings
 {
 public:
@@ -41,7 +43,7 @@ public:
 	void PlotSpacing(double newValue) { itsPlotSpacing = newValue; }
 
 	std::string MakeViewMacroString() const;
-	void InitFromViewMacroString(std::string& viewMacroStr);
+	void InitFromViewMacroString(std::string& viewMacroStr, const NFmiSynopPlotSettings & synopPlotSettings);
 
 private:
 	// Näytetäänkö taivaan tilasta tietoja vai ei (CAVOK/SKC/VV001/SCT003 (4x))
