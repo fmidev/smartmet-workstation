@@ -212,7 +212,13 @@ void NFmiSynopPlotSettings::Read(std::istream& is)
 	// 1. uusi string data on metar-plot asetukset
 	if(extraData.itsStringValues.size() >= 1)
 	{
-		itsMetarPlotSettings.InitFromViewMacroString(extraData.itsStringValues[0]);
+		itsMetarPlotSettings.InitFromViewMacroString(extraData.itsStringValues[0], *this);
+	}
+	else
+	{
+		// Jos viewMacro talletus oli tehty vanhalla versiolla, pitää antaa tyhjä string tässä, 
+		// jotta saadaan halutu asetukset päälle, eli kaikki parametrit näkyviksi ja tietyt synop-plot optiot käyttöön
+		itsMetarPlotSettings.InitFromViewMacroString(std::string(), *this);
 	}
 
 	if(is.fail())
