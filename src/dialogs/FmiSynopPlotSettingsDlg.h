@@ -8,6 +8,7 @@
 class SmartMetDocumentInterface;
 class NFmiFastQueryInfo;
 class NFmiParamBag;
+class NFmiColor;
 
 class NFmiPlotRelatedControls
 {
@@ -56,13 +57,12 @@ public:
 private:
 	void StoreToDoc(void);
 	void RefreshApplicationViews(const std::string &reasonForUpdate);
-	void UpdateFontSizeString(void);
-	void UpdatePlotSpacingString(void);
-	void EnableCheckBox(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, int theParId, int theCheckBoxIdNumber);
-	void EnableCheckBox(NFmiParamBag &theParams, int theParId, int theCheckBoxIdNumber);
-	void EnableCheckBox(BOOL theState, int theCheckBoxIdNumber);
+	void UpdateFontSizeString(bool synopPlotCase);
+	void UpdatePlotSpacingString(bool synopPlotCase);
 	void InitDialogTexts(void);
 	void SetAllSynopParamStates(BOOL newState);
+	void SetAllMetarParamStates(BOOL newState);
+	void InitPlotControls(bool synopPlotCase, bool useSingleColor, double fontSize, double plotSpacing, const NFmiColor& singleColor, NFmiPlotRelatedControls& plotControls);
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 
@@ -86,6 +86,17 @@ private:
 	BOOL fShowTw = TRUE; // eli veden lämpötila
 	NFmiPlotRelatedControls itsSynopControls;
 
+	BOOL fMetarShow_SkyInfo = TRUE;
+	BOOL fMetarShow_TT = TRUE;
+	BOOL fMetarShow_TdTd = TRUE;
+	BOOL fMetarShow_PhPhPhPh = TRUE;
+	BOOL fMetarShow_dddff = TRUE;
+	BOOL fMetarShow_Gff = TRUE;
+	BOOL fMetarShow_VVVV = TRUE;
+	BOOL fMetarShow_ww = TRUE;
+	BOOL fMetarShow_Status = TRUE;
+	NFmiPlotRelatedControls itsMetarControls;
+
 public:
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnBnClickedButtonRefresh();
@@ -93,4 +104,6 @@ public:
 	afx_msg void OnBnClickedButtonSynopSingleColor();
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnBnClickedCheckToggleAllSynopParams();
+	afx_msg void OnBnClickedButtonMetarSingleColor();
+	afx_msg void OnBnClickedCheckToggleAllMetarParams();
 };
