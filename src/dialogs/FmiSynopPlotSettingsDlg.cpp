@@ -16,31 +16,33 @@
 #include "CtrlViewWin32Functions.h"
 #include "execute-command-in-separate-process.h"
 
+NFmiPlotRelatedControls::NFmiPlotRelatedControls() = default;
+
+NFmiPlotRelatedControls::~NFmiPlotRelatedControls()
+{
+	CtrlView::DestroyBitmap(&itsSingleColorBitmap, true);
+}
+
 // CFmiSynopPlotSettingsDlg dialog
 
 IMPLEMENT_DYNAMIC(CFmiSynopPlotSettingsDlg, CDialog)
 CFmiSynopPlotSettingsDlg::CFmiSynopPlotSettingsDlg(SmartMetDocumentInterface *smartMetDocumentInterface, CWnd* pParent /*=NULL*/)
 	: CDialog(CFmiSynopPlotSettingsDlg::IDD, pParent)
 	,itsSmartMetDocumentInterface(smartMetDocumentInterface)
-	,itsSingleColorBitmap(0)
-	,itsSingleColorRef(0)
-	, fSetAllParamState(FALSE)
+	, itsSynopControls()
 {
 }
 
 CFmiSynopPlotSettingsDlg::~CFmiSynopPlotSettingsDlg()
 {
-	if(itsSingleColorBitmap)
-		itsSingleColorBitmap->DeleteObject();
-	delete itsSingleColorBitmap;
 }
 
 void CFmiSynopPlotSettingsDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_SLIDER_FONT_SIZE, itsFontSizeSlider);
-	DDX_Control(pDX, IDC_SLIDER_PLOT_SPACING, itsPlotSpacingSlider);
-	DDX_Control(pDX, IDC_BUTTON_SINGLE_COLOR, itsSingleColorChangeButtom);
+	DDX_Control(pDX, IDC_SLIDER_SYNOP_FONT_SIZE, itsSynopControls.itsFontSizeSlider);
+	DDX_Control(pDX, IDC_SLIDER_SYNOP_PLOT_SPACING, itsSynopControls.itsPlotSpacingSlider);
+	DDX_Control(pDX, IDC_BUTTON_SYNOP_SINGLE_COLOR, itsSynopControls.itsSingleColorChangeButtom);
 	DDX_Check(pDX, IDC_CHECK_SHOW_V, fShowV);
 	DDX_Check(pDX, IDC_CHECK_SHOW_T, fShowT);
 	DDX_Check(pDX, IDC_CHECK_SHOW_WW, fShowWw);
@@ -59,8 +61,8 @@ void CFmiSynopPlotSettingsDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_SHOW_A, fShowA);
 	DDX_Check(pDX, IDC_CHECK_SHOW_W1, fShowW1);
 	DDX_Check(pDX, IDC_CHECK_SHOW_W2, fShowW2);
-	DDX_Check(pDX, IDC_CHECK_SHOW_SINGLE_COLOR, fSingleColor);
-	DDX_Check(pDX, IDC_CHECK_TOGGLE_ALL_PARAMS, fSetAllParamState);
+	DDX_Check(pDX, IDC_CHECK_SHOW_SYNOP_SINGLE_COLOR, itsSynopControls.fSingleColor);
+	DDX_Check(pDX, IDC_CHECK_TOGGLE_ALL_SYNOP_PARAMS, itsSynopControls.fSetAllParamState);
 }
 
 
@@ -68,28 +70,9 @@ BEGIN_MESSAGE_MAP(CFmiSynopPlotSettingsDlg, CDialog)
 	ON_BN_CLICKED(IDOK, OnBnClickedOk)
 	ON_BN_CLICKED(IDC_BUTTON_REFRESH, OnBnClickedButtonRefresh)
 	ON_BN_CLICKED(IDC_BUTTON_STATION_PRIORITIES, OnBnClickedButtonStationPriorities)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_V, OnBnClickedCheckShowV)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_T, OnBnClickedCheckShowT)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_WW, OnBnClickedCheckShowWw)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_TD, OnBnClickedCheckShowTd)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_CH, OnBnClickedCheckShowCh)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_CM, OnBnClickedCheckShowCm)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_N, OnBnClickedCheckShowN)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_DDFF, OnBnClickedCheckShowDdff)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_CL, OnBnClickedCheckShowCl)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_H, OnBnClickedCheckShowH)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_RR, OnBnClickedCheckShowRr)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_PPPP, OnBnClickedCheckShowPppp)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_PPP, OnBnClickedCheckShowPpp)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_NH, OnBnClickedCheckShowNh)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_TW, OnBnClickedCheckShowTw)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_A, OnBnClickedCheckShowA)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_W1, OnBnClickedCheckShowW1)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_W2, OnBnClickedCheckShowW2)
-	ON_BN_CLICKED(IDC_CHECK_SHOW_SINGLE_COLOR, OnBnClickedCheckShowSingleColor)
-	ON_BN_CLICKED(IDC_BUTTON_SINGLE_COLOR, OnBnClickedButtonSingleColor)
+	ON_BN_CLICKED(IDC_BUTTON_SYNOP_SINGLE_COLOR, OnBnClickedButtonSynopSingleColor)
 	ON_WM_HSCROLL()
-	ON_BN_CLICKED(IDC_CHECK_TOGGLE_ALL_PARAMS, OnBnClickedCheckToggleAllParams)
+	ON_BN_CLICKED(IDC_CHECK_TOGGLE_ALL_SYNOP_PARAMS, OnBnClickedCheckToggleAllSynopParams)
 END_MESSAGE_MAP()
 
 
@@ -100,12 +83,12 @@ BOOL CFmiSynopPlotSettingsDlg::OnInitDialog()
 	CDialog::OnInitDialog();
 
 	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
-	itsFontSizeSlider.SetRange(10, 100); // 1-10 mm, jaetaan kymmenellä
-	itsPlotSpacingSlider.SetRange(0, 20); // arvot 0 - 2, jaetaan kymmenellä
+	itsSynopControls.itsFontSizeSlider.SetRange(10, 100); // 1-10 mm, jaetaan kymmenellä
+	itsSynopControls.itsPlotSpacingSlider.SetRange(0, 20); // arvot 0 - 2, jaetaan kymmenellä
 
 	InitDialogTexts();
 	InitFromDoc();
-	fSetAllParamState = true;
+	itsSynopControls.fSetAllParamState = true;
 	UpdateData(FALSE);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -133,17 +116,17 @@ void CFmiSynopPlotSettingsDlg::InitFromDoc(void)
 	fShowH = synopSettings.ShowH();
 	fShowRr = synopSettings.ShowRr();
 	fShowTw = synopSettings.ShowTw();
-	fSingleColor = synopSettings.UseSingleColor();
+	itsSynopControls.fSingleColor = synopSettings.UseSingleColor();
 
-	itsFontSizeSlider.SetPos(static_cast<int>(synopSettings.FontSize() * 10));
-	itsPlotSpacingSlider.SetPos(static_cast<int>(synopSettings.PlotSpacing() * 10));
+	itsSynopControls.itsFontSizeSlider.SetPos(static_cast<int>(synopSettings.FontSize() * 10));
+	itsSynopControls.itsPlotSpacingSlider.SetPos(static_cast<int>(synopSettings.PlotSpacing() * 10));
 
 	UpdateFontSizeString();
 	UpdatePlotSpacingString();
 
 	NFmiColor tColor = synopSettings.SingleColor();
-	itsSingleColorRef = CtrlView::Color2ColorRef(tColor);
-	CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsSingleColorRef, &itsSingleColorBitmap, itsSingleColorRect, itsSingleColorChangeButtom));
+	itsSynopControls.itsSingleColorRef = CtrlView::Color2ColorRef(tColor);
+	CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsSynopControls.itsSingleColorRef, &itsSynopControls.itsSingleColorBitmap, itsSynopControls.itsSingleColorRect, itsSynopControls.itsSingleColorChangeButtom));
 
 	UpdateData(FALSE);
 }
@@ -170,15 +153,15 @@ void CFmiSynopPlotSettingsDlg::StoreToDoc(void)
 	synopSettings.ShowH(fShowH == TRUE);
 	synopSettings.ShowRr(fShowRr == TRUE);
 	synopSettings.ShowTw(fShowTw == TRUE);
-	synopSettings.UseSingleColor(fSingleColor == TRUE);
+	synopSettings.UseSingleColor(itsSynopControls.fSingleColor == TRUE);
 
-	synopSettings.FontSize(itsFontSizeSlider.GetPos() / 10.);
-	synopSettings.PlotSpacing(itsPlotSpacingSlider.GetPos() / 10.);
+	synopSettings.FontSize(itsSynopControls.itsFontSizeSlider.GetPos() / 10.);
+	synopSettings.PlotSpacing(itsSynopControls.itsPlotSpacingSlider.GetPos() / 10.);
 
 	NFmiColor tColor;
-	tColor.SetRGB((float(GetRValue(itsSingleColorRef))/float(255.0)),
-				  (float(GetGValue(itsSingleColorRef))/float(255.0)),
-				  (float(GetBValue(itsSingleColorRef))/float(255.0)));
+	tColor.SetRGB((float(GetRValue(itsSynopControls.itsSingleColorRef))/float(255.0)),
+				  (float(GetGValue(itsSynopControls.itsSingleColorRef))/float(255.0)),
+				  (float(GetBValue(itsSynopControls.itsSingleColorRef))/float(255.0)));
 	synopSettings.SingleColor(tColor);
 
 	synopSettings.Store();
@@ -281,7 +264,7 @@ void CFmiSynopPlotSettingsDlg::UpdateFontSizeString(void)
 	CWnd *win = GetDlgItem(IDC_STATIC_FONT_SIZE_STR);
 	if(win)
 	{
-		std::string str = NFmiStringTools::Convert(itsFontSizeSlider.GetPos() / 10.);
+		std::string str = NFmiStringTools::Convert(itsSynopControls.itsFontSizeSlider.GetPos() / 10.);
 		win->SetWindowText(CA2T(str.c_str()));
 	}
 }
@@ -291,7 +274,7 @@ void CFmiSynopPlotSettingsDlg::UpdatePlotSpacingString(void)
 	CWnd *win = GetDlgItem(IDC_STATIC_PLOT_SPACING_STR);
 	if(win)
 	{
-		std::string str = NFmiStringTools::Convert(itsPlotSpacingSlider.GetPos() / 10.);
+		std::string str = NFmiStringTools::Convert(itsSynopControls.itsPlotSpacingSlider.GetPos() / 10.);
         win->SetWindowText(CA2T(str.c_str()));
 	}
 }
@@ -326,104 +309,9 @@ void CFmiSynopPlotSettingsDlg::OnBnClickedButtonStationPriorities()
     CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr);
 }
 
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowV()
+void CFmiSynopPlotSettingsDlg::OnBnClickedButtonSynopSingleColor()
 {
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowT()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowWw()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowTd()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowCh()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowCm()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowN()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowDdff()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowCl()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowH()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowRr()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowPppp()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowPpp()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowNh()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowTw()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowA()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowW1()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowW2()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckShowSingleColor()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CFmiSynopPlotSettingsDlg::OnBnClickedButtonSingleColor()
-{
-    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsSingleColorRef, &itsSingleColorBitmap, itsSingleColorRect, itsSingleColorChangeButtom));
+    CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsSynopControls.itsSingleColorRef, &itsSynopControls.itsSingleColorBitmap, itsSynopControls.itsSingleColorRect, itsSynopControls.itsSingleColorChangeButtom));
 }
 
 void CFmiSynopPlotSettingsDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
@@ -447,19 +335,19 @@ void CFmiSynopPlotSettingsDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDCANCEL, "IDCANCEL");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_REFRESH, "IDC_BUTTON_REFRESH");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_STATION_PRIORITIES, "IDC_BUTTON_STATION_PRIORITIES");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_SINGLE_COLOR, "IDC_CHECK_SHOW_SINGLE_COLOR");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SYNOP_PLOT_FONT_SIZE_STR, "IDC_STATIC_SYNOP_PLOT_FONT_SIZE_STR");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SYNOP_PLOT_SPACING, "IDC_STATIC_SYNOP_PLOT_SPACING");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_SYNOP_SINGLE_COLOR, "Show with single color");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SYNOP_PLOT_FONT_SIZE_STR, "Font size [mm]");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SYNOP_PLOT_SPACING, "Plot spacing (0 - 2)");
 }
 
-void CFmiSynopPlotSettingsDlg::OnBnClickedCheckToggleAllParams()
+void CFmiSynopPlotSettingsDlg::OnBnClickedCheckToggleAllSynopParams()
 {
 	UpdateData(TRUE);
 
-	SetAllParamStates(fSetAllParamState);
+	SetAllSynopParamStates(itsSynopControls.fSetAllParamState);
 }
 
-void CFmiSynopPlotSettingsDlg::SetAllParamStates(BOOL newState)
+void CFmiSynopPlotSettingsDlg::SetAllSynopParamStates(BOOL newState)
 {
 	UpdateData(TRUE);
 
