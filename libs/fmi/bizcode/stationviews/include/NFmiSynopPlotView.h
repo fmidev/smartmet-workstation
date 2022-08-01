@@ -36,11 +36,11 @@ protected:
     void SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo) override;
 private:
 	float GetSynopPlotValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theParam);
-	bool DrawWindVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theRect, bool &fWindDrawed);
+	bool DrawWindVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theRect, bool &fWindDrawed, bool metarCase);
 	bool DrawNormalFontValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theRect);
 	bool PrintParameterValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theSynopRect, const NFmiPoint &theRelLocation, FmiParameterName theWantedParameter, bool fDoMetarPlotString = false);
 	bool DrawSynopFontValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theRect, bool fWindDrawed);
-	void DrawSynopPlot(NFmiSynopPlotSettings &theSynopSettings, NFmiRect &theSynopRect, NFmiDrawingEnvironment &theStationPointEnvi, std::vector<NFmiRect> &theSynopRects, NFmiRect &theEmptySoundingMarkerRect, bool drawStationMarker);
+	void DrawSynopPlot(double plotSpacing, NFmiRect &theSynopRect, NFmiDrawingEnvironment &theStationPointEnvi, std::vector<NFmiRect> &theSynopRects, NFmiRect &theEmptySoundingMarkerRect, bool drawStationMarker);
 	NFmiRect CalcBaseEmptySoundingMarker(void);
 	void DrawEmptySoundingMarker(const NFmiRect &theEmptySoundingMarkerRect);
 	bool DrawMinMaxPlot(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theDrawRect);

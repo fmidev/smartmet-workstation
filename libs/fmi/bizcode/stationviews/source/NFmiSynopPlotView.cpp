@@ -161,9 +161,14 @@ void NFmiSynopPlotView::Draw(NFmiToolBox * theGTB)
     itsToolBox = theGTB;
 	fGetSynopDataFromQ2 = false;
 
+	fSoundingPlotDraw = itsDrawParam->Param().GetParamIdent() == NFmiInfoData::kFmiSpSoundingPlot;
+	fMinMaxPlotDraw = itsDrawParam->Param().GetParamIdent() == NFmiInfoData::kFmiSpMinMaxPlot;
+	fMetarPlotDraw = itsDrawParam->Param().GetParamIdent() == NFmiInfoData::kFmiSpMetarPlot;
+
 	NFmiSynopPlotSettings & synopSettings = *itsCtrlViewDocumentInterface->SynopPlotSettings();
-	double fontSizeInMM_x = synopSettings.FontSize();
-	double fontSizeInMM_y = synopSettings.FontSize();
+	auto usedFontSize = fMetarPlotDraw ? synopSettings.MetarPlotSettings().FontSize() : synopSettings.FontSize();
+	double fontSizeInMM_x = usedFontSize;
+	double fontSizeInMM_y = usedFontSize;
     auto &graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
     itsFontSizeX = boost::math::iround(fontSizeInMM_x * graphicalInfo.itsPixelsPerMM_x * 1.88);
 	itsFontSizeY = boost::math::iround(fontSizeInMM_y * graphicalInfo.itsPixelsPerMM_y * 1.88);
@@ -187,9 +192,6 @@ void NFmiSynopPlotView::Draw(NFmiToolBox * theGTB)
 	if(itsInfoVector.empty())
 		return ;
 
-	fSoundingPlotDraw = itsDrawParam->Param().GetParamIdent() == NFmiInfoData::kFmiSpSoundingPlot;
-	fMinMaxPlotDraw = itsDrawParam->Param().GetParamIdent() == NFmiInfoData::kFmiSpMinMaxPlot;
-	fMetarPlotDraw = itsDrawParam->Param().GetParamIdent() == NFmiInfoData::kFmiSpMetarPlot;
 	NFmiIgnoreStationsData &ignorestationdata = itsCtrlViewDocumentInterface->IgnoreStationsData();
 	bool useSynopDataForPlot = (fSoundingPlotDraw == false) && (fMetarPlotDraw == false);
 
@@ -213,9 +215,10 @@ void NFmiSynopPlotView::Draw(NFmiToolBox * theGTB)
 		if(!itsInfo->Time(itsTime) && fGetSynopDataFromQ2 == false)
 			continue ;
 		CalculateGeneralStationRect();
-
-		if(synopSettings.PlotSpacing() > 0) // priorisointi jutusta on hyˆty‰ vain jos harvennus on p‰‰ll‰(PlotSpacing on suurempi kuin 0)
+		auto usedPlotSpacing = fMetarPlotDraw ? synopSettings.MetarPlotSettings().PlotSpacing() : synopSettings.PlotSpacing();
+		if(!fMetarPlotDraw && usedPlotSpacing > 0)
 		{
+			// Priorisointi jutusta on hyˆty‰ vain jos harvennus on p‰‰ll‰ (PlotSpacing on suurempi kuin 0) ja kyse ei ole metar-plotista (metar asemia ei priorisoida)
 			// priorisoidut asemat k‰yd‰‰n ensin l‰pi
 			NFmiSynopStationPrioritySystem &prioritySystem = *itsCtrlViewDocumentInterface->SynopStationPrioritySystem();
 			int maxPriorityCount = prioritySystem.MaxPriorityLevel();
@@ -229,7 +232,7 @@ void NFmiSynopPlotView::Draw(NFmiToolBox * theGTB)
 					{
 						if(ignorestationdata.IsStationBlocked(*(itsInfo->Location()), true) == false)
 						{
-							DrawSynopPlot(synopSettings, rect, stationPointEnvi, synopRects, emptySoundingMarkerRect, drawStationMarker);
+							DrawSynopPlot(usedPlotSpacing, rect, stationPointEnvi, synopRects, emptySoundingMarkerRect, drawStationMarker);
 						}
 					}
 				}
@@ -240,20 +243,20 @@ void NFmiSynopPlotView::Draw(NFmiToolBox * theGTB)
 		{
 			if(ignorestationdata.IsStationBlocked(*(itsInfo->Location()), true) == false)
 			{
-				DrawSynopPlot(synopSettings, rect, stationPointEnvi, synopRects, emptySoundingMarkerRect, drawStationMarker);
+				DrawSynopPlot(usedPlotSpacing, rect, stationPointEnvi, synopRects, emptySoundingMarkerRect, drawStationMarker);
 			}
 		}
 	}
 }
 
-void NFmiSynopPlotView::DrawSynopPlot(NFmiSynopPlotSettings &theSynopSettings, NFmiRect &theSynopRect, NFmiDrawingEnvironment &theStationPointEnvi, std::vector<NFmiRect> &theSynopRects, NFmiRect &theEmptySoundingMarkerRect, bool drawStationMarker)
+void NFmiSynopPlotView::DrawSynopPlot(double plotSpacing, NFmiRect &theSynopRect, NFmiDrawingEnvironment &theStationPointEnvi, std::vector<NFmiRect> &theSynopRects, NFmiRect &theEmptySoundingMarkerRect, bool drawStationMarker)
 {
 	if(itsArea->IsInside(CurrentLatLon()))
 	{
 		if(drawStationMarker)
             DrawStation(theStationPointEnvi); // piirret‰‰n asema piste kaikille asemille jos niin on asetuksissa m‰‰r‰tty
 		theSynopRect.Center(this->LatLonToViewPoint(CurrentLatLon()));
-		if(theSynopSettings.PlotSpacing() == 0 || !IsRectOverLapping(theSynopRect, theSynopRects, theSynopSettings.PlotSpacing()))
+		if(plotSpacing == 0 || !IsRectOverLapping(theSynopRect, theSynopRects, plotSpacing))
 		{
 			bool fWindDrawed = false;
 			bool anythingDrawn = false;
@@ -264,12 +267,12 @@ void NFmiSynopPlotView::DrawSynopPlot(NFmiSynopPlotSettings &theSynopSettings, N
 				anythingDrawn |= DrawMetarPlot(itsInfo, theSynopRect);
 			else
 			{
-				anythingDrawn |= DrawWindVector(itsInfo, theSynopRect, fWindDrawed);
+				anythingDrawn |= DrawWindVector(itsInfo, theSynopRect, fWindDrawed, false);
 				anythingDrawn |= DrawNormalFontValues(itsInfo, theSynopRect);
 				anythingDrawn |= DrawSynopFontValues(itsInfo, theSynopRect, fWindDrawed);
 			}
 
-			if(anythingDrawn && theSynopSettings.PlotSpacing() > 0)
+			if(anythingDrawn && plotSpacing > 0)
 				theSynopRects.push_back(theSynopRect);
 			if((fSoundingPlotDraw && anythingDrawn == false) || (fMinMaxPlotDraw && anythingDrawn == true)) // min-max plottiin tulee aina markeri
 			{
@@ -351,7 +354,7 @@ void NFmiSynopPlotView::DrawSynopPlot(NFmiToolBox * theGTB, const NFmiLocation &
 		}
 		else
 		{
-			DrawWindVector(info, theRect, fWindDrawed);
+			DrawWindVector(info, theRect, fWindDrawed, false);
 			DrawNormalFontValues(info, theRect);
 			DrawSynopFontValues(info, theRect, fWindDrawed);
 		}
@@ -1380,16 +1383,22 @@ bool NFmiSynopPlotView::PrintParameterValue(boost::shared_ptr<NFmiFastQueryInfo>
 		return false;
 }
 
-static NFmiColor GetMetarPlotStatusColor(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+// Jos palautetun pair:in second arvo on false, ei piirret‰ statusta ollenkaan
+static std::pair<NFmiColor, bool> GetMetarPlotStatusColor(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	const float bigCloudBaseValue = 5000; // t‰m‰ on helpottamassa puuttuvien arvojen tarkastelua
 	const float bigAviVisValue = 10000; // t‰m‰ on helpottamassa puuttuvien arvojen tarkastelua
 	NFmiColor statusColor(0, 0, 1); // sininen on normaali status
 
 	float visibilityInMeters = ::GetAviVisibility(theInfo);
+	float cloudBaseInFeets = ::GetCloudBaseInFeets(theInfo);
+	if(visibilityInMeters == kFloatMissing && cloudBaseInFeets == kFloatMissing)
+	{
+		return std::make_pair(statusColor, false);
+	}
+		
 	if(visibilityInMeters == kFloatMissing)
 		visibilityInMeters = bigAviVisValue;
-	float cloudBaseInFeets = ::GetCloudBaseInFeets(theInfo);
 	if(cloudBaseInFeets == kFloatMissing)
 		cloudBaseInFeets = bigCloudBaseValue;
 
@@ -1404,7 +1413,7 @@ static NFmiColor GetMetarPlotStatusColor(boost::shared_ptr<NFmiFastQueryInfo> &t
 	else if(visibilityInMeters < 8000 || cloudBaseInFeets < 2500)
 		statusColor = NFmiColor(1, 1, 1); // valkoinen seuraaville s‰ille
 
-	return statusColor;
+	return std::make_pair(statusColor, true);;
 }
 
 static bool HasAnyMetarPlotData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
@@ -1449,61 +1458,89 @@ bool NFmiSynopPlotView::DrawMetarPlot(boost::shared_ptr<NFmiFastQueryInfo> &theI
 	itsDrawingEnvironment->EnableFill();
 	itsToolBox->SetTextAlignment(kRight); // tehd‰‰n ensin tekstit keskiosan vasemmalle puolelle right-alignmentilla
 
-	NFmiSynopPlotSettings & synopSettings = *itsCtrlViewDocumentInterface->SynopPlotSettings();
+	NFmiMetarPlotSettings & metarSettings = itsCtrlViewDocumentInterface->SynopPlotSettings()->MetarPlotSettings();
 
 	// 1. piirr‰ n‰kyvyyden ja cloudbae/vervis:in m‰‰r‰‰m‰ v‰ri boksi (keskelle)
-	NFmiPoint relativeStatusLocation(0.5, 0.5); // status-laatikon sijainti 0,0 1,1 maailmassa synop boxissa
-	NFmiColor statusColor = ::GetMetarPlotStatusColor(theInfo);
-	itsDrawingEnvironment->SetFillColor(statusColor);
-	double statusRectSizeFactor = 0.7;
-	NFmiRect statusRect(0, 0, itsToolBox->SX(itsFontSizeX) * statusRectSizeFactor, itsToolBox->SY(itsFontSizeY)* statusRectSizeFactor);
-	statusRect.Center(GetRelativeLocationFromRect(theDrawRect, relativeStatusLocation));
-	NFmiRectangle statusRectangle(statusRect, 0, itsDrawingEnvironment);
-	itsToolBox->Convert(&statusRectangle);
-
+	if(metarSettings.Show_Status())
+	{
+		NFmiPoint relativeStatusLocation(0.5, 0.5); // status-laatikon sijainti 0,0 1,1 maailmassa synop boxissa
+		auto statusColorData = ::GetMetarPlotStatusColor(theInfo);
+		if(statusColorData.second)
+		{
+			itsDrawingEnvironment->SetFillColor(statusColorData.first);
+			double statusRectSizeFactor = 0.7;
+			NFmiRect statusRect(0, 0, itsToolBox->SX(itsFontSizeX) * statusRectSizeFactor, itsToolBox->SY(itsFontSizeY) * statusRectSizeFactor);
+			statusRect.Center(GetRelativeLocationFromRect(theDrawRect, relativeStatusLocation));
+			NFmiRectangle statusRectangle(statusRect, 0, itsDrawingEnvironment);
+			itsToolBox->Convert(&statusRectangle);
+			anythingDrawed |= true;
+		}
+	}
 
 	// *******  defaulttina seuraavat piirret‰‰n mustana tai halutulla v‰rill‰ ***************
 	itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
 	itsDrawingEnvironment->SetFillColor(NFmiColor(0,0,0));
-	if(synopSettings.UseSingleColor())
+	if(metarSettings.UseSingleColor())
 	{
-		itsDrawingEnvironment->SetFrameColor(synopSettings.SingleColor());
-		itsDrawingEnvironment->SetFillColor(synopSettings.SingleColor());
+		itsDrawingEnvironment->SetFrameColor(metarSettings.SingleColor());
+		itsDrawingEnvironment->SetFillColor(metarSettings.SingleColor());
 	}
-	// 2. piirr‰ tuuli viiri (keskelle)
+
+	// 2. piirr‰ tuuli viiri (keskelle), sen piirto optiot testataan DrawWindVector funktiossa
 	bool windDrawedDummy = false; // t‰ll‰ tiedolla ei tehd‰ mit‰‰n, se pit‰‰ kuitenkin antaa DrawWindVector-metodille
-	anythingDrawed |= DrawWindVector(theInfo, theDrawRect, windDrawedDummy);
+	anythingDrawed |= DrawWindVector(theInfo, theDrawRect, windDrawedDummy, true);
 
 	// 3. piirr‰ l‰mpˆtila (vasen yl‰) ja kastepiste (vasen ala): arvot aina kahdella luvulla ja M-notaatio negatiivisille arvoille
-	NFmiPoint relativeTemperatureLocation(leftXpos, topYpos); // paineen sijainti 0,0 1,1 maailmassa synop boxissa
-	anythingDrawed |= PrintParameterValue(theInfo, theDrawRect, relativeTemperatureLocation, kFmiTemperature, true);
-	NFmiPoint relativeDewPointLocation(leftXpos, bottomYpos); // paineen sijainti 0,0 1,1 maailmassa synop boxissa
-	anythingDrawed |= PrintParameterValue(theInfo, theDrawRect, relativeDewPointLocation, kFmiDewPoint, true);
+	if(metarSettings.Show_TT())
+	{
+		NFmiPoint relativeTemperatureLocation(leftXpos, topYpos); // paineen sijainti 0,0 1,1 maailmassa synop boxissa
+		anythingDrawed |= PrintParameterValue(theInfo, theDrawRect, relativeTemperatureLocation, kFmiTemperature, true);
+	}
+	if(metarSettings.Show_TdTd())
+	{
+		NFmiPoint relativeDewPointLocation(leftXpos, bottomYpos); // paineen sijainti 0,0 1,1 maailmassa synop boxissa
+		anythingDrawed |= PrintParameterValue(theInfo, theDrawRect, relativeDewPointLocation, kFmiDewPoint, true);
+	}
 
 	// 4. piirr‰ Vis metrein‰ 1-4 numeroa (vasen keskelle) Huom. ei piirret‰, jos on CAVOK tai SKC tilanne
-	if(::DrawAviVis(theInfo))
+	if(metarSettings.Show_VVVV())
 	{
-		NFmiPoint relativeDewPointLocation(leftXpos, middleYpos); // paineen sijainti 0,0 1,1 maailmassa synop boxissa
-		anythingDrawed |= PrintParameterValue(theInfo, theDrawRect, relativeDewPointLocation, kFmiAviationVisibility);
+		if(::DrawAviVis(theInfo))
+		{
+			NFmiPoint relativeDewPointLocation(leftXpos, middleYpos); // paineen sijainti 0,0 1,1 maailmassa synop boxissa
+			anythingDrawed |= PrintParameterValue(theInfo, theDrawRect, relativeDewPointLocation, kFmiAviationVisibility);
+		}
 	}
 
 	itsToolBox->SetTextAlignment(kLeft); // tehd‰‰n seuraavat tekstit keskiosan oikealle puolelle left-alignmentilla
 	// 5. piirr‰ QNH hPa:ina 3-4 numeroa (oikea yl‰)
-	NFmiPoint relativePressureLocation(rightXpos, topYpos); // paineen sijainti 0,0 1,1 maailmassa synop boxissa
-	anythingDrawed |= PrintParameterValue(theInfo, theDrawRect, relativePressureLocation, kFmiPressure, true);
+	if(metarSettings.Show_PhPhPhPh())
+	{
+		NFmiPoint relativePressureLocation(rightXpos, topYpos); // paineen sijainti 0,0 1,1 maailmassa synop boxissa
+		anythingDrawed |= PrintParameterValue(theInfo, theDrawRect, relativePressureLocation, kFmiPressure, true);
+	}
 
 	// 6. piirr‰ Gust solmuina vaikka G15 eli G ja 2-3 numeroa (oikea keskell‰)
-	NFmiPoint relativeWindGustPointLocation(rightXpos, middleYpos); // paineen sijainti 0,0 1,1 maailmassa synop boxissa
-	anythingDrawed |= PrintParameterValue(theInfo, theDrawRect, relativeWindGustPointLocation, kFmiHourlyMaximumGust);
+	if(metarSettings.Show_Gff())
+	{
+		NFmiPoint relativeWindGustPointLocation(rightXpos, middleYpos); // paineen sijainti 0,0 1,1 maailmassa synop boxissa
+		anythingDrawed |= PrintParameterValue(theInfo, theDrawRect, relativeWindGustPointLocation, kFmiHourlyMaximumGust);
+	}
 
 	// 7. piirr‰ Wx s‰‰ teksti muodossa kaikki kent‰t per‰kk‰in "SHRA FG" (oikea alhaalla)
-	NFmiPoint relativeMetarWeatherPointLocation(rightXpos, bottomYpos); // paineen sijainti 0,0 1,1 maailmassa synop boxissa
-	anythingDrawed |= PrintParameterValue(theInfo, theDrawRect, relativeMetarWeatherPointLocation, kFmiAviationWeather1);
+	if(metarSettings.Show_ww())
+	{
+		NFmiPoint relativeMetarWeatherPointLocation(rightXpos, bottomYpos); // paineen sijainti 0,0 1,1 maailmassa synop boxissa
+		anythingDrawed |= PrintParameterValue(theInfo, theDrawRect, relativeMetarWeatherPointLocation, kFmiAviationWeather1);
+	}
 
 	itsToolBox->SetTextAlignment(kCenter); // tehd‰‰n seuraavat tekstit keskiosan ala puolelle center-alignmentilla
 	// 8. piirr‰ pilvi‰ kuvaavat kent‰t joko VV002, CAVOK, SKC tai 1-4 pilvikentt‰‰ alekkain OVC009 (alas keskell‰)
-	NFmiPoint relativeMetarCloudsPointLocation(0.5, bottomYpos - 0.2); // paineen sijainti 0,0 1,1 maailmassa synop boxissa
-	anythingDrawed |= PrintParameterValue(theInfo, theDrawRect, relativeMetarCloudsPointLocation, kFmi1CloudBase);
+	if(metarSettings.Show_SkyInfo())
+	{
+		NFmiPoint relativeMetarCloudsPointLocation(0.5, bottomYpos - 0.2); // paineen sijainti 0,0 1,1 maailmassa synop boxissa
+		anythingDrawed |= PrintParameterValue(theInfo, theDrawRect, relativeMetarCloudsPointLocation, kFmi1CloudBase);
+	}
 
 	itsDrawingEnvironment->SetFontType(oldFont);
 //	itsDrawingEnvironment->BoldFont(false);
@@ -1824,11 +1861,13 @@ static double CalcLineValue(double y, double x1, double y1, double x2, double y2
 }
 
 // paluu arvo kertoo onko mit‰‰n piirretty
-bool NFmiSynopPlotView::DrawWindVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theRect, bool &fWindDrawed)
+bool NFmiSynopPlotView::DrawWindVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theRect, bool &fWindDrawed, bool metarCase)
 {
 	fWindDrawed = false;
-	NFmiSynopPlotSettings & synopSettings = *itsCtrlViewDocumentInterface->SynopPlotSettings();
-	if(synopSettings.ShowDdff())
+	NFmiSynopPlotSettings& synopSettings = *itsCtrlViewDocumentInterface->SynopPlotSettings();
+	NFmiMetarPlotSettings & metarSettings = synopSettings.MetarPlotSettings();
+	bool drawWind = metarCase ? metarSettings.Show_dddff() : synopSettings.ShowDdff();
+	if(drawWind)
 	{
 		float windSpeed = kFloatMissing;
 		float windDir = kFloatMissing;
@@ -1838,8 +1877,12 @@ bool NFmiSynopPlotView::DrawWindVector(boost::shared_ptr<NFmiFastQueryInfo> &the
 			// *******  defaulttina seuraavat piirret‰‰n mustina tai halutulla v‰rill‰ *************
 			itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
 			NFmiColor oldFillcolor(itsDrawingEnvironment->GetFillColor());
-			if(synopSettings.UseSingleColor())
-				itsDrawingEnvironment->SetFrameColor(synopSettings.SingleColor());
+			bool useSingleColor = metarCase ? metarSettings.UseSingleColor() : synopSettings.UseSingleColor();
+			if(useSingleColor)
+			{
+				const auto &singleColor = metarCase ? metarSettings.SingleColor() : synopSettings.SingleColor();
+				itsDrawingEnvironment->SetFrameColor(singleColor);
+			}
 			itsDrawingEnvironment->SetFillColor(itsDrawingEnvironment->GetFrameColor());
 			itsDrawingEnvironment->EnableFill();
 
@@ -1865,7 +1908,7 @@ bool NFmiSynopPlotView::DrawWindVector(boost::shared_ptr<NFmiFastQueryInfo> &the
 				itsToolBox->DrawEllipse(circleRect, itsDrawingEnvironment);
 			}
 
-			double fontSizeInMM = synopSettings.FontSize();
+			auto fontSizeInMM = metarCase ? metarSettings.FontSize() : synopSettings.FontSize();
 			double windBarbLineWidthFactor = ::CalcLineValue(fontSizeInMM, 8., 2., 12., 7., 7., 13.);
 			int lineWidthInPixels = boost::math::iround(itsFontSizeX / windBarbLineWidthFactor);
 			NFmiPoint oldSize = itsDrawingEnvironment->GetPenSize();
