@@ -83,7 +83,7 @@ std::string NFmiMetarPlotSettings::MakeViewMacroString() const
 	out << fShow_SkyInfo << " " << fShow_TT << " " << fShow_TdTd << " " << fShow_PhPhPhPh;
 	out << " " << fShow_dddff << " " << fShow_Gff << " " << fShow_VVVV << " " << fShow_ww << " " << fShow_Status;
 	out << " " << fUseSingleColor << " " << itsSingleColor;
-	out << " " << itsFontSize << " " << itsPlotSpacing;
+	out << " " << itsFontSize << " " << itsPlotSpacing << std::endl;
 
     // Lopuksi vielä mahdollinen extra data. Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se 
 	// saadaan talteen tiedopstoon siten että edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
