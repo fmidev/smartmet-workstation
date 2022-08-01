@@ -1,6 +1,7 @@
 #include "NFmiMetarPlotSettings.h"
 #include "NFmiSettings.h"
 #include "NFmiDataStoringHelpers.h"
+#include "NFmiSynopPlotSettings.h"
 
 NFmiMetarPlotSettings::NFmiMetarPlotSettings() = default;
 
@@ -94,10 +95,19 @@ std::string NFmiMetarPlotSettings::MakeViewMacroString() const
 	return out.str();
 }
 
-void NFmiMetarPlotSettings::InitFromViewMacroString(std::string& viewMacroStr)
+void NFmiMetarPlotSettings::InitFromViewMacroString(std::string& viewMacroStr, const NFmiSynopPlotSettings& synopPlotSettings)
 {
 	if(viewMacroStr.empty())
+	{
+		// Jos oli luettu vanha näyttömakro, jossa ei ollut metar-plot asetuksia, asetetaan varmuuden vuoksi oletus optiot päälle,
+		// jolloin kaikki parametrit menevät päälle piirrossa, mutta niin että tietyt asetukset otetaan synop-plot-optioista, koska niin vanha versiokin toimi.
+		*this = NFmiMetarPlotSettings();
+		fUseSingleColor = synopPlotSettings.UseSingleColor();
+		itsSingleColor = synopPlotSettings.SingleColor();
+		itsFontSize = synopPlotSettings.FontSize();
+		itsPlotSpacing = synopPlotSettings.PlotSpacing();
 		return;
+	}
 
 	std::stringstream in(viewMacroStr);
 	in >> fShow_SkyInfo >> fShow_TT >> fShow_TdTd >> fShow_PhPhPhPh;
