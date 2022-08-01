@@ -63,6 +63,20 @@ void CFmiSynopPlotSettingsDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_SHOW_W2, fShowW2);
 	DDX_Check(pDX, IDC_CHECK_SHOW_SYNOP_SINGLE_COLOR, itsSynopControls.fSingleColor);
 	DDX_Check(pDX, IDC_CHECK_TOGGLE_ALL_SYNOP_PARAMS, itsSynopControls.fSetAllParamState);
+	DDX_Check(pDX, IDC_CHECK_SHOW_METAR_SKYINFO, fMetarShow_SkyInfo);
+	DDX_Check(pDX, IDC_CHECK_SHOW_METAR_TT, fMetarShow_TT);
+	DDX_Check(pDX, IDC_CHECK_SHOW_METAR_TdTd, fMetarShow_TdTd);
+	DDX_Check(pDX, IDC_CHECK_SHOW_METAR_PhPhPhPh, fMetarShow_PhPhPhPh);
+	DDX_Check(pDX, IDC_CHECK_SHOW_METAR_dddff, fMetarShow_dddff);
+	DDX_Check(pDX, IDC_CHECK_SHOW_METAR_Gff, fMetarShow_Gff);
+	DDX_Check(pDX, IDC_CHECK_SHOW_METAR_VVVV, fMetarShow_VVVV);
+	DDX_Check(pDX, IDC_CHECK_SHOW_METAR_ww, fMetarShow_ww);
+	DDX_Check(pDX, IDC_CHECK_SHOW_METAR_STATUS, fMetarShow_Status);
+	DDX_Control(pDX, IDC_SLIDER_METAR_FONT_SIZE, itsMetarControls.itsFontSizeSlider);
+	DDX_Control(pDX, IDC_SLIDER_METAR_PLOT_SPACING, itsMetarControls.itsPlotSpacingSlider);
+	DDX_Control(pDX, IDC_BUTTON_METAR_SINGLE_COLOR, itsMetarControls.itsSingleColorChangeButtom);
+	DDX_Check(pDX, IDC_CHECK_SHOW_METAR_SINGLE_COLOR, itsMetarControls.fSingleColor);
+	DDX_Check(pDX, IDC_CHECK_TOGGLE_ALL_METAR_PARAMS, itsMetarControls.fSetAllParamState);
 }
 
 
@@ -73,6 +87,8 @@ BEGIN_MESSAGE_MAP(CFmiSynopPlotSettingsDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_SYNOP_SINGLE_COLOR, OnBnClickedButtonSynopSingleColor)
 	ON_WM_HSCROLL()
 	ON_BN_CLICKED(IDC_CHECK_TOGGLE_ALL_SYNOP_PARAMS, OnBnClickedCheckToggleAllSynopParams)
+	ON_BN_CLICKED(IDC_BUTTON_METAR_SINGLE_COLOR, OnBnClickedButtonMetarSingleColor)
+	ON_BN_CLICKED(IDC_CHECK_TOGGLE_ALL_METAR_PARAMS, OnBnClickedCheckToggleAllMetarParams)
 END_MESSAGE_MAP()
 
 
@@ -83,16 +99,28 @@ BOOL CFmiSynopPlotSettingsDlg::OnInitDialog()
 	CDialog::OnInitDialog();
 
 	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
-	itsSynopControls.itsFontSizeSlider.SetRange(10, 100); // 1-10 mm, jaetaan kymmenellä
-	itsSynopControls.itsPlotSpacingSlider.SetRange(0, 20); // arvot 0 - 2, jaetaan kymmenellä
 
 	InitDialogTexts();
 	InitFromDoc();
-	itsSynopControls.fSetAllParamState = true;
 	UpdateData(FALSE);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CFmiSynopPlotSettingsDlg::InitPlotControls(bool synopPlotCase, bool useSingleColor, double fontSize, double plotSpacing, const NFmiColor & singleColor, NFmiPlotRelatedControls &plotControls)
+{
+	plotControls.itsFontSizeSlider.SetRange(10, 100); // 1-10 mm, jaetaan kymmenellä
+	plotControls.itsPlotSpacingSlider.SetRange(0, 20); // arvot 0 - 2, jaetaan kymmenellä
+	plotControls.fSetAllParamState = true;
+
+	plotControls.fSingleColor = useSingleColor;
+	plotControls.itsFontSizeSlider.SetPos(static_cast<int>(fontSize * 10));
+	plotControls.itsPlotSpacingSlider.SetPos(static_cast<int>(plotSpacing * 10));
+	UpdateFontSizeString(synopPlotCase);
+	UpdatePlotSpacingString(synopPlotCase);
+	plotControls.itsSingleColorRef = CtrlView::Color2ColorRef(singleColor);
+	CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, plotControls.itsSingleColorRef, &plotControls.itsSingleColorBitmap, plotControls.itsSingleColorRect, plotControls.itsSingleColorChangeButtom));
 }
 
 void CFmiSynopPlotSettingsDlg::InitFromDoc(void)
@@ -116,19 +144,35 @@ void CFmiSynopPlotSettingsDlg::InitFromDoc(void)
 	fShowH = synopSettings.ShowH();
 	fShowRr = synopSettings.ShowRr();
 	fShowTw = synopSettings.ShowTw();
-	itsSynopControls.fSingleColor = synopSettings.UseSingleColor();
+	InitPlotControls(true, synopSettings.UseSingleColor(), synopSettings.FontSize(), synopSettings.PlotSpacing(), synopSettings.SingleColor(), itsSynopControls);
 
-	itsSynopControls.itsFontSizeSlider.SetPos(static_cast<int>(synopSettings.FontSize() * 10));
-	itsSynopControls.itsPlotSpacingSlider.SetPos(static_cast<int>(synopSettings.PlotSpacing() * 10));
-
-	UpdateFontSizeString();
-	UpdatePlotSpacingString();
-
-	NFmiColor tColor = synopSettings.SingleColor();
-	itsSynopControls.itsSingleColorRef = CtrlView::Color2ColorRef(tColor);
-	CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsSynopControls.itsSingleColorRef, &itsSynopControls.itsSingleColorBitmap, itsSynopControls.itsSingleColorRect, itsSynopControls.itsSingleColorChangeButtom));
+	NFmiMetarPlotSettings& metarSettings = synopSettings.MetarPlotSettings();
+	fMetarShow_SkyInfo = metarSettings.Show_SkyInfo();
+	fMetarShow_TT = metarSettings.Show_TT();
+	fMetarShow_TdTd = metarSettings.Show_TdTd();
+	fMetarShow_PhPhPhPh = metarSettings.Show_PhPhPhPh();
+	fMetarShow_dddff = metarSettings.Show_dddff();
+	fMetarShow_Gff = metarSettings.Show_Gff();
+	fMetarShow_VVVV = metarSettings.Show_VVVV();
+	fMetarShow_ww = metarSettings.Show_ww();
+	fMetarShow_Status = metarSettings.Show_Status();
+	InitPlotControls(false, metarSettings.UseSingleColor(), metarSettings.FontSize(), metarSettings.PlotSpacing(), metarSettings.SingleColor(), itsMetarControls);
 
 	UpdateData(FALSE);
+}
+
+template<typename PlotSettings>
+void StoreToDoc(const NFmiPlotRelatedControls& plotControls, PlotSettings& plotSettings)
+{
+	plotSettings.UseSingleColor(plotControls.fSingleColor == TRUE);
+	plotSettings.FontSize(plotControls.itsFontSizeSlider.GetPos() / 10.);
+	plotSettings.PlotSpacing(plotControls.itsPlotSpacingSlider.GetPos() / 10.);
+	NFmiColor tColor;
+	tColor.SetRGB((float(GetRValue(plotControls.itsSingleColorRef)) / float(255.0)),
+		(float(GetGValue(plotControls.itsSingleColorRef)) / float(255.0)),
+		(float(GetBValue(plotControls.itsSingleColorRef)) / float(255.0)));
+	plotSettings.SingleColor(tColor);
+	plotSettings.Store();
 }
 
 void CFmiSynopPlotSettingsDlg::StoreToDoc(void)
@@ -153,128 +197,46 @@ void CFmiSynopPlotSettingsDlg::StoreToDoc(void)
 	synopSettings.ShowH(fShowH == TRUE);
 	synopSettings.ShowRr(fShowRr == TRUE);
 	synopSettings.ShowTw(fShowTw == TRUE);
-	synopSettings.UseSingleColor(itsSynopControls.fSingleColor == TRUE);
+	::StoreToDoc(itsSynopControls, synopSettings);
 
-	synopSettings.FontSize(itsSynopControls.itsFontSizeSlider.GetPos() / 10.);
-	synopSettings.PlotSpacing(itsSynopControls.itsPlotSpacingSlider.GetPos() / 10.);
-
-	NFmiColor tColor;
-	tColor.SetRGB((float(GetRValue(itsSynopControls.itsSingleColorRef))/float(255.0)),
-				  (float(GetGValue(itsSynopControls.itsSingleColorRef))/float(255.0)),
-				  (float(GetBValue(itsSynopControls.itsSingleColorRef))/float(255.0)));
-	synopSettings.SingleColor(tColor);
-
-	synopSettings.Store();
+	NFmiMetarPlotSettings& metarSettings = synopSettings.MetarPlotSettings();
+	metarSettings.Show_SkyInfo(fMetarShow_SkyInfo == TRUE);
+	metarSettings.Show_TT(fMetarShow_TT == TRUE);
+	metarSettings.Show_TdTd(fMetarShow_TdTd == TRUE);
+	metarSettings.Show_PhPhPhPh(fMetarShow_PhPhPhPh == TRUE);
+	metarSettings.Show_dddff(fMetarShow_dddff == TRUE);
+	metarSettings.Show_Gff(fMetarShow_Gff == TRUE);
+	metarSettings.Show_VVVV(fMetarShow_VVVV == TRUE);
+	metarSettings.Show_ww(fMetarShow_ww == TRUE);
+	metarSettings.Show_Status(fMetarShow_Status == TRUE);
+	::StoreToDoc(itsMetarControls, metarSettings);
 }
 
 void CFmiSynopPlotSettingsDlg::Update(void)
 {
-    if(IsWindowVisible() && !IsIconic()) // Näyttöä päivitetään vain jos se on näkyvissä ja se ei ole minimized tilassa
-    {
-        InitFromDoc();
-
-        NFmiInfoData::Type synopType = NFmiInfoData::kObservations;
-        boost::shared_ptr<NFmiFastQueryInfo> editedInfo = itsSmartMetDocumentInterface->EditedSmartInfo();
-        if(editedInfo && editedInfo->Producer()->GetIdent() == kFmiSYNOP)
-        {
-            synopType = NFmiInfoData::kEditable; // jos salama data editoitavana, pitää tyypiksi laittaa editable
-        }
-        auto *infoOrganizer = itsSmartMetDocumentInterface->InfoOrganizer();
-        boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer->FindInfo(synopType, NFmiProducer(kFmiSYNOP), true);
-        if(info)
-        {
-            NFmiParamBag params = infoOrganizer->GetParams(kFmiSYNOP);
-            // Jos synop-dataa löytyy, laita check boxien enable/disable riippuen, löytyykö kyseistä parametria synop-datasta
-            EnableCheckBox(params, kFmiTemperature, IDC_CHECK_SHOW_T);
-            EnableCheckBox(params, kFmiVisibility, IDC_CHECK_SHOW_V);
-            EnableCheckBox(params, kFmiPresentWeather, IDC_CHECK_SHOW_WW);
-            EnableCheckBox(params, kFmiDewPoint, IDC_CHECK_SHOW_TD);
-            EnableCheckBox(params, kFmiHighCloudType, IDC_CHECK_SHOW_CH);
-            EnableCheckBox(params, kFmiMiddleCloudType, IDC_CHECK_SHOW_CM);
-            EnableCheckBox(params, kFmiTotalCloudCover, IDC_CHECK_SHOW_N);
-            EnableCheckBox(params, kFmiWindSpeedMS, IDC_CHECK_SHOW_DDFF); // kokeillaan vain WS:ää testauksessa
-            EnableCheckBox(params, kFmiLowCloudType, IDC_CHECK_SHOW_CL);
-            EnableCheckBox(params, kFmiCloudHeight, IDC_CHECK_SHOW_H);
-            EnableCheckBox(params, kFmiPrecipitationAmount, IDC_CHECK_SHOW_RR);
-            EnableCheckBox(params, kFmiPressure, IDC_CHECK_SHOW_PPPP);
-            EnableCheckBox(params, kFmiPressure, IDC_CHECK_SHOW_PPP); // pressurechange parametri lasketaankin paineen avulla
-            EnableCheckBox(params, kFmiLowCloudCover, IDC_CHECK_SHOW_NH);
-            EnableCheckBox(params, kFmiTemperatureSea, IDC_CHECK_SHOW_TW);
-            EnableCheckBox(params, kFmiPressureTendency, IDC_CHECK_SHOW_A);
-            EnableCheckBox(params, kFmiPastWeather1, IDC_CHECK_SHOW_W1);
-            EnableCheckBox(params, kFmiPastWeather2, IDC_CHECK_SHOW_W2);
-        }
-        else
-        {
-            EnableCheckBox(FALSE, IDC_CHECK_SHOW_T);
-            EnableCheckBox(FALSE, IDC_CHECK_SHOW_V);
-            EnableCheckBox(FALSE, IDC_CHECK_SHOW_WW);
-            EnableCheckBox(FALSE, IDC_CHECK_SHOW_TD);
-            EnableCheckBox(FALSE, IDC_CHECK_SHOW_CH);
-            EnableCheckBox(FALSE, IDC_CHECK_SHOW_CM);
-            EnableCheckBox(FALSE, IDC_CHECK_SHOW_N);
-            EnableCheckBox(FALSE, IDC_CHECK_SHOW_DDFF);
-            EnableCheckBox(FALSE, IDC_CHECK_SHOW_CL);
-            EnableCheckBox(FALSE, IDC_CHECK_SHOW_H);
-            EnableCheckBox(FALSE, IDC_CHECK_SHOW_RR);
-            EnableCheckBox(FALSE, IDC_CHECK_SHOW_PPPP);
-            EnableCheckBox(FALSE, IDC_CHECK_SHOW_PPP);
-            EnableCheckBox(FALSE, IDC_CHECK_SHOW_NH);
-            EnableCheckBox(FALSE, IDC_CHECK_SHOW_TW);
-            EnableCheckBox(FALSE, IDC_CHECK_SHOW_A);
-            EnableCheckBox(FALSE, IDC_CHECK_SHOW_W1);
-            EnableCheckBox(FALSE, IDC_CHECK_SHOW_W2);
-        }
-    }
+    InitFromDoc();
 }
 
-void CFmiSynopPlotSettingsDlg::EnableCheckBox(NFmiParamBag &theParams, int theParId, int theCheckBoxIdNumber)
+void CFmiSynopPlotSettingsDlg::UpdateFontSizeString(bool synopPlotCase)
 {
-	CWnd *win = GetDlgItem(theCheckBoxIdNumber);
+	auto usedControlId = synopPlotCase ? IDC_STATIC_SYNOP_FONT_SIZE_STR : IDC_STATIC_METAR_FONT_SIZE_STR;
+	CWnd *win = GetDlgItem(usedControlId);
 	if(win)
 	{
-		if(theParams.SetCurrent(static_cast<FmiParameterName>(theParId), false))
-			win->EnableWindow(TRUE);
-		else
-			win->EnableWindow(FALSE);
-	}
-}
-
-void CFmiSynopPlotSettingsDlg::EnableCheckBox(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, int theParId, int theCheckBoxIdNumber)
-{
-	CWnd *win = GetDlgItem(theCheckBoxIdNumber);
-	if(win)
-	{
-		if(theInfo->Param(static_cast<FmiParameterName>(theParId)))
-			win->EnableWindow(TRUE);
-		else
-			win->EnableWindow(FALSE);
-	}
-}
-
-void CFmiSynopPlotSettingsDlg::EnableCheckBox(BOOL theState, int theCheckBoxIdNumber)
-{
-	CWnd *win = GetDlgItem(theCheckBoxIdNumber);
-	if(win)
-		win->EnableWindow(theState);
-}
-
-void CFmiSynopPlotSettingsDlg::UpdateFontSizeString(void)
-{
-	CWnd *win = GetDlgItem(IDC_STATIC_FONT_SIZE_STR);
-	if(win)
-	{
-		std::string str = NFmiStringTools::Convert(itsSynopControls.itsFontSizeSlider.GetPos() / 10.);
+		auto& usedPlotControl = synopPlotCase ? itsSynopControls : itsMetarControls;
+		std::string str = NFmiStringTools::Convert(usedPlotControl.itsFontSizeSlider.GetPos() / 10.);
 		win->SetWindowText(CA2T(str.c_str()));
 	}
 }
 
-void CFmiSynopPlotSettingsDlg::UpdatePlotSpacingString(void)
+void CFmiSynopPlotSettingsDlg::UpdatePlotSpacingString(bool synopPlotCase)
 {
-	CWnd *win = GetDlgItem(IDC_STATIC_PLOT_SPACING_STR);
+	auto usedControlId = synopPlotCase ? IDC_STATIC_SYNOP_PLOT_SPACING_STR : IDC_STATIC_METAR_PLOT_SPACING_STR;
+	CWnd *win = GetDlgItem(usedControlId);
 	if(win)
 	{
-		std::string str = NFmiStringTools::Convert(itsSynopControls.itsPlotSpacingSlider.GetPos() / 10.);
+		auto& usedPlotControl = synopPlotCase ? itsSynopControls : itsMetarControls;
+		std::string str = NFmiStringTools::Convert(usedPlotControl.itsPlotSpacingSlider.GetPos() / 10.);
         win->SetWindowText(CA2T(str.c_str()));
 	}
 }
@@ -314,10 +276,18 @@ void CFmiSynopPlotSettingsDlg::OnBnClickedButtonSynopSingleColor()
     CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsSynopControls.itsSingleColorRef, &itsSynopControls.itsSingleColorBitmap, itsSynopControls.itsSingleColorRect, itsSynopControls.itsSingleColorChangeButtom));
 }
 
+void CFmiSynopPlotSettingsDlg::OnBnClickedButtonMetarSingleColor()
+{
+	CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsMetarControls.itsSingleColorRef, &itsMetarControls.itsSingleColorBitmap, itsMetarControls.itsSingleColorRect, itsMetarControls.itsSingleColorChangeButtom));
+}
+
 void CFmiSynopPlotSettingsDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
-	UpdateFontSizeString();
-	UpdatePlotSpacingString();
+	// Käydään kaikki mnahdolliset kontrollit läpi synop + metar ja niissä font-size ja plot-spacing
+	UpdateFontSizeString(true);
+	UpdatePlotSpacingString(true);
+	UpdateFontSizeString(false);
+	UpdatePlotSpacingString(false);
 	UpdateData(TRUE);
 
 	CDialog::OnHScroll(nSBCode, nPos, pScrollBar);
@@ -347,6 +317,13 @@ void CFmiSynopPlotSettingsDlg::OnBnClickedCheckToggleAllSynopParams()
 	SetAllSynopParamStates(itsSynopControls.fSetAllParamState);
 }
 
+void CFmiSynopPlotSettingsDlg::OnBnClickedCheckToggleAllMetarParams()
+{
+	UpdateData(TRUE);
+
+	SetAllMetarParamStates(itsMetarControls.fSetAllParamState);
+}
+
 void CFmiSynopPlotSettingsDlg::SetAllSynopParamStates(BOOL newState)
 {
 	UpdateData(TRUE);
@@ -369,6 +346,23 @@ void CFmiSynopPlotSettingsDlg::SetAllSynopParamStates(BOOL newState)
 	fShowH = newState;
 	fShowRr = newState;
 	fShowTw = newState;
+
+	UpdateData(FALSE);
+}
+
+void CFmiSynopPlotSettingsDlg::SetAllMetarParamStates(BOOL newState)
+{
+	UpdateData(TRUE);
+
+	fMetarShow_SkyInfo = newState;
+	fMetarShow_TT = newState;
+	fMetarShow_TdTd = newState;
+	fMetarShow_PhPhPhPh = newState;
+	fMetarShow_dddff = newState;
+	fMetarShow_Gff = newState;
+	fMetarShow_VVVV = newState;
+	fMetarShow_ww = newState;
+	fMetarShow_Status = newState;
 
 	UpdateData(FALSE);
 }
