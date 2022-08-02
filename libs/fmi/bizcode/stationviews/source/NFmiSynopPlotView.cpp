@@ -216,9 +216,9 @@ void NFmiSynopPlotView::Draw(NFmiToolBox * theGTB)
 			continue ;
 		CalculateGeneralStationRect();
 		auto usedPlotSpacing = fMetarPlotDraw ? synopSettings.MetarPlotSettings().PlotSpacing() : synopSettings.PlotSpacing();
-		if(!fMetarPlotDraw && usedPlotSpacing > 0)
+		if(usedPlotSpacing > 0)
 		{
-			// Priorisointi jutusta on hyˆty‰ vain jos harvennus on p‰‰ll‰ (PlotSpacing on suurempi kuin 0) ja kyse ei ole metar-plotista (metar asemia ei priorisoida)
+			// Priorisointi jutusta on hyˆty‰ vain jos harvennus on p‰‰ll‰, PlotSpacing on suurempi kuin 0.
 			// priorisoidut asemat k‰yd‰‰n ensin l‰pi
 			NFmiSynopStationPrioritySystem &prioritySystem = *itsCtrlViewDocumentInterface->SynopStationPrioritySystem();
 			int maxPriorityCount = prioritySystem.MaxPriorityLevel();
@@ -740,6 +740,10 @@ static bool IsCavok(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 		float cloudBaseInFeets = ::GetCloudBaseInFeets(theInfo); // t‰m‰ kattaa sek‰ ver-vis arvon ja bloud-basen
 		if(cloudBaseInFeets == kFloatMissing || cloudBaseInFeets >= 5000)
 		{
+			// Jos kaikki merkitt‰v‰t parametrit olivat pelkk‰‰ puuttuvaa, ei voi sanoa ett‰ on CAVOK keli
+			if(visibilityInMeters == kFloatMissing && cloudBaseInFeets == kFloatMissing)
+				return false;
+
 			// 3. Eik‰ saa olla pilvityyppein‰ Cb/Tcu pilvi‰ miss‰‰n kerroksessa
 			if(!::HasAnySignificantCloudTypes(theInfo))
 			{
