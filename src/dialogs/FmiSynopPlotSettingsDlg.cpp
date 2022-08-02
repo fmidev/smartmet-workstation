@@ -304,7 +304,7 @@ void CFmiSynopPlotSettingsDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDOK, "IDOK");
 	CFmiWin32Helpers::SetDialogItemText(this, IDCANCEL, "IDCANCEL");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_REFRESH, "IDC_BUTTON_REFRESH");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_STATION_PRIORITIES, "IDC_BUTTON_STATION_PRIORITIES");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_STATION_PRIORITIES, "Station priorities");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_SYNOP_SINGLE_COLOR, "Show with single color");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SYNOP_PLOT_FONT_SIZE_STR, "Font size [mm]");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SYNOP_PLOT_SPACING, "Plot spacing (0 - 2)");
