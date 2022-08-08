@@ -466,7 +466,7 @@ void NFmiTempView::DrawSecondaryVerticalHelpLine(double theBottom, double theTop
     itsToolBox->Convert(&l1);
 }
 
-void NFmiTempView::DrawSecondaryData(NFmiSoundingData &theData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo)
+void NFmiTempView::DrawSecondaryData(NFmiSoundingData & theUsedData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo)
 {
     if(theLineInfo.DrawLine() == false)
         return;
@@ -988,7 +988,7 @@ NFmiPoint NFmiTempView::CalcStabilityIndexStartPoint(void)
 	return p;
 }
 
-void NFmiTempView::DrawTextualSoundingData(NFmiSoundingDataOpt1& usedData)
+void NFmiTempView::DrawTextualSoundingData(NFmiSoundingData& usedData)
 {
 	auto doContinue = DoTextualSideViewSetup(
 		itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().ShowTextualSoundingDataSideView(),
@@ -1033,7 +1033,7 @@ bool NFmiTempView::DoTextualSideViewSetup(bool showSideView, const NFmiRect &sid
 }
 
 
-void NFmiTempView::DrawStabilityIndexData(NFmiSoundingDataOpt1& usedData)
+void NFmiTempView::DrawStabilityIndexData(NFmiSoundingData& usedData)
 {
 	auto doContinue = DoTextualSideViewSetup(
 		itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().ShowStabilityIndexSideView(),
@@ -1991,7 +1991,7 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 		{
 			// Jos ei löytynyt mitään dataa ja kyse oli 1. piirrettävästä luotausdatasta, pitää itsFirstSoundingData dataosa nollata,
 			// jotta tekstimuotoisiin sivunäyttöihin ei jäisi vanha data 'kummittelemaan'
-			itsSelectedProducerSoundingData = NFmiSoundingDataOpt1();
+			itsSelectedProducerSoundingData = NFmiSoundingData();
 		}
 
 		if(mainCurve)
@@ -2019,7 +2019,7 @@ bool NFmiTempView::FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInf
         return NFmiSoundingIndexCalculator::FillSoundingData(theInfo, theSoundingData, theTime, theLocation, theGroundDataInfo);
 }
 
-void NFmiTempView::FillInPossibleMissingPressureData(NFmiSoundingDataOpt1& theSoundingData, const NFmiProducer &dataProducer, const NFmiMetTime& theTime, const NFmiLocation& theLocation)
+void NFmiTempView::FillInPossibleMissingPressureData(NFmiSoundingData& theSoundingData, const NFmiProducer &dataProducer, const NFmiMetTime& theTime, const NFmiLocation& theLocation)
 {
 	if(theSoundingData.HeightDataAvailable() && !theSoundingData.PressureDataAvailable())
 	{

@@ -71,8 +71,8 @@ class NFmiTempView : public NFmiCtrlView
 	void DrawSounding(NFmiSoundingData & theUsedDataInOut, int theProducerIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere);
 	void DrawSoundingsInMTAMode(void);
 	void DrawBackground(void);
-	void DrawStabilityIndexData(NFmiSoundingDataOpt1& usedData);
-	void DrawTextualSoundingData(NFmiSoundingDataOpt1& usedData);
+	void DrawStabilityIndexData(NFmiSoundingData& usedData);
+	void DrawTextualSoundingData(NFmiSoundingData& usedData);
 	void DrawStabilityIndexBackground(const NFmiRect &sideViewRect);
 	void DrawDryAdiapaticks(void);
 	void DrawMoistAdiapaticks(void);
@@ -124,9 +124,9 @@ class NFmiTempView : public NFmiCtrlView
 	void ResetTextualScrollingIfSoundingDataChanged(const NFmiMTATempSystem::SoundingProducer& theProducer, const NFmiMTATempSystem::TempInfo& theTempInfo, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, int theProducerIndex);
 	void DrawTextualSideViewScrollingVisuals(NFmiPoint& p, double relativeLineHeight, int totalSoundingRows, int fullVisibleRows, int startingRowIndex, bool drawUpwardSounding);
 	bool DoTextualSideViewSetup(bool showSideView, const NFmiRect& sideViewRect, int fontSize, double fontHeightFactor, double& relativeLineHeightOut);
-	void FillInPossibleMissingPressureData(NFmiSoundingDataOpt1& theSoundingData, const NFmiProducer& dataProducer, const NFmiMetTime& theTime, const NFmiLocation& theLocation);
+	void FillInPossibleMissingPressureData(NFmiSoundingData& theSoundingData, const NFmiProducer& dataProducer, const NFmiMetTime& theTime, const NFmiLocation& theLocation);
 	bool IsSelectedProducerIndex(int theProducerIndex) const;
-	void SetupUsedSoundingData(NFmiSoundingDataOpt1& theUsedDataInOut, int theProducerIndex, bool fMainCurve);
+	void SetupUsedSoundingData(NFmiSoundingData& theUsedDataInOut, int theProducerIndex, bool fMainCurve);
 	const NFmiColor& GetSelectedProducersColor() const;
 	NFmiPoint CalcStringRelativeSize(const std::string& str, double fontSize, const std::string& fontName);
 
@@ -157,7 +157,7 @@ class NFmiTempView : public NFmiCtrlView
 
 	// T‰h‰n talletetaan valitun tuottajan piirrett‰v‰n luotauksen datat, ett‰ niit‰ k‰ytet‰‰n indeksi osio laskuissa
 	// Valitun luotaustuottajan dataa k‰ytet‰‰n myˆs luotausten muokkauksessa!!!!
-	NFmiSoundingDataOpt1 itsSelectedProducerSoundingData;
+	NFmiSoundingData itsSelectedProducerSoundingData;
 	bool fMustResetFirstSoundingData; // joskus k‰ytt‰j‰ haluaa resetoida muokattua luotausta
 	bool fHodografInitialized; // kun ikkuna piirret‰‰n 1. kerran, pit‰‰ laskea alkuarvaus, muutoin ei
 	double itsFirstSoundinWindBarbXPos;
