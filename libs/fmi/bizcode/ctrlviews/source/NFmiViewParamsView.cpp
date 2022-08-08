@@ -21,6 +21,7 @@
 #include "NFmiMacroParamDataCache.h"
 #include "CombinedMapHandlerInterface.h"
 #include "NFmiFastInfoUtils.h"
+#include "NFmiFileString.h"
 
 #include <gdiplus.h>
 #include "boost\math\special_functions\round.hpp"
@@ -520,7 +521,13 @@ std::string NFmiViewParamsView::ComposeToolTipText(const NFmiPoint& thePlace)
 				{
 					try
 					{
-						return CtrlViewUtils::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), drawParam);
+						std::string macroParamTooltip = "File: ";
+						NFmiFileString macroParamFilename = drawParam->InitFileName();
+						macroParamFilename.Extension("st");
+						macroParamTooltip += macroParamFilename;
+						macroParamTooltip += "<br><hr color=red><br>"; // väliviiva
+						macroParamTooltip += CtrlViewUtils::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), drawParam);
+						return macroParamTooltip;
 					}
 					catch(...)
 					{
@@ -530,7 +537,7 @@ std::string NFmiViewParamsView::ComposeToolTipText(const NFmiPoint& thePlace)
 				{
 					bool crossSectionCase = itsMapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView;
 					bool timeSerialCase = itsMapViewDescTopIndex == CtrlViewUtils::kFmiTimeSerialView;
-					std::string str = CtrlViewUtils::GetParamNameString(drawParam, crossSectionCase, true, true, 0, timeSerialCase);
+					std::string str = CtrlViewUtils::GetParamNameString(drawParam, crossSectionCase, true, true, 30, timeSerialCase);
 					std::string tmpLatestObsStr = CtrlViewUtils::GetLatestObservationTimeString(drawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("YYYY.MM.DD HH:mm"), crossSectionCase);
 					if(!tmpLatestObsStr.empty())
 					{

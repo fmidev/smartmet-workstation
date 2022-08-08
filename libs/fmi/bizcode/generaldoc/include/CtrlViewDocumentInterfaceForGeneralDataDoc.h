@@ -138,6 +138,8 @@ public:
     void DrawSelectionOnThisView(bool newValue) override;
     const NFmiPoint& ToolTipLatLonPoint(void) const override;
     void ToolTipLatLonPoint(const NFmiPoint& theLatLon) override;
+    int ToolTipMapViewDescTopIndex() const override;
+    void ToolTipMapViewDescTopIndex(int newIndex) override;
     void ToolTipTime(const NFmiMetTime& theTime) override;
     const NFmiMetTime& ToolTipTime(void) override;
     TimeSerialModificationDataInterface& GenDocDataAdapter(void) override;
@@ -198,6 +200,7 @@ public:
     std::vector<NFmiProducer>& ExtraSoundingProducerList(void) override;
     bool ShowWarningMarkersOnMap(int theDescTopIndex) override;
     CDC* MapBlitDC(int theDescTopIndex) override;
+    int ToolTipColumnIndex() const override;
     void ToolTipColumnIndex(int newIndex) override;
     bool HasActiveViewChanged(void) override;
     void LastBrushedViewTime(const NFmiMetTime& newTime) override;
@@ -291,6 +294,8 @@ public:
     void SetBorderDrawDirtyState(int theDescTopIndex, CountryBorderDrawDirtyState newState) override;
     double SingleMapViewHeightInMilliMeters(int theDescTopIndex) const override;
     bool IsTimeControlViewVisible(int theDescTopIndex) const override;
+    TrueMapViewSizeInfo& GetTrueMapViewSizeInfo(int theDescTopIndex) const override;
+    NFmiSeaLevelPlumeData& SeaLevelPlumeData() const override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;

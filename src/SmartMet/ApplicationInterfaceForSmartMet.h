@@ -53,4 +53,5 @@ public:
     std::pair<HICON, HICON> GetUsedIcons() override;
     void SetToDoFirstTimeWmsDataBasedUpdate() override;
     void OpenVisualizationsettingsDialog() override;
+    void OpenLogViewer() override;
 };

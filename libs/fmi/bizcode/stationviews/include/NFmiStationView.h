@@ -121,7 +121,6 @@ protected:
    std::string GetCompareObservationToolTipString(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
    NFmiPoint CalcFontSize(int theMinSize, int theMaxSize, bool fPrinting) const;
 
-   void SetupUsedDrawParam(void);
    virtual bool PrepareForStationDraw(void);
    virtual void ModifyTextEnvironment(void);
    virtual NFmiString GetPrintedText(float theValue);
@@ -176,6 +175,7 @@ protected:
    using PeekSparseValueDistanceList = std::list<std::tuple<float, double, NFmiPoint>>;
    void SbdPeekSparseValue(int peekIndexX, int peekIndexY, const NFmiRect& peekRect, PeekSparseValueDistanceList& nonMissingValuesWithDistance);
    void SbdDoFinalSparseCaseWork(bool doStationPlotOnly, SparseDataGrid& sparseDataGrid);
+   NFmiPoint SbdCalcOldSchoolSymbolScaleFix(const NFmiPoint &symbolScale) const;
 
    // ******** Symbol-Bulk-Draw toimintojen loppu *********
 

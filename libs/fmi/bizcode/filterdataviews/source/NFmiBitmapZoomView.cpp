@@ -24,7 +24,7 @@ void NFmiBitmapZoomView::Draw(NFmiToolBox * theGTB)
 			itsToolBox->UpdateClientRect(); // poista tämä kun voit
 			itsToolBox->ConvertRect(GetFrame(), mfcRect);
 			Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(mfcRect.left), static_cast<Gdiplus::REAL>(mfcRect.top), static_cast<Gdiplus::REAL>(mfcRect.right), static_cast<Gdiplus::REAL>(mfcRect.bottom));
-			CtrlView::DrawBitmapToDC(theGTB->GetDC(), *aBitmap, bitmapRect, destRect, true);
+			CtrlView::DrawBitmapToDC_4(theGTB->GetDC(), *aBitmap, bitmapRect, destRect, true);
 		}
 	}
 	DrawConstAreaRects();

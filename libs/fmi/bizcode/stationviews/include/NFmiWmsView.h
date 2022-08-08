@@ -31,9 +31,6 @@ public:
 	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
 
 protected:
-    int itsRowIndex; // monennessako rivissä näyttöruudukossa tämä näyttö sijaitsee
-    int itsColIndex;
-	
 	double itsScreenPixelSizeInMM; // tähän pitää saada talteen pikselin koko mm:eissä silloin kun ei olla printtaamassa, 
 								// koska viivan paksuu on annettu ruudulla näkyvissä pikselikoossa.
 

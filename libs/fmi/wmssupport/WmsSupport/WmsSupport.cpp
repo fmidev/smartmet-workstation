@@ -43,13 +43,23 @@ namespace Wms
         return bManager_->isDead(wait);
     }
 
-    const CapabilityTree& WmsSupport::peekCapabilityTree() const
+    const CapabilityTree* WmsSupport::peekCapabilityTree() const
     {
-        return capabilitiesHandler_->peekCapabilityTree();
+        if(capabilitiesHandler_)
+        {
+            return &capabilitiesHandler_->peekCapabilityTree();
+        }
+        else
+            return nullptr;
     }
 
     const LayerInfo* WmsSupport::getHashedLayerInfo(const NFmiDataIdent& dataIdent) const
     {
+        if(!capabilitiesHandler_)
+        {
+            return nullptr;
+        }
+
         auto producer = dataIdent.GetProducer();
         auto producerId = producer->GetIdent();
         auto paramId = dataIdent.GetParamIdent();
@@ -128,17 +138,20 @@ namespace Wms
     std::vector<NFmiImageHolder> WmsSupport::getLegends(int row, int col, int descTop)
     {
         auto legends = std::vector<NFmiImageHolder>{};
-        auto legendDataIdents = legendHandler_->getLegends(row, col, descTop);
-        for(const auto& dataIdent : legendDataIdents)
+        if(capabilitiesHandler_)
         {
-            auto producerId = dataIdent.GetProducer()->GetIdent();
-            auto paramId = dataIdent.GetParamIdent();
-            const auto& layerInfo = capabilitiesHandler_->peekHashes().at(producerId).at(paramId);
-
-            auto holder = dynamicClients_[producerId]->getLegend(layerInfo.style.legendDomain, layerInfo.style.legendRequest);
-            if(holder)
+            auto legendDataIdents = legendHandler_->getLegends(row, col, descTop);
+            for(const auto& dataIdent : legendDataIdents)
             {
-                legends.push_back(holder);
+                auto producerId = dataIdent.GetProducer()->GetIdent();
+                auto paramId = dataIdent.GetParamIdent();
+                const auto& layerInfo = capabilitiesHandler_->peekHashes().at(producerId).at(paramId);
+
+                auto holder = dynamicClients_[producerId]->getLegend(layerInfo.style.legendDomain, layerInfo.style.legendRequest);
+                if(holder)
+                {
+                    legends.push_back(holder);
+                }
             }
         }
         return legends;

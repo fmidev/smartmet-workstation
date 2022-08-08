@@ -16,6 +16,7 @@
 #include "CtrlViewGdiPlusFunctions.h"
 #include "SynopCodeUtils.h"
 #include "ColorStringFunctions.h"
+#include "MathHelper.h"
 
 #include "boost\math\special_functions\round.hpp"
 
@@ -576,6 +577,30 @@ double NFmiImageBasedSymbolView::CalcSymbolSizeInMM() const
     auto& graphicalInfo = GetGraphicalInfo();
     double symbolSizeInMM = itsToolBox->HY(relativeSymbolSize) / graphicalInfo.itsPixelsPerMM_y;
     symbolSizeInMM *= ::CalcMMSizeFactor(static_cast<float>(graphicalInfo.itsViewHeightInMM), 1.1f);
+
+    // T‰ss‰ viel‰ viimeisi‰ ep‰toivoisia symboli koko s‰‰tˆj‰ erilaisille karttaruudukko (columns x rows) tyypeille.
+    // Yritin tehd‰ pikkuisia hienos‰‰tˆj‰ ett‰ aiemmin tehdyt muutokset CurrentDataRect-laskuissa eiv‰t olisi liian 
+    // isoja ja muutokset olisivat oikean suuntaisia.
+    auto viewGridSize = itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex);
+    double xPerYRatio = viewGridSize.X() / viewGridSize.Y();
+    // Isonnetaan symbolia v‰h‰n normi 1x1/2x2 jne. tapauksissa
+    double finalSymbolSizeFactor = 1.15;
+    if(xPerYRatio == 1)
+    {
+        // Jos sarakkeita sama kuin rivej‰, halutaan sarake m‰‰r‰n mukaan kasvattaa enenmm‰n koko
+        finalSymbolSizeFactor = MathHelper::InterpolateWithTwoPoints(viewGridSize.X(), 1, 4, finalSymbolSizeFactor, finalSymbolSizeFactor * 1.3, finalSymbolSizeFactor, finalSymbolSizeFactor * 1.3);
+    }
+    else if(xPerYRatio > 1)
+    {
+        // Jos sarakkeita enemm‰n kuin rivej‰, pienennet‰‰n hieman symboleja
+        finalSymbolSizeFactor = MathHelper::InterpolateWithTwoPoints(xPerYRatio, 2, 5, 0.97, 0.92, 0.9, 0.98);
+    }
+    else if(xPerYRatio < 1)
+    {
+        // Jos sarakkeita v‰hemm‰n kuin rivej‰, suurennetaan kohtalaisesti symboleja
+        finalSymbolSizeFactor = MathHelper::InterpolateWithTwoPoints(xPerYRatio, 0.3, 0.5, 1.4, 1.3, 1.27, 1.41);
+    }
+    symbolSizeInMM *= finalSymbolSizeFactor;
     return symbolSizeInMM;
 }
 

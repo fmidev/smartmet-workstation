@@ -2237,16 +2237,21 @@ void NFmiSmartToolModifier::DoFinalAreaMaskInitializations(
           NFmiAreaMask::TimeRange,
           NFmiAreaMask::LatestValue,
           NFmiAreaMask::PreviousFullDays,
-          NFmiAreaMask::TimeDuration};
+          NFmiAreaMask::TimeDuration,
+          NFmiAreaMask::AreaRect,
+          NFmiAreaMask::AreaCircle};
       NFmiAreaMask::FunctionType functionType = ::GetFunctionType(theAreaMaskInfo);
       auto allowedIter = std::find(functionsThatAllowObservations.begin(),
                                    functionsThatAllowObservations.end(),
                                    functionType);
-      auto isCalculationPointsUsed = !CalculationPoints().empty();
-      //auto isMultiDataSynopCase = IsMultiDataSynopCase(theAreaMaskInfo);
-      //auto keepStationDataForm = (!isMultiDataSynopCase) && (isCalculationPointsUsed ||
-      //                           itsExtraMacroParamData->ObservationRadiusInKm() != kFloatMissing);
-      if (allowedIter != functionsThatAllowObservations.end())
+      auto isCalculationPointsUsed = (!CalculationPoints().empty());
+      auto useSimpleConditionAreaMaskAsStationData =
+          (theAreaMaskInfo.GetSecondaryFunctionType() == NFmiAreaMask::SimpleConditionUsedAsStationData);
+      auto isStationDataAllowingFunction = (allowedIter != functionsThatAllowObservations.end());
+      auto keepStationDataForm =
+          (isCalculationPointsUsed || useSimpleConditionAreaMaskAsStationData ||
+           isStationDataAllowingFunction);
+      if (keepStationDataForm)
       {  // tämä on ok, ei tarvitse tehdä mitään
       }
       else if (maskType == NFmiAreaMask::InfoVariable)
@@ -2971,7 +2976,8 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetOptimalResolutionMacroParamData(
     bool useSpecialResolution,
     boost::shared_ptr<NFmiFastQueryInfo> &resolutionMacroParamData,
     boost::shared_ptr<NFmiFastQueryInfo> &macroParamData,
-    boost::shared_ptr<NFmiFastQueryInfo> &optimizedVisualizationMacroParamData)
+    boost::shared_ptr<NFmiFastQueryInfo> &optimizedVisualizationMacroParamData,
+    bool useCalculationPoints)
 {
   if (!NFmiSmartToolModifier::UseVisualizationOptimazation())
   {
@@ -2982,6 +2988,15 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetOptimalResolutionMacroParamData(
   }
   else
   {
+    if (useCalculationPoints)
+    {
+        // CalculationPoints laskentoja ei saa harventaa optimaatioilla
+      if (useSpecialResolution) 
+          return resolutionMacroParamData;
+      else
+        return macroParamData;
+    }
+
     auto gridSizeAreaOptimized = optimizedVisualizationMacroParamData->GridXNumber() *
                          optimizedVisualizationMacroParamData->GridYNumber();
     if (!useSpecialResolution)
@@ -3024,7 +3039,8 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::UsedMacroParamData()
           itsExtraMacroParamData->UseSpecialResolution(),
           itsExtraMacroParamData->ResolutionMacroParamData(),
           itsInfoOrganizer->MacroParamData(),
-          itsInfoOrganizer->OptimizedVisualizationMacroParamData());
+          itsInfoOrganizer->OptimizedVisualizationMacroParamData(),
+          !CalculationPoints().empty());
     }
   }
 }

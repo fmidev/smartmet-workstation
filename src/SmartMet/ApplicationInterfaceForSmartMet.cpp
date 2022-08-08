@@ -319,3 +319,8 @@ void ApplicationInterfaceForSmartMet::OpenVisualizationsettingsDialog()
 {
     GetDocument()->OnEditVisualizationsettings();
 }
+
+void ApplicationInterfaceForSmartMet::OpenLogViewer()
+{
+    GetDocument()->OpenLogViewer();
+}

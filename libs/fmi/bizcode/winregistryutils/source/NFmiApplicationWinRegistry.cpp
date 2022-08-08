@@ -13,6 +13,186 @@
 
 #include <unordered_map>
 
+namespace
+{
+    template<typename InputIterator, typename ValueType>
+    InputIterator FindClosest(InputIterator first, InputIterator last, ValueType value)
+    {
+        return std::min_element(first, last, [&](ValueType x, ValueType y)
+            {
+                return std::abs(x - value) < std::abs(y - value);
+            });
+    }
+
+    template<typename Container, typename ValueType>
+    auto RangedFindClosest(Container &container, ValueType value)
+    {
+        return FindClosest(container.begin(), container.end(), value);
+    }
+
+}
+
+// ************************************************
+// ****   NFmiMapViewRangeMeterWinRegistry ********
+// ************************************************
+
+// V‰rit vektorissa: black, white, red, green, blue, yellow, magenta, cyan
+const std::vector<NFmiColor> NFmiMapViewRangeMeterWinRegistry::mColors{ NFmiColor(0,0,0),NFmiColor(1,1,1),NFmiColor(1,0,0),NFmiColor(0,1,0),NFmiColor(0,0,1),NFmiColor(1,1,0),NFmiColor(1,0,1),NFmiColor(0,1,1) };
+const int kRangeInMetersMax = 8 * 1000 * 1000; // 8000 km on jonkinlainen looginen maksimi rangelle
+const std::vector<int> kIncrementLimits{ 100,200,500,1000,2000,5000,10000,20000,50000,100000,200000,500000 };
+
+NFmiMapViewRangeMeterWinRegistry::NFmiMapViewRangeMeterWinRegistry() = default;
+
+bool NFmiMapViewRangeMeterWinRegistry::Init(const std::string & baseRegistryPath)
+{
+    if(mInitialized)
+        throw std::runtime_error("NFmiMapViewRangeMeterWinRegistry::Init: all ready initialized.");
+
+    mInitialized = true;
+    mBaseRegistryPath = baseRegistryPath;
+
+    // HKEY_CURRENT_USER -keys
+    HKEY usedKey = HKEY_CURRENT_USER;
+
+    // K‰ynnistyksen yhteydess‰ moodi on aina pois p‰‰lt‰, joten ei tarvitse tallettaa rekisteriink‰‰n.
+    mModeOn = false;
+    mRangeInMeters = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionName, "\\RangeInMeters", usedKey, 100 * 1000);
+    mChangeIncrementInMeters = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionName, "\\ChangeIncrementInMeters", usedKey, 1000);
+    mColorIndex = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionName, "\\ColorIndex", usedKey, 0);
+
+    return true;
+}
+
+bool NFmiMapViewRangeMeterWinRegistry::ModeOn() const 
+{ 
+    return mModeOn; 
+}
+
+void NFmiMapViewRangeMeterWinRegistry::ModeOn(bool newValue) 
+{
+    mModeOn = newValue; 
+}
+
+void NFmiMapViewRangeMeterWinRegistry::ModeOnToggle()
+{
+    mModeOn = !mModeOn;
+}
+
+int NFmiMapViewRangeMeterWinRegistry::RangeInMeters() const 
+{ 
+    return *mRangeInMeters; 
+}
+
+void NFmiMapViewRangeMeterWinRegistry::RangeInMeters(int newValue) 
+{ 
+    if(newValue < 0)
+        newValue = 0;
+    if(newValue > kRangeInMetersMax)
+        newValue = kRangeInMetersMax;
+
+    *mRangeInMeters = newValue;
+}
+
+bool NFmiMapViewRangeMeterWinRegistry::AdjustRangeValue(FmiDirection direction)
+{
+    auto origValue = RangeInMeters();
+    auto newValue = origValue;
+    if(direction == kUp)
+        newValue += ChangeIncrementInMeters();
+    else
+        newValue -= ChangeIncrementInMeters();
+    RangeInMeters(newValue);
+
+    return origValue != RangeInMeters();
+}
+
+int NFmiMapViewRangeMeterWinRegistry::ChangeIncrementInMeters() const
+{ 
+    return *mChangeIncrementInMeters;
+}
+
+void NFmiMapViewRangeMeterWinRegistry::ChangeIncrementInMeters(int newValue)
+{ 
+    auto closestIter = ::RangedFindClosest(kIncrementLimits, newValue);
+
+    *mChangeIncrementInMeters = *closestIter;
+}
+
+bool NFmiMapViewRangeMeterWinRegistry::AdjustChangeIncrementInMeters(FmiDirection direction)
+{
+    auto origValue = ChangeIncrementInMeters();
+    auto closestIter = ::RangedFindClosest(kIncrementLimits, origValue);
+
+    if(direction == kUp)
+    {
+        if(closestIter != kIncrementLimits.end())
+        {
+            ++closestIter;
+        }
+    }
+    else
+    {
+        if(closestIter != kIncrementLimits.begin())
+        {
+            --closestIter;
+        }
+    }
+
+    if(closestIter != kIncrementLimits.end())
+    {
+        *mChangeIncrementInMeters = *closestIter;
+        return origValue != ChangeIncrementInMeters();
+    }
+    else
+        return false;
+}
+
+bool NFmiMapViewRangeMeterWinRegistry::ToggleChangeIncrementInMeters()
+{
+    auto closestIter = ::RangedFindClosest(kIncrementLimits, ChangeIncrementInMeters());
+    size_t index = closestIter - kIncrementLimits.begin();
+    index++;
+    if(index >= kIncrementLimits.size())
+        index = 0;
+    ChangeIncrementInMeters(kIncrementLimits[index]);
+    return true;
+}
+
+int NFmiMapViewRangeMeterWinRegistry::ColorIndex() const 
+{ 
+    return *mColorIndex; 
+}
+
+void NFmiMapViewRangeMeterWinRegistry::ColorIndex(int newValue)
+{
+    if(mColors.empty())
+        throw std::runtime_error("Error in NFmiMapViewRangeMeterWinRegistry::ColorIndex: mColors vector was empty");
+
+    if(newValue < 0)
+        newValue = static_cast<int>(mColors.size() - 1); // alusta loppuun
+    if(newValue >= mColors.size())
+        newValue = 0; // lopusta alkuun
+
+    *mColorIndex = newValue;
+}
+
+void NFmiMapViewRangeMeterWinRegistry::ToggleColor()
+{
+    auto newColorIndex = ColorIndex() + 1;
+    ColorIndex(newColorIndex);
+}
+
+const NFmiColor& NFmiMapViewRangeMeterWinRegistry::GetSelectedColor() const
+{
+    return mColors[*mColorIndex];
+}
+
+void NFmiMapViewRangeMeterWinRegistry::FixedLatlonPointModeToggle(const NFmiPoint& latlon)
+{ 
+    mUseFixedLatlonPoint = !mUseFixedLatlonPoint; 
+    mFixedLatlonPoint = latlon;
+}
+
 // ************************************************
 // ****   NFmiGriddingPropertiesWinRegistry *******
 // ************************************************
@@ -399,7 +579,6 @@ bool NFmiMapViewWinRegistry::Init(const std::string &baseRegistryPath, int mapIn
     mViewGridSizeStr = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, mSectionName, "\\ViewGridSize", usedKey, "1,1", std::string(mapViewBaseSettingsKey + "ViewGridSize").c_str());
     mCombinedMapModeSelectedBackgroundIndicesStr = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, mSectionName, "\\CombinedMapModeSelectedBackgroundIndices", usedKey, "4:0,0,0,0");
     mCombinedMapModeSelectedOverlayIndicesStr = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, mSectionName, "\\CombinedMapModeSelectedOverlayIndices", usedKey, "4:0,0,0,0");
-
     return true;
 }
 
@@ -729,8 +908,7 @@ bool NFmiConfigurationRelatedWinRegistry::Init(const std::string &baseConfigurat
     mLogViewerCategory = ::CreateRegValue<CachedRegInt>(mBaseConfigurationRegistryPath, sectionName, "\\LogViewerCategory", usedKey, static_cast<int>(CatLog::Category::NoCategory));
     mDroppedDataEditable = ::CreateRegValue<CachedRegBool>(mBaseConfigurationRegistryPath, sectionName, "\\DroppedDataEditable", usedKey, false);
     mUseCombinedMapMode = ::CreateRegValue<CachedRegBool>(mBaseConfigurationRegistryPath, sectionName, "\\UseCombinedMapMode", usedKey, false);
-
-    return true;
+    return mMapViewRangeMeter.Init(mBaseConfigurationRegistryPath);
 }
 
 static boost::shared_ptr<NFmiMapViewWinRegistry> MakeNonMapViewWinRegistryObject()

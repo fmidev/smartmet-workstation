@@ -94,10 +94,13 @@ class NFmiSoundingDataOpt1
   const NFmiLocation &Location() const { return itsLocation; }
   void Location(const NFmiLocation &newValue) { itsLocation = newValue; }
   const NFmiMetTime &Time() const { return itsTime; }
+  void Time(const NFmiMetTime &newValue) { itsTime = newValue; }
   const NFmiMetTime &OriginTime() const { return itsOriginTime; }
+  void OriginTime(const NFmiMetTime &newValue) { itsOriginTime = newValue; }
   bool GetValuesStartingLookingFromPressureLevel(double &T, double &Td, double &P);
   float GetValueAtPressure(FmiParameterName theId, float P);
   float GetValueAtHeight(FmiParameterName theId, float H);
+  float GetValueAtHeightHardWay(FmiParameterName theId, float H);
   bool CalcLCLAvgValues(
       double fromZ, double toZ, double &T, double &Td, double &P, bool fUsePotTandMix);
   bool CalcAvgWindComponentValues(double fromZ, double toZ, double &u, double &v);
@@ -164,6 +167,7 @@ class NFmiSoundingDataOpt1
   bool GetTrValues(double &theTMinValue, double &theTMinPressure);
   bool GetMwValues(double &theMaxWsValue, double &theMaxWsPressure);
   bool MovingSounding() const { return fMovingSounding; }
+  void SetVerticalParamStatus();
 
  private:
   bool CheckLFCIndexCache(FmiLCLCalcType theLCLCalcTypeIn,
@@ -198,7 +202,6 @@ class NFmiSoundingDataOpt1
   std::string MakeCacheString(double T, double Td, double fromP, double toP);
   bool FillHeightDataFromLevels(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
   bool FillPressureDataFromLevels(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
-  void SetVerticalParamStatus();
   bool LookForFilledParamFromInfo(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                   FmiParameterName theId);
   std::deque<float> &GetResizedParamData(

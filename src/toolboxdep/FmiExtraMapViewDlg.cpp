@@ -21,6 +21,7 @@
 #include "CtrlViewKeyboardFunctions.h"
 #include "persist2.h"
 #include "ApplicationInterface.h"
+#include "CombinedMapHandlerInterface.h"
 
 // CFmiExtraMapViewDlg dialog
 
@@ -139,6 +140,15 @@ ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP3_BACKWARD, &CFmiExtraMapViewDlg::O
 ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP4_FORWARD, &CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep4Forward)
 ON_COMMAND(ID_ACCELERATOR_CHANGE_TIME_BY_STEP4_BACKWARD, &CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep4Backward)
 ON_COMMAND(ID_EDIT_VISUALIZATIONSETTINGS_EXTRA_MAP, &CFmiExtraMapViewDlg::OnEditVisualizationsettingsExtraMap)
+ON_COMMAND(ID_ACCELERATOR_EM_CHANGE_ALL_MODEL_DATA_ON_ROW_TO_PREVIOUS_MODEL_RUN, &CFmiExtraMapViewDlg::OnAcceleratorEmChangeAllModelDataOnRowToPreviousModelRun)
+ON_COMMAND(ID_ACCELERATOR_EM_CHANGE_ALL_MODEL_DATA_ON_ROW_TO_NEXT_MODEL_RUN, &CFmiExtraMapViewDlg::OnAcceleratorEmChangeAllModelDataOnRowToNextModelRun)
+ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_MODE_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterModeToggle)
+ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_INCREASE_RANGE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterIncreaseRange)
+ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_DECREASE_RANGE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterDecreaseRange)
+ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_INCREMENT_MODE_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterIncrementModeToggle)
+ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_COLOR_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterColorToggle)
+ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_FIXED_LOCATION_MODE_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterFixedLocationModeToggle)
+ON_COMMAND(ID_ACCELERATOR_LOG_VIEWER_TOOLBOXDEB, &CFmiExtraMapViewDlg::OnAcceleratorLogViewerToolboxdeb)
 END_MESSAGE_MAP()
 
 
@@ -709,7 +719,6 @@ CString CFmiExtraMapViewDlg::GetFinalStatusString(UINT nID, const CString &strPr
 	return CString(CA2T(itsSmartMetDocumentInterface->GetToolTipString(nID, tmpStr).c_str()));
 }
 
-
 void CFmiExtraMapViewDlg::OnAcceleratorLockTimeToMainMap()
 {
     itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->LockToMainMapViewTime(!itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->LockToMainMapViewTime());
@@ -790,18 +799,15 @@ void CFmiExtraMapViewDlg::OnAcceleratorExtraMapPanDown()
     CFmiWin32TemplateHelpers::ArrowKeyMapPan(itsView, itsSmartMetDocumentInterface, NFmiPoint(0, 0.05));
 }
 
-
 void CFmiExtraMapViewDlg::OnAcceleratorExtraMapPanLeft()
 {
     CFmiWin32TemplateHelpers::ArrowKeyMapPan(itsView, itsSmartMetDocumentInterface, NFmiPoint(-0.05, 0));
 }
 
-
 void CFmiExtraMapViewDlg::OnAcceleratorExtraMapPanRight()
 {
     CFmiWin32TemplateHelpers::ArrowKeyMapPan(itsView, itsSmartMetDocumentInterface, NFmiPoint(0.05, 0));
 }
-
 
 void CFmiExtraMapViewDlg::OnAcceleratorExtraMapPanUp()
 {
@@ -813,12 +819,10 @@ void CFmiExtraMapViewDlg::OnAcceleratorExtraMapZoomIn()
     CFmiWin32TemplateHelpers::ArrowKeyMapZoom(itsView, itsSmartMetDocumentInterface, 0.95);
 }
 
-
 void CFmiExtraMapViewDlg::OnAcceleratorExtraMapZoomOut()
 {
     CFmiWin32TemplateHelpers::ArrowKeyMapZoom(itsView, itsSmartMetDocumentInterface, 1.05);
 }
-
 
 void CFmiExtraMapViewDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 {
@@ -886,8 +890,78 @@ void CFmiExtraMapViewDlg::OnAcceleratorChangeTimeByStep4Backward()
 	itsSmartMetDocumentInterface->ChangeTime(4, kBackward, itsMapViewDescTopIndex, 1);
 }
 
-
 void CFmiExtraMapViewDlg::OnEditVisualizationsettingsExtraMap()
 {
 	itsSmartMetDocumentInterface->OpenVisualizationsettingsDialog();
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorEmChangeAllModelDataOnRowToPreviousModelRun()
+{
+	itsSmartMetDocumentInterface->GetCombinedMapHandlerInterface().setModelRunOffsetForAllModelDataOnActiveRow(itsMapViewDescTopIndex, kBackward);
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorEmChangeAllModelDataOnRowToNextModelRun()
+{
+	itsSmartMetDocumentInterface->GetCombinedMapHandlerInterface().setModelRunOffsetForAllModelDataOnActiveRow(itsMapViewDescTopIndex, kForward);
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterModeToggle()
+{
+	itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().ModeOnToggle();
+	ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterIncreaseRange()
+{
+	auto& mapViewRangeMeter = itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	if(mapViewRangeMeter.ModeOn())
+	{
+		mapViewRangeMeter.AdjustRangeValue(kUp);
+		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+	}
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterDecreaseRange()
+{
+	auto& mapViewRangeMeter = itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	if(mapViewRangeMeter.ModeOn())
+	{
+		mapViewRangeMeter.AdjustRangeValue(kDown);
+		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+	}
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterIncrementModeToggle()
+{
+	auto& mapViewRangeMeter = itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	if(mapViewRangeMeter.ModeOn())
+	{
+		mapViewRangeMeter.ToggleChangeIncrementInMeters();
+		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+	}
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterColorToggle()
+{
+	auto& mapViewRangeMeter = itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	if(mapViewRangeMeter.ModeOn())
+	{
+		mapViewRangeMeter.ToggleColor();
+		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+	}
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterFixedLocationModeToggle()
+{
+	auto& mapViewRangeMeter = itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	if(mapViewRangeMeter.ModeOn())
+	{
+		mapViewRangeMeter.FixedLatlonPointModeToggle(itsSmartMetDocumentInterface->ToolTipLatLonPoint());
+		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+	}
+}
+
+void CFmiExtraMapViewDlg::OnAcceleratorLogViewerToolboxdeb()
+{
+	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenLogViewer();
 }

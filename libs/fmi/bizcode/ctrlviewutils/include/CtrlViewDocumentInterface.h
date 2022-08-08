@@ -77,6 +77,8 @@ class NFmiFixedDrawParamSystem;
 class NFmiMacroPathSettings;
 class WmsSupportInterface;
 class CombinedMapHandlerInterface;
+class TrueMapViewSizeInfo;
+class NFmiSeaLevelPlumeData;
 
 namespace Imagine
 {
@@ -304,7 +306,10 @@ public:
     virtual std::vector<NFmiProducer>& ExtraSoundingProducerList(void) = 0;
     virtual bool ShowWarningMarkersOnMap(int theDescTopIndex) = 0;
     virtual CDC* MapBlitDC(int theDescTopIndex) = 0;
+    virtual int ToolTipColumnIndex() const = 0;
     virtual void ToolTipColumnIndex(int newIndex) = 0;
+    virtual int ToolTipMapViewDescTopIndex() const = 0;
+    virtual void ToolTipMapViewDescTopIndex(int newIndex) = 0;
     virtual bool HasActiveViewChanged(void) = 0;
     virtual void LastBrushedViewTime(const NFmiMetTime& newTime) = 0;
     virtual void LastBrushedViewRealRowIndex(int newRealRowIndex) = 0;
@@ -397,7 +402,8 @@ public:
     virtual void SetBorderDrawDirtyState(int theDescTopIndex, CountryBorderDrawDirtyState newState) = 0;
     virtual double SingleMapViewHeightInMilliMeters(int theDescTopIndex) const = 0;
     virtual bool IsTimeControlViewVisible(int theDescTopIndex) const = 0;
-
+    virtual TrueMapViewSizeInfo&  GetTrueMapViewSizeInfo(int theDescTopIndex) const = 0;
+    virtual NFmiSeaLevelPlumeData& SeaLevelPlumeData() const = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem(void) = 0;

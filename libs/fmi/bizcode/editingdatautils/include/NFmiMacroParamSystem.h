@@ -49,6 +49,7 @@ public:
 	bool FindMacroParamPath(const std::string& theRelativeMacroParamPath);
 	int CurrentFolderIndex(void) const {return itsCurrentFolderIndex;}
     boost::shared_ptr<NFmiMacroParam> GetWantedMacro(const std::string& theTotalFileName) const;
+	bool ReloadDrawParamFromFile(const std::string& theTotalFileName);
 	const std::vector<std::string>& MacroParamSpeedSearchPathNames(bool updateList);
 	const std::string& CurrentPath(void) const {return itsCurrentPath;}
 	std::string RelativePath(void) const;

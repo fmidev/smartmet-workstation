@@ -109,6 +109,7 @@
 #include "ParamHandlerViewFunctions.h"
 #include "MathHelper.h"
 #include "ColorStringFunctions.h"
+#include "NFmiValueString.h"
 
 #ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupport.h"
@@ -1795,26 +1796,26 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
         return;
     }
     itsToolBox = theGTB;
-
+	auto realRowIndex = CalcRealRowIndex();
     auto registeredLayers = itsCtrlViewDocumentInterface->GetWmsSupport()
-        .getRegisteredLayers(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex);
-    auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
+        .getRegisteredLayers(realRowIndex, itsViewGridColumnNumber, itsMapViewDescTopIndex);
+    auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, realRowIndex);
 
     for (const auto& registered : registeredLayers)
     {
         if(!drawParamList->Find(registered, nullptr, NFmiInfoData::kWmsData))
         {
-            itsCtrlViewDocumentInterface->GetWmsSupport().unregisterDynamicLayer(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
+            itsCtrlViewDocumentInterface->GetWmsSupport().unregisterDynamicLayer(realRowIndex, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
         }
         else
         {
             // Viel‰ jos piirto-optioissa ei ole legendan piirto p‰‰ll‰, poistetaan rekisterˆidyist‰ (en ymm‰rr‰ logiikkaa, miten sen saa taas p‰‰lle)
             if(!drawParamList->Current()->ShowColorLegend())
-                itsCtrlViewDocumentInterface->GetWmsSupport().unregisterDynamicLayer(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
+                itsCtrlViewDocumentInterface->GetWmsSupport().unregisterDynamicLayer(realRowIndex, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
         }
     }
 
-    auto legends = itsCtrlViewDocumentInterface->GetWmsSupport().getLegends(itsViewGridRowNumber, itsViewGridColumnNumber, itsMapViewDescTopIndex);
+    auto legends = itsCtrlViewDocumentInterface->GetWmsSupport().getLegends(realRowIndex, itsViewGridColumnNumber, itsMapViewDescTopIndex);
     if(legends.empty())
     {
         return;
@@ -1903,7 +1904,8 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
                 Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(startPoint.X() + bitmapSize.X() - hSelves.horizontalShift - legendW), static_cast<Gdiplus::REAL>(startPoint.Y() + bitmapSize.Y() - hSelves.verticalShift - legendH), static_cast<Gdiplus::REAL>(legendW), static_cast<Gdiplus::REAL>(legendH));
                 NFmiRect sourceRect(0, 0, legendW, legendH);
                 Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on t‰ysin l‰pin‰kyv‰, 0.5 = semi transparent ja 1.0 = opaque
-                CtrlView::DrawBitmapToDC(itsToolBox->GetDC(), *legend.get()->mImage, sourceRect, destRect, alpha, alpha >= 1.f ? true : false);
+				bool doNearestInterpolation = alpha >= 1.f ? true : false;
+				CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *legend.get()->mImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha), itsGdiPlusGraphics);
 
                 // shift
                 hSelves.horizontalShift += legendW;
@@ -1925,7 +1927,8 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
                 Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(startPoint.X() + bitmapSize.X() - vSelves.horizontalShift - legendW), static_cast<Gdiplus::REAL>(startPoint.Y() + vSelves.verticalShift), static_cast<Gdiplus::REAL>(legendW), static_cast<Gdiplus::REAL>(legendH));
                 NFmiRect sourceRect(0, 0, legendW, legendH);
                 Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on t‰ysin l‰pin‰kyv‰, 0.5 = semi transparent ja 1.0 = opaque
-                CtrlView::DrawBitmapToDC(itsToolBox->GetDC(), *legend.get()->mImage, sourceRect, destRect, alpha, alpha >= 1.f ? true : false);
+				bool doNearestInterpolation = alpha >= 1.f ? true : false;
+				CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *legend.get()->mImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha), itsGdiPlusGraphics);
 
                 // shift
                 vSelves.verticalShift += legendH;
@@ -2564,6 +2567,9 @@ bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long
 		}
 		if((theKey & kCtrlKey) && (theKey & kShiftKey))
 		{
+			if(DoRangeMeterMouseWheelAdjustRangeChecks(theDelta))
+				return true;
+
             // S‰‰det‰‰n kaikkia ruudulla olevia level/satel kanavia jne. kerrallaan
             bool status = false;
             for(itsViewList->Reset(); itsViewList->Next(); ) // hybrid data muutos ensin
@@ -2581,6 +2587,9 @@ bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long
 		}
 		else if(theKey & kShiftKey) // jos shift-nappi pohjassa muutetaan aktiivisen piirto-layerin hybrid-datojen leveli‰ ylˆs/alas tai satel datan kanavaa
 		{
+			if(DoRangeMeterMouseWheelAdjustIncrementChecks(theDelta))
+				return true;
+
 			bool status = false;
 			for(itsViewList->Reset(); itsViewList->Next(); ) // hybrid data muutos ensin
 			{
@@ -2601,6 +2610,36 @@ bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long
 			else
 				return itsCtrlViewDocumentInterface->ScrollViewRow(itsMapViewDescTopIndex, -1);
 		}
+	}
+	return false;
+}
+
+bool NFmiStationViewHandler::DoRangeMeterMouseWheelAdjustRangeChecks(short theDelta)
+{
+	auto &rangeMeter = itsCtrlViewDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	if(rangeMeter.ModeOn())
+	{
+		auto direction = (theDelta > 0) ? kUp : kDown;
+		if(rangeMeter.AdjustRangeValue(direction))
+		{
+			ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+		}
+		return true;
+	}
+	return false;
+}
+
+bool NFmiStationViewHandler::DoRangeMeterMouseWheelAdjustIncrementChecks(short theDelta)
+{
+	auto& rangeMeter = itsCtrlViewDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	if(rangeMeter.ModeOn())
+	{
+		auto direction = (theDelta > 0) ? kUp : kDown;
+		if(rangeMeter.AdjustChangeIncrementInMeters(direction))
+		{
+			ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+		}
+		return true;
 	}
 	return false;
 }
@@ -3637,12 +3676,14 @@ void NFmiStationViewHandler::DrawMap(NFmiToolBox * theGTB, const NFmiRect& theRe
 {
 	if(theGTB)
 	{
-		if(itsCtrlViewDocumentInterface->Printing() == false && itsCtrlViewDocumentInterface->MapBlitDC(itsMapViewDescTopIndex))
+		auto* mapDc = itsCtrlViewDocumentInterface->MapBlitDC(itsMapViewDescTopIndex);
+		if(!itsCtrlViewDocumentInterface->Printing() && mapDc)
 		{
-			theGTB->DrawDC(itsCtrlViewDocumentInterface->MapBlitDC(itsMapViewDescTopIndex), theRect);
+			theGTB->DrawDC(mapDc, theRect);
 		}
-		else // else on hitaampi tapa piirt‰‰ kartta, joka poistunee
+		else 
 		{
+			// Else on hitaampi tapa , jota k‰ytet‰‰n ainakin printtauksen yhteydess‰
             auto mapHandler = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex);
 			Gdiplus::Bitmap *aBitmap = mapHandler->GetBitmap();
 			if(aBitmap)
@@ -3651,7 +3692,7 @@ void NFmiStationViewHandler::DrawMap(NFmiToolBox * theGTB, const NFmiRect& theRe
 				CRect mfcRect;
 				theGTB->ConvertRect(itsMapRect, mfcRect);
 				Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(mfcRect.left), static_cast<Gdiplus::REAL>(mfcRect.top), static_cast<Gdiplus::REAL>(mfcRect.Width()), static_cast<Gdiplus::REAL>(mfcRect.Height()));
-                CtrlView::DrawBitmapToDC(theGTB->GetDC(), *aBitmap, bitmapRect, destRect, true);
+                CtrlView::DrawBitmapToDC_4(theGTB->GetDC(), *aBitmap, bitmapRect, destRect, true, NFmiImageAttributes(), itsGdiPlusGraphics);
 			}
 		}
 		if(itsCtrlViewDocumentInterface->ProjectionCurvatureInfo()->GetDrawingMode() == NFmiProjectionCurvatureInfo::kOverMap)
@@ -3671,7 +3712,7 @@ void NFmiStationViewHandler::DrawOverMap(NFmiToolBox * theGTB, const NFmiRect& t
         auto destRect = MapDraw::getDestRect(mfcRect);
 
         int wantedDrawOverMapMode = 1; // means overlay is drawn after all the dynamic data is drawn
-        MapDraw::drawOverlayMap(itsCtrlViewDocumentInterface, itsMapViewDescTopIndex, wantedDrawOverMapMode, theGTB->GetDC(), destRect, bitmapSize);
+        MapDraw::drawOverlayMap(itsCtrlViewDocumentInterface, itsMapViewDescTopIndex, wantedDrawOverMapMode, theGTB->GetDC(), destRect, bitmapSize, itsGdiPlusGraphics);
 	}
 }
 
@@ -3730,13 +3771,14 @@ void NFmiStationViewHandler::DrawMapInMouseMove(NFmiToolBox * theGTB, const NFmi
 {
 	if(theGTB)
 	{
-		if(itsCtrlViewDocumentInterface->MapBlitDC(itsMapViewDescTopIndex))
+		auto* mapDc = itsCtrlViewDocumentInterface->MapBlitDC(itsMapViewDescTopIndex);
+		if(mapDc)
 		{
 			NFmiPoint place(theRect.Place());
 			place -= GetFrame().Place();
 			NFmiPoint size(1,1); // koolla ei ole todellisuudessa merkityst‰
 			NFmiRect sourceRect(place, size);
-			theGTB->DrawDC(itsCtrlViewDocumentInterface->MapBlitDC(itsMapViewDescTopIndex), theRect, sourceRect);
+			theGTB->DrawDC(mapDc, theRect, sourceRect);
 		}
 		else
 		{
@@ -3764,6 +3806,7 @@ void NFmiStationViewHandler::StoreToolTipDataInDoc(const NFmiPoint& theRelativeP
     itsCtrlViewDocumentInterface->ToolTipTime(itsTime);
     itsCtrlViewDocumentInterface->ToolTipRealRowIndex(CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
     itsCtrlViewDocumentInterface->ToolTipColumnIndex(itsViewGridColumnNumber);
+	itsCtrlViewDocumentInterface->ToolTipMapViewDescTopIndex(itsMapViewDescTopIndex);
 }
 
 void NFmiStationViewHandler::DoBrushingUndoRituals(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
@@ -3889,11 +3932,204 @@ void NFmiStationViewHandler::DrawOverBitmapThings(NFmiToolBox * theGTB, bool /* 
 
     DrawMouseCursorHelperCrossHair();
     DrawSelectedSynopFromGridView();
+	DrawMapViewRangeMeterData();
 
     DrawParamView(theGTB); // piirrett‰v‰ viimeiseksi kartan p‰‰lle!!!
     DrawAutocompleteLocations(); // t‰m‰ ottaa huomioon, ettei piirr‰ parametri boxin p‰‰lle!
     DrawCurrentFrame(theGTB);
     CleanGdiplus();
+}
+
+#ifdef max
+#undef max
+#undef min
+#endif
+static int CalcPenWidthInPixels(float penSizeInMM, float pixelsPerMMOnScreen)
+{
+	return std::max(1, boost::math::iround(penSizeInMM * pixelsPerMMOnScreen));
+}
+
+static std::vector<std::vector<NFmiPoint>> SplitPossibleOverEdgeLongitudeJumps(const std::vector<NFmiPoint>& latlonPolyline)
+{
+	std::vector<std::vector<NFmiPoint>> splitPolylines;
+	if(!latlonPolyline.empty())
+	{
+		size_t lastSplitIndex = 0;
+		for(size_t index = 0; index < latlonPolyline.size() - 1; index++)
+		{
+			const auto& p1 = latlonPolyline[index];
+			auto index2 = index + 1;
+			const auto& p2 = latlonPolyline[index2];
+			if(std::fabs(p1.X() - p2.X()) > 300.)
+			{
+				splitPolylines.push_back(std::vector<NFmiPoint>(latlonPolyline.begin() + lastSplitIndex, latlonPolyline.begin() + index2));
+				lastSplitIndex = index2;
+			}
+		}
+
+		if(splitPolylines.empty())
+		{
+			splitPolylines.push_back(latlonPolyline);
+		}
+		else
+		{
+			splitPolylines.push_back(std::vector<NFmiPoint>(latlonPolyline.begin() + lastSplitIndex, latlonPolyline.end()));
+		}
+	}
+	return splitPolylines;
+}
+
+std::vector<NFmiPoint> NFmiStationViewHandler::ConvertLatlonToRelativePoints(const std::vector<NFmiPoint>& latlonPoints)
+{
+	std::vector<NFmiPoint> relativePoints;
+	relativePoints.reserve(latlonPoints.size());
+	for(const auto& latlon : latlonPoints)
+	{
+		relativePoints.push_back(LatLonToViewPoint(latlon));
+	}
+	return relativePoints;
+}
+
+void NFmiStationViewHandler::DrawMapViewRangeMeterData()
+{
+	auto &mapViewRangeMeter = itsCtrlViewDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	if(mapViewRangeMeter.ModeOn())
+	{
+		auto toolTipRealRowIndex = itsCtrlViewDocumentInterface->ToolTipRealRowIndex();
+		auto toolTipColumnIndex = itsCtrlViewDocumentInterface->ToolTipColumnIndex();
+		auto toolTipMapViewDescTopIndex = itsCtrlViewDocumentInterface->ToolTipMapViewDescTopIndex();
+		if(toolTipRealRowIndex == CalcRealRowIndex() && toolTipColumnIndex == itsViewGridColumnNumber && toolTipMapViewDescTopIndex == itsMapViewDescTopIndex)
+		{
+			double rangeInMeters = mapViewRangeMeter.RangeInMeters();
+			auto incrementInMeters = mapViewRangeMeter.ChangeIncrementInMeters();
+			const auto& color = mapViewRangeMeter.GetSelectedColor();
+			const auto& usedLatlon = mapViewRangeMeter.UseFixedLatlonPoint() ? mapViewRangeMeter.FixedLatlonPoint() : itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
+			NFmiLocation usedLocation(usedLatlon);
+			std::vector<NFmiPoint> latlonCirclePoints;
+			double usedAngleStep = 2.;
+			latlonCirclePoints.reserve(boost::math::iround(360. / usedAngleStep) + 1);
+			for(auto currentAngle = 0.; currentAngle <= 360.; currentAngle += usedAngleStep)
+			{
+				auto currentLocation = usedLocation.GetLocation(currentAngle, rangeInMeters, itsMapArea->PacificView());
+				latlonCirclePoints.push_back(currentLocation.GetLocation());
+			}
+
+			auto pixelsPerMM = static_cast<float>(itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_y);
+			float lineWidthInMM = 0.3f;
+			float lineWidthInPixels = static_cast<float>(::CalcPenWidthInPixels(lineWidthInMM, pixelsPerMM));
+
+			// Piirr‰ range-ympyr‰
+			auto splitLatlonCirclePoints = ::SplitPossibleOverEdgeLongitudeJumps(latlonCirclePoints);
+			for(const auto &latlonCirclePoints : splitLatlonCirclePoints)
+			{
+				auto relativeCirclePoints = ConvertLatlonToRelativePoints(latlonCirclePoints);
+				auto gdiPoints = CtrlView::Relative2GdiplusPolyLine(itsToolBox, relativeCirclePoints, NFmiPoint());
+				int lineStyle = 0; // 0=yhten‰inen viiva
+				GdiPlusLineInfo lineInfo(lineWidthInPixels, color, lineStyle);
+				CtrlView::DrawGdiplusCurve(*itsGdiPlusGraphics, gdiPoints, lineInfo, false, 0, itsCtrlViewDocumentInterface->Printing());
+			}
+
+			// Piirr‰ hiiren osoittimen kohdalle pikku risti
+			auto tooltipRelativePosition = LatLonToViewPoint(usedLatlon);
+			auto tooltipGdiPosition = CtrlView::Relative2GdiplusPoint(itsToolBox, tooltipRelativePosition);
+			float crossHairLengthInMM = 2.5f;
+			float crossHairLengthInPixels = crossHairLengthInMM * pixelsPerMM;
+			// vaaka viiva
+			int line1_x1 = boost::math::iround(tooltipGdiPosition.X - crossHairLengthInPixels);
+			int line1_x2 = boost::math::iround(tooltipGdiPosition.X + crossHairLengthInPixels);
+			int line1_y1 = boost::math::iround(tooltipGdiPosition.Y);
+			int line1_y2 = boost::math::iround(tooltipGdiPosition.Y);
+			CtrlView::DrawLine(*itsGdiPlusGraphics, line1_x1, line1_y1, line1_x2, line1_y2, color, lineWidthInPixels);
+			// pysty viiva
+			int line2_x1 = boost::math::iround(tooltipGdiPosition.X);
+			int line2_x2 = boost::math::iround(tooltipGdiPosition.X);
+			int line2_y1 = boost::math::iround(tooltipGdiPosition.Y - crossHairLengthInPixels);
+			int line2_y2 = boost::math::iround(tooltipGdiPosition.Y + crossHairLengthInPixels);
+			CtrlView::DrawLine(*itsGdiPlusGraphics, line2_x1, line2_y1, line2_x2, line2_y2, color, lineWidthInPixels);
+
+			// Piirret‰‰n avustavaa teksti‰ karttaruudun oikeaan alakulmaan
+			auto textRelativeLocation = GetFrame().BottomRight();
+			std::wstring fontName = L"arial";
+			double fontSizeInMM = 6.f;
+			double relativeTextLineHeight = itsToolBox->SY(boost::math::iround(fontSizeInMM * pixelsPerMM));
+
+			textRelativeLocation.Y(textRelativeLocation.Y() - relativeTextLineHeight);
+			std::string usedLatlonStr = "Used location: ";
+			usedLatlonStr += CtrlViewUtils::GetFixedLatlonStr(usedLatlon);
+			CtrlView::DrawTextToRelativeLocation(
+				*itsGdiPlusGraphics,
+				color,
+				fontSizeInMM,
+				usedLatlonStr,
+				textRelativeLocation,
+				pixelsPerMM,
+				itsToolBox,
+				fontName,
+				kRight);
+
+			textRelativeLocation.Y(textRelativeLocation.Y() - relativeTextLineHeight);
+			std::string fixedLatlonStr = "Fixed location mode: ";
+			fixedLatlonStr += mapViewRangeMeter.UseFixedLatlonPoint() ? "On" : "Off";
+			fixedLatlonStr += " (CTRL + ALT + Y)";
+			CtrlView::DrawTextToRelativeLocation(
+				*itsGdiPlusGraphics,
+				color,
+				fontSizeInMM,
+				fixedLatlonStr,
+				textRelativeLocation,
+				pixelsPerMM,
+				itsToolBox,
+				fontName,
+				kRight);
+
+			textRelativeLocation.Y(textRelativeLocation.Y() - relativeTextLineHeight);
+			std::string rangeIncrementStr = "Range increment: ";
+			double rangeIncrementInKm = mapViewRangeMeter.ChangeIncrementInMeters() / 1000.;
+			auto rangeIncrementInKmStr = NFmiValueString::GetStringWithMaxDecimalsSmartWay(rangeIncrementInKm, 1);
+			rangeIncrementStr += rangeIncrementInKmStr;
+			rangeIncrementStr += " km";
+			CtrlView::DrawTextToRelativeLocation(
+				*itsGdiPlusGraphics,
+				color,
+				fontSizeInMM,
+				rangeIncrementStr,
+				textRelativeLocation,
+				pixelsPerMM,
+				itsToolBox,
+				fontName,
+				kRight);
+
+			textRelativeLocation.Y(textRelativeLocation.Y() - relativeTextLineHeight);
+			std::string rangeStr = "Range from pointer: ";
+			double rangeInKm = rangeInMeters / 1000.;
+			auto rangeInKmStr = NFmiValueString::GetStringWithMaxDecimalsSmartWay(rangeInKm, 1);
+			rangeStr += rangeInKmStr;
+			rangeStr += " km";
+			CtrlView::DrawTextToRelativeLocation(
+				*itsGdiPlusGraphics,
+				color,
+				fontSizeInMM,
+				rangeStr,
+				textRelativeLocation,
+				pixelsPerMM,
+				itsToolBox,
+				fontName,
+				kRight);
+
+			textRelativeLocation.Y(textRelativeLocation.Y() - relativeTextLineHeight);
+			std::string rangeTitleStr = "Range meter (press Y on/off)";
+			CtrlView::DrawTextToRelativeLocation(
+				*itsGdiPlusGraphics,
+				color,
+				fontSizeInMM,
+				rangeTitleStr,
+				textRelativeLocation,
+				pixelsPerMM,
+				itsToolBox,
+				fontName,
+				kRight);
+		}
+	}
 }
 
 static bool IsRectIntersecting(const NFmiRect &theRect, std::vector<NFmiRect> &theExistingRects)

@@ -7,6 +7,7 @@
 #include "NFmiApplicationWinRegistry.h"
 #include "catlog/catlog.h"
 #include "ModelDataServerConfiguration.h"
+#include <boost/algorithm/string.hpp>
 
 
 /*
@@ -749,7 +750,7 @@ const NFmiProducer& NFmiMTATempSystem::CurrentProducer(void) const
 void NFmiMTATempSystem::CurrentProducer(const NFmiProducer &newValue)
 {
 	itsSelectedProducer = -1;
-	for(int i=0; i<static_cast<int>(itsPossibleProducerList.size()); i++)
+	for(int i=0; i < static_cast<int>(itsPossibleProducerList.size()); i++)
 	{
 		if(itsPossibleProducerList[i] == newValue)
 		{
@@ -810,6 +811,55 @@ static const NFmiMTATempSystem::SelectedProducerContainer MakeSoundingComparison
     }
 
     return finalComparisonProducers;
+}
+
+int NFmiMTATempSystem::GetSelectedProducerIndex(bool getLimitCheckedIndex) const 
+{ 
+	if(getLimitCheckedIndex)
+	{
+		if(itsSelectedProducerIndex >= itsSoundingComparisonProducers.size())
+		{
+			if(itsSoundingComparisonProducers.empty())
+				return 0;
+			else
+				return static_cast<int>(itsSoundingComparisonProducers.size() - 1);
+		}
+	}
+
+	return itsSelectedProducerIndex; 
+}
+
+void NFmiMTATempSystem::SetSelectedProducerIndex(int newValue, bool ignoreHighLimit)
+{ 
+	if(newValue < 0 || itsSoundingComparisonProducers.empty())
+		newValue = 0;
+	
+	// ignoreHighLimit tapaus kiinnostaa vain näyttömakron latauksen yhteydessä
+	if(!ignoreHighLimit && newValue >= itsSoundingComparisonProducers.size())
+	{
+		newValue = static_cast<int>(itsSoundingComparisonProducers.size() - 1);
+	}
+
+	itsSelectedProducerIndex = newValue; 
+}
+
+void NFmiMTATempSystem::ToggleSelectedProducerIndex(FmiDirection direction)
+{
+	if(direction == kUp)
+		itsSelectedProducerIndex++;
+	else
+		itsSelectedProducerIndex--;
+
+	// Jos indeksi menee ali tai yli rajojen, mennään ympäri toiseen päähän
+	if(itsSelectedProducerIndex < 0)
+	{
+		if(itsSoundingComparisonProducers.empty())
+			itsSelectedProducerIndex = 0;
+		else
+			itsSelectedProducerIndex = static_cast<int>(itsSoundingComparisonProducers.size() - 1);
+	}
+	else if(itsSelectedProducerIndex >= itsSoundingComparisonProducers.size())
+		itsSelectedProducerIndex = 0;
 }
 
 void NFmiMTATempSystem::Write(std::ostream& os) const
@@ -942,12 +992,59 @@ void NFmiMTATempSystem::Write(std::ostream& os) const
     extraData.Add(MakeSecondaryDataLineInfoString()); // WS + N + RH lineInfor yhtenä stringinä on 1. uusi string arvo extroissa
     extraData.Add(::MakeProducerContainerServerUsageString(itsSoundingComparisonProducers)); // 2. uusi string arvo extroissa on valittujen tuottajien server/local data käyttötila tyyliin "0 1 0 0"
 	extraData.Add(itsHodografViewData.GenerateSettingsString()); // 3. uusi string arvo extroissa on hodografi säädöt
+	extraData.Add(MakeSelectedProducerStringForViewMacro()); // 4. uusi string arvo extroissa on valitun tuottajan indeksiin liittyvät arvot
 
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
 		throw std::runtime_error("NFmiMTATempSystem::Write failed");
+}
+
+// Tehdään stringi, jossa on valitun tuottajan producer-id ja valitun tuottajan index pilkuilla eroteltuna.
+// Oletetaan että itsSelectedProducerIndex on 2 (eli 3. valituista multivalinta tuottajista) ja se on Gfs
+// tuottaja (id = 54), tällöin tehdään seuraava stringi: "2,54"
+// Huom! Jos valittu index on suurempi kuin on valittuja tuottajia, käytetään silloin listan viimeistä tuottajaa,
+// mutta originaali indeksiä, joka osoittaa tuottaja listan ulkopuolelle.
+std::string NFmiMTATempSystem::MakeSelectedProducerStringForViewMacro() const
+{
+	auto usedProducerIndex = GetSelectedProducerIndex(true);
+	auto actualProducerIndex = GetSelectedProducerIndex(false);
+	auto pointedProducerId = 0;
+	if(!itsSoundingComparisonProducers.empty())
+	{
+		pointedProducerId = static_cast<int>(itsSoundingComparisonProducers[usedProducerIndex].GetIdent());
+	}
+	std::string producerStr = std::to_string(actualProducerIndex);
+	producerStr += ",";
+	producerStr += std::to_string(pointedProducerId);
+	return producerStr;
+}
+
+void NFmiMTATempSystem::SetSelectedProducerFromViewMacroString(const std::string& str)
+{
+	std::vector<std::string> parts;
+	boost::split(parts, str, boost::is_any_of(","));
+	if(parts.size() == 2)
+	{
+		try
+		{
+			auto producerIndex = std::stoi(parts[0]);
+			auto producerId = std::stoi(parts[1]);
+			auto iter = std::find_if(itsSoundingComparisonProducers.begin(), itsSoundingComparisonProducers.end(),
+				[=](const auto& producerInfo) { return static_cast<int>(producerInfo.GetIdent()) == producerId; });
+			if(iter != itsSoundingComparisonProducers.end())
+			{
+				itsSelectedProducerIndex = static_cast<int>(iter - itsSoundingComparisonProducers.begin());
+			}
+			else
+			{
+				itsSelectedProducerIndex = producerIndex;
+			}
+		}
+		catch(...)
+		{ }
+	}
 }
 
 // Jos textual-sounding sivuikkuna on auki, avataan se myös legacy näyttömakroissa, 
@@ -1148,6 +1245,9 @@ void NFmiMTATempSystem::Read(std::istream& is)
     itsSoundingComparisonProducers = ::MakeSoundingComparisonProducersFromLegacyData(legacySoundingComparisonProducers, producerContainerServerUsageString);
 	if(extraData.itsStringValues.size() > 2)
 		itsHodografViewData.InitializeFromSettingsString(extraData.itsStringValues[2]);
+	itsSelectedProducerIndex = 0;
+	if(extraData.itsStringValues.size() > 3)
+		SetSelectedProducerFromViewMacroString(extraData.itsStringValues[3]);
 
 	if(is.fail())
 		throw std::runtime_error("NFmiMTATempSystem::Read failed");
@@ -1231,6 +1331,7 @@ void NFmiMTATempSystem::InitFromViewMacro(const NFmiMTATempSystem &theOther)
 	// Pitäisikö myös itsSoundingDataServerConfigurations asetukset kopioida tässä???
 	// itsSoundingDataServerConfigurations = theOther.itsSoundingDataServerConfigurations;
 	itsHodografViewData = theOther.itsHodografViewData;
+	itsSelectedProducerIndex = theOther.itsSelectedProducerIndex;
 }
 
 // Säädetään kaikki aikaa liittyvät jutut parametrina annettuun aikaan, että SmartMet säätyy ladattuun CaseStudy-dataan mahdollisimman hyvin.

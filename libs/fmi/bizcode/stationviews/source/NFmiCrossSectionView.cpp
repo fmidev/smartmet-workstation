@@ -300,7 +300,6 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 		{
 			itsExistingLabels.clear(); //EL
 			itsDrawParam = dpList->Current(); // asetetaan todella käytetty drawParam käyttöön
-			SetupUsedDrawParam(); // tämä updeittaa mm. macroParam-drawparamin
 			itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, true, true, fGetCurrentDataFromQ2Server);
             NFmiStationView::SetupPossibleWindMetaParamData();
             if(itsInfo == 0 || itsDrawParam == 0)

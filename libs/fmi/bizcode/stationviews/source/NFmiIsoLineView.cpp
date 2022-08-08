@@ -391,7 +391,7 @@ void NFmiIsoLineView::EndTransparentDraw(void)
 
         // alpha: 0 on täysin läpinäkyvä, 0.5 = semi transparent ja 1.0 = opaque
         Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f;
-        CtrlView::DrawBitmapToDC(itsToolBox->GetDC(), gdiBitmap, sourceRect, destRect, gFullyTransparentColor, alpha, true);
+        CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), gdiBitmap, sourceRect, destRect, true, NFmiImageAttributes(Gdiplus::Color(gFullyTransparentColor), alpha), itsGdiPlusGraphics);
 
         // lopuksi tuhotaan piirto otukset
         itsTransparencyDrawDC->DeleteDC();
@@ -1144,7 +1144,6 @@ static void LocationsXYForArchiveData(NFmiDataMatrix<NFmiPoint> & theMatrix, con
 void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
 {
     LabelBox::InitPixelPerMMRatio(itsToolBox);
-    SetupUsedDrawParam();
 
     NFmiIsoLineData isoLineData;
 
@@ -2220,7 +2219,6 @@ void NFmiIsoLineView::DrawIsoLinesWithToolMaster(void)
 {
     if(itsInfo)
     {
-        SetupUsedDrawParam();
         NFmiIsoLineData isoLineData;
         NFmiRect zoomedAreaRect;
         if(FillGridRelatedData(isoLineData, zoomedAreaRect))

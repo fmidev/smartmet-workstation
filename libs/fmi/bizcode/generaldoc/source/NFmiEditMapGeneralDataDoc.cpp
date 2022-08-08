@@ -139,6 +139,9 @@
 #include "NFmiFastDrawParamList.h"
 #include "NFmiParameterInterpolationFixer.h"
 #include "NFmiQueryDataKeeper.h"
+#include "NFmiSeaLevelPlumeData.h"
+#include "NFmiDataModifierModMinMax.h"
+#include "NFmiDataModifierModAvg.h"
 
 #include "AnimationProfiler.h"
 
@@ -470,6 +473,12 @@ NFmiMetEditorModeDataWCTR* EditorModeDataWCTR(void)
 	return GetUsedDataLoadingInfo().MetEditorModeDataWCTR();
 }
 
+void TestDataModifiers()
+{
+	NFmiDataModifierModMinMax::DoSomeTestRoutines();
+	NFmiDataModifierModAvg::DoSomeTestRoutines();
+}
+
 bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::map<std::string, std::string> &mapViewsPositionMap, std::map<std::string, std::string> &otherViewsPositionPosMap)
 {
 /* // tämä on remote debug sessiota varten MSVC71 feature
@@ -478,6 +487,8 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 		int x = 1;
 	}
 */
+//	TestDataModifiers();
+
 	itsBasicConfigurations = theBasicConfigurations; // kopsataan CSmartMetApp:issa alustettu perusasetus GenDocin dataosaan
 	CombinedMapHandlerInterface::verboseLogging(itsBasicConfigurations.Verbose());
 
@@ -581,6 +592,8 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 	InitTimeSerialParameters();
     InitColorContourLegendSettings();
 	InitParameterInterpolationFixer();
+	InitSeaLevelPlumeData();
+	UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();
 
 #ifdef SETTINGS_DUMP // TODO enable this with a command line parameter
 	std::string str = NFmiSettings::ToString();
@@ -593,6 +606,26 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 	LogMessage("SmartMet document initialization ends...", CatLog::Severity::Info, CatLog::Category::Configuration);
 	return true;
 }
+
+void InitSeaLevelPlumeData()
+{
+	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
+	try
+	{
+		itsSeaLevelPlumeData.InitFromSettings("SeaLevelPlumeData");
+		LogMessage(itsSeaLevelPlumeData.baseConfigurationMessage(), CatLog::Severity::Debug, CatLog::Category::Configuration);
+		
+		if(!itsSeaLevelPlumeData.configurationErrorMessage().empty())
+		{
+			LogMessage(itsSeaLevelPlumeData.configurationErrorMessage(), CatLog::Severity::Error, CatLog::Category::Configuration);
+		}
+	}
+	catch(exception& e)
+	{
+		LogAndWarnUser(e.what(), "Problems with SeaLevelPlumeData initialization", CatLog::Severity::Error, CatLog::Category::Configuration, true, false, false);
+	}
+}
+
 
 void SetupQueryDataSetKeeperCallbacks()
 {
@@ -3123,38 +3156,41 @@ void AddWmsDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings
             if(!wmsSupport.isConfigured())
                 return;
             CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, __FUNCTION__);
-            const auto& layerTree = wmsSupport.peekCapabilityTree();
-            auto menuItem = std::make_unique<NFmiMenuItem>(
-                theMenuSettings.itsDescTopIndex,
-                "WMS",
-                NFmiDataIdent(NFmiParam(layerTree.value.paramId, layerTree.value.name), layerTree.value.producer),
-                theMenuSettings.itsMenuCommand,
-                g_DefaultParamView,
-                nullptr,
-                theDataType
-            );
-            try
-            {
-                const auto& layerTreeCasted = dynamic_cast<const Wms::CapabilityNode&>(layerTree);
-                auto* subMenuList = menuItem->SubMenu();
-                if(!subMenuList)
-                {
-                    subMenuList = new NFmiMenuItemList;
-                }
+            const auto* layerTree = wmsSupport.peekCapabilityTree();
+			if(layerTree)
+			{
+				auto menuItem = std::make_unique<NFmiMenuItem>(
+					theMenuSettings.itsDescTopIndex,
+					"WMS",
+					NFmiDataIdent(NFmiParam(layerTree->value.paramId, layerTree->value.name), layerTree->value.producer),
+					theMenuSettings.itsMenuCommand,
+					g_DefaultParamView,
+					nullptr,
+					theDataType
+					);
+				try
+				{
+					const auto& layerTreeCasted = dynamic_cast<const Wms::CapabilityNode&>(*layerTree);
+					auto* subMenuList = menuItem->SubMenu();
+					if(!subMenuList)
+					{
+						subMenuList = new NFmiMenuItemList;
+					}
 
-                for(const auto& child : layerTreeCasted.children)
-                {
-                    AddAllWmsProducersToParamSelectionPopup(theMenuSettings, theDataType, subMenuList, *child);
-                }
-                menuItem->AddSubMenu(subMenuList);
-                theMenuItemList->Add(std::move(menuItem));
-            }
-            catch(const std::exception &e)
-            {
-                std::string errorMessage = "WMS popup menu section failed: ";
-                errorMessage += e.what();
-                LogMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
-            }
+					for(const auto& child : layerTreeCasted.children)
+					{
+						AddAllWmsProducersToParamSelectionPopup(theMenuSettings, theDataType, subMenuList, *child);
+					}
+					menuItem->AddSubMenu(subMenuList);
+					theMenuItemList->Add(std::move(menuItem));
+				}
+				catch(const std::exception& e)
+				{
+					std::string errorMessage = "WMS popup menu section failed: ";
+					errorMessage += e.what();
+					LogMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
+				}
+			}
         }
         catch(const std::exception & e)
         {
@@ -4071,16 +4107,13 @@ void AddShowHelperData1OntimeSerialViewPopup(const NFmiDataIdent &param, NFmiInf
         AddShowHelperDataOntimeSerialViewPopup(param, infoDataType, "TimeSerialViewParamPopUpHideHelpData1", kFmiDontShowHelperDataOnTimeSerialView, acceleratorHelpStr);
 }
 
-void AddShowHelperData2OntimeSerialViewPopup(const NFmiDataIdent &param, NFmiInfoData::Type infoDataType)
+void AddShowHelperData2OntimeSerialViewPopup(const NFmiDataIdent& param, NFmiInfoData::Type infoDataType)
 {
-    std::string acceleratorHelpStr(" (CTRL + F)");
-    if(GetFavoriteSurfaceModelFractileData())
-    {
-        if(!ShowHelperData2InTimeSerialView())
-            AddShowHelperDataOntimeSerialViewPopup(param, infoDataType, "TimeSerialViewParamPopUpShowHelpData2", kFmiShowHelperData2OnTimeSerialView, acceleratorHelpStr);
-        else
-            AddShowHelperDataOntimeSerialViewPopup(param, infoDataType, "TimeSerialViewParamPopUpHideHelpData2", kFmiDontShowHelperData2OnTimeSerialView, acceleratorHelpStr);
-    }
+	std::string acceleratorHelpStr(" (CTRL + F)");
+	if(!ShowHelperData2InTimeSerialView())
+		AddShowHelperDataOntimeSerialViewPopup(param, infoDataType, "TimeSerialViewParamPopUpShowHelpData2", kFmiShowHelperData2OnTimeSerialView, acceleratorHelpStr);
+	else
+		AddShowHelperDataOntimeSerialViewPopup(param, infoDataType, "TimeSerialViewParamPopUpHideHelpData2", kFmiDontShowHelperData2OnTimeSerialView, acceleratorHelpStr);
 }
 
 void AddShowHelperData3OntimeSerialViewPopup(const NFmiDataIdent &param, NFmiInfoData::Type infoDataType)
@@ -4519,18 +4552,12 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		case kFmiAddParamCrossSectionView:
 			GetCombinedMapHandler()->addCrossSectionView(*menuItem, itsCurrentCrossSectionRowIndex, false);
 			break;
-		case kFmiAddAsOnlyView:
-			GetCombinedMapHandler()->addAsOnlyView(*menuItem, itsCurrentViewRowIndex);
-			break;
 		case kFmiChangeParam:
 		{
 			auto crossSectionCase = menuItem->MapViewDescTopIndex() == CtrlViewUtils::kFmiCrossSectionView;
 			GetCombinedMapHandler()->changeParamLevel(*menuItem, crossSectionCase ? itsCurrentCrossSectionRowIndex : itsCurrentViewRowIndex);
 			break;
 		}
-		case kFmiAddAsOnlyParamCrossSectionView:
-			GetCombinedMapHandler()->addAsOnlyCrossSectionView(*menuItem, itsCurrentCrossSectionRowIndex);
-			break;
 		case kFmiRemoveView:
 			GetCombinedMapHandler()->removeView(*menuItem, itsCurrentViewRowIndex);
 			break;
@@ -6232,12 +6259,15 @@ bool InitCPManagerSet(void)
 		SetCurrentSmartToolMacro(itsSmartToolInfo.CurrentScript()); // laitetaan currentti skripti myös dociin
 
         // Alustetaan myös yksi smartTool kieleen liittyvät callback funktiot
-        NFmiInfoAreaMaskOccurrance::SetMultiSourceDataGetterCallback(
+        NFmiInfoAreaMask::SetMultiSourceDataGetterCallback(
 			[this](std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, 
-				boost::shared_ptr<NFmiDrawParam> &theDrawParam, 
-				const boost::shared_ptr<NFmiArea> &theArea) 
+				const NFmiDataIdent& dataIdent,
+				const NFmiLevel &level,
+				NFmiInfoData::Type dataType,
+				const boost::shared_ptr<NFmiArea> &theArea)
 			{
-				GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea); 
+				boost::shared_ptr<NFmiDrawParam> drawParam(new NFmiDrawParam(dataIdent, level, 0, dataType));
+				GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(theInfoVector, drawParam, theArea); 
 			});
 
 		return status && status2;
@@ -10476,6 +10506,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsParameterInterpolationFixer;
 	}
 
+	NFmiSeaLevelPlumeData& SeaLevelPlumeData()
+	{
+		return itsSeaLevelPlumeData;
+	}
+
+	NFmiSeaLevelPlumeData itsSeaLevelPlumeData;
 	NFmiParameterInterpolationFixer itsParameterInterpolationFixer;
 	NFmiCombinedMapHandler itsCombinedMapHandler;
 	bool fChangingCaseStudyToNormalMode = false;
@@ -10719,6 +10755,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	int itsToolTipColumnIndex; // hiiren kursorin lepopaikan näyttörivin sarake numero tooltippiä varten
 	NFmiPoint itsToolTipLatLonPoint; // hiiren kursorin lepopaikka tooltippiä varten (kartan koordinaatistossa latlon-piste)
 	NFmiMetTime itsToolTipTime; // tooltipillä voi olla mikä tahansa ruudukon aika, ja se talletetaan tähän
+	int itsToolTipMapViewDescTopIndex; // Mistä karttanäytöltä tooltip otettiin
 	boost::shared_ptr<NFmiDrawParam> itsDefaultEditedDrawParam; // tämän jouduin ottamaan käyttöön kun upudatat
 											  // alkoivat tuottaa ongelmia tälläinen luodaan aina
 											  // uudesta datasta (esim. 1. parametri). Jos käyttäjä
@@ -11112,6 +11149,8 @@ void NFmiEditMapGeneralDataDoc::ToolTipColumnIndex(int newIndex)
 
 const NFmiPoint& NFmiEditMapGeneralDataDoc::ToolTipLatLonPoint(void) const {return pimpl->itsToolTipLatLonPoint;};
 void NFmiEditMapGeneralDataDoc::ToolTipLatLonPoint(const NFmiPoint& theLatLon){pimpl->itsToolTipLatLonPoint = theLatLon;};
+int NFmiEditMapGeneralDataDoc::ToolTipMapViewDescTopIndex() const { return pimpl->itsToolTipMapViewDescTopIndex; }
+void NFmiEditMapGeneralDataDoc::ToolTipMapViewDescTopIndex(int newIndex) { pimpl->itsToolTipMapViewDescTopIndex = newIndex; }
 void NFmiEditMapGeneralDataDoc::ToolTipTime(const NFmiMetTime& theTime){pimpl->itsToolTipTime = theTime;};
 const NFmiMetTime& NFmiEditMapGeneralDataDoc::ToolTipTime(void){return pimpl->itsToolTipTime;};
 int NFmiEditMapGeneralDataDoc::FilterFunction(void){return pimpl->itsFilterFunction;};
@@ -12754,4 +12793,9 @@ NFmiParameterInterpolationFixer& NFmiEditMapGeneralDataDoc::ParameterInterpolati
 void NFmiEditMapGeneralDataDoc::UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged()
 {
 	pimpl->UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();
+}
+
+NFmiSeaLevelPlumeData& NFmiEditMapGeneralDataDoc::SeaLevelPlumeData()
+{
+	return pimpl->SeaLevelPlumeData();
 }

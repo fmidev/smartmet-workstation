@@ -117,6 +117,7 @@ class AnimationProfiler;
 class NFmiColorContourLegendSettings;
 class CombinedMapHandlerInterface;
 class NFmiParameterInterpolationFixer;
+class NFmiSeaLevelPlumeData;
 
 namespace Wms
 {
@@ -150,6 +151,7 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+	NFmiSeaLevelPlumeData& SeaLevelPlumeData();
 	void UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();
 	NFmiParameterInterpolationFixer& ParameterInterpolationFixer();
 	int CurrentCrossSectionRowIndex();
@@ -535,6 +537,8 @@ public:
 	void ToolTipColumnIndex(int newIndex);
 	const NFmiPoint& ToolTipLatLonPoint(void) const;
 	void ToolTipLatLonPoint(const NFmiPoint& theLatLon);
+	int ToolTipMapViewDescTopIndex() const;
+	void ToolTipMapViewDescTopIndex(int newIndex);
 	void ToolTipTime(const NFmiMetTime& theTime);
 	const NFmiMetTime& ToolTipTime(void);
 	NFmiParamBag& AllStaticParams(void);

@@ -91,7 +91,7 @@ class NFmiAreaMaskInfo
   NFmiAreaMask::SimpleConditionRule SimpleConditionRule() const { return itsSimpleConditionRule; }
   void SimpleConditionRule(NFmiAreaMask::SimpleConditionRule newValue) { itsSimpleConditionRule = newValue; }
   boost::shared_ptr<NFmiSimpleConditionInfo> SimpleConditionInfo() const { return itsSimpleConditionInfo; }
-  void SimpleConditionInfo(boost::shared_ptr<NFmiSimpleConditionInfo> &theSimpleConditionInfo) { itsSimpleConditionInfo = theSimpleConditionInfo; }
+  void SimpleConditionInfo(boost::shared_ptr<NFmiSimpleConditionInfo>& theSimpleConditionInfo);
   float TimeOffsetInHours() const { return itsTimeOffsetInHours; }
   void TimeOffsetInHours(float newValue) { itsTimeOffsetInHours = newValue; }
 private:

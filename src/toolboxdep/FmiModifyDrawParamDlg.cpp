@@ -87,6 +87,7 @@ CFmiModifyDrawParamDlg::CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartM
 , itsSimpleColorContourLimit2StringU_(_T(""))
 , itsSimpleColorContourLimit3StringU_(_T(""))
 , itsSimpleColorContourLimit4StringU_(_T(""))
+, fTreatWmsLayerAsObservation(FALSE)
 {
 	if(theDrawParam)
 	{
@@ -277,6 +278,7 @@ void CFmiModifyDrawParamDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_SHOW_SIMPLE_COLORCONTOUR_WITH_COLORS_MIDDLE_VALUE, itsSimpleColorContourLimit2StringU_);
 	DDX_Text(pDX, IDC_SHOW_SIMPLE_COLORCONTOUR_WITH_COLORS_END_VALUE, itsSimpleColorContourLimit3StringU_);
 	DDX_Text(pDX, IDC_SHOW_SIMPLE_COLORCONTOUR_WITH_COLORS_END2_VALUE, itsSimpleColorContourLimit4StringU_);
+	DDX_Check(pDX, IDC_TREAT_WMS_LAYER_AS_OBSERVATION, fTreatWmsLayerAsObservation);
 }
 
 
@@ -583,7 +585,8 @@ void CFmiModifyDrawParamDlg::InitRestOfVersion2Data(void)
 	fUseIsoLineGabWithCustomContours = itsDrawParam->UseIsoLineGabWithCustomContours();
     fUseTransparentLabelBoxFillColor = itsDrawParam->UseTransparentFillColor();
     fDoSparseDataSymbolVisualization = itsDrawParam->DoSparseSymbolVisualization();
-    fUseLegend = itsDrawParam->ShowColorLegend();
+	fUseLegend = itsDrawParam->ShowColorLegend();
+	fTreatWmsLayerAsObservation = itsDrawParam->TreatWmsLayerAsObservation();
 
     FillStationDataViewSelector();
 	InitSpecialClassesData();
@@ -756,7 +759,8 @@ void CFmiModifyDrawParamDlg::ReadRestOfVersion2Data(void)
 	itsDrawParam->StationDataViewType(::GetSelectedStationDataViewType(itsStationDataViewSelector));
     itsDrawParam->UseTransparentFillColor(fUseTransparentLabelBoxFillColor == TRUE);
     itsDrawParam->DoSparseSymbolVisualization(fDoSparseDataSymbolVisualization == TRUE);
-    itsDrawParam->ShowColorLegend(fUseLegend == TRUE);
+	itsDrawParam->ShowColorLegend(fUseLegend == TRUE);
+	itsDrawParam->TreatWmsLayerAsObservation(fTreatWmsLayerAsObservation == TRUE);
 
 	ReadSpecialClassesData();
 }

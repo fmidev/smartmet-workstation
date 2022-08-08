@@ -71,7 +71,7 @@ namespace Wms
         void nextOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
         void previousBackground(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
         void previousOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
-        const Wms::CapabilityTree& peekCapabilityTree() const override;
+        const Wms::CapabilityTree* peekCapabilityTree() const override;
         NFmiImageHolder getBackground(unsigned int mapViewIndex, unsigned int mapAreaIndex, const NFmiArea& area, int resolutionX, int resolutionY) override;
         NFmiImageHolder getOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex, const NFmiArea& area, int resolutionX, int resolutionY) override;
         const LegendIdentSet& getRegisteredLayers(int row, int col, int descTop) override;
@@ -84,13 +84,13 @@ namespace Wms
         bool isDead(std::chrono::milliseconds wait) const override;
         StaticMapClientState& getStaticMapClientState(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
         const std::unique_ptr<Setup>& getSetup() const override;
+        const LayerInfo* getHashedLayerInfo(const NFmiDataIdent& dataIdent) const override;
 
         void fillDynamicClients(const std::unordered_map<int, DynamicServerSetup> &serverSetups, const std::string& proxyUrl);
         std::unique_ptr<WmsClient> createClient(const DynamicServerSetup &setup, const std::string& proxyUrl);
     private:
         StaticMapClientState createStaticMapClientState();
         MapViewStaticMapClientState createMapViewStaticMapClientState(unsigned int mapAreaCount);
-        const LayerInfo* getHashedLayerInfo(const NFmiDataIdent& dataIdent) const;
     };
 }
 

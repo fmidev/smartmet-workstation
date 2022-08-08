@@ -8,6 +8,29 @@
 class SmartMetDocumentInterface;
 class NFmiFastQueryInfo;
 class NFmiParamBag;
+class NFmiColor;
+
+class NFmiPlotRelatedControls
+{
+public:
+	NFmiPlotRelatedControls();
+	~NFmiPlotRelatedControls();
+
+	BOOL fSetAllParamState = TRUE;
+	// Eli k‰ytet‰‰nkˆ yksiv‰rist‰ (synop/metar) plottausta vai defaultti v‰ri koodattua
+	BOOL fSingleColor = FALSE;
+	// Fontin koon s‰‰tˆ slideri
+	CSliderCtrl itsFontSizeSlider;
+	// S‰‰det‰‰n kuinka tihe‰sti synop plottaus tehd‰‰n, eli jos luku alle 1, sallitaan p‰‰llekk‰isyyksi‰ ja jos yli 1, tulee v‰ljemp‰‰
+	CSliderCtrl itsPlotSpacingSlider;
+	// T‰st‰ s‰‰det‰‰n yhdell‰ v‰rill‰ piirrett‰v‰n plottauksen v‰ritys
+	CButton itsSingleColorChangeButtom;
+	// Edell‰ olevaan painikkeeseen liittyv‰‰ dataa (oletusarvo musta)
+	COLORREF itsSingleColorRef = 0;
+	CBitmap* itsSingleColorBitmap = nullptr;
+	CRect itsSingleColorRect;
+
+};
 
 // CFmiSynopPlotSettingsDlg dialog
 
@@ -34,72 +57,53 @@ public:
 private:
 	void StoreToDoc(void);
 	void RefreshApplicationViews(const std::string &reasonForUpdate);
-	void UpdateFontSizeString(void);
-	void UpdatePlotSpacingString(void);
-	void EnableCheckBox(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, int theParId, int theCheckBoxIdNumber);
-	void EnableCheckBox(NFmiParamBag &theParams, int theParId, int theCheckBoxIdNumber);
-	void EnableCheckBox(BOOL theState, int theCheckBoxIdNumber);
+	void UpdateFontSizeString(bool synopPlotCase);
+	void UpdatePlotSpacingString(bool synopPlotCase);
 	void InitDialogTexts(void);
+	void SetAllSynopParamStates(BOOL newState);
+	void SetAllMetarParamStates(BOOL newState);
+	void InitPlotControls(bool synopPlotCase, bool useSingleColor, double fontSize, double plotSpacing, const NFmiColor& singleColor, NFmiPlotRelatedControls& plotControls);
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 
-	BOOL fShowT; // n‰ytet‰‰nkˆ T synop-plotissa vai ei
-	BOOL fShowTd;
-	BOOL fShowV;
-	BOOL fShowWw;
-	BOOL fShowCh;
-	BOOL fShowCm;
-	BOOL fShowCl;
-	BOOL fShowN;
-	BOOL fShowNh;
-	BOOL fShowDdff;
-	BOOL fShowPPPP;	  // PPPP eli pressure
-	BOOL fShowPpp; // ppp eli pressure change
-	BOOL fShowA; // a eli paineen muutoksen luonne
-	BOOL fShowW1;
-	BOOL fShowW2;
-	BOOL fShowH; // h eli pilven korkeus
-	BOOL fShowRr;
-	BOOL fShowTw; // eli veden l‰mpˆtila
-	BOOL fSingleColor; // eli k‰ytet‰‰nkˆ yksiv‰rist‰ synop plottausta vai defaultti v‰ri koodattua
-	// fontin koon s‰‰tˆ slideri
-	CSliderCtrl itsFontSizeSlider;
-	// s‰‰det‰‰n kuinka tihe‰sti synop plottaus tehd‰‰n, eli jos luku alle 1, sallitaan p‰‰llekk‰isyyksi‰ ja jos yli 1, tulee v‰ljemp‰‰
-	CSliderCtrl itsPlotSpacingSlider;
-	// t‰st‰ s‰‰det‰‰n yhdell‰ v‰rill‰ piirrett‰v‰n plttauksen v‰ritys
-	CButton itsSingleColorChangeButtom;
+	BOOL fShowT = TRUE; // n‰ytet‰‰nkˆ T synop-plotissa vai ei
+	BOOL fShowTd = TRUE;
+	BOOL fShowV = TRUE;
+	BOOL fShowWw = TRUE;
+	BOOL fShowCh = TRUE;
+	BOOL fShowCm = TRUE;
+	BOOL fShowCl = TRUE;
+	BOOL fShowN = TRUE;
+	BOOL fShowNh = TRUE;
+	BOOL fShowDdff = TRUE;
+	BOOL fShowPPPP = TRUE;	  // PPPP eli pressure
+	BOOL fShowPpp = TRUE; // ppp eli pressure change
+	BOOL fShowA = TRUE; // a eli paineen muutoksen luonne
+	BOOL fShowW1 = TRUE;
+	BOOL fShowW2 = TRUE;
+	BOOL fShowH = TRUE; // h eli pilven korkeus
+	BOOL fShowRr = TRUE;
+	BOOL fShowTw = TRUE; // eli veden l‰mpˆtila
+	NFmiPlotRelatedControls itsSynopControls;
 
-	COLORREF itsSingleColorRef;
-	CBitmap* itsSingleColorBitmap;
-	CRect itsSingleColorRect;
+	BOOL fMetarShow_SkyInfo = TRUE;
+	BOOL fMetarShow_TT = TRUE;
+	BOOL fMetarShow_TdTd = TRUE;
+	BOOL fMetarShow_PhPhPhPh = TRUE;
+	BOOL fMetarShow_dddff = TRUE;
+	BOOL fMetarShow_Gff = TRUE;
+	BOOL fMetarShow_VVVV = TRUE;
+	BOOL fMetarShow_ww = TRUE;
+	BOOL fMetarShow_Status = TRUE;
+	NFmiPlotRelatedControls itsMetarControls;
 
 public:
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnBnClickedButtonRefresh();
 	afx_msg void OnBnClickedButtonStationPriorities();
-	afx_msg void OnBnClickedCheckShowV();
-	afx_msg void OnBnClickedCheckShowT();
-	afx_msg void OnBnClickedCheckShowWw();
-	afx_msg void OnBnClickedCheckShowTd();
-	afx_msg void OnBnClickedCheckShowCh();
-	afx_msg void OnBnClickedCheckShowCm();
-	afx_msg void OnBnClickedCheckShowN();
-	afx_msg void OnBnClickedCheckShowDdff();
-	afx_msg void OnBnClickedCheckShowCl();
-	afx_msg void OnBnClickedCheckShowH();
-	afx_msg void OnBnClickedCheckShowRr();
-	afx_msg void OnBnClickedCheckShowPppp();
-	afx_msg void OnBnClickedCheckShowPpp();
-	afx_msg void OnBnClickedCheckShowNh();
-	afx_msg void OnBnClickedCheckShowTw();
-	afx_msg void OnBnClickedCheckShowA();
-	afx_msg void OnBnClickedCheckShowW1();
-	afx_msg void OnBnClickedCheckShowW2();
-	afx_msg void OnBnClickedCheckShowSingleColor();
-	afx_msg void OnBnClickedButtonSingleColor();
+	afx_msg void OnBnClickedButtonSynopSingleColor();
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
-	afx_msg void OnBnClickedCheckToggleAllParams();
-private:
-	void SetAllParamStates(BOOL newState);
-	BOOL fSetAllParamState;
+	afx_msg void OnBnClickedCheckToggleAllSynopParams();
+	afx_msg void OnBnClickedButtonMetarSingleColor();
+	afx_msg void OnBnClickedCheckToggleAllMetarParams();
 };

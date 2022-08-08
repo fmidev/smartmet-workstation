@@ -114,7 +114,7 @@ namespace CtrlViewUtils
             identifier += "time-serial";
         }
         identifier += ", row=";
-        int absoluteRowNumber = ctrlView->ViewGridRowNumber() + ctrlView->GetCtrlViewDocumentInterface()->MapRowStartingIndex(ctrlView->MapViewDescTopIndex()) - 1;
+        int absoluteRowNumber = ctrlView->CalcRealRowIndex();
         identifier += std::to_string(absoluteRowNumber);
         if(ctrlView->ViewGridColumnNumber() >= 1)
         {

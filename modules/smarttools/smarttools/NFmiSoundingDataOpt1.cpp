@@ -222,9 +222,12 @@ bool NFmiSoundingDataOpt1::GetLowestNonMissingValues(float &H, float &U, float &
 float NFmiSoundingDataOpt1::GetValueAtHeight(FmiParameterName theId, float H)
 {
   float P = GetPressureAtHeight(H);
-  if (P == kFloatMissing) return kFloatMissing;
-
-  return GetValueAtPressure(theId, P);
+  if (P == kFloatMissing)
+  {
+    return GetValueAtHeightHardWay(theId, H);
+  }
+  else
+      return GetValueAtPressure(theId, P);
 }
 
 // Hakee halutun parametrin arvon halutulta painekorkeudelta.
@@ -279,6 +282,64 @@ float NFmiSoundingDataOpt1::GetValueAtPressure(FmiParameterName theId, float P)
     else if (currentP != kFloatMissing && currentValue != kFloatMissing)
     {
       if (::fabs(currentP - P) < maxPDiff) value = currentValue;
+    }
+  }
+  return value;
+}
+
+// H = height in meters
+float NFmiSoundingDataOpt1::GetValueAtHeightHardWay(FmiParameterName theId, float H)
+{
+  if (H == kFloatMissing) return kFloatMissing;
+
+  std::deque<float> &hV = GetParamData(kFmiGeomHeight);
+  std::deque<float> &paramV = GetParamData(theId);
+  float value = kFloatMissing;
+  if (paramV.size() > 0 && hV.size() == paramV.size())
+  {
+    unsigned int ssize = static_cast<unsigned int>(hV.size());
+    float lastH = kFloatMissing;
+    float lastValue = kFloatMissing;
+    float currentH = kFloatMissing;
+    float currentValue = kFloatMissing;
+    for (unsigned int i = 0; i < ssize; i++)
+    {
+      currentH = hV[i];
+      currentValue = paramV[i];
+      if (currentH != kFloatMissing)
+      {
+        if (currentH > H)
+        {
+          if (currentValue != kFloatMissing) break;
+        }
+        if (currentValue != kFloatMissing)
+        {
+          lastH = currentH;
+          lastValue = currentValue;
+          if (currentH == H) return currentValue;  // jos oli tarkka osuma, turha jatkaa
+        }
+      }
+    }
+    // suurin sallittu ero height:issa, että arvo hyväksytään, jos pyydetty height on 'asteikon ulkona'
+    float maxPDiff = 50.;
+    if (lastH != kFloatMissing && currentH != kFloatMissing && lastValue != kFloatMissing &&
+        currentValue != kFloatMissing)
+    {
+      // interpoloidaan arvo kun löytyi kaikki arvot
+      if (theId == kFmiWindVectorMS)
+        value = NFmiSoundingFunctions::CalcLogInterpolatedWindWectorValue(
+            lastH, currentH, H, lastValue, currentValue);
+      else
+        value = NFmiSoundingFunctions::CalcLogInterpolatedValue(
+            lastH, currentH, H, lastValue, currentValue);
+    }
+    else if (lastH != kFloatMissing && lastValue != kFloatMissing)
+    {
+      if (::fabs(lastH - H) < maxPDiff) value = lastValue;
+    }
+    else if (currentH != kFloatMissing && currentValue != kFloatMissing)
+    {
+      if (::fabs(currentH - H) < maxPDiff) value = currentValue;
     }
   }
   return value;

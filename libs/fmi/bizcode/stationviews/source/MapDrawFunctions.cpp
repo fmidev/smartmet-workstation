@@ -39,7 +39,7 @@ namespace
         if(holder)
         {
             NFmiRect srcRect(0, 0, int(bitmapSize.X()), int(bitmapSize.Y()));
-            CtrlView::DrawBitmapToDC(theUsedCDC, *holder->mImage, srcRect, destRect, true);
+            CtrlView::DrawBitmapToDC_4(theUsedCDC, *holder->mImage, srcRect, destRect, true);
         }
 #endif // DISABLE_CPPRESTSDK
     }
@@ -56,7 +56,7 @@ namespace
             if(holder)
             {
                 NFmiRect srcRect(0, 0, int(bitmapSize.X()), int(bitmapSize.Y()));
-                CtrlView::DrawBitmapToDC(theUsedCDC, *holder->mImage, srcRect, destRect, true);
+                CtrlView::DrawBitmapToDC_4(theUsedCDC, *holder->mImage, srcRect, destRect, true);
             }
         }
         catch(...)
@@ -123,7 +123,7 @@ namespace MapDraw
         return docInterface->GetCombinedMapHandlerInterface().isOverlayMapDrawnForThisDescTop(theDescTopIndex, wantedDrawOverMapMode);
     }
 
-    void drawOverlayMap(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, int wantedDrawOverMapMode, CDC *theUsedCDC, Gdiplus::RectF& destRect, const NFmiPoint& bitmapSize)
+    void drawOverlayMap(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, int wantedDrawOverMapMode, CDC *theUsedCDC, Gdiplus::RectF& destRect, const NFmiPoint& bitmapSize, Gdiplus::Graphics* gdiplusGraphics)
     {
         if(drawOverlay(docInterface, theDescTopIndex, wantedDrawOverMapMode))
         {
@@ -137,8 +137,7 @@ namespace MapDraw
                 if(namesBitmap)
                 {
                     auto bitmapNamesRect = getOverlaySourceRect(docInterface, theDescTopIndex);
-                    CtrlView::DrawBitmapToDC(theUsedCDC, *namesBitmap, bitmapNamesRect, destRect,
-                        Gdiplus::Color(Gdiplus::Color::White), true);
+                    CtrlView::DrawBitmapToDC_4(theUsedCDC, *namesBitmap, bitmapNamesRect, destRect, true, NFmiImageAttributes(Gdiplus::Color(Gdiplus::Color::White)), gdiplusGraphics);
                 }
             }
         }
@@ -155,7 +154,7 @@ namespace MapDraw
             static_cast<Gdiplus::REAL>(mfcRect.top), static_cast<Gdiplus::REAL>(mfcRect.Width()), static_cast<Gdiplus::REAL>(mfcRect.Height()));
     }
 
-    bool GenerateMapBitmap(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC)
+    bool GenerateMapBitmap(CtrlViewDocumentInterface *docInterface, int theDescTopIndex, CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC, Gdiplus::Graphics* gdiplusGraphics)
     {
         if(mapIsNotDirty(docInterface, theDescTopIndex))
         {
@@ -185,11 +184,11 @@ namespace MapDraw
                 return true;
             }
             fillMapWithWhite(theUsedCDC, mfcRect);
-            CtrlView::DrawBitmapToDC(theUsedCDC, *aBitmap, sourceRect, destRect, true);
+            CtrlView::DrawBitmapToDC_4(theUsedCDC, *aBitmap, sourceRect, destRect, true);
         }
 
         int wantedDrawOverMapMode = 0; // means overlay is drawn right over background map before the dynamic data is drawn
-        drawOverlayMap(docInterface, theDescTopIndex, 0, theUsedCDC, destRect, bitmapSize);
+        drawOverlayMap(docInterface, theDescTopIndex, 0, theUsedCDC, destRect, bitmapSize, gdiplusGraphics);
         return true;
     }
 

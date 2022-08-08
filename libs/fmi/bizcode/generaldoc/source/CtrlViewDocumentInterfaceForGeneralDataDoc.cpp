@@ -651,6 +651,16 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipLatLonPoint(const NFmiPo
     itsDoc->ToolTipLatLonPoint(theLatLon);
 }
 
+int CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipMapViewDescTopIndex() const
+{
+    return itsDoc->ToolTipMapViewDescTopIndex();
+}
+
+void CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipMapViewDescTopIndex(int newIndex)
+{
+    itsDoc->ToolTipMapViewDescTopIndex(newIndex);
+}
+
 void CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipTime(const NFmiMetTime& theTime)
 {
     itsDoc->ToolTipTime(theTime);
@@ -938,6 +948,11 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::ShowWarningMarkersOnMap(int the
 CDC* CtrlViewDocumentInterfaceForGeneralDataDoc::MapBlitDC(int theDescTopIndex)
 {
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->MapBlitDC();
+}
+
+int CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipColumnIndex() const
+{
+    return itsDoc->ToolTipColumnIndex();
 }
 
 void CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipColumnIndex(int newIndex)
@@ -1411,6 +1426,19 @@ double CtrlViewDocumentInterfaceForGeneralDataDoc::SingleMapViewHeightInMilliMet
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsTimeControlViewVisible(int theDescTopIndex) const
 {
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->IsTimeControlViewVisible();
+}
+
+TrueMapViewSizeInfo& CtrlViewDocumentInterfaceForGeneralDataDoc::GetTrueMapViewSizeInfo(int theDescTopIndex) const
+{
+    if(theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
+        return itsDoc->CrossSectionSystem()->GetTrueMapViewSizeInfo();
+    else
+        return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->GetTrueMapViewSizeInfo();
+}
+
+NFmiSeaLevelPlumeData& CtrlViewDocumentInterfaceForGeneralDataDoc::SeaLevelPlumeData() const
+{
+    return itsDoc->SeaLevelPlumeData();
 }
 
 #ifndef DISABLE_CPPRESTSDK

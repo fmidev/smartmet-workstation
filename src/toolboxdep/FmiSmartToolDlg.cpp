@@ -1110,6 +1110,7 @@ void CFmiSmartToolDlg::UpdateMacroParamDisplayListAfterSpeedLoad()
 {
     itsMacroParamList.ResetContent();
     auto& mpSystem = itsSmartMetDocumentInterface->MacroParamSystem();
+    auto foundMacroParamName = mpSystem.GetCurrentMacroParam()->Name();
     boost::shared_ptr<NFmiMacroParamFolder> currentFolder = mpSystem.GetCurrentFolder();
     if(currentFolder)
     {
@@ -1126,6 +1127,9 @@ void CFmiSmartToolDlg::UpdateMacroParamDisplayListAfterSpeedLoad()
             itsMacroParamList.SetCurSel(currentFolder->CurrentIndex());
         else
             itsMacroParamList.SetCurSel(selectedNameIndex);
+
+        // currentFolder->RefreshMacroParams operaation jälkeen palautetaan valittu macroParam taas oikeasti valituksi
+        mpSystem.FindMacroFromCurrentFolder(foundMacroParamName);
     }
 }
 

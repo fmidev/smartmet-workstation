@@ -155,4 +155,13 @@ public:
 	afx_msg void OnAcceleratorChangeTimeByStep4Forward();
 	afx_msg void OnAcceleratorChangeTimeByStep4Backward();
 	afx_msg void OnEditVisualizationsettingsExtraMap();
+	afx_msg void OnAcceleratorEmChangeAllModelDataOnRowToPreviousModelRun();
+	afx_msg void OnAcceleratorEmChangeAllModelDataOnRowToNextModelRun();
+	afx_msg void OnAcceleratorExtraMapViewRangeMeterModeToggle();
+	afx_msg void OnAcceleratorExtraMapViewRangeMeterIncreaseRange();
+	afx_msg void OnAcceleratorExtraMapViewRangeMeterDecreaseRange();
+	afx_msg void OnAcceleratorExtraMapViewRangeMeterIncrementModeToggle();
+	afx_msg void OnAcceleratorExtraMapViewRangeMeterColorToggle();
+	afx_msg void OnAcceleratorExtraMapViewRangeMeterFixedLocationModeToggle();
+	afx_msg void OnAcceleratorLogViewerToolboxdeb();
 };

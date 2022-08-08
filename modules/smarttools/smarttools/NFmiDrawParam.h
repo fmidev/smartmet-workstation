@@ -695,6 +695,8 @@ class NFmiDrawParam
   bool DoIsoLineColorBlend() const { return fDoIsoLineColorBlend; }
   void DoIsoLineColorBlend(bool newValue) { fDoIsoLineColorBlend = newValue; }
   bool ShowContourLegendPotentially() const;
+  bool TreatWmsLayerAsObservation() const { return fTreatWmsLayerAsObservation; }
+  void TreatWmsLayerAsObservation(bool newValue) { fTreatWmsLayerAsObservation = newValue; }
 
  protected:
   double SimpleColorContourTransparentColors2Double() const;
@@ -935,6 +937,10 @@ class NFmiDrawParam
   // Tästä eteenpäin isoviivojen värejä blendaillaan, vain jos tämän arvo on true.
   // Blendaus välinä tällöin käytetään itsIsolineGab:in arvoa ja blendejä tehdään kahden isoviiva limitin väleihin.
   bool fDoIsoLineColorBlend;
+  // SmartMetin animaatioissa ei ole tietoa onko joku Wms layer data havainto vai ei. Wms protokollat eivät 
+  // mahdollista sellaista tietoa. Siksi käyttäjän pitää kertoa onko jossain Wms layerissä kyse havainnosta.
+  // Tällä on merkitystä ainakin kun piirretään animaatioita moodissa, joka seuraa viimeisimpiä havaintodatoja.
+  bool fTreatWmsLayerAsObservation = false;
 };
 //@{ \name Globaalit NFmiDrawParam-luokan uudelleenohjaus-operaatiot
 inline std::ostream& operator<<(std::ostream& os, const NFmiDrawParam& item)

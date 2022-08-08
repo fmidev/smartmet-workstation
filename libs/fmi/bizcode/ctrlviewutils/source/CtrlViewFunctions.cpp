@@ -397,13 +397,7 @@ namespace CtrlViewUtils
         lon = FixLongitudeToEuropeCenteredValue(lon);
         str += GetLongitudeMinuteStr(lon, 1);
         str += " [";
-
-        std::stringstream out;
-        out << std::fixed << std::setprecision(4) << std::setw(7) << std::setfill('0') << std::right << ::fabs(lat) << ((lat >= 0) ? "N" : "S");
-        out << " ";
-        out << std::fixed << std::setprecision(4) << std::setw(8) << std::setfill('0') << std::right << ::fabs(lon) << ((lon >= 0 && lon < 180) ? "E" : "W");
-        str += out.str();
-
+        str += GetFixedLatlonStr(theLatlon);
         str += "] Elevation: ";
         float elevation = kFloatMissing;
         boost::shared_ptr<NFmiFastQueryInfo> topoInfo = theCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kStationary);
@@ -421,6 +415,20 @@ namespace CtrlViewUtils
             str += " m";
         }
         return str;
+    }
+
+    std::string GetFixedLatlonStr(const NFmiPoint& theLatlon)
+    {
+        std::stringstream out;
+
+        double lat = theLatlon.Y();
+        out << std::fixed << std::setprecision(4) << std::setw(7) << std::setfill('0') << std::right << ::fabs(lat) << ((lat >= 0) ? "N" : "S");
+        out << " ";
+
+        double lon = theLatlon.X();
+        lon = FixLongitudeToEuropeCenteredValue(lon);
+        out << std::fixed << std::setprecision(4) << std::setw(8) << std::setfill('0') << std::right << ::fabs(lon) << ((lon >= 0 && lon < 180) ? "E" : "W");
+        return out.str();
     }
 
     boost::shared_ptr<NFmiFastQueryInfo> GetLatestLastTimeObservation(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, bool fCrossSectionInfoWanted)

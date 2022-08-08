@@ -1984,7 +1984,7 @@ void NFmiToolBox::DoArroyBulkDraw(const NFmiSymbolBulkDrawData& sbdData)
 			}
 		}
 		pDC->SelectObject(oldPen);
-		pItsPen->DeleteObject();
+		pen.DeleteObject();
 	}
 }
 
