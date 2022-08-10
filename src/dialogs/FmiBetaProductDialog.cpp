@@ -752,23 +752,13 @@ static NFmiMetTime CalcWallClockOffsetTime(const NFmiBetaProduct &theBetaProduct
 {
     NFmiMetTime aTime = theMakeTime;
     long usedOffsetInMinutes = boost::math::iround(theTimeMode.itsWallClockOffsetInHours * 60.);
-    int absoluteOffsetMinutes = std::abs(usedOffsetInMinutes % 60);
-    long usedTimeStepInMinutes = 60;
-    // Yleens‰ halutaan pyˆrist‰‰ aloitus/lopetus ajat l‰himp‰‰n tuntiin, mutta jos annetut wall-time offsetit eiv‰t ole tasatuntisia, 
-    // laitetaan time-stepiksi pienempi 'stepeist‰', jotta p‰‰st‰‰n k‰siksi haluttuihin minuutti lukemiin...
-    if((absoluteOffsetMinutes != 0 && absoluteOffsetMinutes <= 30) || theBetaProduct.TimeStepInMinutes() <= 30)
-    {
-        if(absoluteOffsetMinutes == 0)
-            usedTimeStepInMinutes = theBetaProduct.TimeStepInMinutes();
-        else
-            usedTimeStepInMinutes = std::min(absoluteOffsetMinutes, theBetaProduct.TimeStepInMinutes());
-    }
-    // Varmistetaan ett‰ timestep ei ole mahdoton
-    if(usedTimeStepInMinutes < 1)
-        usedTimeStepInMinutes = 1;
-    aTime.SetTimeStep(usedTimeStepInMinutes);
+    aTime.SetTimeStep(1);
     aTime.ChangeByMinutes(usedOffsetInMinutes);
-    aTime.SetTimeStep(theBetaProduct.TimeStepInMinutes()); // Laitetaan lopuksi aloitusaika haluttuun aikasteppiin, jotta sille voidaan tehd‰ aika-loopissa NextMetTime
+    // Sein‰kello tapauksessa halutaan pyˆrist‰‰ ensiksi saatu aika sopivalla aikastepill‰, muuten tulee ihan hˆlmˆj‰ alku/loppu aikoja
+    long usedRoundingStepInMinutes = std::min(60, theBetaProduct.TimeStepInMinutes());
+    aTime.SetTimeStep(usedRoundingStepInMinutes);
+    // Takaisin 1 minuutin steppi, jotta aikaloopissa voidaan kasvattaa aikaa halutulla tavalla
+    aTime.SetTimeStep(1);
     return aTime;
 }
 
@@ -779,7 +769,7 @@ NFmiMetTime CFmiBetaProductDialog::CalcStartingTime(const NFmiBetaProduct &theBe
         // Otetaan BetaProduct aika myˆs kFmiFirstModelDataTime -tyypille, sill‰ ne pit‰‰ laskea erikseen kuvien generointi loopissa 
         // ja jos rivilt‰ ei lˆydy yht‰‰n mallituottajaa, k‰ytet‰‰n beta-product timea
         NFmiMetTime startingTime = GetCurrentViewTime(theBetaProduct);
-        startingTime.SetTimeStep(theBetaProduct.TimeStepInMinutes()); // Laitetaan lopuksi aloitusaika haluttuun aikasteppiin, jotta sille voidaan tehd‰ aika-loopissa NextMetTime
+        startingTime.SetTimeStep(1);
         return startingTime;
     }
     else if(theTimeMode.itsTimeMode == NFmiBetaProductAutomation::kFmiWallClockOffsetTime)
@@ -828,7 +818,7 @@ NFmiMetTime CFmiBetaProductDialog::GetUsedModelTime(bool fGetStartTime, unsigned
         atime = timeDesc.FirstTime();
     else
         atime = timeDesc.LastTime();
-    atime.SetTimeStep(thePreCalculatedTime.GetTimeStep());
+    atime.SetTimeStep(1);
     return atime;
 }
 
@@ -1085,6 +1075,7 @@ void CFmiBetaProductDialog::MakeVisualizationImagesRowLoop(const NFmiBetaProduct
     CBitmap mapScreenBitmap;
     unsigned int usedMapViewDesktopIndex = theBetaProduct.SelectedViewIndex();
     auto descTop = itsSmartMetDocumentInterface->MapViewDescTop(usedMapViewDesktopIndex);
+    auto usedTimeStepInMinutes = theBetaProduct.TimeStepInMinutes();
     // row-for-loop
     for(size_t i = 0; i < usedRowIndexies.size(); i++)
     {
@@ -1104,8 +1095,8 @@ void CFmiBetaProductDialog::MakeVisualizationImagesRowLoop(const NFmiBetaProduct
         rowIndexString += NFmiStringTools::Convert(rowIndex);
         NFmiMetTime modelOrigTime = GetFirstModelOrigTime(usedMapViewDesktopIndex, rowIndex);
         NFmiMetTime usedStartTime = useModelStartTime ? GetUsedModelTime(true, usedMapViewDesktopIndex, rowIndex, theStartingTime) : theStartingTime;
-        NFmiMetTime usedEndTime = useModelStartTime ? GetUsedModelTime(false, usedMapViewDesktopIndex, rowIndex, theEndingTime) : theEndingTime;
-        for(NFmiMetTime currentTime(usedStartTime); currentTime <= usedEndTime; currentTime.NextMetTime())
+        NFmiMetTime usedEndTime = useModelEndTime ? GetUsedModelTime(false, usedMapViewDesktopIndex, rowIndex, theEndingTime) : theEndingTime;
+        for(NFmiMetTime currentTime(usedStartTime); currentTime <= usedEndTime; currentTime.ChangeByMinutes(usedTimeStepInMinutes))
         {
             std::string imageFileName = ::MakeFinalImageFileName(itsSmartMetDocumentInterface, theBetaProduct, usedMapViewDesktopIndex, rowImageFileNameBase, currentTime, theMakeTime, modelOrigTime, rowIndex, synopStationId);
             itsSmartMetDocumentInterface->CurrentTime(usedMapViewDesktopIndex, currentTime);
