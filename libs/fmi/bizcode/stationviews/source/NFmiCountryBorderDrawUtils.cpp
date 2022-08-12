@@ -281,11 +281,13 @@ namespace
                 if(borderPolyLineList.empty() == false)
                 {
                     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(mapView, std::string(__FUNCTION__) + " doing final border drawing");
-                    NFmiPoint offSet(fixedToOrigoMapArea->TopLeft());
+                    // Printatessa ei ole cache bitmap piirtoa, joten se on erikoistapaus, jolloin tarvitaan originaali relatiivista kartta-aluetta oikeine offset:eineen
+                    auto* usedMapAreaInDrawing = toolbox->GetDC()->IsPrinting() ? mapArea.get() : fixedToOrigoMapArea.get();
+                    NFmiPoint offSet(usedMapAreaInDrawing->TopLeft());
                     NFmiDrawingEnvironment envi;
                     envi.SetFrameColor(ctrlViewDocumentInterface->LandBorderColor(mapViewDescTopIndex, separateBorderLayerDrawOptions));
                     envi.SetPenSize(NFmiPoint(penSize, penSize));
-                    ToolBoxStateRestorer toolBoxStateRestorer(*toolbox, toolbox->GetTextAlignment(), true, &fixedToOrigoMapArea->XYArea());
+                    ToolBoxStateRestorer toolBoxStateRestorer(*toolbox, toolbox->GetTextAlignment(), true, &usedMapAreaInDrawing->XYArea());
                     ::drawPolyLineList(toolbox, borderPolyLineList, offSet, mapView, envi);
                 }
             }
