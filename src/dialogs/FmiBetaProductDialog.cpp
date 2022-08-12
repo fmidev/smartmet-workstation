@@ -752,10 +752,15 @@ static NFmiMetTime CalcWallClockOffsetTime(const NFmiBetaProduct &theBetaProduct
 {
     NFmiMetTime aTime = theMakeTime;
     long usedOffsetInMinutes = boost::math::iround(theTimeMode.itsWallClockOffsetInHours * 60.);
+    long absoluteOffsetMinutes = std::abs(usedOffsetInMinutes % 60);
     aTime.SetTimeStep(1);
     aTime.ChangeByMinutes(usedOffsetInMinutes);
     // Seinäkello tapauksessa halutaan pyöristää ensiksi saatu aika sopivalla aikastepillä, muuten tulee ihan hölmöjä alku/loppu aikoja
     long usedRoundingStepInMinutes = std::min(60, theBetaProduct.TimeStepInMinutes());
+    if(absoluteOffsetMinutes != 0)
+    {
+        usedRoundingStepInMinutes = std::min(usedRoundingStepInMinutes, absoluteOffsetMinutes);
+    }
     aTime.SetTimeStep(usedRoundingStepInMinutes);
     // Takaisin 1 minuutin steppi, jotta aikaloopissa voidaan kasvattaa aikaa halutulla tavalla
     aTime.SetTimeStep(1);
