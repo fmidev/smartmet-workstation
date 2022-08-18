@@ -792,6 +792,7 @@ void NFmiSmartToolModifier::ModifyConditionalData(
     try
     {
       NFmiCalculationParams calculationParams;
+      calculationParams.itsObservationRadiusInKm = ExtraMacroParamData().ObservationRadiusInKm();
       SetInfosMaskType(info);
       NFmiTimeDescriptor modifiedTimes(itsModifiedTimes ? *itsModifiedTimes
                                                         : info->TimeDescriptor());
@@ -913,6 +914,8 @@ static void DoPartialGridCalculationBlockInThread(
             {
               theCalculationParams.itsLatlon = theInfo->LatLon();
               theCalculationParams.itsLocationIndex = theInfo->LocationIndex();
+              if (calculationPointMask)
+                theCalculationParams.itsActualCalculationPoint = (*calculationPointMask)[i];
               // TUON LOCATIONINDEX jutun voisi kai poistaa, kun kyseistä optimointi juttua ei kai
               // enää käytetä
               theCalculationBlock->Calculate_ver2(theCalculationParams, true);
@@ -1112,6 +1115,7 @@ void NFmiSmartToolModifier::ModifyConditionalData_ver2(
       NFmiTimeDescriptor modifiedTimes(itsModifiedTimes ? *itsModifiedTimes
                                                         : info->TimeDescriptor());
       const NFmiBitMask *usedBitmask = ::GetUsedBitmask(info, fModifySelectedLocationsOnly);
+      calculationParams.itsObservationRadiusInKm = ExtraMacroParamData().ObservationRadiusInKm();
 
       unsigned int usedThreadCount = NFmiQueryDataUtil::GetReasonableWorkingThreadCount(75);
       std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector =
@@ -1334,6 +1338,7 @@ void NFmiSmartToolModifier::ModifyData2_ver2(
       NFmiTimeDescriptor modifiedTimes(itsModifiedTimes ? *itsModifiedTimes
                                                         : info->TimeDescriptor());
       const NFmiBitMask *usedBitmask = ::GetUsedBitmask(info, fModifySelectedLocationsOnly);
+      calculationParams.itsObservationRadiusInKm = ExtraMacroParamData().ObservationRadiusInKm();
 
       unsigned int usedThreadCount = NFmiQueryDataUtil::GetReasonableWorkingThreadCount(75);
       std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector =
