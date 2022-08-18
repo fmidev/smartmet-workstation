@@ -349,6 +349,11 @@ class NFmiAreaMask
   virtual void SimpleCondition(boost::shared_ptr<NFmiSimpleCondition> &theSimpleCondition) = 0;
   virtual float FunctionDataTimeOffsetInHours() const = 0;
   virtual void FunctionDataTimeOffsetInHours(float newValue) = 0;
+  // Jos kyse infoAreaMask:ista ja kyse on asemadatasta, ja on käytetty havaintoasemien etäisyys
+  // rajoitinta (observationradius = x), palautetaan false, jos lähin havaintoasema on liian kaukana
+  // laskentapisteestä. Kaikissa muissa tilanteissa palautetaan true.
+  virtual bool CheckPossibleObservationDistance(
+      const NFmiCalculationParams &theCalculationParams) = 0;
 
   static boost::shared_ptr<NFmiFastQueryInfo> DoShallowCopy(
       const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);

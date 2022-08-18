@@ -49,4 +49,8 @@ class NFmiCalculationParams
   // Synop datoilla voi olla monia eri datoja (esim. Suomessa suomi+euro+maailma datat).
   // Ainakin SimpleCondition laskuihin näitä olisi muuten vaikea saada käyttöön, joten tässä on 'kuljetus' laskenta paikalle.
   NFmiFastQueryInfo *itsCurrentMultiInfoData = nullptr;
+  // Joskus havaintoasemien maksimi sallittua etäisyyttä laskentapisteeseen halutaan
+  // rajoittaa smarttool kielessä halutulla km määrällä "observationradius = 5", 
+  // tällöin jos asema on kauempana, sitä ei käytetä ollenkaan kyseiselle laskenta pisteelle.
+  float itsObservationRadiusInKm = kFloatMissing;
 };

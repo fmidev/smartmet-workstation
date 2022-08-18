@@ -337,6 +337,28 @@ void NFmiInfoAreaMask::Level(const NFmiLevel &theLevel) { itsLevel = theLevel; }
 // ----------------------------------------------------------------------
 
 bool NFmiInfoAreaMask::UseLevelInfo() const { return false; }
+
+bool NFmiInfoAreaMask::CheckPossibleObservationDistance(
+    const NFmiCalculationParams &theCalculationParams)
+{
+  if (theCalculationParams.itsObservationRadiusInKm != kFloatMissing && itsInfo && !itsInfo->IsGrid())
+  {
+    auto usedInfo = theCalculationParams.itsCurrentMultiInfoData
+                        ? theCalculationParams.itsCurrentMultiInfoData
+                        : itsInfo.get();
+    if (usedInfo->NearestLocation(theCalculationParams.itsLatlon,
+                                  theCalculationParams.itsObservationRadiusInKm * 1000.))
+    {
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \param theLatLon Undocumented
