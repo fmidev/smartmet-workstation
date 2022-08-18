@@ -526,7 +526,7 @@ std::string NFmiViewParamsView::ComposeToolTipText(const NFmiPoint& thePlace)
 						macroParamFilename.Extension("st");
 						macroParamTooltip += macroParamFilename;
 						macroParamTooltip += "<br><hr color=red><br>"; // väliviiva
-						macroParamTooltip += CtrlViewUtils::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), drawParam);
+						macroParamTooltip += CtrlViewUtils::XmlEncode(CtrlViewUtils::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), drawParam));
 						return macroParamTooltip;
 					}
 					catch(...)
