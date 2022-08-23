@@ -1086,6 +1086,17 @@ static std::vector<boost::shared_ptr<NFmiSmartToolCalculationBlock>> MakeCalcula
   return calculationBlockVector;
 }
 
+static int CalcUsedWorkingThreadCount(double wantedHardwareThreadPercent, int userGivenWorkingThreadCount)
+{
+  if (userGivenWorkingThreadCount > 0)
+  {
+    int maxThreadCount = std::thread::hardware_concurrency();
+    return std::min(maxThreadCount, userGivenWorkingThreadCount);
+  }
+  else
+    return NFmiQueryDataUtil::GetReasonableWorkingThreadCount(wantedHardwareThreadPercent);
+}
+
 // Kun yhden aika-askeleen hilan laskenta jaetaan eri säikeille osiin,
 // käy yksi säie aina läpi näin monen hilapisteen, ennen kuin pyytää lisää laskettavaa.
 // Tämä oli 100, mutta pienempi ChunkSize takaa että työt jaetaan paremmin.
@@ -1117,7 +1128,7 @@ void NFmiSmartToolModifier::ModifyConditionalData_ver2(
       const NFmiBitMask *usedBitmask = ::GetUsedBitmask(info, fModifySelectedLocationsOnly);
       calculationParams.itsObservationRadiusInKm = ExtraMacroParamData().ObservationRadiusInKm();
 
-      unsigned int usedThreadCount = NFmiQueryDataUtil::GetReasonableWorkingThreadCount(75);
+      int usedThreadCount = ::CalcUsedWorkingThreadCount(75, ExtraMacroParamData().WorkingThreadCount());
       std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector =
           ::MakeInfoCopyVector(usedThreadCount, info);
       // tehdään joka coren säikeelle oma calculaatioBlokki kopio
@@ -1247,6 +1258,7 @@ void NFmiSmartToolModifier::ModifyData2(
     try
     {
       NFmiCalculationParams calculationParams;
+      calculationParams.itsObservationRadiusInKm = ExtraMacroParamData().ObservationRadiusInKm();
       SetInfosMaskType(info);
       NFmiTimeDescriptor modifiedTimes(itsModifiedTimes ? *itsModifiedTimes
                                                         : info->TimeDescriptor());
@@ -1340,7 +1352,8 @@ void NFmiSmartToolModifier::ModifyData2_ver2(
       const NFmiBitMask *usedBitmask = ::GetUsedBitmask(info, fModifySelectedLocationsOnly);
       calculationParams.itsObservationRadiusInKm = ExtraMacroParamData().ObservationRadiusInKm();
 
-      unsigned int usedThreadCount = NFmiQueryDataUtil::GetReasonableWorkingThreadCount(75);
+      int usedThreadCount =
+          ::CalcUsedWorkingThreadCount(75, ExtraMacroParamData().WorkingThreadCount());
       std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector =
           ::MakeInfoCopyVector(usedThreadCount, info);
 
@@ -1882,7 +1895,6 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateTimeRangeMask(
                                     info,
                                     theAreaMaskInfo.GetFunctionType(),
                                     theAreaMaskInfo.FunctionArgumentCount(),
-                                    itsExtraMacroParamData->ObservationRadiusInKm(),
                                     theAreaMaskInfo.GetDataIdent().GetParamIdent()));
 }
 
@@ -1898,7 +1910,6 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreatePreviousFullDaysMas
                                            info,
                                            theAreaMaskInfo.GetFunctionType(),
                                            theAreaMaskInfo.FunctionArgumentCount(),
-                                           itsExtraMacroParamData->ObservationRadiusInKm(),
                                            theAreaMaskInfo.GetDataIdent().GetParamIdent()));
 }
 
@@ -1913,7 +1924,6 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateTimeDurationMask(
                                        info->DataType(),
                                        info,
                                        theAreaMaskInfo.FunctionArgumentCount(),
-                                       itsExtraMacroParamData->ObservationRadiusInKm(),
                                        theAreaMaskInfo.GetDataIdent().GetParamIdent()));
 }
 
@@ -2080,7 +2090,6 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreatePeekTimeMask(
                            info->DataType(),
                            info,
                            theAreaMaskInfo.FunctionArgumentCount(),
-                           itsExtraMacroParamData->ObservationRadiusInKm(),
                            theAreaMaskInfo.GetDataIdent().GetParamIdent()));
 }
 

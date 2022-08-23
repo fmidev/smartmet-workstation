@@ -343,17 +343,12 @@ NFmiPeekTimeMask::NFmiPeekTimeMask(Type theMaskType,
     NFmiInfoData::Type theDataType,
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     int theArgumentCount,
-    double observationRadiusInKm,
     unsigned long thePossibleMetaParamId)
     : NFmiInfoAreaMask(
         NFmiCalculationCondition(), theMaskType, theDataType, theInfo, thePossibleMetaParamId, NFmiAreaMask::kNoValue),
-    itsTimeOffsetInMinutes(0),
-    fUseMultiSourceData(false),
-    itsInfoVector(),
-    itsObservationRadiusInKm(observationRadiusInKm)
+    itsTimeOffsetInMinutes(0)
 {
     itsFunctionArgumentCount = theArgumentCount;
-    fUseMultiSourceData = NFmiInfoAreaMask::IsKnownMultiSourceData(itsInfo);
 }
 
 NFmiPeekTimeMask::~NFmiPeekTimeMask()
@@ -362,29 +357,13 @@ NFmiPeekTimeMask::~NFmiPeekTimeMask()
 
 NFmiPeekTimeMask::NFmiPeekTimeMask(const NFmiPeekTimeMask &theOther)
     : NFmiInfoAreaMask(theOther), 
-    itsTimeOffsetInMinutes(theOther.itsTimeOffsetInMinutes),
-    fUseMultiSourceData(theOther.fUseMultiSourceData),
-    itsInfoVector(),
-    itsObservationRadiusInKm(theOther.itsObservationRadiusInKm)
+    itsTimeOffsetInMinutes(theOther.itsTimeOffsetInMinutes)
 {
-    itsInfoVector = NFmiInfoAreaMask::CreateShallowCopyOfInfoVector(theOther.itsInfoVector);
 }
 
 NFmiAreaMask *NFmiPeekTimeMask::Clone() const
 {
     return new NFmiPeekTimeMask(*this);
-}
-
-void NFmiPeekTimeMask::Initialize()
-{
-    if(fUseMultiSourceData)
-    {
-        boost::shared_ptr<NFmiArea> dummyArea;
-        bool getOnlyStationarySynopData = true;
-        itsInfoVector = NFmiInfoAreaMask::GetMultiSourceData(itsInfo, dummyArea, getOnlyStationarySynopData);
-    }
-    else
-        itsInfoVector.push_back(itsInfo);
 }
 
 double NFmiPeekTimeMask::Value(const NFmiCalculationParams &theCalculationParams,
@@ -400,24 +379,16 @@ double NFmiPeekTimeMask::Value(const NFmiCalculationParams &theCalculationParams
         return NFmiInfoAreaMask::Value(peekCalculationParams, true);
     }
     else
-        return CalcValueFromObservation(theCalculationParams.itsLatlon, peekTime);
+        return CalcValueFromObservation(theCalculationParams, peekTime);
 }
 
-static double GetSearchRadiusInMetres(double observationRadiusInKm)
+double NFmiPeekTimeMask::CalcValueFromObservation(const NFmiCalculationParams &theCalculationParams,
+                                                  const NFmiMetTime &thePeekTime)
 {
-    if(observationRadiusInKm == kFloatMissing)
-        return kFloatMissing * 1000.; // Tämä on rajaton etsintä NFmiFastInfo::NearestLocation metodissa
-    else
-        return observationRadiusInKm * 1000.;
-}
-
-
-double NFmiPeekTimeMask::CalcValueFromObservation(const NFmiPoint &theLatlon, const NFmiMetTime &thePeekTime)
-{
-    NFmiLocation wantedLocation(theLatlon);
+  NFmiLocation wantedLocation(theCalculationParams.itsLatlon);
     double valueFromMinDistance = kFloatMissing;
     double minDistanceInMetres = 99999999999;
-    double searchRadiusInMetres = ::GetSearchRadiusInMetres(itsObservationRadiusInKm);
+    double searchRadiusInMetres = GetSearchRadiusInMetres(theCalculationParams.itsObservationRadiusInKm);
     for(auto &info : itsInfoVector)
     {
         // Datasta pitää löytyä etsitty aika suoraan ilman aikainterpolaatioita
@@ -467,9 +438,8 @@ NFmiInfoAreaMaskTimeRange::NFmiInfoAreaMaskTimeRange(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     NFmiAreaMask::FunctionType theIntegrationFunc,
     int theArgumentCount,
-    double observationRadiusInKm,
     unsigned long thePossibleMetaParamId)
-    : NFmiPeekTimeMask(theMaskType, theDataType, theInfo, theArgumentCount, observationRadiusInKm, thePossibleMetaParamId),
+    : NFmiPeekTimeMask(theMaskType, theDataType, theInfo, theArgumentCount, thePossibleMetaParamId),
     itsIntegrationFunc(theIntegrationFunc),
     itsFunctionModifier(),
     itsArgumentVector(),
@@ -568,37 +538,16 @@ void NFmiInfoAreaMaskTimeRange::DoTimeLoopCalculationsForGridData(unsigned long 
     }
 }
 
-static bool FindClosestStationData(const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector, const NFmiPoint &latlon, double observationRadiusInKm, size_t &dataIndexOut, unsigned long &locationIndexOut)
-{
-    NFmiLocation wantedLocation(latlon);
-    double minDistanceInMetres = 99999999999;
-    double searchRadiusInMetres = ::GetSearchRadiusInMetres(observationRadiusInKm);
-    for(size_t dataCounter = 0; dataCounter < infoVector.size(); dataCounter++)
-    {
-        const auto &info = infoVector[dataCounter];
-        if(info->NearestLocation(latlon, searchRadiusInMetres))
-        {
-            double currentDistanceInMetres = wantedLocation.Distance(info->LatLon());
-            if(currentDistanceInMetres < minDistanceInMetres)
-            {
-                minDistanceInMetres = currentDistanceInMetres;
-                dataIndexOut = dataCounter;
-                locationIndexOut = info->LocationIndex();
-            }
-        }
-    }
-    return minDistanceInMetres <= searchRadiusInMetres;
-}
-
 void NFmiInfoAreaMaskTimeRange::CalcValueFromObservationData(const NFmiCalculationParams &theCalculationParams)
 {
     NFmiCalculationParams calculationParams = theCalculationParams;
     size_t dataIndex = 0;
     unsigned long locationIndex = 0;
-    if(::FindClosestStationData(itsInfoVector, calculationParams.itsLatlon, itsObservationRadiusInKm, dataIndex, locationIndex))
+    if(FindClosestStationData(calculationParams.itsLatlon, calculationParams.itsObservationRadiusInKm, dataIndex, locationIndex))
     {
         auto &info = itsInfoVector[dataIndex];
         info->LocationIndex(locationIndex);
+        calculationParams.itsCurrentMultiInfoData = info.get();
 
         unsigned long startTimeIndex = 0;
         unsigned long endTimeIndex = 0;
@@ -641,7 +590,6 @@ NFmiInfoAreaMaskPreviousFullDays::NFmiInfoAreaMaskPreviousFullDays(const NFmiCal
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     NFmiAreaMask::FunctionType theIntegrationFunc,
     int theArgumentCount,
-    double observationRadiusInKm,
     unsigned long thePossibleMetaParamId)
     :NFmiInfoAreaMaskTimeRange(theOperation,
         theMaskType,
@@ -649,7 +597,6 @@ NFmiInfoAreaMaskPreviousFullDays::NFmiInfoAreaMaskPreviousFullDays(const NFmiCal
         theInfo,
         theIntegrationFunc,
         theArgumentCount,
-        observationRadiusInKm,
         thePossibleMetaParamId)
     , itsPreviousDayCount(0)
 {}
@@ -714,10 +661,11 @@ void NFmiInfoAreaMaskPreviousFullDays::CalcValueFromObservationData(const NFmiCa
     NFmiCalculationParams calculationParams = theCalculationParams;
     size_t dataIndex = 0;
     unsigned long locationIndex = 0;
-    if(::FindClosestStationData(itsInfoVector, calculationParams.itsLatlon, itsObservationRadiusInKm, dataIndex, locationIndex))
+    if(FindClosestStationData(calculationParams.itsLatlon, calculationParams.itsObservationRadiusInKm, dataIndex, locationIndex))
     {
         auto &info = itsInfoVector[dataIndex];
         info->LocationIndex(locationIndex);
+        calculationParams.itsCurrentMultiInfoData = info.get();
 
         unsigned long startTimeIndex = 0;
         unsigned long endTimeIndex = 0;
@@ -747,7 +695,6 @@ NFmiInfoAreaMaskTimeDuration::NFmiInfoAreaMaskTimeDuration(const NFmiCalculation
     NFmiInfoData::Type theDataType,
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     int theArgumentCount,
-    double observationRadiusInKm,
     unsigned long thePossibleMetaParamId)
     :NFmiInfoAreaMaskTimeRange(theOperation,
         theMaskType,
@@ -755,7 +702,6 @@ NFmiInfoAreaMaskTimeDuration::NFmiInfoAreaMaskTimeDuration(const NFmiCalculation
         theInfo,
         NFmiAreaMask::Min, // tähän on vain pakko antaa joku integraatio funktio, vaikka sitä ei käytetäkään tässä luokassa
         theArgumentCount,
-        observationRadiusInKm,
         thePossibleMetaParamId)
     ,itsSeekTimeInHours(0)
     ,itsSeekTimeInMinutes(0)
@@ -768,7 +714,8 @@ NFmiInfoAreaMaskTimeDuration::NFmiInfoAreaMaskTimeDuration(const NFmiInfoAreaMas
     , itsSeekTimeInHours(theOther.itsSeekTimeInHours)
     , itsSeekTimeInMinutes(theOther.itsSeekTimeInMinutes)
     , itsCalculatedTimeDurationInMinutes(theOther.itsCalculatedTimeDurationInMinutes)
-    , fUseCumulativeCalculation(theOther.fUseCumulativeCalculation)
+    , fUseCumulativeCalculation(theOther.fUseCumulativeCalculation),
+      fHasLegitDataAvailable(theOther.fHasLegitDataAvailable)
 {}
 
 NFmiAreaMask* NFmiInfoAreaMaskTimeDuration::Clone() const
@@ -793,12 +740,16 @@ double NFmiInfoAreaMaskTimeDuration::Value(const NFmiCalculationParams &theCalcu
         CalcValueFromObservationData(theCalculationParams);
 
     // Palautetaan kesto tunneissa
-    return itsCalculatedTimeDurationInMinutes / 60.f;
+    if (fHasLegitDataAvailable)
+      return itsCalculatedTimeDurationInMinutes / 60.f;
+    else
+      return kFloatMissing;
 }
 
 void NFmiInfoAreaMaskTimeDuration::InitializeIntegrationValues()
 {
-    itsCalculatedTimeDurationInMinutes = 0;
+  itsCalculatedTimeDurationInMinutes = 0;
+  fHasLegitDataAvailable = false;
 }
 
 static bool CalcTimeLoopIndexiesForTimeDuration(boost::shared_ptr<NFmiFastQueryInfo> &info,
@@ -836,10 +787,11 @@ void NFmiInfoAreaMaskTimeDuration::CalcValueFromObservationData(const NFmiCalcul
 {
     size_t dataIndex = 0;
     unsigned long locationIndex = 0;
-    if(::FindClosestStationData(itsInfoVector, theCalculationParams.itsLatlon, itsObservationRadiusInKm, dataIndex, locationIndex))
+    if(FindClosestStationData(theCalculationParams.itsLatlon, theCalculationParams.itsObservationRadiusInKm, dataIndex, locationIndex))
     {
         auto &info = itsInfoVector[dataIndex];
         info->LocationIndex(locationIndex);
+        theCalculationParams.itsCurrentMultiInfoData = info.get();
         CalcDurationTime(info, theCalculationParams);
     }
 }
@@ -875,6 +827,7 @@ void NFmiInfoAreaMaskTimeDuration::CalcDurationTime(boost::shared_ptr<NFmiFastQu
         &startTimeIndex,
         &endTimeIndex))
     {
+        fHasLegitDataAvailable = true;
         int timeIndexIncrement = 1;
         bool reverserTime = false;
         if(startTimeIndex > endTimeIndex)
