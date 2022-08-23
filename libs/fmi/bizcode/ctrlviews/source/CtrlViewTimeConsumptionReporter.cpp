@@ -1,6 +1,5 @@
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "NFmiCtrlView.h"
-#include "catlog/catlog.h"
 #include "SpecialDesctopIndex.h"
 #include "NFmiDrawParam.h"
 #include "CtrlViewFunctions.h"
@@ -35,36 +34,47 @@ namespace CtrlViewUtils
 {
     size_t CtrlViewTimeConsumptionReporter::currentUpdateId_ = 1001;
 
-    CtrlViewTimeConsumptionReporter::CtrlViewTimeConsumptionReporter(NFmiCtrlView *ctrlView, const std::string &eventName)
+    CtrlViewTimeConsumptionReporter::CtrlViewTimeConsumptionReporter(NFmiCtrlView *ctrlView, const std::string &eventName, CatLog::Severity logLevel)
         :ctrlView_(ctrlView)
         , eventName_(eventName)
         , identifier_()
         , startTime_(std::chrono::system_clock::now())
+        , logLevel_(logLevel)
     {
-        if(CatLog::doTraceLevelLogging())
+        if(doLogging())
         {
             identifier_ = makeCtrlViewIdentifier(ctrlView_);
-            std::string message = makeCurrentUpdateIdString() + " " + eventName_;
+            std::string message;
+            if(addUpdateId())
+            {
+                message += makeCurrentUpdateIdString() + " ";
+            }
+            message += eventName_;
             if(ctrlView_)
                 message += " starts for: " + identifier_;
             else
                 message += " starts";
-            CatLog::logMessage(message, CatLog::Severity::Trace, CatLog::Category::Visualization, true);
+            CatLog::logMessage(message, logLevel_, CatLog::Category::Visualization, true);
         }
     }
 
     CtrlViewTimeConsumptionReporter::~CtrlViewTimeConsumptionReporter()
     {
-        if(CatLog::doTraceLevelLogging())
+        if(doLogging())
         {
             auto endTime(std::chrono::system_clock::now());
             auto durationValue = endTime - startTime_;
-            std::string message = makeCurrentUpdateIdString() + " Operation lasted ";
+            std::string message;
+            if(addUpdateId())
+            {
+                message += makeCurrentUpdateIdString() + " ";
+            }
+            message += "Operation lasted ";
             message += makeReadableDurationString(durationValue);
             message += " for " + eventName_;
             if(ctrlView_)
                 message += " by: " + identifier_;
-            CatLog::logMessage(message, CatLog::Severity::Trace, CatLog::Category::Visualization, true);
+            CatLog::logMessage(message, logLevel_, CatLog::Category::Visualization, true);
         }
     }
 
@@ -156,4 +166,13 @@ namespace CtrlViewUtils
         currentUpdateId_++;
     }
 
+    bool CtrlViewTimeConsumptionReporter::doLogging() const
+    {
+        return CatLog::doTraceLevelLogging() || (logLevel_ > CatLog::Severity::Trace);
+    }
+
+    bool CtrlViewTimeConsumptionReporter::addUpdateId() const
+    {
+        return logLevel_ == CatLog::Severity::Trace;
+    }
 }
