@@ -43,6 +43,7 @@
 #include <newbase/NFmiEnumConverter.h>
 #include "NFmiControlPointObservationBlender.h"
 #include "ApplicationInterface.h"
+#include "CtrlViewTimeConsumptionReporter.h"
 
 
 #ifdef _MSC_VER
@@ -948,6 +949,8 @@ static bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, 
 	if(editedData)
 	{
 		boost::shared_ptr<NFmiTimeDescriptor> times = theAdapter.CreateDataFilteringTimeDescriptor(editedData);
+
+		CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(nullptr, __FUNCTION__, CatLog::Severity::Debug);
 
 		status = ::DoSmartToolEditing(theAdapter, theSmartToolText, theRelativePathMacroName, fSelectedLocationsOnly, *times,
 							std::string(" - modified with SmartTool."),
