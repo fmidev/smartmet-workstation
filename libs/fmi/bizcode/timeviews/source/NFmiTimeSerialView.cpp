@@ -4754,13 +4754,14 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
 	{
         NFmiPoint primaryLocationLatlon(GetTooltipLatlon());
         NFmiMetTime aTime = Value2Time(theRelativePoint, true); // haetaan aluksi tarkka aika
-        short mainDataTimeResolution = static_cast<short>(viewedInfo->TimeResolution());
-        if(mainDataTimeResolution > 60)
-            mainDataTimeResolution = 60;
-        aTime.SetTimeStep(mainDataTimeResolution); // asetetaan tooltipin ajaksi joko päädatatan aikaresoluutio tai maksimissaan 60 minuuttia
 
         // Tämä varmistaa että myös erikoistapaus eli synop-data menee oikein
         viewedInfo = ::GetUsedSmartInfo(itsCtrlViewDocumentInterface, primaryLocationLatlon, viewedInfo, aTime, itsDrawParam);
+
+		auto mainDataTimeResolution = static_cast<long>(viewedInfo->TimeResolution());
+		if(mainDataTimeResolution > 60)
+			mainDataTimeResolution = 60;
+		aTime.SetTimeStep(mainDataTimeResolution); // asetetaan tooltipin ajaksi joko päädatatan aikaresoluutio tai maksimissaan 60 minuuttia
 
 	    NFmiString timeStr1 = aTime.ToStr("Nnnn DD. YYYY\nWwww HH:mm [UTC]", itsCtrlViewDocumentInterface->Language());
 	    str += timeStr1;
