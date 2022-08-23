@@ -211,7 +211,8 @@ class NFmiAreaMask
     SimpleConditionUsedAsStationData,  //!< Jos pääfunktion (esim. area_sum funktion) datan tuottaja on sama kuin simple-condition tuottaja ja kyse on asemadatasta, pitää kyseistä simple-condition dataa käsitellä myös asemadatana.
     ModAvg, //!< Käytetään suunta parametrien kanssa, ottaa huomioon jatkuvuuden 0/360 kohdassa
     ModMin,  //!< Käytetään suunta parametrien kanssa, ottaa huomioon jatkuvuuden 0/360 kohdassa
-    ModMax   //!< Käytetään suunta parametrien kanssa, ottaa huomioon jatkuvuuden 0/360 kohdassa
+    ModMax,   //!< Käytetään suunta parametrien kanssa, ottaa huomioon jatkuvuuden 0/360 kohdassa
+    WorkingThreadCount //!< Jos käyttäjä haluaa optimoida laskentoja ja käyttää tietyn määrän loogisia coreja laskennoissa
   };
 
   //! Function direction, e.g. with 'met'-functions x- and/or y-direction
@@ -352,8 +353,10 @@ class NFmiAreaMask
   // Jos kyse infoAreaMask:ista ja kyse on asemadatasta, ja on käytetty havaintoasemien etäisyys
   // rajoitinta (observationradius = x), palautetaan false, jos lähin havaintoasema on liian kaukana
   // laskentapisteestä. Kaikissa muissa tilanteissa palautetaan true.
+  // Jos kyse multi-data tapauksesta, asetetaan theCalculationParams.itsCurrentMultiInfoData
+  // osoittamaan oikeaan dataan.
   virtual bool CheckPossibleObservationDistance(
-      const NFmiCalculationParams &theCalculationParams) = 0;
+      const NFmiCalculationParams &theCalculationParamsInOut) = 0;
 
   static boost::shared_ptr<NFmiFastQueryInfo> DoShallowCopy(
       const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
