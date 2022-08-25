@@ -24,7 +24,6 @@ NFmiInfoAreaMaskOccurrance::NFmiInfoAreaMaskOccurrance(
     NFmiAreaMask::FunctionType theSecondaryFunc,
     int theArgumentCount,
     const boost::shared_ptr<NFmiArea> &theCalculationArea,
-    bool synopXCase,
     unsigned long thePossibleMetaParamId)
     : NFmiInfoAreaMaskProbFunc(theOperation,
                                theMaskType,
@@ -34,24 +33,16 @@ NFmiInfoAreaMaskOccurrance::NFmiInfoAreaMaskOccurrance(
                                theSecondaryFunc,
                                theArgumentCount, 
                                thePossibleMetaParamId),
-      fSynopXCase(synopXCase),
-      fUseMultiSourceData(false),
       itsCalculationArea(theCalculationArea),
-      itsInfoVector(),
       itsCalculatedLocationIndexies()
 {
-  fUseMultiSourceData = NFmiInfoAreaMask::IsKnownMultiSourceData(itsInfo);
 }
 
 NFmiInfoAreaMaskOccurrance::NFmiInfoAreaMaskOccurrance(const NFmiInfoAreaMaskOccurrance &theOther)
     : NFmiInfoAreaMaskProbFunc(theOther),
-      fSynopXCase(theOther.fSynopXCase),
-      fUseMultiSourceData(theOther.fUseMultiSourceData),
       itsCalculationArea(theOther.itsCalculationArea),
-      itsInfoVector(),
       itsCalculatedLocationIndexies(theOther.itsCalculatedLocationIndexies)
 {
-    itsInfoVector = NFmiInfoAreaMask::CreateShallowCopyOfInfoVector(theOther.itsInfoVector);
 }
 
 NFmiAreaMask *NFmiInfoAreaMaskOccurrance::Clone() const
@@ -61,14 +52,9 @@ NFmiAreaMask *NFmiInfoAreaMaskOccurrance::Clone() const
 
 void NFmiInfoAreaMaskOccurrance::Initialize()
 {
+  NFmiInfoAreaMaskProbFunc::Initialize();
   // cachejen alustuksia tehdään vain asemadatoille. Hila datat hanskataan emoluokassa ja sitä en
   // lähde tässä vielä optinmoimaan.
-  if (!fUseMultiSourceData)
-    itsInfoVector.push_back(itsInfo);
-  else
-  {
-      itsInfoVector = NFmiInfoAreaMask::GetMultiSourceData(itsInfo, itsCalculationArea, fSynopXCase);
-  }
   InitializeLocationIndexCaches();
 }
 
@@ -256,7 +242,6 @@ NFmiInfoAreaMaskOccurranceSimpleCondition::NFmiInfoAreaMaskOccurranceSimpleCondi
     NFmiAreaMask::FunctionType theSecondaryFunc,
     int theArgumentCount,
     const boost::shared_ptr<NFmiArea> &theCalculationArea,
-    bool synopXCase,
     unsigned long thePossibleMetaParamId)
     :NFmiInfoAreaMaskOccurrance(theOperation,
         theMaskType,
@@ -266,7 +251,6 @@ NFmiInfoAreaMaskOccurranceSimpleCondition::NFmiInfoAreaMaskOccurranceSimpleCondi
         theSecondaryFunc,
         theArgumentCount,
         theCalculationArea,
-        synopXCase,
         thePossibleMetaParamId)
 {}
 

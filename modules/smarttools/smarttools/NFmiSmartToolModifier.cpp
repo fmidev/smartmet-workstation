@@ -1849,7 +1849,6 @@ static bool SynopXCaseSettings(const NFmiAreaMaskInfo &theAreaMaskInfo)
 boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateOccurrenceMask(
     const NFmiAreaMaskInfo &theAreaMaskInfo, bool &mustUsePressureInterpolation)
 {
-  bool synopXCase = ::SynopXCaseSettings(theAreaMaskInfo);
   boost::shared_ptr<NFmiFastQueryInfo> info =
       CreateInfo(theAreaMaskInfo, mustUsePressureInterpolation);
   boost::shared_ptr<NFmiArea> calculationArea(UsedMacroParamData()->Area()->Clone());
@@ -1864,7 +1863,6 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateOccurrenceMask(
         theAreaMaskInfo.GetSecondaryFunctionType(),
         theAreaMaskInfo.FunctionArgumentCount(),
         calculationArea,
-        synopXCase,
         theAreaMaskInfo.GetDataIdent().GetParamIdent()));
   }
   else
@@ -1878,7 +1876,6 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateOccurrenceMask(
                                        theAreaMaskInfo.GetSecondaryFunctionType(),
                                        theAreaMaskInfo.FunctionArgumentCount(),
                                        calculationArea,
-                                       synopXCase,
                                        theAreaMaskInfo.GetDataIdent().GetParamIdent()));
   }
 }

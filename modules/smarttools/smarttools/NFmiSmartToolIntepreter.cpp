@@ -492,7 +492,7 @@ bool NFmiSmartToolIntepreter::ExtractPossibleNextCalculationSection(bool &fWasBl
 // 2. Pitää olla sijoitus-operaatio eli '='
 bool NFmiSmartToolIntepreter::IsPossibleCalculationLine(const std::string &theTextLine)
 {
-  if (FindAnyFromText(theTextLine, itsTokenConditionalCommands)) return false;
+  if (StartsWithAnyWholeWord(theTextLine, itsTokenConditionalCommands)) return false;
   if (theTextLine.find(string("=")) != string::npos) return true;
 
   if (std::find_if(theTextLine.begin(), theTextLine.end(), std::not1(std::ptr_fun(::isspace))) !=
@@ -576,6 +576,36 @@ bool NFmiSmartToolIntepreter::FindAnyFromText(const std::string &theText,
         if (IsWordContinuing(ch2)) continue;
       }
       return true;
+    }
+  }
+  return false;
+}
+
+// Jos annettu teksti alkaa jollain kokonaisella theSearchedWords sanalla, palauta
+// true, muuten false. Vertailut tehdään case-insensitiivisesti.
+bool NFmiSmartToolIntepreter::StartsWithAnyWholeWord(
+    const std::string &theText,
+                       const std::vector<std::string> &theSearchedWords)
+{
+  std::stringstream out(theText);
+  // Otetaan stringista ensimmaiset yhtenaiset merkit, ilman alun whitespaceja.
+  std::string firstLumpOfCharacters;
+  out >> firstLumpOfCharacters;
+  for (const auto &checkedWord : theSearchedWords)
+  {
+    if (boost::algorithm::istarts_with(firstLumpOfCharacters, checkedWord))
+    {
+      if (checkedWord.size() == firstLumpOfCharacters.size())
+      {
+        return true;
+      }
+      else
+      {
+        if (!::IsWordContinuing(firstLumpOfCharacters[checkedWord.size()]))
+        {
+          return true;
+        }
+      }
     }
   }
   return false;
