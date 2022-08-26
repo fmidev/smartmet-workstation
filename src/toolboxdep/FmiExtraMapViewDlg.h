@@ -164,4 +164,11 @@ public:
 	afx_msg void OnAcceleratorExtraMapViewRangeMeterColorToggle();
 	afx_msg void OnAcceleratorExtraMapViewRangeMeterFixedLocationModeToggle();
 	afx_msg void OnAcceleratorLogViewerToolboxdeb();
+	afx_msg void OnButtonOpenMainMapViewExtraMap();
+	afx_msg void OnButtonOpenOtherSideMapViewExtraMap();
+	afx_msg void OnButtonOpenTimeSerialViewExtraMap();
+	afx_msg void OnButtonOpenSmarttoolsDialogExtraMap();
+	afx_msg void OnButtonOpenSoundingViewExtraMap();
+	afx_msg void OnButtonOpenCrosssectionViewExtraMap();
+	afx_msg void OnButtonOpenViewMacroDialogExtraMap();
 };

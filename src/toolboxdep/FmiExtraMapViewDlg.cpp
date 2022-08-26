@@ -149,6 +149,13 @@ ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_INCREMENT_MODE_TOGGLE, &CFm
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_COLOR_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterColorToggle)
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_FIXED_LOCATION_MODE_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterFixedLocationModeToggle)
 ON_COMMAND(ID_ACCELERATOR_LOG_VIEWER_TOOLBOXDEB, &CFmiExtraMapViewDlg::OnAcceleratorLogViewerToolboxdeb)
+ON_COMMAND(ID_BUTTON_OPEN_MAIN_MAP_VIEW_EXTRA_MAP, &CFmiExtraMapViewDlg::OnButtonOpenMainMapViewExtraMap)
+ON_COMMAND(ID_BUTTON_OPEN_OTHER_SIDE_MAP_VIEW_EXTRA_MAP, &CFmiExtraMapViewDlg::OnButtonOpenOtherSideMapViewExtraMap)
+ON_COMMAND(ID_BUTTON_OPEN_TIME_SERIAL_VIEW_EXTRA_MAP, &CFmiExtraMapViewDlg::OnButtonOpenTimeSerialViewExtraMap)
+ON_COMMAND(ID_BUTTON_OPEN_SMARTTOOLS_DIALOG_EXTRA_MAP, &CFmiExtraMapViewDlg::OnButtonOpenSmarttoolsDialogExtraMap)
+ON_COMMAND(ID_BUTTON_OPEN_SOUNDING_VIEW_EXTRA_MAP, &CFmiExtraMapViewDlg::OnButtonOpenSoundingViewExtraMap)
+ON_COMMAND(ID_BUTTON_OPEN_CROSSSECTION_VIEW_EXTRA_MAP, &CFmiExtraMapViewDlg::OnButtonOpenCrosssectionViewExtraMap)
+ON_COMMAND(ID_BUTTON_OPEN_VIEW_MACRO_DIALOG_EXTRA_MAP, &CFmiExtraMapViewDlg::OnButtonOpenViewMacroDialogExtraMap)
 END_MESSAGE_MAP()
 
 
@@ -964,4 +971,47 @@ void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterFixedLocationModeTo
 void CFmiExtraMapViewDlg::OnAcceleratorLogViewerToolboxdeb()
 {
 	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenLogViewer();
+}
+
+
+void CFmiExtraMapViewDlg::OnButtonOpenMainMapViewExtraMap()
+{
+	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenMainMapView();
+}
+
+
+void CFmiExtraMapViewDlg::OnButtonOpenOtherSideMapViewExtraMap()
+{
+	unsigned int otherSideMapViewIndex = (itsMapViewDescTopIndex == 1) ? 2 : 1;
+	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenSideMapView(otherSideMapViewIndex);
+}
+
+
+void CFmiExtraMapViewDlg::OnButtonOpenTimeSerialViewExtraMap()
+{
+	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenTimeSerialView();
+}
+
+
+void CFmiExtraMapViewDlg::OnButtonOpenSmarttoolsDialogExtraMap()
+{
+	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenSmarttoolsDialog();
+}
+
+
+void CFmiExtraMapViewDlg::OnButtonOpenSoundingViewExtraMap()
+{
+	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenSoundingView();
+}
+
+
+void CFmiExtraMapViewDlg::OnButtonOpenCrosssectionViewExtraMap()
+{
+	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenCrossSectionView();
+}
+
+
+void CFmiExtraMapViewDlg::OnButtonOpenViewMacroDialogExtraMap()
+{
+	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenViewMacroDialog();
 }
