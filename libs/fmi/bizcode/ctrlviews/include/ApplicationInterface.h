@@ -73,6 +73,13 @@ public:
     virtual void SetToDoFirstTimeWmsDataBasedUpdate() = 0;
     virtual void OpenVisualizationsettingsDialog() = 0;
     virtual void OpenLogViewer() = 0;
+    virtual void OpenTimeSerialView() = 0;
+    virtual void OpenCrossSectionView() = 0;
+    virtual void OpenSoundingView() = 0;
+    virtual void OpenMainMapView() = 0;
+    virtual void OpenSideMapView(unsigned int theMapViewDescTopIndex) = 0;
+    virtual void OpenSmarttoolsDialog() = 0;
+    virtual void OpenViewMacroDialog() = 0;
 
 private:
     void AddToHatchingToolmasterEpsilonFactor(float addedValue);

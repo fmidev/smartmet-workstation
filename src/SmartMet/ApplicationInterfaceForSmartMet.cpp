@@ -324,3 +324,46 @@ void ApplicationInterfaceForSmartMet::OpenLogViewer()
 {
     GetDocument()->OpenLogViewer();
 }
+
+void ApplicationInterfaceForSmartMet::OpenTimeSerialView()
+{
+    GetDocument()->OnButtonTimeEditValuesDlg();
+}
+
+void ApplicationInterfaceForSmartMet::OpenCrossSectionView()
+{
+    GetDocument()->OnButtonShowCrossSection();
+}
+
+void ApplicationInterfaceForSmartMet::OpenSoundingView()
+{
+    GetDocument()->OnButtonTempDlg();
+}
+
+void ApplicationInterfaceForSmartMet::OpenMainMapView()
+{
+    auto *mainWindow = AfxGetMainWnd();
+    if(mainWindow)
+    {
+        mainWindow->ShowWindow(SW_RESTORE);	// Vaihdoin SW_RESTOREN, muistaa ikkunan muutetun koon.
+        mainWindow->SetActiveWindow();
+    }
+}
+
+void ApplicationInterfaceForSmartMet::OpenSideMapView(unsigned int theMapViewDescTopIndex)
+{
+    if(theMapViewDescTopIndex == 1)
+        GetDocument()->OnExtraMapView1();
+    else
+        GetDocument()->OnExtraMapView2();
+}
+
+void ApplicationInterfaceForSmartMet::OpenSmarttoolsDialog()
+{
+    GetDocument()->OnButtonOpenSmartToolDlg();
+}
+
+void ApplicationInterfaceForSmartMet::OpenViewMacroDialog()
+{
+    GetDocument()->OnAcceleratorStoreViewMacro();
+}
