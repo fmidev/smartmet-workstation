@@ -886,9 +886,9 @@ NFmiViewSettingMacro::TempView::~TempView(void)
 {
 }
 
-void NFmiViewSettingMacro::TempView::MTATempSystem(const NFmiMTATempSystem &theData)
+void NFmiViewSettingMacro::TempView::MTATempSystem(const NFmiMTATempSystem &theData, bool disableWindowManipulations)
 {
-	itsMTATempSystem.InitFromViewMacro(theData);
+	itsMTATempSystem.InitFromViewMacro(theData, disableWindowManipulations);
 }
 
 void NFmiViewSettingMacro::TempView::Write(std::ostream& os) const
@@ -964,7 +964,7 @@ NFmiViewSettingMacro::TrajectoryView::~TrajectoryView(void)
 
 void NFmiViewSettingMacro::TrajectoryView::TrajectorySystem(const NFmiTrajectorySystem &theData)
 {
-	itsTrajectorySystem.Init(theData);
+	itsTrajectorySystem.Init(theData, false);
 }
 
 void NFmiViewSettingMacro::TrajectoryView::Write(std::ostream& os) const
@@ -1505,9 +1505,9 @@ void NFmiViewSettingMacro::MapViewDescTop::Add(std::vector<MapRow> &theMapRowSet
 	theMapRowSettings.push_back(theMapRow);
 }
 
-void NFmiViewSettingMacro::MapViewDescTop::SetMapViewDescTop(const NFmiMapViewDescTop &theData, NFmiMapViewWinRegistry &theMapViewWinRegistry)
+void NFmiViewSettingMacro::MapViewDescTop::SetMapViewDescTop(const NFmiMapViewDescTop &theData, NFmiMapViewWinRegistry &theMapViewWinRegistry, bool disableWindowManipulations)
 {
-	itsMapViewDescTop.InitForViewMacro(theData, theMapViewWinRegistry ,true);
+	itsMapViewDescTop.InitForViewMacro(theData, theMapViewWinRegistry ,true, disableWindowManipulations);
 }
 
 // tutkii miss‰ n‰yttˆ riviss‰ on viimeiset parametrit. T‰ll‰ pyrit‰‰n s‰‰st‰m‰‰n

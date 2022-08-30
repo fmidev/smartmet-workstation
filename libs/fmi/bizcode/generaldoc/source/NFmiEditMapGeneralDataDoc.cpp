@@ -6329,7 +6329,7 @@ bool InitCPManagerSet(void)
 		tempView.ShowEcmwf(false);
 		tempView.ShowHirlam(false);
 
-		tempView.MTATempSystem(itsMTATempSystem);
+		tempView.MTATempSystem(itsMTATempSystem, false);
 	}
 
 	void FillTrajectoryViewMacro(NFmiViewSettingMacro &theMacro)
@@ -6350,7 +6350,7 @@ bool InitCPManagerSet(void)
 	void FillExtraMapViewSettingMacro2(NFmiViewSettingMacro::MapViewDescTop &theViewMacro, NFmiMapViewDescTop &theDescTop, int theDescTopIndex)
 	{
         boost::shared_ptr<NFmiMapViewWinRegistry> mapViewWinRegistry = ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex);
-        theViewMacro.SetMapViewDescTop(theDescTop, *mapViewWinRegistry.get());
+        theViewMacro.SetMapViewDescTop(theDescTop, *mapViewWinRegistry.get(), false);
 		theViewMacro.SetAllRowParams(theDescTop.DrawParamListVector(), itsMacroParamSystem);
 		theViewMacro.DipMapHelperList(theDescTop.GetViewMacroDipMapHelperList());
 	}
@@ -6554,7 +6554,7 @@ bool InitCPManagerSet(void)
 	{
 		NFmiViewSettingMacro::TempView &tempView = theMacro.GetTempView();
 
-		itsMTATempSystem.InitFromViewMacro(tempView.MTATempSystem());
+		itsMTATempSystem.InitFromViewMacro(tempView.MTATempSystem(), MetEditorOptionsData().DisableWindowManipulations());
 		itsMTATempSystem.UpdateFromViewMacro(true);
 	}
 
@@ -6562,7 +6562,7 @@ bool InitCPManagerSet(void)
 	{
 		NFmiViewSettingMacro::TrajectoryView &view = theMacro.GetTrajectoryView();
 
-		itsTrajectorySystem->Init(view.TrajectorySystem());
+		itsTrajectorySystem->Init(view.TrajectorySystem(), MetEditorOptionsData().DisableWindowManipulations());
 	}
 
 	void SetWarningCenterView(NFmiViewSettingMacro &theMacro)
@@ -6595,7 +6595,7 @@ bool InitCPManagerSet(void)
 	{
 		NFmiViewSettingMacro::CrossSectionView &view = theMacro.GetCrossSectionView();
 
-		itsCrossSectionSystem.Init(view.CrossSectionSystem());
+		itsCrossSectionSystem.Init(view.CrossSectionSystem(), MetEditorOptionsData().DisableWindowManipulations());
 
         // Pit‰‰ tyhjent‰‰ aluksi poikkileikkausn‰ytˆn kaikkien rivien parametrit, koska sen t‰yttˆ looppia (joka tyhjent‰‰ kulloisenkin rivin ensin) ei v‰ltt‰m‰tt‰ edes ajeta
 		GetCombinedMapHandler()->clearDesctopsAllParams(CtrlViewUtils::kFmiCrossSectionView);
@@ -6662,7 +6662,7 @@ bool InitCPManagerSet(void)
 		NFmiMapViewDescTop &descTop = *GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex);
         boost::shared_ptr<NFmiMapViewWinRegistry> mapViewWinRegistry = ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex);
 
-		descTop.InitForViewMacro(theViewMacro.GetMapViewDescTop(), *mapViewWinRegistry.get(), false);
+		descTop.InitForViewMacro(theViewMacro.GetMapViewDescTop(), *mapViewWinRegistry.get(), false, MetEditorOptionsData().DisableWindowManipulations());
 		// Mit‰ tehd‰‰n extra rows:ien kanssa
 //		theViewMacro.SetAllExtraRowParams(descTop.ExtraDrawParamListVector(), itsMacroParamSystem);
 		descTop.SetViewMacroDipMapHelperList(theViewMacro.DipMapHelperList());

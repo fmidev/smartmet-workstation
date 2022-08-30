@@ -294,7 +294,7 @@ public:
 		bool ShowRealSounding(void) const {return fShowRealSounding;}
 		void ShowRealSounding(bool newValue) {fShowRealSounding = newValue;}
 		const NFmiMTATempSystem& MTATempSystem(void) const {return itsMTATempSystem;}
-		void MTATempSystem(const NFmiMTATempSystem &theData);
+		void MTATempSystem(const NFmiMTATempSystem &theData, bool disableWindowManipulations);
 		double CurrentVersionNumber(void) {return itsCurrentVersionNumber;}
 		void CurrentVersionNumber(double newValue) {itsCurrentVersionNumber = newValue;}
 
@@ -384,7 +384,7 @@ public:
         MfcViewStatus& ViewStatus() { return itsViewStatus; }
         void SetMacroParamInitFileNames(const std::string &theRootPath);
 		const NFmiMapViewDescTop& GetMapViewDescTop(void) const {return itsMapViewDescTop;}
-		void SetMapViewDescTop(const NFmiMapViewDescTop &theData, NFmiMapViewWinRegistry &theMapViewWinRegistry);
+		void SetMapViewDescTop(const NFmiMapViewDescTop &theData, NFmiMapViewWinRegistry &theMapViewWinRegistry, bool disableWindowManipulations);
 
 		const std::vector<NFmiMapViewDescTop::ViewMacroDipMapHelper>& DipMapHelperList(void) const {return itsDipMapHelperList;}
 		void DipMapHelperList(const std::vector<NFmiMapViewDescTop::ViewMacroDipMapHelper> &theList) {itsDipMapHelperList = theList;}

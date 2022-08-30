@@ -132,7 +132,7 @@ class NFmiMTATempSystem
 
 	// Heitt‰‰ poikkeuksia virhetilanteissa
     void Init(NFmiProducerSystem &theProducerSystem, const std::vector<NFmiProducer>& theExtraSoundingProducers, const SoundingViewSettingsFromWindowsRegisty & soundingViewSettingsFromWindowsRegisty);
-	void InitFromViewMacro(const NFmiMTATempSystem &theOther);
+	void InitFromViewMacro(const NFmiMTATempSystem &theOther, bool disableWindowManipulations);
 	void AddTemp(const TempInfo &theTempInfo);
 	void ClearTemps(void);
 	const Container& GetTemps(void) const {return itsTempInfos;}

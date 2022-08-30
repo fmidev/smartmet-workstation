@@ -84,7 +84,7 @@ public:
 
 	void Init(NFmiMapViewWinRegistry &theMapViewWinRegistry);
 	void StoreMapViewDescTopToSettings(void);
-    void InitForViewMacro(const NFmiMapViewDescTop &theOther, NFmiMapViewWinRegistry &theMapViewWinRegistry, bool getFromRegisty);
+    void InitForViewMacro(const NFmiMapViewDescTop &theOther, NFmiMapViewWinRegistry &theMapViewWinRegistry, bool getFromRegisty, bool disableWindowManipulations);
 	std::vector<ViewMacroDipMapHelper> GetViewMacroDipMapHelperList(void);
 	void SetViewMacroDipMapHelperList(const std::vector<ViewMacroDipMapHelper> &theData);
 	void StoreToMapViewWinRegistry(NFmiMapViewWinRegistry &theMapViewWinRegistry);
