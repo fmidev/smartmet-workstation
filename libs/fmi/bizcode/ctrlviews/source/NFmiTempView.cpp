@@ -2091,7 +2091,7 @@ bool NFmiTempView::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, s
 	if(theKey & kCtrlKey && theKey & kShiftKey)
 	{
 		// CTRL + SHIFT + rullalla säädetään kaikkialta ikkunasta valitun tuottaja indeksiä
-		auto direction = (theDelta > 0) ? kUp : kDown;
+		auto direction = (theDelta > 0) ? kDown : kUp;
 		mtaTempSystem.ToggleSelectedProducerIndex(direction);
 		return true;
 	}
