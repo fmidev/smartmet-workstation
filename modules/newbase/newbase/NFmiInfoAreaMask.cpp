@@ -408,22 +408,29 @@ bool NFmiInfoAreaMask::CheckPossibleObservationDistance(
     const NFmiCalculationParams &theCalculationParamsInOut)
 {
   theCalculationParamsInOut.itsCurrentMultiInfoData = nullptr;
-  if (theCalculationParamsInOut.itsObservationRadiusInKm != kFloatMissing && itsInfo &&
-      !itsInfo->IsGrid())
+  if (itsInfo && !itsInfo->IsGrid())
   {
-    size_t dataIndex = 0;
-    unsigned long locationIndex = 0;
-    if (FindClosestStationData(theCalculationParamsInOut.itsLatlon, theCalculationParamsInOut.itsObservationRadiusInKm, dataIndex, locationIndex))
+      // Jos ObsRadius:sella on arvo tai on kyse multi-info datasta, pitää etsiä lähin data ja paikka siinä
+    if (theCalculationParamsInOut.itsObservationRadiusInKm != kFloatMissing ||
+        itsInfoVector.size() > 1)
     {
-      if (itsInfoVector.size() > 1)
+      size_t dataIndex = 0;
+      unsigned long locationIndex = 0;
+      if (FindClosestStationData(theCalculationParamsInOut.itsLatlon,
+                                 theCalculationParamsInOut.itsObservationRadiusInKm,
+                                 dataIndex,
+                                 locationIndex))
       {
-        theCalculationParamsInOut.itsCurrentMultiInfoData = itsInfoVector[dataIndex].get();
+        if (itsInfoVector.size() > 1)
+        {
+          theCalculationParamsInOut.itsCurrentMultiInfoData = itsInfoVector[dataIndex].get();
+        }
+        return true;
       }
-      return true;
-    }
-    else
-    {
-      return false;
+      else
+      {
+        return false;
+      }
     }
   }
   return true;
