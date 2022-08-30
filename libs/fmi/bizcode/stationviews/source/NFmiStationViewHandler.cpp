@@ -448,13 +448,19 @@ void NFmiStationViewHandler::DrawWindTableAreas(void)
 	}
 }
 
+bool NFmiStationViewHandler::IsCrossSectionViewStuffShownOnThisMapView() const
+{
+	auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
+	return crossSectionSystem->CrossSectionViewOn() && crossSectionSystem->CrossSectionSystemActive() && itsCtrlViewDocumentInterface->ShowCrossSectionMarkersOnMap(itsMapViewDescTopIndex);
+}
+
 // piirretään kartalle (jos ollaan oikeassa moodissa) poikkileikkauksen
 // 'reitti' pallukat
 void NFmiStationViewHandler::DrawCrossSectionPoints(void)
 {
-    auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
-	if(crossSectionSystem->CrossSectionSystemActive() && itsCtrlViewDocumentInterface->ShowCrossSectionMarkersOnMap(itsMapViewDescTopIndex))
+	if(IsCrossSectionViewStuffShownOnThisMapView())
 	{
+	    auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
 		if(itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
 			return ; // ei piirretä näitä kun ollaan poikkileikkaus trajektori moodissa
 
@@ -2372,8 +2378,7 @@ bool NFmiStationViewHandler::LeftButtonUpCrossSectionActions(const NFmiPoint& th
 // 4. Karttaruudun pitää olla vasemmalla ylhäällä (1. ruutu), koska vain siihen piirretään kyseiset pisteet.
 bool NFmiStationViewHandler::AllowCrossSectionPointManipulations()
 {
-    auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
-    if(crossSectionSystem->CrossSectionSystemActive() && !itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
+    if(IsCrossSectionViewStuffShownOnThisMapView() && !itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
     {
         if(itsCtrlViewDocumentInterface->ShowCrossSectionMarkersOnMap(itsMapViewDescTopIndex))
         {
@@ -2479,11 +2484,11 @@ bool NFmiStationViewHandler::RightDoubleClick(const NFmiPoint &thePlace, unsigne
 	return false;
 }
 
-static bool IsCrossSectionSystemDisableingNormalMiddleMouseButtonUse(CtrlViewDocumentInterface *theCtrlViewDocumentInterface)
+bool NFmiStationViewHandler::IsCrossSectionSystemDisableingNormalMiddleMouseButtonUse() const
 {
-    auto crossSectionSystem = theCtrlViewDocumentInterface->CrossSectionSystem();
-	if(crossSectionSystem->CrossSectionSystemActive())
+	if(IsCrossSectionViewStuffShownOnThisMapView())
 	{
+	    auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
 		if(crossSectionSystem->CrossSectionMode() == NFmiCrossSectionSystem::k3Point)
 		{
 			NFmiCrossSectionSystem::CrossMode crossMode = crossSectionSystem->GetCrossMode();
@@ -2498,8 +2503,9 @@ bool NFmiStationViewHandler::MiddleButtonDown(const NFmiPoint & thePlace, unsign
 {
 	if(itsViewList && GetFrame().IsInside(thePlace))
 	{
-		if(::IsCrossSectionSystemDisableingNormalMiddleMouseButtonUse(itsCtrlViewDocumentInterface) == false)
-		{ // poikkileikkaus moodi ei saa olla päällä kun lähdetään tekemään zoomia
+		if(!IsCrossSectionSystemDisableingNormalMiddleMouseButtonUse())
+		{ 
+			// poikkileikkaus moodi ei saa olla päällä kun lähdetään tekemään zoomia
 			itsCtrlViewDocumentInterface->MiddleMouseButtonDown(true);
 			itsZoomDragDownPoint = thePlace;
 			itsZoomDragUpPoint = thePlace;
@@ -2519,7 +2525,7 @@ bool NFmiStationViewHandler::MiddleButtonUp(const NFmiPoint & thePlace, unsigned
 	if(itsViewList && GetFrame().IsInside(thePlace))
 	{
         itsCtrlViewDocumentInterface->MapMouseDragPanMode(false);
-        if(AllowCrossSectionPointManipulations() && ::IsCrossSectionSystemDisableingNormalMiddleMouseButtonUse(itsCtrlViewDocumentInterface) == true) // eli käytetään sitten keski nappia poikkileikkausnäytölle
+        if(AllowCrossSectionPointManipulations() && IsCrossSectionSystemDisableingNormalMiddleMouseButtonUse()) // eli käytetään sitten keski nappia poikkileikkausnäytölle
         {
             itsCtrlViewDocumentInterface->CrossSectionSystem()->MiddlePoint(itsMapArea->ToLatLon(thePlace));
             itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
