@@ -217,6 +217,8 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	bool DoRangeMeterMouseWheelAdjustRangeChecks(short theDelta);
 	bool DoRangeMeterMouseWheelAdjustIncrementChecks(short theDelta);
 	std::vector<NFmiPoint> ConvertLatlonToRelativePoints(const std::vector<NFmiPoint>& latlonPoints);
+	bool IsCrossSectionViewStuffShownOnThisMapView() const;
+	bool IsCrossSectionSystemDisableingNormalMiddleMouseButtonUse() const;
 
     template<typename T>
     bool MakeParamHandlerViewActions(T action)
