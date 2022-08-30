@@ -1166,7 +1166,7 @@ void NFmiTrajectorySystem::Read(std::istream& is)
 	itsCurrentVersionNumber = itsLatestVersionNumber; // aina jatketaan viimeisellä versio numerolla
 }
 
-void NFmiTrajectorySystem::Init(const NFmiTrajectorySystem &theOther)
+void NFmiTrajectorySystem::Init(const NFmiTrajectorySystem &theOther, bool disableWindowManipulations)
 {
 	itsTrajectories = theOther.itsTrajectories;
 	itsSelectedLatLon = theOther.itsSelectedLatLon;
@@ -1185,7 +1185,10 @@ void NFmiTrajectorySystem::Init(const NFmiTrajectorySystem &theOther)
 	fTrajectoryViewTimeBagDirty = true;
 
 	fPlumesUsed = theOther.fPlumesUsed;
-	fTrajectoryViewOn = theOther.fTrajectoryViewOn;
+	if(!disableWindowManipulations)
+	{
+		fTrajectoryViewOn = theOther.fTrajectoryViewOn;
+	}
 	fShowTrajectoryArrows = theOther.fShowTrajectoryArrows;
 	fShowTrajectoryAnimationMarkers = theOther.fShowTrajectoryAnimationMarkers;
 	fSelectedTrajectoryIsentropic = theOther.fSelectedTrajectoryIsentropic;

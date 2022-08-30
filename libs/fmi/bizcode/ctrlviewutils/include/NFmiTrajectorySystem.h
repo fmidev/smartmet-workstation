@@ -29,7 +29,7 @@ class NFmiTrajectorySystem
 	NFmiTrajectorySystem(NFmiInfoOrganizer *theInfoOrganizer, NFmiProducerSystem *theProducerSystem);
 	~NFmiTrajectorySystem(void);
 
-	void Init(const NFmiTrajectorySystem &theOther);
+	void Init(const NFmiTrajectorySystem &theOther, bool disableWindowManipulations);
 	void InitializeFromSettings(const std::string &basePathAbsolute);
 	void StoreSettings(void);
 	bool SaveXML(const std::string &theFileName);
