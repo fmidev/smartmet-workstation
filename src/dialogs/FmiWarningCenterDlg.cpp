@@ -449,8 +449,10 @@ static const char * Value2String(double value, int wantedDecimalCount)
 }
 
 static void SetGridCell(NFmiWarningCenterGridCtrl &theGridCtrl, int row, int column, const char *str)
-{ // tähän tulee järjestys numero fixed columniin
-	theGridCtrl.SetItemText(row, column, CA2T(str));
+{ 
+    // tähän tulee järjestys numero fixed columniin
+    auto wideStr = ::convertPossibleUtf8StringToWideString(str);
+	theGridCtrl.SetItemText(row, column, wideStr.c_str());
 	theGridCtrl.SetItemState(row, column, theGridCtrl.GetItemState(row, column) | GVIS_READONLY);
 }
 
