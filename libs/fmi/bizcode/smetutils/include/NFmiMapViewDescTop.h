@@ -114,6 +114,7 @@ public:
 	void CurrentTime(const NFmiMetTime &newValue) {itsCurrentTime = newValue;}
 	float TimeControlTimeStep(void) const {return itsTimeControlTimeStep;}
 	void TimeControlTimeStep(float newValue);
+	long TimeControlTimeStepInMinutes() const;
     void MapViewDirty(bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool updateMapViewDrawingLayers);
     CtrlViewUtils::MapViewMode MapViewDisplayMode(void) const {return itsMapViewDisplayMode;}
 	void MapViewDisplayMode(CtrlViewUtils::MapViewMode newValue);

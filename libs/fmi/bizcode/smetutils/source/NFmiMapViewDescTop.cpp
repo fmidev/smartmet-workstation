@@ -712,6 +712,11 @@ bool NFmiMapViewDescTop::IsVisibleRow(int theRowIndex)
 	return true;
 }
 
+long NFmiMapViewDescTop::TimeControlTimeStepInMinutes() const
+{
+	return boost::math::iround(TimeControlTimeStep() * 60.f);
+}
+
 // MapViewDirty metodi tekee kaiken sen mitä ennen tekivät sekavasti AreaViewDirty- ja 
 // MapDirty -metodit yhdessä. Niitä käytettiin sekaisin eri tilanteissa ja yhdessä (sekaisin taas).
 // Yksi pahimmista sekaannuksista aiheutti fAreaViewDirty muuttujan asetus, joka meni 

@@ -83,6 +83,7 @@ public:
     void SetTimeFilterEndTime(const NFmiMetTime& theTime) override;
     void TimeControlTimeStep(int theMapViewDescTopIndex, float timeStepInHours) override;
     float TimeControlTimeStep(int theDescTopIndex) override;
+    long TimeControlTimeStepInMinutes(int theDescTopIndex) const override;
     void MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers) override;
     void ForceStationViewRowUpdate(unsigned int theDescTopIndex, unsigned int theRealRowIndex) override;
     bool SetDataToNextTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes = false) override;

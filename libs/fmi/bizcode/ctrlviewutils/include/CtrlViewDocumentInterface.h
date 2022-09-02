@@ -201,6 +201,7 @@ public:
     virtual void SetTimeFilterEndTime(const NFmiMetTime& theTime) = 0;
     virtual void TimeControlTimeStep(int theMapViewDescTopIndex, float timeStepInHours) = 0;
     virtual float TimeControlTimeStep(int theDescTopIndex) = 0;
+    virtual long TimeControlTimeStepInMinutes(int theDescTopIndex) const = 0;
     virtual void MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers) = 0;
     virtual void ForceStationViewRowUpdate(unsigned int theDescTopIndex, unsigned int theRealRowIndex) = 0;
     virtual bool SetDataToNextTime(unsigned int theDescTopIndex, bool fStayInsideAnimationTimes = false) = 0;
