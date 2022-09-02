@@ -376,6 +376,11 @@ float CtrlViewDocumentInterfaceForGeneralDataDoc::TimeControlTimeStep(int theDes
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->TimeControlTimeStep();
 }
 
+long CtrlViewDocumentInterfaceForGeneralDataDoc::TimeControlTimeStepInMinutes(int theDescTopIndex) const
+{
+    return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->TimeControlTimeStepInMinutes();
+}
+
 void CtrlViewDocumentInterfaceForGeneralDataDoc::MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers)
 {
     itsDoc->GetCombinedMapHandler()->mapViewDirty(theDescTopIndex, makeNewBackgroundBitmap, clearMapViewBitmapCacheRows, redrawMapView, clearMacroParamDataCache, clearEditedDataDependentCaches, updateMapViewDrawingLayers);
