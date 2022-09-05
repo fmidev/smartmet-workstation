@@ -68,6 +68,7 @@ bool IsModelClimatologyData(const boost::shared_ptr<NFmiFastQueryInfo> &info);
 NFmiMetTime GetUsedTimeIfModelClimatologyData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                               const NFmiMetTime &theTime);
 bool IsMovingSoundingData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+bool IsLightningTypeData(boost::shared_ptr<NFmiFastQueryInfo> &info);
 bool FindTimeIndicesForGivenTimeRange(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                       const NFmiMetTime &theStartTime,
                                       long minuteRange,
