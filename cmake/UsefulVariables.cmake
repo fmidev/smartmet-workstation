@@ -73,6 +73,7 @@ set(
     )
 
 # **** Uniras library section ****
+if(NOT DISABLE_UNIRAS_TOOLMASTER)
 set(
     UNIRAS_VERSION
     7v5
@@ -102,6 +103,7 @@ set(
     ${UNIRAS_BASE_DIR}/lib/Release/agx.lib
     CACHE INTERNAL "" FORCE
     )
+endif()
 
 # **** CrashRpt library section ****
 set(
