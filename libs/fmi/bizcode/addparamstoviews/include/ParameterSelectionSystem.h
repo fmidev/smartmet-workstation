@@ -119,7 +119,8 @@ namespace AddParams
 		void trimDialogRowDataDependingOnActiveView();
 		std::vector<SingleRowItem> crossSectionData();
 		std::vector<SingleRowItem> timeSeriesData();
-		bool isObservationsData(const SingleRowItem& row, int index);
+        bool hasActualGridData(const SingleRowItem& row);
+        bool isObservationsData(const SingleRowItem& row, int index);
 		std::vector<SingleRowItem> addSubmenu(const SingleRowItem& row, int index);
 		std::vector<SingleRowItem> addAllChildNodes(const SingleRowItem& row, int index);
         void clearData();

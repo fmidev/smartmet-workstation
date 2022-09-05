@@ -14,6 +14,7 @@
 #include "WmsSupportInterface.h"
 #include "CapabilitiesHandler.h"
 #include "CapabilityTree.h"
+#include "NFmiFastInfoUtils.h"
 #endif // DISABLE_CPPRESTSDK
 
     
@@ -26,6 +27,17 @@ namespace
         // If there is memory for this category's rowItem, use it, otherwise put categoryData in non-collapsed mode
         bool nodeCollapsed = rowItemMemory ? rowItemMemory->dialogTreeNodeCollapsed() : false;
         return AddParams::SingleRowItem(AddParams::kCategoryType, categoryData.categoryName(), 0, nodeCollapsed, uniqueId, NFmiInfoData::kNoDataType);
+    }
+
+    boost::shared_ptr<NFmiFastQueryInfo> getFastInfo(NFmiInfoOrganizer& infoOrganizer, const std::string& uniqueDataId)
+    {
+        auto infoVector = infoOrganizer.GetInfos(uniqueDataId);
+        if(!infoVector.empty())
+        {
+            return infoVector.front();
+        }
+
+        return nullptr;
     }
 }
 
@@ -333,47 +345,69 @@ namespace AddParams
 		return trimmedRowData;
 	}
 
-	std::vector<SingleRowItem> ParameterSelectionSystem::timeSeriesData()
-	{
-		std::vector<AddParams::SingleRowItem> trimmedRowData;
-		int index = 0;
-		bool suitableCategory = true;
+    std::vector<SingleRowItem> ParameterSelectionSystem::timeSeriesData()
+    {
+        std::vector<AddParams::SingleRowItem> trimmedRowData;
+        int index = 0;
+        bool suitableCategory = true;
 
-		for (auto& row : dialogRowData_)
-		{
-			if (row.rowType() == AddParams::RowType::kCategoryType || row.rowType() == AddParams::RowType::kProducerType)
-			{
-				trimmedRowData.push_back(row);
-			}
-			else if (row.itemId() == 2001 || row.parentItemId() == 2001)
-			{
-				trimmedRowData.push_back(row);
-			}
-			std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector = infoOrganizer_->GetInfos(row.uniqueDataId());
-			if (!infoVector.empty())
-			{
-				auto info = infoVector.at(0);
-				if (info->IsGrid())
-				{
-					trimmedRowData.push_back(row);
-					auto subRows = addAllChildNodes(row, index);
-					trimmedRowData.insert(trimmedRowData.end(), subRows.begin(), subRows.end());
-				}
-			}
-			if (isObservationsData(row, index))
-			{
-				trimmedRowData.push_back(row);
-				auto subRows = addAllChildNodes(row, index);
-				trimmedRowData.insert(trimmedRowData.end(), subRows.begin(), subRows.end());
-			}
-			index++;
-		}
-		removeNodesThatDontHaveLeafs(trimmedRowData);
-		return trimmedRowData;
-	}
+        for(auto& row : dialogRowData_)
+        {
+            if(row.rowType() == AddParams::RowType::kCategoryType || row.rowType() == AddParams::RowType::kProducerType)
+            {
+                trimmedRowData.push_back(row);
+            }
+            else if(row.itemId() == 2001 || row.parentItemId() == 2001)
+            {
+                trimmedRowData.push_back(row);
+            }
+            if(row.rowType() == AddParams::RowType::kDataType)
+            {
+                auto hasActualGridDataVariable = hasActualGridData(row);
+                auto isOservationDataVariable = isObservationsData(row, index);
+                if(hasActualGridDataVariable || isOservationDataVariable)
+                {
+                    trimmedRowData.push_back(row);
+                    auto subRows = addAllChildNodes(row, index);
+                    trimmedRowData.insert(trimmedRowData.end(), subRows.begin(), subRows.end());
+                }
+            }
+            index++;
+        }
+        removeNodesThatDontHaveLeafs(trimmedRowData);
+        return trimmedRowData;
+    }
+
+    bool ParameterSelectionSystem::hasActualGridData(const SingleRowItem& row)
+    {
+        auto info = getFastInfo(*infoOrganizer_, row.uniqueDataId());
+        if(info && info->IsGrid())
+        {
+            return true;
+        }
+
+        // Editoitavan datan erikoistapaus: aikasarjaan pitää hyväksyä editoitava data, vaikka 
+        // sitä ei löydy infoOrganizerilta (sille löytyy syy) ja se ei ole hiladataa.
+        if(row.itemName() == AddParams::CategoryData::GetEditableDataRowName())
+        {
+            return true;
+        }
+
+        return false;
+    }
 
 	bool ParameterSelectionSystem::isObservationsData(const SingleRowItem& row, int index)
 	{
+        // Ensin pitää blokata mahdolliset lightning tyyppiset datat, sillä niitä ei voi visualisoida aikasarjassa.
+        auto info = getFastInfo(*infoOrganizer_, row.uniqueDataId());
+        if(info)
+        {
+            if(NFmiFastInfoUtils::IsLightningTypeData(info))
+            {
+                return false;
+            }
+        }
+
 		if (row.rowType() == AddParams::RowType::kDataType)
 		{
 			return dialogRowData_.at(++index).dataType() == NFmiInfoData::kObservations;

@@ -3567,6 +3567,8 @@ void AddHelpDataToParamSelectionPopup(const MenuCreationSettings &theMenuSetting
 	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, 108); // 108 = lumikuorma-datan tuottaja numero
     AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, 101); // 101 = kriging-datan tuottaja numero
 	AddFirstOfDataTypeToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kStationary, ""); // kun annetaan tyhjä dictionary -stringi, käytetään tuottaja nimea menu otsikossa
+	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, kFmiHakeMessages); // hake-sanoma (hälytyskeskus) dataa
+	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, kFmiKaHaMessages); // kaha-sanoma (kansalaishavainto) dataa
 
 	if(theMenuSettings.fDoMapMenu && ConceptualModelData().Use()) // jos käsiteanalyysi systeemi käytössä, lisätään sen lisäämismahdollisuus popup-valikkoon
 	{
@@ -3940,6 +3942,23 @@ void AddSmartInfoToMenuItem(const MenuCreationSettings &theMenuSettings, boost::
 		throw std::runtime_error("Error when making param selection popup menu in function AddSmartInfoToMenuItem. One was zero pointer: menuIten or smartInfo.");
 }
 
+// Jos lisättävä data on salama tyyppistä, sallitaan sen lisäys vain karttanäytöille
+bool DoLightningDataTypePopupCheck(const MenuCreationSettings& theMenuSettings, boost::shared_ptr<NFmiFastQueryInfo>& info)
+{
+	if(NFmiFastInfoUtils::IsLightningTypeData(info))
+	{
+		if(theMenuSettings.fDoMapMenu)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 // Lisätään annetun menuListan perään menuItem, joka on muodostettu annetun smartInfon avulla.
 // Jos theDictionaryStr on tyhjä, annetaan menuItemi otsikoksi smartInfon tuottaja nimi, muuten 
 // pyydetään sanakirjasta käytetty otsikko.
@@ -3951,6 +3970,9 @@ void AddSmartInfoToMenuList(const MenuCreationSettings &theMenuSettings, boost::
 	{
 		if(theMenuSettings.fGridDataOnly && theSmartInfo->IsGrid() == false)
 			return ;
+
+		if(!DoLightningDataTypePopupCheck(theMenuSettings, theSmartInfo))
+			return;
 
 		// jos kyseessä olisi poikkileikkaus menu rakentelua, ei ole syytä päästää läpi dataa, missä on vain yksi leveli ja se ei ole hila dataa
 		if(theMenuSettings.fLevelDataOnly == false || (theMenuSettings.fLevelDataOnly == true && theSmartInfo->SizeLevels() > 1))
@@ -10193,8 +10215,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     void CheckForNewWarningMessageData()
     {
 #ifndef DISABLE_CPPRESTSDK
-        AddMessageBasedData(itsWarningCenterSystem.getHakeQueryData(), "fakeHakeFileName", "fakeHakeFilePattern"); // "New warning center message data");
-        AddMessageBasedData(itsWarningCenterSystem.getKahaQueryData(), "fakeKaHaFileName", "fakeKaHaFilePattern"); // "New Kansalais Havainto message data");
+        AddMessageBasedData(itsWarningCenterSystem.getHakeQueryData(), "Hake Messages", "Hake Messages"); // "New warning center message data");
+        AddMessageBasedData(itsWarningCenterSystem.getKahaQueryData(), "KaHa Messages", "KaHa Messages"); // "New Kansalais Havainto message data");
 #endif // DISABLE_CPPRESTSDK
     }
 
