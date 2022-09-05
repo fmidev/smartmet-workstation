@@ -1,6 +1,10 @@
 #include "ParameterSelectionUtils.h"
 #include <algorithm>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
 namespace
 {
     auto findDataRowItemIterator(const std::string& uniqueRowItemId, const std::vector<AddParams::SingleRowItem>& dialogRowData)

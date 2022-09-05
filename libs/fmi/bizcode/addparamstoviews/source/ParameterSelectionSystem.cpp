@@ -17,6 +17,10 @@
 #include "NFmiFastInfoUtils.h"
 #endif // DISABLE_CPPRESTSDK
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
     
 class NFmiInfoOrganizer;
 

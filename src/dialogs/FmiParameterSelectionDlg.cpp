@@ -20,6 +20,9 @@
 #include "NFmiHelpDataInfo.h"
 #include "NFmiCrossSectionSystem.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
 
 static const int PARAM_ADDING_DIALOG_TOOLTIP_ID = 1234371;
 
@@ -1190,29 +1193,29 @@ void CFmiParameterSelectionDlg::HandleRowItemSelection(const AddParams::SingleRo
 		|| (itsParameterSelectionSystem->LastActivatedDesktopIndex() == CtrlViewUtils::kFmiCrossSectionView && rowItem.crossSectionLeafNode())
 		)
     {
-        NFmiMenuItem *addParamCommand;
+        std::unique_ptr<NFmiMenuItem> addParamCommandPtr;
         if(NFmiDrawParam::IsMacroParamCase(rowItem.dataType())) {
-            addParamCommand = new NFmiMenuItem(
+            addParamCommandPtr.reset(new NFmiMenuItem(
                 static_cast<int>(itsParameterSelectionSystem->LastActivatedDesktopIndex()),
                 rowItem.itemName(),
                 NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
                 kAddViewWithRealRowNumber,
                 NFmiMetEditorTypes::View::kFmiParamsDefaultView,
                 rowItem.level().get(),
-                rowItem.dataType());
+                rowItem.dataType()));
                                                                                                                                                                                                                                                           
-            addParamCommand->MacroParamInitName(rowItem.uniqueDataId());
+            addParamCommandPtr->MacroParamInitName(rowItem.uniqueDataId());
         } 
 		else if (itsParameterSelectionSystem->LastActivatedDesktopIndex() == CtrlViewUtils::kFmiCrossSectionView && rowItem.crossSectionLeafNode())
 		{
-			addParamCommand = new NFmiMenuItem(
+            addParamCommandPtr.reset(new NFmiMenuItem(
 				static_cast<int>(itsParameterSelectionSystem->LastActivatedDesktopIndex()),
 				rowItem.itemName(),
 				NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
 				kFmiAddParamCrossSectionView,
 				NFmiMetEditorTypes::View::kFmiParamsDefaultView,
 				rowItem.level().get(),
-				rowItem.dataType());
+				rowItem.dataType()));
 		}
         else
         {
@@ -1224,17 +1227,17 @@ void CFmiParameterSelectionDlg::HandleRowItemSelection(const AddParams::SingleRo
                     usedParamAddingCommand = kFmiAddTimeSerialSideParam;
             }
 
-            addParamCommand = new NFmiMenuItem(
+            addParamCommandPtr.reset(new NFmiMenuItem(
                 static_cast<int>(itsParameterSelectionSystem->LastActivatedDesktopIndex()),
                 "Add some param",
                 NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
                 usedParamAddingCommand,
                 NFmiMetEditorTypes::View::kFmiParamsDefaultView,
                 rowItem.level().get(), 
-                rowItem.dataType());
+                rowItem.dataType()));
         }
 
-        itsSmartMetDocumentInterface->ExecuteCommand(*addParamCommand, itsParameterSelectionSystem->LastActivatedRowIndex(), 0);
+        itsSmartMetDocumentInterface->ExecuteCommand(*addParamCommandPtr, itsParameterSelectionSystem->LastActivatedRowIndex(), 0);
         itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ParameterSelectionDlg: Parameter added from Parameter selection dialog", ::GetWantedMapViewIdFlag(itsParameterSelectionSystem->LastActivatedDesktopIndex()));
     }
 }

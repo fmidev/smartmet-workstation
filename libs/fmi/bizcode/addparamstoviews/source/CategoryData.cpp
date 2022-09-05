@@ -16,6 +16,9 @@
 
 #include <boost/algorithm/string.hpp>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
 
 namespace
 {
