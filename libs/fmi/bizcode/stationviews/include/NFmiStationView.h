@@ -176,6 +176,7 @@ protected:
    void SbdPeekSparseValue(int peekIndexX, int peekIndexY, const NFmiRect& peekRect, PeekSparseValueDistanceList& nonMissingValuesWithDistance);
    void SbdDoFinalSparseCaseWork(bool doStationPlotOnly, SparseDataGrid& sparseDataGrid);
    NFmiPoint SbdCalcOldSchoolSymbolScaleFix(const NFmiPoint &symbolScale) const;
+   void SbdCollectFlashTypeSymbolDrawData(bool doStationPlotOnly);
 
    // ******** Symbol-Bulk-Draw toimintojen loppu *********
 
@@ -246,21 +247,29 @@ protected:
    bool IsDownSizingNeeded(const NFmiPoint& thePixelToGridPointRatio, double usedPixelToGridPointRatio, NFmiPoint& theDownSizeFactorOut);
    void UpdateOptimizedGridValues(const NFmiRect& dataAreaXyRect, int gridSizeX, int gridSizeY);
    void UpdateOptimizedVisualizationMacroParamData();
+   NFmiMetTime CalcStartTimeOfTimeSpan() const;
+   bool GetTimeSpanIndexies(const boost::shared_ptr<NFmiFastQueryInfo>& theInfo, unsigned long& theStartIndexOut, unsigned long& theEndIndexOut);
+   float GetTooltipValueForFlashTypeData(const NFmiLocation& theCursorLocation);
+   bool FindNearestFlashTypeObservation(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiLocation& theCursorLocation, double& theCurrentMinDistInOut, unsigned long& theMinDistTimeIndexOut);
 
    NFmiRect itsGeneralStationRect;
    FmiParameterName itsParamId;
-   std::vector<boost::shared_ptr<NFmiFastQueryInfo> > itsInfoVector; // t‰m‰ info vektori k‰yd‰‰n l‰pi kun piirret‰‰n dataa (aluksi useita infoja vain synop-data tapauksessa)
-   NFmiLocation itsNearestTooltipLocation; // multi synop infojen takia pient‰ virityst‰
-   boost::shared_ptr<NFmiDrawParam> itsBackupDrawParamForDifferenceDrawing;  // laitetaan t‰h‰n talteen alkuper‰iset asetukset, jos piirto tapahtuu erotuksena, voidaan palauttaa alkuper‰inen t‰st‰
-   bool fDoDifferenceDrawSwitch; // t‰h‰n talletetaan tieto onko k‰ytetty drawParam palautettava piirron j‰lkeen 
-
-   bool fDoTimeInterpolation; // jos datalle voi tehd‰ aikainterpolaation piirrett‰ess‰
-							// kartalle esim. symboleja, on t‰m‰ true (tarvitaan tieto, ettei vahingossa piirret‰ oikeasti puuttuvaa dataa)
-
-   bool fDoShipDataLocations; // normaalisti asemadatassa paikka pyydet‰‰n suoraan datan asema tiedoista. Mutta
-							  // esim. SHIP-havaintojen yhteydess‰ pit‰‰ sijainti katsoa lat-lon parametreist‰
-							  // kulloisellakin ajan hetkell‰. T‰t‰  varten tehtiin metodi CurrentLatLon, joka osaa palauttaa
-							  // datan oikean paikan myˆs ns. laiva tms havaintojen yhteydess‰.
+   // T‰m‰ info vektori k‰yd‰‰n l‰pi kun piirret‰‰n dataa (aluksi useita infoja vain synop-data tapauksessa)
+   std::vector<boost::shared_ptr<NFmiFastQueryInfo> > itsInfoVector; 
+   // multi synop infojen takia pient‰ virityst‰
+   NFmiLocation itsNearestTooltipLocation; 
+   // Laitetaan t‰h‰n talteen alkuper‰iset asetukset, jos piirto tapahtuu erotuksena, voidaan palauttaa alkuper‰inen t‰st‰
+   boost::shared_ptr<NFmiDrawParam> itsBackupDrawParamForDifferenceDrawing;  
+   // T‰h‰n talletetaan tieto onko k‰ytetty drawParam palautettava piirron j‰lkeen 
+   bool fDoDifferenceDrawSwitch; 
+   // jos datalle voi tehd‰ aikainterpolaation piirrett‰ess‰ kartalle esim. symboleja, 
+   // on t‰m‰ true (tarvitaan tieto, ettei vahingossa piirret‰ oikeasti puuttuvaa dataa)
+   bool fDoTimeInterpolation; 
+   // normaalisti asemadatassa paikka pyydet‰‰n suoraan datan asema tiedoista. Mutta
+   // esim. SHIP-havaintojen yhteydess‰ pit‰‰ sijainti katsoa lat-lon parametreist‰
+   // kulloisellakin ajan hetkell‰. T‰t‰  varten tehtiin metodi CurrentLatLon, joka osaa palauttaa
+   // datan oikean paikan myˆs ns. laiva tms havaintojen yhteydess‰.
+   bool fDoMovingStationDataLocations; 
    NFmiPoint itsCurrentShipLatlon;
 
    // Kun erikois tilanne esim. laskemacroParam, mutta piirr‰ se wind-barbilla
