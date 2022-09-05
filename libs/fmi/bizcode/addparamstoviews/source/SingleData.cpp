@@ -7,6 +7,10 @@
 
 #include <boost/algorithm/string.hpp>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
 namespace
 {
     // 80 on perusoletus maksimi, mutta k‰ytt‰j‰ voi ohitt‰‰ sen konfiguraatiolla (SmartMet::ParameterSelection::MaxLevelCountInMakingDialogRowData).

@@ -1,6 +1,10 @@
 #include "SingleRowItem.h"
 #include <vector>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
 namespace AddParams
 {
 
