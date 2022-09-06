@@ -513,7 +513,7 @@ int NFmiStationView::CalcApproxmationOfDataTextLength(const std::vector<float> &
         else // muuten palauta maksimi arvo
             return static_cast<int>(minmaxCalc.MaxValue());
     }
-    return 2;
+    return 1;
 }
 
 std::vector<float> NFmiStationView::GetSampleDataForDataTextLengthApproxmation()
@@ -1624,14 +1624,16 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreatePossibleSpaceOutMacr
     return boost::shared_ptr<NFmiFastQueryInfo>();
 }
 
-static void TraceLogSpacedOutMacroParamCalculationSize(boost::shared_ptr<NFmiFastQueryInfo> &spacedOutInfo, NFmiCtrlView *view)
+static void TraceLogForMacroParamCalculationSize(boost::shared_ptr<NFmiFastQueryInfo> &macroParamInfo, NFmiCtrlView *view, std::string calculationName)
 {
-    if(spacedOutInfo)
+    if(macroParamInfo)
     {
-        auto gridSizeX = spacedOutInfo->GridXNumber();
-        auto gridSizeY = spacedOutInfo->GridYNumber();
+        auto gridSizeX = macroParamInfo->GridXNumber();
+        auto gridSizeY = macroParamInfo->GridYNumber();
         std::string gridSizeStr = std::to_string(gridSizeX) + "x" + std::to_string(gridSizeY) + " grid";
-        CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam calculated for spaced out symbol draw in ") + gridSizeStr, view);
+		std::string finalLogStr = "MacroParam calculated for ";
+		finalLogStr += calculationName + " in " + gridSizeStr;
+        CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(finalLogStr, view);
     }
 }
 
@@ -1657,9 +1659,11 @@ void NFmiStationView::CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFm
         FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, theValues, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, itsInfo, fUseCalculationPoints, possibleSpaceOutData);
         if(fUseCalculationPoints)
             CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam was calculated only in set CalculationPoint's"), this);
-        else
-            ::TraceLogSpacedOutMacroParamCalculationSize(possibleSpaceOutData, this);
-        if(theUsedGridOut && itsInfo && itsInfo->Grid())
+        else if(possibleSpaceOutData)
+            ::TraceLogForMacroParamCalculationSize(possibleSpaceOutData, this, "space out symbol draw");
+		else
+			::TraceLogForMacroParamCalculationSize(itsInfo, this, "normal calculation");
+		if(theUsedGridOut && itsInfo && itsInfo->Grid())
             *theUsedGridOut = *itsInfo->Grid();
 
         CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam data was put into cache for future fast retrievals"), this);
