@@ -1625,15 +1625,14 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreatePossibleSpaceOutMacr
     return boost::shared_ptr<NFmiFastQueryInfo>();
 }
 
-static void TraceLogForMacroParamCalculationSize(boost::shared_ptr<NFmiFastQueryInfo> &macroParamInfo, NFmiCtrlView *view, std::string calculationName)
+static void TraceLogForMacroParamCalculationSize(boost::shared_ptr<NFmiFastQueryInfo> &macroParamInfo, NFmiCtrlView *view)
 {
     if(macroParamInfo)
     {
         auto gridSizeX = macroParamInfo->GridXNumber();
         auto gridSizeY = macroParamInfo->GridYNumber();
-        std::string gridSizeStr = std::to_string(gridSizeX) + "x" + std::to_string(gridSizeY) + " grid";
-		std::string finalLogStr = "MacroParam calculated for ";
-		finalLogStr += calculationName + " in " + gridSizeStr;
+        std::string gridSizeStr = std::to_string(gridSizeX) + "x" + std::to_string(gridSizeY);
+		std::string finalLogStr = "MacroParam was calculated  in grid size of " + gridSizeStr;
         CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(finalLogStr, view);
     }
 }
@@ -1660,10 +1659,8 @@ void NFmiStationView::CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFm
         FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, theValues, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, itsInfo, fUseCalculationPoints, possibleSpaceOutData);
         if(fUseCalculationPoints)
             CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam was calculated only in set CalculationPoint's"), this);
-        else if(possibleSpaceOutData)
-            ::TraceLogForMacroParamCalculationSize(possibleSpaceOutData, this, "space out symbol draw");
 		else
-			::TraceLogForMacroParamCalculationSize(itsInfo, this, "normal calculation");
+			::TraceLogForMacroParamCalculationSize(itsInfo, this);
 		if(theUsedGridOut && itsInfo && itsInfo->Grid())
             *theUsedGridOut = *itsInfo->Grid();
 
