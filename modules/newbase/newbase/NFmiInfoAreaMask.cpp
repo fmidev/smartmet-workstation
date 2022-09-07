@@ -2304,7 +2304,7 @@ float NFmiInfoAreaMaskVertFunc::FindHeightForSimpleCondition(
       // simple-condition tila muuttunut niin tilanne on mennyt päälle ja otetaan tilanne talteen
       if (currentLevelHeigth != kFloatMissing)
       {
-        if (previousLevelCondition == false && currentLevelCondition == true)
+        if (previousLevelCondition != currentLevelCondition)
         {
           foundCount++;
           // Laitetaan löytökorkeudeksi sen levelin arvo missä simple-condition oli päällä
@@ -2542,11 +2542,6 @@ bool NFmiInfoAreaMaskVertFunc::VertFuncSimpleconditionCheck(
     return itsSimpleCondition->CheckPressureCondition(pressure, theCalculationParams);
   }
   return true;
-}
-
-bool NFmiInfoAreaMaskVertFunc::IgnoreSimpleConditionWhileIteratingLevels() const
-{
-  return IsSimpleConditionFindFunction(itsPrimaryFunc);
 }
 
 // **********************************************************

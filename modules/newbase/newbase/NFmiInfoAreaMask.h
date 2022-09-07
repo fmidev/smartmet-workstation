@@ -588,7 +588,8 @@ class NFmiInfoAreaMaskVertFunc : public NFmiInfoAreaMaskMetFuncBase
   void SetArguments(std::vector<float> &theArgumentVector) override;
 
   // tätä kaytetaan smarttool-modifierin yhteydessä
-  double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
+  double Value(const NFmiCalculationParams &theCalculationParams,
+               bool fUseTimeInterpolationAlways) override;
 
  protected:
   // Nämä virtuaali funktiot on toteutettava, vaikka niillä ei ole taas käyttöä täällä
@@ -616,67 +617,71 @@ class NFmiInfoAreaMaskVertFunc : public NFmiInfoAreaMaskMetFuncBase
   float DoGetFunction(const NFmiLocationCache &theLocationCache,
                       const NFmiCalculationParams &theCalculationParams,
                       float theLevelValue);
-  float DoPeekZFunction(const NFmiCalculationParams &theCalculationParams,
-                      float theDeltaZ);
+  float DoPeekZFunction(const NFmiCalculationParams &theCalculationParams, float theDeltaZ);
   float DoVerticalGrad(const NFmiLocationCache &theLocationCache,
                        const NFmiCalculationParams &theCalculationParams);
-  float DoFindFunction(const NFmiLocationCache &theLocationCache, const NFmiCalculationParams &theCalculationParams);
-  float FindHeightForSimpleCondition(const NFmiLocationCache &theLocationCache, const NFmiCalculationParams &theCalculationParams);
+  float DoFindFunction(const NFmiLocationCache &theLocationCache,
+                       const NFmiCalculationParams &theCalculationParams);
+  float FindHeightForSimpleCondition(const NFmiLocationCache &theLocationCache,
+                                     const NFmiCalculationParams &theCalculationParams);
   void SetLevelIndexies(float theHeightValue);
-  unsigned long GetNonMissingStartLevelIndex(const NFmiLocationCache &theLocationCache, const NFmiCalculationParams &theCalculationParams);
+  unsigned long GetNonMissingStartLevelIndex(const NFmiLocationCache &theLocationCache,
+                                             const NFmiCalculationParams &theCalculationParams);
   float GetLevelHeightValue(const NFmiLocationCache &theLocationCache);
-  float DoNormalFunction(const NFmiLocationCache &theLocationCache, const NFmiCalculationParams &theCalculationParams);
+  float DoNormalFunction(const NFmiLocationCache &theLocationCache,
+                         const NFmiCalculationParams &theCalculationParams);
   float CalculateUsedPeekZPressureLevel(float currentPressureLevel, float usedDeltaZ);
 
   // Vertikaali levelien läpikäynti oikeassa järjestyksessä. Tehty template funktioksi
   // jotta sitä voidaan käyttää erilaisten lambda funktioiden avulla eri paikoissa.
-  template<typename FunctionObject>
-  void IterateLevelsFromGroundUpward(FunctionObject &functionObject, VerticalIterationBreakingData &iterationBreakingData, int usedStartLevelIndex, const NFmiCalculationParams &theCalculationParams)
+  template <typename FunctionObject>
+  void IterateLevelsFromGroundUpward(FunctionObject &functionObject,
+                                     VerticalIterationBreakingData &iterationBreakingData,
+                                     int usedStartLevelIndex,
+                                     const NFmiCalculationParams &theCalculationParams)
   {
-      for(auto levelIndex = usedStartLevelIndex;
-          fReverseLevels ? levelIndex >= static_cast<int>(itsEndLevelIndex)
-          : levelIndex <= static_cast<int>(itsEndLevelIndex);
-          levelIndex += itsLevelIncrement)
+    for (auto levelIndex = usedStartLevelIndex;
+         fReverseLevels ? levelIndex >= static_cast<int>(itsEndLevelIndex)
+                        : levelIndex <= static_cast<int>(itsEndLevelIndex);
+         levelIndex += itsLevelIncrement)
+    {
+      if (itsInfo->LevelIndex(levelIndex))  // pitäisi olla aina totta
       {
-          if(itsInfo->LevelIndex(levelIndex))  // pitäisi olla aina totta
-          {
-              if(IgnoreSimpleConditionWhileIteratingLevels() || VertFuncSimpleconditionCheck(theCalculationParams))
-                functionObject();
-              if(iterationBreakingData.BreakIteration())
-                  break;
-          }
+        functionObject();
+        if (iterationBreakingData.BreakIteration()) break;
       }
+    }
   }
 
   bool VertFuncSimpleconditionCheck(const NFmiCalculationParams &theCalculationParams);
-  bool IgnoreSimpleConditionWhileIteratingLevels() const;
 
-  NFmiAreaMask::FunctionType itsPrimaryFunc;    // esim. Avg, Max, Get, Find, jne.
-  NFmiAreaMask::FunctionType itsSecondaryFunc;  // esim. VertP, VertZ, jne.
+  // Esim. Avg, Max, Get, Find, jne.
+  NFmiAreaMask::FunctionType itsPrimaryFunc;
+  // Esim. VertP, VertZ, jne.
+  NFmiAreaMask::FunctionType itsSecondaryFunc;
   std::vector<float> itsArgumentVector;
-
-  boost::shared_ptr<NFmiDataModifier>
-      itsFunctionModifier;   // tämä luodaan itsPrimaryFunc-dataosan mukaan
-  float itsStartLevelValue;  // tähän otetaan annetusta argumentti listasta aloitus korkeus (missä
-                             // yksikössä onkaan)
-  float itsEndLevelValue;  // tähän otetaan annetusta argumentti listasta lopetus korkeus (missä
+  // tämä luodaan itsPrimaryFunc-dataosan mukaan
+  boost::shared_ptr<NFmiDataModifier> itsFunctionModifier;
+  // Tähän otetaan annetusta argumentti listasta aloitus korkeus (missä yksikössä onkaan)
+  float itsStartLevelValue;
+  // tähän otetaan annetusta argumentti listasta lopetus korkeus (missä
   // yksikössä onkaan), PAITSI, jos kyse on get-funktiosta, jolloin tämä on
   // puuttuva
+  float itsEndLevelValue;
   unsigned long itsStartLevelIndex;  // dataa käydään läpi alkaen tästä levelistä
   unsigned long itsEndLevelIndex;    // dataa käydään läpi tähän leveliin asti
 
   FmiParameterName itsUsedHeightParId;
   bool fReturnHeightValue;
-  int itsLevelIncrement;  // kun ollaan päätelty mihin suuntaan leveldata menee (ylös maanpinnasta
-                          // vai alas avaruudesta)
+  // Kun ollaan päätelty mihin suuntaan leveldata menee (ylös maanpinnasta vai alas avaruudesta)
   // tähän on tarkoitus laskea for-looppeja varten level incrementti (joko 1 tai -1)
   // Jos datan levelien suunta on maanpinnasta ylöspäin, on incrementti 1 ja käydään levelit
-  // normaali järjestyksessä läpi.
-  // Jos datan levelien suuntä on avaruudesta maanpintaa kohden, on incrementti -1 ja levelit
-  // käydään käänteisessä järjestyksessä.
-  bool fReverseLevels;  // Jos itsLevelIncrement on -1, tämä on true, jolloin for-loopitus tehdään
-                        // käänteisessä järjestyksessä
-
+  // normaali järjestyksessä läpi. Jos datan levelien suuntä on avaruudesta maanpintaa kohden, on
+  // incrementti -1 ja levelit käydään käänteisessä järjestyksessä.
+  int itsLevelIncrement;
+  // Jos itsLevelIncrement on -1, tämä on true, jolloin for-loopitus tehdään
+  // käänteisessä järjestyksessä
+  bool fReverseLevels;
 };
 
 class NFmiInfoAreaMaskVertConditionalFunc : public NFmiInfoAreaMaskVertFunc
