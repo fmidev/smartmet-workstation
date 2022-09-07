@@ -3042,17 +3042,26 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::UsedMacroParamData()
     return itsInfoOrganizer->CrossSectionMacroParamData();
   else
   {
+    auto optimalMacroParamData = ::GetOptimalResolutionMacroParamData(
+        itsExtraMacroParamData->UseSpecialResolution(),
+        itsExtraMacroParamData->ResolutionMacroParamData(),
+        itsInfoOrganizer->MacroParamData(),
+        itsInfoOrganizer->OptimizedVisualizationMacroParamData(),
+        !CalculationPoints().empty());
+
     if (itsPossibleSpacedOutMacroInfo)
-      return itsPossibleSpacedOutMacroInfo;
-    else
     {
-      return ::GetOptimalResolutionMacroParamData(
-          itsExtraMacroParamData->UseSpecialResolution(),
-          itsExtraMacroParamData->ResolutionMacroParamData(),
-          itsInfoOrganizer->MacroParamData(),
-          itsInfoOrganizer->OptimizedVisualizationMacroParamData(),
-          !CalculationPoints().empty());
+      auto gridsizeOptimal =
+          optimalMacroParamData->GridXNumber() * optimalMacroParamData->GridYNumber();
+      auto gridsizeSpaceOut = itsPossibleSpacedOutMacroInfo->GridXNumber() *
+                              itsPossibleSpacedOutMacroInfo->GridYNumber();
+      if (gridsizeOptimal <= gridsizeSpaceOut)
+        return optimalMacroParamData;
+      else
+        return itsPossibleSpacedOutMacroInfo;
     }
+    else
+      return optimalMacroParamData;
   }
 }
 
