@@ -1086,15 +1086,29 @@ static std::vector<boost::shared_ptr<NFmiSmartToolCalculationBlock>> MakeCalcula
   return calculationBlockVector;
 }
 
-static int CalcUsedWorkingThreadCount(double wantedHardwareThreadPercent, int userGivenWorkingThreadCount)
+static int CalcUsedWorkingThreadCount(double wantedHardwareThreadPercent,
+                                      int userGivenWorkingThreadCount,
+                                      bool macroParamCase)
 {
+  int maxThreadCount = std::thread::hardware_concurrency();
   if (userGivenWorkingThreadCount > 0)
   {
-    int maxThreadCount = std::thread::hardware_concurrency();
     return std::min(maxThreadCount, userGivenWorkingThreadCount);
   }
   else
-    return NFmiQueryDataUtil::GetReasonableWorkingThreadCount(wantedHardwareThreadPercent);
+  {
+    if (macroParamCase)
+    {
+        // macroParam laskuissa ei ole hyötyä olla paljoa threadeja rinnakkain laskemassa juttuja.
+        // Jos käytössä on asema dataa, silloin paras olisi vain 1 threadi, koska eri threadeille tehdään paljon 
+        // asemien kopiointia (jokaiselle asemadata parametrille vielä erikseen).
+        // Lisäksi testeissä osoittautui että vain yhden aika-askeleen laskuissa n. 3 threadin käyttö on
+        // hyödyllistä vaikka kyse olisi hiladata laskuista (isommat määrät eivät työ hyötyä, vain haittaa).
+      return std::min(3, maxThreadCount);
+    }
+    else
+      return NFmiQueryDataUtil::GetReasonableWorkingThreadCount(wantedHardwareThreadPercent);
+  }
 }
 
 // Kun yhden aika-askeleen hilan laskenta jaetaan eri säikeille osiin,
@@ -1128,7 +1142,8 @@ void NFmiSmartToolModifier::ModifyConditionalData_ver2(
       const NFmiBitMask *usedBitmask = ::GetUsedBitmask(info, fModifySelectedLocationsOnly);
       calculationParams.itsObservationRadiusInKm = ExtraMacroParamData().ObservationRadiusInKm();
 
-      int usedThreadCount = ::CalcUsedWorkingThreadCount(75, ExtraMacroParamData().WorkingThreadCount());
+      int usedThreadCount = ::CalcUsedWorkingThreadCount(
+          75, ExtraMacroParamData().WorkingThreadCount(), fMacroParamCalculation);
       std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector =
           ::MakeInfoCopyVector(usedThreadCount, info);
       // tehdään joka coren säikeelle oma calculaatioBlokki kopio
@@ -1352,8 +1367,8 @@ void NFmiSmartToolModifier::ModifyData2_ver2(
       const NFmiBitMask *usedBitmask = ::GetUsedBitmask(info, fModifySelectedLocationsOnly);
       calculationParams.itsObservationRadiusInKm = ExtraMacroParamData().ObservationRadiusInKm();
 
-      int usedThreadCount =
-          ::CalcUsedWorkingThreadCount(75, ExtraMacroParamData().WorkingThreadCount());
+      int usedThreadCount = ::CalcUsedWorkingThreadCount(
+          75, ExtraMacroParamData().WorkingThreadCount(), fMacroParamCalculation);
       std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector =
           ::MakeInfoCopyVector(usedThreadCount, info);
 
