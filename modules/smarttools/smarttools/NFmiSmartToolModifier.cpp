@@ -1086,29 +1086,36 @@ static std::vector<boost::shared_ptr<NFmiSmartToolCalculationBlock>> MakeCalcula
   return calculationBlockVector;
 }
 
-static int CalcUsedWorkingThreadCount(double wantedHardwareThreadPercent,
+void NFmiSmartToolModifier::CalculateUsedWorkingThreadCount(double wantedHardwareThreadPercent,
                                       int userGivenWorkingThreadCount,
                                       bool macroParamCase)
 {
   int maxThreadCount = std::thread::hardware_concurrency();
   if (userGivenWorkingThreadCount > 0)
   {
-    return std::min(maxThreadCount, userGivenWorkingThreadCount);
+    itsUsedThreadCount = std::min(maxThreadCount, userGivenWorkingThreadCount);
   }
   else
   {
     if (macroParamCase)
     {
-        // macroParam laskuissa ei ole hyötyä olla paljoa threadeja rinnakkain laskemassa juttuja.
-        // Jos käytössä on asema dataa, silloin paras olisi vain 1 threadi, koska eri threadeille tehdään paljon 
-        // asemien kopiointia (jokaiselle asemadata parametrille vielä erikseen).
-        // Lisäksi testeissä osoittautui että vain yhden aika-askeleen laskuissa n. 3 threadin käyttö on
-        // hyödyllistä vaikka kyse olisi hiladata laskuista (isommat määrät eivät työ hyötyä, vain haittaa).
-      return std::min(3, maxThreadCount);
+      // macroParam laskuissa ei ole hyötyä olla paljoa threadeja rinnakkain laskemassa juttuja.
+      // Jos käytössä on asema dataa, silloin paras olisi vain 1 threadi, koska eri threadeille
+      // tehdään paljon asemien kopiointia (jokaiselle asemadata parametrille vielä erikseen).
+      // Lisäksi testeissä osoittautui että vain yhden aika-askeleen laskuissa n. 3-4 threadin
+      // käyttö on hyödyllistä vaikka kyse olisi hiladata laskuista (isommat määrät eivät tuo
+      // hyötyä, vain haittaa).
+      CalculateOptimalWorkingThreadCount();
+
+      itsUsedThreadCount = std::min(itsOptimalThreadCount, maxThreadCount);
     }
     else
-      return NFmiQueryDataUtil::GetReasonableWorkingThreadCount(wantedHardwareThreadPercent);
+    {
+      itsUsedThreadCount =
+          NFmiQueryDataUtil::GetReasonableWorkingThreadCount(wantedHardwareThreadPercent);
+    }
   }
+  itsUsedThreadCounts.insert(itsUsedThreadCount);
 }
 
 // Kun yhden aika-askeleen hilan laskenta jaetaan eri säikeille osiin,
@@ -1141,14 +1148,14 @@ void NFmiSmartToolModifier::ModifyConditionalData_ver2(
                                                         : info->TimeDescriptor());
       const NFmiBitMask *usedBitmask = ::GetUsedBitmask(info, fModifySelectedLocationsOnly);
       calculationParams.itsObservationRadiusInKm = ExtraMacroParamData().ObservationRadiusInKm();
-
-      int usedThreadCount = ::CalcUsedWorkingThreadCount(
+      CalculateUsedWorkingThreadCount(
           75, ExtraMacroParamData().WorkingThreadCount(), fMacroParamCalculation);
+
       std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector =
-          ::MakeInfoCopyVector(usedThreadCount, info);
+          ::MakeInfoCopyVector(itsUsedThreadCount, info);
       // tehdään joka coren säikeelle oma calculaatioBlokki kopio
       std::vector<boost::shared_ptr<NFmiSmartToolCalculationBlock>> calculationBlockVector =
-          ::MakeCalculationBlockVector(usedThreadCount, theCalculationBlock);
+          ::MakeCalculationBlockVector(itsUsedThreadCount, theCalculationBlock);
 
       for (modifiedTimes.Reset(); modifiedTimes.Next();)
       {
@@ -1167,12 +1174,12 @@ void NFmiSmartToolModifier::ModifyConditionalData_ver2(
 
           if (macroParamValuesVectorForCrossSection)
             DoMultiThreadConditionalBlockCalculationsForCrossSection(
-                usedThreadCount,
+                itsUsedThreadCount,
                 infoVector,
                 calculationBlockVector,
                 *macroParamValuesVectorForCrossSection);
           else
-            DoMultiThreadConditionalBlockCalculations(usedThreadCount,
+            DoMultiThreadConditionalBlockCalculations(itsUsedThreadCount,
                                                       infoVector,
                                                       calculationBlockVector,
                                                       calculationParams,
@@ -1366,11 +1373,11 @@ void NFmiSmartToolModifier::ModifyData2_ver2(
                                                         : info->TimeDescriptor());
       const NFmiBitMask *usedBitmask = ::GetUsedBitmask(info, fModifySelectedLocationsOnly);
       calculationParams.itsObservationRadiusInKm = ExtraMacroParamData().ObservationRadiusInKm();
-
-      int usedThreadCount = ::CalcUsedWorkingThreadCount(
+      CalculateUsedWorkingThreadCount(
           75, ExtraMacroParamData().WorkingThreadCount(), fMacroParamCalculation);
+
       std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector =
-          ::MakeInfoCopyVector(usedThreadCount, info);
+          ::MakeInfoCopyVector(itsUsedThreadCount, info);
 
       // Muutin lasku systeemin suoritusta, koska tuli ongelmia mm. muuttujien kanssa, kun niitä
       // käytettiin samassa calculationSectionissa
@@ -1389,7 +1396,7 @@ void NFmiSmartToolModifier::ModifyData2_ver2(
         boost::shared_ptr<NFmiSmartToolCalculation> smartToolCalculation = calculationVector[i];
         // tehdään joka coren säikeelle oma calculaatio kopio
         std::vector<boost::shared_ptr<NFmiSmartToolCalculation>> calculationVectorForThread =
-            ::MakeCalculationVector(usedThreadCount, smartToolCalculation);
+            ::MakeCalculationVector(itsUsedThreadCount, smartToolCalculation);
 
         for (modifiedTimes.Reset(); modifiedTimes.Next();)
         {
@@ -1407,12 +1414,12 @@ void NFmiSmartToolModifier::ModifyData2_ver2(
             ::SetTimes(infoVector, calculationParams);
 
             if (macroParamValuesVectorForCrossSection)
-              DoMultiThreadCalculationsForCrossSection(usedThreadCount,
+              DoMultiThreadCalculationsForCrossSection(itsUsedThreadCount,
                                                        infoVector,
                                                        calculationVectorForThread,
                                                        *macroParamValuesVectorForCrossSection);
             else
-              DoMultiThreadCalculations(usedThreadCount,
+              DoMultiThreadCalculations(itsUsedThreadCount,
                                         infoVector,
                                         calculationVectorForThread,
                                         calculationParams,
@@ -2807,8 +2814,41 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::GetWantedAreaMaskDat
                                   theAreaMaskInfo.ModelRunIndex());
     }
   }
+  UpdateInfoVariableStatistics(info);
   return NFmiSmartInfo::CreateShallowCopyOfHighestInfo(
       info);  // tehdään vielä 'kevyt' kopio löytyneestä datasta
+}
+
+void NFmiSmartToolModifier::UpdateInfoVariableStatistics(
+    const boost::shared_ptr<NFmiFastQueryInfo> &info)
+{
+  if (info)
+  {
+    itsInfoVariableCount++;
+    if (!info->IsGrid())
+    {
+      itsStationInfoVariableCount++;
+      itsVariableStationCountSum += info->SizeLocations();
+    }
+  }
+}
+
+void NFmiSmartToolModifier::CalculateOptimalWorkingThreadCount()
+{
+  // MacroParam laskut sopivat rinnakkais ajoihin huonosti, maksimissaan 4 threadia,
+  // jos kaikki muuttujat ovat grid datoista.
+  int maxThreadCount = 4;
+  if (itsInfoVariableCount && itsStationInfoVariableCount)
+  {
+    if (itsVariableStationCountSum < 5000.)
+      itsOptimalThreadCount = 3;
+    else if (itsVariableStationCountSum < 12000)
+      itsOptimalThreadCount = 2;
+    else
+      itsOptimalThreadCount = 1;
+  }
+  else
+    itsOptimalThreadCount = maxThreadCount;
 }
 
 boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::CreateInfo(
