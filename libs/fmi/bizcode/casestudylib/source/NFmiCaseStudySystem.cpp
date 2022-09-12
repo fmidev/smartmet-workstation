@@ -411,6 +411,7 @@ bool NFmiCaseStudyDataFile::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, cons
 	itsCustomMenuFolder = theDataInfo.CustomMenuFolder();
 	itsAdditionalArchiveFileCount = theDataInfo.AdditionalArchiveFileCount();
 	fDataEnabled = theDataInfo.IsEnabled();
+	itsPossibleCustomMenuFolder = theDataInfo.CustomMenuFolder();
 
 
 	if(theDataInfo.DataType() == NFmiInfoData::kSatelData)
@@ -1321,6 +1322,8 @@ NFmiCategoryHeaderInitData::NFmiCategoryHeaderInitData(const std::string name, N
 // *****   NFmiCaseStudySystem alkaa  *************************
 // ************************************************************
 
+std::set<std::string> NFmiCaseStudySystem::itsAllCustomFolderNames;
+
 NFmiCaseStudySystem::NFmiCaseStudySystem(void)
 :itsName("Case1")
 ,itsInfo("Your Case Study info here")
@@ -1381,22 +1384,75 @@ static NFmiCsDataFileWinReg MakeCsDataFileWinRegValues(const NFmiHelpDataInfo& i
 	return ::MakeCsDataFileWinRegValues(info.Name(), info.DataType(), theCaseStudySettingsWinRegistry);
 }
 
-static void InitCategoryHeaders(std::vector<NFmiCategoryHeaderInitData>& categoryHeaders)
+static auto SeekCustomFolderName(const std::string& customFolderName, std::vector<NFmiCategoryHeaderInitData>& categoryHeaders)
+{
+	return std::find_if(categoryHeaders.begin(), categoryHeaders.end(),
+		[&](const auto& categoryHeader)
+		{
+			return categoryHeader.uniqueName == customFolderName;
+		});
+}
+
+static void InitCategoryHeaders(std::vector<NFmiCategoryHeaderInitData>& categoryHeaders, const std::set<std::string> &customFolderNames)
 {
 	categoryHeaders.push_back(NFmiCategoryHeaderInitData(::GetDictionaryString("Model data"), NFmiInfoData::kViewable, NFmiCaseStudyDataCategory::Model));
-	categoryHeaders.push_back(NFmiCategoryHeaderInitData(::GetDictionaryString("Observation data"), NFmiInfoData::kObservations, NFmiCaseStudyDataCategory::Observation));
+	categoryHeaders.push_back(NFmiCategoryHeaderInitData(::GetDictionaryString("Observation"), NFmiInfoData::kObservations, NFmiCaseStudyDataCategory::Observation));
 	categoryHeaders.push_back(NFmiCategoryHeaderInitData(::GetDictionaryString("Analyze data"), NFmiInfoData::kAnalyzeData, NFmiCaseStudyDataCategory::Analyze));
 	categoryHeaders.push_back(NFmiCategoryHeaderInitData(::GetDictionaryString("Edited data"), NFmiInfoData::kKepaData, NFmiCaseStudyDataCategory::Edited));
 	categoryHeaders.push_back(NFmiCategoryHeaderInitData(::GetDictionaryString("Satellite image data"), NFmiInfoData::kSatelData, NFmiCaseStudyDataCategory::SatelImage));
+
+	for(const auto& customFolderName : customFolderNames)
+	{
+		auto iter = ::SeekCustomFolderName(customFolderName, categoryHeaders);
+		// Jos customFolderName:a ei löydy listasta, lisätään sellainen
+		if(iter == categoryHeaders.end())
+		{
+			categoryHeaders.push_back(NFmiCategoryHeaderInitData(customFolderName, NFmiInfoData::kViewable, NFmiCaseStudyDataCategory::CustomFolder));
+		}
+	}
+
+	// Laitetaan vielä mahdollinen Silam custom kansio aina ihan viimeiseksi!
+	auto silamIter = ::SeekCustomFolderName(NFmiCaseStudySystem::GetSilamCustomFolderName(), categoryHeaders);
+	if(silamIter != categoryHeaders.end())
+	{
+		auto silamPosition = std::distance(categoryHeaders.begin(), silamIter);
+		if(silamPosition != categoryHeaders.size() - 1)
+		{
+			std::swap(*silamIter, *categoryHeaders.rbegin());
+		}
+	}
+}
+
+const std::string& NFmiCaseStudySystem::GetSilamCustomFolderName()
+{
+	static const std::string silamCustomFolderName = "Silam";
+	return silamCustomFolderName;
 }
 
 const std::vector<NFmiCategoryHeaderInitData>& NFmiCaseStudySystem::GetCategoryHeaders()
 {
 	static std::once_flag categoryHeadersFlag;
 	static std::vector<NFmiCategoryHeaderInitData> categoryHeaders;
-	std::call_once(categoryHeadersFlag, ::InitCategoryHeaders, categoryHeaders);
+	std::call_once(categoryHeadersFlag, ::InitCategoryHeaders, categoryHeaders, GetAllCustomFolderNames());
 
 	return categoryHeaders;
+}
+
+const std::set<std::string>& NFmiCaseStudySystem::GetAllCustomFolderNames()
+{
+	return itsAllCustomFolderNames;
+}
+
+void NFmiCaseStudySystem::SetAllCustomFolderNames(NFmiHelpDataInfoSystem& theDataInfoSystem)
+{
+	itsAllCustomFolderNames.clear();
+	for(const auto& info : theDataInfoSystem.DynamicHelpDataInfos())
+	{
+		if(!info.CustomMenuFolder().empty())
+		{
+			itsAllCustomFolderNames.insert(info.CustomMenuFolder());
+		}
+	}
 }
 
 bool NFmiCaseStudySystem::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiInfoOrganizer &theInfoOrganizer, NFmiCaseStudySettingsWinRegistry& theCaseStudySettingsWinRegistry)
@@ -1481,31 +1537,26 @@ void NFmiCaseStudySystem::UpdateValuesBackToWinRegistry(NFmiCaseStudySettingsWin
 	}
 }
 
-void NFmiCaseStudySystem::InitDataWithStoredSettings(std::vector<NFmiCaseStudyCategoryData>& theOriginalCategoriesData)
-{
-	for(auto &originalCategoryData : theOriginalCategoriesData)
-	{
-		auto categoryData = GetCategoryData(originalCategoryData.CategoryHeaderInfo().Category());
-		if(categoryData)
-		{
-			categoryData->InitDataWithStoredSettings(originalCategoryData);
-		}
-	}
-}
-
-NFmiCaseStudyCategoryData* NFmiCaseStudySystem::GetCategoryData(NFmiCaseStudyDataCategory theCategory)
+NFmiCaseStudyCategoryData* NFmiCaseStudySystem::GetCategoryData(NFmiCaseStudyDataFile& theCaseStudyDataFile)
 {
 	for(auto &categoryData : itsCategoriesData)
 	{
-		if(categoryData.CategoryHeaderInfo().Category() == theCategory)
+		if(!theCaseStudyDataFile.PossibleCustomMenuFolder().empty())
+		{
+			if(theCaseStudyDataFile.PossibleCustomMenuFolder() == categoryData.CategoryHeaderInfo().Name())
+				return &categoryData;
+		}
+		else if(categoryData.CategoryHeaderInfo().Category() == theCaseStudyDataFile.Category())
+		{
 			return &categoryData;
+		}
 	}
 	return nullptr;
 }
 
 void NFmiCaseStudySystem::AddData(NFmiCaseStudyDataFile &theData)
 {
-	auto categoryData = GetCategoryData(theData.Category());
+	auto categoryData = GetCategoryData(theData);
 	if(categoryData)
 		categoryData->AddData(theData);
 }
@@ -1534,11 +1585,11 @@ void NFmiCaseStudySystem::UpdateNoProducerData(NFmiHelpDataInfoSystem &theDataIn
 }
 
 // updeittaa halutun kategorian halutun tuottajien data koot ja paivittää omat totalSize ja maxSize-koot
-void NFmiCaseStudySystem::Update(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId)
+void NFmiCaseStudySystem::Update(NFmiCaseStudyDataFile& theCaseStudyDataFile)
 {
-	auto categoryData = GetCategoryData(theCategory);
+	auto categoryData = GetCategoryData(theCaseStudyDataFile);
 	if(categoryData)
-		categoryData->Update(theProdId, *this);
+		categoryData->Update(theCaseStudyDataFile.Producer().GetIdent(), *this);
 }
 
 static std::string NormalizeWindowsPathString(const std::string &thePath)
@@ -1579,58 +1630,58 @@ bool NFmiCaseStudySystem::DoApproximateDataSize(const std::string &thePath) cons
 		return true;
 }
 
-void NFmiCaseStudySystem::ProducerStore(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, bool newValue)
+void NFmiCaseStudySystem::ProducerStore(NFmiCaseStudyDataFile& theCaseStudyDataFile, bool newValue)
 {
-	auto categoryData = GetCategoryData(theCategory);
+	auto categoryData = GetCategoryData(theCaseStudyDataFile);
 	if(categoryData)
-		categoryData->ProducerStore(theProdId, newValue, *this);
+		categoryData->ProducerStore(theCaseStudyDataFile.Producer().GetIdent(), newValue, *this);
 }
 
-void NFmiCaseStudySystem::CategoryStore(NFmiCaseStudyDataCategory theCategory, bool newValue)
+void NFmiCaseStudySystem::CategoryStore(NFmiCaseStudyDataFile& theCaseStudyDataFile, bool newValue)
 {
-	auto categoryData = GetCategoryData(theCategory);
+	auto categoryData = GetCategoryData(theCaseStudyDataFile);
 	if(categoryData)
 		categoryData->CategoryStore(newValue, *this);
 }
 
-void NFmiCaseStudySystem::ProducerEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, bool newValue)
+void NFmiCaseStudySystem::ProducerEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataFile& theCaseStudyDataFile, bool newValue)
 {
-	auto categoryData = GetCategoryData(theCategory);
+	auto categoryData = GetCategoryData(theCaseStudyDataFile);
 	if(categoryData)
-		categoryData->ProducerEnable(theDataInfoSystem, theProdId, newValue, *this);
+		categoryData->ProducerEnable(theDataInfoSystem, theCaseStudyDataFile.Producer().GetIdent(), newValue, *this);
 }
 
-void NFmiCaseStudySystem::CategoryEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataCategory theCategory, bool newValue)
+void NFmiCaseStudySystem::CategoryEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataFile& theCaseStudyDataFile, bool newValue)
 {
-	auto categoryData = GetCategoryData(theCategory);
+	auto categoryData = GetCategoryData(theCaseStudyDataFile);
 	if(categoryData)
 		categoryData->CategoryEnable(theDataInfoSystem, newValue, *this);
 }
 
-void NFmiCaseStudySystem::ProducerLocalCacheDataCount(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, int theDataCount)
+void NFmiCaseStudySystem::ProducerLocalCacheDataCount(NFmiCaseStudyDataFile& theCaseStudyDataFile, int theDataCount)
 {
-	auto categoryData = GetCategoryData(theCategory);
+	auto categoryData = GetCategoryData(theCaseStudyDataFile);
 	if(categoryData)
-		categoryData->ProducerLocalCacheDataCount(theProdId, theDataCount, *this);
+		categoryData->ProducerLocalCacheDataCount(theCaseStudyDataFile.Producer().GetIdent(), theDataCount, *this);
 }
 
-void NFmiCaseStudySystem::CategoryLocalCacheDataCount(NFmiCaseStudyDataCategory theCategory, int theDataCount)
+void NFmiCaseStudySystem::CategoryLocalCacheDataCount(NFmiCaseStudyDataFile& theCaseStudyDataFile, int theDataCount)
 {
-	auto categoryData = GetCategoryData(theCategory);
+	auto categoryData = GetCategoryData(theCaseStudyDataFile);
 	if(categoryData)
 		categoryData->CategoryLocalCacheDataCount(theDataCount, *this);
 }
 
-void NFmiCaseStudySystem::ProducerCaseStudyIndexRange(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, const std::pair<int, int>& theIndexRange)
+void NFmiCaseStudySystem::ProducerCaseStudyIndexRange(NFmiCaseStudyDataFile& theCaseStudyDataFile, const std::pair<int, int>& theIndexRange)
 {
-	auto categoryData = GetCategoryData(theCategory);
+	auto categoryData = GetCategoryData(theCaseStudyDataFile);
 	if(categoryData)
-		categoryData->ProducerCaseStudyIndexRange(theProdId, theIndexRange, *this);
+		categoryData->ProducerCaseStudyIndexRange(theCaseStudyDataFile.Producer().GetIdent(), theIndexRange, *this);
 }
 
-void NFmiCaseStudySystem::CategoryCaseStudyIndexRange(NFmiCaseStudyDataCategory theCategory, const std::pair<int, int>& theIndexRange)
+void NFmiCaseStudySystem::CategoryCaseStudyIndexRange(NFmiCaseStudyDataFile& theCaseStudyDataFile, const std::pair<int, int>& theIndexRange)
 {
-	auto categoryData = GetCategoryData(theCategory);
+	auto categoryData = GetCategoryData(theCaseStudyDataFile);
 	if(categoryData)
 		categoryData->CategoryCaseStudyIndexRange(theIndexRange, *this);
 }

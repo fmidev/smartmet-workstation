@@ -164,6 +164,7 @@ private:
 	void DoLocalCacheCountEditing(NFmiCaseStudyDataFile& dataFile, const std::string& cellText);
 	void DoCaseStudyIndexRangeEditing(NFmiCaseStudyDataFile& dataFile, const std::string& cellText);
 	std::pair<std::string, std::string> GetNameAndInfoStringsFromSelectedMetaFilePath(std::string fullPathToMetaFile);
+	void DoFirstTimeSilamCategoryCollapse();
 
     CString itsNameStrU_;
     CString itsInfoStrU_;
@@ -173,6 +174,7 @@ private:
 	BOOL fStoreWarningMessages;
 	BOOL fCropDataToZoomedMapArea;
 	CWndResizer m_resizer;
+	int itsPossibleSilamCategoryRowNumber = -1;
 public:
 	afx_msg void OnBnClickedButtonStoreData();
 	afx_msg void OnBnClickedButtonLoadData();
