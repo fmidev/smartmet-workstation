@@ -507,7 +507,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 	InitMacroPathSettings(); // pit‰‰ olla ennen InfoOrganizer + SmartToolInfo + ViewMacroSystem alustuksia!!!
 	InitInfoOrganizer(); // pit‰‰ alustaa ennen InitSettingsFromConfFile-metodia
 	InitHelpEditorSystem(); // t‰t‰ pit‰‰ kutsua ennen InitHelpDataInfoSystem-metodia
-	InitHelpDataInfoSystem(); // T‰t‰ pit‰‰ kutsua ennen InitApplicationWinRegistry -kutsua!
+	InitHelpDataInfoSystem(); // T‰t‰ pit‰‰ kutsua ennen InitApplicationWinRegistry ja InitCaseStudySystem -kutsuja!
     InitApplicationWinRegistry(mapViewsPositionMap, otherViewsPositionPosMap);
 
 	InitSettingsFromConfFile();
@@ -2165,6 +2165,8 @@ bool InitHelpDataInfoSystem(void)
 	try
 	{
 		itsHelpDataInfoSystem.InitFromSettings("MetEditor::HelpData", itsBasicConfigurations.ControlPath(), CreateHelpEditorFileNameFilter(), StripFilePathAndExtension(itsHelpEditorSystem.FileNameBase()));
+		// T‰m‰ caseStudy dataan liittyv‰ alustus pit‰‰ tehd‰ heti itsHelpDataInfoSystem:in alustuksen j‰lkeen...
+		NFmiCaseStudySystem::SetAllCustomFolderNames(itsHelpDataInfoSystem);
 		return true;
 	}
 	catch(std::exception &e)
