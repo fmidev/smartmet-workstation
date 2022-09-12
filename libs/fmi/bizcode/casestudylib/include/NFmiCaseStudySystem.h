@@ -332,9 +332,9 @@ public:
 	bool DoApproximateDataSize(const std::string &thePath) const;
 
 	static json_spirit::Object MakeJsonObject(NFmiCaseStudySystem &theData, bool fMakeFullStore);
-	bool StoreMetaData(CWnd *theParentWindow, std::string &theMetaDataTotalFileNameInOut, bool fMakeFullStore);
+	bool StoreMetaData(CWnd *theParentWindow, std::string &theMetaDataTotalFileNameInOut, bool fMakeFullStore, bool showErrorMessageBox);
     bool AreStoredMetaDataChanged(const NFmiCaseStudySystem &other);
-	bool ReadMetaData(const std::string &theFullPathFileName, CWnd *theParentWindow);
+	bool ReadMetaData(const std::string &theFullPathFileName, CWnd *theParentWindow, bool showErrorMessageBox);
 	// Voi heitt‰‰ CaseStudyOperationCanceledException -poikkeuksen!!!
 	bool MakeCaseStudyData(const std::string &theFullPathMetaDataFileName, CWnd *theParentWindow, CWnd *theCopyWindowPos, const std::string& theCropDataAreaString); 
 	boost::shared_ptr<NFmiHelpDataInfoSystem> MakeHelpDataInfoSystem(NFmiHelpDataInfoSystem &theOriginalHelpDataInfoSystem, const std::string &theBasePath);

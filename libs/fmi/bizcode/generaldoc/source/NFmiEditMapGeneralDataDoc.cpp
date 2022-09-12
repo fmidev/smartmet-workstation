@@ -9227,7 +9227,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			// 1. Ota metadatasta polku talteen
 			std::string caseStudyBasePath = NFmiFileSystem::PathFromPattern(theCaseStudyMetaFile);
 			// 2. Lataa metadata
-			if(itsLoadedCaseStudySystem.ReadMetaData(theCaseStudyMetaFile, ApplicationInterface::GetSmartMetViewAsCView()))
+			if(itsLoadedCaseStudySystem.ReadMetaData(theCaseStudyMetaFile, ApplicationInterface::GetSmartMetViewAsCView(), true))
 			{
 			// 3. Luo metadatan avulla HelpDataInfoSystem (HUOM! t‰ss‰ pit‰‰ k‰ytt‰‰ suoraan itsHelpDataInfoSystem-dataosiota, kun silt‰ pyydet‰‰n static datoja)
 				itsCaseStudyHelpDataInfoSystem = itsLoadedCaseStudySystem.MakeHelpDataInfoSystem(itsHelpDataInfoSystem, caseStudyBasePath);
