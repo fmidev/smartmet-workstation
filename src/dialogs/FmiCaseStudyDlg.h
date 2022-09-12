@@ -163,6 +163,7 @@ private:
 	void DoResizerHooking();
 	void DoLocalCacheCountEditing(NFmiCaseStudyDataFile& dataFile, const std::string& cellText);
 	void DoCaseStudyIndexRangeEditing(NFmiCaseStudyDataFile& dataFile, const std::string& cellText);
+	std::pair<std::string, std::string> GetNameAndInfoStringsFromSelectedMetaFilePath(std::string fullPathToMetaFile);
 
     CString itsNameStrU_;
     CString itsInfoStrU_;

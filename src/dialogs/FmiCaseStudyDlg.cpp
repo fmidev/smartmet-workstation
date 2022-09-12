@@ -1206,7 +1206,7 @@ void CFmiCaseStudyDlg::OnBnClickedButtonStoreData()
     }
 
     std::string metaDataTotalFileName;
-    if(itsSmartMetDocumentInterface->CaseStudySystem().StoreMetaData(this, metaDataTotalFileName, false))
+    if(itsSmartMetDocumentInterface->CaseStudySystem().StoreMetaData(this, metaDataTotalFileName, false, true))
     {
         std::string commandStr;
         commandStr += "\""; // laitetaan lainausmerkit komento polun ympärille, jos siinä sattuisi olemaan spaceja
@@ -1313,8 +1313,18 @@ void CFmiCaseStudyDlg::OnBnClickedButtonBrowse()
 	if(dlg.DoModal() == IDOK)
 	{
 		itsPathStrU_ = dlg.GetPathName();
+		auto nameAndInfoPair = GetNameAndInfoStringsFromSelectedMetaFilePath(std::string(CT2A(itsPathStrU_)));
+		itsNameStrU_ = CA2T(nameAndInfoPair.first.c_str());
+		itsInfoStrU_ = CA2T(nameAndInfoPair.second.c_str());
 		UpdateData(FALSE);
 	}
+}
+
+std::pair<std::string, std::string> CFmiCaseStudyDlg::GetNameAndInfoStringsFromSelectedMetaFilePath(std::string fullPathToMetaFile)
+{
+	NFmiCaseStudySystem tmpCaseStudySystem;
+	tmpCaseStudySystem.ReadMetaData(fullPathToMetaFile, nullptr, false);
+	return std::make_pair(tmpCaseStudySystem.Name(), tmpCaseStudySystem.Info());
 }
 
 void CFmiCaseStudyDlg::OnBnClickedButtonCloseMode()
