@@ -84,6 +84,7 @@ namespace AddParams
         searchWords_ += (level_ ? std::string(level_->GetName()) + " " : "");
         searchWords_ += ((!parentItemName_.empty()) ? parentItemName_ + " " : "");
         searchWords_ += ((!totalFilePath_.empty()) ? totalFilePath_ + " " : "");
+        searchWords_ += ((parentItemId_ != 0) ? std::to_string(parentItemId_) + " " : "");
     }
 
 }
