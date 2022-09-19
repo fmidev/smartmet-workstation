@@ -164,6 +164,7 @@ public:
 	void DataEnabled(NFmiHelpDataInfoSystem &theDataInfoSystem, bool newValue);
 	NFmiInfoData::Type DataType() const { return itsDataType; }
 	void DataType(NFmiInfoData::Type newValue) { itsDataType = newValue; }
+	const std::string& PossibleCustomMenuFolder() const { return itsPossibleCustomMenuFolder; }
 
     bool operator==(const NFmiCaseStudyDataFile &other) const;
     bool operator!=(const NFmiCaseStudyDataFile &other) const;
@@ -199,7 +200,7 @@ private:
 	std::string itsCustomMenuFolder; // Jos data halutaan laittaa haluttuun hakemistoon param-popupeissa, tehd‰‰n sellainen asetus helpdatassa t‰ss‰ 
 	int itsAdditionalArchiveFileCount;	// defaultti on 0, joitakin datoja (esim. kepa-datoja, joita tuotetaan n. 15-20 per p‰iv‰) , ei normaali asetus riit‰, joten t‰h‰n lis‰t‰‰n v‰h‰n extraa arkistoa varten
 	bool fDataEnabled; // T‰m‰ tieto tulee NFmiHelpDataInfo:n IsEnabled-metodista. Eli k‰ytt‰‰kˆ SmartMet kyseist‰ dataa alkuunkaan. Jos t‰m‰ on false, ei sit‰ talletetan dataan vaikka store-asetus olisi true.
-
+	std::string itsPossibleCustomMenuFolder;
 };
 
 class NFmiCaseStudyProducerData
@@ -292,16 +293,16 @@ public:
     void UpdateNoProducerData(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiInfoOrganizer &theInfoOrganizer);
     void Update(void);
 	void Reset(void); // HUOM! ei saa kutsua konstruktorissa, koska t‰m‰ kutsuu konstruktoria
-	void Update(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId);
-	void ProducerStore(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, bool newValue);
-	void CategoryStore(NFmiCaseStudyDataCategory theCategory, bool newValue);
-	void ProducerEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, bool newValue);
-	void CategoryEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataCategory theCategory, bool newValue);
+	void Update(NFmiCaseStudyDataFile& theCaseStudyDataFile);
+	void ProducerStore(NFmiCaseStudyDataFile& theCaseStudyDataFile, bool newValue);
+	void CategoryStore(NFmiCaseStudyDataFile& theCaseStudyDataFile, bool newValue);
+	void ProducerEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataFile& theCaseStudyDataFile, bool newValue);
+	void CategoryEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiCaseStudyDataFile& theCaseStudyDataFile, bool newValue);
 
-	void ProducerLocalCacheDataCount(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, int theDataCount);
-	void CategoryLocalCacheDataCount(NFmiCaseStudyDataCategory theCategory, int theDataCount);
-	void ProducerCaseStudyIndexRange(NFmiCaseStudyDataCategory theCategory, unsigned long theProdId, const std::pair<int, int>& theIndexRange);
-	void CategoryCaseStudyIndexRange(NFmiCaseStudyDataCategory theCategory, const std::pair<int, int>& theIndexRange);
+	void ProducerLocalCacheDataCount(NFmiCaseStudyDataFile& theCaseStudyDataFile, int theDataCount);
+	void CategoryLocalCacheDataCount(NFmiCaseStudyDataFile& theCaseStudyDataFile, int theDataCount);
+	void ProducerCaseStudyIndexRange(NFmiCaseStudyDataFile& theCaseStudyDataFile, const std::pair<int, int>& theIndexRange);
+	void CategoryCaseStudyIndexRange(NFmiCaseStudyDataFile& theCaseStudyDataFile, const std::pair<int, int>& theIndexRange);
 
 	std::vector<NFmiCaseStudyCategoryData>& CategoriesData(void) {return itsCategoriesData;}
 	void FillCaseStudyDialogData(NFmiProducerSystemsHolder &theProducerSystemsHolder);
@@ -332,9 +333,9 @@ public:
 	bool DoApproximateDataSize(const std::string &thePath) const;
 
 	static json_spirit::Object MakeJsonObject(NFmiCaseStudySystem &theData, bool fMakeFullStore);
-	bool StoreMetaData(CWnd *theParentWindow, std::string &theMetaDataTotalFileNameInOut, bool fMakeFullStore);
+	bool StoreMetaData(CWnd *theParentWindow, std::string &theMetaDataTotalFileNameInOut, bool fMakeFullStore, bool showErrorMessageBox);
     bool AreStoredMetaDataChanged(const NFmiCaseStudySystem &other);
-	bool ReadMetaData(const std::string &theFullPathFileName, CWnd *theParentWindow);
+	bool ReadMetaData(const std::string &theFullPathFileName, CWnd *theParentWindow, bool showErrorMessageBox);
 	// Voi heitt‰‰ CaseStudyOperationCanceledException -poikkeuksen!!!
 	bool MakeCaseStudyData(const std::string &theFullPathMetaDataFileName, CWnd *theParentWindow, CWnd *theCopyWindowPos, const std::string& theCropDataAreaString); 
 	boost::shared_ptr<NFmiHelpDataInfoSystem> MakeHelpDataInfoSystem(NFmiHelpDataInfoSystem &theOriginalHelpDataInfoSystem, const std::string &theBasePath);
@@ -348,6 +349,9 @@ public:
 	static const std::vector<NFmiCategoryHeaderInitData>& GetCategoryHeaders();
 	static std::string MakeIndexRangeString(const std::pair<int, int>& indexRange);
 	static std::pair<int, int> MakeIndexRange(const std::string& str);
+	static void SetAllCustomFolderNames(NFmiHelpDataInfoSystem& theDataInfoSystem);
+	static const std::set<std::string>& GetAllCustomFolderNames();
+	static const std::string& GetSilamCustomFolderName();
 
 private:
 	void AddData(NFmiCaseStudyDataFile &theData);
@@ -356,8 +360,7 @@ private:
 	void ParseJsonPair(json_spirit::Pair &thePair);
 	void ParseJsonCategoryArray(json_spirit::Array &theCategories);
 	int CalculateProgressDialogCount(void) const;
-	void InitDataWithStoredSettings(std::vector<NFmiCaseStudyCategoryData> &theOriginalCategoriesData);
-	NFmiCaseStudyCategoryData* GetCategoryData(NFmiCaseStudyDataCategory theCategory);
+	NFmiCaseStudyCategoryData* GetCategoryData(NFmiCaseStudyDataFile& theCaseStudyDataFile);
 	std::string MakeCaseStudyFilePattern(const std::string &theFilePattern, const std::string &theBasePath, bool fMakeOnlyPath);
 
 	std::string itsName; // talletettavan case-studyn nimi
@@ -375,4 +378,5 @@ private:
 																// vektoriin laitetaan vain pointterit, jotta muokkaukset menev‰t perille molempiin datarakenteisiin.
 																// HUOM! Ei omista eik‰ tuhoa olioita.
 	std::vector<unsigned char> itsTreePatternArray; // t‰t‰ on grid-controlliin laitettavan puurakenteen syvyys rakenne p‰‰taso eli category on 1, producer taso on 2 ja fileData taso on 3
+	static std::set<std::string> itsAllCustomFolderNames;
 };

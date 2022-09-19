@@ -1,6 +1,10 @@
 #include "SingleRowItem.h"
 #include <vector>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
 namespace AddParams
 {
 
@@ -80,6 +84,7 @@ namespace AddParams
         searchWords_ += (level_ ? std::string(level_->GetName()) + " " : "");
         searchWords_ += ((!parentItemName_.empty()) ? parentItemName_ + " " : "");
         searchWords_ += ((!totalFilePath_.empty()) ? totalFilePath_ + " " : "");
+        searchWords_ += ((parentItemId_ != 0) ? std::to_string(parentItemId_) + " " : "");
     }
 
 }

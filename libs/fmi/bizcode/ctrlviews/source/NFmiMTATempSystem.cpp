@@ -1255,14 +1255,17 @@ void NFmiMTATempSystem::Read(std::istream& is)
 	itsCurrentVersionNumber = itsLatestVersionNumber; // aina jatketaan viimeisellä versio numerolla
 }
 
-void NFmiMTATempSystem::InitFromViewMacro(const NFmiMTATempSystem &theOther)
+void NFmiMTATempSystem::InitFromViewMacro(const NFmiMTATempSystem &theOther, bool disableWindowManipulations)
 {
 	itsCurrentVersionNumber = theOther.itsCurrentVersionNumber;
 	itsTempInfos = theOther.itsTempInfos;
 	itsMaxTempsShowed = theOther.itsMaxTempsShowed;
 	itsSoundingComparisonProducers = theOther.itsSoundingComparisonProducers;
 	itsSelectedProducer = theOther.itsSelectedProducer;
-	fTempViewOn = theOther.fTempViewOn;
+	if(!disableWindowManipulations)
+	{
+		fTempViewOn = theOther.fTempViewOn;
+	}
 	itsSkewTDegree = theOther.itsSkewTDegree;
 	itsSoundingColors = theOther.itsSoundingColors;
 	itsTAxisStart0Degree = theOther.itsTAxisStart0Degree;

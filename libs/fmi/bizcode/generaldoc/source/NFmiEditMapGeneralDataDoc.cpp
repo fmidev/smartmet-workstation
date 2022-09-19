@@ -507,7 +507,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 	InitMacroPathSettings(); // pit‰‰ olla ennen InfoOrganizer + SmartToolInfo + ViewMacroSystem alustuksia!!!
 	InitInfoOrganizer(); // pit‰‰ alustaa ennen InitSettingsFromConfFile-metodia
 	InitHelpEditorSystem(); // t‰t‰ pit‰‰ kutsua ennen InitHelpDataInfoSystem-metodia
-	InitHelpDataInfoSystem(); // T‰t‰ pit‰‰ kutsua ennen InitApplicationWinRegistry -kutsua!
+	InitHelpDataInfoSystem(); // T‰t‰ pit‰‰ kutsua ennen InitApplicationWinRegistry ja InitCaseStudySystem -kutsuja!
     InitApplicationWinRegistry(mapViewsPositionMap, otherViewsPositionPosMap);
 
 	InitSettingsFromConfFile();
@@ -2165,6 +2165,8 @@ bool InitHelpDataInfoSystem(void)
 	try
 	{
 		itsHelpDataInfoSystem.InitFromSettings("MetEditor::HelpData", itsBasicConfigurations.ControlPath(), CreateHelpEditorFileNameFilter(), StripFilePathAndExtension(itsHelpEditorSystem.FileNameBase()));
+		// T‰m‰ caseStudy dataan liittyv‰ alustus pit‰‰ tehd‰ heti itsHelpDataInfoSystem:in alustuksen j‰lkeen...
+		NFmiCaseStudySystem::SetAllCustomFolderNames(itsHelpDataInfoSystem);
 		return true;
 	}
 	catch(std::exception &e)
@@ -3567,6 +3569,8 @@ void AddHelpDataToParamSelectionPopup(const MenuCreationSettings &theMenuSetting
 	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, 108); // 108 = lumikuorma-datan tuottaja numero
     AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, 101); // 101 = kriging-datan tuottaja numero
 	AddFirstOfDataTypeToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kStationary, ""); // kun annetaan tyhj‰ dictionary -stringi, k‰ytet‰‰n tuottaja nimea menu otsikossa
+	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, kFmiHakeMessages); // hake-sanoma (h‰lytyskeskus) dataa
+	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, kFmiKaHaMessages); // kaha-sanoma (kansalaishavainto) dataa
 
 	if(theMenuSettings.fDoMapMenu && ConceptualModelData().Use()) // jos k‰siteanalyysi systeemi k‰ytˆss‰, lis‰t‰‰n sen lis‰‰mismahdollisuus popup-valikkoon
 	{
@@ -3940,6 +3944,23 @@ void AddSmartInfoToMenuItem(const MenuCreationSettings &theMenuSettings, boost::
 		throw std::runtime_error("Error when making param selection popup menu in function AddSmartInfoToMenuItem. One was zero pointer: menuIten or smartInfo.");
 }
 
+// Jos lis‰tt‰v‰ data on salama tyyppist‰, sallitaan sen lis‰ys vain karttan‰ytˆille
+bool DoLightningDataTypePopupCheck(const MenuCreationSettings& theMenuSettings, boost::shared_ptr<NFmiFastQueryInfo>& info)
+{
+	if(NFmiFastInfoUtils::IsLightningTypeData(info))
+	{
+		if(theMenuSettings.fDoMapMenu)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 // Lis‰t‰‰n annetun menuListan per‰‰n menuItem, joka on muodostettu annetun smartInfon avulla.
 // Jos theDictionaryStr on tyhj‰, annetaan menuItemi otsikoksi smartInfon tuottaja nimi, muuten 
 // pyydet‰‰n sanakirjasta k‰ytetty otsikko.
@@ -3951,6 +3972,9 @@ void AddSmartInfoToMenuList(const MenuCreationSettings &theMenuSettings, boost::
 	{
 		if(theMenuSettings.fGridDataOnly && theSmartInfo->IsGrid() == false)
 			return ;
+
+		if(!DoLightningDataTypePopupCheck(theMenuSettings, theSmartInfo))
+			return;
 
 		// jos kyseess‰ olisi poikkileikkaus menu rakentelua, ei ole syyt‰ p‰‰st‰‰ l‰pi dataa, miss‰ on vain yksi leveli ja se ei ole hila dataa
 		if(theMenuSettings.fLevelDataOnly == false || (theMenuSettings.fLevelDataOnly == true && theSmartInfo->SizeLevels() > 1))
@@ -6329,7 +6353,7 @@ bool InitCPManagerSet(void)
 		tempView.ShowEcmwf(false);
 		tempView.ShowHirlam(false);
 
-		tempView.MTATempSystem(itsMTATempSystem);
+		tempView.MTATempSystem(itsMTATempSystem, false);
 	}
 
 	void FillTrajectoryViewMacro(NFmiViewSettingMacro &theMacro)
@@ -6350,7 +6374,7 @@ bool InitCPManagerSet(void)
 	void FillExtraMapViewSettingMacro2(NFmiViewSettingMacro::MapViewDescTop &theViewMacro, NFmiMapViewDescTop &theDescTop, int theDescTopIndex)
 	{
         boost::shared_ptr<NFmiMapViewWinRegistry> mapViewWinRegistry = ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex);
-        theViewMacro.SetMapViewDescTop(theDescTop, *mapViewWinRegistry.get());
+        theViewMacro.SetMapViewDescTop(theDescTop, *mapViewWinRegistry.get(), false);
 		theViewMacro.SetAllRowParams(theDescTop.DrawParamListVector(), itsMacroParamSystem);
 		theViewMacro.DipMapHelperList(theDescTop.GetViewMacroDipMapHelperList());
 	}
@@ -6554,7 +6578,7 @@ bool InitCPManagerSet(void)
 	{
 		NFmiViewSettingMacro::TempView &tempView = theMacro.GetTempView();
 
-		itsMTATempSystem.InitFromViewMacro(tempView.MTATempSystem());
+		itsMTATempSystem.InitFromViewMacro(tempView.MTATempSystem(), MetEditorOptionsData().DisableWindowManipulations());
 		itsMTATempSystem.UpdateFromViewMacro(true);
 	}
 
@@ -6562,7 +6586,7 @@ bool InitCPManagerSet(void)
 	{
 		NFmiViewSettingMacro::TrajectoryView &view = theMacro.GetTrajectoryView();
 
-		itsTrajectorySystem->Init(view.TrajectorySystem());
+		itsTrajectorySystem->Init(view.TrajectorySystem(), MetEditorOptionsData().DisableWindowManipulations());
 	}
 
 	void SetWarningCenterView(NFmiViewSettingMacro &theMacro)
@@ -6595,7 +6619,7 @@ bool InitCPManagerSet(void)
 	{
 		NFmiViewSettingMacro::CrossSectionView &view = theMacro.GetCrossSectionView();
 
-		itsCrossSectionSystem.Init(view.CrossSectionSystem());
+		itsCrossSectionSystem.Init(view.CrossSectionSystem(), MetEditorOptionsData().DisableWindowManipulations());
 
         // Pit‰‰ tyhjent‰‰ aluksi poikkileikkausn‰ytˆn kaikkien rivien parametrit, koska sen t‰yttˆ looppia (joka tyhjent‰‰ kulloisenkin rivin ensin) ei v‰ltt‰m‰tt‰ edes ajeta
 		GetCombinedMapHandler()->clearDesctopsAllParams(CtrlViewUtils::kFmiCrossSectionView);
@@ -6662,7 +6686,7 @@ bool InitCPManagerSet(void)
 		NFmiMapViewDescTop &descTop = *GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex);
         boost::shared_ptr<NFmiMapViewWinRegistry> mapViewWinRegistry = ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex);
 
-		descTop.InitForViewMacro(theViewMacro.GetMapViewDescTop(), *mapViewWinRegistry.get(), false);
+		descTop.InitForViewMacro(theViewMacro.GetMapViewDescTop(), *mapViewWinRegistry.get(), false, MetEditorOptionsData().DisableWindowManipulations());
 		// Mit‰ tehd‰‰n extra rows:ien kanssa
 //		theViewMacro.SetAllExtraRowParams(descTop.ExtraDrawParamListVector(), itsMacroParamSystem);
 		descTop.SetViewMacroDipMapHelperList(theViewMacro.DipMapHelperList());
@@ -9205,7 +9229,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			// 1. Ota metadatasta polku talteen
 			std::string caseStudyBasePath = NFmiFileSystem::PathFromPattern(theCaseStudyMetaFile);
 			// 2. Lataa metadata
-			if(itsLoadedCaseStudySystem.ReadMetaData(theCaseStudyMetaFile, ApplicationInterface::GetSmartMetViewAsCView()))
+			if(itsLoadedCaseStudySystem.ReadMetaData(theCaseStudyMetaFile, ApplicationInterface::GetSmartMetViewAsCView(), true))
 			{
 			// 3. Luo metadatan avulla HelpDataInfoSystem (HUOM! t‰ss‰ pit‰‰ k‰ytt‰‰ suoraan itsHelpDataInfoSystem-dataosiota, kun silt‰ pyydet‰‰n static datoja)
 				itsCaseStudyHelpDataInfoSystem = itsLoadedCaseStudySystem.MakeHelpDataInfoSystem(itsHelpDataInfoSystem, caseStudyBasePath);
@@ -10201,8 +10225,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     void CheckForNewWarningMessageData()
     {
 #ifndef DISABLE_CPPRESTSDK
-        AddMessageBasedData(itsWarningCenterSystem.getHakeQueryData(), "fakeHakeFileName", "fakeHakeFilePattern"); // "New warning center message data");
-        AddMessageBasedData(itsWarningCenterSystem.getKahaQueryData(), "fakeKaHaFileName", "fakeKaHaFilePattern"); // "New Kansalais Havainto message data");
+        AddMessageBasedData(itsWarningCenterSystem.getHakeQueryData(), "Hake Messages", "Hake Messages"); // "New warning center message data");
+        AddMessageBasedData(itsWarningCenterSystem.getKahaQueryData(), "KaHa Messages", "KaHa Messages"); // "New Kansalais Havainto message data");
 #endif // DISABLE_CPPRESTSDK
     }
 

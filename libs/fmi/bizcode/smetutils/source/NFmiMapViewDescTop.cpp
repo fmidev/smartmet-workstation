@@ -708,6 +708,11 @@ bool NFmiMapViewDescTop::IsVisibleRow(int theRowIndex)
 	return true;
 }
 
+long NFmiMapViewDescTop::TimeControlTimeStepInMinutes() const
+{
+	return boost::math::iround(TimeControlTimeStep() * 60.f);
+}
+
 // MapViewDirty metodi tekee kaiken sen mit‰ ennen tekiv‰t sekavasti AreaViewDirty- ja 
 // MapDirty -metodit yhdess‰. Niit‰ k‰ytettiin sekaisin eri tilanteissa ja yhdess‰ (sekaisin taas).
 // Yksi pahimmista sekaannuksista aiheutti fAreaViewDirty muuttujan asetus, joka meni 
@@ -1129,7 +1134,7 @@ void NFmiMapViewDescTop::ToggleMapViewDisplayMode(void)
 	ViewGridSize(itsViewGridSizeVM, nullptr);
 }
 
-void NFmiMapViewDescTop::InitForViewMacro(const NFmiMapViewDescTop &theOther, NFmiMapViewWinRegistry &theMapViewWinRegistry, bool getFromRegisty)
+void NFmiMapViewDescTop::InitForViewMacro(const NFmiMapViewDescTop& theOther, NFmiMapViewWinRegistry& theMapViewWinRegistry, bool getFromRegisty, bool disableWindowManipulations)
 {
 	itsLandBorderColorIndex = theOther.itsLandBorderColorIndex;
 	itsParamWindowViewPosition = theOther.itsParamWindowViewPosition;
@@ -1153,29 +1158,32 @@ void NFmiMapViewDescTop::InitForViewMacro(const NFmiMapViewDescTop &theOther, NF
 
 	itsStationPointSize = theOther.itsStationPointSize;
 
-    if(getFromRegisty)
-        InitFromMapViewWinRegistry(theMapViewWinRegistry);
-    else
-    {
-        fShowMasksOnMapVM = theOther.fShowMasksOnMapVM; // talletetaan viewMacrosta arvo sek‰ lokaali arvoon ett‰ rekisteriin
-        theMapViewWinRegistry.ShowMasksOnMap(theOther.fShowMasksOnMapVM);
-    	itsSpacingOutFactorVM = theOther.itsSpacingOutFactorVM; // talletetaan viewMacrosta arvo sek‰ lokaali arvoon ett‰ rekisteriin
-        theMapViewWinRegistry.SpacingOutFactor(theOther.itsSpacingOutFactorVM);
-        SelectedMapIndex(theOther.itsSelectedMapIndexVM); // t‰m‰ indeksi pit‰‰ tarkistaa, joten se laitetaan asetus-metodin l‰pi
-        theMapViewWinRegistry.SelectedMapIndex(itsSelectedMapIndexVM);
+	if(getFromRegisty)
+		InitFromMapViewWinRegistry(theMapViewWinRegistry);
+	else
+	{
+		fShowMasksOnMapVM = theOther.fShowMasksOnMapVM; // talletetaan viewMacrosta arvo sek‰ lokaali arvoon ett‰ rekisteriin
+		theMapViewWinRegistry.ShowMasksOnMap(theOther.fShowMasksOnMapVM);
+		itsSpacingOutFactorVM = theOther.itsSpacingOutFactorVM; // talletetaan viewMacrosta arvo sek‰ lokaali arvoon ett‰ rekisteriin
+		theMapViewWinRegistry.SpacingOutFactor(theOther.itsSpacingOutFactorVM);
+		SelectedMapIndex(theOther.itsSelectedMapIndexVM); // t‰m‰ indeksi pit‰‰ tarkistaa, joten se laitetaan asetus-metodin l‰pi
+		theMapViewWinRegistry.SelectedMapIndex(itsSelectedMapIndexVM);
 
-        fShowStationPlotVM = theOther.fShowStationPlotVM;
-        theMapViewWinRegistry.ShowStationPlot(theOther.fShowStationPlotVM);
-        itsViewGridSizeVM = theOther.itsViewGridSizeVM;
-        theMapViewWinRegistry.ViewGridSizeStr(::Point2String(theOther.itsViewGridSizeVM));
-    }
+		fShowStationPlotVM = theOther.fShowStationPlotVM;
+		theMapViewWinRegistry.ShowStationPlot(theOther.fShowStationPlotVM);
+		itsViewGridSizeVM = theOther.itsViewGridSizeVM;
+		theMapViewWinRegistry.ViewGridSizeStr(::Point2String(theOther.itsViewGridSizeVM));
+	}
 	itsTimeControlTimeStep = theOther.itsTimeControlTimeStep;
 	itsMapViewDisplayMode = theOther.itsMapViewDisplayMode;
 	itsAbsoluteActiveViewRow = theOther.itsAbsoluteActiveViewRow;
 
-	fDescTopOn = theOther.fDescTopOn;
-    fLockToMainMapViewTime = theOther.fLockToMainMapViewTime;
-    fLockToMainMapViewRow = theOther.fLockToMainMapViewRow;
+	if(!disableWindowManipulations)
+	{
+		fDescTopOn = theOther.fDescTopOn;
+	}
+	fLockToMainMapViewTime = theOther.fLockToMainMapViewTime;
+	fLockToMainMapViewRow = theOther.fLockToMainMapViewRow;
 	fShowTrajectorsOnMap = theOther.fShowTrajectorsOnMap;
 	fShowSoundingMarkersOnMap = theOther.fShowSoundingMarkersOnMap;
 	fShowCrossSectionMarkersOnMap = theOther.fShowCrossSectionMarkersOnMap;

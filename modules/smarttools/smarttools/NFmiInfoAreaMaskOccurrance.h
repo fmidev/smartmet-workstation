@@ -19,7 +19,6 @@ class NFmiInfoAreaMaskOccurrance : public NFmiInfoAreaMaskProbFunc
                              NFmiAreaMask::FunctionType theSecondaryFunc,
                              int theArgumentCount,
                              const boost::shared_ptr<NFmiArea> &theCalculationArea,
-                             bool synopXCase,
                              unsigned long thePossibleMetaParamId);
   NFmiInfoAreaMaskOccurrance(const NFmiInfoAreaMaskOccurrance &theOther);
   void Initialize() override;  // Tätä kutsutaan konstruktorin jälkeen, tässä alustetaan tietyille
@@ -44,15 +43,8 @@ class NFmiInfoAreaMaskOccurrance : public NFmiInfoAreaMaskProbFunc
   void InitializeLocationIndexCaches();
   std::vector<unsigned long> CalcLocationIndexCache(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
 
-  // halutaanko vain normaali asemat (true), ei liikkuvia asemia (laivat, poijut)
-  bool fSynopXCase;
-  bool fUseMultiSourceData;
   // Joitain laskuja optimoidaan ja niillä lähdedatasta laskut rajataan laskettavan kartta-alueen sisälle
   boost::shared_ptr<NFmiArea> itsCalculationArea;  
-  // Tähän laitetaan laskuissa käytettävät datat, joko se joko on jo emoluokassa
-  // oleva itsInfo, tai multisource tapauksissa joukko datoja  
-  std::vector<boost::shared_ptr<NFmiFastQueryInfo>> itsInfoVector;  
-
   // Jokaiselle käytössä olevalle datalle lasketaan locationIndex cache, eli kaikki ne pisteet
   // kustakin datasta,
   // joita käytetään laskuissa. Jos jollekin datalle on tyhjä vektori, lasketaan siitä kaikki. Jos
@@ -74,7 +66,6 @@ public:
         NFmiAreaMask::FunctionType theSecondaryFunc,
         int theArgumentCount,
         const boost::shared_ptr<NFmiArea> &theCalculationArea,
-        bool synopXCase,
         unsigned long thePossibleMetaParamId);
     NFmiInfoAreaMaskOccurranceSimpleCondition(const NFmiInfoAreaMaskOccurranceSimpleCondition &theOther);
     NFmiAreaMask *Clone() const override;
@@ -101,28 +92,20 @@ public:
         NFmiInfoData::Type theDataType,
         const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         int theArgumentCount,
-        double observationRadiusInKm,
         unsigned long thePossibleMetaParamId);
     ~NFmiPeekTimeMask();
     NFmiPeekTimeMask(const NFmiPeekTimeMask &theOther);
     NFmiAreaMask *Clone() const override;
-    void Initialize() override;
 
     double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
     void SetArguments(std::vector<float> &theArgumentVector) override;
 
 protected:
-    double CalcValueFromObservation(const NFmiPoint &theLatlon, const NFmiMetTime &thePeekTime);
+    double CalcValueFromObservation(const NFmiCalculationParams &theCalculationParams,
+                                    const NFmiMetTime &thePeekTime);
 
     // kuinka paljon kurkataan ajassa eteen/taakse
     long itsTimeOffsetInMinutes;  
-    bool fUseMultiSourceData;
-    // Tähän laitetaan havainto laskuissa käytettävät datat, joko se joko on jo emoluokassa
-    // oleva itsInfo, tai multisource tapauksissa joukko datoja  
-    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> itsInfoVector;
-    // Lähintä havaintodataa etsitään tämän säteen sisältä. 
-    // Jos arvo on kFloatMissing, etsinnässä ei ole rajoja.
-    double itsObservationRadiusInKm;
 };
 
 class NFmiInfoAreaMaskTimeRange : public NFmiPeekTimeMask
@@ -135,7 +118,6 @@ public:
         const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         NFmiAreaMask::FunctionType theIntegrationFunc,
         int theArgumentCount,
-        double observationRadiusInKm,
         unsigned long thePossibleMetaParamId);
     NFmiInfoAreaMaskTimeRange(const NFmiInfoAreaMaskTimeRange &theOther);
     NFmiAreaMask *Clone() const override;
@@ -182,7 +164,6 @@ public:
         const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         NFmiAreaMask::FunctionType theIntegrationFunc,
         int theArgumentCount,
-        double observationRadiusInKm,
         unsigned long thePossibleMetaParamId);
     NFmiInfoAreaMaskPreviousFullDays(const NFmiInfoAreaMaskPreviousFullDays &theOther);
     NFmiAreaMask *Clone() const override;
@@ -208,7 +189,6 @@ public:
         NFmiInfoData::Type theDataType,
         const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         int theArgumentCount,
-        double observationRadiusInKm,
         unsigned long thePossibleMetaParamId);
     NFmiInfoAreaMaskTimeDuration(const NFmiInfoAreaMaskTimeDuration &theOther);
     NFmiAreaMask *Clone() const override;
@@ -230,4 +210,8 @@ protected:
     // Lasketaanko tapahtuman kesto koko annetun ajan yli (1 eli true) tai lasketaanko 
     // vain alkuhetkestä siihen asti kuin sitä aluksi kestää (0 eli false)
     bool fUseCumulativeCalculation;
+    // Jos datan aika/paikka rakenne ei osu laskuihin ollenkaan, halutaan palauttaa missing arvo, eli jos
+    // tämä on lopussa vielä false, palutetaan missing. Asetetaan true tilaan CalcDurationTime metodissa, jos
+    // löytyi aikoja tarkasteluun.
+    bool fHasLegitDataAvailable = false;
 };

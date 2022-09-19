@@ -52,6 +52,7 @@ namespace AddParams
         std::vector<SingleRowItem> makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory, NFmiInfoOrganizer &infoOrganizer, bool mapViewCase) const;
         NFmiInfoData::Type getDataType(NFmiInfoOrganizer &infoOrganizer, const NFmiProducer &producer);
         void setSoungindLevels(const NFmiLevelBag& soundingLevels);
+        static std::string GetEditableDataRowName();
     private:
         std::vector<SingleRowItem> customObservationData(NFmiInfoOrganizer &infoOrganizer) const;
         void addNewProducerData(const NFmiProducer &producer, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory);

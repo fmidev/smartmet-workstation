@@ -79,7 +79,7 @@ public:
 
 	void Init(NFmiMapViewWinRegistry &theMapViewWinRegistry);
 	void StoreMapViewDescTopToSettings(void);
-    void InitForViewMacro(const NFmiMapViewDescTop &theOther, NFmiMapViewWinRegistry &theMapViewWinRegistry, bool getFromRegisty);
+    void InitForViewMacro(const NFmiMapViewDescTop &theOther, NFmiMapViewWinRegistry &theMapViewWinRegistry, bool getFromRegisty, bool disableWindowManipulations);
 	std::vector<ViewMacroDipMapHelper> GetViewMacroDipMapHelperList(void);
 	void SetViewMacroDipMapHelperList(const std::vector<ViewMacroDipMapHelper> &theData);
 	void StoreToMapViewWinRegistry(NFmiMapViewWinRegistry &theMapViewWinRegistry);
@@ -109,6 +109,7 @@ public:
 	void CurrentTime(const NFmiMetTime &newValue) {itsCurrentTime = newValue;}
 	float TimeControlTimeStep(void) const {return itsTimeControlTimeStep;}
 	void TimeControlTimeStep(float newValue);
+	long TimeControlTimeStepInMinutes() const;
     void MapViewDirty(bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool updateMapViewDrawingLayers);
     CtrlViewUtils::MapViewMode MapViewDisplayMode(void) const {return itsMapViewDisplayMode;}
 	void MapViewDisplayMode(CtrlViewUtils::MapViewMode newValue);

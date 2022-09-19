@@ -438,7 +438,7 @@ std::string NFmiCaseStudyGridCtrl::ComposeToolTipText(const CPoint& point)
 	return str;
 }
 
-static void SetHeaders(CGridCtrl &theGridCtrl, const std::vector<CaseStudyHeaderParInfo> &theHeaders, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount)
+static void SetHeaders(CGridCtrl &theGridCtrl, const std::vector<CaseStudyHeaderParInfo> &theHeaders, int rowCount, bool fFirstTime, int theFixedRowCount, int theFixedColumnCount)
 {
 	int columnCount = static_cast<int>(theHeaders.size());
 	theGridCtrl.SetRowCount(rowCount);
@@ -459,7 +459,6 @@ static void SetHeaders(CGridCtrl &theGridCtrl, const std::vector<CaseStudyHeader
 		if(fFirstTime) // s‰‰det‰‰n sarakkeiden leveydet vain 1. kerran
 			theGridCtrl.SetColumnWidth(i, theHeaders[i].itsColumnWidth);
 	}
-	fFirstTime = false;
 }
 
 void CFmiCaseStudyDlg::InitHeaders()
@@ -753,6 +752,20 @@ void CFmiCaseStudyDlg::InitializeGridControlRelatedData()
 		// Kun dialogia alustetaan, pit‰‰ t‰t‰ kutsua kerran, koska t‰m‰ laittaa piiloon "Enable data" sarakkeen, 
 		// joka aukeaa n‰kyville vasta kun sen toglaava checkbox kontrollia on klikattu.
 		ShowEnableColumn();
+		DoFirstTimeSilamCategoryCollapse();
+	}
+}
+
+void CFmiCaseStudyDlg::DoFirstTimeSilamCategoryCollapse()
+{
+	// Pit‰‰ testata itsTreeColumn:n koko ett‰ ei ole tyhj‰, muuten voi kaatua
+	if(itsTreeColumn.GetRowCount() > 0)
+	{
+		if(itsPossibleSilamCategoryRowNumber > 0)
+		{
+			itsTreeColumn.TreeDataCollapseAllSubLevels(itsPossibleSilamCategoryRowNumber);
+			itsTreeColumn.TreeRefreshRows();
+		}
 	}
 }
 
@@ -927,7 +940,9 @@ void CFmiCaseStudyDlg::InitGridControlValues()
 
 	std::vector<unsigned char> &treePatternArray = caseStudySystem.TreePatternArray();
 	if(treePatternArray.size()) // pit‰‰ testata 0 koko vastaan, muuten voi kaatua
+	{
 		itsTreeColumn.TreeSetup(&itsGridCtrl, 1, static_cast<int>(treePatternArray.size()), 1, &treePatternArray[0], TRUE, FALSE);
+	}
     fFirstTime = false;
 }
 
@@ -937,7 +952,14 @@ void CFmiCaseStudyDlg::UpdateRows(int fixedRowCount, int fixedColumnCount, bool 
 	int currentRowCount = fixedRowCount;
 	for(auto data : dataVector)
 	{
-        SetGridRow(currentRowCount++, *data, fixedColumnCount, updateOnly);
+		const auto& caseStudyData = *data;
+		// Suljetaan mahdollinen Silam sektio 1. kerralla
+		if(caseStudyData.CategoryHeader() && caseStudyData.Name() == NFmiCaseStudySystem::GetSilamCustomFolderName())
+		{
+			itsPossibleSilamCategoryRowNumber = currentRowCount;
+		}
+
+        SetGridRow(currentRowCount++, caseStudyData, fixedColumnCount, updateOnly);
 	}
 }
 
@@ -963,16 +985,16 @@ void CFmiCaseStudyDlg::HandleCheckBoxClick(int col, int row)
 			NFmiCaseStudyDataFile &dataFile = *dataVector[dataIndex];
 			if(dataFile.CategoryHeader())
 			{
-                caseStudySystem.CategoryStore(dataFile.Category(), newState); // t‰m‰ tekee myˆs tarvittavat updatet data rakenteille
+                caseStudySystem.CategoryStore(dataFile, newState); // t‰m‰ tekee myˆs tarvittavat updatet data rakenteille
 			}
 			else if(dataFile.ProducerHeader())
 			{
-                caseStudySystem.ProducerStore(dataFile.Category(), dataFile.Producer().GetIdent(), newState); // t‰m‰ tekee myˆs tarvittavat updatet data rakenteille
+                caseStudySystem.ProducerStore(dataFile, newState); // t‰m‰ tekee myˆs tarvittavat updatet data rakenteille
 			}
 			else
 			{
 				dataFile.DataFileWinRegValues().Store(newState);
-                caseStudySystem.Update(dataFile.Category(), dataFile.Producer().GetIdent());
+                caseStudySystem.Update(dataFile);
 			}
 			UpdateGridControlValues(true);
 		}
@@ -994,16 +1016,16 @@ void CFmiCaseStudyDlg::HandleEnableDataCheckBoxClick(int col, int row)
 			NFmiCaseStudyDataFile &dataFile = *dataVector[dataIndex];
 			if(dataFile.CategoryHeader())
 			{
-                caseStudySystem.CategoryEnable(*itsSmartMetDocumentInterface->HelpDataInfoSystem(), dataFile.Category(), newState); // t‰m‰ tekee myˆs tarvittavat updatet data rakenteille
+                caseStudySystem.CategoryEnable(*itsSmartMetDocumentInterface->HelpDataInfoSystem(), dataFile, newState); // t‰m‰ tekee myˆs tarvittavat updatet data rakenteille
 			}
 			else if(dataFile.ProducerHeader())
 			{
-                caseStudySystem.ProducerEnable(*itsSmartMetDocumentInterface->HelpDataInfoSystem(), dataFile.Category(), dataFile.Producer().GetIdent(), newState); // t‰m‰ tekee myˆs tarvittavat updatet data rakenteille
+                caseStudySystem.ProducerEnable(*itsSmartMetDocumentInterface->HelpDataInfoSystem(), dataFile, newState); // t‰m‰ tekee myˆs tarvittavat updatet data rakenteille
 			}
 			else
 			{
                 dataFile.DataEnabled(*itsSmartMetDocumentInterface->HelpDataInfoSystem(), newState);
-                caseStudySystem.Update(dataFile.Category(), dataFile.Producer().GetIdent());
+                caseStudySystem.Update(dataFile);
 			}
 			UpdateGridControlValues(true);
             itsSmartMetDocumentInterface->UpdateEnableDataChangesToWinReg();
@@ -1099,11 +1121,11 @@ void CFmiCaseStudyDlg::DoLocalCacheCountEditing(NFmiCaseStudyDataFile& dataFile,
 
 		if(dataFile.CategoryHeader())
 		{
-			caseStudySystem.CategoryLocalCacheDataCount(dataFile.Category(), dataCount);
+			caseStudySystem.CategoryLocalCacheDataCount(dataFile, dataCount);
 		}
 		else if(dataFile.ProducerHeader())
 		{
-			caseStudySystem.ProducerLocalCacheDataCount(dataFile.Category(), dataFile.Producer().GetIdent(), dataCount);
+			caseStudySystem.ProducerLocalCacheDataCount(dataFile, dataCount);
 		}
 		else
 		{
@@ -1130,17 +1152,17 @@ void CFmiCaseStudyDlg::DoCaseStudyIndexRangeEditing(NFmiCaseStudyDataFile& dataF
 		if(dataFile.CategoryHeader())
 		{
 			// T‰m‰ tekee myˆs tarvittavat updatet data rakenteiden case-studyyn talletettavien tiedostojen datam‰‰rille
-			caseStudySystem.CategoryCaseStudyIndexRange(dataFile.Category(), indexRange); 
+			caseStudySystem.CategoryCaseStudyIndexRange(dataFile, indexRange); 
 		}
 		else if(dataFile.ProducerHeader())
 		{
 			// T‰m‰ tekee myˆs tarvittavat updatet data rakenteiden case-studyyn talletettavien tiedostojen datam‰‰rille
-			caseStudySystem.ProducerCaseStudyIndexRange(dataFile.Category(), dataFile.Producer().GetIdent(), indexRange);
+			caseStudySystem.ProducerCaseStudyIndexRange(dataFile, indexRange);
 		}
 		else
 		{
 			dataFile.DataFileWinRegValues().CaseStudyDataIndexRange(indexRange);
-			caseStudySystem.Update(dataFile.Category(), dataFile.Producer().GetIdent());
+			caseStudySystem.Update(dataFile);
 		}
 		UpdateGridControlValues(true);
 	}
@@ -1206,7 +1228,7 @@ void CFmiCaseStudyDlg::OnBnClickedButtonStoreData()
     }
 
     std::string metaDataTotalFileName;
-    if(itsSmartMetDocumentInterface->CaseStudySystem().StoreMetaData(this, metaDataTotalFileName, false))
+    if(itsSmartMetDocumentInterface->CaseStudySystem().StoreMetaData(this, metaDataTotalFileName, false, true))
     {
         std::string commandStr;
         commandStr += "\""; // laitetaan lainausmerkit komento polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
@@ -1313,8 +1335,18 @@ void CFmiCaseStudyDlg::OnBnClickedButtonBrowse()
 	if(dlg.DoModal() == IDOK)
 	{
 		itsPathStrU_ = dlg.GetPathName();
+		auto nameAndInfoPair = GetNameAndInfoStringsFromSelectedMetaFilePath(std::string(CT2A(itsPathStrU_)));
+		itsNameStrU_ = CA2T(nameAndInfoPair.first.c_str());
+		itsInfoStrU_ = CA2T(nameAndInfoPair.second.c_str());
 		UpdateData(FALSE);
 	}
+}
+
+std::pair<std::string, std::string> CFmiCaseStudyDlg::GetNameAndInfoStringsFromSelectedMetaFilePath(std::string fullPathToMetaFile)
+{
+	NFmiCaseStudySystem tmpCaseStudySystem;
+	tmpCaseStudySystem.ReadMetaData(fullPathToMetaFile, nullptr, false);
+	return std::make_pair(tmpCaseStudySystem.Name(), tmpCaseStudySystem.Info());
 }
 
 void CFmiCaseStudyDlg::OnBnClickedButtonCloseMode()

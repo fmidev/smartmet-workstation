@@ -115,6 +115,10 @@ class NFmiAreaMaskImpl : public NFmiAreaMask
   void SimpleCondition(boost::shared_ptr<NFmiSimpleCondition> &theSimpleCondition) override { itsSimpleCondition = theSimpleCondition; }
   float FunctionDataTimeOffsetInHours() const override { return itsFunctionDataTimeOffsetInHours; }
   void FunctionDataTimeOffsetInHours(float newValue) override { itsFunctionDataTimeOffsetInHours = newValue; }
+  bool CheckPossibleObservationDistance(const NFmiCalculationParams &) override
+  {
+    return true;
+  }
 
  protected:
   virtual double CalcValueFromLocation(const NFmiPoint &theLatLon) const;

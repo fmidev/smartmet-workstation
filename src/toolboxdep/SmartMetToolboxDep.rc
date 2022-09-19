@@ -1354,6 +1354,13 @@ BEGIN
     BUTTON      ID_BUTTON_SELECT_EUROPE_MAP_EXTRA_MAP
     BUTTON      ID_BUTTON_GLOBE_EXTRA_MAP
     BUTTON      ID_MENUITEM_VIEW_GRID_SELECTION_DLG_EXTRA_MAP
+    BUTTON      ID_BUTTON_OPEN_MAIN_MAP_VIEW_EXTRA_MAP
+    BUTTON      ID_BUTTON_OPEN_OTHER_SIDE_MAP_VIEW_EXTRA_MAP
+    BUTTON      ID_BUTTON_OPEN_TIME_SERIAL_VIEW_EXTRA_MAP
+    BUTTON      ID_BUTTON_OPEN_SMARTTOOLS_DIALOG_EXTRA_MAP
+    BUTTON      ID_BUTTON_OPEN_SOUNDING_VIEW_EXTRA_MAP
+    BUTTON      ID_BUTTON_OPEN_CROSSSECTION_VIEW_EXTRA_MAP
+    BUTTON      ID_BUTTON_OPEN_VIEW_MACRO_DIALOG_EXTRA_MAP
     BUTTON      ID_BUTTON_MAP_VIEW_SETTINGS_EXTRA_MAP
     BUTTON      IDC_BUTTON_PRINT
     BUTTON      ID_BUTTON_ANIMATION_EXTRA_MAP
@@ -1487,6 +1494,24 @@ STRINGTABLE
 BEGIN
     ID_BUTTON_VIEW_SELECT_PARAM_DIALOG_EXTRA_MAP 
                             "Parameter selection dialog\nParameter selection dialog"
+END
+
+STRINGTABLE
+BEGIN
+    ID_BUTTON_OPEN_MAIN_MAP_VIEW_EXTRA_MAP 
+                            "Open main map view\nOpen main map view"
+    ID_BUTTON_OPEN_OTHER_SIDE_MAP_VIEW_EXTRA_MAP 
+                            "Open other side map view\nOpen other side map view"
+    ID_BUTTON_OPEN_TIME_SERIAL_VIEW_EXTRA_MAP 
+                            "Open Time-serial view\nOpen Time-serial view"
+    ID_BUTTON_OPEN_SMARTTOOLS_DIALOG_EXTRA_MAP 
+                            "Open Smarttools dialog\nOpen Smarttools dialog"
+    ID_BUTTON_OPEN_SOUNDING_VIEW_EXTRA_MAP 
+                            "Open Sounding view\nOpen Sounding view"
+    ID_BUTTON_OPEN_CROSSSECTION_VIEW_EXTRA_MAP 
+                            "Open Cross-section view\nOpen Cross-section view"
+    ID_BUTTON_OPEN_VIEW_MACRO_DIALOG_EXTRA_MAP 
+                            "Open View-macro dialog\nOpen View-macro dialog"
 END
 
 #endif    // Finnish (Finland) resources

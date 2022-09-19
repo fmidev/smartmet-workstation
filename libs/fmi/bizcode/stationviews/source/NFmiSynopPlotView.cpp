@@ -327,7 +327,9 @@ void NFmiSynopPlotView::DrawSynopPlot(NFmiToolBox * theGTB, const NFmiLocation &
 		if(info == 0)
 			return;
 
-        SetMapViewSettings(info); // tämä asetus funktio pitää kutsua, että ei jää tiettyjä asetuksia normaali piirrosta päälle (esim. fDoShipDataLocations -lippu väärään tilaan, joka aiheutti epämääräisen tooltipissä olleen tuuliviiri piirron väännön)
+		// Tämä asetus funktio pitää kutsua, että ei jää tiettyjä asetuksia normaali piirrosta päälle (esim. fDoMovingStationDataLocations -lippu 
+		// väärään tilaan, joka aiheutti epämääräisen tooltipissä olleen tuuliviiri piirron väännön)
+        SetMapViewSettings(info); 
 
         auto &graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
         itsFontSizeX = boost::math::iround(theFontSize * graphicalInfo.itsPixelsPerMM_x * 1.88);

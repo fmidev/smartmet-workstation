@@ -54,4 +54,11 @@ public:
     void SetToDoFirstTimeWmsDataBasedUpdate() override;
     void OpenVisualizationsettingsDialog() override;
     void OpenLogViewer() override;
+    void OpenTimeSerialView() override;
+    void OpenCrossSectionView() override;
+    void OpenSoundingView() override;
+    void OpenMainMapView() override;
+    void OpenSideMapView(unsigned int theMapViewDescTopIndex) override;
+    void OpenSmarttoolsDialog() override;
+    void OpenViewMacroDialog() override;
 };

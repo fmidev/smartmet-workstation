@@ -71,14 +71,14 @@ void NFmiFlashDataView::Draw(NFmiToolBox * theGTB)
 		for(size_t j = 0; j < itsInfoVector.size(); j++)
 		{
 			boost::shared_ptr<NFmiFastQueryInfo>& info = itsInfoVector[j];
-			DrawFlashes(*info);
+			DrawFlashes(info);
 		}
 	}
 	// Lopuksi otetaan clippaus pois
 	itsToolBox->EndClipping();
 }
 
-void NFmiFlashDataView::DrawFlashes(NFmiFastQueryInfo &theInfo)
+void NFmiFlashDataView::DrawFlashes(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	NFmiColor startColor(0.9f, 0.9f, 0.9f); // väri, jolla värjätään 'vanhat' salamat ruudussa
 	NFmiColor endColor(itsDrawParam->FillColor()); // väri jolla värjätään 'tuoreimmat' salamat ruudussa
@@ -88,42 +88,42 @@ void NFmiFlashDataView::DrawFlashes(NFmiFastQueryInfo &theInfo)
 	float lon = 0;
     float power = 0;
     float multiplicity = 0;
-	theInfo.Param(kFmiLatitude);
-	unsigned long latIndex = theInfo.ParamIndex();
-	theInfo.Param(kFmiLongitude);
-	unsigned long lonIndex = theInfo.ParamIndex();
-	theInfo.Param(kFmiFlashStrength);
-	unsigned long powerIndex = theInfo.ParamIndex();
-    theInfo.Param(kFmiFlashMultiplicity);
-    unsigned long multiplicityIndex = theInfo.ParamIndex();
-    theInfo.First();
 	// Piirtää tästä kartan hetkesta aika-aseleen verran taaksepäin salamn iskuja
-
 	unsigned long timeIndex1 = 0;
 	unsigned long timeIndex2 = 0;
 	if(GetTimeSpanIndexies(theInfo, timeIndex1, timeIndex2))
 	{
-		int editorTimeStep = CalcUsedTimeStepInMinutes();
-		NFmiMetTime time1 = CalcFirstTimeOfSpan();
+		theInfo->Param(kFmiLatitude);
+		unsigned long latIndex = theInfo->ParamIndex();
+		theInfo->Param(kFmiLongitude);
+		unsigned long lonIndex = theInfo->ParamIndex();
+		theInfo->Param(kFmiFlashStrength);
+		unsigned long powerIndex = theInfo->ParamIndex();
+		theInfo->Param(kFmiFlashMultiplicity);
+		unsigned long multiplicityIndex = theInfo->ParamIndex();
+		theInfo->First();
+
+		auto usedTimeStepInMinutes = itsCtrlViewDocumentInterface->TimeControlTimeStepInMinutes(itsMapViewDescTopIndex);
+		NFmiMetTime time1 = CalcStartTimeOfTimeSpan();
 		NFmiPoint scale(itsDrawParam->OnlyOneSymbolRelativeSize());
 		// käy läpi halutut salamat (olettaen että muut asetukset ovat kohdallaan)
 		for(unsigned long i=timeIndex1; i<=timeIndex2; i++)
 		{
-			theInfo.TimeIndex(i);
-			theInfo.ParamIndex(latIndex);
-			lat = theInfo.FloatValue();
-			theInfo.ParamIndex(lonIndex);
-			lon = theInfo.FloatValue();
-			theInfo.ParamIndex(powerIndex);
-			power = theInfo.FloatValue();
-            theInfo.ParamIndex(multiplicityIndex);
-            multiplicity = theInfo.FloatValue();
+			theInfo->TimeIndex(i);
+			theInfo->ParamIndex(latIndex);
+			lat = theInfo->FloatValue();
+			theInfo->ParamIndex(lonIndex);
+			lon = theInfo->FloatValue();
+			theInfo->ParamIndex(powerIndex);
+			power = theInfo->FloatValue();
+			theInfo->ParamIndex(multiplicityIndex);
+            multiplicity = theInfo->FloatValue();
             NFmiPoint latlon(lon, lat);
 
 			if (itsArea->IsInside(latlon))
 			{
 				// lasketaan luku (0-1), jonka avulla värjätään salama
-				float flashColorFactor = CalcFlashColorFactor(time1, theInfo.Time(), editorTimeStep);
+				float flashColorFactor = CalcFlashColorFactor(time1, theInfo->Time(), usedTimeStepInMinutes);
 				NFmiColor fillColor(CalcFlashFillColor(startColor, endColor, flashColorFactor));
 				NFmiPoint viewPoint(LatLonToViewPoint(NFmiPoint(lon, lat))); // tämä on offset
                 if(multiplicity == kFloatMissing)
@@ -292,56 +292,20 @@ std::string NFmiFlashDataView::ComposeToolTipText(const NFmiPoint& theRelativePo
     return returnStr;
 }
 
-bool NFmiFlashDataView::FindNearestFlash(NFmiFastQueryInfo &theInfo, const NFmiMetTime &theTime, int theUsedTimeStep, const NFmiLocation &theCursorLocation, double &theCurrentMinDist, unsigned long &theMinDistTimeIndex)
-{
-	float lat = 0;
-	float lon = 0;
-	theInfo.Param(kFmiLatitude);
-	unsigned long latIndex = theInfo.ParamIndex();
-	theInfo.Param(kFmiLongitude);
-	unsigned long lonIndex = theInfo.ParamIndex();
-	theInfo.First();
-
-	bool status = false;
-	unsigned long timeIndex1 = 0;
-	unsigned long timeIndex2 = 0;
-	if(GetTimeSpanIndexies(theInfo, timeIndex1, timeIndex2))
-	{
-		for(unsigned long i=timeIndex1; i<=timeIndex2; i++)
-		{
-			theInfo.TimeIndex(i);
-			theInfo.ParamIndex(latIndex);
-			lat = theInfo.FloatValue();
-			theInfo.ParamIndex(lonIndex);
-			lon = theInfo.FloatValue();
-			NFmiLocation flashLoc(lon, lat);
-			double dist = flashLoc.Distance(theCursorLocation);
-			if(dist < theCurrentMinDist)
-			{
-				theCurrentMinDist = dist;
-				theMinDistTimeIndex = i;
-				status = true;
-			}
-		}
-	}
-	return status;
-}
-
 bool NFmiFlashDataView::FindNearestFlashInMapTimeSection(const NFmiPoint &theRelativePoint, float &theLat, float &theLon, float &thePow, float &theAcc, float &theMulti, NFmiMetTime &theTime)
 {
 	bool status = false;
 	if(itsDrawParam)
 	{
 		NFmiLocation cursorLoc(ViewPointToLatLon(theRelativePoint));
-		double minDist = 9999999999.; // et. metreissä
-		double maxAllowedDist = 100 * 1000; // max 100 km et.
-		int editorTimeStep = static_cast<int>(::round(itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex)*60));
+		double minDist = 9999999999.; // etäisyys metreissä
+		double maxAllowedDist = 100 * 1000; // max 100 km etäisyys
 		unsigned long minDistTimeIndex = static_cast<unsigned long>(-1);
 
 		for(size_t j = 0; j < itsInfoVector.size(); j++)
 		{
 			boost::shared_ptr<NFmiFastQueryInfo> &info = itsInfoVector[j];
-			if(FindNearestFlash(*info, itsTime, editorTimeStep, cursorLoc, minDist, minDistTimeIndex))
+			if(FindNearestFlashTypeObservation(info, cursorLoc, minDist, minDistTimeIndex))
 			{
 				if(minDist <= maxAllowedDist)
 				{
@@ -393,41 +357,20 @@ bool NFmiFlashDataView::CalcFlashCount(int &theGroundFlashCountOut, int &theClou
 
 		float lat = 0;
 		float lon = 0;
-		info->Param(kFmiLatitude);
-		unsigned long latIndex = info->ParamIndex();
-		info->Param(kFmiLongitude);
-		unsigned long lonIndex = info->ParamIndex();
-        info->Param(kFmiFlashMultiplicity);
-        unsigned long multiplicityIndex = info->ParamIndex();
-        info->First();
-
 		unsigned long timeIndex1 = 0;
 		unsigned long timeIndex2 = 0;
-		if(GetTimeSpanIndexies(*info, timeIndex1, timeIndex2))
+		if(GetTimeSpanIndexies(info, timeIndex1, timeIndex2))
 		{
-			int editorTimeStep = static_cast<int>(::round(itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex)*60));
-			NFmiMetTime time2(itsTime);
-			NFmiMetTime time1(time2);
-			time1.SetTimeStep(1);
-			time1.ChangeByMinutes(-editorTimeStep);
-
-			// etsi ensin alku aikaindeksi
-			bool found1 = info->TimeToNearestStep(time1, kBackward);
-			int index1 = info->TimeIndex();
-
-			// etsi sitten loppu aikaindeksi
-			bool found2 = info->TimeToNearestStep(time2, kBackward);
-			int index2 = info->TimeIndex();
-			if(index1 == index2) // pitää testata erikois tapaus, koska TimeToNearestStep-palauttaa aina jotain, jos on dataa
-			{
-				info->TimeIndex(index1);
-				NFmiMetTime foundTime(info->Time());
-				if(foundTime > time2 || foundTime < time1) // jos löydetty aika on alku ja loppu ajan ulkopuolella ei piirretä salamaa
-					continue;
-			}
+			info->Param(kFmiLatitude);
+			unsigned long latIndex = info->ParamIndex();
+			info->Param(kFmiLongitude);
+			unsigned long lonIndex = info->ParamIndex();
+			info->Param(kFmiFlashMultiplicity);
+			unsigned long multiplicityIndex = info->ParamIndex();
+			info->First();
 
 			int counter = 0;
-			for(int i=index1; i<=index2; i++)
+			for(unsigned long i = timeIndex1; i <= timeIndex2; i++)
 			{
 				info->TimeIndex(i);
 				info->ParamIndex(latIndex);
@@ -450,58 +393,4 @@ bool NFmiFlashDataView::CalcFlashCount(int &theGroundFlashCountOut, int &theClou
 		}
 	}
 	return status;
-}
-
-int NFmiFlashDataView::CalcUsedTimeStepInMinutes(void)
-{
-	return static_cast<int>(::round(itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex) * 60));
-}
-
-NFmiMetTime NFmiFlashDataView::CalcFirstTimeOfSpan(void)
-{
-	int editorTimeStep = CalcUsedTimeStepInMinutes();
-	NFmiMetTime time2(itsTime);
-	NFmiMetTime time1(time2);
-	time1.SetTimeStep(1);
-	time1.ChangeByMinutes(-editorTimeStep);
-	return time1;
-}
-
-// Etsii karttanäytölle haluttuun salamadataan alku ja loppu ajan indeksit. Jos ei löydy halutulle
-// aikavälille yhtään salamaa, palauttaa false:n, muuten true.
-bool NFmiFlashDataView::GetTimeSpanIndexies(NFmiFastQueryInfo &theInfo, unsigned long &theStartIndexOut, unsigned long &theEndIndexOut)
-{
-	NFmiMetTime time2(itsTime);
-	NFmiMetTime time1 = CalcFirstTimeOfSpan();
-    int usedTimeRangeInMinutes = CalcUsedTimeStepInMinutes();
-
-	// etsi ensin alku aikaindeksi
-	bool found1 = theInfo.TimeToNearestStep(time1, kForward, usedTimeRangeInMinutes);
-	int index1 = theInfo.TimeIndex();
-
-	// etsi sitten loppu aikaindeksi
-	bool found2 = theInfo.TimeToNearestStep(time2, kBackward, usedTimeRangeInMinutes);
-	int index2 = theInfo.TimeIndex();
-
-    // Jos kumpaakaa aikaa ei löytynyt, ei tarvitse jatkaa
-    if(found1 == false && found2 == false)
-        return false;
-
-    // Jos toinen ajoista löytyy mutta toista ei, annetaan löydetty aikaindeksi molemmille ja katsotaan tuottaako se tulosta
-    if(found1 == true && found2 == false)
-        index2 = index1;
-    else if(found1 == false && found2 == true)
-        index1 = index2;
-
-	if(index1 == index2) // pitää testata erikois tapaus, koska TimeToNearestStep-palauttaa aina jotain, jos on dataa
-	{
-		theInfo.TimeIndex(index1);
-		NFmiMetTime foundTime(theInfo.Time());
-		if(foundTime > time2 || foundTime < time1) // jos löydetty aika on alku ja loppu ajan ulkopuolella ei piirretä salamaa
-			return false;
-	}
-	theStartIndexOut = index1;
-	theEndIndexOut = index2;
-
-	return true;
 }

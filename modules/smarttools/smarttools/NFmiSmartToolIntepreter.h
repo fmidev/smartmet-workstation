@@ -256,6 +256,8 @@ class NFmiSmartToolIntepreter
   bool IsPossibleElseConditionLine(const std::string &theTextLine);
   bool FindAnyFromText(const std::string &theText,
                        const std::vector<std::string> &theSearchedItems);
+  bool StartsWithAnyWholeWord(const std::string &theText,
+                       const std::vector<std::string> &theSearchedWords);
   bool ConsistOnlyWhiteSpaces(const std::string &theText);
   bool IsVariableBinaryOperator(const std::string &theVariableText,
                                 boost::shared_ptr<NFmiAreaMaskInfo> &theMaskInfo);
@@ -329,6 +331,7 @@ class NFmiSmartToolIntepreter
   bool ExtractSymbolTooltipFile();
   bool ExtractMacroParamDescription();
   bool ExtractCalculationType();
+  bool ExtractWorkingThreadCount();
   std::string GetWholeNumberFromTokens();
   void CheckMustHaveSimpleConditionFunctions(boost::shared_ptr<NFmiSmartToolCalculationInfo> &theCalculationInfo);
   void AddVariableToCalculation(boost::shared_ptr<NFmiSmartToolCalculationInfo> &theCalculationInfo, boost::shared_ptr<NFmiAreaMaskInfo> &theVariableInfo);

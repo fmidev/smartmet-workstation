@@ -183,7 +183,7 @@ NFmiStationView::NFmiStationView(int theMapViewDescTopIndex, boost::shared_ptr<N
 ,fDoTimeInterpolation(false)
 ,itsBackupDrawParamForDifferenceDrawing()
 ,fDoDifferenceDrawSwitch(false)
-,fDoShipDataLocations(false)
+,fDoMovingStationDataLocations(false)
 ,fUseMacroParamSpecialCalculations(false)
 ,itsMacroParamSpecialCalculationsValues()
 ,fGetSynopDataFromQ2(false)
@@ -290,12 +290,17 @@ bool NFmiStationView::PrepareForStationDraw(void)
 	}
 	else if(!itsInfo->Time(itsTime))
 	{
+		auto flashTypeData = NFmiFastInfoUtils::IsLightningTypeData(itsInfo);
 		if(itsInfo->DataType() == NFmiInfoData::kStationary)
 			itsInfo->FirstTime();
-		else if(itsInfo->TimeDescriptor().IsInside(itsTime) || NFmiFastInfoUtils::IsModelClimatologyData(itsInfo))
+		else if(itsInfo->TimeDescriptor().IsInside(itsTime) || NFmiFastInfoUtils::IsModelClimatologyData(itsInfo) || flashTypeData)
 		{
 			if(itsInfo->IsGrid()) // hila dataa voi interpoloida ajassa, mutta ei asema dataa eli havaintoje
 				fDoTimeInterpolation = true; // nyt voidaan piirt‰‰ dataa k‰ytt‰en aikainterpolaatiota
+			else if(flashTypeData)
+			{
+				// Ei tehd‰ mit‰‰n, mutta sallitaan piirto lopuksi, koska piirrett‰v‰lt‰ aikav‰lilt‰ voi lˆyty‰ dataa
+			}
 			else
 				return false;
 		}
@@ -508,7 +513,7 @@ int NFmiStationView::CalcApproxmationOfDataTextLength(const std::vector<float> &
         else // muuten palauta maksimi arvo
             return static_cast<int>(minmaxCalc.MaxValue());
     }
-    return 2;
+    return 1;
 }
 
 std::vector<float> NFmiStationView::GetSampleDataForDataTextLengthApproxmation()
@@ -1619,14 +1624,15 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreatePossibleSpaceOutMacr
     return boost::shared_ptr<NFmiFastQueryInfo>();
 }
 
-static void TraceLogSpacedOutMacroParamCalculationSize(boost::shared_ptr<NFmiFastQueryInfo> &spacedOutInfo, NFmiCtrlView *view)
+static void TraceLogForMacroParamCalculationSize(boost::shared_ptr<NFmiFastQueryInfo> &macroParamInfo, NFmiCtrlView *view)
 {
-    if(spacedOutInfo)
+    if(macroParamInfo)
     {
-        auto gridSizeX = spacedOutInfo->GridXNumber();
-        auto gridSizeY = spacedOutInfo->GridYNumber();
-        std::string gridSizeStr = std::to_string(gridSizeX) + "x" + std::to_string(gridSizeY) + " grid";
-        CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam calculated for spaced out symbol draw in ") + gridSizeStr, view);
+        auto gridSizeX = macroParamInfo->GridXNumber();
+        auto gridSizeY = macroParamInfo->GridYNumber();
+        std::string gridSizeStr = std::to_string(gridSizeX) + "x" + std::to_string(gridSizeY);
+		std::string finalLogStr = "MacroParam was calculated  in grid size of " + gridSizeStr;
+        CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(finalLogStr, view);
     }
 }
 
@@ -1652,9 +1658,9 @@ void NFmiStationView::CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFm
         FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, theValues, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, itsInfo, fUseCalculationPoints, possibleSpaceOutData);
         if(fUseCalculationPoints)
             CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam was calculated only in set CalculationPoint's"), this);
-        else
-            ::TraceLogSpacedOutMacroParamCalculationSize(possibleSpaceOutData, this);
-        if(theUsedGridOut && itsInfo && itsInfo->Grid())
+		else
+			::TraceLogForMacroParamCalculationSize(itsInfo, this);
+		if(theUsedGridOut && itsInfo && itsInfo->Grid())
             *theUsedGridOut = *itsInfo->Grid();
 
         CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam data was put into cache for future fast retrievals"), this);
@@ -2603,10 +2609,12 @@ void NFmiStationView::SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &t
 	if(itsInfo == 0)
 		return ;
 	FmiProducerName prod = static_cast<FmiProducerName>(itsInfo->Producer()->GetIdent());
-	if(itsInfo->IsGrid() == false && (prod == kFmiSHIP || prod == kFmiBUOY))
-		fDoShipDataLocations = true;
+	auto shipTypeData = (itsInfo->IsGrid() == false && (prod == kFmiSHIP || prod == kFmiBUOY));
+	auto flashTypeData = NFmiFastInfoUtils::IsLightningTypeData(itsInfo);
+	if(shipTypeData || flashTypeData)
+		fDoMovingStationDataLocations = true;
 	else
-		fDoShipDataLocations = false;
+		fDoMovingStationDataLocations = false;
 	if(!NFmiDrawParam::IsMacroParamCase(itsDrawParam->DataType()))
 		if(!itsInfo->Param(static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent())))
 			return ;
@@ -2830,9 +2838,64 @@ float NFmiStationView::ToolTipValue(const NFmiPoint& theRelativePoint, boost::sh
 			return kFloatMissing;
 		SetMapViewSettings(info); // t‰m‰n voisi varmaan optimoida
 		PrepareForStationDraw(); // t‰m‰ pit‰‰ kutsua, ett‰ mm. parametrit on asetettu oikein itsInfo-olioon
-		itsNearestTooltipLocation = *(itsInfo->Location());
-		return ViewFloatValue(true);
+		if(NFmiFastInfoUtils::IsLightningTypeData(itsInfo))
+		{
+			return GetTooltipValueForFlashTypeData(wantedLocation);
+		}
+		else
+		{
+			itsNearestTooltipLocation = *(itsInfo->Location());
+			return ViewFloatValue(true);
+		}
 	}
+}
+
+#ifdef max
+#undef max
+#undef min
+#endif
+
+float NFmiStationView::GetTooltipValueForFlashTypeData(const NFmiLocation& theCursorLocation)
+{
+	double minimumDistance = std::numeric_limits<double>::max(); // iso luku t‰h‰n
+	unsigned long minDistTimeIndex = gMissingIndex;
+	if(FindNearestFlashTypeObservation(itsInfo, theCursorLocation, minimumDistance, minDistTimeIndex))
+	{
+		if(minimumDistance <= 100 * 1000)
+		{
+			itsInfo->TimeIndex(minDistTimeIndex);
+			itsNearestTooltipLocation = NFmiLocation(itsInfo->GetLatlonFromData());
+			std::string locationNameStr = CtrlViewUtils::GetFixedLatlonStr(itsNearestTooltipLocation.GetLocation());
+			locationNameStr += " at ";
+			locationNameStr += itsInfo->Time().ToStr("HH:mm:SS");
+			itsNearestTooltipLocation.SetName(locationNameStr);
+			return itsInfo->FloatValue();
+		}
+	}
+	return kFloatMissing;
+}
+
+bool NFmiStationView::FindNearestFlashTypeObservation(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiLocation& theCursorLocation, double& theCurrentMinDistInOut, unsigned long& theMinDistTimeIndexOut)
+{
+	bool status = false;
+	unsigned long timeIndex1 = 0;
+	unsigned long timeIndex2 = 0;
+	if(GetTimeSpanIndexies(theInfo, timeIndex1, timeIndex2))
+	{
+		for(unsigned long i = timeIndex1; i <= timeIndex2; i++)
+		{
+			theInfo->TimeIndex(i);
+			NFmiLocation flashLoc(theInfo->GetLatlonFromData());
+			double dist = flashLoc.Distance(theCursorLocation);
+			if(dist < theCurrentMinDistInOut)
+			{
+				theCurrentMinDistInOut = dist;
+				theMinDistTimeIndexOut = i;
+				status = true;
+			}
+		}
+	}
+	return status;
 }
 
 bool NFmiStationView::IsActiveParam(void)
@@ -3011,8 +3074,11 @@ static void AddFilePathToTooltip(std::string &theTooltipStr, const boost::shared
 std::string NFmiStationView::GetLocationTooltipString()
 {
     std::string locationStr = " (";
-    locationStr += std::to_string(itsNearestTooltipLocation.GetIdent());
-    locationStr += " ";
+	if(!NFmiFastInfoUtils::IsLightningTypeData(itsInfo))
+	{
+		locationStr += std::to_string(itsNearestTooltipLocation.GetIdent());
+		locationStr += " ";
+	}
     locationStr += itsNearestTooltipLocation.GetName();
     locationStr += ")";
     // Location string must be xml encoded, because it might contain characters that will mess up with html output (like '<' and '>' characters)
@@ -3531,7 +3597,7 @@ const NFmiPoint NFmiStationView::CurrentLatLon() const
 
 const NFmiPoint NFmiStationView::CurrentLatLon(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo) const
 {
-	if(fDoShipDataLocations)
+	if(fDoMovingStationDataLocations)
         return theInfo->GetLatlonFromData();
 	else
 		return theInfo->LatLon();
@@ -3595,11 +3661,49 @@ void NFmiStationView::SbdCollectSymbolDrawData(bool doStationPlotOnly)
 		}
 		else
 		{
-			SbdCollectNormalSymbolDrawData(doStationPlotOnly);
+			if(NFmiFastInfoUtils::IsLightningTypeData(itsInfo))
+				SbdCollectFlashTypeSymbolDrawData(doStationPlotOnly);
+			else
+				SbdCollectNormalSymbolDrawData(doStationPlotOnly);
 		}
 	}
 	catch(...)
 	{
+	}
+}
+
+NFmiMetTime NFmiStationView::CalcStartTimeOfTimeSpan() const
+{
+	auto startTime(itsTime);
+	startTime.SetTimeStep(1);
+	auto usedTimeStepInMinutes = itsCtrlViewDocumentInterface->TimeControlTimeStepInMinutes(itsMapViewDescTopIndex);
+	startTime.ChangeByMinutes(-usedTimeStepInMinutes);
+	return startTime;
+}
+
+// Palauttaa aika ikkunalle: (curret-time - time-step) - current-time , ne aika-indeksit, jotka sopivat mainitulle v‰lille
+bool NFmiStationView::GetTimeSpanIndexies(const boost::shared_ptr<NFmiFastQueryInfo>& theInfo, unsigned long& theStartIndexOut, unsigned long& theEndIndexOut)
+{
+	auto startTime = CalcStartTimeOfTimeSpan();
+	auto usedTimeStepInMinutes = itsCtrlViewDocumentInterface->TimeControlTimeStepInMinutes(itsMapViewDescTopIndex);
+	return NFmiFastInfoUtils::FindTimeIndicesForGivenTimeRange(theInfo, startTime, usedTimeStepInMinutes, theStartIndexOut, theEndIndexOut);
+}
+
+void NFmiStationView::SbdCollectFlashTypeSymbolDrawData(bool doStationPlotOnly)
+{
+	unsigned long startIndex = gMissingIndex;
+	unsigned long endIndex = gMissingIndex;
+	if(GetTimeSpanIndexies(itsInfo, startIndex, endIndex))
+	{
+		for(unsigned long i = startIndex; i <= endIndex; i++)
+		{
+			itsInfo->TimeIndex(i);
+			if(SbdIsInsideEnlargedDrawArea())
+			{
+				NFmiFastInfoUtils::SetSoundingDataLevel(itsDrawParam->Level(), *itsInfo); // T‰m‰ tehd‰‰n vain luotaus datalle: t‰m‰ level pit‰‰ asettaa joka pisteelle erikseen, koska vakio painepinnat eiv‰t ole kaikille luotaus parametreille samoilla leveleill‰
+				SbdCollectStationData(doStationPlotOnly);
+			}
+		}
 	}
 }
 

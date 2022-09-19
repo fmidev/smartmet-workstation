@@ -275,6 +275,21 @@ bool IsMovingSoundingData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
   return false;
 }
 
+// Lightning eli salama tyyppi datalla on yksi feikki asema ja paljon aikoja, jos useita salamoita
+// tai vastaavia havaintoja on havaittu. Datassa pit‰‰ olla latitude ja longitude parametrit, 
+// jotta jokaisella satunnaiselle havainnolle saadaan kulloiseenkin aikaan oikea lokaatio.
+bool IsLightningTypeData(boost::shared_ptr<NFmiFastQueryInfo> &info)
+{
+  if (info && !info->IsGrid())
+  {
+    if (info->SizeLocations() == 1 && info->HasLatlonInfoInData())
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool FindTimeIndicesForGivenTimeRange(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                       const NFmiMetTime &theStartTime,
                                       long minuteRange,
@@ -290,15 +305,36 @@ bool FindTimeIndicesForGivenTimeRange(const boost::shared_ptr<NFmiFastQueryInfo>
 
   if(timeIndex1 == gMissingIndex || timeIndex2 == gMissingIndex)
       return false;
-  else if (timeIndex1 == timeIndex2)  // pit‰‰ testata erikois tapaus, koska TimeToNearestStep-palauttaa
-                                 // aina jotain, jos on dataa
+  else if (timeIndex1 == timeIndex2)
   {
+    // pit‰‰ testata erikoistapaus, koska TimeToNearestStep-palauttaa aina jotain, jos on dataa
     theInfo->TimeIndex(timeIndex1);
-    NFmiMetTime foundTime(theInfo->Time());
-    if (foundTime > endTime || foundTime < theStartTime)  // jos lˆydetty aika on alku ja loppu ajan
-                                                          // ulkopuolella ei piirret‰ salamaa
+    const auto &foundTime = theInfo->Time();
+    if (foundTime > endTime || foundTime < theStartTime)  
+    {
+      // jos lˆydetty aika on alku ja loppu ajan ulkopuolella ei piirret‰ salamaa
       return false;
+    }
   }
+
+  // Viel‰ 2. erikoistapaus: Kyse timeList datasta, jossa loppuajalle lˆytyy useita per‰kk‰isi‰ aikoja,
+  // t‰llˆin FindNearestTime palauttaa 1. lˆyt‰m‰ns‰ halutun ajan.
+  // Huom! t‰ss‰ k‰ytet‰‰n FindNearestTime metodia, koska se k‰ytt‰‰ timelist tapauksissa binary search hakua,
+  // Jos t‰m‰n funktion tekisi k‰ym‰‰n l‰pi kaikki ajat j‰rjestyksess‰, tulisi siit‰ tietyille datoille tuskallisen hidas.
+  theInfo->TimeIndex(timeIndex2);
+  for (auto timeIndex = timeIndex2 + 1; timeIndex < theInfo->SizeTimes(); timeIndex++)
+  {
+    theInfo->TimeIndex(timeIndex);
+    if (theInfo->Time() == endTime)
+    {
+      timeIndex2 = timeIndex;
+    }
+    else
+    {
+      break;
+    }
+  }
+
   return true;
 }
 

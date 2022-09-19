@@ -1837,7 +1837,7 @@ void NFmiCombinedMapHandler::centerTimeControlView(unsigned int mapViewDescTopIn
 {
 	auto* mapViewDescTop = getMapViewDescTop(mapViewDescTopIndex);
 	NFmiTimeBag times = *(mapViewDescTop->TimeControlViewTimes().ValidTimeBag());
-	int timeStepInMinutes = boost::math::iround(mapViewDescTop->TimeControlTimeStep() * 60);
+	auto timeStepInMinutes = mapViewDescTop->TimeControlTimeStepInMinutes();
 	long timeLengthInMinutes = times.LastTime().DifferenceInMinutes(times.FirstTime());
 	long neededChangeInMinutes = times.FirstTime().DifferenceInMinutes(wantedTime) + timeLengthInMinutes / 2;
 	times.MoveByMinutes(-neededChangeInMinutes);
@@ -1848,7 +1848,7 @@ void NFmiCombinedMapHandler::centerTimeControlView(unsigned int mapViewDescTopIn
 	if(updateSelectedTime)
 	{
 		NFmiMetTime newTime(wantedTime);
-		newTime.SetTimeStep(static_cast<short>(timeStepInMinutes), true);
+		newTime.SetTimeStep(timeStepInMinutes, true);
 		currentTime(mapViewDescTopIndex, newTime, false);
 	}
 	mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, false); // tämän pitäisi asettaa näyttö päivitys tilaan, mutta cachea ei tarvitse enää erikseen tyhjentää
@@ -2046,7 +2046,7 @@ bool NFmiCombinedMapHandler::doMacroParamVerticalDataChecks(NFmiFastQueryInfo& i
 NFmiMetTime NFmiCombinedMapHandler::adjustTimeToDescTopTimeStep(unsigned int mapViewDescTopIndex, const NFmiMetTime& wantedTime)
 {
 	NFmiMetTime aTime(wantedTime);
-	short timeStepInMinutes = static_cast<short>(::round(getMapViewDescTop(mapViewDescTopIndex)->TimeControlTimeStep() * 60.f));
+	auto timeStepInMinutes = getMapViewDescTop(mapViewDescTopIndex)->TimeControlTimeStepInMinutes();
 	if(timeStepInMinutes == 0) // ei voi olla 0 timesteppi, muuten kaatuu (negatiivisesta en tiedä)
 		timeStepInMinutes = 60; // hätä korjaus defaultti arvoksi jos oli 0
 	if(aTime.GetTimeStep() > timeStepInMinutes)
@@ -2329,7 +2329,7 @@ bool NFmiCombinedMapHandler::setDataToNextTime(unsigned int mapViewDescTopIndex,
 	{
 		activeMapDescTopIndex(mapViewDescTopIndex);
 		newTime = currentTime(mapViewDescTopIndex);
-		short usedTimeStep = static_cast<short>(::round(getMapViewDescTop(mapViewDescTopIndex)->TimeControlTimeStep() * 60));
+		auto usedTimeStep = getMapViewDescTop(mapViewDescTopIndex)->TimeControlTimeStepInMinutes();
 		newTime.SetTimeStep(1);
 		newTime.ChangeByMinutes(usedTimeStep);
 		newTime = calcAnimationRestrictedTime(mapViewDescTopIndex, newTime, stayInsideAnimationTimes);
@@ -2358,7 +2358,7 @@ bool NFmiCombinedMapHandler::setDataToPreviousTime(unsigned int mapViewDescTopIn
 	{
 		activeMapDescTopIndex(mapViewDescTopIndex);
 		newTime = currentTime(mapViewDescTopIndex);
-		short usedTimeStep = static_cast<short>(::round(getMapViewDescTop(mapViewDescTopIndex)->TimeControlTimeStep() * 60));
+		auto usedTimeStep = getMapViewDescTop(mapViewDescTopIndex)->TimeControlTimeStepInMinutes();
 		newTime.SetTimeStep(1);//usedTimeStep);
 		newTime.ChangeByMinutes(-usedTimeStep);
 		newTime = calcAnimationRestrictedTime(mapViewDescTopIndex, newTime, stayInsideAnimationTimes);

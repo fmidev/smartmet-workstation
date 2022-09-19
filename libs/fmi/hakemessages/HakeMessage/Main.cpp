@@ -27,8 +27,8 @@ namespace
 
         std::copy_if(msgsToFilter.cbegin(), msgsToFilter.cend(), std::back_inserter(msgs), [&startTime, &endTime, &area, &hakeSystemConfigurations](const auto& message)
         {
-            return startTime.IsLessThan(message.StartTime())
-                && message.StartTime().IsLessThan(endTime)
+            return startTime <= message.StartTime()
+                && message.StartTime() <= endTime
                 && area.IsInside(message.LatlonPoint())
                 && hakeSystemConfigurations.IsMessageShown(message);
         });

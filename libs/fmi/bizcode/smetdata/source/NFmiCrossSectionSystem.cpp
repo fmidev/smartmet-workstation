@@ -648,7 +648,7 @@ void NFmiCrossSectionSystem::Read(std::istream& is)
 	itsCurrentVersionNumber = itsLatestVersionNumber; // aina jatketaan viimeisellä versio numerolla
 }
 
-void NFmiCrossSectionSystem::Init(const NFmiCrossSectionSystem &theData)
+void NFmiCrossSectionSystem::Init(const NFmiCrossSectionSystem &theData, bool disableWindowManipulations)
 {
     itsStartPointWinReg = theData.itsStartPointWinReg;
     itsMiddlePointWinReg = theData.itsMiddlePointWinReg;
@@ -663,7 +663,10 @@ void NFmiCrossSectionSystem::Init(const NFmiCrossSectionSystem &theData)
 	fUseObsAndForCrossSection = theData.fUseObsAndForCrossSection;
 	fTimeCrossSectionDirty = true;
 
-	fCrossSectionViewOn = theData.fCrossSectionViewOn;
+	if(!disableWindowManipulations)
+	{
+		fCrossSectionViewOn = theData.fCrossSectionViewOn;
+	}
 	fShowHybridLevels = theData.fShowHybridLevels;
 	if(theData.itsCrossSectionTimeControlTimeBag.GetSize() > 1) // vanhoissa makroissa timebagin koko voi olla 1, sitä ei sijoiteta käyttöön
 		itsCrossSectionTimeControlTimeBag = theData.itsCrossSectionTimeControlTimeBag;

@@ -792,6 +792,7 @@ void NFmiSmartToolModifier::ModifyConditionalData(
     try
     {
       NFmiCalculationParams calculationParams;
+      calculationParams.itsObservationRadiusInKm = ExtraMacroParamData().ObservationRadiusInKm();
       SetInfosMaskType(info);
       NFmiTimeDescriptor modifiedTimes(itsModifiedTimes ? *itsModifiedTimes
                                                         : info->TimeDescriptor());
@@ -913,6 +914,8 @@ static void DoPartialGridCalculationBlockInThread(
             {
               theCalculationParams.itsLatlon = theInfo->LatLon();
               theCalculationParams.itsLocationIndex = theInfo->LocationIndex();
+              if (calculationPointMask)
+                theCalculationParams.itsActualCalculationPoint = (*calculationPointMask)[i];
               // TUON LOCATIONINDEX jutun voisi kai poistaa, kun kyseistä optimointi juttua ei kai
               // enää käytetä
               theCalculationBlock->Calculate_ver2(theCalculationParams, true);
@@ -1083,6 +1086,38 @@ static std::vector<boost::shared_ptr<NFmiSmartToolCalculationBlock>> MakeCalcula
   return calculationBlockVector;
 }
 
+void NFmiSmartToolModifier::CalculateUsedWorkingThreadCount(double wantedHardwareThreadPercent,
+                                      int userGivenWorkingThreadCount,
+                                      bool macroParamCase)
+{
+  int maxThreadCount = std::thread::hardware_concurrency();
+  if (userGivenWorkingThreadCount > 0)
+  {
+    itsUsedThreadCount = std::min(maxThreadCount, userGivenWorkingThreadCount);
+  }
+  else
+  {
+    if (macroParamCase)
+    {
+      // macroParam laskuissa ei ole hyötyä olla paljoa threadeja rinnakkain laskemassa juttuja.
+      // Jos käytössä on asema dataa, silloin paras olisi vain 1 threadi, koska eri threadeille
+      // tehdään paljon asemien kopiointia (jokaiselle asemadata parametrille vielä erikseen).
+      // Lisäksi testeissä osoittautui että vain yhden aika-askeleen laskuissa n. 3-4 threadin
+      // käyttö on hyödyllistä vaikka kyse olisi hiladata laskuista (isommat määrät eivät tuo
+      // hyötyä, vain haittaa).
+      CalculateOptimalWorkingThreadCount();
+
+      itsUsedThreadCount = std::min(itsOptimalThreadCount, maxThreadCount);
+    }
+    else
+    {
+      itsUsedThreadCount =
+          NFmiQueryDataUtil::GetReasonableWorkingThreadCount(wantedHardwareThreadPercent);
+    }
+  }
+  itsUsedThreadCounts.insert(itsUsedThreadCount);
+}
+
 // Kun yhden aika-askeleen hilan laskenta jaetaan eri säikeille osiin,
 // käy yksi säie aina läpi näin monen hilapisteen, ennen kuin pyytää lisää laskettavaa.
 // Tämä oli 100, mutta pienempi ChunkSize takaa että työt jaetaan paremmin.
@@ -1112,13 +1147,15 @@ void NFmiSmartToolModifier::ModifyConditionalData_ver2(
       NFmiTimeDescriptor modifiedTimes(itsModifiedTimes ? *itsModifiedTimes
                                                         : info->TimeDescriptor());
       const NFmiBitMask *usedBitmask = ::GetUsedBitmask(info, fModifySelectedLocationsOnly);
+      calculationParams.itsObservationRadiusInKm = ExtraMacroParamData().ObservationRadiusInKm();
+      CalculateUsedWorkingThreadCount(
+          75, ExtraMacroParamData().WorkingThreadCount(), fMacroParamCalculation);
 
-      unsigned int usedThreadCount = NFmiQueryDataUtil::GetReasonableWorkingThreadCount(75);
       std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector =
-          ::MakeInfoCopyVector(usedThreadCount, info);
+          ::MakeInfoCopyVector(itsUsedThreadCount, info);
       // tehdään joka coren säikeelle oma calculaatioBlokki kopio
       std::vector<boost::shared_ptr<NFmiSmartToolCalculationBlock>> calculationBlockVector =
-          ::MakeCalculationBlockVector(usedThreadCount, theCalculationBlock);
+          ::MakeCalculationBlockVector(itsUsedThreadCount, theCalculationBlock);
 
       for (modifiedTimes.Reset(); modifiedTimes.Next();)
       {
@@ -1137,12 +1174,12 @@ void NFmiSmartToolModifier::ModifyConditionalData_ver2(
 
           if (macroParamValuesVectorForCrossSection)
             DoMultiThreadConditionalBlockCalculationsForCrossSection(
-                usedThreadCount,
+                itsUsedThreadCount,
                 infoVector,
                 calculationBlockVector,
                 *macroParamValuesVectorForCrossSection);
           else
-            DoMultiThreadConditionalBlockCalculations(usedThreadCount,
+            DoMultiThreadConditionalBlockCalculations(itsUsedThreadCount,
                                                       infoVector,
                                                       calculationBlockVector,
                                                       calculationParams,
@@ -1243,6 +1280,7 @@ void NFmiSmartToolModifier::ModifyData2(
     try
     {
       NFmiCalculationParams calculationParams;
+      calculationParams.itsObservationRadiusInKm = ExtraMacroParamData().ObservationRadiusInKm();
       SetInfosMaskType(info);
       NFmiTimeDescriptor modifiedTimes(itsModifiedTimes ? *itsModifiedTimes
                                                         : info->TimeDescriptor());
@@ -1334,10 +1372,12 @@ void NFmiSmartToolModifier::ModifyData2_ver2(
       NFmiTimeDescriptor modifiedTimes(itsModifiedTimes ? *itsModifiedTimes
                                                         : info->TimeDescriptor());
       const NFmiBitMask *usedBitmask = ::GetUsedBitmask(info, fModifySelectedLocationsOnly);
+      calculationParams.itsObservationRadiusInKm = ExtraMacroParamData().ObservationRadiusInKm();
+      CalculateUsedWorkingThreadCount(
+          75, ExtraMacroParamData().WorkingThreadCount(), fMacroParamCalculation);
 
-      unsigned int usedThreadCount = NFmiQueryDataUtil::GetReasonableWorkingThreadCount(75);
       std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector =
-          ::MakeInfoCopyVector(usedThreadCount, info);
+          ::MakeInfoCopyVector(itsUsedThreadCount, info);
 
       // Muutin lasku systeemin suoritusta, koska tuli ongelmia mm. muuttujien kanssa, kun niitä
       // käytettiin samassa calculationSectionissa
@@ -1356,7 +1396,7 @@ void NFmiSmartToolModifier::ModifyData2_ver2(
         boost::shared_ptr<NFmiSmartToolCalculation> smartToolCalculation = calculationVector[i];
         // tehdään joka coren säikeelle oma calculaatio kopio
         std::vector<boost::shared_ptr<NFmiSmartToolCalculation>> calculationVectorForThread =
-            ::MakeCalculationVector(usedThreadCount, smartToolCalculation);
+            ::MakeCalculationVector(itsUsedThreadCount, smartToolCalculation);
 
         for (modifiedTimes.Reset(); modifiedTimes.Next();)
         {
@@ -1374,12 +1414,12 @@ void NFmiSmartToolModifier::ModifyData2_ver2(
             ::SetTimes(infoVector, calculationParams);
 
             if (macroParamValuesVectorForCrossSection)
-              DoMultiThreadCalculationsForCrossSection(usedThreadCount,
+              DoMultiThreadCalculationsForCrossSection(itsUsedThreadCount,
                                                        infoVector,
                                                        calculationVectorForThread,
                                                        *macroParamValuesVectorForCrossSection);
             else
-              DoMultiThreadCalculations(usedThreadCount,
+              DoMultiThreadCalculations(itsUsedThreadCount,
                                         infoVector,
                                         calculationVectorForThread,
                                         calculationParams,
@@ -1831,7 +1871,6 @@ static bool SynopXCaseSettings(const NFmiAreaMaskInfo &theAreaMaskInfo)
 boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateOccurrenceMask(
     const NFmiAreaMaskInfo &theAreaMaskInfo, bool &mustUsePressureInterpolation)
 {
-  bool synopXCase = ::SynopXCaseSettings(theAreaMaskInfo);
   boost::shared_ptr<NFmiFastQueryInfo> info =
       CreateInfo(theAreaMaskInfo, mustUsePressureInterpolation);
   boost::shared_ptr<NFmiArea> calculationArea(UsedMacroParamData()->Area()->Clone());
@@ -1846,7 +1885,6 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateOccurrenceMask(
         theAreaMaskInfo.GetSecondaryFunctionType(),
         theAreaMaskInfo.FunctionArgumentCount(),
         calculationArea,
-        synopXCase,
         theAreaMaskInfo.GetDataIdent().GetParamIdent()));
   }
   else
@@ -1860,7 +1898,6 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateOccurrenceMask(
                                        theAreaMaskInfo.GetSecondaryFunctionType(),
                                        theAreaMaskInfo.FunctionArgumentCount(),
                                        calculationArea,
-                                       synopXCase,
                                        theAreaMaskInfo.GetDataIdent().GetParamIdent()));
   }
 }
@@ -1877,7 +1914,6 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateTimeRangeMask(
                                     info,
                                     theAreaMaskInfo.GetFunctionType(),
                                     theAreaMaskInfo.FunctionArgumentCount(),
-                                    itsExtraMacroParamData->ObservationRadiusInKm(),
                                     theAreaMaskInfo.GetDataIdent().GetParamIdent()));
 }
 
@@ -1893,7 +1929,6 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreatePreviousFullDaysMas
                                            info,
                                            theAreaMaskInfo.GetFunctionType(),
                                            theAreaMaskInfo.FunctionArgumentCount(),
-                                           itsExtraMacroParamData->ObservationRadiusInKm(),
                                            theAreaMaskInfo.GetDataIdent().GetParamIdent()));
 }
 
@@ -1908,7 +1943,6 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateTimeDurationMask(
                                        info->DataType(),
                                        info,
                                        theAreaMaskInfo.FunctionArgumentCount(),
-                                       itsExtraMacroParamData->ObservationRadiusInKm(),
                                        theAreaMaskInfo.GetDataIdent().GetParamIdent()));
 }
 
@@ -2075,7 +2109,6 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreatePeekTimeMask(
                            info->DataType(),
                            info,
                            theAreaMaskInfo.FunctionArgumentCount(),
-                           itsExtraMacroParamData->ObservationRadiusInKm(),
                            theAreaMaskInfo.GetDataIdent().GetParamIdent()));
 }
 
@@ -2781,8 +2814,41 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::GetWantedAreaMaskDat
                                   theAreaMaskInfo.ModelRunIndex());
     }
   }
+  UpdateInfoVariableStatistics(info);
   return NFmiSmartInfo::CreateShallowCopyOfHighestInfo(
       info);  // tehdään vielä 'kevyt' kopio löytyneestä datasta
+}
+
+void NFmiSmartToolModifier::UpdateInfoVariableStatistics(
+    const boost::shared_ptr<NFmiFastQueryInfo> &info)
+{
+  if (info)
+  {
+    itsInfoVariableCount++;
+    if (!info->IsGrid())
+    {
+      itsStationInfoVariableCount++;
+      itsVariableStationCountSum += info->SizeLocations();
+    }
+  }
+}
+
+void NFmiSmartToolModifier::CalculateOptimalWorkingThreadCount()
+{
+  // MacroParam laskut sopivat rinnakkais ajoihin huonosti, maksimissaan 4 threadia,
+  // jos kaikki muuttujat ovat grid datoista.
+  int maxThreadCount = 4;
+  if (itsInfoVariableCount && itsStationInfoVariableCount)
+  {
+    if (itsVariableStationCountSum < 5000.)
+      itsOptimalThreadCount = 3;
+    else if (itsVariableStationCountSum < 12000)
+      itsOptimalThreadCount = 2;
+    else
+      itsOptimalThreadCount = 1;
+  }
+  else
+    itsOptimalThreadCount = maxThreadCount;
 }
 
 boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::CreateInfo(
@@ -3031,17 +3097,26 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::UsedMacroParamData()
     return itsInfoOrganizer->CrossSectionMacroParamData();
   else
   {
+    auto optimalMacroParamData = ::GetOptimalResolutionMacroParamData(
+        itsExtraMacroParamData->UseSpecialResolution(),
+        itsExtraMacroParamData->ResolutionMacroParamData(),
+        itsInfoOrganizer->MacroParamData(),
+        itsInfoOrganizer->OptimizedVisualizationMacroParamData(),
+        !CalculationPoints().empty());
+
     if (itsPossibleSpacedOutMacroInfo)
-      return itsPossibleSpacedOutMacroInfo;
-    else
     {
-      return ::GetOptimalResolutionMacroParamData(
-          itsExtraMacroParamData->UseSpecialResolution(),
-          itsExtraMacroParamData->ResolutionMacroParamData(),
-          itsInfoOrganizer->MacroParamData(),
-          itsInfoOrganizer->OptimizedVisualizationMacroParamData(),
-          !CalculationPoints().empty());
+      auto gridsizeOptimal =
+          optimalMacroParamData->GridXNumber() * optimalMacroParamData->GridYNumber();
+      auto gridsizeSpaceOut = itsPossibleSpacedOutMacroInfo->GridXNumber() *
+                              itsPossibleSpacedOutMacroInfo->GridYNumber();
+      if (gridsizeOptimal <= gridsizeSpaceOut)
+        return optimalMacroParamData;
+      else
+        return itsPossibleSpacedOutMacroInfo;
     }
+    else
+      return optimalMacroParamData;
   }
 }
 

@@ -44,6 +44,7 @@
 #include <newbase/NFmiEnumConverter.h>
 #include "NFmiControlPointObservationBlender.h"
 #include "ApplicationInterface.h"
+#include "CtrlViewTimeConsumptionReporter.h"
 
 
 #ifdef _MSC_VER
@@ -852,6 +853,26 @@ void LogSmartToolModifications(TimeSerialModificationDataInterface &theAdapter, 
     ::LogMessage(theAdapter, editedParams + ModifiedTimesForLog(theAdapter) + theLogMessage + loadedSmartTool, CatLog::Severity::Info, CatLog::Category::Editing);
 }
 
+void TraceLogUsedSmartToolThreadCount(TimeSerialModificationDataInterface& theAdapter, const std::set<int> &usedThreadCounts)
+{
+	std::string logMessage;
+	auto multiValueThreadcount = (usedThreadCounts.size() > 1);
+	if(multiValueThreadcount)
+	{
+		logMessage = "Used working thread counts for this smarttools calculations were ";
+		logMessage += std::to_string(*usedThreadCounts.begin());
+		logMessage += "-";
+		// set's rbegin points to last element, but not past it...
+		logMessage += std::to_string(*usedThreadCounts.rbegin());
+	}
+	else
+	{
+		logMessage = "Used working thread count for this smarttools calculation was ";
+		logMessage += std::to_string(*usedThreadCounts.begin());
+	}
+	::LogMessage(theAdapter, logMessage, CatLog::Severity::Trace, CatLog::Category::Editing);
+}
+
 bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly, NFmiTimeDescriptor &theTimes,
 						const std::string &theLogMessage, const std::string &theIncludeDir, bool fDoDataValidations, bool fDoMultiThread, NFmiThreadCallBacks *theThreadCallBacks, 
                         bool showLoadedSmartTool = false)
@@ -909,9 +930,15 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
 				}
 
 				if(fDoMultiThread)
+				{
 					smartToolModifier.ModifyData_ver2(&theTimes, fSelectedLocationsOnly, false, theThreadCallBacks);
+				}
 				else
+				{
 					smartToolModifier.ModifyData(&theTimes, fSelectedLocationsOnly, false, theThreadCallBacks);
+				}
+
+				TraceLogUsedSmartToolThreadCount(theAdapter, smartToolModifier.UsedThreadCounts());
 
                 if(!smartToolModifier.LastExceptionMessageFromThreads().empty())
                     ::LogMessage(theAdapter, smartToolModifier.LastExceptionMessageFromThreads(), CatLog::Severity::Error, CatLog::Category::Editing);
@@ -949,6 +976,8 @@ static bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, 
 	if(editedData)
 	{
 		boost::shared_ptr<NFmiTimeDescriptor> times = theAdapter.CreateDataFilteringTimeDescriptor(editedData);
+
+		CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(nullptr, __FUNCTION__, CatLog::Severity::Debug);
 
 		status = ::DoSmartToolEditing(theAdapter, theSmartToolText, theRelativePathMacroName, fSelectedLocationsOnly, *times,
 							std::string(" - modified with SmartTool."),
@@ -2680,10 +2709,15 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 			value = smartToolModifier.CalcSmartToolValue(theTime, theTooltipLatlon); // false tarkoittaa ett‰ laskut tehd‰‰n kaikkiin pisteisiin eik‰ vain valittuihin pisteisiin
 		else
 		{
-            if(fDoMultiThread)
+			if(fDoMultiThread)
+			{
 				smartToolModifier.ModifyData_ver2(&times, false, true, 0); // false tarkoittaa ett‰ laskut tehd‰‰n kaikkiin pisteisiin eik‰ vain valittuihin pisteisiin
+			}
 			else
+			{
 				smartToolModifier.ModifyData(&times, false, true, 0); // false tarkoittaa ett‰ laskut tehd‰‰n kaikkiin pisteisiin eik‰ vain valittuihin pisteisiin
+			}
+			TraceLogUsedSmartToolThreadCount(theAdapter, smartToolModifier.UsedThreadCounts());
 		}
 
         if(!smartToolModifier.LastExceptionMessageFromThreads().empty())

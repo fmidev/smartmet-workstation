@@ -10,7 +10,8 @@ enum class NFmiCaseStudyDataCategory
 	Observation,
 	Analyze,
 	Edited,
-	SatelImage
+	SatelImage,
+	CustomFolder
 };
 
 class NFmiCategoryHeaderInitData

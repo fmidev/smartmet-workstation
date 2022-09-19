@@ -80,7 +80,7 @@ class NFmiCrossSectionSystem
 
 	virtual ~NFmiCrossSectionSystem(void);
 
-	void Init(const NFmiCrossSectionSystem &theData);
+	void Init(const NFmiCrossSectionSystem &theData, bool disableWindowManipulations);
 	void InitializeFromSettings(const CrossSectionInitValuesWinReg &initValuesFromWinReg);
 	void StoreSettings(CrossSectionInitValuesWinReg &storeValuesToWinReg);
 	void SetDocumentInterface(CtrlViewDocumentInterface *theCtrlViewDocumentInterface){itsCtrlViewDocumentInterface = theCtrlViewDocumentInterface;}

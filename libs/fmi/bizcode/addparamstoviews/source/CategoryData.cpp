@@ -16,6 +16,9 @@
 
 #include <boost/algorithm/string.hpp>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
 
 namespace
 {
@@ -30,7 +33,7 @@ namespace
     std::map<std::string, boost::shared_ptr<NFmiFastQueryInfo>> operationalProducers(NFmiInfoOrganizer &infoOrganizer)
     {
         std::map<std::string, boost::shared_ptr<NFmiFastQueryInfo>> operationalData;
-        operationalData.emplace("Editable data", infoOrganizer.FindInfo(NFmiInfoData::kEditable));
+        operationalData.emplace(AddParams::CategoryData::GetEditableDataRowName(), infoOrganizer.FindInfo(NFmiInfoData::kEditable));
         //operationalData.emplace("Comparison data", infoOrganizer.FindInfo(NFmiInfoData::kCopyOfEdited));
         operationalData.emplace("Help editor data", infoOrganizer.FindInfo(NFmiInfoData::kEditingHelpData));
         operationalData.emplace("Operational data", infoOrganizer.FindInfo(NFmiInfoData::kKepaData));
@@ -145,6 +148,12 @@ namespace AddParams
     void CategoryData::setSoungindLevels(const NFmiLevelBag &soundingLevels)
     {
         soundingLevels_ = &soundingLevels;
+    }
+
+    std::string CategoryData::GetEditableDataRowName()
+    {
+        static std::string editableDataRowName = "Editable data";
+        return editableDataRowName;
     }
 
     bool CategoryData::updateNormalData(NFmiProducerSystem &categoryProducerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem,

@@ -139,12 +139,16 @@ public:
 	virtual void Dump(CDumpContext& dc) const;
 #endif
 
-protected:
-
 // Generated message map functions
+public:
+	afx_msg void OnButtonTimeEditValuesDlg();
+	afx_msg void OnButtonOpenSmartToolDlg();
+	afx_msg void OnButtonTempDlg();
+	afx_msg void OnButtonShowCrossSection();
+	afx_msg void OnExtraMapView1();
+	afx_msg void OnExtraMapView2();
 protected:
 	afx_msg void OnButtonZoomDialog();
-	afx_msg void OnButtonTimeEditValuesDlg();
 	afx_msg void OnButtonDataArea();
 	afx_msg void OnButtonLoadData();
 	afx_msg void OnButtonStoreData();
@@ -203,18 +207,13 @@ protected:
 	afx_msg void OnDataStoreTimeserialviewToPictureFile();
 	afx_msg void OnDataStoreTrajectoryViewToPictureFile();
 	afx_msg void OnMenuitemGriddingOptions();
-	afx_msg void OnButtonOpenSmartToolDlg();
 	afx_msg void OnUpdateButtonFilterDialog(CCmdUI* pCmdUI);
-	afx_msg void OnButtonTempDlg();
-	afx_msg void OnButtonShowCrossSection();
 	afx_msg void OnDataStoreTempviewToPictureFile();
 	afx_msg void OnButtonObservationComparisonMode();
 	afx_msg void OnUpdateButtonObservationComparisonMode(CCmdUI* pCmdUI);
 	afx_msg void OnButtonSynopDataGridView();
 	afx_msg void OnUpdateSynopDataGridView(CCmdUI* pCmdUI);
-	afx_msg void OnExtraMapView1();
 	afx_msg void OnUpdateOnExtraMapView1(CCmdUI *pCmdUI);
-	afx_msg void OnExtraMapView2();
 	afx_msg void OnUpdateOnExtraMapView2(CCmdUI *pCmdUI);
 	DECLARE_MESSAGE_MAP()
 

@@ -492,7 +492,7 @@ bool NFmiSmartToolIntepreter::ExtractPossibleNextCalculationSection(bool &fWasBl
 // 2. Pitää olla sijoitus-operaatio eli '='
 bool NFmiSmartToolIntepreter::IsPossibleCalculationLine(const std::string &theTextLine)
 {
-  if (FindAnyFromText(theTextLine, itsTokenConditionalCommands)) return false;
+  if (StartsWithAnyWholeWord(theTextLine, itsTokenConditionalCommands)) return false;
   if (theTextLine.find(string("=")) != string::npos) return true;
 
   if (std::find_if(theTextLine.begin(), theTextLine.end(), std::not1(std::ptr_fun(::isspace))) !=
@@ -576,6 +576,36 @@ bool NFmiSmartToolIntepreter::FindAnyFromText(const std::string &theText,
         if (IsWordContinuing(ch2)) continue;
       }
       return true;
+    }
+  }
+  return false;
+}
+
+// Jos annettu teksti alkaa jollain kokonaisella theSearchedWords sanalla, palauta
+// true, muuten false. Vertailut tehdään case-insensitiivisesti.
+bool NFmiSmartToolIntepreter::StartsWithAnyWholeWord(
+    const std::string &theText,
+                       const std::vector<std::string> &theSearchedWords)
+{
+  std::stringstream out(theText);
+  // Otetaan stringista ensimmaiset yhtenaiset merkit, ilman alun whitespaceja.
+  std::string firstLumpOfCharacters;
+  out >> firstLumpOfCharacters;
+  for (const auto &checkedWord : theSearchedWords)
+  {
+    if (boost::algorithm::istarts_with(firstLumpOfCharacters, checkedWord))
+    {
+      if (checkedWord.size() == firstLumpOfCharacters.size())
+      {
+        return true;
+      }
+      else
+      {
+        if (!::IsWordContinuing(firstLumpOfCharacters[checkedWord.size()]))
+        {
+          return true;
+        }
+      }
     }
   }
   return false;
@@ -3101,6 +3131,30 @@ bool NFmiSmartToolIntepreter::ExtractObservationRadiusInfo()
   throw std::runtime_error(errorStr);
 }
 
+ bool NFmiSmartToolIntepreter::ExtractWorkingThreadCount()
+{
+  // Jos skriptistä on löytynyt 'WorkingThreadCount = xxx'
+  GetToken();
+  string assignOperator = token;
+  if (assignOperator == string("="))
+  {
+    string workingThreadCountStr = GetWholeNumberFromTokens();
+    try
+    {
+      int workingThreadCount = NFmiStringTools::Convert<int>(workingThreadCountStr);
+      itsExtraMacroParamData->WorkingThreadCount(workingThreadCount);
+      return true;
+    }
+    catch (...)
+    {
+    }
+  }
+
+  std::string errorStr = "Given WorkingThreadCount -clause was illegal, try something like this:\n";
+  errorStr += "\"WorkingThreadCount = 2\"";
+  throw std::runtime_error(errorStr);
+}
+
 bool NFmiSmartToolIntepreter::ExtractSymbolTooltipFile()
 {
   // Jos skriptistä on löytynyt 'SymbolTooltipFile = path_to_file'
@@ -3196,6 +3250,8 @@ bool NFmiSmartToolIntepreter::IsVariableExtraInfoCommand(const std::string &theV
       return ExtractMacroParamDescription();
     else if (it->second == NFmiAreaMask::CalculationType)
       return ExtractCalculationType();
+    else if (it->second == NFmiAreaMask::WorkingThreadCount)
+      return ExtractWorkingThreadCount();
   }
   return false;
 }
@@ -4319,6 +4375,7 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsExtraInfoCommands.insert(FunctionMap::value_type(string("symboltooltipfile"), NFmiAreaMask::SymbolTooltipFile));
     itsExtraInfoCommands.insert(FunctionMap::value_type(string("macroparamdescription"), NFmiAreaMask::MacroParamDescription));
     itsExtraInfoCommands.insert(FunctionMap::value_type(string("calculationtype"), NFmiAreaMask::CalculationType));
+    itsExtraInfoCommands.insert(FunctionMap::value_type(string("workingthreadcount"), NFmiAreaMask::WorkingThreadCount));
 
     itsResolutionLevelTypes.insert(ResolutionLevelTypesMap::value_type(string("surface"), kFmiMeanSeaLevel));
     itsResolutionLevelTypes.insert(ResolutionLevelTypesMap::value_type(string("pressure"), kFmiPressureLevel));

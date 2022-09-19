@@ -47,11 +47,7 @@ protected:
    void CreateFlashPolyLines(void);
    bool CalcFlashCount(int &theGroundFlashCountOut, int &theCloudFlashCountOut);
    bool PrepareForStationDraw(void) override;
-   void DrawFlashes(NFmiFastQueryInfo &theInfo);
-   bool GetTimeSpanIndexies(NFmiFastQueryInfo &theInfo, unsigned long &theStartIndexOut, unsigned long &theEndIndexOut);
-   bool FindNearestFlash(NFmiFastQueryInfo &theInfo, const NFmiMetTime &theTime, int theUsedTimeStep, const NFmiLocation &theCursorLocation, double &theCurrentMinDist, unsigned long &theMinDistTimeIndex);
-   NFmiMetTime CalcFirstTimeOfSpan(void);
-	int CalcUsedTimeStepInMinutes(void);
+   void DrawFlashes(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
 
    NFmiPolyline *itsNegativeFlashPolyLine;
    NFmiPolyline *itsPositiveFlashPolyLine;
