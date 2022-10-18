@@ -180,7 +180,7 @@ set(
 # **** Gdal library section ****
 set(
     GDAL_VERSION
-    3_0_2
+    3_5_2
     CACHE INTERNAL "" FORCE
     )
 
@@ -192,7 +192,7 @@ set(
 
 set(
     GDAL_INCLUDE_DIR
-    ${GDAL_BASE_DIR}/gdal
+    ${GDAL_BASE_DIR}/include
     CACHE INTERNAL "" FORCE
     )
 
