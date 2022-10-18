@@ -79,6 +79,13 @@ add_compile_options(
     $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
     )
 
+# Disable globally VC++ warnings about "C4834: discarding return value of function with 'nodiscard' attribute".
+# There is macgyver/Cache.h where use of boost::bimap container produces this warning that is multi page long
+# and it's basically included in everywhere in the project and there for totally flooding Visual Studio output window.
+add_compile_options(
+    $<$<CXX_COMPILER_ID:MSVC>:/wd4834>
+    )
+
 include(
     cmake/UsefulVariables.cmake
     )
