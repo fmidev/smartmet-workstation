@@ -723,8 +723,8 @@ const NFmiIndexMask MaskInside(const NFmiGrid &theGrid, const NFmiSvgPath &thePa
 
   // Establish grid resolution
 
-  const double dx = theGrid.Area()->WorldXYWidth() / theGrid.XNumber();
-  const double dy = theGrid.Area()->WorldXYHeight() / theGrid.YNumber();
+  const double dx = theGrid.Area()->WorldXYWidth() / (theGrid.XNumber() - 1);
+  const double dy = theGrid.Area()->WorldXYHeight() / (theGrid.YNumber() - 1);
 
   // Fast lookup tree for distance calculations
 
@@ -805,8 +805,8 @@ const NFmiIndexMask MaskOutside(const NFmiGrid &theGrid, const NFmiSvgPath &theP
 
   // Establish grid resolution
 
-  const double dx = theGrid.Area()->WorldXYWidth() / theGrid.XNumber();
-  const double dy = theGrid.Area()->WorldXYHeight() / theGrid.YNumber();
+  const double dx = theGrid.Area()->WorldXYWidth() / (theGrid.XNumber() - 1);
+  const double dy = theGrid.Area()->WorldXYHeight() / (theGrid.YNumber() - 1);
 
   // Fast lookup tree for distance calculations
 
@@ -909,8 +909,8 @@ const NFmiIndexMask MaskExpand(const NFmiGrid &theGrid,
 
   // Establish grid resolution
 
-  const double dx = theGrid.Area()->WorldXYWidth() / theGrid.XNumber();
-  const double dy = theGrid.Area()->WorldXYHeight() / theGrid.YNumber();
+  const double dx = theGrid.Area()->WorldXYWidth() / (theGrid.XNumber() - 1);
+  const double dy = theGrid.Area()->WorldXYHeight() / (theGrid.YNumber() - 1);
 
   // Fast lookup tree for distance calculations
 
@@ -1001,8 +1001,8 @@ const NFmiIndexMask MaskShrink(const NFmiGrid &theGrid,
 
   // Establish grid resolution
 
-  const double dx = theGrid.Area()->WorldXYWidth() / theGrid.XNumber();
-  const double dy = theGrid.Area()->WorldXYHeight() / theGrid.YNumber();
+  const double dx = theGrid.Area()->WorldXYWidth() / (theGrid.XNumber() - 1);
+  const double dy = theGrid.Area()->WorldXYHeight() / (theGrid.YNumber() - 1);
 
   // Fast lookup tree for distance calculations
 
@@ -1056,8 +1056,8 @@ const NFmiIndexMask MaskDistance(const NFmiGrid &theGrid,
 
   // Establish grid resolution
 
-  const double dx = theGrid.Area()->WorldXYWidth() / theGrid.XNumber();
-  const double dy = theGrid.Area()->WorldXYHeight() / theGrid.YNumber();
+  const double dx = theGrid.Area()->WorldXYWidth() / (theGrid.XNumber() - 1);
+  const double dy = theGrid.Area()->WorldXYHeight() / (theGrid.YNumber() - 1);
 
   // Fast lookup tree for distance calculations
 
@@ -1144,8 +1144,8 @@ const std::vector<NFmiIndexMask> MaskExpand(const NFmiGrid &theGrid,
 
   // Establish grid resolution
 
-  const double dx = theGrid.Area()->WorldXYWidth() / theGrid.XNumber();
-  const double dy = theGrid.Area()->WorldXYHeight() / theGrid.YNumber();
+  const double dx = theGrid.Area()->WorldXYWidth() / (theGrid.XNumber() - 1);
+  const double dy = theGrid.Area()->WorldXYHeight() / (theGrid.YNumber() - 1);
 
   // Fast lookup tree for distance calculations
 
