@@ -69,8 +69,11 @@ NFmiLevelBag::NFmiLevelBag(NFmiLevel *theLevelArray, unsigned long numOfLevels)
       itsLevels(theLevelArray ? new NFmiLevel[GetSize()] : nullptr),
       itsStep(0ul)
 {
-  for (unsigned int i = 0; i < GetSize(); i++)
-    itsLevels[i] = theLevelArray[i];
+  if (itsLevels != nullptr)
+  {
+    for (unsigned int i = 0; i < GetSize(); i++)
+      itsLevels[i] = theLevelArray[i];
+  }
 }
 
 // ----------------------------------------------------------------------

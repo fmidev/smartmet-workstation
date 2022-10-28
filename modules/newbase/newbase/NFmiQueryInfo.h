@@ -1234,6 +1234,9 @@ inline const NFmiPoint NFmiQueryInfo::RelativePoint() const
 
 inline size_t NFmiQueryInfo::Size() const
 {
+  if (!itsParamDescriptor || !itsHPlaceDescriptor || !itsTimeDescriptor || !itsVPlaceDescriptor)
+    return 0;
+
   return (static_cast<size_t>(itsParamDescriptor->Size()) * itsHPlaceDescriptor->Size() * itsTimeDescriptor->Size() *
           itsVPlaceDescriptor->Size());
 }
