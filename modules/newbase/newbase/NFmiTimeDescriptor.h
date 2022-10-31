@@ -15,13 +15,6 @@
 
 class NFmiTimeList;
 
-//! Undocumented unnamed enum
-enum
-{
-  kFmiLocalTime,
-  kFmiUTCTime
-};
-
 //! Undocumented
 class NFmiTimeDescriptor : public NFmiDataDescriptor
 {
