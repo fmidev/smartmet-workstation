@@ -17,8 +17,10 @@ These files have also additional requirements:
     * GridCell.cpp, GridCellBase.cpp, GridCellCheck.cpp, GridCellCombo.cpp, GridCellDateTime.cpp, GridCtrl.cpp, GridDropTarget.cpp, InPlaceEdit.cpp, TitleTip.cpp
   * libs/fmi/bizcode/gridctrl/include/
     * CellRange.h, GridCell.h, GridCellBase.h, GridCellCheck.h, GridCellCombo.h, GridCtrl.h, GridDropTarget.h, InPlaceEdit.h, MemDC.h, TitleTip.h 
-  * libs/fmi/bizcode/casestudylib/include/ -folder
+  * libs/fmi/bizcode/casestudylib/include/
     * CShellFileOp.h, CShellFileOp.cpp
+  * libs/fmi/xmlliteutils/
+    * ConvertUTF.h, ConvertUTF.c
   * src/mfcutils/
     * CeXDib.cpp, MultiMonitor.h, MultiMonitor.cpp, PPHtmlDrawer.h, PPHtmlDrawer.cpp, TextProgressCtrl.h, TextProgressCtrl.cpp
 
