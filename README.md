@@ -1,7 +1,7 @@
-# smartmet-workstation
-SmartMet Workstation
+# SmartMet Workstation
 
-First time build instructions:
+## First time build instructions
+
 1. Starting from version 5.13.0.0 Visual C++ 2019 is required
 2. Also requires CMake 3.14.4 or never
 3. Get master from github in bash:
@@ -21,7 +21,7 @@ First time build instructions:
 11. Press F7 to Build solution (key mappings may be different depending on used key mapping schemes)
 12. Press F5 to Run SmartMet in debugger..
 
-# How to make SmartMet release
+## How to make SmartMet release
 
 1. When you have working version in your master branch, make version tag with git to it (e.g. smartmet_release_5_12_16_0)
 2. Push this version to Github (with smartmet-workstation\scripts\git\dev_2_push_master.sh script)
@@ -33,7 +33,7 @@ First time build instructions:
 8. Finally press Publish release.
 9. Add new link to 3rd party libs into readme.
 
-# SmartMet-workstation 3rd party binary utilities guide
+## SmartMet-workstation 3rd party binary utilities guide
 
 1. If you want to make Case-study data sets, you need 7zip binaries
 2. Go to https://www.7-zip.org/ and download the latest installation executable.
@@ -41,12 +41,12 @@ First time build instructions:
 4. Create utils directory in your SmartMet main directory
 5. Copy 7z.exe and 7z.dll in utils directory
 
-# SmartMet-workstation 3rd party libraries guide
+## SmartMet-workstation 3rd party libraries guide
 
 Here are library dependencies that are needed but are not included with SmartMet-workstation project.
 Build all the library binaries with the same Visual C++ compiler (VC++ 2015 or never). If you download them directly make sure that they are build with the same compiler.
 
-## Mandatory libraries for build:
+### Mandatory libraries for build:
 1. Boost
  - Used version 1.61.0 (or newer if no build breaking interface changes)
  - See https://www.boost.org/users/download/ and look there for the link to download "prebuild windows binaries", then you don't have to work with zlib, bzip2 and icu libraries either.
@@ -71,7 +71,7 @@ Build all the library binaries with the same Visual C++ compiler (VC++ 2015 or n
 5. CrashRpt
  - Used version 1.4.2 (or newer?)
 
-## Optional libraries for build (omitting them will disable many important features):
+### Optional libraries for build (omitting them will disable many important features):
 6. AVS Uniras ToolMaster
  - Used version 7.5.2 (newer versions might have different systems)
  - Not using this will seriously handicap SmartMet's isoline and color contour visualizations.
@@ -88,7 +88,7 @@ Build all the library binaries with the same Visual C++ compiler (VC++ 2015 or n
  - Go to https://github.com/Microsoft/cpprestsdk and look for help to install package to windows or build it your self.
  - To disable Toolmaster set option DISABLE_CPPRESTSDK from smartmet-workstation\CMakeLists.txt to OFF (default is ON).
 
-## Using above libraries in smartMet-workstation project:
+### Using above libraries in smartMet-workstation project:
 1. Libraries are copyed to following location:
  - smartmet-workstation\libs\3rd\
  - The directory structure at the moment is following:
@@ -103,7 +103,7 @@ Build all the library binaries with the same Visual C++ compiler (VC++ 2015 or n
    - There is also used version for each library, that is in the resulting final directory name. If you use different versions, update the version number in there.
  
  
-# Boost building sample script
+## Boost building sample script
 
 rem build boost library bat with bjam-system (using MS VC++ 8-14 compiler)
 
