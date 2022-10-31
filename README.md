@@ -1,5 +1,27 @@
 # SmartMet Workstation
 
+## License
+
+MIT is the main license.
+
+These files have also additional requirements:
+* Must include the comment that mentions that modifications have been made to the original code
+  * src/atlutils/
+    * NTray.h, NTray.cpp
+  * src/mfcutils/
+    * Splasher.h, Splasher.cpp
+* Must include original copyright comments
+  * libs/fmi/bizcode/gridctrl/Experimental Upgrades/
+    * GridCellLite.h, GridCellLite.cpp, InPlaceList.h, InPlaceList.cpp, TitleTip.cpp
+  * libs/fmi/bizcode/gridctrl/source/
+    * GridCell.cpp, GridCellBase.cpp, GridCellCheck.cpp, GridCellCombo.cpp, GridCellDateTime.cpp, GridCtrl.cpp, GridDropTarget.cpp, InPlaceEdit.cpp, TitleTip.cpp
+  * libs/fmi/bizcode/gridctrl/include/
+    * CellRange.h, GridCell.h, GridCellBase.h, GridCellCheck.h, GridCellCombo.h, GridCtrl.h, GridDropTarget.h, InPlaceEdit.h, MemDC.h, TitleTip.h 
+  * libs/fmi/bizcode/casestudylib/include/ -folder
+    * CShellFileOp.h, CShellFileOp.cpp
+  * src/mfcutils/
+    * CeXDib.cpp, MultiMonitor.h, MultiMonitor.cpp, PPHtmlDrawer.h, PPHtmlDrawer.cpp, TextProgressCtrl.h, TextProgressCtrl.cpp
+
 ## First time build instructions
 
 1. Starting from version 5.13.0.0 Visual C++ 2019 is required
