@@ -903,10 +903,10 @@ std::string FileNameFromPath(const std::string &theTotalPathAndFileStr)
 
 #ifndef UNIX
 // Not implemented for Unix, yet
-const std::list<std::pair<std::string, std::time_t> > PatternFiles(const std::string &thePattern,
+const std::list<std::pair<std::string, std::time_t>> PatternFiles(const std::string &thePattern,
                                                                    std::time_t timeLimit)
 {
-  std::list<std::pair<std::string, std::time_t> > out;
+  std::list<std::pair<std::string, std::time_t>> out;
 
   NFmiFileString fileString(thePattern);
   std::string pathStr;

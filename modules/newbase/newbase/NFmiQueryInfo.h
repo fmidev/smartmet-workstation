@@ -121,12 +121,12 @@ class NFmiQueryInfo
 
   //! Hakee listan paikkaindeksi/etäisyys metreinä pareja. Listaan haetaan annettua paikkaa lähimmat
   //! datapisteet.
-  std::vector<std::pair<int, double> > NearestLocations(
+  std::vector<std::pair<int, double>> NearestLocations(
       const NFmiLocation &theLocation,
       int theMaxWantedLocations,
       double theMaxDistance = kFloatMissing) const;
 
-  std::vector<std::pair<int, double> > NearestLocations(
+  std::vector<std::pair<int, double>> NearestLocations(
       const NFmiPoint &theLatLonPoint,
       int theMaxWantedLocations,
       double theMaxDistance = kFloatMissing) const;

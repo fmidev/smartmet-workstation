@@ -134,8 +134,8 @@ class NFmiQueryData
   double InfoVersion() const;
   void InfoVersion(double newValue) const;
 
-  boost::shared_ptr<std::vector<NFmiPoint> > LatLonCache() const;
-  void SetLatLonCache(boost::shared_ptr<std::vector<NFmiPoint> > newCache);
+  boost::shared_ptr<std::vector<NFmiPoint>> LatLonCache() const;
+  void SetLatLonCache(boost::shared_ptr<std::vector<NFmiPoint>> newCache);
 
   // Unique value for unique grids
   std::size_t GridHashValue() const;
@@ -180,7 +180,7 @@ class NFmiQueryData
   NFmiQueryInfo *itsQueryInfo;
 
   void MakeLatLonCache() const;
-  mutable boost::shared_ptr<std::vector<NFmiPoint> > itsLatLonCache;
+  mutable boost::shared_ptr<std::vector<NFmiPoint>> itsLatLonCache;
   mutable boost::once_flag itsLatLonCacheFlag;
 
   friend class NFmiQueryInfo;

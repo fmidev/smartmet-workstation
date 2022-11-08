@@ -937,7 +937,7 @@ const std::map<std::string, std::string> ParseQueryString(const std::string &the
 
   // Split at "&"-characters
 
-  const vector<string> vars = Split<vector<string> >(str, "&");
+  const vector<string> vars = Split<vector<string>>(str, "&");
 
   // Process each assignment
 
@@ -945,7 +945,7 @@ const std::map<std::string, std::string> ParseQueryString(const std::string &the
 
   for (const auto &var : vars)
   {
-    const vector<string> parts = Split<vector<string> >(var, "=");
+    const vector<string> parts = Split<vector<string>>(var, "=");
     if (parts.size() == 1)
       ret.insert(make_pair(UrlDecode(parts.front()), string("")));
     else if (parts.size() == 2)
@@ -966,7 +966,7 @@ const std::map<std::string, std::string> ParseQueryString(const std::string &the
 
 const std::vector<std::string> Split(const std::string &theString, const std::string &theSeparator)
 {
-  return Split<std::vector<std::string> >(theString, theSeparator);
+  return Split<std::vector<std::string>>(theString, theSeparator);
 }
 
 // ----------------------------------------------------------------------

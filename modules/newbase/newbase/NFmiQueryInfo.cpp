@@ -2683,8 +2683,8 @@ void NFmiQueryInfo::ModifyTimesLocationData_FullMT(NFmiDataModifier *theModifier
 
   LatLon();  // multi-thread koodin varmistus, että latlon-cachet on alustettu
   theModifier->InitLatlonCache();
-  std::vector<boost::shared_ptr<NFmiFastQueryInfo> > modifiedInfoVector(usedThreadCount);
-  std::vector<boost::shared_ptr<NFmiDataModifier> > dataModifierVector(usedThreadCount);
+  std::vector<boost::shared_ptr<NFmiFastQueryInfo>> modifiedInfoVector(usedThreadCount);
+  std::vector<boost::shared_ptr<NFmiDataModifier>> dataModifierVector(usedThreadCount);
   auto *thisFastInfo = dynamic_cast<NFmiFastQueryInfo *>(this);
   if (thisFastInfo == nullptr)
     return;  // ei voi edetä, koska this info ei ollutkaan oikeasti fastInfo
@@ -5259,7 +5259,7 @@ bool NFmiQueryInfo::Grid2Info(NFmiGrid &theSource)
  */
 // ----------------------------------------------------------------------
 
-std::vector<std::pair<int, double> > NFmiQueryInfo::NearestLocations(
+std::vector<std::pair<int, double>> NFmiQueryInfo::NearestLocations(
     const NFmiLocation &theLocation, int theMaxWantedLocations, double theMaxDistance) const
 {
   return itsHPlaceDescriptor->NearestLocations(theLocation, theMaxWantedLocations, theMaxDistance);
@@ -5274,7 +5274,7 @@ std::vector<std::pair<int, double> > NFmiQueryInfo::NearestLocations(
  */
 // ----------------------------------------------------------------------
 
-std::vector<std::pair<int, double> > NFmiQueryInfo::NearestLocations(
+std::vector<std::pair<int, double>> NFmiQueryInfo::NearestLocations(
     const NFmiPoint &theLatLonPoint, int theMaxWantedLocations, double theMaxDistance) const
 {
   NFmiLocation location(theLatLonPoint);

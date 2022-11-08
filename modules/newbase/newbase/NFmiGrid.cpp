@@ -699,7 +699,7 @@ typedef pair<int, double> IndDistPari;
  */
 // ----------------------------------------------------------------------
 
-std::vector<pair<int, double> > NFmiGrid::NearestLocations(const NFmiLocation & /* theLocation */,
+std::vector<pair<int, double>> NFmiGrid::NearestLocations(const NFmiLocation & /* theLocation */,
                                                              int /* theMaxWantedLocations */,
                                                              double /* theMaxDistance */) const
 {

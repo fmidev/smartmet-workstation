@@ -122,7 +122,7 @@ class NFmiNearTreeDistance
 
 // The actual class
 
-template <typename T, typename F = NFmiNearTreeDistance<T> >
+template <typename T, typename F = NFmiNearTreeDistance<T>>
 class NFmiNearTree
 {
  public:

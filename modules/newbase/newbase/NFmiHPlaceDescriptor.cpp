@@ -938,7 +938,7 @@ bool NFmiHPlaceDescriptor::First()
  */
 // ----------------------------------------------------------------------
 
-const std::vector<std::pair<int, double> > NFmiHPlaceDescriptor::NearestLocations(
+const std::vector<std::pair<int, double>> NFmiHPlaceDescriptor::NearestLocations(
     const NFmiLocation &theLocation, int theMaxWantedLocations, double theMaxDistance) const
 {
   if (IsLocation())

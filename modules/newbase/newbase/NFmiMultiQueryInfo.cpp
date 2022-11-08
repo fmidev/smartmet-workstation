@@ -40,7 +40,7 @@
  */
 // ----------------------------------------------------------------------
 
-std::size_t find_newest_data(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfos)
+std::size_t find_newest_data(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theInfos)
 {
   assert(!theInfos.empty());
 
@@ -113,7 +113,7 @@ NFmiMultiQueryInfo::NFmiMultiQueryInfo(const std::list<std::string> &theFiles)
  */
 // ----------------------------------------------------------------------
 
-NFmiMultiQueryInfo::NFmiMultiQueryInfo(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfos)
+NFmiMultiQueryInfo::NFmiMultiQueryInfo(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theInfos)
     : itsDatas()  // will remain empty
       ,
       itsInfos(theInfos),

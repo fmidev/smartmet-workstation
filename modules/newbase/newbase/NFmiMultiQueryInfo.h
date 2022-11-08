@@ -71,7 +71,7 @@
 // siellä on siis esi-esitelty std::list seuraavasti:
 // template <class T, class Allocator> class list;
 //, kun pitäisi olla (kuten onkin container/container_fwd.hpp)
-// template <class T,class Allocator = std::allocator<T> > class list;
+// template <class T,class Allocator = std::allocator<T>> class list;
 // Miksi ongelma ei esiinny Linux + gcc yhdistelmän kanssa, ei ole tietoa.
 #define BOOST_DETAIL_NO_CONTAINER_FWD
 
@@ -90,7 +90,7 @@ class NFmiMultiQueryInfo : public NFmiFastQueryInfo, private boost::noncopyable
 
   NFmiMultiQueryInfo(const std::string& thePath);
   NFmiMultiQueryInfo(const std::list<std::string>& thePaths);
-  NFmiMultiQueryInfo(std::vector<boost::shared_ptr<NFmiFastQueryInfo> >& theInfos);
+  NFmiMultiQueryInfo(std::vector<boost::shared_ptr<NFmiFastQueryInfo>>& theInfos);
 
   using NFmiFastQueryInfo::OriginTime;
   const NFmiMetTime& OriginTime() const;  // we may have multiple origin times
@@ -124,11 +124,11 @@ class NFmiMultiQueryInfo : public NFmiFastQueryInfo, private boost::noncopyable
   // is used to construct the object. If NFmiFastQueryInfos are used,
   // the container is empty
 
-  std::list<boost::shared_ptr<NFmiQueryData> > itsDatas;
+  std::list<boost::shared_ptr<NFmiQueryData>> itsDatas;
 
   // This is used by all constructors
 
-  std::vector<boost::shared_ptr<NFmiFastQueryInfo> > itsInfos;
+  std::vector<boost::shared_ptr<NFmiFastQueryInfo>> itsInfos;
 
   // We index NFmiFastQueryInfo objects and their time indexes through this struct
 

@@ -45,7 +45,7 @@ class NFmiAreaMaskList
  private:
   bool IsValidIndex(int theIndex);
 
-  std::vector<boost::shared_ptr<NFmiAreaMask> > itsMaskVector;
+  std::vector<boost::shared_ptr<NFmiAreaMask>> itsMaskVector;
   int itsCurrentIndex;  // Reset laittaa tämän -1:ksi, 1. maski löytyy 0:sta ja viimeinen size-1:stä
   bool fMaskInUse;      // Arvo asetetaan kun tarkastetaan onko mikään
 

@@ -74,7 +74,7 @@ class NFmiHPlaceDescriptor : public NFmiDataDescriptor
 
   //! Hakee listan paikkaindeksi/etäisyys metreinä pareja. Listaan haetaan annettua paikkaa lähimmat
   //! datapisteet.
-  const std::vector<std::pair<int, double> > NearestLocations(
+  const std::vector<std::pair<int, double>> NearestLocations(
       const NFmiLocation &theLocation,
       int theMaxWantedLocations,
       double theMaxDistance = kFloatMissing) const;

@@ -3317,8 +3317,8 @@ NFmiQueryData *NFmiQueryDataUtil::MakeCombineParams(NFmiFastQueryInfo &theSource
     else
     {
       // pakko luoda dynaamisesti eri threadeille tarvittavat kopiot source ja target datoista
-      std::vector<boost::shared_ptr<NFmiFastQueryInfo> > targetInfos(usedThreadCount);
-      std::vector<boost::shared_ptr<NFmiFastQueryInfo> > sourceInfos(usedThreadCount);
+      std::vector<boost::shared_ptr<NFmiFastQueryInfo>> targetInfos(usedThreadCount);
+      std::vector<boost::shared_ptr<NFmiFastQueryInfo>> sourceInfos(usedThreadCount);
       for (unsigned int i = 0; i < usedThreadCount; i++)
       {
         targetInfos[i] = boost::shared_ptr<NFmiFastQueryInfo>(new NFmiFastQueryInfo(destInfo));
@@ -4253,7 +4253,7 @@ void NFmiQueryDataUtil::AddRange(NFmiThreadCallBacks *theThreadCallBacks, int va
 static void ReadQueryDataFiles(boost::shared_ptr<NFmiQueryData> theBaseQData,
                                const std::string &theDirName,
                                std::vector<std::string> &theFilesIn,
-                               std::vector<boost::shared_ptr<NFmiQueryData> > &theQDataVectorOut,
+                               std::vector<boost::shared_ptr<NFmiQueryData>> &theQDataVectorOut,
                                NFmiStopFunctor *theStopFunctor,
                                bool fDoRebuildCheck)
 {
@@ -4293,8 +4293,8 @@ static void ReadQueryDataFiles(boost::shared_ptr<NFmiQueryData> theBaseQData,
   }
 }
 
-static void MakeFastInfos(std::vector<boost::shared_ptr<NFmiQueryData> > &theQDataVectorIn,
-                          std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theFInfoVectorOut)
+static void MakeFastInfos(std::vector<boost::shared_ptr<NFmiQueryData>> &theQDataVectorIn,
+                          std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theFInfoVectorOut)
 {
   for (auto &i : theQDataVectorIn)
   {
@@ -4308,7 +4308,7 @@ static void MakeFastInfos(std::vector<boost::shared_ptr<NFmiQueryData> > &theQDa
 // järjestykseen (uusimmat ensin) ja leikkaa tarvittaessa listan koon haluttuun määrään
 // theMaxTimeStepsInData-parametrin mukaan. Jos se on <= 0, tällöin otetaan kaiiki ajat mukaan.
 static std::vector<NFmiMetTime> MakeValidTimesList(
-    std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theFInfoVectorIn, int theMaxTimeStepsInData)
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theFInfoVectorIn, int theMaxTimeStepsInData)
 {
   std::set<NFmiMetTime> uniqueValidTimes;
   for (auto &i : theFInfoVectorIn)
@@ -4356,7 +4356,7 @@ struct less<NFmiDataIdent>
 }  // namespace std
 
 static NFmiParamDescriptor MakeParamDesc(
-    std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theFInfoVectorIn)
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theFInfoVectorIn)
 {
   std::set<NFmiDataIdent> paramSet;
   for (auto &i : theFInfoVectorIn)
@@ -4387,7 +4387,7 @@ struct less<NFmiLevel>
 }  // namespace std
 
 static NFmiVPlaceDescriptor MakeVPlaceDesc(
-    std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theFInfoVectorIn)
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theFInfoVectorIn)
 {
   std::set<NFmiLevel> levelSet;
   for (auto &i : theFInfoVectorIn)
@@ -4413,7 +4413,7 @@ static NFmiVPlaceDescriptor MakeVPlaceDesc(
 // Validtime-vektorista tehdään timeDescriptori.
 // HUOM! Tämä toimii nyt vain hiladatoille. Muuttuu tulevaisuudessa...
 static NFmiQueryInfo MakeCombinedDatasMetaInfo(
-    std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theFInfoVectorIn,
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theFInfoVectorIn,
     std::vector<NFmiMetTime> &theValidTimesIn,
     bool fFirstInfoDefines)
 {
@@ -4448,7 +4448,7 @@ static NFmiQueryInfo MakeCombinedDatasMetaInfo(
 
 static NFmiFastQueryInfo *FindWantedInfo(
     const NFmiMetTime &theTime,
-    std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theFInfoVectorIn)
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theFInfoVectorIn)
 {
   for (auto &i : theFInfoVectorIn)
   {
@@ -4511,7 +4511,7 @@ static void FillStationDataToCurrentTimeWithDifferentStationStructure(NFmiFastQu
 
 static void FillDataToCurrentTime(
     NFmiFastQueryInfo &theFilledInfo,
-    std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theFInfoVectorIn,
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theFInfoVectorIn,
     NFmiStopFunctor *theStopFunctor)
 {
   NFmiFastQueryInfo *sourceInfo = ::FindWantedInfo(theFilledInfo.Time(), theFInfoVectorIn);
@@ -4559,7 +4559,7 @@ std::string NFmiQueryDataUtil::GetFileFilterDirectory(const std::string &theFile
 }
 
 static void CombineTimeStepDatas(NFmiQueryData &theData,
-                                 std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theFInfoVector,
+                                 std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theFInfoVector,
                                  NFmiStopFunctor *theStopFunctor)
 {
   NFmiFastQueryInfo combFastInfo(&theData);
@@ -4572,7 +4572,7 @@ static void CombineTimeStepDatas(NFmiQueryData &theData,
 }
 
 static void CombineSliceDatas(NFmiQueryData &theData,
-                              std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theFInfoVector,
+                              std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theFInfoVector,
                               NFmiStopFunctor *theStopFunctor)
 {
   NFmiFastQueryInfo combFastInfo(&theData);
@@ -4666,14 +4666,14 @@ static void DoMetaInfoLogging(NFmiQueryDataUtil::LoggingFunction *loggingFunctio
 NFmiQueryData *NFmiQueryDataUtil::CombineQueryDatas(
     bool fDoRebuild,
     boost::shared_ptr<NFmiQueryData> &theBaseQData,
-    std::vector<boost::shared_ptr<NFmiQueryData> > &theQDataVector,
+    std::vector<boost::shared_ptr<NFmiQueryData>> &theQDataVector,
     bool fDoTimeStepCombine,
     int theMaxTimeStepsInData,
     NFmiStopFunctor *theStopFunctor,
     LoggingFunction *loggingFunction,
     const std::string *theFileFilterPtr)
 {
-  std::vector<boost::shared_ptr<NFmiFastQueryInfo> > fInfoVector;
+  std::vector<boost::shared_ptr<NFmiFastQueryInfo>> fInfoVector;
   ::MakeFastInfos(theQDataVector, fInfoVector);
   if (fDoRebuild == false && theBaseQData)
     fInfoVector.push_back(
@@ -4769,7 +4769,7 @@ NFmiQueryData *NFmiQueryDataUtil::CombineQueryDatas(bool fDoRebuildCheck,
       GetFileFilterDirectory(theFileFilter);  // fileFilteristä pitää ottaa hakemisto irti, koska
                                               // PatternFiles-funktio palautta vain tiedostojen
                                               // nimet, ei polkua mukana
-  std::vector<boost::shared_ptr<NFmiQueryData> > qDataVector;
+  std::vector<boost::shared_ptr<NFmiQueryData>> qDataVector;
   ::ReadQueryDataFiles(baseQData, dirName, files, qDataVector, theStopFunctor, fDoRebuildCheck);
   return CombineQueryDatas(fDoRebuildCheck,
                            baseQData,
@@ -5242,8 +5242,8 @@ void NFmiQueryDataUtil::FillGridDataFullMT(NFmiQueryData *theSource,
           source1.LatLon();  // Varmistetaan että NFmiQueryDatan itsLatLonCache on alustettu!!
 
       // pakko luoda dynaamisesti eri threadeille tarvittavat kopiot source ja target datoista
-      std::vector<boost::shared_ptr<NFmiFastQueryInfo> > targetInfos(usedThreadCount);
-      std::vector<boost::shared_ptr<NFmiFastQueryInfo> > sourceInfos(usedThreadCount);
+      std::vector<boost::shared_ptr<NFmiFastQueryInfo>> targetInfos(usedThreadCount);
+      std::vector<boost::shared_ptr<NFmiFastQueryInfo>> sourceInfos(usedThreadCount);
       for (unsigned int i = 0; i < usedThreadCount; i++)
       {
         targetInfos[i] = boost::shared_ptr<NFmiFastQueryInfo>(new NFmiFastQueryInfo(target1));

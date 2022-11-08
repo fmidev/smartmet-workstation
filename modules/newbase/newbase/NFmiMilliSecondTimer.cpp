@@ -51,7 +51,7 @@ double NFmiNanoSecondTimer::elapsedTimeInSeconds() const
 {
   std::chrono::time_point<std::chrono::steady_clock> endTime = std::chrono::steady_clock::now();
   double elapsedSeconds =
-      std::chrono::duration_cast<std::chrono::duration<double> >(endTime - startTime_).count();
+      std::chrono::duration_cast<std::chrono::duration<double>>(endTime - startTime_).count();
   return elapsedSeconds;
 } 
 
