@@ -2373,13 +2373,13 @@ bool NFmiFastQueryInfo::GetInterpolatedCube(std::vector<float> &values, const NF
   NFmiDataIdent &param = Param();
   FmiInterpolationMethod interp = param.GetParam()->InterpolationMethod();
   FmiParameterName parId = static_cast<FmiParameterName>(param.GetParamIdent());
-  bool simpleInterp = kNoneInterpolation || kNearestPoint;
-  if (simpleInterp && timeCache.itsOffset <= 0.5 || timeCache.itsOffset < 0.001)
+  bool simpleInterp = (interp == kNoneInterpolation) || (interp == kNearestPoint);
+  if ((simpleInterp && timeCache.itsOffset <= 0.5) || timeCache.itsOffset < 0.001)
   {
     TimeIndex(timeCache.itsTimeIndex1);
     GetCube(values);
   }
-  else if (simpleInterp && timeCache.itsOffset > 0.5 || timeCache.itsOffset > 0.999)
+  else if ((simpleInterp && timeCache.itsOffset > 0.5) || timeCache.itsOffset > 0.999)
   {
     TimeIndex(timeCache.itsTimeIndex2);
     GetCube(values);
