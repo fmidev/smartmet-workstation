@@ -110,7 +110,6 @@ enum FmiMaskOperation
   kFmiMaskLessThan,                      // <
   kFmiMaskGreaterOrEqualThan,            // >=
   kFmiMaskLessOrEqualThan,               // <=
-  kFmiMaskContinuousEqual,               // ->    (simple condition where two consecutive values have wanted value in between them)
   kFmiMaskGreaterThanAndLessThan,        // > && <
   kFmiMaskGreaterOrEqualAndLessOrEqual,  // >= && <=
   kFmiMaskGreaterOrEqualAndLessThan,     // >= && <
@@ -129,7 +128,9 @@ enum FmiMaskOperation
   kFmiMaskDoubleRamp,  // kerroin -1, kun arvo alle alarajan, 1, kun yli ylärajan, -1 - 1, kun siinä välillä
 
   kFmiMaskAll,
-  kFmiMaskNotEqual  // != tai <> miten sitä milläkin kielellä esitetään
+  kFmiMaskNotEqual,  // != tai <> miten sitä milläkin kielellä esitetään
+  kFmiMaskContinuousEqual  // ->    (simple condition where two consecutive values have wanted
+                                // value in between them)
 
 };
 
