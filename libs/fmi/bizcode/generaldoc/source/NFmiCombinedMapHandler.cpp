@@ -493,22 +493,6 @@ namespace
 		}
 	}
 
-	NFmiInfoData::Type getFinalDataType(NFmiInfoData::Type dataType, boost::shared_ptr<NFmiFastQueryInfo>& fastData, const NFmiProducer& givenProducer, const NFmiLevel& level)
-	{
-		NFmiInfoData::Type finalDataType = dataType;
-		if(fastData)
-		{
-			if(givenProducer != *(fastData->Producer()))
-			{
-				if(level.LevelType() == kFmiHybridLevel)
-					finalDataType = NFmiInfoData::kHybridData;
-				else
-					finalDataType = NFmiInfoData::kViewable;
-			}
-		}
-		return finalDataType;
-	}
-
 	NFmiInfoData::Type getUsableCrossSectionDataType(NFmiInfoData::Type dataType, NFmiInfoData::Type alternateType, const NFmiProducer& givenProducer)
 	{
 		NFmiInfoData::Type finalDataType = dataType;
@@ -540,37 +524,6 @@ namespace
 	boost::shared_ptr<NFmiFastQueryInfo> getEditedInfo()
 	{
 		return CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->EditedSmartInfo();
-	}
-
-	NFmiInfoData::Type getFinalDataType(boost::shared_ptr<NFmiDrawParam>& drawParam, const NFmiProducer& givenProducer, bool useCrossSectionParams, bool fGroundData)
-	{
-		auto& infoOrganizer = ::getInfoOrganizer();
-		boost::shared_ptr<NFmiFastQueryInfo> editedData = ::getEditedInfo();
-		boost::shared_ptr<NFmiFastQueryInfo> operationalData = infoOrganizer.FindInfo(NFmiInfoData::kKepaData);
-		boost::shared_ptr<NFmiFastQueryInfo> helpData = infoOrganizer.FindInfo(NFmiInfoData::kEditingHelpData, 0);
-		NFmiInfoData::Type finalDataType = drawParam->DataType();
-		if(finalDataType == NFmiInfoData::kEditable)
-			finalDataType = ::getFinalDataType(finalDataType, editedData, givenProducer, drawParam->Level());
-		else if(finalDataType == NFmiInfoData::kKepaData)
-			finalDataType = ::getFinalDataType(finalDataType, operationalData, givenProducer, drawParam->Level());
-		else if(finalDataType == NFmiInfoData::kEditingHelpData)
-			finalDataType = ::getFinalDataType(finalDataType, helpData, givenProducer, drawParam->Level());
-
-		boost::shared_ptr<NFmiFastQueryInfo> foundData = infoOrganizer.FindInfo(finalDataType, givenProducer, fGroundData);
-		if(!foundData)
-		{ // Vain jos ei löydy suoraan haluttua dataa, etsitään näistä erikois datoista. Tämä siksi että muuten editoitavaksi dataksi luettu pintadata sotkee kuviot. Käyttäjä haluaa muuttaa EC:n pinta lämpötilaksi, eikä esim. editoidun datan pintalämpötilaksi, joka sattui olemaan Ec:tä.
-			if(editedData && givenProducer == *(editedData->Producer()))
-				finalDataType = NFmiInfoData::kEditable;
-			else if(operationalData && givenProducer == *(operationalData->Producer()))
-				finalDataType = NFmiInfoData::kKepaData;
-			else if(helpData && givenProducer == *(helpData->Producer()))
-				finalDataType = NFmiInfoData::kEditingHelpData;
-		}
-
-		if(useCrossSectionParams)
-			finalDataType = ::checkCrossSectionLevelData(finalDataType, givenProducer);
-
-		return finalDataType;
 	}
 
 	// Perus-oliolle (list-list) on jo varattu muistia, tässä alustetaan vain tyhjät listat kokonaislistaan.
@@ -3166,6 +3119,48 @@ NFmiDrawParamList* NFmiCombinedMapHandler::getWantedDrawParamList(const NFmiMenu
 		return getCrossSectionViewDrawParamList(viewRowIndex);
 	else
 		return getDrawParamList(menuItem.MapViewDescTopIndex(), viewRowIndex);
+}
+
+NFmiInfoData::Type getFinalDataType(boost::shared_ptr<NFmiDrawParam>& drawParam, const NFmiProducer& givenProducer, bool useCrossSectionParams, bool fGroundData)
+{
+	auto& infoOrganizer = ::getInfoOrganizer();
+	NFmiInfoData::Type finalDataType = drawParam->DataType();
+	if(useCrossSectionParams)
+		return ::checkCrossSectionLevelData(finalDataType, givenProducer);
+
+	auto infos = infoOrganizer.GetInfos(givenProducer.GetIdent());
+	if(!infos.empty())
+	{
+		for(const auto& info : infos)
+		{
+			if(info->Param(static_cast<FmiParameterName>(drawParam->Param().GetParamIdent())))
+			{
+				if(!fGroundData && info->SizeLevels() > 1)
+				{
+					if(info->Level()->LevelType() == drawParam->Level().LevelType())
+					{
+						return info->DataType();
+					}
+				}
+				else if(fGroundData && info->SizeLevels() == 1)
+				{
+					return info->DataType();
+				}
+			}
+		}
+	}
+
+	boost::shared_ptr<NFmiFastQueryInfo> editedData = ::getEditedInfo();
+	if(editedData && givenProducer == *(editedData->Producer()))
+		return NFmiInfoData::kEditable;
+	boost::shared_ptr<NFmiFastQueryInfo> operationalData = infoOrganizer.FindInfo(NFmiInfoData::kKepaData);
+	if(operationalData && givenProducer == *(operationalData->Producer()))
+		return NFmiInfoData::kKepaData;
+	boost::shared_ptr<NFmiFastQueryInfo> helpData = infoOrganizer.FindInfo(NFmiInfoData::kEditingHelpData, 0);
+	if(helpData && givenProducer == *(helpData->Producer()))
+		return NFmiInfoData::kEditingHelpData;
+
+	return finalDataType;
 }
 
 void NFmiCombinedMapHandler::changeAllProducersInMapRow(const NFmiMenuItem& menuItem, int viewRowIndex, bool useCrossSectionParams)
