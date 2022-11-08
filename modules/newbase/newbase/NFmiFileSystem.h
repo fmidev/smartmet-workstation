@@ -72,7 +72,7 @@ std::time_t FindFile(const std::string &theFileFilter,
  std::string FileNameFromPath(const std::string &theTotalPathAndFileStr);
  const std::list<std::string> DirectoryFiles(const std::string &thePath);
  const std::list<std::string> PatternFiles(const std::string &thePattern);
- const std::list<std::pair<std::string, std::time_t> > PatternFiles(
+ const std::list<std::pair<std::string, std::time_t>> PatternFiles(
     const std::string &thePattern, std::time_t timeLimit);
  const std::list<std::string> Directories(const std::string &thePath);
 

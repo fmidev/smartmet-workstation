@@ -268,7 +268,7 @@ boost::shared_ptr<NFmiArea> Create(const std::string &theProjection)
   const char *separator = ":";
   if (projection.find('|') != std::string::npos) separator = "|";
 
-  vector<string> parts = NFmiStringTools::Split<vector<string> >(projection, separator);
+  vector<string> parts = NFmiStringTools::Split<vector<string>>(projection, separator);
 
   try
   {
@@ -278,7 +278,7 @@ boost::shared_ptr<NFmiArea> Create(const std::string &theProjection)
       throw runtime_error("must have 1-3 parts separated by ':' or '|'");
 
     // extracts the parts separated by ','
-    list<string> pparts = NFmiStringTools::Split<list<string> >(parts[0]);
+    list<string> pparts = NFmiStringTools::Split<list<string>>(parts[0]);
 
     // Extract possible units
     bool units = false;
@@ -301,12 +301,12 @@ boost::shared_ptr<NFmiArea> Create(const std::string &theProjection)
       }
     }
 
-    const vector<string> aparts = NFmiStringTools::Split<vector<string> >(parts[1], "/");
-    const vector<double> avec = NFmiStringTools::Split<vector<double> >(aparts[0]);
+    const vector<string> aparts = NFmiStringTools::Split<vector<string>>(parts[1], "/");
+    const vector<double> avec = NFmiStringTools::Split<vector<double>>(aparts[0]);
     double aspect = (aparts.size() == 1 ? 1 : NFmiStringTools::Convert<double>(aparts[1]));
 
     deque<double> gvec =
-        NFmiStringTools::Split<deque<double> >(parts.size() == 2 ? "0,0,1,1" : parts[2]);
+        NFmiStringTools::Split<deque<double>>(parts.size() == 2 ? "0,0,1,1" : parts[2]);
 
     // intermediate validity checks
     if (pparts.size() < 1) throw runtime_error("projection part missing");

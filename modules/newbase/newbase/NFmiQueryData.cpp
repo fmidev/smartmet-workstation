@@ -654,7 +654,7 @@ bool NFmiQueryData::Advise(FmiAdvice theAdvice)
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<std::vector<NFmiPoint> > NFmiQueryData::LatLonCache() const
+boost::shared_ptr<std::vector<NFmiPoint>> NFmiQueryData::LatLonCache() const
 {
   // If not already set by SetLatLonCache, initialize once
   if (!itsLatLonCache)
@@ -675,7 +675,7 @@ boost::shared_ptr<std::vector<NFmiPoint> > NFmiQueryData::LatLonCache() const
  */
 // ----------------------------------------------------------------------
 
-void NFmiQueryData::SetLatLonCache(boost::shared_ptr<std::vector<NFmiPoint> > newCache)
+void NFmiQueryData::SetLatLonCache(boost::shared_ptr<std::vector<NFmiPoint>> newCache)
 {
   itsLatLonCache = newCache;
 }
@@ -690,7 +690,7 @@ void NFmiQueryData::SetLatLonCache(boost::shared_ptr<std::vector<NFmiPoint> > ne
 
 void NFmiQueryData::MakeLatLonCache() const
 {
-  boost::shared_ptr<std::vector<NFmiPoint> > tmp = boost::make_shared<std::vector<NFmiPoint> >();
+  boost::shared_ptr<std::vector<NFmiPoint>> tmp = boost::make_shared<std::vector<NFmiPoint>>();
   HPlaceDesc()->CreateLatLonCache(*tmp);
   boost::atomic_store(&itsLatLonCache, tmp);
 }

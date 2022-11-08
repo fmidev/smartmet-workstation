@@ -548,7 +548,7 @@ struct LocationIndexDistanceGreater
  */
 // ----------------------------------------------------------------------
 
-const std::vector<pair<int, double> > NFmiLocationBag::NearestLocations(
+const std::vector<pair<int, double>> NFmiLocationBag::NearestLocations(
     const NFmiLocation &theLocation, int theMaxWantedLocations, double theMaxDistance) const
 {
   auto size = static_cast<int>(this->GetSize());
@@ -566,7 +566,7 @@ const std::vector<pair<int, double> > NFmiLocationBag::NearestLocations(
   if (theMaxWantedLocations != -1 && theMaxDistance == kFloatMissing)
   {
     if (tempValues.size() == 0)
-      return std::vector<pair<int, double> >();
+      return std::vector<pair<int, double>>();
     else
     {
       // halutaan n kpl lahimpiä paikkoja
