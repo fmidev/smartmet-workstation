@@ -3101,7 +3101,8 @@ std::string NFmiStationView::MakeMacroParamDescriptionTooltipText(const NFmiExtr
 	if(!extraMacroParamData.MacroParamDescription().empty())
 	{
 		str += "<font color = magenta> (";
-		str += extraMacroParamData.MacroParamDescription();
+		// MacroParamDescription string must be xml encoded, because it might contain characters that will mess up with html output (like '<' and '>' characters)
+		str += CtrlViewUtils::XmlEncode(extraMacroParamData.MacroParamDescription());
 		str += ")</font>";
 	}
 	return str;
