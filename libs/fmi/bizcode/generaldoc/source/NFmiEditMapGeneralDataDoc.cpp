@@ -3462,44 +3462,51 @@ void AddSwapViewRowsToToMenuItem(unsigned int theDescTopIndex, NFmiMenuItem* the
     theMenuItem->AddSubMenu(rowNumbersMenuList);
 }
 
-void AddChangeAllProducersToParamSelectionPopup(unsigned int theDescTopIndex, NFmiMenuItemList *theMenuList, FmiMenuCommandType theMenuCommandType, bool crossSectionPopup)
+void AddChangeAllProducersToParamSelectionPopup(unsigned int theDescTopIndex, NFmiMenuItemList* theMenuList, FmiMenuCommandType theMenuCommandType, bool crossSectionPopup)
 {
-    CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, __FUNCTION__);
-    std::vector<NFmiProducerInfo> &prodVec = ProducerSystem().Producers();
-		if(prodVec.size() > 0)
+	CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, __FUNCTION__);
+	std::vector<NFmiProducerInfo>& prodVec = ProducerSystem().Producers();
+	if(prodVec.size() > 0)
+	{
+		NFmiMenuItemList* changeProducersMenuList = new NFmiMenuItemList;
+		// Laitetaan alkuun editoitu data ja virallinen data tuottajat listaan, jos ei kyse poikkileikkausnäytöstä
+		if(crossSectionPopup == false)
 		{
-            auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, "Change all producers", NFmiDataIdent(), theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
-			NFmiMenuItemList *changeProducersMenuList = new NFmiMenuItemList;
-			for(size_t i = 0; i < prodVec.size(); i++)
+			boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo();
+			if(editedInfo)
 			{
-				NFmiDataIdent dataIdent(NFmiParam(), prodVec[i].GetProducer()); // laitetaan feikki parametri ja vain 1. tuottaja listasta
+				editedInfo->FirstParam();
+				changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, "Edited data", editedInfo->Param(), theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable));
+			}
+			boost::shared_ptr<NFmiFastQueryInfo> operativeInfo = itsSmartInfoOrganizer->FindInfo(NFmiInfoData::kKepaData);
+			if(operativeInfo) // operatiivinen data
+			{
+				operativeInfo->FirstParam();
+				changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, "Operative data", operativeInfo->Param(), theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable));
+			}
+			boost::shared_ptr<NFmiFastQueryInfo> helpDataInfo = itsSmartInfoOrganizer->FindInfo(NFmiInfoData::kEditingHelpData);
+			if(helpDataInfo) // editointi apu data
+			{
+				helpDataInfo->FirstParam();
+				changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, "Help edit data", helpDataInfo->Param(), theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable));
+			}
+		}
+
+		for(size_t i = 0; i < prodVec.size(); i++)
+		{
+			auto producer = prodVec[i].GetProducer();
+			auto infoVector = itsSmartInfoOrganizer->GetInfos(producer.GetIdent());
+			if(!infoVector.empty())
+			{
+				// Jos löytyy jotain dataa, laitetaan feikki parametri ja tuottaja listasta
+				NFmiDataIdent dataIdent(NFmiParam(), producer);
 				changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, prodVec[i].Name(), dataIdent, theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable));
 			}
-			// lisätään vielä editoitu data ja virallinen data tuottajat listaan, jos ei kyse poikkileikkausnäytöstä
-			if(crossSectionPopup == false)
-			{
-				boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo();
-				if(editedInfo)
-				{
-					editedInfo->FirstParam();
-					changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, "Edited data", editedInfo->Param(), theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable));
-				}
-				boost::shared_ptr<NFmiFastQueryInfo> operativeInfo = itsSmartInfoOrganizer->FindInfo(NFmiInfoData::kKepaData);
-				if(operativeInfo) // operatiivinen data
-				{
-					operativeInfo->FirstParam();
-					changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, "Operative data", operativeInfo->Param(), theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable));
-				}
-				boost::shared_ptr<NFmiFastQueryInfo> helpDataInfo = itsSmartInfoOrganizer->FindInfo(NFmiInfoData::kEditingHelpData);
-				if(helpDataInfo) // editointi apu data
-				{
-					helpDataInfo->FirstParam();
-					changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, "Help edit data", helpDataInfo->Param(), theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable));
-				}
-			}
-			menuItem->AddSubMenu(changeProducersMenuList);
-			theMenuList->Add(std::move(menuItem));
 		}
+		auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, "Change all producers", NFmiDataIdent(), theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+		menuItem->AddSubMenu(changeProducersMenuList);
+		theMenuList->Add(std::move(menuItem));
+	}
 }
 
 void AddChangeAllDataTypesToParamSelectionPopup(unsigned int theDescTopIndex, NFmiMenuItemList *theMenuList, FmiMenuCommandType theMenuCommandType)
