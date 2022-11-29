@@ -1673,7 +1673,7 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateMetFunctionAreaMask
 void NFmiSmartToolModifier::MakeSoundingLevelFix(boost::shared_ptr<NFmiAreaMask> &theAreaMask,
                                                  const NFmiAreaMaskInfo &theAreaMaskInfo)
 {
-  if (theAreaMask)
+  if (theAreaMask && theAreaMaskInfo.GetLevel())
   {
     if (theAreaMask->Info()->LevelType() == kFmiSoundingLevel)
     {  // Luotaus data on poikkeus, jonka haluttu painepinta level pitää asettaa tässä erikseen.
