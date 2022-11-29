@@ -2595,9 +2595,15 @@ bool NFmiCombinedMapHandler::changeTime(int typeOfChange, FmiDirection direction
 	{
 		NFmiTimePerioid period(0, 1, 0, 0, 0, 0);
 		if(direction == kForward)
-			selectedTime.NextMetTime(period);  // HUOM! näissä bugi, ei osaa ottaa huomioon eri pituisia kuukausia!!!!!
+			selectedTime.NextMetTime(period);  
 		else
-			selectedTime.PreviousMetTime(period);  // HUOM! näissä bugi, ei osaa ottaa huomioon eri pituisia kuukausia!!!!!
+			selectedTime.PreviousMetTime(period);
+		// Previous/NextMetTime(period) metodeissa on bugi, ei osaa ottaa 
+		// huomioon eri pituisia kuukausia, siksi pitää tarkistaa että ei mene esim.
+		// toukokuun 31. päivästä kesäkuun 31. päivään, jota ei ole olemassa.
+		auto daysInMonth = NFmiTime::DaysInMonth(selectedTime.GetMonth(), selectedTime.GetYear());
+		if(selectedTime.GetDay() > daysInMonth)
+			selectedTime.SetDay(daysInMonth);
 	}
 	else if(typeOfChange == 5) // year
 	{
