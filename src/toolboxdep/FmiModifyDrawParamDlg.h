@@ -2,6 +2,7 @@
 
 // FmiModifyDrawParamDlg.h : header file
 //
+#include "stdafx.h"
 #include "SmartMetToolboxDep_resource.h"
 #include "afxwin.h"
 #include "NFmiDrawParam.h"
@@ -211,6 +212,9 @@ private:
 	NFmiColorButtonDrawingData GetSimpleIsolineColorButtonData(int colorIndex, bool initColor);
 	void SetSimpleColorContourLimit(float limitValue, float* limitValueDlg, CString* limitStringDlgU_);
 	void OnEnChangeShowSimpleColorcontourLimitValue(ColorType colorType, int colorIndex, CString& limitStringU_, float& limitValue);
+	void InitSymbolDrawDensitySliders();
+	std::pair<double, double> GetSymbolDrawDensityValuesFromSlider();
+	void UpdateSymbolDrawDensityStr();
 
 	std::string itsDrawParamPath;
 	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
@@ -302,6 +306,10 @@ private:
 	BOOL fSimpleContourTransparency4;
 	BOOL fSimpleContourTransparency5;
 	BOOL fTreatWmsLayerAsObservation;
+	CSliderCtrl itsSymbolDrawDensityXSlider;
+	CSliderCtrl itsSymbolDrawDensityYSlider;
+	int itsFixedTextSymbolDrawLength;
+	CString itsSymbolDrawDensityStr;
 
 public:
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
@@ -325,6 +333,7 @@ public:
 	afx_msg void OnEnChangeShowSimpleIsolineWithColorsMiddleValue();
 	afx_msg void OnEnChangeShowSimpleIsolineWithColorsEndValue();
 	afx_msg void OnEnChangeShowSimpleIsolineWithColorsEnd2Value();
+	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 };
 
 //{{AFX_INSERT_LOCATION}}

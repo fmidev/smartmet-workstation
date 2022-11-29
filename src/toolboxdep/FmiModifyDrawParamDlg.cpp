@@ -88,6 +88,8 @@ CFmiModifyDrawParamDlg::CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartM
 , itsSimpleColorContourLimit3StringU_(_T(""))
 , itsSimpleColorContourLimit4StringU_(_T(""))
 , fTreatWmsLayerAsObservation(FALSE)
+, itsFixedTextSymbolDrawLength(DefaultFixedTextSymbolDrawLength)
+, itsSymbolDrawDensityStr(_T(""))
 {
 	if(theDrawParam)
 	{
@@ -279,6 +281,10 @@ void CFmiModifyDrawParamDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_SHOW_SIMPLE_COLORCONTOUR_WITH_COLORS_END_VALUE, itsSimpleColorContourLimit3StringU_);
 	DDX_Text(pDX, IDC_SHOW_SIMPLE_COLORCONTOUR_WITH_COLORS_END2_VALUE, itsSimpleColorContourLimit4StringU_);
 	DDX_Check(pDX, IDC_TREAT_WMS_LAYER_AS_OBSERVATION, fTreatWmsLayerAsObservation);
+	DDX_Control(pDX, IDC_SLIDER_SYMBOL_DRAW_DENSITY_X, itsSymbolDrawDensityXSlider);
+	DDX_Control(pDX, IDC_SLIDER_SYMBOL_DRAW_DENSITY_Y, itsSymbolDrawDensityYSlider);
+	DDX_Text(pDX, IDC_FIXED_TEXT_SYMBOL_DRAW_LENGTH, itsFixedTextSymbolDrawLength);
+	DDX_Text(pDX, IDC_STATIC_SYMBOL_DRAW_DENSITY_STR, itsSymbolDrawDensityStr);
 }
 
 
@@ -329,6 +335,7 @@ BEGIN_MESSAGE_MAP(CFmiModifyDrawParamDlg, CDialog)
 	ON_EN_CHANGE(IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_MIDDLE_VALUE_NEW, &CFmiModifyDrawParamDlg::OnEnChangeShowSimpleIsolineWithColorsMiddleValue)
 	ON_EN_CHANGE(IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_HIGH_VALUE, &CFmiModifyDrawParamDlg::OnEnChangeShowSimpleIsolineWithColorsEndValue)
 	ON_EN_CHANGE(IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_HIGH2_VALUE, &CFmiModifyDrawParamDlg::OnEnChangeShowSimpleIsolineWithColorsEnd2Value)
+	ON_WM_HSCROLL()
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -349,6 +356,7 @@ BOOL CFmiModifyDrawParamDlg::OnInitDialog()
 	}
 
     AdjustStartingPosition();
+	UpdateSymbolDrawDensityStr();
 
 	UpdateData(FALSE);
 
@@ -590,6 +598,32 @@ void CFmiModifyDrawParamDlg::InitRestOfVersion2Data(void)
 
     FillStationDataViewSelector();
 	InitSpecialClassesData();
+
+	itsFixedTextSymbolDrawLength = itsDrawParam->FixedTextSymbolDrawLength();
+	InitSymbolDrawDensitySliders();
+}
+
+static int SymbolDrawDensityToSliderPos(double symbolDrawDensity)
+{
+	int sliderPos = boost::math::iround((symbolDrawDensity - DrawParamMinSymbolDrawDensity) * 10.);
+	return sliderPos;
+}
+
+static double SliderPosToSymbolDrawDensity(int sliderPos)
+{
+	double symbolDrawDensity = (sliderPos / 10.) + DrawParamMinSymbolDrawDensity;
+	return symbolDrawDensity;
+}
+
+void CFmiModifyDrawParamDlg::InitSymbolDrawDensitySliders()
+{
+	// Arvot 0.4 - 2.0 yhden desimaalin tarkkuudella
+	int startIndex = 0;
+	int endIndex = boost::math::iround((DrawParamMaxSymbolDrawDensity - DrawParamMinSymbolDrawDensity) * 10.);
+	itsSymbolDrawDensityXSlider.SetRange(startIndex, endIndex);
+	itsSymbolDrawDensityXSlider.SetPos(::SymbolDrawDensityToSliderPos(itsDrawParam->SymbolDrawDensityX()));
+	itsSymbolDrawDensityYSlider.SetRange(startIndex, endIndex);
+	itsSymbolDrawDensityYSlider.SetPos(::SymbolDrawDensityToSliderPos(itsDrawParam->SymbolDrawDensityY()));
 }
 
 static std::string GetPrettyLimitValue(float limitValue)
@@ -761,6 +795,10 @@ void CFmiModifyDrawParamDlg::ReadRestOfVersion2Data(void)
     itsDrawParam->DoSparseSymbolVisualization(fDoSparseDataSymbolVisualization == TRUE);
 	itsDrawParam->ShowColorLegend(fUseLegend == TRUE);
 	itsDrawParam->TreatWmsLayerAsObservation(fTreatWmsLayerAsObservation == TRUE);
+	itsDrawParam->FixedTextSymbolDrawLength(itsFixedTextSymbolDrawLength);
+	auto densityValues = GetSymbolDrawDensityValuesFromSlider();
+	itsDrawParam->SymbolDrawDensityX(densityValues.first);
+	itsDrawParam->SymbolDrawDensityY(densityValues.second);
 
 	ReadSpecialClassesData();
 }
@@ -1664,6 +1702,9 @@ void CFmiModifyDrawParamDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_CONTOUR_ALPHA_STR, "Alpha 5-100");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DRAW_PARAM_USE_LEGEND, "Use legend");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DRAW_PARAM_USE_STEPS_WITH_CUSTOM_CONTOURS, "Use shading");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_TREAT_WMS_LAYER_AS_OBSERVATION, "Treat Wms layer as observation (in animations)");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_FIXED_TEXT_SYMBOL_DRAW_LENGTH, "Fixed text length");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SYMBOL_DRAW_DENSITY_STR, "Symbol draw density");
     
 //    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_APPLY_FIXED_DRAW_PARAMS_RIGHT_AWAY, "Apply Fixed Settings At Once");
 }
@@ -1785,4 +1826,29 @@ void CFmiModifyDrawParamDlg::OnBnClickedButtonReloadOriginal()
 
     ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(::GetWantedMapViewIdFlag(itsDescTopIndex));
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ModifyDrawParamDlg: Reload original draw param settings", TRUE, TRUE, itsDescTopIndex); // päivitetään näyttöjä
+}
+
+std::pair<double, double> CFmiModifyDrawParamDlg::GetSymbolDrawDensityValuesFromSlider()
+{
+	double symbolDrawDensityX = ::SliderPosToSymbolDrawDensity(itsSymbolDrawDensityXSlider.GetPos());
+	double symbolDrawDensityY = ::SliderPosToSymbolDrawDensity(itsSymbolDrawDensityYSlider.GetPos());
+	return std::make_pair(symbolDrawDensityX, symbolDrawDensityY);
+}
+
+void CFmiModifyDrawParamDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+{
+	UpdateData(TRUE);
+	UpdateSymbolDrawDensityStr();
+	CDialog::OnHScroll(nSBCode, nPos, pScrollBar);
+}
+
+void CFmiModifyDrawParamDlg::UpdateSymbolDrawDensityStr()
+{
+	auto densityValues = GetSymbolDrawDensityValuesFromSlider();
+	std::string densityValuesStr = "Symbol draw density X: ";
+	densityValuesStr += NFmiValueString::GetStringWithMaxDecimalsSmartWay(densityValues.first, 1);
+	densityValuesStr += ", Y: ";
+	densityValuesStr += NFmiValueString::GetStringWithMaxDecimalsSmartWay(densityValues.second, 1);
+	itsSymbolDrawDensityStr = CA2T(densityValuesStr.c_str());
+	UpdateData(FALSE);
 }
