@@ -137,6 +137,7 @@ protected:
    NFmiPoint CalcUsedSpaceOutFactors();
    CtrlViewUtils::GraphicalInfo& GetGraphicalInfo() const;
    NFmiVisualizationSpaceoutSettings& GetVisualizationSettings() const;
+   void DoSymboldrawDensityAdjustments(double &xSizeFactorInOut, double &ySizeFactorInOut);
 
    // T‰h‰n tehd‰‰n kaikki metodit jotka liittyv‰t uuteen Symbol-Bulk-Draw toimintoon.
    // Metodien eteen laitetaan ainakin aluksi Sbd -etuliite, jotta tiedet‰‰n ett‰ ne liittyv‰t siihen.
