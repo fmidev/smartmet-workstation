@@ -517,6 +517,13 @@ void NFmiDrawParam::Init(const NFmiDrawParam* theDrawParam, bool fInitOnlyDrawin
       itsModelOriginTime = theDrawParam->itsModelOriginTime;
       itsModelRunIndex = theDrawParam->itsModelRunIndex;
       itsTimeSerialModelRunCount = theDrawParam->itsTimeSerialModelRunCount;
+
+      // Näitä ei piirtoon liittyviä asetuksia ei kannata säätää kun tehdään normi
+      // copy-paste drawParamille, jolloin halutaan vain säätää piirto-ominaisuudet.
+      itsAbsoluteMinValue = theDrawParam->AbsoluteMinValue();
+      itsAbsoluteMaxValue = theDrawParam->AbsoluteMaxValue();
+      itsTimeSeriesScaleMin = theDrawParam->TimeSeriesScaleMin();
+      itsTimeSeriesScaleMax = theDrawParam->TimeSeriesScaleMax();
     }
     itsPriority = theDrawParam->Priority();
 
@@ -544,12 +551,6 @@ void NFmiDrawParam::Init(const NFmiDrawParam* theDrawParam, bool fInitOnlyDrawin
     //	itsSecondaryIsolineColor = theDrawParam->IsolineSecondaryColor();
     //	itsSecondaryIsolineTextColor = theDrawParam->IsolineSecondaryTextColor();
     // ei tarvitse toistaiseksi alustaa sekundaarisia värejä
-
-    itsAbsoluteMinValue = theDrawParam->AbsoluteMinValue();
-    itsAbsoluteMaxValue = theDrawParam->AbsoluteMaxValue();
-
-    itsTimeSeriesScaleMin = theDrawParam->TimeSeriesScaleMin();
-    itsTimeSeriesScaleMax = theDrawParam->TimeSeriesScaleMax();
 
     itsPossibleViewTypeCount = theDrawParam->PossibleViewTypeCount();
 
@@ -683,6 +684,9 @@ void NFmiDrawParam::Init(const NFmiDrawParam* theDrawParam, bool fInitOnlyDrawin
     fDoSparseSymbolVisualization = theDrawParam->fDoSparseSymbolVisualization;
     fDoIsoLineColorBlend = theDrawParam->fDoIsoLineColorBlend;
     fTreatWmsLayerAsObservation = theDrawParam->fTreatWmsLayerAsObservation;
+    FixedTextSymbolDrawLength(theDrawParam->FixedTextSymbolDrawLength());
+    SymbolDrawDensityX(theDrawParam->SymbolDrawDensityX());
+    SymbolDrawDensityY(theDrawParam->SymbolDrawDensityY());
   }
   return;
 }
@@ -1086,6 +1090,12 @@ std::ostream& NFmiDrawParam::Write(std::ostream& file) const
     extraData.Add(fDoIsoLineColorBlend);
     // fTreatWmsLayerAsObservation arvosta tehdään 11. uusi double-extra-parametri
     extraData.Add(fTreatWmsLayerAsObservation);
+    // itsFixedTextSymbolDrawLength arvosta tehdään 12. uusi double-extra-parametri
+    extraData.Add(itsFixedTextSymbolDrawLength);
+    // itsSymbolDrawDensityX arvosta tehdään 13. uusi double-extra-parametri
+    extraData.Add(itsSymbolDrawDensityX);
+    // itsSymbolDrawDensityY arvosta tehdään 14. uusi double-extra-parametri
+    extraData.Add(itsSymbolDrawDensityY);
 
     // modelRunIndex on 1. uusista string-extra-parametreista
     extraData.Add(::MetTime2String(itsModelOriginTime));
@@ -1488,6 +1498,24 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
           fTreatWmsLayerAsObservation = extraData.itsDoubleValues[10] != 0;
         }
 
+        itsFixedTextSymbolDrawLength = DefaultFixedTextSymbolDrawLength;
+        if (extraData.itsDoubleValues.size() >= 12)
+        {
+          FixedTextSymbolDrawLength(static_cast<int>(extraData.itsDoubleValues[11]));
+        }
+
+        itsSymbolDrawDensityX = DefaultSymbolDrawDensity;
+        if (extraData.itsDoubleValues.size() >= 13)
+        {
+          SymbolDrawDensityX(extraData.itsDoubleValues[12]);
+        }
+
+        itsSymbolDrawDensityY = DefaultSymbolDrawDensity;
+        if (extraData.itsDoubleValues.size() >= 14)
+        {
+          SymbolDrawDensityY(extraData.itsDoubleValues[13]);
+        }
+
         itsModelOriginTime = NFmiMetTime::gMissingTime;  // tämä on oletus arvo eli ei ole käytössä
         if (extraData.itsStringValues.size() >= 1)
         {
@@ -1650,4 +1678,30 @@ bool NFmiDrawParam::IsIsolineType(NFmiMetEditorTypes::View viewType)
     return true;
   else
     return false;
+}
+
+void NFmiDrawParam::FixedTextSymbolDrawLength(int newValue)
+{
+  itsFixedTextSymbolDrawLength = newValue;
+  if (itsFixedTextSymbolDrawLength < 0)
+  {
+    itsFixedTextSymbolDrawLength = 0;
+  }
+}
+
+bool NFmiDrawParam::IsFixedTextSymbolDrawLengthUsed() const
+{
+  return itsFixedTextSymbolDrawLength > DefaultFixedTextSymbolDrawLength;
+}
+
+void NFmiDrawParam::SymbolDrawDensityX(double newValue)
+{
+  itsSymbolDrawDensityX = std::max(newValue, DrawParamMinSymbolDrawDensity);
+  itsSymbolDrawDensityX = std::min(itsSymbolDrawDensityX, DrawParamMaxSymbolDrawDensity);
+}
+
+void NFmiDrawParam::SymbolDrawDensityY(double newValue)
+{
+  itsSymbolDrawDensityY = std::max(newValue, DrawParamMinSymbolDrawDensity);
+  itsSymbolDrawDensityY = std::min(itsSymbolDrawDensityY, DrawParamMaxSymbolDrawDensity);
 }
