@@ -475,6 +475,8 @@ int NFmiStationView::GetApproxmationOfDataTextLength(std::vector<float> *sampleV
         return 1;
     else
     {
+		if(itsDrawParam->IsFixedTextSymbolDrawLengthUsed())
+			return itsDrawParam->FixedTextSymbolDrawLength();
         if(sampleValues)
             return CalcApproxmationOfDataTextLength(*sampleValues);
 		else if(itsDrawParam->DoSparseSymbolVisualization() && itsInfo->IsGrid())
@@ -537,6 +539,21 @@ NFmiPoint NFmiStationView::GetSpaceOutFontFactor(void)
 	return NFmiPoint(0.5, 1);
 }
 
+static double AdjustSymbolSizeFactorWithDensity(double sizeFactor, double symbolDrawDensity)
+{
+	if(symbolDrawDensity != DefaultSymbolDrawDensity)
+	{
+		sizeFactor *= symbolDrawDensity;
+	}
+	return sizeFactor;
+}
+
+void NFmiStationView::DoSymboldrawDensityAdjustments(double &xSizeFactorInOut, double &ySizeFactorInOut)
+{
+	xSizeFactorInOut = ::AdjustSymbolSizeFactorWithDensity(xSizeFactorInOut, itsDrawParam->SymbolDrawDensityX());
+	ySizeFactorInOut = ::AdjustSymbolSizeFactorWithDensity(ySizeFactorInOut, itsDrawParam->SymbolDrawDensityY());
+}
+
 // OLETUS!! itsInfo on grid-dataa.
 NFmiPoint NFmiStationView::CalcUsedSpaceOutFactors(int theSpaceOutFactor)
 {
@@ -571,6 +588,7 @@ NFmiPoint NFmiStationView::CalcUsedSpaceOutFactors(int theSpaceOutFactor)
         NFmiPoint fontFactor(GetSpaceOutFontFactor());
         double xFactor = fontFactor.X() * fontXSize * textLength / distX;
         double yFactor = fontFactor.Y() * fontYSize / distY;
+		DoSymboldrawDensityAdjustments(xFactor, yFactor);
 
         // 6. case theSpaceOutFactor 1 -> ceil, 2 -> ceil + 1
         if(theSpaceOutFactor == 1)
@@ -615,7 +633,8 @@ NFmiPoint NFmiStationView::CalcSymbolDrawedMacroParamSpaceOutGridSize(int theSpa
     const double spaceOutExtraFactor = 1.12; // Pitää vielä harventaa hieman lisää symboli kokoja, jotta menee oikein
     double xRelativeSize = fontFactor.X() * fontXSize * textLength * spaceOutExtraFactor;
     double yRelativeSize = fontFactor.Y() * fontYSize * spaceOutExtraFactor;
-    // 5. Kuinka monta symboli piirtoa mahtuu ruudulle
+	DoSymboldrawDensityAdjustments(xRelativeSize, yRelativeSize);
+	// 5. Kuinka monta symboli piirtoa mahtuu ruudulle
     double xCount = std::floor(itsArea->XYArea().Width() / xRelativeSize);
     double yCount = std::floor(itsArea->XYArea().Height() / yRelativeSize);
 
@@ -1539,11 +1558,11 @@ NFmiPoint NFmiStationView::CalcPixelToGridRatio(NFmiIsoLineData& theIsoLineData,
 }
 
 // 'Probing' macroParam data on alueeltaan hieman pienempi kuin kartan alue, tällöin reunoille ei toivottavasti tule mitään erikoisia
-// arvoja kuten puuttuvaa tai 0:aa. Hilana on 3x3 eli yhdeksän testipistettä, jolla saadaan aavistus, kuinka monta numeroa on luku 
+// arvoja kuten puuttuvaa tai 0:aa. Hilana on 4x4 eli 16 testipistettä, jolla saadaan aavistus, kuinka monta numeroa on luku 
 // tekstissä keskimäärin. Sen avulla voidaan laskea lopullisen harvennetun datan symboli tiheys ruudulla.
 static boost::shared_ptr<NFmiFastQueryInfo> CreateProbingMacroParamData(boost::shared_ptr<NFmiArea> &mapArea)
 {
-    // Lasketaan uudet kulmapisteet kolmanneksen päähän reunoista ja tehdään siihen 3x3 hila.
+    // Lasketaan uudet kulmapisteet kolmanneksen päähän reunoista ja tehdään siihen 4x4 hila.
     if(mapArea)
     {
         auto bottomLeftXyPoint = mapArea->BottomLeft();
@@ -1554,7 +1573,7 @@ static boost::shared_ptr<NFmiFastQueryInfo> CreateProbingMacroParamData(boost::s
         NFmiPoint newBottomLeftXy(bottomLeftXyPoint.X() + xShift, bottomLeftXyPoint.Y() - yShift);
         NFmiPoint newTopRightXy(topRightXyPoint.X() - xShift, topRightXyPoint.Y() + yShift);
         boost::shared_ptr<NFmiArea> newArea(mapArea->CreateNewArea(NFmiRect(newBottomLeftXy, newTopRightXy)));
-        return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(3, 3, NFmiInfoData::kMacroParam, newArea);
+        return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(4, 4, NFmiInfoData::kMacroParam, newArea);
     }
 
     return boost::shared_ptr<NFmiFastQueryInfo>();
