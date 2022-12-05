@@ -55,17 +55,27 @@ protected:
 	DECLARE_MESSAGE_MAP()
 private:
 	void Zoom(void);
+	void Zoom(unsigned int selectedMapViewIndex, BOOL mapViewEnabled);
 	CRect CalcMapArea(void);
 	void MoveMapArea(void);
 	void InitDialogTexts(void);
+	unsigned int GetFirstSelectedMapViewIndex();
+	bool CheckIfMapAreaZoomIsAllowed(unsigned int selectedMapViewIndex);
+	int CalcClientRectTopYPos();
 
 	CView* itsClientView;
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
-	int itsSelectedMapViewDescTopIndex;
+	BOOL fMapView1Enabled;
+	BOOL fMapView2Enabled;
+	BOOL fMapView3Enabled;
 public:
-	afx_msg void OnBnClickedRadioZoomMapView1();
-	afx_msg void OnBnClickedRadioZoomMapView2();
-	afx_msg void OnBnClickedRadioZoomMapView3();
+	afx_msg void OnBnClickedCheckMapView1Enabled();
+	afx_msg void OnBnClickedCheckMapView2Enabled();
+	afx_msg void OnBnClickedCheckMapView3Enabled();
+private:
+	BOOL fAllowMixedMapAreaZoom;
+public:
+	afx_msg void OnBnClickedCheckAllowMixedMapAreaZooming();
 };
 
 //{{AFX_INSERT_LOCATION}}

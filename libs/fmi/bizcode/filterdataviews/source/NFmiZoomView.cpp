@@ -192,8 +192,8 @@ bool NFmiZoomView::LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey
 			itsDragTarget = kCenter; // 1999.08.30/Marko
 		else if(itsDragTarget == kCenter)
 			DrawZoomedAreaRect(thePlace); // this calculates new rect also
+		return true;
 	}
-	return false;
 }
 
 bool NFmiZoomView::RightButtonUp(const NFmiPoint & thePlace, unsigned long theKey)
