@@ -229,12 +229,16 @@ NFmiRect NFmiTempViewDataRects::calcSoundingCurveDataRect(const NFmiRect& rightS
 
 void LogHorizontalEdges(std::string name, const NFmiRect& rect)
 {
-	std::string logMessage = name;
-	logMessage += " left = ";
-	logMessage += std::to_string(rect.Left());
-	logMessage += " right = ";
-	logMessage += std::to_string(rect.Right());
-	CatLog::logMessage(logMessage, CatLog::Severity::Debug, CatLog::Category::Visualization);
+	bool doHorizontalEdgeLogging = false;
+	if(doHorizontalEdgeLogging)
+	{
+		std::string logMessage = name;
+		logMessage += " left = ";
+		logMessage += std::to_string(rect.Left());
+		logMessage += " right = ";
+		logMessage += std::to_string(rect.Right());
+		CatLog::logMessage(logMessage, CatLog::Severity::Debug, CatLog::Category::Visualization);
+	}
 }
 
 // Eri data alueet pit‰‰ laskea oikeassa j‰rjestyksess‰.
