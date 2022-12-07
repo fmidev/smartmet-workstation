@@ -204,7 +204,7 @@ protected:
    NFmiPoint CalcUsedSpaceOutFactors(int theSpaceOutFactor);
    NFmiPoint CalcSymbolDrawedMacroParamSpaceOutGridSize(int theSpaceOutFactor, const NFmiDataMatrix<float> &probingValues);
    bool IsGridDataDrawnWithSpaceOutSymbols();
-   int CalcApproxmationOfDataTextLength(const std::vector<float> &sampleValues);
+   std::pair<int,bool> CalcApproxmationOfDataTextLength(const std::vector<float> &sampleValues);
    std::vector<float> GetSampleDataForDataTextLengthApproxmation();
    NFmiPoint CurrentStationPosition () const;
    const NFmiPoint CurrentLatLon() const;
