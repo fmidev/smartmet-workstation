@@ -471,30 +471,40 @@ static std::vector<float> MatrixToVector(const NFmiDataMatrix<float>& matrix)
 // käy läpi muutaman pisteen datassa ja etsii sieltä edustavimman teksti pituuden
 int NFmiStationView::GetApproxmationOfDataTextLength(std::vector<float> *sampleValues)
 {
-    if(IsSingleSymbolView())
+	if(IsSingleSymbolView())
         return 1;
     else
     {
 		if(itsDrawParam->IsFixedTextSymbolDrawLengthUsed())
 			return itsDrawParam->FixedTextSymbolDrawLength();
         if(sampleValues)
-            return CalcApproxmationOfDataTextLength(*sampleValues);
-		else if(itsDrawParam->DoSparseSymbolVisualization() && itsInfo->IsGrid())
+            return CalcApproxmationOfDataTextLength(*sampleValues).first;
+		else
 		{
-			bool dummyBoolNotUsed = false;
-			NFmiDataMatrix<float> valueMatrix;
-			if(CalcViewFloatValueMatrix(valueMatrix, 0, 0, 0, 0, dummyBoolNotUsed))
+			auto firstApproximation = CalcApproxmationOfDataTextLength(GetSampleDataForDataTextLengthApproxmation());
+			if(itsDrawParam->DoSparseSymbolVisualization() && itsInfo->IsGrid())
 			{
-				std::vector<float> fullFieldValues = ::MatrixToVector(valueMatrix);
-				return CalcApproxmationOfDataTextLength(fullFieldValues);
+				if(!firstApproximation.second)
+				{
+					// Jos alkuarvauksesta ei löytynyt non-missing arvoja, pitää käydä koko data läpi
+					bool dummyBoolNotUsed = false;
+					NFmiDataMatrix<float> valueMatrix;
+					if(CalcViewFloatValueMatrix(valueMatrix, 0, 0, 0, 0, dummyBoolNotUsed))
+					{
+						std::vector<float> fullFieldValues = ::MatrixToVector(valueMatrix);
+						return CalcApproxmationOfDataTextLength(fullFieldValues).first;
+					}
+				}
 			}
+			// Tähän tullaan normaali tilanteessa ja silloin kun sparse-visualisointi tapauksessa löytyi ei-puuttuvia arvoja pienestä näytehilasta
+			return firstApproximation.first;
 		}
-
-		return CalcApproxmationOfDataTextLength(GetSampleDataForDataTextLengthApproxmation());
     }
 }
 
-int NFmiStationView::CalcApproxmationOfDataTextLength(const std::vector<float> &sampleValues)
+// Jos laskuissa saatu non-missing arvoihin perustuva arvio tekstin pituudesta, silloin std::pair:issa palautuu true second:ina.
+// Jos kaikki oli puuttuvaa, palautetaan <1,false>
+std::pair<int, bool> NFmiStationView::CalcApproxmationOfDataTextLength(const std::vector<float> &sampleValues)
 {
     NFmiDataModifierMinMax minmaxCalc;
     NFmiDataModifierAvg avgCalc;
@@ -511,11 +521,11 @@ int NFmiStationView::CalcApproxmationOfDataTextLength(const std::vector<float> &
     if(minmaxCalc.MaxValue() != kFloatMissing)
     {
         if(minmaxCalc.MaxValue() - avgCalc.CalculationResult() >= 4)
-            return boost::math::iround(avgCalc.CalculationResult()); // jos maksimi pituuden ja keski teksti pituuden ero oli 4 tai yli, palauta keskiarvon pyöristys
+            return std::make_pair(boost::math::iround(avgCalc.CalculationResult()), true); // jos maksimi pituuden ja keski teksti pituuden ero oli 4 tai yli, palauta keskiarvon pyöristys
         else // muuten palauta maksimi arvo
-            return static_cast<int>(minmaxCalc.MaxValue());
+            return std::make_pair(static_cast<int>(minmaxCalc.MaxValue()), true);
     }
-    return 1;
+    return std::make_pair(1, false);
 }
 
 std::vector<float> NFmiStationView::GetSampleDataForDataTextLengthApproxmation()
