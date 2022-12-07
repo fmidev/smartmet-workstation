@@ -584,6 +584,7 @@ void CFmiViewMacroDlg::InitMacroListFromDoc(void)
         SetGridRow(currentRowCount++, macro);
     }
     itsGridCtrl.SetSelectedRange(selectedCellRange);
+    itsGridCtrl.Invalidate(TRUE);
 }
 
 static std::string GetColumnText(int theRow, int theColumn, const NFmiLightWeightViewSettingMacro &theListItem, FmiLanguage theLanguage)
