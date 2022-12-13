@@ -438,7 +438,7 @@ bool NFmiCaseStudyDataFile::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, cons
 		if(theDataInfo.IsCombineData())
 		{
 			// Yhdistelmädatoille otetaan yhdistelmän fileFilter
-			itsFileFilter = ::NormalizePathDelimiters(theDataInfo.CombineDataPathAndFileName());
+			itsFileFilter = ::NormalizePathDelimiters(theDataInfo.CombinedResultDataFileFilter());
 		}
 		else
 			itsFileFilter = ::NormalizePathDelimiters(theDataInfo.UsedFileNameFilter(theDataInfoSystem));

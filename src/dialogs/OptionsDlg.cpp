@@ -17,6 +17,7 @@
 #include "Q2ServerInfo.h"
 #include "NFmiParameterInterpolationFixer.h"
 #include "boost\math\special_functions\round.hpp"
+#include "XFolderDialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -60,6 +61,7 @@ COptionsDlg::COptionsDlg(CWnd* pParent /*=NULL*/)
     , itsIsolineMinimumLengthFactor(1)
     , fGenerateTimeCombinationData(FALSE)
     , fUseForcedLinearInterpolationOption(FALSE)
+    , itsLocalCacheDirectoryPath(_T(""))
 {
 	//{{AFX_DATA_INIT(COptionsDlg)
 	fStationPlot = FALSE;
@@ -131,6 +133,8 @@ void COptionsDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Check(pDX, IDC_CHECK_MAKE_COMBINATION_DATA, fGenerateTimeCombinationData);
     DDX_Check(pDX, IDC_CHECK_USE_FORCED_LINEAR_INTERPOLATION_OPTION, fUseForcedLinearInterpolationOption);
     DDX_Text(pDX, IDC_EDIT_HATCHING_EPSILON_FACTOR, itsHatchingToolmasterEpsilonFactor);
+    DDX_Text(pDX, IDC_EDIT_LOCAL_CACHE_DIRECTORY, itsLocalCacheDirectoryPath);
+    DDX_Control(pDX, IDC_STATIC_RESTART_SMARTMET_STR, itsRestartSmartMetStr);
 }
 
 
@@ -140,6 +144,8 @@ BEGIN_MESSAGE_MAP(COptionsDlg, CDialog)
 	//}}AFX_MSG_MAP
 	ON_BN_CLICKED(IDC_CHECK_USE_VIEW_MODE, OnBnClickedCheckUseViewMode)
     ON_WM_CTLCOLOR()
+    ON_BN_CLICKED(IDC_BUTTON_BROWSE_LOCAL_CACHE_DIRECTORY, &COptionsDlg::OnBnClickedButtonBrowseLocalCacheDirectory)
+    ON_EN_CHANGE(IDC_EDIT_LOCAL_CACHE_DIRECTORY, &COptionsDlg::OnEnChangeEditLocalCacheDirectory)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -208,7 +214,8 @@ BOOL COptionsDlg::OnInitDialog()
     fGenerateTimeCombinationData = applicationWinRegistry.GenerateTimeCombinationData();
     fUseForcedLinearInterpolationOption = itsSmartMetDocumentInterface->ParameterInterpolationFixer().doForcedParameterInterpolationChanges();
     itsHatchingToolmasterEpsilonFactor = applicationWinRegistry.HatchingToolmasterEpsilonFactor();
-
+    itsLocalCacheDirectoryPathOriginal = itsLocalCacheDirectoryPath = CA2T(itsSmartMetDocumentInterface->HelpDataInfoSystem()->LocalDataBaseDirectory().c_str());
+    CFmiWin32Helpers::SetDialogItemVisibility(this, IDC_STATIC_RESTART_SMARTMET_STR, false);
 	DisableControls();
 
 	UpdateData(FALSE);
@@ -348,6 +355,8 @@ void COptionsDlg::OnOK()
     itsSmartMetDocumentInterface->ParameterInterpolationFixer().doForcedParameterInterpolationChanges(fUseForcedLinearInterpolationOption == TRUE);
     // HatchingToolmasterEpsilonFactor:in asetus pitää tehdä näin, koska arvo asetetaan tässä useampaan paikkaan.
     itsSmartMetDocumentInterface->SetHatchingToolmasterEpsilonFactor(itsHatchingToolmasterEpsilonFactor);
+    tmpStr = CT2A(itsLocalCacheDirectoryPath);
+    itsSmartMetDocumentInterface->HelpDataInfoSystem()->SetLocalDataBaseDirectory(tmpStr);
 
 	CDialog::OnOK();
 }
@@ -428,6 +437,8 @@ void COptionsDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_FORCED_LINEAR_INTERPOLATION_OPTION, "Use forced linear interpolation option");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COMBINED_MAP_MODE, "Use combined map mode(local + wms)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_HATCHING_EPSILON_FACTOR_TEXT, "Hatching calculation epsilon factor (~1)");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_LOCAL_CACHE_DIRECTORY_STR, "SmartMet's local querydata file cache base directory. Change only if you really know what you are doing!");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_RESTART_SMARTMET_STR, "Directory changed, to apply restart SmartMet");
 }
 
 void COptionsDlg::InitLogLevelComboBox()
@@ -448,5 +459,32 @@ HBRUSH COptionsDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 
     if(pWnd->GetDlgCtrlID() == IDC_STATIC_OPTIONS_CACHE_KEEP_FILES_MAX)
         CFmiWin32Helpers::SetErrorColorForTextControl(pDC, false);
+    if(pWnd->GetDlgCtrlID() == IDC_STATIC_RESTART_SMARTMET_STR)
+        CFmiWin32Helpers::SetErrorColorForTextControl(pDC, false);
     return hbr;
+}
+
+void COptionsDlg::OnBnClickedButtonBrowseLocalCacheDirectory()
+{
+    CXFolderDialog dlg(itsLocalCacheDirectoryPath);
+    dlg.SetTitle(CA2T(::GetDictionaryString("Select folder").c_str()));
+    if(dlg.DoModal() == IDOK)
+    {
+        itsLocalCacheDirectoryPath = dlg.GetPath();
+        AdjustRestartTextControl();
+        UpdateData(FALSE);
+    }
+}
+
+void COptionsDlg::OnEnChangeEditLocalCacheDirectory()
+{
+    UpdateData(TRUE);
+    AdjustRestartTextControl();
+}
+
+void COptionsDlg::AdjustRestartTextControl()
+{
+    fLocalCacheDirectoryChanged = itsLocalCacheDirectoryPath != itsLocalCacheDirectoryPathOriginal;
+    CFmiWin32Helpers::SetDialogItemVisibility(this, IDC_STATIC_RESTART_SMARTMET_STR, fLocalCacheDirectoryChanged);
+    Invalidate();
 }
