@@ -153,7 +153,7 @@ static int ReadData(NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem 
 	{
 		string fileFilter(theDataInfo.UsedFileNameFilter(theHelpDataSystem));
 		if(theDataInfo.IsCombineData())
-			fileFilter = theDataInfo.CombineDataPathAndFileName(); // jos kyse yhdistelem‰ll‰ rakennetusta datasta, k‰ytet‰‰n t‰t‰ lataamaan data (FileNameFilter:in avulla haettiin koottavat tiedostot)
+			fileFilter = theDataInfo.CombinedResultDataFileFilter(); // jos kyse yhdistelem‰ll‰ rakennetusta datasta, k‰ytet‰‰n t‰t‰ lataamaan data (FileNameFilter:in avulla haettiin koottavat tiedostot)
 		time_t timeStamp = 0;
 		time_t latestTimeStamp = theDataInfo.LatestFileTimeStamp();
 		string latestFileName;

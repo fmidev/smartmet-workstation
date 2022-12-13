@@ -84,9 +84,9 @@ struct CachedDataFileInfo
 static void MakeCacheDirectories(void)
 {
 	// Make sure that cache and tmp directories exist
-	NFmiFileSystem::CreateDirectory(gWorkerHelpDataSystem.CacheDirectory());
-	NFmiFileSystem::CreateDirectory(gWorkerHelpDataSystem.CacheTmpDirectory());
-	NFmiFileSystem::CreateDirectory(gWorkerHelpDataSystem.CachePartialDataDirectory());
+	NFmiFileSystem::CreateDirectory(gWorkerHelpDataSystem.LocalDataLocalDirectory());
+	NFmiFileSystem::CreateDirectory(gWorkerHelpDataSystem.LocalDataTmpDirectory());
+	NFmiFileSystem::CreateDirectory(gWorkerHelpDataSystem.LocalDataPartialDirectory());
 }
 
 void CFmiQueryDataCacheLoaderThread::UpdateSettings(NFmiHelpDataInfoSystem &theHelpDataSystem)
@@ -498,7 +498,7 @@ static std::string MakeFinalTmpFileName(const CachedDataFileInfo &theCachedDataF
 {
     NFmiFileString fileStr = fGetPackedName ? NFmiFileString(theCachedDataFileInfo.itsTotalServerFileName) : ::MakeFileStringWithoutCompressionFileExtension(theCachedDataFileInfo);
 	NFmiString fileNameStr = fileStr.FileName();
-	std::string totalCacheTmpFileName = theHelpDataSystem.CacheTmpDirectory();
+	std::string totalCacheTmpFileName = theHelpDataSystem.LocalDataTmpDirectory();
     if(!theCachedDataFileInfo.fFilePacked)
     {
         // Etu TMP-liite laitetaan vain ei pakattuihin datoihin.
@@ -789,11 +789,11 @@ static void CleanCache(void)
         NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
         // 1. siivotaan ensin pois kaikki yli halutun aikamääreen olevat tiedostot
         if(gWorkerHelpDataSystem.CacheFileKeepMaxDays() > 0)
-            ::CleanDirectory(gWorkerHelpDataSystem.CacheDirectory(), gWorkerHelpDataSystem.CacheFileKeepMaxDays() * 24);
+            ::CleanDirectory(gWorkerHelpDataSystem.LocalDataLocalDirectory(), gWorkerHelpDataSystem.CacheFileKeepMaxDays() * 24);
         // 2. siivotaan tmp-hakemistosta kaikki yli puoli tuntia vanhemmat tiedostot (jos ne eivät lukossa), oletetaan
         // että yhden tiedoston kopiointi ei kestä yli puolta tuntia, vaan kyse on jostain virheestä.
         NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-        ::CleanDirectory(gWorkerHelpDataSystem.CacheTmpDirectory(), 0.5);
+        ::CleanDirectory(gWorkerHelpDataSystem.LocalDataTmpDirectory(), 0.5);
 
         auto& caseStudySystem = SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->CaseStudySystem();
 

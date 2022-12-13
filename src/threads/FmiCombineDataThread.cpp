@@ -187,7 +187,7 @@ static void MakeCombineDataInfos(const NFmiHelpDataInfoSystem &theHelpDataInfoSy
 			// jos kyseess‰ oli datatiedostoista koottava data, lis‰t‰‰n se listaan
 			DataCombineInfo dataCombineInfo;
 			dataCombineInfo.itsMaximumTimeSteps = helpDataInfo.CombineDataMaxTimeSteps();
-			dataCombineInfo.itsTargetFileFilter = helpDataInfo.CombineDataPathAndFileName();
+			dataCombineInfo.itsTargetFileFilter = helpDataInfo.CombinedResultDataFileFilter();
 			dataCombineInfo.itsTargetDirectory = ::GetDirectory(dataCombineInfo.itsTargetFileFilter);
 			dataCombineInfo.itsSourceFileFilter = helpDataInfo.UsedFileNameFilter(theHelpDataInfoSystem);
 			dataCombineInfo.itsSourceDirectory = ::GetDirectory(dataCombineInfo.itsSourceFileFilter);

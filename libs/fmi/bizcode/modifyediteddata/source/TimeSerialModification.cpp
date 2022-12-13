@@ -1932,20 +1932,6 @@ static bool StoreDataToDataBase(TimeSerialModificationDataInterface &theAdapter,
     return status;
 }
 
-// tarvittaessa muuttaa annetun tiedosto polku+nimi/patternin siten että polku osoittaa cacheen...
-static std::string MakeCacheFileName(TimeSerialModificationDataInterface &theAdapter, const std::string &theFileName)
-{
-	if(theAdapter.HelpDataInfoSystem()->UseQueryDataCache())
-	{
-		NFmiFileString fileStr(theFileName);
-		std::string cacheFileName(theAdapter.HelpDataInfoSystem()->CacheDirectory());
-		cacheFileName += static_cast<char*>(fileStr.FileName());
-		return cacheFileName;
-	}
-	else
-		return theFileName; // jos cache ei ollut käytössä, palautetaan vain annettu stringi
-}
-
 static std::string GetViewModeSpeedLoadFile(TimeSerialModificationDataInterface &theAdapter, int thePrimaryProducer, NFmiDataLoadingInfo* theLoadingInfo)
 {
 	std::string apuFileFilter;
@@ -1964,7 +1950,6 @@ static std::string GetViewModeSpeedLoadFile(TimeSerialModificationDataInterface 
 		apuFileFilter = theLoadingInfo->CreateDataBaseInFileNameFilter(1);
 		break;
 	}
-	apuFileFilter = ::MakeCacheFileName(theAdapter, apuFileFilter);
 	std::string latestFileName;
 	/* time_t timeStamp = */ NFmiFileSystem::FindFile(apuFileFilter, true, &latestFileName);
 	std::string wholeFileName;
@@ -1984,7 +1969,6 @@ static std::string GetViewModeSpeedLoadFile(TimeSerialModificationDataInterface 
 		break;
 	}
 	wholeFileName += latestFileName;
-	wholeFileName = ::MakeCacheFileName(theAdapter, wholeFileName);
 	return wholeFileName;
 }
 

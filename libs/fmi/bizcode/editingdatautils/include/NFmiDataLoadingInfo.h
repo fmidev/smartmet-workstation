@@ -100,7 +100,6 @@ class NFmiDataLoadingInfo
 	void DataBaseInPath(const NFmiString &newValue);
 	const NFmiString& DataBaseOutPath(void){return itsDataBaseOutPath;}
 	void DataBaseOutPath(const NFmiString& theDataBaseOutPath){itsDataBaseOutPath = theDataBaseOutPath;}
-	NFmiString ErrorFilePath(void) {return itsErrorFilePath;}
 	
 	NFmiSortedStringList& HirlamFileNameList(void){return itsHirlamFileNameList;}
 	void HirlamFileNameList(NFmiSortedStringList& theHirlamFileNameList){itsHirlamFileNameList = theHirlamFileNameList;}
@@ -166,7 +165,7 @@ class NFmiDataLoadingInfo
 	/**
 	* Initializes instance from global settings.
 	*/
-	void Configure(const std::string& theAbsoluteWorkingDirectory);
+	void Configure(const std::string& theAbsoluteWorkingDirectory, const std::string& theCacheBaseDir, const std::string &theCacheLocalDir, bool useDataCache);
 	NFmiDataLoadingInfo& operator=(NFmiDataLoadingInfo& theInfo);
 
 private:	
@@ -202,7 +201,6 @@ private:
 									  // lisäksi In nimeen voidaan laittaa tiedoston filtteri nimi kokonaisuudessaa, koska aluetoimiston tietojen avulla ei voi rakentaa nimi filtteriä oikein
 	NFmiString itsDataBaseFileNameOut;
 		
-	NFmiString itsErrorFilePath;
 	NFmiString itsWorkingPath;
 	NFmiString itsDataBaseInPath;
 	NFmiString itsDataBaseOutPath;
