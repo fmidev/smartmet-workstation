@@ -34,7 +34,7 @@ class NFmiHelpDataInfo
 
   NFmiHelpDataInfo &operator=(const NFmiHelpDataInfo &theOther);
 
-  bool IsCombineData() const { return itsCombineDataPathAndFileName.empty() == false; }
+  bool IsCombineData() const { return itsCombineDataMaxTimeSteps > 0; }
   const std::string &Name() const { return itsName; }
   void Name(const std::string &newValue) { itsName = newValue; }
   const std::string &FileNameFilter() const { return itsFileNameFilter; }
@@ -72,16 +72,17 @@ class NFmiHelpDataInfo
   }
   const std::string &ReportNewDataLabel() const { return itsReportNewDataLabel; }
   void ReportNewDataLabel(const std::string &newValue) { itsReportNewDataLabel = newValue; }
-  const std::string &CombineDataPathAndFileName() const
+  const std::string &CombinedResultDataFileFilter() const
   {
-    return itsCombineDataPathAndFileName;
+    return itsCombinedResultDataFileFilter;
   }
-  void CombineDataPathAndFileName(const std::string &newValue)
+  void CombinedResultDataFileFilter(const std::string &newFileFilter) 
   {
-    itsCombineDataPathAndFileName = newValue;
+    itsCombinedResultDataFileFilter = newFileFilter;
   }
+  const std::string &CombineDataErrorMessage() const { return itsCombineDataErrorMessage; }
   int CombineDataMaxTimeSteps() const { return itsCombineDataMaxTimeSteps; }
-  void CombineDataMaxTimeSteps(int newValue) { itsCombineDataMaxTimeSteps = newValue; }
+  void SetCombineDataMaxTimeSteps(int newValue, const NFmiHelpDataInfoSystem &theHelpDataSystem);
   bool MakeSoundingIndexData() const { return fMakeSoundingIndexData; }
   void MakeSoundingIndexData(bool newValue) { fMakeSoundingIndexData = newValue; }
   bool ForceFileFilterName() const { return fForceFileFilterName; }
@@ -110,7 +111,6 @@ class NFmiHelpDataInfo
   std::string GetCleanedName() const;
   const std::string& RequiredGroundDataFileFilterForSoundingIndexCalculations() const { return itsRequiredGroundDataFileFilterForSoundingIndexCalculations; }
   void RequiredGroundDataFileFilterForSoundingIndexCalculations(const std::string &newValue) { itsRequiredGroundDataFileFilterForSoundingIndexCalculations = newValue; }
-  void FixCombinedDataPath(const std::string &absoluteControlBasePath);
   bool AllowCombiningToSurfaceDataInSoundingView() const { return fAllowCombiningToSurfaceDataInSoundingView; }
   void AllowCombiningToSurfaceDataInSoundingView(bool newValue) { fAllowCombiningToSurfaceDataInSoundingView = newValue; }
 
@@ -160,12 +160,17 @@ class NFmiHelpDataInfo
   int itsReportNewDataTimeStepInMinutes = 0;  
   // Jos halutaan tietty teksti viestiin, se lisätään tähän.
   std::string itsReportNewDataLabel;  
-  // jos tämä on määritelty, tehdään fileNameFilteristä (hakemistosta) löytyvistä datoista yhdistelmä
-  // data ja se talletetaan tähän hakemistoon annetulla nimellä ja aikaleimalla (nimessä tähden tilalle laitetaan aikaleima)
-  std::string itsCombineDataPathAndFileName;  
-
-  // jos ei haluaa rajoittaa kuinka iso yhdistelmä datasta tehdään, tämän voi määritellä
+  // Jos haluaa generoida partial_data:sta yhdistelmädatan, pitää tälle olla määriteltynä joku positiivinen kokonainluku
   int itsCombineDataMaxTimeSteps = 0;  
+  // Jos itsCombineDataMaxTimeSteps on määritelty, tehdään tähän tulosdatan filefilter,
+  // joka talletetaan cache hakemistoon ja originaalista datan fileFilteristä otetaan kaikki,
+  // vaihdetaan partial_data kohta vain cache:ksi, esim.
+  // \smartmet\wrk\data\partial_data\mesan\*_mesan_skandi.sqd 
+  // =>
+  // \smartmet\wrk\data\cache\mesan\*_mesan_skandi.sqd
+  std::string itsCombinedResultDataFileFilter;
+  // Jos tulee ongelmia combinedata juttujen kanssa, laitetaan virheviesti 
+  std::string itsCombineDataErrorMessage;
   // jos tämä on true, SmartMet tekee datasta oman sounding-index datan
   bool fMakeSoundingIndexData = false;  
   // Halutessa voidaan vaatia, että kun tehdään SI dataa, pitää löytyä siihen sopiva maanpintadata:
@@ -209,9 +214,11 @@ class NFmiHelpDataInfoSystem
   NFmiHelpDataInfoSystem()
       : itsDynamicHelpDataInfos(),
         itsStaticHelpDataInfos(),
-        itsCacheDirectory(),
-        itsCacheTmpDirectory(),
-        itsCachePartialDataDirectory(),
+        itsLocalDataBaseDirectory(),
+        itsLocalDataLocalDirectory(),
+        itsLocalDataTmpDirectory(),
+        itsLocalDataPartialDirectory(),
+        itsLocalDataCacheDirectory(),
         itsCacheTmpFileNameFix(),
         fUseQueryDataCache(false),
         fDoCleanCache(false),
@@ -252,10 +259,12 @@ class NFmiHelpDataInfoSystem
     return itsStaticHelpDataInfos;
   }
 
-  const std::string &CacheDirectory() const { return itsCacheDirectory; }
-  void CacheDirectory(const std::string &newValue) { itsCacheDirectory = newValue; }
-  const std::string &CacheTmpDirectory() const { return itsCacheTmpDirectory; }
-  void CacheTmpDirectory(const std::string &newValue) { itsCacheTmpDirectory = newValue; }
+  const std::string &LocalDataBaseDirectory() const { return itsLocalDataBaseDirectory; }
+  void SetLocalDataBaseDirectory(const std::string &newBaseDirectory);
+  const std::string &LocalDataLocalDirectory() const { return itsLocalDataLocalDirectory; }
+  const std::string &LocalDataTmpDirectory() const { return itsLocalDataTmpDirectory; }
+  const std::string &LocalDataPartialDirectory() const { return itsLocalDataPartialDirectory; }
+  const std::string &LocalDataCacheDirectory() const { return itsLocalDataCacheDirectory; }
   const std::string &CacheTmpFileNameFix() const { return itsCacheTmpFileNameFix; }
   void CacheTmpFileNameFix(const std::string &newValue) { itsCacheTmpFileNameFix = newValue; }
   bool UseQueryDataCache() const { return fUseQueryDataCache; }
@@ -272,17 +281,11 @@ class NFmiHelpDataInfoSystem
   void CacheLargeFileSizeMB(double newValue) { itsCacheLargeFileSizeMB = newValue; }
   double CacheMaximumFileSizeMB() const { return itsCacheMaximumFileSizeMB; }
   void CacheMaximumFileSizeMB(double newValue) { itsCacheMaximumFileSizeMB = newValue; }
-  const std::string &CachePartialDataDirectory() const { return itsCachePartialDataDirectory; }
-  void CachePartialDataDirectory(const std::string &newValue)
-  {
-    itsCachePartialDataDirectory = newValue;
-  }
 
  private:
   void InitDataType(const std::string &theBaseKey,
                     std::vector<NFmiHelpDataInfo> &theHelpDataInfos,
                     bool fStaticData);
-  void FixCombinedDataPaths(const std::string &absoluteControlBasePath);
 
   std::vector<NFmiHelpDataInfo> itsDynamicHelpDataInfos;  // tähän tulee jatkuvasti päivitettävät
                                                             // datat kuten havainnot, tutka ja
@@ -294,32 +297,46 @@ class NFmiHelpDataInfoSystem
   // SmartMet voidaan laittaa käyttämään queryData cachetusta, jolloin verkkopalvelimelta
   // luetaan data määrättyyn cache-hakemistoon omalle kovalevylle. Näin voidaan
   // välttää mahdolliset verkko-ongelmat memory-mapattujen dataojen kanssa.
-  std::string itsCacheDirectory;     // qdatat kopioidaan haluttaessa tähän hakemistoon
-  std::string itsCacheTmpDirectory;  // qdatat kopioidaan ensin tähän hakemistoon tmp-nimellä ja
-                                     // lopuksi renametaan
-                                     // oiekaan hakemistoon oikealla nimellä
-  // HUOM!! että tmp-file rename toimisi ns 'atomisesti', on hakemistojen oltava samalla
-  // levypartitiolla!!!
-  std::string itsCachePartialDataDirectory;  // combineData-threadin käyttämät datat kopioidaan
-                                             // tänne cacheen
-  std::string
-      itsCacheTmpFileNameFix;  // tämä name fix lisätään tmp tiedosto nimen alkuun ja loppuun
-  bool fUseQueryDataCache;     // onko cachetus systeemi päällä vai ei?
-  bool fDoCleanCache;          // siivotaanko cachea vai ei
-  float itsCacheFileKeepMaxDays;  // kuinka vanhat tiedostot ainakin siivotaan pois (esim. 1.5 on
+  // 0. AbsoluteControlBasePath:in avulla korjataan konfiguraatioista luettuja 
+  // vaillinaisia (ei absoluuttisia) tai ilman asemakirjainta (A: ... Z:) tulevia polkuja
+  std::string itsAbsoluteControlBasePath;
+  // 1. Yksi ja ainoa perus hakemisto, minkä kautta säädetään kaikkia muita hakemistoja kerralla.
+  // Arvo voi olla esim. "\smartmet\wrk\data\"
+  std::string itsLocalDataBaseDirectory; 
+  // 2. Hakemisto johon kaikki 'normi' datat talletetaan 
+  // itsLocalDataBaseDirectory + "local\"
+  std::string itsLocalDataLocalDirectory;
+  // 3. Hakemisto johon datoja kopioidaan väliaikaisesti verkosta
+  // itsLocalDataBaseDirectory + "tmp\"
+  std::string itsLocalDataTmpDirectory; 
+  // 4. Hakemisto johon kopioidaan aika-askel datatiedostot, joista tehdään yhdistelmä datoja
+  // itsLocalDataBaseDirectory + "partial_data\"
+  std::string itsLocalDataPartialDirectory;
+  // 5. Hakemisto, jonne talletetaan mahdolliset yhdistelmädatat ja leveldatoista lasketut soundingindexdatat
+  // itsLocalDataBaseDirectory + "cache\"
+  std::string itsLocalDataCacheDirectory;
+  // Tämä name fix lisätään tmp tiedosto nimen alkuun ja loppuun, jotta tiedetään että kyse on keskeneräisestä datan kopioinnista
+  std::string itsCacheTmpFileNameFix;
+  // Onko cachetus systeemi päällä vai ei?
+  bool fUseQueryDataCache;
+  // Siivotaanko cachea vai ei
+  bool fDoCleanCache;
+  // Kuinka vanhat tiedostot ainakin siivotaan pois (esim. 1.5 on
   // 1.5 päivää eli 36 tuntia) jos luku on <= 0 ei tätä käytetä
-  int itsCacheMaxFilesPerPattern;  // kuinka monta tiedostoa maksimissaan pidetään kutakin tiedosto
-                                   // patternia kohden, jos luku <= 0, ei tätä käytetä
-
+  float itsCacheFileKeepMaxDays;
+  // Kuinka monta tiedostoa maksimissaan pidetään kutakin tiedosto
+  // patternia kohden, jos luku <= 0, ei tätä käytetä
   // medium ja large koot jakavat cachetettavat qdatat kolmeen osaan:
   // 1. pienet tiedostot 0 <= size < medium
   // 2. keskikokoiset tiedostot medium <= size < large
   // 3. isot tiedostot large <= size < ääretön
   // Jokaiselle kokoluokalle tehdään SmartMetissa oma datan kopiointi threadi, näin isot tiedostot
   // eivät jää blokkaamaan pinempien tiedostojen kopiointia.
+  int itsCacheMaxFilesPerPattern;  
   double itsCacheMediumFileSizeMB;
   double itsCacheLargeFileSizeMB;
-  double itsCacheMaximumFileSizeMB;  // tätä isompia tiedostoja ei cache suostu siirtämään
+  // Tätä isompia tiedostoja ei cache suostu siirtämään
+  double itsCacheMaximumFileSizeMB;
 
   std::string itsBaseNameSpace;
 };
