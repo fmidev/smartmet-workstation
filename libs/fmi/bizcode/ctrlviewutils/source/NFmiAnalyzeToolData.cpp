@@ -239,7 +239,7 @@ void NFmiAnalyzeToolData::SeekPotentialProducersFileFilters(const NFmiHelpDataIn
 			if(dynamicHelpDataInfos[i].IsCombineData() == false)
 				itsPotentialProducersFileFilters.push_back(dynamicHelpDataInfos[i].UsedFileNameFilter(theHelpDataInfoSystem));
 			else
-				itsPotentialProducersFileFilters.push_back(dynamicHelpDataInfos[i].CombineDataPathAndFileName());
+				itsPotentialProducersFileFilters.push_back(dynamicHelpDataInfos[i].CombinedResultDataFileFilter());
 		}
 	}
 }

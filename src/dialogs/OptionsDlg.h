@@ -58,9 +58,12 @@ private:
 	void InitDialogTexts(void);
     void InitLogLevelComboBox();
     void SetLogLevelOnOk();
+	void AdjustRestartTextControl();
 public:
 	afx_msg void OnBnClickedCheckUseViewMode();
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+	afx_msg void OnBnClickedButtonBrowseLocalCacheDirectory();
+	afx_msg void OnEnChangeEditLocalCacheDirectory();
 private:
     CString itsQ2ServerUrlStrU_;
     CString itsQ3ServerUrlStrU_;
@@ -84,7 +87,7 @@ private:
 	int itsSatelDataUpdateFrequenceInMinutes;
 	BOOL fAllowSending;
     CString itsSysInfoDbUrlU_;
-    // Lataako Smartmet automaattisesti querydataa lokaaliincacheen ja siivoaa sitä
+    // Lataako Smartmet automaattisesti querydataa lokaaliin cacheen ja siivoaa sitä
     BOOL fAutoLoadNewCacheData;
     double itsLocationFinderTimeoutInSeconds;
     BOOL fShowLastSendTimeOnMapView;
@@ -95,6 +98,10 @@ private:
     BOOL fGenerateTimeCombinationData;
     BOOL fUseForcedLinearInterpolationOption;
 	float itsHatchingToolmasterEpsilonFactor = 1.f;
+	CString itsLocalCacheDirectoryPathOriginal;
+	CString itsLocalCacheDirectoryPath;
+	bool fLocalCacheDirectoryChanged = false;
+	CStatic itsRestartSmartMetStr;
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -102,7 +102,6 @@ NFmiDataLoadingInfo& NFmiDataLoadingInfo::operator=(NFmiDataLoadingInfo& theInfo
 		itsWorkingFileName = theInfo.itsWorkingFileName;
 		itsDataBaseFileNameIn = theInfo.itsDataBaseFileNameIn;
 		itsDataBaseFileNameOut = theInfo.itsDataBaseFileNameOut;
-		itsErrorFilePath = theInfo.itsErrorFilePath;
 		itsWorkingPath = theInfo.itsWorkingPath;
 		itsDataBaseInPath = theInfo.itsDataBaseInPath;
 		itsDataBaseOutPath = theInfo.itsDataBaseOutPath;
@@ -203,10 +202,8 @@ void NFmiDataLoadingInfo::InitFileNameLists()
 #define CONFIG_DATALOADINGINFO_DATABASEFILENAMEIN "MetEditor::DataLoadingInfo::DataBaseFileNameIn"
 
 #define CONFIG_DATALOADINGINFO_DATABASEFILENAMEOUT "MetEditor::DataLoadingInfo::DataBaseFileNameOut"
-#define CONFIG_DATALOADINGINFO_WORKINGPATH "MetEditor::DataLoadingInfo::WorkingPath"
 #define CONFIG_DATALOADINGINFO_DATABASEINPATH "MetEditor::DataLoadingInfo::DataBaseInPath"
 #define CONFIG_DATALOADINGINFO_DATABASEOUTPATH "MetEditor::DataLoadingInfo::DataBaseOutPath"
-#define CONFIG_DATALOADINGINFO_ERRORFILEPATH "MetEditor::DataLoadingInfo::ErrorFilePath"
 
 #define CONFIG_DATALOADINGINFO_DATALENGTHINHOURS "MetEditor::DataLoadingInfo::DataLengthInHours"
 
@@ -226,7 +223,7 @@ static bool IsWallClockUsedWithTimeStamp(const std::string & theUsedTimeStampTem
     return pos != std::string::npos;
 }
 
-void NFmiDataLoadingInfo::Configure(const std::string& theAbsoluteWorkingDirectory)
+void NFmiDataLoadingInfo::Configure(const std::string& theAbsoluteWorkingDirectory, const std::string& theCacheBaseDir, const std::string& theCacheLocalDir, bool useDataCache)
 {
 	std::string temp;
 	NFmiString producerName;
@@ -265,9 +262,6 @@ void NFmiDataLoadingInfo::Configure(const std::string& theAbsoluteWorkingDirecto
 	temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_DATABASEFILENAMEOUT);
 	itsDataBaseFileNameOut = NFmiString(temp);
 
-	temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_WORKINGPATH);
-	itsWorkingPath = NFmiString(temp);
-
 	temp = NFmiSettings::Require<std::string>(CONFIG_DATALOADINGINFO_DATABASEINPATH);
 	itsDataBaseInPath = NFmiString(temp);
 
@@ -285,13 +279,9 @@ void NFmiDataLoadingInfo::Configure(const std::string& theAbsoluteWorkingDirecto
 	// NFmiMetEditorModeDataWCTR knows how to initialize itself from the global settings.
 	itsMetEditorModeDataWCTR->Configure();
 
-	// HUOM! t‰ss‰ cache-hakemiston alustuksessa on ik‰v‰‰ kaksois koodia, t‰m‰ on jo tehty
-	// NFmiHelpDataInfoSystem::InitFromSettings -metodissa, mutta pika-virityksen‰ kopsasin koodin t‰nne.
-	std::string baseNameSpaceStr("MetEditor::HelpData");
-	std::string tmpCacheDir = NFmiSettings::Require<std::string>(baseNameSpaceStr + "::CacheDirectory");
-	::FixPathEndWithSeparator(tmpCacheDir);
-	itsCacheDir = tmpCacheDir;
-	fUseDataCache = NFmiSettings::Require<bool>(baseNameSpaceStr + "::UseQueryDataCache");
+	itsCacheDir = theCacheLocalDir;
+	itsWorkingPath = theCacheBaseDir + "edited\\";
+	fUseDataCache = useDataCache;
 	NormalizeAllPathDelimiters(theAbsoluteWorkingDirectory); // t‰m‰ pit‰‰ tehd‰ ensin, ett‰ kenoviivat on oikein
 	itsModel1CacheFilePattern = MakeCacheFilePattern(itsModel1FilePattern);
 	itsModel2CacheFilePattern = MakeCacheFilePattern(itsModel2FilePattern);
@@ -328,7 +318,6 @@ void NFmiDataLoadingInfo::NormalizeAllPathDelimiters(const std::string& theAbsol
 	itsWorkingPath = ::DoTotalPathFix(itsWorkingPath, theAbsoluteWorkingDirectory);
 	itsDataBaseInPath = ::DoTotalPathFix(itsDataBaseInPath, theAbsoluteWorkingDirectory);
 	itsDataBaseOutPath = ::DoTotalPathFix(itsDataBaseOutPath, theAbsoluteWorkingDirectory);
-	itsErrorFilePath = ::DoTotalPathFix(itsErrorFilePath, theAbsoluteWorkingDirectory);
 	itsCacheDir = ::DoTotalPathFix(itsCacheDir, theAbsoluteWorkingDirectory);
 }
 
