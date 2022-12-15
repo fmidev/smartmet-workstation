@@ -48,7 +48,6 @@ public:
 	void LoadViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMacro);
 	void UpdateMapView(unsigned int theDescTopIndex);
 	void ActivateZoomDialog(int theWantedDescTopIndex);
-	CPPToolTip& GetToolTipControl(){return *m_tooltip;};
 	void OldWayPrintUpdate(void); // tätä kutsutaan yleisessä printtaus funktiossa
 	void SetNotificationMessage(const std::string &theNotificationMsgStr, const std::string &theNotificationTitle, int theStyle, int theTimeout, bool fNoSound);
 	void PutWarningFlagTimerOn(void);
@@ -212,11 +211,8 @@ public:
 	afx_msg void OnAcceleratorChangeAllModelDataOnRowToPreviousModelRun();
 	afx_msg void OnAcceleratorChangeAllModelDataOnRowToNextModelRun();
 	afx_msg void OnAcceleratorMapViewRangeMeterModeToggle();
-	afx_msg void OnAcceleratorMapViewRangeMeterIncreaseRange();
-	afx_msg void OnAcceleratorMapViewRangeMeterDecreaseRange();
-	afx_msg void OnAcceleratorMapViewRangeMeterIncrementModeToggle();
 	afx_msg void OnAcceleratorMapViewRangeMeterColorToggle();
-	afx_msg void OnAcceleratorMapViewRangeMeterFixedLocationModeToggle();
+	afx_msg void OnAcceleratorMapViewRangeMeterLockModeToggle();
 };
 
 #ifndef _DEBUG  // debug version in SmartMetView.cpp

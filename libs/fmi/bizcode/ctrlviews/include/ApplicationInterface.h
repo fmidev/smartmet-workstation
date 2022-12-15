@@ -80,6 +80,7 @@ public:
     virtual void OpenSideMapView(unsigned int theMapViewDescTopIndex) = 0;
     virtual void OpenSmarttoolsDialog() = 0;
     virtual void OpenViewMacroDialog() = 0;
+    virtual void SetAllMapViewTooltipDelays(bool doRestoreAction, int delayInMilliSeconds) = 0;
 
 private:
     void AddToHatchingToolmasterEpsilonFactor(float addedValue);

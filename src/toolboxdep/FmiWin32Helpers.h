@@ -46,6 +46,7 @@ namespace CFmiWin32Helpers
 	// tooltip/statusbar string helper
 	void SetDescTopGraphicalInfo(bool mapViewCase, CtrlViewUtils::GraphicalInfo &theGraphicalInfo, CDC* pDC, const NFmiPoint &theViewGridSizeInPixels, double theScaleRatio, bool forceInitialization = false, const NFmiPoint *theActualSingleViewSizeInMilliMeters = nullptr);
 	void InitializeCPPTooltip(CWnd *theParentView, CPPToolTip &theTooltip, int theTooltipID, int maxWidthInPixels);
+	void SetTooltipDelay(CPPToolTip& theTooltip, bool doRestoreAction, int delayInMilliSeconds);
 	HBITMAP GetBitmapFromResources(DWORD dwID);
 
 	// printtaus apuja

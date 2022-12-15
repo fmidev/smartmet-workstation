@@ -3790,3 +3790,20 @@ void CSmartMetDoc::OnEditVisualizationsettings()
 
 	itsData->LogMessage("Visualization Settings dialog on", CatLog::Severity::Info, CatLog::Category::Operational);
 }
+
+template<typename MapView>
+void SetTooltipDelay(MapView *mapView, bool doRestoreAction, int delayInMilliSeconds)
+{
+	if(mapView)
+	{
+		CFmiWin32Helpers::SetTooltipDelay(*(mapView->ToolTipControl()), doRestoreAction, delayInMilliSeconds);
+	}
+}
+
+
+void CSmartMetDoc::SetAllMapViewTooltipDelays(bool doRestoreAction, int delayInMilliSeconds)
+{
+	SetTooltipDelay(ApplicationInterface::GetSmartMetView(), doRestoreAction, delayInMilliSeconds);
+	SetTooltipDelay(itsExtraMapViewDlg1->MapView(), doRestoreAction, delayInMilliSeconds);
+	SetTooltipDelay(itsExtraMapViewDlg2->MapView(), doRestoreAction, delayInMilliSeconds);
+}

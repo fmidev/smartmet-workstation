@@ -329,12 +329,15 @@ bool CFmiWin32Helpers::BitmapToPrinter(CDC *thePrinterDC // printterin device co
 	return status;
 }
 
+const DWORD gTooltipTimeAutopopInMilliSeconds = 30000;
+const DWORD gTooltipTimeInitialInMilliSeconds = 500;
+
 void CFmiWin32Helpers::InitializeCPPTooltip(CWnd *theParentView, CPPToolTip &theTooltip, int theTooltipID, int maxWidthInPixels)
 {
 	theTooltip.Create(theParentView);
 	theTooltip.SetNotify();
-	theTooltip.SetDelayTime(PPTOOLTIP_TIME_AUTOPOP, 30000); // kuinka kauan tooltippi viipyy, jos kursoria ei liikuteta [ms]
-	theTooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 500); // kuinka nopeasti tooltip ilmestyy n‰kyviin, jos kursoria ei liikuteta [ms]
+	theTooltip.SetDelayTime(PPTOOLTIP_TIME_AUTOPOP, gTooltipTimeAutopopInMilliSeconds); // kuinka kauan tooltippi viipyy, jos kursoria ei liikuteta [ms]
+	theTooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, gTooltipTimeInitialInMilliSeconds); // kuinka nopeasti tooltip ilmestyy n‰kyviin, jos kursoria ei liikuteta [ms]
 
 	CRect rc;
     theParentView->GetClientRect(&rc);
@@ -352,6 +355,13 @@ void CFmiWin32Helpers::InitializeCPPTooltip(CWnd *theParentView, CPPToolTip &the
 	theTooltip.SetTransparency(20); 
      // Max leveys esim. 400 pikseli‰, jonka j‰lkeen word-wrap p‰‰lle
 	theTooltip.SetMaxTipWidth(maxWidthInPixels);
+}
+
+void CFmiWin32Helpers::SetTooltipDelay(CPPToolTip& theTooltip, bool doRestoreAction, int delayInMilliSeconds)
+{
+    // Joko palautetaan originaal idelay tai asetetaan uusi arvo
+    DWORD usedDelay = doRestoreAction ? gTooltipTimeInitialInMilliSeconds : delayInMilliSeconds;
+    theTooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, usedDelay);
 }
 
 HBITMAP CFmiWin32Helpers::GetBitmapFromResources(DWORD dwID)

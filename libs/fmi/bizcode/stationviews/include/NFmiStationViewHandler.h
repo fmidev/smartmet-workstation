@@ -214,11 +214,12 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	void SetThisAsActiveViewRow() const;
 	bool IsThisActiveViewRow() const;
 	void DrawMapViewRangeMeterData();
-	bool DoRangeMeterMouseWheelAdjustRangeChecks(short theDelta);
-	bool DoRangeMeterMouseWheelAdjustIncrementChecks(short theDelta);
 	std::vector<NFmiPoint> ConvertLatlonToRelativePoints(const std::vector<NFmiPoint>& latlonPoints);
 	bool IsCrossSectionViewStuffShownOnThisMapView() const;
 	bool IsCrossSectionSystemDisableingNormalMiddleMouseButtonUse() const;
+	bool IsRangeMeterModeOn(bool checkAlsoIfMouseDragIsOn) const;
+	void SetRangeMeterDragStart(const NFmiPoint& thePlace);
+	void SetRangeMeterDragEnd(const NFmiPoint& thePlace, bool mouseDragging);
 
     template<typename T>
     bool MakeParamHandlerViewActions(T action)

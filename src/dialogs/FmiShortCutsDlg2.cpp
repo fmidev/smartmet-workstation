@@ -197,15 +197,10 @@ void CFmiShortCutsDlg2::InitDialogTexts(void)
     itsTextU_ += CA2T(::GetDictionaryString("- SHIFT + F12 Apply startup viewMacro").c_str()) + CString(_TEXT("\r\n"));
 
     itsTextU_ += _TEXT("\r\n");
-    itsTextU_ += CA2T(::GetDictionaryString("- Y  Range meter mode on/off").c_str()) + CString(_TEXT("\r\n"));
-    itsTextU_ += CA2T(::GetDictionaryString("- CTRL + Y   Fixed location mode on/off").c_str()) + CString(_TEXT("\r\n"));
-    itsTextU_ += CA2T(::GetDictionaryString("- SHIFT + Y  Decrease range (by current increment)").c_str()) + CString(_TEXT("\r\n"));
-    itsTextU_ += CA2T(::GetDictionaryString("- CTRL + SHIFT + Y  Increase range (by current increment)").c_str()) + CString(_TEXT("\r\n"));
-    itsTextU_ += CA2T(::GetDictionaryString("- ALT + Y  Change colour (white -> black -> red -> green -> blue -> magenta -> yellow -> cyan)").c_str()) + CString(_TEXT("\r\n"));
-    itsTextU_ += CA2T(::GetDictionaryString("- CTRL + ALT + Y  Change increment mode (from 100 m -> 200 m -> 500 m -> 1 km -> 2 km -> 5 km -> 10 km -> 20 km -> 50 km -> 100 km -> 200 km -> 500 km)").c_str()) + CString(_TEXT("\r\n"));
-    itsTextU_ += CA2T(::GetDictionaryString("- If Range meter mode is on, following mouse wheel options are also available:").c_str()) + CString(_TEXT("\r\n"));
-    itsTextU_ += CA2T(::GetDictionaryString("- CTRL + SHIFT + mouse wheel  Increase/decrease selected range").c_str()) + CString(_TEXT("\r\n"));
-    itsTextU_ += CA2T(::GetDictionaryString("- SHIFT + mouse wheel  Increase/decrease Range increment").c_str()) + CString(_TEXT("\r\n"));
+    itsTextU_ += CA2T(::GetDictionaryString("- Y  Distance measure mode on/off").c_str()) + CString(_TEXT("\r\n"));
+    itsTextU_ += CA2T(::GetDictionaryString("- CTRL + Y  Toggle Lock mode (locks start/end points and allows normal data viewing)").c_str()) + CString(_TEXT("\r\n"));
+    itsTextU_ += CA2T(::GetDictionaryString("- SHIFT + Y  Change colour (white -> black -> red -> green -> blue -> magenta -> yellow -> cyan)").c_str()) + CString(_TEXT("\r\n"));
+    itsTextU_ += CA2T(::GetDictionaryString("- To measure distance on map: Start left mouse down - drag to destination - left mouse up").c_str()) + CString(_TEXT("\r\n"));
 
 	itsTextU_ += _TEXT("\r\n");
     itsTextU_ += CA2T(::GetDictionaryString("ShortCutsDlgMouseClickStr1").c_str()) + CString(_TEXT("\r\n"));
