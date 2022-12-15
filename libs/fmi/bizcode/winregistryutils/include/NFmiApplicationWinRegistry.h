@@ -24,36 +24,36 @@ class NFmiMapViewRangeMeterWinRegistry
     std::string mSectionName = "\\MapViewRangeMeter";
 
     bool mModeOn = false;
-    boost::shared_ptr<CachedRegInt> mRangeInMeters;
-    boost::shared_ptr<CachedRegInt> mChangeIncrementInMeters;
     boost::shared_ptr<CachedRegInt> mColorIndex;
     static const std::vector<NFmiColor> mColors;
-    bool mUseFixedLatlonPoint = false;
-    NFmiPoint mFixedLatlonPoint = NFmiPoint::gMissingLatlon;
+    NFmiPoint mDragStartLatlonPoint = NFmiPoint::gMissingLatlon;
+    NFmiPoint mDragEndLatlonPoint = NFmiPoint::gMissingLatlon;
+    bool mMouseDragOn = false;
+    // Jos lukitus moodi on p‰‰ll‰, ei tehd‰ muutoksia start/end-point asetuksiin eik‰ MouseDragOn asetukseen
+    bool mLockModeOn = false;
 public:
+    static const int TooltipDelayInMS = 1500;
     NFmiMapViewRangeMeterWinRegistry();
     bool Init(const std::string& baseRegistryPath);
 
     bool ModeOn() const;
     void ModeOn(bool newValue);
     void ModeOnToggle();
-    int RangeInMeters() const;
-    void RangeInMeters(int newValue);
-    bool AdjustRangeValue(FmiDirection direction);
-    int ChangeIncrementInMeters() const;
-    void ChangeIncrementInMeters(int newValue);
-    bool AdjustChangeIncrementInMeters(FmiDirection direction);
-    bool ToggleChangeIncrementInMeters();
     int ColorIndex() const;
     void ColorIndex(int newValue);
     void ToggleColor();
     const NFmiColor& GetSelectedColor() const;
     static const std::vector<NFmiColor>& Colors() { return mColors; }
-    bool UseFixedLatlonPoint() const { return mUseFixedLatlonPoint; }
-    void UseFixedLatlonPoint(bool newValue) { mUseFixedLatlonPoint = newValue; }
-    void FixedLatlonPointModeToggle(const NFmiPoint& latlon);
-    const NFmiPoint& FixedLatlonPoint() const { return mFixedLatlonPoint; }
-    void FixedLatlonPoint(const NFmiPoint& newValue) { mFixedLatlonPoint = newValue; }
+    const NFmiPoint& DragStartLatlonPoint() const { return mDragStartLatlonPoint; }
+    void DragStartLatlonPoint(const NFmiPoint& newValue) { mDragStartLatlonPoint = newValue; }
+    const NFmiPoint& DragEndLatlonPoint() const { return mDragEndLatlonPoint; }
+    void DragEndLatlonPoint(const NFmiPoint& newValue) { mDragEndLatlonPoint = newValue; }
+    bool MouseDragOn() const { return mMouseDragOn; }
+    void MouseDragOn(bool newValue) { mMouseDragOn = newValue; }
+    double CalculateStartEndDistanceInMeters() const;
+    bool LockModeOn() const { return mLockModeOn; }
+    void LockModeOn(bool newValue) { mLockModeOn = newValue; }
+    void LockModeOnToggle();
 };
 
 class NFmiGriddingPropertiesWinRegistry

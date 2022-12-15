@@ -158,11 +158,7 @@ public:
 	afx_msg void OnAcceleratorEmChangeAllModelDataOnRowToPreviousModelRun();
 	afx_msg void OnAcceleratorEmChangeAllModelDataOnRowToNextModelRun();
 	afx_msg void OnAcceleratorExtraMapViewRangeMeterModeToggle();
-	afx_msg void OnAcceleratorExtraMapViewRangeMeterIncreaseRange();
-	afx_msg void OnAcceleratorExtraMapViewRangeMeterDecreaseRange();
-	afx_msg void OnAcceleratorExtraMapViewRangeMeterIncrementModeToggle();
 	afx_msg void OnAcceleratorExtraMapViewRangeMeterColorToggle();
-	afx_msg void OnAcceleratorExtraMapViewRangeMeterFixedLocationModeToggle();
 	afx_msg void OnAcceleratorLogViewerToolboxdeb();
 	afx_msg void OnButtonOpenMainMapViewExtraMap();
 	afx_msg void OnButtonOpenOtherSideMapViewExtraMap();
@@ -171,4 +167,5 @@ public:
 	afx_msg void OnButtonOpenSoundingViewExtraMap();
 	afx_msg void OnButtonOpenCrosssectionViewExtraMap();
 	afx_msg void OnButtonOpenViewMacroDialogExtraMap();
+	afx_msg void OnAcceleratorExtraMapViewRangeMeterLockModeToggle();
 };

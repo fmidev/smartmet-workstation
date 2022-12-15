@@ -61,4 +61,5 @@ public:
     void OpenSideMapView(unsigned int theMapViewDescTopIndex) override;
     void OpenSmarttoolsDialog() override;
     void OpenViewMacroDialog() override;
+    void SetAllMapViewTooltipDelays(bool doRestoreAction, int delayInMilliSeconds) override;
 };

@@ -367,3 +367,8 @@ void ApplicationInterfaceForSmartMet::OpenViewMacroDialog()
 {
     GetDocument()->OnAcceleratorStoreViewMacro();
 }
+
+void ApplicationInterfaceForSmartMet::SetAllMapViewTooltipDelays(bool doRestoreAction, int delayInMilliSeconds)
+{
+    GetDocument()->SetAllMapViewTooltipDelays(doRestoreAction, delayInMilliSeconds);
+}

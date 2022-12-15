@@ -10,25 +10,12 @@
 #include "SoundingViewSettingsFromWindowsRegisty.h"
 #include "catlog/catlog.h"
 #include "NFmiCategoryHeaderInitData.h"
+#include "NFmiLocation.h"
 
 #include <unordered_map>
 
 namespace
 {
-    template<typename InputIterator, typename ValueType>
-    InputIterator FindClosest(InputIterator first, InputIterator last, ValueType value)
-    {
-        return std::min_element(first, last, [&](ValueType x, ValueType y)
-            {
-                return std::abs(x - value) < std::abs(y - value);
-            });
-    }
-
-    template<typename Container, typename ValueType>
-    auto RangedFindClosest(Container &container, ValueType value)
-    {
-        return FindClosest(container.begin(), container.end(), value);
-    }
 
 }
 
@@ -38,8 +25,6 @@ namespace
 
 // V‰rit vektorissa: black, white, red, green, blue, yellow, magenta, cyan
 const std::vector<NFmiColor> NFmiMapViewRangeMeterWinRegistry::mColors{ NFmiColor(0,0,0),NFmiColor(1,1,1),NFmiColor(1,0,0),NFmiColor(0,1,0),NFmiColor(0,0,1),NFmiColor(1,1,0),NFmiColor(1,0,1),NFmiColor(0,1,1) };
-const int kRangeInMetersMax = 8 * 1000 * 1000; // 8000 km on jonkinlainen looginen maksimi rangelle
-const std::vector<int> kIncrementLimits{ 100,200,500,1000,2000,5000,10000,20000,50000,100000,200000,500000 };
 
 NFmiMapViewRangeMeterWinRegistry::NFmiMapViewRangeMeterWinRegistry() = default;
 
@@ -56,8 +41,6 @@ bool NFmiMapViewRangeMeterWinRegistry::Init(const std::string & baseRegistryPath
 
     // K‰ynnistyksen yhteydess‰ moodi on aina pois p‰‰lt‰, joten ei tarvitse tallettaa rekisteriink‰‰n.
     mModeOn = false;
-    mRangeInMeters = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionName, "\\RangeInMeters", usedKey, 100 * 1000);
-    mChangeIncrementInMeters = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionName, "\\ChangeIncrementInMeters", usedKey, 1000);
     mColorIndex = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionName, "\\ColorIndex", usedKey, 0);
 
     return true;
@@ -76,86 +59,6 @@ void NFmiMapViewRangeMeterWinRegistry::ModeOn(bool newValue)
 void NFmiMapViewRangeMeterWinRegistry::ModeOnToggle()
 {
     mModeOn = !mModeOn;
-}
-
-int NFmiMapViewRangeMeterWinRegistry::RangeInMeters() const 
-{ 
-    return *mRangeInMeters; 
-}
-
-void NFmiMapViewRangeMeterWinRegistry::RangeInMeters(int newValue) 
-{ 
-    if(newValue < 0)
-        newValue = 0;
-    if(newValue > kRangeInMetersMax)
-        newValue = kRangeInMetersMax;
-
-    *mRangeInMeters = newValue;
-}
-
-bool NFmiMapViewRangeMeterWinRegistry::AdjustRangeValue(FmiDirection direction)
-{
-    auto origValue = RangeInMeters();
-    auto newValue = origValue;
-    if(direction == kUp)
-        newValue += ChangeIncrementInMeters();
-    else
-        newValue -= ChangeIncrementInMeters();
-    RangeInMeters(newValue);
-
-    return origValue != RangeInMeters();
-}
-
-int NFmiMapViewRangeMeterWinRegistry::ChangeIncrementInMeters() const
-{ 
-    return *mChangeIncrementInMeters;
-}
-
-void NFmiMapViewRangeMeterWinRegistry::ChangeIncrementInMeters(int newValue)
-{ 
-    auto closestIter = ::RangedFindClosest(kIncrementLimits, newValue);
-
-    *mChangeIncrementInMeters = *closestIter;
-}
-
-bool NFmiMapViewRangeMeterWinRegistry::AdjustChangeIncrementInMeters(FmiDirection direction)
-{
-    auto origValue = ChangeIncrementInMeters();
-    auto closestIter = ::RangedFindClosest(kIncrementLimits, origValue);
-
-    if(direction == kUp)
-    {
-        if(closestIter != kIncrementLimits.end())
-        {
-            ++closestIter;
-        }
-    }
-    else
-    {
-        if(closestIter != kIncrementLimits.begin())
-        {
-            --closestIter;
-        }
-    }
-
-    if(closestIter != kIncrementLimits.end())
-    {
-        *mChangeIncrementInMeters = *closestIter;
-        return origValue != ChangeIncrementInMeters();
-    }
-    else
-        return false;
-}
-
-bool NFmiMapViewRangeMeterWinRegistry::ToggleChangeIncrementInMeters()
-{
-    auto closestIter = ::RangedFindClosest(kIncrementLimits, ChangeIncrementInMeters());
-    size_t index = closestIter - kIncrementLimits.begin();
-    index++;
-    if(index >= kIncrementLimits.size())
-        index = 0;
-    ChangeIncrementInMeters(kIncrementLimits[index]);
-    return true;
 }
 
 int NFmiMapViewRangeMeterWinRegistry::ColorIndex() const 
@@ -187,11 +90,21 @@ const NFmiColor& NFmiMapViewRangeMeterWinRegistry::GetSelectedColor() const
     return mColors[*mColorIndex];
 }
 
-void NFmiMapViewRangeMeterWinRegistry::FixedLatlonPointModeToggle(const NFmiPoint& latlon)
-{ 
-    mUseFixedLatlonPoint = !mUseFixedLatlonPoint; 
-    mFixedLatlonPoint = latlon;
+// Jos mDragStartLatlonPoint ja mDragEndLatlonPoint on oikea arvo, palauttaa niiden et‰isyyden metreiss‰.
+// Jos jompi kumpi tai molemmat puuttuvia, palauttaa -1;
+double NFmiMapViewRangeMeterWinRegistry::CalculateStartEndDistanceInMeters() const
+{
+    if(mDragStartLatlonPoint == NFmiPoint::gMissingLatlon || mDragEndLatlonPoint == NFmiPoint::gMissingLatlon)
+        return -1;
+    NFmiLocation startLocation(mDragStartLatlonPoint);
+    return startLocation.Distance(mDragEndLatlonPoint);
 }
+
+void NFmiMapViewRangeMeterWinRegistry::LockModeOnToggle()
+{
+    mLockModeOn = !mLockModeOn;
+}
+
 
 // ************************************************
 // ****   NFmiGriddingPropertiesWinRegistry *******

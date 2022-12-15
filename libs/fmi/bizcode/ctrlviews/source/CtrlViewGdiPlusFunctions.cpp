@@ -124,6 +124,13 @@ namespace CtrlView
         return Gdiplus::PointF(static_cast<Gdiplus::REAL>(absolutePoint.x), static_cast<Gdiplus::REAL>(absolutePoint.y));
     }
 
+    const Gdiplus::Point Relative2GdiplusPointInt(NFmiToolBox* theToolBox, const NFmiPoint& theRelativePoint)
+    {
+        CPoint absolutePoint;
+        theToolBox->ConvertPoint(theRelativePoint, absolutePoint);
+        return Gdiplus::Point(absolutePoint.x, absolutePoint.y);
+    }
+
     std::vector<Gdiplus::PointF> Relative2GdiplusPolyLine(NFmiToolBox* theToolBox, const std::vector<NFmiPoint>& theRelativePolyLine, const NFmiPoint& theRelativeOffset)
     {
         bool useOffset = theRelativeOffset != NFmiPoint();

@@ -111,11 +111,8 @@ BEGIN_MESSAGE_MAP(CSmartMetView, CView)
 	ON_COMMAND(ID_ACCELERATOR_CHANGE_ALL_MODEL_DATA_ON_ROW_TO_PREVIOUS_MODEL_RUN, &CSmartMetView::OnAcceleratorChangeAllModelDataOnRowToPreviousModelRun)
 	ON_COMMAND(ID_ACCELERATOR_CHANGE_ALL_MODEL_DATA_ON_ROW_TO_NEXT_MODEL_RUN, &CSmartMetView::OnAcceleratorChangeAllModelDataOnRowToNextModelRun)
 	ON_COMMAND(ID_ACCELERATOR_MAP_VIEW_RANGE_METER_MODE_TOGGLE, &CSmartMetView::OnAcceleratorMapViewRangeMeterModeToggle)
-	ON_COMMAND(ID_ACCELERATOR_MAP_VIEW_RANGE_METER_INCREASE_RANGE, &CSmartMetView::OnAcceleratorMapViewRangeMeterIncreaseRange)
-	ON_COMMAND(ID_ACCELERATOR_MAP_VIEW_RANGE_METER_DECREASE_RANGE, &CSmartMetView::OnAcceleratorMapViewRangeMeterDecreaseRange)
-	ON_COMMAND(ID_ACCELERATOR_MAP_VIEW_RANGE_METER_INCREMENT_MODE_TOGGLE, &CSmartMetView::OnAcceleratorMapViewRangeMeterIncrementModeToggle)
 	ON_COMMAND(ID_ACCELERATOR_MAP_VIEW_RANGE_METER_COLOR_TOGGLE, &CSmartMetView::OnAcceleratorMapViewRangeMeterColorToggle)
-	ON_COMMAND(ID_ACCELERATOR_MAP_VIEW_RANGE_METER_FIXED_LOCATION_MODE_TOGGLE, &CSmartMetView::OnAcceleratorMapViewRangeMeterFixedLocationModeToggle)
+	ON_COMMAND(ID_ACCELERATOR_MAP_VIEW_RANGE_METER_LOCK_MODE_TOGGLE, &CSmartMetView::OnAcceleratorMapViewRangeMeterLockModeToggle)
 END_MESSAGE_MAP()
 
 // CSmartMetView construction/destruction
@@ -1386,38 +1383,12 @@ void CSmartMetView::OnDisplayChange(UINT, int, int)
 
 void CSmartMetView::OnAcceleratorMapViewRangeMeterModeToggle()
 {
-	GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().ModeOnToggle();
+	auto& rangeMeter = GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	rangeMeter.ModeOnToggle();
+	// Kun rangeMeter laitetaan toimintaan, kannattaa karttojen tooltipin aukeamisaikaa laittaa pidemmäksi, 
+	// muuten tooltip kuplaa pitää koko ajan klikata hiirellä ennen kuin pääsee tekemään mouse left-click-drag:ia
+	ApplicationInterface::GetApplicationInterfaceImplementation()->SetAllMapViewTooltipDelays(!rangeMeter.ModeOn(), NFmiMapViewRangeMeterWinRegistry::TooltipDelayInMS);
 	ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
-}
-
-void CSmartMetView::OnAcceleratorMapViewRangeMeterIncreaseRange()
-{
-	auto& mapViewRangeMeter = GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
-	if(mapViewRangeMeter.ModeOn())
-	{
-		mapViewRangeMeter.AdjustRangeValue(kUp);
-		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
-	}
-}
-
-void CSmartMetView::OnAcceleratorMapViewRangeMeterDecreaseRange()
-{
-	auto& mapViewRangeMeter = GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
-	if(mapViewRangeMeter.ModeOn())
-	{
-		mapViewRangeMeter.AdjustRangeValue(kDown);
-		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
-	}
-}
-
-void CSmartMetView::OnAcceleratorMapViewRangeMeterIncrementModeToggle()
-{
-	auto& mapViewRangeMeter = GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
-	if(mapViewRangeMeter.ModeOn())
-	{
-		mapViewRangeMeter.ToggleChangeIncrementInMeters();
-		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
-	}
 }
 
 void CSmartMetView::OnAcceleratorMapViewRangeMeterColorToggle()
@@ -1430,12 +1401,12 @@ void CSmartMetView::OnAcceleratorMapViewRangeMeterColorToggle()
 	}
 }
 
-void CSmartMetView::OnAcceleratorMapViewRangeMeterFixedLocationModeToggle()
+void CSmartMetView::OnAcceleratorMapViewRangeMeterLockModeToggle()
 {
 	auto& mapViewRangeMeter = GetGeneralDoc()->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
 	if(mapViewRangeMeter.ModeOn())
 	{
-		mapViewRangeMeter.FixedLatlonPointModeToggle(GetGeneralDoc()->ToolTipLatLonPoint());
+		mapViewRangeMeter.LockModeOnToggle();
 		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
 	}
 }
