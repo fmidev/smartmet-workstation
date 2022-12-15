@@ -419,6 +419,9 @@ namespace CtrlViewUtils
 
     std::string GetFixedLatlonStr(const NFmiPoint& theLatlon)
     {
+        if(theLatlon == NFmiPoint::gMissingLatlon)
+            return "----N/S ----E/W";
+
         std::stringstream out;
 
         double lat = theLatlon.Y();

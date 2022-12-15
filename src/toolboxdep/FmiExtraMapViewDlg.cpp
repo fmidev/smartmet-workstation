@@ -143,11 +143,7 @@ ON_COMMAND(ID_EDIT_VISUALIZATIONSETTINGS_EXTRA_MAP, &CFmiExtraMapViewDlg::OnEdit
 ON_COMMAND(ID_ACCELERATOR_EM_CHANGE_ALL_MODEL_DATA_ON_ROW_TO_PREVIOUS_MODEL_RUN, &CFmiExtraMapViewDlg::OnAcceleratorEmChangeAllModelDataOnRowToPreviousModelRun)
 ON_COMMAND(ID_ACCELERATOR_EM_CHANGE_ALL_MODEL_DATA_ON_ROW_TO_NEXT_MODEL_RUN, &CFmiExtraMapViewDlg::OnAcceleratorEmChangeAllModelDataOnRowToNextModelRun)
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_MODE_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterModeToggle)
-ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_INCREASE_RANGE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterIncreaseRange)
-ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_DECREASE_RANGE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterDecreaseRange)
-ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_INCREMENT_MODE_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterIncrementModeToggle)
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_COLOR_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterColorToggle)
-ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_FIXED_LOCATION_MODE_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterFixedLocationModeToggle)
 ON_COMMAND(ID_ACCELERATOR_LOG_VIEWER_TOOLBOXDEB, &CFmiExtraMapViewDlg::OnAcceleratorLogViewerToolboxdeb)
 ON_COMMAND(ID_BUTTON_OPEN_MAIN_MAP_VIEW_EXTRA_MAP, &CFmiExtraMapViewDlg::OnButtonOpenMainMapViewExtraMap)
 ON_COMMAND(ID_BUTTON_OPEN_OTHER_SIDE_MAP_VIEW_EXTRA_MAP, &CFmiExtraMapViewDlg::OnButtonOpenOtherSideMapViewExtraMap)
@@ -156,6 +152,7 @@ ON_COMMAND(ID_BUTTON_OPEN_SMARTTOOLS_DIALOG_EXTRA_MAP, &CFmiExtraMapViewDlg::OnB
 ON_COMMAND(ID_BUTTON_OPEN_SOUNDING_VIEW_EXTRA_MAP, &CFmiExtraMapViewDlg::OnButtonOpenSoundingViewExtraMap)
 ON_COMMAND(ID_BUTTON_OPEN_CROSSSECTION_VIEW_EXTRA_MAP, &CFmiExtraMapViewDlg::OnButtonOpenCrosssectionViewExtraMap)
 ON_COMMAND(ID_BUTTON_OPEN_VIEW_MACRO_DIALOG_EXTRA_MAP, &CFmiExtraMapViewDlg::OnButtonOpenViewMacroDialogExtraMap)
+ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_LOCK_MODE_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterLockModeToggle)
 END_MESSAGE_MAP()
 
 
@@ -914,38 +911,12 @@ void CFmiExtraMapViewDlg::OnAcceleratorEmChangeAllModelDataOnRowToNextModelRun()
 
 void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterModeToggle()
 {
-	itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().ModeOnToggle();
+	auto& rangeMeter = itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	rangeMeter.ModeOnToggle();
+	// Kun rangeMeter laitetaan toimintaan, kannattaa karttojen tooltipin aukeamisaikaa laittaa pidemmäksi, 
+	// muuten tooltip kuplaa pitää koko ajan klikata hiirellä ennen kuin pääsee tekemään mouse left-click-drag:ia
+	ApplicationInterface::GetApplicationInterfaceImplementation()->SetAllMapViewTooltipDelays(!rangeMeter.ModeOn(), NFmiMapViewRangeMeterWinRegistry::TooltipDelayInMS);
 	ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
-}
-
-void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterIncreaseRange()
-{
-	auto& mapViewRangeMeter = itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
-	if(mapViewRangeMeter.ModeOn())
-	{
-		mapViewRangeMeter.AdjustRangeValue(kUp);
-		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
-	}
-}
-
-void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterDecreaseRange()
-{
-	auto& mapViewRangeMeter = itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
-	if(mapViewRangeMeter.ModeOn())
-	{
-		mapViewRangeMeter.AdjustRangeValue(kDown);
-		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
-	}
-}
-
-void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterIncrementModeToggle()
-{
-	auto& mapViewRangeMeter = itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
-	if(mapViewRangeMeter.ModeOn())
-	{
-		mapViewRangeMeter.ToggleChangeIncrementInMeters();
-		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
-	}
 }
 
 void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterColorToggle()
@@ -958,12 +929,12 @@ void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterColorToggle()
 	}
 }
 
-void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterFixedLocationModeToggle()
+void CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterLockModeToggle()
 {
 	auto& mapViewRangeMeter = itsSmartMetDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
 	if(mapViewRangeMeter.ModeOn())
 	{
-		mapViewRangeMeter.FixedLatlonPointModeToggle(itsSmartMetDocumentInterface->ToolTipLatLonPoint());
+		mapViewRangeMeter.LockModeOnToggle();
 		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
 	}
 }

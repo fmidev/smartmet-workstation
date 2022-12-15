@@ -131,6 +131,7 @@ public:
     SmartMetViewId GetAndResetUpdatedViewsFlag();
     bool HasUpdatedViewsFlagSignificantValue() const { return itsUpdatedViewsFlag != SmartMetViewId::NoViews; }
 	void OpenLogViewer();
+	void SetAllMapViewTooltipDelays(bool doRestoreAction, int delayInMilliSeconds);
 
 	NFmiEditMapGeneralDataDoc* GetData(void);
 	virtual ~CSmartMetDoc();
