@@ -105,6 +105,19 @@ void NFmiMapViewRangeMeterWinRegistry::LockModeOnToggle()
     mLockModeOn = !mLockModeOn;
 }
 
+void NFmiMapViewRangeMeterWinRegistry::MoveStartLatlonPoint(const NFmiPoint& newValue)
+{
+    if(mDragStartLatlonPoint != NFmiPoint::gMissingLatlon && mDragEndLatlonPoint != NFmiPoint::gMissingLatlon)
+    {
+        NFmiLocation origStartLocation(mDragStartLatlonPoint);
+        auto distanceInMeters = origStartLocation.Distance(mDragEndLatlonPoint);
+        auto direction = origStartLocation.Direction(mDragEndLatlonPoint);
+        NFmiLocation newStartLocation(newValue);
+        auto newEndPoint = newStartLocation.GetLocation(direction, distanceInMeters, false);
+        mDragStartLatlonPoint = newValue;
+        mDragEndLatlonPoint = newEndPoint.GetLocation();
+    }
+}
 
 // ************************************************
 // ****   NFmiGriddingPropertiesWinRegistry *******
