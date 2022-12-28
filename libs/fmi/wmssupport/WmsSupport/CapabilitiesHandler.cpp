@@ -123,7 +123,6 @@ namespace Wms
                         .setService("WMS")
                         .setVersion(server.version)
                         .setRequest("GetCapabilities")
-                        .setTransparency(true)
                         .setToken(server.generic.token)
                         .build();
 
