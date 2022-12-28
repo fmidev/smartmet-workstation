@@ -17,6 +17,7 @@
 #include "persist2.h"
 #include "ApplicationInterface.h"
 #include "SoundingViewSettingsFromWindowsRegisty.h"
+#include "NFmiValueString.h"
 
 /*
 #ifdef _DEBUG
@@ -48,6 +49,9 @@ CFmiTempDlg::CFmiTempDlg(SmartMetDocumentInterface *smartMetDocumentInterface, C
     , fSoundingTimeLockWithMapView(FALSE)
     , fSoundingTextUpward(FALSE)
     , fShowSecondaryDataView(FALSE)
+	, itsAvgRangeInKmStr(_T("0"))
+	, itsAvgTimeRange1Str(_T("0"))
+	, itsAvgTimeRange2Str(_T("0"))
 {
 	//{{AFX_DATA_INIT(CFmiTempDlg)
 	//}}AFX_DATA_INIT
@@ -59,24 +63,26 @@ CFmiTempDlg::~CFmiTempDlg(void)
 
 void CFmiTempDlg::DoDataExchange(CDataExchange* pDX)
 {
-    CDialog::DoDataExchange(pDX);
-    //{{AFX_DATA_MAP(CFmiTempDlg)
-    DDX_Control(pDX, IDC_BUTTON_PRINT, itsPrintButtom);
-    DDX_Check(pDX, IDC_CHECK_TEMP_SKEWT_MODE, fSkewTModeOn);
-    DDX_Check(pDX, IDC_CHECK_SHOW_STABILITY_INDEXIES_SIDE_VIEW, fShowStabilityIndexSideView);
-    DDX_Check(pDX, IDC_CHECK_SHOW_HODOGRAF, fShowHodograf);
-    //}}AFX_DATA_MAP
-    DDX_Check(pDX, IDC_CHECK_TEMP_SHOW_MAP_MARKERS, fShowMapMarkers);
-    DDX_Control(pDX, IDC_COMBO_TEMP_PRODUCER_MULTI_SELECTOR, itsMultiProducerSelector);
-    DDX_Check(pDX, IDC_CHECK_SHOW_TEXTUAL_SOUNDING_DATA_SIDE_VIEW, fShowTextualSoundingDataSideView);
-    DDX_Text(pDX, IDC_EDIT_MODEL_RUN_COUNT, itsModelRunCount);
-    //	DDV_MinMaxInt(pDX, itsModelRunCount, 0, 10);
-    DDX_Control(pDX, IDC_SPIN_MODEL_RUN_COUNT, itsModelRunSpinner);
-    DDX_Check(pDX, IDC_CHECK_USE_MAP_TIME_WITH_SOUNDINGS, fSoundingTimeLockWithMapView);
-    DDX_Check(pDX, IDC_CHECK_PUT_SOUNDING_TEXTS_UPWARD, fSoundingTextUpward);
-    DDX_Check(pDX, IDC_CHECK_SHOW_SECONDARY_DATA_VIEW, fShowSecondaryDataView);
+	CDialog::DoDataExchange(pDX);
+	//{{AFX_DATA_MAP(CFmiTempDlg)
+	DDX_Control(pDX, IDC_BUTTON_PRINT, itsPrintButtom);
+	DDX_Check(pDX, IDC_CHECK_TEMP_SKEWT_MODE, fSkewTModeOn);
+	DDX_Check(pDX, IDC_CHECK_SHOW_STABILITY_INDEXIES_SIDE_VIEW, fShowStabilityIndexSideView);
+	DDX_Check(pDX, IDC_CHECK_SHOW_HODOGRAF, fShowHodograf);
+	//}}AFX_DATA_MAP
+	DDX_Check(pDX, IDC_CHECK_TEMP_SHOW_MAP_MARKERS, fShowMapMarkers);
+	DDX_Control(pDX, IDC_COMBO_TEMP_PRODUCER_MULTI_SELECTOR, itsMultiProducerSelector);
+	DDX_Check(pDX, IDC_CHECK_SHOW_TEXTUAL_SOUNDING_DATA_SIDE_VIEW, fShowTextualSoundingDataSideView);
+	DDX_Text(pDX, IDC_EDIT_MODEL_RUN_COUNT, itsModelRunCount);
+	//	DDV_MinMaxInt(pDX, itsModelRunCount, 0, 10);
+	DDX_Control(pDX, IDC_SPIN_MODEL_RUN_COUNT, itsModelRunSpinner);
+	DDX_Check(pDX, IDC_CHECK_USE_MAP_TIME_WITH_SOUNDINGS, fSoundingTimeLockWithMapView);
+	DDX_Check(pDX, IDC_CHECK_PUT_SOUNDING_TEXTS_UPWARD, fSoundingTextUpward);
+	DDX_Check(pDX, IDC_CHECK_SHOW_SECONDARY_DATA_VIEW, fShowSecondaryDataView);
+	DDX_Text(pDX, IDC_EDIT_AVG_RANGE_IN_KM, itsAvgRangeInKmStr);
+	DDX_Text(pDX, IDC_EDIT_AVG_TIME_RANGE_1, itsAvgTimeRange1Str);
+	DDX_Text(pDX, IDC_EDIT_AVG_TIME_RANGE_2, itsAvgTimeRange2Str);
 }
-
 
 BEGIN_MESSAGE_MAP(CFmiTempDlg, CDialog)
 	//{{AFX_MSG_MAP(CFmiTempDlg)
@@ -101,28 +107,31 @@ BEGIN_MESSAGE_MAP(CFmiTempDlg, CDialog)
 	ON_CBN_SELCHANGE(IDC_COMBO_TEMP_PRODUCER_MULTI_SELECTOR, OnCbnSelchangeComboProducerSelection)
 	ON_CBN_CLOSEUP(IDC_COMBO_TEMP_PRODUCER_MULTI_SELECTOR, OnCbnCloseUp)
 
-	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_1, OnAcceleratorTempProducer1)
-	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_2, OnAcceleratorTempProducer2)
-	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_3, OnAcceleratorTempProducer3)
-	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_4, OnAcceleratorTempProducer4)
-	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_5, OnAcceleratorTempProducer5)
-	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_6, OnAcceleratorTempProducer6)
-	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_7, OnAcceleratorTempProducer7)
-	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_8, OnAcceleratorTempProducer8)
-	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_9, OnAcceleratorTempProducer9)
-	ON_COMMAND(ID_ACCELERATOR_BORROW_PARAMS_EXTRA_MAP_10, OnAcceleratorTempProducer10)
-
-	ON_COMMAND(ID_ACCELERATOR_SPACE_OUT_TEMP_WINDS, OnEditSpaceOut)
 	ON_BN_CLICKED(IDC_CHECK_SHOW_TEXTUAL_SOUNDING_DATA_SIDE_VIEW, &CFmiTempDlg::OnBnClickedCheckShowTextualSoundingDataSideView)
-	ON_COMMAND(ID_ACCELERATOR_SWAP_AREA_EXTRA_MAP, &CFmiTempDlg::OnAcceleratorSwapArea)
-	ON_COMMAND(ID_ACCELERATOR_TOGGLE_TEMP_VIEW_TOOLTIP, &CFmiTempDlg::OnAcceleratorToggleTooltip)
 	ON_EN_CHANGE(IDC_EDIT_MODEL_RUN_COUNT, &CFmiTempDlg::OnEnChangeEditModelRunCount)
     ON_BN_CLICKED(IDC_CHECK_USE_MAP_TIME_WITH_SOUNDINGS, &CFmiTempDlg::OnBnClickedCheckUseMapTimeWithSoundings)
     ON_BN_CLICKED(IDC_CHECK_PUT_SOUNDING_TEXTS_UPWARD, &CFmiTempDlg::OnBnClickedCheckPutSoundingTextsUpward)
-    ON_COMMAND(ID_ACCELERATOR_CHANGE_MAP_TYPE_EXTRA_MAP, &CFmiTempDlg::OnAcceleratorChangeMapTypeExtraMap)
     ON_BN_CLICKED(IDC_CHECK_SHOW_SECONDARY_DATA_VIEW, &CFmiTempDlg::OnBnClickedCheckShowSecondaryDataView)
 	ON_WM_GETMINMAXINFO()
-	ON_COMMAND(ID_ACCELERATOR_LOG_VIEWER_TOOLBOXDEB, &CFmiTempDlg::OnAcceleratorLogViewerToolboxdeb)
+	ON_COMMAND(ID_ACCELERATOR_SOUNDING_PRODUCER_1, &CFmiTempDlg::OnAcceleratorSoundingProducer1)
+	ON_COMMAND(ID_ACCELERATOR_SOUNDING_PRODUCER_2, &CFmiTempDlg::OnAcceleratorSoundingProducer2)
+	ON_COMMAND(ID_ACCELERATOR_SOUNDING_PRODUCER_3, &CFmiTempDlg::OnAcceleratorSoundingProducer3)
+	ON_COMMAND(ID_ACCELERATOR_SOUNDING_PRODUCER_4, &CFmiTempDlg::OnAcceleratorSoundingProducer4)
+	ON_COMMAND(ID_ACCELERATOR_SOUNDING_PRODUCER_5, &CFmiTempDlg::OnAcceleratorSoundingProducer5)
+	ON_COMMAND(ID_ACCELERATOR_SOUNDING_PRODUCER_6, &CFmiTempDlg::OnAcceleratorSoundingProducer6)
+	ON_COMMAND(ID_ACCELERATOR_SOUNDING_PRODUCER_7, &CFmiTempDlg::OnAcceleratorSoundingProducer7)
+	ON_COMMAND(ID_ACCELERATOR_SOUNDING_PRODUCER_8, &CFmiTempDlg::OnAcceleratorSoundingProducer8)
+	ON_COMMAND(ID_ACCELERATOR_SOUNDING_PRODUCER_9, &CFmiTempDlg::OnAcceleratorSoundingProducer9)
+	ON_COMMAND(ID_ACCELERATOR_SOUNDING_PRODUCER_10, &CFmiTempDlg::OnAcceleratorSoundingProducer10)
+	ON_COMMAND(ID_ACCELERATOR_SOUNDING_OPEN_LOG_VIEWER, &CFmiTempDlg::OnAcceleratorSoundingOpenLogViewer)
+	ON_COMMAND(ID_ACCELERATOR_SOUNDING_SPACE_OUT_WINDS, &CFmiTempDlg::OnAcceleratorSoundingSpaceOutWinds)
+	ON_COMMAND(ID_ACCELERATOR_SOUNDING_TOGGLE_SIDE_VIEW_2, &CFmiTempDlg::OnAcceleratorSoundingToggleSideView2)
+	ON_COMMAND(ID_ACCELERATOR_SOUNDING_TOGGLE_STABILITY_INDEX_VIEW, &CFmiTempDlg::OnAcceleratorSoundingToggleStabilityIndexView)
+	ON_COMMAND(ID_ACCELERATOR_SOUNDING_TOGGLE_TEXT_VIEW, &CFmiTempDlg::OnAcceleratorSoundingToggleTextView)
+	ON_COMMAND(ID_ACCELERATOR_SOUNDING_TOGGLE_TOOLTIP, &CFmiTempDlg::OnAcceleratorSoundingToggleTooltip)
+	ON_EN_CHANGE(IDC_EDIT_AVG_RANGE_IN_KM, &CFmiTempDlg::OnEnChangeEditAvgRangeInKm)
+	ON_EN_CHANGE(IDC_EDIT_AVG_TIME_RANGE_1, &CFmiTempDlg::OnEnChangeEditAvgTimeRange1)
+	ON_EN_CHANGE(IDC_EDIT_AVG_TIME_RANGE_2, &CFmiTempDlg::OnEnChangeEditAvgTimeRange2)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -132,8 +141,9 @@ BOOL CFmiTempDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-    // Load accelerators
-    m_hAccel = ::LoadAccelerators(AfxGetResourceHandle(), MAKEINTRESOURCE(IDR_ACCELERATOR1));
+    // Load accelerators, piti luoda oma IDR_ACCELERATOR_SOUNDING_VIEW pikanäppäinlista, koska
+	// muuten yleisestä listasta tulee pikanäppäimet 1-9,0, jotka estävät edit controlleihin kyseisten numeroiden syötön.
+    m_hAccel = ::LoadAccelerators(AfxGetResourceHandle(), MAKEINTRESOURCE(IDR_ACCELERATOR_SOUNDING_VIEW));
     ASSERT(m_hAccel);
 
 	if(!InitTooltipControl())
@@ -172,6 +182,11 @@ void CFmiTempDlg::Update(void)
     }
 }
 
+static CString ConvertIntegrationLimitToCString(double value)
+{
+	return CString(CA2T(NFmiValueString::GetStringWithMaxDecimalsSmartWay(value, 1)));
+}
+
 // Tämän avulla luetaan dokumentista tiettyjen luotausnäyttö kontrollien asetukset ja laitetaan ne
 // käyttöön dialogin kontrolleihin. Tätä kutustaan OnInitDialog- ja Update -metodeista.
 void CFmiTempDlg::UpdateControlsFromDocument()
@@ -187,7 +202,10 @@ void CFmiTempDlg::UpdateControlsFromDocument()
     fSoundingTimeLockWithMapView = soundingSettingsFromWinReg.SoundingTimeLockWithMapView();
     fSoundingTextUpward = soundingSettingsFromWinReg.SoundingTextUpward();
     fShowSecondaryDataView = mtaTempSystem.DrawSecondaryData();
-
+	itsAvgRangeInKmStr = ::ConvertIntegrationLimitToCString(mtaTempSystem.IntegrationRangeInKm());
+	itsAvgTimeRange1Str = ::ConvertIntegrationLimitToCString(mtaTempSystem.IntegrationTimeOffset1InHours());
+	itsAvgTimeRange2Str = ::ConvertIntegrationLimitToCString(mtaTempSystem.IntegrationTimeOffset2InHours());
+	
     UpdateData(FALSE);
 }
 
@@ -205,13 +223,13 @@ void CFmiTempDlg::OnSize(UINT nType, int cx, int cy)
 int CFmiTempDlg::CalcControlAreaHeight(void)
 {
 	int areaHeight = 20;
-	CWnd* win = GetDescendantWindow(IDC_CHECK_SHOW_TEXTUAL_SOUNDING_DATA_SIDE_VIEW);
+	CWnd* win = GetDescendantWindow(IDC_EDIT_AVG_TIME_RANGE_1);
 	if(win)
 	{
 		WINDOWPLACEMENT wplace;
 		BOOL bull = win->GetWindowPlacement(&wplace);
 		CRect descRect = wplace.rcNormalPosition;
-		areaHeight = descRect.bottom;
+		areaHeight = descRect.bottom - 1;
 	}
 	return areaHeight;
 }
@@ -251,7 +269,7 @@ void CFmiTempDlg::OnPaint()
 	CPaintDC dc(this); // device context for painting
 
  // tämä on pika viritys, kun muuten Print-nappulan kohdalta jää kaista maalaamatta kun laitoin ikkunaan välkkymättömän päivityksen
-	CBrush brush(RGB(239, 235, 222));
+	CBrush brush(RGB(240, 240, 240));
 	CRect area(CalcOtherArea());
 	dc.FillRect(&area, &brush);
 
@@ -411,6 +429,8 @@ void CFmiTempDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_MAP_TIME_WITH_SOUNDINGS, "MT");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_PUT_SOUNDING_TEXTS_UPWARD, "Up");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_MODEL_RUN_COUNT_STR, "Model Run Count");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_AVG_RANGE_IN_KM_STR, "Range [km]");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_AVG_TIME_RANGE_STR, "Time offsets [h]");
 }
 
 void CFmiTempDlg::OnBnClickedTempCode()
@@ -426,18 +446,19 @@ void CFmiTempDlg::OnBnClickedTempCode()
 	}
 }
 
-
 BOOL CFmiTempDlg::PreTranslateMessage(MSG* pMsg)
 {
-	// ei käsitellä 1-5 acceleraattoreita täällä luotaus näytössä (karttanäytössä rivin vaihto suoraan kyseiseen numeroon)
-	// HUOM!!!! Tämä 1-5 pikanäppäin ohitus ei toimikaan, TODO: tutki miten saadaan näppäimet 1-5 käyttöön...
-	bool ignoreThisAccelerator = (pMsg->message >= ID_ACCELERATOR_EXTRA_MAP_ROW_1) && (pMsg->message <= ID_ACCELERATOR_EXTRA_MAP_ROW_5);
-    if (ignoreThisAccelerator == false && WM_KEYFIRST <= pMsg->message && pMsg->message <= WM_KEYLAST) // acceleratorien hanskaus
-    {
-        HACCEL hAccel = m_hAccel;
-        if (hAccel && ::TranslateAccelerator(m_hWnd, hAccel, pMsg))
-            return TRUE;
-    }
+	// Hoidetaan näppäintenpainalluksien yhteydessä mahdolliset pikanäppäimet.
+	// Huom! Luotausnäytölle piti luoda oma accelerator lista, joka ladataan m_hAccel:iin.
+	// Koska SmartMetToolboxDep kirjaston yleisessä accelerator listassa on mukana 
+	// pikanäppäimet 1-9,0, ja niiden käsittely estäisi editbox:ien käytön luotausnäytössä,
+	// koska kyseiset näppäimet 'syötäisiin' tässä.
+	if(WM_KEYFIRST <= pMsg->message && pMsg->message <= WM_KEYLAST) // acceleratorien hanskaus
+	{
+		HACCEL hAccel = m_hAccel;
+		if(hAccel && ::TranslateAccelerator(m_hWnd, hAccel, pMsg))
+			return TRUE;
+	}
 
 	itsTooltipCtrl.RelayEvent(pMsg); // tooltipit pitää forwardoida näin
 
@@ -455,9 +476,19 @@ BOOL CFmiTempDlg::InitTooltipControl(void)
 	itsTooltipCtrl.SetDelayTime(TTDT_AUTOPOP, 30 * 1000); // 30 sekuntia on pisin saika minkä sain tooltipin pysymään näkyvissä (jos suurempi, menee defaultti arvoon 5 sekuntia)
 	itsTooltipCtrl.Activate(TRUE);
 
-	InitControlsTooltip(IDC_BUTTON_RESET_SCALES, "IDC_BUTTON_RESET_SCALES_TOOLTIP");
-	InitControlsTooltip(IDC_BUTTON_RESET_SOUNDING_DATA, "IDC_BUTTON_RESET_SOUNDING_DATA_TOOLTIP");
-
+	InitControlsTooltip(IDC_BUTTON_RESET_SCALES, "Restore default limits to pressure and temperature scales");
+	InitControlsTooltip(IDC_BUTTON_RESET_SOUNDING_DATA, "Clear all TEMP data generated from raw temp text messages");
+	InitControlsTooltip(IDC_CHECK_SHOW_SECONDARY_DATA_VIEW, "Show/hide secondary data view");
+	InitControlsTooltip(IDC_CHECK_USE_MAP_TIME_WITH_SOUNDINGS, "Make selected soundings follow the main map view times");
+	InitControlsTooltip(IDC_CHECK_TEMP_SKEWT_MODE, "Set Skew-T mode on/off");
+	InitControlsTooltip(IDC_CHECK_PUT_SOUNDING_TEXTS_UPWARD, "Set textual sounding values go upward from the ground (bottom)");
+	InitControlsTooltip(IDC_BUTTON_SHOW_TXT_SOUNDING_DATA, "Show textual sounding values in separate view for copy-paste action");
+	InitControlsTooltip(IDC_EDIT_AVG_RANGE_IN_KM, "Avg integration range [km] for model soundings");
+	InitControlsTooltip(IDC_STATIC_AVG_RANGE_IN_KM_STR, "Avg integration range [km] for model soundings");
+	InitControlsTooltip(IDC_EDIT_AVG_TIME_RANGE_1, "Avg integration start time offset [h] for model soundings");
+	InitControlsTooltip(IDC_EDIT_AVG_TIME_RANGE_2, "Avg integration end time offset [h] for model soundings");
+	InitControlsTooltip(IDC_STATIC_AVG_TIME_RANGE_STR, "Avg integration start+end time offsets [h] for model soundings");
+	
 	return TRUE;
 }
 
@@ -625,63 +656,6 @@ void CFmiTempDlg::SelectProducer(int producerIndex)
 	}
 }
 
-void CFmiTempDlg::OnAcceleratorTempProducer1()
-{
-	SelectProducer(0);
-}
-
-void CFmiTempDlg::OnAcceleratorTempProducer2()
-{
-	SelectProducer(1);
-}
-
-void CFmiTempDlg::OnAcceleratorTempProducer3()
-{
-	SelectProducer(2);
-}
-
-void CFmiTempDlg::OnAcceleratorTempProducer4()
-{
-	SelectProducer(3);
-}
-
-void CFmiTempDlg::OnAcceleratorTempProducer5()
-{
-	SelectProducer(4);
-}
-
-void CFmiTempDlg::OnAcceleratorTempProducer6()
-{
-	SelectProducer(5);
-}
-
-void CFmiTempDlg::OnAcceleratorTempProducer7()
-{
-	SelectProducer(6);
-}
-
-void CFmiTempDlg::OnAcceleratorTempProducer8()
-{
-	SelectProducer(7);
-}
-
-void CFmiTempDlg::OnAcceleratorTempProducer9()
-{
-	SelectProducer(8);
-}
-
-void CFmiTempDlg::OnAcceleratorTempProducer10()
-{
-	SelectProducer(9);
-}
-
-void CFmiTempDlg::OnEditSpaceOut()
-{
-    itsSmartMetDocumentInterface->SoundingViewWindBarbSpaceOutFactor(itsSmartMetDocumentInterface->SoundingViewWindBarbSpaceOutFactor()+1);
-	Update();
-	Invalidate(FALSE);
-}
-
 void CFmiTempDlg::OnBnClickedCheckShowTextualSoundingDataSideView()
 {
 	UpdateData(TRUE);
@@ -690,18 +664,6 @@ void CFmiTempDlg::OnBnClickedCheckShowTextualSoundingDataSideView()
 	itsSmartMetDocumentInterface->ApplicationWinRegistry().ShowTextualSoundingDataSideView(fShowTextualSoundingDataSideView == TRUE);
 	Update();
 	Invalidate(FALSE);
-}
-
-void CFmiTempDlg::OnAcceleratorSwapArea()
-{
-	fShowTextualSoundingDataSideView = !fShowTextualSoundingDataSideView;
-	UpdateData(FALSE);
-	OnBnClickedCheckShowTextualSoundingDataSideView();
-}
-
-void CFmiTempDlg::OnAcceleratorToggleTooltip()
-{
-    itsSmartMetDocumentInterface->ShowToolTipTempView(!itsSmartMetDocumentInterface->ShowToolTipTempView());
 }
 
 void CFmiTempDlg::OnEnChangeEditModelRunCount()
@@ -746,15 +708,6 @@ void CFmiTempDlg::OnBnClickedCheckPutSoundingTextsUpward()
 	Invalidate(FALSE);
 }
 
-// Tämä CTRL + F accelerator siis laittaa luotausnäytön apudata osion päälle/pois
-void CFmiTempDlg::OnAcceleratorChangeMapTypeExtraMap()
-{
-    itsSmartMetDocumentInterface->GetMTATempSystem().DrawSecondaryData(!itsSmartMetDocumentInterface->GetMTATempSystem().DrawSecondaryData());
-    fShowSecondaryDataView = itsSmartMetDocumentInterface->GetMTATempSystem().DrawSecondaryData();
-    Update();
-    Invalidate(FALSE);
-}
-
 void CFmiTempDlg::OnBnClickedCheckShowSecondaryDataView()
 {
     UpdateData(TRUE);
@@ -770,7 +723,188 @@ void CFmiTempDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 	lpMMI->ptMinTrackSize.y = 500;
 }
 
-void CFmiTempDlg::OnAcceleratorLogViewerToolboxdeb()
+// CTRL + 1 toglaa 1. tuottajan listalta päälle/pois
+void CFmiTempDlg::OnAcceleratorSoundingProducer1()
+{
+	SelectProducer(0);
+}
+
+// CTRL + 2 toglaa 2. tuottajan listalta päälle/pois
+void CFmiTempDlg::OnAcceleratorSoundingProducer2()
+{
+	SelectProducer(1);
+}
+
+// CTRL + 3 toglaa 3. tuottajan listalta päälle/pois
+void CFmiTempDlg::OnAcceleratorSoundingProducer3()
+{
+	SelectProducer(2);
+}
+
+// CTRL + 4 toglaa 4. tuottajan listalta päälle/pois
+void CFmiTempDlg::OnAcceleratorSoundingProducer4()
+{
+	SelectProducer(3);
+}
+
+// CTRL + 5 toglaa 5. tuottajan listalta päälle/pois
+void CFmiTempDlg::OnAcceleratorSoundingProducer5()
+{
+	SelectProducer(4);
+}
+
+// CTRL + 6 toglaa 6. tuottajan listalta päälle/pois
+void CFmiTempDlg::OnAcceleratorSoundingProducer6()
+{
+	SelectProducer(5);
+}
+
+// CTRL + 7 toglaa 7. tuottajan listalta päälle/pois
+void CFmiTempDlg::OnAcceleratorSoundingProducer7()
+{
+	SelectProducer(6);
+}
+
+// CTRL + 8 toglaa 8. tuottajan listalta päälle/pois
+void CFmiTempDlg::OnAcceleratorSoundingProducer8()
+{
+	SelectProducer(7);
+}
+
+// CTRL + 9 toglaa 9. tuottajan listalta päälle/pois
+void CFmiTempDlg::OnAcceleratorSoundingProducer9()
+{
+	SelectProducer(8);
+}
+
+// CTRL + 0 toglaa 10. tuottajan listalta päälle/pois
+void CFmiTempDlg::OnAcceleratorSoundingProducer10()
+{
+	SelectProducer(9);
+}
+
+// CTRL + L avaa siis log-viewerin
+void CFmiTempDlg::OnAcceleratorSoundingOpenLogViewer()
 {
 	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenLogViewer();
+}
+
+// CTRL + D muuttaa tuuliviirien harvennusta
+void CFmiTempDlg::OnAcceleratorSoundingSpaceOutWinds()
+{
+	itsSmartMetDocumentInterface->SoundingViewWindBarbSpaceOutFactor(itsSmartMetDocumentInterface->SoundingViewWindBarbSpaceOutFactor() + 1);
+	Update();
+	Invalidate(FALSE);
+}
+
+
+// Tämä CTRL + F accelerator siis laittaa luotausnäytön apudata (SV2) osion päälle/pois
+void CFmiTempDlg::OnAcceleratorSoundingToggleSideView2()
+{
+	itsSmartMetDocumentInterface->GetMTATempSystem().DrawSecondaryData(!itsSmartMetDocumentInterface->GetMTATempSystem().DrawSecondaryData());
+	fShowSecondaryDataView = itsSmartMetDocumentInterface->GetMTATempSystem().DrawSecondaryData();
+	Update();
+	Invalidate(FALSE);
+}
+
+
+void CFmiTempDlg::OnAcceleratorSoundingToggleStabilityIndexView()
+{
+	fShowStabilityIndexSideView = !fShowStabilityIndexSideView;
+	UpdateData(FALSE);
+	OnBnClickedCheckShowStabilityIndexiesSideView();
+}
+
+// CTRL + T toglaa tekstisivunäytön päälle/pois
+void CFmiTempDlg::OnAcceleratorSoundingToggleTextView()
+{
+	fShowTextualSoundingDataSideView = !fShowTextualSoundingDataSideView;
+	UpdateData(FALSE);
+	OnBnClickedCheckShowTextualSoundingDataSideView();
+}
+
+// F11 toglaa tooltipin päälle/pois
+void CFmiTempDlg::OnAcceleratorSoundingToggleTooltip()
+{
+	itsSmartMetDocumentInterface->ShowToolTipTempView(!itsSmartMetDocumentInterface->ShowToolTipTempView());
+}
+
+static std::pair<double, bool> SecureCString2Double(CString& valueStr)
+{
+	std::string valueStdStr;
+	try
+	{
+		valueStdStr = (CT2A(valueStr));
+
+		std::size_t pos;
+		auto value = std::stod(valueStdStr, &pos);
+		if(pos >= valueStdStr.size())
+		{
+			return std::make_pair(value, true);
+		}
+	}
+	catch(...)
+	{
+	}
+
+	// Jos käyttäjä antanut tyhjää, '-' (miinusmerkin), '.' (desimaalipiste) tai space:n alkuun, 
+	// tehdään luvusta 0, mutta tehdään inputista sallittu eli true paluuarvon second:iin
+	if(valueStdStr.empty() || valueStdStr.front() == '-' || valueStdStr.front() == '.' || valueStdStr.front() == ' ')
+		return std::make_pair(0, true);
+
+	// Jos käyttäjä on sotkenut integraatio rajojen arvot roskalla, laitetaan arvot aina takaisin 0:ksi.
+	return std::make_pair(0, false);
+}
+
+void CFmiTempDlg::OnEnChangeEditAvgRangeInKm()
+{
+	UpdateData(TRUE);
+	auto secureValue = ::SecureCString2Double(itsAvgRangeInKmStr);
+	itsSmartMetDocumentInterface->GetMTATempSystem().IntegrationRangeInKm(secureValue.first);
+	auto updatedValue = itsSmartMetDocumentInterface->GetMTATempSystem().IntegrationRangeInKm();
+	if(secureValue.second == false || secureValue.first != updatedValue)
+	{
+		// Jos syötteessä oli jotain roskaa (secureValue.second == false), päivitetään kontrolli korjatulla arvolla.
+		// Tai jos syöte meni ali/yli arvorajojen, päivitetään kontrolli korjatulla arvolla.
+		itsAvgRangeInKmStr = ::ConvertIntegrationLimitToCString(updatedValue);
+		UpdateData(FALSE);
+	}
+	itsView->Update(true);
+	Invalidate(FALSE);
+}
+
+
+void CFmiTempDlg::OnEnChangeEditAvgTimeRange1()
+{
+	UpdateData(TRUE);
+	auto secureValue = ::SecureCString2Double(itsAvgTimeRange1Str);
+	itsSmartMetDocumentInterface->GetMTATempSystem().IntegrationTimeOffset1InHours(secureValue.first);
+	auto updatedValue = itsSmartMetDocumentInterface->GetMTATempSystem().IntegrationTimeOffset1InHours();
+	if(secureValue.second == false || secureValue.first != updatedValue)
+	{
+		// Jos syötteessä oli jotain roskaa (secureValue.second == false), päivitetään kontrolli korjatulla arvolla.
+		// Tai jos syöte meni ali/yli arvorajojen, päivitetään kontrolli korjatulla arvolla.
+		itsAvgTimeRange1Str = ::ConvertIntegrationLimitToCString(updatedValue);
+		UpdateData(FALSE);
+	}
+	itsView->Update(true);
+	Invalidate(FALSE);
+}
+
+
+void CFmiTempDlg::OnEnChangeEditAvgTimeRange2()
+{
+	UpdateData(TRUE);
+	auto secureValue = ::SecureCString2Double(itsAvgTimeRange2Str);
+	itsSmartMetDocumentInterface->GetMTATempSystem().IntegrationTimeOffset2InHours(secureValue.first);
+	auto updatedValue = itsSmartMetDocumentInterface->GetMTATempSystem().IntegrationTimeOffset2InHours();
+	if(secureValue.second == false || secureValue.first != updatedValue)
+	{
+		// Jos syötteessä oli jotain roskaa (secureValue.second == false), päivitetään kontrolli korjatulla arvolla.
+		// Tai jos syöte meni ali/yli arvorajojen, päivitetään kontrolli korjatulla arvolla.
+		itsAvgTimeRange2Str = ::ConvertIntegrationLimitToCString(updatedValue);
+		UpdateData(FALSE);
+	}
+	itsView->Update(true);
+	Invalidate(FALSE);
 }

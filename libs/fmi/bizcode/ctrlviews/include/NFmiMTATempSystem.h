@@ -289,6 +289,12 @@ class NFmiMTATempSystem
 	int GetSelectedProducerIndex(bool getLimitCheckedIndex) const;
 	void SetSelectedProducerIndex(int newValue, bool ignoreHighLimit);
 	void ToggleSelectedProducerIndex(FmiDirection direction);
+	double IntegrationRangeInKm() const { return itsIntegrationRangeInKm; }
+	void IntegrationRangeInKm(double newValue);
+	double IntegrationTimeOffset1InHours() const { return itsIntegrationTimeOffset1InHours; }
+	void IntegrationTimeOffset1InHours(double newValue);
+	double IntegrationTimeOffset2InHours() const { return itsIntegrationTimeOffset2InHours; }
+	void IntegrationTimeOffset2InHours(double newValue);
 
 	void Write(std::ostream& os) const;
 	void Read(std::istream& is);
@@ -423,6 +429,12 @@ private:
 	// Nyt halutun luotauksen voi v‰lit‰ p‰‰luotaukseksi luotausn‰ytˆss‰ CTRL + SHIFT + rullalla.
 	// Indeksit alkavat 0:sta ja jos indeksi on isompi kuin valittujen luotausten m‰‰r‰, valituksi tulee viimeisin tuottaja listalta.
 	int itsSelectedProducerIndex = 0;
+	// Luotauksien kokoomalaskentoihin liittyv‰t asetukset
+	// Jos itsIntegrationRangeInKm arvo on 0, ei tehd‰ kokoomalaskuja alueen suhteen ollenkaan
+	double itsIntegrationRangeInKm = 0;
+	// Jos aikakokooma asetukset ovat 0:aa, ei tehd‰ ajansuhteen mit‰‰n kokoomalaskuja
+	double itsIntegrationTimeOffset1InHours = 0;
+	double itsIntegrationTimeOffset2InHours = 0;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const NFmiMTATempSystem::TempInfo& item){item.Write(os); return os;}

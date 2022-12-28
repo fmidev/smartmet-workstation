@@ -90,6 +90,9 @@ private:
     BOOL fSoundingTimeLockWithMapView;
     BOOL fSoundingTextUpward;
     BOOL fShowSecondaryDataView;
+	CString itsAvgRangeInKmStr;
+	CString itsAvgTimeRange1Str;
+	CString itsAvgTimeRange2Str;
 
 	// Generated message map functions
 	//{{AFX_MSG(CFmiTempDlg)
@@ -116,27 +119,31 @@ public:
 	afx_msg void OnCbnSelchangeComboProducerSelection();
 	afx_msg void OnCbnCloseUp();
 
-	afx_msg void OnAcceleratorTempProducer1();
-	afx_msg void OnAcceleratorTempProducer2();
-	afx_msg void OnAcceleratorTempProducer3();
-	afx_msg void OnAcceleratorTempProducer4();
-	afx_msg void OnAcceleratorTempProducer5();
-	afx_msg void OnAcceleratorTempProducer6();
-	afx_msg void OnAcceleratorTempProducer7();
-	afx_msg void OnAcceleratorTempProducer8();
-	afx_msg void OnAcceleratorTempProducer9();
-	afx_msg void OnAcceleratorTempProducer10();
-	afx_msg void OnEditSpaceOut();
 	afx_msg void OnBnClickedCheckShowTextualSoundingDataSideView();
-	afx_msg void OnAcceleratorSwapArea();
-	afx_msg void OnAcceleratorToggleTooltip();
 	afx_msg void OnEnChangeEditModelRunCount();
     afx_msg void OnBnClickedCheckUseMapTimeWithSoundings();
     afx_msg void OnBnClickedCheckPutSoundingTextsUpward();
-    afx_msg void OnAcceleratorChangeMapTypeExtraMap();
     afx_msg void OnBnClickedCheckShowSecondaryDataView();
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
-	afx_msg void OnAcceleratorLogViewerToolboxdeb();
+	afx_msg void OnAcceleratorSoundingProducer1();
+	afx_msg void OnAcceleratorSoundingProducer2();
+	afx_msg void OnAcceleratorSoundingProducer3();
+	afx_msg void OnAcceleratorSoundingProducer4();
+	afx_msg void OnAcceleratorSoundingProducer5();
+	afx_msg void OnAcceleratorSoundingProducer6();
+	afx_msg void OnAcceleratorSoundingProducer7();
+	afx_msg void OnAcceleratorSoundingProducer8();
+	afx_msg void OnAcceleratorSoundingProducer9();
+	afx_msg void OnAcceleratorSoundingProducer10();
+	afx_msg void OnAcceleratorSoundingOpenLogViewer();
+	afx_msg void OnAcceleratorSoundingSpaceOutWinds();
+	afx_msg void OnAcceleratorSoundingToggleSideView2();
+	afx_msg void OnAcceleratorSoundingToggleStabilityIndexView();
+	afx_msg void OnAcceleratorSoundingToggleTextView();
+	afx_msg void OnAcceleratorSoundingToggleTooltip();
+	afx_msg void OnEnChangeEditAvgRangeInKm();
+	afx_msg void OnEnChangeEditAvgTimeRange1();
+	afx_msg void OnEnChangeEditAvgTimeRange2();
 };
 
 

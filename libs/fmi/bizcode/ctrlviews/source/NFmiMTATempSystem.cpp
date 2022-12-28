@@ -18,6 +18,11 @@ static char THIS_FILE[] = __FILE__;
 #endif
 */
 
+#ifdef max
+#undef max
+#undef min
+#endif
+
 double NFmiMTATempSystem::itsLatestVersionNumber = 1.0;
 
 // ************************************************************
@@ -862,6 +867,40 @@ void NFmiMTATempSystem::ToggleSelectedProducerIndex(FmiDirection direction)
 		itsSelectedProducerIndex = 0;
 }
 
+static double SetInsideLimits(double newValue, double minValue, double maxValue)
+{
+	if(newValue == kFloatMissing)
+	{
+		return 0;
+	}
+	else
+	{
+		double value = std::max(minValue, newValue);
+		value = std::min(value, maxValue);
+		return value;
+	}
+}
+
+const double gIntegrationRangeInKmMin = 0;
+const double gIntegrationRangeInKmMax = 250;
+const double gIntegrationTimeOffsetInHoursMin = -50;
+const double gIntegrationTimeOffsetInHoursMax = 50;
+
+void NFmiMTATempSystem::IntegrationRangeInKm(double newValue) 
+{ 
+	itsIntegrationRangeInKm = ::SetInsideLimits(newValue, gIntegrationRangeInKmMin, gIntegrationRangeInKmMax);
+}
+
+void NFmiMTATempSystem::IntegrationTimeOffset1InHours(double newValue) 
+{ 
+	itsIntegrationTimeOffset1InHours = ::SetInsideLimits(newValue, gIntegrationTimeOffsetInHoursMin, gIntegrationTimeOffsetInHoursMax);
+}
+
+void NFmiMTATempSystem::IntegrationTimeOffset2InHours(double newValue) 
+{ 
+	itsIntegrationTimeOffset2InHours = ::SetInsideLimits(newValue, gIntegrationTimeOffsetInHoursMin, gIntegrationTimeOffsetInHoursMax);
+}
+
 void NFmiMTATempSystem::Write(std::ostream& os) const
 {
 	os << "// NFmiMTATempSystem::Write..." << std::endl;
@@ -988,6 +1027,9 @@ void NFmiMTATempSystem::Write(std::ostream& os) const
 	extraData.Add(static_cast<double>(itsSoundingViewSettingsFromWindowsRegisty.SoundingTimeLockWithMapView())); // fSoundingTimeLockWithMapViewWinReg on 7. uusi double arvo
 	extraData.Add(static_cast<double>(itsSoundingViewSettingsFromWindowsRegisty.ShowStabilityIndexSideView())); // ShowStabilityIndexSideView on 8. uusi double arvo
 	extraData.Add(static_cast<double>(itsSoundingViewSettingsFromWindowsRegisty.ShowTextualSoundingDataSideView())); // ShowTextualSoundingDataSideView on 9. uusi double arvo
+	extraData.Add(itsIntegrationRangeInKm); // IntegrationRangeInKm on 10. uusi double arvo
+	extraData.Add(itsIntegrationTimeOffset1InHours); // IntegrationTimeOffset1InHours on 11. uusi double arvo
+	extraData.Add(itsIntegrationTimeOffset2InHours); // IntegrationTimeOffset2InHours on 12. uusi double arvo
 
     extraData.Add(MakeSecondaryDataLineInfoString()); // WS + N + RH lineInfor yhten‰ stringin‰ on 1. uusi string arvo extroissa
     extraData.Add(::MakeProducerContainerServerUsageString(itsSoundingComparisonProducers)); // 2. uusi string arvo extroissa on valittujen tuottajien server/local data k‰yttˆtila tyyliin "0 1 0 0"
@@ -1231,9 +1273,19 @@ void NFmiMTATempSystem::Read(std::istream& is)
 	}
 	else
 	{
-		// Versiolla 5.13.12.0 ja sit‰ edelt‰vill‰ versioilla tehty n‰yttˆmakro pit‰‰ tehd‰ erityis lagacy metodeilla
+		// Versiolla 5.13.12.0 ja sit‰ edelt‰vill‰ versioilla tehty n‰yttˆmakro pit‰‰ tehd‰ erityis legacy metodeilla
 		SetupSideViewsFromLegacyViewMacroValues(showIndexiesLegacyValue, showSideViewLegacyValue);
 	}
+
+	itsIntegrationRangeInKm = 0;
+	if(extraData.itsDoubleValues.size() > 9)
+		itsIntegrationRangeInKm = static_cast<int>(extraData.itsDoubleValues[9]);
+	itsIntegrationTimeOffset1InHours = 0;
+	if(extraData.itsDoubleValues.size() > 10)
+		itsIntegrationTimeOffset1InHours = static_cast<int>(extraData.itsDoubleValues[10]);
+	itsIntegrationTimeOffset2InHours = 0;
+	if(extraData.itsDoubleValues.size() > 11)
+		itsIntegrationTimeOffset2InHours = static_cast<int>(extraData.itsDoubleValues[11]);
 
     if(extraData.itsStringValues.size() > 0)
         ReadSecondaryDataLineInfoFromString(extraData.itsStringValues[0]);
@@ -1335,6 +1387,9 @@ void NFmiMTATempSystem::InitFromViewMacro(const NFmiMTATempSystem &theOther, boo
 	// itsSoundingDataServerConfigurations = theOther.itsSoundingDataServerConfigurations;
 	itsHodografViewData = theOther.itsHodografViewData;
 	itsSelectedProducerIndex = theOther.itsSelectedProducerIndex;
+	itsIntegrationRangeInKm = theOther.itsIntegrationRangeInKm;
+	itsIntegrationTimeOffset1InHours = theOther.itsIntegrationTimeOffset1InHours;
+	itsIntegrationTimeOffset2InHours = theOther.itsIntegrationTimeOffset2InHours;
 }
 
 // S‰‰det‰‰n kaikki aikaa liittyv‰t jutut parametrina annettuun aikaan, ett‰ SmartMet s‰‰tyy ladattuun CaseStudy-dataan mahdollisimman hyvin.
