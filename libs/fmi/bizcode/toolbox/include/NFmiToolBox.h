@@ -117,7 +117,9 @@ public:
   // Koska asetus metodi on nimetty GetPrintInfo-nimiseksi, laitoin tämän itse palautus metodin nimeksi tälläisen.
   CPrintInfo* ReturnPrintInfo(void){ return pItsPrintInfo; }
 
-  double MeasureText(const NFmiString & theText);
+  double MeasureText(const NFmiString& theText);
+  NFmiPoint MeasureTextCorrect(const NFmiText & theText);
+  void SetupFont(CFont& theFont, NFmiDrawingEnvironment* fmiEnvironment);
 
   long HX(double sX) const { return (long)(sX * mClientRect.Width()); }
   long HY(double sY) const { return (long)(sY * mClientRect.Height()); }

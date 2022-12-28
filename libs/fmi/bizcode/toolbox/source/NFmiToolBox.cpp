@@ -751,53 +751,53 @@ static std::wstring DoWideStringConversion(const std::string& text, bool doUtf8C
 		return std::wstring(CA2T(text.c_str()));
 }
 
+void NFmiToolBox::SetupFont(CFont& theFont, NFmiDrawingEnvironment* fmiEnvironment)
+{
+	double fontHeight;
+	FmiFontType fontType;
+	int fontWeight; // 15.6.1999/Marko
+	if(fmiEnvironment)
+	{
+		fontHeight = fmiEnvironment->GetFontHeight();
+		fontType = fmiEnvironment->GetFontType();		//040397/LW
+		if(!fmiEnvironment->BoldFont()) // 15.6.1999/Marko
+			fontWeight = FW_NORMAL;
+		else
+			fontWeight = FW_BOLD;
+	}
+	else
+	{
+		fontHeight = itsBaseEnvironment->GetFontHeight();
+		fontType = itsBaseEnvironment->GetFontType();		//040397/LW
+		if(!itsBaseEnvironment->BoldFont()) // 15.6.1999/Marko
+			fontWeight = FW_NORMAL;
+		else
+			fontWeight = FW_BOLD;
+	}
+
+	theFont.CreateFont((int)fontHeight
+		, 0 /* width */
+		, 0 // escapement (angle in 0.1 degrees)
+		, 1 // orientation (angle in 0.1 degrees)
+		, fontWeight // weight (FW_NORMAL, FW_BOLD jne.)
+		, 0 // italic
+		, 0 // underline
+		, 0 // strikeout
+		, 1 /* char set */
+		, OUT_TT_PRECIS//040397 //291096/LW oli 1
+		, 1
+		, PROOF_QUALITY
+		, DEFAULT_PITCH /* FF_DONTCARE*/ /* 1 == FIXED_PITCH */ // 29.9.1998/Marko&Persa
+		, ConvertFont(fontType)); //040397/LW oli NULL
+}
+
 //--------------------------------------------------------BuildText
 bool NFmiToolBox::BuildText (const NFmiText *fmiShape)
 {
   SelectEnvironment(fmiShape);
 
- // LW
-///  CFont *oldFont = (CFont *)(pDC->SelectStockObject(ANSI_VAR_FONT));
   CFont myFont;
-  NFmiDrawingEnvironment *fmiEnvironment = fmiShape->GetEnvironment();
-  double fontHeight;
-  FmiFontType fontType;
-  int fontWeight; // 15.6.1999/Marko
-  if(fmiEnvironment)
-  {
-	  fontHeight = fmiEnvironment->GetFontHeight();
- 	  fontType = fmiEnvironment->GetFontType();		//040397/LW
-	  if(!fmiEnvironment->BoldFont()) // 15.6.1999/Marko
-		  fontWeight = FW_NORMAL;
-	  else
-		  fontWeight = FW_BOLD;
-  }
-  else
-  {
-	  fontHeight = itsBaseEnvironment->GetFontHeight();
-  	  fontType = itsBaseEnvironment->GetFontType();		//040397/LW
-	  if(!itsBaseEnvironment->BoldFont()) // 15.6.1999/Marko
-		  fontWeight = FW_NORMAL;
-	  else
-		  fontWeight = FW_BOLD;
-  }
-
-  myFont.CreateFont((int)fontHeight
-				   ,0 /* width */
-				   ,0 // escapement (angle in 0.1 degrees)
-                   ,1 // orientation (angle in 0.1 degrees)
-				   ,fontWeight // weight (FW_NORMAL, FW_BOLD jne.)
-				   ,0 // italic
-				   ,0 // underline
-                   ,0 // strikeout
-				   ,1 /* char set */
-				   ,OUT_TT_PRECIS//040397 //291096/LW oli 1
-                   ,1
-				   ,PROOF_QUALITY
-				   ,DEFAULT_PITCH /* FF_DONTCARE*/ /* 1 == FIXED_PITCH */ // 29.9.1998/Marko&Persa
-				   ,ConvertFont(fontType)); //040397/LW oli NULL
-
-//  myFont.CreatePointFont((int)fontHeight, ConvertFont(fontType), pDC);  //040397/LW
+  SetupFont(myFont, fmiShape->GetEnvironment());
   CFont *oldFont = pDC->SelectObject(&myFont);
 
   CPoint theMFCPoint;				// BottomLeft() ei auta
@@ -1243,6 +1243,22 @@ double NFmiToolBox::MeasureText(const NFmiString &theText)
  return (float)theText.GetLen()*mfontdata.tmAveCharWidth/mClientRect.Width();
 
 }
+
+NFmiPoint NFmiToolBox::MeasureTextCorrect(const NFmiText& theText)
+{
+	CFont myFont;
+	SetupFont(myFont, theText.GetEnvironment());
+	CFont* oldFont = pDC->SelectObject(&myFont);
+	auto drawnWideString = ::DoWideStringConversion(theText.GetText(), theText.DoUtf8Conversion());
+	CRect drawRect;
+	pDC->DrawText(drawnWideString.c_str(), drawRect, DT_CALCRECT);
+	pDC->SelectObject(oldFont);
+	myFont.DeleteObject();
+	double relativeSizeX = double(drawRect.Width()) / mClientRect.Width();
+	double relativeSizeY = double(drawRect.Height())/mClientRect.Height();
+	return NFmiPoint(relativeSizeX, relativeSizeY);
+}
+
  //---------------SetTextAlignment(FmiDirection theAlignment)
 void NFmiToolBox::SetTextAlignment(FmiDirection theAlignment)
 {
