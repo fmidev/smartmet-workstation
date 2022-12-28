@@ -220,6 +220,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	bool IsRangeMeterModeOn(bool checkAlsoIfMouseDragIsOn) const;
 	void SetRangeMeterDragStart(const NFmiPoint& thePlace);
 	void SetRangeMeterDragEnd(const NFmiPoint& thePlace, bool mouseDragging);
+	void MoveRangeMeterStart(const NFmiPoint& thePlace);
 
     template<typename T>
     bool MakeParamHandlerViewActions(T action)

@@ -2208,7 +2208,11 @@ bool NFmiStationViewHandler::LeftButtonDown(const NFmiPoint& thePlace, unsigned 
 		}
 		else if(IsRangeMeterModeOn(false))
 		{
-			SetRangeMeterDragStart(thePlace);
+			if(!(theKey & kCtrlKey))
+			{
+				// Raahaus aloitetaan vain jos ei ole CTRL nappula pohjassa
+				SetRangeMeterDragStart(thePlace);
+			}
 		}
 		else if(itsCtrlViewDocumentInterface->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush)
 		{
@@ -2258,6 +2262,14 @@ void NFmiStationViewHandler::SetRangeMeterDragEnd(const NFmiPoint& thePlace, boo
 		mapViewRangeMeter.MouseDragOn(false);
 	}
 	mapViewRangeMeter.DragEndLatlonPoint(ViewPointToLatLon(thePlace));
+}
+
+void NFmiStationViewHandler::MoveRangeMeterStart(const NFmiPoint& thePlace)
+{
+	auto& mapViewRangeMeter = itsCtrlViewDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
+	// Laitetaan MouseDrag varmuuden vuoksi off tilaan
+	mapViewRangeMeter.MouseDragOn(false);
+	mapViewRangeMeter.MoveStartLatlonPoint(ViewPointToLatLon(thePlace));
 }
 
 void NFmiStationViewHandler::LeftButtonDownCrossSectionActions(const NFmiPoint& thePlace, unsigned long )
@@ -2346,15 +2358,24 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 		SetThisAsActiveViewRow();
 
         itsCtrlViewDocumentInterface->ActiveViewTime(itsTime);
-
+		bool ctrlKeyDown = (theKey & kCtrlKey);
 		if(IsMouseCursorOverParameterBox(thePlace)) // napattava ensimmäiseksi hiiren toiminnot!!!!!!!!
 		{
             return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->LeftButtonUp(thePlace, theKey); });
 		}
-		else if(IsRangeMeterModeOn(true))
+		else if(IsRangeMeterModeOn(!ctrlKeyDown))
 		{
-			SetRangeMeterDragEnd(thePlace, false);
-			return true;
+			if(!ctrlKeyDown)
+			{
+				// Raahaus lopetetaan vain jos ei ole CTRL nappula pohjassa
+				SetRangeMeterDragEnd(thePlace, false);
+				return true;
+			}
+			else
+			{
+				MoveRangeMeterStart(thePlace);
+				return true;
+			}
 		}
 		else if(IsBrushToolUsed())
 		{
@@ -3084,8 +3105,14 @@ bool NFmiStationViewHandler::MouseMove(const NFmiPoint &thePlace, unsigned long 
             return MouseDragZooming(thePlace); // tehdään zoomi laatikon piirtoa suoraan karttanäytölle
 		else if(IsRangeMeterModeOn(false))
 		{
-			SetRangeMeterDragEnd(thePlace, true);
-			return true;
+			if(!(theKey & kCtrlKey))
+			{
+				// Raahausta tehdään vain jos ei ole CTRL nappula pohjassa
+				SetRangeMeterDragEnd(thePlace, true);
+				return true;
+			}
+			else
+				return false;
 		}
 		else if(itsCtrlViewDocumentInterface->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush)
             return MouseMoveBrushAction(thePlace);
@@ -4129,6 +4156,32 @@ void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 				color,
 				fontSizeInMM,
 				lockModeStr,
+				textRelativeLocation,
+				pixelsPerMM,
+				itsToolBox,
+				fontName,
+				kRight);
+
+			textRelativeLocation.Y(textRelativeLocation.Y() - relativeTextLineHeight);
+			std::string moveStartStr = "Move start point (CTRL + left up)";
+			CtrlView::DrawTextToRelativeLocation(
+				*itsGdiPlusGraphics,
+				color,
+				fontSizeInMM,
+				moveStartStr,
+				textRelativeLocation,
+				pixelsPerMM,
+				itsToolBox,
+				fontName,
+				kRight);
+
+			textRelativeLocation.Y(textRelativeLocation.Y() - relativeTextLineHeight);
+			std::string measureStr = "Measure dist: left down - drag - left up";
+			CtrlView::DrawTextToRelativeLocation(
+				*itsGdiPlusGraphics,
+				color,
+				fontSizeInMM,
+				measureStr,
 				textRelativeLocation,
 				pixelsPerMM,
 				itsToolBox,

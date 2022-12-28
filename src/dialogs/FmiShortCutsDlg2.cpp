@@ -198,9 +198,10 @@ void CFmiShortCutsDlg2::InitDialogTexts(void)
 
     itsTextU_ += _TEXT("\r\n");
     itsTextU_ += CA2T(::GetDictionaryString("- Y  Distance measure mode on/off").c_str()) + CString(_TEXT("\r\n"));
-    itsTextU_ += CA2T(::GetDictionaryString("- CTRL + Y  Toggle Lock mode (locks start/end points and allows normal data viewing)").c_str()) + CString(_TEXT("\r\n"));
-    itsTextU_ += CA2T(::GetDictionaryString("- SHIFT + Y  Change colour (white -> black -> red -> green -> blue -> magenta -> yellow -> cyan)").c_str()) + CString(_TEXT("\r\n"));
     itsTextU_ += CA2T(::GetDictionaryString("- To measure distance on map: Start left mouse down - drag to destination - left mouse up").c_str()) + CString(_TEXT("\r\n"));
+    itsTextU_ += CA2T(::GetDictionaryString("- Just change start point: CTRL key down - left mouse down+up").c_str()) + CString(_TEXT("\r\n"));
+    itsTextU_ += CA2T(::GetDictionaryString("- CTRL + Y  Toggle Lock mode (locks start/end points and allows normal data selection/viewing)").c_str()) + CString(_TEXT("\r\n"));
+    itsTextU_ += CA2T(::GetDictionaryString("- SHIFT + Y  Change colour (white -> black -> red -> green -> blue -> magenta -> yellow -> cyan)").c_str()) + CString(_TEXT("\r\n"));
 
 	itsTextU_ += _TEXT("\r\n");
     itsTextU_ += CA2T(::GetDictionaryString("ShortCutsDlgMouseClickStr1").c_str()) + CString(_TEXT("\r\n"));
