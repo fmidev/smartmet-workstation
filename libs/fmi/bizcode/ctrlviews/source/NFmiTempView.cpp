@@ -34,6 +34,7 @@
 #include "SoundingViewSettingsFromWindowsRegisty.h"
 #include "NFmiHelpDataInfo.h"
 #include "ColorStringFunctions.h"
+#include "NFmiDataModifierAvg.h"
 
 #include <stdexcept>
 #include "boost\math\special_functions\round.hpp"
@@ -212,6 +213,34 @@ static void DrawGdiplusCurve(Gdiplus::Graphics &theGraphics, std::vector<PointF>
         GdiplusGraphicsSmoothModeRestorer smoothModeHandler(theGraphics, theWantedSmoothMode, fPrinting, fRectangularLine);
         theGraphics.DrawLines(&pen, &thePoints[0], static_cast<INT>(thePoints.size()));
     }
+}
+
+TotalSoundingData::TotalSoundingData() = default;
+
+TotalSoundingData::TotalSoundingData(NFmiMTATempSystem& mtaTempSystem)
+{
+	itsIntegrationRangeInKm = mtaTempSystem.IntegrationRangeInKm();
+	itsIntegrationTimeOffset1InHours = mtaTempSystem.IntegrationTimeOffset1InHours();
+	itsIntegrationTimeOffset2InHours = mtaTempSystem.IntegrationTimeOffset2InHours();
+}
+
+bool TotalSoundingData::IsSameSounding(TotalSoundingData& other)
+{
+	if(!itsSoundingData.IsSameSounding(other.itsSoundingData))
+		return false;
+	if(itsIntegrationRangeInKm != other.itsIntegrationRangeInKm)
+		return false;
+	if(itsIntegrationTimeOffset1InHours != other.itsIntegrationTimeOffset1InHours)
+		return false;
+	if(itsIntegrationTimeOffset2InHours != other.itsIntegrationTimeOffset2InHours)
+		return false;
+
+	return true;
+}
+
+bool TotalSoundingData::HasAvgIntegrationData() const
+{
+	return itsIntegrationPointsCount != 0 || itsIntegrationTimesCount != 0;
 }
 
 Gdiplus::SmoothingMode NFmiTempView::GetUsedCurveDrawSmoothingMode() const
@@ -765,8 +794,8 @@ void NFmiTempView::DrawTextualSideViewRelatedStuff()
 	itsSoundingIndexStr = ""; 
 	if(IsAnyTextualSideViewVisible())
 	{
-		DrawStabilityIndexData(itsSelectedProducerSoundingData);
-		DrawTextualSoundingData(itsSelectedProducerSoundingData);
+		DrawStabilityIndexData(itsSelectedProducerSoundingData.itsSoundingData);
+		DrawTextualSoundingData(itsSelectedProducerSoundingData.itsSoundingData);
 		// Lisätään varmuuden vuoksi rivinvaihto, niin näkee paremmin, missä eri tekstiosuudet vaihtuvat
 		itsSoundingIndexStr += "\n"; 
 		DrawAnimationControls();
@@ -1166,7 +1195,7 @@ void NFmiTempView::DrawSoundingInTextFormat(NFmiSoundingDataOpt1 &theData)
 	std::deque<float> &wsVec = theData.GetParamData(kFmiWindSpeedMS);
 	std::deque<float> &wdVec = theData.GetParamData(kFmiWindDirection);
 	NFmiString str(::GetStationsShortName(theData));
-	NFmiText text(p, NFmiString(""), false, 0, itsDrawingEnvironment);
+	NFmiText text(p, NFmiString(""), true, 0, itsDrawingEnvironment);
 	auto lineH = itsTextualSoundingDataRelativeLineHeight;
 	DrawNextLineToIndexView(lineH, text, str, p, false);
 
@@ -1902,8 +1931,8 @@ void NFmiTempView::DrawSoundingsInMTAMode(void)
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
     int modelRunCount = mtaTempSystem.ModelRunCount();
 	int producerIndex = 0;
-	const NFmiMTATempSystem::Container &temps = mtaTempSystem.GetTemps();
-	for(NFmiMTATempSystem::Container::const_iterator it = temps.begin() ; it != temps.end(); ++it)
+	itsLegendDrawingLineData.clear();
+	for(const auto &tempInfo : mtaTempSystem.GetTemps())
 	{
 		for(const auto &selectedProducer : mtaTempSystem.SoundingComparisonProducers())
 		{
@@ -1913,16 +1942,17 @@ void NFmiTempView::DrawSoundingsInMTAMode(void)
 				for(int modelRunIndex = startIndex; modelRunIndex <= 0; modelRunIndex++)
 				{
 					double brightningFactor = CtrlView::CalcBrightningFactor(0, modelRunCount, modelRunIndex); // mitä isompi luku, sitä enemmän vaalenee (0-100), vanhemmat malliajot vaaleammalla
-					DrawOneSounding(selectedProducer, *it, producerIndex, brightningFactor, modelRunIndex);
+					DrawOneSounding(selectedProducer, tempInfo, producerIndex, brightningFactor, modelRunIndex);
 				}
 			}
 			else
 			{
-				DrawOneSounding(selectedProducer, *it, producerIndex, 0, 0);
+				DrawOneSounding(selectedProducer, tempInfo, producerIndex, 0, 0);
 			}
 			producerIndex++;
 		}
 	}
+	DrawLegendLineData();
 }
 
 static NFmiMetTime GetUsedSoundingDataTime(CtrlViewDocumentInterface *documentInterface, const NFmiMTATempSystem::TempInfo &tempInfo)
@@ -1973,10 +2003,9 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
         usedTempInfo.Latlon(usedLocationWithName.GetLocation());
 		auto groundDataInfo = ::GetPossibleGroundData(itsCtrlViewDocumentInterface, info, theProducer, g_CombineSurfaceDataTypes);
 		ResetTextualScrollingIfSoundingDataChanged(theProducer, usedTempInfo, info, theProducerIndex);
-		NFmiSoundingDataOpt1 sounding;
-		FillSoundingData(info, sounding, usedTempInfo.Time(), usedLocationWithName, groundDataInfo, theProducer);
-		FillInPossibleMissingPressureData(sounding, theProducer, usedTempInfo.Time(), usedLocationWithName);
         NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
+		TotalSoundingData sounding(mtaTempSystem);
+		FillSoundingData(info, sounding, usedTempInfo.Time(), usedLocationWithName, groundDataInfo, theProducer);
         NFmiColor usedColor(mtaTempSystem.SoundingColor(theProducerIndex));
 		if(theBrightningFactor != 0)
 			usedColor = NFmiColorSpaces::GetBrighterColor(usedColor, theBrightningFactor);
@@ -1991,7 +2020,7 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 		{
 			// Jos ei löytynyt mitään dataa ja kyse oli 1. piirrettävästä luotausdatasta, pitää itsFirstSoundingData dataosa nollata,
 			// jotta tekstimuotoisiin sivunäyttöihin ei jäisi vanha data 'kummittelemaan'
-			itsSelectedProducerSoundingData = NFmiSoundingDataOpt1();
+			itsSelectedProducerSoundingData = TotalSoundingData();
 		}
 
 		if(mainCurve)
@@ -2011,17 +2040,272 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 					emptySoundingData.Location(usedLocationWithName);
 				}
 			}
-			DrawStationInfo(emptySoundingData, theProducerIndex);
+			TotalSoundingData totalData;
+			totalData.itsSoundingData = emptySoundingData;
+			DrawStationInfo(totalData, theProducerIndex);
 		}
 	}
 }
 
-bool NFmiTempView::FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo, const NFmiMTATempSystem::SoundingProducer &theProducer)
+bool NFmiTempView::FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, TotalSoundingData &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo, const NFmiMTATempSystem::SoundingProducer &theProducer)
 {
-    if(theProducer.useServer())
-        return FillSoundingDataFromServer(theProducer, theSoundingData, theTime, theLocation);
-    else
-        return NFmiSoundingIndexCalculator::FillSoundingDataOpt1(theInfo, theSoundingData, theTime, theLocation, theGroundDataInfo);
+	bool status = false;
+	if(theProducer.useServer())
+	{
+		status = FillSoundingDataFromServer(theProducer, theSoundingData.itsSoundingData, theTime, theLocation);
+	}
+	else
+	{
+		if(DoIntegrationSounding(theInfo, theSoundingData))
+		{
+			status = FillIntegrationSounding(theInfo, theSoundingData, theTime, theLocation, theGroundDataInfo);
+		}
+		else
+		{
+			status = NFmiSoundingIndexCalculator::FillSoundingDataOpt1(theInfo, theSoundingData.itsSoundingData, theTime, theLocation, theGroundDataInfo);
+		}
+	}
+
+	// Tämä tehdään vasta lopulliselle, siis mahdollisesti yhdistelmäluotausdatalle, kerralla
+	FillInPossibleMissingPressureData(theSoundingData.itsSoundingData, theProducer, theTime, theLocation);
+	return status;
+}
+
+bool NFmiTempView::DoIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData)
+{
+	auto isModelData = theInfo->IsGrid();
+	auto doAreaIntegration = theSoundingData.itsIntegrationRangeInKm > 0;
+	auto doTimeIntegration = theSoundingData.itsIntegrationTimeOffset1InHours != 0 || theSoundingData.itsIntegrationTimeOffset2InHours != 0;
+	return isModelData && (doAreaIntegration || doTimeIntegration);
+}
+
+bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo)
+{
+	auto rangeInMeters = theSoundingData.itsIntegrationRangeInKm * 1000.;
+	bool singleLocation = (rangeInMeters == 0);
+	auto timeOffset1InHours = theSoundingData.itsIntegrationTimeOffset1InHours;
+	auto timeOffset2InHours = theSoundingData.itsIntegrationTimeOffset2InHours;
+	if(timeOffset1InHours > timeOffset2InHours)
+	{
+		// Varmistetaan että laskuihin offsetit menevät oikeassa järjestyksessä
+		std::swap(timeOffset1InHours, timeOffset2InHours);
+	}
+	auto startTime = theTime;
+	startTime.ChangeByMinutes(boost::math::iround(timeOffset1InHours * 60.));
+	long minuteRange = boost::math::iround((timeOffset2InHours - timeOffset1InHours) * 60.);
+	unsigned long timeIndex1 = gMissingIndex;
+	unsigned long timeIndex2 = gMissingIndex;
+	bool singleTime = (minuteRange == 0);
+	if(singleTime || NFmiFastInfoUtils::FindTimeIndicesForGivenTimeRange(theInfo, startTime, minuteRange, timeIndex1, timeIndex2))
+	{
+		std::vector<unsigned long> locationIndexes;
+		if(!singleLocation)
+		{
+			locationIndexes = CalcAreaIntegrationLocationIndexes(theInfo, theLocation, rangeInMeters);
+		}
+		if(singleLocation || !locationIndexes.empty())
+		{
+			return FillIntegrationSounding(theInfo, theSoundingData, startTime, theLocation, theGroundDataInfo, timeIndex1, timeIndex2, locationIndexes);
+		}
+	}
+
+	return false;
+}
+
+std::vector<FmiParameterName> gSoundingParameterList{ kFmiTemperature,kFmiDewPoint,kFmiHumidity,kFmiPressure,kFmiGeopHeight,kFmiWindSpeedMS,kFmiWindDirection,kFmiWindUMS,kFmiWindVMS,kFmiWindVectorMS,kFmiTotalCloudCover };
+
+static bool CalcAvgSoundingData(TotalSoundingData& theSoundingDataOut, std::vector<NFmiSoundingDataOpt1>& soundingDataList, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo)
+{
+	if(!soundingDataList.empty())
+	{
+		NFmiDataModifierAvg avg;
+		auto soundingDataSize = soundingDataList.size();
+		auto parameterSize = gSoundingParameterList.size();
+		auto levelSize = soundingDataList.front().GetParamData(gSoundingParameterList.front()).size();
+		// Varmistetaan että tulosdatassa on tilaa lähtödatan levelien verran
+		for(size_t parameterIndex = 0; parameterIndex < parameterSize; parameterIndex++)
+		{
+			theSoundingDataOut.itsSoundingData.GetParamData(gSoundingParameterList[parameterIndex]).resize(levelSize);
+		}
+
+		// Lasketaan jokaisen lähtödatan parametetrien keskiarvo kaikille leveleille erikseen ja 
+		// sijoitetaan saatu keskiarvo tulosdatan kyseisen parametrin ja kyseisen levelin kohdalle.
+		for(size_t levelIndex = 0; levelIndex < levelSize; levelIndex++)
+		{
+			for(size_t parameterIndex = 0; parameterIndex < parameterSize; parameterIndex++)
+			{
+				avg.Clear();
+				for(size_t soundingDataIndex = 0; soundingDataIndex < soundingDataSize; soundingDataIndex++)
+				{
+					avg.Calculate(soundingDataList[soundingDataIndex].GetParamData(gSoundingParameterList[parameterIndex])[levelIndex]);
+				}
+				theSoundingDataOut.itsSoundingData.GetParamData(gSoundingParameterList[parameterIndex])[levelIndex] = avg.CalculationResult();
+			}
+		}
+
+		theSoundingDataOut.itsSoundingData.MakeFillDataPostChecks(theInfo, theGroundDataInfo);
+		return true;
+	}
+	return false;
+}
+
+bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo, unsigned long timeIndex1, unsigned long timeIndex2, const std::vector<unsigned long>& locationIndexes)
+{
+	std::vector<NFmiSoundingDataOpt1> soundingDataList;
+	bool singleLocation = locationIndexes.empty();
+	bool singleTime = (timeIndex1 == timeIndex2);
+	theSoundingData.itsIntegrationPointsCount = singleLocation ? 1 : int(locationIndexes.size());
+	theSoundingData.itsIntegrationTimesCount = singleTime ? 1 : int(timeIndex2 - timeIndex1 + 1);
+	NFmiSoundingDataOpt1 data;
+	for(auto timeIndex = timeIndex1; timeIndex <= timeIndex2; timeIndex++)
+	{
+		theInfo->TimeIndex(timeIndex);
+		auto currentTime = singleTime ? theTime : theInfo->Time();
+		if(singleLocation)
+		{
+			if(NFmiSoundingIndexCalculator::FillSoundingDataOpt1(theInfo, data, currentTime, theLocation, theGroundDataInfo))
+			{
+				soundingDataList.push_back(data);
+			}
+		}
+		else
+		{
+			for(auto locationIndex : locationIndexes)
+			{
+				theInfo->LocationIndex(locationIndex);
+				NFmiLocation usedLocation(theInfo->LatLon());
+				if(NFmiSoundingIndexCalculator::FillSoundingDataOpt1(theInfo, data, currentTime, usedLocation, theGroundDataInfo))
+				{
+					soundingDataList.push_back(data);
+				}
+			}
+		}
+		if(singleTime)
+			break; // tullaan loopista ulos jos vain yhden ajan tarkastelu, en saanut rakennettua sopivaa ehtoa for-looppiin ja jää ikilooppiin muuten
+	}
+
+	if(!soundingDataList.empty())
+	{
+		theSoundingData.itsSoundingData.Time(theTime);
+		theSoundingData.itsSoundingData.Location(theLocation);
+		theSoundingData.itsSoundingData.OriginTime(theInfo->OriginTime());
+		return ::CalcAvgSoundingData(theSoundingData, soundingDataList, theInfo, theGroundDataInfo);
+	}
+	return false;
+}
+
+// Oletus: theGridPoint sisältää kokonaisluvut X ja Y arvoina
+static unsigned long CalcGridPointLocationIndex(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiPoint& theGridPoint)
+{
+	if(theGridPoint.X() < 0 || theGridPoint.Y() < 0)
+		return gMissingIndex;
+	if(theGridPoint.X() >= theInfo->GridXNumber() || theGridPoint.Y() >= theInfo->GridYNumber())
+		return gMissingIndex;
+
+	// grid-point x/y arvot floor:ataan indeksi laskuja varten varmuuden vuoksi
+	return ((int)theGridPoint.Y() * theInfo->GridXNumber()) + (int)theGridPoint.X();
+}
+
+struct InsideGridRangeData
+{
+	unsigned long locationIndex = gMissingIndex;
+	bool insideGrid = false;
+	bool insideRange = false;
+};
+
+static InsideGridRangeData IsInsideGridAndRange(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiPoint& theCheckedGridPoint, const NFmiLocation& theLocationOrig, double theRangeInMeters)
+{
+	InsideGridRangeData resultData;
+	resultData.locationIndex = ::CalcGridPointLocationIndex(theInfo, theCheckedGridPoint);
+	resultData.insideGrid = resultData.locationIndex != gMissingIndex;
+	auto gridPointLatlon = theInfo->Grid()->GridToLatLon(theCheckedGridPoint);
+	resultData.insideRange = theLocationOrig.Distance(gridPointLatlon) <= theRangeInMeters;
+	return resultData;
+}
+
+static void AddPossibleMatches(bool &isAnyPointInsideRange, std::set<unsigned long>& matchingGridPointRingLocationIndexesSet, const InsideGridRangeData& insideGridRangeData)
+{
+	if(insideGridRangeData.insideRange)
+	{
+		isAnyPointInsideRange = true;
+		if(insideGridRangeData.locationIndex != gMissingIndex)
+		{
+			matchingGridPointRingLocationIndexesSet.insert(insideGridRangeData.locationIndex);
+		}
+	}
+}
+
+// Palauttaa parin jossa:
+// first:issa on tieto oliko yksikään testattu hilapiste tarpeeksi lähellä theLocation:ia (voi olla datan oman hilan ulkonakin)
+// second:issa on lista niistä datan hilapisteistä, jotka olivat säteen sisällä originaalipisteestä
+static std::pair<bool, std::vector<unsigned long>> CalcMatchingGridPointRingLocationIndexes(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiPoint& theGridPointOrig, const NFmiLocation& theLocationOrig, double theRangeInMeters, int ringIndex)
+{
+	if(ringIndex == 0)
+	{
+		auto isInsideResult = ::IsInsideGridAndRange(theInfo, theGridPointOrig, theLocationOrig, theRangeInMeters);
+		auto locationIndexes = (isInsideResult.insideGrid) ? std::vector<unsigned long>{isInsideResult.locationIndex} : std::vector<unsigned long>();
+		return std::make_pair(isInsideResult.insideRange, locationIndexes);
+	}
+
+	// Left eli pysty sarake, kun x offset on -ringIndex
+	int leftIndexX = (int)(theGridPointOrig.X() - ringIndex);
+	int rightIndexX = (int)(theGridPointOrig.X() + ringIndex);
+	// Down eli vaaka sarake, kun y offset on -ringIndex
+	int downIndexY = (int)(theGridPointOrig.Y() - ringIndex);
+	int upIndexY = (int)(theGridPointOrig.Y() + ringIndex);
+
+	bool isAnyPointInsideRange = false;
+	// std::set:in avulla eliminoidaan kehänkulmien duplikaatit
+	auto resultSet = std::set<unsigned long>();
+	for(int index = -ringIndex; index <= ringIndex; index++)
+	{
+		// Käydään läpi 4 annetun kehän reunustaa (left, right, up, down)
+		NFmiPoint leftColumnGridPoint(leftIndexX, theGridPointOrig.Y() + index);
+		::AddPossibleMatches(isAnyPointInsideRange, resultSet, ::IsInsideGridAndRange(theInfo, leftColumnGridPoint, theLocationOrig, theRangeInMeters));
+		NFmiPoint rightColumnGridPoint(rightIndexX, theGridPointOrig.Y() + index);
+		::AddPossibleMatches(isAnyPointInsideRange, resultSet, ::IsInsideGridAndRange(theInfo, rightColumnGridPoint, theLocationOrig, theRangeInMeters));
+		NFmiPoint upColumnGridPoint(theGridPointOrig.X() + index, upIndexY);
+		::AddPossibleMatches(isAnyPointInsideRange, resultSet, ::IsInsideGridAndRange(theInfo, upColumnGridPoint, theLocationOrig, theRangeInMeters));
+		NFmiPoint downColumnGridPoint(theGridPointOrig.X() + index, downIndexY);
+		::AddPossibleMatches(isAnyPointInsideRange, resultSet, ::IsInsideGridAndRange(theInfo, downColumnGridPoint, theLocationOrig, theRangeInMeters));
+	}
+
+	std::vector<unsigned long> resultVector(resultSet.begin(), resultSet.end());
+	return std::make_pair(isAnyPointInsideRange, resultVector);
+}
+
+// Tee funktio joka laskee annetun säteen sisältä löytyvät hilapisteiden indeksit.
+// Katso mallia NFmiInfoAreaMaskOccurrance::InitializeLocationIndexCaches metodista,
+// mutta optimoi koodia niin että lasket ensin kilometreihin sopivan laatikon sijainnin 
+// datan maailmassa ja muuta ne x/y suuntaisiksi hilapiste lokaatioiksi 0-n, 0-m
+// Ja vasta tälle pikkulaatikon alueella oleville pisteille tee lopullinen rangetarkistus.
+std::vector<unsigned long> NFmiTempView::CalcAreaIntegrationLocationIndexes(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiLocation& theLocation, double theRangeInMeters)
+{
+	std::vector<unsigned long> locationIndexes;
+	if(theInfo->IsGrid())
+	{
+		auto gridPointOrigPrecise = theInfo->Grid()->LatLonToGrid(theLocation.GetLocation());
+		// Otetaan lähimpään tasahilaan pyöristetty aloituspisteeksi
+		auto gridPointOrig = NFmiPoint(std::round(gridPointOrigPrecise.X()), std::round(gridPointOrigPrecise.Y()));
+		// Ruvetaan tutkimaan tuon originaali gridPoint:in ympärille kehässä että löytyykö
+		// pisteitä riittävän läheltä, kunnes joltain kehältä ei löydy enää yhtään osumaa.
+		for(int ringIndex = 0; ringIndex < (int)theInfo->GridXNumber(); ringIndex++)
+		{
+			auto result = ::CalcMatchingGridPointRingLocationIndexes(theInfo, gridPointOrig, theLocation, theRangeInMeters, ringIndex);
+			if(result.first == false)
+			{
+				// Tarkastetulta kehältä ei löytynyt yhtään hilapistettä (hilan sisältä tai ulkoa), voidaan lopettaa etsiminen
+				break; 
+			}
+
+			auto& ringLocationIndexes = result.second;
+			if(!ringLocationIndexes.empty())
+			{
+				locationIndexes.insert(locationIndexes.end(), ringLocationIndexes.begin(), ringLocationIndexes.end());
+			}
+		}
+	}
+	return locationIndexes;
 }
 
 void NFmiTempView::FillInPossibleMissingPressureData(NFmiSoundingDataOpt1& theSoundingData, const NFmiProducer &dataProducer, const NFmiMetTime& theTime, const NFmiLocation& theLocation)
@@ -2226,8 +2510,8 @@ bool NFmiTempView::ModifySoundingWinds(const NFmiPoint &thePlace, unsigned long 
 			float minValue = 0;
 			float maxValue = windDirModified ? 360 : kFloatMissing;
 			bool fCircularValue = windDirModified ? true : false;
-			bool status = itsSelectedProducerSoundingData.Add2ParamAtNearestP(P, parId, addValue, minValue, maxValue, fCircularValue);
-			itsSelectedProducerSoundingData.UpdateUandVParams();
+			bool status = itsSelectedProducerSoundingData.itsSoundingData.Add2ParamAtNearestP(P, parId, addValue, minValue, maxValue, fCircularValue);
+			itsSelectedProducerSoundingData.itsSoundingData.UpdateUandVParams();
 			return status;
 		}
 	}
@@ -2684,14 +2968,50 @@ void NFmiTempView::DrawHodografHeightMarkers(NFmiSoundingDataOpt1 &theData, int 
 	}
 }
 
+bool NFmiTempView::CheckIsSoundingDataChanged(TotalSoundingData& theUsedData)
+{
+	return !itsSelectedProducerSoundingData.IsSameSounding(theUsedData);
+}
 
-void NFmiTempView::SetupUsedSoundingData(NFmiSoundingDataOpt1& theUsedDataInOut, int theProducerIndex, bool fMainCurve)
+NFmiTempView::SoundingDataEqual NFmiTempView::MakeSoundingDataEqual()
+{
+	auto& mtaSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
+	return SoundingDataEqual{mtaSystem.IntegrationRangeInKm(), mtaSystem.IntegrationTimeOffset1InHours(), mtaSystem.IntegrationTimeOffset2InHours() };
+}
+
+
+bool NFmiTempView::SoundingDataEqual::operator==(const SoundingDataEqual& other) const
+{
+	std::string debugStr = "SoundingDataEqual::oper==: this ";
+	debugStr += std::to_string(itsAvgRangeInKm);
+	debugStr += ", ";
+	debugStr += std::to_string(itsAvgTimeRange1Inhours);
+	debugStr += ", ";
+	debugStr += std::to_string(itsAvgTimeRange2Inhours);
+	debugStr += " and other ";
+	debugStr += std::to_string(other.itsAvgRangeInKm);
+	debugStr += ", ";
+	debugStr += std::to_string(other.itsAvgTimeRange1Inhours);
+	debugStr += ", ";
+	debugStr += std::to_string(other.itsAvgTimeRange2Inhours);
+	CatLog::logMessage(debugStr, CatLog::Severity::Debug, CatLog::Category::Visualization);
+
+	if(itsAvgRangeInKm != other.itsAvgRangeInKm)
+		return false;
+	if(itsAvgTimeRange1Inhours != other.itsAvgTimeRange1Inhours)
+		return false;
+	if(itsAvgTimeRange2Inhours != other.itsAvgTimeRange2Inhours)
+		return false;
+	return true;
+}
+
+void NFmiTempView::SetupUsedSoundingData(TotalSoundingData& theUsedDataInOut, int theProducerIndex, bool fMainCurve)
 {
 	// Valitun luotaus tuottajan data laitetaan talteen indeksi laskuja varten
 	if(IsSelectedProducerIndex(theProducerIndex) && fMainCurve) 
 	{
 		// Laitetaan haettu luotausdata valituksi vain jos se on muuttunut
-		if(fMustResetFirstSoundingData || !itsSelectedProducerSoundingData.IsSameSounding(theUsedDataInOut)) 
+		if(fMustResetFirstSoundingData || CheckIsSoundingDataChanged(theUsedDataInOut))
 		{
 			fMustResetFirstSoundingData = false;
 			// Jos ei ole muuttunut (aika/origtime/tuottaja/paikka), sitä on saatettu modifioida ja muutoksia ei heitetä pois
@@ -2705,7 +3025,7 @@ void NFmiTempView::SetupUsedSoundingData(NFmiSoundingDataOpt1& theUsedDataInOut,
 	}
 }
 
-void NFmiTempView::DrawSounding(NFmiSoundingDataOpt1 &theUsedDataInOut, int theProducerIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere)
+void NFmiTempView::DrawSounding(TotalSoundingData &theUsedDataInOut, int theProducerIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere)
 {
 	SetupUsedSoundingData(theUsedDataInOut, theProducerIndex, fMainCurve);
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
@@ -2717,13 +3037,13 @@ void NFmiTempView::DrawSounding(NFmiSoundingDataOpt1 &theUsedDataInOut, int theP
 	envi->SetFrameColor(theUsedSoundingColor);
 	itsToolBox->UseClipping(true); // laitetaan clippaus taas päälle (huonoa koodia, mutta voi voi)
 
-    DrawSecondaryData(theUsedDataInOut, theUsedSoundingColor);
+    DrawSecondaryData(theUsedDataInOut.itsSoundingData, theUsedSoundingColor);
 
     if(fMainCurve)
-        DrawHodograf(theUsedDataInOut, theProducerIndex);
+        DrawHodograf(theUsedDataInOut.itsSoundingData, theProducerIndex);
 
 	if(IsSelectedProducerIndex(theProducerIndex) && fMainCurve)
-		DrawAllLiftedAirParcels(itsSelectedProducerSoundingData); // piirretään ilmapakettien nostot vain valitun tuottajan luotaukseen
+		DrawAllLiftedAirParcels(itsSelectedProducerSoundingData.itsSoundingData); // piirretään ilmapakettien nostot vain valitun tuottajan luotaukseen
 
 	// HUOM! ensin piirretään kastepiste ja sitten lämpötila, koska jälkimmäisenä piirretty
 	// voi peittää allleen toisen piirrot ja koska lämpötila on tärkeämpi, sen pitää tulla pintaan.
@@ -2736,34 +3056,34 @@ void NFmiTempView::DrawSounding(NFmiSoundingDataOpt1 &theUsedDataInOut, int theP
         NFmiTempLineInfo lineInfo = mtaTempSystem.DewPointLineInfo();
 		lineInfo.Color(theUsedSoundingColor);
 		lineInfo.Thickness(boost::math::iround(lineInfo.Thickness() * itsDrawSizeFactor.X() * ExtraPrintLineThicknesFactor(true)));
-		DrawTemperatures(theUsedDataInOut, kFmiDewPoint, lineInfo);
+		DrawTemperatures(theUsedDataInOut.itsSoundingData, kFmiDewPoint, lineInfo);
 	}
 
 	{
         NFmiTempLineInfo lineInfo = mtaTempSystem.TemperatureLineInfo();
 		lineInfo.Color(theUsedSoundingColor);
 		lineInfo.Thickness(boost::math::iround(lineInfo.Thickness() * itsDrawSizeFactor.X() * ExtraPrintLineThicknesFactor(true)));
-		DrawTemperatures(theUsedDataInOut, kFmiTemperature, lineInfo);
+		DrawTemperatures(theUsedDataInOut.itsSoundingData, kFmiTemperature, lineInfo);
 	}
 
 	// Draw height values
 	if(fMainCurve)
-		DrawHeightValues(theUsedDataInOut, theProducerIndex);
+		DrawHeightValues(theUsedDataInOut.itsSoundingData, theProducerIndex);
 
 	// laitetaan takaisin 'solid' kynä
 	envi->SetFillPattern(FMI_SOLID);
 	envi->SetPenSize(NFmiPoint(1, 1));
-	DrawWind(theUsedDataInOut, theProducerIndex, onSouthernHemiSphere);
+	DrawWind(theUsedDataInOut.itsSoundingData, theProducerIndex, onSouthernHemiSphere);
 
 	if(fMainCurve)
 	{
-		DrawLCL(theUsedDataInOut, theProducerIndex, kLCLCalcSurface);
-		DrawLCL(theUsedDataInOut, theProducerIndex, kLCLCalc500m2);
-		DrawLCL(theUsedDataInOut, theProducerIndex, kLCLCalcMostUnstable);
-		DrawTrMw(theUsedDataInOut, theProducerIndex);
+		DrawLCL(theUsedDataInOut.itsSoundingData, theProducerIndex, kLCLCalcSurface);
+		DrawLCL(theUsedDataInOut.itsSoundingData, theProducerIndex, kLCLCalc500m2);
+		DrawLCL(theUsedDataInOut.itsSoundingData, theProducerIndex, kLCLCalcMostUnstable);
+		DrawTrMw(theUsedDataInOut.itsSoundingData, theProducerIndex);
 	}
 	if(IsSelectedProducerIndex(theProducerIndex) && fMainCurve && mtaTempSystem.ShowCondensationTrailProbabilityLines())
-		DrawCondensationTrailRHValues(theUsedDataInOut, 400, 200, 0.32); // 0.32 on viimeinen apuviiva mikä piirretään, arvot laitetaan sen oikealle puolelle
+		DrawCondensationTrailRHValues(theUsedDataInOut.itsSoundingData, 400, 200, 0.32); // 0.32 on viimeinen apuviiva mikä piirretään, arvot laitetaan sen oikealle puolelle
 
 	if(fMainCurve)
 		DrawStationInfo(theUsedDataInOut, theProducerIndex);
@@ -2914,96 +3234,148 @@ NFmiPoint NFmiTempView::CalcStringRelativeSize(const std::string &str, double fo
 	return CtrlView::GdiplusRect2Relative(itsToolBox, stringBoundingRectInPixels).Size();
 }
 
-void NFmiTempView::DrawStationInfo(NFmiSoundingDataOpt1 &theData, int theProducerIndex)
+const NFmiString gMaxLegendLocationNameText("1: E00/05.12 62°23'N, 25°41'E    ");
+
+static NFmiString MakeLegendStringCorrectLength(NFmiString legendLineStr)
 {
-	static const NFmiString maxNameText("1: E00/05.12 62°23'N, 25°41'E    ");
-	NFmiColor normalBackGroundTextcolor(0.86f, 0.86f, 0.86f);
-	NFmiColor selectedBackGroundTextcolor(0.92f, 0.92f, 0.92f);
+	for(auto i = legendLineStr.GetLen(); i < gMaxLegendLocationNameText.GetLen(); i++)
+		legendLineStr += " "; // täytetään nimeä spaceilla, että pohjaväritys peittää saman alan jokaiselle legendan riville
+	return legendLineStr;
+}
 
-    NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
-    if(!mtaTempSystem.DrawLegendText())
-		return ;
+static NFmiString MakeLegendLocationNameStr(NFmiSoundingDataOpt1& theData, int theProducerIndex)
+{
+	NFmiString locationNameStr = NFmiValueString::GetStringWithMaxDecimalsSmartWay(theProducerIndex + 1, 0);
+	locationNameStr += ": ";
+	locationNameStr += ::GetNameText(theData);
+	return ::MakeLegendStringCorrectLength(locationNameStr);
+}
 
+void NFmiTempView::SetupLegendDrawingEnvironment()
+{
+	itsLegendDrawingSetup = LegendDrawingSetup();
+	NFmiMTATempSystem& mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
 	// laitetaan piirto ominaisuudet päälle
-	FmiDirection oldAligment = itsToolBox->GetTextAlignment();
-	itsToolBox->SetTextAlignment(static_cast<FmiDirection>(kLeft + 1000)); // + 1000 SUPERPIKAVIRITYS!!!! (laittaa kirjaimen alle pohjaväriä)
-																		// tarvitaan luotaus legendan kirjoittamisessa
+	itsLegendDrawingSetup.oldTextAlignment = itsToolBox->GetTextAlignment();
+	// kLeft + 1000 on ikävä toolbox pikaviritys, joka laittaa tekstin alle 
+	// pohjaväriä, jota tarvitaan luotaus legendan kirjoittamisessa.
+	itsToolBox->SetTextAlignment(static_cast<FmiDirection>(kLeft + 1000));
 	NFmiPoint fontSize = mtaTempSystem.LegendTextSize();
 	fontSize = ScaleOffsetPoint(fontSize);
 	itsDrawingEnvironment->SetFontSize(fontSize);
+	itsToolBox->ConvertEnvironment(itsDrawingEnvironment);
+	NFmiText measuredText(NFmiPoint(-9999, -9999), gMaxLegendLocationNameText, true, 0, itsDrawingEnvironment);
+	auto relativeTextSize = itsToolBox->MeasureTextCorrect(measuredText);
+	itsLegendDrawingSetup.maxNameLengthRelative = relativeTextSize.X();
+	itsLegendDrawingSetup.textLineHeightRelative = relativeTextSize.Y() * 0.99;
+}
 
-	double maxNameLength = maxNameText.GetLen();
-	double maxNameLengthRel = CalcStringRelativeSize(std::string(maxNameText), fontSize.Y(), "Consolas").X();
-
-	double mtaModeIndexFactor = 2;
-
-	NFmiString locationNameStr;
-	locationNameStr += NFmiValueString::GetStringWithMaxDecimalsSmartWay(theProducerIndex + 1, 0);
-	locationNameStr += ": ";
-	locationNameStr += ::GetNameText(theData);
-	for(int i = locationNameStr.GetLen(); i < maxNameLength; i++)
-		locationNameStr += " "; // täytetään nimeä spaceilla, että pohjaväritys peittää saman alan jokaiselle 'nimelle'
-
-	long index = theProducerIndex;
-	double fontY = itsToolBox->SY(itsDrawingEnvironment->GetFontHeight());
-
+NFmiPoint NFmiTempView::CalcLegendTextStartPoint()
+{
 	const auto& dataRect = itsTempViewDataRects.getSoundingCurveDataRect();
 	NFmiPoint point = dataRect.TopRight();
-	point.X(point.X() - maxNameLengthRel * 1.35);
-	point.Y(point.Y() + fontY * 0.95 + 1.0 * index * mtaModeIndexFactor * fontY);
-    point.X(std::max(point.X(), dataRect.Left()));
+	point.X(point.X() - itsLegendDrawingSetup.maxNameLengthRelative * 1.35);
+	point.Y(point.Y() + itsLegendDrawingSetup.textLineHeightRelative * 0.);
+	point.X(std::max(point.X(), dataRect.Left()));
+	return point;
+}
 
-	auto relativeLeftEdge = point.X() - maxNameLengthRel * 0.01;
-	auto relativeRightEdge = relativeLeftEdge + maxNameLengthRel * 1.02;
-	NFmiDrawingEnvironment separatorLineEnvi;
+const NFmiColor gNormalBackGroundTextColor(0.86f, 0.86f, 0.86f);
+const NFmiColor gSelectedBackGroundTextColor(0.92f, 0.92f, 0.92f);
 
+void NFmiTempView::DrawSelectedProducerIndexText(const NFmiPoint& textPoint)
+{
+	NFmiString selectedProducerIndexText = ::GetDictionaryString("Producer ind:");
+	selectedProducerIndexText += std::to_string(itsCtrlViewDocumentInterface->GetMTATempSystem().GetSelectedProducerIndex(true) + 1);
+	selectedProducerIndexText += " (CTRL+SHIFT+wheel)";
+	AddLegendLineData(selectedProducerIndexText, GetSelectedProducersColor(), gNormalBackGroundTextColor, true);
+}
+
+void NFmiTempView::AddLegendLineData(const NFmiString& text, const NFmiColor& textColor, const NFmiColor& backgroundColor, bool doHorizontalLineSeparator)
+{
+	itsLegendDrawingLineData.push_back(LegendDrawingLineData{ text, textColor, backgroundColor, doHorizontalLineSeparator });
+}
+
+void NFmiTempView::DrawStationInfo(TotalSoundingData& theData, int theProducerIndex)
+{
+	NFmiMTATempSystem& mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
+	if(!mtaTempSystem.DrawLegendText())
+		return;
+
+	SetupLegendDrawingEnvironment();
+	NFmiString locationNameStr = ::MakeLegendLocationNameStr(theData.itsSoundingData, theProducerIndex);
+
+	NFmiPoint point = CalcLegendTextStartPoint();
+	point.Y(point.Y() + (2.0 * theProducerIndex * itsLegendDrawingSetup.textLineHeightRelative));
 	if(theProducerIndex == 0)
 	{
-		// Vain 1. legenda tekstin kanssa (sen yläpuolelle) piirretään valitun tuottaja indeksin tekstit
-		point.Y(point.Y() - fontY);
-		itsDrawingEnvironment->SetFillColor(normalBackGroundTextcolor);
-		itsDrawingEnvironment->SetFrameColor(GetSelectedProducersColor());
-		NFmiString selectedProducerIndexText = ::GetDictionaryString("Producer ind:");
-		selectedProducerIndexText += std::to_string(mtaTempSystem.GetSelectedProducerIndex(true) + 1);
-		selectedProducerIndexText += " (CTRL+SHIFT+wheel)";
-		NFmiText text3(point, selectedProducerIndexText, false, 0, itsDrawingEnvironment);
-		itsToolBox->Convert(&text3);
-		// Piirretään vielä erottava viiva tämän tekstin muiden legenda tekstien väliin
-		NFmiPoint point1(relativeLeftEdge, point.Y() + fontY - itsToolBox->SY(1));
-		NFmiPoint point2(relativeRightEdge, point1.Y());
-		NFmiLine separatorLine(point1, point2, 0, &separatorLineEnvi);
-		itsToolBox->Convert(&separatorLine);
-		// Selected prod tekstin takia pitää lisätä yksi rivi loppuihin teksteihin tässä
-		point.Y(point.Y() + 2 * fontY);
+		DrawSelectedProducerIndexText(point);
+	}
+
+	// Aseman aika tiedot piirretään päälle
+	NFmiMetTime time(theData.itsSoundingData.Time());
+	NFmiString timestr(time.ToStr(::GetDictionaryString("TempViewLegendTimeFormat")));
+	timestr = ::MakeLegendStringCorrectLength(timestr);
+	auto textColor = mtaTempSystem.SoundingColor(theProducerIndex);
+	auto backgroundColor = IsSelectedProducerIndex(theProducerIndex) ? gSelectedBackGroundTextColor : gNormalBackGroundTextColor;
+	AddLegendLineData(timestr, textColor, backgroundColor, false);
+	// Aseman nimi ja paikka tiedot laitetaan sen alle
+	AddLegendLineData(locationNameStr, textColor, backgroundColor, false);
+	AddPossibleAvgIntegrationInfo(theData, textColor, backgroundColor);
+}
+
+static std::string MakePossibleAvgIntegrationInfo(TotalSoundingData& theData)
+{
+	if(theData.HasAvgIntegrationData())
+	{
+		std::string integrationStr = "[Avg from ";
+		integrationStr += std::to_string(theData.itsIntegrationPointsCount);
+		integrationStr += " pts and ";
+		integrationStr += std::to_string(theData.itsIntegrationTimesCount);
+		integrationStr += " times]";
+		return integrationStr;
 	}
 	else
-		point.Y(point.Y() + fontY);
+		return "";
+}
 
-	auto relativeTopEdge = point.Y() - fontY - itsToolBox->SY(1);
-	auto relativeBottomEdge = relativeTopEdge + (2 * fontY) + itsToolBox->SY(1);
-	itsDrawingEnvironment->SetFillColor(IsSelectedProducerIndex(theProducerIndex) ? selectedBackGroundTextcolor : normalBackGroundTextcolor);
-
-	itsDrawingEnvironment->SetFrameColor(mtaTempSystem.SoundingColor(theProducerIndex));
+void NFmiTempView::AddPossibleAvgIntegrationInfo(TotalSoundingData& theData, const NFmiColor& textColor, const NFmiColor& backgroundColor)
+{
+	auto possibleAvgIntegrationInfoStr = ::MakePossibleAvgIntegrationInfo(theData);
+	if(!possibleAvgIntegrationInfoStr.empty())
 	{
-		// Vain 1. aseman aika kirjataan (paitsi MTA moodissa), loput asemat tulevat sitten allekkain
-		NFmiMetTime time(theData.Time());
-		NFmiString timestr(time.ToStr(::GetDictionaryString("TempViewLegendTimeFormat")));
-		for(int i = timestr.GetLen(); i < maxNameLength; i++)
-			timestr += " "; // täytetään nimeä spaceilla, että pohjaväritys peittää saman alan jokaiselle 'nimelle'
-		NFmiPoint timePoint(point);
-		timePoint.Y(point.Y() - fontY);
-		NFmiText text2(timePoint, timestr, false, 0, itsDrawingEnvironment);
-		itsToolBox->Convert(&text2);
+		possibleAvgIntegrationInfoStr = ::MakeLegendStringCorrectLength(possibleAvgIntegrationInfoStr);
+		AddLegendLineData(possibleAvgIntegrationInfoStr, textColor, backgroundColor, false);
 	}
-	NFmiText text1(point, locationNameStr, true, 0, itsDrawingEnvironment);
-	itsToolBox->Convert(&text1);
-	//if(IsSelectedProducerIndex(theProducerIndex))
-	//{
-	//	NFmiRectangle selectedProducerFrame(NFmiPoint(relativeLeftEdge, relativeTopEdge), NFmiPoint(relativeRightEdge, relativeBottomEdge), 0, &separatorLineEnvi);
-	//	itsToolBox->Convert(&selectedProducerFrame);
-	//}
+}
 
-	itsToolBox->SetTextAlignment(oldAligment);
+void NFmiTempView::DrawLegendLineData()
+{
+	SetupLegendDrawingEnvironment();
+	NFmiPoint point = CalcLegendTextStartPoint();
+	for(const auto& legendLineData : itsLegendDrawingLineData)
+	{
+		itsDrawingEnvironment->SetFrameColor(legendLineData.itsTextColor);
+		itsDrawingEnvironment->SetFillColor(legendLineData.itsBackgroundColor);
+		NFmiText text1(point, legendLineData.itsText, true, 0, itsDrawingEnvironment);
+		itsToolBox->Convert(&text1);
+		if(legendLineData.fDoHorizontalLineSeparator)
+		{
+			DrawLegendLineDataSeparator(point);
+		}
+		point.Y(point.Y() + itsLegendDrawingSetup.textLineHeightRelative);
+	}
+}
+
+void NFmiTempView::DrawLegendLineDataSeparator(const NFmiPoint &textPoint)
+{
+	auto relativeLeftEdge = textPoint.X() - itsToolBox->SX(1);
+	auto relativeRightEdge = relativeLeftEdge + itsLegendDrawingSetup.maxNameLengthRelative + itsToolBox->SX(2);
+	NFmiDrawingEnvironment separatorLineEnvi;
+	NFmiPoint point1(relativeLeftEdge, textPoint.Y() + itsLegendDrawingSetup.textLineHeightRelative - itsToolBox->SY(1));
+	NFmiPoint point2(relativeRightEdge, point1.Y());
+	NFmiLine separatorLine(point1, point2, 0, &separatorLineEnvi);
+	itsToolBox->Convert(&separatorLine);
 }
 
 static NFmiRect gMissingRect(0,0,0,0);
@@ -3183,7 +3555,7 @@ bool NFmiTempView::LeftButtonUp(const NFmiPoint &thePlace, unsigned long theKey)
 			return true;
 		}
 		else
-			return ModifySounding(itsSelectedProducerSoundingData, thePlace, theKey, kFmiDewPoint, 3);
+			return ModifySounding(itsSelectedProducerSoundingData.itsSoundingData, thePlace, theKey, kFmiDewPoint, 3);
 	}
 	else if(itsTempViewDataRects.getAnimationButtonRect().IsInside(thePlace))
 	{
@@ -3229,7 +3601,7 @@ bool NFmiTempView::RightButtonUp(const NFmiPoint &thePlace, unsigned long theKey
 		return true;
 	}
 	else if(dataRect.IsInside(thePlace))
-		return ModifySounding(itsSelectedProducerSoundingData, thePlace, theKey, kFmiTemperature, 3);
+		return ModifySounding(itsSelectedProducerSoundingData.itsSoundingData, thePlace, theKey, kFmiTemperature, 3);
 	else if(itsTempViewDataRects.getAnimationButtonRect().IsInside(thePlace))
 	{
         mtaTempSystem.ChangeSoundingsInTime(kForward);
@@ -3506,9 +3878,9 @@ bool NFmiTempView::MouseMove(const NFmiPoint &thePlace, unsigned long  theKey)
 	{
         NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
         if(mtaTempSystem.RightMouseDown()) // oikea nappi on tarkeämpi koska sillä muokataan lämppäriä (vasen muokkaa kastepistettä)
-			return ModifySounding(itsSelectedProducerSoundingData, thePlace, theKey, kFmiTemperature, 3);
+			return ModifySounding(itsSelectedProducerSoundingData.itsSoundingData, thePlace, theKey, kFmiTemperature, 3);
 		else if(mtaTempSystem.LeftMouseDown())
-			return ModifySounding(itsSelectedProducerSoundingData, thePlace, theKey, kFmiDewPoint, 3);
+			return ModifySounding(itsSelectedProducerSoundingData.itsSoundingData, thePlace, theKey, kFmiDewPoint, 3);
 	}
 	return false;
 }
@@ -3569,16 +3941,23 @@ static std::string GetSoundingToolTipText(NFmiTempView::SoundingDataCacheMap &so
     auto soundingDataIter = soundingDataCache.find(NFmiMTATempSystem::SoundingDataCacheMapKey(theTempInfo, producer, modelRunIndex));
     if(soundingDataIter != soundingDataCache.end())
     {
+		auto& subSoundingData = soundingDataIter->second.itsSoundingData;
         // sitten laitetaan interpoloidut arvot annetun korkeuden mukaan eri parametreille
         str += "P: ";
         str += static_cast<char*>(NFmiValueString::GetStringWithMaxDecimalsSmartWay(P, 1));
-        str += ::GetTooltipValueStr(" T: ", soundingDataIter->second, kFmiTemperature, 1, P, heigthInMetersInStaAth);
-        str += ::GetTooltipValueStr(" Td: ", soundingDataIter->second, kFmiDewPoint, 1, P, heigthInMetersInStaAth);
-        str += ::GetTooltipValueStr(" WD: ", soundingDataIter->second, kFmiWindDirection, 0, P, heigthInMetersInStaAth);
-		str += ::GetTooltipValueStr(" WS: ", soundingDataIter->second, kFmiWindSpeedMS, 1, P, heigthInMetersInStaAth);
-		str += ::GetTooltipValueStr(" z: ", soundingDataIter->second, kFmiGeomHeight, 0, P, heigthInMetersInStaAth);
-        str += ::GetTooltipValueStr(" N: ", soundingDataIter->second, kFmiTotalCloudCover, 0, P, heigthInMetersInStaAth);
-        str += ::GetTooltipValueStr(" RH: ", soundingDataIter->second, kFmiHumidity, 1, P, heigthInMetersInStaAth);
+        str += ::GetTooltipValueStr(" T: ", subSoundingData, kFmiTemperature, 1, P, heigthInMetersInStaAth);
+        str += ::GetTooltipValueStr(" Td: ", subSoundingData, kFmiDewPoint, 1, P, heigthInMetersInStaAth);
+        str += ::GetTooltipValueStr(" WD: ", subSoundingData, kFmiWindDirection, 0, P, heigthInMetersInStaAth);
+		str += ::GetTooltipValueStr(" WS: ", subSoundingData, kFmiWindSpeedMS, 1, P, heigthInMetersInStaAth);
+		str += ::GetTooltipValueStr(" z: ", subSoundingData, kFmiGeomHeight, 0, P, heigthInMetersInStaAth);
+        str += ::GetTooltipValueStr(" N: ", subSoundingData, kFmiTotalCloudCover, 0, P, heigthInMetersInStaAth);
+        str += ::GetTooltipValueStr(" RH: ", subSoundingData, kFmiHumidity, 1, P, heigthInMetersInStaAth);
+		auto possibleIntegrationInfoStr = ::MakePossibleAvgIntegrationInfo(soundingDataIter->second);
+		if(!possibleIntegrationInfoStr.empty())
+		{
+			str += "\n";
+			str += possibleIntegrationInfoStr;
+		}
     }
     else
         str += " P: - T: - Td: - WD: - WS: -";

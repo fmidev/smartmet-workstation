@@ -14,6 +14,22 @@ class NFmiText;
 class NFmiTempLineInfo;
 class NFmiTempLabelInfo;
 
+class TotalSoundingData
+{
+public:
+	NFmiSoundingDataOpt1 itsSoundingData;
+	double itsIntegrationRangeInKm = 0;
+	double itsIntegrationTimeOffset1InHours = 0;
+	double itsIntegrationTimeOffset2InHours = 0;
+	int itsIntegrationPointsCount = 0;
+	int itsIntegrationTimesCount = 0;
+
+	TotalSoundingData();
+	TotalSoundingData(NFmiMTATempSystem& mtaTempSystem);
+	bool IsSameSounding(TotalSoundingData& other);
+	bool HasAvgIntegrationData() const;
+};
+
 class NFmiTempView : public NFmiCtrlView
 {
  public:
@@ -25,7 +41,31 @@ class NFmiTempView : public NFmiCtrlView
 		kCross = 3
 	} MarkerShape;
 
-    using SoundingDataCacheMap = std::map<NFmiMTATempSystem::SoundingDataCacheMapKey, NFmiSoundingDataOpt1>;
+	struct SoundingDataEqual
+	{
+		double itsAvgRangeInKm = 0;
+		double itsAvgTimeRange1Inhours = 0;
+		double itsAvgTimeRange2Inhours = 0;
+
+		bool operator==(const SoundingDataEqual& other) const;
+	};
+
+	struct LegendDrawingSetup
+	{
+		FmiDirection oldTextAlignment = kNoDirection;
+		double maxNameLengthRelative = 0;
+		double textLineHeightRelative = 0;
+	};
+
+	struct LegendDrawingLineData
+	{
+		NFmiString itsText;
+		NFmiColor itsTextColor;
+		NFmiColor itsBackgroundColor;
+		bool fDoHorizontalLineSeparator = false;
+	};
+
+    using SoundingDataCacheMap = std::map<NFmiMTATempSystem::SoundingDataCacheMapKey, TotalSoundingData>;
 
 	NFmiTempView( const NFmiRect& theRect
 				 ,NFmiToolBox* theToolBox);
@@ -67,8 +107,8 @@ class NFmiTempView : public NFmiCtrlView
 	void DrawHodografHeightMarkers(NFmiSoundingDataOpt1 &theData, int theProducerIndex);
 	NFmiPoint GetRelativePointFromHodograf(double u, double v);
 	void DrawSoundingInTextFormat(NFmiSoundingDataOpt1 &theData);
-	bool FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo, const NFmiMTATempSystem::SoundingProducer &theProducer);
-	void DrawSounding(NFmiSoundingDataOpt1 & theUsedDataInOut, int theProducerIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere);
+	bool FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, TotalSoundingData &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo, const NFmiMTATempSystem::SoundingProducer &theProducer);
+	void DrawSounding(TotalSoundingData& theUsedDataInOut, int theProducerIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere);
 	void DrawSoundingsInMTAMode(void);
 	void DrawBackground(void);
 	void DrawStabilityIndexData(NFmiSoundingDataOpt1& usedData);
@@ -97,7 +137,7 @@ class NFmiTempView : public NFmiCtrlView
 	void DrawLine(const NFmiPoint &p1, const NFmiPoint &p2, bool drawSpecialLines, int theTrueLineWidth, bool startWithXShift, int theHelpDotPixelSize, NFmiDrawingEnvironment * theEnvi);
 	void DrawHelpLineLabel(const NFmiPoint &p1, const NFmiPoint &theMoveLabelRelatively, double theValue, const NFmiTempLabelInfo &theLabelInfo, NFmiDrawingEnvironment * theEnvi, const NFmiString &thePostStr = NFmiString(""));
 	void DrawWind(NFmiSoundingDataOpt1 &theData, int theProducerIndex, bool onSouthernHemiSphere);
-	void DrawStationInfo(NFmiSoundingDataOpt1 &theData, int theProducerIndex);
+	void DrawStationInfo(TotalSoundingData &theData, int theProducerIndex);
 	void DrawHeightValues(NFmiSoundingDataOpt1 &theData, int theProducerIndex);
 	void MoveToNextLine(double relativeLineHeight, NFmiPoint &theTextPoint);
 	void DrawNextLineToIndexView(double relativeLineHeight, NFmiText& theText, const NFmiString& theStr, NFmiPoint& theTextPoint, bool moveFirst = true, bool addToString = true);
@@ -126,9 +166,22 @@ class NFmiTempView : public NFmiCtrlView
 	bool DoTextualSideViewSetup(bool showSideView, const NFmiRect& sideViewRect, int fontSize, double fontHeightFactor, double& relativeLineHeightOut);
 	void FillInPossibleMissingPressureData(NFmiSoundingDataOpt1& theSoundingData, const NFmiProducer& dataProducer, const NFmiMetTime& theTime, const NFmiLocation& theLocation);
 	bool IsSelectedProducerIndex(int theProducerIndex) const;
-	void SetupUsedSoundingData(NFmiSoundingDataOpt1& theUsedDataInOut, int theProducerIndex, bool fMainCurve);
+	void SetupUsedSoundingData(TotalSoundingData& theUsedDataInOut, int theProducerIndex, bool fMainCurve);
 	const NFmiColor& GetSelectedProducersColor() const;
 	NFmiPoint CalcStringRelativeSize(const std::string& str, double fontSize, const std::string& fontName);
+	bool DoIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData);
+	bool FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo);
+	std::vector<unsigned long> CalcAreaIntegrationLocationIndexes(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiLocation& theLocation, double theRangeInMeters);
+	bool FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo, unsigned long timeIndex1, unsigned long timeIndex2, const std::vector<unsigned long> &locationIndexes);
+	bool CheckIsSoundingDataChanged(TotalSoundingData& theUsedData);
+	SoundingDataEqual MakeSoundingDataEqual();
+	void SetupLegendDrawingEnvironment();
+	NFmiPoint CalcLegendTextStartPoint();
+	void DrawSelectedProducerIndexText(const NFmiPoint &textPoint);
+	void AddLegendLineData(const NFmiString &text, const NFmiColor &textColor, const NFmiColor &backgroundColor, bool doHorizontalLineSeparator);
+	void DrawLegendLineData();
+	void DrawLegendLineDataSeparator(const NFmiPoint& textPoint);
+	void AddPossibleAvgIntegrationInfo(TotalSoundingData& theData, const NFmiColor& textColor, const NFmiColor& backgroundColor);
 
 	double Tpot2x(double tpot, double p);
 	double pt2x(double p, double t);
@@ -157,7 +210,7 @@ class NFmiTempView : public NFmiCtrlView
 
 	// T‰h‰n talletetaan valitun tuottajan piirrett‰v‰n luotauksen datat, ett‰ niit‰ k‰ytet‰‰n indeksi osio laskuissa
 	// Valitun luotaustuottajan dataa k‰ytet‰‰n myˆs luotausten muokkauksessa!!!!
-	NFmiSoundingDataOpt1 itsSelectedProducerSoundingData;
+	TotalSoundingData itsSelectedProducerSoundingData;
 	bool fMustResetFirstSoundingData; // joskus k‰ytt‰j‰ haluaa resetoida muokattua luotausta
 	bool fHodografInitialized; // kun ikkuna piirret‰‰n 1. kerran, pit‰‰ laskea alkuarvaus, muutoin ei
 	double itsFirstSoundinWindBarbXPos;
@@ -183,6 +236,8 @@ class NFmiTempView : public NFmiCtrlView
 	double itsStabilityIndexRelativeLineHeight;
 	double itsTextualSoundingDataRelativeLineHeight;
 	NFmiTempViewScrollingData itsTempViewScrollingData;
+	LegendDrawingSetup itsLegendDrawingSetup;
+	std::vector<LegendDrawingLineData> itsLegendDrawingLineData;
 };
 
 
