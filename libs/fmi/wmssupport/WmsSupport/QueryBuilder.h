@@ -36,7 +36,6 @@ namespace Wms
         QueryBuilder& setLayers(const std::string& layer);
         QueryBuilder& setWidth(unsigned int width);
         QueryBuilder& setHeight(unsigned int height);
-        QueryBuilder& setTransparency(bool on);
         QueryBuilder& setCrsAndBbox(const NFmiArea& area);
         QueryBuilder& setStyles(const std::string& styles);
         QueryBuilder& setExceptions(const std::string& exceptions);

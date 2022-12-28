@@ -139,12 +139,6 @@ namespace Wms
         return *this;
     }
 
-    QueryBuilder& QueryBuilder::setTransparency(bool on)
-    {
-        query_.query["TRANSPARENT"] = on ? "true" : "false";
-        return *this;
-    }
-
     QueryBuilder& QueryBuilder::setCrsAndBbox(const NFmiArea& area)
     {
         if(useCrs_)
