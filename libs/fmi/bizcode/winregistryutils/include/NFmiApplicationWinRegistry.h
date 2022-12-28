@@ -54,6 +54,7 @@ public:
     bool LockModeOn() const { return mLockModeOn; }
     void LockModeOn(bool newValue) { mLockModeOn = newValue; }
     void LockModeOnToggle();
+    void MoveStartLatlonPoint(const NFmiPoint& newValue);
 };
 
 class NFmiGriddingPropertiesWinRegistry
