@@ -102,6 +102,7 @@ private:
 	CString itsLocalCacheDirectoryPath;
 	bool fLocalCacheDirectoryChanged = false;
 	CStatic itsRestartSmartMetStr;
+	BOOL fUseLedLightStatusSystem;
 };
 
 //{{AFX_INSERT_LOCATION}}

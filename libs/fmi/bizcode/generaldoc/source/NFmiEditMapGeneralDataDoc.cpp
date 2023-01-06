@@ -143,6 +143,7 @@
 #include "NFmiSeaLevelPlumeData.h"
 #include "NFmiDataModifierModMinMax.h"
 #include "NFmiDataModifierModAvg.h"
+#include "NFmiLedLightStatus.h"
 
 #include "AnimationProfiler.h"
 
@@ -502,7 +503,8 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 	LogMessage(infoStr, CatLog::Severity::Info, CatLog::Category::Configuration);
 
     InitSpecialFileStoragePath();
-    CheckRunningStatusAtStartup(SpecialFileStoragePath()); // tarkistaa, onko edellisen kerran ohjelma suljettu hallitusti
+	// Tarkistaa, onko edellisen kerran ohjelma suljettu hallitusti
+    CheckRunningStatusAtStartup(SpecialFileStoragePath()); 
 
 	InitMachineThreadCount();
 	InitMacroPathSettings(); // pit‰‰ olla ennen InfoOrganizer + SmartToolInfo + ViewMacroSystem alustuksia!!!
@@ -518,6 +520,8 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitObsComparisonInfo();
     InitDataToDBCheckMethodMain();
 	InitOptionsData();
+	// InitLedLightStatusSystem kutsu pit‰‰ olla InitApplicationWinRegistry:n j‰lkeen, mutta ennen InitCombinedMapHandler:ia.
+	InitLedLightStatusSystem();
 
     CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting("NFmiEditMapDataListHandler::Init");
 	itsListHandler = new NFmiEditMapDataListHandler();
@@ -1070,6 +1074,23 @@ void AddWorkingDataPathToCleaner(void)
 	// ja j‰t‰ vain max 25 tiedostoa
 	NFmiFilePatternCleanerInfo pattCleanInfo(static_cast<char*>(GetUsedDataLoadingInfo().CreateWorkingFileNameFilter()), 20);
 	FileCleanerSystem().Add(pattCleanInfo);
+}
+
+void InitLedLightStatusSystem()
+{
+	if(ApplicationWinRegistry().UseLedLightStatusSystem())
+	{
+		// Katso g_maximumNumberOfLedsInStatusbar vakion selitys, jos haluat lis‰t‰ ledien m‰‰r‰‰
+		auto usedLedChannelAndColors = std::vector<NFmiLedChannelInitializer>{
+			{NFmiLedChannel::QueryData, NFmiLedColor::Green, "QueryData related operations", "No queryData operations at the moment", false},
+			{NFmiLedChannel::WmsData, NFmiLedColor::Blue, "Wms server query operations", "No Wms operations at the moment", false},
+			{NFmiLedChannel::OperationalInfo, NFmiLedColor::Red, "General operational warnings", "No operational warnings at the moment", true}
+		};
+		itsLedLightStatusSystem.Initialize(usedLedChannelAndColors, true);
+		NFmiLedLightStatusSystem::InitializeStaticInstance(&itsLedLightStatusSystem);
+	}
+	else
+		LogAndWarnUser("LedLightStatusSystem (on statusbar) was disabled, if you want to enabled it, do it from Settings dialog and restart SmartMet", "", CatLog::Severity::Info, CatLog::Category::Configuration, true);
 }
 
 void InitSynopDataFilePatternSortOrderVector(void)
@@ -1839,7 +1860,7 @@ bool IsSystemDriveSameAsApplicationDrive()
 
 CatLog::Severity GetHardDriveFreeSpaceLogSeverity(double freeDriveSpaceInProcents)
 {
-    if(freeDriveSpaceInProcents < 2.5 )
+    if(freeDriveSpaceInProcents < 2.5)
         return CatLog::Severity::Critical;
     else if(freeDriveSpaceInProcents < 10)
         return CatLog::Severity::Error;
@@ -1859,18 +1880,38 @@ std::string GetHardDriveReportString(const std::string driverDescription, double
     return reportString;
 }
 
+void DoLedLightFreeSpaceReport(char driveLetter, std::string logMessage, CatLog::Severity severity)
+{
+	// C ja D asemilta tehd‰‰n eri raportit
+	std::string reporterName = "HardDriveUsage-" + driveLetter;
+	if(severity <= CatLog::Severity::Info)
+		NFmiLedLightStatusSystem::StopReportToChannelFromThread(NFmiLedChannel::OperationalInfo, reporterName);
+	else
+	{
+		boost::replace_all(logMessage, "\t", "");
+		NFmiLedLightStatusSystem::ReportToChannelFromThread(NFmiLedChannel::OperationalInfo, reporterName, logMessage, severity);
+	}
+}
+
 void ReportHardDriveUsage(const std::string &driveDescription, char driveLetter)
 {
+	CatLog::Severity logSeverity = CatLog::Severity::Debug;
+	std::string hardDriveReportStr;
     double freeGigaBytesAvailable = 0;
     double totalNumberOfGigaBytes = 0;
     double freeDriveSpaceInProcents = 0;
     if(GetHardDriveInfo(driveLetter, freeGigaBytesAvailable, totalNumberOfGigaBytes, freeDriveSpaceInProcents))
     {
-        auto logSeverity = GetHardDriveFreeSpaceLogSeverity(freeDriveSpaceInProcents);
-        LogSystemInfo(GetHardDriveReportString(driveDescription, freeGigaBytesAvailable, freeDriveSpaceInProcents), logSeverity);
+		logSeverity = GetHardDriveFreeSpaceLogSeverity(freeDriveSpaceInProcents);
+		hardDriveReportStr = GetHardDriveReportString(driveDescription, freeGigaBytesAvailable, freeDriveSpaceInProcents);
     }
-    else
-        LogSystemInfo(driveDescription + "Unable to get info from " + driveLetter + " drive", CatLog::Severity::Error);
+	else
+	{
+		logSeverity = CatLog::Severity::Error;
+		hardDriveReportStr = driveDescription + "Unable to get info from " + driveLetter + " drive";
+	}
+	DoLedLightFreeSpaceReport(driveLetter, hardDriveReportStr, logSeverity);
+	LogSystemInfo(hardDriveReportStr, logSeverity);
 }
 
 void ReportSystemHardDriveUsage()
@@ -2469,6 +2510,16 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 
 		DoPossibleCaseStudyEditedDataSetup(theData, theDataFileName, theType, fDataWasDeletedOut);
         PrepareForParamAddSystemUpdate();
+		RemoveCombinedDataFromLedChannelReport(theDataFilePattern);
+	}
+}
+
+void RemoveCombinedDataFromLedChannelReport(const std::string& theDataFileFilter)
+{
+	auto helpDataInfo = HelpDataInfoSystem()->FindHelpDataInfo(theDataFileFilter);
+	if(helpDataInfo && helpDataInfo->IsCombineData())
+	{
+		LedLightStatusSystem().StopReportToChannelWithFileFilter(NFmiLedChannel::QueryData, theDataFileFilter);
 	}
 }
 
@@ -10515,6 +10566,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsSeaLevelPlumeData;
 	}
 
+	NFmiLedLightStatusSystem& LedLightStatusSystem()
+	{
+		return itsLedLightStatusSystem;
+	}
+
+	NFmiLedLightStatusSystem itsLedLightStatusSystem;
 	NFmiSeaLevelPlumeData itsSeaLevelPlumeData;
 	NFmiParameterInterpolationFixer itsParameterInterpolationFixer;
 	NFmiCombinedMapHandler itsCombinedMapHandler;
@@ -12802,4 +12859,9 @@ void NFmiEditMapGeneralDataDoc::UpdateMacroParamDataGridSizeAfterVisualizationOp
 NFmiSeaLevelPlumeData& NFmiEditMapGeneralDataDoc::SeaLevelPlumeData()
 {
 	return pimpl->SeaLevelPlumeData();
+}
+
+NFmiLedLightStatusSystem& NFmiEditMapGeneralDataDoc::LedLightStatusSystem()
+{
+	return pimpl->LedLightStatusSystem();
 }

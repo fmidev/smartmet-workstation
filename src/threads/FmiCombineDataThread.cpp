@@ -16,6 +16,7 @@
 #include "execute-command-in-separate-process.h"
 #include "NFmiApplicationDataBase.h"
 #include "NFmiPathUtils.h"
+#include "NFmiLedLightStatus.h"
 
 #include <vector>
 #include <thread>
@@ -274,6 +275,17 @@ static std::string MakeDataCombinationWorkArgument(const DataCombineInfo& dataCo
 	return workArgument;
 }
 
+static void MakeLedChannelStartCombineDataWorkReport(const std::string& combinedDataPath, size_t targetIndex)
+{
+	std::string threadName = "CombineData";
+	threadName += std::to_string(targetIndex);
+	std::string reportStr = "Generating combined data:\n";
+	NFmiFileString fileStr(combinedDataPath);
+	reportStr += fileStr.FileName();
+
+	NFmiLedLightStatusSystem::ReportToChannelFromThread(NFmiLedChannel::QueryData, threadName, reportStr, CatLog::Severity::Info);
+}
+
 static std::string MakeDataCombinationExeCommandLineArguments(const std::vector<DataCombineInfo>& dataThatNeedsCombining)
 {
 	// 1. DataCombinationExe täyspolku lainausmerkeissä (haetaan jollain 
@@ -290,8 +302,10 @@ static std::string MakeDataCombinationExeCommandLineArguments(const std::vector<
 	// 3. Jokaiselle DataCombineInfo:lle tehdään oma lainausmerkeissä oleva argumentti, 
 	// jossa "partial-filter,combine-filter,time-steps"
 	// Esim. "D:\SmartMet\wrk\data\partial_data\SMHImesan\*_SMHImesan_skandinavia_pinta.sqd,D:\SmartMet\wrk\data\cache\SMHImesan\*_SMHImesan_skandinavia_pinta.sqd,21"
-	for(const auto& dataCombineInfo : dataThatNeedsCombining)
+	for(size_t index = 0; index < dataThatNeedsCombining.size(); index++)
 	{
+		const auto& dataCombineInfo = dataThatNeedsCombining[index];
+		::MakeLedChannelStartCombineDataWorkReport(dataCombineInfo.itsTargetFileFilter, index);
 		totalCommandLine += ::MakeDataCombinationWorkArgument(dataCombineInfo);
 		totalCommandLine += " ";
 	}
@@ -303,12 +317,12 @@ static void	TryDataCombinationExeStarting(const std::vector<DataCombineInfo>& da
 {
 	if(!dataThatNeedsCombining.empty())
 	{
-		auto commandLineString = ::MakeDataCombinationExeCommandLineArguments(dataThatNeedsCombining);
-
 		// Ainoastaan 1 exe saa olla kerrallaan ajossa. Voidaan oletaa että joko tämä tai joku 
 		// toinen smartmet on jo laittanut datoja rakentumaan, eikä kannata tehdä nyt enempää.
 		if(::IsDataCombinationExeRunning())
 			return;
+
+		auto commandLineString = ::MakeDataCombinationExeCommandLineArguments(dataThatNeedsCombining);
 
 		// Käynnistä exe käynnistämällä uusi prosessi
 		CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandLineString, true, false, SW_HIDE);
@@ -507,8 +521,34 @@ static bool UseOnlyOneThread()
 	return std::thread::hardware_concurrency() < 4;
 }
 
+static std::string MakeSoundingIndexDataWorkString(const std::string& soundingIndexDataPath)
+{
+	std::string reportStr = "Calculating sounding index data:\n";
+	NFmiFileString fileStr(soundingIndexDataPath);
+	reportStr += fileStr.FileName();
+	return reportStr;
+}
+
+struct SoundingIndexOutpuFileNameMaker
+{
+	// Tähän tiedostoon data kirjoitetaan väliaikaisesti aluksi, ja sellaisella nimellä että SmartMet ei tarraa siihen kiinni kesken kaiken
+	std::string itsOutputTmpFilePath;
+	// Tähän talletetaan data lopullisesti rename:n avulla edellä olevasta tiedostosta
+	std::string itsOutputFilePath;
+
+	SoundingIndexOutpuFileNameMaker(SoundingIndexDataInfo& dataInfo)
+	{
+		itsOutputFilePath = dataInfo.itsTargetFileFilter;
+		NFmiStaticTime currentTime;
+		std::string timeStampStr = static_cast<char*>(currentTime.ToStr(kYYYYMMDDHHMM)); // tehdään minuutin tarkkuudella aikaleima, tällöin jos toinen käynnissä oleva SmartMet tekee jo ennenmin tiedoston, tätä ei tarvitse tallentaa
+		NFmiStringTools::ReplaceAll(itsOutputFilePath, "*", timeStampStr);
+		itsOutputTmpFilePath = itsOutputFilePath + "_TMP_FILE_DELETE_THIS_";
+	}
+};
+
 static void	DoSoundingIndexDataWork()
 {
+	std::string workingThreadName = "SoundingIndexDataWorker";
     // Jos koneessa on liian vähän ytimiä, ei kannata jakaa laskuja useampaan säikeeseen
 	bool useOnlyOneThread = UseOnlyOneThread();
 
@@ -527,10 +567,12 @@ static void	DoSoundingIndexDataWork()
             CatLog::logMessage(std::string("Starting doing soundingIndex data from: ") + dataInfo.itsSourceFileFilter, CatLog::Severity::Debug, CatLog::Category::Data);
 			NFmiMilliSecondTimer debugTimer;
 			debugTimer.StartTimer();
+			SoundingIndexOutpuFileNameMaker fileNameMaker(dataInfo);
 	// 2. tee sounding index data
 			boost::shared_ptr<NFmiQueryData> data;
 			try
 			{
+				NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::QueryData, workingThreadName, ::MakeSoundingIndexDataWorkString(fileNameMaker.itsOutputFilePath));
 				std::string producerNameStr; // TODO: laita tähän kuvaava nimi
 				 // otetaan käyttöön n. 40 % koneen säikeistä
                 int maxUsedThreads = NFmiQueryDataUtil::GetReasonableWorkingThreadCount(40.);
@@ -570,28 +612,23 @@ static void	DoSoundingIndexDataWork()
 				// varmistetaan että kohde hakemisto on olemassa
 				NFmiFileSystem::CreateDirectory(dataInfo.itsTargetDirectory);
 			// 3. tarkista ensin että ja talleta queryData tiedostoon oikeaan cache-hakemistoon, mutta väärällä nimellä ja lopuksi tee rename jolloin tiedosto on halutun niminen
-				std::string outputFileName = dataInfo.itsTargetFileFilter;
-				NFmiStaticTime currentTime;
-				std::string timeStampStr = static_cast<char*>(currentTime.ToStr(kYYYYMMDDHHMM)); // tehdään minuutin tarkkuudella aikaleima, tällöin jos toinen käynnissä oleva SmartMet tekee jo ennenmin tiedoston, tätä ei tarvitse tallentaa
-				NFmiStringTools::ReplaceAll(outputFileName, "*", timeStampStr);
-				std::string tmpOutputFileName = outputFileName + "_TMP_FILE_DELETE_THIS_";
-
-				if(NFmiFileSystem::FileExists(outputFileName) == false && NFmiFileSystem::FileExists(tmpOutputFileName) == false)
+				if(NFmiFileSystem::FileExists(fileNameMaker.itsOutputFilePath) == false && NFmiFileSystem::FileExists(fileNameMaker.itsOutputTmpFilePath) == false)
 				{
                     ::DebugCombineDataThread(std::string("finished doing soundingIndex data from: ") + dataInfo.itsSourceFileFilter, CatLog::Severity::Info);
-                    ::DebugCombineDataThread(std::string("Storing soundingIndex-data to file: ") + tmpOutputFileName, CatLog::Severity::Debug);
+                    ::DebugCombineDataThread(std::string("Storing soundingIndex data to file: ") + fileNameMaker.itsOutputTmpFilePath, CatLog::Severity::Debug);
 					NFmiStreamQueryData sQueryData;
-					sQueryData.WriteData(tmpOutputFileName, data.get(), static_cast<long>(data->InfoVersion()));
-					if(NFmiFileSystem::FileExists(outputFileName) == false)
+					sQueryData.WriteData(fileNameMaker.itsOutputTmpFilePath, data.get(), static_cast<long>(data->InfoVersion()));
+					if(NFmiFileSystem::FileExists(fileNameMaker.itsOutputFilePath) == false)
 					{
-						NFmiFileSystem::RenameFile(tmpOutputFileName, outputFileName);
-                        ::DebugCombineDataThread(std::string("renaming to final soundingIndexData-file: ") + outputFileName, CatLog::Severity::Debug);
+						NFmiFileSystem::RenameFile(fileNameMaker.itsOutputTmpFilePath, fileNameMaker.itsOutputFilePath);
+                        ::DebugCombineDataThread(std::string("renaming to final soundingIndex data file: ") + fileNameMaker.itsOutputFilePath, CatLog::Severity::Debug);
 						CFmiDataLoadingThread2::LoadDataNow(); // laitetaan tietoa data-loading threadille että on tullut uutta dataa
 					}
 					else
-					{ // jos sinne on nyt ilmestynyt saman niminen tiedosto, poistetaan väliaikainen tiedosto, joka ehdittiin tallentaa
-						NFmiFileSystem::RemoveFile(tmpOutputFileName);
-                        ::DebugCombineDataThread(std::string("Removing temporary file because final soundingIndexData-file allready exist: ") + outputFileName, CatLog::Severity::Debug);
+					{ 
+						// jos sinne on nyt ilmestynyt saman niminen tiedosto, poistetaan väliaikainen tiedosto, joka ehdittiin tallentaa
+						NFmiFileSystem::RemoveFile(fileNameMaker.itsOutputTmpFilePath);
+                        ::DebugCombineDataThread(std::string("Removing temporary file because final soundingIndexData-file allready exist: ") + fileNameMaker.itsOutputFilePath, CatLog::Severity::Debug);
 					}
 
 					// siivotaan hakemistoa aina kun lisätään tiedostoja
@@ -600,7 +637,7 @@ static void	DoSoundingIndexDataWork()
 				}
 				else
 				{
-                    ::DebugCombineDataThread(std::string("Not storing the soundingIndexData, all ready exist?: ") + outputFileName, CatLog::Severity::Debug);
+                    ::DebugCombineDataThread(std::string("Not storing the soundingIndexData, all ready exist?: ") + fileNameMaker.itsOutputFilePath, CatLog::Severity::Debug);
 					// siellä oli jo sen niminen tiedosto, oletetaan että toinen SmartMet teki sen juuri, eikä tehdä mitään
 				}
 			}

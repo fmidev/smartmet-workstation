@@ -637,6 +637,12 @@ BEGIN
     ID_INDICATOR_SCRL       "SCRL"
     ID_INDICATOR_OVR        "OVR"
     ID_INDICATOR_REC        "REC"
+    ID_INDICATOR_LED_CONTROL_1 "Led control 1"
+    ID_INDICATOR_LED_CONTROL_2 "Led control 2"
+    ID_INDICATOR_LED_CONTROL_3 "Led control 3"
+    ID_INDICATOR_LED_CONTROL_4 "Led control 4"
+    ID_INDICATOR_LED_CONTROL_5 "Led control 5"
+    ID_INDICATOR_LED_CONTROL_6 "Led control 6"
 END
 
 STRINGTABLE
@@ -945,6 +951,7 @@ BEGIN
                             "Beta Production dialog\nBeta Production dialog"
 END
 
+
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -963,24 +970,6 @@ LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON_LED_RED        ICON                    "res\\ledred.ico"
-
-IDI_ICON_LED_BLUE       ICON                    "res\\ledblue.ico"
-
-IDI_ICON_LED_GRAY       ICON                    "res\\ledgray.ico"
-
-IDI_ICON_LED_GREEN      ICON                    "res\\ledgreen.ico"
-
-IDI_ICON_LED_LIGHT_BLUE ICON                    "res\\ledlightblue.ico"
-
-IDI_ICON_LED_LIGHT_GREEN ICON                    "res\\ledlightgreen.ico"
-
-IDI_ICON_LED_ORANGE     ICON                    "res\\ledorange.ico"
-
-IDI_ICON_LED_PURPLE     ICON                    "res\\ledpurple.ico"
-
-IDI_ICON_LED_YELLOW     ICON                    "res\\ledyellow.ico"
-
 IDI_ICON_FOLDER_OPEN    ICON                    "res\\Avosoft-Warm-Toolbar-Folder-open.ico"
 
 IDI_ICON_FILE_CHART     ICON                    "res\\Hopstarter-Soft-Scraps-Document-Chart.ico"
@@ -1118,6 +1107,32 @@ END
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 #pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON_LED_RED        ICON                    "res\\ledred.ico"
+
+IDI_ICON_LED_BLUE       ICON                    "res\\ledblue.ico"
+
+IDI_ICON_LED_GRAY       ICON                    "res\\ledgray.ico"
+
+IDI_ICON_LED_GREEN      ICON                    "res\\ledgreen.ico"
+
+IDI_ICON_LED_LIGHT_BLUE ICON                    "res\\ledlightblue.ico"
+
+IDI_ICON_LED_LIGHT_GREEN ICON                    "res\\ledlightgreen.ico"
+
+IDI_ICON_LED_ORANGE     ICON                    "res\\ledorange.ico"
+
+IDI_ICON_LED_PURPLE     ICON                    "res\\ledpurple.ico"
+
+IDI_ICON_LED_YELLOW     ICON                    "res\\ledyellow.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

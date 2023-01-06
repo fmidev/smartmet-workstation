@@ -36,6 +36,8 @@
 #include "CtrlViewWin32Functions.h"
 #include "CtrlViewFunctions.h"
 #include "FmiHakeWarningMessages.h"
+#include "NFmiLedLightStatus.h"
+#include <numeric>
 
 #ifndef DISABLE_CPPRESTSDK
 #include "WmsSupport.h"
@@ -67,6 +69,160 @@ namespace
 	// Homma pit‰‰ hoitaa t‰ll‰isen flagin kautta, koska Wms rutiini pyˆrii erillisess‰ thread:issa ja sielt‰ ei saa
 	// kutsua MFC:n timer rutiineja, koska niit‰ saa k‰sitell‰ vain C++ ohjelman main-thread:in kautta.
 	std::atomic<bool> g_WmsFirstTimeUpdate{ false };
+}
+
+static const int STATUSBAR_TOOLTIP_ID = 1234642;
+
+IMPLEMENT_DYNCREATE(CStatusBarResize , CStatusBar)
+
+BEGIN_MESSAGE_MAP(CStatusBarResize, CStatusBar)
+	ON_WM_CREATE()
+	ON_WM_SIZE()
+	ON_NOTIFY(UDM_TOOLTIP_DISPLAY, NULL, NotifyDisplayTooltip)
+END_MESSAGE_MAP()
+
+CStatusBarResize::CStatusBarResize()
+:CStatusBar()
+{
+}
+
+void CStatusBarResize::Setup(NFmiLedLightStatusSystem* ledLightStatusSystem, int totalNumberOfPanes)
+{ 
+	if(!ledLightStatusSystem)
+	{
+		std::string errorMessage = __FUNCTION__;
+		errorMessage += ": given ledLightStatusSystem was nullptr, won't be able to do led control tooltips";
+		CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::Configuration, true);
+		return;
+	}
+	if(ledLightStatusSystem->IsInitilized())
+	{
+		ledLightStatusSystem_ = ledLightStatusSystem;
+		wantedStretchPaneIndex_ = ledLightStatusSystem_->MapViewTextStatusbarPaneIndex();
+	}
+	totalNumberOfPanes_ = totalNumberOfPanes;
+}
+
+int CStatusBarResize::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	if(CStatusBar::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+	// TODO:  Add your specialized creation code here
+
+	return 0;
+}
+
+void CStatusBarResize::OnSize(UINT nType, int cx, int cy)
+{
+	CStatusBar::OnSize(nType, cx, cy);
+
+	std::vector<int> paneEndPositionsInPixels(totalNumberOfPanes_);
+	auto& statusBarCtrl = GetStatusBarCtrl();
+	statusBarCtrl.GetParts(totalNumberOfPanes_, paneEndPositionsInPixels.data());
+	auto findIter = std::find(paneEndPositionsInPixels.begin(), paneEndPositionsInPixels.end(), -1);
+	if(findIter != paneEndPositionsInPixels.end())
+	{
+		*findIter = 0;
+		paneEndPositionsInPixels[wantedStretchPaneIndex_] = -1;
+		statusBarCtrl.SetParts(totalNumberOfPanes_, paneEndPositionsInPixels.data());
+	}
+	else
+	{
+		// N‰m‰ laskut tehd‰‰n vain alustuksen j‰lkeen, jolloin eri pane:ille on jo laskettu paikat
+		std::vector<int> paneWidthsInPixels(totalNumberOfPanes_, paneEndPositionsInPixels.front());
+		for(size_t index = 1; index < paneEndPositionsInPixels.size(); index++)
+		{
+			paneWidthsInPixels[index] = paneEndPositionsInPixels[index] - paneEndPositionsInPixels[index - 1];
+		}
+		int fixedPanesWidthInPixels = 0;
+		for(size_t index = 0; index < paneWidthsInPixels.size(); index++)
+		{
+			if(index != wantedStretchPaneIndex_)
+			{
+				fixedPanesWidthInPixels += paneWidthsInPixels[index];
+			}
+		}
+		int strechedPaneWidth = cx - fixedPanesWidthInPixels - 20;
+		const int minimumStrechedPaneWidthInPixels = 400;
+		if(strechedPaneWidth < minimumStrechedPaneWidthInPixels)
+			strechedPaneWidth = minimumStrechedPaneWidthInPixels; // Pakotetaan venytett‰v‰‰ pane:a aina hieman n‰kyviin
+		std::vector<int> newPaneEndPositionsInPixels(totalNumberOfPanes_);
+		int currentPaneEndPoint = 0;
+		for(size_t index = 0; index < newPaneEndPositionsInPixels.size(); index++)
+		{
+			if(index != wantedStretchPaneIndex_)
+			{
+				newPaneEndPositionsInPixels[index] = currentPaneEndPoint + paneWidthsInPixels[index];
+			}
+			else
+			{
+				newPaneEndPositionsInPixels[index] = currentPaneEndPoint + strechedPaneWidth;
+			}
+			currentPaneEndPoint = newPaneEndPositionsInPixels[index];
+		}
+		statusBarCtrl.SetParts(totalNumberOfPanes_, newPaneEndPositionsInPixels.data());
+	}
+}
+
+BOOL CStatusBarResize::InitTooltipControl()
+{
+	if(ledLightStatusSystem_)
+	{
+		CFmiWin32Helpers::InitializeCPPTooltip(this, itsTooltipCtrl, STATUSBAR_TOOLTIP_ID, 950);
+	}
+	return TRUE;
+}
+
+void CStatusBarResize::NotifyDisplayTooltip(NMHDR* pNMHDR, LRESULT* result)
+{
+	if(ledLightStatusSystem_)
+	{
+		*result = 0;
+		NM_PPTOOLTIP_DISPLAY* pNotify = (NM_PPTOOLTIP_DISPLAY*)pNMHDR;
+
+		if(pNotify->ti->nIDTool == STATUSBAR_TOOLTIP_ID)
+		{
+			CPoint pt = *pNotify->pt;
+			ScreenToClient(&pt);
+			auto statusString = GetTooltipText(pt);
+			if(!statusString.empty())
+			{
+				CString strU_ = CA2T(statusString.c_str());
+				pNotify->ti->sTooltip = strU_;
+			}
+
+		} //if
+	}
+} //End NotifyDisplayTooltip
+
+BOOL CStatusBarResize::PreTranslateMessage(MSG* pMsg)
+{
+	if(ledLightStatusSystem_)
+	{
+		itsTooltipCtrl.RelayEvent(pMsg);
+	}
+	return CStatusBar::PreTranslateMessage(pMsg);
+}
+
+std::string CStatusBarResize::GetTooltipText(const CPoint& cursorInClientSpace)
+{
+	// Tutkitaan osuiko hiirenkursori mink‰‰n ledi paneelin p‰‰lle ja vain silloin tehd‰‰n status sanomia
+	if(ledLightStatusSystem_ && ledLightStatusSystem_->LedPaneCount() > 0)
+	{
+		auto& statusBarCtrl = GetStatusBarCtrl();
+		for(int index = 0; index < (int)ledLightStatusSystem_->LedPaneCount(); index++)
+		{
+			int paneIndex = index + ledLightStatusSystem_->StartingLedPaneIndex();
+			CRect paneRect;
+			statusBarCtrl.GetRect(paneIndex, paneRect);
+			if(paneRect.PtInRect(cursorInClientSpace))
+			{
+				return ledLightStatusSystem_->GetTooltipStatusMessage(index);
+			}
+		}
+	}
+	return "";
 }
 
 
@@ -123,14 +279,6 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFmiUsedFrameWndParent)
 	ON_UPDATE_COMMAND_UI(ID_HIDE_SYSTRAY_SYMBOL, &CMainFrame::OnUpdateHideSystraySymbol)
     ON_WM_GETMINMAXINFO()
 END_MESSAGE_MAP()
-
-static UINT indicators[] =
-{
-	ID_SEPARATOR,           // status line indicator
-	ID_INDICATOR_CAPS,
-	ID_INDICATOR_NUM,
-	ID_INDICATOR_SCRL,
-};
 
 const int gDisableMacroParamThread = 1;
 const int gDisableDataCache1Thread = 2;
@@ -306,11 +454,8 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	// Apply user settings to optionally hide some of the toolbar controls
 	ConfigureToolbarControls();
 
-	if (!m_wndStatusBar.Create(this) || !m_wndStatusBar.SetIndicators(indicators, sizeof(indicators)/sizeof(UINT)))
-	{
-		TRACE0("Failed to create status bar\n");
-		return -1;      // fail to create
-	}
+	if(CreateStatusBar() != 0)
+		return -1;
 
 #ifdef FMI_DISABLE_MFC_FEATURE_PACK
 	// TODO: Remove this if you don't want tool tips or a resizeable toolbar
@@ -396,6 +541,148 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	return 0;
 }
 
+int CMainFrame::CreateStatusBar()
+{
+	MakeStatusBarIndicators();
+	m_wndStatusBar.Setup(&itsDoc->LedLightStatusSystem(), (int)indicatorVector.size());
+	DWORD statusbarStyle = WS_CHILD | WS_VISIBLE | CBRS_BOTTOM;
+	if(!m_wndStatusBar.Create(this, statusbarStyle) || !m_wndStatusBar.SetIndicators(indicatorVector.data(), (int)indicatorVector.size()))
+	{
+		TRACE0("Failed to create status bar\n");
+		return -1;      // fail to create
+	}
+	SetupLedIndicatorsInStatusbar();
+	return 0;
+}
+
+void CMainFrame::MakeStatusBarIndicators()
+{
+	auto& ledLightStatusSystem = itsDoc->LedLightStatusSystem();
+	if(!ledLightStatusSystem.IsInitilized())
+	{
+		// Jos ledLightStatusSystem ei ole k‰ytˆss‰, laitetaan vain perus jutut indikaattoreiksi (else haaran j‰lkeen loput)
+		indicatorVector.push_back(ID_SEPARATOR);
+	}
+	else
+	{
+		// Venyv‰ teksti osio (ID_SEPARATOR) on joko alussa tai heti ledien j‰lkeen
+		if(ledLightStatusSystem.MapViewTextStatusbarPaneIndex() == 0)
+			indicatorVector.push_back(ID_SEPARATOR);
+		if(ledLightStatusSystem.LedPaneCount() >= 1)
+			indicatorVector.push_back(ID_INDICATOR_LED_CONTROL_1);
+		if(ledLightStatusSystem.LedPaneCount() >= 2)
+			indicatorVector.push_back(ID_INDICATOR_LED_CONTROL_2);
+		if(ledLightStatusSystem.LedPaneCount() >= 3)
+			indicatorVector.push_back(ID_INDICATOR_LED_CONTROL_3);
+		if(ledLightStatusSystem.LedPaneCount() >= 4)
+			indicatorVector.push_back(ID_INDICATOR_LED_CONTROL_4);
+		if(ledLightStatusSystem.LedPaneCount() >= 5)
+			indicatorVector.push_back(ID_INDICATOR_LED_CONTROL_5);
+		if(ledLightStatusSystem.LedPaneCount() >= 6)
+			indicatorVector.push_back(ID_INDICATOR_LED_CONTROL_6);
+		if(ledLightStatusSystem.MapViewTextStatusbarPaneIndex() != 0)
+			indicatorVector.push_back(ID_SEPARATOR); // TAI heti ledien j‰lkeen
+	}
+
+	// Loppuun normi CAPS/NUMLOCK/SCROL-LOCK indikaattorit
+	indicatorVector.push_back(ID_INDICATOR_CAPS);
+	indicatorVector.push_back(ID_INDICATOR_NUM);
+	indicatorVector.push_back(ID_INDICATOR_SCRL);
+}
+
+static void SetPaneWidth(CStatusBar& statusBar, int paneId, int wantedWidth)
+{
+	UINT nId = 0;
+	UINT nStyle = 0;
+	int cxWidth = 0;
+	statusBar.GetPaneInfo(paneId, nId, nStyle, cxWidth);
+	cxWidth = wantedWidth;
+	statusBar.SetPaneInfo(paneId, nId, nStyle, cxWidth);
+}
+
+void CMainFrame::SetupLedIndicatorsInStatusbar()
+{
+	auto& ledLightStatusSystem = itsDoc->LedLightStatusSystem();
+	if(ledLightStatusSystem.IsInitilized())
+	{
+		int maxPaneIndex = (int)ledLightStatusSystem.LedPaneCount() + ledLightStatusSystem.StartingLedPaneIndex();
+		for(int paneId = ledLightStatusSystem.StartingLedPaneIndex(); paneId < maxPaneIndex; paneId++)
+		{
+			::SetPaneWidth(m_wndStatusBar, paneId, 16);
+		}
+
+		DoLedLightsActionUpdates();
+		m_wndStatusBar.InitTooltipControl();
+	}
+}
+
+void CMainFrame::DoLedLightsActionUpdates()
+{
+	if(itsDoc->LedLightStatusSystem().IsInitilized())
+	{
+		for(auto& ledLightStatus : itsDoc->LedLightStatusSystem().LedLightStatusVector())
+		{
+			auto colorChangedStatus = ledLightStatus.hasLedColorChanged();
+			if(colorChangedStatus.first)
+			{
+				UpdateStatusBarIcons(ledLightStatus.statusBarPaneIndex(), colorChangedStatus.second);
+			}
+		}
+	}
+}
+
+void CMainFrame::UpdateStatusBarIcons(int paneId, NFmiLedColor ledColor)
+{
+	UINT iconId = IDI_ICON_LED_GRAY;
+
+	switch(ledColor)
+	{
+	case NFmiLedColor::Blue:
+		iconId = IDI_ICON_LED_BLUE;
+		break;
+	case NFmiLedColor::Gray:
+		iconId = IDI_ICON_LED_GRAY;
+		break;
+	case NFmiLedColor::Green:
+		iconId = IDI_ICON_LED_GREEN;
+		break;
+	case NFmiLedColor::LightBlue:
+		iconId = IDI_ICON_LED_LIGHT_BLUE;
+		break;
+	case NFmiLedColor::LightGreen:
+		iconId = IDI_ICON_LED_LIGHT_GREEN;
+		break;
+	case NFmiLedColor::Orange:
+		iconId = IDI_ICON_LED_ORANGE;
+		break;
+	case NFmiLedColor::Purple:
+		iconId = IDI_ICON_LED_PURPLE;
+		break;
+	case NFmiLedColor::Red:
+		iconId = IDI_ICON_LED_RED;
+		break;
+	case NFmiLedColor::Yellow:
+		iconId = IDI_ICON_LED_YELLOW;
+		break;
+	default:
+		break;
+	}
+
+	if(iconId)
+	{
+		HICON hIcon = (HICON)::LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(iconId), IMAGE_ICON, 16, 16, 0);
+		if(hIcon)
+		{
+			m_wndStatusBar.GetStatusBarCtrl().SetIcon(paneId, hIcon);
+		}
+	}
+	else
+	{
+		m_wndStatusBar.GetStatusBarCtrl().SetIcon(paneId, NULL);
+	}
+
+}
+
 void CMainFrame::StartSmartMetTimers()
 {
     itsCleanDataTimer = static_cast<UINT>(SetTimer(kFmiCleanDataTimer, 1 * 5 * 60 * 1000, NULL)); // siivotaan datahakemistot kerran 5 minuutin kuluttua, siell‰ timer asetetaan sitten miten pit‰‰
@@ -412,6 +699,10 @@ void CMainFrame::StartSmartMetTimers()
     itsGenerateBetaProductsTimer = static_cast<UINT>(SetTimer(kFmiGenerateBetaProductsTimer, 60 * 1000, NULL)); // Tarkastellaan minuutin v‰lein, ett‰ pit‰‰kˆ beta-producteja tehd‰ 
     itsLoggingSystemManagementTimer = static_cast<UINT>(SetTimer(kFmiLoggingSystemManagementTimer, 12 * 60 * 1000, NULL)); // Lokitus systeemi‰ pit‰‰ hallinnoida aika ajoin, viestien trimmau muistista ja crash-reporteriin mahdollisesti p‰ivitetty lokitiedoston nimi
 	itsOneTimeWmsBasedDataUpdateTimer = static_cast<UINT>(SetTimer(kFmiOneTimeWmsBasedDataUpdateTimer, 3 * 1000, NULL)); // 1. Wms p‰ivityst‰ tutkitaan 3 sekunnin v‰lein
+	if(itsDoc->LedLightStatusSystem().IsInitilized())
+	{
+		itsLedLightsActionTimer = static_cast<UINT>(SetTimer(kFmiLedLightsActionTimer, 200, NULL)); // ledej‰ s‰‰det‰‰n 1/5 sekunnin v‰lein
+	}
 }
 
 static void LocalizeMenuStrings(CMenu *pMenu)
@@ -1032,7 +1323,7 @@ void CMainFrame::OnClose()
 
 			itsDoc->MakeClosingLogMessage();
 		}
-		CFrameWnd::OnClose();
+		CFmiUsedFrameWndParent::OnClose();
 	}
 }
 
@@ -1085,6 +1376,12 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 
 	switch(nIDEvent)
 	{
+		case kFmiLedLightsActionTimer:
+		{
+			DoLedLightsActionUpdates();
+			return;
+		}
+
 		case kFmiCheckAnimationLockedModeTimeBagsTimer:
 		{
 			itsDoc->GetCombinedMapHandler()->checkAnimationLockedModeTimeBags(CtrlViewUtils::kDoAllMapViewDescTopIndex, false);
@@ -1249,7 +1546,7 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
         }
     }
 
-	CFrameWnd::OnTimer(nIDEvent);
+	CFmiUsedFrameWndParent::OnTimer(nIDEvent);
 }
 
 void CMainFrame::CheckForAutoLoadTimerStart(void)
@@ -1347,7 +1644,7 @@ void CMainFrame::OnUpdateFrameTitle(BOOL bAddToTitle)
 		boost::shared_ptr<NFmiFastQueryInfo> info = itsDoc->EditedSmartInfo();
 		if(info && dynamic_cast<NFmiSmartInfo*>(info.get())->LoadedFromFile())
 		{
-			CFrameWnd::OnUpdateFrameTitle(bAddToTitle);
+			CFmiUsedFrameWndParent::OnUpdateFrameTitle(bAddToTitle);
 			return ;
 		}
 	}
@@ -1450,14 +1747,14 @@ BOOL CMainFrame::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* p
     else if(message == ID_MESSAGE_START_HISTORY_THREAD)
         StartHistoryDataCacheThread();
 
-	return CFrameWnd::OnWndMsg(message, wParam, lParam, pResult);
+	return CFmiUsedFrameWndParent::OnWndMsg(message, wParam, lParam, pResult);
 }
 
 // t‰m‰n overriden avulla saadaan tooltippiin kieli versio aikaiseksi
 // eli t‰m‰ tooltip on toolbar-nappuloiden tooltippi
 BOOL CMainFrame::OnToolTipText(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
 {
-	BOOL status = CFrameWnd::OnToolTipText(id, pNMHDR, pResult);
+	BOOL status = CFmiUsedFrameWndParent::OnToolTipText(id, pNMHDR, pResult);
 
 	if(status)
 	{
@@ -1477,7 +1774,7 @@ void CMainFrame::GetMessageString(UINT nID, CString& rMessageU_) const
 {
 	// TODO: Add your specialized code here and/or call the base class
 
-	CFrameWnd::GetMessageString(nID, rMessageU_);
+	CFmiUsedFrameWndParent::GetMessageString(nID, rMessageU_);
 
 	CSmartMetApp* app = (CSmartMetApp*)AfxGetApp();
 	// kielen vaihdon pit‰‰ tapahtua t‰ss‰ v‰liss‰ (statusbar teksti, joka saadaan toolbar + hiiri sen p‰‰ll‰)
@@ -1596,7 +1893,6 @@ void CMainFrame::OnViewDemodockviews()
 }
 #endif // FMI_DISABLE_MFC_FEATURE_PACK
 
-
 void CMainFrame::DoAppDataBaseCollection(int theAction) // theAction = NFmiApplicationDataBase::Action
 {
 	itsDoc->ApplicationDataBase().CollectSmartMetData(static_cast<NFmiApplicationDataBase::Action>(theAction), itsDoc->Language(), itsDoc->RunningTimeInSeconds(), itsDoc->IsToolMasterAvailable(), itsDoc->InfoOrganizer());
@@ -1606,8 +1902,6 @@ void CMainFrame::DoAppDataBaseCollection(int theAction) // theAction = NFmiAppli
         CWinThread *AppDataToDbThread = AfxBeginThread(CFmiAppDataToDbThread::DoThread, &itsDoc->ApplicationDataBase(), THREAD_PRIORITY_BELOW_NORMAL);
     }
 }
-
-
 
 void CMainFrame::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 {
@@ -1620,3 +1914,4 @@ void CMainFrame::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
     lpMMI->ptMinTrackSize.x = rc.Width();
     lpMMI->ptMinTrackSize.y = rc.Height();
 }
+

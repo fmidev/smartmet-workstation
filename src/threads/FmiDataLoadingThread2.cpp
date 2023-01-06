@@ -116,12 +116,16 @@ static void MakeDataNotificationTexts(const NFmiDataNotificationSettingsWinRegis
     }
 }
 
+// Annetaan semaphoren lukitukselle aina t‰m‰ aika kokeilla lukkoa, ennen 
+// kuin ep‰onnistuu ja jolloin data menetet‰‰n, 3 sekuntia pit‰isi riitt‰‰ ruhtinaallisesti.
+const int gDataExchangeTimeInMS = 3000;
+
 // t‰ll‰ p‰‰ohjelma pyyt‰‰ ladattuja datoja (funktiossa tehd‰‰n vector swap!!)
 // palauttaa true, jos uutta dataa tuli k‰yttˆˆn, muuten jos lukitus failaa, tai ei ollut dataa, palautetaan false.
 bool CFmiDataLoadingThread2::GetLoadedDatas(std::vector<LoadedQueryDataHolder> &theLoadedDatasOut)
 {
 	CSingleLock singleLock(&gDataExchange); // muista ett‰ t‰m‰ vapauttaa semaphoren kun tuhoutuu
-	if(singleLock.Lock(1000))
+	if(singleLock.Lock(gDataExchangeTimeInMS))
 	{
 		theLoadedDatasOut.swap(gLoadedDatas);
 		gLoadedDatas.clear(); // tyhjennet‰‰n viel‰ varmuuden vuoksi
@@ -133,7 +137,7 @@ bool CFmiDataLoadingThread2::GetLoadedDatas(std::vector<LoadedQueryDataHolder> &
 static void AddLoadedData(LoadedQueryDataHolder &&theLoadedData)
 {
 	CSingleLock singleLock(&gDataExchange); // muista ett‰ t‰m‰ vapauttaa semaphoren kun tuhoutuu
-	if(singleLock.Lock(3000)) // annetaan 3 sekuntia lukolle aikaa, muuten data menetet‰‰n (pit‰isi riitt‰‰ kevyesti aina)
+	if(singleLock.Lock(gDataExchangeTimeInMS))
 	{
         NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
         gLoadedDatas.push_back(std::move(theLoadedData));
