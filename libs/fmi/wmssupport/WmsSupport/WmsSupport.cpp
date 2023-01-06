@@ -10,6 +10,20 @@
 #include <cppback/background-manager.h>
 #include <webclient/CppRestClient.h>
 
+/* // Katso WmsSupport::getDynamicImage metodin kommentoitujen koodien kommentti teksteistä, miksi tämä kohta on vielä kommentissa.
+#include "NFmiLedLightStatus.h"
+namespace
+{
+    std::string MakeLedChannelGetDynamicLayerReport(const std::string& hostStr, const std::string& layerStr)
+    {
+        std::string str = "Getting dynamic image from wms server:\n";
+        str += hostStr + "(";
+        str += layerStr + ")";
+        return str;
+    }
+}
+*/
+
 namespace Wms
 {
     StaticMapClientState::StaticMapClientState() = default;
@@ -95,6 +109,7 @@ namespace Wms
 
     NFmiImageHolder WmsSupport::getDynamicImage(const NFmiDataIdent& dataIdent, const NFmiArea& area, const NFmiMetTime& time, int resolutionX, int resolutionY, int editorTimeStepInMinutes)
     {
+        std::string workingThreadName = "GetDynamicLayer";
         auto layerInfo = getHashedLayerInfo(dataIdent);
         if(layerInfo)
         {
@@ -128,7 +143,11 @@ namespace Wms
                 .setRequest("GetMap")
                 .setStyles(layerInfo->style.name)
                 .build();
-
+            /* // HUOM! Ei kannata laittaa kuvien haun yhteyteen led-channel viestitystä, koska pää-thread kutsuttu metodi odottaa aina
+            *    loppuun asti että kuva ladataan.
+            *    Tämä led-raportointi voidaan ottaa käyttöön jos/kun kuvan hakuja ei enää odotella katkeraan loppuun asti.
+            NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::WmsData, workingThreadName, MakeLedChannelGetDynamicLayerReport(query.host, layerInfo->name));
+            */
             backgroundFetcher_->fetch(*dynamicClients_[producerId], qb, time, editorTimeStepInMinutes);
             return dynamicClients_[producerId]->getImage(query);
         }

@@ -118,6 +118,7 @@ class NFmiColorContourLegendSettings;
 class CombinedMapHandlerInterface;
 class NFmiParameterInterpolationFixer;
 class NFmiSeaLevelPlumeData;
+class NFmiLedLightStatusSystem;
 
 namespace Wms
 {
@@ -151,6 +152,7 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+	NFmiLedLightStatusSystem& LedLightStatusSystem();
 	NFmiSeaLevelPlumeData& SeaLevelPlumeData();
 	void UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();
 	NFmiParameterInterpolationFixer& ParameterInterpolationFixer();

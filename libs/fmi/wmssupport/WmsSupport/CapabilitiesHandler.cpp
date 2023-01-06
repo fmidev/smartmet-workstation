@@ -4,6 +4,7 @@
 #include "xmlliteutils/XmlHelperFunctions.h"
 #include "../../q2clientlib/include/NFmiQ2Client.h"
 #include "NFmiFileSystem.h"
+#include "NFmiLedLightStatus.h"
 
 #include <webclient/Client.h>
 
@@ -62,6 +63,13 @@ namespace Wms
             }
         }
 
+        std::string MakeLedChannelGetCapabilityTreeReport(const std::string& server)
+        {
+            std::string reportStr = "Doing getcapability request parsing from server:\n";
+            reportStr += server;
+            return reportStr;
+        }
+
     } // unnamed namespace ends
 
     std::function<void()> CapabilitiesHandler::parameterSelectionUpdateCallback_ = nullptr;
@@ -108,59 +116,62 @@ namespace Wms
     void CapabilitiesHandler::startFetchingCapabilitiesInBackground()
     {
         bManager_->addTask([&]()
-        {
-            while(true)
             {
-                auto children = std::vector<std::unique_ptr<CapabilityTree>>{};
-                bool foundAnyWmsServerData = false;
-
-                for(auto& serverKV : servers_)
+                std::string workingThreadName = "GetCapabilityTree";
+                while(true)
                 {
-                    const auto &server = serverKV.second;
-                    auto query = QueryBuilder{}.setScheme(server.generic.scheme)
-                        .setHost(server.generic.host)
-                        .setPath(server.generic.path)
-                        .setService("WMS")
-                        .setVersion(server.version)
-                        .setRequest("GetCapabilities")
-                        .setToken(server.generic.token)
-                        .build();
+                    auto children = std::vector<std::unique_ptr<CapabilityTree>>{};
+                    bool foundAnyWmsServerData = false;
 
-                    try
+                    for(auto& serverKV : servers_)
                     {
-                        auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_ };
-						auto xml = fetchCapabilitiesXml(*client_, query, server.logFetchCapabilitiesRequest, server.doVerboseLogging, getCapabilitiesTimeoutInSeconds);
-						changedLayers_.changedLayers.clear();
-                        children.push_back(capabilityTreeParser.parseXmlGeneral(xml, hashes_, changedLayers_));
-                        foundAnyWmsServerData = true;
-                        if(!changedLayers_.changedLayers.empty())
+                        const auto& server = serverKV.second;
+                        NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::WmsData, workingThreadName, MakeLedChannelGetCapabilityTreeReport(server.generic.host));
+                        auto query = QueryBuilder{}.setScheme(server.generic.scheme)
+                            .setHost(server.generic.host)
+                            .setPath(server.generic.path)
+                            .setService("WMS")
+                            .setVersion(server.version)
+                            .setRequest("GetCapabilities")
+                            .setToken(server.generic.token)
+                            .build();
+
+                        try
                         {
-                            cacheDirtyCallback_(server.producer.GetIdent(), changedLayers_.changedLayers);
+                            auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_ };
+                            auto xml = fetchCapabilitiesXml(*client_, query, server.logFetchCapabilitiesRequest, server.doVerboseLogging, getCapabilitiesTimeoutInSeconds);
+                            changedLayers_.changedLayers.clear();
+                            children.push_back(capabilityTreeParser.parseXmlGeneral(xml, hashes_, changedLayers_));
+                            foundAnyWmsServerData = true;
+                            if(!changedLayers_.changedLayers.empty())
+                            {
+                                cacheDirtyCallback_(server.producer.GetIdent(), changedLayers_.changedLayers);
+                            }
+                        }
+                        catch(std::exception& e)
+                        {
+                            std::string errorMessage = "Error with dynamic Wms server '";
+                            errorMessage += server.generic.host;
+                            errorMessage += "', while parsing getCapabilities response: ";
+                            errorMessage += e.what();
+                            CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
+                        }
+                        catch(...)
+                        {
+                            // Mahdollinen ongelma on jo lokitettu, t‰ll‰ pyrit‰‰n est‰m‰‰n ett‰ poikkeus jonkun serverin k‰sittelyss‰ ei est‰ muiden toimintaa
                         }
                     }
-                    catch(std::exception &e)
+                    capabilityTree_ = std::make_unique<CapabilityNode>(rootValue_, std::move(children));
+                    if(foundAnyWmsServerData)
                     {
-                        std::string errorMessage = "Error with dynamic Wms server '";
-                        errorMessage += server.generic.host;
-                        errorMessage += "', while parsing getCapabilities response: ";
-                        errorMessage += e.what();
-                        CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
+                        firstTimeUpdateCallbackWrapper();
                     }
-                    catch(...)
-                    {
-                        // Mahdollinen ongelma on jo lokitettu, t‰ll‰ pyrit‰‰n est‰m‰‰n ett‰ poikkeus jonkun serverin k‰sittelyss‰ ei est‰ muiden toimintaa
-                    }
-                }
-                capabilityTree_ = std::make_unique<CapabilityNode>(rootValue_, std::move(children));
-                if(foundAnyWmsServerData)
-                {
-                    firstTimeUpdateCallbackWrapper();
-                }
 
-                using namespace std::literals;
-                bManager_->sleepInIntervals(intervalToPollGetCapabilities_, 500ms, "CapabilitiesHandler::BackgroundFetching");
+                    using namespace std::literals;
+                    bManager_->sleepInIntervals(intervalToPollGetCapabilities_, 500ms, "CapabilitiesHandler::BackgroundFetching");
+                }
             }
-        });
+        );
     }
 
     void CapabilitiesHandler::firstTimeUpdateCallbackWrapper()

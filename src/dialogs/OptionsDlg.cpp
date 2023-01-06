@@ -62,6 +62,7 @@ COptionsDlg::COptionsDlg(CWnd* pParent /*=NULL*/)
     , fGenerateTimeCombinationData(FALSE)
     , fUseForcedLinearInterpolationOption(FALSE)
     , itsLocalCacheDirectoryPath(_T(""))
+    , fUseLedLightStatusSystem(FALSE)
 {
 	//{{AFX_DATA_INIT(COptionsDlg)
 	fStationPlot = FALSE;
@@ -135,6 +136,7 @@ void COptionsDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_EDIT_HATCHING_EPSILON_FACTOR, itsHatchingToolmasterEpsilonFactor);
     DDX_Text(pDX, IDC_EDIT_LOCAL_CACHE_DIRECTORY, itsLocalCacheDirectoryPath);
     DDX_Control(pDX, IDC_STATIC_RESTART_SMARTMET_STR, itsRestartSmartMetStr);
+    DDX_Check(pDX, IDC_CHECK_USE_LED_LIGHT_STATUS_SYSTEM, fUseLedLightStatusSystem);
 }
 
 
@@ -215,6 +217,7 @@ BOOL COptionsDlg::OnInitDialog()
     fUseForcedLinearInterpolationOption = itsSmartMetDocumentInterface->ParameterInterpolationFixer().doForcedParameterInterpolationChanges();
     itsHatchingToolmasterEpsilonFactor = applicationWinRegistry.HatchingToolmasterEpsilonFactor();
     itsLocalCacheDirectoryPathOriginal = itsLocalCacheDirectoryPath = CA2T(itsSmartMetDocumentInterface->HelpDataInfoSystem()->LocalDataBaseDirectory().c_str());
+    fUseLedLightStatusSystem = applicationWinRegistry.UseLedLightStatusSystem();
     CFmiWin32Helpers::SetDialogItemVisibility(this, IDC_STATIC_RESTART_SMARTMET_STR, false);
 	DisableControls();
 
@@ -357,6 +360,7 @@ void COptionsDlg::OnOK()
     itsSmartMetDocumentInterface->SetHatchingToolmasterEpsilonFactor(itsHatchingToolmasterEpsilonFactor);
     tmpStr = CT2A(itsLocalCacheDirectoryPath);
     itsSmartMetDocumentInterface->HelpDataInfoSystem()->SetLocalDataBaseDirectory(tmpStr);
+    applicationWinRegistry.UseLedLightStatusSystem(fUseLedLightStatusSystem);
 
 	CDialog::OnOK();
 }
@@ -439,6 +443,7 @@ void COptionsDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_HATCHING_EPSILON_FACTOR_TEXT, "Hatching calculation epsilon factor (~1)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_LOCAL_CACHE_DIRECTORY_STR, "SmartMet's local querydata file cache base directory. Change only if you really know what you are doing!");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_RESTART_SMARTMET_STR, "Directory changed, to apply restart SmartMet");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_LED_LIGHT_STATUS_SYSTEM, "Use led light status system on statusbar");
 }
 
 void COptionsDlg::InitLogLevelComboBox()

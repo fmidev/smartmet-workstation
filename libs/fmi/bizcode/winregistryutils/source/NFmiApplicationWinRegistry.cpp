@@ -1029,6 +1029,7 @@ NFmiApplicationWinRegistry::NFmiApplicationWinRegistry()
 ,mMapViewCacheMaxSizeInMB()
 ,mShowTooltipOnSmarttoolDialog()
 ,mHatchingToolmasterEpsilonFactor()
+,mUseLedLightStatusSystem()
 {
 }
 
@@ -1095,6 +1096,7 @@ bool NFmiApplicationWinRegistry::Init(const std::string &fullAppVer, const std::
     MapViewCacheMaxSizeInMB(*mMapViewCacheMaxSizeInMB);
     mShowTooltipOnSmarttoolDialog = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\ShowTooltipOnSmarttoolDialog", usedKey, true);
     mHatchingToolmasterEpsilonFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, sectionName, "\\HatchingToolmasterEpsilonFactor", usedKey, 1.);
+    mUseLedLightStatusSystem = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, sectionName, "\\UseLedLightStatusSystem", usedKey, true);
 
     // HKEY_LOCAL_MACHINE -keys (HUOM! nämä vaatii Admin oikeuksia Vista/Win7)
     usedKey = HKEY_LOCAL_MACHINE;
@@ -1457,4 +1459,14 @@ void NFmiApplicationWinRegistry::HatchingToolmasterEpsilonFactor(float newEpsilo
 float NFmiApplicationWinRegistry::HatchingToolmasterEpsilonFactor() const
 {
     return static_cast<float>(*mHatchingToolmasterEpsilonFactor);
+}
+
+bool NFmiApplicationWinRegistry::UseLedLightStatusSystem()
+{
+    return *mUseLedLightStatusSystem;
+}
+
+void NFmiApplicationWinRegistry::UseLedLightStatusSystem(bool newValue)
+{
+    *mUseLedLightStatusSystem = newValue;
 }

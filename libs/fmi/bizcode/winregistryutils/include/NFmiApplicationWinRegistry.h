@@ -431,6 +431,8 @@ public:
     float HatchingToolmasterEpsilonFactor() const;
 
     NFmiVisualizationSpaceoutSettings& VisualizationSpaceoutSettings() { return mVisualizationSpaceoutSettings; }
+    bool UseLedLightStatusSystem();
+    void UseLedLightStatusSystem(bool newValue);
 
     static std::string MakeBaseRegistryPath();
     static std::string MakeGeneralSectionName();
@@ -524,6 +526,7 @@ private:
     boost::shared_ptr<CachedRegDouble> mHatchingToolmasterEpsilonFactor;
 
     NFmiVisualizationSpaceoutSettings mVisualizationSpaceoutSettings;
+    boost::shared_ptr<CachedRegBool> mUseLedLightStatusSystem;
 
     // HKEY_LOCAL_MACHINE -keys // HUOM! tämä vaatii ohjelmalta admin oikeuksia!!!!
 
