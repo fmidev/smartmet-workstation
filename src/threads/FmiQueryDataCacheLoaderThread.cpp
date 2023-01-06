@@ -16,6 +16,8 @@
 #include "catlog/catlog.h"
 #include "SmartMetDocumentInterface.h"
 #include "NFmiCaseStudySystem.h"
+#include "NFmiLedLightStatus.h"
+#include "NFmiValueString.h"
 
 #include <boost/filesystem.hpp> 
 #include <mutex> 
@@ -381,7 +383,8 @@ static CFmiCopyingStatus CopyFileEx_CopyRename(CachedDataFileInfo &theCachedData
 	return kFmiCopyNotSuccessfull;
 }
 
-const double gMegaByte = 1024*1024;
+const double gKiloByte = 1024;
+const double gMegaByte = gKiloByte * gKiloByte;
 // t‰ss‰ tarkastetaan kuuluuko kyseinen data-tiedosto t‰lle threadille, eli tiedoston koon
 // pit‰‰ menn‰ rajojen sis‰‰n.
 static bool DoesThisThreadCopyFile(CachedDataFileInfo &theCachedDataFileInfo, CFmiCacheLoaderData *theCacheLoaderData)
@@ -432,6 +435,37 @@ static bool CheckIfFileHasBeenLoadedEarlier(CachedDataFileInfo& theCachedDataFil
         return true;
 }
 
+static std::string MakeFileSizeString(double fileSizeInMB)
+{
+    if(fileSizeInMB <= 0.1)
+    {
+        std::string str = NFmiValueString::GetStringWithMaxDecimalsSmartWay(fileSizeInMB * gKiloByte, 1);
+        str += " kB";
+        return str;
+    }
+
+    if(fileSizeInMB >= 900)
+    {
+        std::string str = NFmiValueString::GetStringWithMaxDecimalsSmartWay(fileSizeInMB / gKiloByte, 2);
+        str += " GB";
+        return str;
+    }
+
+    std::string str = NFmiValueString::GetStringWithMaxDecimalsSmartWay(fileSizeInMB, 1);
+    str += " MB";
+    return str;
+}
+
+static std::string MakeLedChannelStartLoadingString(const CachedDataFileInfo& cachedDataFileInfo)
+{
+    std::string reportStr = "Loading file from server (";
+    reportStr += ::MakeFileSizeString(cachedDataFileInfo.itsFileSizeInMB);
+    reportStr += "):\n";
+    NFmiFileString fileStr(cachedDataFileInfo.itsTotalCacheFileName);
+    reportStr += fileStr.FileName();
+    return reportStr;
+}
+
 static CFmiCopyingStatus CopyFileToLocalCache(CachedDataFileInfo& theCachedDataFileInfo, CFmiCacheLoaderData* theCacheLoaderData, const NFmiHelpDataInfo& theDataInfo)
 {
     if(NFmiFileSystem::FileExists(theCachedDataFileInfo.itsTotalCacheFileName))
@@ -449,6 +483,7 @@ static CFmiCopyingStatus CopyFileToLocalCache(CachedDataFileInfo& theCachedDataF
 
     if(tmpFileStatus == kFmiGoOnWithCopying && tmpPackedFileStatus == kFmiGoOnWithCopying)
     {
+        NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::QueryData, theCacheLoaderData->itsThreadName, ::MakeLedChannelStartLoadingString(theCachedDataFileInfo));
         ::EnsureCacheDirectoryForPartialData(theCachedDataFileInfo.itsTotalCacheFileName, theDataInfo);
         return ::CopyFileEx_CopyRename(theCachedDataFileInfo);
     }

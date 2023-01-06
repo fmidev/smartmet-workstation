@@ -46,6 +46,7 @@
 #include "NFmiGdiPlusImageMapHandler.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "CombinedMapHandlerInterface.h"
+#include "NFmiLedLightStatus.h"
 
 #include <Winspool.h>
 
@@ -632,8 +633,11 @@ void CSmartMetView::PutTextInStatusBar(const std::string &theText)
 #else
     CMFCStatusBar* pStatus = &pFrame->m_wndStatusBar;
 #endif // FMI_DISABLE_MFC_FEATURE_PACK
-    if(pStatus && pStatus->GetSafeHwnd())
-        pStatus->SetPaneText(0, CA2T(theText.c_str()));
+	if(pStatus && pStatus->GetSafeHwnd())
+	{
+		auto textPaneIndex = GetGeneralDoc()->LedLightStatusSystem().MapViewTextStatusbarPaneIndex();
+		pStatus->SetPaneText(textPaneIndex, CA2T(theText.c_str()));
+	}
 }
 
 void CSmartMetView::OnMouseMove(UINT nFlags, CPoint point)

@@ -9,6 +9,7 @@
 #pragma once
 #include <vector>
 #include "NFmiViewPosRegistryInfo.h"
+#include "PPToolTip.h"
 
 #ifdef FMI_DISABLE_MFC_FEATURE_PACK
 	typedef CFrameWnd CFmiUsedFrameWndParent;
@@ -25,6 +26,8 @@
 
 class NFmiEditMapGeneralDataDoc;
 class CFmiCacheLoaderData;
+enum class NFmiLedColor;
+class NFmiLedLightStatusSystem;
 
 const int kFmiAutoSaveTimer = 5;
 const int kFmiCleanDataTimer = 6;
@@ -42,6 +45,30 @@ const int kFmiParameterSelectionSystemUpdateTimer = 19;
 const int kFmiLoggingSystemManagementTimer = 20;
 const int kFmiNewQueryDataReadUpdateViewsTimer = 21;
 const int kFmiOneTimeWmsBasedDataUpdateTimer = 22;
+const int kFmiLedLightsActionTimer = 23;
+
+class CStatusBarResize : public CStatusBar
+{
+	int wantedStretchPaneIndex_ = 0;
+	int totalNumberOfPanes_ = 0;
+	CPPToolTip itsTooltipCtrl;
+	NFmiLedLightStatusSystem* ledLightStatusSystem_ = nullptr; // ei omista/tuhoa
+public:
+	CStatusBarResize();
+	void Setup(NFmiLedLightStatusSystem* ledLightStatusSystem, int totalNumberOfPanes);
+	BOOL InitTooltipControl();
+protected:
+	DECLARE_DYNCREATE(CStatusBarResize)
+	DECLARE_MESSAGE_MAP()
+
+	std::string GetTooltipText(const CPoint& cursorInClientSpace);
+public:
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	afx_msg void NotifyDisplayTooltip(NMHDR* pNMHDR, LRESULT* result);
+};
+
 
 class CMainFrame : public CFmiUsedFrameWndParent
 {
@@ -89,7 +116,8 @@ public:
 #endif
 
 #ifdef FMI_DISABLE_MFC_FEATURE_PACK
-	CStatusBar     m_wndStatusBar;
+	std::vector<UINT> indicatorVector;
+	CStatusBarResize     m_wndStatusBar;
 	CToolBar       m_wndToolBar;
 protected:
 #else
@@ -120,7 +148,8 @@ protected:  // control bar embedded members
     UINT itsParameterSelectionSystemUpdateTimer;
     UINT itsLoggingSystemManagementTimer;
 	UINT itsOneTimeWmsBasedDataUpdateTimer;
-    
+	UINT itsLedLightsActionTimer;
+
 	NFmiEditMapGeneralDataDoc* itsDoc; // ei omista, ei tuhoa
 	CBitmap *itsRedFlagBitmap;
 	CBitmap *itsOrangeFlagBitmap;
@@ -170,6 +199,11 @@ private:
     void TrimmInMemoryLogMessages();
     void StartNewQueryDataLoadedUpdateTimer(const std::string &loadedFileNames);
     void StartSmartMetTimers();
+	void SetupLedIndicatorsInStatusbar();
+	void UpdateStatusBarIcons(int status, NFmiLedColor ledColor);
+	void DoLedLightsActionUpdates();
+	void MakeStatusBarIndicators();
+	int CreateStatusBar();
 
 	// 256 värisen ja vaihtuva kokoisen tolbarin teko vaatii näiden käyttöön oton
 	HBITMAP itsToolBarBitmapHandle;

@@ -103,23 +103,22 @@
 #define IDB_BITMAP_ORANGE_FLAG          2007
 #define IDB_BITMAP1                     2009
 #define IDB_BITMAP_RED_FLAG             2009
-#define IDI_ICON_LED_RED                2011
-#define IDI_ICON_LED_BLUE               2013
-#define IDI_ICON_LED_GRAY               2014
-#define IDI_ICON_LED_GREEN              2015
-#define IDI_ICON_LED_LIGHT_BLUE         2016
-#define IDI_ICON_LED_LIGHT_GREEN        2017
-#define IDI_ICON_LED_ORANGE             2018
-#define IDI_ICON_LED_PURPLE             2019
-#define IDI_ICON_LED_YELLOW             2020
 #define IDB_BITMAP_FMI_LOGO_CASE_STUDY  2023
 #define IDI_ICON_FOLDER_OPEN            2024
-#define IDI_ICON1                       2025
 #define IDI_ICON_FILE_CHART             2025
 #define IDB_BITMAP2                     2026
 #define IDB_BITMAP_FMI_LOGO_BETA_PRODUCT_MODE 2026
 #define IDB_BITMAP3                     2027
 #define IDB_BITMAP_ABOUT_DLG_VER_5_10_NO_TEXTS 2027
+#define IDI_ICON_LED_RED                2029
+#define IDI_ICON_LED_BLUE               2030
+#define IDI_ICON_LED_GRAY               2031
+#define IDI_ICON_LED_GREEN              2032
+#define IDI_ICON_LED_LIGHT_BLUE         2033
+#define IDI_ICON_LED_LIGHT_GREEN        2034
+#define IDI_ICON_LED_ORANGE             2035
+#define IDI_ICON_LED_PURPLE             2036
+#define IDI_ICON_LED_YELLOW             2037
 #define ID_CHANGE_PARAM_WINDOW_POSITION_FORWARD 32828
 #define ID_CHANGE_PARAM_WINDOW_POSITION_BACKWARD 32829
 #define ID_MAKE_GRID_FILE               32833
@@ -323,12 +322,18 @@
 #define ID_ACCELERATOR_MAP_VIEW_RANGE_METER_MODE_TOGGLE 42283
 #define ID_ACCELERATOR_MAP_VIEW_RANGE_METER_COLOR_TOGGLE 42287
 #define ID_ACCELERATOR_MAP_VIEW_RANGE_METER_LOCK_MODE_TOGGLE 42291
+#define ID_INDICATOR_LED_CONTROL_1      59147
+#define ID_INDICATOR_LED_CONTROL_2      59148
+#define ID_INDICATOR_LED_CONTROL_3      59149
+#define ID_INDICATOR_LED_CONTROL_4      59150
+#define ID_INDICATOR_LED_CONTROL_5      59151
+#define ID_INDICATOR_LED_CONTROL_6      59152
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        2028
+#define _APS_NEXT_RESOURCE_VALUE        2038
 #define _APS_NEXT_COMMAND_VALUE         42293
 #define _APS_NEXT_CONTROL_VALUE         2000
 #define _APS_NEXT_SYMED_VALUE           2002
