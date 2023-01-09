@@ -18,6 +18,7 @@
 #include "NFmiCaseStudySystem.h"
 #include "NFmiLedLightStatus.h"
 #include "NFmiValueString.h"
+#include "NFmiMissingDataOnServerReporter.h"
 
 #include <boost/filesystem.hpp> 
 #include <mutex> 
@@ -37,7 +38,6 @@ namespace
     std::string gSmartMetBinDirectory; // SmartMetin bin‰‰ri-hakemistoa tarvitaan ainakin kun tehd‰‰n tiedostojen purkua erillisess‰ prosessissa (purku ohjelma sijaitsee siell‰ miss‰ smartmetin exe)
     std::string gSmartMetWorkingDirectory; // SmartMetin Working-hakemistoa tarvitaan kun rakennetaan polkua 7-zip ohjelmalle (purku ohjelma sijaitsee sen utils-hakemistossa)
 
-	CSemaphore gGetNextIndexSemaphore; // t‰m‰n avulla p‰ivitet‰‰n seuraavan tarkasteltavan datan indeksi‰
 	CSemaphore gSettingsChanged; // t‰m‰n avulla p‰ivitet‰‰n datan luku asetuksia thread safetysti
 	NFmiHelpDataInfoSystem gMediatorHelpDataSystem; // t‰m‰n avulla s‰‰det‰‰n threadin asetuksia thread safetysti
 	bool gSettingsHaveChanged;
@@ -50,9 +50,6 @@ namespace
     size_t gUsedChunckSize; // Jos k‰ytet‰‰n FileCopyMarko:a, t‰m‰n kokoisia puskureita k‰ytet‰‰n kopioinnissa
     double gCacheCleaningIntervalInHours = 0.16; // T‰h‰n otetaan GeneralDocista siivousintervalli, oletus 0.16 [h] eli n. 10 minuutin v‰lein.
 
-    // Teen systeemin, jolla varmistetaan ett‰ kaikki kolme worker threadia ajetaan l‰pi ensin ja sitten vasta k‰ynnistet‰‰n historian ker‰ys threadi.
-    // Eli DoHistoryThread:ia ei ajeta en‰‰ CMainFrame:sta ollenkaan automaattisesti, vaan vasta kun kolmas normaali worker threadi on mennyt kokonaan l‰pi.
-    std::set<std::string> gLoaderThreadsThatHasRunOnceThrough;
     // Aletaan pit‰m‰‰n kirjaa mitk‰ tiedostot on jo kerran kopioitu (tai yritetty kopioida) serverilt‰ lokaali cacheen.
     // On tilanteita, miss‰ samaa tiedostoa yritet‰‰n ladata uudestaan ja uudestaan cacheen ja n‰in kulutetaan turhaan
     // verkkoa ja mahdollisesti puretaan zipattua tiedostoa jolloin kulutetaan turhaan CPU:ta.
@@ -60,6 +57,8 @@ namespace
     // T‰m‰n avulla k‰ytet‰‰n gOnceLoadedFilePathsOnServer containeria thread turvallisesti
     CSemaphore gOnceLoadedFilePathsOnServerSemaphore;
     NFmiNanoSecondTimer gOnceLoadedFilePathsOnServerTimer;
+
+    NFmiMissingDataOnServerReporter gMissingDataOnServerReporter;
 
 	enum CFmiCopyingStatus
 	{
@@ -70,18 +69,6 @@ namespace
 		kFmiUnpackIsDoneInSeparateProcess = 4
 	};
 }
-
-struct CachedDataFileInfo
-{
-    CachedDataFileInfo() = default;
-
-    std::string itsTotalServerFileName; // t‰ss‰ on serverill‰ olevan tiedoston polku
-    bool fFilePacked = false; // tieto onko serverill‰ oleva tiedosto pakattu vai ei
-    std::string itsTotalCacheFileName; // t‰m‰ on datatiedoston lopullinen polku lokaali cachessa
-    std::string itsTotalCacheTmpFileName; // t‰m‰ on tiedoston lokaali tmp hakemiston polku, mist‰ se rename:lla siirret‰‰n lopulliseen paikkaan nimeen
-    std::string itsTotalCacheTmpPackedFileName; // jos tiedosto oli pakattu, t‰m‰ on lokaali tmp hakemiston nimi pakatulle tiedostolle, joka sitten puretaan itsTotalCacheTmpFileName:ksi
-    double itsFileSizeInMB = 0; // tiedoston koko levyll‰ serverill‰ [MB] (joko pakattu tai ei pakattu koko)
-};
 
 static void MakeCacheDirectories(void)
 {
@@ -501,14 +488,6 @@ static CFmiCopyingStatus CopyFileToLocalCache(CachedDataFileInfo& theCachedDataF
     return kFmiNoCopyNeeded;
 }
 
-static bool IsDataCached(const NFmiHelpDataInfo &theDataInfo)
-{
-	if(theDataInfo.DataType() != NFmiInfoData::kSatelData) // kSatelData-tyyppi ei ole queryDataa, n‰m‰ ignoorataan (kuvatkin kyll‰ on tarkoitus joskus cachettaa).
-		return true;
-	else
-		return false;
-}
-
 static NFmiFileString MakeFileStringWithoutCompressionFileExtension(const CachedDataFileInfo &theCachedDataFileInfo)
 {
     NFmiFileString fileStr(theCachedDataFileInfo.itsTotalServerFileName);
@@ -620,24 +599,6 @@ static void MakeRestOfTheFileNames(CachedDataFileInfo &theCachedDataFileInfoInOu
     theCachedDataFileInfoInOut.itsTotalCacheTmpPackedFileName = ::MakeFinalTmpFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem, true);
 }
 
-static void DoReportIfFileFilterHasNoRelatedDataOnServer(const CachedDataFileInfo &cachedDataFileInfo, const std::string &fileFilter)
-{
-    static std::set<std::string> fileFiltersFailed;
-    static std::mutex fileFilterInsertMutex;;
-
-    size_t filtersSize = fileFiltersFailed.size();
-    if(cachedDataFileInfo.itsTotalServerFileName.empty() && filtersSize <= 50)
-    {
-        // Raportoidaan 50 ensimm‰ist‰ tapausta, kun dataa ei lˆydy. T‰m‰ saattaa auttaa lˆyt‰m‰‰n konffi ongelmia helpommin
-        // T‰t‰ funktiota kutsutaan useasta eri threadeista, joten pakko k‰ytt‰‰ lukkoa ennen kuin laitetaan yhteiseen containeriin tavaraa
-        std::lock_guard<std::mutex> lock(fileFilterInsertMutex);
-        filtersSize = fileFiltersFailed.size();
-        fileFiltersFailed.insert(fileFilter);
-        if(filtersSize < fileFiltersFailed.size()) // raportoidaan vain siis jos on uusi filtteri, jolle ei lˆydy tiedostoa
-            CatLog::logMessage(std::string("Cannot find any file with filefilter: ") + fileFilter, CatLog::Severity::Debug, CatLog::Category::Data);
-    }
-}
-
 // Funktio tutkii annetun theDataInfo:n avulla onko kyseess‰ cacheen ladattava data
 // ja onko levypalvelimella uudempaa tiedostoa kuin paikallisessa cachessa.
 // Paluu arvot:
@@ -647,15 +608,13 @@ static void DoReportIfFileFilterHasNoRelatedDataOnServer(const CachedDataFileInf
 //		toinen SmartMet on juuri kopioimassa sit‰), t‰m‰ tulkitaan siten ett‰ ei ollut mit‰‰n luettavaa/kopioitavaa
 static CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem &theHelpDataSystem, CFmiCacheLoaderData *theCacheLoaderData)
 {
-    bool isSatelImageData = theDataInfo.DataType() == NFmiInfoData::kSatelData;
-
-	if(::IsDataCached(theDataInfo))
+	if(CachedDataFileInfo::IsDataCached(theDataInfo))
 	{
 		// 1. Mik‰ on uusimman file-filterin mukaisen tiedoston nimi, ja oliko kyse pakatusta tiedostosta
         std::string fileFilter = theDataInfo.FileNameFilter();
         CachedDataFileInfo cachedDataFileInfo;
         ::GetNewestFileInfo(fileFilter, cachedDataFileInfo);
-        DoReportIfFileFilterHasNoRelatedDataOnServer(cachedDataFileInfo, fileFilter);
+        gMissingDataOnServerReporter.doReportIfFileFilterHasNoRelatedDataOnServer(cachedDataFileInfo, fileFilter);
 
 		NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
         if(!cachedDataFileInfo.itsTotalServerFileName.empty())
@@ -671,16 +630,6 @@ static CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo &theDataInf
             }
 		}
 	}
-    else
-    {
-        if(CatLog::doTraceLevelLogging() && !isSatelImageData)
-        {
-            std::string debugStr = theCacheLoaderData->itsThreadName;
-            debugStr += ": data not cached: ";
-            debugStr += theDataInfo.UsedFileNameFilter(theHelpDataSystem);
-            CatLog::logMessage(debugStr, CatLog::Severity::Trace, CatLog::Category::Data, true);
-        }
-    }
 
 	return kFmiNoCopyNeeded;
 }
@@ -693,22 +642,6 @@ static bool LetGoAfterFirstTimeDelaying(NFmiMilliSecondTimer &theTimer, bool the
 			return true;
 	}
 	return false;
-}
-
-
-static void StartHistoryLoaderThreadOnce(const std::string &theThreadName)
-{
-    static bool historyThreadLaunched = false;
-
-    if(!historyThreadLaunched)
-    {
-        gLoaderThreadsThatHasRunOnceThrough.insert(theThreadName);
-        if(gLoaderThreadsThatHasRunOnceThrough.size() >= 3)
-        {
-            historyThreadLaunched = true;
-            AfxGetMainWnd()->PostMessage(ID_MESSAGE_START_HISTORY_THREAD);
-        }
-    }
 }
 
 static std::string DeletedFilesStr(const std::list<std::string> &theDeletedFiles)
@@ -782,7 +715,7 @@ static void CleanCombineDataCache(void)
 		{
 			NFmiHelpDataInfo &helpData = gWorkerHelpDataSystem.DynamicHelpDataInfo(static_cast<int>(i));
 			NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-			if(::IsDataCached(helpData) && helpData.IsCombineData())
+			if(CachedDataFileInfo::IsDataCached(helpData) && helpData.IsCombineData())
 			{
 				double keepDays = gWorkerHelpDataSystem.CacheFileKeepMaxDays();
 				if(keepDays > 0)
@@ -839,7 +772,7 @@ static void CleanCache(void)
             NFmiHelpDataInfo& helpDataInfo = gWorkerHelpDataSystem.DynamicHelpDataInfo(static_cast<int>(i));
             // HUOM! yhdistelm‰ datoja ei siivota t‰ss‰ yleisill‰ asetuksilla, vaan ne 
             // pit‰‰ siivota eri lailla ja sit‰ varten on oma funktio (CleanCombineDataCache).
-            if(::IsDataCached(helpDataInfo) && helpDataInfo.IsCombineData() == false)
+            if(CachedDataFileInfo::IsDataCached(helpDataInfo) && helpDataInfo.IsCombineData() == false)
                 ::CleanFilePattern(helpDataInfo.UsedFileNameFilter(gWorkerHelpDataSystem), ::CalcMaxKeepFileCount(helpDataInfo, caseStudySystem));
         }
     }
@@ -878,7 +811,7 @@ static int GoThroughAllHelpDataInfos(const NFmiHelpDataInfoSystem &theHelpDataSy
         }
     }
 
-    StartHistoryLoaderThreadOnce(theCacheLoaderData->itsThreadName); // kun k‰yty kerran kaikki normaali datat, k‰ynnist‰ historia datan ker‰ys kerran
+    gMissingDataOnServerReporter.workerThreadCompletesCycle(theCacheLoaderData->itsThreadName);
     return status;
 }
 
@@ -973,7 +906,7 @@ UINT CFmiQueryDataCacheLoaderThread::DoThread(LPVOID pParam)
 }
 
 // T‰t‰ initialisointi funktiota pit‰‰ kutsua ennen kuin itse threadi k‰ynnistet‰‰n MainFramesta. 
-void CFmiQueryDataCacheLoaderThread::InitHelpDataInfo(const NFmiHelpDataInfoSystem &helpDataInfoSystem, const std::string &smartMetBinariesDirectory, double cacheCleaningIntervalInHours, const std::string& smartMetWorkingDirectory)
+void CFmiQueryDataCacheLoaderThread::InitHelpDataInfo(const NFmiHelpDataInfoSystem &helpDataInfoSystem, const std::string &smartMetBinariesDirectory, double cacheCleaningIntervalInHours, const std::string& smartMetWorkingDirectory, int usedDataLoaderThreadCount)
 {
 	gWorkerHelpDataSystem = helpDataInfoSystem;
     gSmartMetBinDirectory = smartMetBinariesDirectory;
@@ -985,6 +918,7 @@ void CFmiQueryDataCacheLoaderThread::InitHelpDataInfo(const NFmiHelpDataInfoSyst
     gUseCopyFileExFunction = NFmiSettings::Optional("SmartMet::UseCopyFileExFunction", true);
     gUsedChunckSize = NFmiSettings::Optional("SmartMet::UsedChunckSizeInKB", 512) * 1024;
     gCacheCleaningIntervalInHours = cacheCleaningIntervalInHours;
+    gMissingDataOnServerReporter.initialize(gWorkerHelpDataSystem, usedDataLoaderThreadCount);
 }
 
 void CFmiQueryDataCacheLoaderThread::CloseNow(void)
