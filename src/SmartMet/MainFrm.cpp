@@ -670,7 +670,7 @@ void CMainFrame::UpdateStatusBarIcons(int paneId, NFmiLedColor ledColor)
 
 	if(iconId)
 	{
-		HICON hIcon = (HICON)::LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(iconId), IMAGE_ICON, 16, 16, 0);
+		HICON hIcon = (HICON)::LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(iconId), IMAGE_ICON, 16, 16, LR_SHARED);
 		if(hIcon)
 		{
 			m_wndStatusBar.GetStatusBarCtrl().SetIcon(paneId, hIcon);
@@ -775,9 +775,11 @@ void CMainFrame::StartQDataCacheThreads(void)
 	if(itsDoc->HelpDataInfoSystem()->UseQueryDataCache() == false)
 		return ; // ei k‰ynnistet‰ cache-worker-threadeja, koska asetukset sanovat ett‰ niit‰ ei k‰ytet‰
 
+	// Datojen serverilt‰ lokaali levylle kopiointiin k‰ytet‰‰n n‰in montaa threadia
+	int usedDataLoaderThreadCount = 3;
     std::string smartMetBinariesDirectory = itsDoc->ApplicationDataBase().GetDecodedApplicationDirectory(); 
 	// k‰ynnistet‰‰n qdata cache-loader threadi kerran, ja se pit‰‰ ensin initialisoida. T‰m‰ threadi k‰ynnistet‰‰n aina.
-	CFmiQueryDataCacheLoaderThread::InitHelpDataInfo(*itsDoc->HelpDataInfoSystem(), smartMetBinariesDirectory, itsDoc->FileCleanerSystem().CleaningTimeStepInHours(), itsDoc->WorkingDirectory());
+	CFmiQueryDataCacheLoaderThread::InitHelpDataInfo(*itsDoc->HelpDataInfoSystem(), smartMetBinariesDirectory, itsDoc->FileCleanerSystem().CleaningTimeStepInHours(), itsDoc->WorkingDirectory(), usedDataLoaderThreadCount);
 	// K‰ynnistet‰‰n 3 eri tasoista cache-loader threadia 
 	// HUOM!!! Muista laittaa min ja max tiedostokoko rajat niin ettei mik‰‰n koko j‰‰ niiden ulkopuolelle.
 	// Eli laita 1. max 2. seuraavan min:iksi jne.
