@@ -82,6 +82,7 @@ class NFmiRawData::Pimple
   void Backup(char *ptr) const;
   void Undo(char *ptr);
   bool Advise(FmiAdvice advice);
+  bool IsReadOnly() const;
 
  private:
 #if NFMIRAWDATA_ENABLE_UNDO_REDO
@@ -553,7 +554,7 @@ bool NFmiRawData::Pimple::SetValue(size_t index, float value)
   }
   else if (itsOffset > 0)
   {
-    if(itsMappedFile->flags() == boost::iostreams::mapped_file::readonly)
+    if(IsReadOnly())
       throw std::runtime_error("Can't modify read-only memory-mapped data");
 
     // We have mmapped output data
@@ -668,6 +669,15 @@ void NFmiRawData::Pimple::Undo(char *ptr)
 bool NFmiRawData::Pimple::Advise(FmiAdvice advice)
 {
   // was supported with boost::interprocess, not with boost::iostreams
+  return false;
+}
+
+bool NFmiRawData::Pimple::IsReadOnly() const 
+{
+  if (itsMappedFile)
+  {
+      return itsMappedFile->flags() == boost::iostreams::mapped_file::readonly;
+  }
   return false;
 }
 
@@ -820,4 +830,6 @@ void NFmiRawData::Undo(char *ptr) { itsPimple->Undo(ptr); }
 // ----------------------------------------------------------------------
 
 bool NFmiRawData::Advise(FmiAdvice theAdvice) { return itsPimple->Advise(theAdvice); }
+
+bool NFmiRawData::IsReadOnly() const { return itsPimple->IsReadOnly(); }
 // ======================================================================
