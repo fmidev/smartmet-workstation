@@ -1458,7 +1458,7 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 		{
 			static bool lastWasRed = false;
 			KillTimer(itsToggleFlagButtonTimer);
-			if(itsDoc->EditedDataNotInPreferredState() && itsFlagButtonIndex != -1)
+			if(itsDoc->IsEditedDataInReadOnlyMode() && itsFlagButtonIndex != -1)
 			{
 				if(lastWasRed)
 					itsToolBarImagelist.Replace(itsFlagButtonIndex, itsOrangeFlagBitmap, NULL);
@@ -1561,7 +1561,7 @@ void CMainFrame::CheckForAutoLoadTimerStart(void)
 
 void CMainFrame::PutWarningFlagTimerOn(void)
 {
-	if(itsDoc->EditedSmartInfo() && itsDoc->EditedDataNotInPreferredState() && itsFlagButtonIndex != -1)
+	if(itsDoc->EditedSmartInfo() && itsDoc->IsEditedDataInReadOnlyMode() && itsFlagButtonIndex != -1)
 	{
 		itsToggleFlagButtonTimer = static_cast<UINT>(SetTimer(kFmiToggleFlagButtonTimer, 1 * 1000, NULL)); // pistet‰‰n 1 sekunnin intervallilla vaihtamaan lippu-napi kuvaa
 	}

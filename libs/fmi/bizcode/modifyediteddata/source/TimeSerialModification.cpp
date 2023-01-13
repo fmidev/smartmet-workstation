@@ -199,7 +199,7 @@ static void ModifyTimesLocationData_FullMT(boost::shared_ptr<NFmiFastQueryInfo> 
 // Heitt‰‰ poikkeuksen, jos on tehty varoitus
 static void PreventEditingIfProblemWithEditedData(TimeSerialModificationDataInterface &theAdapter)
 {
-	if(theAdapter.EditedDataNotInPreferredState())
+	if(theAdapter.IsEditedDataInReadOnlyMode())
 	{
 		std::string msgStr("Current edited data is not suitable for editing or to be sent to the database.\n\n");
 		msgStr += "SmartMet won't let you to do the editing you were going to do here now, nor later.\n\n";
@@ -2215,8 +2215,7 @@ static bool TryAutoStartUpLoad(TimeSerialModificationDataInterface &theAdapter, 
 			{
 				theAdapter.EditedDataNeedsToBeLoaded(false);
                 ::LogMessage(theAdapter, "TryAutoStartUpLoad found some data.", CatLog::Severity::Debug, CatLog::Category::Editing);
-				theAdapter.CheckEditedDataAfterAutoLoad();
-				if(theAdapter.EditedDataNotInPreferredState())
+				if(theAdapter.IsEditedDataInReadOnlyMode())
 					theAdapter.PutWarningFlagTimerOn();
 			}
 		}
@@ -2548,9 +2547,7 @@ static bool LoadEditedData(TimeSerialModificationDataInterface& theAdapter, bool
 	auto infos = ::CreateQueryDataIterators(dataVector);
 	auto status = ::CreateLoadedData(theAdapter, infos, theAdapter.DataLoadingProducerIndexVector(), &dataLoadingInfo, fRemoveThundersOnLoad, primaryProducer, fDoMultiThread);
 
-	if(status)
-		theAdapter.EditedDataNotInPreferredState(false);
-	else
+	if(!status)
 	{
 		if(theAdapter.SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeStartUpLoading)
 		{
