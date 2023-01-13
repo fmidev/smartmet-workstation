@@ -58,8 +58,7 @@ public:
     virtual bool UseMasksInTimeSerialViews(void) = 0;
     virtual NFmiAnalyzeToolData& AnalyzeToolData(void) = 0;
     virtual NFmiInfoOrganizer* InfoOrganizer(void) = 0;
-    virtual bool EditedDataNotInPreferredState(void) = 0;
-    virtual void EditedDataNotInPreferredState(bool newValue) = 0;
+    virtual bool IsEditedDataInReadOnlyMode() = 0;
     virtual int DoMessageBox(const std::string & theMessage, const std::string & theTitle, unsigned int theMessageBoxType) = 0;
     virtual void MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers) = 0;
     virtual void WindTableSystemMustaUpdateTable(bool newState) = 0;
@@ -105,7 +104,6 @@ public:
     virtual NFmiParamDescriptor& EditedDataParamDescriptor(void) = 0;
     virtual std::vector<int>& DataLoadingProducerIndexVector(void) = 0;
     virtual void EditedDataNeedsToBeLoaded(bool newValue) = 0;
-    virtual bool CheckEditedDataAfterAutoLoad(void) = 0;
     virtual void PutWarningFlagTimerOn(void) = 0;
     virtual NFmiModelDataBlender& ModelDataBlender(void) = 0;
     virtual NFmiProducerIdLister& ProducerIdLister(void) = 0;

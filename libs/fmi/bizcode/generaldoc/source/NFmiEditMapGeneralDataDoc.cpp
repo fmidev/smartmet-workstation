@@ -404,7 +404,6 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsIgnoreStationsData()
 ,fEditedDataNeedsToBeLoaded(false)
 ,itsEditedDataNeedsToBeLoadedTimer()
-,fEditedDataNotInPreferredState(false)
 ,itsMacroPathSettings()
 ,itsCaseStudySystem()
 ,itsCaseStudySystemOrig()
@@ -9100,45 +9099,13 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsEditedDataNeedsToBeLoadedTimer;
 	}
 
-	bool EditedDataNotInPreferredState(void)
+	bool IsEditedDataInReadOnlyMode()
 	{
-		return fEditedDataNotInPreferredState;
-	}
-
-	void EditedDataNotInPreferredState(bool newValue)
-	{
-		fEditedDataNotInPreferredState = newValue;
-	}
-
-	bool CheckEditedDataAfterAutoLoad(void)
-	{
-		EditedDataNotInPreferredState(true); // laitetaan lippu p‰‰lle ett‰ data ei ole halutunlaista
-		// 1. onko editoitua dataa
-		boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo();
-		if(editedInfo)
-		{
-			NFmiMetTime aTime(1);
-			NFmiMetTime firstTime = editedInfo->TimeDescriptor().FirstTime();
-			// 2. poikkeaako alkuaika liikaa sein‰kello ajasta
-			if(aTime.DifferenceInMinutes(firstTime) <= 4 * 60) // esim. 4 tuntia voisi olla hyv‰ksytt‰v‰ raja
-			{
-				// 3. Onko hilarakenne oikein
-				if(itsPossibleUsedDataLoadingGrid == 0 || editedInfo->HPlaceDescriptor() == *itsPossibleUsedDataLoadingGrid)
-				{
-					// 4. Onko aikarakenne halutun mukainen
-					// TODO
-					// 5. Onko parametrit halutun mukaiset
-					if(!fUseEditedDataParamDescriptor || itsEditedDataParamDescriptor == editedInfo->ParamDescriptor())
-					{
-						// 6. eih‰n tietyilt‰ parametreilta puutu liikaa dataa...
-						// TODO
-						EditedDataNotInPreferredState(false); // laitetaan lippu pois p‰‰lt‰ eli data on halutunlaista
-						return true;
-					}
-				}
-			}
-		}
-		return false;
+		auto editeData = EditedInfo();
+		if(editeData)
+			return editeData->RefRawData()->IsReadOnly();
+		// Jos editoitua dataa ei ole, palautetaan arvo ett‰ se on read-only moodissa
+		return true;
 	}
 
 	NFmiApplicationDataBase& ApplicationDataBase(void)
@@ -10587,110 +10554,149 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     NFmiColorContourLegendSettings itsColorContourLegendSettings;
     TimeSerialParameters itsTimeSerialParameters;
     NFmiMacroParamDataCache itsMacroParamDataCache;
-    std::string itsLastLoadedViewMacroName; // t‰t‰ nime‰ k‰ytet‰‰n smartmet:in p‰‰ikkunan title tekstiss‰ (jotta k‰ytt‰j‰ n‰kee mik‰ viewMacro on ladattuna)
+	// T‰t‰ nime‰ k‰ytet‰‰n smartmet:in p‰‰ikkunan title tekstiss‰ (jotta k‰ytt‰j‰ n‰kee mik‰ viewMacro on ladattuna)
+	std::string itsLastLoadedViewMacroName; 
     Warnings::CapDataSystem capDataSystem;
     Q2ServerInfo itsQ2ServerInfo;
     AddParams::ParameterSelectionSystem parameterSelectionSystem;
-    NFmiViewSettingMacro itsStartupViewMacro; // T‰h‰n ladataan SmartMetin tyhj‰ alkutilanne, jotta SHIFT + F12 pikan‰pp‰imell‰ p‰‰see takaisin alkutilaan milloin tahansa ajon aikana.
-    NFmiEditDataUserList itsEditDataUserList; // Jos konffeissa on niin m‰‰r‰tty, t‰h‰n luetaan editoijien tunnukset, ja t‰t‰ listaa k‰ytet‰‰n L‰het‰-data-tietokantaan dialogissa
-    std::vector<std::string> itsSmartToolFileNames; // T‰h‰n on listattu rekursiivisesti kaikki perus smarttool hakemistosta haetut tiedostot, joissa on oikea vmr -p‰‰te. Tiedoston nimill‰ on relatiivienn polku (suhteessa perus hakemistoon)
-    std::vector<std::string> itsCorruptedViewMacroFileList; // T‰h‰n talletetaan havaitut korruptoituneet n‰yttˆmakro nimet, ett‰ niiden avulla voidaan varoittaa k‰ytt‰ji‰ niist‰ viewMacro-dialogissa 
+	// T‰h‰n ladataan SmartMetin tyhj‰ alkutilanne, jotta SHIFT + F12 pikan‰pp‰imell‰ p‰‰see takaisin alkutilaan milloin tahansa ajon aikana.
+	NFmiViewSettingMacro itsStartupViewMacro; 
+	// Jos konffeissa on niin m‰‰r‰tty, t‰h‰n luetaan editoijien tunnukset, ja t‰t‰ listaa k‰ytet‰‰n L‰het‰-data-tietokantaan dialogissa
+	NFmiEditDataUserList itsEditDataUserList; 
+	// T‰h‰n on listattu rekursiivisesti kaikki perus smarttool hakemistosta haetut tiedostot, joissa on oikea vmr -p‰‰te. 
+	// Tiedoston nimill‰ on relatiivienn polku (suhteessa perus hakemistoon)
+	std::vector<std::string> itsSmartToolFileNames; 
+	// T‰h‰n talletetaan havaitut korruptoituneet n‰yttˆmakro nimet, ett‰ niiden avulla voidaan varoittaa k‰ytt‰ji‰ niist‰ viewMacro-dialogissa 
+	std::vector<std::string> itsCorruptedViewMacroFileList; 
     std::vector<NFmiLightWeightViewSettingMacro> itsViewMacroDescriptionList;
-    std::vector<std::string> itsViewMacroFileNames; // T‰h‰n on listattu rekursiivisesti kaikki perus viewMacro hakemistosta haetut tiedostot, joissa on oikea vmr -p‰‰te. Tiedoston nimill‰ on relatiivienn polku (suhteessa perus hakemistoon)
-    NFmiMetTime itsLastEditedDataSendTime; // Milloin on viimeksi l‰hetetty editoitu data tietokantaan
-    bool fLastEditedDataSendHasComeBack; // Onko viimeisen editoidun datan tietokantaan l‰hetyksen j‰lkeen tullut operatiivista dataa k‰yttˆˆn?
-    const NFmiBetaProduct *itsCurrentGeneratedBetaProduct; // T‰h‰n asetetaan beta-tuotannossa se juuri nyt generoitava beta-tuote, muuten t‰ss‰ pit‰‰ olla nullptr (ei omista, ei tuhoa)
+	// T‰h‰n on listattu rekursiivisesti kaikki perus viewMacro hakemistosta haetut tiedostot, 
+	// joissa on oikea vmr -p‰‰te. Tiedoston nimill‰ on relatiivienn polku (suhteessa perus hakemistoon)
+	std::vector<std::string> itsViewMacroFileNames; 
+	// Milloin on viimeksi l‰hetetty editoitu data tietokantaan
+	NFmiMetTime itsLastEditedDataSendTime; 
+	// Onko viimeisen editoidun datan tietokantaan l‰hetyksen j‰lkeen tullut operatiivista dataa k‰yttˆˆn?
+	bool fLastEditedDataSendHasComeBack; 
+	// T‰h‰n asetetaan beta-tuotannossa se juuri nyt generoitava beta-tuote, muuten t‰ss‰ pit‰‰ olla nullptr (ei omista, ei tuhoa)
+	const NFmiBetaProduct *itsCurrentGeneratedBetaProduct; 
     NFmiBetaProductionSystem itsBetaProductionSystem;
-    ImageCacheUpdateData itsImageCacheUpdateData; // T‰h‰n tulee tietoa p‰ivitett‰vist‰ satel/muut parametrien kuvista ja niiden ajoista
-    std::mutex itsImageCacheUpdateDataMutex; // t‰ll‰ lukitaan itsImageCacheUpdateData, koska siihen tulee lis‰yksi‰ worker-threadista ja siit‰ siit‰ luetaan p‰‰-threadista
+	// T‰h‰n tulee tietoa p‰ivitett‰vist‰ satel/muut parametrien kuvista ja niiden ajoista
+	ImageCacheUpdateData itsImageCacheUpdateData; 
+	// t‰ll‰ lukitaan itsImageCacheUpdateData, koska siihen tulee lis‰yksi‰ worker-threadista ja siit‰ siit‰ luetaan p‰‰-threadista
+	std::mutex itsImageCacheUpdateDataMutex; 
     std::shared_ptr<NFmiSatelliteImageCacheSystem> itsSatelliteImageCacheSystemPtr;
-    NFmiPoint itsPreciseTimeSerialLatlonPoint; // Aina kun tehd‰‰n hiirell‰ kartalta vasen click valintaa, laitetaan t‰h‰n tarkat koordinaatit
-    NFmiViewSettingMacro itsCrashBackupViewMacro; // T‰m‰ viewMacro saadaan ladattua k‰yttˆˆn SmartMetissa pikan‰pp‰imell‰ CTRL + F12. 
-                                                // Kyseess‰ on edellisen SmartMet istunnon aikana talletettu viewMacro, t‰t‰ talletetaan m‰‰r‰ajoin (joka 1.5 minuutti) 
-                                                // crashBackupViewMacro.wmr tiedostoon. T‰m‰ siis ladataan k‰ynnistyksen yhteydess‰ ja sitten SmartMet alkaa tekem‰‰n kyseiseen tiedostoon uusia talletuksia.
-    NFmiFixedDrawParamSystem itsFixedDrawParamSystem; // T‰h‰n on tallletettu kaikki ns. tehdasasetus drawParamit. K‰ytt‰j‰t voivat k‰ytt‰‰ n‰it‰, mutta eiv‰t voi muuttaa.
-    float itsHardDriveFreeLimitForConfSavesInMB; // Kuinka paljon levytilaa pit‰‰ olla minimiss‰‰n, jotta SmartMet suostuu tekem‰‰n konffi/muita asetus tiedosto talletuksia
-    float itsHardDriveFreeLimitForEditedDataSavesInMB; // Kuinka paljon levytilaa pit‰‰ olla minimiss‰‰n, jotta SmartMet suostuu tekem‰‰n editoidun datan backup tiedosto talletuksia
+	// Aina kun tehd‰‰n hiirell‰ kartalta vasen click valintaa, laitetaan t‰h‰n tarkat koordinaatit
+	NFmiPoint itsPreciseTimeSerialLatlonPoint; 
+	// T‰m‰ viewMacro saadaan ladattua k‰yttˆˆn SmartMetissa pikan‰pp‰imell‰ CTRL + F12. 
+	// Kyseess‰ on edellisen SmartMet istunnon aikana talletettu viewMacro, t‰t‰ talletetaan m‰‰r‰ajoin (joka 1.5 minuutti) 
+	// crashBackupViewMacro.wmr tiedostoon. T‰m‰ siis ladataan k‰ynnistyksen yhteydess‰ ja sitten SmartMet alkaa tekem‰‰n kyseiseen tiedostoon uusia talletuksia.
+	NFmiViewSettingMacro itsCrashBackupViewMacro; 
+	// T‰h‰n on tallletettu kaikki ns. tehdasasetus drawParamit. K‰ytt‰j‰t voivat k‰ytt‰‰ n‰it‰, mutta eiv‰t voi muuttaa.
+	NFmiFixedDrawParamSystem itsFixedDrawParamSystem; 
+	// Kuinka paljon levytilaa pit‰‰ olla minimiss‰‰n, jotta SmartMet suostuu tekem‰‰n konffi/muita asetus tiedosto talletuksia
+	float itsHardDriveFreeLimitForConfSavesInMB; 
+	// Kuinka paljon levytilaa pit‰‰ olla minimiss‰‰n, jotta SmartMet suostuu tekem‰‰n editoidun datan backup tiedosto talletuksia
+    float itsHardDriveFreeLimitForEditedDataSavesInMB; 
     NFmiMultiProcessPoolOptions itsMultiProcessPoolOptions;
-    std::string itsMultiProcessLogFilePath; // t‰m‰n avulla initialisoidaan boost-log
-    std::string itsMultiProcessLogFilePattern; // t‰m‰n avulla siivotaan loki hakemistosta vanhat lokit pois
+	// t‰m‰n avulla initialisoidaan boost-log
+	std::string itsMultiProcessLogFilePath; 
+	// t‰m‰n avulla siivotaan loki hakemistosta vanhat lokit pois
+	std::string itsMultiProcessLogFilePattern; 
     MultiProcessClientData itsMultiProcessClientData;
-
-    bool fStoreLastLoadedFileNameToFile; // joskus on tarpeen ett‰ SmartMet tallettaa viimeisen ladatun tiedoston nimen talteen, mutta oletuksena se ei ole tarpeen.
-    std::string itsSpecialFileStoragePath; // SmartMetin voi s‰‰t‰‰ halutessa tallettamaan tietyt tiedostot pois SmartMetin kontrollihakemistosta. 
-                                            // T‰t‰ tarvitaan erityisesti ulkomaisissa Dropbox-asennuksissa (ks. SMARTMET-393).
-                                            // Jos asetusta ei ole s‰‰detty, k‰ytet‰‰n polkuna normaalia kontrollihakemistoa.
+	// joskus on tarpeen ett‰ SmartMet tallettaa viimeisen ladatun tiedoston nimen talteen, mutta oletuksena se ei ole tarpeen.
+    bool fStoreLastLoadedFileNameToFile; 
+	// SmartMetin voi s‰‰t‰‰ halutessa tallettamaan tietyt tiedostot pois SmartMetin kontrollihakemistosta. 
+	// T‰t‰ tarvitaan erityisesti ulkomaisissa Dropbox-asennuksissa (ks. SMARTMET-393).
+	// Jos asetusta ei ole s‰‰detty, k‰ytet‰‰n polkuna normaalia kontrollihakemistoa.
+    std::string itsSpecialFileStoragePath; 
     NFmiApplicationWinRegistry itsApplicationWinRegistry;
-	NFmiRect itsCPGridCropRect; // Jos kontrollipiste muokkaukset halutaan rajoittaa tietyn ali-hilan alueelle, 
-								// k‰ytet‰‰n t‰t‰ hilapiste-rect:i‰. T‰‰ll‰ on siis bottom-left ja top-right editoidun datan hila-indeksit.
-								// T‰m‰n arvoa p‰ivitet‰‰n kun zoomataan p‰‰ikkunaa.
-	bool fUseCPGridCrop; // flagi ett‰ k‰ytet‰‰nkˆ croppia vai ei. T‰m‰ menee p‰‰lle aikasarjaikkunasta.
-	boost::shared_ptr<NFmiArea> itsCPGridCropLatlonArea; // T‰ss‰ on tallessa latlon kulmapisteet croppi laatikosta (kartalle piirtoa varten)
-	boost::shared_ptr<NFmiArea> itsCPGridCropInnerLatlonArea; // T‰ss‰ on tallessa latlon kulmapisteet sisemm‰st‰ croppi laatikosta (kartalle piirtoa varten)
-	NFmiPoint itsCPGridCropMargin; // t‰ss‰ kerrotaan kuinka monta hilapistett‰ x- ja y-suunnassa on ulko- ja sis‰-laatikon v‰liss‰. 
-									// T‰ll‰ alueella muutokset menev‰t t‰ydest‰ l‰hes nollaan, jotta reunoista tulisi mahdollisimman pehme‰t.
-
-	bool fDrawSelectionOnThisView; // haluan piirt‰‰ maalattaessa valitut pisteet piirto ikkunaan, t‰m‰ on sit‰ varten tehty kikka vitonen
-	bool fEditedPointsSelectionChanged; // onko muutettu editoinnissa valittuja pisteit‰, jos on, niin ruutua pit‰‰ p‰ivitt‰‰ tietyll‰ tavalla.
-	NFmiBasicSmartMetConfigurations itsBasicConfigurations; // T‰‰ll‰ on tietyt perus asetukset, mitk‰ alustetaan jo ennen GenDocin alustusta
-															// CSmartMetApp:in InitInstance-metodissa. Uusi CrashRpt-systeemi vaatii tiettyjen tietojen asetuksia
-															// ennen kuin GenDoc saadaan alustetuksia, ja siksi t‰m‰ piti tehd‰ n‰in osissa ja ehk‰ hieman hankalasti.
-
-	bool fDataModificationInProgress;	// uudet datan modifiointi rutiinit (FmiModifyEditdData -namespacessa) saattavat h‰iriinty‰ multi-thread koodin tai 
-										// erillisess‰ threadissa ajosta johtuen (progress/Cancel vaatii erillist‰ s‰iett‰). T‰st‰ johtuen kokeilen, 
-										// josko muokkausten aikan SmartMetin p‰ivityksen esto auttaisi asiaa. T‰m‰ esto toimii ainakin printtauksien 
-										// yhteydess‰ koettujen ongelmien kanssa.
-	bool fUseMultiThreaddingWithEditingtools; // k‰ytt‰j‰ voi asettaa erikseen sallitaanko multi-threaddaavan koodin k‰yttˆ editoitaessa
+	// Jos kontrollipiste muokkaukset halutaan rajoittaa tietyn ali-hilan alueelle, 
+	// k‰ytet‰‰n t‰t‰ hilapiste-rect:i‰. T‰‰ll‰ on siis bottom-left ja top-right editoidun datan hila-indeksit.
+	// T‰m‰n arvoa p‰ivitet‰‰n kun zoomataan p‰‰ikkunaa.
+	NFmiRect itsCPGridCropRect; 
+	// flagi ett‰ k‰ytet‰‰nkˆ croppia vai ei. T‰m‰ menee p‰‰lle aikasarjaikkunasta.
+	bool fUseCPGridCrop; 
+	// T‰ss‰ on tallessa latlon kulmapisteet croppi laatikosta (kartalle piirtoa varten)
+	boost::shared_ptr<NFmiArea> itsCPGridCropLatlonArea; 
+	// T‰ss‰ on tallessa latlon kulmapisteet sisemm‰st‰ croppi laatikosta (kartalle piirtoa varten)
+	boost::shared_ptr<NFmiArea> itsCPGridCropInnerLatlonArea; 
+	// t‰ss‰ kerrotaan kuinka monta hilapistett‰ x- ja y-suunnassa on ulko- ja sis‰-laatikon v‰liss‰. 
+	// T‰ll‰ alueella muutokset menev‰t t‰ydest‰ l‰hes nollaan, jotta reunoista tulisi mahdollisimman pehme‰t.
+	NFmiPoint itsCPGridCropMargin; 
+	// haluan piirt‰‰ maalattaessa valitut pisteet piirto ikkunaan, t‰m‰ on sit‰ varten tehty kikka vitonen
+	bool fDrawSelectionOnThisView; 
+	// onko muutettu editoinnissa valittuja pisteit‰, jos on, niin ruutua pit‰‰ p‰ivitt‰‰ tietyll‰ tavalla.
+	bool fEditedPointsSelectionChanged; 
+	// T‰‰ll‰ on tietyt perus asetukset, mitk‰ alustetaan jo ennen GenDocin alustusta
+	// CSmartMetApp:in InitInstance-metodissa. Uusi CrashRpt-systeemi vaatii tiettyjen tietojen asetuksia
+	// ennen kuin GenDoc saadaan alustetuksia, ja siksi t‰m‰ piti tehd‰ n‰in osissa ja ehk‰ hieman hankalasti.
+	NFmiBasicSmartMetConfigurations itsBasicConfigurations; 
+	// uudet datan modifiointi rutiinit (FmiModifyEditdData -namespacessa) saattavat h‰iriinty‰ multi-thread koodin tai 
+	// erillisess‰ threadissa ajosta johtuen (progress/Cancel vaatii erillist‰ s‰iett‰). T‰st‰ johtuen kokeilen, 
+	// josko muokkausten aikan SmartMetin p‰ivityksen esto auttaisi asiaa. T‰m‰ esto toimii ainakin printtauksien 
+	// yhteydess‰ koettujen ongelmien kanssa.
+	bool fDataModificationInProgress;	
+	// k‰ytt‰j‰ voi asettaa erikseen sallitaanko multi-threaddaavan koodin k‰yttˆ editoitaessa
+	bool fUseMultiThreaddingWithEditingtools; 
 	boost::shared_ptr<TimeSerialModificationDataInterface> itsGenDocDataAdapter;
-	NFmiHelpDataInfoSystem itsHelpDataInfoSystem; // eri apudatojen tiedot ovat t‰ss‰ ja ne luetaan tiedostosta
-	boost::shared_ptr<NFmiHelpDataInfoSystem> itsCaseStudyHelpDataInfoSystem; // K‰ytˆss‰ olevan CaseStudyn eri apudatojen tiedot ovat t‰ss‰
+	// eri apudatojen tiedot ovat t‰ss‰ ja ne luetaan tiedostosta
+	NFmiHelpDataInfoSystem itsHelpDataInfoSystem; 
+	// K‰ytˆss‰ olevan CaseStudyn eri apudatojen tiedot ovat t‰ss‰
+	boost::shared_ptr<NFmiHelpDataInfoSystem> itsCaseStudyHelpDataInfoSystem; 
 	bool fCaseStudyModeOn;
 
 	NFmiAviationStationInfoSystem itsWmoStationInfoSystem;
 	bool fWmoStationInfoSystemInitialized;
-	NFmiCaseStudySystem itsCaseStudySystem; // t‰ll‰ tehd‰‰n uusia CaseStudy-datoja
-	NFmiCaseStudySystem itsCaseStudySystemOrig; // Lopussa kun SmartMetia suljetaan, tarkistetaan onko tehty muutoksia suhteessa originaali olioon ja vasta sitten tehd‰‰n talletukset asetuksiin
-	NFmiCaseStudySystem itsLoadedCaseStudySystem; // t‰h‰n ladataan olemassa oleva CaseStudy-data k‰yttˆˆn
-
-	bool fEditedDataNotInPreferredState; // Jos pika lataus on tehty, editoitu data tarkastetaan sen rakenteen ja alkuajan ja sein‰kellon suhteen. Jos data ei ole 'ihanteellinen', yritet‰‰n ladata jo ladatun tilalle vimeisint‰ virallista dataa, kunnes t‰rpp‰‰ tai tulee joku aika raja vastaan.
-	NFmiMilliSecondTimer itsEditedDataNeedsToBeLoadedTimer; // kun todetaan ett‰ editoitua dataa pit‰‰ alkaa kytt‰‰m‰‰n, k‰ynnistet‰‰n t‰m‰ timeri, ett‰ tiedet‰‰n kuinka kauan ollaan odotettu. 
-															// Jotta k‰ytt‰j‰‰ voidaan informoida asiasta ja lis‰ksi ehk‰ tietyn ajan yritt‰misen j‰lkeen voidaan lopettaa homma toivottomana.
-	bool fEditedDataNeedsToBeLoaded; // jos auto startup ep‰onnistuu lataamasta mit‰‰ editoitua dataa, laitetaan t‰m‰ lippu p‰‰lle.
-									// Sen j‰lkeen pit‰‰ MainFramessa timerill‰ k‰yd‰ v‰liajoin katsomassa onko tullut sopivaa dataa ladattavaksi, kunnes sit‰ lˆytyy.
+	// t‰ll‰ tehd‰‰n uusia CaseStudy-datoja
+	NFmiCaseStudySystem itsCaseStudySystem; 
+	// Lopussa kun SmartMetia suljetaan, tarkistetaan onko tehty muutoksia suhteessa 
+	// originaali olioon ja vasta sitten tehd‰‰n talletukset asetuksiin
+	NFmiCaseStudySystem itsCaseStudySystemOrig; 
+	// T‰h‰n ladataan olemassa oleva CaseStudy-data k‰yttˆˆn
+	NFmiCaseStudySystem itsLoadedCaseStudySystem; 
+	// Kun todetaan ett‰ editoitua dataa pit‰‰ alkaa kytt‰‰m‰‰n, k‰ynnistet‰‰n t‰m‰ timeri, ett‰ tiedet‰‰n kuinka kauan ollaan odotettu. 
+	// Jotta k‰ytt‰j‰‰ voidaan informoida asiasta ja lis‰ksi ehk‰ tietyn ajan yritt‰misen j‰lkeen voidaan lopettaa homma toivottomana.
+	NFmiMilliSecondTimer itsEditedDataNeedsToBeLoadedTimer;
+	// Jos auto startup ep‰onnistuu lataamasta mit‰‰ editoitua dataa, laitetaan t‰m‰ lippu p‰‰lle.
+	// Sen j‰lkeen pit‰‰ MainFramessa timerill‰ k‰yd‰ v‰liajoin katsomassa onko tullut sopivaa dataa ladattavaksi, kunnes sit‰ lˆytyy.
+	bool fEditedDataNeedsToBeLoaded; 
 
 	NFmiMacroPathSettings itsMacroPathSettings;
 	NFmiIgnoreStationsData itsIgnoreStationsData;
-	int itsSatelDataRefreshTimerInMinutes; // T‰m‰ on brute force ratkaisu ei queryData pohjaisten datojen (mm. satel kuvat, k‰site analyysit)
-											// ruudunp‰ivityksen varmistamiseen. T‰m‰ kertoo kuinka usein tarkasteluja tehd‰‰n. Jos arvo on <= 0, ei tarkastella ollenkaan.
-	int itsMachineThreadCount; // kertoo kuinka paljon koneessa on theaddaus mahdollisuutta (CPU x core x hyper-threading)
+	// T‰m‰ on brute force ratkaisu ei queryData pohjaisten datojen (mm. satel kuvat, k‰site analyysit)
+	// ruudunp‰ivityksen varmistamiseen. T‰m‰ kertoo kuinka usein tarkasteluja tehd‰‰n. Jos arvo on <= 0, ei tarkastella ollenkaan.
+	int itsSatelDataRefreshTimerInMinutes; 
+	// kertoo kuinka paljon koneessa on theaddaus mahdollisuutta (CPU x core x hyper-threading)
+	int itsMachineThreadCount; 
 	NFmiDataQualityChecker itsDataQualityChecker;
 	NFmiAnalyzeToolData itsAnalyzeToolData;
 	NFmiModelDataBlender itsModelDataBlender;
-	std::vector<NFmiColor> itsGeneralColors; // Erilaisissa paikoissa on aiemmin k‰ytetty luotausn‰ytˆn v‰risetti‰ hyv‰kseen kuvaamaan eri k‰yri‰ (aikasarja, trajektori, jne)
-												// Nyt teen oman v‰ri setin t‰ll‰iseen k‰yttˆˆn, koska esim. LENiss‰ on v‰ritetty kaikki luotaukset mustaksi
+	// Erilaisissa paikoissa on aiemmin k‰ytetty luotausn‰ytˆn v‰risetti‰ hyv‰kseen kuvaamaan eri k‰yri‰ (aikasarja, trajektori, jne)
+	// Nyt teen oman v‰ri setin t‰ll‰iseen k‰yttˆˆn, koska esim. LENiss‰ on v‰ritetty kaikki luotaukset mustaksi
+	std::vector<NFmiColor> itsGeneralColors; 
 
 	ObsDataLoadedReporter itsObsDataLoadedReporter;
 	NFmiAutoComplete itsAutoComplete;
 	std::deque<NFmiViewSettingMacro> itsUndoRedoViewMacroList;
-	int itsUndoRedoViewMacroListPointer; // T‰m‰ osoittaa nykyiseen kohtaan yll‰ olevaan undo-listaan.
-										// T‰m‰ indeksi osoittaa siis siihen viewMacroon, johon seuraava undo kohdistuu.
-										// Jos arvo on -1, ollaan listan alun ohi ja undo:ta ei voi tehd‰
-
-	bool fStartUpDataLoadCheckDone; // Kun SmartMet lataa datan alussa automaattisesti, se ei tarkista luettua dataa mitenk‰‰n.
-									// Jos editoidaan dataa, pit‰‰ datan olla oikeanlaista, konfiguraatioiden mukaista. Tein vivun,josta
-									// n‰kee, ett‰ pit‰‰kˆ data tarkistaa viel‰ kun editoidaan tai dataa l‰hetet‰‰n tietokantaan.
+	// T‰m‰ osoittaa nykyiseen kohtaan yll‰ olevaan undo-listaan.
+	// T‰m‰ indeksi osoittaa siis siihen viewMacroon, johon seuraava undo kohdistuu.
+	// Jos arvo on -1, ollaan listan alun ohi ja undo:ta ei voi tehd‰
+	int itsUndoRedoViewMacroListPointer; 
+	// Kun SmartMet lataa datan alussa automaattisesti, se ei tarkista luettua dataa mitenk‰‰n.
+	// Jos editoidaan dataa, pit‰‰ datan olla oikeanlaista, konfiguraatioiden mukaista. Tein vivun,josta
+	// n‰kee, ett‰ pit‰‰kˆ data tarkistaa viel‰ kun editoidaan tai dataa l‰hetet‰‰n tietokantaan.
+	bool fStartUpDataLoadCheckDone; 
 	NFmiWindTableSystem itsWindTableSystem;
 	NFmiPoint itsTimeSerialViewSizeInPixels;
-
-	NFmiTimeBag itsTimeSerialViewTimeBag; // t‰m‰ on aikasarja ikkunassa n‰kyv‰ aikav‰li
+	// t‰m‰ on aikasarja ikkunassa n‰kyv‰ aikav‰li
+	NFmiTimeBag itsTimeSerialViewTimeBag; 
 	NFmiMapViewTimeLabelInfo itsMapViewTimeLabelInfo;
 	bool itsShowToolTipTimeView;
 	bool itsShowToolTipTempView;
 	bool itsShowToolTipTrajectoryView;
-
-	std::vector<std::string> itsSynopDataFilePatternSortOrderVector; // t‰m‰ on m‰‰r‰tty asetuksissa helpdatainfo.conf-tiedostossa.
+	// t‰m‰ on m‰‰r‰tty asetuksissa helpdatainfo.conf-tiedostossa.
 	// t‰m‰ pit‰‰ asettaa aina kun joku n‰yttˆ piirt‰‰ isoviiva/contoureja. T‰m‰n avulla piirret‰‰n
 	// l‰pin‰kyv‰t parametrit pinell‰ kikalla ja Gdiplus-piirtoa hyv‰ksi k‰ytt‰en.
+	std::vector<std::string> itsSynopDataFilePatternSortOrderVector; 
 	CWnd *itsTransparencyContourDrawView; 
 	// rintama piirto ominaisuudet on t‰‰ll‰
 	NFmiConceptualModelData itsConceptualModelData;
@@ -10705,31 +10711,40 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	// joita on tarkoitus katsella luotaus-n‰ytˆll‰
 	std::vector<NFmiProducer> itsExtraSoundingProducerList; 
 	NFmiQ2Client itsQ2Client;
-	NFmiPoint itsStationDataGridSize; // miss‰ hilassa asema/piste datan hilaus lasketaan
-
-	bool fMustDrawTimeSerialView; // tietyss‰ tilanteessa CDokumentti voidaan pakottaa piirt‰m‰‰n aikasarjan‰yttˆ
-	bool fMustDrawCrossSectionView; // tietyss‰ tilanteessa CDokumentti voidaan pakottaa piirt‰m‰‰n poikkileikkausn‰yttˆn‰yttˆ
-	bool fMustDrawTempView; // tietyss‰ tilanteessa CDokumentti voidaan pakottaa piirt‰m‰‰n luotausn‰yttˆ
+	// miss‰ hilassa asema/piste datan hilaus lasketaan
+	NFmiPoint itsStationDataGridSize; 
+	// tietyss‰ tilanteessa CDokumentti voidaan pakottaa piirt‰m‰‰n aikasarjan‰yttˆ
+	bool fMustDrawTimeSerialView; 
+	// tietyss‰ tilanteessa CDokumentti voidaan pakottaa piirt‰m‰‰n poikkileikkausn‰yttˆn‰yttˆ
+	bool fMustDrawCrossSectionView; 
+	// tietyss‰ tilanteessa CDokumentti voidaan pakottaa piirt‰m‰‰n luotausn‰yttˆ
+	bool fMustDrawTempView; 
 	bool fUseOnePressureLevelDrawParam;
 	bool fRawTempRoundSynopTimes;
 	NFmiPoint itsRawTempUnknownStartLonLat;
-	bool fWarnIfCantSaveWorkingFile; // kaikilla konfiguraatioilla ei voi tallettaa tyˆtiedostoa, eik‰ siit‰ tarvitse varoittaa, t‰m‰ luetaan settingseist‰
-	NFmiPoint itsCrossSectionViewSizeInPixels; // poikkileikkausn‰yttˆ ikkunan clientti osan koko pikseleiss‰
+	// kaikilla konfiguraatioilla ei voi tallettaa tyˆtiedostoa, eik‰ siit‰ tarvitse varoittaa, t‰m‰ luetaan settingseist‰
+	bool fWarnIfCantSaveWorkingFile; 
+	// poikkileikkausn‰yttˆ ikkunan clientti osan koko pikseleiss‰
+	NFmiPoint itsCrossSectionViewSizeInPixels; 
 	NFmiHelpEditorSystem itsHelpEditorSystem;
 
 	NFmiProducerSystem itsProducerSystem;
 	NFmiProducerSystem itsObsProducerSystem;
-	NFmiProducerSystem itsSatelImageProducerSystem; // satelliitti/tutka kuvien tuottajat laitetaan t‰h‰n (k‰ytet‰‰n mm. parametri pop-up valikoiden tekoon)
+	// satelliitti/tutka kuvien tuottajat laitetaan t‰h‰n (k‰ytet‰‰n mm. parametri pop-up valikoiden tekoon)
+	NFmiProducerSystem itsSatelImageProducerSystem; 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main itsWarningCenterSystem;
 #endif // DISABLE_CPPRESTSDK
 	NFmiFileCleanerSystem itsFileCleanerSystem;
 
 	bool fIsTEMPCodeSoundingDataAlsoCopiedToEditedData;
-	std::string itsLastTEMPDataStr; // t‰h‰n on talletettu aina viimeksi k‰ytetty TEMP koodin purussa ollut stringi
-	bool fUseEditedDataParamDescriptor; // jos true, CreateLoadedData-metodissa k‰ytet‰‰n alla olevaa parambagi‰, muuten se otetaan 1. source datsta
-	NFmiParamDescriptor itsEditedDataParamDescriptor; // editor.conf-tiedostossa voidaan halutessa m‰‰ritt‰ rakennettava
-													  // ladatun datan parambagi. Jos ei m‰‰ritelty, ottaa parambagin 1. source-datsta
+	// t‰h‰n on talletettu aina viimeksi k‰ytetty TEMP koodin purussa ollut stringi
+	std::string itsLastTEMPDataStr; 
+	// jos true, CreateLoadedData-metodissa k‰ytet‰‰n alla olevaa parambagi‰, muuten se otetaan 1. source datsta
+	bool fUseEditedDataParamDescriptor; 
+	// editor.conf-tiedostossa voidaan halutessa m‰‰ritt‰ rakennettava
+	// ladatun datan parambagi. Jos ei m‰‰ritelty, ottaa parambagin 1. source-datsta
+	NFmiParamDescriptor itsEditedDataParamDescriptor; 
 
 	NFmiTrajectorySystem* itsTrajectorySystem;
 	bool fShowMouseHelpCursorsOnMap; // kartta ruudukolla n‰ytett‰vien apukursorien tila, halutaan s‰‰dett‰v‰ksi, koska mm. kontrollipiste tyˆkalu vilkkuu viel‰ liikaa
@@ -12214,24 +12229,14 @@ bool NFmiEditMapGeneralDataDoc::TryAutoStartUpLoad(void)
 	return pimpl->TryAutoStartUpLoad();
 }
 
-NFmiMilliSecondTimer& NFmiEditMapGeneralDataDoc::EditedDataNeedsToBeLoadedTimer(void) 
+NFmiMilliSecondTimer& NFmiEditMapGeneralDataDoc::EditedDataNeedsToBeLoadedTimer(void)
 {
 	return pimpl->EditedDataNeedsToBeLoadedTimer();
 }
 
-bool NFmiEditMapGeneralDataDoc::EditedDataNotInPreferredState(void)
+bool NFmiEditMapGeneralDataDoc::IsEditedDataInReadOnlyMode()
 {
-	return pimpl->EditedDataNotInPreferredState();
-}
-
-void NFmiEditMapGeneralDataDoc::EditedDataNotInPreferredState(bool newValue)
-{
-	pimpl->EditedDataNotInPreferredState(newValue);
-}
-
-bool NFmiEditMapGeneralDataDoc::CheckEditedDataAfterAutoLoad(void)
-{
-	return pimpl->CheckEditedDataAfterAutoLoad();
+	return pimpl->IsEditedDataInReadOnlyMode();
 }
 
 int NFmiEditMapGeneralDataDoc::RunningTimeInSeconds()

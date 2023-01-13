@@ -50,14 +50,9 @@ NFmiInfoOrganizer* NFmiGenDocDataAdapter::InfoOrganizer(void)
 	return itsDoc->InfoOrganizer();
 }
 
-bool NFmiGenDocDataAdapter::EditedDataNotInPreferredState(void) 
+bool NFmiGenDocDataAdapter::IsEditedDataInReadOnlyMode()
 {
-	return itsDoc->EditedDataNotInPreferredState();
-}
-
-void NFmiGenDocDataAdapter::EditedDataNotInPreferredState(bool newValue) 
-{
-	itsDoc->EditedDataNotInPreferredState(newValue);
+	return itsDoc->IsEditedDataInReadOnlyMode();
 }
 
 int NFmiGenDocDataAdapter::DoMessageBox(const std::string &theMessage, const std::string &theTitle, unsigned int theMessageBoxType) 
@@ -316,11 +311,6 @@ std::vector<int>& NFmiGenDocDataAdapter::DataLoadingProducerIndexVector(void)
 void NFmiGenDocDataAdapter::EditedDataNeedsToBeLoaded(bool newValue)
 {
 	itsDoc->EditedDataNeedsToBeLoaded(newValue);
-}
-
-bool NFmiGenDocDataAdapter::CheckEditedDataAfterAutoLoad(void) 
-{
-	return itsDoc->CheckEditedDataAfterAutoLoad();
 }
 
 void NFmiGenDocDataAdapter::PutWarningFlagTimerOn(void)

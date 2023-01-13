@@ -20,8 +20,7 @@ public:
 	bool UseMasksInTimeSerialViews(void) override;
 	NFmiAnalyzeToolData& AnalyzeToolData(void) override;
 	NFmiInfoOrganizer* InfoOrganizer(void) override;
-	bool EditedDataNotInPreferredState(void) override;
-	void EditedDataNotInPreferredState(bool newValue) override;
+	bool IsEditedDataInReadOnlyMode() override;
 	int DoMessageBox(const std::string & theMessage, const std::string &theTitle, unsigned int theMessageBoxType) override;
     void MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers) override;
     void WindTableSystemMustaUpdateTable(bool newState) override;
@@ -67,7 +66,6 @@ public:
 	NFmiParamDescriptor& EditedDataParamDescriptor(void) override;
 	std::vector<int>& DataLoadingProducerIndexVector(void) override;
 	void EditedDataNeedsToBeLoaded(bool newValue) override;
-	bool CheckEditedDataAfterAutoLoad(void) override;
 	void PutWarningFlagTimerOn(void) override;
 	NFmiModelDataBlender& ModelDataBlender(void) override;
 	NFmiProducerIdLister& ProducerIdLister(void) override;

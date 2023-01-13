@@ -279,9 +279,7 @@ public:
 	NFmiCaseStudySystem& CaseStudySystem(void);
 	NFmiApplicationDataBase& ApplicationDataBase(void);
 	int RunningTimeInSeconds(void);
-	bool EditedDataNotInPreferredState(void);
-	void EditedDataNotInPreferredState(bool newValue);
-	bool CheckEditedDataAfterAutoLoad(void);
+	bool IsEditedDataInReadOnlyMode();
 	NFmiMilliSecondTimer& EditedDataNeedsToBeLoadedTimer(void);
 	bool TryAutoStartUpLoad(void);
 	bool EditedDataNeedsToBeLoaded(void);
