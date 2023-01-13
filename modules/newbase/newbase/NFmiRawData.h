@@ -56,6 +56,7 @@ class NFmiRawData
 
   // Advice memory mapping
   bool Advise(FmiAdvice theAdvice);
+  bool IsReadOnly() const;
 
 };  // class NFmiRawData
 
