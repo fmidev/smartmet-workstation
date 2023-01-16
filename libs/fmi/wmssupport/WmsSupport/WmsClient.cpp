@@ -62,7 +62,8 @@ namespace Wms
             .setVersion(serverSetup.version)
             .setToken(serverSetup.generic.token)
             .setService("WMS")
-            .setFormat("image/png");
+            .setFormat("image/png")
+            .setTransparency(serverSetup.transparency);
     }
 
     void WmsClient::initializeUserUrl(const UserUrlServerSetup& serverSetup, const std::string& proxyUrl)
@@ -78,7 +79,8 @@ namespace Wms
                 .setVersion(serverSetup.version)
                 .setToken(parsedSetup.token)
                 .setService("WMS")
-                .setFormat("image/png");
+                .setFormat("image/png")
+                .setTransparency(serverSetup.transparency);
             parsedUserUrls_.push_back(qb);
         }
     }
