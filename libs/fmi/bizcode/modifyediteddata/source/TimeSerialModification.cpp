@@ -785,14 +785,15 @@ static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &the
 {
 	if(theModifiedDrawParam && theModifiedDrawParam->IsParamEdited())
 	{
+		auto& modifiedParam = *theModifiedDrawParam->Param().GetParam();
         if(theAdapter.AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool()) // haaraudutaan, jos on observation-blender työkalu käytössä!
-            ::DoAnalyzeToolRelatedModifications(true, theAdapter, *(theModifiedDrawParam->Param().GetParam()), fUsedMask, "Using Observation-blender tool to modify edited data.", theAdapter.AnalyzeToolData().ControlPointObservationBlendingData().SelectedProducer(), NFmiInfoData::kObservations);
+            ::DoAnalyzeToolRelatedModifications(true, theAdapter, modifiedParam, fUsedMask, "Using Observation-blender tool to modify edited data.", theAdapter.AnalyzeToolData().ControlPointObservationBlendingData().SelectedProducer(), NFmiInfoData::kObservations);
         else if(theAdapter.AnalyzeToolData().AnalyzeToolMode()) // haaraudutaan, jos on analyysi työkalu käytössä!
-			::DoAnalyzeToolRelatedModifications(false, theAdapter, *(theModifiedDrawParam->Param().GetParam()), fUsedMask, "Using Analyze tool to modify edited data.", theAdapter.AnalyzeToolData().SelectedProducer1(), NFmiInfoData::kAnalyzeData);
+			::DoAnalyzeToolRelatedModifications(false, theAdapter, modifiedParam, fUsedMask, "Using Analyze tool to modify edited data.", theAdapter.AnalyzeToolData().SelectedProducer1(), NFmiInfoData::kAnalyzeData);
 		else
 		{
 			NFmiInfoOrganizer *infoOrganizer = theAdapter.InfoOrganizer();
-            std::string paramName = theModifiedDrawParam->Param().GetParamName();
+            std::string paramName = modifiedParam.GetName();
 			if(infoOrganizer)
 			{
 				boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer->Info(theModifiedDrawParam, false, false);
@@ -830,7 +831,7 @@ static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &the
 				}
 			}
 		}
-		::CheckAndValidateAfterModifications(theAdapter, theEditorTool, false, fUsedMask, FmiParameterName(theModifiedDrawParam->Param().GetParam()->GetIdent()), fDoMultiThread, false);
+		::CheckAndValidateAfterModifications(theAdapter, theEditorTool, false, fUsedMask, FmiParameterName(modifiedParam.GetIdent()), fDoMultiThread, false);
         ::MakeBasicViewUpdatePreparationsAfterDataModifications(theAdapter);
 
 		return true;
@@ -996,7 +997,7 @@ static bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, 
 // Tämä luo SmartInfosta pinta kopioin, eli vain ns. iteraattori (info osuus) kopioituu, data pysyy alkuperäisen kanssa jaettuna.
 static boost::shared_ptr<NFmiFastQueryInfo> CreateShallowInfoCopy(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiDataIdent& theDataIdent, const NFmiLevel* theLevel, NFmiInfoData::Type theType)
 {
-	if(theUsedInfo && theUsedInfo->DataType() == theType && theUsedInfo->Param(theDataIdent) && (!theLevel || (theLevel && theUsedInfo->Level(*theLevel))))
+	if(theUsedInfo && theUsedInfo->DataType() == theType && theUsedInfo->Param(*theDataIdent.GetParam()) && (!theLevel || (theLevel && theUsedInfo->Level(*theLevel))))
 	{
 		boost::shared_ptr<NFmiFastQueryInfo> copyOfInfo(new NFmiFastQueryInfo(*theUsedInfo));
 		return copyOfInfo;
@@ -1163,12 +1164,13 @@ static boost::shared_ptr<NFmiDataModifier> CreateAreaFilteringModifier(TimeSeria
 static bool ModifyLocationData(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fSetParamToActiveParam, bool fDoMultiThread)
 {
 	boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0); // nämä moukkaustyökalulla (filtteri työkalu) tehdyt muokkaukset tehdään aina pääkarttaikkunan aktiiviselle datalle
-	if(!fSetParamToActiveParam || (drawParam && drawParam->DataType() == NFmiInfoData::kEditable && theEditedData->Param(drawParam->Param())))
+	auto& param = *drawParam->Param().GetParam();
+	if(!fSetParamToActiveParam || (drawParam && drawParam->DataType() == NFmiInfoData::kEditable && theEditedData->Param(param)))
 	{
 		if(drawParam && drawParam->Param().Type() == kSymbolicParam) // turha tehdä symbolisille parametreille
 			return false;
 		if(fSetParamToActiveParam && drawParam)
-			if(!theCopyOfEditedData->Param(drawParam->Param()))
+			if(!theCopyOfEditedData->Param(param))
 				return false;
 
 		boost::shared_ptr<NFmiDataModifier> areaModifier = CreateAreaFilteringModifier(theAdapter, theMaskList, theCopyOfEditedData);
@@ -1194,7 +1196,7 @@ static bool DoAreaFilteringToAllParams(TimeSerialModificationDataInterface &theA
 		{
 			if(!theEditedData->Param().HasDataParams())
 			{
-				if(theCopyOfEditedData->Param(theEditedData->Param()))
+				if(theCopyOfEditedData->Param(*theEditedData->Param().GetParam()))
 				{
 					::ModifyLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, false, fDoMultiThread);
 				}
@@ -1206,9 +1208,10 @@ static bool DoAreaFilteringToAllParams(TimeSerialModificationDataInterface &theA
 				{
 					if(subParamBag.Current()->Type() != kSymbolicParam)
 					{
-						if(theEditedData->Param(*subParamBag.Current()))
+						auto& subParam = *subParamBag.Current()->GetParam();
+						if(theEditedData->Param(subParam))
 						{
-							if(theCopyOfEditedData->Param(*subParamBag.Current()))
+							if(theCopyOfEditedData->Param(subParam))
 							{
 								::ModifyLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, false, fDoMultiThread);
 							}
@@ -1234,9 +1237,10 @@ static bool DoAreaFilteringToSelectedParams(TimeSerialModificationDataInterface 
 			{
 				if(filteringParamBag.Current()->IsActive()) // vain aktiiviset käydään läpi
 				{
-					if(theEditedData->Param(*filteringParamBag.Current()))
+					auto& filteringParam = *filteringParamBag.Current()->GetParam();
+					if(theEditedData->Param(filteringParam))
 					{
-						if(theCopyOfEditedData->Param(theEditedData->Param()))
+						if(theCopyOfEditedData->Param(filteringParam))
 						{
 							::ModifyLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, false, fDoMultiThread);
 						}
@@ -1252,9 +1256,10 @@ static bool DoAreaFilteringToSelectedParams(TimeSerialModificationDataInterface 
 					{
 						if(subParamBag.Current()->Type() != kSymbolicParam)
 						{
-							if(theEditedData->Param(*subParamBag.Current()))
+							auto subParam = *subParamBag.Current()->GetParam();
+							if(theEditedData->Param(subParam))
 							{
-								if(theCopyOfEditedData->Param(*subParamBag.Current()))
+								if(theCopyOfEditedData->Param(subParam))
 								{
 									::ModifyLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, false, fDoMultiThread);
 								}
@@ -1485,12 +1490,13 @@ static bool ModifyTimesLocationData(TimeSerialModificationDataInterface &theAdap
 		boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0);  // nämä moukkaustyökalulla (filtteri työkalu) tehdyt muokkaukset tehdään aina pääkarttaikkunan aktiiviselle datalle
 		if(drawParam)
 		{
-			if(!fSetParamToActiveParam || (drawParam && drawParam->DataType() == NFmiInfoData::kEditable && theEditedData->Param(drawParam->Param())))
+			auto& editedParam = *drawParam->Param().GetParam();
+			if(!fSetParamToActiveParam || (drawParam && drawParam->DataType() == NFmiInfoData::kEditable && theEditedData->Param(editedParam)))
 			{
 				if(fSetParamToActiveParam)
 				{
 
-					if(!theCopyOfEditedData->Param(drawParam->Param()))
+					if(!theCopyOfEditedData->Param(editedParam))
 						return false;
 				}
 				boost::shared_ptr<NFmiDataModifier> timeModifier = ::CreateTimeFilteringModifier(theAdapter, theMaskList, theCopyOfEditedData);
@@ -1516,7 +1522,7 @@ static bool DoTimeFilteringToAllParams(TimeSerialModificationDataInterface &theA
 		{
 			if(!theEditedData->Param().HasDataParams())
 			{
-				if(theCopyOfEditedData->Param(theEditedData->Param()))
+				if(theCopyOfEditedData->Param(*theEditedData->Param().GetParam()))
 				{
 					::ModifyTimesLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, false, fDoMultiThread);
 				}
@@ -1528,9 +1534,10 @@ static bool DoTimeFilteringToAllParams(TimeSerialModificationDataInterface &theA
 				{
 					if(subParamBag.Current()->Type() != kSymbolicParam)
 					{
-						if(theEditedData->Param(*subParamBag.Current()))
+						auto& subParam = *subParamBag.Current()->GetParam();
+						if(theEditedData->Param(subParam))
 						{
-							if(theCopyOfEditedData->Param(*subParamBag.Current()))
+							if(theCopyOfEditedData->Param(subParam))
 							{
 								::ModifyTimesLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, false, fDoMultiThread);
 							}
@@ -1556,9 +1563,10 @@ static bool DoTimeFilteringToSelectedParams(TimeSerialModificationDataInterface 
 			{
 				if(filteringParamBag.Current()->IsActive()) // vain aktiiviset käydään läpi
 				{
-					if(theEditedData->Param(*filteringParamBag.Current()))
+					auto& filterinParam = *filteringParamBag.Current()->GetParam();
+					if(theEditedData->Param(filterinParam))
 					{
-						if(theCopyOfEditedData->Param(theEditedData->Param()))
+						if(theCopyOfEditedData->Param(filterinParam))
 						{
 							::ModifyTimesLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, false, fDoMultiThread);
 						}
@@ -1574,9 +1582,10 @@ static bool DoTimeFilteringToSelectedParams(TimeSerialModificationDataInterface 
 					{
 						if(subParamBag.Current()->Type() != kSymbolicParam)
 						{
-							if(theEditedData->Param(*subParamBag.Current()))
+							auto& subParam = *subParamBag.Current()->GetParam();
+							if(theEditedData->Param(subParam))
 							{
-								if(theCopyOfEditedData->Param(*subParamBag.Current()))
+								if(theCopyOfEditedData->Param(subParam))
 								{
 									::ModifyTimesLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, false, fDoMultiThread);
 								}
