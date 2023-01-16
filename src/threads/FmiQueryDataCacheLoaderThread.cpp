@@ -19,6 +19,8 @@
 #include "NFmiLedLightStatus.h"
 #include "NFmiValueString.h"
 #include "NFmiMissingDataOnServerReporter.h"
+#include "NFmiCachedDataFileInfo.h"
+#include "NFmiOnceLoadedDataFiles.h"
 
 #include <boost/filesystem.hpp> 
 #include <mutex> 
@@ -50,15 +52,8 @@ namespace
     size_t gUsedChunckSize; // Jos k‰ytet‰‰n FileCopyMarko:a, t‰m‰n kokoisia puskureita k‰ytet‰‰n kopioinnissa
     double gCacheCleaningIntervalInHours = 0.16; // T‰h‰n otetaan GeneralDocista siivousintervalli, oletus 0.16 [h] eli n. 10 minuutin v‰lein.
 
-    // Aletaan pit‰m‰‰n kirjaa mitk‰ tiedostot on jo kerran kopioitu (tai yritetty kopioida) serverilt‰ lokaali cacheen.
-    // On tilanteita, miss‰ samaa tiedostoa yritet‰‰n ladata uudestaan ja uudestaan cacheen ja n‰in kulutetaan turhaan
-    // verkkoa ja mahdollisesti puretaan zipattua tiedostoa jolloin kulutetaan turhaan CPU:ta.
-    std::set<std::string> gOnceLoadedFilePathsOnServer;
-    // T‰m‰n avulla k‰ytet‰‰n gOnceLoadedFilePathsOnServer containeria thread turvallisesti
-    CSemaphore gOnceLoadedFilePathsOnServerSemaphore;
-    NFmiNanoSecondTimer gOnceLoadedFilePathsOnServerTimer;
-
     NFmiMissingDataOnServerReporter gMissingDataOnServerReporter;
+    NFmiOnceLoadedDataFiles gOnceLoadedDataFiles;
 
 	enum CFmiCopyingStatus
 	{
@@ -168,7 +163,7 @@ std::string CFmiQueryDataCacheLoaderThread::MakeDailyUnpackLogFilePath()
 
 // Katso miten haluttu komentorivi pit‰‰ rakentaa smartmet_workstation\src\unpackdatafilesexe\UnpackSmartMetDataFilesMain.cpp
 // tiedoston main -funktion alusta, kun virhetilanteessa laitetaan ohjeita cout:iin.
-static std::string MakeUnpackCommand(CachedDataFileInfo &theCachedDataFileInfo)
+static std::string MakeUnpackCommand(NFmiCachedDataFileInfo &theCachedDataFileInfo)
 {
     // HUOM! laitetaan kaikki k‰skyn osat lainausmerkkeihin, jos polut sattuisivat sis‰lt‰m‰‰n spaceja
     std::string commandStr("\"");
@@ -193,7 +188,7 @@ static std::string MakeUnpackCommand(CachedDataFileInfo &theCachedDataFileInfo)
     return commandStr;
 }
 
-static CFmiCopyingStatus DoFileUnpacking(CachedDataFileInfo &theCachedDataFileInfo)
+static CFmiCopyingStatus DoFileUnpacking(NFmiCachedDataFileInfo &theCachedDataFileInfo)
 {
     if(theCachedDataFileInfo.fFilePacked) // jos oli pakattu tiedosto
     {
@@ -316,7 +311,7 @@ static bool FileCopyMarko(const std::string &inputPath, const std::string &outpu
 // paikkaan. Oma purku-prosessi on pakko k‰ynnist‰‰, koska purkua ei voi keskeytt‰‰ ja se voi kest‰‰ 
 // vaikka 3 minuuttia (esim. nykyinen arome mallipintadata). Jos k‰ytt‰j‰ sulkee SmartMetin, 
 // ei voi odottaa 3 minuuttia, vaan purku keskeytett‰isiin v‰kivaltaisesti, eik‰ seuraamuksia tiedet‰ viel‰.
-static CFmiCopyingStatus CopyFileEx_CopyRename(CachedDataFileInfo &theCachedDataFileInfo)
+static CFmiCopyingStatus CopyFileEx_CopyRename(NFmiCachedDataFileInfo &theCachedDataFileInfo)
 {
 	NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
 	NFmiMilliSecondTimer timer;
@@ -374,7 +369,7 @@ const double gKiloByte = 1024;
 const double gMegaByte = gKiloByte * gKiloByte;
 // t‰ss‰ tarkastetaan kuuluuko kyseinen data-tiedosto t‰lle threadille, eli tiedoston koon
 // pit‰‰ menn‰ rajojen sis‰‰n.
-static bool DoesThisThreadCopyFile(CachedDataFileInfo &theCachedDataFileInfo, CFmiCacheLoaderData *theCacheLoaderData)
+static bool DoesThisThreadCopyFile(NFmiCachedDataFileInfo &theCachedDataFileInfo, CFmiCacheLoaderData *theCacheLoaderData)
 {
     theCachedDataFileInfo.itsFileSizeInMB = NFmiFileSystem::FileSize(theCachedDataFileInfo.itsTotalServerFileName) / gMegaByte;
     if(theCachedDataFileInfo.itsFileSizeInMB <= 0)
@@ -399,29 +394,6 @@ static CFmiCopyingStatus CheckTmpFileStatus(const std::string &theTmpFileName)
     return kFmiGoOnWithCopying;
 }
 
-static bool CheckIfFileHasBeenLoadedEarlier(CachedDataFileInfo& theCachedDataFileInfo)
-{
-    const double resetIntervalInSeconds = 12 * 60 * 60;
-
-    CSingleLock lock(&gOnceLoadedFilePathsOnServerSemaphore);
-    if(gOnceLoadedFilePathsOnServerTimer.elapsedTimeInSeconds() > resetIntervalInSeconds)
-    {
-        // Tyhjennet‰‰n tiedostonimilista aika ajoin (esim. 12 h v‰lein), jotta sen k‰sittely ei rupea hidastelemaan
-        // t‰t‰ toimintaa, jos SmartMet on k‰ynniss‰ vaikka viikkoja (jos sill‰ ei tee juuri mit‰‰n ei kaatumisia juuri tapahdu).
-        gOnceLoadedFilePathsOnServer.clear();
-        // timer pit‰‰ myˆs k‰ynnist‰‰ uudestaan
-        gOnceLoadedFilePathsOnServerTimer.restart();
-    }
-
-    if(gOnceLoadedFilePathsOnServer.find(theCachedDataFileInfo.itsTotalServerFileName) == gOnceLoadedFilePathsOnServer.end())
-    {
-        gOnceLoadedFilePathsOnServer.insert(theCachedDataFileInfo.itsTotalServerFileName);
-        return false;
-    }
-    else
-        return true;
-}
-
 static std::string MakeFileSizeString(double fileSizeInMB)
 {
     if(fileSizeInMB <= 0.1)
@@ -443,7 +415,7 @@ static std::string MakeFileSizeString(double fileSizeInMB)
     return str;
 }
 
-static std::string MakeLedChannelStartLoadingString(const CachedDataFileInfo& cachedDataFileInfo)
+static std::string MakeLedChannelStartLoadingString(const NFmiCachedDataFileInfo& cachedDataFileInfo)
 {
     std::string reportStr = "Loading file from server (";
     reportStr += ::MakeFileSizeString(cachedDataFileInfo.itsFileSizeInMB);
@@ -453,14 +425,14 @@ static std::string MakeLedChannelStartLoadingString(const CachedDataFileInfo& ca
     return reportStr;
 }
 
-static CFmiCopyingStatus CopyFileToLocalCache(CachedDataFileInfo& theCachedDataFileInfo, CFmiCacheLoaderData* theCacheLoaderData, const NFmiHelpDataInfo& theDataInfo)
+static CFmiCopyingStatus CopyFileToLocalCache(NFmiCachedDataFileInfo& theCachedDataFileInfo, CFmiCacheLoaderData* theCacheLoaderData, const NFmiHelpDataInfo& theDataInfo)
 {
     if(NFmiFileSystem::FileExists(theCachedDataFileInfo.itsTotalCacheFileName))
     {
         return kFmiNoCopyNeeded;
     }
 
-    if(::CheckIfFileHasBeenLoadedEarlier(theCachedDataFileInfo))
+    if(gOnceLoadedDataFiles.checkIfFileHasBeenLoadedEarlier(theCachedDataFileInfo))
     {
         return kFmiNoCopyNeeded;
     }
@@ -488,7 +460,7 @@ static CFmiCopyingStatus CopyFileToLocalCache(CachedDataFileInfo& theCachedDataF
     return kFmiNoCopyNeeded;
 }
 
-static NFmiFileString MakeFileStringWithoutCompressionFileExtension(const CachedDataFileInfo &theCachedDataFileInfo)
+static NFmiFileString MakeFileStringWithoutCompressionFileExtension(const NFmiCachedDataFileInfo &theCachedDataFileInfo)
 {
     NFmiFileString fileStr(theCachedDataFileInfo.itsTotalServerFileName);
     if(theCachedDataFileInfo.fFilePacked)
@@ -496,7 +468,7 @@ static NFmiFileString MakeFileStringWithoutCompressionFileExtension(const Cached
     return fileStr;
 }
 
-static std::string MakeFinalTargetFileName(const CachedDataFileInfo &theCachedDataFileInfo, const NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem &theHelpDataSystem)
+static std::string MakeFinalTargetFileName(const NFmiCachedDataFileInfo &theCachedDataFileInfo, const NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem &theHelpDataSystem)
 {
 	// datatiedoston target polku+nimi saadaan k‰ytt‰m‰ll‰ NFmiHelpDataInfo:n UsedFileFilter:in polkua ja source-filen nimi osaa
     NFmiFileString fileStr = ::MakeFileStringWithoutCompressionFileExtension(theCachedDataFileInfo);
@@ -508,7 +480,7 @@ static std::string MakeFinalTargetFileName(const CachedDataFileInfo &theCachedDa
 	return totalCacheFileName;
 }
 
-static std::string MakeFinalTmpFileName(const CachedDataFileInfo &theCachedDataFileInfo, const NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem &theHelpDataSystem, bool fGetPackedName)
+static std::string MakeFinalTmpFileName(const NFmiCachedDataFileInfo &theCachedDataFileInfo, const NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem &theHelpDataSystem, bool fGetPackedName)
 {
     NFmiFileString fileStr = fGetPackedName ? NFmiFileString(theCachedDataFileInfo.itsTotalServerFileName) : ::MakeFileStringWithoutCompressionFileExtension(theCachedDataFileInfo);
 	NFmiString fileNameStr = fileStr.FileName();
@@ -545,7 +517,7 @@ static std::string TryToFindNewestPackedFileName(const std::string& theFileFilte
 // Tutkii ensin lˆytyykˆ tiedostosta 7z, zip tai bz2-p‰‰tteist‰ versiota, koska pakatut tiedostot ovat 
 // prioriteetissa ensin. Jos oli pakattu tiedosto, asetetaan pair:in second-arvoon true, 
 // muuten se on false.
-static void GetNewestFileInfo(const std::string &theFileFilter, CachedDataFileInfo &theCachedDataFileInfoOut)
+static void GetNewestFileInfo(const std::string &theFileFilter, NFmiCachedDataFileInfo &theCachedDataFileInfoOut)
 {
     std::string totalPackedFileName = TryToFindNewestPackedFileName(theFileFilter);
     if(!totalPackedFileName.empty())
@@ -592,7 +564,7 @@ static std::pair<std::list<std::string>, bool> GetNewestFileInfoList(const std::
 // itsTotalCacheFileName: D:\\smartmet\\wrk\\data\\local\\202001021141_gfs_scandinavia_pressure.sqd
 // itsTotalCacheTmpFileName: D:\\smartmet\\wrk\\data\\tmp\\202001021141_gfs_scandinavia_pressure.sqd_TMP
 // itsTotalCacheTmpPackedFileName: D:\\smartmet\\wrk\\data\\tmp\\202001021141_gfs_scandinavia_pressure.sqd.bz2_TMP
-static void MakeRestOfTheFileNames(CachedDataFileInfo &theCachedDataFileInfoInOut, const NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem &theHelpDataSystem)
+static void MakeRestOfTheFileNames(NFmiCachedDataFileInfo &theCachedDataFileInfoInOut, const NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem &theHelpDataSystem)
 {
     theCachedDataFileInfoInOut.itsTotalCacheFileName = ::MakeFinalTargetFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem);
     theCachedDataFileInfoInOut.itsTotalCacheTmpFileName = ::MakeFinalTmpFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem, false);
@@ -608,11 +580,11 @@ static void MakeRestOfTheFileNames(CachedDataFileInfo &theCachedDataFileInfoInOu
 //		toinen SmartMet on juuri kopioimassa sit‰), t‰m‰ tulkitaan siten ett‰ ei ollut mit‰‰n luettavaa/kopioitavaa
 static CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem &theHelpDataSystem, CFmiCacheLoaderData *theCacheLoaderData)
 {
-	if(CachedDataFileInfo::IsDataCached(theDataInfo))
+	if(NFmiCachedDataFileInfo::IsDataCached(theDataInfo))
 	{
 		// 1. Mik‰ on uusimman file-filterin mukaisen tiedoston nimi, ja oliko kyse pakatusta tiedostosta
         std::string fileFilter = theDataInfo.FileNameFilter();
-        CachedDataFileInfo cachedDataFileInfo;
+        NFmiCachedDataFileInfo cachedDataFileInfo;
         ::GetNewestFileInfo(fileFilter, cachedDataFileInfo);
         gMissingDataOnServerReporter.doReportIfFileFilterHasNoRelatedDataOnServer(cachedDataFileInfo, fileFilter);
 
@@ -715,7 +687,7 @@ static void CleanCombineDataCache(void)
 		{
 			NFmiHelpDataInfo &helpData = gWorkerHelpDataSystem.DynamicHelpDataInfo(static_cast<int>(i));
 			NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-			if(CachedDataFileInfo::IsDataCached(helpData) && helpData.IsCombineData())
+			if(NFmiCachedDataFileInfo::IsDataCached(helpData) && helpData.IsCombineData())
 			{
 				double keepDays = gWorkerHelpDataSystem.CacheFileKeepMaxDays();
 				if(keepDays > 0)
@@ -772,7 +744,7 @@ static void CleanCache(void)
             NFmiHelpDataInfo& helpDataInfo = gWorkerHelpDataSystem.DynamicHelpDataInfo(static_cast<int>(i));
             // HUOM! yhdistelm‰ datoja ei siivota t‰ss‰ yleisill‰ asetuksilla, vaan ne 
             // pit‰‰ siivota eri lailla ja sit‰ varten on oma funktio (CleanCombineDataCache).
-            if(CachedDataFileInfo::IsDataCached(helpDataInfo) && helpDataInfo.IsCombineData() == false)
+            if(NFmiCachedDataFileInfo::IsDataCached(helpDataInfo) && helpDataInfo.IsCombineData() == false)
                 ::CleanFilePattern(helpDataInfo.UsedFileNameFilter(gWorkerHelpDataSystem), ::CalcMaxKeepFileCount(helpDataInfo, caseStudySystem));
         }
     }
@@ -965,7 +937,7 @@ static bool CollectHistoryDataToCache(const NFmiHelpDataInfo &theDataInfo, const
 			NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
 			std::string totalFileName = usedPath;
 			totalFileName += *it;
-            CachedDataFileInfo cachedDataFileInfo;
+            NFmiCachedDataFileInfo cachedDataFileInfo;
             cachedDataFileInfo.itsTotalServerFileName = totalFileName;
             cachedDataFileInfo.fFilePacked = fileInfoList.second;
             ::MakeRestOfTheFileNames(cachedDataFileInfo, theDataInfo, theHelpDataSystem);
