@@ -4,6 +4,7 @@
 #include "SmartMetThreads_resource.h"
 #include "NFmiLedLightStatus.h"
 #include "NFmiValueString.h"
+#include "NFmiCachedDataFileInfo.h"
 
 namespace
 {
@@ -22,7 +23,7 @@ namespace
         for(size_t index = 0; index < helpDataInfoVector.size(); index++)
         {
             const auto& helpDataInfo = helpDataInfoVector[index];
-            if(helpDataInfo.IsEnabled() && CachedDataFileInfo::IsDataCached(helpDataInfo))
+            if(helpDataInfo.IsEnabled() && NFmiCachedDataFileInfo::IsDataCached(helpDataInfo))
             {
                 if(!::isOriginalDataOnLocalCaheDirectory(helpDataInfo, helpDataSystem.LocalDataBaseDirectory()))
                 {
@@ -33,17 +34,6 @@ namespace
         return queryDataOnServerCount;
     }
 
-}
-
-CachedDataFileInfo::CachedDataFileInfo() = default;
-
-bool CachedDataFileInfo::IsDataCached(const NFmiHelpDataInfo& theDataInfo)
-{
-    // kSatelData-tyyppi ei ole queryDataa, nämä ignoorataan (kuvatkin kyllä on tarkoitus joskus cachettaa).
-    if(theDataInfo.DataType() != NFmiInfoData::kSatelData) 
-        return true;
-    else
-        return false;
 }
 
 NFmiMissingDataOnServerReporter::NFmiMissingDataOnServerReporter() = default;
@@ -66,7 +56,7 @@ bool NFmiMissingDataOnServerReporter::initialize(NFmiHelpDataInfoSystem & helpDa
 // Tämä tekee tai valmistelee puuttuvien datojen raportointia kahdella tasolla:
 // 1. Puuttuvan datan lokitus, mutta vain 1. syklin aikana
 // 2. Puuttuvan datan nimen talletus, jotta tehdään sykli kohtaisia led-light status raportteja
-void NFmiMissingDataOnServerReporter::doReportIfFileFilterHasNoRelatedDataOnServer(const CachedDataFileInfo& cachedDataFileInfo, const std::string& fileFilter)
+void NFmiMissingDataOnServerReporter::doReportIfFileFilterHasNoRelatedDataOnServer(const NFmiCachedDataFileInfo& cachedDataFileInfo, const std::string& fileFilter)
 {
     if(cachedDataFileInfo.itsTotalServerFileName.empty())
     {
