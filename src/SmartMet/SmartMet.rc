@@ -642,6 +642,10 @@ BEGIN
     ID_INDICATOR_LED_CONTROL_3 "Led control 3"
     ID_INDICATOR_LED_CONTROL_4 "Led control 4"
     ID_INDICATOR_LED_CONTROL_5 "Led control 5"
+END
+
+STRINGTABLE
+BEGIN
     ID_INDICATOR_LED_CONTROL_6 "Led control 6"
 END
 
@@ -951,7 +955,6 @@ BEGIN
                             "Beta Production dialog\nBeta Production dialog"
 END
 
-
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -1065,8 +1068,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 5,13,26,0
- PRODUCTVERSION 5,13,26,0
+ FILEVERSION 5,13,27,0
+ PRODUCTVERSION 5,13,27,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -1083,12 +1086,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "FMI (Finnish Meteorological Instituet)"
             VALUE "FileDescription", "SmartMet meteorological workstation"
-            VALUE "FileVersion", "5.13.26.0"
+            VALUE "FileVersion", "5.13.27.0"
             VALUE "InternalName", "SmartMet"
-            VALUE "LegalCopyright", "(C) 1999-2022 FMI (Finnish Meteorological Instituet).  All rights reserved"
+            VALUE "LegalCopyright", "(C) 1999-2023 FMI (Finnish Meteorological Instituet).  All rights reserved"
             VALUE "OriginalFilename", "SmartMet.exe"
             VALUE "ProductName", "SmartMet"
-            VALUE "ProductVersion", "5.13.26.0"
+            VALUE "ProductVersion", "5.13.27.0"
         END
     END
     BLOCK "VarFileInfo"
