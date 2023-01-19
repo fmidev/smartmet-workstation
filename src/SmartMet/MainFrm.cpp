@@ -781,8 +781,8 @@ void CMainFrame::StartQDataCacheThreads(void)
 	// k‰ynnistet‰‰n qdata cache-loader threadi kerran, ja se pit‰‰ ensin initialisoida. T‰m‰ threadi k‰ynnistet‰‰n aina.
 	CFmiQueryDataCacheLoaderThread::InitHelpDataInfo(*itsDoc->HelpDataInfoSystem(), smartMetBinariesDirectory, itsDoc->FileCleanerSystem().CleaningTimeStepInHours(), itsDoc->WorkingDirectory(), usedDataLoaderThreadCount);
 	// K‰ynnistet‰‰n 3 eri tasoista cache-loader threadia 
-	// Laitetaan min ja max tiedostokoko rajat niin ett‰ eri threadit lukevat osittain rinnakkain tietynkokoisia datoja.
-	// Thread 1 lukee 0:sta largeen, thread 3 lukee mediumista maxiin ja thread 2 on kaikkiruokainen ja luklee 0:sta max:iin.
+	// HUOM!!! Muista laittaa min ja max tiedostokoko rajat niin ettei mik‰‰n koko j‰‰ niiden ulkopuolelle.
+	// Eli laita 1. max 2. seuraavan min:iksi jne.
 	double mediumFileSizeMB = itsDoc->HelpDataInfoSystem()->CacheMediumFileSizeMB();
 	double largeFileSizeMB = itsDoc->HelpDataInfoSystem()->CacheLargeFileSizeMB();
 	double maximumFileSizeMB = itsDoc->HelpDataInfoSystem()->CacheMaximumFileSizeMB();
@@ -808,12 +808,12 @@ void CMainFrame::StartQDataCacheThreads(void)
     // HUOM2 VC++2012 -k‰‰nt‰j‰ll‰ pit‰‰kin k‰ynnist‰‰ t‰rkeysj‰rjestyksess‰ (edellinen kommentti oli VC++2008 ajoilta).
     // HUOM3 Nyt "viuhti on Linux serveri" -kaudella ja VC++2012, pit‰‰ taas n‰emm‰ k‰ytt‰‰ k‰‰nteist‰ j‰rjestyst‰ (ja nyt 
     // j‰rjestys on tosi t‰rke‰‰, koska yleens‰ vain yksi threadeista toimii kerrallaan).
-    if((itsDisableThreadsVariable & gDisableDataCache1Thread) == 0)
-		::MakeDataLoaderThread(1, 0, largeFileSizeMB, THREAD_PRIORITY_NORMAL, itsQDataCacheLoaderDatas, thread1DelayInMS);
-    if((itsDisableThreadsVariable & gDisableDataCache2Thread) == 0)
-        ::MakeDataLoaderThread(2, 0, maximumFileSizeMB, THREAD_PRIORITY_NORMAL, itsQDataCacheLoaderDatas, thread2DelayInMS);
-    if((itsDisableThreadsVariable & gDisableDataCache3Thread) == 0)
-        ::MakeDataLoaderThread(3, mediumFileSizeMB, maximumFileSizeMB, THREAD_PRIORITY_BELOW_NORMAL, itsQDataCacheLoaderDatas, thread3DelayInMS); // laitetaan tosi isot tiedostot tulemaan pienemm‰ll‰ prioriteetill‰
+	if((itsDisableThreadsVariable & gDisableDataCache1Thread) == 0)
+		::MakeDataLoaderThread(1, 0, mediumFileSizeMB, THREAD_PRIORITY_NORMAL, itsQDataCacheLoaderDatas, thread1DelayInMS);
+	if((itsDisableThreadsVariable & gDisableDataCache2Thread) == 0)
+		::MakeDataLoaderThread(2, mediumFileSizeMB, largeFileSizeMB, THREAD_PRIORITY_NORMAL, itsQDataCacheLoaderDatas, thread2DelayInMS);
+	if((itsDisableThreadsVariable & gDisableDataCache3Thread) == 0)
+		::MakeDataLoaderThread(3, largeFileSizeMB, maximumFileSizeMB, THREAD_PRIORITY_BELOW_NORMAL, itsQDataCacheLoaderDatas, thread3DelayInMS); // laitetaan tosi isot tiedostot tulemaan pienemm‰ll‰ prioriteetill‰
 }
 
 void CMainFrame::StartHistoryDataCacheThread(void)
