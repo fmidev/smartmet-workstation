@@ -118,7 +118,6 @@ BEGIN_MESSAGE_MAP(CFmiSmartToolDlg, CDialog)
 	ON_BN_CLICKED(IDC_CHECK_MODIFY_ONLY_SELECTED_LOCATIONS, OnBnClickedCheckModifyOnlySelectedLocations)
 	ON_BN_CLICKED(IDC_BUTTON_MACRO_PARAM_SAVE_AS, OnBnClickedButtonMacroParamSaveAs)
 	ON_BN_CLICKED(IDC_BUTTON_MACRO_PARAM_REMOVE, OnBnClickedButtonMacroParamRemove)
-	ON_BN_CLICKED(IDC_BUTTON_MACRO_PARAM_PROPERTIES, OnBnClickedButtonMacroParamProperties)
 	ON_BN_CLICKED(IDC_BUTTON_ADD_TO_ROW_1, OnBnClickedButtonAddToRow1)
 	ON_BN_CLICKED(IDC_BUTTON_ADD_TO_ROW_2, OnBnClickedButtonAddToRow2)
 	ON_BN_CLICKED(IDC_BUTTON_ADD_TO_ROW_3, OnBnClickedButtonAddToRow3)
@@ -264,7 +263,6 @@ void CFmiSmartToolDlg::InitTooltipControl()
     SetDialogControlTooltip(IDC_BUTTON_MACRO_PARAM_SAVE, "Save current Macro text to selected macro-param file\n(if any is selected)");
     SetDialogControlTooltip(IDC_BUTTON_MACRO_PARAM_SAVE_AS, "Save current Macro text to wanted macro-param file\n(opens file browser)");
     SetDialogControlTooltip(IDC_BUTTON_MACRO_PARAM_REMOVE, "Removes selected macro-param\n(if any is selected)");
-    SetDialogControlTooltip(IDC_BUTTON_MACRO_PARAM_PROPERTIES, "Opens selected macro-param's drawing options dialog\n(Not recomended though, has known to cause problems)");
     SetDialogControlTooltip(IDC_BUTTON_MACRO_PARAM_REFRESH_LIST, "Updates shown macro-param list control\n(All macro-params, the whole directory tree, are reloaded from files)");
     SetDialogControlTooltip(IDC_BUTTON_MACRO_PARAM_LATEST_ERROR_TEXT, "Show the latest known error caused by any smarttool or macro-param");
     SetDialogControlTooltip(IDC_STATIC_LOADED_MACRO_PARAM_TEXT, "Last loaded or saved macro-param's path.\nThis will be cleared if any smarttools are loaded or saved in between.\n(Clearing is meant to help users with this dual-purpose dialog with mixed smarttool and macro-param handling)");
@@ -541,8 +539,6 @@ void CFmiSmartToolDlg::DoResizerHooking(void)
     bOk = m_resizer.SetAnchor(IDC_BUTTON_MACRO_PARAM_SAVE_AS, ANCHOR_BOTTOM | ANCHOR_LEFT);
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_BUTTON_MACRO_PARAM_REMOVE, ANCHOR_BOTTOM | ANCHOR_LEFT);
-    ASSERT(bOk == TRUE);
-    bOk = m_resizer.SetAnchor(IDC_BUTTON_MACRO_PARAM_PROPERTIES, ANCHOR_BOTTOM | ANCHOR_LEFT);
     ASSERT(bOk == TRUE);
     bOk = m_resizer.SetAnchor(IDC_BUTTON_MACRO_PARAM_REFRESH_LIST, ANCHOR_BOTTOM | ANCHOR_LEFT);
     ASSERT(bOk == TRUE);
@@ -1219,47 +1215,6 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamRemove()
 	}
 }
 
-// katsoo jos on joku listassa valittu macroparametri ja palauttaa sen
-// theSelectedParametrissa.
-// palauttaa true jos löytyi, muuten false.
-NFmiMacroParam* CFmiSmartToolDlg::FindSelectedMacroParam(void)
-{
-    auto macroParamName = GetSelectedMacroParamName();
-	if(!macroParamName.empty())
-	{
-		NFmiMacroParamSystem& mpSystem = itsSmartMetDocumentInterface->MacroParamSystem();
-		boost::shared_ptr<NFmiMacroParamFolder> currentFolder = mpSystem.GetCurrentFolder();
-		if(currentFolder && currentFolder->Find(macroParamName))
-			return currentFolder->Current().get();
-	}
-	return 0;
-}
-
-void CFmiSmartToolDlg::OnBnClickedButtonMacroParamProperties()
-{
-    NFmiMacroParam *selectedMacroParam = FindSelectedMacroParam();
-    if(selectedMacroParam)
-    {
-        if(selectedMacroParam->IsMacroParamDirectory())
-            ::MessageBox(this->GetSafeHwnd(), CA2T(::GetDictionaryString("A directory was selected and you can't modify it's draw properties").c_str()), CA2T(::GetDictionaryString("No selection").c_str()), MB_ICONINFORMATION | MB_OK);
-        else
-        {
-            CFmiModifyDrawParamDlg dlg(itsSmartMetDocumentInterface, selectedMacroParam->DrawParam(), itsSmartMetDocumentInterface->InfoOrganizer()->GetDrawParamPath(), true, false, itsSelectedMapViewDescTopIndex, this); // smarttool-dialogista ei voi toistaiseksi lisätä kuin pääkarttanäytölle macroParameja
-            if(dlg.DoModal() == IDOK)
-            {
-                RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param draw options changed", false, selectedMacroParam->DrawParam()->InitFileName());
-            }
-            else
-            {
-                if(dlg.RefreshPressed())
-                    RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param draw options changed back", false, selectedMacroParam->DrawParam()->InitFileName()); // jos painettu refres-nappia ja sitten cancelia, pitää päivittää ruutu
-            }
-        }
-    }
-    else
-        ::MessageBox(this->GetSafeHwnd(), CA2T(::GetDictionaryString("No macroParam was selected").c_str()), CA2T(::GetDictionaryString("No selection").c_str()), MB_ICONINFORMATION | MB_OK);
-}
-
 void CFmiSmartToolDlg::AddSelectedMacroParamToRow(int theRow)
 {
 	UpdateData(TRUE);
@@ -1472,7 +1427,6 @@ void CFmiSmartToolDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_MACRO_PARAM_SAVE, "Save MacroPar");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_MACRO_PARAM_SAVE_AS, "Save as MacroPar");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_MACRO_PARAM_REMOVE, "IDC_BUTTON_MACRO_PARAM_REMOVE");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_MACRO_PARAM_PROPERTIES, "IDC_BUTTON_MACRO_PARAM_PROPERTIES");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_MACRO_PARAM_REFRESH_LIST, "IDC_BUTTON_MACRO_PARAM_REFRESH_LIST");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_MACRO_PARAM_LATEST_ERROR_TEXT, "IDC_BUTTON_MACRO_PARAM_LATEST_ERROR_TEXT");
 

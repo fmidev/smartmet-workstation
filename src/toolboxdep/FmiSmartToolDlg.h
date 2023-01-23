@@ -80,7 +80,6 @@ protected:
 	void DisableActionButtomIfInViewMode(void);
 	void AddSelectedMacroParamToRow(int theRow);
 	void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool editedDataModified, const std::string &possibleEditedDrawParamPath, bool makeMapDirtyActions = true);
-	NFmiMacroParam* FindSelectedMacroParam(void);
 	void ClearMapViewRow(int theRowIndex);
 	void InitDialogTexts(void);
 	bool EnableDlgItem(int theDlgId, bool fEnable);
@@ -146,7 +145,6 @@ public:
 	afx_msg void OnBnClickedCheckModifyOnlySelectedLocations();
 	afx_msg void OnBnClickedButtonMacroParamSaveAs();
     afx_msg void OnBnClickedButtonMacroParamRemove();
-	afx_msg void OnBnClickedButtonMacroParamProperties();
 	afx_msg void OnBnClickedButtonAddToRow1();
 	afx_msg void OnBnClickedButtonAddToRow2();
 	afx_msg void OnBnClickedButtonAddToRow3();
