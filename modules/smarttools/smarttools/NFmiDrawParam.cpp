@@ -479,11 +479,18 @@ NFmiDrawParam::NFmiDrawParam(const NFmiDrawParam& other)
       fUseViewMacrosSettingsForMacroParam(other.fUseViewMacrosSettingsForMacroParam),
       fDoSparseSymbolVisualization(other.fDoSparseSymbolVisualization),
       fDoIsoLineColorBlend(other.fDoIsoLineColorBlend),
-      fTreatWmsLayerAsObservation(other.fTreatWmsLayerAsObservation)
+      fTreatWmsLayerAsObservation(other.fTreatWmsLayerAsObservation),
+      itsFixedTextSymbolDrawLength(other.itsFixedTextSymbolDrawLength),
+      itsSymbolDrawDensityX(other.itsSymbolDrawDensityX),
+      itsSymbolDrawDensityY(other.itsSymbolDrawDensityY)
 {
   Alpha(itsAlpha);  // varmistus että pysytään rajoissa
   itsPossibleViewTypeList[0] = NFmiMetEditorTypes::View::kFmiTextView;
   itsPossibleViewTypeList[1] = NFmiMetEditorTypes::View::kFmiIsoLineView;
+  // Have put fixed lenght and density values through checking functions
+  FixedTextSymbolDrawLength(itsFixedTextSymbolDrawLength);
+  SymbolDrawDensityX(itsSymbolDrawDensityX);
+  SymbolDrawDensityY(itsSymbolDrawDensityY);
 }
 
 //-------------------------------------------------------
