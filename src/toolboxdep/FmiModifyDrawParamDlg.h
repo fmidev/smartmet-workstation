@@ -25,7 +25,7 @@ class CFmiModifyDrawParamDlg : public CDialog
 {
 // Construction
 public:
-	CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartMetDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const std::string &theDrawParamPath, bool modifyMapViewParam, bool modifyCrossSectionViewParam, unsigned int theDescTopIndex, CWnd* pParent = NULL);
+	CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartMetDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const std::string &theDrawParamPath, bool modifyMapViewParam, bool modifyCrossSectionViewParam, unsigned int theDescTopIndex, unsigned int theRealRowNumber, CWnd* pParent = NULL);
 	~CFmiModifyDrawParamDlg(void);
 
 	bool RefreshPressed(void) const {return fRefreshPressed;}
@@ -215,6 +215,8 @@ private:
 	void InitSymbolDrawDensitySliders();
 	std::pair<double, double> GetSymbolDrawDensityValuesFromSlider();
 	void UpdateSymbolDrawDensityStr();
+	bool IsMacroParamCase();
+	bool IsMacroParamSymbolDrawCase();
 
 	std::string itsDrawParamPath;
 	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
@@ -288,6 +290,7 @@ private:
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface; // p‰ivit‰ napista p‰ivitet‰‰n ruudut t‰m‰n avulla (ja muita tarpeita)
 	unsigned int itsDescTopIndex; // jos piirto-ominaisuudet liittyv‰t jonkun karttan‰ytˆn (desctop) parametriin, pit‰‰ siit‰ olla tieto, ett‰ oikeaa karttan‰yttˆ‰ osataan p‰ivitt‰‰
+	unsigned int itsRealRowNumber; // Tietyiss‰ tilanteissa pit‰‰ tiet‰‰ mill‰ rivill‰ joku drawParam oli
     CString itsDrawParamFileNameStrU_;
     CComboBox itsStationDataViewSelector;
     BOOL fUseIsoLineGabWithCustomContours;

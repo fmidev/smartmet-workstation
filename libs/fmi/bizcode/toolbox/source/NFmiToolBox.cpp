@@ -1855,10 +1855,14 @@ static void DoChangingColorTextBulkDraw(const NFmiSymbolBulkDrawData& sbdData, C
 	{
 		if(!isMissingValue(sbdData, index))
 		{
-			pDC->SetTextColor(Color2ColorRef(sbdData.colors()[index]));
-			const auto& textPosition = mfcTextPositions[index];
-			const auto& text = sbdData.drawnTexts()[index];
-			pDC->TextOut(textPosition.x, textPosition.y, CString(CA2T(text.c_str())));
+			const auto& textColor = sbdData.colors()[index];
+			if(!textColor.IsFullyTransparent())
+			{
+				pDC->SetTextColor(Color2ColorRef(textColor));
+				const auto& textPosition = mfcTextPositions[index];
+				const auto& text = sbdData.drawnTexts()[index];
+				pDC->TextOut(textPosition.x, textPosition.y, CString(CA2T(text.c_str())));
+			}
 		}
 	}
 
@@ -1904,13 +1908,17 @@ static void DoChangingColorAndSizeTextBulkDraw(const NFmiSymbolBulkDrawData& sbd
 	{
 		if(!isMissingValue(sbdData, index))
 		{
-			pDC->SetTextColor(Color2ColorRef(sbdData.colors()[index]));
-			auto textPosition = mfcTextPositions[index];
-			const auto& text = sbdData.drawnTexts()[index];
-			const auto& fontSize = sbdData.symbolSizes()[index];
-			fontHandler.setUsedFont(fontSize);
-			::FixChangingFontSizePosition(textPosition, fontSize);
-			pDC->TextOut(textPosition.x, textPosition.y, CString(CA2T(text.c_str())));
+			const auto& textColor = sbdData.colors()[index];
+			if(!textColor.IsFullyTransparent())
+			{
+				pDC->SetTextColor(Color2ColorRef(textColor));
+				auto textPosition = mfcTextPositions[index];
+				const auto& text = sbdData.drawnTexts()[index];
+				const auto& fontSize = sbdData.symbolSizes()[index];
+				fontHandler.setUsedFont(fontSize);
+				::FixChangingFontSizePosition(textPosition, fontSize);
+				pDC->TextOut(textPosition.x, textPosition.y, CString(CA2T(text.c_str())));
+			}
 		}
 	}
 

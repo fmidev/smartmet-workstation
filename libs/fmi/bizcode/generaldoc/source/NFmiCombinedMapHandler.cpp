@@ -2392,7 +2392,7 @@ NFmiDrawParamList* NFmiCombinedMapHandler::getDrawParamList(unsigned int mapView
 	if(mapViewDescTopIndex == CtrlViewUtils::kFmiTimeSerialView || rowIndex >= CtrlViewUtils::kFmiTimeSerialView) // haetaan aikasarjaikkunan drawparamlistia CtrlViewUtils::kFmiTimeSerialView on suuri luku (99)
 		return &getTimeSerialViewDrawParamList();
 	else
-		return getDrawParamListWithRealRowNumber(mapViewDescTopIndex, rowIndex + getMapViewDescTop(mapViewDescTopIndex)->MapRowStartingIndex() - 1); // ei haittaa, vaikka lisätään rowindeksiin joka kuvaa aikasarjaa jotain. CtrlViewUtils::kFmiTimeSerialView:iin
+		return getDrawParamListWithRealRowNumber(mapViewDescTopIndex, getRealRowNumber(mapViewDescTopIndex, rowIndex));
 }
 
 // Tämä on otettu käyttöön ,että voisi unohtaa tuon kamalan indeksi jupinan, mikä johtuu
@@ -3212,11 +3212,13 @@ void NFmiCombinedMapHandler::modifyCrossSectionDrawParam(const NFmiMenuItem& men
 	boost::shared_ptr<NFmiDrawParam> modifiedDrawParam = getCrosssectionDrawParamFromViewLists(menuItem, viewRowIndex);
 	if(modifiedDrawParam)
 	{
-		CWnd* parentView = ApplicationInterface::GetApplicationInterfaceImplementation()->GetView(menuItem.MapViewDescTopIndex());
-		CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), modifiedDrawParam, ::getMacroPathSettings().DrawParamPath(), false, true, menuItem.MapViewDescTopIndex(), parentView);
+		auto mapViewDescTopIndex = menuItem.MapViewDescTopIndex();
+		CWnd* parentView = ApplicationInterface::GetApplicationInterfaceImplementation()->GetView(mapViewDescTopIndex);
+		auto realRowNumber = getRealRowNumber(mapViewDescTopIndex, viewRowIndex);
+		CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), modifiedDrawParam, ::getMacroPathSettings().DrawParamPath(), false, true, mapViewDescTopIndex, realRowNumber, parentView);
 		if(dlg.DoModal() == IDOK)
 		{
-			drawParamSettingsChangedDirtyActions(menuItem.MapViewDescTopIndex(), getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), modifiedDrawParam);
+			drawParamSettingsChangedDirtyActions(mapViewDescTopIndex, realRowNumber, modifiedDrawParam);
 		}
 	}
 }
@@ -3539,12 +3541,13 @@ void NFmiCombinedMapHandler::showCrossSectionDrawParam(const NFmiMenuItem& menuI
 
 bool NFmiCombinedMapHandler::modifyDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
-	auto mapViewDescTopIndex = menuItem.MapViewDescTopIndex();
 	boost::shared_ptr<NFmiDrawParam> modifiedDrawParam = getDrawParamFromViewLists(menuItem, viewRowIndex);
 	if(modifiedDrawParam)
 	{
+		auto mapViewDescTopIndex = menuItem.MapViewDescTopIndex();
 		CWnd* parentView = ApplicationInterface::GetApplicationInterfaceImplementation()->GetView(mapViewDescTopIndex);
-		CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), modifiedDrawParam, ::getMacroPathSettings().DrawParamPath(), true, false, mapViewDescTopIndex, parentView);
+		auto realRowNumber = getRealRowNumber(mapViewDescTopIndex, viewRowIndex);
+		CFmiModifyDrawParamDlg dlg(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), modifiedDrawParam, ::getMacroPathSettings().DrawParamPath(), true, false, mapViewDescTopIndex, realRowNumber, parentView);
 		if(dlg.DoModal() == IDOK)
 		{
 			updateToModifiedDrawParam(mapViewDescTopIndex, modifiedDrawParam, viewRowIndex);
@@ -3553,7 +3556,7 @@ bool NFmiCombinedMapHandler::modifyDrawParam(const NFmiMenuItem& menuItem, int v
 		else
 		{
 			bool updateStatus = dlg.RefreshPressed(); // myös false:lla halutaan ruudun päivitys, koska jos painettu päivitä-nappia ja sitten cancelia, pitää ruutu päivittää
-			drawParamSettingsChangedDirtyActions(mapViewDescTopIndex, getRealRowNumber(mapViewDescTopIndex, viewRowIndex), modifiedDrawParam);
+			drawParamSettingsChangedDirtyActions(mapViewDescTopIndex, realRowNumber, modifiedDrawParam);
 			return updateStatus;
 
 			// Huom! Jos on muutettu border-layer piirtoa niin että se muuttuisi kyseisellä näyttörivillä, niin älä kuitenkaan
@@ -4475,4 +4478,9 @@ const MapAreaMapLayerRelatedInfo& NFmiCombinedMapHandler::getCurrentMapLayerRela
 	// Virhetilanteissa tai jos wms:ää ei ole ollenkaan edes initialisoitu, palautetaan tyhjää
 	const static MapAreaMapLayerRelatedInfo emptyDummy;
 	return emptyDummy;
+}
+
+void NFmiCombinedMapHandler::clearMacroParamCache(unsigned long mapViewDescTopIndex, unsigned long realRowIndex, boost::shared_ptr<NFmiDrawParam>& drawParam)
+{
+	::getMacroParamDataCache().clearMacroParamCache(mapViewDescTopIndex, realRowIndex, drawParam->InitFileName());
 }

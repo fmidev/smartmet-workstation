@@ -35,7 +35,7 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CFmiModifyDrawParamDlg dialog
 
-CFmiModifyDrawParamDlg::CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartMetDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const std::string &theDrawParamPath, bool modifyMapViewParam, bool modifyCrossSectionViewParam, unsigned int theDescTopIndex, CWnd* pParent)
+CFmiModifyDrawParamDlg::CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartMetDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const std::string &theDrawParamPath, bool modifyMapViewParam, bool modifyCrossSectionViewParam, unsigned int theDescTopIndex, unsigned int theRealRowNumber, CWnd* pParent)
 :CDialog(CFmiModifyDrawParamDlg::IDD, pParent)
 ,itsDrawParam(new NFmiDrawParam())
 ,itsBackupDrawParam(new NFmiDrawParam())
@@ -64,6 +64,7 @@ CFmiModifyDrawParamDlg::CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartM
 ,itsHatch2Bitmap(nullptr)
 ,itsSmartMetDocumentInterface(smartMetDocumentInterface)
 ,itsDescTopIndex(theDescTopIndex)
+,itsRealRowNumber(theRealRowNumber)
 , itsDrawParamFileNameStrU_(_T(""))
 , fUseIsoLineGabWithCustomContours(FALSE)
 , itsContourGap(0)
@@ -348,7 +349,7 @@ BOOL CFmiModifyDrawParamDlg::OnInitDialog()
 	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 	InitDialogFromDrawParam();
 
-    if(NFmiDrawParam::IsMacroParamCase(itsDrawParam->DataType())) // jos macroParam kyseessä, ei lyhennettä voi antaa editoida, koska se on tunniste Metkun editorille
+    if(IsMacroParamCase()) // jos macroParam kyseessä, ei lyhennettä voi antaa editoida, koska se on tunniste Metkun editorille
 	{
 		CWnd *win = GetDlgItem(IDC_PARAM_ABBREVIATION);
 		if(win)
@@ -362,6 +363,11 @@ BOOL CFmiModifyDrawParamDlg::OnInitDialog()
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+bool CFmiModifyDrawParamDlg::IsMacroParamCase()
+{
+	return NFmiDrawParam::IsMacroParamCase(itsDrawParam->DataType());
 }
 
 void CFmiModifyDrawParamDlg::AdjustStartingPosition()
@@ -902,7 +908,7 @@ void CFmiModifyDrawParamDlg::IsHidden(void)
 void CFmiModifyDrawParamDlg::ParamAbbreviation(void)
 {
     itsParamAbbreviationStrU_ = CA2T(itsDrawParam->ParameterAbbreviation().c_str());
-    if(!NFmiDrawParam::IsMacroParamCase(itsDrawParam->DataType()) && itsParamAbbreviationStrU_.GetLength() > 15) // jos ei macroParam tyyppiä (niiden nimiä ei voi editoida), leikataan nimen lyhennetta niin että se on maksimissaan 15 merkkiä
+    if(!IsMacroParamCase() && itsParamAbbreviationStrU_.GetLength() > 15) // jos ei macroParam tyyppiä (niiden nimiä ei voi editoida), leikataan nimen lyhennetta niin että se on maksimissaan 15 merkkiä
 		itsParamAbbreviationStrU_ = itsParamAbbreviationStrU_.Left(15);
 	return;
 }
@@ -1008,12 +1014,29 @@ void CFmiModifyDrawParamDlg::DoOnCancel()
     ForceStationViewUpdate();
 }
 
+bool CFmiModifyDrawParamDlg::IsMacroParamSymbolDrawCase()
+{
+	if(IsMacroParamCase())
+	{
+		// Jos macroParam tapaus, silloin myös hiladatasta kyse
+		auto viewType = itsDrawParam->GetViewType(false);
+		if(!NFmiDrawParam::IsColorContourType(viewType) && !NFmiDrawParam::IsIsolineType(viewType))
+			return true;
+	}
+	return false;
+}
+
 void CFmiModifyDrawParamDlg::ForceStationViewUpdate()
 {
     if(itsDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
     {
         // Liataan myös maphandler, jotta käytössä karttanäytössä ollut stationView vaihtuu tarvittaessa jos esim. isoline piirto vaihtuu teksti esitykseen.
         itsSmartMetDocumentInterface->MapViewDescTop(itsDescTopIndex)->MapHandler()->SetUpdateMapViewDrawingLayers(true);
+		if(IsMacroParamSymbolDrawCase())
+		{
+			// Pitää tyhjentää macroParam tapauksissa ja niiden symbolipiirto tapauksissa tarkastetulta riviltä macroParamCache
+			itsSmartMetDocumentInterface->GetCombinedMapHandlerInterface().clearMacroParamCache(itsDescTopIndex, itsRealRowNumber, itsDrawParam);
+		}
     }
 }
 
