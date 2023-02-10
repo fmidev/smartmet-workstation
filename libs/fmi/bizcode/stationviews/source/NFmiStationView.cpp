@@ -62,7 +62,6 @@
 #include "ToolBoxStateRestorer.h"
 #include "NFmiMacroParamDataCache.h"
 #include "Utf8ConversionFunctions.h"
-#include "NFmiExtraMacroParamData.h"
 #include "NFmiMacroParamfunctions.h"
 #include "NFmiIsoLineData.h"
 #include "ToolMasterDrawingFunctions.h"
@@ -268,7 +267,7 @@ bool NFmiStationView::PrepareForStationDraw(void)
 		return false;
     SetupPossibleWindMetaParamData();
 	bool dummyBoolNotUsed = false;
-	if(NFmiDrawParam::IsMacroParamCase(itsInfo->DataType()))
+	if(IsMacroParamCase())
 	{
 		if(itsDrawParam->IsParamHidden() == false)
 		{
@@ -333,6 +332,9 @@ void NFmiStationView::Draw(NFmiToolBox* theGTB)
 	fUseMacroParamSpecialCalculations = false;
 	fGetSynopDataFromQ2 = false; // aluksi laitetaan falseksi, haku tehd‰‰n kerran PrepareForStationDraw-metodissa jossa onnistumisen kanssa lippu laitetaan p‰‰lle
 	itsOptimizedGridPtr.reset();
+	itsProbingExtraMacroParamData.Clear();
+	itsMacroParamPhase = MacroParamPhase::NoPhase;
+
 	if(!theGTB)
 		return;
 
@@ -486,6 +488,13 @@ int NFmiStationView::GetApproxmationOfDataTextLength(std::vector<float> *sampleV
 			{
 				if(!firstApproximation.second)
 				{
+					if(IsMacroParamCase())
+					{
+						// MacroParam tapaukset ovat erikoistapaus, jos niille ei lˆydy hyvi‰ arvioita, 
+						// ei dataa aleta enemp‰‰ laskemaan ja k‰yd‰ sit‰ l‰pi. Palautetaa vain ns. oletusarvo.
+						// T‰ll‰ estet‰‰n tietyt ikiloopit, kun lasketusta probe-datasta ei lˆydy yht‰‰n non-missing arvoa.
+						return firstApproximation.first;
+					}
 					// Jos alkuarvauksesta ei lˆytynyt non-missing arvoja, pit‰‰ k‰yd‰ koko data l‰pi
 					bool dummyBoolNotUsed = false;
 					NFmiDataMatrix<float> valueMatrix;
@@ -530,6 +539,11 @@ std::pair<int, bool> NFmiStationView::CalcApproxmationOfDataTextLength(const std
 
 std::vector<float> NFmiStationView::GetSampleDataForDataTextLengthApproxmation()
 {
+	if(IsMacroParamCase())
+	{
+		return GetSampleDataFrmoMacroParamForDataTextLengthApproxmation();
+	}
+
     unsigned long oldLocationIndex = itsInfo->LocationIndex();
     std::vector<unsigned long> locationIndexies(FillLocationIndexies(itsInfo));
     std::vector<float> values;
@@ -541,6 +555,55 @@ std::vector<float> NFmiStationView::GetSampleDataForDataTextLengthApproxmation()
 
     itsInfo->LocationIndex(oldLocationIndex);
     return values;
+}
+
+static bool GetNonMissingSampleVectorFromMacroParamCache(const NFmiMacroParamLayerCacheDataType& cacheData, std::vector<float> &sampleVectorOut)
+{
+	const auto& matrix = cacheData.getDataMatrix();
+	size_t maxIndex = matrix.NX() * matrix.NY();
+	size_t step = 1;
+	for(size_t index = 0; index < maxIndex; index += step)
+	{
+		size_t xIndex = index % matrix.NX();
+		size_t yIndex = index / matrix.NX();
+		auto value = matrix[xIndex][yIndex];
+		if(value != kFloatMissing)
+		{
+			sampleVectorOut.push_back(value);
+			if(sampleVectorOut.size() % 10)
+			{
+				// Joka 10:n arvon j‰lkeen harvennetaan hakusteppi‰,
+				// n‰in pienest‰ matriisista saa tarvittavan tiedon,
+				// mutta jos matriisi on iso, haluataan arvoja sielt‰ 
+				// t‰‰lt‰ (kattavampi otos kartan eri osista), mutta 
+				// ei kaikkia miljoonaa arvoa.
+				step *= 2;
+			}
+		}
+	}
+	return !sampleVectorOut.empty();
+}
+
+std::vector<float> NFmiStationView::GetSampleDataFrmoMacroParamForDataTextLengthApproxmation()
+{
+	std::vector<float> sampleFromCache;
+	NFmiMacroParamDataCacheLayer macroParamTotalCache;
+	auto realRowIndex = CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
+	if(itsCtrlViewDocumentInterface->MacroParamDataCache().getTotalCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, itsDrawParam->InitFileName(), macroParamTotalCache))
+	{
+		for(const auto& singleTimeCache : macroParamTotalCache.layerCache())
+		{
+			if(::GetNonMissingSampleVectorFromMacroParamCache(singleTimeCache.second, sampleFromCache))
+				return sampleFromCache;
+		}
+	}
+
+	if(!itsMacroParamProbingValues.empty())
+	{
+		return itsMacroParamProbingValues;
+	}
+
+	return sampleFromCache;
 }
 
 // n‰ill‰ kertoimilla viel‰ tehd‰‰n viimeistely
@@ -564,29 +627,39 @@ void NFmiStationView::DoSymboldrawDensityAdjustments(double &xSizeFactorInOut, d
 	ySizeFactorInOut = ::AdjustSymbolSizeFactorWithDensity(ySizeFactorInOut, itsDrawParam->SymbolDrawDensityY());
 }
 
+static boost::shared_ptr<NFmiFastQueryInfo> GetUsedSpaceOutCalculationInfo(boost::shared_ptr<NFmiFastQueryInfo>& normalInfo, NFmiExtraMacroParamData& probingExtraMacroParamData)
+{
+	if(probingExtraMacroParamData.IsFixedSpacedOutDataCase() && probingExtraMacroParamData.FixedBaseDataInfo())
+	{
+		return probingExtraMacroParamData.FixedBaseDataInfo();
+	}
+	return normalInfo;
+}
+
 // OLETUS!! itsInfo on grid-dataa.
 NFmiPoint NFmiStationView::CalcUsedSpaceOutFactors(int theSpaceOutFactor)
 {
-	if(fUseAlReadySpacedOutData || theSpaceOutFactor == 0)
+	if(theSpaceOutFactor == 0)
 	{
 		// 0. Return no space-out factor value
 		return NFmiPoint(1, 1);
 	}
 	else
     {
-        unsigned long centerX = itsInfo->GridXNumber() / 2;
-        unsigned long centerY = itsInfo->GridYNumber() / 2;
-        unsigned long centerLocationIndex = centerY * itsInfo->GridXNumber() + centerX;
-        itsInfo->LocationIndex(centerLocationIndex); // nyt tutkitaan hilan keskipistett‰ (ennen tutkittiin alukulmaa, mutta globaali datassa ala- ja yl‰reuna pisteet ovat napapisteit‰, eik‰ laskut toimi t‰llˆin) 
+		auto usedInfo = ::GetUsedSpaceOutCalculationInfo(itsInfo, itsProbingExtraMacroParamData);
+        unsigned long centerX = usedInfo->GridXNumber() / 2;
+        unsigned long centerY = usedInfo->GridYNumber() / 2;
+        unsigned long centerLocationIndex = centerY * usedInfo->GridXNumber() + centerX;
+		usedInfo->LocationIndex(centerLocationIndex); // nyt tutkitaan hilan keskipistett‰ (ennen tutkittiin alukulmaa, mutta globaali datassa ala- ja yl‰reuna pisteet ovat napapisteit‰, eik‰ laskut toimi t‰llˆin) 
         // 1. get font size
         NFmiPoint fontSize(itsDrawingEnvironment->GetFontSize());
         double fontXSize = itsToolBox->SX(static_cast<long>(fontSize.X()));
         double fontYSize = itsToolBox->SY(static_cast<long>(fontSize.Y()));
         // 2. get one value string for estimate string length
         int textLength = GetApproxmationOfDataTextLength();
-        NFmiPoint latlon1(CurrentLatLon());
-        NFmiPoint latlon2(itsInfo->PeekLocationLatLon(1, 0));
-        NFmiPoint latlon3(itsInfo->PeekLocationLatLon(0, 1));
+        NFmiPoint latlon1(usedInfo->LatLon());
+        NFmiPoint latlon2(usedInfo->PeekLocationLatLon(1, 0));
+        NFmiPoint latlon3(usedInfo->PeekLocationLatLon(0, 1));
         NFmiPoint p1(LatLonToViewPoint(latlon1));
         NFmiPoint p2(LatLonToViewPoint(latlon2));
         NFmiPoint p3(LatLonToViewPoint(latlon3));
@@ -628,15 +701,14 @@ static std::vector<float> matrixToVector(const NFmiDataMatrix<float> &matrix)
 // Data samplella on merkityst‰ vain jos piirto tapahtuu numero tekstin‰. 1-merkkisten symbolien piirrossa ratkaisee vain 
 // symboli koko ja k‰ytˆss‰ oleva piirtotila.
 // theSpaceOutFactor kertoo symboli piirrossa k‰ytetyn harvennustilan, t‰nne ei pit‰isi tulla jos sen arvo on 0, 1 = tihe‰mpi symboliv‰li ja 2 harvempi.
-NFmiPoint NFmiStationView::CalcSymbolDrawedMacroParamSpaceOutGridSize(int theSpaceOutFactor, const NFmiDataMatrix<float> &probingValues)
+NFmiPoint NFmiStationView::CalcSymbolDrawedMacroParamSpaceOutGridSize(int theSpaceOutFactor)
 {
     // 1. get relative font size
     NFmiPoint fontSize(itsDrawingEnvironment->GetFontSize());
     double fontXSize = itsToolBox->SX(static_cast<long>(fontSize.X()));
     double fontYSize = itsToolBox->SY(static_cast<long>(fontSize.Y()));
     // 2. Calc estimate for string lengths for sample values
-    auto values = ::matrixToVector(probingValues);
-    int textLength = GetApproxmationOfDataTextLength(&values);
+    int textLength = GetApproxmationOfDataTextLength(&itsMacroParamProbingValues);
     // 3. Get space out font factor
     NFmiPoint fontFactor(GetSpaceOutFontFactor());
     // 4. Yhden symbolin koko suhteellisella kartta-alueella
@@ -686,15 +758,17 @@ bool NFmiStationView::IsStationDataMacroParam(void)
     return false;
 }
 
-// Jos kysess‰ on macroParam, joka on laskettu vain havainto pisteisiin (hilan l‰himpiin pisteisiin), sit‰ ei saa harventaa.
-// Sama p‰tee, jos ollaan k‰ytetty calculationpoint:eja.
 bool NFmiStationView::IsSpaceOutDrawingUsed()
 {
+	// Jos kyse macroParam tapauksesta, ei tehd‰ mit‰‰n harvennuksia,
+	// koska macroParam data on tarkoitus laskea aina lopulliseen hilaan.
+	if(IsMacroParamCase())
+		return false;
+
 	auto spaceOutFactors = CalcUsedSpaceOutFactors();
 	if(spaceOutFactors.X() > 1 || spaceOutFactors.Y() > 1)
 	{
-		bool stationMacroParamData = IsStationDataMacroParam();
-		if(itsInfo->Grid() && !stationMacroParamData) // asema dataa ei yritet‰ harventaa
+		if(itsInfo->Grid()) // asema dataa ei yritet‰ harventaa
 		{
 			return true;
 		}
@@ -705,9 +779,24 @@ bool NFmiStationView::IsSpaceOutDrawingUsed()
 
 NFmiPoint NFmiStationView::CalcUsedSpaceOutFactors()
 {
+	auto spacingOutFactor = itsCtrlViewDocumentInterface->Registry_SpacingOutFactor(itsMapViewDescTopIndex);
+	if(IsMacroParamCase())
+	{
+		// MacroParam laskut ovat nyt niin kompleksisia, ett‰ vain tietyiss‰ tilanteissa
+		// lasketaan kertoimet, muuten palautetaan vain (1,1). Cache arvoja ei lasketa tai k‰ytet‰.
+	    // Myˆs calculationpoint tyyppisi‰ datoja ei harvenneta
+		if(itsMacroParamPhase != MacroParamPhase::Calculation || IsStationDataMacroParam())
+		{
+			return NFmiPoint(1, 1);
+		}
+		else
+		{
+			return CalcUsedSpaceOutFactors(spacingOutFactor);
+		}
+	}
+
 	if(itsCachedSpaceOutFactors == NFmiPoint::gMissingLatlon)
 	{
-		int spacingOutFactor = itsCtrlViewDocumentInterface->Registry_SpacingOutFactor(itsMapViewDescTopIndex);
 		itsCachedSpaceOutFactors = CalcUsedSpaceOutFactors(spacingOutFactor);
 	}
 	return itsCachedSpaceOutFactors;
@@ -1429,13 +1518,18 @@ static bool AreMatricesEqual(const NFmiDataMatrix<float> & m1, const NFmiDataMat
 	return false;
 }
 
-static boost::shared_ptr<NFmiFastQueryInfo> CalcPossibleResolutionInfoFromMacroParam(TimeSerialModificationDataInterface& theAdapter, boost::shared_ptr<NFmiDrawParam>& theDrawParam)
+// Resoluutio datalla tarkoitetaan t‰ss‰ joko FixedBaseData:a tai Resolution dataa.
+// FixedBaseDatalla on korkeampi prioriteetti.
+static boost::shared_ptr<NFmiFastQueryInfo> CalcPossibleResolutionInfoFromMacroParam(TimeSerialModificationDataInterface& theAdapter, boost::shared_ptr<NFmiDrawParam>& theDrawParam, int theMapViewDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo>& possibleSpacedOutMacroInfo, const NFmiPoint& spaceOutSkipFactors)
 {
 	float value = kFloatMissing;
 	NFmiSmartToolModifier smartToolModifier(theAdapter.InfoOrganizer());
 	try // ensin tulkitaan macro
 	{
-		FmiModifyEditdData::InitializeSmartToolModifier(smartToolModifier, theAdapter, theDrawParam);
+		FmiModifyEditdData::InitializeSmartToolModifierForMacroParam(smartToolModifier, theAdapter, theDrawParam, theMapViewDescTopIndex, possibleSpacedOutMacroInfo, false, spaceOutSkipFactors);
+		auto possibleFixedBaseMacroParamData = smartToolModifier.PossibleFixedBaseMacroParamData();
+		if(possibleFixedBaseMacroParamData)
+			return possibleFixedBaseMacroParamData;
 		if(smartToolModifier.ExtraMacroParamData().UseSpecialResolution())
 			return smartToolModifier.UsedMacroParamData();
 	}
@@ -1482,7 +1576,8 @@ bool NFmiStationView::IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut
 {
 	if(itsDrawParam)
 	{
-		possibleMacroParamResolutionInfoOut = CalcPossibleResolutionInfoFromMacroParam(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam);
+		boost::shared_ptr<NFmiFastQueryInfo> possibleSpaceOutInfoIsEmpty;
+		possibleMacroParamResolutionInfoOut = CalcPossibleResolutionInfoFromMacroParam(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, itsMapViewDescTopIndex, possibleSpaceOutInfoIsEmpty, CalcUsedSpaceOutFactors());
 		if(possibleMacroParamResolutionInfoOut)
 		{
 			NFmiIsoLineData isoLineData;
@@ -1583,27 +1678,39 @@ static boost::shared_ptr<NFmiFastQueryInfo> CreateProbingMacroParamData(boost::s
         NFmiPoint newBottomLeftXy(bottomLeftXyPoint.X() + xShift, bottomLeftXyPoint.Y() - yShift);
         NFmiPoint newTopRightXy(topRightXyPoint.X() - xShift, topRightXyPoint.Y() + yShift);
         boost::shared_ptr<NFmiArea> newArea(mapArea->CreateNewArea(NFmiRect(newBottomLeftXy, newTopRightXy)));
-        return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(4, 4, NFmiInfoData::kMacroParam, newArea);
+        return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(4, 4, NFmiInfoData::kMacroParam, newArea.get());
     }
 
     return boost::shared_ptr<NFmiFastQueryInfo>();
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreateNewResizedMacroParamData(const NFmiPoint &newGridSize)
+boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreateNewResizedMacroParamData(const NFmiPoint &newGridSize, const NFmiArea* usedArea)
 {
 	fUseAlReadySpacedOutData = true;
 	int gridSizeX = boost::math::iround(newGridSize.X());
 	int gridSizeY = boost::math::iround(newGridSize.Y());
-	return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(gridSizeX, gridSizeY, NFmiInfoData::kMacroParam, itsArea);
+	return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(gridSizeX, gridSizeY, NFmiInfoData::kMacroParam, usedArea);
+}
+
+static bool IsSymbolDrawing(boost::shared_ptr<NFmiDrawParam>& theDrawParam)
+{
+	if(theDrawParam)
+	{
+		auto gridDataDrawStyle = theDrawParam->GridDataPresentationStyle();
+		// Tyylit 2-5 ovat isoline, contour, isoline+contour, quickcontour
+		if(gridDataDrawStyle >= NFmiMetEditorTypes::View::kFmiIsoLineView && gridDataDrawStyle <= NFmiMetEditorTypes::View::kFmiQuickColorContourView)
+			return false;
+		else
+			return true;
+	}
+	return false;
 }
 
 bool NFmiStationView::IsGridDataDrawnWithSpaceOutSymbols()
 {
 	if(itsDrawParam)
 	{
-		auto gridDataDrawStyle = itsDrawParam->GridDataPresentationStyle();
-		// Tyylit 2-5 ovat isoline, contour, isoline+contour, quickcontour
-		if(gridDataDrawStyle >= NFmiMetEditorTypes::View::kFmiIsoLineView && gridDataDrawStyle <= NFmiMetEditorTypes::View::kFmiQuickColorContourView)
+		if(!::IsSymbolDrawing(itsDrawParam))
 			return false;
 		else
 		{
@@ -1632,26 +1739,51 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreatePossibleSpaceOutMacr
 	UpdateOptimizedVisualizationMacroParamData();
     if(IsGridDataDrawnWithSpaceOutSymbols())
     {
-        auto probingData = ::CreateProbingMacroParamData(itsArea);
-        if(probingData)
+		if(DoMacroParamProbing())
         {
-            NFmiDataMatrix<float> probingMatrix(probingData->GridXNumber(), probingData->GridYNumber(), kFloatMissing);
-            FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, probingMatrix, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, probingData, fUseCalculationPoints, probingData);
-            auto gridsize = CalcSymbolDrawedMacroParamSpaceOutGridSize(itsCtrlViewDocumentInterface->Registry_SpacingOutFactor(itsMapViewDescTopIndex), probingMatrix);
-			return CreateNewResizedMacroParamData(gridsize);
+            auto gridsize = CalcSymbolDrawedMacroParamSpaceOutGridSize(itsCtrlViewDocumentInterface->Registry_SpacingOutFactor(itsMapViewDescTopIndex));
+			return CreateNewResizedMacroParamData(gridsize, itsArea.get());
         }
     }
+	else if(::IsSymbolDrawing(itsDrawParam))
+	{
+		// Symbolipiirtoja varten pit‰‰ kuitenkin laskea joku testisetti dataa, jotta
+		// voidaan arvioida symbolin teksti pituuksia.
+		// Jos n‰in ei tehd‰, j‰‰ seuraavanlainen data iki-looppiin:
+		// macroParam, jossa symbolipiirto ja jossa sparse-data-visualization p‰‰ll‰ (sit‰ ei harvenneta)
+		DoMacroParamProbing();
+		return nullptr;
+	}
+
 
 	NFmiPoint possibleNewGridSize;
 	boost::shared_ptr<NFmiFastQueryInfo> possibleMacroParamResolutionInfo;
 	if(IsMacroParamIsolineDataDownSized(possibleNewGridSize, possibleMacroParamResolutionInfo))
-		return CreateNewResizedMacroParamData(possibleNewGridSize);
+		return CreateNewResizedMacroParamData(possibleNewGridSize, possibleMacroParamResolutionInfo->Area());
 
 	if(IsMacroParamContourDataDownSized(possibleMacroParamResolutionInfo, possibleNewGridSize))
-		return CreateNewResizedMacroParamData(possibleNewGridSize);
+		return CreateNewResizedMacroParamData(possibleNewGridSize, possibleMacroParamResolutionInfo->Area());
 
     return boost::shared_ptr<NFmiFastQueryInfo>();
 }
+
+// Tekee m‰‰r‰tyn kokoisen macroParam matriisin laskut ja asettaa
+// arvot haluttuihin dataosiin.
+// Palauttaa true, jos probe action tehtiin onnistuneesti, muuten false.
+bool NFmiStationView::DoMacroParamProbing()
+{
+	auto probingData = ::CreateProbingMacroParamData(itsArea);
+	if(probingData)
+	{
+		itsMacroParamPhase = MacroParamPhase::Probing;
+		NFmiDataMatrix<float> probingMatrix(probingData->GridXNumber(), probingData->GridYNumber(), kFloatMissing);
+		FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsMapViewDescTopIndex, itsDrawParam, probingMatrix, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, probingData, fUseCalculationPoints, true, CalcUsedSpaceOutFactors(), probingData, &itsProbingExtraMacroParamData);
+		itsMacroParamProbingValues = ::matrixToVector(probingMatrix);
+		return true;
+	}
+	return false;
+}
+
 
 static void TraceLogForMacroParamCalculationSize(boost::shared_ptr<NFmiFastQueryInfo> &macroParamInfo, NFmiCtrlView *view)
 {
@@ -1684,7 +1816,8 @@ void NFmiStationView::CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFm
     {
         CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, std::string(__FUNCTION__) + ": macroParam calculations");
         auto possibleSpaceOutData = CreatePossibleSpaceOutMacroParamData();
-        FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, theValues, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, itsInfo, fUseCalculationPoints, possibleSpaceOutData);
+		itsMacroParamPhase = MacroParamPhase::Calculation;
+		FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsMapViewDescTopIndex, itsDrawParam, theValues, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, itsInfo, fUseCalculationPoints, false, CalcUsedSpaceOutFactors(), possibleSpaceOutData);
         if(fUseCalculationPoints)
             CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam was calculated only in set CalculationPoint's"), this);
 		else
@@ -1693,9 +1826,10 @@ void NFmiStationView::CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFm
             *theUsedGridOut = *itsInfo->Grid();
 
         CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string("MacroParam data was put into cache for future fast retrievals"), this);
-        macroParamLayerCacheDataType.setCacheValues(theValues, fUseCalculationPoints, fUseAlReadySpacedOutData);
+        macroParamLayerCacheDataType.setCacheValues(theValues, fUseCalculationPoints, fUseAlReadySpacedOutData, itsInfo->Area());
         itsCtrlViewDocumentInterface->MacroParamDataCache().setCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, itsTime, itsDrawParam->InitFileName(), macroParamLayerCacheDataType);
     }
+	itsMacroParamPhase = MacroParamPhase::Drawing;
 }
 
 const float g_MacroParamValueWasNotInCache = -987654321.123456789f;
@@ -1742,7 +1876,7 @@ float NFmiStationView::CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extra
     NFmiPoint latlon = itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
     NFmiMetTime usedTime = itsCtrlViewDocumentInterface->ToolTipTime();
     NFmiDataMatrix<float> fakeMatrixValues;
-    return FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, fakeMatrixValues, true, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), usedTime, latlon, itsInfo, fUseCalculationPoints, nullptr, &extraMacroParamData);
+    return FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsMapViewDescTopIndex, itsDrawParam, fakeMatrixValues, true, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), usedTime, latlon, itsInfo, fUseCalculationPoints, true, CalcUsedSpaceOutFactors(), nullptr, &extraMacroParamData);
 }
 
 static void MakeDrawedInfoVector(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
@@ -2644,7 +2778,7 @@ void NFmiStationView::SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &t
 		fDoMovingStationDataLocations = true;
 	else
 		fDoMovingStationDataLocations = false;
-	if(!NFmiDrawParam::IsMacroParamCase(itsDrawParam->DataType()))
+	if(!IsMacroParamCase())
 		if(!itsInfo->Param(static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent())))
 			return ;
 
@@ -4161,4 +4295,9 @@ void NFmiStationView::UpdateOptimizedGridValues(const NFmiRect& dataAreaXyRect, 
 	NFmiPoint topRightLatlon = itsArea->ToLatLon(dataAreaXyRect.TopRight());
 	std::unique_ptr<NFmiArea> dataGridArea(itsArea->CreateNewArea(bottomLeftLatlon, topRightLatlon));
 	itsOptimizedGridPtr.reset(new NFmiGrid(dataGridArea.get(), gridSizeX, gridSizeY));
+}
+
+bool NFmiStationView::IsMacroParamCase()
+{
+	return NFmiDrawParam::IsMacroParamCase(itsInfo->DataType());
 }

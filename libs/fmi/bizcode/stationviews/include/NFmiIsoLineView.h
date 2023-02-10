@@ -215,7 +215,7 @@ class NFmiIsoLineView : public NFmiStationView
     CRect GetTrueClientRect();
 	void DoPossibleIsolineSafetyFeatureDownSizing(NFmiIsoLineData* theIsoLineDataInOut, const NFmiRect& zoomedAreaRect);
 private:
-	bool IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theCurrentZoomedMapArea, NFmiRect &theWantedNewZoomedAreaRect, int &theLeftIndex, int &theRightIndex, int &theTopIndex, int &theBottomIndex);
+	bool IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theMapArea, NFmiRect & theCroppedXyRectOut, int &theLeftIndex, int &theRightIndex, int &theTopIndex, int &theBottomIndex);
 	void DrawIsoLinesWithToolMaster(void);
 	void DrawIsoLines(void);
 

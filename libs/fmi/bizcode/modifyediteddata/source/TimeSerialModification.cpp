@@ -2597,9 +2597,12 @@ static void InitializeMacroParamData(const NFmiTimeDescriptor &theTimes, boost::
         NFmiExtraMacroParamData::AdjustValueMatrixToMissing(theMacroInfo, theValues);
     }
 
-    theMacroInfo->First(); // asetetaan varmuuden vuoksi First:iin
-    theMacroInfo->SetValues(theValues); // nollataan infossa ollut data missing-arvoilla, ett‰ saadaan puhdas kentt‰ laskuihin
-    theMacroInfo->SetTimeDescriptor(theTimes); // asetetaan makroData-infon aikasysteemi currentin kartan kohtaan (feikki datassa vain yksi aika ja se pit‰‰ s‰‰t‰‰ kohdalleen, ett‰ laskut onnistuvat)
+	if(theMacroInfo)
+	{
+		theMacroInfo->First(); // asetetaan varmuuden vuoksi First:iin
+		theMacroInfo->SetValues(theValues); // nollataan infossa ollut data missing-arvoilla, ett‰ saadaan puhdas kentt‰ laskuihin
+		theMacroInfo->SetTimeDescriptor(theTimes); // asetetaan makroData-infon aikasysteemi currentin kartan kohtaan (feikki datassa vain yksi aika ja se pit‰‰ s‰‰t‰‰ kohdalleen, ett‰ laskut onnistuvat)
+	}
 }
 
 typedef std::pair<int, int> GridPoint;
@@ -2616,13 +2619,13 @@ static bool GetGridPoint(boost::shared_ptr<NFmiFastQueryInfo> &theMacroInfo, Gri
     return false;
 }
 
-void FmiModifyEditdData::InitializeSmartToolModifier(NFmiSmartToolModifier &theSmartToolModifier, TimeSerialModificationDataInterface& theAdapter, boost::shared_ptr<NFmiDrawParam>& theDrawParam)
+void FmiModifyEditdData::InitializeSmartToolModifierForMacroParam(NFmiSmartToolModifier &theSmartToolModifier, TimeSerialModificationDataInterface& theAdapter, boost::shared_ptr<NFmiDrawParam>& theDrawParam, int theMapViewDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo>& possibleSpacedOutMacroInfo, bool doProbing, const NFmiPoint& spaceOutSkipFactors)
 {
 	theSmartToolModifier.SetGriddingHelper(theAdapter.GetGriddingHelper());
 	theSmartToolModifier.IncludeDirectory(theAdapter.MacroParamSystem().RootPath());
 
 	std::string macroParamStr = CtrlViewUtils::GetMacroParamFormula(theAdapter.MacroParamSystem(), theDrawParam);
-	theSmartToolModifier.InitSmartTool(macroParamStr, true);
+	theSmartToolModifier.InitSmartToolForMacroParam(macroParamStr, possibleSpacedOutMacroInfo, theAdapter.GetUsedMapViewArea(theMapViewDescTopIndex), doProbing, spaceOutSkipFactors);
 }
 
 static void SetMacroParamErrorMessage(const std::string &theErrorText, TimeSerialModificationDataInterface& theAdapter, NFmiExtraMacroParamData* possibleExtraMacroParamData)
@@ -2655,14 +2658,14 @@ std::string FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage(const std
 	return errorMessage;
 }
 
-static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo, NFmiExtraMacroParamData *possibleExtraMacroParamData)
+static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, int theMapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo, NFmiExtraMacroParamData *possibleExtraMacroParamData, bool doProbing, const NFmiPoint& spaceOutSkipFactors)
 {
 	float value = kFloatMissing;
 	NFmiSmartToolModifier smartToolModifier(theAdapter.InfoOrganizer());
 	const auto& macroParamRootPath = theAdapter.MacroParamSystem().RootPath();
 	try // ensin tulkitaan macro
 	{
-		FmiModifyEditdData::InitializeSmartToolModifier(smartToolModifier, theAdapter, theDrawParam);
+		FmiModifyEditdData::InitializeSmartToolModifierForMacroParam(smartToolModifier, theAdapter, theDrawParam, theMapViewDescTopIndex, possibleSpacedOutMacroInfo, doProbing, spaceOutSkipFactors);
 	}
 	catch(std::exception &e)
 	{
@@ -2673,9 +2676,6 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 
 	try // suoritetaan macro sitten
 	{
-        // T‰t‰ kutsutaan vasta kun smarttool skripti on tulkittu
-        smartToolModifier.SetPossibleSpacedOutMacroInfo(possibleSpacedOutMacroInfo);
-
 		NFmiTimeBag validTimes(theTime, theTime, 60);
 		NFmiTimeDescriptor times(theTime, validTimes); // luodaan 'feikki' timedescriptor juuri t‰lle kartan ajalle, joka lasketaan smarttool-systeemiss‰
         theUsedMacroInfoOut = smartToolModifier.UsedMacroParamData();
@@ -2720,9 +2720,9 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 	return value;
 }
 
-float FmiModifyEditdData::CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> possibleSpacedOutMacroInfo, NFmiExtraMacroParamData *possibleExtraMacroParamData)
+float FmiModifyEditdData::CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, int theMapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, bool doProbing, const NFmiPoint& spaceOutSkipFactors, boost::shared_ptr<NFmiFastQueryInfo> possibleSpacedOutMacroInfo, NFmiExtraMacroParamData *possibleExtraMacroParamData)
 {
-    return ::CalcMacroParamMatrix(theAdapter, theDrawParam, theValues, fCalcTooltipValue, fDoMultiThread, theTime, theTooltipLatlon, theUsedMacroInfoOut, theUseCalculationPoints, possibleSpacedOutMacroInfo, possibleExtraMacroParamData);
+    return ::CalcMacroParamMatrix(theAdapter, theMapViewDescTopIndex, theDrawParam, theValues, fCalcTooltipValue, fDoMultiThread, theTime, theTooltipLatlon, theUsedMacroInfoOut, theUseCalculationPoints, possibleSpacedOutMacroInfo, possibleExtraMacroParamData, doProbing, spaceOutSkipFactors);
 }
 
 static void SetActiveParamMissingValues(TimeSerialModificationDataInterface &theAdapter, double theValue, bool fDoMultiThread)

@@ -421,3 +421,8 @@ void NFmiGenDocDataAdapter::LogAndWarnUser(const std::string &theMessageStr, con
 {
     itsDoc->LogAndWarnUser(theMessageStr, theDialogTitleStr, severity, category, justLog, addAbortOption);
 }
+
+boost::shared_ptr<NFmiArea> NFmiGenDocDataAdapter::GetUsedMapViewArea(int theMapViewDescTopIndex)
+{
+	return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->MapHandler()->Area();
+}

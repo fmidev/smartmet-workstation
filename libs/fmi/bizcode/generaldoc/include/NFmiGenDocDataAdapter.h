@@ -87,6 +87,7 @@ public:
     bool MakeSureToolMasterPoolIsRunning(void) override;
     bool IsWorkingDataSaved() override;
     void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false) override;
+	boost::shared_ptr<NFmiArea> GetUsedMapViewArea(int theMapViewDescTopIndex) override;
 
 protected:
 	NFmiEditMapGeneralDataDoc *itsDoc; // ei omista, ei tuhoa

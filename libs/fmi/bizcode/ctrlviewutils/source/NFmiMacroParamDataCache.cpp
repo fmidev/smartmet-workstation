@@ -27,11 +27,34 @@ static void logMacroParamTotalPathWasInCorrectWarning(const std::string &functio
     CatLog::logMessage(message, CatLog::Severity::Warning, CatLog::Category::Data);
 }
 
-void NFmiMacroParamLayerCacheDataType::setCacheValues(const NFmiDataMatrix<float> &dataMatrix, bool useCalculationPoints, bool useAlReadySpacedOutData)
+NFmiMacroParamLayerCacheDataType::NFmiMacroParamLayerCacheDataType() = default;
+
+NFmiMacroParamLayerCacheDataType::NFmiMacroParamLayerCacheDataType(const NFmiMacroParamLayerCacheDataType& other)
+:dataMatrix_(other.dataMatrix_)
+,useCalculationPoints_(other.useCalculationPoints_)
+,useAlReadySpacedOutData_(other.useAlReadySpacedOutData_)
+,dataAreaPtr_(other.dataAreaPtr_ ? other.dataAreaPtr_->Clone() : nullptr)
+{
+}
+
+NFmiMacroParamLayerCacheDataType& NFmiMacroParamLayerCacheDataType::operator=(const NFmiMacroParamLayerCacheDataType& other)
+{
+    if(this != &other)
+    {
+        dataMatrix_ = other.dataMatrix_;
+        useCalculationPoints_ = other.useCalculationPoints_;
+        useAlReadySpacedOutData_ = other.useAlReadySpacedOutData_;
+        dataAreaPtr_.reset(other.dataAreaPtr_ ? other.dataAreaPtr_->Clone() : nullptr);
+    }
+    return *this;
+}
+
+void NFmiMacroParamLayerCacheDataType::setCacheValues(const NFmiDataMatrix<float> &dataMatrix, bool useCalculationPoints, bool useAlReadySpacedOutData, const NFmiArea* dataArea)
 {
     dataMatrix_ = dataMatrix;
     useCalculationPoints_ = useCalculationPoints;
     useAlReadySpacedOutData_ = useAlReadySpacedOutData;
+    dataAreaPtr_.reset(dataArea ? dataArea->Clone() : nullptr);
 }
 
 static bool IsGridSizeSame(NFmiDataMatrix<float> &matrix, boost::shared_ptr<NFmiFastQueryInfo> &info)
@@ -52,8 +75,8 @@ void NFmiMacroParamLayerCacheDataType::getCacheValues(NFmiDataMatrix<float> &dat
     if(useAlReadySpacedOutDataOut || !::IsGridSizeSame(dataMatrixOut, usedInfoInOut))
     {
         // Jos cacheen laskettu data oli jo harvennettua, pit‰‰ myˆs nyt k‰ytetty info s‰‰t‰‰ takaisin kyseiseen oikeaan hilakokoon.
-        boost::shared_ptr<NFmiArea> usedArea(usedInfoInOut->Area()->Clone());
-        usedInfoInOut = NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(static_cast<int>(dataMatrixOut.NX()), static_cast<int>(dataMatrixOut.NY()), NFmiInfoData::kMacroParam, usedArea);
+        // Lis‰ksi pit‰‰ varmistaa ett‰ infossa on oikea datan alue.
+        usedInfoInOut = NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(static_cast<int>(dataMatrixOut.NX()), static_cast<int>(dataMatrixOut.NY()), NFmiInfoData::kMacroParam, dataAreaPtr_.get());
     }
 }
 
@@ -175,6 +198,17 @@ bool NFmiMacroParamDataCacheRow::getCache(unsigned long layerIndex, const NFmiMe
     if(iter != layersCache_.end())
     {
         return iter->second.getCache(time, macroParamTotalPath, cacheDataOut);
+    }
+    return false;
+}
+
+bool NFmiMacroParamDataCacheRow::getTotalCache(unsigned long layerIndex, const std::string& macroParamTotalPath, NFmiMacroParamDataCacheLayer& cacheDataOut)
+{
+    auto iter = layersCache_.find(layerIndex);
+    if(iter != layersCache_.end())
+    {
+        cacheDataOut = iter->second;
+        return true;
     }
     return false;
 }
@@ -319,6 +353,16 @@ bool NFmiMacroParamDataCacheForView::getCache(unsigned long rowIndex, unsigned l
     return false;
 }
 
+bool NFmiMacroParamDataCacheForView::getTotalCache(unsigned long rowIndex, unsigned long layerIndex, const std::string& macroParamTotalPath, NFmiMacroParamDataCacheLayer& cacheDataOut)
+{
+    auto iter = rowsCache_.find(rowIndex);
+    if(iter != rowsCache_.end())
+    {
+        return iter->second.getTotalCache(layerIndex, macroParamTotalPath, cacheDataOut);
+    }
+    return false;
+}
+
 bool NFmiMacroParamDataCacheForView::update(unsigned long rowIndex, NFmiDrawParamList &drawParamList)
 {
     auto iter = rowsCache_.find(rowIndex);
@@ -441,6 +485,16 @@ bool NFmiMacroParamDataCache::getCache(unsigned long viewIndex, unsigned long ro
     if(iter != viewsCache_.end())
     {
         return iter->second.getCache(rowIndex, layerIndex, time, macroParamTotalPath, cacheDataOut);
+    }
+    return false;
+}
+
+bool NFmiMacroParamDataCache::getTotalCache(unsigned long viewIndex, unsigned long rowIndex, unsigned long layerIndex, const std::string& macroParamTotalPath, NFmiMacroParamDataCacheLayer& cacheDataOut)
+{
+    auto iter = viewsCache_.find(viewIndex);
+    if(iter != viewsCache_.end())
+    {
+        return iter->second.getTotalCache(rowIndex, layerIndex, macroParamTotalPath, cacheDataOut);
     }
     return false;
 }
