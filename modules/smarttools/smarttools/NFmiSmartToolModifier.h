@@ -18,6 +18,7 @@
 // laskut suoritetaan.
 //**********************************************************
 
+#include <NFmiExtraMacroParamData.h>
 #include <newbase/NFmiParamBag.h>
 #include <newbase/NFmiDataMatrix.h>
 #include <newbase/NFmiInfoData.h>
@@ -58,6 +59,7 @@ class NFmiSimpleConditionPartInfo;
 class NFmiSimpleConditionPart;
 class NFmiSingleCondition;
 class NFmiSingleConditionInfo;
+class NFmiArea;
 
 // CalculationPoint dataan liittyy originaali laskentapisteen pointteri ja 
 // jos se on nullptr, niin silloin ei kuulu.
@@ -110,6 +112,11 @@ class NFmiSmartToolModifier
 {
  public:
   void InitSmartTool(const std::string &theSmartToolText, bool fThisIsMacroParamSkript = false);
+  void InitSmartToolForMacroParam(const std::string &theSmartToolText,
+                                  boost::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo,
+                                  boost::shared_ptr<NFmiArea> &mapViewArea,
+                                  bool doProbing,
+                                  const NFmiPoint &spaceOutSkipFactors);
   void ModifyData(NFmiTimeDescriptor *theModifiedTimes,
                   bool fSelectedLocationsOnly,
                   bool isMacroParamCalculation,
@@ -143,12 +150,26 @@ class NFmiSmartToolModifier
 
   void ModifiedLevel(boost::shared_ptr<NFmiLevel> &theLevel);
   void SetGriddingHelper(NFmiGriddingHelperInterface *theGriddingHelper);
-  void SetPossibleSpacedOutMacroInfo(boost::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo);
-  const NFmiExtraMacroParamData& ExtraMacroParamData() const;
+  void SetPossibleSpacedOutMacroInfo(
+      boost::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo);
+  void SetUsedMapViewArea(boost::shared_ptr<NFmiArea> &usedMapViewArea);
+  const NFmiExtraMacroParamData &ExtraMacroParamData() const { return itsExtraMacroParamData; }
   const std::string &LastExceptionMessageFromThreads() const {return itsLastExceptionMessageFromThreads;}
   static bool UseVisualizationOptimazation();
   static void UseVisualizationOptimazation(bool newState);
   const std::set<int> &UsedThreadCounts() const { return itsUsedThreadCounts; }
+  static bool GetPossibleCropGridPoints(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+                                        boost::shared_ptr<NFmiArea> &theMapArea,
+                                        NFmiRect &theCroppedXyRectOut,
+                                        int &x1,
+                                        int &y1,
+                                        int &x2,
+                                        int &y2,
+                                        double acceptedMaxPercentage01 = 1.0);
+  boost::shared_ptr<NFmiFastQueryInfo> PossibleFixedBaseMacroParamData()
+  {
+    return itsPossibleFixedBaseMacroParamData;
+  }
 
  private:
   boost::shared_ptr<NFmiFastQueryInfo> GetUsedEditedInfo();
@@ -304,6 +325,10 @@ class NFmiSmartToolModifier
   void CalculateUsedWorkingThreadCount(double wantedHardwareThreadPercent,
                                        int userGivenWorkingThreadCount,
                                        bool macroParamCase);
+  void MakePossibleFixedBaseData(const NFmiPoint &spaceOutSkipFactors);
+  bool MakeFixedBaseDataFromSpacedOutGrid(int x1, int y1, int x2, int y2, const NFmiPoint &spaceOutSkipFactors);
+  void GetExtraMacroParamDataFromIntepreter();
+  void DoFixedDataSetup(bool doProbing, const NFmiPoint &spaceOutSkipFactors);
 
   NFmiInfoOrganizer *itsInfoOrganizer;  // eli database, ei omista ei tuhoa
   boost::shared_ptr<NFmiSmartToolIntepreter> itsSmartToolIntepreter;
@@ -311,7 +336,7 @@ class NFmiSmartToolModifier
   std::string itsErrorText;
   // Tämä alustetaan smarttool-tulkissa (itsSmartToolIntepreter), ja
   // otetaan omistukseen 'suorittajaan'
-  std::unique_ptr<NFmiExtraMacroParamData> itsExtraMacroParamData;  
+  NFmiExtraMacroParamData itsExtraMacroParamData;  
 
   bool fModifySelectedLocationsOnly;
   std::vector<boost::shared_ptr<NFmiFastQueryInfo> >
@@ -363,4 +388,7 @@ class NFmiSmartToolModifier
   int itsOptimalThreadCount = 0;
   int itsUsedThreadCount = 0;
   std::set<int> itsUsedThreadCounts;
+  // Tätä aluetta käytetään kun lasketaan mahdollista FixedBaseData:n määrittelemää infoa
+  boost::shared_ptr<NFmiArea> itsUsedMapViewArea;
+  boost::shared_ptr<NFmiFastQueryInfo> itsPossibleFixedBaseMacroParamData;
 };

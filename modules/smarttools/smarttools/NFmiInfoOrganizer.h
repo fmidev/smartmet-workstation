@@ -196,13 +196,13 @@ class NFmiInfoOrganizer
   void SetMacroParamDataMinGridSize(int x, int y);
   void SetMacroParamDataMaxGridSize(int x, int y);
 
-  boost::shared_ptr<NFmiFastQueryInfo> CreateNewMacroParamData(int x,
+  static boost::shared_ptr<NFmiFastQueryInfo> CreateNewMacroParamData(int x,
                                                                int y,
                                                                NFmiInfoData::Type theDataType);
 
   const NFmiPoint &GetMacroParamDataGridSize() const { return itsMacroParamGridSize; }
-  const NFmiPoint &GetMacroParamDataMaxGridSize() const { return itsMacroParamMaxGridSize; }
-  const NFmiPoint &GetMacroParamDataMinGridSize() const { return itsMacroParamMinGridSize; }
+  static const NFmiPoint &GetMacroParamDataMaxGridSize() { return itsMacroParamMaxGridSize; }
+  static const NFmiPoint &GetMacroParamDataMinGridSize() { return itsMacroParamMinGridSize; }
   int CountData();
   double CountDataSize();
   void UpdateCrossSectionMacroParamDataSize(int x, int y);
@@ -213,7 +213,7 @@ class NFmiInfoOrganizer
   static bool HasGoodParamsForSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                            const ParamCheckFlags &paramCheckFlags);
   static boost::shared_ptr<NFmiFastQueryInfo> CreateNewMacroParamData_checkedInput(
-      int x, int y, NFmiInfoData::Type theDataType, boost::shared_ptr<NFmiArea> wantedArea = nullptr);
+      int x, int y, NFmiInfoData::Type theDataType, const NFmiArea* wantedArea = nullptr);
   // ***************************************************************************************************************
 
  private:
@@ -255,7 +255,7 @@ class NFmiInfoOrganizer
                          const NFmiProducer &theProducer,
                          bool ignoreProducer,
                          const ParamCheckFlags &paramCheckFlags);
-  void FixMacroParamDataGridSize(int &x, int &y);
+  static void FixMacroParamDataGridSize(int &x, int &y);
 
   boost::shared_ptr<NFmiQueryDataKeeper>
       itsEditedDataKeeper;  // pitää sisällään oikeasti NFmiSmartInfo-olion
@@ -265,8 +265,8 @@ class NFmiInfoOrganizer
   boost::shared_ptr<NFmiDrawParamFactory> itsDrawParamFactory;
   std::string itsWorkingDirectory;
   NFmiPoint itsMacroParamGridSize;
-  NFmiPoint itsMacroParamMinGridSize;
-  NFmiPoint itsMacroParamMaxGridSize;
+  static NFmiPoint itsMacroParamMinGridSize;
+  static NFmiPoint itsMacroParamMaxGridSize;
   // makro-parametrien laskuja varten pitää pitää yllä yhden hilan kokoista dataa
   // (yksi aika,param ja level, editoitavan datan hplaceDesc)
   boost::shared_ptr<NFmiFastQueryInfo> itsMacroParamData;

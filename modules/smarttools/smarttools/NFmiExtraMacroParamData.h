@@ -5,6 +5,10 @@
 #include <newbase/NFmiDataMatrix.h>
 #include <newbase/NFmiLevelType.h>
 #include <newbase/NFmiProducer.h>
+#include <newbase/NFmiParam.h>
+#include <newbase/NFmiLevel.h>
+#include <newbase/NFmiInfoData.h>
+#include <set>
 
 class NFmiFastQueryInfo;
 class NFmiInfoOrganizer;
@@ -16,6 +20,70 @@ enum class MacroParamCalculationType
     Index = 1 // indeksi tyyppinen luku (usein kokonaisluku), jota ei saa interpoloida esim. tooltipiss‰
 };
 
+enum class ReasonForDataRejection
+{
+  NoGridData,
+  NoParameter,
+  NoLevel,
+  WrongLevelType,
+  WrongLevelStructure
+};
+
+struct FindWantedInfoData
+{
+  // foundInfo_ on nullptr, jos mit‰‰n dataa ei lˆytynyt
+  boost::shared_ptr<NFmiFastQueryInfo> foundInfo_;
+  // Miten haluttu data alunperin kuvattiin smarttools kaavassa
+  std::string originalDataDescription_;
+  // Mit‰ erilaisia syit‰ oli hyl‰t‰ ehdokasdata(t)
+  std::set<ReasonForDataRejection> rejectionReasons_;
+
+  FindWantedInfoData(boost::shared_ptr<NFmiFastQueryInfo> &foundInfo,
+                     const std::string &originalDataDescription,
+                     const std::set<ReasonForDataRejection> &rejectionReasons);
+};
+
+// Jos smarttools kieless‰ halutaan m‰‰ritell‰ k‰ytetty data (resoluution 
+// tai fiksatun pohjahilan m‰‰ritykseen), on siihen monia erilaisia tapoja:
+// 1. resolution = edited // editoitu data
+// 2. resolution = ec_pressure // ec:n painepintadata (myˆs hybrid/height kelpaavat)
+// 3. resolution = T_ec // Ec:n pintadata, jossa mukana l‰mpˆtila (myˆs par4_prod240 variantit k‰yv‰t)
+// 4. resolution = T_ec_850 // Ec:n painepintadata (leveleiss‰ myˆs lev88 = hybrid, z1000 = height, fl75 = flight-level kelpaavat)
+class NFmiDefineWantedData
+{
+ public:
+  // Jos datatyyppi on NFmiInfoData::kEditable, se ohittaa kaiken muun
+  NFmiInfoData::Type dataType_ = NFmiInfoData::kNoDataType;
+  // Jos prod-id = 0, ei asetettu
+  NFmiProducer producer_;
+  // Jos par-id = 0, ei asetettu
+  NFmiParam param_;
+  // Jos level-id = 0, ei asetettu
+  std::unique_ptr<NFmiLevel> levelPtr_;
+  // Level tyyppi tulee mukaan, jos k‰ytetty ec_surface/pressure/hybrid/height m‰‰rityst‰
+  FmiLevelType levelType_ = kFmiNoLevelType;
+  // Talletetaan alkuper‰inen data stringi t‰h‰n
+  std::string originalDataString_;
+
+  NFmiDefineWantedData();
+  NFmiDefineWantedData(NFmiInfoData::Type dataType, const std::string &originalDataString);
+  NFmiDefineWantedData(const NFmiProducer &producer,
+                       FmiLevelType levelType,
+                       const std::string &originalDataString);
+  NFmiDefineWantedData(const NFmiProducer &producer,
+                       const NFmiParam &param,
+                       const NFmiLevel *level,
+                       const std::string &originalDataString);
+  NFmiDefineWantedData(const NFmiDefineWantedData &other);
+  NFmiDefineWantedData& operator=(const NFmiDefineWantedData &other);
+
+  bool IsEditedData() const;
+  bool IsProducerLevelType() const;
+  bool IsParamProducerLevel() const;
+  const NFmiLevel *UsedLevel() const;
+  bool IsInUse() const;
+};
+
 // Kun smarttool:ia tulkitaan, siin‰ saattaa olla osia, joita voi k‰ytt‰‰ vain macroParamien
 // yhteydess‰.
 // T‰h‰n luokkaan talletetaan kaikkea, mit‰ extra tietoa voi lˆyty‰ annetusta skriptist‰.
@@ -24,19 +92,16 @@ class NFmiExtraMacroParamData
  public:
   NFmiExtraMacroParamData();
 
+  void Clear();
   void FinalizeData(NFmiInfoOrganizer &theInfoOrganizer);
   bool UseSpecialResolution() const;
   static void SetUsedAreaForData(boost::shared_ptr<NFmiFastQueryInfo> &theData,
                                  const NFmiArea *theUsedArea);
 
-  bool UseEditedDataForResolution() const { return fUseEditedDataForResolution; }
-  void UseEditedDataForResolution(bool newValue) { fUseEditedDataForResolution = newValue; }
+  const NFmiDefineWantedData &WantedResolutionData() const { return itsWantedResolutionData; }
+  void WantedResolutionData(const NFmiDefineWantedData &wantedData) { itsWantedResolutionData = wantedData; }
   float GivenResolutionInKm() const { return itsGivenResolutionInKm; }
   void GivenResolutionInKm(float newValue) { itsGivenResolutionInKm = newValue; }
-  const NFmiProducer &Producer() const { return itsProducer; }
-  void Producer(const NFmiProducer &newValue) { itsProducer = newValue; }
-  FmiLevelType LevelType() const { return itsLevelType; }
-  void LevelType(FmiLevelType newValue) { itsLevelType = newValue; }
   boost::shared_ptr<NFmiFastQueryInfo> ResolutionMacroParamData()
   {
     return itsResolutionMacroParamData;
@@ -64,35 +129,41 @@ class NFmiExtraMacroParamData
   void WorkingThreadCount(int newValue) { itsWorkingThreadCount = newValue; }
   const std::string &MacroParamErrorMessage() const { return itsMacroParamErrorMessage; }
   void MacroParamErrorMessage(const std::string &message) { itsMacroParamErrorMessage = message; }
+  const std::string &MacroParamWarningMessage() const { return itsMacroParamWarningMessage; }
+  void MacroParamWarningMessage(const std::string &message) { itsMacroParamWarningMessage = message; }
+  const NFmiDefineWantedData &WantedFixedBaseData() const { return itsWantedFixedBaseData; }
+  void WantedFixedBaseData(const NFmiDefineWantedData &newData) { itsWantedFixedBaseData = newData; }
+  boost::shared_ptr<NFmiFastQueryInfo> FixedBaseDataInfo() const { return itFixedBaseDataInfo; }
+  void FixedBaseDataInfo(boost::shared_ptr<NFmiFastQueryInfo> &info) { itFixedBaseDataInfo = info; }
+  void UseDataForResolutionCalculations(const NFmiArea *usedArea,
+                                        boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+      const std::string &dataDescriptionForErrorMessage);
+  bool IsFixedSpacedOutDataCase() const { return fIsFixedSpacedOutDataCase; }
+  void IsFixedSpacedOutDataCase(bool newValue) { fIsFixedSpacedOutDataCase = newValue; }
 
  private:
-  void InitializeResolutionWithEditedData(NFmiInfoOrganizer &theInfoOrganizer);
-  void InitializeResolutionData(NFmiInfoOrganizer &theInfoOrganizer, const NFmiPoint &usedResolutionInKm);
-  void InitializeDataBasedResolutionData(NFmiInfoOrganizer &theInfoOrganizer,
-                                         const NFmiProducer &theProducer,
-                                         FmiLevelType theLevelType);
-  void UseDataForResolutionCalculations(NFmiInfoOrganizer &theInfoOrganizer,
-                                        boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+  void InitializeResolutionData(const NFmiArea *usedArea,
+                                const NFmiPoint &usedResolutionInKm);
+  void InitializeDataBasedResolutionData(NFmiInfoOrganizer &theInfoOrganizer);
+  FindWantedInfoData FindWantedInfo(
+      NFmiInfoOrganizer &theInfoOrganizer, const NFmiDefineWantedData &wantedData);
   void InitializeRelativeObservationRange(NFmiInfoOrganizer &theInfoOrganizer, float usedRangeInKm);
   void AddCalculationPointsFromData(NFmiInfoOrganizer &theInfoOrganizer,
                                     const std::vector<NFmiProducer> &theProducers);
+  void InitializeFixedBaseDataInfo(NFmiInfoOrganizer &theInfoOrganizer);
 
-  // Jos skriptiss‰ on resolution = edited, k‰ytet‰‰n editoitua dataa resoluutio laskuissa.
-  bool fUseEditedDataForResolution;
+  // T‰h‰n tulee resolution = xxx m‰‰rityksest‰ saatava datan tiedot
+  NFmiDefineWantedData itsWantedResolutionData;
   // Jos skriptiss‰ on annettu haluttu laskenta resoluutio tyyliin "resolution = 12.5", talletetaan
   // kyseinen luku t‰h‰n.
   // Jos ei ole asetettu, on arvo missing.
-  float itsGivenResolutionInKm;
-  // Jos skriptiss‰ on annettu resoluutio data muodossa tyyliin "resolution = hir_pressure",
-  // talletetaan lausekkeen tuottaja ja level tyyppi n‰ihin kahteen arvoon.
-  NFmiProducer itsProducer;   // puuttuva arvo on kun id = 0
-  FmiLevelType itsLevelType;  // puuttuva arvo on kFmiNoLevelType eli 0
+  float itsGivenResolutionInKm = kFloatMissing;
 
   // t‰h‰n lasketaan datasta haluttu resoluutio  makro-parametrien laskuja varten pit‰‰ pit‰‰ yll‰
   // yhden
   // hilan kokoista dataa  (yksi aika,param ja level, editoitavan datan hplaceDesc). T‰h‰n
   // dataan on laskettu haluttu resoluutio t‰m‰n macroParamin laskujen ajaksi.
-  NFmiPoint itsDataBasedResolutionInKm;
+  NFmiPoint itsDataBasedResolutionInKm = NFmiPoint::gMissingLatlon;
   boost::shared_ptr<NFmiFastQueryInfo> itsResolutionMacroParamData;
 
   // CalculationPoint listassa on pisteet jos niit‰ on annettu "CalculationPoint = lat,lon"
@@ -108,10 +179,10 @@ class NFmiExtraMacroParamData
 
   // Jos halutaan ett‰ havaintojen k‰yttˆ‰ laskuissa rajoitetaan laskentas‰teell‰, annetaan se
   // t‰h‰n kilometreiss‰. Jos t‰m‰ on kFloatMissing, k‰ytet‰‰n laskuissa havaintoja rajattomasti.
-  float itsObservationRadiusInKm;
+  float itsObservationRadiusInKm = kFloatMissing;
   // T‰h‰n lasketaan k‰ytetyn kartta-alueen mukainen relatiivinen et‰isyys (jota k‰ytet‰‰n itse
   // laskuissa)
-  float itsObservationRadiusRelative;
+  float itsObservationRadiusRelative = kFloatMissing;
   // Joillekin macroParameilla lasketuille symboleille halutaan antaa arvoon perustuvia selitt‰vi‰
   // tekstej‰ tooltipiss‰
   std::string itsSymbolTooltipFile;
@@ -125,4 +196,13 @@ class NFmiExtraMacroParamData
   // mahdolliset smarttool kielen k‰‰nt‰j‰/ajoaika virheilmoitukset takaisin k‰ytt‰j‰lle, 
   // mm. tooltip tekstiin.
   std::string itsMacroParamErrorMessage;
+  // Joskus pit‰‰ saada varoittaa k‰ytt‰j‰‰, ja sellainen varoitus
+  // viesti laitetaan macroParamin arvojen yhteyteen tooltippiin.
+  std::string itsMacroParamWarningMessage;
+  // T‰h‰n tulee FixedBaseData = xxx m‰‰rityksest‰ saatava datan tiedot
+  NFmiDefineWantedData itsWantedFixedBaseData;
+  // Jos k‰ytt‰j‰ haluaa kiinnitt‰‰ k‰ytetyn laskentahilan johonkin dataan,
+  // otetaan kyseinen data t‰h‰n v‰liaikaisesti talteen.
+  boost::shared_ptr<NFmiFastQueryInfo> itFixedBaseDataInfo;
+  bool fIsFixedSpacedOutDataCase = false;
 };

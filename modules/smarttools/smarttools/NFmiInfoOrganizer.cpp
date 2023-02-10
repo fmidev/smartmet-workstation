@@ -19,6 +19,9 @@
 std::vector<FmiParameterName> NFmiInfoOrganizer::itsWantedSoundingParams;
 std::vector<FmiParameterName> NFmiInfoOrganizer::itsWantedTrajectoryParams;
 bool NFmiInfoOrganizer::fCheckParamsInitialized = false;
+NFmiPoint NFmiInfoOrganizer::itsMacroParamMinGridSize(5, 5);
+NFmiPoint NFmiInfoOrganizer::itsMacroParamMaxGridSize(2000, 2000);
+
 
 void NFmiInfoOrganizer::InitializeCheckParams()
 {
@@ -44,8 +47,6 @@ NFmiInfoOrganizer::NFmiInfoOrganizer()
       itsWorkingDirectory(),
       itsMacroParamGridSize(50, 50),
       itsOptimizedVisualizationGridSize(50, 50),
-      itsMacroParamMinGridSize(5, 5),
-      itsMacroParamMaxGridSize(2000, 2000),
       itsMacroParamData(),
       itsCrossSectionMacroParamData(),
       fCreateEditedDataCopy(false)
@@ -1395,7 +1396,7 @@ const std::string NFmiInfoOrganizer::GetDrawParamPath()
 boost::shared_ptr<NFmiFastQueryInfo> NFmiInfoOrganizer::CreateNewMacroParamData(
     int x, int y, NFmiInfoData::Type theDataType)
 {
-  FixMacroParamDataGridSize(x, y);
+  NFmiInfoOrganizer::FixMacroParamDataGridSize(x, y);
   return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(x, y, theDataType);
 }
 
@@ -1409,14 +1410,14 @@ void NFmiInfoOrganizer::FixMacroParamDataGridSize(int &x, int &y)
 
 void NFmiInfoOrganizer::SetMacroParamDataGridSize(int x, int y)
 {
-  FixMacroParamDataGridSize(x, y);
+  NFmiInfoOrganizer::FixMacroParamDataGridSize(x, y);
   itsMacroParamGridSize = NFmiPoint(x, y);
   UpdateMacroParamDataSize(x, y);
 }
 
 void NFmiInfoOrganizer::SetOptimizedVisualizationMacroParamDataGridSize(int x, int y)
 {
-  FixMacroParamDataGridSize(x, y);
+  NFmiInfoOrganizer::FixMacroParamDataGridSize(x, y);
   itsOptimizedVisualizationGridSize = NFmiPoint(x, y);
   UpdateOptimizedVisualizationMacroParamDataSize(x, y, nullptr);
 }
@@ -1457,12 +1458,12 @@ static NFmiQueryData *CreateDefaultMacroParamQueryData(const NFmiArea *theArea,
 }
 
 boost::shared_ptr<NFmiFastQueryInfo> NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(
-    int x, int y, NFmiInfoData::Type theDataType, boost::shared_ptr<NFmiArea> wantedArea)
+    int x, int y, NFmiInfoData::Type theDataType, const NFmiArea* wantedArea)
 {
   static boost::shared_ptr<NFmiArea> dummyArea(
       new NFmiLatLonArea(NFmiPoint(19, 57), NFmiPoint(32, 71)));
 
-  auto usedArea = wantedArea ? wantedArea.get() : dummyArea.get();
+  auto usedArea = wantedArea ? wantedArea : dummyArea.get();
   // Luo uusi data jossa on yksi aika,param ja level ja luo hplaceDesc annetusta areasta ja hila
   // koosta
   NFmiQueryData *data = ::CreateDefaultMacroParamQueryData(usedArea, x, y);
@@ -1484,7 +1485,7 @@ void NFmiInfoOrganizer::UpdateOptimizedVisualizationMacroParamDataSize(
     int x, int y, boost::shared_ptr<NFmiArea> wantedArea)
 {
   itsOptimizedVisualizationMacroParamData =
-      NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(x, y, NFmiInfoData::kMacroParam, wantedArea);
+      NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(x, y, NFmiInfoData::kMacroParam, wantedArea.get());
 }
 
 

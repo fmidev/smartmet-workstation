@@ -14,7 +14,6 @@
 #include "NFmiAreaMaskInfo.h"
 #include "NFmiAreaMaskSectionInfo.h"
 #include "NFmiDictionaryFunction.h"
-#include "NFmiExtraMacroParamData.h"
 #include "NFmiProducerSystem.h"
 #include "NFmiSimpleConditionInfo.h"
 #include "NFmiSmartToolCalculationInfo.h"
@@ -191,7 +190,7 @@ NFmiSmartToolIntepreter::NFmiSmartToolIntepreter(NFmiProducerSystem *theProducer
                                                  NFmiProducerSystem *theObservationProducerSystem)
     : itsProducerSystem(theProducerSystem),
       itsSmartToolCalculationBlocks(),
-      itsExtraMacroParamData(new NFmiExtraMacroParamData()),
+      itsExtraMacroParamData(),
       fNormalAssigmentFound(false),
       fMacroParamFound(false),
       fMacroParamSkriptInProgress(false)
@@ -2959,67 +2958,194 @@ bool NFmiSmartToolIntepreter::IsVariableVertFunction(
   return false;
 }
 
+static std::pair<bool, NFmiDefineWantedData> CheckForProducerLevelType(
+    const std::string &possibleProducerPart,
+    const std::string &possibleLevelTypePart,
+    const std::string &originalDataString,
+    const NFmiSmartToolIntepreter::ResolutionLevelTypesMap &resolutionLevelTypes)
+{
+  auto producer = NFmiSmartToolIntepreter::GetPossibleProducerInfo(possibleProducerPart).first;
+  auto iter = resolutionLevelTypes.find(possibleLevelTypePart);
+  if (iter != resolutionLevelTypes.end())
+  {
+    return std::make_pair(true, NFmiDefineWantedData(producer, iter->second, originalDataString));
+  }
+  return std::make_pair(false, NFmiDefineWantedData());
+}
+
+std::pair<bool, NFmiDefineWantedData> NFmiSmartToolIntepreter::CheckForVariableDataType(
+    const std::string &originalDataVariableString)
+{
+  string paramNameOnly;
+  string levelNameOnly;
+  string producerNameOnly;
+  bool levelExist = false;
+  bool producerExist = false;
+  int modelRunIndex = 1;
+  float timeOffsetInHours = 0;
+
+  NFmiSmartToolIntepreter::CheckVariableString(originalDataVariableString,
+                                               paramNameOnly,
+                                               levelExist,
+                                               levelNameOnly,
+                                               producerExist,
+                                               producerNameOnly,
+                                               modelRunIndex,
+                                               timeOffsetInHours);
+
+  boost::shared_ptr<NFmiAreaMaskInfo> maskInfo(new NFmiAreaMaskInfo());
+  bool origWanted = false;
+  if (NFmiSmartToolIntepreter::InterpretVariableOnlyCheck(originalDataVariableString,
+                                                          maskInfo,
+                                                          origWanted,
+                                                          levelExist,
+                                                          producerExist,
+                                                          paramNameOnly,
+                                                          levelNameOnly,
+                                                          producerNameOnly,
+                                                          modelRunIndex,
+                                                          timeOffsetInHours))
+  {
+    if (!producerExist)
+    { // Jos ei tuottajaa, kyse on sitten editoidusta datasta
+      return std::make_pair(
+          true, NFmiDefineWantedData(NFmiInfoData::kEditable, originalDataVariableString));
+    }
+    else
+    {
+      return std::make_pair(true,
+                            NFmiDefineWantedData(*maskInfo->GetDataIdent().GetProducer(),
+                                                 *maskInfo->GetDataIdent().GetParam(),
+                                                 maskInfo->GetLevel(),
+                                                 originalDataVariableString));
+    }
+  }
+  return std::make_pair(false, NFmiDefineWantedData());
+}
+
 bool NFmiSmartToolIntepreter::ExtractResolutionInfo()
 {
-  // Haluttu macroParam resoluutio kerrotaan seuraavanlaisilla lausekkeilla:
-  // resolution = 12.5  // [km]
-  // TAI
-  // resolution = hir_surface  // tai level tyyppi voi olla myös pressure/hybrid/height
-
   GetToken();
   string assignOperator = token;
   if (assignOperator == string("="))
   {
     GetToken();
     string resolutionStr = token;
-    NFmiStringTools::LowerCase(resolutionStr);
-    vector<string> resolutionParts = NFmiStringTools::Split(resolutionStr, "_");
-    if (resolutionParts.size() == 1)
+
+    try
     {
-      // Editoitu data on poikkeus, joka hanskataan ensin
-      if (resolutionParts[0] == std::string("edited"))
-      {
-        itsExtraMacroParamData->UseEditedDataForResolution(true);
-        return true;
-      }
-      else
-      {
-        // Konversio heittää poikkeuksen, jos kyseessä ei ole luku, joten siitä tulee oma
-        // virheilmoitus
-        itsExtraMacroParamData->GivenResolutionInKm(
-            NFmiStringTools::Convert<float>(resolutionParts[0]));
-        return true;
-      }
+      itsExtraMacroParamData.GivenResolutionInKm(NFmiStringTools::Convert<float>(resolutionStr));
+      return true;
     }
-    else if (resolutionParts.size() == 2)
+    catch (...)
     {
-      itsExtraMacroParamData->Producer(
-          NFmiSmartToolIntepreter::GetPossibleProducerInfo(resolutionParts[0]).first);
-      auto iter = itsResolutionLevelTypes.find(resolutionParts[1]);
-      if (iter != itsResolutionLevelTypes.end())
-      {
-        itsExtraMacroParamData->LevelType(iter->second);
-        return true;
-      }
-      else
-      {
-        std::string errorStr(
-            ::GetDictionaryString("Given 'resolution' data level type was illegal"));
-        errorStr += ".\n" + ::GetDictionaryString("Try something like following") + ":\n";
-        errorStr += ::GetDictionaryString("resolution = ec_surface OR pressure\\hybrid\\height");
-        throw std::runtime_error(errorStr);
-      }
+      // saattaa heittää poikkeuksia, mutta ei fataalia, jatketaan sitten taas erilaisten
+      // asioiden tutkimista
+    }
+
+    auto variableDataInfo = GetPossibleVariableDataInfo(resolutionStr);
+    if (variableDataInfo.first)
+    {
+      itsExtraMacroParamData.WantedResolutionData(variableDataInfo.second);
+      return true;
     }
   }
 
   // Jos löytyi resolution -lauseke, mutta muuten ehdot eivät täyttyneet, tehdään virheilmoitus.
   std::string errorStr(::GetDictionaryString("Given 'resolution' operation was illegal"));
-  errorStr += ".\n";
+  errorStr += "\n";
   errorStr += ::GetDictionaryString("Try something like following");
   errorStr += ":\n";
-  errorStr += ::GetDictionaryString("resolution = 12.5");
+  errorStr += ::GetDictionaryString("resolution = 25");
   errorStr += "\n" + ::GetDictionaryString("OR") + "\n";
   errorStr += ::GetDictionaryString("resolution = ec_surface");
+  errorStr += "\n" + ::GetDictionaryString("OR") + "\n";
+  errorStr +=
+      ::GetDictionaryString("resolution = T_ec (ec surface data with Temperature parameter in it)");
+  errorStr += "\n";
+  errorStr += ::GetDictionaryString(
+      "resolution = par4_prod240_850 (data which has par4 (Temperature) from producer with id 240 "
+      "with pressure level 850 hPa)");
+  throw std::runtime_error(errorStr);
+}
+
+std::pair<bool, NFmiDefineWantedData> NFmiSmartToolIntepreter::GetPossibleVariableDataInfo(
+    const std::string &originalResolutionStr)
+{
+  std::string resolutionStr = originalResolutionStr;
+  NFmiStringTools::LowerCase(resolutionStr);
+
+  // Editoitu data on poikkeus, joka hanskataan ensin
+  if (resolutionStr == std::string("edited"))
+  {
+    return std::make_pair(true,
+                          NFmiDefineWantedData(NFmiInfoData::kEditable, originalResolutionStr));
+  }
+
+  vector<string> resolutionParts = NFmiStringTools::Split(resolutionStr, "_");
+
+  try
+  {
+    // Tutkitaan ensin producer_leveltype (esim. ec_surface) type case
+    if (resolutionParts.size() == 2)
+    {
+      auto producerLevelTypeInfo = ::CheckForProducerLevelType(
+          resolutionParts[0], resolutionParts[1], originalResolutionStr, itsResolutionLevelTypes);
+      if (producerLevelTypeInfo.first)
+      {
+        return std::make_pair(true, producerLevelTypeInfo.second);
+      }
+    }
+  }
+  catch (...)
+  {
+    // saattaa heittää poikkeuksia, mutta ei fataalia, jatketaan sitten taas erilaisten asioiden
+    // tutkimista
+  }
+
+  // Tutkitaan lopuksi param_producer_possiblelevel (esim. T_ec tai par43_prod221 tai T_meps_850)
+  // type case
+  auto variableDataInfo = CheckForVariableDataType(resolutionStr);
+  if (variableDataInfo.first)
+  {
+    auto &wantedResolutionData = variableDataInfo.second;
+    wantedResolutionData.originalDataString_ = originalResolutionStr;
+    return std::make_pair(true, wantedResolutionData);
+  }
+
+  return std::make_pair(false, NFmiDefineWantedData());
+}
+
+bool NFmiSmartToolIntepreter::ExtractFixedBaseData()
+{
+  GetToken();
+  string assignOperator = token;
+  if (assignOperator == string("="))
+  {
+    GetToken();
+    string resolutionStr = token;
+
+    auto variableDataInfo = GetPossibleVariableDataInfo(resolutionStr);
+    if (variableDataInfo.first)
+    {
+      itsExtraMacroParamData.WantedFixedBaseData(variableDataInfo.second);
+      return true;
+    }
+  }
+
+  // Jos löytyi resolution -lauseke, mutta muuten ehdot eivät täyttyneet, tehdään virheilmoitus.
+  std::string errorStr(::GetDictionaryString("Given 'FixedBaseData' operation was illegal"));
+  errorStr += "\n";
+  errorStr += ::GetDictionaryString("Try something like following");
+  errorStr += ":\n";
+  errorStr += ::GetDictionaryString("FixedBaseData = ec_surface");
+  errorStr += "\n" + ::GetDictionaryString("OR") + "\n";
+  errorStr +=
+      ::GetDictionaryString("FixedBaseData = T_ec (ec surface data with Temperature parameter in it)");
+  errorStr += "\n";
+  errorStr += ::GetDictionaryString(
+      "FixedBaseData = par4_prod240_850 (data which has par4 (Temperature) from producer with id 240 "
+      "with pressure level 850 hPa)");
   throw std::runtime_error(errorStr);
 }
 
@@ -3056,7 +3182,7 @@ bool NFmiSmartToolIntepreter::ExtractCalculationPointInfo()
     // että voidaan tarvittaessa jatkaa)
     try
     {
-      if(itsExtraMacroParamData->AddCalculationPointProducer(
+      if(itsExtraMacroParamData.AddCalculationPointProducer(
           NFmiSmartToolIntepreter::GetPossibleProducerInfo(latitudeStr).first))
       {
         return true;
@@ -3080,7 +3206,7 @@ bool NFmiSmartToolIntepreter::ExtractCalculationPointInfo()
           if (longitude >= -180 && longitude <= 360)
           {
             NFmiPoint latlon(longitude, latitude);
-            itsExtraMacroParamData->AddCalculationPoint(latlon);
+            itsExtraMacroParamData.AddCalculationPoint(latlon);
             return true;
           }
           else
@@ -3118,7 +3244,7 @@ bool NFmiSmartToolIntepreter::ExtractObservationRadiusInfo()
     try
     {
       float obsRadiusInKm = NFmiStringTools::Convert<float>(obsRadiusStr);
-      itsExtraMacroParamData->ObservationRadiusInKm(obsRadiusInKm);
+      itsExtraMacroParamData.ObservationRadiusInKm(obsRadiusInKm);
       return true;
     }
     catch (...)
@@ -3142,7 +3268,7 @@ bool NFmiSmartToolIntepreter::ExtractObservationRadiusInfo()
     try
     {
       int workingThreadCount = NFmiStringTools::Convert<int>(workingThreadCountStr);
-      itsExtraMacroParamData->WorkingThreadCount(workingThreadCount);
+      itsExtraMacroParamData.WorkingThreadCount(workingThreadCount);
       return true;
     }
     catch (...)
@@ -3170,7 +3296,7 @@ bool NFmiSmartToolIntepreter::ExtractSymbolTooltipFile()
                                                                    itsAbsoluteBasePath);
     if (NFmiFileSystem::FileExists(pathToSymbolFile))
     {
-      itsExtraMacroParamData->SymbolTooltipFile(pathToSymbolFile);
+      itsExtraMacroParamData.SymbolTooltipFile(pathToSymbolFile);
       return true;
     }
     else
@@ -3197,7 +3323,7 @@ bool NFmiSmartToolIntepreter::ExtractMacroParamDescription()
     std::string descriptionText = std::string(exp_ptr, exp_end);
     // otetään edessä ja mahdolliset perässä olevat spacet pois
     NFmiStringTools::Trim(descriptionText);
-    itsExtraMacroParamData->MacroParamDescription(descriptionText);
+    itsExtraMacroParamData.MacroParamDescription(descriptionText);
     return true;
   }
 
@@ -3220,7 +3346,7 @@ bool NFmiSmartToolIntepreter::ExtractCalculationType()
     NFmiStringTools::Trim(calculationTypeText);
     if (boost::iequals(calculationTypeText, "index"))
     {
-      itsExtraMacroParamData->CalculationType(MacroParamCalculationType::Index);
+      itsExtraMacroParamData.CalculationType(MacroParamCalculationType::Index);
       return true;
     }
   }
@@ -3252,6 +3378,8 @@ bool NFmiSmartToolIntepreter::IsVariableExtraInfoCommand(const std::string &theV
       return ExtractCalculationType();
     else if (it->second == NFmiAreaMask::WorkingThreadCount)
       return ExtractWorkingThreadCount();
+    else if (it->second == NFmiAreaMask::FixedBaseData)
+      return ExtractFixedBaseData();
   }
   return false;
 }
@@ -3331,12 +3459,6 @@ bool NFmiSmartToolIntepreter::IsVariableBinaryOperator(
     return true;
   }
   return false;
-}
-
-std::unique_ptr<NFmiExtraMacroParamData>
-NFmiSmartToolIntepreter::GetOwnershipOfExtraMacroParamData()
-{
-  return std::move(itsExtraMacroParamData);
 }
 
 NFmiParam NFmiSmartToolIntepreter::GetParamFromString(const std::string &theParamText)
@@ -4376,6 +4498,7 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsExtraInfoCommands.insert(FunctionMap::value_type(string("macroparamdescription"), NFmiAreaMask::MacroParamDescription));
     itsExtraInfoCommands.insert(FunctionMap::value_type(string("calculationtype"), NFmiAreaMask::CalculationType));
     itsExtraInfoCommands.insert(FunctionMap::value_type(string("workingthreadcount"), NFmiAreaMask::WorkingThreadCount));
+    itsExtraInfoCommands.insert(FunctionMap::value_type(string("fixedbasedata"), NFmiAreaMask::FixedBaseData));
 
     itsResolutionLevelTypes.insert(ResolutionLevelTypesMap::value_type(string("surface"), kFmiMeanSeaLevel));
     itsResolutionLevelTypes.insert(ResolutionLevelTypesMap::value_type(string("pressure"), kFmiPressureLevel));

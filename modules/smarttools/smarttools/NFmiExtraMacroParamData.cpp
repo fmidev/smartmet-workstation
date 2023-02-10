@@ -4,36 +4,137 @@
 
 #include <boost/math/special_functions/round.hpp>
 
+// *************************************************************
+// *************  FindWantedInfoData defines *******************
+// *************************************************************
+
+FindWantedInfoData::FindWantedInfoData(boost::shared_ptr<NFmiFastQueryInfo> &foundInfo,
+                                       const std::string &originalDataDescription,
+                                       const std::set<ReasonForDataRejection> &rejectionReasons)
+    : foundInfo_(foundInfo),
+      originalDataDescription_(originalDataDescription),
+      rejectionReasons_(rejectionReasons)
+{
+}
+
+// *************************************************************
+// *************  NFmiDefineWantedData defines *****************
+// *************************************************************
+
+NFmiDefineWantedData::NFmiDefineWantedData() = default;
+
+NFmiDefineWantedData::NFmiDefineWantedData(NFmiInfoData::Type dataType,
+                                           const std::string &originalDataString)
+    : dataType_(dataType), originalDataString_(originalDataString)
+{
+}
+
+NFmiDefineWantedData::NFmiDefineWantedData(const NFmiProducer &producer,
+                                           FmiLevelType levelType,
+                                           const std::string &originalDataString)
+    : producer_(producer), levelType_(levelType), originalDataString_(originalDataString)
+{
+}
+
+NFmiDefineWantedData::NFmiDefineWantedData(const NFmiProducer &producer,
+                     const NFmiParam &param,
+                     const NFmiLevel *level,
+                     const std::string &originalDataString)
+    : producer_(producer), param_(param), originalDataString_(originalDataString)
+{
+  levelPtr_.reset(level ? new NFmiLevel(*level) : nullptr);
+}
+
+NFmiDefineWantedData::NFmiDefineWantedData(const NFmiDefineWantedData &other)
+    : dataType_(other.dataType_),
+      producer_(other.producer_),
+      param_(other.param_),
+      levelPtr_(),
+      levelType_(other.levelType_),
+      originalDataString_(other.originalDataString_)
+{
+  levelPtr_.reset(other.levelPtr_ ? new NFmiLevel(*other.levelPtr_) : nullptr);
+}
+
+NFmiDefineWantedData& NFmiDefineWantedData::operator=(const NFmiDefineWantedData& other)
+{
+  if (this != &other)
+  {
+    dataType_ = other.dataType_;
+    producer_ = other.producer_;
+    param_ = other.param_;
+    levelPtr_.reset(other.levelPtr_ ? new NFmiLevel(*other.levelPtr_) : nullptr);
+    levelType_ = other.levelType_;
+    originalDataString_ = other.originalDataString_;
+  }
+  return *this;
+}
+
+bool NFmiDefineWantedData::IsEditedData() const
+{
+    return dataType_ == NFmiInfoData::kEditable;
+}
+
+bool NFmiDefineWantedData::IsProducerLevelType() const
+{
+  return producer_.GetIdent() != 0 && levelType_ != kFmiNoLevelType;
+}
+
+bool NFmiDefineWantedData::IsParamProducerLevel() const
+{
+  return producer_.GetIdent() != 0 && param_.GetIdent() != 0;
+}
+
+const NFmiLevel *NFmiDefineWantedData::UsedLevel() const
+{
+  if (levelPtr_)
+  {
+    if (levelPtr_->GetIdent() != 0)
+    {
+      return levelPtr_.get();
+    }
+  }
+
+  return nullptr;
+}
+
+bool NFmiDefineWantedData::IsInUse() const
+{
+  return IsEditedData() || IsProducerLevelType() || IsParamProducerLevel();
+}
+
+// *************************************************************
+// *************  NFmiExtraMacroParamData defines **************
+// *************************************************************
+
 NFmiExtraMacroParamData::NFmiExtraMacroParamData()
-    : fUseEditedDataForResolution(false),
-      itsGivenResolutionInKm(kFloatMissing),
-      itsProducer(),
-      itsLevelType(kFmiNoLevelType),
-      itsDataBasedResolutionInKm(kFloatMissing, kFloatMissing),
+    : itsWantedResolutionData(),
       itsResolutionMacroParamData(),
       itsCalculationPoints(),
       itsCalculationPointProducers(),
-      itsObservationRadiusInKm(kFloatMissing),
-      itsObservationRadiusRelative(kFloatMissing),
       itsSymbolTooltipFile(),
       itsMacroParamDescription()
 {
 }
 
+void NFmiExtraMacroParamData::Clear() 
+{ 
+  *this = NFmiExtraMacroParamData(); 
+}
+
 void NFmiExtraMacroParamData::FinalizeData(NFmiInfoOrganizer &theInfoOrganizer)
 {
-  if (fUseEditedDataForResolution)
+  if (itsGivenResolutionInKm != kFloatMissing)
   {
-    InitializeResolutionWithEditedData(theInfoOrganizer);
+    InitializeResolutionData(theInfoOrganizer.MacroParamData()->Area(),
+                             NFmiPoint(itsGivenResolutionInKm, itsGivenResolutionInKm));
   }
-  else if (itsGivenResolutionInKm != kFloatMissing)
+  else
   {
-    InitializeResolutionData(theInfoOrganizer, NFmiPoint(itsGivenResolutionInKm, itsGivenResolutionInKm));
+    InitializeDataBasedResolutionData(theInfoOrganizer);
   }
-  else if (itsProducer.GetIdent() != 0)
-  {
-    InitializeDataBasedResolutionData(theInfoOrganizer, itsProducer, itsLevelType);
-  }
+
+  InitializeFixedBaseDataInfo(theInfoOrganizer);
 
   if (!itsCalculationPointProducers.empty())
   {
@@ -45,7 +146,7 @@ void NFmiExtraMacroParamData::FinalizeData(NFmiInfoOrganizer &theInfoOrganizer)
 
 bool NFmiExtraMacroParamData::UseSpecialResolution() const
 {
-  return itsResolutionMacroParamData != 0;
+  return itsResolutionMacroParamData != nullptr;
 }
 
 void NFmiExtraMacroParamData::SetUsedAreaForData(boost::shared_ptr<NFmiFastQueryInfo> &theData,
@@ -81,16 +182,15 @@ static void CalcUsedGridSize(const NFmiArea *usedArea,
   }
 }
 
-void NFmiExtraMacroParamData::InitializeResolutionData(NFmiInfoOrganizer &theInfoOrganizer,
+void NFmiExtraMacroParamData::InitializeResolutionData(const NFmiArea *usedArea,
                                                        const NFmiPoint &usedResolutionInKm)
 {
   int gridSizeX = 0;
   int gridSizeY = 0;
-  const NFmiArea *usedArea = theInfoOrganizer.MacroParamData()->Area();
   ::CalcUsedGridSize(usedArea, gridSizeX, gridSizeY, usedResolutionInKm);
 
   itsResolutionMacroParamData =
-      theInfoOrganizer.CreateNewMacroParamData(gridSizeX, gridSizeY, NFmiInfoData::kMacroParam);
+      NFmiInfoOrganizer::CreateNewMacroParamData(gridSizeX, gridSizeY, NFmiInfoData::kMacroParam);
   // Pit‰‰ viel‰ s‰‰t‰‰ datan alue kartan zoomaus alueeseen. Se saadaan infoOrganizerin omasta
   // macroParamDatasta.
   SetUsedAreaForData(itsResolutionMacroParamData, usedArea);
@@ -147,10 +247,12 @@ static bool IsPrimaryLevelDataType(boost::shared_ptr<NFmiFastQueryInfo> &info)
 }
 
 static boost::shared_ptr<NFmiFastQueryInfo> FindWantedInfo(
-    std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfos, FmiLevelType theLevelType)
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theInfos,
+    FmiLevelType theLevelType,
+    std::set<ReasonForDataRejection> &rejectionReasonsOut)
 {
-  boost::shared_ptr<NFmiFastQueryInfo>
-      backupData;  // T‰h‰n laitetaan talteen ei prim‰‰ri datatyyppi varmuuden varalle
+  // T‰h‰n laitetaan talteen ei prim‰‰ri datatyyppi varmuuden varalle
+  boost::shared_ptr<NFmiFastQueryInfo> backupData;
   bool searchSingleLevelData = (theLevelType == kFmiMeanSeaLevel);
   for (size_t i = 0; i < theInfos.size(); i++)
   {
@@ -167,6 +269,8 @@ static boost::shared_ptr<NFmiFastQueryInfo> FindWantedInfo(
           else
             backupData = info;
         }
+        else
+          rejectionReasonsOut.insert(ReasonForDataRejection::WrongLevelStructure);
       }
       else
       {
@@ -177,8 +281,62 @@ static boost::shared_ptr<NFmiFastQueryInfo> FindWantedInfo(
           else
             backupData = info;
         }
+        else
+          rejectionReasonsOut.insert(ReasonForDataRejection::WrongLevelType);
       }
     }
+    else
+      rejectionReasonsOut.insert(ReasonForDataRejection::NoGridData);
+  }
+  return backupData;
+}
+
+static boost::shared_ptr<NFmiFastQueryInfo> FindWantedInfo(
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theInfos,
+    const NFmiParam &param,
+    const NFmiLevel *level,
+    std::set<ReasonForDataRejection> &rejectionReasonsOut)
+{
+  // T‰h‰n laitetaan talteen ei prim‰‰ri datatyyppi varmuuden varalle
+  boost::shared_ptr<NFmiFastQueryInfo> backupData;
+  bool searchSingleLevelData = (level == nullptr);
+  for (auto &info : theInfos)
+  {
+    // Vain hiladatat kelpaavat tarkasteluissa
+    if (info->Grid())
+    {
+      if (info->Param(param))
+      {
+        if (searchSingleLevelData)
+        {
+          if (info->SizeLevels() == 1)
+          {
+            if (::IsPrimarySurfaceDataType(info))
+              return info;  // Palautetaan surface tapauksessa 1. yksi tasoinen 'prim‰‰ri' data
+            else
+              backupData = info;
+          }
+          else
+            rejectionReasonsOut.insert(ReasonForDataRejection::WrongLevelStructure);
+        }
+        else
+        {
+          if (info->Level(*level))
+          {
+            if (::IsPrimaryLevelDataType(info))
+              return info;  // Palautetaan level tapauksessa 1. 'prim‰‰ri' data
+            else
+              backupData = info;
+          }
+          else
+            rejectionReasonsOut.insert(ReasonForDataRejection::NoLevel);
+        }
+      }
+      else
+        rejectionReasonsOut.insert(ReasonForDataRejection::NoParameter);
+    }
+    else
+      rejectionReasonsOut.insert(ReasonForDataRejection::NoGridData);
   }
   return backupData;
 }
@@ -209,46 +367,148 @@ static NFmiPoint CalcDataBasedResolutionInKm(boost::shared_ptr<NFmiFastQueryInfo
   return NFmiPoint(resolutionX / 1000., resolutionY / 1000.);
 }
 
-void NFmiExtraMacroParamData::InitializeResolutionWithEditedData(
-    NFmiInfoOrganizer &theInfoOrganizer)
+void NFmiExtraMacroParamData::UseDataForResolutionCalculations(
+    const NFmiArea *usedArea,
+    boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+    const std::string &dataDescriptionForErrorMessage)
 {
-  boost::shared_ptr<NFmiFastQueryInfo> info = theInfoOrganizer.FindInfo(NFmiInfoData::kEditable);
-  if (info)
+  if (theInfo)
   {
-    if (info->Grid())
+    if (theInfo->IsGrid())
     {
-      UseDataForResolutionCalculations(theInfoOrganizer, info);
+      itsDataBasedResolutionInKm = CalcDataBasedResolutionInKm(theInfo);
+      InitializeResolutionData(usedArea,
+                               itsDataBasedResolutionInKm);
     }
     else
-      throw std::runtime_error(
-          std::string("Edited data has no grid for 'resolution' calculations"));
+    {
+      throw std::runtime_error(std::string("Wanted 'resolution' data didn't have grid (") +
+                               dataDescriptionForErrorMessage + ")");
+    }
   }
   else
-    throw std::runtime_error(
-        std::string("Could not find the edited data for 'resolution' calculations"));
-}
-
-void NFmiExtraMacroParamData::UseDataForResolutionCalculations(
-    NFmiInfoOrganizer &theInfoOrganizer, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
-{
-  itsDataBasedResolutionInKm = CalcDataBasedResolutionInKm(theInfo);
-  InitializeResolutionData(theInfoOrganizer, itsDataBasedResolutionInKm);
-}
-
-void NFmiExtraMacroParamData::InitializeDataBasedResolutionData(NFmiInfoOrganizer &theInfoOrganizer,
-                                                                const NFmiProducer &theProducer,
-                                                                FmiLevelType theLevelType)
-{
-  std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infos =
-      theInfoOrganizer.GetInfos(theProducer.GetIdent());
-  boost::shared_ptr<NFmiFastQueryInfo> info = ::FindWantedInfo(infos, theLevelType);
-  if (info)
   {
-    UseDataForResolutionCalculations(theInfoOrganizer, info);
+    throw std::runtime_error(std::string("Could find wanted 'resolution' data for ") +
+                             dataDescriptionForErrorMessage);
   }
-  else
-    throw std::runtime_error(std::string("Could not find the given 'resolution' data for ") +
-                             ::GetProducerInfoForResolutionError(theProducer, theLevelType));
+}
+
+static std::string MakeMessageOfRejectionreasons(const std::set<ReasonForDataRejection> &rejectionReasons)
+{
+  if (rejectionReasons.empty())
+  {
+    return "unknown reason, error in program logic?";
+  }
+
+  auto wrongLevelTypeIter = rejectionReasons.find(ReasonForDataRejection::WrongLevelType);
+  if(wrongLevelTypeIter != rejectionReasons.end())
+  {
+    return "no data with correct level type";
+  }
+
+  auto wrongLevelIter = rejectionReasons.find(ReasonForDataRejection::NoLevel);
+  if (wrongLevelIter != rejectionReasons.end())
+  {
+    return "no data with correct level";
+  }
+
+  auto wrongLevelStructureIter = rejectionReasons.find(ReasonForDataRejection::WrongLevelStructure);
+  if (wrongLevelStructureIter != rejectionReasons.end())
+  {
+    return "no correct single level data";
+  }
+
+  auto noParamIter = rejectionReasons.find(ReasonForDataRejection::NoParameter);
+  if (noParamIter != rejectionReasons.end())
+  {
+    return "no correct parameter data";
+  }
+
+  auto noGridDataIter = rejectionReasons.find(ReasonForDataRejection::NoGridData);
+  if (noGridDataIter != rejectionReasons.end())
+  {
+    return "no grid data found";
+  }
+
+  return "data not found, error in program logic?";
+}
+
+static std::string MakeFindWantedInfoErrorMessage(const std::string &operationName,
+                                                  const FindWantedInfoData &findWantedInfoData)
+{
+  if (!findWantedInfoData.foundInfo_)
+  {
+    std::string message = "Couldn't find wanted '";
+    message += operationName;
+    message += "' data for ";
+    message += findWantedInfoData.originalDataDescription_;
+    message += ": ";
+    message += ::MakeMessageOfRejectionreasons(findWantedInfoData.rejectionReasons_);
+    return message;
+  }
+  return "";
+}
+
+void NFmiExtraMacroParamData::InitializeDataBasedResolutionData(NFmiInfoOrganizer &theInfoOrganizer)
+{
+  if (itsWantedResolutionData.IsInUse())
+  {
+    auto findWantedInfoData = FindWantedInfo(theInfoOrganizer, itsWantedResolutionData);
+    if (findWantedInfoData.foundInfo_)
+    {
+      UseDataForResolutionCalculations(
+          theInfoOrganizer.MacroParamData()->Area(), findWantedInfoData.foundInfo_, findWantedInfoData.originalDataDescription_);
+    }
+    else
+    {
+      throw std::runtime_error(::MakeFindWantedInfoErrorMessage("resolution", findWantedInfoData));
+    }
+  }
+}
+
+void NFmiExtraMacroParamData::InitializeFixedBaseDataInfo(NFmiInfoOrganizer &theInfoOrganizer)
+{
+  if (itsWantedFixedBaseData.IsInUse())
+  {
+    auto findWantedInfoData = FindWantedInfo(theInfoOrganizer, itsWantedFixedBaseData);
+    if (findWantedInfoData.foundInfo_)
+    {
+      itFixedBaseDataInfo = findWantedInfoData.foundInfo_;
+    }
+    else
+    {
+      throw std::runtime_error(::MakeFindWantedInfoErrorMessage("FixedBaseData", findWantedInfoData));
+    }
+  }
+}
+
+FindWantedInfoData NFmiExtraMacroParamData::FindWantedInfo(NFmiInfoOrganizer &theInfoOrganizer,
+                                                           const NFmiDefineWantedData &wantedData)
+{
+  std::set<ReasonForDataRejection> rejectionReasons;
+  boost::shared_ptr<NFmiFastQueryInfo> info;
+  if (wantedData.IsEditedData())
+  {
+    auto editedInfo = theInfoOrganizer.FindInfo(NFmiInfoData::kEditable);
+    if (editedInfo && editedInfo->IsGrid())
+      info = editedInfo;
+    else
+      rejectionReasons.insert(ReasonForDataRejection::NoGridData);
+  }
+  else if (wantedData.IsProducerLevelType())
+  {
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infos =
+        theInfoOrganizer.GetInfos(wantedData.producer_.GetIdent());
+    auto levelType = wantedData.levelType_;
+    info = ::FindWantedInfo(infos, levelType, rejectionReasons);
+  }
+  else if (wantedData.IsParamProducerLevel())
+  {
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infos =
+        theInfoOrganizer.GetInfos(wantedData.producer_.GetIdent());
+    info = ::FindWantedInfo(infos, wantedData.param_, wantedData.UsedLevel(), rejectionReasons);
+  }
+  return FindWantedInfoData(info, wantedData.originalDataString_, rejectionReasons);
 }
 
 static void AddCalculationPoints(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
