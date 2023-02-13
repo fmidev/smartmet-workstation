@@ -402,6 +402,7 @@ void CFmiViewMacroDlg::SelectMacro(const std::string & theFilePath)
         // Asetetaan kyseinen rivi valituksi, ja automaatio huolehtii lopusta
         itsGridCtrl.SetSelectedRange(row, 0, row, static_cast<int>(itsHeaders.size() - 1), TRUE);
         itsGridCtrl.EnsureVisible(row, 0);
+        itsSelectedMacroName = GetSelectedMacroName();
     }
 }
 
