@@ -2112,7 +2112,7 @@ bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>&
 	return false;
 }
 
-std::vector<FmiParameterName> gSoundingParameterList{ kFmiTemperature,kFmiDewPoint,kFmiHumidity,kFmiPressure,kFmiGeopHeight,kFmiWindSpeedMS,kFmiWindDirection,kFmiWindUMS,kFmiWindVMS,kFmiWindVectorMS,kFmiTotalCloudCover };
+std::vector<FmiParameterName> gSoundingParametersWithNormalAvg{ kFmiTemperature,kFmiDewPoint,kFmiHumidity,kFmiPressure,kFmiGeopHeight,kFmiWindUMS,kFmiWindVMS,kFmiTotalCloudCover };
 
 static bool CalcAvgSoundingData(TotalSoundingData& theSoundingDataOut, std::vector<NFmiSoundingDataOpt1>& soundingDataList, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo)
 {
@@ -2120,12 +2120,12 @@ static bool CalcAvgSoundingData(TotalSoundingData& theSoundingDataOut, std::vect
 	{
 		NFmiDataModifierAvg avg;
 		auto soundingDataSize = soundingDataList.size();
-		auto parameterSize = gSoundingParameterList.size();
-		auto levelSize = soundingDataList.front().GetParamData(gSoundingParameterList.front()).size();
+		auto parameterSize = gSoundingParametersWithNormalAvg.size();
+		auto levelSize = soundingDataList.front().GetParamData(gSoundingParametersWithNormalAvg.front()).size();
 		// Varmistetaan että tulosdatassa on tilaa lähtödatan levelien verran
 		for(size_t parameterIndex = 0; parameterIndex < parameterSize; parameterIndex++)
 		{
-			theSoundingDataOut.itsSoundingData.GetParamData(gSoundingParameterList[parameterIndex]).resize(levelSize);
+			theSoundingDataOut.itsSoundingData.GetParamData(gSoundingParametersWithNormalAvg[parameterIndex]).resize(levelSize);
 		}
 
 		// Lasketaan jokaisen lähtödatan parametetrien keskiarvo kaikille leveleille erikseen ja 
@@ -2137,10 +2137,22 @@ static bool CalcAvgSoundingData(TotalSoundingData& theSoundingDataOut, std::vect
 				avg.Clear();
 				for(size_t soundingDataIndex = 0; soundingDataIndex < soundingDataSize; soundingDataIndex++)
 				{
-					avg.Calculate(soundingDataList[soundingDataIndex].GetParamData(gSoundingParameterList[parameterIndex])[levelIndex]);
+					avg.Calculate(soundingDataList[soundingDataIndex].GetParamData(gSoundingParametersWithNormalAvg[parameterIndex])[levelIndex]);
 				}
-				theSoundingDataOut.itsSoundingData.GetParamData(gSoundingParameterList[parameterIndex])[levelIndex] = avg.CalculationResult();
+				theSoundingDataOut.itsSoundingData.GetParamData(gSoundingParametersWithNormalAvg[parameterIndex])[levelIndex] = avg.CalculationResult();
 			}
+		}
+
+		// Tietyt tuuliparametrit (WS, WD, WVec) pitää laskea u- ja v-komponenttien Avg arvojen avulla
+		const auto& u = theSoundingDataOut.itsSoundingData.GetParamData(kFmiWindUMS);
+		const auto& v = theSoundingDataOut.itsSoundingData.GetParamData(kFmiWindVMS);
+		auto& WS = theSoundingDataOut.itsSoundingData.GetParamData(kFmiWindSpeedMS);
+		auto& WD = theSoundingDataOut.itsSoundingData.GetParamData(kFmiWindDirection);
+		auto& WVec = theSoundingDataOut.itsSoundingData.GetParamData(kFmiWindVectorMS);
+		for(size_t levelIndex = 0; levelIndex < levelSize; levelIndex++)
+		{
+			NFmiFastInfoUtils::CalcDequeWindSpeedAndDirectionFromComponents(u, v, WS, WD);
+			NFmiFastInfoUtils::CalcDequeWindVectorFromSpeedAndDirection(WS, WD, WVec);
 		}
 
 		theSoundingDataOut.itsSoundingData.MakeFillDataPostChecks(theInfo, theGroundDataInfo);
