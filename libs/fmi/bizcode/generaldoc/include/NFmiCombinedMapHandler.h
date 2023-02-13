@@ -271,6 +271,7 @@ public:
     void selectMapLayersByMacroReferenceNamesFromViewMacro(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, const std::string& backgroundMacroReferenceName, const std::string& overlayMacroReferenceName) override;
     void selectCombinedMapModeIndices(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, int usedCombinedModeMapIndex, int usedCombinedModeOverlayMapIndex) override;
     void clearMacroParamCache(unsigned long mapViewDescTopIndex, unsigned long realRowIndex, boost::shared_ptr<NFmiDrawParam>& drawParam) override;
+    void clearAllMacroParamDataCacheDependentOfEditedDataAfterEditedDataChanges() override;
 
 private:
     unsigned int getMapViewCount() const;
@@ -302,7 +303,6 @@ private:
     bool findEarliestLastObservation(unsigned long mapViewDescTopIndex, int timeStepInMinutes, NFmiMetTime& newLastTime, bool ignoreSatelImages);
     void updateTimeInLockedDescTops(const NFmiMetTime& wantedTime, unsigned int originalMapViewDescTopIndex);
     std::vector<std::string> makeListOfUsedMacroParamsDependedOnEditedData();
-    void clearAllMacroParamDataCacheDependentOfEditedDataAfterEditedDataChanges();
     bool isMacroParamDependentOfEditedData(boost::shared_ptr<NFmiDrawParam>& drawParam);
     void clearAllViewRowsWithEditedData();
     bool doMacroParamVerticalDataChecks(NFmiFastQueryInfo& info, NFmiInfoData::Type dataType, const MacroParamDataInfo& macroParamDataInfo);

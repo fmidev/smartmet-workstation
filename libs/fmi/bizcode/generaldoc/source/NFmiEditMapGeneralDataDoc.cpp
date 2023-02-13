@@ -2488,6 +2488,7 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 					CPManager(true)->Area(editedInfo->Area());
 					CPManager(true)->Init(editedInfo->TimeDescriptor(), editedInfo->ParamBag(), fileName, false, true);
 				}
+				GetCombinedMapHandler()->clearAllMacroParamDataCacheDependentOfEditedDataAfterEditedDataChanges();
 			}
 			fIsTEMPCodeSoundingDataAlsoCopiedToEditedData = false;
 
