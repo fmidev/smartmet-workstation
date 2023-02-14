@@ -70,6 +70,7 @@
 #include "datautilities\DataUtilitiesAdapter.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "NFmiVisualizationSpaceoutSettings.h"
+#include "NFmiSmartToolModifier.h"
 
 #include <limits>
 
@@ -562,50 +563,6 @@ static void AdjustZoomedAreaRect(NFmiRect &theZoomedAreaRect)
 //*********** täytetään toolmaster piirto functionlle tietoja ************
 //************************************************************************
 
-// NFmiRect on käänteisessä maailmassa, pitää tehdä oma pikku rect-viritelmä.
-struct MRect
-{
-    MRect(const NFmiRect &theRect)
-        :x1(theRect.Left())
-        , y1(theRect.Top())
-        , x2(theRect.Right())
-        , y2(theRect.Bottom())
-    {}
-
-    double x1;
-    double y1;
-    double x2;
-    double y2;
-};
-
-// Laskee, leikkaavatko annetut suorakulmiot
-bool AreRectsIntersecting(const MRect &theRect1, const MRect &theRect2)
-{
-    if(FmiMax(theRect1.x1, theRect2.x1) > FmiMin(theRect1.x2, theRect2.x2)
-        || FmiMax(theRect1.y1, theRect2.y1) > FmiMin(theRect1.y2, theRect2.y2))
-        return false;
-    else
-        return true;
-}
-
-// laskee annettujen suorakulmioiden avulla halutut datan croppauksessa käytetyt xy-pisteet.
-// Eli leikkaus pinnan vasen ala ja oikea ylä kulmat.
-// Oletus, annetut suorakulmiot leikkaavat.
-void CalcXYCropPoints(const MRect &theDataRect, const MRect &theViewRect, NFmiPoint &theBLXYCropPoint, NFmiPoint &theTRXYCropPoint)
-{
-    theBLXYCropPoint.X(FmiMax(theDataRect.x1, theViewRect.x1));
-    theBLXYCropPoint.Y(FmiMax(theDataRect.y1, theViewRect.y1));
-
-    theTRXYCropPoint.X(FmiMin(theDataRect.x2, theViewRect.x2));
-    theTRXYCropPoint.Y(FmiMin(theDataRect.y2, theViewRect.y2));
-
-    // Tämä on ikävää koodia, mutta siivoan jos jaksan, heh hee...
-    // käännän y-akselin jälleen
-    double tmp = theBLXYCropPoint.Y();
-    theBLXYCropPoint.Y(theTRXYCropPoint.Y());
-    theTRXYCropPoint.Y(tmp);
-}
-
 
 // Tämä funktio palauttaa true, jos pelkän zoomatun alueen datan käyttö ja piirto on mahdollista.
 // Jos mahdollista palauttaa myös uuden zoomed-area-rectin ja zoomatun alueen hilan 'boundingbox' indeksit.
@@ -617,73 +574,15 @@ void CalcXYCropPoints(const MRect &theDataRect, const MRect &theViewRect, NFmiPo
 // 1. Annettu data on hilamuotoista.
 // 2. Annettu area ja datan area ovat samaa tyyppiä (ja ne eivät ole 0-pointtereita!).
 // 3. Annettu data (theInfo) on olemassa.
-bool NFmiIsoLineView::IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theCurrentZoomedMapArea, NFmiRect &theWantedNewZoomedAreaRect, int &x1, int &y1, int &x2, int &y2)
+bool NFmiIsoLineView::IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, boost::shared_ptr<NFmiArea>& theMapArea, NFmiRect& theCroppedXyRectOut, int& x1, int& y1, int& x2, int& y2)
 {
-    static const double errorLimit = 0.000001;
     if(IsQ2ServerUsed() && fGetCurrentDataFromQ2Server) // q2serveriltä haetaan aina vain karttanäytön täyttävään hilaan, eli zooming alueen rajoittamista ei saa käyttää
         return false;
     if(IsSpecialMatrixDataDraw())
         return false;
     if(!NFmiDrawParam::IsMacroParamCase(theInfo->DataType()))
     {
-        // lasketaan ensin xy-pisteet, johon datan croppaus rajoittuu
-        NFmiRect zoomInDataAreaXYRect(theInfo->Area()->XYArea(theCurrentZoomedMapArea.get()));
-        if(zoomInDataAreaXYRect.Width() == 0 || zoomInDataAreaXYRect.Height() == 0)
-            return false; // en tiedä miten latin-america data vs. pacific-world croppaus tarkastelu pitäisi hoitaa, mutta tämä on quick-fix siihen, syntyvän rectin width on 0
-        NFmiPoint blXYCropPoint(zoomInDataAreaXYRect.BottomLeft());
-        NFmiPoint trXYCropPoint(zoomInDataAreaXYRect.TopRight());
-        if(AreRectsIntersecting(theInfo->Area()->XYArea(), zoomInDataAreaXYRect))
-        { // jos ei leikannut (ja ne ovat sisäkkäin, koska jos ne ovat pois toistensä päältä, täällä ei oltaisi),
-          // laske käytetyt leikkaus pisteet
-            CalcXYCropPoints(theInfo->Area()->XYArea(), zoomInDataAreaXYRect, blXYCropPoint, trXYCropPoint);
-        }
-
-        { // zoomaus alueen pitää siis olla kokonaan datan sisällä
-            NFmiPoint blGridPoint(theInfo->Grid()->XYToGrid(blXYCropPoint));
-            NFmiPoint trGridPoint(theInfo->Grid()->XYToGrid(trXYCropPoint));
-            if(::fabs(blGridPoint.X() - static_cast<int>(blGridPoint.X())) < errorLimit)
-                x1 = boost::math::iround(blGridPoint.X()); // tietyissä tapauksissa halutaan pyöristää lähimpää, kun double virhe saattaa aiheuttaa ongelmia
-            else
-                x1 = static_cast<int>(blGridPoint.X()); // muuten floor-toiminto
-
-            if(::fabs(blGridPoint.Y() - static_cast<int>(blGridPoint.Y())) < errorLimit)
-                y1 = boost::math::iround(blGridPoint.Y()); // tietyissä tapauksissa halutaan pyöristää lähimpää, kun double virhe saattaa aiheuttaa ongelmia
-            else
-                y1 = static_cast<int>(blGridPoint.Y()); // muuten floor-toiminto
-
-            if(::fabs(trGridPoint.X() - static_cast<int>(trGridPoint.X())) < errorLimit)
-                x2 = boost::math::iround(trGridPoint.X()); // tietyissä tapauksissa halutaan pyöristää lähimpää, kun double virhe saattaa aiheuttaa ongelmia
-            else
-                x2 = static_cast<int>(::ceil(trGridPoint.X())); // muuten ceil-toiminto
-
-            if(::fabs(trGridPoint.Y() - static_cast<int>(trGridPoint.Y())) < errorLimit)
-                y2 = boost::math::iround(trGridPoint.Y()); // tietyissä tapauksissa halutaan pyöristää lähimpää, kun double virhe saattaa aiheuttaa ongelmia
-            else
-                y2 = static_cast<int>(::ceil(trGridPoint.Y())); // muuten ceil-toiminto
-
-            double gridCountTotal = theInfo->SizeLocations();
-            double gridCountZoomed = (x2 - x1 + 1) * (y2 - y1 + 1);
-            if(gridCountZoomed < 4) // pitää tulla vähintään 2x2 hila, miiten ei ole järkeä ja koodissa on vikaa
-                return false; // tässä on jotain vikaa, pitäisi heittää poikkeus tai jotain
-            if(gridCountZoomed > gridCountTotal)
-                return false; // nyt oli jotain vikaa, eihä tässä näin pitäisi käydä, koodissa vikaa
-            if(gridCountZoomed / gridCountTotal < 0.9)
-            { // laitetaan joku prosentti raja siihen milloin tehdään zoomatun datan piirtoa erikois kikoin
-              // Esim. jos zoomatun alueen hilapisteet vastaavat 90% datan kokonais hilapisteistä, kannattaa optimointi
-
-                // zoomatun alueen (sen mikä tuli hila pisteiden suurennoksessa) recti pitää vielä laskea
-                NFmiPoint zoomedBottomLeftLatlon(theInfo->Grid()->GridToLatLon(NFmiPoint(x1, y1)));
-                NFmiPoint zoomedTopRightLatlon(theInfo->Grid()->GridToLatLon(NFmiPoint(x2, y2)));
-                NFmiArea *newZoomedArea = const_cast<NFmiArea*>(theInfo->Area())->NewArea(zoomedBottomLeftLatlon, zoomedTopRightLatlon);
-                if(newZoomedArea)
-                {
-                    newZoomedArea->SetXYArea(NFmiRect(0, 0, 1, 1));
-                    theWantedNewZoomedAreaRect = newZoomedArea->XYArea(GetArea().get());
-                    delete newZoomedArea;
-                    return true;
-                }
-            }
-        }
+        return NFmiSmartToolModifier::GetPossibleCropGridPoints(theInfo, theMapArea, theCroppedXyRectOut, x1, y1, x2, y2, 0.9);
     }
     return false;
 }
@@ -1967,10 +1866,7 @@ bool NFmiIsoLineView::IsIsoLinesDrawnWithImagine(void)
 bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect &zoomedAreaRect)
 {
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
-    int x1 = 0;
-    int y1 = 0;
-    int x2 = 0;
-    int y2 = 0;
+
     isoLineData.itsIsolineMinLengthFactor = itsCtrlViewDocumentInterface->ApplicationWinRegistry().IsolineMinLengthFactor();
 
     if(!FillGridRelatedData_IsDataVisible())

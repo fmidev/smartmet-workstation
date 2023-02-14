@@ -298,13 +298,61 @@ void NFmiSmartToolModifier::InitSmartTool(const std::string &theSmartToolText,
   {
     itsSmartToolIntepreter->IncludeDirectory(itsIncludeDirectory);
     itsSmartToolIntepreter->Interpret(theSmartToolText, fThisIsMacroParamSkript);
-    itsExtraMacroParamData = itsSmartToolIntepreter->GetOwnershipOfExtraMacroParamData();
-    itsExtraMacroParamData->FinalizeData(*itsInfoOrganizer);
+    itsExtraMacroParamData = itsSmartToolIntepreter->ExtraMacroParamData();
+    itsExtraMacroParamData.FinalizeData(*itsInfoOrganizer);
   }
   catch (...)
   {
     fMacroRunnable = false;
     throw;
+  }
+}
+
+void NFmiSmartToolModifier::GetExtraMacroParamDataFromIntepreter()
+{
+  itsExtraMacroParamData = itsSmartToolIntepreter->ExtraMacroParamData();
+}
+
+void NFmiSmartToolModifier::InitSmartToolForMacroParam(
+    const std::string &theSmartToolText,
+                                boost::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo,
+    boost::shared_ptr<NFmiArea> &mapViewArea,
+    bool doProbing,
+    const NFmiPoint &spaceOutSkipFactors)
+{
+  fMacroRunnable = true;
+  itsErrorText = "";
+  try
+  {
+    itsSmartToolIntepreter->IncludeDirectory(itsIncludeDirectory);
+    itsSmartToolIntepreter->Interpret(theSmartToolText, true);
+    GetExtraMacroParamDataFromIntepreter();
+    // Näitä kutsutaan vasta kun smarttool skripti on tulkittu
+    itsExtraMacroParamData.FinalizeData(*itsInfoOrganizer);
+    SetPossibleSpacedOutMacroInfo(possibleSpacedOutMacroInfo);
+    SetUsedMapViewArea(mapViewArea);
+    DoFixedDataSetup(doProbing, spaceOutSkipFactors);
+  }
+  catch (...)
+  {
+    fMacroRunnable = false;
+    throw;
+  }
+}
+
+void NFmiSmartToolModifier::DoFixedDataSetup(bool doProbing, const NFmiPoint &spaceOutSkipFactors)
+{
+  if (doProbing)
+  {
+    if (itsPossibleFixedBaseMacroParamData && itsExtraMacroParamData.FixedBaseDataInfo() ||
+        itsExtraMacroParamData.WantedFixedBaseData().IsInUse())
+    {
+      itsExtraMacroParamData.IsFixedSpacedOutDataCase(true);
+    }
+  }
+  else
+  {
+    MakePossibleFixedBaseData(spaceOutSkipFactors);
   }
 }
 
@@ -2082,7 +2130,7 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateLatestValueMask(
     latestValueMask->SetGriddingHelpers(itsWorkingGrid->itsArea,
                                         itsGriddingHelper,
                                         NFmiPoint(itsWorkingGrid->itsNX, itsWorkingGrid->itsNY),
-                                        itsExtraMacroParamData->ObservationRadiusInKm(),
+                                        itsExtraMacroParamData.ObservationRadiusInKm(),
                                         isCalculationPointsUsed);
     boost::shared_ptr<NFmiAreaMask> areaMask = boost::shared_ptr<NFmiAreaMask>(latestValueMask);
     MakeSoundingLevelFix(areaMask, theAreaMaskInfo);
@@ -2313,7 +2361,7 @@ void NFmiSmartToolModifier::DoFinalAreaMaskInitializations(
                 itsWorkingGrid->itsArea,
                 itsGriddingHelper,
                 NFmiPoint(itsWorkingGrid->itsNX, itsWorkingGrid->itsNY),
-                itsExtraMacroParamData->ObservationRadiusInKm(),
+                itsExtraMacroParamData.ObservationRadiusInKm(),
                 isCalculationPointsUsed);
             areaMask = boost::shared_ptr<NFmiAreaMask>(station2GridMask);
             MakeSoundingLevelFix(areaMask, theAreaMaskInfo);
@@ -2865,8 +2913,9 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::CreateInfo(
     {  // tämä macroParam data viritys on multi threaddaavaa serveriä varten, eli macroparam data
        // pitää olla thread-kohtainen
       // ja se on aina annettu luodulle NFmiSmartToolModifier-luokan instansille erikseen.
-      if (UsedMacroParamData())
-        info = NFmiSmartInfo::CreateShallowCopyOfHighestInfo(UsedMacroParamData());
+      auto usedMacroParamData = UsedMacroParamData();
+      if (usedMacroParamData)
+        info = NFmiSmartInfo::CreateShallowCopyOfHighestInfo(usedMacroParamData);
       else
         throw runtime_error(
             "NFmiSmartToolModifier::CreateInfo - error in program, no macroParam data available.");
@@ -3038,49 +3087,59 @@ const std::string &NFmiSmartToolModifier::GetStrippedMacroText() const
   return itsSmartToolIntepreter->GetStrippedMacroText();
 }
 
+static unsigned long GetDataGridSize(boost::shared_ptr<NFmiFastQueryInfo> &data) 
+{
+  if (data && data->IsGrid())
+  {
+    return data->GridXNumber() * data->GridYNumber();
+  }
+  return 0;
+}
+
+static boost::shared_ptr<NFmiFastQueryInfo> GetSmallerGridData(
+    boost::shared_ptr<NFmiFastQueryInfo> &data1, boost::shared_ptr<NFmiFastQueryInfo> &data2)
+{
+  if (::GetDataGridSize(data1) <= ::GetDataGridSize(data2))
+  {
+    return data1;
+  }
+  return data2;
+}
+
 static boost::shared_ptr<NFmiFastQueryInfo> GetOptimalResolutionMacroParamData(
     bool useSpecialResolution,
     boost::shared_ptr<NFmiFastQueryInfo> &resolutionMacroParamData,
     boost::shared_ptr<NFmiFastQueryInfo> &macroParamData,
     boost::shared_ptr<NFmiFastQueryInfo> &optimizedVisualizationMacroParamData,
-    bool useCalculationPoints)
+    bool useCalculationPoints,
+    boost::shared_ptr<NFmiFastQueryInfo> &possibleFixedBaseMacroParamData)
 {
-  if (!NFmiSmartToolModifier::UseVisualizationOptimazation())
+  if (!NFmiSmartToolModifier::UseVisualizationOptimazation() || useCalculationPoints)
   {
-    if (useSpecialResolution)
+    // Jos ei käytetä visualisointien optimointia tai jos käytetään 
+    // CalculationPoints laskentoja (ei saa harventaa optimaatioilla)
+    if (possibleFixedBaseMacroParamData)
+    {
+      return possibleFixedBaseMacroParamData;
+    }
+    else if (useSpecialResolution)
+    {
       return resolutionMacroParamData;
+    }
     else
+    {
       return macroParamData;
+    }
   }
   else
   {
-    if (useCalculationPoints)
-    {
-        // CalculationPoints laskentoja ei saa harventaa optimaatioilla
-      if (useSpecialResolution) 
-          return resolutionMacroParamData;
-      else
-        return macroParamData;
-    }
-
-    auto gridSizeAreaOptimized = optimizedVisualizationMacroParamData->GridXNumber() *
-                         optimizedVisualizationMacroParamData->GridYNumber();
     if (!useSpecialResolution)
     {
-      auto gridSizeAreaMacroParam = macroParamData->GridXNumber() * macroParamData->GridYNumber();
-      if (gridSizeAreaMacroParam <= gridSizeAreaOptimized)
-        return macroParamData;
-      else
-        return optimizedVisualizationMacroParamData;
+      return ::GetSmallerGridData(macroParamData, optimizedVisualizationMacroParamData);
     }
     else
     {
-      auto gridsizeAreaSpecialResolution =
-          resolutionMacroParamData->GridXNumber() * resolutionMacroParamData->GridYNumber();
-      if (gridSizeAreaOptimized <= gridsizeAreaSpecialResolution)
-        return optimizedVisualizationMacroParamData;
-      else
-        return resolutionMacroParamData;
+      return ::GetSmallerGridData(resolutionMacroParamData, optimizedVisualizationMacroParamData);
     }
   }
 }
@@ -3097,38 +3156,174 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::UsedMacroParamData()
     return itsInfoOrganizer->CrossSectionMacroParamData();
   else
   {
+    auto useCalculationPoints = !CalculationPoints().empty();
     auto optimalMacroParamData = ::GetOptimalResolutionMacroParamData(
-        itsExtraMacroParamData->UseSpecialResolution(),
-        itsExtraMacroParamData->ResolutionMacroParamData(),
+        itsExtraMacroParamData.UseSpecialResolution(),
+        itsExtraMacroParamData.ResolutionMacroParamData(),
         itsInfoOrganizer->MacroParamData(),
         itsInfoOrganizer->OptimizedVisualizationMacroParamData(),
-        !CalculationPoints().empty());
+        useCalculationPoints,
+        itsPossibleFixedBaseMacroParamData);
 
-    if (itsPossibleSpacedOutMacroInfo)
+    if (optimalMacroParamData == itsPossibleFixedBaseMacroParamData)
+    { // itsPossibleFixedBaseMacroParamData:lle on jo laskettu mahdolliset symboliharvennukset, voidaan heti palauttaa se
+      return optimalMacroParamData;
+    }
+    else if (!useCalculationPoints && itsPossibleSpacedOutMacroInfo)
     {
-      auto gridsizeOptimal =
-          optimalMacroParamData->GridXNumber() * optimalMacroParamData->GridYNumber();
-      auto gridsizeSpaceOut = itsPossibleSpacedOutMacroInfo->GridXNumber() *
-                              itsPossibleSpacedOutMacroInfo->GridYNumber();
-      if (gridsizeOptimal <= gridsizeSpaceOut)
-        return optimalMacroParamData;
-      else
-        return itsPossibleSpacedOutMacroInfo;
+      return ::GetSmallerGridData(optimalMacroParamData, itsPossibleSpacedOutMacroInfo);
     }
     else
       return optimalMacroParamData;
   }
 }
 
+static boost::shared_ptr<NFmiFastQueryInfo> CreateCroppedInfo(
+    boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+    int x1,
+    int y1,
+    int x2,
+    int y2,
+    int columns,
+    int rows)
+{
+  if (theInfo && theInfo->IsGrid())
+  {
+    auto bottomLeftLatlon = theInfo->Grid()->GridToLatLon(NFmiPoint(x1, y1));
+    auto topRightLatlon = theInfo->Grid()->GridToLatLon(NFmiPoint(x2, y2));
+    std::unique_ptr<NFmiArea> newAreaPtr(
+        theInfo->Area()->CreateNewArea(bottomLeftLatlon, topRightLatlon));
+    return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(
+        columns, rows, NFmiInfoData::kMacroParam, newAreaPtr.get());
+  }
+  return nullptr;
+}
+
+static int FindLowIndex(int lowLimit, int spaceOutSkipFactor)
+{
+  int lowIndex = 0;
+  for (int index = 0; index <= lowLimit; index++)
+  {
+    if (index % spaceOutSkipFactor == 0)
+    {
+      lowIndex = index;
+    }
+  }
+  return lowIndex;
+}
+
+static int FindHighIndex(int lowLimit, int highLimit, int gridSize, int spaceOutSkipFactor)
+{
+  int highIndex = lowLimit;
+  for (int index = lowLimit; index <= gridSize; index++)
+  {
+    if (index % spaceOutSkipFactor == 0)
+    {
+      highIndex = index;
+      if (index >= highLimit)
+      {
+        break;
+      }
+    }
+  }
+  return highIndex;
+}
+
+bool NFmiSmartToolModifier::MakeFixedBaseDataFromSpacedOutGrid(
+    int x1, int y1, int x2, int y2, const NFmiPoint &spaceOutSkipFactors)
+{
+  if (itsPossibleSpacedOutMacroInfo)
+  {
+    auto fixedBaseData = itsExtraMacroParamData.FixedBaseDataInfo();
+    if (fixedBaseData)
+    {
+      if (spaceOutSkipFactors.X() <= 1 && spaceOutSkipFactors.Y() <= 1)
+      {
+        // Kaikki croppialueen hilapisteet tulevat lopulliseen dataan
+        auto columnCount = x2 - x1 + 1;
+        auto rowCount = y2 - y1 + 1;
+        itsPossibleFixedBaseMacroParamData = ::CreateCroppedInfo(
+            fixedBaseData, x1, y1, x2, y2, columnCount, rowCount);
+      }
+      else
+      {
+        int gridSizeX = int(fixedBaseData->GridXNumber());
+        int gridSizeY = int(fixedBaseData->GridYNumber());
+        int spaceOutSkipFactorX = static_cast<int>(spaceOutSkipFactors.X());
+        int spaceOutSkipFactorY = static_cast<int>(spaceOutSkipFactors.Y());
+        // Harvennetussa symbolipiirrossa aloitetaan bottom-left kulmasta hilapisteiden piirto.
+        // Sitten skipataan aina tarvittava määrä sarakkeita/rivejä ja taas piirretään symboleja.
+        // 1. Etsi se x-sarake, joka on <= x1, siinä on harvennetun fiksatun datan vasen hilareuna
+        int left = ::FindLowIndex(x1, spaceOutSkipFactorX);
+        // 2. Etsi se x-sarake, joka on >= x2, siinä on harvennetun fiksatun datan oikea hilareuna
+        int right = ::FindHighIndex(x1, x2, gridSizeX, spaceOutSkipFactorX);
+        // 3. Etsi se y-sarake, joka on <= y1, siinä on harvennetun fiksatun datan ala hilareuna
+        int bottom = ::FindLowIndex(y1, spaceOutSkipFactorY);
+        // 4. Etsi se y-sarake, joka on >= y2, siinä on harvennetun fiksatun datan ylä hilareuna
+        int top = ::FindHighIndex(y1, y2, gridSizeY, spaceOutSkipFactorY);
+        // 5. Laske tuloshilan sarakemäärä
+        int columnCount = ((right - left) / spaceOutSkipFactorX) + 1;
+        // 6. Laske tuloshilan rivimäärä
+        int rowCount = ((top - bottom) / spaceOutSkipFactorY) + 1;
+        itsPossibleFixedBaseMacroParamData =
+            ::CreateCroppedInfo(fixedBaseData, left, bottom, right, top, columnCount, rowCount);
+        itsExtraMacroParamData.IsFixedSpacedOutDataCase(true);
+      }
+      return itsPossibleFixedBaseMacroParamData != nullptr;
+    }
+  }
+  return false;
+}
+
+void NFmiSmartToolModifier::MakePossibleFixedBaseData(const NFmiPoint &spaceOutSkipFactors)
+{
+  auto fixedBaseData = itsExtraMacroParamData.FixedBaseDataInfo();
+  if (fixedBaseData)
+  {
+    NFmiRect croppedXyRectOut;
+    int x1 = 0;
+    int y1 = 0;
+    int x2 = 0;
+    int y2 = 0;
+    if (GetPossibleCropGridPoints(
+            fixedBaseData, itsUsedMapViewArea, croppedXyRectOut, x1, y1, x2, y2, 1.0))
+    {
+      if (!MakeFixedBaseDataFromSpacedOutGrid(x1, y1, x2, y2, spaceOutSkipFactors))
+      {
+        auto columnCount = x2 - x1 + 1;
+        auto rowCount = y2 - y1 + 1;
+        if (columnCount == fixedBaseData->GridXNumber() && rowCount == fixedBaseData->GridYNumber())
+        {
+          itsPossibleFixedBaseMacroParamData =
+              NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(
+                  columnCount, rowCount, NFmiInfoData::kMacroParam, fixedBaseData->Area());
+        }
+        else
+        {
+          itsPossibleFixedBaseMacroParamData =
+              ::CreateCroppedInfo(fixedBaseData, x1, y1, x2, y2, columnCount, rowCount);
+        }
+      }
+    }
+    else if (!NFmiQueryDataUtil::AreAreasSameKind(fixedBaseData->Area(), itsUsedMapViewArea.get()))
+    {
+      if (!itsExtraMacroParamData.ResolutionMacroParamData())
+      {
+        // Jos fixed-datan ja karttanäytön karttaprojektiot olivat eri tyyppisiä ja
+        // ei oltu määritelty resolution-based macroParam hilaa, yritetään luoda sellainen käyttäen
+        // fixedBaseDatan resoluutiota.
+        itsExtraMacroParamData.UseDataForResolutionCalculations(
+            itsUsedMapViewArea.get(),
+            fixedBaseData,
+            itsExtraMacroParamData.WantedFixedBaseData().originalDataString_);
+      }
+    }
+  }
+}
+
 const std::vector<NFmiPoint> &NFmiSmartToolModifier::CalculationPoints() const
 {
-  if (itsExtraMacroParamData)
-    return itsExtraMacroParamData->CalculationPoints();
-  else
-  {
-    static std::vector<NFmiPoint> dummyEmptyVector;
-    return dummyEmptyVector;
-  }
+    return itsExtraMacroParamData.CalculationPoints();
 }
 
 void NFmiSmartToolModifier::ModifiedLevel(boost::shared_ptr<NFmiLevel> &theLevel)
@@ -3153,6 +3348,11 @@ void NFmiSmartToolModifier::SetPossibleSpacedOutMacroInfo(
   }
 }
 
+void NFmiSmartToolModifier::SetUsedMapViewArea(boost::shared_ptr<NFmiArea>& usedMapViewArea)
+{
+  itsUsedMapViewArea = usedMapViewArea;
+}
+
 // 'Editoitu' data (perus pohjadata mm. skripti muuttuja infoille) voi tulla eri tilanteissa
 // kahdesta lähteestä:
 // 1. Se on oikeasti editoitua dataa
@@ -3165,16 +3365,174 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::GetUsedEditedInfo()
     return itsInfoOrganizer->FindInfo(NFmiInfoData::kEditable);
 }
 
-const NFmiExtraMacroParamData &NFmiSmartToolModifier::ExtraMacroParamData() const
+bool NFmiSmartToolModifier::UseVisualizationOptimazation() { return fUseVisualizationOptimazation; }
+void NFmiSmartToolModifier::UseVisualizationOptimazation(bool newState) {  fUseVisualizationOptimazation = newState; }
+
+// NFmiRect on käänteisessä maailmassa, pitää tehdä oma pikku rect-viritelmä.
+struct MRect
 {
-  if (itsExtraMacroParamData)
-    return *itsExtraMacroParamData;
+  MRect(const NFmiRect &theRect)
+      : x1(theRect.Left()), y1(theRect.Top()), x2(theRect.Right()), y2(theRect.Bottom())
+  {
+  }
+
+  double x1;
+  double y1;
+  double x2;
+  double y2;
+};
+
+// laskee annettujen suorakulmioiden avulla halutut datan croppauksessa käytetyt xy-pisteet.
+// Eli leikkaus pinnan vasen ala ja oikea ylä kulmat.
+// Oletus, annetut suorakulmiot leikkaavat.
+static void CalcXYCropPoints(const MRect &theDataRect,
+                      const MRect &theViewRect,
+                      NFmiPoint &theBLXYCropPoint,
+                      NFmiPoint &theTRXYCropPoint)
+{
+  theBLXYCropPoint.X(FmiMax(theDataRect.x1, theViewRect.x1));
+  theBLXYCropPoint.Y(FmiMax(theDataRect.y1, theViewRect.y1));
+
+  theTRXYCropPoint.X(FmiMin(theDataRect.x2, theViewRect.x2));
+  theTRXYCropPoint.Y(FmiMin(theDataRect.y2, theViewRect.y2));
+
+  // Tämä on ikävää koodia, mutta siivoan jos jaksan, heh hee...
+  // käännän y-akselin jälleen
+  double tmp = theBLXYCropPoint.Y();
+  theBLXYCropPoint.Y(theTRXYCropPoint.Y());
+  theTRXYCropPoint.Y(tmp);
+}
+
+// Laskee, leikkaavatko annetut suorakulmiot
+static bool AreRectsIntersecting(const MRect &theRect1, const MRect &theRect2)
+{
+  if (FmiMax(theRect1.x1, theRect2.x1) > FmiMin(theRect1.x2, theRect2.x2) ||
+      FmiMax(theRect1.y1, theRect2.y1) > FmiMin(theRect1.y2, theRect2.y2))
+    return false;
+  else
+    return true;
+}
+
+static const double g_GridCoordinateErrorLimit = 0.000001;
+
+static int GetFlooredGridPointValue(double gridCoordinate)
+{
+  if (std::fabs(gridCoordinate - static_cast<int>(gridCoordinate)) < g_GridCoordinateErrorLimit)
+  {
+    // tietyissä tapauksissa halutaan pyöristää lähimpää,
+    // kun double virhe saattaa aiheuttaa ongelmia
+    return boost::math::iround(gridCoordinate);
+  }
   else
   {
-    static const NFmiExtraMacroParamData emptyDummy;
-    return emptyDummy;
+    // muuten floor-toiminto
+    return static_cast<int>(gridCoordinate);
   }
 }
 
-bool NFmiSmartToolModifier::UseVisualizationOptimazation() { return fUseVisualizationOptimazation; }
-void NFmiSmartToolModifier::UseVisualizationOptimazation(bool newState) {  fUseVisualizationOptimazation = newState; }
+static int GetCeilingGridPointValue(double gridCoordinate)
+{
+  if (std::fabs(gridCoordinate - static_cast<int>(gridCoordinate)) < g_GridCoordinateErrorLimit)
+  {
+    // tietyissä tapauksissa halutaan pyöristää lähimpää,
+    // kun double virhe saattaa aiheuttaa ongelmia
+    return boost::math::iround(gridCoordinate);
+  }
+  else
+  {
+    // muuten ceil-toiminto
+    return static_cast<int>(std::ceil(gridCoordinate));
+  }
+}
+
+static bool DoPreliminaryCroppingDataChecks(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+                                          boost::shared_ptr<NFmiArea> &theMapArea)
+{
+  if (theInfo && theMapArea)
+  {
+    if (theInfo->IsGrid())
+    {
+      if (NFmiQueryDataUtil::AreAreasSameKind(theInfo->Area(), theMapArea.get()))
+      {
+        return true;
+      }
+    }
+  }
+  // Annettua dataa ei voi cropata mielekkäästi annetun alueen avulla
+  return false;
+}
+
+bool NFmiSmartToolModifier::GetPossibleCropGridPoints(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+                                                      boost::shared_ptr<NFmiArea> &theMapArea,
+                                                      NFmiRect &theCroppedXyRectOut,
+                                                      int &x1,
+                                                      int &y1,
+                                                      int &x2,
+                                                      int &y2,
+                                                      double acceptedMaxPercentage01)
+{
+  if (::DoPreliminaryCroppingDataChecks(theInfo, theMapArea))
+  {
+    // lasketaan ensin xy-pisteet, johon datan croppaus rajoittuu
+    NFmiRect zoomInDataAreaXYRect(theInfo->Area()->XYArea(theMapArea.get()));
+    if (zoomInDataAreaXYRect.Width() == 0 || zoomInDataAreaXYRect.Height() == 0)
+    {
+      // En tiedä miten latin-america data vs. pacific-world croppaus tarkastelu
+      // pitäisi hoitaa, mutta tämä on quick-fix siihen, syntyvän rectin width on 0.
+      return false;
+    }
+    NFmiPoint blXYCropPoint(zoomInDataAreaXYRect.BottomLeft());
+    NFmiPoint trXYCropPoint(zoomInDataAreaXYRect.TopRight());
+    if (AreRectsIntersecting(theInfo->Area()->XYArea(), zoomInDataAreaXYRect))
+    {
+      // jos ei leikannut (ja ne ovat sisäkkäin, koska jos ne ovat pois toistensä päältä, täällä ei
+      // oltaisi), laske käytetyt leikkaus pisteet
+      CalcXYCropPoints(
+          theInfo->Area()->XYArea(), zoomInDataAreaXYRect, blXYCropPoint, trXYCropPoint);
+    }
+
+    // zoomaus alueen pitää siis olla kokonaan datan sisällä
+    NFmiPoint blGridPoint(theInfo->Grid()->XYToGrid(blXYCropPoint));
+    NFmiPoint trGridPoint(theInfo->Grid()->XYToGrid(trXYCropPoint));
+    x1 = ::GetFlooredGridPointValue(blGridPoint.X());
+    y1 = ::GetFlooredGridPointValue(blGridPoint.Y());
+    x2 = ::GetCeilingGridPointValue(trGridPoint.X());
+    y2 = ::GetCeilingGridPointValue(trGridPoint.Y());
+
+    double gridCountTotal = theInfo->SizeLocations();
+    double columnCount = (x2 - x1 + 1);
+    double rowCount = (y2 - y1 + 1);
+    double gridCountZoomed = columnCount * rowCount;
+    if (columnCount < 2 || rowCount < 2)
+    {
+      // Pitää tulla vähintään 2x2 hila, muuten ei ole järkeä ja koodissa on vikaa
+      return false;
+    }
+    if (gridCountZoomed > gridCountTotal)
+    {
+      // Nyt oli jotain vikaa, eihä tässä näin pitäisi käydä, koodissa on vikaa?
+      return false;
+    }
+    if (gridCountZoomed / gridCountTotal <= acceptedMaxPercentage01)
+    {
+      // Laitetaan joku prosentti raja siihen milloin kannattaa vielä tehdään zoomatun datan piirtoa
+      // erikoiskikoin Esim. jos zoomatun alueen hilapisteet ovat alta 90% datan kokonais
+      // hilapisteistä, kannattaa optimointi isoviivapiirroissa, mutta muuten ehkä ei. Oletus arvo
+      // on 1.0 eli sallii originaali hilan palautuksen (mitä tarvitaan tietyissä tilanteissa).
+
+      // zoomatun alueen rect:i pitää vielä laskea
+      NFmiPoint zoomedBottomLeftLatlon(theInfo->Grid()->GridToLatLon(NFmiPoint(x1, y1)));
+      NFmiPoint zoomedTopRightLatlon(theInfo->Grid()->GridToLatLon(NFmiPoint(x2, y2)));
+      NFmiArea *newZoomedArea = const_cast<NFmiArea *>(theInfo->Area())
+                                    ->NewArea(zoomedBottomLeftLatlon, zoomedTopRightLatlon);
+      if (newZoomedArea)
+      {
+        newZoomedArea->SetXYArea(NFmiRect(0, 0, 1, 1));
+        theCroppedXyRectOut = newZoomedArea->XYArea(theMapArea.get());
+        delete newZoomedArea;
+        return true;
+      }
+    }
+  }
+  return false;
+}

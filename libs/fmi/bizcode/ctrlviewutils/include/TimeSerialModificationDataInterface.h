@@ -125,4 +125,5 @@ public:
     virtual bool MakeSureToolMasterPoolIsRunning(void) = 0;
     virtual bool IsWorkingDataSaved() = 0;
     virtual void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false) = 0;
+    virtual boost::shared_ptr<NFmiArea> GetUsedMapViewArea(int theMapViewDescTopIndex) = 0;
 };

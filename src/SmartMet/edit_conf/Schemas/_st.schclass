@@ -440,6 +440,7 @@ lexClass:
 	token:tag	= '#include'
 	token:tag	= 'minute'
 	token:tag	= 'edited'
+	token:tag	= 'fixedbasedata'
 
 	token:start:separators	= ' ', '\t', ':', ';', '!', '(', ')', ',', '/', '{', '}', '=', '+', '-', '*', '/', '%', @eol
 	token:end:separators	= ' ', '\t', ':', ';', '!', '(', ')', '{', '}', @eol
@@ -769,6 +770,12 @@ lexClass:
 	token:tag	= 'resolution = producer_hybrid'
 	token:tag	= 'resolution = producer_height'
 	token:tag	= 'resolution = edited'
+	token:tag	= 'resolution = T'
+	token:tag	= 'resolution = T_EC'
+	token:tag	= 'resolution = par4_prod240'
+	token:tag	= 'resolution = T_EC_850'
+	token:tag	= 'resolution = par4_prod240_850'
+	token:tag	= 'resolution = par4_prod240_lev85'
 	
 	token:tag	= 'calculationpoint = producer'
 	token:tag	= 'calculationpoint = lat,lon'
@@ -779,6 +786,18 @@ lexClass:
 	token:tag	= 'observationradius = x // [km]'
 	
 	token:tag	= '#include "locations\synop_locations.st"'
+	
+	token:tag	= 'fixedbasedata = edited'
+	token:tag	= 'fixedbasedata = producer_surface'
+	token:tag	= 'fixedbasedata = producer_pressure'
+	token:tag	= 'fixedbasedata = producer_hybrid'
+	token:tag	= 'fixedbasedata = producer_height'
+	token:tag	= 'fixedbasedata = T'
+	token:tag	= 'fixedbasedata = T_EC'
+	token:tag	= 'fixedbasedata = par4_prod240'
+	token:tag	= 'fixedbasedata = T_EC_850'
+	token:tag	= 'fixedbasedata = par4_prod240_850'
+	token:tag	= 'fixedbasedata = par4_prod240_lev85'
 
 	token:start:separators	= ' ', '\t', ':', ';', '!', '(', ')', ',', '/', '{', '}', '=', '+', '-', '*', '/', '%', @eol
 	token:end:separators	= ' ', '\t', ':', ';', '!', '(', ')', '{', '}', @eol

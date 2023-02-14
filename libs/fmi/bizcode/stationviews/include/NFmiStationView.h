@@ -14,6 +14,7 @@
 #include "NFmiDataIdent.h"
 #include "NFmiFastInfoUtils.h"
 #include "NFmiSymbolBulkDrawData.h"
+#include "NFmiExtraMacroParamData.h"
 #include <unordered_map>
 
 //_________________________________________________________ NFmiStationView
@@ -50,6 +51,14 @@ static void StoreMatrix(NFmiDataMatrix<T> &theMatrix, const std::string &theFile
 	}
 }
 
+enum class MacroParamPhase
+{
+	NoPhase,
+	Probing,
+	Calculation,
+	Drawing
+};
+	
 class NFmiStationView : public NFmiAreaView
 {
 
@@ -202,10 +211,11 @@ protected:
    void DrawStation(NFmiDrawingEnvironment &theStationPointEnvi);
    void SetStationPointDrawingEnvi(NFmiDrawingEnvironment &envi);
    NFmiPoint CalcUsedSpaceOutFactors(int theSpaceOutFactor);
-   NFmiPoint CalcSymbolDrawedMacroParamSpaceOutGridSize(int theSpaceOutFactor, const NFmiDataMatrix<float> &probingValues);
+   NFmiPoint CalcSymbolDrawedMacroParamSpaceOutGridSize(int theSpaceOutFactor);
    bool IsGridDataDrawnWithSpaceOutSymbols();
    std::pair<int,bool> CalcApproxmationOfDataTextLength(const std::vector<float> &sampleValues);
    std::vector<float> GetSampleDataForDataTextLengthApproxmation();
+   std::vector<float> GetSampleDataFrmoMacroParamForDataTextLengthApproxmation();
    NFmiPoint CurrentStationPosition () const;
    const NFmiPoint CurrentLatLon() const;
    const NFmiPoint CurrentLatLon(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo) const;
@@ -238,7 +248,7 @@ protected:
    void FinalFillWindMetaDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, unsigned long wantedParamId, NFmiGrid* optimizedDataGrid = nullptr);
    bool DataIsDrawable(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &usedTime);
    void DoTimeInterpolationSettingChecks(boost::shared_ptr<NFmiFastQueryInfo>& theInfo);
-   boost::shared_ptr<NFmiFastQueryInfo> CreateNewResizedMacroParamData(const NFmiPoint& newGridSize);
+   boost::shared_ptr<NFmiFastQueryInfo> CreateNewResizedMacroParamData(const NFmiPoint& newGridSize, const NFmiArea* usedArea);
    bool IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut, boost::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfoOut);
    bool IsMacroParamContourDataDownSized(const boost::shared_ptr<NFmiFastQueryInfo> & possibleMacroParamResolutionInfo, NFmiPoint& newGridSizeOut);
    NFmiPoint CalcPixelToGridRatio(NFmiIsoLineData& theIsoLineData, const NFmiRect& zoomedAreaRect);
@@ -252,6 +262,8 @@ protected:
    bool GetTimeSpanIndexies(const boost::shared_ptr<NFmiFastQueryInfo>& theInfo, unsigned long& theStartIndexOut, unsigned long& theEndIndexOut);
    float GetTooltipValueForFlashTypeData(const NFmiLocation& theCursorLocation);
    bool FindNearestFlashTypeObservation(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiLocation& theCursorLocation, double& theCurrentMinDistInOut, unsigned long& theMinDistTimeIndexOut);
+   bool IsMacroParamCase();
+   bool DoMacroParamProbing();
 
    NFmiRect itsGeneralStationRect;
    FmiParameterName itsParamId;
@@ -327,5 +339,8 @@ protected:
    // t‰h‰n, jotta mahdollinen hilapisteiden piirto rutiini osaa piirt‰‰ n‰m‰ tarvittaessa.
    // Nollataan aina piirron aluksi.
    std::unique_ptr<NFmiGrid> itsOptimizedGridPtr;
+   std::vector<float> itsMacroParamProbingValues;
+   NFmiExtraMacroParamData itsProbingExtraMacroParamData;
+   MacroParamPhase itsMacroParamPhase = MacroParamPhase::NoPhase;
 };
 
