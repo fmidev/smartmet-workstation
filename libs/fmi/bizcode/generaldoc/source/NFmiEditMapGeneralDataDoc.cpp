@@ -5439,11 +5439,6 @@ void ResetTimeFilterTimes()
     itsTimeFilterEndTime = editedTimeBag.LastTime();
 }
 
-void SetActiveParamMissingValues(double theValue)
-{
-	FmiModifyEditdData::SetActiveParamMissingValues(GenDocDataAdapter(), theValue, UseMultithreaddingWithModifyingFunctions());
-}
-
 bool LoadStaticHelpData(void)
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
@@ -11131,11 +11126,6 @@ void NFmiEditMapGeneralDataDoc::SetTimeFilterStartTime(const NFmiMetTime& theTim
 void NFmiEditMapGeneralDataDoc::SetTimeFilterEndTime(const NFmiMetTime& theTime)
 {
 	pimpl->SetTimeFilterEndTime(theTime);
-}
-
-void NFmiEditMapGeneralDataDoc::SetActiveParamMissingValues(double theValue)
-{
-	pimpl->SetActiveParamMissingValues(theValue);
 }
 
 bool NFmiEditMapGeneralDataDoc::MakeDataValiditation(void)

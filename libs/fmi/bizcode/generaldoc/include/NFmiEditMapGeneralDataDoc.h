@@ -604,7 +604,6 @@ public:
 	const NFmiMetTime& TimeFilterEndTime(void);
 	void SetTimeFilterStartTime(const NFmiMetTime& theTime);
 	void SetTimeFilterEndTime(const NFmiMetTime& theTime);
-	void SetActiveParamMissingValues(double theValue);
 
 	int FilterDialogUpdateStatus(void);
 	void FilterDialogUpdateStatus(int newState);

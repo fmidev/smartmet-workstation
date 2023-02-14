@@ -39,21 +39,6 @@ class NFmiPoint;
 class NFmiGrid;
 class NFmiFastQueryInfo;
 
-//************** NFmiDataModifierMissingValueSet ************************
-class NFmiDataModifierMissingValueSet : public NFmiDataModifier
-{
- public:
-	NFmiDataModifierMissingValueSet(double theMissingValue, double theValue);
-	NFmiDataModifierMissingValueSet(const NFmiDataModifierMissingValueSet &theOther);
-	NFmiDataModifier* Clone(void) const;
-	virtual float FloatOperation(float theValue);
-
- private:
-	 double itsMissingValue;
-	 double itsValue;
-};
-//************** NFmiDataModifierMissingValueSet ************************
-
 //************** NFmiDataModifierTimeShifter ************************
 class NFmiDataModifierTimeShifter : public NFmiDataModifier
 { 
