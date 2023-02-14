@@ -880,6 +880,8 @@ lexClass:
 	token:tag	= 'RR'
 	token:tag	= 'PREF'
 	token:tag	= 'PRET'
+	token:tag	= 'PREF2'
+	token:tag	= 'PRET2'
 	token:tag	= 'THUND'
 	token:tag	= 'FOG'
 	token:tag	= 'HSADE'
