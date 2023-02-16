@@ -424,12 +424,12 @@ void CFmiTempDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, INSERT_TEMP_CODE, "TEMP");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RESET_SOUNDING_DATA, "R");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SHOW_TXT_SOUNDING_DATA, "txt");
-    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_TEMP_SHOW_MAP_MARKERS, "Map markers");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_TEMP_SHOW_MAP_MARKERS, "Map mkr's");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_TEXTUAL_SOUNDING_DATA_SIDE_VIEW, "Text-data");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_SECONDARY_DATA_VIEW, "SV2");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_MAP_TIME_WITH_SOUNDINGS, "MT");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_PUT_SOUNDING_TEXTS_UPWARD, "Up");
-    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_MODEL_RUN_COUNT_STR, "Model Run Count");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_MODEL_RUN_COUNT_STR, "Model run cnt");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_AVG_RANGE_IN_KM_STR, "Range [km]");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_AVG_TIME_RANGE_STR, "Time offsets [h]");
 }
@@ -490,6 +490,9 @@ BOOL CFmiTempDlg::InitTooltipControl(void)
 	InitControlsTooltip(IDC_EDIT_AVG_TIME_RANGE_2, "Avg integration end time offset [h] for model soundings");
 	InitControlsTooltip(IDC_STATIC_AVG_TIME_RANGE_STR, "Avg integration start+end time offsets [h] for model soundings");
 	InitControlsTooltip(IDC_BUTTON_CLEAR_AVG_CONTROLS, "Clear all the Avg functionality related controls");
+	InitControlsTooltip(IDC_CHECK_TEMP_SHOW_MAP_MARKERS, "Show/don't show sounding related markers on map views");
+	InitControlsTooltip(IDC_EDIT_MODEL_RUN_COUNT, "How many latest model runs shown simultaneously");
+	InitControlsTooltip(IDC_SPIN_MODEL_RUN_COUNT, "How many latest model runs shown simultaneously");
 	
 	return TRUE;
 }
