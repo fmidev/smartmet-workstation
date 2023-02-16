@@ -143,6 +143,7 @@ public:
 	afx_msg void OnEnChangeEditAvgRangeInKm();
 	afx_msg void OnEnChangeEditAvgTimeRange1();
 	afx_msg void OnEnChangeEditAvgTimeRange2();
+	afx_msg void OnBnClickedButtonClearAvgControls();
 };
 
 

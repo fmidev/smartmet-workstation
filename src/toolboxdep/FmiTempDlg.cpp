@@ -132,6 +132,7 @@ BEGIN_MESSAGE_MAP(CFmiTempDlg, CDialog)
 	ON_EN_CHANGE(IDC_EDIT_AVG_RANGE_IN_KM, &CFmiTempDlg::OnEnChangeEditAvgRangeInKm)
 	ON_EN_CHANGE(IDC_EDIT_AVG_TIME_RANGE_1, &CFmiTempDlg::OnEnChangeEditAvgTimeRange1)
 	ON_EN_CHANGE(IDC_EDIT_AVG_TIME_RANGE_2, &CFmiTempDlg::OnEnChangeEditAvgTimeRange2)
+	ON_BN_CLICKED(IDC_BUTTON_CLEAR_AVG_CONTROLS, &CFmiTempDlg::OnBnClickedButtonClearAvgControls)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -488,6 +489,7 @@ BOOL CFmiTempDlg::InitTooltipControl(void)
 	InitControlsTooltip(IDC_EDIT_AVG_TIME_RANGE_1, "Avg integration start time offset [h] for model soundings");
 	InitControlsTooltip(IDC_EDIT_AVG_TIME_RANGE_2, "Avg integration end time offset [h] for model soundings");
 	InitControlsTooltip(IDC_STATIC_AVG_TIME_RANGE_STR, "Avg integration start+end time offsets [h] for model soundings");
+	InitControlsTooltip(IDC_BUTTON_CLEAR_AVG_CONTROLS, "Clear all the Avg functionality related controls");
 	
 	return TRUE;
 }
@@ -905,6 +907,21 @@ void CFmiTempDlg::OnEnChangeEditAvgTimeRange2()
 		itsAvgTimeRange2Str = ::ConvertIntegrationLimitToCString(updatedValue);
 		UpdateData(FALSE);
 	}
+	itsView->Update(true);
+	Invalidate(FALSE);
+}
+
+
+void CFmiTempDlg::OnBnClickedButtonClearAvgControls()
+{
+	auto& mtaTempSystem = itsSmartMetDocumentInterface->GetMTATempSystem();
+	mtaTempSystem.IntegrationRangeInKm(0);
+	mtaTempSystem.IntegrationTimeOffset1InHours(0);
+	mtaTempSystem.IntegrationTimeOffset2InHours(0);
+	itsAvgRangeInKmStr = "0";
+	itsAvgTimeRange1Str = "0";
+	itsAvgTimeRange2Str = "0";
+	UpdateData(FALSE);
 	itsView->Update(true);
 	Invalidate(FALSE);
 }
