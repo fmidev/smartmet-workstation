@@ -2652,7 +2652,7 @@ std::string FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage(const std
 		errorMessage += ": \n";
 		errorMessage += exceptionPtr->what();
 	}
-	errorMessage += ", \nin '";
+	errorMessage += ", in '";
 	errorMessage += PathUtils::getRelativeStrippedFileName(theDrawParam->InitFileName(), macroParamSystemRootPath, "dpa");
 	errorMessage += "'";
 	return errorMessage;
