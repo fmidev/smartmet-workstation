@@ -496,8 +496,13 @@ bool NFmiSmartToolIntepreter::IsPossibleCalculationLine(const std::string &theTe
 
   if (std::find_if(theTextLine.begin(), theTextLine.end(), std::not1(std::ptr_fun(::isspace))) !=
       theTextLine.end())
-    throw runtime_error(::GetDictionaryString("SmartToolErrorIllegalTextFound") + ": \n" +
-                        theTextLine);
+  {
+    // Riviltä löytyi sanoja ja niiden välissä space, ehtolauseet on jo tarkastettu edellä,
+    // vaikuttaa siltä että rivin lausekkeesta siis puuttuu '=' -operaattori.
+    throw runtime_error(
+        ::GetDictionaryString("Calculation line seems to be missing the '=' operator") + ": \n" +
+        theTextLine);
+  }
   return false;
 }
 
