@@ -3190,7 +3190,7 @@ void AddWmsDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings
         try
         {
 			auto& wmsSupport = GetCombinedMapHandler()->getWmsSupport();
-            if(!wmsSupport.isConfigured())
+            if(!wmsSupport.isCapabilityTreeAvailable())
                 return;
             CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, __FUNCTION__);
             const auto* layerTree = wmsSupport.peekCapabilityTree();

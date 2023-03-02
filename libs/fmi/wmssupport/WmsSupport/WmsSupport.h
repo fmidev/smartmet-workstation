@@ -72,6 +72,7 @@ namespace Wms
         void previousBackground(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
         void previousOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
         const Wms::CapabilityTree* peekCapabilityTree() const override;
+        bool isCapabilityTreeAvailable() const override;
         NFmiImageHolder getBackground(unsigned int mapViewIndex, unsigned int mapAreaIndex, const NFmiArea& area, int resolutionX, int resolutionY) override;
         NFmiImageHolder getOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex, const NFmiArea& area, int resolutionX, int resolutionY) override;
         const LegendIdentSet& getRegisteredLayers(int row, int col, int descTop) override;

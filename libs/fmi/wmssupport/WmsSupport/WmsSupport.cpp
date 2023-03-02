@@ -67,6 +67,16 @@ namespace Wms
             return nullptr;
     }
 
+    bool WmsSupport::isCapabilityTreeAvailable() const
+    {
+        if(capabilitiesHandler_)
+        {
+            return capabilitiesHandler_->isCapabilityTreeAvailable();
+        }
+
+        return false;
+    }
+
     const LayerInfo* WmsSupport::getHashedLayerInfo(const NFmiDataIdent& dataIdent) const
     {
         if(!capabilitiesHandler_)
