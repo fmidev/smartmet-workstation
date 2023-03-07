@@ -51,12 +51,16 @@ class NFmiAviationStationInfoSystem
   NFmiAviationStation *FindStation(const std::string &theIcaoId);
   NFmiAviationStation *FindStation(long theWmoId);
   bool WmoStationsWanted() const { return fWmoStationsWanted; }
+  const std::map<std::string, NFmiAviationStation> &IcaoStations() const { return itsIcaoStations; }
+  const std::map<long, NFmiAviationStation> &WmoStations() const { return itsWmoStations; }
+
  private:
-  std::string
-      itsInitLogMessage;  // onnistuneen initialisoinnin viesti, missä voi olla varoituksia lokiin.
+  // Onnistuneen initialisoinnin viesti, missä voi olla varoituksia lokiin.
+  std::string itsInitLogMessage;
   std::map<std::string, NFmiAviationStation> itsIcaoStations;
   std::map<long, NFmiAviationStation> itsWmoStations;
-  bool fWmoStationsWanted;  // tämä päättää, käytetäänkö luokassa WMO vai ICAO asemia
+  // Tämä päättää, käytetäänkö luokassa WMO vai ICAO asemia
+  bool fWmoStationsWanted;  
   bool fVerboseMode;
 };
 

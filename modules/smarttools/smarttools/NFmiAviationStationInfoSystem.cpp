@@ -120,22 +120,16 @@ void NFmiAviationStationInfoSystem::InitFromMasterTableCsv(const std::string &th
   {
     std::stringstream in(fileContent);
 
-    const int maxBufferSize = 1024 + 1;  // kuinka pitkä yhden rivin maksimissaan oletetaan olevan
-    std::string buffer;
-    int i = 0;
+    std::string lineStr;
     int counter = 0;
     do
     {
-      buffer.resize(maxBufferSize);
-      in.getline(&buffer[0], maxBufferSize);
-      size_t realSize = strlen(buffer.c_str());
-      buffer.resize(realSize);
-
       try
       {
+        std::getline(in, lineStr);
         NFmiAviationStation station;
         if (::GetAviationStationFromCsvString(
-                buffer, station, fWmoStationsWanted == false, fWmoStationsWanted == true))
+                lineStr, station, fWmoStationsWanted == false, fWmoStationsWanted == true))
         {
           counter++;
           if (fWmoStationsWanted)
@@ -148,7 +142,6 @@ void NFmiAviationStationInfoSystem::InitFromMasterTableCsv(const std::string &th
       {
       }
 
-      i++;
     } while (in.good());
 
     if (fVerboseMode)
