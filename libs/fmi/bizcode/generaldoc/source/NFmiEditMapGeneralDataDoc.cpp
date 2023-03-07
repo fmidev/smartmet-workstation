@@ -143,6 +143,7 @@
 #include "NFmiDataModifierModMinMax.h"
 #include "NFmiDataModifierModAvg.h"
 #include "NFmiLedLightStatus.h"
+#include "NFmiTempDataGenerator.h"
 
 #include "AnimationProfiler.h"
 
@@ -7959,15 +7960,13 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void DoTEMPDataUpdate(const std::string &theTEMPCodeTextStr, std::string &theTEMPCodeCheckReportStr, bool fJustCheckTEMPCode)
 	{
 		itsLastTEMPDataStr = theTEMPCodeTextStr;
-		NFmiQueryData *newData = DecodeTEMP::MakeNewDataFromTEMPStr(theTEMPCodeTextStr, theTEMPCodeCheckReportStr, WmoStationInfoSystem(), itsRawTempUnknownStartLonLat, NFmiProducer(kFmiRAWTEMP, "TEMP"), fRawTempRoundSynopTimes);
-		if(newData && fJustCheckTEMPCode == false)
+		auto newDataPtr = NFmiTempDataGenerator::GenerateDataFromText(theTEMPCodeTextStr, theTEMPCodeCheckReportStr, WmoStationInfoSystem(), itsRawTempUnknownStartLonLat, NFmiProducer(kFmiRAWTEMP, "TEMP"), fRawTempRoundSynopTimes);
+		if(newDataPtr && fJustCheckTEMPCode == false)
 		{
 			// otetaan TEMP koodi data käyttöön jos löytyi ja  ei ollut pelkkä tarkistus operaatio
 			bool dataWasDeleted = false;
-			AddQueryData(newData, "TEMPData.sqd", "TEMPDataFilePattern", NFmiInfoData::kTEMPCodeSoundingData, "", false, dataWasDeleted);
+			AddQueryData(newDataPtr.release(), "TEMPData.sqd", "TEMPDataFilePattern", NFmiInfoData::kTEMPCodeSoundingData, "", false, dataWasDeleted);
 		}
-		else
-			delete newData;
 	}
 
 	void ClearTEMPData(void)

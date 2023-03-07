@@ -2384,7 +2384,8 @@ bool NFmiTempView::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, s
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
 	auto& hodografViewData = mtaTempSystem.GetHodografViewData();
 	const auto& dataRect = itsTempViewDataRects.getSoundingCurveDataRect();
-	if(theKey & kCtrlKey && theKey & kShiftKey)
+	auto isInsideTextualSoundingRect = itsTempViewDataRects.getTextualSoundingDataSideViewRect().IsInside(thePlace);
+	if(!isInsideTextualSoundingRect && theKey & kCtrlKey && theKey & kShiftKey)
 	{
 		// CTRL + SHIFT + rullalla säädetään kaikkialta ikkunasta valitun tuottaja indeksiä
 		auto direction = (theDelta > 0) ? kDown : kUp;
@@ -2423,7 +2424,7 @@ bool NFmiTempView::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, s
             mtaTempSystem.PreviousAnimationStep();
 		return true;
 	}
-	else if(itsTempViewDataRects.getTextualSoundingDataSideViewRect().IsInside(thePlace))
+	else if(isInsideTextualSoundingRect)
 	{
 		auto drawUpward = mtaTempSystem.GetSoundingViewSettingsFromWindowsRegisty().SoundingTextUpward();
 		int scrollValue = 3; // pelkkä rulla

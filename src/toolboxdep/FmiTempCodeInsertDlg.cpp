@@ -104,7 +104,15 @@ BOOL CFmiTempCodeInsertDlg::OnInitDialog()
 	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 	itsTempCodeInputStrU_ = CA2T(itsSmartMetDocumentInterface->LastTEMPDataStr().c_str());
 	InitDialogTexts();
-
+	// CRichEditCtrl luokan tekstinsyöttökentän oletuskoko on jotain 64k, pitää kasvattaa
+	// koska uudet Wyoming bufr CSV datat ovat niin mielettömän isoja (yhdessä luotauksessa 3000+ leveliä)
+	auto richEditCtrl = static_cast<CRichEditCtrl*>(GetDlgItem(IDC_RICHEDIT_INPUT_TEMP_CODES));
+	if(richEditCtrl)
+	{
+		long kiloByte = 1024;
+		long megaByte = kiloByte * kiloByte;
+		richEditCtrl->LimitText(50 * megaByte);
+	}
 	UpdateData(FALSE);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
