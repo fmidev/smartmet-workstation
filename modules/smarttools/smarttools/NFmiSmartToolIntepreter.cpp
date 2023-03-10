@@ -181,7 +181,8 @@ NFmiSmartToolIntepreter::ResolutionLevelTypesMap NFmiSmartToolIntepreter::itsRes
 std::string NFmiSmartToolIntepreter::itsBaseDelimiterChars = "+-*/%^=(){}<>&|!,";
 std::string NFmiSmartToolIntepreter::itsFullDelimiterChars =
     NFmiSmartToolIntepreter::itsBaseDelimiterChars + " \t\n\r\0";
-std::string NFmiSmartToolIntepreter::itsAbsoluteBasePath = "";
+std::string NFmiSmartToolIntepreter::itsAbsoluteSmarttoolsBasePath = "";
+std::string NFmiSmartToolIntepreter::itsAbsoluteMacroParamBasePath = "";
 
     //--------------------------------------------------------
 // Constructor/Destructor
@@ -2520,9 +2521,11 @@ bool NFmiSmartToolIntepreter::IsWantedStart(const std::string &theText,
   return false;
 }
 
-void NFmiSmartToolIntepreter::SetAbsoluteBasePath(const std::string& theAbsoluteBasePath) 
+void NFmiSmartToolIntepreter::SetAbsoluteBasePaths(const std::string &theAbsoluteSmarttoolsBasePath,
+                                                   const std::string &theAbsoluteMacroParamBasePath)
 {
-  itsAbsoluteBasePath = theAbsoluteBasePath;
+  itsAbsoluteSmarttoolsBasePath = theAbsoluteSmarttoolsBasePath;
+  itsAbsoluteMacroParamBasePath = theAbsoluteMacroParamBasePath;
 }
 
 bool NFmiSmartToolIntepreter::FindParamAndSetMaskInfo(
@@ -3286,6 +3289,26 @@ bool NFmiSmartToolIntepreter::ExtractObservationRadiusInfo()
   throw std::runtime_error(errorStr);
 }
 
+const std::string& NFmiSmartToolIntepreter::GetUsedAbsoluteBasePath() const
+{
+  if (fMacroParamSkriptInProgress)
+    return itsAbsoluteMacroParamBasePath;
+  else
+    return itsAbsoluteSmarttoolsBasePath;
+}
+
+// Smarttools kielessä voidaan antaa polkuja #include lausekkeilla ja SymbolTooltipFile = path lausekkeilla.
+// 1) Tämä funktio muuttaa suhteelliset polut absoluuttisiksi, esim:
+//    path1\path2\file => absoluteBasePath\path1\path2\file
+// 2) Siivoaa poluista .. -notaatio siirtymät ja muuttaa ne vain absoluuttisiksi, esim.
+//    ..\..\myscripts\myscript.st => D:\macrot\myscripts\myscript.st
+// , jos basepath (macroparameille) oli vaikka D:\macrot\fmi\macroparams
+std::string NFmiSmartToolIntepreter::FixGivenSmarttoolsScriptPath(const std::string &thePathInScript) const
+{
+  auto absolutePathInscript = PathUtils::getAbsoluteFilePath(thePathInScript, GetUsedAbsoluteBasePath());
+  return PathUtils::simplifyWindowsPath(absolutePathInscript);
+}
+
 bool NFmiSmartToolIntepreter::ExtractSymbolTooltipFile()
 {
   // Jos skriptistä on löytynyt 'SymbolTooltipFile = path_to_file'
@@ -3297,8 +3320,7 @@ bool NFmiSmartToolIntepreter::ExtractSymbolTooltipFile()
     string pathToSymbolFile = std::string(exp_ptr, exp_end);
     // otetään edessä ja mahdolliset perässä olevat spacet pois
     NFmiStringTools::Trim(pathToSymbolFile);
-    pathToSymbolFile = PathUtils::fixMissingDriveLetterToAbsolutePath(pathToSymbolFile,
-                                                                   itsAbsoluteBasePath);
+    pathToSymbolFile = FixGivenSmarttoolsScriptPath(pathToSymbolFile);
     if (NFmiFileSystem::FileExists(pathToSymbolFile))
     {
       itsExtraMacroParamData.SymbolTooltipFile(pathToSymbolFile);
