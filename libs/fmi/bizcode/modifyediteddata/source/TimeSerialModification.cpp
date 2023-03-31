@@ -973,6 +973,11 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
 	return true;
 }
 
+static const std::string& GetUsedSmarttoolIncludeDirectory(TimeSerialModificationDataInterface& theAdapter)
+{
+	return theAdapter.SmartToolInfo()->RootLoadDirectory();
+}
+
 static bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly, bool fDoMultiThread, NFmiThreadCallBacks *theThreadCallBacks)
 {
 	bool status = false;
@@ -985,7 +990,7 @@ static bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, 
 
 		status = ::DoSmartToolEditing(theAdapter, theSmartToolText, theRelativePathMacroName, fSelectedLocationsOnly, *times,
 							std::string(" - modified with SmartTool."),
-							theAdapter.SmartToolInfo()->LoadDirectory(),
+							::GetUsedSmarttoolIncludeDirectory(theAdapter),
 							true,
 							fDoMultiThread, 
 							theThreadCallBacks,
@@ -1847,7 +1852,7 @@ static bool MakeDBCheckerDataValiditation(TimeSerialModificationDataInterface &t
 						false,
 						timeDesc,
 						" - modified with DBChecker",
-						theAdapter.SmartToolInfo()->LoadDirectory(),
+						::GetUsedSmarttoolIncludeDirectory(theAdapter),
 						true, // =data validoidaan
 						fDoMultiThread,
 						0);
