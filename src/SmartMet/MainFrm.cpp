@@ -37,6 +37,7 @@
 #include "CtrlViewFunctions.h"
 #include "FmiHakeWarningMessages.h"
 #include "NFmiLedLightStatus.h"
+#include "CtrlViewGdiPlusFunctions.h"
 #include <numeric>
 
 #ifndef DISABLE_CPPRESTSDK
@@ -718,8 +719,8 @@ static void LocalizeMenuStrings(CMenu *pMenu)
             if(menuItemStrU_.GetLength())
             {
                 UINT itemId = pMenu->GetMenuItemID(i);
-                std::string newMenuItemStr = ::GetDictionaryString(CT2A(menuItemStrU_));
-                menuItemStrU_ = CA2T(newMenuItemStr.c_str());
+                auto newMenuItemStrU_ = CtrlView::StringToWString(::GetDictionaryString(CT2A(menuItemStrU_)));
+                menuItemStrU_ = newMenuItemStrU_.c_str();
                 pMenu->ModifyMenu(i, MF_BYPOSITION | MF_STRING, itemId, menuItemStrU_);
             }
         }
