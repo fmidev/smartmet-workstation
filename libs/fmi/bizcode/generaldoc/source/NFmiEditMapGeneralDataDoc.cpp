@@ -143,6 +143,7 @@
 #include "NFmiDataModifierModMinMax.h"
 #include "NFmiDataModifierModAvg.h"
 #include "NFmiLedLightStatus.h"
+#include "NFmiTempDataGenerator.h"
 
 #include "AnimationProfiler.h"
 
@@ -1117,7 +1118,7 @@ void InitSmartToolSystem(void)
         NFmiSmartToolIntepreter intepreter(&itsProducerSystem, &itsObsProducerSystem);
 		// Tämä korjaa mm. SymbolTooltipFile asetukset kuntoon, jos skriptissä polku annetaan ilman drive-letter:iä,
 		// mikä onkin jatkossa suositeltavaa.
-		NFmiSmartToolIntepreter::SetAbsoluteBasePath(BasicSmartMetConfigurations().ControlPath());
+		NFmiSmartToolIntepreter::SetAbsoluteBasePaths(MacroPathSettings().SmartToolPath(), MacroPathSettings().MacroParamPath());
 	}
 	catch(std::exception &e)
 	{
@@ -3190,7 +3191,7 @@ void AddWmsDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings
         try
         {
 			auto& wmsSupport = GetCombinedMapHandler()->getWmsSupport();
-            if(!wmsSupport.isConfigured())
+            if(!wmsSupport.isCapabilityTreeAvailable())
                 return;
             CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, __FUNCTION__);
             const auto* layerTree = wmsSupport.peekCapabilityTree();
@@ -5437,11 +5438,6 @@ void ResetTimeFilterTimes()
     const NFmiTimeBag &editedTimeBag = EditedDataTimeBag();
     itsTimeFilterStartTime = editedTimeBag.FirstTime();
     itsTimeFilterEndTime = editedTimeBag.LastTime();
-}
-
-void SetActiveParamMissingValues(double theValue)
-{
-	FmiModifyEditdData::SetActiveParamMissingValues(GenDocDataAdapter(), theValue, UseMultithreaddingWithModifyingFunctions());
 }
 
 bool LoadStaticHelpData(void)
@@ -7964,15 +7960,13 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void DoTEMPDataUpdate(const std::string &theTEMPCodeTextStr, std::string &theTEMPCodeCheckReportStr, bool fJustCheckTEMPCode)
 	{
 		itsLastTEMPDataStr = theTEMPCodeTextStr;
-		NFmiQueryData *newData = DecodeTEMP::MakeNewDataFromTEMPStr(theTEMPCodeTextStr, theTEMPCodeCheckReportStr, WmoStationInfoSystem(), itsRawTempUnknownStartLonLat, NFmiProducer(kFmiRAWTEMP, "TEMP"), fRawTempRoundSynopTimes);
-		if(newData && fJustCheckTEMPCode == false)
+		auto newDataPtr = NFmiTempDataGenerator::GenerateDataFromText(theTEMPCodeTextStr, theTEMPCodeCheckReportStr, WmoStationInfoSystem(), itsRawTempUnknownStartLonLat, NFmiProducer(kFmiRAWTEMP, "TEMP"), fRawTempRoundSynopTimes);
+		if(newDataPtr && fJustCheckTEMPCode == false)
 		{
 			// otetaan TEMP koodi data käyttöön jos löytyi ja  ei ollut pelkkä tarkistus operaatio
 			bool dataWasDeleted = false;
-			AddQueryData(newData, "TEMPData.sqd", "TEMPDataFilePattern", NFmiInfoData::kTEMPCodeSoundingData, "", false, dataWasDeleted);
+			AddQueryData(newDataPtr.release(), "TEMPData.sqd", "TEMPDataFilePattern", NFmiInfoData::kTEMPCodeSoundingData, "", false, dataWasDeleted);
 		}
-		else
-			delete newData;
 	}
 
 	void ClearTEMPData(void)
@@ -11131,11 +11125,6 @@ void NFmiEditMapGeneralDataDoc::SetTimeFilterStartTime(const NFmiMetTime& theTim
 void NFmiEditMapGeneralDataDoc::SetTimeFilterEndTime(const NFmiMetTime& theTime)
 {
 	pimpl->SetTimeFilterEndTime(theTime);
-}
-
-void NFmiEditMapGeneralDataDoc::SetActiveParamMissingValues(double theValue)
-{
-	pimpl->SetActiveParamMissingValues(theValue);
 }
 
 bool NFmiEditMapGeneralDataDoc::MakeDataValiditation(void)

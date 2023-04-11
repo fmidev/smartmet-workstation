@@ -171,6 +171,7 @@ class NFmiSoundingDataOpt1
   void MakeFillDataPostChecks(
       const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
       const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo = nullptr);
+  void FillRestOfWindData(NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage);
 
  private:
   bool CheckLFCIndexCache(FmiLCLCalcType theLCLCalcTypeIn,
@@ -199,7 +200,6 @@ class NFmiSoundingDataOpt1
       const NFmiMetTime &theTime,
       const NFmiPoint &theLatlon);
   void FastFillWindData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
-  void FillRestOfWindData(NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage);
   void InitZeroHeight();  // tätä kutsutaan FillParamData-metodeista
   void CalculateHumidityData();
   std::string MakeCacheString(double T, double Td, double fromP, double toP);

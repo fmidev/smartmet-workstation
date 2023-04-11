@@ -46,6 +46,8 @@ public:
 
 #ifndef DISABLE_CPPRESTSDK
     virtual const Wms::CapabilityTree* peekCapabilityTree() const = 0;
+    // Kun varsinaisia kyselyjä on tarkoitus tehdä, kannattaa varmistaa tällä että onko systeemi jo käytössä
+    virtual bool isCapabilityTreeAvailable() const = 0;
 #endif // DISABLE_CPPRESTSDK
 
 };

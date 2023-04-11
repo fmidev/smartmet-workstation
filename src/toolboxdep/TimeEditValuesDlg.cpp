@@ -131,6 +131,7 @@ BEGIN_MESSAGE_MAP(CTimeEditValuesDlg, CDialog)
     ON_COMMAND(ID_ACCELERATOR_CP_TIME_SERIAL_SELECT_DOWN, &CTimeEditValuesDlg::OnAcceleratorCpSelectDown)
 	ON_BN_CLICKED(IDC_BUTTON_TIME_SERIAL_PARAMETER_SELECTION, &CTimeEditValuesDlg::OnButtonOpenParameterSelection)
 	ON_COMMAND(ID_ACCELERATOR_LOG_VIEWER_TOOLBOXDEB, &CTimeEditValuesDlg::OnAcceleratorLogViewerToolboxdeb)
+	ON_COMMAND(ID_ACCELERATOR_SWAP_AREA_SECONDARY_KEY_EXTRA_MAP, &CTimeEditValuesDlg::OnAcceleratorSwapAreaSecondaryKeyExtraMap)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -678,9 +679,20 @@ void CTimeEditValuesDlg::OnAcceleratorToggleTooltip()
 }
 
 void CTimeEditValuesDlg::OnAcceleratorSwapArea()
-{ // tämä on siis SPACE-näppäimen handleri, jolla tehdää aikasarjojen auto säätö
-    itsTimeEditValuesView->AutoAdjustValueScales(false);
-    itsSmartMetDocumentInterface->TimeSerialViewDirty(true);
+{ 
+	// Tämä on siis SPACE-näppäimen handleri, jolla tehdään aikasarjaikkunan 
+	// aktiivisen rivin arvoasteikko säädöt (=> AutoAdjustValueScales(true)).
+	itsTimeEditValuesView->AutoAdjustValueScales(true);
+	itsSmartMetDocumentInterface->TimeSerialViewDirty(true);
+	Invalidate(FALSE);
+}
+
+void CTimeEditValuesDlg::OnAcceleratorSwapAreaSecondaryKeyExtraMap()
+{
+	// Tämä on siis CTRL + SHIFT + SPACE-näppäimen handleri, jolla tehdään aikasarjaikkunan 
+	// kaikkien rivien arvoasteikko säädöt (=> AutoAdjustValueScales(false)).
+	itsTimeEditValuesView->AutoAdjustValueScales(false);
+	itsSmartMetDocumentInterface->TimeSerialViewDirty(true);
 	Invalidate(FALSE);
 }
 

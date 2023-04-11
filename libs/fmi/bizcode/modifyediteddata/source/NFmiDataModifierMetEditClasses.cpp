@@ -30,36 +30,6 @@
 #include "NFmiGrid.h"
 #include "NFmiSoundingFunctions.h"
 
-//************** NFmiDataModifierMissingValueSet ************************
-
-NFmiDataModifierMissingValueSet::NFmiDataModifierMissingValueSet(double theMissingValue, double theValue)
-:itsMissingValue(theMissingValue)
-,itsValue(theValue)
-{
-}
-
-NFmiDataModifierMissingValueSet::NFmiDataModifierMissingValueSet(const NFmiDataModifierMissingValueSet &theOther)
-:NFmiDataModifier(theOther)
-,itsMissingValue(theOther.itsMissingValue)
-,itsValue(theOther.itsValue)
-{
-}
-
-NFmiDataModifier* NFmiDataModifierMissingValueSet::Clone(void) const
-{
-	return new NFmiDataModifierMissingValueSet(*this);
-}
-
-
-float NFmiDataModifierMissingValueSet::FloatOperation(float theValue)
-{
-	if(theValue == itsMissingValue)
-		return float(itsValue);
-	else
-		return theValue;
-}
-//************** NFmiDataModifierMissingValueSet ************************
-
 //************** NFmiDataModifierTimeShifter ************************
 
 NFmiDataModifierTimeShifter::NFmiDataModifierTimeShifter(const NFmiDataModifierTimeShifter &theOther)

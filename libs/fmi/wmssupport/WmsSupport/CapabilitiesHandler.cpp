@@ -113,6 +113,11 @@ namespace Wms
         return *capabilityTree_;
     }
 
+    bool CapabilitiesHandler::isCapabilityTreeAvailable() const
+    {
+        return capabilityTree_ != nullptr;
+    }
+
     void CapabilitiesHandler::startFetchingCapabilitiesInBackground()
     {
         bManager_->addTask([&]()

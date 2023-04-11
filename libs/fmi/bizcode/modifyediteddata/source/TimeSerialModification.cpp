@@ -973,6 +973,11 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
 	return true;
 }
 
+static const std::string& GetUsedSmarttoolIncludeDirectory(TimeSerialModificationDataInterface& theAdapter)
+{
+	return theAdapter.SmartToolInfo()->RootLoadDirectory();
+}
+
 static bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly, bool fDoMultiThread, NFmiThreadCallBacks *theThreadCallBacks)
 {
 	bool status = false;
@@ -985,7 +990,7 @@ static bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, 
 
 		status = ::DoSmartToolEditing(theAdapter, theSmartToolText, theRelativePathMacroName, fSelectedLocationsOnly, *times,
 							std::string(" - modified with SmartTool."),
-							theAdapter.SmartToolInfo()->LoadDirectory(),
+							::GetUsedSmarttoolIncludeDirectory(theAdapter),
 							true,
 							fDoMultiThread, 
 							theThreadCallBacks,
@@ -1847,7 +1852,7 @@ static bool MakeDBCheckerDataValiditation(TimeSerialModificationDataInterface &t
 						false,
 						timeDesc,
 						" - modified with DBChecker",
-						theAdapter.SmartToolInfo()->LoadDirectory(),
+						::GetUsedSmarttoolIncludeDirectory(theAdapter),
 						true, // =data validoidaan
 						fDoMultiThread,
 						0);
@@ -2652,7 +2657,7 @@ std::string FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage(const std
 		errorMessage += ": \n";
 		errorMessage += exceptionPtr->what();
 	}
-	errorMessage += ", \nin '";
+	errorMessage += ", in '";
 	errorMessage += PathUtils::getRelativeStrippedFileName(theDrawParam->InitFileName(), macroParamSystemRootPath, "dpa");
 	errorMessage += "'";
 	return errorMessage;
@@ -2723,31 +2728,6 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 float FmiModifyEditdData::CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, int theMapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, bool doProbing, const NFmiPoint& spaceOutSkipFactors, boost::shared_ptr<NFmiFastQueryInfo> possibleSpacedOutMacroInfo, NFmiExtraMacroParamData *possibleExtraMacroParamData)
 {
     return ::CalcMacroParamMatrix(theAdapter, theMapViewDescTopIndex, theDrawParam, theValues, fCalcTooltipValue, fDoMultiThread, theTime, theTooltipLatlon, theUsedMacroInfoOut, theUseCalculationPoints, possibleSpacedOutMacroInfo, possibleExtraMacroParamData, doProbing, spaceOutSkipFactors);
-}
-
-static void SetActiveParamMissingValues(TimeSerialModificationDataInterface &theAdapter, double theValue, bool fDoMultiThread)
-{
-	boost::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
-	boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0);  // tämä missing value asetus työkalulla tehdyt muokkaukset tehdään aina pääkarttaikkunan (0-desctop-indeksi) aktiiviselle datalle
-	if(editedData && drawParam && drawParam->DataType() == NFmiInfoData::kEditable)
-	{
-		try
-		{
-			::SnapShotData(theAdapter, editedData, drawParam->Param(), "Setting missing values", theAdapter.TimeFilterStartTime(), theAdapter.TimeFilterEndTime());
-		}
-		catch(...)
-		{
-			// heitetty poikkeus eli halutaan lopettaa toiminto
-			return ;
-		}
-
-		NFmiDataModifierMissingValueSet modifier(kFloatMissing, theValue);
-		NFmiTimeDescriptor timeDescriptor(theAdapter.EditedDataTimeDescriptor());
-		if(fDoMultiThread)
-			editedData->ModifyTimesLocationData_FullMT(&modifier, timeDescriptor);
-		else
-			editedData->ModifyTimesLocationData(&modifier, 0, timeDescriptor);
-	}
 }
 
 static void SetForInfiniteValueCheck(TimeSerialModificationDataInterface &theAdapter)
@@ -2962,15 +2942,6 @@ bool FmiModifyEditdData::CheckAndValidateAfterModifications(TimeSerialModificati
 	bool status = ::CheckAndValidateAfterModifications(theAdapter, theModifyingTool, fMakeDataSnapshotAction, theLocationMask, theParam, fDoMultiThread);
 	::ReportError_InfiniteValueCheck(theAdapter, __FUNCTION__);
 	return status;
-}
-
-void FmiModifyEditdData::SetActiveParamMissingValues(TimeSerialModificationDataInterface &theAdapter, double theValue, bool fDoMultiThread)
-{
-	if(::IsDataModificationInProgress(theAdapter, __FUNCTION__))
-		return ;
-	::SetForInfiniteValueCheck(theAdapter);
-	::SetActiveParamMissingValues(theAdapter, theValue, fDoMultiThread);
-	::ReportError_InfiniteValueCheck(theAdapter, __FUNCTION__);
 }
 
 bool FmiModifyEditdData::MakeDataValiditation(TimeSerialModificationDataInterface &theAdapter, bool fDoMultiThread)

@@ -428,6 +428,19 @@ QueryInfoTotalStateRestorer::~QueryInfoTotalStateRestorer()
   info_.LevelIndex(levelIndex_);
 }
 
+MetaWindParamUsage::MetaWindParamUsage() = default;
+
+MetaWindParamUsage::MetaWindParamUsage(bool hasTotalWind,
+                                       bool hasWindVectorParam,
+                                       bool hasWsAndWd,
+                                       bool hasWindComponents)
+    : fHasTotalWind(hasTotalWind),
+      fHasWindVectorParam(hasWindVectorParam),
+      fHasWsAndWd(hasWsAndWd),
+      fHasWindComponents(hasWindComponents)
+{
+}
+
 bool MetaWindParamUsage::ParamNeedsMetaCalculations(unsigned long paramId) const
 {
     if(fHasTotalWind)

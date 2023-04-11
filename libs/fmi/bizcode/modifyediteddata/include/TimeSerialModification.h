@@ -58,7 +58,6 @@ namespace FmiModifyEditdData
 	float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, int theMapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, bool doProbing, const NFmiPoint& spaceOutSkipFactors, boost::shared_ptr<NFmiFastQueryInfo> possibleSpacedOutMacroInfo = nullptr, NFmiExtraMacroParamData *possibleExtraMacroParamData = nullptr);
 	bool TryAutoStartUpLoad(TimeSerialModificationDataInterface &theAdapter, bool fDoMultiThread);
 	bool CheckAndValidateAfterModifications(TimeSerialModificationDataInterface &theAdapter, NFmiMetEditorTypes::FmiUsedSmartMetTool theModifyingTool, bool fMakeDataSnapshotAction, unsigned int theLocationMask, FmiParameterName theParam, bool fDoMultiThread);
-	void SetActiveParamMissingValues(TimeSerialModificationDataInterface &theAdapter, double theValue, bool fDoMultiThread);
 	bool MakeDataValiditation(TimeSerialModificationDataInterface &theAdapter, bool fDoMultiThread);
 	void SnapShotData(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiDataIdent &theDataIdent, const std::string &theModificationText
 					, const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime);

@@ -37,27 +37,34 @@ namespace NFmiFastInfoUtils
 
     class MetaWindParamUsage
     {
-        // If Totalwind combine parameter is present, no need for any meta parameters...
-        bool fHasTotalWind = false;
-        // Data has kFmiWindVectorMS parameter, so no need to make meta parameter of it.
-        bool fHasWindVectorParam = false;
-        // Data has wind speed and wind direction (that can be used to calculate wind vector)
-        bool fHasWsAndWd = false;
-        // data has u- and v-components of the wind (that can be used to calculate wind vector)
-        bool fHasWindComponents = false;
-    public:
-        bool ParamNeedsMetaCalculations(unsigned long paramId) const;
-        bool NoWindMetaParamsNeeded() const;
-        bool MakeMetaWindVectorParam() const;
-        bool MakeMetaWsAndWdParams() const;
-        bool MakeMetaWindComponents() const;
-        bool HasTotalWind() const { return fHasTotalWind; }
-        bool HasWindVectorParam() const { return fHasWindVectorParam; }
-        bool HasWsAndWd() const { return fHasWsAndWd; }
-        bool HasWindComponents() const { return fHasWindComponents; }
-        bool IsStreamlinePossible() const;
+      // If Totalwind combine parameter is present, no need for any meta parameters...
+      bool fHasTotalWind = false;
+      // Data has kFmiWindVectorMS parameter, so no need to make meta parameter of it.
+      bool fHasWindVectorParam = false;
+      // Data has wind speed and wind direction (that can be used to calculate wind vector)
+      bool fHasWsAndWd = false;
+      // data has u- and v-components of the wind (that can be used to calculate wind vector)
+      bool fHasWindComponents = false;
 
-        friend MetaWindParamUsage CheckMetaWindParamUsage(NFmiQueryInfo &theInfo);
+     public:
+      MetaWindParamUsage();
+      MetaWindParamUsage(bool hasTotalWind,
+                         bool hasWindVectorParam,
+                         bool hasWsAndWd,
+                         bool hasWindComponents);
+
+      bool ParamNeedsMetaCalculations(unsigned long paramId) const;
+      bool NoWindMetaParamsNeeded() const;
+      bool MakeMetaWindVectorParam() const;
+      bool MakeMetaWsAndWdParams() const;
+      bool MakeMetaWindComponents() const;
+      bool HasTotalWind() const { return fHasTotalWind; }
+      bool HasWindVectorParam() const { return fHasWindVectorParam; }
+      bool HasWsAndWd() const { return fHasWsAndWd; }
+      bool HasWindComponents() const { return fHasWindComponents; }
+      bool IsStreamlinePossible() const;
+
+      friend MetaWindParamUsage CheckMetaWindParamUsage(NFmiQueryInfo &theInfo);
     };
 
 bool IsInfoShipTypeData(NFmiFastQueryInfo &theInfo);

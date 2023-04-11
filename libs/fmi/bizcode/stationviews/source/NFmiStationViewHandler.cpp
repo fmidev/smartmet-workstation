@@ -4135,7 +4135,17 @@ void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 			double rangeInKm = rangeInMeters / 1000.;
 			auto rangeInKmStr = (rangeInMeters < 0) ? std::string("-.-") : NFmiValueString::GetStringWithMaxDecimalsSmartWay(rangeInKm, 1);
 			rangeStr += rangeInKmStr;
-			rangeStr += " km";
+			rangeStr += " km (";
+			auto angleInDegrees = startLocation.Direction(endLatlon);
+			if(angleInDegrees < 0)
+			{
+				// halutaan arvot 0-360, mutta NFmiLocation palauttaa arvovälin 180-360 arvot negatiivisina arvoina
+				angleInDegrees = 180 + (180 + angleInDegrees);
+			}
+			rangeStr += NFmiValueString::GetStringWithMaxDecimalsSmartWay(angleInDegrees, 1);
+			rangeStr += "°"; // Astemerkki tms. ovat aina potentiaalinen ongelma, koska ei kuulu perus ascii merkkeihin
+			rangeStr += ")";
+
 			CtrlView::DrawTextToRelativeLocation(
 				*itsGdiPlusGraphics,
 				color,

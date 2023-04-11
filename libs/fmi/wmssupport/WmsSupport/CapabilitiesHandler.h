@@ -58,6 +58,7 @@ namespace Wms
         void startFetchingCapabilitiesInBackground();
 		const std::map<long, std::map<long, LayerInfo>>& peekHashes() const;
         const CapabilityTree& peekCapabilityTree() const;
+        bool isCapabilityTreeAvailable() const;
         static void setParameterSelectionUpdateCallback(std::function<void()>& parameterSelectionUpdateCallback);
         static void firstTimeUpdateCallbackWrapper();
     };

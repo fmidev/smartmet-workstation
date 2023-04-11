@@ -186,7 +186,7 @@ namespace AddParams
 		try
 		{
 			auto& wmsSupport = getWmsCallback_();
-			if (!wmsSupport.isConfigured())
+			if (!wmsSupport.isCapabilityTreeAvailable())
 				return;
 			const auto* layerTree = wmsSupport.peekCapabilityTree();
             if(layerTree)
