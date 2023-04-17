@@ -203,7 +203,7 @@ protected:
    void MakeDrawedInfoVector(void);
    void MakeDrawedInfoVector(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
    void CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFmiGrid *theUsedGridOut);
-   float CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extraMacroParamData);
+   float CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extraMacroParamData, boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam);
    void GridStationDataToMatrix(NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime);
    void GridStationDataFromQ2(NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime);
    NFmiColor GetColoredNumberColor(float theValue) const;
@@ -229,7 +229,9 @@ protected:
    NFmiHelpDataInfo* GetHelpDataInfo(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
    void FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid = nullptr);
    float CalcTimeInterpolatedValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime);
-   std::string GetPossibleMacroParamSymbolText(float value, const std::string &possibleSymbolTooltipFile);
+   std::string GetPossibleMacroParamSymbolText(float value, const std::string& valueStr, const NFmiExtraMacroParamData &extraMacroParamData);
+   std::string GetMacroParamMultiParamText(float multiParamValue1, const std::string & multiParamValue1Str, const NFmiExtraMacroParamData& extraMacroParamData);
+   float GetMultiParamValue(const MultiParamData& multiParam);
    float GetMacroParamTooltipValueFromCache(const NFmiExtraMacroParamData& extraMacroParamData);
    std::string MakeMacroParamTotalTooltipString(boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const std::string &paramName);
    std::string MakeMacroParamErrorTooltipText(const std::string& macroParamErrorMessage);

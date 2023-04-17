@@ -729,12 +729,10 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 						str += ")"; // jos parametri on piilotettu, laita teksti sulkuihin
 					str += ":	";
 					str += "<b><font color=blue>";
-					if(value == kFloatMissing)
-						str += "-";
-					else
-						str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(value, ((value > 1) ? 1 : 2));
+					std::string valueStr = (value == kFloatMissing) ? "-" : NFmiValueString::GetStringWithMaxDecimalsSmartWay(value, ((value > 1) ? 1 : 2));
+					str += valueStr;
 					str += "</font></b>";
-					str += GetPossibleMacroParamSymbolText(value, extraMacroParamData.SymbolTooltipFile());
+					str += GetPossibleMacroParamSymbolText(value, valueStr, extraMacroParamData);
 					str += MakeMacroParamDescriptionTooltipText(extraMacroParamData);
 					str += CtrlViewUtils::GetArchiveOrigTimeString(itsDrawParam, itsCtrlViewDocumentInterface, info, fGetCurrentDataFromQ2Server, "TempViewLegendTimeFormat");
 					str += "\n";
