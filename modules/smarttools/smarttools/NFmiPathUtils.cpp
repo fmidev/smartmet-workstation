@@ -108,18 +108,23 @@ std::string fixMissingDriveLetterToAbsolutePath(const std::string &filePath,
 std::string getAbsoluteFilePath(const std::string &filePath,
                                 const std::string &usedAbsoluteBaseDirectory)
 {
+  std::string finalAbsoluteFilePath;
   NFmiFileString fileString(filePath);
   if (fileString.IsAbsolutePath())
   {
-    return fixMissingDriveLetterToAbsolutePath(filePath, usedAbsoluteBaseDirectory);
+    finalAbsoluteFilePath = fixMissingDriveLetterToAbsolutePath(filePath, usedAbsoluteBaseDirectory);
   }
   else
   {
     std::string absolutePath = usedAbsoluteBaseDirectory;
-    absolutePath += kFmiDirectorySeparator;
+    if (!lastCharacterIsSeparator(absolutePath))
+    {
+      absolutePath += kFmiDirectorySeparator;
+    }
     absolutePath += filePath;
-    return absolutePath;
+    finalAbsoluteFilePath = absolutePath;
   }
+  return simplifyWindowsPath(finalAbsoluteFilePath);
 }
 
 std::string getPathSectionFromTotalFilePath(const std::string &theFilePath)

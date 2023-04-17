@@ -104,6 +104,43 @@ bool NFmiDefineWantedData::IsInUse() const
 }
 
 // *************************************************************
+// ***************  MultiParamData defines *********************
+// *************************************************************
+
+MultiParamData::MultiParamData() = default;
+
+MultiParamData::MultiParamData(const NFmiDefineWantedData &paramData)
+    : possibleParamData_(paramData)
+{}
+
+MultiParamData::MultiParamData(const std::string &originalParamString,
+                               const std::string macroParamFullPath)
+    : possibleOriginalMacroParamPath_(originalParamString),
+      possibleMacroParamFullPath_(macroParamFullPath)
+{
+}
+
+bool MultiParamData::IsInUse() const 
+{
+    if(possibleParamData_.IsInUse())
+        return true;
+    if(!possibleMacroParamFullPath_.empty()) 
+        return true;
+
+    return false;
+}
+
+bool MultiParamData::IsMacroParamCase() const
+{
+  if (possibleParamData_.IsInUse()) 
+      return false;
+  if (!possibleMacroParamFullPath_.empty()) 
+      return true;
+
+    return false;
+}
+
+// *************************************************************
 // *************  NFmiExtraMacroParamData defines **************
 // *************************************************************
 
@@ -135,6 +172,7 @@ void NFmiExtraMacroParamData::FinalizeData(NFmiInfoOrganizer &theInfoOrganizer)
   }
 
   InitializeFixedBaseDataInfo(theInfoOrganizer);
+  InitializeMultiParamData(theInfoOrganizer);
 
   if (!itsCalculationPointProducers.empty())
   {
@@ -393,6 +431,14 @@ void NFmiExtraMacroParamData::UseDataForResolutionCalculations(
   }
 }
 
+bool NFmiExtraMacroParamData::IsMultiParamCase() const
+{
+  if (!itsMultiParamTooltipFile.empty() && itsMultiParam2.IsInUse())
+    return true;
+  else
+    return false;
+}
+
 static std::string MakeMessageOfRejectionreasons(const std::set<ReasonForDataRejection> &rejectionReasons)
 {
   if (rejectionReasons.empty())
@@ -478,6 +524,34 @@ void NFmiExtraMacroParamData::InitializeFixedBaseDataInfo(NFmiInfoOrganizer &the
     else
     {
       throw std::runtime_error(::MakeFindWantedInfoErrorMessage("FixedBaseData", findWantedInfoData));
+    }
+  }
+}
+
+void NFmiExtraMacroParamData::InitializeMultiParamData(NFmiInfoOrganizer& theInfoOrganizer)
+{
+  InitializeMultiParamData(theInfoOrganizer, itsMultiParam2);
+  InitializeMultiParamData(theInfoOrganizer, itsMultiParam3);
+}
+
+void NFmiExtraMacroParamData::InitializeMultiParamData(NFmiInfoOrganizer &theInfoOrganizer,
+                                                       MultiParamData &multiParamData)
+{
+  if (multiParamData.IsInUse())
+  {
+    if (multiParamData.IsMacroParamCase()) 
+        return;
+
+    auto &wantedMultiParamData = multiParamData.possibleParamData();
+    auto findWantedInfoData = FindWantedInfo(theInfoOrganizer, wantedMultiParamData);
+    if (findWantedInfoData.foundInfo_)
+    {
+      wantedMultiParamData.dataType_ = findWantedInfoData.foundInfo_->DataType();
+    }
+    else
+    {
+      throw std::runtime_error(
+          ::MakeFindWantedInfoErrorMessage("MultiParamData", findWantedInfoData));
     }
   }
 }

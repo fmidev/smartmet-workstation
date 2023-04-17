@@ -84,6 +84,27 @@ class NFmiDefineWantedData
   bool IsInUse() const;
 };
 
+class MultiParamData
+{
+  NFmiDefineWantedData possibleParamData_;
+  std::string possibleOriginalMacroParamPath_;
+  std::string possibleMacroParamFullPath_;
+
+ public:
+  MultiParamData();
+  MultiParamData(const NFmiDefineWantedData &paramData);
+  MultiParamData(const std::string &originalParamString,
+                 const std::string macroParamFullPath);
+
+  bool IsInUse() const;
+  bool IsMacroParamCase() const;
+
+  const NFmiDefineWantedData &possibleParamData() const { return possibleParamData_; }
+  NFmiDefineWantedData &possibleParamData() { return possibleParamData_; }
+  const std::string &possibleOriginalMacroParamPath() const { return possibleOriginalMacroParamPath_; }
+  const std::string &possibleMacroParamFullPath() const { return possibleMacroParamFullPath_; }
+};
+
 // Kun smarttool:ia tulkitaan, siin‰ saattaa olla osia, joita voi k‰ytt‰‰ vain macroParamien
 // yhteydess‰.
 // T‰h‰n luokkaan talletetaan kaikkea, mit‰ extra tietoa voi lˆyty‰ annetusta skriptist‰.
@@ -140,6 +161,13 @@ class NFmiExtraMacroParamData
       const std::string &dataDescriptionForErrorMessage);
   bool IsFixedSpacedOutDataCase() const { return fIsFixedSpacedOutDataCase; }
   void IsFixedSpacedOutDataCase(bool newValue) { fIsFixedSpacedOutDataCase = newValue; }
+  const std::string &MultiParamTooltipFile() const { return itsMultiParamTooltipFile; }
+  void MultiParamTooltipFile(const std::string &newValue) { itsMultiParamTooltipFile = newValue; }
+  const MultiParamData &MultiParam2() const { return itsMultiParam2; }
+  void MultiParam2(const MultiParamData &newValue) { itsMultiParam2 = newValue; }
+  const MultiParamData &MultiParam3() const { return itsMultiParam3; }
+  void MultiParam3(const MultiParamData &newValue) { itsMultiParam3 = newValue; }
+  bool IsMultiParamCase() const;
 
  private:
   void InitializeResolutionData(const NFmiArea *usedArea,
@@ -151,6 +179,8 @@ class NFmiExtraMacroParamData
   void AddCalculationPointsFromData(NFmiInfoOrganizer &theInfoOrganizer,
                                     const std::vector<NFmiProducer> &theProducers);
   void InitializeFixedBaseDataInfo(NFmiInfoOrganizer &theInfoOrganizer);
+  void InitializeMultiParamData(NFmiInfoOrganizer &theInfoOrganizer);
+  void InitializeMultiParamData(NFmiInfoOrganizer &theInfoOrganizer, MultiParamData &multiParamData);
 
   // T‰h‰n tulee resolution = xxx m‰‰rityksest‰ saatava datan tiedot
   NFmiDefineWantedData itsWantedResolutionData;
@@ -205,4 +235,11 @@ class NFmiExtraMacroParamData
   // otetaan kyseinen data t‰h‰n v‰liaikaisesti talteen.
   boost::shared_ptr<NFmiFastQueryInfo> itFixedBaseDataInfo;
   bool fIsFixedSpacedOutDataCase = false;
+  // **** Multi-param tooltip juttuja *****
+  // Monesta parametrista riippuvien tooltip tekstien polku
+  std::string itsMultiParamTooltipFile;
+  // Multi-parametrit 2-3, jos itsMultiParamTooltipFile on m‰‰ritelty, pit‰‰ olla ainakin yksi arvo t‰‰ll‰ (MultiParam2:n arvo).
+  // MultiParam voi olla joko queryData parametri (esim. T_ec) tai macroParam tiedoston polku
+  MultiParamData itsMultiParam2;
+  MultiParamData itsMultiParam3;
 };
