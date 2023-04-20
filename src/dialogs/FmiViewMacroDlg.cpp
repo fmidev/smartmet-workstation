@@ -913,7 +913,7 @@ void CFmiViewMacroDlg::DoSpeedSearchMacroSelection(const std::string &theViewMac
         std::string usedName = viewMacroPath.stem().string();
         if(itsSmartMetDocumentInterface->LoadViewMacro(usedName))
         {
-            SelectMacro(usedName);
+            SelectMacro(itsSmartMetDocumentInterface->CurrentViewMacro()->InitFileName());
             UpdateDialogButtons();
         }
     }

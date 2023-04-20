@@ -1434,6 +1434,11 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::OpenVisualizationsettingsDialog
         ApplicationInterface::GetApplicationInterfaceImplementation()->OpenVisualizationsettingsDialog();
 }
 
+std::shared_ptr<NFmiViewSettingMacro> SmartMetDocumentInterfaceForGeneralDataDoc::CurrentViewMacro()
+{
+    return itsDoc->CurrentViewMacro();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // =================================================
 

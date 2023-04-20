@@ -6882,6 +6882,7 @@ bool InitCPManagerSet(void)
 		// makron nimi otetaan tiedoston nimestä.
         theViewMacro.Name(GetFileNameHeader(theFileName));
         theViewMacro.SetMacroParamInitFileNames(MacroParamSystem().RootPath());
+		theViewMacro.InitFileName(theFileName);
 
 		return status;
 	}
@@ -12867,4 +12868,9 @@ NFmiSeaLevelPlumeData& NFmiEditMapGeneralDataDoc::SeaLevelPlumeData()
 NFmiLedLightStatusSystem& NFmiEditMapGeneralDataDoc::LedLightStatusSystem()
 {
 	return pimpl->LedLightStatusSystem();
+}
+
+std::shared_ptr<NFmiViewSettingMacro> NFmiEditMapGeneralDataDoc::CurrentViewMacro()
+{
+	return pimpl->CurrentViewMacro();
 }
