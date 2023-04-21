@@ -29,6 +29,7 @@ class NFmiNanoSecondTimer
   std::chrono::time_point<std::chrono::steady_clock> startTime_;
  public:
   NFmiNanoSecondTimer();
+  NFmiNanoSecondTimer(int moveStartByMS);
 
   void restart();
   double elapsedTimeInSeconds() const;
