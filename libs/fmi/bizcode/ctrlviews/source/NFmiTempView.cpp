@@ -35,6 +35,7 @@
 #include "NFmiHelpDataInfo.h"
 #include "ColorStringFunctions.h"
 #include "NFmiDataModifierAvg.h"
+#include "CtrlViewFunctions.h"
 
 #include <stdexcept>
 #include "boost\math\special_functions\round.hpp"
@@ -48,31 +49,31 @@ using namespace Gdiplus;
 #undef max
 #endif
 
-static NFmiString GetStrValue(float value, int decimalCount, int totalChars)
+static std::string GetStrValue(float value, int decimalCount, int totalChars)
 {
-	NFmiString str;
+	std::string str;
 	if(value != kFloatMissing)
 	{
 		if(decimalCount == 0)
 			str += NFmiStringTools::Convert(::round(value));
 		else 
 		{
-			NFmiString formatStr;
+			std::string formatStr;
 			if(decimalCount == 1)
 				formatStr = "%0.1f";
 			else if(decimalCount == 2)
 				formatStr = "%0.2f";
 			else
 				formatStr = "%0.3f";
-			NFmiValueString valStr(value, formatStr);
+			NFmiValueString valStr(value, formatStr.c_str());
 			str += valStr;
 		}
 	}
 	else
-		str += NFmiString("-");
-	if(static_cast<int>(str.GetLen()) < totalChars)
+		str += "-";
+	if(str.size() < (size_t)totalChars)
 	{
-		for(int i=str.GetLen(); i<totalChars; i++)
+		for(auto i = str.size(); i < (size_t)totalChars; i++)
 			str += " ";
 	}
 	return str;
@@ -107,9 +108,9 @@ static NFmiPoint CalcReltiveMoveFromPixels(NFmiToolBox *theTB, const NFmiPoint &
 
 static void SetLocationNameByItsLatlon(NFmiProducerSystem &theProdSystem, NFmiLocation &theLocation, const NFmiProducer &theProducer, const NFmiMetTime &theOriginTime, bool fIsGrid = false)
 {
-	NFmiString name;
+	std::string name;
     if(fIsGrid == false && (NFmiInfoOrganizer::IsTempData(theProducer.GetIdent(), true)))
-		name += theLocation.GetName() + NFmiString(" ");
+		name += std::string(theLocation.GetName()) + " ";
 	else
 	{ // etsi mallin nimi
 		unsigned int modelIndex = theProdSystem.FindProducerInfo(theProducer);
@@ -131,7 +132,7 @@ static void SetLocationNameByItsLatlon(NFmiProducerSystem &theProdSystem, NFmiLo
 
 static void SetMovingSoundingLocationName(NFmiLocation &theLocation, const NFmiProducer &theProducer)
 {
-	NFmiString name(theProducer.GetName());
+	std::string name(theProducer.GetName());
 	name += " ";
 	std::string latlonStr;
 	latlonStr += CtrlViewUtils::GetLatitudeMinuteStr(theLocation.GetLatitude(), 0);
@@ -810,47 +811,47 @@ void NFmiTempView::DrawStabilityIndexBackground(const NFmiRect& sideViewRect)
 	DrawFrame(itsDrawingEnvironment, sideViewRect);
 }
 
-static NFmiString GetNameText(NFmiSoundingDataOpt1 &theData)
+static std::string GetNameText(const NFmiLocation &location, bool movingSounding)
 {
-	NFmiString str;
+	std::string str;
 
-    if(theData.MovingSounding())
+    if(movingSounding)
     {
-        if(theData.Location().GetLocation() == NFmiPoint::gMissingLatlon)
+        if(location.GetLocation() == NFmiPoint::gMissingLatlon)
             str += "-,-";
         else
         {
-            str += CtrlViewUtils::GetLatitudeMinuteStr(theData.Location().GetLatitude(), 1);
+            str += CtrlViewUtils::GetLatitudeMinuteStr(location.GetLatitude(), 1);
             str += ",";
-            str += CtrlViewUtils::GetLongitudeMinuteStr(theData.Location().GetLongitude(), 1);
+            str += CtrlViewUtils::GetLongitudeMinuteStr(location.GetLongitude(), 1);
         }
     }
     else
 	{
-        if(theData.Location().GetIdent() != 0)
+        if(location.GetIdent() != 0)
         {
-            if(theData.Location().GetIdent() < 10000)
+            if(location.GetIdent() < 10000)
                 str += "0"; // pit‰‰ tarvittaessa laittaa etu nolla aseman identin eteen
-            str += NFmiStringTools::Convert(theData.Location().GetIdent());
+            str += NFmiStringTools::Convert(location.GetIdent());
             str += " ";
         }
-        str += theData.Location().GetName();
+        str += location.GetName();
     }
 
 	return str;
 }
-static NFmiString GetLatText(NFmiSoundingDataOpt1 &theData)
+static std::string GetLatText(NFmiSoundingDataOpt1 &theData)
 {
-	NFmiString str("SLAT=");
+	std::string str("SLAT=");
 	if(theData.Location().GetLatitude() != kFloatMissing)
 		str += CtrlViewUtils::GetLatitudeMinuteStr(theData.Location().GetLatitude(), 1);
 	else
 		str += " -";
 	return str;
 }
-static NFmiString GetLonText(NFmiSoundingDataOpt1 &theData)
+static std::string GetLonText(NFmiSoundingDataOpt1 &theData)
 {
-	NFmiString str("SLON=");
+	std::string str("SLON=");
 	if(theData.Location().GetLongitude() != kFloatMissing)
 		str += CtrlViewUtils::GetLongitudeMinuteStr(theData.Location().GetLongitude(), 1);
 	else
@@ -858,9 +859,9 @@ static NFmiString GetLonText(NFmiSoundingDataOpt1 &theData)
 	return str;
 }
 
-static NFmiString GetElevationText(NFmiSoundingDataOpt1 &theData, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static std::string GetElevationText(NFmiSoundingDataOpt1 &theData, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
-	NFmiString str("SELEV=");
+	std::string str("SELEV=");
 	if(theInfo && theInfo->Param(kFmiTopoGraf))
 	{
 		float elevValue = theInfo->InterpolatedValue(theData.Location().GetLocation());
@@ -874,9 +875,9 @@ static NFmiString GetElevationText(NFmiSoundingDataOpt1 &theData, boost::shared_
 	return str;
 }
 
-NFmiString NFmiTempView::GetIndexText(double theValue, const NFmiString &theText, int theDecimalCount)
+std::string NFmiTempView::GetIndexText(double theValue, const std::string &theText, int theDecimalCount)
 {
-	NFmiString str(theText);
+	std::string str(theText);
 	str += "=";
 	if(theValue != kFloatMissing)
 		str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(theValue, theDecimalCount);
@@ -896,7 +897,7 @@ void NFmiTempView::MoveToNextLine(double relativeLineHeight, NFmiPoint& theTextP
 	theTextPoint.Y(theTextPoint.Y() + relativeLineHeight);
 }
 
-void NFmiTempView::DrawNextLineToIndexView(double relativeLineHeight, NFmiText &theText, const NFmiString &theStr, NFmiPoint &theTextPoint, bool moveFirst, bool addToString)
+void NFmiTempView::DrawNextLineToIndexView(double relativeLineHeight, NFmiText &theText, const std::string &theStr, NFmiPoint &theTextPoint, bool moveFirst, bool addToString)
 {
 	if(addToString)
 		itsSoundingIndexStr += theStr + "\n";
@@ -1077,7 +1078,7 @@ void NFmiTempView::DrawStabilityIndexData(NFmiSoundingDataOpt1& usedData)
 
 	NFmiText text(p, NFmiString(""), false, 0, itsDrawingEnvironment);
 	auto lineH = itsStabilityIndexRelativeLineHeight;
-	DrawNextLineToIndexView(lineH, text, ::GetNameText(usedData), p, false);
+	DrawNextLineToIndexView(lineH, text, ::GetNameText(usedData.Location(), usedData.MovingSounding()), p, false);
 	DrawNextLineToIndexView(lineH, text, ::GetLatText(usedData), p);
 	DrawNextLineToIndexView(lineH, text, ::GetLonText(usedData), p);
 	DrawNextLineToIndexView(lineH, text, ::GetElevationText(usedData, itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kStationary)), p);
@@ -1138,9 +1139,9 @@ void NFmiTempView::DrawStabilityIndexData(NFmiSoundingDataOpt1& usedData)
 	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcBulkShearIndex(0, 1), "0-1km BS", 1), p);
 	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcSRHIndex(0, 3), "0-3km SRH", 1), p);
 	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcSRHIndex(0, 1), "0-1km SRH", 1), p);
-	DrawNextLineToIndexView(lineH, text, usedData.Get_U_V_ID_IndexText("L-motion", kLeft), p);
-	DrawNextLineToIndexView(lineH, text, usedData.Get_U_V_ID_IndexText("MeanWind", kCenter), p);
-	DrawNextLineToIndexView(lineH, text, usedData.Get_U_V_ID_IndexText("R-motion", kRight), p);
+	DrawNextLineToIndexView(lineH, text, std::string(usedData.Get_U_V_ID_IndexText("L-motion", kLeft)), p);
+	DrawNextLineToIndexView(lineH, text, std::string(usedData.Get_U_V_ID_IndexText("MeanWind", kCenter)), p);
+	DrawNextLineToIndexView(lineH, text, std::string(usedData.Get_U_V_ID_IndexText("R-motion", kRight)), p);
 	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcWSatHeightIndex(1500), "WS1500m", 1), p);
 	DrawNextLineToIndexView(lineH, text, GetIndexText(usedData.CalcThetaEDiffIndex(0, 3), "0-3kmThetaE", 1), p);
 }
@@ -1171,12 +1172,13 @@ std::string NFmiTempView::MakeTextualSoundingLevelString(int levelIndex, std::de
 	return str;
 }
 
-static NFmiString GetStationsShortName(NFmiSoundingDataOpt1 &theData)
+static std::string GetStationsShortName(NFmiSoundingDataOpt1 &theData)
 {
-    if(theData.Location().GetIdent() == 0)
-        return ::GetNameText(theData);
+	const auto& location = theData.Location();
+    if(location.GetIdent() == 0)
+        return ::GetNameText(location, theData.MovingSounding());
     else
-        return theData.Location().GetName();
+        return std::string(location.GetName());
 }
 
 void NFmiTempView::DrawSoundingInTextFormat(NFmiSoundingDataOpt1 &theData)
@@ -1194,7 +1196,7 @@ void NFmiTempView::DrawSoundingInTextFormat(NFmiSoundingDataOpt1 &theData)
 	std::deque<float> &zVec = theData.GetParamData(kFmiGeopHeight);
 	std::deque<float> &wsVec = theData.GetParamData(kFmiWindSpeedMS);
 	std::deque<float> &wdVec = theData.GetParamData(kFmiWindDirection);
-	NFmiString str(::GetStationsShortName(theData));
+	auto str(::GetStationsShortName(theData));
 	NFmiText text(p, NFmiString(""), true, 0, itsDrawingEnvironment);
 	auto lineH = itsTextualSoundingDataRelativeLineHeight;
 	DrawNextLineToIndexView(lineH, text, str, p, false);
@@ -1579,7 +1581,7 @@ void NFmiTempView::DrawCondensationTrailRHValues(NFmiSoundingDataOpt1 &theData, 
 		double xShift = ConvertFixedPixelSizeToRelativeWidth(8);
 		double yShift = ConvertFixedPixelSizeToRelativeHeight(boost::math::iround(fontSize/2.));
 		NFmiPoint moveLabelRelatively(xShift, -yShift);
-		NFmiString unitStr("%");
+		std::string unitStr("%");
 		double lastY = -99;
 
 		for(int i=0; i<static_cast<int>(pV.size()); i++)
@@ -1778,12 +1780,12 @@ void NFmiTempView::DrawMoistAdiapaticks(void)
 	::DrawGdiplusStringVector(*itsGdiPlusGraphics, lineLabels, labelInfo, CtrlView::Relative2GdiplusRect(itsToolBox, dataRect), lineInfo.Color());
 }
 
-void NFmiTempView::DrawHelpLineLabel(const NFmiPoint &p1, const NFmiPoint &theMoveLabelRelatively, double theValue, const NFmiTempLabelInfo &theLabelInfo, NFmiDrawingEnvironment * theEnvi, const NFmiString &thePostStr)
+void NFmiTempView::DrawHelpLineLabel(const NFmiPoint &p1, const NFmiPoint &theMoveLabelRelatively, double theValue, const NFmiTempLabelInfo &theLabelInfo, NFmiDrawingEnvironment * theEnvi, const std::string &thePostStr)
 {
 	if(theLabelInfo.DrawLabelText())
 	{
         ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), theLabelInfo.ClipWithDataRect());
-		NFmiString str(NFmiStringTools::Convert<double>(theValue));
+		std::string str(NFmiStringTools::Convert<double>(theValue));
 		str += thePostStr; // jos joku loppu liite on haluttu laittaa labeliin, se tulee t‰ss‰
 		NFmiText txt(p1 + theMoveLabelRelatively, str, false, 0, theEnvi);
 		itsToolBox->Convert(&txt);
@@ -2011,7 +2013,7 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 			usedColor = NFmiColorSpaces::GetBrighterColor(usedColor, theBrightningFactor);
 		itsDrawingEnvironment->SetFrameColor(usedColor);
         bool onSouthernHemiSphere = usedTempInfo.Latlon().Y() < 0;
-		DrawSounding(sounding, theProducerIndex, usedColor, mainCurve, onSouthernHemiSphere);
+		DrawSounding(sounding, theProducerIndex, usedColor, mainCurve, onSouthernHemiSphere, info);
         itsSoundingDataCacheForTooltips.insert(std::make_pair(NFmiMTATempSystem::SoundingDataCacheMapKey(usedTempInfo, theProducer, theModelRunIndex), sounding));
 	}
 	else
@@ -2042,7 +2044,7 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 			}
 			TotalSoundingData totalData;
 			totalData.itsSoundingData = emptySoundingData;
-			DrawStationInfo(totalData, theProducerIndex);
+			DrawStationInfo(totalData, theProducerIndex, info);
 		}
 	}
 }
@@ -2774,7 +2776,7 @@ void NFmiTempView::DrawHodografBase(int theProducerIndex)
 
 		// kirjoita hodografi teksti yl‰ nurkkaan
 		itsToolBox->SetTextAlignment(kLeft);
-		NFmiString titleStr(::GetDictionaryString("TempViewHodographTitle"));
+		std::string titleStr(::GetDictionaryString("TempViewHodographTitle"));
 		NFmiText titleTxt(hodografRect.TopLeft(), titleStr, false, 0, itsDrawingEnvironment);
 		itsToolBox->Convert(&titleTxt);
 
@@ -3038,7 +3040,7 @@ void NFmiTempView::SetupUsedSoundingData(TotalSoundingData& theUsedDataInOut, in
 	}
 }
 
-void NFmiTempView::DrawSounding(TotalSoundingData &theUsedDataInOut, int theProducerIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere)
+void NFmiTempView::DrawSounding(TotalSoundingData &theUsedDataInOut, int theProducerIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere, boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
 {
 	SetupUsedSoundingData(theUsedDataInOut, theProducerIndex, fMainCurve);
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
@@ -3099,7 +3101,7 @@ void NFmiTempView::DrawSounding(TotalSoundingData &theUsedDataInOut, int theProd
 		DrawCondensationTrailRHValues(theUsedDataInOut.itsSoundingData, 400, 200, 0.32); // 0.32 on viimeinen apuviiva mik‰ piirret‰‰n, arvot laitetaan sen oikealle puolelle
 
 	if(fMainCurve)
-		DrawStationInfo(theUsedDataInOut, theProducerIndex);
+		DrawStationInfo(theUsedDataInOut, theProducerIndex, theInfo);
 }
 
 static void AddStringLabelData(const PointF &thePoint, const PointF &theOffsetPoint, const std::string &theStr, vector<LineLabelDrawData> &theLabels)
@@ -3174,7 +3176,7 @@ void NFmiTempView::DrawLCL(NFmiSoundingDataOpt1 &theData, int theProducerIndex, 
 					NFmiPoint p3(x + lclLineLength / 1.8, y);
 					p3.Y(p3.Y() - itsToolBox->SY(static_cast<long>(itsDrawingEnvironment->GetFontHeight() / 2.)));
 					DrawLine(p1, p2, drawSpecialLines, trueLineWidth, false, 0, itsDrawingEnvironment);
-					NFmiString str("LCL (");
+					std::string str("LCL (");
 					str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(pLCL, 0);
 					str += ", ";
 					str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(T, 1);
@@ -3225,7 +3227,7 @@ void NFmiTempView::DrawHeightValues(NFmiSoundingDataOpt1 &theData, int theProduc
 					if(::fabs(currentTextY-lastPrintedTextY) > neededPrintedTextYDiff)
 					{
 						NFmiPoint p(currentTextX, currentTextY);
-						NFmiString str(NFmiStringTools::Convert<int>(static_cast<int>(gValue)));
+						std::string str(NFmiStringTools::Convert<int>(static_cast<int>(gValue)));
 						str += "m";
 						NFmiText txt(p, str, false, 0, itsDrawingEnvironment);
 						itsToolBox->Convert(&txt);
@@ -3247,20 +3249,24 @@ NFmiPoint NFmiTempView::CalcStringRelativeSize(const std::string &str, double fo
 	return CtrlView::GdiplusRect2Relative(itsToolBox, stringBoundingRectInPixels).Size();
 }
 
-const NFmiString gMaxLegendLocationNameText("1: E00/05.12 62∞23'N, 25∞41'E    ");
+const std::string gMaxLegendLocationNameText("1: E00/05.12 62∞23'N, 25∞41'E    ");
 
-static NFmiString MakeLegendStringCorrectLength(NFmiString legendLineStr)
+static std::string MakeLegendStringCorrectLength(std::string legendLineStr)
 {
-	for(auto i = legendLineStr.GetLen(); i < gMaxLegendLocationNameText.GetLen(); i++)
+	for(auto i = legendLineStr.size(); i < gMaxLegendLocationNameText.size(); i++)
 		legendLineStr += " "; // t‰ytet‰‰n nime‰ spaceilla, ett‰ pohjav‰ritys peitt‰‰ saman alan jokaiselle legendan riville
 	return legendLineStr;
 }
 
-static NFmiString MakeLegendLocationNameStr(NFmiSoundingDataOpt1& theData, int theProducerIndex)
+static std::string MakeLegendLocationNameStr(NFmiSoundingDataOpt1& theData, int theProducerIndex, boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
 {
-	NFmiString locationNameStr = NFmiValueString::GetStringWithMaxDecimalsSmartWay(theProducerIndex + 1, 0);
-	locationNameStr += ": ";
-	locationNameStr += ::GetNameText(theData);
+	std::string locationNameStr = std::to_string(theProducerIndex + 1);
+	locationNameStr += ":";
+	if(CtrlViewUtils::IsConsideredAsNewData(theInfo, 0))
+		locationNameStr += "* ";
+	else
+		locationNameStr += " ";
+	locationNameStr += ::GetNameText(theData.Location(), theData.MovingSounding());
 	return ::MakeLegendStringCorrectLength(locationNameStr);
 }
 
@@ -3298,25 +3304,25 @@ const NFmiColor gSelectedBackGroundTextColor(0.92f, 0.92f, 0.92f);
 
 void NFmiTempView::DrawSelectedProducerIndexText(const NFmiPoint& textPoint)
 {
-	NFmiString selectedProducerIndexText = ::GetDictionaryString("Producer ind:");
+	std::string selectedProducerIndexText = ::GetDictionaryString("Producer ind:");
 	selectedProducerIndexText += std::to_string(itsCtrlViewDocumentInterface->GetMTATempSystem().GetSelectedProducerIndex(true) + 1);
 	selectedProducerIndexText += " (CTRL+SHIFT+wheel)";
 	AddLegendLineData(selectedProducerIndexText, GetSelectedProducersColor(), gNormalBackGroundTextColor, true);
 }
 
-void NFmiTempView::AddLegendLineData(const NFmiString& text, const NFmiColor& textColor, const NFmiColor& backgroundColor, bool doHorizontalLineSeparator)
+void NFmiTempView::AddLegendLineData(const std::string& text, const NFmiColor& textColor, const NFmiColor& backgroundColor, bool doHorizontalLineSeparator)
 {
 	itsLegendDrawingLineData.push_back(LegendDrawingLineData{ text, textColor, backgroundColor, doHorizontalLineSeparator });
 }
 
-void NFmiTempView::DrawStationInfo(TotalSoundingData& theData, int theProducerIndex)
+void NFmiTempView::DrawStationInfo(TotalSoundingData& theData, int theProducerIndex, boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
 {
 	NFmiMTATempSystem& mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
 	if(!mtaTempSystem.DrawLegendText())
 		return;
 
 	SetupLegendDrawingEnvironment();
-	NFmiString locationNameStr = ::MakeLegendLocationNameStr(theData.itsSoundingData, theProducerIndex);
+	auto locationNameStr = ::MakeLegendLocationNameStr(theData.itsSoundingData, theProducerIndex, theInfo);
 
 	NFmiPoint point = CalcLegendTextStartPoint();
 	point.Y(point.Y() + (2.0 * theProducerIndex * itsLegendDrawingSetup.textLineHeightRelative));
@@ -3327,7 +3333,7 @@ void NFmiTempView::DrawStationInfo(TotalSoundingData& theData, int theProducerIn
 
 	// Aseman aika tiedot piirret‰‰n p‰‰lle
 	NFmiMetTime time(theData.itsSoundingData.Time());
-	NFmiString timestr(time.ToStr(::GetDictionaryString("TempViewLegendTimeFormat")));
+	std::string timestr(time.ToStr(::GetDictionaryString("TempViewLegendTimeFormat")));
 	timestr = ::MakeLegendStringCorrectLength(timestr);
 	auto textColor = mtaTempSystem.SoundingColor(theProducerIndex);
 	auto backgroundColor = IsSelectedProducerIndex(theProducerIndex) ? gSelectedBackGroundTextColor : gNormalBackGroundTextColor;
@@ -3723,14 +3729,14 @@ void NFmiTempView::DrawAnimationControls(void)
 	const auto& animButtomRect = itsTempViewDataRects.getAnimationButtonRect();
 	NFmiRectangle rec1(animButtomRect, 0, &envi);
 	itsToolBox->Convert(&rec1);
-	NFmiString str1("Anim.");
+	std::string str1("Anim.");
 	NFmiText txt1(NFmiPoint(animButtomRect.TopLeft().X() + moveX, animButtomRect.TopLeft().Y()) , str1, false, 0, &envi);
 	itsToolBox->Convert(&txt1);
 
 	const auto& animStepButtomRect = itsTempViewDataRects.getAnimationStepButtonRect();
 	NFmiRectangle rec2(animStepButtomRect, 0, &envi);
 	itsToolBox->Convert(&rec2);
-	NFmiString str2;
+	std::string str2;
 	int step = itsCtrlViewDocumentInterface->GetMTATempSystem().AnimationTimeStepInMinutes();
 	if(step == 30)
 		str2 += 'Ω';
@@ -3936,7 +3942,7 @@ static std::string GetTooltipValueStr(const std::string &theParStr, NFmiSounding
 	return str;
 }
 
-static std::string GetSoundingToolTipText(NFmiTempView::SoundingDataCacheMap &soundingDataCache, const NFmiMTATempSystem::ServerProducer &producer, const NFmiMTATempSystem::TempInfo &theTempInfo, int modelRunIndex, float P, int theZeroBasedIndex, bool doNormalString, const NFmiString &locationName, float heigthInMetersInStaAth)
+static std::string GetSoundingToolTipText(NFmiTempView::SoundingDataCacheMap &soundingDataCache, const NFmiMTATempSystem::ServerProducer &producer, const NFmiMTATempSystem::TempInfo &theTempInfo, int modelRunIndex, float P, int theZeroBasedIndex, bool doNormalString, const std::string &locationName, float heigthInMetersInStaAth, boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
 {
 	std::string str;
 	if(doNormalString)
@@ -3944,9 +3950,25 @@ static std::string GetSoundingToolTipText(NFmiTempView::SoundingDataCacheMap &so
 		str += NFmiStringTools::Convert(theZeroBasedIndex+1);
 		str += ": ";
 
-		NFmiString timestr(theTempInfo.Time().ToStr(::GetDictionaryString("TempViewLegendTimeFormat")));
-		str += static_cast<char*>(timestr);
+		std::string timestr(theTempInfo.Time().ToStr(::GetDictionaryString("TempViewLegendTimeFormat")));
+		str += timestr;
 		str += "\n";
+		if(CtrlViewUtils::IsConsideredAsNewData(theInfo, modelRunIndex))
+		{
+			// Lis‰t‰‰n uuden datan korostus merkki
+			str += "* ";
+		}
+
+		if(theInfo && !theInfo->IsGrid())
+		{
+			// Jos kyse oli asemadatasta, lis‰t‰‰n sen id rimpsuun, koska se on mukana legendassakin
+			auto stationId = theInfo->Location()->GetIdent();
+			if(stationId < 10000)
+				str += "0";
+			str += std::to_string(stationId);
+			str += " ";
+		}
+
 		str += locationName;
 		str += "\n";
 	}
@@ -4015,7 +4037,7 @@ std::string NFmiTempView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
                     str += "<b><font color=";
                     str += ColorString::Color2HtmlColorStr(mtaTempSystem.SoundingColor(index));
                     str += ">";
-                    str += ::GetSoundingToolTipText(itsSoundingDataCacheForTooltips, selectedProducer, usedTempInfo, 0, pressure, index, true, usedLocationWithName.GetName(), heigthInMetersInStaAth);
+                    str += ::GetSoundingToolTipText(itsSoundingDataCacheForTooltips, selectedProducer, usedTempInfo, 0, pressure, index, true, std::string(usedLocationWithName.GetName()), heigthInMetersInStaAth, info);
                     if(modelRunCount > 0 && NFmiDrawParam::IsModelRunDataType(info->DataType()))
                     { 
                         // lis‰t‰‰n edelliset malliajo -osio tooltippiin 
@@ -4024,7 +4046,7 @@ std::string NFmiTempView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
                             str += "\n[";
                             str += NFmiStringTools::Convert(modelRunIndex);
                             str += "]\t";
-                            str += ::GetSoundingToolTipText(itsSoundingDataCacheForTooltips, selectedProducer, usedTempInfo, modelRunIndex, pressure, index, false, usedLocationWithName.GetName(), heigthInMetersInStaAth);
+                            str += ::GetSoundingToolTipText(itsSoundingDataCacheForTooltips, selectedProducer, usedTempInfo, modelRunIndex, pressure, index, false, std::string(usedLocationWithName.GetName()), heigthInMetersInStaAth, info);
                         }
                     }
                     str += "</font></b>";
@@ -4195,7 +4217,7 @@ bool NFmiTempView::FillSoundingDataFromServer(const NFmiMTATempSystem::SoundingP
     // Laitetaan lopuksi serverilt‰ haetun origintime:n avulla luotauksen paikan nimi lopulliseen kuntoon
     NFmiLocation finalLocation = theSoundingData.Location();
     ::SetLocationNameByItsLatlon(itsCtrlViewDocumentInterface->ProducerSystem(), finalLocation, theProducer, theSoundingData.OriginTime(), true);
-    NFmiString finalNameWithServerMarker = "(S) ";
+	std::string finalNameWithServerMarker = "(S) ";
     finalNameWithServerMarker += finalLocation.GetName();
     finalLocation.SetName(finalNameWithServerMarker);
     theSoundingData.Location(finalLocation);

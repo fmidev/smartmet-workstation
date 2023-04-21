@@ -9,6 +9,7 @@
 #include "NFmiMilliSecondTimer.h"
 #include "catlog/catlog.h"
 #include "QueryDataReading.h"
+#include "NFmiInfoOrganizer.h"
 
 // MSVC++ 2010 Beta 2 k‰‰nt‰j‰ ei k‰‰nn‰ ellei t‰m‰ ole muiden headereiden per‰ss‰
 #include "afxmt.h"
@@ -25,23 +26,31 @@ static bool gUseDebugLog = true;
 
 namespace
 {
-	CSemaphore gThreadRunning; // t‰m‰n avulla yritet‰‰n lopettaan jatkuvasti pyˆriv‰ working thread 'siististi'
+	// T‰m‰n avulla yritet‰‰n lopettaan jatkuvasti pyˆriv‰ working thread 'siististi'
+	CSemaphore gThreadRunning; 
 	NFmiStopFunctor gStopFunctor;
-
-	NFmiHelpDataInfoSystem gWorkerHelpDataSystem; // T‰m‰n olion avulla working thread osaa lukea haluttuja datoja
-    NFmiDataNotificationSettingsWinRegistry gWorkerDataNotificationSettings; // T‰m‰n avulla tehd‰‰n eri datoille halutunlaisia notifikaatio tekstej‰
-    FmiLanguage gWorkerUsedLanguage; // Mink‰ kielisi‰ sanakirjaja k‰ytet‰‰n kun tehd‰‰n notifikaatio tekstej‰
-
-	CSemaphore gSettingsChanged; // t‰m‰n avulla p‰ivitet‰‰n datan luku asetuksia thread safetysti
-	NFmiHelpDataInfoSystem gMediatorHelpDataSystem; // t‰m‰n avulla s‰‰det‰‰n threadin asetuksia thread safetysti
+	// T‰m‰n olion avulla working thread osaa lukea haluttuja datoja
+	NFmiHelpDataInfoSystem gWorkerHelpDataSystem; 
+	// T‰m‰n avulla tehd‰‰n eri datoille halutunlaisia notifikaatio tekstej‰
+    NFmiDataNotificationSettingsWinRegistry gWorkerDataNotificationSettings; 
+	// Mink‰ kielisi‰ sanakirjaja k‰ytet‰‰n kun tehd‰‰n notifikaatio tekstej‰
+	FmiLanguage gWorkerUsedLanguage; 
+	// T‰m‰n avulla p‰ivitet‰‰n datan luku asetuksia thread safetysti
+	CSemaphore gSettingsChanged; 
+	// T‰m‰n avulla s‰‰det‰‰n threadin asetuksia thread safetysti
+	NFmiHelpDataInfoSystem gMediatorHelpDataSystem; 
 	bool gSettingsHaveChanged;
-
-	CSemaphore gDataExchange; // t‰m‰n avulla lis‰t‰‰n ja luetaan qdatoja listasta data-threadin ja p‰‰ohjelman v‰lill‰ thread-safesti
+	// T‰m‰n avulla lis‰t‰‰n ja luetaan qdatoja listasta data-threadin ja p‰‰ohjelman v‰lill‰ thread-safesti
+	CSemaphore gDataExchange; 
 	std::vector<LoadedQueryDataHolder> gLoadedDatas;
-
-	bool gDoDataCheckNow = false; // t‰m‰n avulla voidaan pakottaa threadi tarkistamaan datan lukua heti
-	bool gResetTimeStamps = false; // t‰m‰n avulla voidaan pakottaa NFmiHelpDataSystem:in kaikkien dynaamisten
-	bool gApplyHelpDataInfos = false; // t‰t‰ k‰ytet‰‰n mm. CaseStudy-datan yhteydess‰, t‰ll‰ varmistetaan ett‰ uudet data polut tulevat k‰yttˆˆn
+	// t‰m‰n avulla voidaan pakottaa threadi tarkistamaan datan lukua heti
+	bool gDoDataCheckNow = false; 
+	// t‰m‰n avulla voidaan pakottaa NFmiHelpDataSystem:in kaikkien dynaamisten
+	bool gResetTimeStamps = false; 
+	// t‰t‰ k‰ytet‰‰n mm. CaseStudy-datan yhteydess‰, t‰ll‰ varmistetaan ett‰ uudet data polut tulevat k‰yttˆˆn
+	bool gApplyHelpDataInfos = false; 
+	// Tiedet‰‰n onko datan luku looppi menossa 1. kertaa vai ei, luettuihin datoihin merkit‰‰n kyseinen tieto.
+	bool gFirstTimeGoingThrough = true;
 }
 
 // T‰t‰ initialisointi funktiota pit‰‰ kutsua ennen kuin itse threadi k‰ynnistet‰‰n MainFramesta. 
@@ -243,7 +252,6 @@ UINT CFmiDataLoadingThread2::DoThread(LPVOID /* pParam */ )
 	}
 
 	NFmiMilliSecondTimer timer;
-	bool firstTime = true;
 	int loadingStatus = 0;
 
 	// T‰ss‰ on iki-looppi, jossa vahditaan onko tullut uusia datoja, jolloin tehd‰‰n yhdistelm‰ datoja SmartMetin luettavaksi.
@@ -255,9 +263,9 @@ UINT CFmiDataLoadingThread2::DoThread(LPVOID /* pParam */ )
 		{
 			NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
 
-			if(firstTime || gDoDataCheckNow || loadingStatus || timer.CurrentTimeDiffInMSeconds() > (30 * 1000)) // tarkistetaan v‰hint‰‰n puolen minuutin v‰lein onko tullut uusia datoja
+			if(gFirstTimeGoingThrough || gDoDataCheckNow || loadingStatus || timer.CurrentTimeDiffInMSeconds() > (30 * 1000)) // tarkistetaan v‰hint‰‰n puolen minuutin v‰lein onko tullut uusia datoja
 			{
-				firstTime = false;
+				NFmiInfoOrganizer::MarkLoadedDataAsOld(gFirstTimeGoingThrough);
 				gDoDataCheckNow = false;
 				try
 				{
@@ -273,6 +281,8 @@ UINT CFmiDataLoadingThread2::DoThread(LPVOID /* pParam */ )
 					// jatketaan vain loopitusta
 				}
 
+				gFirstTimeGoingThrough = false;
+				NFmiInfoOrganizer::MarkLoadedDataAsOld(gFirstTimeGoingThrough);
 				timer.StartTimer(); // aloitetaan taas uusi ajan lasku
 			}
 
@@ -288,3 +298,7 @@ UINT CFmiDataLoadingThread2::DoThread(LPVOID /* pParam */ )
     return 0;   // thread completed successfully
 }
 
+void CFmiDataLoadingThread2::ResetFirstTimeGoingThroughState()
+{
+	gFirstTimeGoingThrough = true;
+}

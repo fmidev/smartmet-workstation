@@ -64,6 +64,7 @@ namespace CFmiDataLoadingThread2
 	bool GetLoadedDatas(std::vector<LoadedQueryDataHolder> &theLoadedDatasOut); // t‰ll‰ p‰‰ohjelma pyyt‰‰ ladattuja datoja (funktiossa tehd‰‰n vector swap!!)
 	void LoadDataNow(void); // t‰m‰ pakottaa ett‰ datan luku tehd‰‰n heti
 	void ResetTimeStamps(void); // t‰m‰ asettaa NFmiHelpDataSystemin dynaamisten datojen aikaleimoiksi -1:en
+	void ResetFirstTimeGoingThroughState();
 }
 
 

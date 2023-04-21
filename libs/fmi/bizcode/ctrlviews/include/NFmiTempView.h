@@ -59,7 +59,7 @@ class NFmiTempView : public NFmiCtrlView
 
 	struct LegendDrawingLineData
 	{
-		NFmiString itsText;
+		std::string itsText;
 		NFmiColor itsTextColor;
 		NFmiColor itsBackgroundColor;
 		bool fDoHorizontalLineSeparator = false;
@@ -108,7 +108,7 @@ class NFmiTempView : public NFmiCtrlView
 	NFmiPoint GetRelativePointFromHodograf(double u, double v);
 	void DrawSoundingInTextFormat(NFmiSoundingDataOpt1 &theData);
 	bool FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, TotalSoundingData &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo, const NFmiMTATempSystem::SoundingProducer &theProducer);
-	void DrawSounding(TotalSoundingData& theUsedDataInOut, int theProducerIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere);
+	void DrawSounding(TotalSoundingData& theUsedDataInOut, int theProducerIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere, boost::shared_ptr<NFmiFastQueryInfo>& theInfo);
 	void DrawSoundingsInMTAMode(void);
 	void DrawBackground(void);
 	void DrawStabilityIndexData(NFmiSoundingDataOpt1& usedData);
@@ -135,15 +135,15 @@ class NFmiTempView : public NFmiCtrlView
 	void DrawSimpleLineWithGdiplus(const NFmiTempLineInfo& lineInfo, const NFmiPoint& relativeP1, const NFmiPoint& relativeP2, bool fixEndPixelX, bool fixEndPixelY);
 	double GetPAxisChangeValue(double change);
 	void DrawLine(const NFmiPoint &p1, const NFmiPoint &p2, bool drawSpecialLines, int theTrueLineWidth, bool startWithXShift, int theHelpDotPixelSize, NFmiDrawingEnvironment * theEnvi);
-	void DrawHelpLineLabel(const NFmiPoint &p1, const NFmiPoint &theMoveLabelRelatively, double theValue, const NFmiTempLabelInfo &theLabelInfo, NFmiDrawingEnvironment * theEnvi, const NFmiString &thePostStr = NFmiString(""));
+	void DrawHelpLineLabel(const NFmiPoint &p1, const NFmiPoint &theMoveLabelRelatively, double theValue, const NFmiTempLabelInfo &theLabelInfo, NFmiDrawingEnvironment * theEnvi, const std::string&thePostStr = std::string());
 	void DrawWind(NFmiSoundingDataOpt1 &theData, int theProducerIndex, bool onSouthernHemiSphere);
-	void DrawStationInfo(TotalSoundingData &theData, int theProducerIndex);
+	void DrawStationInfo(TotalSoundingData &theData, int theProducerIndex, boost::shared_ptr<NFmiFastQueryInfo>& theInfo);
 	void DrawHeightValues(NFmiSoundingDataOpt1 &theData, int theProducerIndex);
 	void MoveToNextLine(double relativeLineHeight, NFmiPoint &theTextPoint);
-	void DrawNextLineToIndexView(double relativeLineHeight, NFmiText& theText, const NFmiString& theStr, NFmiPoint& theTextPoint, bool moveFirst = true, bool addToString = true);
+	void DrawNextLineToIndexView(double relativeLineHeight, NFmiText& theText, const std::string& theStr, NFmiPoint& theTextPoint, bool moveFirst = true, bool addToString = true);
 	void DrawLCL(NFmiSoundingDataOpt1 &theData, int theProducerIndex, FmiLCLCalcType theLCLCalcType);
 	void DrawTrMw(NFmiSoundingDataOpt1 &theData, int theProducerIndex);
-	NFmiString GetIndexText(double theValue, const NFmiString &theText, int theDecimalCount);
+	std::string GetIndexText(double theValue, const std::string &theText, int theDecimalCount);
 	void InitializeHodografRect(void);
 	void DrawAnimationControls(void);
 	bool ModifySoundingWinds(const NFmiPoint &thePlace, unsigned long theKey, short theDelta);
@@ -178,7 +178,7 @@ class NFmiTempView : public NFmiCtrlView
 	void SetupLegendDrawingEnvironment();
 	NFmiPoint CalcLegendTextStartPoint();
 	void DrawSelectedProducerIndexText(const NFmiPoint &textPoint);
-	void AddLegendLineData(const NFmiString &text, const NFmiColor &textColor, const NFmiColor &backgroundColor, bool doHorizontalLineSeparator);
+	void AddLegendLineData(const std::string &text, const NFmiColor &textColor, const NFmiColor &backgroundColor, bool doHorizontalLineSeparator);
 	void DrawLegendLineData();
 	void DrawLegendLineDataSeparator(const NFmiPoint& textPoint);
 	void AddPossibleAvgIntegrationInfo(TotalSoundingData& theData, const NFmiColor& textColor, const NFmiColor& backgroundColor);

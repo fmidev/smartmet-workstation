@@ -213,6 +213,11 @@ namespace CtrlViewUtils
         return prodNameStr;
     }
 
+    bool IsConsideredAsNewData(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, int modelRunIndex)
+    {
+        return (modelRunIndex == 0 && theInfo && theInfo->ElapsedTimeFromLoadInSeconds() < 5 * 60);
+    }
+
     std::string GetParamNameString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool fCrossSectionInfoWanted, bool fAddIdInfos, bool fMakeTooltipXmlEncode, size_t theLongerProducerNameMaxCharCount, bool fTimeSerialViewCase, bool fShowModelOriginTime, boost::shared_ptr<NFmiFastQueryInfo> possibleInfo)
     {
         CtrlViewDocumentInterface* ctrlViewDocumentInterface = CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation();
@@ -222,6 +227,12 @@ namespace CtrlViewUtils
         NFmiInfoData::Type dataType = theDrawParam->DataType();
         std::string str;
         boost::shared_ptr<NFmiFastQueryInfo> info = possibleInfo ? possibleInfo : ctrlViewDocumentInterface->InfoOrganizer()->Info(theDrawParam, fCrossSectionInfoWanted, true);
+        if(IsConsideredAsNewData(info, theDrawParam->ModelRunIndex()))
+        {
+            // Korostetaan uudet datat jollain merkillä
+            str += "* ";
+        }
+
         if(theDrawParam->IsModelRunDataType())
         {
             if(info)

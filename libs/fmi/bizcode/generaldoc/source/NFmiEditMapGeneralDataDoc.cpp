@@ -144,6 +144,7 @@
 #include "NFmiDataModifierModAvg.h"
 #include "NFmiLedLightStatus.h"
 #include "NFmiTempDataGenerator.h"
+#include "FmiDataLoadingThread2.h"
 
 #include "AnimationProfiler.h"
 
@@ -9250,6 +9251,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
                     InitializeSatelImageCacheForCaseStudy();
 					auto usedAbsoluteCaseStudyHakeDirectory = NFmiCaseStudySystem::MakeCaseStudyDataHakeDirectory(NFmiCaseStudySystem::MakeBaseDataDirectory(theCaseStudyMetaFile, itsLoadedCaseStudySystem.Name()));
 					itsWarningCenterSystem.goIntoCaseStudyMode(usedAbsoluteCaseStudyHakeDirectory);
+					// Merkit‰‰n taas aluksi luetut datat 'vanhoiksi'
+					CFmiDataLoadingThread2::ResetFirstTimeGoingThroughState();
 
                     // Lopetetaan cache datojen lataus ja siivous
                     CFmiQueryDataCacheLoaderThread::AutoLoadNewCacheDataMode(false);
@@ -9305,6 +9308,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		InfoOrganizer()->ClearDynamicHelpData(true); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eik‰ staattisia helpdatoja kuten topografia ja fraktiilit)
         InitializeSatelImageCacheForCaseStudy();
 		itsWarningCenterSystem.goIntoNormalModeFromStudyMode();
+		// Merkit‰‰n taas aluksi luetut datat 'vanhoiksi'
+		CFmiDataLoadingThread2::ResetFirstTimeGoingThroughState();
 
 		// Palataan taas normaaliin cache datojen lataukseen ja siivoukseen
         CFmiQueryDataCacheLoaderThread::AutoLoadNewCacheDataMode(ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData());

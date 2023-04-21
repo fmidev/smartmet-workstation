@@ -1744,6 +1744,8 @@ void CSmartMetDoc::OnButtonReloadAllDynamicHelpData()
 	itsData->ReloadAllDynamicHelpData();
 	// Ensin tyhjennyksen j‰lkeen pit‰‰ ladata editoitava data muistiin
 	LoadDataOnStartUp();
+	// Merkit‰‰n taas aluksi luetut datat 'vanhoiksi'
+	CFmiDataLoadingThread2::ResetFirstTimeGoingThroughState();
 	// Sitten laitetaan normidatanlataus threadi taas toimimaan
 	CFmiDataLoadingThread2::ResetTimeStamps();
 	CFmiDataLoadingThread2::LoadDataNow();
