@@ -491,6 +491,9 @@ class NFmiFastQueryInfo : public NFmiQueryInfo
      // lopuksi datan (TÄMÄ siis overridataan lapsessa!)
   NFmiInfoData::Type DataType() const { return itsDataType; };
   void DataType(NFmiInfoData::Type newType) { itsDataType = newType; };
+  // ElapsedTimeFromLoadInSeconds toteutetaan vasta lapsiluokassa 
+  // (SmartMet workstation koodeissa), negatiivisia arvoja pidetään puuttuvina
+  virtual double ElapsedTimeFromLoadInSeconds() const { return -1; }
   // Näillä Start/Restore -funktioilla otetaan nykyinen parametri tila talteen ja otetaan käyttöön
   // 'erikois' korkeus-parametri. Ja käytön jälkeen palautus.
   // HUOM! Jos Start-funktio palauttaa true:n, on kyseisen korkeus parametrin käyttö mahdollista ja
