@@ -408,7 +408,7 @@ class NFmiBetaProductionSystem
 public:
 
     NFmiBetaProductionSystem();
-    bool Init(const std::string &theBaseRegistryPath, const std::string& theAbsoluteWorkingDirectory);
+    bool Init(const std::string &theBaseRegistryPath, const std::string& theAbsoluteWorkingDirectory, const std::string& possibleStartingBetaAutomationListPath);
     bool DoNeededBetaAutomation();
     bool DoOnDemandBetaAutomations(int selectedAutomationIndex, bool doOnlyEnabled);
 
@@ -525,6 +525,7 @@ public:
 private:
 
     bool InitImagePackingExe(const std::string& theAbsoluteWorkingDirectory);
+    void SetupFinalBataAutomationListPath(const std::string& possibleStartingBetaAutomationListPath);
 
     bool fBetaProductGenerationRunning; // Onko SmartMet juuri tekemässä kuvia Beta product systeemillä (vaikuttaa mm. joihinkin piirtoihin)
     NFmiMetTime itsBetaProductRuntime; // Millä hetkellä on kuvatuotantoa alettu tekemään (käytetään jos display runtime info käytössä)

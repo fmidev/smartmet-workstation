@@ -62,6 +62,8 @@ public:
     void ToolMasterAvailable(bool newValue) { fToolMasterAvailable = newValue; }
     bool EnableCrashReporter() const { return fEnableCrashReporter; }
     void EnableCrashReporter(bool newValue) { fEnableCrashReporter = newValue; }
+    const std::string& BetaAutomationListPath() const { return itsBetaAutomationListPath; }
+    void BetaAutomationListPath(const std::string &newPath) { itsBetaAutomationListPath = newPath; }
 
 private:
 	bool ReadConfigurations();
@@ -133,4 +135,6 @@ private:
     // CrashReporter on systeemi, joka tekee SmartMetin kaatuessa kaatumisraportin, joka voidaan lähettää kehittäjille sähköpostilla.
     // Jossain tapauksissa (kuten Beta tuote automaatio käytössä) tätä ominaisuutta ei haluta päälle. Jos tämän arvo on false, ei ominaisuutta laiteta päälle.
     bool fEnableCrashReporter;
+    // Jos SmartMetille halutaan joskus antaa käytetyn betaAutomaatioListan polku komentoriviargumenttina
+    std::string itsBetaAutomationListPath;
 };

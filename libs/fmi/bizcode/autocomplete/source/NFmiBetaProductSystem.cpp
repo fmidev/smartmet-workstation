@@ -1999,7 +1999,7 @@ NFmiBetaProductionSystem::NFmiBetaProductionSystem()
 {
 }
 
-bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, const std::string& theAbsoluteWorkingDirectory)
+bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, const std::string& theAbsoluteWorkingDirectory, const std::string& possibleStartingBetaAutomationListPath)
 {
     // Nämä alustetaan vain ja ainoastaan konffeista ainakin toistaiseksi
     itsBetaProductionBaseDirectory = NFmiSettings::Optional<std::string>("BetaProduction::BaseDirectory", "C:\\smartmet\\BetaProducts\\");
@@ -2033,6 +2033,7 @@ bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, cons
 
     mAutomationModeOn = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, betaProductSectionName, "\\AutomationModeOn", usedKey, false, "");
     mUsedAutomationListPathString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\UsedAutomationListPath", usedKey, "");
+    SetupFinalBataAutomationListPath(possibleStartingBetaAutomationListPath);
     mBetaProductPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\BetaProductPath", usedKey, "");
     mBetaProductTabControlIndex = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, betaProductSectionName, "\\BetaProductTabControlIndex", usedKey, 0);
 
@@ -2059,6 +2060,34 @@ bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, cons
     LoadUsedAutomationList(UsedAutomationListPathString());
 
     return true;
+}
+
+static void LogUsedBetaAutomationListPath(const std::string& usedCaseText, const std::string& usedPath)
+{
+    CatLog::Severity severity = NFmiFileSystem::FileExists(usedPath) ? CatLog::Severity::Info : CatLog::Severity::Error;
+    std::string finalLogMessage = usedCaseText;
+    finalLogMessage += ", final path was " + usedPath;
+    if(severity == CatLog::Severity::Error)
+    {
+        finalLogMessage += ", error: file doesn't exist";
+    }
+    CatLog::logMessage(finalLogMessage, severity, CatLog::Category::Configuration, true);
+}
+
+void NFmiBetaProductionSystem::SetupFinalBataAutomationListPath(const std::string& possibleStartingBetaAutomationListPath)
+{
+    if(!possibleStartingBetaAutomationListPath.empty())
+    {
+        *mUsedAutomationListPathString = PathUtils::getTrueFilePath(possibleStartingBetaAutomationListPath, itsBetaProductionBaseDirectory, itsBetaAutomationListFileExtension);
+        std::string caseText = "BetaAutomationList path was given from command line arguments with \"-b ";
+        caseText += possibleStartingBetaAutomationListPath;
+        caseText += "\" -option";
+        ::LogUsedBetaAutomationListPath(caseText, *mUsedAutomationListPathString);
+    }
+    else
+    {
+        ::LogUsedBetaAutomationListPath("BetaAutomationList path was retrieved from Windows registry", *mUsedAutomationListPathString);
+    }
 }
 
 std::string NFmiBetaProductionSystem::AddQuotationMarksToString(std::string paddedString)

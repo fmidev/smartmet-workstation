@@ -842,7 +842,7 @@ void InitBetaProductionSystem()
 	try
     {
         BetaProduct::SetLoggerFunction(GetLogAndWarnFunction());
-        itsBetaProductionSystem.Init(ApplicationWinRegistry().BaseConfigurationRegistryPath(), WorkingDirectory());
+        itsBetaProductionSystem.Init(ApplicationWinRegistry().BaseConfigurationRegistryPath(), WorkingDirectory(), BasicSmartMetConfigurations().BetaAutomationListPath());
     }
     catch(std::exception &e)
     {

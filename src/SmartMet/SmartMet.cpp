@@ -665,7 +665,7 @@ private:
 bool CSmartMetApp::ParseCommandLineArguments()
 {
     UnicodeCommandLineConverter cmdLineConverter(__argc, __targv);
-    NFmiCmdLine cmd(__argc, const_cast<const char**>(cmdLineConverter.getargv()), "p!t!dns!vc");
+    NFmiCmdLine cmd(__argc, const_cast<const char**>(cmdLineConverter.getargv()), "p!t!dns!vcb!");
 	// ei tarkisteta onko comento rivi muuten oikeellinen, koska muut optiot otetaan muualta
 
 	if(cmd.isOption('d')) // HUOM!!! t‰m‰n pit‰‰ olla ennen -p optio tarkastelua
@@ -718,6 +718,12 @@ bool CSmartMetApp::ParseCommandLineArguments()
     {
         gBasicSmartMetConfigurations.EnableCrashReporter(false);
     }
+    if(cmd.isOption('b'))
+    {
+        std::string betaAutomationListPath = cmd.OptionValue('b');
+        gBasicSmartMetConfigurations.BetaAutomationListPath(betaAutomationListPath);
+    }
+
     return true;
 }
 
