@@ -16,6 +16,16 @@
                                  // 'boost::shared_ptr<T>' to 'boost::shared_ptr<T> &'
 #endif
 
+namespace
+{
+// Kun infoOrganizerille annetaan uusia datoja, normaalisti niitä käsitellään kuten uusia datoja.
+// On kuitenkin tilanteita missä ladattua data halutaan merkitä vanhaksi:
+// 1) Kun SmartMet käynnistyy ja dataa ladataan lokaalilevyltä muistiin ensi kerran
+// 2) Kun ladataan CaseStudy dataa 
+// 3) Kun palataan CaseStudy tilasta takaisin ja luetaan lokaalidatat uudestaan.
+bool gMarkLoadedDataAsOld = false;
+}  // namespace
+
 std::vector<FmiParameterName> NFmiInfoOrganizer::itsWantedSoundingParams;
 std::vector<FmiParameterName> NFmiInfoOrganizer::itsWantedTrajectoryParams;
 bool NFmiInfoOrganizer::fCheckParamsInitialized = false;
@@ -97,7 +107,7 @@ bool NFmiInfoOrganizer::AddData(NFmiQueryData *theData,
     else
     {
       // muun tyyppiset datat kuin editoitavat menevät mappiin
-      status = Add(new NFmiOwnerInfo(theData, theDataType, theDataFileName, theDataFilePattern),
+      status = Add(new NFmiOwnerInfo(theData, theDataType, theDataFileName, theDataFilePattern, gMarkLoadedDataAsOld),
                    theMaxLatestDataCount,
                    theModelRunTimeGap,
                    fDataWasDeletedOut,
@@ -287,6 +297,11 @@ bool NFmiInfoOrganizer::CheckForDataIdent(const boost::shared_ptr<NFmiFastQueryI
       return true;
   }
   return false;
+}
+
+void NFmiInfoOrganizer::MarkLoadedDataAsOld(bool newState)
+{
+    gMarkLoadedDataAsOld = newState;
 }
 
 static bool CheckLevel(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
@@ -1469,7 +1484,7 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiInfoOrganizer::CreateNewMacroParamData_
   NFmiQueryData *data = ::CreateDefaultMacroParamQueryData(usedArea, x, y);
   if (data)
   {
-    return boost::shared_ptr<NFmiFastQueryInfo>(new NFmiOwnerInfo(data, theDataType, "", ""));
+    return boost::shared_ptr<NFmiFastQueryInfo>(new NFmiOwnerInfo(data, theDataType, "", "", false));
   }
   else
     return boost::shared_ptr<NFmiFastQueryInfo>();

@@ -510,7 +510,7 @@ bool NFmiQueryDataSetKeeper::ReadDataFileInUse(const std::string &theFileName)
     std::unique_ptr<NFmiQueryData> dataPtr(new NFmiQueryData(theFileName));
     FixLocallyReadDataProducer(dataPtr.get());
     boost::shared_ptr<NFmiOwnerInfo> ownerInfoPtr(
-        new NFmiOwnerInfo(dataPtr.release(), itsDataType, theFileName, itsFilePattern));
+        new NFmiOwnerInfo(dataPtr.release(), itsDataType, theFileName, itsFilePattern, true));
     bool dataWasDeleted = false;
     AddDataToSet(ownerInfoPtr, dataWasDeleted);
     return (dataWasDeleted == false);
