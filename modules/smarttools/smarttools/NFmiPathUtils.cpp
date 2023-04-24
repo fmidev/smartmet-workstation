@@ -108,18 +108,23 @@ std::string fixMissingDriveLetterToAbsolutePath(const std::string &filePath,
 std::string getAbsoluteFilePath(const std::string &filePath,
                                 const std::string &usedAbsoluteBaseDirectory)
 {
+  std::string finalAbsoluteFilePath;
   NFmiFileString fileString(filePath);
   if (fileString.IsAbsolutePath())
   {
-    return fixMissingDriveLetterToAbsolutePath(filePath, usedAbsoluteBaseDirectory);
+    finalAbsoluteFilePath = fixMissingDriveLetterToAbsolutePath(filePath, usedAbsoluteBaseDirectory);
   }
   else
   {
     std::string absolutePath = usedAbsoluteBaseDirectory;
-    absolutePath += kFmiDirectorySeparator;
+    if (!lastCharacterIsSeparator(absolutePath))
+    {
+      absolutePath += kFmiDirectorySeparator;
+    }
     absolutePath += filePath;
-    return absolutePath;
+    finalAbsoluteFilePath = absolutePath;
   }
+  return simplifyWindowsPath(finalAbsoluteFilePath);
 }
 
 std::string getPathSectionFromTotalFilePath(const std::string &theFilePath)
@@ -127,7 +132,7 @@ std::string getPathSectionFromTotalFilePath(const std::string &theFilePath)
   NFmiFileString filePath(theFilePath);
   std::string directoryPart = filePath.Device();
   directoryPart += filePath.Path();
-  return directoryPart;
+  return simplifyWindowsPath(directoryPart);
 }
 
 // Esim. theAbsoluteFilePath = D:\xxx\yyy\zzz\macro.mac, theBaseDirectory = D:\xxx ja
@@ -181,18 +186,22 @@ std::string getRelativePathIfPossible(const std::string &theFilePath,
         std::string relativePath(usedFilePath.begin() + theBaseDirectoryPath.size(),
                                  usedFilePath.end());
         std::string::size_type pos2 = relativePath.find_first_not_of("\\/");
+        std::string finalRelativePath;
         if (pos2 != std::string::npos)
         {
           // Otetaan vielä polun alusta pois mahdolliset kenoviivat
-          return std::string(relativePath.begin() + pos2, relativePath.end());
+          finalRelativePath = std::string(relativePath.begin() + pos2, relativePath.end());
         }
         else
-          return relativePath;
+        {
+          finalRelativePath = relativePath;
+        }
+        return simplifyWindowsPath(finalRelativePath);
       }
     }
   }
 
-  return theFilePath;
+  return simplifyWindowsPath(theFilePath);
 }
 
 // Yrittää hakea tiedostolle sen lopullisen absoluuttisen polun extensioineen kaikkineen.
@@ -247,7 +256,7 @@ std::string getTrueFilePath(const std::string &theOriginalFilePath,
         if (extensionAddedOut) *extensionAddedOut = true;
       }
     }
-    return finalFilePath;
+    return simplifyWindowsPath(finalFilePath);
   }
 }
 
@@ -265,9 +274,8 @@ std::string doDriveLetterFix(const NFmiFileString &filePathString,
 
 std::string simplifyWindowsPath(const std::string &pathstring)
 {
-  std::experimental::filesystem::path originalPath(pathstring);
-  // Käännetään varmuuden vuoksi kaikki separaattorit ensin windows tyylisiksi
-  originalPath = originalPath.make_preferred();
+  auto fixedSeparatorPathString = fixPathSeparators(pathstring);
+  std::experimental::filesystem::path originalPath(fixedSeparatorPathString);
   // Tähän tulee windowsissa esim. D:
   auto rootNamePath = originalPath.root_name();
   // Tähän tulee absoluuttinen polku ilman driveria, esim. \xxx\yyy
@@ -282,9 +290,59 @@ std::string simplifyWindowsPath(const std::string &pathstring)
   return simplifiedWindowsRootPathString;
 }
 
+std::string fixPathSeparators(const std::string &pathstring)
+{
+  std::experimental::filesystem::path originalPath(pathstring);
+  // Käännetään kaikki separaattorit oikein päin
+  originalPath = originalPath.make_preferred();
+  // Poistetaan kaikki tupla tai useammat peräkkäiset separaattorit
+  // Esim. dir1\\dir2\dir3\file => dir1\dir2\dir3\file
+  // paitsi jos kyse on Winows polusta missä on serveri nimi alussa
+  // Esim. tässä ei alun tuplaa 'korjata': \\servername\dir1\dir2\file
+  auto fixedPathString = originalPath.string();
+  if (fixedPathString.size() < 2)
+  {
+    return fixedPathString;
+  }
+
+  std::string searchStr{kFmiDirectorySeparator, kFmiDirectorySeparator};
+  std::string replaceStr{kFmiDirectorySeparator};
+  bool isWinServerStart = (fixedPathString.front() == kFmiDirectorySeparator &&
+                           fixedPathString[1] == kFmiDirectorySeparator);
+  if (isWinServerStart)
+  {
+    // poistetaan 1. kirjain tässä poikkeustapauksessa
+    fixedPathString.erase(0, 1);
+  }
+
+  for (;;)
+  {
+    // Tehdään korjauksia niin kauan, kunnes tulos-stringin koko ei eroa originaalin koosta.
+    auto originalStr = fixedPathString;
+    boost::replace_all(fixedPathString, searchStr, replaceStr);
+    if (originalStr.size() == fixedPathString.size())
+    {
+      break;
+    }
+  }
+
+  if (isWinServerStart)
+  {
+    std::string finalStr;
+    finalStr += kFmiDirectorySeparator;
+    finalStr += fixedPathString;
+    return finalStr;
+  }
+  else
+      return fixedPathString;
+}
+
 bool lastCharacterIsSeparator(const std::string &aPath)
 {
-  return (aPath.back() == '\\' || aPath.back() == '/');
+  if (aPath.empty())
+    return false;
+  else
+    return (aPath.back() == '\\' || aPath.back() == '/');
 }
 
 std::string getFixedAbsolutePathFromSettings(const std::string &theSettingsKey,
@@ -300,7 +358,6 @@ std::string makeFixedAbsolutePath(const std::string &thePath,
                                   bool fEnsureEndDirectorySeparator)
 {
   auto fixedPath = getAbsoluteFilePath(thePath, theAbsoluteWorkingPath);
-  fixedPath = simplifyWindowsPath(fixedPath);
   if (fEnsureEndDirectorySeparator) addDirectorySeparatorAtEnd(fixedPath);
   return fixedPath;
 }

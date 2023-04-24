@@ -79,6 +79,13 @@
 
 using namespace std;
 
+namespace
+{
+	NFmiSymbolTextMappingCache g_SymbolMappingsCache;
+	NFmiColor g_MacroParamSymbolTextColor(0, .75f, 0.2f);
+	NFmiColor g_MacroParamMultiParamBaseTextColor(0.1f, .65f, 0.28f);
+}
+
 bool LogMessage(const NFmiString& fileName, const NFmiString& text)
 {
 	static int counter = 0;
@@ -1871,12 +1878,12 @@ float NFmiStationView::GetMacroParamTooltipValueFromCache(const NFmiExtraMacroPa
 }
 
 // Pelkän tooltipin lasku macroParamista.
-float NFmiStationView::CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extraMacroParamData)
+float NFmiStationView::CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extraMacroParamData, boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
 {
     NFmiPoint latlon = itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
     NFmiMetTime usedTime = itsCtrlViewDocumentInterface->ToolTipTime();
     NFmiDataMatrix<float> fakeMatrixValues;
-    return FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsMapViewDescTopIndex, itsDrawParam, fakeMatrixValues, true, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), usedTime, latlon, itsInfo, fUseCalculationPoints, true, CalcUsedSpaceOutFactors(), nullptr, &extraMacroParamData);
+    return FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsMapViewDescTopIndex, theUsedDrawParam, fakeMatrixValues, true, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), usedTime, latlon, itsInfo, fUseCalculationPoints, true, CalcUsedSpaceOutFactors(), nullptr, &extraMacroParamData);
 }
 
 static void MakeDrawedInfoVector(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
@@ -3275,7 +3282,7 @@ std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<
 {
     NFmiExtraMacroParamData extraMacroParamData;
     itsInfo = usedInfo;
-    float value = CalcMacroParamTooltipValue(extraMacroParamData);
+    float value = CalcMacroParamTooltipValue(extraMacroParamData, itsDrawParam);
 	if(!extraMacroParamData.MacroParamErrorMessage().empty())
 		return MakeMacroParamErrorTooltipText(extraMacroParamData.MacroParamErrorMessage());
 	else
@@ -3285,15 +3292,17 @@ std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<
 		float cacheValue = GetMacroParamTooltipValueFromCache(extraMacroParamData);
 		if(cacheValue == g_MacroParamValueWasNotInCache)
 		{
-			str = GetToolTipValueStr(value, usedInfo, itsDrawParam);
+			auto valueStr = GetToolTipValueStr(value, usedInfo, itsDrawParam);
+			str += valueStr;
 			str += " (crude) ";
-			str += GetPossibleMacroParamSymbolText(value, extraMacroParamData.SymbolTooltipFile());
+			str += GetPossibleMacroParamSymbolText(value, valueStr, extraMacroParamData);
 		}
 		else
 		{
-			str += GetToolTipValueStr(cacheValue, usedInfo, itsDrawParam);
+			auto cacheValueStr = GetToolTipValueStr(cacheValue, usedInfo, itsDrawParam);
+			str += cacheValueStr;
 			str += " (cache) ";
-			str += GetPossibleMacroParamSymbolText(cacheValue, extraMacroParamData.SymbolTooltipFile());
+			str += GetPossibleMacroParamSymbolText(cacheValue, cacheValueStr, extraMacroParamData);
 		}
 		str += MakeMacroParamDescriptionTooltipText(extraMacroParamData);
 		return str;
@@ -3387,17 +3396,92 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
 	return str;
 }
 
-std::string NFmiStationView::GetPossibleMacroParamSymbolText(float value, const std::string &possibleSymbolTooltipFile)
+std::string NFmiStationView::GetPossibleMacroParamSymbolText(float value, const std::string& valueStr, const NFmiExtraMacroParamData& extraMacroParamData)
 {
-	static NFmiSymbolTextMappingCache symbolMappingsCache;
+	if(extraMacroParamData.IsMultiParamCase())
+	{
+		return GetMacroParamMultiParamText(value, valueStr, extraMacroParamData);
+	}
 
-	auto str = symbolMappingsCache.getPossibleMacroParamSymbolText(value, possibleSymbolTooltipFile);
+	auto str = g_SymbolMappingsCache.getPossibleMacroParamSymbolText(value, extraMacroParamData.SymbolTooltipFile());
 	if(str.empty())
 		return str;
 	else
 	{
+		// Fiksataan saatu pohjateksti niin että <,>, jne. merkit korvataan xml enkoodatuilla jutuilla (esim. '<' -> '&lt')
+		str = CtrlViewUtils::XmlEncode(str);
+
 		std::string decoratedStr = "(<b><font color=";
-		decoratedStr += ColorString::Color2HtmlColorStr(NFmiColor(0, .75f, 0.2f));
+		decoratedStr += ColorString::Color2HtmlColorStr(g_MacroParamSymbolTextColor);
+		decoratedStr += ">";
+		decoratedStr += str;
+		decoratedStr += "</font></b>)";
+		return decoratedStr;
+	}
+}
+
+float NFmiStationView::GetMultiParamValue(const MultiParamData& multiParam)
+{
+	if(multiParam.IsInUse())
+	{
+		if(multiParam.IsMacroParamCase())
+		{
+			NFmiExtraMacroParamData extraMacroParamData;
+			auto usedDrawParamPtr = boost::make_shared<NFmiDrawParam>();
+			usedDrawParamPtr->InitFileName(multiParam.possibleMacroParamFullPath());
+			return CalcMacroParamTooltipValue(extraMacroParamData, usedDrawParamPtr);
+		}
+		else
+		{
+			const auto& paramData = multiParam.possibleParamData();
+			NFmiDataIdent dataIdent(paramData.param_, paramData.producer_);
+			auto* level = paramData.levelPtr_.get();
+			auto dataType = paramData.dataType_;
+			bool useParIdOnly = (dataType == NFmiInfoData::kEditable) || (dataType == NFmiInfoData::kCopyOfEdited);
+
+			auto usedInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(dataIdent, level, dataType, useParIdOnly);
+			if(usedInfo)
+			{
+				NFmiPoint latlon = itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
+				NFmiMetTime usedTime = itsCtrlViewDocumentInterface->ToolTipTime();
+				return usedInfo->InterpolatedValue(latlon, usedTime);
+			}
+		}
+	}
+	return kFloatMissing;
+}
+
+std::string NFmiStationView::GetMacroParamMultiParamText(float multiParamValue1, const std::string& multiParamValue1Str, const NFmiExtraMacroParamData& extraMacroParamData)
+{
+	// MultiParam2 on pakollinen käydä läpi
+	const auto& multiParam2 = extraMacroParamData.MultiParam2();
+	auto multiParamValue2 = GetMultiParamValue(multiParam2);
+	std::string multiParamValue2Str = (multiParamValue2 == kFloatMissing) ? " - " : NFmiValueString::GetStringWithMaxDecimalsSmartWay(multiParamValue2, 1);
+	std::vector<float> multiParamValues{ multiParamValue1, multiParamValue2 };
+	const auto& multiParam3 = extraMacroParamData.MultiParam3();
+	std::string multiParamValue3Str;
+	if(multiParam3.IsInUse())
+	{
+		auto multiParamValue3 = GetMultiParamValue(multiParam3);
+		multiParamValues.push_back(multiParamValue3);
+		multiParamValue3Str = (multiParamValue3 == kFloatMissing) ? " - " : NFmiValueString::GetStringWithMaxDecimalsSmartWay(multiParamValue3, 1);
+	}
+	auto str = g_SymbolMappingsCache.getPossibleMacroParamMultiParamText(multiParamValues, extraMacroParamData.MultiParamTooltipFile());
+	if(str.empty())
+		return str;
+	else
+	{
+		// Fiksataan saatu pohjateksti niin että <,>, jne. merkit korvataan xml enkoodatuilla jutuilla (esim. '<' -> '&lt')
+		str = CtrlViewUtils::XmlEncode(str);
+
+		boost::replace_all(str, "%1", multiParamValue1Str);
+		boost::replace_all(str, "%2", multiParamValue2Str);
+		if(multiParam3.IsInUse())
+		{
+			boost::replace_all(str, "%3", multiParamValue3Str);
+		}
+		std::string decoratedStr = "(<b><font color=";
+		decoratedStr += ColorString::Color2HtmlColorStr(g_MacroParamMultiParamBaseTextColor);
 		decoratedStr += ">";
 		decoratedStr += str;
 		decoratedStr += "</font></b>)";

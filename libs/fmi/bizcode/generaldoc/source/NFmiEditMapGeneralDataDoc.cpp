@@ -144,6 +144,7 @@
 #include "NFmiDataModifierModAvg.h"
 #include "NFmiLedLightStatus.h"
 #include "NFmiTempDataGenerator.h"
+#include "FmiDataLoadingThread2.h"
 
 #include "AnimationProfiler.h"
 
@@ -841,7 +842,7 @@ void InitBetaProductionSystem()
 	try
     {
         BetaProduct::SetLoggerFunction(GetLogAndWarnFunction());
-        itsBetaProductionSystem.Init(ApplicationWinRegistry().BaseConfigurationRegistryPath(), WorkingDirectory());
+        itsBetaProductionSystem.Init(ApplicationWinRegistry().BaseConfigurationRegistryPath(), WorkingDirectory(), BasicSmartMetConfigurations().BetaAutomationListPath());
     }
     catch(std::exception &e)
     {
@@ -6882,6 +6883,7 @@ bool InitCPManagerSet(void)
 		// makron nimi otetaan tiedoston nimestä.
         theViewMacro.Name(GetFileNameHeader(theFileName));
         theViewMacro.SetMacroParamInitFileNames(MacroParamSystem().RootPath());
+		theViewMacro.InitFileName(theFileName);
 
 		return status;
 	}
@@ -9249,6 +9251,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
                     InitializeSatelImageCacheForCaseStudy();
 					auto usedAbsoluteCaseStudyHakeDirectory = NFmiCaseStudySystem::MakeCaseStudyDataHakeDirectory(NFmiCaseStudySystem::MakeBaseDataDirectory(theCaseStudyMetaFile, itsLoadedCaseStudySystem.Name()));
 					itsWarningCenterSystem.goIntoCaseStudyMode(usedAbsoluteCaseStudyHakeDirectory);
+					// Merkitään taas aluksi luetut datat 'vanhoiksi'
+					CFmiDataLoadingThread2::ResetFirstTimeGoingThroughState();
 
                     // Lopetetaan cache datojen lataus ja siivous
                     CFmiQueryDataCacheLoaderThread::AutoLoadNewCacheDataMode(false);
@@ -9304,6 +9308,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		InfoOrganizer()->ClearDynamicHelpData(true); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eikä staattisia helpdatoja kuten topografia ja fraktiilit)
         InitializeSatelImageCacheForCaseStudy();
 		itsWarningCenterSystem.goIntoNormalModeFromStudyMode();
+		// Merkitään taas aluksi luetut datat 'vanhoiksi'
+		CFmiDataLoadingThread2::ResetFirstTimeGoingThroughState();
 
 		// Palataan taas normaaliin cache datojen lataukseen ja siivoukseen
         CFmiQueryDataCacheLoaderThread::AutoLoadNewCacheDataMode(ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData());
@@ -12867,4 +12873,9 @@ NFmiSeaLevelPlumeData& NFmiEditMapGeneralDataDoc::SeaLevelPlumeData()
 NFmiLedLightStatusSystem& NFmiEditMapGeneralDataDoc::LedLightStatusSystem()
 {
 	return pimpl->LedLightStatusSystem();
+}
+
+std::shared_ptr<NFmiViewSettingMacro> NFmiEditMapGeneralDataDoc::CurrentViewMacro()
+{
+	return pimpl->CurrentViewMacro();
 }

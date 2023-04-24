@@ -11,7 +11,7 @@ NFmiSmartInfo::NFmiSmartInfo(NFmiQueryData *theOwnedData,
                              NFmiInfoData::Type theDataType,
                              const std::string &theDataFileName,
                              const std::string &theDataFilePattern)
-    : NFmiOwnerInfo(theOwnedData, theDataType, theDataFileName, theDataFilePattern),
+    : NFmiOwnerInfo(theOwnedData, theDataType, theDataFileName, theDataFilePattern, false),
       itsQDataBookKeepingPtr()
 {
   itsQDataBookKeepingPtr = boost::shared_ptr<NFmiModifiableQDatasBookKeeping>(

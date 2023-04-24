@@ -69,7 +69,7 @@ private:
 	bool InitGdiplus(void);
 	void TermGdiplus(void);
 //	void CreateMenuDynamically(void);
-	bool TakeControlPathInfo(void);
+	bool ParseCommandLineArguments();
     void CloseToolMaster();
     // std::map<UINT, std::string>& NonDictionaryToolbarItems(void) {return itsMenuCreator.NonDictionaryToolbarItems();}
 	CSplashThread* SplashStart(void);

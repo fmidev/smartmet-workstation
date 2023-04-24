@@ -39,7 +39,11 @@ void CFmiMyCommandLineInfo::ParseParam(const TCHAR* pszParam, BOOL bFlag, BOOL b
         {
             skipNextParam = false;
         }
-        else
+		else if(bFlag && pszParam[0] == 'b')
+		{
+			skipNextParam = true;
+		}
+		else
 		{
 			if (bFlag)
 				CCommandLineInfo::ParseParamFlag(CT2A(pszParam));

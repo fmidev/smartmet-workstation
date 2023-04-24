@@ -213,7 +213,10 @@ class NFmiAreaMask
     ModMin,  //!< Käytetään suunta parametrien kanssa, ottaa huomioon jatkuvuuden 0/360 kohdassa
     ModMax,   //!< Käytetään suunta parametrien kanssa, ottaa huomioon jatkuvuuden 0/360 kohdassa
     WorkingThreadCount, //!< Jos käyttäjä haluaa optimoida laskentoja ja käyttää tietyn määrän loogisia coreja laskennoissa
-    FixedBaseData //!< Jos käyttäjä haluaa fiksata käytetyn laskenta hilan johonkin olemassa olevan datan hilaan
+    FixedBaseData, //!< Jos käyttäjä haluaa fiksata käytetyn laskenta hilan johonkin olemassa olevan datan hilaan
+    MultiParamTooltipFile,  //!< Mahd. tiedosto, josta haetaan tooltippiä varten aputekstejä monen parametrin avulla
+    MultiParam2,  //!< 2. käytetty multi-param, pakollinen, jos käytetty MultiParamTooltipFile:a
+    MultiParam3,  //!< 3. käytetty multi-param, mahdollinen, jos käytetty MultiParamTooltipFile:a
   };
 
   //! Function direction, e.g. with 'met'-functions x- and/or y-direction

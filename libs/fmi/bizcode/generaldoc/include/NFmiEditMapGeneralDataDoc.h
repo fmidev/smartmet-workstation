@@ -152,6 +152,7 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+	std::shared_ptr<NFmiViewSettingMacro> CurrentViewMacro();
 	NFmiLedLightStatusSystem& LedLightStatusSystem();
 	NFmiSeaLevelPlumeData& SeaLevelPlumeData();
 	void UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();

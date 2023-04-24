@@ -122,7 +122,7 @@ BOOL CSmartMetApp::InitInstance()
 	CFmiUsedAppParent::InitInstance();
 
     // Tämä on kutsuttava ennen gBasicSmartMetConfigurations.Init -kutsua
-    if(!TakeControlPathInfo())
+    if(!ParseCommandLineArguments())
         return FALSE;
     // Tämä on kutsuttava aina ja ennen CrashRptInstall-kutsua ja ennen CSplashThreadHolder luontia, koska sinne tulee dynaamista tekstiä editorin versiota ja build päivämääristä
     if(!gBasicSmartMetConfigurations.Init(Toolmaster::MakeAvsToolmasterVersionString()))
@@ -662,10 +662,10 @@ private:
 // c optiolla disabloidaan CrashReporter systeemin käyttö kokonaan.
 //
 // return true jos jatketaan, false, jos halutaan lopettaa ohjelman suoritus.
-bool CSmartMetApp::TakeControlPathInfo(void)
+bool CSmartMetApp::ParseCommandLineArguments()
 {
     UnicodeCommandLineConverter cmdLineConverter(__argc, __targv);
-    NFmiCmdLine cmd(__argc, const_cast<const char**>(cmdLineConverter.getargv()), "p!t!dns!vc");
+    NFmiCmdLine cmd(__argc, const_cast<const char**>(cmdLineConverter.getargv()), "p!t!dns!vcb!");
 	// ei tarkisteta onko comento rivi muuten oikeellinen, koska muut optiot otetaan muualta
 
 	if(cmd.isOption('d')) // HUOM!!! tämän pitää olla ennen -p optio tarkastelua
@@ -718,6 +718,12 @@ bool CSmartMetApp::TakeControlPathInfo(void)
     {
         gBasicSmartMetConfigurations.EnableCrashReporter(false);
     }
+    if(cmd.isOption('b'))
+    {
+        std::string betaAutomationListPath = cmd.OptionValue('b');
+        gBasicSmartMetConfigurations.BetaAutomationListPath(betaAutomationListPath);
+    }
+
     return true;
 }
 

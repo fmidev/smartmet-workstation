@@ -2438,14 +2438,14 @@ bool NFmiStationViewHandler::LeftButtonUpCrossSectionActions(const NFmiPoint& th
 // 1. Poikkileikkausnäytön pitää olla päällä.
 // 2. Siinä ei saa olla trajektori -moodi päällä, koska silloin ei voi säätää aloituspisteitä.
 // 3. Karttanäytön pitää olla moodissa missä pisteet näytetään kartalla.
-// 4. Karttaruudun pitää olla vasemmalla ylhäällä (1. ruutu), koska vain siihen piirretään kyseiset pisteet.
+// 4. TÄMÄ EI ENÄÄ KÄYTÖSSÄ: Karttaruudun pitää olla vasemmalla ylhäällä (1. ruutu), koska vain siihen piirretään kyseiset pisteet.
 bool NFmiStationViewHandler::AllowCrossSectionPointManipulations()
 {
     if(IsCrossSectionViewStuffShownOnThisMapView() && !itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
     {
         if(itsCtrlViewDocumentInterface->ShowCrossSectionMarkersOnMap(itsMapViewDescTopIndex))
         {
-            if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1) // vain 1. rivin ensimmäiseen ruutuun sallitaan crosssection klikkaukset
+//            if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1) // vain 1. rivin ensimmäiseen ruutuun sallitaan crosssection klikkaukset
             {
                 return true;
             }

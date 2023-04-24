@@ -93,6 +93,7 @@ class NFmiInfoOrganizer
   static bool CheckForDataIdent(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
       const NFmiDataIdent &theDataIdent,
       bool fUseParIdOnly);
+  static void MarkLoadedDataAsOld(bool newState);
 
   // ***************************************************************************************************************
   // Tässä perässä on pienin mahdollinen julkinen rajapinta, jonka sain siivottua originaali

@@ -729,12 +729,10 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 						str += ")"; // jos parametri on piilotettu, laita teksti sulkuihin
 					str += ":	";
 					str += "<b><font color=blue>";
-					if(value == kFloatMissing)
-						str += "-";
-					else
-						str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(value, ((value > 1) ? 1 : 2));
+					std::string valueStr = (value == kFloatMissing) ? "-" : NFmiValueString::GetStringWithMaxDecimalsSmartWay(value, ((value > 1) ? 1 : 2));
+					str += valueStr;
 					str += "</font></b>";
-					str += GetPossibleMacroParamSymbolText(value, extraMacroParamData.SymbolTooltipFile());
+					str += GetPossibleMacroParamSymbolText(value, valueStr, extraMacroParamData);
 					str += MakeMacroParamDescriptionTooltipText(extraMacroParamData);
 					str += CtrlViewUtils::GetArchiveOrigTimeString(itsDrawParam, itsCtrlViewDocumentInterface, info, fGetCurrentDataFromQ2Server, "TempViewLegendTimeFormat");
 					str += "\n";
@@ -2054,14 +2052,15 @@ bool NFmiCrossSectionView::LeftButtonUp(const NFmiPoint& thePlace, unsigned long
 	if(ShowParamHandlerView() && itsParamHandlerView->IsIn(thePlace))
 		return itsParamHandlerView->LeftButtonUp(thePlace, theKey);
 
+	auto ctrlKeyDown = theKey & kCtrlKey;
 	if(itsPressureScaleFrame.IsInside(thePlace))
 	{
 		if(itsPressureScaleFrame.Center().Y() > thePlace.Y())
-			return ChangePressureScale(kDown, true); // true liikuttaa asteikon yl‰p‰‰t‰ ja false alap‰‰t‰
+			return ChangePressureScale(kDown, true, ctrlKeyDown); // true liikuttaa asteikon yl‰p‰‰t‰ ja false alap‰‰t‰
 		else
-			return ChangePressureScale(kDown, false); // true liikuttaa asteikon yl‰p‰‰t‰ ja false alap‰‰t‰
+			return ChangePressureScale(kDown, false, ctrlKeyDown); // true liikuttaa asteikon yl‰p‰‰t‰ ja false alap‰‰t‰
 	}
-	if(theKey & kCtrlKey)
+	if(ctrlKeyDown)
 	{
 		return true;
 	}
@@ -2070,14 +2069,17 @@ bool NFmiCrossSectionView::LeftButtonUp(const NFmiPoint& thePlace, unsigned long
 
 // theDir joko arvo kUp siirt‰‰ asteikkoa halutulla m‰‰r‰ll‰ ylˆsp‰in muut arvot alasp‰in
 // fChangeUpperAxis jos true, siirt‰‰ asteikon yl‰p‰‰t‰, jos false, muuttaa asteikon alap‰‰t‰.
-bool NFmiCrossSectionView::ChangePressureScale(FmiDirection theDir, bool fChangeUpperAxis)
+bool NFmiCrossSectionView::ChangePressureScale(FmiDirection theDir, bool fChangeUpperAxis, bool ctrlKeyDown)
 {
 	double minPressure = 10;
     double startValue = itsLowerEndOfPressureAxis;
     double endValue = itsUpperEndOfPressureAxis;
-    double absChangeValue = 50.f;
-	if(startValue - endValue <= 2.f*absChangeValue)
-		absChangeValue = 5; // kun asteikko on vedetty tarpeeksi lyhyeksi, muutetaan muutos arvoa pienemm‰ksi, ett‰ voidaan tehd‰ tarkempia s‰‰tˆj‰
+    double absChangeValue = ctrlKeyDown ? 10 : 50;
+	if(startValue - endValue <= 2.f * absChangeValue)
+	{
+		// kun asteikko on vedetty tarpeeksi lyhyeksi, muutetaan muutos arvoa pienemm‰ksi, ett‰ voidaan tehd‰ tarkempia s‰‰tˆj‰
+		absChangeValue = ctrlKeyDown ? 1 : 5;
+	}
     double changeValue = theDir == kUp ? -absChangeValue : absChangeValue;
 	if(fChangeUpperAxis)
 		endValue += changeValue;
@@ -2109,10 +2111,11 @@ bool NFmiCrossSectionView::RightButtonUp(const NFmiPoint& thePlace, unsigned lon
 
 	if(itsPressureScaleFrame.IsInside(thePlace))
 	{
+		auto ctrlKeyDown = theKey & kCtrlKey;
 		if(itsPressureScaleFrame.Center().Y() > thePlace.Y())
-			return ChangePressureScale(kUp, true); // true liikuttaa asteikon yl‰p‰‰t‰ ja false alap‰‰t‰
+			return ChangePressureScale(kUp, true, ctrlKeyDown); // true liikuttaa asteikon yl‰p‰‰t‰ ja false alap‰‰t‰
 		else
-			return ChangePressureScale(kUp, false); // true liikuttaa asteikon yl‰p‰‰t‰ ja false alap‰‰t‰
+			return ChangePressureScale(kUp, false, ctrlKeyDown); // true liikuttaa asteikon yl‰p‰‰t‰ ja false alap‰‰t‰
 	}
 
 	itsCtrlViewDocumentInterface->CreateCrossSectionViewPopup(itsViewGridRowNumber);
@@ -2200,9 +2203,6 @@ void NFmiCrossSectionView::DrawPressureScale(void)
 	NFmiRect marginRectLeft(itsRect.Left(), itsDataViewFrame.Top(), itsDataViewFrame.Left(), itsDataViewFrame.Bottom());
 	NFmiRectangle rec1(marginRectLeft, 0, itsDrawingEnvironment);
 	itsToolBox->Convert(&rec1);
-	NFmiRect marginRectRight(itsDataViewFrame.Right(), itsDataViewFrame.Top(), itsRect.Right(), itsDataViewFrame.Bottom());
-	NFmiRectangle rec2(marginRectRight, 0, itsDrawingEnvironment);
-	itsToolBox->Convert(&rec2);
 
 	itsDrawingEnvironment->EnableFrame();
 
@@ -2383,7 +2383,7 @@ void NFmiCrossSectionView::DrawFlightLevelScale(void)
 	NFmiPoint moveLabelRelatively(-itsToolBox->SX(FmiRound(2 * itsDrawSizeFactorX)), -itsToolBox->SY(fontSize)/2.);
 	long extraOffsetInPixels = 0;
 //	if(itsDoc->GetMTATempSystem().ShowKilometerScale()) // jos olisi s‰‰tˆ ett‰ piirret‰‰nkˆ km-asteikko vai ei, olisi ehto laitettava t‰h‰n
-		extraOffsetInPixels = static_cast<long>(fontSize*1.6); // siirret‰‰n asteikkoa, jos myˆs kilometri asteikko on n‰kyviss‰
+//		extraOffsetInPixels = static_cast<long>(fontSize*1.6); // siirret‰‰n asteikkoa, jos myˆs kilometri asteikko on n‰kyviss‰
 	double extraOffset = itsToolBox->SX(extraOffsetInPixels);
 
 	double tickMarkWidth = itsToolBox->SX(FmiRound(6 * itsDrawSizeFactorX));
@@ -2575,7 +2575,8 @@ static std::string ComposeHeightValueString(double theHeightKm, int theUsedDecim
 	return str;
 }
 
-// piirt‰‰ standardi ilmakeh‰n mukaiset kilometri palkit ja tekstit data ruudun oikeaan laitaan
+// Piirt‰‰ standardi ilmakeh‰n mukaiset kilometri palkit ja tekstit n‰yttˆruudun 
+// oikeaan laitaan, data ruudun ulkopuolelle.
 void NFmiCrossSectionView::DrawHeightScale(void)
 {
 //	if(itsDoc->GetMTATempSystem().ShowKilometerScale())
@@ -2594,6 +2595,8 @@ void NFmiCrossSectionView::DrawHeightScale(void)
 		else if(usedHeightStepKm < 1.)
 			usedDecimals = 1;
 
+		const auto& usedRelativeFrame = GetFrame();
+
 		// Laitetaanko korkeus arvot kilometrein‰ vai metrein‰. 
 		// Samalla unit label on joko KM tai m.
 		// Metreihin halutaan siirty‰ vain jos asteikko on l‰hell‰ 0 korkeutta ja kilometridesimaaleja olisi 
@@ -2603,7 +2606,7 @@ void NFmiCrossSectionView::DrawHeightScale(void)
 		if(usedDecimals >= 2 && ::fabs(minHeightKm) < minMaxHeightInKmForMetresUnit && ::fabs(maxHeightKm) < minMaxHeightInKmForMetresUnit)
 			useKmAsUnit = false;
 
-        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, kRight, true, &itsDataViewFrame);
+        ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, kRight, true, &usedRelativeFrame);
 		NFmiDrawingEnvironment envi;
 		int fontSize = FmiRound(16 * itsDrawSizeFactorY);
 		envi.SetFontSize(NFmiPoint(fontSize, fontSize));
@@ -2617,24 +2620,26 @@ void NFmiCrossSectionView::DrawHeightScale(void)
 		for (double heightKM = usedStartHeightKm; heightKM <= usedEndHeightKm;  heightKM += usedHeightStepKm)
 		{
 			double P = ::CalcPressureAtHeight(heightKM);
-			double x = itsDataViewFrame.Right();
+			double x = usedRelativeFrame.Right();
 			double y = p2y(P);
-			// tick-mark ensin
+			// ensin label teksti reunaan
 			NFmiPoint p1(x, y);
-			NFmiPoint p2(x-tickMarkWidth, y);
-			NFmiLine l1(p1, p2, 0, &envi);
-			itsToolBox->Convert(&l1);
 			NFmiString heightLabelStr(::ComposeHeightValueString(heightKM, usedDecimals, useKmAsUnit));
-			NFmiPoint p3 = p2 + moveLabelRelatively;
-			NFmiText text1(p3, heightLabelStr, false, 0, &envi);
+			NFmiPoint p2 = p1 + moveLabelRelatively;
+			NFmiText text1(p2, heightLabelStr, false, 0, &envi);
 			itsToolBox->Convert(&text1);
-			if(this->itsDataViewFrame.IsInside(p2))
+			// Sitten tick-mark alkamaan data-laatikosta oikealle
+			NFmiPoint p3(itsDataViewFrame.Right(), y);
+			NFmiPoint p4(itsDataViewFrame.Right() + tickMarkWidth, y);
+			NFmiLine l1(p3, p4, 0, &envi);
+			itsToolBox->Convert(&l1);
+			if(usedRelativeFrame.IsInside(p3))
 				lastHeightInDataBox = y;
 		}
 		if(lastHeightInDataBox != 0)
 		{
-			double unitStringY = CalcHelpScaleUnitStringYPos(itsDataViewFrame, lastHeightInDataBox, unitStringYoffset, moveLabelRelatively.Y());
-			double unitStringX = itsDataViewFrame.Right();
+			double unitStringY = CalcHelpScaleUnitStringYPos(usedRelativeFrame, lastHeightInDataBox, unitStringYoffset, moveLabelRelatively.Y());
+			double unitStringX = usedRelativeFrame.Right();
 			NFmiText txt1(NFmiPoint(unitStringX + moveLabelRelatively.X(), unitStringY), useKmAsUnit ? "KM" : "m", false, 0, &envi);
 			itsToolBox->Convert(&txt1);
 		}
@@ -2788,9 +2793,10 @@ void NFmiCrossSectionView::DrawGround(void)
 { 
 	// yleiset piirto optio maanpinta piirtoa varten
 	NFmiDrawingEnvironment envi;
-	envi.SetFillColor(NFmiColor(0,0,0));
-	envi.EnableFill();
-	envi.SetHatchPattern(5);
+	envi.SetFrameColor(NFmiColor(0.5f, 0.25f, 0));
+	double lineWidthInMM = 1.1;
+	int pixelSize = boost::math::iround(lineWidthInMM * itsCtrlViewDocumentInterface->CrossSectionSystem()->GetGraphicalInfo().itsPixelsPerMM_y);
+	envi.SetPenSize(NFmiPoint(pixelSize, pixelSize));
 
 	NFmiDrawParamList *dpList = itsCtrlViewDocumentInterface->CrossSectionViewDrawParamList(itsViewGridRowNumber);
 	if(dpList)
@@ -2833,7 +2839,6 @@ void NFmiCrossSectionView::DrawGroundLevel(NFmiDrawingEnvironment &theEnvi)
 	double startX = crossSectionSystem->StartXYPoint().X();
 	double width = crossSectionSystem->EndXYPoint().X() - startX;
 	NFmiPolyline groundPolyLine(itsDataViewFrame, 0, &theEnvi);
-	groundPolyLine.AddPoint(NFmiPoint(startX, itsDataViewFrame.BottomLeft().Y())); // tehhd‰‰n suljettu polyline paanpinnasta
 	for(int i = 0; i < static_cast<int>(itsGroundHeights.size()); i++)
 	{
 		if(itsGroundHeights[i] == kFloatMissing)
@@ -2842,8 +2847,6 @@ void NFmiCrossSectionView::DrawGroundLevel(NFmiDrawingEnvironment &theEnvi)
 		double x = startX + i * width / (itsGroundHeights.size()-1);
 		groundPolyLine.AddPoint(NFmiPoint(x, p2y(CalcPressureAtHeight(itsGroundHeights[i]/1000.))));
 	}
-	groundPolyLine.AddPoint(NFmiPoint(startX + width, itsDataViewFrame.BottomRight().Y())); // tehd‰‰n suljettu polyline paanpinnasta
-	groundPolyLine.AddPoint(NFmiPoint(startX, itsDataViewFrame.BottomLeft().Y())); // tehd‰‰n suljettu polyline paanpinnasta
 	itsToolBox->DrawPolyline(&groundPolyLine, NFmiPoint(0,0), NFmiPoint(1,1));
 
 	// Siit‰ l‰htien kun batymetria otettiin mukaan topografia dataan, pit‰‰ piirt‰‰ meren pinta viiva 
@@ -2960,14 +2963,11 @@ bool NFmiCrossSectionView::DrawModelGroundLevel(boost::shared_ptr<NFmiFastQueryI
             double startX = crossSectionSystem->StartXYPoint().X();
             double width = crossSectionSystem->EndXYPoint().X() - startX;
             NFmiPolyline groundPolyLine(itsDataViewFrame, 0, &theEnvi);
-            groundPolyLine.AddPoint(NFmiPoint(startX, itsDataViewFrame.BottomLeft().Y())); // tehhd‰‰n suljettu polyline paanpinnasta
             for(int i = 0; i < static_cast<int>(itsModelGroundPressures.size()); i++)
             {
                 double x = startX + i * width / (itsModelGroundPressures.size() - 1);
                 groundPolyLine.AddPoint(NFmiPoint(x, p2y(itsModelGroundPressures[i])));
             }
-            groundPolyLine.AddPoint(NFmiPoint(startX + width, itsDataViewFrame.BottomRight().Y())); // tehd‰‰n suljettu polyline paanpinnasta
-            groundPolyLine.AddPoint(NFmiPoint(startX, itsDataViewFrame.BottomLeft().Y())); // tehd‰‰n suljettu polyline paanpinnasta
             itsToolBox->DrawPolyline(&groundPolyLine, NFmiPoint(0, 0), NFmiPoint(1, 1));
 
             return true;
@@ -3133,10 +3133,11 @@ bool NFmiCrossSectionView::MouseWheel(const NFmiPoint &thePlace, unsigned long t
 		}
 		if(itsPressureScaleFrame.IsInside(thePlace))
 		{
+			auto ctrlKeyDown = theKey & kCtrlKey;
 			if(itsPressureScaleFrame.Center().Y() > thePlace.Y())
-				return ChangePressureScale(theDelta < 0 ? kDown : kUp, true); // true liikuttaa asteikon yl‰p‰‰t‰ ja false alap‰‰t‰
+				return ChangePressureScale(theDelta < 0 ? kDown : kUp, true, ctrlKeyDown); // true liikuttaa asteikon yl‰p‰‰t‰ ja false alap‰‰t‰
 			else
-				return ChangePressureScale(theDelta < 0 ? kDown : kUp, false); // true liikuttaa asteikon yl‰p‰‰t‰ ja false alap‰‰t‰
+				return ChangePressureScale(theDelta < 0 ? kDown : kUp, false, ctrlKeyDown); // true liikuttaa asteikon yl‰p‰‰t‰ ja false alap‰‰t‰
 		}
 		else
 			return itsCtrlViewDocumentInterface->CrossSectionSystem()->MouseWheel(thePlace, theKey, theDelta);

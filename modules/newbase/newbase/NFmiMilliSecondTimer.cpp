@@ -45,6 +45,12 @@ int calculateSignificantDigitPrecision(double value, int wantedPrecision)
 
 NFmiNanoSecondTimer::NFmiNanoSecondTimer() : startTime_(std::chrono::steady_clock::now()) {}
 
+NFmiNanoSecondTimer::NFmiNanoSecondTimer(int moveStartByMS)
+    : startTime_(std::chrono::steady_clock::now())
+{
+  startTime_ += std::chrono::milliseconds(moveStartByMS);
+}
+
 void NFmiNanoSecondTimer::restart() { startTime_ = std::chrono::steady_clock::now(); }
 
 double NFmiNanoSecondTimer::elapsedTimeInSeconds() const 

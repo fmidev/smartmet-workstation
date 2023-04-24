@@ -441,6 +441,9 @@ lexClass:
 	token:tag	= 'minute'
 	token:tag	= 'edited'
 	token:tag	= 'fixedbasedata'
+	token:tag	= 'multiparamtooltipfile'
+	token:tag	= 'multiparam2'
+	token:tag	= 'multiparam3'
 
 	token:start:separators	= ' ', '\t', ':', ';', '!', '(', ')', ',', '/', '{', '}', '=', '+', '-', '*', '/', '%', @eol
 	token:end:separators	= ' ', '\t', ':', ';', '!', '(', ')', '{', '}', @eol
@@ -798,6 +801,17 @@ lexClass:
 	token:tag	= 'fixedbasedata = T_EC_850'
 	token:tag	= 'fixedbasedata = par4_prod240_850'
 	token:tag	= 'fixedbasedata = par4_prod240_lev85'
+	
+	token:tag	= 'multiparamtooltipfile = path_to_file'
+	token:tag	= 'multiparam2 = parameter'
+	token:tag	= 'multiparam2 = T'
+	token:tag	= 'multiparam2 = T_EC'
+	token:tag	= 'multiparam2 = par4_prod240'
+	token:tag	= 'multiparam2 = T_EC_850'
+	token:tag	= 'multiparam2 = par4_prod240_850'
+	token:tag	= 'multiparam2 = par4_prod240_lev85'
+	token:tag	= 'multiparam3 = parameter'
+	
 
 	token:start:separators	= ' ', '\t', ':', ';', '!', '(', ')', ',', '/', '{', '}', '=', '+', '-', '*', '/', '%', @eol
 	token:end:separators	= ' ', '\t', ':', ';', '!', '(', ')', '{', '}', @eol

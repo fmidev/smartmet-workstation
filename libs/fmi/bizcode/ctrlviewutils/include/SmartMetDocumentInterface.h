@@ -368,6 +368,7 @@ public:
     virtual void ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag) = 0;
     virtual void UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged() = 0;
     virtual void OpenVisualizationsettingsDialog() = 0;
+    virtual std::shared_ptr<NFmiViewSettingMacro> CurrentViewMacro() = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem() = 0;
