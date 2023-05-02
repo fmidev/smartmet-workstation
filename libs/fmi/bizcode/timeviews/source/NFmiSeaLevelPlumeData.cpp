@@ -140,7 +140,7 @@ bool NFmiSingleSeaLevelPlumeData::dataOk() const
 
 const NFmiSeaLevelProbData* NFmiSingleSeaLevelPlumeData::FindSeaLevelProbabilityStationData(const NFmiLocation* location, const NFmiPoint& latlon) const
 {
-    if(location)
+    if(location && location->GetIdent() != 0)
     {
         // Etsi joko tarkka location-id pohjaisen aseman data
         for(const auto& probStationData : probabilityStationData_)
