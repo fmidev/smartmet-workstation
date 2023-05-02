@@ -140,9 +140,15 @@ void NFmiViewParamsView::DrawData(void)
                     DrawActiveParamMarkers(drawParam, zeroBasedRowIndex);
 					itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(drawParam->DataType(), drawParam->UseArchiveModelData(), itsCtrlViewDocumentInterface));
 
-					NFmiString paramNameStr(CtrlViewUtils::GetParamNameString(drawParam, crossSectionView, false, false, 0, false));
+					auto paramNameStr(CtrlViewUtils::GetParamNameString(drawParam, crossSectionView, false, false, 0, false, true, true, nullptr));
+					if(IsNewDataParameterName(paramNameStr))
+					{
+						itsDrawingEnvironment->BoldFont(true);
+					}
+
 					NFmiText text(LineTextPlace(zeroBasedRowIndex, parameterRowRect, true), paramNameStr, true, 0, itsDrawingEnvironment);
 					itsToolBox->Convert(&text);
+					itsDrawingEnvironment->BoldFont(false);
 					DrawCheckBox(parameterRowRect, !drawParam->IsParamHidden());
 					DrawModelSelectorButtons(drawParam, parameterRowRect);
 				}
@@ -537,7 +543,8 @@ std::string NFmiViewParamsView::ComposeToolTipText(const NFmiPoint& thePlace)
 				{
 					bool crossSectionCase = itsMapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView;
 					bool timeSerialCase = itsMapViewDescTopIndex == CtrlViewUtils::kFmiTimeSerialView;
-					std::string str = CtrlViewUtils::GetParamNameString(drawParam, crossSectionCase, true, true, 30, timeSerialCase);
+					std::string str = CtrlViewUtils::GetParamNameString(drawParam, crossSectionCase, true, true, 30, timeSerialCase, true, true, nullptr);
+					str = DoBoldingParameterNameTooltipText(str);
 					std::string tmpLatestObsStr = CtrlViewUtils::GetLatestObservationTimeString(drawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("YYYY.MM.DD HH:mm"), crossSectionCase);
 					if(!tmpLatestObsStr.empty())
 					{

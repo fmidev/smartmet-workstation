@@ -4134,7 +4134,7 @@ bool CreateTimeSerialDialogOnViewPopup(int index)
 		for(sideParamList->Reset(); sideParamList->Next(); )
 		{
 			auto currentSideParam = sideParamList->Current();
-			auto paramNameInMenu = CtrlViewUtils::GetParamNameString(currentSideParam, false, false, false, 0, false, true);
+			auto paramNameInMenu = CtrlViewUtils::GetParamNameString(currentSideParam, false, false, false, 0, false, false, true, nullptr);
 			const auto &dataIdent = currentSideParam->Param();
 			const auto &level = currentSideParam->Level();
 			auto sideParamMenuItem = std::make_unique<NFmiMenuItem>(CtrlViewUtils::kFmiTimeSerialView, paramNameInMenu, dataIdent, kFmiRemoveSelectedTimeSerialSideParam, g_DefaultParamView, &level, currentSideParam->DataType());

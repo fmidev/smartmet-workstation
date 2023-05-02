@@ -689,7 +689,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 						continue; // tämä on virhe tilanne oikeasti!!!!
 					DoTimeInterpolationSettingChecks(info);
 					bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
-					auto paramNameString = CtrlViewUtils::GetParamNameString(itsDrawParam, true, showExtraInfo, true, 0, false);
+					auto paramNameString = CtrlViewUtils::GetParamNameString(itsDrawParam, true, showExtraInfo, true, 0, false, true, true, nullptr);
 
 					float value = GetLevelValue(info, p, latlon, aTime); // tee log(p) interpoloinnit qinfoon ja käytä tässä!!!!
 					NFmiExtraMacroParamData extraMacroParamData;
@@ -724,6 +724,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 
 					if(itsDrawParam->IsParamHidden())
 						str += "("; // jos parametri on piilotettu, laita teksti sulkuihin
+					paramNameString = DoBoldingParameterNameTooltipText(paramNameString);
 					str += paramNameString;
 					if(itsDrawParam->IsParamHidden())
 						str += ")"; // jos parametri on piilotettu, laita teksti sulkuihin
@@ -3178,6 +3179,6 @@ bool NFmiCrossSectionView::IsMouseDraggingOn(void)
 
 void NFmiCrossSectionView::UpdateCachedParameterName()
 {
-	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, true, false, false, 0, false, true, itsInfo), false);
-	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, true, false, true, 0, false, true, itsInfo), true);
+	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, true, false, false, 0, false, true, true, itsInfo), false);
+	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, true, false, true, 0, false, true, true, itsInfo), true);
 }

@@ -40,7 +40,7 @@ namespace
             {
                 auto drawParamPtr = drawParamList->Current();
                 if(!drawParamPtr->IsParamHidden())
-                    paramBoxTexts.push_back(CtrlViewUtils::GetParamNameString(drawParamPtr, fCrossSectionInfoWanted, false, false, 10, false, fShowModelOriginTime));
+                    paramBoxTexts.push_back(CtrlViewUtils::GetParamNameString(drawParamPtr, fCrossSectionInfoWanted, false, false, 10, false, false, fShowModelOriginTime, nullptr));
             }
         }
 

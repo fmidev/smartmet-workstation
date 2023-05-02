@@ -213,24 +213,30 @@ namespace CtrlViewUtils
         return prodNameStr;
     }
 
-    bool IsConsideredAsNewData(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, int modelRunIndex)
+    bool IsConsideredAsNewData(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, int modelRunIndex, bool isMacroParam)
     {
+        if(isMacroParam)
+        {
+            return false;
+        }
+
         return (modelRunIndex == 0 && theInfo && theInfo->ElapsedTimeFromLoadInSeconds() < 5 * 60);
     }
 
-    std::string GetParamNameString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool fCrossSectionInfoWanted, bool fAddIdInfos, bool fMakeTooltipXmlEncode, size_t theLongerProducerNameMaxCharCount, bool fTimeSerialViewCase, bool fShowModelOriginTime, boost::shared_ptr<NFmiFastQueryInfo> possibleInfo)
+    std::string GetParamNameString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool fCrossSectionInfoWanted, bool fAddIdInfos, bool fMakeTooltipXmlEncode, size_t theLongerProducerNameMaxCharCount, bool fTimeSerialViewCase, bool doNewDataHighlight, bool fShowModelOriginTime, boost::shared_ptr<NFmiFastQueryInfo> possibleInfo)
     {
         CtrlViewDocumentInterface* ctrlViewDocumentInterface = CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation();
         std::string normalOrigTimeFormat = ::GetDictionaryString("MapViewToolTipOrigTimeNormal");
         std::string minuteOrigTimeFormat = ::GetDictionaryString("MapViewToolTipOrigTimeMinute");
         bool betaProductCase = theLongerProducerNameMaxCharCount > 0;
         NFmiInfoData::Type dataType = theDrawParam->DataType();
+        bool isMacroParamCase = theDrawParam->IsMacroParamCase(true);
         std::string str;
         boost::shared_ptr<NFmiFastQueryInfo> info = possibleInfo ? possibleInfo : ctrlViewDocumentInterface->InfoOrganizer()->Info(theDrawParam, fCrossSectionInfoWanted, true);
-        if(IsConsideredAsNewData(info, theDrawParam->ModelRunIndex()))
+        if(doNewDataHighlight && IsConsideredAsNewData(info, theDrawParam->ModelRunIndex(), isMacroParamCase))
         {
             // Korostetaan uudet datat jollain merkillä
-            str += "* ";
+            str += ParameterStringHighlightCharacter;
         }
 
         if(theDrawParam->IsModelRunDataType())

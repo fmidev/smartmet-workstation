@@ -3332,8 +3332,9 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
 			return ::MakeMapLayerTooltipText(itsCtrlViewDocumentInterface, itsDrawParam);
         bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
         bool macroParamCase = (drawParamDataType == NFmiInfoData::kMacroParam);
-        str += CtrlViewUtils::GetParamNameString(itsDrawParam, false, showExtraInfo, true, 0, false);
-		str += tabStr;
+        auto parameterStr = CtrlViewUtils::GetParamNameString(itsDrawParam, false, showExtraInfo, true, 0, false, true, true, nullptr);
+		parameterStr = DoBoldingParameterNameTooltipText(parameterStr);
+		str += parameterStr + tabStr;
 		NFmiLocation loc(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
 		MakeDrawedInfoVector();
 		boost::shared_ptr<NFmiFastQueryInfo> info = itsInfoVector.empty() ? boost::shared_ptr<NFmiFastQueryInfo>() : *itsInfoVector.begin();
