@@ -39,4 +39,6 @@ private:
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
     CString itsTempCodeInputStrU_;
     CString itsTempCheckRaportStrU_;
+public:
+	afx_msg void OnBnClickedButtonBrowseTempTextsFile();
 };

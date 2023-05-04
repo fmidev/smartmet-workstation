@@ -7,6 +7,12 @@
 #include "NFmiDictionaryFunction.h"
 #include "FmiWin32Helpers.h"
 #include "CloneBitmap.h"
+#include "NFmiPathUtils.h"
+#include "NFmiFileSystem.h"
+
+const long gKiloByte = 1024;
+const long gMegaByte = gKiloByte * gKiloByte;
+const long gMaxTempDataTextLength = 200 * gMegaByte;
 
 // CFmiTempCodeInsertDlg dialog
 
@@ -38,6 +44,7 @@ BEGIN_MESSAGE_MAP(CFmiTempCodeInsertDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_CHECK_CLEAR_TEMPS, &CFmiTempCodeInsertDlg::OnBnClickedButtonCheckClearTemps)
 	ON_BN_CLICKED(IDC_BUTTON_CHECK_TEMP_TEXTS, &CFmiTempCodeInsertDlg::OnBnClickedButtonCheckTempTexts)
 	ON_WM_SIZE()
+	ON_BN_CLICKED(IDC_BUTTON_BROWSE_TEMP_TEXTS_FILE, &CFmiTempCodeInsertDlg::OnBnClickedButtonBrowseTempTextsFile)
 END_MESSAGE_MAP()
 
 
@@ -109,9 +116,7 @@ BOOL CFmiTempCodeInsertDlg::OnInitDialog()
 	auto richEditCtrl = static_cast<CRichEditCtrl*>(GetDlgItem(IDC_RICHEDIT_INPUT_TEMP_CODES));
 	if(richEditCtrl)
 	{
-		long kiloByte = 1024;
-		long megaByte = kiloByte * kiloByte;
-		richEditCtrl->LimitText(50 * megaByte);
+		richEditCtrl->LimitText(gMaxTempDataTextLength + 5);
 	}
 	UpdateData(FALSE);
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -175,4 +180,32 @@ void CFmiTempCodeInsertDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDCANCEL, "IDCANCEL");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_CHECK_CLEAR_TEMPS, "IDC_BUTTON_CHECK_CLEAR_TEMPS");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_CHECK_TEMP_TEXTS, "IDC_BUTTON_CHECK_TEMP_TEXTS");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_BROWSE_TEMP_TEXTS_FILE, "Browse...");
+}
+
+
+void CFmiTempCodeInsertDlg::OnBnClickedButtonBrowseTempTextsFile()
+{
+	static TCHAR BASED_CODE szFilter[] = _TEXT("TEMP CSV data files (*.csv)|*.csv|TEMP txt data files (*.txt)|*.txt|All Files (*.*)|*.*||");
+	static std::string lastLoadedFilePath;
+
+	UpdateData(TRUE);
+	std::string initialDirectory = PathUtils::getPathSectionFromTotalFilePath(lastLoadedFilePath);
+	CFileDialog dlg(TRUE, NULL, CA2T(lastLoadedFilePath.c_str()), OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, szFilter);
+	dlg.m_ofn.lpstrInitialDir = CA2T(initialDirectory.c_str());
+	if(dlg.DoModal() == IDOK)
+	{
+		lastLoadedFilePath = CT2A(dlg.GetPathName());
+		std::string fileContent;
+		if(NFmiFileSystem::ReadFile2String(lastLoadedFilePath, fileContent, gMaxTempDataTextLength))
+		{
+			itsTempCodeInputStrU_ = CA2T(fileContent.c_str());
+		}
+		else
+		{
+			itsTempCheckRaportStrU_ = _TEXT("Unable to read data from wanted file:\n");
+			itsTempCheckRaportStrU_ += CA2T(lastLoadedFilePath.c_str());
+		}
+		UpdateData(FALSE);
+	}
 }
