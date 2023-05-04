@@ -4131,8 +4131,28 @@ void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 				kRight);
 
 			textRelativeLocation.Y(textRelativeLocation.Y() - relativeTextLineHeight);
-			std::string rangeStr = "Start to end distance: ";
 			double rangeInKm = rangeInMeters / 1000.;
+			std::string speedInfoStr = "Speed: ";
+			// Nopeus laskuissa käytetään mitatun etäisyyden kanssa karttanäytössä olevaa aika-askelta matkaan käytettävänä aikana
+			auto usedTimeStepInHours = GetUsedTimeResolutionInHours();
+			double speedInKm = rangeInKm / usedTimeStepInHours;
+			speedInfoStr += NFmiValueString::GetStringWithMaxDecimalsSmartWay(speedInKm, 1);
+			speedInfoStr += " (dur ";
+			speedInfoStr += NFmiValueString::GetStringWithMaxDecimalsSmartWay(usedTimeStepInHours, 1);
+			speedInfoStr += " h from time-step)";
+			CtrlView::DrawTextToRelativeLocation(
+				*itsGdiPlusGraphics,
+				color,
+				fontSizeInMM,
+				speedInfoStr,
+				textRelativeLocation,
+				pixelsPerMM,
+				itsToolBox,
+				fontName,
+				kRight);
+
+			textRelativeLocation.Y(textRelativeLocation.Y() - relativeTextLineHeight);
+			std::string rangeStr = "Start to end distance: ";
 			auto rangeInKmStr = (rangeInMeters < 0) ? std::string("-.-") : NFmiValueString::GetStringWithMaxDecimalsSmartWay(rangeInKm, 1);
 			rangeStr += rangeInKmStr;
 			rangeStr += " km (";
@@ -4212,6 +4232,11 @@ void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 				kRight);
 		}
 	}
+}
+
+float NFmiStationViewHandler::GetUsedTimeResolutionInHours()
+{
+	return itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex);
 }
 
 static bool IsRectIntersecting(const NFmiRect &theRect, std::vector<NFmiRect> &theExistingRects)
