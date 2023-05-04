@@ -237,7 +237,7 @@ private:
    int RelativeLength2Minutes(double theLength);
    int GetUsedTimeResolutionInMinutes(void);
    NFmiString GetResolutionText(void);
-   void ChangeResolution(bool fLeftClicked);
+   void ChangeResolution(bool fLeftClicked, bool ctrlKeyDown);
    void DrawTimeFilterTimes(void);
    void DrawBackground (void);
    void DrawTimeAxis (void);

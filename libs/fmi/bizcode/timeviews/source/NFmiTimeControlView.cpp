@@ -472,58 +472,62 @@ static bool IsMainMapViewDesctopIndex(int mapViewDescTopIndex)
     return mapViewDescTopIndex == 0;
 }
 
-void NFmiTimeControlView::ChangeResolution(bool fLeftClicked)
+namespace
+{
+	std::vector<int> gTimeResolutionLimitsInMinutes{ 1,5,10,15,30,60,120,180,360,720,1440, 2880 };
+	std::vector<int> gTimeResolutionExtendedLimitsInMinutes{ 1,5,10,15,30,60,120,180,240,300,360,420,480,540,600,660,720,780,840,900,960,1020,1080,1140,1200,1260,1320,1380,1440,1500,1560,1620,1680,1740,1800,1860,1920,1980,2040,2100,2160,2220,2280,2340,2400,2460,2520,2580,2640,2700,2760,2820,2880 };
+
+	int seekNextLowerLmit(int currentResolution, const std::vector<int>& timeResolutionLimitsInMinutes)
+	{
+		if(currentResolution <= timeResolutionLimitsInMinutes.front())
+			return timeResolutionLimitsInMinutes.front();
+		else if(currentResolution > timeResolutionLimitsInMinutes.back())
+			return timeResolutionLimitsInMinutes.back();
+
+		// lower_bound etsii joko etsityn arvon tai ensimm‰isen sit‰ suuremman arvon paikan iteraattorin
+		auto iter = std::lower_bound(timeResolutionLimitsInMinutes.begin(), timeResolutionLimitsInMinutes.end(), currentResolution);
+		if(iter == timeResolutionLimitsInMinutes.end())
+		{
+			// T‰h‰n ei pit‰isi menn‰, palautetaan vaikka pienin arvo
+			return timeResolutionLimitsInMinutes.front();
+		}
+
+		// Ei tarvitse tarkistaa ett‰ ollaanko jo alarajalla, koska se on jo otettu huomioon heti alussa.
+		// Otetaan yksi pyk‰l‰ alas ja palautetaan se
+		--iter;
+		return *iter;
+	}
+
+	int seekNextUpperLmit(int currentResolution, const std::vector<int>& timeResolutionLimitsInMinutes)
+	{
+		if(currentResolution < timeResolutionLimitsInMinutes.front())
+			return timeResolutionLimitsInMinutes.front();
+		else if(currentResolution >= timeResolutionLimitsInMinutes.back())
+			return timeResolutionLimitsInMinutes.back();
+
+		// upper_bound etsii ensimm‰isen haettua arvoa suuremman arvon paikan iteraattorin
+		auto iter = std::upper_bound(timeResolutionLimitsInMinutes.begin(), timeResolutionLimitsInMinutes.end(), currentResolution);
+		if(iter == timeResolutionLimitsInMinutes.end())
+		{
+			// T‰h‰n ei pit‰isi menn‰, palautetaan vaikka suurin arvo
+			return timeResolutionLimitsInMinutes.back();
+		}
+
+		return *iter;
+	}
+}
+
+void NFmiTimeControlView::ChangeResolution(bool fLeftClicked, bool ctrlKeyDown)
 {
 	int usedTimeResolutionInMinutes = GetUsedTimeResolutionInMinutes();
+	const auto& usedTimeResolutionLimits = ctrlKeyDown ? gTimeResolutionExtendedLimitsInMinutes : gTimeResolutionLimitsInMinutes;
 	if(fLeftClicked) // pienennet‰‰n resoluutiota
 	{
-		if(usedTimeResolutionInMinutes <= 5)
-			usedTimeResolutionInMinutes = 1;
-		else if(usedTimeResolutionInMinutes <= 10)
-			usedTimeResolutionInMinutes = 5;
-		else if(usedTimeResolutionInMinutes <= 15)
-			usedTimeResolutionInMinutes = 10;
-		else if(usedTimeResolutionInMinutes <= 30)
-			usedTimeResolutionInMinutes = 15;
-		else if(usedTimeResolutionInMinutes <= 60)
-			usedTimeResolutionInMinutes = 30;
-		else if(usedTimeResolutionInMinutes <= 120)
-			usedTimeResolutionInMinutes = 60;
-		else if(usedTimeResolutionInMinutes <= 180)
-			usedTimeResolutionInMinutes = 120;
-		else if(usedTimeResolutionInMinutes <= 360)
-			usedTimeResolutionInMinutes = 180;
-		else if(usedTimeResolutionInMinutes <= 720)
-			usedTimeResolutionInMinutes = 360;
-		else if(usedTimeResolutionInMinutes <= 1440)
-			usedTimeResolutionInMinutes = 720;
-		else
-			usedTimeResolutionInMinutes = 1440;
+		usedTimeResolutionInMinutes = ::seekNextLowerLmit(usedTimeResolutionInMinutes, usedTimeResolutionLimits);
 	}
 	else
 	{
-		if(usedTimeResolutionInMinutes < 5)
-			usedTimeResolutionInMinutes = 5;
-		else if(usedTimeResolutionInMinutes < 10)
-			usedTimeResolutionInMinutes = 10;
-		else if(usedTimeResolutionInMinutes < 15)
-			usedTimeResolutionInMinutes = 15;
-		else if(usedTimeResolutionInMinutes < 30)
-			usedTimeResolutionInMinutes = 30;
-		else if(usedTimeResolutionInMinutes < 60)
-			usedTimeResolutionInMinutes = 60;
-		else if(usedTimeResolutionInMinutes < 120)
-			usedTimeResolutionInMinutes = 120;
-		else if(usedTimeResolutionInMinutes < 180)
-			usedTimeResolutionInMinutes = 180;
-		else if(usedTimeResolutionInMinutes < 360)
-			usedTimeResolutionInMinutes = 360;
-		else if(usedTimeResolutionInMinutes < 720)
-			usedTimeResolutionInMinutes = 720;
-		else if(usedTimeResolutionInMinutes < 1440)
-			usedTimeResolutionInMinutes = 1440;
-		else
-			usedTimeResolutionInMinutes = 2880;
+		usedTimeResolutionInMinutes = ::seekNextUpperLmit(usedTimeResolutionInMinutes, usedTimeResolutionLimits);
 	}
 	itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex, usedTimeResolutionInMinutes/60.f);
 	itsCtrlViewDocumentInterface->CheckAnimationLockedModeTimeBags(itsMapViewDescTopIndex, false);
@@ -845,7 +849,7 @@ bool NFmiTimeControlView::AnimationButtonReleased(const NFmiPoint & thePlace,uns
 bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long theKey)
 {
 	bool status = false;
-
+	bool ctrlKeyDown = (theKey & kCtrlKey);
 	// Huomasin ett‰ Winkkarin hiiren k‰sittely rutiinissa on joskus 'vuotoja'.
 	// Eli LeftButtonDown-metodissa on tarkoitus merkit‰, onko hiiri painettu alas aikakontrolli-ikkunassa.
 	// Mutta jos klikkailee hiiren vasenta nappia nopeasti per‰kk‰in, ei LeftButtonDown-metodia aina kutsutakaan.
@@ -857,7 +861,7 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
         if(IsIn(thePlace))
         {	// eli jos hiiren napista on p‰‰stetty irti (vaikka sit‰ ei oltu otettu kiinni) ja kursori on aikaikkunan p‰‰ll‰, siirret‰‰n aikaa taaksep‰in
 
-            if((theKey & kCtrlKey) && (theKey & kShiftKey))
+            if((ctrlKeyDown) && (theKey & kShiftKey))
             {
                 if(itsTimeBag->FindNearestTime(itsTimeView->GetTime(thePlace), kCenter, itsTimeBag->Resolution()))
                 {
@@ -869,7 +873,7 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
                 status = true;
             else if(fShowResolutionChangerBox && itsResolutionChangerBox.IsInside(thePlace))
             {
-                ChangeResolution(true);
+                ChangeResolution(true, ctrlKeyDown);
                 status = true;
             }
             else if(itsCtrlViewDocumentInterface->SetDataToPreviousTime(itsMapViewDescTopIndex))
@@ -941,7 +945,7 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
                 ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(g_EditedDataTimeRangeChangedUpdateViewIdMask);
                 status = true;
             }
-			else if(theKey & kCtrlKey)
+			else if(ctrlKeyDown)
 			{
 				status = (SetTime(thePlace) == true);
 			}
@@ -1133,13 +1137,14 @@ bool NFmiTimeControlView::LeftButtonDown (const NFmiPoint & thePlace, unsigned l
 
 bool NFmiTimeControlView::RightButtonUp(const NFmiPoint& thePlace, unsigned long theKey)
 {
-    itsCtrlViewDocumentInterface->FilterDialogUpdateStatus(1); // 1 = filterdialogin aikakontrolli-ikkuna pit‰‰ p‰ivitt‰‰
+	bool ctrlKeyDown = (theKey & kCtrlKey);
+	itsCtrlViewDocumentInterface->FilterDialogUpdateStatus(1); // 1 = filterdialogin aikakontrolli-ikkuna pit‰‰ p‰ivitt‰‰
 	if(itsResolutionChangerBox.IsInside(thePlace))
 	{
-		ChangeResolution(false);
+		ChangeResolution(false, ctrlKeyDown);
 		return true;
 	}
-	else if((theKey & kCtrlKey) && (theKey & kShiftKey))
+	else if((ctrlKeyDown) && (theKey & kShiftKey))
 	{
 		if(itsTimeBag->FindNearestTime(itsTimeView->GetTime(thePlace), kCenter, itsTimeBag->Resolution()))
 		{
@@ -1147,7 +1152,7 @@ bool NFmiTimeControlView::RightButtonUp(const NFmiPoint& thePlace, unsigned long
             return true;
 		}
 	}
-	else if(theKey & kCtrlKey)
+	else if(ctrlKeyDown)
 	{
 		return SetTime(thePlace) == true;
 	}
@@ -1193,13 +1198,14 @@ bool NFmiTimeControlView::MiddleButtonUp(const NFmiPoint & thePlace, unsigned lo
 
 bool NFmiTimeControlView::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta)
 {
+	bool ctrlKeyDown = (theKey & kCtrlKey);
 	if(IsIn(thePlace))
 	{ 
 		if(fShowResolutionChangerBox && itsResolutionChangerBox.IsInside(thePlace))
 		{
-			ChangeResolution((theDelta > 0) ? false : true);
+			ChangeResolution((theDelta > 0) ? false : true, ctrlKeyDown);
 		}
-		else if(itsTimeView->GetFrame().IsInside(thePlace) && (theKey & kCtrlKey))
+		else if(itsTimeView->GetFrame().IsInside(thePlace) && (ctrlKeyDown))
 		{ // kontrolli pohjassa hiiren rullalla venytet‰‰n tai kutistet‰‰n aikajanaa, siten ett‰
 			// aika ei liiku kursorin kohdalla. Suhteellinen ajan p‰iden liikutus nopeus on aikaresoluutio.
 			// Lis‰ksi jos ollaan ihan vasemmassa reunassa, liikutetaan vain vasenta reunaa ja jos
