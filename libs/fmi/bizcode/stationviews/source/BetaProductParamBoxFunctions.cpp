@@ -58,7 +58,7 @@ namespace
             {
                 auto drawParamPtr = drawParamList->Current();
                 if(!drawParamPtr->IsParamHidden())
-                    paramBoxTextColors.push_back(CtrlViewUtils::GetParamTextColor(drawParamPtr->DataType(), drawParamPtr->UseArchiveModelData(), ctrlViewDocumentInterface));
+                    paramBoxTextColors.push_back(CtrlViewUtils::GetParamTextColor(drawParamPtr->DataType(), drawParamPtr->UseArchiveModelData()));
             }
         }
 

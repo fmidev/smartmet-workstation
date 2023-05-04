@@ -725,6 +725,8 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 					if(itsDrawParam->IsParamHidden())
 						str += "("; // jos parametri on piilotettu, laita teksti sulkuihin
 					paramNameString = DoBoldingParameterNameTooltipText(paramNameString);
+					auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
+					paramNameString = AddColorTagsToString(paramNameString, fontColor, true);
 					str += paramNameString;
 					if(itsDrawParam->IsParamHidden())
 						str += ")"; // jos parametri on piilotettu, laita teksti sulkuihin

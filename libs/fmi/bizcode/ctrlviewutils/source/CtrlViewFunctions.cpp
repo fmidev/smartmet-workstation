@@ -351,7 +351,7 @@ namespace CtrlViewUtils
         return str;
     }
 
-    NFmiColor GetParamTextColor(NFmiInfoData::Type dataType, bool useArchiveModelData, CtrlViewDocumentInterface *theCtrlViewDocumentInterface)
+    NFmiColor GetParamTextColor(NFmiInfoData::Type dataType, bool useArchiveModelData)
     {
         if(useArchiveModelData)
             return NFmiColor(0.016f, 0.64f, 0.68f);
@@ -380,7 +380,7 @@ namespace CtrlViewUtils
         case NFmiInfoData::kCapData:
             return NFmiColor(1.f, 0.f, 0.5f);
         case NFmiInfoData::kEditingHelpData:
-            return theCtrlViewDocumentInterface->HelpColor();
+            return CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->HelpColor();
         case NFmiInfoData::kClimatologyData:
             return NFmiColor(0.f, 0.5f, 0.f);
         case NFmiInfoData::kWmsData:

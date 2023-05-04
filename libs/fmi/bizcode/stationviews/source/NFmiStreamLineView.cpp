@@ -1910,6 +1910,8 @@ std::string NFmiStreamLineView::ComposeToolTipText(const NFmiPoint& theRelativeP
 		bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
 		auto parNameStr = CtrlViewUtils::GetParamNameString(itsDrawParam, false, showExtraInfo, true, 0, false, true, true, nullptr);
         parNameStr = DoBoldingParameterNameTooltipText(parNameStr);
+        auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
+        parNameStr = AddColorTagsToString(parNameStr, fontColor, true);
         str += parNameStr + tabStr;
         itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, false);
         if(itsInfo && itsInfo->Grid() && itsInfo->TimeDescriptor().IsInside(itsTime))

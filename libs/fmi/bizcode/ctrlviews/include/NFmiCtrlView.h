@@ -148,6 +148,7 @@ class NFmiCtrlView
    static NFmiRect CalcWantedDirectionalPosition(const NFmiRect& positionalRect, const NFmiRect& movedRect, FmiDirection wantedPosition);
    static std::string DoBoldingParameterNameTooltipText(std::string parameterStr);
    static bool IsNewDataParameterName(const std::string &parameterStr);
+   static std::string AddColorTagsToString(const std::string& str, const NFmiColor& color, bool addBoldTags);
 
  protected:
 	NFmiRect CalcMaskRectSize(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);

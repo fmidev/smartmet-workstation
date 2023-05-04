@@ -49,7 +49,7 @@ namespace CtrlViewUtils
    std::string GetIdString(unsigned long theId);
    std::string GetProducerName(NFmiProducerSystem &theProducerSystem, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, bool fAddProdId, size_t theLongerProducerNameMaxCharCount);
    std::string GetParamNameString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool fCrossSectionInfoWanted, bool fAddIdInfos, bool fMakeTooltipXmlEncode, size_t theLongerProducerNameMaxCharCount, bool fTimeSerialViewCase, bool doNewDataHighlight, bool fShowModelOriginTime, boost::shared_ptr<NFmiFastQueryInfo> possibleInfo);
-   NFmiColor GetParamTextColor(NFmiInfoData::Type dataType, bool useArchiveModelData, CtrlViewDocumentInterface *theCtrlViewDocumentInterface);
+   NFmiColor GetParamTextColor(NFmiInfoData::Type dataType, bool useArchiveModelData);
    std::string GetEditingDataString(const std::string &theNameStr, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiLanguage lang, const std::string &theOrigTimeFormat);
    std::string GetTotalMapViewStatusBarStr(CtrlViewDocumentInterface* theCtrlViewDocumentInterface, const NFmiPoint& theLatlon);
    std::string GetFixedLatlonStr(const NFmiPoint &theLatlon);

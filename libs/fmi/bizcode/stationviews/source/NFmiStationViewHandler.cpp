@@ -4526,7 +4526,7 @@ std::string NFmiStationViewHandler::ComposeMapLayerToolTipText(bool beforeDataIs
 		if(!beforeDataIsDrawnCase)
 			str += "\n<hr color=red>";
 		str += "\n<b><font color=";
-		str += ColorString::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, itsCtrlViewDocumentInterface));
+		str += ColorString::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false));
 		str += ">";
 		if(addBackgroundText)
 			str += combinedMapHandlerInterface.getCurrentMapLayerGuiText(itsMapViewDescTopIndex, true);

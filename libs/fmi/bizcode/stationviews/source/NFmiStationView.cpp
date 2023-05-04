@@ -3312,7 +3312,7 @@ std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<
 static std::string MakeMapLayerTooltipText(CtrlViewDocumentInterface* ctrlViewDocumentInterface, const boost::shared_ptr<NFmiDrawParam>& drawParam)
 {
 	std::string str = "<b><font color=";
-	str += ColorString::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, ctrlViewDocumentInterface));
+	str += ColorString::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false));
 	str += ">";
 	str += drawParam->ParameterAbbreviation();
 	str += "</font></b>";
@@ -3334,6 +3334,8 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
         bool macroParamCase = (drawParamDataType == NFmiInfoData::kMacroParam);
         auto parameterStr = CtrlViewUtils::GetParamNameString(itsDrawParam, false, showExtraInfo, true, 0, false, true, true, nullptr);
 		parameterStr = DoBoldingParameterNameTooltipText(parameterStr);
+		auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
+		parameterStr = AddColorTagsToString(parameterStr, fontColor, true);
 		str += parameterStr + tabStr;
 		NFmiLocation loc(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
 		MakeDrawedInfoVector();

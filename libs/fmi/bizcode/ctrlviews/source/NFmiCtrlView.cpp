@@ -16,6 +16,7 @@
 #include "MapHandlerInterface.h"
 #include "CtrlViewGdiPlusFunctions.h"
 #include "CtrlViewFunctions.h"
+#include "ColorStringFunctions.h"
 
 #include <gdiplus.h>
 
@@ -343,4 +344,23 @@ std::string NFmiCtrlView::DoBoldingParameterNameTooltipText(std::string paramete
 bool NFmiCtrlView::IsNewDataParameterName(const std::string& parameterStr)
 {
 	return (!parameterStr.empty() && parameterStr.front() == CtrlViewUtils::ParameterStringHighlightCharacter);
+}
+
+std::string NFmiCtrlView::AddColorTagsToString(const std::string &str, const NFmiColor &color, bool addBoldTags)
+{
+	std::string coloredStr;
+	if(addBoldTags)
+	{
+		coloredStr += "<b>";
+	}
+	coloredStr += "<font color=";
+	coloredStr += ColorString::Color2HtmlColorStr(color);
+	coloredStr += ">";
+	coloredStr += str;
+	coloredStr += "</font>";
+	if(addBoldTags)
+	{
+		coloredStr += "</b>";
+	}
+	return coloredStr;
 }

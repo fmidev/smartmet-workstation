@@ -1520,7 +1520,7 @@ void NFmiTimeSerialView::DrawParamName(void)
 	itsToolBox->UseClipping(false);
 	if(itsDrawParam)
 	{
-		itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData(), itsCtrlViewDocumentInterface));
+		itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData()));
 
 		itsDrawingEnvironment->SetFontSize(CalcFontSize());
 
@@ -4786,6 +4786,8 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
 		bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
 		string parNameStr = CtrlViewUtils::GetParamNameString(itsDrawParam, false, showExtraInfo, true, 0, true, true, true, nullptr);
 		parNameStr = DoBoldingParameterNameTooltipText(parNameStr);
+		auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
+		parNameStr = AddColorTagsToString(parNameStr, fontColor, true);
 		NFmiColor stationDataColor;
 		editedInfo->FirstLocation();
 		int selectedLocationCounter = 0;
