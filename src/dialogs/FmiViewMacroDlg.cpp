@@ -725,8 +725,7 @@ void CFmiViewMacroDlg::EnsureWantedRowVisibilityAfterDirectoryChange(const std::
 
 void CFmiViewMacroDlg::UpdateRelativeMacroPath()
 {
-    std::string relativeViewMacroPath = "\\"; // polku alkaa aina \ -viivalla
-    relativeViewMacroPath += itsSmartMetDocumentInterface->GetRelativeViewMacroPath();
+    std::string relativeViewMacroPath = itsSmartMetDocumentInterface->GetRelativeViewMacroPath();
     itsCurrentPathStringU_ = CA2T(relativeViewMacroPath.c_str());
     UpdateData(FALSE);
 }

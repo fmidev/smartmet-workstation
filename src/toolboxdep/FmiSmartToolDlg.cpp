@@ -1489,7 +1489,7 @@ void CFmiSmartToolDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 
 void CFmiSmartToolDlg::UpdateLoadedSmarttoolMacroPathString()
 {
-    std::string usedLoadedMacroPath = "\\" + itsSmartToolInfo->GetRelativeLoadPath();
+    std::string usedLoadedMacroPath = itsSmartToolInfo->GetRelativeLoadPath();
     usedLoadedMacroPath += itsSmartToolInfo->CurrentScriptName();
     itsLoadedSmarttoolMacroPathU_ = CA2T(usedLoadedMacroPath.c_str());
     UpdateData(FALSE);
@@ -1500,7 +1500,7 @@ void CFmiSmartToolDlg::UpdateLoadedMacroParamPathString()
     auto& mpSystem = itsSmartMetDocumentInterface->MacroParamSystem();
     if(mpSystem.GetCurrentMacroParam())
     {
-        std::string usedLoadedMacroPath = "\\" + mpSystem.RelativePath();
+        std::string usedLoadedMacroPath = mpSystem.RelativePath();
         usedLoadedMacroPath += "\\" + mpSystem.GetCurrentMacroParam()->Name();
         itsLoadedMacroParamPathTextU_ = CA2T(usedLoadedMacroPath.c_str());
         UpdateData(FALSE);
