@@ -193,7 +193,7 @@ namespace
 		if(CatLog::doTraceLevelLogging())
 		{
 			std::string traceLogMessage = "Param '";
-			traceLogMessage += CtrlViewUtils::GetParamNameString(drawParam, false, false, false, 0, false);
+			traceLogMessage += CtrlViewUtils::GetParamNameString(drawParam, false, false, false, 0, false, true, true, nullptr);
 			traceLogMessage += "' required map-view ";
 			traceLogMessage += std::to_string(mapViewDescTopIndex + 1);
 			traceLogMessage += " row ";

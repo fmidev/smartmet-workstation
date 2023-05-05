@@ -3312,7 +3312,7 @@ std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<
 static std::string MakeMapLayerTooltipText(CtrlViewDocumentInterface* ctrlViewDocumentInterface, const boost::shared_ptr<NFmiDrawParam>& drawParam)
 {
 	std::string str = "<b><font color=";
-	str += ColorString::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, ctrlViewDocumentInterface));
+	str += ColorString::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false));
 	str += ">";
 	str += drawParam->ParameterAbbreviation();
 	str += "</font></b>";
@@ -3332,8 +3332,11 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
 			return ::MakeMapLayerTooltipText(itsCtrlViewDocumentInterface, itsDrawParam);
         bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
         bool macroParamCase = (drawParamDataType == NFmiInfoData::kMacroParam);
-        str += CtrlViewUtils::GetParamNameString(itsDrawParam, false, showExtraInfo, true, 0, false);
-		str += tabStr;
+        auto parameterStr = CtrlViewUtils::GetParamNameString(itsDrawParam, false, showExtraInfo, true, 0, false, true, true, nullptr);
+		parameterStr = DoBoldingParameterNameTooltipText(parameterStr);
+		auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
+		parameterStr = AddColorTagsToString(parameterStr, fontColor, true);
+		str += parameterStr + tabStr;
 		NFmiLocation loc(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
 		MakeDrawedInfoVector();
 		boost::shared_ptr<NFmiFastQueryInfo> info = itsInfoVector.empty() ? boost::shared_ptr<NFmiFastQueryInfo>() : *itsInfoVector.begin();

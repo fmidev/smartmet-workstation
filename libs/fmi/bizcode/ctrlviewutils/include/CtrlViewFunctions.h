@@ -22,6 +22,7 @@ namespace CtrlViewUtils
     const int MaxViewGridYSize = 5; // tämä on myös viewcachen max rivikoko
     const unsigned int kDoAllMapViewDescTopIndex = 999;
     const int MaxMapViewTooltipWidthInPixels = 900;
+    const char ParameterStringHighlightCharacter = '*';
 
    NFmiPoint CalcTimeScaleFontSizeInPixels(double thePixelsPerMMinX);
    // lat/lon-string helpers
@@ -47,8 +48,8 @@ namespace CtrlViewUtils
 
    std::string GetIdString(unsigned long theId);
    std::string GetProducerName(NFmiProducerSystem &theProducerSystem, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, bool fAddProdId, size_t theLongerProducerNameMaxCharCount);
-   std::string GetParamNameString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool fCrossSectionInfoWanted, bool fAddIdInfos, bool fMakeTooltipXmlEncode, size_t theLongerProducerNameMaxCharCount, bool fTimeSerialViewCase, bool fShowModelOriginTime = true, boost::shared_ptr<NFmiFastQueryInfo> possibleInfo = nullptr);
-   NFmiColor GetParamTextColor(NFmiInfoData::Type dataType, bool useArchiveModelData, CtrlViewDocumentInterface *theCtrlViewDocumentInterface);
+   std::string GetParamNameString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool fCrossSectionInfoWanted, bool fAddIdInfos, bool fMakeTooltipXmlEncode, size_t theLongerProducerNameMaxCharCount, bool fTimeSerialViewCase, bool doNewDataHighlight, bool fShowModelOriginTime, boost::shared_ptr<NFmiFastQueryInfo> possibleInfo);
+   NFmiColor GetParamTextColor(NFmiInfoData::Type dataType, bool useArchiveModelData);
    std::string GetEditingDataString(const std::string &theNameStr, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiLanguage lang, const std::string &theOrigTimeFormat);
    std::string GetTotalMapViewStatusBarStr(CtrlViewDocumentInterface* theCtrlViewDocumentInterface, const NFmiPoint& theLatlon);
    std::string GetFixedLatlonStr(const NFmiPoint &theLatlon);
@@ -57,7 +58,7 @@ namespace CtrlViewUtils
    std::string GetLatestObservationTimeString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, const std::string &theTimeFormat, bool fCrossSectionInfoWanted);
    std::string XmlEncode(const std::string &src);
    FmiDirection CalcFollowingParamWindowViewPosition(FmiDirection currentPosition, bool forward);
-   bool IsConsideredAsNewData(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, int modelRunIndex);
+   bool IsConsideredAsNewData(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, int modelRunIndex, bool isMacroParam);
 
    template<typename T>
    bool IsEqualEnough(T value1, T value2, T usedEpsilon)

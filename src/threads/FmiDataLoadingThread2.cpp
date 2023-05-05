@@ -10,6 +10,8 @@
 #include "catlog/catlog.h"
 #include "QueryDataReading.h"
 #include "NFmiInfoOrganizer.h"
+#include "NFmiFileSystem.h"
+#include "CtrlViewFunctions.h"
 
 // MSVC++ 2010 Beta 2 k‰‰nt‰j‰ ei k‰‰nn‰ ellei t‰m‰ ole muiden headereiden per‰ss‰
 #include "afxmt.h"
@@ -154,6 +156,80 @@ static void AddLoadedData(LoadedQueryDataHolder &&theLoadedData)
 	}
 }
 
+static std::list<std::pair<std::string, std::time_t>> GetLatestTimeSortedFilenames(const std::string& fileFilter, time_t limitingTimeStamp)
+{
+	auto filesWithTimes = NFmiFileSystem::PatternFiles(fileFilter, limitingTimeStamp);
+	if(filesWithTimes.empty())
+		return filesWithTimes;
+
+	// J‰rjestet‰‰n tiedostot ajan suhteen laskevassa j‰rjestyksess‰, jolloin uusimmat ovat listan k‰rjess‰
+	return CtrlViewUtils::TimeSortFiles(filesWithTimes);
+}
+
+static std::unique_ptr<NFmiQueryData> TryReadingFirstGoodBackupData(const std::list<std::pair<std::string, std::time_t>>& backupSortedDataFilenames, const std::string& fileFilter, std::string& fileNameOut)
+{
+	for(const auto& filenameTimeStampPair : backupSortedDataFilenames)
+	{
+		try
+		{
+			const auto& dataFilename = filenameTimeStampPair.first;
+			auto data = QueryDataReading::ReadDataFromFile(dataFilename, true);
+			if(data)
+			{
+				std::string logMessage = "Reading older data file '";
+				logMessage += dataFilename;
+				logMessage += "' for backup (file-filter ";
+				logMessage += fileFilter;
+				logMessage += ")";
+				CatLog::logMessage(logMessage, CatLog::Severity::Debug, CatLog::Category::Data);
+				fileNameOut = dataFilename;
+				return data;
+			}
+		}
+		catch(...)
+		{
+		}
+	}
+
+	std::string logMessage = "Couldn't find any readable older data file for backup to file-filter: ";
+	logMessage += fileFilter;
+	CatLog::logMessage(logMessage, CatLog::Severity::Debug, CatLog::Category::Data);
+	return nullptr;
+}
+
+static std::unique_ptr<NFmiQueryData> ReadLatestAcceptableDataWithFileFilterAfterTimeStamp(const std::string& fileFilter, time_t limitingTimeStamp, std::string& fileNameOut, time_t& timeStampOut)
+{
+	try
+	{
+		// Yritet‰‰n lukea viimeisin data annetulla fileFilter:ill‰ ja palautetaan data
+		return QueryDataReading::ReadLatestDataWithFileFilterAfterTimeStamp(fileFilter, limitingTimeStamp, fileNameOut, timeStampOut);
+	}
+	catch(...)
+	{
+		// Jos viimeisin datatiedosto oli korruptoitunut ja ollaan gFirstTimeGoingThrough moodissa, yritet‰‰n lukea joku vanhempi data tiedostoista
+		if(gFirstTimeGoingThrough)
+		{
+			// Haetaan kaikki fileFilter:iin liittyneet tiedostot j‰rjestettyn‰ uudesta vanhaan
+			auto timeSortedFiles = ::GetLatestTimeSortedFilenames(fileFilter, limitingTimeStamp);
+			if(timeSortedFiles.size() > 1)
+			{
+				// Jos tiedostoja oli enemm‰n kuin 1, kokeillaan lukea jotain vanhempaa jos ne datat eiv‰t olisi korruptoituneita
+				// Poistetaan viimeisin, koska sit‰ on jo yritetty lukea
+				timeSortedFiles.pop_front();
+				auto data = TryReadingFirstGoodBackupData(timeSortedFiles, fileFilter, fileNameOut);
+				// Vain jos backup data saatiin oikeasti luettua, palautetaan se, muuten menn‰‰n poikkeusk‰sittelyihin
+				if(data)
+					return data;
+			}
+		}
+
+		// Jos backup tiedoston luku ei onnistunut tai ei olla moodissa miss‰ 
+		// niit‰ yritet‰‰n lukea, heitet‰‰n vain jo heitetty poikkeus uudestaan
+		throw;
+	}
+}
+
+
 // Lukee qdatan, jos on tullut uusi.
 // Laittaa sen luettujen datojen listaan.
 // Palauttaa 0, jos ei ollut uutta dataa.
@@ -172,7 +248,7 @@ static int ReadData(NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem 
 		string latestFileName;
 		try
 		{
-			std::unique_ptr<NFmiQueryData> data = QueryDataReading::ReadLatestDataWithFileFilterAfterTimeStamp(fileFilter, latestTimeStamp, latestFileName, timeStamp);
+			std::unique_ptr<NFmiQueryData> data = ::ReadLatestAcceptableDataWithFileFilterAfterTimeStamp(fileFilter, latestTimeStamp, latestFileName, timeStamp);
             if(data)
             {
                 data->LatLonCache(); // T‰m‰ alustaa latlon cachen worker threadissa, jotta se olisi sitten k‰ytˆss‰ SmartMetissa multi-thread koodeissa

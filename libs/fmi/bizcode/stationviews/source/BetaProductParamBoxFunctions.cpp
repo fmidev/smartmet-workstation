@@ -40,7 +40,7 @@ namespace
             {
                 auto drawParamPtr = drawParamList->Current();
                 if(!drawParamPtr->IsParamHidden())
-                    paramBoxTexts.push_back(CtrlViewUtils::GetParamNameString(drawParamPtr, fCrossSectionInfoWanted, false, false, 10, false, fShowModelOriginTime));
+                    paramBoxTexts.push_back(CtrlViewUtils::GetParamNameString(drawParamPtr, fCrossSectionInfoWanted, false, false, 10, false, false, fShowModelOriginTime, nullptr));
             }
         }
 
@@ -58,7 +58,7 @@ namespace
             {
                 auto drawParamPtr = drawParamList->Current();
                 if(!drawParamPtr->IsParamHidden())
-                    paramBoxTextColors.push_back(CtrlViewUtils::GetParamTextColor(drawParamPtr->DataType(), drawParamPtr->UseArchiveModelData(), ctrlViewDocumentInterface));
+                    paramBoxTextColors.push_back(CtrlViewUtils::GetParamTextColor(drawParamPtr->DataType(), drawParamPtr->UseArchiveModelData()));
             }
         }
 

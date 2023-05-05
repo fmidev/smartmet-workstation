@@ -105,7 +105,7 @@ void NFmiViewParamsView::DrawBackgroundMapLayerText(int& zeroBasedRowIndexInOut,
 {
 	if(fHasMapLayer)
 	{
-		itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false, itsCtrlViewDocumentInterface));
+		itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false));
 		NFmiString mapLayerText = itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().getCurrentMapLayerGuiText(itsMapViewDescTopIndex, true);
 		// map-layer rivin indeksi on 0 ja se annetaan LineTextPlace -metodille.
 		NFmiText text(LineTextPlace(zeroBasedRowIndexInOut, parameterRowRect, false), mapLayerText, false, 0, itsDrawingEnvironment);
@@ -138,11 +138,17 @@ void NFmiViewParamsView::DrawData(void)
 				if(drawParam)
 				{
                     DrawActiveParamMarkers(drawParam, zeroBasedRowIndex);
-					itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(drawParam->DataType(), drawParam->UseArchiveModelData(), itsCtrlViewDocumentInterface));
+					itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(drawParam->DataType(), drawParam->UseArchiveModelData()));
 
-					NFmiString paramNameStr(CtrlViewUtils::GetParamNameString(drawParam, crossSectionView, false, false, 0, false));
+					auto paramNameStr(CtrlViewUtils::GetParamNameString(drawParam, crossSectionView, false, false, 0, false, true, true, nullptr));
+					if(IsNewDataParameterName(paramNameStr))
+					{
+						itsDrawingEnvironment->BoldFont(true);
+					}
+
 					NFmiText text(LineTextPlace(zeroBasedRowIndex, parameterRowRect, true), paramNameStr, true, 0, itsDrawingEnvironment);
 					itsToolBox->Convert(&text);
+					itsDrawingEnvironment->BoldFont(false);
 					DrawCheckBox(parameterRowRect, !drawParam->IsParamHidden());
 					DrawModelSelectorButtons(drawParam, parameterRowRect);
 				}
@@ -517,11 +523,19 @@ std::string NFmiViewParamsView::ComposeToolTipText(const NFmiPoint& thePlace)
 			if(drawParam)
 			{
 				auto dataType = drawParam->DataType();
-				if(dataType == NFmiInfoData::kMacroParam || dataType == NFmiInfoData::kCrossSectionMacroParam || dataType == NFmiInfoData::kQ3MacroParam)
+				bool macroParamCase = (dataType == NFmiInfoData::kMacroParam || dataType == NFmiInfoData::kCrossSectionMacroParam || dataType == NFmiInfoData::kQ3MacroParam);
+				bool crossSectionCase = itsMapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView;
+				bool timeSerialCase = itsMapViewDescTopIndex == CtrlViewUtils::kFmiTimeSerialView;
+				std::string paramStr = CtrlViewUtils::GetParamNameString(drawParam, crossSectionCase, !macroParamCase, true, 30, timeSerialCase, true, true, nullptr);
+				paramStr = DoBoldingParameterNameTooltipText(paramStr);
+				auto fontColor = CtrlViewUtils::GetParamTextColor(drawParam->DataType(), drawParam->UseArchiveModelData());
+				paramStr = AddColorTagsToString(paramStr, fontColor, true);
+				if(macroParamCase)
 				{
 					try
 					{
-						std::string macroParamTooltip = "File: ";
+						std::string macroParamTooltip = paramStr;
+						macroParamTooltip += "<br>File: ";
 						NFmiFileString macroParamFilename = drawParam->InitFileName();
 						macroParamFilename.Extension("st");
 						macroParamTooltip += macroParamFilename;
@@ -535,9 +549,7 @@ std::string NFmiViewParamsView::ComposeToolTipText(const NFmiPoint& thePlace)
 				}
 				else
 				{
-					bool crossSectionCase = itsMapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView;
-					bool timeSerialCase = itsMapViewDescTopIndex == CtrlViewUtils::kFmiTimeSerialView;
-					std::string str = CtrlViewUtils::GetParamNameString(drawParam, crossSectionCase, true, true, 30, timeSerialCase);
+					std::string str = paramStr;
 					std::string tmpLatestObsStr = CtrlViewUtils::GetLatestObservationTimeString(drawParam, itsCtrlViewDocumentInterface, ::GetDictionaryString("YYYY.MM.DD HH:mm"), crossSectionCase);
 					if(!tmpLatestObsStr.empty())
 					{

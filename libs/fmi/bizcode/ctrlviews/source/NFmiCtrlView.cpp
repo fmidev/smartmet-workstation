@@ -16,6 +16,7 @@
 #include "MapHandlerInterface.h"
 #include "CtrlViewGdiPlusFunctions.h"
 #include "CtrlViewFunctions.h"
+#include "ColorStringFunctions.h"
 
 #include <gdiplus.h>
 
@@ -326,6 +327,40 @@ void NFmiCtrlView::CachedParameterName(const std::string& newName, bool tooltipV
 void NFmiCtrlView::UpdateCachedParameterName()
 {
 	// Tämä on normi karttanäytön alustus, josta tehtiin oletustoiminto (override jutut tehdään mm. aikasarjaan ja poikkileikkaus luokkiin).
-	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, false, 0, false, true, itsInfo), false);
-	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, false, true, itsInfo), true);
+	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, false, 0, false, true, true, itsInfo), false);
+	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, false, true, true, itsInfo), true);
+}
+
+std::string NFmiCtrlView::DoBoldingParameterNameTooltipText(std::string parameterStr)
+{
+	// Jos annettu parameterStr alkaa highlight merkillä, lisätään alkuun ja loppuun html bold tagit
+	if(IsNewDataParameterName(parameterStr))
+	{
+		parameterStr = "<b>" + parameterStr + "</b>";
+	}
+	return parameterStr;
+}
+
+bool NFmiCtrlView::IsNewDataParameterName(const std::string& parameterStr)
+{
+	return (!parameterStr.empty() && parameterStr.front() == CtrlViewUtils::ParameterStringHighlightCharacter);
+}
+
+std::string NFmiCtrlView::AddColorTagsToString(const std::string &str, const NFmiColor &color, bool addBoldTags)
+{
+	std::string coloredStr;
+	if(addBoldTags)
+	{
+		coloredStr += "<b>";
+	}
+	coloredStr += "<font color=";
+	coloredStr += ColorString::Color2HtmlColorStr(color);
+	coloredStr += ">";
+	coloredStr += str;
+	coloredStr += "</font>";
+	if(addBoldTags)
+	{
+		coloredStr += "</b>";
+	}
+	return coloredStr;
 }

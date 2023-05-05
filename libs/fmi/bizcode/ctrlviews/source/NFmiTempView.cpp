@@ -3258,12 +3258,12 @@ static std::string MakeLegendStringCorrectLength(std::string legendLineStr)
 	return legendLineStr;
 }
 
-static std::string MakeLegendLocationNameStr(NFmiSoundingDataOpt1& theData, int theProducerIndex, boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
+static std::string MakeLegendLocationNameStr(NFmiSoundingDataOpt1& theData, int theProducerIndex, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, bool allowHighlights)
 {
 	std::string locationNameStr = std::to_string(theProducerIndex + 1);
 	locationNameStr += ":";
-	if(CtrlViewUtils::IsConsideredAsNewData(theInfo, 0))
-		locationNameStr += "* ";
+	if(allowHighlights && CtrlViewUtils::IsConsideredAsNewData(theInfo, 0, false))
+		locationNameStr += " *";
 	else
 		locationNameStr += " ";
 	locationNameStr += ::GetNameText(theData.Location(), theData.MovingSounding());
@@ -3322,7 +3322,8 @@ void NFmiTempView::DrawStationInfo(TotalSoundingData& theData, int theProducerIn
 		return;
 
 	SetupLegendDrawingEnvironment();
-	auto locationNameStr = ::MakeLegendLocationNameStr(theData.itsSoundingData, theProducerIndex, theInfo);
+	bool allowHighlights = !itsCtrlViewDocumentInterface->BetaProductGenerationRunning();
+	auto locationNameStr = ::MakeLegendLocationNameStr(theData.itsSoundingData, theProducerIndex, theInfo, allowHighlights);
 
 	NFmiPoint point = CalcLegendTextStartPoint();
 	point.Y(point.Y() + (2.0 * theProducerIndex * itsLegendDrawingSetup.textLineHeightRelative));
@@ -3370,12 +3371,19 @@ void NFmiTempView::AddPossibleAvgIntegrationInfo(TotalSoundingData& theData, con
 
 void NFmiTempView::DrawLegendLineData()
 {
+	std::string newDataSearchText = ": ";
+	newDataSearchText += CtrlViewUtils::ParameterStringHighlightCharacter;
+
 	SetupLegendDrawingEnvironment();
 	NFmiPoint point = CalcLegendTextStartPoint();
 	for(const auto& legendLineData : itsLegendDrawingLineData)
 	{
 		itsDrawingEnvironment->SetFrameColor(legendLineData.itsTextColor);
 		itsDrawingEnvironment->SetFillColor(legendLineData.itsBackgroundColor);
+		if(legendLineData.itsText.find(newDataSearchText) != std::string::npos)
+		{
+			itsDrawingEnvironment->BoldFont(true);
+		}
 		NFmiText text1(point, legendLineData.itsText, true, 0, itsDrawingEnvironment);
 		itsToolBox->Convert(&text1);
 		if(legendLineData.fDoHorizontalLineSeparator)
@@ -3383,6 +3391,7 @@ void NFmiTempView::DrawLegendLineData()
 			DrawLegendLineDataSeparator(point);
 		}
 		point.Y(point.Y() + itsLegendDrawingSetup.textLineHeightRelative);
+		itsDrawingEnvironment->BoldFont(false);
 	}
 }
 
@@ -3953,10 +3962,10 @@ static std::string GetSoundingToolTipText(NFmiTempView::SoundingDataCacheMap &so
 		std::string timestr(theTempInfo.Time().ToStr(::GetDictionaryString("TempViewLegendTimeFormat")));
 		str += timestr;
 		str += "\n";
-		if(CtrlViewUtils::IsConsideredAsNewData(theInfo, modelRunIndex))
+		if(CtrlViewUtils::IsConsideredAsNewData(theInfo, modelRunIndex, false))
 		{
 			// Lisätään uuden datan korostus merkki
-			str += "* ";
+			str += CtrlViewUtils::ParameterStringHighlightCharacter;
 		}
 
 		if(theInfo && !theInfo->IsGrid())

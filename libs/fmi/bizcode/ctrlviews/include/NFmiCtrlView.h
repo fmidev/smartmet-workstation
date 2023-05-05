@@ -146,6 +146,9 @@ class NFmiCtrlView
    // T‰t‰ k‰ytt‰‰ mm. InitializeGdiplus, mutta piti tiettyj‰ tapauksia varten tehd‰ irrallinen funktio, jolla luonti voidaan tehd‰ mista tahansa toolbox oliosta.
    static Gdiplus::Graphics* CreateGdiplusGraphics(NFmiToolBox *theToolBox, const NFmiRect *theRelativeClipRect);
    static NFmiRect CalcWantedDirectionalPosition(const NFmiRect& positionalRect, const NFmiRect& movedRect, FmiDirection wantedPosition);
+   static std::string DoBoldingParameterNameTooltipText(std::string parameterStr);
+   static bool IsNewDataParameterName(const std::string &parameterStr);
+   static std::string AddColorTagsToString(const std::string& str, const NFmiColor& color, bool addBoldTags);
 
  protected:
 	NFmiRect CalcMaskRectSize(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);

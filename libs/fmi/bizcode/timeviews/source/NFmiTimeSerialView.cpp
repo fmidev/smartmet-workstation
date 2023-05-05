@@ -1520,11 +1520,16 @@ void NFmiTimeSerialView::DrawParamName(void)
 	itsToolBox->UseClipping(false);
 	if(itsDrawParam)
 	{
-		itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData(), itsCtrlViewDocumentInterface));
+		itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData()));
 
 		itsDrawingEnvironment->SetFontSize(CalcFontSize());
 
-		NFmiString str = CachedParameterName(false);
+		bool doNewDataHighlight = !itsCtrlViewDocumentInterface->BetaProductGenerationRunning();
+		auto str = CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, true, doNewDataHighlight, true, nullptr);
+		if(IsNewDataParameterName(str))
+		{
+			itsDrawingEnvironment->BoldFont(true);
+		}
 
 		if(itsDrawParam->DataType() == NFmiInfoData::kEditable)
 		{
@@ -1542,7 +1547,7 @@ void NFmiTimeSerialView::DrawParamName(void)
 				str += displayedCountStr;
 			else
 				str += selectedCountStr;
-			str += NFmiString(")");
+			str += ")";
 		}
 
 		NFmiPoint place(CalcParamTextPosition());
@@ -1552,6 +1557,7 @@ void NFmiTimeSerialView::DrawParamName(void)
 		itsToolBox->Convert(&text);
 		DrawSideParameterNames(str);
 		itsToolBox->SetTextAlignment(oldDir);
+		itsDrawingEnvironment->BoldFont(false);
 	}
 }
 
@@ -4778,7 +4784,10 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
 		}
 
 		bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
-		string parNameStr = showExtraInfo ? CtrlViewUtils::GetParamNameString(itsDrawParam, false, showExtraInfo, true, 0, true) : CachedParameterName(true);
+		string parNameStr = CtrlViewUtils::GetParamNameString(itsDrawParam, false, showExtraInfo, true, 0, true, true, true, nullptr);
+		parNameStr = DoBoldingParameterNameTooltipText(parNameStr);
+		auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
+		parNameStr = AddColorTagsToString(parNameStr, fontColor, true);
 		NFmiColor stationDataColor;
 		editedInfo->FirstLocation();
 		int selectedLocationCounter = 0;
@@ -4905,14 +4914,14 @@ NFmiPoint NFmiTimeSerialView::GetFirstSelectedLatlonFromEditedData() const
 
 void NFmiTimeSerialView::UpdateCachedParameterName()
 {
-	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, false, 0, true, true, itsInfo), false);
-	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, true, true, itsInfo), true);
+	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, false, 0, true, true, true, itsInfo), false);
+	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, true, true, true, itsInfo), true);
 }
 
 void NFmiTimeSerialView::AddSideParameterNames(boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& fastInfo)
 {
-	itsSideParameterNames.push_back(CtrlViewUtils::GetParamNameString(drawParam, false, false, false, 0, true, true, fastInfo));
-	itsSideParameterNamesForTooltip.push_back(CtrlViewUtils::GetParamNameString(drawParam, false, false, true, 0, true, true, fastInfo));
+	itsSideParameterNames.push_back(CtrlViewUtils::GetParamNameString(drawParam, false, false, false, 0, true, true, true, fastInfo));
+	itsSideParameterNamesForTooltip.push_back(CtrlViewUtils::GetParamNameString(drawParam, false, false, true, 0, true, true, true, fastInfo));
 }
 
 void NFmiTimeSerialView::ClearSideParameterNames()
