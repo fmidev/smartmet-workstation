@@ -301,14 +301,17 @@ void NFmiMacroParamDataCacheForView::clearMacroParamCacheRow(unsigned long rowIn
 
 void NFmiMacroParamDataCacheForView::clearMacroParamCache(unsigned long rowIndex, const std::string &macroParamTotalPath)
 {
-    auto iter = rowsCache_.find(rowIndex);
-    if(iter != rowsCache_.end())
+    if(!rowsCache_.empty())
     {
-        iter->second.clearMacroParamCache(macroParamTotalPath);
-    }
-    else
-    {
-        ::logRowIndexNotFoundWarning(__FUNCTION__, rowIndex);
+        auto iter = rowsCache_.find(rowIndex);
+        if(iter != rowsCache_.end())
+        {
+            iter->second.clearMacroParamCache(macroParamTotalPath);
+        }
+        else
+        {
+            ::logRowIndexNotFoundWarning(__FUNCTION__, rowIndex);
+        }
     }
 }
 
@@ -417,6 +420,7 @@ static void logViewIndexNotFoundWarning(const std::string &functionName, unsigne
 
 void NFmiMacroParamDataCache::clearView(unsigned long viewIndex)
 {
+    // Näyttö-cacheja ei tyhjennetä ikinä, siksi halutun näytön pitää aina löytyä!
     auto iter = viewsCache_.find(viewIndex);
     if(iter != viewsCache_.end())
     {
@@ -430,6 +434,7 @@ void NFmiMacroParamDataCache::clearView(unsigned long viewIndex)
 
 void NFmiMacroParamDataCache::clearMacroParamCacheRow(unsigned long viewIndex, unsigned long rowIndex)
 {
+    // Näyttö-cacheja ei tyhjennetä ikinä, siksi halutun näytön pitää aina löytyä!
     auto iter = viewsCache_.find(viewIndex);
     if(iter != viewsCache_.end())
     {
@@ -443,6 +448,7 @@ void NFmiMacroParamDataCache::clearMacroParamCacheRow(unsigned long viewIndex, u
 
 void NFmiMacroParamDataCache::clearMacroParamCache(unsigned long viewIndex, unsigned long rowIndex, const std::string &macroParamTotalPath)
 {
+    // Näyttö-cacheja ei tyhjennetä ikinä, siksi halutun näytön pitää aina löytyä!
     auto iter = viewsCache_.find(viewIndex);
     if(iter != viewsCache_.end())
     {
