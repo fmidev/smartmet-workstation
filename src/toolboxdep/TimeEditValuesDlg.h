@@ -144,6 +144,7 @@ public:
     afx_msg void OnAcceleratorCpSelectDown();
 	afx_msg void OnAcceleratorLogViewerToolboxdeb();
 	afx_msg void OnAcceleratorSwapAreaSecondaryKeyExtraMap();
+	afx_msg void OnBnClickedButtonStoreCsvFile();
 };
 
 //{{AFX_INSERT_LOCATION}}

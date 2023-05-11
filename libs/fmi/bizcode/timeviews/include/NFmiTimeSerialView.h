@@ -30,6 +30,7 @@
 #include "NFmiInfoData.h"
 #include "NFmiParameterName.h"
 #include "NFmiDataModifierMinMax.h"
+#include <list>
 
 class NFmiFastQueryInfo;
 class NFmiDataModifier;
@@ -48,6 +49,13 @@ namespace ModelClimatology
     using ParamMapItem = std::pair<std::string, ParamIds>;
     using ParamMap = std::map<FmiParameterName, ParamMapItem>;
 }
+
+enum class TimeSerialOperationMode
+{
+	NormalDrawMode,
+	MinMaxScanMode,
+	CsvDataGeneration
+};
 
 class CpDrawingOptions
 {
@@ -100,6 +108,7 @@ class NFmiTimeSerialView : public NFmiTimeView
     void EditingMouseMotionsAllowed(bool newValue) {fEditingMouseMotionsAllowed = newValue;}
     bool IsTimeSerialView(void) override { return true; };
 	void UpdateCachedParameterName() override;
+	std::string MakeCsvDataString() override;
 
  protected:
 	// ***** uusia selkeit‰ piirtofunktioita *********
@@ -289,19 +298,35 @@ class NFmiTimeSerialView : public NFmiTimeView
 	NFmiRect itsDataRect; // t‰lle alueelle piirret‰‰n aikasarja ikkunassa k‰yr‰t
 
  protected:
-	bool ScanDataForMinAndMaxValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiTimeBag &theLimitingTimes, NFmiDataModifierMinMax &theAutoAdjustMinMaxValuesOut, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId);
+	void ScanDataForSpecialOperation(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiTimeBag &theLimitingTimes, NFmiDataModifierMinMax &theAutoAdjustMinMaxValuesOut, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId);
 	void AddSideParameterNames(boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& fastInfo);
 	void ClearSideParameterNames();
+	std::string MakeTimeSerialCsvString();
+	std::string MakeTimeSerialCsvHeaderString();
+	std::string MakeCsvFullParameterNameString(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, unsigned long wantedParamId);
 
-	bool fJustScanningForMinMaxValues; // auto-adjust s‰‰dˆt lasketaan lˆydettyjen min ja max arvojen avulla. Jos t‰m‰ optio on true, 
-										// ei piirret‰ mit‰‰n, etsit‰‰n vain min ja max arvoja. Tarkoitus on ett‰ optio laitetaan p‰‰lle
-										// AutoAdjustValueScale-metodissa ja sitten kutsutaan DrawSelectedStationData() -metodia, joka k‰y
-										// l‰pi kaikki 'piirrett‰v‰t' datat etsien min ja max arvoja.
-	NFmiDataModifierMinMax itsAutoAdjustMinMaxValues; // T‰h‰n talletetaan skannauksen yhteydes‰‰ lˆydetyt minimi ja maksimi arvot
-	NFmiTimeBag itsAutoAdjustScanTimes; // kaikki datat k‰yd‰‰n l‰pi alkaen timabagin alku ajasta loppu aikaan etsitt‰ess‰ min ja max arvoja
-	std::vector<NFmiPoint> itsScannedLatlonPoints; // katseltavalle datalle t‰ss‰ voi olla useita pisteit‰, mutta muille apudatoille k‰ytet‰‰n vain 1. pistett‰
+	// Auto-adjust s‰‰dˆt lasketaan lˆydettyjen min ja max arvojen avulla. Jos t‰m‰ optio on true, 
+	// ei piirret‰ mit‰‰n, etsit‰‰n vain min ja max arvoja. Tarkoitus on ett‰ optio laitetaan p‰‰lle
+	// AutoAdjustValueScale-metodissa ja sitten kutsutaan DrawSelectedStationData() -metodia, joka k‰y
+	// l‰pi kaikki 'piirrett‰v‰t' datat etsien min ja max arvoja.
+	TimeSerialOperationMode itsOperationMode;
+	// T‰h‰n talletetaan skannauksen yhteydes‰‰ lˆydetyt minimi ja maksimi arvot
+	NFmiDataModifierMinMax itsAutoAdjustMinMaxValues; 
+	// kaikki datat k‰yd‰‰n l‰pi alkaen timabagin alku ajasta loppu aikaan etsitt‰ess‰ min ja max arvoja
+	NFmiTimeBag itsAutoAdjustScanTimes; 
+	// Katseltavalle datalle t‰ss‰ voi olla useita pisteit‰, mutta muille apudatoille k‰ytet‰‰n vain 1. pistett‰
+	std::vector<NFmiPoint> itsScannedLatlonPoints; 
 	std::vector<std::string> itsSideParameterNames;
 	std::vector<std::string> itsSideParameterNamesForTooltip;
+	// T‰h‰n generoidaan kaikista datoista ja apudatoista yhteinen kokooma CSV dataa string muodossa
+	std::string itsCsvDataString;
+	// Jokaisen erillisen aikasarjan kaikki ajat
+	std::list<std::list<NFmiMetTime>> itsCsvGenerationTimes;
+	// Jokaisen erillisen aikasarjan kaikki arvot (sama m‰‰r‰ kuin aikoja)
+	std::list<std::list<float>> itsCsvGenerationParameterValues;
+	// Jokaisen erillisen aikasarjan 'yksiselitteisen' parametrin nimi
+	std::list<std::string> itsCsvGenerationParameterNames;
+	NFmiPoint itsCsvGenerationLatlon;
 
 private:
 

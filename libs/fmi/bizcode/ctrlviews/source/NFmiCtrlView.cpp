@@ -364,3 +364,8 @@ std::string NFmiCtrlView::AddColorTagsToString(const std::string &str, const NFm
 	}
 	return coloredStr;
 }
+
+std::string NFmiCtrlView::MakeCsvDataString()
+{
+	return std::string();
+}

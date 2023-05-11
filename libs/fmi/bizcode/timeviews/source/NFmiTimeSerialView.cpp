@@ -133,7 +133,7 @@ NFmiTimeSerialView::NFmiTimeSerialView(const NFmiRect &theRect
 ,itsSinAmplitude(0)
 ,itsPhase(6)
 ,itsProducerModelDataColors()
-,fJustScanningForMinMaxValues(false)
+,itsOperationMode(TimeSerialOperationMode::NormalDrawMode)
 ,fEditingMouseMotionsAllowed(false)
 {
 	itsProducerModelDataColors.push_back(NFmiColor(0.5f, 0.25f, 0.f));
@@ -193,7 +193,7 @@ void NFmiTimeSerialView::Draw(NFmiToolBox* theToolBox)
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
     try
 	{
-		fJustScanningForMinMaxValues = false;
+		itsOperationMode = TimeSerialOperationMode::NormalDrawMode;
 		ClearSideParameterNames();
 		itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, true);
 		if(itsInfo == 0)
@@ -266,7 +266,7 @@ void NFmiTimeSerialView::DrawSideParametersDataLocationInTime(const NFmiPoint& t
 				boost::shared_ptr<NFmiFastQueryInfo> sideParamInfo = ::GetWantedData(itsCtrlViewDocumentInterface, sideParamDrawParam, producer, dataType);
 				if(sideParamInfo)
 				{
-					if(!fJustScanningForMinMaxValues)
+					if(itsOperationMode == TimeSerialOperationMode::NormalDrawMode)
 						AddSideParameterNames(sideParamDrawParam, sideParamInfo);
 
 					sideParamInfo->ResetTime(); // varmuuden vuoksi asetan 1. aikaan
@@ -562,7 +562,7 @@ void NFmiTimeSerialView::DrawTemperatureMinAndMaxFromHelperData(FmiParameterName
 
 void NFmiTimeSerialView::DrawModelDataLegend(const std::vector<NFmiColor> &theUsedColors, const std::vector<std::string> &theFoundProducerNames)
 {
-	if(fJustScanningForMinMaxValues)
+	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 		return ;
 	itsToolBox->UseClipping(false);
 	if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode() == false) // ei piirretä CP legendaa ja model legendaa yhtä aikaa
@@ -881,7 +881,7 @@ static const double gMaxDistanceToFractileStation = 500*1000; // fraktiili asema
 
 void NFmiTimeSerialView::DrawFraktiiliDataLocationInTime(NFmiDrawingEnvironment &envi, const NFmiPoint &theLatlon)
 {
-	if(fJustScanningForMinMaxValues)
+	if(itsOperationMode == TimeSerialOperationMode::MinMaxScanMode)
 		return ; // havainto fraktiili datat skipataan scannauksessa
 
 	if(itsDrawParam->Level().LevelValue() != kFloatMissing)
@@ -1093,7 +1093,7 @@ void NFmiTimeSerialView::DrawPossibleSeaLevelForecastProbLimitDataPlume(const NF
 // Jos löytyy, piirrä näytön yli vaakasuoraan eri prob viivat halutuilla väreillä.
 void NFmiTimeSerialView::DrawSeaLevelProbLines(const NFmiPoint& theLatlon)
 {
-	if(fJustScanningForMinMaxValues)
+	if(itsOperationMode == TimeSerialOperationMode::MinMaxScanMode)
 		return;
 
 	const auto* seaLevelPlumeData = itsCtrlViewDocumentInterface->SeaLevelPlumeData().getSeaLevelPlumeData(itsDrawParam->Param().GetParamIdent());
@@ -1133,7 +1133,7 @@ void NFmiTimeSerialView::DrawSeaLevelProbLine(NFmiDrawingEnvironment &theEnvi, c
 
 void NFmiTimeSerialView::DrawStationNameLegend(const NFmiLocation* theLocation, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& theFontSize, const NFmiPoint& theTextPos, const NFmiString& thePreLocationString, FmiDirection theTextAligment, double theDistanceInMeters)
 {
-	if(fJustScanningForMinMaxValues)
+	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 		return ;
 	itsToolBox->UseClipping(false);
 	if(theLocation)
@@ -1230,9 +1230,9 @@ void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(const NFmiTimeBag &theDrawed
     auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
     auto paramId = itsDrawParam->Param().GetParamIdent();
 
-	if(fJustScanningForMinMaxValues)
+	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 	{
-		ScanDataForMinAndMaxValues(theInfo, theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId);
+		ScanDataForSpecialOperation(theInfo, theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId);
 		return ;
 	}
 
@@ -1295,9 +1295,9 @@ void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(boost::shared_ptr<NFmiFastQu
 {
     auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
     auto paramId = itsDrawParam->Param().GetParamIdent();
-	if(fJustScanningForMinMaxValues)
+	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 	{
-		ScanDataForMinAndMaxValues(theInfo, theLatlon, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId);
+		ScanDataForSpecialOperation(theInfo, theLatlon, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId);
 		return ;
 	}
 	itsToolBox->UseClipping(true);
@@ -1673,7 +1673,7 @@ void NFmiTimeSerialView::DrawData(void)
 // eli laskee kertymän datan arvoista
 void NFmiTimeSerialView::DrawSelectedStationDataIncrementally(void)
 {
-	if(fJustScanningForMinMaxValues)
+	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 		return ;
 	DrawIncrementalDataLegend();
 	boost::shared_ptr<NFmiFastQueryInfo> info = Info();
@@ -1784,7 +1784,7 @@ static std::string GetLatlonString(const NFmiPoint &theLatlon)
 
 void NFmiTimeSerialView::DrawStationDataStationNameLegend(boost::shared_ptr<NFmiFastQueryInfo> &info, const NFmiPoint &theLatlon, int counter, NFmiDrawingEnvironment &envi)
 {
-	if(fJustScanningForMinMaxValues)
+	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 		return ;
 	if(info)
 	{
@@ -1926,13 +1926,11 @@ void NFmiTimeSerialView::DrawSelectedStationData(void)
 			// piirrretään vielä editoidun alueen ulkopuolelta mahd. valittu piste mutta vain jos muuta ei ole piirretty
 			if(counter == 1)
 			{
-				if(itsCtrlViewDocumentInterface->OutOfEditedAreaTimeSerialPoint() != NFmiPoint::gMissingLatlon)
+				auto& latlon = itsCtrlViewDocumentInterface->OutOfEditedAreaTimeSerialPoint();
+				if(latlon != NFmiPoint::gMissingLatlon)
 				{
-                    auto &latlon = itsCtrlViewDocumentInterface->OutOfEditedAreaTimeSerialPoint();
-        			DrawHelperDataLocationInTime(latlon);
-                    // Piirretään mahdolliset apu havainnot viimeiseksi, jotta erilaiset parvet eivät peittäisi niitä (tästä tulee aina vain yksi käyrä, joten se ei peitä paljoa)
-                    DrawHelperObservationData(latlon);
-                }
+					DrawSelectedStationData(info, latlon, counter);
+				}
 			}
 		}
 	}
@@ -2283,7 +2281,7 @@ double NFmiTimeSerialView::CalcModifiedValue(double theRealValue, long theIndex,
 //--------------------------------------------------------
 void NFmiTimeSerialView::DrawModifyFactorPoints(void)
 {
-	if(fJustScanningForMinMaxValues)
+	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 		return ;
 	itsToolBox->UseClipping(true);
 	if(itsCtrlViewDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // jos ns. edit-moodi päällä, piiretään aikarajoitin viivat
@@ -2580,39 +2578,60 @@ bool NFmiTimeSerialView::LeftButtonUp(const NFmiPoint &thePlace
 	return false;
 }
 
-bool NFmiTimeSerialView::ScanDataForMinAndMaxValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiTimeBag &theLimitingTimes, NFmiDataModifierMinMax &theAutoAdjustMinMaxValuesOut, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
+void NFmiTimeSerialView::ScanDataForSpecialOperation(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiPoint& theLatlon, const NFmiTimeBag& theLimitingTimes, NFmiDataModifierMinMax& theAutoAdjustMinMaxValuesOut, const NFmiFastInfoUtils::MetaWindParamUsage& metaWindParamUsage, unsigned long wantedParamId)
 {
-//	if(theInfo->Location(theLatlon))
+	bool interpolateLocation = (theInfo->Grid() != 0);
+	auto usedStartTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(theInfo, theLimitingTimes.FirstTime());
+	theInfo->FindNearestTime(usedStartTime, kBackward);
+	int timeIndex1 = theInfo->TimeIndex();
+	if(timeIndex1 == -1)
 	{
-		bool interpolateLocation = (theInfo->Grid() != 0);
-		auto usedStartTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(theInfo, theLimitingTimes.FirstTime());
-		theInfo->FindNearestTime(usedStartTime, kBackward);
-		int timeIndex1 = theInfo->TimeIndex();
-		if(timeIndex1 == -1)
-		{
-			if(theLimitingTimes.IsInside(theInfo->TimeDescriptor().FirstTime()))
-				timeIndex1 = 0;
-		}
-		auto usedLastTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(theInfo, theLimitingTimes.LastTime());
-		theInfo->FindNearestTime(usedLastTime, kForward);
-		int timeIndex2 = theInfo->TimeIndex();
-		if(timeIndex2 == -1)
-		{
-			if(theLimitingTimes.IsInside(theInfo->TimeDescriptor().LastTime()))
-				timeIndex2 = static_cast<int>(theInfo->SizeTimes()) - 1;
-		}
+		if(theLimitingTimes.IsInside(theInfo->TimeDescriptor().FirstTime()))
+			timeIndex1 = 0;
+	}
+	auto usedLastTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(theInfo, theLimitingTimes.LastTime());
+	theInfo->FindNearestTime(usedLastTime, kForward);
+	int timeIndex2 = theInfo->TimeIndex();
+	if(timeIndex2 == -1)
+	{
+		if(theLimitingTimes.IsInside(theInfo->TimeDescriptor().LastTime()))
+			timeIndex2 = static_cast<int>(theInfo->SizeTimes()) - 1;
+	}
 
-		for(int i = timeIndex1; i <= timeIndex2; i++)
+	bool doCsvDataGeneration = (itsOperationMode == TimeSerialOperationMode::CsvDataGeneration);
+	std::list<NFmiMetTime> csvGenerationTimes;
+	std::list<float> csvGenerationParameterValues;
+	for(int i = timeIndex1; i <= timeIndex2; i++)
+	{
+		if(theInfo->TimeIndex(i))
 		{
-			if(theInfo->TimeIndex(i))
+			float value = static_cast<float>(::GetTimeSerialValue(theInfo, interpolateLocation, theLatlon, metaWindParamUsage, wantedParamId));
+			if(doCsvDataGeneration)
 			{
-				float value = static_cast<float>(::GetTimeSerialValue(theInfo, interpolateLocation, theLatlon, metaWindParamUsage, wantedParamId));
+				csvGenerationTimes.push_back(theInfo->ValidTime());
+				csvGenerationParameterValues.push_back(value);
+			}
+			else
+			{
 				theAutoAdjustMinMaxValuesOut.Calculate(value);
 			}
 		}
-		return true;
 	}
-	return false;
+
+	if(doCsvDataGeneration && !csvGenerationParameterValues.empty())
+	{
+		auto parameterNameString = MakeCsvFullParameterNameString(theInfo, wantedParamId);
+		auto parameterAlreadyIncludedIter = std::find(itsCsvGenerationParameterNames.begin(), itsCsvGenerationParameterNames.end(), parameterNameString);
+		if(parameterAlreadyIncludedIter == itsCsvGenerationParameterNames.end())
+		{
+			// Estetään että sama parametri (prod+par+level) ei mene kahdesti dataan
+			itsCsvGenerationParameterNames.push_back(parameterNameString);
+			itsCsvGenerationTimes.emplace_back(std::move(csvGenerationTimes));
+			itsCsvGenerationParameterValues.emplace_back(std::move(csvGenerationParameterValues));
+			if(itsCsvGenerationLatlon == NFmiPoint::gMissingLatlon)
+				itsCsvGenerationLatlon = theLatlon;
+		}
+	}
 }
 
 std::vector<NFmiPoint> NFmiTimeSerialView::GetViewedLatlonPoints(void)
@@ -2718,7 +2737,7 @@ static NFmiTimeBag GetScannedTimes(const NFmiTimeBag &theViewTimes)
 
 bool NFmiTimeSerialView::AutoAdjustValueScale(void)
 {
-	fJustScanningForMinMaxValues = true;
+	itsOperationMode = TimeSerialOperationMode::MinMaxScanMode;
 	itsAutoAdjustMinMaxValues.Clear();
 	itsScannedLatlonPoints = GetViewedLatlonPoints();
 	itsAutoAdjustScanTimes = ::GetScannedTimes(GetViewLimitingTimes());
@@ -2727,7 +2746,7 @@ bool NFmiTimeSerialView::AutoAdjustValueScale(void)
 	itsToolBox->UseClipping(false);
 	itsDrawingEnvironment->EnableFill();
 	
-	fJustScanningForMinMaxValues = false;
+	itsOperationMode = TimeSerialOperationMode::NormalDrawMode;
 
 	float minValue = itsAutoAdjustMinMaxValues.MinValue();
 	float maxValue = itsAutoAdjustMinMaxValues.MaxValue();
@@ -3522,7 +3541,7 @@ void NFmiTimeSerialView::CutLinePoint2YPlane(const NFmiPoint& theOtherPoint, NFm
 //--------------------------------------------------------
 void NFmiTimeSerialView::DrawTimeLine()
 {
-	if(fJustScanningForMinMaxValues)
+	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 		return ;
 	NFmiRect wholeArea(GetFrame());
 	NFmiRect timeArea(CalcTimeAxisRect());
@@ -3558,7 +3577,7 @@ NFmiRect NFmiTimeSerialView::CalcModifyingUnitRect(void)
 // piirtää analyysi moodin lopetus ajan kohdalle pystyviivan merkiksi
 void NFmiTimeSerialView::DrawAnalyzeToolEndTimeLine(void)
 {
-	if(fJustScanningForMinMaxValues)
+	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 		return ;
 	NFmiDrawingEnvironment envi(ChangeStationDataCurveEnvironment());
 	envi.SetFrameColor(NFmiColor(0.91f,0.34f,0.34f));
@@ -3679,7 +3698,7 @@ void NFmiTimeSerialView::DrawAnalyzeToolRelatedChangeLineFinal(bool useObservati
 // HUOM!!! Piirtää myös analyysidatan ruutuun!!!!!
 void NFmiTimeSerialView::DrawAnalyzeToolChangeLine(const NFmiPoint &theLatLonPoint)
 {
-    if(fJustScanningForMinMaxValues)
+    if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
         return;
 
     if(itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool())
@@ -4003,9 +4022,9 @@ void NFmiTimeSerialView::DrawModelRunsPlume(const NFmiPoint &theLatLonPoint, NFm
                     auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(info);
                     auto paramId = itsDrawParam->Param().GetParamIdent();
 
-					if(fJustScanningForMinMaxValues)
+					if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 					{
-						ScanDataForMinAndMaxValues(info, theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId);
+						ScanDataForSpecialOperation(info, theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId);
 					}
 					else
 					{
@@ -4047,11 +4066,11 @@ bool NFmiTimeSerialView::DrawEditedDataLocationInTime_PreliminaryActions(const N
     // piirretään edellisten malliajojen pluumi ensin eli alle (jos niitä edes piirretään)
     DrawModelRunsPlume(theLatLonPoint, theCurrentDataLineStyle, itsDrawParam); 
 
-    if(fJustScanningForMinMaxValues)
+    if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
     {
         auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(Info());
         auto paramId = itsDrawParam->Param().GetParamIdent();
-        ScanDataForMinAndMaxValues(Info(), theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId);
+        ScanDataForSpecialOperation(Info(), theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId);
         return false;
     }
 
@@ -4928,4 +4947,246 @@ void NFmiTimeSerialView::ClearSideParameterNames()
 {
 	itsSideParameterNames.clear();
 	itsSideParameterNamesForTooltip.clear();
+}
+
+std::string NFmiTimeSerialView::MakeCsvDataString()
+{
+	itsCsvDataString.clear();
+	itsCsvGenerationTimes.clear();
+	itsCsvGenerationParameterValues.clear();
+	itsCsvGenerationParameterNames.clear();
+	itsCsvGenerationLatlon = NFmiPoint::gMissingLatlon;
+
+	itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, true);
+	if(itsInfo)
+	{
+		itsOperationMode = TimeSerialOperationMode::CsvDataGeneration;
+		itsAutoAdjustScanTimes = GetViewLimitingTimes();
+		DrawSelectedStationData();
+		itsOperationMode = TimeSerialOperationMode::NormalDrawMode;
+		if(!itsCsvGenerationTimes.empty())
+		{
+			auto headerString = MakeTimeSerialCsvHeaderString();
+			auto timeSerialDataString = MakeTimeSerialCsvString();
+			if(!headerString.empty() && !timeSerialDataString.empty())
+			{
+				itsCsvDataString = headerString;
+				itsCsvDataString += timeSerialDataString;
+			}
+		}
+	}
+	return itsCsvDataString;
+}
+
+static std::set<NFmiMetTime> MakeUniqueAscendingTimeSet(const std::list<std::list<NFmiMetTime>>& availableTimes)
+{
+	std::set<NFmiMetTime> uniqueTimes;
+	for(const auto& timeList : availableTimes)
+	{
+		uniqueTimes.insert(timeList.begin(), timeList.end());
+	}
+	return uniqueTimes;
+}
+
+const NFmiString gCsvTimeFormatString = "YYYY-MM-DD HH:mm:SS";
+
+static std::string MakeCsvParameterNameSectionString(const std::list<std::string>& csvParameterNames)
+{
+	std::string paramNameLineString = "time";
+	for(const auto& parameterName : csvParameterNames)
+	{
+		paramNameLineString += ",";
+		paramNameLineString += parameterName;
+	}
+	paramNameLineString += "\n";
+	return paramNameLineString;
+}
+
+static std::string MakeCsvValueLineString(const NFmiMetTime& time, const std::list<std::list<NFmiMetTime>>& csvGenerationTimes,
+	const std::list<std::list<float>>& csvGenerationParameterValues)
+{
+	std::string csvDataString = time.ToStr(gCsvTimeFormatString, kEnglish);
+	csvDataString += ",";
+	auto paramValuesListIter = csvGenerationParameterValues.begin();
+	bool firstValueInLoop = true;
+	for(const auto& parameterTimeList : csvGenerationTimes)
+	{
+		if(!firstValueInLoop)
+		{
+			csvDataString += ",";
+		}
+		firstValueInLoop = false;
+
+		auto timeListIter = std::find(parameterTimeList.begin(), parameterTimeList.end(), time);
+		if(timeListIter == parameterTimeList.end())
+		{
+			csvDataString += "-";
+		}
+		else
+		{
+			auto diffFromStart = std::distance(parameterTimeList.begin(), timeListIter);
+			auto valueIter = paramValuesListIter->begin();
+			std::advance(valueIter, diffFromStart);
+			auto value = *valueIter;
+			if(value == kFloatMissing)
+			{
+				csvDataString += "-";
+			}
+			else
+			{
+				csvDataString += NFmiValueString::GetStringWithMaxDecimalsSmartWay(value, 2);
+			}
+		}
+		++paramValuesListIter;
+	}
+	csvDataString += "\n";
+	return csvDataString;
+}
+
+std::string NFmiTimeSerialView::MakeTimeSerialCsvString()
+{
+	std::string csvDataString;
+	// 1. Tarkista että näyttöriviltä tulee sama määrä aikalistoja, parametrilistoja ja parametrien nimiä
+	auto expectedSize = itsCsvGenerationTimes.size();
+	if(expectedSize == itsCsvGenerationParameterValues.size() && expectedSize == itsCsvGenerationParameterNames.size())
+	{
+		csvDataString += ::MakeCsvParameterNameSectionString(itsCsvGenerationParameterNames);
+		// 2. Tee aikalista, missä on mukana kaikkien aikalistojen kaikki eri ajat nousevassa järjestyksessä
+		auto uniqueTimeSet = ::MakeUniqueAscendingTimeSet(itsCsvGenerationTimes);
+		for(const auto& time : uniqueTimeSet)
+		{
+			csvDataString += ::MakeCsvValueLineString(time, itsCsvGenerationTimes, itsCsvGenerationParameterValues);
+		}
+		csvDataString += "\n";
+	}
+	return csvDataString;
+}
+
+std::string NFmiTimeSerialView::MakeTimeSerialCsvHeaderString()
+{
+	std::string rowLabel = "Row-";
+	rowLabel += std::to_string(itsViewGridRowNumber);
+	std::string csvDataString;
+	csvDataString += rowLabel;
+	csvDataString += ",";
+	csvDataString += "lon-lat-point";
+	csvDataString += ",";
+	csvDataString += std::to_string(itsCsvGenerationLatlon.X());
+	csvDataString += ",";
+	csvDataString += std::to_string(itsCsvGenerationLatlon.Y());
+	csvDataString += ",";
+	csvDataString += "start-time";
+	csvDataString += ",";
+	csvDataString += itsAutoAdjustScanTimes.FirstTime().ToStr(gCsvTimeFormatString, kEnglish);
+	csvDataString += ",";
+	csvDataString += "end-time";
+	csvDataString += ",";
+	csvDataString += itsAutoAdjustScanTimes.LastTime().ToStr(gCsvTimeFormatString, kEnglish);
+	csvDataString += "\n";
+
+	return csvDataString;
+}
+
+// Tuottaja nimeä ei haluta mielellään datan tuottajasta, vaan lyhyt geneerinen nimi josatain producerSystem:ista.
+// Jos malli/havainto tuottajanimi systeemeistä ei sitten löydy sellaista, silloin otetaan datasta löytynyt nimi.
+static std::string MakeCsvProducerName(NFmiProducerSystem& modelProducerSystem, NFmiProducerSystem& obsProducerSystem, boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
+{
+	auto dataType = theInfo->DataType();
+	const auto& producer = *theInfo->Producer();
+	if(dataType == NFmiInfoData::kEditable || dataType == NFmiInfoData::kCopyOfEdited)
+		return "";
+	if(dataType == NFmiInfoData::kSingleStationRadarData)
+		return std::string(producer.GetName());
+	if(dataType == NFmiInfoData::kEditingHelpData)
+		return "Help";
+
+	auto producerIndex1Based = modelProducerSystem.FindProducerInfo(producer);
+	if(producerIndex1Based != 0)
+	{
+		return modelProducerSystem.Producer(producerIndex1Based).ShortName();
+	}
+
+	producerIndex1Based = obsProducerSystem.FindProducerInfo(producer);
+	if(producerIndex1Based != 0)
+	{
+		return obsProducerSystem.Producer(producerIndex1Based).ShortName();
+	}
+
+	return std::string(producer.GetName());
+}
+
+static std::string MakeCsvParameterNameSectionString(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, unsigned long wantedParamId)
+{
+	NFmiFastInfoUtils::QueryInfoParamStateRestorer restorer(*theInfo);
+	if(theInfo->Param(static_cast<FmiParameterName>(wantedParamId)))
+	{
+		// jos haluttu parametri löytyi datasta, palautetaan sen nimi
+		return std::string(theInfo->Param().GetParamName());
+	}
+
+	// Jos kyse on meta-parametrista, palautetaan par + id string esim. par21
+	std::string paramNameStr = "par";
+	paramNameStr += std::to_string(wantedParamId);
+	return paramNameStr;
+}
+
+static std::string MakeCsvPossibleLevelSectionString(boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
+{
+	const auto* level = theInfo->Level();
+	if(level && theInfo->SizeLevels() > 1)
+	{
+		auto levelType = level->LevelType();
+		switch(levelType)
+		{
+		case kFmiHybridLevel:
+		{
+			std::string levelStr = ":lev";
+			levelStr += std::to_string(boost::math::iround(level->LevelValue()));
+			return levelStr;
+		}
+		case kFmiPressureLevel:
+		{
+			std::string levelStr = ":p";
+			levelStr += std::to_string(boost::math::iround(level->LevelValue()));
+			return levelStr;
+		}
+		case kFmiHeight:
+		{
+			std::string levelStr = ":z";
+			levelStr += std::to_string(boost::math::iround(level->LevelValue()));
+			return levelStr;
+		}
+		default:
+			break;
+		}
+	}
+
+	// Ei ole level tietoa tai sillä ei ole väliä (= pinta dataa)
+	return "";
+}
+
+// Nimi tulee kolmesta mahdollisesta osiosta producer-parameter-level
+std::string NFmiTimeSerialView::MakeCsvFullParameterNameString(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, unsigned long wantedParamId)
+{
+	CtrlViewDocumentInterface* ctrlViewDocumentInterface = CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation();
+	if(ctrlViewDocumentInterface && theInfo)
+	{
+		boost::shared_ptr<NFmiDrawParam> drawParam = ctrlViewDocumentInterface->InfoOrganizer()->CreateDrawParam(theInfo->Param(), theInfo->Level(), theInfo->DataType());
+		if(drawParam)
+		{
+			auto parameterNameStr = CtrlViewUtils::GetParamNameString(drawParam, false, false, false, 0, true, false, true, nullptr);
+			return parameterNameStr;
+		}
+/*
+		std::string parameterNameStr;
+		auto& modelProducerSystem = ctrlViewDocumentInterface->ProducerSystem();
+		auto& observationProducerSystem = ctrlViewDocumentInterface->ObsProducerSystem();
+		parameterNameStr += ::MakeCsvProducerName(modelProducerSystem, observationProducerSystem, theInfo);
+		parameterNameStr += ":";
+		parameterNameStr += ::MakeCsvParameterNameSectionString(theInfo, wantedParamId);
+		parameterNameStr += ::MakeCsvPossibleLevelSectionString(theInfo);
+		return parameterNameStr;
+*/
+	}
+	return "Unknown_param_name";
 }

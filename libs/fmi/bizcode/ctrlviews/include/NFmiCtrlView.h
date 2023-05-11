@@ -149,6 +149,7 @@ class NFmiCtrlView
    static std::string DoBoldingParameterNameTooltipText(std::string parameterStr);
    static bool IsNewDataParameterName(const std::string &parameterStr);
    static std::string AddColorTagsToString(const std::string& str, const NFmiColor& color, bool addBoldTags);
+   virtual std::string MakeCsvDataString();
 
  protected:
 	NFmiRect CalcMaskRectSize(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);

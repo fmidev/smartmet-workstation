@@ -673,3 +673,8 @@ void CTimeEditValuesView::AutoAdjustValueScales(bool fJustActive)
 	if(itsManagerView->AutoAdjustValueScales(fJustActive))
 		Invalidate(FALSE);
 }
+
+std::string CTimeEditValuesView::MakeCsvDataString()
+{
+	return itsManagerView->MakeCsvDataString();
+}
