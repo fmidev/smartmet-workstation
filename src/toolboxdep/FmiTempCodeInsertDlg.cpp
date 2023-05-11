@@ -191,7 +191,7 @@ void CFmiTempCodeInsertDlg::OnBnClickedButtonBrowseTempTextsFile()
 
 	UpdateData(TRUE);
 	std::string initialDirectory = PathUtils::getPathSectionFromTotalFilePath(lastLoadedFilePath);
-	CFileDialog dlg(TRUE, NULL, CA2T(lastLoadedFilePath.c_str()), OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, szFilter);
+	CFileDialog dlg(TRUE, NULL, CA2T(lastLoadedFilePath.c_str()), OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, szFilter, this);
 	dlg.m_ofn.lpstrInitialDir = CA2T(initialDirectory.c_str());
 	if(dlg.DoModal() == IDOK)
 	{
