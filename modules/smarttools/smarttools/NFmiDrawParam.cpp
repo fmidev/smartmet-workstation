@@ -514,8 +514,7 @@ void NFmiDrawParam::Init(const NFmiDrawParam* theDrawParam, bool fInitOnlyDrawin
     if (fInitOnlyDrawingOptions == false)
     {
       itsInitFileName = theDrawParam->InitFileName();
-      // HUOM! itsMacroParamRelativePath-dataosaa ei saa initialisoida, koska sitä käytetään vain
-      // viewmakrojen yhteydessä
+      itsMacroParamRelativePath = theDrawParam->MacroParamRelativePath();
       itsParameterAbbreviation = theDrawParam->ParameterAbbreviation();
       fViewMacroDrawParam = theDrawParam->ViewMacroDrawParam();
       itsParameter = theDrawParam->itsParameter;
