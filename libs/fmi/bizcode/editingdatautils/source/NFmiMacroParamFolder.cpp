@@ -4,6 +4,7 @@
 #include "NFmiFileSystem.h"
 #include "NFmiDrawParam.h"
 #include "NFmiFileString.h"
+#include <boost\algorithm\string.hpp>
 
 using namespace std;
 
@@ -12,7 +13,7 @@ struct MacroParamFinder
     MacroParamFinder(const string& theName) :itsName(theName) {};
     bool operator()(boost::shared_ptr<NFmiMacroParam> &theItem)
     {
-        return theItem->Name() == itsName;
+        return boost::iequals(theItem->Name(), itsName);
     }
 
     string itsName;
