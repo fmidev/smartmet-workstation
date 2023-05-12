@@ -180,8 +180,8 @@ public:
     bool LoadStaticHelpData(void);
     AddParams::ParameterSelectionSystem& ParameterSelectionSystem();
     void UpdateParameterSelectionSystem();
-    boost::shared_ptr<NFmiFastQueryInfo> GetFavoriteSurfaceModelFractileData();
-    boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData(const NFmiLevel& theLevel);
+	boost::shared_ptr<NFmiFastQueryInfo> GetBestSuitableModelFractileData(boost::shared_ptr<NFmiFastQueryInfo>& usedOriginalInfo);
+	boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData(const NFmiLevel& theLevel);
     bool IsWorkingDataSaved();
     SmartMetDocumentInterface& GetSmartMetDocumentInterface();
     ToolboxViewsInterface& GetToolboxViewsInterface();

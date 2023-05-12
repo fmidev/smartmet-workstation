@@ -151,7 +151,7 @@ class NFmiTimeSerialView : public NFmiTimeView
     std::string GetSeaLevelPlumeDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor);
     std::string GetSeaLevelProbDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, boost::shared_ptr<NFmiFastQueryInfo> &theSeaLevelFractileData, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor);
     boost::shared_ptr<NFmiFastQueryInfo> GetSeaLevelPlumeData(const NFmiProducer &usedProducer);
-    std::string GetEcFraktileParamToolTipText(long theStartParamIndex, const std::string &theParName, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor, long theParamIndexIncrement = 1);
+    std::string GetEcFraktileParamToolTipText(boost::shared_ptr<NFmiFastQueryInfo>& theViewedInfo, long theStartParamIndex, const std::string &theParName, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor, long theParamIndexIncrement = 1);
     std::string GetModelClimatologyDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor);
     std::string GetModelClimatologyParamToolTipText(const ModelClimatology::ParamMapItem &paramItem, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor);
     std::string GetObsFraktileDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor);
@@ -298,7 +298,7 @@ class NFmiTimeSerialView : public NFmiTimeView
 	NFmiRect itsDataRect; // t‰lle alueelle piirret‰‰n aikasarja ikkunassa k‰yr‰t
 
  protected:
-	void ScanDataForSpecialOperation(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiTimeBag &theLimitingTimes, NFmiDataModifierMinMax &theAutoAdjustMinMaxValuesOut, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId);
+	void ScanDataForSpecialOperation(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiTimeBag &theLimitingTimes, NFmiDataModifierMinMax &theAutoAdjustMinMaxValuesOut, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId, int theTimeWhenDrawedInMinutes);
 	void AddSideParameterNames(boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& fastInfo);
 	void ClearSideParameterNames();
 	std::string MakeTimeSerialCsvString();

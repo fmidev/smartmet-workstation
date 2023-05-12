@@ -1010,7 +1010,7 @@ void NFmiTimeSerialView::DrawModelFractileDataLocationInTime(boost::shared_ptr<N
 
 void NFmiTimeSerialView::DrawModelFractileDataLocationInTime(const NFmiPoint &theLatlon)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> fractileData = itsCtrlViewDocumentInterface->GetFavoriteSurfaceModelFractileData();
+	boost::shared_ptr<NFmiFastQueryInfo> fractileData = itsCtrlViewDocumentInterface->GetBestSuitableModelFractileData(itsInfo);
 	if(fractileData)
 	{
 		if(Info()->Param().GetParamIdent() == kFmiTemperature && fractileData->Param(kFmiTemperatureF100)) 
@@ -1093,7 +1093,7 @@ void NFmiTimeSerialView::DrawPossibleSeaLevelForecastProbLimitDataPlume(const NF
 // Jos löytyy, piirrä näytön yli vaakasuoraan eri prob viivat halutuilla väreillä.
 void NFmiTimeSerialView::DrawSeaLevelProbLines(const NFmiPoint& theLatlon)
 {
-	if(itsOperationMode == TimeSerialOperationMode::MinMaxScanMode)
+	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 		return;
 
 	const auto* seaLevelPlumeData = itsCtrlViewDocumentInterface->SeaLevelPlumeData().getSeaLevelPlumeData(itsDrawParam->Param().GetParamIdent());
@@ -1232,7 +1232,7 @@ void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(const NFmiTimeBag &theDrawed
 
 	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 	{
-		ScanDataForSpecialOperation(theInfo, theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId);
+		ScanDataForSpecialOperation(theInfo, theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId, theTimeWhenDrawedInMinutes);
 		return ;
 	}
 
@@ -1297,7 +1297,7 @@ void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(boost::shared_ptr<NFmiFastQu
     auto paramId = itsDrawParam->Param().GetParamIdent();
 	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 	{
-		ScanDataForSpecialOperation(theInfo, theLatlon, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId);
+		ScanDataForSpecialOperation(theInfo, theLatlon, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId, theTimeWhenDrawedInMinutes);
 		return ;
 	}
 	itsToolBox->UseClipping(true);
@@ -2578,7 +2578,7 @@ bool NFmiTimeSerialView::LeftButtonUp(const NFmiPoint &thePlace
 	return false;
 }
 
-void NFmiTimeSerialView::ScanDataForSpecialOperation(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiPoint& theLatlon, const NFmiTimeBag& theLimitingTimes, NFmiDataModifierMinMax& theAutoAdjustMinMaxValuesOut, const NFmiFastInfoUtils::MetaWindParamUsage& metaWindParamUsage, unsigned long wantedParamId)
+void NFmiTimeSerialView::ScanDataForSpecialOperation(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiPoint& theLatlon, const NFmiTimeBag& theLimitingTimes, NFmiDataModifierMinMax& theAutoAdjustMinMaxValuesOut, const NFmiFastInfoUtils::MetaWindParamUsage& metaWindParamUsage, unsigned long wantedParamId, int theTimeWhenDrawedInMinutes)
 {
 	bool interpolateLocation = (theInfo->Grid() != 0);
 	auto usedStartTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(theInfo, theLimitingTimes.FirstTime());
@@ -2608,7 +2608,10 @@ void NFmiTimeSerialView::ScanDataForSpecialOperation(boost::shared_ptr<NFmiFastQ
 			float value = static_cast<float>(::GetTimeSerialValue(theInfo, interpolateLocation, theLatlon, metaWindParamUsage, wantedParamId));
 			if(doCsvDataGeneration)
 			{
-				csvGenerationTimes.push_back(theInfo->ValidTime());
+				// Datasta saatu aika pitää vielä mahdollisesti siirtää aikasarjassa olevaan aikaan
+				auto timeOnView = theInfo->ValidTime();
+				timeOnView.ChangeByMinutes(theTimeWhenDrawedInMinutes);
+				csvGenerationTimes.push_back(timeOnView);
 				csvGenerationParameterValues.push_back(value);
 			}
 			else
@@ -4024,7 +4027,7 @@ void NFmiTimeSerialView::DrawModelRunsPlume(const NFmiPoint &theLatLonPoint, NFm
 
 					if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 					{
-						ScanDataForSpecialOperation(info, theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId);
+						ScanDataForSpecialOperation(info, theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId, 0);
 					}
 					else
 					{
@@ -4053,6 +4056,18 @@ void NFmiTimeSerialView::CalcOptimizedDrawingValues(const NFmiTimeBag &theTimesI
 	theXStepOut = xPos2 - theXStartPosOut;
 }
 
+static int CalcTimeOffsetInMinutes(boost::shared_ptr<NFmiFastQueryInfo>& info, const NFmiMetTime& viewStartTime)
+{
+	int timeOffsetInMinutes = 0;
+	if(NFmiFastInfoUtils::IsModelClimatologyData(info))
+	{
+		auto dataTime = viewStartTime;
+		dataTime.SetYear(info->TimeDescriptor().FirstTime().GetYear());
+		timeOffsetInMinutes = viewStartTime.DifferenceInMinutes(dataTime);
+	}
+	return timeOffsetInMinutes;
+}
+
 //--------------------------------------------------------
 // DrawLocationInTime
 //--------------------------------------------------------
@@ -4068,9 +4083,10 @@ bool NFmiTimeSerialView::DrawEditedDataLocationInTime_PreliminaryActions(const N
 
     if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
     {
+		int timeWhenDrawedInMinutes = ::CalcTimeOffsetInMinutes(itsInfo, itsAutoAdjustScanTimes.FirstTime());
         auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(Info());
         auto paramId = itsDrawParam->Param().GetParamIdent();
-        ScanDataForSpecialOperation(Info(), theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId);
+        ScanDataForSpecialOperation(Info(), theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId, timeWhenDrawedInMinutes);
         return false;
     }
 
@@ -4427,10 +4443,10 @@ std::string NFmiTimeSerialView::GetModelDataToolTipText(boost::shared_ptr<NFmiFa
 }
 
 // Huom! Täällä ei tarvitse välittää tuulen meta parametreista, koska kyse on tietyistä fraktiili parametreista
-std::string NFmiTimeSerialView::GetEcFraktileParamToolTipText(long theStartParamIndex, const std::string &theParName, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor, long theParamIndexIncrement)
+std::string NFmiTimeSerialView::GetEcFraktileParamToolTipText(boost::shared_ptr<NFmiFastQueryInfo>& theViewedInfo, long theStartParamIndex, const std::string &theParName, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor, long theParamIndexIncrement)
 {
 	std::string str;
-	boost::shared_ptr<NFmiFastQueryInfo> modelFractileInfo = itsCtrlViewDocumentInterface->GetFavoriteSurfaceModelFractileData();
+	boost::shared_ptr<NFmiFastQueryInfo> modelFractileInfo = itsCtrlViewDocumentInterface->GetBestSuitableModelFractileData(theViewedInfo);
 	if(modelFractileInfo && modelFractileInfo->Param(static_cast<FmiParameterName>(theStartParamIndex)))
 	{
 		str += "<br><hr color=red><br>";
@@ -4495,18 +4511,18 @@ std::string NFmiTimeSerialView::GetEcFraktileDataToolTipText(boost::shared_ptr<N
 {
 	std::string str;
 	// nyt ec fraktiileja on vain 5 pintaparametrille (T, RR, N, WS ja WG)
-	if(theViewedInfo->SizeLevels() == 1 && itsCtrlViewDocumentInterface->GetFavoriteSurfaceModelFractileData() && itsCtrlViewDocumentInterface->ShowHelperData2InTimeSerialView())
+	if(theViewedInfo->SizeLevels() == 1 && itsCtrlViewDocumentInterface->GetBestSuitableModelFractileData(theViewedInfo) && itsCtrlViewDocumentInterface->ShowHelperData2InTimeSerialView())
 	{
 		if(itsDrawParam->Param().GetParamIdent() == kFmiTemperature)
-			str += GetEcFraktileParamToolTipText(kFmiTemperatureF100, "T", theLatlon, theTime, theColor);
+			str += GetEcFraktileParamToolTipText(theViewedInfo, kFmiTemperatureF100, "T", theLatlon, theTime, theColor);
 		else if(itsDrawParam->Param().GetParamIdent() == kFmiPrecipitation1h)
-			str += GetEcFraktileParamToolTipText(kFmiTotalPrecipitationF100, "RR", theLatlon, theTime, theColor);
+			str += GetEcFraktileParamToolTipText(theViewedInfo, kFmiTotalPrecipitationF100, "RR", theLatlon, theTime, theColor);
 		else if(itsDrawParam->Param().GetParamIdent() == kFmiTotalCloudCover)
-			str += GetEcFraktileParamToolTipText(kFmiTotalCloudCoverF100, "N", theLatlon, theTime, theColor);
+			str += GetEcFraktileParamToolTipText(theViewedInfo, kFmiTotalCloudCoverF100, "N", theLatlon, theTime, theColor);
 		else if(itsDrawParam->Param().GetParamIdent() == kFmiWindSpeedMS) 
-			str += GetEcFraktileParamToolTipText(kFmiWindSpeedF100, "WS", theLatlon, theTime, theColor);
+			str += GetEcFraktileParamToolTipText(theViewedInfo, kFmiWindSpeedF100, "WS", theLatlon, theTime, theColor);
         else if(itsDrawParam->Param().GetParamIdent() == kFmiHourlyMaximumGust) 
-            str += GetEcFraktileParamToolTipText(kFmiWindGustF100, "WG", theLatlon, theTime, theColor);
+            str += GetEcFraktileParamToolTipText(theViewedInfo, kFmiWindGustF100, "WG", theLatlon, theTime, theColor);
 
 	} // end of help data 2}
 	return str;
@@ -5175,6 +5191,12 @@ std::string NFmiTimeSerialView::MakeCsvFullParameterNameString(boost::shared_ptr
 		if(drawParam)
 		{
 			auto parameterNameStr = CtrlViewUtils::GetParamNameString(drawParam, false, false, false, 0, true, false, true, nullptr);
+			if(!theInfo->IsGrid())
+			{
+				parameterNameStr += "(";
+				parameterNameStr += theInfo->Location()->GetName();
+				parameterNameStr += ")";
+			}
 			return parameterNameStr;
 		}
 /*

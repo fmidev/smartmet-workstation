@@ -10324,34 +10324,62 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return filteredData;
     }
 
-    boost::shared_ptr<NFmiFastQueryInfo> SeekMostFavoriteProducerData(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &dataVector, const std::vector<unsigned long> &favoriteProducers)
+    boost::shared_ptr<NFmiFastQueryInfo> SeekMostFavoriteProducerData(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &dataVector, const std::vector<unsigned long> &favoriteProducers, const NFmiLevel* actualLevel, const NFmiProducer &actualProducer)
     {
         if(dataVector.size())
         {
-            for(auto producer : favoriteProducers)
-            {
-                for(auto &info : dataVector)
-                {
-                    if(info->Producer()->GetIdent() == static_cast<long>(producer))
-                        return info;
-                }
-            }
-            // If producers not in favorite list, just return first on the vector
-            return dataVector[0];
+			boost::shared_ptr<NFmiFastQueryInfo> backupData = nullptr;
+			size_t backupDataIndex = 999;
+			// Katsotaan ensin löytyykö ihan täysosuma dataa
+			for(auto& info : dataVector)
+			{
+				auto isLevelDataWanted = actualLevel != nullptr;
+				auto isLevelData = info->SizeLevels() > 1;
+				auto isMatchingLevel = (isLevelDataWanted && isLevelData && info->Level(*actualLevel));
+				if(!isLevelDataWanted || isMatchingLevel)
+				{
+					auto currentInfoProducerId = info->Producer()->GetIdent();
+					if(actualProducer.GetIdent() == currentInfoProducerId)
+						return info;
+					auto favoriteIter = std::find(favoriteProducers.begin(), favoriteProducers.end(), currentInfoProducerId);
+					if(favoriteIter != favoriteProducers.end())
+					{
+						size_t diff = std::distance(favoriteProducers.begin(), favoriteIter);
+						if(diff < backupDataIndex)
+						{
+							backupDataIndex = diff;
+							backupData = info;
+						}
+					}
+				}
+			}
+
+			return backupData;
         }
         // Return empty if there is no data on vector
         return boost::shared_ptr<NFmiFastQueryInfo>();
     }
-
-    boost::shared_ptr<NFmiFastQueryInfo> GetFavoriteSurfaceModelFractileData()
+	
+    boost::shared_ptr<NFmiFastQueryInfo> GetBestSuitableModelFractileData(boost::shared_ptr<NFmiFastQueryInfo> &usedOriginalInfo)
     {
         auto infoVector = itsSmartInfoOrganizer->GetInfos(NFmiInfoData::kClimatologyData);
         auto filteredInfoVector = FilterOnlyGridSurfaceNonYearLongData(infoVector);
         // Seek first if there is data from these producers, in this order. 
         // If none found, then return first data in filtered list.
-        // 199 = harmonie, 54 = gfs, 260 = MEPS, 
-        std::vector<unsigned long> favoriteProducers{kFmiMTAECMWF, 199, 54, kFmiMTAHIRLAM, 260};
-        return SeekMostFavoriteProducerData(filteredInfoVector, favoriteProducers);
+        // 199 = harmonie, 54 = gfs, 260 = MEPS
+        std::vector<unsigned long> favoriteProducers{kFmiMTAECMWF, 260, 54, kFmiMTAHIRLAM, 199 };
+		const NFmiLevel* level = nullptr;
+		// Jos ei ole annettu usedOriginalInfo:a, niin silloin haetaan pääsääntöisesti Ec:n fraktiilidataa
+		NFmiProducer wantedProducer(kFmiMTAECMWF, "Ecmwf");
+		if(usedOriginalInfo)
+		{
+			wantedProducer = *usedOriginalInfo->Producer();
+			if(usedOriginalInfo->SizeLevels() > 1)
+			{
+				level = usedOriginalInfo->Level();
+			}
+		}
+        return SeekMostFavoriteProducerData(filteredInfoVector, favoriteProducers, level, wantedProducer);
     }
 
     std::vector<int> HelpDataIdsForParameterSelectionSystem()
@@ -12735,9 +12763,9 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetModelClimatol
     return pimpl->GetModelClimatologyData(theLevel);
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetFavoriteSurfaceModelFractileData()
+boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetBestSuitableModelFractileData(boost::shared_ptr<NFmiFastQueryInfo>& usedOriginalInfo)
 {
-    return pimpl->GetFavoriteSurfaceModelFractileData();
+    return pimpl->GetBestSuitableModelFractileData(usedOriginalInfo);
 }
 
 AddParams::ParameterSelectionSystem& NFmiEditMapGeneralDataDoc::ParameterSelectionSystem()
