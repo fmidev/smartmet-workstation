@@ -1294,6 +1294,7 @@ std::string NFmiConceptualDataView::ComposeToolTipText(const NFmiPoint & theRela
 	}
 
 	string str;
+	auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
 	if(itsConceptualObjectDatas.size())
 	{
 
@@ -1322,17 +1323,25 @@ std::string NFmiConceptualDataView::ComposeToolTipText(const NFmiPoint & theRela
 		if(minDistance < maxDistInMetres)
 		{
             ConceptualObjectData &tmpData = itsConceptualObjectDatas[minDistInd];
-			str += "Conceptual analysis info:\n";
+			str += "Conceptual analysis info:";
+			str = AddColorTagsToString(str, fontColor, true);
+			str += "\n";
             if(tmpData.itsInfoTextStr.empty())
     			str += ::MakeConceptualObjectInfoString(tmpData);
             else
     			str += tmpData.itsInfoTextStr;
 		}
 		else
+		{
 			str += "No Conceptual analysis object near";
+			str = AddColorTagsToString(str, fontColor, true);
+		}
 	}
 	else
+	{
 		str += "No conceptual analysis info";
+		str = AddColorTagsToString(str, fontColor, true);
+	}
 	return str;
 }
 

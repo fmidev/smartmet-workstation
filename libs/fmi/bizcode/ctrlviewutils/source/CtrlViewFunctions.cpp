@@ -318,7 +318,7 @@ namespace CtrlViewUtils
         if(fAddIdInfos)
             str += GetIdString(theDrawParam->Param().GetParamIdent());
 
-        if(fCrossSectionInfoWanted == false && info->SizeLevels() > 1)
+        if(fCrossSectionInfoWanted == false && info && info->SizeLevels() > 1)
         { 
             // muualla kuin poikkileikkauksissa halutaan level infoa, jos datassa on enemmän kuin 1 leveli
             if(dataType == NFmiInfoData::kHybridData || theDrawParam->Level().LevelType() == kFmiHybridLevel)

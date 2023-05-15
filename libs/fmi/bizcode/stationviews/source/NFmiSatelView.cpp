@@ -178,6 +178,8 @@ void NFmiSatelView::DrawImageOnDifferentProjection(boost::shared_ptr<NFmiArea> &
 std::string NFmiSatelView::ComposeToolTipText(const NFmiPoint& /* theRelativePoint */ )
 {
 	string str = itsDrawParam->ParameterAbbreviation();
+    auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
+    str = AddColorTagsToString(str, fontColor, true);
     str += " ";
 
     NFmiImageHolder imageHolder = GetImageFromCache();

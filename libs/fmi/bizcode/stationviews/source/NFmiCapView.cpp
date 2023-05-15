@@ -178,7 +178,10 @@ void NFmiCapView::drawSymbol(const std::shared_ptr<WarningMember>& warning, doub
 
 std::string NFmiCapView::ComposeToolTipText(const NFmiPoint& theRelativePoint)
 {
-    std::string str = "";
+    std::string str = "Cap-data: ";
+    auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
+    str = AddColorTagsToString(str, fontColor, true);
+    auto capDataStrBaseLength = str.size();
     if(capData_.warnings().size())
     {
         //Find correct warning and display its info
@@ -199,7 +202,7 @@ std::string NFmiCapView::ComposeToolTipText(const NFmiPoint& theRelativePoint)
             }
         }
     }
-    if(str.length() < 2)
+    if(str.length() < (capDataStrBaseLength + 2))
     {
         str += "No warning info";
     }
