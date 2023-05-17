@@ -600,16 +600,25 @@ namespace NFmiTempDataGenerator
         const NFmiProducer& wantedProducer,
         bool roundTimesToNearestSynopticTimes)
     {
-        // Tutkitaan ensin onko tekstidata vanhaa TEMP formaattia
-        std::unique_ptr<NFmiQueryData> newDataPtr(DecodeTEMP::MakeNewDataFromTEMPStr(tempRelatedStr, checkReportStr, tempStations, unknownStationLocation, wantedProducer, roundTimesToNearestSynopticTimes));
-        if(newDataPtr)
+        try
         {
-            // Jos oli TEMP formaattia ja data luotiin, palautetaan se
-            return newDataPtr;
-        }
+            // Tutkitaan ensin onko tekstidata vanhaa TEMP formaattia
+            std::unique_ptr<NFmiQueryData> newDataPtr(DecodeTEMP::MakeNewDataFromTEMPStr(tempRelatedStr, checkReportStr, tempStations, unknownStationLocation, wantedProducer, roundTimesToNearestSynopticTimes));
+            if(newDataPtr)
+            {
+                // Jos oli TEMP formaattia ja data luotiin, palautetaan se
+                return newDataPtr;
+            }
 
-        // Kokeillaan onko tekstidata uutta CSV formaattia luotausdatalle, mit‰ Wyomingin yliopisto k‰ytt‰‰ palveluissaan
-        return GenerateDataFromWyomingCsvText(tempRelatedStr, checkReportStr, tempStations, unknownStationLocation, wantedProducer, roundTimesToNearestSynopticTimes);
+            // Kokeillaan onko tekstidata uutta CSV formaattia luotausdatalle, mit‰ Wyomingin yliopisto k‰ytt‰‰ palveluissaan
+            return GenerateDataFromWyomingCsvText(tempRelatedStr, checkReportStr, tempStations, unknownStationLocation, wantedProducer, roundTimesToNearestSynopticTimes);
+        }
+        catch(std::exception& e)
+        {
+            checkReportStr = "Failed to create sounding data: ";
+            checkReportStr += e.what();
+        }
+        return nullptr;
     }
 
 

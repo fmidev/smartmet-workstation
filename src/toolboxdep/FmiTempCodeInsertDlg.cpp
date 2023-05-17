@@ -77,12 +77,9 @@ void CFmiTempCodeInsertDlg::OnBnClickedOk()
 void CFmiTempCodeInsertDlg::OnBnClickedButtonCheckClearTemps()
 {
 	// tyhjennä dokumentista TEMP-data ja ruudulta teksti
-	itsTempCodeInputStrU_ = _TEXT("");
-	std::string tempCodeCheckReportStr; // tätä ei käytetä koska dialogi suljetaan
-	CWaitCursor cursor;
-    itsSmartMetDocumentInterface->DoTEMPDataUpdate(std::string(CT2A(itsTempCodeInputStrU_)), tempCodeCheckReportStr);
+	itsTempCodeInputStrU_.Empty();
     itsSmartMetDocumentInterface->ClearTEMPData();
-	itsTempCheckRaportStrU_ = _TEXT("");
+	itsTempCheckRaportStrU_.Empty();
 	UpdateData(FALSE);
 }
 
