@@ -189,6 +189,10 @@ public:
     void CombinedMapModeSelectedBackgroundIndices(const std::string &newValue);
     std::string CombinedMapModeSelectedOverlayIndices() const;
     void CombinedMapModeSelectedOverlayIndices(const std::string& newValue);
+    FmiDirection TimeBoxLocation();
+    void TimeBoxLocation(FmiDirection newValue);
+    float TimeBoxTextSizeFactor();
+    void TimeBoxTextSizeFactor(float newValue);
 
 private:
     bool mInitialized; // ei sallita tupla initialisointia
@@ -213,6 +217,10 @@ private:
     boost::shared_ptr<CachedRegString> mCombinedMapModeSelectedBackgroundIndicesStr; 
     // Vastaava teksti overlay kartta-alueiden indekseille
     boost::shared_ptr<CachedRegString> mCombinedMapModeSelectedOverlayIndicesStr;
+    // Time-boxin sijainti
+    boost::shared_ptr<CachedRegInt> mTimeBoxLocation;
+    // Time-boxin tekstien yhteiskokokerroin
+    boost::shared_ptr<CachedRegDouble> mTimeBoxTextSizeFactor;
 };
 
 // Poikkileikkausnäyttöjen asetuksia Windows rekisterissä, SmartMet konffi kohtaisia

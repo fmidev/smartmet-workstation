@@ -222,6 +222,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	void SetRangeMeterDragEnd(const NFmiPoint& thePlace, bool mouseDragging);
 	void MoveRangeMeterStart(const NFmiPoint& thePlace);
 	float GetUsedTimeResolutionInHours();
+	bool HandleTimeBoxMouseWheel(const NFmiPoint& thePlace, unsigned long theKey, short theDelta);
 
     template<typename T>
     bool MakeParamHandlerViewActions(T action)
@@ -250,6 +251,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
     // T‰h‰n talletet‰‰n autocompletionissa piirrettyjen nimi laatikkojen ja piste makkerien laatikot. 
     // Kun etsit‰‰n paikkaa seuraavalle laatikoille, ne eiv‰t saa menn‰ p‰‰llekk‰in.
     std::vector<NFmiRect> itsAutoCompletionRects;
+	NFmiRect itsTimeBoxRelativeRect;
 
 
 #ifndef DISABLE_CPPRESTSDK

@@ -505,6 +505,8 @@ bool NFmiMapViewWinRegistry::Init(const std::string &baseRegistryPath, int mapIn
     mViewGridSizeStr = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, mSectionName, "\\ViewGridSize", usedKey, "1,1", std::string(mapViewBaseSettingsKey + "ViewGridSize").c_str());
     mCombinedMapModeSelectedBackgroundIndicesStr = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, mSectionName, "\\CombinedMapModeSelectedBackgroundIndices", usedKey, "4:0,0,0,0");
     mCombinedMapModeSelectedOverlayIndicesStr = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, mSectionName, "\\CombinedMapModeSelectedOverlayIndices", usedKey, "4:0,0,0,0");
+    mTimeBoxLocation = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionName, "\\TimeBoxLocation", usedKey, static_cast<int>(kBottomLeft));
+    mTimeBoxTextSizeFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, mSectionName, "\\TimeBoxTextSizeFactor", usedKey, 1);
     return true;
 }
 
@@ -585,6 +587,27 @@ std::string NFmiMapViewWinRegistry::CombinedMapModeSelectedOverlayIndices() cons
 void NFmiMapViewWinRegistry::CombinedMapModeSelectedOverlayIndices(const std::string& newValue)
 {
     *mCombinedMapModeSelectedOverlayIndicesStr = newValue;
+}
+
+FmiDirection NFmiMapViewWinRegistry::TimeBoxLocation()
+{
+    // Jostain syyst‰ pit‰‰ ensin castata int:iksi, ja vasta sitten FmiDirection:iksi
+    return (FmiDirection)(int)(*mTimeBoxLocation);
+}
+
+void NFmiMapViewWinRegistry::TimeBoxLocation(FmiDirection newValue)
+{
+    *mTimeBoxLocation = static_cast<int>(newValue);
+}
+
+float NFmiMapViewWinRegistry::TimeBoxTextSizeFactor()
+{
+    return static_cast<float>(*mTimeBoxTextSizeFactor);
+}
+
+void NFmiMapViewWinRegistry::TimeBoxTextSizeFactor(float newValue)
+{
+    *mTimeBoxTextSizeFactor = newValue;
 }
 
 // ******************************************************

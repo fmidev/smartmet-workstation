@@ -237,6 +237,9 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Read(std::istream& is)
 // ******* NFmiMapViewDescTop -luokka *************************************
 // ************************************************************************
 
+const float NFmiMapViewDescTop::itsTimeBoxTextSizeFactorMinLimit = 0.5f;
+const float NFmiMapViewDescTop::itsTimeBoxTextSizeFactorMaxLimit = 2.5f;
+
 NFmiMapViewDescTop::NFmiMapViewDescTop()
 :itsSettingsBaseName()
 ,itsMapViewDescTopIndex(0)
@@ -451,6 +454,8 @@ NFmiMapViewDescTop& NFmiMapViewDescTop::operator=(const NFmiMapViewDescTop& othe
 		ClearBaseLandBorderMapBitmap(); // deletoi ja nollaa itsLandBorderMapBitmap:in
 		itsSeparateCountryBorderBitmapCache = other.itsSeparateCountryBorderBitmapCache;
 		itsTrueMapViewSizeInfo = other.itsTrueMapViewSizeInfo;
+		itsTimeBoxLocationVM = other.itsTimeBoxLocationVM;
+		itsTimeBoxTextSizeFactorVM = other.itsTimeBoxTextSizeFactorVM;
 	}
 	return *this;
 }
@@ -499,6 +504,8 @@ void NFmiMapViewDescTop::InitFromMapViewWinRegistry(NFmiMapViewWinRegistry &theM
 	fShowStationPlotVM = theMapViewWinRegistry.ShowStationPlot();
     // stringi pit‰‰ muuttaa point-otukseksi ja lopuksi pit‰‰ tehd‰ j‰rkevyys tarkastelut
     ViewGridSize(::String2Point(theMapViewWinRegistry.ViewGridSizeStr()), nullptr);
+	TimeBoxLocation(theMapViewWinRegistry.TimeBoxLocation());
+	TimeBoxTextSizeFactor(theMapViewWinRegistry.TimeBoxTextSizeFactor());
 }
 
 void NFmiMapViewDescTop::StoreToMapViewWinRegistry(NFmiMapViewWinRegistry &theMapViewWinRegistry)
@@ -511,6 +518,8 @@ void NFmiMapViewDescTop::StoreToMapViewWinRegistry(NFmiMapViewWinRegistry &theMa
 
     // T‰t‰ s‰‰det‰‰n vain t‰nne, joten loppu tulos on aika-ajoin laitettava takaisin Win-rekistereihin.
     theMapViewWinRegistry.ViewGridSizeStr(::Point2String(itsViewGridSizeVM));
+	theMapViewWinRegistry.TimeBoxLocation(itsTimeBoxLocationVM);
+	theMapViewWinRegistry.TimeBoxTextSizeFactor(itsTimeBoxTextSizeFactorVM);
 }
 
 
@@ -1173,6 +1182,8 @@ void NFmiMapViewDescTop::InitForViewMacro(const NFmiMapViewDescTop& theOther, NF
 		theMapViewWinRegistry.ShowStationPlot(theOther.fShowStationPlotVM);
 		itsViewGridSizeVM = theOther.itsViewGridSizeVM;
 		theMapViewWinRegistry.ViewGridSizeStr(::Point2String(theOther.itsViewGridSizeVM));
+		TimeBoxLocation(theOther.itsTimeBoxLocationVM);
+		TimeBoxTextSizeFactor(theOther.itsTimeBoxTextSizeFactorVM);
 	}
 	itsTimeControlTimeStep = theOther.itsTimeControlTimeStep;
 	itsMapViewDisplayMode = theOther.itsMapViewDisplayMode;
@@ -1253,6 +1264,8 @@ void NFmiMapViewDescTop::Write(std::ostream& os) const
     // 'double' muotoisten lis‰datojen lis‰ys
 	extraData.Add(static_cast<double>(fLockToMainMapViewRow)); // talletetaan 1. extra-datana parametri rivin lukitus
 	extraData.Add(static_cast<double>(itsParamWindowViewPosition)); // talletetaan 2. extra-datana parametri-laatikon sijainti
+	extraData.Add(static_cast<double>(itsTimeBoxLocationVM)); // talletetaan 3. extra-datana time-laatikon sijainti
+	extraData.Add(static_cast<double>(itsTimeBoxTextSizeFactorVM)); // talletetaan 4. extra-datana time-laatikon tekstien kokokerroin
 
     // string muotoisten lis‰datojen lis‰ys
     std::stringstream extraDataStream;
@@ -1327,6 +1340,16 @@ void NFmiMapViewDescTop::Read(std::istream& is)
 	itsParamWindowViewPosition = showParamWindowView ? kTopLeft : kNoDirection;
 	if(extraData.itsDoubleValues.size() >= 2)
 		itsParamWindowViewPosition = static_cast<FmiDirection>(extraData.itsDoubleValues[1]);
+
+	// Luetaan 3. extra-datana time-laatikon sijainti
+	itsTimeBoxLocationVM = kBottomLeft;
+	if(extraData.itsDoubleValues.size() >= 3)
+		TimeBoxLocation(static_cast<FmiDirection>(extraData.itsDoubleValues[2]));
+
+	// Luetaan 4. extra-datana time-laatikon tekstien kokokerroin
+	itsTimeBoxTextSizeFactorVM = 1;
+	if(extraData.itsDoubleValues.size() >= 4)
+		TimeBoxTextSizeFactor(static_cast<float>(extraData.itsDoubleValues[3]));
 
     // string muotoisten lis‰datojen poiminta
     if(extraData.itsStringValues.size() >= 1)
@@ -1558,7 +1581,51 @@ void NFmiMapViewDescTop::ParamWindowViewPositionChange(bool forward)
 	itsParamWindowViewPosition = CtrlViewUtils::CalcFollowingParamWindowViewPosition(itsParamWindowViewPosition, forward);
 }
 
+void NFmiMapViewDescTop::TimeBoxPositionChange()
+{
+	TimeBoxLocation(CtrlViewUtils::MoveTimeBoxPositionForward(itsTimeBoxLocationVM));
+}
+
 bool NFmiMapViewDescTop::IsTimeControlViewVisibleTotal() const 
 { 
 	return !fPrintingModeOn && IsTimeControlViewVisible(); 
+}
+
+void NFmiMapViewDescTop::TimeBoxLocation(FmiDirection newLocation)
+{
+	switch(newLocation)
+	{
+	case kBottomLeft:
+	case kBottomCenter:
+	case kBottomRight:
+	case kTopLeft:
+	case kTopCenter:
+	case kTopRight:
+	{
+		itsTimeBoxLocationVM = newLocation;
+		break;
+	}
+	default:
+		itsTimeBoxLocationVM = kBottomLeft;
+		break;
+	}
+}
+
+void NFmiMapViewDescTop::TimeBoxTextSizeFactor(float newFactor) 
+{
+	if(newFactor < itsTimeBoxTextSizeFactorMinLimit)
+		newFactor = itsTimeBoxTextSizeFactorMinLimit;
+	if(newFactor > itsTimeBoxTextSizeFactorMaxLimit)
+		newFactor = itsTimeBoxTextSizeFactorMaxLimit;
+	itsTimeBoxTextSizeFactorVM = newFactor;
+}
+
+float NFmiMapViewDescTop::TimeBoxTextSizeFactorMinLimit()
+{
+	return itsTimeBoxTextSizeFactorMinLimit;
+}
+
+float NFmiMapViewDescTop::TimeBoxTextSizeFactorMaxLimit()
+{
+	return itsTimeBoxTextSizeFactorMaxLimit;
 }

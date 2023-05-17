@@ -35,6 +35,7 @@ public:
     const NFmiPoint& CrossSectionViewSizeInPixels(void) override;
     const NFmiPoint& MapViewSizeInPixels(int theMapViewDescTopIndex) override;
     bool Printing() override;
+    bool CreateMapViewTimeBoxPopup(unsigned int theDescTopIndex);
     bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue) override;
     void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool fMakeAreaViewDirty = false, bool fClearCache = false, int theWantedMapViewDescTop = -1) override;
     void RefreshApplicationViewsAndDialogs(const std::string& reasonForUpdate, SmartMetViewId updatedViewsFlag, bool redrawMapView = false, bool clearMapViewBitmapCacheRows = false, int theWantedMapViewDescTop = -1) override;

@@ -4368,6 +4368,81 @@ bool IsMapLayerSelectionCase(unsigned int theDescTopIndex, int theRowIndex, int 
 	return (theDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex) && (layerIndex == 0);
 }
 
+void AddSetLocationForTimeBoxPopup(std::unique_ptr<NFmiMenuItemList>& subMenuList, unsigned int theDescTopIndex, FmiDirection wantedLocation, std::string menuNameString)
+{
+	auto mapViewDescTop = GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex);
+	// Lisätään annettu uusi paikka popupiin, vain jos se ei ole sama kuin nykyinen sijainti
+	if(mapViewDescTop && mapViewDescTop->TimeBoxLocation() != wantedLocation)
+	{
+		// Varsinaiset halutut locationit talletetaan menuItem luokan extraParam kohdassa (FmiDirection enum castataan doubleksi)
+		auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuNameString, NFmiDataIdent(), kFmiSetTimeBoxLocation, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+		menuItem->ExtraParam(static_cast<double>(wantedLocation));
+		subMenuList->Add(std::move(menuItem));
+	}
+}
+
+void AddSetLocationSubMenuForTimeBoxPopup(std::unique_ptr<NFmiMenuItemList>& mainMenuList, unsigned int theDescTopIndex)
+{
+	std::string finalSetLocationMenuString = ::GetDictionaryString("Set time legend location");
+	auto setLocationMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, finalSetLocationMenuString, NFmiDataIdent(), kFmiSetTimeBoxLocation, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+	auto setLocationSubMenuItemList = std::make_unique<NFmiMenuItemList>();
+	AddSetLocationForTimeBoxPopup(setLocationSubMenuItemList, theDescTopIndex, kBottomLeft, "Bottom-left");
+	AddSetLocationForTimeBoxPopup(setLocationSubMenuItemList, theDescTopIndex, kTopLeft, "Top-left");
+	AddSetLocationForTimeBoxPopup(setLocationSubMenuItemList, theDescTopIndex, kTopCenter, "Top-center");
+	AddSetLocationForTimeBoxPopup(setLocationSubMenuItemList, theDescTopIndex, kTopRight, "Top-right");
+	AddSetLocationForTimeBoxPopup(setLocationSubMenuItemList, theDescTopIndex, kBottomRight, "Bottom-right");
+	AddSetLocationForTimeBoxPopup(setLocationSubMenuItemList, theDescTopIndex, kBottomCenter, "Bottom-center");
+
+	setLocationMenuItem->AddSubMenu(setLocationSubMenuItemList.release());
+	mainMenuList->Add(std::move(setLocationMenuItem));
+}
+
+void AddSetTextSizeFactorToSubMenu(std::unique_ptr<NFmiMenuItemList>& subMenuList, unsigned int theDescTopIndex, float textSizeFactor)
+{
+	auto mapViewDescTop = GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex);
+	// Lisätään annettu uusi paikka popupiin, vain jos se ei ole sama kuin nykyinen sijainti
+	if(mapViewDescTop && mapViewDescTop->TimeBoxTextSizeFactor() != textSizeFactor)
+	{
+		std::string textSizeFactorStr = NFmiValueString::GetStringWithMaxDecimalsSmartWay(textSizeFactor, 1);
+		auto setTextSizeValueMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, textSizeFactorStr, NFmiDataIdent(), kFmiSetTimeBoxTextSizeFactor, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+		// Haluttu size factor talletetaan menuItem luokan extraParam kohdassa
+		setTextSizeValueMenuItem->ExtraParam(textSizeFactor);
+		subMenuList->Add(std::move(setTextSizeValueMenuItem));
+	}
+}
+
+void AddSetTextSizeFactorSubMenuForTimeBoxPopup(std::unique_ptr<NFmiMenuItemList>& mainMenuList, unsigned int theDescTopIndex)
+{
+	std::string finalSetLocationMenuString = ::GetDictionaryString("Set text size factor");
+	auto setTextSizeMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, finalSetLocationMenuString, NFmiDataIdent(), kFmiSetTimeBoxTextSizeFactor, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+	auto setTextSizeSubMenuItemList = std::make_unique<NFmiMenuItemList>();
+
+	for(float textSizeFactor = NFmiMapViewDescTop::TimeBoxTextSizeFactorMinLimit(); textSizeFactor <= NFmiMapViewDescTop::TimeBoxTextSizeFactorMaxLimit(); textSizeFactor += 0.1f)
+	{
+		AddSetTextSizeFactorToSubMenu(setTextSizeSubMenuItemList, theDescTopIndex, textSizeFactor);
+	}
+	setTextSizeMenuItem->AddSubMenu(setTextSizeSubMenuItemList.release());
+	mainMenuList->Add(std::move(setTextSizeMenuItem));
+}
+
+bool CreateMapViewTimeBoxPopup(unsigned int theDescTopIndex)
+{
+	if(theDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+	{
+		itsPopupMenu = std::make_unique<NFmiMenuItemList>();
+
+		AddSetLocationSubMenuForTimeBoxPopup(itsPopupMenu, theDescTopIndex);
+		AddSetTextSizeFactorSubMenuForTimeBoxPopup(itsPopupMenu, theDescTopIndex);
+
+		if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
+			return false;
+
+		fOpenPopup = true;
+		return true;
+	}
+	return false;
+}
+
 bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue)
 {
 	if(IsMapLayerSelectionCase(theDescTopIndex, theRowIndex, layerIndex))
@@ -4830,6 +4905,12 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		case kFmiSelectBackgroundMapLayer:
 		case kFmiSelectOverlayMapLayer:
 			SelectMapLayerDirectly(*menuItem);
+			break;
+		case kFmiSetTimeBoxLocation:
+			GetCombinedMapHandler()->onSetTimeBoxLocation(menuItem->MapViewDescTopIndex(), static_cast<FmiDirection>(menuItem->ExtraParam()));
+			break;
+		case kFmiSetTimeBoxTextSizeFactor:
+			GetCombinedMapHandler()->onSetTimeBoxTextSizeFactor(menuItem->MapViewDescTopIndex(), static_cast<float>(menuItem->ExtraParam()));
 			break;
 
 		default:
@@ -11071,6 +11152,11 @@ bool NFmiEditMapGeneralDataDoc::CreateParamSelectionPopup(unsigned int theDescTo
 {
 	pimpl->itsCurrentViewRowIndex = theRowIndex;
 	return pimpl->CreateParamSelectionPopup(theDescTopIndex);
+}
+
+bool NFmiEditMapGeneralDataDoc::CreateMapViewTimeBoxPopup(unsigned int theDescTopIndex)
+{
+	return pimpl->CreateMapViewTimeBoxPopup(theDescTopIndex);
 }
 
 bool NFmiEditMapGeneralDataDoc::CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue)

@@ -314,7 +314,8 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
 	ON_COMMAND(ID_VIEW_SET_BETA_PRODUCTION_DLG_PLACE_TO_DEFAULT, &CSmartMetDoc::OnViewSetBetaProductionDlgPlaceToDefault)
 	ON_COMMAND(ID_EDIT_VISUALIZATIONSETTINGS, &CSmartMetDoc::OnEditVisualizationsettings)
 	ON_COMMAND(ID_MOVEVIEWSVISIBLE_VISUALIZATIONSETTINGSPOSITION, &CSmartMetDoc::OnMoveviewsvisibleVisualizationsettingsposition)
-	END_MESSAGE_MAP()
+		ON_COMMAND(ID_ACCELERATOR_MOVE_TIME_BOX_LOCATION, &CSmartMetDoc::OnAcceleratorMoveTimeBoxLocation)
+		END_MESSAGE_MAP()
 
 BEGIN_DISPATCH_MAP(CSmartMetDoc, CDocument)
 END_DISPATCH_MAP()
@@ -3804,4 +3805,10 @@ void CSmartMetDoc::SetAllMapViewTooltipDelays(bool doRestoreAction, int delayInM
 	SetTooltipDelay(ApplicationInterface::GetSmartMetView(), doRestoreAction, delayInMilliSeconds);
 	SetTooltipDelay(itsExtraMapViewDlg1->MapView(), doRestoreAction, delayInMilliSeconds);
 	SetTooltipDelay(itsExtraMapViewDlg2->MapView(), doRestoreAction, delayInMilliSeconds);
+}
+
+
+void CSmartMetDoc::OnAcceleratorMoveTimeBoxLocation()
+{
+	itsData->GetCombinedMapHandler()->onMoveTimeBoxLocation(itsMapViewDescTopIndex);
 }

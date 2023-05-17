@@ -4153,6 +4153,39 @@ void NFmiCombinedMapHandler::onChangeParamWindowPosition(unsigned int mapViewDes
 	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Show/Hide param-view");
 }
 
+void NFmiCombinedMapHandler::onMoveTimeBoxLocation(unsigned int mapViewDescTopIndex)
+{
+	auto* mapViewDescTop = getMapViewDescTop(mapViewDescTopIndex);
+	mapViewDescTop->TimeBoxPositionChange();
+	mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, false); // laitetaan kartta likaiseksi
+	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
+	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Move time-box to next position on map-view");
+}
+
+void NFmiCombinedMapHandler::onSetTimeBoxLocation(unsigned int mapViewDescTopIndex, FmiDirection newPosition)
+{
+	auto* mapViewDescTop = getMapViewDescTop(mapViewDescTopIndex);
+	if(mapViewDescTop && newPosition != mapViewDescTop->TimeBoxLocation())
+	{
+		mapViewDescTop->TimeBoxLocation(newPosition);
+		mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, false); // laitetaan kartta likaiseksi
+		CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
+		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Set time-box location on map-view");
+	}
+}
+
+void NFmiCombinedMapHandler::onSetTimeBoxTextSizeFactor(unsigned int mapViewDescTopIndex, float newSizeFactor)
+{
+	auto* mapViewDescTop = getMapViewDescTop(mapViewDescTopIndex);
+	if(mapViewDescTop && newSizeFactor != mapViewDescTop->TimeBoxTextSizeFactor())
+	{
+		mapViewDescTop->TimeBoxTextSizeFactor(newSizeFactor);
+		mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, false); // laitetaan kartta likaiseksi
+		CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
+		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Set time-box text size factor on map-view");
+	}
+}
+
 void NFmiCombinedMapHandler::onShowTimeString(unsigned int mapViewDescTopIndex)
 {
 	toggleShowTimeOnMapMode(mapViewDescTopIndex);

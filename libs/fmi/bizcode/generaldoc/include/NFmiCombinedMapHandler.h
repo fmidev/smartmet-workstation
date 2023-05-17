@@ -216,6 +216,9 @@ public:
     void onToggleGridPointSize(unsigned int mapViewDescTopIndex) override;
     void onEditSpaceOut(unsigned int mapViewDescTopIndex) override;
     void onChangeParamWindowPosition(unsigned int mapViewDescTopIndex, bool forward) override;
+    void onMoveTimeBoxLocation(unsigned int mapViewDescTopIndex) override;
+    void onSetTimeBoxLocation(unsigned int mapViewDescTopIndex, FmiDirection newPosition) override;
+    void onSetTimeBoxTextSizeFactor(unsigned int mapViewDescTopIndex, float newSizeFactor) override;
     void onShowTimeString(unsigned int mapViewDescTopIndex) override;
     WmsSupportInterface& getWmsSupport() override;
     void onToggleShowNamesOnMap(unsigned int mapViewDescTopIndex, bool goForward) override;

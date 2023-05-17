@@ -134,6 +134,7 @@ public:
 	CDC* MapBlitDC(void){return itsMapBlitDC;};
 	void MapBlitDC(CDC* theDC){itsMapBlitDC=theDC;};
 	void ParamWindowViewPositionChange(bool forward);
+	void TimeBoxPositionChange();
 	FmiDirection ParamWindowViewPosition() const { return itsParamWindowViewPosition; }
 
     boost::shared_ptr<Imagine::NFmiPath> LandBorderPath(void);
@@ -214,6 +215,12 @@ public:
 	void PrintingModeOn(bool newState) { fPrintingModeOn = newState; }
 	void UpdateOneMapViewSize();
 	bool IsTimeControlViewVisibleTotal() const;
+	FmiDirection TimeBoxLocation() const { return itsTimeBoxLocationVM; }
+	void TimeBoxLocation(FmiDirection newLocation);
+	float TimeBoxTextSizeFactor() const { return itsTimeBoxTextSizeFactorVM; }
+	void TimeBoxTextSizeFactor(float newFactor);
+	static float TimeBoxTextSizeFactorMinLimit();
+	static float TimeBoxTextSizeFactorMaxLimit();
 
 	// HUOM!! T‰m‰ laittaa kommentteja mukaan!
 	void Write(std::ostream& os) const;
@@ -353,6 +360,14 @@ private:
 	// Kun tullaan pois printtauksesta, pit‰‰ t‰m‰ taas laittaa false:ksi!
 	// T‰t‰ ei talleteta minnek‰‰n, eik‰ arvoa kopioida mitenk‰‰n.
 	bool fPrintingModeOn = false;
+	// Mihin kohtaan kartan aikalegenda piirret‰‰n (bottom-left/center/right tai top-left/center/right)
+	FmiDirection itsTimeBoxLocationVM = kBottomLeft;
+	// Aikatekstill‰ on konffattu kaksi eri teksti‰ ja niille s‰‰det‰‰n koot erikseen konffeissa.
+	// Tekstikokoja voidaan s‰‰t‰‰ t‰m‰n avulla pienemmiksi (arvo < 1) ja isommiksi (arvo > 1).
+	// Rajat t‰lle s‰‰dˆlle on laitettu 0.5 - 2.5.
+	float itsTimeBoxTextSizeFactorVM = 1.f;
+	static const float itsTimeBoxTextSizeFactorMinLimit;
+	static const float itsTimeBoxTextSizeFactorMaxLimit;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const NFmiMapViewDescTop& item){item.Write(os); return os;}

@@ -136,6 +136,11 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::Printing()
     return itsDoc->Printing();
 }
 
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::CreateMapViewTimeBoxPopup(unsigned int theDescTopIndex)
+{
+    return itsDoc->CreateMapViewTimeBoxPopup(theDescTopIndex);
+}
+
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue)
 {
     return itsDoc->CreateViewParamsPopup(theDescTopIndex, theRowIndex, layerIndex, layerIndexRealValue);

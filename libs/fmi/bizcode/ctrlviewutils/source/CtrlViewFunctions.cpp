@@ -586,6 +586,28 @@ namespace CtrlViewUtils
         }
     }
 
+    FmiDirection MoveTimeBoxPositionForward(FmiDirection currentPosition)
+    {
+        // kBottomLeft -> kTopLeft -> kTopCenter -> kTopRight -> kBottomRight -> kBottomCenter -> kBottomLeft ...
+        switch(currentPosition)
+        {
+        case kBottomLeft:
+            return kTopLeft;
+        case kTopLeft:
+            return kTopCenter;
+        case kTopCenter:
+            return kTopRight;
+        case kTopRight:
+            return kBottomRight;
+        case kBottomRight:
+            return kBottomCenter;
+        case kBottomCenter:
+            return kBottomLeft;
+        default:
+            return kBottomLeft;
+        }
+    }
+
     FileNameWithTimeList TimeSortFiles(FileNameWithTimeList filesWithTimesCopy, bool descending)
     {
         filesWithTimesCopy.sort(

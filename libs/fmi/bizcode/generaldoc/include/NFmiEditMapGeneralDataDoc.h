@@ -512,6 +512,7 @@ public:
 	void OpenPopupMenu(bool newState);
 	bool CreateMaskSelectionPopup(void);
 	bool CreateParamSelectionPopup(unsigned int theDescTopIndex, int theRowIndex);
+	bool CreateMapViewTimeBoxPopup(unsigned int theDescTopIndex);
 	bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue);
 	bool CreateMaskSelectionPopup(int theRowIndex);
 	bool CreateMaskParamsPopup(int theRowIndex, int index);

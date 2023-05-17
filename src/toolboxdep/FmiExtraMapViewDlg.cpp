@@ -153,6 +153,7 @@ ON_COMMAND(ID_BUTTON_OPEN_SOUNDING_VIEW_EXTRA_MAP, &CFmiExtraMapViewDlg::OnButto
 ON_COMMAND(ID_BUTTON_OPEN_CROSSSECTION_VIEW_EXTRA_MAP, &CFmiExtraMapViewDlg::OnButtonOpenCrosssectionViewExtraMap)
 ON_COMMAND(ID_BUTTON_OPEN_VIEW_MACRO_DIALOG_EXTRA_MAP, &CFmiExtraMapViewDlg::OnButtonOpenViewMacroDialogExtraMap)
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_LOCK_MODE_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterLockModeToggle)
+ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_MOVE_TIME_BOX_LOCATION, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapMoveTimeBoxLocation)
 END_MESSAGE_MAP()
 
 
@@ -985,4 +986,10 @@ void CFmiExtraMapViewDlg::OnButtonOpenCrosssectionViewExtraMap()
 void CFmiExtraMapViewDlg::OnButtonOpenViewMacroDialogExtraMap()
 {
 	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenViewMacroDialog();
+}
+
+
+void CFmiExtraMapViewDlg::OnAcceleratorExtraMapMoveTimeBoxLocation()
+{
+	itsSmartMetDocumentInterface->GetCombinedMapHandlerInterface().onMoveTimeBoxLocation(itsMapViewDescTopIndex);
 }
