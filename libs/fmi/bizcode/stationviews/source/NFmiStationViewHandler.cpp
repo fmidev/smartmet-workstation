@@ -2079,7 +2079,7 @@ void NFmiStationViewHandler::DrawTimeText(void)
 				FmiDirection timeBoxLocation = currentBetaProduct ? currentBetaProduct->TimeBoxLocation() : mapViewDescTop->TimeBoxLocation();
 				StationViews::PlaceBoxIntoFrame(timeBox, GetFrame(), itsToolBox, timeBoxLocation);
 
-				Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(timeLabelInfo.BoxFillColor()));
+				Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(mapViewDescTop->TimeBoxFillColor()));
 				Gdiplus::GraphicsPath aPath;
 				Gdiplus::Rect gdiRect(static_cast<INT>(timeBox.Left()), static_cast<INT>(timeBox.Top()), static_cast<INT>(timeBox.Width()), static_cast<INT>(timeBox.Height())); // = CFmiGdiPlusHelpers::Relative2GdiplusRect(itsToolBox, timeBox);
 				itsTimeBoxRelativeRect = CtrlView::GdiplusRect2Relative(itsToolBox, gdiRect);
@@ -2639,11 +2639,24 @@ bool NFmiStationViewHandler::HandleTimeBoxMouseWheel(const NFmiPoint& thePlace, 
 	auto *mapViewDescTop = itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().getMapViewDescTop(itsMapViewDescTopIndex);
 	if(mapViewDescTop)
 	{
-		auto origTextSizeFactor = mapViewDescTop->TimeBoxTextSizeFactor();
-		auto newValue = origTextSizeFactor + (theDelta > 0 ? 0.1f : -0.1f);
-		mapViewDescTop->TimeBoxTextSizeFactor(newValue);
-		// Palautetaan true, jos kerroin on oikeasti muuttunut
-		return origTextSizeFactor != mapViewDescTop->TimeBoxTextSizeFactor();
+		if((theKey & kCtrlKey) && (theKey & kShiftKey))
+		{
+			// CTRL + SHIFT pohjassa tehdään taustavärin alpha kanavan säätöä
+			auto origAlpha = mapViewDescTop->GetTimeBoxFillColorAlpha();
+			auto newAlphaValue = origAlpha + (theDelta > 0 ? 0.05f : -0.05f);
+			mapViewDescTop->SetTimeBoxFillColorAlpha(newAlphaValue);
+			// Palautetaan true, jos kerroin on oikeasti muuttunut
+			return origAlpha != mapViewDescTop->GetTimeBoxFillColorAlpha();
+		}
+		if((theKey & kCtrlKey))
+		{
+			// CTRL pohjassa tehdään kokokertoimen säätöä
+			auto origTextSizeFactor = mapViewDescTop->TimeBoxTextSizeFactor();
+			auto newValue = origTextSizeFactor + (theDelta > 0 ? 0.1f : -0.1f);
+			mapViewDescTop->TimeBoxTextSizeFactor(newValue);
+			// Palautetaan true, jos kerroin on oikeasti muuttunut
+			return origTextSizeFactor != mapViewDescTop->TimeBoxTextSizeFactor();
+		}
 	}
 	return false;
 }

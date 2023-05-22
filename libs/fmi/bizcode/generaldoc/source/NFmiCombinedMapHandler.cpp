@@ -4162,7 +4162,7 @@ void NFmiCombinedMapHandler::onMoveTimeBoxLocation(unsigned int mapViewDescTopIn
 	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Move time-box to next position on map-view");
 }
 
-void NFmiCombinedMapHandler::onSetTimeBoxLocation(unsigned int mapViewDescTopIndex, FmiDirection newPosition)
+bool NFmiCombinedMapHandler::onSetTimeBoxLocation(unsigned int mapViewDescTopIndex, FmiDirection newPosition)
 {
 	auto* mapViewDescTop = getMapViewDescTop(mapViewDescTopIndex);
 	if(mapViewDescTop && newPosition != mapViewDescTop->TimeBoxLocation())
@@ -4171,10 +4171,12 @@ void NFmiCombinedMapHandler::onSetTimeBoxLocation(unsigned int mapViewDescTopInd
 		mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, false); // laitetaan kartta likaiseksi
 		CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
 		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Set time-box location on map-view");
+		return true;
 	}
+	return false;
 }
 
-void NFmiCombinedMapHandler::onSetTimeBoxTextSizeFactor(unsigned int mapViewDescTopIndex, float newSizeFactor)
+bool NFmiCombinedMapHandler::onSetTimeBoxTextSizeFactor(unsigned int mapViewDescTopIndex, float newSizeFactor)
 {
 	auto* mapViewDescTop = getMapViewDescTop(mapViewDescTopIndex);
 	if(mapViewDescTop && newSizeFactor != mapViewDescTop->TimeBoxTextSizeFactor())
@@ -4183,7 +4185,35 @@ void NFmiCombinedMapHandler::onSetTimeBoxTextSizeFactor(unsigned int mapViewDesc
 		mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, false); // laitetaan kartta likaiseksi
 		CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
 		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Set time-box text size factor on map-view");
+		return true;
 	}
+	return false;
+}
+
+void NFmiCombinedMapHandler::onSetTimeBoxFillColor(unsigned int mapViewDescTopIndex, NFmiColor newColorNoAlpha)
+{
+	auto* mapViewDescTop = getMapViewDescTop(mapViewDescTopIndex);
+	if(mapViewDescTop)
+	{
+		mapViewDescTop->SetTimeBoxFillColor(newColorNoAlpha);
+		mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, false); // laitetaan kartta likaiseksi
+		CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
+		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Set time-box fill color on map-view");
+	}
+}
+
+bool NFmiCombinedMapHandler::onSetTimeBoxFillColorAlpha(unsigned int mapViewDescTopIndex, float newColorAlpha)
+{
+	auto* mapViewDescTop = getMapViewDescTop(mapViewDescTopIndex);
+	if(mapViewDescTop && mapViewDescTop->GetTimeBoxFillColorAlpha() != newColorAlpha)
+	{
+		mapViewDescTop->SetTimeBoxFillColorAlpha(newColorAlpha);
+		mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, false); // laitetaan kartta likaiseksi
+		CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
+		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Set time-box fill color alpha on map-view");
+		return true;
+	}
+	return false;
 }
 
 void NFmiCombinedMapHandler::onShowTimeString(unsigned int mapViewDescTopIndex)

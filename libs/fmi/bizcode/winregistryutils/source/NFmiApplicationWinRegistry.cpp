@@ -11,6 +11,7 @@
 #include "catlog/catlog.h"
 #include "NFmiCategoryHeaderInitData.h"
 #include "NFmiLocation.h"
+#include "NFmiDrawParam.h"
 
 #include <unordered_map>
 
@@ -507,6 +508,7 @@ bool NFmiMapViewWinRegistry::Init(const std::string &baseRegistryPath, int mapIn
     mCombinedMapModeSelectedOverlayIndicesStr = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, mSectionName, "\\CombinedMapModeSelectedOverlayIndices", usedKey, "4:0,0,0,0");
     mTimeBoxLocation = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionName, "\\TimeBoxLocation", usedKey, static_cast<int>(kBottomLeft));
     mTimeBoxTextSizeFactor = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, mSectionName, "\\TimeBoxTextSizeFactor", usedKey, 1);
+    mTimeBoxFillColorStr = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, mSectionName, "\\TimeBoxFillColor", usedKey, "1 1 1 0.4");
     return true;
 }
 
@@ -608,6 +610,16 @@ float NFmiMapViewWinRegistry::TimeBoxTextSizeFactor()
 void NFmiMapViewWinRegistry::TimeBoxTextSizeFactor(float newValue)
 {
     *mTimeBoxTextSizeFactor = newValue;
+}
+
+NFmiColor NFmiMapViewWinRegistry::TimeBoxFillColor()
+{
+    return NFmiDrawParam::String2Color(*mTimeBoxFillColorStr);
+}
+
+void NFmiMapViewWinRegistry::TimeBoxFillColor(const NFmiColor& newColor)
+{
+    *mTimeBoxFillColorStr = NFmiDrawParam::Color2String(newColor);
 }
 
 // ******************************************************

@@ -189,8 +189,10 @@ public:
     virtual void onEditSpaceOut(unsigned int mapViewDescTopIndex) = 0;
     virtual void onChangeParamWindowPosition(unsigned int mapViewDescTopIndex, bool forward) = 0;
     virtual void onMoveTimeBoxLocation(unsigned int mapViewDescTopIndex) = 0;
-    virtual void onSetTimeBoxLocation(unsigned int mapViewDescTopIndex, FmiDirection newPosition) = 0;
-    virtual void onSetTimeBoxTextSizeFactor(unsigned int mapViewDescTopIndex, float newSizeFactor) = 0;
+    virtual bool onSetTimeBoxLocation(unsigned int mapViewDescTopIndex, FmiDirection newPosition) = 0;
+    virtual bool onSetTimeBoxTextSizeFactor(unsigned int mapViewDescTopIndex, float newSizeFactor) = 0;
+    virtual void onSetTimeBoxFillColor(unsigned int mapViewDescTopIndex, NFmiColor newColorNoAlpha) = 0;
+    virtual bool onSetTimeBoxFillColorAlpha(unsigned int mapViewDescTopIndex, float newColorAlpha) = 0;
     virtual void onShowTimeString(unsigned int mapViewDescTopIndex) = 0;
     virtual WmsSupportInterface& getWmsSupport() = 0;
     virtual void onToggleShowNamesOnMap(unsigned int mapViewDescTopIndex, bool goForward) = 0;

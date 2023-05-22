@@ -221,6 +221,12 @@ public:
 	void TimeBoxTextSizeFactor(float newFactor);
 	static float TimeBoxTextSizeFactorMinLimit();
 	static float TimeBoxTextSizeFactorMaxLimit();
+	const NFmiColor& TimeBoxFillColor() const { return itsTimeBoxFillColorVM; }
+	void TimeBoxFillColor(const NFmiColor &newColor) { itsTimeBoxFillColorVM = newColor; }
+	void SetTimeBoxFillColor(NFmiColor newColorNotAlpha);
+	float GetTimeBoxFillColorAlpha() const { return itsTimeBoxFillColorVM.Alpha(); }
+	void SetTimeBoxFillColorAlpha(float newAlpha);
+	static const NFmiColor TimeBoxFillColorDefault;
 
 	// HUOM!! Tämä laittaa kommentteja mukaan!
 	void Write(std::ostream& os) const;
@@ -368,6 +374,8 @@ private:
 	float itsTimeBoxTextSizeFactorVM = 1.f;
 	static const float itsTimeBoxTextSizeFactorMinLimit;
 	static const float itsTimeBoxTextSizeFactorMaxLimit;
+	// Aikatekstin laatikon pohjaväri ja sen alpha on tallessa tässä
+	NFmiColor itsTimeBoxFillColorVM = TimeBoxFillColorDefault;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const NFmiMapViewDescTop& item){item.Write(os); return os;}

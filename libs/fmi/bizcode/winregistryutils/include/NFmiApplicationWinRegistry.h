@@ -193,6 +193,8 @@ public:
     void TimeBoxLocation(FmiDirection newValue);
     float TimeBoxTextSizeFactor();
     void TimeBoxTextSizeFactor(float newValue);
+    NFmiColor TimeBoxFillColor();
+    void TimeBoxFillColor(const NFmiColor &newColor);
 
 private:
     bool mInitialized; // ei sallita tupla initialisointia
@@ -221,6 +223,8 @@ private:
     boost::shared_ptr<CachedRegInt> mTimeBoxLocation;
     // Time-boxin tekstien yhteiskokokerroin
     boost::shared_ptr<CachedRegDouble> mTimeBoxTextSizeFactor;
+    // Time-boxin pohjaväri alpha-kertoimen kera
+    boost::shared_ptr<CachedRegString> mTimeBoxFillColorStr;
 };
 
 // Poikkileikkausnäyttöjen asetuksia Windows rekisterissä, SmartMet konffi kohtaisia

@@ -145,6 +145,7 @@
 #include "NFmiLedLightStatus.h"
 #include "NFmiTempDataGenerator.h"
 #include "FmiDataLoadingThread2.h"
+#include "CtrlViewGdiPlusFunctions.h"
 
 #include "AnimationProfiler.h"
 
@@ -4425,6 +4426,110 @@ void AddSetTextSizeFactorSubMenuForTimeBoxPopup(std::unique_ptr<NFmiMenuItemList
 	mainMenuList->Add(std::move(setTextSizeMenuItem));
 }
 
+void AddSetAlphaToSubMenu(std::unique_ptr<NFmiMenuItemList>& subMenuList, unsigned int theDescTopIndex, float alphaValue)
+{
+	auto mapViewDescTop = GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex);
+	// Lis‰t‰‰n annettu uusi paikka popupiin, vain jos se ei ole sama kuin nykyinen sijainti
+	if(mapViewDescTop && mapViewDescTop->GetTimeBoxFillColorAlpha() != alphaValue)
+	{
+		std::string alphaStr = std::to_string(boost::math::iround((1.f - alphaValue) * 100));
+		alphaStr += " %";
+		auto setAlphaMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, alphaStr, NFmiDataIdent(), kFmiSetTimeBoxFillColorAlpha, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+		// Haluttu alpha kerroin talletetaan menuItem luokan extraParam kohdassa
+		setAlphaMenuItem->ExtraParam(alphaValue);
+		subMenuList->Add(std::move(setAlphaMenuItem));
+	}
+}
+
+const std::vector<float> gTimeBoxFillColorAlphaValues{ 0, 0.05f, 0.1f, 0.15f, 0.2f, 0.25f, 0.3f, 0.35f, 0.4f, 0.45f, 0.5f, 0.55f, 0.6f, 0.65f, 0.7f, 0.75f, 0.8f, 0.85f, 0.9f, 0.95f, 1 };
+
+void AddSetTimeBoxFillColorAlphaSubMenuForTimeBoxPopup(std::unique_ptr<NFmiMenuItemList>& mainMenuList, unsigned int theDescTopIndex)
+{
+	std::string finalSetLocationMenuString = ::GetDictionaryString("Set fill color alpha");
+	auto setTextSizeMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, finalSetLocationMenuString, NFmiDataIdent(), kFmiSetTimeBoxFillColorAlpha, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+	auto setTextSizeSubMenuItemList = std::make_unique<NFmiMenuItemList>();
+
+	for(auto alphaValue : gTimeBoxFillColorAlphaValues)
+	{
+		AddSetAlphaToSubMenu(setTextSizeSubMenuItemList, theDescTopIndex, alphaValue);
+	}
+	setTextSizeMenuItem->AddSubMenu(setTextSizeSubMenuItemList.release());
+	mainMenuList->Add(std::move(setTextSizeMenuItem));
+}
+
+const std::string gTimeBoxFillColorCustomName = "custom color";
+
+void AddSetTimeBoxFillColorToSubMenu(std::unique_ptr<NFmiMenuItemList>& subMenuList, unsigned int theDescTopIndex, const std::string& name, const NFmiColor& color)
+{
+	auto mapViewDescTop = GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex);
+	// Lis‰t‰‰n annettu uusi paikka popupiin, vain jos se ei ole sama kuin nykyinen sijainti
+	if(mapViewDescTop)
+	{
+		bool useCustomColor = (name == gTimeBoxFillColorCustomName);
+		auto usedMenuCommand = useCustomColor ? kFmiSetTimeBoxCustomFillColor : kFmiSetTimeBoxFillColor;
+		auto setAlphaMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, name, NFmiDataIdent(), usedMenuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+		// Haluttu alpha kerroin talletetaan menuItem luokan extraParam kohdassa
+		setAlphaMenuItem->ExtraTextParam(NFmiDrawParam::Color2String(color));
+		subMenuList->Add(std::move(setAlphaMenuItem));
+	}
+}
+
+void DoTimeBoxCustomFillColorSetup(NFmiMenuItem& theMenuItem)
+{
+	auto* parentView = ApplicationInterface::GetApplicationInterfaceImplementation()->GetView(theMenuItem.MapViewDescTopIndex());
+	auto color = NFmiDrawParam::String2Color(theMenuItem.ExtraTextParam());
+	auto colorRef = CtrlView::Color2ColorRef(color);
+	CColorDialog dlg(colorRef, 0, parentView);
+	if(dlg.DoModal() == IDOK)
+	{
+		auto newColorRef = dlg.GetColor();
+		auto newColor = CtrlView::ColorRef2Color(newColorRef);
+
+		GetCombinedMapHandler()->onSetTimeBoxFillColor(theMenuItem.MapViewDescTopIndex(), newColor);
+	}
+}
+
+void SetTimeBoxFillColorFromMenu(NFmiMenuItem& theMenuItem)
+{
+	if(theMenuItem.ExtraTextParam() == gTimeBoxFillColorCustomName)
+	{
+		DoTimeBoxCustomFillColorSetup(theMenuItem);
+	}
+	else
+	{
+		GetCombinedMapHandler()->onSetTimeBoxFillColor(theMenuItem.MapViewDescTopIndex(), NFmiDrawParam::String2Color(theMenuItem.ExtraTextParam()));
+	}
+}
+
+const float gBaseChannelValue = 0.85f;
+
+const std::vector<std::pair<std::string, NFmiColor>> gTimeBoxFillColorsWithNames
+{ 
+	std::make_pair(gTimeBoxFillColorCustomName, NFmiColor(1,1,1,0.4f)),
+	std::make_pair("white", NFmiColor(1,1,1,0.4f)),
+	std::make_pair("light grey", NFmiColor(gBaseChannelValue,gBaseChannelValue,gBaseChannelValue,0.4f)),
+	std::make_pair("light green", NFmiColor(gBaseChannelValue,1,gBaseChannelValue,0.4f)),
+	std::make_pair("light red", NFmiColor(1,gBaseChannelValue,gBaseChannelValue,0.4f)),
+	std::make_pair("light blue", NFmiColor(gBaseChannelValue,gBaseChannelValue,1,0.4f)),
+	std::make_pair("light yellow", NFmiColor(1,1,gBaseChannelValue,0.4f)),
+	std::make_pair("light magenta", NFmiColor(1,gBaseChannelValue,1,0.4f)),
+	std::make_pair("light cyan", NFmiColor(gBaseChannelValue,1,1,0.4f)),
+};
+
+void AddSetTimeBoxFillColorSubMenuForTimeBoxPopup(std::unique_ptr<NFmiMenuItemList>& mainMenuList, unsigned int theDescTopIndex)
+{
+	std::string finalSetLocationMenuString = ::GetDictionaryString("Set fill color");
+	auto setTextSizeMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, finalSetLocationMenuString, NFmiDataIdent(), kFmiSetTimeBoxFillColor, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+	auto setTextSizeSubMenuItemList = std::make_unique<NFmiMenuItemList>();
+
+	for(const auto &nameColorPair : gTimeBoxFillColorsWithNames)
+	{
+		AddSetTimeBoxFillColorToSubMenu(setTextSizeSubMenuItemList, theDescTopIndex, nameColorPair.first, nameColorPair.second);
+	}
+	setTextSizeMenuItem->AddSubMenu(setTextSizeSubMenuItemList.release());
+	mainMenuList->Add(std::move(setTextSizeMenuItem));
+}
+
 bool CreateMapViewTimeBoxPopup(unsigned int theDescTopIndex)
 {
 	if(theDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
@@ -4433,6 +4538,8 @@ bool CreateMapViewTimeBoxPopup(unsigned int theDescTopIndex)
 
 		AddSetLocationSubMenuForTimeBoxPopup(itsPopupMenu, theDescTopIndex);
 		AddSetTextSizeFactorSubMenuForTimeBoxPopup(itsPopupMenu, theDescTopIndex);
+		AddSetTimeBoxFillColorAlphaSubMenuForTimeBoxPopup(itsPopupMenu, theDescTopIndex);
+		AddSetTimeBoxFillColorSubMenuForTimeBoxPopup(itsPopupMenu, theDescTopIndex);
 
 		if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
 			return false;
@@ -4911,6 +5018,15 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 			break;
 		case kFmiSetTimeBoxTextSizeFactor:
 			GetCombinedMapHandler()->onSetTimeBoxTextSizeFactor(menuItem->MapViewDescTopIndex(), static_cast<float>(menuItem->ExtraParam()));
+			break;
+		case kFmiSetTimeBoxFillColorAlpha:
+			GetCombinedMapHandler()->onSetTimeBoxFillColorAlpha(menuItem->MapViewDescTopIndex(), static_cast<float>(menuItem->ExtraParam()));
+			break;
+		case kFmiSetTimeBoxFillColor:
+			SetTimeBoxFillColorFromMenu(*menuItem);
+			break;
+		case kFmiSetTimeBoxCustomFillColor:
+			DoTimeBoxCustomFillColorSetup(*menuItem);
 			break;
 
 		default:

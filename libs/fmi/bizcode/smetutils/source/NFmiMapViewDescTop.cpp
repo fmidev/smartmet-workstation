@@ -239,6 +239,7 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Read(std::istream& is)
 
 const float NFmiMapViewDescTop::itsTimeBoxTextSizeFactorMinLimit = 0.5f;
 const float NFmiMapViewDescTop::itsTimeBoxTextSizeFactorMaxLimit = 2.5f;
+const NFmiColor NFmiMapViewDescTop::TimeBoxFillColorDefault = NFmiColor(1, 1, 1, 0.4f);
 
 NFmiMapViewDescTop::NFmiMapViewDescTop()
 :itsSettingsBaseName()
@@ -456,6 +457,7 @@ NFmiMapViewDescTop& NFmiMapViewDescTop::operator=(const NFmiMapViewDescTop& othe
 		itsTrueMapViewSizeInfo = other.itsTrueMapViewSizeInfo;
 		itsTimeBoxLocationVM = other.itsTimeBoxLocationVM;
 		itsTimeBoxTextSizeFactorVM = other.itsTimeBoxTextSizeFactorVM;
+		itsTimeBoxFillColorVM = other.itsTimeBoxFillColorVM;
 	}
 	return *this;
 }
@@ -506,6 +508,7 @@ void NFmiMapViewDescTop::InitFromMapViewWinRegistry(NFmiMapViewWinRegistry &theM
     ViewGridSize(::String2Point(theMapViewWinRegistry.ViewGridSizeStr()), nullptr);
 	TimeBoxLocation(theMapViewWinRegistry.TimeBoxLocation());
 	TimeBoxTextSizeFactor(theMapViewWinRegistry.TimeBoxTextSizeFactor());
+	itsTimeBoxFillColorVM = theMapViewWinRegistry.TimeBoxFillColor();
 }
 
 void NFmiMapViewDescTop::StoreToMapViewWinRegistry(NFmiMapViewWinRegistry &theMapViewWinRegistry)
@@ -520,6 +523,7 @@ void NFmiMapViewDescTop::StoreToMapViewWinRegistry(NFmiMapViewWinRegistry &theMa
     theMapViewWinRegistry.ViewGridSizeStr(::Point2String(itsViewGridSizeVM));
 	theMapViewWinRegistry.TimeBoxLocation(itsTimeBoxLocationVM);
 	theMapViewWinRegistry.TimeBoxTextSizeFactor(itsTimeBoxTextSizeFactorVM);
+	theMapViewWinRegistry.TimeBoxFillColor(itsTimeBoxFillColorVM);
 }
 
 
@@ -1184,6 +1188,7 @@ void NFmiMapViewDescTop::InitForViewMacro(const NFmiMapViewDescTop& theOther, NF
 		theMapViewWinRegistry.ViewGridSizeStr(::Point2String(theOther.itsViewGridSizeVM));
 		TimeBoxLocation(theOther.itsTimeBoxLocationVM);
 		TimeBoxTextSizeFactor(theOther.itsTimeBoxTextSizeFactorVM);
+		TimeBoxFillColor(theOther.itsTimeBoxFillColorVM);
 	}
 	itsTimeControlTimeStep = theOther.itsTimeControlTimeStep;
 	itsMapViewDisplayMode = theOther.itsMapViewDisplayMode;
@@ -1273,6 +1278,7 @@ void NFmiMapViewDescTop::Write(std::ostream& os) const
 	extraData.Add(extraDataStream.str()); // talletetaan 1. extra-datana animaatioon liittyv‰ data yhten‰ stringin‰
 	std::string timeBagStr = NFmiDataStoringHelpers::GetTimeBagOffSetStr(usedViewMacroTime, *(TimeControlViewTimes().ValidTimeBag()));
 	extraData.Add(timeBagStr); // lis‰t‰‰n 2. extra-datana aikaikkunan timebagi offsettina currenttiin aikaan
+	extraData.Add(NFmiDrawParam::Color2String(itsTimeBoxFillColorVM)); // lis‰t‰‰n 3. extra-datana kartan aikalegendan taustav‰ri tekstin‰
 
 	os << "// possible extra data" << std::endl;
 	os << extraData;
@@ -1366,6 +1372,14 @@ void NFmiMapViewDescTop::Read(std::istream& is)
 			throw std::runtime_error("NFmiMapViewDescTop::Read failed");
 		NFmiTimeBag times = NFmiDataStoringHelpers::GetTimeBagOffSetFromStr(usedViewMacroTime, extraData.itsStringValues[1]);
 		TimeControlViewTimes(NFmiTimeDescriptor(times.FirstTime(), times));
+	}
+	itsTimeBoxFillColorVM = TimeBoxFillColorDefault;
+	if(extraData.itsStringValues.size() >= 3)
+	{
+		// luetaan 3. extra-datana aikalegendan pohjav‰ritys
+		if(is.fail())
+			throw std::runtime_error("NFmiMapViewDescTop::Read failed");
+		itsTimeBoxFillColorVM = NFmiDrawParam::String2Color(extraData.itsStringValues[2]);
 	}
 
 	if(is.fail())
@@ -1628,4 +1642,21 @@ float NFmiMapViewDescTop::TimeBoxTextSizeFactorMinLimit()
 float NFmiMapViewDescTop::TimeBoxTextSizeFactorMaxLimit()
 {
 	return itsTimeBoxTextSizeFactorMaxLimit;
+}
+
+void NFmiMapViewDescTop::SetTimeBoxFillColor(NFmiColor newColorNotAlpha)
+{
+	// Asetetaan uuteen v‰riin ensin alpha
+	newColorNotAlpha.Alpha(itsTimeBoxFillColorVM.Alpha());
+	// Sitten vasta korvataan uudella vanha v‰ri kokonaisuudessaan
+	itsTimeBoxFillColorVM = newColorNotAlpha;
+}
+
+void NFmiMapViewDescTop::SetTimeBoxFillColorAlpha(float newAlpha)
+{
+	if(newAlpha < 0)
+		newAlpha = 0;
+	if(newAlpha > 1)
+		newAlpha = 1;
+	itsTimeBoxFillColorVM.Alpha(newAlpha);
 }
