@@ -712,6 +712,11 @@ class NFmiDrawParam
   double SymbolDrawDensityY() const { return itsSymbolDrawDensityY; }
   void SymbolDrawDensityY(double newValue);
 
+  static std::string MetTime2String(const NFmiMetTime& theTime);
+  static NFmiMetTime String2MetTime(const std::string& theStr);
+  static std::string Color2String(const NFmiColor& theColor);
+  static NFmiColor String2Color(const std::string& theColorString);
+
  protected:
   double SimpleColorContourTransparentColors2Double() const;
   void Double2SimpleColorContourTransparentColors(double theValue);
