@@ -169,4 +169,5 @@ public:
 	afx_msg void OnButtonOpenViewMacroDialogExtraMap();
 	afx_msg void OnAcceleratorExtraMapViewRangeMeterLockModeToggle();
 	afx_msg void OnAcceleratorExtraMapMoveTimeBoxLocation();
+	afx_msg void OnAcceleratorExtraMapObsComparisonMode();
 };

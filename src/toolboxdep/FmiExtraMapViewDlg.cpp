@@ -154,6 +154,7 @@ ON_COMMAND(ID_BUTTON_OPEN_CROSSSECTION_VIEW_EXTRA_MAP, &CFmiExtraMapViewDlg::OnB
 ON_COMMAND(ID_BUTTON_OPEN_VIEW_MACRO_DIALOG_EXTRA_MAP, &CFmiExtraMapViewDlg::OnButtonOpenViewMacroDialogExtraMap)
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_LOCK_MODE_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterLockModeToggle)
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_MOVE_TIME_BOX_LOCATION, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapMoveTimeBoxLocation)
+ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_OBS_COMPARISON_MODE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapObsComparisonMode)
 END_MESSAGE_MAP()
 
 
@@ -993,3 +994,12 @@ void CFmiExtraMapViewDlg::OnAcceleratorExtraMapMoveTimeBoxLocation()
 {
 	itsSmartMetDocumentInterface->GetCombinedMapHandlerInterface().onMoveTimeBoxLocation(itsMapViewDescTopIndex);
 }
+
+
+void CFmiExtraMapViewDlg::OnAcceleratorExtraMapObsComparisonMode()
+{
+	itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->ShowObsComparisonOnMap(!itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->ShowObsComparisonOnMap());
+	itsSmartMetDocumentInterface->GetCombinedMapHandlerInterface().mapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false);
+	itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Obs comparison mode on/off", ::GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
+}
+
