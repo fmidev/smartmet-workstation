@@ -146,6 +146,7 @@
 #include "NFmiTempDataGenerator.h"
 #include "FmiDataLoadingThread2.h"
 #include "CtrlViewGdiPlusFunctions.h"
+#include "ProducerData.h"
 
 #include "AnimationProfiler.h"
 
@@ -3704,19 +3705,20 @@ void AddSatelliteImagesToMenu(const MenuCreationSettings &theMenuSettings, NFmiM
     auto menuItem2 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(),
         theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kSatelData);
 
-	NFmiMenuItemList *satelProducerMenuList = new NFmiMenuItemList;
+	auto satelProducerMenuListPtr = std::make_unique<NFmiMenuItemList>();
 	std::vector<NFmiProducerInfo> &satelProducers = itsSatelImageProducerSystem.Producers();
 	for(size_t j=0; j<satelProducers.size(); j++)
 	{
 		bool anyChannelsFound = false;
         auto menuItemProducer = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, satelProducers[j].Name(), NFmiDataIdent(),
             theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kSatelData);
-		NFmiMenuItemList *satelChannelMenuList = new NFmiMenuItemList;
+		auto satelChannelMenuListPtr = std::make_unique<NFmiMenuItemList>();
 		int helpDataSize = HelpDataInfoSystem()->DynamicCount();
 		for(int i=0; i<helpDataSize; i++)
-		{ // etsitään currentin tuottajan kuva kanavat/parametrit
-			NFmiHelpDataInfo &helpDataInfo = HelpDataInfoSystem()->DynamicHelpDataInfo(i);
-			if(helpDataInfo.IsEnabled() && helpDataInfo.DataType() == NFmiInfoData::kSatelData)
+		{ 
+			// etsitään currentin tuottajan kuva kanavat/parametrit
+			const NFmiHelpDataInfo &helpDataInfo = HelpDataInfoSystem()->DynamicHelpDataInfo(i);
+			if(helpDataInfo.IsEnabled() && helpDataInfo.IsDataUsedCaseStudyChecks(CaseStudyModeOn()) && helpDataInfo.DataType() == NFmiInfoData::kSatelData)
 			{
 				int prodId = static_cast<int>(satelProducers[j].ProducerId());
 				int helpDataProdId = helpDataInfo.FakeProducerId();
@@ -3724,32 +3726,22 @@ void AddSatelliteImagesToMenu(const MenuCreationSettings &theMenuSettings, NFmiM
 				{
                     auto satelItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, std::string(helpDataInfo.ImageDataIdent().GetParamName()),
                         helpDataInfo.ImageDataIdent(), theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kSatelData);
-					satelChannelMenuList->Add(std::move(satelItem));
+					satelChannelMenuListPtr->Add(std::move(satelItem));
 					anyChannelsFound = true;
 				}
 			}
 		}
 		if(anyChannelsFound)
 		{
-			menuItemProducer->AddSubMenu(satelChannelMenuList);
-			satelProducerMenuList->Add(std::move(menuItemProducer));
+			menuItemProducer->AddSubMenu(satelChannelMenuListPtr.release());
+			satelProducerMenuListPtr->Add(std::move(menuItemProducer));
 			anySatelProducersFound = true;
-		}
-		else
-		{ 
-            // jos ei löytynyt, tämä pitää tuhota 'käsin'
-			delete satelChannelMenuList;
 		}
 	}
 	if(anySatelProducersFound)
 	{
-		menuItem2->AddSubMenu(satelProducerMenuList);
+		menuItem2->AddSubMenu(satelProducerMenuListPtr.release());
 		theMenuList->Add(std::move(menuItem2));
-	}
-	else
-	{ 
-        // jos ei löytynyt, tämä pitää tuhota 'käsin'
-		delete satelProducerMenuList;
 	}
 }
 
@@ -9371,7 +9363,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	NFmiHelpDataInfoSystem* HelpDataInfoSystem(void)
 	{
-		if(fCaseStudyModeOn)
+		if(CaseStudyModeOn())
 			return itsCaseStudyHelpDataInfoSystem.get();
 		else
 			return &itsHelpDataInfoSystem;
@@ -9379,7 +9371,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	NFmiDataLoadingInfo& GetUsedDataLoadingInfo(void)
 	{
-		if(fCaseStudyModeOn)
+		if(CaseStudyModeOn())
 			return itsDataLoadingInfoCaseStudy;
 		else
 			return itsDataLoadingInfoNormal;
@@ -9421,7 +9413,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		std::string specificError;
 		// 0. ota talteen erilaisia muuttujia, jos CaseStudyn lataus epäonnistuu ja pitää palauttaa olemassa oleva tila takaisin
-		bool oldCaseStudyModeOn = fCaseStudyModeOn;
+		bool oldCaseStudyModeOn = CaseStudyModeOn();
 		boost::shared_ptr<NFmiHelpDataInfoSystem> oldCaseStudyHelpDataInfoSystem = itsCaseStudyHelpDataInfoSystem;
 		NFmiCaseStudySystem oldLoadedCaseStudySystem = itsLoadedCaseStudySystem;
 		try
@@ -9436,7 +9428,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				if(itsCaseStudyHelpDataInfoSystem)
 				{
 			// 3.1. Laita CaseStudy-moodi päälle
-					fCaseStudyModeOn = true;
+					CaseStudyModeOn(true);
 			// 4. Laita CaseStudyn kellonaika seinäkelloajaksi
 			// 5. Laita kaikkien näyttöjen kello CaseStudy-aikaan
                     NFmiMetTime oldWallClockTime = oldCaseStudyModeOn ? oldLoadedCaseStudySystem.Time() : NFmiMetTime();
@@ -9474,7 +9466,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		}
 		// 10. Tee MessageBox ilmenneestä virheestä
 		// 11. Palauta virhetilanteessa vanhat muuttuja arvot takaisin
-		fCaseStudyModeOn = oldCaseStudyModeOn;
+		CaseStudyModeOn(oldCaseStudyModeOn);
 		itsCaseStudyHelpDataInfoSystem = oldCaseStudyHelpDataInfoSystem;
 		itsLoadedCaseStudySystem = oldLoadedCaseStudySystem;
 		std::string errStr(::GetDictionaryString("Error occured while loading Case Study data from file"));
@@ -9491,15 +9483,22 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return false;
 	}
 
-	bool CaseStudyModeOn(void) 
+	void CaseStudyModeOn(bool newState)
+	{
+		fCaseStudyModeOn = newState;
+		CFmiDataLoadingThread2::SetCaseStudyMode(fCaseStudyModeOn);
+		AddParams::ProducerData::SetCaseStudyMode(fCaseStudyModeOn);
+	}
+
+	bool CaseStudyModeOn() const
 	{
 		return fCaseStudyModeOn;
 	}
 
-	void CaseStudyToNormalMode(void)
+	void CaseStudyToNormalMode()
 	{
 		// 3.1. Laita CaseStudy-moodi päälle
-		fCaseStudyModeOn = false;
+		CaseStudyModeOn(false);
 		fChangingCaseStudyToNormalMode = true;
         SetAllSystemsToCaseStudyModeChangeTime(itsLoadedCaseStudySystem.Time(), NFmiMetTime(), true);
 		InfoOrganizer()->ClearDynamicHelpData(true); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eikä staattisia helpdatoja kuten topografia ja fraktiilit)

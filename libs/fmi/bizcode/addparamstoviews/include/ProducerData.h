@@ -46,6 +46,7 @@ namespace AddParams
         bool empty() const { return dataVector_.empty(); }
         std::vector<SingleRowItem> makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory) const;
         std::string makeUniqueProducerIdString() const;
+        static void SetCaseStudyMode(bool newState);
     private:
         bool updateData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem);
         bool updateSatelliteData(NFmiHelpDataInfoSystem &helpDataInfoSystem);

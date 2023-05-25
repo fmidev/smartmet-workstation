@@ -21,6 +21,12 @@
 
 namespace
 {
+    // SmartMetin CaseStudy moodi laitetaan tähän talteen, jotta voidaan jättää
+    // normi moodissa tietyt datat (satelliittikuva datat, jotka on muuten käytöstä poistetut) 
+    // pois dialogista. Jos taas ollaan CaseStudy moodissa, silloin ne lisätään käyttöön, 
+    // koska talletetussa CaseStudydatapaketissa saattaa olla sellaisia vielä käytössä.
+    bool gCaseStudyModeOn = false;
+
     bool isDataOnlyOnOneLevel(const boost::shared_ptr<NFmiFastQueryInfo> &info)
     {
         if(info)
@@ -147,7 +153,7 @@ namespace AddParams
         for(int i = 0; i < helpDataInfoSystem.DynamicCount(); i++)
         {
             const auto &helpDataInfo = helpDataInfoSystem.DynamicHelpDataInfo(i);
-            if(helpDataInfo.IsEnabled() && helpDataInfo.DataType() == NFmiInfoData::kSatelData)
+            if(helpDataInfo.IsEnabled() && helpDataInfo.IsDataUsedCaseStudyChecks(gCaseStudyModeOn) && helpDataInfo.DataType() == NFmiInfoData::kSatelData)
             {
                 int prodId = static_cast<int>(producer_.GetIdent());
                 if(prodId > 0 && prodId == helpDataInfo.FakeProducerId()) //Checks that this actually is correct helpdata
@@ -369,5 +375,10 @@ namespace AddParams
                 rowItem.dialogTreeNodeCollapsed(rowItemMemory->dialogTreeNodeCollapsed());
         }
         return dialogRowData;
+    }
+
+    void ProducerData::SetCaseStudyMode(bool newState)
+    {
+        gCaseStudyModeOn = newState;
     }
 }

@@ -65,6 +65,7 @@ namespace CFmiDataLoadingThread2
 	void LoadDataNow(void); // t‰m‰ pakottaa ett‰ datan luku tehd‰‰n heti
 	void ResetTimeStamps(void); // t‰m‰ asettaa NFmiHelpDataSystemin dynaamisten datojen aikaleimoiksi -1:en
 	void ResetFirstTimeGoingThroughState();
+	void SetCaseStudyMode(bool isInCaseStudyMode);
 }
 
 
