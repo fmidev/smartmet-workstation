@@ -1190,12 +1190,6 @@ void NFmiTempView::DrawSoundingInTextFormat(NFmiSoundingDataOpt1 &theData)
 
 	NFmiPoint p(textualDataRect.TopLeft());
 	p.X(p.X() + ConvertFixedPixelSizeToRelativeWidth(2)); // siirret‰‰n teksti‰ pikkusen oikealle p‰in
-	std::deque<float> &pVec = theData.GetParamData(kFmiPressure);
-	std::deque<float> &tVec = theData.GetParamData(kFmiTemperature);
-	std::deque<float> &tdVec = theData.GetParamData(kFmiDewPoint);
-	std::deque<float> &zVec = theData.GetParamData(kFmiGeopHeight);
-	std::deque<float> &wsVec = theData.GetParamData(kFmiWindSpeedMS);
-	std::deque<float> &wdVec = theData.GetParamData(kFmiWindDirection);
 	auto str(::GetStationsShortName(theData));
 	NFmiText text(p, NFmiString(""), true, 0, itsDrawingEnvironment);
 	auto lineH = itsTextualSoundingDataRelativeLineHeight;
