@@ -165,6 +165,8 @@ void NFmiHelpDataInfo::InitFromSettings(const std::string &theBaseKey,
         NFmiSettings::Optional<bool>(itsBaseNameSpace + "::ReloadCaseStudyData", true);
     fAllowCombiningToSurfaceDataInSoundingView = NFmiSettings::Optional<bool>(
         itsBaseNameSpace + "::AllowCombiningToSurfaceDataInSoundingView", false);
+    fCaseStudyLegacyOnly = NFmiSettings::Optional<bool>(
+        itsBaseNameSpace + "::CaseStudyLegacyOnly", false);
 
     std::string imageProjectionKey(itsBaseNameSpace + "::ImageProjection");
     if (NFmiSettings::IsSet(imageProjectionKey))
@@ -259,6 +261,15 @@ std::string NFmiHelpDataInfo::GetCleanedName() const
     NFmiStringTools::ReplaceChars(newName, '_', ' '); // muutetaan myös ala-viivat spaceiksi
 
     return newName;
+}
+
+bool NFmiHelpDataInfo::IsDataUsedCaseStudyChecks(bool caseStudyModeOn) const
+{
+  if (!CaseStudyLegacyOnly())
+  {
+    return true;
+  }
+  return caseStudyModeOn;
 }
 
 // ***********************************************************

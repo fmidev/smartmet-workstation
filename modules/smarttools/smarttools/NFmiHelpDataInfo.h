@@ -113,6 +113,9 @@ class NFmiHelpDataInfo
   void RequiredGroundDataFileFilterForSoundingIndexCalculations(const std::string &newValue) { itsRequiredGroundDataFileFilterForSoundingIndexCalculations = newValue; }
   bool AllowCombiningToSurfaceDataInSoundingView() const { return fAllowCombiningToSurfaceDataInSoundingView; }
   void AllowCombiningToSurfaceDataInSoundingView(bool newValue) { fAllowCombiningToSurfaceDataInSoundingView = newValue; }
+  bool CaseStudyLegacyOnly() const { return fCaseStudyLegacyOnly; }
+  void CaseStudyLegacyOnly(bool newValue) { fCaseStudyLegacyOnly = newValue; }
+  bool IsDataUsedCaseStudyChecks(bool caseStudyModeOn) const;
 
  private:
   // tällä nimellä erotetaan konffi-tiedostoissa eri datat
@@ -206,6 +209,12 @@ class NFmiHelpDataInfo
   // Oletusarvona ei sallita, koska yhdistelystä voi seurata epäjatkuvuuksia luotauskäyrissä, varsinkin, jos
   // mallin/tuottajan pinta- ja leveldatat ovat eri horisontaali resoluutiossa.
   bool fAllowCombiningToSurfaceDataInSoundingView = false;
+  // Kun joku data lakkautetaan (esim. Hirlamin ja satel-kuvien kaikki datat),
+  // tälläistä dataa ei kuitenkaan voida poistaa konfiguraatioista, koska tätä
+  // kyseistä dataa on voitu tallettaa eri CaseStudy datoihin. Mutta normi käytössä
+  // tämä data halutaan piilottaa, jotta ei eivät vie turhaa käyttöliittymä tilaa. 
+  // Tämä asetus on optionaalinen ja sen oletusarvo on false.
+  bool fCaseStudyLegacyOnly = false;
 };
 
 class NFmiHelpDataInfoSystem
