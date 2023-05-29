@@ -2022,7 +2022,7 @@ void NFmiStationViewHandler::DrawTimeText(void)
 {
 	if(itsCtrlViewDocumentInterface->EditedSmartInfo())
 	{
-		if(itsCtrlViewDocumentInterface->ShowTimeString(itsMapViewDescTopIndex)) // toteuta tämä dokumenttiin!!!!!
+		if(itsCtrlViewDocumentInterface->ShowTimeString(itsMapViewDescTopIndex))
 		{
 			if(DrawTimeTextInThisMapViewTile())
 			{
@@ -2030,9 +2030,6 @@ void NFmiStationViewHandler::DrawTimeText(void)
 				NFmiMapViewTimeLabelInfo& timeLabelInfo = itsCtrlViewDocumentInterface->MapViewTimeLabelInfo();
 
 				const NFmiBetaProduct* currentBetaProduct = itsCtrlViewDocumentInterface->GetCurrentGeneratedBetaProduct();
-				if(currentBetaProduct && currentBetaProduct->TimeBoxLocation() == kNoDirection)
-					return;
-
 				NFmiMetTime usedTimeboxTime = ::CalcUsedTimeboxTime(itsTime, currentBetaProduct);
 				// Aikatekstien varsinainen piirtokoodi alkaa
 				NFmiString formatStr1 = ::MakeUsedTimeboxTimeFormatString(timeLabelInfo.TimeStringInfo1().itsTimeFormat, currentBetaProduct);
@@ -2076,7 +2073,7 @@ void NFmiStationViewHandler::DrawTimeText(void)
 				itsGdiPlusGraphics->MeasureString(wString2.c_str(), INT(wString2.size()), &aFont2, Gdiplus::PointF(0, 0), &stringFormat, &boundingBox2);
 				NFmiRect timeBox;
 				timeBox.Size(NFmiPoint(FmiMax(boundingBox1.Width, boundingBox2.Width) * 1.1, (font1Size + font2Size) * 1.15));
-				FmiDirection timeBoxLocation = currentBetaProduct ? currentBetaProduct->TimeBoxLocation() : mapViewDescTop->TimeBoxLocation();
+				FmiDirection timeBoxLocation = mapViewDescTop->TimeBoxLocation();
 				StationViews::PlaceBoxIntoFrame(timeBox, GetFrame(), itsToolBox, timeBoxLocation);
 
 				Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(mapViewDescTop->TimeBoxFillColor()));

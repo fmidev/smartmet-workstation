@@ -56,7 +56,7 @@ class NFmiBetaProduct
 public:
     NFmiBetaProduct();
     
-    bool CheckTimeRelatedInputs(const NFmiMetTime &theStartingTime, const std::string &theTimeLengthInHoursString, const std::string &theTimeStepInMinutesString, bool theUseUtcTimesInTimeBox, FmiDirection theTimeBoxLocation); // Käy läpi kaikki tarkastelut ja tekee virheilmoituksia
+    bool CheckTimeRelatedInputs(const NFmiMetTime &theStartingTime, const std::string &theTimeLengthInHoursString, const std::string &theTimeStepInMinutesString, bool theUseUtcTimesInTimeBox); // Käy läpi kaikki tarkastelut ja tekee virheilmoituksia
     bool CheckRowRelatedInputs(const std::string &theRowIndexListString, const std::string &theRowSubdirectoryTemplate, const std::string &theFileNameTemplate, bool useAutoFileNames, FmiDirection theParamBoxLocation); // Käy läpi kaikki tarkastelut ja tekee virheilmoituksia
     bool CheckSynopStationIdListRelatedInputs(const std::string &theSynopStationIdListString); // Käy läpi kaikki tarkastelut ja tekee status asetuksia
     bool InputWasGood(); // Palauttaa vain tiedon onko viimeinen tarkastelu mennyt hyvin vai ei
@@ -76,8 +76,6 @@ public:
     int TimeStepInMinutes() const { return itsTimeStepInMinutes; } // Tälle vain getter, koska sen arvo saadaan itsTimeStepInMinutesString:istä
     bool UseUtcTimesInTimeBox() const { return fUseUtcTimesInTimeBox; }
     void UseUtcTimesInTimeBox(bool newValue) { fUseUtcTimesInTimeBox = newValue; }
-    FmiDirection TimeBoxLocation() const { return itsTimeBoxLocation; }
-    void TimeBoxLocation(FmiDirection newValue) { itsTimeBoxLocation = newValue; }
     FmiDirection ParamBoxLocation() const { return itsParamBoxLocation; }
     void ParamBoxLocation(FmiDirection newValue) { itsParamBoxLocation = newValue; }
     const std::string& TimeRangeInfoText() const { return itsTimeRangeInfoText; }
@@ -154,7 +152,6 @@ private:
     double itsTimeLengthInHours; // Saatu konvertoimalla itsTimeLengthInHoursString
     std::string itsTimeStepInMinutesString;
     bool fUseUtcTimesInTimeBox; // Käytetäänkö kuvissa olevissa vaaleissa aikaa merkitsevissä laatikoissa UTC aikaa vai lokaali aikaa
-    FmiDirection itsTimeBoxLocation; // Mihin kohtaa karttaa aikaboxi laitetaan (disabled, bottom-left, top-center, jne.)
     FmiDirection itsParamBoxLocation; // Mihin kohtaa karttaa parametriboxi laitetaan (disabled, bottom-left, top-center, jne.)
     static const std::string itsTimeStepLabel; // Tämän avulla tehdään info/virhe tekstejä
     int itsTimeStepInMinutes; // Saatu konvertoimalla itsTimeStepInMinutesString
@@ -481,8 +478,6 @@ public:
     void BetaProductTimeLengthInHours(double newValue);
     bool BetaProductUseUtcTimesInTimeBox();
     void BetaProductUseUtcTimesInTimeBox(bool newValue);
-    FmiDirection BetaProductTimeBoxLocation();
-    void BetaProductTimeBoxLocation(FmiDirection newValue);
     FmiDirection BetaProductParamBoxLocation();
     void BetaProductParamBoxLocation(FmiDirection newValue);
     std::string BetaProductStoragePath();
@@ -584,7 +579,6 @@ private:
     boost::shared_ptr<CachedRegInt> mBetaProductTimeStepInMinutes; // Käytetty aika-steppi minuuteissa
     boost::shared_ptr<CachedRegDouble> mBetaProductTimeLengthInHours; // Käytetty aika-pituus tunneissa
     boost::shared_ptr<CachedRegBool> mBetaProductUseUtcTimesInTimeBox; // Käytetäänkö kuvissa olevissa vaaleissa aikaa merkitsevissä laatikoissa UTC aikaa vai lokaali aikaa
-    boost::shared_ptr<CachedRegInt> mBetaProductTimeBoxLocation; // Mihin kohtaa kartta aikaboxi laitetaan (disabled, bottom-left, top-center, jne.)
     boost::shared_ptr<CachedRegInt> mBetaProductParamBoxLocation; // Mihin kohtaa kartan paramboxi laitetaan (disabled, bottom-left, top-center, jne.)
     boost::shared_ptr<CachedRegString> mBetaProductStoragePath; // Polku minne kuvat talletetaan
     boost::shared_ptr<CachedRegString> mBetaProductFileNameTemplate; // Talletettavien kuvien tiedosto nimien sapluuna

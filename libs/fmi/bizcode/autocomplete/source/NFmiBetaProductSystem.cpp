@@ -271,7 +271,6 @@ NFmiBetaProduct::NFmiBetaProduct()
 ,itsTimeStepInMinutesString()
 ,itsTimeStepInMinutes(0)
 ,fUseUtcTimesInTimeBox(false)
-,itsTimeBoxLocation(kBottomLeft)
 ,itsParamBoxLocation(kNoDirection)
 ,fTimeInputOk(false)
 ,itsTimeInputErrorString()
@@ -297,7 +296,7 @@ NFmiBetaProduct::NFmiBetaProduct()
 }
 
 // Käy läpi kaikki tarkastelut ja tekee virheilmoituksia
-bool NFmiBetaProduct::CheckTimeRelatedInputs(const NFmiMetTime &theStartingTime, const std::string &theTimeLengthInHoursString, const std::string &theTimeStepInMinutesString, bool theUseUtcTimesInTimeBox, FmiDirection theTimeBoxLocation)
+bool NFmiBetaProduct::CheckTimeRelatedInputs(const NFmiMetTime &theStartingTime, const std::string &theTimeLengthInHoursString, const std::string &theTimeStepInMinutesString, bool theUseUtcTimesInTimeBox)
 {
     // Nollataan status dataosiot
     fTimeInputOk = false;
@@ -310,7 +309,6 @@ bool NFmiBetaProduct::CheckTimeRelatedInputs(const NFmiMetTime &theStartingTime,
     itsTimeLengthInHoursString = theTimeLengthInHoursString;
     itsTimeStepInMinutesString = theTimeStepInMinutesString;
     fUseUtcTimesInTimeBox = theUseUtcTimesInTimeBox;
-    itsTimeBoxLocation = theTimeBoxLocation;
     itsTimeRangeInfoText = MakeTimeRangeInfoString();
 
     return InputWasGood();
@@ -429,12 +427,6 @@ std::string NFmiBetaProduct::MakeTimeRangeInfoString()
     if(endTime == NFmiMetTime::gMissingTime)
     {
         infoStr = itsTimeInputErrorString;
-    }
-    else if(!::CheckUsedBoxLocation(itsTimeBoxLocation))
-    {
-        infoStr = ::GetDictionaryString("Timebox location was illegal.");
-        infoStr += "\n";
-        infoStr += ::GetDictionaryString("Make correct selection from dropdown list.");
     }
     else
     {
@@ -777,7 +769,6 @@ static const std::string gJsonName_UseAutoFileNames = "UseAutoFileNames";
 static const std::string gJsonName_TimeLengthInHours = "TimeLengthInHours";
 static const std::string gJsonName_TimeStepInMinutes = "TimeStepInMinutes";
 static const std::string gJsonName_UseUtcInTimebox = "UseUtcInTimebox";
-static const std::string gJsonName_TimeboxLocation = "TimeboxLocation";
 static const std::string gJsonName_ParamboxLocation = "ParamboxLocation";
 static const std::string gJsonName_RowIndexList = "RowIndexList";
 static const std::string gJsonName_RowSubdirectoryTemplate = "RowSubdirectoryTemplate";
@@ -810,8 +801,6 @@ json_spirit::Object NFmiBetaProduct::MakeJsonObject(const NFmiBetaProduct &betaP
     ::AddNonEmptyStringJsonPair(betaProduct.TimeStepInMinutesString(), gJsonName_TimeStepInMinutes, jsonObject);
     if(defaultBetaProduct.UseUtcTimesInTimeBox() != betaProduct.UseUtcTimesInTimeBox())
         jsonObject.push_back(json_spirit::Pair(gJsonName_UseUtcInTimebox, betaProduct.UseUtcTimesInTimeBox()));
-    if(defaultBetaProduct.TimeBoxLocation() != betaProduct.TimeBoxLocation())
-        jsonObject.push_back(json_spirit::Pair(gJsonName_TimeboxLocation, betaProduct.TimeBoxLocation()));
     if(defaultBetaProduct.ParamBoxLocation() != betaProduct.ParamBoxLocation())
         jsonObject.push_back(json_spirit::Pair(gJsonName_ParamboxLocation, betaProduct.ParamBoxLocation()));
     if(defaultBetaProduct.DisplayRunTimeInfo() != betaProduct.DisplayRunTimeInfo())
@@ -834,7 +823,7 @@ json_spirit::Object NFmiBetaProduct::MakeJsonObject(const NFmiBetaProduct &betaP
 
 void NFmiBetaProduct::InitFromJsonRead(const NFmiMetTime &theStartingTime)
 {
-    auto timeStatus = CheckTimeRelatedInputs(theStartingTime, itsTimeLengthInHoursString, itsTimeStepInMinutesString, fUseUtcTimesInTimeBox, itsTimeBoxLocation);
+    auto timeStatus = CheckTimeRelatedInputs(theStartingTime, itsTimeLengthInHoursString, itsTimeStepInMinutesString, fUseUtcTimesInTimeBox);
     auto rowStatus = CheckRowRelatedInputs(itsRowIndexListString, itsRowSubdirectoryTemplate, itsFileNameTemplate, fUseAutoFileNames, itsParamBoxLocation);
     auto  stationIdStatus = CheckSynopStationIdListRelatedInputs(itsSynopStationIdListString);
     MakeViewMacroInfoText(itsViewMacroPath);
@@ -863,8 +852,6 @@ void NFmiBetaProduct::ParseJsonPair(json_spirit::Pair &thePair)
         itsTimeStepInMinutesString = thePair.value_.get_str();
     else if(thePair.name_ == gJsonName_UseUtcInTimebox)
         fUseUtcTimesInTimeBox = thePair.value_.get_bool();
-    else if(thePair.name_ == gJsonName_TimeboxLocation)
-        itsTimeBoxLocation = static_cast<FmiDirection>(thePair.value_.get_int());
     else if(thePair.name_ == gJsonName_ParamboxLocation)
         itsParamBoxLocation = static_cast<FmiDirection>(thePair.value_.get_int());
     else if(thePair.name_ == gJsonName_DisplayRuntimeInfo)
@@ -2099,7 +2086,6 @@ NFmiBetaProductionSystem::NFmiBetaProductionSystem()
 , mBetaProductTimeStepInMinutes()
 , mBetaProductTimeLengthInHours()
 , mBetaProductUseUtcTimesInTimeBox()
-, mBetaProductTimeBoxLocation()
 , mBetaProductParamBoxLocation()
 , mBetaProductStoragePath()
 , mBetaProductFileNameTemplate()
@@ -2148,7 +2134,6 @@ bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, cons
     mBetaProductTimeStepInMinutes = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, betaProductSectionName, "\\TimeStepInMinutes", usedKey, 60);
     mBetaProductTimeLengthInHours = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, betaProductSectionName, "\\TimeLengthInHours", usedKey, 15);
     mBetaProductUseUtcTimesInTimeBox = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, betaProductSectionName, "\\UseUtcTimesInTimeBox", usedKey, false);
-    mBetaProductTimeBoxLocation = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, betaProductSectionName, "\\TimeBoxLocation", usedKey, kBottomLeft);
     mBetaProductParamBoxLocation = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, betaProductSectionName, "\\ParamBoxLocation", usedKey, kNoDirection);
     mBetaProductStoragePath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\StoragePath", usedKey, "");
     mBetaProductFileNameTemplate = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\FileNameTemplate", usedKey, "product1_validTime.png");
@@ -2346,17 +2331,6 @@ bool NFmiBetaProductionSystem::BetaProductUseUtcTimesInTimeBox()
 void NFmiBetaProductionSystem::BetaProductUseUtcTimesInTimeBox(bool newValue)
 {
     *mBetaProductUseUtcTimesInTimeBox = newValue;
-}
-
-FmiDirection NFmiBetaProductionSystem::BetaProductTimeBoxLocation()
-{
-    int tmpValue = *mBetaProductTimeBoxLocation;
-    return static_cast<FmiDirection>(tmpValue);
-}
-
-void NFmiBetaProductionSystem::BetaProductTimeBoxLocation(FmiDirection newValue)
-{
-    *mBetaProductTimeBoxLocation = newValue;
 }
 
 FmiDirection NFmiBetaProductionSystem::BetaProductParamBoxLocation()
