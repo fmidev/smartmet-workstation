@@ -75,7 +75,8 @@ class NFmiDefineWantedData
                        const NFmiLevel *level,
                        const std::string &originalDataString);
   NFmiDefineWantedData(const NFmiDefineWantedData &other);
-  NFmiDefineWantedData& operator=(const NFmiDefineWantedData &other);
+  NFmiDefineWantedData &operator=(const NFmiDefineWantedData &other);
+  bool operator==(const NFmiDefineWantedData &other) const;
 
   bool IsEditedData() const;
   bool IsProducerLevelType() const;
@@ -168,13 +169,13 @@ class NFmiExtraMacroParamData
   const MultiParamData &MultiParam3() const { return itsMultiParam3; }
   void MultiParam3(const MultiParamData &newValue) { itsMultiParam3 = newValue; }
   bool IsMultiParamCase() const;
+  static FindWantedInfoData FindWantedInfo(NFmiInfoOrganizer &theInfoOrganizer,
+                                    const NFmiDefineWantedData &wantedData);
 
  private:
   void InitializeResolutionData(const NFmiArea *usedArea,
                                 const NFmiPoint &usedResolutionInKm);
   void InitializeDataBasedResolutionData(NFmiInfoOrganizer &theInfoOrganizer);
-  FindWantedInfoData FindWantedInfo(
-      NFmiInfoOrganizer &theInfoOrganizer, const NFmiDefineWantedData &wantedData);
   void InitializeRelativeObservationRange(NFmiInfoOrganizer &theInfoOrganizer, float usedRangeInKm);
   void AddCalculationPointsFromData(NFmiInfoOrganizer &theInfoOrganizer,
                                     const std::vector<NFmiProducer> &theProducers);
