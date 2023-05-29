@@ -4,6 +4,7 @@
 #include "NFmiMetTime.h"
 #include "json_spirit_value.h"
 #include "NFmiCachedRegistryValue.h"
+#include "NFmiExtraMacroParamData.h"
 
 #include <set>
 
@@ -231,6 +232,7 @@ public:
         NFmiMetTime CalcNextDueTimeWithFixedTimes(const NFmiMetTime& theLastRunTime) const;
         NFmiMetTime CalcNextDueTimeWithTimeSteps(const NFmiMetTime& theLastRunTime) const;
         NFmiMetTime CalcNextDueTime(const NFmiMetTime &theLastRunTime, bool automationModeOn) const;
+        bool HasDataTriggerBeenLoaded(const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, const std::string& automationName, bool automationModeOn) const;
         NFmiMetTime MakeFirstRunTimeOfGivenDay(const NFmiMetTime &theTime) const;
         bool operator==(const NFmiTriggerModeInfo &other) const;
         bool operator!=(const NFmiTriggerModeInfo &other) const;
@@ -239,14 +241,17 @@ public:
         void ParseJsonPair(json_spirit::Pair &thePair);
 
         TriggerMode itsTriggerMode;
-        std::string itsFixedRunTimesString; // formaatti on muotoa: hh:mm[,hh:mm,...] eli listattuna on vuorokauden kaikki ajoajat
+        // Formaatti on muotoa: hh:mm[,hh:mm,...] eli listattuna on vuorokauden kaikki ajoajat
+        std::string itsFixedRunTimesString; 
         std::vector<FixedRunTime> itsFixedRunTimes;
         std::string itsRunTimeStepInHoursString;
         double itsRunTimeStepInHours;
         std::string itsFirstRunTimeOfDayString;
         int itsFirstRunTimeOffsetInMinutes;
-        std::string itsTriggerDataString; // tässä on listassa triggeri datojen lista, missä haluttu data on kerrottu sen fileFilterillä ja ne on pilkulla eroteltuna.
-        std::vector<std::string> itsTriggerData;
+        // Tässä on listassa triggeri datojen lista, missä haluttu data 
+        // on kerrottu sen fileFilterillä ja ne on pilkulla eroteltuna.
+        std::string itsTriggerDataString; 
+        std::vector<NFmiDefineWantedData> itsTriggerDataList;
         bool fTriggerModeInfoStatus;
         std::string itsTriggerModeInfoStatusString;
     };
@@ -311,18 +316,32 @@ public:
     bool operator!=(const NFmiBetaProductAutomation &other) const;
 
 private:
-    static const std::string itsRunTimeStepInHoursTitle; // Time-step-hours -kontrolliin liittyvä vakio teksti. Tämän avulla tehdään info/virhe tekstejä ja tämä tulee myös CFmiBetaAutomationDialog -dialogin teksteihin
-    static const std::string itsFirstRunTimeOfDayTitle; // First-run-of-day -kontrolliin liittyvä vakio teksti. Tämän avulla tehdään info/virhe tekstejä ja tämä tulee myös CFmiBetaAutomationDialog -dialogin teksteihin
+    // Time-step-hours -kontrolliin liittyvä vakio teksti. Tämän avulla tehdään info/virhe 
+    // tekstejä ja tämä tulee myös CFmiBetaAutomationDialog -dialogin teksteihin
+    static const std::string itsRunTimeStepInHoursTitle;
+    // First-run-of-day -kontrolliin liittyvä vakio teksti. Tämän avulla tehdään info/virhe 
+    // tekstejä ja tämä tulee myös CFmiBetaAutomationDialog -dialogin teksteihin
+    static const std::string itsFirstRunTimeOfDayTitle; 
     std::string itsBetaProductPath;
-    std::string itsOriginalBetaProductPath; // Tähän talletetaan se polku, minkä käyttäjä on antanut dialogissa, tämä talletetaan myös lopulta tiedostoon
+    // Tähän talletetaan se polku, minkä käyttäjä on antanut dialogissa, 
+    // tämä talletetaan myös lopulta tiedostoon
+    std::string itsOriginalBetaProductPath; 
     bool fBetaProductPathStatus;
     std::string itsBetaProductPathStatusString;
-    NFmiTriggerModeInfo itsTriggerModeInfo; // Mikä laukaisee tämän tuotteen tuotannon
-    NFmiTimeModeInfo itsStartTimeModeInfo; // Miten määrätään tämän tuotteen alkuaika
-    NFmiTimeModeInfo itsEndTimeModeInfo; // Miten määrätään tämän tuotteen pituus
-    std::shared_ptr<NFmiBetaProduct> itsBetaProduct; // Tähän luetaan tarvittaessa itsBetaProductPath:in osoittaman tiedoston Beta-product -olio
-    std::string itsLoadedBetaProductAbsolutePath; // Tähän talletetaan luetun Beta-productin polku, jos tämä poikkeaa itsBetaProductPath:in arvosta, pitää GetBetaProduct -metodissa lukea uusi olio uudesta tiedostosta
-    static BaseDirectoryGetterFunctionType itsBetaProductionBaseDirectoryGetter; // Tämä tieto löytyy NFmiBetaProductionSystem -luokasta. Annan siis näille luokille käyttöön kyseisen luokan metodin, jolta polku tarvittaessa pyydetään (näin luokien ei tarvitse tietää toisistaan mitään)
+    // Mikä laukaisee tämän tuotteen tuotannon
+    NFmiTriggerModeInfo itsTriggerModeInfo;
+    // Miten määrätään tämän tuotteen alkuaika
+    NFmiTimeModeInfo itsStartTimeModeInfo; 
+    // Miten määrätään tämän tuotteen pituus
+    NFmiTimeModeInfo itsEndTimeModeInfo; 
+    // Tähän luetaan tarvittaessa itsBetaProductPath:in osoittaman tiedoston Beta-product -olio
+    std::shared_ptr<NFmiBetaProduct> itsBetaProduct; 
+    // Tähän talletetaan luetun Beta-productin polku, jos tämä poikkeaa itsBetaProductPath:in 
+    // arvosta, pitää GetBetaProduct -metodissa lukea uusi olio uudesta tiedostosta
+    std::string itsLoadedBetaProductAbsolutePath; 
+    // Tämä tieto löytyy NFmiBetaProductionSystem -luokasta. Annan siis näille luokille käyttöön 
+    // kyseisen luokan metodin, jolta polku tarvittaessa pyydetään (näin luokien ei tarvitse tietää toisistaan mitään)
+    static BaseDirectoryGetterFunctionType itsBetaProductionBaseDirectoryGetter; 
 };
 
 class NFmiBetaProductAutomationListItem
@@ -377,7 +396,7 @@ public:
     bool IsEmpty() const { return itsAutomationVector.empty(); }
     bool ContainsAutomationMoreThanOnce() const;
     bool HasAutomationAlready(const std::string &theFullFilePath) const;
-    std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> GetDueAutomations(const NFmiMetTime &theCurrentTime, bool automationModeOn);
+    std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> GetDueAutomations(const NFmiMetTime &theCurrentTime, const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, bool automationModeOn);
     std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> GetOnDemandAutomations(int selectedAutomationIndex, bool doOnlyEnabled);
 
     void RefreshAutomationList();
@@ -409,7 +428,7 @@ public:
 
     NFmiBetaProductionSystem();
     bool Init(const std::string &theBaseRegistryPath, const std::string& theAbsoluteWorkingDirectory, const std::string& possibleStartingBetaAutomationListPath);
-    bool DoNeededBetaAutomation();
+    bool DoNeededBetaAutomation(const std::vector<std::string> &loadedDataTriggerList, NFmiInfoOrganizer &infoOrganizer);
     bool DoOnDemandBetaAutomations(int selectedAutomationIndex, bool doOnlyEnabled);
 
     bool BetaProductGenerationRunning() const { return fBetaProductGenerationRunning; }
@@ -518,6 +537,8 @@ public:
     void EndTimeClockOffsetInHoursString(const std::string &newValue);
     std::string AutomationPath();
     void AutomationPath(const std::string &newValue);
+    std::string TriggerDataString();
+    void TriggerDataString(const std::string& newValue);
 
     const std::string& ImagePackingExePath() const { return itsImagePackingExePath; }
     const std::string& ImagePackingExeCommandLine() const { return itsImagePackingExeCommandLine; }
@@ -591,5 +612,6 @@ private:
     boost::shared_ptr<CachedRegString> mStartTimeClockOffsetInHoursString;
     boost::shared_ptr<CachedRegString> mEndTimeClockOffsetInHoursString;
     boost::shared_ptr<CachedRegString> mAutomationPath; // Polku mistä viimeksi ladattu Automation luetaan
+    boost::shared_ptr<CachedRegString> mTriggerDataString; // T_ec[,par10_prod240_500,...]
 
 };

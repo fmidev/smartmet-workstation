@@ -2515,7 +2515,27 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 		DoPossibleCaseStudyEditedDataSetup(theData, theDataFileName, theType, fDataWasDeletedOut);
         PrepareForParamAddSystemUpdate();
 		RemoveCombinedDataFromLedChannelReport(theDataFilePattern);
+		AddLoadedDataToTriggerList(theDataFilePattern);
 	}
+}
+
+// Luettu data lis‰t‰‰n listaan vain jos ei olla 1. kierroksen jo lokaali cachehakemistossa 
+// olevia datoja lukemassa eli kun smartmet k‰ynnistyy tai ladataan caseStudy setti‰.
+void AddLoadedDataToTriggerList(const std::string& theDataFilePattern)
+{
+	if(!NFmiInfoOrganizer::IsLoadedDataTreatedAsOld())
+	{
+		itsLoadedDataTriggerList.push_back(theDataFilePattern);
+	}
+}
+
+// T‰ss‰ siis palautetaan triggerList ja nollataan se samalla, eli
+// kunkin dataTriggerin voi pyyt‰‰ vain kerran.
+std::vector<std::string> GetDataTriggerListOwnership()
+{
+	std::vector<std::string> returnedDataTriggerList;
+	returnedDataTriggerList.swap(itsLoadedDataTriggerList);
+	return returnedDataTriggerList;
 }
 
 void RemoveCombinedDataFromLedChannelReport(const std::string& theDataFileFilter)
@@ -10300,7 +10320,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             }
         }
 
-        if(BetaProductionSystem().DoNeededBetaAutomation())
+		auto dataTriggerList = GetDataTriggerListOwnership();
+        if(BetaProductionSystem().DoNeededBetaAutomation(dataTriggerList, *InfoOrganizer()))
         {
         }
     }
@@ -10771,6 +10792,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsLedLightStatusSystem;
 	}
 
+	std::vector<std::string> itsLoadedDataTriggerList;
 	NFmiLedLightStatusSystem itsLedLightStatusSystem;
 	NFmiSeaLevelPlumeData itsSeaLevelPlumeData;
 	NFmiParameterInterpolationFixer itsParameterInterpolationFixer;

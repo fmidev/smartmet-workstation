@@ -72,6 +72,7 @@ CFmiBetaProductAutomationDialog::CFmiBetaProductAutomationDialog(SmartMetDocumen
 , itsBetaAutomationEndTimeClockOffsetErrorU_(_T(""))
 , itsAutomationNameU_(_T(""))
 , itsAutomationListNameU_(_T(""))
+, itsBetaAutomationDataTriggersStringU_(_T(""))
 {
 
 }
@@ -98,7 +99,6 @@ void CFmiBetaProductAutomationDialog::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_EDIT_BETA_AUTOMATION_END_TIME_WALL_CLOCK_OFFSET_VALUE, itsBetaAutomationEndTimeClockOffsetValueU_);
     DDX_Text(pDX, IDC_STATIC_BETA_AUTOMATION_START_TIME_OFFSET_ERROR_TEXT, itsBetaAutomationStartTimeClockOffsetErrorU_);
     DDX_Text(pDX, IDC_STATIC_BETA_AUTOMATION_END_TIME_OFFSET_ERROR_TEXT, itsBetaAutomationEndTimeClockOffsetErrorU_);
-    DDX_Control(pDX, IDC_COMBO_BETA_AUTOMATION_DATA_TRIGGER, itsMultiDataSelector);
     DDX_Control(pDX, IDC_BUTTON_BETA_AUTOMATION_SAVE, itsBetaAutomationSaveButton);
     DDX_Text(pDX, IDC_STATIC_BETA_AUTOMATION_NAME_VALUE, itsAutomationNameU_);
     DDX_Control(pDX, IDC_BUTTON_BETA_AUTOMATION_SAVE_AS, itsBetaAutomationSaveAsButton);
@@ -107,6 +107,7 @@ void CFmiBetaProductAutomationDialog::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_BUTTON_SAVE_AS_AUTOMATION_LIST, itsAutomationListSaveAsButton);
     DDX_Control(pDX, IDC_BUTTON_ADD_EDITED_BETA_AUTOMATION_TO_LIST, itsAddEditedAutomationToListButton);
     DDX_Control(pDX, IDC_BUTTON_REMOVE_BETA_AUTOMATION_FROM_LIST, itsRemoveAutomationFromListButton);
+    DDX_Text(pDX, IDC_EDIT_BETA_AUTOMATION_DATA_TRIGGERS, itsBetaAutomationDataTriggersStringU_);
 }
 
 
@@ -121,8 +122,6 @@ BEGIN_MESSAGE_MAP(CFmiBetaProductAutomationDialog, CTabPageSSL)
     ON_EN_CHANGE(IDC_EDIT_BETA_AUTOMATION_TIME_STEP_VALUE, &CFmiBetaProductAutomationDialog::OnEnChangeEditBetaAutomationTimeStepValue)
     ON_EN_CHANGE(IDC_EDIT_BETA_AUTOMATION_FIXED_TIMES, &CFmiBetaProductAutomationDialog::OnEnChangeEditBetaAutomationFixedTimes)
     ON_EN_CHANGE(IDC_EDIT_BETA_AUTOMATION_FIRST_RUN_OF_DAY_VALUE, &CFmiBetaProductAutomationDialog::OnEnChangeEditBetaAutomationFirstRunOfDayValue)
-    ON_CBN_SELCHANGE(IDC_COMBO_BETA_AUTOMATION_DATA_TRIGGER, &CFmiBetaProductAutomationDialog::OnCbnSelchangeComboBetaAutomationDataTrigger)
-    ON_CBN_CLOSEUP(IDC_COMBO_BETA_AUTOMATION_DATA_TRIGGER, &CFmiBetaProductAutomationDialog::OnCbnCloseupComboBetaAutomationDataTrigger)
     ON_BN_CLICKED(IDC_RADIO_BETA_AUTOMATION_START_TIME_FROM_PRODUCT, &CFmiBetaProductAutomationDialog::OnBnClickedRadioBetaAutomationStartTimeFromProduct)
     ON_BN_CLICKED(IDC_RADIO_BETA_AUTOMATION_START_TIME_WALL_CLOCK_OFFSET, &CFmiBetaProductAutomationDialog::OnBnClickedRadioBetaAutomationStartTimeWallClockOffset)
     ON_BN_CLICKED(IDC_RADIO_BETA_AUTOMATION_START_TIME_FROM_MODEL, &CFmiBetaProductAutomationDialog::OnBnClickedRadioBetaAutomationStartTimeFromModel)
@@ -144,6 +143,7 @@ BEGIN_MESSAGE_MAP(CFmiBetaProductAutomationDialog, CTabPageSSL)
     ON_BN_CLICKED(IDC_BUTTON_RUN_SELECTED_AUTOMATION, &CFmiBetaProductAutomationDialog::OnBnClickedButtonRunSelectedAutomation)
     ON_BN_CLICKED(IDC_BUTTON_RUN_ALL_AUTOMATIONS, &CFmiBetaProductAutomationDialog::OnBnClickedButtonRunAllAutomations)
     ON_BN_CLICKED(IDC_BUTTON_RUN_ENABLED_AUTOMATIONS, &CFmiBetaProductAutomationDialog::OnBnClickedButtonRunEnabledAutomations)
+    ON_EN_CHANGE(IDC_EDIT_BETA_AUTOMATION_DATA_TRIGGERS, &CFmiBetaProductAutomationDialog::OnEnChangeEditBetaAutomationDataTriggers)
 END_MESSAGE_MAP()
 
 
@@ -218,6 +218,7 @@ void CFmiBetaProductAutomationDialog::InitDialogTexts()
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_BETA_AUTOMATION_TIME_STEP_HEADER, NFmiBetaProductAutomation::RunTimeStepInHoursTitle().c_str());
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_BETA_AUTOMATION_FIRST_RUN_OF_DAY_HEADER, NFmiBetaProductAutomation::FirstRunTimeOfDayTitle().c_str());
     CFmiWin32Helpers::SetDialogItemText(this, IDC_RADIO_TRIGGER_MODE_DATA_EVENT, "Data event");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DATA_TRIGGERS_SAMPLE_TEXT, "param_prod[_level] list:\nT_ec, par10_prod240_500");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_BETA_AUTOMATION_START_TIME_MODE_GROUP, "Start time mode");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_BETA_AUTOMATION_END_TIME_MODE_GROUP, "End time mode");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_RADIO_BETA_AUTOMATION_START_TIME_FROM_PRODUCT, "Beta product time");
@@ -259,29 +260,7 @@ void CFmiBetaProductAutomationDialog::InitControlsFromDocument()
         itsSelectedAutomationFullFilePath = CT2A(itsAutomationNameU_);
         itsSelectedAutomationFullFilePath += "." + NFmiBetaProductionSystem::BetaAutomationFileExtension();
     }
-
-    // Laitetaan demo mielessä jotain puppua comboon
-    itsMultiDataSelector.AddString(_TEXT("EC-sfc-scand"));
-    itsMultiDataSelector.AddString(_TEXT("EC-sfc2-scand"));
-    itsMultiDataSelector.AddString(_TEXT("EC-sfc-3vrk-scand"));
-    itsMultiDataSelector.AddString(_TEXT("EC-pre-scand"));
-    itsMultiDataSelector.AddString(_TEXT("EC-hyb-scand"));
-    itsMultiDataSelector.AddString(_TEXT("EC-prob-FMI-scand"));
-    itsMultiDataSelector.AddString(_TEXT("EC-si-scand"));
-    itsMultiDataSelector.AddString(_TEXT("Hir-sfc-scand"));
-    itsMultiDataSelector.AddString(_TEXT("Hir-pre-scand"));
-    itsMultiDataSelector.AddString(_TEXT("Hir-hyb-scand"));
-    itsMultiDataSelector.AddString(_TEXT("Hir-si-scand"));
-    itsMultiDataSelector.AddString(_TEXT("Har-sfc-scand"));
-    itsMultiDataSelector.AddString(_TEXT("Har-pre-scand"));
-    itsMultiDataSelector.AddString(_TEXT("Har-hyb-scand"));
-    itsMultiDataSelector.AddString(_TEXT("Har-si-scand"));
-    itsMultiDataSelector.AddString(_TEXT("GFS-sfc-scand"));
-    itsMultiDataSelector.AddString(_TEXT("GFS-pre-scand"));
-    itsMultiDataSelector.AddString(_TEXT("GFS-si-scand"));
-    itsMultiDataSelector.SelectAll(FALSE);
-    itsMultiDataSelector.SetCheck(0, TRUE);
-
+    itsBetaAutomationDataTriggersStringU_ = CA2T(itsBetaProductionSystem->TriggerDataString().c_str());
 
     UpdateData(FALSE);
 
@@ -307,7 +286,7 @@ void CFmiBetaProductAutomationDialog::InitControlsFromLoadedBetaAutomation()
     itsBetaAutomationEndTimeClockOffsetValueU_ = CA2T(itsBetaProductAutomation->EndTimeModeInfo().itsWallClockOffsetInHoursString.c_str());
     itsBetaAutomationStartTimeClockOffsetErrorU_ = CA2T(itsBetaProductAutomation->StartTimeModeInfoStatusString().c_str());
     itsBetaAutomationEndTimeClockOffsetErrorU_ = CA2T(itsBetaProductAutomation->EndTimeModeInfoStatusString().c_str());
-
+    itsBetaAutomationDataTriggersStringU_ = CA2T(itsBetaProductAutomation->TriggerModeInfo().itsTriggerDataString.c_str());
     UpdateData(FALSE);
 
 }
@@ -327,6 +306,7 @@ void CFmiBetaProductAutomationDialog::StoreControlValuesToDocument()
     itsBetaProductionSystem->StartTimeClockOffsetInHoursString(CFmiWin32Helpers::CT2std(itsBetaAutomationStartTimeClockOffsetValueU_));
     itsBetaProductionSystem->EndTimeClockOffsetInHoursString(CFmiWin32Helpers::CT2std(itsBetaAutomationEndTimeClockOffsetValueU_));
     itsBetaProductionSystem->AutomationPath(CFmiWin32Helpers::CT2std(itsAutomationNameU_));
+    itsBetaProductionSystem->TriggerDataString(CFmiWin32Helpers::CT2std(itsBetaAutomationDataTriggersStringU_));
 }
 
 void CFmiBetaProductAutomationDialog::DoWhenClosing(void)
@@ -360,7 +340,7 @@ void CFmiBetaProductAutomationDialog::UpdateBetaProductPathInfo()
 void CFmiBetaProductAutomationDialog::UpdateTriggerModeInfo()
 {
     UpdateData(TRUE);
-    itsBetaProductAutomation->CheckTriggerModeInfo(itsTriggerModeIndex, CFmiWin32Helpers::CT2std(itsBetaAutomationFixedTimesStringU_), CFmiWin32Helpers::CT2std(itsBetaAutomationTimeStepStringU_), CFmiWin32Helpers::CT2std(itsBetaAutomationFirstRunOfDayValueU_), "TriggerDataString");
+    itsBetaProductAutomation->CheckTriggerModeInfo(itsTriggerModeIndex, CFmiWin32Helpers::CT2std(itsBetaAutomationFixedTimesStringU_), CFmiWin32Helpers::CT2std(itsBetaAutomationTimeStepStringU_), CFmiWin32Helpers::CT2std(itsBetaAutomationFirstRunOfDayValueU_), CFmiWin32Helpers::CT2std(itsBetaAutomationDataTriggersStringU_));
     itsBetaAutomationTriggerModeInfoStringU_ = CA2T(itsBetaProductAutomation->TriggerModeInfoStatusString().c_str());
     CheckForSaveButtonEnablations();
     UpdateData(FALSE);
@@ -552,19 +532,6 @@ void CFmiBetaProductAutomationDialog::OnEnChangeEditBetaAutomationFirstRunOfDayV
 {
     UpdateTriggerModeInfo();
 }
-
-
-void CFmiBetaProductAutomationDialog::OnCbnSelchangeComboBetaAutomationDataTrigger()
-{
-    // Ks. mallia CFmiTempDlg::OnCbnSelchangeComboProducerSelection
-}
-
-
-void CFmiBetaProductAutomationDialog::OnCbnCloseupComboBetaAutomationDataTrigger()
-{
-    // Ks. mallia CFmiTempDlg::OnCbnCloseUp
-}
-
 
 void CFmiBetaProductAutomationDialog::OnBnClickedRadioBetaAutomationStartTimeFromProduct()
 {
@@ -956,4 +923,10 @@ void CFmiBetaProductAutomationDialog::OnBnClickedButtonRunEnabledAutomations()
         CatLog::logMessage("Nothing was found for \"Run enabled\" on-demand Beta-automation run", CatLog::Severity::Warning, CatLog::Category::Operational, true);
     }
     UpdateAutomationList();
+}
+
+
+void CFmiBetaProductAutomationDialog::OnEnChangeEditBetaAutomationDataTriggers()
+{
+    UpdateTriggerModeInfo();
 }
