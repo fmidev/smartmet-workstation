@@ -362,6 +362,12 @@ UINT CFmiDataLoadingThread2::DoThread(LPVOID /* pParam */ )
 					// jatketaan vain loopitusta
 				}
 
+				if(gFirstTimeGoingThrough)
+				{
+					// Jos oltiin tekemässä 1. ajo kertaa, nukutaan vähän aikaa, ennen kuin laitetaan lippu 
+					// pois päältä, jotta systeemi ehtii ottaa kierroksella tulleet datat käyttöön ennen moodin vaihtoa,
+					Sleep(1 * 1000);
+				}
 				gFirstTimeGoingThrough = false;
 				NFmiInfoOrganizer::MarkLoadedDataAsOld(gFirstTimeGoingThrough);
 				timer.StartTimer(); // aloitetaan taas uusi ajan lasku
