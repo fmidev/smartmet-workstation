@@ -227,6 +227,8 @@ public:
 	float GetTimeBoxFillColorAlpha() const { return itsTimeBoxFillColorVM.Alpha(); }
 	void SetTimeBoxFillColorAlpha(float newAlpha);
 	static const NFmiColor TimeBoxFillColorDefault;
+	static const FmiDirection TimeBoxLocationDefault;
+	static const float TimeBoxTextSizeFactorDefault;
 
 	// HUOM!! T‰m‰ laittaa kommentteja mukaan!
 	void Write(std::ostream& os) const;
@@ -367,11 +369,11 @@ private:
 	// T‰t‰ ei talleteta minnek‰‰n, eik‰ arvoa kopioida mitenk‰‰n.
 	bool fPrintingModeOn = false;
 	// Mihin kohtaan kartan aikalegenda piirret‰‰n (bottom-left/center/right tai top-left/center/right)
-	FmiDirection itsTimeBoxLocationVM = kBottomLeft;
+	FmiDirection itsTimeBoxLocationVM = TimeBoxLocationDefault;
 	// Aikatekstill‰ on konffattu kaksi eri teksti‰ ja niille s‰‰det‰‰n koot erikseen konffeissa.
 	// Tekstikokoja voidaan s‰‰t‰‰ t‰m‰n avulla pienemmiksi (arvo < 1) ja isommiksi (arvo > 1).
 	// Rajat t‰lle s‰‰dˆlle on laitettu 0.5 - 2.5.
-	float itsTimeBoxTextSizeFactorVM = 1.f;
+	float itsTimeBoxTextSizeFactorVM = TimeBoxTextSizeFactorDefault;
 	static const float itsTimeBoxTextSizeFactorMinLimit;
 	static const float itsTimeBoxTextSizeFactorMaxLimit;
 	// Aikatekstin laatikon pohjav‰ri ja sen alpha on tallessa t‰ss‰

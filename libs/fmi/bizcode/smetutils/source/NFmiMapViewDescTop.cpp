@@ -240,6 +240,8 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Read(std::istream& is)
 const float NFmiMapViewDescTop::itsTimeBoxTextSizeFactorMinLimit = 0.5f;
 const float NFmiMapViewDescTop::itsTimeBoxTextSizeFactorMaxLimit = 2.5f;
 const NFmiColor NFmiMapViewDescTop::TimeBoxFillColorDefault = NFmiColor(1, 1, 1, 0.4f);
+const FmiDirection NFmiMapViewDescTop::TimeBoxLocationDefault = kBottomLeft;
+const float NFmiMapViewDescTop::TimeBoxTextSizeFactorDefault = 1.f;
 
 NFmiMapViewDescTop::NFmiMapViewDescTop()
 :itsSettingsBaseName()

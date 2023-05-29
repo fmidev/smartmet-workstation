@@ -4444,10 +4444,10 @@ void AddSetAlphaToSubMenu(std::unique_ptr<NFmiMenuItemList>& subMenuList, unsign
 	// Lisätään annettu uusi paikka popupiin, vain jos se ei ole sama kuin nykyinen sijainti
 	if(mapViewDescTop && mapViewDescTop->GetTimeBoxFillColorAlpha() != alphaValue)
 	{
-		std::string alphaStr = std::to_string(boost::math::iround((1.f - alphaValue) * 100));
+		std::string alphaStr = std::to_string(boost::math::iround(alphaValue * 100));
 		alphaStr += " %";
 		auto setAlphaMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, alphaStr, NFmiDataIdent(), kFmiSetTimeBoxFillColorAlpha, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
-		// Haluttu alpha kerroin talletetaan menuItem luokan extraParam kohdassa
+		// Haluttu alpha kerroin talletetaan käänteisenä arvona (johtuen NFmiColor luokan käänteisestä alpha kanavan jutusta) menuItem luokan extraParam kohdassa
 		setAlphaMenuItem->ExtraParam(alphaValue);
 		subMenuList->Add(std::move(setAlphaMenuItem));
 	}
@@ -4501,6 +4501,15 @@ void DoTimeBoxCustomFillColorSetup(NFmiMenuItem& theMenuItem)
 	}
 }
 
+void DoTimeBoxToDefaultValues(NFmiMenuItem& theMenuItem)
+{
+	auto combinedMapHandler = GetCombinedMapHandler();
+	combinedMapHandler->onSetTimeBoxLocation(theMenuItem.MapViewDescTopIndex(), NFmiMapViewDescTop::TimeBoxLocationDefault);
+	combinedMapHandler->onSetTimeBoxTextSizeFactor(theMenuItem.MapViewDescTopIndex(), NFmiMapViewDescTop::TimeBoxTextSizeFactorDefault);
+	combinedMapHandler->onSetTimeBoxFillColor(theMenuItem.MapViewDescTopIndex(), NFmiMapViewDescTop::TimeBoxFillColorDefault);
+	combinedMapHandler->onSetTimeBoxFillColorAlpha(theMenuItem.MapViewDescTopIndex(), NFmiMapViewDescTop::TimeBoxFillColorDefault.Alpha());
+}
+
 void SetTimeBoxFillColorFromMenu(NFmiMenuItem& theMenuItem)
 {
 	if(theMenuItem.ExtraTextParam() == gTimeBoxFillColorCustomName)
@@ -4542,12 +4551,20 @@ void AddSetTimeBoxFillColorSubMenuForTimeBoxPopup(std::unique_ptr<NFmiMenuItemLi
 	mainMenuList->Add(std::move(setTextSizeMenuItem));
 }
 
+void AddSetTimeBoxSetToDefaultForTimeBoxPopup(std::unique_ptr<NFmiMenuItemList>& mainMenuList, unsigned int theDescTopIndex)
+{
+	std::string setToDefaultMenuString = ::GetDictionaryString("Set to default");
+	auto setToDefaultMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, setToDefaultMenuString, NFmiDataIdent(), kFmiSetTimeBoxToDefaultValues, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+	mainMenuList->Add(std::move(setToDefaultMenuItem));
+}
+
 bool CreateMapViewTimeBoxPopup(unsigned int theDescTopIndex)
 {
 	if(theDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
 	{
 		itsPopupMenu = std::make_unique<NFmiMenuItemList>();
 
+		AddSetTimeBoxSetToDefaultForTimeBoxPopup(itsPopupMenu, theDescTopIndex);
 		AddSetLocationSubMenuForTimeBoxPopup(itsPopupMenu, theDescTopIndex);
 		AddSetTextSizeFactorSubMenuForTimeBoxPopup(itsPopupMenu, theDescTopIndex);
 		AddSetTimeBoxFillColorAlphaSubMenuForTimeBoxPopup(itsPopupMenu, theDescTopIndex);
@@ -5039,6 +5056,9 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 			break;
 		case kFmiSetTimeBoxCustomFillColor:
 			DoTimeBoxCustomFillColorSetup(*menuItem);
+			break;
+		case kFmiSetTimeBoxToDefaultValues:
+			DoTimeBoxToDefaultValues(*menuItem);
 			break;
 
 		default:
