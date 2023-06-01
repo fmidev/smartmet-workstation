@@ -70,6 +70,46 @@ NFmiDefineWantedData& NFmiDefineWantedData::operator=(const NFmiDefineWantedData
   return *this;
 }
 
+bool NFmiDefineWantedData::operator==(const NFmiDefineWantedData& other) const
+{
+  if (dataType_ != other.dataType_)
+  {
+      return false;
+  }
+  if(producer_ != other.producer_)
+  {
+      return false;
+  }
+  if(param_ != other.param_)
+  {
+      return false;
+  }
+  if (levelPtr_ && other.levelPtr_)
+  {
+    // Molemmissa oli level pointteri, vertaillaan levelin arvoja sitten
+    if (*levelPtr_ != *other.levelPtr_)
+    {
+      return false;
+    }
+  }
+  else if (!levelPtr_ && !other.levelPtr_)
+  {
+    // Kummassakain oli level pointteri nullptr, ei tarvitse tehd‰ mit‰‰n t‰ss‰, mutta
+    // piti varmistaa t‰m‰kin tapaus erikseen, jotta else haaraan menee ne tapaukset, miss‰
+    // toisessa on level ja toisessa ei.
+  }
+  else
+  {
+    return false;
+  }
+  if(levelType_ != other.levelType_)
+  {
+      return false;
+  }
+  // Huom! originalDataString_ ei tarvitse olla sama (T_ec == par4_prod240), sille ei tarkastelua
+  return true;
+}
+
 bool NFmiDefineWantedData::IsEditedData() const
 {
     return dataType_ == NFmiInfoData::kEditable;

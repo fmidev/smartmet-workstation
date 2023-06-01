@@ -180,8 +180,8 @@ public:
     bool LoadStaticHelpData(void);
     AddParams::ParameterSelectionSystem& ParameterSelectionSystem();
     void UpdateParameterSelectionSystem();
-    boost::shared_ptr<NFmiFastQueryInfo> GetFavoriteSurfaceModelFractileData();
-    boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData(const NFmiLevel& theLevel);
+	boost::shared_ptr<NFmiFastQueryInfo> GetBestSuitableModelFractileData(boost::shared_ptr<NFmiFastQueryInfo>& usedOriginalInfo);
+	boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData(const NFmiLevel& theLevel);
     bool IsWorkingDataSaved();
     SmartMetDocumentInterface& GetSmartMetDocumentInterface();
     ToolboxViewsInterface& GetToolboxViewsInterface();
@@ -512,6 +512,7 @@ public:
 	void OpenPopupMenu(bool newState);
 	bool CreateMaskSelectionPopup(void);
 	bool CreateParamSelectionPopup(unsigned int theDescTopIndex, int theRowIndex);
+	bool CreateMapViewTimeBoxPopup(unsigned int theDescTopIndex);
 	bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue);
 	bool CreateMaskSelectionPopup(int theRowIndex);
 	bool CreateMaskParamsPopup(int theRowIndex, int index);

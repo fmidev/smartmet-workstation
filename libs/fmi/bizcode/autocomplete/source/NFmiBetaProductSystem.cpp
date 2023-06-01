@@ -10,6 +10,9 @@
 #include "NFmiFileSystem.h"
 #include "NFmiPathUtils.h"
 #include "MakeOptionalExePath.h"
+#include "NFmiSmartToolIntepreter.h"
+#include "NFmiFastQueryInfo.h"
+#include "NFmiInfoOrganizer.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -268,7 +271,6 @@ NFmiBetaProduct::NFmiBetaProduct()
 ,itsTimeStepInMinutesString()
 ,itsTimeStepInMinutes(0)
 ,fUseUtcTimesInTimeBox(false)
-,itsTimeBoxLocation(kBottomLeft)
 ,itsParamBoxLocation(kNoDirection)
 ,fTimeInputOk(false)
 ,itsTimeInputErrorString()
@@ -294,7 +296,7 @@ NFmiBetaProduct::NFmiBetaProduct()
 }
 
 // K‰y l‰pi kaikki tarkastelut ja tekee virheilmoituksia
-bool NFmiBetaProduct::CheckTimeRelatedInputs(const NFmiMetTime &theStartingTime, const std::string &theTimeLengthInHoursString, const std::string &theTimeStepInMinutesString, bool theUseUtcTimesInTimeBox, FmiDirection theTimeBoxLocation)
+bool NFmiBetaProduct::CheckTimeRelatedInputs(const NFmiMetTime &theStartingTime, const std::string &theTimeLengthInHoursString, const std::string &theTimeStepInMinutesString, bool theUseUtcTimesInTimeBox)
 {
     // Nollataan status dataosiot
     fTimeInputOk = false;
@@ -307,7 +309,6 @@ bool NFmiBetaProduct::CheckTimeRelatedInputs(const NFmiMetTime &theStartingTime,
     itsTimeLengthInHoursString = theTimeLengthInHoursString;
     itsTimeStepInMinutesString = theTimeStepInMinutesString;
     fUseUtcTimesInTimeBox = theUseUtcTimesInTimeBox;
-    itsTimeBoxLocation = theTimeBoxLocation;
     itsTimeRangeInfoText = MakeTimeRangeInfoString();
 
     return InputWasGood();
@@ -426,12 +427,6 @@ std::string NFmiBetaProduct::MakeTimeRangeInfoString()
     if(endTime == NFmiMetTime::gMissingTime)
     {
         infoStr = itsTimeInputErrorString;
-    }
-    else if(!::CheckUsedBoxLocation(itsTimeBoxLocation))
-    {
-        infoStr = ::GetDictionaryString("Timebox location was illegal.");
-        infoStr += "\n";
-        infoStr += ::GetDictionaryString("Make correct selection from dropdown list.");
     }
     else
     {
@@ -774,7 +769,6 @@ static const std::string gJsonName_UseAutoFileNames = "UseAutoFileNames";
 static const std::string gJsonName_TimeLengthInHours = "TimeLengthInHours";
 static const std::string gJsonName_TimeStepInMinutes = "TimeStepInMinutes";
 static const std::string gJsonName_UseUtcInTimebox = "UseUtcInTimebox";
-static const std::string gJsonName_TimeboxLocation = "TimeboxLocation";
 static const std::string gJsonName_ParamboxLocation = "ParamboxLocation";
 static const std::string gJsonName_RowIndexList = "RowIndexList";
 static const std::string gJsonName_RowSubdirectoryTemplate = "RowSubdirectoryTemplate";
@@ -807,8 +801,6 @@ json_spirit::Object NFmiBetaProduct::MakeJsonObject(const NFmiBetaProduct &betaP
     ::AddNonEmptyStringJsonPair(betaProduct.TimeStepInMinutesString(), gJsonName_TimeStepInMinutes, jsonObject);
     if(defaultBetaProduct.UseUtcTimesInTimeBox() != betaProduct.UseUtcTimesInTimeBox())
         jsonObject.push_back(json_spirit::Pair(gJsonName_UseUtcInTimebox, betaProduct.UseUtcTimesInTimeBox()));
-    if(defaultBetaProduct.TimeBoxLocation() != betaProduct.TimeBoxLocation())
-        jsonObject.push_back(json_spirit::Pair(gJsonName_TimeboxLocation, betaProduct.TimeBoxLocation()));
     if(defaultBetaProduct.ParamBoxLocation() != betaProduct.ParamBoxLocation())
         jsonObject.push_back(json_spirit::Pair(gJsonName_ParamboxLocation, betaProduct.ParamBoxLocation()));
     if(defaultBetaProduct.DisplayRunTimeInfo() != betaProduct.DisplayRunTimeInfo())
@@ -831,7 +823,7 @@ json_spirit::Object NFmiBetaProduct::MakeJsonObject(const NFmiBetaProduct &betaP
 
 void NFmiBetaProduct::InitFromJsonRead(const NFmiMetTime &theStartingTime)
 {
-    auto timeStatus = CheckTimeRelatedInputs(theStartingTime, itsTimeLengthInHoursString, itsTimeStepInMinutesString, fUseUtcTimesInTimeBox, itsTimeBoxLocation);
+    auto timeStatus = CheckTimeRelatedInputs(theStartingTime, itsTimeLengthInHoursString, itsTimeStepInMinutesString, fUseUtcTimesInTimeBox);
     auto rowStatus = CheckRowRelatedInputs(itsRowIndexListString, itsRowSubdirectoryTemplate, itsFileNameTemplate, fUseAutoFileNames, itsParamBoxLocation);
     auto  stationIdStatus = CheckSynopStationIdListRelatedInputs(itsSynopStationIdListString);
     MakeViewMacroInfoText(itsViewMacroPath);
@@ -860,8 +852,6 @@ void NFmiBetaProduct::ParseJsonPair(json_spirit::Pair &thePair)
         itsTimeStepInMinutesString = thePair.value_.get_str();
     else if(thePair.name_ == gJsonName_UseUtcInTimebox)
         fUseUtcTimesInTimeBox = thePair.value_.get_bool();
-    else if(thePair.name_ == gJsonName_TimeboxLocation)
-        itsTimeBoxLocation = static_cast<FmiDirection>(thePair.value_.get_int());
     else if(thePair.name_ == gJsonName_ParamboxLocation)
         itsParamBoxLocation = static_cast<FmiDirection>(thePair.value_.get_int());
     else if(thePair.name_ == gJsonName_DisplayRuntimeInfo)
@@ -1001,7 +991,7 @@ NFmiBetaProductAutomation::NFmiTriggerModeInfo::NFmiTriggerModeInfo()
 , itsFirstRunTimeOfDayString()
 , itsFirstRunTimeOffsetInMinutes(0)
 , itsTriggerDataString()
-, itsTriggerData()
+, itsTriggerDataList()
 , fTriggerModeInfoStatus(false)
 , itsTriggerModeInfoStatusString()
 {
@@ -1131,10 +1121,74 @@ void NFmiBetaProductAutomation::NFmiTriggerModeInfo::CheckTimeStep()
     }
 }
 
+static std::string MakeTriggerDataErrorLine(const std::string possibleParameterErrorListStr)
+{
+    return ::GetDictionaryString("Error with these") + ": " + possibleParameterErrorListStr;
+}
+
+static void AddParameterToErrorString(const std::string &parameterStr, std::string& errorStr)
+{
+    if(!errorStr.empty())
+    {
+        errorStr += ", ";
+    }
+    errorStr += parameterStr;
+}
+
+
 void NFmiBetaProductAutomation::NFmiTriggerModeInfo::CheckTriggerData()
 {
-    fTriggerModeInfoStatus = false;
-    itsTriggerModeInfoStatusString = ::GetDictionaryString("Data event is not implemented yet");
+    itsTriggerDataList.clear();
+    std::string possibleParameterErrorListStr;
+    std::vector<std::string> parameterStringList;
+    boost::split(parameterStringList, itsTriggerDataString, boost::is_any_of(","));
+    for(std::string parameterStr : parameterStringList)
+    {
+        boost::trim(parameterStr);
+        if(!parameterStr.empty())
+        {
+            try
+            {
+                auto dataInfo = NFmiSmartToolIntepreter::CheckForVariableDataType(parameterStr);
+                if(dataInfo.first)
+                {
+                    itsTriggerDataList.push_back(dataInfo.second);
+                }
+                else
+                {
+                    AddParameterToErrorString(parameterStr, possibleParameterErrorListStr);
+                }
+            }
+            catch(std::exception& )
+            {
+                AddParameterToErrorString(parameterStr, possibleParameterErrorListStr);
+            }
+        }
+    }
+
+    if(!itsTriggerDataList.empty())
+    {
+        itsTriggerModeInfoStatusString = ::GetDictionaryString("Found");
+        itsTriggerModeInfoStatusString += " " + std::to_string(itsTriggerDataList.size()) + " " + ::GetDictionaryString("trigger data");
+        if(possibleParameterErrorListStr.empty())
+        {
+            fTriggerModeInfoStatus = true;
+        }
+        else
+        {
+            fTriggerModeInfoStatus = false;
+            itsTriggerModeInfoStatusString += "\n" + ::MakeTriggerDataErrorLine(possibleParameterErrorListStr);
+        }
+    }
+    else
+    {
+        fTriggerModeInfoStatus = false;
+        itsTriggerModeInfoStatusString = ::GetDictionaryString("Found no trigger data");
+        if(!possibleParameterErrorListStr.empty())
+        {
+            itsTriggerModeInfoStatusString += "\n" + ::MakeTriggerDataErrorLine(possibleParameterErrorListStr);
+        }
+    }
 }
 
 // T‰m‰ toimii vain itsTriggerMode == kFmiTimeStep -moodissa!!!!
@@ -1212,6 +1266,63 @@ NFmiMetTime NFmiBetaProductAutomation::NFmiTriggerModeInfo::CalcNextDueTime(cons
     return NFmiMetTime::gMissingTime; // virhetilanne, palautetaan puuttuva aika
 }
 
+static bool CheckIfInfoWasOnTriggerList(boost::shared_ptr<NFmiFastQueryInfo> &info, const std::vector<std::string>& loadedDataTriggerList, const std::string &automationName)
+{
+    if(info)
+    {
+        auto filePatternIter = std::find(loadedDataTriggerList.begin(), loadedDataTriggerList.end(), info->DataFilePattern());
+        if(filePatternIter != loadedDataTriggerList.end())
+        {
+            std::string debugTriggerMessage = "Beta automation '";
+            debugTriggerMessage += automationName;
+            debugTriggerMessage += "' was triggered by loading data: ";
+            debugTriggerMessage += info->DataFileName();
+            CatLog::logMessage(debugTriggerMessage, CatLog::Severity::Debug, CatLog::Category::Operational);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, const std::string& automationName, bool automationModeOn) const
+{
+    if(automationModeOn)
+    {
+        if(itsTriggerMode == kFmiDataTrigger)
+        {
+            if(!itsTriggerDataList.empty())
+            {
+                for(const auto& triggerData : itsTriggerDataList)
+                {
+                    auto wantedProducerId = triggerData.producer_.GetIdent();
+                    if(wantedProducerId == kFmiSYNOP || wantedProducerId == kFmiFlashObs)
+                    {
+                        // Ainakin Suomessa Synop ja Flash datat ovat multi-data juttuja, jolloin
+                        // pit‰‰ tutkia ett‰ onko mik‰‰n kyseisen tuottajan datoista juuri nyt ladattu
+                        auto infoList = infoOrganizer.GetInfos(wantedProducerId);
+                        for(auto& info : infoList)
+                        {
+                            if(::CheckIfInfoWasOnTriggerList(info, loadedDataTriggerList, automationName))
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        auto wantedInfoData = NFmiExtraMacroParamData::FindWantedInfo(infoOrganizer, triggerData);
+                        if(::CheckIfInfoWasOnTriggerList(wantedInfoData.foundInfo_, loadedDataTriggerList, automationName))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
 static const std::string gJsonName_TriggerMode = "TriggerMode";
 static const std::string gJsonName_FixedRunTimes = "FixedRunTimes";
 static const std::string gJsonName_RunTimeStepInHours = "RunTimeStepInHours";
@@ -1255,7 +1366,7 @@ void NFmiBetaProductAutomation::NFmiTriggerModeInfo::ParseJsonPair(json_spirit::
     else if(thePair.name_ == gJsonName_TriggerData)
     {
         itsTriggerDataString = thePair.value_.get_str();
-        // HUOM! Laske trigger data lista t‰ss‰
+        CheckTriggerData();
     }
 }
 
@@ -1271,7 +1382,7 @@ bool NFmiBetaProductAutomation::NFmiTriggerModeInfo::operator==(const NFmiBetaPr
         return false;
     if(itsFirstRunTimeOffsetInMinutes != other.itsFirstRunTimeOffsetInMinutes)
         return false;
-    if(itsTriggerData != other.itsTriggerData)
+    if(itsTriggerDataList != other.itsTriggerDataList)
         return false;
 
     return true;
@@ -1869,18 +1980,27 @@ bool NFmiBetaProductAutomationList::HasAutomationAlready(const std::string &theF
     return pos != uniqueFilePaths.end();
 }
 
-std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductAutomationList::GetDueAutomations(const NFmiMetTime &theCurrentTime, bool automationModeOn)
+std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductAutomationList::GetDueAutomations(const NFmiMetTime &theCurrentTime, const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, bool automationModeOn)
 {
     std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> dueAutomations;
-    for(auto &listItem : itsAutomationVector)
+    for(auto& listItem : itsAutomationVector)
     {
         if(listItem->fEnable)
         {
             if(listItem->GetErrorStatus() == NFmiBetaProductAutomationListItem::kFmiListItemOk)
             {
-                NFmiMetTime nextRuntime = listItem->itsBetaProductAutomation->TriggerModeInfo().CalcNextDueTime(listItem->itsLastRunTime, automationModeOn);
-                if(nextRuntime > listItem->itsLastRunTime && nextRuntime <= theCurrentTime)
-                    dueAutomations.push_back(listItem);
+                const auto& triggerModeInfo = listItem->itsBetaProductAutomation->TriggerModeInfo();
+                if(triggerModeInfo.itsTriggerMode == NFmiBetaProductAutomation::kFmiDataTrigger)
+                {
+                    if(triggerModeInfo.HasDataTriggerBeenLoaded(loadedDataTriggerList, infoOrganizer, listItem->AutomationName(), automationModeOn))
+                        dueAutomations.push_back(listItem);
+                }
+                else
+                {
+                    NFmiMetTime nextRuntime = triggerModeInfo.CalcNextDueTime(listItem->itsLastRunTime, automationModeOn);
+                    if(nextRuntime > listItem->itsLastRunTime && nextRuntime <= theCurrentTime)
+                        dueAutomations.push_back(listItem);
+                }
             }
         }
     }
@@ -1966,7 +2086,6 @@ NFmiBetaProductionSystem::NFmiBetaProductionSystem()
 , mBetaProductTimeStepInMinutes()
 , mBetaProductTimeLengthInHours()
 , mBetaProductUseUtcTimesInTimeBox()
-, mBetaProductTimeBoxLocation()
 , mBetaProductParamBoxLocation()
 , mBetaProductStoragePath()
 , mBetaProductFileNameTemplate()
@@ -1996,6 +2115,7 @@ NFmiBetaProductionSystem::NFmiBetaProductionSystem()
 , mStartTimeClockOffsetInHoursString()
 , mEndTimeClockOffsetInHoursString()
 , mAutomationPath()
+, mTriggerDataString()
 {
 }
 
@@ -2014,7 +2134,6 @@ bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, cons
     mBetaProductTimeStepInMinutes = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, betaProductSectionName, "\\TimeStepInMinutes", usedKey, 60);
     mBetaProductTimeLengthInHours = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, betaProductSectionName, "\\TimeLengthInHours", usedKey, 15);
     mBetaProductUseUtcTimesInTimeBox = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, betaProductSectionName, "\\UseUtcTimesInTimeBox", usedKey, false);
-    mBetaProductTimeBoxLocation = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, betaProductSectionName, "\\TimeBoxLocation", usedKey, kBottomLeft);
     mBetaProductParamBoxLocation = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, betaProductSectionName, "\\ParamBoxLocation", usedKey, kNoDirection);
     mBetaProductStoragePath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\StoragePath", usedKey, "");
     mBetaProductFileNameTemplate = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\FileNameTemplate", usedKey, "product1_validTime.png");
@@ -2051,6 +2170,7 @@ bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, cons
     mStartTimeClockOffsetInHoursString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\StartTimeClockOffsetInHours", usedKey, "");
     mEndTimeClockOffsetInHoursString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\EndTimeClockOffsetInHours", usedKey, "");
     mAutomationPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\AutomationPath", usedKey, "");
+    mTriggerDataString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\TriggerData", usedKey, "");
 
     std::function<std::string()> getterFunction = [this]() {return this->GetBetaProductionBaseDirectory(); };
     NFmiBetaProductAutomation::SetBetaProductionBaseDirectoryGetter(getterFunction);
@@ -2128,13 +2248,13 @@ bool NFmiBetaProductionSystem::InitImagePackingExe(const std::string& theAbsolut
 
 // SmartMetin CMainFrm::OnTimer kutsuu t‰t‰ funktiota kerran minuutissa ja p‰‰ttelee onko teht‰v‰ mit‰‰n 
 // itsUsedAutomationList:alla olevaa tuotantoa.
-bool NFmiBetaProductionSystem::DoNeededBetaAutomation()
+bool NFmiBetaProductionSystem::DoNeededBetaAutomation(const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer)
 {
     NFmiMetTime currentTime(1); // Otetaan talteen nyky UTC hetki minuutin tarkkuudella
     bool automationModeOn = AutomationModeOn();
     if(automationModeOn)
     {
-        std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> dueAutomations = itsUsedAutomationList.GetDueAutomations(currentTime, automationModeOn);
+        std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> dueAutomations = itsUsedAutomationList.GetDueAutomations(currentTime, loadedDataTriggerList, infoOrganizer, automationModeOn);
         if(!dueAutomations.empty())
         {
             // Joku callback funktio kutsu CFmiBetaProductDialog-luokalle
@@ -2211,17 +2331,6 @@ bool NFmiBetaProductionSystem::BetaProductUseUtcTimesInTimeBox()
 void NFmiBetaProductionSystem::BetaProductUseUtcTimesInTimeBox(bool newValue)
 {
     *mBetaProductUseUtcTimesInTimeBox = newValue;
-}
-
-FmiDirection NFmiBetaProductionSystem::BetaProductTimeBoxLocation()
-{
-    int tmpValue = *mBetaProductTimeBoxLocation;
-    return static_cast<FmiDirection>(tmpValue);
-}
-
-void NFmiBetaProductionSystem::BetaProductTimeBoxLocation(FmiDirection newValue)
-{
-    *mBetaProductTimeBoxLocation = newValue;
 }
 
 FmiDirection NFmiBetaProductionSystem::BetaProductParamBoxLocation()
@@ -2539,3 +2648,14 @@ void NFmiBetaProductionSystem::AutomationPath(const std::string& newValue)
 {
     *mAutomationPath = newValue;
 }
+
+std::string NFmiBetaProductionSystem::TriggerDataString()
+{
+    return *mTriggerDataString;
+}
+
+void NFmiBetaProductionSystem::TriggerDataString(const std::string& newValue)
+{
+    *mTriggerDataString = newValue;
+}
+

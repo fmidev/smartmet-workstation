@@ -35,6 +35,7 @@ public:
     const NFmiPoint& CrossSectionViewSizeInPixels(void) override;
     const NFmiPoint& MapViewSizeInPixels(int theMapViewDescTopIndex) override;
     bool Printing() override;
+    bool CreateMapViewTimeBoxPopup(unsigned int theDescTopIndex);
     bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue) override;
     void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool fMakeAreaViewDirty = false, bool fClearCache = false, int theWantedMapViewDescTop = -1) override;
     void RefreshApplicationViewsAndDialogs(const std::string& reasonForUpdate, SmartMetViewId updatedViewsFlag, bool redrawMapView = false, bool clearMapViewBitmapCacheRows = false, int theWantedMapViewDescTop = -1) override;
@@ -264,7 +265,7 @@ public:
     const NFmiVPlaceDescriptor& SoundingPlotLevels(void) override;
     double BrushValue(void) override;
     boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData(const NFmiLevel& theLevel) override;
-    boost::shared_ptr<NFmiFastQueryInfo> GetFavoriteSurfaceModelFractileData() override;
+    boost::shared_ptr<NFmiFastQueryInfo> GetBestSuitableModelFractileData(boost::shared_ptr<NFmiFastQueryInfo>& usedOriginalInfo) override;
     boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData() override;
     bool UseCombinedMapMode() const override;
     void UseCombinedMapMode(bool newValue) override;

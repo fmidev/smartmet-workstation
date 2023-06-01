@@ -136,6 +136,11 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::Printing()
     return itsDoc->Printing();
 }
 
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::CreateMapViewTimeBoxPopup(unsigned int theDescTopIndex)
+{
+    return itsDoc->CreateMapViewTimeBoxPopup(theDescTopIndex);
+}
+
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue)
 {
     return itsDoc->CreateViewParamsPopup(theDescTopIndex, theRowIndex, layerIndex, layerIndexRealValue);
@@ -1275,9 +1280,9 @@ boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc:
     return itsDoc->GetModelClimatologyData(theLevel);
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetFavoriteSurfaceModelFractileData()
+boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetBestSuitableModelFractileData(boost::shared_ptr<NFmiFastQueryInfo>& usedOriginalInfo)
 {
-    return itsDoc->GetFavoriteSurfaceModelFractileData();
+    return itsDoc->GetBestSuitableModelFractileData(usedOriginalInfo);
 }
 
 boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetMosTemperatureMinAndMaxData()

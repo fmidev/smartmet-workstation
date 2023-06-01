@@ -145,6 +145,8 @@
 #include "NFmiLedLightStatus.h"
 #include "NFmiTempDataGenerator.h"
 #include "FmiDataLoadingThread2.h"
+#include "CtrlViewGdiPlusFunctions.h"
+#include "ProducerData.h"
 
 #include "AnimationProfiler.h"
 
@@ -2513,7 +2515,27 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 		DoPossibleCaseStudyEditedDataSetup(theData, theDataFileName, theType, fDataWasDeletedOut);
         PrepareForParamAddSystemUpdate();
 		RemoveCombinedDataFromLedChannelReport(theDataFilePattern);
+		AddLoadedDataToTriggerList(theDataFilePattern);
 	}
+}
+
+// Luettu data lis‰t‰‰n listaan vain jos ei olla 1. kierroksen jo lokaali cachehakemistossa 
+// olevia datoja lukemassa eli kun smartmet k‰ynnistyy tai ladataan caseStudy setti‰.
+void AddLoadedDataToTriggerList(const std::string& theDataFilePattern)
+{
+	if(!NFmiInfoOrganizer::IsLoadedDataTreatedAsOld())
+	{
+		itsLoadedDataTriggerList.push_back(theDataFilePattern);
+	}
+}
+
+// T‰ss‰ siis palautetaan triggerList ja nollataan se samalla, eli
+// kunkin dataTriggerin voi pyyt‰‰ vain kerran.
+std::vector<std::string> GetDataTriggerListOwnership()
+{
+	std::vector<std::string> returnedDataTriggerList;
+	returnedDataTriggerList.swap(itsLoadedDataTriggerList);
+	return returnedDataTriggerList;
 }
 
 void RemoveCombinedDataFromLedChannelReport(const std::string& theDataFileFilter)
@@ -3703,19 +3725,20 @@ void AddSatelliteImagesToMenu(const MenuCreationSettings &theMenuSettings, NFmiM
     auto menuItem2 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(),
         theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kSatelData);
 
-	NFmiMenuItemList *satelProducerMenuList = new NFmiMenuItemList;
+	auto satelProducerMenuListPtr = std::make_unique<NFmiMenuItemList>();
 	std::vector<NFmiProducerInfo> &satelProducers = itsSatelImageProducerSystem.Producers();
 	for(size_t j=0; j<satelProducers.size(); j++)
 	{
 		bool anyChannelsFound = false;
         auto menuItemProducer = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, satelProducers[j].Name(), NFmiDataIdent(),
             theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kSatelData);
-		NFmiMenuItemList *satelChannelMenuList = new NFmiMenuItemList;
+		auto satelChannelMenuListPtr = std::make_unique<NFmiMenuItemList>();
 		int helpDataSize = HelpDataInfoSystem()->DynamicCount();
 		for(int i=0; i<helpDataSize; i++)
-		{ // etsit‰‰n currentin tuottajan kuva kanavat/parametrit
-			NFmiHelpDataInfo &helpDataInfo = HelpDataInfoSystem()->DynamicHelpDataInfo(i);
-			if(helpDataInfo.IsEnabled() && helpDataInfo.DataType() == NFmiInfoData::kSatelData)
+		{ 
+			// etsit‰‰n currentin tuottajan kuva kanavat/parametrit
+			const NFmiHelpDataInfo &helpDataInfo = HelpDataInfoSystem()->DynamicHelpDataInfo(i);
+			if(helpDataInfo.IsEnabled() && helpDataInfo.IsDataUsedCaseStudyChecks(CaseStudyModeOn()) && helpDataInfo.DataType() == NFmiInfoData::kSatelData)
 			{
 				int prodId = static_cast<int>(satelProducers[j].ProducerId());
 				int helpDataProdId = helpDataInfo.FakeProducerId();
@@ -3723,32 +3746,22 @@ void AddSatelliteImagesToMenu(const MenuCreationSettings &theMenuSettings, NFmiM
 				{
                     auto satelItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, std::string(helpDataInfo.ImageDataIdent().GetParamName()),
                         helpDataInfo.ImageDataIdent(), theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kSatelData);
-					satelChannelMenuList->Add(std::move(satelItem));
+					satelChannelMenuListPtr->Add(std::move(satelItem));
 					anyChannelsFound = true;
 				}
 			}
 		}
 		if(anyChannelsFound)
 		{
-			menuItemProducer->AddSubMenu(satelChannelMenuList);
-			satelProducerMenuList->Add(std::move(menuItemProducer));
+			menuItemProducer->AddSubMenu(satelChannelMenuListPtr.release());
+			satelProducerMenuListPtr->Add(std::move(menuItemProducer));
 			anySatelProducersFound = true;
-		}
-		else
-		{ 
-            // jos ei lˆytynyt, t‰m‰ pit‰‰ tuhota 'k‰sin'
-			delete satelChannelMenuList;
 		}
 	}
 	if(anySatelProducersFound)
 	{
-		menuItem2->AddSubMenu(satelProducerMenuList);
+		menuItem2->AddSubMenu(satelProducerMenuListPtr.release());
 		theMenuList->Add(std::move(menuItem2));
-	}
-	else
-	{ 
-        // jos ei lˆytynyt, t‰m‰ pit‰‰ tuhota 'k‰sin'
-		delete satelProducerMenuList;
 	}
 }
 
@@ -4368,6 +4381,204 @@ bool IsMapLayerSelectionCase(unsigned int theDescTopIndex, int theRowIndex, int 
 	return (theDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex) && (layerIndex == 0);
 }
 
+void AddSetLocationForTimeBoxPopup(std::unique_ptr<NFmiMenuItemList>& subMenuList, unsigned int theDescTopIndex, FmiDirection wantedLocation, std::string menuNameString)
+{
+	auto mapViewDescTop = GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex);
+	// Lis‰t‰‰n annettu uusi paikka popupiin, vain jos se ei ole sama kuin nykyinen sijainti
+	if(mapViewDescTop && mapViewDescTop->TimeBoxLocation() != wantedLocation)
+	{
+		// Varsinaiset halutut locationit talletetaan menuItem luokan extraParam kohdassa (FmiDirection enum castataan doubleksi)
+		auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuNameString, NFmiDataIdent(), kFmiSetTimeBoxLocation, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+		menuItem->ExtraParam(static_cast<double>(wantedLocation));
+		subMenuList->Add(std::move(menuItem));
+	}
+}
+
+void AddSetLocationSubMenuForTimeBoxPopup(std::unique_ptr<NFmiMenuItemList>& mainMenuList, unsigned int theDescTopIndex)
+{
+	std::string finalSetLocationMenuString = ::GetDictionaryString("Set time legend location");
+	auto setLocationMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, finalSetLocationMenuString, NFmiDataIdent(), kFmiSetTimeBoxLocation, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+	auto setLocationSubMenuItemList = std::make_unique<NFmiMenuItemList>();
+	AddSetLocationForTimeBoxPopup(setLocationSubMenuItemList, theDescTopIndex, kBottomLeft, "Bottom-left");
+	AddSetLocationForTimeBoxPopup(setLocationSubMenuItemList, theDescTopIndex, kTopLeft, "Top-left");
+	AddSetLocationForTimeBoxPopup(setLocationSubMenuItemList, theDescTopIndex, kTopCenter, "Top-center");
+	AddSetLocationForTimeBoxPopup(setLocationSubMenuItemList, theDescTopIndex, kTopRight, "Top-right");
+	AddSetLocationForTimeBoxPopup(setLocationSubMenuItemList, theDescTopIndex, kBottomRight, "Bottom-right");
+	AddSetLocationForTimeBoxPopup(setLocationSubMenuItemList, theDescTopIndex, kBottomCenter, "Bottom-center");
+
+	setLocationMenuItem->AddSubMenu(setLocationSubMenuItemList.release());
+	mainMenuList->Add(std::move(setLocationMenuItem));
+}
+
+void AddSetTextSizeFactorToSubMenu(std::unique_ptr<NFmiMenuItemList>& subMenuList, unsigned int theDescTopIndex, float textSizeFactor)
+{
+	auto mapViewDescTop = GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex);
+	// Lis‰t‰‰n annettu uusi paikka popupiin, vain jos se ei ole sama kuin nykyinen sijainti
+	if(mapViewDescTop && mapViewDescTop->TimeBoxTextSizeFactor() != textSizeFactor)
+	{
+		std::string textSizeFactorStr = NFmiValueString::GetStringWithMaxDecimalsSmartWay(textSizeFactor, 1);
+		auto setTextSizeValueMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, textSizeFactorStr, NFmiDataIdent(), kFmiSetTimeBoxTextSizeFactor, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+		// Haluttu size factor talletetaan menuItem luokan extraParam kohdassa
+		setTextSizeValueMenuItem->ExtraParam(textSizeFactor);
+		subMenuList->Add(std::move(setTextSizeValueMenuItem));
+	}
+}
+
+void AddSetTextSizeFactorSubMenuForTimeBoxPopup(std::unique_ptr<NFmiMenuItemList>& mainMenuList, unsigned int theDescTopIndex)
+{
+	std::string finalSetLocationMenuString = ::GetDictionaryString("Set text size factor");
+	auto setTextSizeMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, finalSetLocationMenuString, NFmiDataIdent(), kFmiSetTimeBoxTextSizeFactor, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+	auto setTextSizeSubMenuItemList = std::make_unique<NFmiMenuItemList>();
+
+	for(float textSizeFactor = NFmiMapViewDescTop::TimeBoxTextSizeFactorMinLimit(); textSizeFactor <= NFmiMapViewDescTop::TimeBoxTextSizeFactorMaxLimit(); textSizeFactor += 0.1f)
+	{
+		AddSetTextSizeFactorToSubMenu(setTextSizeSubMenuItemList, theDescTopIndex, textSizeFactor);
+	}
+	setTextSizeMenuItem->AddSubMenu(setTextSizeSubMenuItemList.release());
+	mainMenuList->Add(std::move(setTextSizeMenuItem));
+}
+
+void AddSetAlphaToSubMenu(std::unique_ptr<NFmiMenuItemList>& subMenuList, unsigned int theDescTopIndex, float alphaValue)
+{
+	auto mapViewDescTop = GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex);
+	// Lis‰t‰‰n annettu uusi paikka popupiin, vain jos se ei ole sama kuin nykyinen sijainti
+	if(mapViewDescTop && mapViewDescTop->GetTimeBoxFillColorAlpha() != alphaValue)
+	{
+		std::string alphaStr = std::to_string(boost::math::iround(alphaValue * 100));
+		alphaStr += " %";
+		auto setAlphaMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, alphaStr, NFmiDataIdent(), kFmiSetTimeBoxFillColorAlpha, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+		// Haluttu alpha kerroin talletetaan k‰‰nteisen‰ arvona (johtuen NFmiColor luokan k‰‰nteisest‰ alpha kanavan jutusta) menuItem luokan extraParam kohdassa
+		setAlphaMenuItem->ExtraParam(alphaValue);
+		subMenuList->Add(std::move(setAlphaMenuItem));
+	}
+}
+
+const std::vector<float> gTimeBoxFillColorAlphaValues{ 0, 0.05f, 0.1f, 0.15f, 0.2f, 0.25f, 0.3f, 0.35f, 0.4f, 0.45f, 0.5f, 0.55f, 0.6f, 0.65f, 0.7f, 0.75f, 0.8f, 0.85f, 0.9f, 0.95f, 1 };
+
+void AddSetTimeBoxFillColorAlphaSubMenuForTimeBoxPopup(std::unique_ptr<NFmiMenuItemList>& mainMenuList, unsigned int theDescTopIndex)
+{
+	std::string finalSetLocationMenuString = ::GetDictionaryString("Set fill color alpha");
+	auto setTextSizeMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, finalSetLocationMenuString, NFmiDataIdent(), kFmiSetTimeBoxFillColorAlpha, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+	auto setTextSizeSubMenuItemList = std::make_unique<NFmiMenuItemList>();
+
+	for(auto alphaValue : gTimeBoxFillColorAlphaValues)
+	{
+		AddSetAlphaToSubMenu(setTextSizeSubMenuItemList, theDescTopIndex, alphaValue);
+	}
+	setTextSizeMenuItem->AddSubMenu(setTextSizeSubMenuItemList.release());
+	mainMenuList->Add(std::move(setTextSizeMenuItem));
+}
+
+const std::string gTimeBoxFillColorCustomName = "custom color";
+
+void AddSetTimeBoxFillColorToSubMenu(std::unique_ptr<NFmiMenuItemList>& subMenuList, unsigned int theDescTopIndex, const std::string& name, const NFmiColor& color)
+{
+	auto mapViewDescTop = GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex);
+	// Lis‰t‰‰n annettu uusi paikka popupiin, vain jos se ei ole sama kuin nykyinen sijainti
+	if(mapViewDescTop)
+	{
+		bool useCustomColor = (name == gTimeBoxFillColorCustomName);
+		auto usedMenuCommand = useCustomColor ? kFmiSetTimeBoxCustomFillColor : kFmiSetTimeBoxFillColor;
+		auto setAlphaMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, name, NFmiDataIdent(), usedMenuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+		// Haluttu alpha kerroin talletetaan menuItem luokan extraParam kohdassa
+		setAlphaMenuItem->ExtraTextParam(NFmiDrawParam::Color2String(color));
+		subMenuList->Add(std::move(setAlphaMenuItem));
+	}
+}
+
+void DoTimeBoxCustomFillColorSetup(NFmiMenuItem& theMenuItem)
+{
+	auto* parentView = ApplicationInterface::GetApplicationInterfaceImplementation()->GetView(theMenuItem.MapViewDescTopIndex());
+	auto color = NFmiDrawParam::String2Color(theMenuItem.ExtraTextParam());
+	auto colorRef = CtrlView::Color2ColorRef(color);
+	CColorDialog dlg(colorRef, 0, parentView);
+	if(dlg.DoModal() == IDOK)
+	{
+		auto newColorRef = dlg.GetColor();
+		auto newColor = CtrlView::ColorRef2Color(newColorRef);
+
+		GetCombinedMapHandler()->onSetTimeBoxFillColor(theMenuItem.MapViewDescTopIndex(), newColor);
+	}
+}
+
+void DoTimeBoxToDefaultValues(NFmiMenuItem& theMenuItem)
+{
+	auto combinedMapHandler = GetCombinedMapHandler();
+	combinedMapHandler->onSetTimeBoxLocation(theMenuItem.MapViewDescTopIndex(), NFmiMapViewDescTop::TimeBoxLocationDefault);
+	combinedMapHandler->onSetTimeBoxTextSizeFactor(theMenuItem.MapViewDescTopIndex(), NFmiMapViewDescTop::TimeBoxTextSizeFactorDefault);
+	combinedMapHandler->onSetTimeBoxFillColor(theMenuItem.MapViewDescTopIndex(), NFmiMapViewDescTop::TimeBoxFillColorDefault);
+	combinedMapHandler->onSetTimeBoxFillColorAlpha(theMenuItem.MapViewDescTopIndex(), NFmiMapViewDescTop::TimeBoxFillColorDefault.Alpha());
+}
+
+void SetTimeBoxFillColorFromMenu(NFmiMenuItem& theMenuItem)
+{
+	if(theMenuItem.ExtraTextParam() == gTimeBoxFillColorCustomName)
+	{
+		DoTimeBoxCustomFillColorSetup(theMenuItem);
+	}
+	else
+	{
+		GetCombinedMapHandler()->onSetTimeBoxFillColor(theMenuItem.MapViewDescTopIndex(), NFmiDrawParam::String2Color(theMenuItem.ExtraTextParam()));
+	}
+}
+
+const float gBaseChannelValue = 0.85f;
+
+const std::vector<std::pair<std::string, NFmiColor>> gTimeBoxFillColorsWithNames
+{ 
+	std::make_pair(gTimeBoxFillColorCustomName, NFmiColor(1,1,1,0.4f)),
+	std::make_pair("white", NFmiColor(1,1,1,0.4f)),
+	std::make_pair("light grey", NFmiColor(gBaseChannelValue,gBaseChannelValue,gBaseChannelValue,0.4f)),
+	std::make_pair("light green", NFmiColor(gBaseChannelValue,1,gBaseChannelValue,0.4f)),
+	std::make_pair("light red", NFmiColor(1,gBaseChannelValue,gBaseChannelValue,0.4f)),
+	std::make_pair("light blue", NFmiColor(gBaseChannelValue,gBaseChannelValue,1,0.4f)),
+	std::make_pair("light yellow", NFmiColor(1,1,gBaseChannelValue,0.4f)),
+	std::make_pair("light magenta", NFmiColor(1,gBaseChannelValue,1,0.4f)),
+	std::make_pair("light cyan", NFmiColor(gBaseChannelValue,1,1,0.4f)),
+};
+
+void AddSetTimeBoxFillColorSubMenuForTimeBoxPopup(std::unique_ptr<NFmiMenuItemList>& mainMenuList, unsigned int theDescTopIndex)
+{
+	std::string finalSetLocationMenuString = ::GetDictionaryString("Set fill color");
+	auto setTextSizeMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, finalSetLocationMenuString, NFmiDataIdent(), kFmiSetTimeBoxFillColor, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+	auto setTextSizeSubMenuItemList = std::make_unique<NFmiMenuItemList>();
+
+	for(const auto &nameColorPair : gTimeBoxFillColorsWithNames)
+	{
+		AddSetTimeBoxFillColorToSubMenu(setTextSizeSubMenuItemList, theDescTopIndex, nameColorPair.first, nameColorPair.second);
+	}
+	setTextSizeMenuItem->AddSubMenu(setTextSizeSubMenuItemList.release());
+	mainMenuList->Add(std::move(setTextSizeMenuItem));
+}
+
+void AddSetTimeBoxSetToDefaultForTimeBoxPopup(std::unique_ptr<NFmiMenuItemList>& mainMenuList, unsigned int theDescTopIndex)
+{
+	std::string setToDefaultMenuString = ::GetDictionaryString("Set to default");
+	auto setToDefaultMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, setToDefaultMenuString, NFmiDataIdent(), kFmiSetTimeBoxToDefaultValues, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+	mainMenuList->Add(std::move(setToDefaultMenuItem));
+}
+
+bool CreateMapViewTimeBoxPopup(unsigned int theDescTopIndex)
+{
+	if(theDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
+	{
+		itsPopupMenu = std::make_unique<NFmiMenuItemList>();
+
+		AddSetTimeBoxSetToDefaultForTimeBoxPopup(itsPopupMenu, theDescTopIndex);
+		AddSetLocationSubMenuForTimeBoxPopup(itsPopupMenu, theDescTopIndex);
+		AddSetTextSizeFactorSubMenuForTimeBoxPopup(itsPopupMenu, theDescTopIndex);
+		AddSetTimeBoxFillColorAlphaSubMenuForTimeBoxPopup(itsPopupMenu, theDescTopIndex);
+		AddSetTimeBoxFillColorSubMenuForTimeBoxPopup(itsPopupMenu, theDescTopIndex);
+
+		if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
+			return false;
+
+		fOpenPopup = true;
+		return true;
+	}
+	return false;
+}
+
 bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue)
 {
 	if(IsMapLayerSelectionCase(theDescTopIndex, theRowIndex, layerIndex))
@@ -4830,6 +5041,24 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		case kFmiSelectBackgroundMapLayer:
 		case kFmiSelectOverlayMapLayer:
 			SelectMapLayerDirectly(*menuItem);
+			break;
+		case kFmiSetTimeBoxLocation:
+			GetCombinedMapHandler()->onSetTimeBoxLocation(menuItem->MapViewDescTopIndex(), static_cast<FmiDirection>(menuItem->ExtraParam()));
+			break;
+		case kFmiSetTimeBoxTextSizeFactor:
+			GetCombinedMapHandler()->onSetTimeBoxTextSizeFactor(menuItem->MapViewDescTopIndex(), static_cast<float>(menuItem->ExtraParam()));
+			break;
+		case kFmiSetTimeBoxFillColorAlpha:
+			GetCombinedMapHandler()->onSetTimeBoxFillColorAlpha(menuItem->MapViewDescTopIndex(), static_cast<float>(menuItem->ExtraParam()));
+			break;
+		case kFmiSetTimeBoxFillColor:
+			SetTimeBoxFillColorFromMenu(*menuItem);
+			break;
+		case kFmiSetTimeBoxCustomFillColor:
+			DoTimeBoxCustomFillColorSetup(*menuItem);
+			break;
+		case kFmiSetTimeBoxToDefaultValues:
+			DoTimeBoxToDefaultValues(*menuItem);
 			break;
 
 		default:
@@ -9174,7 +9403,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	NFmiHelpDataInfoSystem* HelpDataInfoSystem(void)
 	{
-		if(fCaseStudyModeOn)
+		if(CaseStudyModeOn())
 			return itsCaseStudyHelpDataInfoSystem.get();
 		else
 			return &itsHelpDataInfoSystem;
@@ -9182,7 +9411,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	NFmiDataLoadingInfo& GetUsedDataLoadingInfo(void)
 	{
-		if(fCaseStudyModeOn)
+		if(CaseStudyModeOn())
 			return itsDataLoadingInfoCaseStudy;
 		else
 			return itsDataLoadingInfoNormal;
@@ -9224,7 +9453,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		std::string specificError;
 		// 0. ota talteen erilaisia muuttujia, jos CaseStudyn lataus ep‰onnistuu ja pit‰‰ palauttaa olemassa oleva tila takaisin
-		bool oldCaseStudyModeOn = fCaseStudyModeOn;
+		bool oldCaseStudyModeOn = CaseStudyModeOn();
 		boost::shared_ptr<NFmiHelpDataInfoSystem> oldCaseStudyHelpDataInfoSystem = itsCaseStudyHelpDataInfoSystem;
 		NFmiCaseStudySystem oldLoadedCaseStudySystem = itsLoadedCaseStudySystem;
 		try
@@ -9239,7 +9468,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				if(itsCaseStudyHelpDataInfoSystem)
 				{
 			// 3.1. Laita CaseStudy-moodi p‰‰lle
-					fCaseStudyModeOn = true;
+					CaseStudyModeOn(true);
 			// 4. Laita CaseStudyn kellonaika sein‰kelloajaksi
 			// 5. Laita kaikkien n‰yttˆjen kello CaseStudy-aikaan
                     NFmiMetTime oldWallClockTime = oldCaseStudyModeOn ? oldLoadedCaseStudySystem.Time() : NFmiMetTime();
@@ -9277,7 +9506,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		}
 		// 10. Tee MessageBox ilmenneest‰ virheest‰
 		// 11. Palauta virhetilanteessa vanhat muuttuja arvot takaisin
-		fCaseStudyModeOn = oldCaseStudyModeOn;
+		CaseStudyModeOn(oldCaseStudyModeOn);
 		itsCaseStudyHelpDataInfoSystem = oldCaseStudyHelpDataInfoSystem;
 		itsLoadedCaseStudySystem = oldLoadedCaseStudySystem;
 		std::string errStr(::GetDictionaryString("Error occured while loading Case Study data from file"));
@@ -9294,15 +9523,22 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return false;
 	}
 
-	bool CaseStudyModeOn(void) 
+	void CaseStudyModeOn(bool newState)
+	{
+		fCaseStudyModeOn = newState;
+		CFmiDataLoadingThread2::SetCaseStudyMode(fCaseStudyModeOn);
+		AddParams::ProducerData::SetCaseStudyMode(fCaseStudyModeOn);
+	}
+
+	bool CaseStudyModeOn() const
 	{
 		return fCaseStudyModeOn;
 	}
 
-	void CaseStudyToNormalMode(void)
+	void CaseStudyToNormalMode()
 	{
 		// 3.1. Laita CaseStudy-moodi p‰‰lle
-		fCaseStudyModeOn = false;
+		CaseStudyModeOn(false);
 		fChangingCaseStudyToNormalMode = true;
         SetAllSystemsToCaseStudyModeChangeTime(itsLoadedCaseStudySystem.Time(), NFmiMetTime(), true);
 		InfoOrganizer()->ClearDynamicHelpData(true); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eik‰ staattisia helpdatoja kuten topografia ja fraktiilit)
@@ -10104,7 +10340,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             }
         }
 
-        if(BetaProductionSystem().DoNeededBetaAutomation())
+		auto dataTriggerList = GetDataTriggerListOwnership();
+        if(BetaProductionSystem().DoNeededBetaAutomation(dataTriggerList, *InfoOrganizer()))
         {
         }
     }
@@ -10324,34 +10561,62 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return filteredData;
     }
 
-    boost::shared_ptr<NFmiFastQueryInfo> SeekMostFavoriteProducerData(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &dataVector, const std::vector<unsigned long> &favoriteProducers)
+    boost::shared_ptr<NFmiFastQueryInfo> SeekMostFavoriteProducerData(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &dataVector, const std::vector<unsigned long> &favoriteProducers, const NFmiLevel* actualLevel, const NFmiProducer &actualProducer)
     {
         if(dataVector.size())
         {
-            for(auto producer : favoriteProducers)
-            {
-                for(auto &info : dataVector)
-                {
-                    if(info->Producer()->GetIdent() == static_cast<long>(producer))
-                        return info;
-                }
-            }
-            // If producers not in favorite list, just return first on the vector
-            return dataVector[0];
+			boost::shared_ptr<NFmiFastQueryInfo> backupData = nullptr;
+			size_t backupDataIndex = 999;
+			// Katsotaan ensin lˆytyykˆ ihan t‰ysosuma dataa
+			for(auto& info : dataVector)
+			{
+				auto isLevelDataWanted = actualLevel != nullptr;
+				auto isLevelData = info->SizeLevels() > 1;
+				auto isMatchingLevel = (isLevelDataWanted && isLevelData && info->Level(*actualLevel));
+				if(!isLevelDataWanted || isMatchingLevel)
+				{
+					auto currentInfoProducerId = info->Producer()->GetIdent();
+					if(actualProducer.GetIdent() == currentInfoProducerId)
+						return info;
+					auto favoriteIter = std::find(favoriteProducers.begin(), favoriteProducers.end(), currentInfoProducerId);
+					if(favoriteIter != favoriteProducers.end())
+					{
+						size_t diff = std::distance(favoriteProducers.begin(), favoriteIter);
+						if(diff < backupDataIndex)
+						{
+							backupDataIndex = diff;
+							backupData = info;
+						}
+					}
+				}
+			}
+
+			return backupData;
         }
         // Return empty if there is no data on vector
         return boost::shared_ptr<NFmiFastQueryInfo>();
     }
-
-    boost::shared_ptr<NFmiFastQueryInfo> GetFavoriteSurfaceModelFractileData()
+	
+    boost::shared_ptr<NFmiFastQueryInfo> GetBestSuitableModelFractileData(boost::shared_ptr<NFmiFastQueryInfo> &usedOriginalInfo)
     {
         auto infoVector = itsSmartInfoOrganizer->GetInfos(NFmiInfoData::kClimatologyData);
         auto filteredInfoVector = FilterOnlyGridSurfaceNonYearLongData(infoVector);
         // Seek first if there is data from these producers, in this order. 
         // If none found, then return first data in filtered list.
-        // 199 = harmonie, 54 = gfs, 260 = MEPS, 
-        std::vector<unsigned long> favoriteProducers{kFmiMTAECMWF, 199, 54, kFmiMTAHIRLAM, 260};
-        return SeekMostFavoriteProducerData(filteredInfoVector, favoriteProducers);
+        // 199 = harmonie, 54 = gfs, 260 = MEPS
+        std::vector<unsigned long> favoriteProducers{kFmiMTAECMWF, 260, 54, kFmiMTAHIRLAM, 199 };
+		const NFmiLevel* level = nullptr;
+		// Jos ei ole annettu usedOriginalInfo:a, niin silloin haetaan p‰‰s‰‰ntˆisesti Ec:n fraktiilidataa
+		NFmiProducer wantedProducer(kFmiMTAECMWF, "Ecmwf");
+		if(usedOriginalInfo)
+		{
+			wantedProducer = *usedOriginalInfo->Producer();
+			if(usedOriginalInfo->SizeLevels() > 1)
+			{
+				level = usedOriginalInfo->Level();
+			}
+		}
+        return SeekMostFavoriteProducerData(filteredInfoVector, favoriteProducers, level, wantedProducer);
     }
 
     std::vector<int> HelpDataIdsForParameterSelectionSystem()
@@ -10547,6 +10812,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsLedLightStatusSystem;
 	}
 
+	std::vector<std::string> itsLoadedDataTriggerList;
 	NFmiLedLightStatusSystem itsLedLightStatusSystem;
 	NFmiSeaLevelPlumeData itsSeaLevelPlumeData;
 	NFmiParameterInterpolationFixer itsParameterInterpolationFixer;
@@ -11043,6 +11309,11 @@ bool NFmiEditMapGeneralDataDoc::CreateParamSelectionPopup(unsigned int theDescTo
 {
 	pimpl->itsCurrentViewRowIndex = theRowIndex;
 	return pimpl->CreateParamSelectionPopup(theDescTopIndex);
+}
+
+bool NFmiEditMapGeneralDataDoc::CreateMapViewTimeBoxPopup(unsigned int theDescTopIndex)
+{
+	return pimpl->CreateMapViewTimeBoxPopup(theDescTopIndex);
 }
 
 bool NFmiEditMapGeneralDataDoc::CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue)
@@ -12735,9 +13006,9 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetModelClimatol
     return pimpl->GetModelClimatologyData(theLevel);
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetFavoriteSurfaceModelFractileData()
+boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetBestSuitableModelFractileData(boost::shared_ptr<NFmiFastQueryInfo>& usedOriginalInfo)
 {
-    return pimpl->GetFavoriteSurfaceModelFractileData();
+    return pimpl->GetBestSuitableModelFractileData(usedOriginalInfo);
 }
 
 AddParams::ParameterSelectionSystem& NFmiEditMapGeneralDataDoc::ParameterSelectionSystem()

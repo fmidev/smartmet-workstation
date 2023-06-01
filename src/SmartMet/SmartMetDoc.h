@@ -406,6 +406,7 @@ public:
 	afx_msg void OnViewSetBetaProductionDlgPlaceToDefault();
 	afx_msg void OnEditVisualizationsettings();
 	afx_msg void OnMoveviewsvisibleVisualizationsettingsposition();
+	afx_msg void OnAcceleratorMoveTimeBoxLocation();
 };
 
 

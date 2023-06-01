@@ -121,6 +121,7 @@
 #include "CtrlViewWin32Functions.h"
 #include "BetaProductParamBoxFunctions.h"
 #include "NFmiCountryBorderDrawUtils.h"
+#include "NFmiMapViewDescTop.h"
 
 #include <list>
 #include <regex>
@@ -2021,7 +2022,7 @@ void NFmiStationViewHandler::DrawTimeText(void)
 {
 	if(itsCtrlViewDocumentInterface->EditedSmartInfo())
 	{
-		if(itsCtrlViewDocumentInterface->ShowTimeString(itsMapViewDescTopIndex)) // toteuta t‰m‰ dokumenttiin!!!!!
+		if(itsCtrlViewDocumentInterface->ShowTimeString(itsMapViewDescTopIndex))
 		{
 			if(DrawTimeTextInThisMapViewTile())
 			{
@@ -2029,9 +2030,6 @@ void NFmiStationViewHandler::DrawTimeText(void)
 				NFmiMapViewTimeLabelInfo& timeLabelInfo = itsCtrlViewDocumentInterface->MapViewTimeLabelInfo();
 
 				const NFmiBetaProduct* currentBetaProduct = itsCtrlViewDocumentInterface->GetCurrentGeneratedBetaProduct();
-				if(currentBetaProduct && currentBetaProduct->TimeBoxLocation() == kNoDirection)
-					return;
-
 				NFmiMetTime usedTimeboxTime = ::CalcUsedTimeboxTime(itsTime, currentBetaProduct);
 				// Aikatekstien varsinainen piirtokoodi alkaa
 				NFmiString formatStr1 = ::MakeUsedTimeboxTimeFormatString(timeLabelInfo.TimeStringInfo1().itsTimeFormat, currentBetaProduct);
@@ -2048,10 +2046,12 @@ void NFmiStationViewHandler::DrawTimeText(void)
 					timeLabelInfo.MinFactor(),
 					timeLabelInfo.MaxFactor()
 				);
-				double font1SizeInMM = timeLabelInfo.TimeStringInfo1().itsFontSizeInMM * sizeFactor;
+				auto* mapViewDescTop = itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().getMapViewDescTop(itsMapViewDescTopIndex);
+				auto timeBoxTextSizeFactor = mapViewDescTop->TimeBoxTextSizeFactor();
+				double font1SizeInMM = timeLabelInfo.TimeStringInfo1().itsFontSizeInMM * sizeFactor * timeBoxTextSizeFactor;
 				font1SizeInMM = FmiMax(timeLabelInfo.AbsoluteMinFontSizeInMM(), FmiMin(font1SizeInMM, timeLabelInfo.AbsoluteMaxFontSizeInMM()));
 				int font1Size = static_cast<int>(font1SizeInMM * graphicalInfo.itsPixelsPerMM_y * 1.88);
-				double font2SizeInMM = timeLabelInfo.TimeStringInfo2().itsFontSizeInMM * sizeFactor;
+				double font2SizeInMM = timeLabelInfo.TimeStringInfo2().itsFontSizeInMM * sizeFactor * timeBoxTextSizeFactor;
 				font2SizeInMM = FmiMax(timeLabelInfo.AbsoluteMinFontSizeInMM(), FmiMin(font2SizeInMM, timeLabelInfo.AbsoluteMaxFontSizeInMM()));
 				int font2Size = static_cast<int>(font2SizeInMM * graphicalInfo.itsPixelsPerMM_y * 1.88);
 
@@ -2073,12 +2073,13 @@ void NFmiStationViewHandler::DrawTimeText(void)
 				itsGdiPlusGraphics->MeasureString(wString2.c_str(), INT(wString2.size()), &aFont2, Gdiplus::PointF(0, 0), &stringFormat, &boundingBox2);
 				NFmiRect timeBox;
 				timeBox.Size(NFmiPoint(FmiMax(boundingBox1.Width, boundingBox2.Width) * 1.1, (font1Size + font2Size) * 1.15));
-				FmiDirection timeBoxLocation = currentBetaProduct ? currentBetaProduct->TimeBoxLocation() : kBottomLeft;
+				FmiDirection timeBoxLocation = mapViewDescTop->TimeBoxLocation();
 				StationViews::PlaceBoxIntoFrame(timeBox, GetFrame(), itsToolBox, timeBoxLocation);
 
-				Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(timeLabelInfo.BoxFillColor()));
+				Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(mapViewDescTop->TimeBoxFillColor()));
 				Gdiplus::GraphicsPath aPath;
 				Gdiplus::Rect gdiRect(static_cast<INT>(timeBox.Left()), static_cast<INT>(timeBox.Top()), static_cast<INT>(timeBox.Width()), static_cast<INT>(timeBox.Height())); // = CFmiGdiPlusHelpers::Relative2GdiplusRect(itsToolBox, timeBox);
+				itsTimeBoxRelativeRect = CtrlView::GdiplusRect2Relative(itsToolBox, gdiRect);
 				aPath.AddRectangle(gdiRect);
 				aPath.CloseFigure();
 				itsGdiPlusGraphics->FillPath(&aBrushBox, &aPath);
@@ -2099,9 +2100,13 @@ void NFmiStationViewHandler::DrawTimeText(void)
 
 				Gdiplus::SolidBrush aBrushText2(CtrlView::NFmiColor2GdiplusColor(timeLabelInfo.TimeStringInfo2().itsColor));
 				itsGdiPlusGraphics->DrawString(wString2.c_str(), static_cast<INT>(wString2.size()), &aFont2, timeString2OffSet, &stringFormat, &aBrushText2);
+				return;
 			}
 		}
 	}
+
+	// Jos ei aikalaatikkoa piirretty syyst‰ tai toisesta, laitetaan tyhj‰ laatikko sen merkiksi
+	itsTimeBoxRelativeRect = NFmiRect();
 }
 
 bool NFmiStationViewHandler::IsThisActiveViewRow() const
@@ -2626,13 +2631,44 @@ void NFmiStationViewHandler::UpdateOnlyThisMapViewAtNextGeneralViewUpdate()
     itsCtrlViewDocumentInterface->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(itsMapViewDescTopIndex); // optimointia
 }
 
+bool NFmiStationViewHandler::HandleTimeBoxMouseWheel(const NFmiPoint& thePlace, unsigned long theKey, short theDelta)
+{
+	auto *mapViewDescTop = itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().getMapViewDescTop(itsMapViewDescTopIndex);
+	if(mapViewDescTop)
+	{
+		if((theKey & kCtrlKey) && (theKey & kShiftKey))
+		{
+			// CTRL + SHIFT pohjassa tehd‰‰n taustav‰rin alpha kanavan s‰‰tˆ‰
+			auto origAlpha = mapViewDescTop->GetTimeBoxFillColorAlpha();
+			auto newAlphaValue = origAlpha + (theDelta > 0 ? 0.05f : -0.05f);
+			mapViewDescTop->SetTimeBoxFillColorAlpha(newAlphaValue);
+			// Palautetaan true, jos kerroin on oikeasti muuttunut
+			return origAlpha != mapViewDescTop->GetTimeBoxFillColorAlpha();
+		}
+		if((theKey & kCtrlKey))
+		{
+			// CTRL pohjassa tehd‰‰n kokokertoimen s‰‰tˆ‰
+			auto origTextSizeFactor = mapViewDescTop->TimeBoxTextSizeFactor();
+			auto newValue = origTextSizeFactor + (theDelta > 0 ? 0.1f : -0.1f);
+			mapViewDescTop->TimeBoxTextSizeFactor(newValue);
+			// Palautetaan true, jos kerroin on oikeasti muuttunut
+			return origTextSizeFactor != mapViewDescTop->TimeBoxTextSizeFactor();
+		}
+	}
+	return false;
+}
+
 bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta)
 {
 	if(itsViewList && GetFrame().IsInside(thePlace))
 	{
+		if(itsTimeBoxRelativeRect.IsInside(thePlace))
+		{
+			return MakeParamHandlerViewActions([&]() {return HandleTimeBoxMouseWheel(thePlace, theKey, theDelta); });
+		}
 		if(IsMouseCursorOverParameterBox(thePlace))
 		{
-            return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->MouseWheel(thePlace, theKey, theDelta); });
+			return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->MouseWheel(thePlace, theKey, theDelta); });
 		}
 		if((theKey & kCtrlKey) && (theKey & kShiftKey))
 		{
@@ -2871,7 +2907,12 @@ bool NFmiStationViewHandler::RightButtonUp(const NFmiPoint & thePlace, unsigned 
 {
 	if(itsViewList && GetFrame().IsInside(thePlace))
 	{
-		// ensin pit‰‰ handlata parametrin lis‰ys param boxista jos hiiren oikea klikattu
+		// Ensin timebox hanskaus jos hiiren oikea klikattu
+		if(itsTimeBoxRelativeRect.IsInside(thePlace))
+		{
+			return itsCtrlViewDocumentInterface->CreateMapViewTimeBoxPopup(itsMapViewDescTopIndex);
+		}
+		// Sitten pit‰‰ handlata parametrin lis‰ys param boxista 
         if(IsMouseCursorOverParameterBox(thePlace))
         {
             return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->RightButtonUp(thePlace, theKey); });
@@ -3972,14 +4013,17 @@ void NFmiStationViewHandler::DrawOverBitmapThings(NFmiToolBox * theGTB, bool /* 
     DrawSelectedMTAModeSoundingPlaces();
     DrawSoundingPlaces();
     DrawCrossSectionPoints(); // n‰m‰ piirret‰‰n vain vasempaan yl‰ kulmaan karttaruudukossa
-    DrawTimeText();
 
     DrawMouseCursorHelperCrossHair();
     DrawSelectedSynopFromGridView();
 	DrawMapViewRangeMeterData();
 
-    DrawParamView(theGTB); // piirrett‰v‰ viimeiseksi kartan p‰‰lle!!!
-    DrawAutocompleteLocations(); // t‰m‰ ottaa huomioon, ettei piirr‰ parametri boxin p‰‰lle!
+	// Parametrilaatikko piirrett‰v‰ mahdollisimman lopussa kartan p‰‰lle!!!
+    DrawParamView(theGTB); 
+	// Aikalegenda laatikko piirrett‰v‰ parametri boksin p‰‰lle, koska se on l‰pin‰kyv‰ 
+	// ja jos sijoitettu 'vahingossa' p‰‰llekk‰in, time-box on l‰pin‰kyv‰, parambox ei.
+	DrawTimeText(); 
+	DrawAutocompleteLocations(); // t‰m‰ ottaa huomioon, ettei piirr‰ parametri boxin p‰‰lle!
     DrawCurrentFrame(theGTB);
     CleanGdiplus();
 }

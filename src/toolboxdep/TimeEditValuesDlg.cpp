@@ -25,6 +25,8 @@
 #include "CtrlViewFunctions.h"
 #include "persist2.h"
 #include "ApplicationInterface.h"
+#include "NFmiPathUtils.h"
+#include "NFmiFileSystem.h"
 
 using namespace std::literals::string_literals;
 
@@ -132,6 +134,7 @@ BEGIN_MESSAGE_MAP(CTimeEditValuesDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_TIME_SERIAL_PARAMETER_SELECTION, &CTimeEditValuesDlg::OnButtonOpenParameterSelection)
 	ON_COMMAND(ID_ACCELERATOR_LOG_VIEWER_TOOLBOXDEB, &CTimeEditValuesDlg::OnAcceleratorLogViewerToolboxdeb)
 	ON_COMMAND(ID_ACCELERATOR_SWAP_AREA_SECONDARY_KEY_EXTRA_MAP, &CTimeEditValuesDlg::OnAcceleratorSwapAreaSecondaryKeyExtraMap)
+	ON_BN_CLICKED(IDC_BUTTON_STORE_CSV_FILE, &CTimeEditValuesDlg::OnBnClickedButtonStoreCsvFile)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -567,6 +570,7 @@ void CTimeEditValuesDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_REDO, "IDC_BUTTON_REDO");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_PRINT, "IDC_BUTTON_PRINT");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_TIME_SERIAL_PARAMETER_SELECTION, "+");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_STORE_CSV_FILE, "CSV");
 }
 
 void CTimeEditValuesDlg::SetParameterSelectionIcon()
@@ -929,4 +933,35 @@ void CTimeEditValuesDlg::OnAcceleratorCpSelectDown()
 void CTimeEditValuesDlg::OnAcceleratorLogViewerToolboxdeb()
 {
 	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenLogViewer();
+}
+
+void CTimeEditValuesDlg::OnBnClickedButtonStoreCsvFile()
+{
+	static TCHAR BASED_CODE szFilter[] = _TEXT("CSV data files (*.csv)|*.csv|txt data files (*.txt)|*.txt|All Files (*.*)|*.*||");
+	static std::string lastStoredFilePath;
+
+	UpdateData(TRUE);
+	try
+	{
+		std::string initialDirectory = PathUtils::getPathSectionFromTotalFilePath(lastStoredFilePath);
+		// Avataan SaveAs dialogi, siksi openFileDialog = false
+		BOOL openFileDialog = false;
+		CFileDialog dlg(openFileDialog, NULL, CA2T(lastStoredFilePath.c_str()), OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, szFilter, this);
+		dlg.m_ofn.lpstrInitialDir = CA2T(initialDirectory.c_str());
+		if(dlg.DoModal() == IDOK)
+		{
+			lastStoredFilePath = CT2A(dlg.GetPathName());
+			std::string csvDataString = itsTimeEditValuesView->MakeCsvDataString();
+			NFmiFileSystem::SafeFileSave(lastStoredFilePath, csvDataString);
+		}
+		UpdateData(FALSE);
+	}
+	catch(std::exception& e)
+	{
+		std::string errorMessage = "Unable to store time-serial-view data in CSV format to wanted file:\n";
+		errorMessage += lastStoredFilePath;
+		errorMessage += "\n";
+		errorMessage += e.what();
+		itsSmartMetDocumentInterface->LogAndWarnUser(errorMessage, "Unable to store CSV data to file", CatLog::Severity::Error, CatLog::Category::Operational, false, false, true);
+	}
 }

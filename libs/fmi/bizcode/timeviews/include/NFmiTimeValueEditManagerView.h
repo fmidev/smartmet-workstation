@@ -42,6 +42,7 @@ class NFmiTimeValueEditManagerView : public NFmiCtrlView
 	bool TimeScaleUpdated(void) const {return fTimeScaleUpdated;}
 	void TimeScaleUpdated(bool newValue) {fTimeScaleUpdated = newValue;}
 	bool AutoAdjustValueScales(bool fJustActive);
+	std::string MakeCsvDataString() override;
 
  protected:
 	void UpdateTimeSerialViews(void);

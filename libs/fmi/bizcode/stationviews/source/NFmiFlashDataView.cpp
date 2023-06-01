@@ -249,6 +249,9 @@ std::string NFmiFlashDataView::ComposeToolTipText(const NFmiPoint& theRelativePo
 	float lat,lon,power,acc,multi;
 	NFmiMetTime atime;
 	std::string returnStr;
+	auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
+	std::string nameStr;
+
 	if(FindNearestFlashInMapTimeSection(theRelativePoint, lat, lon, power, acc, multi, atime))
 	{
 		bool cloudFlash = false;
@@ -256,10 +259,11 @@ std::string NFmiFlashDataView::ComposeToolTipText(const NFmiPoint& theRelativePo
 			cloudFlash = true;
 
 		if(cloudFlash)
-			returnStr += "cloud-flash ";
+			nameStr += "cloud-flash ";
 		else
-			returnStr += "ground-flash ";
-
+			nameStr += "ground-flash ";
+		nameStr = AddColorTagsToString(nameStr, fontColor, true);
+		returnStr += nameStr;
 		returnStr += atime.ToStr("HH:mm:SS ");
         returnStr += "(";
         returnStr += ::Value2Str(lon, 3);
@@ -279,7 +283,11 @@ std::string NFmiFlashDataView::ComposeToolTipText(const NFmiPoint& theRelativePo
 		}
 	}
 	else
-		returnStr += "No close flashes.";
+	{
+		nameStr += "No close lightning";
+		nameStr = AddColorTagsToString(nameStr, fontColor, true);
+		returnStr += nameStr;
+	}
 
 	int groundFlashCount = 0; 
 	int cloudFlashCount = 0; 

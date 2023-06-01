@@ -437,6 +437,14 @@ static CPoint GetFixedStartPoint(int &theStartCornerCounter)
     return CPoint(startLeft, startTop);
 }
 
+static RECT GetMonitorRect(HMONITOR hMonitor)
+{
+    MONITORINFO mi;
+    mi.cbSize = sizeof(mi);
+    GetMonitorInfo(hMonitor, &mi);
+    return mi.rcMonitor;
+}
+
 // Tarkastetaan josko annettu alue näkyy jossain monitorissa, niin annetaan sen olla.
 // Jos ikkunaa ei näy missään näytössä, laitetaan se näkyviin lähimpään näyttöön.
 // theStartCornerCounter:in avulla voidaan laskea erilaisia aloitus kulmia, kun pitää pakottaa ikkunoita
@@ -465,10 +473,7 @@ CRect CFmiWin32Helpers::FixWindowPosition(const CRect &theRect, int &theStartCor
 		}
 		else
 		{
-			MONITORINFO mi;
-			mi.cbSize = sizeof(mi);
-			GetMonitorInfo(hMonitor2, &mi);
-			RECT aMonitorRect = mi.rcMonitor;
+			RECT aMonitorRect = ::GetMonitorRect(hMonitor2);
 			POINT usedStartPoint = {aMonitorRect.left + startPoint.x, aMonitorRect.top + startPoint.y};
 			return CRect(usedStartPoint, ssize);
 		}
@@ -482,6 +487,37 @@ CRect CFmiWin32Helpers::FixWindowPosition(const CRect &theRect, int &theStartCor
         {
             auto startPoint = ::GetFixedStartPoint(theStartCornerCounter);
             rect.MoveToXY(startPoint);
+        }
+        else
+        {
+            // Tutkitaan ja korjataan vielä sellaiset tapaukset, milloin ikkunasta jäisi näkyviin vain hyvin pieni marginaali
+            // ja käyttäjän olisi hyvin vaikea huomata sitä.
+            LONG marginalLimit = 12;
+            RECT currentMonitorRect = ::GetMonitorRect(hMonitor);
+            if(rect.left + marginalLimit >= currentMonitorRect.right)
+            {
+                // Näyttöikkunan vasen reuna on hyvin lähellä monitorin oikeaa reunaa tapaus
+                auto startPoint = ::GetFixedStartPoint(theStartCornerCounter);
+                rect.MoveToXY(startPoint);
+            }
+            else if(rect.right - marginalLimit <= currentMonitorRect.left)
+            {
+                // Näyttöikkunan oikea reuna on hyvin lähellä monitorin vasenta reunaa tapaus
+                auto startPoint = ::GetFixedStartPoint(theStartCornerCounter);
+                rect.MoveToXY(startPoint);
+            }
+            else if(rect.bottom - marginalLimit <= currentMonitorRect.top)
+            {
+                // Näyttöikkunan alareuna on hyvin lähellä monitorin yläreunaa tapaus
+                auto startPoint = ::GetFixedStartPoint(theStartCornerCounter);
+                rect.MoveToXY(startPoint);
+            }
+            else if(rect.top + marginalLimit >= currentMonitorRect.bottom)
+            {
+                // Näyttöikkunan yläreuna on hyvin lähellä monitorin alareunaa tapaus
+                auto startPoint = ::GetFixedStartPoint(theStartCornerCounter);
+                rect.MoveToXY(startPoint);
+            }
         }
     }
 

@@ -143,6 +143,7 @@ public:
     virtual const NFmiPoint& CrossSectionViewSizeInPixels(void) = 0;
     virtual const NFmiPoint& MapViewSizeInPixels(int theMapViewDescTopIndex) = 0;
     virtual bool Printing() = 0;
+    virtual bool CreateMapViewTimeBoxPopup(unsigned int theDescTopIndex) = 0;
     virtual bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue) = 0;
     virtual void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool fMakeAreaViewDirty = false, bool fClearCache = false, int theWantedMapViewDescTop = -1) = 0;
     virtual void RefreshApplicationViewsAndDialogs(const std::string& reasonForUpdate, SmartMetViewId updatedViewsFlag, bool redrawMapView = false, bool clearMapViewBitmapCacheRows = false, int theWantedMapViewDescTop = -1) = 0;
@@ -372,7 +373,7 @@ public:
     virtual const NFmiVPlaceDescriptor& SoundingPlotLevels(void) = 0;
     virtual double BrushValue(void) = 0;
     virtual boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData(const NFmiLevel& theLevel) = 0;
-    virtual boost::shared_ptr<NFmiFastQueryInfo> GetFavoriteSurfaceModelFractileData() = 0;
+    virtual boost::shared_ptr<NFmiFastQueryInfo> GetBestSuitableModelFractileData(boost::shared_ptr<NFmiFastQueryInfo>& usedOriginalInfo) = 0;
     virtual boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData() = 0;
     virtual bool UseCombinedMapMode() const = 0;
     virtual void UseCombinedMapMode(bool newValue) = 0;

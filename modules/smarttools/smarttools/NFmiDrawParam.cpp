@@ -514,8 +514,7 @@ void NFmiDrawParam::Init(const NFmiDrawParam* theDrawParam, bool fInitOnlyDrawin
     if (fInitOnlyDrawingOptions == false)
     {
       itsInitFileName = theDrawParam->InitFileName();
-      // HUOM! itsMacroParamRelativePath-dataosaa ei saa initialisoida, koska sitä käytetään vain
-      // viewmakrojen yhteydessä
+      itsMacroParamRelativePath = theDrawParam->MacroParamRelativePath();
       itsParameterAbbreviation = theDrawParam->ParameterAbbreviation();
       fViewMacroDrawParam = theDrawParam->ViewMacroDrawParam();
       itsParameter = theDrawParam->itsParameter;
@@ -760,23 +759,27 @@ bool NFmiDrawParam::operator<(const NFmiDrawParam& theDrawParam) const
 // timet
 // viewMakroihin.
 static const unsigned long gMetTime2ViewMacroStringFormat = kYYYYMMDDHHMMSS;
-static std::string MetTime2String(const NFmiMetTime& theTime)
+
+std::string NFmiDrawParam::MetTime2String(const NFmiMetTime& theTime)
 {
   return static_cast<char*>(theTime.ToStr(gMetTime2ViewMacroStringFormat));
 }
-static NFmiMetTime String2MetTime(const std::string& theStr)
+
+NFmiMetTime NFmiDrawParam::String2MetTime(const std::string& theStr)
 {
   NFmiMetTime tmpTime;
   tmpTime.FromStr(theStr, gMetTime2ViewMacroStringFormat);
   return tmpTime;
 }
-static std::string Color2String(const NFmiColor& theColor)
+
+std::string NFmiDrawParam::Color2String(const NFmiColor& theColor)
 {
   std::stringstream out;
   out << theColor;
   return out.str();
 }
-static NFmiColor String2Color(const std::string& theColorString)
+
+NFmiColor NFmiDrawParam::String2Color(const std::string& theColorString)
 {
   std::stringstream in(theColorString);
   NFmiColor color;
@@ -1105,10 +1108,10 @@ std::ostream& NFmiDrawParam::Write(std::ostream& file) const
     extraData.Add(itsSymbolDrawDensityY);
 
     // modelRunIndex on 1. uusista string-extra-parametreista
-    extraData.Add(::MetTime2String(itsModelOriginTime));
+    extraData.Add(MetTime2String(itsModelOriginTime));
     // 5. simple color contour väri (itsColorContouringColorShadeHigh3ValueColor)
     // on 2. uusista string-extra-parametreista
-    extraData.Add(::Color2String(itsColorContouringColorShadeHigh3ValueColor));
+    extraData.Add(Color2String(itsColorContouringColorShadeHigh3ValueColor));
 
     file << "possible_extra_data" << std::endl;
     file << extraData;
@@ -1527,12 +1530,12 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
         if (extraData.itsStringValues.size() >= 1)
         {
           // laitetaan asetus-funktion läpi, jossa raja tarkistukset
-          ModelOriginTime(::String2MetTime(extraData.itsStringValues[0]));
+          ModelOriginTime(String2MetTime(extraData.itsStringValues[0]));
         }
 
         if (extraData.itsStringValues.size() >= 2)
         {
-          itsColorContouringColorShadeHigh3ValueColor = ::String2Color(extraData.itsStringValues[1]);
+          itsColorContouringColorShadeHigh3ValueColor = String2Color(extraData.itsStringValues[1]);
         }
         else
         {

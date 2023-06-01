@@ -100,7 +100,6 @@ void CFmiBetaProductDialog::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_BUTTON_SAVE_BETA_PRODUCT, itsSaveButton);
     DDX_Control(pDX, IDC_BUTTON_SAVE_AS_BETA_PRODUCT, itsSaveAsButton);
     DDX_Text(pDX, IDC_EDIT_COMMAND_LINE_STRING, itsCommandLineStringU_);
-    DDX_Control(pDX, IDC_COMBO_TIME_BOX_LOCATION_SELECTOR, itsTimeBoxLocationSelector);
     DDX_Check(pDX, IDC_CHECK_TIME_BOX_USE_UTC_TIME, fUseUtcTimesInTimeBox);
     DDX_Check(pDX, IDC_CHECK_USE_AUTO_FILE_NAMES, fUseAutoFileNames);
     DDX_Control(pDX, IDC_COMBO_PARAM_BOX_LOCATION_SELECTOR, itsParamBoxLocationSelector);
@@ -132,7 +131,6 @@ BEGIN_MESSAGE_MAP(CFmiBetaProductDialog, CTabPageSSL) //CDialogEx)
     ON_EN_CHANGE(IDC_EDIT_WEB_DESCRIPTION_STRING, &CFmiBetaProductDialog::OnEnChangeEditWebDescriptionString)
     ON_WM_DESTROY()
     ON_EN_CHANGE(IDC_EDIT_COMMAND_LINE_STRING, &CFmiBetaProductDialog::OnEnChangeEditCommandLineString)
-    ON_CBN_SELCHANGE(IDC_COMBO_TIME_BOX_LOCATION_SELECTOR, &CFmiBetaProductDialog::OnCbnSelchangeComboTimeBoxLocationSelector)
     ON_BN_CLICKED(IDC_CHECK_TIME_BOX_USE_UTC_TIME, &CFmiBetaProductDialog::OnBnClickedCheckTimeBoxUseUtcTime)
     ON_BN_CLICKED(IDC_CHECK_USE_AUTO_FILE_NAMES, &CFmiBetaProductDialog::OnBnClickedCheckUseAutoFileNames)
     ON_CBN_SELCHANGE(IDC_COMBO_PARAM_BOX_LOCATION_SELECTOR, &CFmiBetaProductDialog::OnCbnSelchangeComboParamBoxLocationSelector)
@@ -188,7 +186,6 @@ void CFmiBetaProductDialog::InitControlsFromDocument()
     itsWebSiteDescriptionStringU_ = CA2T(itsBetaProductionSystem->BetaProductWebSiteDescription().c_str());
     itsCommandLineStringU_ = CA2T(itsBetaProductionSystem->BetaProductCommandLine().c_str());
     fUseUtcTimesInTimeBox = itsBetaProductionSystem->BetaProductUseUtcTimesInTimeBox();
-    SetBoxLocationSelector(itsTimeBoxLocationSelector, itsBetaProductionSystem->BetaProductTimeBoxLocation());
     SetBoxLocationSelector(itsParamBoxLocationSelector, itsBetaProductionSystem->BetaProductParamBoxLocation());
     fDisplayRuntimeInfo = itsBetaProductionSystem->BetaProductDisplayRuntime();
     fShowModelOriginTime = itsBetaProductionSystem->BetaProductShowModelOriginTime();
@@ -234,7 +231,6 @@ void CFmiBetaProductDialog::InitControlsFromLoadedBetaProduct()
     itsTimeLengthInHoursStringU_ = CA2T(itsBetaProduct->TimeLengthInHoursString().c_str());
     itsTimeStepInMinutesStringU_ = CA2T(itsBetaProduct->TimeStepInMinutesString().c_str());
     fUseUtcTimesInTimeBox = itsBetaProduct->UseUtcTimesInTimeBox();
-    SetBoxLocationSelector(itsTimeBoxLocationSelector, itsBetaProduct->TimeBoxLocation());
     SetBoxLocationSelector(itsParamBoxLocationSelector, itsBetaProduct->ParamBoxLocation());
     fDisplayRuntimeInfo = itsBetaProduct->DisplayRunTimeInfo();
     fShowModelOriginTime = itsBetaProduct->ShowModelOriginTime();
@@ -265,8 +261,7 @@ void CFmiBetaProductDialog::StoreControlValuesToDocument()
     itsBetaProductionSystem->BetaProductWebSiteDescription(CFmiWin32Helpers::CT2std(itsWebSiteDescriptionStringU_));
     itsBetaProductionSystem->BetaProductCommandLine(CFmiWin32Helpers::CT2std(itsCommandLineStringU_));
     itsBetaProductionSystem->BetaProductUseUtcTimesInTimeBox(fUseUtcTimesInTimeBox == TRUE);
-    itsBetaProductionSystem->BetaProductTimeBoxLocation(GetSelectedBoxLocation(true));
-    itsBetaProductionSystem->BetaProductParamBoxLocation(GetSelectedBoxLocation(false));
+    itsBetaProductionSystem->BetaProductParamBoxLocation(GetSelectedParamBoxLocation());
     itsBetaProductionSystem->BetaProductDisplayRuntime(fDisplayRuntimeInfo == TRUE);
     itsBetaProductionSystem->BetaProductShowModelOriginTime(fShowModelOriginTime == TRUE);
     itsBetaProductionSystem->BetaProductPackImages(fPackImages == TRUE);
@@ -336,8 +331,8 @@ void CFmiBetaProductDialog::InitDialogTexts()
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_MODEL_ORIGIN_TIME, "Show model orig. time");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SYNOP_STATION_ID_VIEW_GROUP_TEXT, "Synop station ids: <empty> OR id1,id2,id3-id4,...");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_PACK_IMAGES, "Pack images (some quality loss)");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_TIME_BOX_USE_UTC_TIME, "Use UTC times on Timebox");
 
-    InitLocationSelector(itsTimeBoxLocationSelector);
     InitLocationSelector(itsParamBoxLocationSelector);
 }
 
@@ -380,7 +375,7 @@ void CFmiBetaProductDialog::Update()
     UpdateData(TRUE);
 
     // Katsotaan p‰‰karttan‰ytˆn aika ja s‰‰det‰‰n aikatekstin sen mukaisesti
-    itsBetaProduct->CheckTimeRelatedInputs(GetCurrentViewTime(*itsBetaProduct), ::CFmiWin32Helpers::CT2std(itsTimeLengthInHoursStringU_), CFmiWin32Helpers::CT2std(itsTimeStepInMinutesStringU_), fUseUtcTimesInTimeBox == TRUE, GetSelectedBoxLocation(true));
+    itsBetaProduct->CheckTimeRelatedInputs(GetCurrentViewTime(*itsBetaProduct), ::CFmiWin32Helpers::CT2std(itsTimeLengthInHoursStringU_), CFmiWin32Helpers::CT2std(itsTimeStepInMinutesStringU_), fUseUtcTimesInTimeBox == TRUE);
     itsTimeRangeInfoTextU_ = CA2T(itsBetaProduct->TimeRangeInfoText().c_str());
     itsBetaProduct->ImageStoragePath(CFmiWin32Helpers::CT2std(itsImageStoragePathU_));
     itsBetaProduct->DisplayRunTimeInfo(fDisplayRuntimeInfo == TRUE);
@@ -1219,7 +1214,7 @@ void CFmiBetaProductDialog::UpdateRowInfo(bool fUpdateTimeSectionInTheEnd)
 {
     UpdateData(TRUE);
 
-    itsBetaProduct->CheckRowRelatedInputs(CFmiWin32Helpers::CT2std(itsRowIndexListStringU_), CFmiWin32Helpers::CT2std(itsRowSubdirectoryTemplateStringU_), CFmiWin32Helpers::CT2std(itsFileNameTemplateU_), fUseAutoFileNames == TRUE, GetSelectedBoxLocation(false));
+    itsBetaProduct->CheckRowRelatedInputs(CFmiWin32Helpers::CT2std(itsRowIndexListStringU_), CFmiWin32Helpers::CT2std(itsRowSubdirectoryTemplateStringU_), CFmiWin32Helpers::CT2std(itsFileNameTemplateU_), fUseAutoFileNames == TRUE, GetSelectedParamBoxLocation());
     itsRowIndexListInfoTextU_ = CA2T(itsBetaProduct->RowIndexListInfoText().c_str());
 
     CheckForGenerateButtonActivation();
@@ -1512,10 +1507,10 @@ void CFmiBetaProductDialog::InitLocationSelector(CComboBox &theLocationSelector)
     theLocationSelector.AddString(CA2T(::GetDictionaryString("Disable").c_str()));
 }
 
-FmiDirection CFmiBetaProductDialog::GetSelectedBoxLocation(bool fTimeBoxCase)
+FmiDirection CFmiBetaProductDialog::GetSelectedParamBoxLocation()
 {
     // Ks. j‰rjestys CFmiBetaProductDialog::InitLocationSelector -metodista.
-    int currentSelectionIndex = fTimeBoxCase ? itsTimeBoxLocationSelector.GetCurSel() : itsParamBoxLocationSelector.GetCurSel();
+    int currentSelectionIndex = itsParamBoxLocationSelector.GetCurSel();
     switch(currentSelectionIndex)
     {
     case 0:
@@ -1533,7 +1528,7 @@ FmiDirection CFmiBetaProductDialog::GetSelectedBoxLocation(bool fTimeBoxCase)
     case 6:
         return kNoDirection;
     default:
-        return fTimeBoxCase ? kBottomLeft : kNoDirection; // En tied‰ mit‰ virhetilanteissa pit‰isi tehd‰, joten palautetaan silloin oletusarvoa
+        return kNoDirection; // En tied‰ mit‰ virhetilanteissa pit‰isi tehd‰, joten palautetaan silloin oletusarvoa
     }
 }
 
@@ -1558,12 +1553,6 @@ void CFmiBetaProductDialog::SetBoxLocationSelector(CComboBox &theBoxLocationSele
         theBoxLocationSelector.SetCurSel(0); // En tied‰ mit‰ virhetilanteissa pit‰isi tehd‰, joten asetetaan silloin oletusarvo p‰‰lle
 
 }
-
-void CFmiBetaProductDialog::OnCbnSelchangeComboTimeBoxLocationSelector()
-{
-    Update();
-}
-
 
 void CFmiBetaProductDialog::OnBnClickedCheckTimeBoxUseUtcTime()
 {

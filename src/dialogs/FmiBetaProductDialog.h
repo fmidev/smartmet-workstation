@@ -60,7 +60,7 @@ private:
     NFmiMetTime GetUsedModelTime(bool fGetStartTime, unsigned int theDescTopIndex, int theRealRowIndex, const NFmiMetTime &thePreCalculatedTime);
     void DoImageProducingProcess(std::function<void(const NFmiMetTime&)> &theGenerationFunction, const NFmiMetTime &theMakeTime, bool justLogMessages);
     void InitLocationSelector(CComboBox &theLocationSelector);
-    FmiDirection GetSelectedBoxLocation(bool fTimeBoxCase);
+    FmiDirection GetSelectedParamBoxLocation();
     void SetBoxLocationSelector(CComboBox &theBoxLocationSelector, FmiDirection newValue);
     bool IsFileNameTemplateStampsOk() const;
     void EnableFileNameTemplateEdit();
@@ -103,7 +103,6 @@ private:
     CString itsWebSiteTitleStringU_;
     CString itsWebSiteDescriptionStringU_;
     CString itsCommandLineStringU_;
-    CComboBox itsTimeBoxLocationSelector;
     BOOL fUseUtcTimesInTimeBox;
     BOOL fUseAutoFileNames;
     CComboBox itsParamBoxLocationSelector;
@@ -152,7 +151,6 @@ public:
     afx_msg void OnEnChangeEditWebDescriptionString();
     afx_msg void OnDestroy();
     afx_msg void OnEnChangeEditCommandLineString();
-    afx_msg void OnCbnSelchangeComboTimeBoxLocationSelector();
     afx_msg void OnBnClickedCheckTimeBoxUseUtcTime();
     afx_msg void OnBnClickedCheckUseAutoFileNames();
     afx_msg void OnCbnSelchangeComboParamBoxLocationSelector();

@@ -90,6 +90,8 @@ class NFmiMenuItem
 	double ExtraParam(void) const {return itsExtraParam;}
 	void ExtraParam(double newValue) {itsExtraParam = newValue;}
 	size_t TotalNumberOfMenuItems() const;
+	const std::string& ExtraTextParam() const { return itsExtraTextParam; }
+	void ExtraTextParam(const std::string &newTextValue) { itsExtraTextParam = newTextValue; }
 private:
    NFmiDataIdent itsDataIdent;
    FmiMenuCommandType itsCommandType;
@@ -114,5 +116,6 @@ private:
 							  // differently when modifying options, default value is false
 	std::string itsMacroParamInitName; // kun macroparamia k‰ytet‰‰n popup-valikoista k‰sin, pit‰‰ t‰h‰n laittaa koko polku talteen
 	double itsExtraParam; // tein t‰ll‰isen yleis parametrin, jos jossain k‰skyiss‰ tarvitaan sellaista (nyt tarvitsen sit‰ aikasarjan modelrun m‰‰r‰n asetukseen)
+	std::string itsExtraTextParam; // T‰h‰n voi tallettaa tekstimuodossa olevaa dataa enemm‰nkin
 };
 

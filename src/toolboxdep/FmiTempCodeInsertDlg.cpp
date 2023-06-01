@@ -77,12 +77,9 @@ void CFmiTempCodeInsertDlg::OnBnClickedOk()
 void CFmiTempCodeInsertDlg::OnBnClickedButtonCheckClearTemps()
 {
 	// tyhjennä dokumentista TEMP-data ja ruudulta teksti
-	itsTempCodeInputStrU_ = _TEXT("");
-	std::string tempCodeCheckReportStr; // tätä ei käytetä koska dialogi suljetaan
-	CWaitCursor cursor;
-    itsSmartMetDocumentInterface->DoTEMPDataUpdate(std::string(CT2A(itsTempCodeInputStrU_)), tempCodeCheckReportStr);
+	itsTempCodeInputStrU_.Empty();
     itsSmartMetDocumentInterface->ClearTEMPData();
-	itsTempCheckRaportStrU_ = _TEXT("");
+	itsTempCheckRaportStrU_.Empty();
 	UpdateData(FALSE);
 }
 
@@ -191,7 +188,7 @@ void CFmiTempCodeInsertDlg::OnBnClickedButtonBrowseTempTextsFile()
 
 	UpdateData(TRUE);
 	std::string initialDirectory = PathUtils::getPathSectionFromTotalFilePath(lastLoadedFilePath);
-	CFileDialog dlg(TRUE, NULL, CA2T(lastLoadedFilePath.c_str()), OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, szFilter);
+	CFileDialog dlg(TRUE, NULL, CA2T(lastLoadedFilePath.c_str()), OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, szFilter, this);
 	dlg.m_ofn.lpstrInitialDir = CA2T(initialDirectory.c_str());
 	if(dlg.DoModal() == IDOK)
 	{

@@ -1468,9 +1468,13 @@ bool NFmiCaseStudySystem::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiIn
 
 	for(const auto& info : theDataInfoSystem.DynamicHelpDataInfos())
 	{
-		NFmiCaseStudyDataFile data;
-		data.Init(theDataInfoSystem, info, theInfoOrganizer, ::MakeCsDataFileWinRegValues(info, theCaseStudySettingsWinRegistry), *this);
-		AddData(data);
+		// Edes CaseStudy dialogissa ei haluta n‰hd‰ datoja, joita pidet‰‰n pelkkin‰ CaseStudy legacy datoina
+		if(!info.CaseStudyLegacyOnly())
+		{
+			NFmiCaseStudyDataFile data;
+			data.Init(theDataInfoSystem, info, theInfoOrganizer, ::MakeCsDataFileWinRegValues(info, theCaseStudySettingsWinRegistry), *this);
+			AddData(data);
+		}
 	}
 
 	PutNoneProducerDataToEndFix();

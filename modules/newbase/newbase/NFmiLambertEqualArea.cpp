@@ -217,12 +217,12 @@ double NFmiLambertEqualArea::K(const double delta) const
   //  delta = sinlat0*sinlat + coslat0*coslat*cos(dlon);
 
   /*
-double D;
+  double D;
 
-D = DistanceFromPerspectivePointToCenterOfEarth();
-if((D + (kRearth*delta)) != 0)
+  D = DistanceFromPerspectivePointToCenterOfEarth();
+  if((D + (kRearth*delta)) != 0)
   return kRearth*(D + kRearth)/(D + (kRearth*delta));
-else
+  else
   return kFloatMissing;
   */
   // double	  itsCentralLongitude;
@@ -230,9 +230,10 @@ else
 
   //	return sqrt(2./(1. + sin(lat0)*sin(lat) + cos(lat0)*cos(lat)*cos(lon-lon0));
 
-  if (delta <= -1.0) return kFloatMissing;
+    if (delta <= -1.0)
+      return kFloatMissing;
 
-  return sqrt(2. / (1. + delta));
+    return kRearth * sqrt(2. / (1. + delta));
 }
 
 // ----------------------------------------------------------------------
@@ -247,7 +248,7 @@ double NFmiLambertEqualArea::CalcDelta(const double xyDistance) const
   // Calculates the delta angle for LambertEqual projection.
   // See details in ref. [2] p. 13.
 
-  return 2.0 * asin(FmiMax(-1.0, FmiMin(1.0, xyDistance / 2.0)));
+    return 2.0 * asin(FmiMax(-1.0, FmiMin(1.0, xyDistance / (2 * kRearth))));
   // 11.5.98/EL: delta is always computed for tangential plane only --> itsTrueLatitude.Sin() == 1
 }
 
@@ -410,8 +411,8 @@ NFmiArea *NFmiLambertEqualArea::CreateNewArea(const NFmiRect &theRect) const
 {
   NFmiPoint bottomLeft(ToLatLon(theRect.BottomLeft()));
   NFmiPoint topRight(ToLatLon(theRect.TopRight()));
-  NFmiArea *area =
-      new NFmiLambertEqualArea(bottomLeft, topRight, itsCentralLongitude, TopLeft(), BottomRight());
+    NFmiArea *area = new NFmiLambertEqualArea(
+        bottomLeft, topRight, itsCentralLongitude, TopLeft(), BottomRight());
   return area;
 }
 

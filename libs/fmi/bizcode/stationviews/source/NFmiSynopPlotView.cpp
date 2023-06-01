@@ -1967,21 +1967,28 @@ std::string NFmiSynopPlotView::ComposeToolTipText(const NFmiPoint & /* theRelati
 	std::string str;
 	if(itsDrawParam)
 	{
+		std::string paramNameStr;
 		bool isSoundingPlot = itsDrawParam->Param().GetParamIdent() == NFmiInfoData::kFmiSpSoundingPlot;
 		bool isMinMaxPlot = itsDrawParam->Param().GetParamIdent() == NFmiInfoData::kFmiSpMinMaxPlot;
 		bool isMetarPlot = itsDrawParam->Param().GetParamIdent() == NFmiInfoData::kFmiSpMetarPlot;
 		if(isSoundingPlot)
 		{
-			str += "Temp ";
-			str += NFmiStringTools::Convert<float>(itsDrawParam->Level().LevelValue());
-			str += " mbar";
+			paramNameStr += "Temp ";
+			paramNameStr += NFmiStringTools::Convert<float>(itsDrawParam->Level().LevelValue());
+			paramNameStr += " mbar";
 		}
 		else if(isMinMaxPlot)
-			str += "MinMax";
+			paramNameStr += "MinMax";
 		else if(isMetarPlot)
-			str += "Metar";
+			paramNameStr += "Metar";
 		else
-			str += "Synop";
+		{
+			paramNameStr += "Synop";
+		}
+
+		auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
+		paramNameStr = AddColorTagsToString(paramNameStr, fontColor, true);
+		str += paramNameStr;
 		str += " ";
 		NFmiLocation loc(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
 		boost::shared_ptr<NFmiFastQueryInfo> info;

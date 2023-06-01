@@ -318,8 +318,9 @@ namespace CtrlViewUtils
         if(fAddIdInfos)
             str += GetIdString(theDrawParam->Param().GetParamIdent());
 
-        if(fCrossSectionInfoWanted == false)
-        { // muualla kuin poikkileikkauksissa halutaan level infoa
+        if(fCrossSectionInfoWanted == false && info && info->SizeLevels() > 1)
+        { 
+            // muualla kuin poikkileikkauksissa halutaan level infoa, jos datassa on enemmän kuin 1 leveli
             if(dataType == NFmiInfoData::kHybridData || theDrawParam->Level().LevelType() == kFmiHybridLevel)
             { // laitetaan hybrid datalle parametrin perään viel "xx", missä xx on hybrid levelin numero
                 str += "_L" + NFmiStringTools::Convert(theDrawParam->Level().LevelValue());
@@ -582,6 +583,28 @@ namespace CtrlViewUtils
                 return kTopLeft;
                 break;
             }
+        }
+    }
+
+    FmiDirection MoveTimeBoxPositionForward(FmiDirection currentPosition)
+    {
+        // kBottomLeft -> kTopLeft -> kTopCenter -> kTopRight -> kBottomRight -> kBottomCenter -> kBottomLeft ...
+        switch(currentPosition)
+        {
+        case kBottomLeft:
+            return kTopLeft;
+        case kTopLeft:
+            return kTopCenter;
+        case kTopCenter:
+            return kTopRight;
+        case kTopRight:
+            return kBottomRight;
+        case kBottomRight:
+            return kBottomCenter;
+        case kBottomCenter:
+            return kBottomLeft;
+        default:
+            return kBottomLeft;
         }
     }
 

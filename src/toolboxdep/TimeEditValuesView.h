@@ -67,6 +67,7 @@ public:
 	void DrawOverBitmapThings(NFmiToolBox *theToolBox);
     int MapViewDescTopIndex(void);
 	void SetToolsDCs(CDC* theDC);
+	std::string MakeCsvDataString();
 
 public:
 

@@ -53,6 +53,11 @@ namespace
 	bool gApplyHelpDataInfos = false; 
 	// Tiedet‰‰n onko datan luku looppi menossa 1. kertaa vai ei, luettuihin datoihin merkit‰‰n kyseinen tieto.
 	bool gFirstTimeGoingThrough = true;
+	// Tietyt data poistuvat k‰ytˆst‰, mutta niiden k‰yttˆ‰ pit‰‰ tukea, kun ollaan CaseStudy moodissa,
+	// koska mik‰ tahansa data on voitu joskus tallettaa johonkin CaseStudy pakettiin.
+	// Eli jos t‰m‰ on false (SmartMetin normi moodi), ei t‰ll‰isi poistettuja datoja edes yritet‰ lukea.
+	// Jos true, kaikkia datoja yritet‰‰n lukea.
+	bool gIsInCaseStudyMode = false;
 }
 
 // T‰t‰ initialisointi funktiota pit‰‰ kutsua ennen kuin itse threadi k‰ynnistet‰‰n MainFramesta. 
@@ -296,7 +301,7 @@ static int GoThroughAllHelpDataInfos(NFmiHelpDataInfoSystem &theHelpDataSystem)
 	{
 		NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
 		NFmiHelpDataInfo &dataInfo = theHelpDataSystem.DynamicHelpDataInfo(static_cast<int>(i));
-		if(dataInfo.IsEnabled())
+		if(dataInfo.IsEnabled() && dataInfo.IsDataUsedCaseStudyChecks(gIsInCaseStudyMode))
 		{
 			if(::ReadData(dataInfo, theHelpDataSystem) == 1)
 				status = 1;
@@ -357,6 +362,12 @@ UINT CFmiDataLoadingThread2::DoThread(LPVOID /* pParam */ )
 					// jatketaan vain loopitusta
 				}
 
+				if(gFirstTimeGoingThrough)
+				{
+					// Jos oltiin tekem‰ss‰ 1. ajo kertaa, nukutaan v‰h‰n aikaa, ennen kuin laitetaan lippu 
+					// pois p‰‰lt‰, jotta systeemi ehtii ottaa kierroksella tulleet datat k‰yttˆˆn ennen moodin vaihtoa,
+					Sleep(1 * 1000);
+				}
 				gFirstTimeGoingThrough = false;
 				NFmiInfoOrganizer::MarkLoadedDataAsOld(gFirstTimeGoingThrough);
 				timer.StartTimer(); // aloitetaan taas uusi ajan lasku
@@ -377,4 +388,9 @@ UINT CFmiDataLoadingThread2::DoThread(LPVOID /* pParam */ )
 void CFmiDataLoadingThread2::ResetFirstTimeGoingThroughState()
 {
 	gFirstTimeGoingThrough = true;
+}
+
+void CFmiDataLoadingThread2::SetCaseStudyMode(bool isInCaseStudyMode)
+{
+	gIsInCaseStudyMode = isInCaseStudyMode;
 }

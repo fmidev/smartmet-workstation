@@ -759,6 +759,11 @@ static bool IsCacheCleaningDoneAtAll(CFmiCacheLoaderData &cacheLoaderData)
         return false;
 }
 
+static bool IsDataUsed(const NFmiHelpDataInfo& helpDataInfo)
+{
+    return helpDataInfo.IsEnabled() && !helpDataInfo.CaseStudyLegacyOnly();
+}
+
 // Käy läpi kaikki dynaamiset helpdatat ja tekee tarvittavat cache-kopioinnit.
 // Jos ei löytynyt mitään kopioitavaa koko kierroksella, palauttaa 0, joka tarkoittaa
 // että worker-threadi voi pitää taukoa.
@@ -771,10 +776,12 @@ static int GoThroughAllHelpDataInfos(const NFmiHelpDataInfoSystem &theHelpDataSy
     for(size_t i = 0; i < helpInfos.size(); i++)
     {
         NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-        const NFmiHelpDataInfo &dataInfo = helpInfos[i];
-        if(dataInfo.IsEnabled())
+        const NFmiHelpDataInfo &helpDataInfo = helpInfos[i];
+        // Ei missään tilanteessa haluta ladata dataa serverilta lokaali cacheen, 
+        // jos se on disabloitu tai se on merkitty CaseStudy legacy dataksi.
+        if(::IsDataUsed(helpDataInfo))
         {
-            CFmiCopyingStatus tmpStatus = CopyQueryDataToCache(dataInfo, theHelpDataSystem, theCacheLoaderData);
+            CFmiCopyingStatus tmpStatus = CopyQueryDataToCache(helpDataInfo, theHelpDataSystem, theCacheLoaderData);
             if(tmpStatus == kFmiCopyWentOk)
             {
                 status = kFmiCopyWentOk;
@@ -960,7 +967,7 @@ static void CollectAllHistoryDatas(const NFmiHelpDataInfoSystem& theHelpDataSyst
     for(const auto &helpDataInfo : helpDataInfos)
     {
         NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-        if(helpDataInfo.IsEnabled())
+        if(::IsDataUsed(helpDataInfo))
         {
             ::CollectHistoryDataToCache(helpDataInfo, theHelpDataSystem, theCacheLoaderData);
         }

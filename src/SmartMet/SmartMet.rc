@@ -566,11 +566,12 @@ BEGIN
     "X",            ID_ACCELERATOR_LOCATION_FINDER_TOOL, VIRTKEY, NOINVERT
     "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
     "Y",            ID_ACCELERATOR_MAP_VIEW_RANGE_METER_MODE_TOGGLE, VIRTKEY, NOINVERT
+    "Y",            ID_ACCELERATOR_MAP_VIEW_RANGE_METER_LOCK_MODE_TOGGLE, VIRTKEY, CONTROL, NOINVERT
     "Y",            ID_ACCELERATOR_MAP_VIEW_RANGE_METER_COLOR_TOGGLE, VIRTKEY, SHIFT, NOINVERT
     "Z",            ID_ACCELERATOR_TOGGLE_ANIMATION_VIEW, VIRTKEY, NOINVERT
     "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
     "Z",            ID_EDIT_REDO,           VIRTKEY, SHIFT, CONTROL, NOINVERT
-    "Y",            ID_ACCELERATOR_MAP_VIEW_RANGE_METER_LOCK_MODE_TOGGLE, VIRTKEY, CONTROL, NOINVERT
+    "T",            ID_ACCELERATOR_MOVE_TIME_BOX_LOCATION, VIRTKEY, SHIFT, CONTROL, NOINVERT
 END
 
 
@@ -1068,8 +1069,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 5,13,30,1
- PRODUCTVERSION 5,13,30,1
+ FILEVERSION 5,13,31,0
+ PRODUCTVERSION 5,13,31,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -1086,12 +1087,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "FMI (Finnish Meteorological Instituet)"
             VALUE "FileDescription", "SmartMet meteorological workstation"
-            VALUE "FileVersion", "5.13.30.1"
+            VALUE "FileVersion", "5.13.31.0"
             VALUE "InternalName", "SmartMet"
             VALUE "LegalCopyright", "(C) 1999-2023 FMI (Finnish Meteorological Instituet).  All rights reserved"
             VALUE "OriginalFilename", "SmartMet.exe"
             VALUE "ProductName", "SmartMet"
-            VALUE "ProductVersion", "5.13.30.1"
+            VALUE "ProductVersion", "5.13.31.0"
         END
     END
     BLOCK "VarFileInfo"

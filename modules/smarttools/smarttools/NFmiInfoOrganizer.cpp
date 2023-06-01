@@ -304,6 +304,11 @@ void NFmiInfoOrganizer::MarkLoadedDataAsOld(bool newState)
     gMarkLoadedDataAsOld = newState;
 }
 
+bool NFmiInfoOrganizer::IsLoadedDataTreatedAsOld()
+{
+    return gMarkLoadedDataAsOld;
+}
+
 static bool CheckLevel(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                        const NFmiLevel *theLevel)
 {

@@ -35,6 +35,7 @@ set(TARGET_LINK_LIBRARIES_LIST
     HakeMessage
 	CapData
 	XmlLiteUtils
+    SmetUtils
     )
 if(NOT DISABLE_CPPRESTSDK)
 	set(TARGET_LINK_LIBRARIES_LIST ${TARGET_LINK_LIBRARIES_LIST} WmsSupport)
@@ -59,6 +60,7 @@ target_include_directories(
     PUBLIC ${DataUtilities_INCLUDE_DIRS}
     PUBLIC ${HakeMessage_INCLUDE_DIRS}
 	PUBLIC ${CapData_INCLUDE_DIRS}
+    PUBLIC ${SmetUtils_INCLUDE_DIRS}
     PUBLIC ${WmsSupport_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
 	PUBLIC ${XmlLiteUtils_INCLUDE_DIRS}
@@ -81,6 +83,7 @@ set(
     ${DataUtilities_INCLUDE_DIRS}
     ${HakeMessage_INCLUDE_DIRS}
 	${CapData_INCLUDE_DIRS}
+    ${SmetUtils_INCLUDE_DIRS}
     ${WmsSupport_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIR}
 	${XmlLiteUtils_INCLUDE_DIRS}

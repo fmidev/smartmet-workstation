@@ -58,6 +58,7 @@ namespace CtrlViewUtils
    std::string GetLatestObservationTimeString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, const std::string &theTimeFormat, bool fCrossSectionInfoWanted);
    std::string XmlEncode(const std::string &src);
    FmiDirection CalcFollowingParamWindowViewPosition(FmiDirection currentPosition, bool forward);
+   FmiDirection MoveTimeBoxPositionForward(FmiDirection currentPosition);
    bool IsConsideredAsNewData(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, int modelRunIndex, bool isMacroParam);
 
    template<typename T>

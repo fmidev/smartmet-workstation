@@ -3,7 +3,6 @@
 #include "SmartMetDialogs_resource.h"
 #include "TabCtrlSSL.h"
 #include "GridCtrl.h"
-#include "CheckComboBox.h"
 
 #include <string>
 #include <functional>
@@ -135,7 +134,6 @@ private:
     CString itsBetaAutomationEndTimeClockOffsetValueU_;
     CString itsBetaAutomationStartTimeClockOffsetErrorU_;
     CString itsBetaAutomationEndTimeClockOffsetErrorU_;
-    CCheckComboBox itsMultiDataSelector;
     // Tehd‰‰n Beta-automaatio save buttonille muuttuja, jotta sit‰ voidaan inputtien oikeellisuudesta riippuen enbloida/disabloida
     CButton itsBetaAutomationSaveButton;
     CButton itsBetaAutomationSaveAsButton;
@@ -146,6 +144,7 @@ private:
     CButton itsAutomationListSaveAsButton;
     CButton itsAddEditedAutomationToListButton;
     CButton itsRemoveAutomationFromListButton;
+    CString itsBetaAutomationDataTriggersStringU_;
 
 	DECLARE_MESSAGE_MAP()
 public:
@@ -160,8 +159,6 @@ public:
     afx_msg void OnEnChangeEditBetaAutomationTimeStepValue();
     afx_msg void OnEnChangeEditBetaAutomationFixedTimes();
     afx_msg void OnEnChangeEditBetaAutomationFirstRunOfDayValue();
-    afx_msg void OnCbnSelchangeComboBetaAutomationDataTrigger();
-    afx_msg void OnCbnCloseupComboBetaAutomationDataTrigger();
     afx_msg void OnBnClickedRadioBetaAutomationStartTimeFromProduct();
     afx_msg void OnBnClickedRadioBetaAutomationStartTimeWallClockOffset();
     afx_msg void OnBnClickedRadioBetaAutomationStartTimeFromModel();
@@ -183,4 +180,5 @@ public:
     afx_msg void OnBnClickedButtonRunSelectedAutomation();
     afx_msg void OnBnClickedButtonRunAllAutomations();
     afx_msg void OnBnClickedButtonRunEnabledAutomations();
+    afx_msg void OnEnChangeEditBetaAutomationDataTriggers();
 };

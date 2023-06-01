@@ -568,3 +568,17 @@ bool NFmiTimeValueEditManagerView::AutoAdjustValueScales(bool fJustActive)
 	}
 	return status;
 }
+
+std::string NFmiTimeValueEditManagerView::MakeCsvDataString()
+{
+	std::string csvDataString;
+	if(itsViewList)
+	{
+		for(itsViewList->Reset(); itsViewList->Next();)
+		{
+			csvDataString += itsViewList->Current()->MakeCsvDataString();
+		}
+	}
+	return csvDataString;
+}
+
