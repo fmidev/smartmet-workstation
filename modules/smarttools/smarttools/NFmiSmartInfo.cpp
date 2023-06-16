@@ -1,6 +1,7 @@
 
 #include "NFmiSmartInfo.h"
 #include "NFmiModifiableQDatasBookKeeping.h"
+#include "NFmiAreaMask.h"
 #include <newbase/NFmiQueryData.h>
 
 NFmiSmartInfo::NFmiSmartInfo() : NFmiOwnerInfo(), itsQDataBookKeepingPtr()
@@ -66,6 +67,8 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartInfo::CreateShallowCopyOfHighestIn
 {
   if (theInfo)
   {
+    ShallowLocationCopyEnabler enabler(theInfo);
+
     NFmiSmartInfo *smartInfo = dynamic_cast<NFmiSmartInfo *>(theInfo.get());
     if (smartInfo)
       return boost::shared_ptr<NFmiFastQueryInfo>(new NFmiSmartInfo(*smartInfo));

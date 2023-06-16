@@ -85,8 +85,6 @@ class NFmiInfoAreaMask : public NFmiAreaMaskImpl
       const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
       boost::shared_ptr<NFmiArea> &calculationArea,
       bool getStationarySynopDataOnly);
-  static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> CreateShallowCopyOfInfoVector(
-      const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector);
 
   // tätä kaytetaan smarttool-modifierin yhteydessä
   double Value(const NFmiCalculationParams &theCalculationParams,

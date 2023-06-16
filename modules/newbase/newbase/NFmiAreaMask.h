@@ -22,6 +22,17 @@ class NFmiFastQueryInfo;
 class NFmiSimpleCondition;
 class NFmiCalculationParams;
 class NFmiMacroParamValue;
+class NFmiLocationBag;
+
+class ShallowLocationCopyEnabler
+{
+  const boost::shared_ptr<NFmiFastQueryInfo> &fastInfoPtr;
+  NFmiLocationBag *possibleLocationBag = nullptr;
+
+ public:
+  ShallowLocationCopyEnabler(const boost::shared_ptr<NFmiFastQueryInfo> &theFastInfoPtr);
+  ~ShallowLocationCopyEnabler();
+};
 
 //! Undocumented class
 class NFmiAreaMask
@@ -364,6 +375,8 @@ class NFmiAreaMask
 
   static boost::shared_ptr<NFmiFastQueryInfo> DoShallowCopy(
       const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+  static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> DoShallowCopy(
+      const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector);
   static boost::shared_ptr<NFmiAreaMask> DoShallowCopy(
       const boost::shared_ptr<NFmiAreaMask> &theMask);
   static std::vector<boost::shared_ptr<NFmiAreaMask>> DoShallowCopy(

@@ -127,17 +127,6 @@ std::vector<boost::shared_ptr<NFmiFastQueryInfo>> NFmiInfoAreaMask::GetMultiSour
   return infoVector;
 }
 
-std::vector<boost::shared_ptr<NFmiFastQueryInfo>>
-NFmiInfoAreaMask::CreateShallowCopyOfInfoVector(
-    const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector)
-{
-  // tehdään matala kopio info-vektorista
-  std::vector<boost::shared_ptr<NFmiFastQueryInfo>> shallowCopyVector;
-  for (const auto &info : infoVector)
-    shallowCopyVector.push_back(boost::shared_ptr<NFmiFastQueryInfo>(new NFmiFastQueryInfo(*info)));
-  return shallowCopyVector;
-}
-
 // Nyt synop ja salama datat ovat tälläisiä. Tämä on yritys tehdä vähän optimointia muutenkin jo
 // pirun raskaaseen koodiin.
 // HUOM! Tämä on riippuvainen NFmiEditMapGeneralDataDoc::MakeDrawedInfoVectorForMapView -metodin
@@ -254,7 +243,7 @@ NFmiInfoAreaMask::NFmiInfoAreaMask(const NFmiInfoAreaMask &theOther)
       metaParamDataHolder(theOther.metaParamDataHolder),
       fIsModelClimatologyData(theOther.fIsModelClimatologyData),
       fUseMultiSourceData(theOther.fUseMultiSourceData),
-      itsInfoVector(NFmiInfoAreaMask::CreateShallowCopyOfInfoVector(theOther.itsInfoVector))
+      itsInfoVector(NFmiAreaMask::DoShallowCopy(theOther.itsInfoVector))
 {
 }
 

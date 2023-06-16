@@ -125,6 +125,7 @@ class NFmiHPlaceDescriptor : public NFmiDataDescriptor
   bool IsInside(const NFmiPoint &theLatLon, double theRadius) const;
 
   std::size_t HashValue() const;
+  NFmiLocationBag *LocationBag() const { return itsLocationBag; }
 
  protected:
   void Destroy();

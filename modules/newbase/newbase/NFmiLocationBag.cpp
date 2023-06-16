@@ -41,7 +41,12 @@ NFmiLocationBag::~NFmiLocationBag() { Destroy(); }
  */
 // ----------------------------------------------------------------------
 
-NFmiLocationBag::NFmiLocationBag() : NFmiSize(), itsLocations(), itsSortedLocations(), itsNearTree()
+NFmiLocationBag::NFmiLocationBag() 
+    : NFmiSize(), 
+    itsLocations(std::make_shared<StorageType>()), 
+    itsSortedLocations(std::make_shared<SortedStorageType>()), 
+    itsNearTree(
+          std::make_shared<NFmiNearTree<NFmiNearTreeLocation, NFmiNearTreeLocationDistance>>())
 {
 }
 
@@ -57,7 +62,7 @@ NFmiLocationBag::NFmiLocationBag() : NFmiSize(), itsLocations(), itsSortedLocati
 // ----------------------------------------------------------------------
 
 NFmiLocationBag::NFmiLocationBag(const NFmiLocation &theLocation)
-    : NFmiSize(), itsLocations(), itsSortedLocations(), itsNearTree()
+    : NFmiLocationBag()
 {
   AddLocation(theLocation);
 }
@@ -74,9 +79,9 @@ NFmiLocationBag::NFmiLocationBag(const NFmiLocation &theLocation)
 
 NFmiLocationBag::NFmiLocationBag(const NFmiStation *theLocationArray,
                                  unsigned long numberOfLocations)
-    : NFmiSize(numberOfLocations), itsLocations(), itsSortedLocations(), itsNearTree()
+    : NFmiLocationBag()
 {
-  itsLocations.reserve(numberOfLocations);
+  itsLocations->reserve(numberOfLocations);
   for (unsigned long i = 0; i < numberOfLocations; i++)
   {
     AddLocation(*theLocationArray);
@@ -96,34 +101,14 @@ NFmiLocationBag::NFmiLocationBag(const NFmiStation *theLocationArray,
 
 NFmiLocationBag::NFmiLocationBag(const NFmiLocation *theLocationArray,
                                  unsigned long numberOfLocations)
-    : NFmiSize(numberOfLocations), itsLocations(), itsSortedLocations(), itsNearTree()
+    : NFmiLocationBag()
 {
-  itsLocations.reserve(numberOfLocations);
+  itsLocations->reserve(numberOfLocations);
   for (unsigned long i = 0; i < numberOfLocations; i++)
   {
     AddLocation(*theLocationArray);
     theLocationArray++;
   }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * Constructor based on an array of pointers to locations. All the
- * locations pointed to in the array are added to the constructed
- * bag. Note that the bag takes ownership of the pointers, no
- * cloning is done.
- *
- * \param theLocationArray The array of pointers to NFmiLocation objects.
- * \param numberOfLocations Size of the array.
- */
-// ----------------------------------------------------------------------
-
-NFmiLocationBag::NFmiLocationBag(NFmiLocation **theLocationArray, unsigned long numberOfLocations)
-    : NFmiSize(numberOfLocations), itsLocations(), itsSortedLocations(), itsNearTree()
-{
-  itsLocations.reserve(numberOfLocations);
-  for (unsigned long i = 0; i < numberOfLocations; i++)
-    AddLocation(*theLocationArray[i]);
 }
 
 // ----------------------------------------------------------------------
@@ -135,12 +120,35 @@ NFmiLocationBag::NFmiLocationBag(NFmiLocation **theLocationArray, unsigned long 
 // ----------------------------------------------------------------------
 
 NFmiLocationBag::NFmiLocationBag(const NFmiLocationBag &theLocationBag)
-    : NFmiSize(theLocationBag), itsLocations(), itsSortedLocations(), itsNearTree()
+    : NFmiLocationBag()
 {
-  itsLocations.reserve(theLocationBag.itsLocations.size());
+  DoActualCopyOperations(theLocationBag);
+}
 
-  for (unsigned long i = 0; i < theLocationBag.itsLocations.size(); i++)
-    AddLocation(*(theLocationBag.itsLocations[i]), false);
+void NFmiLocationBag::DoDeepLocationCopy(const NFmiLocationBag &theLocationBag)
+{
+  if (itsLocations.use_count() > 1)
+  {
+    // If this object was using other copies already, we must 'disconnect' 
+    // the sharing by creating new shared objects that are empty
+    NFmiSize::SetSize(0);
+    itsLocations = std::make_shared<StorageType>();
+    itsSortedLocations = std::make_shared<SortedStorageType>();
+    itsNearTree =
+        std::make_shared<NFmiNearTree<NFmiNearTreeLocation, NFmiNearTreeLocationDistance>>();
+  }
+  else
+  {
+    // If this object is the sole owner of possible previous locations, then we can just call Destroy.
+    Destroy();
+  }
+
+  itsLocations->reserve(theLocationBag.itsLocations->size());
+
+  for (unsigned long i = 0; i < theLocationBag.itsLocations->size(); i++)
+  {
+    AddLocation(*((*theLocationBag.itsLocations)[i]), false);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -152,11 +160,15 @@ NFmiLocationBag::NFmiLocationBag(const NFmiLocationBag &theLocationBag)
 
 void NFmiLocationBag::Destroy()
 {
-  for (unsigned long i = 0; i < itsLocations.size(); i++)
-    delete itsLocations[i];
-  itsLocations.clear();
-  itsSortedLocations.clear();
-  itsNearTree.Clear();
+  // vain viimeinen kopio tuhotaan, eli kun päästään use_count:issa 1:een
+  if (itsLocations.use_count() == 1)
+  {
+    for (unsigned long i = 0; i < itsLocations->size(); i++)
+      delete (*itsLocations)[i];
+    itsLocations->clear();
+    itsSortedLocations->clear();
+    itsNearTree->Clear();
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -172,16 +184,16 @@ void NFmiLocationBag::Destroy()
 const NFmiLocationBag NFmiLocationBag::Combine(const NFmiLocationBag &theBag)
 {
   NFmiLocationBag outbag;
-  outbag.itsLocations.reserve(itsLocations.size() + theBag.itsLocations.size());
+  outbag.itsLocations->reserve(itsLocations->size() + theBag.itsLocations->size());
 
-  StorageType::const_iterator begin = itsLocations.begin();
-  StorageType::const_iterator end = itsLocations.end();
+  StorageType::const_iterator begin = itsLocations->begin();
+  StorageType::const_iterator end = itsLocations->end();
   StorageType::const_iterator iter;
   for (iter = begin; iter != end; ++iter)
     outbag.AddLocation(*(*iter), true);
 
-  begin = theBag.itsLocations.begin();
-  end = theBag.itsLocations.end();
+  begin = theBag.itsLocations->begin();
+  end = theBag.itsLocations->end();
   for (iter = begin; iter != end; ++iter)
     outbag.AddLocation(*(*iter), true);
 
@@ -201,7 +213,7 @@ const NFmiLocationBag NFmiLocationBag::Combine(const NFmiLocationBag &theBag)
 const NFmiLocation *NFmiLocationBag::Location() const
 {
   if (CurrentIndex() == -1) return nullptr;
-  return itsLocations[CurrentIndex()];
+  return (*itsLocations)[CurrentIndex()];
 }
 
 // ----------------------------------------------------------------------
@@ -219,9 +231,9 @@ bool NFmiLocationBag::Location(const NFmiLocation &theLocation)
 
   // Search with a zero radius to get an exact coordinate match
   NFmiNearTreeLocation result;
-  if (itsNearTree.NearestPoint(result, searchloc, 0))
+  if (itsNearTree->NearestPoint(result, searchloc, 0))
   {
-    itsIndex = result.GetIndex();
+    itsIndex = static_cast<long>(result.GetIndex());
     return true;
   }
   else
@@ -254,9 +266,9 @@ bool NFmiLocationBag::NearestLocation(const NFmiLocation &theLocation, double th
   double cordlimit = 2 * sin(theMaxDistance / (2 * kRearth));
 
   NFmiNearTreeLocation result;
-  if (itsNearTree.NearestPoint(result, searchloc, cordlimit))
+  if (itsNearTree->NearestPoint(result, searchloc, cordlimit))
   {
-    itsIndex = result.GetIndex();
+    itsIndex = static_cast<long>(result.GetIndex());
     return true;
   }
   else
@@ -289,13 +301,13 @@ bool NFmiLocationBag::NearestLocation(const NFmiLocation &theLocation,
   unsigned long best_index = 0;
   double best_distance = 0;
 
-  for (unsigned long i = 0; i < itsLocations.size(); i++)
+  for (unsigned long i = 0; i < itsLocations->size(); i++)
   {
-    double dist = theLocation.Distance(*itsLocations[i]);
+    double dist = theLocation.Distance(*(*itsLocations)[i]);
     if (dist <= theMaxDistance && (!found || dist < best_distance))
     {
       if (theArea->IsInside(
-              itsLocations[i]
+              (*itsLocations)[i]
                   ->GetLocation()))  // optimointi kysymys, kumpi hitaampi Distance vai IsInside?
       {
         found = true;
@@ -328,7 +340,7 @@ bool NFmiLocationBag::NearestLocation(const NFmiLocation &theLocation,
 bool NFmiLocationBag::AddLocation(const NFmiLocation &theLocation, bool theChecking)
 {
   if (theChecking)
-    if (itsSortedLocations.find(theLocation) != itsSortedLocations.end()) return false;
+    if (itsSortedLocations->find(theLocation) != itsSortedLocations->end()) return false;
 
   Add(theLocation);
   return true;
@@ -345,11 +357,21 @@ bool NFmiLocationBag::AddLocation(const NFmiLocation &theLocation, bool theCheck
 
 void NFmiLocationBag::Add(const NFmiLocation &theLocation)
 {
+  if (itsLocations.use_count() > 1)
+  {
+    // Turvamekanismi sharep_ptr optimointien takia:
+    // Jos loacationBagista on jo tehty kopioita, ollaan luultavasti tekemisissa
+    // jo valmiin queryData olion ja sen info/fastInfo kopioiden kanssa ja siina
+    // tapauksessa ei saa lisata enaa uusia locationeita dataan.
+    throw std::runtime_error(
+        "NFmiLocationBag::Add: can't add locations to existing queryData object");
+  }
+
   NFmiLocation *tmp = theLocation.Clone();
-  itsLocations.push_back(tmp);
-  itsSortedLocations.insert(*tmp);
-  itsSize = itsLocations.size();  // safer than itsSize++
-  itsNearTree.Insert(NFmiNearTreeLocation(*tmp, itsSize - 1));
+  itsLocations->push_back(tmp);
+  itsSortedLocations->insert(*tmp);
+  itsSize = static_cast<unsigned long>(itsLocations->size());  // safer than itsSize++
+  itsNearTree->Insert(NFmiNearTreeLocation(*tmp, itsSize - 1));
 }
 
 // ----------------------------------------------------------------------
@@ -369,12 +391,12 @@ std::ostream &NFmiLocationBag::Write(std::ostream &file) const
 
   if (FmiInfoVersion >= 4)
   {
-    file << itsLocations[0]->ClassId() << std::endl;
+    file << (*itsLocations)[0]->ClassId() << std::endl;
   }
 
-  for (unsigned long i = 0; i < itsLocations.size(); i++)
+  for (unsigned long i = 0; i < itsLocations->size(); i++)
   {
-    file << *(itsLocations[i]);
+    file << *((*itsLocations)[i]);
   }
   return file;
 }
@@ -401,7 +423,7 @@ std::istream &NFmiLocationBag::Read(std::istream &file)
   }
 
   unsigned long newSize = GetSize();
-  itsLocations.reserve(newSize);
+  itsLocations->reserve(newSize);
 
   NFmiLocation *temp;
 
@@ -439,7 +461,7 @@ std::istream &NFmiLocationBag::Read(std::istream &file)
   Reset();
 
   // This is enough to make using itsNearTree thread safe if no more points are added
-  itsNearTree.Flush();
+  itsNearTree->Flush();
 
   return file;
 }
@@ -457,17 +479,29 @@ std::istream &NFmiLocationBag::Read(std::istream &file)
 
 NFmiLocationBag &NFmiLocationBag::operator=(const NFmiLocationBag &theLocationBag)
 {
-  Destroy();
-
-  itsIndex = theLocationBag.CurrentIndex();
-  itsSize = theLocationBag.GetSize();
-
-  itsLocations.reserve(theLocationBag.itsLocations.size());
-  for (unsigned int i = 0; i < theLocationBag.itsLocations.size(); i++)
-    Add(*(theLocationBag.itsLocations[i]));
-
+  if (this != &theLocationBag)
+  {
+    DoActualCopyOperations(theLocationBag);
+  }
   return *this;
 }
+
+void NFmiLocationBag::DoActualCopyOperations(const NFmiLocationBag &theLocationBag)
+{
+  fAllowLocationCopyOptimization = theLocationBag.fAllowLocationCopyOptimization;
+  if (fAllowLocationCopyOptimization)
+  {
+    NFmiSize::operator=(theLocationBag);
+    itsLocations = theLocationBag.itsLocations;
+    itsSortedLocations = theLocationBag.itsSortedLocations;
+    itsNearTree = theLocationBag.itsNearTree;
+  }
+  else
+  {
+    DoDeepLocationCopy(theLocationBag);
+  }
+}
+
 
 // ----------------------------------------------------------------------
 /*!
@@ -480,11 +514,11 @@ NFmiLocationBag &NFmiLocationBag::operator=(const NFmiLocationBag &theLocationBa
 
 bool NFmiLocationBag::operator==(const NFmiLocationBag &theLocationBag) const
 {
-  if (itsLocations.size() != theLocationBag.itsLocations.size()) return false;
+  if (itsLocations->size() != theLocationBag.itsLocations->size()) return false;
 
   for (int i = 0; i < static_cast<int>(this->GetSize()); i++)
   {
-    if (!(this->itsLocations[i]->IsEqual(*(theLocationBag.itsLocations[i])))) return false;
+    if (!((*this->itsLocations)[i]->IsEqual(*((*theLocationBag.itsLocations)[i])))) return false;
   }
   return true;
 }
@@ -554,7 +588,7 @@ const std::vector<pair<int, double>> NFmiLocationBag::NearestLocations(
   auto size = static_cast<int>(this->GetSize());
   std::vector<IndDistPari> tempValues(size, make_pair(-1, kFloatMissing));
   for (int i = 0; i < size; i++)
-    tempValues[i] = make_pair(i, theLocation.Distance(*this->itsLocations[i]));
+    tempValues[i] = make_pair(i, theLocation.Distance(*(*this->itsLocations)[i]));
 
   if (theMaxWantedLocations == -1 && theMaxDistance == kFloatMissing)
   {
@@ -626,7 +660,7 @@ bool NFmiLocationBag::IsInside(const NFmiPoint &theLatLon, double theRadius) con
 
   // We'll ignore this result, we just want to know if there is one
   NFmiNearTreeLocation result;
-  return itsNearTree.NearestPoint(result, searchloc, cordlimit);
+  return itsNearTree->NearestPoint(result, searchloc, cordlimit);
 }
 
 // ----------------------------------------------------------------------
@@ -639,7 +673,7 @@ std::size_t NFmiLocationBag::HashValue() const
 {
   std::size_t hash = 0;
 
-  BOOST_FOREACH (NFmiLocation *location, itsLocations)
+  BOOST_FOREACH (NFmiLocation *location, *itsLocations)
   {
     if (location != nullptr) boost::hash_combine(hash, location->HashValue());
   }
