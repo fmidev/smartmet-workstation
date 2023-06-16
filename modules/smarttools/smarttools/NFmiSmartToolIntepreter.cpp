@@ -3168,7 +3168,16 @@ bool NFmiSmartToolIntepreter::ExtractMultiParam(NFmiAreaMask::FunctionType multi
     string parameterStr = token;
 
     // Katsotaan ensin onko kyse jostain parametrista
-    auto variableDataInfo = GetPossibleVariableDataInfo(parameterStr);
+    auto variableDataInfo = std::make_pair(false, NFmiDefineWantedData());
+    try
+    {
+      // Tehdään tämä try-catch blokissa, koska jos annettu macroParam tiedoston nimi, missä '_' merkkejä, lentää 
+      // poikkeus tässä muuttujatarkastelussa, ja sen jälkeen halutaan tutkia että onko kyse macroParam tiedoston nimestä.
+      variableDataInfo = GetPossibleVariableDataInfo(parameterStr);
+    }
+    catch (...)
+    {  }
+
     if (variableDataInfo.first)
     {
       if (multiParamId == NFmiAreaMask::MultiParam2)
