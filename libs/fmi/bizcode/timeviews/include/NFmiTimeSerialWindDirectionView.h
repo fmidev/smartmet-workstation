@@ -32,7 +32,7 @@ class NFmiTimeSerialWindDirectionView : public NFmiTimeSerialView
 {
 
  public:
-    NFmiTimeSerialWindDirectionView		(const NFmiRect & theRect
+    NFmiTimeSerialWindDirectionView		(int theMapViewDescTopIndex, const NFmiRect & theRect
 										,NFmiToolBox * theToolBox
 										,NFmiDrawingEnvironment * theDrawingEnvi
 										,boost::shared_ptr<NFmiDrawParam> &theDrawParam

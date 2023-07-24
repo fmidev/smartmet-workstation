@@ -44,12 +44,12 @@
 //--------------------------------------------------------
 // Constructor/Destructor 
 //--------------------------------------------------------
-NFmiTimeSerialDiscreteDataView::NFmiTimeSerialDiscreteDataView (const NFmiRect & theRect
+NFmiTimeSerialDiscreteDataView::NFmiTimeSerialDiscreteDataView (int theMapViewDescTopIndex, const NFmiRect & theRect
 															   ,NFmiToolBox * theToolBox
 															   ,NFmiDrawingEnvironment * theDrawingEnvi
 															   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 															   ,int theIndex)
-:NFmiTimeSerialView(theRect
+:NFmiTimeSerialView(theMapViewDescTopIndex, theRect
 				  ,theToolBox
 				  ,theDrawingEnvi
 				  ,theDrawParam
@@ -90,7 +90,7 @@ bool NFmiTimeSerialDiscreteDataView::LeftButtonUp (const NFmiPoint & thePlace, u
 			int index;
 			if(FindTimeIndex(thePlace.X(), proximityFactor, index))
 			{
-				double value = Position2ModifyFactor(thePlace);
+				auto value = Position2ModifyFactor(thePlace);
 				FixModifyFactorValue(value);
 
 				return ModifyFactorPointsSetValue(boost::math::iround(value), index) == true;	// Vain yksi tapa käsitellä aikasarjaa. M.K.
@@ -119,7 +119,7 @@ bool NFmiTimeSerialDiscreteDataView::ModifyFactorPointsSetValue(int theValue, in
 		}
 
 		for(int i = itsPreviousIndex; i <= index; i++)
-			itsModificationFactorCurvePoints[i] = theValue;		// 0 = drizzle, 1 = rain, 2 = sleet, 3 =snow, 4 = freezing
+			itsModificationFactorCurvePoints[i] = (float)theValue;		// 0 = drizzle, 1 = rain, 2 = sleet, 3 =snow, 4 = freezing
 																 
 		fCalculateLine = false;
 	}
@@ -205,12 +205,12 @@ void NFmiTimeSerialDiscreteDataView::CreateModifyFactorScaleView(bool /* fSetSca
 //--------------------------------------------------------
 // FixModifyFactorValue 
 //--------------------------------------------------------
-void NFmiTimeSerialDiscreteDataView::FixModifyFactorValue (double & theValue)
+void NFmiTimeSerialDiscreteDataView::FixModifyFactorValue (float& theValue)
 {
 	if(theValue > itsDrawParam->AbsoluteMaxValue())
-		theValue = itsDrawParam->AbsoluteMaxValue();
+		theValue = (float)itsDrawParam->AbsoluteMaxValue();
 	if(theValue < itsDrawParam->AbsoluteMinValue())
-		theValue = itsDrawParam->AbsoluteMinValue();
+		theValue = (float)itsDrawParam->AbsoluteMinValue();
 	return;
 }
 

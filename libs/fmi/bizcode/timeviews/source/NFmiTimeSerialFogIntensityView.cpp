@@ -12,12 +12,12 @@
 //--------------------------------------------------------
 // Constructor/Destructor 
 //--------------------------------------------------------
-NFmiTimeSerialFogIntensityView::NFmiTimeSerialFogIntensityView(const NFmiRect & theRect
+NFmiTimeSerialFogIntensityView::NFmiTimeSerialFogIntensityView(int theMapViewDescTopIndex, const NFmiRect & theRect
 													   ,NFmiToolBox * theToolBox
 													   ,NFmiDrawingEnvironment * theDrawingEnvi
 													   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 													   ,int theIndex)
-:NFmiTimeSerialDiscreteDataView(theRect
+:NFmiTimeSerialDiscreteDataView(theMapViewDescTopIndex, theRect
 							   ,theToolBox
 							   ,theDrawingEnvi
 							   ,theDrawParam

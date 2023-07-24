@@ -26,12 +26,12 @@
 //--------------------------------------------------------
 // Constructor/Destructor 
 //--------------------------------------------------------
-NFmiTimeSerialWindDirectionView::NFmiTimeSerialWindDirectionView (const NFmiRect & theRect
+NFmiTimeSerialWindDirectionView::NFmiTimeSerialWindDirectionView (int theMapViewDescTopIndex, const NFmiRect & theRect
 															     ,NFmiToolBox * theToolBox
 															     ,NFmiDrawingEnvironment * theDrawingEnvi
 															     ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 																 ,int theIndex)
-:NFmiTimeSerialView(theRect
+:NFmiTimeSerialView(theMapViewDescTopIndex, theRect
 				  ,theToolBox
 				  ,theDrawingEnvi
 				  ,theDrawParam

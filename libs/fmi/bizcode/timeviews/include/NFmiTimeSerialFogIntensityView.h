@@ -13,7 +13,7 @@ class NFmiTimeSerialFogIntensityView : public NFmiTimeSerialDiscreteDataView
 {
 
  public:
-    NFmiTimeSerialFogIntensityView (const NFmiRect & theRect
+    NFmiTimeSerialFogIntensityView (int theMapViewDescTopIndex, const NFmiRect & theRect
 										,NFmiToolBox * theToolBox
 										,NFmiDrawingEnvironment * theDrawingEnvi
 										,boost::shared_ptr<NFmiDrawParam> &theDrawParam
