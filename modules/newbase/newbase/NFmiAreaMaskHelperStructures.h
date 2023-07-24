@@ -19,6 +19,7 @@ class NFmiMacroParamValue
   // Tämä olio on käytössä vain jos tämä on true
   bool fSetValue = false;
   bool fDoCrossSectionCalculations = false;
+  bool fDoTimeSerialCalculations = false;
 };
 
 class NFmiCalculationParams
