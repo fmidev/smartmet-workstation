@@ -14,6 +14,8 @@
 #include "NFmiStepTimeScale.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "SpecialDesctopIndex.h"
+#include "NFmiInfoOrganizer.h"
+#include "NFmiFastQueryInfo.h"
 
 
 const double kFmiEmptySpaceBetweenSubViews = 100.;
@@ -55,6 +57,7 @@ void NFmiTimeValueEditManagerView::Draw(NFmiToolBox* theToolBox)
    UpdateTimeSerialViews();
 
    DrawTimeAxisView();
+   DoNeededTimeSerialMacroParamInfoUpdates();
    itsViewList->Draw(theToolBox);
 }
 
@@ -393,35 +396,35 @@ NFmiTimeSerialView* NFmiTimeValueEditManagerView::CreateTimeSerialView(boost::sh
 			{
             case kFmiPrecipitationForm:
             case kFmiPotentialPrecipitationForm:
-				view = new NFmiTimeSerialPrecipitationFormView(rect
+				view = new NFmiTimeSerialPrecipitationFormView(itsMapViewDescTopIndex, rect
 															   ,itsToolBox
 															   ,itsDrawingEnvironment
 															   ,theDrawParam
 															   ,index);
 				break;
 			case kFmiPrecipitationType:
-				view = new NFmiTimeSerialPrecipitationTypeView(rect
+				view = new NFmiTimeSerialPrecipitationTypeView(itsMapViewDescTopIndex, rect
 															   ,itsToolBox
 															   ,itsDrawingEnvironment
 															   ,theDrawParam
 															   ,index);
 				break;
 			case kFmiFogIntensity:
-				view = new NFmiTimeSerialFogIntensityView(rect
+				view = new NFmiTimeSerialFogIntensityView(itsMapViewDescTopIndex, rect
 														   ,itsToolBox
 														   ,itsDrawingEnvironment
 														   ,theDrawParam
 														   ,index);
 				break;
 			case kFmiWeatherSymbol3:
-				view = new NFmiTimeSerialSymbolView(rect
+				view = new NFmiTimeSerialSymbolView(itsMapViewDescTopIndex, rect
 												   ,itsToolBox
 												   ,itsDrawingEnvironment
 												   ,theDrawParam
 												   ,index);
 				break;
 			default:
-				view = new NFmiTimeSerialView(rect
+				view = new NFmiTimeSerialView(itsMapViewDescTopIndex, rect
 											 ,itsToolBox
 											 ,itsDrawingEnvironment
 											 ,theDrawParam
@@ -582,3 +585,17 @@ std::string NFmiTimeValueEditManagerView::MakeCsvDataString()
 	return csvDataString;
 }
 
+void NFmiTimeValueEditManagerView::DoNeededTimeSerialMacroParamInfoUpdates()
+{
+	if(itsUpperTimeView)
+	{
+		auto timeSerialMacroParamInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->TimeSerialMacroParamData();
+		auto usedTimeBagCopy = itsCtrlViewDocumentInterface->TimeSerialViewTimeBag();
+		double timeRangeInHours = usedTimeBagCopy.LastTime().DifferenceInHours(usedTimeBagCopy.FirstTime());
+		int wantedTimeStepsInData = boost::math::iround(timeRangeInHours) + 1;
+		if(!timeSerialMacroParamInfo || wantedTimeStepsInData != timeSerialMacroParamInfo->GridXNumber())
+		{
+			itsCtrlViewDocumentInterface->InfoOrganizer()->UpdateTimeSerialMacroParamDataSize(wantedTimeStepsInData);
+		}
+	}
+}

@@ -12,6 +12,8 @@
 #include "ColorStringFunctions.h"
 #include "NFmiMacroParamSystem.h"
 #include "NFmiMacroParam.h"
+#include "NFmiPathUtils.h"
+#include "catlog/catlog.h"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/round.hpp>
@@ -666,6 +668,36 @@ namespace CtrlViewUtils
         if(macroParamPtr)
             return macroParamPtr->MacroText();
         throw std::runtime_error(std::string(__FUNCTION__) + ": couldn't found macro parameter: " + theDrawParam->ParameterAbbreviation());
+    }
+
+    std::string MakeMacroParamRelatedFinalErrorMessage(const std::string& baseMessage, const std::exception* exceptionPtr, boost::shared_ptr<NFmiDrawParam>& theDrawParam, const std::string& macroParamSystemRootPath)
+    {
+        std::string errorMessage = baseMessage;
+        if(exceptionPtr)
+        {
+            errorMessage += ": \n";
+            errorMessage += exceptionPtr->what();
+        }
+        errorMessage += ", in '";
+        errorMessage += PathUtils::getRelativeStrippedFileName(theDrawParam->InitFileName(), macroParamSystemRootPath, "dpa");
+        errorMessage += "'";
+        return errorMessage;
+    }
+
+    void SetMacroParamErrorMessage(const std::string& errorText, CtrlViewDocumentInterface& ctrlViewDocumentInterface, std::string* possibleTooltipErrorTextOut)
+    {
+        // Lokitetaan virheviesti
+        CatLog::logMessage(errorText, CatLog::Severity::Error, CatLog::Category::Macro, true);
+        // Jos kyse toolpit laskuista, laitetaan viesti talteen ExtraMacroParamData:an, jotta viesti voidaan laittaa tooltippiin
+        if(possibleTooltipErrorTextOut)
+            *possibleTooltipErrorTextOut = errorText;
+
+        // talletetaan virheteksti aikaleimalla, että käyttäjä voi tarkastella sitä sitten smarttool dialogissa
+        NFmiTime aTime;
+        std::string timeString = aTime.ToStr("YYYY.MM.DD HH:mm:SS\n");
+        auto dialogErrorString = timeString + errorText;
+        ctrlViewDocumentInterface.SetLatestMacroParamErrorText(dialogErrorString);
+        ctrlViewDocumentInterface.SetMacroErrorText(dialogErrorString);
     }
 
 } // namespace CtrlViewUtils

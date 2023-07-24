@@ -2841,7 +2841,7 @@ bool CheckEditedDataForStartUpLoadErrors(int theMessageBoxButtunOptions)
 	return true;
 }
 
-bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1)
+bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1)
 {
 	// Tehd‰‰n aikasarjamuokkauksille progress ja peruutus dialogi ja toiminnot.
 	// Aluksi vain control-point moodille!!!
@@ -3063,13 +3063,13 @@ public:
 	}
 	void SetTimeSerialSettings(FmiMenuCommandType theMenuCommand)
 	{
-		itsDescTopIndex = static_cast<unsigned int>(-1);
+		itsDescTopIndex = CtrlViewUtils::kFmiTimeSerialView;
 		itsMenuCommand = theMenuCommand;
 
 		fLevelDataOnly = false;
 		fGridDataOnly = false;
 		fDoMapMenu = false;
-		fAcceptMacroParams = false;
+		fAcceptMacroParams = true;
 		fAcceptCalculateParams = false;
 		fMakeCustomMenu = false;
 	}
@@ -3150,7 +3150,9 @@ void CreateParamSelectionBasePopup(const MenuCreationSettings &theMenuSettings, 
 	{
 		if(theMenuSettings.fDoMapMenu)
 			AddMacroParamPartToPopUpMenu(theMenuSettings, menuList, NFmiInfoData::kMacroParam);
-		else // viel‰ ei ole muita fAcceptMacroParams -tapauksia kuin poikkileikkaus-makroParamit
+		else if(theMenuSettings.itsDescTopIndex == CtrlViewUtils::kFmiTimeSerialView)
+			AddMacroParamPartToPopUpMenu(theMenuSettings, menuList, NFmiInfoData::kTimeSerialMacroParam);
+		else if(theMenuSettings.itsDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
 			AddMacroParamPartToPopUpMenu(theMenuSettings, menuList, NFmiInfoData::kCrossSectionMacroParam);
 	}
 
@@ -4792,7 +4794,7 @@ bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theRowIndex, int /* the
 		GetCombinedMapHandler()->activateView(theMenuItem, theRowIndex);
         break;
     case kAddViewWithRealRowNumber:
-		GetCombinedMapHandler()->addViewWithRealRowNumber(true, theMenuItem, theRowIndex, false, nullptr);
+		GetCombinedMapHandler()->addViewWithRealRowNumber(true, theMenuItem, theRowIndex, false);
         break;
 	case kFmiAddParamCrossSectionView:
 		GetCombinedMapHandler()->addCrossSectionView(theMenuItem, theRowIndex, false);
@@ -6810,10 +6812,9 @@ bool InitCPManagerSet(void)
 			timeSerialViewIndexReference++; // t‰t‰ juoksuttamalla saan parametrit menem‰‰n aikasarja ikkunaan oikeaan j‰rjestykseen
 			const NFmiViewSettingMacro::Param &par = macroTimeRow.Param();
 			NFmiMenuItem menuItem(-1, "x", par.DataIdent(), kFmiAddTimeSerialView, g_DefaultParamView, &par.Level(), par.DataType());
-			combinedMapHandler.addTimeSerialView(menuItem, fTreatAsViewMacro);
+			auto addedDrawParam = combinedMapHandler.addTimeSerialView(menuItem, fTreatAsViewMacro);
             // Kaikki makroon talletetut drawparam asetukset pit‰‰ viel‰ ladata luotuun ja listoihin laitettuun drawparamiin
-            // viimeinen 0 on feikki indeksi jota tarvitaan karttan‰yttˆ tapauksessa
-			AdjustDrawParam(0, par, CtrlViewUtils::kFmiTimeSerialView, 0, fTreatAsViewMacro);
+			AdjustDrawParam(addedDrawParam, par, fTreatAsViewMacro);
 
 			// Tehd‰‰n side-parameter osio t‰ss‰
 			const auto& sideParameters = macroTimeRow.SideParameters();
@@ -6822,7 +6823,8 @@ bool InitCPManagerSet(void)
 				for(const auto& sideParameter : sideParameters)
 				{
 					NFmiMenuItem sideParameterMenuItem(-1, "x", sideParameter.DataIdent(), kFmiAddTimeSerialSideParam, g_DefaultParamView, &sideParameter.Level(), sideParameter.DataType());
-					combinedMapHandler.addTimeSerialViewSideParameter(sideParameterMenuItem, fTreatAsViewMacro);
+					auto addedSideDrawParam = combinedMapHandler.addTimeSerialViewSideParameter(sideParameterMenuItem, fTreatAsViewMacro);
+					AdjustDrawParam(addedSideDrawParam, sideParameter, fTreatAsViewMacro);
 				}
 			}
 		}
@@ -6941,8 +6943,9 @@ bool InitCPManagerSet(void)
                     usedDataType = NFmiInfoData::kModelHelpData; 
                 }
 				NFmiMenuItem addParamMenuItem(theDescTopIndex, gDummyParamName, viewMacroLayerParam.DataIdent(), kFmiAddView, g_DefaultParamView, &viewMacroLayerParam.Level(), usedDataType);
+				addParamMenuItem.MacroParamInitName(viewMacroLayerParam.DrawParam()->InitFileName());
                 auto realRowNumber = rowVectorCounter + 1;
-				GetCombinedMapHandler()->addViewWithRealRowNumber(false, addParamMenuItem, static_cast<int>(realRowNumber), fTreatAsViewMacro, &(viewMacroLayerParam.DrawParam()->InitFileName()));
+				GetCombinedMapHandler()->addViewWithRealRowNumber(false, addParamMenuItem, static_cast<int>(realRowNumber), fTreatAsViewMacro);
                 // Kaikki makroon talletetut drawparam asetukset pit‰‰ viel‰ ladata luotuun ja listoihin laitettuun drawparamiin
 				AdjustDrawParam(theDescTopIndex, viewMacroLayerParam, static_cast<int>(realRowNumber), static_cast<int>(viewMacroLayerIndex + 1), fTreatAsViewMacro); 
 			}
@@ -7554,7 +7557,7 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 	void AddMacroParamToView(unsigned int theDescTopIndex, int theViewRow, const std::string &theName)
 	{
 		NFmiMenuItem menuItem(theDescTopIndex, theName, static_cast<FmiParameterName>(998), kFmiAddView, g_DefaultParamView, 0, NFmiInfoData::kMacroParam, theViewRow);
-		GetCombinedMapHandler()->addViewWithRealRowNumber(true, menuItem, theViewRow, false, nullptr);
+		GetCombinedMapHandler()->addViewWithRealRowNumber(true, menuItem, theViewRow, false);
 	}
 
 	// poistaa halutun macroparamin dokumentista, tiedostoista ja n‰ytˆilt‰
@@ -11562,7 +11565,7 @@ int NFmiEditMapGeneralDataDoc::FilterDialogUpdateStatus(void){return pimpl->Filt
 void NFmiEditMapGeneralDataDoc::FilterDialogUpdateStatus(int newState){pimpl->FilterDialogUpdateStatus(newState);};
 bool NFmiEditMapGeneralDataDoc::UseTimeInterpolation(void){return pimpl->fUseTimeInterpolation;};
 void NFmiEditMapGeneralDataDoc::UseTimeInterpolation(bool newState){pimpl->fUseTimeInterpolation = newState;};
-bool NFmiEditMapGeneralDataDoc::DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue)
+bool NFmiEditMapGeneralDataDoc::DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue)
 {
 	return pimpl->DoTimeSeriesValuesModifying(theModifiedDrawParam, NFmiMetEditorTypes::Mask(theUsedMask), theTimeDescriptor, theModificationFactorCurvePoints, theEditorTool, fUseSetForDiscreteData, theUnchangedValue);
 }

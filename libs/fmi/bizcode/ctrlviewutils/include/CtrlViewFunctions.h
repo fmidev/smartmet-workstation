@@ -75,4 +75,6 @@ namespace CtrlViewUtils
    double CalcAngle(double x, double y);
    bool IsModularParameter(FmiParameterName theParam);
    std::string GetMacroParamFormula(NFmiMacroParamSystem& macroParamSystem, boost::shared_ptr<NFmiDrawParam>& theDrawParam);
+   std::string MakeMacroParamRelatedFinalErrorMessage(const std::string& baseMessage, const std::exception* exceptionPtr, boost::shared_ptr<NFmiDrawParam>& theDrawParam, const std::string& macroParamSystemRootPath);
+   void SetMacroParamErrorMessage(const std::string& errorText, CtrlViewDocumentInterface& ctrlViewDocumentInterface, std::string* possibleTooltipErrorTextOut = nullptr);
 } // namespace CtrlViewUtils

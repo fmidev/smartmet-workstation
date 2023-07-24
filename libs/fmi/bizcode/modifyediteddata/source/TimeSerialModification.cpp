@@ -781,7 +781,7 @@ std::string TimeSeriesModifiedParamForLog(boost::shared_ptr<NFmiDrawParam> &theM
     return "[" + paramName + "]";
 }
 
-static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue, bool fDoMultiThread, NFmiThreadCallBacks *theThreadCallBacks)
+static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue, bool fDoMultiThread, NFmiThreadCallBacks *theThreadCallBacks)
 {
 	if(theModifiedDrawParam && theModifiedDrawParam->IsParamEdited())
 	{
@@ -2649,20 +2649,6 @@ static void SetMacroParamErrorMessage(const std::string &theErrorText, TimeSeria
 	theAdapter.SetMacroErrorText(dialogErrorString);
 }
 
-std::string FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage(const std::string& baseMessage, const std::exception* exceptionPtr, boost::shared_ptr<NFmiDrawParam>& theDrawParam, const std::string& macroParamSystemRootPath)
-{
-	std::string errorMessage = baseMessage;
-	if(exceptionPtr)
-	{
-		errorMessage += ": \n";
-		errorMessage += exceptionPtr->what();
-	}
-	errorMessage += ", in '";
-	errorMessage += PathUtils::getRelativeStrippedFileName(theDrawParam->InitFileName(), macroParamSystemRootPath, "dpa");
-	errorMessage += "'";
-	return errorMessage;
-}
-
 static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, int theMapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo, NFmiExtraMacroParamData *possibleExtraMacroParamData, bool doProbing, const NFmiPoint& spaceOutSkipFactors)
 {
 	float value = kFloatMissing;
@@ -2674,7 +2660,7 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 	}
 	catch(std::exception &e)
 	{
-		std::string errorText = FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter intepretion failed", &e, theDrawParam, macroParamRootPath);
+		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter intepretion failed", &e, theDrawParam, macroParamRootPath);
 		::SetMacroParamErrorMessage(errorText, theAdapter, possibleExtraMacroParamData);
 		return value;
 	}
@@ -2714,12 +2700,12 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 	}
 	catch(std::exception &e)
 	{
-		std::string errorText = FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter calculation failed", &e, theDrawParam, macroParamRootPath);
+		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter calculation failed", &e, theDrawParam, macroParamRootPath);
 		::SetMacroParamErrorMessage(errorText, theAdapter, possibleExtraMacroParamData);
 	}
 	catch(...)
 	{
-		std::string errorText = FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter calculation failed: Unknown error!", nullptr, theDrawParam, macroParamRootPath);
+		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter calculation failed: Unknown error!", nullptr, theDrawParam, macroParamRootPath);
 		::SetMacroParamErrorMessage(errorText, theAdapter, possibleExtraMacroParamData);
 	}
 	return value;
@@ -2790,7 +2776,7 @@ static bool IsDataModificationInProgress(TimeSerialModificationDataInterface &th
 		return false;
 }
 
-bool FmiModifyEditdData::DoTimeSerialModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue, bool fDoMultiThread, NFmiThreadCallBacks *theThreadCallBacks)
+bool FmiModifyEditdData::DoTimeSerialModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue, bool fDoMultiThread, NFmiThreadCallBacks *theThreadCallBacks)
 {
     auto status = false;
     try
@@ -2814,7 +2800,7 @@ bool FmiModifyEditdData::DoTimeSerialModifications(TimeSerialModificationDataInt
 #define ID_MESSAGE_WORKING_THREAD_COMPLETED 33088
 #define ID_MESSAGE_WORKING_THREAD_CANCELED 33089
 
-void FmiModifyEditdData::DoTimeSerialModifications2(ModifyFunctionParamHolder &theModifyFunctionParamHolder, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, bool fUseSetForDiscreteData, int theUnchangedValue)
+void FmiModifyEditdData::DoTimeSerialModifications2(ModifyFunctionParamHolder &theModifyFunctionParamHolder, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, bool fUseSetForDiscreteData, int theUnchangedValue)
 {
 	if(::IsDataModificationInProgress(theModifyFunctionParamHolder.itsAdapter, __FUNCTION__))
 	{

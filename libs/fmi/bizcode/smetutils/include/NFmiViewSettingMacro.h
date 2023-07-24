@@ -198,6 +198,7 @@ public:
 		void Param(const NFmiViewSettingMacro::Param& newValue) {itsParam = newValue;}
 		const std::vector<NFmiViewSettingMacro::Param>& SideParameters(void) const { return itsSideParameters; }
 		void SideParameters(const std::vector<NFmiViewSettingMacro::Param>& newValue) { itsSideParameters = newValue; }
+		void SetMacroParamInitFileNames(const std::string& theRootPath);
 
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);
@@ -256,6 +257,7 @@ public:
 		void TimeBag(const NFmiTimeBag &newTimes) {itsTimeBag = newTimes;}
 		bool TimeBagUpdated(void) const {return fTimeBagUpdated;}
 		void TimeBagUpdated(bool newValue) {fTimeBagUpdated = newValue;}
+		void SetMacroParamInitFileNames(const std::string& theRootPath);
 
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);

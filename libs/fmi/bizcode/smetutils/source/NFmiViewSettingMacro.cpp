@@ -502,6 +502,13 @@ std::string removeComments(const std::string &prgm)
 	return res;
 }
 
+void NFmiViewSettingMacro::TimeViewRow::SetMacroParamInitFileNames(const std::string& theRootPath)
+{
+	SetMacroParamInitFileNamesFunctor setterFunctor(theRootPath);
+	setterFunctor(itsParam);
+	std::for_each(itsSideParameters.begin(), itsSideParameters.end(), SetMacroParamInitFileNamesFunctor(theRootPath));
+}
+
 void NFmiViewSettingMacro::TimeViewRow::Write(std::ostream& os) const
 {
 	os << "// NFmiViewSettingMacro::TimeViewRow::Write..." << endl;
@@ -791,6 +798,11 @@ void NFmiViewSettingMacro::TimeView::Clear(void)
 void NFmiViewSettingMacro::TimeView::Add(const TimeViewRow &theTimeViewRow)
 {
 	itsRows.push_back(theTimeViewRow);
+}
+
+void NFmiViewSettingMacro::TimeView::SetMacroParamInitFileNames(const std::string& theRootPath)
+{
+	std::for_each(itsRows.begin(), itsRows.end(), SetMacroParamInitFileNamesFunctor(theRootPath));
 }
 
 void NFmiViewSettingMacro::TimeView::Write(std::ostream& os) const
@@ -1458,8 +1470,11 @@ void NFmiViewSettingMacro::Read(std::istream& is)
 	itsCurrentVersionNumber = itsLatestVersionNumber; // aina jatketaan viimeisellä versio numerolla
 }
 
+// Jos jollekin toisille näytöille halutaan vielä lisätä macroParam tuki, 
+// tähän pitää lisätä kyseisen näytön macroParam polkujen alustukset.
 void NFmiViewSettingMacro::SetMacroParamInitFileNames(const std::string &theRootPath)
 {
+	itsTimeView.SetMacroParamInitFileNames(theRootPath);
 	itsCrossSectionView.SetMacroParamInitFileNames(theRootPath);
 	for(size_t i=0; i<itsExtraMapViewDescTops.size(); i++)
 		itsExtraMapViewDescTops[i].SetMacroParamInitFileNames(theRootPath);
