@@ -1584,7 +1584,7 @@ static boost::shared_ptr<NFmiFastQueryInfo> CreateProbingMacroParamData(boost::s
         NFmiPoint newBottomLeftXy(bottomLeftXyPoint.X() + xShift, bottomLeftXyPoint.Y() - yShift);
         NFmiPoint newTopRightXy(topRightXyPoint.X() - xShift, topRightXyPoint.Y() + yShift);
         boost::shared_ptr<NFmiArea> newArea(mapArea->CreateNewArea(NFmiRect(newBottomLeftXy, newTopRightXy)));
-        return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(4, 4, NFmiInfoData::kMacroParam, newArea);
+        return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(4, 4, NFmiInfoData::kMacroParam, newArea.get());
     }
 
     return boost::shared_ptr<NFmiFastQueryInfo>();
@@ -1595,7 +1595,7 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreateNewResizedMacroParam
 	fUseAlReadySpacedOutData = true;
 	int gridSizeX = boost::math::iround(newGridSize.X());
 	int gridSizeY = boost::math::iround(newGridSize.Y());
-	return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(gridSizeX, gridSizeY, NFmiInfoData::kMacroParam, itsArea);
+	return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(gridSizeX, gridSizeY, NFmiInfoData::kMacroParam, itsArea.get());
 }
 
 bool NFmiStationView::IsGridDataDrawnWithSpaceOutSymbols()

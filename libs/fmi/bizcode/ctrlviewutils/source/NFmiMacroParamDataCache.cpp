@@ -53,7 +53,7 @@ void NFmiMacroParamLayerCacheDataType::getCacheValues(NFmiDataMatrix<float> &dat
     {
         // Jos cacheen laskettu data oli jo harvennettua, pit‰‰ myˆs nyt k‰ytetty info s‰‰t‰‰ takaisin kyseiseen oikeaan hilakokoon.
         boost::shared_ptr<NFmiArea> usedArea(usedInfoInOut->Area()->Clone());
-        usedInfoInOut = NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(static_cast<int>(dataMatrixOut.NX()), static_cast<int>(dataMatrixOut.NY()), NFmiInfoData::kMacroParam, usedArea);
+        usedInfoInOut = NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(static_cast<int>(dataMatrixOut.NX()), static_cast<int>(dataMatrixOut.NY()), NFmiInfoData::kMacroParam, usedArea.get());
     }
 }
 

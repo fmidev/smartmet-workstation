@@ -1118,7 +1118,7 @@ void InitSmartToolSystem(void)
         NFmiSmartToolIntepreter intepreter(&itsProducerSystem, &itsObsProducerSystem);
 		// Tämä korjaa mm. SymbolTooltipFile asetukset kuntoon, jos skriptissä polku annetaan ilman drive-letter:iä,
 		// mikä onkin jatkossa suositeltavaa.
-		NFmiSmartToolIntepreter::SetAbsoluteBasePath(BasicSmartMetConfigurations().ControlPath());
+		NFmiSmartToolIntepreter::SetAbsoluteBasePaths(MacroPathSettings().SmartToolPath(), MacroPathSettings().MacroParamPath());
 	}
 	catch(std::exception &e)
 	{
