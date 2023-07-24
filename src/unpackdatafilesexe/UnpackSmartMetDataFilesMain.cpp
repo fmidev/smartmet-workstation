@@ -270,35 +270,35 @@ static std::string MakeNextSubDirectoryPath(const std::string& currentDirectory,
     return nextSubDirectoryPath;
 }
 
-static void ChangeTime(NFmiMetTime& changedTime, int changeTimesByHour)
+static void ChangeTime(NFmiMetTime& changedTime, int changeTimesByDays)
 {
-    changedTime.ChangeByHours(changeTimesByHour);
+    changedTime.ChangeByDays(changeTimesByDays);
 }
 
-static NFmiTimeDescriptor MakeNewTimeDescrptor(NFmiTimeDescriptor copyOfSourceTimeDescriptor, int changeTimesByHour)
+static NFmiTimeDescriptor MakeNewTimeDescrptor(NFmiTimeDescriptor copyOfSourceTimeDescriptor, int changeTimesByDays)
 {
     if(copyOfSourceTimeDescriptor.UseTimeList())
     {
         auto &timeList = *copyOfSourceTimeDescriptor.ValidTimeList();
         for(timeList.Reset(); timeList.Next(); )
         {
-            ::ChangeTime(*timeList.Current(), changeTimesByHour);
+            ::ChangeTime(*timeList.Current(), changeTimesByDays);
         }
     }
     else
     {
         auto &timebag = *copyOfSourceTimeDescriptor.ValidTimeBag();
-        timebag.MoveByMinutes(changeTimesByHour * 60);
+        timebag.MoveByMinutes(changeTimesByDays * 24 * 60);
     }
     auto changedOriginTime = copyOfSourceTimeDescriptor.OriginTime();
-    changedOriginTime.ChangeByHours(changeTimesByHour);
+    changedOriginTime.ChangeByDays(changeTimesByDays);
     copyOfSourceTimeDescriptor.OriginTime(changedOriginTime);
     return copyOfSourceTimeDescriptor;
 }
 
-std::unique_ptr<NFmiQueryData> CreateChangedQueryData(NFmiFastQueryInfo& sourceFastInfo, int changeTimesByHour)
+std::unique_ptr<NFmiQueryData> CreateChangedQueryData(NFmiFastQueryInfo& sourceFastInfo, int changeTimesByDays)
 {
-    auto newTimeDescriptor = ::MakeNewTimeDescrptor(sourceFastInfo.TimeDescriptor(), changeTimesByHour);
+    auto newTimeDescriptor = ::MakeNewTimeDescrptor(sourceFastInfo.TimeDescriptor(), changeTimesByDays);
     auto newQueryData = std::make_unique<NFmiQueryData>(*sourceFastInfo.RefQueryData());
     newQueryData->Info()->SetTimeDescriptor(newTimeDescriptor);
     return newQueryData;
@@ -306,7 +306,7 @@ std::unique_ptr<NFmiQueryData> CreateChangedQueryData(NFmiFastQueryInfo& sourceF
 
 // Timestampissa pit‰‰ olla 12 numeroa per‰kk‰in, jotka on eroteltu muista nimen osista '_' merkill‰.
 // Palautetaan pair, jossa korjattu polku string:ina ja uuden aikaleiman aika NFmiMetTime:na.
-static std::pair<std::string, NFmiStaticTime> MakeChangedTimeStampFilePath(std::string filePath, int changeTimesByHour)
+static std::pair<std::string, NFmiStaticTime> MakeChangedTimeStampFilePath(std::string filePath, int changeTimesByDays)
 {
     NFmiStaticTime usedTime = NFmiMetTime::gMissingTime;
     NFmiStaticTime usedTimeWithDDHHMMss_mask = NFmiMetTime::gMissingTime;
@@ -329,7 +329,7 @@ static std::pair<std::string, NFmiStaticTime> MakeChangedTimeStampFilePath(std::
                 aTime.FromStr(fileNamePart, usedTimeMask);
                 // Valitettavasti ChangeByHours aina nolla sekunnit v‰kisin
                 auto currentSeconds = aTime.GetSec();
-                aTime.ChangeByHours(changeTimesByHour);
+                aTime.ChangeByDays(changeTimesByDays);
                 aTime.SetSec(currentSeconds);
                 std::string newTimeStamp = aTime.ToStr(usedTimeMask);
                 boost::replace_all(newFilePath, fileNamePart, newTimeStamp);
@@ -345,7 +345,7 @@ static std::pair<std::string, NFmiStaticTime> MakeChangedTimeStampFilePath(std::
                 aTime.FromStr(totalTimeString, kYYYYMMDDHHMMSS);
                 // Valitettavasti ChangeByHours aina nolla sekunnit v‰kisin
                 auto currentSeconds = aTime.GetSec();
-                aTime.ChangeByHours(changeTimesByHour);
+                aTime.ChangeByDays(changeTimesByDays);
                 aTime.SetSec(currentSeconds);
                 std::string newTimeStamp = aTime.ToStr("DDHHmmSS");
                 boost::replace_all(newFilePath, fileNamePart, newTimeStamp);
@@ -388,18 +388,18 @@ static void StoreParallerQueryData(NFmiQueryData& newQueryData, const std::strin
     boost::filesystem::last_write_time(boostPath, ::MakeTimeT(newModifiedTime));
 }
 
-static void DoQueryDataWork(const std::string& queryDataFileName, const std::string& currentDirectory, const std::string& parallerDirectory, int changeTimesByHour)
+static void DoQueryDataWork(const std::string& queryDataFileName, const std::string& currentDirectory, const std::string& parallerDirectory, int changeTimesByDays)
 {
     auto queryDataFileSourcePath = ::MakeNextSubDirectoryPath(currentDirectory, queryDataFileName);
     auto parallerQueryDataFileSourcePath = ::MakeNextSubDirectoryPath(parallerDirectory, queryDataFileName);
-    auto responsePair = ::MakeChangedTimeStampFilePath(parallerQueryDataFileSourcePath, changeTimesByHour);
+    auto responsePair = ::MakeChangedTimeStampFilePath(parallerQueryDataFileSourcePath, changeTimesByDays);
     parallerQueryDataFileSourcePath = responsePair.first;
     try
     {
         std::cerr << "Doing queryData file " << queryDataFileSourcePath << std::endl;
         NFmiQueryData sourceData(queryDataFileSourcePath);
         NFmiFastQueryInfo sourceFastInfo(&sourceData);
-        auto newQueryData = ::CreateChangedQueryData(sourceFastInfo, changeTimesByHour);
+        auto newQueryData = ::CreateChangedQueryData(sourceFastInfo, changeTimesByDays);
         if(newQueryData)
             ::StoreParallerQueryData(*newQueryData, parallerQueryDataFileSourcePath, responsePair.second);
         else
@@ -412,17 +412,17 @@ static void DoQueryDataWork(const std::string& queryDataFileName, const std::str
     }
 }
 
-static void DoFilesOnDirectory(const std::string& currentDirectory, const std::string& parallerDirectory, int changeTimesByHour)
+static void DoFilesOnDirectory(const std::string& currentDirectory, const std::string& parallerDirectory, int changeTimesByDays)
 {
     // Tiedostot tulevat aikaj‰rjestyksess‰ vanhimmasta uusimpaan, johtuen tiedostonimiss‰ olevista aikaleimoista.
     auto files = NFmiFileSystem::DirectoryFiles(currentDirectory);
     for(const auto& queryDataFileName : files)
     {
-        ::DoQueryDataWork(queryDataFileName, currentDirectory, parallerDirectory, changeTimesByHour);
+        ::DoQueryDataWork(queryDataFileName, currentDirectory, parallerDirectory, changeTimesByDays);
     }
 }
 
-static void DoRecursiveDirectoryWork(const std::string& currentDirectory, const std::string& parallerDirectory, int changeTimesByHour)
+static void DoRecursiveDirectoryWork(const std::string& currentDirectory, const std::string& parallerDirectory, int changeTimesByDays)
 {
     std::cerr << "Doing directory " << currentDirectory << std::endl;
     if(NFmiFileSystem::DirectoryExists(currentDirectory))
@@ -430,7 +430,7 @@ static void DoRecursiveDirectoryWork(const std::string& currentDirectory, const 
         if(NFmiFileSystem::CreateDirectory(parallerDirectory))
         {
             std::cerr << "Created paraller directory " << parallerDirectory << std::endl;
-            DoFilesOnDirectory(currentDirectory, parallerDirectory, changeTimesByHour);
+            DoFilesOnDirectory(currentDirectory, parallerDirectory, changeTimesByDays);
             auto subDirectories = NFmiFileSystem::Directories(currentDirectory);
             for(const auto &subDirectoryName : subDirectories)
             {
@@ -438,7 +438,7 @@ static void DoRecursiveDirectoryWork(const std::string& currentDirectory, const 
                 {
                     auto nextSubDirectoryPath = ::MakeNextSubDirectoryPath(currentDirectory, subDirectoryName);
                     auto nextParallerSubDirectoryPath = ::MakeNextSubDirectoryPath(parallerDirectory, subDirectoryName);
-                    DoRecursiveDirectoryWork(nextSubDirectoryPath, nextParallerSubDirectoryPath, changeTimesByHour);
+                    DoRecursiveDirectoryWork(nextSubDirectoryPath, nextParallerSubDirectoryPath, changeTimesByDays);
                 }
             }
         }
@@ -449,13 +449,21 @@ static void DoRecursiveDirectoryWork(const std::string& currentDirectory, const 
         std::cerr << "Error: non existing given directory " << parallerDirectory << std::endl;
 }
 
+static int CalculateRoundedDaysDifference(const NFmiMetTime& wallClockTime, const NFmiMetTime& usedDataWallClockTime)
+{
+    long differenceInMinutes = wallClockTime.DifferenceInMinutes(usedDataWallClockTime);
+    int roundedDaysDifference = boost::math::iround(differenceInMinutes / (24. * 60.));
+    return roundedDaysDifference;
+}
+
 // Tutkitaan annetusta queryData hakemistosta local hakemistoa.
 // K‰yd‰‰n l‰pi sen kaikki qData tiedostot.
 // T‰rkeimpi‰ ovat synop ja metar tiedostot, jos niit‰ lˆytyy, k‰ytet‰‰n sen datasetin 'sein‰kelloaikana'
 // mink‰ tahansa synop/metar datan viimeisint‰ validTimea. 
 // Jos t‰ll‰ist‰ ei lˆydy, k‰ytet‰‰n mink‰ tahansa hiladatan (oletetaan ett‰ on ennuste) myˆh‰isint‰ ensimm‰ist‰ validTimea.
 // Jos t‰ll‰ist‰ ei lˆydy, k‰ytet‰‰n mink‰ tahansa asemadatan (oletetaan ett‰ on havainto)  myˆh‰isint‰ viimeist‰ validTimea.
-static int CalculateActualChangeTimesByHourValue(const std::string& pathToQueryDataFiles, int changeTimesByHourAgainstWallClock)
+// Lˆydetyn sein‰kelloajan avulla lasketaan siirtym‰ p‰iviss‰, joka palautetaan.
+static int CalculateActualChangeTimesByDays(const std::string& pathToQueryDataFiles)
 {
     auto localDirectory = pathToQueryDataFiles;
     PathUtils::addDirectorySeparatorAtEnd(localDirectory);
@@ -506,47 +514,47 @@ static int CalculateActualChangeTimesByHourValue(const std::string& pathToQueryD
             }
             if(synopBasedWallClock != NFmiMetTime::gMissingTime)
             {
-                int usedDifferenceInHours = wallClockTime.DifferenceInHours(synopBasedWallClock) + changeTimesByHourAgainstWallClock;
-                std::cerr << "Using synop/metar based qData as original wall-clock time and final change time in hours is " << std::to_string(usedDifferenceInHours) << std::endl;
-                return usedDifferenceInHours;
+                int usedDifferenceInDays = ::CalculateRoundedDaysDifference(wallClockTime, synopBasedWallClock);
+                std::cerr << "Using synop/metar based qData as original wall-clock time and final change time in days is " << std::to_string(usedDifferenceInDays) << std::endl;
+                return usedDifferenceInDays;
             }
             else if(modelDataBasedWallClock != NFmiMetTime::gMissingTime)
             {
-                int usedDifferenceInHours = wallClockTime.DifferenceInHours(modelDataBasedWallClock) + changeTimesByHourAgainstWallClock;
-                std::cerr << "Using model based qData as original wall-clock time and final change time in hours is " << std::to_string(usedDifferenceInHours) << std::endl;
-                return usedDifferenceInHours;
+                int usedDifferenceInDays = ::CalculateRoundedDaysDifference(wallClockTime, modelDataBasedWallClock);
+                std::cerr << "Using model based qData as original wall-clock time and final change time in days is " << std::to_string(usedDifferenceInDays) << std::endl;
+                return usedDifferenceInDays;
             }
             else if(obsDataBasedWallClock != NFmiMetTime::gMissingTime)
             {
-                int usedDifferenceInHours = wallClockTime.DifferenceInHours(obsDataBasedWallClock) + changeTimesByHourAgainstWallClock;
-                std::cerr << "Using other-observation based qData as original wall-clock time and final change time in hours is " << std::to_string(usedDifferenceInHours) << std::endl;
-                return usedDifferenceInHours;
+                int usedDifferenceInDays = ::CalculateRoundedDaysDifference(wallClockTime, obsDataBasedWallClock);
+                std::cerr << "Using other-observation based qData as original wall-clock time and final change time in days is " << std::to_string(usedDifferenceInDays) << std::endl;
+                return usedDifferenceInDays;
             }
             else
-                std::cerr << "Warning: the 'local' sub-directory didn't contain any usable qdata files, using directly argument given changeTimesByHour value " << std::to_string(changeTimesByHourAgainstWallClock) << std::endl;
+                throw std::runtime_error("Error: the 'local' sub-directory didn't contain any usable qdata files, cannot calculate changeTimesByDays value");
         }
         else
-            std::cerr << "Warning: the 'local' sub-directory didn't contain any qdata files, using directly argument given changeTimesByHour value " << std::to_string(changeTimesByHourAgainstWallClock) << std::endl;
+            throw std::runtime_error("Error: the 'local' sub-directory didn't contain any qdata files, cannot calculate changeTimesByDays value");
     }
     else
-        std::cerr << "Warning: given directory didn't have 'local' sub-directory, using directly argument given changeTimesByHour value " << std::to_string(changeTimesByHourAgainstWallClock) << std::endl;
-
-    return changeTimesByHourAgainstWallClock;
+        throw std::runtime_error("Error: the 'local' sub-directory didn't exist at all, cannot calculate changeTimesByDays value");
 }
 
 int main(int argc, const char* argv[])
 {
     // Ohjelma k‰y rekursiivisesti l‰pi kaikki tiedostot ja hakemistot, jotka ovat
     // annetulla pathToQueryDataFiles -polulla ja ja tekee seuraavia asioita:
-    // 1) Luo uusi data muistiin, joissa on siirretty kaikkia aikoja annetulla aikasiirtym‰ll‰,
-    // suhteessa sain‰kelloaikaan, elli -12 siirt‰‰ sein‰kellosta 12 tuntia taaksep‰in.
-    // 2) Talleta uusi data rinnakkaiseen puurakenteeseen, joka alkaa newBasePath -polusta.
-    // 3) Uuden datan nimessa oleva aikaleima on myˆs muokattu samalla siirtym‰ll‰.
+    // 1) Luo uusi data muistiin, joissa on siirretty kaikkia datoja sein‰kelloajan suhteen.
+    //    Siirrot tapahtuvat niin ett‰ tunnit ja minuutit s‰ilyv‰t, ainoastaan p‰iv‰m‰‰r‰
+    //    tulee nykyhetkeen. 
+    // 2) Etsit‰‰n datoista uusin data ja siirrot tapahtuvat sen suhteessa, eli lasketaan
+    //    siirtym‰ p‰iviss‰. 
+    // 3) Talleta uusi data rinnakkaiseen puurakenteeseen, joka alkaa newBasePath -polusta.
+    // 4) Uuden datan nimessa oleva aikaleima on myˆs muokattu samalla siirtym‰ll‰.
     std::string pathToQueryDataFiles = argv[1];
     std::string newBasePath = argv[2];
-    int changeTimesByHourAgainstWallClock = std::stoi(argv[3]);
-    auto changeTimesByHour = ::CalculateActualChangeTimesByHourValue(pathToQueryDataFiles, changeTimesByHourAgainstWallClock);
-    DoRecursiveDirectoryWork(pathToQueryDataFiles, newBasePath, changeTimesByHour);
+    auto changeTimesByDays = ::CalculateActualChangeTimesByDays(pathToQueryDataFiles);
+    DoRecursiveDirectoryWork(pathToQueryDataFiles, newBasePath, changeTimesByDays);
 
     return 1;
 }
