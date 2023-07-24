@@ -3,6 +3,8 @@ project(Calculator)
 
 set(CMAKE_MFC_FLAG 0)
 
+disable_linux_side_compiler_warnings()
+
 file( 
     GLOB SOURCE_FILES 
     calculator/* 
