@@ -358,11 +358,11 @@ int NFmiEditorControlPointManager::Size (void)
 // ChangeValue 
 //--------------------------------------------------------
 // palautetaan sen CP:n arvo, mihin osoitetaan (ja on ilmeisesti aktiivinen)
-double NFmiEditorControlPointManager::ChangeValue (void)
+float NFmiEditorControlPointManager::ChangeValue (void)
 {
 	return ChangeValue(itsCPIndex);
 }
-double NFmiEditorControlPointManager::ChangeValue (int theCPIndex)
+float NFmiEditorControlPointManager::ChangeValue (int theCPIndex)
 {
 	GetControlPoint(itsParamIndex, theCPIndex).TimeIndex(itsTimeDescriptor.Index());
 	return GetControlPoint(itsParamIndex, theCPIndex).ChangeValue();
@@ -372,7 +372,7 @@ double NFmiEditorControlPointManager::ChangeValue (int theCPIndex)
 // ChangeValue 
 //--------------------------------------------------------
 // muutetaan arvo kaikille aktiivisille
-void NFmiEditorControlPointManager::ChangeValue (double newValue)
+void NFmiEditorControlPointManager::ChangeValue (float newValue)
 {
 	if(AreCPIndexiesGood(itsParamIndex, 0))
 	{
@@ -387,7 +387,7 @@ void NFmiEditorControlPointManager::ChangeValue (double newValue)
 	}
 }
 // muutetaan arvo osoitetulle CP:lle
-void NFmiEditorControlPointManager::CurrentCPChangeValue(double newValue)
+void NFmiEditorControlPointManager::CurrentCPChangeValue(float newValue)
 {
 	if(AreCPIndexiesGood(itsParamIndex, itsCPIndex))
 	{
@@ -787,7 +787,7 @@ bool NFmiEditorControlPointManager::ChangeValues (std::vector<float>& xValues, s
 }
 
 // palauttaa 1. aktiivisen CP muutos arvot currentille parametrille
-std::vector<double>& NFmiEditorControlPointManager::ActiveCPChangeValues(void)
+std::vector<float>& NFmiEditorControlPointManager::ActiveCPChangeValues(void)
 {
 	for(int i = 0; i < itsCPCount; i++)
 		if(itsCPActivityVector[i])
@@ -812,7 +812,7 @@ NFmiEditorControlPoint& NFmiEditorControlPointManager::GetControlPoint(int thePa
 }
 
 // currentin CP:n muutos arvot
-std::vector<double>& NFmiEditorControlPointManager::CPChangeValues(void)
+std::vector<float>& NFmiEditorControlPointManager::CPChangeValues(void)
 {
 	return GetControlPoint(itsParamIndex, itsCPIndex).ChangeValues();
 }
@@ -903,7 +903,7 @@ bool NFmiEditorControlPointManager::ActivateFirstCp()
         return false;
 }
 
-static double GetAngleTowardsDirection(ControlPointAcceleratorActions direction)
+static float GetAngleTowardsDirection(ControlPointAcceleratorActions direction)
 {
     switch(direction)
     {
@@ -942,7 +942,7 @@ static int FindBestSuitedCpTowardsDirection(NFmiEditorControlPointManager &cpMan
 {
     const auto &activeCpRelativePoint = cpManager.RelativePoint(activeCpIndex);
     int closestCpIndex = g_missingCpIndex;
-    double minRelativeDistance = 9999999999.;
+	double minRelativeDistance = 9999999999.;
     for(int cpIndex = 0; cpIndex < cpManager.CPCount(); cpIndex++)
     {
         if(cpIndex != activeCpIndex)
@@ -1015,7 +1015,7 @@ bool NFmiEditorControlPointManager::MakeControlPointAcceleratorAction(ControlPoi
 //--------------------------------------------------------
 // Nollaa haluttujen CP:n muutosvektorit.
 // method: 0=kaikki, 1=vain aktiivinen param, 2=aktiivinen param ja CP
-void NFmiEditorControlPointManager::ClearAllChangeValues (int clearMethod, double theClearValue)
+void NFmiEditorControlPointManager::ClearAllChangeValues (int clearMethod, float theClearValue)
 {
 	switch(clearMethod)
 	{
@@ -1030,19 +1030,19 @@ void NFmiEditorControlPointManager::ClearAllChangeValues (int clearMethod, doubl
 		break;
 	}
 }
-void NFmiEditorControlPointManager::ClearAllChangeValues(double newValue)
+void NFmiEditorControlPointManager::ClearAllChangeValues(float newValue)
 {
 	for(int i = 0; i < itsParamCount; i++)
 		ClearIndexedParamChangeValues(newValue, i);
 }
 
-void NFmiEditorControlPointManager::ClearIndexedParamChangeValues(double newValue, int paramIndex)
+void NFmiEditorControlPointManager::ClearIndexedParamChangeValues(float newValue, int paramIndex)
 {
 	for(int i = 0; i < itsCPCount; i++)
 		ClearIndexedParamIndexedCPChangeValues(newValue, paramIndex, i);
 }
 
-void NFmiEditorControlPointManager::ClearIndexedParamIndexedCPChangeValues(double theValue, int theParamIndex, int theCPIndex)
+void NFmiEditorControlPointManager::ClearIndexedParamIndexedCPChangeValues(float theValue, int theParamIndex, int theCPIndex)
 {
 	GetControlPoint(theParamIndex, theCPIndex).ClearValues(theValue);
 }

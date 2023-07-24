@@ -54,9 +54,9 @@ public:
    bool SetZoomedAreaStationsAsControlPoints(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theInfos, boost::shared_ptr<NFmiArea> &theArea);
    bool SetZoomedAreaStationsAsControlPoints(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea);
    int Size (void) ;
-   double ChangeValue (void);
-   void ChangeValue (double newValue);
-   void CurrentCPChangeValue (double newValue);
+   float ChangeValue (void);
+   void ChangeValue (float newValue);
+   void CurrentCPChangeValue (float newValue);
    bool Time (const NFmiMetTime& theTime);
    const NFmiMetTime& Time (void) const;
    bool Param (const NFmiDataIdent& theParam);
@@ -84,8 +84,8 @@ public:
    void CPMovingInTime(bool newState, int theIndex = -1);
    void ActivateAllCPs (bool newState) ;
    bool ChangeValues (std::vector<float>& xValues, std::vector<float>& yValues, std::vector<float>& zValues, int& theArraySize) ;
-   std::vector<double>& ActiveCPChangeValues(void); // tämä on hieman vaarallinen metodi, mutta optimointia varten tehty
-   std::vector<double>& CPChangeValues(void); // currentin CP:n muutos arvot
+   std::vector<float>& ActiveCPChangeValues(void); // tämä on hieman vaarallinen metodi, mutta optimointia varten tehty
+   std::vector<float>& CPChangeValues(void); // currentin CP:n muutos arvot
    bool ResetTime (void) ;
    bool NextTime (void) ;
    bool ResetCP(void) ;
@@ -93,7 +93,7 @@ public:
    bool ActivateNextCP();
    bool ActivatePreviousCP();
    bool ActivateCPToward(ControlPointAcceleratorActions direction);
-   void ClearAllChangeValues (int clearMethod, double theClearValue) ;
+   void ClearAllChangeValues (int clearMethod, float theClearValue) ;
    void CPMovingInTimeHelpPoints(const ThreePoints& thePoints, int theIndex = -1);
    const ThreePoints& CPMovingInTimeHelpPoints(int theIndex = -1) const;
    const NFmiEditorControlPoint& ControlPoint (void) ;
@@ -130,12 +130,12 @@ private:
 	bool AreCPIndexiesGood(int theParamIndex, int theCPIndex) const;
 	NFmiPoint LatLonToRelative(const NFmiPoint& theLatLon);
 	NFmiPoint RelativeToLatLon(const NFmiPoint& thePoint);
-	double ChangeValue (int theCPIndex);
+	float ChangeValue (int theCPIndex);
 	int CalcParamSize(NFmiParamBag& theParams);
 	int CalcParamIndex(const NFmiDataIdent& theParam);
-	void ClearAllChangeValues(double newValue);
-	void ClearIndexedParamChangeValues(double newValue, int paramIndex);
-	void ClearIndexedParamIndexedCPChangeValues(double newValue, int paramIndex, int CPIndex);
+	void ClearAllChangeValues(float newValue);
+	void ClearIndexedParamChangeValues(float newValue, int paramIndex);
+	void ClearIndexedParamIndexedCPChangeValues(float newValue, int paramIndex, int CPIndex);
     void AddZoomedAreaStationsToCPVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea, std::vector<NFmiPoint> &theAddedControlPointsInOut);
     int GetActiveCpIndex() const;
     bool ActivateFirstCp();
@@ -171,7 +171,7 @@ private:
    // parametri-lkm on 1. Resize parametri (param-lkm = x = rivi-lkm)
    // CP-lkm on 2. Resize parametri (CP-lkm = y = column-lkm)
    NFmiDataMatrix<NFmiEditorControlPoint> itsCPMatrix;
-   std::vector<double> itsDummyChangeValueVector; // tämä palautetaan, jos ei löydy aktiivista CP:tä ja kysytään aktiivisen CP muutostaulua
+   std::vector<float> itsDummyChangeValueVector; // tämä palautetaan, jos ei löydy aktiivista CP:tä ja kysytään aktiivisen CP muutostaulua
    NFmiPoint itsDummyLatlon; // tämä palautetaan kun mikään CP ei ole aktiivinen ja pyydetään latlonia
    NFmiEditorControlPoint itsDummyControlPoint;
    bool fMouseCaptured;
