@@ -461,6 +461,11 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiInfoOrganizer::CrossSectionMacroParamDa
   return itsCrossSectionMacroParamData;
 }
 
+boost::shared_ptr<NFmiFastQueryInfo> NFmiInfoOrganizer::TimeSerialMacroParamData()
+{
+  return itsTimeSerialMacroParamData;
+}
+
 static bool MatchData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                       NFmiInfoData::Type theType,
                       const NFmiDataIdent &theDataIdent,
@@ -540,43 +545,69 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiInfoOrganizer::GetInfo(const NFmiDataId
                                                                 bool fUseParIdOnly,
                                                                 int theModelRunIndex)
 {
-  boost::shared_ptr<NFmiFastQueryInfo>
-      backupData;  // etsitää tähän 1. data joka muuten sopii kriteereihin, mutta
-                   // jonka tuottaja nimi on eri kuin haluttu. Jos oikealla nimellä ei löydy dataa,
-                   // käytetään tätä.
+  // etsitää tähän 1. data joka muuten sopii kriteereihin, mutta jonka tuottaja nimi 
+  // on eri kuin haluttu. Jos oikealla nimellä ei löydy dataa, käytetään tätä.
+  boost::shared_ptr<NFmiFastQueryInfo> backupData;  
   if (theDataIdent.GetParamIdent() == NFmiInfoData::kFmiSpSynoPlot ||
-      theDataIdent.GetParamIdent() == NFmiInfoData::kFmiSpMinMaxPlot)  // synop plot paramille pitää
-                                                                       // tehdä kikka (ja min/max
-                                                                       // plot 9996)
+      theDataIdent.GetParamIdent() == NFmiInfoData::kFmiSpMinMaxPlot)
+  {
+    // synop plot paramille pitää tehdä kikka (ja min/max plot 9996)
     return GetSynopPlotParamInfo(theType);
-  if (theDataIdent.GetParamIdent() ==
-      NFmiInfoData::kFmiSpMetarPlot)  // metar plot paramille pitää tehdä kikka (9995)
+  }
+
+  if (theDataIdent.GetParamIdent() == NFmiInfoData::kFmiSpMetarPlot)
+  {
+    // metar plot paramille pitää tehdä kikka (9995)
     return GetMetarPlotParamInfo(theType);
+  }
+
   if (theLevel && theLevel->LevelType() == kFmiSoundingLevel &&
       (theDataIdent.GetParamIdent() == NFmiInfoData::kFmiSpSoundingPlot ||
-       theDataIdent.GetProducer()->GetIdent() ==
-           kFmiTEMP))  // sounding plot paramille pitää tehdä kikka
+       theDataIdent.GetProducer()->GetIdent() == kFmiTEMP))
+  {
+    // sounding plot paramille pitää tehdä kikka
     return GetSoundingPlotParamInfo(theType);
-  if (theType == NFmiInfoData::kMacroParam ||
-      theType == NFmiInfoData::kQ3MacroParam)  // macro- parametrit lasketaan tällä
-    return MacroParamData();  // tässä ei parametreja ja leveleitä ihmetellä, koska ne muutetaan
-                              // aina lennossa tarpeen vaatiessa
+  }
+
+  if (theType == NFmiInfoData::kMacroParam || theType == NFmiInfoData::kQ3MacroParam)
+  {
+    // macro- parametrit lasketaan tällä.
+    // Tässä ei parametreja ja leveleitä ihmetellä, koska laskut tehdään aina ainoaan parametriin
+    return MacroParamData();  
+  }
+
   if (theType == NFmiInfoData::kCrossSectionMacroParam)
-    return CrossSectionMacroParamData();  // tässä ei parametreja ja leveleitä ihmetellä, koska ne
-                                          // muutetaan aina lennossa tarpeen vaatiessa
+  {
+    // Tässä ei parametreja ja leveleitä ihmetellä, koska laskut tehdään aina ainoaan parametriin
+    return CrossSectionMacroParamData();
+  }
+
+  if (theType == NFmiInfoData::kTimeSerialMacroParam)
+  {
+    // Tässä ei parametreja ja leveleitä ihmetellä, koska laskut tehdään aina ainoaan parametriin
+    return TimeSerialMacroParamData();
+  }
+
   if (theDataIdent.GetParamIdent() == NFmiInfoData::kFmiSpSelectedGridPoints)
-    return itsEditedDataKeeper->GetIter();  // editoitu data on tässä haluttu data
+  {
+    // editoitu data on tässä haluttu data
+    return itsEditedDataKeeper->GetIter();  
+  }
 
   boost::shared_ptr<NFmiFastQueryInfo> foundData;
   if (itsEditedDataKeeper &&
       ::MatchData(itsEditedDataKeeper->GetIter(), theType, theDataIdent, fUseParIdOnly, theLevel))
+  {
     foundData = itsEditedDataKeeper->GetIter();
+  }
   else if (itsCopyOfEditedDataKeeper && ::MatchData(itsCopyOfEditedDataKeeper->GetIter(),
                                                     theType,
                                                     theDataIdent,
                                                     fUseParIdOnly,
                                                     theLevel))
+  {
     foundData = itsCopyOfEditedDataKeeper->GetIter();
+  }
   else
   {
     // tutkitaan ensin löytyykö theParam suoraan joltain listassa olevalta
@@ -1513,6 +1544,12 @@ void NFmiInfoOrganizer::UpdateCrossSectionMacroParamDataSize(int x, int y)
 {
   itsCrossSectionMacroParamData = NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(
       x, y, NFmiInfoData::kCrossSectionMacroParam);
+}
+
+void NFmiInfoOrganizer::UpdateTimeSerialMacroParamDataSize(int x)
+{
+  itsTimeSerialMacroParamData = NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(
+      x, 1, NFmiInfoData::kTimeSerialMacroParam);
 }
 
 int NFmiInfoOrganizer::CountData()

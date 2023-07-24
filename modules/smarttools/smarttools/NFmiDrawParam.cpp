@@ -1632,6 +1632,7 @@ bool NFmiDrawParam::IsMacroParamCase(NFmiInfoData::Type theDataType)
 {
   if (theDataType == NFmiInfoData::kMacroParam ||
       theDataType == NFmiInfoData::kCrossSectionMacroParam ||
+      theDataType == NFmiInfoData::kTimeSerialMacroParam ||
       theDataType == NFmiInfoData::kQ3MacroParam)
     return true;
   else
