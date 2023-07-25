@@ -317,10 +317,10 @@ void NFmiNearTree<T, F>::Flush() const
   {
     std::random_shuffle(itsInputBuffer.begin(), itsInputBuffer.end());
 
-    for (typename buffer_type::const_iterator it = itsInputBuffer.begin();
-         it != itsInputBuffer.end();
-         ++it)
-      itsImpl.Insert(*it);
+    for (const auto &location : itsInputBuffer)
+    {
+      itsImpl.Insert(location);
+    }
 
     itsInputBuffer.clear();
   }
