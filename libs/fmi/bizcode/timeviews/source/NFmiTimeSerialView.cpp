@@ -108,7 +108,7 @@ public:
 	unsigned long endTimeIndex_ = gMissingIndex;
 };
 
-static boost::shared_ptr<NFmiFastQueryInfo> GetWantedData(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theViewedDrawParam, const NFmiProducer &theWantedProducer, NFmiInfoData::Type theWantedType)
+static boost::shared_ptr<NFmiFastQueryInfo> GetWantedData(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theViewedDrawParam, const NFmiProducer &theWantedProducer, NFmiInfoData::Type theWantedType, const NFmiPoint* possibleLatlonPtr)
 {
 	bool useParamIdOnly = theWantedProducer.GetIdent() == 0;
 	NFmiDataIdent dataIdent(*(theViewedDrawParam->Param().GetParam()), theWantedProducer);
@@ -120,12 +120,22 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetWantedData(CtrlViewDocumentInterf
 		level = &theViewedDrawParam->Level();
     auto possibleComparisonParameters = theCtrlViewDocumentInterface->GetTimeSerialParameters().getComparisonParameters(static_cast<FmiParameterName>(dataIdent.GetParamIdent()));
 
-	boost::shared_ptr<NFmiFastQueryInfo> wantedInfo = theCtrlViewDocumentInterface->InfoOrganizer()->Info(dataIdent, level, usedType, useParamIdOnly, false, 0, possibleComparisonParameters);
+	boost::shared_ptr<NFmiFastQueryInfo> wantedInfo;
+	if(theWantedProducer.GetIdent() == kFmiSYNOP && possibleLatlonPtr)
+	{
+		NFmiMetTime dummyTime;
+		NFmiLocation location(*possibleLatlonPtr);
+		wantedInfo = theCtrlViewDocumentInterface->GetNearestSynopStationInfo(location, dummyTime, true, nullptr);
+	}
+	else
+	{
+		wantedInfo = theCtrlViewDocumentInterface->InfoOrganizer()->Info(dataIdent, level, usedType, useParamIdOnly, false, 0, possibleComparisonParameters);
+	}
 
     if(!wantedInfo)
     {
 		if(usedType == NFmiInfoData::kViewable) // jos ei löytynyt kViewable-tyypillä, kokeillaan vielä kModelHelpData
-			wantedInfo = ::GetWantedData(theCtrlViewDocumentInterface, theViewedDrawParam, theWantedProducer, NFmiInfoData::kModelHelpData);
+			wantedInfo = ::GetWantedData(theCtrlViewDocumentInterface, theViewedDrawParam, theWantedProducer, NFmiInfoData::kModelHelpData, possibleLatlonPtr);
     }
 
 	return wantedInfo;
@@ -308,7 +318,7 @@ void NFmiTimeSerialView::DrawSideParametersDataLocationInTime(const NFmiPoint& t
 			{
 				auto &producer = *sideParamDrawParam->Param().GetProducer();
 				auto dataType = sideParamDrawParam->DataType();
-				boost::shared_ptr<NFmiFastQueryInfo> sideParamInfo = ::GetWantedData(itsCtrlViewDocumentInterface, sideParamDrawParam, producer, dataType);
+				boost::shared_ptr<NFmiFastQueryInfo> sideParamInfo = ::GetWantedData(itsCtrlViewDocumentInterface, sideParamDrawParam, producer, dataType, &theLatlon);
 				if(sideParamInfo)
 				{
 					if(itsOperationMode == TimeSerialOperationMode::NormalDrawMode)
@@ -656,7 +666,7 @@ void NFmiTimeSerialView::DrawModelDataLegend(const std::vector<NFmiColor> &theUs
 
 void NFmiTimeSerialView::DrawExistingDataLegend(const NFmiProducer &producer, NFmiInfoData::Type dataType, boost::shared_ptr<NFmiDrawParam> &drawParam, const NFmiColor &color, double heightIncrement, double endPointX, NFmiPoint &legendPlaceInOut, NFmiDrawingEnvironment &drawingEnvironmentInOut)
 {
-    boost::shared_ptr<NFmiFastQueryInfo> info = ::GetWantedData(itsCtrlViewDocumentInterface, drawParam, producer, dataType);
+    boost::shared_ptr<NFmiFastQueryInfo> info = ::GetWantedData(itsCtrlViewDocumentInterface, drawParam, producer, dataType, nullptr);
     if(info)
     {
         drawingEnvironmentInOut.SetFrameColor(color);
@@ -728,7 +738,7 @@ static bool DataHasNeededParameters(boost::shared_ptr<NFmiFastQueryInfo> &theInf
 bool NFmiTimeSerialView::DrawModelDataLocationInTime(NFmiDrawingEnvironment &envi, const NFmiPoint &theLatlon, const NFmiProducer &theProducer, NFmiInfoData::Type theDataType)
 {
 	itsToolBox->UseClipping(true);
-    boost::shared_ptr<NFmiFastQueryInfo> info = ::GetWantedData(itsCtrlViewDocumentInterface, itsDrawParam, theProducer, theDataType);
+    boost::shared_ptr<NFmiFastQueryInfo> info = ::GetWantedData(itsCtrlViewDocumentInterface, itsDrawParam, theProducer, theDataType, &theLatlon);
 	if(info)
 	{
 		info->ResetTime(); // varmuuden vuoksi asetan 1. aikaan
@@ -746,7 +756,7 @@ bool NFmiTimeSerialView::DrawModelDataLocationInTime(NFmiDrawingEnvironment &env
 void NFmiTimeSerialView::DrawKepaDataLocationInTime(NFmiDrawingEnvironment &envi, const NFmiPoint &theLatlon)
 {
 	NFmiProducer prod(0, "none"); // 0 producer ignoorataan GetWantedData-funktiossa
-	boost::shared_ptr<NFmiFastQueryInfo> kepaInfo = ::GetWantedData(itsCtrlViewDocumentInterface, itsDrawParam, prod, NFmiInfoData::kKepaData);
+	boost::shared_ptr<NFmiFastQueryInfo> kepaInfo = ::GetWantedData(itsCtrlViewDocumentInterface, itsDrawParam, prod, NFmiInfoData::kKepaData, nullptr);
 	if(kepaInfo)
 	{
 		envi.SetFrameColor(g_OfficialDataColor);
@@ -4209,7 +4219,7 @@ std::string NFmiTimeSerialView::GetSideParametersToolTipText(const NFmiPoint& th
 				{
 					auto& producer = *sideParamDrawParam->Param().GetProducer();
 					auto dataType = sideParamDrawParam->DataType();
-					boost::shared_ptr<NFmiFastQueryInfo> sideParamInfo = ::GetWantedData(itsCtrlViewDocumentInterface, sideParamDrawParam, producer, dataType);
+					boost::shared_ptr<NFmiFastQueryInfo> sideParamInfo = ::GetWantedData(itsCtrlViewDocumentInterface, sideParamDrawParam, producer, dataType, &theLatlon);
 					if(sideParamInfo)
 					{
 						float sideParameterValue = GetTooltipValue(sideParamInfo, theLatlon, theTime, sideParamDrawParam);
@@ -4239,7 +4249,7 @@ std::string NFmiTimeSerialView::GetModelDataToolTipText(boost::shared_ptr<NFmiFa
 	size_t foundDataCounter = 0;
 	for(unsigned int i=0; i < producers.size(); i++) // käydään läpi kaikki tuottajat, ja katsotaan kuinka moneen päädata osui (param + level ja tyyppi)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> modelInfo = ::GetWantedData(itsCtrlViewDocumentInterface, itsDrawParam, producers[i].GetProducer(), NFmiInfoData::kViewable);
+		boost::shared_ptr<NFmiFastQueryInfo> modelInfo = ::GetWantedData(itsCtrlViewDocumentInterface, itsDrawParam, producers[i].GetProducer(), NFmiInfoData::kViewable, &theLatlon);
 		if(modelInfo)
 		{
 			float modelValue = GetTooltipValue(modelInfo, theLatlon, theTime, itsDrawParam);
@@ -4712,7 +4722,7 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
 std::string NFmiTimeSerialView::MakeToolTipTextForData(const NFmiProducer &theProducer, NFmiInfoData::Type theDataType, const NFmiColor &theTitleColor, const NFmiPoint& theLatlon, const NFmiMetTime& theTime)
 {
 	std::string str;
-	boost::shared_ptr<NFmiFastQueryInfo> info = ::GetWantedData(itsCtrlViewDocumentInterface, itsDrawParam, theProducer, theDataType);
+	boost::shared_ptr<NFmiFastQueryInfo> info = ::GetWantedData(itsCtrlViewDocumentInterface, itsDrawParam, theProducer, theDataType, &theLatlon);
 	if(info)
 	{
 		str += "\n";
