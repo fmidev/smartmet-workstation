@@ -63,7 +63,8 @@ class NFmiMenuItem
     NFmiMenuItem(NFmiMenuItem &theMenuItem) = delete;
     NFmiMenuItem &operator=(const NFmiMenuItem &theMenuItem) = delete;
 
-	const FmiMenuCommandType &CommandType(void) const;
+	const FmiMenuCommandType& CommandType(void) const;
+	void CommandType(FmiMenuCommandType newCommandType);
 	const std::string &MenuText(void) const;
 	const FmiParameterName &Parameter(void) const;
 	const NFmiDataIdent& DataIdent(void)const {return itsDataIdent;};

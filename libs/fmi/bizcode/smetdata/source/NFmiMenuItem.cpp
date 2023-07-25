@@ -123,6 +123,11 @@ const FmiMenuCommandType &NFmiMenuItem::CommandType(void) const
 	return itsCommandType;
 }
 
+void NFmiMenuItem::CommandType(FmiMenuCommandType newCommandType)
+{
+	itsCommandType = newCommandType;
+}
+
 const std::string &NFmiMenuItem::MenuText(void) const
 {
 	return itsMenuText;
