@@ -137,5 +137,5 @@ NFmiSymbolBulkDrawType NFmiStationArrowView::SbdGetDrawType() const
 
 NFmiSymbolColorChangingType NFmiStationArrowView::SbdGetSymbolColorChangingType() const
 {
-	return NFmiSymbolColorChangingType::Never;
+	return NFmiSymbolColorChangingType::OnlyWithOtherParameterValues;
 }

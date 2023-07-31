@@ -71,6 +71,7 @@
 #include "SparseDataGrid.h"
 #include "NFmiSymbolTextMapping.h"
 #include "ColorStringFunctions.h"
+#include "NFmiSmartToolIntepreter.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -2864,12 +2865,51 @@ NFmiColor NFmiStationView::GetColoredNumberColor(float theValue) const
 	return color;
 }
 
+static float GetSecondParameterColorValue(const boost::shared_ptr<NFmiFastQueryInfo> &primaryInfo, const boost::shared_ptr<NFmiFastQueryInfo>& colorValueInfo, const NFmiMetTime &theTime)
+{
+	if(NFmiFastInfoUtils::IsInfoShipTypeData(*colorValueInfo))
+	{
+		// Laivatyypeille ei tehdä raskasta lähimmän paikan etsimistä, vaan
+		// katsotaan että jos molemmat datat ovat samoja, laitetaan locationIndex ja aikaIndex 
+		// samoiksi ja pyydetään arvo siitä. Jos ei samoja datoja, palautetaan puuttuvaa.
+		if(primaryInfo->DataFileName() == colorValueInfo->DataFileName())
+		{
+			colorValueInfo->LocationIndex(primaryInfo->LocationIndex());
+			colorValueInfo->TimeIndex(primaryInfo->TimeIndex());
+			return colorValueInfo->FloatValue();
+		}
+		return kFloatMissing;
+	}
+
+	return colorValueInfo->InterpolatedValue(primaryInfo->LatLon(), theTime);
+}
+
+// Jos symboli halutaan värittää toisen parametrin arvojen mukaisesti, mutta se
+// sen toisen parametrin arvo on puuttuvaa, pitää tapaukselle keksiä joku puuttuva väri.
+// Ajattelin, että pelkkä musta kuvaa parhaiten ongelmatilannetta, koska piirtoa ei haluta
+// poistaa, mutta ei sitä kannata myöskään korostaa jollai räväkällä värilläkään.
+const NFmiColor gSecondParameterMissingColor(0, 0, 0);
+
 NFmiColor NFmiStationView::GetSymbolColor(float theValue) const
 {
-    if(itsDrawParam->ShowColoredNumbers())	// Vaihtelevanväriset numerot tekstinäyttöön
-        return GetColoredNumberColor(theValue);
-    else // "Tavalliset" värit näyttöön
-        return GetBasicParamRelatedSymbolColor(theValue);
+	if(itsDrawParam->ShowColoredNumbers())
+	{
+		// Vaihtelevanväriset numerot tekstinäyttöön
+		if(itsPossibleColorValueInfo)
+		{
+			auto colorParamValue = ::GetSecondParameterColorValue(itsInfo, itsPossibleColorValueInfo, itsTime);
+			if(colorParamValue == kFloatMissing)
+				return gSecondParameterMissingColor;
+			else
+				theValue = colorParamValue;
+		}
+		return GetColoredNumberColor(theValue);
+	}
+	else
+	{
+		// "Tavalliset" värit näyttöön
+		return GetBasicParamRelatedSymbolColor(theValue);
+	}
 }
 
 NFmiColor NFmiStationView::GetBasicParamRelatedSymbolColor(float theValue) const
@@ -3886,6 +3926,7 @@ void NFmiStationView::SbdDoFixedSymbolDrawSettings()
 	itsSymbolBulkDrawData.penSize(SbdCalcFixedPenSize());
 	itsSymbolBulkDrawData.printing(itsCtrlViewDocumentInterface->Printing());
 	itsSymbolBulkDrawData.mapViewSizeInPixels(itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex));
+	SetupPossibleColorValueInfo();
 }
 
 void NFmiStationView::SbdCollectSymbolDrawData(bool doStationPlotOnly)
@@ -4185,15 +4226,29 @@ void NFmiStationView::SbdSetPossibleFixedSymbolColor()
 
 bool NFmiStationView::SbdIsChangingSymbolColorsUsed() const
 {
-	auto symbolColorChangingType = SbdGetSymbolColorChangingType();
-	if(symbolColorChangingType == NFmiSymbolColorChangingType::Never)
+	switch(SbdGetSymbolColorChangingType())
+	{
+	case NFmiSymbolColorChangingType::Never:
+	{
 		return false;
-	else if(itsDrawParam->ShowColoredNumbers())
+	}
+	case NFmiSymbolColorChangingType::OnlyWithOtherParameterValues:
+	{
+		return itsDrawParam->ShowColoredNumbers() && itsDrawParam->IsPossibleColorValueParameterValid();
+	}
+	case NFmiSymbolColorChangingType::Mixed:
+	{
 		return true;
-	else if(symbolColorChangingType == NFmiSymbolColorChangingType::Mixed)
-		return true;
-	else
+	}
+	case NFmiSymbolColorChangingType::DrawParamSet:
+	{
+		return itsDrawParam->ShowColoredNumbers();
+	}
+	default:
+	{
 		return false;
+	}
+	}
 }
 
 bool NFmiStationView::SbdIsFixedSymbolSize() const
@@ -4249,11 +4304,6 @@ void NFmiStationView::SbdSetDrawType()
 NFmiSymbolBulkDrawType NFmiStationView::SbdGetDrawType() const
 {
 	return NFmiSymbolBulkDrawType::Text;
-}
-
-NFmiColor NFmiStationView::SbdGetChangingColor(float value) const
-{
-	return GetSymbolColor(value);
 }
 
 // Jotkut symbolit piirretään monivärisinä ja jotkut ei. Tämän tyypin 
@@ -4387,4 +4437,52 @@ void NFmiStationView::UpdateOptimizedGridValues(const NFmiRect& dataAreaXyRect, 
 bool NFmiStationView::IsMacroParamCase()
 {
 	return NFmiDrawParam::IsMacroParamCase(itsInfo->DataType());
+}
+
+// Haetaan colorValueInfoa vielä vain samasta datasta kuin its arvo data
+static boost::shared_ptr<NFmiFastQueryInfo> GetBestMatchingData(CtrlViewDocumentInterface& ctrlViewDocumentInterface, boost::shared_ptr<NFmiDrawParam>& baseDrawParam, FmiParameterName parameterName, boost::shared_ptr<NFmiFastQueryInfo> &valueInfo)
+{
+	if(baseDrawParam->Param().GetProducer()->GetIdent() == kFmiSYNOP)
+	{
+		// Synop tapauksissa pitää hakea tiedoston nimen patternin mukaan, koska synop 
+		// data käsittelee kolmea eri synop dataa (suomi/euro/maailma) ja lisäksi ship ja poiju datat.
+		// Niiden haku normaalilla nearest-location jutulla ei toimi aina halutulla tavalla.
+		auto infos = ctrlViewDocumentInterface.InfoOrganizer()->GetInfos(valueInfo->DataFilePattern());
+		if(!infos.empty())
+		{
+			auto& info = infos.front();
+			if(info->Param(parameterName))
+			{
+				return info;
+			}
+		}
+	}
+	else
+	{
+		boost::shared_ptr<NFmiDrawParam> wantedDrawParamPtr(new NFmiDrawParam(*baseDrawParam));
+		wantedDrawParamPtr->Param().SetParam(NFmiParam(parameterName, "wantedParamName"));
+		return ctrlViewDocumentInterface.InfoOrganizer()->Info(wantedDrawParamPtr, false, true);
+	}
+	return nullptr;
+}
+
+void NFmiStationView::SetupPossibleColorValueInfo()
+{
+	itsPossibleColorValueInfo = nullptr;
+	if(!itsDrawParam->PossibleColorValueParameter().empty())
+	{
+		try
+		{
+			auto variableData = NFmiSmartToolIntepreter::CheckForVariableDataType(itsDrawParam->PossibleColorValueParameter());
+			if(variableData.first && variableData.second.IsInUse())
+			{
+				const auto& defineWantedData = variableData.second;
+				auto wantedParameterName = static_cast<FmiParameterName>(defineWantedData.param_.GetIdent());
+				itsPossibleColorValueInfo = ::GetBestMatchingData(*itsCtrlViewDocumentInterface, itsDrawParam, wantedParameterName, itsInfo);
+			}
+		}
+		catch(std::exception&)
+		{
+		}
+	}
 }

@@ -174,7 +174,6 @@ protected:
    NFmiPoint SbdBasicSymbolSizeCalculation(int minSize, int maxSize) const;
    void SbdSetDrawType();
    virtual NFmiSymbolBulkDrawType SbdGetDrawType() const;
-   virtual NFmiColor SbdGetChangingColor(float value) const;
    virtual NFmiSymbolColorChangingType SbdGetSymbolColorChangingType() const;
    bool SbdIsChangingSymbolColorsUsed() const;
    virtual void SbdSetFontName();
@@ -266,6 +265,7 @@ protected:
    bool FindNearestFlashTypeObservation(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiLocation& theCursorLocation, double& theCurrentMinDistInOut, unsigned long& theMinDistTimeIndexOut);
    bool IsMacroParamCase();
    bool DoMacroParamProbing();
+   void SetupPossibleColorValueInfo();
 
    NFmiRect itsGeneralStationRect;
    FmiParameterName itsParamId;
@@ -344,5 +344,8 @@ protected:
    std::vector<float> itsMacroParamProbingValues;
    NFmiExtraMacroParamData itsProbingExtraMacroParamData;
    MacroParamPhase itsMacroParamPhase = MacroParamPhase::NoPhase;
+   // Jos piirto-ominaisuuksissa sanottu että käytetään toista parametria näytössä 
+   // olevan parametrin symbolien värityksessä, niin tähän otetaan se talteen.
+   boost::shared_ptr<NFmiFastQueryInfo> itsPossibleColorValueInfo;
 };
 

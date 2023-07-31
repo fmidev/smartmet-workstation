@@ -22,6 +22,7 @@
 #include "CtrlViewGdiPlusFunctions.h"
 #include "ApplicationInterface.h"
 #include <boost/algorithm/string.hpp>
+#include "NFmiSmartToolIntepreter.h"
 
 #include <direct.h> // working directory juttuja varten
 
@@ -91,6 +92,7 @@ CFmiModifyDrawParamDlg::CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartM
 , fTreatWmsLayerAsObservation(FALSE)
 , itsFixedTextSymbolDrawLength(DefaultFixedTextSymbolDrawLength)
 , itsSymbolDrawDensityStr(_T(""))
+, itsPossibleColorParameterStr(_T(""))
 {
 	if(theDrawParam)
 	{
@@ -286,6 +288,7 @@ void CFmiModifyDrawParamDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_SLIDER_SYMBOL_DRAW_DENSITY_Y, itsSymbolDrawDensityYSlider);
 	DDX_Text(pDX, IDC_FIXED_TEXT_SYMBOL_DRAW_LENGTH, itsFixedTextSymbolDrawLength);
 	DDX_Text(pDX, IDC_STATIC_SYMBOL_DRAW_DENSITY_STR, itsSymbolDrawDensityStr);
+	DDX_Text(pDX, IDC_EDIT_DRAW_PARAM_COLOR_PARAM_STR, itsPossibleColorParameterStr);
 }
 
 
@@ -337,6 +340,7 @@ BEGIN_MESSAGE_MAP(CFmiModifyDrawParamDlg, CDialog)
 	ON_EN_CHANGE(IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_HIGH_VALUE, &CFmiModifyDrawParamDlg::OnEnChangeShowSimpleIsolineWithColorsEndValue)
 	ON_EN_CHANGE(IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_HIGH2_VALUE, &CFmiModifyDrawParamDlg::OnEnChangeShowSimpleIsolineWithColorsEnd2Value)
 	ON_WM_HSCROLL()
+	ON_EN_CHANGE(IDC_EDIT_DRAW_PARAM_COLOR_PARAM_STR, &CFmiModifyDrawParamDlg::OnEnChangeEditDrawParamColorParamStr)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -360,6 +364,7 @@ BOOL CFmiModifyDrawParamDlg::OnInitDialog()
 	UpdateSymbolDrawDensityStr();
 
 	UpdateData(FALSE);
+	DoPostInitializationChecks();
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
@@ -607,6 +612,7 @@ void CFmiModifyDrawParamDlg::InitRestOfVersion2Data(void)
 
 	itsFixedTextSymbolDrawLength = itsDrawParam->FixedTextSymbolDrawLength();
 	InitSymbolDrawDensitySliders();
+	itsPossibleColorParameterStr = CA2T(itsDrawParam->PossibleColorValueParameter().c_str());
 }
 
 static int SymbolDrawDensityToSliderPos(double symbolDrawDensity)
@@ -805,6 +811,7 @@ void CFmiModifyDrawParamDlg::ReadRestOfVersion2Data(void)
 	auto densityValues = GetSymbolDrawDensityValuesFromSlider();
 	itsDrawParam->SymbolDrawDensityX(densityValues.first);
 	itsDrawParam->SymbolDrawDensityY(densityValues.second);
+	itsDrawParam->PossibleColorValueParameter(std::string(CT2A(itsPossibleColorParameterStr)));
 
 	ReadSpecialClassesData();
 }
@@ -1078,6 +1085,7 @@ void CFmiModifyDrawParamDlg::OnBnClickedDrawParamLoadFrom()
 		itsDrawParam->Init(&dParam, true);
 		InitDialogFromDrawParam();
 		UpdateData(FALSE);
+		DoPostInitializationChecks();
 	}
 }
 
@@ -1587,6 +1595,7 @@ void CFmiModifyDrawParamDlg::OnButtonResetDrawParam()
 	itsDrawParam->Init(&defaultDrawParam, true);
 	InitDialogFromDrawParam();
 	UpdateData(FALSE);
+	DoPostInitializationChecks();
 }
 
 void CFmiModifyDrawParamDlg::MakeViewMacroAdjustments(void)
@@ -1628,6 +1637,14 @@ HBRUSH CFmiModifyDrawParamDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 	{
 		if(this->fSpecialClassesHaveInvalidValues)
 			pDC->SetTextColor(RGB(255, 0, 0)); // virhetilanteissa erikois luokka edit boxin labeli v‰ritet‰‰n punaiseksi
+		else
+			pDC->SetTextColor(RGB(0, 0, 0));
+	}
+
+	if(pWnd->GetDlgCtrlID() == IDC_STATIC_DRAW_PARAM_COLOR_PARAM_TEXT)
+	{
+		if(!fPossibleColorParameterOk)
+			pDC->SetTextColor(RGB(255, 0, 0)); // virhetilanteissa labeli v‰ritet‰‰n punaiseksi
 		else
 			pDC->SetTextColor(RGB(0, 0, 0));
 	}
@@ -1830,6 +1847,7 @@ void CFmiModifyDrawParamDlg::OnCbnSelchangeComboFixedDrawParamSelector()
         InitDialogFromDrawParam(); // alustetaan dialogin arvot 
         itsOrigDrawParam->Init(itsDrawParam); // otetaan muuutokset ainakin hetkellisesti k‰yttˆˆn, cancel peruu muutokset!!!
         UpdateData(FALSE);
+		DoPostInitializationChecks();
 //        if(fApplyFixedDrawParamSettingsAtOnce)
         {
             fRefreshPressed = true;
@@ -1846,6 +1864,7 @@ void CFmiModifyDrawParamDlg::OnBnClickedButtonReloadOriginal()
     itsDrawParam->Init(itsOrigDrawParam); // DoCancel laitta originaalit itsOrigDrawParam:iin, josta ne laitetaan t‰ss‰ itsDrawParam
     InitDialogFromDrawParam(); // alustetaan dialogin arvot itsDrawParam:in arvoilla
     UpdateData(FALSE);
+	DoPostInitializationChecks();
 
     ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(::GetWantedMapViewIdFlag(itsDescTopIndex));
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ModifyDrawParamDlg: Reload original draw param settings", TRUE, TRUE, itsDescTopIndex); // p‰ivitet‰‰n n‰yttˆj‰
@@ -1874,4 +1893,49 @@ void CFmiModifyDrawParamDlg::UpdateSymbolDrawDensityStr()
 	densityValuesStr += NFmiValueString::GetStringWithMaxDecimalsSmartWay(densityValues.second, 1);
 	itsSymbolDrawDensityStr = CA2T(densityValuesStr.c_str());
 	UpdateData(FALSE);
+}
+
+
+void CFmiModifyDrawParamDlg::OnEnChangeEditDrawParamColorParamStr()
+{
+	UpdateData(TRUE);
+	auto originalStatus = fPossibleColorParameterOk;
+	fPossibleColorParameterOk = IsPossibleColorParameterStrOk(itsPossibleColorParameterStr);
+	if(originalStatus != fPossibleColorParameterOk)
+	{
+		CWnd* win = GetDlgItem(IDC_STATIC_DRAW_PARAM_COLOR_PARAM_TEXT);
+		if(win)
+			win->Invalidate(FALSE);
+	}
+}
+
+bool CFmiModifyDrawParamDlg::IsPossibleColorParameterStrOk(const CString& colorParameterStr)
+{
+	std::string originalVariableStr = CT2A(colorParameterStr);
+	NFmiStringTools::Trim(originalVariableStr);
+	if(!originalVariableStr.empty())
+	{
+		try
+		{
+			auto variableData = NFmiSmartToolIntepreter::CheckForVariableDataType(originalVariableStr);
+			// Meit‰ kiinnostaa t‰ss‰ vaiheessa vain editoitu data, eli pelkk‰ parametri
+			auto editedDataOnly = variableData.second.IsEditedData();
+			// Lis‰ksi editoitu data ei voi sis‰lt‰‰ level-tietoa, koska emme halua vaihtaa sellaista viel‰
+			auto noLevelInfo = variableData.second.UsedLevel() == nullptr;
+			return variableData.first && editedDataOnly && noLevelInfo;
+		}
+		catch(std::exception &)
+		{ }
+		return false;
+	}
+
+	// Esim. tyhj‰ parametri on ok, koska silloin ei haluta k‰ytt‰‰ erillist‰ v‰ritysparametria
+	return true;
+}
+
+// Kun dialogi on alustettu tavalla tai toisella drawParam oliosta, t‰t‰ 
+// tarkastelufunktiota voidaan kutsua, sen j‰lkeen kun UpdateData(FALSE) on kutsuttu.
+void CFmiModifyDrawParamDlg::DoPostInitializationChecks()
+{
+	fPossibleColorParameterOk = IsPossibleColorParameterStrOk(itsPossibleColorParameterStr);
 }

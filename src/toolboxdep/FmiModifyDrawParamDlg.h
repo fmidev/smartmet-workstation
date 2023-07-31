@@ -121,9 +121,10 @@ public:
 	float itsSimpleColorContourLimit4Value = kFloatMissing; // Saadaan vastaavasta string valuesta
 	//}}AFX_DATA
 
-	bool fSpecialClassesHaveInvalidValues; // tämän muuttujan avulla väritetään labeli tarvittaessa punaiseksi että
-											// käyttäjä näkee että annetut luokka rajat ovat virheellisiä.
-											// Suurin ongelma tulee kun kaikki arvoteivät ole nousevassa järjestyksessä. Tällöin ohjelma toimii oudosti.
+	// Tämän muuttujan avulla väritetään labeli tarvittaessa punaiseksi että
+	// käyttäjä näkee että annetut luokka rajat ovat virheellisiä.
+	// Suurin ongelma tulee kun kaikki arvot eivät ole nousevassa järjestyksessä. Tällöin ohjelma toimii oudosti.
+	bool fSpecialClassesHaveInvalidValues; 
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -217,6 +218,8 @@ private:
 	void UpdateSymbolDrawDensityStr();
 	bool IsMacroParamCase();
 	bool IsMacroParamSymbolDrawCase();
+	bool IsPossibleColorParameterStrOk(const CString& colorParameterStr);
+	void DoPostInitializationChecks();
 
 	std::string itsDrawParamPath;
 	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
@@ -313,6 +316,8 @@ private:
 	CSliderCtrl itsSymbolDrawDensityYSlider;
 	int itsFixedTextSymbolDrawLength;
 	CString itsSymbolDrawDensityStr;
+	CString itsPossibleColorParameterStr;
+	bool fPossibleColorParameterOk = false;
 
 public:
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
@@ -337,6 +342,7 @@ public:
 	afx_msg void OnEnChangeShowSimpleIsolineWithColorsEndValue();
 	afx_msg void OnEnChangeShowSimpleIsolineWithColorsEnd2Value();
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnEnChangeEditDrawParamColorParamStr();
 };
 
 //{{AFX_INSERT_LOCATION}}

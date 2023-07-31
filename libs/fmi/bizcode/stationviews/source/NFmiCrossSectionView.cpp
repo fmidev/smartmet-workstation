@@ -992,9 +992,10 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 		SetUpDifferenceDrawing(itsDrawParam);
 
     {
+		auto doWindVectorDraw = isoLineData.itsParam.GetParamIdent() == kFmiWindVectorMS;
         // Making ToolMaster setup and drawing in one protected zone
         std::lock_guard<std::mutex> toolMasterLock(NFmiIsoLineView::sToolMasterOperationMutex);
-        if(FillIsoLineVisualizationInfo(itsDrawParam, &isoLineData, IsToolMasterAvailable(), false))
+        if(doWindVectorDraw || FillIsoLineVisualizationInfo(itsDrawParam, &isoLineData, IsToolMasterAvailable(), false))
         {
             if(IsToolMasterAvailable())
                 FillIsoLineDataForToolMaster(itsIsolineValues, isoLineData);
@@ -1003,7 +1004,7 @@ void NFmiCrossSectionView::DrawCrossSection(void)
             FillXYMatrix(isoLineData, koordinaatit, itsPressures);
             FillMainPointXYInfo(koordinaatit);
 
-            if(isoLineData.itsParam.GetParamIdent() == kFmiWindVectorMS)
+            if(doWindVectorDraw)
                 DrawCrosssectionWindVectors(isoLineData, koordinaatit);
             else
             {

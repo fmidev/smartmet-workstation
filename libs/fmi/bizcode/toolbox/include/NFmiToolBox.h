@@ -174,7 +174,10 @@ protected:
   void FillPolyPolygonPoints(std::list<NFmiPolyline*> &thePolyLineList, std::vector<CPoint> &thePoints, std::vector<int> &thePolygonPointCounts, int &thePolygonCount, const NFmiPoint &theOffSet);
   void DoTextBulkDraw(const NFmiSymbolBulkDrawData& sbdData);
   void DoArroyBulkDraw(const NFmiSymbolBulkDrawData& sbdData);
+  void DoBasicArroyBulkDraw(const NFmiSymbolBulkDrawData& sbdData, const std::vector<CPoint>& mfcArrowPositions);
+  void DoChangingColorArroyBulkDraw(const NFmiSymbolBulkDrawData& sbdData, const std::vector<CPoint>& mfcArrowPositions);
   void DoWindBarbBulkDraw(const NFmiSymbolBulkDrawData& sbdData);
+  void DoChangingColorWindBarbBulkDraw(const NFmiSymbolBulkDrawData& sbdData);
   void DoSimpleWeatherBulkkDraw(const NFmiSymbolBulkDrawData& sbdData);
   void DoStationPlotkDraw(const NFmiSymbolBulkDrawData& sbdData);
   
