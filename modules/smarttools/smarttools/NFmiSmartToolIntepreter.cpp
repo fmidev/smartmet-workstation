@@ -3016,9 +3016,23 @@ std::pair<bool, NFmiDefineWantedData> NFmiSmartToolIntepreter::CheckForVariableD
                                                           timeOffsetInHours))
   {
     if (!producerExist)
-    { // Jos ei tuottajaa, kyse on sitten editoidusta datasta
-      return std::make_pair(
-          true, NFmiDefineWantedData(NFmiInfoData::kEditable, originalDataVariableString));
+    {
+      // Jos ei tuottajaa, kyse on sitten editoidusta datasta
+      if (levelExist)
+      {
+        return std::make_pair(true,
+                              NFmiDefineWantedData(NFmiInfoData::kEditable,
+                                                   *maskInfo->GetDataIdent().GetParam(),
+                                                   maskInfo->GetLevel(),
+                                                   originalDataVariableString));
+      }
+      else
+      {
+        return std::make_pair(true,
+                              NFmiDefineWantedData(NFmiInfoData::kEditable,
+                                                   *maskInfo->GetDataIdent().GetParam(),
+                                                   originalDataVariableString));
+      }
     }
     else
     {
@@ -3088,7 +3102,7 @@ std::pair<bool, NFmiDefineWantedData> NFmiSmartToolIntepreter::GetPossibleVariab
   if (resolutionStr == std::string("edited"))
   {
     return std::make_pair(true,
-                          NFmiDefineWantedData(NFmiInfoData::kEditable, originalResolutionStr));
+                          NFmiDefineWantedData(NFmiInfoData::kEditable, NFmiParam(kFmiBadParameter), originalResolutionStr));
   }
 
   vector<string> resolutionParts = NFmiStringTools::Split(resolutionStr, "_");

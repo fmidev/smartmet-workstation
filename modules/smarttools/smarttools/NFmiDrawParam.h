@@ -711,6 +711,9 @@ class NFmiDrawParam
   void SymbolDrawDensityX(double newValue);
   double SymbolDrawDensityY() const { return itsSymbolDrawDensityY; }
   void SymbolDrawDensityY(double newValue);
+  const std::string& PossibleColorValueParameter() const { return itsPossibleColorValueParameter; }
+  void PossibleColorValueParameter(const std::string& newValue);
+  bool IsPossibleColorValueParameterValid() const;
 
   static std::string MetTime2String(const NFmiMetTime& theTime);
   static NFmiMetTime String2MetTime(const std::string& theStr);
@@ -969,6 +972,12 @@ class NFmiDrawParam
   // Arvoavaruus on [0.5 , 1.5].
   double itsSymbolDrawDensityX = DefaultSymbolDrawDensity;
   double itsSymbolDrawDensityY = DefaultSymbolDrawDensity;
+  // Käyttäjä voi halutessaan värjatä jonkun datan jonkun parametrin symbolit jollain toisen
+  // parametrin arvojen avulla. Seuraavia arvoja voi antaa tekstinä:
+  // 1) T tai par4, jolloin väritys haetaan saman tuottajan ja saman levelin lämpötila parametrista
+  // 2) (NOT IMPLEMENTED YET) T_925 tai par4_925, jolloin väritys haetaan saman tuottajan halutulta 925 hPa leveliltä lämpötila parametrista
+  // 3) (NOT IMPLEMENTED YET) T_ec tai T_ec_925, jolloin väritys haetaan Ecmwf datan pinnasta tai 925 hPa tasosta
+  std::string itsPossibleColorValueParameter;
 };
 //@{ \name Globaalit NFmiDrawParam-luokan uudelleenohjaus-operaatiot
 inline std::ostream& operator<<(std::ostream& os, const NFmiDrawParam& item)

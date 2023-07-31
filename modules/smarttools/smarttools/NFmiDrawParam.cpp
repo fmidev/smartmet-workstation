@@ -33,6 +33,7 @@
 #include "NFmiDrawParam.h"
 #include "NFmiColorSpaces.h"
 #include "NFmiDataStoringHelpers.h"
+#include "NFmiSmartToolIntepreter.h"
 
 #include <fstream>
 #include <bitset>
@@ -482,7 +483,8 @@ NFmiDrawParam::NFmiDrawParam(const NFmiDrawParam& other)
       fTreatWmsLayerAsObservation(other.fTreatWmsLayerAsObservation),
       itsFixedTextSymbolDrawLength(other.itsFixedTextSymbolDrawLength),
       itsSymbolDrawDensityX(other.itsSymbolDrawDensityX),
-      itsSymbolDrawDensityY(other.itsSymbolDrawDensityY)
+      itsSymbolDrawDensityY(other.itsSymbolDrawDensityY),
+      itsPossibleColorValueParameter(other.itsPossibleColorValueParameter)
 {
   Alpha(itsAlpha);  // varmistus että pysytään rajoissa
   itsPossibleViewTypeList[0] = NFmiMetEditorTypes::View::kFmiTextView;
@@ -690,9 +692,10 @@ void NFmiDrawParam::Init(const NFmiDrawParam* theDrawParam, bool fInitOnlyDrawin
     fDoSparseSymbolVisualization = theDrawParam->fDoSparseSymbolVisualization;
     fDoIsoLineColorBlend = theDrawParam->fDoIsoLineColorBlend;
     fTreatWmsLayerAsObservation = theDrawParam->fTreatWmsLayerAsObservation;
-    FixedTextSymbolDrawLength(theDrawParam->FixedTextSymbolDrawLength());
-    SymbolDrawDensityX(theDrawParam->SymbolDrawDensityX());
-    SymbolDrawDensityY(theDrawParam->SymbolDrawDensityY());
+    FixedTextSymbolDrawLength(theDrawParam->itsFixedTextSymbolDrawLength);
+    SymbolDrawDensityX(theDrawParam->itsSymbolDrawDensityX);
+    SymbolDrawDensityY(theDrawParam->itsSymbolDrawDensityY);
+    itsPossibleColorValueParameter = theDrawParam->itsPossibleColorValueParameter;
   }
   return;
 }
@@ -1112,6 +1115,8 @@ std::ostream& NFmiDrawParam::Write(std::ostream& file) const
     // 5. simple color contour väri (itsColorContouringColorShadeHigh3ValueColor)
     // on 2. uusista string-extra-parametreista
     extraData.Add(Color2String(itsColorContouringColorShadeHigh3ValueColor));
+    // itsPossibleColorValueParameter on 3. uusista string-extra-parametreista
+    extraData.Add(itsPossibleColorValueParameter);
 
     file << "possible_extra_data" << std::endl;
     file << extraData;
@@ -1543,6 +1548,13 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
           itsColorContouringColorShadeHigh3ValueColor = itsColorContouringColorShadeHigh2ValueColor;
         }
 
+        // Oletuksena vain tyhjennetään teksti, jos esim. luetaan vanhemmalla versiolla talletettuja drawParameja
+        itsPossibleColorValueParameter.clear();
+        if (extraData.itsStringValues.size() >= 3)
+        {
+          itsPossibleColorValueParameter = extraData.itsStringValues[2];
+        }
+
         if (file.fail()) throw std::runtime_error("NFmiDrawParam::Read failed");
         //***********************************************
         //********** 'versio 3' parametreja *************
@@ -1715,4 +1727,28 @@ void NFmiDrawParam::SymbolDrawDensityY(double newValue)
 {
   itsSymbolDrawDensityY = std::max(newValue, DrawParamMinSymbolDrawDensity);
   itsSymbolDrawDensityY = std::min(itsSymbolDrawDensityY, DrawParamMaxSymbolDrawDensity);
+}
+
+void NFmiDrawParam::PossibleColorValueParameter(const std::string& newValue)
+{
+  itsPossibleColorValueParameter = newValue;
+  // Poistetaan varmuuden vuoksi kaikki white spacet stringin alusta ja lopusta
+  NFmiStringTools::Trim(itsPossibleColorValueParameter);
+}
+
+bool NFmiDrawParam::IsPossibleColorValueParameterValid() const 
+{
+  if(!itsPossibleColorValueParameter.empty())
+  {
+    try
+    {
+      auto wantedDataType =
+          NFmiSmartToolIntepreter::CheckForVariableDataType(itsPossibleColorValueParameter);
+      return wantedDataType.first;
+    }
+    catch(std::exception &)
+    {
+    }
+  }
+  return false;
 }

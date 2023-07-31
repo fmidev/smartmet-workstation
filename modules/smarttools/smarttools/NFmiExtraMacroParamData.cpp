@@ -24,9 +24,19 @@ FindWantedInfoData::FindWantedInfoData(boost::shared_ptr<NFmiFastQueryInfo> &fou
 NFmiDefineWantedData::NFmiDefineWantedData() = default;
 
 NFmiDefineWantedData::NFmiDefineWantedData(NFmiInfoData::Type dataType,
+                                           const NFmiParam &param,
                                            const std::string &originalDataString)
-    : dataType_(dataType), originalDataString_(originalDataString)
+    : dataType_(dataType), param_(param), originalDataString_(originalDataString)
 {
+}
+
+NFmiDefineWantedData::NFmiDefineWantedData(NFmiInfoData::Type dataType,
+                     const NFmiParam &param,
+                     const NFmiLevel *level,
+                     const std::string &originalDataString)
+    : dataType_(dataType), param_(param), originalDataString_(originalDataString)
+{
+  levelPtr_.reset(level ? new NFmiLevel(*level) : nullptr);
 }
 
 NFmiDefineWantedData::NFmiDefineWantedData(const NFmiProducer &producer,

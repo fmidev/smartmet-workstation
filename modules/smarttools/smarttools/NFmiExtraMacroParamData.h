@@ -66,7 +66,13 @@ class NFmiDefineWantedData
   std::string originalDataString_;
 
   NFmiDefineWantedData();
-  NFmiDefineWantedData(NFmiInfoData::Type dataType, const std::string &originalDataString);
+  NFmiDefineWantedData(NFmiInfoData::Type dataType,
+                       const NFmiParam &param,
+                       const std::string &originalDataString);
+  NFmiDefineWantedData(NFmiInfoData::Type dataType,
+                       const NFmiParam &param,
+                       const NFmiLevel *level,
+                       const std::string &originalDataString);
   NFmiDefineWantedData(const NFmiProducer &producer,
                        FmiLevelType levelType,
                        const std::string &originalDataString);
