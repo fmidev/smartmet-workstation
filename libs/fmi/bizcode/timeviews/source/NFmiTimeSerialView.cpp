@@ -4169,21 +4169,24 @@ static void AddValueLineString(std::string &theStr, const std::string &theTitle,
 
 static void AddProducerString(std::string &theStr, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool fAddEndl)
 {
-	theStr += " (";
-	theStr += theInfo->Producer()->GetName();
-	if(theDrawParam->Level().GetIdent() != 0) // jos ident on 0, on kyseessä 'pinta data' eli ei ilmoitetan level tietoja
+	if(!theDrawParam->IsMacroParamCase(true))
 	{
-		if(theDrawParam->Level().LevelType() == kFmiHybridLevel)
-			theStr += ", level ";
-		else
-			theStr += ", ";
-		theStr += NFmiValueString(static_cast<int>(theDrawParam->Level().LevelValue()), "%d");
-		if(theDrawParam->Level().LevelType() == kFmiPressureLevel)
-			theStr += " hPa";
-		else if(theDrawParam->Level().LevelType() == kFmiHeight)
-			theStr += " m";
+		theStr += " (";
+		theStr += theInfo->Producer()->GetName();
+		if(theDrawParam->Level().GetIdent() != 0) // jos ident on 0, on kyseessä 'pinta data' eli ei ilmoitetan level tietoja
+		{
+			if(theDrawParam->Level().LevelType() == kFmiHybridLevel)
+				theStr += ", level ";
+			else
+				theStr += ", ";
+			theStr += NFmiValueString(static_cast<int>(theDrawParam->Level().LevelValue()), "%d");
+			if(theDrawParam->Level().LevelType() == kFmiPressureLevel)
+				theStr += " hPa";
+			else if(theDrawParam->Level().LevelType() == kFmiHeight)
+				theStr += " m";
+		}
+		theStr += ") ";
 	}
-	theStr += ") ";
 
 	if(fAddEndl)
 		theStr += "\n";
