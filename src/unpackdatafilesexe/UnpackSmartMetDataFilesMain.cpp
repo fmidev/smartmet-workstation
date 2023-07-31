@@ -176,6 +176,52 @@ int main(int argc, const char* argv[])
 
 
 /*
+#include "NFmiDrawParam.h"
+#include "NFmiFileSystem.h"
+#include "NFmiPathUtils.h"
+#include <fstream>
+
+int main(int argc, const char* argv[])
+{
+    // Tulostetaan annetun 1. argumenttina annetun hakemiston drawParam tiedostoista, mikä
+    // on niiden itsStationSymbolColorShadeClassCount arvon jakauma.
+    try
+    {
+        std::string drawParamDirectory = argv[1];
+        PathUtils::addDirectorySeparatorAtEnd(drawParamDirectory);
+        std::string drawParamFilePattern = drawParamDirectory + "*.dpa";
+        auto fileNames = NFmiFileSystem::PatternFiles(drawParamFilePattern);
+        std::map<int, int> valueDistribution;
+        for(const auto& fileName : fileNames)
+        {
+            auto fileNamePath = drawParamDirectory + fileName;
+            NFmiDrawParam drawParam;
+            std::ifstream in(fileNamePath, std::ios_base::in | std::ios_base::binary);
+            if(in)
+            {
+                in >> drawParam;
+                valueDistribution[drawParam.StationSymbolColorShadeClassCount()]++;
+                if(drawParam.StationSymbolColorShadeClassCount() <= 3)
+                {
+                    std::cout << fileNamePath << std::endl;
+                }
+            }
+        }
+
+        for(const auto& valuePair : valueDistribution)
+        {
+            std::cout << valuePair.first << ": " << valuePair.second << std::endl;
+        }
+    }
+    catch(std::exception& e)
+    {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+    return 1;
+}
+*/
+
+/*
 #include "NFmiQueryData.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiStringTools.h"
