@@ -8532,10 +8532,10 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			unsigned long minLocationIndex = static_cast<unsigned long>(-1);
 			for(auto &info : infoVector)
 			{
-				if(ignoreTime || info->Time(theTime))
+				auto doShipDataLocations = NFmiFastInfoUtils::IsInfoShipTypeData(*info);
+				if((ignoreTime && !doShipDataLocations) || info->Time(theTime))
 				{
 					FmiProducerName prod = static_cast<FmiProducerName>(info->Producer()->GetIdent());
-                    auto doShipDataLocations = (info->IsGrid() == false && (info->HasLatlonInfoInData()));
 					if(doShipDataLocations ? NearestShipLocation(*info, theLocation) : info->NearestLocation(theLocation))
 					{
 						double currentDistance = theLocation.Distance(doShipDataLocations ? info->GetLatlonFromData() : info->LatLonFast());
