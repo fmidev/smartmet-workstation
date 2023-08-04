@@ -56,6 +56,7 @@ CFmiModifyDrawParamDlg::CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartM
 ,itsSimpleIsoLineMidBitmap(nullptr)
 ,itsSimpleIsoLineHighBitmap(nullptr)
 ,itsSimpleIsoLineHigh2Bitmap(nullptr)
+,itsSimpleIsoLineHigh3Bitmap(nullptr)
 ,itsSimpleColorContourLowBitmap(nullptr)
 ,itsSimpleColorContourMidBitmap(nullptr)
 ,itsSimpleColorContourHighBitmap(nullptr)
@@ -176,6 +177,7 @@ CFmiModifyDrawParamDlg::~CFmiModifyDrawParamDlg(void)
     CtrlView::DestroyBitmap(&itsSimpleIsoLineLowBitmap);
 	CtrlView::DestroyBitmap(&itsSimpleIsoLineHighBitmap);
 	CtrlView::DestroyBitmap(&itsSimpleIsoLineHigh2Bitmap);
+	CtrlView::DestroyBitmap(&itsSimpleIsoLineHigh3Bitmap);
     CtrlView::DestroyBitmap(&itsHatch1Bitmap);
     CtrlView::DestroyBitmap(&itsHatch2Bitmap);
     CtrlView::DestroyBitmap(&itsSimpleColorContourMidBitmap);
@@ -289,6 +291,7 @@ void CFmiModifyDrawParamDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_FIXED_TEXT_SYMBOL_DRAW_LENGTH, itsFixedTextSymbolDrawLength);
 	DDX_Text(pDX, IDC_STATIC_SYMBOL_DRAW_DENSITY_STR, itsSymbolDrawDensityStr);
 	DDX_Text(pDX, IDC_EDIT_DRAW_PARAM_COLOR_PARAM_STR, itsPossibleColorParameterStr);
+	DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_ISOLINE_HIGH3, itsSimpleIsoLineHigh3Color);
 }
 
 
@@ -299,6 +302,7 @@ BEGIN_MESSAGE_MAP(CFmiModifyDrawParamDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_COLOR_SHOW_SIMPLE_ISOLINE_MID, OnButtonColorShowSimpleIsolineMid)
 	ON_BN_CLICKED(IDC_BUTTON_COLOR_SHOW_SIMPLE_ISOLINE_HIGH, OnButtonColorShowSimpleIsolineHigh)
 	ON_BN_CLICKED(IDC_BUTTON_COLOR_SHOW_SIMPLE_ISOLINE_HIGH2, OnButtonColorShowSimpleIsolineHigh2)
+	ON_BN_CLICKED(IDC_BUTTON_COLOR_SHOW_SIMPLE_ISOLINE_HIGH3, OnButtonColorShowSimpleIsolineHigh3)
 	ON_BN_CLICKED(IDC_BUTTON_COLOR_SHOW_SYMB_HIGH, OnButtonColorShowSymbHigh)
 	ON_BN_CLICKED(IDC_BUTTON_COLOR_SHOW_SYMB_LOW, OnButtonColorShowSymbLow)
 	ON_BN_CLICKED(IDC_BUTTON_COLOR_SHOW_SYMB_MID, OnButtonColorShowSymbMid)
@@ -362,6 +366,7 @@ BOOL CFmiModifyDrawParamDlg::OnInitDialog()
 
     AdjustStartingPosition();
 	UpdateSymbolDrawDensityStr();
+	InitTooltipControl();
 
 	UpdateData(FALSE);
 	DoPostInitializationChecks();
@@ -500,6 +505,7 @@ void CFmiModifyDrawParamDlg::InitColors(void)
 	CtrlView::InitialButtonColorUpdate(GetSimpleIsolineColorButtonData(2, true));
 	CtrlView::InitialButtonColorUpdate(GetSimpleIsolineColorButtonData(3, true));
 	CtrlView::InitialButtonColorUpdate(GetSimpleIsolineColorButtonData(4, true));
+	CtrlView::InitialButtonColorUpdate(GetSimpleIsolineColorButtonData(5, true));
 	CtrlView::InitialButtonColorUpdate(GetSimpleContourColorButtonData(1, true));
 	CtrlView::InitialButtonColorUpdate(GetSimpleContourColorButtonData(2, true));
 	CtrlView::InitialButtonColorUpdate(GetSimpleContourColorButtonData(3, true));
@@ -949,6 +955,12 @@ void CFmiModifyDrawParamDlg::OnButtonColorShowSimpleIsolineHigh2()
 	CtrlView::ColorButtonPressed(GetSimpleIsolineColorButtonData(4, false));
 }
 
+void CFmiModifyDrawParamDlg::OnButtonColorShowSimpleIsolineHigh3()
+{
+	UpdateData(TRUE);
+	CtrlView::ColorButtonPressed(GetSimpleIsolineColorButtonData(5, false));
+}
+
 void CFmiModifyDrawParamDlg::OnButtonColorShowSymbHigh()
 {
     CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsSymbolHighColorRef, &itsSymbolHighBitmap, itsSymbolHighColorRect, itsSymbolHighColor));
@@ -1179,108 +1191,80 @@ void CFmiModifyDrawParamDlg::ReadTimeSerialModifyingLimit(void)
 	itsDrawParam->TimeSerialModifyingLimit(itsTimeSeriesModifyLimit);
 }
 
+static void SetColorrefToColor(COLORREF colorref, NFmiColor& color)
+{
+	color.SetRGB((float(GetRValue(colorref)) / float(255.0)),
+		(float(GetGValue(colorref)) / float(255.0)),
+		(float(GetBValue(colorref)) / float(255.0)));
+}
+
 void CFmiModifyDrawParamDlg::ReadAllButtonColors(void)
 {
-	NFmiColor tColor;
+	NFmiColor tmpColor;
 
-	tColor.SetRGB((float(GetRValue(itsSymbolColorRef))/float(255.0)),
-					(float(GetGValue(itsSymbolColorRef))/float(255.0)),
-						(float(GetBValue(itsSymbolColorRef))/float(255.0)));
-	itsDrawParam->FrameColor(tColor);
+	SetColorrefToColor(itsSymbolColorRef, tmpColor);
+	itsDrawParam->FrameColor(tmpColor);
 
-	tColor.SetRGB((float(GetRValue(itsSymbolFillColorRef))/float(255.0)),
-					(float(GetGValue(itsSymbolFillColorRef))/float(255.0)),
-						(float(GetBValue(itsSymbolFillColorRef))/float(255.0)));
-	itsDrawParam->FillColor(tColor);
+	SetColorrefToColor(itsSymbolFillColorRef, tmpColor);
+	itsDrawParam->FillColor(tmpColor);
 
-	tColor.SetRGB((float(GetRValue(itsIsoLineColorRef))/float(255.0)),
-					(float(GetGValue(itsIsoLineColorRef))/float(255.0)),
-						(float(GetBValue(itsIsoLineColorRef))/float(255.0)));
-	itsDrawParam->IsolineColor(tColor);
+	SetColorrefToColor(itsIsoLineColorRef, tmpColor);
+	itsDrawParam->IsolineColor(tmpColor);
 
-	tColor.SetRGB((float(GetRValue(itsIsoLineLabelBoxFillColorRef))/float(255.0)),
-					(float(GetGValue(itsIsoLineLabelBoxFillColorRef))/float(255.0)),
-						(float(GetBValue(itsIsoLineLabelBoxFillColorRef))/float(255.0)));
-	itsDrawParam->IsolineLabelBoxFillColor(tColor);
+	SetColorrefToColor(itsIsoLineLabelBoxFillColorRef, tmpColor);
+	itsDrawParam->IsolineLabelBoxFillColor(tmpColor);
 
-	tColor.SetRGB((float(GetRValue(itsIsoLineLabelColorRef))/float(255.0)),
-					(float(GetGValue(itsIsoLineLabelColorRef))/float(255.0)),
-						(float(GetBValue(itsIsoLineLabelColorRef))/float(255.0)));
-	itsDrawParam->IsolineTextColor(tColor);
+	SetColorrefToColor(itsIsoLineLabelColorRef, tmpColor);
+	itsDrawParam->IsolineTextColor(tmpColor);
 
-	// Vaihtuvat isoviivavärit (3 kpl)
-	tColor.SetRGB((float(GetRValue(itsSimpleIsoLineLowColorRef))/float(255.0)),
-					(float(GetGValue(itsSimpleIsoLineLowColorRef))/float(255.0)),
-						(float(GetBValue(itsSimpleIsoLineLowColorRef))/float(255.0)));
-	itsDrawParam->SimpleIsoLineColorShadeLowValueColor(tColor);
+	// Vaihtuvat isoviivavärit (5 kpl)
+	SetColorrefToColor(itsSimpleIsoLineLowColorRef, tmpColor);
+	itsDrawParam->SimpleIsoLineColorShadeLowValueColor(tmpColor);
 
-	tColor.SetRGB((float(GetRValue(itsSimpleIsoLineMidColorRef))/float(255.0)),
-					(float(GetGValue(itsSimpleIsoLineMidColorRef))/float(255.0)),
-						(float(GetBValue(itsSimpleIsoLineMidColorRef))/float(255.0)));
-	itsDrawParam->SimpleIsoLineColorShadeMidValueColor(tColor);
+	SetColorrefToColor(itsSimpleIsoLineMidColorRef, tmpColor);
+	itsDrawParam->SimpleIsoLineColorShadeMidValueColor(tmpColor);
 
-	tColor.SetRGB((float(GetRValue(itsSimpleIsoLineHighColorRef))/float(255.0)),
-					(float(GetGValue(itsSimpleIsoLineHighColorRef))/float(255.0)),
-						(float(GetBValue(itsSimpleIsoLineHighColorRef))/float(255.0)));
-	itsDrawParam->SimpleIsoLineColorShadeHighValueColor(tColor);
+	SetColorrefToColor(itsSimpleIsoLineHighColorRef, tmpColor);
+	itsDrawParam->SimpleIsoLineColorShadeHighValueColor(tmpColor);
 
-	tColor.SetRGB((float(GetRValue(itsSimpleIsoLineHigh2ColorRef)) / float(255.0)),
-		(float(GetGValue(itsSimpleIsoLineHigh2ColorRef)) / float(255.0)),
-		(float(GetBValue(itsSimpleIsoLineHigh2ColorRef)) / float(255.0)));
-	itsDrawParam->SimpleIsoLineColorShadeHigh2ValueColor(tColor);
+	SetColorrefToColor(itsSimpleIsoLineHigh2ColorRef, tmpColor);
+	itsDrawParam->SimpleIsoLineColorShadeHigh2ValueColor(tmpColor);
+
+	SetColorrefToColor(itsSimpleIsoLineHigh3ColorRef, tmpColor);
+	itsDrawParam->SimpleIsoLineColorShadeHigh3ValueColor(tmpColor);
 
 	// Hatch värit (2 kpl)
-	tColor.SetRGB((float(GetRValue(itsHatch1ColorRef))/float(255.0)),
-					(float(GetGValue(itsHatch1ColorRef))/float(255.0)),
-						(float(GetBValue(itsHatch1ColorRef))/float(255.0)));
-	itsDrawParam->IsoLineHatchColor1(tColor);
+	SetColorrefToColor(itsHatch1ColorRef, tmpColor);
+	itsDrawParam->IsoLineHatchColor1(tmpColor);
 
-	tColor.SetRGB((float(GetRValue(itsHatch2ColorRef))/float(255.0)),
-					(float(GetGValue(itsHatch2ColorRef))/float(255.0)),
-						(float(GetBValue(itsHatch2ColorRef))/float(255.0)));
-	itsDrawParam->IsoLineHatchColor2(tColor);
+	SetColorrefToColor(itsHatch2ColorRef, tmpColor);
+	itsDrawParam->IsoLineHatchColor2(tmpColor);
 
 	// Vaihtuvat symboli värit (3 kpl)
-	tColor.SetRGB((float(GetRValue(itsSymbolLowColorRef))/float(255.0)),
-					(float(GetGValue(itsSymbolLowColorRef))/float(255.0)),
-						(float(GetBValue(itsSymbolLowColorRef))/float(255.0)));
-	itsDrawParam->StationSymbolColorShadeLowValueColor(tColor);
+	SetColorrefToColor(itsSymbolLowColorRef, tmpColor);
+	itsDrawParam->StationSymbolColorShadeLowValueColor(tmpColor);
 
-	tColor.SetRGB((float(GetRValue(itsSymbolMidColorRef))/float(255.0)),
-					(float(GetGValue(itsSymbolMidColorRef))/float(255.0)),
-						(float(GetBValue(itsSymbolMidColorRef))/float(255.0)));
-	itsDrawParam->StationSymbolColorShadeMidValueColor(tColor);
+	SetColorrefToColor(itsSymbolMidColorRef, tmpColor);
+	itsDrawParam->StationSymbolColorShadeMidValueColor(tmpColor);
 
-	tColor.SetRGB((float(GetRValue(itsSymbolHighColorRef)) / float(255.0)),
-		(float(GetGValue(itsSymbolHighColorRef)) / float(255.0)),
-		(float(GetBValue(itsSymbolHighColorRef)) / float(255.0)));
-	itsDrawParam->StationSymbolColorShadeHighValueColor(tColor);
+	SetColorrefToColor(itsSymbolHighColorRef, tmpColor);
+	itsDrawParam->StationSymbolColorShadeHighValueColor(tmpColor);
 
 	// Simple color contour värit (5 kpl)
-	tColor.SetRGB((float(GetRValue(itsSimpleColorContourLowColorRef))/float(255.0)),
-					(float(GetGValue(itsSimpleColorContourLowColorRef))/float(255.0)),
-						(float(GetBValue(itsSimpleColorContourLowColorRef))/float(255.0)));
-	itsDrawParam->ColorContouringColorShadeLowValueColor(tColor);
+	SetColorrefToColor(itsSimpleColorContourLowColorRef, tmpColor);
+	itsDrawParam->ColorContouringColorShadeLowValueColor(tmpColor);
 
-	tColor.SetRGB((float(GetRValue(itsSimpleColorContourMidColorRef))/float(255.0)),
-					(float(GetGValue(itsSimpleColorContourMidColorRef))/float(255.0)),
-						(float(GetBValue(itsSimpleColorContourMidColorRef))/float(255.0)));
-	itsDrawParam->ColorContouringColorShadeMidValueColor(tColor);
+	SetColorrefToColor(itsSimpleColorContourMidColorRef, tmpColor);
+	itsDrawParam->ColorContouringColorShadeMidValueColor(tmpColor);
 
-	tColor.SetRGB((float(GetRValue(itsSimpleColorContourHighColorRef)) / float(255.0)),
-		(float(GetGValue(itsSimpleColorContourHighColorRef)) / float(255.0)),
-		(float(GetBValue(itsSimpleColorContourHighColorRef)) / float(255.0)));
-	itsDrawParam->ColorContouringColorShadeHighValueColor(tColor);
+	SetColorrefToColor(itsSimpleColorContourHighColorRef, tmpColor);
+	itsDrawParam->ColorContouringColorShadeHighValueColor(tmpColor);
 
-	tColor.SetRGB((float(GetRValue(itsSimpleColorContourHigh2ColorRef)) / float(255.0)),
-		(float(GetGValue(itsSimpleColorContourHigh2ColorRef)) / float(255.0)),
-		(float(GetBValue(itsSimpleColorContourHigh2ColorRef)) / float(255.0)));
-	itsDrawParam->ColorContouringColorShadeHigh2ValueColor(tColor);
+	SetColorrefToColor(itsSimpleColorContourHigh2ColorRef, tmpColor);
+	itsDrawParam->ColorContouringColorShadeHigh2ValueColor(tmpColor);
 
-	tColor.SetRGB((float(GetRValue(itsSimpleColorContourHigh3ColorRef)) / float(255.0)),
-		(float(GetGValue(itsSimpleColorContourHigh3ColorRef)) / float(255.0)),
-		(float(GetBValue(itsSimpleColorContourHigh3ColorRef)) / float(255.0)));
-	itsDrawParam->ColorContouringColorShadeHigh3ValueColor(tColor);
+	SetColorrefToColor(itsSimpleColorContourHigh3ColorRef, tmpColor);
+	itsDrawParam->ColorContouringColorShadeHigh3ValueColor(tmpColor);
 
 	return;
 }
@@ -1441,6 +1425,10 @@ NFmiColorButtonDrawingData CFmiModifyDrawParamDlg::GetSimpleIsolineColorButtonDa
 	case 4:
 	{
 		return ::MakeColorButtonDrawingData(this, itsSimpleIsoLineHigh2ColorRef, &itsSimpleIsoLineHigh2Bitmap, itsSimpleIsoLineHigh2ColorRect, itsSimpleIsoLineHigh2Color, colorOptions, initColor, itsDrawParam->SimpleIsoLineColorShadeHigh2ValueColor());
+	}
+	case 5:
+	{
+		return ::MakeColorButtonDrawingData(this, itsSimpleIsoLineHigh3ColorRef, &itsSimpleIsoLineHigh3Bitmap, itsSimpleIsoLineHigh3ColorRect, itsSimpleIsoLineHigh3Color, colorOptions, initColor, itsDrawParam->SimpleIsoLineColorShadeHigh3ValueColor());
 	}
 	default:
 	{
@@ -1653,6 +1641,10 @@ HBRUSH CFmiModifyDrawParamDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 	return hbr;
 }
 
+const std::string gMultiColorIsolinesText = "Multi-color isoline";
+const std::string gContourColorsText = "Contour colors";
+const std::string gIsolineColorsText = "Isoline colors";
+
 // Tämä funktio alustaa kaikki dialogin tekstit editoriin valitulla kielellä.
 // Tämä on ikävä kyllä tehtävä erikseen dialogin muokkaus työkalusta, eli
 // tekijän pitää lisätä erikseen tänne kaikki dialogin osat, joihin
@@ -1669,7 +1661,7 @@ void CFmiModifyDrawParamDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_SAVE_BUTTON, "IDC_SAVE_BUTTON");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_SAVE_AS_BUTTON, "IDC_SAVE_AS_BUTTON");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RESET_DRAW_PARAM, "IDC_BUTTON_RESET_DRAW_PARAM");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_VIEW_MACRO_DRAW_PARAM_WARNING, "IDC_STATIC_VIEW_MACRO_DRAW_PARAM_WARNING");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_VIEW_MACRO_DRAW_PARAM_WARNING, "This is loaded from viewmacro, save it through viewmacro dialog!");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SYMBOL_SETTINGS_STR, "IDC_STATIC_DRAW_PARAM_SYMBOL_SETTINGS_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_ONE_SYMBOL_SIZE_STR, "IDC_STATIC_DRAW_PARAM_ONE_SYMBOL_SIZE_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_ONE_SYMBOL_OFFSET_STR, "IDC_STATIC_DRAW_PARAM_ONE_SYMBOL_OFFSET_STR");
@@ -1702,10 +1694,10 @@ void CFmiModifyDrawParamDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_LINE_WIDTH_STR, "IDC_STATIC_DRAW_PARAM_LINE_WIDTH_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_LABEL_FONT_SIZE_STR, "IDC_STATIC_DRAW_PARAM_LABEL_FONT_SIZE_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_LABEL_BOX, "IDC_CHECK_USE_LABEL_BOX");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_ISOLINE_COLORS_STR, "IDC_STATIC_DRAW_PARAM_ISOLINE_COLORS_STR");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_COLOR_CONTOUR_COLORS_STR, "Contour colors");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COLOR_SCALE_WITH_SIMPLE_ISOLINES, "Multi-color isolines");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COLOR_BLEND_WITH_SIMPLE_ISOLINES, "Color-blend isolines");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_ISOLINE_COLORS_STR, gIsolineColorsText.c_str());
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_COLOR_CONTOUR_COLORS_STR, gContourColorsText.c_str());
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COLOR_SCALE_WITH_SIMPLE_ISOLINES, gMultiColorIsolinesText.c_str());
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COLOR_BLEND_WITH_SIMPLE_ISOLINES, "Color-blend isol");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_SEPARATOR_LINES_BETWEEN_COLORCONTOUR_CLASSES, "Use separating line with contours");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_SPECIAL_CLASSES, "IDC_CHECK_USE_SPECIAL_CLASSES");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_SHOW_COLOR_INDEX_DLG, "IDC_SHOW_COLOR_INDEX_DLG");
@@ -1938,4 +1930,213 @@ bool CFmiModifyDrawParamDlg::IsPossibleColorParameterStrOk(const CString& colorP
 void CFmiModifyDrawParamDlg::DoPostInitializationChecks()
 {
 	fPossibleColorParameterOk = IsPossibleColorParameterStrOk(itsPossibleColorParameterStr);
+}
+
+void CFmiModifyDrawParamDlg::SetDialogControlTooltip(int controlId, const std::string& tooltipRawText)
+{
+	CWnd* controlWnd = GetDlgItem(controlId);
+	if(controlWnd)
+	{
+		auto finalText = ::GetDictionaryString(tooltipRawText.c_str());
+		m_tooltip.AddTool(controlWnd, CA2T(finalText.c_str()));
+	}
+}
+
+static std::string MakeDecoratedTooltipString(const std::string& baseText, const std::string& colorString, bool useBold)
+{
+	std::string str;
+	if(useBold)
+	{
+		str += "<b>";
+	}
+	auto useColor = !colorString.empty();
+	if(useColor)
+	{
+		str += "<font color = ";
+		str += colorString;
+		str += ">";
+	}
+
+	str += baseText;
+
+	if(useColor)
+	{
+		str += "</font>";
+	}
+	if(useBold)
+	{
+		str += "</b>";
+	}
+
+	return str;
+}
+
+static std::string MakeColorParamCtrlTooltip()
+{
+	std::string str = ::MakeDecoratedTooltipString("Color parameter", "darkgreen", true);
+	str += "<br>Write e.g. ";
+	str += ::MakeDecoratedTooltipString("T", "green", true);
+	str += " or ";
+	str += ::MakeDecoratedTooltipString("par4", "green", true);
+	str += " if you want to color viewed parameter's symbols with values of Temperature from the same producer.";
+	str += "<br>Also you must check the \"Show symbol in colors\" checkbox in order to utilize colors.";
+	str += "<br>You can't change producer or level for this color parameter.";
+	str += "<br>If \"";
+	str += ::MakeDecoratedTooltipString("Color Parameter", "", true);
+	str += "\" text turns into ";
+	str += ::MakeDecoratedTooltipString("red", "red", true);
+	str += ", then input was incorrectand and this setting is ignored.";
+	return str;
+}
+
+static std::string MakeParamNameOnDataCtrlTooltip()
+{
+	std::string str = "Name of the parameter in current data file";
+	return str;
+}
+
+static std::string MakeProducerNameOnDataCtrlTooltip()
+{
+	std::string str = "Name of the producer in current data file";
+	return str;
+}
+
+static std::string MakeIsolineColorsTooltip()
+{
+	std::string str = "Setup 'simple' multi colored isolines<br>with 4 limits and their max 5 colors.<br>Remember to check the \"";
+	str += ::MakeDecoratedTooltipString(gMultiColorIsolinesText, "", true);
+	str += "\" checkbox also.";
+	return str;
+}
+
+static std::string MakeUseMultiColorIsolineTooltip()
+{
+	std::string str = "Check this if you want to use multi colored isolines<br>defined by \"";
+	str += ::MakeDecoratedTooltipString(gIsolineColorsText, "", true);
+	str += "\" limits and their colors.<br>If not checked, single color isolines are used.<br>If no color blend in use can utilize max 4 limits with 5 colors.";
+	return str;
+}
+
+static std::string MakeContourColorsTooltip()
+{
+	std::string str = "Setup 'simple' contour colors<br>with 4 limits and their max 5 colors.";
+	str += "<br>Note that used number of colors depend if limits and contour step matches.";
+	str += "<br>So if used step is 5 and given limits are also 5, then max 4 limits and 5 colors are used.";
+	str += "<br>If given step is smaller than gaps between limits, then max 4 limits and colors are used.";
+	return str;
+}
+
+static std::string MakeUseSpecialClassesTooltip()
+{
+	std::string str = "You can use special classes to color isolines, contours and symbols.";
+	str += "<br>Give wanted value limits, color indices, line widths,";
+	str += "<br>line styles, isoline label sizes in comma separated lists.";
+	str += "<br>The same settings are used for all previously mentioned visualization cases.";
+	return str;
+}
+
+static std::string MakeSpecialClassesLimitTooltip()
+{
+	std::string str = "Give a list of value limits in rising order.";
+	str += "<br>Sample \"1, 2, 5, 10, 20, 50\",<br>this list of 6 limits needs 6 or 7 colors depending of case.";
+	str += "<br>If any of the value limit numbers are not in rising order, nothing will be drawn.";
+	str += "<br>This value limit list is the only list that has to have all values, other<br>related lists keep using the last value for rest of the value limits.";
+	return str;
+}
+
+const std::string gLastValueIsRepeatedStr = "<br>Last value is repeated automatically for the rest of value limits.";
+
+static std::string MakeSpecialClassesLineWidthTooltip()
+{
+	std::string str = "Give a list of isoline widths in mm.";
+	str += "<br>You need only give one value, if all the isolines are the same width.";
+	str += gLastValueIsRepeatedStr;
+	return str;
+}
+
+static std::string MakeSpecialClassesLineStyleTooltip()
+{
+	std::string str = "Give a list of isoline drawing style with numbers 0-30.";
+	str += "<br>0 is solid line style and rest are different kind of dot-dash style lines.";
+	str += "<br>Experiment with different values until you find suitable ones.";
+	str += "<br>You need only give one style, if all the isolines are drawn with the same style.";
+	str += gLastValueIsRepeatedStr;
+	return str;
+}
+
+static std::string MakeSpecialClassesLabelHeightTooltip()
+{
+	std::string str = "Give a list of isoline label height in mm.";
+	str += "<br>If you don't want a certain isoline to have labels at all, give value 0.";
+	str += "<br>You need only give one value, if all the isolines have the same size labels.";
+	str += gLastValueIsRepeatedStr;
+	return str;
+}
+
+static std::string MakeSpecialClassesColorIndexTooltip()
+{
+	std::string str = "Give a list of color indices, their values are 2-514.";
+	str += "<br>2 is for transparent color used with non visible contours.";
+	str += "<br>Values 3-514 form a 8x8x8 (RGB) color cube with plenty of colors.";
+	str += "<br>Some basic colors: black=3, white=514, blue=10, red=451, cyan=66, yellow=507, violet=458";
+	str += "<br>Open up the Color indexies dialog from ";
+	str += ::MakeDecoratedTooltipString(::GetDictionaryString("IDC_SHOW_COLOR_INDEX_DLG"), "", true);
+	str += " button.";
+	str += gLastValueIsRepeatedStr;
+	return str;
+}
+
+static std::string MakeOpenColorDialogTooltip()
+{
+	std::string str = "Open up dialog that will help you to choose colors for<br>you special classes visualization scheme easier.";
+	str += "<br>Selected color's indexies will be added to the ";
+	str += ::MakeDecoratedTooltipString(::GetDictionaryString("IDC_STATIC_DRAW_PARAM_SPECIAL_COLOR_INDEXIES_STR"), "", true);
+	str += " list.";
+	return str;
+}
+
+void CFmiModifyDrawParamDlg::InitTooltipControl()
+{
+	m_tooltip.Create(this);
+	m_tooltip.SetDelayTime(PPTOOLTIP_TIME_AUTOPOP, 30000); // kuinka kauan tooltippi viipyy, jos kursoria ei liikuteta [ms]
+	m_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 1200); // kuinka nopeasti tooltip ilmestyy näkyviin, jos kursoria ei liikuteta [ms]
+
+	// Tässä erikseen jokainen kontrolli, jolle halutaan joku tooltip teksti
+	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_COLOR_PARAM_TEXT, ::MakeColorParamCtrlTooltip());
+//	SetDialogControlTooltip(IDC_EDIT_DRAW_PARAM_COLOR_PARAM_STR, ::MakeColorParamCtrlTooltip());
+	SetDialogControlTooltip(IDC_BUTTON_RELOAD_ORIGINAL, "Reload original drawing-property settings from the file<br>to revert your changes you have made so far here.");
+	SetDialogControlTooltip(IDC_DRAW_PARAM_LOAD_FROM, "Load drawing-property settings from an other parameter's file.");
+	SetDialogControlTooltip(IDC_SAVE_BUTTON, "Store these settings to this parameter's drawing-property<br>file permanently to be used in this PC and if file<br>sharing is in use, for all other PC's in your group as well.");
+	SetDialogControlTooltip(IDC_MODIFY_DRW_PARAM_REFRESH, "Check how your changes here affect on this parameter's<br>visualizations on map-view or cross-section-view.");
+	SetDialogControlTooltip(IDC_BUTTON_RESET_DRAW_PARAM, "Reset all drawing-property settings of this parameter to the<br>hard coded general default settings. These default settings doesn't<br>mean the settings that are stored in the file of this parameter.");
+	SetDialogControlTooltip(IDC_MODIFY_DRW_PARAM_USE_WITH_ALL, "Take these setting from this parameter (+level) and use them with all the<br>cases with the same parameter. Affects all the e.g. Temperatures on all<br>map-views with Temperatures from different producers. This doesn't<br>affect on different levels or different views (map-view vs cross-section-view).");
+	SetDialogControlTooltip(IDC_STATIC_FIXED_TEXT_SYMBOL_DRAW_LENGTH_STR, "You can define fixed character length for text based<br>symbol visualization when Smartmet calculates needed<br>space for each drawn symbol on map-view.<br>Default value 0 let's SmartMet to determine needed character length,<br>but this self determination can be tricky in many cases.<br>So giving here positive integer value fixes the used space for symbols.<br>The text will be drawn as whole even if therre are<br>more characters then the fixed length suggests.");
+	SetDialogControlTooltip(IDC_STATIC_SYMBOL_DRAW_DENSITY_STR, "You can adjust symbol drawing density in x- and y-directions (map-view).<br>Values smaller than 1 will make symbols more dense and values<br>greater than 1 will make symbols more sparse.<br>Use sliders to adjust x- and y-values.<br>With default value 1 SmartMet will use normal<br>symbol density when visualizing symbols.");
+	SetDialogControlTooltip(IDC_CHECK_DO_SPARSE_SYMBOL_VISUALIZATION, "In case drawing grid data with symbols where data happens to be<br>sparse (= a lot of values are missing), visualization can be poorly done.<br>Normally SmartMet visualizes nth data row and mth data column and<br>if on those grid points parameter values are missing,<br>nothing or few values will be drawn.<br>Sparse visualization draws a value to those nth row and mth column,<br>but if at that point is missing value, SmartMet searches near by<br>the closest non-missing value and draws that on the spot.");
+	SetDialogControlTooltip(IDC_STATIC_FIXED_DRAW_PARAM_LABEL, "Fixed DrawParam system is set of sample visualization settings.<br>They are divided in groups of different characteristiks (isoline,color-contour,etc.).<br>Just select one from the dropdown list and it's drawing properties<br>are set into dialog for you to use or further modify.");
+	SetDialogControlTooltip(IDC_PARAM_ST, MakeParamNameOnDataCtrlTooltip());
+	SetDialogControlTooltip(IDC_PARAM, MakeParamNameOnDataCtrlTooltip());
+	SetDialogControlTooltip(IDC_PRIORITY_ST, MakeProducerNameOnDataCtrlTooltip());
+	SetDialogControlTooltip(IDC_PRODUCER, MakeProducerNameOnDataCtrlTooltip());
+	SetDialogControlTooltip(IDC_PARAM_ST2, "User given abbreviation for this parameter's name.<br>This is used in Smartmet over the actual parameter name on data.");
+	SetDialogControlTooltip(IDC_CHECK_USE_COLOR_SCALE_WITH_SIMPLE_ISOLINES, ::MakeUseMultiColorIsolineTooltip());
+	SetDialogControlTooltip(IDC_CHECK_USE_COLOR_BLEND_WITH_SIMPLE_ISOLINES, "Check this if you want to blend isoline colors<br>by the isoline steps and limiting colors.<br>Always uses the same amount limits and colors, max 4.");
+	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_ISOLINE_COLORS_STR, ::MakeIsolineColorsTooltip());
+	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_COLOR_CONTOUR_COLORS_STR, ::MakeContourColorsTooltip());
+	SetDialogControlTooltip(IDC_CHECK_USE_SPECIAL_CLASSES, ::MakeUseSpecialClassesTooltip());
+	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_SPECIAL_CLASSES_STR, ::MakeSpecialClassesLimitTooltip());
+	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_SPECIAL_WIDTHS_STR, ::MakeSpecialClassesLineWidthTooltip());
+	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_SPECIAL_TYPES_STR, ::MakeSpecialClassesLineStyleTooltip());
+	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_SPECIAL_LABEL_SIZES_STR, ::MakeSpecialClassesLabelHeightTooltip());
+	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_SPECIAL_COLOR_INDEXIES_STR, ::MakeSpecialClassesColorIndexTooltip());
+	SetDialogControlTooltip(IDC_CHECK_DRAW_PARAM_USE_STEPS_WITH_CUSTOM_CONTOURS, "Usable only with contour coloring schemes.<br>If this checked and contours used and contour step smaller<br>than value limits, then smaller step colors are contructed with blends.");
+	SetDialogControlTooltip(IDC_SHOW_COLOR_INDEX_DLG, ::MakeOpenColorDialogTooltip());
+}
+
+
+BOOL CFmiModifyDrawParamDlg::PreTranslateMessage(MSG* pMsg)
+{
+	m_tooltip.RelayEvent(pMsg);
+
+	return CDialog::PreTranslateMessage(pMsg);
 }
