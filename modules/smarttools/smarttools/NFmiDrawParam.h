@@ -394,7 +394,6 @@ class NFmiDrawParam
   void SimpleIsoLineColorShadeHighValue(float newValue)
   {
     itsSimpleIsoLineColorShadeHighValue = newValue;
-    itsSimpleIsoLineColorShadeHigh2Value = newValue;
   }
 
   float SimpleIsoLineColorShadeHigh2Value() const
@@ -429,7 +428,6 @@ class NFmiDrawParam
   void SimpleIsoLineColorShadeHighValueColor(const NFmiColor& newValue)
   {
     itsSimpleIsoLineColorShadeHighValueColor = newValue;
-    itsSimpleIsoLineColorShadeHigh2ValueColor = newValue;
   }
 
   const NFmiColor& SimpleIsoLineColorShadeHigh2ValueColor() const
@@ -439,6 +437,16 @@ class NFmiDrawParam
   void SimpleIsoLineColorShadeHigh2ValueColor(const NFmiColor& newValue)
   {
     itsSimpleIsoLineColorShadeHigh2ValueColor = newValue;
+  }
+
+  const NFmiColor& SimpleIsoLineColorShadeHigh3ValueColor() const
+  {
+    return itsSimpleIsoLineColorShadeHigh3ValueColor;
+  }
+
+  void SimpleIsoLineColorShadeHigh3ValueColor(const NFmiColor& newValue)
+  {
+    itsSimpleIsoLineColorShadeHigh3ValueColor = newValue;
   }
 
   int SimpleIsoLineColorShadeClassCount() const { return itsSimpleIsoLineColorShadeClassCount; }
@@ -836,6 +844,9 @@ class NFmiDrawParam
   NFmiColor itsSimpleIsoLineColorShadeMidValueColor;
   NFmiColor itsSimpleIsoLineColorShadeHighValueColor;
   NFmiColor itsSimpleIsoLineColorShadeHigh2ValueColor;  // **** Versio 3 parametri ****
+  // Lisätty 5. väri, jotta simple-isoline no-color-blending piirrot voidaan tehdä 
+  // oikein (vaatii 4 rajaa ja 5 väriä), kun color-blend on käytössä käytetään 4 rajaa ja 4 väriä
+  NFmiColor itsSimpleIsoLineColorShadeHigh3ValueColor;
   int itsSimpleIsoLineColorShadeClassCount;  // kuinka monta väri luokkaa tehdään skaalaukseen
   // speciaali isoviiva asetukset (otetaan käyttöön, jos fUseSimpleIsoLineDefinitions=false)
   std::vector<float>
