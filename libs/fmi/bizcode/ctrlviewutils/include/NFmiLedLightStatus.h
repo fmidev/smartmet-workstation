@@ -31,9 +31,16 @@ enum class NFmiLedAction
 enum class NFmiLedChannel
 {
 	None,
-	QueryData, // QueryDatojen luku serverilt‰, combined-datojen teko ja soundingIndex datojen tekoon liittyvi‰ sanomia
-	WmsData, // Eri Wms servereiden getcapabilities haut, wms layerien haut, jne.
-	OperationalInfo // Yleiskanava kaikille operatiivisille ongelmille, mist‰ k‰ytt‰j‰‰ pit‰isi varoittaa
+	// QueryDatojen luku serverilt‰, combined-datojen teko ja soundingIndex datojen tekoon liittyvi‰ sanomia
+	QueryData, 
+	// Eri Wms servereiden getcapabilities haut, wms layerien haut, jne.
+	WmsData, 
+	// Yleiskanava kaikille operatiivisille ongelmille, mist‰ k‰ytt‰j‰‰ pit‰isi varoittaa
+	OperationalInfo, 
+	// Jokaiselle queryDatalle voidaan antaa konffeissa myˆh‰stymisaika ja k‰ytt‰j‰lle raportoidaan jos uutta 
+	// dataa ei ole tullut kyseisen aikarajan sis‰ll‰. Kyse on vain siit‰ ett‰ joku data luetaan klo xx.xx,
+	// Jos kyseiselle datalle ei ole tullut uudempaa dataa klo yy.yy menness‰, siit‰ aloitetaan varoittamaan k‰ytt‰j‰‰.
+	DataIsLate 
 };
 
 // Jos tarvitaan enemm‰n ledej‰, pit‰‰ niit‰ varten tehd‰ uusia 

@@ -1083,10 +1083,12 @@ void InitLedLightStatusSystem()
 	if(ApplicationWinRegistry().UseLedLightStatusSystem())
 	{
 		// Katso g_maximumNumberOfLedsInStatusbar vakion selitys, jos haluat lis‰t‰ ledien m‰‰r‰‰
-		auto usedLedChannelAndColors = std::vector<NFmiLedChannelInitializer>{
+		auto usedLedChannelAndColors = std::vector<NFmiLedChannelInitializer>
+		{
 			{NFmiLedChannel::QueryData, NFmiLedColor::Green, "QueryData related operations", "No queryData operations at the moment", false},
 			{NFmiLedChannel::WmsData, NFmiLedColor::Blue, "Wms server query operations", "No Wms operations at the moment", false},
-			{NFmiLedChannel::OperationalInfo, NFmiLedColor::Red, "General operational warnings", "No operational warnings at the moment", true}
+			{NFmiLedChannel::OperationalInfo, NFmiLedColor::Red, "General operational warnings", "No operational warnings at the moment", true},
+			{NFmiLedChannel::DataIsLate, NFmiLedColor::Orange, "Data is late warnings", "No data is late at the moment", false}
 		};
 		itsLedLightStatusSystem.Initialize(usedLedChannelAndColors, true);
 		NFmiLedLightStatusSystem::InitializeStaticInstance(&itsLedLightStatusSystem);
@@ -2515,6 +2517,7 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 		DoPossibleCaseStudyEditedDataSetup(theData, theDataFileName, theType, fDataWasDeletedOut);
         PrepareForParamAddSystemUpdate();
 		RemoveCombinedDataFromLedChannelReport(theDataFilePattern);
+		RemoveLateDataFromLedChannelReport(theDataFilePattern);
 		AddLoadedDataToTriggerList(theDataFilePattern);
 	}
 }
@@ -2545,6 +2548,11 @@ void RemoveCombinedDataFromLedChannelReport(const std::string& theDataFileFilter
 	{
 		LedLightStatusSystem().StopReportToChannelWithFileFilter(NFmiLedChannel::QueryData, theDataFileFilter);
 	}
+}
+
+void RemoveLateDataFromLedChannelReport(const std::string& theDataFileFilter)
+{
+	LedLightStatusSystem().StopReportToChannel(NFmiLedChannel::DataIsLate, theDataFileFilter);
 }
 
 void DoEditedInfoTimeSetup(boost::shared_ptr<NFmiFastQueryInfo>& editedInfo, bool loadFromFileState, bool setCurrentTimeToNearestHour)
@@ -10815,6 +10823,106 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsLedLightStatusSystem;
 	}
 
+	int GetApplicationRunnningTimeInSeconds()
+	{
+		auto t1 = BasicSmartMetConfigurations().SmartMetStartingTime().UTCTime().EpochTime();
+		auto t2 = time(0);
+		double diff = difftime(t2, t1);
+		return boost::math::iround(diff);
+	}
+
+	// FixDataElapsedTimeInSeconds funktio korjaa yhden mahdollisen querydatoihin tehdyn aikav‰‰rennˆksen.
+	// QueryDatoihin talletetaan timeri joka laskee sen latauksesta k‰yttˆˆn kuluneen ajan.
+	// Kyseisen ajan avulla voidaan merkit‰ k‰yttˆliittym‰ss‰ alle 5 minuuuttia sitten ladatatut datat uusiksi
+	// erilaisin korostuksin.
+	// Mutta kun smartmet lataa dataa heti k‰ynnistyksen yhteydess‰ lokaali cachesta, ei datoja
+	// haluttu olevan 'uusia' kuin minuutin, joten niihin lis‰ttiin 4 minuuttia latausaikaa.
+	// Nyt kun tutkitaan onko uutta dataa tullut tarpeeksi nopeasti, t‰m‰ 4:n minuutin aika pit‰‰ poistaa,
+	// silloin kun latausaika on suurempi kuin smartmetin k‰ynniss‰oloaika.
+	int FixDataElapsedTimeInSeconds(int elapsedDataTimeInSeconds)
+	{
+		auto runninTimeInSeconds = GetApplicationRunnningTimeInSeconds();
+		if(elapsedDataTimeInSeconds > runninTimeInSeconds)
+		{
+			elapsedDataTimeInSeconds -= 4*60;
+		}
+		return elapsedDataTimeInSeconds;
+	}
+
+	void AddSpaceToNonEmptyString(std::string &str)
+	{
+		if(!str.empty())
+		{
+			str += " ";
+		}
+	}
+
+	std::string MakeElapsedTimeString(int timeInSeconds)
+	{
+		const int secondsInDay = 3600 * 24;
+		const int secondsInHour = 3600;
+		std::string str;
+		int days = (int)(timeInSeconds / secondsInDay);
+		int remainingTimeInSeconds = timeInSeconds - (days * secondsInDay);
+		int hours = (int)(remainingTimeInSeconds / secondsInHour);
+		remainingTimeInSeconds = remainingTimeInSeconds - (hours * secondsInHour);
+		int minutes = (int)(remainingTimeInSeconds / 60);
+		if(days > 0)
+		{
+			AddSpaceToNonEmptyString(str);
+			str += NFmiStringTools::Convert<int>(days);
+			str += " d";
+		}
+
+		if(hours > 0)
+		{
+			AddSpaceToNonEmptyString(str);
+			str += NFmiStringTools::Convert<int>(hours);
+			str += " h";
+		}
+		
+		if(minutes > 0)
+		{
+			AddSpaceToNonEmptyString(str);
+			str += NFmiStringTools::Convert<int>(minutes);
+			str += " min";
+		}
+		return str;
+	}
+
+	void DoIsAnyQueryDataLateChecks()
+	{
+		// Katsotaan onko miss‰‰n queryDatassa konffattuna ns. myˆh‰stymisaikaraja.
+		// Jos on, katsotaan milloin kyseist‰ dataa on ladattu viimeksi. 
+		// Jos aikaa on kulunut enemm‰n kuin konffeissa on s‰‰detty, laitetaan 
+		// StatusBarin ledissysteemiin varoitus asiasta.
+		const auto& helpDataInfoVector = HelpDataInfoSystem()->DynamicHelpDataInfos();
+		for(const auto& helpInfo : helpDataInfoVector)
+		{
+			if(helpInfo.IsAgingTimeLimitUsed())
+			{
+				auto fileFilter = helpInfo.UsedFileNameFilter(*HelpDataInfoSystem());
+				auto& infos = InfoOrganizer()->GetInfos(fileFilter);
+				if(!infos.empty())
+				{
+					auto& info = infos.front();
+					auto elapsedTimeInSeconds = FixDataElapsedTimeInSeconds(boost::math::iround(info->ElapsedTimeFromLoadInSeconds()));
+					if(elapsedTimeInSeconds > helpInfo.AgingTimeLimitInMinutes() * 60)
+					{
+						std::string logMessage = "No new data for ";
+						logMessage += info->DataFileName();
+						logMessage += " in ";
+						logMessage += MakeElapsedTimeString(elapsedTimeInSeconds);
+						logMessage += " (limit = ";
+						logMessage += MakeElapsedTimeString(helpInfo.AgingTimeLimitInMinutes()*60);
+						logMessage += ")";
+						NFmiLedLightStatusSystem::ReportToChannelFromThread(NFmiLedChannel::DataIsLate, fileFilter, logMessage, CatLog::Severity::Info);
+					}
+				}
+			}
+		}
+	}
+
 	std::vector<std::string> itsLoadedDataTriggerList;
 	NFmiLedLightStatusSystem itsLedLightStatusSystem;
 	NFmiSeaLevelPlumeData itsSeaLevelPlumeData;
@@ -13152,4 +13260,9 @@ NFmiLedLightStatusSystem& NFmiEditMapGeneralDataDoc::LedLightStatusSystem()
 std::shared_ptr<NFmiViewSettingMacro> NFmiEditMapGeneralDataDoc::CurrentViewMacro()
 {
 	return pimpl->CurrentViewMacro();
+}
+
+void NFmiEditMapGeneralDataDoc::DoIsAnyQueryDataLateChecks()
+{
+	pimpl->DoIsAnyQueryDataLateChecks();
 }

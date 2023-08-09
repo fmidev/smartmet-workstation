@@ -64,6 +64,7 @@ public:
     void EnableCrashReporter(bool newValue) { fEnableCrashReporter = newValue; }
     const std::string& BetaAutomationListPath() const { return itsBetaAutomationListPath; }
     void BetaAutomationListPath(const std::string &newPath) { itsBetaAutomationListPath = newPath; }
+    const NFmiTime& SmartMetStartingTime() const { return itsStartingTime; }
 
 private:
 	bool ReadConfigurations();

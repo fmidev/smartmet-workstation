@@ -1503,6 +1503,12 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 
         case kFmiGenerateBetaProductsTimer:
         {
+			// Tämä tehdään aina minuutin välein, siksi laitan tähän myös tarkastelut siitä
+			// että onko joku/jotkin querydatat myöhässä. Tehdään se ensin, koska tarkastelu on nopea.
+			itsDoc->DoIsAnyQueryDataLateChecks();
+
+			// Lopuksi tehdään beta-tuotteiden generointi tarkastelut, jotka saattavat jumittaa 
+			// smartmetin pidemmäksikin aikaa.
             itsDoc->DoGenerateBetaProductsChecks();
             return;
         }
