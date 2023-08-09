@@ -116,6 +116,9 @@ class NFmiHelpDataInfo
   bool CaseStudyLegacyOnly() const { return fCaseStudyLegacyOnly; }
   void CaseStudyLegacyOnly(bool newValue) { fCaseStudyLegacyOnly = newValue; }
   bool IsDataUsedCaseStudyChecks(bool caseStudyModeOn) const;
+  int AgingTimeLimitInMinutes() const { return itsAgingTimeLimitInMinutes; }
+  void AgingTimeLimitInMinutes(int newValue) { itsAgingTimeLimitInMinutes = newValue; }
+  bool IsAgingTimeLimitUsed() const { return itsAgingTimeLimitInMinutes > 0; }
 
  private:
   // tällä nimellä erotetaan konffi-tiedostoissa eri datat
@@ -215,6 +218,11 @@ class NFmiHelpDataInfo
   // tämä data halutaan piilottaa, jotta ei eivät vie turhaa käyttöliittymä tilaa. 
   // Tämä asetus on optionaalinen ja sen oletusarvo on false.
   bool fCaseStudyLegacyOnly = false;
+  // SmartMet alkaa tarkistelemaan haluttujen datojen päivityksiä.
+  // Jos datassa on annettu joku vahenemisaikaraja, ja viimeksi ladattu kyseinen data
+  // on jo vanhentunutta, tällöin käyttäjälle annetaan varoitus asiasta.
+  // Oletusarvona on -1 jolloin kyseiselle datalle ei tehdä tarkasteluja.
+  int itsAgingTimeLimitInMinutes = -1;
 };
 
 class NFmiHelpDataInfoSystem
