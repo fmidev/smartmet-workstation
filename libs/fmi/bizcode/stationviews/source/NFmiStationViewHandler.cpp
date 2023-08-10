@@ -1150,6 +1150,7 @@ namespace
 		,itsTrainCrashPoliceSign(nullptr)
 		,itsShipCrashSign(nullptr)
 		,itsAirplaneCrashSign(nullptr)
+		,itsSmokeObservation(nullptr)
         ,itsUnknownHakeMessageType(nullptr)
         ,itsKahaNoRain(nullptr)
         ,itsKahaHail(nullptr)
@@ -1200,7 +1201,8 @@ namespace
 			itsTrainCrashSign = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "railwaywarningsign.png");
 			itsTrainCrashPoliceSign = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "traincrashpolice.png");
 			itsShipCrashSign = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "boatcrashwarningsign.png");
-            itsAirplaneCrashSign = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "airplanewarningsign.png");
+			itsAirplaneCrashSign = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "airplanewarningsign.png");
+			itsSmokeObservation = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "smoke_obs.png");
             itsUnknownHakeMessageType = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "question_mark_hake_32x32.png");
 
             itsKahaNoRain = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "KaHa-icons/icon-ei-sadetta.png");
@@ -1247,6 +1249,7 @@ namespace
 		Gdiplus::Bitmap *itsTrainCrashPoliceSign; // liikenne onnettomuus raiteilla varoitus kyltti poliisi
 		Gdiplus::Bitmap *itsShipCrashSign; // liikenne onnettomuus vesillä varoitus kyltti
         Gdiplus::Bitmap *itsAirplaneCrashSign; // lento onnettomuus varoitus kyltti
+		Gdiplus::Bitmap* itsSmokeObservation; // savuhavainto symboli
         Gdiplus::Bitmap *itsUnknownHakeMessageType; // tuntematon sanoma id, jolloin merkiksi punainen kysymerkki pallo
 
         // New Kaha icons (citizen observations)
@@ -1461,6 +1464,12 @@ void NFmiStationViewHandler::DrawHakeMessageIcon(const HakeMessage::HakeMsg &the
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsAirplaneCrashSign, 0.85f, 1.);
         break;
     }
+
+	case 420:
+	{ // piirrä savuhavainto
+		DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsSmokeObservation, 0.85f, 0.8);
+		break;
+	}
 
     case 421:
     { // piirrä maastopalo pieni
