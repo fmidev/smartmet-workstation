@@ -662,7 +662,7 @@ namespace CtrlViewUtils
         }
     }
 
-    std::string GetMacroParamFormula(NFmiMacroParamSystem& macroParamSystem, boost::shared_ptr<NFmiDrawParam>& theDrawParam)
+    std::string GetMacroParamFormula(NFmiMacroParamSystem& macroParamSystem, const boost::shared_ptr<NFmiDrawParam>& theDrawParam)
     {
         auto macroParamPtr = macroParamSystem.GetWantedMacro(theDrawParam->InitFileName());
         if(macroParamPtr)
