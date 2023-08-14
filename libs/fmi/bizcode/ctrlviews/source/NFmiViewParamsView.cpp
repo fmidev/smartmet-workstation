@@ -22,6 +22,8 @@
 #include "CombinedMapHandlerInterface.h"
 #include "NFmiFastInfoUtils.h"
 #include "NFmiFileString.h"
+#include "WmsSupportInterface.h"
+#include "wmssupport\ChangedLayers.h"
 
 #include <gdiplus.h>
 #include "boost\math\special_functions\round.hpp"
@@ -524,6 +526,7 @@ std::string NFmiViewParamsView::ComposeToolTipText(const NFmiPoint& thePlace)
 			{
 				auto dataType = drawParam->DataType();
 				bool macroParamCase = (dataType == NFmiInfoData::kMacroParam || dataType == NFmiInfoData::kCrossSectionMacroParam || dataType == NFmiInfoData::kQ3MacroParam);
+				bool wmsParamCase = (dataType == NFmiInfoData::kWmsData);
 				bool crossSectionCase = itsMapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView;
 				bool timeSerialCase = itsMapViewDescTopIndex == CtrlViewUtils::kFmiTimeSerialView;
 				std::string paramStr = CtrlViewUtils::GetParamNameString(drawParam, crossSectionCase, !macroParamCase, true, 30, timeSerialCase, true, true, nullptr);
@@ -532,20 +535,11 @@ std::string NFmiViewParamsView::ComposeToolTipText(const NFmiPoint& thePlace)
 				paramStr = AddColorTagsToString(paramStr, fontColor, true);
 				if(macroParamCase)
 				{
-					try
-					{
-						std::string macroParamTooltip = paramStr;
-						macroParamTooltip += "<br>File: ";
-						NFmiFileString macroParamFilename = drawParam->InitFileName();
-						macroParamFilename.Extension("st");
-						macroParamTooltip += macroParamFilename;
-						macroParamTooltip += "<br><hr color=red><br>"; // väliviiva
-						macroParamTooltip += CtrlViewUtils::XmlEncode(CtrlViewUtils::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), drawParam));
-						return macroParamTooltip;
-					}
-					catch(...)
-					{
-					}
+					return MakeMacroParamTooltipText(drawParam, paramStr);
+				}
+				else if(wmsParamCase)
+				{
+					return MakeWmsTooltipText(drawParam, paramStr);
 				}
 				else
 				{
@@ -616,4 +610,44 @@ bool NFmiViewParamsView::LeftClickOnModelSelectionButtons(const NFmiPoint &thePl
 		return true;
 	}
 	return false;
+}
+
+std::string NFmiViewParamsView::MakeMacroParamTooltipText(const boost::shared_ptr<NFmiDrawParam> &drawParam, const std::string& paramStr)
+{
+	try
+	{
+		std::string macroParamTooltip = paramStr;
+		macroParamTooltip += "<br>File: ";
+		NFmiFileString macroParamFilename = drawParam->InitFileName();
+		macroParamFilename.Extension("st");
+		macroParamTooltip += macroParamFilename;
+		macroParamTooltip += "<br><hr color=red><br>"; // väliviiva
+		macroParamTooltip += CtrlViewUtils::XmlEncode(CtrlViewUtils::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), drawParam));
+		return macroParamTooltip;
+	}
+	catch(...)
+	{
+	}
+	return "";
+}
+
+std::string NFmiViewParamsView::MakeWmsTooltipText(const boost::shared_ptr<NFmiDrawParam>& drawParam, const std::string& paramStr)
+{
+	std::string str = paramStr;
+	try
+	{
+		auto& wmsSupport = itsCtrlViewDocumentInterface->GetWmsSupport();
+		const auto& dataIdent = drawParam->Param();
+		auto layerInfo = wmsSupport.getHashedLayerInfo(dataIdent);
+		if(layerInfo)
+		{
+			auto fixedLayerInfoName = layerInfo->name;
+			boost::replace_all(fixedLayerInfoName, ":", "/");
+			str += "<br>" + layerInfo->style.legendDomain + " + " + fixedLayerInfoName;
+		}
+	}
+	catch(...)
+	{
+	}
+	return str;
 }
