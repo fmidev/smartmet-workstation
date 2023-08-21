@@ -19,3 +19,23 @@ NFmiCalculationParams::NFmiCalculationParams(const NFmiPoint &theLatlon,
       itsPressureHeight(thePressureHeight)
 {
 }
+
+const NFmiPoint &NFmiCalculationParams::UsedLatlon(bool forceCalculationGridPoint) const
+{
+  if (fUseModifiedLatlon || forceCalculationGridPoint)
+  {
+    return itsLatlon;
+  }
+
+  return itsActualCalculationPoint ? *itsActualCalculationPoint : itsLatlon;
+}
+
+void NFmiCalculationParams::SetModifiedLatlon(const NFmiPoint &modifiedLatlon,
+                                              bool setUseModifiedFlag)
+{
+  itsLatlon = modifiedLatlon;
+  if (setUseModifiedFlag)
+  {
+    fUseModifiedLatlon = true;
+  }
+}
