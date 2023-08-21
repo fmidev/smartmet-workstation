@@ -113,7 +113,7 @@ double NFmiStation2GridMask::GetFinalValueFromNearestLocation(const boost::share
 double NFmiStation2GridMask::DoNearestPointCalculations(const NFmiCalculationParams &theCalculationParams)
 {
     GetUsedObservationInfoVector();
-    NFmiLocation calculationLocation(theCalculationParams.itsLatlon);
+    NFmiLocation calculationLocation(theCalculationParams.UsedLatlon());
     NFmiIgnoreStationsData &ignorestationdata = itsGriddingHelper->IgnoreStationsData();
     double nearestValue = kFloatMissing;
     double nearestValueDistanceInMeters = 99999999;

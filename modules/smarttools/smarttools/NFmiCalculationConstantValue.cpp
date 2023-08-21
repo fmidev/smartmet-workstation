@@ -135,7 +135,7 @@ double NFmiCalculationIntegrationFuction::Value(const NFmiCalculationParams &the
 {
   // HUOM!!! Tähän tuli pikaviritys:
   // asetan vain lähimmän pisteen ja ajan kohdalleen.
-  if (itsInfo->NearestPoint(theCalculationParams.itsLatlon) &&
+  if (itsInfo->NearestPoint(theCalculationParams.UsedLatlon()) &&
       itsInfo->TimeToNearestStep(theCalculationParams.itsTime, kForward))
   {
     itsDataIterator->DoForEach(itsDataModifier.get());

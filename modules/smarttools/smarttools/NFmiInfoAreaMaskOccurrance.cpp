@@ -110,7 +110,9 @@ double NFmiInfoAreaMaskOccurrance::Value(const NFmiCalculationParams &theCalcula
 
     InitializeFromArguments();
     // Jos käytössä on CalculationPoint, käytetään suoraan sitä, muuten itsLatlon arvoa, joka on laskentahilan laskettava piste
-    NFmiLocation location(theCalculationParams.itsActualCalculationPoint ? *theCalculationParams.itsActualCalculationPoint : theCalculationParams.itsLatlon);
+    NFmiLocation location(theCalculationParams.itsActualCalculationPoint
+                              ? *theCalculationParams.itsActualCalculationPoint
+                              : theCalculationParams.UsedLatlon());
     int occurranceCount = 0;
 
     if (fUseMultiSourceData && itsMultiSourceDataGetter)
@@ -369,7 +371,7 @@ double NFmiPeekTimeMask::Value(const NFmiCalculationParams &theCalculationParams
 double NFmiPeekTimeMask::CalcValueFromObservation(const NFmiCalculationParams &theCalculationParams,
                                                   const NFmiMetTime &thePeekTime)
 {
-  NFmiLocation wantedLocation(theCalculationParams.itsLatlon);
+  NFmiLocation wantedLocation(theCalculationParams.UsedLatlon());
     double valueFromMinDistance = kFloatMissing;
     double minDistanceInMetres = 99999999999;
     double searchRadiusInMetres = GetSearchRadiusInMetres(theCalculationParams.itsObservationRadiusInKm);
@@ -492,7 +494,7 @@ void NFmiInfoAreaMaskTimeRange::InitializeIntegrationValues()
 void NFmiInfoAreaMaskTimeRange::CalcValueFromGridData(const NFmiCalculationParams &theCalculationParams)
 {
     NFmiCalculationParams calculationParams = theCalculationParams;
-    NFmiLocationCache locationCache = itsInfo->CalcLocationCache(calculationParams.itsLatlon);
+    NFmiLocationCache locationCache = itsInfo->CalcLocationCache(calculationParams.UsedLatlon());
     if(!locationCache.NoValue())
     {
         // Lasketaan aikaloopitus rajat
@@ -527,7 +529,10 @@ void NFmiInfoAreaMaskTimeRange::CalcValueFromObservationData(const NFmiCalculati
     NFmiCalculationParams calculationParams = theCalculationParams;
     size_t dataIndex = 0;
     unsigned long locationIndex = 0;
-    if(FindClosestStationData(calculationParams.itsLatlon, calculationParams.itsObservationRadiusInKm, dataIndex, locationIndex))
+    if (FindClosestStationData(calculationParams.UsedLatlon(),
+                               calculationParams.itsObservationRadiusInKm,
+                               dataIndex,
+                               locationIndex))
     {
         auto &info = itsInfoVector[dataIndex];
         info->LocationIndex(locationIndex);
@@ -623,7 +628,7 @@ static bool CalcTimeLoopIndexiesForPreviousFullDays(boost::shared_ptr<NFmiFastQu
 void NFmiInfoAreaMaskPreviousFullDays::CalcValueFromGridData(const NFmiCalculationParams &theCalculationParams)
 {
     NFmiCalculationParams calculationParams = theCalculationParams;
-    NFmiLocationCache locationCache = itsInfo->CalcLocationCache(calculationParams.itsLatlon);
+    NFmiLocationCache locationCache = itsInfo->CalcLocationCache(calculationParams.UsedLatlon());
     if(!locationCache.NoValue())
     {
         // Lasketaan aikaloopitus rajat
@@ -645,7 +650,10 @@ void NFmiInfoAreaMaskPreviousFullDays::CalcValueFromObservationData(const NFmiCa
     NFmiCalculationParams calculationParams = theCalculationParams;
     size_t dataIndex = 0;
     unsigned long locationIndex = 0;
-    if(FindClosestStationData(calculationParams.itsLatlon, calculationParams.itsObservationRadiusInKm, dataIndex, locationIndex))
+    if (FindClosestStationData(calculationParams.UsedLatlon(),
+                               calculationParams.itsObservationRadiusInKm,
+                               dataIndex,
+                               locationIndex))
     {
         auto &info = itsInfoVector[dataIndex];
         info->LocationIndex(locationIndex);
@@ -760,7 +768,7 @@ static bool CalcTimeLoopIndexiesForTimeDuration(boost::shared_ptr<NFmiFastQueryI
 void NFmiInfoAreaMaskTimeDuration::CalcValueFromGridData(const NFmiCalculationParams &theCalculationParams)
 {
     NFmiCalculationParams calculationParams = theCalculationParams;
-    NFmiLocationCache locationCache = itsInfo->CalcLocationCache(calculationParams.itsLatlon);
+    NFmiLocationCache locationCache = itsInfo->CalcLocationCache(calculationParams.UsedLatlon());
     if(!locationCache.NoValue())
     {
         CalcDurationTime(itsInfo, theCalculationParams);
@@ -771,7 +779,10 @@ void NFmiInfoAreaMaskTimeDuration::CalcValueFromObservationData(const NFmiCalcul
 {
     size_t dataIndex = 0;
     unsigned long locationIndex = 0;
-    if(FindClosestStationData(theCalculationParams.itsLatlon, theCalculationParams.itsObservationRadiusInKm, dataIndex, locationIndex))
+    if (FindClosestStationData(theCalculationParams.UsedLatlon(),
+                               theCalculationParams.itsObservationRadiusInKm,
+                               dataIndex,
+                               locationIndex))
     {
         auto &info = itsInfoVector[dataIndex];
         info->LocationIndex(locationIndex);
