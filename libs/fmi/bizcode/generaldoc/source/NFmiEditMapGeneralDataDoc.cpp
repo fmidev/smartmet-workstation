@@ -3931,7 +3931,7 @@ void AddConfiguredModelProducerDataToParamSelectionPopup(const MenuCreationSetti
 
 				if(producerMenuItemList && producerMenuItemList->NumberOfMenuItems() > 0)
 				{
-                    auto producerMenuItem = std::make_unique<NFmiMenuItem>(prodInfo.Name().c_str(), kFmiBadParameter);
+                    auto producerMenuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, prodInfo.Name().c_str(), kFmiBadParameter, kFmiNoCommand, NFmiMetEditorTypes::View::kFmiTextView, nullptr, NFmiInfoData::kNoDataType);
 					producerMenuItem->AddSubMenu(producerMenuItemList);
 					theMenuList->Add(std::move(producerMenuItem));
 				}

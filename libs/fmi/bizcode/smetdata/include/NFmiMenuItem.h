@@ -45,8 +45,6 @@ class NFmiMenuItem
 
  public:
 
-	NFmiMenuItem(void);
-	NFmiMenuItem(const std::string &theText, const FmiParameterName& theParam);
 	NFmiMenuItem(int theMapViewDescTopIndex, const std::string &theText, const NFmiDataIdent& theDataIdent,
 				const FmiMenuCommandType &theMenuCommandType, 
 				const NFmiMetEditorTypes::View &theViewType, const NFmiLevel* theLevel,

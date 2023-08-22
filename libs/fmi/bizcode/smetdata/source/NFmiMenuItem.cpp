@@ -34,39 +34,6 @@
 // AddSubMenu 
 //--------------------------------------------------------
 
-NFmiMenuItem::NFmiMenuItem(void)
-:itsDataIdent()
-,itsCommandType(kFmiShowView)
-,itsMenuText()
-,itsParameter(kFmiLastParameter)
-,itsViewType(NFmiMetEditorTypes::View::kFmiSymbolView)
-,itsLevel()
-,itsCommandId(0)
-,itsSubMenu()
-,itsDataType(NFmiInfoData::kEditable)
-,itsMapViewDescTopIndex(-1)
-,itsIndexInViewRow(-1)
-,fViewMacroDrawParam(false)
-,itsExtraParam(0)
-{
-}
-
-NFmiMenuItem::NFmiMenuItem(const std::string &theText, const FmiParameterName& theParam)
-:itsDataIdent()
-,itsCommandType(kFmiShowView)
-,itsMenuText(theText)
-,itsParameter(theParam)
-,itsViewType(NFmiMetEditorTypes::View::kFmiSymbolView)
-,itsLevel()
-,itsSubMenu()
-,itsDataType(NFmiInfoData::kEditable)
-,itsMapViewDescTopIndex(-1)
-,itsIndexInViewRow(-1)
-,fViewMacroDrawParam(false)
-,itsExtraParam(0)
-{
-
-}
 NFmiMenuItem::NFmiMenuItem(int theMapViewDescTopIndex
 						  ,const std::string &theText
 						  ,const NFmiDataIdent& theDataIdent
