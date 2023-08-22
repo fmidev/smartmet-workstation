@@ -17,8 +17,8 @@ enum class View
   kFmiColorContourView = 3,
   kFmiColorContourIsoLineView = 4,
   kFmiQuickColorContourView = 5,
-  kFmiSymbolView = 6,
-  kFmiIndexedTextView = 7,
+  kFmiArrowView = 6,
+  kFmiWindVectorView = 7,
   kFmiFontTextView = 8,
   kFmiBitmapView = 9,
   kFmiParamsDefaultView = 10,
@@ -30,7 +30,8 @@ enum class View
   kFmiCustomSymbolView = 16
 };
 
-typedef enum {
+typedef enum
+{
   kFmiNoMask = 1,
   kFmiSelectionMask = 4,
   kFmiDisplayedMask = 16,
