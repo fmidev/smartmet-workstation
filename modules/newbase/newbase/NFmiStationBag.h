@@ -72,7 +72,7 @@ inline std::istream &operator>>(std::istream &file, NFmiStationBag &ob) { return
 
 inline const NFmiStation& NFmiStationBag::Current() const
 {
-  return *static_cast<NFmiStation *>((*itsLocations)[itsIndex]);
+  return *static_cast<NFmiStation *>(itsLocations[itsIndex]);
 }
 
 // ----------------------------------------------------------------------

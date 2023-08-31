@@ -18,27 +18,6 @@
 
 #include <cmath>
 
-// ******** ShallowLocationCopyEnabler ********************************************
-
-ShallowLocationCopyEnabler::ShallowLocationCopyEnabler(
-    const boost::shared_ptr<NFmiFastQueryInfo> &theFastInfoPtr)
-    : fastInfoPtr(theFastInfoPtr)
-{
-  possibleLocationBag = fastInfoPtr->HPlaceDescriptor().LocationBag();
-  if (possibleLocationBag)
-  {
-    possibleLocationBag->AllowLocationCopyOptimization(true);
-  }
-}
-
-ShallowLocationCopyEnabler::~ShallowLocationCopyEnabler()
-{
-  if (possibleLocationBag)
-  {
-    possibleLocationBag->AllowLocationCopyOptimization(false);
-  }
-}
-
 // ******** NFmiAreaMask *******************************************************
 
 //! Destructor
@@ -49,7 +28,6 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiAreaMask::DoShallowCopy(
 {
   if (theInfo)
   {
-    ShallowLocationCopyEnabler enabler(theInfo);
     return boost::shared_ptr<NFmiFastQueryInfo>(new NFmiFastQueryInfo(*theInfo));
   }
   else
@@ -63,7 +41,6 @@ std::vector<boost::shared_ptr<NFmiFastQueryInfo>> NFmiAreaMask::DoShallowCopy(
   std::vector<boost::shared_ptr<NFmiFastQueryInfo>> shallowCopyVector;
   for (const auto &info : infoVector)
   {
-    ShallowLocationCopyEnabler enabler(info);
     shallowCopyVector.push_back(boost::shared_ptr<NFmiFastQueryInfo>(new NFmiFastQueryInfo(*info)));
   }
   return shallowCopyVector;

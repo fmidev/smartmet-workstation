@@ -65,31 +65,24 @@ class NFmiLocationBag : public NFmiSize
   bool IsInside(const NFmiPoint &theLatLon, double theRadius) const;
 
   std::size_t HashValue() const;
-  bool AllowLocationCopyOptimization() const { return fAllowLocationCopyOptimization; }
-  void AllowLocationCopyOptimization(bool newState) { fAllowLocationCopyOptimization = newState; }
 
  protected:
   void Add(const NFmiLocation &theLocation);
-  void DoDeepLocationCopy(const NFmiLocationBag &theLocationBag);
   void DoActualCopyOperations(const NFmiLocationBag &theLocationBag);
 
   typedef std::vector<NFmiLocation *> StorageType;
-  std::shared_ptr<StorageType> itsLocations;
+  StorageType itsLocations;
 
  private:
   // This could also have been a map to vector indices.
   // The pointer is the same as in the vector
   typedef std::set<NFmiLocation> SortedStorageType;
-  std::shared_ptr<SortedStorageType> itsSortedLocations;
+  SortedStorageType itsSortedLocations;
 
   // NearTree of the locations
 
-  std::shared_ptr<NFmiNearTree<NFmiNearTreeLocation, NFmiNearTreeLocationDistance>> itsNearTree;
+  NFmiNearTree<NFmiNearTreeLocation, NFmiNearTreeLocationDistance> itsNearTree;
 
-  // Enable/disable optimizing when copying locationBags, when enable,
-  // sharep_ptr's are used directly ,and when disabled, true copies of all the stations are
-  // created (old and normal way). Can't enable this by default, because some usage would cause troubles.
-  bool fAllowLocationCopyOptimization = false;
 };  // class NFmiLocationBag
 
 // ----------------------------------------------------------------------
@@ -131,8 +124,8 @@ inline std::istream &operator>>(std::istream &file, NFmiLocationBag &ob) { retur
 
 inline const NFmiLocation *NFmiLocationBag::Location(unsigned long theIndex) const
 {
-  if (theIndex < itsLocations->size())
-    return (*itsLocations)[theIndex];
+  if (theIndex < itsLocations.size())
+    return itsLocations[theIndex];
   else
     return 0;
 }
@@ -155,6 +148,6 @@ inline NFmiLocationBag *NFmiLocationBag::Clone() const { return new NFmiLocation
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiLocationBag::IsLocations() const { return (!itsLocations->empty()); }
+inline bool NFmiLocationBag::IsLocations() const { return (!itsLocations.empty()); }
 
 // ======================================================================

@@ -22,17 +22,6 @@ class NFmiFastQueryInfo;
 class NFmiSimpleCondition;
 class NFmiCalculationParams;
 class NFmiMacroParamValue;
-class NFmiLocationBag;
-
-class ShallowLocationCopyEnabler
-{
-  const boost::shared_ptr<NFmiFastQueryInfo> &fastInfoPtr;
-  NFmiLocationBag *possibleLocationBag = nullptr;
-
- public:
-  ShallowLocationCopyEnabler(const boost::shared_ptr<NFmiFastQueryInfo> &theFastInfoPtr);
-  ~ShallowLocationCopyEnabler();
-};
 
 //! Undocumented class
 class NFmiAreaMask

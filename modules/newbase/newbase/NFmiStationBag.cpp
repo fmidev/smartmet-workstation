@@ -36,7 +36,7 @@ NFmiStationBag::NFmiStationBag(unsigned long *theStationArray, unsigned long num
     : NFmiLocationBag()
 {
   itsSize = numberOfStations;
-  itsLocations->reserve(numberOfStations);
+  itsLocations.reserve(numberOfStations);
   for (unsigned long i = 0; i < numberOfStations; i++)
   {
     NFmiStation tmpStation(theStationArray[i]);
