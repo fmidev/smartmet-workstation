@@ -316,7 +316,6 @@ class NFmiSmartToolModifier
   boost::shared_ptr<NFmiAreaMask> CreateVertConditionalMask(const NFmiAreaMaskInfo &theAreaMaskInfo,
                                                             bool &mustUsePressureInterpolation);
   std::unique_ptr<CalculationPointMaskData> MakePossibleCalculationPointMask(
-      std::vector<NFmiSmartToolCalculationBlockInfo> &calculationBlockInfoVector,
       const std::vector<NFmiPoint> &calculationPoints);
   void DoSimpleConditionInitialization(boost::shared_ptr<NFmiAreaMask> &areaMask, const NFmiAreaMaskInfo &theAreaMaskInfo);
   boost::shared_ptr<NFmiSimpleCondition> CreateSimpleCondition(boost::shared_ptr<NFmiSimpleConditionInfo> &theSimpleConditionInfo, bool usesVerticalData);

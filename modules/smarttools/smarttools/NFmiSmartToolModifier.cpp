@@ -753,17 +753,19 @@ void NFmiSmartToolModifier::ModifyData(NFmiTimeDescriptor *theModifiedTimes,
 // This mask is used to skip points not needed in final result.
 // If calculationPoints is empty, return empty pointer.
 std::unique_ptr<CalculationPointMaskData> NFmiSmartToolModifier::MakePossibleCalculationPointMask(
-    std::vector<NFmiSmartToolCalculationBlockInfo> &calculationBlockInfoVector,
     const std::vector<NFmiPoint> &calculationPoints)
 {
-  if (!calculationPoints.empty() && !calculationBlockInfoVector.empty())
+  if (!calculationPoints.empty())
   {
-    auto calculationBlock = CreateCalculationBlock(calculationBlockInfoVector[0]);
-    auto editedInfo = calculationBlock->FirstVariableInfo();
+    auto editedInfo = UsedMacroParamData();
     if (editedInfo)
     {
-      std::unique_ptr<CalculationPointMaskData> calculationPointMask(
-          new CalculationPointMaskData(editedInfo->SizeLocations(), std::make_pair(nullptr, 99999999)));
+      double maxAllowedDistanceInMetres =
+          (itsExtraMacroParamData.ObservationRadiusInKm() == kFloatMissing)
+              ? 99999999
+              : itsExtraMacroParamData.ObservationRadiusInKm() * 1000. + 0.00000001;
+      std::unique_ptr<CalculationPointMaskData> calculationPointMask(new CalculationPointMaskData(
+          editedInfo->SizeLocations(), std::make_pair(nullptr, maxAllowedDistanceInMetres)));
       for (auto &latlon : calculationPoints)
       {
         if (editedInfo->NearestPoint(latlon))
@@ -771,8 +773,7 @@ std::unique_ptr<CalculationPointMaskData> NFmiSmartToolModifier::MakePossibleCal
           auto distanceInMeters = NFmiLocation(latlon).Distance(editedInfo->LatLon());
           auto &maskLocationPtr = (*calculationPointMask)[editedInfo->LocationIndex()].first;
           auto &maskLocationDist = (*calculationPointMask)[editedInfo->LocationIndex()].second;
-          if (maskLocationPtr == nullptr ||
-              (maskLocationPtr != nullptr && distanceInMeters < maskLocationDist))
+          if (distanceInMeters < maskLocationDist)
           {
             maskLocationPtr = &latlon;
             maskLocationDist = distanceInMeters;
@@ -807,7 +808,7 @@ void NFmiSmartToolModifier::ModifyData_ver2(
         smartToolCalculationBlockInfos, theModifiedTimes, theThreadCallBacks);
     size_t size = smartToolCalculationBlockInfos.size();
     auto calculationPointMaskPtr =
-        MakePossibleCalculationPointMask(smartToolCalculationBlockInfos, CalculationPoints());
+        MakePossibleCalculationPointMask(CalculationPoints());
     for (size_t i = 0; i < size; i++)
     {
       NFmiSmartToolCalculationBlockInfo blockInfo = smartToolCalculationBlockInfos[i];
@@ -1182,8 +1183,17 @@ static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> MakeInfoCopyVector(
     size_t threadCount, boost::shared_ptr<NFmiFastQueryInfo> &info)
 {
   std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector;
-  for (size_t i = 0; i < threadCount; i++)
-    infoVector.push_back(NFmiAreaMask::DoShallowCopy(info));
+  if (threadCount > 1)
+  {
+    for (size_t i = 0; i < threadCount; i++)
+      infoVector.push_back(NFmiAreaMask::DoShallowCopy(info));
+  }
+  else
+  {
+    // Jos vain yksi laskenta threadi käytössä, laitetaan originaali info vain sellaisenaan 'kopio'
+    // vectoriin.
+    infoVector.push_back(info);
+  }
   return infoVector;
 }
 
@@ -1191,9 +1201,20 @@ static std::vector<boost::shared_ptr<NFmiSmartToolCalculationBlock>> MakeCalcula
     size_t threadCount, const boost::shared_ptr<NFmiSmartToolCalculationBlock> &calculationBlock)
 {
   std::vector<boost::shared_ptr<NFmiSmartToolCalculationBlock>> calculationBlockVector;
-  for (size_t i = 0; i < threadCount; i++)
-    calculationBlockVector.push_back(boost::shared_ptr<NFmiSmartToolCalculationBlock>(
-        new NFmiSmartToolCalculationBlock(*calculationBlock)));
+  if (threadCount > 1)
+  {
+    for (size_t i = 0; i < threadCount; i++)
+    {
+      calculationBlockVector.push_back(boost::shared_ptr<NFmiSmartToolCalculationBlock>(
+          new NFmiSmartToolCalculationBlock(*calculationBlock)));
+    }
+  }
+  else
+  {
+    // Jos vain yksi laskenta threadi käytössä, laitetaan originaali calculationBlock vain
+    // sellaisenaan 'kopio' vectoriin.
+    calculationBlockVector.push_back(calculationBlock);
+  }
   return calculationBlockVector;
 }
 
@@ -2952,9 +2973,7 @@ void NFmiSmartToolModifier::CalculateOptimalWorkingThreadCount()
   int maxThreadCount = 4;
   if (itsInfoVariableCount && itsStationInfoVariableCount)
   {
-    if (itsVariableStationCountSum < 5000.)
-      itsOptimalThreadCount = 3;
-    else if (itsVariableStationCountSum < 12000)
+    if (itsVariableStationCountSum < 700)
       itsOptimalThreadCount = 2;
     else
       itsOptimalThreadCount = 1;

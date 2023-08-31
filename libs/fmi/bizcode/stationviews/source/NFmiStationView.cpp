@@ -1780,14 +1780,18 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreatePossibleSpaceOutMacr
 // Palauttaa true, jos probe action tehtiin onnistuneesti, muuten false.
 bool NFmiStationView::DoMacroParamProbing()
 {
-	auto probingData = ::CreateProbingMacroParamData(itsArea);
-	if(probingData)
+	// CalculationPoint laskuja ei tarvitse tarkistella
+	if(!fUseCalculationPoints)
 	{
-		itsMacroParamPhase = MacroParamPhase::Probing;
-		NFmiDataMatrix<float> probingMatrix(probingData->GridXNumber(), probingData->GridYNumber(), kFloatMissing);
-		FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsMapViewDescTopIndex, itsDrawParam, probingMatrix, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, probingData, fUseCalculationPoints, true, CalcUsedSpaceOutFactors(), probingData, &itsProbingExtraMacroParamData);
-		itsMacroParamProbingValues = ::matrixToVector(probingMatrix);
-		return true;
+		auto probingData = ::CreateProbingMacroParamData(itsArea);
+		if(probingData)
+		{
+			itsMacroParamPhase = MacroParamPhase::Probing;
+			NFmiDataMatrix<float> probingMatrix(probingData->GridXNumber(), probingData->GridYNumber(), kFloatMissing);
+			FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsMapViewDescTopIndex, itsDrawParam, probingMatrix, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, probingData, fUseCalculationPoints, true, CalcUsedSpaceOutFactors(), probingData, &itsProbingExtraMacroParamData);
+			itsMacroParamProbingValues = ::matrixToVector(probingMatrix);
+			return true;
+		}
 	}
 	return false;
 }

@@ -2665,6 +2665,12 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 		return value;
 	}
 
+	if(doProbing && !smartToolModifier.CalculationPoints().empty())
+	{
+		theUseCalculationPoints = true;
+		return value;
+	}
+
 	try // suoritetaan macro sitten
 	{
 		NFmiTimeBag validTimes(theTime, theTime, 60);

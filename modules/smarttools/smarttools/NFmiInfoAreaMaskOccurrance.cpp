@@ -529,8 +529,7 @@ void NFmiInfoAreaMaskTimeRange::CalcValueFromObservationData(const NFmiCalculati
     NFmiCalculationParams calculationParams = theCalculationParams;
     size_t dataIndex = 0;
     unsigned long locationIndex = 0;
-    if (FindClosestStationData(calculationParams.UsedLatlon(),
-                               calculationParams.itsObservationRadiusInKm,
+    if (FindClosestStationData(calculationParams,
                                dataIndex,
                                locationIndex))
     {
@@ -650,8 +649,7 @@ void NFmiInfoAreaMaskPreviousFullDays::CalcValueFromObservationData(const NFmiCa
     NFmiCalculationParams calculationParams = theCalculationParams;
     size_t dataIndex = 0;
     unsigned long locationIndex = 0;
-    if (FindClosestStationData(calculationParams.UsedLatlon(),
-                               calculationParams.itsObservationRadiusInKm,
+    if (FindClosestStationData(calculationParams,
                                dataIndex,
                                locationIndex))
     {
@@ -779,8 +777,7 @@ void NFmiInfoAreaMaskTimeDuration::CalcValueFromObservationData(const NFmiCalcul
 {
     size_t dataIndex = 0;
     unsigned long locationIndex = 0;
-    if (FindClosestStationData(theCalculationParams.UsedLatlon(),
-                               theCalculationParams.itsObservationRadiusInKm,
+    if (FindClosestStationData(theCalculationParams,
                                dataIndex,
                                locationIndex))
     {

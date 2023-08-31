@@ -365,15 +365,16 @@ double NFmiInfoAreaMask::GetSearchRadiusInMetres(double observationRadiusInKm)
     return observationRadiusInKm * 1000.;
 }
 
-bool NFmiInfoAreaMask::FindClosestStationData(
-    const NFmiPoint &latlon,
-    double observationRadiusInKm,
+bool NFmiInfoAreaMask::FindClosestStationData(const NFmiCalculationParams &calculationParams,
     size_t &dataIndexOut,
     unsigned long &locationIndexOut)
 {
+  // Huom! Pitää käyttää macroParamin laskentahilan pistettä UsedLatlon(true),
+  // jotta itsObservationRadiusInKm juttu otetaan oikein huomioon.
+  auto latlon = calculationParams.UsedLatlon(true);
   NFmiLocation wantedLocation(latlon);
   double minDistanceInMetres = 99999999999;
-  double searchRadiusInMetres = GetSearchRadiusInMetres(observationRadiusInKm);
+  double searchRadiusInMetres = GetSearchRadiusInMetres(calculationParams.itsObservationRadiusInKm);
   for (size_t dataCounter = 0; dataCounter < itsInfoVector.size(); dataCounter++)
   {
     const auto &info = itsInfoVector[dataCounter];
@@ -405,12 +406,7 @@ bool NFmiInfoAreaMask::CheckPossibleObservationDistance(
     {
       size_t dataIndex = 0;
       unsigned long locationIndex = 0;
-      // Huom! Tässä kohtaa poikkeuksellisesti pitää käyttää macroParamin 
-      // laskentahilan pistettä (UsedLatlon kutsutaan true:lla) aina kun 
-      // etsitään lähintä asemapistettä, jotta liian kaukana 
-      // havaintopisteestä olevat laskenta pisteet hylätä.
-      if (FindClosestStationData(theCalculationParamsInOut.UsedLatlon(true),
-                                 theCalculationParamsInOut.itsObservationRadiusInKm,
+      if (FindClosestStationData(theCalculationParamsInOut,
                                  dataIndex,
                                  locationIndex))
       {

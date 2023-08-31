@@ -155,8 +155,7 @@ class NFmiInfoAreaMask : public NFmiAreaMaskImpl
   float CalcCachedInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiLocationCache &theLocationCache, const NFmiTimeCache *theTimeCache);
   float CalcMetaParamCachedInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiLocationCache &theLocationCache, const NFmiTimeCache *theTimeCache);
   void AddExtremeValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDataModifier> &theFunctionModifier, const NFmiLocationCache &theLocationCache);
-  bool FindClosestStationData(const NFmiPoint &latlon,
-                              double observationRadiusInKm,
+  bool FindClosestStationData(const NFmiCalculationParams &calculationParams,
                               size_t &dataIndexOut,
                               unsigned long &locationIndexOut);
   double GetSearchRadiusInMetres(double observationRadiusInKm);
