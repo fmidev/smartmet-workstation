@@ -501,3 +501,8 @@ void CFmiTempView::NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result)
 
 	} //if
 } //End NotifyDisplayTooltip
+
+void CFmiTempView::AutoAdjustSoundingScales()
+{
+	itsView->AutoAdjustSoundingScales();
+}

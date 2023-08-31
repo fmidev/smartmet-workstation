@@ -62,6 +62,7 @@ public:
 	// ********************************************************************************************
     void SetToolMastersDC(CDC * /* theDC */ ) {};
 	void SetToolsDCs(CDC* theDC);
+	void AutoAdjustSoundingScales();
 
 protected:
 	CFmiTempView();           // protected constructor used by dynamic creation
