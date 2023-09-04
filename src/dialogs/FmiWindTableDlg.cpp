@@ -197,7 +197,7 @@ void CFmiWindTableDlg::Update(void)
         NFmiMetTime newStartTime = GetWantedStartTime();
         if(windTableSystem.DoInitializeAreaMasks() || itsLastStartTime != newStartTime || windTableSystem.MustaUpdateTable())
         {
-            std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
+			CFmiWin32Helpers::WaitCursorHelper waitCursorHelper(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
 
             windTableSystem.MustaUpdateTable(false);
             int fixedRowCount = 1;

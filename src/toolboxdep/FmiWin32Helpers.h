@@ -78,8 +78,13 @@ namespace CFmiWin32Helpers
     bool IsShowCommandMinimized(UINT showCommand);
     bool IsShowCommandMaximized(UINT showCommand);
 
-
-	std::auto_ptr<CWaitCursor> GetWaitCursorIfNeeded(bool showWaitCursorWhileDrawingView);
+	class WaitCursorHelper
+	{
+		bool fShowWaitCursor = false;
+	public:
+		WaitCursorHelper(bool showWaitCursor);
+		~WaitCursorHelper();
+	};
 
 	void SetPrinterMode(CDC* pDC, int Mode);
 

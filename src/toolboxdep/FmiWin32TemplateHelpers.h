@@ -581,7 +581,7 @@ namespace CFmiWin32TemplateHelpers
             // välimuistin apuna käytetty dc
             NFmiCopyCDCHandler copyCDCHandler(&dc, *mapViewDesctop);
 
-            std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(smartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
+            CFmiWin32Helpers::WaitCursorHelper waitCursorHelper(smartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
             if(!smartMetDocumentInterface->ViewBrushed())
             {
                 CtrlView::MakeCombatibleBitmap(mapView, &memoryBitmap);

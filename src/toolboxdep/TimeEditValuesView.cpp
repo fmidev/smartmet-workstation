@@ -108,7 +108,7 @@ void CTimeEditValuesView::OnDraw(CDC* pDC)
 		if(itsManagerView)
 		{
 			// Laitetaan tiimalasi piirron ajaksi tiedottamaan k‰ytt‰j‰lle, ett‰ piirto voi kest‰‰ kauann
-			std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
+			CFmiWin32Helpers::WaitCursorHelper waitCursorHelper(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
 
 			DoDraw();
 		}

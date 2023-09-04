@@ -84,7 +84,7 @@ void CFmiCrossSectionView::OnDraw(CDC* pDC)
 	CBitmap *oldBitmap = 0;
 	if(fViewDirty)
 	{
-		std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
+		CFmiWin32Helpers::WaitCursorHelper waitCursorHelper(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
 		if(itsMemoryBitmap)
 			itsMemoryBitmap->DeleteObject();
 		else
