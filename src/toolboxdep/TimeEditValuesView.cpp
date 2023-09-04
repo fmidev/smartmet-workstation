@@ -667,11 +667,16 @@ void CTimeEditValuesView::HideToolTip(void)
 	m_tooltip.HideTooltip();
 }
 
-void CTimeEditValuesView::AutoAdjustValueScales(bool fJustActive)
+void CTimeEditValuesView::AutoAdjustValueScales(bool justActiveRow, bool redrawOnSuccess)
 {
 	CtrlView::DeviceContextHandler<CTimeEditValuesView> deviceContextHandler(this);
-	if(itsManagerView->AutoAdjustValueScales(fJustActive))
-		Invalidate(FALSE);
+	if(itsManagerView->AutoAdjustValueScales(justActiveRow))
+	{
+		if(redrawOnSuccess)
+		{
+			Invalidate(FALSE);
+		}
+	}
 }
 
 std::string CTimeEditValuesView::MakeCsvDataString()

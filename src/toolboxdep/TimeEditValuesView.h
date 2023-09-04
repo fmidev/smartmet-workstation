@@ -34,7 +34,7 @@ public:
 // Operations
 	void Update(void); // en saa nyt windows messageja menemään esim. Invalidate:lla, joten tein erillisen Update funktion
 	void DoPrint(void);
-	void AutoAdjustValueScales(bool fJustActive);
+	void AutoAdjustValueScales(bool justActiveRow, bool redrawOnSuccess);
 
 	// printtaus template funktioiden rajapinta funktioita CView-luokasta perityille näyttöluokille
 	// ********************************************************************************************

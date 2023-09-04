@@ -112,6 +112,7 @@ private:
     std::string itsBetaProductFullFilePath;
     CString itsBetaProductNameU_;
     BOOL fPackImages;
+    BOOL fEnsureCurveVisibility;
 
     std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> *itsDueAutomations; // Tähän laitetaan väliaikaisesti tehtävien automaatioiden lista silloin kun SmartMet on automaatio moodissa ja se on huomannut että on tehtäviä töitä
 
@@ -159,4 +160,5 @@ public:
     afx_msg void OnBnClickedButtonSaveAsBetaProduct();
     afx_msg void OnBnClickedCheckShowModelOriginTime();
     afx_msg void OnBnClickedCheckPackImages();
+    afx_msg void OnBnClickedCheckEnsureCurveVisibility();
 };

@@ -571,3 +571,7 @@ CSize CFmiCrossSectionView::GetPrintedAreaOnScreenSizeInPixels(void)
 		return CSize(0, 0);
 }
 
+void CFmiCrossSectionView::AutoAdjustValueScales(bool /* fJustActive */, bool /* redrawOnSuccess */)
+{
+	// Tämä ei tee mitään poikkileikkausnäytön yhteydessä.
+}

@@ -933,7 +933,7 @@ void CFmiTempDlg::OnBnClickedButtonClearAvgControls()
 
 void CFmiTempDlg::OnAcceleratorSoundingAutoAdjustScales()
 {
-	itsView->AutoAdjustSoundingScales();
+	itsView->AutoAdjustValueScales(false, false);
 	itsView->Update(true);
 	Invalidate(FALSE);
 }
