@@ -29,6 +29,7 @@ public:
     NFmiInfoOrganizer* InfoOrganizer() override;
     bool LoadViewMacroFromBetaProduct(const std::string &theAbsoluteVieMacroPath, std::string &theErrorStringOut, bool justLogMessages) override;
     void SetCurrentGeneratedBetaProduct(const NFmiBetaProduct *theBetaProduct) override;
+    const NFmiBetaProduct* GetCurrentGeneratedBetaProduct() override;
     bool CurrentTime(unsigned int theDescTopIndex, const NFmiMetTime& newCurrentTime, bool fStayInsideAnimationTimes = false) override;
     void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex) override;
     void DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut) override;

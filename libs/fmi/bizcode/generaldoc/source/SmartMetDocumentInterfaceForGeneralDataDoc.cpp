@@ -98,6 +98,11 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::SetCurrentGeneratedBetaProduct(
     itsDoc->SetCurrentGeneratedBetaProduct(theBetaProduct);
 }
 
+const NFmiBetaProduct* SmartMetDocumentInterfaceForGeneralDataDoc::GetCurrentGeneratedBetaProduct()
+{
+    return itsDoc->GetCurrentGeneratedBetaProduct();
+}
+
 bool SmartMetDocumentInterfaceForGeneralDataDoc::CurrentTime(unsigned int theDescTopIndex, const NFmiMetTime& newCurrentTime, bool fStayInsideAnimationTimes)
 {
     return itsDoc->GetCombinedMapHandler()->currentTime(theDescTopIndex, newCurrentTime, fStayInsideAnimationTimes);
