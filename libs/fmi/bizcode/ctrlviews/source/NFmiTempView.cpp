@@ -4318,7 +4318,7 @@ bool NFmiTempView::ScanRangeForAllDataSkewT(double startT, double endT, int& pot
 // olevia arvoja. En tied‰ kuinka paljon iteraatioita oikeasti pit‰‰ tehd‰...
 std::pair<double, double> NFmiTempView::GetVisibleTemperatureRangeForSkewTDiagram(const std::pair<double, double>& originalRange)
 {
-	vector<double> suitableTRanges{ 60, 65, 55, 70, 50, 75, 45, 80 };
+	vector<double> suitableTRanges{ 35, 40, 45, 50, 55, 60, 65, 70, 75, 80 };
 	vector<double> suitableTStartValues{ 0, 5, 10, -5, 15, -10, 20, 25, -15, 30, 35, -20 , 40, 45 , -25 };
 	int potenciallyVisibleValues = 0;
 	int actuallyVisibleValues = 0;
