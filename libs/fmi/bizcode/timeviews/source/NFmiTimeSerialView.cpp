@@ -1158,6 +1158,9 @@ void NFmiTimeSerialView::DrawStationNameLegend(const NFmiLocation* theLocation, 
 		theEnvi.SetFontSize(theFontSize);
 		NFmiString tmpStr(thePreLocationString);
 		tmpStr += theLocation->GetName();
+		tmpStr += " (";
+		tmpStr += std::to_string(theLocation->GetIdent());
+		tmpStr += ")";
 
 		if(theDistanceInMeters != kFloatMissing)
 		{
