@@ -454,6 +454,24 @@ namespace CtrlViewUtils
         return out.str();
     }
 
+    // Tein oman tavan kirjoittaa NFmiPoint, koska en halunnut rivinvaihtoa loppuun
+    std::string Point2String(const NFmiPoint& p)
+    {
+        std::stringstream out;
+        out << p.X() << "," << p.Y(); 
+        return out.str();
+    }
+
+    NFmiPoint String2Point(const std::string& str)
+    {
+        std::stringstream in(str);
+        double x = 0;
+        double y = 0;
+        char ch = 0; // pilkku pitää lukea välistä
+        in >> x >> ch >> y;
+        return NFmiPoint(x, y);
+    }
+
     boost::shared_ptr<NFmiFastQueryInfo> GetLatestLastTimeObservation(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, bool fCrossSectionInfoWanted)
     {
         NFmiInfoData::Type dataType = theDrawParam->DataType();
