@@ -6622,6 +6622,7 @@ bool InitCPManagerSet(void)
         timeView.ShowHelpData4(ShowHelperData4InTimeSerialView());
 
 		timeView.TimeBag(TimeSerialViewTimeBag());
+		timeView.PreciseTimeSerialLatlonPoint(PreciseTimeSerialLatlonPoint());
 	}
 
 	void FillTempViewMacro(NFmiViewSettingMacro &theMacro)
@@ -6808,8 +6809,9 @@ bool InitCPManagerSet(void)
 	{
 		auto& combinedMapHandler = *GetCombinedMapHandler();
 		combinedMapHandler.removeAllTimeSerialViews();
+		auto& timeViewSettings = theMacro.GetTimeView();
 
-		const std::vector<NFmiViewSettingMacro::TimeViewRow>& rows = theMacro.GetTimeView().Rows();
+		const std::vector<NFmiViewSettingMacro::TimeViewRow>& rows = timeViewSettings.Rows();
 		std::vector<NFmiViewSettingMacro::TimeViewRow>::size_type ssize = rows.size();
 		std::vector<NFmiViewSettingMacro::TimeViewRow>::size_type counter = 0;
 		auto& timeSerialViewIndexReference = combinedMapHandler.getTimeSerialViewIndexReference();
@@ -6837,19 +6839,23 @@ bool InitCPManagerSet(void)
 			}
 		}
 
-        if(theMacro.GetTimeView().ShowHelpData())
+        if(timeViewSettings.ShowHelpData())
             SetOnShowHelperData1InTimeSerialView();
         else
             SetOffShowHelperData1InTimeSerialView();
-        if(theMacro.GetTimeView().ShowHelpData2())
+        if(timeViewSettings.ShowHelpData2())
             SetOnShowHelperData2InTimeSerialView();
         else
             SetOffShowHelperData2InTimeSerialView();
-        ShowHelperData3InTimeSerialView(theMacro.GetTimeView().ShowHelpData3());
-        ShowHelperData4InTimeSerialView(theMacro.GetTimeView().ShowHelpData4());
+        ShowHelperData3InTimeSerialView(timeViewSettings.ShowHelpData3());
+        ShowHelperData4InTimeSerialView(timeViewSettings.ShowHelpData4());
 
-		if(theMacro.GetTimeView().TimeBagUpdated())
-			TimeSerialViewTimeBag(theMacro.GetTimeView().TimeBag());
+		if(timeViewSettings.TimeBagUpdated())
+			TimeSerialViewTimeBag(timeViewSettings.TimeBag());
+		if(timeViewSettings.PreciseTimeSerialLatlonPoint() != NFmiPoint::gMissingLatlon)
+		{
+			PreciseTimeSerialLatlonPoint(timeViewSettings.PreciseTimeSerialLatlonPoint());
+		}
 	}
 
 	void SetTempView(NFmiViewSettingMacro &theMacro)
@@ -7013,7 +7019,8 @@ bool InitCPManagerSet(void)
 	}
 
     void ApplyViewMacro(NFmiViewSettingMacro &theMacro, bool fTreatAsViewMacro, bool undoRedoAction)
-	{ // ota käyttöön kaikki makron asetukset ja tee näytöistä 'likaisia'
+	{ 
+		// ota käyttöön kaikki makron asetukset ja tee näytöistä 'likaisia'
 		SetGeneralDoc(theMacro);
         SetTimeViewParams(theMacro, fTreatAsViewMacro);
 		SetTempView(theMacro);

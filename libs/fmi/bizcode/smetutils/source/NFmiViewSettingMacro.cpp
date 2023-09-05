@@ -829,8 +829,13 @@ void NFmiViewSettingMacro::TimeView::Write(std::ostream& os) const
 
 	NFmiMetTime usedViewMacroTime = NFmiDataStoringHelpers::GetUsedViewMacroTime();
 	std::string timeBagStr = NFmiDataStoringHelpers::GetTimeBagOffSetStr(usedViewMacroTime, itsTimeBag);
-	extraData.Add(timeBagStr); // lis‰t‰‰n 1. extra-datana aikaikkunan timebagi offsettina currenttiin aikaan
-
+	extraData.Add(timeBagStr); // lis‰t‰‰n 1. extra-string-datana aikaikkunan timebagi offsettina currenttiin aikaan
+	if(itsPreciseTimeSerialLatlonPoint != NFmiPoint::gMissingLatlon)
+	{
+		// lis‰t‰‰n 2. extra-string-datana aikasarjaan valitun latlon-pisteen paikka
+		extraData.Add(CtrlViewUtils::Point2String(itsPreciseTimeSerialLatlonPoint)); 
+	}
+	
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
@@ -872,12 +877,23 @@ void NFmiViewSettingMacro::TimeView::Read(std::istream& is)
 
 	fTimeBagUpdated = false;
 	if(extraData.itsStringValues.size() >= 1)
-	{// luetaan 1. extra-datana aikaikkunan timebagi offsettina currenttiin aikaan
+	{
+		// luetaan 1. extra-datana aikaikkunan timebagi offsettina currenttiin aikaan
 		if(is.fail())
 			throw std::runtime_error(exceptionErrorMessage);
 		NFmiMetTime usedViewMacroTime = NFmiDataStoringHelpers::GetUsedViewMacroTime();
 		itsTimeBag = NFmiDataStoringHelpers::GetTimeBagOffSetFromStr(usedViewMacroTime, extraData.itsStringValues[0]);
 		fTimeBagUpdated = true;
+	}
+
+	// Oletusarvoisesti laitetaan latlon-point puuttuvaksi, jolloin j‰tet‰‰n nykyinen k‰ytˆss‰ oleva piste voimaan.
+	itsPreciseTimeSerialLatlonPoint = NFmiPoint::gMissingLatlon;
+	if(extraData.itsStringValues.size() >= 2)
+	{
+		// Luetaan 2. extra-string-datana aikaikkunaan valittu latlon-piste.
+		if(is.fail())
+			throw std::runtime_error(exceptionErrorMessage);
+		itsPreciseTimeSerialLatlonPoint = CtrlViewUtils::String2Point(extraData.itsStringValues[1]);
 	}
 
 	if(is.fail())
