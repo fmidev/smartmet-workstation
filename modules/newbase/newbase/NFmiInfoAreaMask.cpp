@@ -841,16 +841,20 @@ void NFmiInfoAreaMask::AddExtremeValues(boost::shared_ptr<NFmiFastQueryInfo> &th
           switch (metaParamDataHolder.possibleMetaParamId())
           {
             case kFmiWindUMS:
-              theFunctionModifier->Calculate(
-                  NFmiFastInfoUtils::CalcU(wsValues[index], wdValues[index]));
+              AddValueToModifier(theInfo,
+                                 theFunctionModifier,
+                                 NFmiFastInfoUtils::CalcU(wsValues[index], wdValues[index]));
               break;
             case kFmiWindVMS:
-              theFunctionModifier->Calculate(
-                  NFmiFastInfoUtils::CalcV(wsValues[index], wdValues[index]));
+              AddValueToModifier(theInfo,
+                                 theFunctionModifier,
+                                 NFmiFastInfoUtils::CalcV(wsValues[index], wdValues[index]));
               break;
             case kFmiWindVectorMS:
-              theFunctionModifier->Calculate(NFmiFastInfoUtils::CalcWindVectorFromSpeedAndDirection(
-                  wsValues[index], wdValues[index]));
+              AddValueToModifier(theInfo,
+                                 theFunctionModifier,
+                                 NFmiFastInfoUtils::CalcWindVectorFromSpeedAndDirection(
+                                     wsValues[index], wdValues[index]));
               break;
           }
         }
@@ -868,16 +872,20 @@ void NFmiInfoAreaMask::AddExtremeValues(boost::shared_ptr<NFmiFastQueryInfo> &th
           switch (metaParamDataHolder.possibleMetaParamId())
           {
             case kFmiWindSpeedMS:
-              theFunctionModifier->Calculate(
-                  NFmiFastInfoUtils::CalcWS(uValues[index], vValues[index]));
+              AddValueToModifier(theInfo,
+                                 theFunctionModifier,
+                                 NFmiFastInfoUtils::CalcWS(uValues[index], vValues[index]));
               break;
             case kFmiWindDirection:
-              theFunctionModifier->Calculate(
-                  NFmiFastInfoUtils::CalcWD(uValues[index], vValues[index]));
+              AddValueToModifier(theInfo,
+                                 theFunctionModifier,
+                                 NFmiFastInfoUtils::CalcWD(uValues[index], vValues[index]));
               break;
             case kFmiWindVectorMS:
-              theFunctionModifier->Calculate(NFmiFastInfoUtils::CalcWindVectorFromWindComponents(
-                  uValues[index], vValues[index]));
+              AddValueToModifier(theInfo,
+                                 theFunctionModifier,
+                                 NFmiFastInfoUtils::CalcWindVectorFromWindComponents(
+                                     uValues[index], vValues[index]));
               break;
           }
         }
@@ -888,9 +896,19 @@ void NFmiInfoAreaMask::AddExtremeValues(boost::shared_ptr<NFmiFastQueryInfo> &th
       std::vector<float> values(4, kFloatMissing);
       theInfo->GetCachedValues(theLocationCache, values);
       for (float value : values)
-        theFunctionModifier->Calculate(value);
+        AddValueToModifier(theInfo, theFunctionModifier, value);
     }
   }
+}
+
+void NFmiInfoAreaMask::AddValueToModifier(boost::shared_ptr<NFmiFastQueryInfo> & /* theInfo */,
+                                          boost::shared_ptr<NFmiDataModifier> &theFunctionModifier,
+                                          float theValue)
+{
+    // In this base virtual method the value is just added to the 
+    // modifier, in child classes there will be overrides that will 
+    // keep record of the time of extreme value.
+  theFunctionModifier->Calculate(theValue);
 }
 
 // Method adds values to function modifier. In case of min/max we use
@@ -906,7 +924,8 @@ void NFmiInfoAreaMask::AddValuesToFunctionModifier(
   if (integrationFunction == NFmiAreaMask::Max || integrationFunction == NFmiAreaMask::Min)
     AddExtremeValues(theInfo, theFunctionModifier, theLocationCache);
   else
-    theFunctionModifier->Calculate(CalcCachedInterpolation(theInfo, theLocationCache, nullptr));
+    AddValueToModifier(
+        theInfo, theFunctionModifier, CalcCachedInterpolation(theInfo, theLocationCache, nullptr));
 }
 
 // ======================================================================
