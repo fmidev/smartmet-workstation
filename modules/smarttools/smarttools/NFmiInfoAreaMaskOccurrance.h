@@ -3,6 +3,7 @@
 #include <newbase/NFmiInfoAreaMask.h>
 
 class NFmiDrawParam;
+class NFmiDataModifierExtreme;
 
 // Näitä kolmea areamaks luokkaa yhdistää se että ne kaikki voivat käsitellä havaintoja (nearest tekniikalla) ja 
 // havaintodatat voivat tulla multi-data-sourcesta (esim. synop voi koostua jopa viidesta eri datasta suomi/euro/maailma/ship/poiju).
@@ -214,4 +215,39 @@ protected:
     // tämä on lopussa vielä false, palutetaan missing. Asetetaan true tilaan CalcDurationTime metodissa, jos
     // löytyi aikoja tarkasteluun.
     bool fHasLegitDataAvailable = false;
+};
+
+class NFmiInfoAreaMaskTimeRangeSecondParValue : public NFmiInfoAreaMaskTimeRange
+{
+ public:
+  ~NFmiInfoAreaMaskTimeRangeSecondParValue();
+  NFmiInfoAreaMaskTimeRangeSecondParValue(const NFmiCalculationCondition &theOperation,
+                                       Type theMaskType,
+                                       NFmiInfoData::Type theDataType,
+                                       const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+                                       const boost::shared_ptr<NFmiFastQueryInfo> &theSecondInfo,
+                                       NFmiAreaMask::FunctionType theIntegrationFunc,
+                                       int theArgumentCount,
+                                       unsigned long thePossibleMetaParamId);
+  NFmiInfoAreaMaskTimeRangeSecondParValue(const NFmiInfoAreaMaskTimeRangeSecondParValue &theOther);
+  NFmiAreaMask *Clone() const override;
+  NFmiInfoAreaMaskTimeRangeSecondParValue &operator=(
+      const NFmiInfoAreaMaskTimeRangeSecondParValue &theMask) = delete;
+
+  // tätä kaytetaan smarttool-modifierin yhteydessä
+  double Value(const NFmiCalculationParams &theCalculationParams,
+               bool fUseTimeInterpolationAlways) override;
+
+ protected:
+  void AddValueToModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+                                  boost::shared_ptr<NFmiDataModifier> &theFunctionModifier,
+                                  float theValue) override;
+  void InitializeIntegrationValues() override;
+  double GetSecondParamValue(const NFmiCalculationParams &theCalculationParams);
+
+  // Tämä luokka luo vain extreme tyyppisiä integrointi-modifiereita.
+  // Niiden avulla saadaan tietää extreme arvon aika ja sitä käytetään 2. parametrin arvon hakuun.
+  boost::shared_ptr<NFmiDataModifierExtreme> itsFunctionModifierExtreme;
+  // Tästä infosta otetaan lopullinen arvo extreme arvon ajan ja laskenta paikan mukaan.
+  boost::shared_ptr<NFmiFastQueryInfo> itsSecondInfo;
 };

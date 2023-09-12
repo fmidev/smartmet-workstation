@@ -297,7 +297,12 @@ class NFmiSmartToolModifier
                                                        bool &mustUsePressureInterpolation);
   boost::shared_ptr<NFmiAreaMask> CreateTimeRangeMask(const NFmiAreaMaskInfo &theAreaMaskInfo,
                                                       bool &mustUsePressureInterpolation);
-  boost::shared_ptr<NFmiAreaMask> CreatePreviousFullDaysMask(const NFmiAreaMaskInfo &theAreaMaskInfo,
+  boost::shared_ptr<NFmiAreaMask> CreateSecondParamFromExtremeTimeMask(
+      const NFmiAreaMaskInfo &theAreaMaskInfo, bool &mustUsePressureInterpolation);
+  boost::shared_ptr<NFmiFastQueryInfo> CreateSecondaryParamInfo(
+      const NFmiAreaMaskInfo &theAreaMaskInfo, bool &mustUsePressureInterpolation);
+  boost::shared_ptr<NFmiAreaMask> CreatePreviousFullDaysMask(
+          const NFmiAreaMaskInfo &theAreaMaskInfo,
       bool &mustUsePressureInterpolation);
   boost::shared_ptr<NFmiAreaMask> CreateTimeDurationMask(const NFmiAreaMaskInfo &theAreaMaskInfo,
       bool &mustUsePressureInterpolation);

@@ -2,6 +2,7 @@
 #include "NFmiInfoAreaMaskOccurrance.h"
 #include <newbase/NFmiFastQueryInfo.h>
 #include <newbase/NFmiDataModifier.h>
+#include <newbase/NFmiDataModifierExtreme.h>
 #include "NFmiDrawParam.h"
 #include <newbase/NFmiProducerName.h>
 #include "NFmiSmartInfo.h"
@@ -524,31 +525,33 @@ void NFmiInfoAreaMaskTimeRange::DoTimeLoopCalculationsForGridData(unsigned long 
     }
 }
 
-void NFmiInfoAreaMaskTimeRange::CalcValueFromObservationData(const NFmiCalculationParams &theCalculationParams)
+void NFmiInfoAreaMaskTimeRange::CalcValueFromObservationData(
+    const NFmiCalculationParams &theCalculationParams)
 {
-    NFmiCalculationParams calculationParams = theCalculationParams;
-    size_t dataIndex = 0;
-    unsigned long locationIndex = 0;
-    if (FindClosestStationData(calculationParams,
-                               dataIndex,
-                               locationIndex))
-    {
-        auto &info = itsInfoVector[dataIndex];
-        info->LocationIndex(locationIndex);
-        calculationParams.itsCurrentMultiInfoData = info.get();
+  NFmiCalculationParams calculationParams = theCalculationParams;
+  size_t dataIndex = 0;
+  unsigned long locationIndex = 0;
+  if (FindClosestStationData(calculationParams, dataIndex, locationIndex))
+  {
+    // Otetaan käytetty info itsInfo:on, tarvitaan jos kyseessä multi-data tapaus (synop/salama)
+    itsInfo = itsInfoVector[dataIndex];
+    itsInfo->LocationIndex(locationIndex);
+    // Tämä ei näytä toimivan oikein, koska itsCurrentMultiInfoData jää osoittamaan nullptr:ia.
+    calculationParams.itsCurrentMultiInfoData = itsInfo.get();
 
-        unsigned long startTimeIndex = 0;
-        unsigned long endTimeIndex = 0;
-        if(NFmiInfoAreaMask::CalcTimeLoopIndexies(info,
-            calculationParams,
-            itsStartTimeOffsetInHours,
-            itsEndTimeOffsetInHours,
-            &startTimeIndex,
-            &endTimeIndex))
-        {
-            DoTimeLoopCalculationsForObservationData(info, startTimeIndex, endTimeIndex, calculationParams);
-        }
+    unsigned long startTimeIndex = 0;
+    unsigned long endTimeIndex = 0;
+    if (NFmiInfoAreaMask::CalcTimeLoopIndexies(itsInfo,
+                                               calculationParams,
+                                               itsStartTimeOffsetInHours,
+                                               itsEndTimeOffsetInHours,
+                                               &startTimeIndex,
+                                               &endTimeIndex))
+    {
+      DoTimeLoopCalculationsForObservationData(
+          itsInfo, startTimeIndex, endTimeIndex, calculationParams);
     }
+  }
 }
 
 void NFmiInfoAreaMaskTimeRange::DoTimeLoopCalculationsForObservationData(boost::shared_ptr<NFmiFastQueryInfo> &info, unsigned long theStartTimeIndex, unsigned long theEndTimeIndex, NFmiCalculationParams &theCalculationParams)
@@ -558,8 +561,8 @@ void NFmiInfoAreaMaskTimeRange::DoTimeLoopCalculationsForObservationData(boost::
         info->TimeIndex(timeIndex);
         if(itsSimpleCondition)
             theCalculationParams.itsTime = info->Time();
-        if(SimpleConditionCheck(theCalculationParams))
-            itsFunctionModifier->Calculate(info->FloatValue());
+        if (SimpleConditionCheck(theCalculationParams))
+          AddValueToModifier(info, itsFunctionModifier, info->FloatValue());
     }
 }
 
@@ -870,4 +873,108 @@ void NFmiInfoAreaMaskTimeDuration::CalcDurationTime(boost::shared_ptr<NFmiFastQu
 
 // **********************************************************
 // *****    NFmiInfoAreaMaskTimeDuration    *****************
+// **********************************************************
+
+// **********************************************************
+// *****  NFmiInfoAreaMaskTimeRangeSecondParValue  **********
+// **********************************************************
+
+NFmiInfoAreaMaskTimeRangeSecondParValue::~NFmiInfoAreaMaskTimeRangeSecondParValue() = default;
+
+NFmiInfoAreaMaskTimeRangeSecondParValue::NFmiInfoAreaMaskTimeRangeSecondParValue(
+    const NFmiCalculationCondition &theOperation,
+    Type theMaskType,
+    NFmiInfoData::Type theDataType,
+    const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+    const boost::shared_ptr<NFmiFastQueryInfo> &theSecondInfo,
+    NFmiAreaMask::FunctionType theIntegrationFunc,
+    int theArgumentCount,
+    unsigned long thePossibleMetaParamId)
+    : NFmiInfoAreaMaskTimeRange(theOperation,
+                                theMaskType,
+                                theDataType,
+                                theInfo,
+                                theIntegrationFunc,
+                                theArgumentCount,
+                                thePossibleMetaParamId),
+      itsFunctionModifierExtreme(),
+      itsSecondInfo(theSecondInfo)
+{
+  itsFunctionModifierExtreme.reset(dynamic_cast<NFmiDataModifierExtreme*>(itsFunctionModifier->Clone()));
+}
+
+NFmiInfoAreaMaskTimeRangeSecondParValue::NFmiInfoAreaMaskTimeRangeSecondParValue(
+    const NFmiInfoAreaMaskTimeRangeSecondParValue &theOther)
+    : NFmiInfoAreaMaskTimeRange(theOther),
+      itsFunctionModifierExtreme(theOther.itsFunctionModifierExtreme
+                                     ? dynamic_cast<NFmiDataModifierExtreme*>(theOther.itsFunctionModifierExtreme->Clone())
+                                     : nullptr),
+      itsSecondInfo(NFmiAreaMask::DoShallowCopy(theOther.itsSecondInfo))
+{
+}
+
+NFmiAreaMask *NFmiInfoAreaMaskTimeRangeSecondParValue::Clone() const
+{
+  return new NFmiInfoAreaMaskTimeRangeSecondParValue(*this);
+}
+
+double NFmiInfoAreaMaskTimeRangeSecondParValue::Value(
+    const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways)
+{
+  if (!itsFunctionModifierExtreme || !itsSecondInfo)
+  {
+    throw std::runtime_error(
+        "Error with get_2nd_par_value_from_extreme function: FunctionModifierExtreme or SecondInfo "
+        "was null.");
+  }
+  // Äääriarvo pitää hakea ja laskea emoluokan Value metodilla, jotta saadaan 
+  // ääriarvon aika itsFunctionModifierExtreme oliolle.
+  auto extremeValue =
+      NFmiInfoAreaMaskTimeRange::Value(theCalculationParams, fUseTimeInterpolationAlways);
+  return GetSecondParamValue(theCalculationParams);
+}
+
+double NFmiInfoAreaMaskTimeRangeSecondParValue::GetSecondParamValue(
+    const NFmiCalculationParams &theCalculationParams)
+{
+  NFmiMetTime extremeTime(itsFunctionModifierExtreme->itsExtremeTime, 1);
+  if (extremeTime != NFmiMetTime::gMissingTime)
+  {
+    // secondInfolle pitää vielä hanskata mahdollinen multi-data tapaus, eli
+    // kyseessä havainto data ja ovat samalta tuottajalta, tällöin itsInfo:ssa on
+    // aina oikea data, ja sitä pitää käyttää (theCalculationParams.itsCurrentMultiInfoData 
+    // mekaniikka ei näytä toimivan oikein).
+    if (itsInfo != nullptr && !itsSecondInfo->IsGrid() &&
+        *itsSecondInfo->Producer() == *itsInfo->Producer())
+    {
+      NFmiFastInfoUtils::QueryInfoTotalStateRestorer queryInfoTotalStateRestorer(*itsInfo);
+      itsInfo->Param(itsSecondInfo->Param());
+      return itsInfo->InterpolatedValue(theCalculationParams.UsedLatlon(), extremeTime);
+    }
+    else
+    {
+      return itsSecondInfo->InterpolatedValue(theCalculationParams.UsedLatlon(), extremeTime);
+    }
+  }
+  return kFloatMissing;
+}
+
+void NFmiInfoAreaMaskTimeRangeSecondParValue::AddValueToModifier(
+    boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+    boost::shared_ptr<NFmiDataModifier> & /* theFunctionModifier */,
+    float theValue)
+{
+  // In this virtual method the time of extreme value is stored.
+  itsFunctionModifierExtreme->Calculate(theValue, theInfo.get());
+}
+
+void NFmiInfoAreaMaskTimeRangeSecondParValue::InitializeIntegrationValues()
+{
+  NFmiInfoAreaMaskTimeRange::InitializeIntegrationValues();
+  itsFunctionModifierExtreme->Clear();
+  itsFunctionModifierExtreme->itsExtremeTime = NFmiMetTime::gMissingTime;
+}
+
+// **********************************************************
+// *****  NFmiInfoAreaMaskTimeRangeSecondParValue  **********
 // **********************************************************

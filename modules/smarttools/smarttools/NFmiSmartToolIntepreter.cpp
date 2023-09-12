@@ -2945,6 +2945,7 @@ bool NFmiSmartToolIntepreter::IsVariableVertFunction(
           theMaskInfo->SetSecondaryFunctionType((*it).second.get<1>());
           theMaskInfo->FunctionArgumentCount((*it).second.get<2>());
           theMaskInfo->SimpleConditionRule((*it).second.get<4>());
+          ExtractPossibleSecondaryParameterInfo(theMaskInfo);
           return true;
         }
       }
@@ -2965,6 +2966,52 @@ bool NFmiSmartToolIntepreter::IsVariableVertFunction(
     throw std::runtime_error(errorStr);
   }
   return false;
+}
+
+static bool HasSecondaryParameter(boost::shared_ptr<NFmiAreaMaskInfo>& theMaskInfo) 
+{
+  auto functionType = theMaskInfo->GetSecondaryFunctionType();
+  return (functionType == NFmiAreaMask::SecondParamFromExtremeTime);
+}
+
+void NFmiSmartToolIntepreter::ExtractPossibleSecondaryParameterInfo(
+    boost::shared_ptr<NFmiAreaMaskInfo> &theMaskInfo)
+{
+  if (HasSecondaryParameter(theMaskInfo))
+  {
+      // Nyt pitää löytyä sekundaari parametri ja sen perässä vielä pilkku
+    GetToken();
+    string secondaryVariableStr = token;
+    GetToken();
+    auto commaStr = token;
+    if (commaStr == string(","))
+    {
+      boost::shared_ptr<NFmiAreaMaskInfo> secondaryParamMaskInfo(new NFmiAreaMaskInfo());
+      InterpretVariable(secondaryVariableStr, secondaryParamMaskInfo);
+      if (secondaryParamMaskInfo->GetOperationType() == NFmiAreaMask::InfoVariable)
+      {
+        theMaskInfo->SetSecondaryParam(secondaryParamMaskInfo->GetDataIdent());
+        theMaskInfo->SetSecondaryParamLevel(secondaryParamMaskInfo->GetLevel());
+        theMaskInfo->SetSecondaryParamDataType(secondaryParamMaskInfo->GetDataType());
+        theMaskInfo->SetSecondaryParamUseDefaultProducer(
+            secondaryParamMaskInfo->GetUseDefaultProducer());
+        // NFmiSmartToolIntepreter::InitTokens metodissa kun itsTokenVertFunctions
+        // alustetaan argumenttien lukumäärällä, yhtenäisyyden takia laitoin siellä
+        // argumenttien määräksi sen mitä funktiolla annettiin, mutta koska sekundaari
+        // parametri argumenttia ei käsitellä normaalisti ja se ohitetaan itse laskuissa
+        //  niin siksi tässä kohtaa pitää niiden funktioiden argumentti määrää pienentää yhdellä.
+        theMaskInfo->FunctionArgumentCount(theMaskInfo->FunctionArgumentCount() - 1);
+        return;
+      }
+    }
+
+    // Jos ei löytynyt oikein tulkittavaa sekundaari parametria ja pilkkua sen perässä, 
+    // heitetään poikkeus, jotta käyttäjälle saadaan virheilmoitus.
+    std::string errorMessage =
+          "There should be an acceptable secondary parameter in 2nd place in parameter list with function ";
+      errorMessage += theMaskInfo->GetMaskText();
+      throw std::runtime_error(errorMessage);
+  }
 }
 
 static std::pair<bool, NFmiDefineWantedData> CheckForProducerLevelType(
@@ -4514,6 +4561,10 @@ void NFmiSmartToolIntepreter::InitTokens(NFmiProducerSystem *theProducerSystem,
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("time_modmin"), VertFunctionMapValue(NFmiAreaMask::ModMin, NFmiAreaMask::TimeRange, 3, string("time_modmin(par, time_offset1, time_offset2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
     itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("time_modmax"), VertFunctionMapValue(NFmiAreaMask::ModMax, NFmiAreaMask::TimeRange, 3, string("time_modmax(par, time_offset1, time_offset2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
 
+    // Haetaan par1:lle max/min arvoa ja siitä paikasta ja ajanhetkestä palautetaan par2:n arvo.
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("second_param_from_min_time"), VertFunctionMapValue(NFmiAreaMask::Min, NFmiAreaMask::SecondParamFromExtremeTime, 4, string("second_param_from_min_time(par1, par2, time_offset1, time_offset2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    itsTokenVertFunctions.insert(VertFunctionMap::value_type(string("second_param_from_max_time"), VertFunctionMapValue(NFmiAreaMask::Max, NFmiAreaMask::SecondParamFromExtremeTime, 4, string("second_param_from_max_time(par1, par2, time_offset1, time_offset2)"), NFmiAreaMask::SimpleConditionRule::Allowed)));
+    
     // Tässä on time-range vertikaaliset-funktiot, jotka operoivat datan omassa aika ja level
     // resoluutiossa.
     // Esim. hae maksimi arvo 2h aikavälillä 1000 ja 500 hPa väliltä.

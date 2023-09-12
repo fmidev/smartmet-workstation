@@ -77,7 +77,13 @@ NFmiAreaMaskInfo::NFmiAreaMaskInfo(const NFmiAreaMaskInfo &theOther)
       itsSoundingParameter(theOther.itsSoundingParameter),
       itsModelRunIndex(theOther.itsModelRunIndex),
       itsSimpleConditionInfo(theOther.itsSimpleConditionInfo),
-      itsTimeOffsetInHours(theOther.itsTimeOffsetInHours)
+      itsTimeOffsetInHours(theOther.itsTimeOffsetInHours),
+      itsSecondaryParam(theOther.itsSecondaryParam),
+      itsSecondaryParamLevel(theOther.itsSecondaryParamLevel
+                                 ? new NFmiLevel(*theOther.itsSecondaryParamLevel)
+                                                             : nullptr),
+      itsSecondaryParamDataType(theOther.itsSecondaryParamDataType),
+      fSecondaryParamUseDefaultProducer(theOther.fSecondaryParamUseDefaultProducer)
 {
 }
 
@@ -105,4 +111,10 @@ void NFmiAreaMaskInfo::SimpleConditionInfo(
   {
     itsSimpleConditionInfo->SetStationDataUsage(*itsDataIdent.GetProducer());
   }
+}
+
+void NFmiAreaMaskInfo::SetSecondaryParamLevel(NFmiLevel *theLevel)
+{
+  delete itsSecondaryParamLevel;
+  itsSecondaryParamLevel = theLevel ? new NFmiLevel(*theLevel) : nullptr;
 }

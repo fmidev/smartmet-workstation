@@ -2050,6 +2050,35 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateTimeRangeMask(
                                     theAreaMaskInfo.GetDataIdent().GetParamIdent()));
 }
 
+boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateSecondParamFromExtremeTimeMask(
+    const NFmiAreaMaskInfo &theAreaMaskInfo, bool &mustUsePressureInterpolation)
+{
+  boost::shared_ptr<NFmiFastQueryInfo> info =
+      CreateInfo(theAreaMaskInfo, mustUsePressureInterpolation);
+  boost::shared_ptr<NFmiFastQueryInfo> secondaryParamInfo =
+      CreateSecondaryParamInfo(theAreaMaskInfo, mustUsePressureInterpolation);
+  return boost::shared_ptr<NFmiAreaMask>(
+      new NFmiInfoAreaMaskTimeRangeSecondParValue(theAreaMaskInfo.GetMaskCondition(),
+                                                  NFmiAreaMask::kInfo,
+                                                  info->DataType(),
+                                                  info,
+                                                  secondaryParamInfo,
+                                                  theAreaMaskInfo.GetFunctionType(),
+                                                  theAreaMaskInfo.FunctionArgumentCount(),
+                                                  theAreaMaskInfo.GetDataIdent().GetParamIdent()));
+}
+
+boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::CreateSecondaryParamInfo(
+    const NFmiAreaMaskInfo &theAreaMaskInfo, bool &mustUsePressureInterpolation)
+{
+  NFmiAreaMaskInfo secondaryParamAreaMaskInfo;
+  secondaryParamAreaMaskInfo.SetDataIdent(theAreaMaskInfo.GetSecondaryParam());
+  secondaryParamAreaMaskInfo.SetLevel(theAreaMaskInfo.GetSecondaryParamLevel());
+  secondaryParamAreaMaskInfo.SetDataType(theAreaMaskInfo.GetSecondaryParamDataType());
+  secondaryParamAreaMaskInfo.SetUseDefaultProducer(theAreaMaskInfo.GetSecondaryParamUseDefaultProducer());
+  return CreateInfo(secondaryParamAreaMaskInfo, mustUsePressureInterpolation);
+}
+
 boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreatePreviousFullDaysMask(
     const NFmiAreaMaskInfo &theAreaMaskInfo, bool &mustUsePressureInterpolation)
 {
@@ -2339,6 +2368,10 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateVertFunctionStartMa
   {
     areaMask = CreateTimeRangeMask(theAreaMaskInfo, mustUsePressureInterpolation);
   }
+  else if (functionType == NFmiAreaMask::SecondParamFromExtremeTime)
+  {
+    areaMask = CreateSecondParamFromExtremeTimeMask(theAreaMaskInfo, mustUsePressureInterpolation);
+  }
   else if (functionType == NFmiAreaMask::AreaRect || functionType == NFmiAreaMask::AreaCircle)
   {
     areaMask = CreateAreaRelatedFunctionMask(theAreaMaskInfo, mustUsePressureInterpolation);
@@ -2405,7 +2438,9 @@ void NFmiSmartToolModifier::DoFinalAreaMaskInitializations(
           NFmiAreaMask::PreviousFullDays,
           NFmiAreaMask::TimeDuration,
           NFmiAreaMask::AreaRect,
-          NFmiAreaMask::AreaCircle};
+          NFmiAreaMask::AreaCircle,
+          NFmiAreaMask::SecondParamFromExtremeTime
+      };
       NFmiAreaMask::FunctionType functionType = ::GetFunctionType(theAreaMaskInfo);
       auto allowedIter = std::find(functionsThatAllowObservations.begin(),
                                    functionsThatAllowObservations.end(),

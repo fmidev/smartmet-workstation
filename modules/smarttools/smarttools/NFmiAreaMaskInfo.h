@@ -94,7 +94,16 @@ class NFmiAreaMaskInfo
   void SimpleConditionInfo(boost::shared_ptr<NFmiSimpleConditionInfo>& theSimpleConditionInfo);
   float TimeOffsetInHours() const { return itsTimeOffsetInHours; }
   void TimeOffsetInHours(float newValue) { itsTimeOffsetInHours = newValue; }
-private:
+  void SetSecondaryParam(const NFmiDataIdent& value) { itsSecondaryParam = value; }
+  const NFmiDataIdent& GetSecondaryParam() const { return itsSecondaryParam; }
+  NFmiLevel* GetSecondaryParamLevel() const { return itsSecondaryParamLevel; }
+  void SetSecondaryParamLevel(NFmiLevel* theLevel);
+  NFmiInfoData::Type GetSecondaryParamDataType() const { return itsSecondaryParamDataType; }
+  void SetSecondaryParamDataType(NFmiInfoData::Type newValue) { itsSecondaryParamDataType = newValue; }
+  bool GetSecondaryParamUseDefaultProducer() const { return fSecondaryParamUseDefaultProducer; }
+  void SetSecondaryParamUseDefaultProducer(bool newValue) { fSecondaryParamUseDefaultProducer = newValue; }
+
+ private:
   NFmiDataIdent itsDataIdent;
   bool fUseDefaultProducer;
   NFmiCalculationCondition itsMaskCondition;
@@ -138,4 +147,9 @@ private:
   // Tietyillä funktioilla voi olla simple-condition-info osio, joka talletetaan tähän
   boost::shared_ptr<NFmiSimpleConditionInfo> itsSimpleConditionInfo;
   float itsTimeOffsetInHours = 0;
+  // Jos laskuissa on käytössä sekundaari parametri, tässä on sen par+prod+level tiedot
+  NFmiDataIdent itsSecondaryParam;
+  NFmiLevel* itsSecondaryParamLevel = nullptr;  // mahd. level tieto, omistaa ja tuhoaa
+  NFmiInfoData::Type itsSecondaryParamDataType = NFmiInfoData::kNoDataType;
+  bool fSecondaryParamUseDefaultProducer = true;
 };
