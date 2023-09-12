@@ -444,7 +444,9 @@ lexClass:
 	token:tag	= 'multiparamtooltipfile'
 	token:tag	= 'multiparam2'
 	token:tag	= 'multiparam3'
-
+	token:tag	= 'second_param_from_min_time'
+	token:tag	= 'second_param_from_max_time'
+	
 	token:start:separators	= ' ', '\t', ':', ';', '!', '(', ')', ',', '/', '{', '}', '=', '+', '-', '*', '/', '%', @eol
 	token:end:separators	= ' ', '\t', ':', ';', '!', '(', ')', '{', '}', @eol
 	
@@ -812,6 +814,8 @@ lexClass:
 	token:tag	= 'multiparam2 = par4_prod240_lev85'
 	token:tag	= 'multiparam3 = parameter'
 	
+    token:tag	= 'second_param_from_min_time(par1, par2, time_offset1, time_offset2)'
+    token:tag	= 'second_param_from_max_time(par1, par2, time_offset1, time_offset2)'
 
 	token:start:separators	= ' ', '\t', ':', ';', '!', '(', ')', ',', '/', '{', '}', '=', '+', '-', '*', '/', '%', @eol
 	token:end:separators	= ' ', '\t', ':', ';', '!', '(', ')', '{', '}', @eol
