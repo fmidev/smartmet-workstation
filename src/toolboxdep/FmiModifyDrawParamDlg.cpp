@@ -506,23 +506,24 @@ const int g_ViewTypeOffset1 = 1;
 const int g_ViewTypeOffset2 = 4;
 static int GetStationDataViewSelectorIndex(NFmiMetEditorTypes::View theViewType)
 {
-    if(theViewType >= NFmiMetEditorTypes::View::kFmiTextView && theViewType <= NFmiMetEditorTypes::View::kFmiIndexedTextView)
-        return static_cast<int>(theViewType) - g_ViewTypeOffset1;
-    else if(theViewType <= NFmiMetEditorTypes::View::kFmiSmartSymbolView)
-        return static_cast<int>(theViewType) - g_ViewTypeOffset2;
-    else if(theViewType <= NFmiMetEditorTypes::View::kFmiCustomSymbolView)
-        return static_cast<int>(theViewType) - g_ViewTypeOffset2;
-    else
-        return -1;
+	if(theViewType >= NFmiMetEditorTypes::View::kFmiTextView && (theViewType < NFmiMetEditorTypes::View::kFmiFontTextView || theViewType > NFmiMetEditorTypes::View::kFmiParamsDefaultView))
+	{
+		if(theViewType <= NFmiMetEditorTypes::View::kFmiWindVectorView)
+			return static_cast<int>(theViewType) - g_ViewTypeOffset1;
+		else if(theViewType <= NFmiMetEditorTypes::View::kFmiCustomSymbolView)
+			return static_cast<int>(theViewType) - g_ViewTypeOffset2;
+	}
+
+	return -1;
 }
 
 static NFmiMetEditorTypes::View GetSelectedStationDataViewType(CComboBox &theStationDataViewSelector)
 {
-    auto currentSelection = theStationDataViewSelector.GetCurSel();
-    if(currentSelection >= (static_cast<int>(NFmiMetEditorTypes::View::kFmiTextView) - g_ViewTypeOffset1) && currentSelection <= (static_cast<int>(NFmiMetEditorTypes::View::kFmiIndexedTextView) - g_ViewTypeOffset1))
-        return static_cast<NFmiMetEditorTypes::View>(theStationDataViewSelector.GetCurSel() + g_ViewTypeOffset1);
-    else
-        return static_cast<NFmiMetEditorTypes::View>(theStationDataViewSelector.GetCurSel() + g_ViewTypeOffset2);
+	auto currentSelection = theStationDataViewSelector.GetCurSel();
+	if(currentSelection >= (static_cast<int>(NFmiMetEditorTypes::View::kFmiTextView) - g_ViewTypeOffset1) && currentSelection <= (static_cast<int>(NFmiMetEditorTypes::View::kFmiWindVectorView) - g_ViewTypeOffset1))
+		return static_cast<NFmiMetEditorTypes::View>(theStationDataViewSelector.GetCurSel() + g_ViewTypeOffset1);
+	else
+		return static_cast<NFmiMetEditorTypes::View>(theStationDataViewSelector.GetCurSel() + g_ViewTypeOffset2);
 }
 
 void CFmiModifyDrawParamDlg::FillStationDataViewSelector(void)

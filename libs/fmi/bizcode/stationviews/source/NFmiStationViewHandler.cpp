@@ -3418,7 +3418,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                             , itsViewGridColumnNumber);
 
 		}
-		else if(theDrawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiSymbolView)
+		else if(theDrawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiArrowView)
 		{
 			stationView = new NFmiStationArrowView(itsMapViewDescTopIndex, itsMapArea
 											 ,itsToolBox
@@ -3518,7 +3518,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                                     , itsViewGridRowNumber
                                                     , itsViewGridColumnNumber);
         }
-		else if(theDrawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiIndexedTextView || (info && info->IsGrid() == false && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiIndexedTextView))
+		else if(theDrawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiWindVectorView || (info && info->IsGrid() == false && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiWindVectorView))
 		{
 			stationView = new NFmiStationWindBarbView(itsMapViewDescTopIndex, itsMapArea
 													 ,itsToolBox
