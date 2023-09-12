@@ -1855,7 +1855,8 @@ float NFmiStationView::GetMacroParamTooltipValueFromCache(const NFmiExtraMacroPa
 	if(itsCtrlViewDocumentInterface->MacroParamDataCache().getCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, usedTime, itsDrawParam->InitFileName(), macroParamLayerCacheDataType))
 	{
 		const auto& dataMatrix = macroParamLayerCacheDataType.getDataMatrix();
-		NFmiGrid grid(itsArea.get(), static_cast<unsigned long>(dataMatrix.NX()), static_cast<unsigned long>(dataMatrix.NY()));
+		NFmiGrid grid = itsMacroParamCalculationGrid ? *itsMacroParamCalculationGrid :
+			NFmiGrid(itsArea.get(), static_cast<unsigned long>(dataMatrix.NX()), static_cast<unsigned long>(dataMatrix.NY()));
 		grid.Area()->SetXYArea(NFmiRect(0, 0, 1, 1));
 		auto gridPoint = grid.LatLonToGrid(latlon);
 		if(extraMacroParamData.CalculationType() == MacroParamCalculationType::Index)
@@ -1869,13 +1870,14 @@ float NFmiStationView::GetMacroParamTooltipValueFromCache(const NFmiExtraMacroPa
 		}
 		else
 		{
+			auto xyPoint = grid.GridToXY(gridPoint);
 			// normi reaaliluku interpolaatio l‰mpˆtila parametri on vain dummy arvo tavalliselle reaaliluvulle
-			auto interpolatedValue = dataMatrix.InterpolatedValue(LatLonToViewPoint(latlon), itsArea->XYArea(), kFmiTemperature);
+			auto interpolatedValue = dataMatrix.InterpolatedValue(xyPoint, grid.Area()->XYArea(), kFmiTemperature);
 			if(interpolatedValue != kFloatMissing)
 				return interpolatedValue;
 
 			// Monissa macroParameissa on paljon puuttuvia arvoja, ja normaali interpolaatio ei toimi, kokeillaan viel‰ saadaanko nearest menetelm‰ll‰ arvoa
-			return dataMatrix.InterpolatedValue(LatLonToViewPoint(latlon), itsArea->XYArea(), kFmiTemperature, false, kNearestPoint);
+			return dataMatrix.InterpolatedValue(xyPoint, grid.Area()->XYArea(), kFmiTemperature, false, kNearestPoint);
 		}
 	}
 
@@ -2697,6 +2699,7 @@ void NFmiStationView::CalculateDifferenceToOriginalDataMatrix(NFmiDataMatrix<flo
 // Otetaan visualizationOptimazation:in harvennetut hilakoot tarvittavissa kohdissa k‰yttˆˆn
 bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2, bool& useOriginalDataInPixelToGridRatioCalculations, NFmiGrid* optimizedDataGrid)
 {
+	itsMacroParamCalculationGrid.reset(); // nollataan aina t‰m‰ aluksi
 	bool status = true;
     NFmiGrid usedGrid; // t‰m‰n avulla lasketaan maski laskut
 
@@ -2723,6 +2726,7 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 		else if(itsInfo->DataType() == NFmiInfoData::kMacroParam) // pit‰‰ tehd‰ makrolaskelmat ja antaa ne theValues-matriisille
 		{
 			CalcMacroParamMatrix(theValues, &usedGrid);
+			itsMacroParamCalculationGrid.reset(new NFmiGrid(usedGrid));
 		}
 		else
 		{

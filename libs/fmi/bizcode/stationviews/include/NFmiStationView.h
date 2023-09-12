@@ -347,5 +347,8 @@ protected:
    // Jos piirto-ominaisuuksissa sanottu ett‰ k‰ytet‰‰n toista parametria n‰ytˆss‰ 
    // olevan parametrin symbolien v‰rityksess‰, niin t‰h‰n otetaan se talteen.
    boost::shared_ptr<NFmiFastQueryInfo> itsPossibleColorValueInfo;
+   // Tooltip interpolaatioissa pit‰‰ tiet‰‰ ns. final-calculation-grid, jotta 
+   // voidaan aina laskea oikein tooltip arvo cachesta.
+   boost::shared_ptr<NFmiGrid> itsMacroParamCalculationGrid;
 };
 
