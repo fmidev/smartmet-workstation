@@ -126,6 +126,10 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetWantedData(CtrlViewDocumentInterf
 		NFmiMetTime dummyTime;
 		NFmiLocation location(*possibleLatlonPtr);
 		wantedInfo = theCtrlViewDocumentInterface->GetNearestSynopStationInfo(location, dummyTime, true, nullptr);
+		if(wantedInfo)
+		{
+			wantedInfo->Param(static_cast<FmiParameterName>(dataIdent.GetParamIdent()));
+		}
 	}
 	else
 	{
