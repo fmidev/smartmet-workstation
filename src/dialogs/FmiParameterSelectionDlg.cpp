@@ -1229,8 +1229,7 @@ void CFmiParameterSelectionDlg::HandleRowItemSelection(const AddParams::SingleRo
         }
         else if(itsParameterSelectionSystem->LastActivatedDesktopIndex() == CtrlViewUtils::kFmiTimeSerialView)
         {
-            auto usedParamAddingCommand = kFmiAddTimeSerialSideParam;
-            usedParamAddingCommand = kFmiAddTimeSerialView;
+            auto usedParamAddingCommand = kFmiAddTimeSerialView;
             if(fTimeSerialSideParameterCase)
             {
                 usedParamAddingCommand = kFmiAddTimeSerialSideParam;
