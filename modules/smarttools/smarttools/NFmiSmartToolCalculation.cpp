@@ -129,6 +129,7 @@ void NFmiSmartToolCalculation::Calculate(const NFmiCalculationParams &theCalcula
   NFmiInfoData::Type dataType = itsResultInfo->DataType();
   if (theMacroParamValue.fSetValue &&
       (dataType == NFmiInfoData::kMacroParam || dataType == NFmiInfoData::kCrossSectionMacroParam ||
+       dataType == NFmiInfoData::kTimeSerialMacroParam ||
        dataType == NFmiInfoData::kScriptVariableData))
     theMacroParamValue.itsValue = static_cast<float>(value);
 }
@@ -737,13 +738,16 @@ void NFmiSmartToolCalculation::eval_math_function(double &result, int theFunctio
   }
 }
 
-bool NFmiSmartToolCalculation::IsCrossSectionVariableCase(const NFmiCalculationParams &theCalculationParams)
+bool NFmiSmartToolCalculation::IsSpecialCalculationVariableCase(
+    const NFmiCalculationParams &theCalculationParams)
 {
-    return (theCalculationParams.fCrossSectionCase && token->GetDataType() == NFmiInfoData::Type::kScriptVariableData);
+  return (theCalculationParams.fSpecialCalculationCase &&
+          token->GetDataType() == NFmiInfoData::Type::kScriptVariableData);
 }
 
 // Oletus: ensin tarkistetaan IsCrossSectionVariableCase metodilla onko tarvetta tälle operaatiolle.
-double NFmiSmartToolCalculation::CrossSectionVariableCaseValue(const NFmiCalculationParams &theCalculationParams)
+double NFmiSmartToolCalculation::SpecialCalculationVariableCaseValue(
+    const NFmiCalculationParams &theCalculationParams)
 {
     // Erikoistapaus: poikkileikkaus macroParam laskuissa var -muuttuja pitää ottaa vain suoraan infosta ilman mitään interpolaatioita
     auto info = token->Info();
@@ -759,9 +763,9 @@ double NFmiSmartToolCalculation::CrossSectionVariableCaseValue(const NFmiCalcula
 void NFmiSmartToolCalculation::atom(double &result,
                                     const NFmiCalculationParams &theCalculationParams)
 {
-  if(IsCrossSectionVariableCase(theCalculationParams))
+  if(IsSpecialCalculationVariableCase(theCalculationParams))
   {
-    result = CrossSectionVariableCaseValue(theCalculationParams);
+    result = SpecialCalculationVariableCaseValue(theCalculationParams);
   }
   else
   {
@@ -1105,9 +1109,9 @@ void NFmiSmartToolCalculation::bin_atom(bool &maskresult,
                                         double &result,
                                         const NFmiCalculationParams &theCalculationParams)
 {
-  if(IsCrossSectionVariableCase(theCalculationParams))
+  if(IsSpecialCalculationVariableCase(theCalculationParams))
   {
-    result = CrossSectionVariableCaseValue(theCalculationParams);
+    result = SpecialCalculationVariableCaseValue(theCalculationParams);
   }
   else
   {
