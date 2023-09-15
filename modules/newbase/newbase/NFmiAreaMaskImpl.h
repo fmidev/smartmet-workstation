@@ -35,16 +35,16 @@ class NFmiAreaMaskImpl : public NFmiAreaMask
   // NFmiInfoAreaMask-luokassa
   double HeightValue(double /* theHeight */, const NFmiCalculationParams &theCalculationParams) override
   {
-    // Poikkileikkauslaskuissa pitää aina käyttää 'aikainterpolaatiota', muuten ei (koska laskussa käytetyt ajat on jo asetettu muualla)
-    bool useTimeInterpolationAlways = theCalculationParams.fCrossSectionCase;
+    // Poikkileikkaus/aikasarja laskuissa pitää aina käyttää 'aikainterpolaatiota', muuten ei (koska laskussa käytetyt ajat on jo asetettu muualla)
+    bool useTimeInterpolationAlways = theCalculationParams.fSpecialCalculationCase;
     return Value(theCalculationParams, useTimeInterpolationAlways);
   }
   // oletuksenä PressureValue palauttaa saman kuin Value-metodi, homma overridataan vain
   // NFmiInfoAreaMask-luokassa
   double PressureValue(double /* thePressure */, const NFmiCalculationParams &theCalculationParams) override
   {
-    // Poikkileikkauslaskuissa pitää aina käyttää 'aikainterpolaatiota', muuten ei (koska laskussa käytetyt ajat on jo asetettu muualla)
-    bool useTimeInterpolationAlways = theCalculationParams.fCrossSectionCase;
+    // Poikkileikkaus/aikasarja laskuissa pitää aina käyttää 'aikainterpolaatiota', muuten ei (koska laskussa käytetyt ajat on jo asetettu muualla)
+    bool useTimeInterpolationAlways = theCalculationParams.fSpecialCalculationCase;
     return Value(theCalculationParams, useTimeInterpolationAlways);
   }
 

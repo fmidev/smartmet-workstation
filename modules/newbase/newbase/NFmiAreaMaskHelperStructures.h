@@ -30,7 +30,7 @@ class NFmiCalculationParams
                         unsigned long theLocationIndex,
                         const NFmiMetTime &theTime,
                         unsigned long theTimeIndex,
-                        bool crossSectionCase = false,
+                        bool specialCalculation = false,
                         float thePressureHeight = kFloatMissing);
 
   const NFmiPoint &UsedLatlon(bool forceCalculationGridPoint = false) const;
@@ -41,8 +41,8 @@ class NFmiCalculationParams
   unsigned long itsLocationIndex = gMissingIndex;
   NFmiMetTime itsTime;
   unsigned long itsTimeIndex = gMissingIndex;
-  // Joskus pitää tietää että kyse on poikkileikkaus laskuista
-  bool fCrossSectionCase = false;
+  // Joskus pitää tietää että kyse on poikkileikkaus tai aikasarja laskuista
+  bool fSpecialCalculationCase = false;
   // Silloin (poikkileikkauslaskuissa) käytetään tätä painepintaa laskentapisteenä
   // Tein siitä mutablen, jotta ei tarvitse muuttaa niin monissa kohtaa const parametria ei const:iksi.
   mutable float itsPressureHeight = kFloatMissing;
