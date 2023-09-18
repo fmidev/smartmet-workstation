@@ -2161,6 +2161,7 @@ void NFmiToolBox::DoChangingColorWindBarbBulkDraw(const NFmiSymbolBulkDrawData& 
 			if(!nextColor.IsFullyTransparent())
 			{
 				envi.SetFrameColor(nextColor);
+				envi.SetFillColor(nextColor);
 
 				float ws, wd;
 				std::tie(ws, wd) = NFmiToolBox::GetWsAndWdFromWindVector(sbdData.values()[index]);
