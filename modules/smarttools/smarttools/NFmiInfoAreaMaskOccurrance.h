@@ -244,6 +244,7 @@ class NFmiInfoAreaMaskTimeRangeSecondParValue : public NFmiInfoAreaMaskTimeRange
                                   float theValue) override;
   void InitializeIntegrationValues() override;
   double GetSecondParamValue(const NFmiCalculationParams &theCalculationParams);
+  bool DoExtremeAddingSpecialCase() const override { return false; }
 
   // Tämä luokka luo vain extreme tyyppisiä integrointi-modifiereita.
   // Niiden avulla saadaan tietää extreme arvon aika ja sitä käytetään 2. parametrin arvon hakuun.

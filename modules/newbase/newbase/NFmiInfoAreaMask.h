@@ -157,6 +157,7 @@ class NFmiInfoAreaMask : public NFmiAreaMaskImpl
   void AddExtremeValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                         boost::shared_ptr<NFmiDataModifier> &theFunctionModifier,
                         const NFmiLocationCache &theLocationCache);
+  virtual bool DoExtremeAddingSpecialCase() const { return true; }
   virtual void AddValueToModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                         boost::shared_ptr<NFmiDataModifier> &theFunctionModifier,
                         float theValue);

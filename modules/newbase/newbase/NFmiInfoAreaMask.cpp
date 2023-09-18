@@ -921,7 +921,8 @@ void NFmiInfoAreaMask::AddValuesToFunctionModifier(
     const NFmiLocationCache &theLocationCache,
     NFmiAreaMask::FunctionType integrationFunction)
 {
-  if (integrationFunction == NFmiAreaMask::Max || integrationFunction == NFmiAreaMask::Min)
+  if (DoExtremeAddingSpecialCase() && (integrationFunction == NFmiAreaMask::Max ||
+      integrationFunction == NFmiAreaMask::Min))
     AddExtremeValues(theInfo, theFunctionModifier, theLocationCache);
   else
     AddValueToModifier(
