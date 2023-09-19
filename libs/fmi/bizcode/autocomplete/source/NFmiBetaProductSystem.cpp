@@ -581,7 +581,7 @@ std::string NFmiBetaProduct::CheckUsedRowSubdirectoryTemplate()
     {
             itsRowInputErrorString = ::GetDictionaryString("Multiple rows were selected but no row subdirectory template.");
             itsRowInputErrorString += "\n";
-            itsRowInputErrorString += ::GetDictionaryString("Unable to generate images.");
+            itsRowInputErrorString += ::GetDictionaryString("Unable to generate images");
             return "";
     }
     else
@@ -595,7 +595,7 @@ std::string NFmiBetaProduct::CheckUsedRowSubdirectoryTemplate()
             itsRowInputErrorString += ": \"";
             itsRowInputErrorString += subdirTemplateStr;
             itsRowInputErrorString += "\"\n";
-            itsRowInputErrorString += ::GetDictionaryString("There must be somthing with # -character in template. Unable to generate images.");
+            itsRowInputErrorString += ::GetDictionaryString("There must be something with # -character in template. Unable to generate images");
             return subdirTemplateStr;
         }
     }
@@ -781,6 +781,7 @@ static const std::string gJsonName_DisplayRuntimeInfo = "DisplayRuntimeInfo";
 static const std::string gJsonName_ShowModelOriginTime = "ShowModelOriginTime";
 static const std::string gJsonName_SynopStationIdList = "SynopStationIdList";
 static const std::string gJsonName_PackImages = "PackImages";
+static const std::string gJsonName_EnsureCurveVisibility = "EnsureCurveVisibility";
 
 static void AddNonEmptyStringJsonPair(const std::string &value, const std::string &valueJsonName, json_spirit::Object &jsonObject)
 {
@@ -817,6 +818,8 @@ json_spirit::Object NFmiBetaProduct::MakeJsonObject(const NFmiBetaProduct &betaP
     ::AddNonEmptyStringJsonPair(betaProduct.SynopStationIdListString(), gJsonName_SynopStationIdList, jsonObject);
     if(defaultBetaProduct.PackImages() != betaProduct.PackImages())
         jsonObject.push_back(json_spirit::Pair(gJsonName_PackImages, betaProduct.PackImages()));
+    if(defaultBetaProduct.EnsureCurveVisibility() != betaProduct.EnsureCurveVisibility())
+        jsonObject.push_back(json_spirit::Pair(gJsonName_EnsureCurveVisibility, betaProduct.EnsureCurveVisibility()));
 
     return jsonObject;
 }
@@ -880,6 +883,8 @@ void NFmiBetaProduct::ParseJsonPair(json_spirit::Pair &thePair)
         itsSynopStationIdListString = thePair.value_.get_str();
     else if(thePair.name_ == gJsonName_PackImages)
         fPackImages = thePair.value_.get_bool();
+    else if(thePair.name_ == gJsonName_EnsureCurveVisibility)
+        fEnsureCurveVisibility = thePair.value_.get_bool();
 }
 
 bool NFmiBetaProduct::StoreInJsonFormat(const NFmiBetaProduct &betaProduct, const std::string &theFilePath, std::string &theErrorStringOut)
@@ -2102,6 +2107,7 @@ NFmiBetaProductionSystem::NFmiBetaProductionSystem()
 , mBetaProductSaveInitialPath()
 , mBetaProductSynopStationIdListString()
 , mBetaProductPackImages()
+, mBetaProductEnsureCurveVisibility()
 , mAutomationModeOn()
 , mUsedAutomationListPathString()
 , mBetaProductTabControlIndex()
@@ -2149,6 +2155,7 @@ bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, cons
     mBetaProductShowModelOriginTime = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, betaProductSectionName, "\\ShowModelOriginTime", usedKey, false);
     mBetaProductSynopStationIdListString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\SynopStationIdList", usedKey, "");
     mBetaProductPackImages = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, betaProductSectionName, "\\PackImages", usedKey, false);
+    mBetaProductEnsureCurveVisibility = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, betaProductSectionName, "\\EnsureCurveVisibility", usedKey, false);
 
     mAutomationModeOn = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, betaProductSectionName, "\\AutomationModeOn", usedKey, false, "");
     mUsedAutomationListPathString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\UsedAutomationListPath", usedKey, "");
@@ -2482,6 +2489,16 @@ bool NFmiBetaProductionSystem::BetaProductPackImages()
 void NFmiBetaProductionSystem::BetaProductPackImages(bool newValue)
 {
     *mBetaProductPackImages = newValue;
+}
+
+bool NFmiBetaProductionSystem::BetaProductEnsureCurveVisibility()
+{
+    return *mBetaProductEnsureCurveVisibility;
+}
+
+void NFmiBetaProductionSystem::BetaProductEnsureCurveVisibility(bool newValue)
+{
+    *mBetaProductEnsureCurveVisibility = newValue;
 }
 
 std::string NFmiBetaProductionSystem::BetaProductSaveInitialPath()

@@ -16,7 +16,7 @@ class NFmiDrawParam;
 
 class NFmiImageAttributes
 {
-    Gdiplus::Color transparentColor_ = Gdiplus::Color(Gdiplus::Color::Black);
+    Gdiplus::Color transparentColor_ = Gdiplus::Color(Gdiplus::Color::PaleGoldenrod);
     Gdiplus::REAL alpha_ = 0.f;
     bool useTransparentColor_ = false;
     bool useAlpha_ = false;

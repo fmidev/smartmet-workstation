@@ -36,6 +36,7 @@
 #include "ColorStringFunctions.h"
 #include "NFmiDataModifierAvg.h"
 #include "CtrlViewFunctions.h"
+#include "NFmiDataModifierMinMax.h"
 
 #include <stdexcept>
 #include "boost\math\special_functions\round.hpp"
@@ -674,6 +675,7 @@ void NFmiTempView::Draw(NFmiToolBox *theToolBox)
     if(theToolBox == 0)
 		return ;
 	itsToolBox = theToolBox;
+	itsOperationalMode = SoundingViewOperationMode::NormalDrawMode;
 
     try
     {
@@ -685,9 +687,7 @@ void NFmiTempView::Draw(NFmiToolBox *theToolBox)
         itsGdiplusScale.Y(itsToolBox->GetClientRect().Height());
 
         NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
-        tmax = mtaTempSystem.TAxisEnd();
-        tmin = mtaTempSystem.TAxisStart();
-        dt = tmax - tmin;
+		SetupTAxisValues(mtaTempSystem.TAxisStart(), mtaTempSystem.TAxisEnd());
 
         pmin = mtaTempSystem.PAxisEnd();
         pmax = mtaTempSystem.PAxisStart();
@@ -1948,7 +1948,11 @@ void NFmiTempView::DrawSoundingsInMTAMode(void)
 			producerIndex++;
 		}
 	}
-	DrawLegendLineData();
+
+	if(!IsInScanMode())
+	{
+		DrawLegendLineData();
+	}
 }
 
 static NFmiMetTime GetUsedSoundingDataTime(CtrlViewDocumentInterface *documentInterface, const NFmiMTATempSystem::TempInfo &tempInfo)
@@ -1980,66 +1984,99 @@ void NFmiTempView::ResetTextualScrollingIfSoundingDataChanged(const NFmiMTATempS
 	}
 }
 
+static bool IsNewData(boost::shared_ptr<NFmiFastQueryInfo> &info)
+{
+	return CtrlViewUtils::IsConsideredAsNewData(info, 0, false);
+}
+
+bool NFmiTempView::IsInScanMode() const
+{
+	return (itsOperationalMode == SoundingViewOperationMode::FitScalesScanMode);
+}
+
 const std::vector<NFmiInfoData::Type> g_CombineSurfaceDataTypes{ NFmiInfoData::kViewable , NFmiInfoData::kAnalyzeData };
 
 void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theProducerIndex, double theBrightningFactor, int theModelRunIndex)
 {
     auto usedTempInfo(theTempInfo);
-    auto useServerData = theProducer.useServer();
     usedTempInfo.Time(::GetUsedSoundingDataTime(itsCtrlViewDocumentInterface, theTempInfo));
-	// Amdar datoilla (tuottaja id 1015) o nerikois aikaikkuna, mist‰ datoja etsit‰‰n, 
+	// Amdar datoilla (tuottaja id 1015) on erikois aikaikkuna, mist‰ datoja etsit‰‰n, 
 	// sen alkuhaarukka pit‰‰ antaa FindSoundingInfo, kaikille muille datoille arvo on 0.
 	int amdarDataStartOffsetInMinutes = (theProducer.GetIdent() == 1015) ? 30 : 0;
-	bool mainCurve = theModelRunIndex == 0;
+	bool mainCurve = (theModelRunIndex == 0);
 
 	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, usedTempInfo.Time(), theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true), amdarDataStartOffsetInMinutes);
-	if(useServerData || info)
+	if(theProducer.useServer() || info)
 	{
-        auto usedLocationWithName = ::GetSoundingLocation(info, theTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
-        usedTempInfo.Latlon(usedLocationWithName.GetLocation());
-		auto groundDataInfo = ::GetPossibleGroundData(itsCtrlViewDocumentInterface, info, theProducer, g_CombineSurfaceDataTypes);
-		ResetTextualScrollingIfSoundingDataChanged(theProducer, usedTempInfo, info, theProducerIndex);
-        NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
-		TotalSoundingData sounding(mtaTempSystem);
-		FillSoundingData(info, sounding, usedTempInfo.Time(), usedLocationWithName, groundDataInfo, theProducer);
-        NFmiColor usedColor(mtaTempSystem.SoundingColor(theProducerIndex));
+		auto sounding = GetTotalsoundingData(info, usedTempInfo, theProducer, theProducerIndex);
+		if(IsInScanMode())
+		{
+			itsScanData.push_back(sounding);
+			return;
+		}
+
+        NFmiColor usedColor(itsCtrlViewDocumentInterface->GetMTATempSystem().SoundingColor(theProducerIndex));
 		if(theBrightningFactor != 0)
 			usedColor = NFmiColorSpaces::GetBrighterColor(usedColor, theBrightningFactor);
 		itsDrawingEnvironment->SetFrameColor(usedColor);
         bool onSouthernHemiSphere = usedTempInfo.Latlon().Y() < 0;
-		DrawSounding(sounding, theProducerIndex, usedColor, mainCurve, onSouthernHemiSphere, info);
+		DrawSounding(sounding, theProducerIndex, usedColor, mainCurve, onSouthernHemiSphere, ::IsNewData(info));
         itsSoundingDataCacheForTooltips.insert(std::make_pair(NFmiMTATempSystem::SoundingDataCacheMapKey(usedTempInfo, theProducer, theModelRunIndex), sounding));
 	}
 	else
 	{
-		if(IsSelectedProducerIndex(theProducerIndex) && theModelRunIndex == 0)
+		if(!IsInScanMode())
 		{
-			// Jos ei lˆytynyt mit‰‰n dataa ja kyse oli 1. piirrett‰v‰st‰ luotausdatasta, pit‰‰ itsFirstSoundingData dataosa nollata,
-			// jotta tekstimuotoisiin sivun‰yttˆihin ei j‰isi vanha data 'kummittelemaan'
-			itsSelectedProducerSoundingData = TotalSoundingData();
+			ResetSelectedDataInEmptyCase(theProducerIndex, theModelRunIndex);
+			DrawMainDataLegendInEmptyCase(mainCurve, usedTempInfo, theProducer, theModelRunIndex, theProducerIndex);
 		}
+	}
+}
 
-		if(mainCurve)
+TotalSoundingData NFmiTempView::GetTotalsoundingData(boost::shared_ptr<NFmiFastQueryInfo>& info, NFmiMTATempSystem::TempInfo& usedTempInfo, const NFmiMTATempSystem::SoundingProducer& theProducer, int theProducerIndex)
+{
+	auto usedLocationWithName = ::GetSoundingLocation(info, usedTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
+	usedTempInfo.Latlon(usedLocationWithName.GetLocation());
+	auto groundDataInfo = ::GetPossibleGroundData(itsCtrlViewDocumentInterface, info, theProducer, g_CombineSurfaceDataTypes);
+	ResetTextualScrollingIfSoundingDataChanged(theProducer, usedTempInfo, info, theProducerIndex);
+	NFmiMTATempSystem& mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
+	TotalSoundingData sounding(mtaTempSystem);
+	FillSoundingData(info, sounding, usedTempInfo.Time(), usedLocationWithName, groundDataInfo, theProducer);
+	return sounding;
+}
+
+void NFmiTempView::DrawMainDataLegendInEmptyCase(bool mainCurve, const NFmiMTATempSystem::TempInfo& usedTempInfo, const NFmiMTATempSystem::SoundingProducer& theProducer, int theModelRunIndex, int theProducerIndex)
+{
+	if(mainCurve)
+	{
+		// Vaikka dataa ei lˆytynyt, piirret‰‰n kuitenkin luotauksen legenda tiedot n‰kyviin
+		NFmiSoundingDataOpt1 emptySoundingData;
+		emptySoundingData.Location(NFmiLocation(usedTempInfo.Latlon()));
+		emptySoundingData.Time(usedTempInfo.Time());
+		// Haetaan luotausdata ilman aika hakuehtoa, jottaa saataisiin mahdollinen originTime datasta
+		boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true));
+		if(info)
 		{
-			// Vaikka dataa ei lˆytynyt, piirret‰‰n kuitenkin luotauksen legenda tiedot n‰kyviin
-			NFmiSoundingDataOpt1 emptySoundingData;
-			emptySoundingData.Location(NFmiLocation(usedTempInfo.Latlon()));
-			emptySoundingData.Time(usedTempInfo.Time());
-			// Haetaan luotausdata ilman aika hakuehtoa, jottaa saataisiin mahdollinen originTime datasta
-			boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true));
-			if(info)
+			emptySoundingData.OriginTime(info->OriginTime());
+			if(info->IsGrid())
 			{
-				emptySoundingData.OriginTime(info->OriginTime());
-				if(info->IsGrid())
-				{
-					auto usedLocationWithName = ::GetSoundingLocation(info, usedTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
-					emptySoundingData.Location(usedLocationWithName);
-				}
+				auto usedLocationWithName = ::GetSoundingLocation(info, usedTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
+				emptySoundingData.Location(usedLocationWithName);
 			}
-			TotalSoundingData totalData;
-			totalData.itsSoundingData = emptySoundingData;
-			DrawStationInfo(totalData, theProducerIndex, info);
 		}
+		TotalSoundingData totalData;
+		totalData.itsSoundingData = emptySoundingData;
+		DrawStationInfo(totalData, theProducerIndex, ::IsNewData(info));
+	}
+}
+
+// Jos ei lˆytynyt mit‰‰n dataa ja kyse oli 1. piirrett‰v‰st‰ luotausdatasta, pit‰‰ itsSelectedProducerSoundingData 
+// dataosa nollata, jotta tekstimuotoisiin sivun‰yttˆihin ei j‰isi vanha data 'kummittelemaan'
+void NFmiTempView::ResetSelectedDataInEmptyCase(int theProducerIndex, int theModelRunIndex)
+{
+	if(IsSelectedProducerIndex(theProducerIndex) && theModelRunIndex == 0)
+	{
+		itsSelectedProducerSoundingData = TotalSoundingData();
 	}
 }
 
@@ -3034,7 +3071,7 @@ void NFmiTempView::SetupUsedSoundingData(TotalSoundingData& theUsedDataInOut, in
 	}
 }
 
-void NFmiTempView::DrawSounding(TotalSoundingData &theUsedDataInOut, int theProducerIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere, boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
+void NFmiTempView::DrawSounding(TotalSoundingData &theUsedDataInOut, int theProducerIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere, bool isNewData)
 {
 	SetupUsedSoundingData(theUsedDataInOut, theProducerIndex, fMainCurve);
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
@@ -3095,7 +3132,7 @@ void NFmiTempView::DrawSounding(TotalSoundingData &theUsedDataInOut, int theProd
 		DrawCondensationTrailRHValues(theUsedDataInOut.itsSoundingData, 400, 200, 0.32); // 0.32 on viimeinen apuviiva mik‰ piirret‰‰n, arvot laitetaan sen oikealle puolelle
 
 	if(fMainCurve)
-		DrawStationInfo(theUsedDataInOut, theProducerIndex, theInfo);
+		DrawStationInfo(theUsedDataInOut, theProducerIndex, isNewData);
 }
 
 static void AddStringLabelData(const PointF &thePoint, const PointF &theOffsetPoint, const std::string &theStr, vector<LineLabelDrawData> &theLabels)
@@ -3252,11 +3289,11 @@ static std::string MakeLegendStringCorrectLength(std::string legendLineStr)
 	return legendLineStr;
 }
 
-static std::string MakeLegendLocationNameStr(NFmiSoundingDataOpt1& theData, int theProducerIndex, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, bool allowHighlights)
+static std::string MakeLegendLocationNameStr(NFmiSoundingDataOpt1& theData, int theProducerIndex, bool isNewData, bool allowHighlights)
 {
 	std::string locationNameStr = std::to_string(theProducerIndex + 1);
 	locationNameStr += ":";
-	if(allowHighlights && CtrlViewUtils::IsConsideredAsNewData(theInfo, 0, false))
+	if(allowHighlights && isNewData)
 		locationNameStr += " *";
 	else
 		locationNameStr += " ";
@@ -3309,7 +3346,7 @@ void NFmiTempView::AddLegendLineData(const std::string& text, const NFmiColor& t
 	itsLegendDrawingLineData.push_back(LegendDrawingLineData{ text, textColor, backgroundColor, doHorizontalLineSeparator });
 }
 
-void NFmiTempView::DrawStationInfo(TotalSoundingData& theData, int theProducerIndex, boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
+void NFmiTempView::DrawStationInfo(TotalSoundingData& theData, int theProducerIndex, bool isNewData)
 {
 	NFmiMTATempSystem& mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
 	if(!mtaTempSystem.DrawLegendText())
@@ -3317,7 +3354,7 @@ void NFmiTempView::DrawStationInfo(TotalSoundingData& theData, int theProducerIn
 
 	SetupLegendDrawingEnvironment();
 	bool allowHighlights = !itsCtrlViewDocumentInterface->BetaProductGenerationRunning();
-	auto locationNameStr = ::MakeLegendLocationNameStr(theData.itsSoundingData, theProducerIndex, theInfo, allowHighlights);
+	auto locationNameStr = ::MakeLegendLocationNameStr(theData.itsSoundingData, theProducerIndex, isNewData, allowHighlights);
 
 	NFmiPoint point = CalcLegendTextStartPoint();
 	point.Y(point.Y() + (2.0 * theProducerIndex * itsLegendDrawingSetup.textLineHeightRelative));
@@ -4227,3 +4264,202 @@ bool NFmiTempView::FillSoundingDataFromServer(const NFmiMTATempSystem::SoundingP
     return status;
 }
 
+// Vaisala diagrammi on helppo tapaus, katso ‰‰ri T ja Td arvot kaikista luotauksista
+// ja kerroksista ja lis‰‰ v‰h‰n toppausta reunoille ja siin‰ on T-akselin alku+loppu rajat.
+std::pair<double, double> NFmiTempView::GetVisibleTemperatureRangeForVaisalaDiagram(const std::pair<double, double>& originalRange)
+{
+	NFmiDataModifierMinMax autoAdjustTMinMaxValues;
+	for(auto& totalSoundingData : itsScanData)
+	{
+		ScanSingleDataVaisala(totalSoundingData, autoAdjustTMinMaxValues);
+	}
+
+	if(autoAdjustTMinMaxValues.MinValue() != kFloatMissing)
+	{
+		auto rawStartT = autoAdjustTMinMaxValues.MinValue();
+		auto rawEndT = autoAdjustTMinMaxValues.MaxValue();
+		// Jos originaali rangen sis‰‰n mahtuu kaikki arvot, k‰ytet‰‰n niit‰,
+		// muuten lasketaan uusi range pyˆrist‰en ja lis‰‰m‰ll‰ marginaalia.
+		if(rawStartT < originalRange.first || rawEndT > originalRange.second)
+		{
+			double newStartT = std::floor(autoAdjustTMinMaxValues.MinValue());
+			double newEndT = std::ceil(autoAdjustTMinMaxValues.MaxValue());
+			auto diff = (newEndT - newStartT);
+			auto padding = std::round(std::sqrt(diff) / 2.);
+			if(padding < 3.)
+			{
+				padding = 3.;
+			}
+			newStartT -= padding;
+			newEndT += padding;
+			return std::make_pair(newStartT, newEndT);
+		}
+	}
+
+	return originalRange;
+}
+
+// Skannaa annetun T-rangen kaikille datoille ja laskee kuinka monta n‰kyv‰‰ pistett‰
+// rangeen osuu. Palauttaa true, jos n‰kyvyys oli t‰ydellinen. Palauttaa parametreina potentiaaliset vs todelliset n‰kyvyydet.
+bool NFmiTempView::ScanRangeForAllDataSkewT(double startT, double endT, int& potenciallyVisibleValuesInOut, int& actuallyVisibleValuesInOut)
+{
+	SetupTAxisValues(startT, endT);
+	for(auto& totalSoundingData : itsScanData)
+	{
+		ScanSingleDataSkewT(totalSoundingData, potenciallyVisibleValuesInOut, actuallyVisibleValuesInOut);
+	}
+	return (potenciallyVisibleValuesInOut == actuallyVisibleValuesInOut);
+}
+
+// Skew-T diagrammi on hankala, pit‰‰ k‰yd‰ l‰pi lista erilaisia vaihtoehtoja T-akselin 
+// alku+loppup‰iden et‰isyyksille. Toisessa iteraatiossa k‰yd‰‰n l‰pi sopivista aloituskohdista.
+// Sitten k‰yd‰‰n l‰pi joka luotaus kaikilla leveleill‰ ja katsotaan kuinka 
+// moni T+Td arvo j‰‰ oikeasti n‰kyviin. N‰in etsit‰‰n jotain miss‰ on eniten n‰kyviss‰ 
+// olevia arvoja. En tied‰ kuinka paljon iteraatioita oikeasti pit‰‰ tehd‰...
+std::pair<double, double> NFmiTempView::GetVisibleTemperatureRangeForSkewTDiagram(const std::pair<double, double>& originalRange)
+{
+	vector<double> suitableTRanges{ 35, 40, 45, 50, 55, 60, 65, 70, 75, 80 };
+	vector<double> suitableTStartValues{ 0, 5, -5, 10, -10, 15, -15, 20, -20, 25, -25, 30, -30, 35, -35, -40, -45, -50, -55, -60, -65, -70, -75, -80};
+	int potenciallyVisibleValues = 0;
+	int actuallyVisibleValues = 0;
+	if(ScanRangeForAllDataSkewT(originalRange.first, originalRange.second, potenciallyVisibleValues, actuallyVisibleValues))
+	{
+		// Originaali T-akselilla kaikki pisteet n‰kyv‰t, palautetaan se sellaisenaan heti
+		return originalRange;
+	}
+
+	// Laitetaan originaali asteikon n‰kyvyydet ja arvot alkuarvauksiksi
+	int bestVisibleCount = actuallyVisibleValues;
+	std::pair<double, double> bestVisibleRange = originalRange;
+	for(auto suitableRange : suitableTRanges)
+	{
+		for(auto suitableStartValue : suitableTStartValues)
+		{
+			auto startT = suitableStartValue;
+			auto endT = suitableStartValue + suitableRange;
+			potenciallyVisibleValues = 0;
+			actuallyVisibleValues = 0;
+			if(ScanRangeForAllDataSkewT(startT, endT, potenciallyVisibleValues, actuallyVisibleValues))
+			{
+				// Kaikki pisteet n‰kyv‰t, palautetaan sellainen heti
+				return std::make_pair(startT, endT);
+			}
+			else if(bestVisibleCount < actuallyVisibleValues)
+			{
+				bestVisibleCount = actuallyVisibleValues;
+				bestVisibleRange = std::make_pair(startT, endT);
+			}
+		}
+	}
+	return bestVisibleRange;
+}
+
+void NFmiTempView::ScanVisualizedData()
+{
+	itsOperationalMode = SoundingViewOperationMode::FitScalesScanMode;
+	itsScanData.clear();
+	DrawSoundingsInMTAMode();
+	itsOperationalMode = SoundingViewOperationMode::NormalDrawMode;
+	NFmiMTATempSystem& mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
+	std::pair<double, double> startEndTemperatureScaleValues(mtaTempSystem.TAxisStart(), mtaTempSystem.TAxisEnd());
+	if(mtaTempSystem.SkewTDegree() == 0)
+	{
+		startEndTemperatureScaleValues = GetVisibleTemperatureRangeForVaisalaDiagram(startEndTemperatureScaleValues);
+	}
+	else
+	{
+		startEndTemperatureScaleValues = GetVisibleTemperatureRangeForSkewTDiagram(startEndTemperatureScaleValues);
+	}
+
+	mtaTempSystem.TAxisStart(startEndTemperatureScaleValues.first);
+	mtaTempSystem.TAxisEnd(startEndTemperatureScaleValues.second);
+}
+
+void NFmiTempView::ScanSingleDataVaisala(TotalSoundingData& totalSoundingData, NFmiDataModifierMinMax& theAutoAdjustTMinMaxValuesOut)
+{
+	auto& soundingData = totalSoundingData.itsSoundingData;
+	if(soundingData.IsDataGood())
+	{
+		const auto& dataRect = itsTempViewDataRects.getSoundingCurveDataRect();
+		const auto& P_container = soundingData.GetParamData(kFmiPressure);
+		const auto& T_container = soundingData.GetParamData(kFmiTemperature);
+		const auto& Td_container = soundingData.GetParamData(kFmiDewPoint);
+		for(size_t index = 0; index < P_container.size(); index++)
+		{
+			auto P = P_container[index];
+			double y = p2y(P);
+			if(y <= dataRect.Bottom() && y >= dataRect.Top())
+			{
+				auto T = T_container[index];
+				theAutoAdjustTMinMaxValuesOut.Calculate(T);
+				auto Td = Td_container[index];
+				theAutoAdjustTMinMaxValuesOut.Calculate(Td);
+//				double x1 = pt2x(P, T);
+//				double x2 = pt2x(P, Td);
+			}
+		}
+	}
+}
+
+void NFmiTempView::CheckIsTVisible(float T, float P, double yPos, int& potenciallyVisibleValuesInOut, int& actuallyVisibleValuesInOut)
+{
+	if(T != kFloatMissing)
+	{
+		potenciallyVisibleValuesInOut++;
+		double x1 = pt2x(P, T);
+		if(itsTempViewDataRects.getSoundingCurveDataRect().IsInside(NFmiPoint(x1, yPos)))
+		{
+			actuallyVisibleValuesInOut++;
+		}
+	}
+}
+
+void NFmiTempView::ScanSingleDataSkewT(TotalSoundingData& totalSoundingData, int& potenciallyVisibleValuesInOut, int& actuallyVisibleValuesInOut)
+{
+	auto& soundingData = totalSoundingData.itsSoundingData;
+	if(soundingData.IsDataGood())
+	{
+		bool previousHeightValueWasChecked = false;
+		double lastInsideRectY = -999;
+		const auto& dataRect = itsTempViewDataRects.getSoundingCurveDataRect();
+		const auto& P_container = soundingData.GetParamData(kFmiPressure);
+		const auto& T_container = soundingData.GetParamData(kFmiTemperature);
+		const auto& Td_container = soundingData.GetParamData(kFmiDewPoint);
+		for(size_t index = 0; index < P_container.size(); index++)
+		{
+			auto P = P_container[index];
+			double y = p2y(P);
+			if(y <= dataRect.Bottom() && y >= dataRect.Top())
+			{
+				previousHeightValueWasChecked = true;
+				lastInsideRectY = y;
+				CheckIsTVisible(T_container[index], P, y, potenciallyVisibleValuesInOut, actuallyVisibleValuesInOut);
+				CheckIsTVisible(Td_container[index], P, y, potenciallyVisibleValuesInOut, actuallyVisibleValuesInOut);
+			}
+			else
+			{
+				if(previousHeightValueWasChecked)
+				{
+					// Jos edellisen levelin arvo on tarkastettu ja seuraava on ulkona,
+					// halutaan juuri se seuraava viel‰ tarkastaa, koska edellisest‰ menev‰ viiva voi muuten menn‰ ruudun ulos.
+					CheckIsTVisible(T_container[index], P, lastInsideRectY, potenciallyVisibleValuesInOut, actuallyVisibleValuesInOut);
+					CheckIsTVisible(Td_container[index], P, lastInsideRectY, potenciallyVisibleValuesInOut, actuallyVisibleValuesInOut);
+				}
+				previousHeightValueWasChecked = false;
+				lastInsideRectY = -999;
+			}
+		}
+	}
+}
+
+void NFmiTempView::AutoAdjustSoundingScales()
+{
+	ScanVisualizedData();
+}
+
+void NFmiTempView::SetupTAxisValues(double startT, double endT)
+{
+	tmax = endT;
+	tmin = startT;
+	dt = tmax - tmin;
+}

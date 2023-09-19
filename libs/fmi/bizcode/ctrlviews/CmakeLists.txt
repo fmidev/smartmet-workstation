@@ -12,8 +12,9 @@ add_library(
     ${H_FILES} 
     )
 
-target_link_libraries( 
-    ${PROJECT_NAME}
+
+set(TARGET_LINK_LIBRARIES_LIST 
+	${PROJECT_NAME}
     SmartTools
     Toolbox
     Newbase
@@ -22,6 +23,12 @@ target_link_libraries(
     TmUtils
     WinRegistryUtils
     )
+if(NOT DISABLE_CPPRESTSDK)
+	set(TARGET_LINK_LIBRARIES_LIST ${TARGET_LINK_LIBRARIES_LIST} WmsSupport)
+endif()
+
+target_link_libraries(${TARGET_LINK_LIBRARIES_LIST})
+
 
 target_include_directories( 
     ${PROJECT_NAME}
@@ -35,6 +42,7 @@ target_include_directories(
     PUBLIC ${BOOST_INCLUDE_DIR}
     PUBLIC ${TmUtils_INCLUDE_DIRS}
     PUBLIC ${WinRegistryUtils_INCLUDE_DIRS}
+    PUBLIC ${WmsSupport_INCLUDE_DIRS}
     )
 
 set(
@@ -49,6 +57,7 @@ set(
     ${BOOST_INCLUDE_DIR}
     ${TmUtils_INCLUDE_DIRS}
     ${WinRegistryUtils_INCLUDE_DIRS}
+    ${WmsSupport_INCLUDE_DIRS}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
     )
 

@@ -50,7 +50,7 @@ istream& NFmiEditorControlPoint::Read(istream& file)
 ostream& NFmiEditorControlPoint::Write(ostream& file) const
 {
 	file << itsTimeCount << " " << itsTimeIndex << endl;
-	std::copy(itsChangeValueVector.begin(), itsChangeValueVector.end(), ostream_iterator<double>(file, " "));
+	std::copy(itsChangeValueVector.begin(), itsChangeValueVector.end(), ostream_iterator<float>(file, " "));
 	file << endl;
 
 	return file;
@@ -81,7 +81,7 @@ void NFmiEditorControlPoint::Resize(int newSize)
 //--------------------------------------------------------
 // ClearValues 
 //--------------------------------------------------------
-void NFmiEditorControlPoint::ClearValues(double theClearValue)
+void NFmiEditorControlPoint::ClearValues(float theClearValue)
 {
 	for(size_t i=0; i < itsChangeValueVector.size(); i++)
 		itsChangeValueVector[i] = theClearValue;
@@ -98,7 +98,7 @@ bool NFmiEditorControlPoint::IsTimeIndexOk(int theTimeIndex)
 //--------------------------------------------------------
 // ChangeValue 
 //--------------------------------------------------------
-double NFmiEditorControlPoint::ChangeValue(void)
+float NFmiEditorControlPoint::ChangeValue(void)
 {
 	if(IsTimeIndexOk(itsTimeIndex))
 		return itsChangeValueVector[itsTimeIndex];
@@ -106,7 +106,7 @@ double NFmiEditorControlPoint::ChangeValue(void)
 		return 0;
 }
 
-std::vector<double>& NFmiEditorControlPoint::ChangeValues(void)
+std::vector<float>& NFmiEditorControlPoint::ChangeValues(void)
 {
    return itsChangeValueVector;
 }
@@ -114,7 +114,7 @@ std::vector<double>& NFmiEditorControlPoint::ChangeValues(void)
 //--------------------------------------------------------
 // ChangeValue 
 //--------------------------------------------------------
-void NFmiEditorControlPoint::ChangeValue(double newValue)
+void NFmiEditorControlPoint::ChangeValue(float newValue)
 {
 	if(IsTimeIndexOk(itsTimeIndex))
 		itsChangeValueVector[itsTimeIndex] = newValue;

@@ -19,12 +19,12 @@ static char THIS_FILE[]=__FILE__;
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-NFmiTimeSerialSymbolView::NFmiTimeSerialSymbolView(const NFmiRect & theRect
+NFmiTimeSerialSymbolView::NFmiTimeSerialSymbolView(int theMapViewDescTopIndex, const NFmiRect & theRect
 												  ,NFmiToolBox * theToolBox
 												  ,NFmiDrawingEnvironment * theDrawingEnvi
 												  ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 												  ,int theIndex)
-:NFmiTimeSerialView(theRect
+:NFmiTimeSerialView(theMapViewDescTopIndex, theRect
 				  ,theToolBox
 				  ,theDrawingEnvi
 				  ,theDrawParam

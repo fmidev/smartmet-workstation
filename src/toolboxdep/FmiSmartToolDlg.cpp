@@ -670,7 +670,7 @@ void CFmiSmartToolDlg::RefreshApplicationViewsAndDialogs(const std::string &reas
     if(makeMapDirtyActions)
         itsSmartMetDocumentInterface->MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, editedDataModified, false);
 
-    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate, SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView);
+    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(reasonForUpdate, SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView | SmartMetViewId::TimeSerialView);
 }
 
 bool CFmiSmartToolDlg::EnableDlgItem(int theDlgId, bool fEnable)

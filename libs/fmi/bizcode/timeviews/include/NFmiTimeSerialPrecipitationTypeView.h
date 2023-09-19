@@ -31,7 +31,7 @@ class NFmiTimeSerialPrecipitationTypeView : public NFmiTimeSerialDiscreteDataVie
 {
 
  public:
-    NFmiTimeSerialPrecipitationTypeView (const NFmiRect & theRect
+    NFmiTimeSerialPrecipitationTypeView (int theMapViewDescTopIndex, const NFmiRect & theRect
 										,NFmiToolBox * theToolBox
 										,NFmiDrawingEnvironment * theDrawingEnvi
 										,boost::shared_ptr<NFmiDrawParam> &theDrawParam

@@ -394,7 +394,6 @@ class NFmiDrawParam
   void SimpleIsoLineColorShadeHighValue(float newValue)
   {
     itsSimpleIsoLineColorShadeHighValue = newValue;
-    itsSimpleIsoLineColorShadeHigh2Value = newValue;
   }
 
   float SimpleIsoLineColorShadeHigh2Value() const
@@ -429,7 +428,6 @@ class NFmiDrawParam
   void SimpleIsoLineColorShadeHighValueColor(const NFmiColor& newValue)
   {
     itsSimpleIsoLineColorShadeHighValueColor = newValue;
-    itsSimpleIsoLineColorShadeHigh2ValueColor = newValue;
   }
 
   const NFmiColor& SimpleIsoLineColorShadeHigh2ValueColor() const
@@ -439,6 +437,16 @@ class NFmiDrawParam
   void SimpleIsoLineColorShadeHigh2ValueColor(const NFmiColor& newValue)
   {
     itsSimpleIsoLineColorShadeHigh2ValueColor = newValue;
+  }
+
+  const NFmiColor& SimpleIsoLineColorShadeHigh3ValueColor() const
+  {
+    return itsSimpleIsoLineColorShadeHigh3ValueColor;
+  }
+
+  void SimpleIsoLineColorShadeHigh3ValueColor(const NFmiColor& newValue)
+  {
+    itsSimpleIsoLineColorShadeHigh3ValueColor = newValue;
   }
 
   int SimpleIsoLineColorShadeClassCount() const { return itsSimpleIsoLineColorShadeClassCount; }
@@ -711,6 +719,9 @@ class NFmiDrawParam
   void SymbolDrawDensityX(double newValue);
   double SymbolDrawDensityY() const { return itsSymbolDrawDensityY; }
   void SymbolDrawDensityY(double newValue);
+  const std::string& PossibleColorValueParameter() const { return itsPossibleColorValueParameter; }
+  void PossibleColorValueParameter(const std::string& newValue);
+  bool IsPossibleColorValueParameterValid() const;
 
   static std::string MetTime2String(const NFmiMetTime& theTime);
   static NFmiMetTime String2MetTime(const std::string& theStr);
@@ -833,6 +844,9 @@ class NFmiDrawParam
   NFmiColor itsSimpleIsoLineColorShadeMidValueColor;
   NFmiColor itsSimpleIsoLineColorShadeHighValueColor;
   NFmiColor itsSimpleIsoLineColorShadeHigh2ValueColor;  // **** Versio 3 parametri ****
+  // Lisätty 5. väri, jotta simple-isoline no-color-blending piirrot voidaan tehdä 
+  // oikein (vaatii 4 rajaa ja 5 väriä), kun color-blend on käytössä käytetään 4 rajaa ja 4 väriä
+  NFmiColor itsSimpleIsoLineColorShadeHigh3ValueColor;
   int itsSimpleIsoLineColorShadeClassCount;  // kuinka monta väri luokkaa tehdään skaalaukseen
   // speciaali isoviiva asetukset (otetaan käyttöön, jos fUseSimpleIsoLineDefinitions=false)
   std::vector<float>
@@ -969,6 +983,12 @@ class NFmiDrawParam
   // Arvoavaruus on [0.5 , 1.5].
   double itsSymbolDrawDensityX = DefaultSymbolDrawDensity;
   double itsSymbolDrawDensityY = DefaultSymbolDrawDensity;
+  // Käyttäjä voi halutessaan värjatä jonkun datan jonkun parametrin symbolit jollain toisen
+  // parametrin arvojen avulla. Seuraavia arvoja voi antaa tekstinä:
+  // 1) T tai par4, jolloin väritys haetaan saman tuottajan ja saman levelin lämpötila parametrista
+  // 2) (NOT IMPLEMENTED YET) T_925 tai par4_925, jolloin väritys haetaan saman tuottajan halutulta 925 hPa leveliltä lämpötila parametrista
+  // 3) (NOT IMPLEMENTED YET) T_ec tai T_ec_925, jolloin väritys haetaan Ecmwf datan pinnasta tai 925 hPa tasosta
+  std::string itsPossibleColorValueParameter;
 };
 //@{ \name Globaalit NFmiDrawParam-luokan uudelleenohjaus-operaatiot
 inline std::ostream& operator<<(std::ostream& os, const NFmiDrawParam& item)

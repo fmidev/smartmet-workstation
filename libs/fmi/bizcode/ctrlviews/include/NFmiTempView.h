@@ -13,6 +13,13 @@ class NFmiProducer;
 class NFmiText;
 class NFmiTempLineInfo;
 class NFmiTempLabelInfo;
+class NFmiDataModifierMinMax;
+
+enum class SoundingViewOperationMode
+{
+	NormalDrawMode,
+	FitScalesScanMode
+};
 
 class TotalSoundingData
 {
@@ -85,6 +92,7 @@ class NFmiTempView : public NFmiCtrlView
 	bool RightButtonDown(const NFmiPoint &thePlace, unsigned long theKey) override;
 	bool MouseMove(const NFmiPoint &thePlace, unsigned long theKey) override;
 	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
+	void AutoAdjustSoundingScales();
 
  private:
 	void DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theProducerIndex, double theBrightningFactor, int theModelRunIndex);
@@ -108,7 +116,7 @@ class NFmiTempView : public NFmiCtrlView
 	NFmiPoint GetRelativePointFromHodograf(double u, double v);
 	void DrawSoundingInTextFormat(NFmiSoundingDataOpt1 &theData);
 	bool FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, TotalSoundingData &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo, const NFmiMTATempSystem::SoundingProducer &theProducer);
-	void DrawSounding(TotalSoundingData& theUsedDataInOut, int theProducerIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere, boost::shared_ptr<NFmiFastQueryInfo>& theInfo);
+	void DrawSounding(TotalSoundingData& theUsedDataInOut, int theProducerIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere, bool isNewData);
 	void DrawSoundingsInMTAMode(void);
 	void DrawBackground(void);
 	void DrawStabilityIndexData(NFmiSoundingDataOpt1& usedData);
@@ -137,7 +145,7 @@ class NFmiTempView : public NFmiCtrlView
 	void DrawLine(const NFmiPoint &p1, const NFmiPoint &p2, bool drawSpecialLines, int theTrueLineWidth, bool startWithXShift, int theHelpDotPixelSize, NFmiDrawingEnvironment * theEnvi);
 	void DrawHelpLineLabel(const NFmiPoint &p1, const NFmiPoint &theMoveLabelRelatively, double theValue, const NFmiTempLabelInfo &theLabelInfo, NFmiDrawingEnvironment * theEnvi, const std::string&thePostStr = std::string());
 	void DrawWind(NFmiSoundingDataOpt1 &theData, int theProducerIndex, bool onSouthernHemiSphere);
-	void DrawStationInfo(TotalSoundingData &theData, int theProducerIndex, boost::shared_ptr<NFmiFastQueryInfo>& theInfo);
+	void DrawStationInfo(TotalSoundingData &theData, int theProducerIndex, bool isNewData);
 	void DrawHeightValues(NFmiSoundingDataOpt1 &theData, int theProducerIndex);
 	void MoveToNextLine(double relativeLineHeight, NFmiPoint &theTextPoint);
 	void DrawNextLineToIndexView(double relativeLineHeight, NFmiText& theText, const std::string& theStr, NFmiPoint& theTextPoint, bool moveFirst = true, bool addToString = true);
@@ -182,6 +190,18 @@ class NFmiTempView : public NFmiCtrlView
 	void DrawLegendLineData();
 	void DrawLegendLineDataSeparator(const NFmiPoint& textPoint);
 	void AddPossibleAvgIntegrationInfo(TotalSoundingData& theData, const NFmiColor& textColor, const NFmiColor& backgroundColor);
+	void ResetSelectedDataInEmptyCase(int theProducerIndex, int theModelRunIndex);
+	void DrawMainDataLegendInEmptyCase(bool mainCurve, const NFmiMTATempSystem::TempInfo& usedTempInfo, const NFmiMTATempSystem::SoundingProducer& theProducer, int theModelRunIndex, int theProducerIndex);
+	TotalSoundingData GetTotalsoundingData(boost::shared_ptr<NFmiFastQueryInfo>& info, NFmiMTATempSystem::TempInfo& usedTempInfo, const NFmiMTATempSystem::SoundingProducer& theProducer, int theProducerIndex);
+	bool IsInScanMode() const;
+	void ScanVisualizedData();
+	void ScanSingleDataVaisala(TotalSoundingData& totalSoundingData, NFmiDataModifierMinMax& theAutoAdjustTMinMaxValuesOut);
+	void ScanSingleDataSkewT(TotalSoundingData& totalSoundingData, int &potenciallyVisibleValuesInOut, int& actuallyVisibleValuesInOut);
+	std::pair<double, double> GetVisibleTemperatureRangeForVaisalaDiagram(const std::pair<double, double>& originalRange);
+	std::pair<double, double> GetVisibleTemperatureRangeForSkewTDiagram(const std::pair<double, double> &originalRange);
+	void CheckIsTVisible(float T, float P, double yPos, int& potenciallyVisibleValuesInOut, int& actuallyVisibleValuesInOut);
+	void SetupTAxisValues(double startT, double endT);
+	bool ScanRangeForAllDataSkewT(double startT, double endT, int& potenciallyVisibleValuesInOut, int& actuallyVisibleValuesInOut);
 
 	double Tpot2x(double tpot, double p);
 	double pt2x(double p, double t);
@@ -238,6 +258,8 @@ class NFmiTempView : public NFmiCtrlView
 	NFmiTempViewScrollingData itsTempViewScrollingData;
 	LegendDrawingSetup itsLegendDrawingSetup;
 	std::vector<LegendDrawingLineData> itsLegendDrawingLineData;
+	SoundingViewOperationMode itsOperationalMode = SoundingViewOperationMode::NormalDrawMode;
+	std::vector<TotalSoundingData> itsScanData;
 };
 
 

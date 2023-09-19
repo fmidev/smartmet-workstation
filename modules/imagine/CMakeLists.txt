@@ -3,6 +3,8 @@ project(Imagine)
 
 set(CMAKE_MFC_FLAG 0)
 
+disable_linux_side_compiler_warnings()
+
 add_definitions( 
     -DIMAGINE_IGNORE_FORMATS
     )

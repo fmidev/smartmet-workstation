@@ -108,7 +108,7 @@ void CTimeEditValuesView::OnDraw(CDC* pDC)
 		if(itsManagerView)
 		{
 			// Laitetaan tiimalasi piirron ajaksi tiedottamaan k‰ytt‰j‰lle, ett‰ piirto voi kest‰‰ kauann
-			std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
+			CFmiWin32Helpers::WaitCursorHelper waitCursorHelper(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
 
 			DoDraw();
 		}
@@ -667,11 +667,16 @@ void CTimeEditValuesView::HideToolTip(void)
 	m_tooltip.HideTooltip();
 }
 
-void CTimeEditValuesView::AutoAdjustValueScales(bool fJustActive)
+void CTimeEditValuesView::AutoAdjustValueScales(bool justActiveRow, bool redrawOnSuccess)
 {
 	CtrlView::DeviceContextHandler<CTimeEditValuesView> deviceContextHandler(this);
-	if(itsManagerView->AutoAdjustValueScales(fJustActive))
-		Invalidate(FALSE);
+	if(itsManagerView->AutoAdjustValueScales(justActiveRow))
+	{
+		if(redrawOnSuccess)
+		{
+			Invalidate(FALSE);
+		}
+	}
 }
 
 std::string CTimeEditValuesView::MakeCsvDataString()

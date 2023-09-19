@@ -47,7 +47,6 @@ class NFmiMenuItemList
     using MenuItemList = std::list<MenuItem>;
 
 	NFmiMenuItemList(void);
-	NFmiMenuItemList(NFmiParamBag* theParamBag);
 	NFmiMenuItemList(int theMapViewDescTopIndex, NFmiParamBag* theParamBag, const FmiMenuCommandType &theMenuCommandType,
 					const NFmiMetEditorTypes::View &theViewType, NFmiInfoData::Type theDataType, const std::vector<std::unique_ptr<NFmiDataIdent>> *possibleMetaParams = nullptr);
 	NFmiMenuItemList(int theMapViewDescTopIndex, const NFmiDataIdent& theDataIdent, 

@@ -133,7 +133,7 @@ public:
     bool setModelRunOffset(boost::shared_ptr<NFmiDrawParam>& drawParam, FmiMenuCommandType command, unsigned int mapViewDescTopIndex, int viewRowIndex);
     void setModelRunOffsetForAllModelDataOnActiveRow(unsigned int mapViewDescTopIndex, FmiDirection direction) override;
     void activateView(const NFmiMenuItem& menuItem, int rowIndex) override;
-    void addViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& menuItem, int realRowIndex, bool isViewMacroDrawParam, const std::string* macroParamInitFileName) override;
+    void addViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& menuItem, int realRowIndex, bool isViewMacroDrawParam) override;
     void addCrossSectionView(const NFmiMenuItem& menuItem, int viewRowIndex, bool treatAsViewMacro) override;
     void addView(const NFmiMenuItem& menuItem, int viewRowIndex) override;
     void changeParamLevel(const NFmiMenuItem& menuItem, int viewRowIndex) override;
@@ -172,13 +172,13 @@ public:
     NFmiDrawParamList& getTimeSerialViewDrawParamList() override;
     NFmiDrawParamList* getTimeSerialViewSideParameters(int viewRowIndex) override;
     SideParametersContainer& getTimeSerialViewSideParameterList() override;
-    void addTimeSerialViewSideParameter(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam) override;
+    boost::shared_ptr<NFmiDrawParam> addTimeSerialViewSideParameter(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam) override;
     void removeTimeSerialViewSideParameter(const NFmiMenuItem& menuItem) override;
     void removeAllTimeSerialViewSideParameters(int viewRowIndex) override;
     void removeAllTimeSerialViews() override;
     void showCrossSectionDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex, bool showParam) override;
     bool modifyDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex) override;
-    void addTimeSerialView(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam) override;
+    boost::shared_ptr<NFmiDrawParam> addTimeSerialView(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam) override;
     void removeTimeSerialView(const NFmiMenuItem& menuItem) override;
     void timeSerialViewModelRunCountSet(const NFmiMenuItem& menuItem) override;
     unsigned long& getTimeSerialViewIndexReference() override;
@@ -338,4 +338,5 @@ private:
     SideParametersIterator getTimeSerialViewSideParameterIterator(int viewRowIndex);
     boost::shared_ptr<NFmiDrawParam> createTimeSerialViewDrawParam(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam);
     bool getLatestWmsImageTime(const NFmiDataIdent& dataIdent, NFmiMetTime& foundTimeOut);
+    void logParameterAction(const std::string& parameterActionStart, const NFmiMenuItem& menuItem, const boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& info);
 };

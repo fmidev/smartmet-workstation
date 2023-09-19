@@ -48,18 +48,18 @@ class NFmiDataParamModifier
 	virtual ~NFmiDataParamModifier(void){};
 	bool ModifyData (void);
 	bool ModifyData2(void); // 1999.11.17/Marko viritetty ympyr‰ muokkauksille
-	bool ModifyTimeSeriesData (NFmiTimeDescriptor& theActiveTimes, double* theModifyFactorTable);
-	bool ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, double* theModifyFactorTable);
-	bool SetTimeSeriesData(NFmiTimeDescriptor& theActiveTimes, double* theModifyFactorTable, int theUnchangedValue);	// M.K. 6.5.99
-	double Calculate (double theDataValue, double theFactor);
-	double CalculateWithMaskFactor (double theDataValue, double theFactor, double theMaskFactor);
+	bool ModifyTimeSeriesData (NFmiTimeDescriptor& theActiveTimes, float* theModifyFactorTable);
+	bool ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, float* theModifyFactorTable);
+	bool SetTimeSeriesData(NFmiTimeDescriptor& theActiveTimes, float* theModifyFactorTable, int theUnchangedValue);	// M.K. 6.5.99
+	float Calculate (float theDataValue, float theFactor);
+	float CalculateWithMaskFactor (float theDataValue, float theFactor, float theMaskFactor);
 	bool Param(const NFmiParam& theParam);
 
  protected:
 	virtual void PrepareFastIsInsideData(void){}; // 1999.11.17/Marko ModifyData2 k‰ytt‰‰
 	virtual bool IsPossibleInside(const NFmiPoint& /* theRelativePlace */){return true;}; // 1999.11.17/Marko ModifyData2 k‰ytt‰‰
-	virtual double Calculate (const double& theValue);
-	virtual double Calculate2(const double& theValue){return theValue;}; // 1999.11.17/Marko ModifyData2 k‰ytt‰‰
+	virtual float Calculate (const float& theValue);
+	virtual float Calculate2(const float& theValue){return theValue;}; // 1999.11.17/Marko ModifyData2 k‰ytt‰‰
 	boost::shared_ptr<NFmiFastQueryInfo> itsInfo;
 	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
 	boost::shared_ptr<NFmiAreaMaskList> itsParamMaskList;

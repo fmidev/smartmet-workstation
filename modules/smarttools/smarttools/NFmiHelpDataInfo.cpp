@@ -167,6 +167,8 @@ void NFmiHelpDataInfo::InitFromSettings(const std::string &theBaseKey,
         itsBaseNameSpace + "::AllowCombiningToSurfaceDataInSoundingView", false);
     fCaseStudyLegacyOnly = NFmiSettings::Optional<bool>(
         itsBaseNameSpace + "::CaseStudyLegacyOnly", false);
+    itsAgingTimeLimitInMinutes =
+        NFmiSettings::Optional<int>(itsBaseNameSpace + "::AgingTimeLimitInMinutes", -1);
 
     std::string imageProjectionKey(itsBaseNameSpace + "::ImageProjection");
     if (NFmiSettings::IsSet(imageProjectionKey))

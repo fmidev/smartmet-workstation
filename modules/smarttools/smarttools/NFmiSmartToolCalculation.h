@@ -131,6 +131,6 @@ class NFmiSmartToolCalculation
   double itsCircularValueModulor;
   void CheckIfModularParameter();
   double FixCircularValues(double theValue);
-  bool IsCrossSectionVariableCase(const NFmiCalculationParams &theCalculationParams);
-  double CrossSectionVariableCaseValue(const NFmiCalculationParams &theCalculationParams);
+  bool IsSpecialCalculationVariableCase(const NFmiCalculationParams &theCalculationParams);
+  double SpecialCalculationVariableCaseValue(const NFmiCalculationParams &theCalculationParams);
 };

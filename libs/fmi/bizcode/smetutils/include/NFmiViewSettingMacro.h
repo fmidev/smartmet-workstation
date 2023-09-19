@@ -198,6 +198,7 @@ public:
 		void Param(const NFmiViewSettingMacro::Param& newValue) {itsParam = newValue;}
 		const std::vector<NFmiViewSettingMacro::Param>& SideParameters(void) const { return itsSideParameters; }
 		void SideParameters(const std::vector<NFmiViewSettingMacro::Param>& newValue) { itsSideParameters = newValue; }
+		void SetMacroParamInitFileNames(const std::string& theRootPath);
 
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);
@@ -256,6 +257,9 @@ public:
 		void TimeBag(const NFmiTimeBag &newTimes) {itsTimeBag = newTimes;}
 		bool TimeBagUpdated(void) const {return fTimeBagUpdated;}
 		void TimeBagUpdated(bool newValue) {fTimeBagUpdated = newValue;}
+		const NFmiPoint& PreciseTimeSerialLatlonPoint() const { return itsPreciseTimeSerialLatlonPoint; }
+		void PreciseTimeSerialLatlonPoint(const NFmiPoint& newValue) { itsPreciseTimeSerialLatlonPoint = newValue; }
+		void SetMacroParamInitFileNames(const std::string& theRootPath);
 
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);
@@ -274,6 +278,7 @@ public:
 		int itsEndTimeOffset; // jos aikaikkunaa on zoomattu ajallisesti, tässä offsetti editoitavan datan loppuaikaan
 		NFmiTimeBag itsTimeBag; // tässä on aikasarjassa käytetty timebag (talletetaan siirtymänä kellonajasta)
 		bool fTimeBagUpdated; // jos timebagi on luettu, asetetaan tähän true
+		NFmiPoint itsPreciseTimeSerialLatlonPoint = NFmiPoint::gMissingLatlon; // Kartalta aikakasarjaan valittu piste talteen
 	};
 
 	class TempView

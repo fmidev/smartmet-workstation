@@ -39,27 +39,6 @@ NFmiMenuItemList::NFmiMenuItemList(void)
 {
 }
 
-NFmiMenuItemList::NFmiMenuItemList(NFmiParamBag* theParamBag)
-:itsMenuItemList()
-{
-	if(theParamBag)
-	{
-		theParamBag -> Reset();
-		
-		while(theParamBag -> NextActive())
-		{
-			auto menuItem = std::make_unique<NFmiMenuItem>(std::string(theParamBag->Current()->GetParamName()), FmiParameterName(theParamBag -> Current() -> GetParam()->GetIdent()));
-			if (theParamBag->Current()->HasDataParams())
-			{
-				NFmiMenuItemList* menuItemList = new NFmiMenuItemList(theParamBag -> Current() -> GetDataParams());
-				menuItem->AddSubMenu(menuItemList);
-			}
-            Add(std::move(menuItem));
-        }
-        SortParamsInAlphabeticalOrder();
-	}
-}
-
 static void AddPossibleMetaParam(NFmiMenuItemList &menuItemList,
     int theMapViewDescTopIndex,
     const FmiMenuCommandType &theMenuCommandType,

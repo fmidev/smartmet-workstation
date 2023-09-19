@@ -67,9 +67,8 @@ class NFmiLocationBag : public NFmiSize
   std::size_t HashValue() const;
 
  protected:
-  NFmiLocationBag(NFmiLocation **theLocationBag, unsigned long theNumberOfLocations);
-
   void Add(const NFmiLocation &theLocation);
+  void DoActualCopyOperations(const NFmiLocationBag &theLocationBag);
 
   typedef std::vector<NFmiLocation *> StorageType;
   StorageType itsLocations;

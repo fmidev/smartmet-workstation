@@ -25,6 +25,8 @@ enum class NFmiSymbolColorChangingType
     // Normaalisti muuttavat erikois v‰ritykset, jotka ohitetaan,
     // jos DrawParamin ShowColoredNumbers asetus on p‰‰ll‰.
     Mixed,
+    // V‰ri‰ voi vaihtaa vain toisen parametrin avustuksella
+    OnlyWithOtherParameterValues,
     // V‰ri‰ ei vaihdella arvon mukaan miss‰‰n tilanteessa.
     Never
 };

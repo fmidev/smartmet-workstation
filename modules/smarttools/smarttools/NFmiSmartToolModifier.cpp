@@ -554,6 +554,27 @@ static std::vector<NFmiMacroParamValue> MakeMacroParamValueVectorForCrossSection
   return macroParamValueVector;
 }
 
+// Vastaava täyttö Timeserial tapauksessa on simppeli, theTimes -> macroParamValueVector täyttö menee suoraan vektorista vektoriin.
+static std::vector<NFmiMacroParamValue> MakeMacroParamValueVectorForTimeSerial(
+    const NFmiPoint &theLatlonPoint, const std::vector<NFmiMetTime> &theTimes)
+{
+  auto timeSize = theTimes.size();
+  std::vector<NFmiMacroParamValue> macroParamValueVector(timeSize);
+
+  NFmiMacroParamValue macroParamValue;
+  macroParamValue.fSetValue = true;
+  macroParamValue.fDoTimeSerialCalculations = true;
+  macroParamValue.itsLatlon = theLatlonPoint;
+
+  // lasketaan läpi yksittäisiä arvoja kaikille halutuille ajoille haluttuun pisteeseen
+  for (size_t i = 0; i < timeSize; i++)
+  {
+    macroParamValue.itsTime = theTimes[i];
+    macroParamValueVector[i] = macroParamValue;
+  }
+  return macroParamValueVector;
+}
+
 static void FillMatrixFromMacroParamValueVector(
     NFmiDataMatrix<float> &theValues, std::vector<NFmiMacroParamValue> &macroParamValueVector)
 {
@@ -562,6 +583,17 @@ static void FillMatrixFromMacroParamValueVector(
     size_t xIndex = i % theValues.NX();
     size_t yIndex = i / theValues.NX();
     theValues[xIndex][yIndex] = macroParamValueVector[i].itsValue;
+  }
+}
+
+static void FillVectorFromMacroParamValueVector(
+    std::vector<float> &theValues, std::vector<NFmiMacroParamValue> &macroParamValueVector)
+{
+  auto valueSize = macroParamValueVector.size();
+  theValues.resize(valueSize, kFloatMissing);
+  for (size_t i = 0; i < valueSize; i++)
+  {
+    theValues[i] = macroParamValueVector[i].itsValue;
   }
 }
 
@@ -596,6 +628,25 @@ void NFmiSmartToolModifier::CalcCrossSectionSmartToolValues(
   NFmiTimeDescriptor dummyTimes(thePointTimes[0], dummyTimeBag);
   ModifyData_ver2(&dummyTimes, false, true, nullptr, &macroParamValueVector);
   ::FillMatrixFromMacroParamValueVector(theValues, macroParamValueVector);
+}
+
+void NFmiSmartToolModifier::CalcTimeSerialSmartToolValues(
+    std::vector<float> &theValues,
+    const NFmiPoint &theLatlonPoint,
+    const std::vector<NFmiMetTime> &theTimes)
+{
+  fDoTimeSerialCalculation = true;
+  if (theTimes.size() < 1)
+    throw runtime_error(
+        "NFmiSmartToolModifier::CalcTimeSerialSmartToolValues - invalid time vector size (0), Error "
+        "in program.");
+  theValues.resize(theTimes.size(), kFloatMissing);
+  auto macroParamValueVector = ::MakeMacroParamValueVectorForTimeSerial(
+      theLatlonPoint, theTimes);
+  NFmiTimeBag dummyTimeBag(theTimes[0], theTimes[0], 60);
+  NFmiTimeDescriptor dummyTimes(theTimes[0], dummyTimeBag);
+  ModifyData_ver2(&dummyTimes, false, true, nullptr, &macroParamValueVector);
+  ::FillVectorFromMacroParamValueVector(theValues, macroParamValueVector);
 }
 
 float NFmiSmartToolModifier::CalcSmartToolValue(NFmiMacroParamValue &theMacroParamValue)
@@ -703,22 +754,31 @@ void NFmiSmartToolModifier::ModifyData(NFmiTimeDescriptor *theModifiedTimes,
 // This mask is used to skip points not needed in final result.
 // If calculationPoints is empty, return empty pointer.
 std::unique_ptr<CalculationPointMaskData> NFmiSmartToolModifier::MakePossibleCalculationPointMask(
-    std::vector<NFmiSmartToolCalculationBlockInfo> &calculationBlockInfoVector,
     const std::vector<NFmiPoint> &calculationPoints)
 {
-  if (!calculationPoints.empty() && !calculationBlockInfoVector.empty())
+  if (!calculationPoints.empty())
   {
-    auto calculationBlock = CreateCalculationBlock(calculationBlockInfoVector[0]);
-    auto editedInfo = calculationBlock->FirstVariableInfo();
+    auto editedInfo = UsedMacroParamData();
     if (editedInfo)
     {
-      std::unique_ptr<CalculationPointMaskData> calculationPointMask(
-          new CalculationPointMaskData(editedInfo->SizeLocations(), nullptr));
+      double maxAllowedDistanceInMetres =
+          (itsExtraMacroParamData.ObservationRadiusInKm() == kFloatMissing)
+              ? 99999999
+              : itsExtraMacroParamData.ObservationRadiusInKm() * 1000. + 0.00000001;
+      std::unique_ptr<CalculationPointMaskData> calculationPointMask(new CalculationPointMaskData(
+          editedInfo->SizeLocations(), std::make_pair(nullptr, maxAllowedDistanceInMetres)));
       for (auto &latlon : calculationPoints)
       {
         if (editedInfo->NearestPoint(latlon))
         {
-          (*calculationPointMask)[editedInfo->LocationIndex()] = &latlon;
+          auto distanceInMeters = NFmiLocation(latlon).Distance(editedInfo->LatLon());
+          auto &maskLocationPtr = (*calculationPointMask)[editedInfo->LocationIndex()].first;
+          auto &maskLocationDist = (*calculationPointMask)[editedInfo->LocationIndex()].second;
+          if (distanceInMeters < maskLocationDist)
+          {
+            maskLocationPtr = &latlon;
+            maskLocationDist = distanceInMeters;
+          }
         }
       }
 
@@ -734,7 +794,7 @@ void NFmiSmartToolModifier::ModifyData_ver2(
     bool fSelectedLocationsOnly,
     bool isMacroParamCalculation,
     NFmiThreadCallBacks *theThreadCallBacks,
-    std::vector<NFmiMacroParamValue> *macroParamValuesVectorForCrossSection)
+    std::vector<NFmiMacroParamValue> *macroParamValuesVectorForSpecialCalculations)
 {
   itsModifiedTimes = theModifiedTimes;
   fMacroParamCalculation = isMacroParamCalculation;
@@ -749,7 +809,7 @@ void NFmiSmartToolModifier::ModifyData_ver2(
         smartToolCalculationBlockInfos, theModifiedTimes, theThreadCallBacks);
     size_t size = smartToolCalculationBlockInfos.size();
     auto calculationPointMaskPtr =
-        MakePossibleCalculationPointMask(smartToolCalculationBlockInfos, CalculationPoints());
+        MakePossibleCalculationPointMask(CalculationPoints());
     for (size_t i = 0; i < size; i++)
     {
       NFmiSmartToolCalculationBlockInfo blockInfo = smartToolCalculationBlockInfos[i];
@@ -759,7 +819,7 @@ void NFmiSmartToolModifier::ModifyData_ver2(
         ModifyBlockData_ver2(block,
                              theThreadCallBacks,
                              calculationPointMaskPtr.get(),
-                             macroParamValuesVectorForCrossSection);
+                             macroParamValuesVectorForSpecialCalculations);
       }
     }
     ClearScriptVariableInfos();  // lopuksi nämä skripti-muuttujat tyhjennetään
@@ -803,7 +863,7 @@ void NFmiSmartToolModifier::ModifyBlockData_ver2(
     const boost::shared_ptr<NFmiSmartToolCalculationBlock> &theCalculationBlock,
     NFmiThreadCallBacks *theThreadCallBacks,
     CalculationPointMaskData *calculationPointMask,
-    std::vector<NFmiMacroParamValue> *macroParamValuesVectorForCrossSection)
+    std::vector<NFmiMacroParamValue> *macroParamValuesVectorForSpecialCalculations)
 {
   // HUOM!! Koska jostain syystä alku ja loppu CalculationSection:it lasketaan erikseen, pitää
   // muistaa
@@ -814,15 +874,15 @@ void NFmiSmartToolModifier::ModifyBlockData_ver2(
   ModifyData2_ver2(theCalculationBlock->itsFirstCalculationSection,
                    theThreadCallBacks,
                    calculationPointMask,
-                   macroParamValuesVectorForCrossSection);
+                   macroParamValuesVectorForSpecialCalculations);
   ModifyConditionalData_ver2(theCalculationBlock,
                              theThreadCallBacks,
                              calculationPointMask,
-                             macroParamValuesVectorForCrossSection);
+                             macroParamValuesVectorForSpecialCalculations);
   ModifyData2_ver2(theCalculationBlock->itsLastCalculationSection,
                    theThreadCallBacks,
                    calculationPointMask,
-                   macroParamValuesVectorForCrossSection);
+                   macroParamValuesVectorForSpecialCalculations);
 }
 
 void NFmiSmartToolModifier::ModifyConditionalData(
@@ -869,13 +929,13 @@ void NFmiSmartToolModifier::ModifyConditionalData(
 
           for (info->ResetLocation(); info->NextLocation();)
           {
-            calculationParams.itsLatlon = info->LatLon();
+            calculationParams.SetModifiedLatlon(info->LatLon(), false);
             if (theMacroParamValue.fSetValue)
             {
-              calculationParams.itsLatlon = theMacroParamValue.itsLatlon;
-              info->Location(calculationParams.itsLatlon);  // pitää laittaa nearestlocation päälle,
-              // että tuloksia voidaan myöhemmin hakea
-              // interpolaation avulla
+              calculationParams.SetModifiedLatlon(theMacroParamValue.itsLatlon, false);
+              // pitää laittaa nearestlocation päälle, että tuloksia voidaan 
+              // myöhemmin hakea interpolaation avulla
+              info->Location(calculationParams.UsedLatlon());
             }
             calculationParams.itsLocationIndex =
                 info->LocationIndex();  // tämä locationindex juttu liittyy kai optimointiin, jota
@@ -938,6 +998,11 @@ class TimeSetter
   NFmiMetTime itsTime;
 };
 
+static bool DoCalculationPointMaskCheck(const CalculationPointMaskData *calculationPointMask, unsigned long index)
+{
+  return (calculationPointMask == nullptr || (*calculationPointMask)[index].first);
+}
+
 static void DoPartialGridCalculationBlockInThread(
     NFmiLocationIndexRangeCalculator &theLocationIndexRangeCalculator,
     boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
@@ -956,14 +1021,14 @@ static void DoPartialGridCalculationBlockInThread(
       {
         if (theUsedBitmask == 0 || theUsedBitmask->IsMasked(i))
         {
-          if (calculationPointMask == nullptr || (*calculationPointMask)[i])
+          if (::DoCalculationPointMaskCheck(calculationPointMask, i))
           {
             if (theInfo->LocationIndex(i))
             {
-              theCalculationParams.itsLatlon = theInfo->LatLon();
+              theCalculationParams.SetModifiedLatlon(theInfo->LatLon(), false);
               theCalculationParams.itsLocationIndex = theInfo->LocationIndex();
               if (calculationPointMask)
-                theCalculationParams.itsActualCalculationPoint = (*calculationPointMask)[i];
+                theCalculationParams.itsActualCalculationPoint = (*calculationPointMask)[i].first;
               // TUON LOCATIONINDEX jutun voisi kai poistaa, kun kyseistä optimointi juttua ei kai
               // enää käytetä
               theCalculationBlock->Calculate_ver2(theCalculationParams, true);
@@ -988,17 +1053,16 @@ static void DoPartialGridCalculationBlockInThread(
 
 static NFmiCalculationParams MakeCalculationParams(const NFmiMacroParamValue &macroParamValue,
                                                    unsigned long locationIndex,
-                                                   unsigned long timeIndex,
-                                                   bool crossSectionCase)
+                                                   unsigned long timeIndex)
 {
   return NFmiCalculationParams(macroParamValue.itsLatlon,
                                locationIndex,
                                macroParamValue.itsTime,
                                timeIndex,
-                               crossSectionCase);
+                               macroParamValue.fDoCrossSectionCalculations || macroParamValue.fDoTimeSerialCalculations);
 }
 
-static void DoPartialCrosSectionCalculationBlockInThread(
+static void DoPartialSpecialTypeCalculationBlockInThread(
     NFmiLocationIndexRangeCalculator &theLocationIndexRangeCalculator,
     boost::shared_ptr<NFmiFastQueryInfo> &theInfo,  // onko theInfo turha?
     boost::shared_ptr<NFmiSmartToolCalculationBlock> &theCalculationBlock,
@@ -1017,7 +1081,7 @@ static void DoPartialCrosSectionCalculationBlockInThread(
         // NFmiCalculationParams:in locationIndex saadaan vector:in i-indeksin mukaan ja timeIndex
         // on macroParam tapauksissa aina 0.
         NFmiCalculationParams calculationParams(
-            ::MakeCalculationParams(macroParamValue, i, 0, true));
+            ::MakeCalculationParams(macroParamValue, i, 0));
         theCalculationBlock->Calculate(calculationParams, macroParamValue);
       }
     }
@@ -1046,14 +1110,14 @@ static void DoPartialGridCalculationInThread(
       {
         if (theUsedBitmask == nullptr || theUsedBitmask->IsMasked(i))
         {
-          if (calculationPointMask == nullptr || (*calculationPointMask)[i] != nullptr)
+          if (::DoCalculationPointMaskCheck(calculationPointMask, i))
           {
             if (theInfo->LocationIndex(i))
             {
-              theCalculationParams.itsLatlon = theInfo->LatLon();
+              theCalculationParams.SetModifiedLatlon(theInfo->LatLon(), false);
               theCalculationParams.itsLocationIndex = theInfo->LocationIndex();
               if (calculationPointMask)
-                theCalculationParams.itsActualCalculationPoint = (*calculationPointMask)[i];
+                theCalculationParams.itsActualCalculationPoint = (*calculationPointMask)[i].first;
               // TUON LOCATIONINDEX jutun voisi kai poistaa, kun kyseistä optimointi juttua ei kai
               // enää käytetä
               theCalculation->Calculate_ver2(theCalculationParams);
@@ -1076,7 +1140,7 @@ static void DoPartialGridCalculationInThread(
   }
 }
 
-static void DoPartialCrosSectionCalculationInThread(
+static void DoPartialSpecialTypeCalculationInThread(
     NFmiLocationIndexRangeCalculator &theLocationIndexRangeCalculator,
     boost::shared_ptr<NFmiFastQueryInfo> &theInfo,  // onko theInfo turha?
     boost::shared_ptr<NFmiSmartToolCalculation> &theCalculation,
@@ -1090,13 +1154,16 @@ static void DoPartialCrosSectionCalculationInThread(
     {
       for (unsigned long i = startIndex; i <= endIndex; i++)
       {
-        // Tässä käydäänkin läpi eri laskenta pisteita, jotka on annettu vektorissa
-        auto &macroParamValue = macroParamValueVector[i];
-        // NFmiCalculationParams:in locationIndex saadaan vector:in i-indeksin mukaan ja timeIndex
-        // on macroParam tapauksissa aina 0.
-        NFmiCalculationParams calculationParams(
-            ::MakeCalculationParams(macroParamValue, i, 0, true));
-        theCalculation->Calculate(calculationParams, macroParamValue);
+        if (theInfo->LocationIndex(i))
+        {
+          // Tässä käydäänkin läpi eri laskenta pisteita, jotka on annettu vektorissa
+          auto &macroParamValue = macroParamValueVector[i];
+          // NFmiCalculationParams:in locationIndex saadaan vector:in i-indeksin mukaan ja timeIndex
+          // on macroParam tapauksissa aina 0.
+          NFmiCalculationParams calculationParams(
+              ::MakeCalculationParams(macroParamValue, i, 0));
+          theCalculation->Calculate(calculationParams, macroParamValue);
+        }
       }
     }
   }
@@ -1119,8 +1186,17 @@ static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> MakeInfoCopyVector(
     size_t threadCount, boost::shared_ptr<NFmiFastQueryInfo> &info)
 {
   std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector;
-  for (size_t i = 0; i < threadCount; i++)
-    infoVector.push_back(NFmiAreaMask::DoShallowCopy(info));
+  if (threadCount > 1)
+  {
+    for (size_t i = 0; i < threadCount; i++)
+      infoVector.push_back(NFmiAreaMask::DoShallowCopy(info));
+  }
+  else
+  {
+    // Jos vain yksi laskenta threadi käytössä, laitetaan originaali info vain sellaisenaan 'kopio'
+    // vectoriin.
+    infoVector.push_back(info);
+  }
   return infoVector;
 }
 
@@ -1128,9 +1204,20 @@ static std::vector<boost::shared_ptr<NFmiSmartToolCalculationBlock>> MakeCalcula
     size_t threadCount, const boost::shared_ptr<NFmiSmartToolCalculationBlock> &calculationBlock)
 {
   std::vector<boost::shared_ptr<NFmiSmartToolCalculationBlock>> calculationBlockVector;
-  for (size_t i = 0; i < threadCount; i++)
-    calculationBlockVector.push_back(boost::shared_ptr<NFmiSmartToolCalculationBlock>(
-        new NFmiSmartToolCalculationBlock(*calculationBlock)));
+  if (threadCount > 1)
+  {
+    for (size_t i = 0; i < threadCount; i++)
+    {
+      calculationBlockVector.push_back(boost::shared_ptr<NFmiSmartToolCalculationBlock>(
+          new NFmiSmartToolCalculationBlock(*calculationBlock)));
+    }
+  }
+  else
+  {
+    // Jos vain yksi laskenta threadi käytössä, laitetaan originaali calculationBlock vain
+    // sellaisenaan 'kopio' vectoriin.
+    calculationBlockVector.push_back(calculationBlock);
+  }
   return calculationBlockVector;
 }
 
@@ -1163,6 +1250,8 @@ void NFmiSmartToolModifier::CalculateUsedWorkingThreadCount(double wantedHardwar
           NFmiQueryDataUtil::GetReasonableWorkingThreadCount(wantedHardwareThreadPercent);
     }
   }
+
+//  itsUsedThreadCount = 1; // Debuggaustestejä varten
   itsUsedThreadCounts.insert(itsUsedThreadCount);
 }
 
@@ -1175,7 +1264,7 @@ void NFmiSmartToolModifier::ModifyConditionalData_ver2(
     const boost::shared_ptr<NFmiSmartToolCalculationBlock> &theCalculationBlock,
     NFmiThreadCallBacks *theThreadCallBacks,
     CalculationPointMaskData *calculationPointMask,
-    std::vector<NFmiMacroParamValue> *macroParamValuesVectorForCrossSection)
+    std::vector<NFmiMacroParamValue> *macroParamValuesVectorForSpecialCalculations)
 {
   if (theCalculationBlock->itsIfAreaMaskSection && theCalculationBlock->itsIfCalculationBlocks)
   {
@@ -1220,12 +1309,12 @@ void NFmiSmartToolModifier::ModifyConditionalData_ver2(
           // info kopioiden ajat pitää myös asettaa
           ::SetTimes(infoVector, calculationParams);
 
-          if (macroParamValuesVectorForCrossSection)
-            DoMultiThreadConditionalBlockCalculationsForCrossSection(
+          if (macroParamValuesVectorForSpecialCalculations)
+            DoMultiThreadConditionalBlockCalculationsForSpecialCalculations(
                 itsUsedThreadCount,
                 infoVector,
                 calculationBlockVector,
-                *macroParamValuesVectorForCrossSection);
+                *macroParamValuesVectorForSpecialCalculations);
           else
             DoMultiThreadConditionalBlockCalculations(itsUsedThreadCount,
                                                       infoVector,
@@ -1267,7 +1356,7 @@ void NFmiSmartToolModifier::DoMultiThreadConditionalBlockCalculations(
   calcParts.join_all();  // odotetaan että threadit lopettavat
 }
 
-void NFmiSmartToolModifier::DoMultiThreadConditionalBlockCalculationsForCrossSection(
+void NFmiSmartToolModifier::DoMultiThreadConditionalBlockCalculationsForSpecialCalculations(
     size_t threadCount,
     std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector,
     std::vector<boost::shared_ptr<NFmiSmartToolCalculationBlock>> &calculationBlockVector,
@@ -1278,7 +1367,7 @@ void NFmiSmartToolModifier::DoMultiThreadConditionalBlockCalculationsForCrossSec
 
   boost::thread_group calcParts;
   for (unsigned int threadIndex = 0; threadIndex < threadCount; threadIndex++)
-    calcParts.add_thread(new boost::thread(::DoPartialCrosSectionCalculationBlockInThread,
+    calcParts.add_thread(new boost::thread(::DoPartialSpecialTypeCalculationBlockInThread,
                                            boost::ref(locationIndexRangeCalculator),
                                            boost::ref(infoVector[threadIndex]),
                                            boost::ref(calculationBlockVector[threadIndex]),
@@ -1360,14 +1449,13 @@ void NFmiSmartToolModifier::ModifyData2(
                 calculationParams.itsTime);  // yritetään optimoida laskuja hieman kun mahdollista
             for (info->ResetLocation(); info->NextLocation();)
             {
-              calculationParams.itsLatlon = info->LatLon();
+              calculationParams.SetModifiedLatlon(info->LatLon(), false);
               if (theMacroParamValue.fSetValue)
               {
-                calculationParams.itsLatlon = theMacroParamValue.itsLatlon;
-                info->Location(calculationParams.itsLatlon);  // pitää laittaa nearestlocation
-                                                              // päälle, että tuloksia voidaan
-                                                              // myöhemmin hakea interpolaation
-                                                              // avulla
+                calculationParams.SetModifiedLatlon(theMacroParamValue.itsLatlon, false);
+                // pitää laittaa nearestlocation päälle, että tuloksia voidaan
+                // myöhemmin hakea interpolaation avulla
+                info->Location(calculationParams.UsedLatlon());  
               }
               calculationParams.itsLocationIndex = info->LocationIndex();
               // TUON LOCATIONINDEX jutun voisi kai poistaa, kun kyseistä optimointi juttua ei kai
@@ -1403,7 +1491,7 @@ void NFmiSmartToolModifier::ModifyData2_ver2(
     boost::shared_ptr<NFmiSmartToolCalculationSection> &theCalculationSection,
     NFmiThreadCallBacks *theThreadCallBacks,
     CalculationPointMaskData *calculationPointMask,
-    std::vector<NFmiMacroParamValue> *macroParamValuesVectorForCrossSection)
+    std::vector<NFmiMacroParamValue> *macroParamValuesVectorForSpecialCalculations)
 {
   if (theCalculationSection && theCalculationSection->FirstVariableInfo())
   {
@@ -1451,7 +1539,7 @@ void NFmiSmartToolModifier::ModifyData2_ver2(
           calculationParams.itsTime = modifiedTimes.Time();
           // Asetetaan myös haluttu aika käytettyyn info:on, että saadaan oikea timeindex, PAITSI
           // jos kyse on poikkileikkaus laskuista
-          if (macroParamValuesVectorForCrossSection || info->Time(calculationParams.itsTime))
+          if (macroParamValuesVectorForSpecialCalculations || info->Time(calculationParams.itsTime))
           {
             NFmiQueryDataUtil::CheckIfStopped(theThreadCallBacks);
             // stepataan vasta 0-tarkastuksen jälkeen!
@@ -1461,18 +1549,22 @@ void NFmiSmartToolModifier::ModifyData2_ver2(
             ::SetTimes(calculationVectorForThread, calculationParams);
             ::SetTimes(infoVector, calculationParams);
 
-            if (macroParamValuesVectorForCrossSection)
-              DoMultiThreadCalculationsForCrossSection(itsUsedThreadCount,
+            if (macroParamValuesVectorForSpecialCalculations)
+            {
+              DoMultiThreadCalculationsForSpecialCalculations(itsUsedThreadCount,
                                                        infoVector,
                                                        calculationVectorForThread,
-                                                       *macroParamValuesVectorForCrossSection);
+                  *macroParamValuesVectorForSpecialCalculations);
+            }
             else
+            {
               DoMultiThreadCalculations(itsUsedThreadCount,
                                         infoVector,
                                         calculationVectorForThread,
                                         calculationParams,
                                         usedBitmask,
                                         calculationPointMask);
+            }
           }
         }
       }
@@ -1508,7 +1600,7 @@ void NFmiSmartToolModifier::DoMultiThreadCalculations(
   calcParts.join_all();  // odotetaan että threadit lopettavat
 }
 
-void NFmiSmartToolModifier::DoMultiThreadCalculationsForCrossSection(
+void NFmiSmartToolModifier::DoMultiThreadCalculationsForSpecialCalculations(
     size_t threadCount,
     std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector,
     std::vector<boost::shared_ptr<NFmiSmartToolCalculation>> &calculationVector,
@@ -1520,7 +1612,7 @@ void NFmiSmartToolModifier::DoMultiThreadCalculationsForCrossSection(
 
   boost::thread_group calcParts;
   for (unsigned int threadIndex = 0; threadIndex < threadCount; threadIndex++)
-    calcParts.add_thread(new boost::thread(::DoPartialCrosSectionCalculationInThread,
+    calcParts.add_thread(new boost::thread(::DoPartialSpecialTypeCalculationInThread,
                                            boost::ref(locationIndexRangeCalculator),
                                            boost::ref(infoVector[threadIndex]),
                                            boost::ref(calculationVector[threadIndex]),
@@ -1965,6 +2057,35 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateTimeRangeMask(
                                     theAreaMaskInfo.GetDataIdent().GetParamIdent()));
 }
 
+boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateSecondParamFromExtremeTimeMask(
+    const NFmiAreaMaskInfo &theAreaMaskInfo, bool &mustUsePressureInterpolation)
+{
+  boost::shared_ptr<NFmiFastQueryInfo> info =
+      CreateInfo(theAreaMaskInfo, mustUsePressureInterpolation);
+  boost::shared_ptr<NFmiFastQueryInfo> secondaryParamInfo =
+      CreateSecondaryParamInfo(theAreaMaskInfo, mustUsePressureInterpolation);
+  return boost::shared_ptr<NFmiAreaMask>(
+      new NFmiInfoAreaMaskTimeRangeSecondParValue(theAreaMaskInfo.GetMaskCondition(),
+                                                  NFmiAreaMask::kInfo,
+                                                  info->DataType(),
+                                                  info,
+                                                  secondaryParamInfo,
+                                                  theAreaMaskInfo.GetFunctionType(),
+                                                  theAreaMaskInfo.FunctionArgumentCount(),
+                                                  theAreaMaskInfo.GetDataIdent().GetParamIdent()));
+}
+
+boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::CreateSecondaryParamInfo(
+    const NFmiAreaMaskInfo &theAreaMaskInfo, bool &mustUsePressureInterpolation)
+{
+  NFmiAreaMaskInfo secondaryParamAreaMaskInfo;
+  secondaryParamAreaMaskInfo.SetDataIdent(theAreaMaskInfo.GetSecondaryParam());
+  secondaryParamAreaMaskInfo.SetLevel(theAreaMaskInfo.GetSecondaryParamLevel());
+  secondaryParamAreaMaskInfo.SetDataType(theAreaMaskInfo.GetSecondaryParamDataType());
+  secondaryParamAreaMaskInfo.SetUseDefaultProducer(theAreaMaskInfo.GetSecondaryParamUseDefaultProducer());
+  return CreateInfo(secondaryParamAreaMaskInfo, mustUsePressureInterpolation);
+}
+
 boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreatePreviousFullDaysMask(
     const NFmiAreaMaskInfo &theAreaMaskInfo, bool &mustUsePressureInterpolation)
 {
@@ -2254,6 +2375,10 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateVertFunctionStartMa
   {
     areaMask = CreateTimeRangeMask(theAreaMaskInfo, mustUsePressureInterpolation);
   }
+  else if (functionType == NFmiAreaMask::SecondParamFromExtremeTime)
+  {
+    areaMask = CreateSecondParamFromExtremeTimeMask(theAreaMaskInfo, mustUsePressureInterpolation);
+  }
   else if (functionType == NFmiAreaMask::AreaRect || functionType == NFmiAreaMask::AreaCircle)
   {
     areaMask = CreateAreaRelatedFunctionMask(theAreaMaskInfo, mustUsePressureInterpolation);
@@ -2320,7 +2445,9 @@ void NFmiSmartToolModifier::DoFinalAreaMaskInitializations(
           NFmiAreaMask::PreviousFullDays,
           NFmiAreaMask::TimeDuration,
           NFmiAreaMask::AreaRect,
-          NFmiAreaMask::AreaCircle};
+          NFmiAreaMask::AreaCircle,
+          NFmiAreaMask::SecondParamFromExtremeTime
+      };
       NFmiAreaMask::FunctionType functionType = ::GetFunctionType(theAreaMaskInfo);
       auto allowedIter = std::find(functionsThatAllowObservations.begin(),
                                    functionsThatAllowObservations.end(),
@@ -2888,9 +3015,7 @@ void NFmiSmartToolModifier::CalculateOptimalWorkingThreadCount()
   int maxThreadCount = 4;
   if (itsInfoVariableCount && itsStationInfoVariableCount)
   {
-    if (itsVariableStationCountSum < 5000.)
-      itsOptimalThreadCount = 3;
-    else if (itsVariableStationCountSum < 12000)
+    if (itsVariableStationCountSum < 700)
       itsOptimalThreadCount = 2;
     else
       itsOptimalThreadCount = 1;
@@ -3154,6 +3279,8 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::UsedMacroParamData()
 {
   if (fDoCrossSectionCalculation)
     return itsInfoOrganizer->CrossSectionMacroParamData();
+  else if (fDoTimeSerialCalculation)
+    return itsInfoOrganizer->TimeSerialMacroParamData();
   else
   {
     auto useCalculationPoints = !CalculationPoints().empty();

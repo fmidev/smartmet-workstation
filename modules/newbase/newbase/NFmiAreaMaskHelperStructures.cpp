@@ -9,13 +9,33 @@ NFmiCalculationParams::NFmiCalculationParams(const NFmiPoint &theLatlon,
                                              unsigned long theLocationIndex,
                                              const NFmiMetTime &theTime,
                                              unsigned long theTimeIndex,
-                                             bool crossSectionCase,
+                                             bool specialCalculation,
                                              float thePressureHeight)
     : itsLatlon(theLatlon),
       itsLocationIndex(theLocationIndex),
       itsTime(theTime),
       itsTimeIndex(theTimeIndex),
-      fCrossSectionCase(crossSectionCase),
+      fSpecialCalculationCase(specialCalculation),
       itsPressureHeight(thePressureHeight)
 {
+}
+
+const NFmiPoint &NFmiCalculationParams::UsedLatlon(bool forceCalculationGridPoint) const
+{
+  if (fUseModifiedLatlon || forceCalculationGridPoint)
+  {
+    return itsLatlon;
+  }
+
+  return itsActualCalculationPoint ? *itsActualCalculationPoint : itsLatlon;
+}
+
+void NFmiCalculationParams::SetModifiedLatlon(const NFmiPoint &modifiedLatlon,
+                                              bool setUseModifiedFlag)
+{
+  itsLatlon = modifiedLatlon;
+  if (setUseModifiedFlag)
+  {
+    fUseModifiedLatlon = true;
+  }
 }

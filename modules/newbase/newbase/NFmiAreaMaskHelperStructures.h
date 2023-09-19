@@ -19,6 +19,7 @@ class NFmiMacroParamValue
   // Tämä olio on käytössä vain jos tämä on true
   bool fSetValue = false;
   bool fDoCrossSectionCalculations = false;
+  bool fDoTimeSerialCalculations = false;
 };
 
 class NFmiCalculationParams
@@ -29,15 +30,19 @@ class NFmiCalculationParams
                         unsigned long theLocationIndex,
                         const NFmiMetTime &theTime,
                         unsigned long theTimeIndex,
-                        bool crossSectionCase = false,
+                        bool specialCalculation = false,
                         float thePressureHeight = kFloatMissing);
 
+  const NFmiPoint &UsedLatlon(bool forceCalculationGridPoint = false) const;
+  void SetModifiedLatlon(const NFmiPoint &modifiedLatlon, bool setUseModifiedFlag);
+
+  // Tässä on yleensä macroParamin laskentapisteen arvo, jota käytetään laskennoissa.
   NFmiPoint itsLatlon;
   unsigned long itsLocationIndex = gMissingIndex;
   NFmiMetTime itsTime;
   unsigned long itsTimeIndex = gMissingIndex;
-  // Joskus pitää tietää että kyse on poikkileikkaus laskuista
-  bool fCrossSectionCase = false;
+  // Joskus pitää tietää että kyse on poikkileikkaus tai aikasarja laskuista
+  bool fSpecialCalculationCase = false;
   // Silloin (poikkileikkauslaskuissa) käytetään tätä painepintaa laskentapisteenä
   // Tein siitä mutablen, jotta ei tarvitse muuttaa niin monissa kohtaa const parametria ei const:iksi.
   mutable float itsPressureHeight = kFloatMissing;
@@ -53,4 +58,7 @@ class NFmiCalculationParams
   // rajoittaa smarttool kielessä halutulla km määrällä "observationradius = 5", 
   // tällöin jos asema on kauempana, sitä ei käytetä ollenkaan kyseiselle laskenta pisteelle.
   float itsObservationRadiusInKm = kFloatMissing;
+  // Joskus ollaan muutettu itsLatlon muuttujan arvoa tahallaan (peekxy jms funktiot), 
+  // ja tällöin halutaan käyttää sitä vaikka kyse olisi calculationpoint laskennasta.
+  bool fUseModifiedLatlon = false;
 };

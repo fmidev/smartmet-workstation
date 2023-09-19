@@ -33,10 +33,10 @@ public:
    bool Init (int newSize) ;
    int Size (void) ;
    void Resize (int newSize) ;
-   void ClearValues (double theClearValue) ;
-   double ChangeValue (void) ;
-   void ChangeValue (double newValue) ;
-   std::vector<double>& ChangeValues(void); // tämä on hieman vaarallinen metodi, mutta optimointia varten tehty
+   void ClearValues (float theClearValue) ;
+   float ChangeValue (void) ;
+   void ChangeValue (float newValue) ;
+   std::vector<float>& ChangeValues(void); // tämä on hieman vaarallinen metodi, mutta optimointia varten tehty
    inline void TimeCount (int value) {itsTimeCount = value;}
    inline int TimeCount () const {return itsTimeCount;}
    inline void TimeIndex (int value) {itsTimeIndex = value;}
@@ -49,7 +49,7 @@ private:
 
    int itsTimeCount;
    int itsTimeIndex;
-   std::vector<double> itsChangeValueVector;
+   std::vector<float> itsChangeValueVector;
 
 };
 

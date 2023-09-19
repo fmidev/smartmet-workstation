@@ -90,6 +90,7 @@ std::pair<std::vector<float>, std::vector<NFmiColor>> IsolineVizualizationData::
 		colors.push_back(drawParam->SimpleIsoLineColorShadeMidValueColor());
 		colors.push_back(drawParam->SimpleIsoLineColorShadeHighValueColor());
 		colors.push_back(drawParam->SimpleIsoLineColorShadeHigh2ValueColor());
+		colors.push_back(drawParam->SimpleIsoLineColorShadeHigh3ValueColor());
 	}
 	return std::make_pair(classLimits, colors);
 }
@@ -274,12 +275,32 @@ std::pair<int, NFmiColor> IsolineVizualizationData::getBlendedColorValues(float 
 	}
 }
 
-// Haetaan annettua limitValue arvoa vastaavat colorIndex ja nfmicolor arvot originaali
-// vektoreista. Oikean kohdan indeksi lasketaan pyˆrist‰m‰ll‰ arvo l‰himp‰‰n limit vektorin arvoon.
+// Haetaan annettua limitValue arvoa pienempi tai yht‰suuren classLimitin indeksi.
+// Jos arvo menee yli kaikkien classLimittien, palautetaan indeksill‰ limitCount + 1.
 std::pair<int, NFmiColor> IsolineVizualizationData::getMultiColorValues(float limitValue)
 {
-	auto closestValueIndex = ::getClosestValueIndex(limitValue, originalClassLimits_);
-	return std::make_pair(originalColorIndexies_[closestValueIndex], originalColors_[closestValueIndex]);
+	size_t usedColorIndex = 0;
+	if(limitValue <= originalClassLimits_.front())
+	{
+		usedColorIndex = 0;
+	}
+	else if(limitValue > originalClassLimits_.back())
+	{
+		// T‰m‰ menee tarkoituksella yhden yli limit taulukon (on samalla v‰ri taulukon viimeinen indeksi)
+		usedColorIndex = originalClassLimits_.size();
+	}
+	else
+	{
+		for(size_t index = originalClassLimits_.size() - 2; index >= 0; index--)
+		{
+			if(limitValue > originalClassLimits_[index])
+			{
+				usedColorIndex = index + 1;
+				break;
+			}
+		}
+	}
+	return std::make_pair(originalColorIndexies_[usedColorIndex], originalColors_[usedColorIndex]);
 }
 
 bool IsolineVizualizationData::doCustomIsolineInitialization()
@@ -347,13 +368,39 @@ bool IsolineVizualizationData::doFinalLimitsAndColorsChecks()
 	}
 	else
 	{
-		// Vain simple tapauksessa pit‰‰ olla limit+v‰ri m‰‰r‰t samoja
-		if(limitSize != colorSize)
+		// Single color tapausta ei tarvitse tarkistaa t‰ss‰
+		if(!useSingleColor_)
 		{
-			auto minSize = std::min(limitSize, colorSize);
-			minSize = std::min(minSize, static_cast<size_t>(g_MaxAllowedIsoLineCount));
-			originalColors_.resize(minSize);
-			originalClassLimits_.resize(minSize);
+			// Vain simple tapauksen useColorBlending tapauksessa pit‰‰ olla limit+v‰ri m‰‰r‰t samoja
+			if(useColorBlending_)
+			{
+				if(limitSize != colorSize)
+				{
+					auto minSize = std::min(limitSize, colorSize);
+					minSize = std::min(minSize, static_cast<size_t>(g_MaxAllowedIsoLineCount));
+					originalColors_.resize(minSize);
+					originalClassLimits_.resize(minSize);
+				}
+			}
+			else
+			{
+				// Ei color-blend tapauksessa v‰rej‰ oltava 1 enemm‰n kuin rajoja
+				if((limitSize + 1) != colorSize)
+				{
+					if(colorSize < 2)
+					{
+						initializationErrorMessage_ = "IsolineVizualizationData: In non color blending case the color size was <= 1, nothing to be done";
+						return false;
+					}
+					else
+					{
+						auto newLimitSize = (limitSize >= colorSize) ? (colorSize - 1) : limitSize;
+						newLimitSize = std::min(newLimitSize, static_cast<size_t>(g_MaxAllowedIsoLineCount));
+						originalColors_.resize(newLimitSize);
+						originalClassLimits_.resize(newLimitSize + 1);
+					}
+				}
+			}
 		}
 	}
 
@@ -388,6 +435,13 @@ void IsolineVizualizationData::missingLimitCleanUp()
 					tmpColors.push_back(originalColors_[index]);
 			}
 		}
+
+		if(!useColorBlending_ && tmpLimits.size() < colorsSize)
+		{
+			// V‰ri-blendaus on false tapauksissa otetaan mukaan yksi v‰ri enemm‰n kuin on rajoja, jos mahdollista
+			tmpColors.push_back(originalColors_[tmpLimits.size()]);
+		}
+
 		originalClassLimits_ = tmpLimits;
 		originalColors_ = tmpColors;
 	}

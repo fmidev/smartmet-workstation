@@ -556,7 +556,7 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::CreateTimeSerialDialogOnViewPop
     return itsDoc->CreateTimeSerialDialogOnViewPopup(index);
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue)
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue)
 {
     return itsDoc->DoTimeSeriesValuesModifying(theModifiedDrawParam, theUsedMask, theTimeDescriptor, theModificationFactorCurvePoints, theEditorTool, fUseSetForDiscreteData, theUnchangedValue);
 }

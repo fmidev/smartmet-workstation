@@ -68,6 +68,7 @@ CFmiBetaProductDialog::CFmiBetaProductDialog(SmartMetDocumentInterface *smartMet
 , itsBetaProductFullFilePath()
 , itsBetaProductNameU_(_T(""))
 , fPackImages(FALSE)
+, fEnsureCurveVisibility(FALSE)
 {
 
 }
@@ -107,6 +108,7 @@ void CFmiBetaProductDialog::DoDataExchange(CDataExchange* pDX)
     DDX_Check(pDX, IDC_CHECK_SHOW_MODEL_ORIGIN_TIME, fShowModelOriginTime);
     DDX_Text(pDX, IDC_STATIC_BETA_PRODUCT_NAME, itsBetaProductNameU_);
     DDX_Check(pDX, IDC_CHECK_PACK_IMAGES, fPackImages);
+    DDX_Check(pDX, IDC_CHECK_ENSURE_CURVE_VISIBILITY, fEnsureCurveVisibility);
 }
 
 
@@ -142,6 +144,7 @@ BEGIN_MESSAGE_MAP(CFmiBetaProductDialog, CTabPageSSL) //CDialogEx)
     ON_EN_CHANGE(IDC_EDIT_SYNOP_STATION_ID_STRING, &CFmiBetaProductDialog::OnEnChangeEditSynopStationIdString)
     ON_BN_CLICKED(IDC_BUTTON_SAVE_AS_BETA_PRODUCT, &CFmiBetaProductDialog::OnBnClickedButtonSaveAsBetaProduct)
     ON_BN_CLICKED(IDC_CHECK_PACK_IMAGES, &CFmiBetaProductDialog::OnBnClickedCheckPackImages)
+    ON_BN_CLICKED(IDC_CHECK_ENSURE_CURVE_VISIBILITY, &CFmiBetaProductDialog::OnBnClickedCheckEnsureCurveVisibility)
 END_MESSAGE_MAP()
 
 
@@ -190,6 +193,7 @@ void CFmiBetaProductDialog::InitControlsFromDocument()
     fDisplayRuntimeInfo = itsBetaProductionSystem->BetaProductDisplayRuntime();
     fShowModelOriginTime = itsBetaProductionSystem->BetaProductShowModelOriginTime();
     fPackImages = itsBetaProductionSystem->BetaProductPackImages();
+    fEnsureCurveVisibility = itsBetaProductionSystem->BetaProductEnsureCurveVisibility();
     try
     {
         itsTimeLengthInHoursStringU_ = CA2T(boost::lexical_cast<std::string>(itsBetaProductionSystem->BetaProductTimeLengthInHours()).c_str());
@@ -235,6 +239,7 @@ void CFmiBetaProductDialog::InitControlsFromLoadedBetaProduct()
     fDisplayRuntimeInfo = itsBetaProduct->DisplayRunTimeInfo();
     fShowModelOriginTime = itsBetaProduct->ShowModelOriginTime();
     fPackImages = itsBetaProduct->PackImages();
+    fEnsureCurveVisibility = itsBetaProduct->EnsureCurveVisibility();
 
     itsTimeRangeInfoTextU_ = CA2T(itsBetaProduct->TimeRangeInfoText().c_str());
     itsRowIndexListInfoTextU_ = CA2T(itsBetaProduct->RowIndexListInfoText().c_str());
@@ -265,6 +270,7 @@ void CFmiBetaProductDialog::StoreControlValuesToDocument()
     itsBetaProductionSystem->BetaProductDisplayRuntime(fDisplayRuntimeInfo == TRUE);
     itsBetaProductionSystem->BetaProductShowModelOriginTime(fShowModelOriginTime == TRUE);
     itsBetaProductionSystem->BetaProductPackImages(fPackImages == TRUE);
+    itsBetaProductionSystem->BetaProductEnsureCurveVisibility(fEnsureCurveVisibility == TRUE);
 
     try
     {
@@ -332,6 +338,7 @@ void CFmiBetaProductDialog::InitDialogTexts()
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SYNOP_STATION_ID_VIEW_GROUP_TEXT, "Synop station ids: <empty> OR id1,id2,id3-id4,...");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_PACK_IMAGES, "Pack images (some quality loss)");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_TIME_BOX_USE_UTC_TIME, "Use UTC times on Timebox");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_ENSURE_CURVE_VISIBILITY, "Ensure curve visibility (sound.+time-ser.)");
 
     InitLocationSelector(itsParamBoxLocationSelector);
 }
@@ -381,6 +388,7 @@ void CFmiBetaProductDialog::Update()
     itsBetaProduct->DisplayRunTimeInfo(fDisplayRuntimeInfo == TRUE);
     itsBetaProduct->ShowModelOriginTime(fShowModelOriginTime == TRUE);
     itsBetaProduct->PackImages(fPackImages == TRUE);
+    itsBetaProduct->EnsureCurveVisibility(fEnsureCurveVisibility == TRUE);
     CheckForGenerateButtonActivation();
 
     UpdateData(FALSE);
@@ -1590,4 +1598,11 @@ void CFmiBetaProductDialog::OnBnClickedCheckPackImages()
 {
     UpdateData(TRUE);
     itsBetaProduct->PackImages(fPackImages == TRUE);
+}
+
+
+void CFmiBetaProductDialog::OnBnClickedCheckEnsureCurveVisibility()
+{
+    UpdateData(TRUE);
+    itsBetaProduct->EnsureCurveVisibility(fEnsureCurveVisibility == TRUE);
 }

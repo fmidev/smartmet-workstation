@@ -133,6 +133,7 @@ BEGIN_MESSAGE_MAP(CFmiTempDlg, CDialog)
 	ON_EN_CHANGE(IDC_EDIT_AVG_TIME_RANGE_1, &CFmiTempDlg::OnEnChangeEditAvgTimeRange1)
 	ON_EN_CHANGE(IDC_EDIT_AVG_TIME_RANGE_2, &CFmiTempDlg::OnEnChangeEditAvgTimeRange2)
 	ON_BN_CLICKED(IDC_BUTTON_CLEAR_AVG_CONTROLS, &CFmiTempDlg::OnBnClickedButtonClearAvgControls)
+	ON_COMMAND(ID_ACCELERATOR_SOUNDING_AUTO_ADJUST_SCALES, &CFmiTempDlg::OnAcceleratorSoundingAutoAdjustScales)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -925,6 +926,14 @@ void CFmiTempDlg::OnBnClickedButtonClearAvgControls()
 	itsAvgTimeRange1Str = "0";
 	itsAvgTimeRange2Str = "0";
 	UpdateData(FALSE);
+	itsView->Update(true);
+	Invalidate(FALSE);
+}
+
+
+void CFmiTempDlg::OnAcceleratorSoundingAutoAdjustScales()
+{
+	itsView->AutoAdjustValueScales(false, false);
 	itsView->Update(true);
 	Invalidate(FALSE);
 }

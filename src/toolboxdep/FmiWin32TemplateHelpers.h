@@ -400,10 +400,27 @@ namespace CFmiWin32TemplateHelpers
     }
 
     template<class Tview>
+    void DoPossibleAutoAdjustValueScalesSetups(Tview* theView, SmartMetDocumentInterface* smartMetDocumentInterface)
+    {
+        auto mapViewDescTopIndex = theView->MapViewDescTopIndex();
+        if(mapViewDescTopIndex == CtrlViewUtils::kFmiTimeSerialView || mapViewDescTopIndex == CtrlViewUtils::kFmiSoundingView)
+        {
+            const auto *currentBetaProduct = smartMetDocumentInterface->GetCurrentGeneratedBetaProduct();
+            if(currentBetaProduct && currentBetaProduct->EnsureCurveVisibility())
+            {
+                theView->AutoAdjustValueScales(false, false);
+            }
+        }
+    }
+
+    template<class Tview>
     void DoOffScreenDrawForNonMapView(Tview *theView, SmartMetDocumentInterface *smartMetDocumentInterface, CBitmap & theDrawnScreenBitmapOut)
     {
         if(theView == nullptr)
             return;
+
+        // Mahdollinen asteikoiden säätö pitää  tehdä ennen kuin view-luokkien device-context:eja aletaan asettelemaan!!!
+        DoPossibleAutoAdjustValueScalesSetups(theView, smartMetDocumentInterface);
 
         CClientDC dc(theView);
         CFmiWin32Helpers::DeviceContextHelper dcMem(&dc);
@@ -412,7 +429,6 @@ namespace CFmiWin32TemplateHelpers
             return;
 
         SetupDrawnBitmap(theView, &dc, theDrawnScreenBitmapOut, dcMem);
-
         theView->SetToolMastersDC(&dcMem.getDc());
         theView->DoDraw();
         theView->DrawOverBitmapThings(theView->ToolBox());
@@ -565,7 +581,7 @@ namespace CFmiWin32TemplateHelpers
             // välimuistin apuna käytetty dc
             NFmiCopyCDCHandler copyCDCHandler(&dc, *mapViewDesctop);
 
-            std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(smartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
+            CFmiWin32Helpers::WaitCursorHelper waitCursorHelper(smartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
             if(!smartMetDocumentInterface->ViewBrushed())
             {
                 CtrlView::MakeCombatibleBitmap(mapView, &memoryBitmap);

@@ -686,7 +686,7 @@ void CTimeEditValuesDlg::OnAcceleratorSwapArea()
 { 
 	// Tämä on siis SPACE-näppäimen handleri, jolla tehdään aikasarjaikkunan 
 	// aktiivisen rivin arvoasteikko säädöt (=> AutoAdjustValueScales(true)).
-	itsTimeEditValuesView->AutoAdjustValueScales(true);
+	itsTimeEditValuesView->AutoAdjustValueScales(true, true);
 	itsSmartMetDocumentInterface->TimeSerialViewDirty(true);
 	Invalidate(FALSE);
 }
@@ -695,7 +695,7 @@ void CTimeEditValuesDlg::OnAcceleratorSwapAreaSecondaryKeyExtraMap()
 {
 	// Tämä on siis CTRL + SHIFT + SPACE-näppäimen handleri, jolla tehdään aikasarjaikkunan 
 	// kaikkien rivien arvoasteikko säädöt (=> AutoAdjustValueScales(false)).
-	itsTimeEditValuesView->AutoAdjustValueScales(false);
+	itsTimeEditValuesView->AutoAdjustValueScales(false, true);
 	itsSmartMetDocumentInterface->TimeSerialViewDirty(true);
 	Invalidate(FALSE);
 }

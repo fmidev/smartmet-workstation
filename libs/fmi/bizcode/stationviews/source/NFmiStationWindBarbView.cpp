@@ -143,5 +143,5 @@ float NFmiStationWindBarbView::InterpolatedToolTipValue(const NFmiMetTime &theUs
 
 NFmiSymbolColorChangingType NFmiStationWindBarbView::SbdGetSymbolColorChangingType() const
 {
-	return NFmiSymbolColorChangingType::Never;
+	return NFmiSymbolColorChangingType::OnlyWithOtherParameterValues;
 }

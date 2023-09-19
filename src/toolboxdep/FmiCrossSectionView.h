@@ -60,6 +60,9 @@ public:
     virtual void OnInitialUpdate();
     virtual void OnPrepareDC(CDC* pDC, CPrintInfo* pInfo = NULL);
 	void SetToolsDCs(CDC* theDC);
+	// Couple non used parameters were added, because time-serial-view needs these and this 
+	// method is used used by beta-product system through template interface.
+	void AutoAdjustValueScales(bool justActiveRow, bool redrawOnSuccess);
 
 protected:
 	CFmiCrossSectionView();           // protected constructor used by dynamic creation

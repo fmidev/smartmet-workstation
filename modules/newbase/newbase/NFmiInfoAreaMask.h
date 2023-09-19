@@ -85,8 +85,6 @@ class NFmiInfoAreaMask : public NFmiAreaMaskImpl
       const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
       boost::shared_ptr<NFmiArea> &calculationArea,
       bool getStationarySynopDataOnly);
-  static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> CreateShallowCopyOfInfoVector(
-      const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector);
 
   // tätä kaytetaan smarttool-modifierin yhteydessä
   double Value(const NFmiCalculationParams &theCalculationParams,
@@ -156,9 +154,14 @@ class NFmiInfoAreaMask : public NFmiAreaMaskImpl
   float CalcMetaParamPressureValue(double thePressure, const NFmiCalculationParams &theCalculationParams);
   float CalcCachedInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiLocationCache &theLocationCache, const NFmiTimeCache *theTimeCache);
   float CalcMetaParamCachedInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiLocationCache &theLocationCache, const NFmiTimeCache *theTimeCache);
-  void AddExtremeValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDataModifier> &theFunctionModifier, const NFmiLocationCache &theLocationCache);
-  bool FindClosestStationData(const NFmiPoint &latlon,
-                              double observationRadiusInKm,
+  void AddExtremeValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+                        boost::shared_ptr<NFmiDataModifier> &theFunctionModifier,
+                        const NFmiLocationCache &theLocationCache);
+  virtual bool DoExtremeAddingSpecialCase() const { return true; }
+  virtual void AddValueToModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+                        boost::shared_ptr<NFmiDataModifier> &theFunctionModifier,
+                        float theValue);
+  bool FindClosestStationData(const NFmiCalculationParams &calculationParams,
                               size_t &dataIndexOut,
                               unsigned long &locationIndexOut);
   double GetSearchRadiusInMetres(double observationRadiusInKm);

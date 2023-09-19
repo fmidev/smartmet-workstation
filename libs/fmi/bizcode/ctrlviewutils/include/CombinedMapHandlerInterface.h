@@ -105,7 +105,7 @@ public:
     virtual void setModelRunOffset(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void setModelRunOffsetForAllModelDataOnActiveRow(unsigned int mapViewDescTopIndex, FmiDirection direction) = 0;
     virtual void activateView(const NFmiMenuItem& menuItem, int rowIndex) = 0;
-    virtual void addViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& menuItem, int realRowIndex, bool isViewMacroDrawParam, const std::string* macroParamInitFileName) = 0;
+    virtual void addViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& menuItem, int realRowIndex, bool isViewMacroDrawParam) = 0;
     virtual void addCrossSectionView(const NFmiMenuItem& menuItem, int viewRowIndex, bool treatAsViewMacro) = 0;
     virtual void addView(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void changeParamLevel(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
@@ -144,13 +144,13 @@ public:
     virtual NFmiDrawParamList& getTimeSerialViewDrawParamList() = 0;
     virtual NFmiDrawParamList* getTimeSerialViewSideParameters(int viewRowIndex) = 0;
     virtual SideParametersContainer& getTimeSerialViewSideParameterList() = 0;
-    virtual void addTimeSerialViewSideParameter(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam) = 0;
+    virtual boost::shared_ptr<NFmiDrawParam> addTimeSerialViewSideParameter(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam) = 0;
     virtual void removeTimeSerialViewSideParameter(const NFmiMenuItem& menuItem) = 0;
     virtual void removeAllTimeSerialViewSideParameters(int viewRowIndex) = 0;
     virtual void removeAllTimeSerialViews() = 0;
     virtual void showCrossSectionDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex, bool showParam) = 0;
     virtual bool modifyDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
-    virtual void addTimeSerialView(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam) = 0;
+    virtual boost::shared_ptr<NFmiDrawParam> addTimeSerialView(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam) = 0;
     virtual void removeTimeSerialView(const NFmiMenuItem& menuItem) = 0;
     virtual void timeSerialViewModelRunCountSet(const NFmiMenuItem& menuItem) = 0;
     virtual unsigned long& getTimeSerialViewIndexReference() = 0;

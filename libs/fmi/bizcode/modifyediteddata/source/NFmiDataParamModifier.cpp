@@ -113,7 +113,7 @@ bool NFmiDataParamModifier::ModifyData2(void)
 //   Tänne annetaan luku mitä on tarkoitus muuttaa
 //   ja muutettu luku palautetaan. Perusluokassa ei tehdä mitään
 //   vaan palautetaan parametrina annettu luku.
-double NFmiDataParamModifier::Calculate (const double& theValue)
+float NFmiDataParamModifier::Calculate (const float& theValue)
 {
 	return theValue;
 }
@@ -123,9 +123,9 @@ double NFmiDataParamModifier::Calculate (const double& theValue)
 //--------------------------------------------------------
 
 //   Käy muuttamassa valitut paikat ja koko aikasarjan lävitse kerralla.
-//   Vain annetun timebagin aktiiviset ajat käydään läpi. double-taulukko
+//   Vain annetun timebagin aktiiviset ajat käydään läpi. float-taulukko
 //   on timebagin kokoinen ja siinä on muutos kertoimet.
-bool NFmiDataParamModifier::ModifyTimeSeriesData (NFmiTimeDescriptor& theActiveTimes, double* theModifyFactorTable)
+bool NFmiDataParamModifier::ModifyTimeSeriesData (NFmiTimeDescriptor& theActiveTimes, float* theModifyFactorTable)
 {
 	int modifyFactorIndex = 0;
 
@@ -141,10 +141,10 @@ bool NFmiDataParamModifier::ModifyTimeSeriesData (NFmiTimeDescriptor& theActiveT
 			if(itsParamMaskList->UseMask())
 			{
 				if(itsParamMaskList->IsMasked(itsInfo->LatLon()))
-					itsInfo->FloatValue(static_cast<float>(Calculate(itsInfo->FloatValue(), theModifyFactorTable[modifyFactorIndex])));
+					itsInfo->FloatValue(Calculate(itsInfo->FloatValue(), theModifyFactorTable[modifyFactorIndex]));
 			}
 			else
-				itsInfo->FloatValue(static_cast<float>(Calculate(itsInfo->FloatValue(), theModifyFactorTable[modifyFactorIndex])));
+				itsInfo->FloatValue(Calculate(itsInfo->FloatValue(), theModifyFactorTable[modifyFactorIndex]));
 		}
 		modifyFactorIndex++;
 	}
@@ -152,7 +152,7 @@ bool NFmiDataParamModifier::ModifyTimeSeriesData (NFmiTimeDescriptor& theActiveT
 	return true;
 }
 
-bool NFmiDataParamModifier::ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, double* theModifyFactorTable)
+bool NFmiDataParamModifier::ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, float* theModifyFactorTable)
 {
 	int modifyFactorIndex = 0;
 
@@ -166,13 +166,13 @@ bool NFmiDataParamModifier::ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescrip
 		else
 			continue;
         itsParamMaskList->SyncronizeMaskTime(itsInfo->Time());
-        double maskFactor = 0;
+		float maskFactor = 0;
 		for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
 		{
 			maskFactor = 1; //itsParamMaskList->MaskValue(itsInfo->LatLon());
 			if(itsParamMaskList->UseMask())
-				maskFactor = itsParamMaskList->MaskValue(itsInfo->LatLon());
-			itsInfo->FloatValue(static_cast<float>(CalculateWithMaskFactor(itsInfo->FloatValue(), theModifyFactorTable[modifyFactorIndex], maskFactor)));
+				maskFactor = (float)itsParamMaskList->MaskValue(itsInfo->LatLon());
+			itsInfo->FloatValue(CalculateWithMaskFactor(itsInfo->FloatValue(), theModifyFactorTable[modifyFactorIndex], maskFactor));
 		}
 		modifyFactorIndex++;
 	}
@@ -183,7 +183,7 @@ bool NFmiDataParamModifier::ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescrip
 //--------------------------------------------------------
 // SetTimeSeriesData
 //--------------------------------------------------------
-bool NFmiDataParamModifier::SetTimeSeriesData(NFmiTimeDescriptor& theActiveTimes, double* theModifyFactorTable, int theUnchangedValue)
+bool NFmiDataParamModifier::SetTimeSeriesData(NFmiTimeDescriptor& theActiveTimes, float* theModifyFactorTable, int theUnchangedValue)
 {
 	int modifyFactorIndex = 0;
 
@@ -199,7 +199,7 @@ bool NFmiDataParamModifier::SetTimeSeriesData(NFmiTimeDescriptor& theActiveTimes
 			if((itsParamMaskList->UseMask() && itsParamMaskList->IsMasked(itsInfo->LatLon()))
 				|| !(itsParamMaskList->UseMask()))
 				if(theModifyFactorTable[modifyFactorIndex] != theUnchangedValue)
-					itsInfo->FloatValue(static_cast<float>(theModifyFactorTable[modifyFactorIndex]));
+					itsInfo->FloatValue(theModifyFactorTable[modifyFactorIndex]);
 		}
 		modifyFactorIndex++;
 	}
@@ -212,9 +212,9 @@ bool NFmiDataParamModifier::SetTimeSeriesData(NFmiTimeDescriptor& theActiveTimes
 //--------------------------------------------------------
 //   Tätä metodia käytetään timeseries funktiossa.
 //
-double NFmiDataParamModifier::Calculate (double theDataValue, double theFactor)
+float NFmiDataParamModifier::Calculate (float theDataValue, float theFactor)
 {
-	double returnValue = kFloatMissing;
+	float returnValue = kFloatMissing;
 	if(theDataValue == kFloatMissing)
 		returnValue = theFactor;
 	else
@@ -223,15 +223,15 @@ double NFmiDataParamModifier::Calculate (double theDataValue, double theFactor)
 		if(itsInfo->Param().GetParam()->GetIdent() == kFmiWindDirection)
 		{
 			if(returnValue > 360)
-				returnValue = int (returnValue) % 360;
+				returnValue = static_cast<float>(int (returnValue) % 360);
 			if(returnValue < 0)
 				returnValue += 360;
 		}
 	}
-	return FmiMin(FmiMax(returnValue, itsDrawParam->AbsoluteMinValue()), itsDrawParam->AbsoluteMaxValue());
+	return static_cast<float>(FmiMin(FmiMax(returnValue, itsDrawParam->AbsoluteMinValue()), itsDrawParam->AbsoluteMaxValue()));
 }
 
-double NFmiDataParamModifier::CalculateWithMaskFactor(double theDataValue, double theFactor, double theMaskFactor)
+float NFmiDataParamModifier::CalculateWithMaskFactor(float theDataValue, float theFactor, float theMaskFactor)
 {
 	if(theFactor != kFloatMissing)
 		return Calculate(theDataValue, theFactor * theMaskFactor);
@@ -536,15 +536,15 @@ bool NFmiDataParamControlPointModifier::DoProcessPoolCpModifyingTcp(MultiProcess
                 }
 
                 itsInfo->TimeIndex(static_cast<unsigned long>(result.data_time_index_)); // asetetaan muokattava aika
-		        double maskFactor = 1;
+				float maskFactor = 1;
 		        for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
 		        {
 			        if(itsParamMaskList->UseMask())
-				        maskFactor = itsParamMaskList->MaskValue(itsInfo->LatLon());
+				        maskFactor = static_cast<float>(itsParamMaskList->MaskValue(itsInfo->LatLon()));
 			        if(maskFactor)
 			        {
 				        int locationIndex = itsInfo->LocationIndex();
-                        itsInfo->FloatValue(static_cast<float>(CalculateWithMaskFactor(itsInfo->FloatValue(), result.values_[locationIndex], maskFactor)));
+                        itsInfo->FloatValue(CalculateWithMaskFactor(itsInfo->FloatValue(), result.values_[locationIndex], maskFactor));
 			        }
 		        }
             }

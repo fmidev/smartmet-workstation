@@ -1185,56 +1185,56 @@ void CFmiParameterSelectionDlg::HandleGridCtrlsLButtonDblClk()
     }
 }
 
+static NFmiInfoData::Type GetFinalMacroParamDataType(unsigned int desktopIndex, NFmiInfoData::Type originalDataType)
+{
+    if(originalDataType == NFmiInfoData::kMacroParam)
+    {
+        if(desktopIndex == CtrlViewUtils::kFmiCrossSectionView)
+            return NFmiInfoData::kCrossSectionMacroParam;
+        if(desktopIndex == CtrlViewUtils::kFmiTimeSerialView)
+            return NFmiInfoData::kTimeSerialMacroParam;
+    }
+    return originalDataType;
+}
+
 void CFmiParameterSelectionDlg::HandleRowItemSelection(const AddParams::SingleRowItem &rowItem)
 {    
     UpdateData(TRUE);
 
-    if((rowItem.dataType() != NFmiInfoData::kNoDataType && rowItem.leafNode()) 
-		|| (itsParameterSelectionSystem->LastActivatedDesktopIndex() == CtrlViewUtils::kFmiCrossSectionView && rowItem.crossSectionLeafNode())
-		)
+    auto normalLeafNode = (rowItem.dataType() != NFmiInfoData::kNoDataType && rowItem.leafNode());
+    auto crossSectionLeafNode = (itsParameterSelectionSystem->LastActivatedDesktopIndex() == CtrlViewUtils::kFmiCrossSectionView &&
+        rowItem.crossSectionLeafNode());
+    if((normalLeafNode || crossSectionLeafNode))
     {
-        std::unique_ptr<NFmiMenuItem> addParamCommandPtr;
-        if(NFmiDrawParam::IsMacroParamCase(rowItem.dataType())) {
-            addParamCommandPtr.reset(new NFmiMenuItem(
-                static_cast<int>(itsParameterSelectionSystem->LastActivatedDesktopIndex()),
-                rowItem.itemName(),
-                NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
-                kAddViewWithRealRowNumber,
-                NFmiMetEditorTypes::View::kFmiParamsDefaultView,
-                rowItem.level().get(),
-                rowItem.dataType()));
-                                                                                                                                                                                                                                                          
-            addParamCommandPtr->MacroParamInitName(rowItem.uniqueDataId());
-        } 
-		else if (itsParameterSelectionSystem->LastActivatedDesktopIndex() == CtrlViewUtils::kFmiCrossSectionView && rowItem.crossSectionLeafNode())
-		{
-            addParamCommandPtr.reset(new NFmiMenuItem(
-				static_cast<int>(itsParameterSelectionSystem->LastActivatedDesktopIndex()),
-				rowItem.itemName(),
-				NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
-				kFmiAddParamCrossSectionView,
-				NFmiMetEditorTypes::View::kFmiParamsDefaultView,
-				rowItem.level().get(),
-				rowItem.dataType()));
-		}
-        else
-        {
-            auto usedParamAddingCommand = kAddViewWithRealRowNumber;
-            if(itsParameterSelectionSystem->LastActivatedDesktopIndex() == CtrlViewUtils::kFmiTimeSerialView)
-            {
-                usedParamAddingCommand = kFmiAddTimeSerialView;
-                if(fTimeSerialSideParameterCase)
-                    usedParamAddingCommand = kFmiAddTimeSerialSideParam;
-            }
+        std::unique_ptr<NFmiMenuItem> addParamCommandPtr(new NFmiMenuItem(
+            static_cast<int>(itsParameterSelectionSystem->LastActivatedDesktopIndex()),
+            rowItem.itemName(),
+            NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
+            kAddViewWithRealRowNumber,
+            NFmiMetEditorTypes::View::kFmiParamsDefaultView,
+            rowItem.level().get(),
+            rowItem.dataType()));
 
-            addParamCommandPtr.reset(new NFmiMenuItem(
-                static_cast<int>(itsParameterSelectionSystem->LastActivatedDesktopIndex()),
-                "Add some param",
-                NFmiDataIdent(NFmiParam(rowItem.itemId(), rowItem.displayName()), NFmiProducer(rowItem.parentItemId(), rowItem.parentItemName())),
-                usedParamAddingCommand,
-                NFmiMetEditorTypes::View::kFmiParamsDefaultView,
-                rowItem.level().get(), 
-                rowItem.dataType()));
+        if(NFmiDrawParam::IsMacroParamCase(rowItem.dataType()))
+        {
+            // Asetetaan oikea datatyyppi
+            addParamCommandPtr->DataType(::GetFinalMacroParamDataType(itsParameterSelectionSystem->LastActivatedDesktopIndex(), rowItem.dataType()));
+            // Asetetaan macroParamin init tiedoston nimi
+            addParamCommandPtr->MacroParamInitName(rowItem.uniqueDataId());
+        }
+
+        if(crossSectionLeafNode)
+        {
+            addParamCommandPtr->CommandType(kFmiAddParamCrossSectionView);
+        }
+        else if(itsParameterSelectionSystem->LastActivatedDesktopIndex() == CtrlViewUtils::kFmiTimeSerialView)
+        {
+            auto usedParamAddingCommand = kFmiAddTimeSerialView;
+            if(fTimeSerialSideParameterCase)
+            {
+                usedParamAddingCommand = kFmiAddTimeSerialSideParam;
+            }
+            addParamCommandPtr->CommandType(usedParamAddingCommand);
         }
 
         itsSmartMetDocumentInterface->ExecuteCommand(*addParamCommandPtr, itsParameterSelectionSystem->LastActivatedRowIndex(), 0);

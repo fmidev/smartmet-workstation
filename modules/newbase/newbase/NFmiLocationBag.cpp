@@ -41,7 +41,11 @@ NFmiLocationBag::~NFmiLocationBag() { Destroy(); }
  */
 // ----------------------------------------------------------------------
 
-NFmiLocationBag::NFmiLocationBag() : NFmiSize(), itsLocations(), itsSortedLocations(), itsNearTree()
+NFmiLocationBag::NFmiLocationBag() 
+    : NFmiSize(), 
+    itsLocations(), 
+    itsSortedLocations(), 
+    itsNearTree()
 {
 }
 
@@ -57,7 +61,7 @@ NFmiLocationBag::NFmiLocationBag() : NFmiSize(), itsLocations(), itsSortedLocati
 // ----------------------------------------------------------------------
 
 NFmiLocationBag::NFmiLocationBag(const NFmiLocation &theLocation)
-    : NFmiSize(), itsLocations(), itsSortedLocations(), itsNearTree()
+    : NFmiLocationBag()
 {
   AddLocation(theLocation);
 }
@@ -74,7 +78,7 @@ NFmiLocationBag::NFmiLocationBag(const NFmiLocation &theLocation)
 
 NFmiLocationBag::NFmiLocationBag(const NFmiStation *theLocationArray,
                                  unsigned long numberOfLocations)
-    : NFmiSize(numberOfLocations), itsLocations(), itsSortedLocations(), itsNearTree()
+    : NFmiLocationBag()
 {
   itsLocations.reserve(numberOfLocations);
   for (unsigned long i = 0; i < numberOfLocations; i++)
@@ -96,7 +100,7 @@ NFmiLocationBag::NFmiLocationBag(const NFmiStation *theLocationArray,
 
 NFmiLocationBag::NFmiLocationBag(const NFmiLocation *theLocationArray,
                                  unsigned long numberOfLocations)
-    : NFmiSize(numberOfLocations), itsLocations(), itsSortedLocations(), itsNearTree()
+    : NFmiLocationBag()
 {
   itsLocations.reserve(numberOfLocations);
   for (unsigned long i = 0; i < numberOfLocations; i++)
@@ -108,26 +112,6 @@ NFmiLocationBag::NFmiLocationBag(const NFmiLocation *theLocationArray,
 
 // ----------------------------------------------------------------------
 /*!
- * Constructor based on an array of pointers to locations. All the
- * locations pointed to in the array are added to the constructed
- * bag. Note that the bag takes ownership of the pointers, no
- * cloning is done.
- *
- * \param theLocationArray The array of pointers to NFmiLocation objects.
- * \param numberOfLocations Size of the array.
- */
-// ----------------------------------------------------------------------
-
-NFmiLocationBag::NFmiLocationBag(NFmiLocation **theLocationArray, unsigned long numberOfLocations)
-    : NFmiSize(numberOfLocations), itsLocations(), itsSortedLocations(), itsNearTree()
-{
-  itsLocations.reserve(numberOfLocations);
-  for (unsigned long i = 0; i < numberOfLocations; i++)
-    AddLocation(*theLocationArray[i]);
-}
-
-// ----------------------------------------------------------------------
-/*!
  * Copy constructor
  *
  * \param theLocationBag The object being copied
@@ -135,12 +119,21 @@ NFmiLocationBag::NFmiLocationBag(NFmiLocation **theLocationArray, unsigned long 
 // ----------------------------------------------------------------------
 
 NFmiLocationBag::NFmiLocationBag(const NFmiLocationBag &theLocationBag)
-    : NFmiSize(theLocationBag), itsLocations(), itsSortedLocations(), itsNearTree()
+    : NFmiLocationBag()
 {
+  DoActualCopyOperations(theLocationBag);
+}
+
+void NFmiLocationBag::DoActualCopyOperations(const NFmiLocationBag &theLocationBag)
+{
+    Destroy();
+
   itsLocations.reserve(theLocationBag.itsLocations.size());
 
   for (unsigned long i = 0; i < theLocationBag.itsLocations.size(); i++)
+  {
     AddLocation(*(theLocationBag.itsLocations[i]), false);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -221,7 +214,7 @@ bool NFmiLocationBag::Location(const NFmiLocation &theLocation)
   NFmiNearTreeLocation result;
   if (itsNearTree.NearestPoint(result, searchloc, 0))
   {
-    itsIndex = result.GetIndex();
+    itsIndex = static_cast<long>(result.GetIndex());
     return true;
   }
   else
@@ -256,7 +249,7 @@ bool NFmiLocationBag::NearestLocation(const NFmiLocation &theLocation, double th
   NFmiNearTreeLocation result;
   if (itsNearTree.NearestPoint(result, searchloc, cordlimit))
   {
-    itsIndex = result.GetIndex();
+    itsIndex = static_cast<long>(result.GetIndex());
     return true;
   }
   else
@@ -348,7 +341,7 @@ void NFmiLocationBag::Add(const NFmiLocation &theLocation)
   NFmiLocation *tmp = theLocation.Clone();
   itsLocations.push_back(tmp);
   itsSortedLocations.insert(*tmp);
-  itsSize = itsLocations.size();  // safer than itsSize++
+  itsSize = static_cast<unsigned long>(itsLocations.size());  // safer than itsSize++
   itsNearTree.Insert(NFmiNearTreeLocation(*tmp, itsSize - 1));
 }
 
@@ -457,17 +450,13 @@ std::istream &NFmiLocationBag::Read(std::istream &file)
 
 NFmiLocationBag &NFmiLocationBag::operator=(const NFmiLocationBag &theLocationBag)
 {
-  Destroy();
-
-  itsIndex = theLocationBag.CurrentIndex();
-  itsSize = theLocationBag.GetSize();
-
-  itsLocations.reserve(theLocationBag.itsLocations.size());
-  for (unsigned int i = 0; i < theLocationBag.itsLocations.size(); i++)
-    Add(*(theLocationBag.itsLocations[i]));
-
+  if (this != &theLocationBag)
+  {
+    DoActualCopyOperations(theLocationBag);
+  }
   return *this;
 }
+
 
 // ----------------------------------------------------------------------
 /*!

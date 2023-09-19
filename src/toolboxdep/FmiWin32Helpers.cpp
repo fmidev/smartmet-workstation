@@ -611,14 +611,23 @@ bool CFmiWin32Helpers::IsWindowMaximized(CWnd *win)
     return false;
 }
 
-std::auto_ptr<CWaitCursor> CFmiWin32Helpers::GetWaitCursorIfNeeded(bool showWaitCursorWhileDrawingView)
+
+CFmiWin32Helpers::WaitCursorHelper::WaitCursorHelper(bool showWaitCursor)
+    :fShowWaitCursor(showWaitCursor)
 {
-	std::auto_ptr<CWaitCursor> cursorPtr;
-	if(showWaitCursorWhileDrawingView)
-	{ // tiimalasi laitetaan vain jos ei ole animaatiota karttanäytössä käynnissä
-		cursorPtr.reset(new CWaitCursor());
-	}
-	return cursorPtr;
+    if(fShowWaitCursor)
+    {
+        // Tiimalasi halutaan laittaa päälle vain jos ei ole animaatiota karttanäytössä käynnissä
+        AfxGetApp()->BeginWaitCursor();
+    }
+}
+
+CFmiWin32Helpers::WaitCursorHelper::~WaitCursorHelper()
+{
+    if(fShowWaitCursor)
+    {
+        AfxGetApp()->EndWaitCursor();
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////

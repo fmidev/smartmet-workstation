@@ -171,7 +171,7 @@ static std::string GetFontColor(CatLog::Severity severity)
 	case CatLog::Severity::Error:
 		return "red";
 	case CatLog::Severity::Warning:
-		return ColorString::Color2HtmlColorStr(NFmiColor(1.f, 0.37f, 0.f)); // punertavampi oranssi näkyy paremmin tootipissa
+		return ColorString::Color2HtmlColorStr(NFmiColor(1.f, 0.37f, 0.f)); // punertavampi oranssi näkyy paremmin tooltipissa
 	default:
 		return "black";
 	}

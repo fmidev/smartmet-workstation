@@ -502,6 +502,13 @@ std::string removeComments(const std::string &prgm)
 	return res;
 }
 
+void NFmiViewSettingMacro::TimeViewRow::SetMacroParamInitFileNames(const std::string& theRootPath)
+{
+	SetMacroParamInitFileNamesFunctor setterFunctor(theRootPath);
+	setterFunctor(itsParam);
+	std::for_each(itsSideParameters.begin(), itsSideParameters.end(), SetMacroParamInitFileNamesFunctor(theRootPath));
+}
+
 void NFmiViewSettingMacro::TimeViewRow::Write(std::ostream& os) const
 {
 	os << "// NFmiViewSettingMacro::TimeViewRow::Write..." << endl;
@@ -793,6 +800,11 @@ void NFmiViewSettingMacro::TimeView::Add(const TimeViewRow &theTimeViewRow)
 	itsRows.push_back(theTimeViewRow);
 }
 
+void NFmiViewSettingMacro::TimeView::SetMacroParamInitFileNames(const std::string& theRootPath)
+{
+	std::for_each(itsRows.begin(), itsRows.end(), SetMacroParamInitFileNamesFunctor(theRootPath));
+}
+
 void NFmiViewSettingMacro::TimeView::Write(std::ostream& os) const
 {
 	os << "// NFmiViewSettingMacro::TimeView::Write..." << endl;
@@ -817,8 +829,13 @@ void NFmiViewSettingMacro::TimeView::Write(std::ostream& os) const
 
 	NFmiMetTime usedViewMacroTime = NFmiDataStoringHelpers::GetUsedViewMacroTime();
 	std::string timeBagStr = NFmiDataStoringHelpers::GetTimeBagOffSetStr(usedViewMacroTime, itsTimeBag);
-	extraData.Add(timeBagStr); // lisätään 1. extra-datana aikaikkunan timebagi offsettina currenttiin aikaan
-
+	extraData.Add(timeBagStr); // lisätään 1. extra-string-datana aikaikkunan timebagi offsettina currenttiin aikaan
+	if(itsPreciseTimeSerialLatlonPoint != NFmiPoint::gMissingLatlon)
+	{
+		// lisätään 2. extra-string-datana aikasarjaan valitun latlon-pisteen paikka
+		extraData.Add(CtrlViewUtils::Point2String(itsPreciseTimeSerialLatlonPoint)); 
+	}
+	
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
@@ -860,12 +877,23 @@ void NFmiViewSettingMacro::TimeView::Read(std::istream& is)
 
 	fTimeBagUpdated = false;
 	if(extraData.itsStringValues.size() >= 1)
-	{// luetaan 1. extra-datana aikaikkunan timebagi offsettina currenttiin aikaan
+	{
+		// luetaan 1. extra-datana aikaikkunan timebagi offsettina currenttiin aikaan
 		if(is.fail())
 			throw std::runtime_error(exceptionErrorMessage);
 		NFmiMetTime usedViewMacroTime = NFmiDataStoringHelpers::GetUsedViewMacroTime();
 		itsTimeBag = NFmiDataStoringHelpers::GetTimeBagOffSetFromStr(usedViewMacroTime, extraData.itsStringValues[0]);
 		fTimeBagUpdated = true;
+	}
+
+	// Oletusarvoisesti laitetaan latlon-point puuttuvaksi, jolloin jätetään nykyinen käytössä oleva piste voimaan.
+	itsPreciseTimeSerialLatlonPoint = NFmiPoint::gMissingLatlon;
+	if(extraData.itsStringValues.size() >= 2)
+	{
+		// Luetaan 2. extra-string-datana aikaikkunaan valittu latlon-piste.
+		if(is.fail())
+			throw std::runtime_error(exceptionErrorMessage);
+		itsPreciseTimeSerialLatlonPoint = CtrlViewUtils::String2Point(extraData.itsStringValues[1]);
 	}
 
 	if(is.fail())
@@ -1458,8 +1486,11 @@ void NFmiViewSettingMacro::Read(std::istream& is)
 	itsCurrentVersionNumber = itsLatestVersionNumber; // aina jatketaan viimeisellä versio numerolla
 }
 
+// Jos jollekin toisille näytöille halutaan vielä lisätä macroParam tuki, 
+// tähän pitää lisätä kyseisen näytön macroParam polkujen alustukset.
 void NFmiViewSettingMacro::SetMacroParamInitFileNames(const std::string &theRootPath)
 {
+	itsTimeView.SetMacroParamInitFileNames(theRootPath);
 	itsCrossSectionView.SetMacroParamInitFileNames(theRootPath);
 	for(size_t i=0; i<itsExtraMapViewDescTops.size(); i++)
 		itsExtraMapViewDescTops[i].SetMacroParamInitFileNames(theRootPath);

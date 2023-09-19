@@ -8,6 +8,10 @@
 #include "NFmiDrawParam.h"
 #include "WzComboBox.h"
 #include "CtrlViewWin32Functions.h"
+#include "PPToolTip.h"
+
+// MARKO Huomio! Outo MFC juttu: GROUPBOX:ien pitää olla dialogissa viimeisinä, muuten static -tyyppiset kontrollit eivät saa
+// CPPToolTip luokan tooltippiä toimimaan. Tuo järjestys tässä viittaa tab-orderiin ja sitä ei siis saa järjestää 'oikein' groupboxien kanssa.
 
 class SmartMetDocumentInterface;
 class NFmiFixedDrawParamFolder;
@@ -53,6 +57,7 @@ public:
 	CButton	itsSimpleIsoLineMidColor;
 	CButton	itsSimpleIsoLineHighColor;
 	CButton	itsSimpleIsoLineHigh2Color;
+	CButton itsSimpleIsoLineHigh3Color;
 	CButton	itsHatch1Color;
 	BOOL	fUSeChangingColorsWithSymbols;
 	BOOL	fUSeMultiColorWithSimpleIsoLines;
@@ -121,9 +126,10 @@ public:
 	float itsSimpleColorContourLimit4Value = kFloatMissing; // Saadaan vastaavasta string valuesta
 	//}}AFX_DATA
 
-	bool fSpecialClassesHaveInvalidValues; // tämän muuttujan avulla väritetään labeli tarvittaessa punaiseksi että
-											// käyttäjä näkee että annetut luokka rajat ovat virheellisiä.
-											// Suurin ongelma tulee kun kaikki arvoteivät ole nousevassa järjestyksessä. Tällöin ohjelma toimii oudosti.
+	// Tämän muuttujan avulla väritetään labeli tarvittaessa punaiseksi että
+	// käyttäjä näkee että annetut luokka rajat ovat virheellisiä.
+	// Suurin ongelma tulee kun kaikki arvot eivät ole nousevassa järjestyksessä. Tällöin ohjelma toimii oudosti.
+	bool fSpecialClassesHaveInvalidValues; 
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -142,6 +148,7 @@ protected:
 	afx_msg void OnButtonColorShowSimpleIsolineMid();
 	afx_msg void OnButtonColorShowSimpleIsolineHigh();
 	afx_msg void OnButtonColorShowSimpleIsolineHigh2();
+	afx_msg void OnButtonColorShowSimpleIsolineHigh3();
 	afx_msg void OnButtonColorShowSymbHigh();
 	afx_msg void OnButtonColorShowSymbLow();
 	afx_msg void OnButtonColorShowSymbMid();
@@ -217,6 +224,10 @@ private:
 	void UpdateSymbolDrawDensityStr();
 	bool IsMacroParamCase();
 	bool IsMacroParamSymbolDrawCase();
+	bool IsPossibleColorParameterStrOk(const CString& colorParameterStr);
+	void DoPostInitializationChecks();
+	void InitTooltipControl();
+	void SetDialogControlTooltip(int controlId, const std::string& tooltipRawText);
 
 	std::string itsDrawParamPath;
 	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
@@ -240,6 +251,7 @@ private:
 	COLORREF itsSimpleIsoLineMidColorRef;
 	COLORREF itsSimpleIsoLineHighColorRef;
 	COLORREF itsSimpleIsoLineHigh2ColorRef;
+	COLORREF itsSimpleIsoLineHigh3ColorRef;
 	COLORREF itsSimpleColorContourLowColorRef;
 	COLORREF itsSimpleColorContourMidColorRef;
 	COLORREF itsSimpleColorContourHighColorRef;
@@ -259,6 +271,7 @@ private:
 	CBitmap* itsSimpleIsoLineMidBitmap;
 	CBitmap* itsSimpleIsoLineHighBitmap;
 	CBitmap* itsSimpleIsoLineHigh2Bitmap;
+	CBitmap* itsSimpleIsoLineHigh3Bitmap;
 	CBitmap* itsSimpleColorContourLowBitmap;
 	CBitmap* itsSimpleColorContourMidBitmap;
 	CBitmap* itsSimpleColorContourHighBitmap;
@@ -278,6 +291,7 @@ private:
 	CRect itsSimpleIsoLineMidColorRect;
 	CRect itsSimpleIsoLineHighColorRect;
 	CRect itsSimpleIsoLineHigh2ColorRect;
+	CRect itsSimpleIsoLineHigh3ColorRect;
 	CRect itsSimpleColorContourLowColorRect;
 	CRect itsSimpleColorContourMidColorRect;
 	CRect itsSimpleColorContourHighColorRect;
@@ -313,6 +327,9 @@ private:
 	CSliderCtrl itsSymbolDrawDensityYSlider;
 	int itsFixedTextSymbolDrawLength;
 	CString itsSymbolDrawDensityStr;
+	CString itsPossibleColorParameterStr;
+	bool fPossibleColorParameterOk = false;
+	CPPToolTip m_tooltip;
 
 public:
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
@@ -337,6 +354,8 @@ public:
 	afx_msg void OnEnChangeShowSimpleIsolineWithColorsEndValue();
 	afx_msg void OnEnChangeShowSimpleIsolineWithColorsEnd2Value();
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnEnChangeEditDrawParamColorParamStr();
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
 
 //{{AFX_INSERT_LOCATION}}

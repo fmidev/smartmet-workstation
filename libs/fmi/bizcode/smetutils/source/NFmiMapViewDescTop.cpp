@@ -89,23 +89,6 @@ namespace
 		}
 	};
 
-	std::string Point2String(const NFmiPoint& p)
-	{
-		std::stringstream out;
-		out << p.X() << "," << p.Y(); // tein oman tavan kirjoittaa NFmiPoint, koska en halunnut rivinvaihtoa loppuun
-		return out.str();
-	}
-
-	NFmiPoint String2Point(const std::string& str)
-	{
-		std::stringstream in(str);
-		double x = 0;
-		double y = 0;
-		char ch = 0; // pilkku pitää lukea välistä
-		in >> x >> ch >> y;
-		return NFmiPoint(x, y);
-	}
-
 	std::vector<NFmiGdiPlusImageMapHandler*> CopyMapHandlerVector(const std::vector<NFmiGdiPlusImageMapHandler*>& mapHandlerVector)
 	{
 		std::vector<NFmiGdiPlusImageMapHandler*> copiedVector;
@@ -507,7 +490,7 @@ void NFmiMapViewDescTop::InitFromMapViewWinRegistry(NFmiMapViewWinRegistry &theM
     SelectedMapIndex(theMapViewWinRegistry.SelectedMapIndex());
 	fShowStationPlotVM = theMapViewWinRegistry.ShowStationPlot();
     // stringi pitää muuttaa point-otukseksi ja lopuksi pitää tehdä järkevyys tarkastelut
-    ViewGridSize(::String2Point(theMapViewWinRegistry.ViewGridSizeStr()), nullptr);
+    ViewGridSize(CtrlViewUtils::String2Point(theMapViewWinRegistry.ViewGridSizeStr()), nullptr);
 	TimeBoxLocation(theMapViewWinRegistry.TimeBoxLocation());
 	TimeBoxTextSizeFactor(theMapViewWinRegistry.TimeBoxTextSizeFactor());
 	itsTimeBoxFillColorVM = theMapViewWinRegistry.TimeBoxFillColor();
@@ -522,7 +505,7 @@ void NFmiMapViewDescTop::StoreToMapViewWinRegistry(NFmiMapViewWinRegistry &theMa
 //    theMapViewWinRegistry.ShowStationPlot(fShowStationPlotVM);
 
     // Tätä säädetään vain tänne, joten loppu tulos on aika-ajoin laitettava takaisin Win-rekistereihin.
-    theMapViewWinRegistry.ViewGridSizeStr(::Point2String(itsViewGridSizeVM));
+    theMapViewWinRegistry.ViewGridSizeStr(CtrlViewUtils::Point2String(itsViewGridSizeVM));
 	theMapViewWinRegistry.TimeBoxLocation(itsTimeBoxLocationVM);
 	theMapViewWinRegistry.TimeBoxTextSizeFactor(itsTimeBoxTextSizeFactorVM);
 	theMapViewWinRegistry.TimeBoxFillColor(itsTimeBoxFillColorVM);
@@ -696,7 +679,7 @@ void NFmiMapViewDescTop::ViewGridSize(const NFmiPoint& newSize, NFmiMapViewWinRe
 		itsViewGridSizeVM.Y(itsViewGridSizeMax.Y());
 
     if(theMapViewWinRegistry)
-        theMapViewWinRegistry->ViewGridSizeStr(::Point2String(itsViewGridSizeVM));
+        theMapViewWinRegistry->ViewGridSizeStr(CtrlViewUtils::Point2String(itsViewGridSizeVM));
 
 	// lasketaan sitten mikä on maksimi karttarivin alku indeksi (riippuu mak ruudukon koosta ja nyky hila ruudukosta)
 	int maxStartIndex = CalcMaxRowStartingIndex();
@@ -1187,7 +1170,7 @@ void NFmiMapViewDescTop::InitForViewMacro(const NFmiMapViewDescTop& theOther, NF
 		fShowStationPlotVM = theOther.fShowStationPlotVM;
 		theMapViewWinRegistry.ShowStationPlot(theOther.fShowStationPlotVM);
 		itsViewGridSizeVM = theOther.itsViewGridSizeVM;
-		theMapViewWinRegistry.ViewGridSizeStr(::Point2String(theOther.itsViewGridSizeVM));
+		theMapViewWinRegistry.ViewGridSizeStr(CtrlViewUtils::Point2String(theOther.itsViewGridSizeVM));
 		TimeBoxLocation(theOther.itsTimeBoxLocationVM);
 		TimeBoxTextSizeFactor(theOther.itsTimeBoxTextSizeFactorVM);
 		TimeBoxFillColor(theOther.itsTimeBoxFillColorVM);

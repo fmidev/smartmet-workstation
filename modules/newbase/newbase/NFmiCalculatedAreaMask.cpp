@@ -295,7 +295,7 @@ double NFmiElevationAngleAreaMask::Value(const NFmiCalculationParams& theCalcula
                                              // SumT-tyyppisiä SmartTool-funktioita ja niiden
                                              // argumentteina on annettu tietyt argumentit jotka
                                              // ovat ajasta riippuvia.
-  return CalcValueFromLocation(theCalculationParams.itsLatlon);
+  return CalcValueFromLocation(theCalculationParams.UsedLatlon());
 }
 
 // ----------------------------------------------------------------------
@@ -683,7 +683,7 @@ double NFmiTimeStepAreaMask::Value(const NFmiCalculationParams& theCalculationPa
         theCalculationParams
             .itsTimeIndex);  // asetetaan ensin aikaindeksi kohdalleen ja sitten kysytään arvoa
   return CalcValueFromLocation(
-      theCalculationParams.itsLatlon);  // ollaan jo oikeassa ajassa, ei aikainterpolointia
+      theCalculationParams.UsedLatlon());  // ollaan jo oikeassa ajassa, ei aikainterpolointia
 }
 
 // **********************************************************
@@ -716,7 +716,7 @@ NFmiAreaMask* NFmiGridSizeAreaMask::Clone() const { return new NFmiGridSizeAreaM
 double NFmiGridSizeAreaMask::Value(const NFmiCalculationParams& theCalculationParams,
                                    bool /* fUseTimeInterpolationAlways */)
 {
-  return CalcValueFromLocation(theCalculationParams.itsLatlon);  // ajalla ei ole väliä
+  return CalcValueFromLocation(theCalculationParams.UsedLatlon());  // ajalla ei ole väliä
 }
 
 double NFmiGridSizeAreaMask::CalcValueFromLocation(const NFmiPoint& /* theLatLon */) const

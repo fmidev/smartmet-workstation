@@ -152,6 +152,7 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+	void DoIsAnyQueryDataLateChecks();
 	std::shared_ptr<NFmiViewSettingMacro> CurrentViewMacro();
 	NFmiLedLightStatusSystem& LedLightStatusSystem();
 	NFmiSeaLevelPlumeData& SeaLevelPlumeData();
@@ -493,7 +494,7 @@ public:
 	void DoAutoSaveData(void);
 	NFmiMetEditorOptionsData& MetEditorOptionsData(void);
 	// theModificationFactorCurvePoints koko tulee annetusta timebagista
-	bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1);
+	bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1);
 	bool DoCombineModelAndKlapse(void);
 	CtrlViewUtils::FmiEditorModifyToolMode ModifyToolMode(void);
 	void ModifyToolMode(CtrlViewUtils::FmiEditorModifyToolMode newState);

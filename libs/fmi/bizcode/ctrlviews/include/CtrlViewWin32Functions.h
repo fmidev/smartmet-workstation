@@ -63,7 +63,7 @@ namespace CtrlView
             // Toimitaan lopulta vain silloin kun RETURN nappi p‰‰tet‰‰n ylˆs
             if(WM_KEYUP == messageType)
             {
-                std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->ShowWaitCursorWhileDrawingView());
+                CFmiWin32Helpers::WaitCursorHelper waitCursorHelper(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->ShowWaitCursorWhileDrawingView());
                 searchFunction();
             }
             return TRUE; // Palautetaan true, jotta t‰t‰ messagea ei k‰sitell‰ en‰‰ muualla

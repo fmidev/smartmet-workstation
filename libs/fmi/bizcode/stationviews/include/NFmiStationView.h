@@ -174,7 +174,6 @@ protected:
    NFmiPoint SbdBasicSymbolSizeCalculation(int minSize, int maxSize) const;
    void SbdSetDrawType();
    virtual NFmiSymbolBulkDrawType SbdGetDrawType() const;
-   virtual NFmiColor SbdGetChangingColor(float value) const;
    virtual NFmiSymbolColorChangingType SbdGetSymbolColorChangingType() const;
    bool SbdIsChangingSymbolColorsUsed() const;
    virtual void SbdSetFontName();
@@ -266,6 +265,7 @@ protected:
    bool FindNearestFlashTypeObservation(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiLocation& theCursorLocation, double& theCurrentMinDistInOut, unsigned long& theMinDistTimeIndexOut);
    bool IsMacroParamCase();
    bool DoMacroParamProbing();
+   void SetupPossibleColorValueInfo();
 
    NFmiRect itsGeneralStationRect;
    FmiParameterName itsParamId;
@@ -344,5 +344,11 @@ protected:
    std::vector<float> itsMacroParamProbingValues;
    NFmiExtraMacroParamData itsProbingExtraMacroParamData;
    MacroParamPhase itsMacroParamPhase = MacroParamPhase::NoPhase;
+   // Jos piirto-ominaisuuksissa sanottu ett‰ k‰ytet‰‰n toista parametria n‰ytˆss‰ 
+   // olevan parametrin symbolien v‰rityksess‰, niin t‰h‰n otetaan se talteen.
+   boost::shared_ptr<NFmiFastQueryInfo> itsPossibleColorValueInfo;
+   // Tooltip interpolaatioissa pit‰‰ tiet‰‰ ns. final-calculation-grid, jotta 
+   // voidaan aina laskea oikein tooltip arvo cachesta.
+   boost::shared_ptr<NFmiGrid> itsMacroParamCalculationGrid;
 };
 

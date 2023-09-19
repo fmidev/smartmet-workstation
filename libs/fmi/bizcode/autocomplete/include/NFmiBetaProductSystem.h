@@ -126,6 +126,8 @@ public:
     const std::vector<int>& SynopStationIdList() const { return itsSynopStationIdList; }
     bool PackImages() const { return fPackImages; }
     void PackImages(bool newValue) { fPackImages = newValue; }
+    bool EnsureCurveVisibility() const { return fEnsureCurveVisibility; }
+    void EnsureCurveVisibility(bool newState) { fEnsureCurveVisibility = newState; }
 
     static bool ContainsStringCaseInsensitive(const std::string &searchThis, const std::string &findThis);
 
@@ -186,6 +188,7 @@ private:
     bool fSynopStationIdListInputOk;
     std::vector<int> itsSynopStationIdList; // Tähän puretaan synop station id:t itsSynopStationIdListString -muuttujasta
     bool fPackImages = false; // Pakataanko tuotetut kuvat vai ei
+    bool fEnsureCurveVisibility = false; // Aikasarja- ja luotauskäyrät voidaan varmistaa näkyviksi säätämällä asteikoita
 };
 
 // NFmiBetaProductAutomation -luokka pitää tietoa yhdestä automaatio tuotteesta. Se pitää tietoa mm. seuraavista asioista:
@@ -508,6 +511,8 @@ public:
     void BetaProductSynopStationIdListString(const std::string &newValue);
     bool BetaProductPackImages();
     void BetaProductPackImages(bool newValue);
+    bool BetaProductEnsureCurveVisibility();
+    void BetaProductEnsureCurveVisibility(bool newValue);
 
     // Beta Product Automation dialog tab control settings
     bool AutomationModeOn();
@@ -594,6 +599,7 @@ private:
     boost::shared_ptr<CachedRegBool> mBetaProductShowModelOriginTime;
     boost::shared_ptr<CachedRegString> mBetaProductSynopStationIdListString; // Mistä kaikista synop asemista halutaan tehdä kuvia (käy vain tietyille näytöille ja moodeille)
     boost::shared_ptr<CachedRegBool> mBetaProductPackImages; // Pakataanko tuotetut kuvat vai ei
+    boost::shared_ptr<CachedRegBool> mBetaProductEnsureCurveVisibility; // Varmistetaanko että aikasarja- ja luotauskäyrät tulevat näkyviin
     // Beta Product Automation dialog tab control settings
     boost::shared_ptr<CachedRegBool> mAutomationModeOn; // Onko SmartMet ns. Beta tuotanto automaatio moodissa, jolloin kuvia tuotetaan säädösten mukaan haluttuina aikoina.
     boost::shared_ptr<CachedRegString> mBetaProductPath; // Polku mistä Beta-product-automation lataa Beta-product tuotteensa

@@ -82,7 +82,7 @@ void NFmiWarningCenterGridCtrl::OnFixedRowClick(CCellID& cell)
 		fLastSortedAscending = GetSortAscending();
 		fLastSortedExist = true;
 
-		std::auto_ptr<CWaitCursor> waitCursor = CFmiWin32Helpers::GetWaitCursorIfNeeded(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
+        CFmiWin32Helpers::WaitCursorHelper waitCursorHelper(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
         if (cell.col == GetSortColumn())
             SortItems(cell.col, !GetSortAscending(), !GetSortAscending()); // *** KOLMAS parametri annettu tässä koodissa ****
         else

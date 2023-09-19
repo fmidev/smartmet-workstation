@@ -436,59 +436,35 @@ namespace
 		return CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->GetSortedSynopInfoVector(producerId, producerId2, producerId3, producerId4);
 	}
 
-	void setDrawMacroSettings(const NFmiMenuItem& menuItem, boost::shared_ptr<NFmiDrawParam>& drawParam, const std::string* theMacroParamInitFileName)
+	void setMacroParamDrawParamSettings(const NFmiMenuItem& menuItem, boost::shared_ptr<NFmiDrawParam>& drawParam)
 	{
-		NFmiInfoData::Type dataType = menuItem.DataType();
+		auto dataType = menuItem.DataType();
 		if(NFmiDrawParam::IsMacroParamCase(dataType))
 		{
 			drawParam->ParameterAbbreviation(menuItem.MenuText()); // macroParamin tapauksessa pitää nimi asettaa tässä (tätä nimilyhennettä käytetään tunnisteenä myöhemmin!!)
 			boost::shared_ptr<NFmiMacroParam> usedMacroParam;
 			auto& macroParamSystem = ::getMacroParamSystem();
-			if(theMacroParamInitFileName == nullptr)
+			const auto& macroParamInitFile = menuItem.MacroParamInitName();
+			if(!macroParamInitFile.empty())
+			{
+				// Tämä on toivottu tapa alustaa, koska muuten saman nimiset 
+				// macroParamit eri hakemistoissa voivat aiheuttaa päällekkäisyyksiä
+				usedMacroParam = macroParamSystem.GetWantedMacro(macroParamInitFile);
+			}
+			else
 			{
 				boost::shared_ptr<NFmiMacroParamFolder> currentFolder = macroParamSystem.GetCurrentFolder();
 				if(currentFolder && currentFolder->Find(drawParam->ParameterAbbreviation()))
 					usedMacroParam = currentFolder->Current();
-				else
-				{
-					// kokeillaan vielä onko macroparam laitettu popup-menun kautta, jolloin pitää tehdä findtotal -juttu
-					usedMacroParam = macroParamSystem.GetWantedMacro(menuItem.MacroParamInitName());
-				}
-			}
-			else
-			{
-				usedMacroParam = macroParamSystem.GetWantedMacro(*theMacroParamInitFileName);
 			}
 
-			if(usedMacroParam != 0 && usedMacroParam->ErrorInMacro() == false) // ei alusteta, jos oli virheellinen macroParami
+			// ei alusteta, jos oli virheellinen macroParam
+			if(usedMacroParam != 0 && usedMacroParam->ErrorInMacro() == false) 
 			{
 				drawParam->Init(usedMacroParam->DrawParam());
-				// q3macroparam tyyppi pitää asettaa tässä, PITÄISIKÖ se asettaa jo DrawParam:in Init-metodissa?!?!?
-				drawParam->DataType(usedMacroParam->DrawParam()->DataType());
-			}
-		}
-	}
-
-	void setCrossSectionDrawMacroSettings(const NFmiMenuItem& menuItem, boost::shared_ptr<NFmiDrawParam>& drawParam)
-	{
-		if(menuItem.DataType() == NFmiInfoData::kCrossSectionMacroParam)
-		{
-			boost::shared_ptr<NFmiMacroParam> usedMacroParam;
-			drawParam->ParameterAbbreviation(menuItem.MenuText()); // macroParamin tapauksessa pitää nimi asettaa tässä (tätä nimilyhennettä käytetään tunnisteenä myöhemmin!!)
-			auto& macroParamSystem = ::getMacroParamSystem();
-			boost::shared_ptr<NFmiMacroParamFolder> currentFolder = macroParamSystem.GetCurrentFolder();
-			if(currentFolder && currentFolder->Find(drawParam->ParameterAbbreviation()))
-				usedMacroParam = currentFolder->Current();
-			else
-			{
-				// kokeillaan vielä onko macroparam laitettu popup-menun kautta, jolloin pitää tehdä findtotal -juttu
-				usedMacroParam = macroParamSystem.GetWantedMacro(menuItem.MacroParamInitName());
-			}
-
-			if(usedMacroParam != 0 && usedMacroParam->ErrorInMacro() == false) // ei alusteta, jos oli virheellinen macroParami
-			{
-				drawParam->Init(usedMacroParam->DrawParam());
-				drawParam->DataType(menuItem.DataType()); // MARKO tämä on mielestäni toiminut ennen ilman tätä viilausta, mikä on muuttunut
+				// Datatyyppi pitää ottaa lopuksi menuItemista, koska niitä on nyt jo 4 erilaista 
+				// ja usedMacroParam ei tiedä siitä mitään
+				drawParam->DataType(dataType);
 			}
 		}
 	}
@@ -2866,7 +2842,7 @@ static void DoSpecialDataInitializations(boost::shared_ptr<NFmiDrawParam>& drawP
 // muuten macroparamin yhteydessä etsitään menuitemista annettua nimeä
 // normalParameterAdd -parametrilla kerrotaan tuleeko normaali lisäys vai erilaisista viewmakroista lisäys. Tämä
 // haluttiin erottaa vielä isViewMacroDrawParam:ista, jolla merkitään vain drawParamin ViewMacroDrawParam -asetus.
-void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& menuItem, int realRowIndex, bool isViewMacroDrawParam, const std::string* macroParamInitFileName)
+void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& menuItem, int realRowIndex, bool isViewMacroDrawParam)
 {
 	auto& infoOrganizer = ::getInfoOrganizer();
 	boost::shared_ptr<NFmiDrawParam> drawParam = infoOrganizer.CreateDrawParam(menuItem.DataIdent(), menuItem.Level(), menuItem.DataType());
@@ -2874,7 +2850,7 @@ void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, c
 		return; // HUOM!! Ei saisi mennä tähän!!!!!!!
 
 	DoSpecialDataInitializations(drawParam, normalParameterAdd, menuItem);
-	::setDrawMacroSettings(menuItem, drawParam, macroParamInitFileName);
+	::setMacroParamDrawParamSettings(menuItem, drawParam);
 	bool insertParamCase = (menuItem.CommandType() == kFmiInsertParamLayer);
 	bool changeParamCase = (menuItem.CommandType() == kFmiChangeParam);
 
@@ -2888,20 +2864,10 @@ void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, c
 	NFmiDrawParamList* drawParamList = getDrawParamListWithRealRowNumber(menuItem.MapViewDescTopIndex(), realRowIndex);
 	if(drawParamList)
 	{
-		std::string logStr(insertParamCase ? "Insert to specific point into map view " : "Added to map view ");
+		std::string logStartStr(insertParamCase ? "Insert to specific point into map view " : "Added to map view ");
 		if(changeParamCase)
-			logStr = "Changed parameter to selected ";
-		if(NFmiDrawParam::IsMacroParamCase(drawParam->DataType()))
-		{
-			logStr += "macro parameter '";
-			logStr += drawParam->ParameterAbbreviation();
-			logStr += "'";
-		}
-		else if(info)
-			logStr += getSelectedParamInfoString(info, false);
-		else // satelliitti jutuissa ei ole infoa, joten
-			logStr += menuItem.DataIdent().GetParamName();
-		logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Visualization);
+			logStartStr = "Changed parameter to selected ";
+		logParameterAction(logStartStr, menuItem, drawParam, info);
 
 		// ChangeParam tapauksessa vaihdettava parametri on jo poistettu listasta, ja siksi tässä vain uusi samaan paikkaan
 		if(insertParamCase || changeParamCase)
@@ -2922,6 +2888,29 @@ void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, c
 	drawParamSettingsChangedDirtyActions(menuItem.MapViewDescTopIndex(), realRowIndex, drawParam);
 }
 
+void NFmiCombinedMapHandler::logParameterAction(const std::string &parameterActionStart, const NFmiMenuItem& menuItem, const boost::shared_ptr<NFmiDrawParam> &drawParam, boost::shared_ptr<NFmiFastQueryInfo> &info)
+{
+	std::string logStr = parameterActionStart;
+	if(NFmiDrawParam::IsMacroParamCase(drawParam->DataType()))
+	{
+		logStr += "macro parameter '";
+		logStr += drawParam->ParameterAbbreviation();
+		logStr += "'";
+	}
+	else if(info)
+		logStr += getSelectedParamInfoString(info, false);
+	else 
+	{
+		bool satelDataCase = drawParam->DataType() == NFmiInfoData::kSatelData;
+		// Esim. satelliitti jutuissa tai jos ei löydy ladattavaa dataa, ei ole infoa, joten otetaan halutut tiedot muualta
+		if(satelDataCase)
+			logStr += menuItem.DataIdent().GetParamName();
+		else
+			logStr += getSelectedParamInfoString(&drawParam->Param(), &drawParam->Level());
+	}
+	logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Visualization);
+}
+
 void NFmiCombinedMapHandler::toggleShowDifferenceToOriginalData(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
 	boost::shared_ptr<NFmiDrawParam>& modifiedDrawParam = getDrawParamFromViewLists(menuItem, viewRowIndex);
@@ -2935,9 +2924,8 @@ void NFmiCombinedMapHandler::toggleShowDifferenceToOriginalData(const NFmiMenuIt
 
 void NFmiCombinedMapHandler::addView(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
-	const auto* initMacroParamFilePathPtr = menuItem.MacroParamInitName().empty() ? nullptr : &menuItem.MacroParamInitName();
 	// lasketaan todellinen rivinumero (johtuu karttanäytön virtuaali riveistä)
-	addViewWithRealRowNumber(true, menuItem, getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), false, initMacroParamFilePathPtr);
+	addViewWithRealRowNumber(true, menuItem, getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), false);
 
 	// lisään tämän CheckAnimationLockedModeTimeBags -kutsun vain perus AddView-metodin yhteyteen, mutta en esim.
 	// AddViewWithRealRowNumber -metodin yhteyteen, että homma ei mene pelkäksi tarkasteluksi.
@@ -2956,7 +2944,7 @@ void NFmiCombinedMapHandler::addCrossSectionView(const NFmiMenuItem& menuItem, i
 		drawParam = infoOrganizer.CreateCrossSectionDrawParam(menuItem.DataIdent(), menuItem.DataType());
 	if(!drawParam)
 		return; // HUOM!! Ei saisi mennä tähän!!!!!!!
-	::setCrossSectionDrawMacroSettings(menuItem, drawParam);
+	::setMacroParamDrawParamSettings(menuItem, drawParam);
 	drawParam->ViewMacroDrawParam(treatAsViewMacro);
 
 	boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer.Info(drawParam, true, true);
@@ -2964,12 +2952,8 @@ void NFmiCombinedMapHandler::addCrossSectionView(const NFmiMenuItem& menuItem, i
 	if(crossSectionViewDrawParamList)
 	{
 		bool changeParamCase = (menuItem.CommandType() == kFmiChangeParam);
-		std::string logStr(changeParamCase ? "Changing selected param to " : "Adding to crosssection-view ");
-		if(info)
-			logStr += getSelectedParamInfoString(info, true);
-		else
-			logStr += "??????"; // tämä on virhe tilanne
-		logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Visualization);
+		std::string logStartStr(changeParamCase ? "Changing selected param to " : "Adding to crosssection-view ");
+		logParameterAction(logStartStr, menuItem, drawParam, info);
 		if(changeParamCase)
 			crossSectionViewDrawParamList->Add(drawParam, menuItem.IndexInViewRow());
 		else
@@ -2992,7 +2976,7 @@ void NFmiCombinedMapHandler::changeParamLevel(const NFmiMenuItem& menuItem, int 
 				if(menuItem.MapViewDescTopIndex() == CtrlViewUtils::kFmiCrossSectionView)
 					addCrossSectionView(menuItem, viewRowIndex, false);
 				else
-					addViewWithRealRowNumber(true, menuItem, getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), false, nullptr);
+					addViewWithRealRowNumber(true, menuItem, getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), false);
 			}
 		}
 	}
@@ -3475,7 +3459,9 @@ void NFmiCombinedMapHandler::removeSideParamList(int viewRowIndex)
 	}
 }
 
-void NFmiCombinedMapHandler::addTimeSerialViewSideParameter(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam)
+// Lisätty drawParam pitää myös palauttaa lopussa, jotta sille voidaan tehdä tarvittavia jatkoasetuksia.
+// Tämä on tarpeen varsinkin kun ladataan näyttömakroja ja niissä eritoten macroParam jutut ovat todella hankalia käsitellä.
+boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::addTimeSerialViewSideParameter(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam)
 {
 	auto rowSideParameters = getTimeSerialViewSideParameters(timeSerialViewIndex_);
 	if(rowSideParameters)
@@ -3483,20 +3469,19 @@ void NFmiCombinedMapHandler::addTimeSerialViewSideParameter(const NFmiMenuItem& 
 		auto drawParam = createTimeSerialViewDrawParam(menuItem, isViewMacroDrawParam);
 		if(drawParam)
 		{
-			std::string logStr("Adding to time-serial-view row #");
-			logStr += std::to_string(timeSerialViewIndex_);
-			logStr += " a side parameter: ";
+			::setMacroParamDrawParamSettings(menuItem, drawParam);
+			std::string logStartStr("Adding to time-serial-view row #");
+			logStartStr += std::to_string(timeSerialViewIndex_);
+			logStartStr += " a side parameter: ";
 			auto info = ::getInfoOrganizer().Info(drawParam, false, false);
-			if(info)
-				logStr += getSelectedParamInfoString(info, false);
-			else
-				logStr += getSelectedParamInfoString(&drawParam->Param(), &drawParam->Level());
-			logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Visualization);
+			logParameterAction(logStartStr, menuItem, drawParam, info);
 
 			rowSideParameters->Add(drawParam);
 			timeSerialViewDirty(true);
 		}
+		return drawParam;
 	}
+	return nullptr;
 }
 
 void NFmiCombinedMapHandler::removeTimeSerialViewSideParameter(const NFmiMenuItem& menuItem)
@@ -3581,20 +3566,19 @@ boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::createTimeSerialViewDra
 }
 
 // laitetaan drawparam aikasarjan omaan listaa ja jos vertailutila käytössä, lisätää
-// vielä eri tuottajien drawparamit erilliseen listaan
-void NFmiCombinedMapHandler::addTimeSerialView(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam)
+// vielä eri tuottajien drawparamit erilliseen listaan.
+// Lisätty drawParam palautetaan, koska joskus lisätylle oliolle pitää tehdä vielä lisä asetuksia,
+// varsinkin kun ladataan näyttömakroja ja niiden drawParameja.
+boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::addTimeSerialView(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam)
 {
 	timeSerialViewDirty(true);
 	auto drawParam = createTimeSerialViewDrawParam(menuItem, isViewMacroDrawParam);
 	if(drawParam)
 	{
-		std::string logStr("Adding to time-serial-view ");
+		::setMacroParamDrawParamSettings(menuItem, drawParam);
+		std::string logStartStr("Adding to time-serial-view ");
 		boost::shared_ptr<NFmiFastQueryInfo> info = ::getInfoOrganizer().Info(drawParam, false, false);
-		if(info)
-			logStr += getSelectedParamInfoString(info, false);
-		else
-			logStr += getSelectedParamInfoString(&drawParam->Param(), &drawParam->Level());
-		logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Visualization);
+		logParameterAction(logStartStr, menuItem, drawParam, info);
 
 		timeSerialViewDrawParamList_->Add(drawParam, timeSerialViewIndex_);
 		addEmptySideParamList(timeSerialViewIndex_);
@@ -3602,6 +3586,7 @@ void NFmiCombinedMapHandler::addTimeSerialView(const NFmiMenuItem& menuItem, boo
 		bool groundData = ::isGroundDataType(drawParam);
 		updateFromModifiedDrawParam(drawParam, groundData);
 	}
+	return drawParam;
 }
 
 void NFmiCombinedMapHandler::removeTimeSerialView(const NFmiMenuItem& menuItem)

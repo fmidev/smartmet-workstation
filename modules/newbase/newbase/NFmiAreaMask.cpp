@@ -18,8 +18,11 @@
 
 #include <cmath>
 
+// ******** NFmiAreaMask *******************************************************
+
 //! Destructor
 NFmiAreaMask::~NFmiAreaMask() = default;
+
 boost::shared_ptr<NFmiFastQueryInfo> NFmiAreaMask::DoShallowCopy(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
@@ -29,6 +32,18 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiAreaMask::DoShallowCopy(
   }
   else
     return theInfo;
+}
+
+std::vector<boost::shared_ptr<NFmiFastQueryInfo>> NFmiAreaMask::DoShallowCopy(
+    const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector)
+{
+  // tehd‰‰n matala kopio info-vektorista
+  std::vector<boost::shared_ptr<NFmiFastQueryInfo>> shallowCopyVector;
+  for (const auto &info : infoVector)
+  {
+    shallowCopyVector.push_back(boost::shared_ptr<NFmiFastQueryInfo>(new NFmiFastQueryInfo(*info)));
+  }
+  return shallowCopyVector;
 }
 
 boost::shared_ptr<NFmiAreaMask> NFmiAreaMask::DoShallowCopy(

@@ -978,15 +978,13 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 	if(!isoLineData.InitIsoLineData(itsIsolineValues))
 		return; // Jos data hila (isoLineData.Init() ==> false) oli tyhjä, pitää lopettaa
 
-	Imagine::NFmiDataHints helper(itsIsolineValues);
-
 	// HUOM! TÄMÄ ON VIRITYS!!!! -alkaa
 	// Tuulensuunta-parametri on saatettu laittaa suuntanuoli asetukseen ja se toimiikiin hyvin karttanäytöllä. 
 	// Mutta minusta olisi hämäävää jos tuuulen suunta piirretään nuolella poikkileikkausnäytössä ,koska se ei osoittaisi tuulen suuntaa
 	// näytöllä vaan maantieteellisesti. WindBarb on eri asia ja se piirretään kuten kartalla, mutta siihen ollaan totuttu...
 	// Lisäksi nyt kun valitsin tuulen suunnan näytölle, ei tapahdu mitään, koska piirto ei tue suunta-nuolen piirtoa.
 	// ELI JOS paramtri on tuulen suunta ja hilaesitys on nuoli, muuta se isoviiva esitykseksi.
-	if(isoLineData.itsParam.GetParamIdent() == kFmiWindDirection && itsDrawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiSymbolView)
+	if(isoLineData.itsParam.GetParamIdent() == kFmiWindDirection && itsDrawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiArrowView)
 		itsDrawParam->GridDataPresentationStyle(NFmiMetEditorTypes::View::kFmiIsoLineView);
 	// HUOM! TÄMÄ ON VIRITYS!!!! - loppuu
 
@@ -994,9 +992,10 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 		SetUpDifferenceDrawing(itsDrawParam);
 
     {
+		auto doWindVectorDraw = isoLineData.itsParam.GetParamIdent() == kFmiWindVectorMS;
         // Making ToolMaster setup and drawing in one protected zone
         std::lock_guard<std::mutex> toolMasterLock(NFmiIsoLineView::sToolMasterOperationMutex);
-        if(FillIsoLineVisualizationInfo(itsDrawParam, &isoLineData, IsToolMasterAvailable(), false))
+        if(doWindVectorDraw || FillIsoLineVisualizationInfo(itsDrawParam, &isoLineData, IsToolMasterAvailable(), false))
         {
             if(IsToolMasterAvailable())
                 FillIsoLineDataForToolMaster(itsIsolineValues, isoLineData);
@@ -1005,12 +1004,15 @@ void NFmiCrossSectionView::DrawCrossSection(void)
             FillXYMatrix(isoLineData, koordinaatit, itsPressures);
             FillMainPointXYInfo(koordinaatit);
 
-            if(isoLineData.itsParam.GetParamIdent() == kFmiWindVectorMS)
+            if(doWindVectorDraw)
                 DrawCrosssectionWindVectors(isoLineData, koordinaatit);
             else
             {
-                if(!IsToolMasterAvailable())
+				if(!IsToolMasterAvailable())
+				{
+					Imagine::NFmiDataHints helper(itsIsolineValues);
                     DrawCrosssectionWithImagine(isoLineData, itsIsolineValues, helper, koordinaatit);
+				}
                 else
                     DrawCrosssectionWithToolMaster(isoLineData);
             }
@@ -1244,22 +1246,6 @@ void NFmiCrossSectionView::FillTrajectoryCrossSectionData(NFmiDataMatrix<float> 
 	FillRouteCrossSectionData(theValues, theIsoLineData, thePressures, points, times);
 }
 
-static void SetMacroParamErrorMessage(const std::string& errorText, CtrlViewDocumentInterface& ctrlViewDocumentInterface, CrossSectionTooltipData* possibleTooltipData)
-{
-	// Lokitetaan virheviesti
-	CatLog::logMessage(errorText, CatLog::Severity::Error, CatLog::Category::Macro, true);
-	// Jos kyse toolpit laskuista, laitetaan viesti talteen ExtraMacroParamData:an, jotta viesti voidaan laittaa tooltippiin
-	if(possibleTooltipData)
-		possibleTooltipData->macroParamErrorMessage = errorText;
-
-	// talletetaan virheteksti aikaleimalla, että käyttäjä voi tarkastella sitä sitten smarttool dialogissa
-	NFmiTime aTime;
-	std::string timeString = aTime.ToStr("YYYY.MM.DD HH:mm:SS\n");
-	auto dialogErrorString = timeString + errorText;
-	ctrlViewDocumentInterface.SetLatestMacroParamErrorText(dialogErrorString);
-	ctrlViewDocumentInterface.SetMacroErrorText(dialogErrorString);
-}
-
 void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, CrossSectionTooltipData *possibleTooltipData, NFmiExtraMacroParamData* possibleExtraMacroParamData)
 {
     if(!possibleTooltipData)
@@ -1289,8 +1275,8 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
     }
 	catch(exception &e)
 	{
-		std::string errorText = FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter intepretion failed", &e, itsDrawParam, mpSystem.RootPath());
-		::SetMacroParamErrorMessage(errorText, *itsCtrlViewDocumentInterface, possibleTooltipData);
+		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter intepretion failed", &e, itsDrawParam, mpSystem.RootPath());
+		CtrlViewUtils::SetMacroParamErrorMessage(errorText, *itsCtrlViewDocumentInterface, possibleTooltipData ? &possibleTooltipData->macroParamErrorMessage : nullptr);
 	}
 
 	try // suoritetaan macro sitten
@@ -1313,8 +1299,8 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
 	}
 	catch(exception &e)
 	{
-		std::string errorText = FmiModifyEditdData::MakeMacroParamRelatedFinalErrorMessage("Error: MacroParam calculation failed", &e, itsDrawParam, mpSystem.RootPath());
-		::SetMacroParamErrorMessage(errorText, *itsCtrlViewDocumentInterface, possibleTooltipData);
+		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: MacroParam calculation failed", &e, itsDrawParam, mpSystem.RootPath());
+		CtrlViewUtils::SetMacroParamErrorMessage(errorText, *itsCtrlViewDocumentInterface, possibleTooltipData ? &possibleTooltipData->macroParamErrorMessage : nullptr);
 	}
 }
 

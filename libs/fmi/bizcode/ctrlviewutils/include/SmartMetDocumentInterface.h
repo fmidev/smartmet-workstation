@@ -101,7 +101,8 @@ public:
     virtual NFmiDrawParamList* DrawParamListWithRealRowNumber(unsigned int theDescTopIndex, int theRealRowIndex) = 0;
     virtual NFmiInfoOrganizer* InfoOrganizer() = 0;
     virtual bool LoadViewMacroFromBetaProduct(const std::string &theAbsoluteVieMacroPath, std::string &theErrorStringOut, bool justLogMessages) = 0;
-    virtual void SetCurrentGeneratedBetaProduct(const NFmiBetaProduct *theBetaProduct) = 0;
+    virtual void SetCurrentGeneratedBetaProduct(const NFmiBetaProduct* theBetaProduct) = 0;
+    virtual const NFmiBetaProduct* GetCurrentGeneratedBetaProduct() = 0;
     virtual bool CurrentTime(unsigned int theDescTopIndex, const NFmiMetTime& newCurrentTime, bool fStayInsideAnimationTimes = false) = 0;
     virtual void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex) = 0;
     virtual void DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut) = 0;

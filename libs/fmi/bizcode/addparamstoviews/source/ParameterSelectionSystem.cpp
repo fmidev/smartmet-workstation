@@ -365,6 +365,10 @@ namespace AddParams
             {
                 trimmedRowData.push_back(row);
             }
+            if(row.dataType() == NFmiInfoData::kMacroParam)
+            {
+                trimmedRowData.push_back(row);
+            }
             if(row.rowType() == AddParams::RowType::kDataType)
             {
                 auto hasActualGridDataVariable = hasActualGridData(row);

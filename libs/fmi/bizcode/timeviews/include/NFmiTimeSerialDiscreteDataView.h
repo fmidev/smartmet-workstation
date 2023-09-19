@@ -31,7 +31,7 @@ class NFmiTimeSerialDiscreteDataView : public NFmiTimeSerialView
 {
 
  public:
-    NFmiTimeSerialDiscreteDataView (const NFmiRect & theRect
+    NFmiTimeSerialDiscreteDataView (int theMapViewDescTopIndex, const NFmiRect & theRect
 								   ,NFmiToolBox * theToolBox
 								   ,NFmiDrawingEnvironment * theDrawingEnvi
 								   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
@@ -56,7 +56,7 @@ class NFmiTimeSerialDiscreteDataView : public NFmiTimeSerialView
 	bool ModifyFactorPointsSetValue(int theValue, int theIndex);
 	void ResetModifyFactorValues(void) override;
 	void CreateModifyFactorScaleView(bool fSetScalesDirectlyWithLimits = false, double theValue = kFloatMissing) override;
-	void FixModifyFactorValue (double & theValue) override;
+	void FixModifyFactorValue (float& theValue) override;
 	void DrawModifyFactorPoints(void) override;
 	void DrawModifyFactorAxis(void) override;
 	void DrawData (void) override;

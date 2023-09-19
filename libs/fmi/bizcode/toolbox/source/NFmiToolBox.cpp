@@ -1980,16 +1980,12 @@ static void DoPolylineConversion(std::vector<CPoint>& mfcPolylinePositions, floa
 	}
 }
 
-void NFmiToolBox::DoArroyBulkDraw(const NFmiSymbolBulkDrawData& sbdData)
+std::vector<NFmiPoint> gArrowPoints{ NFmiPoint(0, 1), NFmiPoint(0, -1), NFmiPoint(-0.5, -0.25), NFmiPoint(0, -1), NFmiPoint(0.5, -0.25) };
+
+void NFmiToolBox::DoBasicArroyBulkDraw(const NFmiSymbolBulkDrawData& sbdData, const std::vector<CPoint> &mfcArrowPositions)
 {
-	std::vector<NFmiPoint> arrowPoints{ NFmiPoint(0, 1), NFmiPoint(0, -1), NFmiPoint(-0.5, -0.25), NFmiPoint(0, -1), NFmiPoint(0.5, -0.25) };
 	// Samaa kokoskaalaa k‰ytet‰‰n x- ja y-suunnissa
 	auto scale = sbdData.symbolSizes().front();
-
-	CPoint mfcOffSet;
-	ConvertPoint(sbdData.relativePositionOffset(), mfcOffSet);
-	std::vector<CPoint> mfcArrowPositions;
-	ConvertPointList(sbdData.relativeStationPointPositions(), mfcArrowPositions, mfcOffSet, 0, 0, 0);
 	CPen pen;
 	if(pen.CreatePen(PS_SOLID, sbdData.penSize(), ::Color2ColorRef(sbdData.colors().front())))
 	{
@@ -2002,7 +1998,7 @@ void NFmiToolBox::DoArroyBulkDraw(const NFmiSymbolBulkDrawData& sbdData)
 				const auto& arrowPosition = mfcArrowPositions[index];
 
 				std::vector<CPoint> mfcArrowPoints;
-				ConvertPointList(arrowPoints, mfcArrowPoints, arrowPosition, scale.X(), scale.Y(), rotationAngle);
+				ConvertPointList(gArrowPoints, mfcArrowPoints, arrowPosition, scale.X(), scale.Y(), rotationAngle);
 
 				pDC->Polyline(mfcArrowPoints.data(), static_cast<int>(mfcArrowPoints.size()));
 			}
@@ -2010,6 +2006,72 @@ void NFmiToolBox::DoArroyBulkDraw(const NFmiSymbolBulkDrawData& sbdData)
 		pDC->SelectObject(oldPen);
 		pen.DeleteObject();
 	}
+}
+
+// Tutkii onko seuraavaksi k‰ytett‰v‰ v‰ri l‰pin‰kyv‰ vai ei. 
+// Jos on l‰pin‰kyv‰, palauttaa false, jolloin ei ole tarkoitus tehd‰ mit‰‰n asetuksia tai piirtoja.
+// Jos ei l‰pin‰kyv‰, tutkitaan onko v‰ri vaihtunut.
+// Jos v‰ri on vaihtunut, pit‰‰ DC:n kyn‰ vaihtaa, jotta siihen voidaan luoda uusi kyn‰ uudella v‰rill‰.
+// Hankalaa ja varmaan tehotonta, mutta uuden piirtokoodin teko GDI+:lla on isompi urakka.
+// Kaikissa ei l‰pin‰kyv‰ v‰ri tapauksissa palautetaan true, jolloin itse piirto tehd‰‰n.
+static bool DoColorChecks(NFmiColor& currentColor, const NFmiColor& nextColor, int penWidth, CDC* pDC, CPen& pen, CPen* oldPen)
+{
+	if(nextColor.IsFullyTransparent())
+		return false;
+
+	if(currentColor != nextColor)
+	{
+		COLORREF nextColorref = ::Color2ColorRef(nextColor);
+		pDC->SelectObject(oldPen);
+		pen.DeleteObject();
+		pen.CreatePen(PS_SOLID, penWidth, nextColorref);
+		pDC->SelectObject(&pen);
+		currentColor = nextColor;
+	}
+	return true;
+}
+
+void NFmiToolBox::DoChangingColorArroyBulkDraw(const NFmiSymbolBulkDrawData& sbdData, const std::vector<CPoint>& mfcArrowPositions)
+{
+	// Samaa kokoskaalaa k‰ytet‰‰n x- ja y-suunnissa
+	auto scale = sbdData.symbolSizes().front();
+	CPen pen;
+	NFmiColor currentColor = sbdData.colors().front();
+	if(pen.CreatePen(PS_SOLID, sbdData.penSize(), ::Color2ColorRef(currentColor)))
+	{
+		auto oldPen = pDC->SelectObject(&pen);
+		for(size_t index = 0; index < mfcArrowPositions.size(); index++)
+		{
+			if(!isMissingValue(sbdData, index))
+			{
+				if(::DoColorChecks(currentColor, sbdData.colors()[index], sbdData.penSize(), pDC, pen, oldPen))
+				{
+					auto rotationAngle = sbdData.values()[index];
+					const auto& arrowPosition = mfcArrowPositions[index];
+
+					std::vector<CPoint> mfcArrowPoints;
+					ConvertPointList(gArrowPoints, mfcArrowPoints, arrowPosition, scale.X(), scale.Y(), rotationAngle);
+
+					pDC->Polyline(mfcArrowPoints.data(), static_cast<int>(mfcArrowPoints.size()));
+				}
+			}
+		}
+		pDC->SelectObject(oldPen);
+		pen.DeleteObject();
+	}
+}
+
+
+void NFmiToolBox::DoArroyBulkDraw(const NFmiSymbolBulkDrawData& sbdData)
+{
+	CPoint mfcOffSet;
+	ConvertPoint(sbdData.relativePositionOffset(), mfcOffSet);
+	std::vector<CPoint> mfcArrowPositions;
+	ConvertPointList(sbdData.relativeStationPointPositions(), mfcArrowPositions, mfcOffSet, 0, 0, 0);
+	if(sbdData.isChangingColorsUsed())
+		DoChangingColorArroyBulkDraw(sbdData, mfcArrowPositions);
+	else
+		DoBasicArroyBulkDraw(sbdData, mfcArrowPositions);
 }
 
 std::pair<float, float> NFmiToolBox::GetWsAndWdFromWindVector(float windVector)
@@ -2026,6 +2088,12 @@ std::pair<float, float> NFmiToolBox::GetWsAndWdFromWindVector(float windVector)
 
 void NFmiToolBox::DoWindBarbBulkDraw(const NFmiSymbolBulkDrawData& sbdData)
 {
+	if(sbdData.isChangingColorsUsed())
+	{
+		DoChangingColorWindBarbBulkDraw(sbdData);
+		return;
+	}
+
 	NFmiDrawingEnvironment envi;
 	envi.SetFillColor(sbdData.colors().front());
 	envi.SetFrameColor(sbdData.colors().front());
@@ -2062,6 +2130,56 @@ void NFmiToolBox::DoWindBarbBulkDraw(const NFmiSymbolBulkDrawData& sbdData)
 				, symbolSize.Y()
 				, nullptr
 				, &envi).Build();
+		}
+	}
+}
+
+void NFmiToolBox::DoChangingColorWindBarbBulkDraw(const NFmiSymbolBulkDrawData& sbdData)
+{
+	NFmiDrawingEnvironment envi;
+	envi.SetFillColor(sbdData.colors().front());
+	envi.SetFrameColor(sbdData.colors().front());
+	envi.SetPenSize(NFmiPoint(sbdData.penSize(), sbdData.penSize()));
+
+	const auto& stationLatlons = sbdData.stationPointLatlons();
+	const auto& relativeStationPositions = sbdData.relativeStationPointPositions();
+	const auto& relativeObjectSize = sbdData.relativeDrawObjectSize();
+	const auto& symbolSize = sbdData.symbolSizes().front();
+	const auto& colors = sbdData.colors();
+	NFmiRect relativeSymbolRect;
+	relativeSymbolRect.Size(relativeObjectSize);
+
+	// Clippaus pit‰‰ laittaa pois p‰‰lt‰, muuten tulee p‰‰llekk‰isi‰ clippaus 
+	// asetuksia NFmiWindBarb olion sis‰ll‰, ja ohjelma kaatuu...
+	TurnClippingOffHelper turnClippingOffHelper(this);
+
+	for(size_t index = 0; index < relativeStationPositions.size(); index++)
+	{
+		if(!isMissingValue(sbdData, index))
+		{
+			const auto& nextColor = colors[index];
+			if(!nextColor.IsFullyTransparent())
+			{
+				envi.SetFrameColor(nextColor);
+				envi.SetFillColor(nextColor);
+
+				float ws, wd;
+				std::tie(ws, wd) = NFmiToolBox::GetWsAndWdFromWindVector(sbdData.values()[index]);
+				// Huom1 WindBarb:illa ei voi olla offset:ia, sit‰ ei vain oteta ollenkaan huomioon.
+				// Huom2 sijoittelu tapahtuu puhtaasti suhteellisilla koordinaateilla (NFmiWindBarb::Build 
+				// tekee sitten lopuksi koordinaattimuunnokset piirrossa).
+				relativeSymbolRect.Center(relativeStationPositions[index]);
+
+				NFmiWindBarb(ws
+					, wd
+					, relativeSymbolRect
+					, this
+					, stationLatlons[index].Y() < 0
+					, symbolSize.X()
+					, symbolSize.Y()
+					, nullptr
+					, &envi).Build();
+			}
 		}
 	}
 }

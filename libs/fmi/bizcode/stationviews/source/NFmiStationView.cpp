@@ -71,6 +71,7 @@
 #include "SparseDataGrid.h"
 #include "NFmiSymbolTextMapping.h"
 #include "ColorStringFunctions.h"
+#include "NFmiSmartToolIntepreter.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -1779,14 +1780,18 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreatePossibleSpaceOutMacr
 // Palauttaa true, jos probe action tehtiin onnistuneesti, muuten false.
 bool NFmiStationView::DoMacroParamProbing()
 {
-	auto probingData = ::CreateProbingMacroParamData(itsArea);
-	if(probingData)
+	// CalculationPoint laskuja ei tarvitse tarkistella
+	if(!fUseCalculationPoints)
 	{
-		itsMacroParamPhase = MacroParamPhase::Probing;
-		NFmiDataMatrix<float> probingMatrix(probingData->GridXNumber(), probingData->GridYNumber(), kFloatMissing);
-		FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsMapViewDescTopIndex, itsDrawParam, probingMatrix, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, probingData, fUseCalculationPoints, true, CalcUsedSpaceOutFactors(), probingData, &itsProbingExtraMacroParamData);
-		itsMacroParamProbingValues = ::matrixToVector(probingMatrix);
-		return true;
+		auto probingData = ::CreateProbingMacroParamData(itsArea);
+		if(probingData)
+		{
+			itsMacroParamPhase = MacroParamPhase::Probing;
+			NFmiDataMatrix<float> probingMatrix(probingData->GridXNumber(), probingData->GridYNumber(), kFloatMissing);
+			FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsMapViewDescTopIndex, itsDrawParam, probingMatrix, false, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), itsTime, NFmiPoint::gMissingLatlon, probingData, fUseCalculationPoints, true, CalcUsedSpaceOutFactors(), probingData, &itsProbingExtraMacroParamData);
+			itsMacroParamProbingValues = ::matrixToVector(probingMatrix);
+			return true;
+		}
 	}
 	return false;
 }
@@ -1850,7 +1855,8 @@ float NFmiStationView::GetMacroParamTooltipValueFromCache(const NFmiExtraMacroPa
 	if(itsCtrlViewDocumentInterface->MacroParamDataCache().getCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, usedTime, itsDrawParam->InitFileName(), macroParamLayerCacheDataType))
 	{
 		const auto& dataMatrix = macroParamLayerCacheDataType.getDataMatrix();
-		NFmiGrid grid(itsArea.get(), static_cast<unsigned long>(dataMatrix.NX()), static_cast<unsigned long>(dataMatrix.NY()));
+		NFmiGrid grid = itsMacroParamCalculationGrid ? *itsMacroParamCalculationGrid :
+			NFmiGrid(itsArea.get(), static_cast<unsigned long>(dataMatrix.NX()), static_cast<unsigned long>(dataMatrix.NY()));
 		grid.Area()->SetXYArea(NFmiRect(0, 0, 1, 1));
 		auto gridPoint = grid.LatLonToGrid(latlon);
 		if(extraMacroParamData.CalculationType() == MacroParamCalculationType::Index)
@@ -1864,13 +1870,14 @@ float NFmiStationView::GetMacroParamTooltipValueFromCache(const NFmiExtraMacroPa
 		}
 		else
 		{
+			auto xyPoint = grid.GridToXY(gridPoint);
 			// normi reaaliluku interpolaatio l‰mpˆtila parametri on vain dummy arvo tavalliselle reaaliluvulle
-			auto interpolatedValue = dataMatrix.InterpolatedValue(LatLonToViewPoint(latlon), itsArea->XYArea(), kFmiTemperature);
+			auto interpolatedValue = dataMatrix.InterpolatedValue(xyPoint, grid.Area()->XYArea(), kFmiTemperature);
 			if(interpolatedValue != kFloatMissing)
 				return interpolatedValue;
 
 			// Monissa macroParameissa on paljon puuttuvia arvoja, ja normaali interpolaatio ei toimi, kokeillaan viel‰ saadaanko nearest menetelm‰ll‰ arvoa
-			return dataMatrix.InterpolatedValue(LatLonToViewPoint(latlon), itsArea->XYArea(), kFmiTemperature, false, kNearestPoint);
+			return dataMatrix.InterpolatedValue(xyPoint, grid.Area()->XYArea(), kFmiTemperature, false, kNearestPoint);
 		}
 	}
 
@@ -2692,6 +2699,7 @@ void NFmiStationView::CalculateDifferenceToOriginalDataMatrix(NFmiDataMatrix<flo
 // Otetaan visualizationOptimazation:in harvennetut hilakoot tarvittavissa kohdissa k‰yttˆˆn
 bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2, bool& useOriginalDataInPixelToGridRatioCalculations, NFmiGrid* optimizedDataGrid)
 {
+	itsMacroParamCalculationGrid.reset(); // nollataan aina t‰m‰ aluksi
 	bool status = true;
     NFmiGrid usedGrid; // t‰m‰n avulla lasketaan maski laskut
 
@@ -2718,6 +2726,7 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 		else if(itsInfo->DataType() == NFmiInfoData::kMacroParam) // pit‰‰ tehd‰ makrolaskelmat ja antaa ne theValues-matriisille
 		{
 			CalcMacroParamMatrix(theValues, &usedGrid);
+			itsMacroParamCalculationGrid.reset(new NFmiGrid(usedGrid));
 		}
 		else
 		{
@@ -2864,12 +2873,51 @@ NFmiColor NFmiStationView::GetColoredNumberColor(float theValue) const
 	return color;
 }
 
+static float GetSecondParameterColorValue(const boost::shared_ptr<NFmiFastQueryInfo> &primaryInfo, const boost::shared_ptr<NFmiFastQueryInfo>& colorValueInfo, const NFmiMetTime &theTime)
+{
+	if(NFmiFastInfoUtils::IsInfoShipTypeData(*colorValueInfo))
+	{
+		// Laivatyypeille ei tehd‰ raskasta l‰himm‰n paikan etsimist‰, vaan
+		// katsotaan ett‰ jos molemmat datat ovat samoja, laitetaan locationIndex ja aikaIndex 
+		// samoiksi ja pyydet‰‰n arvo siit‰. Jos ei samoja datoja, palautetaan puuttuvaa.
+		if(primaryInfo->DataFileName() == colorValueInfo->DataFileName())
+		{
+			colorValueInfo->LocationIndex(primaryInfo->LocationIndex());
+			colorValueInfo->TimeIndex(primaryInfo->TimeIndex());
+			return colorValueInfo->FloatValue();
+		}
+		return kFloatMissing;
+	}
+
+	return colorValueInfo->InterpolatedValue(primaryInfo->LatLon(), theTime);
+}
+
+// Jos symboli halutaan v‰ritt‰‰ toisen parametrin arvojen mukaisesti, mutta se
+// sen toisen parametrin arvo on puuttuvaa, pit‰‰ tapaukselle keksi‰ joku puuttuva v‰ri.
+// Ajattelin, ett‰ pelkk‰ musta kuvaa parhaiten ongelmatilannetta, koska piirtoa ei haluta
+// poistaa, mutta ei sit‰ kannata myˆsk‰‰n korostaa jollai r‰v‰k‰ll‰ v‰rill‰k‰‰n.
+const NFmiColor gSecondParameterMissingColor(0, 0, 0);
+
 NFmiColor NFmiStationView::GetSymbolColor(float theValue) const
 {
-    if(itsDrawParam->ShowColoredNumbers())	// Vaihtelevanv‰riset numerot tekstin‰yttˆˆn
-        return GetColoredNumberColor(theValue);
-    else // "Tavalliset" v‰rit n‰yttˆˆn
-        return GetBasicParamRelatedSymbolColor(theValue);
+	if(itsDrawParam->ShowColoredNumbers())
+	{
+		// Vaihtelevanv‰riset numerot tekstin‰yttˆˆn
+		if(itsPossibleColorValueInfo)
+		{
+			auto colorParamValue = ::GetSecondParameterColorValue(itsInfo, itsPossibleColorValueInfo, itsTime);
+			if(colorParamValue == kFloatMissing)
+				return gSecondParameterMissingColor;
+			else
+				theValue = colorParamValue;
+		}
+		return GetColoredNumberColor(theValue);
+	}
+	else
+	{
+		// "Tavalliset" v‰rit n‰yttˆˆn
+		return GetBasicParamRelatedSymbolColor(theValue);
+	}
 }
 
 NFmiColor NFmiStationView::GetBasicParamRelatedSymbolColor(float theValue) const
@@ -3886,6 +3934,7 @@ void NFmiStationView::SbdDoFixedSymbolDrawSettings()
 	itsSymbolBulkDrawData.penSize(SbdCalcFixedPenSize());
 	itsSymbolBulkDrawData.printing(itsCtrlViewDocumentInterface->Printing());
 	itsSymbolBulkDrawData.mapViewSizeInPixels(itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex));
+	SetupPossibleColorValueInfo();
 }
 
 void NFmiStationView::SbdCollectSymbolDrawData(bool doStationPlotOnly)
@@ -4185,15 +4234,29 @@ void NFmiStationView::SbdSetPossibleFixedSymbolColor()
 
 bool NFmiStationView::SbdIsChangingSymbolColorsUsed() const
 {
-	auto symbolColorChangingType = SbdGetSymbolColorChangingType();
-	if(symbolColorChangingType == NFmiSymbolColorChangingType::Never)
+	switch(SbdGetSymbolColorChangingType())
+	{
+	case NFmiSymbolColorChangingType::Never:
+	{
 		return false;
-	else if(itsDrawParam->ShowColoredNumbers())
+	}
+	case NFmiSymbolColorChangingType::OnlyWithOtherParameterValues:
+	{
+		return itsDrawParam->ShowColoredNumbers() && itsDrawParam->IsPossibleColorValueParameterValid();
+	}
+	case NFmiSymbolColorChangingType::Mixed:
+	{
 		return true;
-	else if(symbolColorChangingType == NFmiSymbolColorChangingType::Mixed)
-		return true;
-	else
+	}
+	case NFmiSymbolColorChangingType::DrawParamSet:
+	{
+		return itsDrawParam->ShowColoredNumbers();
+	}
+	default:
+	{
 		return false;
+	}
+	}
 }
 
 bool NFmiStationView::SbdIsFixedSymbolSize() const
@@ -4249,11 +4312,6 @@ void NFmiStationView::SbdSetDrawType()
 NFmiSymbolBulkDrawType NFmiStationView::SbdGetDrawType() const
 {
 	return NFmiSymbolBulkDrawType::Text;
-}
-
-NFmiColor NFmiStationView::SbdGetChangingColor(float value) const
-{
-	return GetSymbolColor(value);
 }
 
 // Jotkut symbolit piirret‰‰n moniv‰risin‰ ja jotkut ei. T‰m‰n tyypin 
@@ -4387,4 +4445,52 @@ void NFmiStationView::UpdateOptimizedGridValues(const NFmiRect& dataAreaXyRect, 
 bool NFmiStationView::IsMacroParamCase()
 {
 	return NFmiDrawParam::IsMacroParamCase(itsInfo->DataType());
+}
+
+// Haetaan colorValueInfoa viel‰ vain samasta datasta kuin its arvo data
+static boost::shared_ptr<NFmiFastQueryInfo> GetBestMatchingData(CtrlViewDocumentInterface& ctrlViewDocumentInterface, boost::shared_ptr<NFmiDrawParam>& baseDrawParam, FmiParameterName parameterName, boost::shared_ptr<NFmiFastQueryInfo> &valueInfo)
+{
+	if(baseDrawParam->Param().GetProducer()->GetIdent() == kFmiSYNOP)
+	{
+		// Synop tapauksissa pit‰‰ hakea tiedoston nimen patternin mukaan, koska synop 
+		// data k‰sittelee kolmea eri synop dataa (suomi/euro/maailma) ja lis‰ksi ship ja poiju datat.
+		// Niiden haku normaalilla nearest-location jutulla ei toimi aina halutulla tavalla.
+		auto infos = ctrlViewDocumentInterface.InfoOrganizer()->GetInfos(valueInfo->DataFilePattern());
+		if(!infos.empty())
+		{
+			auto& info = infos.front();
+			if(info->Param(parameterName))
+			{
+				return info;
+			}
+		}
+	}
+	else
+	{
+		boost::shared_ptr<NFmiDrawParam> wantedDrawParamPtr(new NFmiDrawParam(*baseDrawParam));
+		wantedDrawParamPtr->Param().SetParam(NFmiParam(parameterName, "wantedParamName"));
+		return ctrlViewDocumentInterface.InfoOrganizer()->Info(wantedDrawParamPtr, false, true);
+	}
+	return nullptr;
+}
+
+void NFmiStationView::SetupPossibleColorValueInfo()
+{
+	itsPossibleColorValueInfo = nullptr;
+	if(!itsDrawParam->PossibleColorValueParameter().empty())
+	{
+		try
+		{
+			auto variableData = NFmiSmartToolIntepreter::CheckForVariableDataType(itsDrawParam->PossibleColorValueParameter());
+			if(variableData.first && variableData.second.IsInUse())
+			{
+				const auto& defineWantedData = variableData.second;
+				auto wantedParameterName = static_cast<FmiParameterName>(defineWantedData.param_.GetIdent());
+				itsPossibleColorValueInfo = ::GetBestMatchingData(*itsCtrlViewDocumentInterface, itsDrawParam, wantedParameterName, itsInfo);
+			}
+		}
+		catch(std::exception&)
+		{
+		}
+	}
 }

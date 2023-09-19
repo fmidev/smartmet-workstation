@@ -1083,10 +1083,12 @@ void InitLedLightStatusSystem()
 	if(ApplicationWinRegistry().UseLedLightStatusSystem())
 	{
 		// Katso g_maximumNumberOfLedsInStatusbar vakion selitys, jos haluat lisätä ledien määrää
-		auto usedLedChannelAndColors = std::vector<NFmiLedChannelInitializer>{
+		auto usedLedChannelAndColors = std::vector<NFmiLedChannelInitializer>
+		{
 			{NFmiLedChannel::QueryData, NFmiLedColor::Green, "QueryData related operations", "No queryData operations at the moment", false},
 			{NFmiLedChannel::WmsData, NFmiLedColor::Blue, "Wms server query operations", "No Wms operations at the moment", false},
-			{NFmiLedChannel::OperationalInfo, NFmiLedColor::Red, "General operational warnings", "No operational warnings at the moment", true}
+			{NFmiLedChannel::OperationalInfo, NFmiLedColor::Red, "General operational warnings", "No operational warnings at the moment", true},
+			{NFmiLedChannel::DataIsLate, NFmiLedColor::Orange, "Data is late warnings", "No data is late at the moment", false}
 		};
 		itsLedLightStatusSystem.Initialize(usedLedChannelAndColors, true);
 		NFmiLedLightStatusSystem::InitializeStaticInstance(&itsLedLightStatusSystem);
@@ -2515,6 +2517,7 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 		DoPossibleCaseStudyEditedDataSetup(theData, theDataFileName, theType, fDataWasDeletedOut);
         PrepareForParamAddSystemUpdate();
 		RemoveCombinedDataFromLedChannelReport(theDataFilePattern);
+		RemoveLateDataFromLedChannelReport(theDataFilePattern);
 		AddLoadedDataToTriggerList(theDataFilePattern);
 	}
 }
@@ -2545,6 +2548,11 @@ void RemoveCombinedDataFromLedChannelReport(const std::string& theDataFileFilter
 	{
 		LedLightStatusSystem().StopReportToChannelWithFileFilter(NFmiLedChannel::QueryData, theDataFileFilter);
 	}
+}
+
+void RemoveLateDataFromLedChannelReport(const std::string& theDataFileFilter)
+{
+	LedLightStatusSystem().StopReportToChannel(NFmiLedChannel::DataIsLate, theDataFileFilter);
 }
 
 void DoEditedInfoTimeSetup(boost::shared_ptr<NFmiFastQueryInfo>& editedInfo, bool loadFromFileState, bool setCurrentTimeToNearestHour)
@@ -2841,7 +2849,7 @@ bool CheckEditedDataForStartUpLoadErrors(int theMessageBoxButtunOptions)
 	return true;
 }
 
-bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1)
+bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1)
 {
 	// Tehdään aikasarjamuokkauksille progress ja peruutus dialogi ja toiminnot.
 	// Aluksi vain control-point moodille!!!
@@ -3063,13 +3071,13 @@ public:
 	}
 	void SetTimeSerialSettings(FmiMenuCommandType theMenuCommand)
 	{
-		itsDescTopIndex = static_cast<unsigned int>(-1);
+		itsDescTopIndex = CtrlViewUtils::kFmiTimeSerialView;
 		itsMenuCommand = theMenuCommand;
 
 		fLevelDataOnly = false;
 		fGridDataOnly = false;
 		fDoMapMenu = false;
-		fAcceptMacroParams = false;
+		fAcceptMacroParams = true;
 		fAcceptCalculateParams = false;
 		fMakeCustomMenu = false;
 	}
@@ -3150,7 +3158,9 @@ void CreateParamSelectionBasePopup(const MenuCreationSettings &theMenuSettings, 
 	{
 		if(theMenuSettings.fDoMapMenu)
 			AddMacroParamPartToPopUpMenu(theMenuSettings, menuList, NFmiInfoData::kMacroParam);
-		else // vielä ei ole muita fAcceptMacroParams -tapauksia kuin poikkileikkaus-makroParamit
+		else if(theMenuSettings.itsDescTopIndex == CtrlViewUtils::kFmiTimeSerialView)
+			AddMacroParamPartToPopUpMenu(theMenuSettings, menuList, NFmiInfoData::kTimeSerialMacroParam);
+		else if(theMenuSettings.itsDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
 			AddMacroParamPartToPopUpMenu(theMenuSettings, menuList, NFmiInfoData::kCrossSectionMacroParam);
 	}
 
@@ -3921,7 +3931,7 @@ void AddConfiguredModelProducerDataToParamSelectionPopup(const MenuCreationSetti
 
 				if(producerMenuItemList && producerMenuItemList->NumberOfMenuItems() > 0)
 				{
-                    auto producerMenuItem = std::make_unique<NFmiMenuItem>(prodInfo.Name().c_str(), kFmiBadParameter);
+                    auto producerMenuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, prodInfo.Name().c_str(), kFmiBadParameter, kFmiNoCommand, NFmiMetEditorTypes::View::kFmiTextView, nullptr, NFmiInfoData::kNoDataType);
 					producerMenuItem->AddSubMenu(producerMenuItemList);
 					theMenuList->Add(std::move(producerMenuItem));
 				}
@@ -4792,7 +4802,7 @@ bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theRowIndex, int /* the
 		GetCombinedMapHandler()->activateView(theMenuItem, theRowIndex);
         break;
     case kAddViewWithRealRowNumber:
-		GetCombinedMapHandler()->addViewWithRealRowNumber(true, theMenuItem, theRowIndex, false, nullptr);
+		GetCombinedMapHandler()->addViewWithRealRowNumber(true, theMenuItem, theRowIndex, false);
         break;
 	case kFmiAddParamCrossSectionView:
 		GetCombinedMapHandler()->addCrossSectionView(theMenuItem, theRowIndex, false);
@@ -6612,6 +6622,7 @@ bool InitCPManagerSet(void)
         timeView.ShowHelpData4(ShowHelperData4InTimeSerialView());
 
 		timeView.TimeBag(TimeSerialViewTimeBag());
+		timeView.PreciseTimeSerialLatlonPoint(PreciseTimeSerialLatlonPoint());
 	}
 
 	void FillTempViewMacro(NFmiViewSettingMacro &theMacro)
@@ -6798,8 +6809,9 @@ bool InitCPManagerSet(void)
 	{
 		auto& combinedMapHandler = *GetCombinedMapHandler();
 		combinedMapHandler.removeAllTimeSerialViews();
+		auto& timeViewSettings = theMacro.GetTimeView();
 
-		const std::vector<NFmiViewSettingMacro::TimeViewRow>& rows = theMacro.GetTimeView().Rows();
+		const std::vector<NFmiViewSettingMacro::TimeViewRow>& rows = timeViewSettings.Rows();
 		std::vector<NFmiViewSettingMacro::TimeViewRow>::size_type ssize = rows.size();
 		std::vector<NFmiViewSettingMacro::TimeViewRow>::size_type counter = 0;
 		auto& timeSerialViewIndexReference = combinedMapHandler.getTimeSerialViewIndexReference();
@@ -6810,10 +6822,9 @@ bool InitCPManagerSet(void)
 			timeSerialViewIndexReference++; // tätä juoksuttamalla saan parametrit menemään aikasarja ikkunaan oikeaan järjestykseen
 			const NFmiViewSettingMacro::Param &par = macroTimeRow.Param();
 			NFmiMenuItem menuItem(-1, "x", par.DataIdent(), kFmiAddTimeSerialView, g_DefaultParamView, &par.Level(), par.DataType());
-			combinedMapHandler.addTimeSerialView(menuItem, fTreatAsViewMacro);
+			auto addedDrawParam = combinedMapHandler.addTimeSerialView(menuItem, fTreatAsViewMacro);
             // Kaikki makroon talletetut drawparam asetukset pitää vielä ladata luotuun ja listoihin laitettuun drawparamiin
-            // viimeinen 0 on feikki indeksi jota tarvitaan karttanäyttö tapauksessa
-			AdjustDrawParam(0, par, CtrlViewUtils::kFmiTimeSerialView, 0, fTreatAsViewMacro);
+			AdjustDrawParam(addedDrawParam, par, fTreatAsViewMacro);
 
 			// Tehdään side-parameter osio tässä
 			const auto& sideParameters = macroTimeRow.SideParameters();
@@ -6822,24 +6833,29 @@ bool InitCPManagerSet(void)
 				for(const auto& sideParameter : sideParameters)
 				{
 					NFmiMenuItem sideParameterMenuItem(-1, "x", sideParameter.DataIdent(), kFmiAddTimeSerialSideParam, g_DefaultParamView, &sideParameter.Level(), sideParameter.DataType());
-					combinedMapHandler.addTimeSerialViewSideParameter(sideParameterMenuItem, fTreatAsViewMacro);
+					auto addedSideDrawParam = combinedMapHandler.addTimeSerialViewSideParameter(sideParameterMenuItem, fTreatAsViewMacro);
+					AdjustDrawParam(addedSideDrawParam, sideParameter, fTreatAsViewMacro);
 				}
 			}
 		}
 
-        if(theMacro.GetTimeView().ShowHelpData())
+        if(timeViewSettings.ShowHelpData())
             SetOnShowHelperData1InTimeSerialView();
         else
             SetOffShowHelperData1InTimeSerialView();
-        if(theMacro.GetTimeView().ShowHelpData2())
+        if(timeViewSettings.ShowHelpData2())
             SetOnShowHelperData2InTimeSerialView();
         else
             SetOffShowHelperData2InTimeSerialView();
-        ShowHelperData3InTimeSerialView(theMacro.GetTimeView().ShowHelpData3());
-        ShowHelperData4InTimeSerialView(theMacro.GetTimeView().ShowHelpData4());
+        ShowHelperData3InTimeSerialView(timeViewSettings.ShowHelpData3());
+        ShowHelperData4InTimeSerialView(timeViewSettings.ShowHelpData4());
 
-		if(theMacro.GetTimeView().TimeBagUpdated())
-			TimeSerialViewTimeBag(theMacro.GetTimeView().TimeBag());
+		if(timeViewSettings.TimeBagUpdated())
+			TimeSerialViewTimeBag(timeViewSettings.TimeBag());
+		if(timeViewSettings.PreciseTimeSerialLatlonPoint() != NFmiPoint::gMissingLatlon)
+		{
+			PreciseTimeSerialLatlonPoint(timeViewSettings.PreciseTimeSerialLatlonPoint());
+		}
 	}
 
 	void SetTempView(NFmiViewSettingMacro &theMacro)
@@ -6941,8 +6957,9 @@ bool InitCPManagerSet(void)
                     usedDataType = NFmiInfoData::kModelHelpData; 
                 }
 				NFmiMenuItem addParamMenuItem(theDescTopIndex, gDummyParamName, viewMacroLayerParam.DataIdent(), kFmiAddView, g_DefaultParamView, &viewMacroLayerParam.Level(), usedDataType);
+				addParamMenuItem.MacroParamInitName(viewMacroLayerParam.DrawParam()->InitFileName());
                 auto realRowNumber = rowVectorCounter + 1;
-				GetCombinedMapHandler()->addViewWithRealRowNumber(false, addParamMenuItem, static_cast<int>(realRowNumber), fTreatAsViewMacro, &(viewMacroLayerParam.DrawParam()->InitFileName()));
+				GetCombinedMapHandler()->addViewWithRealRowNumber(false, addParamMenuItem, static_cast<int>(realRowNumber), fTreatAsViewMacro);
                 // Kaikki makroon talletetut drawparam asetukset pitää vielä ladata luotuun ja listoihin laitettuun drawparamiin
 				AdjustDrawParam(theDescTopIndex, viewMacroLayerParam, static_cast<int>(realRowNumber), static_cast<int>(viewMacroLayerIndex + 1), fTreatAsViewMacro); 
 			}
@@ -7002,7 +7019,8 @@ bool InitCPManagerSet(void)
 	}
 
     void ApplyViewMacro(NFmiViewSettingMacro &theMacro, bool fTreatAsViewMacro, bool undoRedoAction)
-	{ // ota käyttöön kaikki makron asetukset ja tee näytöistä 'likaisia'
+	{ 
+		// ota käyttöön kaikki makron asetukset ja tee näytöistä 'likaisia'
 		SetGeneralDoc(theMacro);
         SetTimeViewParams(theMacro, fTreatAsViewMacro);
 		SetTempView(theMacro);
@@ -7554,7 +7572,7 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 	void AddMacroParamToView(unsigned int theDescTopIndex, int theViewRow, const std::string &theName)
 	{
 		NFmiMenuItem menuItem(theDescTopIndex, theName, static_cast<FmiParameterName>(998), kFmiAddView, g_DefaultParamView, 0, NFmiInfoData::kMacroParam, theViewRow);
-		GetCombinedMapHandler()->addViewWithRealRowNumber(true, menuItem, theViewRow, false, nullptr);
+		GetCombinedMapHandler()->addViewWithRealRowNumber(true, menuItem, theViewRow, false);
 	}
 
 	// poistaa halutun macroparamin dokumentista, tiedostoista ja näytöiltä
@@ -8529,10 +8547,10 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			unsigned long minLocationIndex = static_cast<unsigned long>(-1);
 			for(auto &info : infoVector)
 			{
-				if(ignoreTime || info->Time(theTime))
+				auto doShipDataLocations = NFmiFastInfoUtils::IsInfoShipTypeData(*info);
+				if((ignoreTime && !doShipDataLocations) || info->Time(theTime))
 				{
 					FmiProducerName prod = static_cast<FmiProducerName>(info->Producer()->GetIdent());
-                    auto doShipDataLocations = (info->IsGrid() == false && (info->HasLatlonInfoInData()));
 					if(doShipDataLocations ? NearestShipLocation(*info, theLocation) : info->NearestLocation(theLocation))
 					{
 						double currentDistance = theLocation.Distance(doShipDataLocations ? info->GetLatlonFromData() : info->LatLonFast());
@@ -10812,6 +10830,106 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsLedLightStatusSystem;
 	}
 
+	int GetApplicationRunnningTimeInSeconds()
+	{
+		auto t1 = BasicSmartMetConfigurations().SmartMetStartingTime().UTCTime().EpochTime();
+		auto t2 = time(0);
+		double diff = difftime(t2, t1);
+		return boost::math::iround(diff);
+	}
+
+	// FixDataElapsedTimeInSeconds funktio korjaa yhden mahdollisen querydatoihin tehdyn aikaväärennöksen.
+	// QueryDatoihin talletetaan timeri joka laskee sen latauksesta käyttöön kuluneen ajan.
+	// Kyseisen ajan avulla voidaan merkitä käyttöliittymässä alle 5 minuuuttia sitten ladatatut datat uusiksi
+	// erilaisin korostuksin.
+	// Mutta kun smartmet lataa dataa heti käynnistyksen yhteydessä lokaali cachesta, ei datoja
+	// haluttu olevan 'uusia' kuin minuutin, joten niihin lisättiin 4 minuuttia latausaikaa.
+	// Nyt kun tutkitaan onko uutta dataa tullut tarpeeksi nopeasti, tämä 4:n minuutin aika pitää poistaa,
+	// silloin kun latausaika on suurempi kuin smartmetin käynnissäoloaika.
+	int FixDataElapsedTimeInSeconds(int elapsedDataTimeInSeconds)
+	{
+		auto runninTimeInSeconds = GetApplicationRunnningTimeInSeconds();
+		if(elapsedDataTimeInSeconds > runninTimeInSeconds)
+		{
+			elapsedDataTimeInSeconds -= 4*60;
+		}
+		return elapsedDataTimeInSeconds;
+	}
+
+	void AddSpaceToNonEmptyString(std::string &str)
+	{
+		if(!str.empty())
+		{
+			str += " ";
+		}
+	}
+
+	std::string MakeElapsedTimeString(int timeInSeconds)
+	{
+		const int secondsInDay = 3600 * 24;
+		const int secondsInHour = 3600;
+		std::string str;
+		int days = (int)(timeInSeconds / secondsInDay);
+		int remainingTimeInSeconds = timeInSeconds - (days * secondsInDay);
+		int hours = (int)(remainingTimeInSeconds / secondsInHour);
+		remainingTimeInSeconds = remainingTimeInSeconds - (hours * secondsInHour);
+		int minutes = (int)(remainingTimeInSeconds / 60);
+		if(days > 0)
+		{
+			AddSpaceToNonEmptyString(str);
+			str += NFmiStringTools::Convert<int>(days);
+			str += " d";
+		}
+
+		if(hours > 0)
+		{
+			AddSpaceToNonEmptyString(str);
+			str += NFmiStringTools::Convert<int>(hours);
+			str += " h";
+		}
+		
+		if(minutes > 0)
+		{
+			AddSpaceToNonEmptyString(str);
+			str += NFmiStringTools::Convert<int>(minutes);
+			str += " min";
+		}
+		return str;
+	}
+
+	void DoIsAnyQueryDataLateChecks()
+	{
+		// Katsotaan onko missään queryDatassa konffattuna ns. myöhästymisaikaraja.
+		// Jos on, katsotaan milloin kyseistä dataa on ladattu viimeksi. 
+		// Jos aikaa on kulunut enemmän kuin konffeissa on säädetty, laitetaan 
+		// StatusBarin ledissysteemiin varoitus asiasta.
+		const auto& helpDataInfoVector = HelpDataInfoSystem()->DynamicHelpDataInfos();
+		for(const auto& helpInfo : helpDataInfoVector)
+		{
+			if(helpInfo.IsAgingTimeLimitUsed())
+			{
+				auto fileFilter = helpInfo.UsedFileNameFilter(*HelpDataInfoSystem());
+				auto& infos = InfoOrganizer()->GetInfos(fileFilter);
+				if(!infos.empty())
+				{
+					auto& info = infos.front();
+					auto elapsedTimeInSeconds = FixDataElapsedTimeInSeconds(boost::math::iround(info->ElapsedTimeFromLoadInSeconds()));
+					if(elapsedTimeInSeconds > helpInfo.AgingTimeLimitInMinutes() * 60)
+					{
+						std::string logMessage = "No new data for ";
+						logMessage += info->DataFileName();
+						logMessage += " in ";
+						logMessage += MakeElapsedTimeString(elapsedTimeInSeconds);
+						logMessage += " (limit = ";
+						logMessage += MakeElapsedTimeString(helpInfo.AgingTimeLimitInMinutes()*60);
+						logMessage += ")";
+						NFmiLedLightStatusSystem::ReportToChannelFromThread(NFmiLedChannel::DataIsLate, fileFilter, logMessage, CatLog::Severity::Info);
+					}
+				}
+			}
+		}
+	}
+
 	std::vector<std::string> itsLoadedDataTriggerList;
 	NFmiLedLightStatusSystem itsLedLightStatusSystem;
 	NFmiSeaLevelPlumeData itsSeaLevelPlumeData;
@@ -11562,7 +11680,7 @@ int NFmiEditMapGeneralDataDoc::FilterDialogUpdateStatus(void){return pimpl->Filt
 void NFmiEditMapGeneralDataDoc::FilterDialogUpdateStatus(int newState){pimpl->FilterDialogUpdateStatus(newState);};
 bool NFmiEditMapGeneralDataDoc::UseTimeInterpolation(void){return pimpl->fUseTimeInterpolation;};
 void NFmiEditMapGeneralDataDoc::UseTimeInterpolation(bool newState){pimpl->fUseTimeInterpolation = newState;};
-bool NFmiEditMapGeneralDataDoc::DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue)
+bool NFmiEditMapGeneralDataDoc::DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue)
 {
 	return pimpl->DoTimeSeriesValuesModifying(theModifiedDrawParam, NFmiMetEditorTypes::Mask(theUsedMask), theTimeDescriptor, theModificationFactorCurvePoints, theEditorTool, fUseSetForDiscreteData, theUnchangedValue);
 }
@@ -13149,4 +13267,9 @@ NFmiLedLightStatusSystem& NFmiEditMapGeneralDataDoc::LedLightStatusSystem()
 std::shared_ptr<NFmiViewSettingMacro> NFmiEditMapGeneralDataDoc::CurrentViewMacro()
 {
 	return pimpl->CurrentViewMacro();
+}
+
+void NFmiEditMapGeneralDataDoc::DoIsAnyQueryDataLateChecks()
+{
+	pimpl->DoIsAnyQueryDataLateChecks();
 }

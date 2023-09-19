@@ -217,6 +217,7 @@ class NFmiAreaMask
     MultiParamTooltipFile,  //!< Mahd. tiedosto, josta haetaan tooltippiä varten aputekstejä monen parametrin avulla
     MultiParam2,  //!< 2. käytetty multi-param, pakollinen, jos käytetty MultiParamTooltipFile:a
     MultiParam3,  //!< 3. käytetty multi-param, mahdollinen, jos käytetty MultiParamTooltipFile:a
+    SecondParamFromExtremeTime // Etsitään par1:n min/max ja siitä paikasta ja extreme ajasta palautetaan toisen parametrin arvo
   };
 
   //! Function direction, e.g. with 'met'-functions x- and/or y-direction
@@ -364,6 +365,8 @@ class NFmiAreaMask
 
   static boost::shared_ptr<NFmiFastQueryInfo> DoShallowCopy(
       const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+  static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> DoShallowCopy(
+      const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector);
   static boost::shared_ptr<NFmiAreaMask> DoShallowCopy(
       const boost::shared_ptr<NFmiAreaMask> &theMask);
   static std::vector<boost::shared_ptr<NFmiAreaMask>> DoShallowCopy(

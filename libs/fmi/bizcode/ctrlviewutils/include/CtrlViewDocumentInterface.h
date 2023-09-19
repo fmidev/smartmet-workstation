@@ -227,7 +227,7 @@ public:
     virtual void TimeSerialViewDirty(bool newValue) = 0;
     virtual bool CreateTimeSerialDialogPopup(int index) = 0;
     virtual bool CreateTimeSerialDialogOnViewPopup(int index) = 0;
-    virtual bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<double> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1) = 0;
+    virtual bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1) = 0;
     virtual void UpdateToModifiedDrawParam(unsigned int mapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam>& drawParam, int viewRowIndex) = 0;
     virtual bool UseTimeSerialAxisAutoAdjust(void) = 0;
     virtual bool UseQ2Server(void) = 0;
