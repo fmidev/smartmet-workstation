@@ -4319,7 +4319,7 @@ bool NFmiTempView::ScanRangeForAllDataSkewT(double startT, double endT, int& pot
 std::pair<double, double> NFmiTempView::GetVisibleTemperatureRangeForSkewTDiagram(const std::pair<double, double>& originalRange)
 {
 	vector<double> suitableTRanges{ 35, 40, 45, 50, 55, 60, 65, 70, 75, 80 };
-	vector<double> suitableTStartValues{ 0, 5, 10, -5, 15, -10, 20, 25, -15, 30, 35, -20 , 40, 45 , -25 };
+	vector<double> suitableTStartValues{ 0, 5, -5, 10, -10, 15, -15, 20, -20, 25, -25, 30, -30, 35, -35, -40, -45, -50, -55, -60, -65, -70, -75, -80};
 	int potenciallyVisibleValues = 0;
 	int actuallyVisibleValues = 0;
 	if(ScanRangeForAllDataSkewT(originalRange.first, originalRange.second, potenciallyVisibleValues, actuallyVisibleValues))
