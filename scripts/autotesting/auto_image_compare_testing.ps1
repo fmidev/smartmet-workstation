@@ -10,9 +10,9 @@ $DescriptionFileName = "description.txt"
 $ImageFileFilter = "*.png"
 $DifferenceImagesDirectoryRoot = "D:\autotesting\differenceimages"
 $MagickMetric = "DSSIM"
-$MagickExitCodeSimilar = 0
-$MagickExitCodeDissimilar = 1
-$MagickExitCodeError = 2
+[int]$MagickExitCodeSimilar = 0
+[int]$MagickExitCodeDissimilar = 1
+[int]$MagickExitCodeError = 2
 $MagickMetricValueGood = 0
 $MagickMetricValueBad = 1
 $GeneralOkString = "[OK]"
@@ -20,6 +20,7 @@ $GeneralWarningString = "[Warning]"
 $GeneralErrorString = "[ERROR]"
 $ComparisonSideOriginal = "original"
 $ComparisonSideCurrent = "current"
+$MissingFileOrDirectoryColor = "Magenta"
 
 
 function RemoveDotSlashFromStart
@@ -54,6 +55,23 @@ function GetRelativePath
   { 
     pop-location 
   }
+}
+
+function Write-ColorOutput
+{
+	param ([string]$ForegroundColor, [string]$OutputText)
+	
+    # save the current color
+    $OldColor = $host.UI.RawUI.ForegroundColor
+
+    # set the new color
+    $host.UI.RawUI.ForegroundColor = $ForegroundColor
+
+    # output
+    Write-Output $OutputText
+
+    # restore the original color
+    $host.UI.RawUI.ForegroundColor = $OldColor
 }
 
 function OutputDescriptionFile
@@ -111,6 +129,24 @@ function MakeMagickCompareStringForDSSIM
   return $MagickCompareString
 }
 
+function GetCompareTextColor
+{
+  param ([int]$MagicExitCode, [string]$MagickCompareString)
+  
+  if($MagicExitCode -eq $MagickExitCodeError -Or $MagickCompareString -eq $GeneralErrorString)
+  {
+	  return "Red"
+  }
+  elseif($MagicExitCode -eq $MagickExitCodeDissimilar -Or $MagickCompareString -eq $GeneralWarningString)
+  {
+	  return "Yellow"
+  }
+  else
+  {
+	  return "Green"
+  }
+}
+
 function ReportCompareResults
 {
 # Do one line report of comparison results: image-name, exit-code-string, metric-type, metric-value, ok/warning/error
@@ -129,7 +165,8 @@ function ReportCompareResults
   }
   $MagickCompareString = MakeMagickCompareStringForDSSIM $MagickCompareValue
   $output = "Image: " + $ImageFileName + ", magick exit-code: " + $ExitCodeString + ", compare value (" + $MagickMetric + "): " + $MagickCompareValue + " " + $MagickCompareString
-  Write-Output $output
+  $FontColor = GetCompareTextColor $MagicExitCode $MagickCompareString
+  Write-ColorOutput $FontColor $output
 }
 
 function TryConvertStringToDouble
@@ -245,11 +282,11 @@ function CompareDirectoryImages
 	  $ImageFileName = $ImageFileCompare.Name
       if ($ImageFileCompare.SideIndicator -eq "<=") 
       {
-        Write-Output $(MissingFileErrorString $ImageFileName $ComparisonSideOriginal)
+        Write-ColorOutput $MissingFileOrDirectoryColor $(MissingFileErrorString $ImageFileName $ComparisonSideOriginal)
       }
       elseif ($ImageFileCompare.SideIndicator -eq "=>") 
       {
-        Write-Output $(MissingFileErrorString $ImageFileName $ComparisonSideCurrent)
+        Write-ColorOutput $MissingFileOrDirectoryColor $(MissingFileErrorString $ImageFileName $ComparisonSideCurrent)
       }
       else 
       {
@@ -286,13 +323,13 @@ ForEach($DirectoryCompare in $DirectoryComparisons)
   $RelativePath = RemoveDotSlashFromStart $RelativePath
   if ($DirectoryCompare.SideIndicator -eq "<=") 
   {
-    Write-Output $(MissingDirectoryErrorString $RelativePath $ComparisonSideOriginal)
+    Write-ColorOutput $MissingFileOrDirectoryColor $(MissingDirectoryErrorString $RelativePath $ComparisonSideOriginal)
   }
   elseif ($DirectoryCompare.SideIndicator -eq "=>") 
   {
     $RelativePath = GetRelativePath $CurrentDirectoryRoot $FullDirName
     $RelativePath = RemoveDotSlashFromStart $RelativePath
-    Write-Output $(MissingDirectoryErrorString $RelativePath $ComparisonSideCurrent)
+    Write-ColorOutput $MissingFileOrDirectoryColor $(MissingDirectoryErrorString $RelativePath $ComparisonSideCurrent)
   }
   else 
   {
