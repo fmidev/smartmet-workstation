@@ -15,6 +15,12 @@ $MagickExitCodeDissimilar = 1
 $MagickExitCodeError = 2
 $MagickMetricValueGood = 0
 $MagickMetricValueBad = 1
+$GeneralOkString = "[OK]"
+$GeneralWarningString = "[Warning]"
+$GeneralErrorString = "[ERROR]"
+$ComparisonSideOriginal = "original"
+$ComparisonSideCurrent = "current"
+
 
 function RemoveDotSlashFromStart
 {
@@ -83,7 +89,7 @@ function MakeMagickExitCodeString
   }
   elseif($MagicExitCode -eq $MagickExitCodeError)
   {
-    $ExitCodeString = "execution error"
+    $ExitCodeString = "EXECUTION ERROR"
   }
   return $ExitCodeString
 }
@@ -93,14 +99,14 @@ function MakeMagickCompareStringForDSSIM
   param ([double]$MagickCompareValue)
 
   $WarningLimitForDSSIM = 0.006
-  $MagickCompareString = "[OK]"
+  $MagickCompareString = $GeneralOkString
   if($MagickCompareValue -gt $MagickMetricValueGood -And $MagickCompareValue -le $WarningLimitForDSSIM)
   {
-    $MagickCompareString = "[Warning]"
+    $MagickCompareString = $GeneralWarningString
   }
   elseif($MagickCompareValue -gt $WarningLimitForDSSIM)
   {
-    $MagickCompareString = "[ERROR]"
+    $MagickCompareString = $GeneralErrorString
   }
   return $MagickCompareString
 }
@@ -192,8 +198,15 @@ function MissingFileErrorString
 {
   param ([string]$ImageFileName, [string]$ExistSide)
 
-  $ErrorString = MakeMagickCompareStringForDSSIM $MagickMetricValueBad
-  $ResultString = "Image: " + $ImageFileName + " was only in '" + $ExistSide + "' side " + $ErrorString
+  $ResultString = "Image: " + $ImageFileName + " was only in '" + $ExistSide + "' side " + $GeneralErrorString
+  return $ResultString
+}
+
+function MissingDirectoryErrorString
+{
+  param ([string]$DirectoryName, [string]$ExistSide)
+
+  $ResultString = "Directory: " + $DirectoryName + " was only in '" + $ExistSide + "' side " + $GeneralErrorString
   return $ResultString
 }
 
@@ -232,15 +245,11 @@ function CompareDirectoryImages
 	  $ImageFileName = $ImageFileCompare.Name
       if ($ImageFileCompare.SideIndicator -eq "<=") 
       {
-	    # Write-Output puts new-line after each separate output, you have to make one variable that contain the whole message first
-        $output = MissingFileErrorString $ImageFileName "original"
-        Write-Output $output
+        Write-Output $(MissingFileErrorString $ImageFileName $ComparisonSideOriginal)
       }
       elseif ($ImageFileCompare.SideIndicator -eq "=>") 
       {
-        # Write-Output puts new-line after each separate output, you have to make one variable that contain the whole message first
-        $output = MissingFileErrorString $ImageFileName "current"
-        Write-Output $output
+        Write-Output $(MissingFileErrorString $ImageFileName $ComparisonSideCurrent)
       }
       else 
       {
@@ -277,17 +286,13 @@ ForEach($DirectoryCompare in $DirectoryComparisons)
   $RelativePath = RemoveDotSlashFromStart $RelativePath
   if ($DirectoryCompare.SideIndicator -eq "<=") 
   {
-	# Write-Output puts new-line after each separate output, you have to make one variable that contain the whole message first
-    $output = "Error: Directory " + $RelativePath + " was only in 'original' side"
-    Write-Output $output
+    Write-Output $(MissingDirectoryErrorString $RelativePath $ComparisonSideOriginal)
   }
   elseif ($DirectoryCompare.SideIndicator -eq "=>") 
   {
     $RelativePath = GetRelativePath $CurrentDirectoryRoot $FullDirName
     $RelativePath = RemoveDotSlashFromStart $RelativePath
-	# Write-Output puts new-line after each separate output, you have to make one variable that contain the whole message first
-    $output = "Error: Directory " + $RelativePath + " was only in 'current' side"
-    Write-Output $output
+    Write-Output $(MissingDirectoryErrorString $RelativePath $ComparisonSideCurrent)
   }
   else 
   {
