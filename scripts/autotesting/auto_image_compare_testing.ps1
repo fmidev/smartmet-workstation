@@ -3,12 +3,15 @@
 # There is *current* folder which contains images which are just produced with Smartmet and that are wanted to be tested.
 #
 
-$OriginalDirectoryRoot = "D:\autotesting\original"
-$CurrentDirectoryRoot = "D:\autotesting\current"
+# These are paths to the baselinetesting directory trees
+$OriginalDirectoryRoot = "D:\autotesting\baselinetest\original"
+$CurrentDirectoryRoot = "D:\autotesting\baselinetest\current"
+$DifferenceImagesDirectoryRoot = "D:\autotesting\baselinetest\differenceimages"
+
+
 $DotSlash = ".\"
 $DescriptionFileName = "description.txt"
 $ImageFileFilter = "*.png"
-$DifferenceImagesDirectoryRoot = "D:\autotesting\differenceimages"
 $MagickMetric = "DSSIM"
 [int]$MagickExitCodeSimilar = 0
 [int]$MagickExitCodeDissimilar = 1
@@ -133,7 +136,11 @@ function GetCompareTextColor
 {
   param ([int]$MagicExitCode, [string]$MagickCompareString)
   
-  if($MagicExitCode -eq $MagickExitCodeError -Or $MagickCompareString -eq $GeneralErrorString)
+  if($MagicExitCode -eq $MagickExitCodeError)
+  {
+	  return "Cyan"
+  }
+  elseif($MagickCompareString -eq $GeneralErrorString)
   {
 	  return "Red"
   }
@@ -158,15 +165,20 @@ function ReportCompareResults
   param ([string]$ImageFileName, [int]$MagicExitCode, [double]$MagickCompareValue)
 
   $ExitCodeString = MakeMagickExitCodeString $MagicExitCode
+  $MagickCompareString = MakeMagickCompareStringForDSSIM $MagickCompareValue
+  $FontColor = GetCompareTextColor $MagicExitCode $MagickCompareString
+
   if($MagicExitCode -eq $MagickExitCodeError)
   {
-    # Lat's make sure that in magick excution error the metric value is set to bad
-    $MagickCompareValue = $MagickMetricValueBad
+    # This is when in magick execution an unexpected error has occurred
+    $output = "Image: " + $ImageFileName + ", magick exit-code: " + $ExitCodeString + ", compare value (" + $MagickMetric + "): --- " + $GeneralErrorString
+    Write-ColorOutput $FontColor $output
   }
-  $MagickCompareString = MakeMagickCompareStringForDSSIM $MagickCompareValue
-  $output = "Image: " + $ImageFileName + ", magick exit-code: " + $ExitCodeString + ", compare value (" + $MagickMetric + "): " + $MagickCompareValue + " " + $MagickCompareString
-  $FontColor = GetCompareTextColor $MagicExitCode $MagickCompareString
-  Write-ColorOutput $FontColor $output
+  else
+  {
+    $output = "Image: " + $ImageFileName + ", magick exit-code: " + $ExitCodeString + ", compare value (" + $MagickMetric + "): " + $MagickCompareValue + " " + $MagickCompareString
+    Write-ColorOutput $FontColor $output
+  }
 }
 
 function TryConvertStringToDouble
@@ -296,7 +308,6 @@ function CompareDirectoryImages
 	 
   }
 }
-
 
 # Let's get recursively all the directories from the both root directories
 $OriginalDirectories = Get-childitem -Recurse -Directory $OriginalDirectoryRoot
