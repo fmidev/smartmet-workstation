@@ -1,12 +1,16 @@
 # This script does automation test for SmartMet generated images.
-# There is *original* folder which contains proven correct images in it's subfolders.
+# There is *reference* folder which contains proven correct images in it's subfolders.
 # There is *current* folder which contains images which are just produced with Smartmet and that are wanted to be tested.
 #
 
-# These are paths to the baselinetesting directory trees
-$OriginalDirectoryRoot = "D:\autotesting\baselinetest\original"
+# These are paths to the baseline testing directory trees
+$ReferenceDirectoryRoot = "D:\autotesting\baselinetest\reference"
 $CurrentDirectoryRoot = "D:\autotesting\baselinetest\current"
 $DifferenceImagesDirectoryRoot = "D:\autotesting\baselinetest\differenceimages"
+# These are paths to the real testing directory trees
+#$ReferenceDirectoryRoot = "D:\autotesting\reference"
+#$CurrentDirectoryRoot = "D:\autotesting\current"
+#$DifferenceImagesDirectoryRoot = "D:\autotesting\differenceimages"
 
 
 $DotSlash = ".\"
@@ -21,9 +25,24 @@ $MagickMetricValueBad = 1
 $GeneralOkString = "[OK]"
 $GeneralWarningString = "[Warning]"
 $GeneralErrorString = "[ERROR]"
-$ComparisonSideOriginal = "original"
+$ComparisonSideReference = "reference"
 $ComparisonSideCurrent = "current"
+$ImageOkColor = "green"
+$ImageWarningColor = "yellow"
+$ImageErrorColor = "red"
+$ImageCorruptedColor = "cyan"
 $MissingFileOrDirectoryColor = "Magenta"
+
+[int]$global:ImagesTotalCounter = 0
+[int]$global:ImagesOkCounter = 0
+[int]$global:ImagesWarningCounter = 0
+[int]$global:ImagesErrorCounter = 0
+[int]$global:ImagesCorruptedCounter = 0
+[int]$global:ImagesReferenceSideOnlyCounter = 0
+[int]$global:ImagesCurrentSideOnlyCounter = 0
+[int]$global:DirectoriesTotalCounter = 0
+[int]$global:DirectoriesReferenceSideOnlyCounter = 0
+[int]$global:DirectoriesCurrentSideOnlyCounter = 0
 
 
 function RemoveDotSlashFromStart
@@ -138,19 +157,23 @@ function GetCompareTextColor
   
   if($MagicExitCode -eq $MagickExitCodeError)
   {
-	  return "Cyan"
+    $global:ImagesCorruptedCounter++
+    return $ImageCorruptedColor
   }
   elseif($MagickCompareString -eq $GeneralErrorString)
   {
-	  return "Red"
+    $global:ImagesErrorCounter++
+    return $ImageErrorColor
   }
   elseif($MagicExitCode -eq $MagickExitCodeDissimilar -Or $MagickCompareString -eq $GeneralWarningString)
   {
-	  return "Yellow"
+    $global:ImagesWarningCounter++
+    return $ImageWarningColor
   }
   else
   {
-	  return "Green"
+    $global:ImagesOkCounter++
+    return $ImageOkColor
   }
 }
 
@@ -207,15 +230,15 @@ function CompareImageFiles
 # Both same name image files exist on both comparison directory trees and 
 # now they need to be compared with magicks system.
 # Function has three parameters:
-# 1) $AbsoluteOriginalFilePath is absolute path of image file on the original side of check tree.
+# 1) $AbsoluteReferenceFilePath is absolute path of image file on the reference side of check tree.
 # 2) $AbsoluteCurrentFilePath is absolute path of image file on the current side of check tree.
 # 3) $ImageFileName is name of both checked files (on different paths), used only to output results.
-  param ([string]$AbsoluteOriginalFilePath, [string]$AbsoluteCurrentFilePath, [string]$ImageFileName)
+  param ([string]$AbsoluteReferenceFilePath, [string]$AbsoluteCurrentFilePath, [string]$ImageFileName)
   
-  $AbsoluteDifferenceFilePath = $AbsoluteOriginalFilePath.replace($OriginalDirectoryRoot, $DifferenceImagesDirectoryRoot)
+  $AbsoluteDifferenceFilePath = $AbsoluteReferenceFilePath.replace($ReferenceDirectoryRoot, $DifferenceImagesDirectoryRoot)
 
   # Mysteries of Powershell: With magick executable you need to prevent magick's own output by adding "2>&1" thingy in the end
-  $MagickResult = magick compare -metric $MagickMetric $AbsoluteOriginalFilePath $AbsoluteCurrentFilePath $AbsoluteDifferenceFilePath 2>&1
+  $MagickResult = magick compare -metric $MagickMetric $AbsoluteReferenceFilePath $AbsoluteCurrentFilePath $AbsoluteDifferenceFilePath 2>&1
   [int]$MagicExitCode = $LASTEXITCODE
   [double]$MagickCompareValue = TryConvertStringToDouble $MagickResult.ToString() 1
 
@@ -239,7 +262,7 @@ function DifferenceImageDirectoryChecks
   else
   {
     # Directory didn't exist, create it.
-	New-Item -ItemType Directory -Force -Path $AbsoluteDifferenceImageDirectory
+	New-Item -ItemType Directory -Force -Path $AbsoluteDifferenceImageDirectory >$null
   }
 }
 
@@ -261,83 +284,137 @@ function MissingDirectoryErrorString
 
 function CompareDirectoryImages
 {
-# Check given directory's all image files in original vs current directories.
+# Check given directory's all image files in reference vs current directories.
 # Check only this level, so no recursive options.
 # Function has two parameters:
-# 1) $AbsoluteDirectoryPath is absolute path from the original side of check tree.
-# 2) $RelativeDirectoryPath is relative path in relation to the original and current root paths.
+# 1) $AbsoluteDirectoryPath is absolute path from the reference side of check tree.
+# 2) $RelativeDirectoryPath is relative path in relation to the reference and current root paths.
 	
   param ([string]$AbsoluteDirectoryPath, [string]$RelativeDirectoryPath)
 
   OutputDescriptionFile $AbsoluteDirectoryPath $RelativeDirectoryPath
 
   # Let's get all the image files from the both testing side directories
-  $FinalOriginalPath = MakeGetChildItemPathWithIncludeParam $OriginalDirectoryRoot $RelativeDirectoryPath
-  $OriginalImageFiles = Get-childitem -Path $FinalOriginalPath -Include $ImageFileFilter -File
+  $FinalReferencePath = MakeGetChildItemPathWithIncludeParam $ReferenceDirectoryRoot $RelativeDirectoryPath
+  $ReferenceImageFiles = Get-childitem -Path $FinalReferencePath -Include $ImageFileFilter -File
   $FinalCurrentPath = MakeGetChildItemPathWithIncludeParam $CurrentDirectoryRoot $RelativeDirectoryPath
   $CurrentImageFiles = Get-childitem -Path $FinalCurrentPath -Include $ImageFileFilter -File
 
-  if($OriginalImageFiles -ne $null -And $CurrentImageFiles -ne $null)
+  if($ReferenceImageFiles -ne $null -And $CurrentImageFiles -ne $null)
   {
+    $global:DirectoriesTotalCounter++
     $output =  "Doing image comparisons in directory: " + $RelativeDirectoryPath
     Write-Output $output
 	
 	$AbsoluteDifferenceImageDirectory = $DifferenceImagesDirectoryRoot + "\" + $RelativeDirectoryPath
 	DifferenceImageDirectoryChecks $AbsoluteDifferenceImageDirectory
 
-    $ImageFileComparisons = Compare-Object -ReferenceObject $OriginalImageFiles -DifferenceObject $CurrentImageFiles -IncludeEqual  -Property Name -PassThru | select Name, @{n="FullName";e={$_.fullname}}, SideIndicator
+    $ImageFileComparisons = Compare-Object -ReferenceObject $ReferenceImageFiles -DifferenceObject $CurrentImageFiles -IncludeEqual  -Property Name -PassThru | select Name, @{n="FullName";e={$_.fullname}}, SideIndicator
 
     ForEach($ImageFileCompare in $ImageFileComparisons) 
     {
-      $AbsoluteOriginalFilePath = $ImageFileCompare.FullName
-      $AbsoluteCurrentFilePath = $AbsoluteOriginalFilePath.replace($OriginalDirectoryRoot, $CurrentDirectoryRoot)
+      $global:ImagesTotalCounter++
+      $AbsoluteReferenceFilePath = $ImageFileCompare.FullName
+      $AbsoluteCurrentFilePath = $AbsoluteReferenceFilePath.replace($ReferenceDirectoryRoot, $CurrentDirectoryRoot)
 	  $ImageFileName = $ImageFileCompare.Name
       if ($ImageFileCompare.SideIndicator -eq "<=") 
       {
-        Write-ColorOutput $MissingFileOrDirectoryColor $(MissingFileErrorString $ImageFileName $ComparisonSideOriginal)
+        $global:ImagesReferenceSideOnlyCounter++
+        Write-ColorOutput $MissingFileOrDirectoryColor $(MissingFileErrorString $ImageFileName $ComparisonSideReference)
       }
       elseif ($ImageFileCompare.SideIndicator -eq "=>") 
       {
+        $global:ImagesCurrentSideOnlyCounter++
         Write-ColorOutput $MissingFileOrDirectoryColor $(MissingFileErrorString $ImageFileName $ComparisonSideCurrent)
       }
       else 
       {
-		CompareImageFiles $AbsoluteOriginalFilePath $AbsoluteCurrentFilePath $ImageFileName
+		CompareImageFiles $AbsoluteReferenceFilePath $AbsoluteCurrentFilePath $ImageFileName
       }
     }
 	 
   }
 }
 
+function DoFinalCounterSummary
+{
+	Write-Output ""
+    Write-ColorOutput "white" "--------------- Final summary -------------------------"
+	$OkImagesSummary = "Images ok: " + $ImagesOkCounter + "/" + $ImagesTotalCounter
+    Write-ColorOutput $ImageOkColor $OkImagesSummary
+	if($ImagesWarningCounter -gt 0)
+	{
+	  $WarningImagesSummary = "Images warning: " + $ImagesWarningCounter + "/" + $ImagesTotalCounter
+      Write-ColorOutput $ImageWarningColor $WarningImagesSummary
+	}
+	if($ImagesErrorCounter -gt 0)
+	{
+	  $ErrorImagesSummary = "Images error: " + $ImagesErrorCounter + "/" + $ImagesTotalCounter
+      Write-ColorOutput $ImageErrorColor $ErrorImagesSummary
+	}
+	if($ImagesCorruptedCounter -gt 0)
+	{
+	  $CorruptedImagesSummary = "Images corrupted: " + $ImagesCorruptedCounter + "/" + $ImagesTotalCounter
+      Write-ColorOutput $ImageCorruptedColor $CorruptedImagesSummary
+	}
+	if($ImagesReferenceSideOnlyCounter -gt 0)
+	{
+	  $ReferenceSideOnlyImagesSummary = "Images only on reference side: " + $ImagesReferenceSideOnlyCounter + "/" + $ImagesTotalCounter
+      Write-ColorOutput $MissingFileOrDirectoryColor $ReferenceSideOnlyImagesSummary
+	}
+	if($ImagesCurrentSideOnlyCounter -gt 0)
+	{
+	  $CurrentSideOnlyImagesSummary = "Images only on current side: " + $ImagesCurrentSideOnlyCounter + "/" + $ImagesTotalCounter
+      Write-ColorOutput $MissingFileOrDirectoryColor $CurrentSideOnlyImagesSummary
+	}
+
+	$CheckedDirectorySummary = "Directories checked: " + $DirectoriesTotalCounter
+    Write-ColorOutput "white" $CheckedDirectorySummary
+	if($DirectoriesReferenceSideOnlyCounter -gt 0)
+	{
+	  $ReferenceSideOnlyDirectorySummary = "Directories only on reference side: " + $DirectoriesReferenceSideOnlyCounter + "/" + $DirectoriesTotalCounter
+      Write-ColorOutput $MissingFileOrDirectoryColor $ReferenceSideOnlyDirectorySummary
+	}
+	if($DirectoriesCurrentSideOnlyCounter -gt 0)
+	{
+	  $CurrentSideOnlyDirectorySummary = "Directories only on current side: " + $DirectoriesCurrentSideOnlyCounter + "/" + $DirectoriesTotalCounter
+      Write-ColorOutput $MissingFileOrDirectoryColor $CurrentSideOnlyDirectorySummary
+	}
+}
+
 # Let's get recursively all the directories from the both root directories
-$OriginalDirectories = Get-childitem -Recurse -Directory $OriginalDirectoryRoot
+$ReferenceDirectories = Get-childitem -Recurse -Directory $ReferenceDirectoryRoot
 $CurrentDirectories = Get-childitem -Recurse -Directory $CurrentDirectoryRoot
 
-if($OriginalDirectories -eq $null -Or $CurrentDirectories -eq $null)
+if($ReferenceDirectories -eq $null -Or $CurrentDirectories -eq $null)
 {
-  if($OriginalDirectories -eq $null)
+  if($ReferenceDirectories -eq $null)
   {
-	Write-Output "OriginalDirectories on null, wrong root path given? Exiting..."
+	Write-Output "ReferenceDirectories was null, wrong root path given? Exiting..."
   }
   if($CurrentDirectories -eq $null)
   {
-	Write-Output "CurrentDirectories on null, wrong root path given? Exiting..."
+	Write-Output "CurrentDirectories was null, wrong root path given? Exiting..."
   }
   exit
 }
 
-$DirectoryComparisons = Compare-Object -ReferenceObject $OriginalDirectories -DifferenceObject $CurrentDirectories -IncludeEqual -Property Name -PassThru | select Name, @{n="FullName";e={$_.fullname}}, SideIndicator
+$DirectoryComparisons = Compare-Object -ReferenceObject $ReferenceDirectories -DifferenceObject $CurrentDirectories -IncludeEqual -Property Name -PassThru | select Name, @{n="FullName";e={$_.fullname}}, SideIndicator
 ForEach($DirectoryCompare in $DirectoryComparisons) 
 {
   $FullDirName = $DirectoryCompare.FullName
-  $RelativePath = GetRelativePath $OriginalDirectoryRoot $FullDirName
+  $RelativePath = GetRelativePath $ReferenceDirectoryRoot $FullDirName
   $RelativePath = RemoveDotSlashFromStart $RelativePath
   if ($DirectoryCompare.SideIndicator -eq "<=") 
   {
-    Write-ColorOutput $MissingFileOrDirectoryColor $(MissingDirectoryErrorString $RelativePath $ComparisonSideOriginal)
+    $global:DirectoriesTotalCounter++
+    $global:DirectoriesReferenceSideOnlyCounter++
+    Write-ColorOutput $MissingFileOrDirectoryColor $(MissingDirectoryErrorString $RelativePath $ComparisonSideReference)
   }
   elseif ($DirectoryCompare.SideIndicator -eq "=>") 
   {
+    $global:DirectoriesTotalCounter++
+    $global:DirectoriesCurrentSideOnlyCounter++
     $RelativePath = GetRelativePath $CurrentDirectoryRoot $FullDirName
     $RelativePath = RemoveDotSlashFromStart $RelativePath
     Write-ColorOutput $MissingFileOrDirectoryColor $(MissingDirectoryErrorString $RelativePath $ComparisonSideCurrent)
@@ -347,5 +424,7 @@ ForEach($DirectoryCompare in $DirectoryComparisons)
 	CompareDirectoryImages $FullDirName $RelativePath
   }
 }
+
+DoFinalCounterSummary
 
 #read-host “Press ENTER to continue...”
