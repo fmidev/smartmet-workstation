@@ -11,6 +11,7 @@
 #include "NFmiModelDataBlender.h"
 #include "NFmiQueryInfo.h"
 #include "CtrlViewDocumentInterface.h"
+#include "NFmiText.h"
 
 NFmiModelProducerIndexViewWCTR::NFmiModelProducerIndexViewWCTR(NFmiToolBox * theToolBox
 													 ,NFmiDrawingEnvironment * theDrawingEnvi
@@ -47,20 +48,23 @@ void NFmiModelProducerIndexViewWCTR::Update(void)
 
 void NFmiModelProducerIndexViewWCTR::Draw(NFmiToolBox * theGTB)
 {
-
-	itsProducerColorIndexViewRect = CalcStatusGridViewSize();
 	DrawBackground();
 
-	if(itsTimeView)
-		itsToolBox->Draw(itsTimeView);
+	DrawTimeView();
+	DrawStatusBoxView();
 	DrawHourValueView();
+	DrawBlendingArea();
+	DrawStartAndEndTimes();
+}
 
-
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
-	itsDrawingEnvironment->SetPenSize(NFmiPoint(1,1));
+void NFmiModelProducerIndexViewWCTR::DrawStatusBoxView()
+{
+	itsProducerColorIndexViewRect = CalcStatusGridViewSize();
+	itsDrawingEnvironment->SetFrameColor(NFmiColor(0, 0, 0));
+	itsDrawingEnvironment->SetPenSize(NFmiPoint(1, 1));
 	itsDrawingEnvironment->EnableFill();
-	itsDrawingEnvironment->SetFillColor(NFmiColor(0.9f,0.9f,0.9f));
-	NFmiColor color(1,0,0);
+	itsDrawingEnvironment->SetFillColor(NFmiColor(0.9f, 0.9f, 0.9f));
+	NFmiColor color(1, 0, 0);
 	NFmiTimeBag tmpTimeBag(MaximalCoverageTimeBag());
 
 	itsLoadedDataTimeDescriptor.Reset();
@@ -69,7 +73,7 @@ void NFmiModelProducerIndexViewWCTR::Draw(NFmiToolBox * theGTB)
 	NFmiMetTime time2(time1);
 	double bottom = itsProducerColorIndexViewRect.Bottom();
 	double top = itsProducerColorIndexViewRect.Top();
-	for( ; itsLoadedDataTimeDescriptor.Next(); )
+	for(; itsLoadedDataTimeDescriptor.Next(); )
 	{
 		time2 = itsLoadedDataTimeDescriptor.Time();
 		color = CheckStatusBoxColor(itsLoadedDataTimeDescriptor.Index());
@@ -81,8 +85,35 @@ void NFmiModelProducerIndexViewWCTR::Draw(NFmiToolBox * theGTB)
 		itsToolBox->Convert(&box);
 		time1 = time2;
 	}
+}
 
-	DrawBlendingArea();
+void NFmiModelProducerIndexViewWCTR::DrawTimeView()
+{
+	if(itsTimeView)
+		itsToolBox->Draw(itsTimeView);
+}
+
+// Piirret‰‰n k‰ytt‰j‰lle editoidun datan alku ja loppu ajat 
+// selvyyden vuoksi ikkunan yl‰reunaan.
+void NFmiModelProducerIndexViewWCTR::DrawStartAndEndTimes()
+{
+	NFmiString timeFormat = "Www MM.DD HH:mm [utc]";
+	NFmiDrawingEnvironment envi;
+	envi.SetFontSize(NFmiPoint(18, 18));
+	envi.SetFontType(kArial);
+	auto oldTextAlingment = itsToolBox->GetTextAlignment();
+	itsToolBox->SetTextAlignment(kTopLeft);
+	const auto& startTime = itsLoadedDataTimeDescriptor.FirstTime();
+	auto startTimeStr = NFmiString("Start time: ") + startTime.ToStr(timeFormat, kEnglish);
+	NFmiText startTimeText(itsRect.TopLeft(), startTimeStr, false, nullptr, &envi);
+	itsToolBox->Convert(&startTimeText);
+	itsToolBox->SetTextAlignment(kTopRight);
+	const auto& endTime = itsLoadedDataTimeDescriptor.LastTime();
+	auto endTimeStr = NFmiString("End time: ") + endTime.ToStr(timeFormat, kEnglish);
+	NFmiText endTimeText(itsRect.TopRight(), endTimeStr, false, nullptr, &envi);
+	itsToolBox->Convert(&endTimeText);
+
+	itsToolBox->SetTextAlignment(oldTextAlingment);
 }
 
 // Piierret‰‰n modelIndex v‰ri tauluun alue, mill‰ aikav‰lill‰
@@ -234,6 +265,7 @@ void NFmiModelProducerIndexViewWCTR::SetDataFromDialog( std::vector<boost::share
 	itsProducerColorTable = theProducerColorTable;
 	UpdateHelperData();
 	CreateTimeAxis();
+	itsProducerColorIndexViewRect = CalcStatusGridViewSize();
 	CreateHourValueAxis();
 }
 
@@ -304,8 +336,8 @@ NFmiPoint NFmiModelProducerIndexViewWCTR::CalcTimeIndexRange(NFmiTimeDescriptor&
 NFmiRect NFmiModelProducerIndexViewWCTR::CalcTimeAxisRect(void)
 {
 	NFmiRect rect(GetFrame());
-	double bottom = rect.Bottom() - rect.Height()/25.;
-	double top = rect.Bottom() - rect.Height()/1.9;
+	double bottom = rect.Bottom() - (rect.Height() / 90.);
+	double top = rect.Bottom() - rect.Height()/2.1;
 	double left = rect.Left() + rect.Width()/50.;
 	double right = rect.Right() - rect.Width()/50.;
 	rect = NFmiRect(left, top, right, bottom);
@@ -315,8 +347,8 @@ NFmiRect NFmiModelProducerIndexViewWCTR::CalcTimeAxisRect(void)
 NFmiRect NFmiModelProducerIndexViewWCTR::CalcHourValueAxisRect(void)
 {
 	NFmiRect rect(GetFrame());
-	double top = rect.Top() - rect.Height()/20.;
-	double bottom = top + rect.Height()/4.;
+	double bottom = itsProducerColorIndexViewRect.Top() - (rect.Height() / 25.);
+	double top = bottom - rect.Height()/6.;
 	double left = rect.Left() + rect.Width()/40.;
 	double right = rect.Right() - rect.Width()/40.;
 	rect = NFmiRect(left, top, right, bottom);
@@ -326,8 +358,8 @@ NFmiRect NFmiModelProducerIndexViewWCTR::CalcHourValueAxisRect(void)
 NFmiRect NFmiModelProducerIndexViewWCTR::CalcStatusGridViewSize(void)
 {
 	NFmiRect rect(GetFrame());
-	double top = rect.Top() + rect.Height()/4.0;
-	double bottom = rect.Bottom() - rect.Height()/1.75;
+	double bottom = itsTimeAxisRect.Top() - (rect.Height() / 45.);
+	double top = bottom - rect.Height()/5.5;
 	double left = rect.Left() + rect.Width()/80.;
 	double right = rect.Right() - rect.Width()/80.;
 	rect = NFmiRect(left, top, right, bottom);
@@ -364,7 +396,7 @@ void NFmiModelProducerIndexViewWCTR::CreateTimeAxis(void)
 
 	NFmiPoint fontSize(18, 18);
 
-	itsTimeView = new NFmiAdjustedTimeScaleView(0, CalcTimeAxisRect()
+	itsTimeView = new NFmiAdjustedTimeScaleView(0, itsTimeAxisRect
 									,itsToolBox
 									,itsTimeAxis
 									,&theSelectedScale
@@ -414,8 +446,7 @@ bool NFmiModelProducerIndexViewWCTR::IsProducerIndexInTimeVectorFilled(void)
 double NFmiModelProducerIndexViewWCTR::Time2Value(const NFmiMetTime& theTime)
 {
 	double value = ((NFmiTimeScale*)itsTimeAxis->Scale())->RelTimeLocation(theTime);
-	NFmiRect rect(CalcTimeAxisRect());
-	double finalValue = rect.Left() + value * rect.Width();
+	double finalValue = itsTimeAxisRect.Left() + value * itsTimeAxisRect.Width();
 	return finalValue;
 }
 
