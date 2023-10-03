@@ -237,7 +237,7 @@ void IsolineVizualizationData::calculateNonBlendingColors()
 std::pair<int, NFmiColor> IsolineVizualizationData::getBlendedColorValues(float limitValue)
 {
 	// 1. Haetaan limitValue:ta lähimmän classLimitin elementin indeksi.
-	auto closestValueIndex = ::getClosestValueIndex(limitValue, originalClassLimits_);
+	auto closestValueIndex = CtrlViewUtils::GetClosestValueIndex(limitValue, originalClassLimits_);
 	auto closestClassLimitValue = originalClassLimits_[closestValueIndex];
 	if(closestValueIndex == 0 && limitValue <= closestClassLimitValue)
 		return std::make_pair(originalColorIndexies_[0], originalColors_[0]);

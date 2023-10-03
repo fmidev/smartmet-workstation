@@ -732,8 +732,8 @@ const NFmiColor& ColorContouringData::getValueRangeColor(float value1, float val
 	if(finalClassLimits_.empty())
 		return g_DefaultValueRangeColor;
 
-	auto index1 = ::getClosestValueIndex(value1, finalClassLimits_);
-	auto index2 = ::getClosestValueIndex(value2, finalClassLimits_);
+	auto index1 = CtrlViewUtils::GetClosestValueIndex(value1, finalClassLimits_);
+	auto index2 = CtrlViewUtils::GetClosestValueIndex(value2, finalClassLimits_);
 	if(index1 == 0 && index2 == 0)
 		return finalColors_.front();
 	auto lastIndexValue = finalClassLimits_.size() - 1;

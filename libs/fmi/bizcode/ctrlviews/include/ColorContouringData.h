@@ -9,41 +9,6 @@
 
 class NFmiDrawParam;
 
-// Haetaan sortatusta container:ista value:ta lähimmän arvon elementin iteraattori.
-// Koodi haettu: https://stackoverflow.com/questions/698520/search-for-nearest-value-in-an-array-of-doubles-in-c
-template <typename BidirectionalIterator, typename T>
-BidirectionalIterator getClosestValue(BidirectionalIterator first,
-    BidirectionalIterator last,
-    const T& value)
-{
-    BidirectionalIterator before = std::lower_bound(first, last, value);
-
-    if(before == first) return first;
-    if(before == last)  return --last; // iterator must be bidirectional
-
-    BidirectionalIterator after = before;
-    --before;
-
-    return (*after - value) < (value - *before) ? after : before;
-}
-
-// Haetaan sortatusta container:ista value:ta lähimmän arvon elementin indeksi.
-// Koodi haettu: https://stackoverflow.com/questions/698520/search-for-nearest-value-in-an-array-of-doubles-in-c
-template <typename BidirectionalIterator, typename T>
-std::size_t getClosestIndex(BidirectionalIterator first,
-    BidirectionalIterator last,
-    const T& value)
-{
-    return std::distance(first, getClosestValue(first, last, value));
-}
-
-template <typename Container>
-size_t getClosestValueIndex(float value, const Container& container)
-{
-    return getClosestIndex(container.begin(), container.end(), value);
-}
-
-
 class ContouringJobData
 {
 public:
