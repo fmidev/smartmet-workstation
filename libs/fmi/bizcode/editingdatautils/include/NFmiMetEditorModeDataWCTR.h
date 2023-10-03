@@ -91,6 +91,7 @@ public:
    const NFmiTimeBag& MaximalCoverageTimeBag(void) const{return itsMaximalCoverageTimeBag;}
    bool InNormalModeStillInDataLoadDialog(void) {return fInNormalModeStillInDataLoadDialog;}
    void InNormalModeStillInDataLoadDialog(bool newValue) {fInNormalModeStillInDataLoadDialog = newValue;}
+   const std::vector<TimeSectionData>& TimeSections() const { return itsTimeSections; }
 
 
    /**
