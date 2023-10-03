@@ -220,8 +220,7 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Read(std::istream& is)
 // ******* NFmiMapViewDescTop -luokka *************************************
 // ************************************************************************
 
-const float NFmiMapViewDescTop::itsTimeBoxTextSizeFactorMinLimit = 0.5f;
-const float NFmiMapViewDescTop::itsTimeBoxTextSizeFactorMaxLimit = 2.5f;
+const std::vector<float> NFmiMapViewDescTop::itsTimeBoxTextSizeAllowedFactors{ 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f, 1.1f, 1.2f, 1.3f, 1.4f, 1.5f, 1.6f, 1.7f, 1.8f, 1.9f, 2.0f, 2.1f, 2.2f, 2.3f, 2.4f, 2.5f };
 const NFmiColor NFmiMapViewDescTop::TimeBoxFillColorDefault = NFmiColor(1, 1, 1, 0.4f);
 const FmiDirection NFmiMapViewDescTop::TimeBoxLocationDefault = kBottomLeft;
 const float NFmiMapViewDescTop::TimeBoxTextSizeFactorDefault = 1.f;
@@ -1612,21 +1611,7 @@ void NFmiMapViewDescTop::TimeBoxLocation(FmiDirection newLocation)
 
 void NFmiMapViewDescTop::TimeBoxTextSizeFactor(float newFactor) 
 {
-	if(newFactor < itsTimeBoxTextSizeFactorMinLimit)
-		newFactor = itsTimeBoxTextSizeFactorMinLimit;
-	if(newFactor > itsTimeBoxTextSizeFactorMaxLimit)
-		newFactor = itsTimeBoxTextSizeFactorMaxLimit;
-	itsTimeBoxTextSizeFactorVM = newFactor;
-}
-
-float NFmiMapViewDescTop::TimeBoxTextSizeFactorMinLimit()
-{
-	return itsTimeBoxTextSizeFactorMinLimit;
-}
-
-float NFmiMapViewDescTop::TimeBoxTextSizeFactorMaxLimit()
-{
-	return itsTimeBoxTextSizeFactorMaxLimit;
+	itsTimeBoxTextSizeFactorVM = CtrlViewUtils::GetClosestValueFromContainer(newFactor, itsTimeBoxTextSizeAllowedFactors);
 }
 
 void NFmiMapViewDescTop::SetTimeBoxFillColor(NFmiColor newColorNotAlpha)

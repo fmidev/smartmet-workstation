@@ -708,12 +708,52 @@ void InitLogFileCleaning()
     FileCleanerSystem().Add(info);
 }
 
+/*
+void LogWallclockVsStartTime_Debug(const NFmiMetTime& usedWallClockTime, const NFmiMetTime& usedCurrentTime, const NFmiMetTime& startTime)
+{
+	std::string logMessage = usedWallClockTime.ToStr("Wallclock: YYYY.MM.DD HH:mm ==> ", kEnglish);
+	logMessage += usedCurrentTime.ToStr("CurrentTime: YYYY.MM.DD HH:mm ==> ", kEnglish);
+	logMessage += startTime.ToStr("StartTime: YYYY.MM.DD HH:mm", kEnglish);
+	LogMessage(logMessage, CatLog::Severity::Debug, CatLog::Category::Operational, true);
+}
+
+NFmiMetTime CalcStartTime_Debug(const NFmiMetEditorModeDataWCTR::TimeSectionData& theStartSection, const NFmiMetTime& theCurrentTime)
+{
+	NFmiMetTime startTime(theCurrentTime);
+	startTime.SetTimeStep(theStartSection.itsStartTimeResolutionInMinutes);
+	if(startTime > theCurrentTime)
+		startTime.PreviousMetTime();
+	if(theStartSection.itsStartTimeResolutionInMinutes <= 60)
+	{
+		startTime.PreviousMetTime(); // laitetaan koko jutun (1. osion 1h aikaresoluutio-alue) aloitusaika aina niin, että se on yhden tunnin ennen currenttia aikaa
+	}
+	return startTime;
+}
+
+void LogStartTimesForDifferentMinutes_Debug(const NFmiMetEditorModeDataWCTR::TimeSectionData& theStartSection)
+{
+	NFmiMetTime usedWallClockTime;
+	usedWallClockTime.SetTimeStep(1);
+	for(; ; usedWallClockTime.NextMetTime())
+	{
+		NFmiMetTime usedCurrentTime(usedWallClockTime, 60);
+		NFmiMetTime startTime(CalcStartTime_Debug(theStartSection, usedCurrentTime));
+		LogWallclockVsStartTime_Debug(usedWallClockTime, usedCurrentTime, startTime);
+		if(usedWallClockTime.GetMin() == 59)
+			break;
+	}
+}
+*/
+
 void InitMetEditorModeDataWCTR()
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	NFmiMetEditorModeDataWCTR* metEdModeData = EditorModeDataWCTR();
-    if(metEdModeData && metEdModeData->EditorMode() != NFmiMetEditorModeDataWCTR::kNormalAutoLoad)
-        metEdModeData->UseNormalModeForAWhile(true);
+	if(metEdModeData && metEdModeData->EditorMode() != NFmiMetEditorModeDataWCTR::kNormalAutoLoad)
+	{
+		metEdModeData->UseNormalModeForAWhile(true);
+//		LogStartTimesForDifferentMinutes_Debug(metEdModeData->TimeSections().at(1));
+	}
 }
 
 void InitDataLoadingInfo()
@@ -4440,7 +4480,7 @@ void AddSetTextSizeFactorSubMenuForTimeBoxPopup(std::unique_ptr<NFmiMenuItemList
 	auto setTextSizeMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, finalSetLocationMenuString, NFmiDataIdent(), kFmiSetTimeBoxTextSizeFactor, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
 	auto setTextSizeSubMenuItemList = std::make_unique<NFmiMenuItemList>();
 
-	for(float textSizeFactor = NFmiMapViewDescTop::TimeBoxTextSizeFactorMinLimit(); textSizeFactor <= NFmiMapViewDescTop::TimeBoxTextSizeFactorMaxLimit(); textSizeFactor += 0.1f)
+	for(auto textSizeFactor : NFmiMapViewDescTop::TimeBoxTextSizeAllowedFactors())
 	{
 		AddSetTextSizeFactorToSubMenu(setTextSizeSubMenuItemList, theDescTopIndex, textSizeFactor);
 	}
