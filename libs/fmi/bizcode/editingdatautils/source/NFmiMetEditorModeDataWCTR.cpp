@@ -38,8 +38,13 @@ static int CalcTotalSuggestedTime(const std::vector<NFmiMetEditorModeDataWCTR::T
 	return totalSuggestedTime;
 }
 
-static NFmiMetTime CalcStartTime(const NFmiMetEditorModeDataWCTR::TimeSectionData &theStartSection, const NFmiMetTime &theCurrentTime)
+static NFmiMetTime CalcStartTime(const NFmiMetEditorModeDataWCTR::TimeSectionData &theStartSection, const NFmiMetTime &theCurrentTime, bool useCurrentAsStart)
 {
+	if(useCurrentAsStart)
+	{
+		return theCurrentTime;
+	}
+
 	NFmiMetTime startTime(theCurrentTime);
 	startTime.SetTimeStep(theStartSection.itsStartTimeResolutionInMinutes);
 	if(startTime > theCurrentTime)
@@ -157,23 +162,23 @@ const NFmiTimeDescriptor& NFmiMetEditorModeDataWCTR::TimeDescriptor(void)
 	return *itsTimeDescriptor;
 }
 
-const NFmiTimeDescriptor& NFmiMetEditorModeDataWCTR::TimeDescriptor(const NFmiMetTime &theCurrentTime, const NFmiMetTime &theOriginTime, bool fMakeUpdate)
+const NFmiTimeDescriptor& NFmiMetEditorModeDataWCTR::TimeDescriptor(const NFmiMetTime &theCurrentTime, const NFmiMetTime &theOriginTime, bool fMakeUpdate, bool useCurrentAsStart)
 {
 	if(fMakeUpdate)
 	{
 		if(itsEditorMode == kOperativeNormal)
-			CreateTimeBagSystem(theCurrentTime, theOriginTime);
+			CreateTimeBagSystem(theCurrentTime, theOriginTime, useCurrentAsStart);
 		else if(itsEditorMode == kOperativeWCTR)
-			CreateTimeListSystem(theCurrentTime, theOriginTime);
+			CreateTimeListSystem(theCurrentTime, theOriginTime, useCurrentAsStart);
 		itsRealDataLengthInHours = itsWantedDataLengthInHours; // t‰m‰ pit‰‰ korjata, jos real-arvoa tosiaan tarvitaan
 		MakeMaximalCoverageTimeBag();
 	}
 	return *itsTimeDescriptor;
 }
 
-bool NFmiMetEditorModeDataWCTR::CreateTimeListSystem(const NFmiMetTime &theCurrentTime, const NFmiMetTime &theOriginTime)
+bool NFmiMetEditorModeDataWCTR::CreateTimeListSystem(const NFmiMetTime &theCurrentTime, const NFmiMetTime &theOriginTime, bool useCurrentAsStart)
 {
-	std::vector<NFmiMetTime> borderTimes(CalcSectionBorderTimes(theCurrentTime));
+	std::vector<NFmiMetTime> borderTimes(CalcSectionBorderTimes(theCurrentTime, useCurrentAsStart));
 
 	if(borderTimes.size() > 1)
 	{
@@ -203,9 +208,9 @@ bool NFmiMetEditorModeDataWCTR::CreateTimeListSystem(const NFmiMetTime &theCurre
 }
 
 // timebag systeemiss‰ katsotaan vain 1. aikasectionia ja tehd‰‰n sen mukainen timebagi
-bool NFmiMetEditorModeDataWCTR::CreateTimeBagSystem(const NFmiMetTime &theCurrentTime, const NFmiMetTime &theOriginTime)
+bool NFmiMetEditorModeDataWCTR::CreateTimeBagSystem(const NFmiMetTime &theCurrentTime, const NFmiMetTime &theOriginTime, bool useCurrentAsStart)
 {
-	std::vector<NFmiMetTime> borderTimes(CalcSectionBorderTimes(theCurrentTime));
+	std::vector<NFmiMetTime> borderTimes(CalcSectionBorderTimes(theCurrentTime, useCurrentAsStart));
 	if(borderTimes.size() > 1)
 	{
 		NFmiTimeBag times(borderTimes[0], borderTimes[1], itsTimeSections[0].itsTimeResolutionInMinutes);
@@ -216,7 +221,7 @@ bool NFmiMetEditorModeDataWCTR::CreateTimeBagSystem(const NFmiMetTime &theCurren
 	return false;
 }
 
-std::vector<NFmiMetTime> NFmiMetEditorModeDataWCTR::CalcSectionBorderTimes(const NFmiMetTime &theCurrentTime)
+std::vector<NFmiMetTime> NFmiMetEditorModeDataWCTR::CalcSectionBorderTimes(const NFmiMetTime &theCurrentTime, bool useCurrentAsStart)
 {
 	std::vector<NFmiMetTime> borderTimes;
 	if(itsTimeSections.size() > 0)
@@ -224,7 +229,7 @@ std::vector<NFmiMetTime> NFmiMetEditorModeDataWCTR::CalcSectionBorderTimes(const
 		int totalSuggestedTime = CalcTotalSuggestedTime(itsTimeSections);
 		itsWantedDataLengthInHours = totalSuggestedTime;
 
-		NFmiMetTime startTime(CalcStartTime(itsTimeSections[0], theCurrentTime));
+		NFmiMetTime startTime(CalcStartTime(itsTimeSections[0], theCurrentTime, useCurrentAsStart));
 		NFmiMetTime endTime(CalcEndTime(itsTimeSections[itsTimeSections.size() - 1], theCurrentTime, totalSuggestedTime));
 
 		if(itsTimeSections.size() == 1 || itsEditorMode != kOperativeWCTR)

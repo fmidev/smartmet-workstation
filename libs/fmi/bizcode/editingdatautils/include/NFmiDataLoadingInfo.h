@@ -154,7 +154,7 @@ class NFmiDataLoadingInfo
 	int ForecastingLength(void) const;
 	const NFmiTimeBag& MaximalCoverageTimeBag(void) const;
 	const NFmiTimeDescriptor& LoadedTimeDescriptor(void) const;
-	const NFmiTimeDescriptor& UpdatedTimeDescriptor(void) const;
+	const NFmiTimeDescriptor& UpdatedTimeDescriptor(bool useCurrentAsStart) const;
 	int DataLengthInHours(void) {return itsDataLengthInHours;}
 	const NFmiMetTime& CaseStudyTime(void) const {return itsCaseStudyTime;}
 	void CaseStudyTime(const NFmiMetTime &newValue) {itsCaseStudyTime = newValue;}

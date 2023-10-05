@@ -280,7 +280,7 @@ void CFmiLoadDataDialog::UpdateCaseStudyStartTime(void)
             aTime.GetHour()); // jätetään tarkkuus tahallaan tunti tasolle
         itsDataLoadingInfo->CaseStudyTime(itsCaseStudyStartTime);
     }
-	itsDataLoadingInfo->UpdatedTimeDescriptor();
+	itsDataLoadingInfo->UpdatedTimeDescriptor(!UseNormalStartTime());
 	DoFullModelProducerIndexViewUpdate();
 	InvalidateBlendControl();
 }
@@ -330,7 +330,7 @@ void CFmiLoadDataDialog::InitializeModelBlenderControl(void)
     fUseModelBlender = modelDataBlender.Use();
 	itsModelBlendCtrlRect = CalcModelBlendingControlRect();
 	CalcModelBlendScaleRect();
-    modelDataBlender.InitWithNewTimes(itsDataLoadingInfo->UpdatedTimeDescriptor(), modelDataBlender.GetStartTimeHour(), modelDataBlender.GetEndTimeHour());
+    modelDataBlender.InitWithNewTimes(itsDataLoadingInfo->UpdatedTimeDescriptor(!UseNormalStartTime()), modelDataBlender.GetStartTimeHour(), modelDataBlender.GetEndTimeHour());
 	InitializeBlenderButtons();
 	itsModelProducerIndexView->SelectSecondProducerFromThisTimeOn(static_cast<int>(modelDataBlender.GetEndTimeIndex()));
 }
@@ -377,7 +377,7 @@ void CFmiLoadDataDialog::CreateModelProducerIndexView(void)
 	}
 }
 
-void CFmiLoadDataDialog::DoFullModelProducerIndexViewUpdate(void)
+void CFmiLoadDataDialog::DoFullModelProducerIndexViewUpdate()
 {
 	if(itsModelProducerIndexView)
 	{
@@ -391,7 +391,7 @@ void CFmiLoadDataDialog::DoFullModelProducerIndexViewUpdate(void)
 		itsSelectedProducerPriorityTable[2] = itsThirdProducer;
 
 		itsModelProducerIndexView->SetDataFromDialog(itsQueryInfoVector,
-													 itsDataLoadingInfo->UpdatedTimeDescriptor(),
+													 itsDataLoadingInfo->UpdatedTimeDescriptor(!UseNormalStartTime()),
 													 itsSelectedProducerPriorityTable,
 													 itsProducerColorTable,
 													 itsActiveProducerIndex);

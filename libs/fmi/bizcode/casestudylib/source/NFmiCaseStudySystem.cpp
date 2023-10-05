@@ -2633,7 +2633,7 @@ void NFmiCaseStudySystem::SetUpDataLoadinInfoForCaseStudy(NFmiDataLoadingInfo &t
 
 	theDataLoadingInfo.InitFileNameLists();
 	theDataLoadingInfo.CaseStudyTime(Time());
-	theDataLoadingInfo.UpdatedTimeDescriptor();
+	theDataLoadingInfo.UpdatedTimeDescriptor(false);
 }
 
 std::string NFmiCaseStudySystem::CaseStudyPath(void) const

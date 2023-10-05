@@ -9494,7 +9494,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         TrajectorySystem()->SetCaseStudyTimes(theToWallClockTime);
 
         itsDataLoadingInfoNormal.CaseStudyTime(theToWallClockTime);
-        itsDataLoadingInfoNormal.UpdatedTimeDescriptor();
+        itsDataLoadingInfoNormal.UpdatedTimeDescriptor(false);
     }
 
     void InitializeSatelImageCacheForCaseStudy()
