@@ -1,0 +1,24 @@
+{
+    "Beta-automation list" : [
+        {
+            "Enable" : true,
+            "Beta-automation path" : "marko\\automationtesting\\Ec_scand_surf_raw_data.BetaAutom",
+            "Beta-automation absolute path" : "D:\\SmartMet\\FMI Dropbox\\Marko Pietarinen\\Macros\\BetaProducts\\marko\\automationtesting\\Ec_scand_surf_raw_data.BetaAutom"
+        },
+        {
+            "Enable" : true,
+            "Beta-automation path" : "marko\\automationtesting\\Obs_scand_surf_raw_data.BetaAutom",
+            "Beta-automation absolute path" : "D:\\SmartMet\\FMI Dropbox\\Marko Pietarinen\\Macros\\BetaProducts\\marko\\automationtesting\\Obs_scand_surf_raw_data.BetaAutom"
+        },
+        {
+            "Enable" : true,
+            "Beta-automation path" : "marko\\automationtesting\\Ec_scand_surf_raw_data_zoomed.BetaAutom",
+            "Beta-automation absolute path" : "D:\\SmartMet\\FMI Dropbox\\Marko Pietarinen\\Macros\\BetaProducts\\marko\\automationtesting\\Ec_scand_surf_raw_data_zoomed.BetaAutom"
+        },
+        {
+            "Enable" : true,
+            "Beta-automation path" : "marko\\automationtesting\\Obs_euro_surf_raw_data_zoomed.BetaAutom",
+            "Beta-automation absolute path" : "D:\\SmartMet\\FMI Dropbox\\Marko Pietarinen\\Macros\\BetaProducts\\marko\\automationtesting\\Obs_euro_surf_raw_data_zoomed.BetaAutom"
+        }
+    ]
+}
