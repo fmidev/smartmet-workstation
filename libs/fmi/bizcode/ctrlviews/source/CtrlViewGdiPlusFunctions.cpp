@@ -582,7 +582,7 @@ namespace CtrlView
         DrawWrappedTextToRelativeLocation(theGdiPlusGraphics, theColor, theStartFontSizeInMM, wideStr, pixelsPerMM, theToolbox, theFontNameStr, theAlingment, layoutRectInPixels, theFontStyle);
     }
 
-    std::vector<int> gFontSizeLoopRowCount{ 1,1,1,2,2,3,3,3,3,3 };
+    std::vector<int> gFontSizeLoopRowCount{ 1,1,1,2,2,3};
 
     void DrawWrappedTextToRelativeLocation(Gdiplus::Graphics& theGdiPlusGraphics, const NFmiColor& theColor, double theStartFontSizeInMM, const std::wstring& theStr, double pixelsPerMM, NFmiToolBox* theToolbox, const std::wstring& theFontNameStr, FmiDirection theAlingment, const Gdiplus::RectF& layoutRectInPixels, Gdiplus::FontStyle theFontStyle)
     {
