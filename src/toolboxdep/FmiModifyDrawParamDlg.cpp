@@ -929,8 +929,6 @@ void CFmiModifyDrawParamDlg::IsHidden(void)
 void CFmiModifyDrawParamDlg::ParamAbbreviation(void)
 {
     itsParamAbbreviationStrU_ = CA2T(itsDrawParam->ParameterAbbreviation().c_str());
-    if(!IsMacroParamCase() && itsParamAbbreviationStrU_.GetLength() > 15) // jos ei macroParam tyyppiä (niiden nimiä ei voi editoida), leikataan nimen lyhennetta niin että se on maksimissaan 15 merkkiä
-		itsParamAbbreviationStrU_ = itsParamAbbreviationStrU_.Left(15);
 	return;
 }
 
