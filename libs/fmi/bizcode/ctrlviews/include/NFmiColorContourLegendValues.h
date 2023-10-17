@@ -45,10 +45,11 @@ private:
     bool isStationDataType(const boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& info);
     void FillColorContourValues(const boost::shared_ptr<NFmiDrawParam>& drawParam);
     void FillClassLimitTextsVector();
-    void FinalizeFillingValues();
+    void FinalizeFillingValues(float layerAlphaProcent);
     void RemoveTransparentColorsFromEdges();
     void RemoveConsecutiveTransparentColorsFromMiddle();
     bool hasEmptyValues();
+    void SetLayerAlphaForColors(float layerAlphaProcent);
 };
 
 

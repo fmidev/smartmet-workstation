@@ -79,11 +79,11 @@ void NFmiColorContourLegendValues::FillColorContourValues(const boost::shared_pt
     {
         classLimitValues_ = colorContouringData.finalClassLimits();
         classColors_ = colorContouringData.finalColors();
-        FinalizeFillingValues();
+        FinalizeFillingValues(drawParam->Alpha());
     }
 }
 
-void NFmiColorContourLegendValues::FinalizeFillingValues()
+void NFmiColorContourLegendValues::FinalizeFillingValues(float layerAlphaProcent)
 {
     if(hasEmptyValues())
         return;
@@ -96,11 +96,30 @@ void NFmiColorContourLegendValues::FinalizeFillingValues()
 
     RemoveTransparentColorsFromEdges();
     RemoveConsecutiveTransparentColorsFromMiddle();
+    SetLayerAlphaForColors(layerAlphaProcent);
     if(hasEmptyValues())
         return;
 
     FillClassLimitTextsVector();
     useLegend_ = true;
+}
+
+// Jos layerilla on alpha kerroin, laitetaan se tässä joka värille käyttöön
+// jotta legendaan piirrossa voidaan 'haalentaa' väreja alpha kertoimen avulla.
+void NFmiColorContourLegendValues::SetLayerAlphaForColors(float layerAlphaProcent)
+{
+    if(layerAlphaProcent < 100)
+    {
+        float usedAlpha = 1.f - (layerAlphaProcent / 100.f);
+        for(auto& color : classColors_)
+        {
+            // Läpinäkyvään väriin ei saa asettaa kuitenkaan layer-alphaa
+            if(!ToolMasterColorCube::IsColorFullyTransparent(color))
+            {
+                color.Alpha(usedAlpha);
+            }
+        }
+    }
 }
 
 bool NFmiColorContourLegendValues::hasEmptyValues()

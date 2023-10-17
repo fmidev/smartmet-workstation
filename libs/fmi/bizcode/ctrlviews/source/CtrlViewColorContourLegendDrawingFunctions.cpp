@@ -18,6 +18,7 @@ namespace
         int maxValueStringLengthInPixels = 0;
         int paddingLengthInPixels = 0;
         int usedFontSizeInPixels = 0;
+        int titleTextAreaHeightInPixels = 0;
         double usedFontSizeInPixelsReal = 0;
         double usedFontSizeInMM = 0;
         Gdiplus::Rect backgroundRectInPixels;
@@ -50,8 +51,11 @@ namespace
 
         // 1.3. Koko laatikon korkeus = N kpl laatikoiden korkeus
         int backgroundRectHeigthInPixels = static_cast<int>(colorContourLegendValues.classColors().size()) * legendDrawingMeasures.colorRectSizeInPixels.Y;
-        // Lis‰t‰‰n korkeuteen viel‰ padding ala ja yl‰reunaan ja otsikkorivin korkeus
-        backgroundRectHeigthInPixels += legendDrawingMeasures.colorRectSizeInPixels.Y + (2 * legendDrawingMeasures.paddingLengthInPixels);
+        // Lasketaan otsikko alueen korkeus (tilaa 1.6 riville teksti‰, 1.6, koska jos pit‰‰ menn‰ 2-3 riviseksi, t‰llˆin fontin kokoa pienennet‰‰n)
+        // factor x rivi korkeus + yl‰osan padding.
+        legendDrawingMeasures.titleTextAreaHeightInPixels = boost::math::iround(1.6 * legendDrawingMeasures.colorRectSizeInPixels.Y + legendDrawingMeasures.paddingLengthInPixels);
+        // Lis‰t‰‰n lopulliseen korkeuteen viel‰ otsikkoalueen korkeus ja padding alareunaan.
+        backgroundRectHeigthInPixels += legendDrawingMeasures.titleTextAreaHeightInPixels + legendDrawingMeasures.paddingLengthInPixels;
         // 1.4. Koko laatikon leveys = maksimi tekstin leveys + laatikon leveys
         int backgroundRectWidthInPixels = legendDrawingMeasures.maxValueStringLengthInPixels + legendDrawingMeasures.colorRectSizeInPixels.X;
         // Lis‰t‰‰n leveyteen viel‰ padding vasempaan ja oikeaan reunaan
@@ -100,13 +104,14 @@ namespace
             CtrlView::DrawTextToRelativeLocation(gdiPlusGraphics, textColor, legendDrawingMeasures.usedFontSizeInMM, classLimitText, relativeTextPosition, pixelsPerMM, toolbox, fontName, kRight, Gdiplus::FontStyleRegular);
         }
 
-        // Piirret‰‰n viel‰ otsikko
-        currentTextPosXInPixels = lastLegendBottomRightCornerInPixels.X + paddingInPixels;
-        startPositionAdjustFactor = 1.7f;
-        currentTextPosYInPixels -= boost::math::iround(heigthInPixels * startPositionAdjustFactor);
-        auto textLocationInPixels = Gdiplus::Point(currentTextPosXInPixels, currentTextPosYInPixels);
-        auto relativeTextPosition = CtrlView::GdiplusPoint2Relative(toolbox, textLocationInPixels);
-        CtrlView::DrawTextToRelativeLocation(gdiPlusGraphics, textColor, legendDrawingMeasures.usedFontSizeInMM, colorContourLegendValues.name(), relativeTextPosition, pixelsPerMM, toolbox, fontName, kLeft, Gdiplus::FontStyleRegular);
+        // Piirret‰‰n viel‰ otsikko alkaen vasemmasta yl‰reunasta, lasketaan hieman ekstra tilaa
+        // pystysuunnassa, koska uusi "parametrin nimi"/title piirtokoodi pyrkii saamaan pidemm‰tkin tekstit 
+        // n‰kyville pienent‰m‰ll‰ fonttia ja k‰ytt‰m‰ll‰ wrap optiota ja useampia riveja tarvittaessa.
+        const auto& bgRect = legendDrawingMeasures.backgroundRectInPixels;
+        Gdiplus::PointF topLeftCornerInPixels((float)bgRect.GetLeft(), (float)bgRect.GetTop());
+        Gdiplus::SizeF layoutRectSizeInPixels((float)(bgRect.GetRight() - bgRect.GetLeft()), (float)legendDrawingMeasures.titleTextAreaHeightInPixels);
+        Gdiplus::RectF layoutRectInPixels(topLeftCornerInPixels, layoutRectSizeInPixels);
+        CtrlView::DrawWrappedTextToRelativeLocation(gdiPlusGraphics, textColor, legendDrawingMeasures.usedFontSizeInMM, colorContourLegendValues.name(), pixelsPerMM, toolbox, fontName, kTopLeft, layoutRectInPixels, Gdiplus::FontStyleRegular);
         gdiPlusGraphics.ResetClip();
     }
 
@@ -138,7 +143,7 @@ namespace
             auto colorRectInPixels = Gdiplus::Rect(rectLeftInPixels, currentRectTopInPixels, widthInPixels, heigthInPixels);
             const auto& color = classColors[index];
 
-            if(!ToolMasterColorCube::IsColorFullyOpaque(color))
+            if(ToolMasterColorCube::IsColorFullyTransparent(color))
             {
                 if(colorContourLegendSettings.drawTransparentRects())
                     DrawNormalColorContourLegendClassColorRect(colorContourLegendSettings.invsibleColorRectSettings(), colorRectInPixels, color, true, graphicalInfo, gdiPlusGraphics);
