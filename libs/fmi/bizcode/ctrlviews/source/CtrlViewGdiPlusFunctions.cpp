@@ -576,6 +576,42 @@ namespace CtrlView
         theGdiPlusGraphics.DrawString(theStr.c_str(), static_cast<INT>(theStr.size()), aFont.get(), aPlace, &stringFormat, &aBrush);
     }
 
+    void DrawWrappedTextToRelativeLocation(Gdiplus::Graphics& theGdiPlusGraphics, const NFmiColor& theColor, double theStartFontSizeInMM, const std::string& theStr, double pixelsPerMM, NFmiToolBox* theToolbox, const std::wstring& theFontNameStr, FmiDirection theAlingment, const Gdiplus::RectF& layoutRectInPixels, Gdiplus::FontStyle theFontStyle)
+    {
+        std::wstring wideStr = StringToWString(theStr);
+        DrawWrappedTextToRelativeLocation(theGdiPlusGraphics, theColor, theStartFontSizeInMM, wideStr, pixelsPerMM, theToolbox, theFontNameStr, theAlingment, layoutRectInPixels, theFontStyle);
+    }
+
+    std::vector<int> gFontSizeLoopRowCount{ 1,1,1,2,2,3,3,3,3,3 };
+
+    void DrawWrappedTextToRelativeLocation(Gdiplus::Graphics& theGdiPlusGraphics, const NFmiColor& theColor, double theStartFontSizeInMM, const std::wstring& theStr, double pixelsPerMM, NFmiToolBox* theToolbox, const std::wstring& theFontNameStr, FmiDirection theAlingment, const Gdiplus::RectF& layoutRectInPixels, Gdiplus::FontStyle theFontStyle)
+    {
+        Gdiplus::Color usedColor(NFmiColor2GdiplusColor(theColor));
+        Gdiplus::SolidBrush aBrush(usedColor);
+        Gdiplus::StringFormat stringFormat; // Perus asetuksilla tulee wrap käyttöön
+        SetGdiplusAlignment(theAlingment, stringFormat);
+        // Pitää etsiä sopiva fonttikoko jotenkin iteroimalla ja pienentämällä fontin kokoa tarvittaessa
+        auto fontSizeStep = theStartFontSizeInMM / 10.f;
+        auto usedFontSizeInMM = theStartFontSizeInMM;
+        auto layoutRectWidth = layoutRectInPixels.GetRight() - layoutRectInPixels.GetLeft();
+        for(int counter = 0; counter < gFontSizeLoopRowCount.size(); counter++)
+        {
+            bool lastIteration = (counter == gFontSizeLoopRowCount.size() - 1);
+            int targetRowCount = gFontSizeLoopRowCount[counter];
+            auto aFont = CreateFontPtr(usedFontSizeInMM, pixelsPerMM, theFontNameStr, theFontStyle);
+
+            Gdiplus::RectF boundingBox;
+            theGdiPlusGraphics.MeasureString(theStr.c_str(), INT(theStr.size()), aFont.get(), Gdiplus::PointF(0, 0), &stringFormat, &boundingBox);
+            auto boundingBoxWidth = boundingBox.GetRight() - boundingBox.GetLeft();
+            if(lastIteration || boundingBoxWidth <= targetRowCount * layoutRectWidth * 0.925f)
+            {
+                theGdiPlusGraphics.DrawString(theStr.c_str(), static_cast<INT>(theStr.size()), aFont.get(), layoutRectInPixels, &stringFormat, &aBrush);
+                break;
+            }
+            usedFontSizeInMM -= fontSizeStep;
+        }
+    }
+
     void DrawSimpleText(Gdiplus::Graphics& theGdiPlusGraphics, const NFmiColor& theColor, float theFontSizeInPixels, const std::string& theStr, const NFmiPoint& theAbsPlace, const std::wstring& theFontNameStr, FmiDirection theAlingment, Gdiplus::FontStyle theFontStyle, const NFmiColor* theBkColor)
     {
         Gdiplus::Color usedColor(NFmiColor2GdiplusColor(theColor));
