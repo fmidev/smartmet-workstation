@@ -21,6 +21,7 @@ namespace ToolMasterColorCube
     NFmiColor ColorIndexToRgb(int theColorIndex);
     NFmiColor ColorToActualCubeColor(const NFmiColor& color);
     bool IsColorFullyOpaque(const NFmiColor& color);
+    bool IsColorFullyTransparent(const NFmiColor& color);
 #else
     // Here are dymmy versions of functions with dummy definitions, if Uniras ToolMaster isn't supported (must be inline because VC++ linker...)
     inline Matrix3D<std::pair<int, COLORREF>>* UsedColorsCube()
