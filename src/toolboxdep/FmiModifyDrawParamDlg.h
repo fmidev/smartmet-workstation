@@ -330,6 +330,7 @@ private:
 	CString itsPossibleColorParameterStr;
 	bool fPossibleColorParameterOk = false;
 	CPPToolTip m_tooltip;
+	BOOL fFlipArrowSymbol;
 
 public:
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
