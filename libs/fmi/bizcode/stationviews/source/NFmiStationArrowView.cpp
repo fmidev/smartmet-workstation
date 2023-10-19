@@ -58,14 +58,16 @@ float NFmiStationArrowView::ViewFloatValue(bool doTooltipValue)
 			NFmiAngle ang(itsArea->TrueNorthAzimuth(CurrentLatLon()));
 			angle += static_cast<float>(ang.Value());
 			FmiParameterName parId = static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent());
-			// Muutin koodin niin että kaikkia suuntanuolella piirrettävien parametrien suunta käännetään se 180 astetta.
-			// Turha yrittää erotella parametreja tässä tapauksessa ja esim. macroParamien kanssa kun lasketaan
-			// omia tuulensuuntia ja visualisoidaan ne nuolilla, sitä ei saa millään toimimaan kunnolla, vaikka 
-			// lisäisi tulokseen 180 astetta tms, koska tooltip-arvot olisivat sitten taas väärin.
-//			if(parId == kFmiWindDirection || parId == kFmiWaveDirection || parId == kFmiWaveDirectionBandB || parId == kFmiWaveDirectionBandC || parId == kFmiWaveDirectionSwell0 || parId == kFmiWaveDirectionSwell1 || parId == kFmiWaveDirectionSwell2)
+			// Tietyt parametrit pitää kääntää 180 astetta ja tietyt ei:
+			// Käännettäviin kuuluu tuulen suunta ja erilaiset aallon suunnat.
+			bool flipArrowAngle = (parId == kFmiWindDirection || parId == kFmiWaveDirection || parId == kFmiWaveDirectionBandB || parId == kFmiWaveDirectionBandC || parId == kFmiWaveDirectionSwell0 || parId == kFmiWaveDirectionSwell1 || parId == kFmiWaveDirectionSwell2);
+			if(itsDrawParam->FlipArrowSymbol())
 			{
-				// Tuulensuunta kuvaa siis aina mistä tullaan, eikä mihin mennään..., 
-				// aaltojen suunta halutaan myös tuulen suuntaiseksi
+				flipArrowAngle = !flipArrowAngle;
+			}
+
+			if(flipArrowAngle)
+			{
 				angle += 180;
 			}
 		}
