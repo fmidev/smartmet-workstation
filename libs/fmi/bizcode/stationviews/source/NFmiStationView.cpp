@@ -1848,11 +1848,14 @@ const float g_MacroParamValueWasNotInCache = -987654321.123456789f;
 
 float NFmiStationView::GetMacroParamTooltipValueFromCache(const NFmiExtraMacroParamData& extraMacroParamData)
 {
-    NFmiPoint latlon = itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
-    NFmiMetTime usedTime = itsCtrlViewDocumentInterface->ToolTipTime();
-    NFmiMacroParamLayerCacheDataType macroParamLayerCacheDataType;
-    auto realRowIndex = CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
-	if(itsCtrlViewDocumentInterface->MacroParamDataCache().getCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, usedTime, itsDrawParam->InitFileName(), macroParamLayerCacheDataType))
+	return GetMacroParamValueFromCache(extraMacroParamData, itsCtrlViewDocumentInterface->ToolTipLatLonPoint(), itsCtrlViewDocumentInterface->ToolTipTime());
+}
+
+float NFmiStationView::GetMacroParamValueFromCache(const NFmiExtraMacroParamData& extraMacroParamData, const NFmiPoint& latlon, const NFmiMetTime& aTime)
+{
+	NFmiMacroParamLayerCacheDataType macroParamLayerCacheDataType;
+	auto realRowIndex = CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
+	if(itsCtrlViewDocumentInterface->MacroParamDataCache().getCache(itsMapViewDescTopIndex, realRowIndex, itsViewRowLayerNumber, aTime, itsDrawParam->InitFileName(), macroParamLayerCacheDataType))
 	{
 		const auto& dataMatrix = macroParamLayerCacheDataType.getDataMatrix();
 		NFmiGrid grid = itsMacroParamCalculationGrid ? *itsMacroParamCalculationGrid :
@@ -1881,7 +1884,7 @@ float NFmiStationView::GetMacroParamTooltipValueFromCache(const NFmiExtraMacroPa
 		}
 	}
 
-    return g_MacroParamValueWasNotInCache;
+	return g_MacroParamValueWasNotInCache;
 }
 
 // Pelkän tooltipin lasku macroParamista.
@@ -3139,6 +3142,7 @@ void NFmiStationView::DrawControlPointData(void)
 		boost::shared_ptr<NFmiEditorControlPointManager> CPMan = itsCtrlViewDocumentInterface->CPManager();
 		if(CPMan && CPMan->Time(itsTime) && CPMan->Param(itsDrawParam->Param()))
 		{
+			bool macroParamCase = itsDrawParam->IsMacroParamCase(true);
 			info->Time(itsTime); // pitää asettaa aika kohdalleen
 			// lasketaan fontti koko
 			int pixels = 1 + 2*(itsToolBox->HY(sqrt(itsArea->Width() * itsArea->Height()))/55);
@@ -3167,6 +3171,16 @@ void NFmiStationView::DrawControlPointData(void)
 
 				float changeValue = static_cast<float>(CPMan->ChangeValue());
 				float actualValue = info->InterpolatedValue(latLonPoint);
+				if(macroParamCase)
+				{
+					NFmiExtraMacroParamData extraMPData;
+					auto macroParamValue = GetMacroParamValueFromCache(extraMPData, latLonPoint, itsTime);
+					if(macroParamValue == g_MacroParamValueWasNotInCache)
+					{
+						macroParamValue = kFloatMissing;
+					}
+					actualValue = macroParamValue;
+				}
 				float modifiedValue = (actualValue != kFloatMissing) ? (changeValue + actualValue) : kFloatMissing;
 				NFmiValueString str(changeValue, "%0.1f");
 				NFmiValueString modifiedStr(modifiedValue, "%0.1f");

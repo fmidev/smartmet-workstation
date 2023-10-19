@@ -232,6 +232,7 @@ protected:
    std::string GetMacroParamMultiParamText(float multiParamValue1, const std::string & multiParamValue1Str, const NFmiExtraMacroParamData& extraMacroParamData);
    float GetMultiParamValue(const MultiParamData& multiParam);
    float GetMacroParamTooltipValueFromCache(const NFmiExtraMacroParamData& extraMacroParamData);
+   float GetMacroParamValueFromCache(const NFmiExtraMacroParamData& extraMacroParamData, const NFmiPoint &latlon, const NFmiMetTime &aTime);
    std::string MakeMacroParamTotalTooltipString(boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const std::string &paramName);
    std::string MakeMacroParamErrorTooltipText(const std::string& macroParamErrorMessage);
    std::string MakeMacroParamDescriptionTooltipText(const NFmiExtraMacroParamData& extraMacroParamData);
