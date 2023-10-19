@@ -487,7 +487,8 @@ NFmiDrawParam::NFmiDrawParam(const NFmiDrawParam& other)
       itsFixedTextSymbolDrawLength(other.itsFixedTextSymbolDrawLength),
       itsSymbolDrawDensityX(other.itsSymbolDrawDensityX),
       itsSymbolDrawDensityY(other.itsSymbolDrawDensityY),
-      itsPossibleColorValueParameter(other.itsPossibleColorValueParameter)
+      itsPossibleColorValueParameter(other.itsPossibleColorValueParameter),
+      fFlipArrowSymbol(other.fFlipArrowSymbol)
 {
   Alpha(itsAlpha);  // varmistus että pysytään rajoissa
   itsPossibleViewTypeList[0] = NFmiMetEditorTypes::View::kFmiTextView;
@@ -701,6 +702,7 @@ void NFmiDrawParam::Init(const NFmiDrawParam* theDrawParam, bool fInitOnlyDrawin
     SymbolDrawDensityX(theDrawParam->itsSymbolDrawDensityX);
     SymbolDrawDensityY(theDrawParam->itsSymbolDrawDensityY);
     itsPossibleColorValueParameter = theDrawParam->itsPossibleColorValueParameter;
+    fFlipArrowSymbol = theDrawParam->fFlipArrowSymbol;
   }
   return;
 }
@@ -1114,6 +1116,8 @@ std::ostream& NFmiDrawParam::Write(std::ostream& file) const
     extraData.Add(itsSymbolDrawDensityX);
     // itsSymbolDrawDensityY arvosta tehdään 14. uusi double-extra-parametri
     extraData.Add(itsSymbolDrawDensityY);
+    // fFlipArrowSymbol arvosta tehdään 15. uusi double-extra-parametri
+    extraData.Add(static_cast<double>(fFlipArrowSymbol));
 
     // modelRunIndex on 1. uusista string-extra-parametreista
     extraData.Add(MetTime2String(itsModelOriginTime));
@@ -1537,6 +1541,12 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
         if (extraData.itsDoubleValues.size() >= 14)
         {
           SymbolDrawDensityY(extraData.itsDoubleValues[13]);
+        }
+
+        fFlipArrowSymbol = false;
+        if (extraData.itsDoubleValues.size() >= 15)
+        {
+          fFlipArrowSymbol = extraData.itsDoubleValues[14] != 0;
         }
 
         itsModelOriginTime = NFmiMetTime::gMissingTime;  // tämä on oletus arvo eli ei ole käytössä

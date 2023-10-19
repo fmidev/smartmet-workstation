@@ -722,6 +722,9 @@ class NFmiDrawParam
   const std::string& PossibleColorValueParameter() const { return itsPossibleColorValueParameter; }
   void PossibleColorValueParameter(const std::string& newValue);
   bool IsPossibleColorValueParameterValid() const;
+  bool FlipArrowSymbol() const { return fFlipArrowSymbol; }
+  void FlipArrowSymbol(bool newState) { fFlipArrowSymbol = newState; }
+
 
   static std::string MetTime2String(const NFmiMetTime& theTime);
   static NFmiMetTime String2MetTime(const std::string& theStr);
@@ -989,6 +992,8 @@ class NFmiDrawParam
   // 2) (NOT IMPLEMENTED YET) T_925 tai par4_925, jolloin väritys haetaan saman tuottajan halutulta 925 hPa leveliltä lämpötila parametrista
   // 3) (NOT IMPLEMENTED YET) T_ec tai T_ec_925, jolloin väritys haetaan Ecmwf datan pinnasta tai 925 hPa tasosta
   std::string itsPossibleColorValueParameter;
+  // Joskus pitää saada nuoli symboli käännettyä 180 astetta.
+  bool fFlipArrowSymbol = false;
 };
 //@{ \name Globaalit NFmiDrawParam-luokan uudelleenohjaus-operaatiot
 inline std::ostream& operator<<(std::ostream& os, const NFmiDrawParam& item)
