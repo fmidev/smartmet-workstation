@@ -1,7 +1,7 @@
 #include "NFmiTempDataGenerator.h"
 #include "NFmiQueryData.h"
 #include "NFmiTEMPCode.h"
-#include "NFmiSoundingDataOpt1.h"
+#include "NFmiSoundingData.h"
 #include "NFmiAviationStationInfoSystem.h"
 #include "NFmiTimeList.h"
 #include "NFmiFastQueryInfo.h"
@@ -319,11 +319,11 @@ namespace
             return nearestWmoStationPair.second;
     }
 
-    std::unique_ptr<NFmiSoundingDataOpt1> CreateSoundingDataFromLevels(const std::vector<SoundingLevelValues>& soundingLevelValuesVector, NFmiAviationStationInfoSystem& tempStations)
+    std::unique_ptr<NFmiSoundingData> CreateSoundingDataFromLevels(const std::vector<SoundingLevelValues>& soundingLevelValuesVector, NFmiAviationStationInfoSystem& tempStations)
     {
         if(!soundingLevelValuesVector.empty())
         {
-            auto soundingDataPtr = std::make_unique<NFmiSoundingDataOpt1>();
+            auto soundingDataPtr = std::make_unique<NFmiSoundingData>();
             soundingDataPtr->Time(::DeduceSoundingDataTime(soundingLevelValuesVector));
             soundingDataPtr->Location(::FindNearestSoundingLocation(::GetLowestLevelLatlon(soundingLevelValuesVector), tempStations));
             auto& P_values = soundingDataPtr->GetParamData(kFmiPressure);
@@ -354,7 +354,7 @@ namespace
         return nullptr;
     }
 
-    std::unique_ptr<NFmiSoundingDataOpt1> GenerateSingleSoundingData(std::istream &input, NFmiAviationStationInfoSystem& tempStations)
+    std::unique_ptr<NFmiSoundingData> GenerateSingleSoundingData(std::istream &input, NFmiAviationStationInfoSystem& tempStations)
     {
         auto parameterLineStr = ::GetFirstNoneEmptyLine(input);
         if(!parameterLineStr.empty())
@@ -397,7 +397,7 @@ namespace
         return NFmiParamDescriptor(params);
     }
 
-    NFmiVPlaceDescriptor MakeVPlaceDescriptor(const std::list<std::unique_ptr<NFmiSoundingDataOpt1>>& soundingDataList)
+    NFmiVPlaceDescriptor MakeVPlaceDescriptor(const std::list<std::unique_ptr<NFmiSoundingData>>& soundingDataList)
     {
         float maxLevelSize = 0;
         for(const auto &sounding : soundingDataList)
@@ -431,7 +431,7 @@ namespace
         std::set<NFmiLocation> locationSet;
     };
 
-    NFmiTimeDescriptor MakeTimeDescriptor(const std::list<std::unique_ptr<NFmiSoundingDataOpt1>>& soundingDataList)
+    NFmiTimeDescriptor MakeTimeDescriptor(const std::list<std::unique_ptr<NFmiSoundingData>>& soundingDataList)
     {
         NFmiMetTime originTime(60);
         auto timeListCollector = std::for_each(soundingDataList.begin(), soundingDataList.end(), TimeListCollector());
@@ -445,7 +445,7 @@ namespace
         return NFmiTimeDescriptor(originTime, timeList);
     }
 
-    NFmiHPlaceDescriptor MakeHPlaceDescriptor(const std::list<std::unique_ptr<NFmiSoundingDataOpt1>>& soundingDataList)
+    NFmiHPlaceDescriptor MakeHPlaceDescriptor(const std::list<std::unique_ptr<NFmiSoundingData>>& soundingDataList)
     {
         auto locationCollector = std::for_each(soundingDataList.begin(), soundingDataList.end(), LocationCollector());
         NFmiLocationBag locationBag;
@@ -456,7 +456,7 @@ namespace
         return NFmiHPlaceDescriptor(locationBag);
     }
 
-    void FillSoundingData(NFmiQueryData& qdata, const std::list<std::unique_ptr<NFmiSoundingDataOpt1>>& soundingDataList)
+    void FillSoundingData(NFmiQueryData& qdata, const std::list<std::unique_ptr<NFmiSoundingData>>& soundingDataList)
     {
         NFmiFastQueryInfo fastInfo(&qdata);
         for(const auto& soundingDataPtr : soundingDataList)
@@ -498,7 +498,7 @@ namespace
         }
     }
 
-    std::unique_ptr<NFmiQueryData> CreateQDataFromSoundings(const std::list<std::unique_ptr<NFmiSoundingDataOpt1>>& soundingDataList, const NFmiProducer& wantedProducer)
+    std::unique_ptr<NFmiQueryData> CreateQDataFromSoundings(const std::list<std::unique_ptr<NFmiSoundingData>>& soundingDataList, const NFmiProducer& wantedProducer)
     {
         auto paramDescriptor = ::MakeParamDescriptor(wantedProducer);
         auto vPlaceDescriptor = ::MakeVPlaceDescriptor(soundingDataList);
@@ -575,7 +575,7 @@ namespace
         bool roundTimesToNearestSynopticTimes)
     {
         std::stringstream input(possibleCsvStr);
-        std::list<std::unique_ptr<NFmiSoundingDataOpt1>> soundingDataList;
+        std::list<std::unique_ptr<NFmiSoundingData>> soundingDataList;
         do
         {
             auto soundingDataPtr = ::GenerateSingleSoundingData(input, tempStations);

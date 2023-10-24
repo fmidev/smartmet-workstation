@@ -1,13 +1,13 @@
 // ======================================================================
 /*!
- * \file NFmiSoundingDataOpt1.cpp
+ * \file NFmiSoundingData.cpp
  *
  * Apuluokka laskemaan ja tutkimaan luotaus dataa. Osaa täyttää itsensä
  * mm. mallipinta QueryDatasta (infosta).
  */
 // ======================================================================
 
-#include "NFmiSoundingDataOpt1.h"
+#include "NFmiSoundingData.h"
 #include "NFmiSoundingFunctions.h"
 #include <newbase/NFmiAngle.h>
 #include <newbase/NFmiDataModifierAvg.h>
@@ -41,13 +41,13 @@ static void FillAllDataContainersWithMissingValuesIfNeeded(
 }
 
 
-bool NFmiSoundingDataOpt1::GroundLevelValue::HasAnyValues() const
+bool NFmiSoundingData::GroundLevelValue::HasAnyValues() const
 {
   return (itsStationPressureInMilliBars != kFloatMissing) || (itsTopographyHeightInMillibars != kFloatMissing);
 }
 
 
-NFmiSoundingDataOpt1::NFmiSoundingDataOpt1()
+NFmiSoundingData::NFmiSoundingData()
     : itsLocation(),
       itsTime(NFmiMetTime::gMissingTime),
       itsOriginTime(NFmiMetTime::gMissingTime),
@@ -64,7 +64,7 @@ NFmiSoundingDataOpt1::NFmiSoundingDataOpt1()
 
 // hakee lähimmän sopivan painepinnan, mistä löytyy halutuille parametreille arvot
 // Mutta ei sallita muokkausta ennen 1. validia leveliä!
-bool NFmiSoundingDataOpt1::GetTandTdValuesFromNearestPressureLevel(double P,
+bool NFmiSoundingData::GetTandTdValuesFromNearestPressureLevel(double P,
                                                                    double &theFoundP,
                                                                    double &theT,
                                                                    double &theTd)
@@ -106,7 +106,7 @@ bool NFmiSoundingDataOpt1::GetTandTdValuesFromNearestPressureLevel(double P,
 }
 
 // hakee lähimmän sopivan painepinnan, mistä löytyy halutulle parametrille ei-puuttuva arvo
-bool NFmiSoundingDataOpt1::SetValueToPressureLevel(float P,
+bool NFmiSoundingData::SetValueToPressureLevel(float P,
                                                    float theParamValue,
                                                    FmiParameterName theId)
 {
@@ -128,7 +128,7 @@ bool NFmiSoundingDataOpt1::SetValueToPressureLevel(float P,
   return false;
 }
 
-void NFmiSoundingDataOpt1::SetTandTdSurfaceValues(float T, float Td)
+void NFmiSoundingData::SetTandTdSurfaceValues(float T, float Td)
 {
   std::deque<float> &tV = GetParamData(kFmiTemperature);
   std::deque<float> &tdV = GetParamData(kFmiDewPoint);
@@ -137,7 +137,7 @@ void NFmiSoundingDataOpt1::SetTandTdSurfaceValues(float T, float Td)
 }
 
 // paluttaa paine arvon halutulle metri korkeudelle
-float NFmiSoundingDataOpt1::GetPressureAtHeight(double H)
+float NFmiSoundingData::GetPressureAtHeight(double H)
 {
   if (H == kFloatMissing) return kFloatMissing;
 
@@ -194,7 +194,7 @@ float NFmiSoundingDataOpt1::GetPressureAtHeight(double H)
 // origin-aika).
 // Jos ei ole ja luotausta on modifioitu, piirretään modifioitu, muuten nollataan 'modifioitu'
 // luotaus ja täytetään se tällä uudella datalla.
-bool NFmiSoundingDataOpt1::IsSameSounding(const NFmiSoundingDataOpt1 &theOtherSounding)
+bool NFmiSoundingData::IsSameSounding(const NFmiSoundingData &theOtherSounding)
 {
   if (Location() == theOtherSounding.Location())
     if (Time() == theOtherSounding.Time())
@@ -204,7 +204,7 @@ bool NFmiSoundingDataOpt1::IsSameSounding(const NFmiSoundingDataOpt1 &theOtherSo
 
 // hakee ne arvot h, u ja v parametreista, mitkä ovat samalta korkeudelta ja mitkä
 // eivät ole puuttuvia. Haetaan alhaalta ylös päin arvoja
-bool NFmiSoundingDataOpt1::GetLowestNonMissingValues(float &H, float &U, float &V)
+bool NFmiSoundingData::GetLowestNonMissingValues(float &H, float &U, float &V)
 {
   std::deque<float> &hV = GetParamData(kFmiGeomHeight);
   std::deque<float> &uV = GetParamData(kFmiWindUMS);
@@ -226,7 +226,7 @@ bool NFmiSoundingDataOpt1::GetLowestNonMissingValues(float &H, float &U, float &
 }
 
 // laskee halutun parametrin arvon haluttuun metri korkeuteen
-float NFmiSoundingDataOpt1::GetValueAtHeight(FmiParameterName theId, float H)
+float NFmiSoundingData::GetValueAtHeight(FmiParameterName theId, float H)
 {
   float P = GetPressureAtHeight(H);
   if (P == kFloatMissing)
@@ -238,7 +238,7 @@ float NFmiSoundingDataOpt1::GetValueAtHeight(FmiParameterName theId, float H)
 }
 
 // Hakee halutun parametrin arvon halutulta painekorkeudelta.
-float NFmiSoundingDataOpt1::GetValueAtPressure(FmiParameterName theId, float P)
+float NFmiSoundingData::GetValueAtPressure(FmiParameterName theId, float P)
 {
   if (P == kFloatMissing) return kFloatMissing;
 
@@ -295,7 +295,7 @@ float NFmiSoundingDataOpt1::GetValueAtPressure(FmiParameterName theId, float P)
 }
 
 // H = height in meters
-float NFmiSoundingDataOpt1::GetValueAtHeightHardWay(FmiParameterName theId, float H)
+float NFmiSoundingData::GetValueAtHeightHardWay(FmiParameterName theId, float H)
 {
   if (H == kFloatMissing) return kFloatMissing;
 
@@ -356,7 +356,7 @@ float NFmiSoundingDataOpt1::GetValueAtHeightHardWay(FmiParameterName theId, floa
 // Huom! z korkeudet interpoloidaan, koska havaituissa luotauksissa niitä ei ole aina ja varsinkaan
 // samoissa
 // väleissä kuin tuulia
-bool NFmiSoundingDataOpt1::CalcAvgWindComponentValues(double fromZ,
+bool NFmiSoundingData::CalcAvgWindComponentValues(double fromZ,
                                                       double toZ,
                                                       double &u,
                                                       double &v)
@@ -388,7 +388,7 @@ bool NFmiSoundingDataOpt1::CalcAvgWindComponentValues(double fromZ,
   return false;
 }
 
-float NFmiSoundingDataOpt1::FindPressureWhereHighestValue(FmiParameterName theId,
+float NFmiSoundingData::FindPressureWhereHighestValue(FmiParameterName theId,
                                                           float theMaxP,
                                                           float theMinP)
 {
@@ -581,7 +581,7 @@ static void setThetaValues(
 // Etsitään arvoja jos pinta on alle theMinP-tason (siis alle tuon tason fyysisesti).
 // HUOM! theMinP ei voi olla kFloatMissing, jos haluat että kaikki levelit käydään läpi laita sen
 // arvoksi 0.
-bool NFmiSoundingDataOpt1::FindHighestThetaE(
+bool NFmiSoundingData::FindHighestThetaE(
     double &T, double &Td, double &P, double &theMaxThetaE, double theMinP)
 {
   T = kFloatMissing;
@@ -620,7 +620,7 @@ bool NFmiSoundingDataOpt1::FindHighestThetaE(
   return theMaxThetaE != kFloatMissing;
 }
 /*
-bool NFmiSoundingDataOpt1::FindHighestThetaE2(double &T, double &Td, double &P, double
+bool NFmiSoundingData::FindHighestThetaE2(double &T, double &Td, double &P, double
 &theMaxThetaE, double theMinP)
 {
         T = kFloatMissing;
@@ -670,7 +670,7 @@ tmpTd, tmpP);
 // näyte valit painota mitenkaan laskuja.
 // Paineelle otetaan suoraan pohja kerroksen arvo.
 // Oletus fromZ ja toZ eivät ole puuttuvia.
-bool NFmiSoundingDataOpt1::CalcLCLAvgValues(
+bool NFmiSoundingData::CalcLCLAvgValues(
     double fromZ, double toZ, double &T, double &Td, double &P, bool fUsePotTandMix)
 {
   T = kFloatMissing;
@@ -736,7 +736,7 @@ bool NFmiSoundingDataOpt1::CalcLCLAvgValues(
 // Tämä hakee annettua painearvoa lähimmät arvot, jotka löytyvät kaikille halutuille parametreille.
 // Palauttaa true, jos löytyy dataa ja false jos ei löydy.
 // OLETUS: maanpinta arvot ovat vektorin alussa, pitäisi tarkistaa??
-bool NFmiSoundingDataOpt1::GetValuesStartingLookingFromPressureLevel(double &T,
+bool NFmiSoundingData::GetValuesStartingLookingFromPressureLevel(double &T,
                                                                      double &Td,
                                                                      double &P)
 {
@@ -764,7 +764,7 @@ bool NFmiSoundingDataOpt1::GetValuesStartingLookingFromPressureLevel(double &T,
 
 // oletuksia paljon:
 // theInfo on validi, aika ja paikka on jo asetettu
-bool NFmiSoundingDataOpt1::FillParamData(
+bool NFmiSoundingData::FillParamData(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     FmiParameterName theId,
     NFmiQueryDataUtil::SignificantSoundingLevels &theSoungingLevels)
@@ -788,7 +788,7 @@ bool NFmiSoundingDataOpt1::FillParamData(
 }
 
 // Palauttaa true:n, jos löytyi yksikin non-missing arvo datasta.
-bool NFmiSoundingDataOpt1::FillParamDataNormally(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+bool NFmiSoundingData::FillParamDataNormally(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                              std::deque<float> &data)
 {
   bool foundNonMissingValue = false;
@@ -803,7 +803,7 @@ bool NFmiSoundingDataOpt1::FillParamDataNormally(const boost::shared_ptr<NFmiFas
 }
 
 // Palauttaa true:n, jos löytyi yksikin non-missing arvo datasta.
-bool NFmiSoundingDataOpt1::FillParamDataFromSignificantLevels(
+bool NFmiSoundingData::FillParamDataFromSignificantLevels(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     std::deque<float> &data,
     NFmiQueryDataUtil::SignificantSoundingLevels &significantLevels)
@@ -824,7 +824,7 @@ bool NFmiSoundingDataOpt1::FillParamDataFromSignificantLevels(
 }
 
 
-std::deque<float> &NFmiSoundingDataOpt1::GetResizedParamData(
+std::deque<float> &NFmiSoundingData::GetResizedParamData(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     FmiParameterName theId,
     NFmiQueryDataUtil::SignificantSoundingLevels &theSoungingLevels)
@@ -839,7 +839,7 @@ std::deque<float> &NFmiSoundingDataOpt1::GetResizedParamData(
 
 // Asettaa fastInfon osoittamaan oikeaa parametria.
 // Kastepiste parametri on erikoistapaus.
-bool NFmiSoundingDataOpt1::LookForFilledParamFromInfo(
+bool NFmiSoundingData::LookForFilledParamFromInfo(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theId)
 {
   bool paramFound = theInfo->Param(theId);
@@ -850,7 +850,7 @@ bool NFmiSoundingDataOpt1::LookForFilledParamFromInfo(
 }
 
 // Oletus, tässä info on jo parametrissa ja ajassa kohdallaan.
-bool NFmiSoundingDataOpt1::FastFillParamData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+bool NFmiSoundingData::FastFillParamData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                              FmiParameterName theId)
 {
   bool status = false;
@@ -870,7 +870,7 @@ bool NFmiSoundingDataOpt1::FastFillParamData(const boost::shared_ptr<NFmiFastQue
   return status;
 }
 
-  bool NFmiSoundingDataOpt1::FillPressureDataFromLevels(
+  bool NFmiSoundingData::FillPressureDataFromLevels(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
   // jos halutaan paine dataa ja parametria ei ollut datassa, oliko kyseessa painepinta data,
@@ -895,7 +895,7 @@ bool NFmiSoundingDataOpt1::FastFillParamData(const boost::shared_ptr<NFmiFastQue
 }
 
 // Katsotaan saadaanko täytettyä korkeus data heith-levleiden avulla
-bool NFmiSoundingDataOpt1::FillHeightDataFromLevels(
+bool NFmiSoundingData::FillHeightDataFromLevels(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
   bool status = false;
@@ -915,7 +915,7 @@ bool NFmiSoundingDataOpt1::FillHeightDataFromLevels(
 }
 
 // Palauttaa true:n, jos löytyi yksikin non-missing arvo datasta.
-bool NFmiSoundingDataOpt1::FillParamData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+bool NFmiSoundingData::FillParamData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                          FmiParameterName theId,
                                          const NFmiMetTime &theTime,
                                          const NFmiPoint &theLatlon)
@@ -938,7 +938,7 @@ bool NFmiSoundingDataOpt1::FillParamData(const boost::shared_ptr<NFmiFastQueryIn
   return status;
 }
 
-unsigned long NFmiSoundingDataOpt1::GetHighestNonMissingValueLevelIndex(FmiParameterName theParaId)
+unsigned long NFmiSoundingData::GetHighestNonMissingValueLevelIndex(FmiParameterName theParaId)
 {
   std::deque<float> &vec = GetParamData(theParaId);
   std::deque<float>::size_type ssize = vec.size();
@@ -948,7 +948,7 @@ unsigned long NFmiSoundingDataOpt1::GetHighestNonMissingValueLevelIndex(FmiParam
   return index;
 }
 
-unsigned long NFmiSoundingDataOpt1::GetLowestNonMissingValueLevelIndex(FmiParameterName theParaId)
+unsigned long NFmiSoundingData::GetLowestNonMissingValueLevelIndex(FmiParameterName theParaId)
 {
   std::deque<float> &vec = GetParamData(theParaId);
   std::deque<float>::size_type ssize = vec.size();
@@ -960,7 +960,7 @@ unsigned long NFmiSoundingDataOpt1::GetLowestNonMissingValueLevelIndex(FmiParame
 // Tarkistaa onko annetun parametrin alin ei puuttuva indeksi liian korkea, jotta data olisi hyvää
 // (= ei liian puutteellista).
 // Jos data on liian puutteellista, palautetaan true, muuten false.
-bool NFmiSoundingDataOpt1::CheckForMissingLowLevelData(FmiParameterName theParaId,
+bool NFmiSoundingData::CheckForMissingLowLevelData(FmiParameterName theParaId,
                                                        unsigned long theMissingIndexLimit)
 {
   unsigned long index = GetLowestNonMissingValueLevelIndex(theParaId);
@@ -970,7 +970,7 @@ bool NFmiSoundingDataOpt1::CheckForMissingLowLevelData(FmiParameterName theParaI
     return false;
 }
 
-bool NFmiSoundingDataOpt1::IsDataGood()
+bool NFmiSoundingData::IsDataGood()
 {
   double T = kFloatMissing, Td = kFloatMissing, P = kFloatMissing;
   if (!GetValuesNeededInLCLCalculations(kLCLCalcSurface, T, Td, P)) return false;
@@ -987,7 +987,7 @@ bool NFmiSoundingDataOpt1::IsDataGood()
 
 // tämä leikkaa Fill.. -metodeissa laskettuja data vektoreita niin että pelkät puuttuvat kerrokset
 // otetaan pois
-void NFmiSoundingDataOpt1::CutEmptyData()
+void NFmiSoundingData::CutEmptyData()
 {
   std::vector<FmiParameterName> itsSoundingParameters;
   itsSoundingParameters.push_back(kFmiPressure);
@@ -1015,7 +1015,7 @@ void NFmiSoundingDataOpt1::CutEmptyData()
 }
 
 // Tälle anntaan asema dataa ja ei tehdä minkäänlaisia interpolointeja.
-bool NFmiSoundingDataOpt1::FillSoundingData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+bool NFmiSoundingData::FillSoundingData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                             const NFmiMetTime &theTime,
                                             const NFmiMetTime &theOriginTime,
                                             const NFmiLocation &theLocation,
@@ -1078,7 +1078,7 @@ bool NFmiSoundingDataOpt1::FillSoundingData(const boost::shared_ptr<NFmiFastQuer
 }
 
 // Tälle annetaan hiladataa, ja interpolointi tehdään tarvittaessa ajassa ja paikassa.
-bool NFmiSoundingDataOpt1::FillSoundingData(
+bool NFmiSoundingData::FillSoundingData(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     const NFmiMetTime &theTime,
     const NFmiMetTime &theOriginTime,
@@ -1134,7 +1134,7 @@ bool NFmiSoundingDataOpt1::FillSoundingData(
   return false;
 }
 
-void NFmiSoundingDataOpt1::MakeFillDataPostChecks(
+void NFmiSoundingData::MakeFillDataPostChecks(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
     const GroundLevelValue &theGroundLevelValue)
@@ -1180,7 +1180,7 @@ static bool AnyGoodValues(const std::deque<float> &values)
 // -lipun päälle.
 // Tarkistaa onko height taulussa yhtaan ei puuttuvaa arvoa ja asettaa fHeightDataAvailable -lipun
 // päälle.
-void NFmiSoundingDataOpt1::SetVerticalParamStatus()
+void NFmiSoundingData::SetVerticalParamStatus()
 {
   std::deque<float> &pVec = GetParamData(kFmiPressure);
   if (::AnyGoodValues(pVec)) fPressureDataAvailable = true;
@@ -1198,7 +1198,7 @@ static void CutStartOfVector(vectorContainer &theVec, int theCutIndex)
     theVec.erase(theVec.begin(), theVec.begin() + theCutIndex);
 }
 
-void NFmiSoundingDataOpt1::FixByGroundLevelValue(const GroundLevelValue& theGroundLevelValue)
+void NFmiSoundingData::FixByGroundLevelValue(const GroundLevelValue& theGroundLevelValue)
 {
   if (theGroundLevelValue.HasAnyValues())
   {
@@ -1215,7 +1215,7 @@ void NFmiSoundingDataOpt1::FixByGroundLevelValue(const GroundLevelValue& theGrou
   }
 }
 
-void NFmiSoundingDataOpt1::FixByGroundPressureValue(float theGroundPressureValue)
+void NFmiSoundingData::FixByGroundPressureValue(float theGroundPressureValue)
 {
   auto &pressureData = GetParamData(kFmiPressure);
   // oletus, kaikki vektorit on alustettu saman kokoisiksi kuin paine vektori
@@ -1245,7 +1245,7 @@ void NFmiSoundingDataOpt1::FixByGroundPressureValue(float theGroundPressureValue
 // HUOM! Oletus että löytyi ainakin yksi kerros, joka oli alle tämän pintakerroksen, koska
 // en tee taulukkojen resize:a ainakaan nyt, eli taulukossa pitää olla tilaa tälle uudelle
 // pintakerrokselle.
-void NFmiSoundingDataOpt1::FixPressureDataSoundingWithGroundData(
+void NFmiSoundingData::FixPressureDataSoundingWithGroundData(
     const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
     const GroundLevelValue &theGroundLevelValue)
 {
@@ -1372,7 +1372,7 @@ void NFmiSoundingDataOpt1::FixPressureDataSoundingWithGroundData(
   }
 }
 
-void NFmiSoundingDataOpt1::CutDataByZeroHeightIndex(int theIndex)
+void NFmiSoundingData::CutDataByZeroHeightIndex(int theIndex)
 {
   // theIndex osoittaa kohtaan mihin asti datoja on leikattava alusta.
   // Lopuksi vielä itsZeroHeightIndex asetetaan 0:ksi.
@@ -1388,7 +1388,7 @@ void NFmiSoundingDataOpt1::CutDataByZeroHeightIndex(int theIndex)
 
 // laskee jo laskettujen T ja Td avulla RH 
 // tai sitten T:n ja RH:n avulla Td:n.
-void NFmiSoundingDataOpt1::CalculateHumidityData()
+void NFmiSoundingData::CalculateHumidityData()
 {
   auto &temperatureData = GetParamData(kFmiTemperature);
   auto &dewPointData = GetParamData(kFmiDewPoint);
@@ -1429,7 +1429,7 @@ void NFmiSoundingDataOpt1::CalculateHumidityData()
 // Poikkeus: jos löytyy paine ja korkeus tiedot alempaa ja heti sen jälkeen tarpeeksi
 // lähellä (<  4 Hpa) on leveli, jossa on muita tietoja, mutta ei korkeutta, hyväksytään
 // aiemman levelin korkeus.
-void NFmiSoundingDataOpt1::InitZeroHeight()
+void NFmiSoundingData::InitZeroHeight()
 {
   float closeLevelHeight = kFloatMissing;
   float closeLevelPressure = kFloatMissing;
@@ -1485,7 +1485,7 @@ void NFmiSoundingDataOpt1::InitZeroHeight()
   }
 }
 
-std::deque<float> &NFmiSoundingDataOpt1::GetParamData(FmiParameterName theId)
+std::deque<float> &NFmiSoundingData::GetParamData(FmiParameterName theId)
 {
   switch (theId)
   {
@@ -1516,12 +1516,12 @@ std::deque<float> &NFmiSoundingDataOpt1::GetParamData(FmiParameterName theId)
     default:
       throw std::runtime_error(
           std::string(
-              "NFmiSoundingDataOpt1::GetParamData - wrong paramId given (Error in Program?): ") +
+              "NFmiSoundingData::GetParamData - wrong paramId given (Error in Program?): ") +
           NFmiStringTools::Convert<int>(theId));
   }
 }
 
-void NFmiSoundingDataOpt1::ClearDatas()
+void NFmiSoundingData::ClearDatas()
 {
   for (auto &paramData : itsParamDataVector)
     std::deque<float>().swap(paramData);
@@ -1532,7 +1532,7 @@ void NFmiSoundingDataOpt1::ClearDatas()
   fMovingSounding = false;
 }
 
-bool NFmiSoundingDataOpt1::ModifyT2DryAdiapaticBelowGivenP(double P, double T)
+bool NFmiSoundingData::ModifyT2DryAdiapaticBelowGivenP(double P, double T)
 {
   if (P == kFloatMissing || T == kFloatMissing) return false;
 
@@ -1559,7 +1559,7 @@ bool NFmiSoundingDataOpt1::ModifyT2DryAdiapaticBelowGivenP(double P, double T)
   return false;
 }
 
-bool NFmiSoundingDataOpt1::ModifyTd2MixingRatioBelowGivenP(double P, double T, double Td)
+bool NFmiSoundingData::ModifyTd2MixingRatioBelowGivenP(double P, double T, double Td)
 {
   if (P == kFloatMissing || Td == kFloatMissing) return false;
 
@@ -1588,7 +1588,7 @@ bool NFmiSoundingDataOpt1::ModifyTd2MixingRatioBelowGivenP(double P, double T, d
   return false;
 }
 
-bool NFmiSoundingDataOpt1::ModifyTd2MoistAdiapaticBelowGivenP(double P, double Td)
+bool NFmiSoundingData::ModifyTd2MoistAdiapaticBelowGivenP(double P, double Td)
 {
   if (P == kFloatMissing || Td == kFloatMissing) return false;
 
@@ -1638,7 +1638,7 @@ static float FixValuesWithLimits(float theValue, float minValue, float maxValue)
   return theValue;
 }
 
-bool NFmiSoundingDataOpt1::Add2ParamAtNearestP(float P,
+bool NFmiSoundingData::Add2ParamAtNearestP(float P,
                                                FmiParameterName parId,
                                                float addValue,
                                                float minValue,
@@ -1719,7 +1719,7 @@ static float CalcV(float WS, float WD)
   return value;
 }
 
-void NFmiSoundingDataOpt1::UpdateUandVParams()
+void NFmiSoundingData::UpdateUandVParams()
 {
   std::deque<float> &wsV = GetParamData(kFmiWindSpeedMS);
   std::deque<float> &wdV = GetParamData(kFmiWindDirection);
@@ -1738,7 +1738,7 @@ void NFmiSoundingDataOpt1::UpdateUandVParams()
 }
 
 // tarkistaa onko kyseisellä ajanhetkellä ja asemalla ei puuttuvaa luotaus-dataa
-bool NFmiSoundingDataOpt1::HasRealSoundingData(
+bool NFmiSoundingData::HasRealSoundingData(
     boost::shared_ptr<NFmiFastQueryInfo> &theSoundingLevelInfo)
 {
   if (theSoundingLevelInfo->Param(kFmiPressure) || theSoundingLevelInfo->Param(kFmiGeomHeight) ||
@@ -1770,7 +1770,7 @@ bool NFmiSoundingDataOpt1::HasRealSoundingData(
 // SHOW	= T500 - Tparcel
 // T500 = Temperature in Celsius at 500 mb
 // Tparcel = Temperature in Celsius at 500 mb of a parcel lifted from 850 mb
-double NFmiSoundingDataOpt1::CalcSHOWIndex()
+double NFmiSoundingData::CalcSHOWIndex()
 {
   double indexValue = kFloatMissing;
   double T_850 = GetValueAtPressure(kFmiTemperature, 850);
@@ -1791,7 +1791,7 @@ double NFmiSoundingDataOpt1::CalcSHOWIndex()
 // T500 = temperature in Celsius of the environment at 500 mb
 // Tparcel = 500 mb temperature in Celsius of a lifted parcel with the average pressure,
 //			 temperature, and dewpoint of the layer 500 m above the surface.
-double NFmiSoundingDataOpt1::CalcLIFTIndex()
+double NFmiSoundingData::CalcLIFTIndex()
 {
   double indexValue = kFloatMissing;
   double P_500m_avg = kFloatMissing;
@@ -1821,7 +1821,7 @@ double NFmiSoundingDataOpt1::CalcLIFTIndex()
 //	TD850 = Dewpoint in Celsius at 850 mb
 //	T700 = Temperature in Celsius at 700 mb
 //	TD700 = Dewpoint in Celsius at 700 mb
-double NFmiSoundingDataOpt1::CalcKINXIndex()
+double NFmiSoundingData::CalcKINXIndex()
 {
   double T850 = GetValueAtPressure(kFmiTemperature, 850);
   double T500 = GetValueAtPressure(kFmiTemperature, 500);
@@ -1838,7 +1838,7 @@ double NFmiSoundingDataOpt1::CalcKINXIndex()
 //	CTOT	= TD850 - T500
 //		TD850 	= Dewpoint in Celsius at 850 mb
 //		T500 	= Temperature in Celsius at 500 mb
-double NFmiSoundingDataOpt1::CalcCTOTIndex()
+double NFmiSoundingData::CalcCTOTIndex()
 {
   double T500 = GetValueAtPressure(kFmiTemperature, 500);
   double TD850 = GetValueAtPressure(kFmiDewPoint, 850);
@@ -1850,7 +1850,7 @@ double NFmiSoundingDataOpt1::CalcCTOTIndex()
 //	VTOT	= T850 - T500
 //		T850	= Temperature in Celsius at 850 mb
 //		T500	= Temperature in Celsius at 500 mb
-double NFmiSoundingDataOpt1::CalcVTOTIndex()
+double NFmiSoundingData::CalcVTOTIndex()
 {
   double T500 = GetValueAtPressure(kFmiTemperature, 500);
   double T850 = GetValueAtPressure(kFmiTemperature, 850);
@@ -1863,7 +1863,7 @@ double NFmiSoundingDataOpt1::CalcVTOTIndex()
 //		T850 	= Temperature in Celsius at 850 mb
 //		TD850	= Dewpoint in Celsius at 850 mb
 //		T500 	= Temperature in Celsius at 500 mb
-double NFmiSoundingDataOpt1::CalcTOTLIndex()
+double NFmiSoundingData::CalcTOTLIndex()
 {
   double T850 = GetValueAtPressure(kFmiTemperature, 850);
   double T500 = GetValueAtPressure(kFmiTemperature, 500);
@@ -1874,7 +1874,7 @@ double NFmiSoundingDataOpt1::CalcTOTLIndex()
 }
 
 // HUOM! Pitää ottaa huomioon aseman korkeus kun tehdään laskuja!!!!
-bool NFmiSoundingDataOpt1::GetValuesNeededInLCLCalculations(FmiLCLCalcType theLCLCalcType,
+bool NFmiSoundingData::GetValuesNeededInLCLCalculations(FmiLCLCalcType theLCLCalcType,
                                                             double &T,
                                                             double &Td,
                                                             double &P)
@@ -1909,7 +1909,7 @@ bool NFmiSoundingDataOpt1::GetValuesNeededInLCLCalculations(FmiLCLCalcType theLC
 }
 
 // LCL-levelin painepinnan lasku käyttäen luotauksen haluttuja arvoja
-double NFmiSoundingDataOpt1::CalcLCLPressureLevel(FmiLCLCalcType theLCLCalcType)
+double NFmiSoundingData::CalcLCLPressureLevel(FmiLCLCalcType theLCLCalcType)
 {
   // 1. calc T,Td,P values from 500 m layer avg or surface values
   double T = kFloatMissing, Td = kFloatMissing, P = kFloatMissing;
@@ -1920,18 +1920,18 @@ double NFmiSoundingDataOpt1::CalcLCLPressureLevel(FmiLCLCalcType theLCLCalcType)
 
 // Claculates LCL (Lifted Condensation Level)
 // halutulla tavalla
-double NFmiSoundingDataOpt1::CalcLCLIndex(FmiLCLCalcType theLCLCalcType)
+double NFmiSoundingData::CalcLCLIndex(FmiLCLCalcType theLCLCalcType)
 {
   return CalcLCLPressureLevel(theLCLCalcType);
 }
 // palauttaa LCL:n korkeuden metreissä
-double NFmiSoundingDataOpt1::CalcLCLHeightIndex(FmiLCLCalcType theLCLCalcType)
+double NFmiSoundingData::CalcLCLHeightIndex(FmiLCLCalcType theLCLCalcType)
 {
   return GetValueAtPressure(kFmiGeomHeight,
                             static_cast<float>(CalcLCLPressureLevel(theLCLCalcType)));
 }
 
-void NFmiSoundingDataOpt1::FillLFCIndexCache(FmiLCLCalcType theLCLCalcType,
+void NFmiSoundingData::FillLFCIndexCache(FmiLCLCalcType theLCLCalcType,
                                              double theLfcIndexValue,
                                              double theELValue)
 {
@@ -1970,7 +1970,7 @@ void NFmiSoundingDataOpt1::FillLFCIndexCache(FmiLCLCalcType theLCLCalcType,
   }
 }
 
-bool NFmiSoundingDataOpt1::CheckLFCIndexCache(FmiLCLCalcType theLCLCalcTypeIn,
+bool NFmiSoundingData::CheckLFCIndexCache(FmiLCLCalcType theLCLCalcTypeIn,
                                               double &theLfcIndexValueOut,
                                               double &theELValueOut)
 {
@@ -2172,7 +2172,7 @@ static const double gUsedEpsilon =
 // 6. Käy lopuksi läpi CAPE-alueet alhaalta ylös
 // 7. Etsi ensimmäinen sellainen missä LFC on LCL:n yläpuolella ja ota siitä LFC ja EL arvot.
 // 8. Jos ei löydy sellaista CAPE-aluetta, saavat LFC ja EL puuttuvan arvon.
-double NFmiSoundingDataOpt1::CalcLFCIndex(FmiLCLCalcType theLCLCalcType, double &EL)
+double NFmiSoundingData::CalcLFCIndex(FmiLCLCalcType theLCLCalcType, double &EL)
 {
   double lfcIndexValue = kFloatMissing;
   // 1. Katso löytyykö valmiiksi lasketut arvot cachesta.
@@ -2280,7 +2280,7 @@ double NFmiSoundingDataOpt1::CalcLFCIndex(FmiLCLCalcType theLCLCalcType, double 
 }
 
 // palauttaa LFC:n ja  EL:n korkeuden metreissä
-double NFmiSoundingDataOpt1::CalcLFCHeightIndex(FmiLCLCalcType theLCLCalcType, double &ELheigth)
+double NFmiSoundingData::CalcLFCHeightIndex(FmiLCLCalcType theLCLCalcType, double &ELheigth)
 {
   double tmpValue = CalcLFCIndex(theLCLCalcType, ELheigth);
   ELheigth = GetValueAtPressure(kFmiGeomHeight, static_cast<float>(ELheigth));
@@ -2290,7 +2290,7 @@ double NFmiSoundingDataOpt1::CalcLFCHeightIndex(FmiLCLCalcType theLCLCalcType, d
 // Calculates CAPE (500 m mix)
 // theHeightLimit jos halutaan, voidaan cape lasku rajoittaa alle jonkin korkeus arvon (esim. 3000
 // m)
-double NFmiSoundingDataOpt1::CalcCAPE500Index(FmiLCLCalcType theLCLCalcType, double theHeightLimit)
+double NFmiSoundingData::CalcCAPE500Index(FmiLCLCalcType theLCLCalcType, double theHeightLimit)
 {
   // 1. calc T,Td,P values from 500 m layer avg or surface values
   double T = kFloatMissing, Td = kFloatMissing, P = kFloatMissing;
@@ -2341,7 +2341,7 @@ double NFmiSoundingDataOpt1::CalcCAPE500Index(FmiLCLCalcType theLCLCalcType, dou
 }
 
 // Calculates CAPE in layer between two temperatures given
-double NFmiSoundingDataOpt1::CalcCAPE_TT_Index(FmiLCLCalcType theLCLCalcType,
+double NFmiSoundingData::CalcCAPE_TT_Index(FmiLCLCalcType theLCLCalcType,
                                                double Thigh,
                                                double Tlow)
 {
@@ -2390,7 +2390,7 @@ double NFmiSoundingDataOpt1::CalcCAPE_TT_Index(FmiLCLCalcType theLCLCalcType,
 
 // Calculates CIN
 // first layer of negative (TP - TE (= T-parcel - T-envi)) unless its the last also
-double NFmiSoundingDataOpt1::CalcCINIndex(FmiLCLCalcType theLCLCalcType)
+double NFmiSoundingData::CalcCINIndex(FmiLCLCalcType theLCLCalcType)
 {
   // 1. calc T,Td,P values from 500 m layer avg or surface values
   double T = kFloatMissing, Td = kFloatMissing, P = kFloatMissing;
@@ -2443,7 +2443,7 @@ double NFmiSoundingDataOpt1::CalcCINIndex(FmiLCLCalcType theLCLCalcType)
 
 // startH and endH are in kilometers
 // HUOM! Pitää ottaa huomioon aseman korkeus kun tehdään laskuja!!!!
-double NFmiSoundingDataOpt1::CalcWindBulkShearComponent(double startH,
+double NFmiSoundingData::CalcWindBulkShearComponent(double startH,
                                                         double endH,
                                                         FmiParameterName theParId)
 {
@@ -2460,7 +2460,7 @@ double NFmiSoundingDataOpt1::CalcWindBulkShearComponent(double startH,
 
 // startH and endH are in kilometers
 // HUOM! Pitää ottaa huomioon aseman korkeus kun tehdään laskuja!!!!
-double NFmiSoundingDataOpt1::CalcThetaEDiffIndex(double startH, double endH)
+double NFmiSoundingData::CalcThetaEDiffIndex(double startH, double endH)
 {
   // HUOM! Pitää ottaa huomioon aseman korkeus kun tehdään laskuja!!!!
   startH += ZeroHeight() / 1000.;  // zero height pitää muuttaa tässä metreistä kilometreiksi!
@@ -2485,7 +2485,7 @@ double NFmiSoundingDataOpt1::CalcThetaEDiffIndex(double startH, double endH)
 
 // Calculates Bulk Shear between two given layers
 // startH and endH are in kilometers
-double NFmiSoundingDataOpt1::CalcBulkShearIndex(double startH, double endH)
+double NFmiSoundingData::CalcBulkShearIndex(double startH, double endH)
 {
   // HUOM! asema korkeus otetaan huomioon CalcWindBulkShearComponent-funktiossa.
   double uTot = CalcWindBulkShearComponent(startH, endH, kFmiWindUMS);
@@ -2543,7 +2543,7 @@ v_ID = v0_6 - shr_0_6_u_n * 7.5;
 
 // shear
 // startH and endH are in kilometers
-double NFmiSoundingDataOpt1::CalcBulkShearIndex(double startH,
+double NFmiSoundingData::CalcBulkShearIndex(double startH,
                                                 double endH,
                                                 FmiParameterName theParId)
 {
@@ -2552,7 +2552,7 @@ double NFmiSoundingDataOpt1::CalcBulkShearIndex(double startH,
   return shr_0_6_component;
 }
 
-void NFmiSoundingDataOpt1::Calc_U_V_helpers(double &shr_0_6_u_n,
+void NFmiSoundingData::Calc_U_V_helpers(double &shr_0_6_u_n,
                                             double &shr_0_6_v_n,
                                             double &u0_6,
                                             double &v0_6)
@@ -2571,7 +2571,7 @@ void NFmiSoundingDataOpt1::Calc_U_V_helpers(double &shr_0_6_u_n,
 
 // lasketaan u ja v ID:t 0-6km layerissä
 // tämä on hodografissa 'left'
-void NFmiSoundingDataOpt1::Calc_U_and_V_IDs_left(double &u_ID, double &v_ID)
+void NFmiSoundingData::Calc_U_and_V_IDs_left(double &u_ID, double &v_ID)
 {
   double shr_0_6_u_n = 0, shr_0_6_v_n = 0, u0_6 = 0, v0_6 = 0;
   Calc_U_V_helpers(shr_0_6_u_n, shr_0_6_v_n, u0_6, v0_6);
@@ -2582,7 +2582,7 @@ void NFmiSoundingDataOpt1::Calc_U_and_V_IDs_left(double &u_ID, double &v_ID)
 
 // lasketaan u ja v ID:t 0-6km layerissä
 // tämä on hodografissa 'right'
-void NFmiSoundingDataOpt1::Calc_U_and_V_IDs_right(double &u_ID, double &v_ID)
+void NFmiSoundingData::Calc_U_and_V_IDs_right(double &u_ID, double &v_ID)
 {
   double shr_0_6_u_n = 0, shr_0_6_v_n = 0, u0_6 = 0, v0_6 = 0;
   Calc_U_V_helpers(shr_0_6_u_n, shr_0_6_v_n, u0_6, v0_6);
@@ -2592,7 +2592,7 @@ void NFmiSoundingDataOpt1::Calc_U_and_V_IDs_right(double &u_ID, double &v_ID)
 }
 
 // lasketaan u ja v mean 0-6km layerissä
-void NFmiSoundingDataOpt1::Calc_U_and_V_mean_0_6km(double &u0_6, double &v0_6)
+void NFmiSoundingData::Calc_U_and_V_mean_0_6km(double &u0_6, double &v0_6)
 {
   // HUOM! Pitää ottaa huomioon aseman korkeus kun tehdään laskuja!!!!
   double h1 = 0 + ZeroHeight();     // 0 m + aseman korkeus
@@ -2600,7 +2600,7 @@ void NFmiSoundingDataOpt1::Calc_U_and_V_mean_0_6km(double &u0_6, double &v0_6)
   CalcAvgWindComponentValues(h1, h2, u0_6, v0_6);
 }
 
-NFmiString NFmiSoundingDataOpt1::Get_U_V_ID_IndexText(const NFmiString &theText,
+NFmiString NFmiSoundingData::Get_U_V_ID_IndexText(const NFmiString &theText,
                                                       FmiDirection theStormDirection)
 {
   NFmiString str(theText);
@@ -2637,7 +2637,7 @@ NFmiString NFmiSoundingDataOpt1::Get_U_V_ID_IndexText(const NFmiString &theText,
 // käytetään muuttujan niminä samoja mitä on Pieterin helpissä, vaikka kyseessä ei olekaan laskut
 // layerille 0-6km vaan mille välille tahansa
 // HUOM! Pitää ottaa huomioon aseman korkeus kun tehdään laskuja!!!!
-double NFmiSoundingDataOpt1::CalcSRHIndex(double startH, double endH)
+double NFmiSoundingData::CalcSRHIndex(double startH, double endH)
 {
   std::deque<float> &pV = GetParamData(kFmiPressure);
   if (pV.size() > 0)
@@ -2688,7 +2688,7 @@ double NFmiSoundingDataOpt1::CalcSRHIndex(double startH, double endH)
 }
 
 // theH in meters
-double NFmiSoundingDataOpt1::CalcWSatHeightIndex(double theH)
+double NFmiSoundingData::CalcWSatHeightIndex(double theH)
 {
   // HUOM! Pitää ottaa huomioon aseman korkeus kun tehdään laskuja!!!!
   theH += ZeroHeight();
@@ -2696,14 +2696,14 @@ double NFmiSoundingDataOpt1::CalcWSatHeightIndex(double theH)
   return GetValueAtHeight(kFmiWindSpeedMS, static_cast<float>(theH));
 }
 
-std::string NFmiSoundingDataOpt1::MakeCacheString(double T, double Td, double fromP, double toP)
+std::string NFmiSoundingData::MakeCacheString(double T, double Td, double fromP, double toP)
 {
   return (boost::format("%f,%f,%f,%f") % T % Td % fromP % toP).str();
 }
 
 // Laske ilmapaketin lämpötila nostamalla ilmapakettia
 // Nosta kuiva-adiapaattisesti LCL-korkeuteen ja siitä eteenpäin kostea-adiapaattisesti
-double NFmiSoundingDataOpt1::CalcTOfLiftedAirParcel(double T, double Td, double fromP, double toP)
+double NFmiSoundingData::CalcTOfLiftedAirParcel(double T, double Td, double fromP, double toP)
 {
   std::string cacheKeyStr = MakeCacheString(T, Td, fromP, toP);
   LiftedAirParcelCacheType::iterator it = itsLiftedAirParcelCache.find(cacheKeyStr);
@@ -2745,7 +2745,7 @@ double NFmiSoundingDataOpt1::CalcTOfLiftedAirParcel(double T, double Td, double 
 }
 
 // Haetaan minimi lämpötilan arvo ja sen korkeuden paine.
-bool NFmiSoundingDataOpt1::GetTrValues(double &theTMinValue, double &theTMinPressure)
+bool NFmiSoundingData::GetTrValues(double &theTMinValue, double &theTMinPressure)
 {
   theTMinValue = kFloatMissing;
   theTMinPressure = kFloatMissing;
@@ -2776,7 +2776,7 @@ bool NFmiSoundingDataOpt1::GetTrValues(double &theTMinValue, double &theTMinPres
 }
 
 // Haetaan maksimi tuulen nopeus, sen korkeuden korkeuden paine.
-bool NFmiSoundingDataOpt1::GetMwValues(double &theMaxWsValue, double &theMaxWsPressure)
+bool NFmiSoundingData::GetMwValues(double &theMaxWsValue, double &theMaxWsPressure)
 {
   theMaxWsValue = kFloatMissing;
   theMaxWsPressure = kFloatMissing;
@@ -2807,7 +2807,7 @@ bool NFmiSoundingDataOpt1::GetMwValues(double &theMaxWsValue, double &theMaxWsPr
 }
 
 // Galvez-Davison Index, http://www.wpc.ncep.noaa.gov/international/gdi/GDI_Manuscript_V20161021.pdf
-double NFmiSoundingDataOpt1::CalcGDI()
+double NFmiSoundingData::CalcGDI()
 {
   // GDI = CBI + MWI + II + TC
   // CBI = column buoyancy index, MWI = mid-tropospheric warming index, II = inversion index, TC =
@@ -2905,7 +2905,7 @@ double NFmiSoundingDataOpt1::CalcGDI()
   return kFloatMissing;
 }
 
-void NFmiSoundingDataOpt1::FillWindData(
+void NFmiSoundingData::FillWindData(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     NFmiQueryDataUtil::SignificantSoundingLevels &theSignificantSoundingLevels)
 {
@@ -2935,7 +2935,7 @@ void NFmiSoundingDataOpt1::FillWindData(
   }
 }
 
-void NFmiSoundingDataOpt1::FillWindData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+void NFmiSoundingData::FillWindData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                         const NFmiMetTime &theTime,
                                         const NFmiPoint &theLatlon)
 {
@@ -2965,7 +2965,7 @@ void NFmiSoundingDataOpt1::FillWindData(const boost::shared_ptr<NFmiFastQueryInf
   }
 }
 
-void NFmiSoundingDataOpt1::FastFillWindData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+void NFmiSoundingData::FastFillWindData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
   auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
   if (metaWindParamUsage.NoWindMetaParamsNeeded())
@@ -2993,7 +2993,7 @@ void NFmiSoundingDataOpt1::FastFillWindData(const boost::shared_ptr<NFmiFastQuer
   }
 }
 
-void NFmiSoundingDataOpt1::FillRestOfWindData(
+void NFmiSoundingData::FillRestOfWindData(
     NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
 {
   if (metaWindParamUsage.MakeMetaWsAndWdParams())
@@ -3054,7 +3054,7 @@ static void CalcPossibleOriginTime(double localOriginTimeValue, NFmiMetTime &ori
   }
 }
 
-bool NFmiSoundingDataOpt1::FillSoundingData(
+bool NFmiSoundingData::FillSoundingData(
     const std::vector<FmiParameterName> &parametersInServerData,
     const std::string &theServerDataAsciiFormat,
     const NFmiMetTime &theTime,
@@ -3118,7 +3118,7 @@ bool NFmiSoundingDataOpt1::FillSoundingData(
         // Haetaan parametreihin liittyvät taulukot järjestyksessä ja siirretään
         // täällä lasketut arvot suoraan niihin paitsi tietyissä erikoisparametreissa.
         auto parameterId = parametersInServerData[paramIndex];
-        if (parameterId == NFmiSoundingDataOpt1::LevelParameterId || parameterId == kFmiGeopHeight)
+        if (parameterId == NFmiSoundingData::LevelParameterId || parameterId == kFmiGeopHeight)
           CheckForAlternativeParameterFill(parameterId, serverDataVector[paramIndex]);
         else
           GetParamData(parametersInServerData[paramIndex]).swap(serverDataVector[paramIndex]);
@@ -3144,10 +3144,10 @@ static bool HasAnyActualValues(const std::deque<float> &data)
   return iter != data.end();
 }
 
-void NFmiSoundingDataOpt1::CheckForAlternativeParameterFill(
+void NFmiSoundingData::CheckForAlternativeParameterFill(
     FmiParameterName parameterId, std::deque<float> &parametersInServerData)
 {
-  if (parameterId == NFmiSoundingDataOpt1::LevelParameterId)
+  if (parameterId == NFmiSoundingData::LevelParameterId)
   {
     auto &pressureValues = GetParamData(kFmiPressure);
     auto hasPressure = ::HasAnyActualValues(pressureValues);
@@ -3162,7 +3162,7 @@ void NFmiSoundingDataOpt1::CheckForAlternativeParameterFill(
 }
 
 template <typename Calculation>
-static void FillMissingParam(NFmiSoundingDataOpt1 &soundingData,
+static void FillMissingParam(NFmiSoundingData &soundingData,
                              FmiParameterName par1,
                              FmiParameterName par2,
                              FmiParameterName missingPar,
@@ -3186,7 +3186,7 @@ static void FillMissingParam(NFmiSoundingDataOpt1 &soundingData,
   }
 }
 
-void NFmiSoundingDataOpt1::FillMissingServerData()
+void NFmiSoundingData::FillMissingServerData()
 {
   // 1. Oletetaan että aina löytyy T parametri, mutta katsotaan tarvitseeko laskea joko Td tai RH
   auto hasT = ::HasAnyActualValues(GetParamData(kFmiTemperature));
@@ -3285,7 +3285,7 @@ static std::pair<bool, bool> IsRisingParameter(const std::deque<float> &data)
   return std::make_pair(false, false);
 }
 
-void NFmiSoundingDataOpt1::SetServerDataFromGroundLevelUp()
+void NFmiSoundingData::SetServerDataFromGroundLevelUp()
 {
   // 1. Onko heigth parametri nousevassa järjestyksessä? Jos ei, silloin data pitää kääntää.
   auto &geomData = GetParamData(kFmiGeomHeight);
@@ -3315,7 +3315,7 @@ void NFmiSoundingDataOpt1::SetServerDataFromGroundLevelUp()
   }
 }
 
-void NFmiSoundingDataOpt1::ReverseAllData()
+void NFmiSoundingData::ReverseAllData()
 {
   for (auto &data : itsParamDataVector)
   {
@@ -3323,7 +3323,7 @@ void NFmiSoundingDataOpt1::ReverseAllData()
   }
 }
 
-void NFmiSoundingDataOpt1::MakeFillDataPostChecksForServerData(
+void NFmiSoundingData::MakeFillDataPostChecksForServerData(
     const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo)
 {
   try

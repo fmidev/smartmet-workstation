@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "NFmiSoundingDataOpt1.h"
+#include "NFmiSoundingData.h"
 #include <boost/shared_ptr.hpp>
 
 class NFmiQueryData;
@@ -95,14 +95,14 @@ class NFmiSoundingIndexCalculator
 {
  public:
   static bool IsSurfaceBasedSoundingIndex(FmiSoundingParameters theSoundingParameter);
-  static bool FillSoundingDataOpt1(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-                                   NFmiSoundingDataOpt1 &theSoundingData,
+  static bool FillSoundingData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
+                                   NFmiSoundingData &theSoundingData,
                                    const NFmiMetTime &theTime,
                                    const NFmiLocation &theLocation,
       const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
-      const NFmiSoundingDataOpt1::GroundLevelValue &theGroundLevelValue =
-          NFmiSoundingDataOpt1::GroundLevelValue());
-  static float CalcOpt1(NFmiSoundingDataOpt1 &theSoundingDataOpt1, FmiSoundingParameters theParam);
+      const NFmiSoundingData::GroundLevelValue &theGroundLevelValue =
+          NFmiSoundingData::GroundLevelValue());
+  static float Calc(NFmiSoundingData &theSoundingData, FmiSoundingParameters theParam);
   static float Calc(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                     const NFmiPoint &theLatlon,
                     const NFmiMetTime &theTime,
