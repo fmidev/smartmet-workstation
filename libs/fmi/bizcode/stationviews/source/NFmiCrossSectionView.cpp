@@ -21,7 +21,7 @@
 #include "NFmiSmartToolModifier.h"
 #include "NFmiSmartToolInfo.h"
 #include "NFmiProducerSystem.h"
-#include "NFmiSoundingData.h"
+#include "NFmiSoundingDataOpt1.h"
 #include "NFmiMetMath.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiParamHandlerView.h"
@@ -1466,7 +1466,7 @@ static void InterpolateSoundingDatasInMatrix(NFmiDataMatrix<float> &theValues, v
 static void FillCrossSectionMatrixWithSoundingData(NFmiDataMatrix<float> &theValues, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, std::vector<float> &thePressures, int theTimeIndex)
 {
 	FmiParameterName parId = static_cast<FmiParameterName>(theDrawParam->Param().GetParamIdent());
-	NFmiSoundingData soundingData;
+	NFmiSoundingDataOpt1 soundingData;
 	if(soundingData.FillSoundingData(theInfo, theInfo->Time(), theInfo->OriginTime(), *theInfo->Location()))
 	{
 		for(size_t i=0; i < thePressures.size(); i++)
@@ -1480,7 +1480,7 @@ static void FillBeforeStartTimeWithCrossSectionValues(boost::shared_ptr<NFmiFast
 	{
 		do
 		{
-			if(NFmiSoundingData::HasRealSoundingData(*theInfo))
+			if(NFmiSoundingDataOpt1::HasRealSoundingData(theInfo))
 			{ // dataa löytyi asemalta johonkin aikaan, täytetään vektori siltä kohdalta, ja lasketaan aika-indeksi talteen
 				theBeforeStartIndex = theInfo->Time().DifferenceInMinutes(theTimes.FirstTime())/theTimes.Resolution();
 				::FillCrossSectionMatrixWithSoundingData(theBeforeStartValues, theInfo, theDrawParam, thePressures, 0);
@@ -1500,7 +1500,7 @@ static void FillCrossSectionMatrixWithObservedSoundings(NFmiDataMatrix<float> &t
 	{
 		if(theInfo->Time(theTimes.CurrentTime()))
 		{
-			if(NFmiSoundingData::HasRealSoundingData(*theInfo))
+			if(NFmiSoundingDataOpt1::HasRealSoundingData(theInfo))
 			{ // dataa löytyi asemalta johonkin aikaan, täytetään matriisi siltä kohdalta, ja merkitään viimeksi löytynyt aika-indeksi talteen
 				FmiParameterName parId = static_cast<FmiParameterName>(theDrawParam->Param().GetParamIdent());
 				if(theInfo->Param(parId) || parId == kFmiHumidity || metaWindParamUsage.ParamNeedsMetaCalculations(theDrawParam->Param().GetParamIdent())) // humidity lasketaan vaikka sitä ei löydy infosta

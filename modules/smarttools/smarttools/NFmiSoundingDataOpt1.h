@@ -9,8 +9,6 @@
 
 #pragma once
 
-#include "NFmiSoundingData.h"
-
 #include <newbase/NFmiMetTime.h>
 #include <newbase/NFmiLocation.h>
 #include <newbase/NFmiParameterName.h>
@@ -21,6 +19,16 @@
 #include <unordered_map>
 
 class NFmiFastQueryInfo;
+
+// Miten LCL lasketaan, pinta-arvojen vai mixed layer arvojen avulla, vai most unstable?
+typedef enum
+{
+  kLCLCalcNone = 0,
+  kLCLCalcSurface = 1,
+  kLCLCalc500m = 2,
+  kLCLCalc500m2 = 3,        // lasketaan Tpot ja w keskiarvojen ja 1. hPa kerroksin laskien
+  kLCLCalcMostUnstable = 4  // etsi maksimi theta-e arvon avulla most unstable tapaus
+} FmiLCLCalcType;
 
 class NFmiSoundingDataOpt1
 {

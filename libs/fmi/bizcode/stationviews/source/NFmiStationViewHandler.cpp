@@ -72,7 +72,7 @@
 #include "NFmiHelpDataInfo.h"
 #include "NFmiDictionaryFunction.h"
 #include "NFmiStationArrowView.h"
-#include "NFmiSoundingData.h"
+#include "NFmiSoundingDataOpt1.h"
 #include "NFmiParamHandlerView.h"
 #include "NFmiConceptualDataView.h"
 #include "NFmiWindTableSystem.h"
@@ -1033,7 +1033,7 @@ void NFmiStationViewHandler::DrawSoundingSymbols(boost::shared_ptr<NFmiFastQuery
 		for(theSoundingInfo->ResetLocation() ; theSoundingInfo->NextLocation(); )
 		{
 			NFmiPoint viewPoint(LatLonToViewPoint(theSoundingInfo->LatLon())); // tämä on offset
-			if(NFmiSoundingData::HasRealSoundingData(*theSoundingInfo))
+			if(NFmiSoundingDataOpt1::HasRealSoundingData(theSoundingInfo))
 				markerPolyLine.GetEnvironment()->SetFillColor(NFmiColor(0.551f, 0.9f, 0.21f)); // löytyy dataa, vihreä kolmio
 			else
 				markerPolyLine.GetEnvironment()->SetFillColor(NFmiColor(1.f, 0.35f, 0.f)); // ei dataa, oranssi kolmio

@@ -14,7 +14,6 @@
 
 class NFmiQueryData;
 class NFmiFastQueryInfo;
-class NFmiSoundingData;
 class NFmiDrawParam;
 class NFmiMetTime;
 class NFmiInfoOrganizer;
@@ -96,11 +95,6 @@ class NFmiSoundingIndexCalculator
 {
  public:
   static bool IsSurfaceBasedSoundingIndex(FmiSoundingParameters theSoundingParameter);
-  static bool FillSoundingData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-                               NFmiSoundingData &theSoundingData,
-                               const NFmiMetTime &theTime,
-                               const NFmiLocation &theLocation,
-                               const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo);
   static bool FillSoundingDataOpt1(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                    NFmiSoundingDataOpt1 &theSoundingData,
                                    const NFmiMetTime &theTime,
@@ -108,7 +102,6 @@ class NFmiSoundingIndexCalculator
       const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
       const NFmiSoundingDataOpt1::GroundLevelValue &theGroundLevelValue =
           NFmiSoundingDataOpt1::GroundLevelValue());
-  static float Calc(NFmiSoundingData &theSoundingData, FmiSoundingParameters theParam);
   static float CalcOpt1(NFmiSoundingDataOpt1 &theSoundingDataOpt1, FmiSoundingParameters theParam);
   static float Calc(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                     const NFmiPoint &theLatlon,

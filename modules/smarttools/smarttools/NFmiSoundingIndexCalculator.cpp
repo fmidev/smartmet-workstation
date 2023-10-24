@@ -9,7 +9,6 @@
 
 #include "NFmiDrawParam.h"
 #include "NFmiInfoOrganizer.h"
-#include "NFmiSoundingData.h"
 #include "NFmiSoundingDataOpt1.h"
 #include "NFmiSoundingFunctions.h"
 #include "NFmiSoundingIndexCalculator.h"
@@ -34,28 +33,6 @@
 
 using namespace NFmiSoundingFunctions;
 
-bool NFmiSoundingIndexCalculator::FillSoundingData(
-    const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-    NFmiSoundingData &theSoundingData,
-    const NFmiMetTime &theTime,
-    const NFmiLocation &theLocation,
-    const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo)
-{
-  if (theInfo)
-  {
-    if (theInfo->IsGrid())
-      return theSoundingData.FillSoundingData(theInfo,
-                                              theTime,
-                                              theInfo->OriginTime(),
-                                              theLocation.GetLocation(),
-                                              theLocation.GetName(),
-                                              theGroundDataInfo);
-    else
-      return theSoundingData.FillSoundingData(theInfo, theTime, theInfo->OriginTime(), theLocation);
-  }
-  return false;
-}
-
 bool NFmiSoundingIndexCalculator::FillSoundingDataOpt1(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     NFmiSoundingDataOpt1 &theSoundingData,
@@ -76,25 +53,6 @@ bool NFmiSoundingIndexCalculator::FillSoundingDataOpt1(
                                               theGroundLevelValue);
     else
       return theSoundingData.FillSoundingData(theInfo, theTime, theInfo->OriginTime(), theLocation);
-  }
-  return false;
-}
-
-static bool FillSoundingData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-                             NFmiSoundingData &theSoundingData,
-                             const NFmiMetTime &theTime,
-                             const NFmiPoint &theLatlon)
-{
-  static NFmiString bsName("bsname");
-  if (theInfo)
-  {
-    if (theInfo->IsGrid())
-      return theSoundingData.FillSoundingData(theInfo,
-                                              theTime,
-                                              theInfo->OriginTime(),
-                                              theLatlon,
-                                              bsName,
-                                              boost::shared_ptr<NFmiFastQueryInfo>());
   }
   return false;
 }
@@ -583,183 +541,17 @@ float NFmiSoundingIndexCalculator::CalcOpt1(NFmiSoundingDataOpt1 &theSoundingDat
   return static_cast<float>(value);
 }
 
-float NFmiSoundingIndexCalculator::Calc(NFmiSoundingData &theSoundingData,
-                                        FmiSoundingParameters theParam)
-{
-  double value = kFloatMissing;
-  double xxxxValue = kFloatMissing;  // tämä on ns. hukka parametri, koska jotkut parametrit
-                                     // syntyvät sivutuotteena ja tähän sijoitetaan aina se ei
-                                     // haluttu parametri
-  switch (theParam)
-  {
-    // **** 1. yksinkertaiset indeksit, tarvitaan vain soundingdata ***
-    case kSoundingParSHOW:
-      value = theSoundingData.CalcSHOWIndex();
-      break;
-    case kSoundingParLIFT:
-      value = theSoundingData.CalcLIFTIndex();
-      break;
-    case kSoundingParKINX:
-      value = theSoundingData.CalcKINXIndex();
-      break;
-    case kSoundingParCTOT:
-      value = theSoundingData.CalcCTOTIndex();
-      break;
-    case kSoundingParVTOT:
-      value = theSoundingData.CalcVTOTIndex();
-      break;
-    case kSoundingParTOTL:
-      value = theSoundingData.CalcTOTLIndex();
-      break;
-
-    // **** 2. indeksit joissa tarvitaan myös pintakerros lasku tyyppi soundingdatan lisäksi ja
-    // mahd. korkeus parametri ***
-    // **** surface ****
-    case kSoundingParLCLSur:
-    case kSoundingParLCLSurBas:
-      value = theSoundingData.CalcLCLIndex(kLCLCalcSurface);
-      break;
-    case kSoundingParCAPESur:
-    case kSoundingParCAPESurBas:
-      value = theSoundingData.CalcCAPE500Index(kLCLCalcSurface);
-      break;
-    case kSoundingParCAPE0_3kmSur:
-    case kSoundingParCAPE0_3kmSurBas:
-      value = theSoundingData.CalcCAPE500Index(kLCLCalcSurface, 3000);
-      break;
-    case kSoundingParCAPE_TT_Sur:
-    case kSoundingParCAPE_TT_SurBas:
-      value = theSoundingData.CalcCAPE_TT_Index(kLCLCalcSurface, -10, -40);
-      break;
-    case kSoundingParCINSur:
-    case kSoundingParCINSurBas:
-      value = theSoundingData.CalcCINIndex(kLCLCalcSurface);
-      break;
-    case kSoundingParLCLHeightSur:
-    case kSoundingParLCLHeightSurBas:
-      value = theSoundingData.CalcLCLHeightIndex(kLCLCalcSurface);
-      break;
-
-    // **** 500 m mixing ****
-    case kSoundingParLCL500m:
-      value = theSoundingData.CalcLCLIndex(kLCLCalc500m2);
-      break;
-    case kSoundingParCAPE500m:
-      value = theSoundingData.CalcCAPE500Index(kLCLCalc500m2);
-      break;
-    case kSoundingParCAPE0_3km500m:
-      value = theSoundingData.CalcCAPE500Index(kLCLCalc500m2, 3000);
-      break;
-    case kSoundingParCAPE_TT_500m:
-      value = theSoundingData.CalcCAPE_TT_Index(kLCLCalc500m2, -10, -40);
-      break;
-    case kSoundingParCIN500m:
-      value = theSoundingData.CalcCINIndex(kLCLCalc500m2);
-      break;
-    case kSoundingParLCLHeight500m:
-      value = theSoundingData.CalcLCLHeightIndex(kLCLCalc500m2);
-      break;
-
-    // **** most unstable case ****
-    case kSoundingParLCLMostUn:
-      value = theSoundingData.CalcLCLIndex(kLCLCalcMostUnstable);
-      break;
-    case kSoundingParCAPEMostUn:
-      value = theSoundingData.CalcCAPE500Index(kLCLCalcMostUnstable);
-      break;
-    case kSoundingParCAPE0_3kmMostUn:
-      value = theSoundingData.CalcCAPE500Index(kLCLCalcMostUnstable, 3000);
-      break;
-    case kSoundingParCAPE_TT_MostUn:
-      value = theSoundingData.CalcCAPE_TT_Index(kLCLCalcMostUnstable, -10, -40);
-      break;
-    case kSoundingParCINMostUn:
-      value = theSoundingData.CalcCINIndex(kLCLCalcMostUnstable);
-      break;
-    case kSoundingParLCLHeightMostUn:
-      value = theSoundingData.CalcLCLHeightIndex(kLCLCalcMostUnstable);
-      break;
-
-    // **** 3. indeksit jotka lasketaan jonkun muun indeksin yhteydessä, tarvitaan myös
-    // mahdollisesti pintakerros lasku tyyppi ja soundingdata ***
-    case kSoundingParLFCSur:
-    case kSoundingParLFCSurBas:
-      value = theSoundingData.CalcLFCIndex(kLCLCalcSurface, xxxxValue);
-      break;
-    case kSoundingParELSur:
-    case kSoundingParELSurBas:
-      xxxxValue = theSoundingData.CalcLFCIndex(kLCLCalcSurface, value);
-      break;
-    case kSoundingParLFCHeightSur:
-    case kSoundingParLFCHeightSurBas:
-      value = theSoundingData.CalcLFCHeightIndex(kLCLCalcSurface, xxxxValue);
-      break;
-    case kSoundingParELHeightSur:
-    case kSoundingParELHeightSurBas:
-      xxxxValue = theSoundingData.CalcLFCHeightIndex(kLCLCalcSurface, value);
-      break;
-
-    case kSoundingParLFC500m:
-      value = theSoundingData.CalcLFCIndex(kLCLCalc500m2, xxxxValue);
-      break;
-    case kSoundingParEL500m:
-      xxxxValue = theSoundingData.CalcLFCIndex(kLCLCalc500m2, value);
-      break;
-    case kSoundingParLFCHeight500m:
-      value = theSoundingData.CalcLFCHeightIndex(kLCLCalc500m2, xxxxValue);
-      break;
-    case kSoundingParELHeight500m:
-      xxxxValue = theSoundingData.CalcLFCHeightIndex(kLCLCalc500m2, value);
-      break;
-
-    case kSoundingParLFCMostUn:
-      value = theSoundingData.CalcLFCIndex(kLCLCalcMostUnstable, xxxxValue);
-      break;
-    case kSoundingParELMostUn:
-      xxxxValue = theSoundingData.CalcLFCIndex(kLCLCalcMostUnstable, value);
-      break;
-    case kSoundingParLFCHeightMostUn:
-      value = theSoundingData.CalcLFCHeightIndex(kLCLCalcMostUnstable, xxxxValue);
-      break;
-    case kSoundingParELHeightMostUn:
-      xxxxValue = theSoundingData.CalcLFCHeightIndex(kLCLCalcMostUnstable, value);
-      break;
-
-    // **** 4. indeksit joiden laskuissa tarvitaan korkeus parametreja ja soundingdata ***
-    case kSoundingParBS0_6km:
-      value = theSoundingData.CalcBulkShearIndex(0, 6);
-      break;
-    case kSoundingParBS0_1km:
-      value = theSoundingData.CalcBulkShearIndex(0, 1);
-      break;
-    case kSoundingParSRH0_3km:
-      value = theSoundingData.CalcSRHIndex(0, 3);
-      break;
-    case kSoundingParSRH0_1km:
-      value = theSoundingData.CalcSRHIndex(0, 1);
-      break;
-    case kSoundingParWS1500m:
-      value = theSoundingData.CalcWSatHeightIndex(1500);
-      break;
-    case kSoundingParThetaE0_3km:
-      value = theSoundingData.CalcThetaEDiffIndex(0, 3);
-      break;
-    case kSoundingParNone:
-      value = kFloatMissing;
-      break;
-  }
-
-  return static_cast<float>(value);
-}
 
 float NFmiSoundingIndexCalculator::Calc(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                         const NFmiPoint &theLatlon,
                                         const NFmiMetTime &theTime,
                                         FmiSoundingParameters theParam)
 {
-  NFmiSoundingData soundingData;
-  if (::FillSoundingData(theInfo, soundingData, theTime, theLatlon))
-    return Calc(soundingData, theParam);
+  NFmiSoundingDataOpt1 soundingData;
+  if (::FillSoundingDataOpt1(theInfo, soundingData, nullptr, theTime, theLatlon, false))
+  {
+    return CalcOpt1(soundingData, theParam);
+  }
   return kFloatMissing;
 }
 
