@@ -178,9 +178,9 @@ class NFmiTempView : public NFmiCtrlView
 	const NFmiColor& GetSelectedProducersColor() const;
 	NFmiPoint CalcStringRelativeSize(const std::string& str, double fontSize, const std::string& fontName);
 	bool DoIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData);
-	bool FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo);
+	bool FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo, const NFmiSoundingDataOpt1::GroundLevelValue& theGroundLevelValue);
 	std::vector<unsigned long> CalcAreaIntegrationLocationIndexes(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiLocation& theLocation, double theRangeInMeters);
-	bool FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo, unsigned long timeIndex1, unsigned long timeIndex2, const std::vector<unsigned long> &locationIndexes);
+	bool FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo, unsigned long timeIndex1, unsigned long timeIndex2, const std::vector<unsigned long> &locationIndexes, const NFmiSoundingDataOpt1::GroundLevelValue& theGroundLevelValue);
 	bool CheckIsSoundingDataChanged(TotalSoundingData& theUsedData);
 	SoundingDataEqual MakeSoundingDataEqual();
 	void SetupLegendDrawingEnvironment();
@@ -202,6 +202,7 @@ class NFmiTempView : public NFmiCtrlView
 	void CheckIsTVisible(float T, float P, double yPos, int& potenciallyVisibleValuesInOut, int& actuallyVisibleValuesInOut);
 	void SetupTAxisValues(double startT, double endT);
 	bool ScanRangeForAllDataSkewT(double startT, double endT, int& potenciallyVisibleValuesInOut, int& actuallyVisibleValuesInOut);
+	NFmiSoundingDataOpt1::GroundLevelValue GetPossibleGroundLevelValue(boost::shared_ptr<NFmiFastQueryInfo> &soundingInfo, const NFmiPoint& latlon, const NFmiMetTime& atime);
 
 	double Tpot2x(double tpot, double p);
 	double pt2x(double p, double t);

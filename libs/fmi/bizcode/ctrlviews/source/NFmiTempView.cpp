@@ -1885,40 +1885,75 @@ static bool IsSurfaceDataCombiningAllowed(CtrlViewDocumentInterface* ctrlViewDoc
 	return false;
 }
 
-// Haetaan painepinta datalle pinta-dataa, että luotauksia voidaan leikata maanpinnalle.
-static boost::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(CtrlViewDocumentInterface *ctrlViewDocumentInterface, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiProducer &theProducer, const std::vector<NFmiInfoData::Type> &theDataTypes)
+static boost::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(const NFmiProducer& theProducer, NFmiInfoOrganizer& theInfoOrganizer)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> groundDataInfo;
-    if(ctrlViewDocumentInterface && theInfo)
-    {
-		auto &infoOrganizer = *ctrlViewDocumentInterface->InfoOrganizer();
-        theInfo->FirstLevel();
-        if(theInfo->Level()->LevelType() == kFmiPressureLevel || theInfo->Level()->LevelType() == kFmiHybridLevel)
-        { 
+	// Jos tuottajalta löytyy pintadataa, missä parametri kFmiPressureAtStationLevel, palautetaan se.
+	auto infoVec = theInfoOrganizer.GetInfos(theProducer.GetIdent());
+	if(infoVec.size())
+	{
+		for(size_t i = 0; i < infoVec.size(); i++)
+		{
+			boost::shared_ptr<NFmiFastQueryInfo> tmpInfo = infoVec[i];
+			if(tmpInfo && tmpInfo->Param(kFmiPressureAtStationLevel))
+			{
+				groundDataInfo = tmpInfo; // löytyi data ja siitä tarvittava parametri, otetaan se käyttöön
+				break;
+			}
+		}
+	}
+	return groundDataInfo;
+}
+
+
+// Haetaan painepinta datalle pinta-dataa, että luotauksia voidaan leikata maanpinnalle.
+static boost::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(CtrlViewDocumentInterface* ctrlViewDocumentInterface, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiProducer& theProducer)
+{
+	if(ctrlViewDocumentInterface && theInfo)
+	{
+		auto& infoOrganizer = *ctrlViewDocumentInterface->InfoOrganizer();
+		theInfo->FirstLevel();
+		if(theInfo->Level()->LevelType() == kFmiPressureLevel || theInfo->Level()->LevelType() == kFmiHybridLevel)
+		{
 			if(::IsSurfaceDataCombiningAllowed(ctrlViewDocumentInterface, theInfo))
 			{
-				// Käydään mahdolliset datatyypit läpi
-				for(auto dataType : theDataTypes)
+				// jos kyse on painepinta datasta ja löytyy vastaavan datan pinta data, josta löytyy paine aseman korkeudelta, fixataan luotaus dataa pintadatan avulla
+				auto possibleGroundDataInfo = ::GetPossibleGroundData(theProducer, infoOrganizer);
+				if(possibleGroundDataInfo)
 				{
-					// jos kyse on painepinta datasta ja löytyy vastaavan datan pinta data, josta löytyy paine aseman korkeudelta, fixataan luotaus dataa pintadatan avulla
-					auto infoVec = infoOrganizer.GetInfos(dataType, true, theProducer.GetIdent());
-					if(infoVec.size())
-					{
-						for(size_t i = 0; i < infoVec.size(); i++)
-						{
-							boost::shared_ptr<NFmiFastQueryInfo> tmpInfo = infoVec[i];
-							if(tmpInfo && tmpInfo->Param(kFmiPressureAtStationLevel))
-							{
-								groundDataInfo = tmpInfo; // löytyi data ja siitä tarvittava parametri, otetaan se käyttöön
-								break;
-							}
-						}
-					}
+					return possibleGroundDataInfo;
 				}
 			}
-        }
-    }
-	return groundDataInfo;
+		}
+	}
+	return nullptr;
+}
+
+NFmiSoundingDataOpt1::GroundLevelValue NFmiTempView::GetPossibleGroundLevelValue(boost::shared_ptr<NFmiFastQueryInfo>& soundingInfo, const NFmiPoint& latlon, const NFmiMetTime& atime)
+{
+	NFmiSoundingDataOpt1::GroundLevelValue groundLevelValue;
+	if(soundingInfo)
+	{
+		// Laitetaan maanpinnalla leikattaviin datoihin vain painepintadatat.
+		// En tiedä pitäisikö height-level-datat myös laittaa tähän (ei ole testidataa, niin turha vielä tehdä).
+		if(soundingInfo->LevelType() == kFmiPressureLevel)
+		{
+			auto& infoOrganizer = *itsCtrlViewDocumentInterface->InfoOrganizer();
+			auto possibleGroundDataInfo = ::GetPossibleGroundData(*soundingInfo->Producer(), infoOrganizer);
+			if(possibleGroundDataInfo)
+			{
+				// Tällä datalla on par 472 eli stationPressure
+				groundLevelValue.itsStationPressureInMilliBars = possibleGroundDataInfo->InterpolatedValue(latlon, atime);
+			}
+			auto topoData = infoOrganizer.FindInfo(NFmiInfoData::kStationary);
+			if(topoData && topoData->Param(kFmiTopoGraf))
+			{
+				// Otetaan topo datasta korkeus metreissä ja muunnetaan se standardi-ilmakehän paineeksi
+				groundLevelValue.itsTopographyHeightInMillibars = static_cast<float>(CalcPressureAtHeight(topoData->InterpolatedValue(latlon) / 1000.f));
+			}
+		}
+	}
+	return groundLevelValue;
 }
 
 void NFmiTempView::DrawSoundingsInMTAMode(void)
@@ -1994,8 +2029,6 @@ bool NFmiTempView::IsInScanMode() const
 	return (itsOperationalMode == SoundingViewOperationMode::FitScalesScanMode);
 }
 
-const std::vector<NFmiInfoData::Type> g_CombineSurfaceDataTypes{ NFmiInfoData::kViewable , NFmiInfoData::kAnalyzeData };
-
 void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theProducerIndex, double theBrightningFactor, int theModelRunIndex)
 {
     auto usedTempInfo(theTempInfo);
@@ -2037,7 +2070,7 @@ TotalSoundingData NFmiTempView::GetTotalsoundingData(boost::shared_ptr<NFmiFastQ
 {
 	auto usedLocationWithName = ::GetSoundingLocation(info, usedTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
 	usedTempInfo.Latlon(usedLocationWithName.GetLocation());
-	auto groundDataInfo = ::GetPossibleGroundData(itsCtrlViewDocumentInterface, info, theProducer, g_CombineSurfaceDataTypes);
+	auto groundDataInfo = ::GetPossibleGroundData(itsCtrlViewDocumentInterface, info, theProducer);
 	ResetTextualScrollingIfSoundingDataChanged(theProducer, usedTempInfo, info, theProducerIndex);
 	NFmiMTATempSystem& mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
 	TotalSoundingData sounding(mtaTempSystem);
@@ -2089,13 +2122,14 @@ bool NFmiTempView::FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInf
 	}
 	else
 	{
+		auto groundLevelValue = GetPossibleGroundLevelValue(theInfo, theLocation.GetLocation(), theTime);
 		if(DoIntegrationSounding(theInfo, theSoundingData))
 		{
-			status = FillIntegrationSounding(theInfo, theSoundingData, theTime, theLocation, theGroundDataInfo);
+			status = FillIntegrationSounding(theInfo, theSoundingData, theTime, theLocation, theGroundDataInfo, groundLevelValue);
 		}
 		else
 		{
-			status = NFmiSoundingIndexCalculator::FillSoundingDataOpt1(theInfo, theSoundingData.itsSoundingData, theTime, theLocation, theGroundDataInfo);
+			status = NFmiSoundingIndexCalculator::FillSoundingDataOpt1(theInfo, theSoundingData.itsSoundingData, theTime, theLocation, theGroundDataInfo, groundLevelValue);
 		}
 	}
 
@@ -2112,7 +2146,7 @@ bool NFmiTempView::DoIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& t
 	return isModelData && (doAreaIntegration || doTimeIntegration);
 }
 
-bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo)
+bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo, const NFmiSoundingDataOpt1::GroundLevelValue& theGroundLevelValue)
 {
 	auto rangeInMeters = theSoundingData.itsIntegrationRangeInKm * 1000.;
 	bool singleLocation = (rangeInMeters == 0);
@@ -2138,7 +2172,7 @@ bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>&
 		}
 		if(singleLocation || !locationIndexes.empty())
 		{
-			return FillIntegrationSounding(theInfo, theSoundingData, startTime, theLocation, theGroundDataInfo, timeIndex1, timeIndex2, locationIndexes);
+			return FillIntegrationSounding(theInfo, theSoundingData, startTime, theLocation, theGroundDataInfo, timeIndex1, timeIndex2, locationIndexes, theGroundLevelValue);
 		}
 	}
 
@@ -2194,7 +2228,7 @@ static bool CalcAvgSoundingData(TotalSoundingData& theSoundingDataOut, std::vect
 	return false;
 }
 
-bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo, unsigned long timeIndex1, unsigned long timeIndex2, const std::vector<unsigned long>& locationIndexes)
+bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo, unsigned long timeIndex1, unsigned long timeIndex2, const std::vector<unsigned long>& locationIndexes, const NFmiSoundingDataOpt1::GroundLevelValue& theGroundLevelValue)
 {
 	std::vector<NFmiSoundingDataOpt1> soundingDataList;
 	bool singleLocation = locationIndexes.empty();
@@ -2208,7 +2242,7 @@ bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>&
 		auto currentTime = singleTime ? theTime : theInfo->Time();
 		if(singleLocation)
 		{
-			if(NFmiSoundingIndexCalculator::FillSoundingDataOpt1(theInfo, data, currentTime, theLocation, theGroundDataInfo))
+			if(NFmiSoundingIndexCalculator::FillSoundingDataOpt1(theInfo, data, currentTime, theLocation, theGroundDataInfo, theGroundLevelValue))
 			{
 				soundingDataList.push_back(data);
 			}
@@ -2219,7 +2253,7 @@ bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>&
 			{
 				theInfo->LocationIndex(locationIndex);
 				NFmiLocation usedLocation(theInfo->LatLon());
-				if(NFmiSoundingIndexCalculator::FillSoundingDataOpt1(theInfo, data, currentTime, usedLocation, theGroundDataInfo))
+				if(NFmiSoundingIndexCalculator::FillSoundingDataOpt1(theInfo, data, currentTime, usedLocation, theGroundDataInfo, theGroundLevelValue))
 				{
 					soundingDataList.push_back(data);
 				}
