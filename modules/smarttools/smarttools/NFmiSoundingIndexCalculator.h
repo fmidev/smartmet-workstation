@@ -9,12 +9,12 @@
 
 #pragma once
 
+#include "NFmiSoundingDataOpt1.h"
 #include <boost/shared_ptr.hpp>
 
 class NFmiQueryData;
 class NFmiFastQueryInfo;
 class NFmiSoundingData;
-class NFmiSoundingDataOpt1;
 class NFmiDrawParam;
 class NFmiMetTime;
 class NFmiInfoOrganizer;
@@ -105,7 +105,9 @@ class NFmiSoundingIndexCalculator
                                    NFmiSoundingDataOpt1 &theSoundingData,
                                    const NFmiMetTime &theTime,
                                    const NFmiLocation &theLocation,
-                                   const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo);
+      const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
+      const NFmiSoundingDataOpt1::GroundLevelValue &theGroundLevelValue =
+          NFmiSoundingDataOpt1::GroundLevelValue());
   static float Calc(NFmiSoundingData &theSoundingData, FmiSoundingParameters theParam);
   static float CalcOpt1(NFmiSoundingDataOpt1 &theSoundingDataOpt1, FmiSoundingParameters theParam);
   static float Calc(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,

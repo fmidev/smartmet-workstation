@@ -61,7 +61,8 @@ bool NFmiSoundingIndexCalculator::FillSoundingDataOpt1(
     NFmiSoundingDataOpt1 &theSoundingData,
     const NFmiMetTime &theTime,
     const NFmiLocation &theLocation,
-    const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo)
+    const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
+    const NFmiSoundingDataOpt1::GroundLevelValue &theGroundLevelValue)
 {
   if (theInfo)
   {
@@ -70,7 +71,9 @@ bool NFmiSoundingIndexCalculator::FillSoundingDataOpt1(
                                               theTime,
                                               theInfo->OriginTime(),
                                               theLocation,
-                                              theGroundDataInfo);
+                                              theGroundDataInfo,
+                                              false,
+                                              theGroundLevelValue);
     else
       return theSoundingData.FillSoundingData(theInfo, theTime, theInfo->OriginTime(), theLocation);
   }

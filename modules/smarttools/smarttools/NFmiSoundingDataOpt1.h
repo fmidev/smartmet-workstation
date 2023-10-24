@@ -30,6 +30,18 @@ class NFmiSoundingDataOpt1
    static const FmiParameterName OriginTimeParameterId = static_cast<FmiParameterName>(kFmiLastParameter + 1);
    static const FmiParameterName LevelParameterId = static_cast<FmiParameterName>(kFmiLastParameter + 2);
 
+   // Esim. painepintadatojen Luotauksia ja poikkileikkauksia halutaan
+   // leikata niin että pinnan alle jäävät osiot jätetään pois kokonaan.
+   // Tässä on kerrottuna, missä maanpinta sijaitsee joko mallin station-pressure 
+   // parametrista saatuna tai topografia datasta saatu korkeus muutettuna 
+   // normaali-ilmakehan korkeuden paineeksi.
+   struct GroundLevelValue
+   {
+     bool HasAnyValues() const;
+     float itsTopographyHeightInMillibars = kFloatMissing;
+     float itsStationPressureInMilliBars = kFloatMissing;
+   };
+
   class LFCIndexCache
   {
    public:
@@ -78,7 +90,8 @@ class NFmiSoundingDataOpt1
                         const NFmiMetTime &theOriginTime,
                         const NFmiLocation &theLocation,
                         const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
-                        bool useFastFill = false);
+                        bool useFastFill = false,
+                        const GroundLevelValue &theGroundLevelValue = GroundLevelValue());
   bool FillSoundingData(const std::vector<FmiParameterName> &parametersInServerData, const std::string &theServerDataAsciiFormat,
       const NFmiMetTime &theTime,
       const NFmiLocation &theLocation,
@@ -170,7 +183,8 @@ class NFmiSoundingDataOpt1
   void SetVerticalParamStatus();
   void MakeFillDataPostChecks(
       const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-      const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo = nullptr);
+      const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo = nullptr,
+      const GroundLevelValue &theGroundLevelValue = GroundLevelValue());
   void FillRestOfWindData(NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage);
 
  private:
@@ -179,7 +193,8 @@ class NFmiSoundingDataOpt1
                           double &theELValueOut);
   void FillLFCIndexCache(FmiLCLCalcType theLCLCalcType, double theLfcIndexValue, double theELValue);
   void FixPressureDataSoundingWithGroundData(
-      const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo);
+      const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
+      const GroundLevelValue &theGroundLevelValue);
   unsigned long GetHighestNonMissingValueLevelIndex(FmiParameterName theParaId);
   unsigned long GetLowestNonMissingValueLevelIndex(FmiParameterName theParaId);
   bool CheckForMissingLowLevelData(FmiParameterName theParaId, unsigned long theMissingIndexLimit);
@@ -222,6 +237,9 @@ class NFmiSoundingDataOpt1
   void SetServerDataFromGroundLevelUp();
   void ReverseAllData();
   void CheckForAlternativeParameterFill(FmiParameterName parameterId, std::deque<float> &parametersInServerData);
+  void FixByGroundLevelValue(const GroundLevelValue &theGroundLevelValue);
+  void FixByGroundPressureValue(float theGroundPressureValue);
+  void CutDataByZeroHeightIndex(int theIndex);
 
   NFmiLocation itsLocation;
   NFmiMetTime itsTime;
