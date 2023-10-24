@@ -1,9 +1,9 @@
 // NFmiModifiableQDatasBookKeeping
 
 #include "NFmiModifiableQDatasBookKeeping.h"
-#include "NFmiUndoableMultiLevelMask.h"
 #include "NFmiMultiLevelMask.h"
 #include "NFmiUndoRedoQData.h"
+#include "NFmiUndoableMultiLevelMask.h"
 
 NFmiModifiableQDatasBookKeeping::NFmiModifiableQDatasBookKeeping(unsigned long theMaskSize)
     : itsAreaMask(theMaskSize ? new NFmiUndoableMultiLevelMask(theMaskSize) : 0),
@@ -103,9 +103,8 @@ bool NFmiModifiableQDatasBookKeeping::IsMasked(unsigned long theIndex) const
   return (*itsAreaMask)->IsMasked(theIndex);
 }
 
-bool NFmiModifiableQDatasBookKeeping::SnapShotData(
-    const std::string& theAction,
-    const NFmiRawData& theRawData)
+bool NFmiModifiableQDatasBookKeeping::SnapShotData(const std::string& theAction,
+                                                   const NFmiRawData& theRawData)
 {
   if (itsUndoRedoQData)
     return itsUndoRedoQData->SnapShotData(theAction, theRawData);
@@ -127,7 +126,8 @@ bool NFmiModifiableQDatasBookKeeping::Redo()
   return false;
 }
 
-bool NFmiModifiableQDatasBookKeeping::UndoData(NFmiRawData& theRawData, std::string &modificationDescription)
+bool NFmiModifiableQDatasBookKeeping::UndoData(NFmiRawData& theRawData,
+                                               std::string& modificationDescription)
 {
   if (itsUndoRedoQData)
   {
@@ -140,7 +140,8 @@ bool NFmiModifiableQDatasBookKeeping::UndoData(NFmiRawData& theRawData, std::str
   return false;
 }
 
-bool NFmiModifiableQDatasBookKeeping::RedoData(NFmiRawData& theRawData, std::string &modificationDescription)
+bool NFmiModifiableQDatasBookKeeping::RedoData(NFmiRawData& theRawData,
+                                               std::string& modificationDescription)
 {
   if (itsUndoRedoQData)
   {

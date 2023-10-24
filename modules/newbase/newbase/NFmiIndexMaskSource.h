@@ -9,6 +9,7 @@
 
 #include "NFmiIndexMask.h"
 #include "NFmiMetTime.h"
+
 #include <map>
 
 class NFmiIndexMaskSource

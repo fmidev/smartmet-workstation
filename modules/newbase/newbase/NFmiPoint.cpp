@@ -26,7 +26,9 @@
 // ======================================================================
 
 #include "NFmiPoint.h"
+
 #include <boost/functional/hash.hpp>
+
 #include <fstream>
 
 const NFmiPoint NFmiPoint::gMissingLatlon = NFmiPoint(kFloatMissing, kFloatMissing);

@@ -121,15 +121,13 @@ class NFmiQueryInfo
 
   //! Hakee listan paikkaindeksi/etäisyys metreinä pareja. Listaan haetaan annettua paikkaa lähimmat
   //! datapisteet.
-  std::vector<std::pair<int, double>> NearestLocations(
-      const NFmiLocation &theLocation,
-      int theMaxWantedLocations,
-      double theMaxDistance = kFloatMissing) const;
+  std::vector<std::pair<int, double>> NearestLocations(const NFmiLocation &theLocation,
+                                                       int theMaxWantedLocations,
+                                                       double theMaxDistance = kFloatMissing) const;
 
-  std::vector<std::pair<int, double>> NearestLocations(
-      const NFmiPoint &theLatLonPoint,
-      int theMaxWantedLocations,
-      double theMaxDistance = kFloatMissing) const;
+  std::vector<std::pair<int, double>> NearestLocations(const NFmiPoint &theLatLonPoint,
+                                                       int theMaxWantedLocations,
+                                                       double theMaxDistance = kFloatMissing) const;
 
   virtual bool Level(const NFmiLevel &theLevelValue);
   virtual bool Time(const NFmiMetTime &theTime);
@@ -591,7 +589,7 @@ class NFmiQueryInfo
   virtual float SubParamFloatValue() const;
   virtual bool SubParamFloatValue(float theFloatData);
 
-  //Muuntaa floatin subvalueksi
+  // Muuntaa floatin subvalueksi
   float NFmiQueryInfo::SubValueFromFloat(float fValue) const;
 
   virtual float IndexFloatValue(
@@ -1237,8 +1235,8 @@ inline size_t NFmiQueryInfo::Size() const
   if (!itsParamDescriptor || !itsHPlaceDescriptor || !itsTimeDescriptor || !itsVPlaceDescriptor)
     return 0;
 
-  return (static_cast<size_t>(itsParamDescriptor->Size()) * itsHPlaceDescriptor->Size() * itsTimeDescriptor->Size() *
-          itsVPlaceDescriptor->Size());
+  return (static_cast<size_t>(itsParamDescriptor->Size()) * itsHPlaceDescriptor->Size() *
+          itsTimeDescriptor->Size() * itsVPlaceDescriptor->Size());
 }
 
 // ----------------------------------------------------------------------

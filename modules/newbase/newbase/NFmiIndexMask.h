@@ -8,7 +8,8 @@
 #pragma once
 
 #include "NFmiDef.h"  // for std::auto_ptr
-#include <vector>     // for std::vector
+
+#include <vector>  // for std::vector
 
 class NFmiIndexMaskIterator;
 

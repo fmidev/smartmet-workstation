@@ -15,7 +15,9 @@
 #pragma once
 
 #include "NFmiString.h"
+
 #include <sys/stat.h>
+
 #include <iostream>
 
 //! Undocumented

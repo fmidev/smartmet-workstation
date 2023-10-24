@@ -13,6 +13,7 @@
 // ======================================================================
 
 #include "NFmiParamBag.h"
+
 #include <cassert>
 #include <fstream>
 

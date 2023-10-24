@@ -53,8 +53,8 @@ class NFmiMetTime : public NFmiTime
   virtual bool IsEqual(const NFmiSortable& aFmiTest) const;
 
   NFmiMetTime& operator=(const NFmiMetTime&);
-  NFmiMetTime& operator++();      // prefix
-  NFmiMetTime& operator--();      // prefix
+  NFmiMetTime& operator++();          // prefix
+  NFmiMetTime& operator--();          // prefix
   const NFmiMetTime operator++(int);  // postfix
   const NFmiMetTime operator--(int);  // postfix
 

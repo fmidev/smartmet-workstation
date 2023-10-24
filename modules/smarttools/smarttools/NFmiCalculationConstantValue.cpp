@@ -7,8 +7,8 @@
 //**********************************************************
 
 #include "NFmiCalculationConstantValue.h"
-#include <newbase/NFmiDataModifier.h>
 #include <newbase/NFmiDataIterator.h>
+#include <newbase/NFmiDataModifier.h>
 #include <newbase/NFmiFastQueryInfo.h>
 
 // ****************************************************************************
@@ -18,12 +18,8 @@
 //--------------------------------------------------------
 // Constructor/Destructor
 //--------------------------------------------------------
-NFmiCalculationConstantValue::NFmiCalculationConstantValue(double value) : itsValue(value)
-{
-}
-NFmiCalculationConstantValue::~NFmiCalculationConstantValue()
-{
-}
+NFmiCalculationConstantValue::NFmiCalculationConstantValue(double value) : itsValue(value) {}
+NFmiCalculationConstantValue::~NFmiCalculationConstantValue() {}
 NFmiCalculationConstantValue::NFmiCalculationConstantValue(
     const NFmiCalculationConstantValue &theOther)
     : NFmiAreaMaskImpl(theOther), itsValue(theOther.itsValue)
@@ -82,13 +78,16 @@ NFmiCalculationRampFuction::NFmiCalculationRampFuction(
     boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     unsigned long thePossibleMetaParamId,
     BinaryOperator thePostBinaryOperator)
-    : NFmiInfoAreaMask(theOperation, theMaskType, theDataType, theInfo, thePossibleMetaParamId, thePostBinaryOperator)
+    : NFmiInfoAreaMask(theOperation,
+                       theMaskType,
+                       theDataType,
+                       theInfo,
+                       thePossibleMetaParamId,
+                       thePostBinaryOperator)
 {
 }
 
-NFmiCalculationRampFuction::~NFmiCalculationRampFuction()
-{
-}
+NFmiCalculationRampFuction::~NFmiCalculationRampFuction() {}
 NFmiCalculationRampFuction::NFmiCalculationRampFuction(const NFmiCalculationRampFuction &theOther)
     : NFmiInfoAreaMask(theOther)
 {
@@ -120,16 +119,18 @@ NFmiCalculationIntegrationFuction::NFmiCalculationIntegrationFuction(
     NFmiInfoData::Type theDataType,
     boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     unsigned long thePossibleMetaParamId)
-    : NFmiInfoAreaMask(
-          NFmiCalculationCondition(), theMaskType, theDataType, theInfo, thePossibleMetaParamId, NFmiAreaMask::kNoValue),
+    : NFmiInfoAreaMask(NFmiCalculationCondition(),
+                       theMaskType,
+                       theDataType,
+                       theInfo,
+                       thePossibleMetaParamId,
+                       NFmiAreaMask::kNoValue),
       itsDataModifier(theDataModifier),
       itsDataIterator(theDataIterator)
 {
 }
 
-NFmiCalculationIntegrationFuction::~NFmiCalculationIntegrationFuction()
-{
-}
+NFmiCalculationIntegrationFuction::~NFmiCalculationIntegrationFuction() {}
 double NFmiCalculationIntegrationFuction::Value(const NFmiCalculationParams &theCalculationParams,
                                                 bool /* fUseTimeInterpolationAlways */)
 {
@@ -172,9 +173,7 @@ NFmiCalculationRampFuctionWithAreaMask::NFmiCalculationRampFuctionWithAreaMask(
 {
 }
 
-NFmiCalculationRampFuctionWithAreaMask::~NFmiCalculationRampFuctionWithAreaMask()
-{
-}
+NFmiCalculationRampFuctionWithAreaMask::~NFmiCalculationRampFuctionWithAreaMask() {}
 NFmiCalculationRampFuctionWithAreaMask::NFmiCalculationRampFuctionWithAreaMask(
     const NFmiCalculationRampFuctionWithAreaMask &theOther)
     : NFmiAreaMaskImpl(theOther),
@@ -196,9 +195,7 @@ NFmiAreaMask *NFmiCalculationRampFuctionWithAreaMask::Clone() const
 // ****************************************************************************
 double NFmiCalculationDeltaZValue::itsHeightValue;
 
-NFmiCalculationDeltaZValue::NFmiCalculationDeltaZValue() : NFmiAreaMaskImpl()
-{
-}
+NFmiCalculationDeltaZValue::NFmiCalculationDeltaZValue() : NFmiAreaMaskImpl() {}
 NFmiCalculationDeltaZValue::NFmiCalculationDeltaZValue(const NFmiCalculationDeltaZValue &theOther)
     : NFmiAreaMaskImpl(theOther)
 {
@@ -211,4 +208,3 @@ NFmiAreaMask *NFmiCalculationDeltaZValue::Clone() const
 // ****************************************************************************
 // **************** NFmiCalculationDeltaZValue ********************************
 // ****************************************************************************
-

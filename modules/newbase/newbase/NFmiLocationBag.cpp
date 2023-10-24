@@ -15,6 +15,7 @@
 // ======================================================================
 
 #include "NFmiLocationBag.h"
+
 #include "NFmiArea.h"
 #include "NFmiRadarStation.h"
 #include "NFmiStation.h"
@@ -41,11 +42,7 @@ NFmiLocationBag::~NFmiLocationBag() { Destroy(); }
  */
 // ----------------------------------------------------------------------
 
-NFmiLocationBag::NFmiLocationBag() 
-    : NFmiSize(), 
-    itsLocations(), 
-    itsSortedLocations(), 
-    itsNearTree()
+NFmiLocationBag::NFmiLocationBag() : NFmiSize(), itsLocations(), itsSortedLocations(), itsNearTree()
 {
 }
 
@@ -60,8 +57,7 @@ NFmiLocationBag::NFmiLocationBag()
  */
 // ----------------------------------------------------------------------
 
-NFmiLocationBag::NFmiLocationBag(const NFmiLocation &theLocation)
-    : NFmiLocationBag()
+NFmiLocationBag::NFmiLocationBag(const NFmiLocation &theLocation) : NFmiLocationBag()
 {
   AddLocation(theLocation);
 }
@@ -118,15 +114,14 @@ NFmiLocationBag::NFmiLocationBag(const NFmiLocation *theLocationArray,
  */
 // ----------------------------------------------------------------------
 
-NFmiLocationBag::NFmiLocationBag(const NFmiLocationBag &theLocationBag)
-    : NFmiLocationBag()
+NFmiLocationBag::NFmiLocationBag(const NFmiLocationBag &theLocationBag) : NFmiLocationBag()
 {
   DoActualCopyOperations(theLocationBag);
 }
 
 void NFmiLocationBag::DoActualCopyOperations(const NFmiLocationBag &theLocationBag)
 {
-    Destroy();
+  Destroy();
 
   itsLocations.reserve(theLocationBag.itsLocations.size());
 
@@ -287,9 +282,8 @@ bool NFmiLocationBag::NearestLocation(const NFmiLocation &theLocation,
     double dist = theLocation.Distance(*itsLocations[i]);
     if (dist <= theMaxDistance && (!found || dist < best_distance))
     {
-      if (theArea->IsInside(
-              itsLocations[i]
-                  ->GetLocation()))  // optimointi kysymys, kumpi hitaampi Distance vai IsInside?
+      if (theArea->IsInside(itsLocations[i]->GetLocation()))  // optimointi kysymys, kumpi hitaampi
+                                                              // Distance vai IsInside?
       {
         found = true;
         best_index = i;
@@ -456,7 +450,6 @@ NFmiLocationBag &NFmiLocationBag::operator=(const NFmiLocationBag &theLocationBa
   }
   return *this;
 }
-
 
 // ----------------------------------------------------------------------
 /*!

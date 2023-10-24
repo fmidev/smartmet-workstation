@@ -9,6 +9,7 @@
 
 #include "NFmiGlobals.h"
 #include "NFmiGridBase.h"
+
 #include <memory>
 
 class NFmiQueryInfo;

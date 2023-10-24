@@ -7,9 +7,9 @@
 // ns. InfoOrganizer-luokkaan talteen, mistä eri datojen infoja pyydetään.
 // TODO: Keksi luokalle parempi nimi.
 
+#include <boost/shared_ptr.hpp>
 #include <newbase/NFmiFastQueryInfo.h>
 #include <newbase/NFmiMilliSecondTimer.h>
-#include <boost/shared_ptr.hpp>
 
 class NFmiOwnerInfo : public NFmiFastQueryInfo
 {
@@ -39,14 +39,14 @@ class NFmiOwnerInfo : public NFmiFastQueryInfo
   boost::shared_ptr<NFmiQueryData> DataReference() { return itsDataPtr; }
   double ElapsedTimeFromLoadInSeconds() const override;
 
-protected:
+ protected:
   void SetupDataLoadedTimer(bool IsConsideredOldData);
 
   boost::shared_ptr<NFmiQueryData> itsDataPtr;
   std::string itsDataFileName;
   // Tätä käytetään tunnistamaan mm. info-organizerissa, että onko
   // data samanlaista, eli pyyhitäänkö vanha tälläinen data pois alta
-  std::string itsDataFilePattern;  
+  std::string itsDataFilePattern;
   // SmartMetin käyttäjille kerrotaan tietyillä korostuksilla, että onko
   // data luettu vasta käyttöön, vai onko se ollut käytössä jo pidempään.
   // Tämä timer osaa kertoa kuinka kauan data on ollut käytössä.

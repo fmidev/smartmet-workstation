@@ -13,6 +13,7 @@
 // ======================================================================
 
 #include "NFmiQueryInfoSatel.h"
+
 #include "NFmiQueryData.h"
 #include "NFmiSaveBaseFactory.h"
 

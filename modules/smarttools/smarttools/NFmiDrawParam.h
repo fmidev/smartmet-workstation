@@ -33,13 +33,13 @@
 #include "NFmiColor.h"
 #include "NFmiMetEditorTypes.h"
 
-#include <newbase/NFmiParameterName.h>
-#include <newbase/NFmiDataIdent.h>
-#include <newbase/NFmiPoint.h>
-#include <newbase/NFmiLevel.h>
-#include <newbase/NFmiInfoData.h>
-#include <newbase/NFmiMetTime.h>
 #include <boost/shared_ptr.hpp>
+#include <newbase/NFmiDataIdent.h>
+#include <newbase/NFmiInfoData.h>
+#include <newbase/NFmiLevel.h>
+#include <newbase/NFmiMetTime.h>
+#include <newbase/NFmiParameterName.h>
+#include <newbase/NFmiPoint.h>
 
 class NFmiDrawingEnvironment;
 
@@ -96,7 +96,7 @@ class NFmiDrawParam
 
   // --------------- "set" ja "get" metodit -----------------
   const std::string& ParameterAbbreviation() const;
-  void ParameterAbbreviation(const std::string &theParameterAbbreviation)
+  void ParameterAbbreviation(const std::string& theParameterAbbreviation)
   {
     itsParameterAbbreviation = theParameterAbbreviation;
   }
@@ -168,10 +168,7 @@ class NFmiDrawParam
   //	void				 ModifyingUnit (bool theModifyingUnit) { fModifyingUnit =
   // theModifyingUnit; }
   //	bool			 ModifyingUnit () const { return fModifyingUnit; }
-  const NFmiMetEditorTypes::View* PossibleViewTypeList() const
-  {
-    return itsPossibleViewTypeList;
-  }
+  const NFmiMetEditorTypes::View* PossibleViewTypeList() const { return itsPossibleViewTypeList; }
   int PossibleViewTypeCount() const { return itsPossibleViewTypeCount; };
   const std::string& InitFileName() const { return itsInitFileName; }
   void InitFileName(std::string theFileName) { itsInitFileName = theFileName; }
@@ -183,10 +180,7 @@ class NFmiDrawParam
   double TimeSeriesScaleMax() const { return itsTimeSeriesScaleMax; };
   void TimeSeriesScaleMin(double theValue) { itsTimeSeriesScaleMin = theValue; };
   void TimeSeriesScaleMax(double theValue) { itsTimeSeriesScaleMax = theValue; };
-  const NFmiColor& IsolineColor() const
-  {
-    return itsIsolineColor;
-  };
+  const NFmiColor& IsolineColor() const { return itsIsolineColor; };
   void IsolineColor(const NFmiColor& newColor)
   {
     itsIsolineColor = newColor;
@@ -199,12 +193,9 @@ class NFmiDrawParam
   {
     itsIsolineTextColor = newColor;
     // **** Versio 3 parametri asetetaan toistaiseksi myös näin ****
-    itsContourTextColor = newColor;  
+    itsContourTextColor = newColor;
   }
-  const NFmiColor& IsolineTextColor() const
-  {
-    return itsIsolineTextColor;
-  };
+  const NFmiColor& IsolineTextColor() const { return itsIsolineTextColor; };
 
   void ContourTextColor(const NFmiColor& newColor) { itsContourTextColor = newColor; };
   const NFmiColor& ContourTextColor() const { return itsContourTextColor; };
@@ -290,8 +281,14 @@ class NFmiDrawParam
   void UsedSymbolListIndex(int newValue) { itsUsedSymbolListIndex = newValue; }
   int SymbolIndexingMapListIndex() const { return itsSymbolIndexingMapListIndex; }
   void SymbolIndexingMapListIndex(int newValue) { itsSymbolIndexingMapListIndex = newValue; }
-  NFmiMetEditorTypes::View GridDataPresentationStyle() const { return itsGridDataPresentationStyle; }
-  void GridDataPresentationStyle(NFmiMetEditorTypes::View newValue) { itsGridDataPresentationStyle = newValue; }
+  NFmiMetEditorTypes::View GridDataPresentationStyle() const
+  {
+    return itsGridDataPresentationStyle;
+  }
+  void GridDataPresentationStyle(NFmiMetEditorTypes::View newValue)
+  {
+    itsGridDataPresentationStyle = newValue;
+  }
   bool UseIsoLineFeathering() const { return fUseIsoLineFeathering; }
   void UseIsoLineFeathering(bool newValue)
   {
@@ -396,10 +393,7 @@ class NFmiDrawParam
     itsSimpleIsoLineColorShadeHighValue = newValue;
   }
 
-  float SimpleIsoLineColorShadeHigh2Value() const
-  {
-    return itsSimpleIsoLineColorShadeHigh2Value;
-  }
+  float SimpleIsoLineColorShadeHigh2Value() const { return itsSimpleIsoLineColorShadeHigh2Value; }
   void SimpleIsoLineColorShadeHigh2Value(float newValue)
   {
     itsSimpleIsoLineColorShadeHigh2Value = newValue;
@@ -538,26 +532,17 @@ class NFmiDrawParam
   bool DrawOnlyOverMask() const { return fDrawOnlyOverMask; }
   void DrawOnlyOverMask(bool newValue) { fDrawOnlyOverMask = newValue; }
 
-  float ColorContouringColorShadeLowValue() const
-  {
-    return itsColorContouringColorShadeLowValue;
-  }
+  float ColorContouringColorShadeLowValue() const { return itsColorContouringColorShadeLowValue; }
   void ColorContouringColorShadeLowValue(float newValue)
   {
     itsColorContouringColorShadeLowValue = newValue;
   }
-  float ColorContouringColorShadeMidValue() const
-  {
-    return itsColorContouringColorShadeMidValue;
-  }
+  float ColorContouringColorShadeMidValue() const { return itsColorContouringColorShadeMidValue; }
   void ColorContouringColorShadeMidValue(float newValue)
   {
     itsColorContouringColorShadeMidValue = newValue;
   }
-  float ColorContouringColorShadeHighValue() const
-  {
-    return itsColorContouringColorShadeHighValue;
-  }
+  float ColorContouringColorShadeHighValue() const { return itsColorContouringColorShadeHighValue; }
   void ColorContouringColorShadeHighValue(float newValue)
   {
     itsColorContouringColorShadeHighValue = newValue;
@@ -611,15 +596,30 @@ class NFmiDrawParam
     itsColorContouringColorShadeHigh3ValueColor = newValue;
   }
   bool SimpleColorContourTransparentColor1() const { return fSimpleColorContourTransparentColor1; }
-  void SimpleColorContourTransparentColor1(bool newValue) { fSimpleColorContourTransparentColor1 = newValue; }
+  void SimpleColorContourTransparentColor1(bool newValue)
+  {
+    fSimpleColorContourTransparentColor1 = newValue;
+  }
   bool SimpleColorContourTransparentColor2() const { return fSimpleColorContourTransparentColor2; }
-  void SimpleColorContourTransparentColor2(bool newValue) { fSimpleColorContourTransparentColor2 = newValue; }
+  void SimpleColorContourTransparentColor2(bool newValue)
+  {
+    fSimpleColorContourTransparentColor2 = newValue;
+  }
   bool SimpleColorContourTransparentColor3() const { return fSimpleColorContourTransparentColor3; }
-  void SimpleColorContourTransparentColor3(bool newValue) { fSimpleColorContourTransparentColor3 = newValue; }
+  void SimpleColorContourTransparentColor3(bool newValue)
+  {
+    fSimpleColorContourTransparentColor3 = newValue;
+  }
   bool SimpleColorContourTransparentColor4() const { return fSimpleColorContourTransparentColor4; }
-  void SimpleColorContourTransparentColor4(bool newValue) { fSimpleColorContourTransparentColor4 = newValue; }
+  void SimpleColorContourTransparentColor4(bool newValue)
+  {
+    fSimpleColorContourTransparentColor4 = newValue;
+  }
   bool SimpleColorContourTransparentColor5() const { return fSimpleColorContourTransparentColor5; }
-  void SimpleColorContourTransparentColor5(bool newValue) { fSimpleColorContourTransparentColor5 = newValue; }
+  void SimpleColorContourTransparentColor5(bool newValue)
+  {
+    fSimpleColorContourTransparentColor5 = newValue;
+  }
   bool UseWithIsoLineHatch1() const { return fUseWithIsoLineHatch1; }
   void UseWithIsoLineHatch1(bool newValue) { fUseWithIsoLineHatch1 = newValue; }
   bool DrawIsoLineHatchWithBorders1() const { return fDrawIsoLineHatchWithBorders1; }
@@ -701,7 +701,10 @@ class NFmiDrawParam
   bool UseTransparentFillColor() const { return fUseTransparentFillColor; }
   void UseTransparentFillColor(bool newValue) { fUseTransparentFillColor = newValue; }
   bool UseViewMacrosSettingsForMacroParam() const { return fUseViewMacrosSettingsForMacroParam; }
-  void UseViewMacrosSettingsForMacroParam(bool newValue) { fUseViewMacrosSettingsForMacroParam = newValue; }
+  void UseViewMacrosSettingsForMacroParam(bool newValue)
+  {
+    fUseViewMacrosSettingsForMacroParam = newValue;
+  }
   bool DoSparseSymbolVisualization() const { return fDoSparseSymbolVisualization; }
   void DoSparseSymbolVisualization(bool newValue) { fDoSparseSymbolVisualization = newValue; }
   NFmiMetEditorTypes::View GetViewType(bool isStationData) const;
@@ -724,7 +727,6 @@ class NFmiDrawParam
   bool IsPossibleColorValueParameterValid() const;
   bool FlipArrowSymbol() const { return fFlipArrowSymbol; }
   void FlipArrowSymbol(bool newState) { fFlipArrowSymbol = newState; }
-
 
   static std::string MetTime2String(const NFmiMetTime& theTime);
   static NFmiMetTime String2MetTime(const std::string& theStr);
@@ -813,7 +815,9 @@ class NFmiDrawParam
   int itsSymbolIndexingMapListIndex;  // indeksi johonkin symbolilistaan, jossa on mapattu arvot
                                       // haluttuihin symboleihin
 
-  NFmiMetEditorTypes::View itsGridDataPresentationStyle;  // isoviiva, color contouring, contour+isoviiva, quick color contouring, etc.
+  NFmiMetEditorTypes::View
+      itsGridDataPresentationStyle;  // isoviiva, color contouring, contour+isoviiva, quick color
+                                     // contouring, etc.
   bool fUseIsoLineFeathering;        // isoviivojen harvennus optio
   bool fUseContourFeathering;        // **** Versio 3 parametri ****
   bool fIsoLineLabelsOverLapping;    // voivatko isoviiva labelit mennä päällekkäin vai ei?
@@ -847,7 +851,7 @@ class NFmiDrawParam
   NFmiColor itsSimpleIsoLineColorShadeMidValueColor;
   NFmiColor itsSimpleIsoLineColorShadeHighValueColor;
   NFmiColor itsSimpleIsoLineColorShadeHigh2ValueColor;  // **** Versio 3 parametri ****
-  // Lisätty 5. väri, jotta simple-isoline no-color-blending piirrot voidaan tehdä 
+  // Lisätty 5. väri, jotta simple-isoline no-color-blending piirrot voidaan tehdä
   // oikein (vaatii 4 rajaa ja 5 väriä), kun color-blend on käytössä käytetään 4 rajaa ja 4 väriä
   NFmiColor itsSimpleIsoLineColorShadeHigh3ValueColor;
   int itsSimpleIsoLineColorShadeClassCount;  // kuinka monta väri luokkaa tehdään skaalaukseen
@@ -862,12 +866,12 @@ class NFmiDrawParam
   std::vector<int> itsSpecialIsoLineStyle;          // viiva tyylit
   std::vector<int> itsSpecialContourStyle;          // **** Versio 3 parametri ****
   std::vector<int> itsSpecialIsoLineColorIndexies;  // eri viivojen väri indeksit (pitää tehdä
-                                                      // näyttö taulukko käyttäjälle)
+                                                    // näyttö taulukko käyttäjälle)
   std::vector<int> itsSpecialContourColorIndexies;  // **** Versio 3 parametri ****
   std::vector<bool> itsSpecialIsoLineShowLabelBox;  // eri viivojen väri indeksit (pitää tehdä
-                                                      // näyttö taulukko käyttäjälle)
+                                                    // näyttö taulukko käyttäjälle)
   // colorcontouring ja quick contouring asetukset
-  bool fDrawOnlyOverMask;          // jos true, data piirretään vain maskin päälle
+  bool fDrawOnlyOverMask;                      // jos true, data piirretään vain maskin päälle
   float itsColorContouringColorShadeLowValue;  // väri skaalaus alkaa tästä arvosta
   float itsColorContouringColorShadeMidValue;  // väri skaalauksen keskiarvo
   float itsColorContouringColorShadeHighValue;
@@ -876,8 +880,9 @@ class NFmiDrawParam
   NFmiColor itsColorContouringColorShadeMidValueColor;
   NFmiColor itsColorContouringColorShadeHighValueColor;
   NFmiColor itsColorContouringColorShadeHigh2ValueColor;
-  // Lisätty 5. väri, jotta simple-contour piirrot voidaan tehdä samaan tyyliin kuin custom-contourit
-  NFmiColor itsColorContouringColorShadeHigh3ValueColor; 
+  // Lisätty 5. väri, jotta simple-contour piirrot voidaan tehdä samaan tyyliin kuin
+  // custom-contourit
+  NFmiColor itsColorContouringColorShadeHigh3ValueColor;
   // Kaikki Simple-Color-Contour värit voidaan laittaa
   // läpinäkyviksi, eli jos flagin arvo on true, on väri läpinäkyvä
   // ja jos false, se on normaali näkyvä väri.
@@ -924,73 +929,75 @@ class NFmiDrawParam
 
   // lisäsin tämän, kun laitoin editoriin satelliitti kuvien
   // katselun mahdollisuuden (satel-datalla ei ole infoa)
-  NFmiInfoData::Type itsDataType;  
-  
-  
+  NFmiInfoData::Type itsDataType;
+
   // is this DrawParam from viewmacro, if it is, then some things are handled
   // differently when modifying options, default value is false This is not stored in file!
   bool fViewMacroDrawParam;
 
-
   // onko parametri lainassa vai ei (A-J Punkan vilkutus juttu)
-  // Arkistodatan käyttöön liittyviä asetuksia (historialliseen dataan voidaan viitata kahdella eri tavalla)
-  // Joko suoraan fixatulla itsModelOriginTime:lla tai itsModelRunIndex:illä, jolla kerrotaan monesko ajo
-  // kiinnostaa viimeiseen nähden.
-  // Prioriteetti järjestys on, että ensin tarkistetaan löytyykö fiksattu aika (itsModelOriginTime)
-  // ja sitten vasta onko suhteellinen.
-  bool fBorrowedParam;       
+  // Arkistodatan käyttöön liittyviä asetuksia (historialliseen dataan voidaan viitata kahdella eri
+  // tavalla) Joko suoraan fixatulla itsModelOriginTime:lla tai itsModelRunIndex:illä, jolla
+  // kerrotaan monesko ajo kiinnostaa viimeiseen nähden. Prioriteetti järjestys on, että ensin
+  // tarkistetaan löytyykö fiksattu aika (itsModelOriginTime) ja sitten vasta onko suhteellinen.
+  bool fBorrowedParam;
 
   // Jos tässä arvo, etsitään arkistosta (SmartMetin (tulevaisuudessa) oma tai Q2Server)
   // suoraan kyseinen aika. Jos arvo on NFmiDrawParam::gMissingOriginTime, tämä ei ole käytössä.
-  NFmiMetTime itsModelOriginTime;  
-
+  NFmiMetTime itsModelOriginTime;
 
   // Jos tässä on negatiivinen arvo (-1 on edellinen malliajo, -2 on sitä edellinen jne.), haetaan
-  // arkistosta dataa. Tämä luku on siis verrattuna kyseisen mallin viimeisimpään data osaan, joka löytyy.
-  // Tarkoittaen että jos Hirlamista on pinta ja painepinta datasta tullut jo 06:n ajo ja
+  // arkistosta dataa. Tämä luku on siis verrattuna kyseisen mallin viimeisimpään data osaan, joka
+  // löytyy. Tarkoittaen että jos Hirlamista on pinta ja painepinta datasta tullut jo 06:n ajo ja
   // mallipintadatasta vasta 00, silloin viimeisin ajo on 06 ja -1 viittaa tällöin 00-ajoon.
   // Jos tämä on 0 tai positiivinen, tämä ei ole käytössä.
-  int itsModelRunIndex;  
+  int itsModelRunIndex;
 
   // tähän lasketaan relatiivisen malliajon mukainen
   // origin aika, jotä käytetään sitten mm. tooltipeissä ja muualla
-  NFmiMetTime itsModelOriginTimeCalculated;  
+  NFmiMetTime itsModelOriginTimeCalculated;
 
   // tähän määrätään kuinka monta viimeista ajoa näytetään mallille
   // kerrallaa aikasarjassa. Jos arvo on 0 (default), ei näytetä kuin viimeinen ajo normaalisti.
-  int itsTimeSerialModelRunCount;  
+  int itsTimeSerialModelRunCount;
 
-  // Default is true (like old behaviour). If set false, label boxes will be filled with itsIsolineLabelBoxFillColor.
+  // Default is true (like old behaviour). If set false, label boxes will be filled with
+  // itsIsolineLabelBoxFillColor.
   bool fUseTransparentFillColor;
-  // This is FIX for complicated SmartMet code in case where we wan't to prevent loading macroParameter's drawing settings
-  // normal way in NFmiStationView's SetupUsedDrawParam method. AND we want to prevent that some viewMacro loadings
-  // are not considered as viewMacros at all (F12 and CTRL + F12 functions in SmartMet).
-  // Don't use this for anything else. Right way to correct the problem is huge task (re-write certain parts of SmartMet's code).
+  // This is FIX for complicated SmartMet code in case where we wan't to prevent loading
+  // macroParameter's drawing settings normal way in NFmiStationView's SetupUsedDrawParam method.
+  // AND we want to prevent that some viewMacro loadings are not considered as viewMacros at all
+  // (F12 and CTRL + F12 functions in SmartMet). Don't use this for anything else. Right way to
+  // correct the problem is huge task (re-write certain parts of SmartMet's code).
   bool fUseViewMacrosSettingsForMacroParam;
-  // Sparse symboli piirto tarkoittaa että suurin osa hilan arvoista puuttuu (ainakin pitäisi) 
-  // ja kaikki ei-puuttuvat arvot piirretään symboleilla oli SmartMetin symboliharvennus asetus käytössä tai ei.
+  // Sparse symboli piirto tarkoittaa että suurin osa hilan arvoista puuttuu (ainakin pitäisi)
+  // ja kaikki ei-puuttuvat arvot piirretään symboleilla oli SmartMetin symboliharvennus asetus
+  // käytössä tai ei.
   bool fDoSparseSymbolVisualization;
   // Tästä eteenpäin isoviivojen värejä blendaillaan, vain jos tämän arvo on true.
-  // Blendaus välinä tällöin käytetään itsIsolineGab:in arvoa ja blendejä tehdään kahden isoviiva limitin väleihin.
+  // Blendaus välinä tällöin käytetään itsIsolineGab:in arvoa ja blendejä tehdään kahden isoviiva
+  // limitin väleihin.
   bool fDoIsoLineColorBlend;
-  // SmartMetin animaatioissa ei ole tietoa onko joku Wms layer data havainto vai ei. Wms protokollat eivät 
-  // mahdollista sellaista tietoa. Siksi käyttäjän pitää kertoa onko jossain Wms layerissä kyse havainnosta.
-  // Tällä on merkitystä ainakin kun piirretään animaatioita moodissa, joka seuraa viimeisimpiä havaintodatoja.
+  // SmartMetin animaatioissa ei ole tietoa onko joku Wms layer data havainto vai ei. Wms
+  // protokollat eivät mahdollista sellaista tietoa. Siksi käyttäjän pitää kertoa onko jossain Wms
+  // layerissä kyse havainnosta. Tällä on merkitystä ainakin kun piirretään animaatioita moodissa,
+  // joka seuraa viimeisimpiä havaintodatoja.
   bool fTreatWmsLayerAsObservation = false;
   // Käyttäjä voi säätää vakiopituuden tekstisymboli piirroille.
   // Tämä vaikuttaa symbolien harvennuksen laskuissa, mutta ei pakota itse tekstin pituuteen mitään.
   // Oletus arvo on 0, jolloin asetus ei ole käytössä, arvo jos < 1, ei tätä käytetä ollenkaan.
   int itsFixedTextSymbolDrawLength = DefaultFixedTextSymbolDrawLength;
   // Käyttäjä voi säätää symbolipiirroissa tiheämpää ja harvempaa piirtoa.
-  // Oletus arvo on 1, jolloin harvennus ei muutu mitenkään. 
+  // Oletus arvo on 1, jolloin harvennus ei muutu mitenkään.
   // Arvoavaruus on [0.5 , 1.5].
   double itsSymbolDrawDensityX = DefaultSymbolDrawDensity;
   double itsSymbolDrawDensityY = DefaultSymbolDrawDensity;
   // Käyttäjä voi halutessaan värjatä jonkun datan jonkun parametrin symbolit jollain toisen
   // parametrin arvojen avulla. Seuraavia arvoja voi antaa tekstinä:
   // 1) T tai par4, jolloin väritys haetaan saman tuottajan ja saman levelin lämpötila parametrista
-  // 2) (NOT IMPLEMENTED YET) T_925 tai par4_925, jolloin väritys haetaan saman tuottajan halutulta 925 hPa leveliltä lämpötila parametrista
-  // 3) (NOT IMPLEMENTED YET) T_ec tai T_ec_925, jolloin väritys haetaan Ecmwf datan pinnasta tai 925 hPa tasosta
+  // 2) (NOT IMPLEMENTED YET) T_925 tai par4_925, jolloin väritys haetaan saman tuottajan halutulta
+  // 925 hPa leveliltä lämpötila parametrista 3) (NOT IMPLEMENTED YET) T_ec tai T_ec_925, jolloin
+  // väritys haetaan Ecmwf datan pinnasta tai 925 hPa tasosta
   std::string itsPossibleColorValueParameter;
   // Joskus pitää saada nuoli symboli käännettyä 180 astetta.
   bool fFlipArrowSymbol = false;
@@ -1005,4 +1012,3 @@ inline std::istream& operator>>(std::istream& is, NFmiDrawParam& item)
   return item.Read(is);
 }
 //@}
-

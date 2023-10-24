@@ -8,6 +8,7 @@
 #pragma once
 
 #include "NFmiDef.h"
+
 #include <iosfwd>
 #include <vector>
 

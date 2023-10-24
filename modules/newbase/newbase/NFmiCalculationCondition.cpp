@@ -13,7 +13,9 @@
 // ======================================================================
 
 #include "NFmiCalculationCondition.h"
+
 #include "NFmiValueString.h"
+
 #include <cmath>
 #include <iostream>
 

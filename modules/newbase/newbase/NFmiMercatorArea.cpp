@@ -88,6 +88,7 @@
 // ======================================================================
 
 #include "NFmiMercatorArea.h"
+
 #include <limits>
 
 using namespace std;
@@ -347,7 +348,7 @@ std::ostream& NFmiMercatorArea::Write(std::ostream& file) const
  *
  * \param file The input stream to read from
  * \return The input stream read from
-*/
+ */
 // ----------------------------------------------------------------------
 
 std::istream& NFmiMercatorArea::Read(std::istream& file)

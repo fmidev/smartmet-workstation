@@ -35,8 +35,8 @@
 #include "NFmiDataStoringHelpers.h"
 #include "NFmiSmartToolIntepreter.h"
 
-#include <fstream>
 #include <bitset>
+#include <fstream>
 
 const NFmiColor gLabelBoxDefaultFillColor(1., 1., 0.);  // keltainen
 
@@ -799,24 +799,29 @@ NFmiColor NFmiDrawParam::String2Color(const std::string& theColorString)
 
 // Function makes from simple-contour 5 colors transparency boolean values
 // (fSimpleColorContourTransparentColor1-5 data members)
-// to bitset and that is converted to double to be stored in 
+// to bitset and that is converted to double to be stored in
 // NFmiDrawParam::Write method with NFmiDataStoringHelpers::NFmiExtraDataStorage
 // as double value. Alternative was to store 5 separate bool values as 5
 // double values.
 double NFmiDrawParam::SimpleColorContourTransparentColors2Double() const
 {
   std::bitset<5> value;
-  if (fSimpleColorContourTransparentColor1) value[0] = true;
-  if (fSimpleColorContourTransparentColor2) value[1] = true;
-  if (fSimpleColorContourTransparentColor3) value[2] = true;
-  if (fSimpleColorContourTransparentColor4) value[3] = true;
-  if (fSimpleColorContourTransparentColor5) value[4] = true;
+  if (fSimpleColorContourTransparentColor1)
+    value[0] = true;
+  if (fSimpleColorContourTransparentColor2)
+    value[1] = true;
+  if (fSimpleColorContourTransparentColor3)
+    value[2] = true;
+  if (fSimpleColorContourTransparentColor4)
+    value[3] = true;
+  if (fSimpleColorContourTransparentColor5)
+    value[4] = true;
   return static_cast<double>(value.to_ulong());
 }
 
 // This converts given double value to bitset and it's first
 // 5 bit are given to each fSimpleColorContourTransparentColor1-5 data members.
-void NFmiDrawParam::Double2SimpleColorContourTransparentColors(double theValue) 
+void NFmiDrawParam::Double2SimpleColorContourTransparentColors(double theValue)
 {
   std::bitset<5> bitValue(static_cast<unsigned long>(theValue));
   fSimpleColorContourTransparentColor1 = bitValue[0];
@@ -1133,7 +1138,8 @@ std::ostream& NFmiDrawParam::Write(std::ostream& file) const
     file << "possible_extra_data" << std::endl;
     file << extraData;
 
-    if (file.fail()) throw std::runtime_error("NFmiDrawParam::Write failed");
+    if (file.fail())
+      throw std::runtime_error("NFmiDrawParam::Write failed");
     //***********************************************
     //********** 'versio 3' parametreja *************
     //***********************************************
@@ -1165,7 +1171,8 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
   char temp[80];
   std::string tmpStr;
   int number;
-  if (!file) return file;
+  if (!file)
+    return file;
   file >> temp;
   if (std::string(temp) == std::string("Version"))
   {
@@ -1177,7 +1184,8 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
 
     if (itsInitFileVersionNumber >= 1.)  // tämä on vain esimerkki siitä mitä joskus tulee olemaan
     {
-      if (!file) return file;
+      if (!file)
+        return file;
       file >> temp;                // luetaan nimike pois
       std::getline(file, tmpStr);  // luetaan ed. rivinvaihto pois jaloista
       std::getline(file, tmpStr);  // luetaan rivin loppuun, jos lyhenteessä spaceja mahdollisesti
@@ -1233,7 +1241,8 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
       file >> temp;  // luetaan nimike pois
       file >> itsAbsoluteMaxValue;
 
-      if (!file) return file;
+      if (!file)
+        return file;
 
       file >> temp;  // luetaan nimike pois
       file >> itsTimeSeriesScaleMin;
@@ -1253,14 +1262,16 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
       file >> temp;  // luetaan nimike pois
       file >> itsPossibleViewTypeCount;
       file >> temp;  // luetaan nimike pois
-      if (!file) return file;
+      if (!file)
+        return file;
       for (int ind = 0; ind < itsPossibleViewTypeCount; ind++)
       {
         file >> number;
         itsPossibleViewTypeList[ind] = NFmiMetEditorTypes::View(number);
       }
 
-      if (!file) return file;
+      if (!file)
+        return file;
 
       file >> temp;  // luetaan nimike pois
       file >> itsTimeSerialModifyingLimit;
@@ -1277,7 +1288,8 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
       // on pienempi kuin 1, annetaan arvoksi 1.
       file >> number;
       number -= 100;
-      if (number < 1) number = 1;
+      if (number < 1)
+        number = 1;
       itsStationDataViewType = NFmiMetEditorTypes::View(number);
       file >> temp;  // luetaan nimike pois
       bool tmpBool = false;
@@ -1285,7 +1297,8 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
 
       file >> temp;  // luetaan nimike pois
       file >> temp;
-      if (!file) return file;
+      if (!file)
+        return file;
       itsUnit = std::string(temp);
 
       file >> temp;  // luetaan nimike pois
@@ -1308,7 +1321,8 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
       //***********************************************
       if (itsInitFileVersionNumber >= 2.)  // tämä on vain esimerkki siitä mitä joskus tulee olemaan
       {
-        if (!file) return file;
+        if (!file)
+          return file;
         file >> itsStationSymbolColorShadeLowValue;
         file >> itsStationSymbolColorShadeMidValue;
         file >> itsStationSymbolColorShadeHighValue;
@@ -1342,7 +1356,8 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
         file >> itsSimpleIsoLineColorShadeHighValueColor;
         file >> itsSimpleIsoLineColorShadeClassCount;
 
-        if (!file) return file;
+        if (!file)
+          return file;
         int i = 0;
         int size;
         file >> size;
@@ -1380,18 +1395,21 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
           itsSpecialIsoLineShowLabelBox[i] = foobar;
         }
 
-        if (!file) return file;
+        if (!file)
+          return file;
         file >> fDrawOnlyOverMask;
         file >> dummyLegacyValue;
 
         file >> size;
-        if (!file) return file;
+        if (!file)
+          return file;
         dummyLegacyFloatVectorValues.resize(size);
         for (i = 0; i < size; i++)
           file >> dummyLegacyFloatVectorValues[i];
 
         file >> size;
-        if (!file) return file;
+        if (!file)
+          return file;
         dummyLegacyIntVectorValues.resize(size);
         for (i = 0; i < size; i++)
           file >> dummyLegacyIntVectorValues[i];
@@ -1418,7 +1436,8 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
         file >> itsIsoLineHatchColor2;
         file >> itsColorContouringColorShadeHigh2ValueColor;
         file >> itsIsoLineLabelDigitCount;
-        if (!file) return file;
+        if (!file)
+          return file;
         //***********************************************
         //********** 'versio 2' parametreja *************
         //***********************************************
@@ -1448,7 +1467,8 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
 
         file >> dummyLegacyValue >> itsContourLabelDigitCount;
 
-        if (file.fail()) throw std::runtime_error("NFmiDrawParam::Read failed");
+        if (file.fail())
+          throw std::runtime_error("NFmiDrawParam::Read failed");
 
         file >> temp;  // luetaan 'possible_extra_data' pois
         NFmiDataStoringHelpers::NFmiExtraDataStorage
@@ -1506,7 +1526,8 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
         {
           fDoSparseSymbolVisualization = extraData.itsDoubleValues[7] != 0;
         }
-        double simpleContourColorsTransparencyBits = 0; // Oletusarvona kaikki laitetaan ei-transparenteiksi
+        double simpleContourColorsTransparencyBits =
+            0;  // Oletusarvona kaikki laitetaan ei-transparenteiksi
         if (extraData.itsDoubleValues.size() >= 9)
         {
           simpleContourColorsTransparencyBits = extraData.itsDoubleValues[8];
@@ -1566,7 +1587,8 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
           itsColorContouringColorShadeHigh3ValueColor = itsColorContouringColorShadeHigh2ValueColor;
         }
 
-        // Oletuksena vain tyhjennetään teksti, jos esim. luetaan vanhemmalla versiolla talletettuja drawParameja
+        // Oletuksena vain tyhjennetään teksti, jos esim. luetaan vanhemmalla versiolla talletettuja
+        // drawParameja
         itsPossibleColorValueParameter.clear();
         if (extraData.itsStringValues.size() >= 3)
         {
@@ -1579,11 +1601,13 @@ std::istream& NFmiDrawParam::Read(std::istream& file)
         }
         else
         {
-          // Jos luetaan vanhan version tekemää drawParamia, kopsataan vain simple-isolinen 4. väri 5. väriksi
+          // Jos luetaan vanhan version tekemää drawParamia, kopsataan vain simple-isolinen 4.
+          // väri 5. väriksi
           itsSimpleIsoLineColorShadeHigh3ValueColor = itsSimpleIsoLineColorShadeHigh2ValueColor;
         }
 
-        if (file.fail()) throw std::runtime_error("NFmiDrawParam::Read failed");
+        if (file.fail())
+          throw std::runtime_error("NFmiDrawParam::Read failed");
         //***********************************************
         //********** 'versio 3' parametreja *************
         //***********************************************
@@ -1648,8 +1672,10 @@ bool NFmiDrawParam::UseArchiveModelData() const
 {
   if (IsModelRunDataType())
   {
-    if (itsModelOriginTime != NFmiMetTime::gMissingTime) return true;
-    if (itsModelRunIndex < 0) return true;
+    if (itsModelOriginTime != NFmiMetTime::gMissingTime)
+      return true;
+    if (itsModelRunIndex < 0)
+      return true;
   }
   return false;
 }
@@ -1663,9 +1689,11 @@ bool NFmiDrawParam::IsModelRunDataType(NFmiInfoData::Type theDataType)
 {
   if (theDataType == NFmiInfoData::kViewable || theDataType == NFmiInfoData::kHybridData ||
       theDataType == NFmiInfoData::kModelHelpData || theDataType == NFmiInfoData::kKepaData ||
-      theDataType == NFmiInfoData::kTrajectoryHistoryData || theDataType == NFmiInfoData::kEditingHelpData)
+      theDataType == NFmiInfoData::kTrajectoryHistoryData ||
+      theDataType == NFmiInfoData::kEditingHelpData)
     return true;
-  if (theDataType == NFmiInfoData::kClimatologyData) return true;
+  if (theDataType == NFmiInfoData::kClimatologyData)
+    return true;
   return false;
 }
 
@@ -1684,13 +1712,15 @@ bool NFmiDrawParam::IsMacroParamCase(bool justCheckDataType)
 {
   if (justCheckDataType)
   {
-    if (IsMacroParamCase(itsDataType)) return true;
+    if (IsMacroParamCase(itsDataType))
+      return true;
   }
   else
   {
     if (!fUseViewMacrosSettingsForMacroParam)
     {
-      if (ViewMacroDrawParam() == false && (IsMacroParamCase(itsDataType))) return true;
+      if (ViewMacroDrawParam() == false && (IsMacroParamCase(itsDataType)))
+        return true;
     }
   }
   return false;
@@ -1701,7 +1731,7 @@ NFmiMetEditorTypes::View NFmiDrawParam::GetViewType(bool isStationData) const
   return isStationData ? StationDataViewType() : GridDataPresentationStyle();
 }
 
-bool NFmiDrawParam::IsColorContourType(NFmiMetEditorTypes::View viewType) 
+bool NFmiDrawParam::IsColorContourType(NFmiMetEditorTypes::View viewType)
 {
   if (viewType == NFmiMetEditorTypes::View::kFmiColorContourView ||
       viewType == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView ||
@@ -1723,7 +1753,7 @@ bool NFmiDrawParam::ShowContourLegendPotentially() const
   return false;
 }
 
-bool NFmiDrawParam::IsIsolineType(NFmiMetEditorTypes::View viewType) 
+bool NFmiDrawParam::IsIsolineType(NFmiMetEditorTypes::View viewType)
 {
   if (viewType == NFmiMetEditorTypes::View::kFmiIsoLineView ||
       viewType == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView)
@@ -1765,9 +1795,9 @@ void NFmiDrawParam::PossibleColorValueParameter(const std::string& newValue)
   NFmiStringTools::Trim(itsPossibleColorValueParameter);
 }
 
-bool NFmiDrawParam::IsPossibleColorValueParameterValid() const 
+bool NFmiDrawParam::IsPossibleColorValueParameterValid() const
 {
-  if(!itsPossibleColorValueParameter.empty())
+  if (!itsPossibleColorValueParameter.empty())
   {
     try
     {
@@ -1775,7 +1805,7 @@ bool NFmiDrawParam::IsPossibleColorValueParameterValid() const
           NFmiSmartToolIntepreter::CheckForVariableDataType(itsPossibleColorValueParameter);
       return wantedDataType.first;
     }
-    catch(std::exception &)
+    catch (std::exception&)
     {
     }
   }

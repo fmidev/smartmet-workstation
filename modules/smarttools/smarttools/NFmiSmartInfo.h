@@ -46,11 +46,11 @@ class NFmiSmartInfo : public NFmiOwnerInfo
   bool RedoData(std::string &modificationDescription);
   void UndoLevel(long theDepth);
 
-  bool LocationSelectionSnapShot();                  // ota maskit talteen
-  bool LocationSelectionUndo();                      // kysyy onko undo mahdollinen
-  bool LocationSelectionRedo();                      // kysyy onko redo mahdollinen
-  bool LocationSelectionUndoData();                  // suorittaa todellisen undon
-  bool LocationSelectionRedoData();                  // suorittaa todellisen redon
+  bool LocationSelectionSnapShot();                      // ota maskit talteen
+  bool LocationSelectionUndo();                          // kysyy onko undo mahdollinen
+  bool LocationSelectionRedo();                          // kysyy onko redo mahdollinen
+  bool LocationSelectionUndoData();                      // suorittaa todellisen undon
+  bool LocationSelectionRedoData();                      // suorittaa todellisen redon
   void LocationSelectionUndoLevel(int theNewUndoLevel);  // undolevel asetetaan tällä
   bool LoadedFromFile();
   void LoadedFromFile(bool loadedFromFile);

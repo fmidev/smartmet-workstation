@@ -49,9 +49,11 @@
 // ======================================================================
 
 #include "NFmiEnumConverter.h"
+
 #include "NFmiDef.h"
 #include "NFmiPressMasks.h"
 #include "NFmiTiesaaAlueet.h"
+
 #include <map>
 #include <vector>
 
@@ -61,57 +63,57 @@ using namespace std;
 bool NFmiEnumConverter::Comparator::operator()(const char *a, const char *b) const
 {
 #ifdef _MSC_VER
-    // MSVC++ 2008 (or before) doesn't support strcasecmp-function so using _stricmp instead.
-    return (::_stricmp(a, b) < 0);
+  // MSVC++ 2008 (or before) doesn't support strcasecmp-function so using _stricmp instead.
+  return (::_stricmp(a, b) < 0);
 #else
-    return (::strcasecmp(a, b) < 0);
+  return (::strcasecmp(a, b) < 0);
 #endif
 }
 
 NFmiEnumConverter::Impl::Impl(FmiEnumSpace theEnumspace) : itsEnumspace(theEnumspace)
 {
-    switch (itsEnumspace)
+  switch (itsEnumspace)
+  {
+    case kParamNames:
     {
-      case kParamNames:
-      {
-        itsBadEnum = kFmiBadParameter;
-        initParamNames();
-        break;
-      }
-      case kRoadRegions:
-      {
-        itsBadEnum = kTieAlueNone;
-        initRoadRegions();
-        break;
-      }
-      case kPressRegions:
-      {
-        itsBadEnum = kPressMaskNone;
-        initPressRegions();
-        break;
-      }
-      default:
-      {
-        itsBadEnum = 0;
-        break;
-      }
+      itsBadEnum = kFmiBadParameter;
+      initParamNames();
+      break;
     }
-    initEnumMap();
+    case kRoadRegions:
+    {
+      itsBadEnum = kTieAlueNone;
+      initRoadRegions();
+      break;
+    }
+    case kPressRegions:
+    {
+      itsBadEnum = kPressMaskNone;
+      initPressRegions();
+      break;
+    }
+    default:
+    {
+      itsBadEnum = 0;
+      break;
+    }
+  }
+  initEnumMap();
 }
 
 void NFmiEnumConverter::Impl::initEnumMap()
 {
-    // Establish maximum parameter number
-    int maxnum = -99999;
-    for (const auto &name_id : itsParamMap)
-      maxnum = std::max(maxnum, name_id.second);
+  // Establish maximum parameter number
+  int maxnum = -99999;
+  for (const auto &name_id : itsParamMap)
+    maxnum = std::max(maxnum, name_id.second);
 
-    // Create a vector mapping enum to name (char *)
+  // Create a vector mapping enum to name (char *)
 
-    itsEnumMap.resize(maxnum + 1, nullptr);
+  itsEnumMap.resize(maxnum + 1, nullptr);
 
-    for (const auto &name_id : itsParamMap)
-      itsEnumMap[name_id.second] = name_id.first;
+  for (const auto &name_id : itsParamMap)
+    itsEnumMap[name_id.second] = name_id.first;
 }
 
 // ----------------------------------------------------------------------
@@ -155,12 +157,11 @@ NFmiEnumConverter::NFmiEnumConverter(FmiEnumSpace theEnumspace)
 
 int NFmiEnumConverter::ToEnum(const char *s)
 {
-    auto pos = impl->itsParamMap.find(s);
+  auto pos = impl->itsParamMap.find(s);
 
-    if (pos == impl->itsParamMap.end())
-      return impl->itsBadEnum;
+  if (pos == impl->itsParamMap.end()) return impl->itsBadEnum;
 
-    return pos->second;
+  return pos->second;
 }
 
 // ----------------------------------------------------------------------
@@ -171,11 +172,10 @@ int NFmiEnumConverter::ToEnum(const char *s)
 
 const std::string NFmiEnumConverter::ToString(int theValue)
 {
-    const char *ptr = ToCharPtr(theValue);
-    if (ptr == nullptr)
-      return "";
+  const char *ptr = ToCharPtr(theValue);
+  if (ptr == nullptr) return "";
 
-    return ptr;
+  return ptr;
 }
 
 // ----------------------------------------------------------------------
@@ -196,10 +196,9 @@ const std::string NFmiEnumConverter::ToString(int theValue)
 
 const char *NFmiEnumConverter::ToCharPtr(int theName)
 {
-    if (theName < 0 || static_cast<std::size_t>(theName) >= impl->itsEnumMap.size())
-      return nullptr;
+  if (theName < 0 || static_cast<std::size_t>(theName) >= impl->itsEnumMap.size()) return nullptr;
 
-    return impl->itsEnumMap.at(theName);
+  return impl->itsEnumMap.at(theName);
 }
 
 // ----------------------------------------------------------------------
@@ -212,10 +211,10 @@ const char *NFmiEnumConverter::ToCharPtr(int theName)
 
 list<string> NFmiEnumConverter::Names()
 {
-    list<string> out;
+  list<string> out;
 
-    for (const auto &name_value : impl->itsParamMap)
-      out.push_back(name_value.first);
+  for (const auto &name_value : impl->itsParamMap)
+    out.push_back(name_value.first);
 
-    return out;
+  return out;
 }

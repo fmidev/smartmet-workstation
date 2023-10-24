@@ -1,6 +1,6 @@
 #include "NFmiExtraMacroParamData.h"
-#include <newbase/NFmiFastQueryInfo.h>
 #include "NFmiInfoOrganizer.h"
+#include <newbase/NFmiFastQueryInfo.h>
 
 #include <boost/math/special_functions/round.hpp>
 
@@ -31,9 +31,9 @@ NFmiDefineWantedData::NFmiDefineWantedData(NFmiInfoData::Type dataType,
 }
 
 NFmiDefineWantedData::NFmiDefineWantedData(NFmiInfoData::Type dataType,
-                     const NFmiParam &param,
-                     const NFmiLevel *level,
-                     const std::string &originalDataString)
+                                           const NFmiParam &param,
+                                           const NFmiLevel *level,
+                                           const std::string &originalDataString)
     : dataType_(dataType), param_(param), originalDataString_(originalDataString)
 {
   levelPtr_.reset(level ? new NFmiLevel(*level) : nullptr);
@@ -47,9 +47,9 @@ NFmiDefineWantedData::NFmiDefineWantedData(const NFmiProducer &producer,
 }
 
 NFmiDefineWantedData::NFmiDefineWantedData(const NFmiProducer &producer,
-                     const NFmiParam &param,
-                     const NFmiLevel *level,
-                     const std::string &originalDataString)
+                                           const NFmiParam &param,
+                                           const NFmiLevel *level,
+                                           const std::string &originalDataString)
     : producer_(producer), param_(param), originalDataString_(originalDataString)
 {
   levelPtr_.reset(level ? new NFmiLevel(*level) : nullptr);
@@ -66,7 +66,7 @@ NFmiDefineWantedData::NFmiDefineWantedData(const NFmiDefineWantedData &other)
   levelPtr_.reset(other.levelPtr_ ? new NFmiLevel(*other.levelPtr_) : nullptr);
 }
 
-NFmiDefineWantedData& NFmiDefineWantedData::operator=(const NFmiDefineWantedData& other)
+NFmiDefineWantedData &NFmiDefineWantedData::operator=(const NFmiDefineWantedData &other)
 {
   if (this != &other)
   {
@@ -80,19 +80,19 @@ NFmiDefineWantedData& NFmiDefineWantedData::operator=(const NFmiDefineWantedData
   return *this;
 }
 
-bool NFmiDefineWantedData::operator==(const NFmiDefineWantedData& other) const
+bool NFmiDefineWantedData::operator==(const NFmiDefineWantedData &other) const
 {
   if (dataType_ != other.dataType_)
   {
-      return false;
+    return false;
   }
-  if(producer_ != other.producer_)
+  if (producer_ != other.producer_)
   {
-      return false;
+    return false;
   }
-  if(param_ != other.param_)
+  if (param_ != other.param_)
   {
-      return false;
+    return false;
   }
   if (levelPtr_ && other.levelPtr_)
   {
@@ -112,9 +112,9 @@ bool NFmiDefineWantedData::operator==(const NFmiDefineWantedData& other) const
   {
     return false;
   }
-  if(levelType_ != other.levelType_)
+  if (levelType_ != other.levelType_)
   {
-      return false;
+    return false;
   }
   // Huom! originalDataString_ ei tarvitse olla sama (T_ec == par4_prod240), sille ei tarkastelua
   return true;
@@ -122,7 +122,7 @@ bool NFmiDefineWantedData::operator==(const NFmiDefineWantedData& other) const
 
 bool NFmiDefineWantedData::IsEditedData() const
 {
-    return dataType_ == NFmiInfoData::kEditable;
+  return dataType_ == NFmiInfoData::kEditable;
 }
 
 bool NFmiDefineWantedData::IsProducerLevelType() const
@@ -161,7 +161,8 @@ MultiParamData::MultiParamData() = default;
 
 MultiParamData::MultiParamData(const NFmiDefineWantedData &paramData)
     : possibleParamData_(paramData)
-{}
+{
+}
 
 MultiParamData::MultiParamData(const std::string &originalParamString,
                                const std::string macroParamFullPath)
@@ -170,24 +171,24 @@ MultiParamData::MultiParamData(const std::string &originalParamString,
 {
 }
 
-bool MultiParamData::IsInUse() const 
+bool MultiParamData::IsInUse() const
 {
-    if(possibleParamData_.IsInUse())
-        return true;
-    if(!possibleMacroParamFullPath_.empty()) 
-        return true;
+  if (possibleParamData_.IsInUse())
+    return true;
+  if (!possibleMacroParamFullPath_.empty())
+    return true;
 
-    return false;
+  return false;
 }
 
 bool MultiParamData::IsMacroParamCase() const
 {
-  if (possibleParamData_.IsInUse()) 
-      return false;
-  if (!possibleMacroParamFullPath_.empty()) 
-      return true;
-
+  if (possibleParamData_.IsInUse())
     return false;
+  if (!possibleMacroParamFullPath_.empty())
+    return true;
+
+  return false;
 }
 
 // *************************************************************
@@ -204,9 +205,9 @@ NFmiExtraMacroParamData::NFmiExtraMacroParamData()
 {
 }
 
-void NFmiExtraMacroParamData::Clear() 
-{ 
-  *this = NFmiExtraMacroParamData(); 
+void NFmiExtraMacroParamData::Clear()
+{
+  *this = NFmiExtraMacroParamData();
 }
 
 void NFmiExtraMacroParamData::FinalizeData(NFmiInfoOrganizer &theInfoOrganizer)
@@ -465,8 +466,7 @@ void NFmiExtraMacroParamData::UseDataForResolutionCalculations(
     if (theInfo->IsGrid())
     {
       itsDataBasedResolutionInKm = CalcDataBasedResolutionInKm(theInfo);
-      InitializeResolutionData(usedArea,
-                               itsDataBasedResolutionInKm);
+      InitializeResolutionData(usedArea, itsDataBasedResolutionInKm);
     }
     else
     {
@@ -489,7 +489,8 @@ bool NFmiExtraMacroParamData::IsMultiParamCase() const
     return false;
 }
 
-static std::string MakeMessageOfRejectionreasons(const std::set<ReasonForDataRejection> &rejectionReasons)
+static std::string MakeMessageOfRejectionreasons(
+    const std::set<ReasonForDataRejection> &rejectionReasons)
 {
   if (rejectionReasons.empty())
   {
@@ -497,7 +498,7 @@ static std::string MakeMessageOfRejectionreasons(const std::set<ReasonForDataRej
   }
 
   auto wrongLevelTypeIter = rejectionReasons.find(ReasonForDataRejection::WrongLevelType);
-  if(wrongLevelTypeIter != rejectionReasons.end())
+  if (wrongLevelTypeIter != rejectionReasons.end())
   {
     return "no data with correct level type";
   }
@@ -552,8 +553,9 @@ void NFmiExtraMacroParamData::InitializeDataBasedResolutionData(NFmiInfoOrganize
     auto findWantedInfoData = FindWantedInfo(theInfoOrganizer, itsWantedResolutionData);
     if (findWantedInfoData.foundInfo_)
     {
-      UseDataForResolutionCalculations(
-          theInfoOrganizer.MacroParamData()->Area(), findWantedInfoData.foundInfo_, findWantedInfoData.originalDataDescription_);
+      UseDataForResolutionCalculations(theInfoOrganizer.MacroParamData()->Area(),
+                                       findWantedInfoData.foundInfo_,
+                                       findWantedInfoData.originalDataDescription_);
     }
     else
     {
@@ -573,12 +575,13 @@ void NFmiExtraMacroParamData::InitializeFixedBaseDataInfo(NFmiInfoOrganizer &the
     }
     else
     {
-      throw std::runtime_error(::MakeFindWantedInfoErrorMessage("FixedBaseData", findWantedInfoData));
+      throw std::runtime_error(
+          ::MakeFindWantedInfoErrorMessage("FixedBaseData", findWantedInfoData));
     }
   }
 }
 
-void NFmiExtraMacroParamData::InitializeMultiParamData(NFmiInfoOrganizer& theInfoOrganizer)
+void NFmiExtraMacroParamData::InitializeMultiParamData(NFmiInfoOrganizer &theInfoOrganizer)
 {
   InitializeMultiParamData(theInfoOrganizer, itsMultiParam2);
   InitializeMultiParamData(theInfoOrganizer, itsMultiParam3);
@@ -589,8 +592,8 @@ void NFmiExtraMacroParamData::InitializeMultiParamData(NFmiInfoOrganizer &theInf
 {
   if (multiParamData.IsInUse())
   {
-    if (multiParamData.IsMacroParamCase()) 
-        return;
+    if (multiParamData.IsMacroParamCase())
+      return;
 
     auto &wantedMultiParamData = multiParamData.possibleParamData();
     auto findWantedInfoData = FindWantedInfo(theInfoOrganizer, wantedMultiParamData);
@@ -658,7 +661,7 @@ static void AddCalculationPoints(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
   }
 }
 
-static void AddCalculationPoints(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfos,
+static void AddCalculationPoints(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theInfos,
                                  const NFmiArea *theArea,
                                  std::vector<NFmiPoint> &theCalculationPoints)
 {
@@ -668,11 +671,12 @@ static void AddCalculationPoints(std::vector<boost::shared_ptr<NFmiFastQueryInfo
   }
 }
 
-void NFmiExtraMacroParamData::AddCalculationPointsFromData(NFmiInfoOrganizer &theInfoOrganizer, const std::vector<NFmiProducer> &theProducers)
+void NFmiExtraMacroParamData::AddCalculationPointsFromData(
+    NFmiInfoOrganizer &theInfoOrganizer, const std::vector<NFmiProducer> &theProducers)
 {
   for (const auto &producer : theProducers)
   {
-    std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infos =
+    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infos =
         theInfoOrganizer.GetInfos(producer.GetIdent());
     const NFmiArea *usedArea = theInfoOrganizer.MacroParamData()->Area();
 

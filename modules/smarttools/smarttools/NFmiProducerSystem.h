@@ -11,9 +11,9 @@
 
 #pragma once
 
+#include <newbase/NFmiInfoData.h>
 #include <newbase/NFmiProducer.h>
 #include <newbase/NFmiProducerName.h>
-#include <newbase/NFmiInfoData.h>
 #include <string>
 #include <vector>
 
@@ -52,6 +52,7 @@ class NFmiProducerInfo
   void HasRealVerticalData(bool newValue) { fHasRealVerticalData = newValue; }
   bool HasQ2ArchiveData() const { return fHasQ2ArchiveData; }
   void HasQ2ArchiveData(bool newValue) { fHasQ2ArchiveData = newValue; }
+
  private:
   std::string itsName;  // Pitempi nimi esim. Hirlam tai Ecmwf (voidaan käyttää esim.
                         // popup-valikoissa, missä on tilaa)
@@ -139,4 +140,3 @@ struct NFmiProducerHelperInfo
   NFmiInfoData::Type itsDataType;
   bool fGroundData;
 };
-

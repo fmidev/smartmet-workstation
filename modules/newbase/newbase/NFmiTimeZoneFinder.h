@@ -8,7 +8,9 @@
 #pragma once
 
 #include "NFmiDef.h"
+
 #include <boost/shared_ptr.hpp>
+
 #include <string>
 
 class NFmiPoint;

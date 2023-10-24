@@ -22,11 +22,11 @@
 // TODO: keksi parempi nimi tai muuta lopuksi NFmiInfoOrganizer-nimiseksi ja
 // tuhoa alkuperäinen luokka.
 
-#include <newbase/NFmiPoint.h>
+#include <boost/shared_ptr.hpp>
 #include <newbase/NFmiInfoData.h>
 #include <newbase/NFmiParamBag.h>
+#include <newbase/NFmiPoint.h>
 #include <newbase/NFmiProducerName.h>
-#include <boost/shared_ptr.hpp>
 #include <map>
 
 class NFmiSmartInfo;
@@ -91,8 +91,8 @@ class NFmiInfoOrganizer
       std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &infos,
       const std::vector<FmiParameterName> &wantedParameters);
   static bool CheckForDataIdent(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-      const NFmiDataIdent &theDataIdent,
-      bool fUseParIdOnly);
+                                const NFmiDataIdent &theDataIdent,
+                                bool fUseParIdOnly);
   static void MarkLoadedDataAsOld(bool newState);
   static bool IsLoadedDataTreatedAsOld();
 
@@ -115,12 +115,13 @@ class NFmiInfoOrganizer
   boost::shared_ptr<NFmiFastQueryInfo> Info(boost::shared_ptr<NFmiDrawParam> &theDrawParam,
                                             bool fCrossSectionInfoWanted,
                                             bool fGetLatestIfArchiveNotFound);
-  boost::shared_ptr<NFmiFastQueryInfo> Info(const NFmiDataIdent &theIdent,
-                                            const NFmiLevel *theLevel,
-                                            NFmiInfoData::Type theType,
-                                            bool fUseParIdOnly = false,
-                                            bool fLevelData = false,
-                                            int theModelRunIndex = 0,
+  boost::shared_ptr<NFmiFastQueryInfo> Info(
+      const NFmiDataIdent &theIdent,
+      const NFmiLevel *theLevel,
+      NFmiInfoData::Type theType,
+      bool fUseParIdOnly = false,
+      bool fLevelData = false,
+      int theModelRunIndex = 0,
       const std::vector<FmiParameterName> *possibleComparisonParameters = nullptr);
   std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetInfos(
       const std::string &theFileNameFilter,
@@ -153,8 +154,7 @@ class NFmiInfoOrganizer
       const NFmiProducer &theProducer,
       const NFmiMetTime &theDataTime,
       int theIndex = 0,
-      ParamCheckFlags paramCheckFlags =
-      ParamCheckFlags(),
+      ParamCheckFlags paramCheckFlags = ParamCheckFlags(),
       int amdarDataStartOffsetInMinutes = 0);  // Hakee parhaan luotaus infon tuottajalle
   boost::shared_ptr<NFmiFastQueryInfo> GetPrioritizedSoundingInfo(
       ParamCheckFlags paramCheckFlags =
@@ -199,9 +199,8 @@ class NFmiInfoOrganizer
   void SetMacroParamDataMinGridSize(int x, int y);
   void SetMacroParamDataMaxGridSize(int x, int y);
 
-  static boost::shared_ptr<NFmiFastQueryInfo> CreateNewMacroParamData(int x,
-                                                               int y,
-                                                               NFmiInfoData::Type theDataType);
+  static boost::shared_ptr<NFmiFastQueryInfo> CreateNewMacroParamData(
+      int x, int y, NFmiInfoData::Type theDataType);
 
   const NFmiPoint &GetMacroParamDataGridSize() const { return itsMacroParamGridSize; }
   static const NFmiPoint &GetMacroParamDataMaxGridSize() { return itsMacroParamMaxGridSize; }
@@ -217,7 +216,7 @@ class NFmiInfoOrganizer
   static bool HasGoodParamsForSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                                            const ParamCheckFlags &paramCheckFlags);
   static boost::shared_ptr<NFmiFastQueryInfo> CreateNewMacroParamData_checkedInput(
-      int x, int y, NFmiInfoData::Type theDataType, const NFmiArea* wantedArea = nullptr);
+      int x, int y, NFmiInfoData::Type theDataType, const NFmiArea *wantedArea = nullptr);
   // ***************************************************************************************************************
 
  private:
@@ -274,8 +273,7 @@ class NFmiInfoOrganizer
   // makro-parametrien laskuja varten pitää pitää yllä yhden hilan kokoista dataa
   // (yksi aika,param ja level, editoitavan datan hplaceDesc)
   boost::shared_ptr<NFmiFastQueryInfo> itsMacroParamData;
-  boost::shared_ptr<NFmiFastQueryInfo>
-      itsOptimizedVisualizationMacroParamData;
+  boost::shared_ptr<NFmiFastQueryInfo> itsOptimizedVisualizationMacroParamData;
   NFmiPoint itsOptimizedVisualizationGridSize;
   // poikkileikkaus makro-parametrien laskuja
   // varten pitää pitää yllä yhden hilan kokoista dataa
@@ -284,7 +282,7 @@ class NFmiInfoOrganizer
   // aikasarja makro-parametrien laskuja
   // varten pitää pitää yllä yhden hilan (nx1) kokoista dataa
   // (yksi aika,param ja level, editoitavan datan hplaceDesc)
-  boost::shared_ptr<NFmiFastQueryInfo> itsTimeSerialMacroParamData;  
+  boost::shared_ptr<NFmiFastQueryInfo> itsTimeSerialMacroParamData;
   bool fCreateEditedDataCopy;  // luodaanko vai eikö luoda kopiota editoidusta datasta
   static std::vector<FmiParameterName> itsWantedSoundingParams;
   static std::vector<FmiParameterName> itsWantedTrajectoryParams;

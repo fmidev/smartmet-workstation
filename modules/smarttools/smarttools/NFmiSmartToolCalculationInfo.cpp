@@ -18,9 +18,7 @@ NFmiSmartToolCalculationInfo::NFmiSmartToolCalculationInfo()
 {
 }
 
-NFmiSmartToolCalculationInfo::~NFmiSmartToolCalculationInfo()
-{
-}
+NFmiSmartToolCalculationInfo::~NFmiSmartToolCalculationInfo() {}
 
 void NFmiSmartToolCalculationInfo::AddCalculationInfo(
     boost::shared_ptr<NFmiAreaMaskInfo> &theAreaMaskInfo)

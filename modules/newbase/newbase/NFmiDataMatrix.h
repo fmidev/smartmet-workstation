@@ -59,8 +59,7 @@ static const NFmiRect g_defaultCoordinates(0, 0, 1, 1);
 //! A 2D data container
 template <class T>  // miten annetaan containeri template parametrina??????
 // class NFmiDataMatrix : public std::vector<std::vector<T>>
-class NFmiDataMatrix
-    : public std::vector<std::vector<T>>  // tämä on ns. debug versio, jos tarvetta
+class NFmiDataMatrix : public std::vector<std::vector<T>>  // tämä on ns. debug versio, jos tarvetta
 {
  public:
   typedef typename std::vector<T>::size_type size_type;

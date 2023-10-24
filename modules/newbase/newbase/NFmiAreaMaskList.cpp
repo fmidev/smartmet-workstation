@@ -293,14 +293,14 @@ bool NFmiAreaMaskList::CheckIfMaskUsed()
 
 bool NFmiAreaMaskList::SyncronizeMaskTime(const NFmiMetTime &theTime)
 {
-    if(fMaskInUse)
+  if (fMaskInUse)
+  {
+    for (auto &index : itsMaskVector)
     {
-        for(auto &index : itsMaskVector)
-        {
-            if(index->IsEnabled()) index->Time(theTime);
-        }
+      if (index->IsEnabled()) index->Time(theTime);
     }
-    return true;
+  }
+  return true;
 }
 
 // ----------------------------------------------------------------------

@@ -6,6 +6,7 @@
 // ======================================================================
 
 #include "NFmiSaveBaseFactory.h"
+
 #include "NFmiEquidistArea.h"
 #include "NFmiGdalArea.h"
 #include "NFmiGnomonicArea.h"
@@ -17,9 +18,8 @@
 #include "NFmiRotatedLatLonArea.h"
 #include "NFmiStationBag.h"
 #include "NFmiStereographicArea.h"
-#include "NFmiYKJArea.h"
-
 #include "NFmiVersion.h"
+#include "NFmiYKJArea.h"
 
 #include <boost/lexical_cast.hpp>
 

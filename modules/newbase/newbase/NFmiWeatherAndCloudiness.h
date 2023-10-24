@@ -10,11 +10,12 @@
 #include "NFmiCombinedParam.h"
 
 #include <cmath>
-extern "C" {
+extern "C"
+{
 #if defined(_MSC_VER) && \
     (_MSC_VER <          \
      1600)  // stdint.h -headeria ei ole MSVC++ kääntäjissä ennen VC++ 2010 eli _MSC_VER < 1600
-typedef unsigned long uint32_t;
+  typedef unsigned long uint32_t;
 #else
 #include <stdint.h>
 #endif
@@ -351,7 +352,8 @@ class NFmiWeatherAndCloudiness : public NFmiCombinedParam
   void SetThunderProbability(unsigned long theValue);
 
   //! Tämän structin avulla debuggaus on helpompaa (toimii ainoastaan little-endian koneissa)
-  union FmiWeatherUnion {
+  union FmiWeatherUnion
+  {
     uint32_t longType;
     float floatType;
 #ifndef UNIX

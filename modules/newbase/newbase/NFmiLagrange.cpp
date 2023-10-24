@@ -589,7 +589,7 @@ int main(int argc, char *argv[])
       out.width(8);
       out << " (" << i << "," << j << ")= " << zInterpolated;
 
-// Normalized (t = [0..1], x = [0..1]) POV-RAY output:
+      // Normalized (t = [0..1], x = [0..1]) POV-RAY output:
 
 #endif
     }

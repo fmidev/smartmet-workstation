@@ -9,6 +9,7 @@
 
 #include "NFmiQueryData.h"
 #include "NFmiString.h"  // Added by ClassView
+
 #include <ctime>
 
 #ifdef UNIX

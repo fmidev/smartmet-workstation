@@ -31,9 +31,9 @@
 #include "NFmiDrawParamFactory.h"
 #include "NFmiDrawParam.h"
 
-#include <newbase/NFmiValueString.h>
 #include <newbase/NFmiFileSystem.h>
 #include <newbase/NFmiStringTools.h>
+#include <newbase/NFmiValueString.h>
 
 #include <cassert>
 
@@ -79,9 +79,7 @@ NFmiDrawParamFactory::NFmiDrawParamFactory(bool createDrawParamFileIfNotExist,
 //--------------------------------------------------------
 // ~FmiDrawParamFactory()
 //--------------------------------------------------------
-NFmiDrawParamFactory::~NFmiDrawParamFactory()
-{
-}
+NFmiDrawParamFactory::~NFmiDrawParamFactory() {}
 
 //--------------------------------------------------------
 // DrawParam

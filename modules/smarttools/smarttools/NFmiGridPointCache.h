@@ -41,4 +41,3 @@ class NFmiGridPointCache
  private:
   pointMap itsPointCache;
 };
-

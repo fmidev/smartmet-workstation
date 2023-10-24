@@ -19,9 +19,7 @@
 //--------------------------------------------------------
 // Constructor/Destructor
 //--------------------------------------------------------
-NFmiSmartToolCalculationSection::NFmiSmartToolCalculationSection() : itsCalculations()
-{
-}
+NFmiSmartToolCalculationSection::NFmiSmartToolCalculationSection() : itsCalculations() {}
 
 NFmiSmartToolCalculationSection::NFmiSmartToolCalculationSection(
     const NFmiSmartToolCalculationSection &theOther)
@@ -29,9 +27,7 @@ NFmiSmartToolCalculationSection::NFmiSmartToolCalculationSection(
 {
 }
 
-NFmiSmartToolCalculationSection::~NFmiSmartToolCalculationSection()
-{
-}
+NFmiSmartToolCalculationSection::~NFmiSmartToolCalculationSection() {}
 //--------------------------------------------------------
 // Calculate
 //--------------------------------------------------------

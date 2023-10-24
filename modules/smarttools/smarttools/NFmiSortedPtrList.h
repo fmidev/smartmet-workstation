@@ -88,4 +88,3 @@ class NFmiSortedPtrList : public NFmiPtrList<Type>
  private:
   bool fAscending;  //   Määrää listan järjestyksen (true = nouseva).
 };
-

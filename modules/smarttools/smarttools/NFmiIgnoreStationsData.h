@@ -7,8 +7,8 @@
  */
 // ======================================================================
 
-#include <string>
 #include <list>
+#include <string>
 
 class NFmiLocation;
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "NFmiDef.h"
+
 #include <cmath>
 #include <cstdlib>
 

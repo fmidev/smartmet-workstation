@@ -579,6 +579,7 @@
 // ======================================================================
 
 #include "NFmiIndexMaskTools.h"
+
 #include "NFmiCalculationCondition.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiGeoTools.h"
@@ -588,6 +589,7 @@
 #include "NFmiPoint.h"
 #include "NFmiSvgPath.h"
 #include "NFmiSvgTools.h"
+
 #include <cassert>
 
 // Implementation hiding detail functions
@@ -692,7 +694,7 @@ void Insert(NFmiNearTree<NFmiPoint> &theTree, const NFmiSvgPath &thePath, double
   }
 }
 
-}  // namespace anonymous
+}  // namespace
 
 namespace NFmiIndexMaskTools
 {

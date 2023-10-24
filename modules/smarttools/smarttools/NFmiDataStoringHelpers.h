@@ -10,8 +10,8 @@
 #include <newbase/NFmiStringTools.h>
 #include <newbase/NFmiTimeBag.h>
 
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace NFmiDataStoringHelpers
 {
@@ -121,7 +121,7 @@ struct NFmiExtraDataStorage
   std::vector<std::string> itsStringValues;
 };
 
-}  // end of namespace
+}  // namespace NFmiDataStoringHelpers
 
 inline std::ostream &operator<<(std::ostream &os,
                                 const NFmiDataStoringHelpers::NFmiExtraDataStorage &item)
@@ -135,4 +135,3 @@ inline std::istream &operator>>(std::istream &is,
   item.Read(is);
   return is;
 }
-

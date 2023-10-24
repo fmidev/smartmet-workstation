@@ -211,10 +211,7 @@ inline void NFmiParamDescriptor::SetProducer(const NFmiProducer &newProducer)
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiParamDescriptor::IsSubParamUsed() const
-{
-  return itsParamBag->IsSubParamUsed();
-}
+inline bool NFmiParamDescriptor::IsSubParamUsed() const { return itsParamBag->IsSubParamUsed(); }
 
 // ----------------------------------------------------------------------
 /*!

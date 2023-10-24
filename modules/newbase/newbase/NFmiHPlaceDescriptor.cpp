@@ -13,6 +13,7 @@
 // ======================================================================
 
 #include "NFmiHPlaceDescriptor.h"
+
 #include "NFmiGrid.h"
 #include "NFmiLocationBag.h"
 #include "NFmiSaveBaseFactory.h"
@@ -289,7 +290,7 @@ NFmiPoint NFmiHPlaceDescriptor::LatLon(unsigned long theIndex) const
     auto location = LocationWithIndex(theIndex);
     if (location)
     {
-        return location->GetLocation();
+      return location->GetLocation();
     }
   }
   else if (itsGrid)

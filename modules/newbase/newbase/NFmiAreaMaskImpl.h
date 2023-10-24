@@ -8,9 +8,9 @@
 #pragma once
 
 #include "NFmiAreaMask.h"
+#include "NFmiAreaMaskHelperStructures.h"
 #include "NFmiCalculationCondition.h"
 #include "NFmiInfoData.h"
-#include "NFmiAreaMaskHelperStructures.h"
 
 class NFmAreaMaskList;
 
@@ -30,20 +30,25 @@ class NFmiAreaMaskImpl : public NFmiAreaMask
   bool IsMasked(int theIndex) const override;
   bool IsMasked(const NFmiPoint &theLatLon) const override;
   double MaskValue(const NFmiPoint &theLatLon) const override;
-  double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
+  double Value(const NFmiCalculationParams &theCalculationParams,
+               bool fUseTimeInterpolationAlways) override;
   // oletuksenä HeightValue palauttaa saman kuin Value-metodi, homma overridataan vain
   // NFmiInfoAreaMask-luokassa
-  double HeightValue(double /* theHeight */, const NFmiCalculationParams &theCalculationParams) override
+  double HeightValue(double /* theHeight */,
+                     const NFmiCalculationParams &theCalculationParams) override
   {
-    // Poikkileikkaus/aikasarja laskuissa pitää aina käyttää 'aikainterpolaatiota', muuten ei (koska laskussa käytetyt ajat on jo asetettu muualla)
+    // Poikkileikkaus/aikasarja laskuissa pitää aina käyttää 'aikainterpolaatiota', muuten ei (koska
+    // laskussa käytetyt ajat on jo asetettu muualla)
     bool useTimeInterpolationAlways = theCalculationParams.fSpecialCalculationCase;
     return Value(theCalculationParams, useTimeInterpolationAlways);
   }
   // oletuksenä PressureValue palauttaa saman kuin Value-metodi, homma overridataan vain
   // NFmiInfoAreaMask-luokassa
-  double PressureValue(double /* thePressure */, const NFmiCalculationParams &theCalculationParams) override
+  double PressureValue(double /* thePressure */,
+                       const NFmiCalculationParams &theCalculationParams) override
   {
-    // Poikkileikkaus/aikasarja laskuissa pitää aina käyttää 'aikainterpolaatiota', muuten ei (koska laskussa käytetyt ajat on jo asetettu muualla)
+    // Poikkileikkaus/aikasarja laskuissa pitää aina käyttää 'aikainterpolaatiota', muuten ei (koska
+    // laskussa käytetyt ajat on jo asetettu muualla)
     bool useTimeInterpolationAlways = theCalculationParams.fSpecialCalculationCase;
     return Value(theCalculationParams, useTimeInterpolationAlways);
   }
@@ -96,7 +101,10 @@ class NFmiAreaMaskImpl : public NFmiAreaMask
   FunctionType GetFunctionType() const override { return itsFunctionType; }
   void SetFunctionType(FunctionType newType) override { itsFunctionType = newType; }
   FunctionType GetSecondaryFunctionType() const override { return itsSecondaryFunctionType; }
-  void SetSecondaryFunctionType(FunctionType newType) override { itsSecondaryFunctionType = newType; }
+  void SetSecondaryFunctionType(FunctionType newType) override
+  {
+    itsSecondaryFunctionType = newType;
+  }
   MetFunctionDirection GetMetFunctionDirection() const override { return itsMetFunctionDirection; }
   void GetMetFunctionDirection(MetFunctionDirection newValue) override
   {
@@ -104,30 +112,40 @@ class NFmiAreaMaskImpl : public NFmiAreaMask
   }
   int IntegrationFunctionType() const override { return itsIntegrationFunctionType; }
   void IntegrationFunctionType(int newValue) override { itsIntegrationFunctionType = newValue; }
-  void SetArguments(std::vector<float> & /* theArgumentVector */) override {};
+  void SetArguments(std::vector<float> & /* theArgumentVector */) override{};
   int FunctionArgumentCount() const override { return itsFunctionArgumentCount; }
   void FunctionArgumentCount(int newValue) override { itsFunctionArgumentCount = newValue; }
   // HUOM! seuraavat toimivat oikeasti vain NFmiBinaryMask:in kanssa. Tässä vain tyhjät oletus
   // toteutukset.
-  void SetAll(bool /* theNewState */) override {};
-  void Mask(int /* theIndex */, bool /* newStatus */) override {};
-  const boost::shared_ptr<NFmiSimpleCondition>& SimpleCondition() const override { return itsSimpleCondition; }
-  void SimpleCondition(boost::shared_ptr<NFmiSimpleCondition> &theSimpleCondition) override { itsSimpleCondition = theSimpleCondition; }
-  float FunctionDataTimeOffsetInHours() const override { return itsFunctionDataTimeOffsetInHours; }
-  void FunctionDataTimeOffsetInHours(float newValue) override { itsFunctionDataTimeOffsetInHours = newValue; }
-  bool CheckPossibleObservationDistance(const NFmiCalculationParams &) override
+  void SetAll(bool /* theNewState */) override{};
+  void Mask(int /* theIndex */, bool /* newStatus */) override{};
+  const boost::shared_ptr<NFmiSimpleCondition> &SimpleCondition() const override
   {
-    return true;
+    return itsSimpleCondition;
   }
+  void SimpleCondition(boost::shared_ptr<NFmiSimpleCondition> &theSimpleCondition) override
+  {
+    itsSimpleCondition = theSimpleCondition;
+  }
+  float FunctionDataTimeOffsetInHours() const override { return itsFunctionDataTimeOffsetInHours; }
+  void FunctionDataTimeOffsetInHours(float newValue) override
+  {
+    itsFunctionDataTimeOffsetInHours = newValue;
+  }
+  bool CheckPossibleObservationDistance(const NFmiCalculationParams &) override { return true; }
 
  protected:
   virtual double CalcValueFromLocation(const NFmiPoint &theLatLon) const;
   virtual const NFmiString MakeSubMaskString() const;
-  // Seuraavat virtuaali funktiot liittyvät integraatio funktioihin ja niiden mahdollisiin Simplecondition tarkasteluihin
+  // Seuraavat virtuaali funktiot liittyvät integraatio funktioihin ja niiden mahdollisiin
+  // Simplecondition tarkasteluihin
   virtual void DoIntegrationCalculations(float value);
   virtual void InitializeIntegrationValues();
   virtual bool SimpleConditionCheck(const NFmiCalculationParams &theCalculationParams);
-  virtual float CalculationPointValue(int theOffsetX, int theOffsetY, const NFmiMetTime &theInterpolationTime, bool useInterpolatedTime);
+  virtual float CalculationPointValue(int theOffsetX,
+                                      int theOffsetY,
+                                      const NFmiMetTime &theInterpolationTime,
+                                      bool useInterpolatedTime);
 
  protected:
   NFmiCalculationCondition itsMaskCondition;
@@ -266,8 +284,8 @@ inline NFmiAreaMaskImpl::BinaryOperator NFmiAreaMaskImpl::PostBinaryOperator() c
  */
 // ----------------------------------------------------------------------
 
-inline NFmiAreaMaskImpl::CalculationOperationType NFmiAreaMaskImpl::GetCalculationOperationType(
-    ) const
+inline NFmiAreaMaskImpl::CalculationOperationType NFmiAreaMaskImpl::GetCalculationOperationType()
+    const
 {
   return itsCalculationOperationType;
 }

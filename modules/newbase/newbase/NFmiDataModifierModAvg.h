@@ -8,7 +8,7 @@
  * \class NFmiDataModifierModAvg
  *
  * Calculates avg value from given set of modular values (directions 0-360).
- * The difference to normal avg is that if given values are 10 and 340, the 
+ * The difference to normal avg is that if given values are 10 and 340, the
  * avg is not (10 + 340) / 2 = 175, but it takes account of 0/360 continuity
  * and the result is (10 + 360) + 340 / 2 = 355.
  *
@@ -35,6 +35,7 @@ class NFmiDataModifierModAvg : public NFmiDataModifier
   float CalculationResult() override;
 
   static void DoSomeTestRoutines();
+
  protected:
   NFmiModMeanCalculator itsModMeanCalculator;
 };  // class NFmiDataModifierModAvg

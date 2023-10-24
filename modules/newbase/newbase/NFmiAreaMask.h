@@ -11,7 +11,9 @@
 #include "NFmiMetTime.h"
 #include "NFmiPoint.h"
 #include "NFmiString.h"
+
 #include <boost/shared_ptr.hpp>
+
 #include <vector>
 
 class NFmiCalculationCondition;
@@ -110,9 +112,10 @@ class NFmiAreaMask
     CalculationMask,        //!< A calculatable mask such as sunangle>0, lat>65 etc
     StartParenthesis,       //!< Beginning of expression parenthesis
     EndParenthesis,         //!< End of expression parenthesis
-    CommaOperator,   //!< ','-merkki joka toimii argumenttien erottimena tietyissä funktioissa
-    SimpleConditionCalculation,  //!< Simple condition type calculation inside string-literal, like "T_ec > xxx"
-    EndOfOperations  //!< End of operators marker
+    CommaOperator,  //!< ','-merkki joka toimii argumenttien erottimena tietyissä funktioissa
+    SimpleConditionCalculation,  //!< Simple condition type calculation inside string-literal, like
+                                 //!< "T_ec > xxx"
+    EndOfOperations              //!< End of operators marker
   };
 
   //! Similar to CalculationOperationType, should redesign
@@ -131,18 +134,20 @@ class NFmiAreaMask
   enum FunctionType
   {
     NotFunction,
-    Avg,    //!< Average
-    Min,    //!< Minimum
-    MinH,   //!< Height of minimum
-    Max,    //!< Maximum
-    MaxH,   //!< Height of maximum
-    WAvg,   //!< Distance weighted average
-    Sum,    //!< Sum
-    Get,    //!< Get -function just gets value
-    FindH,  //!< FindH -function finds the height where wanted value exists
-    FindC,  //!< FindC -function finds how many wanted values there is
-    FindHeightCond,  //!< FindHeightCond -function finds the height where wanted simple-condition turns true
-    FindCountCond,  //!< FindCountCond -function calculates how many time simple-condition status changes
+    Avg,             //!< Average
+    Min,             //!< Minimum
+    MinH,            //!< Height of minimum
+    Max,             //!< Maximum
+    MaxH,            //!< Height of maximum
+    WAvg,            //!< Distance weighted average
+    Sum,             //!< Sum
+    Get,             //!< Get -function just gets value
+    FindH,           //!< FindH -function finds the height where wanted value exists
+    FindC,           //!< FindC -function finds how many wanted values there is
+    FindHeightCond,  //!< FindHeightCond -function finds the height where wanted simple-condition
+                     //!< turns true
+    FindCountCond,   //!< FindCountCond -function calculates how many time simple-condition status
+                     //!< changes
 
     // Seuraaavt ovat ns. 'meteorologisia' funktioita
     Grad,        //!< Gradientti
@@ -189,7 +194,8 @@ class NFmiAreaMask
     TimeVertFL,   //!< aika+vertikaali-hakua lentopinta rajoissa hakien
     TimeVertHyb,  //!< aika+vertikaali-hakua hybrid-pintojen mukaan hakien
     Occurrence,  //!< aika-väli + aluehaku datasta, laskee kuinka monta kertaa tarkastelupisteessä
-    Occurrence2,  //!< Sama kuin edellä, mutta tarkoitettu toistaiseksi vain hiladatalle (käytetään occurance with simple-condition funktion kanssa)
+    Occurrence2,  //!< Sama kuin edellä, mutta tarkoitettu toistaiseksi vain hiladatalle (käytetään
+                  //!< occurance with simple-condition funktion kanssa)
     PeekT,       //!< 'Kurkistetaan' arvo halutun aikahypyn [h] päästä
     Resolution,  //!< Tällä asetetaan macroParamin lasketun hilan toive resoluutio, joko jostain
                  //! datasta tai suoraan kilometreinä.
@@ -198,26 +204,40 @@ class NFmiAreaMask
     ObservationRadius,  //!< Tällä määrätään että laskuissa otetaan huomioon havainnoista vain x
                         //![km] säteellä olevat arvot.
     //! joku ehto toteutuu
-    Med, //!< Mediaani laskut
+    Med,                  //!< Mediaani laskut
     ProbSimpleCondition,  //!< Todennäköisyys laskut käyttäen ehtolauseketta esim. "T_ec > 0"
-    LatestValue,  //!< Hae datasta sen viimeisimmän ajan arvo
-    PreviousFullDays, //!< Laske datasta aikasarja integraatio mennen halutun määrän päiviä taaksepäin aina halutun päivän 0 lokaali tuntiin asti.
-    TimeDuration,  //!< Katso laskentahetkestä eteen/taaksepäin kuinka kauan simple-condition ehto pitää paikkaansa
-    LocalExtremes,  //!< Etsi lokaalit (ja globaalit) minimit ja maksimit kentästä, mutta vain jos ne ovat tarpeeksi 'merkittäviä'
-    SymbolTooltipFile, //!< Tällä määritetään mahdollinen tiedosto, josta haetaan tooltippiä varten aputekstejä eri symboleille
-    MacroParamDescription, //!< Jos tooltippiin halutaan tälle macroParmille yleisselite, se annetaan tällä
-    CalculationType,  //!< Tällä voi määritellä että onko joku laskenta esim. indeksi tyyppinen vai normi reaaliluku
-    PeekZ,  //!< 'Kurkistetaan' arvo vertikaali suunnassa halutussa yksikössä (hPa/m/FL/hybrid-level)
-    SimpleConditionUsedAsStationData,  //!< Jos pääfunktion (esim. area_sum funktion) datan tuottaja on sama kuin simple-condition tuottaja ja kyse on asemadatasta, pitää kyseistä simple-condition dataa käsitellä myös asemadatana.
-    ModAvg, //!< Käytetään suunta parametrien kanssa, ottaa huomioon jatkuvuuden 0/360 kohdassa
+    LatestValue,          //!< Hae datasta sen viimeisimmän ajan arvo
+    PreviousFullDays,     //!< Laske datasta aikasarja integraatio mennen halutun määrän päiviä
+                          //!< taaksepäin aina halutun päivän 0 lokaali tuntiin asti.
+    TimeDuration,  //!< Katso laskentahetkestä eteen/taaksepäin kuinka kauan simple-condition ehto
+                   //!< pitää paikkaansa
+    LocalExtremes,  //!< Etsi lokaalit (ja globaalit) minimit ja maksimit kentästä, mutta vain jos
+                    //!< ne ovat tarpeeksi 'merkittäviä'
+    SymbolTooltipFile,  //!< Tällä määritetään mahdollinen tiedosto, josta haetaan tooltippiä varten
+                        //!< aputekstejä eri symboleille
+    MacroParamDescription,  //!< Jos tooltippiin halutaan tälle macroParmille yleisselite, se
+                            //!< annetaan tällä
+    CalculationType,  //!< Tällä voi määritellä että onko joku laskenta esim. indeksi tyyppinen vai
+                      //!< normi reaaliluku
+    PeekZ,  //!< 'Kurkistetaan' arvo vertikaali suunnassa halutussa yksikössä
+            //!< (hPa/m/FL/hybrid-level)
+    SimpleConditionUsedAsStationData,  //!< Jos pääfunktion (esim. area_sum funktion) datan tuottaja
+                                       //!< on sama kuin simple-condition tuottaja ja kyse on
+                                       //!< asemadatasta, pitää kyseistä simple-condition dataa
+                                       //!< käsitellä myös asemadatana.
+    ModAvg,  //!< Käytetään suunta parametrien kanssa, ottaa huomioon jatkuvuuden 0/360 kohdassa
     ModMin,  //!< Käytetään suunta parametrien kanssa, ottaa huomioon jatkuvuuden 0/360 kohdassa
-    ModMax,   //!< Käytetään suunta parametrien kanssa, ottaa huomioon jatkuvuuden 0/360 kohdassa
-    WorkingThreadCount, //!< Jos käyttäjä haluaa optimoida laskentoja ja käyttää tietyn määrän loogisia coreja laskennoissa
-    FixedBaseData, //!< Jos käyttäjä haluaa fiksata käytetyn laskenta hilan johonkin olemassa olevan datan hilaan
-    MultiParamTooltipFile,  //!< Mahd. tiedosto, josta haetaan tooltippiä varten aputekstejä monen parametrin avulla
+    ModMax,  //!< Käytetään suunta parametrien kanssa, ottaa huomioon jatkuvuuden 0/360 kohdassa
+    WorkingThreadCount,  //!< Jos käyttäjä haluaa optimoida laskentoja ja käyttää tietyn määrän
+                         //!< loogisia coreja laskennoissa
+    FixedBaseData,  //!< Jos käyttäjä haluaa fiksata käytetyn laskenta hilan johonkin olemassa
+                    //!< olevan datan hilaan
+    MultiParamTooltipFile,  //!< Mahd. tiedosto, josta haetaan tooltippiä varten aputekstejä monen
+                            //!< parametrin avulla
     MultiParam2,  //!< 2. käytetty multi-param, pakollinen, jos käytetty MultiParamTooltipFile:a
     MultiParam3,  //!< 3. käytetty multi-param, mahdollinen, jos käytetty MultiParamTooltipFile:a
-    SecondParamFromExtremeTime // Etsitään par1:n min/max ja siitä paikasta ja extreme ajasta palautetaan toisen parametrin arvo
+    SecondParamFromExtremeTime  // Etsitään par1:n min/max ja siitä paikasta ja extreme ajasta
+                                // palautetaan toisen parametrin arvo
   };
 
   //! Function direction, e.g. with 'met'-functions x- and/or y-direction
@@ -255,16 +275,16 @@ class NFmiAreaMask
 
   enum class SimpleConditionRule
   {
-      NotAllowed,
-      Allowed,
-      MustHave
+    NotAllowed,
+    Allowed,
+    MustHave
   };
 
   virtual ~NFmiAreaMask();
   NFmiAreaMask() {}
   virtual void Initialize() = 0;  // tämä on konstruktorin jälkeen kutsuttava virtuaalinen
-                                      // initialisointi (koska konstruktorissa ei voi kutsua
-                                      // virtuaali funktioita)
+                                  // initialisointi (koska konstruktorissa ei voi kutsua
+                                  // virtuaali funktioita)
 
   // Default constructor intentionally left for the compiler
   // NFmiAreaMask ();
@@ -342,16 +362,16 @@ class NFmiAreaMask
   // tämän avulla annetaan laskuissa tarvittavia eri pituisia argumenttilistaja
   // (käytössä ainakin uusille vertikaali funktioille)
   virtual void SetArguments(std::vector<float> &theArgumentVector) = 0;
-  virtual int FunctionArgumentCount(
-      ) const = 0;  // käytössä ainakin uusille vertikaali funktioille
+  virtual int FunctionArgumentCount() const = 0;  // käytössä ainakin uusille vertikaali funktioille
   virtual void FunctionArgumentCount(
       int newValue) = 0;  // käytössä ainakin uusille vertikaali funktioille
 
   // HUOM! seuraavat toimivat oikeasti vain NFmiBinaryMask:in kanssa.
   virtual void SetAll(bool theNewState) = 0;  // Asettaa koko maskin kaikki arvot halutuksi.
   virtual void Mask(int theIndex, bool newStatus) = 0;
-  // Joillain smarttool funktoilla voi olla simple-condition ehto (esim. "T_ec > T_hir"), jota käytetään mm. erilaisissa integraatiolaskuissa
-  virtual const boost::shared_ptr<NFmiSimpleCondition>& SimpleCondition() const = 0;
+  // Joillain smarttool funktoilla voi olla simple-condition ehto (esim. "T_ec > T_hir"), jota
+  // käytetään mm. erilaisissa integraatiolaskuissa
+  virtual const boost::shared_ptr<NFmiSimpleCondition> &SimpleCondition() const = 0;
   virtual void SimpleCondition(boost::shared_ptr<NFmiSimpleCondition> &theSimpleCondition) = 0;
   virtual float FunctionDataTimeOffsetInHours() const = 0;
   virtual void FunctionDataTimeOffsetInHours(float newValue) = 0;

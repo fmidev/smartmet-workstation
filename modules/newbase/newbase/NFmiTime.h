@@ -129,10 +129,7 @@ typedef NFmiTime TFmiTime;
  */
 // ----------------------------------------------------------------------
 
-inline NFmiTime::NFmiTime() : NFmiStaticTime(), itsZoneDifferenceHour()
-{
-  SetZoneDifferenceHour();
-}
+inline NFmiTime::NFmiTime() : NFmiStaticTime(), itsZoneDifferenceHour() { SetZoneDifferenceHour(); }
 
 // ----------------------------------------------------------------------
 /*!

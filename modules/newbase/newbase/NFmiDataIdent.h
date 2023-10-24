@@ -308,10 +308,7 @@ inline bool NFmiDataIdent::IsGroup() const { return fIsGroup; }
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiDataIdent::ContainsIndividualParams() const
-{
-  return fContainsIndividualParams;
-}
+inline bool NFmiDataIdent::ContainsIndividualParams() const { return fContainsIndividualParams; }
 
 // ----------------------------------------------------------------------
 /*!

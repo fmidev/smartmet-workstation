@@ -88,7 +88,7 @@ typedef enum
   kSoundingParLFCHeightSurBas,
   kSoundingParELHeightSurBas,
   kSoundingParCAPE_TT_SurBas,  // cape -10 ja -40 asteen kerroksen läpi
-  kSoundingParGDI = 4790 
+  kSoundingParGDI = 4790
 } FmiSoundingParameters;
 
 class NFmiSoundingIndexCalculator
@@ -96,12 +96,12 @@ class NFmiSoundingIndexCalculator
  public:
   static bool IsSurfaceBasedSoundingIndex(FmiSoundingParameters theSoundingParameter);
   static bool FillSoundingData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-                                   NFmiSoundingData &theSoundingData,
-                                   const NFmiMetTime &theTime,
-                                   const NFmiLocation &theLocation,
-      const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
-      const NFmiSoundingData::GroundLevelValue &theGroundLevelValue =
-          NFmiSoundingData::GroundLevelValue());
+                               NFmiSoundingData &theSoundingData,
+                               const NFmiMetTime &theTime,
+                               const NFmiLocation &theLocation,
+                               const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
+                               const NFmiSoundingData::GroundLevelValue &theGroundLevelValue =
+                                   NFmiSoundingData::GroundLevelValue());
   static float Calc(NFmiSoundingData &theSoundingData, FmiSoundingParameters theParam);
   static float Calc(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                     const NFmiPoint &theLatlon,
@@ -139,8 +139,8 @@ class NFmiSoundingIndexCalculator
       bool fUseOnlyOneThread = true,
       int theMaxThreadCount = 0);
 
-  // This is used by smartmet to determine the log-level of exception thrown from CreateNewSoundingIndexData.
-  // If exception message contains this string, it's logged with debug level, otherwise it will be logged with error level.
+  // This is used by smartmet to determine the log-level of exception thrown from
+  // CreateNewSoundingIndexData. If exception message contains this string, it's logged with debug
+  // level, otherwise it will be logged with error level.
   static const std::string itsReadCompatibleGroundData_functionName;
 };
-

@@ -28,12 +28,8 @@
 //--------------------------------------------------------
 // Constructor/Destructor
 //--------------------------------------------------------
-NFmiAreaMaskSectionInfo::NFmiAreaMaskSectionInfo()
-{
-}
-NFmiAreaMaskSectionInfo::~NFmiAreaMaskSectionInfo()
-{
-}
+NFmiAreaMaskSectionInfo::NFmiAreaMaskSectionInfo() {}
+NFmiAreaMaskSectionInfo::~NFmiAreaMaskSectionInfo() {}
 
 boost::shared_ptr<NFmiAreaMaskInfo> NFmiAreaMaskSectionInfo::MaskInfo(int theIndex)
 {

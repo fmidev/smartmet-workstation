@@ -178,6 +178,7 @@
 // ======================================================================
 
 #include "NFmiSettingsImpl.h"
+
 #include "NFmiFileSystem.h"
 #include "NFmiPreProcessor.h"
 #include "NFmiStringTools.h"
@@ -333,7 +334,7 @@ std::string expand(const std::string& value,
 
   return ret;
 }
-}
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!

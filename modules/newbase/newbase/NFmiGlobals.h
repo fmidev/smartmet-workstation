@@ -122,15 +122,17 @@ enum FmiMaskOperation
 
   // näiden 'ramppimaskien' avulla voidaan laskea tarvittaessa liukuvia maskeja
 
-  kFmiMaskRisingRamp,  // kerroin 0, kun arvo alle alarajan, 1, kun yli ylärajan, 0-1
-                            // (lasketaan lineaarisesti), kun siinä välillä
-  kFmiMaskLoweringRamp,  // kerroin 1, kun arvo alle alarajan, 0, kun yli ylärajan, 1-0, kun siinä välillä
-  kFmiMaskDoubleRamp,  // kerroin -1, kun arvo alle alarajan, 1, kun yli ylärajan, -1 - 1, kun siinä välillä
+  kFmiMaskRisingRamp,    // kerroin 0, kun arvo alle alarajan, 1, kun yli ylärajan, 0-1
+                         // (lasketaan lineaarisesti), kun siinä välillä
+  kFmiMaskLoweringRamp,  // kerroin 1, kun arvo alle alarajan, 0, kun yli ylärajan, 1-0, kun siinä
+                         // välillä
+  kFmiMaskDoubleRamp,  // kerroin -1, kun arvo alle alarajan, 1, kun yli ylärajan, -1 - 1, kun siinä
+                       // välillä
 
   kFmiMaskAll,
-  kFmiMaskNotEqual,  // != tai <> miten sitä milläkin kielellä esitetään
+  kFmiMaskNotEqual,        // != tai <> miten sitä milläkin kielellä esitetään
   kFmiMaskContinuousEqual  // ->    (simple condition where two consecutive values have wanted
-                                // value in between them)
+                           // value in between them)
 
 };
 

@@ -8,6 +8,7 @@
 #pragma once
 
 #include "NFmiDef.h"
+
 #include <list>
 #include <map>
 #include <set>

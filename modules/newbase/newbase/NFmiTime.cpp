@@ -17,10 +17,13 @@
 // ======================================================================
 
 #include "NFmiTime.h"
+
 #include "NFmiLocation.h"
 #include "NFmiSettings.h"
 #include "NFmiValueString.h"
+
 #include <sys/timeb.h>
+
 #include <ctime>
 #include <iostream>
 
@@ -269,7 +272,7 @@ const char *reldays[] =  // OBS also in NFmiPressTime ??
      "Parit",
      "ylivuoto"};
 
-}  // namespace anonymous
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!

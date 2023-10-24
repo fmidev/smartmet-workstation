@@ -169,7 +169,7 @@ class NFmiSuperSmartInfo : public NFmiFastQueryInfo
   bool LocationIndex2XYPosition(
       unsigned long theIndex,
       int* theXOffset,
-      int* theYOffset);                // tämä kannattaa testien jälkeen laittaa privateksi
+      int* theYOffset);            // tämä kannattaa testien jälkeen laittaa privateksi
   void UpdateHelperBinaryMasks();  // kutsu tätä kun haluat päivittää apuharvennusmaskeja
   void InitEmptyAreaMask();
   bool SetNearestPointMask(const NFmiPoint& theLatLonPoint, bool newValue, bool fClearFirst);
@@ -369,10 +369,7 @@ inline void NFmiSuperSmartInfo::UseVariationCalculator(bool value)
  */
 // ----------------------------------------------------------------------
 
-inline bool NFmiSuperSmartInfo::UseVariationCalculator() const
-{
-  return fUseVariationCalculator;
-}
+inline bool NFmiSuperSmartInfo::UseVariationCalculator() const { return fUseVariationCalculator; }
 
 // ----------------------------------------------------------------------
 /*!
@@ -478,10 +475,7 @@ inline const NFmiBitmapAreaMask* NFmiSuperSmartInfo::CurrentHelperBinaryMask() c
  */
 // ----------------------------------------------------------------------
 
-inline NFmiCalculator* NFmiSuperSmartInfo::VariationCalculator()
-{
-  return itsVariationCalculator;
-}
+inline NFmiCalculator* NFmiSuperSmartInfo::VariationCalculator() { return itsVariationCalculator; }
 
 // ----------------------------------------------------------------------
 /*!
@@ -523,9 +517,6 @@ inline void NFmiSuperSmartInfo::TimeIntegrationCalculator(NFmiCalculator* newCal
  */
 // ----------------------------------------------------------------------
 
-inline float NFmiSuperSmartInfo::RawFloatValue() const
-{
-  return NFmiFastQueryInfo::FloatValue();
-}
+inline float NFmiSuperSmartInfo::RawFloatValue() const { return NFmiFastQueryInfo::FloatValue(); }
 
 // ======================================================================

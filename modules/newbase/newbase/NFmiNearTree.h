@@ -101,6 +101,7 @@
 
 #include "NFmiDef.h"
 #include "NFmiNearTreeImpl.h"
+
 #include <algorithm>
 #include <cmath>
 #include <vector>
@@ -317,7 +318,7 @@ void NFmiNearTree<T, F>::Flush() const
   {
     std::random_shuffle(itsInputBuffer.begin(), itsInputBuffer.end());
 
-    for (const auto &location : itsInputBuffer)
+    for (const auto& location : itsInputBuffer)
     {
       itsImpl.Insert(location);
     }

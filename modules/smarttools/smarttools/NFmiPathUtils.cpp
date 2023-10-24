@@ -1,8 +1,8 @@
 #include "NFmiPathUtils.h"
 
 #include "NFmiFileString.h"
-#include "NFmiStringTools.h"
 #include "NFmiSettings.h"
+#include "NFmiStringTools.h"
 #include "boost/algorithm/string/replace.hpp"
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #include <experimental/filesystem>
@@ -95,7 +95,8 @@ namespace PathUtils
 std::string fixMissingDriveLetterToAbsolutePath(const std::string &filePath,
                                                 const std::string &usedAbsoluteBaseDirectory)
 {
-  if (!::hasDriveLetterInPath(filePath, false) && ::hasDriveLetterInPath(usedAbsoluteBaseDirectory, true))
+  if (!::hasDriveLetterInPath(filePath, false) &&
+      ::hasDriveLetterInPath(usedAbsoluteBaseDirectory, true))
   {
     std::string pathWithDriveLetter(usedAbsoluteBaseDirectory.begin(),
                                     usedAbsoluteBaseDirectory.begin() + 2);
@@ -112,7 +113,8 @@ std::string getAbsoluteFilePath(const std::string &filePath,
   NFmiFileString fileString(filePath);
   if (fileString.IsAbsolutePath())
   {
-    finalAbsoluteFilePath = fixMissingDriveLetterToAbsolutePath(filePath, usedAbsoluteBaseDirectory);
+    finalAbsoluteFilePath =
+        fixMissingDriveLetterToAbsolutePath(filePath, usedAbsoluteBaseDirectory);
   }
   else
   {
@@ -215,7 +217,8 @@ std::string getTrueFilePath(const std::string &theOriginalFilePath,
                             const std::string &theFileExtension,
                             bool *extensionAddedOut)
 {
-  if (extensionAddedOut) *extensionAddedOut = false;
+  if (extensionAddedOut)
+    *extensionAddedOut = false;
   std::string filePath = theOriginalFilePath;
   NFmiStringTools::Trim(filePath);  // Siivotaan annetusta polusta alusta ja lopusta white spacet
 
@@ -241,7 +244,8 @@ std::string getTrueFilePath(const std::string &theOriginalFilePath,
     if (fileExtension.empty())
     {
       finalFilePath += "." + theFileExtension;
-      if (extensionAddedOut) *extensionAddedOut = true;
+      if (extensionAddedOut)
+        *extensionAddedOut = true;
     }
     else
     {
@@ -253,7 +257,8 @@ std::string getTrueFilePath(const std::string &theOriginalFilePath,
       if (fileExtension != wantedFileExtensionLowerCase)
       {
         finalFilePath += "." + theFileExtension;
-        if (extensionAddedOut) *extensionAddedOut = true;
+        if (extensionAddedOut)
+          *extensionAddedOut = true;
       }
     }
     return simplifyWindowsPath(finalFilePath);
@@ -334,7 +339,7 @@ std::string fixPathSeparators(const std::string &pathstring)
     return finalStr;
   }
   else
-      return fixedPathString;
+    return fixedPathString;
 }
 
 bool lastCharacterIsSeparator(const std::string &aPath)
@@ -358,15 +363,15 @@ std::string makeFixedAbsolutePath(const std::string &thePath,
                                   bool fEnsureEndDirectorySeparator)
 {
   auto fixedPath = getAbsoluteFilePath(thePath, theAbsoluteWorkingPath);
-  if (fEnsureEndDirectorySeparator) addDirectorySeparatorAtEnd(fixedPath);
+  if (fEnsureEndDirectorySeparator)
+    addDirectorySeparatorAtEnd(fixedPath);
   return fixedPath;
 }
 
-std::string getFilename(const std::string& filePath) 
+std::string getFilename(const std::string &filePath)
 {
   std::experimental::filesystem::path originalPath(filePath);
   return originalPath.stem().string();
 }
-
 
 }  // namespace PathUtils

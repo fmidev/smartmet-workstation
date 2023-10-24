@@ -12,7 +12,9 @@
 // ======================================================================
 
 #include "NFmiStaticTime.h"
+
 #include "NFmiValueString.h"
+
 #include <ctime>
 
 using namespace std;

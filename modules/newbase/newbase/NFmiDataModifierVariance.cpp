@@ -13,8 +13,10 @@
 // ======================================================================
 
 #include "NFmiDataModifierVariance.h"
+
 #include "NFmiQueryInfo.h"
 #include "NFmiRegressionItem.h"
+
 #include <cmath>
 #include <cstdlib>
 #include <ctime>

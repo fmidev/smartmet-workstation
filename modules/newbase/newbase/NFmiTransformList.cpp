@@ -130,6 +130,7 @@
 // ======================================================================
 
 #include "NFmiTransformList.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -511,9 +512,9 @@ bool NFmiTransformList::Interpolate(const NFmiPoint& firstPair, const NFmiPoint&
   if ((firstInputValue < inputValue) && (inputValue < lastInputValue))
   {
     // Interpolate
-    itsOutputValue = firstOutputValue +
-                     ((lastOutputValue - firstOutputValue) * (inputValue - firstInputValue)) /
-                         (lastInputValue - firstInputValue);
+    itsOutputValue =
+        firstOutputValue + ((lastOutputValue - firstOutputValue) * (inputValue - firstInputValue)) /
+                               (lastInputValue - firstInputValue);
     return true;
   }
 

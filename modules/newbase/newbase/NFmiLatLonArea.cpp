@@ -13,6 +13,7 @@
 // ======================================================================
 
 #include "NFmiLatLonArea.h"
+
 #include "NFmiAreaFactory.h"
 
 // ----------------------------------------------------------------------
@@ -128,9 +129,8 @@ const NFmiPoint NFmiLatLonArea::ToXY(const NFmiPoint &theLatLonPoint) const
 {
   double usedLongitude = FixLongitude(theLatLonPoint.X());
   double X = Left() + (usedLongitude - itsBottomLeftLatLon.X()) * itsXScaleFactor;
-  double Y =
-      Top() +
-      (theLatLonPoint.Y() - itsTopRightLatLon.Y()) * itsYScaleFactor;  // Tässä on edelleen virhe
+  double Y = Top() + (theLatLonPoint.Y() - itsTopRightLatLon.Y()) *
+                         itsYScaleFactor;  // Tässä on edelleen virhe
   return NFmiPoint(X, Y);
 }
 

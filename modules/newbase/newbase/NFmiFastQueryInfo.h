@@ -101,7 +101,7 @@ class NFmiFastQueryInfo : public NFmiQueryInfo
   const NFmiLocation *Location() const;
   NFmiPoint LatLon() const;
   const NFmiPoint &LatLonFast() const;  // Lisäsin nopean Latlon-metodin, joka ei ole
-                                            // virtuaalinen. NFmiQueryInfo:n Latlon ei voi palauttaa
+                                        // virtuaalinen. NFmiQueryInfo:n Latlon ei voi palauttaa
   // const referenssiä, koska se pyytää NFmiGrid-luokalta
   // latlon-pistettä ja se rakennetaan lennossa.
   const NFmiPoint &LatLon(unsigned long index) const;
@@ -167,14 +167,23 @@ class NFmiFastQueryInfo : public NFmiQueryInfo
 
   // 12.09.2013 Anssi.R changed method to virtual to be able to override in NFmiMultiQueryInfo
   virtual void Values(NFmiDataMatrix<float> &theMatrix, const NFmiMetTime &theInterpolatedTime);
-  // Hakee annetun time-rangen sisällä olevan kentän interpoloituna. Jos time-range menee toiselta aikasuunnalta
-  // yli, mutta toiselta ei, palautetaan nearesr, jos niin on määrätty (doNearestTimeIfPossible = true).
-  virtual void Values(NFmiDataMatrix<float> &theMatrix, const NFmiMetTime &theInterpolatedTime, long theTimeRangeInMinutes, bool doNearestTimeIfPossible = false);
+  // Hakee annetun time-rangen sisällä olevan kentän interpoloituna. Jos time-range menee toiselta
+  // aikasuunnalta yli, mutta toiselta ei, palautetaan nearesr, jos niin on määrätty
+  // (doNearestTimeIfPossible = true).
+  virtual void Values(NFmiDataMatrix<float> &theMatrix,
+                      const NFmiMetTime &theInterpolatedTime,
+                      long theTimeRangeInMinutes,
+                      bool doNearestTimeIfPossible = false);
 
   // 31.5.2017 Tavi high performance bulk query
   bool GetValues(size_t startIndex, size_t step, size_t count, std::vector<float> &values) const;
   bool SetValues(size_t startIndex, size_t step, size_t count, const std::vector<float> &values);
-  bool GetValuesPartial(size_t startIndex, size_t rowCount, size_t rowStep, size_t columnCount, size_t columnStep, std::vector<float> &values) const;
+  bool GetValuesPartial(size_t startIndex,
+                        size_t rowCount,
+                        size_t rowStep,
+                        size_t columnCount,
+                        size_t columnStep,
+                        std::vector<float> &values) const;
   bool GetLevelToVec(std::vector<float> &values);
   bool SetLevelFromVec(const std::vector<float> &values);
   bool GetLevelToVecPartial(size_t x1, size_t y1, size_t x2, size_t y2, std::vector<float> &values);
@@ -217,11 +226,10 @@ class NFmiFastQueryInfo : public NFmiQueryInfo
               int theBackwardOffsetInMinutes,
               int theForwardOffsetInMinutes);
 
-
   virtual void Values(const NFmiDataMatrix<NFmiPoint> &theLatlonMatrix,
-      NFmiDataMatrix<float> &theValues,
-      float P = kFloatMissing,
-      float H = kFloatMissing);
+                      NFmiDataMatrix<float> &theValues,
+                      float P = kFloatMissing,
+                      float H = kFloatMissing);
   // 12.09.2013 Anssi.R changed method to virtual to be able to override in NFmiMultiQueryInfo
   virtual void Values(const NFmiDataMatrix<NFmiPoint> &theLatlonMatrix,
                       NFmiDataMatrix<float> &theValues,
@@ -229,12 +237,12 @@ class NFmiFastQueryInfo : public NFmiQueryInfo
                       float P = kFloatMissing,
                       float H = kFloatMissing);
   virtual void Values(const NFmiDataMatrix<NFmiPoint> &theLatlonMatrix,
-      NFmiDataMatrix<float> &theValues,
-      const NFmiMetTime &theTime,
-      float P,
-      float H,
-      long theTimeRangeInMinutes,
-      bool doNearestTimeIfPossible = false);
+                      NFmiDataMatrix<float> &theValues,
+                      const NFmiMetTime &theTime,
+                      float P,
+                      float H,
+                      long theTimeRangeInMinutes,
+                      bool doNearestTimeIfPossible = false);
 
   void CroppedValues(NFmiDataMatrix<float> &theMatrix, int x1, int y1, int x2, int y2) const;
   void CroppedValues(NFmiDataMatrix<float> &theMatrix,
@@ -244,13 +252,13 @@ class NFmiFastQueryInfo : public NFmiQueryInfo
                      int x2,
                      int y2);
   void CroppedValues(NFmiDataMatrix<float> &theMatrix,
-      const NFmiMetTime &theInterpolatedTime,
-      int x1,
-      int y1,
-      int x2,
-      int y2,
-      long theTimeRangeInMinutes,
-      bool doNearestTimeIfPossible = false);
+                     const NFmiMetTime &theInterpolatedTime,
+                     int x1,
+                     int y1,
+                     int x2,
+                     int y2,
+                     long theTimeRangeInMinutes,
+                     bool doNearestTimeIfPossible = false);
   bool SetValues(const NFmiDataMatrix<float> &theMatrix);
 
   template <typename T>
@@ -311,8 +319,7 @@ class NFmiFastQueryInfo : public NFmiQueryInfo
   static NFmiDataMatrix<float> CalcRouteCrossSectionLeveldata(
       NFmiFastQueryInfo &theInfo,
       const std::vector<NFmiPoint> &theLatlonPoints,
-      const std::vector<NFmiMetTime>
-          &thePointTimes);
+      const std::vector<NFmiMetTime> &thePointTimes);
   void CrossSectionValues(NFmiDataMatrix<float> &theValues,
                           const NFmiMetTime &theInterpolatedTime,
                           const std::vector<float> &theHeights,
@@ -464,8 +471,8 @@ class NFmiFastQueryInfo : public NFmiQueryInfo
   void SetIsSubParamUsed(bool newState) { fUseSubParam = newState; }
   bool HasLatlonInfoInData() const;
   NFmiPoint GetLatlonFromData();  // jos datassa on kFmiLongitude ja kFmiLatitude parametrit,
-                                      // lasketaan sijanti asetetun ajan ja paikan suhteen niiden
-                                      // avulla
+                                  // lasketaan sijanti asetetun ajan ja paikan suhteen niiden
+                                  // avulla
   float PeekParamValue(unsigned long theParamIndex);  // jos tiedetään jonkin parametrin indeksi,
                                                       // tämän avulla voidaan kurkata
   // sen parametrin arvoa (aika,paikka ja leveli jo asetettuja)
@@ -491,7 +498,7 @@ class NFmiFastQueryInfo : public NFmiQueryInfo
      // lopuksi datan (TÄMÄ siis overridataan lapsessa!)
   NFmiInfoData::Type DataType() const { return itsDataType; };
   void DataType(NFmiInfoData::Type newType) { itsDataType = newType; };
-  // ElapsedTimeFromLoadInSeconds toteutetaan vasta lapsiluokassa 
+  // ElapsedTimeFromLoadInSeconds toteutetaan vasta lapsiluokassa
   // (SmartMet workstation koodeissa), negatiivisia arvoja pidetään puuttuvina
   virtual double ElapsedTimeFromLoadInSeconds() const { return -1; }
   // Näillä Start/Restore -funktioilla otetaan nykyinen parametri tila talteen ja otetaan käyttöön
@@ -553,7 +560,10 @@ class NFmiFastQueryInfo : public NFmiQueryInfo
   float GetCurrentLevelPressure();
   float GetCurrentLevelPressure(const NFmiPoint &theLatlon);
   float GetCurrentLevelPressure(const NFmiPoint &theLatlon, const NFmiMetTime &theTime);
-  const std::vector<float> &PressureLevelDataPressures() const  {    return itsPressureLevelDataPressures;  }
+  const std::vector<float> &PressureLevelDataPressures() const
+  {
+    return itsPressureLevelDataPressures;
+  }
 
  protected:
   size_t Index() const;
@@ -1022,10 +1032,7 @@ inline unsigned long NFmiFastQueryInfo::TimeResolution()
 // ----------------------------------------------------------------------
 
 inline NFmiPoint NFmiFastQueryInfo::LatLon() const { return LatLon(itsLocationIndex); }
-inline const NFmiPoint &NFmiFastQueryInfo::LatLonFast() const
-{
-  return LatLon(itsLocationIndex);
-}
+inline const NFmiPoint &NFmiFastQueryInfo::LatLonFast() const { return LatLon(itsLocationIndex); }
 
 // ----------------------------------------------------------------------
 /*!

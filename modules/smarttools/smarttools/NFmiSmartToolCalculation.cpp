@@ -30,12 +30,12 @@
 #include "NFmiSmartToolCalculation.h"
 #include "NFmiAreaMaskInfo.h"
 #include "NFmiCalculationConstantValue.h"
-#include <newbase/NFmiFastQueryInfo.h>
+#include "NFmiDictionaryFunction.h"
 #include <newbase/NFmiDataModifierClasses.h>
+#include <newbase/NFmiFastQueryInfo.h>
 #include <algorithm>
 #include <cassert>
 #include <stdexcept>
-#include "NFmiDictionaryFunction.h"
 
 using namespace std;
 
@@ -84,9 +84,7 @@ NFmiSmartToolCalculation::NFmiSmartToolCalculation(const NFmiSmartToolCalculatio
 {
 }
 
-NFmiSmartToolCalculation::~NFmiSmartToolCalculation()
-{
-}
+NFmiSmartToolCalculation::~NFmiSmartToolCalculation() {}
 
 //--------------------------------------------------------
 // Calculate
@@ -97,7 +95,8 @@ void NFmiSmartToolCalculation::Calculate(const NFmiCalculationParams &theCalcula
   if (theMacroParamValue.fDoCrossSectionCalculations)
   {
     fUsePressureLevelCalculation = true;
-    itsPressureHeightValue = theCalculationParams.itsPressureHeight = theMacroParamValue.itsPressureHeight;
+    itsPressureHeightValue = theCalculationParams.itsPressureHeight =
+        theMacroParamValue.itsPressureHeight;
   }
   else if (theMacroParamValue.fDoTimeSerialCalculations)
   {
@@ -106,7 +105,7 @@ void NFmiSmartToolCalculation::Calculate(const NFmiCalculationParams &theCalcula
   double value = eval_exp(theCalculationParams);
 
   // kohde dataa juoksutetaan, joten lokaatio indeksien pitää olla synkassa!!!
-  itsResultInfo->LocationIndex(theCalculationParams.itsLocationIndex);  
+  itsResultInfo->LocationIndex(theCalculationParams.itsLocationIndex);
   if (value != kFloatMissing)
   {
     value = FixCircularValues(value);  // ensin tehdään circular tarkistus ja sitten vasta min/max
@@ -134,51 +133,56 @@ void NFmiSmartToolCalculation::Calculate(const NFmiCalculationParams &theCalcula
     theMacroParamValue.itsValue = static_cast<float>(value);
 }
 
-// Poista kommentti tästä, jos haluat lokittaa jokaisen laskennan debuggausmielessä 
+// Poista kommentti tästä, jos haluat lokittaa jokaisen laskennan debuggausmielessä
 // Huom! myös kirjaston CMakeLists.txt:stä pitää poistaa kommentit Catlogin kohdilta
 //#define LOG_ALL_CALCULATIONS_VERY_HEAVY_AND_SLOW 1
 
 #ifdef LOG_ALL_CALCULATIONS_VERY_HEAVY_AND_SLOW
 #include <catlog\catlog.h>
 
-static std::string MakeDebugInfoIndexString(boost::shared_ptr<NFmiFastQueryInfo> &resultInfo, const NFmiCalculationParams &theCalculationParams)
+static std::string MakeDebugInfoIndexString(boost::shared_ptr<NFmiFastQueryInfo> &resultInfo,
+                                            const NFmiCalculationParams &theCalculationParams)
 {
-    std::string str = "(at loc:";
-    if(resultInfo)
-        str += std::to_string(resultInfo->LocationIndex());
-    else
-        str += std::to_string(theCalculationParams.itsLocationIndex);
-    str += ", at time:";
-    if(resultInfo)
-        str += std::to_string(resultInfo->TimeIndex());
-    else
-        str += std::to_string(theCalculationParams.itsTimeIndex);
-    str += ")";
-    return str;
+  std::string str = "(at loc:";
+  if (resultInfo)
+    str += std::to_string(resultInfo->LocationIndex());
+  else
+    str += std::to_string(theCalculationParams.itsLocationIndex);
+  str += ", at time:";
+  if (resultInfo)
+    str += std::to_string(resultInfo->TimeIndex());
+  else
+    str += std::to_string(theCalculationParams.itsTimeIndex);
+  str += ")";
+  return str;
 }
 
-static void MakeCalculateDebugLogging_SUPER_HEAVY(NFmiSmartToolCalculation &calculation, boost::shared_ptr<NFmiFastQueryInfo> &resultInfo, const NFmiCalculationParams &theCalculationParams, double value, bool fAllowMissingValueAssignment)
+static void MakeCalculateDebugLogging_SUPER_HEAVY(NFmiSmartToolCalculation &calculation,
+                                                  boost::shared_ptr<NFmiFastQueryInfo> &resultInfo,
+                                                  const NFmiCalculationParams &theCalculationParams,
+                                                  double value,
+                                                  bool fAllowMissingValueAssignment)
 {
-    std::string loggedMessage = "Calc: '";
-    loggedMessage += calculation.GetCalculationText();
-    loggedMessage += "' => ";
-    if(value == kFloatMissing)
-    {
-        loggedMessage += "missing";
-        if(fAllowMissingValueAssignment)
-            loggedMessage += " (was allowed)";
-        else
-            loggedMessage += " (wasn't allowed)";
-    }
+  std::string loggedMessage = "Calc: '";
+  loggedMessage += calculation.GetCalculationText();
+  loggedMessage += "' => ";
+  if (value == kFloatMissing)
+  {
+    loggedMessage += "missing";
+    if (fAllowMissingValueAssignment)
+      loggedMessage += " (was allowed)";
     else
-    {
-        loggedMessage += std::to_string(value);
-    }
+      loggedMessage += " (wasn't allowed)";
+  }
+  else
+  {
+    loggedMessage += std::to_string(value);
+  }
 
-    loggedMessage += " ";
-    loggedMessage += ::MakeDebugInfoIndexString(resultInfo, theCalculationParams);
+  loggedMessage += " ";
+  loggedMessage += ::MakeDebugInfoIndexString(resultInfo, theCalculationParams);
 
-    CatLog::logMessage(loggedMessage, CatLog::Severity::Debug, CatLog::Category::Editing);
+  CatLog::logMessage(loggedMessage, CatLog::Severity::Debug, CatLog::Category::Editing);
 }
 #endif
 
@@ -186,7 +190,7 @@ void NFmiSmartToolCalculation::Calculate_ver2(const NFmiCalculationParams &theCa
 {
   double value = eval_exp(theCalculationParams);
   // kohde dataa juoksutetaan, joten lokaatio indeksien pitää olla synkassa!!!
-  itsResultInfo->LocationIndex(theCalculationParams.itsLocationIndex);  
+  itsResultInfo->LocationIndex(theCalculationParams.itsLocationIndex);
   if (value != kFloatMissing)
   {
     value = FixCircularValues(value);  // ensin tehdään circular tarkistus ja sitten vasta min/max
@@ -207,7 +211,8 @@ void NFmiSmartToolCalculation::Calculate_ver2(const NFmiCalculationParams &theCa
   }
 
 #ifdef LOG_ALL_CALCULATIONS_VERY_HEAVY_AND_SLOW
-  ::MakeCalculateDebugLogging_SUPER_HEAVY(*this, itsResultInfo, theCalculationParams, value, fAllowMissingValueAssignment);
+  ::MakeCalculateDebugLogging_SUPER_HEAVY(
+      *this, itsResultInfo, theCalculationParams, value, fAllowMissingValueAssignment);
 #endif
 }
 
@@ -246,16 +251,19 @@ void NFmiSmartToolCalculation::SetLimits(float theLowerLimit,
 }
 
 #ifdef LOG_ALL_CALCULATIONS_VERY_HEAVY_AND_SLOW
-static void MakeMaskDebugLogging_SUPER_HEAVY(NFmiSmartToolCalculation &calculation, boost::shared_ptr<NFmiFastQueryInfo> &resultInfo, const NFmiCalculationParams &theCalculationParams, bool value)
+static void MakeMaskDebugLogging_SUPER_HEAVY(NFmiSmartToolCalculation &calculation,
+                                             boost::shared_ptr<NFmiFastQueryInfo> &resultInfo,
+                                             const NFmiCalculationParams &theCalculationParams,
+                                             bool value)
 {
-    std::string loggedMessage = "Condition: '";
-    loggedMessage += calculation.GetCalculationText();
-    loggedMessage += "' => ";
-    loggedMessage += value ? "true" : "false";
-    loggedMessage += " ";
-    loggedMessage += ::MakeDebugInfoIndexString(resultInfo, theCalculationParams);
+  std::string loggedMessage = "Condition: '";
+  loggedMessage += calculation.GetCalculationText();
+  loggedMessage += "' => ";
+  loggedMessage += value ? "true" : "false";
+  loggedMessage += " ";
+  loggedMessage += ::MakeDebugInfoIndexString(resultInfo, theCalculationParams);
 
-    CatLog::logMessage(loggedMessage, CatLog::Severity::Debug, CatLog::Category::Editing);
+  CatLog::logMessage(loggedMessage, CatLog::Severity::Debug, CatLog::Category::Editing);
 }
 #endif
 
@@ -494,8 +502,8 @@ void NFmiSmartToolCalculation::eval_ThreeArgumentFunction(
         if (endTime.DifferenceInMinutes(startTime) / usedTimeResolutionInMinutes > 250)
           throw runtime_error(::GetDictionaryString("SmartToolCalculationErrorTimeCalcOverRun"));
         // 5. funktiosta riippuva datamodifier min, max jne.
-        boost::shared_ptr<NFmiDataModifier> modifier =
-            NFmiInfoAreaMask::CreateIntegrationFuction(func);  // tämä palauttaa aina jotain, tai heittää poikkeuksen
+        boost::shared_ptr<NFmiDataModifier> modifier = NFmiInfoAreaMask::CreateIntegrationFuction(
+            func);  // tämä palauttaa aina jotain, tai heittää poikkeuksen
         try
         {
           NFmiCalculationParams modifiedCalculationParams(theCalculationParams);
@@ -585,8 +593,8 @@ void NFmiSmartToolCalculation::eval_ThreeArgumentFunctionZ(
       if ((argument2 - argument1) > 35000)
         throw runtime_error(::GetDictionaryString("SmartToolCalculationErrorHeightCalcOverRun"));
       // 5. funktiosta riippuva datamodifier min, max jne.
-      boost::shared_ptr<NFmiDataModifier> modifier =
-          NFmiInfoAreaMask::CreateIntegrationFuction(func);  // tämä palauttaa aina jotain, tai heittää poikkeuksen
+      boost::shared_ptr<NFmiDataModifier> modifier = NFmiInfoAreaMask::CreateIntegrationFuction(
+          func);  // tämä palauttaa aina jotain, tai heittää poikkeuksen
       try
       {
         fUseHeightCalculation = true;
@@ -641,15 +649,15 @@ void NFmiSmartToolCalculation::eval_ThreeArgumentFunctionZ(
 #include <random>
 namespace
 {
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_real_distribution<double> uniformDistribution0to1(0, 1);
+std::random_device rd;
+std::mt19937 mt(rd());
+std::uniform_real_distribution<double> uniformDistribution0to1(0, 1);
 
-    double GetRandomNumber(double maxValue)
-    {
-        return maxValue * uniformDistribution0to1(mt);
-    }
+double GetRandomNumber(double maxValue)
+{
+  return maxValue * uniformDistribution0to1(mt);
 }
+}  // namespace
 
 // HUOM! trigonometriset funktiot tehdään asteille, joten annettu luku pitää konvertoida
 // c++ funktioille jotka odottavat kulmaa radiaaneille.
@@ -728,8 +736,8 @@ void NFmiSmartToolCalculation::eval_math_function(double &result, int theFunctio
         result = fabs(result);
         break;
       case NFmiAreaMask::Rand:
-          // palauttaa luvun 0 ja result:in väliltä
-          result = ::GetRandomNumber(result);
+        // palauttaa luvun 0 ja result:in väliltä
+        result = ::GetRandomNumber(result);
         break;
       default:
         throw runtime_error(::GetDictionaryString("SmartToolCalculationErrorMathFunction") + ":\n" +
@@ -749,21 +757,22 @@ bool NFmiSmartToolCalculation::IsSpecialCalculationVariableCase(
 double NFmiSmartToolCalculation::SpecialCalculationVariableCaseValue(
     const NFmiCalculationParams &theCalculationParams)
 {
-    // Erikoistapaus: poikkileikkaus macroParam laskuissa var -muuttuja pitää ottaa vain suoraan infosta ilman mitään interpolaatioita
-    auto info = token->Info();
-    if(info)
-    {
-        info->TimeIndex(theCalculationParams.itsTimeIndex);
-        info->LocationIndex(theCalculationParams.itsLocationIndex);
-        return info->FloatValue();
-    }
-    return kFloatMissing; // Ei pitäisi mennä tänne
+  // Erikoistapaus: poikkileikkaus macroParam laskuissa var -muuttuja pitää ottaa vain suoraan
+  // infosta ilman mitään interpolaatioita
+  auto info = token->Info();
+  if (info)
+  {
+    info->TimeIndex(theCalculationParams.itsTimeIndex);
+    info->LocationIndex(theCalculationParams.itsLocationIndex);
+    return info->FloatValue();
+  }
+  return kFloatMissing;  // Ei pitäisi mennä tänne
 }
 
 void NFmiSmartToolCalculation::atom(double &result,
                                     const NFmiCalculationParams &theCalculationParams)
 {
-  if(IsSpecialCalculationVariableCase(theCalculationParams))
+  if (IsSpecialCalculationVariableCase(theCalculationParams))
   {
     result = SpecialCalculationVariableCaseValue(theCalculationParams);
   }
@@ -1109,7 +1118,7 @@ void NFmiSmartToolCalculation::bin_atom(bool &maskresult,
                                         double &result,
                                         const NFmiCalculationParams &theCalculationParams)
 {
-  if(IsSpecialCalculationVariableCase(theCalculationParams))
+  if (IsSpecialCalculationVariableCase(theCalculationParams))
   {
     result = SpecialCalculationVariableCaseValue(theCalculationParams);
   }
@@ -1137,7 +1146,7 @@ void NFmiSmartToolCalculation::CheckIfModularParameter()
   if (itsResultInfo)
   {
     auto paramName = itsResultInfo->Param().GetParamIdent();
-    if(paramName == kFmiWindDirection || paramName == kFmiWaveDirection)
+    if (paramName == kFmiWindDirection || paramName == kFmiWaveDirection)
     {
       fCircularValue = true;
       itsCircularValueModulor = 360;

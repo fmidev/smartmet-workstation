@@ -2,7 +2,6 @@
 
 namespace
 {
-
 void TestModAvg(const std::vector<float>& values, float expected)
 {
   NFmiDataModifierModAvg modAvg;
@@ -44,7 +43,7 @@ void NFmiDataModifierModAvg::Calculate(float theValue)
 float NFmiDataModifierModAvg::CalculationResult() { return itsModMeanCalculator(); }
 
 void NFmiDataModifierModAvg::DoSomeTestRoutines()
-{  
+{
   // Testi 20, 50  ==>  avg = 35
   auto values = std::vector<float>{20, 50};
   auto result = 35.f;
@@ -54,4 +53,3 @@ void NFmiDataModifierModAvg::DoSomeTestRoutines()
   result = 355.f;
   ::TestModAvg(values, result);
 }
-

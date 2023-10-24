@@ -11,7 +11,9 @@
 // ======================================================================
 
 #include "NFmiLambertEqualArea.h"
+
 #include "NFmiStringTools.h"
+
 #include <cmath>
 #include <iomanip>
 
@@ -72,13 +74,13 @@ NFmiLambertEqualArea::NFmiLambertEqualArea(const NFmiPoint &theBottomLeftLatLon,
 }
 
 /*!
-* Constructor
-*
-* \param theCenterLatLon Undocumented
-* \param theRadialRangeInMeters Undocumented
-* \param theTopLeftXY Undocumented
-* \param theBottomRightXY Undocumented
-*/
+ * Constructor
+ *
+ * \param theCenterLatLon Undocumented
+ * \param theRadialRangeInMeters Undocumented
+ * \param theTopLeftXY Undocumented
+ * \param theBottomRightXY Undocumented
+ */
 NFmiLambertEqualArea::NFmiLambertEqualArea(double theRadialRangeInMeters,
                                            const NFmiPoint &theCenterLatLon,
                                            const NFmiPoint &theTopLeftXY,
@@ -230,10 +232,9 @@ double NFmiLambertEqualArea::K(const double delta) const
 
   //	return sqrt(2./(1. + sin(lat0)*sin(lat) + cos(lat0)*cos(lat)*cos(lon-lon0));
 
-    if (delta <= -1.0)
-      return kFloatMissing;
+  if (delta <= -1.0) return kFloatMissing;
 
-    return kRearth * sqrt(2. / (1. + delta));
+  return kRearth * sqrt(2. / (1. + delta));
 }
 
 // ----------------------------------------------------------------------
@@ -248,7 +249,7 @@ double NFmiLambertEqualArea::CalcDelta(const double xyDistance) const
   // Calculates the delta angle for LambertEqual projection.
   // See details in ref. [2] p. 13.
 
-    return 2.0 * asin(FmiMax(-1.0, FmiMin(1.0, xyDistance / (2 * kRearth))));
+  return 2.0 * asin(FmiMax(-1.0, FmiMin(1.0, xyDistance / (2 * kRearth))));
   // 11.5.98/EL: delta is always computed for tangential plane only --> itsTrueLatitude.Sin() == 1
 }
 
@@ -411,8 +412,8 @@ NFmiArea *NFmiLambertEqualArea::CreateNewArea(const NFmiRect &theRect) const
 {
   NFmiPoint bottomLeft(ToLatLon(theRect.BottomLeft()));
   NFmiPoint topRight(ToLatLon(theRect.TopRight()));
-    NFmiArea *area = new NFmiLambertEqualArea(
-        bottomLeft, topRight, itsCentralLongitude, TopLeft(), BottomRight());
+  NFmiArea *area =
+      new NFmiLambertEqualArea(bottomLeft, topRight, itsCentralLongitude, TopLeft(), BottomRight());
   return area;
 }
 

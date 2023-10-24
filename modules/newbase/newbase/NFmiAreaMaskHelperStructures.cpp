@@ -2,7 +2,6 @@
 
 NFmiMacroParamValue::NFmiMacroParamValue() = default;
 
-
 NFmiCalculationParams::NFmiCalculationParams() = default;
 
 NFmiCalculationParams::NFmiCalculationParams(const NFmiPoint &theLatlon,

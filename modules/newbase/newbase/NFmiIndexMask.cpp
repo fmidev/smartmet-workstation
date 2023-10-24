@@ -64,6 +64,7 @@
 // ======================================================================
 
 #include "NFmiIndexMask.h"
+
 #include <algorithm>
 #include <deque>
 #include <iterator>

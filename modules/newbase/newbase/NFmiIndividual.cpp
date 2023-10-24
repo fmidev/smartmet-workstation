@@ -16,8 +16,11 @@
 // ======================================================================
 
 #include "NFmiIndividual.h"
+
 #include "NFmiVersion.h"
+
 #include <boost/functional/hash.hpp>
+
 #include <fstream>
 
 // ----------------------------------------------------------------------

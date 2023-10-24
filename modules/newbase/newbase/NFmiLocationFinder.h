@@ -9,6 +9,7 @@
 
 #include "NFmiPoint.h"
 #include "NFmiString.h"
+
 #include <map>
 #include <string>
 

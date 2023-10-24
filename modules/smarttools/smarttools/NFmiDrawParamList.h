@@ -31,10 +31,10 @@
 //**********************************************************
 #pragma once
 
-#include "NFmiSortedPtrList.h"
-#include <newbase/NFmiInfoData.h>
 #include "NFmiDrawParam.h"
+#include "NFmiSortedPtrList.h"
 #include <boost/shared_ptr.hpp>
+#include <newbase/NFmiInfoData.h>
 #include <list>
 
 #ifdef _MSC_VER
@@ -115,4 +115,3 @@ class NFmiDrawParamList
   bool fDirtyList;
   bool fHasBorrowedParams;  // onko tällä listalla 'lainattuja' parametreja
 };
-

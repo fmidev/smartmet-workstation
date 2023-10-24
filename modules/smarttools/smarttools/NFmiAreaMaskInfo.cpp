@@ -81,7 +81,7 @@ NFmiAreaMaskInfo::NFmiAreaMaskInfo(const NFmiAreaMaskInfo &theOther)
       itsSecondaryParam(theOther.itsSecondaryParam),
       itsSecondaryParamLevel(theOther.itsSecondaryParamLevel
                                  ? new NFmiLevel(*theOther.itsSecondaryParamLevel)
-                                                             : nullptr),
+                                 : nullptr),
       itsSecondaryParamDataType(theOther.itsSecondaryParamDataType),
       fSecondaryParamUseDefaultProducer(theOther.fSecondaryParamUseDefaultProducer)
 {
@@ -98,16 +98,17 @@ void NFmiAreaMaskInfo::SetLevel(NFmiLevel *theLevel)
   itsLevel = theLevel ? new NFmiLevel(*theLevel) : nullptr;
 }
 
-bool NFmiAreaMaskInfo::AllowSimpleCondition() const 
-{ 
-    return (itsSimpleConditionRule == NFmiAreaMask::SimpleConditionRule::Allowed || itsSimpleConditionRule == NFmiAreaMask::SimpleConditionRule::MustHave);
+bool NFmiAreaMaskInfo::AllowSimpleCondition() const
+{
+  return (itsSimpleConditionRule == NFmiAreaMask::SimpleConditionRule::Allowed ||
+          itsSimpleConditionRule == NFmiAreaMask::SimpleConditionRule::MustHave);
 }
 
 void NFmiAreaMaskInfo::SimpleConditionInfo(
     boost::shared_ptr<NFmiSimpleConditionInfo> &theSimpleConditionInfo)
 {
   itsSimpleConditionInfo = theSimpleConditionInfo;
-  if(itsSimpleConditionInfo)
+  if (itsSimpleConditionInfo)
   {
     itsSimpleConditionInfo->SetStationDataUsage(*itsDataIdent.GetProducer());
   }

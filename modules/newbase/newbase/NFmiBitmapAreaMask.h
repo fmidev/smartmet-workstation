@@ -61,8 +61,7 @@ class NFmiBitmapAreaMask : public NFmiAreaMaskImpl
 
  protected:
   double CalcValueFromLocation(const NFmiPoint& theLatLon) const;  // tee tämä lapsiin!!!
-  const NFmiString MakeSubMaskString(
-      ) const;  // tekee  param nimi tai vastaavan stringin pätkän
+  const NFmiString MakeSubMaskString() const;  // tekee  param nimi tai vastaavan stringin pätkän
 
  private:
   NFmiBitmapAreaMask& operator=(const NFmiBitmapAreaMask& theMask);

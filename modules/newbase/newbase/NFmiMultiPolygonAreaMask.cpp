@@ -26,6 +26,7 @@
 // ======================================================================
 
 #include "NFmiMultiPolygonAreaMask.h"
+
 #include "NFmiBitmapAreaMask.h"
 #include "NFmiGrid.h"
 #include "NFmiPoint.h"

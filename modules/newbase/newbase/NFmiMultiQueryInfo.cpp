@@ -20,6 +20,7 @@
 #endif
 
 #include "NFmiMultiQueryInfo.h"
+
 #include "NFmiCombinedParam.h"
 #include "NFmiFileSystem.h"
 #include "NFmiMetTime.h"

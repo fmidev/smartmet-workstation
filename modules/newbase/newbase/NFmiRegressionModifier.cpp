@@ -13,11 +13,13 @@
 // ======================================================================
 
 #include "NFmiRegressionModifier.h"
+
 #include "NFmiDataIdent.h"
 #include "NFmiDataModifierConstant.h"
 #include "NFmiDataModifierList.h"
 #include "NFmiDataModifierLogical.h"
 #include "NFmiRegressionItem.h"
+
 #include <algorithm>
 #include <cmath>
 

@@ -65,4 +65,3 @@ class NFmiUndoableMultiLevelMask
   int itsCurrentUndoLevel;
   int itsCurrentRedoLevel;
 };
-

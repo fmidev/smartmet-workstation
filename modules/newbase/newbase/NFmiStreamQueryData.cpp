@@ -13,8 +13,10 @@
 // ======================================================================
 
 #include "NFmiStreamQueryData.h"
+
 #include "NFmiFileSystem.h"
 #include "NFmiValueString.h"
+
 #include <cstdio>
 #include <fcntl.h>
 #include <fstream>

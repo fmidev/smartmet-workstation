@@ -18,6 +18,7 @@
 // ======================================================================
 
 #include "NFmiDataModifierWindChill.h"
+
 #include "NFmiMetMath.h"
 #include "NFmiQueryInfo.h"
 

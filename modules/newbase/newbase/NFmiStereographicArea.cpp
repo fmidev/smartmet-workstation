@@ -66,6 +66,7 @@
 // ======================================================================
 
 #include "NFmiStereographicArea.h"
+
 #include <cmath>
 #include <iomanip>
 
@@ -126,13 +127,13 @@ NFmiStereographicArea::NFmiStereographicArea(const NFmiPoint &theBottomLeftLatLo
 }
 
 /*!
-* Constructor
-*
-* \param theCenterLatLon Undocumented
-* \param theRadialRangeInMeters Undocumented
-* \param theTopLeftXY Undocumented
-* \param theBottomRightXY Undocumented
-*/
+ * Constructor
+ *
+ * \param theCenterLatLon Undocumented
+ * \param theRadialRangeInMeters Undocumented
+ * \param theTopLeftXY Undocumented
+ * \param theBottomRightXY Undocumented
+ */
 NFmiStereographicArea::NFmiStereographicArea(double theRadialRangeInMeters,
                                              const NFmiPoint &theCenterLatLon,
                                              const NFmiPoint &theTopLeftXY,

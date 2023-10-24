@@ -7,9 +7,9 @@
 //
 //**********************************************************
 
+#include <boost/shared_ptr.hpp>
 #include <newbase/NFmiAreaMaskImpl.h>
 #include <newbase/NFmiInfoAreaMask.h>
-#include <boost/shared_ptr.hpp>
 
 class NFmiDataModifier;
 class NFmiDataIterator;
@@ -19,7 +19,8 @@ class NFmiFastQueryInfo;
 class NFmiCalculationConstantValue : public NFmiAreaMaskImpl
 {
  public:
-  double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
+  double Value(const NFmiCalculationParams &theCalculationParams,
+               bool fUseTimeInterpolationAlways) override;
 
   NFmiCalculationConstantValue(double value = 0);
   ~NFmiCalculationConstantValue();
@@ -28,6 +29,7 @@ class NFmiCalculationConstantValue : public NFmiAreaMaskImpl
 
   void SetValue(double value) { itsValue = value; }
   double GetValue() const { return itsValue; }
+
  private:
   double itsValue;
 };
@@ -53,6 +55,7 @@ class NFmiCalculationDeltaZValue : public NFmiAreaMaskImpl
   // tätä funktiota käyttämällä asetetaan korkeus 'siivun' paksuus. HUOM! se on staattinen kuten on
   // itsHeightValue-dataosakin, joten se tulee kaikille 'DeltaZ':oille yhteiseksi arvoksi.
   static void SetDeltaZValue(double value) { itsHeightValue = value; }
+
  private:
   static double itsHeightValue;
 };
@@ -76,14 +79,15 @@ class NFmiCalculationSpecialCase : public NFmiAreaMaskImpl
 class NFmiCalculationRampFuction : public NFmiInfoAreaMask
 {
  public:
-  double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
+  double Value(const NFmiCalculationParams &theCalculationParams,
+               bool fUseTimeInterpolationAlways) override;
 
   NFmiCalculationRampFuction(const NFmiCalculationCondition &theOperation,
                              Type theMaskType,
                              NFmiInfoData::Type theDataType,
                              boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-                              unsigned long thePossibleMetaParamId,
-                              BinaryOperator thePostBinaryOperator);
+                             unsigned long thePossibleMetaParamId,
+                             BinaryOperator thePostBinaryOperator);
   ~NFmiCalculationRampFuction();
   NFmiCalculationRampFuction(const NFmiCalculationRampFuction &theOther);
   NFmiAreaMask *Clone() const override;
@@ -95,7 +99,8 @@ class NFmiCalculationRampFuction : public NFmiInfoAreaMask
 class NFmiCalculationRampFuctionWithAreaMask : public NFmiAreaMaskImpl
 {
  public:
-  double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
+  double Value(const NFmiCalculationParams &theCalculationParams,
+               bool fUseTimeInterpolationAlways) override;
 
   NFmiCalculationRampFuctionWithAreaMask(const NFmiCalculationCondition &theOperation,
                                          Type theMaskType,
@@ -116,7 +121,8 @@ class NFmiCalculationRampFuctionWithAreaMask : public NFmiAreaMaskImpl
 class NFmiCalculationIntegrationFuction : public NFmiInfoAreaMask
 {
  public:
-  double Value(const NFmiCalculationParams &theCalculationParams, bool fUseTimeInterpolationAlways) override;
+  double Value(const NFmiCalculationParams &theCalculationParams,
+               bool fUseTimeInterpolationAlways) override;
 
   NFmiCalculationIntegrationFuction(boost::shared_ptr<NFmiDataIterator> &theDataIterator,
                                     boost::shared_ptr<NFmiDataModifier> &theDataModifier,
@@ -132,4 +138,3 @@ class NFmiCalculationIntegrationFuction : public NFmiInfoAreaMask
   boost::shared_ptr<NFmiDataModifier> itsDataModifier;
   boost::shared_ptr<NFmiDataIterator> itsDataIterator;
 };
-

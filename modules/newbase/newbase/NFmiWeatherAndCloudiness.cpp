@@ -16,6 +16,7 @@
 // ======================================================================
 
 #include "NFmiWeatherAndCloudiness.h"
+
 #include "NFmiDataIdent.h"
 #include "NFmiDataModifierClasses.h"
 #include "NFmiDataModifierCombi.h"
@@ -23,6 +24,7 @@
 #include "NFmiParamBag.h"
 #include "NFmiPoint.h"
 #include "NFmiQueryInfo.h"
+
 #include <algorithm>
 #include <cmath>
 
@@ -40,7 +42,7 @@ bool fDefaultPrecipitationTypeIsLargeScale = false;
 
 const float gMinimumPrecipitationForV6 = 0.1f;
 const float gMinimumPrecipitationForV7 = 0.015f;
-}
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!
