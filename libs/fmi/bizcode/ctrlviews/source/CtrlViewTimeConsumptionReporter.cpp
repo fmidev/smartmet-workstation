@@ -5,23 +5,55 @@
 #include "CtrlViewFunctions.h"
 #include "NFmiDictionaryFunction.h"
 #include "CtrlViewDocumentInterface.h"
+#include "NFmiValueString.h"
 
 namespace
 {
+    std::string makePossibleLevelName(const NFmiLevel &level)
+    {
+        std::string levelName;
+        if(level.GetIdent() != 0)
+        {
+            levelName = " ";
+            auto levelType = level.LevelType();
+            if(levelType == kFmiPressureLevel)
+                levelName += "pre";
+            else if(levelType == kFmiHybridLevel)
+                levelName += "hyb";
+            else if(levelType == kFmiHeight)
+                levelName += "z";
+            else if(levelType == kFmiSoundingLevel)
+                levelName += "temp";
+            else if(levelType == kFmiDepth)
+                levelName += "d";
+            else
+                levelName += "?";
+            levelName += "_";
+            levelName += NFmiValueString::GetStringWithMaxDecimalsSmartWay(level.LevelValue(), 2);
+
+            return levelName;
+        }
+        return levelName;
+    }
+
     std::string makeParameterName(boost::shared_ptr<NFmiDrawParam>& drawParam)
     {
         if(drawParam)
         {
             std::string parameterName = drawParam->ParameterAbbreviation();
-            parameterName += " (";
-            parameterName += drawParam->Param().GetProducer()->GetName();
-            if(drawParam->ModelRunIndex() < 0)
+            if(!drawParam->IsMacroParamCase(true))
             {
-                parameterName += "[";
-                parameterName += std::to_string(drawParam->ModelRunIndex());
-                parameterName += "]";
+                parameterName += ::makePossibleLevelName(drawParam->Level());
+                parameterName += " (";
+                parameterName += drawParam->Param().GetProducer()->GetName();
+                if(drawParam->ModelRunIndex() < 0)
+                {
+                    parameterName += "[";
+                    parameterName += std::to_string(drawParam->ModelRunIndex());
+                    parameterName += "]";
+                }
+                parameterName += ")";
             }
-            parameterName += ")";
 
             return parameterName;
         }
