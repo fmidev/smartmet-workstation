@@ -60,6 +60,7 @@ class NFmiSimpleConditionPart;
 class NFmiSingleCondition;
 class NFmiSingleConditionInfo;
 class NFmiArea;
+class NFmiRect;
 
 // CalculationPoint dataan liittyy pair, jossa originaali laskentapiste ja
 // sen etäisyys laskentapisteeseen, jos pair:in point on nullptr, niin silloin ei kuulu.

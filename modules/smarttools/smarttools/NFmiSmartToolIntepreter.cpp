@@ -227,9 +227,10 @@ void NFmiSmartToolIntepreter::Interpret(const std::string &theMacroText,
 {
   fMacroParamSkriptInProgress = fThisIsMacroParamSkript;
   Clear();
-  itsTokenScriptVariableNames.clear();  // tyhjennetaan aluksi kaikki skripti muuttujat
-  itsScriptVariableParamIdCounter =
-      987654321;  // alustetaan isoksi, ettei mene päällekkäin todellisten param id::::ien kanssa
+  // tyhjennetaan aluksi kaikki skripti muuttujat (Interpret metodia pitäisi 
+  // kyllä oikeasti kutsua vain kerran olion elinaikana).
+  itsTokenScriptVariableNames.clear();
+  itsTokenScriptConstVariableNames.clear();  
   SetMacroTexts(theMacroText);
   InitCheckOut();
 
@@ -935,45 +936,55 @@ std::string NFmiSmartToolIntepreter::ExtractNextLine(std::string &theText,
 boost::shared_ptr<NFmiSmartToolCalculationInfo> NFmiSmartToolIntepreter::InterpretCalculationLine(
     const std::string &theCalculationLineText)
 {
-  string calculationLineText(theCalculationLineText);
+  itsCalculationLineText = theCalculationLineText;
   boost::shared_ptr<NFmiSmartToolCalculationInfo> calculationInfo(
       new NFmiSmartToolCalculationInfo());
-  calculationInfo->SetCalculationText(theCalculationLineText);
+  calculationInfo->SetCalculationText(itsCalculationLineText);
 
-  exp_ptr = calculationLineText.begin();
-  exp_end = calculationLineText.end();
+  exp_ptr = itsCalculationLineText.begin();
+  exp_end = itsCalculationLineText.end();
 
   string tmp;
   if (GetToken())  // luetaan muuttuja johon sijoitetaan esim. T
   {
     tmp = token;
-    bool fNewScriptVariable = false;
-    if (boost::iequals(tmp, "var"))
-    {
-      GetToken();  // ollaan alustamassa uutta skripti muuttujaa, luetaan nimi talteen
-      tmp = token;
-      fNewScriptVariable = true;
-    }
-    boost::shared_ptr<NFmiAreaMaskInfo> assignedVariable(new NFmiAreaMaskInfo(calculationLineText));
+    auto newVariableType = DoUserVariableChecks(tmp);
+    boost::shared_ptr<NFmiAreaMaskInfo> assignedVariable(
+        new NFmiAreaMaskInfo(itsCalculationLineText));
     InterpretVariable(
         tmp,
-        assignedVariable,
-        fNewScriptVariable);  // ei saa antaa auto_ptr-otustä tässä, muuten se menettää omistuksen!
+        assignedVariable, newVariableType);
+
+    // Jos rivillä on alustettu named-constant-variable tyyppinen otus, 
+    // lopetetaan rivin tulkinta siihen ja palautetaan nullptr, koska
+    // kyseistä lauseketta ei varsinaisesti saa käyttää itse laskuissa.
+    if (assignedVariable->GetOperationType() == NFmiAreaMask::Constant)
+    {
+      if (newVariableType == SmarttoolsUserVariableType::None)
+      {
+        // Jos kyse oli ei uuden const-muuttujan luonnista ja
+        // on yritetty sijoittaa arvoa const:iin, pitää tehdä virheilmoitus.
+        throw runtime_error(::GetDictionaryString("Can't reassign value to named const variable") + ":\n" +
+                            itsCalculationLineText);
+      }
+      return nullptr;
+    }
     NFmiInfoData::Type dType = assignedVariable->GetDataType();
     if (!(dType == NFmiInfoData::kEditable || dType == NFmiInfoData::kScriptVariableData ||
           dType == NFmiInfoData::kAnyData || dType == NFmiInfoData::kMacroParam))
       throw runtime_error(::GetDictionaryString("SmartToolErrorAssignmentError") + ":\n" +
-                          calculationLineText);
+                          itsCalculationLineText);
     calculationInfo->SetResultDataInfo(assignedVariable);
 
     GetToken();  // luetaan sijoitus operaattori =
     if (string(token) != string("="))
       throw runtime_error(::GetDictionaryString("SmartToolErrorNoAssignmentOperator") + ":\n" +
-                          theCalculationLineText);
+                          itsCalculationLineText);
     for (; GetToken();)
     {
       tmp = token;  // luetaan muuttuja/vakio/funktio tai mikä lie
-      boost::shared_ptr<NFmiAreaMaskInfo> variableInfo(new NFmiAreaMaskInfo(calculationLineText));
+      boost::shared_ptr<NFmiAreaMaskInfo> variableInfo(
+          new NFmiAreaMaskInfo(itsCalculationLineText));
       InterpretToken(tmp, variableInfo);
       AddVariableToCalculation(calculationInfo, variableInfo);
     }
@@ -1003,6 +1014,27 @@ boost::shared_ptr<NFmiSmartToolCalculationInfo> NFmiSmartToolIntepreter::Interpr
                         ::GetDictionaryString("SmartToolErrorThatWontWorkEnding"));
 
   return calculationInfo;
+}
+
+SmarttoolsUserVariableType NFmiSmartToolIntepreter::DoUserVariableChecks(
+    std::string &variableNameInOut)
+{
+  if (boost::iequals(variableNameInOut, "var"))
+  {
+    // Ollaan alustamassa uutta skripti muuttujaa, luetaan nimi talteen
+    GetToken();  
+    variableNameInOut = token;
+    return SmarttoolsUserVariableType::Var;
+  }
+  else if (boost::iequals(variableNameInOut, "const"))
+  {
+    // Ollaan alustamassa uutta skripti vakiomuuttujaa, luetaan nimi talteen
+    GetToken();
+    variableNameInOut = token;
+    return SmarttoolsUserVariableType::Const;
+  }
+
+  return SmarttoolsUserVariableType::None;
 }
 
 void NFmiSmartToolIntepreter::CheckMustHaveSimpleConditionFunctions(
@@ -1350,7 +1382,7 @@ void NFmiSmartToolIntepreter::InterpretDelimiter(const std::string &theDelimText
 // Voi olla myös vakio tai funktio systeemi.
 void NFmiSmartToolIntepreter::InterpretVariable(const std::string &theVariableText,
                                                 boost::shared_ptr<NFmiAreaMaskInfo> &theMaskInfo,
-                                                bool fNewScriptVariable)
+                                                SmarttoolsUserVariableType theNewVariableType)
 {
   theMaskInfo->SetMaskText(theVariableText);
   string paramNameOnly;
@@ -1369,7 +1401,7 @@ void NFmiSmartToolIntepreter::InterpretVariable(const std::string &theVariableTe
 
   // tutkitaan ensin onko mahdollisesti variable-muuttuja, jolloin voimme sallia _-merkin käytön
   // muuttujissa
-  if (InterpretPossibleScriptVariable(theVariableText, theMaskInfo, fNewScriptVariable))
+  if (InterpretPossibleScriptVariable(theVariableText, theMaskInfo, theNewVariableType))
     return;
 
   NFmiSmartToolIntepreter::CheckVariableString(theVariableText,
@@ -1394,7 +1426,7 @@ void NFmiSmartToolIntepreter::InterpretVariable(const std::string &theVariableTe
                                    modelRunIndex,
                                    timeOffsetInHours))
   {
-    if (fNewScriptVariable)
+    if (theNewVariableType != SmarttoolsUserVariableType::None)
       throw runtime_error(::GetDictionaryString("SmartToolErrorTokenWordUsedAsVariable") + ": " +
                           theVariableText);
     return;
@@ -1902,18 +1934,90 @@ bool NFmiSmartToolIntepreter::InterpretVariableForChecking(
   return false;
 }
 
+bool NFmiSmartToolIntepreter::InterpretPossibleScriptConstVariable(
+    const std::string &theVariableText,
+    boost::shared_ptr<NFmiAreaMaskInfo> &theMaskInfo,
+    SmarttoolsUserVariableType theNewVariableType)
+{
+  auto isNewScriptConstVariable = theNewVariableType == SmarttoolsUserVariableType::Const;
+  auto it = itsTokenScriptConstVariableNames.find(theVariableText);
+  if (it != itsTokenScriptConstVariableNames.end() && isNewScriptConstVariable)
+  {
+    // const x käytetty uudestaan, esitellään nimetyt vakiomuuttujat vain kerran
+    throw runtime_error(
+        ::GetDictionaryString("Can't introduce named constant variable more than once") + ": " +
+        theVariableText);
+  }
+  else if (it != itsTokenScriptConstVariableNames.end())
+  {
+    // Nimettyä vakiomuuttujaa x käytetty uudestaan
+    theMaskInfo->SetOperationType(NFmiAreaMask::Constant);
+    NFmiCalculationCondition calcCond(kFmiMaskEqual, it->second);
+    theMaskInfo->SetMaskCondition(calcCond);
+    return true;
+  }
+  else if (isNewScriptConstVariable)
+  {
+    // named-const-variable:n alustus pitää tulkata tässä loppuun asti,
+    // koska kyseistä lauseketta ei käytetä muuhun kuin nimetyn vakion
+    // alustuksessa ja niitä käytetään myöhemmin suoraan eri lausekkeissa.
+    GetToken();
+    string assignOperator = token;
+    if (assignOperator == string("="))
+    {
+      GetToken();
+      string valueStr = token;
+      if (valueStr == string("-") || valueStr == string("+"))
+      {
+        // nagatiivisen tai positiivisen luvun kanssa pitää lukea vielä luvun loppuosa
+        GetToken();
+        valueStr += token;
+      }
+
+      if (IsVariableConstantValue(valueStr, theMaskInfo))
+      {
+        itsTokenScriptConstVariableNames.insert(ScriptConstVariableMap::value_type(
+            theVariableText, theMaskInfo->GetMaskCondition().LowerLimit()));
+        if (!GetToken())
+        {
+          // Sijoituksen jälkeen ei rivillä saisi olla mitään muuta, siksi vielä testattiin
+          // GetToken:ia
+          return true;
+        }
+      }
+    }
+
+    // const x = ? ei voitu alustaa nimetyn vakion arvoa
+    throw runtime_error(
+        ::GetDictionaryString("Can't initialize named constant variable's value with '") +
+        itsCalculationLineText + "'");
+  }
+  return false;
+}
+
 bool NFmiSmartToolIntepreter::InterpretPossibleScriptVariable(
     const std::string &theVariableText,
     boost::shared_ptr<NFmiAreaMaskInfo> &theMaskInfo,
-    bool fNewScriptVariable)
+    SmarttoolsUserVariableType theNewVariableType)
 {
+  if (InterpretPossibleScriptConstVariable(theVariableText,
+                                           theMaskInfo,
+                                           theNewVariableType))
+  {
+    return true;
+  }
+
+  auto isNewScriptVariable = theNewVariableType == SmarttoolsUserVariableType::Var;
   ScriptVariableMap::iterator it = itsTokenScriptVariableNames.find(theVariableText);
-  if (it != itsTokenScriptVariableNames.end() &&
-      fNewScriptVariable)  // var x käytetty uudestaan, esitellään muuttujat vain kerran
+  if (it != itsTokenScriptVariableNames.end() && isNewScriptVariable)
+  {
+    // var x käytetty uudestaan, esitellään muuttujat vain kerran
     throw runtime_error(::GetDictionaryString("SmartToolErrorScriptVariableSecondTime") + ": " +
                         theVariableText);
-  else if (it != itsTokenScriptVariableNames.end())  // muuttujaa x käytetty uudestaan
+  }
+  else if (it != itsTokenScriptVariableNames.end())  
   {
+    // muuttujaa x käytetty uudestaan
     NFmiParam param((*it).second,
                     (*it).first,
                     kFloatMissing,
@@ -1927,13 +2031,15 @@ bool NFmiSmartToolIntepreter::InterpretPossibleScriptVariable(
     theMaskInfo->SetOperationType(NFmiAreaMask::InfoVariable);
     theMaskInfo->SetDataIdent(dataIdent);
     theMaskInfo->SetDataType(NFmiInfoData::kScriptVariableData);
-    theMaskInfo->SetUseDefaultProducer(false);  // tämä ei todellakaan ole default tuottajan dataa
+    // tämä ei todellakaan ole default tuottajan dataa
     // (tämä vaikuttaa siihen mm. että tehdäänkö datasta
     // kopioita tietyissä tilanteissa)
+    theMaskInfo->SetUseDefaultProducer(false);  
     return true;
   }
-  else if (fNewScriptVariable)  // var x, eli 1. alustus
+  else if (isNewScriptVariable)
   {
+    // var x, eli 1. alustus
     NFmiParam param(itsScriptVariableParamIdCounter,
                     theVariableText,
                     kFloatMissing,
@@ -1945,14 +2051,15 @@ bool NFmiSmartToolIntepreter::InterpretPossibleScriptVariable(
     itsTokenScriptVariableNames.insert(
         ScriptVariableMap::value_type(theVariableText, itsScriptVariableParamIdCounter));
     itsScriptVariableParamIdCounter++;  // kasvatetaan seuraavaa uutta muutujaa varten
-    NFmiProducer producer;              // tällä ei ole väliä
+    NFmiProducer producer;              // Tuottajalla ei ole väliä
     NFmiDataIdent dataIdent(param, producer);
     theMaskInfo->SetOperationType(NFmiAreaMask::InfoVariable);
     theMaskInfo->SetDataIdent(dataIdent);
     theMaskInfo->SetDataType(NFmiInfoData::kScriptVariableData);
-    theMaskInfo->SetUseDefaultProducer(false);  // tämä ei todellakaan ole default tuottajan dataa
+    // tämä ei todellakaan ole default tuottajan dataa
     // (tämä vaikuttaa siihen mm. että tehdäänkö datasta
     // kopioita tietyissä tilanteissa)
+    theMaskInfo->SetUseDefaultProducer(false);
     return true;
   }
   return false;

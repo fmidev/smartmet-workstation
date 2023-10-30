@@ -51,6 +51,13 @@ class NFmiExtraMacroParamData;
 class NFmiSimpleConditionPartInfo;
 class NFmiSingleConditionInfo;
 
+enum class SmarttoolsUserVariableType
+{
+    None,
+    Var,
+    Const
+};
+
 class NFmiSmartToolCalculationBlockInfoVector
 {
  public:
@@ -284,7 +291,7 @@ class NFmiSmartToolIntepreter
       const std::string &theOperatorText);
   void InterpretVariable(const std::string &theVariableText,
                          boost::shared_ptr<NFmiAreaMaskInfo> &theMaskInfo,
-                         bool fNewScriptVariable = false);
+                         SmarttoolsUserVariableType theNewVariableType = SmarttoolsUserVariableType::None);
   void InterpretStringLiteral(const std::string &theVariableText,
                               boost::shared_ptr<NFmiAreaMaskInfo> &theMaskInfo);
   bool InterpretSimpleCondition(const std::string &theVariableText,
@@ -324,7 +331,10 @@ class NFmiSmartToolIntepreter
 
   bool InterpretPossibleScriptVariable(const std::string &theVariableText,
                                        boost::shared_ptr<NFmiAreaMaskInfo> &theMaskInfo,
-                                       bool fNewScriptVariable);
+                                       SmarttoolsUserVariableType theNewVariableType);
+  bool InterpretPossibleScriptConstVariable(const std::string &theVariableText,
+                                       boost::shared_ptr<NFmiAreaMaskInfo> &theMaskInfo,
+                                       SmarttoolsUserVariableType theNewVariableType);
   static void CheckVariableString(const std::string &theVariableText,
                                   std::string &theParamText,
                                   bool &fLevelExist,
@@ -378,6 +388,7 @@ class NFmiSmartToolIntepreter
       const std::string &originalResolutionStr);
   const std::string &GetUsedAbsoluteBasePath() const;
   std::string FixGivenSmarttoolsScriptPath(const std::string &thePathInScript) const;
+  SmarttoolsUserVariableType DoUserVariableChecks(std::string &variableNameOut);
 
   NFmiProducerSystem *itsProducerSystem;               // ei omista
   std::string itsCheckOutSectionText;                  // esim. if-sectionin koko teksti
@@ -458,19 +469,29 @@ class NFmiSmartToolIntepreter
   static ResolutionLevelTypesMap itsResolutionLevelTypes;
 
   typedef std::map<std::string, int> ScriptVariableMap;
-  ScriptVariableMap itsTokenScriptVariableNames;  // skriptissä varatut muuttujat (var x = ?)
-                                                  // talletetaan tänne, että voidaan tarkistaa
-                                                  // niiden olemassa olo
-  int itsScriptVariableParamIdCounter;  // pitää keksia muutujille id, joten tehdää juokseva counter
-
-  // normaali ja macroParam sijoituksia halutaan seurata, että ei tapahdu vahinkoja eli niitä olisi
-  // sekaisin, jolloin seuramukset ovat vahingollisia
-  bool fNormalAssigmentFound;  // loytyykö skriptistä normaaleja sijoituksia esim. T = ???
-  bool fMacroParamFound;  // loytyykö skriptistä ns. macroParameri sijoituksia eli RESULT = ?????
-  bool fMacroParamSkriptInProgress;  // Tieto siitä tulkitaanko macroParam-skriptiä vai tavallista
+  // skriptissä varatut muuttujat (var x = ?) talletetaan tänne, 
+  // että voidaan tarkistaa niiden olemassa olo
+  ScriptVariableMap itsTokenScriptVariableNames;
+  // pitää keksia muutujille id, joten tehdää juokseva counter normaali 
+  // ja macroParam sijoituksia halutaan seurata, että ei tapahdu vahinkoja 
+  // eli niitä olisi sekaisin, jolloin seuramukset ovat vahingollisia.
+  // Alustetaan tämä jollain isolla 'random' id numerolla, jotta ei
+  // mene päällekkäin oikeiden parametri id numeroiden kanssa.
+  int itsScriptVariableParamIdCounter = 918273645;
+  typedef std::map<std::string, double> ScriptConstVariableMap;
+  // skriptissä varatut nimetyt vakiomuuttujat (const x = ?) talletetaan tänne,
+  // että voidaan tarkistaa niiden olemassa olo
+  ScriptConstVariableMap itsTokenScriptConstVariableNames;
+  // loytyykö skriptistä normaaleja sijoituksia esim. T = ???
+  bool fNormalAssigmentFound;  
+  // loytyykö skriptistä ns. macroParameri sijoituksia eli RESULT = ?????
+  bool fMacroParamFound;  
+  // Tieto siitä tulkitaanko macroParam-skriptiä vai tavallista
   // skriptiä. Poikkeus heitetään jos macrpParam-skripti päällä,
   // mutta tehdään tavallinen sijoitus
-
+  bool fMacroParamSkriptInProgress;
+  // Kulloisenkin tulkattavan rivin sisältö
+  std::string itsCalculationLineText;
   // GetToken ja IsDelim otettu H. Schilbertin  C++: the Complete Refeference third ed.
   // jouduin muuttamaan niitä vähän sopimaan tähän ympäristöön.
   bool GetToken();

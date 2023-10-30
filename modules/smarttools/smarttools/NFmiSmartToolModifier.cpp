@@ -488,7 +488,6 @@ boost::shared_ptr<NFmiSmartToolCalculation> NFmiSmartToolModifier::CreateCalcula
         theCalcInfo->GetCalculationOperandInfoVector();
     calculation = boost::shared_ptr<NFmiSmartToolCalculation>(new NFmiSmartToolCalculation());
     calculation->SetCalculationText(theCalcInfo->GetCalculationText());
-    calculation->SetCalculationText(theCalcInfo->GetCalculationText());
     bool mustUsePressureInterpolation =
         false;  // tätäei käytetä tässä, mutta pakko laittaa metodin interfacen takia
     calculation->SetResultInfo(
