@@ -23,8 +23,9 @@ target_link_libraries(
     Newbase
     MultiProcessTools
     MultiProcessToolsMFC
-	${UNIRAS_LIB}
-	version
+    ${UNIRAS_LIB}
+    ${FMT_TARGET_LINK_LIBRARIES}
+	  version
     )
 	
 include_directories(
