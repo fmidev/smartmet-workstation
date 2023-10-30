@@ -1893,7 +1893,13 @@ float NFmiStationView::CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extra
     NFmiPoint latlon = itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
     NFmiMetTime usedTime = itsCtrlViewDocumentInterface->ToolTipTime();
     NFmiDataMatrix<float> fakeMatrixValues;
-    return FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsMapViewDescTopIndex, theUsedDrawParam, fakeMatrixValues, true, itsCtrlViewDocumentInterface->UseMultithreaddingWithModifyingFunctions(), usedTime, latlon, itsInfo, fUseCalculationPoints, true, CalcUsedSpaceOutFactors(), nullptr, &extraMacroParamData);
+	// Ei ole hyötyä käyttää monta threadia kun lasketaan yhtä tooltip arvoa
+	bool doMultiThread = false;
+	// Luodaan mahdollisimman pieni data, jotta tooltippien rakentelu menee joutuisasti.
+	// Ainoa asia mikä menetetään on, että jos joku laskee muuttujaan jotain ja haluaa 
+	// laskea siitä jotain alueellisia keskiarvoja tms., koska sitä ei voi tehdä probe hilalla.
+	auto probeData = CreateProbingMacroParamData(itsArea);
+	return FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsMapViewDescTopIndex, theUsedDrawParam, fakeMatrixValues, true, doMultiThread, usedTime, latlon, itsInfo, fUseCalculationPoints, true, CalcUsedSpaceOutFactors(), probeData, &extraMacroParamData);
 }
 
 static void MakeDrawedInfoVector(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
