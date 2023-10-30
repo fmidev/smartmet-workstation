@@ -4637,6 +4637,7 @@ std::string NFmiStationViewHandler::ComposeMapLayerToolTipText(bool beforeDataIs
 
 std::string NFmiStationViewHandler::ComposeToolTipText(const NFmiPoint& theRelativePoint)
 {
+	CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
 	std::string str;
 	// Parametri laatikon p‰‰lt‰ ei tehd‰ normi tooltippi‰, koska jotkut tooltipien laskut ovat super hitaita ja saattavat h‰irit‰ parametrin valinta popupin avautumista.
 	// Tehd‰‰n param-boxille vain tiettyjen tapauksien k‰sittely kuten mik‰ on kohdalla olevan macroParamin kaava, tms.
