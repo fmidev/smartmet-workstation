@@ -338,7 +338,6 @@ function CompareDirectoryImages
 
 function DoFinalCounterSummary
 {
-	Write-Output ""
     Write-ColorOutput "white" "--------------- Final summary -------------------------"
 	$OkImagesSummary = "Images ok: " + $ImagesOkCounter + "/" + $ImagesTotalCounter
     Write-ColorOutput $ImageOkColor $OkImagesSummary
@@ -439,7 +438,8 @@ function DoImageTestingForGivenDirectories
 
 
 DoImageTestingForGivenDirectories "D:\autotesting\baselinetest\reference" "D:\autotesting\baselinetest\current" "D:\autotesting\baselinetest\differenceimages"
-DoImageTestingForGivenDirectories "D:\autotesting\reference" "D:\autotesting\current" "D:\autotesting\differenceimages"
+DoImageTestingForGivenDirectories "D:\autotesting\mainmapview\reference" "D:\autotesting\mainmapview\current" "D:\autotesting\mainmapview\differenceimages"
+DoImageTestingForGivenDirectories "D:\autotesting\crosssectionview\reference" "D:\autotesting\crosssectionview\current" "D:\autotesting\crosssectionview\differenceimages"
 
 DoFinalCounterSummary
 
