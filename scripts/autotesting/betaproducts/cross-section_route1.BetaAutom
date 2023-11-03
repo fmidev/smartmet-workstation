@@ -1,0 +1,19 @@
+{
+    "BetaProductPath" : "D:\\SmartMet\\FMI Dropbox\\Marko Pietarinen\\Macros\\BetaProducts\\marko\\automationtesting\\cross-section_route1.BetaProd",
+    "OriginalBetaProductPath" : "marko\\automationtesting\\cross-section_route1.BetaProd",
+    "TriggerModeInfo" : {
+        "TriggerMode" : 0,
+        "FixedRunTimes" : "23:59",
+        "RunTimeStepInHours" : "1",
+        "FirstRunTimeOfDay" : "00:25",
+        "TriggerData" : "TriggerDataString"
+    },
+    "StartTimeModeInfo" : {
+        "TimeMode" : 0,
+        "WallClockOffsetInHours" : "0"
+    },
+    "EndTimeModeInfo" : {
+        "TimeMode" : 0,
+        "WallClockOffsetInHours" : "60"
+    }
+}

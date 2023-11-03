@@ -19,6 +19,55 @@
             "Enable" : true,
             "Beta-automation path" : "marko\\automationtesting\\Obs_euro_surf_raw_data_zoomed.BetaAutom",
             "Beta-automation absolute path" : "D:\\SmartMet\\FMI Dropbox\\Marko Pietarinen\\Macros\\BetaProducts\\marko\\automationtesting\\Obs_euro_surf_raw_data_zoomed.BetaAutom"
+        },
+        {
+            "Enable" : true,
+            "Beta-automation path" : "marko\\automationtesting\\cross-section_normal_section1.BetaAutom",
+            "Beta-automation absolute path" : "D:\\SmartMet\\FMI Dropbox\\Marko Pietarinen\\Macros\\BetaProducts\\marko\\automationtesting\\cross-section_normal_section1.BetaAutom"
+        },
+        {
+            "Enable" : true,
+            "Beta-automation path" : "marko\\automationtesting\\cross-section_normal_section2.BetaAutom",
+            "Beta-automation absolute path" : "D:\\SmartMet\\FMI Dropbox\\Marko Pietarinen\\Macros\\BetaProducts\\marko\\automationtesting\\cross-section_normal_section2.BetaAutom"
+        },
+        {
+            "Enable" : true,
+            "Beta-automation path" : "marko\\automationtesting\\cross-section_normal_section3.BetaAutom",
+            "Beta-automation absolute path" : "D:\\SmartMet\\FMI Dropbox\\Marko Pietarinen\\Macros\\BetaProducts\\marko\\automationtesting\\cross-section_normal_section3.BetaAutom"
+        },
+        {
+            "Enable" : true,
+            "Beta-automation path" : "marko\\automationtesting\\cross-section_normal_section_3-point_1.BetaAutom",
+            "Beta-automation absolute path" : "D:\\SmartMet\\FMI Dropbox\\Marko Pietarinen\\Macros\\BetaProducts\\marko\\automationtesting\\cross-section_normal_section_3-point_1.BetaAutom"
+        },
+        {
+            "Enable" : true,
+            "Beta-automation path" : "marko\\automationtesting\\cross-section_route1.BetaAutom",
+            "Beta-automation absolute path" : "D:\\SmartMet\\FMI Dropbox\\Marko Pietarinen\\Macros\\BetaProducts\\marko\\automationtesting\\cross-section_route1.BetaAutom"
+        },
+        {
+            "Enable" : true,
+            "Beta-automation path" : "marko\\automationtesting\\cross-section_route2.BetaAutom",
+            "Beta-automation absolute path" : "D:\\SmartMet\\FMI Dropbox\\Marko Pietarinen\\Macros\\BetaProducts\\marko\\automationtesting\\cross-section_route2.BetaAutom"
+        },
+        {
+            "Enable" : true,
+            "Beta-automation path" : "marko\\automationtesting\\cross-section_route3_3-point.BetaAutom",
+            "Beta-automation absolute path" : "D:\\SmartMet\\FMI Dropbox\\Marko Pietarinen\\Macros\\BetaProducts\\marko\\automationtesting\\cross-section_route3_3-point.BetaAutom"
+        },
+        {
+            "Enable" : true,
+            "Beta-automation path" : "marko\\automationtesting\\cross-section_time_point1.BetaAutom",
+            "Beta-automation absolute path" : "D:\\SmartMet\\FMI Dropbox\\Marko Pietarinen\\Macros\\BetaProducts\\marko\\automationtesting\\cross-section_time_point1.BetaAutom"
+        },
+        {
+            "Enable" : true,
+            "Beta-automation path" : "marko\\automationtesting\\cross-section_trajector1.BetaAutom",
+            "Beta-automation absolute path" : "D:\\SmartMet\\FMI Dropbox\\Marko Pietarinen\\Macros\\BetaProducts\\marko\\automationtesting\\cross-section_trajector1.BetaAutom"
+        },
+        {
+            "Beta-automation path" : "marko\\automationtesting\\main-map_macroParams_scand.BetaAutom",
+            "Beta-automation absolute path" : "D:\\SmartMet\\FMI Dropbox\\Marko Pietarinen\\Macros\\BetaProducts\\marko\\automationtesting\\main-map_macroParams_scand.BetaAutom"
         }
     ]
 }

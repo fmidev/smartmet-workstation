@@ -5,7 +5,7 @@
     "TimeStepInMinutes" : "30",
     "UseUtcInTimebox" : true,
     "ParamboxLocation" : 33,
-    "RowIndexList" : "1-15",
+    "RowIndexList" : "1-16",
     "RowSubdirectoryTemplate" : "Row#",
     "ViewMacroPath" : "FMI\\Marko\\automationtesting\\main-map_obs_euro_surf_raw_zoomed.vmr",
     "SelectedViewIndex" : 0

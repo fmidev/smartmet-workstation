@@ -1,0 +1,8759 @@
+// NFmiViewSettingMacro::Write...
+// version number
+2
+// itsName
+20 cross-section_route2
+// Description
+318 Automaatiotesti: reitti (Lappeenranta - Venäjä) poikkileikkaus kohdasta 2
+Mukana rivit 1-4:
+1. Ec:n mallipintadataa monia parametreja ja macroParam
+2. Ec:n painepintadataa monia parametreja ja macroParam
+3. Gfs:n painepintadataa monia parametreja ja macroParam
+4. Meps:n mallipintadataa monia parametreja ja macroParam
+// GeneralDoc-settings
+// NFmiViewSettingMacro::GeneralDoc::Write...
+// ProjectionCurvatureInfo
+2
+2
+1
+1
+
+1
+1 1
+0 0 0 2.36943e-38
+0
+16 16 0 0 0 9.64289e-39 4
+0
+0 0
+
+
+0
+1 1
+0 0 0 7.71434e-39
+0
+8 12 0 0 0 9.64289e-39 4
+0
+0 0
+
+
+// CPLocationVector
+47
+27.4713 56.0273
+ 19.9227 60.1862
+ 23.788 61.5618
+ 25.7549 62.3253
+ 28.1836 61.0208
+ 42.4226 67.7724
+ 28.8564 71.5334
+ 19.1125 71.4423
+ 5.68986 64.0711
+ 2.27163 61.8775
+ 4.81063 55.9459
+ 6.39098 54.4099
+ 3.56623 58.9831
+ 9.731 58.1036
+ 27.5093 68.7281
+ 30.4386 59.8886
+ 24.9683 60.2636
+ 21.428 68.9774
+ 29.1021 66.0689
+ 22.1794 62.5612
+ 25.7911 66.4728
+ 24.7393 67.8189
+ 29.7695 62.6305
+ 29.4636 64.1572
+ 24.7428 63.9449
+ 25.5276 64.921
+ 22.4007 60.6954
+ 27.1759 69.735
+ 25.0303 59.4646
+ 17.4036 59.3133
+ 20.2541 63.8703
+ 21.7984 61.4529
+ 24.961 60.1119
+ 26.9286 60.5495
+ 26.9516 60.4062
+ 24.0903 60.6369
+ 24.0004 59.9288
+ 23.0217 59.8137
+ 23.2752 60.0481
+ 22.0992 60.2998
+ 21.5498 61.4838
+ 21.3155 63.0108
+ 21.329 63.2752
+ 22.3839 61.5046
+ 22.2702 60.4512
+ 21.6787 63.0187
+ 24.0378 60.1373
+// possible extra data
+0
+0
+
+// TimeView-settings (timeseries-view)
+// NFmiViewSettingMacro::TimeView::Write...
+// std::vector<TimeViewRow> itsRows
+0
+// AbsolutRect
+1073 15
+1479 1243
+// Status ShowWindow ShowHelpData
+0 0 1
+// itsStartTimeOffset itsEndTimeOffset
+0 0
+// possible extra data
+3
+0 0 0
+2
+19 10 0 0
+ 13 0 -9
+ 60
+14 26.7963,61.182
+
+
+// TempView-settings (sounding-view)
+// NFmiViewSettingMacro::TempView::Write...
+// AbsolutRect
+1159 10
+998 1219
+// Status ShowWindow
+0 0
+// ShowHirlam ShowEcmwf ShowRealSounding
+0 0 0
+// MTATempSystem
+// NFmiMTATempSystem::Write...
+// version number
+1
+// Container<TempInfos>
+0
+// MaxTempsShowed
+6
+// Selected producers std::vector<NFmiProducer>
+1
+240
+9 (S) Ecmwf
+// SelectedProducer index + tempViewOn + SkewTDegree
+-1 0 45
+// SoundingColors std::vector<NFmiColor>
+10
+0 0 1 0
+1 0 0 0
+0 0.501961 0 0
+0.8 0 0.8 0
+0.694118 0.4 0 0
+0 0.74902 0.74902 0
+0.294118 0.294118 0.294118 0
+0 0.4 0.0901961 0
+1 0 0.6 0
+0 0.54902 1 0// TAxisStart0Degree + TAxisEnd0Degree + TAxisStart45Degree + TAxisEnd45Degree + TAxisStartNegDegree + TAxisEndNegDegree
+-74 14 -5 55 -120 40
+// TemperatureHelpLineStart + TemperatureHelpLineEnd + TemperatureHelpLineStep
+-160 160 10
+// TemperatureHelpLineInfo
+// NFmiMTATempSystem::LineInfo::Write...
+// Line Color
+0 0 0 0
+// Line thickness + type + draw-it
+1 1 1
+// possible extra data
+0
+0
+
+// TemperatureHelpLabelInfo
+// NFmiMTATempSystem::LabelInfo::Write...
+// StartPointPixelOffSet
+0 0
+// TextAlignment + FontSize + DrawLabelText + ClipWithDataRect
+70 18 1 0
+// possible extra data
+0
+0
+
+// PAxisStart + PAxisEnd
+1080 150
+// PressureValues
+17
+1000 925 850 700 600 500 400 300 200 150 100 50 20 10 5 2 1
+// PressureLineInfo
+// NFmiMTATempSystem::LineInfo::Write...
+// Line Color
+0 0.501961 1 0
+// Line thickness + type + draw-it
+1 2 1
+// possible extra data
+0
+0
+
+// PressureLabelInfo
+// NFmiMTATempSystem::LabelInfo::Write...
+// StartPointPixelOffSet
+0 0
+// TextAlignment + FontSize + DrawLabelText + ClipWithDataRect
+2 16 1 0
+// possible extra data
+0
+0
+
+// MixingRatioValues
+10
+0.1 0.4 1 2 4 7 10 16 20 30
+// MixingRatioLineInfo
+// NFmiMTATempSystem::LineInfo::Write...
+// Line Color
+0.8 0.0901961 0.74902 0
+// Line thickness + type + draw-it
+1 2 1
+// possible extra data
+0
+0
+
+// MixingRatioLabelInfo
+// NFmiMTATempSystem::LabelInfo::Write...
+// StartPointPixelOffSet
+0 -10
+// TextAlignment + FontSize + DrawLabelText + ClipWithDataRect
+1 14 1 1
+// possible extra data
+0
+0
+
+// MoistAdiabaticValues
+13
+-20 -15 -10 -5 0 5 10 15 20 25 30 35 40
+// MoistAdiabaticLineInfo
+// NFmiMTATempSystem::LineInfo::Write...
+// Line Color
+0 0.501961 1 0
+// Line thickness + type + draw-it
+1 3 1
+// possible extra data
+0
+0
+
+// MoistAdiabaticLabelInfo
+// NFmiMTATempSystem::LabelInfo::Write...
+// StartPointPixelOffSet
+0 0
+// TextAlignment + FontSize + DrawLabelText + ClipWithDataRect
+1 14 0 1
+// possible extra data
+0
+0
+
+// DryAdiabaticValues
+10
+-60 -40 -20 10 0 10 20 40 60 80
+// DryAdiabaticLineInfo
+// NFmiMTATempSystem::LineInfo::Write...
+// Line Color
+0 0.501961 0 0
+// Line thickness + type + draw-it
+1 4 1
+// possible extra data
+0
+0
+
+// DryAdiabaticLabelInfo
+// NFmiMTATempSystem::LabelInfo::Write...
+// StartPointPixelOffSet
+0 0
+// TextAlignment + FontSize + DrawLabelText + ClipWithDataRect
+1 14 0 1
+// possible extra data
+0
+0
+
+// AirParcel1LineInfo
+// NFmiMTATempSystem::LineInfo::Write...
+// Line Color
+0 1 0 0
+// Line thickness + type + draw-it
+2 0 0
+// possible extra data
+0
+0
+
+// AirParcel1LabelInfo
+// NFmiMTATempSystem::LabelInfo::Write...
+// StartPointPixelOffSet
+0 0
+// TextAlignment + FontSize + DrawLabelText + ClipWithDataRect
+1 14 0 1
+// possible extra data
+0
+0
+
+// AirParcel2LineInfo
+// NFmiMTATempSystem::LineInfo::Write...
+// Line Color
+0 1 1 0
+// Line thickness + type + draw-it
+2 0 1
+// possible extra data
+0
+0
+
+// AirParcel2LabelInfo
+// NFmiMTATempSystem::LabelInfo::Write...
+// StartPointPixelOffSet
+0 0
+// TextAlignment + FontSize + DrawLabelText + ClipWithDataRect
+1 14 0 1
+// possible extra data
+0
+0
+
+// AirParcel3LineInfo
+// NFmiMTATempSystem::LineInfo::Write...
+// Line Color
+0 1 0 0
+// Line thickness + type + draw-it
+3 0 0
+// possible extra data
+0
+0
+
+// AirParcel3LabelInfo
+// NFmiMTATempSystem::LabelInfo::Write...
+// StartPointPixelOffSet
+0 0
+// TextAlignment + FontSize + DrawLabelText + ClipWithDataRect
+1 14 0 1
+// possible extra data
+0
+0
+
+// WindModificationAreaLineInfo
+// NFmiMTATempSystem::LineInfo::Write...
+// Line Color
+0.501961 0.501961 0.501961 0
+// Line thickness + type + draw-it
+1 2 1
+// possible extra data
+0
+0
+
+// DrawWinds + WindvectorSizeInPixels
+1 25 30
+// DrawLegendText + LegendTextSize
+1 14 14
+
+// TemperatureLineInfo
+// NFmiMTATempSystem::LineInfo::Write...
+// Line Color
+0 0 0 0
+// Line thickness + type + draw-it
+2 0 1
+// possible extra data
+0
+0
+
+// DewPointLineInfo
+// NFmiMTATempSystem::LineInfo::Write...
+// Line Color
+0 0 0 0
+// Line thickness + type + draw-it
+2 2 1
+// possible extra data
+0
+0
+
+// HeightValueLabelInfo
+// NFmiMTATempSystem::LabelInfo::Write...
+// StartPointPixelOffSet
+1 -7
+// TextAlignment + FontSize + DrawLabelText + ClipWithDataRect
+1 14 1 1
+// possible extra data
+0
+0
+
+// DrawOnlyHeightValuesOfFirstDrawedSounding
+1
+// ShowIndexies + IndexiesFontSize + SoundingTextFontSize
+0 14 14
+// ShowHodograf + ShowCondensationTrailProbabilityLines + ShowKilometerScale + ShowFlightLevelScale + fShowMapMarkers + ShowOnlyFirstSoundingInHodograf
+0 0 1 1 0 0
+// ResetScalesStartP + ResetScalesEndP + ResetScalesStartT + ResetScalesEndT + ResetScalesSkewTStartT + ResetScalesSkewTEndT
+1050 150 -80 30 -30 30
+// AnimationTimeStepInMinutes
+60
+// possible extra data
+12
+1 1 0 0 0.15 1 0 0 1 0 0 0
+4
+56 0 0 0 0 2 0 0
+0
+0
+ 0 0 0 0 2 1 1
+0
+0
+ 0 0 0 0 2 2 0
+0
+0
+
+1 1
+20 0 0
+0 0
+50 0.35
+0
+0
+
+5 0,240
+
+
+// possible extra data
+0
+0
+
+// MaskSettings
+// NFmiViewSettingMacro::MaskSettings::Write...
+// std::vector<Mask>
+0
+// ShowMasksOnMapView UseMasksInTimeSerialViews fUseMasksWithFilterTool fUseMaskWithBrush
+0 1 0 0
+// possible extra data
+0
+0
+
+// IsPrinterPortrait
+1
+// fUseBrushTool fUseAnalyzeTool fUseTextGenTool (removed feature legacy storage) fUseChangeSpreaderTool fUseControlPoinTool fUseAnimationTool
+0 0 0 0 0 0
+// itsAnimationStartPosition itsAnimationEndPosition itsAnimationDelayInMS
+0 0 200
+// Here starts View Macro version 2 stuff
+// NFmiViewSettingMacro::TrajectoryView::Write...
+// AbsolutRect
+1766 209
+656 622
+// Status ShowWindow
+0 0
+// TrajectorySystem
+// NFmiTrajectorySystem::Write...
+// version number
+1
+// Container<Trajectories>
+0
+// Selected-LatLon
+0 0
+
+// selected time with utc hour + minute + day shift to current day
+9 0 0
+// Selected-Producer
+260
+11 MetCoop EPS
+
+// SelectedDataType + SelectedTimeStepInMinutes + SelectedTimeLengthInHours
+2 30 24
+// SelectedPlumeProbFactor + SelectedPlumeParticleCount
+25 10
+// SelectedStartLocationRangeInKM + SelectedPressureLevel + SelectedStartPressureLevelRange
+0 850 0
+// SelectedDirection + SelectedStartTimeRangeInMinutes
+68 0
+// PlumesUsed + TrajectoryViewOn + ShowTrajectoryArrows + ShowTrajectoryAnimationMarkers + SelectedTrajectoryIsentropic + ShowTrajectoriesInCrossSectionView + UseMapTime
+1 0 1 1 0 0 1
+// NFmiTempBalloonTrajectorSettings::Write...
+// RisingSpeed + FallSpeed + TopHeightInKM + FloatingTimeInMinutes
+4.34 3.28 15 0
+// possible extra data
+0
+0
+
+// CalcTempBalloonTrajectors
+0
+// possible extra data
+0
+0
+
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::CrossSectionView::Write...
+// std::vector<MapRow> itsMapRowSettings
+5
+// NFmiViewSettingMacro::MapRow::Write...
+// std::vector<Param> itsRowParams
+10
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+TI2m
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+1
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-1e+09
+'itsAbsoluteMaxValue'
+1e+09
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+0.5 0.5
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+1
+'ZeroColorMean'
+0
+0
+50
+100
+0 0.501961 0 0
+1 0 0 0
+0 0 0 0
+9
+0
+0
+-1
+4
+0
+1
+0
+0
+1
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+14
+5 10 20 30 45 60 75 90 105 120 135 150 200 250 
+1
+2.5 
+1
+0.2 
+1
+0 
+13
+2 99 59 66 507 475 451 458 482 498 514 514 514 
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.494118 0.494118 0.494118 0
+0 1 0 0
+0
+Version_3_stuff
+1 1 0 0
+0 1
+0 0 0 0
+0 0 0 0
+0 0 0 4
+0 0.2 0 100
+0 1 0 0
+14
+5 10 20 30 45 60 75 90 105 120 135 150 200 250
+1
+2.5
+1
+0.2
+1
+0
+13
+2 99 59 66 507 475 451 458 482 498 514 514 514
+0 0
+possible_extra_data
+14
+70 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+1209
+31 Clear Air Turbulence TI2m (FMI)
+32700 32700 2 32700 32700 4 %.1f
+240
+16 ECMWF mallipinta
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 1 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+EDR (eddy dissi
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+0.05
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-1e+09
+'itsAbsoluteMaxValue'
+1e+09
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+4
+0
+1
+0
+0
+1
+1
+0
+2.5
+0
+0.1
+0
+6
+0
+0
+0.1
+0.2
+0 0 1 0
+1 1 0 0
+1 0.501961 0 0
+9
+13
+0.1 0.15 0.2 0.25 0.3 0.35 0.4 0.45 0.5 0.6 0.7 0.8 0.9 
+1
+2.5 
+1
+0.1 
+1
+0 
+14
+2 2 507 499 491 483 475 467 451 455 458 482 498 514 
+0
+
+0
+0
+0
+
+0
+
+0.1
+0.2
+0.3
+0 0 1 0
+1 1 0 0
+1 0.501961 0 0
+0.45
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.494118 0.494118 0.494118 0
+1 0 0 0
+2
+Version_3_stuff
+1 1 0 0
+0 0.05
+0 0 0 0
+0 0 0 0
+0 0 0 2.5
+0 0.1 0 0.45
+1 0 0.501961 0
+13
+0.1 0.15 0.2 0.25 0.3 0.35 0.4 0.45 0.5 0.6 0.7 0.8 0.9
+1
+2.5
+1
+0.1
+1
+0
+14
+2 2 507 499 491 483 475 467 451 455 458 482 498 514
+0 2
+possible_extra_data
+14
+70 0 0 0 0 0 1 0 1 0 0 0 1 1
+4
+14 19000000000000
+7 1 0 1 0
+0 
+14 1 0 0.501961 0
+
+
+// DataIdent
+70
+19 EddyDissipationRate
+32700 32700 2 32700 32700 4 %.1f
+240
+16 ECMWF mallipinta
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+N
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+1
+'IsoLineGab'
+1
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+1 1 1 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-1e+09
+'itsAbsoluteMaxValue'
+1e+09
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+4
+0
+1
+0
+0
+0
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+9
+10 20 30 40 50 60 70 80 90 
+1
+2.5 
+1
+0 
+1
+1 
+10
+2 59 59 51 51 43 43 35 35 27 
+0
+
+0
+0
+0
+
+0
+
+20
+40
+60
+1 1 1 0
+0 1 0 0
+0 1 0.247059 0
+80
+0
+0
+95
+101
+5
+0.74902 0.74902 0.74902 0
+0 0 0 0
+1
+0
+60
+100
+2
+0.286275 0.286275 0.141176 0
+0 0.501961 0 0
+0
+Version_3_stuff
+1 1 0 0
+1 5
+0 0 0 0
+1 1 1 0
+0 0 0 4
+0 0.2 0 100
+0 1 0 0
+9
+10 20 30 40 50 60 70 80 90
+1
+2.5
+1
+0
+1
+1
+10
+2 59 59 51 51 43 43 35 35 27
+0 0
+possible_extra_data
+14
+80 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+14 0 0.501961 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+79
+1 N
+32700 32700 2 32700 32700 4 %.1f
+240
+16 ECMWF mallipinta
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+T
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+5
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 1 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+1 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 0.501961 0.247059 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+1
+0
+1
+0
+2.5
+0
+0.2
+0
+6
+0
+-1
+0
+1
+0 0 1 0
+0.501961 0 1 0
+1 0 0 0
+3
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+0
+0
+
+0
+
+-40
+0
+40
+0 0 1 0
+1 0.501961 1 0
+1 0 0 0
+40
+0
+0
+-0.2
+0
+2
+0.501961 0 1 0
+0 0 0 0
+1
+0
+0
+0.2
+2
+1 0 0 0
+1 0 0 0
+0
+Version_3_stuff
+1 0.501961 0.247059 0
+0 5
+0 0 0 0
+0 0 1 0
+0 1 0 2.5
+0 0.2 0 1
+1 0 0 0
+0
+
+0
+
+0
+
+0
+
+0
+
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 1 0 0 0
+0 
+7 1 0 0 0
+
+
+// DataIdent
+4
+1 T
+32700 32700 2 32700 32700 4 %.1f
+240
+16 ECMWF mallipinta
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+Tpot
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+2
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+1
+1
+1
+0
+2.5
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.494118 0.494118 0.494118 0
+0 1 0 0
+0
+Version_3_stuff
+1 1 0 0
+0 2
+0 0 0 0
+0 0 0 0
+0 1 0 2.5
+0 0.2 0 100
+0 1 0 0
+0
+
+0
+
+0
+
+0
+
+0
+
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+8
+4 tpot
+32700 32700 2 32700 32700 4 %.1f
+240
+16 ECMWF mallipinta
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+WS
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+2
+'IsolineColor'
+0 0 1 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+0.74902 0.74902 0.74902 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+0
+1
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+13
+40 45 50 55 60 65 70 75 80 85 90 95 100 
+1
+2.5 
+1
+0.5 
+1
+6 
+11
+266 266 10 66 59 507 483 451 458 482 514 
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+1
+0
+50
+500
+5
+1 0.501961 0 0
+0 0 0 0
+0
+0
+10
+15
+2
+0.494118 0.494118 0.494118 0
+0 1 0 0
+0
+Version_3_stuff
+0.74902 0.74902 0.74902 0
+0 2
+0 0 1 0
+0 0 0 0
+0 0 0 4
+0 0.2 0 100
+0 1 0 0
+13
+40 45 50 55 60 65 70 75 80 85 90 95 100
+1
+2.5
+1
+0.5
+1
+6
+11
+266 266 10 66 59 507 483 451 458 482 514
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+21
+2 WS
+32700 32700 2 32700 32700 4 %.1f
+240
+16 ECMWF mallipinta
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+CldIceMR
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+0.002
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+1
+1
+0
+1
+0
+1
+0
+3
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+7
+0.1 0.2 0.3 0.4 0.5 0.6 0.7 
+1
+3 
+1
+0.3 
+1
+0 
+6
+2 506 490 474 458 330 
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0.3
+0.5
+5
+0.501961 0 1 0
+0 0 0 0
+0
+0
+0.5
+100
+5
+1 0 0 0
+0 1 0 0
+3
+Version_3_stuff
+1 1 0 0
+0 0.002
+0 0 0 0
+0 0 0 0
+1 1 0 3
+0 0.2 0 100
+0 1 0 0
+7
+0.1 0.2 0.3 0.4 0.5 0.6 0.7
+1
+3
+1
+0.3
+1
+0
+6
+2 506 490 474 458 330
+0 3
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+1199
+10 CloudIceMR
+32700 32700 2 32700 32700 4 %.1f
+240
+16 ECMWF mallipinta
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+TI2m
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+1
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-1e+09
+'itsAbsoluteMaxValue'
+1e+09
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+0.5 0.5
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+1
+'ZeroColorMean'
+0
+0
+50
+100
+0 0.501961 0 0
+1 0 0 0
+0 0 0 0
+9
+0
+0
+-1
+4
+0
+1
+0
+0
+1
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+14
+5 10 20 30 45 60 75 90 105 120 135 150 200 250 
+1
+2.5 
+1
+0.2 
+1
+0 
+13
+2 99 59 66 507 475 451 458 482 498 514 514 514 
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.494118 0.494118 0.494118 0
+0 1 0 0
+0
+Version_3_stuff
+1 1 0 0
+0 1
+0 0 0 0
+0 0 0 0
+0 0 0 4
+0 0.2 0 100
+0 1 0 0
+14
+5 10 20 30 45 60 75 90 105 120 135 150 200 250
+1
+2.5
+1
+0.2
+1
+0
+13
+2 99 59 66 507 475 451 458 482 498 514 514 514
+0 0
+possible_extra_data
+14
+70 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+1209
+31 Clear Air Turbulence TI2m (FMI)
+32700 32700 2 32700 32700 4 %.1f
+240
+16 ECMWF mallipinta
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+WVec
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+1
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+0 0 0 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+0.4 0.4
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+1
+1
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.494118 0.494118 0.494118 0
+0 1 0 0
+0
+Version_3_stuff
+0 0 0 0
+0 1
+0 0 0 0
+0 0 0 0
+0 1 0 4
+0 0.2 0 100
+0 1 0 0
+0
+
+0
+
+0
+
+0
+
+0
+
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+22
+18 Wind vector (meta)
+32700 32700 1 32700 32700 4 %.1f
+240
+16 ECMWF mallipinta
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+Omat\Marko\automationtesting\cross_ec_1
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+5
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-1e+09
+'itsAbsoluteMaxValue'
+1e+09
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+1
+1
+1
+0
+4
+0
+0.2
+0
+6
+0
+-40
+-20
+0
+0 0 1 0
+0 1 0 0
+1 1 0 0
+9
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+1 0 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.498039 0.498039 0.498039 0
+0.498039 0 1 0
+0
+Version_3_stuff
+1 1 0 0
+0 1
+0 0 0 0
+0 0 0 0
+0 1 0 4
+0 0.2 0 30
+1 0 0 0
+0
+
+0
+
+0
+
+0
+
+0
+
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+14 0.498039 0 1 0
+0 
+7 1 0 1 0
+
+
+// DataIdent
+14000
+10 MacroParam
+32700 32700 2 32700 32700 4 %.1f
+0
+6 Kennel
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+21
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::MapRow::Write...
+// std::vector<Param> itsRowParams
+8
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+RH
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+10
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+0 0 0 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+4
+0
+1
+0
+0
+0
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+5
+20 40 60 80 90 
+1
+3 
+1
+0 
+1
+0 
+6
+512 2 2 251 59 51 
+0
+
+0
+0
+0
+
+0
+
+0
+30
+60
+0 0.501961 1 0
+0.501961 0.501961 1 0
+0.74902 0.74902 0.74902 0
+60
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.494118 0.494118 0.494118 0
+0.74902 0.74902 0.74902 0
+0
+Version_3_stuff
+0 0 0 0
+0 10
+0 0 0 0
+0 0 0 0
+0 0 0 4
+0 0.2 0 100
+0 1 0 0
+5
+20 40 60 80 90
+1
+3
+1
+0
+1
+0
+6
+512 2 2 251 59 51
+0 0
+possible_extra_data
+14
+70 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+25 0.74902 0.74902 0.74902 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+13
+17 Relative Humidity
+32700 32700 2 32700 32700 4 %.1f
+240
+11 ECMWF level
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+2
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 1 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+T
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+5
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 1 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+1 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 0.501961 0.247059 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+1
+0
+1
+0
+2.5
+0
+0.2
+0
+6
+0
+-1
+0
+1
+0 0 1 0
+0.501961 0 1 0
+1 0 0 0
+3
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+0
+0
+
+0
+
+-40
+0
+40
+0 0 1 0
+1 0.501961 1 0
+1 0 0 0
+40
+0
+0
+-0.2
+0
+2
+0.501961 0 1 0
+0 0 0 0
+1
+0
+0
+0.2
+2
+1 0 0 0
+1 0 0 0
+0
+Version_3_stuff
+1 0.501961 0.247059 0
+0 5
+0 0 0 0
+0 0 1 0
+0 1 0 2.5
+0 0.2 0 1
+1 0 0 0
+0
+
+0
+
+0
+
+0
+
+0
+
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 1 0 0 0
+0 
+7 1 0 0 0
+
+
+// DataIdent
+4
+11 Temperature
+32700 32700 2 32700 32700 4 %.1f
+240
+11 ECMWF level
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+2
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+Thetae
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+1
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-1e+09
+'itsAbsoluteMaxValue'
+1e+09
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+1
+1
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+1 1 0 0
+9
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+1 0 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.5 0.5 0.5 0
+0.5 0 1 0
+0
+Version_3_stuff
+1 1 0 0
+0 1
+0 0 0 0
+0 0 0 0
+0 1 0 4
+0 0.2 0 100
+1 0 0 0
+0
+
+0
+
+0
+
+0
+
+0
+
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+9 0.5 0 1 0
+0 
+7 1 0 0 0
+
+
+// DataIdent
+4775
+6 Thetae
+32700 32700 2 32700 32700 4 %.1f
+240
+11 ECMWF level
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+2
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+Tpot
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+2
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+1
+1
+1
+0
+2.5
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.494118 0.494118 0.494118 0
+0 1 0 0
+0
+Version_3_stuff
+1 1 0 0
+0 2
+0 0 0 0
+0 0 0 0
+0 1 0 2.5
+0 0.2 0 100
+0 1 0 0
+0
+
+0
+
+0
+
+0
+
+0
+
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+8
+4 tpot
+32700 32700 2 32700 32700 4 %.1f
+240
+11 ECMWF level
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+2
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+WS
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+2
+'IsolineColor'
+0 0 1 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+0.74902 0.74902 0.74902 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+0
+1
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+13
+40 45 50 55 60 65 70 75 80 85 90 95 100 
+1
+2.5 
+1
+0.5 
+1
+6 
+11
+266 266 10 66 59 507 483 451 458 482 514 
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+1
+0
+50
+500
+5
+1 0.501961 0 0
+0 0 0 0
+0
+0
+10
+15
+2
+0.494118 0.494118 0.494118 0
+0 1 0 0
+0
+Version_3_stuff
+0.74902 0.74902 0.74902 0
+0 2
+0 0 1 0
+0 0 0 0
+0 0 0 4
+0 0.2 0 100
+0 1 0 0
+13
+40 45 50 55 60 65 70 75 80 85 90 95 100
+1
+2.5
+1
+0.5
+1
+6
+11
+266 266 10 66 59 507 483 451 458 482 514
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+21
+13 Tuulen nopeus
+32700 32700 2 32700 32700 4 %.1f
+240
+11 ECMWF level
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+2
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+WVec
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+1
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+0 0 0 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+0.4 0.4
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+1
+1
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.494118 0.494118 0.494118 0
+0 1 0 0
+0
+Version_3_stuff
+0 0 0 0
+0 1
+0 0 0 0
+0 0 0 0
+0 1 0 4
+0 0.2 0 100
+0 1 0 0
+0
+
+0
+
+0
+
+0
+
+0
+
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+22
+18 Wind vector (meta)
+32700 32700 2 32700 32700 4 %.1f
+240
+11 ECMWF level
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+2
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+Wind u component (meta)
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+1
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+0 0 0 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+1
+1
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.5 0.5 0.5 0
+0 1 0 0
+0
+Version_3_stuff
+0 0 0 0
+0 1
+0 0 0 0
+0 0 0 0
+0 1 0 4
+0 0.2 0 100
+0 1 0 0
+0
+
+0
+
+0
+
+0
+
+0
+
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+23
+23 Wind u component (meta)
+32700 32700 2 32700 32700 4 %.1f
+240
+11 ECMWF level
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+2
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+Omat\Marko\automationtesting\cross_ec_vars_1
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+2
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-1e+09
+'itsAbsoluteMaxValue'
+1e+09
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+1
+1
+1
+0
+4
+0
+0.2
+0
+6
+0
+-20
+0
+20
+0 0 1 0
+0 1 0 0
+1 1 0 0
+9
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+1 0 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.498039 0.498039 0.498039 0
+0.498039 0 1 0
+0
+Version_3_stuff
+1 1 0 0
+0 1
+0 0 0 0
+0 0 0 0
+0 1 0 4
+0 0.2 0 40
+1 0 0 0
+0
+
+0
+
+0
+
+0
+
+0
+
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+14 0.498039 0 1 0
+0 
+7 1 0 1 0
+
+
+// DataIdent
+14000
+10 MacroParam
+32700 32700 2 32700 32700 4 %.1f
+0
+6 Kennel
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+21
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::MapRow::Write...
+// std::vector<Param> itsRowParams
+8
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+RH
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+10
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+0 0 0 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+4
+0
+1
+0
+0
+0
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+5
+20 40 60 80 90 
+1
+3 
+1
+0 
+1
+0 
+6
+512 2 2 251 59 51 
+0
+
+0
+0
+0
+
+0
+
+0
+30
+60
+0 0.501961 1 0
+0.501961 0.501961 1 0
+0.74902 0.74902 0.74902 0
+60
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.494118 0.494118 0.494118 0
+0.74902 0.74902 0.74902 0
+0
+Version_3_stuff
+0 0 0 0
+0 10
+0 0 0 0
+0 0 0 0
+0 0 0 4
+0 0.2 0 100
+0 1 0 0
+5
+20 40 60 80 90
+1
+3
+1
+0
+1
+0
+6
+512 2 2 251 59 51
+0 0
+possible_extra_data
+14
+70 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+25 0.74902 0.74902 0.74902 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+13
+2 RH
+32700 32700 2 32700 32700 4 %.1f
+54
+12 GFS pressure
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+2
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 1 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+CldWaterMR
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+0.002
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+4
+0
+1
+1
+0
+0
+1
+0
+2.5
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+7
+0.1 0.2 0.3 0.4 0.5 0.6 0.7 
+1
+2.5 
+1
+0 
+1
+0 
+6
+2 258 242 226 218 330 
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0.3
+0.5
+5
+0.501961 0 1 0
+0 0 0 0
+0
+0
+0.5
+100
+5
+1 0 0 0
+0 1 0 0
+1
+Version_3_stuff
+1 1 0 0
+0 0.002
+0 0 0 0
+0 0 0 0
+0 0 0 2.5
+0 0.2 0 100
+0 1 0 0
+7
+0.1 0.2 0.3 0.4 0.5 0.6 0.7
+1
+2.5
+1
+0
+1
+0
+6
+2 258 242 226 218 330
+0 1
+possible_extra_data
+14
+70 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+276
+16 Cloud water g/kg
+32700 32700 2 32700 32700 4 %.1f
+54
+12 GFS pressure
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+2
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+T
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+5
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 1 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+1 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 0.501961 0.247059 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+1
+0
+1
+0
+2.5
+0
+0.2
+0
+6
+0
+-1
+0
+1
+0 0 1 0
+0.501961 0 1 0
+1 0 0 0
+3
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+0
+0
+
+0
+
+-40
+0
+40
+0 0 1 0
+1 0.501961 1 0
+1 0 0 0
+40
+0
+0
+-0.2
+0
+2
+0.501961 0 1 0
+0 0 0 0
+1
+0
+0
+0.2
+2
+1 0 0 0
+1 0 0 0
+0
+Version_3_stuff
+1 0.501961 0.247059 0
+0 5
+0 0 0 0
+0 0 1 0
+0 1 0 2.5
+0 0.2 0 1
+1 0 0 0
+0
+
+0
+
+0
+
+0
+
+0
+
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 1 0 0 0
+0 
+7 1 0 0 0
+
+
+// DataIdent
+4
+1 T
+32700 32700 2 32700 32700 4 %.1f
+54
+12 GFS pressure
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+2
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+w mm-s
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+250
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 1 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 0.501961 1 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+0
+1
+1
+0
+2.5
+0
+0.2
+0
+6
+0
+-1
+0
+1
+0 0 1 0
+0.501961 0 1 0
+1 0 0 0
+3
+41
+-15000 -14000 -13000 -12000 -11000 -10000 -9000 -8000 -7000 -6000 -5000 -4000 -3000 -2750 -2500 -2250 -2000 -1750 -1500 -1000 -500 0 500 1000 1500 1750 2000 2500 3000 4000 5000 6000 7000 8000 9000 10000 11000 12000 13000 14000 15000 
+1
+2.5 
+30
+0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.8 0.2 0.2 0.2 0.2 0.8 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.4 0.2 0.2 0.4 0.2 
+1
+0 
+23
+10 10 10 10 10 10 10 10 10 10 10 10 266 10 10 10 10 10 10 10 10 458 451 
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+1
+0
+-20000
+-3000
+5
+0.501961 0 1 0
+0 0 0 0
+1
+0
+-2999
+-1500
+5
+0 0 1 0
+0 1 0 0
+0
+Version_3_stuff
+1 0.501961 1 0
+0 5
+0 0 0 0
+0 0 1 0
+0 0 0 2.5
+0 0.2 0 1
+1 0 0 0
+41
+-15000 -14000 -13000 -12000 -11000 -10000 -9000 -8000 -7000 -6000 -5000 -4000 -3000 -2750 -2500 -2250 -2000 -1750 -1500 -1000 -500 0 500 1000 1500 1750 2000 2500 3000 4000 5000 6000 7000 8000 9000 10000 11000 12000 13000 14000 15000
+1
+2.5
+30
+0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.8 0.2 0.2 0.2 0.2 0.8 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.4 0.2 0.2 0.4 0.2
+1
+0
+23
+10 10 10 10 10 10 10 10 10 10 10 10 266 10 10 10 10 10 10 10 10 458 451
+0 0
+possible_extra_data
+14
+80 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 1 0 0 0
+
+
+// DataIdent
+43
+24 Vertical Velocity [mm/s]
+32700 32700 2 32700 32700 4 %.1f
+54
+12 GFS pressure
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+2
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+Wind u component (meta)
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+1
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+0 0 0 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+1
+1
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.5 0.5 0.5 0
+0 1 0 0
+0
+Version_3_stuff
+0 0 0 0
+0 1
+0 0 0 0
+0 0 0 0
+0 1 0 4
+0 0.2 0 100
+0 1 0 0
+0
+
+0
+
+0
+
+0
+
+0
+
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+23
+23 Wind u component (meta)
+32700 32700 2 32700 32700 4 %.1f
+54
+12 GFS pressure
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+2
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+WS
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+2
+'IsolineColor'
+0 0 1 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+0.74902 0.74902 0.74902 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+0
+1
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+13
+40 45 50 55 60 65 70 75 80 85 90 95 100 
+1
+2.5 
+1
+0.5 
+1
+6 
+11
+266 266 10 66 59 507 483 451 458 482 514 
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+1
+0
+50
+500
+5
+1 0.501961 0 0
+0 0 0 0
+0
+0
+10
+15
+2
+0.494118 0.494118 0.494118 0
+0 1 0 0
+0
+Version_3_stuff
+0.74902 0.74902 0.74902 0
+0 2
+0 0 1 0
+0 0 0 0
+0 0 0 4
+0 0.2 0 100
+0 1 0 0
+13
+40 45 50 55 60 65 70 75 80 85 90 95 100
+1
+2.5
+1
+0.5
+1
+6
+11
+266 266 10 66 59 507 483 451 458 482 514
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+21
+2 WS
+32700 32700 2 32700 32700 4 %.1f
+54
+12 GFS pressure
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+2
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+WVec
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+1
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+0 0 0 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+0.4 0.4
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+1
+1
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.494118 0.494118 0.494118 0
+0 1 0 0
+0
+Version_3_stuff
+0 0 0 0
+0 1
+0 0 0 0
+0 0 0 0
+0 1 0 4
+0 0.2 0 100
+0 1 0 0
+0
+
+0
+
+0
+
+0
+
+0
+
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+22
+18 Wind vector (meta)
+32700 32700 2 32700 32700 4 %.1f
+54
+12 GFS pressure
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+2
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+Omat\Marko\automationtesting\cross_gfs_vars_1
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+2
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-1e+09
+'itsAbsoluteMaxValue'
+1e+09
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+1
+1
+1
+0
+4
+0
+0.2
+0
+6
+0
+-20
+0
+20
+0 0 1 0
+0 1 0 0
+1 1 0 0
+9
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+1 0 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.498039 0.498039 0.498039 0
+0.498039 0 1 0
+0
+Version_3_stuff
+1 1 0 0
+0 1
+0 0 0 0
+0 0 0 0
+0 1 0 4
+0 0.2 0 40
+1 0 0 0
+0
+
+0
+
+0
+
+0
+
+0
+
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+14 0.498039 0 1 0
+0 
+7 1 0 1 0
+
+
+// DataIdent
+14000
+10 MacroParam
+32700 32700 2 32700 32700 4 %.1f
+0
+6 Kennel
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+21
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::MapRow::Write...
+// std::vector<Param> itsRowParams
+14
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+IceGrowth cm-h
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+0.5
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-1e+09
+'itsAbsoluteMaxValue'
+1e+09
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+4
+1
+1
+1
+0
+1
+1
+0
+2.5
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+12
+0.1 0.6 1 1.5 2 2.5 3 4 5 6 7 7.6 
+1
+2.5 
+4
+0.1 0.1 0 0.1 
+1
+2 
+13
+2 512 510 509 508 507 498 490 482 474 466 458 451 
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+1 0 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.494118 0.494118 0.494118 0
+0.494118 0 1 0
+1
+Version_3_stuff
+1 1 0 0
+0 1
+0 0 0 0
+0 0 0 0
+1 0 0 2.5
+0 0.2 0 100
+0 1 0 0
+12
+0.1 0.6 1 1.5 2 2.5 3 4 5 6 7 7.6
+1
+2.5
+4
+0.1 0.1 0 0.1
+1
+2
+13
+2 512 510 509 508 507 498 490 482 474 466 458 451
+0 1
+possible_extra_data
+14
+80 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+14 0.494118 0 1 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+1463
+19 AtmosphericIcGrowth
+32700 32700 2 32700 32700 4 %.1f
+260
+19 MEPS Hybrid Control
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 1 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+Aviation Icing 
+'Priority'
+1
+'ViewType'
+1
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+1
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0.501961 0 1 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+1 1 1 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-1e+09
+'itsAbsoluteMaxValue'
+1e+09
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+0.5 0.5
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+1
+'ZeroColorMean'
+0
+4
+6
+8
+1 0.501961 0.247059 0
+1 0 1 0
+1 0 0.501961 0
+9
+0
+0
+-1
+4
+0
+1
+0
+0
+0
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+8
+2 3 4 5 6 7 8 9 
+1
+2.5 
+1
+0 
+1
+0 
+10
+2 2 507 491 498 490 458 456 454 451 
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.494118 0.494118 0.494118 0
+0 1 0 0
+0
+Version_3_stuff
+1 1 0 0
+0 1
+0 0 0 0
+0.501961 0 1 0
+0 0 0 4
+0 0.2 0 100
+0 1 0 0
+8
+2 3 4 5 6 7 8 9
+1
+2.5
+1
+0
+1
+0
+10
+2 2 507 491 498 490 458 456 454 451
+0 0
+possible_extra_data
+14
+60 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+480
+20 Aviation Icing (FMI)
+32700 32700 2 32700 32700 4 %.1f
+260
+19 MEPS Hybrid Control
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+TI2m
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+1
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-1e+09
+'itsAbsoluteMaxValue'
+1e+09
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+0.5 0.5
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+1
+'ZeroColorMean'
+0
+0
+50
+100
+0 0.501961 0 0
+1 0 0 0
+0 0 0 0
+9
+0
+0
+-1
+4
+0
+1
+0
+0
+1
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+14
+5 10 20 30 45 60 75 90 105 120 135 150 200 250 
+1
+2.5 
+1
+0.2 
+1
+0 
+13
+2 99 59 66 507 475 451 458 482 498 514 514 514 
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.494118 0.494118 0.494118 0
+0 1 0 0
+0
+Version_3_stuff
+1 1 0 0
+0 1
+0 0 0 0
+0 0 0 0
+0 0 0 4
+0 0.2 0 100
+0 1 0 0
+14
+5 10 20 30 45 60 75 90 105 120 135 150 200 250
+1
+2.5
+1
+0.2
+1
+0
+13
+2 99 59 66 507 475 451 458 482 498 514 514 514
+0 0
+possible_extra_data
+14
+70 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+1209
+31 Clear Air Turbulence TI2m (FMI)
+32700 32700 2 32700 32700 4 %.1f
+260
+19 MEPS Hybrid Control
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+N
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+1
+'IsoLineGab'
+1
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+1 1 1 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-1e+09
+'itsAbsoluteMaxValue'
+1e+09
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+4
+0
+1
+0
+0
+0
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+9
+10 20 30 40 50 60 70 80 90 
+1
+2.5 
+1
+0 
+1
+1 
+10
+2 59 59 51 51 43 43 35 35 27 
+0
+
+0
+0
+0
+
+0
+
+20
+40
+60
+1 1 1 0
+0 1 0 0
+0 1 0.247059 0
+80
+0
+0
+95
+101
+5
+0.74902 0.74902 0.74902 0
+0 0 0 0
+1
+0
+60
+100
+2
+0.286275 0.286275 0.141176 0
+0 0.501961 0 0
+0
+Version_3_stuff
+1 1 0 0
+1 5
+0 0 0 0
+1 1 1 0
+0 0 0 4
+0 0.2 0 100
+0 1 0 0
+9
+10 20 30 40 50 60 70 80 90
+1
+2.5
+1
+0
+1
+1
+10
+2 59 59 51 51 43 43 35 35 27
+0 0
+possible_extra_data
+14
+80 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+14 0 0.501961 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+79
+13 CloudFraction
+32700 32700 2 32700 32700 4 %.1f
+260
+19 MEPS Hybrid Control
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+CldWaterMR
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+0.002
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+4
+0
+1
+1
+0
+0
+1
+0
+2.5
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+7
+0.1 0.2 0.3 0.4 0.5 0.6 0.7 
+1
+2.5 
+1
+0 
+1
+0 
+6
+2 258 242 226 218 330 
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0.3
+0.5
+5
+0.501961 0 1 0
+0 0 0 0
+0
+0
+0.5
+100
+5
+1 0 0 0
+0 1 0 0
+1
+Version_3_stuff
+1 1 0 0
+0 0.002
+0 0 0 0
+0 0 0 0
+0 0 0 2.5
+0 0.2 0 100
+0 1 0 0
+7
+0.1 0.2 0.3 0.4 0.5 0.6 0.7
+1
+2.5
+1
+0
+1
+0
+6
+2 258 242 226 218 330
+0 1
+possible_extra_data
+14
+70 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+276
+12 CloudWaterMR
+32700 32700 2 32700 32700 4 %.1f
+260
+19 MEPS Hybrid Control
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+GraupelMR
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+0.1
+'IsolineColor'
+1 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-1e+09
+'itsAbsoluteMaxValue'
+1e+09
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+0
+1
+1
+0.01
+3
+0
+0.5
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+2
+0.01 0.1 
+1
+3 
+2
+0.5 0 
+1
+0 
+2
+451 2 
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.494118 0.494118 0.494118 0
+0 1 0 0
+2
+Version_3_stuff
+1 1 0 0
+0 1
+1 0 0 0
+0 0 0 0
+0 0 0.01 3
+0 0.5 0 100
+0 1 0 0
+2
+0.01 0.1
+1
+3
+2
+0.5 0
+1
+0
+2
+451 2
+0 2
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+1202
+9 GraupelMR
+32700 32700 2 32700 32700 4 %.1f
+260
+19 MEPS Hybrid Control
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+SnowMR
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+0.1
+'IsolineColor'
+1 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-1e+09
+'itsAbsoluteMaxValue'
+1e+09
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+0
+1
+1
+0.01
+3
+0
+0.5
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+2
+0.01 0.1 
+1
+3 
+2
+0.5 0 
+1
+0 
+2
+10 2 
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.494118 0.494118 0.494118 0
+0 1 0 0
+2
+Version_3_stuff
+1 1 0 0
+0 1
+1 0 0 0
+0 0 0 0
+0 0 0.01 3
+0 0.5 0 100
+0 1 0 0
+2
+0.01 0.1
+1
+3
+2
+0.5 0
+1
+0
+2
+10 2
+0 2
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+1200
+6 SnowMR
+32700 32700 2 32700 32700 4 %.1f
+260
+19 MEPS Hybrid Control
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+T
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+5
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 1 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+1 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 0.501961 0.247059 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+1
+0
+1
+0
+2.5
+0
+0.2
+0
+6
+0
+-1
+0
+1
+0 0 1 0
+0.501961 0 1 0
+1 0 0 0
+3
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+0
+0
+
+0
+
+-40
+0
+40
+0 0 1 0
+1 0.501961 1 0
+1 0 0 0
+40
+0
+0
+-0.2
+0
+2
+0.501961 0 1 0
+0 0 0 0
+1
+0
+0
+0.2
+2
+1 0 0 0
+1 0 0 0
+0
+Version_3_stuff
+1 0.501961 0.247059 0
+0 5
+0 0 0 0
+0 0 1 0
+0 1 0 2.5
+0 0.2 0 1
+1 0 0 0
+0
+
+0
+
+0
+
+0
+
+0
+
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 1 0 0 0
+0 
+7 1 0 0 0
+
+
+// DataIdent
+4
+1 T
+32700 32700 2 32700 32700 4 %.1f
+260
+19 MEPS Hybrid Control
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+TKE
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+1
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+4
+0
+1
+0
+0
+1
+1
+0
+3
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+12
+0.5 1 2 3 4 5 6 7 8 9 12 15 
+1
+2.5 
+1
+0.2 
+1
+0 
+13
+2 250 107 507 483 451 455 458 482 490 498 506 514 
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.494118 0.494118 0.494118 0
+0 1 0 0
+1
+Version_3_stuff
+1 1 0 0
+0 1
+0 0 0 0
+0 0 0 0
+0 0 0 3
+0 0.2 0 100
+0 1 0 0
+12
+0.5 1 2 3 4 5 6 7 8 9 12 15
+1
+2.5
+1
+0.2
+1
+0
+13
+2 250 107 507 483 451 455 458 482 490 498 506 514
+0 1
+possible_extra_data
+14
+70 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+301
+3 TKE
+32700 32700 2 32700 32700 4 %.1f
+260
+19 MEPS Hybrid Control
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+w mm-s
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+250
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 1 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 0.501961 1 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+0
+1
+1
+0
+2.5
+0
+0.2
+0
+6
+0
+-1
+0
+1
+0 0 1 0
+0.501961 0 1 0
+1 0 0 0
+3
+41
+-15000 -14000 -13000 -12000 -11000 -10000 -9000 -8000 -7000 -6000 -5000 -4000 -3000 -2750 -2500 -2250 -2000 -1750 -1500 -1000 -500 0 500 1000 1500 1750 2000 2500 3000 4000 5000 6000 7000 8000 9000 10000 11000 12000 13000 14000 15000 
+1
+2.5 
+30
+0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.8 0.2 0.2 0.2 0.2 0.8 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.4 0.2 0.2 0.4 0.2 
+1
+0 
+23
+10 10 10 10 10 10 10 10 10 10 10 10 266 10 10 10 10 10 10 10 10 458 451 
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+1
+0
+-20000
+-3000
+5
+0.501961 0 1 0
+0 0 0 0
+1
+0
+-2999
+-1500
+5
+0 0 1 0
+0 1 0 0
+0
+Version_3_stuff
+1 0.501961 1 0
+0 5
+0 0 0 0
+0 0 1 0
+0 0 0 2.5
+0 0.2 0 1
+1 0 0 0
+41
+-15000 -14000 -13000 -12000 -11000 -10000 -9000 -8000 -7000 -6000 -5000 -4000 -3000 -2750 -2500 -2250 -2000 -1750 -1500 -1000 -500 0 500 1000 1500 1750 2000 2500 3000 4000 5000 6000 7000 8000 9000 10000 11000 12000 13000 14000 15000
+1
+2.5
+30
+0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.8 0.2 0.2 0.2 0.2 0.8 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.4 0.2 0.2 0.4 0.2
+1
+0
+23
+10 10 10 10 10 10 10 10 10 10 10 10 266 10 10 10 10 10 10 10 10 458 451
+0 0
+possible_extra_data
+14
+80 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 1 0 0 0
+
+
+// DataIdent
+43
+23 VerticalVelocity (mm/s)
+32700 32700 2 32700 32700 4 %.1f
+260
+19 MEPS Hybrid Control
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+V
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+5
+'IsolineColor'
+1 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+0 0 0 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+1
+1
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.494118 0.494118 0.494118 0
+0 1 0 0
+0
+Version_3_stuff
+0 0 0 0
+0 5
+1 0 0 0
+0 0 0 0
+0 1 0 4
+0 0.2 0 100
+0 1 0 0
+0
+
+0
+
+0
+
+0
+
+0
+
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+24
+23 Wind v component (meta)
+32700 32700 2 32700 32700 4 %.1f
+260
+19 MEPS Hybrid Control
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+WVec
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+1
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+0 0 0 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+0.4 0.4
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+1
+1
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.494118 0.494118 0.494118 0
+0 1 0 0
+0
+Version_3_stuff
+0 0 0 0
+0 1
+0 0 0 0
+0 0 0 0
+0 1 0 4
+0 0.2 0 100
+0 1 0 0
+0
+
+0
+
+0
+
+0
+
+0
+
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+22
+18 Wind vector (meta)
+32700 32700 2 32700 32700 4 %.1f
+260
+19 MEPS Hybrid Control
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+WS
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+2
+'IsolineColor'
+0 0 1 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+0.74902 0.74902 0.74902 0
+'itsAbsoluteMinValue'
+-10000
+'itsAbsoluteMaxValue'
+10000
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+0
+1
+1
+0
+4
+0
+0.2
+0
+6
+1
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+13
+40 45 50 55 60 65 70 75 80 85 90 95 100 
+1
+2.5 
+1
+0.5 
+1
+6 
+11
+266 266 10 66 59 507 483 451 458 482 514 
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+100
+1
+0
+50
+500
+5
+1 0.501961 0 0
+0 0 0 0
+0
+0
+10
+15
+2
+0.494118 0.494118 0.494118 0
+0 1 0 0
+0
+Version_3_stuff
+0.74902 0.74902 0.74902 0
+0 2
+0 0 1 0
+0 0 0 0
+0 0 0 4
+0 0.2 0 100
+0 1 0 0
+13
+40 45 50 55 60 65 70 75 80 85 90 95 100
+1
+2.5
+1
+0.5
+1
+6
+11
+266 266 10 66 59 507 483 451 458 482 514
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+7 0 1 0 0
+0 
+7 0 1 0 0
+
+
+// DataIdent
+21
+2 WS
+32700 32700 2 32700 32700 4 %.1f
+260
+19 MEPS Hybrid Control
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+15
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::Param::Write...
+// NFmiDrawParam
+Version 3
+'ParameterAbbreviation'
+Omat\Marko\automationtesting\cross_meps_vars_1
+'Priority'
+1
+'ViewType'
+2
+'UseIsoLineGabWithCustomContours'
+0
+'IsoLineGab'
+2
+'IsolineColor'
+0 0 0 0
+'IsolineTextColor'
+0 0 0 0
+'ModifyingStep'
+1
+'ModifyingUnit'
+1
+'FrameColor'
+0 0 0 0
+'FillColor'
+0 0 0 0
+'IsolineLabelBoxFillColor'
+1 1 0 0
+'itsAbsoluteMinValue'
+-1e+09
+'itsAbsoluteMaxValue'
+1e+09
+'TimeSeriesScaleMin'
+0
+'TimeSeriesScaleMax'
+100
+'RelativeSize'
+1 1
+'RelativePositionOffset'
+0 0
+'OnlyOneSymbolRelativeSize'
+1 1
+'OnlyOneSymbolRelativePositionOffset'
+0 0
+'PossibleViewTypeCount'
+2
+'PossibleViewTypeList'
+1
+2
+'TimeSerialModifyingLimit'
+10
+'StationDataViewType'
+101
+'EditableParam'
+0
+'Unit'
+?
+'ShowNumbers'
+1
+'ShowMasks'
+0
+'ShowColors'
+0
+'ShowColoredNumbers'
+0
+'ZeroColorMean'
+0
+0
+50
+100
+0 0 1 0
+0 1 0 0
+0 1 0 0
+9
+0
+0
+-1
+2
+0
+1
+0
+1
+1
+1
+0
+4
+0
+0.2
+0
+6
+0
+-20
+0
+20
+0 0 1 0
+0 1 0 0
+1 1 0 0
+9
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+
+0
+0
+0
+
+0
+
+0
+50
+100
+0 0 1 0
+0 1 0 0
+1 0 0 0
+100
+0
+0
+0
+10
+1
+0 0 0 0
+0 0 0 0
+0
+0
+50
+60
+2
+0.498039 0.498039 0.498039 0
+0.498039 0 1 0
+0
+Version_3_stuff
+1 1 0 0
+0 1
+0 0 0 0
+0 0 0 0
+0 1 0 4
+0 0.2 0 40
+1 0 0 0
+0
+
+0
+
+0
+
+0
+
+0
+
+0 0
+possible_extra_data
+14
+100 0 0 0 0 0 1 0 0 0 0 0 1 1
+4
+14 19000000000000
+14 0.498039 0 1 0
+0 
+7 1 0 1 0
+
+
+// DataIdent
+14000
+10 MacroParam
+32700 32700 2 32700 32700 4 %.1f
+0
+6 Kennel
+1 1 1 1 1 0 0 0 
+0
+
+// NFmiLevel
+0
+4 None
+32700
+
+// NFmiInfoData::Type
+21
+// ModelOrigTimeOffsetInHours
+0
+// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData
+0 0 0 0
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::MapRow::Write...
+// std::vector<Param> itsRowParams
+0
+// AbsolutRect
+980 19
+1234 1204
+// Status fShowWindow
+0 1
+// CrossSectionSystem
+// NFmiCrossSectionSystem::Write...
+// version number
+1
+// Container<MainPoints>
+3
+26.7963 61.182
+-23.9914 58.884
+33.1256 56.4709
+// ActivatedMinorPointIndex + WantedMinorPointCount + VerticalPointCount
+-1 100 60
+// CrossSectionSystemActive + UseTimeCrossSection + UseRouteCrossSection
+1 0 1
+// UseObsAndForCrossSection + TimeCrossSectionDirty + CrossSectionViewOn + ShowHybridLevels
+0 0 1 0
+// selected Route-Start-Time with utc hour + minute + day shift to current day
+9 0 0
+// selected Route-End-Time with utc hour + minute + day shift to current day
+13 0 -2
+// itsMaxViewRowSize + itsStartRowIndex + itsRowCount + itsCrossSectionMode  + itsStandardPressureLevelMode
+5 4 1 0 0
+// ObsForModeLocation
+32700 32700
+// possible extra data
+1
+17
+2
+18 9 0 0
+ 13 0 -2
+ 60
+44 1015,150,1015,150,1015,150,1015,150,1015,150
+
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::SynopPlotSettings::Write...
+// NFmiSynopPlotSettings::Write...
+// ShowT + ShowTd + ShowV + ShowWw
+1 1 1 1
+// ShowCh + ShowCm + ShowCl + ShowN
+1 1 1 1
+// ShowNh + ShowDdff + ShowPPPP + ShowPpp
+1 1 1 1
+// ShowA + ShowW1 + ShowW2 + ShowH
+1 1 1 1
+// ShowRr + ShowTw + UseSingleColor
+1 1 0
+// SingleColor
+0 1 1 0
+// itsFontSize + itsPlotSpacing
+2.3 0.6
+// possible extra data
+0
+1
+40 0 1 0 1 1 0 0 1 1 0 0 1 1 0 3.5 0.8
+0
+0
+
+
+
+
+// NFmiViewSettingMacro::ObsComparisonInfo::Write...
+// NFmiObsComparisonInfo::Write...
+// ComparisonMode + DrawBorders + SymbolType
+0 1 2
+// SymbolSize
+16 16
+
+// itsOkColor
+0.6 0.8 0.2 0
+// UnderLowColor
+0.086 0.49 0.788 0
+// OverHighColor
+0.929 0.2 0.027 0
+// ExtrapolationOkColor
+0.713 0.855 0.42 0
+// ExtrapolationUnderLowColor
+0.29 0.655 0.925 0
+// ExtrapolationOverHighColor
+0.98 0.435 0.294 0
+// FrameColor
+1 1 0.5 0
+// Vector<NFmiObsComparisonInfo::Param>
+8
+// NFmiObsComparisonInfo::Param::Write...
+// ParId + LowLimit + HighLimit + DecimalCount + ConversionFactor
+4 -2 2 1 1
+// possible extra data
+0
+0
+// NFmiObsComparisonInfo::Param::Write...
+// ParId + LowLimit + HighLimit + DecimalCount + ConversionFactor
+1 -2 2 1 1
+// possible extra data
+0
+0
+// NFmiObsComparisonInfo::Param::Write...
+// ParId + LowLimit + HighLimit + DecimalCount + ConversionFactor
+10 -2 2 1 1
+// possible extra data
+0
+0
+// NFmiObsComparisonInfo::Param::Write...
+// ParId + LowLimit + HighLimit + DecimalCount + ConversionFactor
+13 -20 20 0 1
+// possible extra data
+0
+0
+// NFmiObsComparisonInfo::Param::Write...
+// ParId + LowLimit + HighLimit + DecimalCount + ConversionFactor
+21 -2 2 1 1
+// possible extra data
+0
+0
+// NFmiObsComparisonInfo::Param::Write...
+// ParId + LowLimit + HighLimit + DecimalCount + ConversionFactor
+20 -30 30 0 1
+// possible extra data
+0
+0
+// NFmiObsComparisonInfo::Param::Write...
+// ParId + LowLimit + HighLimit + DecimalCount + ConversionFactor
+79 -30 30 0 12.5
+// possible extra data
+0
+0
+// NFmiObsComparisonInfo::Param::Write...
+// ParId + LowLimit + HighLimit + DecimalCount + ConversionFactor
+353 -0.5 0.5 2 1
+// possible extra data
+0
+0
+// possible extra data
+0
+0
+
+
+// NFmiViewSettingMacro::WarningCenterView::Write...
+// AbsolutRect
+1233 4
+1081 1339
+// Status + ShowWindow
+0 0
+// WarningCenterSystem
+// HakeSystemConfigurations::Write...
+// UpdateTimeStepInMinutes + WarningCenterViewOn + ShowAllMessages
+5 0 0
+// Container<SymbolInfos>
+10
+// WarningSymbolInfo::Write...
+// SymbolID + MessageCategory + MinLevelToBeShown + Use
+2 454 0 1
+// Color
+1 0 0 0
+// SymbolSizeInPixels
+10 10
+// possible extra data
+0
+0
+
+// WarningSymbolInfo::Write...
+// SymbolID + MessageCategory + MinLevelToBeShown + Use
+4 461 0 0
+// Color
+1 0 0.501961 0
+// SymbolSizeInPixels
+10 10
+// possible extra data
+0
+0
+
+// WarningSymbolInfo::Write...
+// SymbolID + MessageCategory + MinLevelToBeShown + Use
+3 403 2 1
+// Color
+0 0.501961 1 0
+// SymbolSizeInPixels
+10 10
+// possible extra data
+0
+0
+
+// WarningSymbolInfo::Write...
+// SymbolID + MessageCategory + MinLevelToBeShown + Use
+4 422 1 1
+// Color
+0 0.501961 0 0
+// SymbolSizeInPixels
+10 10
+// possible extra data
+0
+0
+
+// WarningSymbolInfo::Write...
+// SymbolID + MessageCategory + MinLevelToBeShown + Use
+5 462 0 1
+// Color
+1 1 0 0
+// SymbolSizeInPixels
+10 10
+// possible extra data
+0
+0
+
+// WarningSymbolInfo::Write...
+// SymbolID + MessageCategory + MinLevelToBeShown + Use
+6 6 2 0
+// Color
+0 1 1 0
+// SymbolSizeInPixels
+15 15
+// possible extra data
+0
+0
+
+// WarningSymbolInfo::Write...
+// SymbolID + MessageCategory + MinLevelToBeShown + Use
+7 7 2 0
+// Color
+0.501961 0 1 0
+// SymbolSizeInPixels
+10 10
+// possible extra data
+0
+0
+
+// WarningSymbolInfo::Write...
+// SymbolID + MessageCategory + MinLevelToBeShown + Use
+2 461 1 0
+// Color
+0 1 0 0
+// SymbolSizeInPixels
+10 10
+// possible extra data
+0
+0
+
+// WarningSymbolInfo::Write...
+// SymbolID + MessageCategory + MinLevelToBeShown + Use
+2 413 2 0
+// Color
+0.501961 0 1 0
+// SymbolSizeInPixels
+10 10
+// possible extra data
+0
+0
+
+// WarningSymbolInfo::Write...
+// SymbolID + MessageCategory + MinLevelToBeShown + Use
+2 413 2 0
+// Color
+0.501961 0 1 0
+// SymbolSizeInPixels
+8 8
+// possible extra data
+0
+0
+// DefaultSymbolInfo
+// WarningSymbolInfo::Write...
+// SymbolID + MessageCategory + MinLevelToBeShown + Use
+6 0 0 1
+// Color
+0 1 0 0
+// SymbolSizeInPixels
+10 10
+// possible extra data
+0
+0
+
+// possible extra data
+0
+1
+0 
+
+
+// Container<Header-Column-Widths-In-Pixels>
+0
+// possible extra data
+3
+1 0 120
+0
+
+// NFmiViewSettingMacro::SynopDataGridView::Write...
+// AbsolutRect
+864 174
+1649 1032
+// Status + ShowWindow
+0 0
+// SelectedProducer
+1001
+6 Kennel
+
+// MinMaxRangeStartTime with utc hour + minute + day shift to current day
+10 0 0
+// MinMaxModeOn + DayRangeValue + AllCountriesSelected
+0 1 1
+// SelectedCountryAbbrStr
+0 
+// Container<Header-Column-Widths-In-Pixels>
+0
+// possible extra data
+0
+0
+
+// ExtraMapView(s) settings are here
+// ExtraMapView size
+3
+// NFmiViewSettingMacro::MapViewDescTop::Write...
+// AbsolutRect
+-2 18
+901 1148
+// Status fShowWindow
+0 1
+// vector<MapRow> MapRowSettings
+0
+// vector<MapRow> ExtraMapRowSettings
+0
+// MapViewDescTop
+// NFmiMapViewDescTop::Write...
+// SelectedMapIndex
+1
+// LandBorderColorIndex + ShowParamWindowView
+0 1
+// LandBorderPenSize
+1 1
+// RelativeMapRect
+0 0
+1 0.931305
+// DrawOverMapMode + MapRowStartingIndex + ShowTimeOnMapMode + ShowTimeString
+1 1 0 1
+// selected time with utc hour + minute + day shift to current day
+9 0 0
+// ViewGridSize
+1 1
+// ShowStationPlot + StationPointColorIndex
+0 2
+// StationPointSize
+3 3
+// ShowMasksOnMap + TimeControlTimeStep + SpacingOutFactor + MapViewDisplayMode
+0 1 1 0
+// DescTopOn + LockToMainMapViewTime + ShowTrajectorsOnMap + ShowSoundingMarkersOnMap + ShowCrossSectionMarkersOnMap
+0 1 1 1 1
+// ShowSelectedPointsOnMap + ShowControlPointsOnMap + ShowObsComparisonOnMap + ShowWarningMarkersOnMap + ShowRedCrossOverMapIfNotEditedDataTime
+1 1 1 1 0
+// possible extra data
+4
+0 17 33 1
+3
+44 0 0 400
+10 0 0
+ 20 0 0
+ 60
+60 1 1 0
+2
+1 0
+0
+
+17 3 0 0
+ 6 0 -9
+ 60
+9 1 1 1 0.4
+
+
+// DipMapHelperList
+4
+// NFmiMapViewDescTop::ViewMacroDipMapHelper::Write...
+// UsedMapIndex + UsedOverMapDibIndex
+0 1
+// itsZoomedAreaStr
+54 stereographic,20,90,60:18.3712,59.5339,37.4927,69.4803
+
+// possible extra data
+2
+0 1
+2
+0 
+0 
+
+
+// NFmiMapViewDescTop::ViewMacroDipMapHelper::Write...
+// UsedMapIndex + UsedOverMapDibIndex
+1 -1
+// itsZoomedAreaStr
+37 stereographic,20,90,60:6,51.3,49,70.2
+
+// possible extra data
+2
+1 -1
+2
+9 Light_map
+0 
+
+
+// NFmiMapViewDescTop::ViewMacroDipMapHelper::Write...
+// UsedMapIndex + UsedOverMapDibIndex
+1 -1
+// itsZoomedAreaStr
+40 stereographic,10,90,60:-19.22,25,79.7,57
+
+// possible extra data
+2
+1 -1
+2
+0 
+0 
+
+
+// NFmiMapViewDescTop::ViewMacroDipMapHelper::Write...
+// UsedMapIndex + UsedOverMapDibIndex
+0 0
+// itsZoomedAreaStr
+22 latlon:-180,-90,180,90
+
+// possible extra data
+2
+0 0
+2
+0 
+0 
+
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::MapViewDescTop::Write...
+// AbsolutRect
+594 38
+1874 1187
+// Status fShowWindow
+0 0
+// vector<MapRow> MapRowSettings
+0
+// vector<MapRow> ExtraMapRowSettings
+0
+// MapViewDescTop
+// NFmiMapViewDescTop::Write...
+// SelectedMapIndex
+1
+// LandBorderColorIndex + ShowParamWindowView
+0 1
+// LandBorderPenSize
+1 1
+// RelativeMapRect
+0 0
+1 0.936364
+// DrawOverMapMode + MapRowStartingIndex + ShowTimeOnMapMode + ShowTimeString
+1 1 0 1
+// selected time with utc hour + minute + day shift to current day
+9 0 0
+// ViewGridSize
+2 1
+// ShowStationPlot + StationPointColorIndex
+0 2
+// StationPointSize
+2 2
+// ShowMasksOnMap + TimeControlTimeStep + SpacingOutFactor + MapViewDisplayMode
+0 3 1 0
+// DescTopOn + LockToMainMapViewTime + ShowTrajectorsOnMap + ShowSoundingMarkersOnMap + ShowCrossSectionMarkersOnMap
+0 1 0 1 1
+// ShowSelectedPointsOnMap + ShowControlPointsOnMap + ShowObsComparisonOnMap + ShowWarningMarkersOnMap + ShowRedCrossOverMapIfNotEditedDataTime
+1 0 0 0 0
+// possible extra data
+4
+0 17 33 1
+3
+46 0 0 400
+12 0 0
+ 21 0 0
+ 180
+180 1 1 0
+2
+1 0
+0
+
+19 10 0 0
+ 13 0 -9
+ 60
+9 1 1 1 0.4
+
+
+// DipMapHelperList
+4
+// NFmiMapViewDescTop::ViewMacroDipMapHelper::Write...
+// UsedMapIndex + UsedOverMapDibIndex
+0 1
+// itsZoomedAreaStr
+54 stereographic,20,90,60:18.3712,59.5339,37.4927,69.4803
+
+// possible extra data
+2
+0 1
+2
+0 
+0 
+
+
+// NFmiMapViewDescTop::ViewMacroDipMapHelper::Write...
+// UsedMapIndex + UsedOverMapDibIndex
+1 -1
+// itsZoomedAreaStr
+37 stereographic,20,90,60:6,51.3,49,70.2
+
+// possible extra data
+2
+1 -1
+2
+9 Light_map
+0 
+
+
+// NFmiMapViewDescTop::ViewMacroDipMapHelper::Write...
+// UsedMapIndex + UsedOverMapDibIndex
+1 -1
+// itsZoomedAreaStr
+40 stereographic,10,90,60:-19.22,25,79.7,57
+
+// possible extra data
+2
+1 -1
+2
+0 
+0 
+
+
+// NFmiMapViewDescTop::ViewMacroDipMapHelper::Write...
+// UsedMapIndex + UsedOverMapDibIndex
+0 0
+// itsZoomedAreaStr
+22 latlon:-180,-90,180,90
+
+// possible extra data
+2
+0 0
+2
+0 
+0 
+
+// possible extra data
+0
+0
+
+// NFmiViewSettingMacro::MapViewDescTop::Write...
+// AbsolutRect
+50 50
+1288 1404
+// Status fShowWindow
+0 0
+// vector<MapRow> MapRowSettings
+0
+// vector<MapRow> ExtraMapRowSettings
+0
+// MapViewDescTop
+// NFmiMapViewDescTop::Write...
+// SelectedMapIndex
+1
+// LandBorderColorIndex + ShowParamWindowView
+-1 1
+// LandBorderPenSize
+1 1
+// RelativeMapRect
+0 0
+1 0.946849
+// DrawOverMapMode + MapRowStartingIndex + ShowTimeOnMapMode + ShowTimeString
+1 1 0 1
+// selected time with utc hour + minute + day shift to current day
+10 0 0
+// ViewGridSize
+1 1
+// ShowStationPlot + StationPointColorIndex
+0 2
+// StationPointSize
+2 2
+// ShowMasksOnMap + TimeControlTimeStep + SpacingOutFactor + MapViewDisplayMode
+0 0.5 1 0
+// DescTopOn + LockToMainMapViewTime + ShowTrajectorsOnMap + ShowSoundingMarkersOnMap + ShowCrossSectionMarkersOnMap
+0 0 0 1 1
+// ShowSelectedPointsOnMap + ShowControlPointsOnMap + ShowObsComparisonOnMap + ShowWarningMarkersOnMap + ShowRedCrossOverMapIfNotEditedDataTime
+1 0 0 1 0
+// possible extra data
+4
+0 17 33 1
+3
+44 0 0 400
+10 0 0
+ 20 0 0
+ 30
+30 1 1 0
+2
+1 0
+0
+
+19 10 0 0
+ 13 0 -9
+ 30
+9 1 1 1 0.4
+
+
+// DipMapHelperList
+4
+// NFmiMapViewDescTop::ViewMacroDipMapHelper::Write...
+// UsedMapIndex + UsedOverMapDibIndex
+1 0
+// itsZoomedAreaStr
+54 stereographic,20,90,60:18.3712,59.5339,37.4927,69.4803
+
+// possible extra data
+2
+1 0
+2
+0 
+0 
+
+
+// NFmiMapViewDescTop::ViewMacroDipMapHelper::Write...
+// UsedMapIndex + UsedOverMapDibIndex
+1 6
+// itsZoomedAreaStr
+37 stereographic,20,90,60:6,51.3,49,70.2
+
+// possible extra data
+2
+1 6
+2
+9 Light_map
+0 
+
+
+// NFmiMapViewDescTop::ViewMacroDipMapHelper::Write...
+// UsedMapIndex + UsedOverMapDibIndex
+0 -1
+// itsZoomedAreaStr
+40 stereographic,10,90,60:-19.22,25,79.7,57
+
+// possible extra data
+2
+0 -1
+2
+0 
+0 
+
+
+// NFmiMapViewDescTop::ViewMacroDipMapHelper::Write...
+// UsedMapIndex + UsedOverMapDibIndex
+0 0
+// itsZoomedAreaStr
+22 latlon:-180,-90,180,90
+
+// possible extra data
+2
+0 0
+2
+0 
+0 
+
+// possible extra data
+0
+0
+
+// possible extra data
+1
+0
+0
