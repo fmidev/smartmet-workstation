@@ -121,7 +121,6 @@ private:
 	void FillMainPointXYInfo(NFmiDataMatrix<NFmiPoint> &theCoordinates);
 	NFmiPoint GetCrossSectionLatlonPoint(const NFmiPoint &theRelativePlace);
 	std::string GetSelectedParamInfoString(NFmiFastQueryInfo *theInfo);
-	bool FillIsoLineDataForToolMaster(const NFmiDataMatrix<float> &theValues, NFmiIsoLineData& theIsoLineData);
 	bool ChangePressureScale(FmiDirection theDir, bool fChangeUpperAxis, bool ctrlKeyDown);
 	void DrawActivatedMinorPointLine(void);
 	boost::shared_ptr<NFmiArea> GetZoomedArea(void);
