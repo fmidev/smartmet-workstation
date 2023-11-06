@@ -4,8 +4,8 @@
 #include <newbase/NFmiMetTime.h>
 #include <newbase/NFmiStation.h>
 
-#include <vector>
 #include <map>
+#include <vector>
 
 class NFmiQueryData;
 class NFmiAviationStationInfoSystem;
@@ -49,7 +49,7 @@ NFmiQueryData *MakeNewDataFromTEMPStr(const std::string &theTEMPStr,
 // TempCode-vektorissa on siis luotauksia tempcode-olioihin talletettuna.
 NFmiQueryData *CreateNewQData(std::vector<NFmiTEMPCode> &theTempCodeVec,
                               const NFmiProducer &theWantedProducer);
-}
+}  // namespace DecodeTEMP
 
 // Luokka joka saa 4 stringiä, missä on koko temp-koodi.
 // Purkaa koodin ja laskee leveleiksi ja muuksi dataksi.
@@ -77,6 +77,7 @@ class NFmiTEMPCode
   const NFmiStation &Station() const { return itsStation; }
   void Station(const NFmiStation &theStation) { itsStation = theStation; }
   const std::map<double, TEMPLevelData> &LevelData() const { return itsLevels; }
+
  private:
   int Decode();
   bool DecodeA();
@@ -98,4 +99,3 @@ class NFmiTEMPCode
 
   std::map<double, TEMPLevelData> itsLevels;
 };
-

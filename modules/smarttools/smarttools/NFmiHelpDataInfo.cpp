@@ -9,13 +9,13 @@
 
 #include "NFmiHelpDataInfo.h"
 #include "NFmiPathUtils.h"
-#include <newbase/NFmiProducerName.h>
+#include <boost/algorithm/string/replace.hpp>
 #include <newbase/NFmiArea.h>
 #include <newbase/NFmiAreaFactory.h>
-#include <newbase/NFmiStereographicArea.h>
-#include <newbase/NFmiSettings.h>
 #include <newbase/NFmiFileString.h>
-#include <boost/algorithm/string/replace.hpp>
+#include <newbase/NFmiProducerName.h>
+#include <newbase/NFmiSettings.h>
+#include <newbase/NFmiStereographicArea.h>
 
 using namespace std;
 
@@ -28,7 +28,8 @@ static void FixPathEndWithSeparator(std::string &theFixedPathStr)
     theFixedPathStr = static_cast<char *>(tmpFileStr);
 
     std::string::value_type lastLetter = theFixedPathStr[theFixedPathStr.size() - 1];
-    if (lastLetter != kFmiDirectorySeparator) theFixedPathStr.push_back(kFmiDirectorySeparator);
+    if (lastLetter != kFmiDirectorySeparator)
+      theFixedPathStr.push_back(kFmiDirectorySeparator);
   }
 }
 
@@ -46,14 +47,15 @@ static void FixPatternSeparators(std::string &theFixedPatternStr)
 // So if cachePath = "/path/xxx" and  absoluteControlBasePath = "C:/yyy/zzz"  => cachePath =
 // "c:/path/xxx" Must also possibly add directory slash at the end of cachePath string. If cachePath
 // = "c:/path/xxx" => "c:/path/xxx/"
-static void FixCachePath(std::string &cachePath, const std::string &absoluteControlBasePath, bool directoryCase)
+static void FixCachePath(std::string &cachePath,
+                         const std::string &absoluteControlBasePath,
+                         bool directoryCase)
 {
   cachePath = PathUtils::fixMissingDriveLetterToAbsolutePath(cachePath, absoluteControlBasePath);
   cachePath = PathUtils::simplifyWindowsPath(cachePath);
   if (directoryCase)
-      ::FixPathEndWithSeparator(cachePath);
+    ::FixPathEndWithSeparator(cachePath);
 }
-
 
 // ***********************************************************
 // ******** NFmiHelpDataInfo alkaa ***************************
@@ -63,7 +65,7 @@ NFmiHelpDataInfo::NFmiHelpDataInfo(const NFmiHelpDataInfo &theOther) = default;
 
 NFmiHelpDataInfo &NFmiHelpDataInfo::operator=(const NFmiHelpDataInfo &theOther) = default;
 
-// Esim. 
+// Esim.
 // fileFilter = P:\data\partial_data\iasi\*_iasi.sqd
 // newBaseDirectory = D:\smartmet\wrk\data\cache\
 // Palautettava arvo on D:\smartmet\wrk\data\cache\iasi\*_iasi.sqd
@@ -76,10 +78,10 @@ static std::string CopyLatestDirectoryLevelFromFileFilterToNewBaseDirectory(
     size_t i = fileFilter.size() - 1;
     for (; i > 0; i--)
     {
-      if (fileFilter[i] == '\\') 
-          slashesFound++;
-      if (slashesFound > 1) 
-          break;
+      if (fileFilter[i] == '\\')
+        slashesFound++;
+      if (slashesFound > 1)
+        break;
     }
 
     if (slashesFound > 1)
@@ -102,7 +104,7 @@ static bool MakeCombinedDataFilePattern(NFmiHelpDataInfo &theDataInfo,
 }
 
 static bool MakeCombinedDataResultFileFilter(NFmiHelpDataInfo &theDataInfo,
-                                        const NFmiHelpDataInfoSystem &theHelpDataSystem)
+                                             const NFmiHelpDataInfoSystem &theHelpDataSystem)
 {
   auto resultDataCacheFileFilter = ::CopyLatestDirectoryLevelFromFileFilterToNewBaseDirectory(
       theDataInfo.FileNameFilter(), theHelpDataSystem.LocalDataCacheDirectory());
@@ -112,12 +114,12 @@ static bool MakeCombinedDataResultFileFilter(NFmiHelpDataInfo &theDataInfo,
 
 static long GetDefaultTimeInterpolationRangeInMinutes(NFmiInfoData::Type dataType)
 {
-    // Nämä aikainterpolaatio jutut koskevat siis vain hilamuotoisia datoja, ei asemadataa.
-    // Esim. erilaiset tutkadatat saavat lyhyemmän interpolaatio rajan.
-    if(dataType == NFmiInfoData::kObservations || dataType == NFmiInfoData::kSingleStationRadarData)
-        return 0;
-    else
-        return kTimeInterpolationRangeDefaultValueInMinutes;
+  // Nämä aikainterpolaatio jutut koskevat siis vain hilamuotoisia datoja, ei asemadataa.
+  // Esim. erilaiset tutkadatat saavat lyhyemmän interpolaatio rajan.
+  if (dataType == NFmiInfoData::kObservations || dataType == NFmiInfoData::kSingleStationRadarData)
+    return 0;
+  else
+    return kTimeInterpolationRangeDefaultValueInMinutes;
 }
 
 void NFmiHelpDataInfo::InitFromSettings(const std::string &theBaseKey,
@@ -147,7 +149,8 @@ void NFmiHelpDataInfo::InitFromSettings(const std::string &theBaseKey,
     itsReportNewDataLabel =
         NFmiSettings::Optional<string>(itsBaseNameSpace + "::ReportNewDataLabel", "");
     SetCombineDataMaxTimeSteps(
-        NFmiSettings::Optional<int>(itsBaseNameSpace + "::CombineDataMaxTimeSteps", 0), theHelpDataSystem);
+        NFmiSettings::Optional<int>(itsBaseNameSpace + "::CombineDataMaxTimeSteps", 0),
+        theHelpDataSystem);
     fMakeSoundingIndexData =
         NFmiSettings::Optional<bool>(itsBaseNameSpace + "::MakeSoundingIndexData", false);
     itsRequiredGroundDataFileFilterForSoundingIndexCalculations = NFmiSettings::Optional<string>(
@@ -165,8 +168,8 @@ void NFmiHelpDataInfo::InitFromSettings(const std::string &theBaseKey,
         NFmiSettings::Optional<bool>(itsBaseNameSpace + "::ReloadCaseStudyData", true);
     fAllowCombiningToSurfaceDataInSoundingView = NFmiSettings::Optional<bool>(
         itsBaseNameSpace + "::AllowCombiningToSurfaceDataInSoundingView", false);
-    fCaseStudyLegacyOnly = NFmiSettings::Optional<bool>(
-        itsBaseNameSpace + "::CaseStudyLegacyOnly", false);
+    fCaseStudyLegacyOnly =
+        NFmiSettings::Optional<bool>(itsBaseNameSpace + "::CaseStudyLegacyOnly", false);
     itsAgingTimeLimitInMinutes =
         NFmiSettings::Optional<int>(itsBaseNameSpace + "::AgingTimeLimitInMinutes", -1);
 
@@ -249,20 +252,19 @@ const std::string NFmiHelpDataInfo::UsedFileNameFilter(
   }
 }
 
-// Datojen nimissä on joskus ylimääräinen kirjain nimen edessä, että se menisi akkosjärjestyksessä alku tai loppu päähän.
-// Poistetaan tälläinen kirjain nimestä selkeyden takia.
-// Lisäksi korvataan kaikki alaviivat space:illa.
-// esim. A_ecmwf_eurooppa_pinta  =>  ecmwf eurooppa pinta
+// Datojen nimissä on joskus ylimääräinen kirjain nimen edessä, että se menisi akkosjärjestyksessä
+// alku tai loppu päähän. Poistetaan tälläinen kirjain nimestä selkeyden takia. Lisäksi korvataan
+// kaikki alaviivat space:illa. esim. A_ecmwf_eurooppa_pinta  =>  ecmwf eurooppa pinta
 std::string NFmiHelpDataInfo::GetCleanedName() const
 {
-    std::string newName(itsName);
+  std::string newName(itsName);
 
-    if(newName.size() > 2 && newName[1] == '_')
-        newName = std::string(itsName.begin() + 2, itsName.end());
+  if (newName.size() > 2 && newName[1] == '_')
+    newName = std::string(itsName.begin() + 2, itsName.end());
 
-    NFmiStringTools::ReplaceChars(newName, '_', ' '); // muutetaan myös ala-viivat spaceiksi
+  NFmiStringTools::ReplaceChars(newName, '_', ' ');  // muutetaan myös ala-viivat spaceiksi
 
-    return newName;
+  return newName;
 }
 
 bool NFmiHelpDataInfo::IsDataUsedCaseStudyChecks(bool caseStudyModeOn) const
@@ -386,7 +388,8 @@ void NFmiHelpDataInfoSystem::InitFromSettings(const std::string &theBaseNameSpac
 {
   itsBaseNameSpace = theBaseNameSpaceStr;
   itsAbsoluteControlBasePath = absoluteControlBasePath;
-  auto localDataBaseDirectory = NFmiSettings::Require<std::string>(itsBaseNameSpace + "::LocalDataBaseDirectory");
+  auto localDataBaseDirectory =
+      NFmiSettings::Require<std::string>(itsBaseNameSpace + "::LocalDataBaseDirectory");
   SetLocalDataBaseDirectory(localDataBaseDirectory);
 
   itsCacheTmpFileNameFix =
@@ -429,7 +432,9 @@ void NFmiHelpDataInfoSystem::StoreToSettings()
   if (itsBaseNameSpace.empty() == false)
   {
     // HUOM! tässä on toistaiseksi vain cacheen liittyvien muutosten talletukset
-    NFmiSettings::Set(std::string(itsBaseNameSpace + "::LocalDataBaseDirectory"), itsLocalDataBaseDirectory, true);
+    NFmiSettings::Set(std::string(itsBaseNameSpace + "::LocalDataBaseDirectory"),
+                      itsLocalDataBaseDirectory,
+                      true);
     NFmiSettings::Set(
         std::string(itsBaseNameSpace + "::CacheTmpFileNameFix"), itsCacheTmpFileNameFix, true);
     NFmiSettings::Set(std::string(itsBaseNameSpace + "::UseQueryDataCache"),
@@ -490,8 +495,9 @@ static NFmiHelpDataInfo *FindHelpDataInfo(std::vector<NFmiHelpDataInfo> &theHelp
 {
   for (auto &helpDataInfo : theHelpInfos)
   {
-    // Siis jos joko FileNameFilter (server path), UsedFileNameFilter (local path) tai CombineDataPathAndFileName (yhdistelmä datoissa tämä
-    // on se data joka luetaan sisään SmartMetiin) on etsitty, palautetaan helpInfo.
+    // Siis jos joko FileNameFilter (server path), UsedFileNameFilter (local path) tai
+    // CombineDataPathAndFileName (yhdistelmä datoissa tämä on se data joka luetaan sisään
+    // SmartMetiin) on etsitty, palautetaan helpInfo.
     if (helpDataInfo.UsedFileNameFilter(theHelpDataInfoSystem) == theFileNameFilter ||
         helpDataInfo.FileNameFilter() == theFileNameFilter ||
         helpDataInfo.CombinedResultDataFileFilter() == theFileNameFilter)

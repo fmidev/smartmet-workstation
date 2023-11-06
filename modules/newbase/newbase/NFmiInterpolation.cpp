@@ -17,8 +17,10 @@
 // ======================================================================
 
 #include "NFmiInterpolation.h"
+
 #include "NFmiModMeanCalculator.h"
 #include "NFmiPoint.h"
+
 #include <set>
 
 namespace NFmiInterpolation
@@ -338,20 +340,20 @@ PointData CalcPointData(const NFmiPoint &referencePoint,
 
 // ----------------------------------------------------------------------
 /*!
-* \brief Seeking the nearest non-missing value.
-*
-* We assume all interpolation occurs in a rectilinear grid
-* and the given coordinates are relative within the grid cell.
-* The values must thus be in the range 0-1.
-*
-* \param theX The relative offset from the bottomleft X-coordinate
-* \param theY The relative offset from the bottomleft Y-coordinate
-* \param theTopLeft The top left value
-* \param theTopRight The top right value
-* \param theBottomLeft The bottom left value
-* \param theBottomRight The bottom right value
-* \return The nearest non-missing value
-*/
+ * \brief Seeking the nearest non-missing value.
+ *
+ * We assume all interpolation occurs in a rectilinear grid
+ * and the given coordinates are relative within the grid cell.
+ * The values must thus be in the range 0-1.
+ *
+ * \param theX The relative offset from the bottomleft X-coordinate
+ * \param theY The relative offset from the bottomleft Y-coordinate
+ * \param theTopLeft The top left value
+ * \param theTopRight The top right value
+ * \param theBottomLeft The bottom left value
+ * \param theBottomRight The bottom right value
+ * \return The nearest non-missing value
+ */
 // ----------------------------------------------------------------------
 double NearestNonMissing(double theX,
                          double theY,

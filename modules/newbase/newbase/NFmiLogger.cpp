@@ -17,6 +17,7 @@
 // ======================================================================
 
 #include "NFmiLogger.h"
+
 #include "NFmiFileSystem.h"
 #include "NFmiSettings.h"
 

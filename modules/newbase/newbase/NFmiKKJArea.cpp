@@ -64,6 +64,7 @@
 // ======================================================================
 
 #include "NFmiKKJArea.h"
+
 #include <cmath>
 #include <cstdlib>
 #include <stdexcept>
@@ -165,13 +166,13 @@ NFmiKKJArea::NFmiKKJArea(const NFmiPoint &theBottomLeftLatLon,
 }
 
 /*!
-* Constructor
-*
-* \param theRadialRangeInMeters Undocumented
-* \param theCenterLatLon Undocumented
-* \param theTopLeftXY Undocumented
-* \param theBottomRightXY Undocumented
-*/
+ * Constructor
+ *
+ * \param theRadialRangeInMeters Undocumented
+ * \param theCenterLatLon Undocumented
+ * \param theTopLeftXY Undocumented
+ * \param theBottomRightXY Undocumented
+ */
 NFmiKKJArea::NFmiKKJArea(double /* theRadialRangeInMeters */,
                          const NFmiPoint & /* theCenterLatLon */,
                          const NFmiPoint &theTopLeftXY,

@@ -12,7 +12,9 @@
 // ======================================================================
 
 #include "NFmiGeoTools.h"
+
 #include "NFmiGlobals.h"
+
 #include <algorithm>
 #include <cmath>
 

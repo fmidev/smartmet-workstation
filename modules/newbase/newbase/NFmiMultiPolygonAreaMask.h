@@ -8,6 +8,7 @@
 #pragma once
 
 #include "NFmiAreaMaskImpl.h"
+
 #include <vector>
 
 class NFmiSvgPath;

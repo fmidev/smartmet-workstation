@@ -13,8 +13,10 @@
 // ======================================================================
 
 #include "NFmiTimeList.h"
+
 #include "NFmiMetTime.h"
 #include "NFmiTimeBag.h"
+
 #include <algorithm>
 #include <cmath>
 #include <functional>
@@ -94,13 +96,16 @@ bool NFmiTimeList::Next(NFmiMetTime **theItem) const
   /*
   *theItem=Current();
   if(*theItem)
-	{						// VAROITUS !
-	  itsIter->Next();		// Viimeisen alkion jälkeen mennään listan ulkopuolelle true:lla;
-	  return true;			// vasta seuraavalla kerralla tämä Next palauttaa false !!	
-	  // return Next();		<-- Näin kursori jääsi osoittamaan viimeistä itemiä, mutta toisaalta nyt
-	}						// return false on harhaan johtava, sillä onhan saatu mielekäs theItem.
+        {						// VAROITUS !
+          itsIter->Next();		// Viimeisen alkion jälkeen mennään listan ulkopuolelle
+  true:lla;
+          return true;			// vasta seuraavalla kerralla tämä Next palauttaa false !!
+          // return Next();		<-- Näin kursori jääsi osoittamaan viimeistä itemiä, mutta
+  toisaalta nyt }						// return false on harhaan johtava,
+  sillä onhan saatu mielekäs theItem.
 
-	return false;			// Suosittelen metodien Next() & Current() käyttöä, jolloin ei voi joutua ulos listalta
+        return false;			// Suosittelen metodien Next() & Current() käyttöä, jolloin
+  ei voi joutua ulos listalta
 */  // viljo 12.05.-97
 }
 

@@ -13,7 +13,7 @@ namespace
 {
 const float Kelvin0 = 273.15f;
 const float simmer_limit = 14.5;
-}
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!

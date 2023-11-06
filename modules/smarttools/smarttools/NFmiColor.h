@@ -147,9 +147,7 @@ inline void NFmiColor::SetRGBA(const FmiRGBColor &aColor)
   itsColor.alpha = NFmiColor::ColorChannelLimitCheck(aColor.alpha);
 }
 
-inline NFmiColor::NFmiColor(const NFmiColor &aColor) : itsColor(aColor.itsColor)
-{
-}
+inline NFmiColor::NFmiColor(const NFmiColor &aColor) : itsColor(aColor.itsColor) {}
 
 inline NFmiColor::NFmiColor(const FmiRGBColor &aColor) : itsColor()
 {
@@ -240,11 +238,15 @@ inline void NFmiColor::Mix(const NFmiColor &anOtherColor, float mixingRatio, boo
       (1.f - mixingRatio) * static_cast<float>(itsColor.red) + mixingRatio * anOtherColor.Red(),
       (1.f - mixingRatio) * static_cast<float>(itsColor.green) + mixingRatio * anOtherColor.Green(),
       (1.f - mixingRatio) * static_cast<float>(itsColor.blue) + mixingRatio * anOtherColor.Blue());
-  if (mixAlpha) 
-      Alpha((1.f - mixingRatio) * static_cast<float>(itsColor.alpha) + mixingRatio * anOtherColor.Alpha());
+  if (mixAlpha)
+    Alpha((1.f - mixingRatio) * static_cast<float>(itsColor.alpha) +
+          mixingRatio * anOtherColor.Alpha());
 }
 
-inline bool NFmiColor::IsFullyTransparent() const { return itsColor.alpha >= 1.f; }
+inline bool NFmiColor::IsFullyTransparent() const
+{
+  return itsColor.alpha >= 1.f;
+}
 
 // On tapauksia, missä on talletettu värin alpha väärin päin.
 // Tällä funktiolla korjataan tuollainen toistaiseksi.
@@ -256,9 +258,7 @@ inline void NFmiColor::InvertAlphaChannel()
 
 inline FmiColorValue NFmiColor::ColorChannelLimitCheck(FmiColorValue colorChannelValue)
 {
-  return (colorChannelValue >= 0.f) ? ((colorChannelValue <= 1.f) ? colorChannelValue : 1.f)
-                                     : 0.f;
+  return (colorChannelValue >= 0.f) ? ((colorChannelValue <= 1.f) ? colorChannelValue : 1.f) : 0.f;
 }
-
 
 // ======================================================================

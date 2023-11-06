@@ -45,8 +45,7 @@ class NFmiProducerIdLister
  private:
   NFmiTimeDescriptor itsTimes;
   std::string itsProducerString;
-  std::vector<int> itsProducerIds;  // tähän talletetaan kunkin ajan tuottaja id
-  std::vector<NFmiMetTime>
-      itsModelOriginTimes;  // tähän talletetaan kunkin ajan mallin origin aika
+  std::vector<int> itsProducerIds;               // tähän talletetaan kunkin ajan tuottaja id
+  std::vector<NFmiMetTime> itsModelOriginTimes;  // tähän talletetaan kunkin ajan mallin origin aika
   int itsDefaultProducerId;
 };

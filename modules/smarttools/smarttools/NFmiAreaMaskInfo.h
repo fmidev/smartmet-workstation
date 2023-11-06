@@ -7,11 +7,11 @@
 //
 //**********************************************************
 
-#include <newbase/NFmiAreaMask.h>
-#include <newbase/NFmiDataIdent.h>
-#include <newbase/NFmiCalculationCondition.h>
-#include <newbase/NFmiPoint.h>
 #include "NFmiSoundingIndexCalculator.h"
+#include <newbase/NFmiAreaMask.h>
+#include <newbase/NFmiCalculationCondition.h>
+#include <newbase/NFmiDataIdent.h>
+#include <newbase/NFmiPoint.h>
 
 class NFmiLevel;
 class NFmiSimpleConditionInfo;
@@ -54,10 +54,7 @@ class NFmiAreaMaskInfo
   void SetOrigLineText(const std::string& theText) { itsOrigLineText = theText; }
   NFmiAreaMask::FunctionType GetFunctionType() const { return itsFunctionType; }
   void SetFunctionType(NFmiAreaMask::FunctionType newType) { itsFunctionType = newType; }
-  NFmiAreaMask::FunctionType GetSecondaryFunctionType() const
-  {
-    return itsSecondaryFunctionType;
-  }
+  NFmiAreaMask::FunctionType GetSecondaryFunctionType() const { return itsSecondaryFunctionType; }
   void SetSecondaryFunctionType(NFmiAreaMask::FunctionType newType)
   {
     itsSecondaryFunctionType = newType;
@@ -89,8 +86,14 @@ class NFmiAreaMaskInfo
   void ModelRunIndex(int newValue) { itsModelRunIndex = newValue; }
   bool AllowSimpleCondition() const;
   NFmiAreaMask::SimpleConditionRule SimpleConditionRule() const { return itsSimpleConditionRule; }
-  void SimpleConditionRule(NFmiAreaMask::SimpleConditionRule newValue) { itsSimpleConditionRule = newValue; }
-  boost::shared_ptr<NFmiSimpleConditionInfo> SimpleConditionInfo() const { return itsSimpleConditionInfo; }
+  void SimpleConditionRule(NFmiAreaMask::SimpleConditionRule newValue)
+  {
+    itsSimpleConditionRule = newValue;
+  }
+  boost::shared_ptr<NFmiSimpleConditionInfo> SimpleConditionInfo() const
+  {
+    return itsSimpleConditionInfo;
+  }
   void SimpleConditionInfo(boost::shared_ptr<NFmiSimpleConditionInfo>& theSimpleConditionInfo);
   float TimeOffsetInHours() const { return itsTimeOffsetInHours; }
   void TimeOffsetInHours(float newValue) { itsTimeOffsetInHours = newValue; }
@@ -99,9 +102,15 @@ class NFmiAreaMaskInfo
   NFmiLevel* GetSecondaryParamLevel() const { return itsSecondaryParamLevel; }
   void SetSecondaryParamLevel(NFmiLevel* theLevel);
   NFmiInfoData::Type GetSecondaryParamDataType() const { return itsSecondaryParamDataType; }
-  void SetSecondaryParamDataType(NFmiInfoData::Type newValue) { itsSecondaryParamDataType = newValue; }
+  void SetSecondaryParamDataType(NFmiInfoData::Type newValue)
+  {
+    itsSecondaryParamDataType = newValue;
+  }
   bool GetSecondaryParamUseDefaultProducer() const { return fSecondaryParamUseDefaultProducer; }
-  void SetSecondaryParamUseDefaultProducer(bool newValue) { fSecondaryParamUseDefaultProducer = newValue; }
+  void SetSecondaryParamUseDefaultProducer(bool newValue)
+  {
+    fSecondaryParamUseDefaultProducer = newValue;
+  }
 
  private:
   NFmiDataIdent itsDataIdent;
@@ -116,7 +125,7 @@ class NFmiAreaMaskInfo
   NFmiAreaMask::BinaryOperator itsBinaryOperator;
   NFmiInfoData::Type itsDataType;  // jos kyseessä infoVariable, tarvitaan vielä datan tyyppi, että
                                    // parametri saadaan tietokannasta (=infoOrganizerista)
-  NFmiLevel* itsLevel;             // mahd. level tieto, omistaa ja tuhoaa
+  NFmiLevel* itsLevel;  // mahd. level tieto, omistaa ja tuhoaa
   std::string itsMaskText;  // originaali teksti, mistä tämä maskinfo on tulkittu, tämä on siis vain
                             // yksi sana tai luku
   std::string itsOrigLineText;  // originaali koko rivin teksti, mistä tämä currentti sana
@@ -142,8 +151,10 @@ class NFmiAreaMaskInfo
   // jne....).
   FmiSoundingParameters itsSoundingParameter;
   int itsModelRunIndex;
-  // Onko jollekin areaMask funktiolla sallittua tai pakollista olla ns. SimpleCondition ehto lauseke, oletuksena ei.
-  NFmiAreaMask::SimpleConditionRule itsSimpleConditionRule = NFmiAreaMask::SimpleConditionRule::NotAllowed;
+  // Onko jollekin areaMask funktiolla sallittua tai pakollista olla ns. SimpleCondition ehto
+  // lauseke, oletuksena ei.
+  NFmiAreaMask::SimpleConditionRule itsSimpleConditionRule =
+      NFmiAreaMask::SimpleConditionRule::NotAllowed;
   // Tietyillä funktioilla voi olla simple-condition-info osio, joka talletetaan tähän
   boost::shared_ptr<NFmiSimpleConditionInfo> itsSimpleConditionInfo;
   float itsTimeOffsetInHours = 0;

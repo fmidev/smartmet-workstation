@@ -67,9 +67,7 @@ NFmiMultiLevelMask& NFmiMultiLevelMask::operator=(const NFmiMultiLevelMask& theM
   return *this;
 }
 
-NFmiMultiLevelMask::~NFmiMultiLevelMask()
-{
-}
+NFmiMultiLevelMask::~NFmiMultiLevelMask() {}
 
 //--------------------------------------------------------
 // MaskSize

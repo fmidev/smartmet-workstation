@@ -1,0 +1,12 @@
+{
+    "ImageStoragePath" : "D:\\autotesting\\crosssectionview\\current\\cross-section_normal_section_3-point_1",
+    "FileNameTemplate" : "cross-section_normal_section_3-point_1_validTime.png",
+    "TimeLengthInHours" : "72",
+    "TimeStepInMinutes" : "360",
+    "UseUtcInTimebox" : true,
+    "ParamboxLocation" : 71,
+    "RowIndexList" : "1-5",
+    "RowSubdirectoryTemplate" : "Row#",
+    "ViewMacroPath" : "FMI\\Marko\\automationtesting\\cross-section_normal_section_3-point_1.vmr",
+    "SelectedViewIndex" : 5
+}

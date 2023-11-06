@@ -87,7 +87,7 @@ class NFmiTimeList
                           unsigned long theTimeRangeInMinutes);
 
   std::vector<NFmiMetTime *> itsVectorList;  // muutin nimen, että se erottuu vanhasta
-                                               //  NFmiVoidPtrList *	itsList;
+                                             //  NFmiVoidPtrList *	itsList;
   mutable int itsIndex;
 
   //  mutable NFmiVoidPtrIterator* itsIter;

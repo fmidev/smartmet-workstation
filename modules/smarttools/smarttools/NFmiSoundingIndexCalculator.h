@@ -9,12 +9,11 @@
 
 #pragma once
 
+#include "NFmiSoundingData.h"
 #include <boost/shared_ptr.hpp>
 
 class NFmiQueryData;
 class NFmiFastQueryInfo;
-class NFmiSoundingData;
-class NFmiSoundingDataOpt1;
 class NFmiDrawParam;
 class NFmiMetTime;
 class NFmiInfoOrganizer;
@@ -89,7 +88,7 @@ typedef enum
   kSoundingParLFCHeightSurBas,
   kSoundingParELHeightSurBas,
   kSoundingParCAPE_TT_SurBas,  // cape -10 ja -40 asteen kerroksen läpi
-  kSoundingParGDI = 4790 
+  kSoundingParGDI = 4790
 } FmiSoundingParameters;
 
 class NFmiSoundingIndexCalculator
@@ -100,14 +99,10 @@ class NFmiSoundingIndexCalculator
                                NFmiSoundingData &theSoundingData,
                                const NFmiMetTime &theTime,
                                const NFmiLocation &theLocation,
-                               const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo);
-  static bool FillSoundingDataOpt1(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-                                   NFmiSoundingDataOpt1 &theSoundingData,
-                                   const NFmiMetTime &theTime,
-                                   const NFmiLocation &theLocation,
-                                   const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo);
+                               const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
+                               const NFmiSoundingData::GroundLevelValue &theGroundLevelValue =
+                                   NFmiSoundingData::GroundLevelValue());
   static float Calc(NFmiSoundingData &theSoundingData, FmiSoundingParameters theParam);
-  static float CalcOpt1(NFmiSoundingDataOpt1 &theSoundingDataOpt1, FmiSoundingParameters theParam);
   static float Calc(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                     const NFmiPoint &theLatlon,
                     const NFmiMetTime &theTime,
@@ -144,8 +139,8 @@ class NFmiSoundingIndexCalculator
       bool fUseOnlyOneThread = true,
       int theMaxThreadCount = 0);
 
-  // This is used by smartmet to determine the log-level of exception thrown from CreateNewSoundingIndexData.
-  // If exception message contains this string, it's logged with debug level, otherwise it will be logged with error level.
+  // This is used by smartmet to determine the log-level of exception thrown from
+  // CreateNewSoundingIndexData. If exception message contains this string, it's logged with debug
+  // level, otherwise it will be logged with error level.
   static const std::string itsReadCompatibleGroundData_functionName;
 };
-

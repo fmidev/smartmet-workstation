@@ -41,7 +41,7 @@ NFmiDataParamModifierAreaConeChange::NFmiDataParamModifierAreaConeChange(boost::
 																	,double theRadius, double theFactor
 																	,NFmiMetEditorTypes::Mask theAreaMask
 																	,int theLimitingOption
-																	,float theLimitngValue)
+																	,float theLimitingValue)
 :NFmiDataParamModifier(theInfo, theDrawParam, theMaskList, theAreaMask)
 ,itsModifyingCenter(theLatLon)
 ,itsModificationRange(theRadius)
@@ -50,7 +50,7 @@ NFmiDataParamModifierAreaConeChange::NFmiDataParamModifierAreaConeChange(boost::
 ,itsOriginalArea(theOriginalArea)
 ,itsRelativeCheckRect()
 ,itsLimitingOption(theLimitingOption)
-,itsLimitngValue(theLimitngValue)
+,itsLimitingValue(theLimitingValue)
 ,fCircularValue(false)
 ,itsCircularValueModulor(kFloatMissing)
 {
@@ -64,7 +64,7 @@ NFmiDataParamModifierAreaConeChange::~NFmiDataParamModifierAreaConeChange (void)
 //--------------------------------------------------------
 // Calculate 
 //--------------------------------------------------------
-double NFmiDataParamModifierAreaConeChange::Calculate (const double& theValue)
+float NFmiDataParamModifierAreaConeChange::Calculate (const float& theValue)
 {
 	double value;
 	
@@ -82,7 +82,7 @@ double NFmiDataParamModifierAreaConeChange::Calculate (const double& theValue)
 		return theValue;
 	}
 
-	return FmiMin(FmiMax(value, itsDrawParam->AbsoluteMinValue()), itsDrawParam->AbsoluteMaxValue());
+	return static_cast<float>(FmiMin(FmiMax(value, itsDrawParam->AbsoluteMinValue()), itsDrawParam->AbsoluteMaxValue()));
 }
 
 double NFmiDataParamModifierAreaConeChange::CalcDistance(void)
@@ -130,7 +130,7 @@ double NFmiDataParamModifierAreaConeChange::FixCircularValues(double theValue)
 }
 
 // 1999.11.17/Marko ModifyData2 k‰ytt‰‰
-double NFmiDataParamModifierAreaConeChange::Calculate2(const double& theValue)
+float NFmiDataParamModifierAreaConeChange::Calculate2(const float& theValue)
 {
 	double value;
 	
@@ -154,11 +154,11 @@ double NFmiDataParamModifierAreaConeChange::Calculate2(const double& theValue)
 	value = FixCircularValues(value); // ensin tehd‰‰n circular (esim. tuulen suunta) tarkistus ja sitten vasta min/max
 
 	if(itsLimitingOption == 1) // ei alle
-		value = FmiMax(value, static_cast<double>(itsLimitngValue));
+		value = FmiMax(value, itsLimitingValue);
 	else if(itsLimitingOption == 2) // ei yli
-		value = FmiMin(value, static_cast<double>(itsLimitngValue));
+		value = FmiMin(value, itsLimitingValue);
 	
-	return FmiMin(FmiMax(value, itsDrawParam->AbsoluteMinValue()), itsDrawParam->AbsoluteMaxValue());
+	return static_cast<float>(FmiMin(FmiMax(value, itsDrawParam->AbsoluteMinValue()), itsDrawParam->AbsoluteMaxValue()));
 }
 
 
@@ -187,7 +187,7 @@ NFmiDataParamModifierAreaCircleSetValue::NFmiDataParamModifierAreaCircleSetValue
 ,itsModifyValue(theValue)
 {}
 
-double NFmiDataParamModifierAreaCircleSetValue::Calculate(const double& theValue)
+float NFmiDataParamModifierAreaCircleSetValue::Calculate(const float& theValue)
 {
 	double value = theValue;
 	double distance = CalcDistance();
@@ -196,5 +196,5 @@ double NFmiDataParamModifierAreaCircleSetValue::Calculate(const double& theValue
 	else
 		return theValue;
 
-	return FmiMin(FmiMax(value, itsDrawParam->AbsoluteMinValue()), itsDrawParam->AbsoluteMaxValue());
+	return static_cast<float>(FmiMin(FmiMax(value, itsDrawParam->AbsoluteMinValue()), itsDrawParam->AbsoluteMaxValue()));
 }

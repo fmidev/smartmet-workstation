@@ -8,6 +8,7 @@
 #pragma once
 
 #include "NFmiGlobals.h"
+
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -43,7 +44,12 @@ class NFmiRawData
   float GetValue(size_t index) const;
   bool GetValues(size_t startIndex, size_t step, size_t count, std::vector<float>& values) const;
   bool SetValues(size_t startIndex, size_t step, size_t count, const std::vector<float>& values);
-  bool GetValuesPartial(size_t startIndex, size_t rowCount, size_t rowStep, size_t columnCount, size_t columnStep, std::vector<float> &values) const;
+  bool GetValuesPartial(size_t startIndex,
+                        size_t rowCount,
+                        size_t rowStep,
+                        size_t columnCount,
+                        size_t columnStep,
+                        std::vector<float>& values) const;
   bool SetValue(size_t index, float value);
 
   void SetBinaryStorage(bool flag) const;

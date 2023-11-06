@@ -1,0 +1,12 @@
+{
+    "ImageStoragePath" : "D:\\autotesting\\mainmapview\\current\\main-map_macroParams_scand",
+    "FileNameTemplate" : "main-map_macroParams_scand_validTime.png",
+    "TimeLengthInHours" : "48",
+    "TimeStepInMinutes" : "180",
+    "UseUtcInTimebox" : true,
+    "ParamboxLocation" : 33,
+    "RowIndexList" : "1-3",
+    "RowSubdirectoryTemplate" : "Row#",
+    "ViewMacroPath" : "FMI\\Marko\\automationtesting\\main-map_macroParams_scand.vmr",
+    "SelectedViewIndex" : 0
+}

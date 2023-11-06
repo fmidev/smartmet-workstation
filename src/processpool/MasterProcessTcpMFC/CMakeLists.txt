@@ -23,7 +23,8 @@ target_link_libraries(
     Newbase
     MultiProcessTools
     MultiProcessToolsMFC
-	version
+    ${FMT_TARGET_LINK_LIBRARIES}
+    version
     )
 	
 target_include_directories(

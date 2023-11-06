@@ -18,7 +18,9 @@
 // ======================================================================
 
 #include "NFmiMetTime.h"
+
 #include "NFmiLocation.h"
+
 #include <ctime>
 #include <iostream>
 #include <vector>

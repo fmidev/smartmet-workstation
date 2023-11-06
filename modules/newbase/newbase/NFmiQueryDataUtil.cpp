@@ -1297,8 +1297,8 @@ float TimeInterpolationValueWCTR(NFmiFastQueryInfo &theInfo,
                                  FmiInterpolationMethod theParamInterpMethod,
                                  NFmiQueryDataUtil::LimitChecker &theLimitChecker,
                                  std::vector<double> &theTimeFactors)  // lagrange timeFactorit on
-                                                                         // laskettu kerran joka
-                                                                         // aika askeleelle
+                                                                       // laskettu kerran joka
+                                                                       // aika askeleelle
 {
   if (theInterpolationMethod != kLagrange ||
       !(theParamInterpMethod == kLinearly || theParamInterpMethod == kLagrange))
@@ -1465,7 +1465,7 @@ bool MakeSimilarTimeBagDataFromWCTRData(NFmiFastQueryInfo &theDestination,
                                     // niiden kahden aikapisteen välissä, jotka ovat lähinnä
                                     // interpoloitavaa pistettä lähdedatassa.
   std::vector<double> timeFactors;  // tähän lasketaan joka aika-askeleella mahdolliset lagrange
-                                      // laskuissa tarvittavat aikakertoimet
+                                    // laskuissa tarvittavat aikakertoimet
 
   int i = 0;
   for (theDestination.ResetTime(); theDestination.NextTime() && i < timeSize;
@@ -4431,9 +4431,9 @@ static NFmiQueryInfo MakeCombinedDatasMetaInfo(
 
   NFmiMetTime origTime = firstInfo->OriginTime();
   NFmiTimeDescriptor timeDesc(origTime, ::MakeTimeList(theValidTimesIn));
-  // HPlaceDescin tapauksessa otetaan se vain 1. datasta, jos hila, ei erilaisia hiloja 
-  // voi comboilla. Jos asemalista, sen jumppaaminen pomminvarmasti on liian iso urakka 
-  // (locationit voivat mm. olla eri luokkia ja samalla station-id:llä voi olla eri 
+  // HPlaceDescin tapauksessa otetaan se vain 1. datasta, jos hila, ei erilaisia hiloja
+  // voi comboilla. Jos asemalista, sen jumppaaminen pomminvarmasti on liian iso urakka
+  // (locationit voivat mm. olla eri luokkia ja samalla station-id:llä voi olla eri
   // datoissa eri koordinaatteja, nimi, jne.)
   NFmiHPlaceDescriptor hPlaceDesc = firstInfo->HPlaceDescriptor();
   NFmiVPlaceDescriptor vPlaceDesc;
@@ -4447,8 +4447,7 @@ static NFmiQueryInfo MakeCombinedDatasMetaInfo(
 }
 
 static NFmiFastQueryInfo *FindWantedInfo(
-    const NFmiMetTime &theTime,
-    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theFInfoVectorIn)
+    const NFmiMetTime &theTime, std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theFInfoVectorIn)
 {
   for (auto &i : theFInfoVectorIn)
   {
@@ -4457,21 +4456,20 @@ static NFmiFastQueryInfo *FindWantedInfo(
   return nullptr;  // tänne ei pitäisi mennä, pitäisikö heittää poikkeus?
 }
 
-static bool StationDataHasSameStructure(NFmiFastQueryInfo &info1,
-                                        NFmiFastQueryInfo &info2) 
+static bool StationDataHasSameStructure(NFmiFastQueryInfo &info1, NFmiFastQueryInfo &info2)
 {
-  if (info1.HPlaceDescriptor().IsLocation() && info2.HPlaceDescriptor().IsLocation()) 
+  if (info1.HPlaceDescriptor().IsLocation() && info2.HPlaceDescriptor().IsLocation())
   {
     if (info1.SizeLocations() == info2.SizeLocations())
     {
-        // Tarkastellaan vain että asema-id:t ovat samoja ja samassa järjestyksessä.
-        // Ei täydellistä, mutta saa nyt kelvata...
+      // Tarkastellaan vain että asema-id:t ovat samoja ja samassa järjestyksessä.
+      // Ei täydellistä, mutta saa nyt kelvata...
       for (info1.ResetLocation(), info2.ResetLocation();
-           info1.NextLocation() && info2.NextLocation(); )
-        {
+           info1.NextLocation() && info2.NextLocation();)
+      {
         if (info1.Location()->GetIdent() != info2.Location()->GetIdent()) return false;
-        }
-        return true;
+      }
+      return true;
     }
   }
   return false;
@@ -4486,7 +4484,7 @@ static bool HasStationData(NFmiFastQueryInfo &info1, NFmiFastQueryInfo &info2)
 }
 
 static void FillStationDataToCurrentTimeWithDifferentStationStructure(NFmiFastQueryInfo &destInfo,
-                                                  NFmiFastQueryInfo &sourceInfo)
+                                                                      NFmiFastQueryInfo &sourceInfo)
 {
   for (destInfo.ResetLevel(); destInfo.NextLevel();)
   {
@@ -4518,7 +4516,7 @@ static void FillDataToCurrentTime(
   if (sourceInfo)  // aina pitäisi löytyä sourceInfo, mutta tarkistetaan kuitenkin
   {
     if (theFilledInfo.Grid() && sourceInfo->Grid() &&
-        *(theFilledInfo.Grid()) == *(sourceInfo->Grid()) ||
+            *(theFilledInfo.Grid()) == *(sourceInfo->Grid()) ||
         ::StationDataHasSameStructure(theFilledInfo, *sourceInfo))
     {
       std::vector<float> values;
@@ -5200,10 +5198,10 @@ void NFmiQueryDataUtil::FillGridDataFullMT(NFmiQueryData *theSource,
     if (usedStartTimeIndex == gMissingIndex) usedStartTimeIndex = 0;
     if (usedEndTimeIndex == gMissingIndex) usedEndTimeIndex = target1.SizeTimes() - 1;
 
-    double threadCountPercentage = 50.; // Linux side wants to use 1/2 the cores here
+    double threadCountPercentage = 50.;  // Linux side wants to use 1/2 the cores here
 #ifdef _MSC_VER
     // With SmartMet side more core power is needed for the parallel job
-    threadCountPercentage = 75.; 
+    threadCountPercentage = 75.;
 #endif
     unsigned int usedThreadCount =
         NFmiQueryDataUtil::GetReasonableWorkingThreadCount(threadCountPercentage);
@@ -5340,7 +5338,7 @@ NFmiQueryData *NFmiQueryDataUtil::ReadNewestData(const std::string &theFileFilte
   return data;
 }
 
-template<typename T>
+template <typename T>
 static void CheckThreadCountLimits(T &threadCountInOut, T maxThreadCount)
 {
   T minThreadCount = 1;
@@ -5368,8 +5366,7 @@ int NFmiQueryDataUtil::CalcOptimalThreadCount(int maxAvailableThreads, int separ
   double ratio = static_cast<double>(separateTaskCount) / maxAvailableThreads;
   auto wantedIntegerPart = static_cast<int>(ratio);
   // Jos jakosuhteeksi tuli kokonaisluku, käytetään kaikkia annettuja threadeja
-  if (ratio == wantedIntegerPart)
-    return maxAvailableThreads;
+  if (ratio == wantedIntegerPart) return maxAvailableThreads;
 
   // Jos ei löytynyt tasalukuja, pitää iteroida semmoinen ratio, jolla saadaan mahdollisimman iso
   // kokonaisluku,
@@ -5400,22 +5397,22 @@ int NFmiQueryDataUtil::CalcOptimalThreadCount(int maxAvailableThreads, int separ
 }
 
 // By default this function returns count of half of the hardware threads in the system.
-// If you start a heavy parallel work, you shouldn't use all the threads in the machine 
+// If you start a heavy parallel work, you shouldn't use all the threads in the machine
 // because it will freeze the system. also the modern CPU's use hyper-threading system
 // where actual CPU cores are duplicated and when one thread on one actual core is working,
-// the other thread on that core must just wait. Using full hyper-threading gives boost of 
-// about 5-10 % depending of the work, but the system freezes. Using only half the threads 
+// the other thread on that core must just wait. Using full hyper-threading gives boost of
+// about 5-10 % depending of the work, but the system freezes. Using only half the threads
 // gives you almost full power, but much more responsive system otherwise.
 // Use wantedHardwareThreadPercent (0 - 100 %) to use more or less cores for the work threads.
-// Use separateTaskCount to calculate more balanced thread count, works only if separate 
-// tasks takes to complete about the same amount of time. It's defaulted to 0 and then 
+// Use separateTaskCount to calculate more balanced thread count, works only if separate
+// tasks takes to complete about the same amount of time. It's defaulted to 0 and then
 // it's ignored.
 unsigned int NFmiQueryDataUtil::GetReasonableWorkingThreadCount(double wantedHardwareThreadPercent,
                                                                 unsigned int separateTaskCount)
 {
   auto maxThreadCount = std::thread::hardware_concurrency();
-  auto threadCount =
-      static_cast<unsigned int>(boost::math::iround(maxThreadCount * (wantedHardwareThreadPercent / 100.)));
+  auto threadCount = static_cast<unsigned int>(
+      boost::math::iround(maxThreadCount * (wantedHardwareThreadPercent / 100.)));
   ::CheckThreadCountLimits(threadCount, maxThreadCount);
   if (separateTaskCount == 0)
     return threadCount;

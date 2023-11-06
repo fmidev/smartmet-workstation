@@ -97,10 +97,9 @@ class NFmiGrid : public NFmiGridBase
                      double theMaxDistance = kFloatMissing * 1000.,
                      NFmiPoint *theGridPoint = 0);
 
-  std::vector<std::pair<int, double>> NearestLocations(
-      const NFmiLocation &theLocation,
-      int theMaxWantedLocations,
-      double theMaxDistance = kFloatMissing) const;
+  std::vector<std::pair<int, double>> NearestLocations(const NFmiLocation &theLocation,
+                                                       int theMaxWantedLocations,
+                                                       double theMaxDistance = kFloatMissing) const;
 
   const NFmiPoint XYToGrid(double x, double y) const;
   const NFmiPoint XYToGrid(const NFmiPoint &theXYPoint) const;

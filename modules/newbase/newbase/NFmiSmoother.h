@@ -10,6 +10,7 @@
 #include "NFmiDataMatrix.h"  // for NFmiDataMatrix
 #include "NFmiGlobals.h"     // for kFloatMissing
 #include "NFmiPoint.h"       // for NFmiPoint
+
 #include <string>
 
 //! Undocumented
@@ -48,7 +49,7 @@ class NFmiSmoother
                                        const NFmiDataMatrix<float>& theValues) const;
 
   const std::vector<float> Smoothen(const std::vector<float>& theX,
-                                      const std::vector<float>& theY) const;
+                                    const std::vector<float>& theY) const;
 
   float Weight(float distance) const;
 
@@ -60,7 +61,7 @@ class NFmiSmoother
                                              const NFmiDataMatrix<float>& theValues) const;
 
   const std::vector<float> SmoothenKernel(const std::vector<float>& theX,
-                                            const std::vector<float>& theY) const;
+                                          const std::vector<float>& theY) const;
 
   // Data members
 

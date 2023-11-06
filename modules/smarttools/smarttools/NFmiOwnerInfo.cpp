@@ -5,7 +5,7 @@
 NFmiOwnerInfo::NFmiOwnerInfo()
     : NFmiFastQueryInfo(), itsDataPtr(), itsDataFileName(), itsDataFilePattern()
 {
-  SetupDataLoadedTimer(true); // true = 'vanha' data
+  SetupDataLoadedTimer(true);  // true = 'vanha' data
 }
 
 NFmiOwnerInfo::NFmiOwnerInfo(NFmiQueryData *theOwnedData,
@@ -34,9 +34,7 @@ NFmiOwnerInfo::NFmiOwnerInfo(const NFmiOwnerInfo &theInfo)
 {
 }
 
-NFmiOwnerInfo::~NFmiOwnerInfo()
-{
-}
+NFmiOwnerInfo::~NFmiOwnerInfo() {}
 
 NFmiOwnerInfo &NFmiOwnerInfo::operator=(const NFmiOwnerInfo &theInfo)
 {
@@ -52,7 +50,8 @@ NFmiOwnerInfo &NFmiOwnerInfo::operator=(const NFmiOwnerInfo &theInfo)
 NFmiOwnerInfo *NFmiOwnerInfo::Clone() const
 {
   NFmiQueryData *cloneData = itsDataPtr.get()->Clone();
-  auto ownerInfo = new NFmiOwnerInfo(cloneData, DataType(), itsDataFileName, itsDataFilePattern, false);
+  auto ownerInfo =
+      new NFmiOwnerInfo(cloneData, DataType(), itsDataFileName, itsDataFilePattern, false);
   ownerInfo->itsDataLoadedTimer = itsDataLoadedTimer;
   return ownerInfo;
 }
@@ -62,15 +61,16 @@ double NFmiOwnerInfo::ElapsedTimeFromLoadInSeconds() const
   return itsDataLoadedTimer.elapsedTimeInSeconds();
 }
 
-// IsConsideredOldData tarkoittaa ett‰ datasta halutaan tehd‰ 'vanhaa' ja timerin aikaa 
+// IsConsideredOldData tarkoittaa ett‰ datasta halutaan tehd‰ 'vanhaa' ja timerin aikaa
 // siirret‰‰n keinotekoisesti taaksep‰in. Muuten timer aloittaa nykyhetkest‰ ajanmittauksen.
 void NFmiOwnerInfo::SetupDataLoadedTimer(bool IsConsideredOldData)
 {
   if (IsConsideredOldData)
   {
-  // Siirret‰‰n vanhan datan alkua vaikka 4 minuuttia taaksep‰in, jolloin ne ovat 'uusia' vain 1 minuutin.
-  const int oldDataTimeChangeInMS = -1000 * 60 * 4;
-  itsDataLoadedTimer = NFmiNanoSecondTimer(oldDataTimeChangeInMS);
+    // Siirret‰‰n vanhan datan alkua vaikka 4 minuuttia taaksep‰in, jolloin ne ovat 'uusia' vain 1
+    // minuutin.
+    const int oldDataTimeChangeInMS = -1000 * 60 * 4;
+    itsDataLoadedTimer = NFmiNanoSecondTimer(oldDataTimeChangeInMS);
   }
   else
     itsDataLoadedTimer = NFmiNanoSecondTimer();

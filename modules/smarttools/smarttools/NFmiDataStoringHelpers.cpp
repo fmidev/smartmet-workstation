@@ -15,7 +15,7 @@ NFmiMetTime itsViewMacroTime =
 // itsViewMacroTime sai arvokseen 0 v 0 kk 0 pv 0 h 0 min 0 sec
 // Ilmeisesti anonymous namespace alustetaan ensin ja sitten vasta NFmiMetTime-luokan staattinen
 // const dataosa.
-}
+}  // namespace
 
 void NFmiDataStoringHelpers::WriteTimeWithOffsets(const NFmiMetTime &theUsedCurrentTime,
                                                   const NFmiMetTime &theTime,

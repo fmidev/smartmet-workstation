@@ -28,6 +28,7 @@ class NFmiAreaMaskSectionInfo
   }
   const std::string& GetCalculationText() { return itsCalculationText; }
   void SetCalculationText(const std::string& theText) { itsCalculationText = theText; }
+
  private:
   std::vector<boost::shared_ptr<NFmiAreaMaskInfo> > itsAreaMaskInfoVector;
   std::string itsCalculationText;  // originaali teksti, mistä tämä lasku on tulkittu

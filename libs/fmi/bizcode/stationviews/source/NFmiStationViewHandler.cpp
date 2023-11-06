@@ -1033,7 +1033,7 @@ void NFmiStationViewHandler::DrawSoundingSymbols(boost::shared_ptr<NFmiFastQuery
 		for(theSoundingInfo->ResetLocation() ; theSoundingInfo->NextLocation(); )
 		{
 			NFmiPoint viewPoint(LatLonToViewPoint(theSoundingInfo->LatLon())); // t‰m‰ on offset
-			if(NFmiSoundingData::HasRealSoundingData(*theSoundingInfo))
+			if(NFmiSoundingData::HasRealSoundingData(theSoundingInfo))
 				markerPolyLine.GetEnvironment()->SetFillColor(NFmiColor(0.551f, 0.9f, 0.21f)); // lˆytyy dataa, vihre‰ kolmio
 			else
 				markerPolyLine.GetEnvironment()->SetFillColor(NFmiColor(1.f, 0.35f, 0.f)); // ei dataa, oranssi kolmio
@@ -4637,6 +4637,7 @@ std::string NFmiStationViewHandler::ComposeMapLayerToolTipText(bool beforeDataIs
 
 std::string NFmiStationViewHandler::ComposeToolTipText(const NFmiPoint& theRelativePoint)
 {
+	CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
 	std::string str;
 	// Parametri laatikon p‰‰lt‰ ei tehd‰ normi tooltippi‰, koska jotkut tooltipien laskut ovat super hitaita ja saattavat h‰irit‰ parametrin valinta popupin avautumista.
 	// Tehd‰‰n param-boxille vain tiettyjen tapauksien k‰sittely kuten mik‰ on kohdalla olevan macroParamin kaava, tms.

@@ -41,6 +41,7 @@
 // ======================================================================
 
 #include "NFmiCalculatedAreaMask.h"
+
 #include "NFmiArea.h"
 #include "NFmiDataIdent.h"
 #include "NFmiFastQueryInfo.h"

@@ -215,6 +215,12 @@ namespace ToolMasterColorCube
     {
         return color.Alpha() <= 0.f;
     }
+
+    bool IsColorFullyTransparent(const NFmiColor& color)
+    {
+        return color.Alpha() >= 1.f;
+    }
+
 }
 
 #endif // DISABLE_UNIRAS_TOOLMASTER

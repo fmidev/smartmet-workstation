@@ -55,13 +55,14 @@ enum Type
                                  // popup-valikko)
   kQ3MacroParam = 25,  // makro-parametri joka lasketaan Q3-enginellä eli esim. RESULT = T_EC -
                        // T_HIR makrolla laskettu
-  kCapData = 26,  // Kun editorilla halutaan katsoa CAP/Varoke II dataa
+  kCapData = 26,       // Kun editorilla halutaan katsoa CAP/Varoke II dataa
   kWmsData = 27,
-  kMapLayer = 28, // Erilaiset karttaaineista datat ovat tämän tyyppisiä (background map, overlay-map, land borders, wms-map-layer, etc)
-  kTimeSerialMacroParam = 29,  // aikasarja makro-parametri eli esim. result = T_EC - T_HIR makrolla laskettu
-  kSoundingParameterData =
-      1000  // HUOM! tästä on tarkoitus päästä eroon, mukana nyt siksi että on olemassa
-            // näyttömakroja, joissa on käytetty tätä.
+  kMapLayer = 28,  // Erilaiset karttaaineista datat ovat tämän tyyppisiä (background map,
+                   // overlay-map, land borders, wms-map-layer, etc)
+  kTimeSerialMacroParam =
+      29,  // aikasarja makro-parametri eli esim. result = T_EC - T_HIR makrolla laskettu
+  kSoundingParameterData = 1000  // HUOM! tästä on tarkoitus päästä eroon, mukana nyt siksi että on
+                                 // olemassa näyttömakroja, joissa on käytetty tätä.
   // Vanha käyttö: luotaus parametrien (CAPE, CIN, jne.) erikois laskelmat tätä kautta, laitoin
   // luvuksi 100, koska joudun laskemaan yhteen aina kaksi datatypeä esim. kHybrid ja tämän, että
   // tiedän minkä tyyppistä dataa käyttetään laskuissa

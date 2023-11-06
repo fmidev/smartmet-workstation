@@ -84,7 +84,7 @@ NFmiDataLoadingInfo::NFmiDataLoadingInfo()
 ,fUseWallClockTimeInTimeStamp(false)
 {
 	fUseDataBaseOutName = true;
-	UpdatedTimeDescriptor();
+	UpdatedTimeDescriptor(false);
 }
 
 NFmiDataLoadingInfo& NFmiDataLoadingInfo::operator=(NFmiDataLoadingInfo& theInfo)
@@ -288,7 +288,7 @@ void NFmiDataLoadingInfo::Configure(const std::string& theAbsoluteWorkingDirecto
 
 	NormalizeAllPathDelimiters(theAbsoluteWorkingDirectory); // tehdään tämä vielä toistamiseen että varmasti kaikki kenot on oikein päin
 	InitFileNameLists(); //luodaan tiedostonnimilistat valmiiksi, koska tämä on yleisin tapa luoda info
-	UpdatedTimeDescriptor();
+	UpdatedTimeDescriptor(false);
 
 }
 
@@ -727,13 +727,13 @@ const NFmiTimeDescriptor& NFmiDataLoadingInfo::LoadedTimeDescriptor(void) const
 	return itsMetEditorModeDataWCTR->TimeDescriptor();
 }
 
-const NFmiTimeDescriptor& NFmiDataLoadingInfo::UpdatedTimeDescriptor(void) const
+const NFmiTimeDescriptor& NFmiDataLoadingInfo::UpdatedTimeDescriptor(bool useCurrentAsStart) const
 {
 	NFmiMetTime timeNow;
 	if(itsCaseStudyTime != NFmiMetTime::gMissingTime)
 		timeNow = itsCaseStudyTime;
 	if(itsMetEditorModeDataWCTR)
-		return itsMetEditorModeDataWCTR->TimeDescriptor(timeNow, timeNow, true);
+		return itsMetEditorModeDataWCTR->TimeDescriptor(timeNow, timeNow, true, useCurrentAsStart);
 	else
 	{
 		static NFmiTimeDescriptor dummy;

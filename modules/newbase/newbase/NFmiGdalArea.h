@@ -10,6 +10,7 @@
 #pragma once
 
 #include "NFmiArea.h"
+
 #include <boost/shared_ptr.hpp>
 
 class OGRSpatialReference;

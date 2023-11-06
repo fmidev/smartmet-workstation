@@ -20,6 +20,6 @@ void Set(const std::string& theName, const std::string& theValue, bool modifyOnl
 
 bool IsSet(const std::string& theName) { return NFmiSettingsImpl::Instance().IsSet(theName); }
 std::string ToString() { return NFmiSettingsImpl::Instance().ToString(); }
-}
+}  // namespace NFmiSettings
 
 // ======================================================================

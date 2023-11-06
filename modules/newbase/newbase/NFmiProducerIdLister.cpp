@@ -19,9 +19,11 @@
 // ======================================================================
 
 #include "NFmiProducerIdLister.h"
+
 #include "NFmiQueryDataUtil.h"
 #include "NFmiQueryInfo.h"
 #include "NFmiTimeList.h"
+
 #include <cmath>
 #include <sstream>
 

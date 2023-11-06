@@ -13,7 +13,9 @@
 #include "NFmiNearTreeLocation.h"
 #include "NFmiSaveBaseFactory.h"
 #include "NFmiSize.h"
+
 #include <boost/math/constants/constants.hpp>
+
 #include <algorithm>
 #include <cassert>
 #include <set>

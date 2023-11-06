@@ -3,9 +3,7 @@
 #include "NFmiModifiableQDatasBookKeeping.h"
 #include <newbase/NFmiQueryData.h>
 
-NFmiSmartInfo::NFmiSmartInfo() : NFmiOwnerInfo(), itsQDataBookKeepingPtr()
-{
-}
+NFmiSmartInfo::NFmiSmartInfo() : NFmiOwnerInfo(), itsQDataBookKeepingPtr() {}
 
 NFmiSmartInfo::NFmiSmartInfo(NFmiQueryData *theOwnedData,
                              NFmiInfoData::Type theDataType,
@@ -28,9 +26,7 @@ NFmiSmartInfo::NFmiSmartInfo(const NFmiSmartInfo &theInfo)
 {
 }
 
-NFmiSmartInfo::~NFmiSmartInfo()
-{
-}
+NFmiSmartInfo::~NFmiSmartInfo() {}
 
 NFmiSmartInfo &NFmiSmartInfo::operator=(const NFmiSmartInfo &theInfo)
 {
@@ -156,8 +152,7 @@ bool NFmiSmartInfo::NextLocation()
 
 bool NFmiSmartInfo::SnapShotData(const std::string &theAction)
 {
-  return itsQDataBookKeepingPtr->SnapShotData(
-      theAction, *itsRefRawData);
+  return itsQDataBookKeepingPtr->SnapShotData(theAction, *itsRefRawData);
 }
 
 bool NFmiSmartInfo::Undo()

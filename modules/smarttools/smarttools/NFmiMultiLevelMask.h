@@ -72,4 +72,3 @@ class NFmiMultiLevelMask
   unsigned long itsMaskType;
   unsigned long itsMaskSize;  //    NFmiBitmask:ien koko.
 };
-

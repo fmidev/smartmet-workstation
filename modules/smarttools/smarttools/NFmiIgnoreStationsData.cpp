@@ -6,8 +6,8 @@
 // ======================================================================
 
 #include "NFmiIgnoreStationsData.h"
-#include <newbase/NFmiSettings.h>
 #include <newbase/NFmiLocation.h>
+#include <newbase/NFmiSettings.h>
 
 NFmiIgnoreStation::NFmiIgnoreStation()
     : itsId(0), itsId2(0), itsName(), itsLastLocationIndex(-1), fEnabled(false)

@@ -830,6 +830,9 @@ lexClass:
 	DisplayName		= 'Code Control'
 
 	token:tag	= 'VAR'
+	token:tag	= 'var'
+	token:tag	= 'CONST'
+	token:tag	= 'const'
 	token:tag	= 'IF'
 	token:tag	= 'ELSEIF'
 	token:tag	= 'ELSE'

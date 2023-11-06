@@ -21,6 +21,7 @@
 // ======================================================================
 
 #include "NFmiLocation.h"
+
 #include "NFmiAngle.h"
 #include "NFmiGeoTools.h"
 #include "NFmiMetTime.h"
@@ -145,8 +146,7 @@ double NFmiLocation::CalcDeclinationAngle(const NFmiTime &theSolarTime)
       (theSolarTime.GetJulianDay() +
        (theSolarTime.GetHour() + theSolarTime.GetMin() / 60. + theSolarTime.GetSec() / 3600.) /
            24.  // 17.09.2002/Viljo adds the seconds
-       -
-       1.0) /
+       - 1.0) /
       365.;
   return (0.006918 - 0.399912 * cos(yearAngle) + 0.070257 * sin(yearAngle) -
           0.006758 * cos(2 * yearAngle) + 0.000907 * sin(2 * yearAngle) -

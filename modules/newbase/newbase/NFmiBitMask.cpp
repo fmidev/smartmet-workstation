@@ -27,6 +27,7 @@
 // ======================================================================
 
 #include "NFmiBitMask.h"
+
 #include "NFmiDataModifier.h"
 #include "NFmiQueryInfo.h"
 

@@ -169,7 +169,7 @@ private:
 	CRect CalcModelBlendingControlRect(void);
 	void DrawModelBlendingControl(CDC * dc);
 	void UpdateQueryInfoVector(void);
-	void DoFullModelProducerIndexViewUpdate(void);
+	void DoFullModelProducerIndexViewUpdate();
 	void CreateModelProducerIndexView(void);
 	void SetupProducerButtons(NFmiDataLoadingInfo& theDataLoadingInfo);
 	void SetupNameCombos(NFmiDataLoadingInfo& theDataLoadingInfo);

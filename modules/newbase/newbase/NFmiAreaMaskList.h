@@ -9,6 +9,7 @@
 
 #include "NFmiAreaMask.h"
 #include "boost/shared_ptr.hpp"
+
 #include <vector>
 
 class NFmiAreaMaskList

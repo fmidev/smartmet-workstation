@@ -1,0 +1,12 @@
+{
+    "ImageStoragePath" : "D:\\autotesting\\crosssectionview\\current\\cross-section_route2",
+    "FileNameTemplate" : "cross-section_route2_validTime.png",
+    "TimeLengthInHours" : "0",
+    "TimeStepInMinutes" : "60",
+    "UseUtcInTimebox" : true,
+    "ParamboxLocation" : 18,
+    "RowIndexList" : "1-5",
+    "RowSubdirectoryTemplate" : "Row#",
+    "ViewMacroPath" : "FMI\\Marko\\automationtesting\\cross-section_route2.vmr",
+    "SelectedViewIndex" : 5
+}

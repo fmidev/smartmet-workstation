@@ -13,6 +13,7 @@
 // ======================================================================
 
 #include "NFmiRotatedLatLonArea.h"
+
 #include <algorithm>
 #include <iomanip>
 
@@ -113,7 +114,7 @@ const NFmiPoint toreglatlon(const NFmiPoint &theRotLatLonPoint,
 
   return NFmiPoint(XReg.Value(), YReg.Value());
 }
-}
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!

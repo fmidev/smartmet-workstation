@@ -34,9 +34,9 @@ class NFmiTimeBag : public NFmiSize
   void PruneTimes(int theMaxTimeCount, bool fFromEnd = true);
 
   virtual unsigned long GetSize(
-      void) const;           //??? Tarvitaanko täällä? //should be const. Look at .cpp
+      void) const;       //??? Tarvitaanko täällä? //should be const. Look at .cpp
   bool IsEmpty() const;  // Jouduin tekemään IsEmpty -metodin, NFmiTimeBag palauttaa tyhjänä 1:n
-                             // kun resolution on 0 jostain historiallisista v. 1998 syistä
+                         // kun resolution on 0 jostain historiallisista v. 1998 syistä
   virtual bool Next();
   virtual bool Previous();
   virtual void Reset(FmiDirection directionToIter = kForward);
@@ -143,10 +143,7 @@ inline const NFmiMetTime &NFmiTimeBag::CurrentTime() const { return itsCurrentTi
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiTimeBag::TimeFromStart() const
-{
-  return CurrentIndex() * itsResolution;
-}
+inline unsigned long NFmiTimeBag::TimeFromStart() const { return CurrentIndex() * itsResolution; }
 
 // ----------------------------------------------------------------------
 /*!

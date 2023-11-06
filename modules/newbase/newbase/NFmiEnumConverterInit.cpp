@@ -4,23 +4,23 @@
 
 void NFmiEnumConverter::Impl::initRoadRegions()
 {
-    itsParamMap = ParameterMap{
-        {"None", kTieAlueNone}, {"U1", kTieAlueU1},   {"U2", kTieAlueU2},   {"U3", kTieAlueU3},
-        {"U4", kTieAlueU4},     {"U5", kTieAlueU5},   {"T1", kTieAlueT1},   {"T2", kTieAlueT2},
-        {"T3", kTieAlueT3},     {"T4", kTieAlueT4},   {"T5", kTieAlueT5},   {"H1", kTieAlueH1},
-        {"H2", kTieAlueH2},     {"H3", kTieAlueH3},   {"H4", kTieAlueH4},   {"H5", kTieAlueH5},
-        {"K1", kTieAlueK1},     {"K2", kTieAlueK2},   {"K3", kTieAlueK3},   {"K4", kTieAlueK4},
-        {"S1", kTieAlueS1},     {"S2", kTieAlueS2},   {"S3", kTieAlueS3},   {"S4", kTieAlueS4},
-        {"S5", kTieAlueS5},     {"V1", kTieAlueV1},   {"V2", kTieAlueV2},   {"V4", kTieAlueV4},
-        {"V5", kTieAlueV5},     {"O1e", kTieAlueO1e}, {"O1p", kTieAlueO1p}, {"O2", kTieAlueO2},
-        {"O3", kTieAlueO3},     {"O4", kTieAlueO4},   {"O5", kTieAlueO5},   {"L1", kTieAlueL1},
-        {"L2", kTieAlueL2},     {"L3", kTieAlueL3},   {"L4", kTieAlueL4},   {"L5", kTieAlueL5},
-        {"Ke1", kTieAlueKe1},   {"Ke2", kTieAlueKe2}};
+  itsParamMap = ParameterMap{
+      {"None", kTieAlueNone}, {"U1", kTieAlueU1},   {"U2", kTieAlueU2},   {"U3", kTieAlueU3},
+      {"U4", kTieAlueU4},     {"U5", kTieAlueU5},   {"T1", kTieAlueT1},   {"T2", kTieAlueT2},
+      {"T3", kTieAlueT3},     {"T4", kTieAlueT4},   {"T5", kTieAlueT5},   {"H1", kTieAlueH1},
+      {"H2", kTieAlueH2},     {"H3", kTieAlueH3},   {"H4", kTieAlueH4},   {"H5", kTieAlueH5},
+      {"K1", kTieAlueK1},     {"K2", kTieAlueK2},   {"K3", kTieAlueK3},   {"K4", kTieAlueK4},
+      {"S1", kTieAlueS1},     {"S2", kTieAlueS2},   {"S3", kTieAlueS3},   {"S4", kTieAlueS4},
+      {"S5", kTieAlueS5},     {"V1", kTieAlueV1},   {"V2", kTieAlueV2},   {"V4", kTieAlueV4},
+      {"V5", kTieAlueV5},     {"O1e", kTieAlueO1e}, {"O1p", kTieAlueO1p}, {"O2", kTieAlueO2},
+      {"O3", kTieAlueO3},     {"O4", kTieAlueO4},   {"O5", kTieAlueO5},   {"L1", kTieAlueL1},
+      {"L2", kTieAlueL2},     {"L3", kTieAlueL3},   {"L4", kTieAlueL4},   {"L5", kTieAlueL5},
+      {"Ke1", kTieAlueKe1},   {"Ke2", kTieAlueKe2}};
 }
 
 void NFmiEnumConverter::Impl::initPressRegions()
 {
-    itsParamMap = ParameterMap{{"None", kPressMaskNone}, {"TampereenAlue", kPressTampereenAlue}};
+  itsParamMap = ParameterMap{{"None", kPressMaskNone}, {"TampereenAlue", kPressTampereenAlue}};
 }
 
 void NFmiEnumConverter::Impl::initParamNames()

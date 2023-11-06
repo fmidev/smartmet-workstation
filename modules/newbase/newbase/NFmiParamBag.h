@@ -78,7 +78,7 @@ class NFmiParamBag : public NFmiSize
   virtual std::istream &Read(std::istream &file);
 
   virtual const char *ClassName() const { return "NFmiParamBag"; }
-  const std::vector<NFmiDataIdent>& ParamsVector() const { return itsParamsVector; }
+  const std::vector<NFmiDataIdent> &ParamsVector() const { return itsParamsVector; }
 
  private:
   std::vector<NFmiDataIdent> itsParamsVector;

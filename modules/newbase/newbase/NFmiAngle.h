@@ -9,10 +9,15 @@
 #pragma once
 
 #include "NFmiGlobals.h"
+
 #include <cmath>
 
 //! Tyyppimääritelmä kulmayksiköille.
-typedef enum { kDeg, kRad } FmiAngleUnit;
+typedef enum
+{
+  kDeg,
+  kRad
+} FmiAngleUnit;
 
 //! Yleinen kulman määrittely perusluokka
 

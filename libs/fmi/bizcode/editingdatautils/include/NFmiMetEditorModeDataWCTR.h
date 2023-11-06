@@ -84,13 +84,14 @@ public:
    Mode EditorMode(void) const;
    void UseNormalModeForAWhile(bool newState) {fUseNormalModeForAWhile = newState;};
    bool UseNormalModeForAWhile(void){return fUseNormalModeForAWhile;};
-   const NFmiTimeDescriptor& TimeDescriptor(const NFmiMetTime &theCurrentTime, const NFmiMetTime &theOriginTime, bool fMakeUpdate);
+   const NFmiTimeDescriptor& TimeDescriptor(const NFmiMetTime &theCurrentTime, const NFmiMetTime &theOriginTime, bool fMakeUpdate, bool useCurrentAsStart);
    const NFmiTimeDescriptor& TimeDescriptor(void);
    int WantedDataLengthInHours(void) const{return itsWantedDataLengthInHours;}
    int RealDataLengthInHours(void) const{return itsRealDataLengthInHours;}
    const NFmiTimeBag& MaximalCoverageTimeBag(void) const{return itsMaximalCoverageTimeBag;}
    bool InNormalModeStillInDataLoadDialog(void) {return fInNormalModeStillInDataLoadDialog;}
    void InNormalModeStillInDataLoadDialog(bool newValue) {fInNormalModeStillInDataLoadDialog = newValue;}
+   const std::vector<TimeSectionData>& TimeSections() const { return itsTimeSections; }
 
 
    /**
@@ -99,9 +100,9 @@ public:
    void Configure(void);
 
 private:
-   bool CreateTimeListSystem(const NFmiMetTime &theCurrentTime, const NFmiMetTime &theOriginTime);
-   bool CreateTimeBagSystem(const NFmiMetTime &theCurrentTime, const NFmiMetTime &theOriginTime);
-   std::vector<NFmiMetTime> CalcSectionBorderTimes(const NFmiMetTime &theCurrentTime);
+   bool CreateTimeListSystem(const NFmiMetTime &theCurrentTime, const NFmiMetTime &theOriginTime, bool useCurrentAsStart);
+   bool CreateTimeBagSystem(const NFmiMetTime &theCurrentTime, const NFmiMetTime &theOriginTime, bool useCurrentAsStart);
+   std::vector<NFmiMetTime> CalcSectionBorderTimes(const NFmiMetTime &theCurrentTime, bool useCurrentAsStart);
    bool MakeMaximalCoverageTimeBag(void);
 
    Mode itsEditorMode;

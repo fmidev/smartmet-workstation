@@ -106,6 +106,7 @@
 // ======================================================================
 
 #include "NFmiAreaFactory.h"
+
 #include "NFmiEquidistArea.h"
 #include "NFmiGdalArea.h"
 #include "NFmiGnomonicArea.h"
@@ -121,6 +122,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
+
 #include <algorithm>
 #include <deque>
 #include <list>
@@ -215,7 +217,7 @@ void print_unused_parameters(const map<string, string> &inMap, const set<string>
   }
   cerr << endl;
 }
-}
+}  // namespace
 
 namespace NFmiAreaFactory
 {

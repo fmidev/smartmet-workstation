@@ -37,6 +37,7 @@ class NFmiSmartToolCalculationInfo
   void SetCalculationText(const std::string& theText) { itsCalculationText = theText; }
   void CheckIfAllowMissingValueAssignment();
   bool AllowMissingValueAssignment() { return fAllowMissingValueAssignment; };
+
  private:
   // HUOM!! Tämä erillinen ResultInfo-systeemi oli huono ratkaisu, laita ne mielluummin
   // osaksi laskentaketjua (itsCalculationOperandInfoVector:iin).

@@ -19,10 +19,9 @@
 #include "NFmiFastInfoUtils.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiMetMath.h"
+#include "NFmiProducerName.h"
 #include "NFmiQueryDataUtil.h"
 #include "NFmiSimpleCondition.h"
-#include "NFmiFastInfoUtils.h"
-#include "NFmiProducerName.h"
 #include "boost/math/special_functions/round.hpp"
 
 #include <cassert>
@@ -105,8 +104,7 @@ static bool CheckProbabilityCondition(NFmiAreaMask::FunctionType condition,
 }
 
 // Static data member initialization to empty
-NFmiInfoAreaMask::MultiSourceDataGetterType
-    NFmiInfoAreaMask::itsMultiSourceDataGetter;
+NFmiInfoAreaMask::MultiSourceDataGetterType NFmiInfoAreaMask::itsMultiSourceDataGetter;
 
 void NFmiInfoAreaMask::SetMultiSourceDataGetterCallback(
     const MultiSourceDataGetterType &theCallbackFunction)
@@ -123,7 +121,8 @@ std::vector<boost::shared_ptr<NFmiFastQueryInfo>> NFmiInfoAreaMask::GetMultiSour
   NFmiDataIdent usedDataIdent = theInfo->Param();
   if (getStationarySynopDataOnly)
     usedDataIdent.GetProducer()->SetIdent(NFmiInfoData::kFmiSpSynoXProducer);
-  itsMultiSourceDataGetter(infoVector, usedDataIdent, *theInfo->Level(), theInfo->DataType(), calculationArea);
+  itsMultiSourceDataGetter(
+      infoVector, usedDataIdent, *theInfo->Level(), theInfo->DataType(), calculationArea);
   return infoVector;
 }
 
@@ -131,8 +130,7 @@ std::vector<boost::shared_ptr<NFmiFastQueryInfo>> NFmiInfoAreaMask::GetMultiSour
 // pirun raskaaseen koodiin.
 // HUOM! Tämä on riippuvainen NFmiEditMapGeneralDataDoc::MakeDrawedInfoVectorForMapView -metodin
 // erikoistapauksista.
-bool NFmiInfoAreaMask::IsKnownMultiSourceData(
-    const boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+bool NFmiInfoAreaMask::IsKnownMultiSourceData(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
   if (theInfo)
   {
@@ -366,8 +364,8 @@ double NFmiInfoAreaMask::GetSearchRadiusInMetres(double observationRadiusInKm)
 }
 
 bool NFmiInfoAreaMask::FindClosestStationData(const NFmiCalculationParams &calculationParams,
-    size_t &dataIndexOut,
-    unsigned long &locationIndexOut)
+                                              size_t &dataIndexOut,
+                                              unsigned long &locationIndexOut)
 {
   // Huom! Pitää käyttää macroParamin laskentahilan pistettä UsedLatlon(true),
   // jotta itsObservationRadiusInKm juttu otetaan oikein huomioon.
@@ -378,7 +376,8 @@ bool NFmiInfoAreaMask::FindClosestStationData(const NFmiCalculationParams &calcu
   for (size_t dataCounter = 0; dataCounter < itsInfoVector.size(); dataCounter++)
   {
     const auto &info = itsInfoVector[dataCounter];
-    if (!NFmiFastInfoUtils::IsInfoShipTypeData(*info) && info->NearestLocation(latlon, searchRadiusInMetres))
+    if (!NFmiFastInfoUtils::IsInfoShipTypeData(*info) &&
+        info->NearestLocation(latlon, searchRadiusInMetres))
     {
       double currentDistanceInMetres = wantedLocation.Distance(info->LatLon());
       if (currentDistanceInMetres < minDistanceInMetres)
@@ -392,23 +391,20 @@ bool NFmiInfoAreaMask::FindClosestStationData(const NFmiCalculationParams &calcu
   return minDistanceInMetres <= searchRadiusInMetres;
 }
 
-
-
 bool NFmiInfoAreaMask::CheckPossibleObservationDistance(
     const NFmiCalculationParams &theCalculationParamsInOut)
 {
   theCalculationParamsInOut.itsCurrentMultiInfoData = nullptr;
   if (itsInfo && !itsInfo->IsGrid())
   {
-      // Jos ObsRadius:sella on arvo tai on kyse multi-info datasta, pitää etsiä lähin data ja paikka siinä
+    // Jos ObsRadius:sella on arvo tai on kyse multi-info datasta, pitää etsiä lähin data ja paikka
+    // siinä
     if (theCalculationParamsInOut.itsObservationRadiusInKm != kFloatMissing ||
         itsInfoVector.size() > 1)
     {
       size_t dataIndex = 0;
       unsigned long locationIndex = 0;
-      if (FindClosestStationData(theCalculationParamsInOut,
-                                 dataIndex,
-                                 locationIndex))
+      if (FindClosestStationData(theCalculationParamsInOut, dataIndex, locationIndex))
       {
         if (itsInfoVector.size() > 1)
         {
@@ -548,31 +544,37 @@ float NFmiInfoAreaMask::CalcMetaParamValue(const NFmiCalculationParams &theCalcu
   }
   else
   {
-    return CalcMetaParamValueWithFunction([&]() {
-      return itsInfo->InterpolatedValue(theCalculationParams.UsedLatlon(),
-                                        theCalculationParams.itsTime);
-    });
+    return CalcMetaParamValueWithFunction(
+        [&]()
+        {
+          return itsInfo->InterpolatedValue(theCalculationParams.UsedLatlon(),
+                                            theCalculationParams.itsTime);
+        });
   }
 }
 
 float NFmiInfoAreaMask::CalcMetaParamHeightValue(double theHeight,
                                                  const NFmiCalculationParams &theCalculationParams)
 {
-  return CalcMetaParamValueWithFunction([&]() {
-    return itsInfo->HeightValue(static_cast<float>(theHeight),
-                                theCalculationParams.UsedLatlon(),
-                                theCalculationParams.itsTime);
-  });
+  return CalcMetaParamValueWithFunction(
+      [&]()
+      {
+        return itsInfo->HeightValue(static_cast<float>(theHeight),
+                                    theCalculationParams.UsedLatlon(),
+                                    theCalculationParams.itsTime);
+      });
 }
 
 float NFmiInfoAreaMask::CalcMetaParamPressureValue(
     double thePressure, const NFmiCalculationParams &theCalculationParams)
 {
-  return CalcMetaParamValueWithFunction([&]() {
-    return itsInfo->PressureLevelValue(static_cast<float>(thePressure),
-                                       theCalculationParams.UsedLatlon(),
-                                       theCalculationParams.itsTime);
-  });
+  return CalcMetaParamValueWithFunction(
+      [&]()
+      {
+        return itsInfo->PressureLevelValue(static_cast<float>(thePressure),
+                                           theCalculationParams.UsedLatlon(),
+                                           theCalculationParams.itsTime);
+      });
 }
 
 float NFmiInfoAreaMask::CalcCachedInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo,
@@ -595,10 +597,12 @@ float NFmiInfoAreaMask::CalcMetaParamCachedInterpolation(
     const NFmiLocationCache &theLocationCache,
     const NFmiTimeCache *theTimeCache)
 {
-  return CalcMetaParamValueWithFunction([&]() {
-    return theTimeCache ? theUsedInfo->CachedInterpolation(theLocationCache, *theTimeCache)
-                        : theUsedInfo->CachedInterpolation(theLocationCache);
-  });
+  return CalcMetaParamValueWithFunction(
+      [&]()
+      {
+        return theTimeCache ? theUsedInfo->CachedInterpolation(theLocationCache, *theTimeCache)
+                            : theUsedInfo->CachedInterpolation(theLocationCache);
+      });
 }
 
 double NFmiInfoAreaMask::HeightValue(double theHeight,
@@ -905,9 +909,9 @@ void NFmiInfoAreaMask::AddValueToModifier(boost::shared_ptr<NFmiFastQueryInfo> &
                                           boost::shared_ptr<NFmiDataModifier> &theFunctionModifier,
                                           float theValue)
 {
-    // In this base virtual method the value is just added to the 
-    // modifier, in child classes there will be overrides that will 
-    // keep record of the time of extreme value.
+  // In this base virtual method the value is just added to the
+  // modifier, in child classes there will be overrides that will
+  // keep record of the time of extreme value.
   theFunctionModifier->Calculate(theValue);
 }
 
@@ -921,8 +925,8 @@ void NFmiInfoAreaMask::AddValuesToFunctionModifier(
     const NFmiLocationCache &theLocationCache,
     NFmiAreaMask::FunctionType integrationFunction)
 {
-  if (DoExtremeAddingSpecialCase() && (integrationFunction == NFmiAreaMask::Max ||
-      integrationFunction == NFmiAreaMask::Min))
+  if (DoExtremeAddingSpecialCase() &&
+      (integrationFunction == NFmiAreaMask::Max || integrationFunction == NFmiAreaMask::Min))
     AddExtremeValues(theInfo, theFunctionModifier, theLocationCache);
   else
     AddValueToModifier(
@@ -2168,7 +2172,7 @@ float NFmiInfoAreaMaskVertFunc::CalculateUsedPeekZPressureLevel(float currentPre
       auto usedFLlevel = ::CalcPressureFlightLevel(currentPressureLevel);
       usedFLlevel += usedDeltaZ;
       // Lopuksi muutetaan yhteis flight-level takaisin paineeksi
-      return static_cast<float>(::CalcFlightLevelPressure(usedFLlevel*100));
+      return static_cast<float>(::CalcFlightLevelPressure(usedFLlevel * 100));
     }
     case NFmiAreaMask::VertZ:
     {
@@ -2207,7 +2211,8 @@ unsigned long NFmiInfoAreaMaskVertFunc::GetNonMissingStartLevelIndex(
 {
   VerticalIterationBreakingData iterationBreakingData(true);
   // Lambda funktio joka annetaan iterointi metodille
-  auto findLevelFunction = [&]() {
+  auto findLevelFunction = [&]()
+  {
     float value = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
     if (value != kFloatMissing)
     {
@@ -2266,7 +2271,10 @@ class SimpleConditionPreviousValueResetter
   boost::shared_ptr<NFmiSimpleCondition> &simpleCondition_;
 
  public:
-  SimpleConditionPreviousValueResetter(boost::shared_ptr<NFmiSimpleCondition> &simpleCondition):simpleCondition_(simpleCondition) {}
+  SimpleConditionPreviousValueResetter(boost::shared_ptr<NFmiSimpleCondition> &simpleCondition)
+      : simpleCondition_(simpleCondition)
+  {
+  }
   ~SimpleConditionPreviousValueResetter() { simpleCondition_->ResetPreviousValue(); }
 };
 
@@ -2301,13 +2309,13 @@ float NFmiInfoAreaMaskVertFunc::FindHeightForSimpleCondition(
     {
       foundCount++;
       foundHeight = previousLevelHeigth;
-      if (findHeight && search_nth_value == 1) 
-          return foundHeight;
+      if (findHeight && search_nth_value == 1) return foundHeight;
     }
 
     VerticalIterationBreakingData iterationBreaking(true);
     // Lambda funktio joka annetaan iterointi metodille
-    auto findValueFunction = [&]() {
+    auto findValueFunction = [&]()
+    {
       currentLevelCondition = VertFuncSimpleconditionCheck(theCalculationParams);
       currentLevelHeigth = GetLevelHeightValue(theLocationCache);
       // simple-condition tila muuttunut niin tilanne on mennyt päälle ja otetaan tilanne talteen
@@ -2368,7 +2376,8 @@ float NFmiInfoAreaMaskVertFunc::DoFindFunction(const NFmiLocationCache &theLocat
 
     VerticalIterationBreakingData iterationBreaking(true);
     // Lambda funktio joka annetaan iterointi metodille
-    auto findValueFunction = [&]() {
+    auto findValueFunction = [&]()
+    {
       value2 = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
       if (value2 != kFloatMissing)
       {
@@ -2512,7 +2521,8 @@ float NFmiInfoAreaMaskVertFunc::DoNormalFunction(const NFmiLocationCache &theLoc
   {
     DoubleValueSearcher valueSearcher(itsPrimaryFunc == NFmiAreaMask::MaxH);
     // Lambda funktio joka annetaan iterointi metodille
-    auto heightSeekerFunction = [&]() {
+    auto heightSeekerFunction = [&]()
+    {
       float primaryValue = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
       float heightValue = GetLevelHeightValue(theLocationCache);
       valueSearcher.Values(primaryValue, heightValue);
@@ -2528,7 +2538,8 @@ float NFmiInfoAreaMaskVertFunc::DoNormalFunction(const NFmiLocationCache &theLoc
   {
     itsFunctionModifier->Clear();
     // Lambda funktio joka annetaan iterointi metodille
-    auto valueFunction = [&]() {
+    auto valueFunction = [&]()
+    {
       itsFunctionModifier->Calculate(
           CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache));
     };
@@ -2648,7 +2659,8 @@ float NFmiInfoAreaMaskVertConditionalFunc::DoFindConditionalFunction(
   {
     VerticalIterationBreakingData iterationBreakingData(true);
     // Lambda funktio joka annetaan iterointi metodille
-    auto findValueHeightFunction = [&]() {
+    auto findValueHeightFunction = [&]()
+    {
       float value = CalcCachedInterpolation(itsInfo, theLocationCache, &itsTimeCache);
       if (CheckProbabilityCondition(value))
       {
@@ -2764,7 +2776,8 @@ double NFmiInfoAreaMaskTimeVertFunc::Value(const NFmiCalculationParams &theCalcu
       itsInfo->TimeIndex(timeIndex);
       if (itsSimpleCondition) usedCalculationParams.itsTime = itsInfo->Time();
       // Lambda funktio joka annetaan iterointi metodille
-      auto modifierFunction = [&]() {
+      auto modifierFunction = [&]()
+      {
         NFmiInfoAreaMask::AddValuesToFunctionModifier(
             itsInfo, itsFunctionModifier, locationCache, itsPrimaryFunc);
       };
@@ -3045,7 +3058,7 @@ double NFmiInfoAreaMaskProbFunc::Value(const NFmiCalculationParams &theCalculati
   }
 }
 
-static bool IsSynopDataCase(const boost::shared_ptr<NFmiFastQueryInfo>& info)
+static bool IsSynopDataCase(const boost::shared_ptr<NFmiFastQueryInfo> &info)
 {
   if (info)
   {
@@ -3103,10 +3116,10 @@ double NFmiInfoAreaMaskProbFunc::DoObservationAreaMaskCalculations(
             float value = CalculationPointValueForObservation(info);
             if (value != kFloatMissing)
             {
-                // Jos kyse prob laskuista, joissa käytetään simple-condition ehtoa, 
-                // laskuria pitää kasvattaa tässä, en ole varma sotkeeko tämä jotain muuta tapausta.
-                // value != missing on huono tarkastus, koska simple-condition laskuissa voi olla 
-                // muita parametreja käytössä, mutta en tiedä mitä muuta tässä voisi tarkastella.
+              // Jos kyse prob laskuista, joissa käytetään simple-condition ehtoa,
+              // laskuria pitää kasvattaa tässä, en ole varma sotkeeko tämä jotain muuta tapausta.
+              // value != missing on huono tarkastus, koska simple-condition laskuissa voi olla
+              // muita parametreja käytössä, mutta en tiedä mitä muuta tässä voisi tarkastella.
               itsTotalCalculatedGridPoints++;
             }
             if (SimpleConditionCheck(simpleConditionCalculationPointParams))
@@ -3165,7 +3178,8 @@ void NFmiInfoAreaMaskProbFunc::DoSubgridCalculations(
         continue;  // kyseinen piste oli ympyrän ulkopuolella
       }
       // Jos tarvitaan simple-condition laskuja, pitää niitä varten olla paikka tallessa
-      theSimpleConditionCalculationPointParams.SetModifiedLatlon(itsInfo->PeekLocationLatLon(offsetX, offsetY), true);
+      theSimpleConditionCalculationPointParams.SetModifiedLatlon(
+          itsInfo->PeekLocationLatLon(offsetX, offsetY), true);
       if (theSimpleConditionCalculationPointParams.UsedLatlon() != NFmiPoint::gMissingLatlon)
       {
         float value =
@@ -3190,8 +3204,7 @@ bool NFmiInfoAreaMaskProbFunc::IsCalculationPointInsideCircle(
     const NFmiLocation &theCalculationPointLocation, int theOffsetX, int theOffsetY)
 {
   if (itsSecondaryFunc == NFmiAreaMask::AreaCircle ||
-      itsSecondaryFunc == NFmiAreaMask::Occurrence ||
-      itsSecondaryFunc == NFmiAreaMask::Occurrence2)
+      itsSecondaryFunc == NFmiAreaMask::Occurrence || itsSecondaryFunc == NFmiAreaMask::Occurrence2)
   {
     // ympyrä tapauksessa tarkastetaan jokainen piste erikseen, onko se halutun säteisen ympyrän
     // sisällä
@@ -3226,11 +3239,13 @@ float NFmiInfoAreaMaskProbFunc::CalcMetaParamCalculationPointValue(
     const NFmiMetTime &theInterpolationTime,
     bool useInterpolatedTime)
 {
-  return CalcMetaParamValueWithFunction([&]() {
-    return useInterpolatedTime
-               ? itsInfo->PeekLocationValue(theOffsetX, theOffsetY, theInterpolationTime)
-               : itsInfo->PeekLocationValue(theOffsetX, theOffsetY);
-  });
+  return CalcMetaParamValueWithFunction(
+      [&]()
+      {
+        return useInterpolatedTime
+                   ? itsInfo->PeekLocationValue(theOffsetX, theOffsetY, theInterpolationTime)
+                   : itsInfo->PeekLocationValue(theOffsetX, theOffsetY);
+      });
 }
 
 void NFmiInfoAreaMaskProbFunc::DoIntegrationCalculations(float value)

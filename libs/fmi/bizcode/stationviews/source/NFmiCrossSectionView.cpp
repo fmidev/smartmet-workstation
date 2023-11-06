@@ -997,9 +997,6 @@ void NFmiCrossSectionView::DrawCrossSection(void)
         std::lock_guard<std::mutex> toolMasterLock(NFmiIsoLineView::sToolMasterOperationMutex);
         if(doWindVectorDraw || FillIsoLineVisualizationInfo(itsDrawParam, &isoLineData, IsToolMasterAvailable(), false))
         {
-            if(IsToolMasterAvailable())
-                FillIsoLineDataForToolMaster(itsIsolineValues, isoLineData);
-
             NFmiDataMatrix<NFmiPoint> koordinaatit;
             FillXYMatrix(isoLineData, koordinaatit, itsPressures);
             FillMainPointXYInfo(koordinaatit);
@@ -1039,19 +1036,6 @@ void NFmiCrossSectionView::FillMainPointXYInfo(NFmiDataMatrix<NFmiPoint> &theCoo
         crossSectionSystem->MiddleXYPoint(theCoordinates[xCount/2][0]);
         crossSectionSystem->EndXYPoint(theCoordinates[xCount-1][0]);
 	}
-}
-
-// toolmasterille data pitää tallettaa omaan taulukkoon tiettyyn juoksu järjestykseen.
-bool NFmiCrossSectionView::FillIsoLineDataForToolMaster(const NFmiDataMatrix<float> &theValues, NFmiIsoLineData& theIsoLineData)
-{
-    auto nx = theValues.NX();
-    auto ny = theValues.NY();
-    theIsoLineData.itsVectorFloatGridData.resize(nx*ny);
-	auto &valuesVector = theIsoLineData.itsVectorFloatGridData;
-	for(int j=0; j<ny; j++)
-		for(int i=0; i<nx; i++)
-            valuesVector[j * nx + i] = theValues[i][j];
-	return true;
 }
 
 void NFmiCrossSectionView::DrawCrosssectionWithToolMaster(NFmiIsoLineData& theIsoLineData)
@@ -1480,7 +1464,7 @@ static void FillBeforeStartTimeWithCrossSectionValues(boost::shared_ptr<NFmiFast
 	{
 		do
 		{
-			if(NFmiSoundingData::HasRealSoundingData(*theInfo))
+			if(NFmiSoundingData::HasRealSoundingData(theInfo))
 			{ // dataa löytyi asemalta johonkin aikaan, täytetään vektori siltä kohdalta, ja lasketaan aika-indeksi talteen
 				theBeforeStartIndex = theInfo->Time().DifferenceInMinutes(theTimes.FirstTime())/theTimes.Resolution();
 				::FillCrossSectionMatrixWithSoundingData(theBeforeStartValues, theInfo, theDrawParam, thePressures, 0);
@@ -1500,7 +1484,7 @@ static void FillCrossSectionMatrixWithObservedSoundings(NFmiDataMatrix<float> &t
 	{
 		if(theInfo->Time(theTimes.CurrentTime()))
 		{
-			if(NFmiSoundingData::HasRealSoundingData(*theInfo))
+			if(NFmiSoundingData::HasRealSoundingData(theInfo))
 			{ // dataa löytyi asemalta johonkin aikaan, täytetään matriisi siltä kohdalta, ja merkitään viimeksi löytynyt aika-indeksi talteen
 				FmiParameterName parId = static_cast<FmiParameterName>(theDrawParam->Param().GetParamIdent());
 				if(theInfo->Param(parId) || parId == kFmiHumidity || metaWindParamUsage.ParamNeedsMetaCalculations(theDrawParam->Param().GetParamIdent())) // humidity lasketaan vaikka sitä ei löydy infosta
@@ -2933,6 +2917,16 @@ void NFmiCrossSectionView::DrawSeaLevel(void)
 
 }
 
+// Jos annetusta vektorista löytyy yksikin ei missing arvo, palauta true, muuten false
+static void ClearValueVectorIfOnlyMissingValues(std::vector<float>& values)
+{
+	auto nonMissingIter = std::find_if(values.begin(), values.end(), [](auto value) {return value != kFloatMissing; });
+	if(nonMissingIter == values.end())
+	{
+		values.clear();
+	}
+}
+
 // Piirretään mallista saatu karkea maanpinta profiili näyttöön.
 // Palauttaa true, jos piirretty jotain, muuten false.
 bool NFmiCrossSectionView::DrawModelGroundLevel(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDrawingEnvironment &theEnvi, bool fUseHybridCalculations)
@@ -2943,6 +2937,9 @@ bool NFmiCrossSectionView::DrawModelGroundLevel(boost::shared_ptr<NFmiFastQueryI
 			CalcModelGroundPressures(theInfo); // kerää pinta profiili mallipintadatasta
 		else
 			CalcModelPressuresAtStation(theInfo); // kerää pinta profiili pintadatan kFmiPressureAtStationLevel -parametrista
+
+		::ClearValueVectorIfOnlyMissingValues(itsModelGroundPressures);
+
         // Jos datassa ei ollutkaan haluttua parametria, tällöin itsModelGroundPressures on tyhjä ja ei voida piirtää mitään.
         if(itsModelGroundPressures.size())
         {

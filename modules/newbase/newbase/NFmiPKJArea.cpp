@@ -96,6 +96,7 @@
 // ======================================================================
 
 #include "NFmiPKJArea.h"
+
 #include <cmath>
 #include <cstdlib>
 #include <stdexcept>

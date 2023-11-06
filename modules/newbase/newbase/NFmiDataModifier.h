@@ -52,8 +52,8 @@ class NFmiDataModifier : public NFmiDataModifierBase
   virtual void SetLocationIndex(unsigned long theIndex);
   virtual void SetTimeIndex(unsigned long theIndex);
   virtual void InitLatlonCache();  // jos datamodifierissa on fastInfoja tai maskeja joissa on
-                                       // fastInfoja, niiden latlon-cache pitää alustaa ennen
-                                       // multi-thread-ajoa
+                                   // fastInfoja, niiden latlon-cache pitää alustaa ennen
+                                   // multi-thread-ajoa
 
  protected:
   virtual bool CheckMissingValues(float theValue);

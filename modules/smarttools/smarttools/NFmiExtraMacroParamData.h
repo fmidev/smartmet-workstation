@@ -3,11 +3,11 @@
 #include "boost/shared_ptr.hpp"
 
 #include <newbase/NFmiDataMatrix.h>
-#include <newbase/NFmiLevelType.h>
-#include <newbase/NFmiProducer.h>
-#include <newbase/NFmiParam.h>
-#include <newbase/NFmiLevel.h>
 #include <newbase/NFmiInfoData.h>
+#include <newbase/NFmiLevel.h>
+#include <newbase/NFmiLevelType.h>
+#include <newbase/NFmiParam.h>
+#include <newbase/NFmiProducer.h>
 #include <set>
 
 class NFmiFastQueryInfo;
@@ -16,8 +16,9 @@ class NFmiArea;
 
 enum class MacroParamCalculationType
 {
-    Normal = 0, // Normaalit reaaliluvut
-    Index = 1 // indeksi tyyppinen luku (usein kokonaisluku), jota ei saa interpoloida esim. tooltipissä
+  Normal = 0,  // Normaalit reaaliluvut
+  Index =
+      1  // indeksi tyyppinen luku (usein kokonaisluku), jota ei saa interpoloida esim. tooltipissä
 };
 
 enum class ReasonForDataRejection
@@ -43,12 +44,14 @@ struct FindWantedInfoData
                      const std::set<ReasonForDataRejection> &rejectionReasons);
 };
 
-// Jos smarttools kielessä halutaan määritellä käytetty data (resoluution 
+// Jos smarttools kielessä halutaan määritellä käytetty data (resoluution
 // tai fiksatun pohjahilan määritykseen), on siihen monia erilaisia tapoja:
 // 1. resolution = edited // editoitu data
 // 2. resolution = ec_pressure // ec:n painepintadata (myös hybrid/height kelpaavat)
-// 3. resolution = T_ec // Ec:n pintadata, jossa mukana lämpötila (myös par4_prod240 variantit käyvät)
-// 4. resolution = T_ec_850 // Ec:n painepintadata (leveleissä myös lev88 = hybrid, z1000 = height, fl75 = flight-level kelpaavat)
+// 3. resolution = T_ec // Ec:n pintadata, jossa mukana lämpötila (myös par4_prod240 variantit
+// käyvät)
+// 4. resolution = T_ec_850 // Ec:n painepintadata (leveleissä myös lev88 = hybrid, z1000 = height,
+// fl75 = flight-level kelpaavat)
 class NFmiDefineWantedData
 {
  public:
@@ -100,15 +103,17 @@ class MultiParamData
  public:
   MultiParamData();
   MultiParamData(const NFmiDefineWantedData &paramData);
-  MultiParamData(const std::string &originalParamString,
-                 const std::string macroParamFullPath);
+  MultiParamData(const std::string &originalParamString, const std::string macroParamFullPath);
 
   bool IsInUse() const;
   bool IsMacroParamCase() const;
 
   const NFmiDefineWantedData &possibleParamData() const { return possibleParamData_; }
   NFmiDefineWantedData &possibleParamData() { return possibleParamData_; }
-  const std::string &possibleOriginalMacroParamPath() const { return possibleOriginalMacroParamPath_; }
+  const std::string &possibleOriginalMacroParamPath() const
+  {
+    return possibleOriginalMacroParamPath_;
+  }
   const std::string &possibleMacroParamFullPath() const { return possibleMacroParamFullPath_; }
 };
 
@@ -127,7 +132,10 @@ class NFmiExtraMacroParamData
                                  const NFmiArea *theUsedArea);
 
   const NFmiDefineWantedData &WantedResolutionData() const { return itsWantedResolutionData; }
-  void WantedResolutionData(const NFmiDefineWantedData &wantedData) { itsWantedResolutionData = wantedData; }
+  void WantedResolutionData(const NFmiDefineWantedData &wantedData)
+  {
+    itsWantedResolutionData = wantedData;
+  }
   float GivenResolutionInKm() const { return itsGivenResolutionInKm; }
   void GivenResolutionInKm(float newValue) { itsGivenResolutionInKm = newValue; }
   boost::shared_ptr<NFmiFastQueryInfo> ResolutionMacroParamData()
@@ -140,7 +148,10 @@ class NFmiExtraMacroParamData
   void AddCalculationPoint(const NFmiPoint &latlon) { itsCalculationPoints.push_back(latlon); }
   const std::vector<NFmiPoint> &CalculationPoints() const { return itsCalculationPoints; }
   bool UseCalculationPoints() const { return !itsCalculationPoints.empty(); }
-  const std::vector<NFmiProducer> &CalculationPointProducers() const { return itsCalculationPointProducers; }
+  const std::vector<NFmiProducer> &CalculationPointProducers() const
+  {
+    return itsCalculationPointProducers;
+  }
   bool AddCalculationPointProducer(const NFmiProducer &theProducer);
 
   float ObservationRadiusInKm() const { return itsObservationRadiusInKm; }
@@ -158,14 +169,20 @@ class NFmiExtraMacroParamData
   const std::string &MacroParamErrorMessage() const { return itsMacroParamErrorMessage; }
   void MacroParamErrorMessage(const std::string &message) { itsMacroParamErrorMessage = message; }
   const std::string &MacroParamWarningMessage() const { return itsMacroParamWarningMessage; }
-  void MacroParamWarningMessage(const std::string &message) { itsMacroParamWarningMessage = message; }
+  void MacroParamWarningMessage(const std::string &message)
+  {
+    itsMacroParamWarningMessage = message;
+  }
   const NFmiDefineWantedData &WantedFixedBaseData() const { return itsWantedFixedBaseData; }
-  void WantedFixedBaseData(const NFmiDefineWantedData &newData) { itsWantedFixedBaseData = newData; }
+  void WantedFixedBaseData(const NFmiDefineWantedData &newData)
+  {
+    itsWantedFixedBaseData = newData;
+  }
   boost::shared_ptr<NFmiFastQueryInfo> FixedBaseDataInfo() const { return itFixedBaseDataInfo; }
   void FixedBaseDataInfo(boost::shared_ptr<NFmiFastQueryInfo> &info) { itFixedBaseDataInfo = info; }
   void UseDataForResolutionCalculations(const NFmiArea *usedArea,
                                         boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
-      const std::string &dataDescriptionForErrorMessage);
+                                        const std::string &dataDescriptionForErrorMessage);
   bool IsFixedSpacedOutDataCase() const { return fIsFixedSpacedOutDataCase; }
   void IsFixedSpacedOutDataCase(bool newValue) { fIsFixedSpacedOutDataCase = newValue; }
   const std::string &MultiParamTooltipFile() const { return itsMultiParamTooltipFile; }
@@ -176,18 +193,18 @@ class NFmiExtraMacroParamData
   void MultiParam3(const MultiParamData &newValue) { itsMultiParam3 = newValue; }
   bool IsMultiParamCase() const;
   static FindWantedInfoData FindWantedInfo(NFmiInfoOrganizer &theInfoOrganizer,
-                                    const NFmiDefineWantedData &wantedData);
+                                           const NFmiDefineWantedData &wantedData);
 
  private:
-  void InitializeResolutionData(const NFmiArea *usedArea,
-                                const NFmiPoint &usedResolutionInKm);
+  void InitializeResolutionData(const NFmiArea *usedArea, const NFmiPoint &usedResolutionInKm);
   void InitializeDataBasedResolutionData(NFmiInfoOrganizer &theInfoOrganizer);
   void InitializeRelativeObservationRange(NFmiInfoOrganizer &theInfoOrganizer, float usedRangeInKm);
   void AddCalculationPointsFromData(NFmiInfoOrganizer &theInfoOrganizer,
                                     const std::vector<NFmiProducer> &theProducers);
   void InitializeFixedBaseDataInfo(NFmiInfoOrganizer &theInfoOrganizer);
   void InitializeMultiParamData(NFmiInfoOrganizer &theInfoOrganizer);
-  void InitializeMultiParamData(NFmiInfoOrganizer &theInfoOrganizer, MultiParamData &multiParamData);
+  void InitializeMultiParamData(NFmiInfoOrganizer &theInfoOrganizer,
+                                MultiParamData &multiParamData);
 
   // Tähän tulee resolution = xxx määrityksestä saatava datan tiedot
   NFmiDefineWantedData itsWantedResolutionData;
@@ -230,7 +247,7 @@ class NFmiExtraMacroParamData
   int itsWorkingThreadCount = 0;
 
   // Tämä ei kuuluvarsinaisesti näihin macroParam extra datoihin, mutta tarvitsen kuljettaa
-  // mahdolliset smarttool kielen kääntäjä/ajoaika virheilmoitukset takaisin käyttäjälle, 
+  // mahdolliset smarttool kielen kääntäjä/ajoaika virheilmoitukset takaisin käyttäjälle,
   // mm. tooltip tekstiin.
   std::string itsMacroParamErrorMessage;
   // Joskus pitää saada varoittaa käyttäjää, ja sellainen varoitus
@@ -245,8 +262,9 @@ class NFmiExtraMacroParamData
   // **** Multi-param tooltip juttuja *****
   // Monesta parametrista riippuvien tooltip tekstien polku
   std::string itsMultiParamTooltipFile;
-  // Multi-parametrit 2-3, jos itsMultiParamTooltipFile on määritelty, pitää olla ainakin yksi arvo täällä (MultiParam2:n arvo).
-  // MultiParam voi olla joko queryData parametri (esim. T_ec) tai macroParam tiedoston polku
+  // Multi-parametrit 2-3, jos itsMultiParamTooltipFile on määritelty, pitää olla ainakin yksi arvo
+  // täällä (MultiParam2:n arvo). MultiParam voi olla joko queryData parametri (esim. T_ec) tai
+  // macroParam tiedoston polku
   MultiParamData itsMultiParam2;
   MultiParamData itsMultiParam3;
 };

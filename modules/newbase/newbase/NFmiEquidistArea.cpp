@@ -71,6 +71,7 @@
 // ======================================================================
 
 #include "NFmiEquidistArea.h"
+
 #include <algorithm>
 #include <iomanip>
 
@@ -89,13 +90,13 @@ NFmiEquidistArea::NFmiEquidistArea(const NFmiEquidistArea &theEquidistArea)
     = default;
 
 /*!
-* Constructor
-*
-* \param theCenterLatLon Undocumented
-* \param theRadialRangeInMeters Undocumented
-* \param theTopLeftXY Undocumented
-* \param theBottomRightXY Undocumented
-*/
+ * Constructor
+ *
+ * \param theCenterLatLon Undocumented
+ * \param theRadialRangeInMeters Undocumented
+ * \param theTopLeftXY Undocumented
+ * \param theBottomRightXY Undocumented
+ */
 NFmiEquidistArea::NFmiEquidistArea(double theRadialRangeInMeters,
                                    const NFmiPoint &theCenterLatLon,
                                    const NFmiPoint &theTopLeftXY,

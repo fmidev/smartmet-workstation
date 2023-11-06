@@ -94,6 +94,7 @@ CFmiModifyDrawParamDlg::CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartM
 , itsFixedTextSymbolDrawLength(DefaultFixedTextSymbolDrawLength)
 , itsSymbolDrawDensityStr(_T(""))
 , itsPossibleColorParameterStr(_T(""))
+, fFlipArrowSymbol(FALSE)
 {
 	if(theDrawParam)
 	{
@@ -292,6 +293,7 @@ void CFmiModifyDrawParamDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_STATIC_SYMBOL_DRAW_DENSITY_STR, itsSymbolDrawDensityStr);
 	DDX_Text(pDX, IDC_EDIT_DRAW_PARAM_COLOR_PARAM_STR, itsPossibleColorParameterStr);
 	DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_ISOLINE_HIGH3, itsSimpleIsoLineHigh3Color);
+	DDX_Check(pDX, IDC_CHECK_FLIP_ARROW_SYMBOL, fFlipArrowSymbol);
 }
 
 
@@ -627,6 +629,7 @@ void CFmiModifyDrawParamDlg::InitRestOfVersion2Data(void)
 	itsFixedTextSymbolDrawLength = itsDrawParam->FixedTextSymbolDrawLength();
 	InitSymbolDrawDensitySliders();
 	itsPossibleColorParameterStr = CA2T(itsDrawParam->PossibleColorValueParameter().c_str());
+	fFlipArrowSymbol = itsDrawParam->FlipArrowSymbol();
 }
 
 static int SymbolDrawDensityToSliderPos(double symbolDrawDensity)
@@ -826,6 +829,7 @@ void CFmiModifyDrawParamDlg::ReadRestOfVersion2Data(void)
 	itsDrawParam->SymbolDrawDensityX(densityValues.first);
 	itsDrawParam->SymbolDrawDensityY(densityValues.second);
 	itsDrawParam->PossibleColorValueParameter(std::string(CT2A(itsPossibleColorParameterStr)));
+	itsDrawParam->FlipArrowSymbol(fFlipArrowSymbol == TRUE);
 
 	ReadSpecialClassesData();
 }
@@ -929,8 +933,6 @@ void CFmiModifyDrawParamDlg::IsHidden(void)
 void CFmiModifyDrawParamDlg::ParamAbbreviation(void)
 {
     itsParamAbbreviationStrU_ = CA2T(itsDrawParam->ParameterAbbreviation().c_str());
-    if(!IsMacroParamCase() && itsParamAbbreviationStrU_.GetLength() > 15) // jos ei macroParam tyyppiä (niiden nimiä ei voi editoida), leikataan nimen lyhennetta niin että se on maksimissaan 15 merkkiä
-		itsParamAbbreviationStrU_ = itsParamAbbreviationStrU_.Left(15);
 	return;
 }
 
@@ -1745,6 +1747,7 @@ void CFmiModifyDrawParamDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_TREAT_WMS_LAYER_AS_OBSERVATION, "Treat Wms layer as observation (in animations)");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_FIXED_TEXT_SYMBOL_DRAW_LENGTH, "Fixed text length");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SYMBOL_DRAW_DENSITY_STR, "Symbol draw density");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_FLIP_ARROW_SYMBOL, "Flip arrow");
     
 //    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_APPLY_FIXED_DRAW_PARAMS_RIGHT_AWAY, "Apply Fixed Settings At Once");
 }

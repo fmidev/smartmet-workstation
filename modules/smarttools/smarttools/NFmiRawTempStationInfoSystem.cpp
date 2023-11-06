@@ -3,8 +3,8 @@
 
 #include "NFmiRawTempStationInfoSystem.h"
 #include <newbase/NFmiCommentStripper.h>
-#include <newbase/NFmiStation.h>
 #include <newbase/NFmiLocationBag.h>
+#include <newbase/NFmiStation.h>
 #include <newbase/NFmiStringTools.h>
 #include <fstream>
 
@@ -282,7 +282,7 @@ static NFmiSilamStationList::Station GetSilamStationFromString(const std::string
     throw std::runtime_error(
         "GetSilamStationFromString - error in line string.");  // viestillä ei ole oikeastaan väliä,
                                                                // lähinnä kommentti
-  in >> str;                                                   // longtitude sign
+  in >> str;  // longtitude sign
   if (in.fail())
     throw std::runtime_error(
         "GetSilamStationFromString - error in line string.");  // viestillä ei ole oikeastaan väliä,
@@ -381,9 +381,7 @@ void NFmiSilamStationList::Clear()
 
 // ****************   NFmiWmoStationLookUpSystem  *************************************
 
-NFmiWmoStationLookUpSystem::NFmiWmoStationLookUpSystem() : itsStations(), itsInitLogMessage()
-{
-}
+NFmiWmoStationLookUpSystem::NFmiWmoStationLookUpSystem() : itsStations(), itsInitLogMessage() {}
 
 const NFmiWmoStation &NFmiWmoStationLookUpSystem::GetStation(long theWmoId)
 {

@@ -1,7 +1,7 @@
 
+#include "NFmiTEMPCode.h"
 #include "NFmiAviationStationInfoSystem.h"
 #include "NFmiDictionaryFunction.h"
-#include "NFmiTEMPCode.h"
 #include <newbase/NFmiFastQueryInfo.h>
 #include <newbase/NFmiLocationBag.h>
 #include <newbase/NFmiQueryDataUtil.h>
@@ -40,9 +40,7 @@ NFmiTEMPCode::NFmiTEMPCode(NFmiAviationStationInfoSystem *theTempStations,
 {
 }
 
-NFmiTEMPCode::~NFmiTEMPCode()
-{
-}
+NFmiTEMPCode::~NFmiTEMPCode() {}
 
 void NFmiTEMPCode::Clear()
 {
@@ -1030,7 +1028,7 @@ static NFmiQueryInfo *MakeNewInnerInfoForTEMP(std::vector<NFmiTEMPCode> &theSoun
 
 static std::string MakeTimeString(const NFmiMetTime &atime)
 {
-    return std::string(atime.ToStr("YYYY.MM.DD HH:mm"));
+  return std::string(atime.ToStr("YYYY.MM.DD HH:mm"));
 }
 
 static std::string MakeCheckReport(NFmiQueryData *theData, int theSoundingCount)
@@ -1060,8 +1058,8 @@ static std::string MakeCheckReport(NFmiQueryData *theData, int theSoundingCount)
       str += ::GetDictionaryString("TempCodeInsertDlgPiecesStr");
       str += ".\n";
       str += ::GetDictionaryString("Times: ");
-      for(info.ResetTime(); info.NextTime(); )
-          str += ::MakeTimeString(info.Time()) + " ";
+      for (info.ResetTime(); info.NextTime();)
+        str += ::MakeTimeString(info.Time()) + " ";
       return str;
     }
   }

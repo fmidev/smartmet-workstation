@@ -18,7 +18,8 @@
 #include "NFmiGlobals.h"
 #include "NFmiStringTools.h"
 
-extern "C" {
+extern "C"
+{
 #include <sys/timeb.h>
 }
 
@@ -27,6 +28,7 @@ extern "C" {
 class NFmiNanoSecondTimer
 {
   std::chrono::time_point<std::chrono::steady_clock> startTime_;
+
  public:
   NFmiNanoSecondTimer();
   NFmiNanoSecondTimer(int moveStartByMS);

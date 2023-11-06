@@ -9,6 +9,7 @@
 
 #include "NFmiFileString.h"
 #include "NFmiGlobals.h"
+
 #include <string>
 #ifdef UNIX
 #include <glob.h>

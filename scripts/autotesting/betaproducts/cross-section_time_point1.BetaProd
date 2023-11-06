@@ -1,0 +1,13 @@
+{
+    "ImageStoragePath" : "D:\\autotesting\\crosssectionview\\current\\cross-section_time_point1",
+    "FileNameTemplate" : "cross-section_time_point1_validTime_stationid.png",
+    "TimeLengthInHours" : "0",
+    "TimeStepInMinutes" : "60",
+    "UseUtcInTimebox" : true,
+    "ParamboxLocation" : 18,
+    "RowIndexList" : "1-5",
+    "RowSubdirectoryTemplate" : "Row#",
+    "ViewMacroPath" : "FMI\\Marko\\automationtesting\\cross-section_time_point1.vmr",
+    "SelectedViewIndex" : 5,
+    "SynopStationIdList" : "2704,1049,26863,10249,22641"
+}

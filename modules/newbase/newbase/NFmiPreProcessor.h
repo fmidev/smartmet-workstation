@@ -8,6 +8,7 @@
 #pragma once
 
 #include "NFmiCommentStripper.h"
+
 #include <map>
 #include <string>
 

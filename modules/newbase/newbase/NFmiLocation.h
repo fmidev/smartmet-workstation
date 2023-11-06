@@ -10,6 +10,7 @@
 #include "NFmiIndividual.h"
 #include "NFmiPoint.h"
 #include "NFmiSaveBaseFactory.h"
+
 #include <algorithm>
 
 class NFmiTime;

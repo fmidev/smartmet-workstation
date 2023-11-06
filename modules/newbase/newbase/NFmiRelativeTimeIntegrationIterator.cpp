@@ -13,6 +13,7 @@
 // ======================================================================
 
 #include "NFmiRelativeTimeIntegrationIterator.h"
+
 #include "NFmiDataModifier.h"
 #include "NFmiQueryInfo.h"
 

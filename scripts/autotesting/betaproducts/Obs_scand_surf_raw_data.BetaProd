@@ -1,0 +1,12 @@
+{
+    "ImageStoragePath" : "D:\\autotesting\\mainmapview\\current\\Obs_scand_surf_raw_data",
+    "FileNameTemplate" : "Obs_surf_raw_validTime.png",
+    "TimeLengthInHours" : "32",
+    "TimeStepInMinutes" : "30",
+    "UseUtcInTimebox" : true,
+    "ParamboxLocation" : 17,
+    "RowIndexList" : "1-16",
+    "RowSubdirectoryTemplate" : "Row#",
+    "ViewMacroPath" : "FMI\\Marko\\automationtesting\\main-map_obs_scand_surf_raw.vmr",
+    "SelectedViewIndex" : 0
+}

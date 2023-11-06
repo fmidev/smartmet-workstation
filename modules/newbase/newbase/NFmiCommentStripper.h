@@ -9,6 +9,7 @@
 
 #include "NFmiDef.h"
 #include "NFmiGlobals.h"
+
 #include <set>
 #include <string>
 #include <vector>

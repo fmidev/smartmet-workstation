@@ -14,6 +14,7 @@
 // ======================================================================
 
 #include "NFmiAreaMask.h"
+
 #include "NFmiFastQueryInfo.h"
 
 #include <cmath>

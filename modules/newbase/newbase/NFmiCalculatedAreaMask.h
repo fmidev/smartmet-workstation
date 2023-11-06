@@ -64,7 +64,8 @@ class NFmiElevationAngleAreaMask : public NFmiLatLonAreaMask
                              const NFmiCalculationCondition& theOperation);
   bool Time(const NFmiMetTime& theTime) override;
   NFmiAreaMask* Clone() const override;
-  double Value(const NFmiCalculationParams& theCalculationParams, bool fUseTimeInterpolationAlways) override;
+  double Value(const NFmiCalculationParams& theCalculationParams,
+               bool fUseTimeInterpolationAlways) override;
 
  protected:
   double CalcValueFromLocation(const NFmiPoint& theLatLon) const override;  // tee tämä lapsiin!!!
@@ -174,7 +175,8 @@ class NFmiTimeStepAreaMask : public NFmiElevationAngleAreaMask
                        const NFmiDataIdent& theParam,
                        const NFmiCalculationCondition& theOperation);
   NFmiAreaMask* Clone() const override;
-  double Value(const NFmiCalculationParams& theCalculationParams, bool fUseTimeInterpolationAlways) override;
+  double Value(const NFmiCalculationParams& theCalculationParams,
+               bool fUseTimeInterpolationAlways) override;
 
  protected:
   double CalcValueFromLocation(const NFmiPoint& theLatLon) const override;  // tee tämä lapsiin!!!
@@ -198,7 +200,8 @@ class NFmiGridSizeAreaMask : public NFmiElevationAngleAreaMask
                        bool calcXValue);
   NFmiGridSizeAreaMask(const NFmiGridSizeAreaMask& theMask);
   NFmiAreaMask* Clone() const override;
-  double Value(const NFmiCalculationParams& theCalculationParams, bool fUseTimeInterpolationAlways) override;
+  double Value(const NFmiCalculationParams& theCalculationParams,
+               bool fUseTimeInterpolationAlways) override;
 
  protected:
   double CalcValueFromLocation(const NFmiPoint& theLatLon) const override;

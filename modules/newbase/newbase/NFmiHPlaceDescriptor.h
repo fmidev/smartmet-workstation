@@ -12,6 +12,7 @@
 #include "NFmiLocation.h"
 #include "NFmiPoint.h"
 #include "NFmiSaveBaseFactory.h"
+
 #include <algorithm>
 
 class NFmiLocationBag;

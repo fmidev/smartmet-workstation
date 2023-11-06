@@ -14,4 +14,3 @@ typedef struct
 {
   FmiColorValue red, green, blue, alpha;
 } FmiRGBColor;
-

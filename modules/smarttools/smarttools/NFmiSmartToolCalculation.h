@@ -8,10 +8,10 @@
 // Tämä luokka hoitaa yhden laskurivin esim. T = T + 1
 //**********************************************************
 
-#include <newbase/NFmiAreaMask.h>
-#include <newbase/NFmiPoint.h>
-#include <newbase/NFmiMetTime.h>
 #include <boost/shared_ptr.hpp>
+#include <newbase/NFmiAreaMask.h>
+#include <newbase/NFmiMetTime.h>
+#include <newbase/NFmiPoint.h>
 
 class NFmiFastQueryInfo;
 class NFmiDataModifier;
@@ -44,6 +44,7 @@ class NFmiSmartToolCalculation
   void SetLimits(float theLowerLimit, float theUpperLimit, bool theDoLimitCheck);
   bool AllowMissingValueAssignment() { return fAllowMissingValueAssignment; };
   void AllowMissingValueAssignment(bool newState) { fAllowMissingValueAssignment = newState; };
+
  private:
   std::string itsCalculationText;  // originaali teksti, mistä tämä lasku on tulkittu
   typedef std::vector<boost::shared_ptr<NFmiAreaMask> >::iterator CalcIter;
@@ -112,7 +113,7 @@ class NFmiSmartToolCalculation
   void CalcThreeArgumentFunction(double &result, const NFmiCalculationParams &theCalculationParams);
   void CalcVertFunction(double &result, const NFmiCalculationParams &theCalculationParams);
 
-  boost::shared_ptr<NFmiFastQueryInfo> itsResultInfo;               // omistaa+tuhoaa
+  boost::shared_ptr<NFmiFastQueryInfo> itsResultInfo;             // omistaa+tuhoaa
   std::vector<boost::shared_ptr<NFmiAreaMask> > itsCalculations;  // omistaa+tuhoaa
   float itsHeightValue;
   float itsPressureHeightValue;

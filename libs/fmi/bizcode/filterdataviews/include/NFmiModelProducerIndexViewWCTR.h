@@ -70,6 +70,9 @@ private:
 	bool IndexInsideRange(const NFmiPoint& theRange, int theIndex);
 	double Time2Value(const NFmiMetTime& theTime);
 	NFmiMetTime Value2Time(const NFmiPoint& thePoint);
+	void DrawStartAndEndTimes();
+	void DrawTimeView();
+	void DrawStatusBoxView();
 
 	std::vector<boost::shared_ptr<NFmiQueryInfo> > itsQueryInfoVector; // tässä on ladattavien datojen tietoja
 	std::vector<int> itsProducerIndexInTimeVector;

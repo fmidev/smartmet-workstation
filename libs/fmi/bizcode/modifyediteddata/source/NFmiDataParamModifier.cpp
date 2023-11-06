@@ -102,7 +102,7 @@ bool NFmiDataParamModifier::ModifyData2(void)
 
 	for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
 		if(IsPossibleInside(itsInfo->RelativePoint()))
-			itsInfo->FloatValue(static_cast<float>(Calculate2(itsInfo->FloatValue())));
+			itsInfo->FloatValue(Calculate2(itsInfo->FloatValue()));
 
 	return true;
 }

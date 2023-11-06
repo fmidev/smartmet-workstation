@@ -13,6 +13,7 @@
 // ======================================================================
 
 #include "NFmiDataModifierMode.h"
+
 #include <algorithm>
 
 NFmiDataModifierMode::NFmiDataModifierMode() : NFmiDataModifier(), itsDataVector() {}

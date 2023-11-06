@@ -219,8 +219,7 @@ public:
 	void TimeBoxLocation(FmiDirection newLocation);
 	float TimeBoxTextSizeFactor() const { return itsTimeBoxTextSizeFactorVM; }
 	void TimeBoxTextSizeFactor(float newFactor);
-	static float TimeBoxTextSizeFactorMinLimit();
-	static float TimeBoxTextSizeFactorMaxLimit();
+	static const std::vector<float>& TimeBoxTextSizeAllowedFactors() { return itsTimeBoxTextSizeAllowedFactors; }
 	const NFmiColor& TimeBoxFillColor() const { return itsTimeBoxFillColorVM; }
 	void TimeBoxFillColor(const NFmiColor &newColor) { itsTimeBoxFillColorVM = newColor; }
 	void SetTimeBoxFillColor(NFmiColor newColorNotAlpha);
@@ -374,8 +373,7 @@ private:
 	// Tekstikokoja voidaan s‰‰t‰‰ t‰m‰n avulla pienemmiksi (arvo < 1) ja isommiksi (arvo > 1).
 	// Rajat t‰lle s‰‰dˆlle on laitettu 0.5 - 2.5.
 	float itsTimeBoxTextSizeFactorVM = TimeBoxTextSizeFactorDefault;
-	static const float itsTimeBoxTextSizeFactorMinLimit;
-	static const float itsTimeBoxTextSizeFactorMaxLimit;
+	static const std::vector<float> itsTimeBoxTextSizeAllowedFactors;
 	// Aikatekstin laatikon pohjav‰ri ja sen alpha on tallessa t‰ss‰
 	NFmiColor itsTimeBoxFillColorVM = TimeBoxFillColorDefault;
 };

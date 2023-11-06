@@ -18,6 +18,7 @@ target_link_libraries(
     ${PROJECT_NAME}
     Newbase
     EditingDataUtils
+    ${FMT_TARGET_LINK_LIBRARIES}
     )
 
 target_include_directories( 

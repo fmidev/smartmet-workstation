@@ -35,8 +35,7 @@ void TestSingleValue(float result, float expected, const std::string& testedName
 {
   if (result != expected)
   {
-    std::string errorMessage = "NFmiDataModifierModMinMax tester failed: " + testedName +
-                               " value ";
+    std::string errorMessage = "NFmiDataModifierModMinMax tester failed: " + testedName + " value ";
     errorMessage += std::to_string(result);
     errorMessage += " was not expected ";
     errorMessage += std::to_string(expected);
@@ -70,7 +69,8 @@ NFmiDataModifierModMinMax::NFmiDataModifierModMinMax(bool returnMinValue)
 {
 }
 
-NFmiDataModifierModMinMax::NFmiDataModifierModMinMax(const NFmiDataModifierModMinMax& theOther) = default;
+NFmiDataModifierModMinMax::NFmiDataModifierModMinMax(const NFmiDataModifierModMinMax& theOther) =
+    default;
 
 NFmiDataModifierModMinMax* NFmiDataModifierModMinMax::Clone() const
 {
@@ -78,7 +78,7 @@ NFmiDataModifierModMinMax* NFmiDataModifierModMinMax::Clone() const
 }
 
 void NFmiDataModifierModMinMax::Clear()
-{ 
+{
   itsRawValues.clear();
   itsMinValue = kFloatMissing;
   itsMaxValue = kFloatMissing;
@@ -94,9 +94,8 @@ void NFmiDataModifierModMinMax::Calculate(float theValue)
 }
 
 float NFmiDataModifierModMinMax::CalculationResult()
-{ 
-  if (!fCalculationsAreMade) 
-      DoCalculations();
+{
+  if (!fCalculationsAreMade) DoCalculations();
   if (fReturnMinValue)
     return itsMinValue;
   else
@@ -129,7 +128,7 @@ void NFmiDataModifierModMinMax::DoCalculations()
       {
         DoCalculations2();
       }
-      catch (std::exception &e)
+      catch (std::exception& e)
       {
         std::string errorMessage = "Error in NFmiDataModifierModMinMax::DoCalculations: ";
         errorMessage += e.what();
@@ -146,7 +145,8 @@ void NFmiDataModifierModMinMax::DoCalculations2()
   auto minValue = *itsRawValues.begin();
   auto maxValue = *(--itsRawValues.end());
   auto maxMinDiff = maxValue - minValue;
-  // Muutama eri tapausta tuo tähän ratkaisuun (min = min ja max = max), joten tehdään se defaulttina heti alkuun
+  // Muutama eri tapausta tuo tähän ratkaisuun (min = min ja max = max), joten tehdään se
+  // defaulttina heti alkuun
   itsMinValue = minValue;
   itsMaxValue = maxValue;
   if (maxMinDiff > 180)
@@ -166,8 +166,8 @@ void NFmiDataModifierModMinMax::DoCalculations2()
 }
 
 void NFmiDataModifierModMinMax::DoSomeTestRoutines()
-{ 
-    // Testi 20, 50, 90, 120  ==>  min 20 ja max 120
+{
+  // Testi 20, 50, 90, 120  ==>  min 20 ja max 120
   auto values = std::vector<float>{20, 50, 90, 120};
   auto results = std::make_pair(20.f, 120.f);
   ::TestModMinMax(values, results);

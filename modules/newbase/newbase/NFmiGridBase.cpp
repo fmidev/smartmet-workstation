@@ -13,7 +13,9 @@
 // ======================================================================
 
 #include "NFmiGridBase.h"
+
 #include <boost/functional/hash.hpp>
+
 #include <algorithm>
 #include <cstring>
 #include <iostream>

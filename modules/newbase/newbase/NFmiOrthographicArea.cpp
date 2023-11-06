@@ -65,6 +65,7 @@
 // ======================================================================
 
 #include "NFmiOrthographicArea.h"
+
 #include <algorithm>
 #include <cmath>
 #include <iomanip>

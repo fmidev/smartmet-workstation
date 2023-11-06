@@ -8,6 +8,7 @@
 #pragma once
 
 #include "NFmiMetTime.h"
+
 #include <string>
 
 //! Undocumented
@@ -93,8 +94,7 @@ class NFmiLogger
       bool updatePath);  // tämä päivittää itsAbsolutLogFilePath:in ja itsCurrentLogFileName:n
   void MakeCurrentLogFileName();
   const std::string MakeBackupFileFilter();
-  bool CheckBackupSystem(
-      );  // tekee kaiken mahdollisen liittyen mahdollisiin backup systeemeihin
+  bool CheckBackupSystem();  // tekee kaiken mahdollisen liittyen mahdollisiin backup systeemeihin
   bool CleanBackupFiles();
   bool LogMessage(const std::string &theMessage, Level theMessageLevel, int theDevices);
   std::string MakeFinalMessage(const std::string &theMessage, Level theMessageLevel);
@@ -112,8 +112,8 @@ class NFmiLogger
   bool DirectoryExist(const std::string &thePath);
   bool TooOldBackupFileTimeStamp(std::time_t theFileTimeStamp);
 
-  void GetLastLoggetTimeFromLogFile(
-      );  // kun logger käynnistyy, katsotaan loki-tiedostosta, milloin on viimeksi tehty lokia
+  void GetLastLoggetTimeFromLogFile();  // kun logger käynnistyy, katsotaan loki-tiedostosta,
+                                        // milloin on viimeksi tehty lokia
   const std::string MakeBackupFileNameTimeStamp();
 
   // Tähän voidaan biteillä tallettaa eritasoiset käytettävät logattavat viestitasot ks. enum Level.

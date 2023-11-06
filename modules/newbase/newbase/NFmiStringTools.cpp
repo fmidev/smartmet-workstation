@@ -12,10 +12,10 @@
 #endif
 
 #include "NFmiStringTools.h"
-#include <iostream>
 
 #include <cctype>
 #include <cstdlib>
+#include <iostream>
 #include <locale>
 
 using namespace std;
@@ -583,7 +583,7 @@ int todec(unsigned char theHex)
   else
     return (theHex - 'A' + 10);
 }
-}
+}  // namespace
 
 namespace NFmiStringTools
 {

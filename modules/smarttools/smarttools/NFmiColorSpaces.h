@@ -53,5 +53,4 @@ RGB_color HSLtoRGB(double h, double s, double l);
 // tummennettua.
 // jos prosentti luku on > 0, vaalenee väri, jos se on < 0, tummenee väri.
 NFmiColor GetBrighterColor(const NFmiColor &theColor, double theBrightningFactor);
-}
-
+}  // namespace NFmiColorSpaces

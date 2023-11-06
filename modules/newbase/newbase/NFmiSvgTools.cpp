@@ -16,6 +16,7 @@
 // ======================================================================
 
 #include "NFmiSvgTools.h"
+
 #include "NFmiArea.h"
 #include "NFmiEquidistArea.h"
 #include "NFmiGeoTools.h"

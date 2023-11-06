@@ -156,9 +156,9 @@ bool NFmiUndoRedoQData::RedoData(NFmiRawData &theRawData, std::string &modificat
   {
     theRawData.Undo(itsUndoTable[*itsCurrentRedoLevelPtr]);
     (*itsCurrentUndoLevelPtr)++;
-    if((*itsCurrentRedoLevelPtr) + 1 <= (*itsMaxRedoLevelPtr))
+    if ((*itsCurrentRedoLevelPtr) + 1 <= (*itsMaxRedoLevelPtr))
     {
-        (*itsCurrentRedoLevelPtr)++;
+      (*itsCurrentRedoLevelPtr)++;
     }
   }
   modificationDescription = itsUndoTextTable[*itsCurrentUndoLevelPtr];

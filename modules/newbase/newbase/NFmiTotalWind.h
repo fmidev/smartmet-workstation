@@ -10,11 +10,12 @@
 #include "NFmiCombinedParam.h"
 
 #include <cmath>
-extern "C" {
+extern "C"
+{
 #if defined(_MSC_VER) && \
     (_MSC_VER <          \
      1600)  // stdint.h -headeria ei ole MSVC++ kääntäjissä ennen VC++ 2010 eli _MSC_VER < 1600
-typedef unsigned long uint32_t;
+  typedef unsigned long uint32_t;
 #else
 #include <stdint.h>
 #endif
@@ -153,7 +154,8 @@ class NFmiTotalWind : public NFmiCombinedParam
   void SetWindGustV7(unsigned long theValue);
 
   //! Undocumented
-  union FmiWindUnion {
+  union FmiWindUnion
+  {
     uint32_t longType;
     float floatType;
 #ifndef UNIX
@@ -258,10 +260,7 @@ inline unsigned long NFmiTotalWind::WindDirection() const { return itsData.longT
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiTotalWind::WindSpeedV6() const
-{
-  return (itsData.longType >> 6) & 0x01FF;
-}
+inline unsigned long NFmiTotalWind::WindSpeedV6() const { return (itsData.longType >> 6) & 0x01FF; }
 
 // ----------------------------------------------------------------------
 /*!
@@ -269,10 +268,7 @@ inline unsigned long NFmiTotalWind::WindSpeedV6() const
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiTotalWind::WindSpeedV7() const
-{
-  return (itsData.longType >> 6) & 0x0FFF;
-}
+inline unsigned long NFmiTotalWind::WindSpeedV7() const { return (itsData.longType >> 6) & 0x0FFF; }
 
 // ----------------------------------------------------------------------
 /*!
@@ -294,10 +290,7 @@ inline unsigned long NFmiTotalWind::WindSpeed() const
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiTotalWind::WindGustV6() const
-{
-  return (itsData.longType >> 15) & 0xF;
-}
+inline unsigned long NFmiTotalWind::WindGustV6() const { return (itsData.longType >> 15) & 0xF; }
 
 // ----------------------------------------------------------------------
 /*!
@@ -305,10 +298,7 @@ inline unsigned long NFmiTotalWind::WindGustV6() const
  */
 // ----------------------------------------------------------------------
 
-inline unsigned long NFmiTotalWind::WindGustV7() const
-{
-  return (itsData.longType >> 18) & 0xFFF;
-}
+inline unsigned long NFmiTotalWind::WindGustV7() const { return (itsData.longType >> 18) & 0xFFF; }
 
 // ----------------------------------------------------------------------
 /*!

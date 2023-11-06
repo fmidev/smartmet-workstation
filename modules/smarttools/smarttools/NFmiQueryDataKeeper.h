@@ -1,12 +1,12 @@
 #pragma once
 
-#include <newbase/NFmiMilliSecondTimer.h>
-#include <newbase/NFmiMetTime.h>
-#include <newbase/NFmiInfoData.h>
 #include <boost/shared_ptr.hpp>
+#include <newbase/NFmiInfoData.h>
+#include <newbase/NFmiMetTime.h>
+#include <newbase/NFmiMilliSecondTimer.h>
 #include <list>
-#include <set>
 #include <mutex>
+#include <set>
 
 class NFmiOwnerInfo;
 class NFmiQueryData;
@@ -29,8 +29,8 @@ class NFmiQueryDataKeeper
   ~NFmiQueryDataKeeper();
 
   boost::shared_ptr<NFmiOwnerInfo> OriginalData();  // Tätä saa käyttää vain
-                                                        // NFmiInfoOrganizer-luokka sisäisesti,
-                                                        // koska tätä ei ole tarkoitus palauttaa,
+                                                    // NFmiInfoOrganizer-luokka sisäisesti,
+                                                    // koska tätä ei ole tarkoitus palauttaa,
   // kun tarvitaan moni-säie turvallinen info-iteraattori kopio, käytetään mieluummin
   // GetIter-metodia.
   boost::shared_ptr<NFmiFastQueryInfo> GetIter(
@@ -48,11 +48,11 @@ class NFmiQueryDataKeeper
   // laskea, voidaanko kyseinen data siivota pois muistista (jos dataa ei ole käytetty tarpeeksi
   // pitkään aikaan)
   int itsIndex;  // malliajo datoissa 0 arvo tarkoittaa viimeisintä ja -1 sitä edellistä jne.
-  std::vector<boost::shared_ptr<NFmiFastQueryInfo> > itsIteratorList;  // originaali datasta
-                                                                         // tehnään tarvittaessa n
-                                                                         // kpl iteraattori
-                                                                         // kopioita, ulkopuoliset
-                                                                         // rutiinit/säikeet
+  std::vector<boost::shared_ptr<NFmiFastQueryInfo>> itsIteratorList;  // originaali datasta
+                                                                      // tehnään tarvittaessa n
+                                                                      // kpl iteraattori
+                                                                      // kopioita, ulkopuoliset
+                                                                      // rutiinit/säikeet
   // käyttävät aina vain iteraattori-kopioita alkuperäisestä, jolloin niitä voidaan käyttää eri
   // säikeissä yht'aikaa.
   // nämä luodaan on demandina, eli jos InfoOrganizerilta pyydetään dataa, ja listassa ei ole
@@ -105,7 +105,8 @@ class NFmiQueryDataSetKeeper
   size_t DataByteCount();
 
   static void SetTraceLogMessageCallback(TraceLogMessageCallback &traceLogMessageCallback);
-  static void SetIsTraceLoggingInUseCallback(IsTraceLoggingInUseCallback &isTraceLoggingInUseCallback);
+  static void SetIsTraceLoggingInUseCallback(
+      IsTraceLoggingInUseCallback &isTraceLoggingInUseCallback);
 
  private:
   void AddDataToSet(boost::shared_ptr<NFmiOwnerInfo> &theData, bool &fDataWasDeletedOut);
@@ -115,11 +116,12 @@ class NFmiQueryDataSetKeeper
   bool ReadDataFileInUse(const std::string &theFileName);
   bool CheckKeepTime(ListType::iterator &it);
   bool OrigTimeDataExist(const NFmiMetTime &theOrigTime);
-  const NFmiProducer* GetLatestDataProducer() const;
+  const NFmiProducer *GetLatestDataProducer() const;
   void FixLocallyReadDataProducer(NFmiQueryData *locallyReadData);
 
-  // Tässä on n kpl viimeisintä malliajoa tallessa (tai esim. havaintojen tapauksessa vain viimeisin data)
-  ListType itsQueryDatas;  
+  // Tässä on n kpl viimeisintä malliajoa tallessa (tai esim. havaintojen tapauksessa vain viimeisin
+  // data)
+  ListType itsQueryDatas;
   // Kuinka monta viimeisintä malliajoa/dataa maksimissään kullekin
   // datalle on, 0 jos kyse esim. havainnoista, joille ei ole kuin viimeisin data.
   int itsMaxLatestDataCount = 0;
@@ -129,14 +131,15 @@ class NFmiQueryDataSetKeeper
   int itsModelRunTimeGap = 0;
   // Erilaiset datat erotellaan fileFilterin avulla (esim.
   // "D:\smartmet\wrk\data\local\*_hirlam_skandinavia_mallipinta.sqd").
-  std::string itsFilePattern;  
+  std::string itsFilePattern;
   // Tähän talletetaan aina viimeisimmän datan origin-time vertailuja helpottamaan
-  NFmiMetTime itsLatestOriginTime; 
-  // Tähän laitetaan 1. datan datattyyppi (pitäisi olla yhtenäinen kaikille setissä oleville datoille)
+  NFmiMetTime itsLatestOriginTime;
+  // Tähän laitetaan 1. datan datattyyppi (pitäisi olla yhtenäinen kaikille setissä oleville
+  // datoille)
   NFmiInfoData::Type itsDataType = NFmiInfoData::kNoDataType;
   // Kuinka kauan pidetään data muistissa, jos sitä ei ole käytetty, yksikkö on minuutteja.
   int itsKeepInMemoryTime = kQueryDataKeepInMemoryTimeInMinutes;
-  // Jotkin datat halutaan pitää tallessa tietyissä tilanteissa, vaikka tehtäisiin datojen reload-operaatio (Case-study tapahtumien yhteydessä).
+  // Jotkin datat halutaan pitää tallessa tietyissä tilanteissa, vaikka tehtäisiin datojen
+  // reload-operaatio (Case-study tapahtumien yhteydessä).
   bool fReloadCaseStudyData = true;
 };
-

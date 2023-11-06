@@ -22,6 +22,7 @@
 #pragma once
 
 #include "NFmiDataModifier.h"
+
 #include <set>
 
 //! Undocumented
@@ -41,6 +42,7 @@ class NFmiDataModifierModMinMax : public NFmiDataModifier
   float Max();
 
   static void DoSomeTestRoutines();
+
  protected:
   void DoCalculations();
   void DoCalculations2();

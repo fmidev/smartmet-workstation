@@ -26,8 +26,8 @@ class NFmiDataModifierList : public NFmiDataModifier
   bool BoolOperation(float);
   virtual float FloatOperation(float theValue);
 
-  using NFmiDataModifier::CalculationResult;
   using NFmiDataModifier::Calculate;
+  using NFmiDataModifier::CalculationResult;
   using NFmiDataModifier::WriteExpressionBody;
   virtual float CalculationResult();
   virtual void Calculate(float NotInUse);

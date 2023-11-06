@@ -497,7 +497,7 @@ void NFmiTempView::DrawSecondaryVerticalHelpLine(double theBottom, double theTop
     itsToolBox->Convert(&l1);
 }
 
-void NFmiTempView::DrawSecondaryData(NFmiSoundingDataOpt1 &theUsedData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo)
+void NFmiTempView::DrawSecondaryData(NFmiSoundingData &theUsedData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo)
 {
     if(theLineInfo.DrawLine() == false)
         return;
@@ -555,7 +555,7 @@ void NFmiTempView::DrawSecondaryData(NFmiSoundingDataOpt1 &theUsedData, FmiParam
     itsGdiPlusGraphics->ResetClip();
 }
 
-void NFmiTempView::DrawSecondaryData(NFmiSoundingDataOpt1 &theUsedData, const NFmiColor &theUsedSoundingColor)
+void NFmiTempView::DrawSecondaryData(NFmiSoundingData &theUsedData, const NFmiColor &theUsedSoundingColor)
 {
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
     if(mtaTempSystem.DrawSecondaryData())
@@ -840,7 +840,7 @@ static std::string GetNameText(const NFmiLocation &location, bool movingSounding
 
 	return str;
 }
-static std::string GetLatText(NFmiSoundingDataOpt1 &theData)
+static std::string GetLatText(NFmiSoundingData &theData)
 {
 	std::string str("SLAT=");
 	if(theData.Location().GetLatitude() != kFloatMissing)
@@ -849,7 +849,7 @@ static std::string GetLatText(NFmiSoundingDataOpt1 &theData)
 		str += " -";
 	return str;
 }
-static std::string GetLonText(NFmiSoundingDataOpt1 &theData)
+static std::string GetLonText(NFmiSoundingData &theData)
 {
 	std::string str("SLON=");
 	if(theData.Location().GetLongitude() != kFloatMissing)
@@ -859,7 +859,7 @@ static std::string GetLonText(NFmiSoundingDataOpt1 &theData)
 	return str;
 }
 
-static std::string GetElevationText(NFmiSoundingDataOpt1 &theData, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static std::string GetElevationText(NFmiSoundingData &theData, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	std::string str("SELEV=");
 	if(theInfo && theInfo->Param(kFmiTopoGraf))
@@ -932,14 +932,14 @@ static NFmiTempLabelInfo& GetAirParcelLabelInfo(NFmiMTATempSystem &theMTATempSys
 	throw std::runtime_error("GetAirParcelLabelInfo - wrong calculation type given.");
 }
 
-void NFmiTempView::DrawAllLiftedAirParcels(NFmiSoundingDataOpt1 &theData)
+void NFmiTempView::DrawAllLiftedAirParcels(NFmiSoundingData &theData)
 {
 	DrawLiftedAirParcel(theData, kLCLCalcSurface);
 	DrawLiftedAirParcel(theData, kLCLCalc500m2);
 	DrawLiftedAirParcel(theData, kLCLCalcMostUnstable);
 }
 
-void NFmiTempView::DrawLiftedAirParcel(NFmiSoundingDataOpt1 &theData, FmiLCLCalcType theLCLCalcType)
+void NFmiTempView::DrawLiftedAirParcel(NFmiSoundingData &theData, FmiLCLCalcType theLCLCalcType)
 {
 	// 1. calc T,Td,P values from 500 m layer avg or surface values
 	double T=kFloatMissing,
@@ -1018,7 +1018,7 @@ NFmiPoint NFmiTempView::CalcStabilityIndexStartPoint(void)
 	return p;
 }
 
-void NFmiTempView::DrawTextualSoundingData(NFmiSoundingDataOpt1& usedData)
+void NFmiTempView::DrawTextualSoundingData(NFmiSoundingData& usedData)
 {
 	auto doContinue = DoTextualSideViewSetup(
 		itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().ShowTextualSoundingDataSideView(),
@@ -1063,7 +1063,7 @@ bool NFmiTempView::DoTextualSideViewSetup(bool showSideView, const NFmiRect &sid
 }
 
 
-void NFmiTempView::DrawStabilityIndexData(NFmiSoundingDataOpt1& usedData)
+void NFmiTempView::DrawStabilityIndexData(NFmiSoundingData& usedData)
 {
 	auto doContinue = DoTextualSideViewSetup(
 		itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().ShowStabilityIndexSideView(),
@@ -1172,7 +1172,7 @@ std::string NFmiTempView::MakeTextualSoundingLevelString(int levelIndex, std::de
 	return str;
 }
 
-static std::string GetStationsShortName(NFmiSoundingDataOpt1 &theData)
+static std::string GetStationsShortName(NFmiSoundingData &theData)
 {
 	const auto& location = theData.Location();
     if(location.GetIdent() == 0)
@@ -1181,7 +1181,7 @@ static std::string GetStationsShortName(NFmiSoundingDataOpt1 &theData)
         return std::string(location.GetName());
 }
 
-void NFmiTempView::DrawSoundingInTextFormat(NFmiSoundingDataOpt1 &theData)
+void NFmiTempView::DrawSoundingInTextFormat(NFmiSoundingData &theData)
 {
 	// Muista: jos tämä piirretään muuten kuin kaiken muun jälkeen Draw-metodissa,
 	// ei clippausta saa muuttaa kesken kaiken.
@@ -1277,7 +1277,7 @@ double NFmiTempView::CalcSideViewTextRowCount(const NFmiRect& viewRect, const NF
 	return rowCount;
 }
 
-std::vector<std::string> NFmiTempView::MakeSoundingDataLevelStrings(NFmiSoundingDataOpt1& theData)
+std::vector<std::string> NFmiTempView::MakeSoundingDataLevelStrings(NFmiSoundingData& theData)
 {
 	std::deque<float>& pVec = theData.GetParamData(kFmiPressure);
 	std::deque<float>& tVec = theData.GetParamData(kFmiTemperature);
@@ -1558,7 +1558,7 @@ void NFmiTempView::DrawHeightScale(void)
 // piirretään annetulla paine välillä. Arvot piirretään annetun
 // mixingratio viivan oikealle puolelle ja paineen avulla lasketaan korkeus
 // mihin 'label' laitetaan.
-void NFmiTempView::DrawCondensationTrailRHValues(NFmiSoundingDataOpt1 &theData, double startP, double endP, double theMixRatio)
+void NFmiTempView::DrawCondensationTrailRHValues(NFmiSoundingData &theData, double startP, double endP, double theMixRatio)
 {
 	std::deque<float>&tV = theData.GetParamData(kFmiTemperature);
 	std::deque<float>&tdV = theData.GetParamData(kFmiDewPoint);
@@ -1885,40 +1885,75 @@ static bool IsSurfaceDataCombiningAllowed(CtrlViewDocumentInterface* ctrlViewDoc
 	return false;
 }
 
-// Haetaan painepinta datalle pinta-dataa, että luotauksia voidaan leikata maanpinnalle.
-static boost::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(CtrlViewDocumentInterface *ctrlViewDocumentInterface, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiProducer &theProducer, const std::vector<NFmiInfoData::Type> &theDataTypes)
+static boost::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(const NFmiProducer& theProducer, NFmiInfoOrganizer& theInfoOrganizer)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> groundDataInfo;
-    if(ctrlViewDocumentInterface && theInfo)
-    {
-		auto &infoOrganizer = *ctrlViewDocumentInterface->InfoOrganizer();
-        theInfo->FirstLevel();
-        if(theInfo->Level()->LevelType() == kFmiPressureLevel || theInfo->Level()->LevelType() == kFmiHybridLevel)
-        { 
+	// Jos tuottajalta löytyy pintadataa, missä parametri kFmiPressureAtStationLevel, palautetaan se.
+	auto infoVec = theInfoOrganizer.GetInfos(theProducer.GetIdent());
+	if(infoVec.size())
+	{
+		for(size_t i = 0; i < infoVec.size(); i++)
+		{
+			boost::shared_ptr<NFmiFastQueryInfo> tmpInfo = infoVec[i];
+			if(tmpInfo && tmpInfo->Param(kFmiPressureAtStationLevel))
+			{
+				groundDataInfo = tmpInfo; // löytyi data ja siitä tarvittava parametri, otetaan se käyttöön
+				break;
+			}
+		}
+	}
+	return groundDataInfo;
+}
+
+
+// Haetaan painepinta datalle pinta-dataa, että luotauksia voidaan leikata maanpinnalle.
+static boost::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(CtrlViewDocumentInterface* ctrlViewDocumentInterface, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiProducer& theProducer)
+{
+	if(ctrlViewDocumentInterface && theInfo)
+	{
+		auto& infoOrganizer = *ctrlViewDocumentInterface->InfoOrganizer();
+		theInfo->FirstLevel();
+		if(theInfo->Level()->LevelType() == kFmiPressureLevel || theInfo->Level()->LevelType() == kFmiHybridLevel)
+		{
 			if(::IsSurfaceDataCombiningAllowed(ctrlViewDocumentInterface, theInfo))
 			{
-				// Käydään mahdolliset datatyypit läpi
-				for(auto dataType : theDataTypes)
+				// jos kyse on painepinta datasta ja löytyy vastaavan datan pinta data, josta löytyy paine aseman korkeudelta, fixataan luotaus dataa pintadatan avulla
+				auto possibleGroundDataInfo = ::GetPossibleGroundData(theProducer, infoOrganizer);
+				if(possibleGroundDataInfo)
 				{
-					// jos kyse on painepinta datasta ja löytyy vastaavan datan pinta data, josta löytyy paine aseman korkeudelta, fixataan luotaus dataa pintadatan avulla
-					auto infoVec = infoOrganizer.GetInfos(dataType, true, theProducer.GetIdent());
-					if(infoVec.size())
-					{
-						for(size_t i = 0; i < infoVec.size(); i++)
-						{
-							boost::shared_ptr<NFmiFastQueryInfo> tmpInfo = infoVec[i];
-							if(tmpInfo && tmpInfo->Param(kFmiPressureAtStationLevel))
-							{
-								groundDataInfo = tmpInfo; // löytyi data ja siitä tarvittava parametri, otetaan se käyttöön
-								break;
-							}
-						}
-					}
+					return possibleGroundDataInfo;
 				}
 			}
-        }
-    }
-	return groundDataInfo;
+		}
+	}
+	return nullptr;
+}
+
+NFmiSoundingData::GroundLevelValue NFmiTempView::GetPossibleGroundLevelValue(boost::shared_ptr<NFmiFastQueryInfo>& soundingInfo, const NFmiPoint& latlon, const NFmiMetTime& atime)
+{
+	NFmiSoundingData::GroundLevelValue groundLevelValue;
+	if(soundingInfo)
+	{
+		// Laitetaan maanpinnalla leikattaviin datoihin vain painepintadatat.
+		// En tiedä pitäisikö height-level-datat myös laittaa tähän (ei ole testidataa, niin turha vielä tehdä).
+		if(soundingInfo->LevelType() == kFmiPressureLevel)
+		{
+			auto& infoOrganizer = *itsCtrlViewDocumentInterface->InfoOrganizer();
+			auto possibleGroundDataInfo = ::GetPossibleGroundData(*soundingInfo->Producer(), infoOrganizer);
+			if(possibleGroundDataInfo)
+			{
+				// Tällä datalla on par 472 eli stationPressure
+				groundLevelValue.itsStationPressureInMilliBars = possibleGroundDataInfo->InterpolatedValue(latlon, atime);
+			}
+			auto topoData = infoOrganizer.FindInfo(NFmiInfoData::kStationary);
+			if(topoData && topoData->Param(kFmiTopoGraf))
+			{
+				// Otetaan topo datasta korkeus metreissä ja muunnetaan se standardi-ilmakehän paineeksi
+				groundLevelValue.itsTopographyHeightInMillibars = static_cast<float>(CalcPressureAtHeight(topoData->InterpolatedValue(latlon) / 1000.f));
+			}
+		}
+	}
+	return groundLevelValue;
 }
 
 void NFmiTempView::DrawSoundingsInMTAMode(void)
@@ -1994,8 +2029,6 @@ bool NFmiTempView::IsInScanMode() const
 	return (itsOperationalMode == SoundingViewOperationMode::FitScalesScanMode);
 }
 
-const std::vector<NFmiInfoData::Type> g_CombineSurfaceDataTypes{ NFmiInfoData::kViewable , NFmiInfoData::kAnalyzeData };
-
 void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &theProducer, const NFmiMTATempSystem::TempInfo &theTempInfo, int theProducerIndex, double theBrightningFactor, int theModelRunIndex)
 {
     auto usedTempInfo(theTempInfo);
@@ -2037,7 +2070,7 @@ TotalSoundingData NFmiTempView::GetTotalsoundingData(boost::shared_ptr<NFmiFastQ
 {
 	auto usedLocationWithName = ::GetSoundingLocation(info, usedTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
 	usedTempInfo.Latlon(usedLocationWithName.GetLocation());
-	auto groundDataInfo = ::GetPossibleGroundData(itsCtrlViewDocumentInterface, info, theProducer, g_CombineSurfaceDataTypes);
+	auto groundDataInfo = ::GetPossibleGroundData(itsCtrlViewDocumentInterface, info, theProducer);
 	ResetTextualScrollingIfSoundingDataChanged(theProducer, usedTempInfo, info, theProducerIndex);
 	NFmiMTATempSystem& mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
 	TotalSoundingData sounding(mtaTempSystem);
@@ -2050,7 +2083,7 @@ void NFmiTempView::DrawMainDataLegendInEmptyCase(bool mainCurve, const NFmiMTATe
 	if(mainCurve)
 	{
 		// Vaikka dataa ei löytynyt, piirretään kuitenkin luotauksen legenda tiedot näkyviin
-		NFmiSoundingDataOpt1 emptySoundingData;
+		NFmiSoundingData emptySoundingData;
 		emptySoundingData.Location(NFmiLocation(usedTempInfo.Latlon()));
 		emptySoundingData.Time(usedTempInfo.Time());
 		// Haetaan luotausdata ilman aika hakuehtoa, jottaa saataisiin mahdollinen originTime datasta
@@ -2089,13 +2122,14 @@ bool NFmiTempView::FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInf
 	}
 	else
 	{
+		auto groundLevelValue = GetPossibleGroundLevelValue(theInfo, theLocation.GetLocation(), theTime);
 		if(DoIntegrationSounding(theInfo, theSoundingData))
 		{
-			status = FillIntegrationSounding(theInfo, theSoundingData, theTime, theLocation, theGroundDataInfo);
+			status = FillIntegrationSounding(theInfo, theSoundingData, theTime, theLocation, theGroundDataInfo, groundLevelValue);
 		}
 		else
 		{
-			status = NFmiSoundingIndexCalculator::FillSoundingDataOpt1(theInfo, theSoundingData.itsSoundingData, theTime, theLocation, theGroundDataInfo);
+			status = NFmiSoundingIndexCalculator::FillSoundingData(theInfo, theSoundingData.itsSoundingData, theTime, theLocation, theGroundDataInfo, groundLevelValue);
 		}
 	}
 
@@ -2112,7 +2146,7 @@ bool NFmiTempView::DoIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& t
 	return isModelData && (doAreaIntegration || doTimeIntegration);
 }
 
-bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo)
+bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo, const NFmiSoundingData::GroundLevelValue& theGroundLevelValue)
 {
 	auto rangeInMeters = theSoundingData.itsIntegrationRangeInKm * 1000.;
 	bool singleLocation = (rangeInMeters == 0);
@@ -2138,7 +2172,7 @@ bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>&
 		}
 		if(singleLocation || !locationIndexes.empty())
 		{
-			return FillIntegrationSounding(theInfo, theSoundingData, startTime, theLocation, theGroundDataInfo, timeIndex1, timeIndex2, locationIndexes);
+			return FillIntegrationSounding(theInfo, theSoundingData, startTime, theLocation, theGroundDataInfo, timeIndex1, timeIndex2, locationIndexes, theGroundLevelValue);
 		}
 	}
 
@@ -2147,7 +2181,7 @@ bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>&
 
 std::vector<FmiParameterName> gSoundingParametersWithNormalAvg{ kFmiTemperature,kFmiDewPoint,kFmiHumidity,kFmiPressure,kFmiGeopHeight,kFmiWindUMS,kFmiWindVMS,kFmiTotalCloudCover };
 
-static bool CalcAvgSoundingData(TotalSoundingData& theSoundingDataOut, std::vector<NFmiSoundingDataOpt1>& soundingDataList, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo)
+static bool CalcAvgSoundingData(TotalSoundingData& theSoundingDataOut, std::vector<NFmiSoundingData>& soundingDataList, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo)
 {
 	if(!soundingDataList.empty())
 	{
@@ -2194,21 +2228,21 @@ static bool CalcAvgSoundingData(TotalSoundingData& theSoundingDataOut, std::vect
 	return false;
 }
 
-bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo, unsigned long timeIndex1, unsigned long timeIndex2, const std::vector<unsigned long>& locationIndexes)
+bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo, unsigned long timeIndex1, unsigned long timeIndex2, const std::vector<unsigned long>& locationIndexes, const NFmiSoundingData::GroundLevelValue& theGroundLevelValue)
 {
-	std::vector<NFmiSoundingDataOpt1> soundingDataList;
+	std::vector<NFmiSoundingData> soundingDataList;
 	bool singleLocation = locationIndexes.empty();
 	bool singleTime = (timeIndex1 == timeIndex2);
 	theSoundingData.itsIntegrationPointsCount = singleLocation ? 1 : int(locationIndexes.size());
 	theSoundingData.itsIntegrationTimesCount = singleTime ? 1 : int(timeIndex2 - timeIndex1 + 1);
-	NFmiSoundingDataOpt1 data;
+	NFmiSoundingData data;
 	for(auto timeIndex = timeIndex1; timeIndex <= timeIndex2; timeIndex++)
 	{
 		theInfo->TimeIndex(timeIndex);
 		auto currentTime = singleTime ? theTime : theInfo->Time();
 		if(singleLocation)
 		{
-			if(NFmiSoundingIndexCalculator::FillSoundingDataOpt1(theInfo, data, currentTime, theLocation, theGroundDataInfo))
+			if(NFmiSoundingIndexCalculator::FillSoundingData(theInfo, data, currentTime, theLocation, theGroundDataInfo, theGroundLevelValue))
 			{
 				soundingDataList.push_back(data);
 			}
@@ -2219,7 +2253,7 @@ bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>&
 			{
 				theInfo->LocationIndex(locationIndex);
 				NFmiLocation usedLocation(theInfo->LatLon());
-				if(NFmiSoundingIndexCalculator::FillSoundingDataOpt1(theInfo, data, currentTime, usedLocation, theGroundDataInfo))
+				if(NFmiSoundingIndexCalculator::FillSoundingData(theInfo, data, currentTime, usedLocation, theGroundDataInfo, theGroundLevelValue))
 				{
 					soundingDataList.push_back(data);
 				}
@@ -2353,7 +2387,7 @@ std::vector<unsigned long> NFmiTempView::CalcAreaIntegrationLocationIndexes(boos
 	return locationIndexes;
 }
 
-void NFmiTempView::FillInPossibleMissingPressureData(NFmiSoundingDataOpt1& theSoundingData, const NFmiProducer &dataProducer, const NFmiMetTime& theTime, const NFmiLocation& theLocation)
+void NFmiTempView::FillInPossibleMissingPressureData(NFmiSoundingData& theSoundingData, const NFmiProducer &dataProducer, const NFmiMetTime& theTime, const NFmiLocation& theLocation)
 {
 	if(theSoundingData.HeightDataAvailable() && !theSoundingData.PressureDataAvailable())
 	{
@@ -2564,7 +2598,7 @@ bool NFmiTempView::ModifySoundingWinds(const NFmiPoint &thePlace, unsigned long 
 	return false;
 }
 
-void NFmiTempView::DrawHodograf(NFmiSoundingDataOpt1 & theData, int theProducerIndex)
+void NFmiTempView::DrawHodograf(NFmiSoundingData & theData, int theProducerIndex)
 {
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
     if(!mtaTempSystem.ShowHodograf())
@@ -2628,7 +2662,7 @@ public:
 	double h2 = kFloatMissing;
 };
 
-static UpDownWindCalculationBaseData CalcUpDownWindBaseData(NFmiSoundingDataOpt1& theData)
+static UpDownWindCalculationBaseData CalcUpDownWindBaseData(NFmiSoundingData& theData)
 {
 	UpDownWindCalculationBaseData baseData;
 	// Yritetään laskea EL:lle ei-puuttuvaa arvoa eri laskutyypeillä tietyssä priorisointijärjestyksessä
@@ -2658,7 +2692,7 @@ static UpDownWindCalculationBaseData CalcUpDownWindBaseData(NFmiSoundingDataOpt1
 	return baseData;
 }
 
-void NFmiTempView::DrawHodografUpAndDownWinds(NFmiSoundingDataOpt1 & theData, int theProducerIndex)
+void NFmiTempView::DrawHodografUpAndDownWinds(NFmiSoundingData & theData, int theProducerIndex)
 {
 	auto upDownWindBaseData = ::CalcUpDownWindBaseData(theData);
 	bool elPressureMissing = (upDownWindBaseData.elPressure == kFloatMissing);
@@ -2753,7 +2787,7 @@ void NFmiTempView::DrawHodografUpAndDownWinds(NFmiSoundingDataOpt1 & theData, in
 	}
 }
 
-void NFmiTempView::DrawHodografWindVectorMarkers(NFmiSoundingDataOpt1 & theData, int theProducerIndex)
+void NFmiTempView::DrawHodografWindVectorMarkers(NFmiSoundingData & theData, int theProducerIndex)
 {
 	NFmiColor markFillColor(0,0,0);
 	NFmiColor markFrameColor(0,0,0);
@@ -2873,7 +2907,7 @@ void NFmiTempView::DrawHodografBase(int theProducerIndex)
 	}
 }
 
-void NFmiTempView::DrawHodografCurve(NFmiSoundingDataOpt1 &theData, int theProducerIndex)
+void NFmiTempView::DrawHodografCurve(NFmiSoundingData &theData, int theProducerIndex)
 {
 	// piirrä itse hodografi käyrä
 	NFmiColor soundingColor(itsCtrlViewDocumentInterface->GetMTATempSystem().SoundingColor(theProducerIndex));
@@ -2973,7 +3007,7 @@ void NFmiTempView::DrawHodografTextWithMarker(const std::string &theText, float 
 	}
 }
 
-void NFmiTempView::DrawHodografHeightMarkers(NFmiSoundingDataOpt1 &theData, int theProducerIndex)
+void NFmiTempView::DrawHodografHeightMarkers(NFmiSoundingData &theData, int theProducerIndex)
 {
 	// piirretään sitten halutut korkeudet hodografi käyrään
 	// piirretään merkkipiste käyrään aina tiettyihin korkeuksiin (interpoloituna)
@@ -3145,7 +3179,7 @@ static void AddStringLabelData(const PointF &thePoint, const PointF &theOffsetPo
 }
 
 // Piirretään luotauksen Tropopaussi merkki ja maksimi tuuli
-void NFmiTempView::DrawTrMw(NFmiSoundingDataOpt1 &theData, int theProducerIndex)
+void NFmiTempView::DrawTrMw(NFmiSoundingData &theData, int theProducerIndex)
 {
 	std::vector<LineLabelDrawData> lineLabels;
     NFmiTempLabelInfo labelInfo(NFmiPoint(4, 0), kLeft, 12, true, true);
@@ -3180,7 +3214,7 @@ void NFmiTempView::DrawTrMw(NFmiSoundingDataOpt1 &theData, int theProducerIndex)
 	::DrawGdiplusStringVector(*itsGdiPlusGraphics, lineLabels, labelInfo, CtrlView::Relative2GdiplusRect(itsToolBox, itsTempViewDataRects.getSoundingCurveDataRect()), itsCtrlViewDocumentInterface->GetMTATempSystem().SoundingColor(theProducerIndex));
 }
 
-void NFmiTempView::DrawLCL(NFmiSoundingDataOpt1 &theData, int theProducerIndex, FmiLCLCalcType theLCLCalcType)
+void NFmiTempView::DrawLCL(NFmiSoundingData &theData, int theProducerIndex, FmiLCLCalcType theLCLCalcType)
 {
 	// piirretään vain valitun tuottajan luotaukseen
 	if(IsSelectedProducerIndex(theProducerIndex))
@@ -3221,7 +3255,7 @@ void NFmiTempView::DrawLCL(NFmiSoundingDataOpt1 &theData, int theProducerIndex, 
 }
 
 // piirretään paine asteikon viereen luotauksesta korkeus arvoja
-void NFmiTempView::DrawHeightValues(NFmiSoundingDataOpt1 &theData, int theProducerIndex)
+void NFmiTempView::DrawHeightValues(NFmiSoundingData &theData, int theProducerIndex)
 {
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
     if(mtaTempSystem.HeightValueLabelInfo().DrawLabelText() == false)
@@ -3289,7 +3323,7 @@ static std::string MakeLegendStringCorrectLength(std::string legendLineStr)
 	return legendLineStr;
 }
 
-static std::string MakeLegendLocationNameStr(NFmiSoundingDataOpt1& theData, int theProducerIndex, bool isNewData, bool allowHighlights)
+static std::string MakeLegendLocationNameStr(NFmiSoundingData& theData, int theProducerIndex, bool isNewData, bool allowHighlights)
 {
 	std::string locationNameStr = std::to_string(theProducerIndex + 1);
 	locationNameStr += ":";
@@ -3439,7 +3473,7 @@ void NFmiTempView::DrawLegendLineDataSeparator(const NFmiPoint &textPoint)
 
 static NFmiRect gMissingRect(0,0,0,0);
 
-void NFmiTempView::DrawWind(NFmiSoundingDataOpt1 &theData, int theProducerIndex, bool onSouthernHemiSphere)
+void NFmiTempView::DrawWind(NFmiSoundingData &theData, int theProducerIndex, bool onSouthernHemiSphere)
 {
 	itsFirstSoundinWindBarbXPos = kFloatMissing;
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
@@ -3517,7 +3551,7 @@ void NFmiTempView::DrawWind(NFmiSoundingDataOpt1 &theData, int theProducerIndex,
 
 // piirtää sekä lämppäri että kastepiste viivat
 // HUOM! tänne tullessa theLineInfo on jo skaalattu printtauksen suhteen jos tarpeen
-void NFmiTempView::DrawTemperatures(NFmiSoundingDataOpt1 &theData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo)
+void NFmiTempView::DrawTemperatures(NFmiSoundingData &theData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo)
 {
 	if(theLineInfo.DrawLine() == false)
 		return ;
@@ -3674,7 +3708,7 @@ bool NFmiTempView::RightButtonUp(const NFmiPoint &thePlace, unsigned long theKey
 	return false;
 }
 
-bool NFmiTempView::ModifySounding(NFmiSoundingDataOpt1 &theSoundingData, const NFmiPoint &thePlace, unsigned long theKey, FmiParameterName theParam, int theDistToleranceInPixels)
+bool NFmiTempView::ModifySounding(NFmiSoundingData &theSoundingData, const NFmiPoint &thePlace, unsigned long theKey, FmiParameterName theParam, int theDistToleranceInPixels)
 {
 	if(!itsCtrlViewDocumentInterface->GetMTATempSystem().ShowHodograf()) // ei muokkausta jos hodografi on näkyvissä
 	{
@@ -3721,7 +3755,7 @@ bool NFmiTempView::ModifySounding(NFmiSoundingDataOpt1 &theSoundingData, const N
 
 // annetusta paineesta alaspäin laskee kuiva-adiapaattisesti lasketun lämpötilan luotaukselle ja asettaa sen.
 // Jos kyseessä kastepiste, muuttaa kastepisteen mixing ration mukaisesta annetusta paineesta alas.
-bool NFmiTempView::QuickModifySounding(NFmiSoundingDataOpt1 &theSoundingData, FmiParameterName theParam, double P, double T, double Td)
+bool NFmiTempView::QuickModifySounding(NFmiSoundingData &theSoundingData, FmiParameterName theParam, double P, double T, double Td)
 {
 	if(theParam == kFmiTemperature)
 		return theSoundingData.ModifyT2DryAdiapaticBelowGivenP(P, T);
@@ -3966,7 +4000,7 @@ static float GetFinalTooltipValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
         return theInfo->PressureLevelValue(P, theLatlon, usedTime);
 }
 
-static std::string GetTooltipValueStr(const std::string &theParStr, NFmiSoundingDataOpt1 &soundingData, FmiParameterName theParId, int theMaxDecimalCount, float P, float heigthInMetersInStaAth)
+static std::string GetTooltipValueStr(const std::string &theParStr, NFmiSoundingData &soundingData, FmiParameterName theParId, int theMaxDecimalCount, float P, float heigthInMetersInStaAth)
 {
 	std::string str = theParStr;
 	float value = soundingData.GetValueAtPressure(theParId, P);
@@ -4230,7 +4264,7 @@ static void ReportFailedSoundingFromServerRequest(const std::string &requestUriS
     CatLog::logMessage(logMessage, CatLog::Severity::Warning, CatLog::Category::NetRequest);
 }
 
-bool NFmiTempView::FillSoundingDataFromServer(const NFmiMTATempSystem::SoundingProducer &theProducer, NFmiSoundingDataOpt1 &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation)
+bool NFmiTempView::FillSoundingDataFromServer(const NFmiMTATempSystem::SoundingProducer &theProducer, NFmiSoundingData &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation)
 {
     auto requestUriStr = itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().makeFinalServerRequestUrl(theProducer.GetIdent(), theTime, theLocation.GetLocation());
     ::TraceLogSoundingFromServerRequest(requestUriStr, theProducer, theTime, theLocation);

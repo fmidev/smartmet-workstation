@@ -14,6 +14,7 @@
 // ======================================================================
 
 #include "NFmiCombinedParam.h"
+
 #include "NFmiDataModifierCombi.h"
 #include "NFmiParamBag.h"
 #include "NFmiParamDataModifierList.h"
@@ -142,7 +143,8 @@ bool NFmiCombinedParam::TransformFromFloatValue(float theValue)
 
 float NFmiCombinedParam::TransformedFloatValue()
 {
-  union converter {
+  union converter
+  {
     unsigned long ulongvalue;
     float floatvalue;
   };
@@ -170,7 +172,8 @@ unsigned long NFmiCombinedParam::ConvertFloatToLong(float theValue)
   //  if(theValue == kFloatMissing)
   if (theValue == 32700.0F) return kTCombinedWeatherMissing;
 
-  union converter {
+  union converter
+  {
     unsigned long ulongvalue;
     float floatvalue;
   };

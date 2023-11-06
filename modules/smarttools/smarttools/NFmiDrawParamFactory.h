@@ -44,6 +44,7 @@ class NFmiDrawParamFactory
   bool Init();
   const std::string& LoadDirectory() const { return itsLoadDirectory; };
   void LoadDirectory(const std::string& newValue) { itsLoadDirectory = newValue; };
+
  private:
   boost::shared_ptr<NFmiDrawParam> CreateDrawParam(boost::shared_ptr<NFmiDrawParam>& theDrawParam,
                                                    bool fDoCrossSection);
@@ -54,4 +55,3 @@ class NFmiDrawParamFactory
                                         // mutta SmarToolFiltterin ei tarvitse.
   bool fOnePressureLevelDrawParam;
 };
-

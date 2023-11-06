@@ -708,12 +708,52 @@ void InitLogFileCleaning()
     FileCleanerSystem().Add(info);
 }
 
+/*
+void LogWallclockVsStartTime_Debug(const NFmiMetTime& usedWallClockTime, const NFmiMetTime& usedCurrentTime, const NFmiMetTime& startTime)
+{
+	std::string logMessage = usedWallClockTime.ToStr("Wallclock: YYYY.MM.DD HH:mm ==> ", kEnglish);
+	logMessage += usedCurrentTime.ToStr("CurrentTime: YYYY.MM.DD HH:mm ==> ", kEnglish);
+	logMessage += startTime.ToStr("StartTime: YYYY.MM.DD HH:mm", kEnglish);
+	LogMessage(logMessage, CatLog::Severity::Debug, CatLog::Category::Operational, true);
+}
+
+NFmiMetTime CalcStartTime_Debug(const NFmiMetEditorModeDataWCTR::TimeSectionData& theStartSection, const NFmiMetTime& theCurrentTime)
+{
+	NFmiMetTime startTime(theCurrentTime);
+	startTime.SetTimeStep(theStartSection.itsStartTimeResolutionInMinutes);
+	if(startTime > theCurrentTime)
+		startTime.PreviousMetTime();
+	if(theStartSection.itsStartTimeResolutionInMinutes <= 60)
+	{
+		startTime.PreviousMetTime(); // laitetaan koko jutun (1. osion 1h aikaresoluutio-alue) aloitusaika aina niin, että se on yhden tunnin ennen currenttia aikaa
+	}
+	return startTime;
+}
+
+void LogStartTimesForDifferentMinutes_Debug(const NFmiMetEditorModeDataWCTR::TimeSectionData& theStartSection)
+{
+	NFmiMetTime usedWallClockTime;
+	usedWallClockTime.SetTimeStep(1);
+	for(; ; usedWallClockTime.NextMetTime())
+	{
+		NFmiMetTime usedCurrentTime(usedWallClockTime, 60);
+		NFmiMetTime startTime(CalcStartTime_Debug(theStartSection, usedCurrentTime));
+		LogWallclockVsStartTime_Debug(usedWallClockTime, usedCurrentTime, startTime);
+		if(usedWallClockTime.GetMin() == 59)
+			break;
+	}
+}
+*/
+
 void InitMetEditorModeDataWCTR()
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	NFmiMetEditorModeDataWCTR* metEdModeData = EditorModeDataWCTR();
-    if(metEdModeData && metEdModeData->EditorMode() != NFmiMetEditorModeDataWCTR::kNormalAutoLoad)
-        metEdModeData->UseNormalModeForAWhile(true);
+	if(metEdModeData && metEdModeData->EditorMode() != NFmiMetEditorModeDataWCTR::kNormalAutoLoad)
+	{
+		metEdModeData->UseNormalModeForAWhile(true);
+//		LogStartTimesForDifferentMinutes_Debug(metEdModeData->TimeSections().at(1));
+	}
 }
 
 void InitDataLoadingInfo()
@@ -3531,49 +3571,73 @@ void AddSwapViewRowsToToMenuItem(unsigned int theDescTopIndex, NFmiMenuItem* the
     theMenuItem->AddSubMenu(rowNumbersMenuList);
 }
 
-void AddChangeAllProducersToParamSelectionPopup(unsigned int theDescTopIndex, NFmiMenuItemList* theMenuList, FmiMenuCommandType theMenuCommandType, bool crossSectionPopup)
+void AddChangeAllProducersOperativeModelPart(unsigned int theDescTopIndex, NFmiMenuItemList* changeProducersMenuList, FmiMenuCommandType theMenuCommandType, bool crossSectionPopup)
 {
-	CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, __FUNCTION__);
-	std::vector<NFmiProducerInfo>& prodVec = ProducerSystem().Producers();
-	if(prodVec.size() > 0)
+	// Laitetaan alkuun editoitu data ja virallinen data tuottajat listaan, jos ei kyse poikkileikkausnäytöstä
+	if(crossSectionPopup == false)
 	{
-		NFmiMenuItemList* changeProducersMenuList = new NFmiMenuItemList;
-		// Laitetaan alkuun editoitu data ja virallinen data tuottajat listaan, jos ei kyse poikkileikkausnäytöstä
-		if(crossSectionPopup == false)
+		boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo();
+		if(editedInfo)
 		{
-			boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo();
-			if(editedInfo)
-			{
-				editedInfo->FirstParam();
-				changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, "Edited data", editedInfo->Param(), theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable));
-			}
-			boost::shared_ptr<NFmiFastQueryInfo> operativeInfo = itsSmartInfoOrganizer->FindInfo(NFmiInfoData::kKepaData);
-			if(operativeInfo) // operatiivinen data
-			{
-				operativeInfo->FirstParam();
-				changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, "Operative data", operativeInfo->Param(), theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable));
-			}
-			boost::shared_ptr<NFmiFastQueryInfo> helpDataInfo = itsSmartInfoOrganizer->FindInfo(NFmiInfoData::kEditingHelpData);
-			if(helpDataInfo) // editointi apu data
-			{
-				helpDataInfo->FirstParam();
-				changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, "Help edit data", helpDataInfo->Param(), theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable));
-			}
+			editedInfo->FirstParam();
+			changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, "Edited data", editedInfo->Param(), theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable));
 		}
-
-		for(size_t i = 0; i < prodVec.size(); i++)
+		boost::shared_ptr<NFmiFastQueryInfo> operativeInfo = itsSmartInfoOrganizer->FindInfo(NFmiInfoData::kKepaData);
+		if(operativeInfo) // operatiivinen data
 		{
-			auto producer = prodVec[i].GetProducer();
+			operativeInfo->FirstParam();
+			changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, "Operative data", operativeInfo->Param(), theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable));
+		}
+		boost::shared_ptr<NFmiFastQueryInfo> helpDataInfo = itsSmartInfoOrganizer->FindInfo(NFmiInfoData::kEditingHelpData);
+		if(helpDataInfo) // editointi apu data
+		{
+			helpDataInfo->FirstParam();
+			changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, "Help edit data", helpDataInfo->Param(), theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable));
+		}
+	}
+}
+
+void AddChangeAllProducersFromVectorPart(unsigned int theDescTopIndex, std::vector<NFmiProducerInfo>& producerInfos, NFmiMenuItemList* changeProducersMenuList, FmiMenuCommandType theMenuCommandType)
+{
+		for(auto &producerInfo : producerInfos)
+		{
+			auto producer = producerInfo.GetProducer();
 			auto infoVector = itsSmartInfoOrganizer->GetInfos(producer.GetIdent());
 			if(!infoVector.empty())
 			{
 				// Jos löytyy jotain dataa, laitetaan feikki parametri ja tuottaja listasta
 				NFmiDataIdent dataIdent(NFmiParam(), producer);
-				changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, prodVec[i].Name(), dataIdent, theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable));
+				changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, producerInfo.Name(), dataIdent, theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable));
 			}
 		}
-		auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, "Change all producers", NFmiDataIdent(), theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+}
+
+void AddChangeAllProducersDataTypePart(unsigned int theDescTopIndex, NFmiMenuItemList* theMenuList, FmiMenuCommandType theMenuCommandType, bool crossSectionPopup, const std::string &theDataTypeMenuTitleName, std::vector<NFmiProducerInfo>& producerInfos, bool modelTypeCase)
+{
+	if(producerInfos.size() > 0)
+	{
+		NFmiMenuItemList* changeProducersMenuList = new NFmiMenuItemList;
+		if(modelTypeCase)
+		{
+			AddChangeAllProducersOperativeModelPart(theDescTopIndex, changeProducersMenuList, theMenuCommandType, crossSectionPopup);
+		}
+		AddChangeAllProducersFromVectorPart(theDescTopIndex, producerInfos, changeProducersMenuList, theMenuCommandType);
+		auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, theDataTypeMenuTitleName, NFmiDataIdent(), theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
 		menuItem->AddSubMenu(changeProducersMenuList);
+		theMenuList->Add(std::move(menuItem));
+	}
+}
+
+void AddChangeAllProducersToParamSelectionPopup(unsigned int theDescTopIndex, NFmiMenuItemList* theMenuList, FmiMenuCommandType theMenuCommandType, bool crossSectionPopup)
+{
+	CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, __FUNCTION__);
+	NFmiMenuItemList* dataTypePartSubMenuList = new NFmiMenuItemList;
+	AddChangeAllProducersDataTypePart(theDescTopIndex, dataTypePartSubMenuList, theMenuCommandType, crossSectionPopup, "Model data", ProducerSystem().Producers(), true);
+	AddChangeAllProducersDataTypePart(theDescTopIndex, dataTypePartSubMenuList, theMenuCommandType, crossSectionPopup, "Observations", ObsProducerSystem().Producers(), false);
+	if(dataTypePartSubMenuList->NumberOfMenuItems() > 0)
+	{
+		auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, "Change all producers", NFmiDataIdent(), theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
+		menuItem->AddSubMenu(dataTypePartSubMenuList);
 		theMenuList->Add(std::move(menuItem));
 	}
 }
@@ -4440,7 +4504,7 @@ void AddSetTextSizeFactorSubMenuForTimeBoxPopup(std::unique_ptr<NFmiMenuItemList
 	auto setTextSizeMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, finalSetLocationMenuString, NFmiDataIdent(), kFmiSetTimeBoxTextSizeFactor, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
 	auto setTextSizeSubMenuItemList = std::make_unique<NFmiMenuItemList>();
 
-	for(float textSizeFactor = NFmiMapViewDescTop::TimeBoxTextSizeFactorMinLimit(); textSizeFactor <= NFmiMapViewDescTop::TimeBoxTextSizeFactorMaxLimit(); textSizeFactor += 0.1f)
+	for(auto textSizeFactor : NFmiMapViewDescTop::TimeBoxTextSizeAllowedFactors())
 	{
 		AddSetTextSizeFactorToSubMenu(setTextSizeSubMenuItemList, theDescTopIndex, textSizeFactor);
 	}
@@ -9454,7 +9518,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         TrajectorySystem()->SetCaseStudyTimes(theToWallClockTime);
 
         itsDataLoadingInfoNormal.CaseStudyTime(theToWallClockTime);
-        itsDataLoadingInfoNormal.UpdatedTimeDescriptor();
+        itsDataLoadingInfoNormal.UpdatedTimeDescriptor(false);
     }
 
     void InitializeSatelImageCacheForCaseStudy()

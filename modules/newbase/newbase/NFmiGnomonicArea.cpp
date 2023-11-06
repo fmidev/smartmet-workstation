@@ -64,6 +64,7 @@
 // ======================================================================
 
 #include "NFmiGnomonicArea.h"
+
 #include <cmath>
 #include <iomanip>
 

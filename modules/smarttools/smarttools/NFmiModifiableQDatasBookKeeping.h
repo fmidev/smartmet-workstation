@@ -37,8 +37,7 @@ class NFmiModifiableQDatasBookKeeping
   unsigned long MaskType();
   bool IsMasked(unsigned long theIndex) const;
 
-  bool SnapShotData(const std::string &theAction,
-                    const NFmiRawData &theRawData);
+  bool SnapShotData(const std::string &theAction, const NFmiRawData &theRawData);
   void RearrangeUndoTable();
   bool Undo();
   bool Redo();
@@ -46,11 +45,11 @@ class NFmiModifiableQDatasBookKeeping
   bool RedoData(NFmiRawData &theRawData, std::string &modificationDescription);
   void UndoLevel(long theDepth, const NFmiRawData &theRawData);
 
-  bool LocationSelectionSnapShot();                  // ota maskit talteen
-  bool LocationSelectionUndo();                      // kysyy onko undo mahdollinen
-  bool LocationSelectionRedo();                      // kysyy onko redo mahdollinen
-  bool LocationSelectionUndoData();                  // suorittaa todellisen undon
-  bool LocationSelectionRedoData();                  // suorittaa todellisen redon
+  bool LocationSelectionSnapShot();                      // ota maskit talteen
+  bool LocationSelectionUndo();                          // kysyy onko undo mahdollinen
+  bool LocationSelectionRedo();                          // kysyy onko redo mahdollinen
+  bool LocationSelectionUndoData();                      // suorittaa todellisen undon
+  bool LocationSelectionRedoData();                      // suorittaa todellisen redon
   void LocationSelectionUndoLevel(int theNewUndoLevel);  // undolevel asetetaan tällä
  private:
   NFmiModifiableQDatasBookKeeping &operator=(

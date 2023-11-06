@@ -12,14 +12,14 @@
  */
 // ======================================================================
 
-#include "NFmiVersion.h"
+#include "NFmiQueryData.h"
 
 #include "NFmiFileSystem.h"
 #include "NFmiGrid.h"
-#include "NFmiQueryData.h"
 #include "NFmiQueryInfo.h"
 #include "NFmiSaveBaseFactory.h"
 #include "NFmiStationBag.h"
+#include "NFmiVersion.h"
 
 #include <boost/make_shared.hpp>
 

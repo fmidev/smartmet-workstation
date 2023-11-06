@@ -16,6 +16,7 @@
 #endif
 
 #include "NFmiRawData.h"
+
 #include "NFmiVersion.h"
 
 #include <boost/filesystem/operations.hpp>
@@ -70,10 +71,14 @@ class NFmiRawData::Pimple
   size_t Size() const;
   float GetValue(size_t index) const;
 
-
   bool GetValues(size_t startIndex, size_t step, size_t count, std::vector<float> &values) const;
   bool SetValues(size_t startIndex, size_t step, size_t count, const std::vector<float> &values);
-  bool GetValuesPartial(size_t startIndex, size_t rowCount, size_t columnCount, size_t step, size_t rowSkip, std::vector<float> &values) const;
+  bool GetValuesPartial(size_t startIndex,
+                        size_t rowCount,
+                        size_t columnCount,
+                        size_t step,
+                        size_t rowSkip,
+                        std::vector<float> &values) const;
 
   bool SetValue(size_t index, float value);
   void SetBinaryStorage(bool flag) const;
@@ -440,48 +445,45 @@ float NFmiRawData::Pimple::GetValue(size_t index) const
   return ptr[index];
 }
 
-
-bool NFmiRawData::Pimple::GetValues(size_t startIndex, size_t step, size_t count, std::vector<float> &values) const
+bool NFmiRawData::Pimple::GetValues(size_t startIndex,
+                                    size_t step,
+                                    size_t count,
+                                    std::vector<float> &values) const
 {
-	if (startIndex + step*(count-1) >= itsSize)
-		return false;
+  if (startIndex + step * (count - 1) >= itsSize) return false;
 
+  values.resize(count);
 
-	values.resize(count);
+  const float *ptr;
 
-	const float *ptr;
+  if (itsData)
+    ptr = itsData;
+  else
+    ptr = reinterpret_cast<const float *>(itsMappedFile->const_data() + itsOffset);
 
+  {
+    ReadLock lock(itsMutex);
 
+    size_t i = 0;
+    std::generate(values.begin(), values.end(), [&] { return ptr[startIndex + (i++) * step]; });
 
+    // C++17 (not supported yet), might enable additional compiler optimization
 
-	if (itsData) ptr = itsData;
-	else ptr = reinterpret_cast<const float *>(itsMappedFile->const_data() + itsOffset);
+    // std::generate(values.begin(), values.end(), [&] { return i++; });
+    // std::transform(std::execution::par_unseq,values.begin(),values.end(),
+    // [=] (const float &i)
+    // {
+    // 	return ptr[startIndex + i*step];
+    // });
+  }
 
-	{   ReadLock lock(itsMutex);
-
-	size_t i = 0;
-	std::generate (values.begin(), values.end(), 
-		[&]
-	{
-		return ptr[startIndex + (i++)*step];
-	} );
-
-	//C++17 (not supported yet), might enable additional compiler optimization
-
-	//std::generate(values.begin(), values.end(), [&] { return i++; });
-	//std::transform(std::execution::par_unseq,values.begin(),values.end(),
-	// [=] (const float &i) 
-	// { 
-	// 	return ptr[startIndex + i*step]; 
-	// });
-
-	}
-
-
-	return true;
+  return true;
 }
 
-bool NFmiRawData::Pimple::SetValues(size_t startIndex, size_t step, size_t count, const std::vector<float> &values)
+bool NFmiRawData::Pimple::SetValues(size_t startIndex,
+                                    size_t step,
+                                    size_t count,
+                                    const std::vector<float> &values)
 {
   if (startIndex + step * (count - 1) >= itsSize) return false;
 
@@ -495,44 +497,49 @@ bool NFmiRawData::Pimple::SetValues(size_t startIndex, size_t step, size_t count
   {
     WriteLock lock(itsMutex);
 
-    for(size_t i = 0; i < count; i++)
-        ptr[startIndex + i * step] = values[i];
+    for (size_t i = 0; i < count; i++)
+      ptr[startIndex + i * step] = values[i];
   }
 
   return true;
 }
 
-bool NFmiRawData::Pimple::GetValuesPartial(size_t startIndex, size_t rowCount, size_t rowStep, size_t columnCount, size_t columnStep, std::vector<float> &values) const
+bool NFmiRawData::Pimple::GetValuesPartial(size_t startIndex,
+                                           size_t rowCount,
+                                           size_t rowStep,
+                                           size_t columnCount,
+                                           size_t columnStep,
+                                           std::vector<float> &values) const
 {
-	if (startIndex + rowStep*(rowCount - 1) + columnStep*(columnCount-1) >= itsSize)
-		return false;
+  if (startIndex + rowStep * (rowCount - 1) + columnStep * (columnCount - 1) >= itsSize)
+    return false;
 
+  values.resize(rowCount * columnCount);
 
-	values.resize(rowCount*columnCount);
+  const float *ptr;
 
-	const float *ptr;
+  if (itsData)
+    ptr = itsData;
+  else
+    ptr = reinterpret_cast<const float *>(itsMappedFile->const_data() + itsOffset);
 
+  {
+    ReadLock lock(itsMutex);
 
-	if (itsData) ptr = itsData;
-	else ptr = reinterpret_cast<const float *>(itsMappedFile->const_data() + itsOffset);
+    size_t i = 0;
 
-	{   ReadLock lock(itsMutex);
+    for (size_t row = 0; row < rowCount; row++)
+    {
+      for (size_t column = 0; column < columnCount; column++)
+      {
+        values[column + row * columnCount] = ptr[startIndex + i];
+        i += columnStep;
+      }
+      i += rowStep;
+    }
+  }
 
-	size_t i = 0;
-
-	for (size_t row = 0; row < rowCount; row++) {
-		for (size_t column = 0; column < columnCount; column++) {
-			values[column + row*columnCount] = ptr[startIndex + i];
-			i += columnStep;
-		}
-		i += rowStep;
-	}
-
-
-	}
-
-
-	return true;
+  return true;
 }
 
 // ----------------------------------------------------------------------
@@ -554,8 +561,7 @@ bool NFmiRawData::Pimple::SetValue(size_t index, float value)
   }
   else if (itsOffset > 0)
   {
-    if(IsReadOnly())
-      throw std::runtime_error("Can't modify read-only memory-mapped data");
+    if (IsReadOnly()) throw std::runtime_error("Can't modify read-only memory-mapped data");
 
     // We have mmapped output data
     auto *ptr = reinterpret_cast<float *>(itsMappedFile->data() + itsOffset);
@@ -563,7 +569,7 @@ bool NFmiRawData::Pimple::SetValue(size_t index, float value)
     return true;
   }
 
-// copy-on-write semantics: switch to memory buffer on a write
+  // copy-on-write semantics: switch to memory buffer on a write
 
 #if 0
   Unmap();
@@ -623,18 +629,18 @@ ostream &NFmiRawData::Pimple::Write(ostream &file) const
 
 void NFmiRawData::Pimple::Backup(char *ptr) const
 {
-    if(itsData)
-    {
-        ReadLock lock(itsMutex);
+  if (itsData)
+  {
+    ReadLock lock(itsMutex);
 
-        // we assume data which is backed up is edited, so might as well unmap
+    // we assume data which is backed up is edited, so might as well unmap
 #if NFMIRAWDATA_ENABLE_UNDO_REDO
-        Unmap();
+    Unmap();
 #endif
 
-        auto *src = reinterpret_cast<char *>(itsData);
-        memcpy(ptr, src, itsSize * sizeof(float));
-    }
+    auto *src = reinterpret_cast<char *>(itsData);
+    memcpy(ptr, src, itsSize * sizeof(float));
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -645,19 +651,19 @@ void NFmiRawData::Pimple::Backup(char *ptr) const
 
 void NFmiRawData::Pimple::Undo(char *ptr)
 {
-    if(itsData)
-    {
-        WriteLock lock(itsMutex);
+  if (itsData)
+  {
+    WriteLock lock(itsMutex);
 
-        // This may be slower than necessary when mmapped, but since Backup
-        // unmaps this really should never actually unmap
+    // This may be slower than necessary when mmapped, but since Backup
+    // unmaps this really should never actually unmap
 
 #if NFMIRAWDATA_ENABLE_UNDO_REDO
-        Unmap();
+    Unmap();
 #endif
-        auto *src = reinterpret_cast<char *>(itsData);
-        memcpy(src, ptr, itsSize * sizeof(float));
-    }
+    auto *src = reinterpret_cast<char *>(itsData);
+    memcpy(src, ptr, itsSize * sizeof(float));
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -672,11 +678,11 @@ bool NFmiRawData::Pimple::Advise(FmiAdvice advice)
   return false;
 }
 
-bool NFmiRawData::Pimple::IsReadOnly() const 
+bool NFmiRawData::Pimple::IsReadOnly() const
 {
   if (itsMappedFile)
   {
-      return itsMappedFile->flags() == boost::iostreams::mapped_file::readonly;
+    return itsMappedFile->flags() == boost::iostreams::mapped_file::readonly;
   }
   return false;
 }
@@ -762,22 +768,46 @@ float NFmiRawData::GetValue(size_t index) const { return itsPimple->GetValue(ind
 
 // ----------------------------------------------------------------------
 /*!
-* \brief Resizes values (invalidates iterators!!) to count and populates it with values at startIndex, startIndex+step, startIndex+step*2, ..., startIndex+step*count. Returns false if out-of-range, true otherwise.
-*/
+ * \brief Resizes values (invalidates iterators!!) to count and populates it with values at
+ * startIndex, startIndex+step, startIndex+step*2, ..., startIndex+step*count. Returns false if
+ * out-of-range, true otherwise.
+ */
 // ----------------------------------------------------------------------
 
-bool NFmiRawData::GetValues(size_t startIndex, size_t step, size_t count, std::vector<float> &values) const { return itsPimple->GetValues(startIndex, step, count, values); }
+bool NFmiRawData::GetValues(size_t startIndex,
+                            size_t step,
+                            size_t count,
+                            std::vector<float> &values) const
+{
+  return itsPimple->GetValues(startIndex, step, count, values);
+}
 
-bool NFmiRawData::SetValues(size_t startIndex, size_t step, size_t count, const std::vector<float> &values) { return itsPimple->SetValues(startIndex, step, count, values); }
+bool NFmiRawData::SetValues(size_t startIndex,
+                            size_t step,
+                            size_t count,
+                            const std::vector<float> &values)
+{
+  return itsPimple->SetValues(startIndex, step, count, values);
+}
 
 // ----------------------------------------------------------------------
 /*!
-* \brief Resizes values (invalidates iterators!!) to count and populates it with values at startIndex, startIndex+step, startIndex+step*2, ..., startIndex+step*count. Returns false if out-of-range, true otherwise.
-*/
+ * \brief Resizes values (invalidates iterators!!) to count and populates it with values at
+ * startIndex, startIndex+step, startIndex+step*2, ..., startIndex+step*count. Returns false if
+ * out-of-range, true otherwise.
+ */
 // ----------------------------------------------------------------------
 
-bool NFmiRawData::GetValuesPartial(size_t startIndex, size_t rowCount, size_t  rowStep, size_t columnCount, size_t  columnStep, std::vector<float> &values) const { return itsPimple->GetValuesPartial(startIndex,rowCount,rowStep,columnCount,columnStep, values); }
-
+bool NFmiRawData::GetValuesPartial(size_t startIndex,
+                                   size_t rowCount,
+                                   size_t rowStep,
+                                   size_t columnCount,
+                                   size_t columnStep,
+                                   std::vector<float> &values) const
+{
+  return itsPimple->GetValuesPartial(
+      startIndex, rowCount, rowStep, columnCount, columnStep, values);
+}
 
 // ----------------------------------------------------------------------
 /*!

@@ -37,6 +37,6 @@ SPECIALIZE(long, "long")
 SPECIALIZE(bool, "bool")
 SPECIALIZE(float, "float")
 SPECIALIZE(double, "double")
-}
+}  // namespace NFmiTypeNameTraits
 
 // ======================================================================

@@ -35,7 +35,9 @@
 // ======================================================================
 
 #include "NFmiLocationFinder.h"
+
 #include "NFmiStringTools.h"
+
 #include <cstdio>  // for sscanf()
 #include <cstdlib>
 #include <fstream>

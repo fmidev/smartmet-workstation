@@ -1,4 +1,5 @@
 #include "NFmiNearTreeLocation.h"
+
 #include "NFmiGlobals.h"
 #include "NFmiLocation.h"
 

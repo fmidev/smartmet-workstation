@@ -286,10 +286,11 @@ bool NFmiCommentStripper::Strip()
 
 void NFmiCommentStripper::StripBomMarkersFromStart()
 {
-    const std::string bomMarkers = "\xEF\xBB\xBF"; // BOM characters ï»¿ must be given with hexa escape format because this cpp file is Utf-8 encoded
-    auto pos = itsString.find(bomMarkers);
-    if(pos == 0)
-        itsString = std::string(itsString.begin() + bomMarkers.size(), itsString.end());
+  const std::string bomMarkers =
+      "\xEF\xBB\xBF";  // BOM characters ï»¿ must be given with hexa escape format because this cpp
+                       // file is Utf-8 encoded
+  auto pos = itsString.find(bomMarkers);
+  if (pos == 0) itsString = std::string(itsString.begin() + bomMarkers.size(), itsString.end());
 }
 
 // ----------------------------------------------------------------------
