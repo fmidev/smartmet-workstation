@@ -13,6 +13,7 @@ namespace SmartMetDataUtilities
     class Interpolation
     {
     public:
+        virtual ~Interpolation(){}
         virtual void calculate() = 0;
         virtual std::shared_ptr<NFmiArea> getArea() = 0;
         virtual std::shared_ptr<NFmiDataMatrix<NFmiPoint>> getMatrix() = 0;
