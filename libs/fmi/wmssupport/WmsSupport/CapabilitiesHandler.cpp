@@ -12,6 +12,12 @@
 #include <cppback/background-manager.h>
 #include <boost/property_tree/xml_parser.hpp>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 namespace Wms
 {
     namespace

@@ -1,5 +1,11 @@
 #include "wmssupport/BackgroundFetcher.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 namespace Wms
 {
     BackgroundFetcher::BackgroundFetcher(const std::shared_ptr<cppback::BackgroundManager> &bManager, int howManyBackward, int howManyForward)
