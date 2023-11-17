@@ -81,9 +81,9 @@ namespace SmartMetDataUtilities
             auto lastColumn = rootData_.getMatrix()->NX() - 1;
             auto lastRow = rootData_.getMatrix()->NY() - 1;
             firstColumnToCopy_ = (firstColumnToCopy_ < 0) ? 0 : firstColumnToCopy_;
-            lastColumnToCopy_ = (lastColumnToCopy_ > lastColumn) ? lastColumn : lastColumnToCopy_;
+            lastColumnToCopy_ = (int)((lastColumnToCopy_ > lastColumn) ? lastColumn : lastColumnToCopy_);
             firstRowToCopy_ = (firstRowToCopy_ < 0) ? 0 : firstRowToCopy_;
-            lastRowToCopy_ = (lastRowToCopy_ > lastRow) ? lastRow : lastRowToCopy_;
+            lastRowToCopy_ = (int)((lastRowToCopy_ > lastRow) ? lastRow : lastRowToCopy_);
         }
 
     };
