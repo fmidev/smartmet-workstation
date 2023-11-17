@@ -50,6 +50,12 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/math/special_functions.hpp>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 namespace
 {
 	// Laitetaan tämä piiloon cpp tiedostoon, koska haluan tehdä Wms::WmsSupport -luokan objektin käyttöön tänne,
@@ -1023,7 +1029,7 @@ void NFmiCombinedMapHandler::storeMapViewDescTopToSettings()
 
 bool NFmiCombinedMapHandler::wmsSupportAvailable() const
 {
-	if(wmsSupport_ && wmsSupport_->isConfigured())
+	if(wmsSupport_ && wmsSupport_->isConfigured() && wmsSupport_->isTotalMapViewStaticMapClientStateAvailable())
 		return true;
 	else
 		return false;
