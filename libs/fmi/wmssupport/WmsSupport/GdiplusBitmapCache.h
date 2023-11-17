@@ -15,6 +15,7 @@ namespace Wms
         size_t sndCacheSize_;
     public:
         GdiplusBitmapCache(size_t maxSize, size_t numberOfLayers);
+        ~GdiplusBitmapCache();
 
         bool exists(const std::string& key1, const std::string& key2) final;
         bool exists(const std::string& key1) final;

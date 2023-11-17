@@ -3,6 +3,12 @@
 
 using namespace utility::conversions;
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 namespace
 {
     std::string makeFinalLogMessage(const std::string& domain, const std::string& request)
@@ -35,6 +41,8 @@ namespace Web
         , proxyUrl_{proxyUrl}
     {
     }
+
+    CppRestClient::~CppRestClient() = default;
 
     std::future<std::string> CppRestClient::queryFor(const std::string& domain, const std::string& request, int timeoutInSeconds) const
     {

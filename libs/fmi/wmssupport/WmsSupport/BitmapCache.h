@@ -21,6 +21,7 @@ namespace Wms
     class BitmapCache
     {
     public:
+        virtual ~BitmapCache(){}
         virtual bool exists(const std::string& key1, const std::string& key2) = 0;
         virtual bool exists(const std::string& key1) = 0;
         virtual NFmiImageHolder get(const std::string& key1, const std::string& key2) = 0;
