@@ -6,6 +6,7 @@
 
 #include "NFmiDrawingEnvironment.h"
 #include "NFmiMetTime.h"
+#include "SmartMetOpenUrlAction.h"
 
 class NFmiToolBox;
 class NFmiEditMapView;
@@ -24,7 +25,6 @@ class NFmiRect;
 class NFmiViewSettingMacro;
 class CTableWnd;
 class CPPToolTip;
-
 
 
 class CSmartMetView : public CView
@@ -121,19 +121,20 @@ protected:
 // Generated message map functions
 protected:
 	afx_msg void OnFilePrintPreview();
-	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 #ifndef FMI_DISABLE_MFC_FEATURE_PACK
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 #endif // FMI_DISABLE_MFC_FEATURE_PACK
-	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
-	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
-	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnRButtonDblClk(UINT nFlags, CPoint point);
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
 	afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
 	afx_msg void OnDropFiles(HDROP hDropInfo);
-	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnFilePrint();
 	DECLARE_MESSAGE_MAP()
@@ -149,6 +150,13 @@ private:
 	std::string MakeActiveDataLocationIndexString(const NFmiPoint &theLatlon);
     void ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOriginalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews);
     void DoGraphReportOnDraw(const CtrlViewUtils::GraphicalInfo &graphicalInfo, double scaleFactor);
+	void OnMouseMove_Implementation(UINT nFlags, CPoint point);
+	void OnLButtonDown_Implementation(UINT nFlags, CPoint point);
+	void OnLButtonUp_Implementation(UINT nFlags, CPoint point);
+	void OnLButtonDblClk_Implementation(UINT nFlags, CPoint point);
+	void CheckOpenUrlKeyPressedState();
+	bool HandleUrlMouseActions() const;
+	void OpenWantedUrlInBrowser();
 
     CBitmap* itsFinalMapViewImageBitmap;
 	CBitmap* itsMemoryBitmap;
@@ -170,6 +178,7 @@ private:
 	// Bitmapin, johon mahdollinen synop-plot image talletetaan.
 	CBitmap* itsSynopPlotBitmap;
 	HBITMAP itsSynopPlotBitmapHandle;
+	SmartMetOpenUrlAction itsCurrentOpenUrlAction = SmartMetOpenUrlAction::None;
 
 public:
 	afx_msg void OnMButtonUp(UINT nFlags, CPoint point);
@@ -206,7 +215,6 @@ public:
     afx_msg void OnAcceleratorMapPanLeft();
     afx_msg void OnAcceleratorMapPanRight();
     afx_msg void OnAcceleratorMapPanUp();
-	afx_msg void OnRButtonDblClk(UINT nFlags, CPoint point);
 	afx_msg void OnDisplayChange(UINT, int, int);
 	afx_msg void OnAcceleratorChangeAllModelDataOnRowToPreviousModelRun();
 	afx_msg void OnAcceleratorChangeAllModelDataOnRowToNextModelRun();
