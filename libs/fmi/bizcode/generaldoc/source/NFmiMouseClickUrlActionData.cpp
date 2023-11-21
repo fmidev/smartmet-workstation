@@ -91,9 +91,9 @@ namespace
 
     std::string makeAreaInfoString(const NFmiPoint& latlon, float areaRadiusInKm, bool includeRadius)
     {
-        std::string areaInfoStr = std::to_string(latlon.X());
+        std::string areaInfoStr = std::to_string(latlon.Y());
         areaInfoStr += ",";
-        areaInfoStr += std::to_string(latlon.Y());
+        areaInfoStr += std::to_string(latlon.X());
         if(includeRadius)
         {
             areaInfoStr += ":";
