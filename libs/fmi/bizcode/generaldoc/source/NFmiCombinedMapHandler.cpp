@@ -4148,6 +4148,7 @@ void NFmiCombinedMapHandler::onMoveTimeBoxLocation(unsigned int mapViewDescTopIn
 {
 	auto* mapViewDescTop = getMapViewDescTop(mapViewDescTopIndex);
 	mapViewDescTop->TimeBoxPositionChange();
+	setTimeBoxValuesToWinRegistry(mapViewDescTopIndex);
 	mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, false); // laitetaan kartta likaiseksi
 	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
 	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Move time-box to next position on map-view");
@@ -4159,6 +4160,7 @@ bool NFmiCombinedMapHandler::onSetTimeBoxLocation(unsigned int mapViewDescTopInd
 	if(mapViewDescTop && newPosition != mapViewDescTop->TimeBoxLocation())
 	{
 		mapViewDescTop->TimeBoxLocation(newPosition);
+		setTimeBoxValuesToWinRegistry(mapViewDescTopIndex);
 		mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, false); // laitetaan kartta likaiseksi
 		CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
 		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Set time-box location on map-view");
@@ -4173,6 +4175,7 @@ bool NFmiCombinedMapHandler::onSetTimeBoxTextSizeFactor(unsigned int mapViewDesc
 	if(mapViewDescTop && newSizeFactor != mapViewDescTop->TimeBoxTextSizeFactor())
 	{
 		mapViewDescTop->TimeBoxTextSizeFactor(newSizeFactor);
+		setTimeBoxValuesToWinRegistry(mapViewDescTopIndex);
 		mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, false); // laitetaan kartta likaiseksi
 		CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
 		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Set time-box text size factor on map-view");
@@ -4181,12 +4184,25 @@ bool NFmiCombinedMapHandler::onSetTimeBoxTextSizeFactor(unsigned int mapViewDesc
 	return false;
 }
 
+void NFmiCombinedMapHandler::setTimeBoxValuesToWinRegistry(unsigned int mapViewDescTopIndex)
+{
+	auto* mapViewDescTop = getMapViewDescTop(mapViewDescTopIndex);
+	auto& mapViewWinRegistry = ::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(mapViewDescTopIndex);
+	if(mapViewDescTop && mapViewWinRegistry)
+	{
+		mapViewWinRegistry->TimeBoxFillColor(mapViewDescTop->TimeBoxFillColor());
+		mapViewWinRegistry->TimeBoxLocation(mapViewDescTop->TimeBoxLocation());
+		mapViewWinRegistry->TimeBoxTextSizeFactor(mapViewDescTop->TimeBoxTextSizeFactor());
+	}
+}
+
 void NFmiCombinedMapHandler::onSetTimeBoxFillColor(unsigned int mapViewDescTopIndex, NFmiColor newColorNoAlpha)
 {
 	auto* mapViewDescTop = getMapViewDescTop(mapViewDescTopIndex);
 	if(mapViewDescTop)
 	{
 		mapViewDescTop->SetTimeBoxFillColor(newColorNoAlpha);
+		setTimeBoxValuesToWinRegistry(mapViewDescTopIndex);
 		mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, false); // laitetaan kartta likaiseksi
 		CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
 		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Set time-box fill color on map-view");
@@ -4199,6 +4215,7 @@ bool NFmiCombinedMapHandler::onSetTimeBoxFillColorAlpha(unsigned int mapViewDesc
 	if(mapViewDescTop && mapViewDescTop->GetTimeBoxFillColorAlpha() != newColorAlpha)
 	{
 		mapViewDescTop->SetTimeBoxFillColorAlpha(newColorAlpha);
+		setTimeBoxValuesToWinRegistry(mapViewDescTopIndex);
 		mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, false); // laitetaan kartta likaiseksi
 		CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
 		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Set time-box fill color alpha on map-view");
