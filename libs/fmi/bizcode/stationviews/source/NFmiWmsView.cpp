@@ -96,7 +96,10 @@ std::string NFmiWmsView::ComposeToolTipText(const NFmiPoint& theRelativePoint)
 {
     try
     {
-        return itsCtrlViewDocumentInterface->GetWmsSupport().getFullLayerName(itsDrawParam->Param());
+        auto parameterStr = itsCtrlViewDocumentInterface->GetWmsSupport().getFullLayerName(itsDrawParam->Param());
+        auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
+        parameterStr = AddColorTagsToString(parameterStr, fontColor, true);
+        return parameterStr;
     }
     catch(std::exception& e)
     {
