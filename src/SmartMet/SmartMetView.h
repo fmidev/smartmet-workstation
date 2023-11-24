@@ -154,9 +154,6 @@ private:
 	void OnLButtonDown_Implementation(UINT nFlags, CPoint point);
 	void OnLButtonUp_Implementation(UINT nFlags, CPoint point);
 	void OnLButtonDblClk_Implementation(UINT nFlags, CPoint point);
-	void CheckOpenUrlKeyPressedState();
-	bool HandleUrlMouseActions() const;
-	void OpenWantedUrlInBrowser();
 
     CBitmap* itsFinalMapViewImageBitmap;
 	CBitmap* itsMemoryBitmap;

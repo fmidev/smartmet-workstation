@@ -1368,49 +1368,10 @@ void CSmartMetView::OnLButtonDblClk_Implementation(UINT nFlags, CPoint point)
 // Eri hiiren napin k‰sittelyn varsinaiset funktiot
 // **********************************************************************************
 
-void CSmartMetView::OpenWantedUrlInBrowser()
-{
-	if(itsCurrentOpenUrlAction != SmartMetOpenUrlAction::None)
-	{
-		auto* ctrlViewInterface = CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation();
-		auto baseUrl = ctrlViewInterface->MouseClickUrlActionData().GetMouseActionUrl(itsCurrentOpenUrlAction, ctrlViewInterface->ToolTipLatLonPoint());
-		if(!baseUrl.empty())
-		{
-			CString urlToOpen = CA2T(baseUrl.c_str());
-			// Open the URL in the default web browser
-			ShellExecute(NULL, _T("open"), urlToOpen, NULL, NULL, SW_SHOWNORMAL);
-		}
-	}
-}
-
-void CSmartMetView::CheckOpenUrlKeyPressedState()
-{
-	// 1. Jos shift nappi pohjassa
-	if(CtrlView::IsKeyboardKeyDown(VK_SHIFT))
-	{
-		// 2. Etsi ensimm‰inen n‰pp‰in joka on pohjassa ja joka on mapattu url-actionille
-		for(const auto &mappedActionKeyPair : CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->MouseClickUrlActionData().OpenUrlActionKeyMappings())
-		{
-			if(CtrlView::IsKeyboardKeyDown(mappedActionKeyPair.first))
-			{
-				itsCurrentOpenUrlAction = mappedActionKeyPair.second;
-				return;
-			}
-		}
-	}
-	// 3. Muuten laitetaan ei-url-action moodiin
-	itsCurrentOpenUrlAction = SmartMetOpenUrlAction::None;
-}
-
-bool CSmartMetView::HandleUrlMouseActions() const
-{
-	return (itsCurrentOpenUrlAction != SmartMetOpenUrlAction::None);
-}
-
 void CSmartMetView::OnLButtonDown(UINT nFlags, CPoint point)
 {
-	CheckOpenUrlKeyPressedState();
-	if(!HandleUrlMouseActions())
+	itsCurrentOpenUrlAction = CtrlView::GetOpenUrlKeyPressedState();
+	if(!CtrlView::HandleUrlMouseActions(itsCurrentOpenUrlAction))
 	{
 		// Tehd‰‰n mouse-down vain jos ei olla tekem‰ss‰ url-action juttuja, t‰llˆin ei 
 		// haluta tehd‰ mit‰‰n mouse-drag juttuja, joiden setup tehd‰‰n mouse-down k‰sittelyiss‰.
@@ -1425,10 +1386,10 @@ void CSmartMetView::OnLButtonUp(UINT nFlags, CPoint point)
 	// saman pisteen kuin t‰lle url-actionillekin.
 	// 1. Ensin valitaan klikattu piste.
 	OnLButtonUp_Implementation(nFlags, point);
-	if(HandleUrlMouseActions())
+	if(CtrlView::HandleUrlMouseActions(itsCurrentOpenUrlAction))
 	{
 		// 2. Sitten mahdollisesti hanskataan se klikatun pisteen url-action
-		OpenWantedUrlInBrowser();
+		CtrlView::OpenWantedUrlInBrowser(itsCurrentOpenUrlAction);
 	}
 	// 3. Lopuksi aina nollataan menossa oleva url-action asetus
 	itsCurrentOpenUrlAction = SmartMetOpenUrlAction::None;
@@ -1503,7 +1464,7 @@ void CSmartMetView::OnMouseMove(UINT nFlags, CPoint point)
 	// Mouse-move juttuja hanskataan vain jos ei ole menossa url-action juttuja.
 	// Ei haluta mouse drag ja muita vastaavia k‰sittelyj‰, jos k‰ytt‰j‰ haluaa
 	// vain avata button-up k‰sittelyssa valitun pisteen url-actionin.
-	if(!HandleUrlMouseActions())
+	if(!CtrlView::HandleUrlMouseActions(itsCurrentOpenUrlAction))
 	{
 		OnMouseMove_Implementation(nFlags, point);
 	}

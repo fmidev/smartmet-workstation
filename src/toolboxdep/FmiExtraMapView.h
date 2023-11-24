@@ -93,6 +93,7 @@ public:
     HBITMAP SynopPlotBitmapHandle() { return itsSynopPlotBitmapHandle; }
     CPPToolTip* ToolTipControl() { return &m_tooltip; }
     void SetToolBoxsDC(CDC* theDC);
+	void ForceDrawOverBitmapThingsThisExtraMapView(void);
 
 #ifdef _DEBUG
 	virtual void AssertValid() const;
@@ -104,6 +105,10 @@ protected:
 
 private:
 	void CreateEditMapView(void);
+	void OnMouseMove_Implementation(UINT nFlags, CPoint point);
+	void OnLButtonDown_Implementation(UINT nFlags, CPoint point);
+	void OnLButtonUp_Implementation(UINT nFlags, CPoint point);
+	void OnLButtonDblClk_Implementation(UINT nFlags, CPoint point);
 
     SmartMetDocumentInterface* itsSmartMetDocumentInterface;
 
@@ -135,6 +140,7 @@ private:
     // CDC asetukset, koska jostain syystä tämä apukarttanäyttö toimii erilailla printtaus-dialogin kanssa ja
     // se ei esim. blokkaa mitään hiirien käsittelyjä, kuten muut näytöt (mm. pääkartta-, luotaus-, aikasarja- ja poikkileikkausnäytöt)
 	bool fPrintingOnDontSetDcs; 
+	SmartMetOpenUrlAction itsCurrentOpenUrlAction = SmartMetOpenUrlAction::None;
 public:
 	virtual void OnInitialUpdate();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
@@ -142,18 +148,15 @@ public:
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	afx_msg void OnMButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnMButtonUp(UINT nFlags, CPoint point);
-	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
-	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 	afx_msg void NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result);
-protected:
-	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
-public:
-	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
-	void ForceDrawOverBitmapThingsThisExtraMapView(void);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 protected:
+	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 	virtual void OnPrint(CDC* pDC, CPrintInfo* pInfo);
 	virtual BOOL OnPreparePrinting(CPrintInfo* pInfo);
 	virtual void OnEndPrinting(CDC* pDC, CPrintInfo* pInfo);

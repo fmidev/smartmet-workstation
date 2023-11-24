@@ -2,6 +2,9 @@
 #include "CtrlViewGdiPlusFunctions.h"
 #include "NFmiToolBox.h"
 #include "ToolMasterHelperFunctions.h"
+#include "CtrlViewDocumentInterface.h"
+#include "NFmiMouseClickUrlActionData.h"
+#include "CtrlViewKeyboardFunctions.h"
 
 #include <stdexcept>
 
@@ -238,4 +241,42 @@ namespace CtrlView
         Toolmaster::SetToolMastersDC(theDC, theClientRect);
     }
 
-}
+    void OpenWantedUrlInBrowser(SmartMetOpenUrlAction currentOpenUrlAction)
+    {
+        if(currentOpenUrlAction != SmartMetOpenUrlAction::None)
+        {
+            auto* ctrlViewInterface = CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation();
+            auto baseUrl = ctrlViewInterface->MouseClickUrlActionData().GetMouseActionUrl(currentOpenUrlAction, ctrlViewInterface->ToolTipLatLonPoint());
+            if(!baseUrl.empty())
+            {
+                CString urlToOpen = CA2T(baseUrl.c_str());
+                // Open the URL in the default web browser
+                ShellExecute(NULL, _T("open"), urlToOpen, NULL, NULL, SW_SHOWNORMAL);
+            }
+        }
+    }
+
+    SmartMetOpenUrlAction GetOpenUrlKeyPressedState()
+    {
+        // 1. Jos shift nappi pohjassa
+        if(CtrlView::IsKeyboardKeyDown(VK_SHIFT))
+        {
+            // 2. Etsi ensimmäinen näppäin joka on pohjassa ja joka on mapattu url-actionille
+            for(const auto& mappedActionKeyPair : CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->MouseClickUrlActionData().OpenUrlActionKeyMappings())
+            {
+                if(CtrlView::IsKeyboardKeyDown(mappedActionKeyPair.first))
+                {
+                    return mappedActionKeyPair.second;
+                }
+            }
+        }
+        // 3. Muuten palautetaan ei-url-action moodiin
+        return SmartMetOpenUrlAction::None;
+    }
+
+    bool HandleUrlMouseActions(SmartMetOpenUrlAction currentOpenUrlAction)
+    {
+        return (currentOpenUrlAction != SmartMetOpenUrlAction::None);
+    }
+
+} // namespace CtrlView
