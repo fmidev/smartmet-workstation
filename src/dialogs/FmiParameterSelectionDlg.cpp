@@ -119,7 +119,7 @@ BOOL NFmiParameterSelectionGridCtrl::PreTranslateMessage(MSG* pMsg)
 
 BOOL NFmiParameterSelectionGridCtrl::OnInitDialog()
 {
-    CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, PARAM_ADDING_DIALOG_TOOLTIP_ID, 600);
+    CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, PARAM_ADDING_DIALOG_TOOLTIP_ID, 700);
 
     return TRUE;
 }

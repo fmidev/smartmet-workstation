@@ -1,5 +1,11 @@
 #include "wmssupport/ChangedLayers.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 namespace Wms
 {
     bool operator<(const LayerInfo& info1, const LayerInfo& info2)

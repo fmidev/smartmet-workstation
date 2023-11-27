@@ -79,6 +79,7 @@ class WmsSupportInterface;
 class CombinedMapHandlerInterface;
 class TrueMapViewSizeInfo;
 class NFmiSeaLevelPlumeData;
+class NFmiMouseClickUrlActionData;
 
 namespace Imagine
 {
@@ -406,6 +407,7 @@ public:
     virtual bool IsTimeControlViewVisible(int theDescTopIndex) const = 0;
     virtual TrueMapViewSizeInfo&  GetTrueMapViewSizeInfo(int theDescTopIndex) const = 0;
     virtual NFmiSeaLevelPlumeData& SeaLevelPlumeData() const = 0;
+    virtual NFmiMouseClickUrlActionData& MouseClickUrlActionData() const = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem(void) = 0;

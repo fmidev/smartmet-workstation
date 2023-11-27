@@ -2650,7 +2650,8 @@ bool NFmiStationViewHandler::HandleTimeBoxMouseWheel(const NFmiPoint& thePlace, 
 			// CTRL + SHIFT pohjassa tehdään taustavärin alpha kanavan säätöä
 			auto origAlpha = mapViewDescTop->GetTimeBoxFillColorAlpha();
 			auto newAlphaValue = origAlpha + (theDelta > 0 ? 0.05f : -0.05f);
-			mapViewDescTop->SetTimeBoxFillColorAlpha(newAlphaValue);
+			// Arvon asetus pitää tehdä CombinedMapHandler:in kautta, jotta muutos menisi myös WinRegistry:n ja sitten näyttömakroihin
+			itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().onSetTimeBoxFillColorAlpha(itsMapViewDescTopIndex, newAlphaValue);
 			// Palautetaan true, jos kerroin on oikeasti muuttunut
 			return origAlpha != mapViewDescTop->GetTimeBoxFillColorAlpha();
 		}
@@ -2659,7 +2660,8 @@ bool NFmiStationViewHandler::HandleTimeBoxMouseWheel(const NFmiPoint& thePlace, 
 			// CTRL pohjassa tehdään kokokertoimen säätöä
 			auto origTextSizeFactor = mapViewDescTop->TimeBoxTextSizeFactor();
 			auto newValue = origTextSizeFactor + (theDelta > 0 ? 0.1f : -0.1f);
-			mapViewDescTop->TimeBoxTextSizeFactor(newValue);
+			// Arvon asetus pitää tehdä CombinedMapHandler:in kautta, jotta muutos menisi myös WinRegistry:n ja sitten näyttömakroihin
+			itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().onSetTimeBoxTextSizeFactor(itsMapViewDescTopIndex, newValue);
 			// Palautetaan true, jos kerroin on oikeasti muuttunut
 			return origTextSizeFactor != mapViewDescTop->TimeBoxTextSizeFactor();
 		}

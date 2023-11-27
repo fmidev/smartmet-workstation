@@ -48,6 +48,8 @@ namespace SmartMetDataUtilities
         {
         }
 
+        ~NewInterpolation();
+
         virtual void calculate() override
         {
             croppedArea_ = AreaUtil::calculateCroppedArea(grid_, mapArea_);

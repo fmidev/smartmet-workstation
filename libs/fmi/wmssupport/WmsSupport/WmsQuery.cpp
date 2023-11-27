@@ -4,6 +4,12 @@
 #include <cpprest/http_msg.h>
 #undef U // This fixes cpprest's U -macro clash with boost library move code (really dangerous to give macro name like U !!!!)
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 namespace Wms
 {
     std::string toRequest(const WmsQuery& query)

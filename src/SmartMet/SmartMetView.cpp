@@ -47,6 +47,7 @@
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "CombinedMapHandlerInterface.h"
 #include "NFmiLedLightStatus.h"
+#include "NFmiMouseClickUrlActionData.h"
 
 #include <Winspool.h>
 
@@ -390,31 +391,6 @@ void CSmartMetView::CreateEditMapView()
 	itsEditMapView = new NFmiEditMapView(itsMapViewDescTopIndex, itsToolBox, &itsDrawingEnvironment, itsDrawParam);
 }
 
-void CSmartMetView::OnLButtonUp(UINT nFlags, CPoint point)
-{
-	try // try-catch -blokilla varmistetaan että lopuksi ReleaseCapture todellakin kutsutaan
-	{
-		CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
-		CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // tämä vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi jäädä pohjaan, jos kyseinen näppäin vapautetaan, ennen kuin kartta ruudun piirto on valmis)
-
-		bool needsUpdate = itsEditMapView ? itsEditMapView->LeftButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
-			,itsToolBox->ConvertCtrlKey(nFlags)) : false;	// M.K. 29.4.99 Lisäsin "parametrivalintalaatikon" piirtämistä varten.
-		Invalidate(FALSE);
-		if(needsUpdate)
-		{
-			GetDocument()->UpdateAllViewsAndDialogs("Main map view: left mouse button was released");
-            ForceDrawOverBitmapThings(itsMapViewDescTopIndex, false, true);
-		}
-	}
-	catch(...)
-	{
-		ReleaseCapture(); // vapautetaan lopuksi hiiren viestit muidenkin ikkunoiden käyttöön
-		throw ; // laitetaan poikkeus eteenpäin
-	}
-	ReleaseCapture(); // vapautetaan lopuksi hiiren viestit muidenkin ikkunoiden käyttöön (OnLButtonDown:issa laitettiin SetCapture päälle)
-
-}
-
 void CSmartMetView::OnMButtonUp(UINT nFlags, CPoint point)
 {
     try
@@ -436,75 +412,6 @@ void CSmartMetView::OnMButtonUp(UINT nFlags, CPoint point)
         throw; // laitetaan poikkeus eteenpäin
     }
     ReleaseCapture(); // vapautetaan lopuksi hiiren viestit muidenkin ikkunoiden käyttöön (OnLButtonDown:issa laitettiin SetCapture päälle)
-}
-
-void CSmartMetView::OnLButtonDblClk(UINT nFlags, CPoint point)
-{
-	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
-	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // tämä vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi jäädä pohjaan, jos kyseinen näppäin vapautetaan, ennen kuin kartta ruudun piirto on valmis)
-
-	bool needsUpdate = itsEditMapView ? itsEditMapView->LeftDoubleClick(itsToolBox->ToViewPoint(point.x, point.y)
-		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	if(needsUpdate)
-	{
-		CSmartMetDoc* pDoc = GetDocument();
-		if(pDoc)
-		{
-			if(pDoc->GetData()->ActivateParamSelectionDlgAfterLeftDoubleClick())
-			{
-				pDoc->GetData()->ActivateParamSelectionDlgAfterLeftDoubleClick(false);
-				pDoc->ActivateParameterSelectionDlg();
-				return ;
-			}
-		}
-		Invalidate(FALSE);
-		GetDocument()->UpdateAllViewsAndDialogs("Main map view: left mouse button double click");
-	}
-//	CView::OnLButtonDblClk(nFlags, point);
-}
-
-void CSmartMetView::OnRButtonDblClk(UINT nFlags, CPoint point)
-{
-	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
-	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // tämä vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi jäädä pohjaan, jos kyseinen näppäin vapautetaan, ennen kuin kartta ruudun piirto on valmis)
-
-	bool needsUpdate = itsEditMapView ? itsEditMapView->RightDoubleClick(itsToolBox->ToViewPoint(point.x, point.y)
-		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	if(needsUpdate)
-	{
-		Invalidate(FALSE);
-		GetDocument()->UpdateAllViewsAndDialogs("Main map view: right mouse button double click");
-	}
-//    CView::OnRButtonDblClk(nFlags, point);
-}
-
-void CSmartMetView::OnRButtonUp(UINT nFlags, CPoint point)
-{
-	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
-	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // tämä vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi jäädä pohjaan, jos kyseinen näppäin vapautetaan, ennen kuin kartta ruudun piirto on valmis)
-
-	bool needsUpdate = itsEditMapView ? itsEditMapView->RightButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
-		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-
-	NFmiEditMapGeneralDataDoc* genData = GetDocument()->GetData();
-	Invalidate(FALSE);
-	if(genData && genData->OpenPopupMenu())
-	{
-        CFmiPopupMenu menu;
-//        CFmiMenu menu;
-		menu.Init(genData->PopupMenu());
-		CMenu* pPopup = menu.Popup();
-
-		CRect tempRect;
-		GetWindowRect(tempRect);
-		pPopup->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x+tempRect.left, point.y+tempRect.top, this);
-		genData->OpenPopupMenu(false);
-	}
-	else if(needsUpdate)
-	{
-		GetDocument()->UpdateAllViewsAndDialogs("Main map view: right mouse button was released");
-		ForceDrawOverBitmapThings(itsMapViewDescTopIndex, false, true);
-	}
 }
 
 void CSmartMetView::OnUpdate(CView* /* pSender */ , LPARAM /* lHint */ , CObject* /* pHint */ )
@@ -542,19 +449,6 @@ BOOL CSmartMetView::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 
 	return CView::OnCommand(wParam, lParam);
-}
-
-void CSmartMetView::OnLButtonDown(UINT nFlags, CPoint point)
-{
-	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
-	bool needsUpdate = itsEditMapView ? itsEditMapView->LeftButtonDown(itsToolBox->ToViewPoint(point.x, point.y)
-		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-
-	if(needsUpdate)
-	{
-		GetDocument()->UpdateAllViewsAndDialogs("Main map view: left mouse button was pressed down");
-	}
-	SetCapture(); // otetaan hiiren liikkeet/viestit talteeen toistaiseksi tähän ikkunaan
 }
 
 // Toimenpiteet, mitä tehdään kun hiiri tulee karttanäytön päälle
@@ -638,123 +532,6 @@ void CSmartMetView::PutTextInStatusBar(const std::string &theText)
 		auto textPaneIndex = GetGeneralDoc()->LedLightStatusSystem().MapViewTextStatusbarPaneIndex();
 		pStatus->SetPaneText(textPaneIndex, CA2T(theText.c_str()));
 	}
-}
-
-void CSmartMetView::OnMouseMove(UINT nFlags, CPoint point)
-{
-    NFmiEditMapGeneralDataDoc* genData = GetDocument()->GetData();
-    if(genData->Printing())
-        return;
-	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
-	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // tämä vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi jäädä pohjaan, jos kyseinen näppäin vapautetaan, ennen kuin kartta ruudun piirto on valmis)
-
-// laitetaan myös karttabitmap valmiiksi osittaisia päivityksiä varten
-	CClientDC dc(this);
-	CDC dcMem;
-	dcMem.CreateCompatibleDC(&dc);
-	CBitmap* oldBitmap2 = dcMem.SelectObject(itsMapBitmap);
-	auto *mapViewDescTop = genData->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex);
-	mapViewDescTop->MapBlitDC(&dcMem);
-
-	NFmiPoint viewPoint(itsToolBox->ToViewPoint(point.x, point.y));
-
-	// HUOM! jos pensselillä muokataan läpinäkyvyydellä piirrettävää dataa, pitää läpinäkyvyys näyttö asettaa käyttöön
-	genData->TransparencyContourDrawView(this); // tämä on osa kikkaa, jolla saadaan piiirettyä läpinäkyviä kenttiä toolmasterilla tai imaginella
-	bool needsUpdate = false;
-	try
-	{
-		needsUpdate = itsEditMapView ? itsEditMapView->MouseMove(viewPoint, itsToolBox->ConvertCtrlKey(nFlags)) : false;
-	}
-	catch(...)
-	{
-	}
-	genData->TransparencyContourDrawView(0); // lopuksi se asetetaan taas 0-pointteriksi...
-
-	mapViewDescTop->MapBlitDC(0);
-	dcMem.SelectObject(oldBitmap2);
-	dcMem.DeleteDC();
-
-	bool drawOverBitmapAnyway = genData->EditedPointsSelectionChanged(false); // pyydetään vanha arvo drawOverBitmapAnyway -muuttujaan ja asetetaan samalla false:ksi
-	if(itsEditMapView->MapRect().IsInside(viewPoint))
-	{
-		NFmiPoint cursorLatlon(genData->ToolTipLatLonPoint());
-		std::string str = CtrlViewUtils::GetTotalMapViewStatusBarStr(&genData->GetCtrlViewDocumentInterface(), cursorLatlon);
-        // Laitetaan kartta osion pikseli koko tähän perään sulkuihin
-        str += CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(mapViewDescTop->ActualMapBitmapSizeInPixels(), false);
-
-		// Jos CTRL-nappi on pohjassa, lisätään vielä osoitetun karttaruudun aktiivisen datan joko hilapiste indeksit tai havaintoaseman location id.
-        if(CtrlView::IsKeyboardKeyDown(VK_CONTROL))
-    		str += MakeActiveDataLocationIndexString(cursorLatlon);
-
-        PutTextInStatusBar(str);
-
-		// Päivitetään myös synop data teksti muodossa taulukossa ikkunaa, eli
-		// lähin asema scrollataan näkyviin ja tehdään se valituksi
-		if(genData->SynopDataGridViewOn())
-		{
-			if(nFlags & MK_CONTROL && genData->MouseCaptured() == false)
-			{// tehdään lähimpien havainto asemien seuranta vain CTRL pohjassa ja kun hiiri ei ole kaapattu
-				if(itsEditMapView->MapRect().IsInside(viewPoint))
-				{ // ja vain jos ollaan karttanäytön päällä, ei kun ollaan aikakontrolli ikkunan päällä
-					boost::shared_ptr<NFmiFastQueryInfo> obsInfo = genData->GetNearestSynopStationInfo(NFmiLocation(cursorLatlon), NFmiMetTime(), true, 0);
-					if(obsInfo)
-					{
-						if(GetDocument()->SynopDataGridViewDlg())
-						{
-							genData->LastSelectedSynopWmoId(obsInfo->Location()->GetIdent());
-							GetDocument()->SynopDataGridViewDlg()->EnsureVisibleStationRow();
-							drawOverBitmapAnyway = true;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	if(needsUpdate)
-	{
-		GetDocument()->UpdateAllViewsAndDialogs("Main map view: mouse cursor moved while dragging it");
-	}
-	else if(mapViewDescTop->MapViewBitmapDirty())
-		Invalidate(FALSE);
-	else if(!(genData->MiddleMouseButtonDown() && genData->MouseCaptured())) // muuten ForceDrawOverBitmapThings, paitsi jos ollaan vetämässä kartan päälle zoomi laatikkoa, koska se peittyisi aina ForceDrawOverBitmapThings:n alle
-	{
-        bool doIncreaseCurrentUpdateId = false;
-		bool rangeMeterModeOn = genData->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().ModeOn();
-
-		if(genData->ShowMouseHelpCursorsOnMap() || drawOverBitmapAnyway || rangeMeterModeOn)
-		{
-            // Täältä ei haluta doIncreaseCurrentUpdateId asetusta, koska ei kiinnosta, jos kartalla päivitetään apukursoreita
-            ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true); // hiiren apukursorit pitää joka tapauksessa piirtää aina
-		}
-		if(genData->MustDrawTempView())
-		{
-            if(genData->GetMTATempSystem().TempViewOn())
-                doIncreaseCurrentUpdateId = true;
-            GetDocument()->UpdateTempView();
-            // Tämä nollataan vasta piirron jälkeen, koska piirrossa kiinnostaa että mennäänkö sinne mouse-move operaatiosta vai mistä.
-            genData->MustDrawTempView(false); 
-        }
-		if(genData->MustDrawTimeSerialView())
-		{
-            if(genData->TimeSerialDataViewOn())
-                doIncreaseCurrentUpdateId = true;
-            genData->MustDrawTimeSerialView(false);
-			GetDocument()->UpdateTimeSerialView();
-		}
-		if(genData->MustDrawCrossSectionView())
-		{
-            if(genData->CrossSectionSystem()->CrossSectionViewOn())
-                doIncreaseCurrentUpdateId = true;
-            genData->MustDrawCrossSectionView(false);
-			GetDocument()->UpdateCrossSectionView();
-			ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, false);
-		}
-
-        // Kasvatetaan ruutujenpäivityslaskuria, jos mouse-move operaatio on aiheuttanut muiden kuin karttanäytön päivityksiä (tosin jälkijättöisesti)
-        if(doIncreaseCurrentUpdateId)
-            CtrlViewUtils::CtrlViewTimeConsumptionReporter::increaseCurrentUpdateId();
-    }
 }
 
 static bool IsViewForceUpdated(unsigned int viewIndexToBeUpdated, unsigned int theOriginalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews)
@@ -911,18 +688,6 @@ void CSmartMetView::RefreshApplicationViewsAndDialogs(const std::string &reasonF
 void CSmartMetView::ActivateFilterDlg(void)
 {
 	GetDocument()->ActivateFilterDlg();
-}
-
-void CSmartMetView::OnRButtonDown(UINT nFlags, CPoint point)
-{
-	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
-	bool needsUpdate = itsEditMapView ? itsEditMapView->RightButtonDown(itsToolBox->ToViewPoint(point.x, point.y)
-		,itsToolBox->ConvertCtrlKey(nFlags)) : false;
-
-	if(needsUpdate)
-	{
-		GetDocument()->UpdateAllViewsAndDialogs("Main map view: right mouse button was pressed down");
-	}
 }
 
 BOOL CSmartMetView::OnSetCursor(CWnd* /* pWnd */ , UINT /* nHitTest */ , UINT /* message */ )
@@ -1412,5 +1177,295 @@ void CSmartMetView::OnAcceleratorMapViewRangeMeterLockModeToggle()
 	{
 		mapViewRangeMeter.LockModeOnToggle();
 		ApplicationInterface::GetApplicationInterfaceImplementation()->ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true);
+	}
+}
+
+// **********************************************************************************
+// Eri hiiren napin käsittelyn perus-implementaatio funktiot
+// **********************************************************************************
+
+void CSmartMetView::OnMouseMove_Implementation(UINT nFlags, CPoint point)
+{
+	NFmiEditMapGeneralDataDoc* genData = GetDocument()->GetData();
+	if(genData->Printing())
+		return;
+	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
+	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // tämä vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi jäädä pohjaan, jos kyseinen näppäin vapautetaan, ennen kuin kartta ruudun piirto on valmis)
+
+	// laitetaan myös karttabitmap valmiiksi osittaisia päivityksiä varten
+	CClientDC dc(this);
+	CDC dcMem;
+	dcMem.CreateCompatibleDC(&dc);
+	CBitmap* oldBitmap2 = dcMem.SelectObject(itsMapBitmap);
+	auto* mapViewDescTop = genData->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex);
+	mapViewDescTop->MapBlitDC(&dcMem);
+
+	NFmiPoint viewPoint(itsToolBox->ToViewPoint(point.x, point.y));
+
+	// HUOM! jos pensselillä muokataan läpinäkyvyydellä piirrettävää dataa, pitää läpinäkyvyys näyttö asettaa käyttöön
+	genData->TransparencyContourDrawView(this); // tämä on osa kikkaa, jolla saadaan piiirettyä läpinäkyviä kenttiä toolmasterilla tai imaginella
+	bool needsUpdate = false;
+	try
+	{
+		needsUpdate = itsEditMapView ? itsEditMapView->MouseMove(viewPoint, itsToolBox->ConvertCtrlKey(nFlags)) : false;
+	}
+	catch(...)
+	{
+	}
+	genData->TransparencyContourDrawView(0); // lopuksi se asetetaan taas 0-pointteriksi...
+
+	mapViewDescTop->MapBlitDC(0);
+	dcMem.SelectObject(oldBitmap2);
+	dcMem.DeleteDC();
+
+	bool drawOverBitmapAnyway = genData->EditedPointsSelectionChanged(false); // pyydetään vanha arvo drawOverBitmapAnyway -muuttujaan ja asetetaan samalla false:ksi
+	if(itsEditMapView->MapRect().IsInside(viewPoint))
+	{
+		NFmiPoint cursorLatlon(genData->ToolTipLatLonPoint());
+		std::string str = CtrlViewUtils::GetTotalMapViewStatusBarStr(&genData->GetCtrlViewDocumentInterface(), cursorLatlon);
+		// Laitetaan kartta osion pikseli koko tähän perään sulkuihin
+		str += CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(mapViewDescTop->ActualMapBitmapSizeInPixels(), false);
+
+		// Jos CTRL-nappi on pohjassa, lisätään vielä osoitetun karttaruudun aktiivisen datan joko hilapiste indeksit tai havaintoaseman location id.
+		if(CtrlView::IsKeyboardKeyDown(VK_CONTROL))
+			str += MakeActiveDataLocationIndexString(cursorLatlon);
+
+		PutTextInStatusBar(str);
+
+		// Päivitetään myös synop data teksti muodossa taulukossa ikkunaa, eli
+		// lähin asema scrollataan näkyviin ja tehdään se valituksi
+		if(genData->SynopDataGridViewOn())
+		{
+			if(nFlags & MK_CONTROL && genData->MouseCaptured() == false)
+			{// tehdään lähimpien havainto asemien seuranta vain CTRL pohjassa ja kun hiiri ei ole kaapattu
+				if(itsEditMapView->MapRect().IsInside(viewPoint))
+				{ // ja vain jos ollaan karttanäytön päällä, ei kun ollaan aikakontrolli ikkunan päällä
+					boost::shared_ptr<NFmiFastQueryInfo> obsInfo = genData->GetNearestSynopStationInfo(NFmiLocation(cursorLatlon), NFmiMetTime(), true, 0);
+					if(obsInfo)
+					{
+						if(GetDocument()->SynopDataGridViewDlg())
+						{
+							genData->LastSelectedSynopWmoId(obsInfo->Location()->GetIdent());
+							GetDocument()->SynopDataGridViewDlg()->EnsureVisibleStationRow();
+							drawOverBitmapAnyway = true;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if(needsUpdate)
+	{
+		GetDocument()->UpdateAllViewsAndDialogs("Main map view: mouse cursor moved while dragging it");
+	}
+	else if(mapViewDescTop->MapViewBitmapDirty())
+		Invalidate(FALSE);
+	else if(!(genData->MiddleMouseButtonDown() && genData->MouseCaptured())) // muuten ForceDrawOverBitmapThings, paitsi jos ollaan vetämässä kartan päälle zoomi laatikkoa, koska se peittyisi aina ForceDrawOverBitmapThings:n alle
+	{
+		bool doIncreaseCurrentUpdateId = false;
+		bool rangeMeterModeOn = genData->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().ModeOn();
+
+		if(genData->ShowMouseHelpCursorsOnMap() || drawOverBitmapAnyway || rangeMeterModeOn)
+		{
+			// Täältä ei haluta doIncreaseCurrentUpdateId asetusta, koska ei kiinnosta, jos kartalla päivitetään apukursoreita
+			ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, true); // hiiren apukursorit pitää joka tapauksessa piirtää aina
+		}
+		if(genData->MustDrawTempView())
+		{
+			if(genData->GetMTATempSystem().TempViewOn())
+				doIncreaseCurrentUpdateId = true;
+			GetDocument()->UpdateTempView();
+			// Tämä nollataan vasta piirron jälkeen, koska piirrossa kiinnostaa että mennäänkö sinne mouse-move operaatiosta vai mistä.
+			genData->MustDrawTempView(false);
+		}
+		if(genData->MustDrawTimeSerialView())
+		{
+			if(genData->TimeSerialDataViewOn())
+				doIncreaseCurrentUpdateId = true;
+			genData->MustDrawTimeSerialView(false);
+			GetDocument()->UpdateTimeSerialView();
+		}
+		if(genData->MustDrawCrossSectionView())
+		{
+			if(genData->CrossSectionSystem()->CrossSectionViewOn())
+				doIncreaseCurrentUpdateId = true;
+			genData->MustDrawCrossSectionView(false);
+			GetDocument()->UpdateCrossSectionView();
+			ForceDrawOverBitmapThings(itsMapViewDescTopIndex, true, false);
+		}
+
+		// Kasvatetaan ruutujenpäivityslaskuria, jos mouse-move operaatio on aiheuttanut muiden kuin karttanäytön päivityksiä (tosin jälkijättöisesti)
+		if(doIncreaseCurrentUpdateId)
+			CtrlViewUtils::CtrlViewTimeConsumptionReporter::increaseCurrentUpdateId();
+	}
+}
+
+void CSmartMetView::OnLButtonDown_Implementation(UINT nFlags, CPoint point)
+{
+	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
+	bool needsUpdate = itsEditMapView ? itsEditMapView->LeftButtonDown(itsToolBox->ToViewPoint(point.x, point.y)
+		, itsToolBox->ConvertCtrlKey(nFlags)) : false;
+
+	if(needsUpdate)
+	{
+		GetDocument()->UpdateAllViewsAndDialogs("Main map view: left mouse button was pressed down");
+	}
+	SetCapture(); // otetaan hiiren liikkeet/viestit talteeen toistaiseksi tähän ikkunaan
+}
+
+void CSmartMetView::OnLButtonUp_Implementation(UINT nFlags, CPoint point)
+{
+	try // try-catch -blokilla varmistetaan että lopuksi ReleaseCapture todellakin kutsutaan
+	{
+		CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
+		CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // tämä vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi jäädä pohjaan, jos kyseinen näppäin vapautetaan, ennen kuin kartta ruudun piirto on valmis)
+
+		bool needsUpdate = itsEditMapView ? itsEditMapView->LeftButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
+			, itsToolBox->ConvertCtrlKey(nFlags)) : false;	// M.K. 29.4.99 Lisäsin "parametrivalintalaatikon" piirtämistä varten.
+		Invalidate(FALSE);
+		if(needsUpdate)
+		{
+			GetDocument()->UpdateAllViewsAndDialogs("Main map view: left mouse button was released");
+			ForceDrawOverBitmapThings(itsMapViewDescTopIndex, false, true);
+		}
+	}
+	catch(...)
+	{
+		ReleaseCapture(); // vapautetaan lopuksi hiiren viestit muidenkin ikkunoiden käyttöön
+		throw; // laitetaan poikkeus eteenpäin
+	}
+	ReleaseCapture(); // vapautetaan lopuksi hiiren viestit muidenkin ikkunoiden käyttöön (OnLButtonDown:issa laitettiin SetCapture päälle)
+
+}
+
+void CSmartMetView::OnLButtonDblClk_Implementation(UINT nFlags, CPoint point)
+{
+	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
+	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // tämä vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi jäädä pohjaan, jos kyseinen näppäin vapautetaan, ennen kuin kartta ruudun piirto on valmis)
+
+	bool needsUpdate = itsEditMapView ? itsEditMapView->LeftDoubleClick(itsToolBox->ToViewPoint(point.x, point.y)
+		, itsToolBox->ConvertCtrlKey(nFlags)) : false;
+	if(needsUpdate)
+	{
+		CSmartMetDoc* pDoc = GetDocument();
+		if(pDoc)
+		{
+			if(pDoc->GetData()->ActivateParamSelectionDlgAfterLeftDoubleClick())
+			{
+				pDoc->GetData()->ActivateParamSelectionDlgAfterLeftDoubleClick(false);
+				pDoc->ActivateParameterSelectionDlg();
+				return;
+			}
+		}
+		Invalidate(FALSE);
+		GetDocument()->UpdateAllViewsAndDialogs("Main map view: left mouse button double click");
+	}
+	//	CView::OnLButtonDblClk(nFlags, point);
+}
+
+// **********************************************************************************
+// Eri hiiren napin käsittelyn varsinaiset funktiot
+// **********************************************************************************
+
+void CSmartMetView::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	itsCurrentOpenUrlAction = CtrlView::GetOpenUrlKeyPressedState();
+	if(!CtrlView::HandleUrlMouseActions(itsCurrentOpenUrlAction))
+	{
+		// Tehdään mouse-down vain jos ei olla tekemässä url-action juttuja, tällöin ei 
+		// haluta tehdä mitään mouse-drag juttuja, joiden setup tehdään mouse-down käsittelyissä.
+		OnLButtonDown_Implementation(nFlags, point);
+	}
+}
+
+void CSmartMetView::OnLButtonUp(UINT nFlags, CPoint point)
+{
+	// Normi mouse-up jutut tehdään myös silloin kun on tarkoitus tehdä 
+	// url-action juttuja, koska haluamme valita kartalta normi käyttöön
+	// saman pisteen kuin tälle url-actionillekin.
+	// 1. Ensin valitaan klikattu piste.
+	OnLButtonUp_Implementation(nFlags, point);
+	if(CtrlView::HandleUrlMouseActions(itsCurrentOpenUrlAction))
+	{
+		// 2. Sitten mahdollisesti hanskataan se klikatun pisteen url-action
+		CtrlView::OpenWantedUrlInBrowser(itsCurrentOpenUrlAction);
+	}
+	// 3. Lopuksi aina nollataan menossa oleva url-action asetus
+	itsCurrentOpenUrlAction = SmartMetOpenUrlAction::None;
+}
+
+void CSmartMetView::OnLButtonDblClk(UINT nFlags, CPoint point)
+{
+	// Ei tehdäkään mitään url-action juttuja jos tupla-klikkaus, koska
+	// se saattoi olla vahinko ja turha avata paria tabia sekunnin sisään 
+	// selaimeen vahinkolaukauksesta.
+	OnLButtonDblClk_Implementation(nFlags, point);
+}
+
+void CSmartMetView::OnRButtonDown(UINT nFlags, CPoint point)
+{
+	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
+	bool needsUpdate = itsEditMapView ? itsEditMapView->RightButtonDown(itsToolBox->ToViewPoint(point.x, point.y)
+		, itsToolBox->ConvertCtrlKey(nFlags)) : false;
+
+	if(needsUpdate)
+	{
+		GetDocument()->UpdateAllViewsAndDialogs("Main map view: right mouse button was pressed down");
+	}
+}
+
+void CSmartMetView::OnRButtonUp(UINT nFlags, CPoint point)
+{
+	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
+	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // tämä vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi jäädä pohjaan, jos kyseinen näppäin vapautetaan, ennen kuin kartta ruudun piirto on valmis)
+
+	bool needsUpdate = itsEditMapView ? itsEditMapView->RightButtonUp(itsToolBox->ToViewPoint(point.x, point.y)
+		, itsToolBox->ConvertCtrlKey(nFlags)) : false;
+
+	NFmiEditMapGeneralDataDoc* genData = GetDocument()->GetData();
+	Invalidate(FALSE);
+	if(genData && genData->OpenPopupMenu())
+	{
+		CFmiPopupMenu menu;
+		//        CFmiMenu menu;
+		menu.Init(genData->PopupMenu());
+		CMenu* pPopup = menu.Popup();
+
+		CRect tempRect;
+		GetWindowRect(tempRect);
+		pPopup->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x + tempRect.left, point.y + tempRect.top, this);
+		genData->OpenPopupMenu(false);
+	}
+	else if(needsUpdate)
+	{
+		GetDocument()->UpdateAllViewsAndDialogs("Main map view: right mouse button was released");
+		ForceDrawOverBitmapThings(itsMapViewDescTopIndex, false, true);
+	}
+}
+
+void CSmartMetView::OnRButtonDblClk(UINT nFlags, CPoint point)
+{
+	CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
+	CtrlView::ReleaseCtrlKeyIfStuck(nFlags); // tämä vapauttaa CTRL-napin, jos se on 'jumiutunut' pohjaan (MFC bugi, ctrl-nappi voi jäädä pohjaan, jos kyseinen näppäin vapautetaan, ennen kuin kartta ruudun piirto on valmis)
+
+	bool needsUpdate = itsEditMapView ? itsEditMapView->RightDoubleClick(itsToolBox->ToViewPoint(point.x, point.y)
+		, itsToolBox->ConvertCtrlKey(nFlags)) : false;
+	if(needsUpdate)
+	{
+		Invalidate(FALSE);
+		GetDocument()->UpdateAllViewsAndDialogs("Main map view: right mouse button double click");
+	}
+	//    CView::OnRButtonDblClk(nFlags, point);
+}
+
+void CSmartMetView::OnMouseMove(UINT nFlags, CPoint point)
+{
+	// Mouse-move juttuja hanskataan vain jos ei ole menossa url-action juttuja.
+	// Ei haluta mouse drag ja muita vastaavia käsittelyjä, jos käyttäjä haluaa
+	// vain avata button-up käsittelyssa valitun pisteen url-actionin.
+	if(!CtrlView::HandleUrlMouseActions(itsCurrentOpenUrlAction))
+	{
+		OnMouseMove_Implementation(nFlags, point);
 	}
 }

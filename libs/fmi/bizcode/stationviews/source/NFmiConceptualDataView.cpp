@@ -763,6 +763,9 @@ void NFmiConceptualDataView::GetConceptualsFromFile(const NFmiMetTime &theTime)
 
 void NFmiConceptualDataView::GetConceptualDataStrFromDB(std::string &url, std::string &theResultStr)
 {
+	std::string startingRequestLogStr = "ConceptualDataView starting request: ";
+	startingRequestLogStr += url;
+	CatLog::logMessage(startingRequestLogStr, CatLog::Severity::Debug, CatLog::Category::NetRequest);
     NFmiMilliSecondTimer timer;
     timer.StartTimer();
     itsCtrlViewDocumentInterface->MakeHTTPRequest(url, theResultStr, true);

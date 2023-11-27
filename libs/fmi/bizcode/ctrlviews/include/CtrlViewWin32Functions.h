@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include <utility>
 #include "NFmiColor.h"
+#include "SmartMetOpenUrlAction.h"
 
 class NFmiToolBox;
 
@@ -52,6 +53,10 @@ namespace CtrlView
     void SetToolsDCs(CDC* theDC, NFmiToolBox *theToolBox, const CRect &theClientRect, bool fToolMasterAvailable); // tämä asettaa kaikki kerralla
     void SetToolBoxsDC(CDC* theDC, NFmiToolBox *theToolBox, const CRect &theClientRect);
     void SetToolMastersDC(CDC* theDC, const CRect &theClientRect);
+
+    void OpenWantedUrlInBrowser(SmartMetOpenUrlAction currentOpenUrlAction);
+    SmartMetOpenUrlAction GetOpenUrlKeyPressedState();
+    bool HandleUrlMouseActions(SmartMetOpenUrlAction currentOpenUrlAction);
 
     template<typename SearchFunction>
     BOOL DoReturnKeyOperation(MSG* pMsg, SearchFunction& searchFunction)

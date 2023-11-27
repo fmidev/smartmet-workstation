@@ -89,6 +89,7 @@ namespace Wms
 
         void fillDynamicClients(const std::unordered_map<int, DynamicServerSetup> &serverSetups, const std::string& proxyUrl);
         std::unique_ptr<WmsClient> createClient(const DynamicServerSetup &setup, const std::string& proxyUrl);
+        bool isTotalMapViewStaticMapClientStateAvailable() const override;
     private:
         StaticMapClientState createStaticMapClientState();
         MapViewStaticMapClientState createMapViewStaticMapClientState(unsigned int mapAreaCount);

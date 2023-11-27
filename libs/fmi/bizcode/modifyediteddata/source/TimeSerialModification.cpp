@@ -2037,12 +2037,12 @@ void RemoveThunders(NFmiQueryData* theData, bool fDoMultiThread)
 	}
 }
 
-static bool UseLoadedDataAndLoadAccessoryData(TimeSerialModificationDataInterface& theAdapter, NFmiDataLoadingInfo* theDataLoadingInfo, NFmiQueryData *theLoadedQueryData, bool fRemoveThundersOnLoad, bool fDoMultiThread, bool fLoadedFromFile, bool& dataWasDeleted)
+static bool UseLoadedDataAndLoadAccessoryData(TimeSerialModificationDataInterface& theAdapter, NFmiDataLoadingInfo* theDataLoadingInfo, NFmiQueryData *theLoadedQueryData, bool fRemoveThundersOnLoad, bool fDoMultiThread, bool fLoadedFromFile, bool& dataWasDeleted, std::string *possibleReadOnlyFileName = nullptr)
 {
 	if(theDataLoadingInfo && theAdapter.DataLoadingOK(theLoadedQueryData != nullptr))
 	{
-		//talletetaan ja ladataan uusi data
-		std::string newFileName = static_cast<char*>(theDataLoadingInfo->NewFileName());
+		//talletetaan ja ladataan uusi data, jos annettu startup latauksen yhteydest‰ oikea ladattu read-only datan tiedostopolku, k‰ytet‰‰n sit‰
+		std::string newFileName = possibleReadOnlyFileName ? *possibleReadOnlyFileName : theDataLoadingInfo->NewFileName();
 		theLoadedQueryData->First();
 		if(fRemoveThundersOnLoad)
 			::RemoveThunders(theLoadedQueryData, fDoMultiThread);
@@ -2066,10 +2066,10 @@ static bool WriteDataToFile(NFmiString fileName, NFmiQueryData& data)
 	return false;
 }
 
-static bool ContinueCreatingLoadedData(TimeSerialModificationDataInterface &theAdapter, NFmiQueryData* theLoadedQueryData, NFmiDataLoadingInfo* theLoadingInfo, bool fRemoveThundersOnLoad, bool fDoMultiThread, bool fLoadedFromFile)
+static bool ContinueCreatingLoadedData(TimeSerialModificationDataInterface &theAdapter, NFmiQueryData* theLoadedQueryData, NFmiDataLoadingInfo* theLoadingInfo, bool fRemoveThundersOnLoad, bool fDoMultiThread, bool fLoadedFromFile, std::string* possibleReadOnlyFileName = nullptr)
 {
 	bool dataWasDeleted = false;
-	bool status= ::UseLoadedDataAndLoadAccessoryData(theAdapter, theLoadingInfo, theLoadedQueryData, fRemoveThundersOnLoad, fDoMultiThread, fLoadedFromFile, dataWasDeleted);
+	bool status= ::UseLoadedDataAndLoadAccessoryData(theAdapter, theLoadingInfo, theLoadedQueryData, fRemoveThundersOnLoad, fDoMultiThread, fLoadedFromFile, dataWasDeleted, possibleReadOnlyFileName);
 	if(dataWasDeleted)
 		return false;
 
@@ -2112,8 +2112,9 @@ static bool SpeedLoadModeDataLoading(TimeSerialModificationDataInterface &theAda
 
 		if(data)
 		{
-			// Jos ladattu suoraan tiedosto read-onlyna, ei poisteta ukkosia, ja loadFromFile on true
-			status = ::ContinueCreatingLoadedData(theAdapter, data, theLoadingInfo, false, fDoMultiThread, false);
+			// Jos ladattu suoraan tiedosto read-onlyna, ei poisteta ukkosia, ja annetaan speedLoadFile parametrina, 
+			// jotta oikeaa tiedostopolkua k‰ytet‰‰n, kun data laitetaan sis‰iseen qdata-tietokantaan.
+			status = ::ContinueCreatingLoadedData(theAdapter, data, theLoadingInfo, false, fDoMultiThread, false, &speedLoadFile);
 		}
 	}
 	return status;
@@ -2649,6 +2650,14 @@ static void SetMacroParamErrorMessage(const std::string &theErrorText, TimeSeria
 	theAdapter.SetMacroErrorText(dialogErrorString);
 }
 
+static void SetupPossibleextraMacroParamData(NFmiExtraMacroParamData* possibleExtraMacroParamData, NFmiSmartToolModifier& smartToolModifier)
+{
+	if(possibleExtraMacroParamData)
+	{
+		*possibleExtraMacroParamData = smartToolModifier.ExtraMacroParamData();
+	}
+}
+
 static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, int theMapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo, NFmiExtraMacroParamData *possibleExtraMacroParamData, bool doProbing, const NFmiPoint& spaceOutSkipFactors)
 {
 	float value = kFloatMissing;
@@ -2668,6 +2677,7 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 	if(doProbing && !smartToolModifier.CalculationPoints().empty())
 	{
 		theUseCalculationPoints = true;
+		SetupPossibleextraMacroParamData(possibleExtraMacroParamData, smartToolModifier);
 		return value;
 	}
 
@@ -2699,10 +2709,7 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 		theUsedMacroInfoOut->Values(theValues);
         if(!smartToolModifier.CalculationPoints().empty())
             theUseCalculationPoints = true;
-        if(possibleExtraMacroParamData)
-        {
-            *possibleExtraMacroParamData = smartToolModifier.ExtraMacroParamData();
-        }
+		SetupPossibleextraMacroParamData(possibleExtraMacroParamData, smartToolModifier);
 	}
 	catch(std::exception &e)
 	{

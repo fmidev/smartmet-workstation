@@ -298,6 +298,7 @@ public:
     bool IsTimeControlViewVisible(int theDescTopIndex) const override;
     TrueMapViewSizeInfo& GetTrueMapViewSizeInfo(int theDescTopIndex) const override;
     NFmiSeaLevelPlumeData& SeaLevelPlumeData() const override;
+    NFmiMouseClickUrlActionData& MouseClickUrlActionData() const override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;

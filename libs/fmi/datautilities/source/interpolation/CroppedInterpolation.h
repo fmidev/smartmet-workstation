@@ -27,6 +27,8 @@ namespace SmartMetDataUtilities
         {
         }
 
+        ~CroppedInterpolation();
+
         virtual void calculate() override
         {
             auto area = AreaUtil::createCopyOf(mapArea_);

@@ -23,7 +23,7 @@ namespace SmartMetDataUtilities
 
         DataUtilitiesAdapterPimpl(Toolmaster toolmasterAvailability, unsigned int mapWiewIndex, const std::string& fileFilter);
         DataUtilitiesAdapterPimpl();
-        ~DataUtilitiesAdapterPimpl();
+        virtual ~DataUtilitiesAdapterPimpl();
         DataUtilitiesAdapterPimpl(const DataUtilitiesAdapterPimpl& rhs);
         DataUtilitiesAdapterPimpl& DataUtilitiesAdapterPimpl::operator=(DataUtilitiesAdapterPimpl rhs);
         DataUtilitiesAdapterPimpl(DataUtilitiesAdapterPimpl&& rhs);

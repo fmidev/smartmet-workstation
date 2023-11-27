@@ -16,6 +16,12 @@
 #include "CtrlViewFunctions.h"
 #include "catlog/catlog.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 using namespace std;
 using namespace Gdiplus;
 
@@ -90,7 +96,10 @@ std::string NFmiWmsView::ComposeToolTipText(const NFmiPoint& theRelativePoint)
 {
     try
     {
-        return itsCtrlViewDocumentInterface->GetWmsSupport().getFullLayerName(itsDrawParam->Param());
+        auto parameterStr = itsCtrlViewDocumentInterface->GetWmsSupport().getFullLayerName(itsDrawParam->Param());
+        auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
+        parameterStr = AddColorTagsToString(parameterStr, fontColor, true);
+        return parameterStr;
     }
     catch(std::exception& e)
     {

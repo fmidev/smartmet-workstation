@@ -339,4 +339,5 @@ private:
     boost::shared_ptr<NFmiDrawParam> createTimeSerialViewDrawParam(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam);
     bool getLatestWmsImageTime(const NFmiDataIdent& dataIdent, NFmiMetTime& foundTimeOut);
     void logParameterAction(const std::string& parameterActionStart, const NFmiMenuItem& menuItem, const boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& info);
+    void setTimeBoxValuesToWinRegistry(unsigned int mapViewDescTopIndex);
 };

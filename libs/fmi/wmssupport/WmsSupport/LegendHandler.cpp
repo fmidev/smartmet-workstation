@@ -1,6 +1,12 @@
 #include "wmssupport/LegendHandler.h"
 #include "catlog/catlog.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 namespace Wms
 {
         LegendIdentSet LegendHandler::getLegends(int row, int col, int descTop)

@@ -119,6 +119,7 @@ class CombinedMapHandlerInterface;
 class NFmiParameterInterpolationFixer;
 class NFmiSeaLevelPlumeData;
 class NFmiLedLightStatusSystem;
+class NFmiMouseClickUrlActionData;
 
 namespace Wms
 {
@@ -152,6 +153,7 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+	NFmiMouseClickUrlActionData& MouseClickUrlActionData();
 	void DoIsAnyQueryDataLateChecks();
 	std::shared_ptr<NFmiViewSettingMacro> CurrentViewMacro();
 	NFmiLedLightStatusSystem& LedLightStatusSystem();

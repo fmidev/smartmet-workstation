@@ -1451,6 +1451,11 @@ NFmiSeaLevelPlumeData& CtrlViewDocumentInterfaceForGeneralDataDoc::SeaLevelPlume
     return itsDoc->SeaLevelPlumeData();
 }
 
+NFmiMouseClickUrlActionData& CtrlViewDocumentInterfaceForGeneralDataDoc::MouseClickUrlActionData() const
+{
+    return itsDoc->MouseClickUrlActionData();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // ===============================================
 

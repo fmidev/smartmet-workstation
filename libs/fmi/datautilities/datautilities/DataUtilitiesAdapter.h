@@ -30,6 +30,7 @@ namespace SmartMetDataUtilities
     public:
         DataUtilitiesAdapter() = default;
         DataUtilitiesAdapter(Toolmaster toolmasterAvailability, unsigned int mapWiewIndex, const std::string& fileFilter);
+        ~DataUtilitiesAdapter() = default;
         void clear();
 
         void initializeDrawingData(const NFmiFastQueryInfo& data, const NFmiArea& mapArea);

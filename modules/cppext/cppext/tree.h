@@ -11,6 +11,7 @@ namespace cppext
     {
     public:
         ValueT value;
+        virtual ~Tree() {}
     private:
         virtual void type() const = 0;
     };
@@ -25,6 +26,7 @@ namespace cppext
             Tree<ValueT>::value = std::move(val);
             children = std::move(childs);
         }
+        ~Node() = default;
 
         std::vector<std::unique_ptr<Tree>> children;
     private:
@@ -40,6 +42,7 @@ namespace cppext
         {
             Tree<ValueT>::value = std::move(val);
         }
+        ~Leaf() = default;
     private:
         void type() const final {}
     };

@@ -10,6 +10,12 @@
 
 using namespace std;
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 namespace Wms
 {
     GdiplusBitmapCache::GdiplusBitmapCache(size_t maxSize, size_t numberOfLayersPerCache)
@@ -17,6 +23,9 @@ namespace Wms
         , sndCacheSize_{ numberOfLayersPerCache }
     {
     };
+
+    GdiplusBitmapCache::~GdiplusBitmapCache() = default;
+
 
     bool GdiplusBitmapCache::exists(const std::string& key1, const std::string& key2)
     {

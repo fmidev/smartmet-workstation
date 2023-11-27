@@ -147,6 +147,7 @@
 #include "FmiDataLoadingThread2.h"
 #include "CtrlViewGdiPlusFunctions.h"
 #include "ProducerData.h"
+#include "NFmiMouseClickUrlActionData.h"
 
 #include "AnimationProfiler.h"
 
@@ -581,6 +582,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitBetaProductionSystem(); // T‰t‰ on kutsuttava InitMacroPathSettings- ja InitApplicationWinRegistry -metodien kutsujen j‰lkeen!!
     InitEditDataUserList();
     InitGriddingCallback();
+	InitMouseClickUrlActionData();
 
 	// Asetetaan alustuksessa jonkinlainen timeDescriptor, ennen kuin ladataan mit‰‰n datoja
 	NFmiMetTime origTime;
@@ -1135,6 +1137,11 @@ void InitLedLightStatusSystem()
 	}
 	else
 		LogAndWarnUser("LedLightStatusSystem (on statusbar) was disabled, if you want to enabled it, do it from Settings dialog and restart SmartMet", "", CatLog::Severity::Info, CatLog::Category::Configuration, true);
+}
+
+void InitMouseClickUrlActionData()
+{
+	itsMouseClickUrlActionData.InitFromSettings("SmartMet::MouseClickActionData");
 }
 
 void InitSynopDataFilePatternSortOrderVector(void)
@@ -10994,6 +11001,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		}
 	}
 
+	NFmiMouseClickUrlActionData& MouseClickUrlActionData()
+	{
+		return itsMouseClickUrlActionData;
+	}
+
+	NFmiMouseClickUrlActionData itsMouseClickUrlActionData;
 	std::vector<std::string> itsLoadedDataTriggerList;
 	NFmiLedLightStatusSystem itsLedLightStatusSystem;
 	NFmiSeaLevelPlumeData itsSeaLevelPlumeData;
@@ -13336,4 +13349,9 @@ std::shared_ptr<NFmiViewSettingMacro> NFmiEditMapGeneralDataDoc::CurrentViewMacr
 void NFmiEditMapGeneralDataDoc::DoIsAnyQueryDataLateChecks()
 {
 	pimpl->DoIsAnyQueryDataLateChecks();
+}
+
+NFmiMouseClickUrlActionData& NFmiEditMapGeneralDataDoc::MouseClickUrlActionData()
+{
+	return pimpl->MouseClickUrlActionData();
 }

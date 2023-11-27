@@ -10,6 +10,12 @@
 #include <cppback/background-manager.h>
 #include <webclient/CppRestClient.h>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 /* // Katso WmsSupport::getDynamicImage metodin kommentoitujen koodien kommentti teksteistä, miksi tämä kohta on vielä kommentissa.
 #include "NFmiLedLightStatus.h"
 namespace
@@ -397,6 +403,11 @@ namespace Wms
     const std::unique_ptr<Setup>& WmsSupport::getSetup() const
     {
         return setup_;
+    }
+
+    bool WmsSupport::isTotalMapViewStaticMapClientStateAvailable() const
+    {
+        return !totalMapViewStaticMapClientState_.empty();
     }
 }
 

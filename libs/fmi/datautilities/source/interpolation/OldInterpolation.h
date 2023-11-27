@@ -23,6 +23,8 @@ namespace SmartMetDataUtilities
         {
         }
 
+        ~OldInterpolation();
+
         virtual void calculate() override
         {
             decltype(auto) interpolatedData = CacheUtil::get(interpolatedCache_, keys_, mapArea_, grid_);
