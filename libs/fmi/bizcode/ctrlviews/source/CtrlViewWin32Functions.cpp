@@ -258,8 +258,8 @@ namespace CtrlView
 
     SmartMetOpenUrlAction GetOpenUrlKeyPressedState()
     {
-        // 1. Jos shift nappi pohjassa
-        if(CtrlView::IsKeyboardKeyDown(VK_SHIFT))
+        // 1. Jos ALT nappi pohjassa
+        if(CtrlView::IsKeyboardKeyDown(VK_MENU))
         {
             // 2. Etsi ensimmäinen näppäin joka on pohjassa ja joka on mapattu url-actionille
             for(const auto& mappedActionKeyPair : CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->MouseClickUrlActionData().OpenUrlActionKeyMappings())
