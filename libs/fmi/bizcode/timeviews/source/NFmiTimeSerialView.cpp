@@ -3097,10 +3097,15 @@ void NFmiTimeSerialView::CreateModifyFactorScaleView(bool fSetScalesDirectlyWith
 //--------------------------------------------------------
 double NFmiTimeSerialView::Value2AxisPosition(float theValue)
 {
-	float value = itsValueAxis->Location(theValue);
-	NFmiRect rect(CalcValueAxisRect());
-	double finalValue = rect.Bottom() - value * rect.Height(); // HUOMM!! toimii vain jos value on y-akselilla ja alkaa alhaalta ylös!!!
-	return finalValue;
+	if(itsValueAxis)
+	{
+		float value = itsValueAxis->Location(theValue);
+		NFmiRect rect(CalcValueAxisRect());
+		double finalValue = rect.Bottom() - value * rect.Height(); // HUOMM!! toimii vain jos value on y-akselilla ja alkaa alhaalta ylös!!!
+		return finalValue;
+	}
+
+	return kFloatMissing;
 }
 
 //--------------------------------------------------------
@@ -3392,37 +3397,38 @@ static double GetSuitableValueScaleModifyingStep(boost::shared_ptr<NFmiDrawParam
 //--------------------------------------------------------
 bool NFmiTimeSerialView::ChangeValueView(double theChangeDirectionFactor, bool fMoveTop)
 {
-
-	for(int i = 0; i < 50; i++)//50 = Ei tehdä ikiluuppia
+	if(itsValueAxis)
 	{
-		if(itsDrawParam)
+		for(int i = 0; i < 50; i++)//50 = Ei tehdä ikiluuppia
 		{
-			double step = ::GetSuitableValueScaleModifyingStep(itsDrawParam);
-			double scaleMax = itsDrawParam->TimeSeriesScaleMax();
-			double scaleMin = itsDrawParam->TimeSeriesScaleMin();
-			if(((scaleMax - scaleMin) > step*3) || theChangeDirectionFactor > 0.)
+			if(itsDrawParam)
 			{
-				double changeValue = step * theChangeDirectionFactor;
-				if(fMoveTop)
-					itsDrawParam->TimeSeriesScaleMax(itsDrawParam->TimeSeriesScaleMax() + changeValue);
+				double step = ::GetSuitableValueScaleModifyingStep(itsDrawParam);
+				double scaleMax = itsDrawParam->TimeSeriesScaleMax();
+				double scaleMin = itsDrawParam->TimeSeriesScaleMin();
+				if(((scaleMax - scaleMin) > step * 3) || theChangeDirectionFactor > 0.)
+				{
+					double changeValue = step * theChangeDirectionFactor;
+					if(fMoveTop)
+						itsDrawParam->TimeSeriesScaleMax(itsDrawParam->TimeSeriesScaleMax() + changeValue);
+					else
+						itsDrawParam->TimeSeriesScaleMin(itsDrawParam->TimeSeriesScaleMin() - changeValue);
+				}
 				else
-					itsDrawParam->TimeSeriesScaleMin(itsDrawParam->TimeSeriesScaleMin() - changeValue);
+					return false;
 			}
-			else
-				return false;
-		}
 
-		double ruunanPaa = itsValueAxis->StartValue();
-		double ruunanHanta = itsValueAxis->EndValue();
-		CreateValueScaleView();
-		if(ruunanPaa != itsValueAxis->StartValue() || ruunanHanta != itsValueAxis->EndValue())
-		{
-			// HUOM! tässä on parametrit outoja, koska toteutus on aikoinaan tehty aikasarjalle vinksalleen, mieti jos korjattaisiin koodia paremmaksi!!
-			itsCtrlViewDocumentInterface->UpdateToModifiedDrawParam(CtrlViewUtils::kFmiTimeSerialView, itsDrawParam, CtrlViewUtils::kFmiTimeSerialView);
-		   return true;
+			double ruunanPaa = itsValueAxis->StartValue();
+			double ruunanHanta = itsValueAxis->EndValue();
+			CreateValueScaleView();
+			if(ruunanPaa != itsValueAxis->StartValue() || ruunanHanta != itsValueAxis->EndValue())
+			{
+				// HUOM! tässä on parametrit outoja, koska toteutus on aikoinaan tehty aikasarjalle vinksalleen, mieti jos korjattaisiin koodia paremmaksi!!
+				itsCtrlViewDocumentInterface->UpdateToModifiedDrawParam(CtrlViewUtils::kFmiTimeSerialView, itsDrawParam, CtrlViewUtils::kFmiTimeSerialView);
+				return true;
+			}
 		}
 	}
-
 
 	return false;
 }
