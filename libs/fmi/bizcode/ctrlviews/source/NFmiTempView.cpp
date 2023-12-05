@@ -2038,7 +2038,7 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 	int amdarDataStartOffsetInMinutes = (theProducer.GetIdent() == 1015) ? 30 : 0;
 	bool mainCurve = (theModelRunIndex == 0);
 
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, usedTempInfo.Time(), theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true), amdarDataStartOffsetInMinutes);
+	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, usedTempInfo.Time(), usedTempInfo.Latlon(), theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true), amdarDataStartOffsetInMinutes);
 	if(theProducer.useServer() || info)
 	{
 		auto sounding = GetTotalsoundingData(info, usedTempInfo, theProducer, theProducerIndex);
@@ -2395,7 +2395,7 @@ void NFmiTempView::FillInPossibleMissingPressureData(NFmiSoundingData& theSoundi
 		{
 			if(selectedProducer.GetIdent() != dataProducer.GetIdent())
 			{
-				boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(selectedProducer, theTime, 0, NFmiInfoOrganizer::ParamCheckFlags(true));
+				boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(selectedProducer, theTime, theLocation.GetLocation(), 0, NFmiInfoOrganizer::ParamCheckFlags(true));
 				if(info && info->IsGrid() && info->PressureDataAvailable() && info->TimeDescriptor().IsInside(theTime))
 				{
 					auto& pVector = theSoundingData.GetParamData(kFmiPressure);
@@ -4103,7 +4103,7 @@ std::string NFmiTempView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
             {
 	            NFmiMTATempSystem::TempInfo usedTempInfo = constantLoopTempInfo;
                 usedTempInfo.Time(::GetUsedSoundingDataTime(itsCtrlViewDocumentInterface, usedTempInfo));
-                boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(selectedProducer, usedTempInfo.Time(), 0, NFmiInfoOrganizer::ParamCheckFlags(true));
+                boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(selectedProducer, usedTempInfo.Time(), usedTempInfo.Latlon(), 0, NFmiInfoOrganizer::ParamCheckFlags(true));
                 if(selectedProducer.useServer() || info)
                 {
                     auto usedLocationWithName = ::GetSoundingLocation(info, usedTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
