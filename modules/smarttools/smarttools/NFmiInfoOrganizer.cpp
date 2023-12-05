@@ -967,18 +967,35 @@ static bool IsGivenTimeInDataRange(const boost::shared_ptr<NFmiFastQueryInfo> &i
   }
 }
 
+static bool IsGivenLatlonInDataArea(const boost::shared_ptr<NFmiFastQueryInfo> &info,
+                                    const NFmiPoint &wantedLatlon)
+{
+  if (!info)
+    return false;
+  if (wantedLatlon == NFmiPoint::gMissingLatlon)
+    return true;  // with missing-latlon we don't care if latlon is in area
+  else
+  {
+    if (info->IsGrid() && !info->Area()->IsInside(wantedLatlon))
+      return false;
+    else
+      return true;
+  }
+}
+
 // Hakee parhaan luotaus infon tuottajalle. Eli jos kyseessä esim hirlam tuottaja, katsotaan
 // löytyykö
 // hybridi dataa ja sitten tyydytään viewable-dataa (= painepinta)
 boost::shared_ptr<NFmiFastQueryInfo> NFmiInfoOrganizer::FindSoundingInfo(
     const NFmiProducer &theProducer, int theIndex, ParamCheckFlags paramCheckFlags)
 {
-  return FindSoundingInfo(theProducer, NFmiMetTime::gMissingTime, theIndex, paramCheckFlags);
+  return FindSoundingInfo(theProducer, NFmiMetTime::gMissingTime, NFmiPoint::gMissingLatlon, theIndex, paramCheckFlags);
 }
 
 boost::shared_ptr<NFmiFastQueryInfo> NFmiInfoOrganizer::FindSoundingInfo(
     const NFmiProducer &theProducer,
     const NFmiMetTime &theDataTime,
+    const NFmiPoint &theLatlon,
     int theIndex,
     ParamCheckFlags paramCheckFlags,
     int amdarDataStartOffsetInMinutes)
@@ -989,6 +1006,8 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiInfoOrganizer::FindSoundingInfo(
     boost::shared_ptr<NFmiFastQueryInfo> aInfo = iter->second->GetDataKeeper()->GetIter();
     int result = IsGoodSoundingData(aInfo, theProducer, false, paramCheckFlags);
     if (!::IsGivenTimeInDataRange(aInfo, theDataTime, amdarDataStartOffsetInMinutes))
+      result = 0;
+    if (!::IsGivenLatlonInDataArea(aInfo, theLatlon))
       result = 0;
     if (result != 0 && theIndex < 0)
     {  // haetaan vanhempaa malliajo dataa
