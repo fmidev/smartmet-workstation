@@ -24,6 +24,7 @@
 #include "CtrlViewFastInfoFunctions.h"
 #include "SpecialDesctopIndex.h"
 #include "NFmiLocationSelectionTool.h"
+#include "ApplicationInterface.h"
 
 #include <boost/algorithm/string.hpp>
 #include <fstream>
@@ -31,6 +32,27 @@
 #include "execute-command-in-separate-process.h"
 
 const static int gMissingRowIndex = -1;
+
+static unsigned int ConvertBetaProductViewIndexToDescTopIndex(BetaProductViewIndex selectedViewRadioButtonIndex)
+{
+    switch(selectedViewRadioButtonIndex)
+    {
+    case BetaProductViewIndex::MainMapView:
+        return 0;
+    case BetaProductViewIndex::MapView2:
+        return 1;
+    case BetaProductViewIndex::MapView3:
+        return 2;
+    case BetaProductViewIndex::TimeSerialView:
+        return CtrlViewUtils::kFmiTimeSerialView;
+    case BetaProductViewIndex::SoundingView:
+        return CtrlViewUtils::kFmiSoundingView;
+    case BetaProductViewIndex::CrossSectionView:
+        return CtrlViewUtils::kFmiCrossSectionView;
+    default:
+        return 0;
+    }
+}
 
 // CFmiBetaProductDialog dialog
 
@@ -183,7 +205,7 @@ void CFmiBetaProductDialog::InitControlsFromDocument()
     itsRowSubdirectoryTemplateStringU_ = CA2T(itsBetaProductionSystem->BetaProductRowSubDirectoryTemplate().c_str());
     // Pitää asettaa sekä dialogin SelectedViewIndex -kontrolli että itsBetaProduct:in SelectedViewIndex
     itsSelectedViewIndex = itsBetaProductionSystem->BetaProductSelectedViewIndex();
-    itsBetaProduct->SelectedViewIndex(itsSelectedViewIndex);
+    itsBetaProduct->SelectedViewIndex(static_cast<BetaProductViewIndex>(itsSelectedViewIndex));
     itsViewMacroPathU_ = CA2T(itsBetaProductionSystem->BetaProductViewMacroPath().c_str());
     itsWebSiteTitleStringU_ = CA2T(itsBetaProductionSystem->BetaProductWebSiteTitle().c_str());
     itsWebSiteDescriptionStringU_ = CA2T(itsBetaProductionSystem->BetaProductWebSiteDescription().c_str());
@@ -227,7 +249,7 @@ void CFmiBetaProductDialog::InitControlsFromLoadedBetaProduct()
     itsRowIndexListStringU_ = CA2T(itsBetaProduct->RowIndexListString().c_str());
     itsSynopStationIdListTextU_ = CA2T(itsBetaProduct->SynopStationIdListString().c_str());
     itsRowSubdirectoryTemplateStringU_ = CA2T(itsBetaProduct->RowSubdirectoryTemplate().c_str());
-    itsSelectedViewIndex = itsBetaProduct->SelectedViewIndex();
+    itsSelectedViewIndex = static_cast<int>(itsBetaProduct->SelectedViewIndex());
     itsViewMacroPathU_ = CA2T(itsBetaProduct->OriginalViewMacroPath().c_str());
     itsWebSiteTitleStringU_ = CA2T(itsBetaProduct->WebSiteTitleString().c_str());
     itsWebSiteDescriptionStringU_ = CA2T(itsBetaProduct->WebSiteDescriptionString().c_str());
@@ -396,7 +418,7 @@ void CFmiBetaProductDialog::Update()
 
 NFmiMetTime CFmiBetaProductDialog::GetCurrentViewTime(const NFmiBetaProduct &theBetaProduct)
 {
-    return itsSmartMetDocumentInterface->CurrentTime(theBetaProduct.SelectedViewIndex());
+    return itsSmartMetDocumentInterface->CurrentTime(::ConvertBetaProductViewIndexToDescTopIndex(theBetaProduct.SelectedViewIndex()));
 }
 
 void CFmiBetaProductDialog::OnBnClickedButtonImageDirectoryBrowse()
@@ -577,6 +599,8 @@ bool CFmiBetaProductDialog::CheckDestinationDirectory(const std::string &theDest
                 itsSmartMetDocumentInterface->LogAndWarnUser(errorStr, errorDialogTitle, CatLog::Severity::Error, CatLog::Category::Operational, true);
                 return false;
             }
+            else
+                CatLog::logMessage(std::string("CFmiBetaProductDialog::CheckDestinationDirectory created directory: ") + theDestinationDirectory, CatLog::Severity::Debug, CatLog::Category::Operational);
         }
         if(fAllowDestinationDelete)
         {
@@ -609,31 +633,31 @@ bool CFmiBetaProductDialog::CheckDestinationDirectory(const std::string &theDest
 }
 
 // Palauttaa näytön oikean (absoluuttisen) rivinumeron (ei suhteellista rivinumeroa)
-int CFmiBetaProductDialog::GetViewRowIndex(int selectedViewRadioButtonIndex)
+int CFmiBetaProductDialog::GetViewRowIndex(BetaProductViewIndex selectedViewRadioButtonIndex)
 {
     int rowIndex = gMissingRowIndex;
-    if(selectedViewRadioButtonIndex <= BetaProductViewIndex::kMapView3)
+    if(selectedViewRadioButtonIndex <= BetaProductViewIndex::MapView3)
     {
-        NFmiMapViewDescTop *mapViewDescTop = itsSmartMetDocumentInterface->MapViewDescTop(selectedViewRadioButtonIndex);
+        NFmiMapViewDescTop *mapViewDescTop = itsSmartMetDocumentInterface->MapViewDescTop(::ConvertBetaProductViewIndexToDescTopIndex(selectedViewRadioButtonIndex));
         if(mapViewDescTop)
             rowIndex = mapViewDescTop->MapRowStartingIndex();
     }
-    else if(selectedViewRadioButtonIndex == BetaProductViewIndex::kCrossSectionView)
+    else if(selectedViewRadioButtonIndex == BetaProductViewIndex::CrossSectionView)
         rowIndex = itsSmartMetDocumentInterface->CrossSectionSystem()->StartRowIndex();
 
     return rowIndex;
 }
 
 // Asettaa näytön oikean (absoluuttisen) rivinumeron (ei suhteellista rivinumeroa)
-void CFmiBetaProductDialog::SetViewRowIndex(int selectedViewRadioButtonIndex, int rowIndex)
+void CFmiBetaProductDialog::SetViewRowIndex(BetaProductViewIndex selectedViewRadioButtonIndex, int rowIndex)
 {
-    if(selectedViewRadioButtonIndex <= BetaProductViewIndex::kMapView3)
+    if(selectedViewRadioButtonIndex <= BetaProductViewIndex::MapView3)
     {
-        NFmiMapViewDescTop *mapViewDescTop = itsSmartMetDocumentInterface->MapViewDescTop(selectedViewRadioButtonIndex);
+        NFmiMapViewDescTop *mapViewDescTop = itsSmartMetDocumentInterface->MapViewDescTop(::ConvertBetaProductViewIndexToDescTopIndex(selectedViewRadioButtonIndex));
         if(mapViewDescTop)
             mapViewDescTop->MapRowStartingIndex(rowIndex);
     }
-    else if(selectedViewRadioButtonIndex == BetaProductViewIndex::kCrossSectionView)
+    else if(selectedViewRadioButtonIndex == BetaProductViewIndex::CrossSectionView)
         itsSmartMetDocumentInterface->CrossSectionSystem()->StartRowIndex(rowIndex);
 }
 
@@ -656,9 +680,9 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetFirstModelsInfo(SmartMetDocumentI
     return boost::shared_ptr<NFmiFastQueryInfo>();
 }
 
-NFmiMetTime CFmiBetaProductDialog::GetFirstModelOrigTime(unsigned int theDescTopIndex, int theRealRowIndex)
+NFmiMetTime CFmiBetaProductDialog::GetFirstModelOrigTime(BetaProductViewIndex selectedViewRadioButtonIndex, int theRealRowIndex)
 {
-    boost::shared_ptr<NFmiFastQueryInfo> info = ::GetFirstModelsInfo(itsSmartMetDocumentInterface, theDescTopIndex, theRealRowIndex);
+    boost::shared_ptr<NFmiFastQueryInfo> info = ::GetFirstModelsInfo(itsSmartMetDocumentInterface, ::ConvertBetaProductViewIndexToDescTopIndex(selectedViewRadioButtonIndex), theRealRowIndex);
     if(info)
         return info->OriginTime();
     else
@@ -675,13 +699,13 @@ NFmiTimeDescriptor CFmiBetaProductDialog::GetFirstModelsValidTimeDescriptor(unsi
 }
 
 // Lisätään tiedosto nimen polkuun mahdollinen listatuista riveistä ja row-subdirectory templaatista tuleva osio.
-void CFmiBetaProductDialog::AddImageRowPath(std::string &theImageFileNameBaseInOut, int theRowIndex)
+void CFmiBetaProductDialog::AddImageRowPath(const NFmiBetaProduct& theBetaProduct, std::string &theImageFileNameBaseInOut, int theRowIndex)
 {
-    if(itsBetaProduct->GetOriginalRowIndexies().size() && !itsBetaProduct->RowSubdirectoryTemplate().empty())
+    if(theBetaProduct.GetOriginalRowIndexies().size() && !theBetaProduct.RowSubdirectoryTemplate().empty())
     {
         PathUtils::addDirectorySeparatorAtEnd(theImageFileNameBaseInOut);
         std::string rowIndexStr = boost::lexical_cast<std::string>(theRowIndex);
-        std::string usedSubDirectory = itsBetaProduct->RowSubdirectoryTemplate();
+        std::string usedSubDirectory = theBetaProduct.RowSubdirectoryTemplate();
         boost::algorithm::ireplace_first(usedSubDirectory, "#", rowIndexStr);
         theImageFileNameBaseInOut += usedSubDirectory;
         PathUtils::addDirectorySeparatorAtEnd(theImageFileNameBaseInOut);
@@ -816,9 +840,9 @@ bool CFmiBetaProductDialog::CheckGenerationTimes(const NFmiMetTime &theStartingT
     }
 }
 
-NFmiMetTime CFmiBetaProductDialog::GetUsedModelTime(bool fGetStartTime, unsigned int theDescTopIndex, int theRealRowIndex, const NFmiMetTime &thePreCalculatedTime)
+NFmiMetTime CFmiBetaProductDialog::GetUsedModelTime(bool fGetStartTime, BetaProductViewIndex selectedViewRadioButtonIndex, int theRealRowIndex, const NFmiMetTime &thePreCalculatedTime)
 {
-    NFmiTimeDescriptor timeDesc = GetFirstModelsValidTimeDescriptor(theDescTopIndex, theRealRowIndex);
+    NFmiTimeDescriptor timeDesc = GetFirstModelsValidTimeDescriptor(::ConvertBetaProductViewIndexToDescTopIndex(selectedViewRadioButtonIndex), theRealRowIndex);
     if(timeDesc.IsEmpty())
         return thePreCalculatedTime;
     NFmiMetTime atime;
@@ -830,9 +854,9 @@ NFmiMetTime CFmiBetaProductDialog::GetUsedModelTime(bool fGetStartTime, unsigned
     return atime;
 }
 
-static NFmiRect GetWantedImageRelativeRect(NFmiMapViewDescTop &mapViewDescTop, int selectedViewRadioButtonIndex)
+static NFmiRect GetWantedImageRelativeRect(NFmiMapViewDescTop &mapViewDescTop, BetaProductViewIndex selectedViewRadioButtonIndex)
 {
-    if(selectedViewRadioButtonIndex <= CtrlViewUtils::SpecialDesctopIndex::kFmiMaxMapDescTopIndex)
+    if(selectedViewRadioButtonIndex <= BetaProductViewIndex::MapView3)
         return mapViewDescTop.RelativeMapRect();
     else
     {
@@ -845,13 +869,13 @@ static NFmiRect GetWantedImageRelativeRect(NFmiMapViewDescTop &mapViewDescTop, i
 // Jos on annettu synop asemien id:tä beta tuotteessa
 // JA jos on kyse aikasarjaikkuna piirrosta
 // TAI on kyse poikkileikkausnäytöstä ja käytössä on aikasarja TAI obs-model moodi.
-bool CFmiBetaProductDialog::IsSynopLocationsUsed(int selectedViewRadioButtonIndex, const std::vector<int> &synopLocationIds)
+bool CFmiBetaProductDialog::IsSynopLocationsUsed(BetaProductViewIndex selectedViewRadioButtonIndex, const std::vector<int> &synopLocationIds)
 {
     if(synopLocationIds.empty())
         return false;
-    if(selectedViewRadioButtonIndex == BetaProductViewIndex::kTimeSerialView || selectedViewRadioButtonIndex == BetaProductViewIndex::kSoundingView)
+    if(selectedViewRadioButtonIndex == BetaProductViewIndex::TimeSerialView || selectedViewRadioButtonIndex == BetaProductViewIndex::SoundingView)
         return true;
-    else if(selectedViewRadioButtonIndex == BetaProductViewIndex::kCrossSectionView)
+    else if(selectedViewRadioButtonIndex == BetaProductViewIndex::CrossSectionView)
     {
         auto crossMode = itsSmartMetDocumentInterface->CrossSectionSystem()->GetCrossMode();
         if(crossMode == NFmiCrossSectionSystem::CrossMode::kObsAndFor || crossMode == NFmiCrossSectionSystem::CrossMode::kTime)
@@ -887,15 +911,15 @@ bool CFmiBetaProductDialog::SetStationIdLocation(const NFmiBetaProduct &theBetaP
     auto synopLocation = ::GetSynopLocation(itsSmartMetDocumentInterface, synopLocationId);
     if(synopLocation)
     {
-        int usedViewRadioButtonIndex = theBetaProduct.SelectedViewIndex();
-        if(usedViewRadioButtonIndex == BetaProductViewIndex::kTimeSerialView || usedViewRadioButtonIndex == BetaProductViewIndex::kSoundingView)
+        BetaProductViewIndex usedViewRadioButtonIndex = theBetaProduct.SelectedViewIndex();
+        if(usedViewRadioButtonIndex == BetaProductViewIndex::TimeSerialView || usedViewRadioButtonIndex == BetaProductViewIndex::SoundingView)
         {
             unsigned int mainMapViewIndex = 0;
             auto editedInfo = itsSmartMetDocumentInterface->EditedSmartInfo();
             auto mapViewDesktop = itsSmartMetDocumentInterface->MapViewDescTop(mainMapViewIndex);
             itsSmartMetDocumentInterface->SelectLocations(mainMapViewIndex, editedInfo, mapViewDesktop->MapHandler()->Area(), synopLocation->GetLocation(), itsSmartMetDocumentInterface->CurrentTime(mainMapViewIndex), kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiSelectionMask, true, false);
         }
-        else if(usedViewRadioButtonIndex == BetaProductViewIndex::kCrossSectionView)
+        else if(usedViewRadioButtonIndex == BetaProductViewIndex::CrossSectionView)
         {
             itsSmartMetDocumentInterface->CrossSectionSystem()->StartPoint(synopLocation->GetLocation());
         }
@@ -928,7 +952,7 @@ void CFmiBetaProductDialog::MakeVisualizationImages(const NFmiBetaProduct &theBe
             itsTotalImagesGenerated = 0;
             std::string makeTimeStampString = theMakeTime.ToStr(kYYYYMMDDHHMM);
 
-            int usedViewRadioButtonIndex = theBetaProduct.SelectedViewIndex();
+            auto usedViewRadioButtonIndex = theBetaProduct.SelectedViewIndex();
             int origRowIndex = GetViewRowIndex(usedViewRadioButtonIndex);
             std::vector<int> usedRowIndexies = theBetaProduct.GetUsedRowIndexies(origRowIndex);
             std::vector<int> synopLocationIds = theBetaProduct.SynopStationIdList();
@@ -937,10 +961,11 @@ void CFmiBetaProductDialog::MakeVisualizationImages(const NFmiBetaProduct &theBe
             int totalImageCount = ::CalcTotalImageCount(theBetaProduct, usedRowIndexies, synopLocationIds, useSynopLocations);
             itsImageGenerationProgressControl.SetRange(0, totalImageCount);
             itsImageGenerationProgressControl.SetPos(0);
-            auto descTop = itsSmartMetDocumentInterface->MapViewDescTop(usedViewRadioButtonIndex);
+            auto descTopIndex = ::ConvertBetaProductViewIndexToDescTopIndex(usedViewRadioButtonIndex);
+            auto descTop = itsSmartMetDocumentInterface->MapViewDescTop(descTopIndex);
             float oldTimeStepInHours = descTop->TimeControlTimeStep();
             descTop->TimeControlTimeStep(theBetaProduct.TimeStepInMinutes() / 60.f);
-            NFmiMetTime originalViewTime = itsSmartMetDocumentInterface->CurrentTime(usedViewRadioButtonIndex); // otetaan nykyinen näytön aika talteen
+            NFmiMetTime originalViewTime = itsSmartMetDocumentInterface->CurrentTime(descTopIndex); // otetaan nykyinen näytön aika talteen
 
             if(useSynopLocations)
             {
@@ -963,7 +988,7 @@ void CFmiBetaProductDialog::MakeVisualizationImages(const NFmiBetaProduct &theBe
             descTop->TimeControlTimeStep(oldTimeStepInHours);
             SetViewRowIndex(usedViewRadioButtonIndex, origRowIndex);
 
-            itsSmartMetDocumentInterface->CurrentTime(usedViewRadioButtonIndex, originalViewTime); // asetus takaisin alkuaikaan
+            itsSmartMetDocumentInterface->CurrentTime(descTopIndex, originalViewTime); // asetus takaisin alkuaikaan
         }
     }
     catch(...)
@@ -1057,7 +1082,7 @@ static void AutoFileNameChanges(SmartMetDocumentInterface *smartMetDocumentInter
 const std::string g_OrigTimeStampString = "origTime";
 const std::string g_MakeTimeStampString = "makeTime";
 
-static std::string MakeFinalImageFileName(SmartMetDocumentInterface *smartMetDocumentInterface, const NFmiBetaProduct &theBetaProduct, unsigned int selectedViewRadioButtonIndex, const std::string &rowImageFileNameBase, const NFmiMetTime &currentTime, const NFmiMetTime &theMakeTime, const NFmiMetTime &modelOrigTime, int rowIndex, int synopStationId)
+static std::string MakeFinalImageFileName(SmartMetDocumentInterface *smartMetDocumentInterface, const NFmiBetaProduct &theBetaProduct, BetaProductViewIndex selectedViewRadioButtonIndex, const std::string &rowImageFileNameBase, const NFmiMetTime &currentTime, const NFmiMetTime &theMakeTime, const NFmiMetTime &modelOrigTime, int rowIndex, int synopStationId)
 {
     std::string imageFileName = rowImageFileNameBase;
     std::string validTimeStampString = currentTime.ToStr(kYYYYMMDDHHMM);
@@ -1073,25 +1098,61 @@ static std::string MakeFinalImageFileName(SmartMetDocumentInterface *smartMetDoc
         std::string synopStationIdString = std::to_string(synopStationId);
         boost::algorithm::ireplace_first(imageFileName, NFmiBetaProductionSystem::FileNameTemplateStationIdStamp(), synopStationIdString);
     }
-    ::AutoFileNameChanges(smartMetDocumentInterface, theBetaProduct, selectedViewRadioButtonIndex, rowIndex, currentTime, theMakeTime, imageFileName); // theMakeTime:a käytetään täällä tarkasteluissa myös seinäkelloaikana
+    ::AutoFileNameChanges(smartMetDocumentInterface, theBetaProduct, ::ConvertBetaProductViewIndexToDescTopIndex(selectedViewRadioButtonIndex), rowIndex, currentTime, theMakeTime, imageFileName); // theMakeTime:a käytetään täällä tarkasteluissa myös seinäkelloaikana
     return imageFileName;
+}
+
+static std::string GetViewIndexName(BetaProductViewIndex selectedViewRadioButtonIndex)
+{
+    switch(selectedViewRadioButtonIndex)
+    {
+    case BetaProductViewIndex::MainMapView:
+        return "Main-map-view";
+    case BetaProductViewIndex::MapView2:
+        return "Map-view-2";
+    case BetaProductViewIndex::MapView3:
+        return "Map-view-3";
+    case BetaProductViewIndex::TimeSerialView:
+        return "Time-serial-view";
+    case BetaProductViewIndex::SoundingView:
+        return "Sounding-view";
+    case BetaProductViewIndex::CrossSectionView:
+        return "Cross-section-view";
+    default:
+        return "No-view";
+    }
+}
+
+static void LogImageGenerationForRowAction(std::string startString, int rowIndex, BetaProductViewIndex selectedViewRadioButtonIndex)
+{
+    std::string logMessage = startString;
+    logMessage += " in ";
+    logMessage += ::GetViewIndexName(selectedViewRadioButtonIndex);
+    if(selectedViewRadioButtonIndex != BetaProductViewIndex::TimeSerialView && selectedViewRadioButtonIndex != BetaProductViewIndex::SoundingView)
+    {
+        logMessage += " row ";
+        logMessage += std::to_string(rowIndex);
+    }
+    CatLog::logMessage(logMessage, CatLog::Severity::Debug, CatLog::Category::Operational);
 }
 
 void CFmiBetaProductDialog::MakeVisualizationImagesRowLoop(const NFmiBetaProduct &theBetaProduct, const NFmiMetTime &theStartingTime, bool useModelStartTime, const NFmiMetTime &theEndingTime, bool useModelEndTime, const NFmiMetTime &theMakeTime, bool justLogMessages, const std::vector<int> &usedRowIndexies, int totalImageCount, int synopStationId, bool deleteDestinationDirectory)
 {
     std::string imageFileNameBase = ::MakeImageFileNameBase(theBetaProduct);
     CBitmap mapScreenBitmap;
-    unsigned int usedMapViewDesktopIndex = theBetaProduct.SelectedViewIndex();
-    auto descTop = itsSmartMetDocumentInterface->MapViewDescTop(usedMapViewDesktopIndex);
+    auto selectedViewRadioButtonIndex = theBetaProduct.SelectedViewIndex();
+    auto descTopIndex = ::ConvertBetaProductViewIndexToDescTopIndex(selectedViewRadioButtonIndex);
+    auto descTop = itsSmartMetDocumentInterface->MapViewDescTop(descTopIndex);
     auto usedTimeStepInMinutes = theBetaProduct.TimeStepInMinutes();
     // row-for-loop
     for(size_t i = 0; i < usedRowIndexies.size(); i++)
     {
         int rowIndex = usedRowIndexies[i];
-        SetViewRowIndex(usedMapViewDesktopIndex, rowIndex);
-        itsSmartMetDocumentInterface->UpdateViewForOffScreenDraw(usedMapViewDesktopIndex); // Tämä päivittää oikeat näyttörivit kohdalleen ja niihin oikeat parametrit
+        ::LogImageGenerationForRowAction("Beta-automation generating images", rowIndex, selectedViewRadioButtonIndex);
+        SetViewRowIndex(selectedViewRadioButtonIndex, rowIndex);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->UpdateViewForOffScreenDraw(selectedViewRadioButtonIndex); // Tämä päivittää oikeat näyttörivit kohdalleen ja niihin oikeat parametrit
         std::string rowImageBaseDirectory = imageFileNameBase;
-        AddImageRowPath(rowImageBaseDirectory, rowIndex);
+        AddImageRowPath(theBetaProduct, rowImageBaseDirectory, rowIndex);
         std::string rowImageFileNameBase = rowImageBaseDirectory;
 
         // pitää varmistaa myös että rivikohtaiset alihakemistot luodaan tarvittaessa, paitsi jos on käytetty 
@@ -1101,17 +1162,17 @@ void CFmiBetaProductDialog::MakeVisualizationImagesRowLoop(const NFmiBetaProduct
 
         std::string rowIndexString = "Row";
         rowIndexString += NFmiStringTools::Convert(rowIndex);
-        NFmiMetTime modelOrigTime = GetFirstModelOrigTime(usedMapViewDesktopIndex, rowIndex);
-        NFmiMetTime usedStartTime = useModelStartTime ? GetUsedModelTime(true, usedMapViewDesktopIndex, rowIndex, theStartingTime) : theStartingTime;
-        NFmiMetTime usedEndTime = useModelEndTime ? GetUsedModelTime(false, usedMapViewDesktopIndex, rowIndex, theEndingTime) : theEndingTime;
+        NFmiMetTime modelOrigTime = GetFirstModelOrigTime(selectedViewRadioButtonIndex, rowIndex);
+        NFmiMetTime usedStartTime = useModelStartTime ? GetUsedModelTime(true, selectedViewRadioButtonIndex, rowIndex, theStartingTime) : theStartingTime;
+        NFmiMetTime usedEndTime = useModelEndTime ? GetUsedModelTime(false, selectedViewRadioButtonIndex, rowIndex, theEndingTime) : theEndingTime;
         for(NFmiMetTime currentTime(usedStartTime); currentTime <= usedEndTime; currentTime.ChangeByMinutes(usedTimeStepInMinutes))
         {
-            std::string imageFileName = ::MakeFinalImageFileName(itsSmartMetDocumentInterface, theBetaProduct, usedMapViewDesktopIndex, rowImageFileNameBase, currentTime, theMakeTime, modelOrigTime, rowIndex, synopStationId);
-            itsSmartMetDocumentInterface->CurrentTime(usedMapViewDesktopIndex, currentTime);
-            itsSmartMetDocumentInterface->DoOffScreenDraw(usedMapViewDesktopIndex, mapScreenBitmap);
+            std::string imageFileName = ::MakeFinalImageFileName(itsSmartMetDocumentInterface, theBetaProduct, selectedViewRadioButtonIndex, rowImageFileNameBase, currentTime, theMakeTime, modelOrigTime, rowIndex, synopStationId);
+            itsSmartMetDocumentInterface->CurrentTime(descTopIndex, currentTime);
+            ApplicationInterface::GetApplicationInterfaceImplementation()->DoOffScreenDraw(selectedViewRadioButtonIndex, mapScreenBitmap);
 
             bool throwErrors = justLogMessages; // Jos ollaan automaatio moodissa, halutaan että CFmiGdiPlusHelpers::SafelySaveMfcBitmapToFile -funktio heittaa poikkeuksen (joka lokitetaan), eikä avaa MessageBoxia (tämä tehdään kun generoidaan tuotteita manuaalisesti)
-            auto relativeViewImageArea = ::GetWantedImageRelativeRect(*descTop, usedMapViewDesktopIndex);
+            auto relativeViewImageArea = ::GetWantedImageRelativeRect(*descTop, selectedViewRadioButtonIndex);
             CFmiGdiPlusHelpers::SafelySaveMfcBitmapToFile(__FUNCTION__, &mapScreenBitmap, imageFileName, &relativeViewImageArea, throwErrors);
             UpdateGeneratedImagesText(++itsTotalImagesGenerated, totalImageCount);
             itsImageGenerationProgressControl.StepIt();
@@ -1144,21 +1205,17 @@ void CFmiBetaProductDialog::MakeVisualizationImagesManually(const NFmiMetTime &t
         return;
 
     itsBetaProductionSystem->BetaProductRuntime(theMakeTime);
-
     // Lasketaan start- ja end -time:t suoraan Beta-productin avulla
     NFmiBetaProductAutomation::NFmiTimeModeInfo startTimeMode(NFmiBetaProductAutomation::kFmiBetaProductTime);
     NFmiBetaProductAutomation::NFmiTimeModeInfo endTimeMode(NFmiBetaProductAutomation::kFmiBetaProductTime);
-
     NFmiMetTime startingTime = CalcStartingTime(*itsBetaProduct, startTimeMode, theMakeTime);
     NFmiMetTime endingTime = CalcEndingTime(*itsBetaProduct, endTimeMode, startingTime, theMakeTime);
-
     MakeVisualizationImages(*itsBetaProduct, startingTime, false, endingTime, false, theMakeTime, false);
 }
 
 void CFmiBetaProductDialog::DoBetaProductGenerations(std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> &theDueAutomations, const NFmiMetTime &theMakeTime)
 {
     itsDueAutomations = &theDueAutomations;
-
     std::function<void(const NFmiMetTime&)> generationFunction = std::bind(&CFmiBetaProductDialog::DoBetaProductGenerationsFinal, this, std::placeholders::_1);
     DoImageProducingProcess(generationFunction, theMakeTime, true);
 
@@ -1359,7 +1416,7 @@ void CFmiBetaProductDialog::OnBnClickedRadioCrossSectionView()
 void CFmiBetaProductDialog::UpdateViewSelection()
 {
     UpdateData(TRUE);
-    itsBetaProduct->SelectedViewIndex(itsSelectedViewIndex);
+    itsBetaProduct->SelectedViewIndex(static_cast<BetaProductViewIndex>(itsSelectedViewIndex));
     Update(); // Aika tekstit pitää myös päivittää kun näyttö vaihtuu
     UpdateSynopStationEditColors();
 }
@@ -1400,7 +1457,7 @@ HBRUSH CFmiBetaProductDialog::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
     else if(pWnd->GetDlgCtrlID() == IDC_EDIT_SYNOP_STATION_ID_STRING)
     {
         // Täällä kontollilla voi olla 3 väriä: virhe=punainen, ei käytössä = harmaa ja normaali = musta
-        bool isSynopControlUsed = (itsBetaProduct->SelectedViewIndex() > BetaProductViewIndex::kMapView3);
+        bool isSynopControlUsed = (itsBetaProduct->SelectedViewIndex() > BetaProductViewIndex::MapView3);
         CFmiWin32Helpers::SetErrorColorForTextControl(pDC, itsBetaProduct->SynopStationIdListInputOk(), isSynopControlUsed);
     }
     return hbr;
