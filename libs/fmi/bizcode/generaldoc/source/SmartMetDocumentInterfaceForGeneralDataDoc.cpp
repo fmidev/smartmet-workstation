@@ -108,16 +108,6 @@ bool SmartMetDocumentInterfaceForGeneralDataDoc::CurrentTime(unsigned int theDes
     return itsDoc->GetCombinedMapHandler()->currentTime(theDescTopIndex, newCurrentTime, fStayInsideAnimationTimes);
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex)
-{
-    itsDoc->UpdateViewForOffScreenDraw(theMapViewDescTopIndex); // Tämä päivittää oikeat näyttörivit kohdalleen ja niihin oikeat parametrit
-}
-
-void SmartMetDocumentInterfaceForGeneralDataDoc::DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut)
-{
-    itsDoc->DoOffScreenDraw(theMapViewDescTopIndex, theDrawedScreenBitmapOut);
-}
-
 NFmiSatelliteImageCacheSystem& SmartMetDocumentInterfaceForGeneralDataDoc::SatelliteImageCacheSystem()
 {
     return itsDoc->SatelliteImageCacheSystem();

@@ -45,6 +45,7 @@ class CFmiGriddingOptionsDlg;
 class NFmiApplicationWinRegistry;
 class CFmiSoundingDataServerConfigurationsDlg;
 class CFmiVisualizationSettings;
+enum class BetaProductViewIndex;
 
 class CSmartMetDoc : public CDocument
 {
@@ -67,8 +68,8 @@ public:
     static std::map<std::string, std::string> MakeMapWindowPosMap(void);
     static std::map<std::string, std::string> MakeOtherWindowPosMap(void);
     void SaveViewPositionsToRegistry(void);
-    void DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut);
-    void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex);
+    void DoOffScreenDraw(BetaProductViewIndex selectedViewRadioButtonIndex, CBitmap &theDrawedScreenBitmapOut);
+    void UpdateViewForOffScreenDraw(BetaProductViewIndex selectedViewRadioButtonIndex);
     CWnd* GetView(int theWantedDescTopIndex);
     NFmiApplicationWinRegistry& ApplicationWinRegistry();
 

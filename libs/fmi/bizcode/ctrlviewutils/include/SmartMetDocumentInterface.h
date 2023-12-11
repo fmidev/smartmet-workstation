@@ -104,8 +104,6 @@ public:
     virtual void SetCurrentGeneratedBetaProduct(const NFmiBetaProduct* theBetaProduct) = 0;
     virtual const NFmiBetaProduct* GetCurrentGeneratedBetaProduct() = 0;
     virtual bool CurrentTime(unsigned int theDescTopIndex, const NFmiMetTime& newCurrentTime, bool fStayInsideAnimationTimes = false) = 0;
-    virtual void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex) = 0;
-    virtual void DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut) = 0;
     virtual NFmiSatelliteImageCacheSystem& SatelliteImageCacheSystem() = 0;
     virtual void MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) = 0;
     virtual NFmiApplicationWinRegistry& ApplicationWinRegistry() = 0;

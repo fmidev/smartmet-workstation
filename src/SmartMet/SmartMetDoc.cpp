@@ -3513,42 +3513,42 @@ CWnd* CSmartMetDoc::GetView(int theWantedDescTopIndex)
     }
 }
 
-void CSmartMetDoc::DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut)
+void CSmartMetDoc::DoOffScreenDraw(BetaProductViewIndex selectedViewRadioButtonIndex, CBitmap &theDrawedScreenBitmapOut)
 {
-    if(theMapViewDescTopIndex == 0)
+    if(selectedViewRadioButtonIndex == BetaProductViewIndex::MainMapView)
         CFmiWin32TemplateHelpers::DoOffScreenDraw(ApplicationInterface::GetSmartMetView(), SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), theDrawedScreenBitmapOut);
-    else if(theMapViewDescTopIndex == 1)
+    else if(selectedViewRadioButtonIndex == BetaProductViewIndex::MapView2)
         CFmiWin32TemplateHelpers::DoOffScreenDraw(itsExtraMapViewDlg1->MapView(), SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), theDrawedScreenBitmapOut);
-    else if(theMapViewDescTopIndex == 2)
+    else if(selectedViewRadioButtonIndex == BetaProductViewIndex::MapView3)
         CFmiWin32TemplateHelpers::DoOffScreenDraw(itsExtraMapViewDlg2->MapView(), SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), theDrawedScreenBitmapOut);
-    else if(theMapViewDescTopIndex == 3)
+    else if(selectedViewRadioButtonIndex == BetaProductViewIndex::TimeSerialView)
         CFmiWin32TemplateHelpers::DoOffScreenDrawForNonMapView(itsTimeSerialDataEditorDlg->GetTimeEditValuesView(), SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), theDrawedScreenBitmapOut);
-    else if(theMapViewDescTopIndex == 4)
+    else if(selectedViewRadioButtonIndex == BetaProductViewIndex::SoundingView)
     {
         // Lets set all possible temp info times to the main map's time
         SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->GetMTATempSystem().SetAllTempTimes(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->CurrentTime(0));
         CFmiWin32TemplateHelpers::DoOffScreenDrawForNonMapView(itsTempDialog->GetTempView(), SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), theDrawedScreenBitmapOut);
     }
-    else if(theMapViewDescTopIndex == 5)
+    else if(selectedViewRadioButtonIndex == BetaProductViewIndex::CrossSectionView)
         CFmiWin32TemplateHelpers::DoOffScreenDrawForNonMapView(itsCrossSectionDlg->GetCrossSectionView(), SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), theDrawedScreenBitmapOut);
 }
 
-void CSmartMetDoc::UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex)
+void CSmartMetDoc::UpdateViewForOffScreenDraw(BetaProductViewIndex selectedViewRadioButtonIndex)
 {
-    if(theMapViewDescTopIndex == 0)
+    if(selectedViewRadioButtonIndex == BetaProductViewIndex::MainMapView)
         ApplicationInterface::GetSmartMetView()->Update();
-    else if(theMapViewDescTopIndex == 1)
+    else if(selectedViewRadioButtonIndex == BetaProductViewIndex::MapView2)
         itsExtraMapViewDlg1->Update(true);
-    else if(theMapViewDescTopIndex == 2)
+    else if(selectedViewRadioButtonIndex == BetaProductViewIndex::MapView3)
         itsExtraMapViewDlg2->Update(true);
-    else if(theMapViewDescTopIndex == 3)
+    else if(selectedViewRadioButtonIndex == BetaProductViewIndex::TimeSerialView)
         CreateTimeEditor(true); // This creates dialog, if not created, and then updates it. 
-    else if(theMapViewDescTopIndex == 4)
+    else if(selectedViewRadioButtonIndex == BetaProductViewIndex::SoundingView)
     {
         CreateTempDlg(); // This creates dialog, if not created
         itsTempDialog->Update();
     }
-    else if(theMapViewDescTopIndex == 5)
+    else if(selectedViewRadioButtonIndex == BetaProductViewIndex::CrossSectionView)
         CreateCrossSectionDlg(true); // This creates dialog, if not created, and then updates it. 
 }
 
