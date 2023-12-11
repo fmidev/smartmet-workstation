@@ -281,7 +281,7 @@ NFmiBetaProduct::NFmiBetaProduct()
 ,fRowIndexInputOk(false)
 ,itsRowInputErrorString()
 ,itsRowIndexListInfoText()
-,itsSelectedViewIndex(0)
+,itsSelectedViewIndex(BetaProductViewIndex::MainMapView)
 ,itsViewMacroPath()
 ,fGivenViewMacroOk(false)
 ,itsWebSiteTitleString()
@@ -814,7 +814,7 @@ json_spirit::Object NFmiBetaProduct::MakeJsonObject(const NFmiBetaProduct &betaP
     ::AddNonEmptyStringJsonPair(betaProduct.WebSiteTitleString(), gJsonName_WebSiteTitle, jsonObject);
     ::AddNonEmptyStringJsonPair(betaProduct.WebSiteDescriptionString(), gJsonName_WebSiteDescription, jsonObject);
     ::AddNonEmptyStringJsonPair(betaProduct.CommandLineString(), gJsonName_CommandLine, jsonObject);
-    jsonObject.push_back(json_spirit::Pair(gJsonName_SelectedViewIndex, betaProduct.SelectedViewIndex()));
+    jsonObject.push_back(json_spirit::Pair(gJsonName_SelectedViewIndex, static_cast<int>(betaProduct.SelectedViewIndex())));
     ::AddNonEmptyStringJsonPair(betaProduct.SynopStationIdListString(), gJsonName_SynopStationIdList, jsonObject);
     if(defaultBetaProduct.PackImages() != betaProduct.PackImages())
         jsonObject.push_back(json_spirit::Pair(gJsonName_PackImages, betaProduct.PackImages()));
@@ -878,7 +878,7 @@ void NFmiBetaProduct::ParseJsonPair(json_spirit::Pair &thePair)
     else if(thePair.name_ == gJsonName_CommandLine)
         itsCommandLineString = thePair.value_.get_str();
     else if(thePair.name_ == gJsonName_SelectedViewIndex)
-        itsSelectedViewIndex = thePair.value_.get_int();
+        itsSelectedViewIndex = static_cast<BetaProductViewIndex>(thePair.value_.get_int());
     else if(thePair.name_ == gJsonName_SynopStationIdList)
         itsSynopStationIdListString = thePair.value_.get_str();
     else if(thePair.name_ == gJsonName_PackImages)
@@ -1985,6 +1985,21 @@ bool NFmiBetaProductAutomationList::HasAutomationAlready(const std::string &theF
     return pos != uniqueFilePaths.end();
 }
 
+static void LogBetaAutomationTrigger(NFmiBetaProductAutomationListItem & automationListItem, const NFmiMetTime &nextRuntime)
+{
+    std::string debugTriggerMessage = "Beta automation '";
+    debugTriggerMessage += automationListItem.AutomationName();
+    debugTriggerMessage += "' was triggered by ";
+    const auto& triggerModeInfo = automationListItem.itsBetaProductAutomation->TriggerModeInfo();
+    if(triggerModeInfo.itsTriggerMode == NFmiBetaProductAutomation::kFmiFixedTimes)
+        debugTriggerMessage += "fixed time";
+    else
+        debugTriggerMessage += "time step";
+    debugTriggerMessage += " at ";
+    debugTriggerMessage += nextRuntime.ToStr("HH:mm Utc", kEnglish);
+    CatLog::logMessage(debugTriggerMessage, CatLog::Severity::Debug, CatLog::Category::Operational);
+}
+
 std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductAutomationList::GetDueAutomations(const NFmiMetTime &theCurrentTime, const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, bool automationModeOn)
 {
     std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> dueAutomations;
@@ -2004,7 +2019,10 @@ std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductA
                 {
                     NFmiMetTime nextRuntime = triggerModeInfo.CalcNextDueTime(listItem->itsLastRunTime, automationModeOn);
                     if(nextRuntime > listItem->itsLastRunTime && nextRuntime <= theCurrentTime)
+                    {
+                        ::LogBetaAutomationTrigger(*listItem, nextRuntime);
                         dueAutomations.push_back(listItem);
+                    }
                 }
             }
         }
