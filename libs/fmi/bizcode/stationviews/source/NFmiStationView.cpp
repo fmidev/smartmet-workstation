@@ -1887,6 +1887,24 @@ float NFmiStationView::GetMacroParamValueFromCache(const NFmiExtraMacroParamData
 	return g_MacroParamValueWasNotInCache;
 }
 
+// Tooltip laskuja varten tehd‰‰n oma 'Probing' macroParam data on alueeltaan seuraava:
+// Tooltipin latlon piste tulee sen bottom-left-kulmaksi ja siit‰ koilliseen 100 metri‰ on top-right-kulma.
+// Laskentahilaksi 4x4, joihin ei oikeasti edes lasketa kuin yhteen pisteeseen.
+static boost::shared_ptr<NFmiFastQueryInfo> CreateTooltipProbingMacroParamData(boost::shared_ptr<NFmiArea>& mapArea, const NFmiPoint &tooltipLatlon)
+{
+	// Lasketaan uudet kulmapisteet suhteessa tooltip sijaintiin (=bottomLeft) ja tehd‰‰n siihen 4x4 hila.
+	if(mapArea)
+	{
+		NFmiLocation topRightLocation(tooltipLatlon);
+		// Siirryt‰‰n tooltip kohdasta koilliseen (= 45 astetta kun 0 astetta on pohjoiseen) 100 metri‰.
+		topRightLocation.SetLocation(45, 100, mapArea->PacificView());
+		boost::shared_ptr<NFmiArea> newArea(mapArea->CreateNewArea(tooltipLatlon, topRightLocation.GetLocation()));
+		return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(4, 4, NFmiInfoData::kMacroParam, newArea.get());
+	}
+
+	return boost::shared_ptr<NFmiFastQueryInfo>();
+}
+
 // Pelk‰n tooltipin lasku macroParamista.
 float NFmiStationView::CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extraMacroParamData, boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
 {
@@ -1898,7 +1916,7 @@ float NFmiStationView::CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extra
 	// Luodaan mahdollisimman pieni data, jotta tooltippien rakentelu menee joutuisasti.
 	// Ainoa asia mik‰ menetet‰‰n on, ett‰ jos joku laskee muuttujaan jotain ja haluaa 
 	// laskea siit‰ jotain alueellisia keskiarvoja tms., koska sit‰ ei voi tehd‰ probe hilalla.
-	auto probeData = CreateProbingMacroParamData(itsArea);
+	auto probeData = ::CreateTooltipProbingMacroParamData(itsArea, latlon);
 	return FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsMapViewDescTopIndex, theUsedDrawParam, fakeMatrixValues, true, doMultiThread, usedTime, latlon, itsInfo, fUseCalculationPoints, true, CalcUsedSpaceOutFactors(), probeData, &extraMacroParamData);
 }
 
