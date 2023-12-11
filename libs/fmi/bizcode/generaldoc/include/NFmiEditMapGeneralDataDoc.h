@@ -175,8 +175,6 @@ public:
     int GetTimeRangeForWarningMessagesOnMapViewInMinutes();
     Warnings::CapDataSystem& GetCapDataSystem();
     Q2ServerInfo& GetQ2ServerInfo();
-    void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex);
-    void DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut);
     NFmiBasicSmartMetConfigurations& BasicSmartMetConfigurations();
     boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData();
     void SetLastActiveDescTopAndViewRow(unsigned int theDescTopIndex, int theActiveRowIndex);
