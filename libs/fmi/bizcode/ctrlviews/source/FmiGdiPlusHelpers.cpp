@@ -262,6 +262,25 @@ bool CFmiGdiPlusHelpers::SaveMfcBitmapToFile(const std::string &theCallingFuncti
 	return false;
 }
 
+BOOL ChangeFileCreationTimeToCurrent(const CString& filePath) 
+{
+    CFileStatus fileStatus;
+
+    // Get the current file status
+    if(CFile::GetStatus(filePath, fileStatus)) 
+    {
+        // Set the current time as the creation timestamp
+        fileStatus.m_ctime = CTime::GetCurrentTime();
+
+        // Set the new status to the file
+        CFile::SetStatus(filePath, fileStatus);
+        return TRUE;
+    }
+
+    // Error occurred while updating timestamp
+    return FALSE;
+}
+
 // Käytetään kuvan tallennuksessa "store tmpFile -> rename to finalName" -toimintoa.
 // throwError -parametri, jos true => heittää std::runtime_error:in, jos false => avaa messageboxin
 bool CFmiGdiPlusHelpers::SafelySaveMfcBitmapToFile(const std::string &theCallingFunctionName, CBitmap *bm, const std::string &theFileName, const NFmiRect *theRelativeOutputArea, bool throwError)
@@ -270,7 +289,9 @@ bool CFmiGdiPlusHelpers::SafelySaveMfcBitmapToFile(const std::string &theCalling
     temporaryFileName += "_TMP";
     if(CFmiGdiPlusHelpers::SaveMfcBitmapToFile(theCallingFunctionName, bm, temporaryFileName, theRelativeOutputArea, throwError))
     {
-        MoveFileEx(CA2T(temporaryFileName.c_str()), CA2T(theFileName.c_str()), MOVEFILE_REPLACE_EXISTING);
+        CString finalFilePath = CA2T(theFileName.c_str());
+        MoveFileEx(CA2T(temporaryFileName.c_str()), finalFilePath, MOVEFILE_REPLACE_EXISTING);
+        ::ChangeFileCreationTimeToCurrent(finalFilePath);
     }
     return false;
 }
