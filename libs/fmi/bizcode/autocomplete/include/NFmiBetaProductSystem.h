@@ -5,6 +5,7 @@
 #include "json_spirit_value.h"
 #include "NFmiCachedRegistryValue.h"
 #include "NFmiExtraMacroParamData.h"
+#include "NFmiMilliSecondTimer.h"
 
 #include <set>
 
@@ -232,7 +233,7 @@ public:
         NFmiMetTime CalcNextDueTimeWithFixedTimes(const NFmiMetTime& theLastRunTime) const;
         NFmiMetTime CalcNextDueTimeWithTimeSteps(const NFmiMetTime& theLastRunTime) const;
         NFmiMetTime CalcNextDueTime(const NFmiMetTime &theLastRunTime, bool automationModeOn) const;
-        bool HasDataTriggerBeenLoaded(const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, const std::string& automationName, bool automationModeOn) const;
+        bool HasDataTriggerBeenLoaded(const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, const std::string& automationName, bool automationModeOn, int &postponeTriggerInMinutesOut) const;
         NFmiMetTime MakeFirstRunTimeOfGivenDay(const NFmiMetTime &theTime) const;
         bool operator==(const NFmiTriggerModeInfo &other) const;
         bool operator!=(const NFmiTriggerModeInfo &other) const;
@@ -378,6 +379,17 @@ public:
     NFmiMetTime itsNextRunTime; // Milloin tämä tuote pitäisi ajaa seuraavaksi
 };
 
+class NFmiPostponedBetaAutomation
+{
+public:
+    NFmiMilliSecondTimer itsPostponeTimer;
+    std::shared_ptr<NFmiBetaProductAutomationListItem> itsPostponedDataTriggeredAutomation;
+    int itsPostponeTimeInMinutes;
+
+    NFmiPostponedBetaAutomation(std::shared_ptr<NFmiBetaProductAutomationListItem> &postponedDataTriggeredAutomation, int postponeTimeInMinutes);
+    bool IsPostponeTimeOver();
+};
+
 class NFmiBetaProductAutomationList
 {
 public:
@@ -416,6 +428,7 @@ private:
     void RefreshAutomationIfNeeded(std::shared_ptr<NFmiBetaProductAutomationListItem> &automationListItem);
 
     AutomationContainer itsAutomationVector;
+    std::list<NFmiPostponedBetaAutomation> itsPostponedDataTriggeredAutomations;
 
     static BaseDirectoryGetterFunctionType itsBetaProductionBaseDirectoryGetter; // Tämä tieto löytyy NFmiBetaProductionSystem -luokasta. Annan siis näille luokille käyttöön kyseisen luokan metodin, jolta polku tarvittaessa pyydetään (näin luokien ei tarvitse tietää toisistaan mitään)
 };

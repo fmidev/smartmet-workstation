@@ -49,10 +49,15 @@ NFmiDefineWantedData::NFmiDefineWantedData(const NFmiProducer &producer,
 NFmiDefineWantedData::NFmiDefineWantedData(const NFmiProducer &producer,
                                            const NFmiParam &param,
                                            const NFmiLevel *level,
-                                           const std::string &originalDataString)
+                                           const std::string &originalDataString,
+                                           float offsetTimeInHours)
     : producer_(producer), param_(param), originalDataString_(originalDataString)
 {
   levelPtr_.reset(level ? new NFmiLevel(*level) : nullptr);
+  if(offsetTimeInHours > 0)
+  {
+    dataTriggerRelatedWaitForMinutes_ = boost::math::iround(offsetTimeInHours * 60.f);
+  }
 }
 
 NFmiDefineWantedData::NFmiDefineWantedData(const NFmiDefineWantedData &other)
@@ -61,7 +66,8 @@ NFmiDefineWantedData::NFmiDefineWantedData(const NFmiDefineWantedData &other)
       param_(other.param_),
       levelPtr_(),
       levelType_(other.levelType_),
-      originalDataString_(other.originalDataString_)
+      originalDataString_(other.originalDataString_),
+      dataTriggerRelatedWaitForMinutes_(other.dataTriggerRelatedWaitForMinutes_)
 {
   levelPtr_.reset(other.levelPtr_ ? new NFmiLevel(*other.levelPtr_) : nullptr);
 }
@@ -76,6 +82,7 @@ NFmiDefineWantedData &NFmiDefineWantedData::operator=(const NFmiDefineWantedData
     levelPtr_.reset(other.levelPtr_ ? new NFmiLevel(*other.levelPtr_) : nullptr);
     levelType_ = other.levelType_;
     originalDataString_ = other.originalDataString_;
+    dataTriggerRelatedWaitForMinutes_ = other.dataTriggerRelatedWaitForMinutes_;
   }
   return *this;
 }
@@ -113,6 +120,10 @@ bool NFmiDefineWantedData::operator==(const NFmiDefineWantedData &other) const
     return false;
   }
   if (levelType_ != other.levelType_)
+  {
+    return false;
+  }
+  if (dataTriggerRelatedWaitForMinutes_ != other.dataTriggerRelatedWaitForMinutes_)
   {
     return false;
   }
@@ -338,7 +349,8 @@ static bool IsPrimaryLevelDataType(boost::shared_ptr<NFmiFastQueryInfo> &info)
 static boost::shared_ptr<NFmiFastQueryInfo> FindWantedInfo(
     std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theInfos,
     FmiLevelType theLevelType,
-    std::set<ReasonForDataRejection> &rejectionReasonsOut)
+    std::set<ReasonForDataRejection> &rejectionReasonsOut,
+    bool allowStationData)
 {
   // T‰h‰n laitetaan talteen ei prim‰‰ri datatyyppi varmuuden varalle
   boost::shared_ptr<NFmiFastQueryInfo> backupData;
@@ -346,8 +358,7 @@ static boost::shared_ptr<NFmiFastQueryInfo> FindWantedInfo(
   for (size_t i = 0; i < theInfos.size(); i++)
   {
     boost::shared_ptr<NFmiFastQueryInfo> &info = theInfos[i];
-    // Vain hiladatat kelpaavat tarkasteluissa
-    if (info->Grid())
+    if (allowStationData || info->Grid())
     {
       if (searchSingleLevelData)
       {
@@ -384,15 +395,15 @@ static boost::shared_ptr<NFmiFastQueryInfo> FindWantedInfo(
     std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theInfos,
     const NFmiParam &param,
     const NFmiLevel *level,
-    std::set<ReasonForDataRejection> &rejectionReasonsOut)
+    std::set<ReasonForDataRejection> &rejectionReasonsOut,
+    bool allowStationData)
 {
   // T‰h‰n laitetaan talteen ei prim‰‰ri datatyyppi varmuuden varalle
   boost::shared_ptr<NFmiFastQueryInfo> backupData;
   bool searchSingleLevelData = (level == nullptr);
   for (auto &info : theInfos)
   {
-    // Vain hiladatat kelpaavat tarkasteluissa
-    if (info->Grid())
+    if (allowStationData || info->Grid())
     {
       if (info->Param(param))
       {
@@ -610,14 +621,15 @@ void NFmiExtraMacroParamData::InitializeMultiParamData(NFmiInfoOrganizer &theInf
 }
 
 FindWantedInfoData NFmiExtraMacroParamData::FindWantedInfo(NFmiInfoOrganizer &theInfoOrganizer,
-                                                           const NFmiDefineWantedData &wantedData)
+                                                           const NFmiDefineWantedData &wantedData,
+                                                           bool allowStationData)
 {
   std::set<ReasonForDataRejection> rejectionReasons;
   boost::shared_ptr<NFmiFastQueryInfo> info;
   if (wantedData.IsEditedData())
   {
     auto editedInfo = theInfoOrganizer.FindInfo(NFmiInfoData::kEditable);
-    if (editedInfo && editedInfo->IsGrid())
+    if (editedInfo && (allowStationData || editedInfo->IsGrid()))
       info = editedInfo;
     else
       rejectionReasons.insert(ReasonForDataRejection::NoGridData);
@@ -627,13 +639,14 @@ FindWantedInfoData NFmiExtraMacroParamData::FindWantedInfo(NFmiInfoOrganizer &th
     std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infos =
         theInfoOrganizer.GetInfos(wantedData.producer_.GetIdent());
     auto levelType = wantedData.levelType_;
-    info = ::FindWantedInfo(infos, levelType, rejectionReasons);
+    info = ::FindWantedInfo(infos, levelType, rejectionReasons, allowStationData);
   }
   else if (wantedData.IsParamProducerLevel())
   {
     std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infos =
         theInfoOrganizer.GetInfos(wantedData.producer_.GetIdent());
-    info = ::FindWantedInfo(infos, wantedData.param_, wantedData.UsedLevel(), rejectionReasons);
+    info = ::FindWantedInfo(
+        infos, wantedData.param_, wantedData.UsedLevel(), rejectionReasons, allowStationData);
   }
   return FindWantedInfoData(info, wantedData.originalDataString_, rejectionReasons);
 }

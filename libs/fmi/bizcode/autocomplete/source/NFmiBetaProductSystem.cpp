@@ -1271,7 +1271,7 @@ NFmiMetTime NFmiBetaProductAutomation::NFmiTriggerModeInfo::CalcNextDueTime(cons
     return NFmiMetTime::gMissingTime; // virhetilanne, palautetaan puuttuva aika
 }
 
-static bool CheckIfInfoWasOnTriggerList(boost::shared_ptr<NFmiFastQueryInfo> &info, const std::vector<std::string>& loadedDataTriggerList, const std::string &automationName)
+static bool CheckIfInfoWasOnTriggerList(boost::shared_ptr<NFmiFastQueryInfo> &info, const std::vector<std::string>& loadedDataTriggerList, const std::string &automationName, int dataTriggerWaitForMinutes)
 {
     if(info)
     {
@@ -1282,6 +1282,12 @@ static bool CheckIfInfoWasOnTriggerList(boost::shared_ptr<NFmiFastQueryInfo> &in
             debugTriggerMessage += automationName;
             debugTriggerMessage += "' was triggered by loading data: ";
             debugTriggerMessage += info->DataFileName();
+            if(dataTriggerWaitForMinutes > 0)
+            {
+                debugTriggerMessage += ", but trigger will be delayed by ";
+                debugTriggerMessage += std::to_string(dataTriggerWaitForMinutes);
+                debugTriggerMessage += " minutes";
+            }
             CatLog::logMessage(debugTriggerMessage, CatLog::Severity::Debug, CatLog::Category::Operational);
             return true;
         }
@@ -1289,7 +1295,65 @@ static bool CheckIfInfoWasOnTriggerList(boost::shared_ptr<NFmiFastQueryInfo> &in
     return false;
 }
 
-bool NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, const std::string& automationName, bool automationModeOn) const
+static std::string MakeLevelString(const NFmiLevel& level)
+{
+    std::string str;
+    switch(level.LevelType())
+    {
+    case kFmiPressureLevel:
+        str += "pressure ";
+        break;
+    case kFmiHybridLevel:
+        str += "hybrid lev";
+        break;
+    case kFmiHeight:
+        str += "height z";
+        break;
+    case kFmiFlightLevel:
+        str += "flight-level fl";
+        break;
+    default:
+        str += "unknown level type ";
+        break;
+    }
+
+    str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(level.LevelValue(), 1);
+    return str;
+}
+
+static void DoPossibleLogWarningAboutNonExistingLevel(NFmiInfoOrganizer& infoOrganizer, const NFmiDefineWantedData& triggerData, const std::vector<std::string>& loadedDataTriggerList, const std::string& automationName)
+{
+    auto* level = triggerData.UsedLevel();
+    if(level)
+    {
+        for(const auto& loadedDataFilenameFilter : loadedDataTriggerList)
+        {
+            auto infos = infoOrganizer.GetInfos(loadedDataFilenameFilter);
+            for(auto& info : infos)
+            {
+                if(info->SizeLevels() > 1)
+                {
+                    if(*(info->Producer()) == triggerData.producer_)
+                    {
+                        if(info->LevelType() == level->LevelType())
+                        {
+                            std::string debugTriggerMessage = "Beta automation '";
+                            debugTriggerMessage += automationName;
+                            debugTriggerMessage += "' has data trigger level (";
+                            debugTriggerMessage += ::MakeLevelString(*level);
+                            debugTriggerMessage += ") which was not found in loaded level data of wanted type: ";
+                            debugTriggerMessage += info->DataFileName();
+                            debugTriggerMessage += ", maybe beta-automation trigger data should be fixed?";
+                            CatLog::logMessage(debugTriggerMessage, CatLog::Severity::Warning, CatLog::Category::Operational);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+bool NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, const std::string& automationName, bool automationModeOn, int& postponeTriggerInMinutesOut) const
 {
     if(automationModeOn)
     {
@@ -1307,18 +1371,25 @@ bool NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(co
                         auto infoList = infoOrganizer.GetInfos(wantedProducerId);
                         for(auto& info : infoList)
                         {
-                            if(::CheckIfInfoWasOnTriggerList(info, loadedDataTriggerList, automationName))
+                            if(::CheckIfInfoWasOnTriggerList(info, loadedDataTriggerList, automationName, triggerData.dataTriggerRelatedWaitForMinutes_))
                             {
+                                postponeTriggerInMinutesOut = triggerData.dataTriggerRelatedWaitForMinutes_;
                                 return true;
                             }
                         }
                     }
                     else
                     {
-                        auto wantedInfoData = NFmiExtraMacroParamData::FindWantedInfo(infoOrganizer, triggerData);
-                        if(::CheckIfInfoWasOnTriggerList(wantedInfoData.foundInfo_, loadedDataTriggerList, automationName))
+                        // NFmiExtraMacroParamData::FindWantedInfo metodille pitää sallia etsiä myös asemadatoja (3. parametri true).
+                        auto wantedInfoData = NFmiExtraMacroParamData::FindWantedInfo(infoOrganizer, triggerData, true);
+                        if(::CheckIfInfoWasOnTriggerList(wantedInfoData.foundInfo_, loadedDataTriggerList, automationName, triggerData.dataTriggerRelatedWaitForMinutes_))
                         {
+                            postponeTriggerInMinutesOut = triggerData.dataTriggerRelatedWaitForMinutes_;
                             return true;
+                        }
+                        else if(triggerData.IsParamProducerLevel())
+                        {
+                            ::DoPossibleLogWarningAboutNonExistingLevel(infoOrganizer, triggerData, loadedDataTriggerList, automationName);
                         }
                     }
                 }
@@ -1749,6 +1820,21 @@ void NFmiBetaProductAutomationListItem::ParseJsonPair(json_spirit::Pair &thePair
         itsBetaProductAutomationAbsolutePath = thePair.value_.get_str();
 }
 
+// ********************************************************************
+// *******  NFmiPostponedBetaAutomation osio alkaa  *******************
+// ********************************************************************
+
+NFmiPostponedBetaAutomation::NFmiPostponedBetaAutomation(std::shared_ptr<NFmiBetaProductAutomationListItem> &postponedDataTriggeredAutomation, int postponeTimeInMinutes)
+:itsPostponeTimer()
+,itsPostponedDataTriggeredAutomation(postponedDataTriggeredAutomation)
+,itsPostponeTimeInMinutes(postponeTimeInMinutes)
+{}
+
+bool NFmiPostponedBetaAutomation::IsPostponeTimeOver()
+{
+    return itsPostponeTimer.CurrentTimeDiffInMSeconds() >= (itsPostponeTimeInMinutes * 1000 * 60);
+}
+
 
 // ********************************************************************
 // *******  NFmiBetaProductAutomationList osio alkaa  *****************
@@ -2000,6 +2086,32 @@ static void LogBetaAutomationTrigger(NFmiBetaProductAutomationListItem & automat
     CatLog::logMessage(debugTriggerMessage, CatLog::Severity::Debug, CatLog::Category::Operational);
 }
 
+static void AddPostponedAutomationsToDueList(std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>>& dueAutomationsInOut, std::list<NFmiPostponedBetaAutomation>& postponedDataTriggeredAutomations)
+{
+    for(auto it = postponedDataTriggeredAutomations.begin(); it != postponedDataTriggeredAutomations.end(); )
+    {
+        // Check condition for removal
+        if(it->IsPostponeTimeOver())
+        {
+            std::string debugTriggerMessage = "Postponed beta-automation '";
+            debugTriggerMessage += it->itsPostponedDataTriggeredAutomation->AutomationName();
+            debugTriggerMessage += "' is now triggered after ";
+            debugTriggerMessage += std::to_string(it->itsPostponeTimeInMinutes);
+            debugTriggerMessage += " minutes";
+            CatLog::logMessage(debugTriggerMessage, CatLog::Severity::Debug, CatLog::Category::Operational);
+            // Kopsataan myöhästetty automaatio ajettavien listalle
+            dueAutomationsInOut.push_back(it->itsPostponedDataTriggeredAutomation);
+            // Erase the current element and get the iterator to the next element
+            it = postponedDataTriggeredAutomations.erase(it);
+        }
+        else
+        {
+            // Move iterator to the next element
+            ++it; 
+        }
+    }
+}
+
 std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductAutomationList::GetDueAutomations(const NFmiMetTime &theCurrentTime, const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, bool automationModeOn)
 {
     std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> dueAutomations;
@@ -2012,8 +2124,14 @@ std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductA
                 const auto& triggerModeInfo = listItem->itsBetaProductAutomation->TriggerModeInfo();
                 if(triggerModeInfo.itsTriggerMode == NFmiBetaProductAutomation::kFmiDataTrigger)
                 {
-                    if(triggerModeInfo.HasDataTriggerBeenLoaded(loadedDataTriggerList, infoOrganizer, listItem->AutomationName(), automationModeOn))
-                        dueAutomations.push_back(listItem);
+                    int postponeTriggerInMinutes = 0;
+                    if(triggerModeInfo.HasDataTriggerBeenLoaded(loadedDataTriggerList, infoOrganizer, listItem->AutomationName(), automationModeOn, postponeTriggerInMinutes))
+                    {
+                        if(postponeTriggerInMinutes <= 0)
+                            dueAutomations.push_back(listItem);
+                        else
+                            itsPostponedDataTriggeredAutomations.push_back(NFmiPostponedBetaAutomation(listItem, postponeTriggerInMinutes));
+                    }
                 }
                 else
                 {
@@ -2027,6 +2145,8 @@ std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductA
             }
         }
     }
+
+    ::AddPostponedAutomationsToDueList(dueAutomations, itsPostponedDataTriggeredAutomations);
 
     return dueAutomations;
 }
