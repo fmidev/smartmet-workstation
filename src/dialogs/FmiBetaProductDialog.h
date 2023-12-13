@@ -72,6 +72,7 @@ private:
     void UpdateSynopStationEditColors();
     void UpdateBetaProductName();
     void DoImagePacking(const std::string &directoryPath);
+    void DoFileNameTemplateContainsStationIdIfNeededChecks();
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface; // ei omista, ei tuhoa
     NFmiBetaProductionSystem *itsBetaProductionSystem; // ei omista, ei tuhoa
@@ -79,6 +80,10 @@ private:
     CString itsFileNameTemplateU_;
     CString itsFileNameTemplateStampsStringU_;
     bool fFileNameTemplateContainsValidTime;
+    // Jos käytössä Synop asemien lista ja visualisointi aikasarja-, luotaus- tai poikkileikkausnäyttö (tietyt moodit),
+    // pitäisi tiedostonimeen lisätä 'stationid' sana kyseistä asemanumeroa varten.
+    // Jos synop-id jutuille ei ole tarvetta, tulee tähän aina true.
+    bool fFileNameTemplateContainsStationIdIfNeeded;
     CString itsTimeRangeInfoTextU_; // Tähän päätellään kuvien tuotannon aika-ranget ja niihin liittyvät mahdolliset virhetekstit
     CString itsTimeLengthInHoursStringU_;
     CString itsTimeStepInMinutesStringU_;

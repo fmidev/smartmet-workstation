@@ -1293,6 +1293,7 @@ void CFmiBetaProductDialog::UpdateSynopStationIdInfo()
 {
     UpdateData(TRUE);
     itsBetaProduct->CheckSynopStationIdListRelatedInputs(CFmiWin32Helpers::CT2std(itsSynopStationIdListTextU_));
+    DoFileNameTemplateContainsStationIdIfNeededChecks();
     CheckForGenerateButtonActivation();
     UpdateData(FALSE);
 
@@ -1311,6 +1312,7 @@ void CFmiBetaProductDialog::UpdateSynopStationEditColors()
 void CFmiBetaProductDialog::OnEnChangeEditSynopStationIdString()
 {
     UpdateSynopStationIdInfo();
+    UpdateFileNameTemplateInfo();
 }
 
 static bool CStingContainsZeroValue(const CString& cstringValue)
@@ -1329,6 +1331,10 @@ static bool CStingContainsZeroValue(const CString& cstringValue)
 
 bool CFmiBetaProductDialog::IsFileNameTemplateStampsOk() const
 {
+    if(!fFileNameTemplateContainsStationIdIfNeeded)
+    {
+        return false;
+    }
     return fFileNameTemplateContainsValidTime || fUseAutoFileNames || ::CStingContainsZeroValue(itsTimeLengthInHoursStringU_);
 }
 
@@ -1347,8 +1353,10 @@ std::string CFmiBetaProductDialog::GetFileNameTemplateStampsString()
         stampHelperString += ")";
         return stampHelperString;
     }
-    else
+    else if(!fFileNameTemplateContainsValidTime)
         return std::string("File name must contain '") + NFmiBetaProductionSystem::FileNameTemplateValidTimeStamp() + "'";
+    else
+        return std::string("File name must contain '") + NFmiBetaProductionSystem::FileNameTemplateStationIdStamp() + "'";
 }
 
 void CFmiBetaProductDialog::UpdateFileNameTemplateInfo()
@@ -1356,11 +1364,26 @@ void CFmiBetaProductDialog::UpdateFileNameTemplateInfo()
     UpdateData(TRUE);
     itsBetaProduct->UseAutoFileNames(fUseAutoFileNames == TRUE);
     fFileNameTemplateContainsValidTime = NFmiBetaProduct::ContainsStringCaseInsensitive(CFmiWin32Helpers::CT2std(itsFileNameTemplateU_), NFmiBetaProductionSystem::FileNameTemplateValidTimeStamp());
+    DoFileNameTemplateContainsStationIdIfNeededChecks();
     itsFileNameTemplateStampsStringU_ = CA2T(::GetDictionaryString(GetFileNameTemplateStampsString().c_str()).c_str());
 
     CheckForGenerateButtonActivation();
     EnableFileNameTemplateEdit();
     UpdateData(FALSE);
+}
+
+void CFmiBetaProductDialog::DoFileNameTemplateContainsStationIdIfNeededChecks()
+{
+    const auto& synopStationIdList = itsBetaProduct->SynopStationIdList();
+    auto useSynopLocations = IsSynopLocationsUsed(itsBetaProduct->SelectedViewIndex(), synopStationIdList);
+    if(useSynopLocations)
+    {
+        fFileNameTemplateContainsStationIdIfNeeded = NFmiBetaProduct::ContainsStringCaseInsensitive(CFmiWin32Helpers::CT2std(itsFileNameTemplateU_), NFmiBetaProductionSystem::FileNameTemplateStationIdStamp());
+    }
+    else
+    {
+        fFileNameTemplateContainsStationIdIfNeeded = true;
+    }
 }
 
 void CFmiBetaProductDialog::OnEnChangeEditRowIndexList()
@@ -1418,6 +1441,7 @@ void CFmiBetaProductDialog::UpdateViewSelection()
     UpdateData(TRUE);
     itsBetaProduct->SelectedViewIndex(static_cast<BetaProductViewIndex>(itsSelectedViewIndex));
     Update(); // Aika tekstit pitää myös päivittää kun näyttö vaihtuu
+    UpdateFileNameTemplateInfo();
     UpdateSynopStationEditColors();
 }
 
