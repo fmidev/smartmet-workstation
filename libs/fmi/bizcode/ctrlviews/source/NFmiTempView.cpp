@@ -4082,8 +4082,10 @@ static std::string GetTooltipValueStr(const std::string &theParStr, NFmiSounding
 {
 	std::string str = theParStr;
 	float value = soundingData.GetValueAtPressure(theParId, P);
-	if(value == kFloatMissing)
+	if(value == kFloatMissing && !soundingData.IsDataGood())
 	{
+		// Jos paineen avulla ei saatu arvoja, koska datassaa ei ole painearvoa (soundingData.IsDataGood() == false),
+		// haetaan standardi-ilmakehän korkeuden mukaan arvoa, jos datassa on sitten edes korkeus parametri käytössä.
 		value = soundingData.GetValueAtHeight(theParId, heigthInMetersInStaAth);
 	}
 		
