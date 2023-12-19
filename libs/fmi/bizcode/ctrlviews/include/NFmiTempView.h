@@ -30,6 +30,9 @@ public:
 	double itsIntegrationTimeOffset2InHours = 0;
 	int itsIntegrationPointsCount = 0;
 	int itsIntegrationTimesCount = 0;
+	// T‰m‰ GroundLevelValue juttu ei kuulu cache-avaimen tekoon, eik‰
+	// sit‰ verrata mitenk‰‰n IsSameSounding tarkasteluissa.
+	NFmiGroundLevelValue itsGroundLevelValue;
 
 	TotalSoundingData();
 	TotalSoundingData(NFmiMTATempSystem& mtaTempSystem);
@@ -114,13 +117,13 @@ class NFmiTempView : public NFmiCtrlView
 	void DrawHodografCurve(NFmiSoundingData &theData, int theProducerIndex);
 	void DrawHodografHeightMarkers(NFmiSoundingData &theData, int theProducerIndex);
 	NFmiPoint GetRelativePointFromHodograf(double u, double v);
-	void DrawSoundingInTextFormat(NFmiSoundingData &theData);
+	void DrawSoundingInTextFormat(TotalSoundingData & usedTotalData);
 	bool FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, TotalSoundingData &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo, const NFmiMTATempSystem::SoundingProducer &theProducer);
 	void DrawSounding(TotalSoundingData& theUsedDataInOut, int theProducerIndex, const NFmiColor &theUsedSoundingColor, bool fMainCurve, bool onSouthernHemiSphere, bool isNewData);
 	void DrawSoundingsInMTAMode(void);
 	void DrawBackground(void);
 	void DrawStabilityIndexData(NFmiSoundingData& usedData);
-	void DrawTextualSoundingData(NFmiSoundingData& usedData);
+	void DrawTextualSoundingData(TotalSoundingData& usedTotalData);
 	void DrawStabilityIndexBackground(const NFmiRect &sideViewRect);
 	void DrawDryAdiapaticks(void);
 	void DrawMoistAdiapaticks(void);
@@ -134,19 +137,19 @@ class NFmiTempView : public NFmiCtrlView
 	void DrawMixingRatio(const NFmiTempLabelInfo &theLabelInfo, const NFmiTempLineInfo &theLineInfo,
 						   const std::vector<double> &theValues, double startP, double endP, double deltaStartLevelP,
 						   NFmiDrawingEnvironment * theEnvi);
-	void DrawTemperatures(NFmiSoundingData &theData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo);
-	std::string MakeTextualSoundingLevelString(int levelIndex, std::deque<float>& pVec, std::deque<float>& tVec, std::deque<float>& tdVec, std::deque<float>& zVec, std::deque<float>& wsVec, std::deque<float>& wdVec);
-	std::vector<std::string> MakeSoundingDataLevelStrings(NFmiSoundingData& theData);
-	void DrawWantedTextualSoundingDataLevels(NFmiText& text, NFmiPoint& p, const std::vector<std::string>& levelStrings, double relativeLineHeight);
+	void DrawTemperatures(NFmiSoundingData &theData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo, const NFmiGroundLevelValue& groundLevelValue);
+	std::pair<float, std::string> MakeTextualSoundingLevelString(int levelIndex, std::deque<float>& pVec, std::deque<float>& tVec, std::deque<float>& tdVec, std::deque<float>& zVec, std::deque<float>& wsVec, std::deque<float>& wdVec);
+	std::vector<std::pair<float, std::string>> MakeSoundingDataLevelStrings(NFmiSoundingData& theData);
+	void DrawWantedTextualSoundingDataLevels(NFmiText& text, NFmiPoint& p, const std::vector<std::pair<float, std::string>>& levelStrings, double relativeLineHeight, const NFmiGroundLevelValue& groundLevelValue);
 	double CalcRelativeTextLineHeight(int fontSizeInPixels, double heightFactor);
 	double CalcSideViewTextRowCount(const NFmiRect& viewRect, const NFmiPoint &currentRowCursor, double relativeTextRowHeight, bool advanceBeforeDraw);
 	void DrawSimpleLineWithGdiplus(const NFmiTempLineInfo& lineInfo, const NFmiPoint& relativeP1, const NFmiPoint& relativeP2, bool fixEndPixelX, bool fixEndPixelY);
 	double GetPAxisChangeValue(double change);
 	void DrawLine(const NFmiPoint &p1, const NFmiPoint &p2, bool drawSpecialLines, int theTrueLineWidth, bool startWithXShift, int theHelpDotPixelSize, NFmiDrawingEnvironment * theEnvi);
 	void DrawHelpLineLabel(const NFmiPoint &p1, const NFmiPoint &theMoveLabelRelatively, double theValue, const NFmiTempLabelInfo &theLabelInfo, NFmiDrawingEnvironment * theEnvi, const std::string&thePostStr = std::string());
-	void DrawWind(NFmiSoundingData &theData, int theProducerIndex, bool onSouthernHemiSphere);
+	void DrawWind(NFmiSoundingData &theData, int theProducerIndex, bool onSouthernHemiSphere, const NFmiGroundLevelValue& groundLevelValue);
 	void DrawStationInfo(TotalSoundingData &theData, int theProducerIndex, bool isNewData);
-	void DrawHeightValues(NFmiSoundingData &theData, int theProducerIndex);
+	void DrawHeightValues(NFmiSoundingData &theData, int theProducerIndex, const NFmiGroundLevelValue& groundLevelValue);
 	void MoveToNextLine(double relativeLineHeight, NFmiPoint &theTextPoint);
 	void DrawNextLineToIndexView(double relativeLineHeight, NFmiText& theText, const std::string& theStr, NFmiPoint& theTextPoint, bool moveFirst = true, bool addToString = true);
 	void DrawLCL(NFmiSoundingData &theData, int theProducerIndex, FmiLCLCalcType theLCLCalcType);
@@ -157,8 +160,8 @@ class NFmiTempView : public NFmiCtrlView
 	bool ModifySoundingWinds(const NFmiPoint &thePlace, unsigned long theKey, short theDelta);
     void DrawSecondaryDataRect();
     void DrawSecondaryDataHorizontalAxel(NFmiTempLabelInfo &theLabelInfo, NFmiTempLineInfo &theLineInfo, FmiDirection theLabelTextAlignment, double theYPosition, const NFmiPoint &theLabelOffset);
-    void DrawSecondaryData(NFmiSoundingData &theUsedData, const NFmiColor &theUsedSoundingColor);
-    void DrawSecondaryData(NFmiSoundingData &theUsedData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo);
+    void DrawSecondaryData(NFmiSoundingData &theUsedData, const NFmiColor &theUsedSoundingColor, const NFmiGroundLevelValue& groundLevelValue);
+    void DrawSecondaryData(NFmiSoundingData &theUsedData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo, const NFmiGroundLevelValue& groundLevelValue);
     double SecondaryDataFrameXoffset(double theValue);
     void DrawSecondaryVerticalHelpLine(double theBottom, double theTop, double theValue);
     bool FillSoundingDataFromServer(const NFmiMTATempSystem::SoundingProducer &theProducer, NFmiSoundingData &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation);
@@ -178,9 +181,9 @@ class NFmiTempView : public NFmiCtrlView
 	const NFmiColor& GetSelectedProducersColor() const;
 	NFmiPoint CalcStringRelativeSize(const std::string& str, double fontSize, const std::string& fontName);
 	bool DoIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData);
-	bool FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo, const NFmiSoundingData::GroundLevelValue& theGroundLevelValue);
+	bool FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo);
 	std::vector<unsigned long> CalcAreaIntegrationLocationIndexes(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiLocation& theLocation, double theRangeInMeters);
-	bool FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo, unsigned long timeIndex1, unsigned long timeIndex2, const std::vector<unsigned long> &locationIndexes, const NFmiSoundingData::GroundLevelValue& theGroundLevelValue);
+	bool FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo, unsigned long timeIndex1, unsigned long timeIndex2, const std::vector<unsigned long> &locationIndexes);
 	bool CheckIsSoundingDataChanged(TotalSoundingData& theUsedData);
 	SoundingDataEqual MakeSoundingDataEqual();
 	void SetupLegendDrawingEnvironment();
@@ -202,7 +205,7 @@ class NFmiTempView : public NFmiCtrlView
 	void CheckIsTVisible(float T, float P, double yPos, int& potenciallyVisibleValuesInOut, int& actuallyVisibleValuesInOut);
 	void SetupTAxisValues(double startT, double endT);
 	bool ScanRangeForAllDataSkewT(double startT, double endT, int& potenciallyVisibleValuesInOut, int& actuallyVisibleValuesInOut);
-	NFmiSoundingData::GroundLevelValue GetPossibleGroundLevelValue(boost::shared_ptr<NFmiFastQueryInfo> &soundingInfo, const NFmiPoint& latlon, const NFmiMetTime& atime);
+	NFmiGroundLevelValue GetPossibleGroundLevelValue(boost::shared_ptr<NFmiFastQueryInfo> &soundingInfo, const NFmiPoint& latlon, const NFmiMetTime& atime);
 
 	double Tpot2x(double tpot, double p);
 	double pt2x(double p, double t);
