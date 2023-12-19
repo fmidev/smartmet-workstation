@@ -67,6 +67,10 @@ class NFmiDefineWantedData
   FmiLevelType levelType_ = kFmiNoLevelType;
   // Talletetaan alkuperäinen data stringi tähän
   std::string originalDataString_;
+  // Jos triggerille on annettu haluttu data vaikka T_ec[0.5h] tavalla,
+  // on tarkoitus että datan tulon jälkeen odotetaan 0.5 tuntia eli 30
+  //  minuuttia ,ennen kuin triggeri laukeaa.
+  int dataTriggerRelatedWaitForMinutes_ = 0;
 
   NFmiDefineWantedData();
   NFmiDefineWantedData(NFmiInfoData::Type dataType,
@@ -82,7 +86,8 @@ class NFmiDefineWantedData
   NFmiDefineWantedData(const NFmiProducer &producer,
                        const NFmiParam &param,
                        const NFmiLevel *level,
-                       const std::string &originalDataString);
+                       const std::string &originalDataString,
+                       float offsetTimeInHours);
   NFmiDefineWantedData(const NFmiDefineWantedData &other);
   NFmiDefineWantedData &operator=(const NFmiDefineWantedData &other);
   bool operator==(const NFmiDefineWantedData &other) const;
@@ -193,7 +198,7 @@ class NFmiExtraMacroParamData
   void MultiParam3(const MultiParamData &newValue) { itsMultiParam3 = newValue; }
   bool IsMultiParamCase() const;
   static FindWantedInfoData FindWantedInfo(NFmiInfoOrganizer &theInfoOrganizer,
-                                           const NFmiDefineWantedData &wantedData);
+                                           const NFmiDefineWantedData &wantedData, bool allowStationData = false);
 
  private:
   void InitializeResolutionData(const NFmiArea *usedArea, const NFmiPoint &usedResolutionInKm);

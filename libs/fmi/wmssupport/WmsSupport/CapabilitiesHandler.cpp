@@ -149,7 +149,7 @@ namespace Wms
 
                         try
                         {
-                            auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_ };
+                            auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_, server.acceptTimeDimensionalLayersOnly };
                             auto xml = fetchCapabilitiesXml(*client_, query, server.logFetchCapabilitiesRequest, server.doVerboseLogging, getCapabilitiesTimeoutInSeconds);
                             changedLayers_.changedLayers.clear();
                             children.push_back(capabilityTreeParser.parseXmlGeneral(xml, hashes_, changedLayers_));

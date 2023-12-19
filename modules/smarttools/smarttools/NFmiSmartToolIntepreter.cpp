@@ -3248,7 +3248,8 @@ std::pair<bool, NFmiDefineWantedData> NFmiSmartToolIntepreter::CheckForVariableD
                             NFmiDefineWantedData(*maskInfo->GetDataIdent().GetProducer(),
                                                  *maskInfo->GetDataIdent().GetParam(),
                                                  maskInfo->GetLevel(),
-                                                 originalDataVariableString));
+                                                 originalDataVariableString,
+                                                 maskInfo->TimeOffsetInHours()));
     }
   }
   return std::make_pair(false, NFmiDefineWantedData());

@@ -5,19 +5,20 @@
 #include "json_spirit_value.h"
 #include "NFmiCachedRegistryValue.h"
 #include "NFmiExtraMacroParamData.h"
+#include "NFmiMilliSecondTimer.h"
 
 #include <set>
 
 using BaseDirectoryGetterFunctionType = std::function<std::string()>;
 
-enum BetaProductViewIndex
+enum class BetaProductViewIndex
 {
-    kMainMapView = 0,
-    kMapView2 = 1,
-    kMapView3 = 2,
-    kTimeSerialView = 3,
-    kSoundingView = 4,
-    kCrossSectionView = 5
+    MainMapView = 0,
+    MapView2 = 1,
+    MapView3 = 2,
+    TimeSerialView = 3,
+    SoundingView = 4,
+    CrossSectionView = 5
 };
 
 // Luokka tiet‰‰ halutusta ajoajasta vain tunnin ja minuutin [Utc aika]. Sit‰ ei ole sidottu muuten mitenk‰‰n kalenteriin.
@@ -97,8 +98,8 @@ public:
     bool RowIndexInputOk() const { return fRowIndexInputOk; }
     bool SynopStationIdListInputOk() const { return fSynopStationIdListInputOk; }
 
-    int SelectedViewIndex() const { return itsSelectedViewIndex; }
-    void SelectedViewIndex(int newValue) { itsSelectedViewIndex = newValue; }
+    BetaProductViewIndex SelectedViewIndex() const { return itsSelectedViewIndex; }
+    void SelectedViewIndex(BetaProductViewIndex newValue) { itsSelectedViewIndex = newValue; }
 
     const std::string& ViewMacroPath() const { return  itsViewMacroPath; }
     void ViewMacroPath(const std::string &newValue) { itsViewMacroPath = newValue; }
@@ -169,7 +170,7 @@ private:
     std::string itsRowInputErrorString; // Riveihin liittyvien input arvojen virheraportointia
     std::string itsRowIndexListInfoText; // T‰h‰n p‰‰tell‰‰n kuvien tuotannon rivi-indeksit, alihakemisto infoa ja niihin liittyv‰t mahdolliset virhetekstit
 
-    int itsSelectedViewIndex;
+    BetaProductViewIndex itsSelectedViewIndex;
     std::string itsViewMacroPath;
     std::string itsOriginalViewMacroPath; // T‰h‰n talletetaan se polku, mink‰ k‰ytt‰j‰ on antanut dialogissa, t‰m‰ talletetaan myˆs lopulta tiedostoon
     bool fGivenViewMacroOk;
@@ -232,7 +233,7 @@ public:
         NFmiMetTime CalcNextDueTimeWithFixedTimes(const NFmiMetTime& theLastRunTime) const;
         NFmiMetTime CalcNextDueTimeWithTimeSteps(const NFmiMetTime& theLastRunTime) const;
         NFmiMetTime CalcNextDueTime(const NFmiMetTime &theLastRunTime, bool automationModeOn) const;
-        bool HasDataTriggerBeenLoaded(const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, const std::string& automationName, bool automationModeOn) const;
+        bool HasDataTriggerBeenLoaded(const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, const std::string& automationName, bool automationModeOn, int &postponeTriggerInMinutesOut) const;
         NFmiMetTime MakeFirstRunTimeOfGivenDay(const NFmiMetTime &theTime) const;
         bool operator==(const NFmiTriggerModeInfo &other) const;
         bool operator!=(const NFmiTriggerModeInfo &other) const;
@@ -378,6 +379,17 @@ public:
     NFmiMetTime itsNextRunTime; // Milloin t‰m‰ tuote pit‰isi ajaa seuraavaksi
 };
 
+class NFmiPostponedBetaAutomation
+{
+public:
+    NFmiMilliSecondTimer itsPostponeTimer;
+    std::shared_ptr<NFmiBetaProductAutomationListItem> itsPostponedDataTriggeredAutomation;
+    int itsPostponeTimeInMinutes;
+
+    NFmiPostponedBetaAutomation(std::shared_ptr<NFmiBetaProductAutomationListItem> &postponedDataTriggeredAutomation, int postponeTimeInMinutes);
+    bool IsPostponeTimeOver();
+};
+
 class NFmiBetaProductAutomationList
 {
 public:
@@ -416,6 +428,7 @@ private:
     void RefreshAutomationIfNeeded(std::shared_ptr<NFmiBetaProductAutomationListItem> &automationListItem);
 
     AutomationContainer itsAutomationVector;
+    std::list<NFmiPostponedBetaAutomation> itsPostponedDataTriggeredAutomations;
 
     static BaseDirectoryGetterFunctionType itsBetaProductionBaseDirectoryGetter; // T‰m‰ tieto lˆytyy NFmiBetaProductionSystem -luokasta. Annan siis n‰ille luokille k‰yttˆˆn kyseisen luokan metodin, jolta polku tarvittaessa pyydet‰‰n (n‰in luokien ei tarvitse tiet‰‰ toisistaan mit‰‰n)
 };

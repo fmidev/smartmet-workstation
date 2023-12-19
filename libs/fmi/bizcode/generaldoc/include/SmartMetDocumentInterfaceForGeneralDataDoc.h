@@ -31,8 +31,6 @@ public:
     void SetCurrentGeneratedBetaProduct(const NFmiBetaProduct *theBetaProduct) override;
     const NFmiBetaProduct* GetCurrentGeneratedBetaProduct() override;
     bool CurrentTime(unsigned int theDescTopIndex, const NFmiMetTime& newCurrentTime, bool fStayInsideAnimationTimes = false) override;
-    void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex) override;
-    void DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut) override;
     NFmiSatelliteImageCacheSystem& SatelliteImageCacheSystem() override;
     void MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override;
     NFmiApplicationWinRegistry& ApplicationWinRegistry() override;

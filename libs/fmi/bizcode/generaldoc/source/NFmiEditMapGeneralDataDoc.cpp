@@ -10432,6 +10432,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		auto dataTriggerList = GetDataTriggerListOwnership();
         if(BetaProductionSystem().DoNeededBetaAutomation(dataTriggerList, *InfoOrganizer()))
         {
+			// Päivitetään beta-dialogia, sillä jos se on auki ja beta-automaatio tabi on päällä, 
+			// haluamme että näemme automaatio listalla päivittyvät next ja last ajo ajat
+			ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Beta-automation triggered, update beta-dialog", SmartMetViewId::BetaProductionDlg);
         }
     }
 
@@ -10807,16 +10810,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     int RunningTimeInSeconds()
     {
         return itsBasicConfigurations.RunningTimeInSeconds();
-    }
-
-    void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex)
-    {
-        ApplicationInterface::GetApplicationInterfaceImplementation()->UpdateViewForOffScreenDraw(theMapViewDescTopIndex); // Tämä päivittää oikeat näyttörivit kohdalleen ja niihin oikeat parametrit
-    }
-
-    void DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut)
-    {
-        ApplicationInterface::GetApplicationInterfaceImplementation()->DoOffScreenDraw(theMapViewDescTopIndex, theDrawedScreenBitmapOut);
     }
 
     Q2ServerInfo& GetQ2ServerInfo()
@@ -13234,16 +13227,6 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiEditMapGeneralDataDoc::GetMosTemperatur
 NFmiBasicSmartMetConfigurations& NFmiEditMapGeneralDataDoc::BasicSmartMetConfigurations()
 {
     return pimpl->BasicSmartMetConfigurations();
-}
-
-void NFmiEditMapGeneralDataDoc::UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex)
-{
-    pimpl->UpdateViewForOffScreenDraw(theMapViewDescTopIndex);
-}
-
-void NFmiEditMapGeneralDataDoc::DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut)
-{
-    pimpl->DoOffScreenDraw(theMapViewDescTopIndex, theDrawedScreenBitmapOut);
 }
 
 Q2ServerInfo& NFmiEditMapGeneralDataDoc::GetQ2ServerInfo()

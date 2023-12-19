@@ -265,18 +265,18 @@ void ApplicationInterfaceForSmartMet::SetAllViewIconsDynamically()
         doc->SetAllViewIconsDynamically();
 }
 
-void ApplicationInterfaceForSmartMet::DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut)
+void ApplicationInterfaceForSmartMet::DoOffScreenDraw(BetaProductViewIndex selectedViewRadioButtonIndex, CBitmap &theDrawedScreenBitmapOut)
 {
     auto doc = GetDocument();
     if(doc)
-        doc->DoOffScreenDraw(theMapViewDescTopIndex, theDrawedScreenBitmapOut);
+        doc->DoOffScreenDraw(selectedViewRadioButtonIndex, theDrawedScreenBitmapOut);
 }
 
-void ApplicationInterfaceForSmartMet::UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex)
+void ApplicationInterfaceForSmartMet::UpdateViewForOffScreenDraw(BetaProductViewIndex selectedViewRadioButtonIndex)
 {
     auto doc = GetDocument();
     if(doc)
-        doc->UpdateViewForOffScreenDraw(theMapViewDescTopIndex);
+        doc->UpdateViewForOffScreenDraw(selectedViewRadioButtonIndex);
 }
 
 void ApplicationInterfaceForSmartMet::UpdateMainFrameTitle()

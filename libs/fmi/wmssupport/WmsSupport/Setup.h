@@ -50,6 +50,7 @@ namespace Wms
         bool doVerboseLogging = false;
         std::string delimiter;
         ServerSetup generic;
+        bool acceptTimeDimensionalLayersOnly = false;
     };
 
     class Setup

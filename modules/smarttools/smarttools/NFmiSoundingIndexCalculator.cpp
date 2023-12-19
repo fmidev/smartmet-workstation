@@ -38,7 +38,7 @@ bool NFmiSoundingIndexCalculator::FillSoundingData(
     const NFmiMetTime &theTime,
     const NFmiLocation &theLocation,
     const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
-    const NFmiSoundingData::GroundLevelValue &theGroundLevelValue)
+    const NFmiGroundLevelValue &theGroundLevelValue)
 {
   if (theInfo)
   {

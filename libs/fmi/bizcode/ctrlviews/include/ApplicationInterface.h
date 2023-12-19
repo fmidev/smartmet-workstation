@@ -15,6 +15,7 @@ class CSmartMetView;
 class CSmartMetDoc;
 class CDocument;
 class NFmiApplicationWinRegistry;
+enum class BetaProductViewIndex;
 
 // Interface that is meant to be used by NFmiEditMapGeneralDataDoc class by using functionalities from SmartMet application.
 class ApplicationInterface
@@ -61,8 +62,8 @@ public:
     virtual void PutWarningFlagTimerOn() = 0;
     virtual void CreateBetaProductDialog(SmartMetDocumentInterface *smartMetDocumentInterface) = 0;
     virtual void SetAllViewIconsDynamically() = 0;
-    virtual void DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut) = 0;
-    virtual void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex) = 0;
+    virtual void DoOffScreenDraw(BetaProductViewIndex selectedViewRadioButtonIndex, CBitmap &theDrawedScreenBitmapOut) = 0;
+    virtual void UpdateViewForOffScreenDraw(BetaProductViewIndex selectedViewRadioButtonIndex) = 0;
     virtual void UpdateMainFrameTitle() = 0;
     virtual void OpenLocationFinderDialog(CWnd *parentView) = 0;
     virtual NFmiApplicationWinRegistry& ApplicationWinRegistry() = 0;

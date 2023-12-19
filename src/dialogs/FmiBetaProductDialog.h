@@ -33,13 +33,13 @@ private:
     void InitControlsFromLoadedBetaProduct();
     void StoreControlValuesToDocument();
     bool CheckDestinationDirectory(const std::string &theDestinationDirectory, bool fAllowDestinationDelete, const NFmiBetaProduct &theBetaProduct);
-    NFmiMetTime GetFirstModelOrigTime(unsigned int theDescTopIndex, int theRealRowIndex);
+    NFmiMetTime GetFirstModelOrigTime(BetaProductViewIndex selectedViewRadioButtonIndex, int theRealRowIndex);
     NFmiTimeDescriptor GetFirstModelsValidTimeDescriptor(unsigned int theDescTopIndex, int theRealRowIndex);
-    int GetViewRowIndex(int selectedViewRadioButtonIndex);
-    void SetViewRowIndex(int selectedViewRadioButtonIndex, int rowIndex);
+    int GetViewRowIndex(BetaProductViewIndex selectedViewRadioButtonIndex);
+    void SetViewRowIndex(BetaProductViewIndex selectedViewRadioButtonIndex, int rowIndex);
     void UpdateRowInfo(bool fUpdateTimeSectionInTheEnd = false);
     void CheckForGenerateButtonActivation();
-    void AddImageRowPath(std::string &theImageFileNameBaseInOut, int theRowIndex);
+    void AddImageRowPath(const NFmiBetaProduct& theBetaProduct, std::string &theImageFileNameBaseInOut, int theRowIndex);
     void UpdateGeneratedImagesText(int theIndex, int theTotalImageCount);
     void UpdateViewSelection();
     void UpdateViewMacroInfo();
@@ -57,7 +57,7 @@ private:
     NFmiMetTime CalcStartingTime(const NFmiBetaProduct &theBetaProduct, const NFmiBetaProductAutomation::NFmiTimeModeInfo &theTimeMode, const NFmiMetTime &theMakeTime);
     NFmiMetTime CalcEndingTime(const NFmiBetaProduct &theBetaProduct, const NFmiBetaProductAutomation::NFmiTimeModeInfo &theTimeMode, const NFmiMetTime &theStartTime, const NFmiMetTime &theMakeTime);
     bool CheckGenerationTimes(const NFmiMetTime &theStartingTime, const NFmiMetTime &theEndingTime, bool justLogMessages);
-    NFmiMetTime GetUsedModelTime(bool fGetStartTime, unsigned int theDescTopIndex, int theRealRowIndex, const NFmiMetTime &thePreCalculatedTime);
+    NFmiMetTime GetUsedModelTime(bool fGetStartTime, BetaProductViewIndex selectedViewRadioButtonIndex, int theRealRowIndex, const NFmiMetTime &thePreCalculatedTime);
     void DoImageProducingProcess(std::function<void(const NFmiMetTime&)> &theGenerationFunction, const NFmiMetTime &theMakeTime, bool justLogMessages);
     void InitLocationSelector(CComboBox &theLocationSelector);
     FmiDirection GetSelectedParamBoxLocation();
@@ -65,13 +65,14 @@ private:
     bool IsFileNameTemplateStampsOk() const;
     void EnableFileNameTemplateEdit();
     void MakeVisualizationImagesRowLoop(const NFmiBetaProduct &theBetaProduct, const NFmiMetTime &theStartingTime, bool useModelStartTime, const NFmiMetTime &theEndingTime, bool useModelEndTime, const NFmiMetTime &theMakeTime, bool justLogMessages, const std::vector<int> &usedRowIndexies, int totalImageCount, int synopStationId, bool deleteDestinationDirectory);
-    bool IsSynopLocationsUsed(int selectedViewRadioButtonIndex, const std::vector<int> &synopLocationIds);
+    bool IsSynopLocationsUsed(BetaProductViewIndex selectedViewRadioButtonIndex, const std::vector<int> &synopLocationIds);
     bool SetStationIdLocation(const NFmiBetaProduct &theBetaProduct, int synopLocationId);
     void UpdateSynopStationIdInfo();
     void DoAllBetaProductUpdates();
     void UpdateSynopStationEditColors();
     void UpdateBetaProductName();
     void DoImagePacking(const std::string &directoryPath);
+    void DoFileNameTemplateContainsStationIdIfNeededChecks();
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface; // ei omista, ei tuhoa
     NFmiBetaProductionSystem *itsBetaProductionSystem; // ei omista, ei tuhoa
@@ -79,6 +80,10 @@ private:
     CString itsFileNameTemplateU_;
     CString itsFileNameTemplateStampsStringU_;
     bool fFileNameTemplateContainsValidTime;
+    // Jos käytössä Synop asemien lista ja visualisointi aikasarja-, luotaus- tai poikkileikkausnäyttö (tietyt moodit),
+    // pitäisi tiedostonimeen lisätä 'stationid' sana kyseistä asemanumeroa varten.
+    // Jos synop-id jutuille ei ole tarvetta, tulee tähän aina true.
+    bool fFileNameTemplateContainsStationIdIfNeeded;
     CString itsTimeRangeInfoTextU_; // Tähän päätellään kuvien tuotannon aika-ranget ja niihin liittyvät mahdolliset virhetekstit
     CString itsTimeLengthInHoursStringU_;
     CString itsTimeStepInMinutesStringU_;

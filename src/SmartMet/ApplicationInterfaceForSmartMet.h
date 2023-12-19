@@ -44,8 +44,8 @@ public:
     void PutWarningFlagTimerOn() override;  // CSmartMetView
     void CreateBetaProductDialog(SmartMetDocumentInterface *smartMetDocumentInterface) override; // CSmartMetDoc
     void SetAllViewIconsDynamically() override; // CSmartMetDoc
-    void DoOffScreenDraw(unsigned int theMapViewDescTopIndex, CBitmap &theDrawedScreenBitmapOut) override; // CSmartMetDoc
-    void UpdateViewForOffScreenDraw(unsigned int theMapViewDescTopIndex) override; // CSmartMetDoc
+    void DoOffScreenDraw(BetaProductViewIndex selectedViewRadioButtonIndex, CBitmap &theDrawedScreenBitmapOut) override; // CSmartMetDoc
+    void UpdateViewForOffScreenDraw(BetaProductViewIndex selectedViewRadioButtonIndex) override; // CSmartMetDoc
     void UpdateMainFrameTitle() override; // CMainFrame (CMainFrame*)AfxGetMainWnd()
     void OpenLocationFinderDialog(CWnd *parentView) override;
     NFmiApplicationWinRegistry& ApplicationWinRegistry() override;
