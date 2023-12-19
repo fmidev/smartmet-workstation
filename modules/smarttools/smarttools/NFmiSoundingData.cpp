@@ -8,7 +8,11 @@
 // ======================================================================
 
 #include "NFmiSoundingData.h"
+
 #include "NFmiSoundingFunctions.h"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/format.hpp>
 #include <newbase/NFmiAngle.h>
 #include <newbase/NFmiDataModifierAvg.h>
 #include <newbase/NFmiFastInfoUtils.h>
@@ -17,8 +21,6 @@
 #include <newbase/NFmiQueryDataUtil.h>
 #include <newbase/NFmiValueString.h>
 
-#include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
 #include <fstream>
 
 // On käynyt niin että haettaessa dataa serveriltä, on jokin data vektoreista jäänyt vajaaksi tai
@@ -42,11 +44,31 @@ static void FillAllDataContainersWithMissingValuesIfNeeded(
   }
 }
 
-bool NFmiSoundingData::GroundLevelValue::HasAnyValues() const
+// ********************************************
+// ******  NFmiGroundLevelValue ***************
+// ********************************************
+
+bool NFmiGroundLevelValue::HasAnyValues() const
 {
   return (itsStationPressureInMilliBars != kFloatMissing) ||
          (itsTopographyHeightInMillibars != kFloatMissing);
 }
+
+bool NFmiGroundLevelValue::IsBelowGroundLevelCase(float P) const
+{
+  if (P != kFloatMissing && HasAnyValues())
+  {
+    if (itsStationPressureInMilliBars != kFloatMissing)
+      return P > itsStationPressureInMilliBars;
+    if (itsTopographyHeightInMillibars != kFloatMissing)
+      return P > itsTopographyHeightInMillibars;
+  }
+  return false;
+}
+
+// ********************************************
+// ********  NFmiSoundingData *****************
+// ********************************************
 
 NFmiSoundingData::NFmiSoundingData()
     : itsLocation(),
@@ -339,8 +361,7 @@ float NFmiSoundingData::GetValueAtHeightHardWay(FmiParameterName theId, float H)
         }
       }
     }
-    // suurin sallittu ero height:issa, että arvo hyväksytään, jos pyydetty height on 'asteikon
-    // ulkona'
+    // suurin sallittu ero height:issa, että arvo hyväksytään, jos pyydetty height on 'asteikon ulkona'
     float maxPDiff = 50.;
     if (lastH != kFloatMissing && currentH != kFloatMissing && lastValue != kFloatMissing &&
         currentValue != kFloatMissing)
@@ -1107,7 +1128,7 @@ bool NFmiSoundingData::FillSoundingData(
     const NFmiLocation &theLocation,
     const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
     bool useFastFill,
-    const GroundLevelValue &theGroundLevelValue)
+    const NFmiGroundLevelValue &theGroundLevelValue)
 {
   ClearDatas();
   if (theInfo && theInfo->IsGrid())
@@ -1161,7 +1182,7 @@ bool NFmiSoundingData::FillSoundingData(
 void NFmiSoundingData::MakeFillDataPostChecks(
     const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
     const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
-    const GroundLevelValue &theGroundLevelValue)
+    const NFmiGroundLevelValue &theGroundLevelValue)
 {
   try
   {
@@ -1211,7 +1232,7 @@ static void CutStartOfVector(vectorContainer &theVec, int theCutIndex)
     theVec.erase(theVec.begin(), theVec.begin() + theCutIndex);
 }
 
-void NFmiSoundingData::FixByGroundLevelValue(const GroundLevelValue &theGroundLevelValue)
+void NFmiSoundingData::FixByGroundLevelValue(const NFmiGroundLevelValue &theGroundLevelValue)
 {
   if (theGroundLevelValue.HasAnyValues())
   {
@@ -1260,7 +1281,7 @@ void NFmiSoundingData::FixByGroundPressureValue(float theGroundPressureValue)
 // pintakerrokselle.
 void NFmiSoundingData::FixPressureDataSoundingWithGroundData(
     const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
-    const GroundLevelValue &theGroundLevelValue)
+    const NFmiGroundLevelValue &theGroundLevelValue)
 {
   if (theGroundDataInfo == nullptr && theGroundLevelValue.HasAnyValues())
   {
@@ -3201,7 +3222,7 @@ static void FillMissingParam(NFmiSoundingData &soundingData,
                              FmiParameterName par1,
                              FmiParameterName par2,
                              FmiParameterName missingPar,
-                             Calculation &paramCalculation)
+                             const Calculation &paramCalculation)
 {
   auto &data1 = soundingData.GetParamData(par1);
   auto &data2 = soundingData.GetParamData(par2);
@@ -3392,7 +3413,7 @@ void NFmiSoundingData::MakeFillDataPostChecksForServerData(
     FillMissingServerData();
     SetServerDataFromGroundLevelUp();
     InitZeroHeight();
-    FixPressureDataSoundingWithGroundData(theGroundDataInfo, GroundLevelValue());
+    FixPressureDataSoundingWithGroundData(theGroundDataInfo, NFmiGroundLevelValue());
     SetVerticalParamStatus();
   }
   catch (...)

@@ -100,8 +100,7 @@ class NFmiSoundingIndexCalculator
                                const NFmiMetTime &theTime,
                                const NFmiLocation &theLocation,
                                const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo,
-                               const NFmiSoundingData::GroundLevelValue &theGroundLevelValue =
-                                   NFmiSoundingData::GroundLevelValue());
+                               const NFmiGroundLevelValue &theGroundLevelValue = NFmiGroundLevelValue());
   static float Calc(NFmiSoundingData &theSoundingData, FmiSoundingParameters theParam);
   static float Calc(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo,
                     const NFmiPoint &theLatlon,
