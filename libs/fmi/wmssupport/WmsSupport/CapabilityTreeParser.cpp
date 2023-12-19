@@ -298,10 +298,20 @@ namespace Wms
 
 	} // end of unnamed namespace
 
-	CapabilityTreeParser::CapabilityTreeParser(const NFmiProducer& producer, const std::string& delimiter, std::function<bool(long, const std::string&)>& cacheHitCallback)
+
+	bool DimensionTimeData::hasTimeDimension() const
+	{
+		if(timeWindow_.empty())
+			return false;
+		return (startTime_ != NFmiMetTime::gMissingTime) && (endTime_ != NFmiMetTime::gMissingTime);
+	}
+
+
+	CapabilityTreeParser::CapabilityTreeParser(const NFmiProducer& producer, const std::string& delimiter, std::function<bool(long, const std::string&)>& cacheHitCallback, bool acceptTimeDimensionalLayersOnly)
 		:producer_{ producer }
 		, delimiter_{ delimiter }
 		, cacheHitCallback_{ cacheHitCallback }
+		,acceptTimeDimensionalLayersOnly_(acceptTimeDimensionalLayersOnly)
 	{}
 
 	std::unique_ptr<CapabilityTree> CapabilityTreeParser::parseXmlGeneral(std::string& xml, std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers)
@@ -378,25 +388,37 @@ namespace Wms
 		return false;
 	}
 
+	DimensionTimeData CapabilityTreeParser::getDimensionTimeData(LPXNode layerNode)
+	{
+		DimensionTimeData dimensionTimeData;
+		auto dimensionNode = layerNode->GetChilds(_TEXT("Dimension"));
+		if(!dimensionNode.empty())
+		{
+			auto dNode = dimensionNode.at(0);
+			dimensionTimeData.nodeName_ = XmlHelper::AttributeValue(dNode, "name");
+			if(dimensionTimeData.nodeName_ == "time")
+			{
+				dimensionTimeData.timeWindow_ = XmlHelper::ChildNodeValue(layerNode, "Dimension");
+				auto startEnd = parseDimension(dimensionTimeData.timeWindow_);
+				dimensionTimeData.startTime_ = startEnd.first;
+				dimensionTimeData.endTime_ = startEnd.second;
+			}
+		}
+		return dimensionTimeData;
+	}
+
 	void CapabilityTreeParser::ParseLeafLayer(std::unique_ptr<CapabilityNode>& subTree, LPXNode layerNode, std::list<std::string>& path,
 		std::map<long, std::map<long, LayerInfo>>& hashes, ChangedLayers& changedLayers)
 	{
 		if(layerNode)
 		{
-			auto dimensionNode = layerNode->GetChilds(_TEXT("Dimension"));
-			if(!dimensionNode.empty())
+			auto dimensionTimeData = getDimensionTimeData(layerNode);
+			if(!acceptTimeDimensionalLayersOnly_ || dimensionTimeData.hasTimeDimension())
 			{
-				auto dNode = dimensionNode.at(0);
-				std::string dimensionNodeValue = XmlHelper::AttributeValue(dNode, "name");
-				if(dimensionNodeValue == "time")
-				{
-					auto timeWindow = XmlHelper::ChildNodeValue(layerNode, "Dimension");
-					auto hasFlatFmiLayerStructure = DoGeneralPathHandling(layerNode, path);
-					auto name = XmlHelper::GetChildNodeText(layerNode, "Name");
-					cacheHitCallback_(producer_.GetIdent(), name);
-					auto startEnd = parseDimension(timeWindow);
-					addWithPossibleStyles(layerNode, subTree, path, timeWindow, changedLayers, hashes, startEnd, name, hasFlatFmiLayerStructure);
-				}
+				auto hasFlatFmiLayerStructure = DoGeneralPathHandling(layerNode, path);
+				auto name = XmlHelper::GetChildNodeText(layerNode, "Name");
+				cacheHitCallback_(producer_.GetIdent(), name);
+				addWithPossibleStyles(layerNode, subTree, path, changedLayers, hashes, dimensionTimeData, name, hasFlatFmiLayerStructure);
 			}
 		}
 	}
@@ -433,15 +455,15 @@ namespace Wms
 	}
 
 	void CapabilityTreeParser::addWithPossibleStyles(LPXNode layerNode, std::unique_ptr<CapabilityNode>& subTree,
-		std::list<std::string>& path, std::string& timeWindow, ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes
-		, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name, bool hasFlatFmiLayerStructure) const
+		std::list<std::string>& path, ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes,
+		DimensionTimeData& dimensionTimeData, std::string& name, bool hasFlatFmiLayerStructure) const
 	{
 		if(layerNode)
 		{
 			bool useAlsoAlternateFmiDefaultLayerName = false;
 			// Check if layer has multiple styles (then add all possibilities)
 			auto styles = lookForStyles(layerNode, useAlsoAlternateFmiDefaultLayerName);
-			addWithStyles(subTree, path, timeWindow, changedLayers, hashes, startEnd, name, styles, hasFlatFmiLayerStructure, useAlsoAlternateFmiDefaultLayerName);
+			addWithStyles(subTree, path, changedLayers, hashes, dimensionTimeData, name, styles, hasFlatFmiLayerStructure, useAlsoAlternateFmiDefaultLayerName);
 		}
 	}
 
@@ -449,7 +471,7 @@ namespace Wms
 	{
 		if(CatLog::logLevel() <= CatLog::Severity::Debug)
 		{
-			if(layerInfo.endTime.DifferenceInHours(layerInfo.startTime) <= 3)
+			if(layerInfo.hasTimeDimension && (layerInfo.endTime.DifferenceInHours(layerInfo.startTime) <= 3))
 			{
 				std::string logMessage = "Short time-window with Wms server ";
 				logMessage += serverName;
@@ -465,8 +487,8 @@ namespace Wms
 	}
 
 	void CapabilityTreeParser::addWithStyles(std::unique_ptr<CapabilityNode>& subTree,
-		std::list<std::string>& path, std::string& timeWindow, ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes
-		, std::pair<NFmiMetTime, NFmiMetTime>& startEnd, std::string& name, std::set<Wms::Style>& styles, bool hasFlatFmiLayerStructure, bool useAlsoAlternateFmiDefaultLayerName) const
+		std::list<std::string>& path, ChangedLayers& changedLayers, std::map<long, std::map<long, LayerInfo>>& hashes,
+		DimensionTimeData& dimensionTimeData, std::string& name, std::set<Wms::Style>& styles, bool hasFlatFmiLayerStructure, bool useAlsoAlternateFmiDefaultLayerName) const
 	{
 		if (styles.empty())
 		{
@@ -478,9 +500,11 @@ namespace Wms
 			);
 
 			auto layerInfo = LayerInfo{ name };
-			layerInfo.startTime = startEnd.first;
-			layerInfo.endTime = startEnd.second;
-			changedLayers.update(hashedName, layerInfo, timeWindow);
+			layerInfo.setTimeDimensions(dimensionTimeData.startTime_, dimensionTimeData.endTime_);
+			if(dimensionTimeData.hasTimeDimension())
+			{
+				changedLayers.update(hashedName, layerInfo, dimensionTimeData.timeWindow_);
+			}
 			hashes[producer_.GetIdent()][hashedName] = layerInfo;
 			if(hasFlatFmiLayerStructure && useAlsoAlternateFmiDefaultLayerName)
 			{
@@ -504,9 +528,16 @@ namespace Wms
 				);
 
 				auto layerInfo = LayerInfo{ name, style };
-				layerInfo.startTime = startEnd.first;
-				layerInfo.endTime = startEnd.second;
-				changedLayers.update(hashedName, layerInfo, timeWindow);
+				layerInfo.setTimeDimensions(dimensionTimeData.startTime_, dimensionTimeData.endTime_);
+				if(dimensionTimeData.hasTimeDimension())
+				{
+					changedLayers.update(hashedName, layerInfo, dimensionTimeData.timeWindow_);
+				}
+				//else
+				//{
+				//	std::string msg = "Timeless dimension layer: " + layerInfo.name + " from " + producer_.GetName();
+				//	CatLog::logMessage(msg, CatLog::Severity::Debug, CatLog::Category::NetRequest);
+				//}
 				hashes[producer_.GetIdent()][hashedName] = layerInfo;
 				traceLogLayerInfo(layerInfo, std::string(producer_.GetName()));
 			}

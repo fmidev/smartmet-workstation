@@ -8,6 +8,13 @@ static char THIS_FILE[] = __FILE__;
 
 namespace Wms
 {
+    void LayerInfo::setTimeDimensions(const NFmiMetTime& start, const NFmiMetTime& end)
+    {
+        startTime = start;
+        endTime = end;
+        hasTimeDimension = (startTime != NFmiMetTime::gMissingTime) && (endTime == NFmiMetTime::gMissingTime);
+    }
+
     bool operator<(const LayerInfo& info1, const LayerInfo& info2)
     {
         auto tmp1 = info1.name + info1.style.name;

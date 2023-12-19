@@ -39,6 +39,8 @@ namespace Wms
             dynamicSetup.delimiter = NFmiSettings::Optional(path + "::Delimiter", std::string(","));
             dynamicSetup.generic = parseServer(path);
             dynamicSetup.doVerboseLogging = doVerboseLogging;
+            dynamicSetup.acceptTimeDimensionalLayersOnly = NFmiSettings::Optional(path + "::AcceptTimeDimensionalLayersOnly", false);
+
             return dynamicSetup;
         }
 

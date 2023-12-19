@@ -129,7 +129,7 @@ namespace Wms
         auto layerInfo = getHashedLayerInfo(dataIdent);
         if(layerInfo)
         {
-            if(time > layerInfo->endTime || time < layerInfo->startTime)
+            if(layerInfo->hasTimeDimension && (time > layerInfo->endTime || time < layerInfo->startTime))
             {
                 if(CatLog::logLevel() <= CatLog::Severity::Debug)
                 {

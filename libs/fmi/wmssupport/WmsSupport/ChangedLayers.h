@@ -12,10 +12,13 @@ namespace Wms
     class LayerInfo
     {
     public:
+        void setTimeDimensions(const NFmiMetTime& start, const NFmiMetTime& end);
+
         std::string name;
         Style style;
         NFmiMetTime startTime;
         NFmiMetTime endTime;
+        bool hasTimeDimension = false;
     };
 
     bool operator<(const LayerInfo& info1, const LayerInfo& info2);
