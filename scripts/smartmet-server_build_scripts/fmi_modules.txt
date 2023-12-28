@@ -1,0 +1,75 @@
+# These module information are used by two scripts:
+# 1) xxx (which puts build system on local directory)
+# 2) yyy (multi make command that is used to build/install/etc all modules)
+# In each row there are 3 things about module separated by space
+# 1) github module name 2) local module name 3) local relative directory, where module will be located
+# E.g. smartmet-engine-contour contour brainstorm/engines
+# So module smartmet-engine-contour is cloned from github into brainstorm/engines/contour directory.
+# These modules must be in dependency order so that modules that depend on nothing from Fmi modules
+# are first and main programs building modules are last.
+# Näillä moduuleilla ei riippuvuuksia toisiin FMI kirjastoihin
+smartmet-fonts fonts .
+smartmet-library-regression regression .
+smartmet-library-macgyver macgyver .
+smartmet-timezones timezones .
+smartmet-library-woml woml .
+# Milloin utils pitää oikeasti buildata?
+smartmet-utils utils . 
+# Kirjastot joilla FMI kirjasto riippuvuuksia, rakennetaan riippuvuus järjestyksessä
+smartmet-library-gis gis .
+smartmet-library-giza giza .
+smartmet-library-locus locus .
+smartmet-library-trax trax .
+smartmet-library-newbase newbase .
+smartmet-library-smarttools smarttools .
+smartmet-library-calculator calculator .
+smartmet-library-imagine imagine .
+smartmet-library-imagine2 imagine2 .
+smartmet-library-spine spine .
+smartmet-library-textgen textgen .
+smartmet-library-timeseries timeseries .
+smartmet-library-delfoi delfoi .
+smartmet-library-grid-files grid-files .
+smartmet-library-grid-content content .
+smartmet-tools-grid grid .
+# Engines (näillä ei kai ole väliä missä järjestyksessä buildataan)
+smartmet-engine-authentication authentication brainstorm/engines
+smartmet-engine-avi avi brainstorm/engines
+smartmet-engine-contour contour brainstorm/engines
+smartmet-engine-geonames geonames brainstorm/engines
+smartmet-engine-gis gis brainstorm/engines
+smartmet-engine-grid grid brainstorm/engines
+smartmet-engine-observation observation brainstorm/engines
+smartmet-engine-querydata querydata brainstorm/engines
+smartmet-engine-sputnik sputnik brainstorm/engines
+# Plugins (näillä ei kai ole väliä missä järjestyksessä buildataan)
+smartmet-plugin-admin admin brainstorm\plugins
+smartmet-plugin-autocomplete autocomplete brainstorm\plugins
+smartmet-plugin-avi avi brainstorm\plugins
+smartmet-plugin-backend backend brainstorm\plugins
+smartmet-plugin-cross_section cross_section brainstorm\plugins
+smartmet-plugin-download download brainstorm\plugins
+smartmet-plugin-edr edr brainstorm\plugins
+smartmet-plugin-frontend frontend brainstorm\plugins
+smartmet-plugin-grid-admin grid-admin brainstorm\plugins
+smartmet-plugin-grid-gui grid-gui brainstorm\plugins
+smartmet-plugin-meta meta brainstorm\plugins
+smartmet-plugin-textgen textgen brainstorm\plugins
+smartmet-plugin-timeseries timeseries brainstorm\plugins
+smartmet-plugin-trajectory trajectory brainstorm\plugins
+smartmet-plugin-wfs wfs brainstorm\plugins
+smartmet-plugin-wms wms brainstorm\plugins
+# Pääohjelmat rakennetaan kirjastojen jälkeen
+smartmet-fmitools fmitools .
+smartmet-frontier frontier .
+smartmet-press press .
+smartmet-qdcontour qdcontour .
+smartmet-qdcontour2 qdcontour2 .
+smartmet-qdtools qdtools .
+smartmet-roadindex roadindex .
+smartmet-roadmodel roadmodel .
+smartmet-shapetools shapetools .
+smartmet-textgenapps textgenapps .
+smartmet-library-trajectory trajectory .
+smartmet-server server brainstorm
+
