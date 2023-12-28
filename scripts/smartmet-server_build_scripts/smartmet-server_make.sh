@@ -20,44 +20,10 @@ while IFS=' ' read -r str1 str2 str3 _rest; do
     fi
 done < "$file"
 
-# Define directories containing makefiles
-directories=(
-    "calculator"
-    "delfoi"
-    "fonts"
-    "frontier"
-    "gis"
-    "giza"
-    "grid"
-    "grid-content"
-    "grid-files"
-    "imagine"
-    "imagine2"
-    "locus"
-    "macgyver"
-    "newbase"
-    "press"
-    "qdcontour"
-    "qdcontour2"
-    "regression"
-    "roadindex"
-    "roadmodel"
-    "smarttools"
-    "spine"
-    "textgen"
-    "timeseries"
-    "timezones"
-    "trajectory"
-    "trax"
-    "utils"
-    "woml"
-)
-
 # Loop through modules and run make command
 for index in "${!local_relative_base_directory[@]}"; do
     make_file_directory="${local_relative_base_directory[$index]}/${local_module_names[$index]}"
     make_file_path="$make_file_directory/Makefile"
-    echo "Makefile path is $make_file_path"
     if [ -f "$make_file_path" ]; then
         echo "Running '$1' in '$make_file_directory'"
         (cd "$make_file_directory" && make "$1")
