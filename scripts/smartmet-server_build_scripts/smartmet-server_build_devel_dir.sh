@@ -2,7 +2,7 @@
 
 # Creates smartmet-server development environment on current directory.
 
-# 1. Let's install required stuff on Linux:
+# 1. Let's first install some required stuff on Linux:
 sudo dnf -y install 'dnf-command(config-manager)'
 sudo dnf config-manager --set-enabled crb
 sudo dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
