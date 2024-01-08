@@ -1,6 +1,6 @@
 # These module information are used by two scripts:
-# 1) xxx (which puts build system on local directory)
-# 2) smartmet-server_make.sh (multi make command that is used to build/install/etc all modules)
+# 1) smartmet-server_build_devel_dir.sh   (which puts (= git clone) the build system with all needed directories on local directory)
+# 2) smartmet-server_make.sh     (multi make command that is used to build/install/etc all modules)
 
 # In each row there are 3 things about module separated by space
 # 1) github module name 2) local module name 3) local relative directory, where module will be located
