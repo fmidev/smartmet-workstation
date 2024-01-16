@@ -9,9 +9,9 @@
                                  // merkkiä joka johtuu 'puretuista' STL-template nimistä)
 #endif
 
+#include "NFmiSmartToolUtil.h"
 #include "NFmiInfoOrganizer.h"
 #include "NFmiSmartToolModifier.h"
-#include "NFmiSmartToolUtil.h"
 #include <newbase/NFmiFastQueryInfo.h>
 #include <newbase/NFmiQueryData.h>
 #include <newbase/NFmiStreamQueryData.h>
