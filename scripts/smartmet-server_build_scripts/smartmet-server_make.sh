@@ -2,7 +2,7 @@
 
 # Check if argument is provided
 if [ $# -eq 0 ]; then
-    echo "Usage: $0 <make_command>"
+    echo "Usage: $0 <make_command1> [<make_command2> ...]"
     exit 1
 fi
 
@@ -25,9 +25,10 @@ for index in "${!local_relative_base_directory[@]}"; do
     make_file_directory="${local_relative_base_directory[$index]}/${local_module_names[$index]}"
     make_file_path="$make_file_directory/Makefile"
     if [ -f "$make_file_path" ]; then
-        echo "Running '$1' in '$make_file_directory'"
-        (cd "$make_file_directory" && make "$1")
-        echo "Finished '$1' in '$make_file_directory'"
+        echo "Running \"make $@\" in '$make_file_directory'"
+        # Let's make following commands temporary in different directory
+        (cd "$make_file_directory" && make "$@")
+        echo "Finished \"make $@\" in '$make_file_directory'"
         echo
     else
         echo "Makefile not found in '$make_file_directory'"
