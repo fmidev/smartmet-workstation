@@ -1186,9 +1186,9 @@ static void DoPartialSpecialTypeCalculationInThread(
 template <typename Container>
 static void SetTimes(Container &container, const NFmiCalculationParams &calculationParams)
 {
+  using PointedType = typename Container::value_type::element_type;
   std::for_each(container.begin(),
-                container.end(),
-                TimeSetter<Container::value_type::element_type>(calculationParams.itsTime));
+                container.end(), TimeSetter<PointedType>(calculationParams.itsTime));
 }
 
 static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> MakeInfoCopyVector(
