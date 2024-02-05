@@ -529,7 +529,7 @@ void NFmiIsoLineView::RestoreUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam
     if(fDoDifferenceDrawSwitch)
     {
         theUsedDrawParam = itsBackupDrawParamForDifferenceDrawing;
-        itsBackupDrawParamForDifferenceDrawing = boost::shared_ptr<NFmiDrawParam>();
+        itsBackupDrawParamForDifferenceDrawing.reset();
     }
     fDoDifferenceDrawSwitch = false;
 }
