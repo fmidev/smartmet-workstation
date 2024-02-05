@@ -3061,7 +3061,7 @@ NFmiInfoData::Type getFinalDataType(boost::shared_ptr<NFmiDrawParam>& drawParam,
 			{
 				if(!fGroundData && info->SizeLevels() > 1)
 				{
-					if(info->Level()->LevelType() == drawParam->Level().LevelType())
+					if(info->LevelType() == drawParam->Level().LevelType())
 					{
 						return info->DataType();
 					}
