@@ -88,7 +88,13 @@ void NFmiSmartInfo::CopyClonedDatas(const NFmiSmartInfo &theOther)
 
 void NFmiSmartInfo::UndoLevel(long theDepth)  // theDepth kuvaa kuinka monta Undota voidaan tehdä.
 {
-  itsQDataBookKeepingPtr->UndoLevel(theDepth, *itsRefRawData);
+  // Jos editoitava data on luettu memory-mapattuna, ei ole hyötyä varata muistia undo/redo 
+  // jutuille, on käynyt niin että kyseinen datan varaus on jopa kaatanut smartmetin.
+  const auto *rawDataPtr = RefRawData();
+  if (rawDataPtr && !rawDataPtr->IsReadOnly())
+  {
+    itsQDataBookKeepingPtr->UndoLevel(theDepth, *itsRefRawData);
+  }
 }
 
 bool NFmiSmartInfo::LocationSelectionSnapShot()
