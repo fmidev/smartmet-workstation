@@ -1816,148 +1816,150 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
     auto registeredLayers = itsCtrlViewDocumentInterface->GetWmsSupport()
         .getRegisteredLayers(realRowIndex, itsViewGridColumnNumber, itsMapViewDescTopIndex);
     auto drawParamList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, realRowIndex);
+	if(drawParamList)
+	{
+		for(const auto& registered : registeredLayers)
+		{
+			if(!drawParamList->Find(registered, nullptr, NFmiInfoData::kWmsData))
+			{
+				itsCtrlViewDocumentInterface->GetWmsSupport().unregisterDynamicLayer(realRowIndex, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
+			}
+			else
+			{
+				// Vielä jos piirto-optioissa ei ole legendan piirto päällä, poistetaan rekisteröidyistä (en ymmärrä logiikkaa, miten sen saa taas päälle)
+				if(!drawParamList->Current()->ShowColorLegend())
+					itsCtrlViewDocumentInterface->GetWmsSupport().unregisterDynamicLayer(realRowIndex, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
+			}
+		}
 
-    for (const auto& registered : registeredLayers)
-    {
-        if(!drawParamList->Find(registered, nullptr, NFmiInfoData::kWmsData))
-        {
-            itsCtrlViewDocumentInterface->GetWmsSupport().unregisterDynamicLayer(realRowIndex, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
-        }
-        else
-        {
-            // Vielä jos piirto-optioissa ei ole legendan piirto päällä, poistetaan rekisteröidyistä (en ymmärrä logiikkaa, miten sen saa taas päälle)
-            if(!drawParamList->Current()->ShowColorLegend())
-                itsCtrlViewDocumentInterface->GetWmsSupport().unregisterDynamicLayer(realRowIndex, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
-        }
-    }
+		auto legends = itsCtrlViewDocumentInterface->GetWmsSupport().getLegends(realRowIndex, itsViewGridColumnNumber, itsMapViewDescTopIndex);
+		if(legends.empty())
+		{
+			return;
+		}
 
-    auto legends = itsCtrlViewDocumentInterface->GetWmsSupport().getLegends(realRowIndex, itsViewGridColumnNumber, itsMapViewDescTopIndex);
-    if(legends.empty())
-    {
-        return;
-    }
+		auto bitmapSize = NFmiPoint(itsCtrlViewDocumentInterface->ActualMapBitmapSizeInPixels(itsMapViewDescTopIndex));
+		// calculate how many columns there are
+		auto wholeDesktopSize = itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex);
+		auto nCols = static_cast<int>(wholeDesktopSize.X() / bitmapSize.X());
 
-    auto bitmapSize = NFmiPoint(itsCtrlViewDocumentInterface->ActualMapBitmapSizeInPixels(itsMapViewDescTopIndex));
-    // calculate how many columns there are
-    auto wholeDesktopSize = itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex);
-    auto nCols = static_cast<int>(wholeDesktopSize.X() / bitmapSize.X());
+		// draw legends only if this is the last column
+		if(itsViewGridColumnNumber != nCols)
+		{
+			return;
+		}
+		try
+		{
+			InitializeGdiplus(itsToolBox, &GetFrame());
+			auto sizeToFitHorizontal = NFmiPoint{ bitmapSize.X(), bitmapSize.Y() / 5 };
+			auto sizeToFitVertical = NFmiPoint{ bitmapSize.X() / 5, bitmapSize.Y() - (bitmapSize.Y() / 5) };
 
-    // draw legends only if this is the last column
-    if(itsViewGridColumnNumber != nCols)
-    {
-        return;
-    }
-    try
-    {
-        InitializeGdiplus(itsToolBox, &GetFrame());
-        auto sizeToFitHorizontal = NFmiPoint{ bitmapSize.X(), bitmapSize.Y() / 5 };
-        auto sizeToFitVertical = NFmiPoint{ bitmapSize.X() / 5, bitmapSize.Y() - (bitmapSize.Y() / 5) };
+			// partition legends into higher than wide and vice versa
 
-        // partition legends into higher than wide and vice versa
+			auto posH = std::partition(legends.begin(), legends.end(), [](const auto& legend)
+				{
+					return legend->mImage->GetWidth() > legend->mImage->GetHeight();
+				});
 
-        auto posH = std::partition(legends.begin(), legends.end(), [](const auto& legend)
-        {
-            return legend->mImage->GetWidth() > legend->mImage->GetHeight();
-        });
+			auto vLegends = std::vector<Wms::LegendBuffer>{};
+			std::copy(posH, legends.end(), std::back_inserter(vLegends));
 
-        auto vLegends = std::vector<Wms::LegendBuffer>{};
-        std::copy(posH, legends.end(), std::back_inserter(vLegends));
+			auto hLegends = std::vector<Wms::LegendBuffer>{};
+			std::copy(legends.begin(), posH, std::back_inserter(hLegends));
 
-        auto hLegends = std::vector<Wms::LegendBuffer>{};
-        std::copy(legends.begin(), posH, std::back_inserter(hLegends));
+			// sort
 
-        // sort
+			std::sort(hLegends.begin(), hLegends.end(), [](const auto& legend1, const auto& legend2)
+				{
+					return legend1.width > legend2.width;
+				});
 
-        std::sort(hLegends.begin(), hLegends.end(), [](const auto& legend1, const auto& legend2)
-        {
-            return legend1.width > legend2.width;
-        });
+			std::sort(vLegends.begin(), vLegends.end(), [](const auto& legend1, const auto& legend2)
+				{
+					return legend1.height > legend2.height;
+				});
 
-        std::sort(vLegends.begin(), vLegends.end(), [](const auto& legend1, const auto& legend2)
-        {
-            return legend1.height > legend2.height;
-        });
+			// pack
 
-        // pack
+			// horizontal
 
-        // horizontal
+			auto hSelves = Wms::LegendSelf(static_cast<unsigned int>(sizeToFitHorizontal.X()), static_cast<unsigned int>(sizeToFitHorizontal.Y()), Wms::Orientation::Horizontal);
+			hSelves.insert(hLegends);
 
-        auto hSelves = Wms::LegendSelf(static_cast<unsigned int>(sizeToFitHorizontal.X()), static_cast<unsigned int>(sizeToFitHorizontal.Y()), Wms::Orientation::Horizontal);
-        hSelves.insert(hLegends);
+			// vertical
 
-        // vertical
+			auto vSelves = Wms::LegendSelf(static_cast<unsigned int>(sizeToFitVertical.Y()), static_cast<unsigned int>(sizeToFitVertical.X()), Wms::Orientation::Vertical);
+			vSelves.insert(vLegends);
 
-        auto vSelves = Wms::LegendSelf(static_cast<unsigned int>(sizeToFitVertical.Y()), static_cast<unsigned int>(sizeToFitVertical.X()), Wms::Orientation::Vertical);
-        vSelves.insert(vLegends);
+			// check if compressing is needed
 
-        // check if compressing is needed
+			// horizontal
 
-        // horizontal
+			if(hSelves.shouldCompress())
+			{
+				hSelves.compress();
+			}
 
-        if(hSelves.shouldCompress())
-        {
-            hSelves.compress();
-        }
+			// vertical
+			if(vSelves.shouldCompress())
+			{
+				vSelves.compress();
+			}
 
-        // vertical
-        if(vSelves.shouldCompress())
-        {
-            vSelves.compress();
-        }
+			// Draw
 
-        // Draw
+			NFmiPoint startPoint(CtrlViewUtils::ConvertPointFromRect1ToRect2(itsRect.TopLeft(), NFmiRect(0, 0, 1, 1), NFmiRect(NFmiPoint(0, 0), itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex))));
 
-        NFmiPoint startPoint(CtrlViewUtils::ConvertPointFromRect1ToRect2(itsRect.TopLeft(), NFmiRect(0, 0, 1, 1), NFmiRect(NFmiPoint(0, 0), itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex))));
+			// horizontal
+			for(auto& self : hSelves.selves)
+			{
+				// we draw from left to right starting from the bottom left corner
+				for(auto& legend : self.legends)
+				{
+					auto legendW = legend.width;
+					auto legendH = legend.height;
+					Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(startPoint.X() + bitmapSize.X() - hSelves.horizontalShift - legendW), static_cast<Gdiplus::REAL>(startPoint.Y() + bitmapSize.Y() - hSelves.verticalShift - legendH), static_cast<Gdiplus::REAL>(legendW), static_cast<Gdiplus::REAL>(legendH));
+					NFmiRect sourceRect(0, 0, legendW, legendH);
+					Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on täysin läpinäkyvä, 0.5 = semi transparent ja 1.0 = opaque
+					bool doNearestInterpolation = alpha >= 1.f ? true : false;
+					CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *legend.get()->mImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha), itsGdiPlusGraphics);
 
-        // horizontal
-        for(auto& self : hSelves.selves)
-        {
-            // we draw from left to right starting from the bottom left corner
-            for(auto& legend : self.legends)
-            {
-                auto legendW = legend.width;
-                auto legendH = legend.height;
-                Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(startPoint.X() + bitmapSize.X() - hSelves.horizontalShift - legendW), static_cast<Gdiplus::REAL>(startPoint.Y() + bitmapSize.Y() - hSelves.verticalShift - legendH), static_cast<Gdiplus::REAL>(legendW), static_cast<Gdiplus::REAL>(legendH));
-                NFmiRect sourceRect(0, 0, legendW, legendH);
-                Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on täysin läpinäkyvä, 0.5 = semi transparent ja 1.0 = opaque
-				bool doNearestInterpolation = alpha >= 1.f ? true : false;
-				CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *legend.get()->mImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha), itsGdiPlusGraphics);
+					// shift
+					hSelves.horizontalShift += legendW;
+				}
 
-                // shift
-                hSelves.horizontalShift += legendW;
-            }
+				// shift
+				hSelves.horizontalShift = 0;
+				hSelves.verticalShift += self.getHeight();
+			}
 
-            // shift
-            hSelves.horizontalShift = 0;
-            hSelves.verticalShift += self.getHeight();
-        }
+			// vertical
+			for(auto& self : vSelves.selves)
+			{
+				// we draw from top to bottom starting from the top right corner
+				for(auto& legend : self.legends)
+				{
+					auto legendW = legend.width;
+					auto legendH = legend.height;
+					Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(startPoint.X() + bitmapSize.X() - vSelves.horizontalShift - legendW), static_cast<Gdiplus::REAL>(startPoint.Y() + vSelves.verticalShift), static_cast<Gdiplus::REAL>(legendW), static_cast<Gdiplus::REAL>(legendH));
+					NFmiRect sourceRect(0, 0, legendW, legendH);
+					Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on täysin läpinäkyvä, 0.5 = semi transparent ja 1.0 = opaque
+					bool doNearestInterpolation = alpha >= 1.f ? true : false;
+					CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *legend.get()->mImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha), itsGdiPlusGraphics);
 
-        // vertical
-        for(auto& self : vSelves.selves)
-        {
-            // we draw from top to bottom starting from the top right corner
-            for(auto& legend : self.legends)
-            {
-                auto legendW = legend.width;
-                auto legendH = legend.height;
-                Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(startPoint.X() + bitmapSize.X() - vSelves.horizontalShift - legendW), static_cast<Gdiplus::REAL>(startPoint.Y() + vSelves.verticalShift), static_cast<Gdiplus::REAL>(legendW), static_cast<Gdiplus::REAL>(legendH));
-                NFmiRect sourceRect(0, 0, legendW, legendH);
-                Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on täysin läpinäkyvä, 0.5 = semi transparent ja 1.0 = opaque
-				bool doNearestInterpolation = alpha >= 1.f ? true : false;
-				CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *legend.get()->mImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha), itsGdiPlusGraphics);
+					// shift
+					vSelves.verticalShift += legendH;
+				}
 
-                // shift
-                vSelves.verticalShift += legendH;
-            }
-
-            // shift
-            vSelves.horizontalShift += self.getHeight();
-            vSelves.verticalShift = 0;
-        }
-    }
-    catch(...)
-    {
-    }
+				// shift
+				vSelves.horizontalShift += self.getHeight();
+				vSelves.verticalShift = 0;
+			}
+		}
+		catch(...)
+		{
+		}
+	}
 #endif // DISABLE_CPPRESTSDK
 }
 
