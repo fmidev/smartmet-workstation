@@ -2935,7 +2935,6 @@ bool NFmiFastQueryInfo::GetFixedPressureLevelIndex(const NFmiPoint &theLatlon,
                                                    double &pressure,
                                                    double &pInd)
 {
-  auto originalPressureLevelIndex = pInd;
   auto status = GetLevelIndex(theLatlon, theTime, pressure, pInd);
   if (!status || pInd < 0)
   {
