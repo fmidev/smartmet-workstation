@@ -3274,7 +3274,7 @@ void AddWmsDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings
             if(!wmsSupport.isCapabilityTreeAvailable())
                 return;
             CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, __FUNCTION__);
-            const auto* layerTree = wmsSupport.peekCapabilityTree();
+            auto layerTree = wmsSupport.getCapabilityTree();
 			if(layerTree)
 			{
 				auto menuItem = std::make_unique<NFmiMenuItem>(
@@ -9416,9 +9416,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	bool IsEditedDataInReadOnlyMode()
 	{
-		auto editeData = EditedInfo();
-		if(editeData)
-			return editeData->RefRawData()->IsReadOnly();
+		auto editedData = EditedInfo();
+		if(editedData)
+			return editedData->RefRawData()->IsReadOnly();
 		// Jos editoitua dataa ei ole, palautetaan arvo että se on read-only moodissa
 		return true;
 	}

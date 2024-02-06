@@ -190,7 +190,7 @@ namespace AddParams
 			auto& wmsSupport = getWmsCallback_();
 			if (!wmsSupport.isCapabilityTreeAvailable())
 				return;
-			const auto* layerTree = wmsSupport.peekCapabilityTree();
+			auto layerTree = wmsSupport.getCapabilityTree();
             if(layerTree)
             {
                 const auto& wmsLayerTree = dynamic_cast<const Wms::CapabilityNode&>(*layerTree);
