@@ -31,7 +31,11 @@ namespace Wms
         
         std::map<long, std::map<long, LayerInfo>> hashes_;
         ChangedLayers changedLayers_;
-        std::unique_ptr<CapabilityTree> capabilityTree_;
+        // Käytetään std::shared_ptr:ia, jotta olio voidaan antaa eri threadeissa käyttöön turvallisesti 
+        // (shared_ptr kopio) vaikka kyseinen capabilityTree_ vaihdetaan lennossa päivitys working-threadeissa.
+        std::shared_ptr<CapabilityTree> capabilityTree_;
+        // capabilityTree_ olion käyttö pitää suojata thread turvallisella lukolla.
+        mutable std::mutex capabilityTreeMutex_;
 
         std::unique_ptr<Web::Client> client_;
         std::function<void(long, const std::set<LayerInfo>&)> cacheDirtyCallback_;
@@ -57,7 +61,8 @@ namespace Wms
 
         void startFetchingCapabilitiesInBackground();
 		const std::map<long, std::map<long, LayerInfo>>& peekHashes() const;
-        const CapabilityTree& peekCapabilityTree() const;
+        std::shared_ptr<CapabilityTree> getCapabilityTree() const;
+        void setCapabilityTree(std::shared_ptr<CapabilityTree> capabilityTree);
         bool isCapabilityTreeAvailable() const;
         static void setParameterSelectionUpdateCallback(std::function<void()>& parameterSelectionUpdateCallback);
         static void firstTimeUpdateCallbackWrapper();

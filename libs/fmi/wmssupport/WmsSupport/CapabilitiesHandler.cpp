@@ -110,13 +110,21 @@ namespace Wms
         return hashes_;
     }
 
-    const CapabilityTree& CapabilitiesHandler::peekCapabilityTree() const
+    std::shared_ptr<CapabilityTree> CapabilitiesHandler::getCapabilityTree() const
     {
+        std::lock_guard<std::mutex> lock(capabilityTreeMutex_);
         if(!capabilityTree_)
         {
             throw std::runtime_error("CapabilitiesHandler: peekCapabilityTree called before capabilitiesTree was initialized.");
         }
-        return *capabilityTree_;
+        return capabilityTree_;
+    }
+
+    void CapabilitiesHandler::setCapabilityTree(std::shared_ptr<CapabilityTree> capabilityTree)
+    {
+        std::lock_guard<std::mutex> lock(capabilityTreeMutex_);
+        // Tehd‰‰n sijoitus, ei swap, koska t‰ss‰ haluataan korvata olion sis‰ltˆ ja reference-count:it
+        capabilityTree_ = capabilityTree;
     }
 
     bool CapabilitiesHandler::isCapabilityTreeAvailable() const
@@ -172,7 +180,7 @@ namespace Wms
                             // Mahdollinen ongelma on jo lokitettu, t‰ll‰ pyrit‰‰n est‰m‰‰n ett‰ poikkeus jonkun serverin k‰sittelyss‰ ei est‰ muiden toimintaa
                         }
                     }
-                    capabilityTree_ = std::make_unique<CapabilityNode>(rootValue_, std::move(children));
+                    setCapabilityTree(std::make_shared<CapabilityNode>(rootValue_, std::move(children)));
                     if(foundAnyWmsServerData)
                     {
                         firstTimeUpdateCallbackWrapper();
