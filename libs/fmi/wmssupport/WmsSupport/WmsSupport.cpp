@@ -63,11 +63,11 @@ namespace Wms
         return bManager_->isDead(wait);
     }
 
-    const CapabilityTree* WmsSupport::peekCapabilityTree() const
+    std::shared_ptr<Wms::CapabilityTree> WmsSupport::getCapabilityTree() const
     {
         if(capabilitiesHandler_)
         {
-            return &capabilitiesHandler_->peekCapabilityTree();
+            return capabilitiesHandler_->getCapabilityTree();
         }
         else
             return nullptr;

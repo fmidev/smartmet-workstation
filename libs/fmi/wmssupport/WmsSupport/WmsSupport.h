@@ -71,7 +71,7 @@ namespace Wms
         void nextOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
         void previousBackground(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
         void previousOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
-        const Wms::CapabilityTree* peekCapabilityTree() const override;
+        std::shared_ptr<Wms::CapabilityTree> getCapabilityTree() const override;
         bool isCapabilityTreeAvailable() const override;
         NFmiImageHolder getBackground(unsigned int mapViewIndex, unsigned int mapAreaIndex, const NFmiArea& area, int resolutionX, int resolutionY) override;
         NFmiImageHolder getOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex, const NFmiArea& area, int resolutionX, int resolutionY) override;
