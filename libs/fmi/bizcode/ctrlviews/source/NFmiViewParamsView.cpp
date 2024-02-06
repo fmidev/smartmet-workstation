@@ -639,15 +639,15 @@ std::string NFmiViewParamsView::MakeWmsTooltipText(const boost::shared_ptr<NFmiD
 		auto& wmsSupport = itsCtrlViewDocumentInterface->GetWmsSupport();
 		const auto& dataIdent = drawParam->Param();
 		auto layerInfo = wmsSupport.getHashedLayerInfo(dataIdent);
-		if(layerInfo)
-		{
-			auto fixedLayerInfoName = layerInfo->name;
-			boost::replace_all(fixedLayerInfoName, ":", "/");
-			str += "<br>" + layerInfo->style.legendDomain + " + " + fixedLayerInfoName;
-		}
+		auto fixedLayerInfoName = layerInfo.name;
+		boost::replace_all(fixedLayerInfoName, ":", "/");
+		str += "<br>" + layerInfo.style.legendDomain + " + " + fixedLayerInfoName;
 	}
-	catch(...)
+	catch(std::exception &e)
 	{
+		std::string errorMessage = "NFmiViewParamsView::MakeWmsTooltipText failed: ";
+		errorMessage += e.what();
+		CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::Operational, true);
 	}
 	return str;
 }

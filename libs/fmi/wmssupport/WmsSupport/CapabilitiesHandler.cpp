@@ -90,7 +90,8 @@ namespace Wms
         std::function<bool(long, const std::string&)> cacheHitCallback,
         int capabilitiesTimeoutInSeconds
     )
-        : client_(std::move(client))
+        : hashesPtr_(std::make_shared<CapabilitiesHandlerHashes>())
+        , client_(std::move(client))
         , cacheDirtyCallback_(cacheDirtyCallback)
         , bManager_{ bManager }
         , proxyUrl_{ proxyUrl }
@@ -105,9 +106,16 @@ namespace Wms
         parameterSelectionUpdateCallback_ = parameterSelectionUpdateCallback;
     }
 
-    const std::map<long, std::map<long, LayerInfo>>& CapabilitiesHandler::peekHashes() const
+    std::shared_ptr<CapabilitiesHandlerHashes> CapabilitiesHandler::getHashes() const
     {
-        return hashes_;
+        std::lock_guard<std::mutex> lock(hashesMutex_);
+        return hashesPtr_;
+    }
+
+    void CapabilitiesHandler::setHashes(std::shared_ptr<CapabilitiesHandlerHashes> hashesPtr)
+    {
+        std::lock_guard<std::mutex> lock(hashesMutex_);
+        hashesPtr_ = hashesPtr;
     }
 
     std::shared_ptr<CapabilityTree> CapabilitiesHandler::getCapabilityTree() const
@@ -141,6 +149,9 @@ namespace Wms
                 {
                     auto children = std::vector<std::unique_ptr<CapabilityTree>>{};
                     bool foundAnyWmsServerData = false;
+                    // Tehdään kopio hashes tietorakenteesta, jotta sitä voidaan päivityksen aikan rauhassa päivitellä
+                    // Wms servereiden muuttuneilla sisällöillä.
+                    auto workingHashesPtr = std::make_shared<CapabilitiesHandlerHashes>(*hashesPtr_);
 
                     for(auto& serverKV : servers_)
                     {
@@ -160,7 +171,7 @@ namespace Wms
                             auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_, server.acceptTimeDimensionalLayersOnly };
                             auto xml = fetchCapabilitiesXml(*client_, query, server.logFetchCapabilitiesRequest, server.doVerboseLogging, getCapabilitiesTimeoutInSeconds);
                             changedLayers_.changedLayers.clear();
-                            children.push_back(capabilityTreeParser.parseXmlGeneral(xml, hashes_, changedLayers_));
+                            children.push_back(capabilityTreeParser.parseXmlGeneral(xml, workingHashesPtr->getHashes(), changedLayers_));
                             foundAnyWmsServerData = true;
                             if(!changedLayers_.changedLayers.empty())
                             {
@@ -181,6 +192,7 @@ namespace Wms
                         }
                     }
                     setCapabilityTree(std::make_shared<CapabilityNode>(rootValue_, std::move(children)));
+                    setHashes(workingHashesPtr);
                     if(foundAnyWmsServerData)
                     {
                         firstTimeUpdateCallbackWrapper();

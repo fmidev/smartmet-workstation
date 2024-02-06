@@ -42,7 +42,7 @@ public:
     virtual bool isDead(std::chrono::milliseconds wait) const = 0;
     virtual Wms::StaticMapClientState& getStaticMapClientState(unsigned int mapViewIndex, unsigned int mapAreaIndex) = 0;
     virtual const std::unique_ptr<Wms::Setup>& getSetup() const = 0;
-    virtual const Wms::LayerInfo* getHashedLayerInfo(const NFmiDataIdent& dataIdent) const = 0;
+    virtual Wms::LayerInfo getHashedLayerInfo(const NFmiDataIdent& dataIdent) const = 0;
     virtual bool isTotalMapViewStaticMapClientStateAvailable() const = 0;
 
 #ifndef DISABLE_CPPRESTSDK

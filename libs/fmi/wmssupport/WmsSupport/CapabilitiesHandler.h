@@ -6,6 +6,7 @@
 #include "wmssupport/CapabilityTree.h"
 #include "wmssupport/CapabilityTreeParser.h"
 #include "wmssupport/ChangedLayers.h"
+#include "wmssupport/CapabilitiesHandlerHashes.h"
 
 #include <webclient/Client.h>
 
@@ -29,7 +30,9 @@ namespace Wms
     private:
         Capability rootValue_ = { NFmiProducer{ 455234234, "NoProducer" }, kFmiLastParameter, "WmsData" };
         
-        std::map<long, std::map<long, LayerInfo>> hashes_;
+        std::shared_ptr<CapabilitiesHandlerHashes> hashesPtr_;
+        // hashes_ olion käyttö pitää suojata thread turvallisella lukolla.
+        mutable std::mutex hashesMutex_;
         ChangedLayers changedLayers_;
         // Käytetään std::shared_ptr:ia, jotta olio voidaan antaa eri threadeissa käyttöön turvallisesti 
         // (shared_ptr kopio) vaikka kyseinen capabilityTree_ vaihdetaan lennossa päivitys working-threadeissa.
@@ -60,7 +63,8 @@ namespace Wms
             );
 
         void startFetchingCapabilitiesInBackground();
-		const std::map<long, std::map<long, LayerInfo>>& peekHashes() const;
+        std::shared_ptr<CapabilitiesHandlerHashes> getHashes() const;
+        void setHashes(std::shared_ptr<CapabilitiesHandlerHashes> hashesPtr);
         std::shared_ptr<CapabilityTree> getCapabilityTree() const;
         void setCapabilityTree(std::shared_ptr<CapabilityTree> capabilityTree);
         bool isCapabilityTreeAvailable() const;

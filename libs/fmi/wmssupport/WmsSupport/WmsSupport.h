@@ -85,7 +85,7 @@ namespace Wms
         bool isDead(std::chrono::milliseconds wait) const override;
         StaticMapClientState& getStaticMapClientState(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
         const std::unique_ptr<Setup>& getSetup() const override;
-        const LayerInfo* getHashedLayerInfo(const NFmiDataIdent& dataIdent) const override;
+        LayerInfo getHashedLayerInfo(const NFmiDataIdent& dataIdent) const override;
 
         void fillDynamicClients(const std::unordered_map<int, DynamicServerSetup> &serverSetups, const std::string& proxyUrl);
         std::unique_ptr<WmsClient> createClient(const DynamicServerSetup &setup, const std::string& proxyUrl);

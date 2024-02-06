@@ -1666,11 +1666,14 @@ bool NFmiCombinedMapHandler::findLastObservation(unsigned long mapViewDescTopInd
 
 bool NFmiCombinedMapHandler::getLatestWmsImageTime(const NFmiDataIdent& dataIdent, NFmiMetTime& foundTimeOut)
 {
-	auto* layerInfo = getWmsSupport().getHashedLayerInfo(dataIdent);
-	if(layerInfo)
+	try
 	{
-		foundTimeOut = layerInfo->endTime;
+		auto layerInfo = getWmsSupport().getHashedLayerInfo(dataIdent);
+		foundTimeOut = layerInfo.endTime;
 		return true;
+	}
+	catch(...)
+	{
 	}
 	return false;
 }
