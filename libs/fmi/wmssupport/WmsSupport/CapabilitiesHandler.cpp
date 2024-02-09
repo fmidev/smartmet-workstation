@@ -151,7 +151,7 @@ namespace Wms
                     bool foundAnyWmsServerData = false;
                     // Tehdään kopio hashes tietorakenteesta, jotta sitä voidaan päivityksen aikan rauhassa päivitellä
                     // Wms servereiden muuttuneilla sisällöillä.
-                    auto workingHashesPtr = std::make_shared<CapabilitiesHandlerHashes>(*hashesPtr_);
+                    auto workingHashesPtr = std::make_shared<CapabilitiesHandlerHashes>(*getHashes());
 
                     for(auto& serverKV : servers_)
                     {
