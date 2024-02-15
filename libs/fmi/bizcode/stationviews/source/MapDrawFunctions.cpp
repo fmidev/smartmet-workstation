@@ -35,7 +35,7 @@ namespace
 #ifndef DISABLE_CPPRESTSDK
         auto mapAreaIndex = docInterface->SelectedMapIndex(theDescTopIndex);
         auto mapPtr = docInterface->GetMapHandlerInterface(theDescTopIndex)->Area();
-        auto holder = docInterface->GetWmsSupport().getBackground(theDescTopIndex, mapAreaIndex, *mapPtr, int(bitmapSize.X()), int(bitmapSize.Y()));
+        auto holder = docInterface->GetWmsSupport()->getBackground(theDescTopIndex, mapAreaIndex, *mapPtr, int(bitmapSize.X()), int(bitmapSize.Y()));
         if(holder)
         {
             NFmiRect srcRect(0, 0, int(bitmapSize.X()), int(bitmapSize.Y()));
@@ -52,7 +52,7 @@ namespace
         auto mapPtr = docInterface->GetMapHandlerInterface(theDescTopIndex)->Area();
         try
         {
-            auto holder = docInterface->GetWmsSupport().getOverlay(theDescTopIndex, mapAreaIndex, *mapPtr, int(bitmapSize.X()), int(bitmapSize.Y()));
+            auto holder = docInterface->GetWmsSupport()->getOverlay(theDescTopIndex, mapAreaIndex, *mapPtr, int(bitmapSize.X()), int(bitmapSize.Y()));
             if(holder)
             {
                 NFmiRect srcRect(0, 0, int(bitmapSize.X()), int(bitmapSize.Y()));

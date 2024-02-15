@@ -1262,7 +1262,7 @@ void CMainFrame::OnClose()
 #ifndef DISABLE_CPPRESTSDK
 			auto& combinedMapHandler = *itsDoc->GetCombinedMapHandler();
             if(combinedMapHandler.wmsSupportAvailable())
-				combinedMapHandler.getWmsSupport().kill();
+				combinedMapHandler.getWmsSupport()->kill();
 #endif // DISABLE_CPPRESTSDK
 			CFmiCombineDataThread::CloseNow(); // sama tässä combineData-threadille
 			CFmiSoundingIndexDataThread::CloseNow(); // sama tässä soundingIndexData-threadille
@@ -1310,7 +1310,7 @@ void CMainFrame::OnClose()
 
             if(combinedMapHandler.wmsSupportAvailable())
             {
-                if(combinedMapHandler.getWmsSupport().isDead(std::chrono::milliseconds(1 * 1000)))
+                if(combinedMapHandler.getWmsSupport()->isDead(std::chrono::milliseconds(1 * 1000)))
                     itsDoc->LogMessage("WmsSupport -threads stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
                 else
                     itsDoc->LogMessage("WmsSupport -threads didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
@@ -1524,7 +1524,7 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 		{
 			if(g_WmsFirstTimeUpdate.load())
 			{
-				if(itsDoc->GetCombinedMapHandler()->getWmsSupport().isConfigured())
+				if(itsDoc->GetCombinedMapHandler()->getWmsSupport()->isConfigured())
 				{
 					CatLog::logMessage("Do one time Wms data update", CatLog::Severity::Debug, CatLog::Category::Operational);
 				}

@@ -302,6 +302,6 @@ public:
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;
-    WmsSupportInterface& GetWmsSupport()  override;
+    std::shared_ptr<WmsSupportInterface> GetWmsSupport() const  override;
 #endif // DISABLE_CPPRESTSDK
 };

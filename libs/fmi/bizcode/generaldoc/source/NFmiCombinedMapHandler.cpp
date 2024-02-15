@@ -62,7 +62,9 @@ namespace
 	// missä on koko luokan kaikki metodit käytössä, mutta palauttaa WmsSupportInterface -pointterin ulkopuolelle.
 	// Lisäksi kaikki #ifndef DISABLE_CPPRESTSDK -jutut saa piiloon myös cpp:hen.
 #ifndef DISABLE_CPPRESTSDK
-	std::unique_ptr<WmsSupportInterface> wmsSupport_;
+	std::shared_ptr<WmsSupportInterface> wmsSupport_;
+	// capabilityTree_ olion käyttö pitää suojata thread turvallisella lukolla.
+	std::mutex wmsSupportMutex_;
 #endif // DISABLE_CPPRESTSDK
 
 	static const std::string g_ObservationMenuName = "Observation";
@@ -922,7 +924,7 @@ void NFmiCombinedMapHandler::initCombinedMapStates()
 	auto wmsOverlayMapLayerCount = 0;
 	if(wmsSupportAvailable())
 	{
-		auto& staticMapClientState = getWmsSupport().getStaticMapClientState(0, 0).state_;
+		auto& staticMapClientState = getWmsSupport()->getStaticMapClientState(0, 0).state_;
 		wmsBackgroundMapLayerCount = static_cast<unsigned int>(staticMapClientState->getBackgroundsLength());
 		wmsOverlayMapLayerCount = static_cast<unsigned int>(staticMapClientState->getOverlaysLenght());
 	}
@@ -986,14 +988,14 @@ void NFmiCombinedMapHandler::initWmsSupportSelectionIndices()
 	if(!wmsSupportAvailable())
 		return;
 
-	auto &wmsSupport = getWmsSupport();
+	auto wmsSupportPtr = getWmsSupport();
 	auto mapViewCount = getMapViewCount();
 	for(auto mapViewIndex = 0u; mapViewIndex < mapViewCount; mapViewIndex++)
 	{
 		auto mapAreaCount = getMapAreaCount();
 		for(auto mapAreaIndex = 0u; mapAreaIndex < mapAreaCount; mapAreaIndex++)
 		{
-			auto &staticMapClientState = wmsSupport.getStaticMapClientState(mapViewIndex, mapAreaIndex);
+			auto &staticMapClientState = wmsSupportPtr->getStaticMapClientState(mapViewIndex, mapAreaIndex);
 			// Tehdään ensin background map indeksin asetus
 			staticMapClientState.state_->setBackgroundIndex(::calcInitialWmsLayerIndex(getCombinedMapModeState(mapViewIndex, mapAreaIndex)));
 
@@ -1029,7 +1031,8 @@ void NFmiCombinedMapHandler::storeMapViewDescTopToSettings()
 
 bool NFmiCombinedMapHandler::wmsSupportAvailable() const
 {
-	if(wmsSupport_ && wmsSupport_->isConfigured() && wmsSupport_->isTotalMapViewStaticMapClientStateAvailable())
+	auto wmsSupportPtr = getWmsSupport();
+	if(wmsSupportPtr && wmsSupportPtr->isConfigured() && wmsSupportPtr->isTotalMapViewStaticMapClientStateAvailable())
 		return true;
 	else
 		return false;
@@ -1668,7 +1671,7 @@ bool NFmiCombinedMapHandler::getLatestWmsImageTime(const NFmiDataIdent& dataIden
 {
 	try
 	{
-		auto layerInfo = getWmsSupport().getHashedLayerInfo(dataIdent);
+		auto layerInfo = getWmsSupport()->getHashedLayerInfo(dataIdent);
 		foundTimeOut = layerInfo.endTime;
 		return true;
 	}
@@ -3735,14 +3738,14 @@ void NFmiCombinedMapHandler::setWantedLayerIndex(const NFmiCombinedMapModeState&
 		if(combinedMapModeState.isLocalMapCurrentlyInUse())
 			getMapViewDescTop(mapViewDescTopIndex)->MapHandler(mapAreaIndex)->UsedMapIndex(combinedMapModeState.currentMapSectionIndex());
 		else
-			getWmsSupport().getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setBackgroundIndex(combinedMapModeState.currentMapSectionIndex());
+			getWmsSupport()->getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setBackgroundIndex(combinedMapModeState.currentMapSectionIndex());
 	}
 	else
 	{
 		if(combinedMapModeState.isLocalMapCurrentlyInUse())
 			getMapViewDescTop(mapViewDescTopIndex)->MapHandler(mapAreaIndex)->OverMapBitmapIndex(combinedMapModeState.currentMapSectionIndex());
 		else
-			getWmsSupport().getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setOverlayIndex(combinedMapModeState.currentMapSectionIndex());
+			getWmsSupport()->getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setOverlayIndex(combinedMapModeState.currentMapSectionIndex());
 	}
 }
 
@@ -4234,9 +4237,10 @@ void NFmiCombinedMapHandler::onShowTimeString(unsigned int mapViewDescTopIndex)
 	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Toggle show time on map view mode");
 }
 
-WmsSupportInterface& NFmiCombinedMapHandler::getWmsSupport()
+std::shared_ptr<WmsSupportInterface> NFmiCombinedMapHandler::getWmsSupport() const
 {
-	return *wmsSupport_;
+	std::lock_guard<std::mutex> lock(wmsSupportMutex_);
+	return wmsSupport_;
 }
 
 void NFmiCombinedMapHandler::onToggleLandBorderDrawColor(unsigned int mapViewDescTopIndex)
@@ -4370,12 +4374,12 @@ std::string NFmiCombinedMapHandler::getCurrentMapLayerGuiName(int mapViewDescTop
 		if(backgroundMap)
 		{
 			auto mapLayerIndex = getCombinedMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).currentMapSectionIndex();
-			return ::getWmsMapLayerGuiName(mapLayerIndex, getWmsSupport().getSetup()->background, false);
+			return ::getWmsMapLayerGuiName(mapLayerIndex, getWmsSupport()->getSetup()->background, false);
 		}
 		else
 		{
 			auto mapLayerIndex = getCombinedOverlayMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).currentMapSectionIndex();
-			return ::getWmsMapLayerGuiName(mapLayerIndex, getWmsSupport().getSetup()->overlay, false);
+			return ::getWmsMapLayerGuiName(mapLayerIndex, getWmsSupport()->getSetup()->overlay, false);
 		}
 	}
 	else
@@ -4525,10 +4529,11 @@ void NFmiCombinedMapHandler::initializeStaticMapLayerInfos(std::vector<MapAreaMa
 
 void NFmiCombinedMapHandler::initializeWmsMapLayerInfos()
 {
-	if(getWmsSupport().isConfigured())
+	auto wmsSupportPtr = getWmsSupport();
+	if(wmsSupportPtr->isConfigured())
 	{
-		::initializeWmsMapLayerInfos(wmsBackgroundMapLayerRelatedInfos_, getWmsSupport().getSetup()->background);
-		::initializeWmsMapLayerInfos(wmsOverlayMapLayerRelatedInfos_, getWmsSupport().getSetup()->overlay);
+		::initializeWmsMapLayerInfos(wmsBackgroundMapLayerRelatedInfos_, wmsSupportPtr->getSetup()->background);
+		::initializeWmsMapLayerInfos(wmsOverlayMapLayerRelatedInfos_, wmsSupportPtr->getSetup()->overlay);
 	}
 }
 

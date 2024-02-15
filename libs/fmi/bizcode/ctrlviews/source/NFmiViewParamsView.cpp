@@ -636,9 +636,9 @@ std::string NFmiViewParamsView::MakeWmsTooltipText(const boost::shared_ptr<NFmiD
 	std::string str = paramStr;
 	try
 	{
-		auto& wmsSupport = itsCtrlViewDocumentInterface->GetWmsSupport();
+		auto wmsSupportPtr = itsCtrlViewDocumentInterface->GetWmsSupport();
 		const auto& dataIdent = drawParam->Param();
-		auto layerInfo = wmsSupport.getHashedLayerInfo(dataIdent);
+		auto layerInfo = wmsSupportPtr->getHashedLayerInfo(dataIdent);
 		auto fixedLayerInfoName = layerInfo.name;
 		boost::replace_all(fixedLayerInfoName, ":", "/");
 		str += "<br>" + layerInfo.style.legendDomain + " + " + fixedLayerInfoName;

@@ -194,7 +194,7 @@ public:
     virtual void onSetTimeBoxFillColor(unsigned int mapViewDescTopIndex, NFmiColor newColorNoAlpha) = 0;
     virtual bool onSetTimeBoxFillColorAlpha(unsigned int mapViewDescTopIndex, float newColorAlpha) = 0;
     virtual void onShowTimeString(unsigned int mapViewDescTopIndex) = 0;
-    virtual WmsSupportInterface& getWmsSupport() = 0;
+    virtual std::shared_ptr<WmsSupportInterface> getWmsSupport() const = 0;
     virtual void onToggleShowNamesOnMap(unsigned int mapViewDescTopIndex, bool goForward) = 0;
     virtual void onToggleLandBorderDrawColor(unsigned int mapViewDescTopIndex) = 0;
     virtual void onToggleLandBorderPenSize(unsigned int mapViewDescTopIndex) = 0;

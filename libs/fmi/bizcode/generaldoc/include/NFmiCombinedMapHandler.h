@@ -222,7 +222,7 @@ public:
     void onSetTimeBoxFillColor(unsigned int mapViewDescTopIndex, NFmiColor newColorNoAlpha) override;
     bool onSetTimeBoxFillColorAlpha(unsigned int mapViewDescTopIndex, float newColorAlpha) override;
     void onShowTimeString(unsigned int mapViewDescTopIndex) override;
-    WmsSupportInterface& getWmsSupport() override;
+    std::shared_ptr<WmsSupportInterface> getWmsSupport() const override;
     void onToggleShowNamesOnMap(unsigned int mapViewDescTopIndex, bool goForward) override;
     void onToggleLandBorderDrawColor(unsigned int mapViewDescTopIndex) override;
     void onToggleLandBorderPenSize(unsigned int mapViewDescTopIndex) override;

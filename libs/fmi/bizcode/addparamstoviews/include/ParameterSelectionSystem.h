@@ -66,7 +66,8 @@ namespace AddParams
         std::vector<std::string> customCategories_;
 
         std::function<NFmiMacroParamSystem&()> getMacroParamSystemCallback_;
-		std::function<WmsSupportInterface&()> getWmsCallback_;
+        using GetWmsCallbackType = std::function<std::shared_ptr<WmsSupportInterface>()>;
+        GetWmsCallbackType getWmsCallback_;
         const NFmiLevelBag *soundingLevels_;
 
 		const std::string OperationalDataStr = "Operational data",
@@ -101,7 +102,7 @@ namespace AddParams
         int LastActivatedRowIndex() const;
         int GetLastActivatedRowIndexFromWantedDesktop(unsigned int desktopIndex) const;
 		void setMacroParamSystemCallback(std::function<NFmiMacroParamSystem& ()> macroParamSystemCallback) { getMacroParamSystemCallback_ = macroParamSystemCallback; }
-		void setWmsCallback(std::function<WmsSupportInterface& ()> wmsCallBack) { getWmsCallback_ = wmsCallBack; }
+		void setWmsCallback(GetWmsCallbackType wmsCallBack) { getWmsCallback_ = wmsCallBack; }
 		void setSoundingLevels(const NFmiLevelBag& soundingLevels) { soundingLevels_ = &soundingLevels; }
         void searchItemsThatMatchToSearchWords(const std::string &words); 
 
