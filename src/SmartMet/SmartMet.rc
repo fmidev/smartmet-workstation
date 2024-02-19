@@ -259,6 +259,7 @@ BEGIN
             MENUITEM "Reload All Dynamic Data\tCTRL + SHIFT + F5", ID_ACCELERATOR_RELOAD_ALL_DYNAMIC_DATA
             MENUITEM "Reload Failed Satellite Images", ID_RELOADDATA_RELOADFAILEDSATELLITEIMAGES
         END
+        MENUITEM "Generate new Wms system",     ID_EDIT_GENERATE_NEW_WMS_SYSTEM
     END
     POPUP "&View"
     BEGIN
@@ -954,6 +955,12 @@ BEGIN
                             "Sounding data from server settings...\nSounding data from server settings..."
     ID_BUTTON_BETA_PRODUCT_DIALOG 
                             "Beta Production dialog\nBeta Production dialog"
+END
+
+STRINGTABLE
+BEGIN
+    ID_EDIT_GENERATE_NEW_WMS_SYSTEM 
+                            "Generate new Wms system and replace current system with it (it may corrupt over time)\nGenerate new Wms system and replace current system with it (it may corrupt over time)"
 END
 
 #endif    // English (United States) resources

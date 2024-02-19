@@ -408,6 +408,8 @@ public:
 	afx_msg void OnEditVisualizationsettings();
 	afx_msg void OnMoveviewsvisibleVisualizationsettingsposition();
 	afx_msg void OnAcceleratorMoveTimeBoxLocation();
+	afx_msg void OnEditGenerateNewWmsSystem();
+	afx_msg void OnUpdateEditGenerateNewWmsSystem(CCmdUI* pCmdUI);
 };
 
 
