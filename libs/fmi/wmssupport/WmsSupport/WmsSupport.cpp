@@ -9,6 +9,7 @@
 #include "bitmaphandler/GdiplusBitmapParser.h"
 #include <cppback/background-manager.h>
 #include <webclient/CppRestClient.h>
+#include <NFmiValueString.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -16,19 +17,42 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-/* // Katso WmsSupport::getDynamicImage metodin kommentoitujen koodien kommentti teksteistä, miksi tämä kohta on vielä kommentissa.
-#include "NFmiLedLightStatus.h"
+// Katso WmsSupport::getDynamicImage metodin kommentoitujen koodien kommentti teksteistä, miksi tämä kohta on vielä kommentissa.
+//#include "NFmiLedLightStatus.h"
 namespace
 {
-    std::string MakeLedChannelGetDynamicLayerReport(const std::string& hostStr, const std::string& layerStr)
+    //std::string MakeLedChannelGetDynamicLayerReport(const std::string& hostStr, const std::string& layerStr)
+    //{
+    //    std::string str = "Getting dynamic image from wms server:\n";
+    //    str += hostStr + "(";
+    //    str += layerStr + ")";
+    //    return str;
+    //}
+
+    void MakeRegenerationLog(double renewWmsSystemIntervalInHours)
     {
-        std::string str = "Getting dynamic image from wms server:\n";
-        str += hostStr + "(";
-        str += layerStr + ")";
-        return str;
+        static bool firstTime = true;
+        if(firstTime)
+        {
+            firstTime = false;
+            std::string recreateMwsMessage;
+            if(renewWmsSystemIntervalInHours > 0)
+            {
+                recreateMwsMessage = "Wms system will be recreated every ";
+                recreateMwsMessage += NFmiValueString::GetStringWithMaxDecimalsSmartWay(renewWmsSystemIntervalInHours, 2);
+                recreateMwsMessage += " hours, in order to maintain it's functionality, otherwise it corrupts after about 1-3 days of working";
+            }
+            else
+            {
+                recreateMwsMessage = "Wms system will not be recreated at all, SmartMet::Wms2::GetCapabilities::RenewWmsSystemIntervalInHours was set to ";
+                recreateMwsMessage += NFmiValueString::GetStringWithMaxDecimalsSmartWay(renewWmsSystemIntervalInHours, 2);
+                recreateMwsMessage += " in configurations (non positive value), Wms system will probably stop working after few days, because it corrupts after about 1-3 days of working";
+            }
+            CatLog::logMessage(recreateMwsMessage, CatLog::Severity::Info, CatLog::Category::Configuration);
+        }
     }
+
 }
-*/
 
 namespace Wms
 {
@@ -51,6 +75,7 @@ namespace Wms
 
     void WmsSupport::kill()
     {
+        setToBeKilled_ = true;
         for(auto& client : dynamicClients_)
         {
             client.second->kill();
@@ -58,9 +83,9 @@ namespace Wms
         bManager_->kill();
     }
 
-    bool WmsSupport::isDead(std::chrono::milliseconds wait) const
+    bool WmsSupport::isDead(const std::chrono::milliseconds& waitTime) const
     {
-        return bManager_->isDead(wait);
+        return bManager_->isDead(waitTime);
     }
 
     std::shared_ptr<Wms::CapabilityTree> WmsSupport::getCapabilityTree() const
@@ -256,6 +281,8 @@ namespace Wms
             return;
         }
 
+        ::MakeRegenerationLog(setup_->renewWmsSystemIntervalInHours);
+
         capabilitiesHandler_ = std::make_unique<CapabilitiesHandler>(
             std::make_unique<Web::CppRestClient>(bManager_, setup_->proxyUrl),
             bManager_,
@@ -377,5 +404,16 @@ namespace Wms
     {
         return !totalMapViewStaticMapClientState_.empty();
     }
+
+    bool WmsSupport::isSetToBeKilled() const
+    {
+        return setToBeKilled_;
+    }
+
+    bool WmsSupport::getCapabilitiesHaveBeenRetrieved() const
+    {
+        return capabilitiesHandler_->getCapabilitiesHaveBeenRetrieved();
+    }
+
 }
 
