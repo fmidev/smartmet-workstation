@@ -277,6 +277,8 @@ public:
     void selectCombinedMapModeIndices(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, int usedCombinedModeMapIndex, int usedCombinedModeOverlayMapIndex) override;
     void clearMacroParamCache(unsigned long mapViewDescTopIndex, unsigned long realRowIndex, boost::shared_ptr<NFmiDrawParam>& drawParam) override;
     void clearAllMacroParamDataCacheDependentOfEditedDataAfterEditedDataChanges() override;
+    void startWmsSupportRenewalProcess(bool startedByUser) override;
+    bool waitWmsSupportToDie(const std::chrono::milliseconds& waitTime) override;
 
 private:
     unsigned int getMapViewCount() const;
@@ -285,6 +287,11 @@ private:
     std::unique_ptr<NFmiMapViewDescTop> createMapViewDescTop(const std::string& baseSettingStr, int mapViewIndex);
     std::string getMapViewDescTopSettingString(const std::string& baseStr, int mapViewDescTopIndex);
     void initWmsSupport();
+    std::shared_ptr<WmsSupportInterface> createWmsSupport(const std::string& creationName) const;
+    void setWmsSupport(std::shared_ptr<WmsSupportInterface> wmsSupportPtr);
+    bool isWmsSupportBeenKilled() const;
+    void doWmsSupportRenewalProcessInSeparateThread(const std::string& creationName);
+
     void initMapConfigurationSystemMain();
     void initMapConfigurationSystem();
     void initProjectionCurvatureInfo();
@@ -297,7 +304,7 @@ private:
     std::vector<int> getCombinedModeSelectedMapIndicesFromWinRegistry(unsigned int mapViewDescTopIndex, bool doBackgroundMaps);
     void doCutBorderDrawInitialization();
     void makeNeededDirtyOperationsWhenDataAdded(unsigned int mapViewDescTopIndex, NFmiFastQueryInfo& fastInfo, NFmiInfoData::Type dataType, const NFmiTimeBag& dirtyViewTimes, const std::string& fileName);
-    void logMessage(const std::string &logMessage, CatLog::Severity severity, CatLog::Category category);
+    void logMessage(const std::string &logMessage, CatLog::Severity severity, CatLog::Category category, bool flushAlways = false) const;
     void logAndWarnUser(const std::string& logMessage, const std::string& titleString, CatLog::Severity severity, CatLog::Category category, bool addAbortOption);
     void mapViewDirtyForAllDescTops(bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool doClearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers);
     void clearMacroParamDataCache(unsigned int mapViewDescTopIndex, bool doClearMacroParamDataCache, bool clearEditedDataDependentCaches);

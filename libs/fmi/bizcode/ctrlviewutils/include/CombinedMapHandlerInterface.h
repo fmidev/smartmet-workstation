@@ -12,6 +12,7 @@
 #include <functional>
 #include <memory>
 #include <list>
+#include <chrono>
 
 class NFmiMetTime;
 class NFmiQueryData;
@@ -252,6 +253,8 @@ public:
     virtual void selectCombinedMapModeIndices(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, int usedCombinedModeMapIndex, int usedCombinedModeOverlayMapIndex) = 0;
     virtual void clearMacroParamCache(unsigned long mapViewDescTopIndex, unsigned long realRowIndex, boost::shared_ptr<NFmiDrawParam>& drawParam) = 0;
     virtual void clearAllMacroParamDataCacheDependentOfEditedDataAfterEditedDataChanges() = 0;
+    virtual void startWmsSupportRenewalProcess(bool startedByUser) = 0;
+    virtual bool waitWmsSupportToDie(const std::chrono::milliseconds &waitTime) = 0;
 
 
     // Staattiset perushelper-funktiot
