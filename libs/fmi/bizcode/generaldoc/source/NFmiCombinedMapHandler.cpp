@@ -75,8 +75,10 @@ namespace
 	// capabilityTree_ olion käyttö pitää suojata thread turvallisella lukolla.
 	std::mutex wmsSupportMutex_;
 	// Koska WmsSupport olion tappaminen vaatii odottelua, pitää tehdä tälläinen tmp-oliolle oma kuolin paikka.
-	// Eli ku
+	// Eli kun wmsSupport_ oli on vaihdettu tmpWmsSupport_ olioon, voidaan odotella että se tappaa itsensä ja se voidaan deletoida.
 	std::shared_ptr<WmsSupportInterface> tmpWmsSupport_;
+	// Tämä atomic-flagin avulla estetään samanaikaisten renewal prosessien käynnistyksen
+	std::mutex isWmsSupportRenewalProcessRunningMutex_;
 #endif // DISABLE_CPPRESTSDK
 
 	static const std::string g_ObservationMenuName = "Observation";
@@ -1658,53 +1660,65 @@ void NFmiCombinedMapHandler::startWmsSupportRenewalProcess(bool startedByUser)
 
 void NFmiCombinedMapHandler::doWmsSupportRenewalProcessInSeparateThread(const std::string& creationName)
 {
-	auto wmsSupportPtr = createWmsSupport(creationName);
-	if(wmsSupportPtr)
+	// Tarkistetaan ettei systeemi ole jo käynnissä
+	if(!isWmsSupportRenewalProcessRunningMutex_.try_lock())
 	{
-		for(;;)
+		logMessage("Wms-support renewal process was already running, stopping this call", CatLog::Severity::Warning, CatLog::Category::Operational, true);
+	}
+	else
+	{
+		// Avaan lukon ja laitan sen lock_guard:iin, jotta ei tarvitse laittaan kaikkiin return kohtiin erillistä avausta
+		isWmsSupportRenewalProcessRunningMutex_.unlock();
+		std::lock_guard<std::mutex> lock(isWmsSupportRenewalProcessRunningMutex_);
+
+		auto wmsSupportPtr = createWmsSupport(creationName);
+		if(wmsSupportPtr)
 		{
-			// Odotetaan että juuri luotu wmsSupport otus saa tehtyä getcapabilities haut ennen kuin otus otetaan käyttöön
-			if(isWmsSupportBeenKilled())
-			{
-				// Jos smartmetia ollaan sulkemassa, voidaan tämä odottelu lopettaa ja sijoitetaan wmsSupportPtr odottelemaan 
-				// loppuaan tmpWmsSupport_ olioon...
-				tmpWmsSupport_.swap(wmsSupportPtr);
-				tmpWmsSupport_->kill();
-				return;
-			}
-			if(wmsSupportPtr->getCapabilitiesHaveBeenRetrieved())
-			{
-				logMessage("Replacement Wms-support object has been properly initialized and it's getCapabilities have been retrieved once", CatLog::Severity::Debug, CatLog::Category::Operational, true);
-				break;
-			}
-			// Tässä laitetaan threadi nukkumaan pieneksi aikaa, jotta tarkasteluja voidaan sitten jatkaa
-			std::this_thread::sleep_for(std::chrono::milliseconds(500));
-		}
-		// Nyt täysin toiminta valmis wmsSupport olio voidaan ottaa käyttöön
-		setWmsSupport(wmsSupportPtr);
-		if(tmpWmsSupport_)
-		{
-			// Lopuksi odotellaan että tmp-wms-support olio tappaa itsensä ja että se voidaan poistaa ja nollata
 			for(;;)
 			{
+				// Odotetaan että juuri luotu wmsSupport otus saa tehtyä getcapabilities haut ennen kuin otus otetaan käyttöön
 				if(isWmsSupportBeenKilled())
 				{
-					// Jos smartmetia ollaan sulkemassa, voidaan tämä odottelu lopettaa
+					// Jos smartmetia ollaan sulkemassa, voidaan tämä odottelu lopettaa ja sijoitetaan wmsSupportPtr odottelemaan 
+					// loppuaan tmpWmsSupport_ olioon...
+					tmpWmsSupport_.swap(wmsSupportPtr);
+					tmpWmsSupport_->kill();
 					return;
 				}
-
-				// tässä pika tarkastus (0 lukko aika), voidaanko nollata
+				if(wmsSupportPtr->getCapabilitiesHaveBeenRetrieved())
 				{
-					std::lock_guard<std::mutex> lock(wmsSupportMutex_);
-					if(tmpWmsSupport_->isDead(std::chrono::milliseconds(0)))
-					{
-						tmpWmsSupport_.reset();
-						logMessage("Replaced Wms-support object has been killed and disposed", CatLog::Severity::Debug, CatLog::Category::Operational, true);
-						break;
-					}
+					logMessage("Replacement Wms-support object has been properly initialized and it's getCapabilities have been retrieved once", CatLog::Severity::Debug, CatLog::Category::Operational, true);
+					break;
 				}
 				// Tässä laitetaan threadi nukkumaan pieneksi aikaa, jotta tarkasteluja voidaan sitten jatkaa
 				std::this_thread::sleep_for(std::chrono::milliseconds(500));
+			}
+			// Nyt täysin toiminta valmis wmsSupport olio voidaan ottaa käyttöön
+			setWmsSupport(wmsSupportPtr);
+			if(tmpWmsSupport_)
+			{
+				// Lopuksi odotellaan että tmp-wms-support olio tappaa itsensä ja että se voidaan poistaa ja nollata
+				for(;;)
+				{
+					if(isWmsSupportBeenKilled())
+					{
+						// Jos smartmetia ollaan sulkemassa, voidaan tämä odottelu lopettaa
+						return;
+					}
+
+					// tässä pika tarkastus (0 lukko aika), voidaanko nollata
+					{
+						std::lock_guard<std::mutex> lock(wmsSupportMutex_);
+						if(tmpWmsSupport_->isDead(std::chrono::milliseconds(0)))
+						{
+							tmpWmsSupport_.reset();
+							logMessage("Replaced Wms-support object has been killed and disposed", CatLog::Severity::Debug, CatLog::Category::Operational, true);
+							break;
+						}
+					}
+					// Tässä laitetaan threadi nukkumaan pieneksi aikaa, jotta tarkasteluja voidaan sitten jatkaa
+					std::this_thread::sleep_for(std::chrono::milliseconds(500));
+				}
 			}
 		}
 	}
