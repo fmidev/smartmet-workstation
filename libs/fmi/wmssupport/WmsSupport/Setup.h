@@ -67,6 +67,11 @@ namespace Wms
         int imageTimeoutInSeconds;
         int legendTimeoutInSeconds;
         int getCapabilitiesTimeoutInSeconds;
+        // Wms systeemi on mennyt monesti rikki jonkun käynnissä oloajan jälkeen (n. 2-3 vrk), tämän 
+        // estämiseksi, smartmetiin tehtiin timer, joka laukaustaan tietyin väliajoin, joka generoi 
+        // uuden WmsSupport systeemin ja laittaa sen käytössä olleen tilalle (vanha tuhotaan). Oletusarvo 
+        // on 6 h mutta jos tälle antaa arvoksi 0 tai negatiivinen luku, ei timeria käynnistetä ollenkaan.
+        float renewWmsSystemIntervalInHours = 6;
 
         std::chrono::seconds intervalToPollGetCapabilities;
 
