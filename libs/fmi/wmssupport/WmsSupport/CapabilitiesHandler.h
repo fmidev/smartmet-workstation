@@ -49,7 +49,10 @@ namespace Wms
         std::unordered_map<int, Wms::DynamicServerSetup> servers_;
         std::string proxyUrl_;
         std::chrono::seconds intervalToPollGetCapabilities_;
-        int getCapabilitiesTimeoutInSeconds;
+        int getCapabilitiesTimeoutInSeconds_;
+        // Jos tämä muuttuu true:ksi, se tarkoittaa että startFetchingCapabilitiesInBackground
+        // metodi on mennyt kerran läpi, löytyi servereiltä mitään järkevää tai ei.
+        bool getCapabilitiesHaveBeenRetrieved_ = false;
     public:
         CapabilitiesHandler(
             std::unique_ptr<Web::Client> client,
@@ -68,6 +71,7 @@ namespace Wms
         std::shared_ptr<CapabilityTree> getCapabilityTree() const;
         void setCapabilityTree(std::shared_ptr<CapabilityTree> capabilityTree);
         bool isCapabilityTreeAvailable() const;
+        bool getCapabilitiesHaveBeenRetrieved() const;
         static void setParameterSelectionUpdateCallback(std::function<void()>& parameterSelectionUpdateCallback);
         static void firstTimeUpdateCallbackWrapper();
     };

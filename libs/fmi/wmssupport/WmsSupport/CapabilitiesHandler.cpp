@@ -97,7 +97,7 @@ namespace Wms
         , proxyUrl_{ proxyUrl }
         , servers_{ servers }
         , intervalToPollGetCapabilities_{ intervalToPollGetCapabilities }
-        , getCapabilitiesTimeoutInSeconds{capabilitiesTimeoutInSeconds}
+        , getCapabilitiesTimeoutInSeconds_{capabilitiesTimeoutInSeconds}
         , cacheHitCallback_{ cacheHitCallback }
     {}
 
@@ -140,6 +140,11 @@ namespace Wms
         return capabilityTree_ != nullptr;
     }
 
+    bool CapabilitiesHandler::getCapabilitiesHaveBeenRetrieved() const
+    {
+        return getCapabilitiesHaveBeenRetrieved_;
+    }
+
     void CapabilitiesHandler::startFetchingCapabilitiesInBackground()
     {
         bManager_->addTask([&]()
@@ -169,7 +174,7 @@ namespace Wms
                         try
                         {
                             auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_, server.acceptTimeDimensionalLayersOnly };
-                            auto xml = fetchCapabilitiesXml(*client_, query, server.logFetchCapabilitiesRequest, server.doVerboseLogging, getCapabilitiesTimeoutInSeconds);
+                            auto xml = fetchCapabilitiesXml(*client_, query, server.logFetchCapabilitiesRequest, server.doVerboseLogging, getCapabilitiesTimeoutInSeconds_);
                             changedLayers_.changedLayers.clear();
                             children.push_back(capabilityTreeParser.parseXmlGeneral(xml, workingHashesPtr->getHashes(), changedLayers_));
                             foundAnyWmsServerData = true;
@@ -191,8 +196,9 @@ namespace Wms
                             // Mahdollinen ongelma on jo lokitettu, t‰ll‰ pyrit‰‰n est‰m‰‰n ett‰ poikkeus jonkun serverin k‰sittelyss‰ ei est‰ muiden toimintaa
                         }
                     }
-                    setCapabilityTree(std::make_shared<CapabilityNode>(rootValue_, std::move(children)));
                     setHashes(workingHashesPtr);
+                    setCapabilityTree(std::make_shared<CapabilityNode>(rootValue_, std::move(children)));
+                    getCapabilitiesHaveBeenRetrieved_ = true;
                     if(foundAnyWmsServerData)
                     {
                         firstTimeUpdateCallbackWrapper();
