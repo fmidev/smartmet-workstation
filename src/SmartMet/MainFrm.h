@@ -46,6 +46,7 @@ const int kFmiLoggingSystemManagementTimer = 20;
 const int kFmiNewQueryDataReadUpdateViewsTimer = 21;
 const int kFmiOneTimeWmsBasedDataUpdateTimer = 22;
 const int kFmiLedLightsActionTimer = 23;
+const int kFmiWmsSupportRenewerTimer = 24;
 
 class CStatusBarResize : public CStatusBar
 {
@@ -149,6 +150,7 @@ protected:  // control bar embedded members
     UINT itsLoggingSystemManagementTimer;
 	UINT itsOneTimeWmsBasedDataUpdateTimer;
 	UINT itsLedLightsActionTimer;
+	UINT itsWmsSupportRenewerTimer;
 
 	NFmiEditMapGeneralDataDoc* itsDoc; // ei omista, ei tuhoa
 	CBitmap *itsRedFlagBitmap;

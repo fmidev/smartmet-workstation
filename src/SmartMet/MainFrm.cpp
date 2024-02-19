@@ -704,6 +704,18 @@ void CMainFrame::StartSmartMetTimers()
 	{
 		itsLedLightsActionTimer = static_cast<UINT>(SetTimer(kFmiLedLightsActionTimer, 200, NULL)); // ledejä säädetään 1/5 sekunnin välein
 	}
+	if(itsDoc->GetCombinedMapHandler()->wmsSupportAvailable())
+	{
+		auto renewWmsSystemIntervalInHours = itsDoc->GetCombinedMapHandler()->getWmsSupport()->getSetup()->renewWmsSystemIntervalInHours;
+		if(renewWmsSystemIntervalInHours > 0)
+		{
+			const UINT hourInMilliseconds = 60 * 60 * 1000;
+			// WmsSupport regeneroinnin tarkoitus on uusia WmsSupport otus tietyn väliajoin, koska on huomattu ainakin
+			// Beta-tuotanto koneissa että wms datan saanti loppuu usein 1-3 vuorokauden kuluttua.
+			// Sellainen 6 tunnin välein Wms-systeemin vaihto voisi olla kokeilemisen arvoista.
+			itsWmsSupportRenewerTimer = static_cast<UINT>(SetTimer(kFmiWmsSupportRenewerTimer, static_cast<UINT>(renewWmsSystemIntervalInHours * hourInMilliseconds), NULL));
+		}
+	}
 }
 
 static void LocalizeMenuStrings(CMenu *pMenu)
@@ -1303,14 +1315,14 @@ void CMainFrame::OnClose()
             else
                 itsDoc->LogMessage("SatelliteImageCache-threads didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
 #ifndef DISABLE_CPPRESTSDK
-            if(itsDoc->WarningCenterSystem().isDead(std::chrono::milliseconds(1 * 1000)))
+            if(itsDoc->WarningCenterSystem().isDead(std::chrono::milliseconds(10 * 1000)))
                 itsDoc->LogMessage("Hake message -threads stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
             else
                 itsDoc->LogMessage("Hake message -threads didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
 
             if(combinedMapHandler.wmsSupportAvailable())
             {
-                if(combinedMapHandler.getWmsSupport()->isDead(std::chrono::milliseconds(1 * 1000)))
+                if(combinedMapHandler.waitWmsSupportToDie(std::chrono::milliseconds(10 * 1000)))
                     itsDoc->LogMessage("WmsSupport -threads stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
                 else
                     itsDoc->LogMessage("WmsSupport -threads didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
@@ -1553,6 +1565,12 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
             g_NewQueryDataReadUpdateViewsTimerFlag.clear();
             return;
         }
+
+		case kFmiWmsSupportRenewerTimer:
+		{
+			itsDoc->GetCombinedMapHandler()->startWmsSupportRenewalProcess(false);
+			return;
+		}
     }
 
 	CFmiUsedFrameWndParent::OnTimer(nIDEvent);
