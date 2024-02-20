@@ -502,6 +502,25 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForMacroParamCategoryType(con
     return str;
 }
 
+std::string NFmiParameterSelectionGridCtrl::TooltipForWmsDataCategoryType(const AddParams::SingleRowItem& singleRowItem, const std::vector<AddParams::SingleRowItem>& singleRowItemVector, int rowNumber)
+{
+    std::string str;
+    str += "<b><font face=\"Serif\" size=\"5\" color=\"darkblue\">";
+    str += "Wms layer info";
+    str += "</font></b>";
+    str += "<br><hr color=darkblue><br>";
+    str += "<b>Name: </b> \t" + singleRowItem.itemName();
+    str += "<br><b>Wms server: </b> \t" + singleRowItem.parentItemName();
+    if(singleRowItem.leafNode())
+    {
+        str += "<br><b>Has time dimension: </b> \t" + std::string((singleRowItem.wmsLayerHasTimeDimension() ? "Yes" : "No"));
+    }
+    str += "<br><b>Tree depth: </b> \t" + std::to_string(singleRowItem.treeDepth());
+    str += "<br><hr color=darkblue><br>";
+
+    return str;
+}
+
 std::string NFmiParameterSelectionGridCtrl::TooltipForParameterType(const AddParams::SingleRowItem &rowItem)
 {
     FmiInterpolationMethod interpolation = kNoneInterpolation;   
@@ -557,39 +576,46 @@ std::string NFmiParameterSelectionGridCtrl::ComposeToolTipText(const CPoint &poi
         int rowNumber = idCurrentCell.row;
         AddParams::SingleRowItem singleRowItem = itsSmartMetDocumentInterface->ParameterSelectionSystem().dialogRowData().at(rowNumber - 1);
         std::vector<AddParams::SingleRowItem> singleRowItemVector = itsSmartMetDocumentInterface->ParameterSelectionSystem().dialogRowData();
-        auto fastQueryInfo = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
-        auto fastQueryInfoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.itemId());
-        auto helpDataInfo = itsSmartMetDocumentInterface->HelpDataInfoSystem()->FindHelpDataInfo(singleRowItem.uniqueDataId());
-        auto producerInfo = itsSmartMetDocumentInterface->ProducerSystem().Producer(itsSmartMetDocumentInterface->ProducerSystem().FindProducerInfo(NFmiProducer(singleRowItem.itemId())));
-
-        if(singleRowItem.rowType() == AddParams::RowType::kCategoryType && singleRowItemVector.at(rowNumber).itemId() == 998)
+        if(singleRowItem.dataType() == NFmiInfoData::kWmsData)
         {
-            return TooltipForMacroParamCategoryType(singleRowItem, singleRowItemVector, rowNumber);
+            return TooltipForWmsDataCategoryType(singleRowItem, singleRowItemVector, rowNumber);
         }
-        else if(singleRowItem.rowType() == AddParams::RowType::kCategoryType && singleRowItem.itemName() == "Operational data")
-        {
-            return TooltipForCategoryType();
-        }
-        else if(singleRowItem.rowType() == AddParams::RowType::kDataType)
-        {
-            return TooltipForDataType(singleRowItem);
-        }
-        else if(!fastQueryInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kProducerType)
-        {
-            return TooltipForProducerType(singleRowItem, fastQueryInfoVector, producerInfo);
-        }
-        else if(!fastQueryInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kCategoryType)
-        {
-            return TooltipForCategoryType(singleRowItem, singleRowItemVector, rowNumber);
-        }
-        // Pelk‰lle parametrille ei en‰ ‰tehd‰ tooltippi‰, koska siin‰ ei ole en‰‰ mit‰‰n uutta tietoa (interpolaatio), 
-        // mutta tooltipin esille pomppaaminen h‰iritsee parametrin tupla-klik valintaa.
-        //else if(IsParameterType(singleRowItem.rowType()))
-        //{
-        //    return TooltipForParameterType(singleRowItem);
-        //}
         else
-            return "";
+        {
+            auto fastQueryInfo = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
+            auto fastQueryInfoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.itemId());
+            auto helpDataInfo = itsSmartMetDocumentInterface->HelpDataInfoSystem()->FindHelpDataInfo(singleRowItem.uniqueDataId());
+            auto producerInfo = itsSmartMetDocumentInterface->ProducerSystem().Producer(itsSmartMetDocumentInterface->ProducerSystem().FindProducerInfo(NFmiProducer(singleRowItem.itemId())));
+
+            if(singleRowItem.rowType() == AddParams::RowType::kCategoryType && singleRowItemVector.at(rowNumber).itemId() == 998)
+            {
+                return TooltipForMacroParamCategoryType(singleRowItem, singleRowItemVector, rowNumber);
+            }
+            else if(singleRowItem.rowType() == AddParams::RowType::kCategoryType && singleRowItem.itemName() == "Operational data")
+            {
+                return TooltipForCategoryType();
+            }
+            else if(singleRowItem.rowType() == AddParams::RowType::kDataType)
+            {
+                return TooltipForDataType(singleRowItem);
+            }
+            else if(!fastQueryInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kProducerType)
+            {
+                return TooltipForProducerType(singleRowItem, fastQueryInfoVector, producerInfo);
+            }
+            else if(!fastQueryInfoVector.empty() && singleRowItem.rowType() == AddParams::RowType::kCategoryType)
+            {
+                return TooltipForCategoryType(singleRowItem, singleRowItemVector, rowNumber);
+            }
+            // Pelk‰lle parametrille ei en‰ ‰tehd‰ tooltippi‰, koska siin‰ ei ole en‰‰ mit‰‰n uutta tietoa (interpolaatio), 
+            // mutta tooltipin esille pomppaaminen h‰iritsee parametrin tupla-klik valintaa.
+            //else if(IsParameterType(singleRowItem.rowType()))
+            //{
+            //    return TooltipForParameterType(singleRowItem);
+            //}
+            else
+                return "";
+        }
     }
     
     return std::string("Parameter Selection");

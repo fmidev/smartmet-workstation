@@ -45,6 +45,7 @@ namespace AddParams
         std::string totalFilePath_;
         std::string searchWords_;
         FmiInterpolationMethod interpolationType_ = kNoneInterpolation;
+        bool wmsLayerHasTimeDimension_ = false;
 
     public:
         SingleRowItem();
@@ -84,6 +85,8 @@ namespace AddParams
         const std::string& searchWords() const { return searchWords_; }
         FmiInterpolationMethod interpolationType() const { return interpolationType_; }
         void interpolationType(FmiInterpolationMethod interpolationType) { interpolationType_ = interpolationType; }
+        bool wmsLayerHasTimeDimension() const { return wmsLayerHasTimeDimension_; }
+        void wmsLayerHasTimeDimension(bool hasTimeDimension) { wmsLayerHasTimeDimension_ = hasTimeDimension; }
 
     private:
         void createSearchWords();
