@@ -3239,6 +3239,7 @@ NFmiInfoData::Type getFinalDataType(boost::shared_ptr<NFmiDrawParam>& drawParam,
 {
 	auto& infoOrganizer = ::getInfoOrganizer();
 	NFmiInfoData::Type finalDataType = drawParam->DataType();
+	NFmiInfoData::Type foundBackupDataType = NFmiInfoData::kNoDataType;
 	if(useCrossSectionParams)
 		return ::checkCrossSectionLevelData(finalDataType, givenProducer);
 
@@ -3253,12 +3254,20 @@ NFmiInfoData::Type getFinalDataType(boost::shared_ptr<NFmiDrawParam>& drawParam,
 				{
 					if(info->LevelType() == drawParam->Level().LevelType())
 					{
-						return info->DataType();
+						auto actualInfoDataType = info->DataType();
+						if(actualInfoDataType == finalDataType)
+							return actualInfoDataType;
+						else
+							foundBackupDataType = actualInfoDataType;
 					}
 				}
 				else if(fGroundData && info->SizeLevels() == 1)
 				{
-					return info->DataType();
+					auto actualInfoDataType = info->DataType();
+					if(actualInfoDataType == finalDataType)
+						return actualInfoDataType;
+					else
+						foundBackupDataType = actualInfoDataType;
 				}
 			}
 		}
@@ -3273,6 +3282,9 @@ NFmiInfoData::Type getFinalDataType(boost::shared_ptr<NFmiDrawParam>& drawParam,
 	boost::shared_ptr<NFmiFastQueryInfo> helpData = infoOrganizer.FindInfo(NFmiInfoData::kEditingHelpData, 0);
 	if(helpData && givenProducer == *(helpData->Producer()))
 		return NFmiInfoData::kEditingHelpData;
+
+	if(foundBackupDataType != NFmiInfoData::kNoDataType)
+		return foundBackupDataType;
 
 	return finalDataType;
 }
