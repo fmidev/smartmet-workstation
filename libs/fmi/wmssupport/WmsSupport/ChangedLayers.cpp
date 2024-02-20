@@ -12,7 +12,7 @@ namespace Wms
     {
         startTime = start;
         endTime = end;
-        hasTimeDimension = (startTime != NFmiMetTime::gMissingTime) && (endTime == NFmiMetTime::gMissingTime);
+        hasTimeDimension = (startTime != NFmiMetTime::gMissingTime) && (endTime != NFmiMetTime::gMissingTime);
     }
 
     bool operator<(const LayerInfo& info1, const LayerInfo& info2)

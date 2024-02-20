@@ -495,7 +495,7 @@ namespace Wms
 			auto hashedName = static_cast<long>(std::hash<std::string>{}(name));
 			insertLeaf(
 				*subTree,
-				CapabilityLeaf{ Capability{ producer_, hashedName,  popLastElementFrom(path) } },
+				CapabilityLeaf{ Capability{ producer_, hashedName,  popLastElementFrom(path), dimensionTimeData.hasTimeDimension()}},
 				path
 			);
 
@@ -523,7 +523,7 @@ namespace Wms
 				auto tmpPath = path;
 				insertLeaf(
 					*subTree,
-					CapabilityLeaf{ Capability{ producer_, hashedName, tmpPath.back() + ":" + style.name } },
+					CapabilityLeaf{ Capability{ producer_, hashedName, tmpPath.back() + ":" + style.name, dimensionTimeData.hasTimeDimension() } },
 					tmpPath
 				);
 

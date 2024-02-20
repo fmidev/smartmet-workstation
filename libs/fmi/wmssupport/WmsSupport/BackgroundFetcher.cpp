@@ -21,7 +21,7 @@ namespace Wms
         {
             return;
         }
-        update(qb, time, editorTimeStepInMinutes);
+        update(qb, time, editorTimeStepInMinutes, true);
         fetchQueriesInTheBackground(client, forwardQueries_);
         fetchQueriesInTheBackground(client, backwardQueries_);
     }
@@ -39,10 +39,13 @@ namespace Wms
         }
     }
 
-    void BackgroundFetcher::update(const QueryBuilder& qb, const NFmiMetTime& time, int timeStepInMinutes)
+    void BackgroundFetcher::update(const QueryBuilder& qb, const NFmiMetTime& time, int timeStepInMinutes, bool hasTimeDimension)
     {
-        createQueries(qb, time, timeStepInMinutes, forwardQueries_);
-        createQueries(qb, time, -timeStepInMinutes, backwardQueries_);
+        if(hasTimeDimension)
+        {
+            createQueries(qb, time, timeStepInMinutes, forwardQueries_);
+            createQueries(qb, time, -timeStepInMinutes, backwardQueries_);
+        }
     }
 
     void BackgroundFetcher::createQueries(const QueryBuilder &qb, const NFmiMetTime &time, int timeStepInMinutes, std::vector<WmsQuery>& queries)
@@ -52,7 +55,7 @@ namespace Wms
         for(auto& query : queries)
         {
             usedTime.ChangeByMinutes(timeStepInMinutes);
-            query = usedQueryBuilder.setTime(usedTime).build();
+            query = usedQueryBuilder.setTime(usedTime, true).build();
         }
     }
 

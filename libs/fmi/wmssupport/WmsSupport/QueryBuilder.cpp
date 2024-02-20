@@ -192,9 +192,12 @@ namespace Wms
         return *this;
     }
 
-    QueryBuilder& QueryBuilder::setTime(const NFmiMetTime& time)
+    QueryBuilder& QueryBuilder::setTime(const NFmiMetTime& time, bool hasTimeDimension)
     {
-        query_.query["TIME"] = stringify(time);
+        if(hasTimeDimension)
+        {
+            query_.query["TIME"] = stringify(time);
+        }
         return *this;
     }
 

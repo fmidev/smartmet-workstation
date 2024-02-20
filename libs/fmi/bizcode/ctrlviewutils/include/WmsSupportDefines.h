@@ -17,6 +17,7 @@ namespace Wms
         NFmiProducer producer;
         long paramId;
         std::string name;
+        bool hasTimeDimension = false;
     };
 
     using CapabilityLeaf = cppext::Leaf<Capability>;

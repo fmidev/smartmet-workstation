@@ -40,7 +40,7 @@ namespace Wms
         QueryBuilder& setCrsAndBbox(const NFmiArea& area);
         QueryBuilder& setStyles(const std::string& styles);
         QueryBuilder& setExceptions(const std::string& exceptions);
-        QueryBuilder& setTime(const NFmiMetTime& time);
+        QueryBuilder& setTime(const NFmiMetTime& time, bool hasTimeDimension);
         QueryBuilder& setMap(const std::string& map);
         QueryBuilder& setToken(const std::string& token);
         QueryBuilder& useProxy(const std::string& url);

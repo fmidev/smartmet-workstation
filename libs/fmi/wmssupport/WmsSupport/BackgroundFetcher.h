@@ -25,7 +25,7 @@ namespace Wms
 
     private:
         void fetchQueriesInTheBackground(WmsClient& client, const std::vector<WmsQuery> &queries);
-        void update(const QueryBuilder& qb, const NFmiMetTime& time, int timeStepInMinutes);
+        void update(const QueryBuilder& qb, const NFmiMetTime& time, int timeStepInMinutes, bool hasTimeDimension);
         void createQueries(const QueryBuilder &qb, const NFmiMetTime &time, int timeStepInMinutes, std::vector<WmsQuery>& queries);
         bool shouldNotDoBackgroundFetching(const WmsClient& client, const QueryBuilder& qb) const;
     };

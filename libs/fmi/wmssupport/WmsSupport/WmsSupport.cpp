@@ -153,7 +153,7 @@ namespace Wms
             .setWidth(resolutionX)
             .setHeight(resolutionY)
             .setCrsAndBbox(area)
-            .setTime(time)
+            .setTime(time, layerInfo.hasTimeDimension)
             .setRequest("GetMap")
             .setStyles(layerInfo.style.name)
             .build();
@@ -162,7 +162,10 @@ namespace Wms
         *    Tämä led-raportointi voidaan ottaa käyttöön jos/kun kuvan hakuja ei enää odotella katkeraan loppuun asti.
         NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::WmsData, workingThreadName, MakeLedChannelGetDynamicLayerReport(query.host, layerInfo->name));
         */
-        backgroundFetcher_->fetch(*dynamicClients_[producerId], qb, time, editorTimeStepInMinutes);
+        if(layerInfo.hasTimeDimension)
+        {
+            backgroundFetcher_->fetch(*dynamicClients_[producerId], qb, time, editorTimeStepInMinutes);
+        }
         return dynamicClients_[producerId]->getImage(query);
     }
 
