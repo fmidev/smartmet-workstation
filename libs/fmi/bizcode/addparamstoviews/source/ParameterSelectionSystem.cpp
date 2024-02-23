@@ -10,11 +10,11 @@
 #include "..\..\..\catlog\catlog\catlogutils.h"
 #include "SpecialDesctopIndex.h"
 #include "NFmiHelpDataInfo.h"
+#include "NFmiFastInfoUtils.h"
 #ifndef DISABLE_CPPRESTSDK
 #include "WmsSupportInterface.h"
-#include "CapabilitiesHandler.h"
 #include "CapabilityTree.h"
-#include "NFmiFastInfoUtils.h"
+#include "CapabilitiesHandler.h" // Tuottaa C++17 ympäristössä ParameterSelectionSystem.cpp tiedostossa byte ongelman
 #endif // DISABLE_CPPRESTSDK
 
 #ifdef _DEBUG
@@ -22,9 +22,6 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-
-    
-class NFmiInfoOrganizer;
 
 namespace
 {

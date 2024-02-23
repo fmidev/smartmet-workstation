@@ -4,7 +4,6 @@
 #include "wmssupport/BitmapCache.h"
 #include "wmssupport/QueryBuilder.h"
 #include "wmssupport/CapabilityTree.h"
-#include "wmssupport/CapabilityTreeParser.h"
 #include "wmssupport/ChangedLayers.h"
 #include "wmssupport/CapabilitiesHandlerHashes.h"
 

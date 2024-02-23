@@ -1,11 +1,11 @@
 #pragma once
 #include <string>
 #include <memory>
-#include <vector>
 
+#include "NFmiGlobals.h"
 #include "NFmiInfoData.h"
-#include "NFmiLevel.h"
 
+class NFmiLevel;
 
 namespace AddParams
 {

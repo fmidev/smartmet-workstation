@@ -2,16 +2,16 @@
 
 #include "SingleRowItem.h"
 #include "boost/shared_ptr.hpp"
-#include "NFmiProducer.h"
 #include <vector>
 #include <functional>
-#include "NFmiLevelBag.h"
 
 class NFmiHelpDataInfoSystem;
 class NFmiInfoOrganizer;
 class NFmiProducerSystem;
 class NFmiMacroParamSystem;
 class WmsSupportInterface;
+class NFmiLevelBag;
+class NFmiProducer;
 
 namespace AddParams
 {   
