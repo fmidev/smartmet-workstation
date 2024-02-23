@@ -125,9 +125,9 @@ void CFmiDataQualityCheckerDialog::OnBnClickedButtonDoQualityCheck()
 
 	// pitää tehdä kopio editoidusta datasta (thread turvallinen)
 	NFmiDataQualityChecker &dataQualityChecker = itsSmartMetDocumentInterface->DataQualityChecker();
-	std::auto_ptr<NFmiQueryData> editedDataPtr(editedInfo->DataReference()->Clone());
+	std::unique_ptr<NFmiQueryData> editedDataPtr(editedInfo->DataReference()->Clone());
 	
-	dataQualityChecker.SetCheckedData(editedDataPtr);
+	dataQualityChecker.SetCheckedData(std::move(editedDataPtr));
 	boost::thread wrk_thread(::DoDataChecking, boost::ref(threadCallBacks), boost::ref(dataQualityChecker));
 	// käynnistetään sitten porgress ja cancel dialogi, että käyttäjä voi tarvittaessa keskeyttää työt.
 	/* int status = */ static_cast<int>(dlg.DoModal());

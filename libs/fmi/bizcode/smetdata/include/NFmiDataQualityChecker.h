@@ -124,7 +124,7 @@ public:
 	void StoreToSettings(void);
 
 	void CheckData(NFmiThreadCallBacks *theThreadCallBacks);
-	void SetCheckedData(std::auto_ptr<NFmiQueryData> theDataPtr);
+	void SetCheckedData(std::unique_ptr<NFmiQueryData> theDataPtr);
 	void Clear(void);
 
 	bool Use(void) const {return fUse;}
@@ -145,7 +145,7 @@ private:
 	std::vector<NFmiDataParamCheckingInfo> itsDataParamCheckingInfos;
 	NFmiDataMatrix<NFmiGridValuesCheck> itsValueCheckMatrix; // data on t‰‰ll‰ param, time j‰rjestyksess‰ x-indeksi siis parametri ja y-indeksi on aika
 	std::vector<NFmiGridValuesCheck> itsCombinedParamChecks; // t‰ss‰ on koosteet jokaisesta parametrista (yli kaikkien aikojen)
-	std::auto_ptr<NFmiQueryData> itsDataPtr; // data v‰litet‰‰n t‰nne ja s‰ilytet‰‰n auto_ptr:ssa, siksi ett‰ olisi varmaa ett‰ 
+	std::unique_ptr<NFmiQueryData> itsDataPtr; // data v‰litet‰‰n t‰nne ja s‰ilytet‰‰n unique_ptr:ssa, siksi ett‰ olisi varmaa ett‰ 
 											// t‰m‰ luokka omistaa annetun datan, eik‰ tule ongelmia eri threadien v‰lill‰.
 	bool fUse; // onko checker k‰ytˆss‰ vai ei
 	bool fAutomatic; // toimiiko checker tyˆ-threadissa automaattisesti, vaiko toimitaanko vai on-demandina eli nappia painamalla

@@ -279,9 +279,9 @@ void NFmiDataQualityChecker::StoreToSettings(void)
 		throw std::runtime_error("Error in NFmiDataQualityChecker::StoreToSettings, unable to store setting.");
 }
 
-void NFmiDataQualityChecker::SetCheckedData(std::auto_ptr<NFmiQueryData> theDataPtr)
+void NFmiDataQualityChecker::SetCheckedData(std::unique_ptr<NFmiQueryData> theDataPtr)
 {
-	itsDataPtr = theDataPtr; // otetaan queryData omistukseen
+	itsDataPtr.swap(theDataPtr); // otetaan queryData omistukseen
 }
 
 static void DoStepIt(NFmiThreadCallBacks *theThreadCallBacks)

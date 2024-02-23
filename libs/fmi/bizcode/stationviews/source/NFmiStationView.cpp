@@ -1963,7 +1963,7 @@ static void SetXYZValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, co
 static void DoFinalGridding(const NFmiGriddingProperties &griddingProperties, const boost::shared_ptr<NFmiArea> &theArea, std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues, NFmiDataMatrix<float> &theValues)
 {
     auto stationRadiusRelative = static_cast<float>(NFmiGriddingProperties::ConvertLengthInKmToRelative(griddingProperties.rangeLimitInKm(), theArea.get()));
-    auto_ptr<NFmiObsDataGridding> obsDataGridding(new NFmiObsDataGridding());
+    std::unique_ptr<NFmiObsDataGridding> obsDataGridding(new NFmiObsDataGridding());
 	NFmiDataParamControlPointModifier::DoDataGridding(theXValues, theYValues, theZValues, static_cast<int>(theZValues.size()), theValues, theArea->XYArea(), griddingProperties, obsDataGridding.get(), stationRadiusRelative);
 }
 
