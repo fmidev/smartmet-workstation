@@ -10,6 +10,13 @@ template<class T>
 class checkedVector : public std::vector<T>   // inherit from std::vector<T>
 {
    public:
+       // Accessing std::vector<T> types in C++17 must be done more directly
+       using typename std::vector<T>::size_type;
+       using typename std::vector<T>::difference_type;
+       using typename std::vector<T>::iterator;
+       using typename std::vector<T>::reference;
+       using typename std::vector<T>::const_reference;
+
       // type names like iterator etc. are also inherited
       checkedVector()
       {}
@@ -24,7 +31,6 @@ class checkedVector : public std::vector<T>   // inherit from std::vector<T>
 
       reference operator[](difference_type index)
       {
-		 using std::vector;
          assert(index >=0 
              && index < static_cast<difference_type>(size()));
          return vector<T>::operator[](index);
@@ -32,7 +38,6 @@ class checkedVector : public std::vector<T>   // inherit from std::vector<T>
 
       const_reference operator[](difference_type index) const
       {
-		 using std::vector;
          assert(index >=0 
              && index < static_cast<difference_type>(size()));
          return vector<T>::operator[](index);
