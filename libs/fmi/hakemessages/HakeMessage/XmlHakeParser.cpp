@@ -11,6 +11,12 @@
 
 using namespace std;
 
+namespace
+{
+    // T‰t‰ k‰ytet‰‰n HAKE datopista saatujen koordinaattien konvertoimiseen newbase vastaaviksi
+    std::unique_ptr<NFmiArea> gYkjAreaCoordinateConverionPtr = std::make_unique<NFmiYKJArea>(NFmiPoint(19, 59), NFmiPoint(32, 70));
+}
+
 namespace HakeMessage
 {
     namespace
@@ -74,13 +80,6 @@ namespace HakeMessage
     {
         auto xmlMessage = HakeMsg{};
         xmlMessage.IsFromXmlFormat(true);
-        static std::auto_ptr<NFmiArea> areaPtr;
-        static bool firstTime = true;
-        if(firstTime)
-        {
-            firstTime = false;
-            areaPtr.reset(new NFmiYKJArea(NFmiPoint(19, 59), NFmiPoint(32, 70)));
-        }
 
         CString sxmlU_(CA2T(xmlString.c_str()));
         XNode xml;
@@ -174,7 +173,7 @@ namespace HakeMessage
             childNodeStr = GetXMLChildNodeString(xml, "KoordY", xmlString);
             double worldY = NFmiStringTools::Convert<double>(childNodeStr);
             // PITƒƒ TEHDƒ world xy muunnos YKJ-arean avulla latlon koordinaatistoon
-            xmlMessage.LatlonPoint(areaPtr->WorldXYToLatLon(NFmiPoint(worldX, worldY)));
+            xmlMessage.LatlonPoint(gYkjAreaCoordinateConverionPtr->WorldXYToLatLon(NFmiPoint(worldX, worldY)));
         }
         catch(const exception &)
         {
