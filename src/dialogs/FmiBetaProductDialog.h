@@ -32,7 +32,7 @@ private:
     void InitControlsFromDocument();
     void InitControlsFromLoadedBetaProduct();
     void StoreControlValuesToDocument();
-    bool CheckDestinationDirectory(const std::string &theDestinationDirectory, bool fAllowDestinationDelete, const NFmiBetaProduct &theBetaProduct);
+    bool CheckDestinationDirectory(const std::string &theDestinationDirectory, bool fAllowDestinationDelete, const NFmiBetaProduct &theBetaProduct, const std::string & theImageFileNameBase);
     NFmiMetTime GetFirstModelOrigTime(BetaProductViewIndex selectedViewRadioButtonIndex, int theRealRowIndex);
     NFmiTimeDescriptor GetFirstModelsValidTimeDescriptor(unsigned int theDescTopIndex, int theRealRowIndex);
     int GetViewRowIndex(BetaProductViewIndex selectedViewRadioButtonIndex);
