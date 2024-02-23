@@ -2220,6 +2220,8 @@ const std::string NFmiBetaProductionSystem::itsBetaAutomationListFileFilter = "B
 const std::string NFmiBetaProductionSystem::itsBetaAutomationAutoFileNameTypeStamp = "obsOrForType";
 const std::string NFmiBetaProductionSystem::itsFileNameTemplateValidTimeStamp = "validtime";
 const std::string NFmiBetaProductionSystem::itsFileNameTemplateStationIdStamp = "stationid";
+const std::string NFmiBetaProductionSystem::itsFileNameTemplateOrigTimeStamp = "origtime";
+const std::string NFmiBetaProductionSystem::itsFileNameTemplateMakeTimeStamp = "maketime";
 
 NFmiBetaProductionSystem::NFmiBetaProductionSystem()
 : fBetaProductGenerationRunning(false)
