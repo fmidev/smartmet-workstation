@@ -17,6 +17,9 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/round.hpp>
+#include <filesystem>
+#include <regex>
+#include <numeric>
 
 namespace CtrlViewUtils
 {
@@ -716,6 +719,65 @@ namespace CtrlViewUtils
         auto dialogErrorString = timeString + errorText;
         ctrlViewDocumentInterface.SetLatestMacroParamErrorText(dialogErrorString);
         ctrlViewDocumentInterface.SetMacroErrorText(dialogErrorString);
+    }
+
+    std::string wildcardToRegex(const std::string& wildcard) 
+    {
+        std::string regexStr = wildcard;
+
+        // Escape characters with special meaning in regex
+//        regexStr = std::regex_replace(regexStr, std::regex("([\\.\\[\\{\\(\\)\\*\\+\\?\\^\\$\\|])"), "\\$1");
+
+        // Convert wildcard symbols to regex equivalents
+        boost::replace_all(regexStr, ".", "\\.");
+        boost::replace_all(regexStr, "*", ".*");
+        boost::replace_all(regexStr, "?", ".");
+
+        // Match the whole string by adding ^ and $ to the beginning and end
+//        regexStr = "^" + regexStr + "$";
+
+        return regexStr;
+    }
+
+
+    namespace fs = std::filesystem;
+
+    void DeleteFilesWithPattern(const std::string& directoryPath, const std::string& fileNamePattern, std::list<std::string> *deletedFileNamesOut)
+    {
+        auto regexWildCardPatternString = wildcardToRegex(fileNamePattern);
+        std::regex regexPattern(regexWildCardPatternString);
+        for(const auto& entry : fs::directory_iterator(directoryPath)) 
+        {
+            if(fs::is_regular_file(entry) && std::regex_match(entry.path().filename().string(), regexPattern))
+            {
+                fs::remove(entry.path());
+                if(deletedFileNamesOut)
+                {
+                    deletedFileNamesOut->push_back(entry.path().filename().string());
+                }
+            }
+        }
+    }
+
+    void DeleteFilesWithPattern(const std::string& filePathPattern, std::list<std::string>* deletedFileNamesOut)
+    {
+        fs::path fullPath(filePathPattern);
+        std::string directoryPath = fullPath.parent_path().string();
+        std::string fileNamePattern = fullPath.filename().string();
+        DeleteFilesWithPattern(directoryPath, fileNamePattern, deletedFileNamesOut);
+    }
+
+    void DeleteFilesWithPatternAndLog(const std::string& filePathPattern, const std::string& logMessageStart, CatLog::Severity severity, CatLog::Category category)
+    {
+        std::list<std::string> deletedFiles;
+        DeleteFilesWithPattern(filePathPattern, &deletedFiles);
+        if(!deletedFiles.empty())
+        {
+            auto deletedFilesListString = MakeCommaSeparatedStringFromStrings(deletedFiles);
+            std::string logMessage = logMessageStart;
+            logMessage += deletedFilesListString;
+            CatLog::logMessage(logMessage, severity, category);
+        }
     }
 
 } // namespace CtrlViewUtils

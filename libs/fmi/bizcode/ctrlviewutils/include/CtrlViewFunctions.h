@@ -14,6 +14,11 @@ class CtrlViewDocumentInterface;
 class NFmiProducerSystem;
 class NFmiFastQueryInfo;
 class NFmiMacroParamSystem;
+namespace CatLog
+{
+    enum class Severity;
+    enum class Category;
+}
 
 namespace CtrlViewUtils
 {
@@ -80,6 +85,9 @@ namespace CtrlViewUtils
    std::string GetMacroParamFormula(NFmiMacroParamSystem& macroParamSystem, const boost::shared_ptr<NFmiDrawParam>& theDrawParam);
    std::string MakeMacroParamRelatedFinalErrorMessage(const std::string& baseMessage, const std::exception* exceptionPtr, boost::shared_ptr<NFmiDrawParam>& theDrawParam, const std::string& macroParamSystemRootPath);
    void SetMacroParamErrorMessage(const std::string& errorText, CtrlViewDocumentInterface& ctrlViewDocumentInterface, std::string* possibleTooltipErrorTextOut = nullptr);
+   void DeleteFilesWithPattern(const std::string& directoryPath, const std::string& fileNamePattern, std::list<std::string>* deletedFileNamesOut = nullptr);
+   void DeleteFilesWithPattern(const std::string& filePathPattern, std::list<std::string>* deletedFileNamesOut = nullptr);
+   void DeleteFilesWithPatternAndLog(const std::string& filePathPattern, const std::string &logMessageStart, CatLog::Severity severity, CatLog::Category category);
 
    // Haetaan sortatusta container:ista value:ta l‰himm‰n arvon elementin iteraattori.
    // Koodi haettu: https://stackoverflow.com/questions/698520/search-for-nearest-value-in-an-array-of-doubles-in-c
@@ -119,6 +127,35 @@ namespace CtrlViewUtils
    ValueType GetClosestValueFromContainer(ValueType value, const Container& container)
    {
        return container.at(GetClosestValueIndex(value, container));
+   }
+
+   // T‰lle annettu container ei s‰‰ sis‰lt‰‰ std::string olioita, koska sille ei ole std::to_string funktiota.
+   template<typename Container>
+   std::string MakeCommaSeparatedStringFromValues(const Container& container)
+   {
+       // Use std::accumulate to concatenate strings with comma separation, also use std::to_string for each object in container
+       std::string result = std::accumulate(container.begin(), container.end(), std::string{},
+           [](const std::string& accumulated, const auto& nextValue) 
+           {
+               auto nextString = std::to_string(nextValue);
+               return accumulated.empty() ? nextString : accumulated + ", " + nextString;
+           }
+       );
+       return result;
+   }
+
+   // T‰ss‰ on viimein tapa miten tehd‰‰n template funtio, joka saa jonkun stl containerin, joka sis‰lt‰‰ tietyn tyyppisi‰ olioita.
+   template <template<typename...> class Container, typename... Args>
+   std::string MakeCommaSeparatedStringFromStrings(const Container<std::string, Args...>& container)
+   {
+       // Use std::accumulate to concatenate strings with comma separation, also use std::to_string for each object in container
+       std::string result = std::accumulate(container.begin(), container.end(), std::string{},
+           [](const std::string& accumulated, const auto& nextString)
+           {
+               return accumulated.empty() ? nextString : accumulated + ", " + nextString;
+           }
+       );
+       return result;
    }
 
 } // namespace CtrlViewUtils
