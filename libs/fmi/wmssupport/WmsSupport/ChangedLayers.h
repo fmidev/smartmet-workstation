@@ -16,8 +16,8 @@ namespace Wms
 
         std::string name;
         Style style;
-        NFmiMetTime startTime;
-        NFmiMetTime endTime;
+        NFmiMetTime startTime = NFmiMetTime::gMissingTime;
+        NFmiMetTime endTime = NFmiMetTime::gMissingTime;
         bool hasTimeDimension = false;
     };
 
