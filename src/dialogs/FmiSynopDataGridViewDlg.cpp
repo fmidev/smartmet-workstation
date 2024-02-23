@@ -329,38 +329,6 @@ static string GetMinMaxTimeRangeAndStationString(FmiLanguage language, const NFm
 	return str;
 }
 
-// Case in sensitiivinen stringi vertailu.
-// Pöllitty verkosta Matt Austernilta.
-class InsensitiveComparison : public
-std::binary_function<std::string,std::string,bool>
-{
-private:
-  std::locale itsLocale;
-  const std::ctype<char> & itsCtype;
-
-  struct mycomparison
-  {
-	const std::ctype<char> & itsCtype;
-	mycomparison(const std::ctype<char> & theCtype) : itsCtype(theCtype) { }
-	bool operator()(char x, char y) const
-	{ return itsCtype.toupper(x) < itsCtype.toupper(y); }
-  };
-
-public:
-
-  InsensitiveComparison(const std::locale & theLocale = std::locale::classic())
-	: itsLocale(theLocale)
-	, itsCtype(std::use_facet<std::ctype<char> >(theLocale))
-	{ }
-
-  bool operator()(const std::string & theX, const std::string & theY)
-  {
-	return std::lexicographical_compare(theX.begin(), theX.end(),
-                                        theY.begin(), theY.end(),
-										mycomparison(itsCtype));
-  }
-};
-
 BEGIN_MESSAGE_MAP(NFmiGridCtrl, CGridCtrl)
 	ON_WM_RBUTTONUP()
 	ON_WM_MOUSEMOVE()

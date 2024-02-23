@@ -525,7 +525,7 @@ bool NFmiSmartToolIntepreter::IsPossibleCalculationLine(const std::string &theTe
   if (theTextLine.find(string("=")) != string::npos)
     return true;
 
-  if (std::find_if(theTextLine.begin(), theTextLine.end(), std::not1(std::ptr_fun(::isspace))) !=
+  if (std::find_if(theTextLine.begin(), theTextLine.end(), [](int c) { return !std::isspace(c); }) !=
       theTextLine.end())
   {
     // Riviltä löytyi sanoja ja niiden välissä space, ehtolauseet on jo tarkastettu edellä,

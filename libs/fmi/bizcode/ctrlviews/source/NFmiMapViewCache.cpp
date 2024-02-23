@@ -71,7 +71,7 @@ NFmiMapViewCache::CacheRow::~CacheRow(void)
 
 void NFmiMapViewCache::CacheRow::Clear(void)
 {
-	std::for_each(itsFifoCache.begin(), itsFifoCache.end(), std::mem_fun_ref<void, NFmiMapViewCache::CacheSlot> ( &NFmiMapViewCache::CacheSlot::DestroyData ) );
+	std::for_each(itsFifoCache.begin(), itsFifoCache.end(), [&](auto& cacheSlot) { cacheSlot.DestroyData(); });
 	itsFifoCache.clear();
 }
 
