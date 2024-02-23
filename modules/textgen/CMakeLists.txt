@@ -3,6 +3,11 @@ project(Textgen)
 
 set(CMAKE_MFC_FLAG 0)
 
+# Set C++ standard to C++14
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS ON)
+
 disable_linux_side_compiler_warnings()
 
 file( 
