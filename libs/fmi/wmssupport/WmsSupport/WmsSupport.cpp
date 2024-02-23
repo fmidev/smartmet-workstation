@@ -415,7 +415,12 @@ namespace Wms
 
     bool WmsSupport::getCapabilitiesHaveBeenRetrieved() const
     {
-        return capabilitiesHandler_->getCapabilitiesHaveBeenRetrieved();
+        if(capabilitiesHandler_)
+        {
+            return capabilitiesHandler_->getCapabilitiesHaveBeenRetrieved();
+        }
+
+        return false;
     }
 
 }
