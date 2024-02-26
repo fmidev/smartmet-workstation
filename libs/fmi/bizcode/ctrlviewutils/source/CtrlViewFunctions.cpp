@@ -742,35 +742,54 @@ namespace CtrlViewUtils
 
     namespace fs = std::filesystem;
 
-    void DeleteFilesWithPattern(const std::string& directoryPath, const std::string& fileNamePattern, std::list<std::string> *deletedFileNamesOut)
+    void DeleteFilesWithPattern(const std::string& directoryPath, const std::string& fileNamePattern, int keepMaxFiles, std::list<std::string> *deletedFileNamesOut)
     {
+        std::vector<fs::path> filePaths;
         auto regexWildCardPatternString = wildcardToRegex(fileNamePattern);
         std::regex regexPattern(regexWildCardPatternString);
         for(const auto& entry : fs::directory_iterator(directoryPath)) 
         {
             if(fs::is_regular_file(entry) && std::regex_match(entry.path().filename().string(), regexPattern))
             {
-                fs::remove(entry.path());
+                filePaths.push_back(entry.path());
+            }
+        }
+
+        // Sort file paths by creation time in descending order
+        std::sort(filePaths.begin(), filePaths.end(),
+            [](const fs::path& path1, const fs::path& path2) 
+            {
+                return fs::last_write_time(path1) > fs::last_write_time(path2);
+            });
+
+        // Keep the newest files as much keepMaxFiles number indicates, and remove the rest of older files
+        int fileCounter = 0;
+        for(const auto& filePath : filePaths)
+        {
+            if(fileCounter >= keepMaxFiles)
+            {
+                fs::remove(filePath);
                 if(deletedFileNamesOut)
                 {
-                    deletedFileNamesOut->push_back(entry.path().filename().string());
+                    deletedFileNamesOut->push_back(filePath.filename().string());
                 }
             }
+            fileCounter++;
         }
     }
 
-    void DeleteFilesWithPattern(const std::string& filePathPattern, std::list<std::string>* deletedFileNamesOut)
+    void DeleteFilesWithPattern(const std::string& filePathPattern, int keepMaxFiles, std::list<std::string>* deletedFileNamesOut)
     {
         fs::path fullPath(filePathPattern);
         std::string directoryPath = fullPath.parent_path().string();
         std::string fileNamePattern = fullPath.filename().string();
-        DeleteFilesWithPattern(directoryPath, fileNamePattern, deletedFileNamesOut);
+        DeleteFilesWithPattern(directoryPath, fileNamePattern, keepMaxFiles, deletedFileNamesOut);
     }
 
-    void DeleteFilesWithPatternAndLog(const std::string& filePathPattern, const std::string& logMessageStart, CatLog::Severity severity, CatLog::Category category)
+    void DeleteFilesWithPatternAndLog(const std::string& filePathPattern, const std::string& logMessageStart, CatLog::Severity severity, CatLog::Category category, int keepMaxFiles)
     {
         std::list<std::string> deletedFiles;
-        DeleteFilesWithPattern(filePathPattern, &deletedFiles);
+        DeleteFilesWithPattern(filePathPattern, keepMaxFiles, &deletedFiles);
         if(!deletedFiles.empty())
         {
             auto deletedFilesListString = MakeCommaSeparatedStringFromStrings(deletedFiles);
