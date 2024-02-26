@@ -88,6 +88,8 @@ namespace CtrlViewUtils
    void DeleteFilesWithPattern(const std::string& directoryPath, const std::string& fileNamePattern, std::list<std::string>* deletedFileNamesOut = nullptr);
    void DeleteFilesWithPattern(const std::string& filePathPattern, std::list<std::string>* deletedFileNamesOut = nullptr);
    void DeleteFilesWithPatternAndLog(const std::string& filePathPattern, const std::string &logMessageStart, CatLog::Severity severity, CatLog::Category category);
+   std::string GetFileExtension(const std::string& filePath);
+   std::string GetParentPath(const std::string& filePath);
 
    // Haetaan sortatusta container:ista value:ta lähimmän arvon elementin iteraattori.
    // Koodi haettu: https://stackoverflow.com/questions/698520/search-for-nearest-value-in-an-array-of-doubles-in-c

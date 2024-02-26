@@ -780,4 +780,18 @@ namespace CtrlViewUtils
         }
     }
 
+    // Huom! std::filesystem::path::extension metodi palauttaa myös pisteen eli jos
+    // filePath:in arvo oli "c:\polku\filename.txt" palautetaan arvo ".txt"
+    std::string GetFileExtension(const std::string& filePath)
+    {
+        fs::path path(filePath);
+        return path.extension().string();
+    }
+
+    std::string GetParentPath(const std::string& filePath)
+    {
+        fs::path path(filePath);
+        return path.parent_path().string();
+    }
+
 } // namespace CtrlViewUtils
