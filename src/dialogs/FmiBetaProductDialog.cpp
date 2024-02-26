@@ -581,14 +581,25 @@ void CFmiBetaProductDialog::GenerateWebInfoFiles(const std::string &theDestinati
     StoreWebInfoFile(finalDestinationDirectory, "description.txt", theBetaProduct.WebSiteDescriptionString());
 }
 
-static std::string MakeBetaProductCleaningFilePattern(const std::string& imageFileNameBase)
+static std::string MakeBetaProductCleaningFilePattern(const std::string& imageFileNameBase, bool fixToFileTypeOnly)
 {
-    auto cleanFileNamePattern = imageFileNameBase;
-    boost::algorithm::ireplace_first(cleanFileNamePattern, NFmiBetaProductionSystem::FileNameTemplateValidTimeStamp(), "*");
-    boost::algorithm::ireplace_first(cleanFileNamePattern, NFmiBetaProductionSystem::FileNameTemplateMakeTimeStamp(), "*");
-    boost::algorithm::ireplace_first(cleanFileNamePattern, NFmiBetaProductionSystem::FileNameTemplateOrigTimeStamp(), "*");
-    boost::algorithm::ireplace_first(cleanFileNamePattern, NFmiBetaProductionSystem::FileNameTemplateStationIdStamp(), "*");
-    return cleanFileNamePattern;
+    if(fixToFileTypeOnly)
+    {
+        std::string cleanFileNamePattern = CtrlViewUtils::GetParentPath(imageFileNameBase);
+        PathUtils::addDirectorySeparatorAtEnd(cleanFileNamePattern);
+        cleanFileNamePattern += "*";
+        cleanFileNamePattern += CtrlViewUtils::GetFileExtension(imageFileNameBase);
+        return cleanFileNamePattern;
+    }
+    else
+    {
+        auto cleanFileNamePattern = imageFileNameBase;
+        boost::algorithm::ireplace_first(cleanFileNamePattern, NFmiBetaProductionSystem::FileNameTemplateValidTimeStamp(), "*");
+        boost::algorithm::ireplace_first(cleanFileNamePattern, NFmiBetaProductionSystem::FileNameTemplateMakeTimeStamp(), "*");
+        boost::algorithm::ireplace_first(cleanFileNamePattern, NFmiBetaProductionSystem::FileNameTemplateOrigTimeStamp(), "*");
+        boost::algorithm::ireplace_first(cleanFileNamePattern, NFmiBetaProductionSystem::FileNameTemplateStationIdStamp(), "*");
+        return cleanFileNamePattern;
+    }
 }
 
 bool CFmiBetaProductDialog::CheckDestinationDirectory(const std::string &theDestinationDirectory, bool fAllowDestinationDelete, const NFmiBetaProduct &theBetaProduct, const std::string& theImageFileNameBase)
@@ -617,7 +628,7 @@ bool CFmiBetaProductDialog::CheckDestinationDirectory(const std::string &theDest
         {
             try
             {
-                auto productImageFilePattern = ::MakeBetaProductCleaningFilePattern(theImageFileNameBase);
+                auto productImageFilePattern = ::MakeBetaProductCleaningFilePattern(theImageFileNameBase, true);
                 std::string logMessageStart = "Deleting old Beta-product images with file-pattern " + productImageFilePattern + ": ";
                 CtrlViewUtils::DeleteFilesWithPatternAndLog(productImageFilePattern, logMessageStart, CatLog::Severity::Debug, CatLog::Category::Operational);
             }
