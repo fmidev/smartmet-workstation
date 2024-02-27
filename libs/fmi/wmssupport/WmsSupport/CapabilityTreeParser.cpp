@@ -211,7 +211,7 @@ namespace Wms
 			return timeStringProspects.back();
 		}
 
-		std::pair<NFmiMetTime, NFmiMetTime> parseDimension(const std::string& dimension)
+		std::pair<NFmiMetTime, NFmiMetTime> parseStartAndEndFromTimeDimension(const std::string& dimension)
 		{
 			auto beginEnd = std::pair<NFmiMetTime, NFmiMetTime>{};
 
@@ -245,6 +245,16 @@ namespace Wms
 			}
 
 			return beginEnd;
+		}
+
+		std::string getPossibleResolutionTimeDimension(const std::string& dimension)
+		{
+			auto strs = cppext::split(dimension, '/');
+			if(strs.size() == 3)
+			{
+				return strs[2];
+			}
+			return "";
 		}
 
 		bool IsNameStringNumeric(const std::string& nameString)
@@ -399,9 +409,10 @@ namespace Wms
 			if(dimensionTimeData.nodeName_ == "time")
 			{
 				dimensionTimeData.timeWindow_ = XmlHelper::ChildNodeValue(layerNode, "Dimension");
-				auto startEnd = parseDimension(dimensionTimeData.timeWindow_);
+				auto startEnd = parseStartAndEndFromTimeDimension(dimensionTimeData.timeWindow_);
 				dimensionTimeData.startTime_ = startEnd.first;
 				dimensionTimeData.endTime_ = startEnd.second;
+				dimensionTimeData.timeResolution_ = getPossibleResolutionTimeDimension(dimensionTimeData.timeWindow_);
 			}
 		}
 		return dimensionTimeData;
@@ -500,7 +511,7 @@ namespace Wms
 			);
 
 			auto layerInfo = LayerInfo{ name };
-			layerInfo.setTimeDimensions(dimensionTimeData.startTime_, dimensionTimeData.endTime_);
+			layerInfo.setTimeDimensions(dimensionTimeData.startTime_, dimensionTimeData.endTime_, dimensionTimeData.timeResolution_);
 			if(dimensionTimeData.hasTimeDimension())
 			{
 				changedLayers.update(hashedName, layerInfo, dimensionTimeData.timeWindow_);
@@ -528,7 +539,7 @@ namespace Wms
 				);
 
 				auto layerInfo = LayerInfo{ name, style };
-				layerInfo.setTimeDimensions(dimensionTimeData.startTime_, dimensionTimeData.endTime_);
+				layerInfo.setTimeDimensions(dimensionTimeData.startTime_, dimensionTimeData.endTime_, dimensionTimeData.timeResolution_);
 				if(dimensionTimeData.hasTimeDimension())
 				{
 					changedLayers.update(hashedName, layerInfo, dimensionTimeData.timeWindow_);
