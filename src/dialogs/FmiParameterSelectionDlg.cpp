@@ -19,6 +19,8 @@
 #include "CtrlViewFunctions.h"
 #include "NFmiHelpDataInfo.h"
 #include "NFmiCrossSectionSystem.h"
+#include "WmsSupport/WmsSupport.h"
+#include "WmsSupport/ChangedLayers.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -511,9 +513,42 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForWmsDataCategoryType(const 
     str += "<br><hr color=darkblue><br>";
     str += "<b>Name: </b> \t" + singleRowItem.itemName();
     str += "<br><b>Wms server: </b> \t" + singleRowItem.parentItemName();
-    if(singleRowItem.leafNode())
+    AddParams::SingleRowItem possibleChildLeafNode;
+    try
     {
-        str += "<br><b>Has time dimension: </b> \t" + std::string((singleRowItem.wmsLayerHasTimeDimension() ? "Yes" : "No"));
+        // Katsotaan löytyykö seuraavalta riviltä currentin rivin, joka on vasta data-tasoa 
+        // eikä ole leaf-node, vastaava parametri-tason leaf-node olio.
+        // Huom! rowNumber alkaa 1:stä ja dialogRowData:n vector alkaa 0:sta, siksi seuraavan rivin indeksinä käytetään
+        // suoraan rowNumber:ia.
+        possibleChildLeafNode = itsSmartMetDocumentInterface->ParameterSelectionSystem().dialogRowData().at(rowNumber);
+    }
+    catch(...)
+    { }
+
+    bool currentIsLeafNode = singleRowItem.leafNode();
+    bool childIsLeafNode = possibleChildLeafNode.dataType() == NFmiInfoData::kWmsData && possibleChildLeafNode.leafNode();
+    if(currentIsLeafNode || childIsLeafNode)
+    {
+        auto useChildNodeRowItem = (!currentIsLeafNode && childIsLeafNode);
+        const auto& usedSingleRowItem = useChildNodeRowItem ? possibleChildLeafNode : singleRowItem;
+        str += "<br><b>Has time dimension: </b> \t" + std::string((usedSingleRowItem.wmsLayerHasTimeDimension() ? "Yes" : "No"));
+        try
+        {
+            if(usedSingleRowItem.wmsLayerHasTimeDimension())
+            {
+                auto wmsSupportPtr = itsSmartMetDocumentInterface->GetCombinedMapHandlerInterface().getWmsSupport();
+                NFmiDataIdent wmsLayerDataIdent(NFmiParam(usedSingleRowItem.itemId()), NFmiProducer(usedSingleRowItem.parentItemId()));
+                auto layerInfo = wmsSupportPtr->getHashedLayerInfo(wmsLayerDataIdent);
+                str += "<br><b>Start time: </b> \t" + std::string(layerInfo.startTime.ToStr("YYYY.MM.DD HH:mm", kEnglish));
+                str += "<br><b>End time: </b> \t" + std::string(layerInfo.endTime.ToStr("YYYY.MM.DD HH:mm", kEnglish));
+                if(!layerInfo.possibleResolution.empty())
+                {
+                    str += "<br><b>Time resolution: </b> \t" + layerInfo.possibleResolution;
+                }
+            }
+        }
+        catch(...)
+        { }
     }
     str += "<br><b>Tree depth: </b> \t" + std::to_string(singleRowItem.treeDepth());
     str += "<br><hr color=darkblue><br>";
