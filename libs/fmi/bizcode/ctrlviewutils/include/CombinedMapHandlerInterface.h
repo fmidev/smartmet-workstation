@@ -12,6 +12,7 @@
 #include <functional>
 #include <memory>
 #include <list>
+#include <chrono>
 
 class NFmiMetTime;
 class NFmiQueryData;
@@ -194,7 +195,7 @@ public:
     virtual void onSetTimeBoxFillColor(unsigned int mapViewDescTopIndex, NFmiColor newColorNoAlpha) = 0;
     virtual bool onSetTimeBoxFillColorAlpha(unsigned int mapViewDescTopIndex, float newColorAlpha) = 0;
     virtual void onShowTimeString(unsigned int mapViewDescTopIndex) = 0;
-    virtual WmsSupportInterface& getWmsSupport() = 0;
+    virtual std::shared_ptr<WmsSupportInterface> getWmsSupport() const = 0;
     virtual void onToggleShowNamesOnMap(unsigned int mapViewDescTopIndex, bool goForward) = 0;
     virtual void onToggleLandBorderDrawColor(unsigned int mapViewDescTopIndex) = 0;
     virtual void onToggleLandBorderPenSize(unsigned int mapViewDescTopIndex) = 0;
@@ -252,6 +253,8 @@ public:
     virtual void selectCombinedMapModeIndices(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, int usedCombinedModeMapIndex, int usedCombinedModeOverlayMapIndex) = 0;
     virtual void clearMacroParamCache(unsigned long mapViewDescTopIndex, unsigned long realRowIndex, boost::shared_ptr<NFmiDrawParam>& drawParam) = 0;
     virtual void clearAllMacroParamDataCacheDependentOfEditedDataAfterEditedDataChanges() = 0;
+    virtual void startWmsSupportRenewalProcess(bool startedByUser) = 0;
+    virtual bool waitWmsSupportToDie(const std::chrono::milliseconds &waitTime) = 0;
 
 
     // Staattiset perushelper-funktiot

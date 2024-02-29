@@ -1186,9 +1186,9 @@ static void DoPartialSpecialTypeCalculationInThread(
 template <typename Container>
 static void SetTimes(Container &container, const NFmiCalculationParams &calculationParams)
 {
+  using PointedType = typename Container::value_type::element_type;
   std::for_each(container.begin(),
-                container.end(),
-                TimeSetter<Container::value_type::element_type>(calculationParams.itsTime));
+                container.end(), TimeSetter<PointedType>(calculationParams.itsTime));
 }
 
 static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> MakeInfoCopyVector(
@@ -1260,7 +1260,7 @@ void NFmiSmartToolModifier::CalculateUsedWorkingThreadCount(double wantedHardwar
     }
   }
 
-  //  itsUsedThreadCount = 1; // Debuggaustestejä varten
+//    itsUsedThreadCount = 1; // Debuggaustestejä varten
   itsUsedThreadCounts.insert(itsUsedThreadCount);
 }
 
@@ -1606,6 +1606,7 @@ void NFmiSmartToolModifier::DoMultiThreadCalculations(
 
   boost::thread_group calcParts;
   for (unsigned int threadIndex = 0; threadIndex < threadCount; threadIndex++)
+  {
     calcParts.add_thread(new boost::thread(::DoPartialGridCalculationInThread,
                                            boost::ref(locationIndexRangeCalculator),
                                            boost::ref(infoVector[threadIndex]),
@@ -1613,7 +1614,15 @@ void NFmiSmartToolModifier::DoMultiThreadCalculations(
                                            boost::ref(calculationParamsVector[threadIndex]),
                                            usedBitmask,
                                            calculationPointMask));
+  }
   calcParts.join_all();  // odotetaan että threadit lopettavat
+  auto possibleLastExceptionMessage = ::GetLastExceptionMessage();
+  if (!possibleLastExceptionMessage.empty())
+  {
+    // Pakotetaan tässä poikkeuskäsittely päälle heti kun sellainen ilmaantuu,
+    // heti kun kaikki säikeet ovat lopettaneet työskentelynsä.
+    throw std::runtime_error(possibleLastExceptionMessage);
+  }
 }
 
 void NFmiSmartToolModifier::DoMultiThreadCalculationsForSpecialCalculations(

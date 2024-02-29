@@ -162,13 +162,13 @@ bool NFmiFileCleanerSystem::DoCleaning(void)
 
 bool NFmiFileCleanerSystem::CleanDirectories(void)
 {
-	std::for_each(itsDirectoryInfos.begin(), itsDirectoryInfos.end(), std::mem_fun_ref( &NFmiDirectorCleanerInfo::CleanDirectory ));
+	std::for_each(itsDirectoryInfos.begin(), itsDirectoryInfos.end(), [&](auto& directorCleanerInfo) {directorCleanerInfo.CleanDirectory(); });
 	return true;
 }
 
 bool NFmiFileCleanerSystem::CleanFilePatterns(void)
 {
-	std::for_each(itsPatternInfos.begin(), itsPatternInfos.end(), std::mem_fun_ref( &NFmiFilePatternCleanerInfo::CleanFilePattern ));
+	std::for_each(itsPatternInfos.begin(), itsPatternInfos.end(), [&](auto& filePatternCleanerInfo) {filePatternCleanerInfo.CleanFilePattern(); });
 	return true;
 }
 

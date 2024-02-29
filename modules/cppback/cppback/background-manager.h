@@ -128,23 +128,23 @@ namespace cppback
             return isKillSignalSet(0ms);
         }
 
-        bool isKillSignalSet(std::chrono::milliseconds wait) const
+        bool isKillSignalSet(const std::chrono::milliseconds &waitTime) const
         {
             using namespace std::literals;
-            return shouldDie_.wait_for(wait) == std::future_status::ready;
+            return shouldDie_.wait_for(waitTime) == std::future_status::ready;
         }
 
-        bool isDead(std::chrono::milliseconds wait) const
+        bool isDead(const std::chrono::milliseconds &waitTime) const
         {
             if(running_ == 0)
             {
                 return true;
             }
-            std::this_thread::sleep_for(wait);
+            std::this_thread::sleep_for(waitTime);
             return running_ == 0;
         }
 
-        void sleepInIntervals(std::chrono::milliseconds sleepDuration, std::chrono::milliseconds interval, const std::string& taskName = "") const
+        void sleepInIntervals(const std::chrono::milliseconds &sleepDuration, const std::chrono::milliseconds &interval, const std::string& taskName = "") const
         {
             using namespace std::literals;
             std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();

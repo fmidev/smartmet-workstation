@@ -9,6 +9,7 @@
 #include "bitmaphandler/GdiplusBitmapParser.h"
 #include <cppback/background-manager.h>
 #include <webclient/CppRestClient.h>
+#include <NFmiValueString.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -16,19 +17,42 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-/* // Katso WmsSupport::getDynamicImage metodin kommentoitujen koodien kommentti teksteistä, miksi tämä kohta on vielä kommentissa.
-#include "NFmiLedLightStatus.h"
+// Katso WmsSupport::getDynamicImage metodin kommentoitujen koodien kommentti teksteistä, miksi tämä kohta on vielä kommentissa.
+//#include "NFmiLedLightStatus.h"
 namespace
 {
-    std::string MakeLedChannelGetDynamicLayerReport(const std::string& hostStr, const std::string& layerStr)
+    //std::string MakeLedChannelGetDynamicLayerReport(const std::string& hostStr, const std::string& layerStr)
+    //{
+    //    std::string str = "Getting dynamic image from wms server:\n";
+    //    str += hostStr + "(";
+    //    str += layerStr + ")";
+    //    return str;
+    //}
+
+    void MakeRegenerationLog(double renewWmsSystemIntervalInHours)
     {
-        std::string str = "Getting dynamic image from wms server:\n";
-        str += hostStr + "(";
-        str += layerStr + ")";
-        return str;
+        static bool firstTime = true;
+        if(firstTime)
+        {
+            firstTime = false;
+            std::string recreateMwsMessage;
+            if(renewWmsSystemIntervalInHours > 0)
+            {
+                recreateMwsMessage = "Wms system will be recreated every ";
+                recreateMwsMessage += NFmiValueString::GetStringWithMaxDecimalsSmartWay(renewWmsSystemIntervalInHours, 2);
+                recreateMwsMessage += " hours, in order to maintain it's functionality, otherwise it corrupts after about 1-3 days of working";
+            }
+            else
+            {
+                recreateMwsMessage = "Wms system will not be recreated at all, SmartMet::Wms2::GetCapabilities::RenewWmsSystemIntervalInHours was set to ";
+                recreateMwsMessage += NFmiValueString::GetStringWithMaxDecimalsSmartWay(renewWmsSystemIntervalInHours, 2);
+                recreateMwsMessage += " in configurations (non positive value), Wms system will probably stop working after few days, because it corrupts after about 1-3 days of working";
+            }
+            CatLog::logMessage(recreateMwsMessage, CatLog::Severity::Info, CatLog::Category::Configuration);
+        }
     }
+
 }
-*/
 
 namespace Wms
 {
@@ -51,6 +75,7 @@ namespace Wms
 
     void WmsSupport::kill()
     {
+        setToBeKilled_ = true;
         for(auto& client : dynamicClients_)
         {
             client.second->kill();
@@ -58,16 +83,16 @@ namespace Wms
         bManager_->kill();
     }
 
-    bool WmsSupport::isDead(std::chrono::milliseconds wait) const
+    bool WmsSupport::isDead(const std::chrono::milliseconds& waitTime) const
     {
-        return bManager_->isDead(wait);
+        return bManager_->isDead(waitTime);
     }
 
-    const CapabilityTree* WmsSupport::peekCapabilityTree() const
+    std::shared_ptr<Wms::CapabilityTree> WmsSupport::getCapabilityTree() const
     {
         if(capabilitiesHandler_)
         {
-            return &capabilitiesHandler_->peekCapabilityTree();
+            return capabilitiesHandler_->getCapabilityTree();
         }
         else
             return nullptr;
@@ -83,91 +108,65 @@ namespace Wms
         return false;
     }
 
-    const LayerInfo* WmsSupport::getHashedLayerInfo(const NFmiDataIdent& dataIdent) const
+    LayerInfo WmsSupport::getHashedLayerInfo(const NFmiDataIdent& dataIdent) const
     {
         if(!capabilitiesHandler_)
         {
-            return nullptr;
+            throw std::runtime_error("Error: calling WmsSupport::getHashedLayerInfo function before capabilitiesHandler system is initialized");
         }
 
-        auto producer = dataIdent.GetProducer();
-        auto producerId = producer->GetIdent();
-        auto paramId = dataIdent.GetParamIdent();
-        std::string paramName = dataIdent.GetParamName();
-        try
-        {
-            const auto& layerInfo = capabilitiesHandler_->peekHashes().at(producerId).at(paramId);
-            return &layerInfo;
-        }
-        catch(...)
-        { 
-            // Logging warning for missing layerInfo
-            std::string warningMessage = "Unable to find layerInfo for Producer: ";
-            warningMessage += producer->GetName();
-            warningMessage += " (prod-id: ";
-            warningMessage += std::to_string(producerId);
-            warningMessage += "), Parameter: ";
-            warningMessage += paramName;
-            warningMessage += " (par-id: ";
-            warningMessage += std::to_string(paramId);
-            warningMessage += ")";
-            throw std::runtime_error(warningMessage);
-        }
+        return capabilitiesHandler_->getHashes()->getLayerInfo(dataIdent);
     }
 
     std::string WmsSupport::getFullLayerName(const NFmiDataIdent& dataIdent) const
     {
-        auto layerInfo = getHashedLayerInfo(dataIdent);
-        if(layerInfo)
-            return layerInfo->name;
-        return "";
+        return getHashedLayerInfo(dataIdent).name;
     }
 
     NFmiImageHolder WmsSupport::getDynamicImage(const NFmiDataIdent& dataIdent, const NFmiArea& area, const NFmiMetTime& time, int resolutionX, int resolutionY, int editorTimeStepInMinutes)
     {
         std::string workingThreadName = "GetDynamicLayer";
         auto layerInfo = getHashedLayerInfo(dataIdent);
-        if(layerInfo)
+        if(layerInfo.hasTimeDimension && (time > layerInfo.endTime || time < layerInfo.startTime))
         {
-            if(layerInfo->hasTimeDimension && (time > layerInfo->endTime || time < layerInfo->startTime))
+            if(CatLog::logLevel() <= CatLog::Severity::Debug)
             {
-                if(CatLog::logLevel() <= CatLog::Severity::Debug)
-                {
-                    const NFmiString usedTimeFormat = "YYYY.MM.DD HH:mm";
-                    std::string noTimeDebugLevelMessage = __FUNCTION__;
-                    noTimeDebugLevelMessage += " requested time ";
-                    noTimeDebugLevelMessage += time.ToStr(usedTimeFormat);
-                    noTimeDebugLevelMessage += " was out of available server time range ";
-                    noTimeDebugLevelMessage += layerInfo->startTime.ToStr(usedTimeFormat);
-                    noTimeDebugLevelMessage += " - ";
-                    noTimeDebugLevelMessage += layerInfo->endTime.ToStr(usedTimeFormat);
-                    noTimeDebugLevelMessage += " for layer: ";
-                    noTimeDebugLevelMessage += layerInfo->name;
-                    CatLog::logMessage(noTimeDebugLevelMessage, CatLog::Severity::Debug, CatLog::Category::NetRequest);
-                }
-                return nullptr;
+                const NFmiString usedTimeFormat = "YYYY.MM.DD HH:mm";
+                std::string noTimeDebugLevelMessage = __FUNCTION__;
+                noTimeDebugLevelMessage += " requested time ";
+                noTimeDebugLevelMessage += time.ToStr(usedTimeFormat);
+                noTimeDebugLevelMessage += " was out of available server time range ";
+                noTimeDebugLevelMessage += layerInfo.startTime.ToStr(usedTimeFormat);
+                noTimeDebugLevelMessage += " - ";
+                noTimeDebugLevelMessage += layerInfo.endTime.ToStr(usedTimeFormat);
+                noTimeDebugLevelMessage += " for layer: ";
+                noTimeDebugLevelMessage += layerInfo.name;
+                CatLog::logMessage(noTimeDebugLevelMessage, CatLog::Severity::Debug, CatLog::Category::NetRequest);
             }
-
-            auto producerId = dataIdent.GetProducer()->GetIdent();
-            auto qb = dynamicClients_[producerId]->getQB();
-            auto query = qb
-                .setLayers(layerInfo->name)
-                .setWidth(resolutionX)
-                .setHeight(resolutionY)
-                .setCrsAndBbox(area)
-                .setTime(time)
-                .setRequest("GetMap")
-                .setStyles(layerInfo->style.name)
-                .build();
-            /* // HUOM! Ei kannata laittaa kuvien haun yhteyteen led-channel viestitystä, koska pää-thread kutsuttu metodi odottaa aina
-            *    loppuun asti että kuva ladataan.
-            *    Tämä led-raportointi voidaan ottaa käyttöön jos/kun kuvan hakuja ei enää odotella katkeraan loppuun asti.
-            NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::WmsData, workingThreadName, MakeLedChannelGetDynamicLayerReport(query.host, layerInfo->name));
-            */
-            backgroundFetcher_->fetch(*dynamicClients_[producerId], qb, time, editorTimeStepInMinutes);
-            return dynamicClients_[producerId]->getImage(query);
+            return nullptr;
         }
-        return nullptr;
+
+        auto producerId = dataIdent.GetProducer()->GetIdent();
+        auto qb = dynamicClients_[producerId]->getQB();
+        auto query = qb
+            .setLayers(layerInfo.name)
+            .setWidth(resolutionX)
+            .setHeight(resolutionY)
+            .setCrsAndBbox(area)
+            .setTime(time, layerInfo.hasTimeDimension)
+            .setRequest("GetMap")
+            .setStyles(layerInfo.style.name)
+            .build();
+        /* // HUOM! Ei kannata laittaa kuvien haun yhteyteen led-channel viestitystä, koska pää-thread kutsuttu metodi odottaa aina
+        *    loppuun asti että kuva ladataan.
+        *    Tämä led-raportointi voidaan ottaa käyttöön jos/kun kuvan hakuja ei enää odotella katkeraan loppuun asti.
+        NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::WmsData, workingThreadName, MakeLedChannelGetDynamicLayerReport(query.host, layerInfo->name));
+        */
+        if(layerInfo.hasTimeDimension)
+        {
+            backgroundFetcher_->fetch(*dynamicClients_[producerId], qb, time, editorTimeStepInMinutes);
+        }
+        return dynamicClients_[producerId]->getImage(query);
     }
 
     std::vector<NFmiImageHolder> WmsSupport::getLegends(int row, int col, int descTop)
@@ -178,11 +177,8 @@ namespace Wms
             auto legendDataIdents = legendHandler_->getLegends(row, col, descTop);
             for(const auto& dataIdent : legendDataIdents)
             {
-                auto producerId = dataIdent.GetProducer()->GetIdent();
-                auto paramId = dataIdent.GetParamIdent();
-                const auto& layerInfo = capabilitiesHandler_->peekHashes().at(producerId).at(paramId);
-
-                auto holder = dynamicClients_[producerId]->getLegend(layerInfo.style.legendDomain, layerInfo.style.legendRequest);
+                auto layerInfo = capabilitiesHandler_->getHashes()->getLayerInfo(dataIdent);
+                auto holder = dynamicClients_[dataIdent.GetProducer()->GetIdent()]->getLegend(layerInfo.style.legendDomain, layerInfo.style.legendRequest);
                 if(holder)
                 {
                     legends.push_back(holder);
@@ -287,6 +283,8 @@ namespace Wms
             setup_->isConfigured = false;
             return;
         }
+
+        ::MakeRegenerationLog(setup_->renewWmsSystemIntervalInHours);
 
         capabilitiesHandler_ = std::make_unique<CapabilitiesHandler>(
             std::make_unique<Web::CppRestClient>(bManager_, setup_->proxyUrl),
@@ -409,5 +407,21 @@ namespace Wms
     {
         return !totalMapViewStaticMapClientState_.empty();
     }
+
+    bool WmsSupport::isSetToBeKilled() const
+    {
+        return setToBeKilled_;
+    }
+
+    bool WmsSupport::getCapabilitiesHaveBeenRetrieved() const
+    {
+        if(capabilitiesHandler_)
+        {
+            return capabilitiesHandler_->getCapabilitiesHaveBeenRetrieved();
+        }
+
+        return false;
+    }
+
 }
 

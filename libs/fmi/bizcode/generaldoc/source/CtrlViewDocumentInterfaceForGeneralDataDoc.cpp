@@ -1464,7 +1464,7 @@ HakeMessage::Main& CtrlViewDocumentInterfaceForGeneralDataDoc::WarningCenterSyst
     return itsDoc->WarningCenterSystem();
 }
 
-WmsSupportInterface& CtrlViewDocumentInterfaceForGeneralDataDoc::GetWmsSupport()
+std::shared_ptr<WmsSupportInterface> CtrlViewDocumentInterfaceForGeneralDataDoc::GetWmsSupport() const
 {
     return itsDoc->GetCombinedMapHandler()->getWmsSupport();
 }

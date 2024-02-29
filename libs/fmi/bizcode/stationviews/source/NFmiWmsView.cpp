@@ -52,11 +52,11 @@ void NFmiWmsView::Draw(NFmiToolBox *theGTB)
     itsToolBox = theGTB;
 
     auto dataIdent = itsDrawParam->Param();
-    decltype(auto) wmsSupport = itsCtrlViewDocumentInterface->GetWmsSupport();
+    decltype(auto) wmsSupportPtr = itsCtrlViewDocumentInterface->GetWmsSupport();
 
     if(!IsParamDrawn())
     {
-        wmsSupport.unregisterDynamicLayer(CalcRealRowIndex(), itsViewGridColumnNumber, itsMapViewDescTopIndex, dataIdent);
+        wmsSupportPtr->unregisterDynamicLayer(CalcRealRowIndex(), itsViewGridColumnNumber, itsMapViewDescTopIndex, dataIdent);
         return;
     }
 
@@ -67,7 +67,7 @@ void NFmiWmsView::Draw(NFmiToolBox *theGTB)
 
         auto editorTimeStepInMinutes = static_cast<int>(::round(itsCtrlViewDocumentInterface->TimeControlTimeStep(itsMapViewDescTopIndex) * 60));
 
-        auto holder = wmsSupport.getDynamicImage(dataIdent, *itsArea, itsTime, int(bitmapSize.X()), int(bitmapSize.Y()), editorTimeStepInMinutes);
+        auto holder = wmsSupportPtr->getDynamicImage(dataIdent, *itsArea, itsTime, int(bitmapSize.X()), int(bitmapSize.Y()), editorTimeStepInMinutes);
 
         if(holder)
         {
@@ -78,11 +78,11 @@ void NFmiWmsView::Draw(NFmiToolBox *theGTB)
             bool doNearestInterpolation = alpha >= 1.f ? true : false;
             CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *holder->mImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha), itsGdiPlusGraphics);
 
-            wmsSupport.registerDynamicLayer(CalcRealRowIndex(), itsViewGridColumnNumber, itsMapViewDescTopIndex, dataIdent);
+            wmsSupportPtr->registerDynamicLayer(CalcRealRowIndex(), itsViewGridColumnNumber, itsMapViewDescTopIndex, dataIdent);
         }
         else
         {
-            wmsSupport.unregisterDynamicLayer(CalcRealRowIndex(), itsViewGridColumnNumber, itsMapViewDescTopIndex, dataIdent);
+            wmsSupportPtr->unregisterDynamicLayer(CalcRealRowIndex(), itsViewGridColumnNumber, itsMapViewDescTopIndex, dataIdent);
         }
     }
     catch(std::exception &e)
@@ -96,7 +96,7 @@ std::string NFmiWmsView::ComposeToolTipText(const NFmiPoint& theRelativePoint)
 {
     try
     {
-        auto parameterStr = itsCtrlViewDocumentInterface->GetWmsSupport().getFullLayerName(itsDrawParam->Param());
+        auto parameterStr = itsCtrlViewDocumentInterface->GetWmsSupport()->getFullLayerName(itsDrawParam->Param());
         auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
         parameterStr = AddColorTagsToString(parameterStr, fontColor, true);
         return parameterStr;

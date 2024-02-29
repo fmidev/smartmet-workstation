@@ -468,6 +468,8 @@ public:
     static const std::string& BetaAutomationAutoFileNameTypeStamp() { return itsBetaAutomationAutoFileNameTypeStamp; }
     static const std::string& FileNameTemplateValidTimeStamp() { return itsFileNameTemplateValidTimeStamp; }
     static const std::string& FileNameTemplateStationIdStamp() { return itsFileNameTemplateStationIdStamp; }
+    static const std::string& FileNameTemplateOrigTimeStamp() { return itsFileNameTemplateOrigTimeStamp; }
+    static const std::string& FileNameTemplateMakeTimeStamp() { return itsFileNameTemplateMakeTimeStamp; }
 
     int BetaProductTabControlIndex();
     void BetaProductTabControlIndex(int newValue);
@@ -578,6 +580,8 @@ private:
     static const std::string itsBetaAutomationAutoFileNameTypeStamp;
     static const std::string itsFileNameTemplateValidTimeStamp;
     static const std::string itsFileNameTemplateStationIdStamp;
+    static const std::string itsFileNameTemplateOrigTimeStamp;
+    static const std::string itsFileNameTemplateMakeTimeStamp;
 
     // Perushakemisto, jonne talletetaan Beta-produt:eja ja automaatioita ja automaatiolistoja. Tämä voi olla jaetulla verkkolevyllä.
     std::string itsBetaProductionBaseDirectory;

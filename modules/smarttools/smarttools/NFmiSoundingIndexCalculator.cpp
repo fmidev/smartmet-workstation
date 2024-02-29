@@ -339,6 +339,7 @@ void NFmiSoundingIndexCalculator::CalculateWholeSoundingData(NFmiQueryData &theS
     if (fDoCerrReporting)
       std::cerr << "making data in multiple threads" << std::endl;
 
+    // DEPRECATED CODE IN WGS84 BRANCH:
     theSourceData.LatLonCache();  // Ennen multi-thread laskuja pitää varmistaa että kunkin datan
                                   // (source + result) latlon-cache on alustettu, muutern tulee
                                   // ongelmia.

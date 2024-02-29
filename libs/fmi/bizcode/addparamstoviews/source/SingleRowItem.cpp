@@ -1,4 +1,5 @@
 #include "SingleRowItem.h"
+#include "NFmiLevel.h"
 #include <vector>
 
 #ifdef _DEBUG

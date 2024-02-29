@@ -18,6 +18,11 @@ add_definitions(
     -DJSON_SPIRIT_WVALUE_ENABLED
     )
 
+# Set C++ standard to C++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS ON)
+
 # To disable/enable Cpprestsdk usage in SmartMet build, do following: 
 # 1. Set DISABLE_CPPRESTSDK to ON/OFF in smartmet-workstation/CMakeLists.txt
 # 2. Delete the MSVC build directory smartmet-workstation_msvc

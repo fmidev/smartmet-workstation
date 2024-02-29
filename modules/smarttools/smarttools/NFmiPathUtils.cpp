@@ -1,8 +1,8 @@
 #include "NFmiPathUtils.h"
 
-#include "NFmiFileString.h"
-#include "NFmiSettings.h"
-#include "NFmiStringTools.h"
+#include <newbase/NFmiFileString.h>
+#include <newbase/NFmiSettings.h>
+#include <newbase/NFmiStringTools.h>
 #include "boost/algorithm/string/replace.hpp"
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #include <experimental/filesystem>

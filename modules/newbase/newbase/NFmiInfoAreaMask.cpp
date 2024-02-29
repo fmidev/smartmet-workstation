@@ -16,8 +16,6 @@
 
 #include "NFmiArea.h"
 #include "NFmiDataModifierClasses.h"
-#include "NFmiFastInfoUtils.h"
-#include "NFmiFastQueryInfo.h"
 #include "NFmiMetMath.h"
 #include "NFmiProducerName.h"
 #include "NFmiQueryDataUtil.h"
@@ -1200,9 +1198,11 @@ NFmiCalculationParams NFmiInfoAreaMaskPeekXY3::MakeModifiedCalculationParams(
 
   NFmiCalculationParams modifiedCalculationParams(theCalculationParams);
   modifiedCalculationParams.SetModifiedLatlon(loc.GetLocation(), true);
-  if (itsFunctionDataTimeOffsetInHours != 0)
+  if(itsFunctionDataTimeOffsetInHours != 0)
+  {
     modifiedCalculationParams.itsTime.ChangeByMinutes(
         static_cast<long>(itsFunctionDataTimeOffsetInHours * 60.f));
+  }
   return modifiedCalculationParams;
 }
 
@@ -2025,7 +2025,7 @@ void NFmiInfoAreaMaskVertFunc::SearchLevels(const NFmiLocationCache &theLocation
       float minStartDiff = 99999999.f;
       // float closestInsideEndLevelValue = kFloatMissing;
       float minEndDiff = 99999999.f;
-      for (itsInfo->FirstLevel(); itsInfo->NextLevel();)
+      for (itsInfo->ResetLevel(); itsInfo->NextLevel();)
       {
         const NFmiLevel *aLevel = itsInfo->Level();
 
@@ -2061,7 +2061,7 @@ void NFmiInfoAreaMaskVertFunc::SearchLevels(const NFmiLocationCache &theLocation
     }
     else
     {
-      for (itsInfo->FirstLevel(); itsInfo->NextLevel();)
+      for (itsInfo->ResetLevel(); itsInfo->NextLevel();)
       {
         float Pvalue =
             itsInfo->GetLevelHeightValue(itsUsedHeightParId, theLocationCache, itsTimeCache);
@@ -3070,8 +3070,9 @@ static bool IsSynopDataCase(const boost::shared_ptr<NFmiFastQueryInfo> &info)
 double NFmiInfoAreaMaskProbFunc::DoObservationAreaMaskCalculations(
     const NFmiCalculationParams &theCalculationParams)
 {
-  auto infoVector = NFmiInfoAreaMask::GetMultiSourceData(
-      itsInfo, boost::shared_ptr<NFmiArea>(nullptr), ::IsSynopDataCase(itsInfo));
+  boost::shared_ptr<NFmiArea> emptyAreaPtr;
+  auto infoVector =
+      NFmiInfoAreaMask::GetMultiSourceData(itsInfo, emptyAreaPtr, ::IsSynopDataCase(itsInfo));
   for (auto &info : infoVector)
   {
     NFmiCalculationParams simpleConditionCalculationPointParams(theCalculationParams);

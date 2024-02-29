@@ -1,6 +1,7 @@
 #include "wmssupport/CapabilitiesHandler.h"
 #include "wmssupport/WmsQuery.h"
 #include "wmssupport/SetupParser.h"
+#include "wmssupport/CapabilityTreeParser.h"
 #include "xmlliteutils/XmlHelperFunctions.h"
 #include "../../q2clientlib/include/NFmiQ2Client.h"
 #include "NFmiFileSystem.h"
@@ -90,13 +91,14 @@ namespace Wms
         std::function<bool(long, const std::string&)> cacheHitCallback,
         int capabilitiesTimeoutInSeconds
     )
-        : client_(std::move(client))
+        : hashesPtr_(std::make_shared<CapabilitiesHandlerHashes>())
+        , client_(std::move(client))
         , cacheDirtyCallback_(cacheDirtyCallback)
         , bManager_{ bManager }
         , proxyUrl_{ proxyUrl }
         , servers_{ servers }
         , intervalToPollGetCapabilities_{ intervalToPollGetCapabilities }
-        , getCapabilitiesTimeoutInSeconds{capabilitiesTimeoutInSeconds}
+        , getCapabilitiesTimeoutInSeconds_{capabilitiesTimeoutInSeconds}
         , cacheHitCallback_{ cacheHitCallback }
     {}
 
@@ -105,23 +107,43 @@ namespace Wms
         parameterSelectionUpdateCallback_ = parameterSelectionUpdateCallback;
     }
 
-    const std::map<long, std::map<long, LayerInfo>>& CapabilitiesHandler::peekHashes() const
+    std::shared_ptr<CapabilitiesHandlerHashes> CapabilitiesHandler::getHashes() const
     {
-        return hashes_;
+        std::lock_guard<std::mutex> lock(hashesMutex_);
+        return hashesPtr_;
     }
 
-    const CapabilityTree& CapabilitiesHandler::peekCapabilityTree() const
+    void CapabilitiesHandler::setHashes(std::shared_ptr<CapabilitiesHandlerHashes> hashesPtr)
     {
+        std::lock_guard<std::mutex> lock(hashesMutex_);
+        hashesPtr_ = hashesPtr;
+    }
+
+    std::shared_ptr<CapabilityTree> CapabilitiesHandler::getCapabilityTree() const
+    {
+        std::lock_guard<std::mutex> lock(capabilityTreeMutex_);
         if(!capabilityTree_)
         {
             throw std::runtime_error("CapabilitiesHandler: peekCapabilityTree called before capabilitiesTree was initialized.");
         }
-        return *capabilityTree_;
+        return capabilityTree_;
+    }
+
+    void CapabilitiesHandler::setCapabilityTree(std::shared_ptr<CapabilityTree> capabilityTree)
+    {
+        std::lock_guard<std::mutex> lock(capabilityTreeMutex_);
+        // Tehdään sijoitus, ei swap, koska tässä haluataan korvata olion sisältö ja reference-count:it
+        capabilityTree_ = capabilityTree;
     }
 
     bool CapabilitiesHandler::isCapabilityTreeAvailable() const
     {
         return capabilityTree_ != nullptr;
+    }
+
+    bool CapabilitiesHandler::getCapabilitiesHaveBeenRetrieved() const
+    {
+        return getCapabilitiesHaveBeenRetrieved_;
     }
 
     void CapabilitiesHandler::startFetchingCapabilitiesInBackground()
@@ -133,6 +155,9 @@ namespace Wms
                 {
                     auto children = std::vector<std::unique_ptr<CapabilityTree>>{};
                     bool foundAnyWmsServerData = false;
+                    // Tehdään kopio hashes tietorakenteesta, jotta sitä voidaan päivityksen aikan rauhassa päivitellä
+                    // Wms servereiden muuttuneilla sisällöillä.
+                    auto workingHashesPtr = std::make_shared<CapabilitiesHandlerHashes>(*getHashes());
 
                     for(auto& serverKV : servers_)
                     {
@@ -150,9 +175,9 @@ namespace Wms
                         try
                         {
                             auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_, server.acceptTimeDimensionalLayersOnly };
-                            auto xml = fetchCapabilitiesXml(*client_, query, server.logFetchCapabilitiesRequest, server.doVerboseLogging, getCapabilitiesTimeoutInSeconds);
+                            auto xml = fetchCapabilitiesXml(*client_, query, server.logFetchCapabilitiesRequest, server.doVerboseLogging, getCapabilitiesTimeoutInSeconds_);
                             changedLayers_.changedLayers.clear();
-                            children.push_back(capabilityTreeParser.parseXmlGeneral(xml, hashes_, changedLayers_));
+                            children.push_back(capabilityTreeParser.parseXmlGeneral(xml, workingHashesPtr->getHashes(), changedLayers_));
                             foundAnyWmsServerData = true;
                             if(!changedLayers_.changedLayers.empty())
                             {
@@ -172,7 +197,9 @@ namespace Wms
                             // Mahdollinen ongelma on jo lokitettu, tällä pyritään estämään että poikkeus jonkun serverin käsittelyssä ei estä muiden toimintaa
                         }
                     }
-                    capabilityTree_ = std::make_unique<CapabilityNode>(rootValue_, std::move(children));
+                    setHashes(workingHashesPtr);
+                    setCapabilityTree(std::make_shared<CapabilityNode>(rootValue_, std::move(children)));
+                    getCapabilitiesHaveBeenRetrieved_ = true;
                     if(foundAnyWmsServerData)
                     {
                         firstTimeUpdateCallbackWrapper();

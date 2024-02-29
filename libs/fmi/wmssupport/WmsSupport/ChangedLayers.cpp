@@ -8,11 +8,12 @@ static char THIS_FILE[] = __FILE__;
 
 namespace Wms
 {
-    void LayerInfo::setTimeDimensions(const NFmiMetTime& start, const NFmiMetTime& end)
+    void LayerInfo::setTimeDimensions(const NFmiMetTime& start, const NFmiMetTime& end, const std::string& resolution)
     {
         startTime = start;
         endTime = end;
-        hasTimeDimension = (startTime != NFmiMetTime::gMissingTime) && (endTime == NFmiMetTime::gMissingTime);
+        hasTimeDimension = (startTime != NFmiMetTime::gMissingTime) && (endTime != NFmiMetTime::gMissingTime);
+        possibleResolution = resolution;
     }
 
     bool operator<(const LayerInfo& info1, const LayerInfo& info2)

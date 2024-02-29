@@ -1,11 +1,11 @@
 #pragma once
 #include <string>
 #include <memory>
-#include <vector>
 
+#include "NFmiGlobals.h"
 #include "NFmiInfoData.h"
-#include "NFmiLevel.h"
 
+class NFmiLevel;
 
 namespace AddParams
 {
@@ -25,26 +25,27 @@ namespace AddParams
     class SingleRowItem
     {
         // Data's file filter is unique id in SmartMet
-        RowType rowType_;
+        RowType rowType_ = kNoType;
         std::string itemName_;
         std::string displayName_;
-        unsigned long itemId_;
+        unsigned long itemId_ = 0;
         bool dialogTreeNodeCollapsed_;
         // If rowItem is kDataType, store here data's uniqueDataId (its file path filter).
         // We need to be able to find individual data from last dialogData to remember all the
         // collapsed and uncollapsed dialog tree nodes.
         std::string uniqueDataId_;
-        NFmiInfoData::Type dataType_;
-        unsigned long parentItemId_;
+        NFmiInfoData::Type dataType_ = NFmiInfoData::kNoDataType;
+        unsigned long parentItemId_ = 0;
         std::string parentItemName_;
-        bool leafNode_;
-		bool crossSectionLeafNode_;
+        bool leafNode_ = false;
+		bool crossSectionLeafNode_ = false;
         std::shared_ptr<NFmiLevel> level_;
-        int treeDepth_;
+        int treeDepth_ = 0;
         std::string origTime_;
         std::string totalFilePath_;
         std::string searchWords_;
         FmiInterpolationMethod interpolationType_ = kNoneInterpolation;
+        bool wmsLayerHasTimeDimension_ = false;
 
     public:
         SingleRowItem();
@@ -84,6 +85,8 @@ namespace AddParams
         const std::string& searchWords() const { return searchWords_; }
         FmiInterpolationMethod interpolationType() const { return interpolationType_; }
         void interpolationType(FmiInterpolationMethod interpolationType) { interpolationType_ = interpolationType; }
+        bool wmsLayerHasTimeDimension() const { return wmsLayerHasTimeDimension_; }
+        void wmsLayerHasTimeDimension(bool hasTimeDimension) { wmsLayerHasTimeDimension_ = hasTimeDimension; }
 
     private:
         void createSearchWords();

@@ -234,6 +234,16 @@ static std::unique_ptr<NFmiQueryData> ReadLatestAcceptableDataWithFileFilterAfte
 	}
 }
 
+// Kaatumisraportit ovat kertoneet että latlon cachen alustus on kaatanut smartmetia usein.
+// Lokitetaan että mikä data ja kuinka iso vector<NFmiPoint> on pitänyt alustaa, kaatuu vector<NFmiPoint>::reserve kutsuun.
+static void LogLatlonCacheInitialization(NFmiQueryData& data, const std::string & latestFileName)
+{
+	std::string logMessage = "Starting to initialize latlon-cache after reading queryData file ";
+	logMessage += latestFileName;
+	logMessage += " with location count of ";
+	logMessage += std::to_string(data.Info()->SizeLocations());
+	CatLog::logMessage(logMessage, CatLog::Severity::Debug, CatLog::Category::Data, true);
+}
 
 // Lukee qdatan, jos on tullut uusi.
 // Laittaa sen luettujen datojen listaan.
@@ -256,6 +266,7 @@ static int ReadData(NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem 
 			std::unique_ptr<NFmiQueryData> data = ::ReadLatestAcceptableDataWithFileFilterAfterTimeStamp(fileFilter, latestTimeStamp, latestFileName, timeStamp);
             if(data)
             {
+				::LogLatlonCacheInitialization(*data, latestFileName);
                 data->LatLonCache(); // Tämä alustaa latlon cachen worker threadissa, jotta se olisi sitten käytössä SmartMetissa multi-thread koodeissa
                 if(theDataInfo.FakeProducerId() != 0)
                 {

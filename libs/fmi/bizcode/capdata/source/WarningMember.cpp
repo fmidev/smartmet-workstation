@@ -8,6 +8,12 @@
 
 using namespace std;
 
+namespace
+{
+    // T‰t‰ k‰ytet‰‰n Cap datoista saatujen koordinaattien konvertoimiseen newbase vastaaviksi
+    std::unique_ptr<NFmiArea> gYkjAreaCoordinateConverionPtr = std::make_unique<NFmiYKJArea>(NFmiPoint(19, 59), NFmiPoint(32, 70));
+}
+
 namespace Warnings
 {
     WarningMember::WarningMember()
@@ -73,10 +79,8 @@ namespace Warnings
             double longitude = _wtof(x->GetText());
             double latitude = _wtof(y->GetText());
 
-            static std::auto_ptr<NFmiArea> areaPtr;
-            areaPtr.reset(new NFmiYKJArea(NFmiPoint(19, 59), NFmiPoint(32, 70)));
             longitude += 3000000; //Fix difference between coordinate systems
-            NFmiPoint point = areaPtr->WorldXYToLatLon(NFmiPoint(longitude, latitude));
+            NFmiPoint point = gYkjAreaCoordinateConverionPtr->WorldXYToLatLon(NFmiPoint(longitude, latitude));
 
             this->center_ = point;
         }

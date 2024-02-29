@@ -656,18 +656,12 @@ void CleanFilePattern(const std::string &theFilePattern, int theKeepMaxFiles)
 {
 	try
 	{
-		std::list<std::string> deletedFiles;
-		NFmiFileSystem::CleanFilePattern(theFilePattern, theKeepMaxFiles, &deletedFiles);
-		if(deletedFiles.size())
-		{
-			std::string logStr("CFmiQueryDataCacheLoaderThread - CleanFilePattern: ");
-			logStr += theFilePattern;
-			logStr += ",\n keep-max-files: ";
-			logStr += NFmiStringTools::Convert(theKeepMaxFiles);
-			logStr += ",\n Deleted files: \n";
-			logStr += ::DeletedFilesStr(deletedFiles);
-			CatLog::logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Data);
-		}
+        std::string logMessageStart("CFmiQueryDataCacheLoaderThread - CleanFilePattern: ");
+        logMessageStart += theFilePattern;
+        logMessageStart += ",\nkeep-max-files = ";
+        logMessageStart += NFmiStringTools::Convert(theKeepMaxFiles);
+        logMessageStart += ",\nDeleted files:\n";
+        CtrlViewUtils::DeleteFilesWithPatternAndLog(theFilePattern, logMessageStart, CatLog::Severity::Debug, CatLog::Category::Data, theKeepMaxFiles);
 	}
 	catch(...)
 	{

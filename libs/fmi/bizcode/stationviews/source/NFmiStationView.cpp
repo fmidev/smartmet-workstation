@@ -644,7 +644,13 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetUsedSpaceOutCalculationInfo(boost
 	return normalInfo;
 }
 
+#ifdef max
+#undef max
+#endif
+
+
 // OLETUS!! itsInfo on grid-dataa.
+// HUOM! Pitää varmistaa että tulos on minimissään 1.
 NFmiPoint NFmiStationView::CalcUsedSpaceOutFactors(int theSpaceOutFactor)
 {
 	if(theSpaceOutFactor == 0)
@@ -680,17 +686,31 @@ NFmiPoint NFmiStationView::CalcUsedSpaceOutFactors(int theSpaceOutFactor)
         double xFactor = fontFactor.X() * fontXSize * textLength / distX;
         double yFactor = fontFactor.Y() * fontYSize / distY;
 		DoSymboldrawDensityAdjustments(xFactor, yFactor);
-
+		double finalFactorX = 1;
+		double finalFactorY = 1;
         // 6. case theSpaceOutFactor 1 -> ceil, 2 -> ceil + 1
-        if(theSpaceOutFactor == 1)
-            return NFmiPoint(::ceil(xFactor), ::ceil(yFactor));
+		if(theSpaceOutFactor == 1)
+		{
+			finalFactorX = std::ceil(xFactor);
+			finalFactorY = std::ceil(yFactor);
+		}
         else //if(theSpaceOutFactor == 2)
         {
             if(xFactor < 0.5 && yFactor < 0.5) // jos ollaan zoomattu jo tarpeeksi lähellä, näytetään kaikki pisteet
-                return NFmiPoint(::ceil(xFactor), ::ceil(yFactor));
+			{
+				finalFactorX = std::ceil(xFactor);
+				finalFactorY = std::ceil(yFactor);
+			}
             else
-                return NFmiPoint(::ceil(xFactor) + 1, ::ceil(yFactor) + 1);
+			{
+				finalFactorX = std::ceil(xFactor) + 1;
+				finalFactorY = std::ceil(yFactor) + 1;
+			}
         }
+
+		finalFactorX = std::max(finalFactorX, 1.);
+		finalFactorY = std::max(finalFactorY, 1.);
+		return NFmiPoint(finalFactorX, finalFactorY);
     }
 }
 
@@ -1943,7 +1963,7 @@ static void SetXYZValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, co
 static void DoFinalGridding(const NFmiGriddingProperties &griddingProperties, const boost::shared_ptr<NFmiArea> &theArea, std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues, NFmiDataMatrix<float> &theValues)
 {
     auto stationRadiusRelative = static_cast<float>(NFmiGriddingProperties::ConvertLengthInKmToRelative(griddingProperties.rangeLimitInKm(), theArea.get()));
-    auto_ptr<NFmiObsDataGridding> obsDataGridding(new NFmiObsDataGridding());
+    std::unique_ptr<NFmiObsDataGridding> obsDataGridding(new NFmiObsDataGridding());
 	NFmiDataParamControlPointModifier::DoDataGridding(theXValues, theYValues, theZValues, static_cast<int>(theZValues.size()), theValues, theArea->XYArea(), griddingProperties, obsDataGridding.get(), stationRadiusRelative);
 }
 

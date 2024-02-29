@@ -39,14 +39,15 @@ public:
     virtual std::string getFullLayerName(const NFmiDataIdent& dataIdent) const = 0;
     virtual NFmiImageHolder getDynamicImage(const NFmiDataIdent &dataIdent, const NFmiArea& area, const NFmiMetTime& time, int resolutionX, int resolutionY, int editorTimeStepInMinutes) = 0;
     virtual void kill() = 0;
-    virtual bool isDead(std::chrono::milliseconds wait) const = 0;
+    virtual bool isDead(const std::chrono::milliseconds &waitTime) const = 0;
     virtual Wms::StaticMapClientState& getStaticMapClientState(unsigned int mapViewIndex, unsigned int mapAreaIndex) = 0;
     virtual const std::unique_ptr<Wms::Setup>& getSetup() const = 0;
-    virtual const Wms::LayerInfo* getHashedLayerInfo(const NFmiDataIdent& dataIdent) const = 0;
+    virtual Wms::LayerInfo getHashedLayerInfo(const NFmiDataIdent& dataIdent) const = 0;
     virtual bool isTotalMapViewStaticMapClientStateAvailable() const = 0;
-
+    virtual bool isSetToBeKilled() const = 0;
+    virtual bool getCapabilitiesHaveBeenRetrieved() const = 0;
 #ifndef DISABLE_CPPRESTSDK
-    virtual const Wms::CapabilityTree* peekCapabilityTree() const = 0;
+    virtual std::shared_ptr<Wms::CapabilityTree> getCapabilityTree() const = 0;
     // Kun varsinaisia kyselyjä on tarkoitus tehdä, kannattaa varmistaa tällä että onko systeemi jo käytössä
     virtual bool isCapabilityTreeAvailable() const = 0;
 #endif // DISABLE_CPPRESTSDK

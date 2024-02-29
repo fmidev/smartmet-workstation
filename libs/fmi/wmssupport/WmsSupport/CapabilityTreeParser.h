@@ -23,6 +23,7 @@ namespace Wms
 		std::string timeWindow_;
 		NFmiMetTime startTime_ = NFmiMetTime::gMissingTime;
 		NFmiMetTime endTime_ = NFmiMetTime::gMissingTime;
+		std::string timeResolution_;
 	};
 
     class CapabilityTreeParser

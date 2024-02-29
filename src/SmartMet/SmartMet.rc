@@ -259,6 +259,7 @@ BEGIN
             MENUITEM "Reload All Dynamic Data\tCTRL + SHIFT + F5", ID_ACCELERATOR_RELOAD_ALL_DYNAMIC_DATA
             MENUITEM "Reload Failed Satellite Images", ID_RELOADDATA_RELOADFAILEDSATELLITEIMAGES
         END
+        MENUITEM "Generate new Wms system",     ID_EDIT_GENERATE_NEW_WMS_SYSTEM
     END
     POPUP "&View"
     BEGIN
@@ -956,6 +957,12 @@ BEGIN
                             "Beta Production dialog\nBeta Production dialog"
 END
 
+STRINGTABLE
+BEGIN
+    ID_EDIT_GENERATE_NEW_WMS_SYSTEM 
+                            "Generate new Wms system and replace current system with it (it may corrupt over time)\nGenerate new Wms system and replace current system with it (it may corrupt over time)"
+END
+
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -1069,8 +1076,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 5,14,1,0
- PRODUCTVERSION 5,14,1,0
+ FILEVERSION 5,14,2,0
+ PRODUCTVERSION 5,14,2,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -1087,12 +1094,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "FMI (Finnish Meteorological Instituet)"
             VALUE "FileDescription", "SmartMet meteorological workstation"
-            VALUE "FileVersion", "5.14.1.0"
+            VALUE "FileVersion", "5.14.2.0"
             VALUE "InternalName", "SmartMet"
-            VALUE "LegalCopyright", "(C) 1999-2023 FMI (Finnish Meteorological Instituet).  All rights reserved"
+            VALUE "LegalCopyright", "(C) 1999-2024 FMI (Finnish Meteorological Instituet).  All rights reserved"
             VALUE "OriginalFilename", "SmartMet.exe"
             VALUE "ProductName", "SmartMet"
-            VALUE "ProductVersion", "5.14.1.0"
+            VALUE "ProductVersion", "5.14.2.0"
         END
     END
     BLOCK "VarFileInfo"

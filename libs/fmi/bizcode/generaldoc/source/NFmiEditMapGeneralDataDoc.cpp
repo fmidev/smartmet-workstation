@@ -1288,7 +1288,7 @@ void InitCombinedMapHandler()
 	Wms::CapabilitiesHandler::setParameterSelectionUpdateCallback(parameterSelectionUpdateCallback);
 	// NFmiCombinedMapHandler luokka hanskaa itse kaikki poikkeukset ja mahdolliset käyttäjän tekemät ohjelman lopetukset.
 	itsCombinedMapHandler.initialize(itsBasicConfigurations.ControlPath());
-	if(!itsCombinedMapHandler.getWmsSupport().isConfigured())
+	if(!itsCombinedMapHandler.getWmsSupport()->isConfigured())
 	{
 		// Jos wms systeemiä ei oteta käyttöön, pitää lopettaa timer joka odottaa 1. data päivitystä joka 3. sekunti
 		parameterSelectionUpdateCallback();
@@ -3270,11 +3270,11 @@ void AddWmsDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings
     {
         try
         {
-			auto& wmsSupport = GetCombinedMapHandler()->getWmsSupport();
-            if(!wmsSupport.isCapabilityTreeAvailable())
+			auto wmsSupportPtr = GetCombinedMapHandler()->getWmsSupport();
+            if(!wmsSupportPtr->isCapabilityTreeAvailable())
                 return;
             CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(nullptr, __FUNCTION__);
-            const auto* layerTree = wmsSupport.peekCapabilityTree();
+            auto layerTree = wmsSupportPtr->getCapabilityTree();
 			if(layerTree)
 			{
 				auto menuItem = std::make_unique<NFmiMenuItem>(
@@ -9416,9 +9416,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	bool IsEditedDataInReadOnlyMode()
 	{
-		auto editeData = EditedInfo();
-		if(editeData)
-			return editeData->RefRawData()->IsReadOnly();
+		auto editedData = EditedInfo();
+		if(editedData)
+			return editedData->RefRawData()->IsReadOnly();
 		// Jos editoitua dataa ei ole, palautetaan arvo että se on read-only moodissa
 		return true;
 	}
@@ -10777,9 +10777,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
                 parameterSelectionSystem.addHelpData(prod, menuString, NFmiInfoData::kConceptualModelData, displayName);
             }
 #ifndef DISABLE_CPPRESTSDK
-			if (GetCombinedMapHandler()->getWmsSupport().isConfigured())
+			if (GetCombinedMapHandler()->getWmsSupport()->isConfigured())
 			{
-				auto wmsCallBackFunction = [this]() {return std::ref(this->GetCombinedMapHandler()->getWmsSupport()); };
+				auto wmsCallBackFunction = [this]() {return this->GetCombinedMapHandler()->getWmsSupport(); };
 				parameterSelectionSystem.setWmsCallback(wmsCallBackFunction);
 			}
 #endif // DISABLE_CPPRESTSDK

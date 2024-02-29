@@ -300,7 +300,9 @@ namespace AddParams
 
 				if (leafNode)
 				{
-					wmsVector.push_back(::makeDataRowItem(producer, paramId, paramName, uniqueId, dataCategory_, leafNode, treeDepth));
+                    auto tmpDataRowItem = ::makeDataRowItem(producer, paramId, paramName, uniqueId, dataCategory_, leafNode, treeDepth);
+                    tmpDataRowItem->wmsLayerHasTimeDimension(wmsChild->value.hasTimeDimension);
+					wmsVector.push_back(std::move(tmpDataRowItem));
 				}				
 			}
 			catch (...)

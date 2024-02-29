@@ -32,6 +32,12 @@ using namespace boost::assign;
 using namespace std;
 using namespace Warnings;
 
+namespace
+{
+    // T‰t‰ k‰ytet‰‰n Cap datoista saatujen koordinaattien konvertoimiseen newbase vastaaviksi
+    std::unique_ptr<NFmiArea> gYkjAreaCoordinateConverionPtr = std::make_unique<NFmiYKJArea>(NFmiPoint(19, 59), NFmiPoint(32, 70));
+}
+
 namespace Warnings
 {
 
@@ -269,14 +275,6 @@ namespace Warnings
 
     std::vector<NFmiPoint> CapData::parseCoordinatesFromString(const std::string &coordinateString)
     {
-        static std::auto_ptr<NFmiArea> areaPtr;
-        static bool firstTime = true;
-        if(firstTime)
-        {
-            firstTime = false;
-            areaPtr.reset(new NFmiYKJArea(NFmiPoint(19, 59), NFmiPoint(32, 70)));
-        }
-
         std::stringstream sStream(coordinateString);
         std::vector<NFmiPoint> latLonPoints;
 
@@ -288,7 +286,7 @@ namespace Warnings
             if(sStream)
             {
                 longitude += 3000000; //Fix difference between coordinate systems
-                latLonPoints.push_back(areaPtr->WorldXYToLatLon(NFmiPoint(longitude, latitude)));
+                latLonPoints.push_back(gYkjAreaCoordinateConverionPtr->WorldXYToLatLon(NFmiPoint(longitude, latitude)));
             }
             else
                 break;

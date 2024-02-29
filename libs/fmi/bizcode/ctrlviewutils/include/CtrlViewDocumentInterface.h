@@ -411,6 +411,6 @@ public:
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem(void) = 0;
-    virtual WmsSupportInterface& GetWmsSupport() = 0;
+    virtual std::shared_ptr<WmsSupportInterface> GetWmsSupport() const = 0;
 #endif // DISABLE_CPPRESTSDK
 };

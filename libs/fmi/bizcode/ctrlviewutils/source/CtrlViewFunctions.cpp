@@ -17,6 +17,9 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/round.hpp>
+#include <filesystem>
+#include <regex>
+#include <numeric>
 
 namespace CtrlViewUtils
 {
@@ -716,6 +719,98 @@ namespace CtrlViewUtils
         auto dialogErrorString = timeString + errorText;
         ctrlViewDocumentInterface.SetLatestMacroParamErrorText(dialogErrorString);
         ctrlViewDocumentInterface.SetMacroErrorText(dialogErrorString);
+    }
+
+    std::string wildcardToRegex(const std::string& wildcard) 
+    {
+        std::string regexStr = wildcard;
+
+        // Escape characters with special meaning in regex
+//        regexStr = std::regex_replace(regexStr, std::regex("([\\.\\[\\{\\(\\)\\*\\+\\?\\^\\$\\|])"), "\\$1");
+
+        // Convert wildcard symbols to regex equivalents
+        boost::replace_all(regexStr, ".", "\\.");
+        boost::replace_all(regexStr, "*", ".*");
+        boost::replace_all(regexStr, "?", ".");
+
+        // Match the whole string by adding ^ and $ to the beginning and end
+//        regexStr = "^" + regexStr + "$";
+
+        return regexStr;
+    }
+
+
+    namespace fs = std::filesystem;
+
+    void DeleteFilesWithPattern(const std::string& directoryPath, const std::string& fileNamePattern, int keepMaxFiles, std::list<std::string> *deletedFileNamesOut)
+    {
+        std::vector<fs::path> filePaths;
+        auto regexWildCardPatternString = wildcardToRegex(fileNamePattern);
+        std::regex regexPattern(regexWildCardPatternString);
+        for(const auto& entry : fs::directory_iterator(directoryPath)) 
+        {
+            if(fs::is_regular_file(entry) && std::regex_match(entry.path().filename().string(), regexPattern))
+            {
+                filePaths.push_back(entry.path());
+            }
+        }
+
+        // Sort file paths by creation time in descending order
+        std::sort(filePaths.begin(), filePaths.end(),
+            [](const fs::path& path1, const fs::path& path2) 
+            {
+                return fs::last_write_time(path1) > fs::last_write_time(path2);
+            });
+
+        // Keep the newest files as much keepMaxFiles number indicates, and remove the rest of older files
+        int fileCounter = 0;
+        for(const auto& filePath : filePaths)
+        {
+            if(fileCounter >= keepMaxFiles)
+            {
+                fs::remove(filePath);
+                if(deletedFileNamesOut)
+                {
+                    deletedFileNamesOut->push_back(filePath.filename().string());
+                }
+            }
+            fileCounter++;
+        }
+    }
+
+    void DeleteFilesWithPattern(const std::string& filePathPattern, int keepMaxFiles, std::list<std::string>* deletedFileNamesOut)
+    {
+        fs::path fullPath(filePathPattern);
+        std::string directoryPath = fullPath.parent_path().string();
+        std::string fileNamePattern = fullPath.filename().string();
+        DeleteFilesWithPattern(directoryPath, fileNamePattern, keepMaxFiles, deletedFileNamesOut);
+    }
+
+    void DeleteFilesWithPatternAndLog(const std::string& filePathPattern, const std::string& logMessageStart, CatLog::Severity severity, CatLog::Category category, int keepMaxFiles)
+    {
+        std::list<std::string> deletedFiles;
+        DeleteFilesWithPattern(filePathPattern, keepMaxFiles, &deletedFiles);
+        if(!deletedFiles.empty())
+        {
+            auto deletedFilesListString = MakeCommaSeparatedStringFromStrings(deletedFiles);
+            std::string logMessage = logMessageStart;
+            logMessage += deletedFilesListString;
+            CatLog::logMessage(logMessage, severity, category);
+        }
+    }
+
+    // Huom! std::filesystem::path::extension metodi palauttaa myös pisteen eli jos
+    // filePath:in arvo oli "c:\polku\filename.txt" palautetaan arvo ".txt"
+    std::string GetFileExtension(const std::string& filePath)
+    {
+        fs::path path(filePath);
+        return path.extension().string();
+    }
+
+    std::string GetParentPath(const std::string& filePath)
+    {
+        fs::path path(filePath);
+        return path.parent_path().string();
     }
 
 } // namespace CtrlViewUtils

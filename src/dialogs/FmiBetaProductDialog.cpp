@@ -28,6 +28,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <fstream>
+#include <numeric>
 #include "boost/math/special_functions/round.hpp"
 #include "execute-command-in-separate-process.h"
 
@@ -580,7 +581,28 @@ void CFmiBetaProductDialog::GenerateWebInfoFiles(const std::string &theDestinati
     StoreWebInfoFile(finalDestinationDirectory, "description.txt", theBetaProduct.WebSiteDescriptionString());
 }
 
-bool CFmiBetaProductDialog::CheckDestinationDirectory(const std::string &theDestinationDirectory, bool fAllowDestinationDelete, const NFmiBetaProduct &theBetaProduct)
+static std::string MakeBetaProductCleaningFilePattern(const std::string& imageFileNameBase, bool fixToFileTypeOnly)
+{
+    if(fixToFileTypeOnly)
+    {
+        std::string cleanFileNamePattern = CtrlViewUtils::GetParentPath(imageFileNameBase);
+        PathUtils::addDirectorySeparatorAtEnd(cleanFileNamePattern);
+        cleanFileNamePattern += "*";
+        cleanFileNamePattern += CtrlViewUtils::GetFileExtension(imageFileNameBase);
+        return cleanFileNamePattern;
+    }
+    else
+    {
+        auto cleanFileNamePattern = imageFileNameBase;
+        boost::algorithm::ireplace_first(cleanFileNamePattern, NFmiBetaProductionSystem::FileNameTemplateValidTimeStamp(), "*");
+        boost::algorithm::ireplace_first(cleanFileNamePattern, NFmiBetaProductionSystem::FileNameTemplateMakeTimeStamp(), "*");
+        boost::algorithm::ireplace_first(cleanFileNamePattern, NFmiBetaProductionSystem::FileNameTemplateOrigTimeStamp(), "*");
+        boost::algorithm::ireplace_first(cleanFileNamePattern, NFmiBetaProductionSystem::FileNameTemplateStationIdStamp(), "*");
+        return cleanFileNamePattern;
+    }
+}
+
+bool CFmiBetaProductDialog::CheckDestinationDirectory(const std::string &theDestinationDirectory, bool fAllowDestinationDelete, const NFmiBetaProduct &theBetaProduct, const std::string& theImageFileNameBase)
 {
     static const std::string errorDialogTitle = ::GetDictionaryString("Beta product output directory error");
     if(theDestinationDirectory.empty())
@@ -604,12 +626,11 @@ bool CFmiBetaProductDialog::CheckDestinationDirectory(const std::string &theDest
         }
         if(fAllowDestinationDelete)
         {
-//            ::DeleteAllFiles(CA2T(theDestinationDirectory.c_str()));
-
-            // Kokeillaan toista hakemiston tyhjennys funktiota, koska kuulemma DeleteAllFiles j‰tt‰‰ joskus vanhoja tiedostoja j‰lkeen?!?
             try
             {
-                NFmiFileSystem::CleanDirectory(theDestinationDirectory, 0);
+                auto productImageFilePattern = ::MakeBetaProductCleaningFilePattern(theImageFileNameBase, true);
+                std::string logMessageStart = "Deleting old Beta-product images with file-pattern " + productImageFilePattern + ": ";
+                CtrlViewUtils::DeleteFilesWithPatternAndLog(productImageFilePattern, logMessageStart, CatLog::Severity::Debug, CatLog::Category::Operational);
             }
             catch(std::exception &e)
             {
@@ -938,6 +959,14 @@ static std::vector<int> GetFoundSynopLocationIds(SmartMetDocumentInterface *smar
     return actuallyFoundLocationIds;
 }
 
+static std::string MakeSimpleImageFileBasePath(const NFmiBetaProduct& theBetaProduct, bool addStationIdMarker)
+{
+    std::string basePath = theBetaProduct.ImageStoragePath();
+    PathUtils::addDirectorySeparatorAtEnd(basePath);
+    basePath += theBetaProduct.GetUsedFileNameTemplate(addStationIdMarker);
+    return basePath;
+}
+
 void CFmiBetaProductDialog::MakeVisualizationImages(const NFmiBetaProduct &theBetaProduct, const NFmiMetTime &theStartingTime, bool useModelStartTime, const NFmiMetTime &theEndingTime, bool useModelEndTime, const NFmiMetTime &theMakeTime, bool justLogMessages)
 {
     try
@@ -947,7 +976,10 @@ void CFmiBetaProductDialog::MakeVisualizationImages(const NFmiBetaProduct &theBe
         if(!CheckGenerationTimes(theStartingTime, theEndingTime, justLogMessages))
             return;
 
-        if(CheckDestinationDirectory(theBetaProduct.ImageStoragePath(), true, theBetaProduct))
+        bool useSynopLocations = IsSynopLocationsUsed(theBetaProduct.SelectedViewIndex(), theBetaProduct.SynopStationIdList());
+        auto imageFileNameBase = ::MakeSimpleImageFileBasePath(theBetaProduct, useSynopLocations);
+
+        if(CheckDestinationDirectory(theBetaProduct.ImageStoragePath(), true, theBetaProduct, imageFileNameBase))
         {
             itsTotalImagesGenerated = 0;
             std::string makeTimeStampString = theMakeTime.ToStr(kYYYYMMDDHHMM);
@@ -1079,9 +1111,6 @@ static void AutoFileNameChanges(SmartMetDocumentInterface *smartMetDocumentInter
     }
 }
 
-const std::string g_OrigTimeStampString = "origTime";
-const std::string g_MakeTimeStampString = "makeTime";
-
 static std::string MakeFinalImageFileName(SmartMetDocumentInterface *smartMetDocumentInterface, const NFmiBetaProduct &theBetaProduct, BetaProductViewIndex selectedViewRadioButtonIndex, const std::string &rowImageFileNameBase, const NFmiMetTime &currentTime, const NFmiMetTime &theMakeTime, const NFmiMetTime &modelOrigTime, int rowIndex, int synopStationId)
 {
     std::string imageFileName = rowImageFileNameBase;
@@ -1090,8 +1119,8 @@ static std::string MakeFinalImageFileName(SmartMetDocumentInterface *smartMetDoc
     std::string origTimeStampString = modelOrigTime.ToStr(kYYYYMMDDHHMM);
 
     boost::algorithm::ireplace_first(imageFileName, NFmiBetaProductionSystem::FileNameTemplateValidTimeStamp(), validTimeStampString);
-    boost::algorithm::ireplace_first(imageFileName, g_MakeTimeStampString, makeTimeStampString);
-    boost::algorithm::ireplace_first(imageFileName, g_OrigTimeStampString, origTimeStampString);
+    boost::algorithm::ireplace_first(imageFileName, NFmiBetaProductionSystem::FileNameTemplateMakeTimeStamp(), makeTimeStampString);
+    boost::algorithm::ireplace_first(imageFileName, NFmiBetaProductionSystem::FileNameTemplateOrigTimeStamp(), origTimeStampString);
     // Jos synop asema id on 0:sta poikkeava liitet‰‰n se mahdollisesti tiedostonimeen
     if(synopStationId)
     {
@@ -1144,6 +1173,7 @@ void CFmiBetaProductDialog::MakeVisualizationImagesRowLoop(const NFmiBetaProduct
     auto descTopIndex = ::ConvertBetaProductViewIndexToDescTopIndex(selectedViewRadioButtonIndex);
     auto descTop = itsSmartMetDocumentInterface->MapViewDescTop(descTopIndex);
     auto usedTimeStepInMinutes = theBetaProduct.TimeStepInMinutes();
+    auto addStationIdMarker = (synopStationId != 0);
     // row-for-loop
     for(size_t i = 0; i < usedRowIndexies.size(); i++)
     {
@@ -1154,11 +1184,11 @@ void CFmiBetaProductDialog::MakeVisualizationImagesRowLoop(const NFmiBetaProduct
         std::string rowImageBaseDirectory = imageFileNameBase;
         AddImageRowPath(theBetaProduct, rowImageBaseDirectory, rowIndex);
         std::string rowImageFileNameBase = rowImageBaseDirectory;
+        rowImageFileNameBase += theBetaProduct.GetUsedFileNameTemplate(addStationIdMarker);
 
         // pit‰‰ varmistaa myˆs ett‰ rivikohtaiset alihakemistot luodaan tarvittaessa, paitsi jos on k‰ytetty 
         // rowIndex -leimaa tiedoston nimess‰, t‰llˆin ei saa siivota yht‰ ja samaa hakemistosa uudestaan ja uudestaan.
-        CheckDestinationDirectory(rowImageBaseDirectory, deleteDestinationDirectory, theBetaProduct);
-        rowImageFileNameBase += theBetaProduct.GetUsedFileNameTemplate(synopStationId != 0);
+        CheckDestinationDirectory(rowImageBaseDirectory, deleteDestinationDirectory, theBetaProduct, rowImageFileNameBase);
 
         std::string rowIndexString = "Row";
         rowIndexString += NFmiStringTools::Convert(rowIndex);
@@ -1345,9 +1375,9 @@ std::string CFmiBetaProductDialog::GetFileNameTemplateStampsString()
         std::string stampHelperString("('Stamps': ");
         stampHelperString += NFmiBetaProductionSystem::FileNameTemplateValidTimeStamp();
         stampHelperString += ", ";
-        stampHelperString += g_OrigTimeStampString;
+        stampHelperString += NFmiBetaProductionSystem::FileNameTemplateOrigTimeStamp();
         stampHelperString += ", ";
-        stampHelperString += g_MakeTimeStampString;
+        stampHelperString += NFmiBetaProductionSystem::FileNameTemplateMakeTimeStamp();
         stampHelperString += ", ";
         stampHelperString += NFmiBetaProductionSystem::FileNameTemplateStationIdStamp();
         stampHelperString += ")";

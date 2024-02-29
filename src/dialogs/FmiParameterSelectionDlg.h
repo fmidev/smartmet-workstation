@@ -70,7 +70,8 @@ private:
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
     std::string TooltipForCategoryType(const AddParams::SingleRowItem &singleRowItem, const std::vector<AddParams::SingleRowItem> &singleRowItemVector, int rowNumber);
     std::string TooltipForCategoryType();
-    std::string TooltipForMacroParamCategoryType(const AddParams::SingleRowItem &singleRowItem, const std::vector<AddParams::SingleRowItem> &singleRowItemVector, int rowNumber);
+    std::string TooltipForMacroParamCategoryType(const AddParams::SingleRowItem& singleRowItem, const std::vector<AddParams::SingleRowItem>& singleRowItemVector, int rowNumber);
+    std::string TooltipForWmsDataCategoryType(const AddParams::SingleRowItem &singleRowItem, const std::vector<AddParams::SingleRowItem> &singleRowItemVector, int rowNumber);
     std::string TooltipForParameterType(const AddParams::SingleRowItem &rowItem);
     std::string TooltipForDataType(const AddParams::SingleRowItem &singleRowItem);
     std::string TooltipForProducerType(const AddParams::SingleRowItem &singleRowItem, const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector, const NFmiProducerInfo &producerInfo);

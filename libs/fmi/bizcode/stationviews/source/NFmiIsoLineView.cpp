@@ -497,9 +497,8 @@ static double GetDifferenceDrawIsoLineGab(double theCurrentIsolineGap)
 void NFmiIsoLineView::SetUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam)
 {
     fDoDifferenceDrawSwitch = false;
-    bool diffParamUsed = theUsedDrawParam->Param().GetParamIdent() == NFmiInfoData::kFmiSpDrawDifferenceParam;
     // piirretään toistaiseksi erotus vanhalla tavalla
-    if(diffParamUsed || theUsedDrawParam->ShowDifferenceToOriginalData())
+    if(theUsedDrawParam->ShowDifferenceToOriginalData())
     {
         auto differenceDrawParam = itsCtrlViewDocumentInterface->GetDrawDifferenceDrawParam();
         if(differenceDrawParam)
@@ -529,7 +528,7 @@ void NFmiIsoLineView::RestoreUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam
     if(fDoDifferenceDrawSwitch)
     {
         theUsedDrawParam = itsBackupDrawParamForDifferenceDrawing;
-        itsBackupDrawParamForDifferenceDrawing = boost::shared_ptr<NFmiDrawParam>();
+        itsBackupDrawParamForDifferenceDrawing.reset();
     }
     fDoDifferenceDrawSwitch = false;
 }

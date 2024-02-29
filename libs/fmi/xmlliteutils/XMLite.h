@@ -19,6 +19,13 @@
 // 2004-06-15 : add GetText()/ Find() functions
 // 2004-06-15 : add force_parse : now can parse HTML (not-welformed xml)
 // 
+// HUOM!!!! T‰m‰n headerin includointi joidenkin muiden include tiedostojen kanssa voi
+// aiheuttaa ongelmia, kun koodia k‰‰nnet‰‰n C++17 asetuksilla. Ongelman aiheuttaa
+// #include "xmlliteutils/stdafx.h", jossa on taas #include <afx.h> eli n‰m‰ on ihan perus MFC/win32 headereita.
+// K‰‰nt‰j‰ tˆrm‰‰ C++17 m‰‰rittelem‰n uuden tyypin byte ja jossain muualla
+// m‰‰riteltyjen byte juttujen kanssa ambiguous tilanteeseen ja tulee virheilmoitus rivej‰ sivukaupalla.
+// Sen voi est‰‰ laittamalla "#define _HAS_STD_BYTE 0" ongelma cpp tiedostoon alkuun ennen includeja.
+
 //////////////////////////////////////////////////////////////////////
 
 #if !defined(AFX_XMLITE_H__786258A5_8360_4AE4_BDAF_2A52F8E1B877__INCLUDED_)

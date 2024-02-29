@@ -4,6 +4,7 @@
 #include "NFmiSatelliteImageCacheHelpers.h"
 #include "wmssupport/LegendHandler.h"
 #include "wmssupport/CapabilityTree.h"
+#include "wmssupport/Setup.h"
 
 #include <chrono>
 #include <map>
@@ -60,6 +61,8 @@ namespace Wms
         std::unique_ptr<LegendHandler> legendHandler_;
 
         std::shared_ptr<cppback::BackgroundManager> bManager_;
+        // Jos Smartmet halutaan tappaa, halutaan myös WmsSupport tappaa
+        bool setToBeKilled_ = false;
     public:
         WmsSupport();
         ~WmsSupport();
@@ -71,7 +74,7 @@ namespace Wms
         void nextOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
         void previousBackground(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
         void previousOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
-        const Wms::CapabilityTree* peekCapabilityTree() const override;
+        std::shared_ptr<Wms::CapabilityTree> getCapabilityTree() const override;
         bool isCapabilityTreeAvailable() const override;
         NFmiImageHolder getBackground(unsigned int mapViewIndex, unsigned int mapAreaIndex, const NFmiArea& area, int resolutionX, int resolutionY) override;
         NFmiImageHolder getOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex, const NFmiArea& area, int resolutionX, int resolutionY) override;
@@ -82,14 +85,16 @@ namespace Wms
         std::string getFullLayerName(const NFmiDataIdent& dataIdent) const override;
         NFmiImageHolder getDynamicImage(const NFmiDataIdent& dataIdent, const NFmiArea& area, const NFmiMetTime& time, int resolutionX, int resolutionY, int editorTimeStepInMinutes) override;
         void kill() override;
-        bool isDead(std::chrono::milliseconds wait) const override;
+        bool isDead(const std::chrono::milliseconds& waitTime) const override;
         StaticMapClientState& getStaticMapClientState(unsigned int mapViewIndex, unsigned int mapAreaIndex) override;
         const std::unique_ptr<Setup>& getSetup() const override;
-        const LayerInfo* getHashedLayerInfo(const NFmiDataIdent& dataIdent) const override;
+        LayerInfo getHashedLayerInfo(const NFmiDataIdent& dataIdent) const override;
 
         void fillDynamicClients(const std::unordered_map<int, DynamicServerSetup> &serverSetups, const std::string& proxyUrl);
         std::unique_ptr<WmsClient> createClient(const DynamicServerSetup &setup, const std::string& proxyUrl);
         bool isTotalMapViewStaticMapClientStateAvailable() const override;
+        bool isSetToBeKilled() const override;
+        bool getCapabilitiesHaveBeenRetrieved() const override;
     private:
         StaticMapClientState createStaticMapClientState();
         MapViewStaticMapClientState createMapViewStaticMapClientState(unsigned int mapAreaCount);

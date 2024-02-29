@@ -62,7 +62,23 @@ namespace
 	// missä on koko luokan kaikki metodit käytössä, mutta palauttaa WmsSupportInterface -pointterin ulkopuolelle.
 	// Lisäksi kaikki #ifndef DISABLE_CPPRESTSDK -jutut saa piiloon myös cpp:hen.
 #ifndef DISABLE_CPPRESTSDK
-	std::unique_ptr<WmsSupportInterface> wmsSupport_;
+	// Tähän wmsSupport_:iin laitetaan kulloinkin käytössä oleva WmsSupport olio.
+	// Koska on huomattu että esim. Beta-tuotteiden luonnissa jos käytetään paljon wms dataa, on wms osio mennyt rikki 2-3 vuorokauden kuluttua.
+	// Nyt on siis tarkoitus että WmsSupport olio vaihdetaan määräajoin. Tämä vaihto pitää tehdä niin että vaikka
+	// 12 tunnin välein MainFramen timer käynnistää vaihto operaation, jolloin tapahtuu seuraavaa:
+	// 1) Luodaan uusi WmsSupport olio tmpWmsSupport_ muuttujalle
+	// 2) Mutex lukon turvissa vaihdetaan swap:illa wmsSupport_ ja tmpWmsSupport_ olioiden sisältö
+	// 3) Nyt tmpWmsSupport_ oliolle annetaan käsky tappaa itsensä
+	// 4) Kun se on kuollut, nollataan tmpWmsSupport_ olio
+	// 5) Tähän soppaan luo omat hankaluutensa kun uutta WmsSupport oliota luodaan, tällöin pitää tarkastella onko vanhaa haluttu jo tappaa, jolloin uusi pitää myös laittaa tappamaan itsensä ja mitään vaihtoa ei enää tehdä.
+	std::shared_ptr<WmsSupportInterface> wmsSupport_;
+	// capabilityTree_ olion käyttö pitää suojata thread turvallisella lukolla.
+	std::mutex wmsSupportMutex_;
+	// Koska WmsSupport olion tappaminen vaatii odottelua, pitää tehdä tälläinen tmp-oliolle oma kuolin paikka.
+	// Eli kun wmsSupport_ oli on vaihdettu tmpWmsSupport_ olioon, voidaan odotella että se tappaa itsensä ja se voidaan deletoida.
+	std::shared_ptr<WmsSupportInterface> tmpWmsSupport_;
+	// Tämä atomic-flagin avulla estetään samanaikaisten renewal prosessien käynnistyksen
+	std::mutex isWmsSupportRenewalProcessRunningMutex_;
 #endif // DISABLE_CPPRESTSDK
 
 	static const std::string g_ObservationMenuName = "Observation";
@@ -922,7 +938,7 @@ void NFmiCombinedMapHandler::initCombinedMapStates()
 	auto wmsOverlayMapLayerCount = 0;
 	if(wmsSupportAvailable())
 	{
-		auto& staticMapClientState = getWmsSupport().getStaticMapClientState(0, 0).state_;
+		auto& staticMapClientState = getWmsSupport()->getStaticMapClientState(0, 0).state_;
 		wmsBackgroundMapLayerCount = static_cast<unsigned int>(staticMapClientState->getBackgroundsLength());
 		wmsOverlayMapLayerCount = static_cast<unsigned int>(staticMapClientState->getOverlaysLenght());
 	}
@@ -986,14 +1002,14 @@ void NFmiCombinedMapHandler::initWmsSupportSelectionIndices()
 	if(!wmsSupportAvailable())
 		return;
 
-	auto &wmsSupport = getWmsSupport();
+	auto wmsSupportPtr = getWmsSupport();
 	auto mapViewCount = getMapViewCount();
 	for(auto mapViewIndex = 0u; mapViewIndex < mapViewCount; mapViewIndex++)
 	{
 		auto mapAreaCount = getMapAreaCount();
 		for(auto mapAreaIndex = 0u; mapAreaIndex < mapAreaCount; mapAreaIndex++)
 		{
-			auto &staticMapClientState = wmsSupport.getStaticMapClientState(mapViewIndex, mapAreaIndex);
+			auto &staticMapClientState = wmsSupportPtr->getStaticMapClientState(mapViewIndex, mapAreaIndex);
 			// Tehdään ensin background map indeksin asetus
 			staticMapClientState.state_->setBackgroundIndex(::calcInitialWmsLayerIndex(getCombinedMapModeState(mapViewIndex, mapAreaIndex)));
 
@@ -1029,7 +1045,8 @@ void NFmiCombinedMapHandler::storeMapViewDescTopToSettings()
 
 bool NFmiCombinedMapHandler::wmsSupportAvailable() const
 {
-	if(wmsSupport_ && wmsSupport_->isConfigured() && wmsSupport_->isTotalMapViewStaticMapClientStateAvailable())
+	auto wmsSupportPtr = getWmsSupport();
+	if(wmsSupportPtr && wmsSupportPtr->isConfigured() && wmsSupportPtr->isTotalMapViewStaticMapClientStateAvailable())
 		return true;
 	else
 		return false;
@@ -1308,10 +1325,10 @@ void NFmiCombinedMapHandler::makeNeededDirtyOperationsWhenDataAdded(unsigned int
 }
 
 // Halutaan vain laittaa viesti lokiin
-void NFmiCombinedMapHandler::logMessage(const std::string& logMessage, CatLog::Severity severity, CatLog::Category category)
+void NFmiCombinedMapHandler::logMessage(const std::string& logMessage, CatLog::Severity severity, CatLog::Category category, bool flushAlways) const
 {
 	// Kaikki warning/error/fatal tason viestit pitää flushata heti lokitiedostoon, jos ongelmista seuraa kaatuminen
-	auto flushLogger = severity > CatLog::Severity::Info;
+	auto flushLogger = (flushAlways ? true : (severity > CatLog::Severity::Info));
 	CatLog::logMessage(logMessage, severity, category, flushLogger);
 }
 
@@ -1541,21 +1558,191 @@ std::string NFmiCombinedMapHandler::doGetMacroParamFormula(boost::shared_ptr<NFm
 void NFmiCombinedMapHandler::initWmsSupport()
 {
 #ifndef DISABLE_CPPRESTSDK
-	doVerboseFunctionStartingLogReporting(__FUNCTION__);
-	try
+	setWmsSupport(createWmsSupport("first time Wms-support system creation"));
+#else
+	logMessage("CPP-Rest disabled, no Wms-support available", CatLog::Severity::Info, CatLog::Category::Operational);
+#endif // DISABLE_CPPRESTSDK
+}
+
+std::shared_ptr<WmsSupportInterface> NFmiCombinedMapHandler::createWmsSupport(const std::string& creationName) const
+{
+#ifndef DISABLE_CPPRESTSDK
+	if(!isWmsSupportBeenKilled())
 	{
-		auto mapViewCount = static_cast<unsigned int>(mapViewDescTops_.size());
-		auto mapAreaCount = static_cast<unsigned int>(getMapViewDescTop(0)->GdiPlusImageMapHandlerList().size());
-		wmsSupport_ = std::make_unique<Wms::WmsSupport>();
-		wmsSupport_->initialSetUp(mapViewCount, mapAreaCount, CombinedMapHandlerInterface::verboseLogging());
-	}
-	catch(std::exception & e)
-	{
-		std::string errorMessage = "Problems with WMS initializations: ";
-		errorMessage += e.what();
-		logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::Configuration);
+		logMessage(std::string("Starting ") + creationName, CatLog::Severity::Info, CatLog::Category::Operational);
+		try
+		{
+			auto mapViewCount = static_cast<unsigned int>(mapViewDescTops_.size());
+			auto mapAreaCount = static_cast<unsigned int>(getMapViewDescTop(0)->GdiPlusImageMapHandlerList().size());
+			auto wmsSupportPtr = std::make_shared<Wms::WmsSupport>();
+			wmsSupportPtr->initialSetUp(mapViewCount, mapAreaCount, CombinedMapHandlerInterface::verboseLogging());
+			return wmsSupportPtr;
+		}
+		catch(std::exception& e)
+		{
+			std::string errorMessage = "Problems with ";
+			errorMessage += creationName;
+			errorMessage += ": ";
+			errorMessage += e.what();
+			logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::Configuration);
+		}
 	}
 #endif // DISABLE_CPPRESTSDK
+	return nullptr;
+}
+
+void NFmiCombinedMapHandler::setWmsSupport(std::shared_ptr<WmsSupportInterface> wmsSupportPtr)
+{
+	if(wmsSupportPtr)
+	{
+		if(isWmsSupportBeenKilled())
+		{
+			tmpWmsSupport_ = wmsSupportPtr;
+			tmpWmsSupport_->kill();
+			logMessage("When creating replacement Wms-support system, system wants to shutdown, starting killing created system instead", CatLog::Severity::Debug, CatLog::Category::Operational, true);
+			return;
+		}
+
+		if(wmsSupport_)
+		{
+			// Raportoidaan vain jos olio todella vaihdetaan, ei 1. asetuksesta
+			logMessage("Replacing currently used Wms-support system with freshly created system, hopefully this way Wms-support will work for longer time period (more than 3 days in row)", CatLog::Severity::Info, CatLog::Category::Operational, true);
+		}
+
+		{
+			// Vaihdetaan ensin uusi tmp-olioon, oletetaan että edellinen vanha on jo ehditty tappaa ja tuhota pois alta.
+			tmpWmsSupport_.swap(wmsSupportPtr);
+
+			// Jos vanha tmp-Wms-support olio on vielä hengissä, sen pakotetusta taposta tämän metodin loppuessa tulee varmaan ongelmia, lokitetaan siitä
+			if(wmsSupportPtr && !wmsSupportPtr->isDead(std::chrono::milliseconds(0)))
+			{
+				logMessage("Old already replaced Wms-support object hasn't been killed by the time new replacemnt arrived, destroing it now forcefully will probably cause problems", CatLog::Severity::Warning, CatLog::Category::Operational, true);
+			}
+
+			{
+				// Vaihdetaan virallinen otus tmp-otukseen
+				std::lock_guard<std::mutex> lock(wmsSupportMutex_);
+				wmsSupport_.swap(tmpWmsSupport_);
+			}
+			
+			if(tmpWmsSupport_)
+			{
+				// Jos oli jo käytössä wmsSupport olio, sitä pitää alkaa tappamaan
+				tmpWmsSupport_->kill();
+			}
+		}
+	}
+}
+
+bool NFmiCombinedMapHandler::isWmsSupportBeenKilled() const
+{
+	std::lock_guard<std::mutex> lock(wmsSupportMutex_);
+	if(wmsSupport_ && wmsSupport_->isSetToBeKilled())
+		return true;
+	else
+		return false;
+}
+
+void NFmiCombinedMapHandler::startWmsSupportRenewalProcess(bool startedByUser)
+{
+	static int counter = 1;
+	std::string creationName = "creating a new Wms-support system and replacing the currently used with it (";
+	creationName += startedByUser ? "started by user" : " started by automatic timer, counter : ";
+	if(!startedByUser)
+	{
+		creationName += std::to_string(counter);
+	}
+	creationName += ")";
+	std::thread t(&NFmiCombinedMapHandler::doWmsSupportRenewalProcessInSeparateThread, this, creationName);
+	t.detach();
+	counter++;
+}
+
+void NFmiCombinedMapHandler::doWmsSupportRenewalProcessInSeparateThread(const std::string& creationName)
+{
+	// Tarkistetaan ettei systeemi ole jo käynnissä
+	if(!isWmsSupportRenewalProcessRunningMutex_.try_lock())
+	{
+		logMessage("Wms-support renewal process was already running, stopping this call", CatLog::Severity::Warning, CatLog::Category::Operational, true);
+	}
+	else
+	{
+		// Avaan lukon ja laitan sen lock_guard:iin, jotta ei tarvitse laittaan kaikkiin return kohtiin erillistä avausta
+		isWmsSupportRenewalProcessRunningMutex_.unlock();
+		std::lock_guard<std::mutex> lock(isWmsSupportRenewalProcessRunningMutex_);
+
+		auto wmsSupportPtr = createWmsSupport(creationName);
+		if(wmsSupportPtr)
+		{
+			for(;;)
+			{
+				// Odotetaan että juuri luotu wmsSupport otus saa tehtyä getcapabilities haut ennen kuin otus otetaan käyttöön
+				if(isWmsSupportBeenKilled())
+				{
+					// Jos smartmetia ollaan sulkemassa, voidaan tämä odottelu lopettaa ja sijoitetaan wmsSupportPtr odottelemaan 
+					// loppuaan tmpWmsSupport_ olioon...
+					tmpWmsSupport_.swap(wmsSupportPtr);
+					tmpWmsSupport_->kill();
+					return;
+				}
+				if(wmsSupportPtr->getCapabilitiesHaveBeenRetrieved())
+				{
+					logMessage("Replacement Wms-support object has been properly initialized and it's getCapabilities have been retrieved once", CatLog::Severity::Debug, CatLog::Category::Operational, true);
+					break;
+				}
+				// Tässä laitetaan threadi nukkumaan pieneksi aikaa, jotta tarkasteluja voidaan sitten jatkaa
+				std::this_thread::sleep_for(std::chrono::milliseconds(500));
+			}
+			// Nyt täysin toiminta valmis wmsSupport olio voidaan ottaa käyttöön
+			setWmsSupport(wmsSupportPtr);
+			if(tmpWmsSupport_)
+			{
+				// Lopuksi odotellaan että tmp-wms-support olio tappaa itsensä ja että se voidaan poistaa ja nollata
+				for(;;)
+				{
+					if(isWmsSupportBeenKilled())
+					{
+						// Jos smartmetia ollaan sulkemassa, voidaan tämä odottelu lopettaa
+						return;
+					}
+
+					// tässä pika tarkastus (0 lukko aika), voidaanko nollata
+					{
+						std::lock_guard<std::mutex> lock(wmsSupportMutex_);
+						if(tmpWmsSupport_->isDead(std::chrono::milliseconds(0)))
+						{
+							tmpWmsSupport_.reset();
+							logMessage("Replaced Wms-support object has been killed and disposed", CatLog::Severity::Debug, CatLog::Category::Operational, true);
+							break;
+						}
+					}
+					// Tässä laitetaan threadi nukkumaan pieneksi aikaa, jotta tarkasteluja voidaan sitten jatkaa
+					std::this_thread::sleep_for(std::chrono::milliseconds(500));
+				}
+			}
+		}
+	}
+}
+
+static bool waitWmsSupportToDie(const std::chrono::milliseconds& waitTime, std::shared_ptr<WmsSupportInterface> wmsSupport)
+{
+	if(wmsSupport)
+	{
+		return wmsSupport->isDead(waitTime);
+	}
+	return true;
+}
+
+
+bool NFmiCombinedMapHandler::waitWmsSupportToDie(const std::chrono::milliseconds& waitTime)
+{
+	auto mainWmsSupportIsDead = ::waitWmsSupportToDie(waitTime, getWmsSupport());
+	bool tmpWmsSupportIsDead = true;
+	{
+		std::lock_guard<std::mutex> lock(wmsSupportMutex_);
+		tmpWmsSupportIsDead = ::waitWmsSupportToDie(waitTime, tmpWmsSupport_);
+	}
+	return (mainWmsSupportIsDead && tmpWmsSupportIsDead);
 }
 
 bool NFmiCombinedMapHandler::isAnimationTimebagCheckNeeded(unsigned int mapviewDescTopIndex)
@@ -1666,11 +1853,14 @@ bool NFmiCombinedMapHandler::findLastObservation(unsigned long mapViewDescTopInd
 
 bool NFmiCombinedMapHandler::getLatestWmsImageTime(const NFmiDataIdent& dataIdent, NFmiMetTime& foundTimeOut)
 {
-	auto* layerInfo = getWmsSupport().getHashedLayerInfo(dataIdent);
-	if(layerInfo)
+	try
 	{
-		foundTimeOut = layerInfo->endTime;
+		auto layerInfo = getWmsSupport()->getHashedLayerInfo(dataIdent);
+		foundTimeOut = layerInfo.endTime;
 		return true;
+	}
+	catch(...)
+	{
 	}
 	return false;
 }
@@ -3049,6 +3239,7 @@ NFmiInfoData::Type getFinalDataType(boost::shared_ptr<NFmiDrawParam>& drawParam,
 {
 	auto& infoOrganizer = ::getInfoOrganizer();
 	NFmiInfoData::Type finalDataType = drawParam->DataType();
+	NFmiInfoData::Type foundBackupDataType = NFmiInfoData::kNoDataType;
 	if(useCrossSectionParams)
 		return ::checkCrossSectionLevelData(finalDataType, givenProducer);
 
@@ -3061,14 +3252,22 @@ NFmiInfoData::Type getFinalDataType(boost::shared_ptr<NFmiDrawParam>& drawParam,
 			{
 				if(!fGroundData && info->SizeLevels() > 1)
 				{
-					if(info->Level()->LevelType() == drawParam->Level().LevelType())
+					if(info->LevelType() == drawParam->Level().LevelType())
 					{
-						return info->DataType();
+						auto actualInfoDataType = info->DataType();
+						if(actualInfoDataType == finalDataType)
+							return actualInfoDataType;
+						else
+							foundBackupDataType = actualInfoDataType;
 					}
 				}
 				else if(fGroundData && info->SizeLevels() == 1)
 				{
-					return info->DataType();
+					auto actualInfoDataType = info->DataType();
+					if(actualInfoDataType == finalDataType)
+						return actualInfoDataType;
+					else
+						foundBackupDataType = actualInfoDataType;
 				}
 			}
 		}
@@ -3083,6 +3282,9 @@ NFmiInfoData::Type getFinalDataType(boost::shared_ptr<NFmiDrawParam>& drawParam,
 	boost::shared_ptr<NFmiFastQueryInfo> helpData = infoOrganizer.FindInfo(NFmiInfoData::kEditingHelpData, 0);
 	if(helpData && givenProducer == *(helpData->Producer()))
 		return NFmiInfoData::kEditingHelpData;
+
+	if(foundBackupDataType != NFmiInfoData::kNoDataType)
+		return foundBackupDataType;
 
 	return finalDataType;
 }
@@ -3732,14 +3934,14 @@ void NFmiCombinedMapHandler::setWantedLayerIndex(const NFmiCombinedMapModeState&
 		if(combinedMapModeState.isLocalMapCurrentlyInUse())
 			getMapViewDescTop(mapViewDescTopIndex)->MapHandler(mapAreaIndex)->UsedMapIndex(combinedMapModeState.currentMapSectionIndex());
 		else
-			getWmsSupport().getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setBackgroundIndex(combinedMapModeState.currentMapSectionIndex());
+			getWmsSupport()->getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setBackgroundIndex(combinedMapModeState.currentMapSectionIndex());
 	}
 	else
 	{
 		if(combinedMapModeState.isLocalMapCurrentlyInUse())
 			getMapViewDescTop(mapViewDescTopIndex)->MapHandler(mapAreaIndex)->OverMapBitmapIndex(combinedMapModeState.currentMapSectionIndex());
 		else
-			getWmsSupport().getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setOverlayIndex(combinedMapModeState.currentMapSectionIndex());
+			getWmsSupport()->getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setOverlayIndex(combinedMapModeState.currentMapSectionIndex());
 	}
 }
 
@@ -4231,9 +4433,10 @@ void NFmiCombinedMapHandler::onShowTimeString(unsigned int mapViewDescTopIndex)
 	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Toggle show time on map view mode");
 }
 
-WmsSupportInterface& NFmiCombinedMapHandler::getWmsSupport()
+std::shared_ptr<WmsSupportInterface> NFmiCombinedMapHandler::getWmsSupport() const
 {
-	return *wmsSupport_;
+	std::lock_guard<std::mutex> lock(wmsSupportMutex_);
+	return wmsSupport_;
 }
 
 void NFmiCombinedMapHandler::onToggleLandBorderDrawColor(unsigned int mapViewDescTopIndex)
@@ -4367,12 +4570,12 @@ std::string NFmiCombinedMapHandler::getCurrentMapLayerGuiName(int mapViewDescTop
 		if(backgroundMap)
 		{
 			auto mapLayerIndex = getCombinedMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).currentMapSectionIndex();
-			return ::getWmsMapLayerGuiName(mapLayerIndex, getWmsSupport().getSetup()->background, false);
+			return ::getWmsMapLayerGuiName(mapLayerIndex, getWmsSupport()->getSetup()->background, false);
 		}
 		else
 		{
 			auto mapLayerIndex = getCombinedOverlayMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).currentMapSectionIndex();
-			return ::getWmsMapLayerGuiName(mapLayerIndex, getWmsSupport().getSetup()->overlay, false);
+			return ::getWmsMapLayerGuiName(mapLayerIndex, getWmsSupport()->getSetup()->overlay, false);
 		}
 	}
 	else
@@ -4522,10 +4725,11 @@ void NFmiCombinedMapHandler::initializeStaticMapLayerInfos(std::vector<MapAreaMa
 
 void NFmiCombinedMapHandler::initializeWmsMapLayerInfos()
 {
-	if(getWmsSupport().isConfigured())
+	auto wmsSupportPtr = getWmsSupport();
+	if(wmsSupportPtr->isConfigured())
 	{
-		::initializeWmsMapLayerInfos(wmsBackgroundMapLayerRelatedInfos_, getWmsSupport().getSetup()->background);
-		::initializeWmsMapLayerInfos(wmsOverlayMapLayerRelatedInfos_, getWmsSupport().getSetup()->overlay);
+		::initializeWmsMapLayerInfos(wmsBackgroundMapLayerRelatedInfos_, wmsSupportPtr->getSetup()->background);
+		::initializeWmsMapLayerInfos(wmsOverlayMapLayerRelatedInfos_, wmsSupportPtr->getSetup()->overlay);
 	}
 }
 
