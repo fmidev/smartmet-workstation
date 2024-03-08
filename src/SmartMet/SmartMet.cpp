@@ -509,18 +509,27 @@ static void AddPossibleButtonTooltip(CSmartMetApp::ControlIdTextMap &tooltipItem
 // Ajetaan kun GeneralDataDoc on initialisoitu (eli kun konfiguraatiot on alustettu).
 void CSmartMetApp::InitNonDictionaryToolbarItems()
 {
-    // Toolbarissa olevat kartta nappien tooltip tekstit pitää ottaa konfiguraatioista.
-    // Täällä täytetään id-text map, josta kyseiset tekstit saa vastaavaa button id:tä vastaan.
-    // Pääkarttanäytön toolbar button id:t
-    ::AddPossibleButtonTooltip(itsNonDictionaryToolbarItems, ID_BUTTON_SELECT_FINLAND_MAP, "MetEditor::ButtonTooltip::Map1");
-    ::AddPossibleButtonTooltip(itsNonDictionaryToolbarItems, ID_BUTTON_SELECT_SCANDINAVIA_MAP, "MetEditor::ButtonTooltip::Map2");
-    ::AddPossibleButtonTooltip(itsNonDictionaryToolbarItems, ID_BUTTON_SELECT_EUROPE_MAP, "MetEditor::ButtonTooltip::Map3");
-    ::AddPossibleButtonTooltip(itsNonDictionaryToolbarItems, ID_BUTTON_GLOBE, "MetEditor::ButtonTooltip::Map4");
-    // Apukarttanäyttöjen toolbar button id:t laitetaan lukuina, koska en halua includata SmartMetToolboxDep\SmartMetToolboxDep_resource.h -tiedostoa
-    ::AddPossibleButtonTooltip(itsNonDictionaryToolbarItems, 32816, "MetEditor::ButtonTooltip::Map1");
-    ::AddPossibleButtonTooltip(itsNonDictionaryToolbarItems, 32946, "MetEditor::ButtonTooltip::Map2");
-    ::AddPossibleButtonTooltip(itsNonDictionaryToolbarItems, 32817, "MetEditor::ButtonTooltip::Map3");
-    ::AddPossibleButtonTooltip(itsNonDictionaryToolbarItems, 32886, "MetEditor::ButtonTooltip::Map4");
+    try
+    {
+        // Toolbarissa olevat kartta nappien tooltip tekstit pitää ottaa konfiguraatioista.
+        // Täällä täytetään id-text map, josta kyseiset tekstit saa vastaavaa button id:tä vastaan.
+        // Pääkarttanäytön toolbar button id:t
+        ::AddPossibleButtonTooltip(itsNonDictionaryToolbarItems, ID_BUTTON_SELECT_FINLAND_MAP, "MetEditor::ButtonTooltip::Map1");
+        ::AddPossibleButtonTooltip(itsNonDictionaryToolbarItems, ID_BUTTON_SELECT_SCANDINAVIA_MAP, "MetEditor::ButtonTooltip::Map2");
+        ::AddPossibleButtonTooltip(itsNonDictionaryToolbarItems, ID_BUTTON_SELECT_EUROPE_MAP, "MetEditor::ButtonTooltip::Map3");
+        ::AddPossibleButtonTooltip(itsNonDictionaryToolbarItems, ID_BUTTON_GLOBE, "MetEditor::ButtonTooltip::Map4");
+        // Apukarttanäyttöjen toolbar button id:t laitetaan lukuina, koska en halua includata SmartMetToolboxDep\SmartMetToolboxDep_resource.h -tiedostoa
+        ::AddPossibleButtonTooltip(itsNonDictionaryToolbarItems, 32816, "MetEditor::ButtonTooltip::Map1");
+        ::AddPossibleButtonTooltip(itsNonDictionaryToolbarItems, 32946, "MetEditor::ButtonTooltip::Map2");
+        ::AddPossibleButtonTooltip(itsNonDictionaryToolbarItems, 32817, "MetEditor::ButtonTooltip::Map3");
+        ::AddPossibleButtonTooltip(itsNonDictionaryToolbarItems, 32886, "MetEditor::ButtonTooltip::Map4");
+    }
+    catch(std::exception& e)
+    {
+        std::string errorString = "Error in CSmartMetApp::InitNonDictionaryToolbarItems: ";
+        errorString += e.what();
+        CatLog::logMessage(errorString, CatLog::Severity::Error, CatLog::Category::Operational, true);
+    }
 }
 
 // Tämän funktion avulla saadaan status ja tooltip stringeistä
