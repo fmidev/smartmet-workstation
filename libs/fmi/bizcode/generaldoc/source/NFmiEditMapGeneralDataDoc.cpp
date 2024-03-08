@@ -1288,7 +1288,7 @@ void InitCombinedMapHandler()
 	Wms::CapabilitiesHandler::setParameterSelectionUpdateCallback(parameterSelectionUpdateCallback);
 	// NFmiCombinedMapHandler luokka hanskaa itse kaikki poikkeukset ja mahdolliset käyttäjän tekemät ohjelman lopetukset.
 	itsCombinedMapHandler.initialize(itsBasicConfigurations.ControlPath());
-	if(!itsCombinedMapHandler.getWmsSupport()->isConfigured())
+	if(!itsCombinedMapHandler.wmsSupportAvailable())
 	{
 		// Jos wms systeemiä ei oteta käyttöön, pitää lopettaa timer joka odottaa 1. data päivitystä joka 3. sekunti
 		parameterSelectionUpdateCallback();
@@ -10777,7 +10777,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
                 parameterSelectionSystem.addHelpData(prod, menuString, NFmiInfoData::kConceptualModelData, displayName);
             }
 #ifndef DISABLE_CPPRESTSDK
-			if (GetCombinedMapHandler()->getWmsSupport()->isConfigured())
+			if (GetCombinedMapHandler()->wmsSupportAvailable())
 			{
 				auto wmsCallBackFunction = [this]() {return this->GetCombinedMapHandler()->getWmsSupport(); };
 				parameterSelectionSystem.setWmsCallback(wmsCallBackFunction);
