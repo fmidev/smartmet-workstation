@@ -65,6 +65,7 @@ public:
     const std::string& BetaAutomationListPath() const { return itsBetaAutomationListPath; }
     void BetaAutomationListPath(const std::string &newPath) { itsBetaAutomationListPath = newPath; }
     const NFmiTime& SmartMetStartingTime() const { return itsStartingTime; }
+    static void DoInitializationAbortMessageBox(const std::string& errorString, const std::string& titleString, bool throwAbortException);
 
 private:
 	bool ReadConfigurations();
