@@ -42,6 +42,7 @@
 #include "wmssupport/Setup.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "wmssupport/ChangedLayers.h"
+#include "NFmiBasicSmartMetConfigurations.h"
 
 #ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupport.h"
@@ -892,12 +893,7 @@ void NFmiCombinedMapHandler::initialize(const std::string & absoluteControlPath)
 		initCrossSectionDrawParamListVector();
 		initMapConfigurationSystemMain();
 		initProjectionCurvatureInfo();
-
-		int mapViewCount = ::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewCount();
-		// MapView-indeksit alkavat 0:sta
-		std::string baseSettingStr("MetEditor::MapView::");
-		for(int mapViewIndex = 0; mapViewIndex < mapViewCount; mapViewIndex++)
-			mapViewDescTops_.emplace_back(createMapViewDescTop(baseSettingStr, mapViewIndex));
+		initMapViewDescTops();
 
 		initLandBorderDrawingSystem();
 		initWmsSupport();
@@ -910,6 +906,27 @@ void NFmiCombinedMapHandler::initialize(const std::string & absoluteControlPath)
 		errStr += " - Initialization error in configurations: \n";
 		errStr += e.what();
 		logAndWarnUser(errStr, "Problems with map view settings", CatLog::Severity::Error, CatLog::Category::Configuration, true);
+	}
+}
+
+void NFmiCombinedMapHandler::initMapViewDescTops()
+{
+	try
+	{
+		int mapViewCount = ::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewCount();
+		// MapView-indeksit alkavat 0:sta
+		std::string baseSettingStr("MetEditor::MapView::");
+		for(int mapViewIndex = 0; mapViewIndex < mapViewCount; mapViewIndex++)
+		{
+			mapViewDescTops_.emplace_back(createMapViewDescTop(baseSettingStr, mapViewIndex));
+		}
+	}
+	catch(std::exception& e)
+	{
+		std::string errStr = __FUNCTION__;
+		errStr += " - cannot initialize map view settings from configurations: \n";
+		errStr += e.what();
+		NFmiBasicSmartMetConfigurations::DoInitializationAbortMessageBox(errStr, "Map view settings error", true);
 	}
 }
 
@@ -4725,9 +4742,9 @@ void NFmiCombinedMapHandler::initializeStaticMapLayerInfos(std::vector<MapAreaMa
 
 void NFmiCombinedMapHandler::initializeWmsMapLayerInfos()
 {
-	auto wmsSupportPtr = getWmsSupport();
-	if(wmsSupportPtr->isConfigured())
+	if(wmsSupportAvailable())
 	{
+		auto wmsSupportPtr = getWmsSupport();
 		::initializeWmsMapLayerInfos(wmsBackgroundMapLayerRelatedInfos_, wmsSupportPtr->getSetup()->background);
 		::initializeWmsMapLayerInfos(wmsOverlayMapLayerRelatedInfos_, wmsSupportPtr->getSetup()->overlay);
 	}
