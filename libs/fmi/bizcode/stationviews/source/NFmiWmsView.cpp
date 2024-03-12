@@ -15,6 +15,7 @@
 #include "CtrlViewGdiPlusFunctions.h"
 #include "CtrlViewFunctions.h"
 #include "catlog/catlog.h"
+#include "WmsSupport/ChangedLayers.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -96,9 +97,20 @@ std::string NFmiWmsView::ComposeToolTipText(const NFmiPoint& theRelativePoint)
 {
     try
     {
-        auto parameterStr = itsCtrlViewDocumentInterface->GetWmsSupport()->getFullLayerName(itsDrawParam->Param());
-        auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
-        parameterStr = AddColorTagsToString(parameterStr, fontColor, true);
+        std::string parameterStr;
+        auto wmsSupportPtr = itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().getWmsSupport();
+        if(wmsSupportPtr)
+        {
+            const auto& dataIdent = itsDrawParam->Param();
+            parameterStr = itsCtrlViewDocumentInterface->GetWmsSupport()->getFullLayerName(dataIdent);
+            auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
+            parameterStr = AddColorTagsToString(parameterStr, fontColor, true);
+            auto timeDimensionStr = wmsSupportPtr->makeWmsLayerTimeDimensionTooltipString(dataIdent, true);
+            if(!timeDimensionStr.empty())
+            {
+                parameterStr += timeDimensionStr;
+            }
+        }
         return parameterStr;
     }
     catch(std::exception& e)

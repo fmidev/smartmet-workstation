@@ -538,12 +538,10 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForWmsDataCategoryType(const 
             {
                 auto wmsSupportPtr = itsSmartMetDocumentInterface->GetCombinedMapHandlerInterface().getWmsSupport();
                 NFmiDataIdent wmsLayerDataIdent(NFmiParam(usedSingleRowItem.itemId()), NFmiProducer(usedSingleRowItem.parentItemId()));
-                auto layerInfo = wmsSupportPtr->getHashedLayerInfo(wmsLayerDataIdent);
-                str += "<br><b>Start time: </b> \t" + std::string(layerInfo.startTime.ToStr("YYYY.MM.DD HH:mm", kEnglish));
-                str += "<br><b>End time: </b> \t" + std::string(layerInfo.endTime.ToStr("YYYY.MM.DD HH:mm", kEnglish));
-                if(!layerInfo.possibleResolution.empty())
+                auto timeDimensionStr = wmsSupportPtr->makeWmsLayerTimeDimensionTooltipString(wmsLayerDataIdent, false);
+                if(!timeDimensionStr.empty())
                 {
-                    str += "<br><b>Time resolution: </b> \t" + layerInfo.possibleResolution;
+                    str += timeDimensionStr;
                 }
             }
         }

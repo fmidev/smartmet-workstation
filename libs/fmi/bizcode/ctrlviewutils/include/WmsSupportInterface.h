@@ -46,6 +46,7 @@ public:
     virtual bool isTotalMapViewStaticMapClientStateAvailable() const = 0;
     virtual bool isSetToBeKilled() const = 0;
     virtual bool getCapabilitiesHaveBeenRetrieved() const = 0;
+    virtual std::string makeWmsLayerTimeDimensionTooltipString(const NFmiDataIdent& dataIdent, bool shortVersion) const = 0;
 #ifndef DISABLE_CPPRESTSDK
     virtual std::shared_ptr<Wms::CapabilityTree> getCapabilityTree() const = 0;
     // Kun varsinaisia kyselyjä on tarkoitus tehdä, kannattaa varmistaa tällä että onko systeemi jo käytössä
