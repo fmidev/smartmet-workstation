@@ -16,6 +16,7 @@
 #include "CtrlViewWin32Functions.h"
 #include "NFmiMacroParamDataCache.h"
 #include "SpecialDesctopIndex.h"
+#include "WaitCursorHelper.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -84,7 +85,7 @@ void CFmiCrossSectionView::OnDraw(CDC* pDC)
 	CBitmap *oldBitmap = 0;
 	if(fViewDirty)
 	{
-		CFmiWin32Helpers::WaitCursorHelper waitCursorHelper(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
+		WaitCursorHelper waitCursorHelper(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
 		if(itsMemoryBitmap)
 			itsMemoryBitmap->DeleteObject();
 		else

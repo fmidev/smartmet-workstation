@@ -611,25 +611,6 @@ bool CFmiWin32Helpers::IsWindowMaximized(CWnd *win)
     return false;
 }
 
-
-CFmiWin32Helpers::WaitCursorHelper::WaitCursorHelper(bool showWaitCursor)
-    :fShowWaitCursor(showWaitCursor)
-{
-    if(fShowWaitCursor)
-    {
-        // Tiimalasi halutaan laittaa päälle vain jos ei ole animaatiota karttanäytössä käynnissä
-        AfxGetApp()->BeginWaitCursor();
-    }
-}
-
-CFmiWin32Helpers::WaitCursorHelper::~WaitCursorHelper()
-{
-    if(fShowWaitCursor)
-    {
-        AfxGetApp()->EndWaitCursor();
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////
 //	STATIC MEMBER FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////

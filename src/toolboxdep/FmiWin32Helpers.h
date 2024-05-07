@@ -78,14 +78,6 @@ namespace CFmiWin32Helpers
     bool IsShowCommandMinimized(UINT showCommand);
     bool IsShowCommandMaximized(UINT showCommand);
 
-	class WaitCursorHelper
-	{
-		bool fShowWaitCursor = false;
-	public:
-		WaitCursorHelper(bool showWaitCursor);
-		~WaitCursorHelper();
-	};
-
 	void SetPrinterMode(CDC* pDC, int Mode);
 
 	bool StopMouseEventWhenPrinting(NFmiToolBox *theUsedToolBox);
