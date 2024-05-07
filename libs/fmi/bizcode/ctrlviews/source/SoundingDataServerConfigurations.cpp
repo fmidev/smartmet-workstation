@@ -189,6 +189,18 @@ std::string SoundingDataServerConfigurations::dataNameOnServer(int producerId) c
     return ::getInfoFromProducer(producerId, modelConfigurations_, std::string(), [](auto &iter) {return iter->dataNameOnServer(); });
 }
 
+const ModelDataServerConfiguration* SoundingDataServerConfigurations::getServerConfiguration(int producerId) const
+{
+    auto findProducerLambda = makeFindProducerLambda(producerId);
+    auto iter = std::find_if(modelConfigurations_.begin(), modelConfigurations_.end(), findProducerLambda);
+    if(iter == modelConfigurations_.end())
+    {
+        return nullptr;
+    }
+
+    return &(*iter);
+}
+
 static std::string makeLonlatString(const NFmiPoint &latlon)
 {
     std::string str = std::to_string(latlon.X());
@@ -201,28 +213,25 @@ std::string SoundingDataServerConfigurations::makeFinalServerRequestUrl(int prod
 {
     try
     {
-        std::string requestStr = getSelectedBaseUrl();
-        if(requestStr.empty())
+        auto serverConfigurationPtr = getServerConfiguration(producerId);
+        if(!serverConfigurationPtr)
+            throw std::runtime_error(std::string("Error in ") + __FUNCTION__ + ", can't find server-configuration from given producer id " + std::to_string(producerId));
+
+        auto baseRequestStr = getSelectedBaseUrl();
+        if(baseRequestStr.empty())
             throw std::runtime_error("Error in SoundingDataServerConfigurations::makeFinalServerRequestUri, illegal server url selected (empty)");
+
+        if(serverConfigurationPtr->gribDataCase())
+        {
+            return makeFinalGribDataServerRequestUrl(baseRequestStr, *serverConfigurationPtr, validTime, latlon);
+        }
+
+        std::string requestStr = baseRequestStr;
         requestStr += "producer=";
         requestStr += dataNameOnServer(producerId);
-        requestStr += "&lonlat=";
-        requestStr += makeLonlatString(latlon);
         requestStr += "&param=";
         requestStr += wantedParametersString_;
-        requestStr += "&timesteps=1";
-        requestStr += "&format=ascii";
-        requestStr += "&precision=double";
-        // Oletus paluu formaatti on YYYYMMDDTHHMISS eli siinä on 'T' kirjain päiväyksen ja kellon välissä
-        // Nyt halutaan käyttää timestamp formaattia, jossa iso integer luku ilman sekunteja ja 'T' kirjainta eli muotoa: YYYYMMDDHHmm
-        requestStr += "&timeformat=timestamp";
-        // Kaikki requestissa ja palauuarvoissa olevat ajat halutaan UTC ajassa
-        requestStr += "&tz=utc";
-        // Ei haeta origintime:n avulla, haetaan toistaiseksi vain viimeisintä mallidataa, joka löytyy serveriltä
-        //requestStr += "&origintime=";
-        //requestStr += originTime.ToStr(kYYYYMMDDHHMM);
-        requestStr += "&starttime=";
-        requestStr += validTime.ToStr(kYYYYMMDDHHMM);
+        requestStr += makeBaseUrlParameterString(validTime, latlon);
         return requestStr;
     }
     catch(std::exception &e)
@@ -233,6 +242,37 @@ std::string SoundingDataServerConfigurations::makeFinalServerRequestUrl(int prod
         CatLog::logMessage(errorStr, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
     }
     return "";
+}
+
+std::string SoundingDataServerConfigurations::makeBaseUrlParameterString(const NFmiMetTime& validTime, const NFmiPoint& latlon) const
+{
+    std::string urlParameterStr;
+    urlParameterStr += "&lonlat=";
+    urlParameterStr += makeLonlatString(latlon);
+    urlParameterStr += "&timesteps=1";
+    urlParameterStr += "&format=ascii";
+    urlParameterStr += "&precision=double";
+    // Oletus paluu formaatti on YYYYMMDDTHHMISS eli siinä on 'T' kirjain päiväyksen ja kellon välissä
+    // Nyt halutaan käyttää timestamp formaattia, jossa iso integer luku ilman sekunteja ja 'T' kirjainta eli muotoa: YYYYMMDDHHmm
+    urlParameterStr += "&timeformat=timestamp";
+    // Kaikki requestissa ja palauuarvoissa olevat ajat halutaan UTC ajassa
+    urlParameterStr += "&tz=utc";
+    // Ei haeta origintime:n avulla, haetaan toistaiseksi vain viimeisintä mallidataa, joka löytyy serveriltä
+    //urlParameterStr += "&origintime=";
+    //urlParameterStr += originTime.ToStr(kYYYYMMDDHHMM);
+    urlParameterStr += "&starttime=";
+    urlParameterStr += validTime.ToStr(kYYYYMMDDHHMM);
+
+    return urlParameterStr;
+}
+
+std::string SoundingDataServerConfigurations::makeFinalGribDataServerRequestUrl(const std::string &baseRequestStr, const ModelDataServerConfiguration& gribDataServerConfiguration, const NFmiMetTime& validTime, const NFmiPoint& latlon) const
+{
+    std::string requestStr = baseRequestStr;
+    requestStr += "&param=";
+    requestStr += gribDataServerConfiguration.finalGribDataParamsStr();
+    requestStr += makeBaseUrlParameterString(validTime, latlon);
+    return requestStr;
 }
 
 int SoundingDataServerConfigurations::selectedBaseUrlIndex() const

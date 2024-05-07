@@ -40,6 +40,7 @@ public:
     int selectedBaseUrlIndex() const;
     void setSelectedBaseUrlIndex(int newValue);
     const std::string& getSelectedBaseUrl() const;
+    const ModelDataServerConfiguration* getServerConfiguration(int producerId) const;
 
 private:
     bool mustDoConfigurationOverride(HKEY usedKey);
@@ -47,5 +48,7 @@ private:
     std::string makeWantedParametersString() const;
     std::string dataNameOnServer(int producerId) const;
     void initBaseUrlVector();
+    std::string makeFinalGribDataServerRequestUrl(const std::string& baseRequestStr, const ModelDataServerConfiguration& gribDataServerConfiguration, const NFmiMetTime& validTime, const NFmiPoint& latlon) const;
+    std::string makeBaseUrlParameterString(const NFmiMetTime& validTime, const NFmiPoint& latlon) const;
 };
 
