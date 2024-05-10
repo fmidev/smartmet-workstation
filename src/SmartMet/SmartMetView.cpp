@@ -1389,7 +1389,7 @@ void CSmartMetView::OnLButtonUp(UINT nFlags, CPoint point)
 	if(CtrlView::HandleUrlMouseActions(itsCurrentOpenUrlAction))
 	{
 		// 2. Sitten mahdollisesti hanskataan se klikatun pisteen url-action
-		CtrlView::OpenWantedUrlInBrowser(itsCurrentOpenUrlAction);
+		CtrlView::OpenWantedUrlInBrowser(itsCurrentOpenUrlAction, itsMapViewDescTopIndex);
 	}
 	// 3. Lopuksi aina nollataan menossa oleva url-action asetus
 	itsCurrentOpenUrlAction = SmartMetOpenUrlAction::None;

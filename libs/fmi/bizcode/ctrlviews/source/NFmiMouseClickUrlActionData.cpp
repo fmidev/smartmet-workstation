@@ -2,6 +2,7 @@
 #include "SettingsFunctions.h"
 #include "NFmiSettings.h"
 #include "NFmiStringTools.h"
+#include "NFmiMetTime.h"
 #include "catlog/catlog.h"
 
 #include <boost/algorithm/string.hpp>
@@ -89,22 +90,34 @@ namespace
         return static_cast<int>(urlAction);
     }
 
-    std::string makeAreaInfoString(const NFmiPoint& latlon, float areaRadiusInKm, bool includeRadius)
+    std::string makePointInfoString(const NFmiPoint& latlon)
     {
-        std::string areaInfoStr = std::to_string(latlon.Y());
-        areaInfoStr += ",";
-        areaInfoStr += std::to_string(latlon.X());
-        if(includeRadius)
-        {
-            areaInfoStr += ":";
-            auto radiusStr = std::to_string(areaRadiusInKm);
-            // Putsataan lopusta mahdolliset turhat desimaalit
-            boost::trim_right_if(radiusStr, boost::is_any_of("0"));
-            boost::trim_right_if(radiusStr, boost::is_any_of("."));
-            areaInfoStr += radiusStr;
-        }
-        return areaInfoStr;
+        std::string pointInfoStr = std::to_string(latlon.Y());
+        pointInfoStr += ",";
+        pointInfoStr += std::to_string(latlon.X());
+        return pointInfoStr;
     }
+
+    std::string makeTimeInfoString(const NFmiMetTime & atime)
+    {
+        std::string timeInfoStr = atime.ToStr("YYYY-MM-DDTHH:mm:SS", kEnglish);
+        return timeInfoStr;
+    }
+
+    std::string makeAreaRadiusString(float areaRadiusInKm)
+    {
+        std::string areaRadiusStr = std::to_string(areaRadiusInKm);
+        return areaRadiusStr;
+    }
+
+    void replacePossibleSubstrings(std::string& modifiedStr, const std::string& seachStr, const std::string& replacementStr)
+    {
+        if(boost::icontains(modifiedStr, seachStr))
+        {
+            boost::ireplace_all(modifiedStr, seachStr, replacementStr);
+        }
+    }
+
 }
 
 std::map<unsigned int, SmartMetOpenUrlAction> NFmiMouseClickUrlActionData::itsOpenUrlActionKeyMappings =
@@ -188,44 +201,20 @@ const std::string& NFmiMouseClickUrlActionData::GetMouseActionBaseUrl(int index)
 }
 
 const std::string gDefaultPointInfoStr = "%pointinfo%";
-const std::string gDefaultAreaInfoStr = "%areainfo%";
-const std::string gRadiusUrlParameterStr = "&arearadius";
+const std::string gDefaultAreaRadiusStr = "%arearadius%";
+const std::string gDefaultTimeInfoStr = "%timeinfo%";
 
-std::string NFmiMouseClickUrlActionData::GetMouseActionUrl(SmartMetOpenUrlAction urlAction, const NFmiPoint& latlon) const
+std::string NFmiMouseClickUrlActionData::GetMouseActionUrl(SmartMetOpenUrlAction urlAction, const NFmiPoint& latlon, const NFmiMetTime& atime, float areaRadiusInKm) const
 {
     std::string baseUrl = GetMouseActionBaseUrl(SmartMetOpenUrlActionToIndex(urlAction));
     if(!baseUrl.empty())
     {
-        bool hasPointInfo = boost::ifind_last(baseUrl, gDefaultPointInfoStr);
-        bool hasRadiusUrlParameter = boost::ifind_last(baseUrl, gRadiusUrlParameterStr);
-        auto includeRadius = !(hasRadiusUrlParameter || hasPointInfo);
-        auto areaInfoStr = ::makeAreaInfoString(latlon, itsAreaRadiusInKm, includeRadius);
-        if(hasPointInfo)
-        {
-            // Löytyi point-info place-holder, nyt pitää replace:ta se saadulla areaInfoStr:illa
-            boost::ireplace_last(baseUrl, gDefaultPointInfoStr, areaInfoStr);
-        }
-        if(hasRadiusUrlParameter)
-        {
-            // Löytyi area-radius parameter urlista, nyt sen arvo pitää replace:ta se halutulla säteellä
-            // Tehdään tämä myöhemmin!!!!
-            // auto replacedUrlStr = ::getAreaRadiusStringFromUrl(baseUrl);
-            // auto usedAreaRadiusStr = ::makeAreaRadiusString(replacedUrlStr, itsAreaRadiusInKm)
-            // boost::ireplace_last(baseUrl, replacedUrlStr, usedAreaRadiusStr);
-        }
-        if(!hasPointInfo)
-        {
-            if(!boost::ifind_last(baseUrl, gDefaultAreaInfoStr))
-            {
-                // Ei löytynyt placeholderia baseUrl:ista, joten lisätään tehty area-info-string vain perään
-                baseUrl += areaInfoStr;
-            }
-            else
-            {
-                // Löytyi placeholder, nyt pitää replace:ta se saadulla areaInfoStr:illa
-                boost::ireplace_last(baseUrl, gDefaultAreaInfoStr, areaInfoStr);
-            }
-        }
+        auto pointInfoStr = ::makePointInfoString(latlon);
+        ::replacePossibleSubstrings(baseUrl, gDefaultPointInfoStr, pointInfoStr);
+        auto timeInfoStr = ::makeTimeInfoString(atime);
+        ::replacePossibleSubstrings(baseUrl, gDefaultTimeInfoStr, timeInfoStr);
+        auto areaRadiusStr = ::makeAreaRadiusString(areaRadiusInKm);
+        ::replacePossibleSubstrings(baseUrl, gDefaultAreaRadiusStr, areaRadiusStr);
     }
     return baseUrl;
 }

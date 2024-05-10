@@ -55,7 +55,7 @@ namespace CtrlView
     void SetToolBoxsDC(CDC* theDC, NFmiToolBox *theToolBox, const CRect &theClientRect);
     void SetToolMastersDC(CDC* theDC, const CRect &theClientRect);
 
-    void OpenWantedUrlInBrowser(SmartMetOpenUrlAction currentOpenUrlAction);
+    void OpenWantedUrlInBrowser(SmartMetOpenUrlAction currentOpenUrlAction, int mapViewDescTopIndex);
     SmartMetOpenUrlAction GetOpenUrlKeyPressedState();
     bool HandleUrlMouseActions(SmartMetOpenUrlAction currentOpenUrlAction);
 
