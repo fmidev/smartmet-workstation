@@ -30,7 +30,6 @@ set(TARGET_LINK_LIBRARIES_LIST
     TmUtils
     Imagine
     ModifyEditedData
-    Textgen
     DataUtilities
     HakeMessage
 	CapData
@@ -56,7 +55,6 @@ target_include_directories(
     PUBLIC ${TmUtils_INCLUDE_DIRS}
     PUBLIC ${Imagine_INCLUDE_DIRS}
     PUBLIC ${ModifyEditedData_INCLUDE_DIRS}
-    PUBLIC ${Textgen_INCLUDE_DIRS}
     PUBLIC ${DataUtilities_INCLUDE_DIRS}
     PUBLIC ${HakeMessage_INCLUDE_DIRS}
 	PUBLIC ${CapData_INCLUDE_DIRS}
@@ -79,7 +77,6 @@ set(
     ${TmUtils_INCLUDE_DIRS}
     ${Imagine_INCLUDE_DIRS}
     ${ModifyEditedData_INCLUDE_DIRS}
-    ${Textgen_INCLUDE_DIRS}
     ${DataUtilities_INCLUDE_DIRS}
     ${HakeMessage_INCLUDE_DIRS}
 	${CapData_INCLUDE_DIRS}
