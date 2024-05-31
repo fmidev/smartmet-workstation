@@ -1989,8 +1989,16 @@ bool NFmiIsoLineView::FillGridRelatedData_BetterVisualizationChecks(NFmiIsoLineD
             isoLineData.itsTime = this->itsTime; // Tähän pistetään kartalla oleva aika
             // Mutta pitää varmistaa että data interpoloidaan oikealta ajalta myös klimatologisilta datoilta (kuten Era-5, tms.)
             auto usedInterpolationTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(itsInfo, itsTime);
+            auto paramId = itsDrawParam->Param().GetParamIdent();
+            if(metaWindParamUsage.ParamNeedsMetaCalculations(paramId))
+            {
+                FinalFillWindMetaDataMatrix(itsInfo, isoLineData.itsIsolineData, usedInterpolationTime, false, 0, 0, 0, 0, paramId);
+            }
+            else
+            {
+                itsInfo->Values(*dataUtilitiesAdapter->getInterpolatedData(), isoLineData.itsIsolineData, usedInterpolationTime, kFloatMissing, kFloatMissing, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
+            }
 
-            itsInfo->Values(*dataUtilitiesAdapter->getInterpolatedData(), isoLineData.itsIsolineData, usedInterpolationTime, kFloatMissing, kFloatMissing, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
             itsIsolineValues = isoLineData.itsIsolineData;
             fillGridDataStatus = initializeIsoLineData(isoLineData);
             zoomedAreaRect = dataUtilitiesAdapter->getCroppedArea()->XYArea(GetArea().get());
