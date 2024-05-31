@@ -1045,17 +1045,6 @@ void NFmiCrossSectionView::DrawCrosssectionWithToolMaster(NFmiIsoLineData& theIs
 	if(itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
 		relRect = itsTrajectoryDataRect;
 
-	// HUOM!!! viilaan zoom laatikon hienoista ep‰tarkkuutta, pit‰isi korjata area metodeihin!!!
-	static const double errorLimit = 0.000001;
-	if(fabs(zoomedAreaRect.Left()) < errorLimit)
-		zoomedAreaRect.Left(0);
-	if(fabs(zoomedAreaRect.Top()) < errorLimit)
-		zoomedAreaRect.Top(0);
-	if(fabs(1. - zoomedAreaRect.Right()) < errorLimit)
-		zoomedAreaRect.Right(1);
-	if(fabs(1. - zoomedAreaRect.Bottom()) < errorLimit)
-		zoomedAreaRect.Bottom(1);
-
 	if(theIsoLineData.fUseIsoLines)
 		itsCrossSectionIsoLineDrawIndex++;
 	NFmiPoint grid2PixelRatio(0, 0); // t‰t‰ ei k‰ytet‰ viel‰ toistaiseksi poikkileikkaus n‰ytˆss‰, siksi alustetaan 0:ksi.
@@ -1760,6 +1749,16 @@ static NFmiDataMatrix<float> MakePressureLevelBasedPressureMatrix(size_t xSize, 
 	{
 		auto& pressureColumn = pressureValues[pressureColumnIndex];
 		pressureColumn = pressureLevelValuesBS;
+	}
+
+	if((usedInfo.HeightDataAvailable() && !usedInfo.HeightParamIsRising()) ||
+		((usedInfo.PressureDataAvailable()) && usedInfo.PressureParamIsRising()))
+	{
+		// paineet pit‰‰ k‰‰nt‰‰, koska ne k‰‰nnet‰‰n myˆs datan haussa
+		for(auto& pressureVector : pressureValues)
+		{
+			std::reverse(pressureVector.begin(), pressureVector.end());
+		}
 	}
 	return pressureValues;
 }
