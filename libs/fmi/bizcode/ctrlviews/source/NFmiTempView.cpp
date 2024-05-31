@@ -2046,7 +2046,11 @@ NFmiGroundLevelValue NFmiTempView::GetPossibleGroundLevelValue(boost::shared_ptr
 			if(topoData && topoData->Param(kFmiTopoGraf))
 			{
 				// Otetaan topo datasta korkeus metreissä ja muunnetaan se standardi-ilmakehän paineeksi
-				groundLevelValue.itsTopographyHeightInMillibars = static_cast<float>(CalcPressureAtHeight(topoData->InterpolatedValue(latlon) / 1000.f));
+				auto topoHeightInMeters = topoData->InterpolatedValue(latlon);
+				if(topoHeightInMeters != kFloatMissing)
+				{
+					groundLevelValue.itsTopographyHeightInMillibars = static_cast<float>(CalcPressureAtHeight(topoHeightInMeters / 1000.f));
+				}
 			}
 		}
 	}
