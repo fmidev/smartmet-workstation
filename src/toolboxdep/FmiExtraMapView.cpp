@@ -249,7 +249,15 @@ void CFmiExtraMapView::DoDraw(void)
 
 bool CFmiExtraMapView::GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC)
 {
+	try
+	{
 	return MapDraw::GenerateMapBitmap(CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC, nullptr);
+	}
+	catch(std::exception& e)
+	{
+		CatLog::logMessage(e.what(), CatLog::Severity::Error, CatLog::Category::Configuration, true);
+		return false;
+	}
 }
 
 // asettaa toolmasterin ja toolboxin DC:t
