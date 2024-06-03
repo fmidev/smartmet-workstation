@@ -18,14 +18,6 @@ static char THIS_FILE[] = __FILE__;
 
 namespace Wms
 {
-    namespace
-    {
-        int getOrientationOf(const AreaWithOrientation& area)
-        {
-            return static_cast<int>(area.Orientation());
-        }
-    }
-
     EpsgParser::EpsgParser(const std::string& stereo00, const std::string& stereo10, const std::string& stereo20)
         : stereo00_{ stereo00 }
         , stereo10_{ stereo10 }
@@ -54,21 +46,25 @@ namespace Wms
 
     std::string EpsgParser::stereographicToEpsg(const NFmiArea& area) const
     {
-        decltype(auto) areaWithOrientation = static_cast<const AreaWithOrientation&>(area);
-        auto orientation = getOrientationOf(areaWithOrientation);
-        auto epsg = std::string{};
-        if(orientation == 0)
+        auto *areaWithOrientation = dynamic_cast<const AreaWithOrientation*>(&area);
+        if(areaWithOrientation)
         {
-            epsg = stereo00_;
+            auto orientation = areaWithOrientation->Orientation();
+            auto epsg = std::string{};
+            if(orientation == 0)
+            {
+                epsg = stereo00_;
+            }
+            else if(orientation == 10)
+            {
+                epsg = stereo10_;
+            }
+            else if(orientation == 20)
+            {
+                epsg = stereo20_;
+            }
+            return epsg;
         }
-        else if (orientation == 10)
-        {
-            epsg = stereo10_;
-        }
-        else if(orientation == 20)
-        {
-            epsg = stereo20_;
-        }
-        return epsg;
+        return "";
     }
 }
