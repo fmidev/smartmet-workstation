@@ -107,7 +107,10 @@ private:
 
 // Talletetaan jokaista uniikkia datanimeä kohden pari, jossa on datan tyyppi ja lukumäärä int arvona.
 using CaseStudyCountMap = std::map<std::string, std::pair<NFmiInfoData::Type, boost::shared_ptr<CachedRegInt>>>;
-const std::pair<int, int> gMissingIndexRange = std::make_pair(-1, -1);
+using ModelDataOffsetRangeInHours = std::pair<int, int>;
+const ModelDataOffsetRangeInHours gMissingOffsetRangeInHours = std::make_pair(-1, -1);
+const ModelDataOffsetRangeInHours gLatestDataOnlyRangeInHours = std::make_pair(0, 0);
+const ModelDataOffsetRangeInHours gDefaultModelDataOffsetRangeInHours = std::make_pair(24, 0);
 
 // CaseStudy dialogiin liittyvien asetuksien asetukset Windows rekisterissä:
 // 1) Kuinka monta viimeistä dataa säilytetään lokaali cachessa
@@ -126,16 +129,16 @@ public:
 
     int GetHelpDataLocalCacheCount(const std::string& uniqueDataName) const;
     void SetHelpDataLocalCacheCount(const std::string& uniqueDataName, int newValue);
-    std::pair<int, int> GetHelpDataCaseStudyIndexRange(const std::string& uniqueDataName) const;
-    void SetHelpDataCaseStudyIndexRange(const std::string& uniqueDataName, const std::pair<int, int> &indexRange);
+    ModelDataOffsetRangeInHours GetHelpDataCaseStudyOffsetRangeInHours(const std::string& uniqueDataName) const;
+    void SetHelpDataCaseStudyOffsetRangeInHours(const std::string& uniqueDataName, const ModelDataOffsetRangeInHours &offsetRangeInHours);
     bool GetStoreDataState(const std::string& uniqueDataName) const;
     void SetStoreDataState(const std::string& uniqueDataName, bool newState);
     static int GetDefaultCaseStudyCountValue(NFmiInfoData::Type dataType);
     static int GetDefaultLocalCacheCountValue(NFmiInfoData::Type dataType);
     NFmiHelpDataEnableWinRegistry& HelpDataEnableWinRegistry() { return mHelpDataEnableWinRegistry; }
     CaseStudyCountMap& GetHelpDataLocalCacheCountMap() { return mHelpDataLocalCacheCountMap; }
-    CaseStudyCountMap& GetHelpDataCaseStudyIndex1Map() { return mHelpDataCaseStudyIndex1Map; }
-    CaseStudyCountMap& GetHelpDataCaseStudyIndex2Map() { return mHelpDataCaseStudyIndex2Map; }
+    CaseStudyCountMap& GetHelpDataCaseStudyOffset1Map() { return mHelpDataCaseStudyOffset1Map; }
+    CaseStudyCountMap& GetHelpDataCaseStudyOffset2Map() { return mHelpDataCaseStudyOffset2Map; }
     CaseStudyBoolMap& GetCaseStudyStoreDataMap() { return  mCaseStudyStoreDataMap; }
 
 private:
@@ -143,8 +146,8 @@ private:
 
     std::string mBaseRegistryPath;
     std::string mSectionNameLocalCacheCount; // tässä on LocalCacheCount
-    std::string mSectionNameCaseStudyIndex1; // tässä on CaseStudyIndex1
-    std::string mSectionNameCaseStudyIndex2; // tässä on CaseStudyIndex2
+    std::string mSectionNameCaseStudyOffset1; // tässä on CaseStudyOffset1
+    std::string mSectionNameCaseStudyOffset2; // tässä on CaseStudyOffset2
     std::string mSectionNameStoreData; // tässä on StoreData
 
     // Kaikkien queryData konffien EnableData -osio
@@ -159,10 +162,10 @@ private:
     // Muuten cell:in string arvossa on kaksi lukua eroteltuna '-' merkillä ,esim. "4-3". Tällöin talletetaan 4. tuorein ja 3. tuorein, mutta ei 2. ja 1. tuoreimpia.
     // Näin voi tallettaa CaseStudyn jälkikäteen vaikka eilisen datoilla niin että uusimpia datoja ei tarvitse sulloa väkisin datapakettiin.
 
-    // Tässä on siis aloitus indeksi, joka kertoo vanhimman talletettavan datan järjestysnumeron.
-    CaseStudyCountMap mHelpDataCaseStudyIndex1Map;
-    // Tässä on siis lopetus indeksi, joka kertoo tuoreimman talletettavan datan järjestysnumeron (oletusarvo on 1, jolloin se ignoorataan dialogin cell-näytössä).
-    CaseStudyCountMap mHelpDataCaseStudyIndex2Map;
+    // Tässä on siis aloitus offset, joka kertoo talletusikkunan alkuhetken offsetin seinäkelloajasta.
+    CaseStudyCountMap mHelpDataCaseStudyOffset1Map;
+    // Tässä on siis lopetus offset, joka kertoo talletusikkunan loppuhetken offsetin seinäkelloajasta.
+    CaseStudyCountMap mHelpDataCaseStudyOffset2Map;
     CaseStudyBoolMap mCaseStudyStoreDataMap;
     bool mInitialized = false; // ei sallita tupla initialisointia
 };

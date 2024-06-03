@@ -316,6 +316,39 @@ int NFmiCaseStudySettingsWinRegistry::GetDefaultCaseStudyCountValue(NFmiInfoData
     }
 }
 
+static int GetDefaultCaseStudyOffsetInHours(NFmiInfoData::Type dataType, bool doStartOffset)
+{
+    if(!doStartOffset)
+    {
+        return 0;
+    }
+
+    switch(dataType)
+    {
+    case NFmiInfoData::kEditable:
+    case NFmiInfoData::kViewable:
+    case NFmiInfoData::kCopyOfEdited:
+    case NFmiInfoData::kKepaData:
+    case NFmiInfoData::kClimatologyData:
+    case NFmiInfoData::kHybridData:
+    case NFmiInfoData::kFuzzyData:
+    case NFmiInfoData::kVerificationData:
+    case NFmiInfoData::kModelHelpData:
+    case NFmiInfoData::kEditingHelpData:
+        return gDefaultModelDataOffsetRangeInHours.first;
+    case NFmiInfoData::kObservations:
+    case NFmiInfoData::kAnalyzeData:
+    case NFmiInfoData::kFlashData:
+    case NFmiInfoData::kTrajectoryHistoryData:
+    case NFmiInfoData::kSingleStationRadarData:
+        return gLatestDataOnlyRangeInHours.first;
+    case NFmiInfoData::kSatelData:
+        return gDefaultModelDataOffsetRangeInHours.first;
+    default:
+        return 0;
+    }
+}
+
 static void CheckAndFixDataCountValue(NFmiInfoData::Type dataType, boost::shared_ptr<CachedRegInt>& countValue, bool doLocalCacheCount)
 {
     auto defaultCountValueByType = doLocalCacheCount ? NFmiCaseStudySettingsWinRegistry::GetDefaultLocalCacheCountValue(dataType) : NFmiCaseStudySettingsWinRegistry::GetDefaultCaseStudyCountValue(dataType);
@@ -337,22 +370,22 @@ static void CheckAndFixDataCountValue(NFmiInfoData::Type dataType, boost::shared
     }
 }
 
-static void CheckAndFixIndexRangeValues(NFmiInfoData::Type dataType, boost::shared_ptr<CachedRegInt>& index1, boost::shared_ptr<CachedRegInt>& index2)
+static void CheckAndFixOffsetRangeValues(NFmiInfoData::Type dataType, boost::shared_ptr<CachedRegInt>& index1, boost::shared_ptr<CachedRegInt>& index2)
 {
-    // index1 voidaa tarkastaa vanhaan tyyliin
-    ::CheckAndFixDataCountValue(dataType, index1, false);
-
-    // Seuraavat ehdot pätevät index2:lle:
-    // index1 >= index2 ja index2 >= defaultIndex2Value
-    auto defaultIndex2Value = 1;
-    auto index2value = (int)(*index2);
-    if(index2value < defaultIndex2Value)
+    // Seuraavat ehdot pätevät:
+    // index1 ja index2 >= 0
+    // index1 >= index2
+    if(*index1 < 0)
     {
-        *index2 = defaultIndex2Value;
+        *index1 = 0;
     }
-    else if(index2value > *index1)
+    if(*index2 < 0)
     {
-        *index2 = *index1;
+        *index2 = 0;
+    }
+    if(*index1 < *index2)
+    {
+        *index1 = *index2;
     }
 }
 
@@ -368,8 +401,8 @@ bool NFmiCaseStudySettingsWinRegistry::Init(const std::string& baseRegistryPath,
 
     mBaseRegistryPath = baseRegistryPath + "\\CaseStudyDlgSettings";
     mSectionNameLocalCacheCount = "\\LocalCache";
-    mSectionNameCaseStudyIndex1 = "\\CaseStudyIndex1";
-    mSectionNameCaseStudyIndex2 = "\\CaseStudyIndex2";
+    mSectionNameCaseStudyOffset1 = "\\CaseStudyOffset1";
+    mSectionNameCaseStudyOffset2 = "\\CaseStudyOffset2";
     mSectionNameStoreData = "\\StoreData";
 
     for(const auto &helpDataInfo : theHelpDataInfoSystem.DynamicHelpDataInfos())
@@ -399,12 +432,13 @@ void NFmiCaseStudySettingsWinRegistry::InitHelpDataRelatedWinRegValues(const std
     mHelpDataLocalCacheCountMap.insert(std::make_pair(uniqueDataName, std::make_pair(dataType, tmpLocalCacheCountValue)));
 
     // CaseStudy lukemien asetus
-    auto defaultCaseStudyCountValueByType = GetDefaultCaseStudyCountValue(dataType);
-    auto tmpCaseStudyIndex1 = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionNameCaseStudyIndex1, regName.c_str(), usedKey, defaultCaseStudyCountValueByType);
-    auto tmpCaseStudyIndex2 = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionNameCaseStudyIndex2, regName.c_str(), usedKey, 1);
-    ::CheckAndFixIndexRangeValues(dataType, tmpCaseStudyIndex1, tmpCaseStudyIndex2);
-    mHelpDataCaseStudyIndex1Map.insert(std::make_pair(uniqueDataName, std::make_pair(dataType, tmpCaseStudyIndex1)));
-    mHelpDataCaseStudyIndex2Map.insert(std::make_pair(uniqueDataName, std::make_pair(dataType, tmpCaseStudyIndex2)));
+    auto defaultOffset1 = GetDefaultCaseStudyOffsetInHours(dataType, true);
+    auto defaultOffset2 = GetDefaultCaseStudyOffsetInHours(dataType, false);
+    auto tmpCaseStudyOffset1 = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionNameCaseStudyOffset1, regName.c_str(), usedKey, defaultOffset1);
+    auto tmpCaseStudyOffset2 = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, mSectionNameCaseStudyOffset2, regName.c_str(), usedKey, defaultOffset2);
+    ::CheckAndFixOffsetRangeValues(dataType, tmpCaseStudyOffset1, tmpCaseStudyOffset2);
+    mHelpDataCaseStudyOffset1Map.insert(std::make_pair(uniqueDataName, std::make_pair(dataType, tmpCaseStudyOffset1)));
+    mHelpDataCaseStudyOffset2Map.insert(std::make_pair(uniqueDataName, std::make_pair(dataType, tmpCaseStudyOffset2)));
 
     // Store data option asetus
     auto tmpCaseStudyStoreDataState = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, mSectionNameStoreData, regName.c_str(), usedKey, true);
@@ -431,27 +465,27 @@ void NFmiCaseStudySettingsWinRegistry::SetHelpDataLocalCacheCount(const std::str
     }
 }
 
-std::pair<int, int> NFmiCaseStudySettingsWinRegistry::GetHelpDataCaseStudyIndexRange(const std::string& uniqueDataName) const
+ModelDataOffsetRangeInHours NFmiCaseStudySettingsWinRegistry::GetHelpDataCaseStudyOffsetRangeInHours(const std::string& uniqueDataName) const
 {
-    auto iter1 = mHelpDataCaseStudyIndex1Map.find(uniqueDataName);
-    auto iter2 = mHelpDataCaseStudyIndex2Map.find(uniqueDataName);
-    if(iter1 != mHelpDataCaseStudyIndex1Map.end() && iter2 != mHelpDataCaseStudyIndex2Map.end())
+    auto iter1 = mHelpDataCaseStudyOffset1Map.find(uniqueDataName);
+    auto iter2 = mHelpDataCaseStudyOffset2Map.find(uniqueDataName);
+    if(iter1 != mHelpDataCaseStudyOffset1Map.end() && iter2 != mHelpDataCaseStudyOffset2Map.end())
         return std::make_pair(*(iter1->second.second), *(iter2->second.second));
     else
-        return gMissingIndexRange;
+        return gMissingOffsetRangeInHours;
 }
 
-void NFmiCaseStudySettingsWinRegistry::SetHelpDataCaseStudyIndexRange(const std::string& uniqueDataName, const std::pair<int, int>& indexRange)
+void NFmiCaseStudySettingsWinRegistry::SetHelpDataCaseStudyOffsetRangeInHours(const std::string& uniqueDataName, const ModelDataOffsetRangeInHours& offsetRangeInHours)
 {
-    auto iter1 = mHelpDataCaseStudyIndex1Map.find(uniqueDataName);
-    auto iter2 = mHelpDataCaseStudyIndex2Map.find(uniqueDataName);
-    if(iter1 != mHelpDataCaseStudyIndex1Map.end() && iter2 != mHelpDataCaseStudyIndex2Map.end())
+    auto iter1 = mHelpDataCaseStudyOffset1Map.find(uniqueDataName);
+    auto iter2 = mHelpDataCaseStudyOffset2Map.find(uniqueDataName);
+    if(iter1 != mHelpDataCaseStudyOffset1Map.end() && iter2 != mHelpDataCaseStudyOffset2Map.end())
     {
-        auto& index1 = iter1->second.second;
-        *index1 = indexRange.first;
-        auto& index2 = iter2->second.second;
-        *index2 = indexRange.second;
-        ::CheckAndFixIndexRangeValues(iter1->second.first, index1, index2);
+        auto& offset1 = iter1->second.second;
+        *offset1 = offsetRangeInHours.first;
+        auto& offset2 = iter2->second.second;
+        *offset2 = offsetRangeInHours.second;
+        ::CheckAndFixOffsetRangeValues(iter1->second.first, offset1, offset2);
     }
 }
 

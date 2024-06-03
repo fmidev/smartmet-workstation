@@ -40,14 +40,14 @@ namespace
 	const std::string g_GridCtrlHeaderName2 = "Name";
 	const std::string g_GridCtrlHeaderName3 = "ProdId";
 	const std::string g_GridCtrlHeaderName4 = "Store";
-	const std::string g_GridCtrlHeaderName5 = "CS Index-Range";
+	const std::string g_GridCtrlHeaderName5 = "CS [h] Offset-Range";
 	const std::string g_GridCtrlHeaderName6 = "LC CNT";
 	const std::string g_GridCtrlHeaderName7 = "Enable Data";
 	const std::string g_GridCtrlHeaderName8 = "File(s) size [MB]";
 
 	std::string g_GridCtrlHeaderNameExplanation3 = "(= Producer Id)";
 	std::string g_GridCtrlHeaderNameExplanation4 = "(= store data to Case-study package)";
-	std::string g_GridCtrlHeaderNameExplanation5 = "(= Case Study data index range m-n)";
+	std::string g_GridCtrlHeaderNameExplanation5 = "(= Case Study model data stored origin-time offset range in hours)";
 	std::string g_GridCtrlHeaderNameExplanation6 = "(= Local Cache data file Count)";
 	std::string g_GridCtrlHeaderNameExplanation7 = "(= is this data used by SmartMet at all)";
 	std::string g_GridCtrlHeaderNameExplanation7_2 = "(= is this data used by SmartMet at all, now hidden)";
@@ -181,7 +181,7 @@ END_MESSAGE_MAP()
 
 BOOL NFmiCaseStudyGridCtrl::OnInitDialog()
 {
-	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, CASE_STUDY_DIALOG_TOOLTIP_ID, 700);
+	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, CASE_STUDY_DIALOG_TOOLTIP_ID, 800);
 	// Kuinka nopeasti tooltip ilmestyy näkyviin, jos kursoria ei liikuteta [ms],
 	// Laitetaan tähän defaulttia 0.5 s isompi viive eli 1 s.
 	m_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 1000); 
@@ -264,32 +264,14 @@ static NFmiColor GetStoredDataStatusColor(bool storeData)
 	return storeData ? storedFileColor : nonStoredFileColor;
 }
 
-static std::string MakeFinalFilePathTooltipText(const std::string& finalFilePath, int index, bool storeData, bool latestDataOnlyCase)
+static std::string MakeFinalFilePathTooltipText(const std::string& finalFilePath, int index, bool storeData)
 {
 	auto filePathColor = ::GetStoredDataStatusColor(storeData);
 	std::string str = "<br>";
-	if(latestDataOnlyCase)
-	{
-		str += storeData ? "On  " : "Off ";
-	}
-	else
-	{
-		str += std::to_string(index);
-		str += ".  ";
-	}
+	str += std::to_string(index);
+	str += ".  ";
 	str += finalFilePath;
 	return ::GetColoredBoldTextForTooltip(str, true, true, filePathColor);
-}
-
-static bool IsModelRunDataStored(const NFmiCaseStudyDataFile& dataFile, int modelRunIndex)
-{
-	const auto& regValues = dataFile.DataFileWinRegValues();
-	if(regValues.Store())
-	{
-		const auto& indexRange = regValues.CaseStudyDataIndexRange();
-		return indexRange.first >= modelRunIndex && indexRange.second <= modelRunIndex;
-	}
-	return false;
 }
 
 static std::string MakeModelRunText(const std::string& dataFilePath, bool isModelRunStored)
@@ -301,7 +283,7 @@ static std::string MakeModelRunText(const std::string& dataFilePath, bool isMode
 		std::string str = "<br>    ";
 		// Checked symboli 'V' tai crossed-box 'X', utf-8 symbolit eivät näytä toimivan tooltip html piirto systeemin kanssa
 		str += isModelRunStored ? "On " : "Off"; // "&#x2611;" : "&#x2612;";
-		str += " model-run-time  ";
+		str += ": model-run-time  ";
 		str += modelRunTimeString;
 		auto textColor = ::GetStoredDataStatusColor(isModelRunStored);
 		return ::GetColoredBoldTextForTooltip(str, true, true, textColor);
@@ -311,21 +293,74 @@ static std::string MakeModelRunText(const std::string& dataFilePath, bool isMode
 	return ::GetColoredBoldTextForTooltip("<br>Unknown error when opening data file", true, true, NFmiColor(1,0,0));
 }
 
+std::string MakeOffsetTimeString(const NFmiMetTime& offsetTime)
+{
+	return std::string(offsetTime.ToStr("Www H:mm", kEnglish));
+}
+
+std::string MakeRangeOffsetString(const NFmiCaseStudyDataFile& dataFile, const NFmiMetTime& usedWallClockTime)
+{
+	const auto& offsetRange = dataFile.DataFileWinRegValues().CaseStudyModelDataOffsetRangeInHours();
+	std::string rangeStr = "(";
+	auto offsetTime1(usedWallClockTime);
+	offsetTime1.ChangeByMinutes(-(offsetRange.first * 60));
+	rangeStr += ::MakeOffsetTimeString(offsetTime1);
+	rangeStr += " - ";
+	auto offsetTime2(usedWallClockTime);
+	offsetTime2.ChangeByMinutes(-(offsetRange.second * 60));
+	rangeStr += ::MakeOffsetTimeString(offsetTime2);
+	rangeStr += " utc)";
+	return rangeStr;
+}
+
+
+std::string MakeObsRangeOffsetString(const NFmiCaseStudyDataFile& dataFile, const NFmiMetTime& usedWallClockTime)
+{
+	const auto& offsetRange = dataFile.DataFileWinRegValues().CaseStudyModelDataOffsetRangeInHours();
+	if(offsetRange == gLatestDataOnlyRangeInHours)
+	{
+		return "(latest data only)";
+	}
+
+	return MakeRangeOffsetString(dataFile, usedWallClockTime);
+}
+
 // Oletuksia:
 // 1. timeSortedFiles ei ole tyhjä
 // 2. datafile ei ole producer/category header
 // 3. Kyse on model-datasta, jolla voidaan tallettaa useita eri malliajoja
-static std::string MakeModelDataStoredFileListText(const NFmiCaseStudyDataFile& dataFile, const CtrlViewUtils::FileNameWithTimeList &timeSortedFiles)
+static std::string MakeModelDataStoredFileListText(const NFmiCaseStudyDataFile& dataFile, const CaseStudyMatchingFiles &matchingFilePaths, const NFmiMetTime& usedWallClockTime)
 {
 	std::string str = "<br><br>";
-	str += ::GetColoredBoldTextForTooltip("Following model-run data files are available to be stored:", true, false, NFmiColor());
-	int index = 1;
-	for(const auto& fileInfo : timeSortedFiles)
+	if(!dataFile.DataFileWinRegValues().Store())
 	{
-		auto finalFilePath = fileInfo.first;
-		auto isModelRunStored = ::IsModelRunDataStored(dataFile, index);
-		str += ::MakeFinalFilePathTooltipText(finalFilePath, index, isModelRunStored, dataFile.StoreLastDataOnly());
-		str += ::MakeModelRunText(finalFilePath, isModelRunStored);
+		str += ::GetColoredBoldTextForTooltip("None of the following data files will be stored (Store option off) ", true, false, NFmiColor());
+		// Asetetaan vielä kaikki tiedostot false tilaan, eli mitään niistä ei ole tarkoitus tallettaa
+		for(auto matchingFilePath : matchingFilePaths)
+		{
+			matchingFilePath.second = false;
+		}
+	}
+	else if(dataFile.StoreLastDataOnly())
+	{
+		str += ::GetColoredBoldTextForTooltip("Following data files are available but only one to be stored ", true, false, NFmiColor());
+		std::string rangeStr = ::MakeObsRangeOffsetString(dataFile, usedWallClockTime);
+		str += ::GetColoredBoldTextForTooltip(rangeStr, true, false, NFmiColor());
+	}
+	else
+	{
+		str += ::GetColoredBoldTextForTooltip("Following model-run data files are available to be stored ", true, false, NFmiColor());
+		std::string rangeStr = ::MakeRangeOffsetString(dataFile, usedWallClockTime);
+		str += ::GetColoredBoldTextForTooltip(rangeStr, true, false, NFmiColor());
+	}
+	int index = 1;
+	for(const auto& filePath : matchingFilePaths)
+	{
+		str += ::MakeFinalFilePathTooltipText(filePath.first, index, filePath.second);
+		if(!dataFile.StoreLastDataOnly())
+		{
+			str += ::MakeModelRunText(filePath.first, filePath.second);
+		}
 		index++;
 	}
 	return str;
@@ -348,10 +383,9 @@ static std::string AddPossibleSelectedModelRunTexts(const NFmiCaseStudyDataFile&
 		}
 		else
 		{
-			// Haetaan kaikki tiedostot mitä FileFilter:illä löytyy (annettu aikaraja 1 on 1970.01.01 00:00:01)
-			time_t earliestTimeLimit = 1;
-			auto filesWithTimes = NFmiFileSystem::PatternFiles(dataFile.FileFilter(), earliestTimeLimit);
-			if(filesWithTimes.empty())
+			NFmiMetTime usedWallClockTime(1);
+			auto storedFilePaths = NFmiCaseStudyDataFile::GetTimeOffsetMatchingFileList(dataFile, usedWallClockTime, true);
+			if(storedFilePaths.empty())
 			{
 				str += "<br><br>";
 				str += ::GetColoredBoldTextForTooltip("No data files were found with file filter:<br>", true, false, NFmiColor());
@@ -359,19 +393,7 @@ static std::string AddPossibleSelectedModelRunTexts(const NFmiCaseStudyDataFile&
 			}
 			else
 			{
-				// Järjestetään tiedostot ajan suhteen laskevassa järjestyksessä, jolloin uusimmat ovat listan kärjessä
-				auto timeSortedFiles = CtrlViewUtils::TimeSortFiles(filesWithTimes);
-				if(dataFile.StoreLastDataOnly())
-				{
-					str += "<br><br>";
-					str += ::GetColoredBoldTextForTooltip("Only the newest file can be stored from this data:", true, false, NFmiColor());
-					auto finalFilePath = timeSortedFiles.front().first;
-					str += ::MakeFinalFilePathTooltipText(finalFilePath, 1, dataFile.DataFileWinRegValues().Store(), true);
-				}
-				else
-				{
-					str += ::MakeModelDataStoredFileListText(dataFile, timeSortedFiles);
-				}
+				str += ::MakeModelDataStoredFileListText(dataFile, storedFilePaths, usedWallClockTime);
 			}
 		}
 	}
@@ -411,7 +433,7 @@ std::string NFmiCaseStudyGridCtrl::ComposeToolTipText(const CPoint& point)
 			str += "<br>";
 			str += ::GetColoredBoldTextForTooltip(g_GridCtrlHeaderName5, true, true, headerNameColor) + " ";
 			str += ::GetColoredBoldTextForTooltip(g_GridCtrlHeaderNameExplanation5, true, true, explanationTextColor) + ": ";
-			str += ::GetColoredBoldTextForTooltip(NFmiCaseStudySystem::MakeIndexRangeString(rowData->DataFileWinRegValues().CaseStudyDataIndexRange()), true, true, valueTextColor);
+			str += ::GetColoredBoldTextForTooltip(NFmiCaseStudySystem::MakeModelDataOffsetRangeInHoursString(rowData->DataFileWinRegValues().CaseStudyModelDataOffsetRangeInHours()), true, true, valueTextColor);
 			str += "<br>";
 			str += ::GetColoredBoldTextForTooltip(g_GridCtrlHeaderName6, true, true, headerNameColor) + " ";
 			str += ::GetColoredBoldTextForTooltip(g_GridCtrlHeaderNameExplanation6, true, true, explanationTextColor) + ": ";
@@ -469,7 +491,7 @@ void CFmiCaseStudyDlg::InitHeaders()
     itsHeaders.push_back(CaseStudyHeaderParInfo(g_GridCtrlHeaderName2, CaseStudyHeaderParInfo::kModelName, basicColumnWidthUnit * 18));
     itsHeaders.push_back(CaseStudyHeaderParInfo(g_GridCtrlHeaderName3, CaseStudyHeaderParInfo::kProducerId, basicColumnWidthUnit * 4));
 	itsHeaders.push_back(CaseStudyHeaderParInfo(g_GridCtrlHeaderName4, CaseStudyHeaderParInfo::kStoreData, basicColumnWidthUnit*3));
-    itsHeaders.push_back(CaseStudyHeaderParInfo(g_GridCtrlHeaderName5, CaseStudyHeaderParInfo::kCaseStudyDataIndexRange, boost::math::iround(basicColumnWidthUnit * 3.5)));
+    itsHeaders.push_back(CaseStudyHeaderParInfo(g_GridCtrlHeaderName5, CaseStudyHeaderParInfo::kCaseStudyDataOffsetRange, boost::math::iround(basicColumnWidthUnit * 3.5)));
     itsHeaders.push_back(CaseStudyHeaderParInfo(g_GridCtrlHeaderName6, CaseStudyHeaderParInfo::kLocalCacheDataCount, boost::math::iround(basicColumnWidthUnit * 3.5)));
     itsHeaders.push_back(CaseStudyHeaderParInfo(g_GridCtrlHeaderName7, CaseStudyHeaderParInfo::kEnableData, basicColumnWidthUnit*5)); // sijoita tämä indeksille CaseStudyHeaderParInfo::kEnableData
     itsHeaders.push_back(CaseStudyHeaderParInfo(g_GridCtrlHeaderName8, CaseStudyHeaderParInfo::kDataSize, boost::math::iround(basicColumnWidthUnit * 11.)));
@@ -813,8 +835,8 @@ static std::string GetColumnText(int theRow, int theColumn, const NFmiCaseStudyD
 		return theCaseData.Name();
     case CaseStudyHeaderParInfo::kProducerId:
         return ::GetProducerIdString(theCaseData);
-    case CaseStudyHeaderParInfo::kCaseStudyDataIndexRange:
-		return NFmiCaseStudySystem::MakeIndexRangeString(theCaseData.DataFileWinRegValues().CaseStudyDataIndexRange());
+    case CaseStudyHeaderParInfo::kCaseStudyDataOffsetRange:
+		return NFmiCaseStudySystem::MakeModelDataOffsetRangeInHoursString(theCaseData.DataFileWinRegValues().CaseStudyModelDataOffsetRangeInHours());
 	case CaseStudyHeaderParInfo::kLocalCacheDataCount:
 		return ::GetDataCountStr(theCaseData.DataFileWinRegValues().LocalCacheDataCount());
 	case CaseStudyHeaderParInfo::kDataSize:
@@ -828,7 +850,7 @@ static bool IsReadOnlyCell(int column, const NFmiCaseStudyDataFile &theCaseData)
 {
     if(column == CaseStudyHeaderParInfo::kStoreData || column == CaseStudyHeaderParInfo::kEnableData)
 		return false;
-	if(column == CaseStudyHeaderParInfo::kCaseStudyDataIndexRange)
+	if(column == CaseStudyHeaderParInfo::kCaseStudyDataOffsetRange)
 	{
 		if(theCaseData.StoreLastDataOnly())
 			return true;
@@ -1050,8 +1072,8 @@ BOOL CFmiCaseStudyDlg::AcceptChange(int col, int row)
 		std::string str = CT2A(itsGridCtrl.GetCell(row, col)->GetText());
 		try
 		{
-			if(col == CaseStudyHeaderParInfo::kCaseStudyDataIndexRange)
-				auto indexRange = NFmiCaseStudySystem::MakeIndexRange(str);
+			if(col == CaseStudyHeaderParInfo::kCaseStudyDataOffsetRange)
+				auto offsetRange = NFmiCaseStudySystem::MakeTimeOffsetRange(str);
 			else
 				double offsetInHours = NFmiStringTools::Convert<double>(str);
 			itsOffsetEditedCell = CCellID(row, col);
@@ -1105,8 +1127,8 @@ void CFmiCaseStudyDlg::OnDataCountEdited()
 			auto& dataFile = *dataVector[dataIndex];
 			if(itsOffsetEditedCell.col == CaseStudyHeaderParInfo::kLocalCacheDataCount)
 				DoLocalCacheCountEditing(dataFile, cellText);
-			else if(itsOffsetEditedCell.col == CaseStudyHeaderParInfo::kCaseStudyDataIndexRange)
-				DoCaseStudyIndexRangeEditing(dataFile, cellText);
+			else if(itsOffsetEditedCell.col == CaseStudyHeaderParInfo::kCaseStudyDataOffsetRange)
+				DoCaseStudyOffsetRangeEditing(dataFile, cellText);
 		}
 	}
 	itsOffsetEditedCell = CCellID();
@@ -1142,26 +1164,26 @@ void CFmiCaseStudyDlg::DoLocalCacheCountEditing(NFmiCaseStudyDataFile& dataFile,
 	}
 }
 
-void CFmiCaseStudyDlg::DoCaseStudyIndexRangeEditing(NFmiCaseStudyDataFile& dataFile, const std::string& cellText)
+void CFmiCaseStudyDlg::DoCaseStudyOffsetRangeEditing(NFmiCaseStudyDataFile& dataFile, const std::string& cellText)
 {
 	try
 	{
-		auto indexRange = NFmiCaseStudySystem::MakeIndexRange(cellText);
+		auto timeOffsetRange = NFmiCaseStudySystem::MakeTimeOffsetRange(cellText);
 		auto& caseStudySystem = itsSmartMetDocumentInterface->CaseStudySystem();
 
 		if(dataFile.CategoryHeader())
 		{
 			// Tämä tekee myös tarvittavat updatet data rakenteiden case-studyyn talletettavien tiedostojen datamäärille
-			caseStudySystem.CategoryCaseStudyIndexRange(dataFile, indexRange); 
+			caseStudySystem.CategoryCaseStudyOffsetRange(dataFile, timeOffsetRange);
 		}
 		else if(dataFile.ProducerHeader())
 		{
 			// Tämä tekee myös tarvittavat updatet data rakenteiden case-studyyn talletettavien tiedostojen datamäärille
-			caseStudySystem.ProducerCaseStudyIndexRange(dataFile, indexRange);
+			caseStudySystem.ProducerCaseStudyOffsetRange(dataFile, timeOffsetRange);
 		}
 		else
 		{
-			dataFile.DataFileWinRegValues().CaseStudyDataIndexRange(indexRange);
+			dataFile.DataFileWinRegValues().CaseStudyModelDataOffsetRangeInHours(timeOffsetRange);
 			caseStudySystem.Update(dataFile);
 		}
 		UpdateGridControlValues(true);
