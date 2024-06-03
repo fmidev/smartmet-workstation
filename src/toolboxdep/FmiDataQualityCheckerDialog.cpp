@@ -514,6 +514,38 @@ static std::string GetLonLatString(const NFmiPoint &thePoint, int decimals)
 	return txt;
 }
 
+static std::string MakeMinMaxCheckString(bool shortVersion, std::string nameStr, float value)
+{
+	std::string str;
+	if(!shortVersion)
+		str += "\n";
+	else
+		str += " ";
+	str += nameStr + ": ";
+	if(value == kFloatMissing)
+		str += "  -  ";
+	else
+		str += NFmiStringTools::Convert(::RoundValue(value, .01f));
+	return str;
+}
+
+static std::string MakeMinMaxTimeLocationString(bool shortVersion, bool mainStatus, std::string nameStr, const NFmiMetTime &atime, const NFmiPoint &locationPoint)
+{
+	std::string str;
+	if(!shortVersion && mainStatus)
+	{
+		str += "\n" + nameStr + " time: ";
+		str += atime.ToStr("ww HH:mm DD.MM.YYYY"); // on sama mikä aika (min, max) tähänä otetaan koska kyse on yhden aika-askeleen arvoista
+	}
+	if(!shortVersion)
+	{
+		str += "\n" + nameStr + " location : ";
+		str += ::GetLonLatString(locationPoint, 3);
+		str += "\n";
+	}
+	return str;
+}
+
 static std::string MakeGridValuesCheckString(const NFmiGridValuesCheck *theCheckValues, const NFmiDataParamCheckingInfo &theCheckInfo, bool shortVersion, bool mainStatus)
 {
 	std::string str = theCheckInfo.CheckedParam().GetName().CharPtr();
@@ -530,43 +562,11 @@ static std::string MakeGridValuesCheckString(const NFmiGridValuesCheck *theCheck
 		else if(!shortVersion && mainStatus)
 			str += "\n";
 
-		if(!shortVersion)
-			str += "\n";
-		else
-			str += " ";
-		str += "Max: ";
-		str += NFmiStringTools::Convert(::RoundValue(theCheckValues->MaxValue(), .01f));
+		::MakeMinMaxCheckString(shortVersion, "Max", theCheckValues->MaxValue());
+		::MakeMinMaxTimeLocationString(shortVersion, mainStatus, "Max", theCheckValues->MaxTime(), theCheckValues->MaxValueLatlon());
 
-		if(!shortVersion && mainStatus)
-		{
-			str += "\nMaxTime: ";
-			str += theCheckValues->MaxTime().ToStr("ww HH:mm DD.MM.YYYY"); // on sama mikä aika (min, max) tähänä otetaan koska kyse on yhden aika-askeleen arvoista
-		}
-		if(!shortVersion)
-		{
-			str += "\nMax location: ";
-			str += ::GetLonLatString(theCheckValues->MaxValueLatlon(), 3);
-			str += "\n";
-		}
-
-		if(!shortVersion)
-			str += "\n";
-		else
-			str += " ";
-		str += "Min: ";
-		str += NFmiStringTools::Convert(::RoundValue(theCheckValues->MinValue(), .01f));
-
-		if(!shortVersion && mainStatus)
-		{
-			str += "\nMinTime: ";
-			str += theCheckValues->MinTime().ToStr("ww HH:mm DD.MM.YYYY"); // on sama mikä aika (min, max) tähänä otetaan koska kyse on yhden aika-askeleen arvoista
-		}
-		if(!shortVersion)
-		{
-			str += "\nMin location: ";
-			str += ::GetLonLatString(theCheckValues->MinValueLatlon(), 3);
-			str += "\n";
-		}
+		::MakeMinMaxCheckString(shortVersion, "Min", theCheckValues->MinValue());
+		::MakeMinMaxTimeLocationString(shortVersion, mainStatus, "Min", theCheckValues->MinTime(), theCheckValues->MinValueLatlon());
 
 		if(!shortVersion)
 			str += "\n";
