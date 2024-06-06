@@ -113,7 +113,7 @@ bool NFmiMTATempSystem::ServerProducer::operator==(const NFmiProducer &other) co
 
 bool NFmiMTATempSystem::ServerProducer::operator!=(const ServerProducer &other) const
 {
-    return !(ProducersAreEqual(*this, other) && useServer() == other.useServer());
+    return !operator==(other);
 }
 
 bool NFmiMTATempSystem::ServerProducer::operator!=(const NFmiProducer &other) const
@@ -127,8 +127,8 @@ bool NFmiMTATempSystem::ServerProducer::operator<(const ServerProducer &other) c
         return GetIdent() < other.GetIdent();
     if(GetName() != other.GetName())
         return GetName() < other.GetName();
-    else
-        return useServer() < other.useServer();
+
+	return useServer() < other.useServer();
 }
 
 

@@ -37,9 +37,11 @@
 #include "NFmiDataModifierAvg.h"
 #include "CtrlViewFunctions.h"
 #include "NFmiDataModifierMinMax.h"
+#include "WaitCursorHelper.h"
 
 #include <stdexcept>
 #include "boost\math\special_functions\round.hpp"
+#include <boost/algorithm/string.hpp>
 
 #include <thread>
 
@@ -107,26 +109,43 @@ static NFmiPoint CalcReltiveMoveFromPixels(NFmiToolBox *theTB, const NFmiPoint &
 	return NFmiPoint(theTB->SX(static_cast<long>(thePixelMove.X())), theTB->SY(static_cast<long>(thePixelMove.Y())));
 }
 
-static void SetLocationNameByItsLatlon(NFmiProducerSystem &theProdSystem, NFmiLocation &theLocation, const NFmiProducer &theProducer, const NFmiMetTime &theOriginTime, bool fIsGrid = false)
+static void SetLocationNameByItsLatlon(NFmiProducerSystem &theProdSystem, NFmiLocation &theLocation, const NFmiProducer &theProducer, const NFmiMetTime &theOriginTime, bool fIsGrid, bool isGribDataCase, const std::string &gribDataProducerName)
 {
 	std::string name;
-    if(fIsGrid == false && (NFmiInfoOrganizer::IsTempData(theProducer.GetIdent(), true)))
+	if(fIsGrid == false && (NFmiInfoOrganizer::IsTempData(theProducer.GetIdent(), true)))
+	{
 		name += std::string(theLocation.GetName()) + " ";
+	}
 	else
-	{ // etsi mallin nimi
-		unsigned int modelIndex = theProdSystem.FindProducerInfo(theProducer);
-		if(modelIndex > 0)
-			name += theProdSystem.Producer(modelIndex).UltraShortName();
+	{
+		if(isGribDataCase)
+		{
+			name += gribDataProducerName;
+		}
 		else
-			name += "X?";
+		{
+			// etsi mallin nimi
+			unsigned int modelIndex = theProdSystem.FindProducerInfo(theProducer);
+			if(modelIndex > 0)
+				name += theProdSystem.Producer(modelIndex).UltraShortName();
+			else
+				name += "X?";
+		}
 		name += theOriginTime.ToStr(::GetDictionaryString("MapViewToolTipOrigTimeNormal"));
 		name += " ";
 	}
 	std::string latlonStr;
-	latlonStr += CtrlViewUtils::GetLatitudeMinuteStr(theLocation.GetLatitude(), 0);
-	latlonStr += ",";
-	latlonStr += CtrlViewUtils::GetLongitudeMinuteStr(theLocation.GetLongitude(), 0);
-	name += latlonStr.c_str();
+	if(theLocation.GetLocation() == NFmiPoint::gMissingLatlon)
+	{
+		latlonStr += "loc-error";
+	}
+	else
+	{
+		latlonStr += CtrlViewUtils::GetLatitudeMinuteStr(theLocation.GetLatitude(), 0);
+		latlonStr += ",";
+		latlonStr += CtrlViewUtils::GetLongitudeMinuteStr(theLocation.GetLongitude(), 0);
+	}
+	name += latlonStr;
 
 	theLocation.SetName(name);
 }
@@ -1945,7 +1964,7 @@ static NFmiLocation GetSoundingLocation(boost::shared_ptr<NFmiFastQueryInfo> &th
                 ::SetMovingSoundingLocationName(location, *theInfo->Producer());
         }
         else
-            ::SetLocationNameByItsLatlon(theProdSystem, location, theInfo->IsGrid() ? *theInfo->Producer() : theTempInfo.Producer(), theInfo->OriginTime(), theInfo->IsGrid());
+            ::SetLocationNameByItsLatlon(theProdSystem, location, theInfo->IsGrid() ? *theInfo->Producer() : theTempInfo.Producer(), theInfo->OriginTime(), theInfo->IsGrid(), false, "");
     }
 	return location;
 }
@@ -2027,7 +2046,11 @@ NFmiGroundLevelValue NFmiTempView::GetPossibleGroundLevelValue(boost::shared_ptr
 			if(topoData && topoData->Param(kFmiTopoGraf))
 			{
 				// Otetaan topo datasta korkeus metreiss‰ ja muunnetaan se standardi-ilmakeh‰n paineeksi
-				groundLevelValue.itsTopographyHeightInMillibars = static_cast<float>(CalcPressureAtHeight(topoData->InterpolatedValue(latlon) / 1000.f));
+				auto topoHeightInMeters = topoData->InterpolatedValue(latlon);
+				if(topoHeightInMeters != kFloatMissing)
+				{
+					groundLevelValue.itsTopographyHeightInMillibars = static_cast<float>(CalcPressureAtHeight(topoHeightInMeters / 1000.f));
+				}
 			}
 		}
 	}
@@ -3482,6 +3505,10 @@ void NFmiTempView::DrawStationInfo(TotalSoundingData& theData, int theProducerIn
 	// Aseman aika tiedot piirret‰‰n p‰‰lle
 	NFmiMetTime time(theData.itsSoundingData.Time());
 	std::string timestr(time.ToStr(::GetDictionaryString("TempViewLegendTimeFormat")));
+	if(time == NFmiMetTime::gMissingTime)
+	{
+		timestr = "Error time with data";
+	}
 	timestr = ::MakeLegendStringCorrectLength(timestr);
 	auto textColor = mtaTempSystem.SoundingColor(theProducerIndex);
 	auto backgroundColor = IsSelectedProducerIndex(theProducerIndex) ? gSelectedBackGroundTextColor : gNormalBackGroundTextColor;
@@ -4346,14 +4373,17 @@ static void ReportFailedSoundingFromServerRequest(const std::string &requestUriS
 
 bool NFmiTempView::FillSoundingDataFromServer(const NFmiMTATempSystem::SoundingProducer &theProducer, NFmiSoundingData &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation)
 {
-    auto requestUriStr = itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().makeFinalServerRequestUrl(theProducer.GetIdent(), theTime, theLocation.GetLocation());
+	auto& soundingDataServerConfigurations = itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations();
+    auto requestUriStr = soundingDataServerConfigurations.makeFinalServerRequestUrl(theProducer.GetIdent(), theTime, theLocation.GetLocation());
     ::TraceLogSoundingFromServerRequest(requestUriStr, theProducer, theTime, theLocation);
     if(requestUriStr.empty())
         return false;
     std::string soundingDataResponseFromServer;
 
     {
-        // Raportoidaan trace tasolla pelk‰n haun kesto
+		// T‰ss‰ odotus kursori halutaan laittaa aina n‰kyviin
+		WaitCursorHelper waitCursorHelper(true);
+		// Raportoidaan trace tasolla pelk‰n haun kesto
         CtrlViewUtils::CtrlViewTimeConsumptionReporter timeConsumptionReporter(this, "Sounding data from server request");
         itsCtrlViewDocumentInterface->MakeHTTPRequest(requestUriStr, soundingDataResponseFromServer, true);
     }
@@ -4366,16 +4396,134 @@ bool NFmiTempView::FillSoundingDataFromServer(const NFmiMTATempSystem::SoundingP
         theSoundingData.Location(errorLocation);
         return false;
     }
-    const auto &paramsInServerData = itsCtrlViewDocumentInterface->GetMTATempSystem().GetSoundingDataServerConfigurations().wantedParameters();
-    auto status = theSoundingData.FillSoundingData(paramsInServerData, soundingDataResponseFromServer, theTime, theLocation, nullptr);
+
+	auto serverDataConfigurationPtr = soundingDataServerConfigurations.getServerConfiguration(theProducer.GetIdent());
+	if(!serverDataConfigurationPtr)
+		return false;
+
+	auto status = false;
+	auto gribDataCase = serverDataConfigurationPtr->gribDataCase();
+	if(gribDataCase)
+	{
+		status = FillServerGribSoundingData(theSoundingData, theTime, theLocation, *serverDataConfigurationPtr, soundingDataResponseFromServer);
+	}
+	else
+	{
+		const auto& paramsInServerData = soundingDataServerConfigurations.wantedParameters();
+		status = theSoundingData.FillSoundingData(paramsInServerData, soundingDataResponseFromServer, theTime, theLocation, nullptr);
+	}
     // Laitetaan lopuksi serverilt‰ haetun origintime:n avulla luotauksen paikan nimi lopulliseen kuntoon
     NFmiLocation finalLocation = theSoundingData.Location();
-    ::SetLocationNameByItsLatlon(itsCtrlViewDocumentInterface->ProducerSystem(), finalLocation, theProducer, theSoundingData.OriginTime(), true);
-	std::string finalNameWithServerMarker = "(S) ";
+    ::SetLocationNameByItsLatlon(itsCtrlViewDocumentInterface->ProducerSystem(), finalLocation, theProducer, theSoundingData.OriginTime(), true, gribDataCase, serverDataConfigurationPtr->gribShortName());
+	std::string finalNameWithServerMarker = gribDataCase ? "(SG)" : "(S)";
     finalNameWithServerMarker += finalLocation.GetName();
     finalLocation.SetName(finalNameWithServerMarker);
     theSoundingData.Location(finalLocation);
     return status;
+}
+
+static size_t GetMaxLevelCount(const std::vector<std::vector<std::string>>& paramLevelValuesVectors)
+{
+	size_t maxLevelCount = 0;
+	for(const auto& paramLevelValues : paramLevelValuesVectors)
+	{
+		if(maxLevelCount < paramLevelValues.size())
+			maxLevelCount = paramLevelValues.size();
+	}
+	return maxLevelCount;
+}
+
+static std::string GribData2QueryDataFormatResponseString(const std::string& gribSoundingDataResponseFromServer, const std::vector<FmiParameterName> &paramsInServerData)
+{
+	std::vector<std::string> paramLevelValuesParts;
+	boost::split(paramLevelValuesParts, gribSoundingDataResponseFromServer, boost::is_any_of(" "));
+	if(paramLevelValuesParts.size() != paramsInServerData.size())
+		return "";
+	
+	std::vector<std::vector<std::string>> paramLevelValuesVectors;
+	for(const auto& paramLevelValues : paramLevelValuesParts)
+	{
+		std::vector<std::string> paramValues;
+		boost::split(paramValues, paramLevelValues, boost::is_any_of(";"));
+		paramLevelValuesVectors.push_back(paramValues);
+	}
+
+	size_t maxLevelCount = ::GetMaxLevelCount(paramLevelValuesVectors);
+	// Tehd‰‰n string, johon laitetaan kaikki luvut stringein‰ seuraavassa j‰rjestyksess‰:
+	// 1. Ensimm‰isen levelin eri parametrien arvot spacella eroteltuna
+	// 2. Levelit eroteltuna spacella
+	// 3. Toisen levelin eri parametrit sama juttu, jne.
+	std::ostringstream responseStream;
+	for(size_t levelIndex = 0; levelIndex < maxLevelCount; levelIndex++)
+	{
+		for(const auto& paramValues : paramLevelValuesVectors)
+		{
+			if(levelIndex >= paramValues.size())
+				responseStream << "nan";
+			else
+				responseStream << paramValues[levelIndex];
+
+			responseStream << " ";
+		}
+	}
+	return responseStream.str();
+}
+
+const std::string g_nanToken = "nan";
+
+static std::string MakeGribDataConversion(const std::string& valueStr, const std::string& conversionFunction)
+{
+	try
+	{
+		auto value = std::stod(valueStr);
+		auto convertedValue = GribDataParameterMapping::doValueConversion(value, conversionFunction);
+		return std::to_string(convertedValue);
+	}
+	catch(...)
+	{
+		return g_nanToken;
+	}
+}
+
+static std::string DoGribDataConversions(const std::string &qDataFormatSoundingDataResponseFromServer, const std::vector<GribDataParameterMapping> & gribDataParamMappingVector)
+{
+	if(qDataFormatSoundingDataResponseFromServer.empty() || gribDataParamMappingVector.empty())
+		return "";
+
+	std::vector<std::string> paramValuesParts;
+	boost::split(paramValuesParts, qDataFormatSoundingDataResponseFromServer, boost::is_any_of(" "));
+	
+	std::string convertedSoundingDataStr;
+	for(size_t totalValueIndex = 0; totalValueIndex < paramValuesParts.size(); )
+	{
+		// Tehd‰‰n datan konversioita vain t‰ysille leveleille, eli pit‰‰ lˆyty‰ dataa kaikille parametreille
+		if(paramValuesParts.size() - totalValueIndex < gribDataParamMappingVector.size())
+			break;
+		
+		for(size_t currentParameterIndex = 0; currentParameterIndex < gribDataParamMappingVector.size(); currentParameterIndex++)
+		{
+			convertedSoundingDataStr += ::MakeGribDataConversion(paramValuesParts[totalValueIndex], gribDataParamMappingVector[currentParameterIndex].conversionFunctionName());
+			convertedSoundingDataStr += " ";
+			totalValueIndex++;
+		}
+	}
+	return convertedSoundingDataStr;
+}
+
+// Grib data tapauksessa vastaus tulee eri muodossa ja se pit‰‰ ensin muuttaa sopivaan formaattiin, 
+// jotta NFmiSoundingData objekti voidaan t‰ytt‰‰ sill‰. Lis‰ksi pit‰‰ rakentaa viel‰ oikeanlainen FmiParameterName vector.
+bool NFmiTempView::FillServerGribSoundingData(NFmiSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, const ModelDataServerConfiguration& modelDataServerConf, const std::string& gribSoundingDataResponseFromServer)
+{
+	const auto& gribDataParamMappingVector = modelDataServerConf.gribDataParamsMapping();
+	std::vector<FmiParameterName> paramsInServerData;
+	for(const auto& paramMapping : gribDataParamMappingVector)
+	{
+		paramsInServerData.push_back(paramMapping.newbaseParameterId());
+	}
+
+	auto usedSoundingDataResponseFromServer = ::GribData2QueryDataFormatResponseString(gribSoundingDataResponseFromServer, paramsInServerData);
+	usedSoundingDataResponseFromServer = ::DoGribDataConversions(usedSoundingDataResponseFromServer, gribDataParamMappingVector);
+	return theSoundingData.FillSoundingData(paramsInServerData, usedSoundingDataResponseFromServer, theTime, theLocation, nullptr);
 }
 
 // Vaisala diagrammi on helppo tapaus, katso ‰‰ri T ja Td arvot kaikista luotauksista

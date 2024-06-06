@@ -513,7 +513,7 @@ void NFmiGridCtrl::OnFixedRowClick(CCellID& cell)
 
     if (GetHeaderSort())
     {
-		CFmiWin32Helpers::WaitCursorHelper waitCursorHelper(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
+		WaitCursorHelper waitCursorHelper(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
         if (cell.col == GetSortColumn())
             SortItems(cell.col, !GetSortAscending(), !GetSortAscending()); // *** KOLMAS parametri annettu tässä koodissa ****
         else

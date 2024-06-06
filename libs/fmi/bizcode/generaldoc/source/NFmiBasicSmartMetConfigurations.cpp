@@ -36,17 +36,25 @@ static void DoInitializationAbortOrContinueMessageBox(const std::string &errorSt
     std::string finalErrorString = errorString;
     finalErrorString += "\n\n";
     finalErrorString += "Press Cancel to abort, press Ok to continue";
+    CatLog::logMessage(finalErrorString, severity, CatLog::Category::Configuration, true);
     if(::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(finalErrorString.c_str()), CA2T(titleString.c_str()), MB_OKCANCEL | usedIcon) == IDCANCEL)
+    {
         throw AbortSmartMetInitializationGracefullyException();
+    }
 }
 
-static void DoInitializationAbortMessageBox(const std::string &errorString, const std::string &titleString)
+void NFmiBasicSmartMetConfigurations::DoInitializationAbortMessageBox(const std::string &errorString, const std::string &titleString, bool throwAbortException)
 {
     int usedIcon = ::GetUsedMessageBoxIcon(CatLog::Severity::Critical);
     std::string finalErrorString = errorString;
     finalErrorString += "\n\n";
     finalErrorString += "Too severe errors in initialization, press Ok to abort";
+    CatLog::logMessage(finalErrorString, CatLog::Severity::Error, CatLog::Category::Configuration, true);
     ::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(finalErrorString.c_str()), CA2T(titleString.c_str()), MB_OK | usedIcon);
+    if(throwAbortException)
+    {
+        throw AbortSmartMetInitializationGracefullyException();
+    }
 }
 
 NFmiBasicSmartMetConfigurations::NFmiBasicSmartMetConfigurations(void)
@@ -142,14 +150,14 @@ bool NFmiBasicSmartMetConfigurations::Init(const std::string &avsToolMasterVersi
         {
             std::string errorStr("Problems while trying to read dictionary file from:\n");
             errorStr += dictionaryFilePath;
-            ::DoInitializationAbortMessageBox(errorStr, "Cannot read dictionary file");
+            DoInitializationAbortMessageBox(errorStr, "Cannot read dictionary file", false);
             return false;
         }
 		NFmiTime::Init(itsLanguage);
 	}
 	catch(std::exception &e)
 	{
-        ::DoInitializationAbortMessageBox(e.what(), "Problems with Settings");
+        DoInitializationAbortMessageBox(e.what(), "Problems with Settings", false);
 		return false;
 	}
 
@@ -372,7 +380,7 @@ bool NFmiBasicSmartMetConfigurations::ReadConfigurations()
         std::string errorWithFilePath = e.what();
         errorWithFilePath += "\nIn file: ";
         errorWithFilePath += fileName;
-        ::DoInitializationAbortMessageBox(errorWithFilePath, "Problems with Settings");
+        DoInitializationAbortMessageBox(errorWithFilePath, "Problems with Settings", false);
 		return false;
 	}
 
@@ -397,7 +405,7 @@ bool NFmiBasicSmartMetConfigurations::ReadPreConfigurationSettings()
     }
     catch(std::exception &e)
     {
-        ::DoInitializationAbortMessageBox(e.what(), "Problems with PreConfigurationSettings");
+        DoInitializationAbortMessageBox(e.what(), "Problems with PreConfigurationSettings", false);
         return false;
     }
 
@@ -482,7 +490,7 @@ bool NFmiBasicSmartMetConfigurations::InitLogger(void)
 	{
 		std::string errStr("Error while initializing SmartMet logger:\n");
 		errStr += e.what();
-        ::DoInitializationAbortMessageBox(errStr, "Error while initializing logger");
+        DoInitializationAbortMessageBox(errStr, "Error while initializing logger", false);
         return false;
 	}
 }
@@ -516,7 +524,7 @@ void NFmiBasicSmartMetConfigurations::MakeSplashScreenTextDataVector(const NFmiT
 
     bool betaVersion = false;
     if(betaVersion)
-        itsSplashScreenTextDataVector.push_back(DrawStringData(_TEXT("Beta"), _TEXT("Arial"), 25, RGB(0, 0, 0), CPoint(122, 267), true));
+        itsSplashScreenTextDataVector.push_back(DrawStringData(_TEXT("Beta"), _TEXT("Arial"), 25, RGB(255, 0, 0), CPoint(122, 267), true));
 
     CString possibleWarningTextU_;// = _TEXT("Mahdollisia ongelmia johtuen kehittimen (VS 2019) päivityksestä");
     if(possibleWarningTextU_.GetLength())
@@ -567,7 +575,7 @@ bool NFmiBasicSmartMetConfigurations::SetControlPath(const std::string &theContr
     errStr += "'\nAbsolut path:\n'";
     errStr += itsControlPath;
     errStr += "'\n\ndoesn't exist. Is the -p option correct?";
-    ::DoInitializationAbortMessageBox(errStr, "SmartMet control path or base control file doesn't exist");
+    DoInitializationAbortMessageBox(errStr, "SmartMet control path or base control file doesn't exist", false);
     return false;
 }
 

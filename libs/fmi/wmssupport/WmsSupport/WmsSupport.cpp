@@ -10,6 +10,7 @@
 #include <cppback/background-manager.h>
 #include <webclient/CppRestClient.h>
 #include <NFmiValueString.h>
+#include <regex>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -52,6 +53,53 @@ namespace
         }
     }
 
+    std::string GetFinalTimeResolutionMatch(const std::smatch& match, const std::string& resolutionUnitStr)
+    {
+        auto resolutionStr = match[1].str();
+        resolutionStr += " " + resolutionUnitStr;
+        return resolutionStr;
+    }
+
+    std::string MakeReadableWmsTimeDimensionResolutionStr(const std::string& wmsTimeResolutionStr)
+    {
+        if(wmsTimeResolutionStr.empty())
+        {
+            return wmsTimeResolutionStr;
+        }
+        std::regex secondsPattern(R"(PT(\d+)S)"); // Regex pattern to match seconds resolution
+        std::regex minutesPattern(R"(PT(\d+)M)"); // Regex pattern to match minutes resolution
+        std::regex hoursPattern(R"(PT(\d+)H)"); // Regex pattern to match hours resolution
+        std::regex daysPattern(R"(P(\d+)D)"); // Regex pattern to match days resolution
+        std::regex monthsPattern(R"(P(\d+)M)"); // Regex pattern to match months resolution
+        std::regex yearsPattern(R"(P(\d+)Y)"); // Regex pattern to match years resolution
+        std::smatch match;
+        if(std::regex_search(wmsTimeResolutionStr, match, secondsPattern))
+        {
+            return ::GetFinalTimeResolutionMatch(match, "sec");
+        }
+        else if(std::regex_search(wmsTimeResolutionStr, match, minutesPattern))
+        {
+            return ::GetFinalTimeResolutionMatch(match, "min");
+        }
+        else if(std::regex_search(wmsTimeResolutionStr, match, hoursPattern))
+        {
+            return ::GetFinalTimeResolutionMatch(match, "hrs");
+        }
+        else if(std::regex_search(wmsTimeResolutionStr, match, daysPattern))
+        {
+            return ::GetFinalTimeResolutionMatch(match, "days");
+        }
+        else if(std::regex_search(wmsTimeResolutionStr, match, monthsPattern))
+        {
+            return ::GetFinalTimeResolutionMatch(match, "months");
+        }
+        else if(std::regex_search(wmsTimeResolutionStr, match, yearsPattern))
+        {
+            return ::GetFinalTimeResolutionMatch(match, "years");
+        }
+
+        return wmsTimeResolutionStr;
+    }
 }
 
 namespace Wms
@@ -421,6 +469,39 @@ namespace Wms
         }
 
         return false;
+    }
+
+    std::string WmsSupport::makeWmsLayerTimeDimensionTooltipString(const NFmiDataIdent& dataIdent, bool shortVersion) const
+    {
+        auto layerInfo = getHashedLayerInfo(dataIdent);
+        std::string str;
+        if(layerInfo.hasTimeDimension)
+        {
+            if(shortVersion)
+            {
+                str += "<br>(" + std::string(layerInfo.startTime.ToStr("YYYY.MM.DD HH:mm", kEnglish));
+                str += " - " + std::string(layerInfo.endTime.ToStr("YYYY.MM.DD HH:mm", kEnglish));
+                if(!layerInfo.possibleResolution.empty())
+                {
+                    str += ", time-res: " + ::MakeReadableWmsTimeDimensionResolutionStr(layerInfo.possibleResolution);
+                }
+                str += ")";
+            }
+            else
+            {
+                str += "<br><b>Start time: </b> \t" + std::string(layerInfo.startTime.ToStr("YYYY.MM.DD HH:mm", kEnglish));
+                str += "<br><b>End time: </b> \t" + std::string(layerInfo.endTime.ToStr("YYYY.MM.DD HH:mm", kEnglish));
+                if(!layerInfo.possibleResolution.empty())
+                {
+                    str += "<br><b>Time resolution: </b> \t" + ::MakeReadableWmsTimeDimensionResolutionStr(layerInfo.possibleResolution);
+                }
+            }
+        }
+        else
+        {
+            str += "<br>(no time dimension)";
+        }
+        return str;
     }
 
 }

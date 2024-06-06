@@ -165,7 +165,8 @@ class NFmiTempView : public NFmiCtrlView
     double SecondaryDataFrameXoffset(double theValue);
     void DrawSecondaryVerticalHelpLine(double theBottom, double theTop, double theValue);
     bool FillSoundingDataFromServer(const NFmiMTATempSystem::SoundingProducer &theProducer, NFmiSoundingData &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation);
-    Gdiplus::SmoothingMode GetUsedCurveDrawSmoothingMode() const;
+	bool FillServerGribSoundingData(NFmiSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, const ModelDataServerConfiguration& modelDataServerConf, const std::string& gribSoundingDataResponseFromServer);
+	Gdiplus::SmoothingMode GetUsedCurveDrawSmoothingMode() const;
     bool IsRectangularTemperatureHelperLines() const;
 	bool IsAnyTextualSideViewVisible() const;
 	void DrawTextualSideViewRelatedStuff();

@@ -4,6 +4,7 @@
 #include <utility>
 #include "NFmiColor.h"
 #include "SmartMetOpenUrlAction.h"
+#include "WaitCursorHelper.h"
 
 class NFmiToolBox;
 
@@ -54,7 +55,7 @@ namespace CtrlView
     void SetToolBoxsDC(CDC* theDC, NFmiToolBox *theToolBox, const CRect &theClientRect);
     void SetToolMastersDC(CDC* theDC, const CRect &theClientRect);
 
-    void OpenWantedUrlInBrowser(SmartMetOpenUrlAction currentOpenUrlAction);
+    void OpenWantedUrlInBrowser(SmartMetOpenUrlAction currentOpenUrlAction, int mapViewDescTopIndex);
     SmartMetOpenUrlAction GetOpenUrlKeyPressedState();
     bool HandleUrlMouseActions(SmartMetOpenUrlAction currentOpenUrlAction);
 
@@ -68,7 +69,7 @@ namespace CtrlView
             // Toimitaan lopulta vain silloin kun RETURN nappi p‰‰tet‰‰n ylˆs
             if(WM_KEYUP == messageType)
             {
-                CFmiWin32Helpers::WaitCursorHelper waitCursorHelper(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->ShowWaitCursorWhileDrawingView());
+                WaitCursorHelper waitCursorHelper(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->ShowWaitCursorWhileDrawingView());
                 searchFunction();
             }
             return TRUE; // Palautetaan true, jotta t‰t‰ messagea ei k‰sitell‰ en‰‰ muualla

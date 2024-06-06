@@ -3,6 +3,7 @@
 #include <map>
 
 class NFmiPoint;
+class NFmiMetTime;
 
 class NFmiMouseClickUrlActionData
 {
@@ -21,7 +22,7 @@ public:
 
     bool InitFromSettings(const std::string& baseNameSpace);
     const std::string& GetMouseActionBaseUrl(int index) const;
-    std::string GetMouseActionUrl(SmartMetOpenUrlAction urlAction, const NFmiPoint &latlon) const;
+    std::string GetMouseActionUrl(SmartMetOpenUrlAction urlAction, const NFmiPoint &latlon, const NFmiMetTime &atime, float areaRadiusInKm) const;
     // Urlissa voi olla placeholder, mihin on tarkoitus sijoittaa halutun alueen latlonkp:säde tiedot (25.0,60.2:150)
     static const std::map<unsigned int, SmartMetOpenUrlAction>& OpenUrlActionKeyMappings();
 };

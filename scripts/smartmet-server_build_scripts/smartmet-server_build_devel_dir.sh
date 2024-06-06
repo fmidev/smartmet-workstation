@@ -27,6 +27,7 @@ sudo dnf -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-
 sudo dnf config-manager --disable "pgdg*"
 sudo dnf -y install ImageMagick
 sudo dnf -y install smartmet-engine-grid-test smartmet-library-spine-plugin-test smartmet-test-db smartmet-test-data
+sudo dnf -y install catch-devel
 
 # 2. Private side library installation:
 sudo dnf -y install https://download.fmi.fi/smartmet-private/rhel/9/x86_64/smartmet-private-release-latest-9.noarch.rpm

@@ -505,15 +505,6 @@ static std::string GetWindowsName(OSVERSIONINFOEX &osvi, SYSTEM_INFO &sys_info)
 	return winName;
 }
 
-static std::string GetWindowsVersion(OSVERSIONINFOEX &osvi)
-{
-	std::string winVersion;
-	winVersion += NFmiStringTools::Convert(osvi.dwMajorVersion);
-	winVersion += ".";
-	winVersion += NFmiStringTools::Convert(osvi.dwMinorVersion);
-	return winVersion;
-}
-
 static std::string GetWindowsRevision(void)
 {
 	std::string revisionNumber;
@@ -806,20 +797,40 @@ const std::string& NFmiApplicationDataBase::GuidStr(void) const
 
 static std::string GetOsLangName()
 {
-    // Kokeillaan ensin C++ tapaa, joka on toiminut joskus aiemmin, mutta ei enää tietyillä systeemeillä (en tiedä johtuuko ongelma Windows vai Visual C++ versioista)
-    std::locale loc("");
-    std::string oslang = loc.name();
-    if(oslang.empty())
-    {
-        WCHAR localeName[LOCALE_NAME_MAX_LENGTH] = { 0 };
-        int ret = GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH);
-        if(ret)
-            oslang = CW2A(localeName);
-    }
+	// Kokeillaan ensin C++ tapaa, joka on toiminut joskus aiemmin, mutta ei enää tietyillä systeemeillä (en tiedä johtuuko ongelma Windows vai Visual C++ versioista)
+	std::locale loc("");
+	std::string oslang = loc.name();
+	if(oslang.empty())
+	{
+		WCHAR localeName[LOCALE_NAME_MAX_LENGTH] = { 0 };
+		int ret = GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH);
+		if(ret)
+			oslang = CW2A(localeName);
+	}
 
-    if(oslang.size() > 2)
-        oslang.resize(2); // vain kaksi ensimmäistä kirjainta kiinnostaa.... (fi, en, tms)
-    return oslang;
+	if(oslang.size() > 2)
+		oslang.resize(2); // vain kaksi ensimmäistä kirjainta kiinnostaa.... (fi, en, tms)
+	return oslang;
+}
+
+// Windows versionin haku systeemistä on ihan rikki, MicroSoft on ryssinyt pahasti sen kanssa:
+// 1. Joskus toiminut GetVersionEx((LPOSVERSIONINFO)&osvi); systeemi palauttaa nykyään vain versiota 6.2 eli Windows 8.0:aa.
+// 2. Windows rekisterissä on tieto versiosta Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\CurrentMajorVersionNumber ja CurrentMinorVersionNumber
+//   - Mutta jostain syystä niitä ei saa ulos normi kyselyillä, muita saman paikan arvoja saa kyllä ulos (esim. CurrentVersion saa ulos, mutta siinä on arvo 6.3)
+//   - Ongelma johtuu jotenkin WOW64 jutuista ja että niillä on omat rekisteri arvonsa ja nämä pitäisi ehkä hakea sieltä (WOW o nWindows on Windows ja siinä voidaan ajaa eri bittisiä windows ohjelmia eri bittisissä käyttiksissä)
+// 3. Tämä uuden GetWindowsVersion funktion jutut on haettu https://www.codeproject.com/Articles/5336372/Windows-Version-Detection
+//   - Siinä otetaan joku randomin näköinen muistiosoite talteen ja siitä nysvätään sopivilla siirtymillä major/minor/build numerot
+//   - Ainoa lohtu on että se toimii ainakin Windows 10:issä, muita koneita ei ole minulla käytössä
+static std::string GetWindowsVersion()
+{
+	auto sharedUserData = (BYTE*)0x7FFE0000;
+	int majorVersion = static_cast<int>(*(ULONG*)(sharedUserData + 0x26c));
+	int minorVersion = static_cast<int>(*(ULONG*)(sharedUserData + 0x270));
+//	DWORD buildNumber = static_cast<DWORD>(*(ULONG*)(sharedUserData + 0x260));
+	std::string osVersionStr = std::to_string(majorVersion);
+	osVersionStr += ".";
+	osVersionStr += std::to_string(minorVersion);
+	return osVersionStr;
 }
 
 void NFmiApplicationDataBase::CollectSmartMetData(NFmiApplicationDataBase::Action theAction, FmiLanguage applicationLanguage, int applicationRunningTimeInSeconds, bool toolMasterAvailable, NFmiInfoOrganizer *infoOrganizer)
@@ -936,7 +947,7 @@ void NFmiApplicationDataBase::CollectSmartMetData(NFmiApplicationDataBase::Actio
 	// osspinfo
 	osspinfo = CT2A(osvi.szCSDVersion); // sisältää tekstin winkkarin viimeisestä asennetusta service packista (esim. "Service Pack 3" tai tyhjä, jos ei ole asennettu ensimmäistäkään)
 	// oskernelversion
-	oskernelversion = ::GetWindowsVersion(osvi);
+	oskernelversion = ::GetWindowsVersion();
 	// osbits
 	if(native_sys_info.wProcessorArchitecture >= 6 && native_sys_info.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_UNKNOWN)
 		osbits = 64;

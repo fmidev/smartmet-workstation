@@ -361,28 +361,11 @@ double NFmiAdjustedTimeScaleView::CalcTimeScaleWidthInMM(void)
 // Kun Major-step on laskettu, minor on aina yksi pykälä siitä pienempi tai jos ollaan jo alarajalla, se on sitten sama.
 void NFmiAdjustedTimeScaleView::GetTimeSteps(NFmiDrawingEnvironment &theDrawingEnvi, int &theMajorStepInMinutesOut, int &theMinorStepInMinutesOut)
 {
-	static const NFmiString shortLabel("00");
-	static const NFmiString longLabel("00:00");
-
-	// 0. Tehdään dummy tekstin printtaus (varmasti kauas ruudun ulkopuolelle) että varmistetaan että toolboxissa on oikea fontti päälä tekstien pituus laskuja varten
-	NFmiText dummyText(NFmiPoint(-1111, -1111), shortLabel, false, 0, &theDrawingEnvi);
-	itsToolBox->Convert(&dummyText);
-
 	// 1. Calc width of time scale in [mm]
 	double scaleWidthInMM = CalcTimeScaleWidthInMM();
 	// 2. Calc width of string "00" and "00:00" in [mm]
 	double shortLabelLenInMM = 2 * theDrawingEnvi.GetFontSize().X() / (itsToolboxViewsInterface->ContextPixelsPerMM_x(itsMapViewDescTopIndex) * 1.88);
 	double longLabelLenInMM = 5 * theDrawingEnvi.GetFontSize().X() / (itsToolboxViewsInterface->ContextPixelsPerMM_x(itsMapViewDescTopIndex) * 1.88);
-/*
-	double shortLabelLenInMM = RelativeXToMM(itsToolBox->MeasureText(shortLabel));
-	double longLabelLenInMM = RelativeXToMM(itsToolBox->MeasureText(longLabel));
-	// TÄMÄ ON HACK, pirun shortLabelLenInMM -lasku vaihtelee hieman riippuen miten ikkunaa on venytetty, 
-	// mutta longLabelLenInMM taas palauttaa näemmä aina samaa. 
-	// Kokeilin jo että josko auttaisi jos laskettaisiin dummy tekstin pituus ensin, joka asettaisi jonkun jutun kohdalleen 
-	// ennen molempia laskuja, mutta se ei vaikuttanut tulokseen. 
-	// JOTEN lasken sitten shortLabel jutun longLabel -jutun avulla
-	shortLabelLenInMM = longLabelLenInMM * (2./5.); // TÄMÄ ON PAKON SANELEMA HACK-VIRITYS!!!!
-*/
 	// 3. Calc width of timeview in minutes
     int minutesInTimeScale = boost::math::iround(itsBaseScale->StepNumber() * itsBaseScale->StepValue());
     int scaleStepInMinutes = boost::math::iround(itsBaseScale->StepValue());

@@ -95,6 +95,7 @@ namespace Wms
         bool isTotalMapViewStaticMapClientStateAvailable() const override;
         bool isSetToBeKilled() const override;
         bool getCapabilitiesHaveBeenRetrieved() const override;
+        std::string makeWmsLayerTimeDimensionTooltipString(const NFmiDataIdent& dataIdent, bool shortVersion) const override;
     private:
         StaticMapClientState createStaticMapClientState();
         MapViewStaticMapClientState createMapViewStaticMapClientState(unsigned int mapAreaCount);

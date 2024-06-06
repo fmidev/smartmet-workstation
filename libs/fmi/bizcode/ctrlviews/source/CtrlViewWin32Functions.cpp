@@ -5,6 +5,7 @@
 #include "CtrlViewDocumentInterface.h"
 #include "NFmiMouseClickUrlActionData.h"
 #include "CtrlViewKeyboardFunctions.h"
+#include "NFmiApplicationWinRegistry.h"
 
 #include <stdexcept>
 
@@ -241,12 +242,21 @@ namespace CtrlView
         Toolmaster::SetToolMastersDC(theDC, theClientRect);
     }
 
-    void OpenWantedUrlInBrowser(SmartMetOpenUrlAction currentOpenUrlAction)
+    void OpenWantedUrlInBrowser(SmartMetOpenUrlAction currentOpenUrlAction, int mapViewDescTopIndex)
     {
         if(currentOpenUrlAction != SmartMetOpenUrlAction::None)
         {
             auto* ctrlViewInterface = CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation();
-            auto baseUrl = ctrlViewInterface->MouseClickUrlActionData().GetMouseActionUrl(currentOpenUrlAction, ctrlViewInterface->ToolTipLatLonPoint());
+            auto pointedLatlonPoint = ctrlViewInterface->ToolTipLatLonPoint();
+            auto mapTime = ctrlViewInterface->CurrentTime(mapViewDescTopIndex);
+            float currentRadiusInKm = float(ctrlViewInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().CalculateStartEndDistanceInMeters() / 1000.);
+            if(currentRadiusInKm < 0)
+            {
+                // Jos distance measure työkalua ei ole vielä käytetty, palauttaa se mitatun matkan pituudeksi -1:n,
+                // tällöin laitetaan vain joku default arvo eli vaikka 50 km
+                currentRadiusInKm = 50.f;
+            }
+            auto baseUrl = ctrlViewInterface->MouseClickUrlActionData().GetMouseActionUrl(currentOpenUrlAction, pointedLatlonPoint, mapTime, currentRadiusInKm);
             if(!baseUrl.empty())
             {
                 CString urlToOpen = CA2T(baseUrl.c_str());

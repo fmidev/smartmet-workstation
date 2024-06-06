@@ -223,8 +223,16 @@ void CSmartMetView::DrawOverBitmapThings(NFmiToolBox * theGTB)
 
 bool CSmartMetView::GenerateMapBitmap(CBitmap *theUsedBitmap, CDC *theUsedCDC, CDC *theCompatibilityCDC)
 {
+	try
+	{
 	NFmiEditMapGeneralDataDoc *data = GetDocument()->GetData();
 	return MapDraw::GenerateMapBitmap(&data->GetCtrlViewDocumentInterface(), itsMapViewDescTopIndex, theUsedBitmap, theUsedCDC, theCompatibilityCDC, nullptr);
+	}
+	catch(std::exception& e)
+	{
+		CatLog::logMessage(e.what(), CatLog::Severity::Error, CatLog::Category::Configuration, true);
+		return false;
+	}
 }
 
 void CSmartMetView::DoGraphReportOnDraw(const CtrlViewUtils::GraphicalInfo &graphicalInfo, double scaleFactor)
@@ -1389,7 +1397,7 @@ void CSmartMetView::OnLButtonUp(UINT nFlags, CPoint point)
 	if(CtrlView::HandleUrlMouseActions(itsCurrentOpenUrlAction))
 	{
 		// 2. Sitten mahdollisesti hanskataan se klikatun pisteen url-action
-		CtrlView::OpenWantedUrlInBrowser(itsCurrentOpenUrlAction);
+		CtrlView::OpenWantedUrlInBrowser(itsCurrentOpenUrlAction, itsMapViewDescTopIndex);
 	}
 	// 3. Lopuksi aina nollataan menossa oleva url-action asetus
 	itsCurrentOpenUrlAction = SmartMetOpenUrlAction::None;

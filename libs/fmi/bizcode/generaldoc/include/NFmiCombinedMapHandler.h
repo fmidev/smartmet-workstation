@@ -292,6 +292,7 @@ private:
     bool isWmsSupportBeenKilled() const;
     void doWmsSupportRenewalProcessInSeparateThread(const std::string& creationName);
 
+    void initMapViewDescTops();
     void initMapConfigurationSystemMain();
     void initMapConfigurationSystem();
     void initProjectionCurvatureInfo();

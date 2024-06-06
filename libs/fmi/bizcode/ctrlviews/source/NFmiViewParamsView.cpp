@@ -642,6 +642,11 @@ std::string NFmiViewParamsView::MakeWmsTooltipText(const boost::shared_ptr<NFmiD
 		auto fixedLayerInfoName = layerInfo.name;
 		boost::replace_all(fixedLayerInfoName, ":", "/");
 		str += "<br>" + layerInfo.style.legendDomain + " + " + fixedLayerInfoName;
+		auto timeDimensionStr = wmsSupportPtr->makeWmsLayerTimeDimensionTooltipString(dataIdent, false);
+		if(!timeDimensionStr.empty())
+		{
+			str += timeDimensionStr;
+		}
 	}
 	catch(std::exception &e)
 	{

@@ -22,7 +22,7 @@ struct CaseStudyHeaderParInfo
 		kModelName,
         kProducerId,
 		kStoreData,
-		kCaseStudyDataIndexRange,
+		kCaseStudyDataOffsetRange,
 		kLocalCacheDataCount,
 		kEnableData, // tätä ei saa laittaa viimeiseen sarakkeeseen, koska sitä on tarkoitus piilottaa ja CGridCtrl-luokassa on bugi, joka estaa viimeisen sarakkeen Unhide-toiminnon eston, eli viimeisen sarakkeen saa aina auki hiirellä vetämällä.
 		kDataSize
@@ -162,7 +162,7 @@ private:
 	std::string AddPossibleCropDataToZoomedMapAreaOptions() const;
 	void DoResizerHooking();
 	void DoLocalCacheCountEditing(NFmiCaseStudyDataFile& dataFile, const std::string& cellText);
-	void DoCaseStudyIndexRangeEditing(NFmiCaseStudyDataFile& dataFile, const std::string& cellText);
+	void DoCaseStudyOffsetRangeEditing(NFmiCaseStudyDataFile& dataFile, const std::string& cellText);
 	std::pair<std::string, std::string> GetNameAndInfoStringsFromSelectedMetaFilePath(std::string fullPathToMetaFile);
 	void DoFirstTimeSilamCategoryCollapse();
 

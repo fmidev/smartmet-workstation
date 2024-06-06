@@ -7,6 +7,7 @@
 #include "NFmiTrajectoryView.h"
 #include "SmartMetDocumentInterface.h"
 #include "FmiWin32Helpers.h"
+#include "WaitCursorHelper.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -64,7 +65,7 @@ void CFmiTrajectoryView::OnDraw(CDC* pDC)
 	CBitmap *oldBitmap = 0;
 	if(fViewDirty)
 	{
-		CFmiWin32Helpers::WaitCursorHelper waitCursorHelper(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
+		WaitCursorHelper waitCursorHelper(itsSmartMetDocumentInterface->ShowWaitCursorWhileDrawingView());
 		if(itsMemoryBitmap)
 			itsMemoryBitmap->DeleteObject();
 		if(!itsMemoryBitmap)

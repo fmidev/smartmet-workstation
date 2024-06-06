@@ -23,6 +23,8 @@ class NFmiProducerSystem;
 class NFmiDataLoadingInfo;
 class NFmiCaseStudySettingsWinRegistry;
 
+using CaseStudyMatchingFiles = std::list<std::pair<std::string, bool>>;
+
 class CaseStudyOperationCanceledException
 {
 public:
@@ -57,7 +59,7 @@ public:
 // otetaan lokaali CaseStudyMemory.csmeta tiedostosta.
 class NFmiCsDataFileWinReg
 {
-	std::pair<int, int> itsCaseStudyDataIndexRange = gMissingIndexRange;
+	ModelDataOffsetRangeInHours itsCaseStudyModelDataOffsetRangeInHours = gMissingOffsetRangeInHours;
 	bool fFixedValueForCaseStudyDataCount = false;
 	int itsLocalCacheDataCount = 0;
 	bool fFixedValueForLocalCacheDataCount = false;
@@ -66,26 +68,23 @@ class NFmiCsDataFileWinReg
 public:
 
 	NFmiCsDataFileWinReg();
-	NFmiCsDataFileWinReg(const std::pair<int, int> &caseStudyDataIndexRange, bool fixedValueForCaseStudyDataCount, int localCacheDataCount, bool fixedValueForLocalCacheDataCount, bool store);
+	NFmiCsDataFileWinReg(const ModelDataOffsetRangeInHours &modelDataOffsetRangeInHours, bool fixedValueForCaseStudyDataCount, int localCacheDataCount, bool fixedValueForLocalCacheDataCount, bool store);
 
-	const std::pair<int, int>& CaseStudyDataIndexRange() const { return itsCaseStudyDataIndexRange; }
+	const ModelDataOffsetRangeInHours& CaseStudyModelDataOffsetRangeInHours() const { return itsCaseStudyModelDataOffsetRangeInHours; }
+	void CaseStudyModelDataOffsetRangeInHours(ModelDataOffsetRangeInHours modelDataOffsetRangeInHours);
 	bool FixedValueForCaseStudyDataCount() const { return fFixedValueForCaseStudyDataCount; }
 	int LocalCacheDataCount() const { return itsLocalCacheDataCount; }
 	bool FixedValueForLocalCacheDataCount() const { return fFixedValueForLocalCacheDataCount; }
 	bool Store() const { return fStore; }
 	bool ProperlyInitialized() const { return fProperlyInitialized; }
 	bool StoreLastDataOnly() const;
-	bool LatestDataIncluded() const;
-	std::vector<int> GetWantedModelRunIndexList() const;
 
-	static void FixCaseStudyDataIndexRange(std::pair<int, int> &caseStudyDataIndexRange);
-	void CaseStudyDataIndexRange(std::pair<int, int> caseStudyDataIndexRange);
+	static void FixCaseStudyModelDataOffsetRangeInHours(ModelDataOffsetRangeInHours & modelDataOffsetRangeInHours);
 	void FixedValueForCaseStudyDataCount(bool newValue);
 	void LocalCacheDataCount(int newValue);
 	void FixedValueForLocalCacheDataCount(bool newValue);
 	void Store(bool newValue);
 	void ProperlyInitialized(bool newValue);
-	int CalcCaseStudyDataCount() const;
 
 	bool AreDataCountsFixed() const;
 	void FixToLastDataOnlyType();
@@ -165,6 +164,7 @@ public:
 	NFmiInfoData::Type DataType() const { return itsDataType; }
 	void DataType(NFmiInfoData::Type newValue) { itsDataType = newValue; }
 	const std::string& PossibleCustomMenuFolder() const { return itsPossibleCustomMenuFolder; }
+	static CaseStudyMatchingFiles GetTimeOffsetMatchingFileList(const NFmiCaseStudyDataFile& theDataFile, const NFmiMetTime& usedWallClockTime, bool getFilesInAnyCase);
 
     bool operator==(const NFmiCaseStudyDataFile &other) const;
     bool operator!=(const NFmiCaseStudyDataFile &other) const;
@@ -216,7 +216,7 @@ public:
     void ProducerStore(bool newValue);
 	void ProducerEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, bool newValue);
 	void ProducerLocalCacheDataCount(int theDataCount);
-	void ProducerCaseStudyIndexRange(const std::pair<int, int> &theIndexRange);
+	void ProducerCaseStudyOffsetRange(const ModelDataOffsetRangeInHours &theOffsetRange);
 	std::vector<NFmiCaseStudyDataFile>& FilesData(void) {return itsFilesData;}
 	const std::vector<NFmiCaseStudyDataFile>& FilesData(void) const {return itsFilesData;}
 	NFmiCaseStudyDataFile& ProducerHeaderInfo(void) {return itsProducerHeaderInfo;}
@@ -255,8 +255,8 @@ public:
 	void CategoryEnable(NFmiHelpDataInfoSystem &theDataInfoSystem, bool newValue, const NFmiCaseStudySystem &theCaseStudySystem);
 	void ProducerLocalCacheDataCount(unsigned long theProdId, int theDataCount, const NFmiCaseStudySystem& theCaseStudySystem);
 	void CategoryLocalCacheDataCount(int theDataCount, const NFmiCaseStudySystem& theCaseStudySystem);
-	void ProducerCaseStudyIndexRange(unsigned long theProdId, const std::pair<int, int>& theIndexRange, const NFmiCaseStudySystem& theCaseStudySystem);
-	void CategoryCaseStudyIndexRange(const std::pair<int, int>& theIndexRange, const NFmiCaseStudySystem& theCaseStudySystem);
+	void ProducerCaseStudyOffsetRange(unsigned long theProdId, const ModelDataOffsetRangeInHours &theOffsetRange, const NFmiCaseStudySystem& theCaseStudySystem);
+	void CategoryCaseStudyOffsetRange(const ModelDataOffsetRangeInHours &theOffsetRange, const NFmiCaseStudySystem& theCaseStudySystem);
 	std::list<NFmiCaseStudyProducerData>& ProducersData(void) {return itsProducersData;}
 	const std::list<NFmiCaseStudyProducerData>& ProducersData(void) const {return itsProducersData;}
 	static json_spirit::Object MakeJsonObject(const NFmiCaseStudyCategoryData &theData, bool fMakeFullStore);
@@ -301,8 +301,8 @@ public:
 
 	void ProducerLocalCacheDataCount(NFmiCaseStudyDataFile& theCaseStudyDataFile, int theDataCount);
 	void CategoryLocalCacheDataCount(NFmiCaseStudyDataFile& theCaseStudyDataFile, int theDataCount);
-	void ProducerCaseStudyIndexRange(NFmiCaseStudyDataFile& theCaseStudyDataFile, const std::pair<int, int>& theIndexRange);
-	void CategoryCaseStudyIndexRange(NFmiCaseStudyDataFile& theCaseStudyDataFile, const std::pair<int, int>& theIndexRange);
+	void ProducerCaseStudyOffsetRange(NFmiCaseStudyDataFile& theCaseStudyDataFile, const ModelDataOffsetRangeInHours& theOffsetRange);
+	void CategoryCaseStudyOffsetRange(NFmiCaseStudyDataFile& theCaseStudyDataFile, const ModelDataOffsetRangeInHours& theOffsetRange);
 
 	std::vector<NFmiCaseStudyCategoryData>& CategoriesData(void) {return itsCategoriesData;}
 	void FillCaseStudyDialogData(NFmiProducerSystemsHolder &theProducerSystemsHolder);
@@ -347,8 +347,8 @@ public:
 	static std::string MakeCaseStudyDataHakeDirectory(const std::string& theBaseCaseStudyDataDirectory);
 	static std::string GetCropDataOptionStartPart() { return "CropDataArea="; }
 	static const std::vector<NFmiCategoryHeaderInitData>& GetCategoryHeaders();
-	static std::string MakeIndexRangeString(const std::pair<int, int>& indexRange);
-	static std::pair<int, int> MakeIndexRange(const std::string& str);
+	static std::string MakeModelDataOffsetRangeInHoursString(const ModelDataOffsetRangeInHours& offsetRange);
+	static ModelDataOffsetRangeInHours MakeTimeOffsetRange(const std::string& str);
 	static void SetAllCustomFolderNames(NFmiHelpDataInfoSystem& theDataInfoSystem);
 	static const std::set<std::string>& GetAllCustomFolderNames();
 	static const std::string& GetSilamCustomFolderName();

@@ -1536,7 +1536,7 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 		{
 			if(g_WmsFirstTimeUpdate.load())
 			{
-				if(itsDoc->GetCombinedMapHandler()->getWmsSupport()->isConfigured())
+				if(itsDoc->GetCombinedMapHandler()->wmsSupportAvailable())
 				{
 					CatLog::logMessage("Do one time Wms data update", CatLog::Severity::Debug, CatLog::Category::Operational);
 				}
