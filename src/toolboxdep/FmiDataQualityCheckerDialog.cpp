@@ -19,6 +19,8 @@
 #include "CtrlViewGdiPlusFunctions.h"
 #include "CtrlViewFunctions.h"
 #include "persist2.h"
+#include "NFmiValueString.h"
+#include "NFmiCtrlView.h"
 
 #ifdef _MSC_VER
 #pragma warning (disable : 4244 4267) // boost:in thread kirjastosta tulee ikävästi 4244 varoituksia
@@ -29,6 +31,16 @@
 #endif
 
 // CFmiDataQualityCheckerDialog dialog
+
+enum class CheckStatus
+{
+	Ok,
+	Warning,
+	Error,
+	NoCheck, // Tarkistusta ei ole tehty, milloin voi olla tämä tilanne?
+	NoData, // Kun datasta ei löydy testattua parametria ollenkaan
+	NoBaseValue // Kun tehdään perus status testiä, tämä on vaihtoehto, jos kyse ei ole NoCheck eikä NoData tapauksesta
+};
 
 static const int DATA_QUALITY_VIEW_TOOLTIP_ID = 1234359;
 static const int gWorkingAreaMargin = 3;
@@ -144,6 +156,7 @@ BOOL CFmiDataQualityCheckerDialog::OnInitDialog()
     std::string titleStr = ::GetDictionaryString("Data quality checking");
     SetWindowText(CA2T(titleStr.c_str()));
 	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, DATA_QUALITY_VIEW_TOOLTIP_ID, 400);
+	m_tooltip.SetTransparency(10);
 
 	CWnd *doCheckButton = GetDlgItem(IDC_BUTTON_DO_QUALITY_CHECK);
 	if(doCheckButton)
@@ -425,35 +438,49 @@ static Gdiplus::RectF GetStatusRectF(const CRect &theParamAreaRect, int timeInde
 	}
 }
 
-static NFmiColor GetStatusColor(int status)
+static NFmiColor GetStatusColor(CheckStatus status)
 {
-	if(status == 1) // ok
+	if(status == CheckStatus::Ok)
 		return NFmiColor(0, 1, 0);
-	else if(status == 2) // varoitus
+	else if(status == CheckStatus::Warning)
 		return NFmiColor(1, 0.5f, 0);
-	else if(status == 3) // virhe
+	else if(status == CheckStatus::Error)
 		return NFmiColor(1, 0, 0);
-	else if(status == 4) // ei tarkastusta
+	else if(status == CheckStatus::NoCheck)
 		return NFmiColor(0.5f, 0.5f, 0.5f);
-	else // ei paramia datassa ja muut
+	else // CheckStatus::NoData ja muut
 		return NFmiColor(0.5, 1, 1);
 }
 
-static std::string GetStatusString(int status)
+static NFmiColor GetStatusColorForTooltip(CheckStatus status)
 {
-	if(status == 1) // ok
+	if(status == CheckStatus::Ok)
+		return NFmiColor(0, 0.5f, 0);
+	else if(status == CheckStatus::Warning)
+		return NFmiColor(0.93f, 0.46f, 0);
+	else if(status == CheckStatus::Error)
+		return NFmiColor(0.78f, 0, 0);
+	else if(status == CheckStatus::NoCheck)
+		return NFmiColor(0.5f, 0.5f, 0.5f);
+	else // CheckStatus::NoData ja muut
+		return NFmiColor(0.5, 1, 1);
+}
+
+static std::string GetStatusString(CheckStatus status)
+{
+	if(status == CheckStatus::Ok)
 		return "Ok";
-	else if(status == 2) // varoitus
+	else if(status == CheckStatus::Warning)
 		return "Warning";
-	else if(status == 3) // virhe
+	else if(status == CheckStatus::Error)
 		return "Error";
-	else if(status == 4) // ei tarkastusta
+	else if(status == CheckStatus::NoCheck)
 		return "No check";
-	else // ei paramia datassa ja muut
+	else // CheckStatus::NoData ja muut
 		return "Param not found";
 }
 
-static void DrawStatusButton(Gdiplus::Graphics &theGraphics, const CRect &theParamRect, int status, int timeIndex, bool paramTotal, int timeSize)
+static void DrawStatusButton(Gdiplus::Graphics &theGraphics, const CRect &theParamRect, CheckStatus status, int timeIndex, bool paramTotal, int timeSize)
 {
 	NFmiColor frameColor(0, 0, 0);
 	NFmiColor fillColor(::GetStatusColor(status));
@@ -464,44 +491,85 @@ static void DrawStatusButton(Gdiplus::Graphics &theGraphics, const CRect &thePar
     CtrlView::DrawPath(theGraphics, statusButtonPath, frameColor, fillColor, true, true, 1);
 }
 
-// palauttaa statuksen tarkastetulle datalle.
-// 1 jos ok, 2 jos warning ja 3 jos error, 4 jos ei ole tarkastettu ja 5 jos parametria ei ollut datassa
-static int CalcParamStatus(const NFmiDataParamCheckingInfo &theCheckingInfo, const NFmiGridValuesCheck *theValuesCheck)
+static CheckStatus GetBaseCheckStatus(const NFmiDataParamCheckingInfo& theCheckingInfo, const NFmiGridValuesCheck* theValuesCheck)
 {
-	if(theValuesCheck == 0)
-		return 4;
-	else if(theValuesCheck->ChecksDone() == false)
-		return 4;
-	else if(theValuesCheck->ParamFound() == false)
-		return 5;
-	else
+	if(!theValuesCheck)
+		return CheckStatus::NoCheck;
+
+	if(theValuesCheck->ChecksDone() == false)
+		return CheckStatus::NoCheck;
+
+	if(theValuesCheck->ParamFound() == false)
+		return CheckStatus::NoData;
+
+	return CheckStatus::NoBaseValue;
+}
+
+static CheckStatus GetMinValueStatus(const NFmiDataParamCheckingInfo& theCheckingInfo, const NFmiGridValuesCheck* theValuesCheck)
+{
+	auto baseStatus = ::GetBaseCheckStatus(theCheckingInfo, theValuesCheck);
+	if(baseStatus != CheckStatus::NoBaseValue)
+		return baseStatus;
+
+	if(theValuesCheck->MinValue() != kFloatMissing)
 	{
-		int missStatus = 1;
-		if(theValuesCheck->MissingValueProsent() > theCheckingInfo.MissingValueErrorLimit())
-			missStatus = 3;
-		else if(theValuesCheck->MissingValueProsent() > theCheckingInfo.MissingValueWarningLimit())
-			missStatus = 2;
-
-		int minStatus = 1;
-		if(theValuesCheck->MinValue() != kFloatMissing)
-		{
-			if(theValuesCheck->MinValue() < theCheckingInfo.MinValueErrorLimit())
-				minStatus = 3;
-			else if(theValuesCheck->MinValue() < theCheckingInfo.MinValueWarningLimit())
-				minStatus = 2;
-		}
-
-		int maxStatus = 1;
-		if(theValuesCheck->MaxValue() != kFloatMissing)
-		{
-			if(theValuesCheck->MaxValue() > theCheckingInfo.MaxValueErrorLimit())
-				maxStatus = 3;
-			else if(theValuesCheck->MaxValue() > theCheckingInfo.MaxValueWarningLimit())
-				maxStatus = 2;
-		}
-		int status = FmiMax(FmiMax(missStatus, minStatus), maxStatus);
-		return status;
+		if(theValuesCheck->MinValue() < theCheckingInfo.MinValueErrorLimit())
+			return CheckStatus::Error;
+		
+		if(theValuesCheck->MinValue() < theCheckingInfo.MinValueWarningLimit())
+			return CheckStatus::Warning;
 	}
+
+	return CheckStatus::Ok;
+}
+
+static CheckStatus GetMaxValueStatus(const NFmiDataParamCheckingInfo& theCheckingInfo, const NFmiGridValuesCheck* theValuesCheck)
+{
+	auto baseStatus = ::GetBaseCheckStatus(theCheckingInfo, theValuesCheck);
+	if(baseStatus != CheckStatus::NoBaseValue)
+		return baseStatus;
+
+	if(theValuesCheck->MaxValue() != kFloatMissing)
+	{
+		if(theValuesCheck->MaxValue() > theCheckingInfo.MaxValueErrorLimit())
+			return CheckStatus::Error;
+
+		if(theValuesCheck->MaxValue() > theCheckingInfo.MaxValueWarningLimit())
+			return CheckStatus::Warning;
+	}
+
+	return CheckStatus::Ok;
+}
+
+static CheckStatus GetMissingValueStatus(const NFmiDataParamCheckingInfo& theCheckingInfo, const NFmiGridValuesCheck* theValuesCheck)
+{
+	auto baseStatus = ::GetBaseCheckStatus(theCheckingInfo, theValuesCheck);
+	if(baseStatus != CheckStatus::NoBaseValue)
+		return baseStatus;
+
+	if(theValuesCheck->MissingValueProsent() != kFloatMissing)
+	{
+		if(theValuesCheck->MissingValueProsent() > theCheckingInfo.MissingValueErrorLimit())
+			return CheckStatus::Error;
+
+		if(theValuesCheck->MissingValueProsent() > theCheckingInfo.MissingValueWarningLimit())
+			return CheckStatus::Warning;
+	}
+
+	return CheckStatus::Ok;
+}
+
+static CheckStatus CalcParamStatus(const NFmiDataParamCheckingInfo &theCheckingInfo, const NFmiGridValuesCheck *theValuesCheck)
+{
+	auto baseStatus = ::GetBaseCheckStatus(theCheckingInfo, theValuesCheck);
+	if(baseStatus != CheckStatus::NoBaseValue)
+		return baseStatus;
+
+	auto missStatus = ::GetMissingValueStatus(theCheckingInfo, theValuesCheck);
+	auto minStatus = ::GetMinValueStatus(theCheckingInfo, theValuesCheck);
+	auto maxStatus = ::GetMaxValueStatus(theCheckingInfo, theValuesCheck);
+	auto status = FmiMax(FmiMax(missStatus, minStatus), maxStatus);
+	return status;
 }
 
 // decimals 0 eli ei desimaaleja ja muuten yhdellä desimaalilla
@@ -514,18 +582,36 @@ static std::string GetLonLatString(const NFmiPoint &thePoint, int decimals)
 	return txt;
 }
 
-static std::string MakeMinMaxCheckString(bool shortVersion, std::string nameStr, float value)
+static std::string MakeLimitsString(double warningLimit, double errorLimit)
+{
+	std::string str;
+	str += "   (limits: warning ";
+	str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(warningLimit, 1);
+	str += ", error ";
+	str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(errorLimit, 1);
+	str += ")";
+
+	return str;
+}
+
+static std::string MakeMinMaxCheckString(bool shortVersion, std::string nameStr, float value, double warningLimit, double errorLimit)
 {
 	std::string str;
 	if(!shortVersion)
 		str += "\n";
 	else
 		str += " ";
-	str += nameStr + ": ";
+	str += nameStr;
+	str += ": ";
 	if(value == kFloatMissing)
 		str += "  -  ";
 	else
 		str += NFmiStringTools::Convert(::RoundValue(value, .01f));
+	if(!shortVersion)
+	{
+		str += ::MakeLimitsString(warningLimit, errorLimit);
+	}
+
 	return str;
 }
 
@@ -548,10 +634,13 @@ static std::string MakeMinMaxTimeLocationString(bool shortVersion, bool mainStat
 
 static std::string MakeGridValuesCheckString(const NFmiGridValuesCheck *theCheckValues, const NFmiDataParamCheckingInfo &theCheckInfo, bool shortVersion, bool mainStatus)
 {
-	std::string str = theCheckInfo.CheckedParam().GetName().CharPtr();
-	str += ":    ";
-	str += "Status: ";
-	str += ::GetStatusString(::CalcParamStatus(theCheckInfo, theCheckValues));
+	std::string baseStatusStr = theCheckInfo.CheckedParam().GetName().CharPtr();
+	baseStatusStr += ":    ";
+	baseStatusStr += "Status: ";
+	auto baseStatus = ::CalcParamStatus(theCheckInfo, theCheckValues);
+	baseStatusStr += ::GetStatusString(baseStatus);
+	std::string str = shortVersion ? baseStatusStr : NFmiCtrlView::AddColorTagsToString(baseStatusStr, ::GetStatusColorForTooltip(baseStatus), true);
+
 	if(theCheckValues)
 	{
 		if(!shortVersion && !mainStatus)
@@ -560,20 +649,29 @@ static std::string MakeGridValuesCheckString(const NFmiGridValuesCheck *theCheck
 			str += theCheckValues->MinTime().ToStr("ww HH:mm DD.MM.YYYY\n"); // on sama mikä aika (min, max) tähänä otetaan koska kyse on yhden aika-askeleen arvoista
 		}
 		else if(!shortVersion && mainStatus)
+		{
 			str += "\n";
+		}
 
-		::MakeMinMaxCheckString(shortVersion, "Max", theCheckValues->MaxValue());
-		::MakeMinMaxTimeLocationString(shortVersion, mainStatus, "Max", theCheckValues->MaxTime(), theCheckValues->MaxValueLatlon());
+		auto maxStatusStr = ::MakeMinMaxCheckString(shortVersion, "Max", theCheckValues->MaxValue(), theCheckInfo.MaxValueWarningLimit(), theCheckInfo.MaxValueErrorLimit());
+		auto maxStatus = ::GetMaxValueStatus(theCheckInfo, theCheckValues);
+		str += shortVersion ? maxStatusStr : NFmiCtrlView::AddColorTagsToString(maxStatusStr, ::GetStatusColorForTooltip(maxStatus), true);
+		str += ::MakeMinMaxTimeLocationString(shortVersion, mainStatus, "Max", theCheckValues->MaxTime(), theCheckValues->MaxValueLatlon());
 
-		::MakeMinMaxCheckString(shortVersion, "Min", theCheckValues->MinValue());
-		::MakeMinMaxTimeLocationString(shortVersion, mainStatus, "Min", theCheckValues->MinTime(), theCheckValues->MinValueLatlon());
+		auto minStatusStr = ::MakeMinMaxCheckString(shortVersion, "Min", theCheckValues->MinValue(), theCheckInfo.MinValueWarningLimit(), theCheckInfo.MinValueErrorLimit());
+		auto minStatus = ::GetMinValueStatus(theCheckInfo, theCheckValues);
+		str += shortVersion ? minStatusStr : NFmiCtrlView::AddColorTagsToString(minStatusStr, ::GetStatusColorForTooltip(minStatus), true);
+		str += ::MakeMinMaxTimeLocationString(shortVersion, mainStatus, "Min", theCheckValues->MinTime(), theCheckValues->MinValueLatlon());
 
 		if(!shortVersion)
 			str += "\n";
 		else
 			str += " ";
-		str += "Miss %: ";
-		str += NFmiStringTools::Convert(::RoundValue(static_cast<float>(theCheckValues->MissingValueProsent()), .1f));
+		std::string missingStatusStr = "Miss %: ";
+		missingStatusStr += NFmiStringTools::Convert(::RoundValue(static_cast<float>(theCheckValues->MissingValueProsent()), .1f));
+		missingStatusStr += ::MakeLimitsString(theCheckInfo.MissingValueWarningLimit(), theCheckInfo.MissingValueErrorLimit());
+		auto missingStatus = ::GetMissingValueStatus(theCheckInfo, theCheckValues);
+		str += shortVersion ? missingStatusStr : NFmiCtrlView::AddColorTagsToString(missingStatusStr, ::GetStatusColorForTooltip(missingStatus), true);
 
 		if(!shortVersion && theCheckValues->MissingValueLatlon() != NFmiPoint::gMissingLatlon)
 		{
@@ -614,13 +712,13 @@ void CFmiDataQualityCheckerDialog::DoDrawStatistics(void)
 		NFmiPoint strPos(fontSizeInPixels * 1.2, paramAreaRect.top);
         CtrlView::DrawSimpleText(*itsDrawingGraphics, txtColor, fontSizeInPixels, statusStr, strPos, gFontNameStr, kTopLeft, Gdiplus::FontStyleBold);
 
-		int status = 4;
+		auto status = CheckStatus::NoCheck;
 		if(i < static_cast<int>(combinedParamChecks.size()))
 			status = ::CalcParamStatus(dataParamCheckingInfos[i], &(combinedParamChecks[i]));
 		::DrawStatusButton(*itsDrawingGraphics, paramAreaRect, status, 0, true, static_cast<int>(valueCheckMatrix.NY()));
 		for(int j = 0; j < static_cast<int>(valueCheckMatrix.NY()); j++)
 		{
-			status = 4;
+			status = CheckStatus::NoCheck;
 			if(i < static_cast<int>(valueCheckMatrix.NX()) && j < static_cast<int>(valueCheckMatrix.NY()))
 				status = ::CalcParamStatus(dataParamCheckingInfos[i], &(valueCheckMatrix[i][j]));
 			::DrawStatusButton(*itsDrawingGraphics, paramAreaRect, status, j, false, static_cast<int>(valueCheckMatrix.NY()));
