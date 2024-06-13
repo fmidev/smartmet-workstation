@@ -567,6 +567,7 @@ BEGIN_MESSAGE_MAP(CFmiCaseStudyDlg, CDialog)
     ON_BN_CLICKED(IDC_CHECK_EDIT_ENABLE_DATA, &CFmiCaseStudyDlg::OnBnClickedCheckEditEnableData)
     ON_WM_CTLCOLOR()
     ON_BN_CLICKED(IDC_BUTTON_REFRESH_GRID, &CFmiCaseStudyDlg::OnBnClickedButtonRefreshGrid)
+	ON_BN_CLICKED(IDC_BUTTON_BROWSE_FOLDER, &CFmiCaseStudyDlg::OnBnClickedButtonBrowseFolder)
 END_MESSAGE_MAP()
 
 
@@ -637,7 +638,8 @@ void CFmiCaseStudyDlg::InitDialogTexts()
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_STORE_WARNING_MESSAGES, "Store warnings");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_ZIP_DATA, "Zip data");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_CROP_DATA_TO_ZOOMED_MAP_AREA, "Crop data to zoomed main-map area");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_BROWSE, "Browse");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_BROWSE, "Browse file");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_BROWSE_FOLDER, "Browse dir");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_EDIT_ENABLE_DATA, gEditEnableDataCheckControlOffStr.c_str());
 }
 
@@ -668,6 +670,8 @@ void CFmiCaseStudyDlg::DoResizerHooking(void)
 	bOk = m_resizer.SetAnchor(IDC_CHECK_CROP_DATA_TO_ZOOMED_MAP_AREA, ANCHOR_TOP | ANCHOR_RIGHT);
 	ASSERT(bOk == TRUE);
 	bOk = m_resizer.SetAnchor(IDC_BUTTON_BROWSE, ANCHOR_TOP | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_BROWSE_FOLDER, ANCHOR_TOP | ANCHOR_RIGHT);
 	ASSERT(bOk == TRUE);
 
 	bOk = m_resizer.SetAnchor(IDC_EDIT_NAME_STR, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
@@ -1360,6 +1364,18 @@ void CFmiCaseStudyDlg::OnBnClickedButtonBrowse()
 		auto nameAndInfoPair = GetNameAndInfoStringsFromSelectedMetaFilePath(std::string(CT2A(itsPathStrU_)));
 		itsNameStrU_ = CA2T(nameAndInfoPair.first.c_str());
 		itsInfoStrU_ = CA2T(nameAndInfoPair.second.c_str());
+		UpdateData(FALSE);
+	}
+}
+
+void CFmiCaseStudyDlg::OnBnClickedButtonBrowseFolder()
+{
+	UpdateData(TRUE);
+	CFolderPickerDialog dlg(_T("Select Folder"), BIF_RETURNONLYFSDIRS | BIF_USENEWUI, NULL, 0);
+
+	if(dlg.DoModal() == IDOK)
+	{
+		itsPathStrU_ = dlg.GetFolderPath();
 		UpdateData(FALSE);
 	}
 }

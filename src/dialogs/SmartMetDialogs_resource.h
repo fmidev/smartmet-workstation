@@ -435,6 +435,8 @@
 #define IDC_BUTTON_BROWSE               8015
 #define IDD_DIALOG1                     8015
 #define IDD_DIALOG_PARAM_ADDING         8015
+#define IDC_BUTTON_BROWSE2              8016
+#define IDC_BUTTON_BROWSE_FOLDER        8016
 #define IDC_STATIC_GROUP                8019
 #define IDC_STATIC_SNOW_LIMIT           8020
 #define IDC_CHECK_UPDATE_DATA2          8020
