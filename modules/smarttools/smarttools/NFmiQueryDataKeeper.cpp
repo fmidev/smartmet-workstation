@@ -230,8 +230,13 @@ static int CalcIndex(const NFmiMetTime &theLatestOrigTime,
 {
   if (theModelRunTimeGap == 0)
     return 0;
-  int diffInMinutes = theLatestOrigTime.DifferenceInMinutes(theOrigCurrentTime);
-  return static_cast<int>(round(-diffInMinutes / theModelRunTimeGap));
+  float diffInMinutes = float(theLatestOrigTime.DifferenceInMinutes(theOrigCurrentTime));
+  auto floatIndex = -diffInMinutes / theModelRunTimeGap;
+  auto roundedFloatIndex = std::roundf(floatIndex);
+  if (std::fabs(floatIndex - roundedFloatIndex) < 0.01)
+    return int(roundedFloatIndex);
+  else
+    return -99999; // Tämä on virhe indeksi, voi johtua siitä että datalle on annettu väärä model-runtime-gab konffeissa
 }
 
 static bool IsNewer(const boost::shared_ptr<NFmiQueryDataKeeper> &theDataKeeper1,
