@@ -1658,8 +1658,9 @@ bool NFmiStationView::IsMacroParamContourDataDownSized(const boost::shared_ptr<N
 // Jos x/y arvo on 0, jätetään tämä huomiotta.
 NFmiPoint NFmiStationView::CalcPixelToGridRatio(NFmiIsoLineData& theIsoLineData, const NFmiRect& zoomedAreaRect)
 {
+	auto areasAreSameKind = NFmiQueryDataUtil::AreAreasSameKind(itsArea.get(), theIsoLineData.itsInfo->Area());
 	NFmiPoint grid2PixelRatio(0, 0);
-	if(theIsoLineData.fUseOriginalDataInPixelToGridRatioCalculations && theIsoLineData.itsInfo && theIsoLineData.itsInfo->Grid())
+	if((!areasAreSameKind || theIsoLineData.fUseOriginalDataInPixelToGridRatioCalculations) && theIsoLineData.itsInfo && theIsoLineData.itsInfo->Grid())
 	{
 		NFmiFastQueryInfo& usedInfo = *(theIsoLineData.itsInfo);
 		usedInfo.FirstLocation(); // laitetaan 1. hilapiste eli vasen alanurkka kohdalle
