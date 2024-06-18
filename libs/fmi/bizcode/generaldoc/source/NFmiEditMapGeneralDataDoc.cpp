@@ -9581,6 +9581,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 					ParameterSelectionSystem().reInitialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(), *HelpDataInfoSystem());
 					PrepareForParamAddSystemUpdate();
+					TryAutoStartUpLoad();
 					return true;
 				}
 			}

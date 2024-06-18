@@ -1292,7 +1292,7 @@ void NFmiTempView::DrawSoundingInTextFormat(TotalSoundingData & usedTotalData)
 	DrawNextLineToIndexView(lineH, text, str, p);
 
 	auto soundingDataLevelStrings = MakeSoundingDataLevelStrings(usedTotalData.itsSoundingData);
-	DrawWantedTextualSoundingDataLevels(text, p, soundingDataLevelStrings, lineH, usedTotalData.itsGroundLevelValue);
+	DrawWantedTextualSoundingDataLevels(text, p, soundingDataLevelStrings, lineH, usedTotalData.itsSoundingData.GroundLevelValue());
 }
 
 void NFmiTempView::DrawSimpleLineWithGdiplus(const NFmiTempLineInfo& lineInfo, const NFmiPoint& relativeP1, const NFmiPoint& relativeP2, bool fixEndPixelX, bool fixEndPixelY)
@@ -2154,7 +2154,7 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 			usedColor = NFmiColorSpaces::GetBrighterColor(usedColor, theBrightningFactor);
 		itsDrawingEnvironment->SetFrameColor(usedColor);
         bool onSouthernHemiSphere = usedTempInfo.Latlon().Y() < 0;
-		sounding.itsGroundLevelValue = GetPossibleGroundLevelValue(info, usedTempInfo.Latlon(), usedTempInfo.Time());
+		sounding.itsSoundingData.GroundLevelValue(GetPossibleGroundLevelValue(info, usedTempInfo.Latlon(), usedTempInfo.Time()));
 		DrawSounding(sounding, theProducerIndex, usedColor, mainCurve, onSouthernHemiSphere, ::IsNewData(info));
         itsSoundingDataCacheForTooltips.insert(std::make_pair(NFmiMTATempSystem::SoundingDataCacheMapKey(usedTempInfo, theProducer, theModelRunIndex), sounding));
 	}
@@ -3218,7 +3218,7 @@ void NFmiTempView::DrawSounding(TotalSoundingData &theUsedDataInOut, int theProd
 	envi->SetFrameColor(theUsedSoundingColor);
 	itsToolBox->UseClipping(true); // laitetaan clippaus taas päälle (huonoa koodia, mutta voi voi)
 
-    DrawSecondaryData(theUsedDataInOut.itsSoundingData, theUsedSoundingColor, theUsedDataInOut.itsGroundLevelValue);
+    DrawSecondaryData(theUsedDataInOut.itsSoundingData, theUsedSoundingColor, theUsedDataInOut.itsSoundingData.GroundLevelValue());
 
     if(fMainCurve)
         DrawHodograf(theUsedDataInOut.itsSoundingData, theProducerIndex);
@@ -3237,24 +3237,24 @@ void NFmiTempView::DrawSounding(TotalSoundingData &theUsedDataInOut, int theProd
         NFmiTempLineInfo lineInfo = mtaTempSystem.DewPointLineInfo();
 		lineInfo.Color(theUsedSoundingColor);
 		lineInfo.Thickness(boost::math::iround(lineInfo.Thickness() * itsDrawSizeFactor.X() * ExtraPrintLineThicknesFactor(true)));
-		DrawTemperatures(theUsedDataInOut.itsSoundingData, kFmiDewPoint, lineInfo, theUsedDataInOut.itsGroundLevelValue);
+		DrawTemperatures(theUsedDataInOut.itsSoundingData, kFmiDewPoint, lineInfo, theUsedDataInOut.itsSoundingData.GroundLevelValue());
 	}
 
 	{
         NFmiTempLineInfo lineInfo = mtaTempSystem.TemperatureLineInfo();
 		lineInfo.Color(theUsedSoundingColor);
 		lineInfo.Thickness(boost::math::iround(lineInfo.Thickness() * itsDrawSizeFactor.X() * ExtraPrintLineThicknesFactor(true)));
-		DrawTemperatures(theUsedDataInOut.itsSoundingData, kFmiTemperature, lineInfo, theUsedDataInOut.itsGroundLevelValue);
+		DrawTemperatures(theUsedDataInOut.itsSoundingData, kFmiTemperature, lineInfo, theUsedDataInOut.itsSoundingData.GroundLevelValue());
 	}
 
 	// Draw height values
 	if(fMainCurve)
-		DrawHeightValues(theUsedDataInOut.itsSoundingData, theProducerIndex, theUsedDataInOut.itsGroundLevelValue);
+		DrawHeightValues(theUsedDataInOut.itsSoundingData, theProducerIndex, theUsedDataInOut.itsSoundingData.GroundLevelValue());
 
 	// laitetaan takaisin 'solid' kynä
 	envi->SetFillPattern(FMI_SOLID);
 	envi->SetPenSize(NFmiPoint(1, 1));
-	DrawWind(theUsedDataInOut.itsSoundingData, theProducerIndex, onSouthernHemiSphere, theUsedDataInOut.itsGroundLevelValue);
+	DrawWind(theUsedDataInOut.itsSoundingData, theProducerIndex, onSouthernHemiSphere, theUsedDataInOut.itsSoundingData.GroundLevelValue());
 
 	if(fMainCurve)
 	{

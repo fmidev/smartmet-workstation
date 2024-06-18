@@ -198,6 +198,9 @@ class NFmiSoundingData
       const boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo = nullptr,
       const NFmiGroundLevelValue &theGroundLevelValue = NFmiGroundLevelValue());
   void FillRestOfWindData(NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage);
+  const NFmiGroundLevelValue &GroundLevelValue() const { return itsGroundLevelValue; }
+  NFmiGroundLevelValue &GroundLevelValue() { return itsGroundLevelValue; }
+  void GroundLevelValue(const NFmiGroundLevelValue &newValue) { itsGroundLevelValue = newValue; }
 
  private:
   bool CheckLFCIndexCache(FmiLCLCalcType theLCLCalcTypeIn,
@@ -254,6 +257,7 @@ class NFmiSoundingData
   void FixByGroundLevelValue(const NFmiGroundLevelValue &theGroundLevelValue);
   void FixByGroundPressureValue(float theGroundPressureValue);
   void CutDataByZeroHeightIndex(int theIndex);
+  bool IsPressureLevelBelowGround(float P);
 
   NFmiLocation itsLocation;
   NFmiMetTime itsTime;
@@ -291,6 +295,8 @@ class NFmiSoundingData
   LFCIndexCache itsLFCIndexCache;
   typedef std::unordered_map<std::string, double> LiftedAirParcelCacheType;
   LiftedAirParcelCacheType itsLiftedAirParcelCache;
+  NFmiGroundLevelValue itsGroundLevelValue;
+
   bool fMovingSounding = false;
   // Jos datassa on suoraan ei-missing arvoja kyseiselle parametrille, ei sitä enää lasketa toisten
   // parametrien avulla. Tämä koskee siis Td joka voidaan laskea T:n ja RH:n avulla ja RH joka

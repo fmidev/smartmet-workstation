@@ -183,4 +183,5 @@ public:
     afx_msg void OnBnClickedCheckEditEnableData();
     afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
     afx_msg void OnBnClickedButtonRefreshGrid();
+	afx_msg void OnBnClickedButtonBrowseFolder();
 };

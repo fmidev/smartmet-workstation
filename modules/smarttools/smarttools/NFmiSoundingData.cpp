@@ -629,23 +629,26 @@ bool NFmiSoundingData::FindHighestThetaE(
     for (unsigned int i = 0; i < pV.size(); i++)
     {
       float tmpP = pV[i];
-      float tmpT = tV[i];
-      float tmpTd = tdV[i];
-      if (tmpP != kFloatMissing && tmpT != kFloatMissing && tmpTd != kFloatMissing)
+      if (tmpP != kFloatMissing && !IsPressureLevelBelowGround(tmpP))
       {
-        if (tmpP >= theMinP)  // eli ollaanko lähempana maanpintaa kuin raja paine pinta on
+        float tmpT = tV[i];
+        float tmpTd = tdV[i];
+        if (tmpT != kFloatMissing && tmpTd != kFloatMissing)
         {
-          double thetaE = NFmiSoundingFunctions::CalcThetaE(tmpT, tmpTd, tmpP);
-          if (thetaE != kFloatMissing && thetaE > theMaxThetaE)
+          if (tmpP >= theMinP)  // eli ollaanko lähempana maanpintaa kuin raja paine pinta on
           {
-            theMaxThetaE = thetaE;
-            T = tmpT;
-            Td = tmpTd;
-            P = tmpP;
+            double thetaE = NFmiSoundingFunctions::CalcThetaE(tmpT, tmpTd, tmpP);
+            if (thetaE != kFloatMissing && thetaE > theMaxThetaE)
+            {
+              theMaxThetaE = thetaE;
+              T = tmpT;
+              Td = tmpTd;
+              P = tmpP;
+            }
           }
+          else  // jos oltiin korkeammalla, voidaan lopettaa
+            break;
         }
-        else  // jos oltiin korkeammalla, voidaan lopettaa
-          break;
       }
     }
   }
@@ -714,26 +717,37 @@ bool NFmiSoundingData::CalcLCLAvgValues(
   if (pV.size() > 0)
   {
     for (unsigned int i = 0; i < pV.size(); i++)
-      if (pV[i] != kFloatMissing && tV[i] != kFloatMissing &&
-          tdV[i] != kFloatMissing)  // etsitään 1. ei puuttuva paine arvo eli alin paine arvo (missä
-                                    // myös T ja Td arvot)
+    {
+      // etsitään 1. ei puuttuva paine arvo eli alin paine arvo (missä
+      // myös T ja Td arvot)
+      auto pValue = pV[i];
+      if (pValue != kFloatMissing && !IsPressureLevelBelowGround(pValue))
       {
-        P = pV[i];
-        break;
+        if (tV[i] != kFloatMissing && tdV[i] != kFloatMissing)
+        {
+          P = pValue;
+          break;
+        }
       }
+    }
     if (P == kFloatMissing)
       return false;
-    int startP = static_cast<int>(round(GetPressureAtHeight(fromZ)));
-    int endP = static_cast<int>(round(GetPressureAtHeight(toZ)));
+    auto startP = round(GetPressureAtHeight(fromZ));
+    auto endP = round(GetPressureAtHeight(toZ));
     if (startP == kFloatMissing || endP == kFloatMissing || startP <= endP)
       return false;
-    NFmiDataModifierAvg avgT;   // riippuen moodista tässä lasketaan T tai Tpot keskiarvoa
-    NFmiDataModifierAvg avgTd;  // riippuen moodista tässä lasketaan Td tai w keskiarvoa
-    for (int pressure = startP; pressure > endP;
-         pressure--)  // käydää layeria yhden hPa:n välein läpi
+    // riippuen moodista tässä lasketaan T tai Tpot keskiarvoa
+    NFmiDataModifierAvg avgT;
+    // riippuen moodista tässä lasketaan Td tai w keskiarvoa
+    NFmiDataModifierAvg avgTd;
+    // käydää layeria yhden hPa:n välein läpi
+    for (float pressure = startP; pressure > endP; pressure--)  
     {
-      float temperature = GetValueAtPressure(kFmiTemperature, static_cast<float>(pressure));
-      float dewpoint = GetValueAtPressure(kFmiDewPoint, static_cast<float>(pressure));
+      if (IsPressureLevelBelowGround(pressure))
+        continue;
+
+      float temperature = GetValueAtPressure(kFmiTemperature, pressure);
+      float dewpoint = GetValueAtPressure(kFmiDewPoint, pressure);
       if (temperature != kFloatMissing && dewpoint != kFloatMissing)
       {
         if (fUsePotTandMix)
@@ -767,6 +781,11 @@ bool NFmiSoundingData::CalcLCLAvgValues(
   return false;
 }
 
+bool NFmiSoundingData::IsPressureLevelBelowGround(float P)
+{
+  return itsGroundLevelValue.IsBelowGroundLevelCase(P);
+}
+
 // Tämä hakee annettua painearvoa lähimmät arvot, jotka löytyvät kaikille halutuille parametreille.
 // Palauttaa true, jos löytyy dataa ja false jos ei löydy.
 // OLETUS: maanpinta arvot ovat vektorin alussa, pitäisi tarkistaa??
@@ -779,13 +798,14 @@ bool NFmiSoundingData::GetValuesStartingLookingFromPressureLevel(double &T, doub
   {
     for (unsigned int i = 0; i < pV.size(); i++)
     {
-      if (pV[i] != kFloatMissing)  // && tV[i] != kFloatMissing && tdV[i] != kFloatMissing)
+      auto pValue = pV[i];
+      if (pValue != kFloatMissing && !IsPressureLevelBelowGround(pValue))
       {
-        if (P >= pV[i] && tV[i] != kFloatMissing && tdV[i] != kFloatMissing)
+        if (P >= pValue && tV[i] != kFloatMissing && tdV[i] != kFloatMissing)
         {
           T = tV[i];
           Td = tdV[i];
-          P = pV[i];
+          P = pValue;
           return true;
         }
       }

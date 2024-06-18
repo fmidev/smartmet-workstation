@@ -924,21 +924,12 @@ void NFmiCaseStudyProducerData::ProducerLocalCacheDataCount(int theDataCount)
 	}
 }
 
-static void FixGivenIndexRange(const NFmiCaseStudyDataFile& dataFile, ModelDataOffsetRangeInHours &theIndexRange)
-{
-	theIndexRange.first = ::FixGivenDataCount(dataFile, theIndexRange.first, true);
-	if(theIndexRange.second < 1)
-		theIndexRange.second = 1;
-	if(theIndexRange.second > theIndexRange.first)
-		theIndexRange.second = theIndexRange.first;
-}
-
 void NFmiCaseStudyProducerData::ProducerCaseStudyOffsetRange(const ModelDataOffsetRangeInHours& theOffsetRange)
 {
 	if(!ProducerHeaderInfo().IsReadOnlyDataCount(false))
 	{
 		auto finalOffsetRange = theOffsetRange;
-		::FixGivenIndexRange(ProducerHeaderInfo(), finalOffsetRange);
+		NFmiCsDataFileWinReg::FixCaseStudyModelDataOffsetRangeInHours(finalOffsetRange);
 		ProducerHeaderInfo().DataFileWinRegValues().CaseStudyModelDataOffsetRangeInHours(finalOffsetRange);
 
 		for(size_t i = 0; i < itsFilesData.size(); i++)
@@ -1288,7 +1279,7 @@ void NFmiCaseStudyCategoryData::CategoryCaseStudyOffsetRange(const ModelDataOffs
 	if(!itsCategoryHeaderInfo.IsReadOnlyDataCount(true))
 	{
 		auto finalOffsetRange = theOffsetRange;
-		::FixGivenIndexRange(CategoryHeaderInfo(), finalOffsetRange);
+		NFmiCsDataFileWinReg::FixCaseStudyModelDataOffsetRangeInHours(finalOffsetRange);
 		itsCategoryHeaderInfo.DataFileWinRegValues().CaseStudyModelDataOffsetRangeInHours(finalOffsetRange);
 
 		for(auto& producerData : itsProducersData)

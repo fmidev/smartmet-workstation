@@ -2114,7 +2114,13 @@ void NFmiIsoLineView::DoPossibleIsolineSafetyFeatureDownSizing(NFmiIsoLineData* 
         
         // Korvataan havennetulla datalla piirrettävä data
         *theIsoLineDataInOut = downSizedIsoLineData;
-        UpdateOptimizedGridValues(zoomedAreaRect, downSizedIsoLineData.itsXNumber, downSizedIsoLineData.itsYNumber);
+        if(NFmiQueryDataUtil::AreAreasSameKind(itsArea.get(), theIsoLineDataInOut->itsInfo->Area()))
+        {
+            // Jos datan ja karttapohjan projektiot ovat samantyyppisiä, pitää itsOptimizedGridPtr päivittää
+            // mahdollista hilapistepiirtoa varten datan näkyvällä alueella.
+            auto visibleDataArea = itsArea->XYArea().Intersection(itsArea->XYArea(theIsoLineDataInOut->itsInfo->Area()));
+            UpdateOptimizedGridValues(visibleDataArea, downSizedIsoLineData.itsXNumber, downSizedIsoLineData.itsYNumber);
+        }
     }
 }
 

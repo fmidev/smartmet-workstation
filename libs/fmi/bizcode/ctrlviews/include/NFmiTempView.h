@@ -30,9 +30,6 @@ public:
 	double itsIntegrationTimeOffset2InHours = 0;
 	int itsIntegrationPointsCount = 0;
 	int itsIntegrationTimesCount = 0;
-	// T‰m‰ GroundLevelValue juttu ei kuulu cache-avaimen tekoon, eik‰
-	// sit‰ verrata mitenk‰‰n IsSameSounding tarkasteluissa.
-	NFmiGroundLevelValue itsGroundLevelValue;
 
 	TotalSoundingData();
 	TotalSoundingData(NFmiMTATempSystem& mtaTempSystem);
