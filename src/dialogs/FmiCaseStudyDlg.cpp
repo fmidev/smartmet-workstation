@@ -295,7 +295,7 @@ static std::string MakeModelRunText(const std::string& dataFilePath, bool isMode
 
 std::string MakeOffsetTimeString(const NFmiMetTime& offsetTime)
 {
-	return std::string(offsetTime.ToStr("Www H:mm", kEnglish));
+	return std::string(offsetTime.ToStr("MM.DD Www HH:mm", kEnglish));
 }
 
 std::string MakeRangeOffsetString(const NFmiCaseStudyDataFile& dataFile, const NFmiMetTime& usedWallClockTime)
