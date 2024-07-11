@@ -47,3 +47,15 @@ void NFmiVirtualTimeData::VirtualTime(const NFmiMetTime& virtualTime, bool caseS
     itsNormalVirtualTime = virtualTime;
     fNormalVirtualTimeSet = true;
 }
+
+std::string NFmiVirtualTimeData::GetVirtualTimeTooltipText(bool caseStudyModeOn) const
+{
+    std::string str = "<b><font color=purple>Virtual-Time mode (toggle CTRL+K):</font>\n";
+    str += "<font color=purple>VT = ";
+    const auto& usedTime = caseStudyModeOn ? itsCaseStudyVirtualTime : itsNormalVirtualTime;
+    str += usedTime.ToStr("Www YYYY.MM.DD HH:mm [utc]", kEnglish);
+    str += "</font>\n";
+    str += "<font color=purple>Change VT left click purple bar in time control</font></b>\n";
+    str += "<hr color=red><br>";
+    return str;
+}

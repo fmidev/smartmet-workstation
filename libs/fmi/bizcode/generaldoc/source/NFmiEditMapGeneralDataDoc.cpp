@@ -11020,6 +11020,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		itsVirtualTimeData.VirtualTime(virtualTime, CaseStudyModeOn());
 	}
 
+	std::string GetVirtualTimeTooltipText() const
+	{
+		return itsVirtualTimeData.GetVirtualTimeTooltipText(CaseStudyModeOn());
+	}
+
 	NFmiVirtualTimeData itsVirtualTimeData;
 	NFmiMouseClickUrlActionData itsMouseClickUrlActionData;
 	std::vector<std::string> itsLoadedDataTriggerList;
@@ -13379,4 +13384,9 @@ const NFmiMetTime& NFmiEditMapGeneralDataDoc::VirtualTime() const
 void NFmiEditMapGeneralDataDoc::VirtualTime(const NFmiMetTime& virtualTime)
 {
 	pimpl->VirtualTime(virtualTime);
+}
+
+std::string NFmiEditMapGeneralDataDoc::GetVirtualTimeTooltipText() const
+{
+	return pimpl->GetVirtualTimeTooltipText();
 }

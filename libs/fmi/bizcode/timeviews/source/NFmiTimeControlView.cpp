@@ -1767,6 +1767,10 @@ std::string NFmiTimeControlView::ComposeToolTipText(const NFmiPoint& theRelative
 	try
 	{
 		std::string str;
+
+		// Kaikissa tapauksissa jos Virtual-Time moodi p‰‰ll‰, laitetaan tietoa siit‰ heti ensimm‰iseksi
+		str += MakePossibleVirtualTimeTooltipText();
+
         if(CalcFullTimeRangeButtonRect().IsInside(theRelativePoint))
         { // Animaatio ikkuna ei siis saa olla p‰‰ll‰ ja jos ollaan FullTimeRange -napin sis‰ll‰
             str += "Set full editing time range for edited data";

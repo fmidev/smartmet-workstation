@@ -22,6 +22,7 @@ public:
 	const NFmiMetTime& NormalVirtualTime() const { return itsNormalVirtualTime; }
 	const NFmiMetTime& CaseStudyVirtualTime() const { return itsCaseStudyVirtualTime; }
 	void VirtualTime(const NFmiMetTime& virtualTime, bool caseStudyModeOn);
+	std::string GetVirtualTimeTooltipText(bool caseStudyModeOn) const;
 
 	static const NFmiColor virtualTimeBaseColor;
 };

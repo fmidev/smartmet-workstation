@@ -331,6 +331,16 @@ void NFmiCtrlView::UpdateCachedParameterName()
 	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, false, true, true, itsInfo), true);
 }
 
+std::string NFmiCtrlView::MakePossibleVirtualTimeTooltipText()
+{
+	if(itsCtrlViewDocumentInterface->VirtualTimeUsed())
+	{
+		return itsCtrlViewDocumentInterface->GetVirtualTimeTooltipText();
+	}
+
+	return "";
+}
+
 std::string NFmiCtrlView::DoBoldingParameterNameTooltipText(std::string parameterStr)
 {
 	// Jos annettu parameterStr alkaa highlight merkill‰, lis‰t‰‰n alkuun ja loppuun html bold tagit

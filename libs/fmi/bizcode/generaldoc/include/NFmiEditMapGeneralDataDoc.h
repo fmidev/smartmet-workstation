@@ -153,6 +153,7 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+	std::string GetVirtualTimeTooltipText() const;
 	void VirtualTime(const NFmiMetTime& virtualTime);
 	const NFmiMetTime& VirtualTime() const;
 	bool VirtualTimeUsed() const;

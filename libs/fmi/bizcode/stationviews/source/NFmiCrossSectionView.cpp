@@ -681,6 +681,9 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 				}
 
 				str += "<br><hr color=red><br>";
+
+				str += MakePossibleVirtualTimeTooltipText();
+
 				for(dpList->Reset(); dpList->Next(); )
 				{
 					itsDrawParam = dpList->Current(); // asetetaan todella käytetty drawParam käyttöön

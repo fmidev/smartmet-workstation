@@ -303,6 +303,7 @@ public:
     const NFmiMetTime& VirtualTime() const override;
     bool VirtualTimeUsed() const override;
     void ToggleVirtualTimeMode() override;
+    std::string GetVirtualTimeTooltipText() const override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;

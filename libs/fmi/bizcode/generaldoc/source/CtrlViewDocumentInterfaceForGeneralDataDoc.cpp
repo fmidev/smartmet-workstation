@@ -1476,6 +1476,11 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::ToggleVirtualTimeMode()
     itsDoc->ToggleVirtualTimeMode();
 }
 
+std::string CtrlViewDocumentInterfaceForGeneralDataDoc::GetVirtualTimeTooltipText() const
+{
+    return itsDoc->GetVirtualTimeTooltipText();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // ===============================================
 

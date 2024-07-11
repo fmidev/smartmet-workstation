@@ -4651,6 +4651,8 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
 	    str += timeStr1;
 	    str += "<br><hr color=red><br>";
 
+		str += MakePossibleVirtualTimeTooltipText();
+
         viewedInfo->Param(static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent())); // parametri pit‰‰ asettaa
 		// n‰in saadaan selville 1. piirretty piste, ik‰v‰‰ koodia, mutta ei voi mit‰‰n...
 		bool composeAllSelectedLocations = false;
