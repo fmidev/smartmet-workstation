@@ -329,6 +329,7 @@ void NFmiTimeControlView::DrawAnimationBox(void)
 			lastFrameDelayStrPlace.Y(lastFrameDelayStrPlace.Y() - lastFrameDelayRect.Height() * 0.7);
 			::DrawCenteredText(itsGdiPlusGraphics, textColor, itsButtonSizeInMM_y * 0.7, lasframeDelayStr, lastFrameDelayStrPlace, GetGraphicalInfo().itsPixelsPerMM_y, itsToolBox);
 		}
+		itsGdiPlusGraphics->ResetClip();
 	}
 }
 
@@ -408,7 +409,7 @@ void NFmiTimeControlView::DrawVirtualTimeDataBox()
 void NFmiTimeControlView::DrawVirtualTimeSlider()
 {
 	auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
-	float sliderRectHeightInMM = 1.8f;
+	float sliderRectHeightInMM = 2.2f;
 	auto heigthInPixels = boost::math::iround(sliderRectHeightInMM * graphicalInfo.itsPixelsPerMM_y);
 	auto relativeHeight = itsToolBox->SY(heigthInPixels);
 
@@ -422,7 +423,7 @@ void NFmiTimeControlView::DrawVirtualTimeSlider()
 
 	const auto& baseColor = NFmiVirtualTimeData::virtualTimeBaseColor;
 	NFmiColor fillColor = NFmiColorSpaces::GetBrighterColor(baseColor, 45.);
-	fillColor.Alpha(0.25f);
+	fillColor.Alpha(0.35f);
 	CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, baseColor, fillColor, true, true, penThicknessInPixels);
 }
 
@@ -944,6 +945,36 @@ bool NFmiTimeControlView::AnimationButtonReleased(const NFmiPoint & thePlace,uns
 		return false;
 }
 
+bool NFmiTimeControlView::HandlePossibleVirtualTimeSet(const NFmiPoint& thePlace, unsigned long theKey)
+{
+	if(!itsCtrlViewDocumentInterface->VirtualTimeUsed() || !itsVirtualTimeSliderRect.IsInside(thePlace))
+	{
+		return false;
+	}
+
+	auto pointedTime = itsTimeView->GetTime(thePlace);
+	itsCtrlViewDocumentInterface->VirtualTime(pointedTime);
+	return true;
+}
+
+// Tiettyj‰ hiiren klikkauksia halutaan tehd‰ monessa kohtaa (4) NFmiTimeControlView::LeftButtonUp 
+// metodissa, siksi ne on niputettu t‰h‰n yhteen kutsuun.
+bool NFmiTimeControlView::DoPrimaryLeftButtonUpChecks(const NFmiPoint& thePlace, unsigned long theKey)
+{
+	if(HandlePossibleVirtualTimeSet(thePlace, theKey))
+	{
+		return true;
+	}
+	
+	if(itsCtrlViewDocumentInterface->SetDataToPreviousTime(itsMapViewDescTopIndex))
+	{
+		itsTimeBag->SetCurrent(itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex));
+		return true;
+	}
+	
+	return false;
+}
+
 bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long theKey)
 {
 	bool status = false;
@@ -954,11 +985,13 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 	// T‰st‰ seurasi, ett‰ jos ei ole merkint‰‰ onko hiiri 'kaapattu', mutta hiiri on aikakontrolli-ikkunan p‰‰ll‰
 	// tehd‰‰n kuitenkin hyppy edelliseen aikaan. Muuten taaksep‰in ajassa klikkailu ei toimi kuten
 	// ennen n‰it‰ Mirwasta otettuja aikakontrolli hiirenk‰sittely uudistuksia.
-    if(!IsMouseCaptured() && !CalcFullTimeRangeButtonRect().IsInside(thePlace))
+	auto isMouseCaptured = IsMouseCaptured();
+	auto isInsideFullTimeRangeButtonRect = CalcFullTimeRangeButtonRect().IsInside(thePlace);
+    if(!isMouseCaptured && !isInsideFullTimeRangeButtonRect)
 	{
         if(IsIn(thePlace))
-        {	// eli jos hiiren napista on p‰‰stetty irti (vaikka sit‰ ei oltu otettu kiinni) ja kursori on aikaikkunan p‰‰ll‰, siirret‰‰n aikaa taaksep‰in
-
+        {	
+			// eli jos hiiren napista on p‰‰stetty irti (vaikka sit‰ ei oltu otettu kiinni) ja kursori on aikaikkunan p‰‰ll‰, siirret‰‰n aikaa taaksep‰in
             if((ctrlKeyDown) && (theKey & kShiftKey))
             {
                 if(itsTimeBag->FindNearestTime(itsTimeView->GetTime(thePlace), kCenter, itsTimeBag->Resolution()))
@@ -974,12 +1007,11 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
                 ChangeResolution(true, ctrlKeyDown);
                 status = true;
             }
-            else if(itsCtrlViewDocumentInterface->SetDataToPreviousTime(itsMapViewDescTopIndex))
-            {
-                itsTimeBag->SetCurrent(itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex));
-                status = true;
-            }
-        }
+			else if(DoPrimaryLeftButtonUpChecks(thePlace, theKey))
+			{
+				status = true;
+			}
+		}
         else
             status = false; // jos hiirt‰ ei oltu klikattu pohjaan aikaikkunassa, eik‰ olla aikakontrolliikkunassa, ei tehd‰ mit‰‰n
 	}
@@ -1001,8 +1033,10 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 				double xDiff = thePlace.X() - itsLeftButtonDownMousePosition.X();
 				if(::fabs(xDiff) < 0.001)
 				{
-					if(itsCtrlViewDocumentInterface->SetDataToPreviousTime(itsMapViewDescTopIndex))
-						itsTimeBag->SetCurrent(itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex));
+					if(DoPrimaryLeftButtonUpChecks(thePlace, theKey))
+					{
+						status = true;
+					}
 				}
 				else
 				{
@@ -1023,8 +1057,7 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 				double xDiff = thePlace.X() - itsLeftButtonDownMousePosition.X();
 				if(::fabs(xDiff) < 0.001)
 				{
-					if(itsCtrlViewDocumentInterface->SetDataToPreviousTime(itsMapViewDescTopIndex))
-						itsTimeBag->SetCurrent(itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex));
+					DoPrimaryLeftButtonUpChecks(thePlace, theKey);
 				}
 				else
 				{
@@ -1037,7 +1070,7 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 		if(status == false)
 		{
 			// jos hiirt‰ ei oltu raahattu, tehd‰‰n vain jotain seuraavista
-            if(CalcFullTimeRangeButtonRect().IsInside(thePlace))
+            if(isInsideFullTimeRangeButtonRect)
             {
                 itsCtrlViewDocumentInterface->ResetTimeFilterTimes();
                 ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(g_EditedDataTimeRangeChangedUpdateViewIdMask);
@@ -1060,9 +1093,8 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 				{ // jos klikkaus alas tapahtui animaatio boxissa, ja sit‰ on raahattu, eik‰ oltu painettu mit‰‰n nappulaa
 					status = true;
 				}
-				else if(itsCtrlViewDocumentInterface->SetDataToPreviousTime(itsMapViewDescTopIndex))
+				else if(DoPrimaryLeftButtonUpChecks(thePlace, theKey))
 				{
-					itsTimeBag->SetCurrent(itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex));
 					status = true;
 				}
 			}

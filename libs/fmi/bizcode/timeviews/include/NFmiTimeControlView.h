@@ -195,6 +195,8 @@ protected:
 	void DrawVirtualTimeData();
 	void DrawVirtualTimeDataBox();
 	void DrawVirtualTimeSlider();
+	bool HandlePossibleVirtualTimeSet(const NFmiPoint& thePlace, unsigned long theKey);
+	bool DoPrimaryLeftButtonUpChecks(const NFmiPoint& thePlace, unsigned long theKey);
 
    NFmiTimeScaleView * itsTimeView;
    NFmiStepTimeScale * itsTimeAxis;
