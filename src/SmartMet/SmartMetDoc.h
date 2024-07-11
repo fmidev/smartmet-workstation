@@ -410,6 +410,7 @@ public:
 	afx_msg void OnAcceleratorMoveTimeBoxLocation();
 	afx_msg void OnEditGenerateNewWmsSystem();
 	afx_msg void OnUpdateEditGenerateNewWmsSystem(CCmdUI* pCmdUI);
+	afx_msg void OnAcceleratorToggleVirtualTimeMode();
 };
 
 

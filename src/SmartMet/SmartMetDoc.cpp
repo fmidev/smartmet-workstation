@@ -320,6 +320,7 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
 		ON_COMMAND(ID_ACCELERATOR_MOVE_TIME_BOX_LOCATION, &CSmartMetDoc::OnAcceleratorMoveTimeBoxLocation)
 		ON_COMMAND(ID_EDIT_GENERATE_NEW_WMS_SYSTEM, &CSmartMetDoc::OnEditGenerateNewWmsSystem)
 		ON_UPDATE_COMMAND_UI(ID_EDIT_GENERATE_NEW_WMS_SYSTEM, &CSmartMetDoc::OnUpdateEditGenerateNewWmsSystem)
+		ON_COMMAND(ID_ACCELERATOR_TOGGLE_VIRTUAL_TIME_MODE, &CSmartMetDoc::OnAcceleratorToggleVirtualTimeMode)
 		END_MESSAGE_MAP()
 
 BEGIN_DISPATCH_MAP(CSmartMetDoc, CDocument)
@@ -3833,4 +3834,10 @@ void CSmartMetDoc::OnUpdateEditGenerateNewWmsSystem(CCmdUI* pCmdUI)
 	else
 		pCmdUI->Enable(FALSE);
 #endif // DISABLE_CPPRESTSDK
+}
+
+
+void CSmartMetDoc::OnAcceleratorToggleVirtualTimeMode()
+{
+	itsData->ToggleVirtualTimeMode();
 }

@@ -21,6 +21,9 @@
 #include "catlog/catlog.h"
 #include "SmartMetViewId.h"
 #include "ApplicationInterface.h"
+#include "CtrlViewWin32Functions.h"
+#include "NFmiColorSpaces.h"
+#include "NFmiVirtualTimeData.h"
 
 
 #include <gdiplus.h>
@@ -205,6 +208,7 @@ void NFmiTimeControlView::Draw(NFmiToolBox * theGTB)
 
 			((NFmiAdjustedTimeScaleView*)itsTimeView)->DrawSelectedTimes();
 			DrawResolutionChangerBox();
+			DrawVirtualTimeData();
 		}
 		else
 			DrawNoDataAvailable();
@@ -326,6 +330,100 @@ void NFmiTimeControlView::DrawAnimationBox(void)
 			::DrawCenteredText(itsGdiPlusGraphics, textColor, itsButtonSizeInMM_y * 0.7, lasframeDelayStr, lastFrameDelayStrPlace, GetGraphicalInfo().itsPixelsPerMM_y, itsToolBox);
 		}
 	}
+}
+
+// Jos ollaan virtual-time moodissa piirret‰‰n seuraavaa (purpppura v‰rill‰):
+// 1. Vasempaan alakulmaaan laatikko, jossa tekstit: VT Www<br>MM.DD HH:mm
+// 2. Alaraunaa horisontaali palkki, jota voi klikata.
+// 3. Jos virtual-time n‰kyy aika-asteikolla, piirret‰‰n sen kohtaan pysty palkki tai merkki ja VT kirjaimet
+void NFmiTimeControlView::DrawVirtualTimeData()
+{
+	if(itsCtrlViewDocumentInterface->VirtualTimeUsed())
+	{
+		DrawVirtualTimeSlider();
+		DrawVirtualTimeDataBox();
+	}
+}
+
+void NFmiTimeControlView::DrawVirtualTimeDataBox()
+{
+	auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+
+	Gdiplus::StringFormat stringFormat;
+	stringFormat.SetAlignment(Gdiplus::StringAlignmentCenter);
+	stringFormat.SetLineAlignment(Gdiplus::StringAlignmentNear);
+
+	const auto& virtualTime = itsCtrlViewDocumentInterface->VirtualTime();
+	Gdiplus::REAL fontSize = 17;
+	Gdiplus::Font aFont(L"Arial", fontSize, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
+	auto str1 = virtualTime.ToStr("VT Www", kEnglish);
+	std::wstring wString1 = CtrlView::StringToWString(std::string(str1));
+	auto str2 = virtualTime.ToStr("MM.DD HH:mm", kEnglish);
+	std::wstring wString2 = CtrlView::StringToWString(std::string(str2));
+
+	Gdiplus::RectF boundingBox1;
+	itsGdiPlusGraphics->MeasureString(wString1.c_str(), INT(wString1.size()), &aFont, Gdiplus::PointF(0, 0), &stringFormat, &boundingBox1);
+	Gdiplus::RectF boundingBox2;
+	itsGdiPlusGraphics->MeasureString(wString2.c_str(), INT(wString2.size()), &aFont, Gdiplus::PointF(0, 0), &stringFormat, &boundingBox2);
+
+	float penThicknessInMM = 0.8f;
+	Gdiplus::REAL penThicknessInPixels = static_cast<float>(std::round(penThicknessInMM * graphicalInfo.itsPixelsPerMM_y));
+	double relativePenThickness = itsToolBox->SY((long)penThicknessInPixels);
+
+	NFmiRect virtualTimeBox;
+	virtualTimeBox.Size(NFmiPoint(FmiMax(boundingBox1.Width, boundingBox2.Width) * 1.1, (boundingBox1.Height + boundingBox2.Height) * 1.f));
+	auto usedRelativeBaseRect = itsTimeView->GetRelativeRect();
+	auto newPlace = usedRelativeBaseRect.Place();
+	newPlace.Y(newPlace.Y() - itsVirtualTimeSliderRect.Height() - relativePenThickness);
+	usedRelativeBaseRect.Place(newPlace);
+	CtrlView::PlaceBoxIntoFrame(virtualTimeBox, usedRelativeBaseRect, itsToolBox, kBottomRight);
+
+	const auto& baseColor = NFmiVirtualTimeData::virtualTimeBaseColor;
+	NFmiColor fillColor = NFmiColorSpaces::GetBrighterColor(baseColor, 50.);
+	fillColor.Alpha(0.25f);
+	Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(fillColor));
+	Gdiplus::GraphicsPath aPath;
+	Gdiplus::Rect gdiRect(static_cast<INT>(virtualTimeBox.Left()), static_cast<INT>(virtualTimeBox.Top()), static_cast<INT>(virtualTimeBox.Width()), static_cast<INT>(virtualTimeBox.Height()));
+	aPath.AddRectangle(gdiRect);
+	aPath.CloseFigure();
+	itsGdiPlusGraphics->FillPath(&aBrushBox, &aPath);
+
+	Gdiplus::Pen penBox(CtrlView::NFmiColor2GdiplusColor(NFmiColor()), penThicknessInPixels);
+	itsGdiPlusGraphics->DrawPath(&penBox, &aPath);
+
+	NFmiPoint center = virtualTimeBox.Center();
+	NFmiPoint topleft = virtualTimeBox.TopLeft();
+
+	Gdiplus::PointF timeString1OffSet(static_cast<Gdiplus::REAL>(center.X()), static_cast<Gdiplus::REAL>(topleft.Y())); // t‰m‰ offset on suhteellinen laskettuun aika-string boxiin
+	Gdiplus::PointF timeString2OffSet(timeString1OffSet);
+	timeString2OffSet.Y += fontSize;
+
+	Gdiplus::SolidBrush aBrushText1(CtrlView::NFmiColor2GdiplusColor(baseColor));
+	itsGdiPlusGraphics->DrawString(wString1.c_str(), static_cast<INT>(wString1.size()), &aFont, timeString1OffSet, &stringFormat, &aBrushText1);
+
+	Gdiplus::SolidBrush aBrushText2(CtrlView::NFmiColor2GdiplusColor(baseColor));
+	itsGdiPlusGraphics->DrawString(wString2.c_str(), static_cast<INT>(wString2.size()), &aFont, timeString2OffSet, &stringFormat, &aBrushText2);
+}
+
+void NFmiTimeControlView::DrawVirtualTimeSlider()
+{
+	auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+	float sliderRectHeightInMM = 1.8f;
+	auto heigthInPixels = boost::math::iround(sliderRectHeightInMM * graphicalInfo.itsPixelsPerMM_y);
+	auto relativeHeight = itsToolBox->SY(heigthInPixels);
+
+	itsVirtualTimeSliderRect = itsTimeView->GetRelativeRect();
+	float penThicknessInMM = 0.6f;
+	Gdiplus::REAL penThicknessInPixels = static_cast<float>(boost::math::iround(penThicknessInMM * graphicalInfo.itsPixelsPerMM_y));
+	auto relativePenThickness = itsToolBox->SY((int)penThicknessInPixels);
+	itsVirtualTimeSliderRect.Top(itsVirtualTimeSliderRect.Bottom() - relativeHeight - (relativePenThickness / 2.));
+	itsVirtualTimeSliderRect.Height(relativeHeight);
+	auto rectInPixels = CtrlView::Relative2GdiplusRect(itsToolBox, itsVirtualTimeSliderRect);
+
+	const auto& baseColor = NFmiVirtualTimeData::virtualTimeBaseColor;
+	NFmiColor fillColor = NFmiColorSpaces::GetBrighterColor(baseColor, 45.);
+	fillColor.Alpha(0.25f);
+	CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, baseColor, fillColor, true, true, penThicknessInPixels);
 }
 
 bool NFmiTimeControlView::IsTimeFiltersDrawn(void)

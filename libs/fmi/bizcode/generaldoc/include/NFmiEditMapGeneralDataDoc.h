@@ -153,6 +153,10 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+	void VirtualTime(const NFmiMetTime& virtualTime);
+	const NFmiMetTime& VirtualTime() const;
+	bool VirtualTimeUsed() const;
+	void ToggleVirtualTimeMode();
 	NFmiMouseClickUrlActionData& MouseClickUrlActionData();
 	void DoIsAnyQueryDataLateChecks();
 	std::shared_ptr<NFmiViewSettingMacro> CurrentViewMacro();

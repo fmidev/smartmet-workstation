@@ -192,6 +192,9 @@ protected:
 	NFmiRect CalcSelectedTimeArea(const NFmiMetTime &theTime) const;
     void DrawFullTimeRangeButton(Gdiplus::Graphics *theUsedGdiPlusGraphics);
     bool IsAnimationViewVisible() const;
+	void DrawVirtualTimeData();
+	void DrawVirtualTimeDataBox();
+	void DrawVirtualTimeSlider();
 
    NFmiTimeScaleView * itsTimeView;
    NFmiStepTimeScale * itsTimeAxis;
@@ -232,6 +235,7 @@ protected:
    double itsButtonSizeInMM_y; // paino nappuloiden koko millimetreissä y-suunnassa
    double itsButtonOffSetFromEdgeFactor; // kuinka kaukana paino nappula on reunoista irti suhteessa napulan kokoon
    static AnimationButtonImageHolder statAnimationButtonImages; // tämä on staattinen dataosa, koska näitä timekontrol-instansseja luodaan lennossa jatkuvasti uudelleen ja uudelleen eli bitmapit luetaan vain kerran kaikkien käyttöön
+   NFmiRect itsVirtualTimeSliderRect; // Kun tähän klikataan hiirellä, voidaan virtual-time:a säätää
 
 private:
    int RelativeLength2Minutes(double theLength);

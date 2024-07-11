@@ -408,6 +408,10 @@ public:
     virtual TrueMapViewSizeInfo&  GetTrueMapViewSizeInfo(int theDescTopIndex) const = 0;
     virtual NFmiSeaLevelPlumeData& SeaLevelPlumeData() const = 0;
     virtual NFmiMouseClickUrlActionData& MouseClickUrlActionData() const = 0;
+    virtual void VirtualTime(const NFmiMetTime& virtualTime) = 0;
+    virtual const NFmiMetTime& VirtualTime() const = 0;
+    virtual bool VirtualTimeUsed() const = 0;
+    virtual void ToggleVirtualTimeMode() = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem(void) = 0;

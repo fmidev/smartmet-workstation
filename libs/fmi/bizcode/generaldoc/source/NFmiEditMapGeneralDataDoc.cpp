@@ -148,7 +148,7 @@
 #include "CtrlViewGdiPlusFunctions.h"
 #include "ProducerData.h"
 #include "NFmiMouseClickUrlActionData.h"
-
+#include "NFmiVirtualTimeData.h"
 #include "AnimationProfiler.h"
 
 #ifdef OLDGCC
@@ -11000,6 +11000,27 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsMouseClickUrlActionData;
 	}
 
+	void ToggleVirtualTimeMode()
+	{
+		itsVirtualTimeData.ToggleVirtualTimeMode(CaseStudyModeOn(), CaseStudySystem().Time());
+	}
+
+	bool VirtualTimeUsed() const 
+	{ 
+		return itsVirtualTimeData.VirtualTimeUsed(); 
+	}
+
+	const NFmiMetTime& VirtualTime() const
+	{
+		return CaseStudyModeOn() ? itsVirtualTimeData.CaseStudyVirtualTime() : itsVirtualTimeData.NormalVirtualTime();
+	}
+
+	void VirtualTime(const NFmiMetTime& virtualTime)
+	{
+		itsVirtualTimeData.VirtualTime(virtualTime, CaseStudyModeOn());
+	}
+
+	NFmiVirtualTimeData itsVirtualTimeData;
 	NFmiMouseClickUrlActionData itsMouseClickUrlActionData;
 	std::vector<std::string> itsLoadedDataTriggerList;
 	NFmiLedLightStatusSystem itsLedLightStatusSystem;
@@ -13338,4 +13359,24 @@ void NFmiEditMapGeneralDataDoc::DoIsAnyQueryDataLateChecks()
 NFmiMouseClickUrlActionData& NFmiEditMapGeneralDataDoc::MouseClickUrlActionData()
 {
 	return pimpl->MouseClickUrlActionData();
+}
+
+void NFmiEditMapGeneralDataDoc::ToggleVirtualTimeMode()
+{
+	pimpl->ToggleVirtualTimeMode();
+}
+
+bool NFmiEditMapGeneralDataDoc::VirtualTimeUsed() const
+{
+	return pimpl->VirtualTimeUsed();
+}
+
+const NFmiMetTime& NFmiEditMapGeneralDataDoc::VirtualTime() const
+{
+	return pimpl->VirtualTime();
+}
+
+void NFmiEditMapGeneralDataDoc::VirtualTime(const NFmiMetTime& virtualTime)
+{
+	pimpl->VirtualTime(virtualTime);
 }
