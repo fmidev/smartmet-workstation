@@ -195,8 +195,10 @@ protected:
 	void DrawVirtualTimeData();
 	void DrawVirtualTimeDataBox();
 	void DrawVirtualTimeSlider();
+	void DrawVirtualTimeMarker();
 	bool HandlePossibleVirtualTimeSet(const NFmiPoint& thePlace, unsigned long theKey);
 	bool DoPrimaryLeftButtonUpChecks(const NFmiPoint& thePlace, unsigned long theKey);
+	std::pair<double, int> ConvertMilliMetersToRelativeAndPixels(double valueInMM, bool doDirectionX);
 
    NFmiTimeScaleView * itsTimeView;
    NFmiStepTimeScale * itsTimeAxis;

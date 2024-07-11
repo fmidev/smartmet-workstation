@@ -367,9 +367,8 @@ void NFmiTimeControlView::DrawVirtualTimeDataBox()
 	Gdiplus::RectF boundingBox2;
 	itsGdiPlusGraphics->MeasureString(wString2.c_str(), INT(wString2.size()), &aFont, Gdiplus::PointF(0, 0), &stringFormat, &boundingBox2);
 
-	float penThicknessInMM = 0.8f;
-	Gdiplus::REAL penThicknessInPixels = static_cast<float>(std::round(penThicknessInMM * graphicalInfo.itsPixelsPerMM_y));
-	double relativePenThickness = itsToolBox->SY((long)penThicknessInPixels);
+	float penThicknessInMM = 0.5f;
+	auto [relativePenThickness, penThicknessInPixels] = ConvertMilliMetersToRelativeAndPixels(penThicknessInMM, false);
 
 	NFmiRect virtualTimeBox;
 	virtualTimeBox.Size(NFmiPoint(FmiMax(boundingBox1.Width, boundingBox2.Width) * 1.1, (boundingBox1.Height + boundingBox2.Height) * 1.f));
@@ -389,7 +388,7 @@ void NFmiTimeControlView::DrawVirtualTimeDataBox()
 	aPath.CloseFigure();
 	itsGdiPlusGraphics->FillPath(&aBrushBox, &aPath);
 
-	Gdiplus::Pen penBox(CtrlView::NFmiColor2GdiplusColor(NFmiColor()), penThicknessInPixels);
+	Gdiplus::Pen penBox(CtrlView::NFmiColor2GdiplusColor(NFmiColor()), static_cast<Gdiplus::REAL>(penThicknessInPixels));
 	itsGdiPlusGraphics->DrawPath(&penBox, &aPath);
 
 	NFmiPoint center = virtualTimeBox.Center();
@@ -406,17 +405,23 @@ void NFmiTimeControlView::DrawVirtualTimeDataBox()
 	itsGdiPlusGraphics->DrawString(wString2.c_str(), static_cast<INT>(wString2.size()), &aFont, timeString2OffSet, &stringFormat, &aBrushText2);
 }
 
+std::pair<double, int> NFmiTimeControlView::ConvertMilliMetersToRelativeAndPixels(double valueInMM, bool doDirectionX)
+{
+	auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+	auto valueInPixels = boost::math::iround(valueInMM * (doDirectionX ? graphicalInfo.itsPixelsPerMM_x : graphicalInfo.itsPixelsPerMM_y));
+	auto relativeValue = doDirectionX ? itsToolBox->SX(valueInPixels) : itsToolBox->SY(valueInPixels);
+	return std::make_pair(relativeValue, valueInPixels);
+}
+
 void NFmiTimeControlView::DrawVirtualTimeSlider()
 {
 	auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
 	float sliderRectHeightInMM = 2.2f;
-	auto heigthInPixels = boost::math::iround(sliderRectHeightInMM * graphicalInfo.itsPixelsPerMM_y);
-	auto relativeHeight = itsToolBox->SY(heigthInPixels);
+	auto [relativeHeight, heigthInPixels] = ConvertMilliMetersToRelativeAndPixels(sliderRectHeightInMM, false);
 
 	itsVirtualTimeSliderRect = itsTimeView->GetRelativeRect();
 	float penThicknessInMM = 0.6f;
-	Gdiplus::REAL penThicknessInPixels = static_cast<float>(boost::math::iround(penThicknessInMM * graphicalInfo.itsPixelsPerMM_y));
-	auto relativePenThickness = itsToolBox->SY((int)penThicknessInPixels);
+	auto [relativePenThickness, penThicknessInPixels] = ConvertMilliMetersToRelativeAndPixels(penThicknessInMM, false);
 	itsVirtualTimeSliderRect.Top(itsVirtualTimeSliderRect.Bottom() - relativeHeight - (relativePenThickness / 2.));
 	itsVirtualTimeSliderRect.Height(relativeHeight);
 	auto rectInPixels = CtrlView::Relative2GdiplusRect(itsToolBox, itsVirtualTimeSliderRect);
@@ -424,7 +429,38 @@ void NFmiTimeControlView::DrawVirtualTimeSlider()
 	const auto& baseColor = NFmiVirtualTimeData::virtualTimeBaseColor;
 	NFmiColor fillColor = NFmiColorSpaces::GetBrighterColor(baseColor, 45.);
 	fillColor.Alpha(0.35f);
-	CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, baseColor, fillColor, true, true, penThicknessInPixels);
+	CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, baseColor, fillColor, true, true, static_cast<float>(penThicknessInPixels));
+	DrawVirtualTimeMarker();
+}
+
+// Piirretään kärjellään seisova kolmio virtual-timen kohdalle,
+// slider-laatikon päälle.
+void NFmiTimeControlView::DrawVirtualTimeMarker()
+{
+	auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+	float markerHeightInMM = 6.f;
+	auto [relativeHeight, heigthInPixels] = ConvertMilliMetersToRelativeAndPixels(markerHeightInMM, false);
+
+	const auto& baseColor = NFmiVirtualTimeData::virtualTimeBaseColor;
+	Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(baseColor));
+	auto timePointX = Time2Value(itsCtrlViewDocumentInterface->VirtualTime());
+	// p1 on kärki kolmion piste, joka on sliderin yläosassa
+	NFmiPoint p1(timePointX, itsVirtualTimeSliderRect.Top());
+	NFmiPoint p2(timePointX - (relativeHeight / 3.), itsVirtualTimeSliderRect.Top() - relativeHeight);
+	NFmiPoint p3(timePointX + (relativeHeight / 3.), itsVirtualTimeSliderRect.Top() - relativeHeight);
+	auto gdiplusP1 = CtrlView::Relative2GdiplusPoint(itsToolBox, p1);
+	auto gdiplusP2 = CtrlView::Relative2GdiplusPoint(itsToolBox, p2);
+	auto gdiplusP3 = CtrlView::Relative2GdiplusPoint(itsToolBox, p3);
+	Gdiplus::GraphicsPath aPath;
+	aPath.AddLine(gdiplusP1, gdiplusP2);
+	aPath.AddLine(gdiplusP2, gdiplusP3);
+	aPath.CloseFigure();
+	itsGdiPlusGraphics->FillPath(&aBrushBox, &aPath);
+
+	float penThicknessInMM = 0.3f;
+	auto [relativePenThickness, penThicknessInPixels] = ConvertMilliMetersToRelativeAndPixels(penThicknessInMM, false);
+	Gdiplus::Pen penBox(CtrlView::NFmiColor2GdiplusColor(NFmiColor()), static_cast<Gdiplus::REAL>(penThicknessInPixels));
+	itsGdiPlusGraphics->DrawPath(&penBox, &aPath);
 }
 
 bool NFmiTimeControlView::IsTimeFiltersDrawn(void)
