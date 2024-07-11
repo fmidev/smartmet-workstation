@@ -7,6 +7,7 @@
 #include "WaitCursorHelper.h"
 
 class NFmiToolBox;
+class NFmiRect;
 
 class NFmiColorButtonDrawingData
 {
@@ -58,6 +59,7 @@ namespace CtrlView
     void OpenWantedUrlInBrowser(SmartMetOpenUrlAction currentOpenUrlAction, int mapViewDescTopIndex);
     SmartMetOpenUrlAction GetOpenUrlKeyPressedState();
     bool HandleUrlMouseActions(SmartMetOpenUrlAction currentOpenUrlAction);
+    void PlaceBoxIntoFrame(NFmiRect& theObjectBoxAbsolute, const NFmiRect& theViewFrameRelative, NFmiToolBox* theToolbox, FmiDirection theWantedLocation);
 
     template<typename SearchFunction>
     BOOL DoReturnKeyOperation(MSG* pMsg, SearchFunction& searchFunction)

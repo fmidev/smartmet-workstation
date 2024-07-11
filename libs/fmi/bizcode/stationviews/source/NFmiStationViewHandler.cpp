@@ -2037,7 +2037,7 @@ void NFmiStationViewHandler::DrawTimeText(void)
 		{
 			if(DrawTimeTextInThisMapViewTile())
 			{
-				CtrlViewUtils::GraphicalInfo graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+				auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
 				NFmiMapViewTimeLabelInfo& timeLabelInfo = itsCtrlViewDocumentInterface->MapViewTimeLabelInfo();
 
 				const NFmiBetaProduct* currentBetaProduct = itsCtrlViewDocumentInterface->GetCurrentGeneratedBetaProduct();
@@ -2085,7 +2085,7 @@ void NFmiStationViewHandler::DrawTimeText(void)
 				NFmiRect timeBox;
 				timeBox.Size(NFmiPoint(FmiMax(boundingBox1.Width, boundingBox2.Width) * 1.1, (font1Size + font2Size) * 1.15));
 				FmiDirection timeBoxLocation = mapViewDescTop->TimeBoxLocation();
-				StationViews::PlaceBoxIntoFrame(timeBox, GetFrame(), itsToolBox, timeBoxLocation);
+				CtrlView::PlaceBoxIntoFrame(timeBox, GetFrame(), itsToolBox, timeBoxLocation);
 
 				Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(mapViewDescTop->TimeBoxFillColor()));
 				Gdiplus::GraphicsPath aPath;
