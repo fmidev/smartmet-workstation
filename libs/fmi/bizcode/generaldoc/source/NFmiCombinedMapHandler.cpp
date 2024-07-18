@@ -4162,11 +4162,11 @@ void NFmiCombinedMapHandler::removeMacroParamFromDrawParamLists(const std::strin
 	for(unsigned int mapViewDescTopIndex = 0; mapViewDescTopIndex < mapViewDescTops_.size(); mapViewDescTopIndex++)
 	{
 		NFmiPtrList<NFmiDrawParamList>::Iterator iter = getMapViewDescTop(mapViewDescTopIndex)->DrawParamListVector()->Start();
-		for(unsigned long rowIndex = 0; iter.Next(); rowIndex++)
+		for(unsigned long realRowIndex = 1; iter.Next(); realRowIndex++)
 		{
 			if(iter.CurrentPtr()->RemoveMacroParam(macroParamName))
 			{
-				::getMacroParamDataCache().update(mapViewDescTopIndex, rowIndex, iter.Current());
+				::getMacroParamDataCache().update(mapViewDescTopIndex, realRowIndex, iter.Current());
 			}
 		}
 	}
@@ -4242,7 +4242,9 @@ void NFmiCombinedMapHandler::makeMacroParamCacheUpdatesForWantedRow(int mapViewD
 {
 	NFmiDrawParamList* drawParamList = getDrawParamList(mapViewDescTopIndex, viewRowIndex);
 	if(drawParamList)
-		::getMacroParamDataCache().update(mapViewDescTopIndex, viewRowIndex, *drawParamList);
+	{
+		::getMacroParamDataCache().update(mapViewDescTopIndex, getRealRowNumber(mapViewDescTopIndex, viewRowIndex), *drawParamList);
+	}
 }
 
 // Kun jonkun parametrin piirto-ominaisuuksia muutetaan, eivät ne tulevoimaan kuin sille yhdelle
