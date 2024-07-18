@@ -62,4 +62,5 @@ public:
     void OpenSmarttoolsDialog() override;
     void OpenViewMacroDialog() override;
     void SetAllMapViewTooltipDelays(bool doRestoreAction, int delayInMilliSeconds) override;
+    void UpdateAllViewsAndDialogs(const std::string& reasonForUpdate, bool fUpdateOnlyMapViews = false) override;
 };
