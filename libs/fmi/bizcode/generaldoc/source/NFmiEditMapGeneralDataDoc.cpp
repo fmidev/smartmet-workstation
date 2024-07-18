@@ -2444,6 +2444,15 @@ bool IsDataReloadedInCaseStudyEvent(const std::string& theDataFilePattern)
 	return true;
 }
 
+int GetDataFakeProducerId(const std::string& theDataFilePattern)
+{
+	const auto helpData = HelpDataInfoSystem()->FindHelpDataInfo(theDataFilePattern);
+	if(helpData)
+		return helpData->FakeProducerId();
+	else
+		return 0; // 0 tarkoittaa ett‰ datalla ei ole fake-producer-id:t‰
+}
+
 void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern,
 			NFmiInfoData::Type theType, const std::string& theNotificationStr, bool loadFromFileState, bool& fDataWasDeletedOut, bool setCurrentTimeToNearestHour = false)
 {
@@ -2474,14 +2483,11 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 			NFmiQueryInfo *aInfo = theData ? theData->Info() : 0;
 			int theModelRunTimeGap = NFmiCaseStudyDataFile::GetModelRunTimeGapInMinutes(aInfo, theType, HelpDataInfoSystem()->FindHelpDataInfo(theDataFilePattern));
 			auto reloadCaseStudyData = IsDataReloadedInCaseStudyEvent(theDataFilePattern);
-			itsSmartInfoOrganizer->AddData(theData, theDataFileName, theDataFilePattern, theType, undoredoDepth, theMaxLatestDataCount, theModelRunTimeGap, fDataWasDeletedOut, reloadCaseStudyData);
-			if(fDataWasDeletedOut)
-			{ // data on deletoitu, n‰in voi k‰yd‰ jos esim. annetun datan origin aika on pieless‰ esim. 1900.0.0 jne (kuten on ollut mtl_ecmwf_aalto-datan kanssa joskus)
-				// tehd‰‰n raportti lokiin ja ei jatketa funktiota eteenp‰in...
-				string errorStr("Following data was not accepted to SmartMet: ");
-				errorStr += theDataFileName;
-				LogAndWarnUser(errorStr, "Data adding failed", CatLog::Severity::Error, CatLog::Category::Data, true);
-				return ;
+			auto fakeProducerId = GetDataFakeProducerId(theDataFilePattern);
+			itsSmartInfoOrganizer->AddData(theData, theDataFileName, theDataFilePattern, theType, undoredoDepth, theMaxLatestDataCount, theModelRunTimeGap,fakeProducerId, fDataWasDeletedOut, reloadCaseStudyData);
+			if(ReportPossibleRejectedLoadedData(fDataWasDeletedOut, theDataFileName))
+			{
+				return; // Data oli deletoitu, ei saa jatkaa...
 			}
 		}
 		catch(std::exception &e)
@@ -2499,74 +2505,106 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 		GetCombinedMapHandler()->makeNeededDirtyOperationsWhenDataAdded(theData, theType, removedDatasTimesOut, theDataFileName);
 		DoLastEditedDataSendHasComeBackChecks(theType);
 		UpdateParamMaskList(theType, theDataFilePattern, theData);
+		DoNewEditedDataLoadedSetups(theType, loadFromFileState, undoredoDepth, setCurrentTimeToNearestHour);
 
-		if(theType == NFmiInfoData::kEditable) // 1999.08.30/Marko
+		if(DataNotificationSettings().Use() && DataNotificationSettings().ShowIcon())
 		{
-			FilterDialogUpdateStatus(1); // 1 = filterdialogin aikakontrolli-ikkuna pit‰‰ p‰ivitt‰‰
-			itsLastBrushedViewRealRowIndex = -1; // sivellint‰ varten pit‰‰ 'nollata' t‰m‰
-			boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo();
-			if(editedInfo)
-			{
-				if((SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal || SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeStartUpLoading) && undoredoDepth > 0)
-					undoredoDepth++; // +1 tulee virheest‰, mit‰ en jaksa nyt etsi‰ maskiotuksesta (Marko: eli leveleit‰ tulee yksi v‰hemm‰n kuin pyydet‰‰n)
-				dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->LocationSelectionUndoLevel(undoredoDepth);
-				editedInfo->First(); // t‰m‰ asetetaan siksi, ett‰ jos edellisess‰ datassa oli leveleit‰ ja nykyisess‰ ei ole ja oli levelparameja n‰ytˆll‰, levelit menee pieleen jos leveli‰ ei aseteta t‰ss‰
-			}
-
-			NFmiParamBag tempbag(itsFilteringParamBag);
-			itsFilteringParamBag = theData->Info()->ParamBag();
-			itsFilteringParamBag.SetActivities(tempbag, false);
-
-			static bool firstTime = true;
-
-			if(editedInfo)
-			{
-				if(firstTime || loadFromFileState)
-				{ // s‰‰det‰‰n t‰‰ll‰ aikakontrolli ikkunan aikoja vain 1. kun editoitu data laitetaan SmartMetiin tai jos editoitu data on ladattu suoraan tiedostosta (esim. tiputtamalla)
-					firstTime = false;
-					GetCombinedMapHandler()->timeControlViewTimes(CtrlViewUtils::kDoAllMapViewDescTopIndex, editedInfo->TimeDescriptor());
-					SetCrossSectionSystemTimes(editedInfo->TimeDescriptor());
-				}
-
-                ResetTimeFilterTimes();
-				editedInfo->FirstParam();
-				itsDefaultEditedDrawParam = itsSmartInfoOrganizer->CreateDrawParam(editedInfo->Param(), 0, theType);
-
-				std::string fileName(SpecialFileStoragePath());
-				fileName += "controlpoint.dat";
-				CPManager()->Area(editedInfo->Area());
-				CPManager()->Init(editedInfo->TimeDescriptor(), editedInfo->ParamBag(), fileName, false, true);
-				if(CPManagerSet().UseOldSchoolStyle() == false) // jos ollaan uudessa multi CPManager setiss‰, pit‰‰ oldSchool CPManager viel‰ p‰ivitt‰‰, ett‰ viewMakroista ladatut CPManagerit ovat kunnossa
-				{
-					CPManager(true)->Area(editedInfo->Area());
-					CPManager(true)->Init(editedInfo->TimeDescriptor(), editedInfo->ParamBag(), fileName, false, true);
-				}
-				GetCombinedMapHandler()->clearAllMacroParamDataCacheDependentOfEditedDataAfterEditedDataChanges();
-			}
-			fIsTEMPCodeSoundingDataAlsoCopiedToEditedData = false;
-
-			DoEditedInfoTimeSetup(editedInfo, loadFromFileState, setCurrentTimeToNearestHour);
+			DoNewDataNotifications(theData, theNotificationStr, theDataFilePattern);
 		}
 
-        if(DataNotificationSettings().Use() && DataNotificationSettings().ShowIcon())
-            DoNewDataNotifications(theData, theNotificationStr, theDataFilePattern);
-
-		// T‰m‰ on kTEMPCodeSoundingData-speciaali. Jos editori k‰ytt‰‰ vain luotaus datan katseluun,
-		// eik‰ ole olemassa editoitua dataa, laitetaan t‰m‰n tyyppinen data myˆs editoitavaksi dataksi,
-		// jotta dataa voisi k‰tev‰sti katsella editorilla, ilman ett‰ tarvitsee erikseen tiputella editoitavia datoja
-		bool dataWasDeletedInInnerCall = false;
-		if(theType == NFmiInfoData::kTEMPCodeSoundingData && (EditedInfo() == nullptr || fIsTEMPCodeSoundingDataAlsoCopiedToEditedData))
-		{
-			AddQueryData(theData->Clone(), theDataFileName, "", NFmiInfoData::kEditable, "", false, dataWasDeletedInInnerCall);
-			fIsTEMPCodeSoundingDataAlsoCopiedToEditedData = true;
-		}
-
+		DoPossibleTEMPCodeSoundingDataSetup(theData, theType, theDataFileName);
 		DoPossibleCaseStudyEditedDataSetup(theData, theDataFileName, theType, fDataWasDeletedOut);
         PrepareForParamAddSystemUpdate();
 		RemoveCombinedDataFromLedChannelReport(theDataFilePattern);
 		RemoveLateDataFromLedChannelReport(theDataFilePattern);
 		AddLoadedDataToTriggerList(theDataFilePattern);
 	}
+}
+
+void DoPossibleTEMPCodeSoundingDataSetup(NFmiQueryData* theData, NFmiInfoData::Type theType, const std::string& theDataFileName)
+{
+	// T‰m‰ on kTEMPCodeSoundingData-speciaali. Jos editori k‰ytt‰‰ vain luotaus datan katseluun,
+	// eik‰ ole olemassa editoitua dataa, laitetaan t‰m‰n tyyppinen data myˆs editoitavaksi dataksi,
+	// jotta dataa voisi k‰tev‰sti katsella editorilla, ilman ett‰ tarvitsee erikseen tiputella editoitavia datoja
+	bool dataWasDeletedInInnerCall = false;
+	if(theType == NFmiInfoData::kTEMPCodeSoundingData && (EditedInfo() == nullptr || fIsTEMPCodeSoundingDataAlsoCopiedToEditedData))
+	{
+		AddQueryData(theData->Clone(), theDataFileName, "", NFmiInfoData::kEditable, "", false, dataWasDeletedInInnerCall);
+		fIsTEMPCodeSoundingDataAlsoCopiedToEditedData = true;
+	}
+}
+
+void DoNewEditedDataLoadedSetups(NFmiInfoData::Type theType, bool loadFromFileState, int undoredoDepth, bool setCurrentTimeToNearestHour)
+{
+	static bool firstTime = true;
+
+	if(theType == NFmiInfoData::kEditable) // 1999.08.30/Marko
+	{
+
+		FilterDialogUpdateStatus(1); // 1 = filterdialogin aikakontrolli-ikkuna pit‰‰ p‰ivitt‰‰
+		itsLastBrushedViewRealRowIndex = -1; // sivellint‰ varten pit‰‰ 'nollata' t‰m‰
+		boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo();
+		if(editedInfo)
+		{
+			if((SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal || SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeStartUpLoading) && undoredoDepth > 0)
+				undoredoDepth++; // +1 tulee virheest‰, mit‰ en jaksa nyt etsi‰ maskiotuksesta (Marko: eli leveleit‰ tulee yksi v‰hemm‰n kuin pyydet‰‰n)
+			dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->LocationSelectionUndoLevel(undoredoDepth);
+			editedInfo->First(); // t‰m‰ asetetaan siksi, ett‰ jos edellisess‰ datassa oli leveleit‰ ja nykyisess‰ ei ole ja oli levelparameja n‰ytˆll‰, levelit menee pieleen jos leveli‰ ei aseteta t‰ss‰
+
+			NFmiParamBag tempbag(itsFilteringParamBag);
+			itsFilteringParamBag = editedInfo->ParamBag();
+			itsFilteringParamBag.SetActivities(tempbag, false);
+
+			if(firstTime || loadFromFileState)
+			{ // s‰‰det‰‰n t‰‰ll‰ aikakontrolli ikkunan aikoja vain 1. kun editoitu data laitetaan SmartMetiin tai jos editoitu data on ladattu suoraan tiedostosta (esim. tiputtamalla)
+				firstTime = false;
+				GetCombinedMapHandler()->timeControlViewTimes(CtrlViewUtils::kDoAllMapViewDescTopIndex, editedInfo->TimeDescriptor());
+				SetCrossSectionSystemTimes(editedInfo->TimeDescriptor());
+			}
+
+			ResetTimeFilterTimes();
+			editedInfo->FirstParam();
+			itsDefaultEditedDrawParam = itsSmartInfoOrganizer->CreateDrawParam(editedInfo->Param(), 0, theType);
+
+			std::string fileName(SpecialFileStoragePath());
+			fileName += "controlpoint.dat";
+			CPManager()->Area(editedInfo->Area());
+			CPManager()->Init(editedInfo->TimeDescriptor(), editedInfo->ParamBag(), fileName, false, true);
+			if(CPManagerSet().UseOldSchoolStyle() == false) // jos ollaan uudessa multi CPManager setiss‰, pit‰‰ oldSchool CPManager viel‰ p‰ivitt‰‰, ett‰ viewMakroista ladatut CPManagerit ovat kunnossa
+			{
+				CPManager(true)->Area(editedInfo->Area());
+				CPManager(true)->Init(editedInfo->TimeDescriptor(), editedInfo->ParamBag(), fileName, false, true);
+			}
+			GetCombinedMapHandler()->clearAllMacroParamDataCacheDependentOfEditedDataAfterEditedDataChanges();
+		}
+		fIsTEMPCodeSoundingDataAlsoCopiedToEditedData = false;
+
+		DoEditedInfoTimeSetup(editedInfo, loadFromFileState, setCurrentTimeToNearestHour);
+	}
+}
+
+// Palauttaa true, jos data oli deletoitu, muuten false.
+bool ReportPossibleRejectedLoadedData(bool fDataWasDeletedOut, const std::string &theDataFileName)
+{
+	if(fDataWasDeletedOut)
+	{
+		auto virtualTimeCase = itsVirtualTimeData.VirtualTimeUsed();
+		// 1. Data on deletoitu, n‰in voi k‰yd‰ jos esim. annetun datan origin aika on pieless‰ esim. 1900.0.0 jne (kuten on ollut mtl_ecmwf_aalto-datan kanssa joskus)
+		// tehd‰‰n raportti lokiin ja ei jatketa funktiota eteenp‰in...
+		// 2. Jos ollaan Virtual-time moodissa, oletetaan ett‰ uutta dataa ei lueta sen vuoksi ett‰ valittu VT on latadun datan edell‰, t‰llˆin
+		// raportoidaan vain Debug tasolla lokiin.
+		string errorStr("Following data was not accepted to SmartMet: ");
+		if(virtualTimeCase)
+		{
+			errorStr = "Following data was not accepted to SmartMet due probably Virtual-Time usage: ";
+		}
+		errorStr += theDataFileName;
+		auto usedLogSeverity = virtualTimeCase ? CatLog::Severity::Debug : CatLog::Severity::Error;
+		LogAndWarnUser(errorStr, "Data adding failed", usedLogSeverity, CatLog::Category::Data, true);
+		return true;
+	}
+
+	return false;
 }
 
 // Luettu data lis‰t‰‰n listaan vain jos ei olla 1. kierroksen jo lokaali cachehakemistossa 
@@ -5152,23 +5190,6 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 void InsertWantedParamLayer(NFmiMenuItem& theMenuItem, int theSelectedViewRowIndex)
 {
 	GetCombinedMapHandler()->insertParamLayer(theMenuItem, theSelectedViewRowIndex);
-}
-
-// Nyt on voitu lis‰t‰/poistaa/muuttaa eri n‰ytˆill‰ olevien parametrien ja siten myˆs riveill‰ 
-// olevien macroParamien paikkaa riviss‰. T‰m‰n vuoksi pit‰‰ p‰ivitt‰‰ rivin macroParam cachen tila.
-void MakeMacroParamCacheUpdatesForCurrentRow(int mapViewDescTopIndex)
-{
-    int usedRowIndex = 0;
-    if(mapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
-    {
-        usedRowIndex = itsCurrentCrossSectionRowIndex;
-    }
-    else if(mapViewDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
-    {
-        usedRowIndex = itsCurrentViewRowIndex;
-    }
-
-	GetCombinedMapHandler()->makeMacroParamCacheUpdatesForWantedRow(mapViewDescTopIndex, usedRowIndex);
 }
 
 void DoControlPointCommand(FmiMenuCommandType command)
@@ -8644,19 +8665,22 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return info;
 	}
 
-	void DoSmartMetRefreshActions(const std::string& message)
+	void DoSmartMetRefreshActions(const std::string& message, bool makeDirtyActionsOnly)
 	{
 		LogMessage(message, CatLog::Severity::Info, CatLog::Category::Visualization);
 		GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, true, true, true); // laitetaan kartta likaiseksi
 		WindTableSystem().MustaUpdateTable(true);
 		GetCombinedMapHandler()->makeApplyViewMacroDirtyActions(ApplicationWinRegistry().DrawObjectScaleFactor());
 
-		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(message);
+		if(!makeDirtyActionsOnly)
+		{
+			ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(message);
+		}
 	}
 
 	void OnButtonRefresh(const std::string& message)
 	{
-		DoSmartMetRefreshActions(message);
+		DoSmartMetRefreshActions(message, false);
 	}
 
 	void ReloadAllDynamicHelpData()
@@ -8665,7 +8689,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		HelpDataInfoSystem()->ResetAllDynamicDataTimeStamps(); // merkit‰‰n kaikkien dynaamisten help datojen aikaleimaksi -1, eli ei ole luettu ollenkaan
 		SatelliteImageCacheSystem().ResetImages();
 		// T‰nne pit‰isi lis‰t‰ muidenkin datojen uudelleen lataus, kuten kaikki Wms jutut, CAP, Hake, KaHa, muita?
-		DoSmartMetRefreshActions("Reloading all the dynamic data (CTRL+SHIFT+F5)");
+		DoSmartMetRefreshActions("Reloading all the dynamic data (CTRL+SHIFT+F5)", false);
 		// T‰m‰n j‰lkeen pit‰‰ laittaa datan luku threadi heti p‰‰lle ylemm‰ll‰ tasolla eli CSmartMetDoc-luokassa, mist‰ t‰t‰ metodia on kutsuttukkin.
 	}
 
@@ -11003,6 +11027,22 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void ToggleVirtualTimeMode()
 	{
 		itsVirtualTimeData.ToggleVirtualTimeMode(CaseStudyModeOn(), CaseStudySystem().Time());
+		SetupInfoOrganizerVirtualTime();
+	}
+
+	void SetupInfoOrganizerVirtualTime()
+	{
+		const auto& virtualTime = CaseStudyModeOn() ? itsVirtualTimeData.CaseStudyVirtualTime() : itsVirtualTimeData.NormalVirtualTime();
+		InfoOrganizer()->SetupVirtualTime(virtualTime, itsVirtualTimeData.VirtualTimeUsed());
+		DoSmartMetRefreshActions("Virtual-Time setup changes require refresh all views actions", true);
+		if(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation())
+		{
+			// P‰ivitet‰‰n normi editoidun datan muutoksiin liittyv‰t n‰ytˆt (kartat, aikasarja, stationdata-taulukko, wind-taulukko)
+			auto updatedViews = GetUpdatedViewIdMaskForEditingData();
+			// Lis‰t‰‰n siihen viel‰ poikkileikkaus ja luotaus n‰ytˆt
+			updatedViews = updatedViews | SmartMetViewId::CrossSectionView | SmartMetViewId::SoundingView;
+			SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->ApplyUpdatedViewsFlag(updatedViews);
+		}
 	}
 
 	bool VirtualTimeUsed() const 
@@ -11018,6 +11058,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void VirtualTime(const NFmiMetTime& virtualTime)
 	{
 		itsVirtualTimeData.VirtualTime(virtualTime, CaseStudyModeOn());
+		SetupInfoOrganizerVirtualTime();
 	}
 
 	std::string GetVirtualTimeTooltipText() const
