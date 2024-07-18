@@ -155,6 +155,7 @@ ON_COMMAND(ID_BUTTON_OPEN_VIEW_MACRO_DIALOG_EXTRA_MAP, &CFmiExtraMapViewDlg::OnB
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_VIEW_RANGE_METER_LOCK_MODE_TOGGLE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapViewRangeMeterLockModeToggle)
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_MOVE_TIME_BOX_LOCATION, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapMoveTimeBoxLocation)
 ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_OBS_COMPARISON_MODE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapObsComparisonMode)
+ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_TOGGLE_VIRTUAL_TIME_MODE, &CFmiExtraMapViewDlg::OnAcceleratorExtraMapToggleVirtualTimeMode)
 END_MESSAGE_MAP()
 
 
@@ -1003,3 +1004,14 @@ void CFmiExtraMapViewDlg::OnAcceleratorExtraMapObsComparisonMode()
 	itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("Map view 2/3: Obs comparison mode on/off", ::GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
 }
 
+
+
+void CFmiExtraMapViewDlg::OnAcceleratorExtraMapToggleVirtualTimeMode()
+{
+	itsSmartMetDocumentInterface->ToggleVirtualTimeMode();
+	if(ApplicationInterface::GetApplicationInterfaceImplementation)
+	{
+		std::string updateMessage = "Virtual-Time mode changed from Map view " + std::to_string(itsMapViewDescTopIndex + 1) + " by CRTL + K";
+		ApplicationInterface::GetApplicationInterfaceImplementation()->UpdateAllViewsAndDialogs(updateMessage);
+	}
+}
