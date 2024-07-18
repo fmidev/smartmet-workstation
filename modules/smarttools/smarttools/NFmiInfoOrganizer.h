@@ -78,9 +78,11 @@ class NFmiInfoOrganizer
                int theUndoLevel,
                int theMaxLatestDataCount,
                int theModelRunTimeGap,
+               int theFakeProducerId,
                bool &fDataWasDeletedOut,
                bool reloadCaseStudyData);
   int CleanUnusedDataFromMemory();
+  void SetupVirtualTime(const NFmiMetTime &virtualTime, bool virtualTimeUsed);
   static boost::shared_ptr<NFmiFastQueryInfo> DoDynamicShallowCopy(
       const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
   static bool IsTempData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
@@ -229,6 +231,7 @@ class NFmiInfoOrganizer
   bool Add(NFmiOwnerInfo *theInfo,
            int theMaxLatestDataCount,
            int theModelRunTimeGap,
+           int theFakeProducerId,
            bool &fDataWasDeletedOut,
            bool reloadCaseStudyData);
 

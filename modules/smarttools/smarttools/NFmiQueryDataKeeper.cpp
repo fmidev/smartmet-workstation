@@ -1,10 +1,12 @@
 
 #include "NFmiQueryDataKeeper.h"
 #include "NFmiSmartInfo.h"
+#include "NFmiDrawParam.h"
 #include <newbase/NFmiFileString.h>
 #include <newbase/NFmiFileSystem.h>
 #include <newbase/NFmiQueryData.h>
 #include <fstream>
+#include <thread>
 
 namespace
 {
@@ -122,11 +124,13 @@ int NFmiQueryDataKeeper::LastUsedInMS() const
 NFmiQueryDataSetKeeper::NFmiQueryDataSetKeeper(boost::shared_ptr<NFmiOwnerInfo> &theData,
                                                int theMaxLatestDataCount,
                                                int theModelRunTimeGap,
-                                               int theKeepInMemoryTime,
-                                               bool reloadCaseStudyData)
+                                               int theFakeProducerId,
+                                               bool reloadCaseStudyData,
+                                               int theKeepInMemoryTime)
     : itsQueryDatas(),
       itsMaxLatestDataCount(theMaxLatestDataCount),
       itsModelRunTimeGap(theModelRunTimeGap),
+      itsFakeProducerId(theFakeProducerId),
       itsFilePattern(),
       itsLatestOriginTime(),
       itsKeepInMemoryTime(theKeepInMemoryTime),
@@ -136,6 +140,26 @@ NFmiQueryDataSetKeeper::NFmiQueryDataSetKeeper(boost::shared_ptr<NFmiOwnerInfo> 
   MaxLatestDataCount(theMaxLatestDataCount);
   bool dataWasDeleted = false;
   AddData(theData, true, dataWasDeleted);  // true tarkoittaa että kyse on 1. lisättävästä datasta
+  int x = 0;
+}
+
+static void DestroyDataList(NFmiQueryDataSetKeeper::ListType &&queryDatas)
+{
+  // Varsinkin salama kaudella tämä operaatio voi olla todella hidas salamadatoille,
+  // koska niissä voi olla satojatuhansia dynaamisesti luotuja NFmiMetTime olioita.
+  queryDatas.clear();
+}
+
+// Halusin siirtää tämän datojen tuhoamisen omaan threadiin, koska se voi olla hidasta.
+static void DoAsynchronousDataDestroing(NFmiQueryDataSetKeeper::ListType &queryDatas)
+{
+  // Tehdään väliaikainen lista ja swap, jotta originaali queryDatas lista on paluussa tyhjänä ja valmiina käyttöön.
+  NFmiQueryDataSetKeeper::ListType destroyedList;
+  destroyedList.swap(queryDatas);
+  // Tehdään lopullinen tuhoaminen erillisessä threadissa.
+  std::thread t(::DestroyDataList, std::move(destroyedList));
+  // Tehdään irroitus, niin ei jäädä odottelemaan loppumista.
+  t.detach();
 }
 
 // Lisätätään annettu data keeper-settiin.
@@ -147,19 +171,11 @@ void NFmiQueryDataSetKeeper::AddData(boost::shared_ptr<NFmiOwnerInfo> &theData,
                                      bool fFirstData,
                                      bool &fDataWasDeletedOut)
 {
-  if (theData)
+  if (IsDataAcceptedByVirtualTime(theData))
   {
-    itsDataType = theData->DataType();
     if (fFirstData || itsMaxLatestDataCount == 0)
     {
-      // Halusin siirtää tämän datojen tuhoamisen omaan threadiin, koska ainakin debugatessa
-      // salama-kaudella, salama datan tuhomaminen kestää, koska siinä on kymmeniä tuhansia
-      // dynaamisesti luotuja NFmiMetTime-olioita tuhottavana
-      itsQueryDatas.clear();
-
-      //::DestroyQDatasInSeparateThread(itsQueryDatas); // ei riitä että tuhoaminen siirretään omaan
-      // threadiin, OwnerInfon rakennuskin kestää!
-
+      ::DoAsynchronousDataDestroing(itsQueryDatas);
       itsQueryDatas.push_back(
           boost::shared_ptr<NFmiQueryDataKeeper>(new NFmiQueryDataKeeper(theData)));
       itsFilePattern = theData->DataFilePattern();
@@ -168,6 +184,31 @@ void NFmiQueryDataSetKeeper::AddData(boost::shared_ptr<NFmiOwnerInfo> &theData,
     else
       AddDataToSet(theData, fDataWasDeletedOut);
   }
+  else
+  {
+    theData.reset();
+    fDataWasDeletedOut = true;
+  }
+}
+
+bool NFmiQueryDataSetKeeper::IsDataAcceptedByVirtualTime(
+    boost::shared_ptr<NFmiOwnerInfo> &theData)
+{
+  if (!theData)
+  {
+    return false;
+  }
+
+  itsDataType = theData->DataType();
+
+  // Jos virtual-time ei ole käytössä TAI kyse havainto datasta, data kelpaa
+  if(!fVirtualTimeUsed || !NFmiDrawParam::IsModelRunDataType(itsDataType))
+  {
+    return true;
+  }
+
+  // Jos vitualli-time jutusta ja mallidatasta, katsotaan onko datan origTime <= VT
+  return theData->OriginTime() <= itsVirtualTime;
 }
 
 // Oletus: annettu data lisätään tähän data settiin niin että etsitään sen paikka (indeksi).
@@ -315,12 +356,23 @@ boost::shared_ptr<NFmiQueryDataKeeper> NFmiQueryDataSetKeeper::GetDataKeeper(int
   if (qDataKeeperPtr)
     return qDataKeeperPtr;
 
-  if (DoOnDemandOldDataLoad(theIndex))
+  if (theIndex < 0 && DoOnDemandOldDataLoad(theIndex))
+  {
     return ::FindQDataKeeper(
         itsQueryDatas, theIndex);  // kokeillaan, löytyykö on-demand pyynnön jälkeen haluttua dataa
+  }
 
   // jos ei löytynyt, palautetaan tyhjä
   return boost::shared_ptr<NFmiQueryDataKeeper>();
+}
+
+boost::shared_ptr<NFmiFastQueryInfo> NFmiQueryDataSetKeeper::GetFastInfoIter(int theIndex)
+{
+  auto dataKeeper = GetDataKeeper(theIndex);
+  if (!dataKeeper)
+    return nullptr;
+
+  return dataKeeper->GetIter();
 }
 
 static NFmiMetTime CalcWantedOrigTime(const NFmiMetTime &theLatestOrigTime,
@@ -482,33 +534,23 @@ bool NFmiQueryDataSetKeeper::DoOnDemandOldDataLoad(int theIndex)
   return false;
 }
 
-const NFmiProducer *NFmiQueryDataSetKeeper::GetLatestDataProducer() const
-{
-  // Jos ei ole yhtään dataa, palauta 0, joka on error koodi tuottaja id:nä
-  if (itsQueryDatas.empty())
-    return nullptr;
-  else
-  {
-    // Muuten palauta 1. datan (joka on siis ajallisesti viimeisin eli latest) tuottaja id
-    return itsQueryDatas.front()->OriginalData()->Producer();
-  }
-}
-
 void NFmiQueryDataSetKeeper::FixLocallyReadDataProducer(NFmiQueryData *locallyReadData)
 {
-  auto wantedProducer = GetLatestDataProducer();
-  if (locallyReadData && wantedProducer)
+  if (locallyReadData && (itsFakeProducerId != 0))
   {
     auto info = locallyReadData->Info();
     info->FirstParam();
-    if (*wantedProducer != *info->Producer())
+    auto finalProducerPtr = info->Producer();
+    if (finalProducerPtr)
     {
-      info->SetProducer(*wantedProducer);
+      auto finalProducer = *finalProducerPtr;
+      finalProducer.SetIdent(itsFakeProducerId);
+      info->SetProducer(finalProducer);
     }
   }
 }
 
-// Huom! Jos vanhempia lokaal iversioita luetaan erikseen käyttöön (käytetään edellisiä malliajoja),
+// Huom! Jos vanhempia lokaaliversioita luetaan erikseen käyttöön (käytetään edellisiä malliajoja),
 // pitää tällä lailla luetuille datoille laittaa oikea tuottaja id, koska SmartMetin konffeissä
 // voidaan vaihtaa kullekin datalle haluttu producer-id (esim. virallinen data, jonka id pitää
 // muuttaa että se ei menisi sekaisin editoidun datan kanssa).
@@ -520,9 +562,12 @@ bool NFmiQueryDataSetKeeper::ReadDataFileInUse(const std::string &theFileName)
     FixLocallyReadDataProducer(dataPtr.get());
     boost::shared_ptr<NFmiOwnerInfo> ownerInfoPtr(
         new NFmiOwnerInfo(dataPtr.release(), itsDataType, theFileName, itsFilePattern, true));
-    bool dataWasDeleted = false;
-    AddDataToSet(ownerInfoPtr, dataWasDeleted);
-    return (dataWasDeleted == false);
+    if (IsDataAcceptedByVirtualTime(ownerInfoPtr))
+    {
+      bool dataWasDeleted = false;
+      AddDataToSet(ownerInfoPtr, dataWasDeleted);
+      return (dataWasDeleted == false);
+    }
   }
   catch (...)
   {  // pitää vain varmistaa että jos tiedosto on viallinen, poikkeukset napataan kiinni tässä
@@ -682,4 +727,45 @@ void NFmiQueryDataSetKeeper::MaxLatestDataCount(int newValue)
   // "Pitää olla minimissään" 0 -tarkastus
   if (itsMaxLatestDataCount < 0)
     itsMaxLatestDataCount = 0;
+}
+
+static bool VirtualTimeChangesRequireReloading(const NFmiMetTime &origVirtualTime,
+                                               bool origVirtualTimeUsed,
+                                               const NFmiMetTime &newVirtualTime,
+                                               bool newVirtualTimeUsed)
+{
+  // Jos virtuaaliaika tila muuttuu, pitää aina tehdä reload
+  if (origVirtualTimeUsed != newVirtualTimeUsed)
+    return true;
+
+  // Jos virtual-time moodi on päällä ja Virtual-Time on muuttunut, pitää tehdä reload
+  if (newVirtualTimeUsed)
+  {
+    return origVirtualTime != newVirtualTime;
+  }
+
+  return false;
+}
+
+void NFmiQueryDataSetKeeper::SetupVirtualTime(const NFmiMetTime& virtualTime, bool virtualTimeUsed)
+{
+  auto reloadRequired = ::VirtualTimeChangesRequireReloading(
+      itsVirtualTime, fVirtualTimeUsed, virtualTime, virtualTimeUsed);
+  itsVirtualTime = virtualTime;
+  fVirtualTimeUsed = virtualTimeUsed;
+  if(reloadRequired && NFmiDrawParam::IsModelRunDataType(itsDataType))
+  {
+    ReloadModelDataAfterVirtualTimeChange();
+  }
+}
+
+void NFmiQueryDataSetKeeper::ReloadModelDataAfterVirtualTimeChange()
+{
+  itsQueryDatas.clear();
+  std::list<std::string> filesOnLocalCacheDirectory = NFmiFileSystem::PatternFiles(itsFilePattern);
+  for (const auto &fileName : filesOnLocalCacheDirectory)
+  {
+    std::string usedFileName = ::GetFullFileName(itsFilePattern, fileName);
+    ReadDataFileInUse(usedFileName);
+  }
 }

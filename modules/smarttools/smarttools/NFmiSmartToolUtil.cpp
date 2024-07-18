@@ -183,6 +183,7 @@ bool NFmiSmartToolUtil::InitDataBase(NFmiInfoOrganizer *theDataBase,
                          0,
                          0,
                          0,
+                         0,
                          dataWasDeleted,
                          true);
     if (theHelperDataFileNames && theHelperDataFileNames->size())
@@ -216,6 +217,7 @@ bool NFmiSmartToolUtil::InitDataBaseHelperData(
                         theHelperDataFileNames[i],
                         theHelperDataFileNames[i],
                         dataType,
+                        0,
                         0,
                         0,
                         0,
