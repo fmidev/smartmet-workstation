@@ -3434,8 +3434,6 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
 	string str;
 	if(itsDrawParam)
 	{
-		str += MakePossibleVirtualTimeTooltipText();
-
 		auto drawParamDataType = itsDrawParam->DataType();
 		if(drawParamDataType == NFmiInfoData::kMapLayer)
 			return ::MakeMapLayerTooltipText(itsCtrlViewDocumentInterface, itsDrawParam);

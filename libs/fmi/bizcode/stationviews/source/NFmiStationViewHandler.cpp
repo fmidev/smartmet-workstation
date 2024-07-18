@@ -4664,6 +4664,7 @@ std::string NFmiStationViewHandler::ComposeToolTipText(const NFmiPoint& theRelat
 		str += ComposeMapLayerToolTipText(true);
 		str += "<hr color=red>";
 		str += "\n";
+		str += MakePossibleVirtualTimeTooltipText();
 
 		auto viewGridSizePoint = itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex);
 		auto viewGridSize = int(viewGridSizePoint.X() * viewGridSizePoint.Y());
