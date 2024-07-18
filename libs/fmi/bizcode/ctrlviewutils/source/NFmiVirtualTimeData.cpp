@@ -35,17 +35,26 @@ void NFmiVirtualTimeData::ClearCaseStudyVirtualTime()
     fCaseStudyVirtualTimeSet = false;
 }
 
-void NFmiVirtualTimeData::VirtualTime(const NFmiMetTime& virtualTime, bool caseStudyModeOn)
+bool NFmiVirtualTimeData::SignificantVirtualTimeChangeHappened(const NFmiMetTime& origVirtualTime, const NFmiMetTime& newVirtualTime)
 {
+    return fVirtualTimeUsed && (origVirtualTime != newVirtualTime);
+}
+
+bool NFmiVirtualTimeData::VirtualTime(const NFmiMetTime& virtualTime, bool caseStudyModeOn)
+{
+    bool virtualTimeChanged = false;
     if(caseStudyModeOn)
     {
+        virtualTimeChanged = SignificantVirtualTimeChangeHappened(itsCaseStudyVirtualTime,virtualTime);
         itsCaseStudyVirtualTime = virtualTime;
         fCaseStudyVirtualTimeSet = true;
-        return;
+        return virtualTimeChanged;
     }
 
+    virtualTimeChanged = SignificantVirtualTimeChangeHappened(itsNormalVirtualTime, virtualTime);
     itsNormalVirtualTime = virtualTime;
     fNormalVirtualTimeSet = true;
+    return virtualTimeChanged;
 }
 
 std::string NFmiVirtualTimeData::GetVirtualTimeTooltipText(bool caseStudyModeOn) const

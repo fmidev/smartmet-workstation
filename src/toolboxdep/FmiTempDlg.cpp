@@ -134,6 +134,7 @@ BEGIN_MESSAGE_MAP(CFmiTempDlg, CDialog)
 	ON_EN_CHANGE(IDC_EDIT_AVG_TIME_RANGE_2, &CFmiTempDlg::OnEnChangeEditAvgTimeRange2)
 	ON_BN_CLICKED(IDC_BUTTON_CLEAR_AVG_CONTROLS, &CFmiTempDlg::OnBnClickedButtonClearAvgControls)
 	ON_COMMAND(ID_ACCELERATOR_SOUNDING_AUTO_ADJUST_SCALES, &CFmiTempDlg::OnAcceleratorSoundingAutoAdjustScales)
+	ON_COMMAND(ID_ACCELERATOR_SOUNDING_TOGGLE_VIRTUAL_TIME_MODE, &CFmiTempDlg::OnAcceleratorSoundingToggleVirtualTimeMode)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -915,7 +916,6 @@ void CFmiTempDlg::OnEnChangeEditAvgTimeRange2()
 	Invalidate(FALSE);
 }
 
-
 void CFmiTempDlg::OnBnClickedButtonClearAvgControls()
 {
 	auto& mtaTempSystem = itsSmartMetDocumentInterface->GetMTATempSystem();
@@ -930,10 +930,15 @@ void CFmiTempDlg::OnBnClickedButtonClearAvgControls()
 	Invalidate(FALSE);
 }
 
-
 void CFmiTempDlg::OnAcceleratorSoundingAutoAdjustScales()
 {
 	itsView->AutoAdjustValueScales(false, false);
 	itsView->Update(true);
 	Invalidate(FALSE);
+}
+
+void CFmiTempDlg::OnAcceleratorSoundingToggleVirtualTimeMode()
+{
+	std::string viewName = "Sounding-view";
+	CFmiWin32TemplateHelpers::OnAcceleratorToggleVirtualTimeMode(itsSmartMetDocumentInterface, viewName);
 }

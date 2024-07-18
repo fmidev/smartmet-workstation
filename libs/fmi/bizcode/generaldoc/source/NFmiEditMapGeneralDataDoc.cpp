@@ -11024,17 +11024,17 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsMouseClickUrlActionData;
 	}
 
-	void ToggleVirtualTimeMode()
+	void ToggleVirtualTimeMode(const std::string& logMessage)
 	{
 		itsVirtualTimeData.ToggleVirtualTimeMode(CaseStudyModeOn(), CaseStudySystem().Time());
-		SetupInfoOrganizerVirtualTime();
+		SetupInfoOrganizerVirtualTime(logMessage);
 	}
 
-	void SetupInfoOrganizerVirtualTime()
+	void SetupInfoOrganizerVirtualTime(const std::string &logMessage)
 	{
 		const auto& virtualTime = CaseStudyModeOn() ? itsVirtualTimeData.CaseStudyVirtualTime() : itsVirtualTimeData.NormalVirtualTime();
 		InfoOrganizer()->SetupVirtualTime(virtualTime, itsVirtualTimeData.VirtualTimeUsed());
-		DoSmartMetRefreshActions("Virtual-Time setup changes require refresh all views actions", true);
+		DoSmartMetRefreshActions(logMessage, true);
 		if(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation())
 		{
 			// Päivitetään normi editoidun datan muutoksiin liittyvät näytöt (kartat, aikasarja, stationdata-taulukko, wind-taulukko)
@@ -11057,8 +11057,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	void VirtualTime(const NFmiMetTime& virtualTime)
 	{
-		itsVirtualTimeData.VirtualTime(virtualTime, CaseStudyModeOn());
-		SetupInfoOrganizerVirtualTime();
+		if(itsVirtualTimeData.VirtualTime(virtualTime, CaseStudyModeOn()))
+		{
+			std::string logMessage = "Virtual-Time changed to ";
+			logMessage += virtualTime.ToStr("Www YYYY.MM.DD HH:mm [utc], reloading all model data and recalculating and redrawing everything", kEnglish);
+			SetupInfoOrganizerVirtualTime(logMessage);
+		}
 	}
 
 	std::string GetVirtualTimeTooltipText() const
@@ -13407,9 +13411,9 @@ NFmiMouseClickUrlActionData& NFmiEditMapGeneralDataDoc::MouseClickUrlActionData(
 	return pimpl->MouseClickUrlActionData();
 }
 
-void NFmiEditMapGeneralDataDoc::ToggleVirtualTimeMode()
+void NFmiEditMapGeneralDataDoc::ToggleVirtualTimeMode(const std::string& logMessage)
 {
-	pimpl->ToggleVirtualTimeMode();
+	pimpl->ToggleVirtualTimeMode(logMessage);
 }
 
 bool NFmiEditMapGeneralDataDoc::VirtualTimeUsed() const

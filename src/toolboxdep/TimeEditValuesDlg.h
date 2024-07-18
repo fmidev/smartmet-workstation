@@ -145,6 +145,7 @@ public:
 	afx_msg void OnAcceleratorLogViewerToolboxdeb();
 	afx_msg void OnAcceleratorSwapAreaSecondaryKeyExtraMap();
 	afx_msg void OnBnClickedButtonStoreCsvFile();
+	afx_msg void OnAcceleratorExtraMapToggleVirtualTimeMode();
 };
 
 //{{AFX_INSERT_LOCATION}}

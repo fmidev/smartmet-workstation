@@ -295,7 +295,8 @@ public:
     void UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged() override;
     void OpenVisualizationsettingsDialog() override;
     std::shared_ptr<NFmiViewSettingMacro> CurrentViewMacro() override;
-    void ToggleVirtualTimeMode() override;
+    void ToggleVirtualTimeMode(const std::string& logMessage) override;
+    bool VirtualTimeUsed() const override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem() override;

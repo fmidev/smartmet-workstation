@@ -1008,10 +1008,6 @@ void CFmiExtraMapViewDlg::OnAcceleratorExtraMapObsComparisonMode()
 
 void CFmiExtraMapViewDlg::OnAcceleratorExtraMapToggleVirtualTimeMode()
 {
-	itsSmartMetDocumentInterface->ToggleVirtualTimeMode();
-	if(ApplicationInterface::GetApplicationInterfaceImplementation)
-	{
-		std::string updateMessage = "Virtual-Time mode changed from Map view " + std::to_string(itsMapViewDescTopIndex + 1) + " by CRTL + K";
-		ApplicationInterface::GetApplicationInterfaceImplementation()->UpdateAllViewsAndDialogs(updateMessage);
-	}
+	std::string viewName = "Map-view-" + std::to_string(itsMapViewDescTopIndex + 1);
+	CFmiWin32TemplateHelpers::OnAcceleratorToggleVirtualTimeMode(itsSmartMetDocumentInterface, viewName);
 }

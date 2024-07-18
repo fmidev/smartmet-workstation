@@ -145,6 +145,7 @@ public:
 	afx_msg void OnEnChangeEditAvgTimeRange2();
 	afx_msg void OnBnClickedButtonClearAvgControls();
 	afx_msg void OnAcceleratorSoundingAutoAdjustScales();
+	afx_msg void OnAcceleratorSoundingToggleVirtualTimeMode();
 };
 
 

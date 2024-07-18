@@ -1471,9 +1471,9 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::VirtualTimeUsed() const
     return itsDoc->VirtualTimeUsed();
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::ToggleVirtualTimeMode()
+void CtrlViewDocumentInterfaceForGeneralDataDoc::ToggleVirtualTimeMode(const std::string& logMessage)
 {
-    itsDoc->ToggleVirtualTimeMode();
+    itsDoc->ToggleVirtualTimeMode(logMessage);
 }
 
 std::string CtrlViewDocumentInterfaceForGeneralDataDoc::GetVirtualTimeTooltipText() const

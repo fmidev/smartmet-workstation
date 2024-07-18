@@ -157,7 +157,7 @@ public:
 	void VirtualTime(const NFmiMetTime& virtualTime);
 	const NFmiMetTime& VirtualTime() const;
 	bool VirtualTimeUsed() const;
-	void ToggleVirtualTimeMode();
+	void ToggleVirtualTimeMode(const std::string& logMessage);
 	NFmiMouseClickUrlActionData& MouseClickUrlActionData();
 	void DoIsAnyQueryDataLateChecks();
 	std::shared_ptr<NFmiViewSettingMacro> CurrentViewMacro();

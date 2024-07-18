@@ -3843,6 +3843,6 @@ void CSmartMetDoc::OnUpdateEditGenerateNewWmsSystem(CCmdUI* pCmdUI)
 
 void CSmartMetDoc::OnAcceleratorToggleVirtualTimeMode()
 {
-	itsData->ToggleVirtualTimeMode();
-	UpdateAllViewsAndDialogs("Virtual-Time mode changed from main map-view by CRTL + K");
+	std::string viewName = "Main-map-view";
+	CFmiWin32TemplateHelpers::OnAcceleratorToggleVirtualTimeMode(itsData, viewName);
 }

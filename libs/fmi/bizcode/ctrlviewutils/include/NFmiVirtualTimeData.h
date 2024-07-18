@@ -21,8 +21,9 @@ public:
 	bool VirtualTimeUsed() const { return fVirtualTimeUsed; }
 	const NFmiMetTime& NormalVirtualTime() const { return itsNormalVirtualTime; }
 	const NFmiMetTime& CaseStudyVirtualTime() const { return itsCaseStudyVirtualTime; }
-	void VirtualTime(const NFmiMetTime& virtualTime, bool caseStudyModeOn);
+	bool VirtualTime(const NFmiMetTime& virtualTime, bool caseStudyModeOn);
 	std::string GetVirtualTimeTooltipText(bool caseStudyModeOn) const;
+	bool SignificantVirtualTimeChangeHappened(const NFmiMetTime& origVirtualTime, const NFmiMetTime& newVirtualTime);
 
 	static const NFmiColor virtualTimeBaseColor;
 };

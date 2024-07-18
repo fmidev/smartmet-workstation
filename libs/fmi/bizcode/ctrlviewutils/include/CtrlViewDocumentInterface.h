@@ -411,7 +411,7 @@ public:
     virtual void VirtualTime(const NFmiMetTime& virtualTime) = 0;
     virtual const NFmiMetTime& VirtualTime() const = 0;
     virtual bool VirtualTimeUsed() const = 0;
-    virtual void ToggleVirtualTimeMode() = 0;
+    virtual void ToggleVirtualTimeMode(const std::string& logMessage) = 0;
     virtual std::string GetVirtualTimeTooltipText() const = 0;
 
 #ifndef DISABLE_CPPRESTSDK

@@ -86,6 +86,7 @@ ON_COMMAND(ID_ACCELERATOR_SAVE_CROSS_SECTION_DEFAULT_AXIS, &CFmiCrossSectionDlg:
 ON_COMMAND(ID_ACCELERATOR_SAVE_CROSS_SECTION_SPECIAL_AXIS, &CFmiCrossSectionDlg::OnAcceleratorSaveCrossSectionSpecialAxis)
 ON_BN_CLICKED(IDC_BUTTON_CROSS_SECTION_PARAMETER_SELECTION, &CFmiCrossSectionDlg::OnButtonOpenParameterSelection)
 ON_COMMAND(ID_ACCELERATOR_LOG_VIEWER_TOOLBOXDEB, &CFmiCrossSectionDlg::OnAcceleratorLogViewerToolboxdeb)
+ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_TOGGLE_VIRTUAL_TIME_MODE, &CFmiCrossSectionDlg::OnAcceleratorExtraMapToggleVirtualTimeMode)
 END_MESSAGE_MAP()
 
 // CFmiCrossSectionDlg message handlers
@@ -515,4 +516,11 @@ void CFmiCrossSectionDlg::OnButtonOpenParameterSelection()
 void CFmiCrossSectionDlg::OnAcceleratorLogViewerToolboxdeb()
 {
 	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenLogViewer();
+}
+
+
+void CFmiCrossSectionDlg::OnAcceleratorExtraMapToggleVirtualTimeMode()
+{
+	std::string viewName = "Cross-section-view";
+	CFmiWin32TemplateHelpers::OnAcceleratorToggleVirtualTimeMode(itsSmartMetDocumentInterface, viewName);
 }

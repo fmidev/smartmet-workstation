@@ -1434,9 +1434,14 @@ std::shared_ptr<NFmiViewSettingMacro> SmartMetDocumentInterfaceForGeneralDataDoc
     return itsDoc->CurrentViewMacro();
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::ToggleVirtualTimeMode()
+void SmartMetDocumentInterfaceForGeneralDataDoc::ToggleVirtualTimeMode(const std::string& logMessage)
 {
-    itsDoc->ToggleVirtualTimeMode();
+    itsDoc->ToggleVirtualTimeMode(logMessage);
+}
+
+bool SmartMetDocumentInterfaceForGeneralDataDoc::VirtualTimeUsed() const
+{
+    return itsDoc->VirtualTimeUsed();
 }
 
 #ifndef DISABLE_CPPRESTSDK

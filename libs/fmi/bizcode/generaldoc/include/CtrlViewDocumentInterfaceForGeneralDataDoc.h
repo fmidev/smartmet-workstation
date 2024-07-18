@@ -302,7 +302,7 @@ public:
     void VirtualTime(const NFmiMetTime& virtualTime) override;
     const NFmiMetTime& VirtualTime() const override;
     bool VirtualTimeUsed() const override;
-    void ToggleVirtualTimeMode() override;
+    void ToggleVirtualTimeMode(const std::string& logMessage) override;
     std::string GetVirtualTimeTooltipText() const override;
 
 #ifndef DISABLE_CPPRESTSDK
