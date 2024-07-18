@@ -1321,7 +1321,8 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string &reasonForUpdate, 
                 ::UpdateModalessDialog(itsCrossSectionDlg);
                 ::UpdateModalessDialog(itsSynopPlotSettingsDlg);
                 ::UpdateModalessDialog(itsSmartToolDlg);
-                ::UpdateModalessDialog(itsSynopDataGridViewDlg);
+				MakeNextUpdateOnSynopDataGridViewDlgForced();
+				::UpdateModalessDialog(itsSynopDataGridViewDlg);
                 ::UpdateModalessDialog(itsTrajectoryDlg);
                 ::UpdateModalessDialog(itsWarningCenterDlg);
                 ::UpdateModalessDialog(itsWindTableDlg);
@@ -1393,8 +1394,11 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string& reasonForUpdate, 
             ::UpdateModalessDialog(itsSynopPlotSettingsDlg);
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::SmartToolDlg))
             ::UpdateModalessDialog(itsSmartToolDlg);
-        if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::StationDataTableView))
-            ::UpdateModalessDialog(itsSynopDataGridViewDlg);
+		if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::StationDataTableView))
+		{
+			MakeNextUpdateOnSynopDataGridViewDlgForced();
+			::UpdateModalessDialog(itsSynopDataGridViewDlg);
+		}
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::TrajectoryView))
             ::UpdateModalessDialog(itsTrajectoryDlg);
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::WarningCenterDlg))
@@ -3840,4 +3844,5 @@ void CSmartMetDoc::OnUpdateEditGenerateNewWmsSystem(CCmdUI* pCmdUI)
 void CSmartMetDoc::OnAcceleratorToggleVirtualTimeMode()
 {
 	itsData->ToggleVirtualTimeMode();
+	UpdateAllViewsAndDialogs("Virtual-Time mode changed from main map-view by CRTL + K");
 }
