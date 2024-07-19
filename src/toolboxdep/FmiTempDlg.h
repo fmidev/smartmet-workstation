@@ -65,6 +65,7 @@ private:
     void SetSelectedProducersFromViewMacro(void);
     BOOL InitTooltipControl(void);
     void InitControlsTooltip(int theControlId, const char *theDictionaryStr);
+	void DoPossibleViewMacroProducersUpdates();
 
 // Attributes:
 	CFmiTempView *itsView;
@@ -79,7 +80,8 @@ private:
     // T‰m‰ on lippu, jolla teemme dialogista k‰ytt‰j‰ yst‰v‰llisen eli jos kukaan ei ole viel‰ k‰ynyt s‰‰t‰m‰ss‰ tuottaja listaa, voidaan
     // listan oletus arvo laittaa osoittamaan havaittuja luotauksia jos niit‰ lˆytyy, muuten laitetaan se osoittamaan 1. tuottajaa. 
     // Muista ett‰ t‰m‰ lista el‰‰ kun dataa ladataan koko ajan sis‰‰n.
-    bool fProducerSelectorUsedYet; 
+	bool fProducerSelectorUsedYet;
+	bool fAllProducersSetFromViewMacro = true;
     BOOL fShowMapMarkers;
     CCheckComboBox itsMultiProducerSelector;
     HACCEL m_hAccel; // accelerator hanskaus menee t‰m‰n kautta

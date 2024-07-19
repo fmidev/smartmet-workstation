@@ -530,23 +530,32 @@ void CFmiTempDlg::SetSelectedProducersFromViewMacro(void)
 {
 	itsMultiProducerSelector.SelectAll(false);
 	const auto &selectedProducers = itsSmartMetDocumentInterface->GetMTATempSystem().SoundingComparisonProducers();
-	auto ssize = selectedProducers.size();
-	auto xsize = itsProducerListWithData.size();
-	for(size_t i=0; i<ssize; i++)
+	size_t selectedProducerCount = 0;
+	for(size_t i = 0; i < selectedProducers.size(); i++)
 	{
-		for(size_t j=0; j<xsize; j++)
+		for(size_t j = 0; j < itsProducerListWithData.size(); j++)
 		{
 			if(selectedProducers[i] == itsProducerListWithData[j])
+			{
 				itsMultiProducerSelector.SetCheck(static_cast<int>(j), true);
+				selectedProducerCount++;
+			}
 		}
 	}
-    fProducerSelectorUsedYet = true;
-    UpdateData(FALSE);
+
+	fProducerSelectorUsedYet = true;
+	if(selectedProducers.empty() || selectedProducers.size() == selectedProducerCount)
+	{
+		// Jos ei ollut yhtään tuottajaa näyttömakrossa valittuna tai kaikki näyttömakron tuottajat löytyivät ja asetettiin päälle
+		fAllProducersSetFromViewMacro = true;
+	}
+	UpdateData(FALSE);
 }
 
 void CFmiTempDlg::OnCbnSelchangeComboProducerSelection()
 {
 	fProducerSelectorUsedYet = true;
+	fAllProducersSetFromViewMacro = true; // Jos käyttäjä tekee tuottaja valintoja, niitä ei enää tarvitse päivitellä, jos valinnat jääneet vajaiksi
 	SetSelectedProducer();
 	Update();
 	Invalidate(FALSE);
@@ -640,15 +649,28 @@ void CFmiTempDlg::UpdateProducerList(void)
 		}
 
         // If not loading viewMacro, put selected producers back to MTATempSystem
-        if(!itsSmartMetDocumentInterface->GetMTATempSystem().UpdateFromViewMacro())
+        if(!itsSmartMetDocumentInterface->GetMTATempSystem().UpdateFromViewMacro() && fAllProducersSetFromViewMacro)
             SetSelectedProducer();
 	}
 
 	// jos ollaan lataamassa näyttömakroa, pitää itsMultiProducerSelector-otus päivittää
 	if(itsSmartMetDocumentInterface->GetMTATempSystem().UpdateFromViewMacro())
 	{
+		fAllProducersSetFromViewMacro = false; // Resetoidaan tämä flagi ennen kuin aletaan lataamaan tuottajia näyttömakrosta
 		SetSelectedProducersFromViewMacro();
         itsSmartMetDocumentInterface->GetMTATempSystem().UpdateFromViewMacro(false);
+	}
+	else
+	{
+		DoPossibleViewMacroProducersUpdates();
+	}
+}
+
+void CFmiTempDlg::DoPossibleViewMacroProducersUpdates()
+{
+	if(!fAllProducersSetFromViewMacro)
+	{
+		SetSelectedProducersFromViewMacro();
 	}
 }
 
