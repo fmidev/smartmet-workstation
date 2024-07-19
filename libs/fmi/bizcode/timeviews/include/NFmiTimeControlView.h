@@ -197,8 +197,11 @@ protected:
 	void DrawVirtualTimeSlider();
 	void DrawVirtualTimeMarker();
 	bool HandlePossibleVirtualTimeSet(const NFmiPoint& thePlace, unsigned long theKey);
+	bool HandlePossibleVirtualTimeBoxCloseButtonClick(const NFmiPoint& thePlace, unsigned long theKey);
 	bool DoPrimaryLeftButtonUpChecks(const NFmiPoint& thePlace, unsigned long theKey);
 	std::pair<double, int> ConvertMilliMetersToRelativeAndPixels(double valueInMM, bool doDirectionX);
+	NFmiRect CalcAnimationButtonTopLeftRect(const NFmiRect& baseRect);
+	NFmiRect CalcVirtualTimeCloseButtonRect();
 
    NFmiTimeScaleView * itsTimeView;
    NFmiStepTimeScale * itsTimeAxis;
@@ -240,7 +243,7 @@ protected:
    double itsButtonOffSetFromEdgeFactor; // kuinka kaukana paino nappula on reunoista irti suhteessa napulan kokoon
    static AnimationButtonImageHolder statAnimationButtonImages; // tämä on staattinen dataosa, koska näitä timekontrol-instansseja luodaan lennossa jatkuvasti uudelleen ja uudelleen eli bitmapit luetaan vain kerran kaikkien käyttöön
    NFmiRect itsVirtualTimeSliderRect; // Kun tähän klikataan hiirellä, voidaan virtual-time:a säätää
-
+   NFmiRect itsVirtualTimeBoxRect;
 private:
    int RelativeLength2Minutes(double theLength);
    int GetUsedTimeResolutionInMinutes(void);

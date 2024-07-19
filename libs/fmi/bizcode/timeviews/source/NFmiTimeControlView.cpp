@@ -343,6 +343,8 @@ void NFmiTimeControlView::DrawVirtualTimeData()
 	{
 		DrawVirtualTimeSlider();
 		DrawVirtualTimeDataBox();
+		// Close buttonin piirto pitää olla DrawVirtualTimeDataBox metodin kutsun perässä!
+		CtrlView::DrawAnimationButton(CalcVirtualTimeCloseButtonRect(), statAnimationButtonImages.itsCloseButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f);
 	}
 }
 
@@ -370,6 +372,7 @@ void NFmiTimeControlView::DrawVirtualTimeDataBox()
 	float penThicknessInMM = 0.5f;
 	auto [relativePenThickness, penThicknessInPixels] = ConvertMilliMetersToRelativeAndPixels(penThicknessInMM, false);
 
+	// HUOM! virtualTimeBox on pikseli maailmassa
 	NFmiRect virtualTimeBox;
 	virtualTimeBox.Size(NFmiPoint(FmiMax(boundingBox1.Width, boundingBox2.Width) * 1.1, (boundingBox1.Height + boundingBox2.Height) * 1.f));
 	auto usedRelativeBaseRect = itsTimeView->GetRelativeRect();
@@ -384,6 +387,8 @@ void NFmiTimeControlView::DrawVirtualTimeDataBox()
 	Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(fillColor));
 	Gdiplus::GraphicsPath aPath;
 	Gdiplus::Rect gdiRect(static_cast<INT>(virtualTimeBox.Left()), static_cast<INT>(virtualTimeBox.Top()), static_cast<INT>(virtualTimeBox.Width()), static_cast<INT>(virtualTimeBox.Height()));
+	// Otetaan tässä vaiheessa talteen VT-laatikon suhteellinen rect
+	itsVirtualTimeBoxRect = CtrlView::GdiplusRect2Relative(itsToolBox, gdiRect);
 	aPath.AddRectangle(gdiRect);
 	aPath.CloseFigure();
 	itsGdiPlusGraphics->FillPath(&aBrushBox, &aPath);
@@ -832,16 +837,25 @@ NFmiRect NFmiTimeControlView::CalcFullTimeRangeButtonRect(void)
     return closeRect;
 }
 
-NFmiRect NFmiTimeControlView::CalcAnimationCloseButtonRect(void)
+NFmiRect NFmiTimeControlView::CalcAnimationCloseButtonRect()
 {
-	NFmiRect animRect = CalcAnimationBoxRect();
+	return CalcAnimationButtonTopLeftRect(CalcAnimationBoxRect());
+}
+
+NFmiRect NFmiTimeControlView::CalcVirtualTimeCloseButtonRect()
+{
+	return CalcAnimationButtonTopLeftRect(itsVirtualTimeBoxRect);
+}
+
+NFmiRect NFmiTimeControlView::CalcAnimationButtonTopLeftRect(const NFmiRect &baseRect)
+{
 	NFmiPoint buttonRelativeSize = CalcAnimationButtonRelativeSize();
 	NFmiPoint buttonRelativeEdgeOffset = CalcAnimationButtonRelativeEdgeOffset(buttonRelativeSize);
 	// Sijoitetaan close-nappi oikeaa ylä kulmaan hieman irti reunoista
-	double leftSide = animRect.Right() - buttonRelativeSize.X() - buttonRelativeEdgeOffset.X();
-	double rightside = animRect.Right() - buttonRelativeEdgeOffset.X();
-	double topSide = animRect.Top() + buttonRelativeEdgeOffset.Y();
-	double bottomSide = animRect.Top() + buttonRelativeSize.Y() + buttonRelativeEdgeOffset.Y();
+	double leftSide = baseRect.Right() - buttonRelativeSize.X() - buttonRelativeEdgeOffset.X();
+	double rightside = baseRect.Right() - buttonRelativeEdgeOffset.X();
+	double topSide = baseRect.Top() + buttonRelativeEdgeOffset.Y();
+	double bottomSide = baseRect.Top() + buttonRelativeSize.Y() + buttonRelativeEdgeOffset.Y();
 	NFmiRect closeRect(leftSide, topSide, rightside, bottomSide);
 	return closeRect;
 }
@@ -993,6 +1007,17 @@ bool NFmiTimeControlView::HandlePossibleVirtualTimeSet(const NFmiPoint& thePlace
 	return true;
 }
 
+bool NFmiTimeControlView::HandlePossibleVirtualTimeBoxCloseButtonClick(const NFmiPoint& thePlace, unsigned long theKey)
+{
+	if(!itsCtrlViewDocumentInterface->VirtualTimeUsed() || !CalcVirtualTimeCloseButtonRect().IsInside(thePlace))
+	{
+		return false;
+	}
+
+	itsCtrlViewDocumentInterface->ToggleVirtualTimeMode("Virtual-Time mode closed by pressing Close button inside Virtual-Time-box in time-control-view");
+	return true;
+}
+
 // Tiettyjä hiiren klikkauksia halutaan tehdä monessa kohtaa (4) NFmiTimeControlView::LeftButtonUp 
 // metodissa, siksi ne on niputettu tähän yhteen kutsuun.
 bool NFmiTimeControlView::DoPrimaryLeftButtonUpChecks(const NFmiPoint& thePlace, unsigned long theKey)
@@ -1001,7 +1026,12 @@ bool NFmiTimeControlView::DoPrimaryLeftButtonUpChecks(const NFmiPoint& thePlace,
 	{
 		return true;
 	}
-	
+
+	if(HandlePossibleVirtualTimeBoxCloseButtonClick(thePlace, theKey))
+	{
+		return true;
+	}
+
 	if(itsCtrlViewDocumentInterface->SetDataToPreviousTime(itsMapViewDescTopIndex))
 	{
 		itsTimeBag->SetCurrent(itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex));
