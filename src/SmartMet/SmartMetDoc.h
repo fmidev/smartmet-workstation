@@ -411,6 +411,8 @@ public:
 	afx_msg void OnEditGenerateNewWmsSystem();
 	afx_msg void OnUpdateEditGenerateNewWmsSystem(CCmdUI* pCmdUI);
 	afx_msg void OnAcceleratorToggleVirtualTimeMode();
+	afx_msg void OnEditVirtualTimeMode();
+	afx_msg void OnUpdateEditVirtualTimeMode(CCmdUI* pCmdUI);
 };
 
 

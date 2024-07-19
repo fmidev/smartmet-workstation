@@ -260,6 +260,7 @@ BEGIN
             MENUITEM "Reload Failed Satellite Images", ID_RELOADDATA_RELOADFAILEDSATELLITEIMAGES
         END
         MENUITEM "Generate new Wms system",     ID_EDIT_GENERATE_NEW_WMS_SYSTEM
+        MENUITEM "Virtual-Time Mode",           ID_EDIT_VIRTUAL_TIME_MODE
     END
     POPUP "&View"
     BEGIN

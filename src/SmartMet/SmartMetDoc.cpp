@@ -321,6 +321,8 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
 		ON_COMMAND(ID_EDIT_GENERATE_NEW_WMS_SYSTEM, &CSmartMetDoc::OnEditGenerateNewWmsSystem)
 		ON_UPDATE_COMMAND_UI(ID_EDIT_GENERATE_NEW_WMS_SYSTEM, &CSmartMetDoc::OnUpdateEditGenerateNewWmsSystem)
 		ON_COMMAND(ID_ACCELERATOR_TOGGLE_VIRTUAL_TIME_MODE, &CSmartMetDoc::OnAcceleratorToggleVirtualTimeMode)
+		ON_COMMAND(ID_EDIT_VIRTUAL_TIME_MODE, &CSmartMetDoc::OnEditVirtualTimeMode)
+		ON_UPDATE_COMMAND_UI(ID_EDIT_VIRTUAL_TIME_MODE, &CSmartMetDoc::OnUpdateEditVirtualTimeMode)
 		END_MESSAGE_MAP()
 
 BEGIN_DISPATCH_MAP(CSmartMetDoc, CDocument)
@@ -3845,4 +3847,16 @@ void CSmartMetDoc::OnAcceleratorToggleVirtualTimeMode()
 {
 	std::string viewName = "Main-map-view";
 	CFmiWin32TemplateHelpers::OnAcceleratorToggleVirtualTimeMode(itsData, viewName);
+}
+
+
+void CSmartMetDoc::OnEditVirtualTimeMode()
+{
+	OnAcceleratorToggleVirtualTimeMode();
+}
+
+
+void CSmartMetDoc::OnUpdateEditVirtualTimeMode(CCmdUI* pCmdUI)
+{
+	pCmdUI->SetCheck(itsData->VirtualTimeUsed());
 }
