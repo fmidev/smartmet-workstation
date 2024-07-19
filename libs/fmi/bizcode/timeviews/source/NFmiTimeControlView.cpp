@@ -359,9 +359,9 @@ void NFmiTimeControlView::DrawVirtualTimeDataBox()
 	const auto& virtualTime = itsCtrlViewDocumentInterface->VirtualTime();
 	Gdiplus::REAL fontSize = 17;
 	Gdiplus::Font aFont(L"Arial", fontSize, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
-	auto str1 = virtualTime.ToStr("VT Www", kEnglish);
+	auto str1 = virtualTime.ToStr("VT HH:mm", kEnglish);
 	std::wstring wString1 = CtrlView::StringToWString(std::string(str1));
-	auto str2 = virtualTime.ToStr("MM.DD HH:mm", kEnglish);
+	auto str2 = virtualTime.ToStr("YYYY.MM.DD", kEnglish);
 	std::wstring wString2 = CtrlView::StringToWString(std::string(str2));
 
 	Gdiplus::RectF boundingBox1;
