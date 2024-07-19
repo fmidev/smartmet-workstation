@@ -17,6 +17,7 @@ public:
 	NFmiVirtualTimeData();
 
 	void ToggleVirtualTimeMode(bool caseStudyModeOn, const NFmiMetTime &caseStudyWallClockTime);
+	void UpdateUsedVirtualTime(bool caseStudyModeOn, const NFmiMetTime& caseStudyWallClockTime);
 	void ClearCaseStudyVirtualTime();
 	bool VirtualTimeUsed() const { return fVirtualTimeUsed; }
 	const NFmiMetTime& NormalVirtualTime() const { return itsNormalVirtualTime; }
@@ -26,4 +27,7 @@ public:
 	bool SignificantVirtualTimeChangeHappened(const NFmiMetTime& origVirtualTime, const NFmiMetTime& newVirtualTime);
 
 	static const NFmiColor virtualTimeBaseColor;
+private:
+	void UpdateCaseStudyVirtualTime(const NFmiMetTime& caseStudyWallClockTime);
+	void UpdateNormalVirtualTime();
 };

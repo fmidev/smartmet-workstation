@@ -9605,6 +9605,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 					ParameterSelectionSystem().reInitialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(), *HelpDataInfoSystem());
 					PrepareForParamAddSystemUpdate();
+					itsVirtualTimeData.UpdateUsedVirtualTime(true, itsLoadedCaseStudySystem.Time());
 					TryAutoStartUpLoad();
 					return true;
 				}
@@ -9666,6 +9667,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         ApplicationInterface::GetApplicationInterfaceImplementation()->CaseStudyToNormalModeActions();
 		ParameterSelectionSystem().reInitialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(), *HelpDataInfoSystem());
 		PrepareForParamAddSystemUpdate();
+		itsVirtualTimeData.UpdateUsedVirtualTime(false, itsLoadedCaseStudySystem.Time());
 	}
 
 	bool StoreCaseStudyMemory(void)
@@ -11026,7 +11028,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	void ToggleVirtualTimeMode(const std::string& logMessage)
 	{
-		itsVirtualTimeData.ToggleVirtualTimeMode(CaseStudyModeOn(), CaseStudySystem().Time());
+		itsVirtualTimeData.ToggleVirtualTimeMode(CaseStudyModeOn(), LoadedCaseStudySystem().Time());
 		SetupInfoOrganizerVirtualTime(logMessage);
 	}
 
