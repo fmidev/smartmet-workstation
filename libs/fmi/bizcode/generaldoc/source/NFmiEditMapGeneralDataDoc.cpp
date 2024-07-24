@@ -81,7 +81,7 @@
 #include "NFmiDataStoringHelpers.h"
 #include "NFmiAnalyzeToolData.h"
 #include "NFmiDataQualityChecker.h"
-#include "FmiQueryDataCacheLoaderThread.h"
+#include "QueryDataToLocalCacheLoaderThread.h"
 #include "FmiCombineDataThread.h"
 #include "NFmiIgnoreStationsData.h"
 #include "NFmiApplicationDataBase.h"
@@ -9597,7 +9597,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 					CFmiDataLoadingThread2::ResetFirstTimeGoingThroughState();
 
                     // Lopetetaan cache datojen lataus ja siivous
-                    CFmiQueryDataCacheLoaderThread::AutoLoadNewCacheDataMode(false);
+                    QueryDataToLocalCacheLoaderThread::AutoLoadNewCacheDataMode(false);
 
                     // 7. Laita HelpDataInfoSystem-tarvittaviin paikkoihin käyttöön (HelpDataInfoSystem-funktio, datanlataus-threadeihin jne.) JA aloita dynaamisen datan uudelleen lataus
 			// CSmartMetDoc:in CaseStudyLoadingActions myös likaa cachet ja päivittää lopuksi kaikki näytöt!!, joten se pitää tehdä viimeisenä...
@@ -9663,7 +9663,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		CFmiDataLoadingThread2::ResetFirstTimeGoingThroughState();
 
 		// Palataan taas normaaliin cache datojen lataukseen ja siivoukseen
-        CFmiQueryDataCacheLoaderThread::AutoLoadNewCacheDataMode(ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData());
+        QueryDataToLocalCacheLoaderThread::AutoLoadNewCacheDataMode(ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData());
         ApplicationInterface::GetApplicationInterfaceImplementation()->CaseStudyToNormalModeActions();
 		ParameterSelectionSystem().reInitialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(), *HelpDataInfoSystem());
 		PrepareForParamAddSystemUpdate();

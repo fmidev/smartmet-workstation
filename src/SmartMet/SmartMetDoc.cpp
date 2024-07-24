@@ -81,7 +81,7 @@
 #include "CloneBitmap.h"
 #include "NFmiValueString.h"
 #include "NFmiApplicationWinRegistry.h"
-#include "FmiQueryDataCacheLoaderThread.h"
+#include "QueryDataToLocalCacheLoaderThread.h"
 #include "FmiBetaProductTabControlDialog.h"
 #include "FmiWin32TemplateHelpers.h"
 #include "FmiLogViewer.h"
@@ -797,14 +797,16 @@ void CSmartMetDoc::OnMenuitemOptiot()
 	if(dlg.DoModal() == IDOK)
 	{
 		itsData->StoreOptionsData();
-		CFmiQueryDataCacheLoaderThread::LoadDataAtStartUp(itsData->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().LoadDataAtStartUp());
-		CFmiQueryDataCacheLoaderThread::AutoLoadNewCacheDataMode(itsData->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData());
+		auto loadDataAtStartUp = itsData->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().LoadDataAtStartUp();
+		auto autoLoadNewCacheDataMode = itsData->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData();
+		auto* helpDataInfoSystem = itsData->HelpDataInfoSystem();
+		QueryDataToLocalCacheLoaderThread::UpdateSettings(*helpDataInfoSystem, loadDataAtStartUp, autoLoadNewCacheDataMode);
 		itsData->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, true, true, true, false, false, false);
-		bool cacheSettingChanged = oldDoCacheSetting != itsData->HelpDataInfoSystem()->UseQueryDataCache();
+		bool cacheSettingChanged = oldDoCacheSetting != helpDataInfoSystem->UseQueryDataCache();
 		if(cacheSettingChanged)
 		{
-			CFmiCombineDataThread::InitCombineDataInfos(*itsData->HelpDataInfoSystem(), itsData->ApplicationDataBase().GetDecodedApplicationDirectory()); // kun cache asetukset muuttuvat, pitää yhdistelmä data asetuksia pävittää
-			if(itsData->HelpDataInfoSystem()->UseQueryDataCache())
+			CFmiCombineDataThread::InitCombineDataInfos(*helpDataInfoSystem, itsData->ApplicationDataBase().GetDecodedApplicationDirectory()); // kun cache asetukset muuttuvat, pitää yhdistelmä data asetuksia pävittää
+			if(helpDataInfoSystem->UseQueryDataCache())
 				((CMainFrame*)AfxGetMainWnd())->StartQDataCacheThreads();
 			else
 				((CMainFrame*)AfxGetMainWnd())->StopQDataCacheThreads();

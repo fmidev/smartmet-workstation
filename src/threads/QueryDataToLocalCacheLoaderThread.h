@@ -14,13 +14,12 @@ class NFmiHelpDataInfoSystem;
 namespace QueryDataToLocalCacheLoaderThread
 {
     // InitHelpDataInfo funktiota pit‰‰ kutsua ennen kuin luokan varsinainen thread (DoThread) k‰ynnistet‰‰n
-    void InitHelpDataInfo(const NFmiHelpDataInfoSystem& helpDataInfoSystem, const std::string& smartMetBinariesDirectory, double cacheCleaningIntervalInHours, const std::string& smartMetWorkingDirectory, double maxDataFileSizeInMB);
+    void InitHelpDataInfo(const NFmiHelpDataInfoSystem& helpDataInfoSystem, const std::string& smartMetBinariesDirectory, double cacheCleaningIntervalInHours, bool loadDataAtStartUp, bool autoLoadNewCacheDataMode, const std::string& smartMetWorkingDirectory, double maxDataFileSizeInMB);
     UINT DoThread(LPVOID pParam);
     void CloseNow();
     bool WaitToClose(int milliSecondsToWait);
-    void UpdateSettings(NFmiHelpDataInfoSystem& theHelpDataSystem);
-    void LoadDataAtStartUp(bool newState);
-    void AutoLoadNewCacheDataMode(bool newState);
+    void UpdateSettings(NFmiHelpDataInfoSystem& theHelpDataSystem, bool loadDataAtStartUp, bool autoLoadNewCacheDataMode);
+    void AutoLoadNewCacheDataMode(bool newValue);
     std::string MakeDailyUnpackLogFilePath();
 
 //    UINT DoCombinedDataHistoryThread(LPVOID pParam);

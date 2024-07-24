@@ -15,14 +15,15 @@
 #include "NFmiValueString.h"
 #include "execute-command-in-separate-process.h"
 #include "LocalCacheHelpDataSystem.h"
+#include "LocalCacheCleaning.h"
 
 #include <thread>
 #include <mutex>
 
 namespace
 {
-    // Jos ohjelma halutaan lopettaa, t‰lle gStopFunctor:ille annetaan tieto siit‰ ulkoap‰in.
-    NFmiStopFunctor gStopFunctor;
+    // Jos ohjelma halutaan lopettaa ulkoap‰in, t‰lle gStopFunctorPtr:ille asetetaan tieto siit‰ CloseNow funktion kautta.
+    std::shared_ptr<NFmiStopFunctor> gStopFunctorPtr;
     // T‰m‰n avulla CopyFileEx-funktio voidaan keskeytt‰‰, arvo muutetaan TRUE:ksi.
     BOOL gCopyFileExCancel;
     // T‰m‰n olion avulla working thread osaa lukea/kopioida haluttuja datoja
@@ -34,16 +35,8 @@ namespace
     // T‰m‰n avulla tiedet‰‰n, suljettaessa ohjelmaa ett‰ onko working-thread 
     // lopettanut tyˆns‰ ja sen puolesta voidaan ohjelman sulkemista jatkaa.
     std::timed_mutex gThreadRunningMutex;
-    // Jos t‰m‰ on false, se est‰‰ datan latauksen cacheen ja hakemistojen siivouksen
-    bool gLoadDataAtStartUp = true;
-    // Onko SmartMet ns. operatiivisessa moodissa, eli silloin se automaattisesti latailee uusia datoja cacheen ja silloin myˆs vanhoja pit‰‰ siivoilla pois.
-    // Joskus halutaan ett‰ uutta dataa ei lueta eik‰ vanhoja siivota, silloin t‰m‰ moodi pit‰‰ laittaa pois p‰‰lt‰.
-    // Myˆs jos ollaan ns. no-data/tiputus moodissa, t‰llˆin ei saa tuhota vanhoja tiedostoja.
-    bool gAutoLoadNewCacheDataMode = true;
     // Jos k‰ytet‰‰n FileCopyMarko:a, t‰m‰n kokoisia puskureita k‰ytet‰‰n kopioinnissa
     size_t gUsedChunckSize;
-    // T‰h‰n otetaan GeneralDocista siivousintervalli, oletus 0.16 [h] eli n. 10 minuutin v‰lein.
-    double gCacheCleaningIntervalInHours = 0.16;
     // Jos tiedosto on isompi kuin t‰ss‰ oleva raja, sit‰ ei kopioida ollenkaan
     double gMaxDataFileSizeInMB;
     std::string gThreadName = "Main-thread";
@@ -53,7 +46,6 @@ namespace
     NFmiOnceLoadedDataFiles gOnceLoadedDataFiles;
 
     NFmiMilliSecondTimer gDoWorkTimer;
-    NFmiMilliSecondTimer gLocalCacheCleanerTimer;
 
     enum CFmiCopyingStatus
     {
@@ -63,6 +55,17 @@ namespace
         kFmiGoOnWithCopying = 3,
         kFmiUnpackIsDoneInSeparateProcess = 4
     };
+
+    NFmiStopFunctor* GetStopFunctor()
+    {
+        return gStopFunctorPtr.get();
+    }
+
+    // T‰m‰ heitt‰‰ erikois poikkeuksen, jos k‰ytt‰j‰ on halunnut sulkea ohjelman.
+    void CheckIfProgramWantsToStop()
+    {
+        NFmiQueryDataUtil::CheckIfStopped(GetStopFunctor());
+    }
 
     void MakeCacheDirectories(NFmiHelpDataInfoSystem& helpDataSystem)
     {
@@ -74,10 +77,10 @@ namespace
 
     bool IsTimeToCheckForNewData(bool* firstTime, CFmiCopyingStatus status)
     {
-        if(firstTime)
+        if(*firstTime)
         {
             // Jos ollaan 1. kertaa loopissa, jatketaan heti ja nollataan siihen liittyv‰ firstTime flag
-            firstTime = false;
+            *firstTime = false;
             return true;
         }
 
@@ -89,161 +92,11 @@ namespace
         return gDoWorkTimer.CurrentTimeDiffInMSeconds() > (60 * 1000);
     }
 
-    bool IsCacheCleaningDoneAtAll()
-    {
-        if(gLoadDataAtStartUp && gAutoLoadNewCacheDataMode)
-            return true;
-        else
-            return false;
-    }
-
-    std::string DeletedFilesStr(const std::list<std::string>& theDeletedFiles)
-    {
-        std::string str;
-        for(auto filePath : theDeletedFiles)
-        {
-            if(!str.empty())
-                str += "\n";
-            boost::replace_all(filePath, "\\/", "\\");
-            str += filePath;
-        }
-        return str;
-    }
-
-    void CleanDirectory(const std::string& theDirectory, double theKeepHours)
-    {
-        try
-        {
-            std::list<std::string> deletedFiles;
-            NFmiFileSystem::CleanDirectory(theDirectory, theKeepHours, &deletedFiles);
-            if(deletedFiles.size())
-            {
-                std::string logStr("QueryDataToLocalCacheLoaderThread - CleanDirectory: ");
-                logStr += theDirectory;
-                logStr += ", keep-hour: ";
-                logStr += NFmiStringTools::Convert(theKeepHours);
-                logStr += "\nDeleted files:\n";
-                logStr += ::DeletedFilesStr(deletedFiles);
-                CatLog::logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Data);
-            }
-        }
-        catch(...)
-        {
-            // ei tehd‰ toistaiseksi mit‰‰n...
-        }
-    }
-
-    void CleanFilePattern(const std::string& theFilePattern, int theKeepMaxFiles)
-    {
-        try
-        {
-            std::string logMessageStart("QueryDataToLocalCacheLoaderThread - CleanFilePattern: ");
-            logMessageStart += theFilePattern;
-            logMessageStart += ",\nkeep-max-files = ";
-            logMessageStart += NFmiStringTools::Convert(theKeepMaxFiles);
-            logMessageStart += ",\nDeleted files:\n";
-            CtrlViewUtils::DeleteFilesWithPatternAndLog(theFilePattern, logMessageStart, CatLog::Severity::Debug, CatLog::Category::Data, theKeepMaxFiles);
-        }
-        catch(...)
-        {
-            // ei tehd‰ toistaiseksi mit‰‰n...
-        }
-    }
-
-    int CalcMaxKeepFileCount(const NFmiHelpDataInfo& helpDataInfo, NFmiCaseStudySystem& caseStudySystem)
-    {
-        NFmiInfoData::Type dataType = helpDataInfo.DataType();
-        if(NFmiInfoData::IsLatestOnlyBasedData(dataType))
-        {
-            return 1; // n‰it‰ datatyyppeja on turhaa s‰ilˆ‰ 1 enemp‰‰
-        }
-        else
-        {
-            auto localCacheFileCount = 3;
-            auto* caseStudyDataFile = caseStudySystem.FindCaseStudyDataFile(helpDataInfo.Name());
-            if(caseStudyDataFile)
-                localCacheFileCount = caseStudyDataFile->DataFileWinRegValues().LocalCacheDataCount();
-            return localCacheFileCount;
-        }
-    }
-
-    // Siivotaan combine-data cachet.
-    // N‰m‰ olivat omissa alihakemistoissaan ja niille oli omat keep-files m‰‰r‰t.
-    // siivotaan kuitenkin jokaista ali-hakemistoa yhteisen keepMaxDays:in mukaan.
-    void CleanCombineDataCache(NFmiHelpDataInfoSystem& theHelpDataSystem)
-    {
-        if(theHelpDataSystem.DoCleanCache())
-        {
-            NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-            for(size_t i = 0; i < theHelpDataSystem.DynamicHelpDataInfos().size(); i++)
-            {
-                NFmiHelpDataInfo& helpData = theHelpDataSystem.DynamicHelpDataInfo(static_cast<int>(i));
-                NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-                if(NFmiCachedDataFileInfo::IsDataCached(helpData) && helpData.IsCombineData())
-                {
-                    double keepDays = theHelpDataSystem.CacheFileKeepMaxDays();
-                    if(keepDays > 0)
-                    {
-                        NFmiFileString usedFileFilterStr = helpData.UsedFileNameFilter(theHelpDataSystem);
-                        std::string cacheDir = usedFileFilterStr.Device();
-                        cacheDir += usedFileFilterStr.Path();
-                        ::CleanDirectory(cacheDir, keepDays * 24);
-                    }
-                    ::CleanFilePattern(helpData.UsedFileNameFilter(theHelpDataSystem), helpData.CombineDataMaxTimeSteps() + 3);
-                }
-            }
-        }
-    }
-
-    // HUOM! siivouksessa ei tarkisteta onko jokin data k‰ytˆss‰ vai ei (NFmiHelpDataInfo:n IsEnabled-metodi tarkistus), vanhoja tiedostoja ei 
-    // j‰tet‰ levyille lojumaan, vaikka joku data on joskus otettu pois k‰ytˆst‰.
-    void CleanCache(NFmiHelpDataInfoSystem& theHelpDataSystem)
-    {
-        if(theHelpDataSystem.DoCleanCache())
-        {
-            NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-            // 1. siivotaan ensin pois kaikki yli halutun aikam‰‰reen olevat tiedostot
-            if(theHelpDataSystem.CacheFileKeepMaxDays() > 0)
-                ::CleanDirectory(theHelpDataSystem.LocalDataLocalDirectory(), theHelpDataSystem.CacheFileKeepMaxDays() * 24);
-            // 2. siivotaan tmp-hakemistosta kaikki yli puoli tuntia vanhemmat tiedostot (jos ne eiv‰t lukossa), oletetaan
-            // ett‰ yhden tiedoston kopiointi ei kest‰ yli puolta tuntia, vaan kyse on jostain virheest‰.
-            NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-            ::CleanDirectory(theHelpDataSystem.LocalDataTmpDirectory(), 0.5);
-
-            auto& caseStudySystem = SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->CaseStudySystem();
-
-            // 3. siivotaan pois file-pattern -kohtaisesti ylim‰‰r‰iset tiedostot n-kpl
-            for(size_t i = 0; i < theHelpDataSystem.DynamicHelpDataInfos().size(); i++)
-            {
-                NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-                NFmiHelpDataInfo& helpDataInfo = theHelpDataSystem.DynamicHelpDataInfo(static_cast<int>(i));
-                // HUOM! yhdistelm‰ datoja ei siivota t‰ss‰ yleisill‰ asetuksilla, vaan ne 
-                // pit‰‰ siivota eri lailla ja sit‰ varten on oma funktio (CleanCombineDataCache).
-                if(NFmiCachedDataFileInfo::IsDataCached(helpDataInfo) && helpDataInfo.IsCombineData() == false)
-                    ::CleanFilePattern(helpDataInfo.UsedFileNameFilter(theHelpDataSystem), ::CalcMaxKeepFileCount(helpDataInfo, caseStudySystem));
-            }
-        }
-        ::CleanCombineDataCache(theHelpDataSystem);
-    }
-
     // Tehd‰‰n lokaali data cachen siivous halutulla v‰leill‰ (10 minuuttia)
-    void DoPossibleLocalCacheCleaning(std::shared_ptr<NFmiHelpDataInfoSystem> theHelpDataSystemPtr)
+    void DoPossibleLocalCacheCleaning(std::shared_ptr<NFmiHelpDataInfoSystem> theHelpDataInfoSystemPtr)
     {
-        // T‰nne annettu shared_ptr on tarkoituksella kopio, ja siit‰ otetaan k‰ytett‰v‰ referenssi ulos t‰ss‰.
-        NFmiHelpDataInfoSystem& usedHelpDataSystem = *theHelpDataSystemPtr;
-
-        if(!::IsCacheCleaningDoneAtAll())
-        {
-            return;
-        }
-
-        int cleaningIntervalInMS = int(gCacheCleaningIntervalInHours * 60 * 60 * 1000);
-        if(gLocalCacheCleanerTimer.CurrentTimeDiffInMSeconds() > cleaningIntervalInMS)
-        {
-            ::CleanCache(usedHelpDataSystem);
-            // Aloitetaan taas uusi siivous ajan lasku
-            gLocalCacheCleanerTimer.StartTimer();
-        }
+        auto& usedHelpDataInfoSystem = *theHelpDataInfoSystemPtr;
+        LocalCacheCleaning::DoPossibleLocalCacheCleaning(usedHelpDataInfoSystem);
     }
 
     // Ei miss‰‰n tilanteessa haluta ladata dataa serverilta lokaali cacheen, 
@@ -534,7 +387,7 @@ namespace
     // ei voi odottaa 3 minuuttia, vaan purku keskeytett‰isiin v‰kivaltaisesti, eik‰ seuraamuksia tiedet‰ viel‰.
     CFmiCopyingStatus CopyFileEx_CopyRename(NFmiCachedDataFileInfo& theCachedDataFileInfo)
     {
-        NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
+        CheckIfProgramWantsToStop();
         NFmiMilliSecondTimer timer;
         timer.StartTimer();
         std::string totalFileStdString = theCachedDataFileInfo.itsTotalServerFileName;
@@ -638,7 +491,7 @@ namespace
             ::GetNewestFileInfo(fileFilter, cachedDataFileInfo);
             gMissingDataOnServerReporter.doReportIfFileFilterHasNoRelatedDataOnServer(cachedDataFileInfo, fileFilter);
 
-            NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
+            CheckIfProgramWantsToStop();
             if(!cachedDataFileInfo.itsTotalServerFileName.empty())
             {
                 if(::DoesThisThreadCopyFile(cachedDataFileInfo))
@@ -669,7 +522,7 @@ namespace
         const auto& helpInfos = theHelpDataSystemPtr->DynamicHelpDataInfos();
         for(size_t i = 0; i < helpInfos.size(); i++)
         {
-            NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
+            CheckIfProgramWantsToStop();
             const NFmiHelpDataInfo& helpDataInfo = helpInfos[i];
             if(::IsDataUsed(helpDataInfo))
             {
@@ -702,8 +555,9 @@ namespace
 
 namespace QueryDataToLocalCacheLoaderThread
 {
-    void InitHelpDataInfo(const NFmiHelpDataInfoSystem& helpDataInfoSystem, const std::string& smartMetBinariesDirectory, double cacheCleaningIntervalInHours, const std::string& smartMetWorkingDirectory, double maxDataFileSizeInMB)
+    void InitHelpDataInfo(const NFmiHelpDataInfoSystem& helpDataInfoSystem, const std::string& smartMetBinariesDirectory, double cacheCleaningIntervalInHours, bool loadDataAtStartUp, bool autoLoadNewCacheDataMode, const std::string& smartMetWorkingDirectory, double maxDataFileSizeInMB)
     {
+        gStopFunctorPtr = std::make_shared<NFmiStopFunctor>();
         gLocalCacheHelpDataSystem.InitHelpDataInfoSystem(helpDataInfoSystem);
         gSmartMetBinDirectory = smartMetBinariesDirectory;
         gSmartMetWorkingDirectory = smartMetWorkingDirectory;
@@ -711,7 +565,7 @@ namespace QueryDataToLocalCacheLoaderThread
         gCopyFileExCancel = FALSE;
 
         gUsedChunckSize = NFmiSettings::Optional("SmartMet::UsedChunckSizeInKB", 512) * 1024;
-        gCacheCleaningIntervalInHours = cacheCleaningIntervalInHours;
+        LocalCacheCleaning::InitLocalCacheCleaning(loadDataAtStartUp, autoLoadNewCacheDataMode, cacheCleaningIntervalInHours, gStopFunctorPtr);
         auto tmpHelpDataSystemPtr = gLocalCacheHelpDataSystem.GetHelpDataInfoSystemPtr();
         gMissingDataOnServerReporter.initialize(*tmpHelpDataSystemPtr, 1);
         ::MakeCacheDirectories(*tmpHelpDataSystemPtr);
@@ -733,7 +587,6 @@ namespace QueryDataToLocalCacheLoaderThread
 
         bool firstTime = true;
         gDoWorkTimer.StartTimer();
-        gLocalCacheCleanerTimer.StartTimer();
 
         // T‰ss‰ on iki-looppi, jossa vahditaan onko tullut uusia datoja, jolloin tehd‰‰n yhdistelm‰ datoja SmartMetin luettavaksi.
         // Lis‰ksi pit‰‰ tarkkailla, onko tullut lopetus k‰sky, joloin pit‰‰ siivota ja lopettaa.
@@ -742,13 +595,13 @@ namespace QueryDataToLocalCacheLoaderThread
         {
             for(;;)
             {
-                NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
+                CheckIfProgramWantsToStop();
 
                 if(::IsTimeToCheckForNewData(&firstTime, status))
                 {
                     try
                     {
-                        if(gLoadDataAtStartUp && gAutoLoadNewCacheDataMode)
+                        if(LocalCacheCleaning::IsDataCopyingRoutinesOn())
                         {
                             status = GoThroughAllHelpDataInfos(gLocalCacheHelpDataSystem.GetHelpDataInfoSystemPtr());
                         }
@@ -764,13 +617,14 @@ namespace QueryDataToLocalCacheLoaderThread
                         // jatketaan vain loopitusta.
                     }
 
-                    // Aloitetaan taas uusi ajan lasku
+                    // Tarkastellaan myˆs pit‰‰kˆ lokaali cachehakemisto tyhjennell‰
+                    ::DoPossibleLocalCacheCleaning(gLocalCacheHelpDataSystem.GetHelpDataInfoSystemPtr());
+                    // Aloitetaan taas uuden kierroksen ajanlasku
                     gDoWorkTimer.StartTimer();
                 }
 
-                ::DoPossibleLocalCacheCleaning(gLocalCacheHelpDataSystem.GetHelpDataInfoSystemPtr());
 
-                NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
+                CheckIfProgramWantsToStop();
                 // Nukutaan aina lyhyit‰ aikoja (0.5 s), ett‰ osataan tutkia usein, josko p‰‰ohjelma haluaa jo sulkea
                 Sleep(500); 
             }
@@ -786,7 +640,7 @@ namespace QueryDataToLocalCacheLoaderThread
 
     void CloseNow()
     {
-        gStopFunctor.Stop(true);
+        gStopFunctorPtr->Stop(true);
         gCopyFileExCancel = TRUE;
     }
 
@@ -804,20 +658,17 @@ namespace QueryDataToLocalCacheLoaderThread
         return false; 
     }
 
-    void UpdateSettings(NFmiHelpDataInfoSystem& theHelpDataSystem)
+    void UpdateSettings(NFmiHelpDataInfoSystem& theHelpDataSystem, bool loadDataAtStartUp, bool autoLoadNewCacheDataMode)
     {
         gLocalCacheHelpDataSystem.UpdateHelpDataInfoSystem(theHelpDataSystem);
+        LocalCacheCleaning::LoadDataAtStartUp(loadDataAtStartUp);
+        LocalCacheCleaning::AutoLoadNewCacheDataMode(autoLoadNewCacheDataMode);
         MakeCacheDirectories(*gLocalCacheHelpDataSystem.GetHelpDataInfoSystemPtr());
     }
 
-    void LoadDataAtStartUp(bool newState)
+    void AutoLoadNewCacheDataMode(bool newValue)
     {
-        gLoadDataAtStartUp = newState;
-    }
-
-    void AutoLoadNewCacheDataMode(bool newState)
-    {
-        gAutoLoadNewCacheDataMode = newState;
+        LocalCacheCleaning::AutoLoadNewCacheDataMode(newValue);
     }
 
     // Kun catlog ja sen speedlog systeemit otettiin k‰yttˆˆn, ovat smartmetin

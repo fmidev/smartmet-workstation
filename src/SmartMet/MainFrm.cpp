@@ -768,10 +768,9 @@ void CMainFrame::StartQDataCacheThreads()
     std::string smartMetBinariesDirectory = itsDoc->ApplicationDataBase().GetDecodedApplicationDirectory(); 
 	double maximumFileSizeMB = itsDoc->HelpDataInfoSystem()->CacheMaximumFileSizeMB();
 	// käynnistetään qdata cache-loader threadi kerran, ja se pitää ensin initialisoida. Tämä threadi käynnistetään aina.
-	QueryDataToLocalCacheLoaderThread::InitHelpDataInfo(*itsDoc->HelpDataInfoSystem(), smartMetBinariesDirectory, itsDoc->FileCleanerSystem().CleaningTimeStepInHours(), itsDoc->WorkingDirectory(), maximumFileSizeMB);
-
-    QueryDataToLocalCacheLoaderThread::LoadDataAtStartUp(itsDoc->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().LoadDataAtStartUp());
-	QueryDataToLocalCacheLoaderThread::AutoLoadNewCacheDataMode(itsDoc->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData());
+	auto loadDataAtStartUp = itsDoc->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().LoadDataAtStartUp();
+	auto autoLoadNewCacheData = itsDoc->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData();
+	QueryDataToLocalCacheLoaderThread::InitHelpDataInfo(*itsDoc->HelpDataInfoSystem(), smartMetBinariesDirectory, itsDoc->FileCleanerSystem().CleaningTimeStepInHours(), loadDataAtStartUp, autoLoadNewCacheData, itsDoc->WorkingDirectory(), maximumFileSizeMB);
 
 	CWinThread* localCacheLoaderThread = AfxBeginThread(QueryDataToLocalCacheLoaderThread::DoThread, nullptr, THREAD_PRIORITY_NORMAL);
 }

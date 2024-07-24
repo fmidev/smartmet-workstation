@@ -26,7 +26,6 @@
 #include "ToolMasterHelperFunctions.h"
 #include "CombinedMapHandlerInterface.h"
 #include "FmiCombineDataThread.h"
-#include "FmiQueryDataCacheLoaderThread.h"
 
 #include "boost/format.hpp"
 
