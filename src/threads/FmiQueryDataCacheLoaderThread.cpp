@@ -784,7 +784,7 @@ static int GoThroughAllHelpDataInfos(const NFmiHelpDataInfoSystem &theHelpDataSy
         }
     }
 
-    gMissingDataOnServerReporter.workerThreadCompletesCycle(theCacheLoaderData->itsThreadName);
+    gMissingDataOnServerReporter.mainWorkerThreadCompletesCycle();
     return status;
 }
 
@@ -891,7 +891,7 @@ void CFmiQueryDataCacheLoaderThread::InitHelpDataInfo(const NFmiHelpDataInfoSyst
     gUseCopyFileExFunction = NFmiSettings::Optional("SmartMet::UseCopyFileExFunction", true);
     gUsedChunckSize = NFmiSettings::Optional("SmartMet::UsedChunckSizeInKB", 512) * 1024;
     gCacheCleaningIntervalInHours = cacheCleaningIntervalInHours;
-    gMissingDataOnServerReporter.initialize(gWorkerHelpDataSystem, usedDataLoaderThreadCount);
+    gMissingDataOnServerReporter.initialize(gWorkerHelpDataSystem);
 }
 
 void CFmiQueryDataCacheLoaderThread::CloseNow(void)

@@ -536,7 +536,7 @@ namespace
             }
         }
 
-        gMissingDataOnServerReporter.workerThreadCompletesCycle(gThreadName);
+        gMissingDataOnServerReporter.mainWorkerThreadCompletesCycle();
         return status;
     }
 
@@ -548,6 +548,18 @@ namespace
         logStr += " ";
         logStr += theEndMessage;
         CatLog::logMessage(logStr, logLevel, CatLog::Category::Data);
+    }
+
+    // Ei tarvii tehdä mitään threadi turvallista std::call_once juttua, koska 
+    // pää-working-thread kutsuu tätä normiloopissa, eli static lippu riittää.
+    void StartHistoryDataThreadOnce()
+    {
+        static bool hasRun = false;
+        if(!hasRun)
+        {
+            hasRun = true;
+            // Toteutetaan tämä sitten kun historia tulee takaisin mukaan kuvioihin
+        }
     }
 
 } // nameless namespace
@@ -567,12 +579,12 @@ namespace QueryDataToLocalCacheLoaderThread
         gUsedChunckSize = NFmiSettings::Optional("SmartMet::UsedChunckSizeInKB", 512) * 1024;
         LocalCacheCleaning::InitLocalCacheCleaning(loadDataAtStartUp, autoLoadNewCacheDataMode, cacheCleaningIntervalInHours, gStopFunctorPtr);
         auto tmpHelpDataSystemPtr = gLocalCacheHelpDataSystem.GetHelpDataInfoSystemPtr();
-        gMissingDataOnServerReporter.initialize(*tmpHelpDataSystemPtr, 1);
+        gMissingDataOnServerReporter.initialize(*tmpHelpDataSystemPtr);
         ::MakeCacheDirectories(*tmpHelpDataSystemPtr);
         gMaxDataFileSizeInMB = maxDataFileSizeInMB;
     }
 
-    UINT DoThread(LPVOID pParam)
+    void DoThread()
     {
         // Create lock without acquiring mutex, lock object will release mutex on any kind of exit
         std::unique_lock<std::timed_mutex> lock(gThreadRunningMutex, std::defer_lock);
@@ -580,7 +592,7 @@ namespace QueryDataToLocalCacheLoaderThread
         if(!lock.try_lock_for(std::chrono::seconds(2)))
         {
             ::LogGeneralMessage(gThreadName, "QueryDataToLocalCacheLoaderThread::DoThread with", "was allready running, stopping...", CatLog::Severity::Warning);
-            return 1;
+            return ;
         }
         else
             ::LogGeneralMessage(gThreadName, "QueryDataToLocalCacheLoaderThread::DoThread with", "was started...", CatLog::Severity::Debug);
@@ -609,7 +621,7 @@ namespace QueryDataToLocalCacheLoaderThread
                     catch(NFmiStopThreadException& /* e */)
                     {
                         // SmartMet haluaa lopettaa, tullaan ulos thred funktiosta
-                        return 0; 
+                        return ; 
                     }
                     catch(...)
                     {
@@ -619,6 +631,7 @@ namespace QueryDataToLocalCacheLoaderThread
 
                     // Tarkastellaan myös pitääkö lokaali cachehakemisto tyhjennellä
                     ::DoPossibleLocalCacheCleaning(gLocalCacheHelpDataSystem.GetHelpDataInfoSystemPtr());
+                    ::StartHistoryDataThreadOnce();
                     // Aloitetaan taas uuden kierroksen ajanlasku
                     gDoWorkTimer.StartTimer();
                 }
@@ -635,7 +648,6 @@ namespace QueryDataToLocalCacheLoaderThread
         }
 
         ::LogGeneralMessage(gThreadName, "QueryDataToLocalCacheLoaderThread::DoThread with", "is now stopped as requested...", CatLog::Severity::Debug);
-        return 0;
     }
 
     void CloseNow()

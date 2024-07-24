@@ -772,7 +772,8 @@ void CMainFrame::StartQDataCacheThreads()
 	auto autoLoadNewCacheData = itsDoc->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData();
 	QueryDataToLocalCacheLoaderThread::InitHelpDataInfo(*itsDoc->HelpDataInfoSystem(), smartMetBinariesDirectory, itsDoc->FileCleanerSystem().CleaningTimeStepInHours(), loadDataAtStartUp, autoLoadNewCacheData, itsDoc->WorkingDirectory(), maximumFileSizeMB);
 
-	CWinThread* localCacheLoaderThread = AfxBeginThread(QueryDataToLocalCacheLoaderThread::DoThread, nullptr, THREAD_PRIORITY_NORMAL);
+	std::thread t(QueryDataToLocalCacheLoaderThread::DoThread);
+	t.detach(); // Detach the thread
 }
 
 void CMainFrame::StartHistoryDataCacheThread()
