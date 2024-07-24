@@ -25,7 +25,6 @@
 #endif // FMI_DISABLE_MFC_FEATURE_PACK
 
 class NFmiEditMapGeneralDataDoc;
-class CFmiCacheLoaderData;
 enum class NFmiLedColor;
 class NFmiLedLightStatusSystem;
 
@@ -76,7 +75,7 @@ class CMainFrame : public CFmiUsedFrameWndParent
 private:
     static const NFmiViewPosRegistryInfo s_ViewPosRegistryInfo;
 public:
-    static const NFmiViewPosRegistryInfo& ViewPosRegistryInfo(void){return s_ViewPosRegistryInfo;}
+    static const NFmiViewPosRegistryInfo& ViewPosRegistryInfo() {return s_ViewPosRegistryInfo;}
 
 protected: // create from serialization only
 	CMainFrame();
@@ -87,16 +86,16 @@ public:
 
 // Operations
 public:
-	void StartDataLoadingWorkingThread(void);
-	void StartAdditionalWorkerThreads(void);
-    void StartQDataCacheThreads(void);
-    void StartHistoryDataCacheThread(void);
-	void StopQDataCacheThreads(void);
-	void WaitQDataCacheThreadsToStop(void);
+	void StartDataLoadingWorkingThread();
+	void StartAdditionalWorkerThreads();
+    void StartQDataCacheThreads();
+    void StartHistoryDataCacheThread();
+	void StopQDataCacheThreads();
+	void WaitQDataCacheThreadsToStop();
 	void SetNotificationMessage(const std::string &theNotificationMsgStr, const std::string &theNotificationTitle, int theStyle, int theTimeout, bool fNoSound);
-	void SetDefaultValues(void){}; // t‰m‰ vaaditaan DoWindowSizeSettings -template funktion takia, mutta se ei tee mit‰‰n, koska p‰‰ ikkunaa ei voi laittaa defaultti paikkaan
-	void CheckForAutoLoadTimerStart(void);
-	void PutWarningFlagTimerOn(void);
+	void SetDefaultValues() {}; // t‰m‰ vaaditaan DoWindowSizeSettings -template funktion takia, mutta se ei tee mit‰‰n, koska p‰‰ ikkunaa ei voi laittaa defaultti paikkaan
+	void CheckForAutoLoadTimerStart();
+	void PutWarningFlagTimerOn();
 	void DoAppDataBaseCollection(int theAction);
     static std::string MakeUsedWinRegistryKeyStr(unsigned int /* theMapViewDescTopIndex */) {return ViewPosRegistryInfo().WinRegistryKeyStr();}
     void ParameterSelectionSystemUpdateTimerStart(int waitTimeInSeconds);
@@ -179,9 +178,9 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 	virtual BOOL OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult);
-	void OnWorkinThreadDataRead2(void);
-	void GetNewWarningMessages(void);
-	void DoMacroParamUpdate(void);
+	void OnWorkinThreadDataRead2();
+	void GetNewWarningMessages();
+	void DoMacroParamUpdate();
 
 #ifndef FMI_DISABLE_MFC_FEATURE_PACK
 	BOOL CreateDockingWindows();
@@ -211,7 +210,6 @@ private:
 	HBITMAP itsToolBarBitmapHandle;
 	CBitmap itsToolBarBitmap;
 	CImageList itsToolBarImagelist;
-	std::vector<CFmiCacheLoaderData*> itsQDataCacheLoaderDatas;
 public:
 	afx_msg void OnEnablenotifications();
 	afx_msg void OnUpdateEnablenotifications(CCmdUI *pCmdUI);
