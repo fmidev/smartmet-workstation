@@ -20,7 +20,6 @@ namespace QueryDataToLocalCacheLoaderThread
     bool WaitToClose(int milliSecondsToWait);
     void UpdateSettings(NFmiHelpDataInfoSystem& theHelpDataSystem, bool loadDataAtStartUp, bool autoLoadNewCacheDataMode);
     void AutoLoadNewCacheDataMode(bool newValue);
-    std::string MakeDailyUnpackLogFilePath();
 
 //    UINT DoCombinedDataHistoryThread(LPVOID pParam);
 }

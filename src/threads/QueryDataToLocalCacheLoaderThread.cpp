@@ -2,20 +2,13 @@
 #include "QueryDataToLocalCacheLoaderThread.h"
 #include "NFmiQueryDataUtil.h"
 #include "NFmiMissingDataOnServerReporter.h"
-#include "NFmiOnceLoadedDataFiles.h"
 #include "NFmiHelpDataInfo.h"
-#include "NFmiSettings.h"
 #include "NFmiFileSystem.h"
-#include "NFmiFileString.h"
-#include "SmartMetDocumentInterface.h"
-#include "NFmiCachedDataFileInfo.h"
-#include "NFmiCaseStudySystem.h"
 #include "FmiDataLoadingThread2.h"
-#include "NFmiLedLightStatus.h"
-#include "NFmiValueString.h"
-#include "execute-command-in-separate-process.h"
 #include "LocalCacheHelpDataSystem.h"
 #include "LocalCacheCleaning.h"
+#include "LocalCacheSingleFileLoaderThread.h"
+#include "NFmiMilliSecondTimer.h"
 
 #include <thread>
 #include <mutex>
@@ -24,47 +17,23 @@ namespace
 {
     // Jos ohjelma halutaan lopettaa ulkoapäin, tälle gStopFunctorPtr:ille asetetaan tieto siitä CloseNow funktion kautta.
     std::shared_ptr<NFmiStopFunctor> gStopFunctorPtr;
-    // Tämän avulla CopyFileEx-funktio voidaan keskeyttää, arvo muutetaan TRUE:ksi.
-    BOOL gCopyFileExCancel;
+    // Jos jotain datoja ei löydy serveriltä, halutaan siitä raportoida kerran lokiin.
+    // Lisäksi tämä pitää jatkuvaa kirjaa siitä kuinka monta dataa löytyy löytyy sieltä serveriltä ja
+    // tämä raportoi siitä Smartmetin tarvittaessa statusbarissa olevaan "operationaaliset ongelmat" ledikontrolliin.
+    std::shared_ptr<NFmiMissingDataOnServerReporter> gMissingDataOnServerReporterPtr;
     // Tämän olion avulla working thread osaa lukea/kopioida haluttuja datoja
     LocalCacheHelpDataSystem gLocalCacheHelpDataSystem;
-    // SmartMetin binääri-hakemistoa tarvitaan ainakin kun tehdään tiedostojen purkua erillisessä prosessissa (purku ohjelma sijaitsee siellä missä smartmetin exe)
-    std::string gSmartMetBinDirectory;
-    // SmartMetin Working-hakemistoa tarvitaan kun rakennetaan polkua 7-zip ohjelmalle (purku ohjelma sijaitsee sen utils-hakemistossa)
-    std::string gSmartMetWorkingDirectory;
     // Tämän avulla tiedetään, suljettaessa ohjelmaa että onko working-thread 
     // lopettanut työnsä ja sen puolesta voidaan ohjelman sulkemista jatkaa.
     std::timed_mutex gThreadRunningMutex;
-    // Jos käytetään FileCopyMarko:a, tämän kokoisia puskureita käytetään kopioinnissa
-    size_t gUsedChunckSize;
-    // Jos tiedosto on isompi kuin tässä oleva raja, sitä ei kopioida ollenkaan
-    double gMaxDataFileSizeInMB;
-    std::string gThreadName = "Main-thread";
-    const std::vector<std::string> g_ZippedFileExtensions{ ".7z", ".zip", ".bz2" }; //, ".gz" , ".tar" , ".xz" , ".wim" };
-
-    NFmiMissingDataOnServerReporter gMissingDataOnServerReporter;
-    NFmiOnceLoadedDataFiles gOnceLoadedDataFiles;
+    std::string gThreadName = "Main-qdata-file-loader-thread";
 
     NFmiMilliSecondTimer gDoWorkTimer;
-
-    enum CFmiCopyingStatus
-    {
-        kFmiNoCopyNeeded = 0,
-        kFmiCopyWentOk = 1,
-        kFmiCopyNotSuccessfull = 2,
-        kFmiGoOnWithCopying = 3,
-        kFmiUnpackIsDoneInSeparateProcess = 4
-    };
-
-    NFmiStopFunctor* GetStopFunctor()
-    {
-        return gStopFunctorPtr.get();
-    }
 
     // Tämä heittää erikois poikkeuksen, jos käyttäjä on halunnut sulkea ohjelman.
     void CheckIfProgramWantsToStop()
     {
-        NFmiQueryDataUtil::CheckIfStopped(GetStopFunctor());
+        NFmiQueryDataUtil::CheckIfStopped(gStopFunctorPtr.get());
     }
 
     void MakeCacheDirectories(NFmiHelpDataInfoSystem& helpDataSystem)
@@ -106,409 +75,6 @@ namespace
         return helpDataInfo.IsEnabled() && !helpDataInfo.CaseStudyLegacyOnly();
     }
 
-    // Kokeillaan eri pakkaus päätteitä prioriteetti järjestyksessä, heti kun löytyy jotain jollain päätteellä, etsintä loppuu.
-    std::list<std::string> TryToFindPackedFileNameListWithFileFilter(const std::string& theFileFilter)
-    {
-        for(auto& zipExtension : g_ZippedFileExtensions)
-        {
-            auto packedFileNameList = NFmiFileSystem::PatternFiles(theFileFilter + zipExtension);
-            if(!packedFileNameList.empty())
-                return packedFileNameList;
-        }
-        return std::list<std::string>();
-    }
-
-    // Sama kuin edellä GetNewestFileInfo-funktiossa, mutta haetaan joko pakattujen tiedostojen listaa
-    // tai ei pakattujen tiedostojen listaa.
-    std::pair<std::list<std::string>, bool> GetNewestFileInfoList(const std::string& theFileFilter)
-    {
-        std::list<std::string> packedFileList = ::TryToFindPackedFileNameListWithFileFilter(theFileFilter);
-        if(packedFileList.empty() == false)
-            return std::make_pair(packedFileList, true);
-        else
-        {
-            std::list<std::string> fileList = NFmiFileSystem::PatternFiles(theFileFilter);
-            return std::make_pair(fileList, false);
-        }
-    }
-
-    NFmiFileString MakeFileStringWithoutCompressionFileExtension(const NFmiCachedDataFileInfo& theCachedDataFileInfo)
-    {
-        NFmiFileString fileStr(theCachedDataFileInfo.itsTotalServerFileName);
-        if(theCachedDataFileInfo.fFilePacked)
-            fileStr = fileStr.Device() + fileStr.Path() + fileStr.Header(); // pakatun tiedoston tapauksessa jätetaan pois tiedoston viimeinen extensio
-        return fileStr;
-    }
-
-    std::string MakeFinalTargetFileName(const NFmiCachedDataFileInfo& theCachedDataFileInfo, const NFmiHelpDataInfo& theDataInfo, const NFmiHelpDataInfoSystem& theHelpDataSystem)
-    {
-        // datatiedoston target polku+nimi saadaan käyttämällä NFmiHelpDataInfo:n UsedFileFilter:in polkua ja source-filen nimi osaa
-        NFmiFileString fileStr = ::MakeFileStringWithoutCompressionFileExtension(theCachedDataFileInfo);
-        NFmiString fileNameStr = fileStr.FileName();
-        NFmiFileString usedFileFilterStr = theDataInfo.UsedFileNameFilter(theHelpDataSystem);
-        std::string totalCacheFileName = usedFileFilterStr.Device();
-        totalCacheFileName += usedFileFilterStr.Path();
-        totalCacheFileName += fileNameStr;
-        return totalCacheFileName;
-    }
-
-    std::string MakeFinalTmpFileName(const NFmiCachedDataFileInfo& theCachedDataFileInfo, const NFmiHelpDataInfo& theDataInfo, const NFmiHelpDataInfoSystem& theHelpDataSystem, bool fGetPackedName)
-    {
-        NFmiFileString fileStr = fGetPackedName ? NFmiFileString(theCachedDataFileInfo.itsTotalServerFileName) : ::MakeFileStringWithoutCompressionFileExtension(theCachedDataFileInfo);
-        NFmiString fileNameStr = fileStr.FileName();
-        std::string totalCacheTmpFileName = theHelpDataSystem.LocalDataTmpDirectory();
-        if(!theCachedDataFileInfo.fFilePacked)
-        {
-            // Etu TMP-liite laitetaan vain ei pakattuihin datoihin.
-            // SYY: Jostain syystä bzip2 tyyppi puretaan niin että purettuun datatiedostoon tulee mukaan pakatun tiedoston etiliite, jos purkaus tehdään 7-zip ohjelmalla.
-            // Jos purku tehdään zip tai 7zip pakattuihin datoihin, etuliitettä ei tule purettuun tiedostoon (this behaviour really sucks!!!).
-            totalCacheTmpFileName += theHelpDataSystem.CacheTmpFileNameFix() + "_"; // laitetaan tmp-nimi fixi tiedosto nimen alkuun ja loppuun
-        }
-        totalCacheTmpFileName += fileNameStr;
-        totalCacheTmpFileName += "_";
-        totalCacheTmpFileName += theHelpDataSystem.CacheTmpFileNameFix();
-        return totalCacheTmpFileName;
-    }
-
-    // Sample results from MakeRestOfTheFileNames function:
-    // Original data path: p:\\data\\in\\202001021141_gfs_scandinavia_pressure.sqd.bz2
-    // itsTotalCacheFileName: D:\\smartmet\\wrk\\data\\local\\202001021141_gfs_scandinavia_pressure.sqd
-    // itsTotalCacheTmpFileName: D:\\smartmet\\wrk\\data\\tmp\\202001021141_gfs_scandinavia_pressure.sqd_TMP
-    // itsTotalCacheTmpPackedFileName: D:\\smartmet\\wrk\\data\\tmp\\202001021141_gfs_scandinavia_pressure.sqd.bz2_TMP
-    void MakeRestOfTheFileNames(NFmiCachedDataFileInfo& theCachedDataFileInfoInOut, const NFmiHelpDataInfo& theDataInfo, const NFmiHelpDataInfoSystem& theHelpDataSystem)
-    {
-        theCachedDataFileInfoInOut.itsTotalCacheFileName = ::MakeFinalTargetFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem);
-        theCachedDataFileInfoInOut.itsTotalCacheTmpFileName = ::MakeFinalTmpFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem, false);
-        theCachedDataFileInfoInOut.itsTotalCacheTmpPackedFileName = ::MakeFinalTmpFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem, true);
-    }
-
-    // Kokeillaan eri pakkaus päätteitä prioriteetti järjestyksessä, heti kun löytyy jotain jollain päätteellä, etsintä loppuu.
-    std::string TryToFindNewestPackedFileName(const std::string& theFileFilter)
-    {
-        for(auto& zipExtension : g_ZippedFileExtensions)
-        {
-            auto totalPackedFileName = NFmiFileSystem::NewestPatternFileName(theFileFilter + zipExtension);
-            if(!totalPackedFileName.empty())
-                return totalPackedFileName;
-        }
-        return "";
-    }
-
-    // Etsii uusimman tiedoston, joka vastaa annettua fileFilteriä ja löytyy server puolelta 
-    // ja palauttaa sen koko nimen polkuineen.
-    // Tutkii ensin löytyykö tiedostosta 7z, zip tai bz2-päätteistä versiota, koska pakatut tiedostot ovat 
-    // prioriteetissa ensin. Jos oli pakattu tiedosto, asetetaan pair:in second-arvoon true, 
-    // muuten se on false.
-    void GetNewestFileInfo(const std::string& theFileFilter, NFmiCachedDataFileInfo& theCachedDataFileInfoOut)
-    {
-        std::string totalPackedFileName = TryToFindNewestPackedFileName(theFileFilter);
-        if(!totalPackedFileName.empty())
-        {
-            theCachedDataFileInfoOut.itsTotalServerFileName = totalPackedFileName;
-            theCachedDataFileInfoOut.fFilePacked = true;
-        }
-        else
-        {
-            std::string totalFileName = NFmiFileSystem::NewestPatternFileName(theFileFilter);
-            theCachedDataFileInfoOut.itsTotalServerFileName = totalFileName;
-            theCachedDataFileInfoOut.fFilePacked = false;
-        }
-    }
-
-    const double gKiloByte = 1024;
-    const double gMegaByte = gKiloByte * gKiloByte;
-    // tässä tarkastetaan kuuluuko kyseinen data-tiedosto tälle threadille, eli tiedoston koon
-    // pitää mennä rajojen sisään.
-    bool DoesThisThreadCopyFile(NFmiCachedDataFileInfo& theCachedDataFileInfo)
-    {
-        theCachedDataFileInfo.itsFileSizeInMB = NFmiFileSystem::FileSize(theCachedDataFileInfo.itsTotalServerFileName) / gMegaByte;
-        if(theCachedDataFileInfo.itsFileSizeInMB <= 0)
-        {
-            return false; // jostain syystä tiedoston kokoa ei saatu
-        }
-
-        if(theCachedDataFileInfo.itsFileSizeInMB < gMaxDataFileSizeInMB)
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-    // Tarkistetaan tmp-tiedoston tila. Jos sitä ei ole, voidaan kopiointiproseduuria jatkaa.
-    // Jos se on olemassa, mutta sen voi poistaa (jäänyt virhetilanteessa ja siinä ei ole nyt mikään kiinni?), voidaan jatkaa.
-    // Jos sitä ei voi poistaa, ei jatketa eteenpäin, koska joku muu threadi tai prosessi on luultavasti tekemässä sille jotain.
-    CFmiCopyingStatus CheckTmpFileStatus(const std::string& theTmpFileName)
-    {
-        if(NFmiFileSystem::FileExists(theTmpFileName))
-        {
-            // kokeillaan, voiko tmp-tiedoston deletoida, jos voi (eli kukaan ei ole sinä kiinni), se on jäänyt jostain virhetilanteesta ja se voidaan deletoida ja aloittaa kopio uudestaan
-            if(NFmiFileSystem::RemoveFile(theTmpFileName) == false)
-                return kFmiNoCopyNeeded;
-        }
-        return kFmiGoOnWithCopying;
-    }
-
-    std::string MakeFileSizeString(double fileSizeInMB)
-    {
-        if(fileSizeInMB <= 0.1)
-        {
-            std::string str = NFmiValueString::GetStringWithMaxDecimalsSmartWay(fileSizeInMB * gKiloByte, 1);
-            str += " kB";
-            return str;
-        }
-
-        if(fileSizeInMB >= 900)
-        {
-            std::string str = NFmiValueString::GetStringWithMaxDecimalsSmartWay(fileSizeInMB / gKiloByte, 2);
-            str += " GB";
-            return str;
-        }
-
-        std::string str = NFmiValueString::GetStringWithMaxDecimalsSmartWay(fileSizeInMB, 1);
-        str += " MB";
-        return str;
-    }
-
-    std::string MakeLedChannelStartLoadingString(const NFmiCachedDataFileInfo& cachedDataFileInfo)
-    {
-        std::string reportStr = "Loading file from server (";
-        reportStr += ::MakeFileSizeString(cachedDataFileInfo.itsFileSizeInMB);
-        reportStr += "):\n";
-        NFmiFileString fileStr(cachedDataFileInfo.itsTotalCacheFileName);
-        reportStr += fileStr.FileName();
-        return reportStr;
-    }
-
-    void EnsureCacheDirectoryForPartialData(const std::string& theTotalCacheFileName, const NFmiHelpDataInfo& theDataInfo)
-    {
-        if(theDataInfo.IsCombineData())
-        { // partial-datoille on varmistettava hakemisto, koska ne laitetaan cachessakin eri hakemistoihin
-            NFmiFileString fileStr(theTotalCacheFileName);
-            std::string partialDataDirectory = fileStr.Device();
-            partialDataDirectory += fileStr.Path();
-            NFmiFileSystem::CreateDirectory(partialDataDirectory);
-        }
-    }
-
-    void LogCopySuccess(const std::string& theTotalFileName, NFmiMilliSecondTimer& theTimer)
-    {
-        std::string logStr("Copying QData file '");
-        logStr += theTotalFileName;
-        logStr += "' to cache lasted: ";
-        logStr += theTimer.EasyTimeDiffStr();
-        CatLog::logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Data);
-    }
-
-    void LogRenameFailure(const std::string& theTotalCacheTmpFileName, const std::string& theTotalCacheFileName)
-    {
-        std::string logStr("Copying QData file was success but renaming tmp file failed\n");
-        logStr += theTotalCacheTmpFileName;
-        logStr += "\n -> \n";
-        logStr += theTotalCacheFileName;
-        CatLog::logMessage(logStr, CatLog::Severity::Warning, CatLog::Category::Data);
-    }
-
-    void LogCopyFailure(const std::string& theTotalFileName, const std::string& theTotalCacheTmpFileName)
-    {
-        std::string logStr("Copying QData file to cache tmp file failed\n");
-        logStr += theTotalFileName;
-        logStr += "\n -> \n";
-        logStr += theTotalCacheTmpFileName;
-        CatLog::logMessage(logStr, CatLog::Severity::Error, CatLog::Category::Data);
-    }
-
-    // Katso miten haluttu komentorivi pitää rakentaa smartmet_workstation\src\unpackdatafilesexe\UnpackSmartMetDataFilesMain.cpp
-    // tiedoston main -funktion alusta, kun virhetilanteessa laitetaan ohjeita cout:iin.
-    std::string MakeUnpackCommand(NFmiCachedDataFileInfo& theCachedDataFileInfo)
-    {
-        // HUOM! laitetaan kaikki käskyn osat lainausmerkkeihin, jos polut sattuisivat sisältämään spaceja
-        std::string commandStr("\"");
-        // 1. ajettava exe
-        commandStr += gSmartMetBinDirectory;
-        commandStr += "\\UnpackSmartMetDataFilesExe\"";
-        commandStr += " \"";
-        // 2. pakattu tmp tiedosto
-        commandStr += theCachedDataFileInfo.itsTotalCacheTmpPackedFileName;
-        commandStr += "\" \"";
-        // 3. purettu tiedosto siirrettynä lokaali cacheen
-        commandStr += theCachedDataFileInfo.itsTotalCacheFileName;
-        // 4. pakattu tiedosto deletoidaan = 1
-        commandStr += "\" 1 ";
-        // 5. käytetty 7-zip exe polku
-        commandStr += CFmiProcessHelpers::Make7zipExePath(gSmartMetWorkingDirectory);
-        // 6. käytetty lokitiedosto
-        commandStr += " \"";
-        commandStr += QueryDataToLocalCacheLoaderThread::MakeDailyUnpackLogFilePath();
-        commandStr += "\"";
-
-        return commandStr;
-    }
-    CFmiCopyingStatus DoFileUnpacking(NFmiCachedDataFileInfo& theCachedDataFileInfo)
-    {
-        if(theCachedDataFileInfo.fFilePacked) // jos oli pakattu tiedosto
-        {
-            // 1.1. Puretaan 7z, zip tai bz2 pakattu tiedosto
-            try
-            {
-                // Tehdään purku aina omassa erillisessä prosessissa, koska siihen pitää käyttää erillista 7z.exe ohjelmaa ja purku voi kestaa minuutteja
-                std::string unpackCommandStr = ::MakeUnpackCommand(theCachedDataFileInfo);
-                bool status = CFmiProcessHelpers::ExecuteCommandInSeparateProcess(unpackCommandStr, true, false, SW_HIDE, false, NORMAL_PRIORITY_CLASS);
-                if(status)
-                    return kFmiUnpackIsDoneInSeparateProcess;
-                else
-                    return kFmiCopyNotSuccessfull;
-            }
-            catch(std::exception& e)
-            {
-                std::string errStr(std::string("Error in ") + __FUNCTION__ + " when trying to unpack file '" + theCachedDataFileInfo.itsTotalCacheFileName + "': ");
-                errStr += e.what();
-                CatLog::logMessage(errStr, CatLog::Severity::Error, CatLog::Category::Data);
-                return kFmiCopyNotSuccessfull;
-            }
-            catch(...)
-            {
-                std::string errStr(std::string("Unknown error in ") + __FUNCTION__ + " when trying to unpack file '" + theCachedDataFileInfo.itsTotalCacheFileName + "'");
-                CatLog::logMessage(errStr, CatLog::Severity::Error, CatLog::Category::Data);
-                return kFmiCopyNotSuccessfull;
-            }
-        }
-        return kFmiGoOnWithCopying;
-    }
-
-    // Tämä on copy-rename käyttäen win32:en CopyFileEx funktiota. 
-    // Tässä on keskeytys ja progres-seuranta mahdollisuudet.
-    // Jos server-datatiedosto oli pakattu (theNewestFileInfo.second == true),
-    // pitää tiedosto kopioida normaalisti tmp-hakemistoon, mutta sen jälkeen riippuen 
-    // pakatun tiedoston koosta, tiedosto pitää joko purkaa täällä tai jos se on iso
-    // tiedosto, pitää käynnistää erillinen prosessi, joka purkaa ja siirtää tiedoston oikeaan 
-    // paikkaan. Oma purku-prosessi on pakko käynnistää, koska purkua ei voi keskeyttää ja se voi kestää 
-    // vaikka 3 minuuttia (esim. nykyinen arome mallipintadata). Jos käyttäjä sulkee SmartMetin, 
-    // ei voi odottaa 3 minuuttia, vaan purku keskeytettäisiin väkivaltaisesti, eikä seuraamuksia tiedetä vielä.
-    CFmiCopyingStatus CopyFileEx_CopyRename(NFmiCachedDataFileInfo& theCachedDataFileInfo)
-    {
-        CheckIfProgramWantsToStop();
-        NFmiMilliSecondTimer timer;
-        timer.StartTimer();
-        std::string totalFileStdString = theCachedDataFileInfo.itsTotalServerFileName;
-        CString totFileStrU_ = CA2T(totalFileStdString.c_str());
-        // totCacheTmpFileStr arvo riippuu onko kyse pakatusta tiedostosta vai ei
-        CString totCacheTmpFileStrU_ = CA2T(theCachedDataFileInfo.itsTotalCacheTmpFileName.c_str());
-        if(theCachedDataFileInfo.fFilePacked)
-            totCacheTmpFileStrU_ = CA2T(theCachedDataFileInfo.itsTotalCacheTmpPackedFileName.c_str());
-        std::string totalCacheTmpFileStdString = CT2A(totCacheTmpFileStrU_);
-
-        // 1. kopioi data tmp-tiedostoon
-        DWORD dwCopyFlags = COPY_FILE_FAIL_IF_EXISTS; // & COPY_FILE_NO_BUFFERING;
-        bool copyStatus = (CopyFileEx(totFileStrU_, totCacheTmpFileStrU_, 0, 0, &gCopyFileExCancel, dwCopyFlags) == TRUE);
-        if(copyStatus)
-            //	if(CopyFileEx(totFileStr, totCacheTmpFileStr, 0, 0, &gCopyFileExCancel, dwCopyFlags))
-            //    if(NFmiFileSystem::CopyFile((LPCSTR)totFileStr, (LPCSTR)totCacheTmpFileStr))
-        {
-            timer.StopTimer();
-            ::LogCopySuccess(theCachedDataFileInfo.itsTotalServerFileName, timer); // pitää laittaa lokiin tiedoston kopion lokaalilevylle kesto ennen mahdollista bzip2 purkua
-
-            CFmiCopyingStatus tmpFileStatus = ::DoFileUnpacking(theCachedDataFileInfo);
-            if(tmpFileStatus == kFmiGoOnWithCopying)
-            {
-                // 2. jos onnistui renamea data-tiedosto lopulliseen muotoon ja hakemistoon.
-                if(NFmiFileSystem::RenameFile(theCachedDataFileInfo.itsTotalCacheTmpFileName, theCachedDataFileInfo.itsTotalCacheFileName))
-                {
-                    return kFmiCopyWentOk;
-                }
-                else
-                {
-                    ::LogRenameFailure(theCachedDataFileInfo.itsTotalCacheTmpFileName, theCachedDataFileInfo.itsTotalCacheFileName);
-                    // jos rename epäonnistui, ei poisteta tmp-tiedostoa ainakaan vielä, että jää jotain näyttöä ongelmista
-                }
-            }
-            else
-                return tmpFileStatus;
-        }
-        else
-        {
-            if(gCopyFileExCancel == FALSE) // raportoidaan epäonnistumisesta vain jos threadia ei oltu canceloitu
-            {
-                ::LogCopyFailure(theCachedDataFileInfo.itsTotalServerFileName, theCachedDataFileInfo.itsTotalCacheTmpFileName);
-                return kFmiCopyNotSuccessfull;
-            }
-            else
-                return kFmiNoCopyNeeded; // jos threadi haluttiin lopettaa, palautetaan no-copy-needed status, eikä virhettä
-        }
-
-        return kFmiCopyNotSuccessfull;
-    }
-
-    CFmiCopyingStatus CopyFileToLocalCache(NFmiCachedDataFileInfo& theCachedDataFileInfo, const NFmiHelpDataInfo& theDataInfo)
-    {
-        if(NFmiFileSystem::FileExists(theCachedDataFileInfo.itsTotalCacheFileName))
-        {
-            return kFmiNoCopyNeeded;
-        }
-
-        if(gOnceLoadedDataFiles.checkIfFileHasBeenLoadedEarlier(theCachedDataFileInfo))
-        {
-            return kFmiNoCopyNeeded;
-        }
-
-        CFmiCopyingStatus tmpFileStatus = ::CheckTmpFileStatus(theCachedDataFileInfo.itsTotalCacheTmpFileName);
-        CFmiCopyingStatus tmpPackedFileStatus = ::CheckTmpFileStatus(theCachedDataFileInfo.itsTotalCacheTmpPackedFileName);
-
-        if(tmpFileStatus == kFmiGoOnWithCopying && tmpPackedFileStatus == kFmiGoOnWithCopying)
-        {
-            NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::QueryData, gThreadName, ::MakeLedChannelStartLoadingString(theCachedDataFileInfo));
-            ::EnsureCacheDirectoryForPartialData(theCachedDataFileInfo.itsTotalCacheFileName, theDataInfo);
-            return ::CopyFileEx_CopyRename(theCachedDataFileInfo);
-        }
-        else
-        {
-            if(CatLog::doTraceLevelLogging())
-            {
-                std::string traceLoggingStr = gThreadName;
-                traceLoggingStr += ": tmp file status was no go with: ";
-                traceLoggingStr += theCachedDataFileInfo.itsTotalServerFileName;
-                CatLog::logMessage(traceLoggingStr, CatLog::Severity::Trace, CatLog::Category::Data, true);
-            }
-        }
-
-        return kFmiNoCopyNeeded;
-    }
-
-    // Funktio tutkii annetun theDataInfo:n avulla onko kyseessä cacheen ladattava data
-    // ja onko levypalvelimella uudempaa tiedostoa kuin paikallisessa cachessa.
-    // Paluu arvot:
-    // kFmiNoCopyNeeded = ei ollut mitään luettavaa
-    // kFmiCopyWentOk = oli luettavaa ja se on luettu ilman ongelmia cacheen
-    // kFmiCopyNotSuccessfull = oli luettavaa, mutta ei voitu kopioida tiedostoa (yksi mahd. syy on että 
-    //		toinen SmartMet on juuri kopioimassa sitä), tämä tulkitaan siten että ei ollut mitään luettavaa/kopioitavaa
-    CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo& theDataInfo, const NFmiHelpDataInfoSystem& theHelpDataSystem)
-    {
-        if(NFmiCachedDataFileInfo::IsDataCached(theDataInfo))
-        {
-            // 1. Mikä on uusimman file-filterin mukaisen tiedoston nimi, ja oliko kyse pakatusta tiedostosta
-            std::string fileFilter = theDataInfo.FileNameFilter();
-            NFmiCachedDataFileInfo cachedDataFileInfo;
-            ::GetNewestFileInfo(fileFilter, cachedDataFileInfo);
-            gMissingDataOnServerReporter.doReportIfFileFilterHasNoRelatedDataOnServer(cachedDataFileInfo, fileFilter);
-
-            CheckIfProgramWantsToStop();
-            if(!cachedDataFileInfo.itsTotalServerFileName.empty())
-            {
-                if(::DoesThisThreadCopyFile(cachedDataFileInfo))
-                {
-                    ::MakeRestOfTheFileNames(cachedDataFileInfo, theDataInfo, theHelpDataSystem);
-                    // 2. onko sen nimistä tiedostoa jo cachessa
-                    // 3. tee cache kopiointia varten tmp-nimi tiedostosta (joka kopioinnin jälkeen renametaan oikeaksi)
-                    // 4. onko tmp-nimi jo cachessa (tällöin mahd. toisen SmartMetin kopio on jo käynnissä)
-                    // 5. tee varsinainen tiedosto kopio cacheen
-                    return ::CopyFileToLocalCache(cachedDataFileInfo, theDataInfo);
-                }
-            }
-        }
-
-        return kFmiNoCopyNeeded;
-    }
-
     // Käy läpi kaikki dynaamiset helpdatat ja tekee tarvittavat cache-kopioinnit.
     // Jos ei löytynyt mitään kopioitavaa koko kierroksella, palauttaa kFmiNoCopyNeeded, joka tarkoittaa
     // että worker-threadi voi pitää taukoa.
@@ -526,7 +92,7 @@ namespace
             const NFmiHelpDataInfo& helpDataInfo = helpInfos[i];
             if(::IsDataUsed(helpDataInfo))
             {
-                CFmiCopyingStatus tmpStatus = CopyQueryDataToCache(helpDataInfo, usedHelpDataSystem);
+                CFmiCopyingStatus tmpStatus = LocalCacheSingleFileLoaderThread::CopyQueryDataToCache(helpDataInfo, usedHelpDataSystem);
                 if(tmpStatus == kFmiCopyWentOk)
                 {
                     status = kFmiCopyWentOk;
@@ -536,7 +102,7 @@ namespace
             }
         }
 
-        gMissingDataOnServerReporter.mainWorkerThreadCompletesCycle();
+        gMissingDataOnServerReporterPtr->mainWorkerThreadCompletesCycle();
         return status;
     }
 
@@ -570,18 +136,14 @@ namespace QueryDataToLocalCacheLoaderThread
     void InitHelpDataInfo(const NFmiHelpDataInfoSystem& helpDataInfoSystem, const std::string& smartMetBinariesDirectory, double cacheCleaningIntervalInHours, bool loadDataAtStartUp, bool autoLoadNewCacheDataMode, const std::string& smartMetWorkingDirectory, double maxDataFileSizeInMB)
     {
         gStopFunctorPtr = std::make_shared<NFmiStopFunctor>();
+        gMissingDataOnServerReporterPtr = std::make_shared<NFmiMissingDataOnServerReporter>();
         gLocalCacheHelpDataSystem.InitHelpDataInfoSystem(helpDataInfoSystem);
-        gSmartMetBinDirectory = smartMetBinariesDirectory;
-        gSmartMetWorkingDirectory = smartMetWorkingDirectory;
-
-        gCopyFileExCancel = FALSE;
-
-        gUsedChunckSize = NFmiSettings::Optional("SmartMet::UsedChunckSizeInKB", 512) * 1024;
-        LocalCacheCleaning::InitLocalCacheCleaning(loadDataAtStartUp, autoLoadNewCacheDataMode, cacheCleaningIntervalInHours, gStopFunctorPtr);
         auto tmpHelpDataSystemPtr = gLocalCacheHelpDataSystem.GetHelpDataInfoSystemPtr();
-        gMissingDataOnServerReporter.initialize(*tmpHelpDataSystemPtr);
+        gMissingDataOnServerReporterPtr->initialize(*tmpHelpDataSystemPtr);
         ::MakeCacheDirectories(*tmpHelpDataSystemPtr);
-        gMaxDataFileSizeInMB = maxDataFileSizeInMB;
+
+        LocalCacheCleaning::InitLocalCacheCleaning(loadDataAtStartUp, autoLoadNewCacheDataMode, cacheCleaningIntervalInHours, gStopFunctorPtr);
+        LocalCacheSingleFileLoaderThread::InitSingleFileLoader(gStopFunctorPtr, gMissingDataOnServerReporterPtr, maxDataFileSizeInMB, smartMetBinariesDirectory, smartMetWorkingDirectory);
     }
 
     void DoThread()
@@ -653,7 +215,7 @@ namespace QueryDataToLocalCacheLoaderThread
     void CloseNow()
     {
         gStopFunctorPtr->Stop(true);
-        gCopyFileExCancel = TRUE;
+        LocalCacheSingleFileLoaderThread::CloseNow();
     }
 
     bool WaitToClose(int milliSecondsToWait)
@@ -681,22 +243,6 @@ namespace QueryDataToLocalCacheLoaderThread
     void AutoLoadNewCacheDataMode(bool newValue)
     {
         LocalCacheCleaning::AutoLoadNewCacheDataMode(newValue);
-    }
-
-    // Kun catlog ja sen speedlog systeemit otettiin käyttöön, ovat smartmetin
-    // lokitiedostot lukossa ja niihin ei voi mennä ulkopuoliset loggerit lisäämään mitään.
-    // Siksi luodaan oma unpack lokitiedosto. Jokaiselle päivälle oma jotta niitä saadaan vähän niputettua.
-    std::string MakeDailyUnpackLogFilePath()
-    {
-        auto basicLogFile = CatLog::currentLogFilePath();
-        NFmiFileString fileString = basicLogFile;
-        std::string dailyLogFilePath = fileString.Device();
-        dailyLogFilePath += fileString.Path();
-        dailyLogFilePath += "unpacking_data_daily_log_";
-        NFmiTime atime;
-        dailyLogFilePath += atime.ToStr(kYYYYMMDD);
-        dailyLogFilePath += ".txt";
-        return dailyLogFilePath;
     }
 
 //    UINT DoCombinedDataHistoryThread(LPVOID pParam);
