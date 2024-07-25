@@ -131,18 +131,6 @@ namespace
         return totalCacheTmpFileName;
     }
 
-    // Sample results from MakeRestOfTheFileNames function:
-    // Original data path: p:\\data\\in\\202001021141_gfs_scandinavia_pressure.sqd.bz2
-    // itsTotalCacheFileName: D:\\smartmet\\wrk\\data\\local\\202001021141_gfs_scandinavia_pressure.sqd
-    // itsTotalCacheTmpFileName: D:\\smartmet\\wrk\\data\\tmp\\202001021141_gfs_scandinavia_pressure.sqd_TMP
-    // itsTotalCacheTmpPackedFileName: D:\\smartmet\\wrk\\data\\tmp\\202001021141_gfs_scandinavia_pressure.sqd.bz2_TMP
-    void MakeRestOfTheFileNames(NFmiCachedDataFileInfo& theCachedDataFileInfoInOut, const NFmiHelpDataInfo& theDataInfo, const NFmiHelpDataInfoSystem& theHelpDataSystem)
-    {
-        theCachedDataFileInfoInOut.itsTotalCacheFileName = ::MakeFinalTargetFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem);
-        theCachedDataFileInfoInOut.itsTotalCacheTmpFileName = ::MakeFinalTmpFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem, false);
-        theCachedDataFileInfoInOut.itsTotalCacheTmpPackedFileName = ::MakeFinalTmpFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem, true);
-    }
-
     // Tarkistetaan tmp-tiedoston tila. Jos sitä ei ole, voidaan kopiointiproseduuria jatkaa.
     // Jos se on olemassa, mutta sen voi poistaa (jäänyt virhetilanteessa ja siinä ei ole nyt mikään kiinni?), voidaan jatkaa.
     // Jos sitä ei voi poistaa, ei jatketa eteenpäin, koska joku muu threadi tai prosessi on luultavasti tekemässä sille jotain.
@@ -350,45 +338,6 @@ namespace
         return kFmiCopyNotSuccessfull;
     }
 
-    // 1. onko sen nimistä tiedostoa jo cachessa
-    // 2. tee cache kopiointia varten tmp-nimi tiedostosta (joka kopioinnin jälkeen renametaan oikeaksi)
-    // 3. onko tmp-nimi jo cachessa (tällöin mahd. toisen SmartMetin kopio on jo käynnissä)
-    // 4. tee varsinainen tiedosto kopio cacheen
-    CFmiCopyingStatus CopyFileToLocalCache(NFmiCachedDataFileInfo& theCachedDataFileInfo, const NFmiHelpDataInfo& theDataInfo)
-    {
-        if(NFmiFileSystem::FileExists(theCachedDataFileInfo.itsTotalCacheFileName))
-        {
-            return kFmiNoCopyNeeded;
-        }
-
-        if(gOnceLoadedDataFiles.checkIfFileHasBeenLoadedEarlier(theCachedDataFileInfo))
-        {
-            return kFmiNoCopyNeeded;
-        }
-
-        CFmiCopyingStatus tmpFileStatus = ::CheckTmpFileStatus(theCachedDataFileInfo.itsTotalCacheTmpFileName);
-        CFmiCopyingStatus tmpPackedFileStatus = ::CheckTmpFileStatus(theCachedDataFileInfo.itsTotalCacheTmpPackedFileName);
-
-        if(tmpFileStatus == kFmiGoOnWithCopying && tmpPackedFileStatus == kFmiGoOnWithCopying)
-        {
-            NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::QueryData, gThreadName, ::MakeLedChannelStartLoadingString(theCachedDataFileInfo));
-            ::EnsureCacheDirectoryForPartialData(theCachedDataFileInfo.itsTotalCacheFileName, theDataInfo);
-            return ::CopyFileEx_CopyRename(theCachedDataFileInfo);
-        }
-        else
-        {
-            if(CatLog::doTraceLevelLogging())
-            {
-                std::string traceLoggingStr = gThreadName;
-                traceLoggingStr += ": tmp file status was no go with: ";
-                traceLoggingStr += theCachedDataFileInfo.itsTotalServerFileName;
-                CatLog::logMessage(traceLoggingStr, CatLog::Severity::Trace, CatLog::Category::Data, true);
-            }
-        }
-
-        return kFmiNoCopyNeeded;
-    }
-
 } // nameless namespace ends
 
 namespace LocalCacheSingleFileLoaderThread
@@ -426,8 +375,8 @@ namespace LocalCacheSingleFileLoaderThread
                 {
                     if(::DoesThisThreadCopyFile(cachedDataFileInfo))
                     {
-                        ::MakeRestOfTheFileNames(cachedDataFileInfo, theDataInfo, theHelpDataSystem);
-                        return ::CopyFileToLocalCache(cachedDataFileInfo, theDataInfo);
+                        LocalCacheSingleFileLoaderThread::MakeRestOfTheFileNames(cachedDataFileInfo, theDataInfo, theHelpDataSystem);
+                        return CopyFileToLocalCache(cachedDataFileInfo, theDataInfo);
                     }
                 }
             }
@@ -459,6 +408,63 @@ namespace LocalCacheSingleFileLoaderThread
         dailyLogFilePath += atime.ToStr(kYYYYMMDD);
         dailyLogFilePath += ".txt";
         return dailyLogFilePath;
+    }
+
+    const std::vector<std::string>& GetZippedFileExtensions()
+    {
+        return g_ZippedFileExtensions;
+    }
+
+    // Sample results from MakeRestOfTheFileNames function:
+    // Original data path: p:\\data\\in\\202001021141_gfs_scandinavia_pressure.sqd.bz2
+    // itsTotalCacheFileName: D:\\smartmet\\wrk\\data\\local\\202001021141_gfs_scandinavia_pressure.sqd
+    // itsTotalCacheTmpFileName: D:\\smartmet\\wrk\\data\\tmp\\202001021141_gfs_scandinavia_pressure.sqd_TMP
+    // itsTotalCacheTmpPackedFileName: D:\\smartmet\\wrk\\data\\tmp\\202001021141_gfs_scandinavia_pressure.sqd.bz2_TMP
+    void MakeRestOfTheFileNames(NFmiCachedDataFileInfo& theCachedDataFileInfoInOut, const NFmiHelpDataInfo& theDataInfo, const NFmiHelpDataInfoSystem& theHelpDataSystem)
+    {
+        theCachedDataFileInfoInOut.itsTotalCacheFileName = ::MakeFinalTargetFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem);
+        theCachedDataFileInfoInOut.itsTotalCacheTmpFileName = ::MakeFinalTmpFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem, false);
+        theCachedDataFileInfoInOut.itsTotalCacheTmpPackedFileName = ::MakeFinalTmpFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem, true);
+    }
+
+    // 1. onko sen nimistä tiedostoa jo cachessa
+    // 2. tee cache kopiointia varten tmp-nimi tiedostosta (joka kopioinnin jälkeen renametaan oikeaksi)
+    // 3. onko tmp-nimi jo cachessa (tällöin mahd. toisen SmartMetin kopio on jo käynnissä)
+    // 4. tee varsinainen tiedosto kopio cacheen
+    CFmiCopyingStatus CopyFileToLocalCache(NFmiCachedDataFileInfo& theCachedDataFileInfo, const NFmiHelpDataInfo& theDataInfo, std::string* possibleThreadName)
+    {
+        if(NFmiFileSystem::FileExists(theCachedDataFileInfo.itsTotalCacheFileName))
+        {
+            return kFmiNoCopyNeeded;
+        }
+
+        if(gOnceLoadedDataFiles.checkIfFileHasBeenLoadedEarlier(theCachedDataFileInfo))
+        {
+            return kFmiNoCopyNeeded;
+        }
+
+        CFmiCopyingStatus tmpFileStatus = ::CheckTmpFileStatus(theCachedDataFileInfo.itsTotalCacheTmpFileName);
+        CFmiCopyingStatus tmpPackedFileStatus = ::CheckTmpFileStatus(theCachedDataFileInfo.itsTotalCacheTmpPackedFileName);
+        std::string usedThreadName = possibleThreadName ? *possibleThreadName : gThreadName;
+
+        if(tmpFileStatus == kFmiGoOnWithCopying && tmpPackedFileStatus == kFmiGoOnWithCopying)
+        {
+            NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::QueryData, usedThreadName, ::MakeLedChannelStartLoadingString(theCachedDataFileInfo));
+            ::EnsureCacheDirectoryForPartialData(theCachedDataFileInfo.itsTotalCacheFileName, theDataInfo);
+            return ::CopyFileEx_CopyRename(theCachedDataFileInfo);
+        }
+        else
+        {
+            if(CatLog::doTraceLevelLogging())
+            {
+                std::string traceLoggingStr = usedThreadName;
+                traceLoggingStr += ": tmp file status was no go with: ";
+                traceLoggingStr += theCachedDataFileInfo.itsTotalServerFileName;
+                CatLog::logMessage(traceLoggingStr, CatLog::Severity::Trace, CatLog::Category::Data, true);
+            }
+        }
+
+        return kFmiNoCopyNeeded;
     }
 
 } // LocalCacheSingleFileLoaderThread namespace ends

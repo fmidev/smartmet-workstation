@@ -9,6 +9,7 @@
 #include "LocalCacheSingleFileLoaderThread.h"
 #include "NFmiMilliSecondTimer.h"
 #include "LocalCacheFutureWaitingSystem.h"
+#include "LocalCacheHistoryDataThread.h"
 
 #include <thread>
 #include <mutex>
@@ -121,7 +122,8 @@ namespace
         if(!hasRun)
         {
             hasRun = true;
-            // Toteutetaan tämä sitten kun historia tulee takaisin mukaan kuvioihin
+            std::thread t(LocalCacheHistoryDataThread::DoHistoryThread, gStopFunctorPtr, gLocalCacheHelpDataSystem.GetHelpDataInfoSystemPtr());
+            t.detach(); // Detach the thread
         }
     }
 

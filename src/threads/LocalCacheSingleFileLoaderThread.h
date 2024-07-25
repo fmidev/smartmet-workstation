@@ -3,11 +3,13 @@
 #include "FmiCopyingStatus.h"
 #include <memory>
 #include <string>
+#include <vector>
 
 class NFmiHelpDataInfoSystem;
 class NFmiHelpDataInfo;
 class NFmiStopFunctor;
 class NFmiMissingDataOnServerReporter;
+struct NFmiCachedDataFileInfo;
 
 namespace LocalCacheSingleFileLoaderThread
 {
@@ -15,4 +17,7 @@ namespace LocalCacheSingleFileLoaderThread
     CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo& theDataInfo, const NFmiHelpDataInfoSystem& theHelpDataSystem);
     void CloseNow();
     std::string MakeDailyUnpackLogFilePath();
+    const std::vector<std::string>& GetZippedFileExtensions();
+    void MakeRestOfTheFileNames(NFmiCachedDataFileInfo& theCachedDataFileInfoInOut, const NFmiHelpDataInfo& theDataInfo, const NFmiHelpDataInfoSystem& theHelpDataSystem);
+    CFmiCopyingStatus CopyFileToLocalCache(NFmiCachedDataFileInfo& theCachedDataFileInfo, const NFmiHelpDataInfo& theDataInfo, std::string* possibleThreadName = nullptr);
 }
