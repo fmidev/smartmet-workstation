@@ -25,15 +25,10 @@ namespace
     // Kun ohjelma halutaan sulkea (k‰ytt‰j‰), t‰h‰n tulee tieto asiasta
     std::shared_ptr<NFmiStopFunctor> gStopFunctorPtr;
 
-    NFmiStopFunctor* GetStopFunctor()
-    {
-        return gStopFunctorPtr.get();
-    }
-
-    // T‰m‰ heitt‰‰ erikois poikkeuksen, jos k‰ytt‰j‰ on halunnut sulkea ohjelman.
+    // T‰m‰ heitt‰‰ erikoispoikkeuksen, jos k‰ytt‰j‰ on halunnut sulkea ohjelman.
     void CheckIfProgramWantsToStop()
     {
-        NFmiQueryDataUtil::CheckIfStopped(GetStopFunctor());
+        NFmiQueryDataUtil::CheckIfStopped(gStopFunctorPtr.get());
     }
 
     std::string DeletedFilesStr(const std::list<std::string>& theDeletedFiles)
