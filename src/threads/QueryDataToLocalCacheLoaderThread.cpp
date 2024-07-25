@@ -4,11 +4,11 @@
 #include "NFmiMissingDataOnServerReporter.h"
 #include "NFmiHelpDataInfo.h"
 #include "NFmiFileSystem.h"
-#include "FmiDataLoadingThread2.h"
 #include "LocalCacheHelpDataSystem.h"
 #include "LocalCacheCleaning.h"
 #include "LocalCacheSingleFileLoaderThread.h"
 #include "NFmiMilliSecondTimer.h"
+#include "LocalCacheFutureWaitingSystem.h"
 
 #include <thread>
 #include <mutex>
@@ -27,6 +27,7 @@ namespace
     // lopettanut työnsä ja sen puolesta voidaan ohjelman sulkemista jatkaa.
     std::timed_mutex gThreadRunningMutex;
     std::string gThreadName = "Main-qdata-file-loader-thread";
+    LocalCacheFutureWaitingSystem localCacheFutureWaitingSystem;
 
     NFmiMilliSecondTimer gDoWorkTimer;
 
@@ -84,7 +85,6 @@ namespace
     {
         // Tänne annettu shared_ptr on tarkoituksella kopio, ja siitä otetaan käytettävä referenssi ulos tässä.
         NFmiHelpDataInfoSystem& usedHelpDataSystem = *theHelpDataSystemPtr;
-        CFmiCopyingStatus status = kFmiNoCopyNeeded;
         const auto& helpInfos = theHelpDataSystemPtr->DynamicHelpDataInfos();
         for(size_t i = 0; i < helpInfos.size(); i++)
         {
@@ -92,18 +92,15 @@ namespace
             const NFmiHelpDataInfo& helpDataInfo = helpInfos[i];
             if(::IsDataUsed(helpDataInfo))
             {
-                CFmiCopyingStatus tmpStatus = LocalCacheSingleFileLoaderThread::CopyQueryDataToCache(helpDataInfo, usedHelpDataSystem);
-                if(tmpStatus == kFmiCopyWentOk)
-                {
-                    status = kFmiCopyWentOk;
-                    // Laitetaan tietoa data-loading threadille että on tullut uutta dataa
-                    CFmiDataLoadingThread2::LoadDataNow();
-                }
+                localCacheFutureWaitingSystem.AddFuture(std::async(std::launch::async, LocalCacheSingleFileLoaderThread::CopyQueryDataToCache, helpDataInfo, usedHelpDataSystem));
             }
+
+            // Pitää mahdollisesti odotella jos kaikki worker-threadit ovat jo käytössä
+            localCacheFutureWaitingSystem.WaitForFuturesToExpire();
         }
 
         gMissingDataOnServerReporterPtr->mainWorkerThreadCompletesCycle();
-        return status;
+        return localCacheFutureWaitingSystem.GetAndResetDataCycleStatus();
     }
 
     void LogGeneralMessage(const std::string& theThreadNameStr, const std::string& theStartMessage, const std::string& theEndMessage, CatLog::Severity logLevel)
@@ -141,6 +138,8 @@ namespace QueryDataToLocalCacheLoaderThread
         auto tmpHelpDataSystemPtr = gLocalCacheHelpDataSystem.GetHelpDataInfoSystemPtr();
         gMissingDataOnServerReporterPtr->initialize(*tmpHelpDataSystemPtr);
         ::MakeCacheDirectories(*tmpHelpDataSystemPtr);
+        const size_t maxSingleDataCopyThreads = 3;
+        localCacheFutureWaitingSystem.InitWaitingSystem(maxSingleDataCopyThreads, gStopFunctorPtr);
 
         LocalCacheCleaning::InitLocalCacheCleaning(loadDataAtStartUp, autoLoadNewCacheDataMode, cacheCleaningIntervalInHours, gStopFunctorPtr);
         LocalCacheSingleFileLoaderThread::InitSingleFileLoader(gStopFunctorPtr, gMissingDataOnServerReporterPtr, maxDataFileSizeInMB, smartMetBinariesDirectory, smartMetWorkingDirectory);

@@ -10,10 +10,11 @@
 #include "NFmiValueString.h"
 #include "NFmiLedLightStatus.h"
 #include "execute-command-in-separate-process.h"
+#include "FmiDataLoadingThread2.h"
 
 namespace
 {
-    std::string gThreadName = "Single-qdata-file-loader-thread";
+    std::string gThreadName = "Qdata-loader-thread";
     // Jos ohjelma halutaan lopettaa ulkoapäin, tälle gStopFunctorPtr:ille asetetaan tieto siitä CloseNow funktion kautta.
     std::shared_ptr<NFmiStopFunctor> gStopFunctorPtr;
     // Jos jotain datoja ei löydy serveriltä, halutaan siitä raportoida eri paikkoihin, 
@@ -202,7 +203,7 @@ namespace
     {
         std::string logStr("Copying QData file '");
         logStr += theTotalFileName;
-        logStr += "' to cache lasted: ";
+        logStr += "' from server to local cache lasted: ";
         logStr += theTimer.EasyTimeDiffStr();
         CatLog::logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Data);
     }
@@ -322,6 +323,8 @@ namespace
                 // 2. jos onnistui renamea data-tiedosto lopulliseen muotoon ja hakemistoon.
                 if(NFmiFileSystem::RenameFile(theCachedDataFileInfo.itsTotalCacheTmpFileName, theCachedDataFileInfo.itsTotalCacheFileName))
                 {
+                    // Laitetaan tietoa data-loading threadille että on tullut uutta dataa
+                    CFmiDataLoadingThread2::LoadDataNow();
                     return kFmiCopyWentOk;
                 }
                 else
@@ -347,6 +350,10 @@ namespace
         return kFmiCopyNotSuccessfull;
     }
 
+    // 1. onko sen nimistä tiedostoa jo cachessa
+    // 2. tee cache kopiointia varten tmp-nimi tiedostosta (joka kopioinnin jälkeen renametaan oikeaksi)
+    // 3. onko tmp-nimi jo cachessa (tällöin mahd. toisen SmartMetin kopio on jo käynnissä)
+    // 4. tee varsinainen tiedosto kopio cacheen
     CFmiCopyingStatus CopyFileToLocalCache(NFmiCachedDataFileInfo& theCachedDataFileInfo, const NFmiHelpDataInfo& theDataInfo)
     {
         if(NFmiFileSystem::FileExists(theCachedDataFileInfo.itsTotalCacheFileName))
@@ -404,27 +411,30 @@ namespace LocalCacheSingleFileLoaderThread
     // toinen SmartMet on juuri kopioimassa sitä), tämä tulkitaan siten että ei ollut mitään luettavaa/kopioitavaa
     CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo& theDataInfo, const NFmiHelpDataInfoSystem& theHelpDataSystem)
     {
-        if(NFmiCachedDataFileInfo::IsDataCached(theDataInfo))
+        try
         {
-            // 1. Mikä on uusimman file-filterin mukaisen tiedoston nimi, ja oliko kyse pakatusta tiedostosta
-            std::string fileFilter = theDataInfo.FileNameFilter();
-            NFmiCachedDataFileInfo cachedDataFileInfo;
-            ::GetNewestFileInfo(fileFilter, cachedDataFileInfo);
-            gMissingDataOnServerReporterPtr->doReportIfFileFilterHasNoRelatedDataOnServer(cachedDataFileInfo, fileFilter);
-
-            CheckIfProgramWantsToStop();
-            if(!cachedDataFileInfo.itsTotalServerFileName.empty())
+            if(NFmiCachedDataFileInfo::IsDataCached(theDataInfo))
             {
-                if(::DoesThisThreadCopyFile(cachedDataFileInfo))
+                // 1. Mikä on uusimman file-filterin mukaisen tiedoston nimi, ja oliko kyse pakatusta tiedostosta
+                std::string fileFilter = theDataInfo.FileNameFilter();
+                NFmiCachedDataFileInfo cachedDataFileInfo;
+                ::GetNewestFileInfo(fileFilter, cachedDataFileInfo);
+                gMissingDataOnServerReporterPtr->doReportIfFileFilterHasNoRelatedDataOnServer(cachedDataFileInfo, fileFilter);
+
+                CheckIfProgramWantsToStop();
+                if(!cachedDataFileInfo.itsTotalServerFileName.empty())
                 {
-                    ::MakeRestOfTheFileNames(cachedDataFileInfo, theDataInfo, theHelpDataSystem);
-                    // 2. onko sen nimistä tiedostoa jo cachessa
-                    // 3. tee cache kopiointia varten tmp-nimi tiedostosta (joka kopioinnin jälkeen renametaan oikeaksi)
-                    // 4. onko tmp-nimi jo cachessa (tällöin mahd. toisen SmartMetin kopio on jo käynnissä)
-                    // 5. tee varsinainen tiedosto kopio cacheen
-                    return ::CopyFileToLocalCache(cachedDataFileInfo, theDataInfo);
+                    if(::DoesThisThreadCopyFile(cachedDataFileInfo))
+                    {
+                        ::MakeRestOfTheFileNames(cachedDataFileInfo, theDataInfo, theHelpDataSystem);
+                        return ::CopyFileToLocalCache(cachedDataFileInfo, theDataInfo);
+                    }
                 }
             }
+        }
+        catch(...)
+        {
+            // tämä oli luultavasti StopThreadException, lopetetaan joka tapauksessa
         }
 
         return kFmiNoCopyNeeded;

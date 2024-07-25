@@ -1,5 +1,6 @@
 #pragma once
 
+#include "FmiCopyingStatus.h"
 #include <memory>
 #include <string>
 
@@ -7,15 +8,6 @@ class NFmiHelpDataInfoSystem;
 class NFmiHelpDataInfo;
 class NFmiStopFunctor;
 class NFmiMissingDataOnServerReporter;
-
-enum CFmiCopyingStatus
-{
-    kFmiNoCopyNeeded = 0,
-    kFmiCopyWentOk = 1,
-    kFmiCopyNotSuccessfull = 2,
-    kFmiGoOnWithCopying = 3,
-    kFmiUnpackIsDoneInSeparateProcess = 4
-};
 
 namespace LocalCacheSingleFileLoaderThread
 {
