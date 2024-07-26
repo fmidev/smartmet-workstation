@@ -8,6 +8,7 @@
 */
 
 #include <string>
+#include <list>
 
 class NFmiHelpDataInfoSystem;
 
@@ -20,7 +21,6 @@ namespace QueryDataToLocalCacheLoaderThread
     bool WaitToClose(int milliSecondsToWait);
     void UpdateSettings(NFmiHelpDataInfoSystem& theHelpDataSystem, bool loadDataAtStartUp, bool autoLoadNewCacheDataMode);
     void AutoLoadNewCacheDataMode(bool newValue);
-
-//    UINT DoCombinedDataHistoryThread(LPVOID pParam);
+    void AddPrioritizedDataLoadWork(const std::list<std::string>& prioritizedDataLoadWorkList);
 }
 

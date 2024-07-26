@@ -13,6 +13,7 @@
 
 #include <thread>
 #include <mutex>
+#include <numeric>
 
 namespace
 {
@@ -28,7 +29,15 @@ namespace
     // lopettanut työnsä ja sen puolesta voidaan ohjelman sulkemista jatkaa.
     std::timed_mutex gThreadRunningMutex;
     std::string gThreadName = "Main-qdata-file-loader-thread";
-    LocalCacheFutureWaitingSystem localCacheFutureWaitingSystem;
+    // Tämän avulla kontrolloidaan sitä kuinka monta single-data-loader threadia 
+    // voi olla käynnissä kerrallaan.
+    LocalCacheFutureWaitingSystem gLocalCacheFutureWaitingSystem;
+    // Käyttäjä voi lisätä työlistoja, millä nopeutetaan jonkin datan latauksen
+    // aloittamista esim, kun smartmetia käynnistetään tauon jälkeen ja on paljon 
+    // ladattavaa. Nämä työt siis ohittavat normityölistan ja annetuista datoista 
+    // luetaan vain viimeisimmät datat.
+    std::list<std::string> gPrioritizedDataLoadWorkList;
+    std::mutex gPrioritizedDataLoadWorkListMutex;
 
     NFmiMilliSecondTimer gDoWorkTimer;
 
@@ -77,31 +86,77 @@ namespace
         return helpDataInfo.IsEnabled() && !helpDataInfo.CaseStudyLegacyOnly();
     }
 
+    const NFmiHelpDataInfo* GetNextPossiblePrioritizedDataWork(NFmiHelpDataInfoSystem& helpDataInfoSystem)
+    {
+        std::lock_guard<std::mutex> lock(gPrioritizedDataLoadWorkListMutex);
+        do
+        {
+            // Jos lista oli tyhjä, lopetetaan ikilooppi
+            if(gPrioritizedDataLoadWorkList.empty())
+                return nullptr;
+
+            // Otetaan ensimmäinen filefiltteri listasta kokonaan pois
+            auto prioritizedFileFilter = gPrioritizedDataLoadWorkList.front();
+            gPrioritizedDataLoadWorkList.pop_front();
+
+            // Jos filtteriä vastaava helpDataInfo löytyi, palautetaan se
+            auto* helpDataInfo = helpDataInfoSystem.FindHelpDataInfo(prioritizedFileFilter);
+            if(helpDataInfo)
+                return helpDataInfo;
+        } while(true);
+    }
+
+    const NFmiHelpDataInfo& GetNextDataWork(NFmiHelpDataInfoSystem& helpDataInfoSystem, size_t* helpInfoIndexInOut)
+    {
+        const auto* prioritizedHelpDataInfo = ::GetNextPossiblePrioritizedDataWork(helpDataInfoSystem);
+        if(prioritizedHelpDataInfo)
+        {
+            std::string debugMessage = "Starting prioritized work with ";
+            debugMessage += prioritizedHelpDataInfo->FileNameFilter();
+            CatLog::logMessage(debugMessage, CatLog::Severity::Debug, CatLog::Category::Data, true);
+
+            // helpInfoIndexInOut:ia ei saa kasvattaa, kun tehdään priorisoituja töitä välissä.
+            return *prioritizedHelpDataInfo;
+        }
+
+        // Muuten palautetaan normityö ja juoksutus indeksiä pitää kasvattaa
+        auto usedHelpDataIndex = *helpInfoIndexInOut;
+        // Kasvatetaan helpInfoIndexInOut juoksutusta
+        (*helpInfoIndexInOut)++;
+        // Tehdään vielä tarkistus ettei mennä DynamicHelpDataInfos vector:in rajojen yli mitenkään
+        const auto& helpDataInfos = helpDataInfoSystem.DynamicHelpDataInfos();
+        if(usedHelpDataIndex >= helpDataInfos.size())
+            throw std::runtime_error("Error in QueryDataToLocalCacheLoaderThread - GetNextDataWork: Given helpInfoIndex was out of bounds, logical error in program");
+
+        return helpDataInfos[usedHelpDataIndex];
+    }
+
     // Käy läpi kaikki dynaamiset helpdatat ja tekee tarvittavat cache-kopioinnit.
     // Jos ei löytynyt mitään kopioitavaa koko kierroksella, palauttaa kFmiNoCopyNeeded, joka tarkoittaa
     // että worker-threadi voi pitää taukoa.
     // Jos palauttaa kFmiCopyWentOk:n, tarkoittaa että jotain kopiointi on tapahtunut ja on 
     // syytä tehdä uusi kierros saman tien.
-    CFmiCopyingStatus GoThroughAllHelpDataInfos(std::shared_ptr<NFmiHelpDataInfoSystem> theHelpDataSystemPtr)
+    CFmiCopyingStatus GoThroughAllHelpDataInfos(std::shared_ptr<NFmiHelpDataInfoSystem> theHelpDataInfoSystemPtr)
     {
         // Tänne annettu shared_ptr on tarkoituksella kopio, ja siitä otetaan käytettävä referenssi ulos tässä.
-        NFmiHelpDataInfoSystem& usedHelpDataSystem = *theHelpDataSystemPtr;
-        const auto& helpInfos = theHelpDataSystemPtr->DynamicHelpDataInfos();
-        for(size_t i = 0; i < helpInfos.size(); i++)
+        NFmiHelpDataInfoSystem& usedHelpDataInfoSystem = *theHelpDataInfoSystemPtr;
+        for(size_t helpInfoIndex = 0; helpInfoIndex < usedHelpDataInfoSystem.DynamicHelpDataInfos().size(); )
         {
             CheckIfProgramWantsToStop();
-            const NFmiHelpDataInfo& helpDataInfo = helpInfos[i];
+            // Huom! helpInfoIndex:ia juoksutetaan GetNextDataWork funktiossa, joten sen kutsun jälkeen 
+            // siinä voi olla jo seuraavan kierroksen arvo.
+            const NFmiHelpDataInfo& helpDataInfo = ::GetNextDataWork(usedHelpDataInfoSystem, &helpInfoIndex);
             if(::IsDataUsed(helpDataInfo))
             {
-                localCacheFutureWaitingSystem.AddFuture(std::async(std::launch::async, LocalCacheSingleFileLoaderThread::CopyQueryDataToCache, helpDataInfo, usedHelpDataSystem));
+                gLocalCacheFutureWaitingSystem.AddFuture(std::async(std::launch::async, LocalCacheSingleFileLoaderThread::CopyQueryDataToCache, helpDataInfo, usedHelpDataInfoSystem));
             }
 
             // Pitää mahdollisesti odotella jos kaikki worker-threadit ovat jo käytössä
-            localCacheFutureWaitingSystem.WaitForFuturesToExpire();
+            gLocalCacheFutureWaitingSystem.WaitForFuturesToExpire();
         }
 
         gMissingDataOnServerReporterPtr->mainWorkerThreadCompletesCycle();
-        return localCacheFutureWaitingSystem.GetAndResetDataCycleStatus();
+        return gLocalCacheFutureWaitingSystem.GetAndResetDataCycleStatus();
     }
 
     void LogGeneralMessage(const std::string& theThreadNameStr, const std::string& theStartMessage, const std::string& theEndMessage, CatLog::Severity logLevel)
@@ -141,7 +196,7 @@ namespace QueryDataToLocalCacheLoaderThread
         gMissingDataOnServerReporterPtr->initialize(*tmpHelpDataSystemPtr);
         ::MakeCacheDirectories(*tmpHelpDataSystemPtr);
         const size_t maxSingleDataCopyThreads = 3;
-        localCacheFutureWaitingSystem.InitWaitingSystem(maxSingleDataCopyThreads, gStopFunctorPtr);
+        gLocalCacheFutureWaitingSystem.InitWaitingSystem(maxSingleDataCopyThreads, gStopFunctorPtr);
 
         LocalCacheCleaning::InitLocalCacheCleaning(loadDataAtStartUp, autoLoadNewCacheDataMode, cacheCleaningIntervalInHours, gStopFunctorPtr);
         LocalCacheSingleFileLoaderThread::InitSingleFileLoader(gStopFunctorPtr, gMissingDataOnServerReporterPtr, maxDataFileSizeInMB, smartMetBinariesDirectory, smartMetWorkingDirectory);
@@ -246,7 +301,26 @@ namespace QueryDataToLocalCacheLoaderThread
         LocalCacheCleaning::AutoLoadNewCacheDataMode(newValue);
     }
 
-//    UINT DoCombinedDataHistoryThread(LPVOID pParam);
+    void AddPrioritizedDataLoadWork(const std::list<std::string>& prioritizedDataLoadWorkList)
+    {
+        if(prioritizedDataLoadWorkList.empty())
+            return;
+
+        std::string debugMessage = "AddPrioritizedDataLoadWork: adding new prioritized work to list: ";
+        debugMessage += std::accumulate(
+            std::next(prioritizedDataLoadWorkList.begin()), // Start from the second element
+            prioritizedDataLoadWorkList.end(),              // End of the list
+            *prioritizedDataLoadWorkList.begin(),           // Initial value (first element)
+            [](const std::string& a, const std::string& b) {
+                return a + ", " + b;     // Concatenate with a comma
+            }
+        );
+
+        CatLog::logMessage(debugMessage, CatLog::Severity::Debug, CatLog::Category::Data, true);
+
+        std::lock_guard<std::mutex> lock(gPrioritizedDataLoadWorkListMutex);
+        gPrioritizedDataLoadWorkList.insert(gPrioritizedDataLoadWorkList.begin(), prioritizedDataLoadWorkList.begin(), prioritizedDataLoadWorkList.end());
+    }
 
 } // QueryDataToLocalCacheLoaderThread
 
