@@ -23,6 +23,7 @@
 #include <boost/math/special_functions/round.hpp>
 #include <boost/algorithm/string.hpp>
 #include "execute-command-in-separate-process.h"
+#include "QueryDataToLocalCacheLoaderThread.h"
 
 namespace
 {
@@ -568,6 +569,7 @@ BEGIN_MESSAGE_MAP(CFmiCaseStudyDlg, CDialog)
     ON_WM_CTLCOLOR()
     ON_BN_CLICKED(IDC_BUTTON_REFRESH_GRID, &CFmiCaseStudyDlg::OnBnClickedButtonRefreshGrid)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_FOLDER, &CFmiCaseStudyDlg::OnBnClickedButtonBrowseFolder)
+	ON_BN_CLICKED(IDC_BUTTON_PRIORITIZE_DATA, &CFmiCaseStudyDlg::OnBnClickedButtonPrioritizeData)
 END_MESSAGE_MAP()
 
 
@@ -640,6 +642,7 @@ void CFmiCaseStudyDlg::InitDialogTexts()
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_CROP_DATA_TO_ZOOMED_MAP_AREA, "Crop data to zoomed main-map area");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_BROWSE, "Browse file");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_BROWSE_FOLDER, "Browse dir");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_PRIORITIZE_DATA, "Prioritize Selected");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_EDIT_ENABLE_DATA, gEditEnableDataCheckControlOffStr.c_str());
 }
 
@@ -672,6 +675,8 @@ void CFmiCaseStudyDlg::DoResizerHooking(void)
 	bOk = m_resizer.SetAnchor(IDC_BUTTON_BROWSE, ANCHOR_TOP | ANCHOR_RIGHT);
 	ASSERT(bOk == TRUE);
 	bOk = m_resizer.SetAnchor(IDC_BUTTON_BROWSE_FOLDER, ANCHOR_TOP | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_PRIORITIZE_DATA, ANCHOR_TOP | ANCHOR_RIGHT);
 	ASSERT(bOk == TRUE);
 
 	bOk = m_resizer.SetAnchor(IDC_EDIT_NAME_STR, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
@@ -1482,4 +1487,37 @@ void CFmiCaseStudyDlg::OnBnClickedButtonRefreshGrid()
 	caseStudySystem.FillCaseStudyDialogData(*itsProducerSystemsHolder);
     InitGridControlValues();
 	UpdateData(FALSE);
+}
+
+
+void CFmiCaseStudyDlg::OnBnClickedButtonPrioritizeData()
+{
+	std::vector<int> selectedRowIndexies;
+	// Haetaan valittujen rivien numerot listaan
+	auto fixedRowCount = itsGridCtrl.GetFixedRowCount();
+	auto rowCount = itsGridCtrl.GetRowCount();
+	for(int rowIndex = fixedRowCount; rowIndex < rowCount; rowIndex++)
+	{
+		if(itsGridCtrl.IsCellSelected(rowIndex, 1))
+		{
+			selectedRowIndexies.push_back(rowIndex);
+		}
+	}
+
+	std::list<std::string> selectedDataFileFilters;
+	auto& caseStudyDialogData = itsSmartMetDocumentInterface->CaseStudySystem().CaseStudyDialogData();
+	for(auto selectedRowIndex : selectedRowIndexies)
+	{
+		auto usedRowIndex = selectedRowIndex - 1;
+		if(usedRowIndex >= 0 && usedRowIndex < caseStudyDialogData.size())
+		{
+			const auto *rowData = caseStudyDialogData[usedRowIndex];
+			if(!rowData->FileFilter().empty())
+			{
+				selectedDataFileFilters.push_back(rowData->FileFilter());
+			}
+		}
+	}
+
+	QueryDataToLocalCacheLoaderThread::AddPrioritizedDataLoadWork(selectedDataFileFilters);
 }
