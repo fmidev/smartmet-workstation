@@ -37,7 +37,13 @@ namespace
     // ladattavaa. Nämä työt siis ohittavat normityölistan ja annetuista datoista 
     // luetaan vain viimeisimmät datat.
     std::list<std::string> gPrioritizedDataLoadWorkList;
-    std::mutex gPrioritizedDataLoadWorkListMutex;
+    // Vanhojen datojen lataus työlista
+    std::list<std::string> gLoadOldDataWorkList;
+    // Tämä mutex on molemmille työlistoille
+    std::mutex gWorkDataLoadMutex;
+    // Lippu sille että uutta work listaa on tullut, eikä kannata odotella
+    // normityö-timerin kanssa kokonaista minuuttia odotusloopissa.
+    bool gNewDataLoadingWorkReceived = false;
 
     NFmiMilliSecondTimer gDoWorkTimer;
 
@@ -64,6 +70,12 @@ namespace
             return true;
         }
 
+        if(gNewDataLoadingWorkReceived)
+        {
+            gNewDataLoadingWorkReceived = false;
+            return true;
+        }
+
         // Jos datan läpikäynnissä oli kopioitu mitään dataa, tehdään uusi kierros samantein
         if(status != kFmiNoCopyNeeded)
             return true;
@@ -86,49 +98,81 @@ namespace
         return helpDataInfo.IsEnabled() && !helpDataInfo.CaseStudyLegacyOnly();
     }
 
-    const NFmiHelpDataInfo* GetNextPossiblePrioritizedDataWork(NFmiHelpDataInfoSystem& helpDataInfoSystem)
+    const NFmiHelpDataInfo* GetNextPossibleDataWork(NFmiHelpDataInfoSystem& helpDataInfoSystem, std::list<std::string> &workList, bool oldDataCase)
     {
-        std::lock_guard<std::mutex> lock(gPrioritizedDataLoadWorkListMutex);
+        std::lock_guard<std::mutex> lock(gWorkDataLoadMutex);
         do
         {
             // Jos lista oli tyhjä, lopetetaan ikilooppi
-            if(gPrioritizedDataLoadWorkList.empty())
+            if(workList.empty())
                 return nullptr;
 
             // Otetaan ensimmäinen filefiltteri listasta kokonaan pois
-            auto prioritizedFileFilter = gPrioritizedDataLoadWorkList.front();
-            gPrioritizedDataLoadWorkList.pop_front();
+            auto prioritizedFileFilter = workList.front();
+            workList.pop_front();
 
             // Jos filtteriä vastaava helpDataInfo löytyi, palautetaan se
             auto* helpDataInfo = helpDataInfoSystem.FindHelpDataInfo(prioritizedFileFilter);
             if(helpDataInfo)
-                return helpDataInfo;
+            {
+                if(oldDataCase && NFmiInfoData::IsModelRunBasedData(helpDataInfo->DataType()))
+                {
+                    return helpDataInfo;
+                }
+            }
         } while(true);
     }
 
-    const NFmiHelpDataInfo& GetNextDataWork(NFmiHelpDataInfoSystem& helpDataInfoSystem, size_t* helpInfoIndexInOut)
+    const NFmiHelpDataInfo* GetNextPossiblePrioritizedDataWork(NFmiHelpDataInfoSystem& helpDataInfoSystem)
     {
-        const auto* prioritizedHelpDataInfo = ::GetNextPossiblePrioritizedDataWork(helpDataInfoSystem);
+        return ::GetNextPossibleDataWork(helpDataInfoSystem, gPrioritizedDataLoadWorkList, false);
+    }
+
+    const NFmiHelpDataInfo* GetNextPossibleLoadOldDataWork(NFmiHelpDataInfoSystem& helpDataInfoSystem)
+    {
+        return ::GetNextPossibleDataWork(helpDataInfoSystem, gLoadOldDataWorkList, true);
+    }
+
+    const NFmiHelpDataInfo* GetNextPossibleWorkWithLogging(NFmiHelpDataInfoSystem& helpDataInfoSystem, bool doLoadOldData, const std::string& baseLogMessage)
+    {
+        const auto* workHelpDataInfo = doLoadOldData ? ::GetNextPossibleLoadOldDataWork(helpDataInfoSystem) : ::GetNextPossiblePrioritizedDataWork(helpDataInfoSystem);
+        if(workHelpDataInfo)
+        {
+            std::string debugMessage = baseLogMessage;
+            debugMessage += workHelpDataInfo->FileNameFilter();
+            CatLog::logMessage(debugMessage, CatLog::Severity::Debug, CatLog::Category::Data, true);
+        }
+        return workHelpDataInfo;
+    }
+
+    // Palautetaan kopiointi työhön liittyvä HelpDataInfo ja tieto että onko kyse normaali datan 
+    // kopioinnista (bool on false) vai mahdollisesta historiadata kopioinnista (bool on true)
+    std::pair<const NFmiHelpDataInfo*, bool> GetNextDataWork(NFmiHelpDataInfoSystem& helpDataInfoSystem, size_t* helpInfoIndexInOut)
+    {
+        const auto* prioritizedHelpDataInfo = ::GetNextPossibleWorkWithLogging(helpDataInfoSystem, false, "Starting prioritized work with ");
         if(prioritizedHelpDataInfo)
         {
-            std::string debugMessage = "Starting prioritized work with ";
-            debugMessage += prioritizedHelpDataInfo->FileNameFilter();
-            CatLog::logMessage(debugMessage, CatLog::Severity::Debug, CatLog::Category::Data, true);
+            // Huom: ei kasvateta helpInfoIndexInOut:ia!
+            gNewDataLoadingWorkReceived = false; // nollataan työsaatu lippu myös
+            return std::make_pair(prioritizedHelpDataInfo, false);
+        }
 
-            // helpInfoIndexInOut:ia ei saa kasvattaa, kun tehdään priorisoituja töitä välissä.
-            return *prioritizedHelpDataInfo;
+        const auto* loadOldDataHelpDataInfo = ::GetNextPossibleWorkWithLogging(helpDataInfoSystem, true, "Starting load-old-data work with ");
+        if(loadOldDataHelpDataInfo)
+        {
+            // Huom: ei kasvateta helpInfoIndexInOut:ia!
+            gNewDataLoadingWorkReceived = false; // nollataan työsaatu lippu myös
+            return std::make_pair(loadOldDataHelpDataInfo, true);
         }
 
         // Muuten palautetaan normityö ja juoksutus indeksiä pitää kasvattaa
-        auto usedHelpDataIndex = *helpInfoIndexInOut;
-        // Kasvatetaan helpInfoIndexInOut juoksutusta
-        (*helpInfoIndexInOut)++;
+        auto usedHelpDataIndex = (*helpInfoIndexInOut)++;
         // Tehdään vielä tarkistus ettei mennä DynamicHelpDataInfos vector:in rajojen yli mitenkään
         const auto& helpDataInfos = helpDataInfoSystem.DynamicHelpDataInfos();
         if(usedHelpDataIndex >= helpDataInfos.size())
             throw std::runtime_error("Error in QueryDataToLocalCacheLoaderThread - GetNextDataWork: Given helpInfoIndex was out of bounds, logical error in program");
 
-        return helpDataInfos[usedHelpDataIndex];
+        return std::make_pair(&helpDataInfos[usedHelpDataIndex], false);
     }
 
     // Käy läpi kaikki dynaamiset helpdatat ja tekee tarvittavat cache-kopioinnit.
@@ -145,18 +189,46 @@ namespace
             CheckIfProgramWantsToStop();
             // Huom! helpInfoIndex:ia juoksutetaan GetNextDataWork funktiossa, joten sen kutsun jälkeen 
             // siinä voi olla jo seuraavan kierroksen arvo.
-            const NFmiHelpDataInfo& helpDataInfo = ::GetNextDataWork(usedHelpDataInfoSystem, &helpInfoIndex);
-            if(::IsDataUsed(helpDataInfo))
+            auto helpDataInfoOldDataPair = ::GetNextDataWork(usedHelpDataInfoSystem, &helpInfoIndex);
+            if(::IsDataUsed(*helpDataInfoOldDataPair.first))
             {
-                gLocalCacheFutureWaitingSystem.AddFuture(std::async(std::launch::async, LocalCacheSingleFileLoaderThread::CopyQueryDataToCache, helpDataInfo, usedHelpDataInfoSystem));
+                try
+                {
+                    auto doOldDataCase = helpDataInfoOldDataPair.second;
+                    if(doOldDataCase)
+                        gLocalCacheFutureWaitingSystem.AddFuture(std::async(std::launch::async, LocalCacheHistoryDataThread::CollectOldModelRunDataToCache, *helpDataInfoOldDataPair.first, theHelpDataInfoSystemPtr));
+                    else
+                        gLocalCacheFutureWaitingSystem.AddFuture(std::async(std::launch::async, LocalCacheSingleFileLoaderThread::CopyQueryDataToCache, *helpDataInfoOldDataPair.first, theHelpDataInfoSystemPtr));
+                }
+                catch(std::exception& e)
+                {
+                    std::string errorMessage = "Error in GoThroughAllHelpDataInfos: ";
+                    errorMessage += e.what();
+                    CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::Data, true);
+                }
             }
 
             // Pitää mahdollisesti odotella jos kaikki worker-threadit ovat jo käytössä
             gLocalCacheFutureWaitingSystem.WaitForFuturesToExpire();
         }
 
+        // Tässä lopussa pitää odotella että kaikki työt tulevat tehdyiksi, eli tehdään
+        // yksi kokonainen kierros ja mahdolliset erilliset old-data/history-data työt 
+        // jämptisti loppuun, ennen kuin rynnätään seuraavalle kierrokselle.
+        gLocalCacheFutureWaitingSystem.WaitForAllFuturesToExpire();
         gMissingDataOnServerReporterPtr->mainWorkerThreadCompletesCycle();
         return gLocalCacheFutureWaitingSystem.GetAndResetDataCycleStatus();
+    }
+
+    std::string JoinStringList(const std::list<std::string>& stringList)
+    {
+        return std::accumulate( std::next(stringList.begin()), // Start from the second element
+            stringList.end(),              // End of the list
+            *stringList.begin(),           // Initial value (first element)
+            [](const std::string& a, const std::string& b) {
+                return a + ", " + b;     // Concatenate with a comma
+            }
+        );
     }
 
     void LogGeneralMessage(const std::string& theThreadNameStr, const std::string& theStartMessage, const std::string& theEndMessage, CatLog::Severity logLevel)
@@ -306,20 +378,31 @@ namespace QueryDataToLocalCacheLoaderThread
         if(prioritizedDataLoadWorkList.empty())
             return;
 
-        std::string debugMessage = "AddPrioritizedDataLoadWork: adding new prioritized work to list: ";
-        debugMessage += std::accumulate(
-            std::next(prioritizedDataLoadWorkList.begin()), // Start from the second element
-            prioritizedDataLoadWorkList.end(),              // End of the list
-            *prioritizedDataLoadWorkList.begin(),           // Initial value (first element)
-            [](const std::string& a, const std::string& b) {
-                return a + ", " + b;     // Concatenate with a comma
-            }
-        );
-
+        std::string debugMessage = "AddPrioritizedDataLoadWork: adding new prioritized-data-loading work to list: ";
+        debugMessage += ::JoinStringList(prioritizedDataLoadWorkList);
         CatLog::logMessage(debugMessage, CatLog::Severity::Debug, CatLog::Category::Data, true);
 
-        std::lock_guard<std::mutex> lock(gPrioritizedDataLoadWorkListMutex);
-        gPrioritizedDataLoadWorkList.insert(gPrioritizedDataLoadWorkList.begin(), prioritizedDataLoadWorkList.begin(), prioritizedDataLoadWorkList.end());
+        {
+            std::lock_guard<std::mutex> lock(gWorkDataLoadMutex);
+            gPrioritizedDataLoadWorkList.insert(gPrioritizedDataLoadWorkList.begin(), prioritizedDataLoadWorkList.begin(), prioritizedDataLoadWorkList.end());
+        }
+        gNewDataLoadingWorkReceived = true;
+    }
+
+    void AddLoadOldDataWork(const std::list<std::string>& loadOldDataWorkList)
+    {
+        if(loadOldDataWorkList.empty())
+            return;
+
+        std::string debugMessage = "AddLoadOldDataWork: adding new load-old-model-run-data work to list: ";
+        debugMessage += ::JoinStringList(loadOldDataWorkList);
+        CatLog::logMessage(debugMessage, CatLog::Severity::Debug, CatLog::Category::Data, true);
+
+        {
+            std::lock_guard<std::mutex> lock(gWorkDataLoadMutex);
+            gLoadOldDataWorkList.insert(gLoadOldDataWorkList.begin(), loadOldDataWorkList.begin(), loadOldDataWorkList.end());
+        }
+        gNewDataLoadingWorkReceived = true;
     }
 
 } // QueryDataToLocalCacheLoaderThread

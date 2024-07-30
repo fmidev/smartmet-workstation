@@ -22,5 +22,6 @@ namespace QueryDataToLocalCacheLoaderThread
     void UpdateSettings(NFmiHelpDataInfoSystem& theHelpDataSystem, bool loadDataAtStartUp, bool autoLoadNewCacheDataMode);
     void AutoLoadNewCacheDataMode(bool newValue);
     void AddPrioritizedDataLoadWork(const std::list<std::string>& prioritizedDataLoadWorkList);
+    void AddLoadOldDataWork(const std::list<std::string>& loadOldDataWorkList);
 }
 
