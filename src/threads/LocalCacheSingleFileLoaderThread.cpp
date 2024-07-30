@@ -34,6 +34,9 @@ namespace
     // SmartMetin Working-hakemistoa tarvitaan kun rakennetaan polkua 7-zip ohjelmalle (purku ohjelma sijaitsee sen utils-hakemistossa)
     std::string gSmartMetWorkingDirectory;
 
+    const double gKiloByte = 1024;
+    const double gMegaByte = gKiloByte * gKiloByte;
+
     // T‰m‰ heitt‰‰ erikoispoikkeuksen, jos k‰ytt‰j‰ on halunnut sulkea ohjelman.
     void CheckIfProgramWantsToStop()
     {
@@ -71,26 +74,6 @@ namespace
             theCachedDataFileInfoOut.itsTotalServerFileName = totalFileName;
             theCachedDataFileInfoOut.fFilePacked = false;
         }
-    }
-
-    const double gKiloByte = 1024;
-    const double gMegaByte = gKiloByte * gKiloByte;
-    // t‰ss‰ tarkastetaan kuuluuko kyseinen data-tiedosto t‰lle threadille, eli tiedoston koon
-    // pit‰‰ menn‰ rajojen sis‰‰n.
-    bool DoesThisThreadCopyFile(NFmiCachedDataFileInfo& theCachedDataFileInfo)
-    {
-        theCachedDataFileInfo.itsFileSizeInMB = NFmiFileSystem::FileSize(theCachedDataFileInfo.itsTotalServerFileName) / gMegaByte;
-        if(theCachedDataFileInfo.itsFileSizeInMB <= 0)
-        {
-            return false; // jostain syyst‰ tiedoston kokoa ei saatu
-        }
-
-        if(theCachedDataFileInfo.itsFileSizeInMB < gMaxDataFileSizeInMB)
-        {
-            return true;
-        }
-
-        return false;
     }
 
     NFmiFileString MakeFileStringWithoutCompressionFileExtension(const NFmiCachedDataFileInfo& theCachedDataFileInfo)
@@ -358,7 +341,8 @@ namespace LocalCacheSingleFileLoaderThread
     // kFmiCopyWentOk = oli luettavaa ja se on luettu ilman ongelmia cacheen
     // kFmiCopyNotSuccessfull = oli luettavaa, mutta ei voitu kopioida tiedostoa (yksi mahd. syy on ett‰ 
     // toinen SmartMet on juuri kopioimassa sit‰), t‰m‰ tulkitaan siten ett‰ ei ollut mit‰‰n luettavaa/kopioitavaa
-    CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo& theDataInfo, const NFmiHelpDataInfoSystem& theHelpDataSystem)
+    // HUOM! helpDataInfoSystemPtr parametri on tarkoituksella shared_ptr kopio, ‰l‰ laita referenssiksi!
+    CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo& theDataInfo, std::shared_ptr<NFmiHelpDataInfoSystem> helpDataInfoSystemPtr)
     {
         try
         {
@@ -373,9 +357,9 @@ namespace LocalCacheSingleFileLoaderThread
                 CheckIfProgramWantsToStop();
                 if(!cachedDataFileInfo.itsTotalServerFileName.empty())
                 {
-                    if(::DoesThisThreadCopyFile(cachedDataFileInfo))
+                    if(DoesThisThreadCopyFile(cachedDataFileInfo))
                     {
-                        LocalCacheSingleFileLoaderThread::MakeRestOfTheFileNames(cachedDataFileInfo, theDataInfo, theHelpDataSystem);
+                        LocalCacheSingleFileLoaderThread::MakeRestOfTheFileNames(cachedDataFileInfo, theDataInfo, *helpDataInfoSystemPtr);
                         return CopyFileToLocalCache(cachedDataFileInfo, theDataInfo);
                     }
                 }
@@ -465,6 +449,24 @@ namespace LocalCacheSingleFileLoaderThread
         }
 
         return kFmiNoCopyNeeded;
+    }
+
+    // t‰ss‰ tarkastetaan kuuluuko kyseinen data-tiedosto t‰lle threadille, eli tiedoston koon
+    // pit‰‰ menn‰ rajojen sis‰‰n.
+    bool DoesThisThreadCopyFile(NFmiCachedDataFileInfo& theCachedDataFileInfo)
+    {
+        theCachedDataFileInfo.itsFileSizeInMB = NFmiFileSystem::FileSize(theCachedDataFileInfo.itsTotalServerFileName) / gMegaByte;
+        if(theCachedDataFileInfo.itsFileSizeInMB <= 0)
+        {
+            return false; // jostain syyst‰ tiedoston kokoa ei saatu
+        }
+
+        if(theCachedDataFileInfo.itsFileSizeInMB < gMaxDataFileSizeInMB)
+        {
+            return true;
+        }
+
+        return false;
     }
 
 } // LocalCacheSingleFileLoaderThread namespace ends
