@@ -39,6 +39,19 @@ void LocalCacheFutureWaitingSystem::WaitForFuturesToExpire()
 	}
 }
 
+// Datan lukuloopissa pitää lopussa kiltisti odotella että kaikki työt tehdään loppuun 
+// tai että ohjelma halutaan lopettaa. Muuten lataustöille annettu HelpDataInfoSystem:in
+// olio voi tuhoutua, kun sitä päivitetään.
+void LocalCacheFutureWaitingSystem::WaitForAllFuturesToExpire()
+{
+	while(!futuresFromThreads.empty())
+	{
+		CheckForExpiredFutures();
+		CheckIfProgramWantsToStop();
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	}
+}
+
 void LocalCacheFutureWaitingSystem::CheckIfProgramWantsToStop() const
 {
 	NFmiQueryDataUtil::CheckIfStopped(gStopFunctorPtr.get());
@@ -66,11 +79,11 @@ bool LocalCacheFutureWaitingSystem::IsFutureReady(std::future<CFmiCopyingStatus>
 		if(value == kFmiCopyWentOk || value == kFmiUnpackIsDoneInSeparateProcess)
 		{
 			hasDataCopiesDoneOnThisCycle = true;
-			std::string message = "IsFutureReady [";
-			message += std::to_string(debugCounter++);
-			message += "] file was ";
-			message += (value == kFmiCopyWentOk) ? "copied to local cache" : "packed and it's now in unpacking process";
-			CatLog::logMessage(message, CatLog::Severity::Debug, CatLog::Category::Data, true);
+			//std::string message = "IsFutureReady [";
+			//message += std::to_string(debugCounter++);
+			//message += "] file was ";
+			//message += (value == kFmiCopyWentOk) ? "copied to local cache" : "packed and it's now in unpacking process";
+			//CatLog::logMessage(message, CatLog::Severity::Debug, CatLog::Category::Data, true);
 		}
 		return true;
 	}

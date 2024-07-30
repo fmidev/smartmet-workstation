@@ -20,6 +20,7 @@ public:
 	void InitWaitingSystem(size_t maxThreadCount, std::shared_ptr<NFmiStopFunctor> stopFunctorPtr);
 	bool AddFuture(std::future<CFmiCopyingStatus>&& futureFromThread);
 	void WaitForFuturesToExpire();
+	void WaitForAllFuturesToExpire();
 	CFmiCopyingStatus GetAndResetDataCycleStatus();
 private:
 	void CheckIfProgramWantsToStop() const;
