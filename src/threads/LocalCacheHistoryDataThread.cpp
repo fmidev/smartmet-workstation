@@ -62,18 +62,21 @@ namespace
 		}
 	}
 
-	void CollectHistoryDataToCache(const NFmiHelpDataInfo& theDataInfo, const NFmiHelpDataInfoSystem& theHelpDataSystem)
+	void CollectHistoryDataToCache(const NFmiHelpDataInfo& theDataInfo, const NFmiHelpDataInfoSystem& theHelpDataSystem, bool loadOldDataCase)
 	{
+		bool doCombineDataCase = !loadOldDataCase && theDataInfo.IsCombineData();
+		bool doOldDataCase = loadOldDataCase && NFmiInfoData::IsModelRunBasedData(theDataInfo.DataType());
 		// aluksi tehd‰‰n vain combine-datojen historiat
-		if(theDataInfo.IsCombineData())
+		if(doCombineDataCase || doOldDataCase)
 		{
-			if(CatLog::doTraceLevelLogging())
-			{
-				std::string debugStr = gThreadName;
-				debugStr += ": starting to load history data for: ";
-				debugStr += theDataInfo.UsedFileNameFilter(theHelpDataSystem);
-				CatLog::logMessage(debugStr, CatLog::Severity::Trace, CatLog::Category::Data);
-			}
+			std::string debugStr = gThreadName;
+			if(doOldDataCase)
+				debugStr += ": starting to load older model run data for: ";
+			else
+				debugStr += ": starting to load combined history data for: ";
+
+			debugStr += theDataInfo.UsedFileNameFilter(theHelpDataSystem);
+			CatLog::logMessage(debugStr, CatLog::Severity::Debug, CatLog::Category::Data);
 
 			std::string usedPattern = theDataInfo.FileNameFilter();
 			std::string usedPath = NFmiFileSystem::PathFromPattern(usedPattern);
@@ -91,9 +94,12 @@ namespace
 				cachedDataFileInfo.itsTotalServerFileName = totalFileName;
 				cachedDataFileInfo.fFilePacked = fileInfoList.second;
 				LocalCacheSingleFileLoaderThread::MakeRestOfTheFileNames(cachedDataFileInfo, theDataInfo, theHelpDataSystem);
-				LocalCacheSingleFileLoaderThread::CopyFileToLocalCache(cachedDataFileInfo, theDataInfo, &gThreadName);
+				if(LocalCacheSingleFileLoaderThread::DoesThisThreadCopyFile(cachedDataFileInfo))
+				{
+					LocalCacheSingleFileLoaderThread::CopyFileToLocalCache(cachedDataFileInfo, theDataInfo, &gThreadName);
+				}
 				counter++;
-				if(counter > theDataInfo.CombineDataMaxTimeSteps())
+				if(!doOldDataCase && counter > theDataInfo.CombineDataMaxTimeSteps())
 					break;
 			}
 		}
@@ -107,7 +113,7 @@ namespace
 			CheckIfProgramWantsToStop();
 			if(::IsDataUsed(helpDataInfo))
 			{
-				::CollectHistoryDataToCache(helpDataInfo, theHelpDataSystem);
+				::CollectHistoryDataToCache(helpDataInfo, theHelpDataSystem, false);
 			}
 		}
 	}
@@ -116,6 +122,7 @@ namespace
 
 namespace LocalCacheHistoryDataThread
 {
+	// HUOM! helpDataInfoSystemPtr parametri on tarkoituksella shared_ptr kopio, ‰l‰ muuta referenssiksi!
 	void DoHistoryThread(std::shared_ptr<NFmiStopFunctor>& stopFunctorPtr, std::shared_ptr<NFmiHelpDataInfoSystem> helpDataInfoSystemPtr)
 	{
 		if(gThreadHasRun)
@@ -139,6 +146,14 @@ namespace LocalCacheHistoryDataThread
 		}
 
 		::LogGeneralMessage(gThreadName, "DoHistoryThread with", "is now stopped as requested...", CatLog::Severity::Debug);
+	}
+
+	// HUOM! helpDataInfoSystemPtr parametri on tarkoituksella shared_ptr kopio, ‰l‰ laita referenssiksi!
+	CFmiCopyingStatus CollectOldModelRunDataToCache(const NFmiHelpDataInfo& theDataInfo, std::shared_ptr<NFmiHelpDataInfoSystem> helpDataInfoSystemPtr)
+	{
+		::CollectHistoryDataToCache(theDataInfo, *helpDataInfoSystemPtr, true);
+		// T‰m‰n pit‰‰ palauttaa status vain future:a varten, muuta v‰li‰ sill‰ ei ole
+		return kFmiCopyWentOk;
 	}
 
 } // LocalCacheHistoryDataThread namespace ends
