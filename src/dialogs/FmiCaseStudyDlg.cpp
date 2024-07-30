@@ -570,6 +570,7 @@ BEGIN_MESSAGE_MAP(CFmiCaseStudyDlg, CDialog)
     ON_BN_CLICKED(IDC_BUTTON_REFRESH_GRID, &CFmiCaseStudyDlg::OnBnClickedButtonRefreshGrid)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE_FOLDER, &CFmiCaseStudyDlg::OnBnClickedButtonBrowseFolder)
 	ON_BN_CLICKED(IDC_BUTTON_PRIORITIZE_DATA, &CFmiCaseStudyDlg::OnBnClickedButtonPrioritizeData)
+	ON_BN_CLICKED(IDC_BUTTON_LOAD_OLD_DATA, &CFmiCaseStudyDlg::OnBnClickedButtonLoadOldData)
 END_MESSAGE_MAP()
 
 
@@ -642,7 +643,8 @@ void CFmiCaseStudyDlg::InitDialogTexts()
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_CROP_DATA_TO_ZOOMED_MAP_AREA, "Crop data to zoomed main-map area");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_BROWSE, "Browse file");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_BROWSE_FOLDER, "Browse dir");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_PRIORITIZE_DATA, "Prioritize Selected");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_PRIORITIZE_DATA, "Prioritize data");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_LOAD_OLD_DATA, "Load old data");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_EDIT_ENABLE_DATA, gEditEnableDataCheckControlOffStr.c_str());
 }
 
@@ -677,6 +679,8 @@ void CFmiCaseStudyDlg::DoResizerHooking(void)
 	bOk = m_resizer.SetAnchor(IDC_BUTTON_BROWSE_FOLDER, ANCHOR_TOP | ANCHOR_RIGHT);
 	ASSERT(bOk == TRUE);
 	bOk = m_resizer.SetAnchor(IDC_BUTTON_PRIORITIZE_DATA, ANCHOR_TOP | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_LOAD_OLD_DATA, ANCHOR_TOP | ANCHOR_RIGHT);
 	ASSERT(bOk == TRUE);
 
 	bOk = m_resizer.SetAnchor(IDC_EDIT_NAME_STR, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
@@ -1489,8 +1493,7 @@ void CFmiCaseStudyDlg::OnBnClickedButtonRefreshGrid()
 	UpdateData(FALSE);
 }
 
-
-void CFmiCaseStudyDlg::OnBnClickedButtonPrioritizeData()
+std::list<std::string> CFmiCaseStudyDlg::GetSelectedDataFileFilters()
 {
 	std::vector<int> selectedRowIndexies;
 	// Haetaan valittujen rivien numerot listaan
@@ -1511,13 +1514,23 @@ void CFmiCaseStudyDlg::OnBnClickedButtonPrioritizeData()
 		auto usedRowIndex = selectedRowIndex - 1;
 		if(usedRowIndex >= 0 && usedRowIndex < caseStudyDialogData.size())
 		{
-			const auto *rowData = caseStudyDialogData[usedRowIndex];
+			const auto* rowData = caseStudyDialogData[usedRowIndex];
 			if(!rowData->FileFilter().empty())
 			{
 				selectedDataFileFilters.push_back(rowData->FileFilter());
 			}
 		}
 	}
+	return selectedDataFileFilters;
+}
 
-	QueryDataToLocalCacheLoaderThread::AddPrioritizedDataLoadWork(selectedDataFileFilters);
+void CFmiCaseStudyDlg::OnBnClickedButtonPrioritizeData()
+{
+	QueryDataToLocalCacheLoaderThread::AddPrioritizedDataLoadWork(GetSelectedDataFileFilters());
+}
+
+
+void CFmiCaseStudyDlg::OnBnClickedButtonLoadOldData()
+{
+	QueryDataToLocalCacheLoaderThread::AddLoadOldDataWork(GetSelectedDataFileFilters());
 }

@@ -8,6 +8,7 @@
 #include "NFmiViewPosRegistryInfo.h"
 #include "WndResizer.h"
 #include "PPTooltip.h"
+#include <list>
 
 class SmartMetDocumentInterface;
 class NFmiCaseStudyDataFile;
@@ -165,6 +166,7 @@ private:
 	void DoCaseStudyOffsetRangeEditing(NFmiCaseStudyDataFile& dataFile, const std::string& cellText);
 	std::pair<std::string, std::string> GetNameAndInfoStringsFromSelectedMetaFilePath(std::string fullPathToMetaFile);
 	void DoFirstTimeSilamCategoryCollapse();
+	std::list<std::string> GetSelectedDataFileFilters();
 
     CString itsNameStrU_;
     CString itsInfoStrU_;
@@ -185,4 +187,5 @@ public:
     afx_msg void OnBnClickedButtonRefreshGrid();
 	afx_msg void OnBnClickedButtonBrowseFolder();
 	afx_msg void OnBnClickedButtonPrioritizeData();
+	afx_msg void OnBnClickedButtonLoadOldData();
 };

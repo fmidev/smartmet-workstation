@@ -7,8 +7,8 @@
 #define IDC_BUTTON_CLOSE_MODE           4
 #define IDC_BUTTON_CLOSE_MODE2          5
 #define IDC_BUTTON_REFRESH_GRID         5
-#define IDC_BUTTON_REFRESH_GRID2        6
 #define IDC_BUTTON_PRIORITIZE_DATA      6
+#define IDC_BUTTON_LOAD_OLD_DATA        7
 #define IDD_DLG_MASK_OPER               104
 #define IDD_DIALOG_OPTIONS              144
 #define IDD_DIALOG_SAVE_TO_DATABASE     154
