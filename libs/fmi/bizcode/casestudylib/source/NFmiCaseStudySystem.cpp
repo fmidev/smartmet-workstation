@@ -67,12 +67,6 @@ static const std::string gJsonName_NotificationLabel = "NotificationLabel";
 static const std::string gJsonName_CustomMenuFolder = "CustomMenuFolder";
 static const std::string gJsonName_AdditionalArchiveFileCount = "AdditionalArchiveFileCount";
 
-static std::string NormalizePathDelimiters(const std::string& thePath)
-{
-	std::string fixedPath = thePath;
-	return NFmiStringTools::ReplaceChars(fixedPath, '/', '\\');
-}
-
 static void DoCsDataFileWinRegValuesInitializingChecks(NFmiCsDataFileWinReg& csDataValues)
 {
 	// Jos saatu ainakin yksi dataCount arvo joka ei ole puuttuva (-1), laitetaan alustus 'kunnolliseksi'.
@@ -400,7 +394,7 @@ bool NFmiCaseStudyDataFile::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, cons
 	{ 
 		// Kyse on kuva datasta.
 		// Kuvia ei cacheteta, joten pit‰‰ pyyt‰‰ 'originaali' polkua, ei UsedFileNameFilter -polkua
-		itsFileFilter = ::NormalizePathDelimiters(theDataInfo.FileNameFilter()); 
+		itsFileFilter = PathUtils::fixPathSeparators(theDataInfo.FileNameFilter()); 
 		itsName = theDataInfo.ImageDataIdent().GetParamName();
 		itsProducer = *(theDataInfo.ImageDataIdent().GetProducer());
 		fImageFile = true;
@@ -420,10 +414,10 @@ bool NFmiCaseStudyDataFile::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, cons
 		if(theDataInfo.IsCombineData())
 		{
 			// Yhdistelm‰datoille otetaan yhdistelm‰n fileFilter
-			itsFileFilter = ::NormalizePathDelimiters(theDataInfo.CombinedResultDataFileFilter());
+			itsFileFilter = PathUtils::fixPathSeparators(theDataInfo.CombinedResultDataFileFilter());
 		}
 		else
-			itsFileFilter = ::NormalizePathDelimiters(theDataInfo.UsedFileNameFilter(theDataInfoSystem));
+			itsFileFilter = PathUtils::fixPathSeparators(theDataInfo.UsedFileNameFilter(theDataInfoSystem));
 
 		itsName = theDataInfo.GetCleanedName();
 		fImageFile = false;
@@ -523,12 +517,12 @@ void NFmiCaseStudyDataFile::ParseJsonPair(json_spirit::Pair &thePair)
 	else if(thePair.name_ == gJsonName_FileFilter)
 	{
 		// Muutetaan viel‰ luetut polut niin ett‰ SHFileOperation-funktio ymm‰rt‰‰ ne varmasti
-		itsFileFilter = ::NormalizePathDelimiters(thePair.value_.get_str());
+		itsFileFilter = PathUtils::fixPathSeparators(thePair.value_.get_str());
 	}
 	else if(thePair.name_ == gJsonName_RelativeStoredFileFilter)
 	{
 		// Muutetaan viel‰ luetut polut niin ett‰ SHFileOperation-funktio ymm‰rt‰‰ ne varmasti
-		itsRelativeStoredFileFilter = ::NormalizePathDelimiters(thePair.value_.get_str());
+		itsRelativeStoredFileFilter = PathUtils::fixPathSeparators(thePair.value_.get_str());
 	}
 	else if(thePair.name_ == gJsonName_ModelDataOffsetRangeInHours)
 	{
@@ -1435,8 +1429,8 @@ NFmiCategoryHeaderInitData::NFmiCategoryHeaderInitData(const std::string name, N
 std::set<std::string> NFmiCaseStudySystem::itsAllCustomFolderNames;
 
 NFmiCaseStudySystem::NFmiCaseStudySystem(void)
-:itsName("Case1")
-,itsInfo("Your Case Study info here")
+:itsCaseStudyName()
+,itsCaseStudyInfo("Your Case Study info here")
 ,itsCaseStudyPath()
 ,itsSmartMetLocalCachePath()
 ,itsTime()
@@ -1710,7 +1704,7 @@ static std::string NormalizeWindowsPathString(const std::string &thePath)
 {
 	std::string pathStr(thePath);
 	NFmiStringTools::LowerCase(pathStr);
-	pathStr = ::NormalizePathDelimiters(pathStr);
+	pathStr = PathUtils::fixPathSeparators(pathStr);
 	return pathStr;
 }
 
@@ -1891,8 +1885,8 @@ json_spirit::Object NFmiCaseStudySystem::MakeJsonObject(NFmiCaseStudySystem &the
 	json_spirit::Object jsonObject; // luodaan aluksi ns. null-objekti
 	if(dataArray.size())
 	{  // talletetaan CaseStudy-data vain jos oli yht‰‰n categoriaa, jolla talletettiin yht‰‰n dataa
-		jsonObject.push_back(json_spirit::Pair(gJsonName_Name, theData.Name()));
-		jsonObject.push_back(json_spirit::Pair(gJsonName_Info, theData.Info()));
+		jsonObject.push_back(json_spirit::Pair(gJsonName_Name, theData.CaseStudyName()));
+		jsonObject.push_back(json_spirit::Pair(gJsonName_Info, theData.CaseStudyInfo()));
         jsonObject.push_back(json_spirit::Pair(gJsonName_Path, theData.CaseStudyPath()));
 		jsonObject.push_back(json_spirit::Pair(gJsonName_Time, std::string(theData.Time().ToStr("YYYY.MM.DD HH:mm", kEnglish))));
 		jsonObject.push_back(json_spirit::Pair(gJsonName_ZipFiles, theData.ZipFiles()));
@@ -1904,9 +1898,9 @@ json_spirit::Object NFmiCaseStudySystem::MakeJsonObject(NFmiCaseStudySystem &the
 
 bool NFmiCaseStudySystem::AreStoredMetaDataChanged(const NFmiCaseStudySystem &other)
 {
-	if(itsName != other.itsName)
+	if(itsCaseStudyName != other.itsCaseStudyName)
         return true;
-    if(itsInfo != other.itsInfo)
+    if(itsCaseStudyInfo != other.itsCaseStudyInfo)
         return true;
     if(itsCaseStudyPath != other.itsCaseStudyPath)
         return true;
@@ -1937,52 +1931,32 @@ static bool DoErrorActions(CWnd *theParentWindow, const std::string &theErrorStr
 	return false;
 }
 
-// fMakeFullStore -parametri tarkoittaa ett‰ talletetaanko tiedot myˆs ei talletettavista datoista. Kun tehd‰‰n CaseStudy-dataa, t‰t‰ ei haluta tehd‰,
-// mutta kun talletetaan CaseStudy-muistia halutaan myˆs ei talletettujen datojen tiedot talteen.
-// Lis‰ksi jos fMakeFullStore on true, k‰ytet‰‰n suoraan theMetaDataTotalFileNameInOut -parametria tallennustiedoston polku+nimen‰,
-// muuten talletus polku otetaan Path-metodista.
-bool NFmiCaseStudySystem::StoreMetaData(CWnd *theParentWindow, std::string &theMetaDataTotalFileNameInOut, bool fMakeFullStore, bool showErrorMessageBox)
+bool NFmiCaseStudySystem::StoreMetaData(CWnd *theParentWindow, const std::string& theMetaDataTotalFilePath, bool showErrorMessageBox)
 {
 	const std::string metaDataFileExtension = "csmeta";
-	const std::string metaDataFileExtensionWithDot = "." + metaDataFileExtension;
 
-	std::string pathStr = fMakeFullStore ? NFmiFileSystem::PathFromPattern(theMetaDataTotalFileNameInOut) : CaseStudyPath();
-	if(pathStr.empty())
+	if(theMetaDataTotalFilePath.empty())
 	{
 		std::string errStr(::GetDictionaryString("Given path was empty, you must provide absolute path for Case Study data.\nE.g. C:\\data or D:\\data"));
 		std::string captionStr(::GetDictionaryString("Case-Study data path was empty"));
 		return ::DoErrorActions(theParentWindow, errStr, captionStr, showErrorMessageBox);
 	}
 
-	NFmiFileString fileStr(pathStr);
+	NFmiFileString fileStr(theMetaDataTotalFilePath);
 	if(fileStr.IsAbsolutePath() == false)
 	{
 		std::string errStr(::GetDictionaryString("Given path"));
 		errStr += "\n";
-		errStr += pathStr;
+		errStr += theMetaDataTotalFilePath;
 		errStr += "\n";
 		errStr += "was not absolute, you must provide absolute path for Case Study data.\nE.g. C:\\data or D:\\data";
 		std::string captionStr(::GetDictionaryString("Case-Study data path was not absolute"));
 		return ::DoErrorActions(theParentWindow, errStr, captionStr, showErrorMessageBox);
 	}
 
-	if(fileStr.Extension() == metaDataFileExtension)
-	{
-		std::string errStr(::GetDictionaryString("Given path "));
-		errStr += "\n";
-		errStr += pathStr;
-		errStr += "\n";
-		errStr += "had case-study metadata file extension '";
-		errStr += metaDataFileExtension;
-		errStr += "', can't allow it,\n";
-		errStr += "'because propably last loaded case-study data was just left there";
-		std::string captionStr(::GetDictionaryString("Case-Study data path had case-study file extension"));
-		return ::DoErrorActions(theParentWindow, errStr, captionStr, showErrorMessageBox);
-	}
-
 	// Otetaan currentti aika CaseStudy-ajaksi.
 	itsTime = NFmiMetTime();
-	json_spirit::Object jsonObject = NFmiCaseStudySystem::MakeJsonObject(*this, fMakeFullStore);
+	json_spirit::Object jsonObject = NFmiCaseStudySystem::MakeJsonObject(*this, false);
 	if(jsonObject.size() == 0)
 	{
 		std::string errStr(::GetDictionaryString("There was nothing to store in selected Case-Study data set."));
@@ -1990,30 +1964,29 @@ bool NFmiCaseStudySystem::StoreMetaData(CWnd *theParentWindow, std::string &theM
 		return ::DoErrorActions(theParentWindow, errStr, captionStr, showErrorMessageBox);
 	}
 
-	if(NFmiFileSystem::DirectoryExists(pathStr) == false)
-	{ // yritet‰‰n luoda polkua
-		if(NFmiFileSystem::CreateDirectory(pathStr) == false)
+	auto pathOnlyPart = PathUtils::getPathSectionFromTotalFilePath(theMetaDataTotalFilePath);
+	if(NFmiFileSystem::DirectoryExists(pathOnlyPart) == false)
+	{ 
+		// yritet‰‰n luoda polkua
+		if(NFmiFileSystem::CreateDirectory(pathOnlyPart) == false)
 		{
 			std::string errStr(::GetDictionaryString("Unable to create directory"));
 			errStr += ":\n";
-			errStr += pathStr;
+			errStr += pathOnlyPart;
 			std::string captionStr(::GetDictionaryString("Error when storing Case-Study data"));
 			return ::DoErrorActions(theParentWindow, errStr, captionStr, showErrorMessageBox);
 		}
 	}
 
-	std::string totalFileName = (fMakeFullStore ? theMetaDataTotalFileNameInOut : (pathStr + '\\' + Name() + metaDataFileExtensionWithDot));
-	std::ofstream out(totalFileName.c_str(), std::ios::binary);
+	std::ofstream out(theMetaDataTotalFilePath.c_str(), std::ios::binary);
 	if(!out)
 	{
 		std::string errStr(::GetDictionaryString("Unable to create file"));
 		errStr += ":\n";
-		errStr += totalFileName;
+		errStr += theMetaDataTotalFilePath;
 		std::string captionStr(::GetDictionaryString("Error when storing Case-Study data"));
 		return ::DoErrorActions(theParentWindow, errStr, captionStr, showErrorMessageBox);
 	}
-	if(fMakeFullStore == false)
-		theMetaDataTotalFileNameInOut = totalFileName;
 
 	json_spirit::write(jsonObject, out, json_spirit::pretty_print);
 
@@ -2088,9 +2061,9 @@ void NFmiCaseStudySystem::ParseJsonPair(json_spirit::Pair &thePair)
 {
 	// T‰ss‰ puret‰‰n CaseStudySystem luokan p‰‰tason pareja.
 	if(thePair.name_ == gJsonName_Name)
-		itsName = thePair.value_.get_str();
+		itsCaseStudyName = thePair.value_.get_str();
 	else if(thePair.name_ == gJsonName_Info)
-		itsInfo = thePair.value_.get_str();
+		itsCaseStudyInfo = thePair.value_.get_str();
 	else if(thePair.name_ == gJsonName_Path)
 		; // itsPath = thePair.value_.get_str();
 	else if(thePair.name_ == gJsonName_Time)
@@ -2121,22 +2094,11 @@ void NFmiCaseStudySystem::ParseJsonCategoryArray(json_spirit::Array &theCategori
 	}
 }
 
-static std::string GetDirectory(const std::string &theFileFilter)
+std::string NFmiCaseStudySystem::MakeBaseDataDirectory(const std::string& theMetaDataFilePath)
 {
-	NFmiFileString fileStr(theFileFilter);
-	NFmiString str;
-	str += fileStr.Device();
-	str += fileStr.Path();
-
-	return std::string(str);
-}
-
-std::string NFmiCaseStudySystem::MakeBaseDataDirectory(const std::string& theMetaDataFilePath, const std::string& theCaseStudyName)
-{
-	std::string basePath = ::NormalizePathDelimiters(::GetDirectory(theMetaDataFilePath));
-	std::string dataDir = basePath;
+	std::string dataDir = PathUtils::fixPathSeparators(PathUtils::getPathSectionFromTotalFilePath(theMetaDataFilePath));
 	PathUtils::addDirectorySeparatorAtEnd(dataDir);
-	dataDir += theCaseStudyName;
+	dataDir += PathUtils::getFilename(theMetaDataFilePath);
 	dataDir += "_data";
 	return dataDir;
 }
@@ -2153,7 +2115,7 @@ std::string NFmiCaseStudySystem::MakeCaseStudyDataHakeDirectory(const std::strin
 // "C:\\data\case1_data" -> "case1_data"
 static std::string GetRelativeDataDirectory(const std::string &theDataDir)
 {
-	std::string tmpStr = ::NormalizePathDelimiters(theDataDir);
+	std::string tmpStr = PathUtils::fixPathSeparators(theDataDir);
 	// Pit‰‰ poistaa per‰ss‰ mahdollisesti oleva(t) kenoviiva(t)
 	NFmiStringTools::TrimR(tmpStr, '\\'); 
 	std::string::size_type pos = tmpStr.find_last_of("\\");
@@ -2371,6 +2333,9 @@ static void CopyFilesToDestination(const CaseStudyMatchingFiles &theMatchingFile
 	        sfo.AddSourceFile(CA2T(copyedFile.first.c_str()));
 		}
 	}
+
+	if(sfo.GetSourceFileList().GetCount() <= 0)
+		return;
 
     sfo.AddDestFile(CA2T(theDestDir.c_str()));
 
@@ -2592,7 +2557,7 @@ bool NFmiCaseStudySystem::MakeCaseStudyData(const std::string &theFullPathMetaDa
 		NFmiMetTime usedWallClockTime(60);
 		int progressDialogMaxCount = CalculateProgressDialogCount();
 		int progressCounter = 1;
-		std::string dataDir = NFmiCaseStudySystem::MakeBaseDataDirectory(theFullPathMetaDataFileName, Name());
+		std::string dataDir = NFmiCaseStudySystem::MakeBaseDataDirectory(theFullPathMetaDataFileName);
 		std::string relativeDataDir = ::GetRelativeDataDirectory(dataDir);
 		if(NFmiFileSystem::CreateDirectory(dataDir))
 		{
@@ -2600,11 +2565,7 @@ bool NFmiCaseStudySystem::MakeCaseStudyData(const std::string &theFullPathMetaDa
 				::StoreCategoryData(dataDir, relativeDataDir, itsCategoriesData[i], progressDialogMaxCount, progressCounter, theCopyWindowPos, theCropDataAreaString, usedWallClockTime);
 		}
 
-		// TODO pit‰‰kˆ metadata tallettaa nyt uusilla poluilla?
-		std::string dummyMetaFileName; // t‰ll‰ ei tee mit‰‰n t‰ss‰, mutta pit‰‰ antaan funktiolle
-		StoreMetaData(theParentWindow, dummyMetaFileName, false, true); // tehd‰‰n uudelleen talletus p‰ivitetyill‰ relatiivisilla poluilla
-		// TODO Ent‰ mist‰ tiet‰‰ ett‰ onko metadataan jo laitettu uudet suhteelliset polut? (tai pit‰‰kˆ edes tiet‰‰)
-		// TODO pit‰isikˆ tehd‰ kaksi metadatatiedostoa, joissa toisessa olisi orig-tiedot ja toisessa p‰ivitetyt polut?
+		StoreMetaData(theParentWindow, theFullPathMetaDataFileName, true); // tehd‰‰n uudelleen talletus p‰ivitetyill‰ relatiivisilla poluilla
 	}
 	return false;
 }
