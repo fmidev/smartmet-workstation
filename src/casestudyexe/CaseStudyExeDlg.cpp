@@ -294,12 +294,13 @@ void CCaseStudyExeDlg::DoCaseDataOperation(void)
 {
     bool operationCanceled = false;
     std::string errorStr;
-    std::string baseCaseStudyPath = NFmiFileSystem::PathFromPattern(itsMetaFileName);
+    std::string baseCaseStudyPath = PathUtils::getPathSectionFromTotalFilePath(itsMetaFileName);
+    std::string baseCaseStudyNamePath = baseCaseStudyPath + PathUtils::getFilename(itsMetaFileName);
     try
     {
         // 1. Kopioidaan data-tiedostot haluttuun hakemisto rakenteeseen
         itsCaseStudySystem.MakeCaseStudyData(itsMetaFileName, this, GetCopyDialogPositionWindow(), itsCropDataAreaString);
-        std::string actualCaseStudyDataDirectory = NFmiCaseStudySystem::MakeBaseDataDirectory(itsMetaFileName, itsCaseStudySystem.Name());
+        std::string actualCaseStudyDataDirectory = NFmiCaseStudySystem::MakeBaseDataDirectory(itsMetaFileName);
         DoMessageCopyOperations(actualCaseStudyDataDirectory);
 
         // 2. Zippaa datapaketti
@@ -326,11 +327,11 @@ void CCaseStudyExeDlg::DoCaseDataOperation(void)
                                     // 7 = max
                                     // 9 = ultra
             commandStr += " \"";  // laitetaan lainausmerkit metadatatiedoston polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
-            commandStr += baseCaseStudyPath + itsCaseStudySystem.Name();
+            commandStr += baseCaseStudyNamePath;
             // K‰ytet‰‰n 7z:an omaa formaattia (.7z extensio pakatulle tiedostolle), joka on nopein
             commandStr += ".7z";
             commandStr += "\" \""; // laitetaan lainausmerkit metadatatiedoston polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
-            commandStr += baseCaseStudyPath + itsCaseStudySystem.Name();
+            commandStr += baseCaseStudyNamePath;
             commandStr += "*\""; // laitetaan lainausmerkit metadatatiedoston polun ymp‰rille, jos siin‰ sattuisi olemaan spaceja
             if(CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true, true, showWindow, true, BELOW_NORMAL_PRIORITY_CLASS))
             {
