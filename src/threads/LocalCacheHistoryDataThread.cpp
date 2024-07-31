@@ -62,14 +62,14 @@ namespace
 		}
 	}
 
-	void CollectHistoryDataToCache(const NFmiHelpDataInfo& theDataInfo, const NFmiHelpDataInfoSystem& theHelpDataSystem, bool loadOldDataCase)
+	void CollectHistoryDataToCache(const NFmiHelpDataInfo& theDataInfo, const NFmiHelpDataInfoSystem& theHelpDataSystem, bool loadOldDataCase, std::string callingThreadName)
 	{
 		bool doCombineDataCase = !loadOldDataCase && theDataInfo.IsCombineData();
 		bool doOldDataCase = loadOldDataCase && NFmiInfoData::IsModelRunBasedData(theDataInfo.DataType());
 		// aluksi tehd‰‰n vain combine-datojen historiat
 		if(doCombineDataCase || doOldDataCase)
 		{
-			std::string debugStr = gThreadName;
+			std::string debugStr = callingThreadName;
 			if(doOldDataCase)
 				debugStr += ": starting to load older model run data for: ";
 			else
@@ -96,7 +96,7 @@ namespace
 				LocalCacheSingleFileLoaderThread::MakeRestOfTheFileNames(cachedDataFileInfo, theDataInfo, theHelpDataSystem);
 				if(LocalCacheSingleFileLoaderThread::DoesThisThreadCopyFile(cachedDataFileInfo))
 				{
-					LocalCacheSingleFileLoaderThread::CopyFileToLocalCache(cachedDataFileInfo, theDataInfo, &gThreadName);
+					LocalCacheSingleFileLoaderThread::CopyFileToLocalCache(cachedDataFileInfo, theDataInfo, callingThreadName);
 				}
 				counter++;
 				if(!doOldDataCase && counter > theDataInfo.CombineDataMaxTimeSteps())
@@ -113,7 +113,7 @@ namespace
 			CheckIfProgramWantsToStop();
 			if(::IsDataUsed(helpDataInfo))
 			{
-				::CollectHistoryDataToCache(helpDataInfo, theHelpDataSystem, false);
+				::CollectHistoryDataToCache(helpDataInfo, theHelpDataSystem, false, gThreadName);
 			}
 		}
 	}
@@ -149,9 +149,9 @@ namespace LocalCacheHistoryDataThread
 	}
 
 	// HUOM! helpDataInfoSystemPtr parametri on tarkoituksella shared_ptr kopio, ‰l‰ laita referenssiksi!
-	CFmiCopyingStatus CollectOldModelRunDataToCache(const NFmiHelpDataInfo& theDataInfo, std::shared_ptr<NFmiHelpDataInfoSystem> helpDataInfoSystemPtr)
+	CFmiCopyingStatus CollectOldModelRunDataToCache(const NFmiHelpDataInfo& theDataInfo, std::shared_ptr<NFmiHelpDataInfoSystem> helpDataInfoSystemPtr, std::string callingThreadName)
 	{
-		::CollectHistoryDataToCache(theDataInfo, *helpDataInfoSystemPtr, true);
+		::CollectHistoryDataToCache(theDataInfo, *helpDataInfoSystemPtr, true, callingThreadName);
 		// T‰m‰n pit‰‰ palauttaa status vain future:a varten, muuta v‰li‰ sill‰ ei ole
 		return kFmiCopyWentOk;
 	}

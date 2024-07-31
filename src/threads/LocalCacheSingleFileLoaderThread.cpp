@@ -14,7 +14,6 @@
 
 namespace
 {
-    std::string gThreadName = "Qdata-loader-thread";
     // Jos ohjelma halutaan lopettaa ulkoapäin, tälle gStopFunctorPtr:ille asetetaan tieto siitä CloseNow funktion kautta.
     std::shared_ptr<NFmiStopFunctor> gStopFunctorPtr;
     // Jos jotain datoja ei löydy serveriltä, halutaan siitä raportoida eri paikkoihin, 
@@ -342,7 +341,7 @@ namespace LocalCacheSingleFileLoaderThread
     // kFmiCopyNotSuccessfull = oli luettavaa, mutta ei voitu kopioida tiedostoa (yksi mahd. syy on että 
     // toinen SmartMet on juuri kopioimassa sitä), tämä tulkitaan siten että ei ollut mitään luettavaa/kopioitavaa
     // HUOM! helpDataInfoSystemPtr parametri on tarkoituksella shared_ptr kopio, älä laita referenssiksi!
-    CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo& theDataInfo, std::shared_ptr<NFmiHelpDataInfoSystem> helpDataInfoSystemPtr)
+    CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo& theDataInfo, std::shared_ptr<NFmiHelpDataInfoSystem> helpDataInfoSystemPtr, std::string callingThreadName)
     {
         try
         {
@@ -360,7 +359,7 @@ namespace LocalCacheSingleFileLoaderThread
                     if(DoesThisThreadCopyFile(cachedDataFileInfo))
                     {
                         LocalCacheSingleFileLoaderThread::MakeRestOfTheFileNames(cachedDataFileInfo, theDataInfo, *helpDataInfoSystemPtr);
-                        return CopyFileToLocalCache(cachedDataFileInfo, theDataInfo);
+                        return CopyFileToLocalCache(cachedDataFileInfo, theDataInfo, callingThreadName);
                     }
                 }
             }
@@ -415,7 +414,7 @@ namespace LocalCacheSingleFileLoaderThread
     // 2. tee cache kopiointia varten tmp-nimi tiedostosta (joka kopioinnin jälkeen renametaan oikeaksi)
     // 3. onko tmp-nimi jo cachessa (tällöin mahd. toisen SmartMetin kopio on jo käynnissä)
     // 4. tee varsinainen tiedosto kopio cacheen
-    CFmiCopyingStatus CopyFileToLocalCache(NFmiCachedDataFileInfo& theCachedDataFileInfo, const NFmiHelpDataInfo& theDataInfo, std::string* possibleThreadName)
+    CFmiCopyingStatus CopyFileToLocalCache(NFmiCachedDataFileInfo& theCachedDataFileInfo, const NFmiHelpDataInfo& theDataInfo, const std::string& callingThreadName)
     {
         if(NFmiFileSystem::FileExists(theCachedDataFileInfo.itsTotalCacheFileName))
         {
@@ -429,11 +428,10 @@ namespace LocalCacheSingleFileLoaderThread
 
         CFmiCopyingStatus tmpFileStatus = ::CheckTmpFileStatus(theCachedDataFileInfo.itsTotalCacheTmpFileName);
         CFmiCopyingStatus tmpPackedFileStatus = ::CheckTmpFileStatus(theCachedDataFileInfo.itsTotalCacheTmpPackedFileName);
-        std::string usedThreadName = possibleThreadName ? *possibleThreadName : gThreadName;
 
         if(tmpFileStatus == kFmiGoOnWithCopying && tmpPackedFileStatus == kFmiGoOnWithCopying)
         {
-            NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::QueryData, usedThreadName, ::MakeLedChannelStartLoadingString(theCachedDataFileInfo));
+            NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::QueryData, callingThreadName, ::MakeLedChannelStartLoadingString(theCachedDataFileInfo));
             ::EnsureCacheDirectoryForPartialData(theCachedDataFileInfo.itsTotalCacheFileName, theDataInfo);
             return ::CopyFileEx_CopyRename(theCachedDataFileInfo);
         }
@@ -441,7 +439,7 @@ namespace LocalCacheSingleFileLoaderThread
         {
             if(CatLog::doTraceLevelLogging())
             {
-                std::string traceLoggingStr = usedThreadName;
+                std::string traceLoggingStr = callingThreadName;
                 traceLoggingStr += ": tmp file status was no go with: ";
                 traceLoggingStr += theCachedDataFileInfo.itsTotalServerFileName;
                 CatLog::logMessage(traceLoggingStr, CatLog::Severity::Trace, CatLog::Category::Data, true);

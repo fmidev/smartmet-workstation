@@ -44,6 +44,14 @@ namespace
     // Lippu sille ett‰ uutta work listaa on tullut, eik‰ kannata odotella
     // normityˆ-timerin kanssa kokonaista minuuttia odotusloopissa.
     bool gNewDataLoadingWorkReceived = false;
+    // Eri working-threadeille pit‰‰ saada uniikki nimi, jotta Smartmetin ledi-indikaattori systeemi
+    // osaisi raportoida kaikki jutut sen tooltipissa.
+    // Nyt kun ei en‰‰ ole 3:a erillist‰ kopiointi threadia, vaan jokaiselle tiedostokopioinnille
+    // luodaan oma yksitt‰inen threadi, niille pit‰‰ saada uniikki nimi, koska niit‰ voi olla p‰‰ll‰
+    // monta rinnakksin. Lis‰ksi on uusi load-old-data juttu, joille pit‰‰ myˆs saada omat uniikit
+    // nimet, siksi t‰ss‰ on kaksi laskuria, joista uniikit nimet lopulta saadaan.
+    size_t gThreadNameIndexForSingleFileCopy = 1;
+    size_t gThreadNameIndexForLoadOldData = 1;
 
     NFmiMilliSecondTimer gDoWorkTimer;
 
@@ -59,6 +67,16 @@ namespace
         NFmiFileSystem::CreateDirectory(helpDataSystem.LocalDataLocalDirectory());
         NFmiFileSystem::CreateDirectory(helpDataSystem.LocalDataTmpDirectory());
         NFmiFileSystem::CreateDirectory(helpDataSystem.LocalDataPartialDirectory());
+    }
+
+    std::string GetThreadName(bool loadOldDataCase)
+    {
+        if(loadOldDataCase)
+        {
+            return std::string("LoadOldData-") + std::to_string(gThreadNameIndexForLoadOldData++);
+        }
+
+        return std::string("LoadSingleData-") + std::to_string(gThreadNameIndexForSingleFileCopy++);
     }
 
     bool IsTimeToCheckForNewData(bool* firstTime, CFmiCopyingStatus status)
@@ -115,8 +133,14 @@ namespace
             auto* helpDataInfo = helpDataInfoSystem.FindHelpDataInfo(prioritizedFileFilter);
             if(helpDataInfo)
             {
+                if(!oldDataCase)
+                {
+                    // Jos kyse priorisoidusta datasta, ei ole muita tarkastuksia
+                    return helpDataInfo;
+                }
                 if(oldDataCase && NFmiInfoData::IsModelRunBasedData(helpDataInfo->DataType()))
                 {
+                    // Old data tapauksessa, datan pit‰‰ olla malliajo tyyppist‰
                     return helpDataInfo;
                 }
             }
@@ -195,10 +219,11 @@ namespace
                 try
                 {
                     auto doOldDataCase = helpDataInfoOldDataPair.second;
+                    auto usedThreadName = ::GetThreadName(doOldDataCase);
                     if(doOldDataCase)
-                        gLocalCacheFutureWaitingSystem.AddFuture(std::async(std::launch::async, LocalCacheHistoryDataThread::CollectOldModelRunDataToCache, *helpDataInfoOldDataPair.first, theHelpDataInfoSystemPtr));
+                        gLocalCacheFutureWaitingSystem.AddFuture(std::async(std::launch::async, LocalCacheHistoryDataThread::CollectOldModelRunDataToCache, *helpDataInfoOldDataPair.first, theHelpDataInfoSystemPtr, usedThreadName));
                     else
-                        gLocalCacheFutureWaitingSystem.AddFuture(std::async(std::launch::async, LocalCacheSingleFileLoaderThread::CopyQueryDataToCache, *helpDataInfoOldDataPair.first, theHelpDataInfoSystemPtr));
+                        gLocalCacheFutureWaitingSystem.AddFuture(std::async(std::launch::async, LocalCacheSingleFileLoaderThread::CopyQueryDataToCache, *helpDataInfoOldDataPair.first, theHelpDataInfoSystemPtr, usedThreadName));
                 }
                 catch(std::exception& e)
                 {
