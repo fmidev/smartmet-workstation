@@ -9591,7 +9591,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			// 6. Heit‰ kaikki dynaaminen data roskiin
 					InfoOrganizer()->ClearDynamicHelpData(true); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eik‰ staattisia helpdatoja kuten topografia ja fraktiilit)
                     InitializeSatelImageCacheForCaseStudy();
-					auto usedAbsoluteCaseStudyHakeDirectory = NFmiCaseStudySystem::MakeCaseStudyDataHakeDirectory(NFmiCaseStudySystem::MakeBaseDataDirectory(theCaseStudyMetaFile, itsLoadedCaseStudySystem.Name()));
+					auto usedAbsoluteCaseStudyHakeDirectory = NFmiCaseStudySystem::MakeCaseStudyDataHakeDirectory(NFmiCaseStudySystem::MakeBaseDataDirectory(theCaseStudyMetaFile));
 					itsWarningCenterSystem.goIntoCaseStudyMode(usedAbsoluteCaseStudyHakeDirectory);
 					// Merkit‰‰n taas aluksi luetut datat 'vanhoiksi'
 					CFmiDataLoadingThread2::ResetFirstTimeGoingThroughState();
