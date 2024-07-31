@@ -56,7 +56,7 @@ namespace
                 logStr += theDirectory;
                 logStr += ", keep-hour: ";
                 logStr += NFmiStringTools::Convert(theKeepHours);
-                logStr += "\nDeleted files:\n";
+                logStr += "\nDeleted files (" + std::to_string(deletedFiles.size()) + "):\n";
                 logStr += ::DeletedFilesStr(deletedFiles);
                 CatLog::logMessage(logStr, CatLog::Severity::Debug, CatLog::Category::Data);
             }
