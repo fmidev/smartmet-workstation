@@ -207,10 +207,13 @@ std::string getRelativePathIfPossible(const std::string &theFilePath,
 }
 
 // Yrittää hakea tiedostolle sen lopullisen absoluuttisen polun extensioineen kaikkineen.
-// Esim1 "beta1" "D:\betaProducts" "BetaProd"                           =>
-// D:\betaProducts\beta1.BetaProd" Esim2 "D:\betaProducts\beta1.1" "D:\betaProducts" "BetaProd" =>
-// D:\betaProducts\beta1.1.BetaProd" Esim3 "D:\betaProducts\beta1.BetaProd" "D:\betaProducts"
-// "BetaProd"  => D:\betaProducts\beta1.BetaProd" Esim4 "xxx\beta1" "D:\betaProducts" "BetaProd" =>
+// Esim1 "beta1" "D:\betaProducts" "BetaProd"  =>
+// D:\betaProducts\beta1.BetaProd" 
+// Esim2 "D:\betaProducts\beta1.1" "D:\betaProducts" "BetaProd" =>
+// D:\betaProducts\beta1.1.BetaProd" 
+// Esim3 "D:\betaProducts\beta1.BetaProd" "D:\betaProducts" "BetaProd"  => 
+// D:\betaProducts\beta1.BetaProd" 
+// Esim4 "xxx\beta1" "D:\betaProducts" "BetaProd" =>
 // D:\betaProducts\xxx\beta1.BetaProd"
 std::string getTrueFilePath(const std::string &theOriginalFilePath,
                             const std::string &theRootDirectory,
