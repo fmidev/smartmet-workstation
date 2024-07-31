@@ -68,7 +68,8 @@ private:
 	std::string ComposeToolTipText(const CPoint& point);
 	bool IsEnableDataColumnVisible() const;
 
-	CPPToolTip m_tooltip;
+	// Tämä koskee vain grid-kontrollissa olevien datarivien tooltippeja.
+	CPPToolTip m_grid_control_tooltip;
 };
 
 const int kFmiDataCountEditTimer = 1;
@@ -125,6 +126,8 @@ private:
 	void AdjustGridControl();
 	CRect CalcGridArea();
 	void FitNameColumnOnVisibleArea(int gridCtrlWidth);
+	void InitTooltipControl();
+	void SetDialogControlTooltip(int controlId, const std::string& tooltipRawText);
 
 	NFmiCaseStudyGridCtrl itsGridCtrl;
     CTreeColumn itsTreeColumn;   // provides tree column support
@@ -168,10 +171,13 @@ private:
 	void DoFirstTimeSilamCategoryCollapse();
 	std::list<std::string> GetSelectedDataFileFilters();
 
-    CString itsNameStrU_;
-    CString itsInfoStrU_;
-    CString itsPathStrU_;
-    BOOL fEditEnableData;
+	// Tämä koskee dialogissa olevien yksittäisten kontrollien staattisia tooltippeja, 
+	// ei grid-control osion dynaamisia juttuja.
+	CPPToolTip m_dialog_tooltip;
+	CString itsCaseStudyNameStrU_;
+	CString itsCaseStudyInfoStrU_;
+	CString itsCaseStudyPathStrU_;
+	BOOL fEditEnableData;
     BOOL fZipData;
 	BOOL fStoreWarningMessages;
 	BOOL fCropDataToZoomedMapArea;
@@ -180,12 +186,11 @@ private:
 public:
 	afx_msg void OnBnClickedButtonStoreData();
 	afx_msg void OnBnClickedButtonLoadData();
-	afx_msg void OnBnClickedButtonBrowse();
 	afx_msg void OnBnClickedButtonCloseMode();
     afx_msg void OnBnClickedCheckEditEnableData();
     afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
     afx_msg void OnBnClickedButtonRefreshGrid();
-	afx_msg void OnBnClickedButtonBrowseFolder();
 	afx_msg void OnBnClickedButtonPrioritizeData();
 	afx_msg void OnBnClickedButtonLoadOldData();
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
