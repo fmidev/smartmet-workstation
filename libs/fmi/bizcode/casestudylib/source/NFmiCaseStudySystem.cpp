@@ -1954,6 +1954,7 @@ bool NFmiCaseStudySystem::StoreMetaData(CWnd *theParentWindow, const std::string
 		return ::DoErrorActions(theParentWindow, errStr, captionStr, showErrorMessageBox);
 	}
 
+	CaseStudyName(PathUtils::getFilename(theMetaDataTotalFilePath));
 	// Otetaan currentti aika CaseStudy-ajaksi.
 	itsTime = NFmiMetTime();
 	json_spirit::Object jsonObject = NFmiCaseStudySystem::MakeJsonObject(*this, false);
