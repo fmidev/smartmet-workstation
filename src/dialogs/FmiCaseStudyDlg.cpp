@@ -631,27 +631,127 @@ BOOL CFmiCaseStudyDlg::OnInitDialog()
 
 static std::string Make_StoreData_ButtonTooltipText()
 {
-	std::string text = "To store selected Case-Study data.\n";
-	text += "Before pressing, make sure the following:\n";
-	text += "1. Give stored Case-Study a name (-> Name:)\n";
-	text += "  - This affects stored data file's and directory's name\n";
-	text += "2. Give stored Case-Study a description (-> Info:)\n";
-	text += " - This is optional information\n";
-	text += "3. Give directory where it's stored (-> Absolute path:)\n";
-	text += "  - You can browse the path with 'Browse dir' button\n";
-	text += "4. Select all stored data from data file table control\n";
-	text += "  - Check or uncheck the 'Store' column for each data\n";
-	text += "  - You can check/uncheck also on Producer/Category level at once\n";
+	std::string text = "To store selected Case-Study data:\n";
+	text += "1. Give stored Case-Study a description (-> Info:)\n";
+	text += " - This is optional information.\n";
+	text += "2. Press 'Store data' button to open file browser.\n";
+	text += "3. Browse to the directory you want to store Case-Study.\n";
+	text += "4. Give Case-Study a name as filename in browser.\n";
+	text += " - You won't need to give file extension.\n";
+	text += " - File extension will be given automatically.\n";
+	text += "5. Press 'Save' button to start data storage operation.";
 	return text;
 }
 
 static std::string Make_LoadData_ButtonTooltipText()
 {
-	std::string text = "To load wanted Case-Study data.\n";
-	text += "Before pressing, make sure the following:\n";
-	text += "1. Set loaded Case-Study meta-file (-> Absolute path:)\n";
-	text += "  - You can browse for it with 'Browse file' button\n";
-	text += "  - Case-Study meta-files have .csmeta file extension\n";
+	std::string text = "To load wanted Case-Study data:\n";
+	text += "1. Press 'Load data' button to open file browser.\n";
+	text += "2. Browse to wanted directory and select Case-Study meta-file.\n";
+	text += " - Case-Study meta-files have .csmeta file extension.\n";
+	text += "3. Press 'Open' button to start data loading operation.";
+	return text;
+}
+
+static std::string Make_CloseMode_ButtonTooltipText()
+{
+	std::string text = "To close Case-Study mode:\n";
+	text += "1. Press 'Close mode' button which sets back to normal mode.\n";
+	text += " - Used Case-Study data is not used anymore.\n";
+	text += " - Normal latest data will be read into use.";
+	return text;
+}
+
+static std::string Make_Refresh_ButtonTooltipText()
+{
+	std::string text = "To refresh data grid control:\n";
+	text += "1. Press 'Refresh' button which will update the data grid.\n";
+	text += " - This can be usefull if more data is read into system.";
+	return text;
+}
+
+static std::string Make_Name_StaticTooltipText()
+{
+	std::string text = "Here is displayed loaded Case-Study's name.";
+	return text;
+}
+
+static std::string Make_Path_StaticTooltipText()
+{
+	std::string text = "Here is displayed loaded/stored Case-Study's meta-file path.";
+	return text;
+}
+
+static std::string Make_CropData_CheckTooltipText()
+{
+	std::string text = "With this checked Smartmet will try to save in data sizes.\n";
+	text += " - Depending on data and main-map-view's area data is cropped.\n";
+	text += " - This is usefull if having global data but wants to cover only smaller area on map.";
+
+	return text;
+}
+
+static std::string Make_StoreWarnings_CheckTooltipText()
+{
+	std::string text = "Check this if you want to store HAKE warnings too.\n";
+	text += " - This is useful only in FMI, these HAKE warnings are available only there.";
+
+	return text;
+}
+
+static std::string Make_ZipData_CheckTooltipText()
+{
+	std::string text = "Check this if you want to zip stored Case-Study data.\n";
+	text += " - This will generate a zip file containing all the relevant files.\n";
+	text += " - Leaves original meta-data file and data directories intact.\n";
+	text += " - So user needs to delete those if wanting to free space on hard-drive.";
+
+	return text;
+}
+
+static std::string Make_EditEnableData_CheckTooltipText()
+{
+	std::string text = "Check this to change enabled/disabled state of each query-data.\n";
+	text += " - When checked, 7th column appears with check-box controls.\n";
+	text += " - If data is enabled, Smartmet will try to use it and load it's newest data from server.\n";
+	text += " - If disabled, smartmet will ignore the data in every way.\n";
+	text += " - If disabled, data row will turn into grey colored (grey indicates disabled state).\n";
+	text += " - After changes has been made, you'll have to restart Smartmet to apply changes.";
+
+	return text;
+}
+
+static std::string Make_MultiDataSelection_ButtonTooltipText()
+{
+	std::string text = "1. Select a data from data-grid control with left mouse click.\n";
+	text += " - You can also select a Producer or Category to load more with less clicking.\n";
+	text += "2. If you want to select multiple data, keep CTRL key down while left clicking.\n";
+
+	return text;
+}
+
+static std::string Make_PrioritizeData_ButtonTooltipText()
+{
+	std::string text = "Makes 'prioritized data loading' background works.\n";
+	text += " - Usable if Smartmet has been shutdown for a while and startup loading is slow.\n";
+	text += " - Especially if connection to server is slow and query-data files are big.\n";
+	text += " - And there are some data you need soon but know that they are loaded much later after all other data.\n";
+	text += Make_MultiDataSelection_ButtonTooltipText();
+	text += "3. Press 'Prioritize data' button and Smartmet will add these to fast load list.\n";
+	text += " - They are removed from this list as soon as the latest wanted data is loaded.";
+
+	return text;
+}
+
+static std::string Make_LoadOldData_ButtonTooltipText()
+{
+	std::string text = "Makes 'load older model run data' background works.\n";
+	text += " - Usable if Smartmet has been shutdown for a while.\n";
+	text += " - You need older model run data that are missing in local cache directory.\n";
+	text += Make_MultiDataSelection_ButtonTooltipText();
+	text += "3. Press 'Load old data' button and Smartmet will add these to load list.\n";
+	text += " - SmartMet will load all the older data that are missing locally that are found in server.";
+
 	return text;
 }
 
@@ -663,6 +763,16 @@ void CFmiCaseStudyDlg::InitTooltipControl()
 	// Tässä erikseen jokainen kontrolli, jolle halutaan joku tooltip teksti
 	SetDialogControlTooltip(IDC_BUTTON_STORE_DATA, ::Make_StoreData_ButtonTooltipText());
 	SetDialogControlTooltip(IDC_BUTTON_LOAD_DATA, ::Make_LoadData_ButtonTooltipText());
+	SetDialogControlTooltip(IDC_BUTTON_CLOSE_MODE, ::Make_CloseMode_ButtonTooltipText());
+	SetDialogControlTooltip(IDC_BUTTON_REFRESH_GRID, ::Make_Refresh_ButtonTooltipText());
+	SetDialogControlTooltip(IDC_STATIC_CASE_STUDY_NAME, ::Make_Name_StaticTooltipText());
+	SetDialogControlTooltip(IDC_STATIC_CASE_STUDY_PATH, ::Make_Path_StaticTooltipText());
+	SetDialogControlTooltip(IDC_CHECK_CROP_DATA_TO_ZOOMED_MAP_AREA, ::Make_CropData_CheckTooltipText());
+	SetDialogControlTooltip(IDC_CHECK_STORE_WARNING_MESSAGES, ::Make_StoreWarnings_CheckTooltipText());
+	SetDialogControlTooltip(IDC_CHECK_ZIP_DATA, ::Make_ZipData_CheckTooltipText());
+	SetDialogControlTooltip(IDC_CHECK_EDIT_ENABLE_DATA, ::Make_EditEnableData_CheckTooltipText());
+	SetDialogControlTooltip(IDC_BUTTON_PRIORITIZE_DATA, ::Make_PrioritizeData_ButtonTooltipText());
+	SetDialogControlTooltip(IDC_BUTTON_LOAD_OLD_DATA, ::Make_LoadOldData_ButtonTooltipText());
 }
 
 void CFmiCaseStudyDlg::SetDialogControlTooltip(int controlId, const std::string& tooltipRawText)
