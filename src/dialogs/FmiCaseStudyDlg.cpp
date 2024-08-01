@@ -1432,7 +1432,7 @@ void CFmiCaseStudyDlg::OnBnClickedButtonStoreData()
 
 	std::string fileExtension = "csmeta";
 	std::string fileFilter = "CaseStudy Files (*.csmeta)|*.csmeta|All Files (*.*)|*.*||";
-	std::string initialDirectory = itsSmartMetDocumentInterface->LoadedCaseStudySystem().CaseStudyPath();
+	std::string initialDirectory = CT2A(itsCaseStudyPathStrU_);
 	initialDirectory = PathUtils::getPathSectionFromTotalFilePath(initialDirectory);
 	std::string usedMetaDataFilePath;
 	std::string initialfileName = "CaseStudy1";
@@ -1454,9 +1454,20 @@ void CFmiCaseStudyDlg::OnBnClickedButtonStoreData()
 			commandStr += AddPossibleCropDataToZoomedMapAreaOptions();
 
 			CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true, true, SW_MINIMIZE);
+
+			UpdateBasicInfo(usedMetaDataFilePath, itsSmartMetDocumentInterface->CaseStudySystem());
+			UpdateData(FALSE);
 		}
 	}
     UpdateButtonStates();
+}
+
+void CFmiCaseStudyDlg::UpdateBasicInfo(const std::string &metaDataFilePath, const NFmiCaseStudySystem& caseStudySystem)
+{
+	itsCaseStudyNameStrU_ = CA2T(caseStudySystem.CaseStudyName().c_str());
+	itsCaseStudyInfoStrU_ = CA2T(caseStudySystem.CaseStudyInfo().c_str());
+	itsCaseStudyPathStrU_ = CA2T(metaDataFilePath.c_str());
+	UpdateData(FALSE);
 }
 
 std::string CFmiCaseStudyDlg::AddPossibleZippingOptions() const
@@ -1517,17 +1528,14 @@ void CFmiCaseStudyDlg::OnBnClickedButtonLoadData()
 {
 	UpdateData(TRUE);
 	std::string fileFilter = "CaseStudy Files (*.csmeta)|*.csmeta|All Files (*.*)|*.*||";
-	std::string initialDirectory = itsSmartMetDocumentInterface->LoadedCaseStudySystem().CaseStudyPath();
+	std::string initialDirectory = CT2A(itsCaseStudyPathStrU_);
 	std::string usedFilePath;
 	std::string initialfileName = "CaseStudy1";
 	if(BetaProduct::GetFilePathFromUser(fileFilter, initialDirectory, usedFilePath, true, initialfileName, this))
 	{
 		if(itsSmartMetDocumentInterface->LoadCaseStudyData(usedFilePath))
 		{
-			itsCaseStudyNameStrU_ = CA2T(itsSmartMetDocumentInterface->LoadedCaseStudySystem().CaseStudyName().c_str());
-			itsCaseStudyInfoStrU_ = CA2T(itsSmartMetDocumentInterface->LoadedCaseStudySystem().CaseStudyInfo().c_str());
-			itsCaseStudyPathStrU_ = CA2T(usedFilePath.c_str());
-			UpdateData(FALSE);
+			UpdateBasicInfo(usedFilePath, itsSmartMetDocumentInterface->LoadedCaseStudySystem());
 		}
 		UpdateButtonStates();
 		itsSmartMetDocumentInterface->SetAllViewIconsDynamically();

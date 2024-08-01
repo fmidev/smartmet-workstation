@@ -14,6 +14,7 @@ class SmartMetDocumentInterface;
 class NFmiCaseStudyDataFile;
 class NFmiProducerSystemsHolder;
 class NFmiCaseStudySettingsWinRegistry;
+class NFmiCaseStudySystem;
 
 struct CaseStudyHeaderParInfo
 {
@@ -170,6 +171,7 @@ private:
 	std::pair<std::string, std::string> GetNameAndInfoStringsFromSelectedMetaFilePath(std::string fullPathToMetaFile);
 	void DoFirstTimeSilamCategoryCollapse();
 	std::list<std::string> GetSelectedDataFileFilters();
+	void UpdateBasicInfo(const std::string& metaDataFilePath, const NFmiCaseStudySystem &caseStudySystem);
 
 	// Tämä koskee dialogissa olevien yksittäisten kontrollien staattisia tooltippeja, 
 	// ei grid-control osion dynaamisia juttuja.
