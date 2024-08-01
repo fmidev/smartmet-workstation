@@ -9,7 +9,7 @@
 namespace
 {
 	bool gThreadHasRun = false;
-	std::string gThreadName = "History-thread";
+	std::string gThreadName = "HistoryData-1";
 	// Kun ohjelma halutaan sulkea (käyttäjä), tähän tulee tieto asiasta
 	std::shared_ptr<NFmiStopFunctor> gStopFunctorPtr;
 

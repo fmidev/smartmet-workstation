@@ -17,6 +17,14 @@
 
 namespace
 {
+    enum class ThreadDataType
+    {
+        LatestData,
+        OldData,
+        PrioritizedData,
+        HistoryData
+    };
+
     // Jos ohjelma halutaan lopettaa ulkoapäin, tälle gStopFunctorPtr:ille asetetaan tieto siitä CloseNow funktion kautta.
     std::shared_ptr<NFmiStopFunctor> gStopFunctorPtr;
     // Jos jotain datoja ei löydy serveriltä, halutaan siitä raportoida kerran lokiin.
@@ -45,13 +53,12 @@ namespace
     // normityö-timerin kanssa kokonaista minuuttia odotusloopissa.
     bool gNewDataLoadingWorkReceived = false;
     // Eri working-threadeille pitää saada uniikki nimi, jotta Smartmetin ledi-indikaattori systeemi
-    // osaisi raportoida kaikki jutut sen tooltipissa.
-    // Nyt kun ei enää ole 3:a erillistä kopiointi threadia, vaan jokaiselle tiedostokopioinnille
-    // luodaan oma yksittäinen threadi, niille pitää saada uniikki nimi, koska niitä voi olla päällä
-    // monta rinnakksin. Lisäksi on uusi load-old-data juttu, joille pitää myös saada omat uniikit
-    // nimet, siksi tässä on kaksi laskuria, joista uniikit nimet lopulta saadaan.
-    size_t gThreadNameIndexForSingleFileCopy = 1;
-    size_t gThreadNameIndexForLoadOldData = 1;
+    // osaisi raportoida kaikki erilliset käynnissä olevat jutut sen tooltipissa.
+    // Nyt on kolme erityyppistä datanhakua, ja niille on erilliset laskurit, joista
+    // tuotetaan lopuksi nimet tiettyjen sääntöjen mukaan.
+    size_t gThreadNameIndexForLatestData = 1;
+    size_t gThreadNameIndexForPrioritizedData = 1;
+    size_t gThreadNameIndexForOldData = 1;
 
     NFmiMilliSecondTimer gDoWorkTimer;
 
@@ -69,14 +76,22 @@ namespace
         NFmiFileSystem::CreateDirectory(helpDataSystem.LocalDataPartialDirectory());
     }
 
-    std::string GetThreadName(bool loadOldDataCase)
+    std::string GetThreadName(ThreadDataType dataType)
     {
-        if(loadOldDataCase)
+        switch(dataType)
         {
-            return std::string("LoadOldData-") + std::to_string(gThreadNameIndexForLoadOldData++);
+        case ThreadDataType::LatestData:
+            return std::string("LatestData-") + std::to_string(gThreadNameIndexForLatestData++);
+        case ThreadDataType::OldData:
+            return std::string("OldData-") + std::to_string(gThreadNameIndexForOldData++);
+        case ThreadDataType::PrioritizedData:
+            return std::string("PrioritizedData-") + std::to_string(gThreadNameIndexForPrioritizedData++);
+        default:
+        {
+            CatLog::logMessage("Unknown data type in GetThreadName, logical error in program", CatLog::Severity::Error, CatLog::Category::Data, true);
+            return std::string("UnknownData-1");
         }
-
-        return std::string("LoadSingleData-") + std::to_string(gThreadNameIndexForSingleFileCopy++);
+        }
     }
 
     bool IsTimeToCheckForNewData(bool* firstTime, CFmiCopyingStatus status)
@@ -169,16 +184,15 @@ namespace
         return workHelpDataInfo;
     }
 
-    // Palautetaan kopiointi työhön liittyvä HelpDataInfo ja tieto että onko kyse normaali datan 
-    // kopioinnista (bool on false) vai mahdollisesta historiadata kopioinnista (bool on true)
-    std::pair<const NFmiHelpDataInfo*, bool> GetNextDataWork(NFmiHelpDataInfoSystem& helpDataInfoSystem, size_t* helpInfoIndexInOut)
+    // Palautetaan kopiointi työhön liittyvä HelpDataInfo ja tieto minkä tyyppisestä datan hausta on kyse
+    std::pair<const NFmiHelpDataInfo*, ThreadDataType> GetNextDataWork(NFmiHelpDataInfoSystem& helpDataInfoSystem, size_t* helpInfoIndexInOut)
     {
         const auto* prioritizedHelpDataInfo = ::GetNextPossibleWorkWithLogging(helpDataInfoSystem, false, "Starting prioritized work with ");
         if(prioritizedHelpDataInfo)
         {
             // Huom: ei kasvateta helpInfoIndexInOut:ia!
             gNewDataLoadingWorkReceived = false; // nollataan työsaatu lippu myös
-            return std::make_pair(prioritizedHelpDataInfo, false);
+            return std::make_pair(prioritizedHelpDataInfo, ThreadDataType::PrioritizedData);
         }
 
         const auto* loadOldDataHelpDataInfo = ::GetNextPossibleWorkWithLogging(helpDataInfoSystem, true, "Starting load-old-data work with ");
@@ -186,7 +200,7 @@ namespace
         {
             // Huom: ei kasvateta helpInfoIndexInOut:ia!
             gNewDataLoadingWorkReceived = false; // nollataan työsaatu lippu myös
-            return std::make_pair(loadOldDataHelpDataInfo, true);
+            return std::make_pair(loadOldDataHelpDataInfo, ThreadDataType::OldData);
         }
 
         // Muuten palautetaan normityö ja juoksutus indeksiä pitää kasvattaa
@@ -196,7 +210,7 @@ namespace
         if(usedHelpDataIndex >= helpDataInfos.size())
             throw std::runtime_error("Error in QueryDataToLocalCacheLoaderThread - GetNextDataWork: Given helpInfoIndex was out of bounds, logical error in program");
 
-        return std::make_pair(&helpDataInfos[usedHelpDataIndex], false);
+        return std::make_pair(&helpDataInfos[usedHelpDataIndex], ThreadDataType::LatestData);
     }
 
     // Käy läpi kaikki dynaamiset helpdatat ja tekee tarvittavat cache-kopioinnit.
@@ -218,8 +232,8 @@ namespace
             {
                 try
                 {
-                    auto doOldDataCase = helpDataInfoOldDataPair.second;
-                    auto usedThreadName = ::GetThreadName(doOldDataCase);
+                    auto doOldDataCase = (helpDataInfoOldDataPair.second == ThreadDataType::OldData);
+                    auto usedThreadName = ::GetThreadName(helpDataInfoOldDataPair.second);
                     if(doOldDataCase)
                         gLocalCacheFutureWaitingSystem.AddFuture(std::async(std::launch::async, LocalCacheHistoryDataThread::CollectOldModelRunDataToCache, *helpDataInfoOldDataPair.first, theHelpDataInfoSystemPtr, usedThreadName));
                     else
@@ -292,7 +306,7 @@ namespace QueryDataToLocalCacheLoaderThread
         auto tmpHelpDataSystemPtr = gLocalCacheHelpDataSystem.GetHelpDataInfoSystemPtr();
         gMissingDataOnServerReporterPtr->initialize(*tmpHelpDataSystemPtr);
         ::MakeCacheDirectories(*tmpHelpDataSystemPtr);
-        const size_t maxSingleDataCopyThreads = 3;
+        const size_t maxSingleDataCopyThreads = 2;
         gLocalCacheFutureWaitingSystem.InitWaitingSystem(maxSingleDataCopyThreads, gStopFunctorPtr);
 
         LocalCacheCleaning::InitLocalCacheCleaning(loadDataAtStartUp, autoLoadNewCacheDataMode, cacheCleaningIntervalInHours, gStopFunctorPtr);

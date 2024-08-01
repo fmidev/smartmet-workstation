@@ -148,9 +148,25 @@ namespace
         return str;
     }
 
-    std::string MakeLedChannelStartLoadingString(const NFmiCachedDataFileInfo& cachedDataFileInfo)
+    std::string GetTextBeforeDash(const std::string& input) 
     {
-        std::string reportStr = "Loading file from server (";
+        // Find the position of the '-' character
+        size_t pos = input.find('-');
+
+        // If '-' is found, return the substring before it
+        if(pos != std::string::npos) 
+        {
+            return input.substr(0, pos);
+        }
+
+        // If '-' is not found, return the entire input string
+        return input;
+    }
+
+    std::string MakeLedChannelStartLoadingString(const NFmiCachedDataFileInfo& cachedDataFileInfo, const std::string &threadName)
+    {
+        auto dataTypeStr = ::GetTextBeforeDash(threadName);
+        std::string reportStr = std::string("Loading ") + dataTypeStr + " file from server(";
         reportStr += ::MakeFileSizeString(cachedDataFileInfo.itsFileSizeInMB);
         reportStr += "):\n";
         NFmiFileString fileStr(cachedDataFileInfo.itsTotalCacheFileName);
@@ -431,7 +447,7 @@ namespace LocalCacheSingleFileLoaderThread
 
         if(tmpFileStatus == kFmiGoOnWithCopying && tmpPackedFileStatus == kFmiGoOnWithCopying)
         {
-            NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::QueryData, callingThreadName, ::MakeLedChannelStartLoadingString(theCachedDataFileInfo));
+            NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::QueryData, callingThreadName, ::MakeLedChannelStartLoadingString(theCachedDataFileInfo, callingThreadName));
             ::EnsureCacheDirectoryForPartialData(theCachedDataFileInfo.itsTotalCacheFileName, theDataInfo);
             return ::CopyFileEx_CopyRename(theCachedDataFileInfo);
         }
