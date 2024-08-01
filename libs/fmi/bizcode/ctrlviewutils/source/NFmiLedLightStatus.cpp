@@ -272,6 +272,7 @@ bool NFmiLedLightStatusSystem::ClearChannelReport(NFmiLedChannel ledChannel, con
 				{
 					iter = wantedChannelReport.erase(iter);
 					removedMessage = true;
+					break; // Turha jatkaa poiston jälkeen, on myös kaatunut iteraattorin juoksutukseen
 				}
 			}
 		} // mutex-lukon purku
