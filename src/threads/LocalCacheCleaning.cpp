@@ -37,7 +37,7 @@ namespace
         for(auto filePath : theDeletedFiles)
         {
             if(!str.empty())
-                str += "\n";
+                str += ",\n";
             boost::replace_all(filePath, "\\/", "\\");
             str += filePath;
         }
@@ -49,7 +49,7 @@ namespace
         try
         {
             std::list<std::string> deletedFiles;
-            NFmiFileSystem::CleanDirectory(theDirectory, theKeepHours, &deletedFiles);
+            CtrlViewUtils::CleanDirectory(theDirectory, theKeepHours, &deletedFiles);
             if(deletedFiles.size())
             {
                 std::string logStr("QueryDataToLocalCacheLoaderThread - CleanDirectory: ");
