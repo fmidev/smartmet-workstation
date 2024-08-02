@@ -10,6 +10,12 @@
 #include "CtrlViewFunctions.h"
 #include "SmartMetDocumentInterface.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 namespace
 {
     // Jos t‰m‰ on false, se est‰‰ datan latauksen cacheen ja hakemistojen siivouksen
@@ -159,12 +165,42 @@ namespace
 
 namespace LocalCacheCleaning
 {
-    void InitLocalCacheCleaning(bool loadDataAtStartUp, bool autoLoadNewCacheDataMode, double cacheCleaningIntervalInHours, std::shared_ptr<NFmiStopFunctor> &stopFunctorPtr)
+    void InitLocalCacheCleaning(bool loadDataAtStartUp, bool autoLoadNewCacheDataMode, double cacheCleaningIntervalInHours, std::shared_ptr<NFmiStopFunctor> &stopFunctorPtr, const NFmiHelpDataInfoSystem& helpDataSystem)
     {
         gLoadDataAtStartUp = loadDataAtStartUp;
         gAutoLoadNewCacheDataMode = autoLoadNewCacheDataMode;
         gCacheCleaningIntervalInHours = cacheCleaningIntervalInHours;
         gStopFunctorPtr = stopFunctorPtr;
+
+        if(!IsDataCopyingRoutinesOn() || !helpDataSystem.DoCleanCache())
+        {
+            std::string logMessageStr = "Local querydata cache cleaning disabled, reason: ";
+            std::string reasonStr;
+            if(!gLoadDataAtStartUp)
+                reasonStr += "Auto load data at startup is OFF";
+            if(!gAutoLoadNewCacheDataMode)
+            {
+                if(!reasonStr.empty())
+                    reasonStr += ", ";
+                reasonStr += "Auto load new cache data is OFF";
+            }
+            if(!helpDataSystem.DoCleanCache())
+            {
+                if(!reasonStr.empty())
+                    reasonStr += ", ";
+                reasonStr += "Clean local data cache is OFF";
+            }
+            logMessageStr += reasonStr;
+            CatLog::logMessage(logMessageStr, CatLog::Severity::Debug, CatLog::Category::Data);
+            return;
+        }
+        else
+        {
+            std::string logMessageStr = "Local querydata cache cleaning enabled, clening interval is ";
+            logMessageStr += std::to_string(boost::math::iround(gCacheCleaningIntervalInHours * 60));
+            logMessageStr += " minutes";
+            CatLog::logMessage(logMessageStr, CatLog::Severity::Debug, CatLog::Category::Data);
+        }
     }
 
     void DoPossibleLocalCacheCleaning(NFmiHelpDataInfoSystem& helpDataSystem)
