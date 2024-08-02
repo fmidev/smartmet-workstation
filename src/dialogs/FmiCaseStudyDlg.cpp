@@ -1652,6 +1652,42 @@ void CFmiCaseStudyDlg::OnBnClickedButtonRefreshGrid()
 	UpdateData(FALSE);
 }
 
+static void AddProducerFileFiltersToList(const NFmiCaseStudyDataFile* rowData, std::vector<NFmiCaseStudyDataFile*> & caseStudyDialogData, std::list<std::string>* selectedDataFileFiltersInOut)
+{
+	if(rowData == nullptr || selectedDataFileFiltersInOut == nullptr)
+		return;
+
+	auto wantedProducerId = rowData->Producer().GetIdent();
+	for(const auto* caseStudyDataFile : caseStudyDialogData)
+	{
+		if(caseStudyDataFile->Producer().GetIdent() == wantedProducerId)
+		{
+			if(!caseStudyDataFile->FileFilter().empty())
+			{
+				selectedDataFileFiltersInOut->push_back(caseStudyDataFile->FileFilter());
+			}
+		}
+	}
+}
+
+static void AddCategoryFileFiltersToList(const NFmiCaseStudyDataFile* rowData, std::vector<NFmiCaseStudyDataFile*>& caseStudyDialogData, std::list<std::string>* selectedDataFileFiltersInOut)
+{
+	if(rowData == nullptr || selectedDataFileFiltersInOut == nullptr)
+		return;
+
+	auto wantedCategory = rowData->Category();
+	for(const auto* caseStudyDataFile : caseStudyDialogData)
+	{
+		if(caseStudyDataFile->Category() == wantedCategory)
+		{
+			if(!caseStudyDataFile->FileFilter().empty())
+			{
+				selectedDataFileFiltersInOut->push_back(caseStudyDataFile->FileFilter());
+			}
+		}
+	}
+}
+
 std::list<std::string> CFmiCaseStudyDlg::GetSelectedDataFileFilters()
 {
 	std::vector<int> selectedRowIndexies;
@@ -1677,6 +1713,14 @@ std::list<std::string> CFmiCaseStudyDlg::GetSelectedDataFileFilters()
 			if(!rowData->FileFilter().empty())
 			{
 				selectedDataFileFilters.push_back(rowData->FileFilter());
+			}
+			else if(rowData->ProducerHeader())
+			{
+				::AddProducerFileFiltersToList(rowData, caseStudyDialogData, &selectedDataFileFilters);
+			}
+			else if(rowData->CategoryHeader())
+			{
+				::AddCategoryFileFiltersToList(rowData, caseStudyDialogData, &selectedDataFileFilters);
 			}
 		}
 	}
