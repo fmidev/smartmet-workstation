@@ -2,6 +2,11 @@
 #include "NFmiQueryDataUtil.h"
 #include "catlog/catlog.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
 void LocalCacheFutureWaitingSystem::InitWaitingSystem(size_t maxThreadCount, std::shared_ptr<NFmiStopFunctor> stopFunctorPtr)
 {

@@ -12,6 +12,12 @@
 #include "execute-command-in-separate-process.h"
 #include "FmiDataLoadingThread2.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 namespace
 {
     // Jos ohjelma halutaan lopettaa ulkoapäin, tälle gStopFunctorPtr:ille asetetaan tieto siitä CloseNow funktion kautta.

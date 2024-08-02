@@ -30,6 +30,12 @@
 #pragma warning( disable : 4503 ) // t‰m‰ est‰‰ varoituksen joka tulee VC++ 2012 k‰‰nt‰j‰ll‰, kun jonkun boost-luokan nimi merkkein‰ ylitt‰‰ jonkun rajan
 #endif
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 static const std::string gJsonName_Name = "Name";
 static const std::string gJsonName_Info = "Info";
 static const std::string gJsonName_Path = "Path";
