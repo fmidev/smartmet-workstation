@@ -1215,6 +1215,7 @@ void CMainFrame::OnClose()
             theApp.AllowApplicationToClose(true);
 			itsDoc->LogMessage("Give Working-threads 15 s time to stop.", CatLog::Severity::Info, CatLog::Category::Operational);
 			DoAppDataBaseCollection(NFmiApplicationDataBase::kClose);
+			NFmiLedLightStatusSystem::ProgramStopsNow();
 
             // HUOM! Jos WmsSupport:in alustus on epäonnistunut, ei saa tehdä tappokäskyä ja odottelua
             // koska mystisestä syystä tällöin CFmiDataLoadingThread2:en lopetus epäonnistuu DEBUG moodissa (ei release).

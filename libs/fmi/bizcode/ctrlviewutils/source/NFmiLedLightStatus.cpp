@@ -123,6 +123,12 @@ void NFmiLedLightStatus::ledColor(NFmiLedColor newColor)
 // ****** NFmiLedLightStatusSystem starts ************
 // ***************************************************
 
+bool NFmiLedLightStatusSystem::programWantsToStop_ = false;
+void NFmiLedLightStatusSystem::ProgramStopsNow()
+{
+	programWantsToStop_ = true;
+}
+
 NFmiLedLightStatusSystem* NFmiLedLightStatusSystem::staticInstance_ = nullptr;
 
 NFmiLedLightStatusSystem::NFmiLedLightStatusSystem() = default;
@@ -479,5 +485,9 @@ NFmiLedLightStatusBlockReporter::NFmiLedLightStatusBlockReporter(NFmiLedChannel 
 
 NFmiLedLightStatusBlockReporter::~NFmiLedLightStatusBlockReporter()
 {
-	NFmiLedLightStatusSystem::StopReportToChannelFromThread(usedLedChannel_, reporterName_);
+	// Eli StopReportToChannelFromThread kutsu tehd‰‰n vain jos ohjelmaa ei ole viel‰ haluttu jo sulkea!
+	if(!NFmiLedLightStatusSystem::ProgramWantsToStop())
+	{
+		NFmiLedLightStatusSystem::StopReportToChannelFromThread(usedLedChannel_, reporterName_);
+	}
 }
