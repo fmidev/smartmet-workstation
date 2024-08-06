@@ -294,8 +294,11 @@ namespace
         if(!hasRun)
         {
             hasRun = true;
-            std::thread t(LocalCacheHistoryDataThread::DoHistoryThread, gStopFunctorPtr, gLocalCacheHelpDataSystem.GetHelpDataInfoSystemPtr());
-            t.detach(); // Detach the thread
+            if(LocalCacheCleaning::IsDataCopyingRoutinesOn())
+            {
+                std::thread t(LocalCacheHistoryDataThread::DoHistoryThread, gStopFunctorPtr, gLocalCacheHelpDataSystem.GetHelpDataInfoSystemPtr());
+                t.detach(); // Detach the thread
+            }
         }
     }
 
