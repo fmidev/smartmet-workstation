@@ -279,7 +279,7 @@ void NFmiTimeControlView::DrawAnimationBox(void)
 		buttonClipRect = buttonClipRect.Intersection(animRect);
 		itsGdiPlusGraphics->SetClip(CtrlView::Relative2GdiplusRect(itsToolBox, buttonClipRect));
 		// piirr‰ close-button
-        CtrlView::DrawAnimationButton(CalcAnimationCloseButtonRect(), statAnimationButtonImages.itsCloseButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f);
+        CtrlView::DrawAnimationButton(CalcAnimationCloseButtonRect(), statAnimationButtonImages.itsCloseButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f, true);
 
         NFmiAnimationData &animData = itsCtrlViewDocumentInterface->AnimationData(itsMapViewDescTopIndex);
 
@@ -287,18 +287,18 @@ void NFmiTimeControlView::DrawAnimationBox(void)
 		Gdiplus::Bitmap *usedPlayButtonBitmap = statAnimationButtonImages.itsPlayButtonImage;
 		if(animData.AnimationOn() == true)
 			usedPlayButtonBitmap = statAnimationButtonImages.itsPauseButtonImage;
-        CtrlView::DrawAnimationButton(CalcAnimationPlayButtonRect(), usedPlayButtonBitmap, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f);
+        CtrlView::DrawAnimationButton(CalcAnimationPlayButtonRect(), usedPlayButtonBitmap, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f, true);
 
 		// piirr‰ vertical control -button
 		Gdiplus::Bitmap *usedVerticalControlButtonBitmap = statAnimationButtonImages.itsVerticalTimeControlOnImage;
 		if(animData.ShowVerticalControl() == true)
 			usedVerticalControlButtonBitmap = statAnimationButtonImages.itsVerticalTimeControlOffImage;
-        CtrlView::DrawAnimationButton(CalcAnimationVerticalControlButtonRect(), usedVerticalControlButtonBitmap, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.9f);
+        CtrlView::DrawAnimationButton(CalcAnimationVerticalControlButtonRect(), usedVerticalControlButtonBitmap, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.9f, true);
 
 		{
 			// piirr‰ (time)delay-button
 			NFmiRect delayRect = CalcAnimationDelayButtonRect();
-            CtrlView::DrawAnimationButton(delayRect, statAnimationButtonImages.itsDelayButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f);
+            CtrlView::DrawAnimationButton(delayRect, statAnimationButtonImages.itsDelayButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f, true);
 			// piirret‰‰n napin yl‰ puolelle k‰ytetty delay aika sadasosa sekunneilla
 			NFmiColor textColor(0.f, 0.f, 0.0f);
 			std::string delayStr = NFmiValueString::GetStringWithMaxDecimalsSmartWay(animData.FrameDelayInMS()/10., 0);
@@ -308,19 +308,19 @@ void NFmiTimeControlView::DrawAnimationBox(void)
 		}
 
 		// piirr‰ runmode-button
-        CtrlView::DrawAnimationButton(CalcAnimationRunModeButtonRect(), statAnimationButtonImages.itsRepeatButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f);
+        CtrlView::DrawAnimationButton(CalcAnimationRunModeButtonRect(), statAnimationButtonImages.itsRepeatButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f, true);
 
 		// piirr‰ lockmode-button
 		NFmiRect lockModeRect(CalcAnimationLockModeButtonRect());
 		Gdiplus::Bitmap *usedLockButtonBitmap = statAnimationButtonImages.itsAnimationLockButtonImage;
 		if(animData.LockMode() == NFmiAnimationData::kFollowEarliestLastObservation)
 			usedLockButtonBitmap = statAnimationButtonImages.itsAnimationNoLockButtonImage;
-        CtrlView::DrawAnimationButton(lockModeRect, usedLockButtonBitmap, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f);
+        CtrlView::DrawAnimationButton(lockModeRect, usedLockButtonBitmap, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f, true);
 
 		{
 			// piirr‰ last frame delay factor-button
 			NFmiRect lastFrameDelayRect = CalcLastFrameDelayFactorButtonRect();
-            CtrlView::DrawAnimationButton(lastFrameDelayRect, statAnimationButtonImages.itsLastFrameDelayButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f);
+            CtrlView::DrawAnimationButton(lastFrameDelayRect, statAnimationButtonImages.itsLastFrameDelayButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f, true);
 			// piirret‰‰n napin yl‰ puolelle k‰ytetty delay kerroin
 			NFmiColor textColor(0.f, 0.f, 0.0f);
 			std::string lasframeDelayStr = NFmiStringTools::Convert<double>(animData.LastFrameDelayFactor());
@@ -795,18 +795,19 @@ void NFmiTimeControlView::ClearAllMouseCaptureFlags(void)
 }
 
 // theSizeFactorX -parametri on pika viritys, jotta saisin FullTimeRange-nappulan toimimaan, ja se on 2x leve‰mpi kuin normaalit nappulat (32 x 16 pikseli‰)
-NFmiPoint NFmiTimeControlView::CalcAnimationButtonRelativeSize(double theSizeFactorX)
+// theSizeFactorY -parametri on pika viritys, jotta saisin tehty‰ nappuloista tuplakokoisia 
+NFmiPoint NFmiTimeControlView::CalcAnimationButtonRelativeSize(double theSizeFactorX, double theSizeFactorY)
 {
-    double relativeWidth = itsToolBox->SX(boost::math::iround(theSizeFactorX * itsButtonSizeInMM_x * itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x));
-    double relativeHeight = itsToolBox->SY(boost::math::iround(itsButtonSizeInMM_y * GetGraphicalInfo().itsPixelsPerMM_y));
+    double relativeWidth = itsToolBox->SX(boost::math::iround(theSizeFactorX * itsButtonSizeInMM_x * GetGraphicalInfo().itsPixelsPerMM_x));
+    double relativeHeight = itsToolBox->SY(boost::math::iround(theSizeFactorY * itsButtonSizeInMM_y * GetGraphicalInfo().itsPixelsPerMM_y));
 	if(itsCtrlViewDocumentInterface->Printing() == false)
 	{
         long bitmapSizeX = boost::math::iround(16 * theSizeFactorX);
-		long bitmapSizeY = 16;
+		long bitmapSizeY = boost::math::iround(16 * theSizeFactorY);
 		if(statAnimationButtonImages.itsPlayButtonImage)
 		{
             bitmapSizeX = boost::math::iround(statAnimationButtonImages.itsPlayButtonImage->GetWidth() * theSizeFactorX);
-			bitmapSizeY = statAnimationButtonImages.itsPlayButtonImage->GetHeight();
+			bitmapSizeY = boost::math::iround(statAnimationButtonImages.itsPlayButtonImage->GetHeight() * theSizeFactorY);
 		}
 		relativeWidth = itsToolBox->SX(bitmapSizeX);
 		relativeHeight = itsToolBox->SY(bitmapSizeY);
@@ -849,7 +850,7 @@ NFmiRect NFmiTimeControlView::CalcVirtualTimeCloseButtonRect()
 
 NFmiRect NFmiTimeControlView::CalcAnimationButtonTopLeftRect(const NFmiRect &baseRect)
 {
-	NFmiPoint buttonRelativeSize = CalcAnimationButtonRelativeSize();
+	NFmiPoint buttonRelativeSize = CalcAnimationButtonRelativeSize(2, 2);
 	NFmiPoint buttonRelativeEdgeOffset = CalcAnimationButtonRelativeEdgeOffset(buttonRelativeSize);
 	// Sijoitetaan close-nappi oikeaa yl‰ kulmaan hieman irti reunoista
 	double leftSide = baseRect.Right() - buttonRelativeSize.X() - buttonRelativeEdgeOffset.X();
@@ -864,7 +865,7 @@ NFmiRect NFmiTimeControlView::CalcAnimationVerticalControlButtonRect(void)
 {
 	// sijoitetaan t‰m‰ nappi close -napin alle
 	NFmiRect rect = CalcAnimationCloseButtonRect();
-	NFmiPoint buttonRelativeSize = CalcAnimationButtonRelativeSize();
+	NFmiPoint buttonRelativeSize = CalcAnimationButtonRelativeSize(2, 2);
 	NFmiPoint buttonRelativeEdgeOffset = CalcAnimationButtonRelativeEdgeOffset(buttonRelativeSize);
 	NFmiPoint center = rect.Center();
 	center.Y(center.Y() + rect.Height() + buttonRelativeEdgeOffset.Y());
@@ -877,7 +878,7 @@ NFmiRect NFmiTimeControlView::CalcAnimationVerticalControlButtonRect(void)
 NFmiRect NFmiTimeControlView::CalcAnimationButtonRect(int theIndex)
 {
 	NFmiRect animRect = CalcAnimationBoxRect();
-	NFmiPoint buttonRelativeSize = CalcAnimationButtonRelativeSize();
+	NFmiPoint buttonRelativeSize = CalcAnimationButtonRelativeSize(2, 2);
 	NFmiPoint buttonRelativeEdgeOffset = CalcAnimationButtonRelativeEdgeOffset(buttonRelativeSize);
 
 	// Sijoitetaan n‰m‰ nappulat vasemapaan ala kulmaan hieman irti reunoista.

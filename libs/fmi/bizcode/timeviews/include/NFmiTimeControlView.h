@@ -154,7 +154,7 @@ protected:
 	bool AnimationButtonReleased(const NFmiPoint & thePlace,unsigned long theKey);
 	bool IsAnimationButtonPressed(void);
 	NFmiPoint CalcAnimationButtonRelativeEdgeOffset(const NFmiPoint &theButtonRelaviteSize);
-	NFmiPoint CalcAnimationButtonRelativeSize(double theSizeFactorX = 1);
+	NFmiPoint CalcAnimationButtonRelativeSize(double theSizeFactorX = 1, double theSizeFactorY = 1);
 	NFmiRect CalcAnimationVerticalControlButtonRect(void);
     NFmiRect CalcFullTimeRangeButtonRect(void);
     NFmiRect CalcAnimationCloseButtonRect(void);
