@@ -21,6 +21,7 @@
 #include "NFmiCrossSectionSystem.h"
 #include "WmsSupport/WmsSupport.h"
 #include "WmsSupport/ChangedLayers.h"
+#include "UnicodeStringConversions.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1012,7 +1013,11 @@ void CFmiParameterSelectionDlg::SetGridRow(int row, const AddParams::SingleRowIt
 {
     for(int column = 0; column < static_cast<int>(itsHeaders.size()); column++)
     {
-        itsGridCtrl.SetItemText(row, column, CA2T(::GetColumnText(row, column, theRowItem).c_str()));
+        if(column == ParameterSelectionHeaderParInfo::kItemName)
+            itsGridCtrl.SetItemText(row, column, ::convertPossibleUtf8StringToWideString(theRowItem.itemName()).c_str());
+        else
+            itsGridCtrl.SetItemText(row, column, CA2T(::GetColumnText(row, column, theRowItem).c_str()));
+
         if(column >= theFixedColumnCount)
         {
             // Laita read-only -bitti p‰‰lle

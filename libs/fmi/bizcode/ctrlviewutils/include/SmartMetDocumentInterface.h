@@ -368,6 +368,8 @@ public:
     virtual void UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged() = 0;
     virtual void OpenVisualizationsettingsDialog() = 0;
     virtual std::shared_ptr<NFmiViewSettingMacro> CurrentViewMacro() = 0;
+    virtual void ToggleVirtualTimeMode(const std::string& logMessage) = 0;
+    virtual bool VirtualTimeUsed() const = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem() = 0;

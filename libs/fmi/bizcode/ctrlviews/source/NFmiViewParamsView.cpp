@@ -329,7 +329,7 @@ bool NFmiViewParamsView::LeftDoubleClick(const NFmiPoint &thePlace, unsigned lon
 				{
 					if(drawParam->IsActive())
 					{
-						if(itsMapViewDescTopIndex == 0) // en saa tätä toimimaan oikein kuin pääkarttanäytöllä (joten estän drawParam muokkauksen muissa ikkunoissa), muissa parametri menee piiloon, enkä saa ikkunoita päivittämään ruutua oikeaan tilaan
+//						if(itsMapViewDescTopIndex == 0) // en saa tätä toimimaan oikein kuin pääkarttanäytöllä (joten estän drawParam muokkauksen muissa ikkunoissa), muissa parametri menee piiloon, enkä saa ikkunoita päivittämään ruutua oikeaan tilaan
 						{
 							NFmiDataIdent param = drawParam->Param();
                             bool macroParamInCase = (NFmiDrawParam::IsMacroParamCase(drawParam->DataType()));
@@ -406,8 +406,8 @@ bool NFmiViewParamsView::DoAfterParamModeModifications(NFmiDrawParamList *thePar
 {
     theParamList->Dirty(true);
     itsCtrlViewDocumentInterface->CheckAnimationLockedModeTimeBags(itsMapViewDescTopIndex, false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
-    auto rowIndex = GetUsedParamRowIndex();
-    itsCtrlViewDocumentInterface->MacroParamDataCache().update(itsMapViewDescTopIndex, static_cast<unsigned long>(rowIndex), *theParamList);
+	auto realRowIndex = CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
+	itsCtrlViewDocumentInterface->MacroParamDataCache().update(itsMapViewDescTopIndex, static_cast<unsigned long>(realRowIndex), *theParamList);
     itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, true);
     return true;
 }

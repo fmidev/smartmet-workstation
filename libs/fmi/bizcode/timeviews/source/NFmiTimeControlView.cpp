@@ -21,6 +21,9 @@
 #include "catlog/catlog.h"
 #include "SmartMetViewId.h"
 #include "ApplicationInterface.h"
+#include "CtrlViewWin32Functions.h"
+#include "NFmiColorSpaces.h"
+#include "NFmiVirtualTimeData.h"
 
 
 #include <gdiplus.h>
@@ -205,6 +208,7 @@ void NFmiTimeControlView::Draw(NFmiToolBox * theGTB)
 
 			((NFmiAdjustedTimeScaleView*)itsTimeView)->DrawSelectedTimes();
 			DrawResolutionChangerBox();
+			DrawVirtualTimeData();
 		}
 		else
 			DrawNoDataAvailable();
@@ -275,7 +279,7 @@ void NFmiTimeControlView::DrawAnimationBox(void)
 		buttonClipRect = buttonClipRect.Intersection(animRect);
 		itsGdiPlusGraphics->SetClip(CtrlView::Relative2GdiplusRect(itsToolBox, buttonClipRect));
 		// piirr‰ close-button
-        CtrlView::DrawAnimationButton(CalcAnimationCloseButtonRect(), statAnimationButtonImages.itsCloseButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f);
+        CtrlView::DrawAnimationButton(CalcAnimationCloseButtonRect(), statAnimationButtonImages.itsCloseButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f, true);
 
         NFmiAnimationData &animData = itsCtrlViewDocumentInterface->AnimationData(itsMapViewDescTopIndex);
 
@@ -283,18 +287,18 @@ void NFmiTimeControlView::DrawAnimationBox(void)
 		Gdiplus::Bitmap *usedPlayButtonBitmap = statAnimationButtonImages.itsPlayButtonImage;
 		if(animData.AnimationOn() == true)
 			usedPlayButtonBitmap = statAnimationButtonImages.itsPauseButtonImage;
-        CtrlView::DrawAnimationButton(CalcAnimationPlayButtonRect(), usedPlayButtonBitmap, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f);
+        CtrlView::DrawAnimationButton(CalcAnimationPlayButtonRect(), usedPlayButtonBitmap, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f, true);
 
 		// piirr‰ vertical control -button
 		Gdiplus::Bitmap *usedVerticalControlButtonBitmap = statAnimationButtonImages.itsVerticalTimeControlOnImage;
 		if(animData.ShowVerticalControl() == true)
 			usedVerticalControlButtonBitmap = statAnimationButtonImages.itsVerticalTimeControlOffImage;
-        CtrlView::DrawAnimationButton(CalcAnimationVerticalControlButtonRect(), usedVerticalControlButtonBitmap, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.9f);
+        CtrlView::DrawAnimationButton(CalcAnimationVerticalControlButtonRect(), usedVerticalControlButtonBitmap, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.9f, true);
 
 		{
 			// piirr‰ (time)delay-button
 			NFmiRect delayRect = CalcAnimationDelayButtonRect();
-            CtrlView::DrawAnimationButton(delayRect, statAnimationButtonImages.itsDelayButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f);
+            CtrlView::DrawAnimationButton(delayRect, statAnimationButtonImages.itsDelayButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f, true);
 			// piirret‰‰n napin yl‰ puolelle k‰ytetty delay aika sadasosa sekunneilla
 			NFmiColor textColor(0.f, 0.f, 0.0f);
 			std::string delayStr = NFmiValueString::GetStringWithMaxDecimalsSmartWay(animData.FrameDelayInMS()/10., 0);
@@ -304,19 +308,19 @@ void NFmiTimeControlView::DrawAnimationBox(void)
 		}
 
 		// piirr‰ runmode-button
-        CtrlView::DrawAnimationButton(CalcAnimationRunModeButtonRect(), statAnimationButtonImages.itsRepeatButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f);
+        CtrlView::DrawAnimationButton(CalcAnimationRunModeButtonRect(), statAnimationButtonImages.itsRepeatButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f, true);
 
 		// piirr‰ lockmode-button
 		NFmiRect lockModeRect(CalcAnimationLockModeButtonRect());
 		Gdiplus::Bitmap *usedLockButtonBitmap = statAnimationButtonImages.itsAnimationLockButtonImage;
 		if(animData.LockMode() == NFmiAnimationData::kFollowEarliestLastObservation)
 			usedLockButtonBitmap = statAnimationButtonImages.itsAnimationNoLockButtonImage;
-        CtrlView::DrawAnimationButton(lockModeRect, usedLockButtonBitmap, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f);
+        CtrlView::DrawAnimationButton(lockModeRect, usedLockButtonBitmap, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f, true);
 
 		{
 			// piirr‰ last frame delay factor-button
 			NFmiRect lastFrameDelayRect = CalcLastFrameDelayFactorButtonRect();
-            CtrlView::DrawAnimationButton(lastFrameDelayRect, statAnimationButtonImages.itsLastFrameDelayButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f);
+            CtrlView::DrawAnimationButton(lastFrameDelayRect, statAnimationButtonImages.itsLastFrameDelayButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f, true);
 			// piirret‰‰n napin yl‰ puolelle k‰ytetty delay kerroin
 			NFmiColor textColor(0.f, 0.f, 0.0f);
 			std::string lasframeDelayStr = NFmiStringTools::Convert<double>(animData.LastFrameDelayFactor());
@@ -325,7 +329,143 @@ void NFmiTimeControlView::DrawAnimationBox(void)
 			lastFrameDelayStrPlace.Y(lastFrameDelayStrPlace.Y() - lastFrameDelayRect.Height() * 0.7);
 			::DrawCenteredText(itsGdiPlusGraphics, textColor, itsButtonSizeInMM_y * 0.7, lasframeDelayStr, lastFrameDelayStrPlace, GetGraphicalInfo().itsPixelsPerMM_y, itsToolBox);
 		}
+		itsGdiPlusGraphics->ResetClip();
 	}
+}
+
+// Jos ollaan virtual-time moodissa piirret‰‰n seuraavaa (purpppura v‰rill‰):
+// 1. Vasempaan alakulmaaan laatikko, jossa tekstit: VT Www<br>MM.DD HH:mm
+// 2. Alaraunaa horisontaali palkki, jota voi klikata.
+// 3. Jos virtual-time n‰kyy aika-asteikolla, piirret‰‰n sen kohtaan pysty palkki tai merkki ja VT kirjaimet
+void NFmiTimeControlView::DrawVirtualTimeData()
+{
+	if(itsCtrlViewDocumentInterface->VirtualTimeUsed())
+	{
+		DrawVirtualTimeSlider();
+		DrawVirtualTimeDataBox();
+		// Close buttonin piirto pit‰‰ olla DrawVirtualTimeDataBox metodin kutsun per‰ss‰!
+		CtrlView::DrawAnimationButton(CalcVirtualTimeCloseButtonRect(), statAnimationButtonImages.itsCloseButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f);
+	}
+}
+
+void NFmiTimeControlView::DrawVirtualTimeDataBox()
+{
+	auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+
+	Gdiplus::StringFormat stringFormat;
+	stringFormat.SetAlignment(Gdiplus::StringAlignmentCenter);
+	stringFormat.SetLineAlignment(Gdiplus::StringAlignmentNear);
+
+	const auto& virtualTime = itsCtrlViewDocumentInterface->VirtualTime();
+	Gdiplus::REAL fontSize = 17;
+	Gdiplus::Font aFont(L"Arial", fontSize, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
+	auto str1 = virtualTime.ToStr("VT HH:mm", kEnglish);
+	std::wstring wString1 = CtrlView::StringToWString(std::string(str1));
+	auto str2 = virtualTime.ToStr("YYYY.MM.DD", kEnglish);
+	std::wstring wString2 = CtrlView::StringToWString(std::string(str2));
+
+	Gdiplus::RectF boundingBox1;
+	itsGdiPlusGraphics->MeasureString(wString1.c_str(), INT(wString1.size()), &aFont, Gdiplus::PointF(0, 0), &stringFormat, &boundingBox1);
+	Gdiplus::RectF boundingBox2;
+	itsGdiPlusGraphics->MeasureString(wString2.c_str(), INT(wString2.size()), &aFont, Gdiplus::PointF(0, 0), &stringFormat, &boundingBox2);
+
+	float penThicknessInMM = 0.5f;
+	auto [relativePenThickness, penThicknessInPixels] = ConvertMilliMetersToRelativeAndPixels(penThicknessInMM, false);
+
+	// HUOM! virtualTimeBox on pikseli maailmassa
+	NFmiRect virtualTimeBox;
+	virtualTimeBox.Size(NFmiPoint(FmiMax(boundingBox1.Width, boundingBox2.Width) * 1.1, (boundingBox1.Height + boundingBox2.Height) * 1.f));
+	auto usedRelativeBaseRect = itsTimeView->GetRelativeRect();
+	auto newPlace = usedRelativeBaseRect.Place();
+	newPlace.Y(newPlace.Y() - itsVirtualTimeSliderRect.Height() - relativePenThickness);
+	usedRelativeBaseRect.Place(newPlace);
+	CtrlView::PlaceBoxIntoFrame(virtualTimeBox, usedRelativeBaseRect, itsToolBox, kBottomRight);
+
+	const auto& baseColor = NFmiVirtualTimeData::virtualTimeBaseColor;
+	NFmiColor fillColor = NFmiColorSpaces::GetBrighterColor(baseColor, 50.);
+	fillColor.Alpha(0.25f);
+	Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(fillColor));
+	Gdiplus::GraphicsPath aPath;
+	Gdiplus::Rect gdiRect(static_cast<INT>(virtualTimeBox.Left()), static_cast<INT>(virtualTimeBox.Top()), static_cast<INT>(virtualTimeBox.Width()), static_cast<INT>(virtualTimeBox.Height()));
+	// Otetaan t‰ss‰ vaiheessa talteen VT-laatikon suhteellinen rect
+	itsVirtualTimeBoxRect = CtrlView::GdiplusRect2Relative(itsToolBox, gdiRect);
+	aPath.AddRectangle(gdiRect);
+	aPath.CloseFigure();
+	itsGdiPlusGraphics->FillPath(&aBrushBox, &aPath);
+
+	Gdiplus::Pen penBox(CtrlView::NFmiColor2GdiplusColor(NFmiColor()), static_cast<Gdiplus::REAL>(penThicknessInPixels));
+	itsGdiPlusGraphics->DrawPath(&penBox, &aPath);
+
+	NFmiPoint center = virtualTimeBox.Center();
+	NFmiPoint topleft = virtualTimeBox.TopLeft();
+
+	Gdiplus::PointF timeString1OffSet(static_cast<Gdiplus::REAL>(center.X()), static_cast<Gdiplus::REAL>(topleft.Y())); // t‰m‰ offset on suhteellinen laskettuun aika-string boxiin
+	Gdiplus::PointF timeString2OffSet(timeString1OffSet);
+	timeString2OffSet.Y += fontSize;
+
+	Gdiplus::SolidBrush aBrushText1(CtrlView::NFmiColor2GdiplusColor(baseColor));
+	itsGdiPlusGraphics->DrawString(wString1.c_str(), static_cast<INT>(wString1.size()), &aFont, timeString1OffSet, &stringFormat, &aBrushText1);
+
+	Gdiplus::SolidBrush aBrushText2(CtrlView::NFmiColor2GdiplusColor(baseColor));
+	itsGdiPlusGraphics->DrawString(wString2.c_str(), static_cast<INT>(wString2.size()), &aFont, timeString2OffSet, &stringFormat, &aBrushText2);
+}
+
+std::pair<double, int> NFmiTimeControlView::ConvertMilliMetersToRelativeAndPixels(double valueInMM, bool doDirectionX)
+{
+	auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+	auto valueInPixels = boost::math::iround(valueInMM * (doDirectionX ? graphicalInfo.itsPixelsPerMM_x : graphicalInfo.itsPixelsPerMM_y));
+	auto relativeValue = doDirectionX ? itsToolBox->SX(valueInPixels) : itsToolBox->SY(valueInPixels);
+	return std::make_pair(relativeValue, valueInPixels);
+}
+
+void NFmiTimeControlView::DrawVirtualTimeSlider()
+{
+	auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+	float sliderRectHeightInMM = 2.2f;
+	auto [relativeHeight, heigthInPixels] = ConvertMilliMetersToRelativeAndPixels(sliderRectHeightInMM, false);
+
+	itsVirtualTimeSliderRect = itsTimeView->GetRelativeRect();
+	float penThicknessInMM = 0.6f;
+	auto [relativePenThickness, penThicknessInPixels] = ConvertMilliMetersToRelativeAndPixels(penThicknessInMM, false);
+	itsVirtualTimeSliderRect.Top(itsVirtualTimeSliderRect.Bottom() - relativeHeight - (relativePenThickness / 2.));
+	itsVirtualTimeSliderRect.Height(relativeHeight);
+	auto rectInPixels = CtrlView::Relative2GdiplusRect(itsToolBox, itsVirtualTimeSliderRect);
+
+	const auto& baseColor = NFmiVirtualTimeData::virtualTimeBaseColor;
+	NFmiColor fillColor = NFmiColorSpaces::GetBrighterColor(baseColor, 45.);
+	fillColor.Alpha(0.35f);
+	CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, baseColor, fillColor, true, true, static_cast<float>(penThicknessInPixels));
+	DrawVirtualTimeMarker();
+}
+
+// Piirret‰‰n k‰rjell‰‰n seisova kolmio virtual-timen kohdalle,
+// slider-laatikon p‰‰lle.
+void NFmiTimeControlView::DrawVirtualTimeMarker()
+{
+	auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
+	float markerHeightInMM = 6.f;
+	auto [relativeHeight, heigthInPixels] = ConvertMilliMetersToRelativeAndPixels(markerHeightInMM, false);
+
+	const auto& baseColor = NFmiVirtualTimeData::virtualTimeBaseColor;
+	Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(baseColor));
+	auto timePointX = Time2Value(itsCtrlViewDocumentInterface->VirtualTime());
+	// p1 on k‰rki kolmion piste, joka on sliderin yl‰osassa
+	NFmiPoint p1(timePointX, itsVirtualTimeSliderRect.Top());
+	NFmiPoint p2(timePointX - (relativeHeight / 3.), itsVirtualTimeSliderRect.Top() - relativeHeight);
+	NFmiPoint p3(timePointX + (relativeHeight / 3.), itsVirtualTimeSliderRect.Top() - relativeHeight);
+	auto gdiplusP1 = CtrlView::Relative2GdiplusPoint(itsToolBox, p1);
+	auto gdiplusP2 = CtrlView::Relative2GdiplusPoint(itsToolBox, p2);
+	auto gdiplusP3 = CtrlView::Relative2GdiplusPoint(itsToolBox, p3);
+	Gdiplus::GraphicsPath aPath;
+	aPath.AddLine(gdiplusP1, gdiplusP2);
+	aPath.AddLine(gdiplusP2, gdiplusP3);
+	aPath.CloseFigure();
+	itsGdiPlusGraphics->FillPath(&aBrushBox, &aPath);
+
+	float penThicknessInMM = 0.3f;
+	auto [relativePenThickness, penThicknessInPixels] = ConvertMilliMetersToRelativeAndPixels(penThicknessInMM, false);
+	Gdiplus::Pen penBox(CtrlView::NFmiColor2GdiplusColor(NFmiColor()), static_cast<Gdiplus::REAL>(penThicknessInPixels));
+	itsGdiPlusGraphics->DrawPath(&penBox, &aPath);
 }
 
 bool NFmiTimeControlView::IsTimeFiltersDrawn(void)
@@ -655,18 +795,19 @@ void NFmiTimeControlView::ClearAllMouseCaptureFlags(void)
 }
 
 // theSizeFactorX -parametri on pika viritys, jotta saisin FullTimeRange-nappulan toimimaan, ja se on 2x leve‰mpi kuin normaalit nappulat (32 x 16 pikseli‰)
-NFmiPoint NFmiTimeControlView::CalcAnimationButtonRelativeSize(double theSizeFactorX)
+// theSizeFactorY -parametri on pika viritys, jotta saisin tehty‰ nappuloista tuplakokoisia 
+NFmiPoint NFmiTimeControlView::CalcAnimationButtonRelativeSize(double theSizeFactorX, double theSizeFactorY)
 {
-    double relativeWidth = itsToolBox->SX(boost::math::iround(theSizeFactorX * itsButtonSizeInMM_x * itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x));
-    double relativeHeight = itsToolBox->SY(boost::math::iround(itsButtonSizeInMM_y * GetGraphicalInfo().itsPixelsPerMM_y));
+    double relativeWidth = itsToolBox->SX(boost::math::iround(theSizeFactorX * itsButtonSizeInMM_x * GetGraphicalInfo().itsPixelsPerMM_x));
+    double relativeHeight = itsToolBox->SY(boost::math::iround(theSizeFactorY * itsButtonSizeInMM_y * GetGraphicalInfo().itsPixelsPerMM_y));
 	if(itsCtrlViewDocumentInterface->Printing() == false)
 	{
         long bitmapSizeX = boost::math::iround(16 * theSizeFactorX);
-		long bitmapSizeY = 16;
+		long bitmapSizeY = boost::math::iround(16 * theSizeFactorY);
 		if(statAnimationButtonImages.itsPlayButtonImage)
 		{
             bitmapSizeX = boost::math::iround(statAnimationButtonImages.itsPlayButtonImage->GetWidth() * theSizeFactorX);
-			bitmapSizeY = statAnimationButtonImages.itsPlayButtonImage->GetHeight();
+			bitmapSizeY = boost::math::iround(statAnimationButtonImages.itsPlayButtonImage->GetHeight() * theSizeFactorY);
 		}
 		relativeWidth = itsToolBox->SX(bitmapSizeX);
 		relativeHeight = itsToolBox->SY(bitmapSizeY);
@@ -697,16 +838,25 @@ NFmiRect NFmiTimeControlView::CalcFullTimeRangeButtonRect(void)
     return closeRect;
 }
 
-NFmiRect NFmiTimeControlView::CalcAnimationCloseButtonRect(void)
+NFmiRect NFmiTimeControlView::CalcAnimationCloseButtonRect()
 {
-	NFmiRect animRect = CalcAnimationBoxRect();
-	NFmiPoint buttonRelativeSize = CalcAnimationButtonRelativeSize();
+	return CalcAnimationButtonTopLeftRect(CalcAnimationBoxRect());
+}
+
+NFmiRect NFmiTimeControlView::CalcVirtualTimeCloseButtonRect()
+{
+	return CalcAnimationButtonTopLeftRect(itsVirtualTimeBoxRect);
+}
+
+NFmiRect NFmiTimeControlView::CalcAnimationButtonTopLeftRect(const NFmiRect &baseRect)
+{
+	NFmiPoint buttonRelativeSize = CalcAnimationButtonRelativeSize(2, 2);
 	NFmiPoint buttonRelativeEdgeOffset = CalcAnimationButtonRelativeEdgeOffset(buttonRelativeSize);
 	// Sijoitetaan close-nappi oikeaa yl‰ kulmaan hieman irti reunoista
-	double leftSide = animRect.Right() - buttonRelativeSize.X() - buttonRelativeEdgeOffset.X();
-	double rightside = animRect.Right() - buttonRelativeEdgeOffset.X();
-	double topSide = animRect.Top() + buttonRelativeEdgeOffset.Y();
-	double bottomSide = animRect.Top() + buttonRelativeSize.Y() + buttonRelativeEdgeOffset.Y();
+	double leftSide = baseRect.Right() - buttonRelativeSize.X() - buttonRelativeEdgeOffset.X();
+	double rightside = baseRect.Right() - buttonRelativeEdgeOffset.X();
+	double topSide = baseRect.Top() + buttonRelativeEdgeOffset.Y();
+	double bottomSide = baseRect.Top() + buttonRelativeSize.Y() + buttonRelativeEdgeOffset.Y();
 	NFmiRect closeRect(leftSide, topSide, rightside, bottomSide);
 	return closeRect;
 }
@@ -715,7 +865,7 @@ NFmiRect NFmiTimeControlView::CalcAnimationVerticalControlButtonRect(void)
 {
 	// sijoitetaan t‰m‰ nappi close -napin alle
 	NFmiRect rect = CalcAnimationCloseButtonRect();
-	NFmiPoint buttonRelativeSize = CalcAnimationButtonRelativeSize();
+	NFmiPoint buttonRelativeSize = CalcAnimationButtonRelativeSize(2, 2);
 	NFmiPoint buttonRelativeEdgeOffset = CalcAnimationButtonRelativeEdgeOffset(buttonRelativeSize);
 	NFmiPoint center = rect.Center();
 	center.Y(center.Y() + rect.Height() + buttonRelativeEdgeOffset.Y());
@@ -728,7 +878,7 @@ NFmiRect NFmiTimeControlView::CalcAnimationVerticalControlButtonRect(void)
 NFmiRect NFmiTimeControlView::CalcAnimationButtonRect(int theIndex)
 {
 	NFmiRect animRect = CalcAnimationBoxRect();
-	NFmiPoint buttonRelativeSize = CalcAnimationButtonRelativeSize();
+	NFmiPoint buttonRelativeSize = CalcAnimationButtonRelativeSize(2, 2);
 	NFmiPoint buttonRelativeEdgeOffset = CalcAnimationButtonRelativeEdgeOffset(buttonRelativeSize);
 
 	// Sijoitetaan n‰m‰ nappulat vasemapaan ala kulmaan hieman irti reunoista.
@@ -846,6 +996,52 @@ bool NFmiTimeControlView::AnimationButtonReleased(const NFmiPoint & thePlace,uns
 		return false;
 }
 
+bool NFmiTimeControlView::HandlePossibleVirtualTimeSet(const NFmiPoint& thePlace, unsigned long theKey)
+{
+	if(!itsCtrlViewDocumentInterface->VirtualTimeUsed() || !itsVirtualTimeSliderRect.IsInside(thePlace))
+	{
+		return false;
+	}
+
+	auto pointedTime = itsTimeView->GetTime(thePlace);
+	itsCtrlViewDocumentInterface->VirtualTime(pointedTime);
+	return true;
+}
+
+bool NFmiTimeControlView::HandlePossibleVirtualTimeBoxCloseButtonClick(const NFmiPoint& thePlace, unsigned long theKey)
+{
+	if(!itsCtrlViewDocumentInterface->VirtualTimeUsed() || !CalcVirtualTimeCloseButtonRect().IsInside(thePlace))
+	{
+		return false;
+	}
+
+	itsCtrlViewDocumentInterface->ToggleVirtualTimeMode("Virtual-Time mode closed by pressing Close button inside Virtual-Time-box in time-control-view");
+	return true;
+}
+
+// Tiettyj‰ hiiren klikkauksia halutaan tehd‰ monessa kohtaa (4) NFmiTimeControlView::LeftButtonUp 
+// metodissa, siksi ne on niputettu t‰h‰n yhteen kutsuun.
+bool NFmiTimeControlView::DoPrimaryLeftButtonUpChecks(const NFmiPoint& thePlace, unsigned long theKey)
+{
+	if(HandlePossibleVirtualTimeSet(thePlace, theKey))
+	{
+		return true;
+	}
+
+	if(HandlePossibleVirtualTimeBoxCloseButtonClick(thePlace, theKey))
+	{
+		return true;
+	}
+
+	if(itsCtrlViewDocumentInterface->SetDataToPreviousTime(itsMapViewDescTopIndex))
+	{
+		itsTimeBag->SetCurrent(itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex));
+		return true;
+	}
+	
+	return false;
+}
+
 bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long theKey)
 {
 	bool status = false;
@@ -856,11 +1052,13 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 	// T‰st‰ seurasi, ett‰ jos ei ole merkint‰‰ onko hiiri 'kaapattu', mutta hiiri on aikakontrolli-ikkunan p‰‰ll‰
 	// tehd‰‰n kuitenkin hyppy edelliseen aikaan. Muuten taaksep‰in ajassa klikkailu ei toimi kuten
 	// ennen n‰it‰ Mirwasta otettuja aikakontrolli hiirenk‰sittely uudistuksia.
-    if(!IsMouseCaptured() && !CalcFullTimeRangeButtonRect().IsInside(thePlace))
+	auto isMouseCaptured = IsMouseCaptured();
+	auto isInsideFullTimeRangeButtonRect = CalcFullTimeRangeButtonRect().IsInside(thePlace);
+    if(!isMouseCaptured && !isInsideFullTimeRangeButtonRect)
 	{
         if(IsIn(thePlace))
-        {	// eli jos hiiren napista on p‰‰stetty irti (vaikka sit‰ ei oltu otettu kiinni) ja kursori on aikaikkunan p‰‰ll‰, siirret‰‰n aikaa taaksep‰in
-
+        {	
+			// eli jos hiiren napista on p‰‰stetty irti (vaikka sit‰ ei oltu otettu kiinni) ja kursori on aikaikkunan p‰‰ll‰, siirret‰‰n aikaa taaksep‰in
             if((ctrlKeyDown) && (theKey & kShiftKey))
             {
                 if(itsTimeBag->FindNearestTime(itsTimeView->GetTime(thePlace), kCenter, itsTimeBag->Resolution()))
@@ -876,12 +1074,11 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
                 ChangeResolution(true, ctrlKeyDown);
                 status = true;
             }
-            else if(itsCtrlViewDocumentInterface->SetDataToPreviousTime(itsMapViewDescTopIndex))
-            {
-                itsTimeBag->SetCurrent(itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex));
-                status = true;
-            }
-        }
+			else if(DoPrimaryLeftButtonUpChecks(thePlace, theKey))
+			{
+				status = true;
+			}
+		}
         else
             status = false; // jos hiirt‰ ei oltu klikattu pohjaan aikaikkunassa, eik‰ olla aikakontrolliikkunassa, ei tehd‰ mit‰‰n
 	}
@@ -903,8 +1100,10 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 				double xDiff = thePlace.X() - itsLeftButtonDownMousePosition.X();
 				if(::fabs(xDiff) < 0.001)
 				{
-					if(itsCtrlViewDocumentInterface->SetDataToPreviousTime(itsMapViewDescTopIndex))
-						itsTimeBag->SetCurrent(itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex));
+					if(DoPrimaryLeftButtonUpChecks(thePlace, theKey))
+					{
+						status = true;
+					}
 				}
 				else
 				{
@@ -925,8 +1124,7 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 				double xDiff = thePlace.X() - itsLeftButtonDownMousePosition.X();
 				if(::fabs(xDiff) < 0.001)
 				{
-					if(itsCtrlViewDocumentInterface->SetDataToPreviousTime(itsMapViewDescTopIndex))
-						itsTimeBag->SetCurrent(itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex));
+					DoPrimaryLeftButtonUpChecks(thePlace, theKey);
 				}
 				else
 				{
@@ -939,7 +1137,7 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 		if(status == false)
 		{
 			// jos hiirt‰ ei oltu raahattu, tehd‰‰n vain jotain seuraavista
-            if(CalcFullTimeRangeButtonRect().IsInside(thePlace))
+            if(isInsideFullTimeRangeButtonRect)
             {
                 itsCtrlViewDocumentInterface->ResetTimeFilterTimes();
                 ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(g_EditedDataTimeRangeChangedUpdateViewIdMask);
@@ -962,9 +1160,8 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 				{ // jos klikkaus alas tapahtui animaatio boxissa, ja sit‰ on raahattu, eik‰ oltu painettu mit‰‰n nappulaa
 					status = true;
 				}
-				else if(itsCtrlViewDocumentInterface->SetDataToPreviousTime(itsMapViewDescTopIndex))
+				else if(DoPrimaryLeftButtonUpChecks(thePlace, theKey))
 				{
-					itsTimeBag->SetCurrent(itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex));
 					status = true;
 				}
 			}
@@ -1601,6 +1798,10 @@ std::string NFmiTimeControlView::ComposeToolTipText(const NFmiPoint& theRelative
 	try
 	{
 		std::string str;
+
+		// Kaikissa tapauksissa jos Virtual-Time moodi p‰‰ll‰, laitetaan tietoa siit‰ heti ensimm‰iseksi
+		str += MakePossibleVirtualTimeTooltipText();
+
         if(CalcFullTimeRangeButtonRect().IsInside(theRelativePoint))
         { // Animaatio ikkuna ei siis saa olla p‰‰ll‰ ja jos ollaan FullTimeRange -napin sis‰ll‰
             str += "Set full editing time range for edited data";

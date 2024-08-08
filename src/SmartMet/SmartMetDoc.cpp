@@ -81,7 +81,7 @@
 #include "CloneBitmap.h"
 #include "NFmiValueString.h"
 #include "NFmiApplicationWinRegistry.h"
-#include "FmiQueryDataCacheLoaderThread.h"
+#include "QueryDataToLocalCacheLoaderThread.h"
 #include "FmiBetaProductTabControlDialog.h"
 #include "FmiWin32TemplateHelpers.h"
 #include "FmiLogViewer.h"
@@ -320,6 +320,9 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
 		ON_COMMAND(ID_ACCELERATOR_MOVE_TIME_BOX_LOCATION, &CSmartMetDoc::OnAcceleratorMoveTimeBoxLocation)
 		ON_COMMAND(ID_EDIT_GENERATE_NEW_WMS_SYSTEM, &CSmartMetDoc::OnEditGenerateNewWmsSystem)
 		ON_UPDATE_COMMAND_UI(ID_EDIT_GENERATE_NEW_WMS_SYSTEM, &CSmartMetDoc::OnUpdateEditGenerateNewWmsSystem)
+		ON_COMMAND(ID_ACCELERATOR_TOGGLE_VIRTUAL_TIME_MODE, &CSmartMetDoc::OnAcceleratorToggleVirtualTimeMode)
+		ON_COMMAND(ID_EDIT_VIRTUAL_TIME_MODE, &CSmartMetDoc::OnEditVirtualTimeMode)
+		ON_UPDATE_COMMAND_UI(ID_EDIT_VIRTUAL_TIME_MODE, &CSmartMetDoc::OnUpdateEditVirtualTimeMode)
 		END_MESSAGE_MAP()
 
 BEGIN_DISPATCH_MAP(CSmartMetDoc, CDocument)
@@ -794,14 +797,16 @@ void CSmartMetDoc::OnMenuitemOptiot()
 	if(dlg.DoModal() == IDOK)
 	{
 		itsData->StoreOptionsData();
-		CFmiQueryDataCacheLoaderThread::LoadDataAtStartUp(itsData->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().LoadDataAtStartUp());
-		CFmiQueryDataCacheLoaderThread::AutoLoadNewCacheDataMode(itsData->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData());
+		auto loadDataAtStartUp = itsData->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().LoadDataAtStartUp();
+		auto autoLoadNewCacheDataMode = itsData->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData();
+		auto* helpDataInfoSystem = itsData->HelpDataInfoSystem();
+		QueryDataToLocalCacheLoaderThread::UpdateSettings(*helpDataInfoSystem, loadDataAtStartUp, autoLoadNewCacheDataMode);
 		itsData->GetCombinedMapHandler()->mapViewDirty(itsMapViewDescTopIndex, true, true, true, false, false, false);
-		bool cacheSettingChanged = oldDoCacheSetting != itsData->HelpDataInfoSystem()->UseQueryDataCache();
+		bool cacheSettingChanged = oldDoCacheSetting != helpDataInfoSystem->UseQueryDataCache();
 		if(cacheSettingChanged)
 		{
-			CFmiCombineDataThread::InitCombineDataInfos(*itsData->HelpDataInfoSystem(), itsData->ApplicationDataBase().GetDecodedApplicationDirectory()); // kun cache asetukset muuttuvat, pitää yhdistelmä data asetuksia pävittää
-			if(itsData->HelpDataInfoSystem()->UseQueryDataCache())
+			CFmiCombineDataThread::InitCombineDataInfos(*helpDataInfoSystem, itsData->ApplicationDataBase().GetDecodedApplicationDirectory()); // kun cache asetukset muuttuvat, pitää yhdistelmä data asetuksia pävittää
+			if(helpDataInfoSystem->UseQueryDataCache())
 				((CMainFrame*)AfxGetMainWnd())->StartQDataCacheThreads();
 			else
 				((CMainFrame*)AfxGetMainWnd())->StopQDataCacheThreads();
@@ -1320,7 +1325,8 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string &reasonForUpdate, 
                 ::UpdateModalessDialog(itsCrossSectionDlg);
                 ::UpdateModalessDialog(itsSynopPlotSettingsDlg);
                 ::UpdateModalessDialog(itsSmartToolDlg);
-                ::UpdateModalessDialog(itsSynopDataGridViewDlg);
+				MakeNextUpdateOnSynopDataGridViewDlgForced();
+				::UpdateModalessDialog(itsSynopDataGridViewDlg);
                 ::UpdateModalessDialog(itsTrajectoryDlg);
                 ::UpdateModalessDialog(itsWarningCenterDlg);
                 ::UpdateModalessDialog(itsWindTableDlg);
@@ -1392,8 +1398,11 @@ void CSmartMetDoc::UpdateAllViewsAndDialogs(const std::string& reasonForUpdate, 
             ::UpdateModalessDialog(itsSynopPlotSettingsDlg);
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::SmartToolDlg))
             ::UpdateModalessDialog(itsSmartToolDlg);
-        if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::StationDataTableView))
-            ::UpdateModalessDialog(itsSynopDataGridViewDlg);
+		if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::StationDataTableView))
+		{
+			MakeNextUpdateOnSynopDataGridViewDlgForced();
+			::UpdateModalessDialog(itsSynopDataGridViewDlg);
+		}
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::TrajectoryView))
             ::UpdateModalessDialog(itsTrajectoryDlg);
         if(SmartMetViewIdFlagCheck(updatedViewsFlag, SmartMetViewId::WarningCenterDlg))
@@ -3833,4 +3842,23 @@ void CSmartMetDoc::OnUpdateEditGenerateNewWmsSystem(CCmdUI* pCmdUI)
 	else
 		pCmdUI->Enable(FALSE);
 #endif // DISABLE_CPPRESTSDK
+}
+
+
+void CSmartMetDoc::OnAcceleratorToggleVirtualTimeMode()
+{
+	std::string viewName = "Main-map-view";
+	CFmiWin32TemplateHelpers::OnAcceleratorToggleVirtualTimeMode(itsData, viewName);
+}
+
+
+void CSmartMetDoc::OnEditVirtualTimeMode()
+{
+	OnAcceleratorToggleVirtualTimeMode();
+}
+
+
+void CSmartMetDoc::OnUpdateEditVirtualTimeMode(CCmdUI* pCmdUI)
+{
+	pCmdUI->SetCheck(itsData->VirtualTimeUsed());
 }

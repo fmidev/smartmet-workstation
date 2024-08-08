@@ -21,6 +21,17 @@
 #include <regex>
 #include <numeric>
 
+#include <iostream>
+#include <filesystem>
+#include <chrono>
+#include <iomanip>
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 namespace CtrlViewUtils
 {
     NFmiPoint CalcTimeScaleFontSizeInPixels(double thePixelsPerMMinX)
@@ -811,6 +822,54 @@ namespace CtrlViewUtils
     {
         fs::path path(filePath);
         return path.parent_path().string();
+    }
+
+    void CleanDirectory(const std::string& theDirectory, double theKeepHours, std::list<std::string>* deletedFilesOut)
+    {
+        try 
+        {
+            fs::path dirPath = theDirectory;
+            long long ageLimitInSeconds = boost::math::iround(theKeepHours * 3600.);
+            // Get current time
+            auto now = fs::file_time_type::clock::now();
+
+            // Iterate over directory
+            for(const auto& entry : fs::directory_iterator(dirPath)) 
+            {
+                // Check if it's a regular file
+                if(entry.is_regular_file()) 
+                {
+                    try
+                    {
+                        // Get the last write time of the file
+                        auto fileTime = fs::last_write_time(entry);
+
+                        auto ageInSeconds = std::chrono::duration_cast<std::chrono::seconds>(now - fileTime).count();
+
+                        // If the file is older than the age limit, delete it
+                        if(ageInSeconds > ageLimitInSeconds)
+                        {
+                            fs::remove(entry);
+                            if(deletedFilesOut)
+                            {
+                                deletedFilesOut->push_back(entry.path().string());
+                            }
+//                            CatLog::logMessage(std::string("CleanDirectory delete file: ") + entry.path().string(), CatLog::Severity::Debug, CatLog::Category::Operational);
+                        }
+                    }
+                    catch(...)
+                    {
+                        // Ei tehd‰ mit‰‰n, estet‰‰n vain loopin lopetus.
+                        // Esim. kun yritet‰‰n deletoida vanhaa, mutta Smartmetin k‰ytˆss‰ (= ei voi deletoida) olevaa tiedostoa, lent‰‰ poikkeus ja se on ihan ok
+                    }
+                }
+            }
+        }
+        catch(...) 
+        {
+            // Ei tehd‰ mit‰‰n, estet‰‰n vain funktiosta ulostulo poikkeuksella.
+            // Esim. kun yritet‰‰n puhdistaa hakemistoa, jota ei ole, t‰llˆin lent‰‰ poikkeus ja se on ihan ok
+        }
     }
 
 } // namespace CtrlViewUtils

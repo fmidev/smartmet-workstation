@@ -3,6 +3,12 @@
 #include "NFmiColor.h"
 #include "ColorStringFunctions.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 // ***************************************************
 // ******** NFmiLedLightStatus starts ****************
 // ***************************************************
@@ -116,6 +122,12 @@ void NFmiLedLightStatus::ledColor(NFmiLedColor newColor)
 // ***************************************************
 // ****** NFmiLedLightStatusSystem starts ************
 // ***************************************************
+
+bool NFmiLedLightStatusSystem::programWantsToStop_ = false;
+void NFmiLedLightStatusSystem::ProgramStopsNow()
+{
+	programWantsToStop_ = true;
+}
 
 NFmiLedLightStatusSystem* NFmiLedLightStatusSystem::staticInstance_ = nullptr;
 
@@ -272,6 +284,7 @@ bool NFmiLedLightStatusSystem::ClearChannelReport(NFmiLedChannel ledChannel, con
 				{
 					iter = wantedChannelReport.erase(iter);
 					removedMessage = true;
+					break; // Turha jatkaa poiston jälkeen, on myös kaatunut iteraattorin juoksutukseen
 				}
 			}
 		} // mutex-lukon purku
@@ -472,5 +485,9 @@ NFmiLedLightStatusBlockReporter::NFmiLedLightStatusBlockReporter(NFmiLedChannel 
 
 NFmiLedLightStatusBlockReporter::~NFmiLedLightStatusBlockReporter()
 {
-	NFmiLedLightStatusSystem::StopReportToChannelFromThread(usedLedChannel_, reporterName_);
+	// Eli StopReportToChannelFromThread kutsu tehdään vain jos ohjelmaa ei ole vielä haluttu jo sulkea!
+	if(!NFmiLedLightStatusSystem::ProgramWantsToStop())
+	{
+		NFmiLedLightStatusSystem::StopReportToChannelFromThread(usedLedChannel_, reporterName_);
+	}
 }

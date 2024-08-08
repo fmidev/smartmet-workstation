@@ -54,6 +54,27 @@ namespace
         else // Normipiirto (fillattu laatikko) on prioriteetill‰ 3.
             dc.FillSolidRect(&frameRect, drawingData.color_);
     }
+
+    NFmiPoint GetWantedRelativePlace(const NFmiRect& theViewFrameRelative, FmiDirection theWantedLocation)
+    {
+        switch(theWantedLocation)
+        {
+        case kBottomLeft:
+            return theViewFrameRelative.BottomLeft();
+        case kBottomRight:
+            return theViewFrameRelative.BottomRight();
+        case kTopLeft:
+            return theViewFrameRelative.TopLeft();
+        case kTopRight:
+            return theViewFrameRelative.TopRight();
+        case kBottomCenter:
+            return NFmiPoint(theViewFrameRelative.Center().X(), theViewFrameRelative.Bottom());
+        case kTopCenter:
+            return NFmiPoint(theViewFrameRelative.Center().X(), theViewFrameRelative.Top());
+        default:
+            return theViewFrameRelative.BottomLeft();
+        }
+    }
 }
 
 NFmiColorButtonDrawingData::NFmiColorButtonDrawingData(CWnd* view, COLORREF& color, CBitmap** bitmap, CRect& rect, CButton& button, const std::pair<bool, bool>& colorOptions)
@@ -287,6 +308,30 @@ namespace CtrlView
     bool HandleUrlMouseActions(SmartMetOpenUrlAction currentOpenUrlAction)
     {
         return (currentOpenUrlAction != SmartMetOpenUrlAction::None);
+    }
+
+    // Sijoita annettu theObjectBoxAbsolute (param/time laatikko) haluttuun kohtaan ikkunaa (theViewFrameRelative).
+    void PlaceBoxIntoFrame(NFmiRect& theObjectBoxAbsolute, const NFmiRect& theViewFrameRelative, NFmiToolBox* theToolbox, FmiDirection theWantedLocation)
+    {
+        NFmiPoint relativePlace = ::GetWantedRelativePlace(theViewFrameRelative, theWantedLocation);
+
+        CPoint absolutePlace;
+        theToolbox->ConvertPoint(relativePlace, absolutePlace);
+        theObjectBoxAbsolute.Place(NFmiPoint(absolutePlace.x, absolutePlace.y));
+
+        // Riippuen halutusta paikasta, pit‰‰ absoluuttista laatikkoa viel‰ s‰‰t‰‰ tietyiss‰ tilanteissa
+
+        // 1. Jos ollaan alareunassa, pit‰‰ laatikkoa nostaa itsens‰ korkeuden verran
+        if(theWantedLocation == kBottomLeft || theWantedLocation == kBottomRight || theWantedLocation == kBottomCenter)
+            theObjectBoxAbsolute.Place(NFmiPoint(theObjectBoxAbsolute.Left(), theObjectBoxAbsolute.Top() - theObjectBoxAbsolute.Height()));
+
+        // 2. Jos ollaan oikeassa reunassa, pit‰‰ laatikkoa siirt‰‰ vasemmalle itsens‰ leveyden verran
+        if(theWantedLocation == kBottomRight || theWantedLocation == kTopRight)
+            theObjectBoxAbsolute.Place(NFmiPoint(theObjectBoxAbsolute.Left() - theObjectBoxAbsolute.Width(), theObjectBoxAbsolute.Top()));
+
+        // 3. Jos ollaan vaaka suunnassa keskell‰, pit‰‰ laatikon keskipiste siirt‰‰ x-suunnassa puoli laatikon leveytt‰ vasemmalle
+        if(theWantedLocation == kBottomCenter || theWantedLocation == kTopCenter)
+            theObjectBoxAbsolute.Place(NFmiPoint(theObjectBoxAbsolute.Left() - (theObjectBoxAbsolute.Width() / 2.), theObjectBoxAbsolute.Top()));
     }
 
 } // namespace CtrlView

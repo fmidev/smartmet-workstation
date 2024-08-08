@@ -92,6 +92,7 @@ bool NFmiInfoOrganizer::AddData(NFmiQueryData *theData,
                                 int theUndoLevel,
                                 int theMaxLatestDataCount,
                                 int theModelRunTimeGap,
+                                int theFakeProducerId,
                                 bool &fDataWasDeletedOut,
                                 bool reloadCaseStudyData)
 {
@@ -113,6 +114,7 @@ bool NFmiInfoOrganizer::AddData(NFmiQueryData *theData,
                   theData, theDataType, theDataFileName, theDataFilePattern, gMarkLoadedDataAsOld),
               theMaxLatestDataCount,
               theModelRunTimeGap,
+              theFakeProducerId,
               fDataWasDeletedOut,
               reloadCaseStudyData);
     }
@@ -175,6 +177,7 @@ void NFmiInfoOrganizer::UpdateEditedDataCopy()
 bool NFmiInfoOrganizer::Add(NFmiOwnerInfo *theInfo,
                             int theMaxLatestDataCount,
                             int theModelRunTimeGap,
+                            int theFakeProducerId,
                             bool &fDataWasDeletedOut,
                             bool reloadCaseStudyData)
 {
@@ -200,8 +203,9 @@ bool NFmiInfoOrganizer::Add(NFmiOwnerInfo *theInfo,
                              new NFmiQueryDataSetKeeper(dataPtr,
                                                         theMaxLatestDataCount,
                                                         theModelRunTimeGap,
-                                                        kQueryDataKeepInMemoryTimeInMinutes,
-                                                        reloadCaseStudyData))));
+                                                        theFakeProducerId,
+                                                        reloadCaseStudyData,
+                                                        kQueryDataKeepInMemoryTimeInMinutes))));
     }
     return true;
   }
@@ -421,13 +425,14 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiInfoOrganizer::GetWantedProducerInfo(
     return itsEditedDataKeeper->GetIter();
   else
   {
-    boost::shared_ptr<NFmiFastQueryInfo> aInfo;
     for (MapType::iterator iter = itsDataMap.begin(); iter != itsDataMap.end(); ++iter)
     {
-      aInfo = iter->second->GetDataKeeper()->GetIter();
-      if (aInfo->DataType() == theType &&
+      auto aInfo = iter->second->GetFastInfoIter();
+      if(aInfo && aInfo->DataType() == theType &&
           static_cast<FmiProducerName>(aInfo->Producer()->GetIdent()) == theProducerName)
+      {
         return aInfo;
+      }
     }
   }
   // Jos ei löytynyt sopivaa dataa, palautetaan tyhjä.
@@ -627,8 +632,8 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiInfoOrganizer::GetInfo(const NFmiDataId
     // NFmiSmartInfo-pointterilta
     for (MapType::iterator iter = itsDataMap.begin(); iter != itsDataMap.end(); ++iter)
     {
-      boost::shared_ptr<NFmiFastQueryInfo> aInfo =
-          iter->second->GetDataKeeper(0)->GetIter();  // tässä haetaan ensin viimeisin data!!
+      // tässä haetaan ensin viimeisin data!!
+      auto aInfo = iter->second->GetFastInfoIter(0);
       if (::MatchData(aInfo, theType, theDataIdent, fUseParIdOnly, theLevel))
       {
         if (!(theLevel == 0 && aInfo->SizeLevels() > 1))
@@ -686,8 +691,8 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiInfoOrganizer::CrossSectionInfo(
     // NFmiSmartInfo-pointterilta
     for (MapType::iterator iter = itsDataMap.begin(); iter != itsDataMap.end(); ++iter)
     {
-      boost::shared_ptr<NFmiFastQueryInfo> aInfo =
-          iter->second->GetDataKeeper(0)->GetIter();  // tässä haetaan ensin viimeisin data!!
+      // tässä haetaan ensin viimeisin data!!
+      auto aInfo = iter->second->GetFastInfoIter(0);
       if (::MatchCrossSectionData(aInfo, theType, theDataIdent, false))
       {
         if (theDataIdent.GetProducer()->GetName() == aInfo->Param().GetProducer()->GetName())
@@ -734,8 +739,8 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiInfoOrganizer::FindInfo(
     int ind = 0;
     for (MapType::iterator iter = itsDataMap.begin(); iter != itsDataMap.end(); ++iter)
     {
-      boost::shared_ptr<NFmiFastQueryInfo> aInfo = iter->second->GetDataKeeper()->GetIter();
-      if (aInfo->DataType() == theDataType)
+      auto aInfo = iter->second->GetFastInfoIter();
+      if (aInfo && aInfo->DataType() == theDataType)
       {
         if (ind == theIndex)
           return aInfo;
@@ -763,7 +768,7 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiInfoOrganizer::FindInfo(NFmiInfoData::T
     int ind = 0;
     for (MapType::iterator iter = itsDataMap.begin(); iter != itsDataMap.end(); ++iter)
     {
-      boost::shared_ptr<NFmiFastQueryInfo> aInfo = iter->second->GetDataKeeper()->GetIter();
+      auto aInfo = iter->second->GetFastInfoIter();
       if (aInfo && aInfo->DataType() == theDataType)
       {
         aInfo->FirstParam();  // pitää varmistaa, että producer löytyy
@@ -1003,7 +1008,7 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiInfoOrganizer::FindSoundingInfo(
   boost::shared_ptr<NFmiFastQueryInfo> exceptableInfo;
   for (MapType::iterator iter = itsDataMap.begin(); iter != itsDataMap.end(); ++iter)
   {
-    boost::shared_ptr<NFmiFastQueryInfo> aInfo = iter->second->GetDataKeeper()->GetIter();
+    auto aInfo = iter->second->GetFastInfoIter();
     int result = IsGoodSoundingData(aInfo, theProducer, false, paramCheckFlags);
     if (!::IsGivenTimeInDataRange(aInfo, theDataTime, amdarDataStartOffsetInMinutes))
       result = 0;
@@ -1011,9 +1016,9 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiInfoOrganizer::FindSoundingInfo(
       result = 0;
     if (result != 0 && theIndex < 0)
     {  // haetaan vanhempaa malliajo dataa
-      boost::shared_ptr<NFmiQueryDataKeeper> qDataKeeper = iter->second->GetDataKeeper(theIndex);
-      if (qDataKeeper)
-        aInfo = qDataKeeper->GetIter();
+      auto dataKeeper = iter->second->GetDataKeeper(theIndex);
+      if (dataKeeper)
+        aInfo = dataKeeper->GetIter();
       else
         aInfo = boost::shared_ptr<NFmiFastQueryInfo>();  // ei löytynyt vanhoista malliajoista,
                                                          // pitää nollata pointteri
@@ -1090,9 +1095,21 @@ std::vector<boost::shared_ptr<NFmiFastQueryInfo> > NFmiInfoOrganizer::GetInfos(
       if (iter->second->FilePattern() == theFileNameFilter)
       {
         if (theModelRunIndex < 0)
-          infoVector.push_back(iter->second->GetDataKeeper(theModelRunIndex)->GetIter());
+        {
+          auto fastInfo = iter->second->GetFastInfoIter(theModelRunIndex);
+          if (fastInfo)
+          {
+            infoVector.push_back(fastInfo);
+          }
+        }
         else
-          infoVector.push_back(iter->second->GetDataKeeper()->GetIter());
+        {
+          auto fastInfo = iter->second->GetFastInfoIter();
+          if (fastInfo)
+          {
+            infoVector.push_back(fastInfo);
+          }
+        }
       }
     }
   }
@@ -1149,14 +1166,19 @@ std::vector<boost::shared_ptr<NFmiFastQueryInfo> > NFmiInfoOrganizer::GetInfos(i
 
   for (MapType::iterator iter = itsDataMap.begin(); iter != itsDataMap.end(); ++iter)
   {
-    boost::shared_ptr<NFmiFastQueryInfo> aInfo = iter->second->GetDataKeeper()->GetIter();
-    currentProdId = static_cast<int>(
-        aInfo->FirstParamProducer().GetIdent());  // haetaan aina 1. parametrin tuottaja => ei
-                                                  // satunnaisuutta, jos datassa on väärin
-                                                  // rakennettu parambagi jossa eri tuottajia
-    if (::IsProducerWanted(
-            currentProdId, theProducerId, theProducerId2, theProducerId3, theProducerId4))
-      infoVector.push_back(aInfo);
+    auto aInfo = iter->second->GetFastInfoIter();
+    if (aInfo)
+    {
+      // haetaan aina 1. parametrin tuottaja => ei satunnaisuutta, 
+      // jos datassa on väärin rakennettu parambagi jossa eri tuottajia
+      currentProdId = static_cast<int>(
+          aInfo->FirstParamProducer().GetIdent());
+      if (::IsProducerWanted(
+              currentProdId, theProducerId, theProducerId2, theProducerId3, theProducerId4))
+      {
+        infoVector.push_back(aInfo);
+      }
+    }
   }
   return infoVector;
 }
@@ -1189,7 +1211,7 @@ std::vector<boost::shared_ptr<NFmiFastQueryInfo> > NFmiInfoOrganizer::GetInfos(
   {
     for (MapType::iterator iter = itsDataMap.begin(); iter != itsDataMap.end(); ++iter)
     {
-      boost::shared_ptr<NFmiFastQueryInfo> info = iter->second->GetDataKeeper()->GetIter();
+      auto info = iter->second->GetFastInfoIter();
       if (info && info->DataType() == theType)
       {
         if ((fGroundData == true && info->SizeLevels() == 1) ||
@@ -1231,9 +1253,11 @@ std::vector<boost::shared_ptr<NFmiFastQueryInfo> > NFmiInfoOrganizer::GetInfos(
   {
     for (MapType::iterator iter = itsDataMap.begin(); iter != itsDataMap.end(); ++iter)
     {
-      boost::shared_ptr<NFmiFastQueryInfo> info = iter->second->GetDataKeeper()->GetIter();
-      if (info->DataType() == theDataType)
+      auto info = iter->second->GetFastInfoIter();
+      if (info && info->DataType() == theDataType)
+      {
         infoVector.push_back(info);
+      }
     }
   }
   return infoVector;
@@ -1344,7 +1368,8 @@ void NFmiInfoOrganizer::ClearData(NFmiInfoData::Type theDataType)
       if (iter == itsDataMap.end())
         break;
 
-      if (iter->second->GetDataKeeper()->GetIter()->DataType() == theDataType)
+      auto fastInfo = iter->second->GetFastInfoIter();
+      if (fastInfo && fastInfo->DataType() == theDataType)
       {
 #ifdef UNIX
         // RHEL5 and RHEL6 bug??
@@ -1440,7 +1465,7 @@ void NFmiInfoOrganizer::ClearThisKindOfData(NFmiQueryInfo *theInfo,
 
     for (MapType::iterator iter = itsDataMap.begin(); iter != itsDataMap.end(); ++iter)
     {
-      boost::shared_ptr<NFmiFastQueryInfo> info = iter->second->GetDataKeeper()->GetIter();
+      auto info = iter->second->GetFastInfoIter();
       if (IsInfosTwoOfTheKind(theInfo, theDataType, theFileNamePattern, info))
       {
         theRemovedDatasTimesOut = info->TimeDescriptor();
@@ -1456,13 +1481,22 @@ static bool DeleteDynamicHelpData(const std::vector<NFmiInfoData::Type> &ignoreT
                                   bool caseStudyEvent,
                                   NFmiInfoOrganizer::MapType::iterator &dataIterator)
 {
-  if (std::find(ignoreTypesVector.begin(),
-                ignoreTypesVector.end(),
-                dataIterator->second->GetDataKeeper()->GetIter()->DataType()) !=
+  auto fastInfo = dataIterator->second->GetFastInfoIter();
+  if (!fastInfo)
+  {
+    return false;
+  }
+
+  if (std::find(ignoreTypesVector.begin(), ignoreTypesVector.end(), fastInfo->DataType()) !=
       ignoreTypesVector.end())
+  {
     return false;
+  }
+
   if (caseStudyEvent && !dataIterator->second->ReloadCaseStudyData())
+  {
     return false;
+  }
 
   return true;
 }
@@ -1650,6 +1684,14 @@ int NFmiInfoOrganizer::CleanUnusedDataFromMemory()
   for (MapType::iterator iter = itsDataMap.begin(); iter != itsDataMap.end(); ++iter)
     dataRemovedCounter += iter->second->CleanUnusedDataFromMemory();
   return dataRemovedCounter;
+}
+
+void NFmiInfoOrganizer::SetupVirtualTime(const NFmiMetTime &virtualTime, bool virtualTimeUsed)
+{
+  for (auto &dataMapPair : itsDataMap)
+  {
+    dataMapPair.second->SetupVirtualTime(virtualTime, virtualTimeUsed);
+  }
 }
 
 // Jos kyse ns. editoidusta datasta (esim. kepa-data), joilla on epäsäännöllinen ilmestymis

@@ -134,6 +134,7 @@ class NFmiCtrlView
    const std::string& CachedParameterName(bool tooltipVersion) const;
    void CachedParameterName(const std::string& newName, bool tooltipVersion);
    virtual void UpdateCachedParameterName();
+   std::string MakePossibleVirtualTimeTooltipText();
 
    virtual NFmiPoint LatLonToViewPoint(const NFmiPoint & /* theLatLon */ ) const {return NFmiPoint(kFloatMissing, kFloatMissing);}
    virtual NFmiPoint ViewPointToLatLon(const NFmiPoint & /* theViewPoint */ ) const {return NFmiPoint(kFloatMissing, kFloatMissing);}

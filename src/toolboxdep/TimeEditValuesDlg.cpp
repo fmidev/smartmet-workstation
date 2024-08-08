@@ -135,6 +135,7 @@ BEGIN_MESSAGE_MAP(CTimeEditValuesDlg, CDialog)
 	ON_COMMAND(ID_ACCELERATOR_LOG_VIEWER_TOOLBOXDEB, &CTimeEditValuesDlg::OnAcceleratorLogViewerToolboxdeb)
 	ON_COMMAND(ID_ACCELERATOR_SWAP_AREA_SECONDARY_KEY_EXTRA_MAP, &CTimeEditValuesDlg::OnAcceleratorSwapAreaSecondaryKeyExtraMap)
 	ON_BN_CLICKED(IDC_BUTTON_STORE_CSV_FILE, &CTimeEditValuesDlg::OnBnClickedButtonStoreCsvFile)
+	ON_COMMAND(ID_ACCELERATOR_EXTRA_MAP_TOGGLE_VIRTUAL_TIME_MODE, &CTimeEditValuesDlg::OnAcceleratorExtraMapToggleVirtualTimeMode)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -964,4 +965,11 @@ void CTimeEditValuesDlg::OnBnClickedButtonStoreCsvFile()
 		errorMessage += e.what();
 		itsSmartMetDocumentInterface->LogAndWarnUser(errorMessage, "Unable to store CSV data to file", CatLog::Severity::Error, CatLog::Category::Operational, false, false, true);
 	}
+}
+
+
+void CTimeEditValuesDlg::OnAcceleratorExtraMapToggleVirtualTimeMode()
+{
+	std::string viewName = "Time-serial-view";
+	CFmiWin32TemplateHelpers::OnAcceleratorToggleVirtualTimeMode(itsSmartMetDocumentInterface, viewName);
 }

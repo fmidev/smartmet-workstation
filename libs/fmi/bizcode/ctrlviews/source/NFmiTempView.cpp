@@ -4198,7 +4198,9 @@ std::string NFmiTempView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
 	std::string str;
     if(itsTempViewDataRects.getSoundingCurveDataRect().IsInside(theRelativePoint) || itsTempViewDataRects.getSecondaryDataFrame().IsInside(theRelativePoint))
     {
-        NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
+		str += MakePossibleVirtualTimeTooltipText();
+
+		NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
         int modelRunCount = mtaTempSystem.ModelRunCount();
         float pressure = static_cast<float>(y2p(theRelativePoint.Y()));
 		float heigthInMetersInStaAth = ::CalcHeightInMetersAtPressure(pressure);

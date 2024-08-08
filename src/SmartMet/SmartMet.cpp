@@ -2,7 +2,8 @@
 // SmartMet.cpp : Defines the class behaviors for the application.
 //
 
-//#include <vld.h> // poista t‰m‰, jos visual leak detector aiheuttaa liikaa overheadia debug ajossa
+// Kommentoi vld.h includointi, kun et en‰‰ etsi muistivuotoja debugtilassa
+//#include <vld.h>
 
 #include "SmartMet.h"
 #include "MainFrm.h"
@@ -26,7 +27,7 @@
 #include "ToolMasterHelperFunctions.h"
 #include "CombinedMapHandlerInterface.h"
 #include "FmiCombineDataThread.h"
-#include "FmiQueryDataCacheLoaderThread.h"
+#include "LocalCacheSingleFileLoaderThread.h"
 
 #include "boost/format.hpp"
 
@@ -777,7 +778,7 @@ void CSmartMetApp::UpdateCrashRptLogFile()
     {
         ::crAddFile2(CA2T(CatLog::currentLogFilePath().c_str()), NULL, _TEXT("Log File"), CR_AF_MAKE_FILE_COPY);
         ::crAddFile2(CA2T(CFmiCombineDataThread::MakeDailyDataCombinationLogFilePath(false).c_str()), NULL, _TEXT("Data-combining Log File"), CR_AF_MAKE_FILE_COPY);
-        ::crAddFile2(CA2T(CFmiQueryDataCacheLoaderThread::MakeDailyUnpackLogFilePath().c_str()), NULL, _TEXT("Unpack-data Log File"), CR_AF_MAKE_FILE_COPY);
+        ::crAddFile2(CA2T(LocalCacheSingleFileLoaderThread::MakeDailyUnpackLogFilePath().c_str()), NULL, _TEXT("Unpack-data Log File"), CR_AF_MAKE_FILE_COPY);
     }
 #endif
 }

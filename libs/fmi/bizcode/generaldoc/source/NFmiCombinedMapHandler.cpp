@@ -1797,7 +1797,7 @@ bool NFmiCombinedMapHandler::findLastObservation(unsigned long mapViewDescTopInd
 	// haetaan min ja maksimi aika limitit, jotka on n. nykyhetki ja 2h - nykyhetki
 	NFmiMetTime timeLimit1;
 	NFmiMetTime timeLimit2;
-	::makeObsSeekTimeLimits(currentTime, mapViewDescTopIndex, timeLimit1, timeLimit2);
+	::makeObsSeekTimeLimits(currentTime, timeStepInMinutes, timeLimit1, timeLimit2);
 
 	NFmiMapViewDescTop& mapViewDescTop = *(getMapViewDescTop(mapViewDescTopIndex));
 	NFmiPtrList<NFmiDrawParamList>::Iterator iter = mapViewDescTop.DrawParamListVector()->Start();
@@ -1825,7 +1825,7 @@ bool NFmiCombinedMapHandler::findLastObservation(unsigned long mapViewDescTopInd
 							boost::shared_ptr<NFmiFastQueryInfo>& info = infoVector[i];
 							NFmiMetTime dataLastTime;
 							NFmiTimeDescriptor timeDesc = info->TimeDescriptor();
-							if(::getLatestValidTimeWithCorrectTimeStep(timeDesc, mapViewDescTopIndex, demandExactTimeChecking, timeLimit1, timeLimit2, dataLastTime))
+							if(::getLatestValidTimeWithCorrectTimeStep(timeDesc, timeStepInMinutes, demandExactTimeChecking, timeLimit1, timeLimit2, dataLastTime))
 							{
 								if(::checkLastObservationTime(&newerTimeFound, dataLastTime, currentTime, &newLastTime, timeStepInMinutes))
 								{
@@ -1887,11 +1887,11 @@ bool NFmiCombinedMapHandler::getLatestWmsImageTime(const NFmiDataIdent& dataIden
 // t‰ll‰ tavalla etsittyyn viimeiseen aikaan.
 bool NFmiCombinedMapHandler::findEarliestLastObservation(unsigned long mapViewDescTopIndex, int timeStepInMinutes, NFmiMetTime& newLastTime, bool ignoreSatelImages)
 {
-	NFmiMetTime currentTime(mapViewDescTopIndex); // t‰m‰ on jonkinlainen rajapyykki, eli t‰m‰n yli kun menn‰‰n (ei pit‰isi menn‰), lopetetaan havaintojen etsiminene siihen
+	NFmiMetTime currentTime(timeStepInMinutes); // t‰m‰ on jonkinlainen rajapyykki, eli t‰m‰n yli kun menn‰‰n (ei pit‰isi menn‰), lopetetaan havaintojen etsiminene siihen
 	// haetaan min ja maksimi aika limitit, jotka on n. nykyhetki ja 2h - nykyhetki
 	NFmiMetTime timeLimit1;
 	NFmiMetTime timeLimit2;
-	::makeObsSeekTimeLimits(currentTime, mapViewDescTopIndex, timeLimit1, timeLimit2);
+	::makeObsSeekTimeLimits(currentTime, timeStepInMinutes, timeLimit1, timeLimit2);
 
 	NFmiMapViewDescTop& mapViewDescTop = *(getMapViewDescTop(mapViewDescTopIndex));
 	NFmiPtrList<NFmiDrawParamList>* drawParamListVector = mapViewDescTop.DrawParamListVector();
@@ -1925,7 +1925,7 @@ bool NFmiCombinedMapHandler::findEarliestLastObservation(unsigned long mapViewDe
 								boost::shared_ptr<NFmiFastQueryInfo>& info = infoVector[i];
 								NFmiMetTime dataLastTime;
 								NFmiTimeDescriptor timeDesc = info->TimeDescriptor();
-								if(::getLatestValidTimeWithCorrectTimeStep(timeDesc, mapViewDescTopIndex, demandExactTimeChecking, timeLimit1, timeLimit2, dataLastTime))
+								if(::getLatestValidTimeWithCorrectTimeStep(timeDesc, timeStepInMinutes, demandExactTimeChecking, timeLimit1, timeLimit2, dataLastTime))
 								{
 									if(lastTimeOfThisDataTypeFoundYet == false || dataLastTime > lastTimeOfThisDataType)
 									{
@@ -4162,11 +4162,11 @@ void NFmiCombinedMapHandler::removeMacroParamFromDrawParamLists(const std::strin
 	for(unsigned int mapViewDescTopIndex = 0; mapViewDescTopIndex < mapViewDescTops_.size(); mapViewDescTopIndex++)
 	{
 		NFmiPtrList<NFmiDrawParamList>::Iterator iter = getMapViewDescTop(mapViewDescTopIndex)->DrawParamListVector()->Start();
-		for(unsigned long rowIndex = 0; iter.Next(); rowIndex++)
+		for(unsigned long realRowIndex = 1; iter.Next(); realRowIndex++)
 		{
 			if(iter.CurrentPtr()->RemoveMacroParam(macroParamName))
 			{
-				::getMacroParamDataCache().update(mapViewDescTopIndex, rowIndex, iter.Current());
+				::getMacroParamDataCache().update(mapViewDescTopIndex, realRowIndex, iter.Current());
 			}
 		}
 	}
@@ -4242,7 +4242,9 @@ void NFmiCombinedMapHandler::makeMacroParamCacheUpdatesForWantedRow(int mapViewD
 {
 	NFmiDrawParamList* drawParamList = getDrawParamList(mapViewDescTopIndex, viewRowIndex);
 	if(drawParamList)
-		::getMacroParamDataCache().update(mapViewDescTopIndex, viewRowIndex, *drawParamList);
+	{
+		::getMacroParamDataCache().update(mapViewDescTopIndex, getRealRowNumber(mapViewDescTopIndex, viewRowIndex), *drawParamList);
+	}
 }
 
 // Kun jonkun parametrin piirto-ominaisuuksia muutetaan, eiv‰t ne tulevoimaan kuin sille yhdelle

@@ -372,3 +372,8 @@ void ApplicationInterfaceForSmartMet::SetAllMapViewTooltipDelays(bool doRestoreA
 {
     GetDocument()->SetAllMapViewTooltipDelays(doRestoreAction, delayInMilliSeconds);
 }
+
+void ApplicationInterfaceForSmartMet::UpdateAllViewsAndDialogs(const std::string& reasonForUpdate, bool fUpdateOnlyMapViews)
+{
+    GetDocument()->UpdateAllViewsAndDialogs(reasonForUpdate, fUpdateOnlyMapViews);
+}

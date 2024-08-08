@@ -8,6 +8,7 @@
 #include "GraphicalInfo.h"
 #include "CtrlViewGdiPlusFunctions.h"
 #include "NFmiToolBox.h"
+#include "CtrlViewWin32Functions.h"
 #include <gdiplus.h>
 
 namespace
@@ -158,27 +159,6 @@ namespace
         return 0;
     }
 
-    NFmiPoint GetWantedRelativePlace(const NFmiRect &theViewFrameRelative, FmiDirection theWantedLocation)
-    {
-        switch(theWantedLocation)
-        {
-        case kBottomLeft:
-            return theViewFrameRelative.BottomLeft();
-        case kBottomRight:
-            return theViewFrameRelative.BottomRight();
-        case kTopLeft:
-            return theViewFrameRelative.TopLeft();
-        case kTopRight:
-            return theViewFrameRelative.TopRight();
-        case kBottomCenter:
-            return NFmiPoint(theViewFrameRelative.Center().X(), theViewFrameRelative.Bottom());
-        case kTopCenter:
-            return NFmiPoint(theViewFrameRelative.Center().X(), theViewFrameRelative.Top());
-        default:
-            return theViewFrameRelative.BottomLeft();
-        }
-    }
-
     void DrawGdiplusBoxRect(CtrlViewDocumentInterface *ctrlViewDocumentInterface, int mapViewDescTopIndex, Gdiplus::Graphics *gdiPlusGraphics, const NFmiRect &theBoxAbsoluteRect, const NFmiColor &theBoxFillColor, const NFmiColor &theBoxFrameCcolor, float theFrameThicknessInMM)
     {
         Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(theBoxFillColor));
@@ -254,30 +234,6 @@ namespace
 
 namespace StationViews
 {
-    // Sijoita annettu theObjectBoxAbsolute (param/time laatikko) haluttuun kohtaan ikkunaa (theViewFrameRelative).
-    void PlaceBoxIntoFrame(NFmiRect &theObjectBoxAbsolute, const NFmiRect &theViewFrameRelative, NFmiToolBox *theToolbox, FmiDirection theWantedLocation)
-    {
-        NFmiPoint relativePlace = ::GetWantedRelativePlace(theViewFrameRelative, theWantedLocation);
-
-        CPoint absolutePlace;
-        theToolbox->ConvertPoint(relativePlace, absolutePlace);
-        theObjectBoxAbsolute.Place(NFmiPoint(absolutePlace.x, absolutePlace.y));
-
-        // Riippuen halutusta paikasta, pit‰‰ absoluuttista laatikkoa viel‰ s‰‰t‰‰ tietyiss‰ tilanteissa
-
-        // 1. Jos ollaan alareunassa, pit‰‰ laatikkoa nostaa itsens‰ korkeuden verran
-        if(theWantedLocation == kBottomLeft || theWantedLocation == kBottomRight || theWantedLocation == kBottomCenter)
-            theObjectBoxAbsolute.Place(NFmiPoint(theObjectBoxAbsolute.Left(), theObjectBoxAbsolute.Top() - theObjectBoxAbsolute.Height()));
-
-        // 2. Jos ollaan oikeassa reunassa, pit‰‰ laatikkoa siirt‰‰ vasemmalle itsens‰ leveyden verran
-        if(theWantedLocation == kBottomRight || theWantedLocation == kTopRight)
-            theObjectBoxAbsolute.Place(NFmiPoint(theObjectBoxAbsolute.Left() - theObjectBoxAbsolute.Width(), theObjectBoxAbsolute.Top()));
-
-        // 3. Jos ollaan vaaka suunnassa keskell‰, pit‰‰ laatikon keskipiste siirt‰‰ x-suunnassa puoli laatikon leveytt‰ vasemmalle
-        if(theWantedLocation == kBottomCenter || theWantedLocation == kTopCenter)
-            theObjectBoxAbsolute.Place(NFmiPoint(theObjectBoxAbsolute.Left() - (theObjectBoxAbsolute.Width() / 2.), theObjectBoxAbsolute.Top()));
-    }
-
 	void DrawBetaProductParamBox(NFmiCtrlView *view, bool fCrossSectionInfoWanted, const NFmiBetaProduct* optionalBetaProduct)
 	{
         if(view)
@@ -305,7 +261,7 @@ namespace StationViews
                         NFmiRect paramBoxAbsoluteRect = CalcBetaProductParamBoxSize(gdiPlusGraphics, paramBoxTexts, *usedFont, stringFormat);
                         std::unique_ptr<Gdiplus::Font> usedRuntimeFont = MakeParamBoxFont(ctrlViewDocumentInterface, mapViewDescTopIndex, 0.8);
                         double paramStartingPointX = ::MakeRunTimeInfoAdjustments(*gdiPlusGraphics, currentBetaProduct, *usedRuntimeFont, stringFormat, paramBoxAbsoluteRect);
-                        PlaceBoxIntoFrame(paramBoxAbsoluteRect, view->GetFrameForParamBox(), view->GetToolBox(), paramBoxLocation);
+                        CtrlView::PlaceBoxIntoFrame(paramBoxAbsoluteRect, view->GetFrameForParamBox(), view->GetToolBox(), paramBoxLocation);
                         ::DrawBetaProductParamBox(ctrlViewDocumentInterface, mapViewDescTopIndex, gdiPlusGraphics, paramBoxAbsoluteRect, paramBoxTexts, *usedFont, *usedRuntimeFont, stringFormat, paramBoxTextColors, paramStartingPointX, currentBetaProduct);
                     }
                 }

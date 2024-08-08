@@ -309,10 +309,10 @@ public:
 	std::vector<NFmiCaseStudyDataFile*>& CaseStudyDialogData(void) {return itsCaseStudyDialogData;}
 	std::vector<unsigned char>& TreePatternArray(void) {return itsTreePatternArray;}
 
-	const std::string& Name(void) const {return itsName;}
-	void Name(const std::string &newValue) {itsName = newValue;}
-	const std::string& Info(void) const {return itsInfo;}
-	void Info(const std::string &newValue) {itsInfo = newValue;}
+	const std::string& CaseStudyName(void) const {return itsCaseStudyName;}
+	void CaseStudyName(const std::string &newValue) { itsCaseStudyName = newValue;}
+	const std::string& CaseStudyInfo(void) const {return itsCaseStudyInfo;}
+	void CaseStudyInfo(const std::string &newValue) {itsCaseStudyInfo = newValue;}
 	std::string CaseStudyPath(void) const;
 	void CaseStudyPath(const std::string &newValue);
 	const NFmiMetTime& Time(void) const {return itsTime;}
@@ -333,7 +333,7 @@ public:
 	bool DoApproximateDataSize(const std::string &thePath) const;
 
 	static json_spirit::Object MakeJsonObject(NFmiCaseStudySystem &theData, bool fMakeFullStore);
-	bool StoreMetaData(CWnd *theParentWindow, std::string &theMetaDataTotalFileNameInOut, bool fMakeFullStore, bool showErrorMessageBox);
+	bool StoreMetaData(CWnd *theParentWindow, const std::string &theMetaDataTotalFilePath, bool showErrorMessageBox);
     bool AreStoredMetaDataChanged(const NFmiCaseStudySystem &other);
 	bool ReadMetaData(const std::string &theFullPathFileName, CWnd *theParentWindow, bool showErrorMessageBox);
 	// Voi heitt‰‰ CaseStudyOperationCanceledException -poikkeuksen!!!
@@ -343,7 +343,7 @@ public:
 	void PutNoneProducerDataToEndFix();
 
 	void SetUpDataLoadinInfoForCaseStudy(NFmiDataLoadingInfo &theDataLoadingInfo, const std::string &theBasePath);
-	static std::string MakeBaseDataDirectory(const std::string& theMetaDataFilePath, const std::string& theCaseStudyName);
+	static std::string MakeBaseDataDirectory(const std::string& theMetaDataFilePath);
 	static std::string MakeCaseStudyDataHakeDirectory(const std::string& theBaseCaseStudyDataDirectory);
 	static std::string GetCropDataOptionStartPart() { return "CropDataArea="; }
 	static const std::vector<NFmiCategoryHeaderInitData>& GetCategoryHeaders();
@@ -363,8 +363,8 @@ private:
 	NFmiCaseStudyCategoryData* GetCategoryData(NFmiCaseStudyDataFile& theCaseStudyDataFile);
 	std::string MakeCaseStudyFilePattern(const std::string &theFilePattern, const std::string &theBasePath, bool fMakeOnlyPath);
 
-	std::string itsName; // talletettavan case-studyn nimi
-	std::string itsInfo; // talletettavan case-studyn info
+	std::string itsCaseStudyName; // talletettavan case-studyn nimi
+	std::string itsCaseStudyInfo; // talletettavan case-studyn info
     boost::shared_ptr<CachedRegString> itsCaseStudyPath; // t‰ss‰ on abs polku hakemistoon johon on tarkoitus tehd‰ case study talletuksia
 	boost::shared_ptr<CachedRegBool> fZipFiles; // pakataanko tehty case-study data lopuksi vai ei
 	boost::shared_ptr<CachedRegBool> fStoreWarningMessages; // Talletetaanko mit‰‰n sanomia (l‰hinn‰ HAKE) CaseStudy dataan

@@ -628,6 +628,20 @@ namespace CFmiWin32TemplateHelpers
         // Lopuksi viimeinen kuva pit‰‰ piirt‰‰ originaali piirtopinnalle kerrallaan
         DoBitBltOperation(*pDC, finalImageDc.getDc(), clientArea, SRCCOPY);
     }
-};
+
+    template<typename DocumentInterface>
+    void OnAcceleratorToggleVirtualTimeMode(DocumentInterface & documentInterface, const std::string &viewName)
+    {
+        std::string updateMessage = "Virtual-Time mode changed to ";
+        updateMessage += documentInterface->VirtualTimeUsed() ? "OFF" : "ON";
+        updateMessage += " from " + viewName + " by CRTL + K, reloading all model data and recalculating and redrawing everything";
+        documentInterface->ToggleVirtualTimeMode(updateMessage);
+        if(ApplicationInterface::GetApplicationInterfaceImplementation)
+        {
+            ApplicationInterface::GetApplicationInterfaceImplementation()->UpdateAllViewsAndDialogs(updateMessage);
+        }
+    }
+
+}
 
 

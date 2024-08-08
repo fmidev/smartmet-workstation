@@ -1456,6 +1456,31 @@ NFmiMouseClickUrlActionData& CtrlViewDocumentInterfaceForGeneralDataDoc::MouseCl
     return itsDoc->MouseClickUrlActionData();
 }
 
+void CtrlViewDocumentInterfaceForGeneralDataDoc::VirtualTime(const NFmiMetTime& virtualTime)
+{
+    itsDoc->VirtualTime(virtualTime);
+}
+
+const NFmiMetTime& CtrlViewDocumentInterfaceForGeneralDataDoc::VirtualTime() const
+{
+    return itsDoc->VirtualTime();
+}
+
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::VirtualTimeUsed() const
+{
+    return itsDoc->VirtualTimeUsed();
+}
+
+void CtrlViewDocumentInterfaceForGeneralDataDoc::ToggleVirtualTimeMode(const std::string& logMessage)
+{
+    itsDoc->ToggleVirtualTimeMode(logMessage);
+}
+
+std::string CtrlViewDocumentInterfaceForGeneralDataDoc::GetVirtualTimeTooltipText() const
+{
+    return itsDoc->GetVirtualTimeTooltipText();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // ===============================================
 

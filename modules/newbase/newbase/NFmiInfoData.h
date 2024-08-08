@@ -68,6 +68,68 @@ enum Type
   // tiedän minkä tyyppistä dataa käyttetään laskuissa
 };
 
+inline bool IsModelRunBasedData(NFmiInfoData::Type dataType)
+{
+  switch (dataType)
+  {
+    case NFmiInfoData::kEditable:
+    case NFmiInfoData::kViewable:
+    case NFmiInfoData::kCopyOfEdited:
+    case NFmiInfoData::kKepaData:
+    case NFmiInfoData::kClimatologyData:
+    case NFmiInfoData::kHybridData:
+    case NFmiInfoData::kFuzzyData:
+    case NFmiInfoData::kVerificationData:
+    case NFmiInfoData::kModelHelpData:
+    case NFmiInfoData::kEditingHelpData:
+    {
+      return true;
+    }
+    default:
+      return false;
+  }
+}
+
+inline bool IsLatestOnlyBasedData(NFmiInfoData::Type dataType)
+{
+  switch (dataType)
+  {
+    case NFmiInfoData::kObservations:
+    case NFmiInfoData::kAnalyzeData:
+    case NFmiInfoData::kFlashData:
+    case NFmiInfoData::kTrajectoryHistoryData:
+    case NFmiInfoData::kSingleStationRadarData:
+    case NFmiInfoData::kStationary:
+    {
+      return true;
+    }
+    default:
+      return false;
+  }
+}
+
+inline bool IsImageBasedData(NFmiInfoData::Type dataType)
+{
+  return (dataType == NFmiInfoData::kSatelData);
+}
+
+inline bool IsMacroParamBasedData(NFmiInfoData::Type dataType)
+{
+  switch (dataType)
+  {
+    case NFmiInfoData::kMacroParam:
+    case NFmiInfoData::kCrossSectionMacroParam:
+    case NFmiInfoData::kQ3MacroParam:
+    case NFmiInfoData::kTimeSerialMacroParam:
+    {
+      return true;
+    }
+    default:
+      return false;
+  }
+}
+
+
 // SmartMetissa on muutama erikoisparamtri, joiden enumin laitoin nyt toistaiseksi tähän
 enum SpecialParameters
 {

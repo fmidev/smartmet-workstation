@@ -299,6 +299,11 @@ public:
     TrueMapViewSizeInfo& GetTrueMapViewSizeInfo(int theDescTopIndex) const override;
     NFmiSeaLevelPlumeData& SeaLevelPlumeData() const override;
     NFmiMouseClickUrlActionData& MouseClickUrlActionData() const override;
+    void VirtualTime(const NFmiMetTime& virtualTime) override;
+    const NFmiMetTime& VirtualTime() const override;
+    bool VirtualTimeUsed() const override;
+    void ToggleVirtualTimeMode(const std::string& logMessage) override;
+    std::string GetVirtualTimeTooltipText() const override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;

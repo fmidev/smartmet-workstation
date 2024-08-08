@@ -197,6 +197,10 @@ void CFmiShortCutsDlg2::InitDialogTexts(void)
     itsTextU_ += CA2T(::GetDictionaryString("- SHIFT + F12 Apply startup viewMacro").c_str()) + CString(_TEXT("\r\n"));
 
     itsTextU_ += _TEXT("\r\n");
+    itsTextU_ += CA2T(::GetDictionaryString("- CTRL + K Toggle Virtual-Time mode on all views (map, time-serial, sounding, cross-section)").c_str()) + CString(_TEXT("\r\n"));
+    itsTextU_ += CA2T(::GetDictionaryString("- In time-control-views left click on the purple bar to set Virtual-Time (all views when visible)").c_str()) + CString(_TEXT("\r\n"));
+
+    itsTextU_ += _TEXT("\r\n");
     itsTextU_ += CA2T(::GetDictionaryString("- Y  Distance measure mode on/off").c_str()) + CString(_TEXT("\r\n"));
     itsTextU_ += CA2T(::GetDictionaryString("- To measure distance on map: Start left mouse down - drag to destination - left mouse up").c_str()) + CString(_TEXT("\r\n"));
     itsTextU_ += CA2T(::GetDictionaryString("- Just change start point: CTRL key down - left mouse down+up").c_str()) + CString(_TEXT("\r\n"));

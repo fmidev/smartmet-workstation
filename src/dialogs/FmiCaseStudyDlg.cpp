@@ -19,14 +19,23 @@
 #include "CtrlViewFunctions.h"
 #include "NFmiGdiPlusImageMapHandler.h"
 #include "ColorStringFunctions.h"
+#include "NFmiBetaProductHelperFunctions.h"
 
 #include <boost/math/special_functions/round.hpp>
 #include <boost/algorithm/string.hpp>
 #include "execute-command-in-separate-process.h"
+#include "QueryDataToLocalCacheLoaderThread.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
 namespace
 {
-	const int CASE_STUDY_DIALOG_TOOLTIP_ID = 1234383;
+	const int CASE_STUDY_GRID_CONTROL_TOOLTIP_ID = 1234383;
+	const int CASE_STUDY_DIALOG_TOOLTIP_ID = 1234384;
 
 	const COLORREF gFixedBkColor = RGB(239, 235, 222);
 	const double gMegaByteSize = 1024 * 1024;
@@ -181,10 +190,10 @@ END_MESSAGE_MAP()
 
 BOOL NFmiCaseStudyGridCtrl::OnInitDialog()
 {
-	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, CASE_STUDY_DIALOG_TOOLTIP_ID, 800);
+	CFmiWin32Helpers::InitializeCPPTooltip(this, m_grid_control_tooltip, CASE_STUDY_GRID_CONTROL_TOOLTIP_ID, 800);
 	// Kuinka nopeasti tooltip ilmestyy näkyviin, jos kursoria ei liikuteta [ms],
 	// Laitetaan tähän defaulttia 0.5 s isompi viive eli 1 s.
-	m_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 1000); 
+	m_grid_control_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 1000);
 
 	return TRUE;
 }
@@ -199,7 +208,7 @@ void NFmiCaseStudyGridCtrl::OnRButtonUp(UINT nFlags, CPoint point)
 
 BOOL NFmiCaseStudyGridCtrl::PreTranslateMessage(MSG* pMsg)
 {
-	m_tooltip.RelayEvent(pMsg);
+	m_grid_control_tooltip.RelayEvent(pMsg);
 
 	return CGridCtrl::PreTranslateMessage(pMsg);
 }
@@ -217,7 +226,7 @@ void NFmiCaseStudyGridCtrl::OnSize(UINT nType, int cx, int cy)
 
 	CRect rect;
 	GetClientRect(rect);
-	m_tooltip.SetToolRect(this, CASE_STUDY_DIALOG_TOOLTIP_ID, rect);
+	m_grid_control_tooltip.SetToolRect(this, CASE_STUDY_GRID_CONTROL_TOOLTIP_ID, rect);
 }
 
 void NFmiCaseStudyGridCtrl::NotifyDisplayTooltip(NMHDR* pNMHDR, LRESULT* result)
@@ -225,7 +234,7 @@ void NFmiCaseStudyGridCtrl::NotifyDisplayTooltip(NMHDR* pNMHDR, LRESULT* result)
 	*result = 0;
 	NM_PPTOOLTIP_DISPLAY* pNotify = (NM_PPTOOLTIP_DISPLAY*)pNMHDR;
 
-	if(pNotify->ti->nIDTool == CASE_STUDY_DIALOG_TOOLTIP_ID)
+	if(pNotify->ti->nIDTool == CASE_STUDY_GRID_CONTROL_TOOLTIP_ID)
 	{
 		CPoint pt = *pNotify->pt;
 		ScreenToClient(&pt);
@@ -516,13 +525,13 @@ CFmiCaseStudyDlg::CFmiCaseStudyDlg(SmartMetDocumentInterface *smartMetDocumentIn
 	,itsOffsetEditedCell()
 	,itsBoldFont()
 	, itsCaseStudySettingsWinRegistry(smartMetDocumentInterface->ApplicationWinRegistry().CaseStudySettingsWinRegistry())
-    , itsNameStrU_(_T(""))
-    , itsInfoStrU_(_T(""))
-    , itsPathStrU_(_T(""))
     , fEditEnableData(FALSE)
     , fZipData(FALSE)
 	, fStoreWarningMessages(FALSE)
 	, fCropDataToZoomedMapArea(FALSE)
+	, itsCaseStudyNameStrU_(_T(""))
+	, itsCaseStudyInfoStrU_(_T(""))
+	, itsCaseStudyPathStrU_(_T(""))
 {
 
 }
@@ -542,13 +551,13 @@ void CFmiCaseStudyDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	DDX_GridControl(pDX, IDC_CUSTOM_GRID_CASE_STUDY, itsGridCtrl);
-	DDX_Text(pDX, IDC_EDIT_NAME_STR, itsNameStrU_);
-	DDX_Text(pDX, IDC_EDIT_INFO_STR, itsInfoStrU_);
-	DDX_Text(pDX, IDC_EDIT_PATH_STR, itsPathStrU_);
 	DDX_Check(pDX, IDC_CHECK_EDIT_ENABLE_DATA, fEditEnableData);
 	DDX_Check(pDX, IDC_CHECK_ZIP_DATA, fZipData);
 	DDX_Check(pDX, IDC_CHECK_STORE_WARNING_MESSAGES, fStoreWarningMessages);
 	DDX_Check(pDX, IDC_CHECK_CROP_DATA_TO_ZOOMED_MAP_AREA, fCropDataToZoomedMapArea);
+	DDX_Text(pDX, IDC_STATIC_CASE_STUDY_NAME, itsCaseStudyNameStrU_);
+	DDX_Text(pDX, IDC_EDIT_INFO_STR, itsCaseStudyInfoStrU_);
+	DDX_Text(pDX, IDC_STATIC_CASE_STUDY_PATH, itsCaseStudyPathStrU_);
 }
 
 #define WM_CASE_STUDY_OFFSET_EDITED = WM_USER + 222
@@ -562,12 +571,12 @@ BEGIN_MESSAGE_MAP(CFmiCaseStudyDlg, CDialog)
 	ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_BUTTON_STORE_DATA, &CFmiCaseStudyDlg::OnBnClickedButtonStoreData)
 	ON_BN_CLICKED(IDC_BUTTON_LOAD_DATA, &CFmiCaseStudyDlg::OnBnClickedButtonLoadData)
-	ON_BN_CLICKED(IDC_BUTTON_BROWSE, &CFmiCaseStudyDlg::OnBnClickedButtonBrowse)
 	ON_BN_CLICKED(IDC_BUTTON_CLOSE_MODE, &CFmiCaseStudyDlg::OnBnClickedButtonCloseMode)
     ON_BN_CLICKED(IDC_CHECK_EDIT_ENABLE_DATA, &CFmiCaseStudyDlg::OnBnClickedCheckEditEnableData)
     ON_WM_CTLCOLOR()
     ON_BN_CLICKED(IDC_BUTTON_REFRESH_GRID, &CFmiCaseStudyDlg::OnBnClickedButtonRefreshGrid)
-	ON_BN_CLICKED(IDC_BUTTON_BROWSE_FOLDER, &CFmiCaseStudyDlg::OnBnClickedButtonBrowseFolder)
+	ON_BN_CLICKED(IDC_BUTTON_PRIORITIZE_DATA, &CFmiCaseStudyDlg::OnBnClickedButtonPrioritizeData)
+	ON_BN_CLICKED(IDC_BUTTON_LOAD_OLD_DATA, &CFmiCaseStudyDlg::OnBnClickedButtonLoadOldData)
 END_MESSAGE_MAP()
 
 
@@ -608,9 +617,9 @@ BOOL CFmiCaseStudyDlg::OnInitDialog()
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
 
     auto &caseStudySystem = itsSmartMetDocumentInterface->CaseStudySystem();
-	itsNameStrU_ = CA2T(caseStudySystem.Name().c_str());
-    itsInfoStrU_ = CA2T(caseStudySystem.Info().c_str());
-    itsPathStrU_ = CA2T(caseStudySystem.CaseStudyPath().c_str());
+	itsCaseStudyNameStrU_ = CA2T(caseStudySystem.CaseStudyName().c_str());
+    itsCaseStudyInfoStrU_ = CA2T(caseStudySystem.CaseStudyInfo().c_str());
+    itsCaseStudyPathStrU_ = CA2T(caseStudySystem.CaseStudyPath().c_str());
 	fZipData = caseStudySystem.ZipFiles();
 	fStoreWarningMessages = caseStudySystem.StoreWarningMessages();
 	fCropDataToZoomedMapArea = caseStudySystem.CropDataToZoomedMapArea();
@@ -619,10 +628,174 @@ BOOL CFmiCaseStudyDlg::OnInitDialog()
     UpdateEditEnableDataText();
     EnableColorCodedControls();
 	InitializeGridControlRelatedData();
+	InitTooltipControl();
 
 	UpdateData(FALSE);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
+}
+
+static std::string Make_StoreData_ButtonTooltipText()
+{
+	std::string text = "To store selected Case-Study data:\n";
+	text += "1. Give stored Case-Study a description (-> Info:)\n";
+	text += " - This is optional information.\n";
+	text += "2. Press 'Store data' button to open file browser.\n";
+	text += "3. Browse to the directory you want to store Case-Study.\n";
+	text += "4. Give Case-Study a name as filename in browser.\n";
+	text += " - You won't need to give file extension.\n";
+	text += " - File extension will be given automatically.\n";
+	text += "5. Press 'Save' button to start data storage operation.";
+	return text;
+}
+
+static std::string Make_LoadData_ButtonTooltipText()
+{
+	std::string text = "To load wanted Case-Study data:\n";
+	text += "1. Press 'Load data' button to open file browser.\n";
+	text += "2. Browse to wanted directory and select Case-Study meta-file.\n";
+	text += " - Case-Study meta-files have .csmeta file extension.\n";
+	text += "3. Press 'Open' button to start data loading operation.";
+	return text;
+}
+
+static std::string Make_CloseMode_ButtonTooltipText()
+{
+	std::string text = "To close Case-Study mode:\n";
+	text += "1. Press 'Close mode' button which sets back to normal mode.\n";
+	text += " - Used Case-Study data is not used anymore.\n";
+	text += " - Normal latest data will be read into use.";
+	return text;
+}
+
+static std::string Make_Refresh_ButtonTooltipText()
+{
+	std::string text = "To refresh data grid control:\n";
+	text += "1. Press 'Refresh' button which will update the data grid.\n";
+	text += " - This can be usefull if more data is read into system.";
+	return text;
+}
+
+static std::string Make_Name_StaticTooltipText()
+{
+	std::string text = "Here is displayed loaded Case-Study's name.";
+	return text;
+}
+
+static std::string Make_Path_StaticTooltipText()
+{
+	std::string text = "Here is displayed loaded/stored Case-Study's meta-file path.";
+	return text;
+}
+
+static std::string Make_CropData_CheckTooltipText()
+{
+	std::string text = "With this checked Smartmet will try to save in data sizes.\n";
+	text += " - Depending on data and main-map-view's area data is cropped.\n";
+	text += " - This is usefull if having global data but wants to cover only smaller area on map.";
+
+	return text;
+}
+
+static std::string Make_StoreWarnings_CheckTooltipText()
+{
+	std::string text = "Check this if you want to store HAKE warnings too.\n";
+	text += " - This is useful only in FMI, these HAKE warnings are available only there.";
+
+	return text;
+}
+
+static std::string Make_ZipData_CheckTooltipText()
+{
+	std::string text = "Check this if you want to zip stored Case-Study data.\n";
+	text += " - This will generate a zip file containing all the relevant files.\n";
+	text += " - Leaves original meta-data file and data directories intact.\n";
+	text += " - So user needs to delete those if wanting to free space on hard-drive.";
+
+	return text;
+}
+
+static std::string Make_EditEnableData_CheckTooltipText()
+{
+	std::string text = "Check this to change enabled/disabled state of each query-data.\n";
+	text += " - When checked, 7th column appears with check-box controls.\n";
+	text += " - If data is enabled, Smartmet will try to use it and load it's newest data from server.\n";
+	text += " - If disabled, smartmet will ignore the data in every way.\n";
+	text += " - If disabled, data row will turn into grey colored (grey indicates disabled state).\n";
+	text += " - After changes has been made, you'll have to restart Smartmet to apply changes.";
+
+	return text;
+}
+
+static std::string Make_MultiDataSelection_ButtonTooltipText()
+{
+	std::string text = "1. Select a data from data-grid control with left mouse click.\n";
+	text += " - You can also select a Producer or Category to load more with less clicking.\n";
+	text += "2. If you want to select multiple data, keep CTRL key down while left clicking.\n";
+
+	return text;
+}
+
+static std::string Make_PrioritizeData_ButtonTooltipText()
+{
+	std::string text = "Makes 'prioritized data loading' background works.\n";
+	text += " - Usable if Smartmet has been shutdown for a while and startup loading is slow.\n";
+	text += " - Especially if connection to server is slow and query-data files are big.\n";
+	text += " - And there are some data you need soon but know that they are loaded much later after all other data.\n";
+	text += Make_MultiDataSelection_ButtonTooltipText();
+	text += "3. Press 'Prioritize data' button and Smartmet will add these to fast load list.\n";
+	text += " - They are removed from this list as soon as the latest wanted data is loaded.";
+
+	return text;
+}
+
+static std::string Make_LoadOldData_ButtonTooltipText()
+{
+	std::string text = "Makes 'load older model run data' background works.\n";
+	text += " - Usable if Smartmet has been shutdown for a while.\n";
+	text += " - You need older model run data that are missing in local cache directory.\n";
+	text += Make_MultiDataSelection_ButtonTooltipText();
+	text += "3. Press 'Load old data' button and Smartmet will add these to load list.\n";
+	text += " - SmartMet will load all the older data that are missing locally that are found in server.";
+
+	return text;
+}
+
+void CFmiCaseStudyDlg::InitTooltipControl()
+{
+	CFmiWin32Helpers::InitializeCPPTooltip(this, m_dialog_tooltip, CASE_STUDY_DIALOG_TOOLTIP_ID, 800);
+	m_dialog_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 750); // kuinka nopeasti tooltip ilmestyy näkyviin, jos kursoria ei liikuteta [ms]
+
+	// Tässä erikseen jokainen kontrolli, jolle halutaan joku tooltip teksti
+	SetDialogControlTooltip(IDC_BUTTON_STORE_DATA, ::Make_StoreData_ButtonTooltipText());
+	SetDialogControlTooltip(IDC_BUTTON_LOAD_DATA, ::Make_LoadData_ButtonTooltipText());
+	SetDialogControlTooltip(IDC_BUTTON_CLOSE_MODE, ::Make_CloseMode_ButtonTooltipText());
+	SetDialogControlTooltip(IDC_BUTTON_REFRESH_GRID, ::Make_Refresh_ButtonTooltipText());
+	SetDialogControlTooltip(IDC_STATIC_CASE_STUDY_NAME, ::Make_Name_StaticTooltipText());
+	SetDialogControlTooltip(IDC_STATIC_CASE_STUDY_PATH, ::Make_Path_StaticTooltipText());
+	SetDialogControlTooltip(IDC_CHECK_CROP_DATA_TO_ZOOMED_MAP_AREA, ::Make_CropData_CheckTooltipText());
+	SetDialogControlTooltip(IDC_CHECK_STORE_WARNING_MESSAGES, ::Make_StoreWarnings_CheckTooltipText());
+	SetDialogControlTooltip(IDC_CHECK_ZIP_DATA, ::Make_ZipData_CheckTooltipText());
+	SetDialogControlTooltip(IDC_CHECK_EDIT_ENABLE_DATA, ::Make_EditEnableData_CheckTooltipText());
+	SetDialogControlTooltip(IDC_BUTTON_PRIORITIZE_DATA, ::Make_PrioritizeData_ButtonTooltipText());
+	SetDialogControlTooltip(IDC_BUTTON_LOAD_OLD_DATA, ::Make_LoadOldData_ButtonTooltipText());
+}
+
+void CFmiCaseStudyDlg::SetDialogControlTooltip(int controlId, const std::string& tooltipRawText)
+{
+	CWnd* controlWnd = GetDlgItem(controlId);
+	if(controlWnd)
+	{
+		auto finalText = ::GetDictionaryString(tooltipRawText.c_str());
+		m_dialog_tooltip.AddTool(controlWnd, CA2T(finalText.c_str()));
+	}
+}
+
+BOOL CFmiCaseStudyDlg::PreTranslateMessage(MSG* pMsg)
+{
+	m_dialog_tooltip.RelayEvent(pMsg);
+
+	return CDialog::PreTranslateMessage(pMsg);
 }
 
 void CFmiCaseStudyDlg::InitDialogTexts()
@@ -638,8 +811,8 @@ void CFmiCaseStudyDlg::InitDialogTexts()
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_STORE_WARNING_MESSAGES, "Store warnings");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_ZIP_DATA, "Zip data");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_CROP_DATA_TO_ZOOMED_MAP_AREA, "Crop data to zoomed main-map area");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_BROWSE, "Browse file");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_BROWSE_FOLDER, "Browse dir");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_PRIORITIZE_DATA, "Prioritize data");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_LOAD_OLD_DATA, "Load old data");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_EDIT_ENABLE_DATA, gEditEnableDataCheckControlOffStr.c_str());
 }
 
@@ -669,16 +842,16 @@ void CFmiCaseStudyDlg::DoResizerHooking(void)
 
 	bOk = m_resizer.SetAnchor(IDC_CHECK_CROP_DATA_TO_ZOOMED_MAP_AREA, ANCHOR_TOP | ANCHOR_RIGHT);
 	ASSERT(bOk == TRUE);
-	bOk = m_resizer.SetAnchor(IDC_BUTTON_BROWSE, ANCHOR_TOP | ANCHOR_RIGHT);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_PRIORITIZE_DATA, ANCHOR_TOP | ANCHOR_RIGHT);
 	ASSERT(bOk == TRUE);
-	bOk = m_resizer.SetAnchor(IDC_BUTTON_BROWSE_FOLDER, ANCHOR_TOP | ANCHOR_RIGHT);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_LOAD_OLD_DATA, ANCHOR_TOP | ANCHOR_RIGHT);
 	ASSERT(bOk == TRUE);
 
-	bOk = m_resizer.SetAnchor(IDC_EDIT_NAME_STR, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_CASE_STUDY_NAME, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
 	ASSERT(bOk == TRUE);
 	bOk = m_resizer.SetAnchor(IDC_EDIT_INFO_STR, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
 	ASSERT(bOk == TRUE);
-	bOk = m_resizer.SetAnchor(IDC_EDIT_PATH_STR, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_CASE_STUDY_PATH, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
 	ASSERT(bOk == TRUE);
 	bOk = m_resizer.SetAnchor(IDC_CHECK_EDIT_ENABLE_DATA, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
 	ASSERT(bOk == TRUE);
@@ -1213,13 +1386,13 @@ void CFmiCaseStudyDlg::GetBasicInfoFromDialog()
 {
 	UpdateData(TRUE);
     auto &caseStudySystem = itsSmartMetDocumentInterface->CaseStudySystem();
-    caseStudySystem.Name(std::string(CT2A(itsNameStrU_)));
-    caseStudySystem.Info(std::string(CT2A(itsInfoStrU_)));
+    caseStudySystem.CaseStudyName(std::string(CT2A(itsCaseStudyNameStrU_)));
+    caseStudySystem.CaseStudyInfo(std::string(CT2A(itsCaseStudyInfoStrU_)));
 
 	// polun perässä ei saa olla minkäänsuuntaisia kenoviivoja. Datan kopioinnissa käytetty 
 	// CShellFileOp -luokka on traumaattisen herkkä minkäänlaisille tai asteisille epämääräisyyksille.
 	// nyt jos polussa on kenoviiva perässä, tulee siihen kaksi kenoviivaa ja tiedostojen kopioinnit epäonnistuvat.
-	std::string strippedPathString = CT2A(itsPathStrU_);
+	std::string strippedPathString = CT2A(itsCaseStudyPathStrU_);
 	NFmiStringTools::TrimR(strippedPathString, '\\');
 	NFmiStringTools::TrimR(strippedPathString, '/');
 	NFmiStringTools::ReplaceChars(strippedPathString, '/', '\\'); // varmistetaan vielä että kaikki kenot ovat winkkarin omaan suuntaan.
@@ -1228,6 +1401,16 @@ void CFmiCaseStudyDlg::GetBasicInfoFromDialog()
 	caseStudySystem.ZipFiles(fZipData == TRUE);
 	caseStudySystem.StoreWarningMessages(fStoreWarningMessages == TRUE);
 	caseStudySystem.CropDataToZoomedMapArea(fCropDataToZoomedMapArea == TRUE);
+}
+
+static std::string AddFileExtensionIfMissing(std::string filePath, const std::string &fileExtension)
+{
+	NFmiFileString fileString(filePath);
+	if(fileString.Extension() != NFmiString(fileExtension))
+	{
+		filePath += "." + fileExtension;
+	}
+	return filePath;
 }
 
 void CFmiCaseStudyDlg::OnBnClickedButtonStoreData()
@@ -1253,24 +1436,44 @@ void CFmiCaseStudyDlg::OnBnClickedButtonStoreData()
         return;
     }
 
-    std::string metaDataTotalFileName;
-    if(itsSmartMetDocumentInterface->CaseStudySystem().StoreMetaData(this, metaDataTotalFileName, false, true))
-    {
-        std::string commandStr;
-        commandStr += "\""; // laitetaan lainausmerkit komento polun ympärille, jos siinä sattuisi olemaan spaceja
-        commandStr += itsSmartMetDocumentInterface->ApplicationDataBase().GetDecodedApplicationDirectory();
-        commandStr += "\\";
-        commandStr += gCaseStudyMakerData.first;
-        commandStr += "\" \""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
-        commandStr += metaDataTotalFileName;
-        commandStr += "\""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
-		commandStr += AddPossibleZippingOptions();
-		commandStr += AddPossibleHakeMessageOptions();
-		commandStr += AddPossibleCropDataToZoomedMapAreaOptions();
+	std::string fileExtension = "csmeta";
+	std::string fileFilter = "CaseStudy Files (*.csmeta)|*.csmeta|All Files (*.*)|*.*||";
+	std::string initialDirectory = CT2A(itsCaseStudyPathStrU_);
+	initialDirectory = PathUtils::getPathSectionFromTotalFilePath(initialDirectory);
+	std::string usedMetaDataFilePath;
+	std::string initialfileName = "CaseStudy1";
+	if(BetaProduct::GetFilePathFromUser(fileFilter, initialDirectory, usedMetaDataFilePath, false, initialfileName, this))
+	{
+		usedMetaDataFilePath = ::AddFileExtensionIfMissing(usedMetaDataFilePath, fileExtension);
+		if(itsSmartMetDocumentInterface->CaseStudySystem().StoreMetaData(this, usedMetaDataFilePath, true))
+		{
+			std::string commandStr;
+			commandStr += "\""; // laitetaan lainausmerkit komento polun ympärille, jos siinä sattuisi olemaan spaceja
+			commandStr += itsSmartMetDocumentInterface->ApplicationDataBase().GetDecodedApplicationDirectory();
+			commandStr += "\\";
+			commandStr += gCaseStudyMakerData.first;
+			commandStr += "\" \""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
+			commandStr += usedMetaDataFilePath;
+			commandStr += "\""; // laitetaan lainausmerkit metadatatiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
+			commandStr += AddPossibleZippingOptions();
+			commandStr += AddPossibleHakeMessageOptions();
+			commandStr += AddPossibleCropDataToZoomedMapAreaOptions();
 
-        CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true, true, SW_MINIMIZE);
-    }
+			CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true, true, SW_MINIMIZE);
+
+			UpdateBasicInfo(usedMetaDataFilePath, itsSmartMetDocumentInterface->CaseStudySystem());
+			UpdateData(FALSE);
+		}
+	}
     UpdateButtonStates();
+}
+
+void CFmiCaseStudyDlg::UpdateBasicInfo(const std::string &metaDataFilePath, const NFmiCaseStudySystem& caseStudySystem)
+{
+	itsCaseStudyNameStrU_ = CA2T(caseStudySystem.CaseStudyName().c_str());
+	itsCaseStudyInfoStrU_ = CA2T(caseStudySystem.CaseStudyInfo().c_str());
+	itsCaseStudyPathStrU_ = CA2T(metaDataFilePath.c_str());
+	UpdateData(FALSE);
 }
 
 std::string CFmiCaseStudyDlg::AddPossibleZippingOptions() const
@@ -1329,54 +1532,19 @@ std::string CFmiCaseStudyDlg::AddPossibleCropDataToZoomedMapAreaOptions() const
 
 void CFmiCaseStudyDlg::OnBnClickedButtonLoadData()
 {
-	CWaitCursor waitCursor;
 	UpdateData(TRUE);
-	std::string fullPathAndName = CT2A(itsPathStrU_);
-	if(itsSmartMetDocumentInterface->LoadCaseStudyData(fullPathAndName))
+	std::string fileFilter = "CaseStudy Files (*.csmeta)|*.csmeta|All Files (*.*)|*.*||";
+	std::string initialDirectory = CT2A(itsCaseStudyPathStrU_);
+	std::string usedFilePath;
+	std::string initialfileName = "CaseStudy1";
+	if(BetaProduct::GetFilePathFromUser(fileFilter, initialDirectory, usedFilePath, true, initialfileName, this))
 	{
-        itsNameStrU_ = CA2T(itsSmartMetDocumentInterface->LoadedCaseStudySystem().Name().c_str());
-        itsInfoStrU_ = CA2T(itsSmartMetDocumentInterface->LoadedCaseStudySystem().Info().c_str());
-		UpdateData(FALSE);
-	}
-	UpdateButtonStates();
-	itsSmartMetDocumentInterface->SetAllViewIconsDynamically();
-}
-
-void CFmiCaseStudyDlg::OnBnClickedButtonBrowse()
-{
-	static TCHAR BASED_CODE szFilter[] = _TEXT("CaseStudy Files (*.csmeta)|*.csmeta|All Files (*.*)|*.*||");
-
-	UpdateData(TRUE);
-
-	std::string initialDir = CT2A(itsPathStrU_);
-	if(NFmiFileSystem::DirectoryExists(initialDir) == false)
-	{
-		NFmiFileString currentFilePath(initialDir);
-		initialDir = currentFilePath.Device();
-		initialDir += currentFilePath.Path();
-	}
-
-	CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, szFilter);
-    dlg.m_ofn.lpstrInitialDir = CA2T(initialDir.c_str());
-	if(dlg.DoModal() == IDOK)
-	{
-		itsPathStrU_ = dlg.GetPathName();
-		auto nameAndInfoPair = GetNameAndInfoStringsFromSelectedMetaFilePath(std::string(CT2A(itsPathStrU_)));
-		itsNameStrU_ = CA2T(nameAndInfoPair.first.c_str());
-		itsInfoStrU_ = CA2T(nameAndInfoPair.second.c_str());
-		UpdateData(FALSE);
-	}
-}
-
-void CFmiCaseStudyDlg::OnBnClickedButtonBrowseFolder()
-{
-	UpdateData(TRUE);
-	CFolderPickerDialog dlg(_T("Select Folder"), BIF_RETURNONLYFSDIRS | BIF_USENEWUI, NULL, 0);
-
-	if(dlg.DoModal() == IDOK)
-	{
-		itsPathStrU_ = dlg.GetFolderPath();
-		UpdateData(FALSE);
+		if(itsSmartMetDocumentInterface->LoadCaseStudyData(usedFilePath))
+		{
+			UpdateBasicInfo(usedFilePath, itsSmartMetDocumentInterface->LoadedCaseStudySystem());
+		}
+		UpdateButtonStates();
+		itsSmartMetDocumentInterface->SetAllViewIconsDynamically();
 	}
 }
 
@@ -1384,7 +1552,7 @@ std::pair<std::string, std::string> CFmiCaseStudyDlg::GetNameAndInfoStringsFromS
 {
 	NFmiCaseStudySystem tmpCaseStudySystem;
 	tmpCaseStudySystem.ReadMetaData(fullPathToMetaFile, nullptr, false);
-	return std::make_pair(tmpCaseStudySystem.Name(), tmpCaseStudySystem.Info());
+	return std::make_pair(tmpCaseStudySystem.CaseStudyName(), tmpCaseStudySystem.CaseStudyInfo());
 }
 
 void CFmiCaseStudyDlg::OnBnClickedButtonCloseMode()
@@ -1482,4 +1650,90 @@ void CFmiCaseStudyDlg::OnBnClickedButtonRefreshGrid()
 	caseStudySystem.FillCaseStudyDialogData(*itsProducerSystemsHolder);
     InitGridControlValues();
 	UpdateData(FALSE);
+}
+
+static void AddProducerFileFiltersToList(const NFmiCaseStudyDataFile* rowData, std::vector<NFmiCaseStudyDataFile*> & caseStudyDialogData, std::list<std::string>* selectedDataFileFiltersInOut)
+{
+	if(rowData == nullptr || selectedDataFileFiltersInOut == nullptr)
+		return;
+
+	auto wantedProducerId = rowData->Producer().GetIdent();
+	for(const auto* caseStudyDataFile : caseStudyDialogData)
+	{
+		if(caseStudyDataFile->Producer().GetIdent() == wantedProducerId)
+		{
+			if(!caseStudyDataFile->FileFilter().empty())
+			{
+				selectedDataFileFiltersInOut->push_back(caseStudyDataFile->FileFilter());
+			}
+		}
+	}
+}
+
+static void AddCategoryFileFiltersToList(const NFmiCaseStudyDataFile* rowData, std::vector<NFmiCaseStudyDataFile*>& caseStudyDialogData, std::list<std::string>* selectedDataFileFiltersInOut)
+{
+	if(rowData == nullptr || selectedDataFileFiltersInOut == nullptr)
+		return;
+
+	auto wantedCategory = rowData->Category();
+	for(const auto* caseStudyDataFile : caseStudyDialogData)
+	{
+		if(caseStudyDataFile->Category() == wantedCategory)
+		{
+			if(!caseStudyDataFile->FileFilter().empty())
+			{
+				selectedDataFileFiltersInOut->push_back(caseStudyDataFile->FileFilter());
+			}
+		}
+	}
+}
+
+std::list<std::string> CFmiCaseStudyDlg::GetSelectedDataFileFilters()
+{
+	std::vector<int> selectedRowIndexies;
+	// Haetaan valittujen rivien numerot listaan
+	auto fixedRowCount = itsGridCtrl.GetFixedRowCount();
+	auto rowCount = itsGridCtrl.GetRowCount();
+	for(int rowIndex = fixedRowCount; rowIndex < rowCount; rowIndex++)
+	{
+		if(itsGridCtrl.IsCellSelected(rowIndex, 1))
+		{
+			selectedRowIndexies.push_back(rowIndex);
+		}
+	}
+
+	std::list<std::string> selectedDataFileFilters;
+	auto& caseStudyDialogData = itsSmartMetDocumentInterface->CaseStudySystem().CaseStudyDialogData();
+	for(auto selectedRowIndex : selectedRowIndexies)
+	{
+		auto usedRowIndex = selectedRowIndex - 1;
+		if(usedRowIndex >= 0 && usedRowIndex < caseStudyDialogData.size())
+		{
+			const auto* rowData = caseStudyDialogData[usedRowIndex];
+			if(!rowData->FileFilter().empty())
+			{
+				selectedDataFileFilters.push_back(rowData->FileFilter());
+			}
+			else if(rowData->ProducerHeader())
+			{
+				::AddProducerFileFiltersToList(rowData, caseStudyDialogData, &selectedDataFileFilters);
+			}
+			else if(rowData->CategoryHeader())
+			{
+				::AddCategoryFileFiltersToList(rowData, caseStudyDialogData, &selectedDataFileFilters);
+			}
+		}
+	}
+	return selectedDataFileFilters;
+}
+
+void CFmiCaseStudyDlg::OnBnClickedButtonPrioritizeData()
+{
+	QueryDataToLocalCacheLoaderThread::AddPrioritizedDataLoadWork(GetSelectedDataFileFilters());
+}
+
+
+void CFmiCaseStudyDlg::OnBnClickedButtonLoadOldData()
+{
+	QueryDataToLocalCacheLoaderThread::AddLoadOldDataWork(GetSelectedDataFileFilters());
 }

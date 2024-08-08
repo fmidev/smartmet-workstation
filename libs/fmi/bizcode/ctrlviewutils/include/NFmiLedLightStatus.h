@@ -113,6 +113,12 @@ class NFmiLedLightStatusSystem
 	mutable std::mutex channelReportsMutex_;
 	static NFmiLedLightStatusSystem* staticInstance_;
 	bool isInitilized_ = false;
+	// Tämä flagi kertoo että halutaanko Smartmetia jo sulkea. Jos se on true
+	// tällöin estetään tiettyjen operaatioiden tekeminen, jotta ohjelma ei kaatuisi niihin
+	// jos tiettyjen working-threadien sulkeminen kestää kauan ja niitä kutsutaan liian myöhään.
+	// Crashrpt raporteissa on näkynyt että Smartmetia suljettaessa on NFmiLedLightStatusBlockReporter:in
+	// destructor on tehnyt kutsuja jo lopetettuun NFmiLedLightStatusSystem:iin.
+	static bool programWantsToStop_;
 public:
 	NFmiLedLightStatusSystem();
 	void Initialize(const std::vector<NFmiLedChannelInitializer>& channelInitializers, bool mapViewTextStatusbarPaneIsAfterLeds);
@@ -129,6 +135,8 @@ public:
 	bool IsInitilized() const { return isInitilized_; }
 	static bool ReportToChannelFromThread(NFmiLedChannel ledChannel, const std::string& reporterName, const std::string& message, CatLog::Severity messageSeverity);
 	static bool StopReportToChannelFromThread(NFmiLedChannel ledChannel, const std::string& reporterName);
+	static void ProgramStopsNow();
+	static bool ProgramWantsToStop() { return programWantsToStop_; }
 private:
 	std::vector<ChannelReport> getChannelReports(NFmiLedChannel ledChannel) const;
 	void SetLedChannelActionMode(NFmiLedChannel ledChannel);

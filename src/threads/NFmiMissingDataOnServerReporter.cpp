@@ -38,11 +38,10 @@ namespace
 
 NFmiMissingDataOnServerReporter::NFmiMissingDataOnServerReporter() = default;
 
-bool NFmiMissingDataOnServerReporter::initialize(NFmiHelpDataInfoSystem & helpDataSystem, int workerThreadCount)
+bool NFmiMissingDataOnServerReporter::initialize(NFmiHelpDataInfoSystem & helpDataSystem)
 {
     if(!initialized_)
     {
-        workerThreadCount_ = workerThreadCount;
         queryDataOnServerCount_ = ::calcDataOnServerCount(helpDataSystem);
         if(queryDataOnServerCount_ > 0)
         {
@@ -70,31 +69,11 @@ void NFmiMissingDataOnServerReporter::doReportIfFileFilterHasNoRelatedDataOnServ
     }
 }
 
-void NFmiMissingDataOnServerReporter::workerThreadCompletesCycle(const std::string& workerThreadName)
+void NFmiMissingDataOnServerReporter::mainWorkerThreadCompletesCycle()
 {
-    {
-        // Tehd‰‰n omassa blokissa, jotta lukko aukeaa heti kuin mahdollista
-        std::lock_guard<std::mutex> lock(loaderThreadsThatHaveRunThroughCycleMutex_);
-        loaderThreadsThatHaveRunThroughCycle_.insert(workerThreadName);
-    }
-
-    if(isCycleCompletedForAllThreads())
-    {
-        // N‰m‰ rutiinit pit‰‰ lukita erikseen, jotta ei mene p‰‰llekk‰isi‰ lopetuksia
-        std::lock_guard<std::mutex> lock(cycleCompletionMutex_);
-        startHistoryLoaderThreadOnce();
-        doLedChannelReportOfMissingServerData();
-        clearThreadCycleData();
-    }
-}
-
-void NFmiMissingDataOnServerReporter::startHistoryLoaderThreadOnce()
-{
-    if(!allThreadsHaveRunThroughFirstCycle_)
-    {
-        allThreadsHaveRunThroughFirstCycle_ = true;
-        AfxGetMainWnd()->PostMessage(ID_MESSAGE_START_HISTORY_THREAD);
-    }
+    haveRunThroughFirstCycle_ = true;
+    doLedChannelReportOfMissingServerData();
+    clearThreadCycleData();
 }
 
 void NFmiMissingDataOnServerReporter::doLedChannelReportOfMissingServerData()
@@ -127,17 +106,8 @@ void NFmiMissingDataOnServerReporter::doLedChannelReportOfMissingServerData()
 
 void NFmiMissingDataOnServerReporter::clearThreadCycleData()
 {
-    {
-        // Tehd‰‰n omassa blokissa, jotta lukko aukeaa heti kuin mahdollista
-        std::lock_guard<std::mutex> lock(fileFiltersWithNoServerDataFilesMutex_);
-        fileFiltersWithNoServerDataFiles_.clear();
-    }
-
-    {
-        // Tehd‰‰n omassa blokissa, jotta lukko aukeaa heti kuin mahdollista
-        std::lock_guard<std::mutex> lock(loaderThreadsThatHaveRunThroughCycleMutex_);
-        loaderThreadsThatHaveRunThroughCycle_.clear();
-    }
+    std::lock_guard<std::mutex> lock(fileFiltersWithNoServerDataFilesMutex_);
+    fileFiltersWithNoServerDataFiles_.clear();
 }
 
 // Lis‰t‰‰n annettu fileFilter puuttuvien sarver datojen listaan.
@@ -147,7 +117,7 @@ bool NFmiMissingDataOnServerReporter::insertMissingDataFileFilter(const std::str
     std::lock_guard<std::mutex> lock(fileFiltersWithNoServerDataFilesMutex_);
     auto insertIter = fileFiltersWithNoServerDataFiles_.insert(fileFilter);
     // Huom! lokitusta tehd‰‰n vain 1. p‰‰syklin aikana
-    if(!allThreadsHaveRunThroughFirstCycle_)
+    if(!haveRunThroughFirstCycle_)
     {
         // Raportoidaan vain siis jos on uusi filefiltteri (set luokan insert:in paluu arvon second on true) 
         // jolle ei lˆydy tiedostoa serverilt‰
@@ -157,19 +127,8 @@ bool NFmiMissingDataOnServerReporter::insertMissingDataFileFilter(const std::str
     return false;
 }
 
-size_t NFmiMissingDataOnServerReporter::completedCycleThreadCount()
-{
-    std::lock_guard<std::mutex> lock(loaderThreadsThatHaveRunThroughCycleMutex_);
-    return loaderThreadsThatHaveRunThroughCycle_.size();
-}
-
 size_t NFmiMissingDataOnServerReporter::missingDataOnServerCount()
 {
     std::lock_guard<std::mutex> lock(fileFiltersWithNoServerDataFilesMutex_);
     return fileFiltersWithNoServerDataFiles_.size();
-}
-
-bool NFmiMissingDataOnServerReporter::isCycleCompletedForAllThreads()
-{
-    return workerThreadCount_ <= completedCycleThreadCount();
 }

@@ -22,9 +22,8 @@
 #include "FmiCombineDataThread.h"
 #include "FmiMacroParamUpdateThread.h"
 #include "SmartMetThreads_resource.h"
-#include "FmiQueryDataCacheLoaderThread.h"
+#include "QueryDataToLocalCacheLoaderThread.h"
 #include "FmiDataLoadingThread2.h"
-#include "FmiCacheLoaderData.h"
 #include "NFmiHelpDataInfo.h"
 #include "NFmiApplicationDataBase.h"
 #include "FmiAppDataToDbThread.h"
@@ -291,7 +290,7 @@ const int gDisableSoundingIndexDataThread = 64;
 const int gDisableWarningMessageThread = 128;
 const int gDisableDataLoaderThread = 256;
 
-static int GetDisabledThreads(void)
+static int GetDisabledThreads()
 {
 	int disableThreads = 0;
 // Ota n‰it‰ riveja pois kommentista, jos haluat disabloida tiettyj‰ threadeja testi mieless‰
@@ -331,10 +330,6 @@ CMainFrame::CMainFrame()
 
 CMainFrame::~CMainFrame()
 {
-	for(size_t i=0; i < itsQDataCacheLoaderDatas.size(); i++)
-		delete itsQDataCacheLoaderDatas[i];
-	itsQDataCacheLoaderDatas.clear();
-
 	CtrlView::DestroyBitmap(&itsRedFlagBitmap);
     CtrlView::DestroyBitmap(&itsOrangeFlagBitmap);
 }
@@ -748,7 +743,7 @@ void CMainFrame::LocalizeMenuStrings()
 // T‰ss‰ metodissa on tarkoitus k‰ynnist‰‰ ne working-threadit, jotka k‰ynnistet‰‰n aina.
 // StartDataLoadingWorkingThread -metodissa k‰ynnistet‰‰n ne working-threadit, jotka
 // k‰ynnistet‰‰n vain ns. operatiivisessa tilassa.
-void CMainFrame::StartAdditionalWorkerThreads(void)
+void CMainFrame::StartAdditionalWorkerThreads()
 {
 	DoAppDataBaseCollection(NFmiApplicationDataBase::kStart);
 
@@ -764,81 +759,33 @@ void CMainFrame::StartAdditionalWorkerThreads(void)
 	StartQDataCacheThreads();
 }
 
-static void MakeDataLoaderThread(int priority, double minSizeMB, double maxSizeMB, int win32ThreadPriority, std::vector<CFmiCacheLoaderData*> &theQDataCacheLoaderDatas, int theStartUpDelayInMS, bool fMakeHistoryThread = false)
-{
-	CFmiCacheLoaderData *cacheLoaderData = new CFmiCacheLoaderData(); 
-	cacheLoaderData->itsThreadPriority = priority;
-	std::string threadName = "thread #";
-	threadName += NFmiStringTools::Convert(cacheLoaderData->itsThreadPriority);
-	cacheLoaderData->itsThreadName = threadName;
-	cacheLoaderData->itsMinDataSizeInMB = minSizeMB;
-	cacheLoaderData->itsMaxDataSizeInMB = maxSizeMB;
-	cacheLoaderData->itsStartUpWaitTimeInMS = theStartUpDelayInMS;
-	if(fMakeHistoryThread)
-		AfxBeginThread(CFmiQueryDataCacheLoaderThread::DoHistoryThread, cacheLoaderData, win32ThreadPriority);
-	else
-		AfxBeginThread(CFmiQueryDataCacheLoaderThread::DoThread, cacheLoaderData, win32ThreadPriority);
-	theQDataCacheLoaderDatas.push_back(cacheLoaderData);
-}
-
-// t‰lle piti tehd‰ oma metodi, koska SmartMetin asetuksia muuttamalla t‰m‰ pit‰‰ k‰ynnist‰‰ joskus erikseen tai uudelleen.
-// T‰ss‰ k‰ynnistet‰‰n kolme eri tasoista threadia, joilla ladataan cacheen eri kokoisia (eri prioriteetteja) qdata-tiedostoja.
-void CMainFrame::StartQDataCacheThreads(void)
+// T‰lle piti tehd‰ oma metodi, koska SmartMetin asetuksia muuttamalla t‰m‰ pit‰‰ k‰ynnist‰‰ joskus erikseen tai uudelleen.
+void CMainFrame::StartQDataCacheThreads()
 {
 	if(itsDoc->HelpDataInfoSystem()->UseQueryDataCache() == false)
 		return ; // ei k‰ynnistet‰ cache-worker-threadeja, koska asetukset sanovat ett‰ niit‰ ei k‰ytet‰
 
-	// Datojen serverilt‰ lokaali levylle kopiointiin k‰ytet‰‰n n‰in montaa threadia
-	int usedDataLoaderThreadCount = 3;
     std::string smartMetBinariesDirectory = itsDoc->ApplicationDataBase().GetDecodedApplicationDirectory(); 
-	// k‰ynnistet‰‰n qdata cache-loader threadi kerran, ja se pit‰‰ ensin initialisoida. T‰m‰ threadi k‰ynnistet‰‰n aina.
-	CFmiQueryDataCacheLoaderThread::InitHelpDataInfo(*itsDoc->HelpDataInfoSystem(), smartMetBinariesDirectory, itsDoc->FileCleanerSystem().CleaningTimeStepInHours(), itsDoc->WorkingDirectory(), usedDataLoaderThreadCount);
-	// K‰ynnistet‰‰n 3 eri tasoista cache-loader threadia 
-	// HUOM!!! Muista laittaa min ja max tiedostokoko rajat niin ettei mik‰‰n koko j‰‰ niiden ulkopuolelle.
-	// Eli laita 1. max 2. seuraavan min:iksi jne.
-	double mediumFileSizeMB = itsDoc->HelpDataInfoSystem()->CacheMediumFileSizeMB();
-	double largeFileSizeMB = itsDoc->HelpDataInfoSystem()->CacheLargeFileSizeMB();
 	double maximumFileSizeMB = itsDoc->HelpDataInfoSystem()->CacheMaximumFileSizeMB();
-	// Testi threadi, joka tekee kaikki tiedosto koot
-//	::MakeDataLoaderThread(1, 0, maximumFileSizeMB, THREAD_PRIORITY_BELOW_NORMAL, itsQDataCacheLoaderDatas);
-	// Oikea threadi setti
-	int thread1DelayInMS = 0*1000;
-	int thread2DelayInMS = 2*1000;
-	int thread3DelayInMS = 3*1000;
-	if(itsDoc->MachineThreadCount() >= 6)
-	{ // jos konessa on paljon coreja, ei tarvitse viivytt‰‰ eri threadien alkua niin paljoa
-		thread1DelayInMS = 0*1000;
-		thread2DelayInMS = 2*1000;
-		thread3DelayInMS = 20*1000;
-	}
+	// k‰ynnistet‰‰n qdata cache-loader threadi kerran, ja se pit‰‰ ensin initialisoida. T‰m‰ threadi k‰ynnistet‰‰n aina.
+	auto loadDataAtStartUp = itsDoc->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().LoadDataAtStartUp();
+	auto autoLoadNewCacheData = itsDoc->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData();
+	QueryDataToLocalCacheLoaderThread::InitHelpDataInfo(*itsDoc->HelpDataInfoSystem(), smartMetBinariesDirectory, itsDoc->FileCleanerSystem().CleaningTimeStepInHours(), loadDataAtStartUp, autoLoadNewCacheData, itsDoc->WorkingDirectory(), maximumFileSizeMB);
 
-    CFmiQueryDataCacheLoaderThread::LoadDataAtStartUp(itsDoc->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().LoadDataAtStartUp());
-    CFmiQueryDataCacheLoaderThread::AutoLoadNewCacheDataMode(itsDoc->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData());
-
-	// HUOM1 k‰ynnist‰n data-kopiointithreadit v‰hiten merkitt‰v‰st‰ merkitt‰vimp‰‰n, koska
-	// ainakin 1-2 core systeemeiss‰ viimeiseksi k‰ynnistetyt threadit n‰ytt‰v‰t saavan 
-	// etulyˆnti aseman k‰ytetyist‰ prioriteeteista huolimatta.
-    // HUOM2 VC++2012 -k‰‰nt‰j‰ll‰ pit‰‰kin k‰ynnist‰‰ t‰rkeysj‰rjestyksess‰ (edellinen kommentti oli VC++2008 ajoilta).
-    // HUOM3 Nyt "viuhti on Linux serveri" -kaudella ja VC++2012, pit‰‰ taas n‰emm‰ k‰ytt‰‰ k‰‰nteist‰ j‰rjestyst‰ (ja nyt 
-    // j‰rjestys on tosi t‰rke‰‰, koska yleens‰ vain yksi threadeista toimii kerrallaan).
-	if((itsDisableThreadsVariable & gDisableDataCache1Thread) == 0)
-		::MakeDataLoaderThread(1, 0, mediumFileSizeMB, THREAD_PRIORITY_NORMAL, itsQDataCacheLoaderDatas, thread1DelayInMS);
-	if((itsDisableThreadsVariable & gDisableDataCache2Thread) == 0)
-		::MakeDataLoaderThread(2, mediumFileSizeMB, largeFileSizeMB, THREAD_PRIORITY_NORMAL, itsQDataCacheLoaderDatas, thread2DelayInMS);
-	if((itsDisableThreadsVariable & gDisableDataCache3Thread) == 0)
-		::MakeDataLoaderThread(3, largeFileSizeMB, maximumFileSizeMB, THREAD_PRIORITY_BELOW_NORMAL, itsQDataCacheLoaderDatas, thread3DelayInMS); // laitetaan tosi isot tiedostot tulemaan pienemm‰ll‰ prioriteetill‰
+	std::thread t(QueryDataToLocalCacheLoaderThread::DoThread);
+	t.detach(); // Detach the thread
 }
 
-void CMainFrame::StartHistoryDataCacheThread(void)
+void CMainFrame::StartHistoryDataCacheThread()
 {
     double maximumFileSizeMB = itsDoc->HelpDataInfoSystem()->CacheMaximumFileSizeMB();
     // T‰m‰ yritt‰‰ k‰ynnist‰‰ uuden worker threadin. Jos se on jo k‰ynniss‰, uusi threadi lopettaa saman 2 sekunnin odottelun j‰lkeen.
-    ::MakeDataLoaderThread(4, 0, maximumFileSizeMB, THREAD_PRIORITY_NORMAL, itsQDataCacheLoaderDatas, 0, true); // laitetaan tosi isot tiedostot tulemaan pinemm‰ll‰ prioriteetill‰
+//    ::MakeDataLoaderThread(4, 0, maximumFileSizeMB, THREAD_PRIORITY_NORMAL, itsQDataCacheLoaderDatas, 0, true); // laitetaan tosi isot tiedostot tulemaan pinemm‰ll‰ prioriteetill‰
 }
 
-void CMainFrame::StopQDataCacheThreads(void)
+void CMainFrame::StopQDataCacheThreads()
 {
-	CFmiQueryDataCacheLoaderThread::CloseNow(); // t‰m‰ on halppoa, kaikki cache-worker-threadit seuraavat t‰m‰ flagin asetusta
+	QueryDataToLocalCacheLoaderThread::CloseNow();
 }
 
 typedef std::deque<std::pair<time_t, std::string> > MessageContainer;
@@ -1268,6 +1215,7 @@ void CMainFrame::OnClose()
             theApp.AllowApplicationToClose(true);
 			itsDoc->LogMessage("Give Working-threads 15 s time to stop.", CatLog::Severity::Info, CatLog::Category::Operational);
 			DoAppDataBaseCollection(NFmiApplicationDataBase::kClose);
+			NFmiLedLightStatusSystem::ProgramStopsNow();
 
             // HUOM! Jos WmsSupport:in alustus on ep‰onnistunut, ei saa tehd‰ tappok‰sky‰ ja odottelua
             // koska mystisest‰ syyst‰ t‰llˆin CFmiDataLoadingThread2:en lopetus ep‰onnistuu DEBUG moodissa (ei release).
@@ -1279,7 +1227,7 @@ void CMainFrame::OnClose()
 			CFmiCombineDataThread::CloseNow(); // sama t‰ss‰ combineData-threadille
 			CFmiSoundingIndexDataThread::CloseNow(); // sama t‰ss‰ soundingIndexData-threadille
 			CFmiMacroParamUpdateThread::CloseNow(); // t‰ss‰ sama macroParam p‰ivitys -threadille
-			CFmiQueryDataCacheLoaderThread::CloseNow(); // t‰ss‰ sama queryData cachetus -threadeille (3 kpl kerralla)
+			QueryDataToLocalCacheLoaderThread::CloseNow(); // t‰ss‰ sama queryData cachetus -threadeille (3 kpl kerralla)
             NFmiSatelliteImageCacheSystem::StopUpdateThreads();
 #ifndef DISABLE_CPPRESTSDK
             itsDoc->WarningCenterSystem().kill();
@@ -1342,21 +1290,13 @@ void CMainFrame::OnClose()
 	}
 }
 
-void CMainFrame::WaitQDataCacheThreadsToStop(void)
+void CMainFrame::WaitQDataCacheThreadsToStop()
 {
-	bool status = true;
-	int waitTimeInSeconds = 6;
-	if(itsDoc->MachineThreadCount() < 3)
-		waitTimeInSeconds = 10;
-	for(size_t i=0; i < itsQDataCacheLoaderDatas.size(); i++)
-	{
-		if(CFmiQueryDataCacheLoaderThread::WaitToClose(waitTimeInSeconds * 1000, itsQDataCacheLoaderDatas[i]) == false)
-			status = false;
-	}
-	if(status)
-		itsDoc->LogMessage("QueryData cache-threads stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
+	int waitTimeInSeconds = 10;
+	if(QueryDataToLocalCacheLoaderThread::WaitToClose(waitTimeInSeconds * 1000))
+		itsDoc->LogMessage("QueryData to local cache copying threads stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
 	else
-		itsDoc->LogMessage("Some problem with QueryData cache-threads stoppage, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
+		itsDoc->LogMessage("Some problem with QueryData to local cache copying threads stoppage, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
 }
 
 void CMainFrame::ParameterSelectionSystemUpdateTimerStart(int waitTimeInSeconds)
@@ -1576,7 +1516,7 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 	CFmiUsedFrameWndParent::OnTimer(nIDEvent);
 }
 
-void CMainFrame::CheckForAutoLoadTimerStart(void)
+void CMainFrame::CheckForAutoLoadTimerStart()
 {
 	if(itsDoc->EditedDataNeedsToBeLoaded())
 	{
@@ -1584,7 +1524,7 @@ void CMainFrame::CheckForAutoLoadTimerStart(void)
 	}
 }
 
-void CMainFrame::PutWarningFlagTimerOn(void)
+void CMainFrame::PutWarningFlagTimerOn()
 {
 	if(itsDoc->EditedSmartInfo() && itsDoc->IsEditedDataInReadOnlyMode() && itsFlagButtonIndex != -1)
 	{
@@ -1592,7 +1532,7 @@ void CMainFrame::PutWarningFlagTimerOn(void)
 	}
 }
 
-void CMainFrame::StartDataLoadingWorkingThread(void)
+void CMainFrame::StartDataLoadingWorkingThread()
 {
 	// datan lataus thread k‰ynnistys, jos ei olla ns. normaali moodissa
 	if(itsDoc->EditorModeDataWCTR()->EditorMode() != NFmiMetEditorModeDataWCTR::kNormal)
@@ -1727,7 +1667,7 @@ void CMainFrame::StartNewQueryDataLoadedUpdateTimer(const std::string &loadedFil
     g_NewQueryDataReadList += loadedFileNames;
 }
 
-void CMainFrame::GetNewWarningMessages(void)
+void CMainFrame::GetNewWarningMessages()
 {
 #ifndef DISABLE_CPPRESTSDK
     if(itsDoc)
@@ -1742,7 +1682,7 @@ void CMainFrame::GetNewWarningMessages(void)
 #endif // DISABLE_CPPRESTSDK
 }
 
-void CMainFrame::DoMacroParamUpdate(void)
+void CMainFrame::DoMacroParamUpdate()
 {
 	if(itsDoc)
 	{
