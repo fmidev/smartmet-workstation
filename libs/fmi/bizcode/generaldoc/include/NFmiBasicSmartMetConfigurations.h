@@ -13,6 +13,7 @@
 #include "catlog/catlog.h"
 #include "NFmiApplicationDataBase.h"
 #include "NFmiCachedRegistryValue.h"
+#include "NFmiMilliSecondTimer.h"
 #include "FmiWin32Helpers.h"
 #include "Splasher.h"
 
@@ -56,7 +57,7 @@ public:
     void Verbose(bool newValue) {fVerbose = newValue;}
     void DoStartupLogging(const std::string &theAction);
     const std::vector<DrawStringData>& SplashScreenTextDataVector() const { return itsSplashScreenTextDataVector; }
-    int RunningTimeInSeconds();
+    double RunningTimeInSeconds() { return itsElapsedRunningTimer.elapsedTimeInSeconds(); }
     std::string MakeRunningTimeString();
     bool IsToolMasterAvailable() const { return fToolMasterAvailable; }
     void ToolMasterAvailable(bool newValue) { fToolMasterAvailable = newValue; }
@@ -64,7 +65,6 @@ public:
     void EnableCrashReporter(bool newValue) { fEnableCrashReporter = newValue; }
     const std::string& BetaAutomationListPath() const { return itsBetaAutomationListPath; }
     void BetaAutomationListPath(const std::string &newPath) { itsBetaAutomationListPath = newPath; }
-    const NFmiTime& SmartMetStartingTime() const { return itsStartingTime; }
     static void DoInitializationAbortMessageBox(const std::string& errorString, const std::string& titleString, bool throwAbortException);
 
 private:
@@ -130,8 +130,8 @@ private:
 													// luodaan aina instanssi kohtaisesti, ett‰ tiedet‰‰n mik‰ open kuuluu mihinkin update ja close tietoihin.
     bool fVerbose; // Onko lokituksen verbose moodi p‰‰ll‰ vai ei 
     std::vector<DrawStringData> itsSplashScreenTextDataVector;
-    // Milloin Smartmet k‰ynnistyi
-    NFmiTime itsStartingTime;
+    // Smartmetin k‰ynniss‰oloajan laskuri
+    NFmiNanoSecondTimer itsElapsedRunningTimer;
     // Onko agx Uniras ToolMaster lisenssi kunnossa, jos on, k‰yt‰ toolmasteria, muuten ‰l‰
     bool fToolMasterAvailable;
     // CrashReporter on systeemi, joka tekee SmartMetin kaatuessa kaatumisraportin, joka voidaan l‰hett‰‰ kehitt‰jille s‰hkˆpostilla.

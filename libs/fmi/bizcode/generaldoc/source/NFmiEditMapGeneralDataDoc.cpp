@@ -10836,8 +10836,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     int RunningTimeInSeconds()
     {
-        return itsBasicConfigurations.RunningTimeInSeconds();
-    }
+		return boost::math::iround(BasicSmartMetConfigurations().RunningTimeInSeconds());
+	}
 
     Q2ServerInfo& GetQ2ServerInfo()
     {
@@ -10921,14 +10921,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsLedLightStatusSystem;
 	}
 
-	int GetApplicationRunnningTimeInSeconds()
-	{
-		auto t1 = BasicSmartMetConfigurations().SmartMetStartingTime().UTCTime().EpochTime();
-		auto t2 = time(0);
-		double diff = difftime(t2, t1);
-		return boost::math::iround(diff);
-	}
-
 	// FixDataElapsedTimeInSeconds funktio korjaa yhden mahdollisen querydatoihin tehdyn aikaväärennöksen.
 	// QueryDatoihin talletetaan timeri joka laskee sen latauksesta käyttöön kuluneen ajan.
 	// Kyseisen ajan avulla voidaan merkitä käyttöliittymässä alle 5 minuuuttia sitten ladatatut datat uusiksi
@@ -10939,7 +10931,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	// silloin kun latausaika on suurempi kuin smartmetin käynnissäoloaika.
 	int FixDataElapsedTimeInSeconds(int elapsedDataTimeInSeconds)
 	{
-		auto runninTimeInSeconds = GetApplicationRunnningTimeInSeconds();
+		auto runninTimeInSeconds = RunningTimeInSeconds();
 		if(elapsedDataTimeInSeconds > runninTimeInSeconds)
 		{
 			elapsedDataTimeInSeconds -= 4*60;
@@ -10947,45 +10939,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return elapsedDataTimeInSeconds;
 	}
 
-	void AddSpaceToNonEmptyString(std::string &str)
-	{
-		if(!str.empty())
-		{
-			str += " ";
-		}
-	}
-
 	std::string MakeElapsedTimeString(int timeInSeconds)
 	{
-		const int secondsInDay = 3600 * 24;
-		const int secondsInHour = 3600;
-		std::string str;
-		int days = (int)(timeInSeconds / secondsInDay);
-		int remainingTimeInSeconds = timeInSeconds - (days * secondsInDay);
-		int hours = (int)(remainingTimeInSeconds / secondsInHour);
-		remainingTimeInSeconds = remainingTimeInSeconds - (hours * secondsInHour);
-		int minutes = (int)(remainingTimeInSeconds / 60);
-		if(days > 0)
-		{
-			AddSpaceToNonEmptyString(str);
-			str += NFmiStringTools::Convert<int>(days);
-			str += " d";
-		}
-
-		if(hours > 0)
-		{
-			AddSpaceToNonEmptyString(str);
-			str += NFmiStringTools::Convert<int>(hours);
-			str += " h";
-		}
-		
-		if(minutes > 0)
-		{
-			AddSpaceToNonEmptyString(str);
-			str += NFmiStringTools::Convert<int>(minutes);
-			str += " min";
-		}
-		return str;
+		return NFmiMilliSecondTimer::EasyTimeDiffStr(timeInSeconds * 1000, true);
 	}
 
 	void DoIsAnyQueryDataLateChecks()
