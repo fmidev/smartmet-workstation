@@ -342,7 +342,7 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsSmartMetEditingMode(CtrlViewUtils::kFmiEditingModeNormal)
 ,itsSavedDirectory()
 ,itsCurrentMacroText()
-,itsMacroParamSystem()
+,itsMacroParamSystemPtr()
 ,itsCrossSectionSystem(CtrlViewUtils::MaxViewGridYSize)
 ,itsPossibleUsedDataLoadingGrid(0)
 ,itsSynopStationPrioritySystem()
@@ -1687,8 +1687,10 @@ void InitMacroParamSystem(bool haveAbortOption)
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	try
 	{
-		itsMacroParamSystem.RootPath(itsMacroPathSettings.MacroParamPath());
-		NFmiFileSystem::CreateDirectory(itsMacroParamSystem.RootPath()); // luodaan varmuuden vuoksi hakemisto, jos ei ole jo
+		std::lock_guard<std::mutex> macroParamSystemLock(itsMacroParamSystemMutex);
+		itsMacroParamSystemPtr = std::make_shared<NFmiMacroParamSystem>();
+		itsMacroParamSystemPtr->RootPath(itsMacroPathSettings.MacroParamPath());
+		NFmiFileSystem::CreateDirectory(itsMacroParamSystemPtr->RootPath()); // luodaan varmuuden vuoksi hakemisto, jos ei ole jo
 
 	}
 	catch(exception &e)
@@ -2706,8 +2708,8 @@ void PrepareForParamAddSystemUpdate()
 {
     if(!ParameterSelectionSystem().updatePending())
     {
-        ApplicationInterface::GetApplicationInterfaceImplementation()->ParameterSelectionSystemUpdateTimerStart(ParameterSelectionSystem().updateWaitTimeoutInSeconds());
         ParameterSelectionSystem().updatePending(true);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ParameterSelectionSystemUpdateTimerStart(ParameterSelectionSystem().updateWaitTimeoutInSeconds());
     }
 }
 
@@ -3580,7 +3582,7 @@ void AddMacroParamPartToPopUpMenu(const MenuCreationSettings &theMenuSettings, N
     auto menuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kMacroParam);
 	NFmiMenuItemList *macroParamsMenuList = new NFmiMenuItemList;
 
-	std::vector<NFmiMacroParamItem> &macroParamItemList = itsMacroParamSystem.MacroParamItemTree();
+	std::vector<NFmiMacroParamItem> &macroParamItemList = MacroParamSystem()->MacroParamItemTree();
 	AddMacroParamPartToPopUpMenu(theMenuSettings, macroParamsMenuList, macroParamItemList, theDataType);
 	menuItem->AddSubMenu(macroParamsMenuList);
 	theMenuList->Add(std::move(menuItem));
@@ -6739,14 +6741,14 @@ bool InitCPManagerSet(void)
 		NFmiViewSettingMacro::CrossSectionView &view = theMacro.GetCrossSectionView();
 
 		view.CrossSectionSystem(itsCrossSectionSystem);
-		view.SetAllRowParams(&GetCombinedMapHandler()->getCrossSectionDrawParamListVector(), itsMacroParamSystem);
+		view.SetAllRowParams(&GetCombinedMapHandler()->getCrossSectionDrawParamListVector(), *MacroParamSystem());
 	}
 
 	void FillExtraMapViewSettingMacro2(NFmiViewSettingMacro::MapViewDescTop &theViewMacro, NFmiMapViewDescTop &theDescTop, int theDescTopIndex)
 	{
         boost::shared_ptr<NFmiMapViewWinRegistry> mapViewWinRegistry = ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex);
         theViewMacro.SetMapViewDescTop(theDescTop, *mapViewWinRegistry.get(), false);
-		theViewMacro.SetAllRowParams(theDescTop.DrawParamListVector(), itsMacroParamSystem);
+		theViewMacro.SetAllRowParams(theDescTop.DrawParamListVector(), *MacroParamSystem());
 		theViewMacro.DipMapHelperList(theDescTop.GetViewMacroDipMapHelperList());
 	}
 
@@ -7221,7 +7223,7 @@ bool InitCPManagerSet(void)
 		// alunperin makron nimi talletettiin tiedostoon. Tästä on seurannut ongelmia. Nyt
 		// makron nimi otetaan tiedoston nimestä.
         theViewMacro.Name(GetFileNameHeader(theFileName));
-        theViewMacro.SetMacroParamInitFileNames(MacroParamSystem().RootPath());
+        theViewMacro.SetMacroParamInitFileNames(MacroParamSystem()->RootPath());
 		theViewMacro.InitFileName(theFileName);
 
 		return status;
@@ -7655,9 +7657,11 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 		return itsSmartToolInfo.CurrentScript();
 	}
 
-	NFmiMacroParamSystem& MacroParamSystem(void)
+	// Palauttaa kopion shared_ptr:sta, jotta sitä voi käyttää thread-turvallisesti
+	std::shared_ptr<NFmiMacroParamSystem> MacroParamSystem()
 	{
-		return itsMacroParamSystem;
+		std::lock_guard<std::mutex> macroParamSystemLock(itsMacroParamSystemMutex);
+		return itsMacroParamSystemPtr;
 	}
 
 	// lisää halutun nimisen macroParamin halutun karttanäytön riville (1-5)
@@ -7670,6 +7674,7 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 	// poistaa halutun macroparamin dokumentista, tiedostoista ja näytöiltä
 	void RemoveMacroParam(const std::string &theName)
 	{
+		auto macroParamSystemPtr = MacroParamSystem();
 		if(theName.empty())
 			return ;
 		else if(theName[0] == '<')
@@ -7677,7 +7682,7 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 			string tmp(theName);
 			NFmiStringTools::TrimL(tmp, '<');
 			NFmiStringTools::TrimR(tmp, '>');
-			string totalPath(itsMacroParamSystem.CurrentPath());
+			string totalPath(macroParamSystemPtr->CurrentPath());
 			totalPath += tmp;
 			list<string> fileList = NFmiFileSystem::DirectoryFiles(totalPath);
 			if(fileList.empty())
@@ -7690,7 +7695,7 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 		}
 		else
 		{
-			boost::shared_ptr<NFmiMacroParamFolder> currentFolder = MacroParamSystem().GetCurrentFolder();
+			boost::shared_ptr<NFmiMacroParamFolder> currentFolder = macroParamSystemPtr->GetCurrentFolder();
 			if(currentFolder)
 				currentFolder->Remove(theName); // poista macroparam mpsysteemistä (joka tuhoaa myös tiedostot)
 			GetCombinedMapHandler()->removeMacroParamFromDrawParamLists(theName); // poista macroparam drawparamlistoista
@@ -8671,6 +8676,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, true, true, true); // laitetaan kartta likaiseksi
 		WindTableSystem().MustaUpdateTable(true);
 		GetCombinedMapHandler()->makeApplyViewMacroDirtyActions(ApplicationWinRegistry().DrawObjectScaleFactor());
+		ParameterSelectionSystem().dialogDataNeedsUpdate(true);
 
 		if(!makeDirtyActionsOnly)
 		{
@@ -10785,7 +10791,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             parameterSelectionSystem.initialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(),
                 *InfoOrganizer(), *HelpDataInfoSystem(), HelpDataIdsForParameterSelectionSystem(), customCategories);
 
-            auto macroParamSystemCallBackFunction = [this]() {return std::ref(this->MacroParamSystem()); };
+            auto macroParamSystemCallBackFunction = [this]() {return this->MacroParamSystem(); };
             parameterSelectionSystem.setMacroParamSystemCallback(macroParamSystemCallBackFunction);
 
             // Add other data to help data. 
@@ -11028,6 +11034,17 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsVirtualTimeData.GetVirtualTimeTooltipText(CaseStudyModeOn());
 	}
 
+	void UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr)
+	{
+		// MacroParamSystem:in käytön synkronointi päälle
+		std::lock_guard<std::mutex> macroParamSystemLock(itsMacroParamSystemMutex);
+		// Päivtetään uuteen MacroParamSystem:iin työdatan käytössä olevia asetuksia
+		updatedMacroParamSystemPtr->UpdateToWorkingData(*itsMacroParamSystemPtr);
+		// Tehdään working-MacroParamSystem:in swappaus
+		itsMacroParamSystemPtr.swap(updatedMacroParamSystemPtr);
+		LogMessage("UpdateMacroParamSystemContent: updated used macroParamSystem from working-thread", CatLog::Severity::Debug, CatLog::Category::Operational);
+	}
+
 	NFmiVirtualTimeData itsVirtualTimeData;
 	NFmiMouseClickUrlActionData itsMouseClickUrlActionData;
 	std::vector<std::string> itsLoadedDataTriggerList;
@@ -11248,7 +11265,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	NFmiHPlaceDescriptor *itsPossibleUsedDataLoadingGrid; // jos editorissa halutaan käyttää muuta kuin apudatojen omia hilamääreitä, käytetään tätä conffi-tiedostosta luettua speksiä
 	NFmiCrossSectionSystem itsCrossSectionSystem; // poikkileikkaus piirron pisteiden hanskaus systeemi
 	string itsLatestMacroParamErrorText; // kun macroParam piirretään karttanäytölle, ja tulee virhe, talletetaan tähän aina viimeisin virhe ilmoitus
-	NFmiMacroParamSystem itsMacroParamSystem; // tämä hanskaa macroParamit, joilla voi piirtää smarttoolmacroja karttanäytölle
+	std::shared_ptr<NFmiMacroParamSystem> itsMacroParamSystemPtr; // tämä hanskaa macroParamit, joilla voi piirtää smarttoolmacroja karttanäytölle
+	std::mutex itsMacroParamSystemMutex; // Tällä varmistetaan että macroParam kyselyjä ja päivityksiä tehdään synkronoidusti
 	string itsCurrentMacroText; // tässä on tallessa viimeisin smarttool-dialogin teksti
 								// käytetään macroparam-näytön testivaiheessa
 
@@ -12005,7 +12023,7 @@ const std::string& NFmiEditMapGeneralDataDoc::GetCurrentSmartToolMacro(void)
 	return pimpl->GetCurrentSmartToolMacro();
 }
 
-NFmiMacroParamSystem& NFmiEditMapGeneralDataDoc::MacroParamSystem(void)
+std::shared_ptr<NFmiMacroParamSystem> NFmiEditMapGeneralDataDoc::MacroParamSystem(void)
 {
 	return pimpl->MacroParamSystem();
 }
@@ -13392,4 +13410,9 @@ void NFmiEditMapGeneralDataDoc::VirtualTime(const NFmiMetTime& virtualTime)
 std::string NFmiEditMapGeneralDataDoc::GetVirtualTimeTooltipText() const
 {
 	return pimpl->GetVirtualTimeTooltipText();
+}
+
+void NFmiEditMapGeneralDataDoc::UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr)
+{
+	pimpl->UpdateMacroParamSystemContent(std::move(updatedMacroParamSystemPtr));
 }
