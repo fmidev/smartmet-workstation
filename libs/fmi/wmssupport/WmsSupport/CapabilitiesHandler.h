@@ -72,6 +72,6 @@ namespace Wms
         bool isCapabilityTreeAvailable() const;
         bool getCapabilitiesHaveBeenRetrieved() const;
         static void setParameterSelectionUpdateCallback(std::function<void()>& parameterSelectionUpdateCallback);
-        static void firstTimeUpdateCallbackWrapper();
+        static void getCapabilitiesUpdateCallbackWrapper();
     };
 }
