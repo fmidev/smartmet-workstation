@@ -22,6 +22,7 @@
 #include "WmsSupport/WmsSupport.h"
 #include "WmsSupport/ChangedLayers.h"
 #include "UnicodeStringConversions.h"
+#include <boost/algorithm/string.hpp>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -719,7 +720,7 @@ BOOL CFmiParameterSelectionDlg::OnInitDialog()
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
     itsGridCtrl.SetDocument(itsSmartMetDocumentInterface);
 
-    UpdateGridControlValues();
+    UpdateGridControlValues(false, "");
     auto LButtonDblClkCallback = [this]() {this->HandleGridCtrlsLButtonDblClk(); };
     itsGridCtrl.itsLButtonDblClkCallback = LButtonDblClkCallback;
     AdjustDialogControls();
@@ -1030,22 +1031,24 @@ void CFmiParameterSelectionDlg::SetGridRow(int row, const AddParams::SingleRowIt
     }
 }
 
-void CFmiParameterSelectionDlg::UpdateGridControlValues(bool searchRemoved)
+void CFmiParameterSelectionDlg::UpdateGridControlValues(bool searchRemoved, const std::string &searchStr)
 {
     static bool fFirstTime = true;
-    std::string searchText = CFmiWin32Helpers::CT2std(itsSearchText);
 
     if(searchRemoved)
     {
         UpdateGridControlValuesWhenSearchRemoved();
     }
-    else if(fFirstTime || itsParameterSelectionSystem->dialogDataNeedsUpdate() && searchText.empty())
+    else if(fFirstTime || itsParameterSelectionSystem->dialogDataNeedsUpdate() && searchStr.empty())
     {
         UpdateGridControlValuesInNormalMode(fFirstTime);
         fFirstTime = false;
     }
-    else if(!searchText.empty())
+    else if(!searchStr.empty())
+    {
         UpdateGridControlValuesWhenSearchActive();
+    }
+    itsParameterSelectionSystem->dialogDataNeedsUpdate(false);
 }
 
 void CFmiParameterSelectionDlg::UpdateGridControlValuesInNormalMode(bool fFirstTime)
@@ -1195,8 +1198,8 @@ void CFmiParameterSelectionDlg::Update()
 {
     if(IsWindowVisible())
     {
-        bool searchRemoved = UpdateSearchIfNeeded();
-        UpdateGridControlValues(searchRemoved);
+        auto searchRemovedAndSearchStr = UpdateSearchIfNeeded();
+        UpdateGridControlValues(searchRemovedAndSearchStr.first, searchRemovedAndSearchStr.second);
     }
 }
 
@@ -1213,21 +1216,23 @@ void CFmiParameterSelectionDlg::DoTimeSerialSideParametersCheckboxAdjustments()
     UpdateData(FALSE);
 }
 
-// Returns true if search word is removed
-bool CFmiParameterSelectionDlg::UpdateSearchIfNeeded()
+// Returns true if search word is removed and current cleaned search string
+std::pair<bool, std::string> CFmiParameterSelectionDlg::UpdateSearchIfNeeded()
 {
     //If search word has changed, do update.
     auto searchtext = CFmiWin32Helpers::CT2std(itsSearchText);
+    // Let's trim all white space away from start and end of input string
+    boost::trim(searchtext);
     if(searchtext != itsPreviousSearchText)
     {   
         itsParameterSelectionSystem->searchItemsThatMatchToSearchWords(searchtext);
         itsPreviousSearchText = searchtext;
         if(searchtext.empty()) //If search text is removed, collapse all but category nodes
         {
-            return true;
+            return std::make_pair(true, searchtext);
         }  
     }
-    return false;
+    return std::make_pair(false, searchtext);
 }
 
 void CFmiParameterSelectionDlg::InitDialogTexts(void)
@@ -1346,12 +1351,11 @@ void CFmiParameterSelectionDlg::OnTimer(UINT_PTR nIDEvent)
 
 void CFmiParameterSelectionDlg::UpdateGridControlIfNeeded()
 {
-	if (itsLastActivatedDesktopIndex != itsParameterSelectionSystem->LastActivatedDesktopIndex())
+	if (itsParameterSelectionSystem->dialogDataNeedsUpdate())
 	{
 		SetWindowText(CA2T(MakeTitleText().c_str()));
         // DoTimeSerialSideParametersCheckboxAdjustments metodia on kutsuttava vasta MakeTitleText metodi kutsun jälkeen
         DoTimeSerialSideParametersCheckboxAdjustments();
-        itsParameterSelectionSystem->dialogDataNeedsUpdate(true);
 		Update();
 	}
 	else if (itsLastActivatedRowIndex != itsParameterSelectionSystem->LastActivatedRowIndex())
