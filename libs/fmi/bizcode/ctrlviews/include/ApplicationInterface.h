@@ -71,7 +71,6 @@ public:
     virtual std::pair<HICON, HICON> GetUsedIcons() = 0;
     virtual void SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor);
     virtual void SetHatchingDebuggingPolygonIndex(int action);
-    virtual void SetToDoFirstTimeWmsDataBasedUpdate() = 0;
     virtual void OpenVisualizationsettingsDialog() = 0;
     virtual void OpenLogViewer() = 0;
     virtual void OpenTimeSerialView() = 0;

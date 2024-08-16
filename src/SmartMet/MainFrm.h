@@ -43,9 +43,8 @@ const int kFmiGenerateBetaProductsTimer = 18;
 const int kFmiParameterSelectionSystemUpdateTimer = 19;
 const int kFmiLoggingSystemManagementTimer = 20;
 const int kFmiNewQueryDataReadUpdateViewsTimer = 21;
-const int kFmiOneTimeWmsBasedDataUpdateTimer = 22;
-const int kFmiLedLightsActionTimer = 23;
-const int kFmiWmsSupportRenewerTimer = 24;
+const int kFmiLedLightsActionTimer = 22;
+const int kFmiWmsSupportRenewerTimer = 23;
 
 class CStatusBarResize : public CStatusBar
 {
@@ -99,7 +98,6 @@ public:
 	void DoAppDataBaseCollection(int theAction);
     static std::string MakeUsedWinRegistryKeyStr(unsigned int /* theMapViewDescTopIndex */) {return ViewPosRegistryInfo().WinRegistryKeyStr();}
     void ParameterSelectionSystemUpdateTimerStart(int waitTimeInSeconds);
-	static void SetToDoFirstTimeWmsDataBasedUpdate();
 
 // Overrides
 public:
@@ -147,7 +145,6 @@ protected:  // control bar embedded members
     UINT itsGenerateBetaProductsTimer;
     UINT itsParameterSelectionSystemUpdateTimer;
     UINT itsLoggingSystemManagementTimer;
-	UINT itsOneTimeWmsBasedDataUpdateTimer;
 	UINT itsLedLightsActionTimer;
 	UINT itsWmsSupportRenewerTimer;
 

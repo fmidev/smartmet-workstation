@@ -81,7 +81,11 @@ ApplicationInterfaceForSmartMet::ApplicationInterfaceForSmartMet()
 
 void ApplicationInterfaceForSmartMet::ParameterSelectionSystemUpdateTimerStart(int waitTimeInSeconds)
 {
-    ::GetMainFrame()->ParameterSelectionSystemUpdateTimerStart(waitTimeInSeconds);
+    auto* mainFrm = ::GetMainFrame();
+    if(mainFrm)
+    {
+        mainFrm->ParameterSelectionSystemUpdateTimerStart(waitTimeInSeconds);
+    }
 }
 
 void ApplicationInterfaceForSmartMet::SetNotificationMessage(const std::string &theNotificationMsgStr, const std::string &theNotificationTitle, int theStyle, int theTimeout, bool fNoSound)
@@ -308,11 +312,6 @@ std::pair<HICON, HICON> ApplicationInterfaceForSmartMet::GetUsedIcons()
         return ::GetUsedIcons(*generalDataDocument);
     else
         return std::pair<HICON, HICON>();
-}
-
-void ApplicationInterfaceForSmartMet::SetToDoFirstTimeWmsDataBasedUpdate()
-{
-    CMainFrame::SetToDoFirstTimeWmsDataBasedUpdate();
 }
 
 void ApplicationInterfaceForSmartMet::OpenVisualizationsettingsDialog()
