@@ -1284,7 +1284,7 @@ void InitCombinedMapHandler()
 	// parameterSelectionUpdateCallback varmistaa ett‰ kun kaikki Wms serverit on k‰yty 1. kerran l‰pi, 
 	// t‰m‰n j‰lkeen p‰ivitet‰‰n Parameter selection dialogi, jotta siell‰ n‰kyy Wms datat (jos dialogi avattu
 	// ennen t‰t‰, j‰i dialogi ilman Wms datoja ennen kuin jokin muu eventti teki kunnon updaten).
-	std::function<void()> parameterSelectionUpdateCallback = []() {ApplicationInterface::GetApplicationInterfaceImplementation()->SetToDoFirstTimeWmsDataBasedUpdate(); };
+	std::function<void()> parameterSelectionUpdateCallback = [this]() {this->WmsSupportHasDoneGetCapabilitiesQuery(); };
 	Wms::CapabilitiesHandler::setParameterSelectionUpdateCallback(parameterSelectionUpdateCallback);
 	// NFmiCombinedMapHandler luokka hanskaa itse kaikki poikkeukset ja mahdolliset k‰ytt‰j‰n tekem‰t ohjelman lopetukset.
 	itsCombinedMapHandler.initialize(itsBasicConfigurations.ControlPath());
@@ -1293,6 +1293,17 @@ void InitCombinedMapHandler()
 		// Jos wms systeemi‰ ei oteta k‰yttˆˆn, pit‰‰ lopettaa timer joka odottaa 1. data p‰ivityst‰ joka 3. sekunti
 		parameterSelectionUpdateCallback();
 	}
+}
+
+void WmsSupportHasDoneGetCapabilitiesQuery()
+{
+	// T‰h‰n on tarkoitus laittaa p‰ivitys harvennuksia heti kun testaus 
+	// osoittaa ett‰ systeemi toimii. Ei ole j‰rkev‰‰ tehd‰ t‰ysi‰ p‰ivityksi‰ 
+	// joka 5 minuutti, mill‰ tahdilla getCapabilities hakuja tehd‰‰n, kun
+	// varsinaiset ParameterSelection rakenteet muuttuvat harvoin ja dataa on
+	// kuitenkin j‰rkytt‰v‰t m‰‰r‰t.
+	SetupForParameterSelectionSystemUpdate(false, false, true, false);
+	CatLog::logMessage("WmsSupport has done GetCapabilities query and ParameterSelection updates are requested", CatLog::Severity::Debug, CatLog::Category::NetRequest);
 }
 
 void InitProducerSystem(NFmiProducerSystem &producerSystem, const std::string &baseConfigurationKey, const std::string &callingFunctionName)
@@ -2516,7 +2527,7 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 
 		DoPossibleTEMPCodeSoundingDataSetup(theData, theType, theDataFileName);
 		DoPossibleCaseStudyEditedDataSetup(theData, theDataFileName, theType, fDataWasDeletedOut);
-        PrepareForParamAddSystemUpdate();
+		SetupForParameterSelectionSystemUpdate(true, false, false, false);
 		RemoveCombinedDataFromLedChannelReport(theDataFilePattern);
 		RemoveLateDataFromLedChannelReport(theDataFilePattern);
 		AddLoadedDataToTriggerList(theDataFilePattern);
@@ -2704,12 +2715,22 @@ void DoPossibleCaseStudyEditedDataSetup(NFmiQueryData* theData, const std::strin
 	}
 }
 
-void PrepareForParamAddSystemUpdate()
+void SetupForParameterSelectionSystemUpdate(bool queryDataCase, bool imageDataCase, bool wmsDataCase, bool macroParamDataCase)
 {
-    if(!ParameterSelectionSystem().updatePending())
+	auto& parSelectionSystem = ParameterSelectionSystem();
+	if(queryDataCase)
+		parSelectionSystem.queryDataNeedsUpdate(true);
+	if(imageDataCase)
+		parSelectionSystem.imageDataNeedsUpdate(true);
+	if(wmsDataCase)
+		parSelectionSystem.wmsDataNeedsUpdate(true);
+	if(macroParamDataCase)
+		parSelectionSystem.macroParamDataNeedsUpdate(true);
+	
+	if(!parSelectionSystem.updatePending())
     {
-        ParameterSelectionSystem().updatePending(true);
-        ApplicationInterface::GetApplicationInterfaceImplementation()->ParameterSelectionSystemUpdateTimerStart(ParameterSelectionSystem().updateWaitTimeoutInSeconds());
+		parSelectionSystem.updatePending(true);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ParameterSelectionSystemUpdateTimerStart(parSelectionSystem.updateWaitTimeoutInSeconds());
     }
 }
 
@@ -9610,7 +9631,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
                     ApplicationInterface::GetApplicationInterfaceImplementation()->CaseStudyLoadingActions(itsLoadedCaseStudySystem.Time(), "Going into case study mode"); // itsCaseStudyHelpDataInfoSystem -pit‰‰ olla ladattuna ja fCaseStudyModeOn pit‰‰ olla asetettuna true:ksi ennen t‰m‰n kutsua
 
 					ParameterSelectionSystem().reInitialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(), *HelpDataInfoSystem());
-					PrepareForParamAddSystemUpdate();
+					SetupForParameterSelectionSystemUpdate(true, true, true, true);
 					itsVirtualTimeData.UpdateUsedVirtualTime(true, itsLoadedCaseStudySystem.Time());
 					TryAutoStartUpLoad();
 					return true;
@@ -9672,7 +9693,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         QueryDataToLocalCacheLoaderThread::AutoLoadNewCacheDataMode(ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData());
         ApplicationInterface::GetApplicationInterfaceImplementation()->CaseStudyToNormalModeActions();
 		ParameterSelectionSystem().reInitialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(), *HelpDataInfoSystem());
-		PrepareForParamAddSystemUpdate();
+		SetupForParameterSelectionSystemUpdate(true, true, true, true);
 		itsVirtualTimeData.UpdateUsedVirtualTime(false, itsLoadedCaseStudySystem.Time());
 	}
 
@@ -11042,6 +11063,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		updatedMacroParamSystemPtr->UpdateToWorkingData(*itsMacroParamSystemPtr);
 		// Tehd‰‰n working-MacroParamSystem:in swappaus
 		itsMacroParamSystemPtr.swap(updatedMacroParamSystemPtr);
+		// K‰ynnistet‰‰n dialogin p‰ivitys rutiinit
+		SetupForParameterSelectionSystemUpdate(false, false, false, true);
 		LogMessage("UpdateMacroParamSystemContent: updated used macroParamSystem from working-thread", CatLog::Severity::Debug, CatLog::Category::Operational);
 	}
 
