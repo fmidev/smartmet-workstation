@@ -8,6 +8,7 @@
 #include "NFmiMacroParam.h"
 #include "NFmiDrawParam.h"
 #include "NFmiPathUtils.h"
+#include "catlog/catlog.h"
 #ifndef DISABLE_CPPRESTSDK
 #include "CapabilityTree.h"
 #endif // DISABLE_CPPRESTSDK
@@ -331,6 +332,7 @@ namespace AddParams
             std::sort(dataVector_.begin(), dataVector_.end(), ([](const auto &a, const auto &b)
                 { return boost::algorithm::ilexicographical_compare(std::string(a->dataName()), std::string(b->dataName())); }));
         }
+        CatLog::logMessage(std::string(__FUNCTION__) + " new data: " + info->DataFileName() + " parameter selection needs update", CatLog::Severity::Debug, CatLog::Category::Operational);
     }
 
     std::vector<SingleRowItem> ProducerData::makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory) const
