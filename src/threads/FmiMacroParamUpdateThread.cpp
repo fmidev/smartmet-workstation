@@ -66,6 +66,7 @@ UINT CFmiMacroParamUpdateThread::DoThread(LPVOID /* pParam */ )
 
 	NFmiMilliSecondTimer timer;
 	bool firstTime = true;
+	int usedUpdateTimeIntervalInMilliSeconds = 4 * 60 * 1000; // tehd‰‰n tunnin v‰lein
 
 	// T‰ss‰ on iki-looppi, jossa vahditaan onko tullut uusia datoja, jolloin tehd‰‰n yhdistelm‰ datoja SmartMetin luettavaksi.
 	// Lis‰ksi pit‰‰ tarkkailla, onko tullut lopetus k‰sky, joloin pit‰‰ siivota ja lopettaa.
@@ -76,8 +77,9 @@ UINT CFmiMacroParamUpdateThread::DoThread(LPVOID /* pParam */ )
 		{
 			NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
 
-			if(::LetGoAfterFirstTimeDelaying(timer, firstTime, gStartUpDelayInMS) || fDoUpdateNow || timer.CurrentTimeDiffInMSeconds() > (60 * 60 * 1000)) // tarkistetaan 60 minuutin v‰lein onko tullut muutoksia makroParameihin
-			{ // jos on kulunut tarpeeksi aikaa, tarkastetaan, onko jonnekin tullut uusia datatiedostoja jotka pit‰‰ yhdist‰‰
+			if(::LetGoAfterFirstTimeDelaying(timer, firstTime, gStartUpDelayInMS) || fDoUpdateNow || timer.CurrentTimeDiffInMSeconds() > usedUpdateTimeIntervalInMilliSeconds)
+			{ 
+				// jos on kulunut tarpeeksi aikaa, tarkastetaan, onko jonnekin tullut uusia datatiedostoja jotka pit‰‰ yhdist‰‰
 				firstTime = false;
 				fDoUpdateNow = false;
 				try
