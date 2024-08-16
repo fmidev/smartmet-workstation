@@ -1235,13 +1235,13 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
         theIsoLineData.itsInfo->SetValues(theValues); // nollataan infossa ollut data missing-arvoilla, että saadaan puhdas kenttä laskuihin
     }
 
-	NFmiMacroParamSystem& mpSystem = itsCtrlViewDocumentInterface->MacroParamSystem();
+	auto macroParamSystemPtr = itsCtrlViewDocumentInterface->MacroParamSystem();
 	NFmiSmartToolModifier smartToolModifier(itsCtrlViewDocumentInterface->InfoOrganizer());
     try // ensin tulkitaan macro
     {
         smartToolModifier.IncludeDirectory(itsCtrlViewDocumentInterface->SmartToolInfo()->LoadDirectory());
 
-        auto macroParamPtr = mpSystem.GetWantedMacro(itsDrawParam->InitFileName());
+        auto macroParamPtr = macroParamSystemPtr->GetWantedMacro(itsDrawParam->InitFileName());
         if(macroParamPtr)
         {
             smartToolModifier.InitSmartTool(macroParamPtr->MacroText(), true);
@@ -1251,7 +1251,7 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
     }
 	catch(exception &e)
 	{
-		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter intepretion failed", &e, itsDrawParam, mpSystem.RootPath());
+		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter intepretion failed", &e, itsDrawParam, macroParamSystemPtr->RootPath());
 		CtrlViewUtils::SetMacroParamErrorMessage(errorText, *itsCtrlViewDocumentInterface, possibleTooltipData ? &possibleTooltipData->macroParamErrorMessage : nullptr);
 	}
 
@@ -1275,7 +1275,7 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
 	}
 	catch(exception &e)
 	{
-		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: MacroParam calculation failed", &e, itsDrawParam, mpSystem.RootPath());
+		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: MacroParam calculation failed", &e, itsDrawParam, macroParamSystemPtr->RootPath());
 		CtrlViewUtils::SetMacroParamErrorMessage(errorText, *itsCtrlViewDocumentInterface, possibleTooltipData ? &possibleTooltipData->macroParamErrorMessage : nullptr);
 	}
 }

@@ -2628,9 +2628,10 @@ static bool GetGridPoint(boost::shared_ptr<NFmiFastQueryInfo> &theMacroInfo, Gri
 void FmiModifyEditdData::InitializeSmartToolModifierForMacroParam(NFmiSmartToolModifier &theSmartToolModifier, TimeSerialModificationDataInterface& theAdapter, boost::shared_ptr<NFmiDrawParam>& theDrawParam, int theMapViewDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo>& possibleSpacedOutMacroInfo, bool doProbing, const NFmiPoint& spaceOutSkipFactors)
 {
 	theSmartToolModifier.SetGriddingHelper(theAdapter.GetGriddingHelper());
-	theSmartToolModifier.IncludeDirectory(theAdapter.MacroParamSystem().RootPath());
+	auto macroParamSystemPtr = theAdapter.MacroParamSystem();
+	theSmartToolModifier.IncludeDirectory(macroParamSystemPtr->RootPath());
 
-	std::string macroParamStr = CtrlViewUtils::GetMacroParamFormula(theAdapter.MacroParamSystem(), theDrawParam);
+	std::string macroParamStr = CtrlViewUtils::GetMacroParamFormula(*macroParamSystemPtr, theDrawParam);
 	theSmartToolModifier.InitSmartToolForMacroParam(macroParamStr, possibleSpacedOutMacroInfo, theAdapter.GetUsedMapViewArea(theMapViewDescTopIndex), doProbing, spaceOutSkipFactors);
 }
 
@@ -2662,7 +2663,7 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 {
 	float value = kFloatMissing;
 	NFmiSmartToolModifier smartToolModifier(theAdapter.InfoOrganizer());
-	const auto& macroParamRootPath = theAdapter.MacroParamSystem().RootPath();
+	const auto& macroParamRootPath = theAdapter.MacroParamSystem()->RootPath();
 	try // ensin tulkitaan macro
 	{
 		FmiModifyEditdData::InitializeSmartToolModifierForMacroParam(smartToolModifier, theAdapter, theDrawParam, theMapViewDescTopIndex, possibleSpacedOutMacroInfo, doProbing, spaceOutSkipFactors);

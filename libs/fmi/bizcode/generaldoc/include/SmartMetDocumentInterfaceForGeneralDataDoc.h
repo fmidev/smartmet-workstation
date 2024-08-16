@@ -221,7 +221,7 @@ public:
     NFmiFixedDrawParamSystem& FixedDrawParamSystem() override;
     void TakeDrawParamInUseEveryWhere(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool useInMap, bool useInTimeSerial, bool useInCrossSection, bool useWithViewMacros) override;
     NFmiSmartToolInfo* SmartToolInfo() override;
-    NFmiMacroParamSystem& MacroParamSystem() override;
+    std::shared_ptr<NFmiMacroParamSystem> MacroParamSystem() override;
     bool DoSmartToolEditing(const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly) override;
     std::string& SmartToolEditingErrorText() override;
     void RemoveMacroParam(const std::string &theName) override;

@@ -73,7 +73,7 @@ public:
 	void DataModificationInProgress(bool newValue) override;
 	bool DataModificationInProgress(void) override;
 	const std::string& GetCurrentSmartToolMacro(void) override;
-	NFmiMacroParamSystem& MacroParamSystem(void) override;
+	std::shared_ptr<NFmiMacroParamSystem> MacroParamSystem(void) override;
 	void SetLatestMacroParamErrorText(const std::string& theErrorText) override;
 	void SetMacroErrorText(const std::string &theErrorStr) override;
 	boost::shared_ptr<NFmiArea> MapHandlerArea(bool fGetZoomedArea) override;

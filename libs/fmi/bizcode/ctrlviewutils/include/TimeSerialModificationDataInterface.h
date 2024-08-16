@@ -111,7 +111,7 @@ public:
     virtual void DataModificationInProgress(bool newValue) = 0;
     virtual bool DataModificationInProgress(void) = 0;
     virtual const std::string& GetCurrentSmartToolMacro(void) = 0;
-    virtual NFmiMacroParamSystem& MacroParamSystem(void) = 0;
+    virtual std::shared_ptr<NFmiMacroParamSystem> MacroParamSystem(void) = 0;
     virtual void SetLatestMacroParamErrorText(const std::string& theErrorText) = 0;
     virtual void SetMacroErrorText(const std::string &theErrorStr) = 0;
     virtual boost::shared_ptr<NFmiArea> MapHandlerArea(bool fGetZoomedArea) = 0;

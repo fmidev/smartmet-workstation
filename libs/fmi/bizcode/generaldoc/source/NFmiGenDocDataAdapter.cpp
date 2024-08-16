@@ -348,7 +348,7 @@ const std::string& NFmiGenDocDataAdapter::GetCurrentSmartToolMacro(void)
 	return itsDoc->GetCurrentSmartToolMacro();
 }
 
-NFmiMacroParamSystem& NFmiGenDocDataAdapter::MacroParamSystem(void)
+std::shared_ptr<NFmiMacroParamSystem> NFmiGenDocDataAdapter::MacroParamSystem(void)
 {
 	return itsDoc->MacroParamSystem();
 }

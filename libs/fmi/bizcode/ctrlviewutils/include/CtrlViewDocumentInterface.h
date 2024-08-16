@@ -240,7 +240,7 @@ public:
     virtual NFmiIgnoreStationsData& IgnoreStationsData(void) = 0;
     virtual const NFmiColor& StationPointColor(int theMapViewDescTopIndex) const = 0;
     virtual const NFmiPoint& StationPointSize(int theMapViewDescTopIndex) const = 0;
-    virtual NFmiMacroParamSystem& MacroParamSystem(void) = 0;
+    virtual std::shared_ptr<NFmiMacroParamSystem> MacroParamSystem(void) = 0;
     virtual CtrlViewUtils::FmiEditorModifyToolMode ModifyToolMode(void) = 0;
     virtual size_t SelectedGridPointLimit(void) = 0;
     virtual boost::shared_ptr<NFmiDrawParam> GetDrawDifferenceDrawParam(void) = 0;
@@ -413,6 +413,7 @@ public:
     virtual bool VirtualTimeUsed() const = 0;
     virtual void ToggleVirtualTimeMode(const std::string& logMessage) = 0;
     virtual std::string GetVirtualTimeTooltipText() const = 0;
+    virtual void UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr) = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem(void) = 0;

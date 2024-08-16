@@ -622,7 +622,7 @@ std::string NFmiViewParamsView::MakeMacroParamTooltipText(const boost::shared_pt
 		macroParamFilename.Extension("st");
 		macroParamTooltip += macroParamFilename;
 		macroParamTooltip += "<br><hr color=red><br>"; // väliviiva
-		macroParamTooltip += CtrlViewUtils::XmlEncode(CtrlViewUtils::GetMacroParamFormula(itsCtrlViewDocumentInterface->MacroParamSystem(), drawParam));
+		macroParamTooltip += CtrlViewUtils::XmlEncode(CtrlViewUtils::GetMacroParamFormula(*(itsCtrlViewDocumentInterface->MacroParamSystem()), drawParam));
 		return macroParamTooltip;
 	}
 	catch(...)

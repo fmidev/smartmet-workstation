@@ -419,7 +419,7 @@ namespace
 		return CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->MacroParamDataCache();
 	}
 
-	NFmiMacroParamSystem& getMacroParamSystem()
+	std::shared_ptr<NFmiMacroParamSystem> getMacroParamSystem()
 	{
 		return CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->MacroParamSystem();
 	}
@@ -466,17 +466,17 @@ namespace
 		{
 			drawParam->ParameterAbbreviation(menuItem.MenuText()); // macroParamin tapauksessa pitää nimi asettaa tässä (tätä nimilyhennettä käytetään tunnisteenä myöhemmin!!)
 			boost::shared_ptr<NFmiMacroParam> usedMacroParam;
-			auto& macroParamSystem = ::getMacroParamSystem();
+			auto macroParamSystemPtr = ::getMacroParamSystem();
 			const auto& macroParamInitFile = menuItem.MacroParamInitName();
 			if(!macroParamInitFile.empty())
 			{
 				// Tämä on toivottu tapa alustaa, koska muuten saman nimiset 
 				// macroParamit eri hakemistoissa voivat aiheuttaa päällekkäisyyksiä
-				usedMacroParam = macroParamSystem.GetWantedMacro(macroParamInitFile);
+				usedMacroParam = macroParamSystemPtr->GetWantedMacro(macroParamInitFile);
 			}
 			else
 			{
-				boost::shared_ptr<NFmiMacroParamFolder> currentFolder = macroParamSystem.GetCurrentFolder();
+				boost::shared_ptr<NFmiMacroParamFolder> currentFolder = macroParamSystemPtr->GetCurrentFolder();
 				if(currentFolder && currentFolder->Find(drawParam->ParameterAbbreviation()))
 					usedMacroParam = currentFolder->Current();
 			}
@@ -1552,7 +1552,7 @@ std::string NFmiCombinedMapHandler::doGetMacroParamFormula(boost::shared_ptr<NFm
 	std::string logErrorMessage;
 	try
 	{
-		return CtrlViewUtils::GetMacroParamFormula(getMacroParamSystem(), drawParam);
+		return CtrlViewUtils::GetMacroParamFormula(*getMacroParamSystem(), drawParam);
 	}
 	catch(std::exception & e)
 	{
@@ -3505,7 +3505,7 @@ void NFmiCombinedMapHandler::saveDrawParamSettings(boost::shared_ptr<NFmiDrawPar
 		}
 		else if(drawParam->StoreData(initFileName))
 		{
-			::getMacroParamSystem().ReloadDrawParamFromFile(initFileName);
+			::getMacroParamSystem()->ReloadDrawParamFromFile(initFileName);
 		}
 		else
 		{

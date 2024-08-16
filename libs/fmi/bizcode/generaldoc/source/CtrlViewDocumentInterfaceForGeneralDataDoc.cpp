@@ -616,7 +616,7 @@ const NFmiPoint& CtrlViewDocumentInterfaceForGeneralDataDoc::StationPointSize(in
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->StationPointSize();
 }
 
-NFmiMacroParamSystem& CtrlViewDocumentInterfaceForGeneralDataDoc::MacroParamSystem(void)
+std::shared_ptr<NFmiMacroParamSystem> CtrlViewDocumentInterfaceForGeneralDataDoc::MacroParamSystem(void)
 {
     return itsDoc->MacroParamSystem();
 }
@@ -1479,6 +1479,11 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::ToggleVirtualTimeMode(const std
 std::string CtrlViewDocumentInterfaceForGeneralDataDoc::GetVirtualTimeTooltipText() const
 {
     return itsDoc->GetVirtualTimeTooltipText();
+}
+
+void CtrlViewDocumentInterfaceForGeneralDataDoc::UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr)
+{
+    return itsDoc->UpdateMacroParamSystemContent(std::move(updatedMacroParamSystemPtr));
 }
 
 #ifndef DISABLE_CPPRESTSDK
