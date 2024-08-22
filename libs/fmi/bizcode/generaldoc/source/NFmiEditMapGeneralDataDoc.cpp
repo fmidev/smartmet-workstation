@@ -1302,8 +1302,18 @@ void WmsSupportHasDoneGetCapabilitiesQuery()
 	// joka 5 minuutti, millä tahdilla getCapabilities hakuja tehdään, kun
 	// varsinaiset ParameterSelection rakenteet muuttuvat harvoin ja dataa on
 	// kuitenkin järkyttävät määrät.
-	SetupForParameterSelectionSystemUpdate(false, false, true, false);
-	CatLog::logMessage("WmsSupport has done GetCapabilities query and ParameterSelection updates are requested", CatLog::Severity::Debug, CatLog::Category::NetRequest);
+	static NFmiNanoSecondTimer updateTimer;
+	static bool firstTime = true;
+	double updateIntervalInSeconds = 42 * 60;
+
+	if(firstTime || updateTimer.elapsedTimeInSeconds() > updateIntervalInSeconds)
+	{
+		firstTime = false;
+		SetupForParameterSelectionSystemUpdate(false, false, true, false);
+		CatLog::logMessage("WmsSupport has done GetCapabilities query and ParameterSelection updates are requested", CatLog::Severity::Debug, CatLog::Category::NetRequest);
+	}
+	else
+		CatLog::logMessage("WmsSupport has done GetCapabilities query and but not doing the ParameterSelection updates yet", CatLog::Severity::Debug, CatLog::Category::NetRequest);
 }
 
 void InitProducerSystem(NFmiProducerSystem &producerSystem, const std::string &baseConfigurationKey, const std::string &callingFunctionName)
