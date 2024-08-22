@@ -1353,15 +1353,35 @@ void CFmiParameterSelectionDlg::UpdateGridControlIfNeeded()
 {
 	if (itsParameterSelectionSystem->dialogDataNeedsUpdate())
 	{
+        // Huom! HasViewTypeChanged pitää kutsua ennen MakeTitleText kutsua, joka asettaa em. metodissa tarkasteltuja muuttujia
+        bool viewDesktopIndexChangeRequiresDialogUpdate = HasViewTypeChanged();
 		SetWindowText(CA2T(MakeTitleText().c_str()));
         // DoTimeSerialSideParametersCheckboxAdjustments metodia on kutsuttava vasta MakeTitleText metodi kutsun jälkeen
         DoTimeSerialSideParametersCheckboxAdjustments();
-		Update();
+        if(viewDesktopIndexChangeRequiresDialogUpdate)
+        {
+    		Update();
+        }
 	}
 	else if (itsLastActivatedRowIndex != itsParameterSelectionSystem->LastActivatedRowIndex())
 	{
 		SetWindowText(CA2T(MakeTitleText().c_str()));
 	}
+}
+
+// Palautetaan true, jos molemmat annetut indeksit ovat karttanäyttö tyyppisiä
+bool BothViewIndexWereMapViewType(unsigned int desktopIndex1, unsigned int desktopIndex2)
+{
+    return (desktopIndex1 <= CtrlViewUtils::kFmiMaxMapDescTopIndex) && (desktopIndex2 <= CtrlViewUtils::kFmiMaxMapDescTopIndex);
+}
+
+bool CFmiParameterSelectionDlg::HasViewTypeChanged()
+{
+    if(itsLastActivatedDesktopIndex != itsParameterSelectionSystem->LastActivatedDesktopIndex())
+    {
+        return !::BothViewIndexWereMapViewType(itsLastActivatedDesktopIndex, itsParameterSelectionSystem->LastActivatedDesktopIndex());
+    }
+    return false;
 }
 
 std::string CFmiParameterSelectionDlg::MakeTitleText()

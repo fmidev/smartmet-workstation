@@ -140,6 +140,7 @@ private:
     void UpdateAfterSearchText();
     void DoResizerHooking();
     void DoTimeSerialSideParametersCheckboxAdjustments();
+    bool HasViewTypeChanged();
 
     NFmiParameterSelectionGridCtrl itsGridCtrl;
     CTreeColumn itsTreeColumn;   // provides tree column support
