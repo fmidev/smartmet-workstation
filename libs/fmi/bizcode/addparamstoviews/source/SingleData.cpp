@@ -209,10 +209,6 @@ namespace AddParams
                 dataName_ = helpDataInfo->GetCleanedName();
             }
         }
-        if(dataStructuresChanged)
-        {
-            CatLog::logMessage(std::string(__FUNCTION__) + " structures changed by data: " + latestDataFilePath_ + " parameter selection needs update", CatLog::Severity::Debug, CatLog::Category::Operational);
-        }
         return dataStructuresChanged;
     }
 
