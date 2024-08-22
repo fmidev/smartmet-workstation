@@ -1668,7 +1668,7 @@ void CMainFrame::DoMacroParamUpdate()
 				itsDoc->GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, true);
 			}
             ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView | SmartMetViewId::TimeSerialView | SmartMetViewId::SmartToolDlg);
-            itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: Macro params has been updated"); // t‰m‰n on tarkoitus p‰ivitt‰‰ vain SmartToolView, mutta sill‰ ei ole omaa p‰ivitys k‰sky‰ (ainakaan viel‰)
+            itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: Macro params have been updated"); // t‰m‰n on tarkoitus p‰ivitt‰‰ vain SmartToolView, mutta sill‰ ei ole omaa p‰ivitys k‰sky‰ (ainakaan viel‰)
 		}
 	}
 }
