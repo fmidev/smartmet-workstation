@@ -66,7 +66,7 @@ UINT CFmiMacroParamUpdateThread::DoThread(LPVOID /* pParam */ )
 
 	NFmiMilliSecondTimer timer;
 	bool firstTime = true;
-	int usedUpdateTimeIntervalInMilliSeconds = 4 * 60 * 1000; // tehd‰‰n tunnin v‰lein
+	int usedUpdateTimeIntervalInMilliSeconds = 32 * 60 * 1000; // tehd‰‰n n. puolen tunnin v‰lein
 
 	// T‰ss‰ on iki-looppi, jossa vahditaan onko tullut uusia datoja, jolloin tehd‰‰n yhdistelm‰ datoja SmartMetin luettavaksi.
 	// Lis‰ksi pit‰‰ tarkkailla, onko tullut lopetus k‰sky, joloin pit‰‰ siivota ja lopettaa.
