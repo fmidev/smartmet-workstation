@@ -8697,7 +8697,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, true, true, true); // laitetaan kartta likaiseksi
 		WindTableSystem().MustaUpdateTable(true);
 		GetCombinedMapHandler()->makeApplyViewMacroDirtyActions(ApplicationWinRegistry().DrawObjectScaleFactor());
-		ParameterSelectionSystem().dialogDataNeedsUpdate(true);
+		ParameterSelectionSystem().setAllUpdateflagsDirty();
 
 		if(!makeDirtyActionsOnly)
 		{
