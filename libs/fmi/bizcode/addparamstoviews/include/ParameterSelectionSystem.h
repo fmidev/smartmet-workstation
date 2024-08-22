@@ -110,8 +110,7 @@ namespace AddParams
         void wmsDataNeedsUpdate(bool value);
         bool macroParamDataNeedsUpdate() const { return macroParamDataNeedsUpdate_; }
         void macroParamDataNeedsUpdate(bool value);
-        void setMainDataFlagDirtyIfSubDataIsSet(bool value);
-        void setDialogDataFlagDirtyIfSubDataNeedsUpdate(bool value);
+        void setAllUpdateflagsDirty();
         void updateDialogData();
         std::vector<SingleRowItem>& dialogRowData();
         const std::vector<SingleRowItem>& dialogRowData() const;
@@ -137,6 +136,8 @@ namespace AddParams
         void updateHelpData();
         void updateImageData();
         void updateQueryData();
+        void setMainDataFlagDirtyIfSubDataIsSet(bool value);
+        void setDialogDataFlagDirtyIfSubDataNeedsUpdate(bool value);
         bool hasLeafNodeAsAChild(int index, std::vector<SingleRowItem> &resultRowData);
         void removeNodesThatDontHaveLeafs(std::vector<SingleRowItem> &resultRowData);
 		void trimDialogRowDataDependingOnActiveView();

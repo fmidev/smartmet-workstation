@@ -275,6 +275,16 @@ namespace AddParams
         setMainDataFlagDirtyIfSubDataIsSet(value);
     }
 
+    void ParameterSelectionSystem::setAllUpdateflagsDirty()
+    {
+        dialogDataNeedsUpdate(true);
+        dataNeedsUpdate(true);
+        queryDataNeedsUpdate(true);
+        imageDataNeedsUpdate(true);
+        wmsDataNeedsUpdate(true);
+        macroParamDataNeedsUpdate(true);
+    }
+
     void ParameterSelectionSystem::updateData(const std::string &catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory, bool customCategory)
     {
         std::string categoryName = ::GetDictionaryString(catName.c_str());
@@ -739,22 +749,14 @@ namespace AddParams
         return GetLastActivatedRowIndexFromWantedDesktop(itsLastActivatedDesktopIndex);
     }
 
-    // Palautetaan true, jos molemmat annetut indeksit ovat karttanäyttö tyyppisiä
-    bool BothViewIndexWereMapViewType(unsigned int desktopIndex1, unsigned int desktopIndex2)
-    {
-        return (desktopIndex1 <= CtrlViewUtils::kFmiMaxMapDescTopIndex) && (desktopIndex2 <= CtrlViewUtils::kFmiMaxMapDescTopIndex);
-    }
-
     void ParameterSelectionSystem::SetLastActiveIndexes(unsigned int desktopIndex, int rowIndex)
     {
         bool desktopIndexChanged = (desktopIndex != itsLastActivatedDesktopIndex);
-        auto mapViewTypeRemains = BothViewIndexWereMapViewType(desktopIndex, itsLastActivatedDesktopIndex);
-        if(desktopIndexChanged && !mapViewTypeRemains)
+        if(desktopIndexChanged)
         {
-            // Jos muutetaan näyttötyyppiä niin että ei pysytä karttanäyttötyypissä,
-            // tällöin pitää Parameter-selection dialogia päivittää. On siis sallittua 
-            // vaihtaa kartta1:stä kartta2:een ilman että pitää päivitellä.
-            dataNeedsUpdate(true);
+            // Jos muutetaan näyttöä niin tällöin pitää Parameter-selection dialogia 
+            // päivittää. On siis sallittua vaihtaa kartta1:stä kartta2:een ilman että pitää päivitellä.
+            dialogDataNeedsUpdate(true);
             CatLog::logMessage(std::string(__FUNCTION__) + ": active view type changed, need to update selection dialog", CatLog::Severity::Debug, CatLog::Category::Operational);
         }
 
