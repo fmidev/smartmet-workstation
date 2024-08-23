@@ -2286,6 +2286,27 @@ void LogHelpDataInfoSystemCombineDataConfigurationProblems()
 	}
 }
 
+void LogHelpDataInfoSystemCacheDataOptions()
+{
+	if(itsHelpDataInfoSystem.UseQueryDataCache())
+	{
+		CatLog::logMessage("UseQueryDataCache setting was on, Smartmet will use local cache directories to copy query-data files from server for faster usage.", CatLog::Severity::Info, CatLog::Category::Configuration);
+	}
+	else
+	{
+		CatLog::logMessage("UseQueryDataCache setting was OFF, Smartmet will NOT use local cache directories to copy query-data files from server!", CatLog::Severity::Warning, CatLog::Category::Configuration);
+	}
+
+	if(itsHelpDataInfoSystem.DoCleanCache())
+	{
+		CatLog::logMessage("DoCleanCache setting was on, Smartmet will clean local query-data cache directories regularly.", CatLog::Severity::Info, CatLog::Category::Configuration);
+	}
+	else
+	{
+		CatLog::logMessage("DoCleanCache setting was OFF, Smartmet will NOT clean local query-data cache directories at all.", CatLog::Severity::Warning, CatLog::Category::Configuration);
+	}
+}
+
 bool InitHelpDataInfoSystem(void)
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
@@ -2293,6 +2314,7 @@ bool InitHelpDataInfoSystem(void)
 	{
 		itsHelpDataInfoSystem.InitFromSettings("MetEditor::HelpData", itsBasicConfigurations.ControlPath(), CreateHelpEditorFileNameFilter(), StripFilePathAndExtension(itsHelpEditorSystem.FileNameBase()));
 		LogHelpDataInfoSystemCombineDataConfigurationProblems();
+		LogHelpDataInfoSystemCacheDataOptions();
 		// T‰m‰ caseStudy dataan liittyv‰ alustus pit‰‰ tehd‰ heti itsHelpDataInfoSystem:in alustuksen j‰lkeen...
 		NFmiCaseStudySystem::SetAllCustomFolderNames(itsHelpDataInfoSystem);
 		return true;

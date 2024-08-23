@@ -866,6 +866,28 @@ NFmiConfigurationRelatedWinRegistry::NFmiConfigurationRelatedWinRegistry()
 {
 }
 
+static void ReportLoadDataAtStartUpStatusToLog(bool loadDataAtStartUpValue)
+{
+    if(loadDataAtStartUpValue)
+    {
+        CatLog::logMessage("DoAutoLoadDataAtStartUp setting was on, Smartmet will try to load all the data normal way at start up.", CatLog::Severity::Info, CatLog::Category::Configuration);
+        return;
+    }
+
+    CatLog::logMessage("DoAutoLoadDataAtStartUp setting was OFF, Smartmet will NOT load any data at start up!", CatLog::Severity::Warning, CatLog::Category::Configuration);
+}
+
+static void ReportAutoLoadNewCacheDataStatusToLog(bool autoLoadNewCacheDataValue)
+{
+    if(autoLoadNewCacheDataValue)
+    {
+        CatLog::logMessage("AutoLoadNewCacheData setting was on, Smartmet will try to load new query-data files from server to local cache directories the normal way.", CatLog::Severity::Info, CatLog::Category::Configuration);
+        return;
+    }
+
+    CatLog::logMessage("AutoLoadNewCacheData setting was OFF, Smartmet will NOT load new query-data files from server to local cache directories at all!", CatLog::Severity::Warning, CatLog::Category::Configuration);
+}
+
 bool NFmiConfigurationRelatedWinRegistry::Init(const std::string &baseConfigurationRegistryPath, int mapViewCount, std::map<std::string, std::string> &mapWindowPosMap)
 {
     mBaseConfigurationRegistryPath = baseConfigurationRegistryPath;
@@ -893,7 +915,9 @@ bool NFmiConfigurationRelatedWinRegistry::Init(const std::string &baseConfigurat
     std::string sectionName = "\\General";
 
     mLoadDataAtStartUp = ::CreateRegValue<CachedRegBool>(mBaseConfigurationRegistryPath, sectionName, "\\LoadDataAtStartUp", usedKey, true, "MetEditor::DoAutoLoadDataAtStartUp");
+    ::ReportLoadDataAtStartUpStatusToLog(*mLoadDataAtStartUp);
     mAutoLoadNewCacheData = ::CreateRegValue<CachedRegBool>(mBaseConfigurationRegistryPath, sectionName, "\\AutoLoadNewCacheData", usedKey, true, "SmartMet::GeneralOptions::AutoLoadNewCacheData");
+    ::ReportAutoLoadNewCacheDataStatusToLog(*mAutoLoadNewCacheData);
     mShowLastSendTimeOnMapView = ::CreateRegValue<CachedRegBool>(mBaseConfigurationRegistryPath, sectionName, "\\ShowLastSendTimeOnMapView", usedKey, false);
     mAddHelpDataIdAtSendindDataToDatabase = ::CreateRegValue<CachedRegBool>(mBaseConfigurationRegistryPath, sectionName, "\\AddHelpDataIdAtSendindDataToDatabase", usedKey, false, "SmartMet::AddHelpDataIdAtSendindDataToDatabase");
     mMacroParamGridSizeX = ::CreateRegValue<CachedRegInt>(mBaseConfigurationRegistryPath, sectionName, "\\MacroParamGridSizeX", usedKey, 70);
