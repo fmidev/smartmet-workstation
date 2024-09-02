@@ -68,12 +68,13 @@ CFmiModifyDrawParamDlg::CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartM
 ,itsDescTopIndex(theDescTopIndex)
 ,itsRealRowNumber(theRealRowNumber)
 , itsDrawParamFileNameStrU_(_T(""))
-, fUseIsoLineGabWithCustomContours(FALSE)
+, fUseColorBlendingWithCustomContours(FALSE)
 , itsContourGap(0)
 ,fRefreshPressed(false)
-,fSkipreadingSpecialClassColorIndices(false)
+,fSkipReadingSpecialClassColorIndices(false)
 , itsAlpha(100)
-,fSpecialClassesHaveInvalidValues(false)
+,fSpecialIsolineClassesHaveInvalidValues(false)
+, fSpecialContourClassesHaveInvalidValues(false)
 ,fFixedDrawParamSelectorInitialized(false)
 , itsOneSymbolHorizontalOffset_NEW(0)
 , itsOneSymbolVerticalOffset_NEW(0)
@@ -95,6 +96,9 @@ CFmiModifyDrawParamDlg::CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartM
 , itsSymbolDrawDensityStr(_T(""))
 , itsPossibleColorParameterStr(_T(""))
 , fFlipArrowSymbol(FALSE)
+, itsSpecialContourClassValuesStrU_(_T(""))
+, itsSpecialContourColorIndicesStrU_(_T(""))
+, itsSpecialContourClassCount(0)
 {
 	if(theDrawParam)
 	{
@@ -145,12 +149,12 @@ CFmiModifyDrawParamDlg::CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartM
 	itsSymbolsWithColorsEndValue = 0.0f;
 	itsSymbolsWithColorsMiddleValue = 0.0f;
 	itsSymbolsWithColorsStartValue = 0.0f;
-	itsSpecialClassCount = 0;
-    itsSpecialClassColorIndicesStrU_ = _T("");
-    itsSpecialClassLabelColorIndicesStrU_ = _T("");
+	itsSpecialIsolineClassCount = 0;
+    itsSpecialIsolineColorIndicesStrU_ = _T("");
+    itsSpecialClassLabelHeightsStrU_ = _T("");
     itsSpecialClassLineStylesStrU_ = _T("");
-    itsSpecialClassLineWidthStrU_ = _T("");
-    itsSpecialClassValuesStrU_ = _T("");
+    itsSpecialClassLineWidthsStrU_ = _T("");
+    itsSpecialIsolineClassValuesStrU_ = _T("");
 	itsTimeSeriesModifyLimit = 0.0;
 	itsTimeSeriesScaleMax = 0.0;
 	itsTimeSeriesScaleMin = 0.0;
@@ -245,12 +249,12 @@ void CFmiModifyDrawParamDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_SHOW_SYMBOL_WITH_COLORS_END_VALUE, itsSymbolsWithColorsEndValue);
 	DDX_Text(pDX, IDC_SHOW_SYMBOL_WITH_COLORS_MIDDLE_VALUE, itsSymbolsWithColorsMiddleValue);
 	DDX_Text(pDX, IDC_SHOW_SYMBOL_WITH_COLORS_START_VALUE, itsSymbolsWithColorsStartValue);
-	DDX_Text(pDX, IDC_SPECIAL_CLASSES_COUNT, itsSpecialClassCount);
-	DDX_Text(pDX, IDC_SPECIAL_CLASSES_LINE_COLOR_INDICES, itsSpecialClassColorIndicesStrU_);
-	DDX_Text(pDX, IDC_SPECIAL_CLASSES_LINE_LABEL_COLOR_INDICES, itsSpecialClassLabelColorIndicesStrU_);
+	DDX_Text(pDX, IDC_SPECIAL_ISOLINE_CLASSES_COUNT, itsSpecialIsolineClassCount);
+	DDX_Text(pDX, IDC_SPECIAL_CLASSES_ISOLINE_COLOR_INDICES, itsSpecialIsolineColorIndicesStrU_);
+	DDX_Text(pDX, IDC_SPECIAL_CLASSES_LINE_LABEL_HEIGHTS, itsSpecialClassLabelHeightsStrU_);
 	DDX_Text(pDX, IDC_SPECIAL_CLASSES_LINE_STYLES, itsSpecialClassLineStylesStrU_);
-	DDX_Text(pDX, IDC_SPECIAL_CLASSES_LINE_WIDTH, itsSpecialClassLineWidthStrU_);
-	DDX_Text(pDX, IDC_SPECIAL_CLASSES_VALUES, itsSpecialClassValuesStrU_);
+	DDX_Text(pDX, IDC_SPECIAL_CLASSES_LINE_WIDTHS, itsSpecialClassLineWidthsStrU_);
+	DDX_Text(pDX, IDC_SPECIAL_ISOLINE_CLASSES_VALUES, itsSpecialIsolineClassValuesStrU_);
 	DDX_Text(pDX, IDC_TIME_SERIES_MOD_LIMIT, itsTimeSeriesModifyLimit);
 	DDX_Text(pDX, IDC_TIME_SERIES_SCALE_MAX, itsTimeSeriesScaleMax);
 	DDX_Text(pDX, IDC_TIME_SERIES_SCALE_MIN, itsTimeSeriesScaleMin);
@@ -265,7 +269,7 @@ void CFmiModifyDrawParamDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_STATIC_DRAW_PARAM_FILE_NAME, itsDrawParamFileNameStrU_);
 	DDX_Control(pDX, IDC_COMBO_DRAW_PARAM_STATION_DATA_VIEW_SELECTOR, itsStationDataViewSelector);
 	DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_HIGH2, itsSimpleColorContourHigh2Color);
-	DDX_Check(pDX, IDC_CHECK_DRAW_PARAM_USE_STEPS_WITH_CUSTOM_CONTOURS, fUseIsoLineGabWithCustomContours);
+	DDX_Check(pDX, IDC_CHECK_USE_COLOR_BLENDING_WITH_CUSTOM_CONTOURS, fUseColorBlendingWithCustomContours);
 	DDX_Text(pDX, IDC_CONTOUR_GAP, itsContourGap);
 	DDX_Text(pDX, IDC_CONTOUR_ALPHA, itsAlpha);
 	DDV_MinMaxFloat(pDX, itsAlpha, NFmiDrawParam::itsMinAlpha, 100);
@@ -294,6 +298,9 @@ void CFmiModifyDrawParamDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_DRAW_PARAM_COLOR_PARAM_STR, itsPossibleColorParameterStr);
 	DDX_Control(pDX, IDC_BUTTON_COLOR_SHOW_SIMPLE_ISOLINE_HIGH3, itsSimpleIsoLineHigh3Color);
 	DDX_Check(pDX, IDC_CHECK_FLIP_ARROW_SYMBOL, fFlipArrowSymbol);
+	DDX_Text(pDX, IDC_SPECIAL_CONTOUR_CLASSES_VALUES, itsSpecialContourClassValuesStrU_);
+	DDX_Text(pDX, IDC_SPECIAL_CLASSES_CONTOUR_COLOR_INDICES, itsSpecialContourColorIndicesStrU_);
+	DDX_Text(pDX, IDC_SPECIAL_CONTOUR_CLASSES_COUNT, itsSpecialContourClassCount);
 }
 
 
@@ -315,7 +322,7 @@ BEGIN_MESSAGE_MAP(CFmiModifyDrawParamDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_SYMBOL_FILL_COLOR, OnButtonSymbolFillColor)
 	ON_BN_CLICKED(IDC_SAVE_AS_BUTTON, OnSaveAsButton)
 	ON_BN_CLICKED(IDC_SAVE_BUTTON, OnSaveButton)
-	ON_BN_CLICKED(IDC_SHOW_COLOR_INDEX_DLG, OnShowColorIndexDlg)
+	ON_BN_CLICKED(IDC_SHOW_ISOLINE_COLOR_INDEX_DLG, OnBnClickedShowIsolineColorIndexDlg)
 	ON_BN_CLICKED(IDC_BUTTON__HATCH2_COLOR, OnButtonHatch2Color)
 	ON_BN_CLICKED(IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_LOW, OnButtonColorShowSimpleColorcontourLow)
 	ON_BN_CLICKED(IDC_BUTTON_COLOR_SHOW_SIMPLE_COLORCONTOUR_MID, OnButtonColorShowSimpleColorcontourMid)
@@ -329,7 +336,7 @@ BEGIN_MESSAGE_MAP(CFmiModifyDrawParamDlg, CDialog)
 	ON_BN_CLICKED(IDC_DRAW_PARAM_LOAD_FROM, OnBnClickedDrawParamLoadFrom)
 	ON_BN_CLICKED(IDC_MODIFY_DRW_PARAM_USE_WITH_ALL, OnBnClickedModifyDrwParamUseWithAll)
 	ON_WM_CLOSE()
-	ON_EN_CHANGE(IDC_SPECIAL_CLASSES_VALUES, &CFmiModifyDrawParamDlg::OnEnChangeSpecialClassesValues)
+	ON_EN_CHANGE(IDC_SPECIAL_ISOLINE_CLASSES_VALUES, &CFmiModifyDrawParamDlg::OnEnChangeSpecialIsolineClassesValues)
     ON_CBN_SELCHANGE(IDC_COMBO_FIXED_DRAW_PARAM_SELECTOR, &CFmiModifyDrawParamDlg::OnCbnSelchangeComboFixedDrawParamSelector)
     ON_BN_CLICKED(IDC_BUTTON_RELOAD_ORIGINAL, &CFmiModifyDrawParamDlg::OnBnClickedButtonReloadOriginal)
 	ON_BN_CLICKED(IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY1, &CFmiModifyDrawParamDlg::OnBnClickedCheckSimpleContourTransparency1)
@@ -347,6 +354,8 @@ BEGIN_MESSAGE_MAP(CFmiModifyDrawParamDlg, CDialog)
 	ON_EN_CHANGE(IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_HIGH2_VALUE, &CFmiModifyDrawParamDlg::OnEnChangeShowSimpleIsolineWithColorsEnd2Value)
 	ON_WM_HSCROLL()
 	ON_EN_CHANGE(IDC_EDIT_DRAW_PARAM_COLOR_PARAM_STR, &CFmiModifyDrawParamDlg::OnEnChangeEditDrawParamColorParamStr)
+	ON_EN_CHANGE(IDC_SPECIAL_CONTOUR_CLASSES_VALUES, &CFmiModifyDrawParamDlg::OnEnChangeSpecialContourClassesValues)
+	ON_BN_CLICKED(IDC_SHOW_CONTOUR_COLOR_INDEX_DLG, &CFmiModifyDrawParamDlg::OnBnClickedShowContourColorIndexDlg)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -617,7 +626,9 @@ void CFmiModifyDrawParamDlg::InitRestOfVersion2Data(void)
 	itsHatch2Style = itsDrawParam->IsoLineHatchType2();
 	itsHatch2EndValue = itsDrawParam->IsoLineHatchHighValue2();
 	itsHatch2StartValue = itsDrawParam->IsoLineHatchLowValue2();
-	fUseIsoLineGabWithCustomContours = itsDrawParam->UseIsoLineGabWithCustomContours();
+	// Luokan dataosan fUseColorBlendingWithCustomContours nimi on oikea 
+	// k‰yttˆtarkoitus kyseiselle asetukselle (EI DrawParamin UseIsoLineGabWithCustomContours)
+	fUseColorBlendingWithCustomContours = itsDrawParam->UseIsoLineGabWithCustomContours();
     fUseTransparentLabelBoxFillColor = itsDrawParam->UseTransparentFillColor();
     fDoSparseDataSymbolVisualization = itsDrawParam->DoSparseSymbolVisualization();
 	fUseLegend = itsDrawParam->ShowColorLegend();
@@ -683,84 +694,52 @@ void CFmiModifyDrawParamDlg::SetSimpleColorContourLimit(float limitValue, float 
 	}
 }
 
+template<typename Container>
+static std::string MakeCommaSeparatedValuesString(const Container& values, int usedDecimals)
+{
+	std::string str;
+	for(auto value : values)
+	{
+		if(!str.empty())
+		{
+			str += ", ";
+		}
+		if(usedDecimals > 0)
+			str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(value, 4);
+		else
+			str += std::to_string(value);
+	}
+	return str;
+}
+
 void CFmiModifyDrawParamDlg::InitSpecialClassesData(void)
 {
-	std::vector<float> specialIsoLineValues = itsDrawParam->SpecialIsoLineValues();
-	size_t ssize = specialIsoLineValues.size();
-	itsSpecialClassCount = static_cast<int>(specialIsoLineValues.size());
-	NFmiString str;
-	if(ssize > 0)
-	{
-		for(size_t i = 0; i < ssize; i++)
-		{
-			str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(specialIsoLineValues[i], 4);
-			if(i < ssize - 1)
-				str += ", ";
-		}
-	}
-    itsSpecialClassValuesStrU_ = CA2T(str);
+	// Isoviivojen asetuksiin liittyv‰t jutut
+	const auto &specialIsoLineValues = itsDrawParam->SpecialIsoLineValues();
+	itsSpecialIsolineClassCount = static_cast<int>(specialIsoLineValues.size());
+	auto str = ::MakeCommaSeparatedValuesString(specialIsoLineValues, 4);
+    itsSpecialIsolineClassValuesStrU_ = CA2T(str.c_str());
 
-	std::vector<int> specialClassColorIndices = itsDrawParam->SpecialIsoLineColorIndexies();
-	ssize = specialClassColorIndices.size();
-	str = "";
-	if(ssize > 0)
-	{
-		for(size_t i = 0; i < ssize; i++)
-		{
-			NFmiValueString valStr(specialClassColorIndices[i], "%d");
-			str += valStr;
-			if(i < ssize - 1)
-				str += ", ";
-		}
-	}
-    itsSpecialClassColorIndicesStrU_ = CA2T(str);
+	str = ::MakeCommaSeparatedValuesString(itsDrawParam->SpecialIsoLineColorIndexies(), 0);
+	itsSpecialIsolineColorIndicesStrU_ = CA2T(str.c_str());
 
+	str = ::MakeCommaSeparatedValuesString(itsDrawParam->SpecialIsoLineStyle(), 0);
+    itsSpecialClassLineStylesStrU_ = CA2T(str.c_str());
 
-	std::vector<int> specialClassLineStyles = itsDrawParam->SpecialIsoLineStyle();
-	ssize = specialClassLineStyles.size();
-	str = "";
-	if(ssize > 0)
-	{
-		for(size_t i = 0; i < ssize; i++)
-		{
-			NFmiValueString valStr(specialClassLineStyles[i], "%d");
-			str += valStr;
-			if(i < ssize - 1)
-				str += ", ";
-		}
-	}
-    itsSpecialClassLineStylesStrU_ = CA2T(str);
+	str = ::MakeCommaSeparatedValuesString(itsDrawParam->SpecialIsoLineWidth(), 4);
+    itsSpecialClassLineWidthsStrU_ = CA2T(str.c_str());
 
+	str = ::MakeCommaSeparatedValuesString(itsDrawParam->SpecialIsoLineLabelHeight(), 4);
+    itsSpecialClassLabelHeightsStrU_ = CA2T(str.c_str());
 
-	std::vector<float> specialClassLineWidth = itsDrawParam->SpecialIsoLineWidth();
-	ssize = specialClassLineWidth.size();
-	str = "";
-	if(ssize > 0)
-	{
-		for(size_t i = 0; i < ssize; i++)
-		{
-			str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(specialClassLineWidth[i], 4);
-			if(i < ssize - 1)
-				str += ", ";
-		}
-	}
-    itsSpecialClassLineWidthStrU_ = CA2T(str);
+	// Contour asetuksiin liittyv‰t jutut
+	std::vector<float> specialContourValues = itsDrawParam->SpecialContourValues();
+	itsSpecialContourClassCount = static_cast<int>(specialContourValues.size());
+	str = ::MakeCommaSeparatedValuesString(specialContourValues, 4);
+	itsSpecialContourClassValuesStrU_ = CA2T(str.c_str());
 
-	// itsSpecialClassLabelColorIndicesStr:i‰ k‰ytet‰‰n v‰liaikaisesti label korkeuden kanssa!!!!!!!!!!!!!!!!!!!!!!!!!!
-	std::vector<float> specialIsoLineLabelHeight = itsDrawParam->SpecialIsoLineLabelHeight();
-	ssize = specialIsoLineLabelHeight.size();
-	str = "";
-	if(ssize > 0)
-	{
-		for(size_t i = 0; i < ssize; i++)
-		{
-			str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(specialIsoLineLabelHeight[i], 4);
-			if(i < ssize - 1)
-				str += ", ";
-		}
-	}
-    itsSpecialClassLabelColorIndicesStrU_ = CA2T(str);
-
+	str = ::MakeCommaSeparatedValuesString(itsDrawParam->SpecialContourColorIndexies(), 0);
+	itsSpecialContourColorIndicesStrU_ = CA2T(str.c_str());
 }
 
 
@@ -781,7 +760,7 @@ void CFmiModifyDrawParamDlg::ReadRestOfVersion2Data(void)
 	itsDrawParam->IsoLineHatchLowValue1(static_cast<float>(itsHatch1StartValue));
 	itsDrawParam->IsoLineGab(itsIsoLineGap);
 	itsDrawParam->Alpha(itsAlpha);
-	if(fSkipreadingSpecialClassColorIndices == false) // n‰m‰ on siis jo p‰ivitetty TMColorIndex-disalogissa, ei saa p‰ivitt‰‰ niit‰ arvoja p‰‰lle
+	if(fSkipReadingSpecialClassColorIndices == false) // n‰m‰ on siis jo p‰ivitetty TMColorIndex-disalogissa, ei saa p‰ivitt‰‰ niit‰ arvoja p‰‰lle
 	{
 		itsDrawParam->ContourGab(itsContourGap);
 	}
@@ -815,9 +794,11 @@ void CFmiModifyDrawParamDlg::ReadRestOfVersion2Data(void)
 	itsDrawParam->IsoLineHatchType2(static_cast<int>(itsHatch2Style));
 	itsDrawParam->IsoLineHatchHighValue2(static_cast<float>(itsHatch2EndValue));
 	itsDrawParam->IsoLineHatchLowValue2(static_cast<float>(itsHatch2StartValue));
-	if(fSkipreadingSpecialClassColorIndices == false) // n‰m‰ on siis jo p‰ivitetty TMColorIndex-disalogissa, ei saa p‰ivitt‰‰ niit‰ arvoja p‰‰lle
+	if(fSkipReadingSpecialClassColorIndices == false) // n‰m‰ on siis jo p‰ivitetty TMColorIndex-dialogissa, ei saa p‰ivitt‰‰ niit‰ arvoja p‰‰lle
 	{
-		itsDrawParam->UseIsoLineGabWithCustomContours(fUseIsoLineGabWithCustomContours == TRUE);
+		// Luokan dataosan fUseColorBlendingWithCustomContours nimi on oikea 
+		// k‰yttˆtarkoitus kyseiselle asetukselle (EI DrawParamin UseIsoLineGabWithCustomContours)
+		itsDrawParam->UseIsoLineGabWithCustomContours(fUseColorBlendingWithCustomContours == TRUE);
 	}
 	itsDrawParam->StationDataViewType(::GetSelectedStationDataViewType(itsStationDataViewSelector));
     itsDrawParam->UseTransparentFillColor(fUseTransparentLabelBoxFillColor == TRUE);
@@ -840,15 +821,23 @@ void CFmiModifyDrawParamDlg::ReadSpecialClassesData(void)
 	std::string currentValueStr;
 	try
 	{
-		if(fSkipreadingSpecialClassColorIndices == false) // n‰m‰ on siis jo p‰ivitetty TMColorIndex-disalogissa, ei saa p‰ivitt‰‰ niit‰ arvoja p‰‰lle
+		if(fSkipReadingSpecialClassColorIndices == false) // n‰m‰ on siis jo p‰ivitetty TMColorIndex-disalogissa, ei saa p‰ivitt‰‰ niit‰ arvoja p‰‰lle
 		{
-			problemVariableStr = "Problem with SpecialClassValues string\n";
-			currentValueStr = CT2A(itsSpecialClassValuesStrU_);
+			problemVariableStr = "Problem with SpecialIsolineClassValues string\n";
+			currentValueStr = CT2A(itsSpecialIsolineClassValuesStrU_);
 			itsDrawParam->SetSpecialIsoLineValues(NFmiStringTools::Split<std::vector<float> >(currentValueStr, ","));
 
-			problemVariableStr = "Problem with SpecialClassColorIndices string\n";
-            currentValueStr = CT2A(itsSpecialClassColorIndicesStrU_);
+			problemVariableStr = "Problem with SpecialIsolineClassColorIndices string\n";
+            currentValueStr = CT2A(itsSpecialIsolineColorIndicesStrU_);
 			itsDrawParam->SetSpecialIsoLineColorIndexies(NFmiStringTools::Split<std::vector<int> >(currentValueStr, ","));
+
+			problemVariableStr = "Problem with SpecialContourClassValues string\n";
+			currentValueStr = CT2A(itsSpecialContourClassValuesStrU_);
+			itsDrawParam->SetSpecialContourValues(NFmiStringTools::Split<std::vector<float> >(currentValueStr, ","));
+
+			problemVariableStr = "Problem with SpecialContourClassColorIndices string\n";
+			currentValueStr = CT2A(itsSpecialContourColorIndicesStrU_);
+			itsDrawParam->SetSpecialContourColorIndexies(NFmiStringTools::Split<std::vector<int> >(currentValueStr, ","));
 		}
 
 		problemVariableStr = "Problem with SpecialClassLineStyles string\n";
@@ -856,11 +845,11 @@ void CFmiModifyDrawParamDlg::ReadSpecialClassesData(void)
 		itsDrawParam->SetSpecialIsoLineStyle(NFmiStringTools::Split<std::vector<int> >(currentValueStr, ","));
 
 		problemVariableStr = "Problem with SpecialClassLineWidth string\n";
-        currentValueStr = CT2A(itsSpecialClassLineWidthStrU_);
+        currentValueStr = CT2A(itsSpecialClassLineWidthsStrU_);
 		itsDrawParam->SetSpecialIsoLineWidth(NFmiStringTools::Split<std::vector<float> >(currentValueStr, ","));
 
-		problemVariableStr = "Problem with SpecialIsoLineLabelHeight string\n";
-        currentValueStr = CT2A(itsSpecialClassLabelColorIndicesStrU_);
+		problemVariableStr = "Problem with SpecialIsoLineLabelHeights string\n";
+        currentValueStr = CT2A(itsSpecialClassLabelHeightsStrU_);
 		itsDrawParam->SetSpecialIsoLineLabelHeight(NFmiStringTools::Split<std::vector<float> >(currentValueStr, ","));
 	}
 	catch(std::exception &e)
@@ -1281,20 +1270,32 @@ void CFmiModifyDrawParamDlg::ReadAllButtonColors(void)
 
 
 
-void CFmiModifyDrawParamDlg::OnShowColorIndexDlg()
+void CFmiModifyDrawParamDlg::OnShowColorIndexDlg(bool doIsolineCase)
 {
 	UpdateData(TRUE);
 	GetSelectedDrawParamSetUp();
     
 	CFmiTMColorIndexDlg dlg(this, ::GetDictionaryString("ModifyDrawParamColorIndexTitle"), ::GetDictionaryString("ModifyDrawParamColorIndexHelpStr"),
-        ToolMasterColorCube::UsedColorsCube(), itsDrawParam, this);
+        ToolMasterColorCube::UsedColorsCube(), itsDrawParam, doIsolineCase, this);
 	if(dlg.DoModal() == IDOK)
 	{
 		InitSpecialClassesData(); // valitut special v‰rit pit‰‰ alustaa uudestaan
 		itsContourGap = itsDrawParam->ContourGab();
-		fUseIsoLineGabWithCustomContours = itsDrawParam->UseIsoLineGabWithCustomContours();
+		// Luokan dataosan fUseColorBlendingWithCustomContours nimi on oikea 
+		// k‰yttˆtarkoitus kyseiselle asetukselle (EI DrawParamin UseIsoLineGabWithCustomContours)
+		fUseColorBlendingWithCustomContours = itsDrawParam->UseIsoLineGabWithCustomContours();
 		UpdateData(FALSE);
 	}
+}
+
+void CFmiModifyDrawParamDlg::OnBnClickedShowIsolineColorIndexDlg()
+{
+	OnShowColorIndexDlg(true);
+}
+
+void CFmiModifyDrawParamDlg::OnBnClickedShowContourColorIndexDlg()
+{
+	OnShowColorIndexDlg(false);
 }
 
 void CFmiModifyDrawParamDlg::OnButtonHatch2Color()
@@ -1631,9 +1632,17 @@ HBRUSH CFmiModifyDrawParamDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 	if(pWnd->GetDlgCtrlID() == IDC_STATIC_VIEW_MACRO_DRAW_PARAM_WARNING) // v‰rj‰t‰‰n viewmacro-drawparam varoitus teksti punaisella
 		pDC->SetTextColor(RGB(255, 0, 0));
 
-	if(pWnd->GetDlgCtrlID() == IDC_STATIC_DRAW_PARAM_SPECIAL_CLASSES_STR)
+	if(pWnd->GetDlgCtrlID() == IDC_STATIC_SPECIAL_ISOLINE_CLASSES_STR)
 	{
-		if(this->fSpecialClassesHaveInvalidValues)
+		if(this->fSpecialIsolineClassesHaveInvalidValues)
+			pDC->SetTextColor(RGB(255, 0, 0)); // virhetilanteissa erikois luokka edit boxin labeli v‰ritet‰‰n punaiseksi
+		else
+			pDC->SetTextColor(RGB(0, 0, 0));
+	}
+
+	if(pWnd->GetDlgCtrlID() == IDC_STATIC_SPECIAL_CONTOUR_CLASSES_STR)
+	{
+		if(this->fSpecialContourClassesHaveInvalidValues)
 			pDC->SetTextColor(RGB(255, 0, 0)); // virhetilanteissa erikois luokka edit boxin labeli v‰ritet‰‰n punaiseksi
 		else
 			pDC->SetTextColor(RGB(0, 0, 0));
@@ -1709,14 +1718,13 @@ void CFmiModifyDrawParamDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COLOR_SCALE_WITH_SIMPLE_ISOLINES, gMultiColorIsolinesText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COLOR_BLEND_WITH_SIMPLE_ISOLINES, "Color-blend isol");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_SEPARATOR_LINES_BETWEEN_COLORCONTOUR_CLASSES, "Use separating line with contours");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_SPECIAL_CLASSES, "IDC_CHECK_USE_SPECIAL_CLASSES");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_SHOW_COLOR_INDEX_DLG, "IDC_SHOW_COLOR_INDEX_DLG");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_CLASSES_STR, "IDC_STATIC_DRAW_PARAM_SPECIAL_CLASSES_STR");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_WIDTHS_STR, "IDC_STATIC_DRAW_PARAM_SPECIAL_WIDTHS_STR");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_SPECIAL_CLASSES, "Use special classes");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_SHOW_ISOLINE_COLOR_INDEX_DLG, "Line colors");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SPECIAL_ISOLINE_CLASSES_STR, "Isoline\r\nclasses");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_WIDTHS_STR, "Widths\r\n[mm]");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_TYPES_STR, "IDC_STATIC_DRAW_PARAM_SPECIAL_TYPES_STR");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_COLOR_INDEXIES_STR, "IDC_STATIC_DRAW_PARAM_SPECIAL_COLOR_INDEXIES_STR");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_LABEL_SIZES_STR, "IDC_STATIC_DRAW_PARAM_SPECIAL_LABEL_SIZES_STR");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_CLASSES_COUNT_STR, "IDC_STATIC_DRAW_PARAM_SPECIAL_CLASSES_COUNT_STR");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SPECIAL_ISOLINE_COLOR_INDEXIES_STR, "Isoline\r\ncolors");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_LABEL_SIZES_STR, "Label hgt\r\n[mm]");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_HATCH_SETTINGS_STR, "IDC_STATIC_DRAW_PARAM_HATCH_SETTINGS_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_HACTH1, "IDC_CHECK_USE_HACTH1");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_HACTH2, "IDC_CHECK_USE_HACTH2");
@@ -1743,12 +1751,16 @@ void CFmiModifyDrawParamDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_FIXED_DRAW_PARAM_LABEL, "Fixed DrawParams");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_CONTOUR_ALPHA_STR, "Alpha 5-100");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DRAW_PARAM_USE_LEGEND, "Use legend");
-    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DRAW_PARAM_USE_STEPS_WITH_CUSTOM_CONTOURS, "Use shading");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COLOR_BLENDING_WITH_CUSTOM_CONTOURS, "Use color blending with contours");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_TREAT_WMS_LAYER_AS_OBSERVATION, "Treat Wms layer as observation (in animations)");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_FIXED_TEXT_SYMBOL_DRAW_LENGTH, "Fixed text length");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SYMBOL_DRAW_DENSITY_STR, "Symbol draw density");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_FLIP_ARROW_SYMBOL, "Flip arrow");
-    
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SPECIAL_CLASSES_SETTINGS_STR, "Special classes settings");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_SHOW_CONTOUR_COLOR_INDEX_DLG, "Cont. colors");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SPECIAL_CONTOUR_COLOR_INDEXIES_STR, "Contour\r\ncolors");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SPECIAL_CONTOUR_CLASSES_STR, "Contour\r\nclasses");
+	
 //    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_APPLY_FIXED_DRAW_PARAMS_RIGHT_AWAY, "Apply Fixed Settings At Once");
 }
 
@@ -1782,23 +1794,50 @@ void CFmiModifyDrawParamDlg::OnBnClickedModifyDrwParamUseWithAll()
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ModifyDrawParamDlg: Using these setting for all similar parameters button pressed", TRUE, TRUE);
 }
 
-void CFmiModifyDrawParamDlg::OnEnChangeSpecialClassesValues()
+void CFmiModifyDrawParamDlg::OnEnChangeSpecialIsolineClassesValues()
 {
 	UpdateData(TRUE);
 
-	fSpecialClassesHaveInvalidValues = false;
+	fSpecialIsolineClassesHaveInvalidValues = false;
 	try
 	{
-		std::string tmp = CT2A(itsSpecialClassValuesStrU_);
+		std::string tmp = CT2A(itsSpecialIsolineClassValuesStrU_);
 		std::vector<float> classValues = NFmiStringTools::Split<std::vector<float> >(tmp, ",");
 		if(CtrlViewUtils::AreVectorValuesInRisingOrder(classValues) == false)
 			throw std::runtime_error("xxx");
+		itsSpecialIsolineClassCount = (int)classValues.size();
+		UpdateData(FALSE);
 	}
 	catch(...)
 	{
-		fSpecialClassesHaveInvalidValues = true; // vain asetetaan t‰m‰ lippu p‰‰lle jos tulee mit‰‰n ongelmia
+		fSpecialIsolineClassesHaveInvalidValues = true; // vain asetetaan t‰m‰ lippu p‰‰lle jos tulee mit‰‰n ongelmia
 	}
-	CWnd *win = GetDlgItem(IDC_STATIC_DRAW_PARAM_SPECIAL_CLASSES_STR);
+
+	// IDC_STATIC_SPECIAL_ISOLINE_CLASSES_STR kontrolli v‰rj‰t‰‰n punaiseksi, jos inputissa on vikaa
+	CWnd *win = GetDlgItem(IDC_STATIC_SPECIAL_ISOLINE_CLASSES_STR);
+	if(win)
+		win->Invalidate(FALSE);
+}
+
+void CFmiModifyDrawParamDlg::OnEnChangeSpecialContourClassesValues()
+{
+	UpdateData(TRUE);
+
+	fSpecialContourClassesHaveInvalidValues = false;
+	try
+	{
+		std::string tmp = CT2A(itsSpecialContourClassValuesStrU_);
+		std::vector<float> classValues = NFmiStringTools::Split<std::vector<float> >(tmp, ",");
+		if(CtrlViewUtils::AreVectorValuesInRisingOrder(classValues) == false)
+			throw std::runtime_error("xxx");
+		itsSpecialContourClassCount = (int)classValues.size();
+		UpdateData(FALSE);
+	}
+	catch(...)
+	{
+		fSpecialContourClassesHaveInvalidValues = true; // vain asetetaan t‰m‰ lippu p‰‰lle jos tulee mit‰‰n ongelmia
+	}
+	CWnd* win = GetDlgItem(IDC_STATIC_SPECIAL_CONTOUR_CLASSES_STR);
 	if(win)
 		win->Invalidate(FALSE);
 }
@@ -2046,7 +2085,7 @@ static std::string MakeUseSpecialClassesTooltip()
 	return str;
 }
 
-static std::string MakeSpecialClassesLimitTooltip()
+static std::string MakeSpecialIsolineClassesLimitTooltip()
 {
 	std::string str = "Give a list of value limits in rising order.";
 	str += "<br>Sample \"1, 2, 5, 10, 20, 50\",<br>this list of 6 limits needs 6 or 7 colors depending of case.";
@@ -2091,7 +2130,7 @@ static std::string MakeSpecialClassesColorIndexTooltip()
 	str += "<br>Values 3-514 form a 8x8x8 (RGB) color cube with plenty of colors.";
 	str += "<br>Some basic colors: black=3, white=514, blue=10, red=451, cyan=66, yellow=507, violet=458";
 	str += "<br>Open up the Color indexies dialog from ";
-	str += ::MakeDecoratedTooltipString(::GetDictionaryString("IDC_SHOW_COLOR_INDEX_DLG"), "", true);
+	str += ::MakeDecoratedTooltipString(::GetDictionaryString("Show isoline color dlg"), "", true);
 	str += " button.";
 	str += gLastValueIsRepeatedStr;
 	return str;
@@ -2101,7 +2140,7 @@ static std::string MakeOpenColorDialogTooltip()
 {
 	std::string str = "Open up dialog that will help you to choose colors for<br>you special classes visualization scheme easier.";
 	str += "<br>Selected color's indexies will be added to the ";
-	str += ::MakeDecoratedTooltipString(::GetDictionaryString("IDC_STATIC_DRAW_PARAM_SPECIAL_COLOR_INDEXIES_STR"), "", true);
+	str += ::MakeDecoratedTooltipString(::GetDictionaryString("Isoline colors (index!)"), "", true);
 	str += " list.";
 	return str;
 }
@@ -2135,13 +2174,13 @@ void CFmiModifyDrawParamDlg::InitTooltipControl()
 	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_ISOLINE_COLORS_STR, ::MakeIsolineColorsTooltip());
 	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_COLOR_CONTOUR_COLORS_STR, ::MakeContourColorsTooltip());
 	SetDialogControlTooltip(IDC_CHECK_USE_SPECIAL_CLASSES, ::MakeUseSpecialClassesTooltip());
-	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_SPECIAL_CLASSES_STR, ::MakeSpecialClassesLimitTooltip());
+	SetDialogControlTooltip(IDC_STATIC_SPECIAL_ISOLINE_CLASSES_STR, ::MakeSpecialIsolineClassesLimitTooltip());
 	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_SPECIAL_WIDTHS_STR, ::MakeSpecialClassesLineWidthTooltip());
 	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_SPECIAL_TYPES_STR, ::MakeSpecialClassesLineStyleTooltip());
 	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_SPECIAL_LABEL_SIZES_STR, ::MakeSpecialClassesLabelHeightTooltip());
 	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_SPECIAL_COLOR_INDEXIES_STR, ::MakeSpecialClassesColorIndexTooltip());
-	SetDialogControlTooltip(IDC_CHECK_DRAW_PARAM_USE_STEPS_WITH_CUSTOM_CONTOURS, "Usable only with contour coloring schemes.<br>If this checked and contours used and contour step smaller<br>than value limits, then smaller step colors are contructed with blends.");
-	SetDialogControlTooltip(IDC_SHOW_COLOR_INDEX_DLG, ::MakeOpenColorDialogTooltip());
+	SetDialogControlTooltip(IDC_CHECK_USE_COLOR_BLENDING_WITH_CUSTOM_CONTOURS, "Usable only with contour coloring schemes.<br>If this checked and contours used and contour step smaller<br>than value limits, then the smaller step colors are constructed by color blending.");
+	SetDialogControlTooltip(IDC_SHOW_ISOLINE_COLOR_INDEX_DLG, ::MakeOpenColorDialogTooltip());
 }
 
 
@@ -2151,3 +2190,4 @@ BOOL CFmiModifyDrawParamDlg::PreTranslateMessage(MSG* pMsg)
 
 	return CDialog::PreTranslateMessage(pMsg);
 }
+

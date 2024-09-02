@@ -452,7 +452,6 @@ class NFmiDrawParam
   void SetSpecialIsoLineValues(const std::vector<float>& newValue)
   {
     itsSpecialIsoLineValues = newValue;
-    itsSpecialContourValues = newValue;
   }
 
   const std::vector<float>& SpecialContourValues() const { return itsSpecialContourValues; }
@@ -509,7 +508,6 @@ class NFmiDrawParam
   void SetSpecialIsoLineColorIndexies(const std::vector<int>& newValue)
   {
     itsSpecialIsoLineColorIndexies = newValue;
-    itsSpecialContourColorIndexies = newValue;
   }
 
   const std::vector<int>& SpecialContourColorIndexies() const

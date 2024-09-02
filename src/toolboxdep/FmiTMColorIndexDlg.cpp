@@ -687,7 +687,7 @@ static char THIS_FILE[] = __FILE__;
 // CFmiTMColorIndexDlg dialog
 
 
-CFmiTMColorIndexDlg::CFmiTMColorIndexDlg(CFmiModifyDrawParamDlg *theModifyDrawParamDlg, const std::string &theTitleStr, const std::string theHelpStr, Matrix3D<std::pair<int, COLORREF> >* theColorsCube, boost::shared_ptr<NFmiDrawParam> &theDrawParam, CWnd* pParent)
+CFmiTMColorIndexDlg::CFmiTMColorIndexDlg(CFmiModifyDrawParamDlg *theModifyDrawParamDlg, const std::string &theTitleStr, const std::string theHelpStr, Matrix3D<std::pair<int, COLORREF> >* theColorsCube, boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool doIsolineModifications, CWnd* pParent)
 : CDialog(CFmiTMColorIndexDlg::IDD, pParent)
 , itsUsedColorsCube(*theColorsCube)
 , itsTitleStr(theTitleStr)
@@ -702,8 +702,9 @@ CFmiTMColorIndexDlg::CFmiTMColorIndexDlg(CFmiModifyDrawParamDlg *theModifyDrawPa
 , itsColorPaletteBottomY(0)
 , fDoViewUpdates(TRUE)
 , itsModifyDrawParamDlg(theModifyDrawParamDlg)
+, fDoIsolineModifications(doIsolineModifications)
 , itsSpecialClassesValuesStrU_(_T(""))
-, fUseSteps(FALSE)
+, fUseColorBlendingWithCustomContours(FALSE)
 , itsLatestAcceptedSpecialClasses()
 , itsLatestAcceptedContourGap()
 , fSpecialClassesHaveInvalidValues(false)
@@ -736,7 +737,7 @@ void CFmiTMColorIndexDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_INSTANT_VIEW_UPDATE, fDoViewUpdates);
 	//}}AFX_DATA_MAP
     DDX_Text(pDX, IDC_SPECIAL_CLASSES_VALUES, itsSpecialClassesValuesStrU_);
-	DDX_Check(pDX, IDC_CHECK_DRAW_PARAM_USE_STEPS_WITH_CUSTOM_CONTOURS, fUseSteps);
+	DDX_Check(pDX, IDC_CHECK_USE_COLOR_BLENDING_WITH_CUSTOM_CONTOURS, fUseColorBlendingWithCustomContours);
 	DDX_Text(pDX, IDC_CONTOUR_GAP, itsContourGab);
 }
 
@@ -752,7 +753,7 @@ BEGIN_MESSAGE_MAP(CFmiTMColorIndexDlg, CDialog)
 	ON_WM_RBUTTONUP()
 	ON_EN_CHANGE(IDC_SPECIAL_CLASSES_VALUES, &CFmiTMColorIndexDlg::OnEnChangeSpecialClassesValues)
 	ON_EN_CHANGE(IDC_CONTOUR_GAP, &CFmiTMColorIndexDlg::OnEnChangeContourGap)
-	ON_BN_CLICKED(IDC_CHECK_DRAW_PARAM_USE_STEPS_WITH_CUSTOM_CONTOURS, &CFmiTMColorIndexDlg::OnBnClickedCheckDrawParamUseStepsWithCustomContours)
+	ON_BN_CLICKED(IDC_CHECK_USE_COLOR_BLENDING_WITH_CUSTOM_CONTOURS, &CFmiTMColorIndexDlg::OnBnClickedCheckUseColorBlendingWithCustomContours)
 	ON_WM_CTLCOLOR()
 	ON_BN_CLICKED(ID_BUTTOM_REMOVE_COLOR, &CFmiTMColorIndexDlg::OnBnClickedButtomRemoveColor)
     ON_NOTIFY(UDM_TOOLTIP_DISPLAY, NULL, NotifyDisplayTooltip)
@@ -767,7 +768,7 @@ void CFmiTMColorIndexDlg::MakeViewUpdates(void)
 	if(fDoViewUpdates)
 	{
 		MakeColorUpdatesTodrawParam();
-		itsModifyDrawParamDlg->SkipreadingSpecialClassColorIndices(true);
+		itsModifyDrawParamDlg->SkipReadingSpecialClassColorIndices(true);
 		try
 		{
 			itsModifyDrawParamDlg->OnBnClickedModifyDrwParamRefresh();
@@ -775,7 +776,7 @@ void CFmiTMColorIndexDlg::MakeViewUpdates(void)
 		catch(...)
 		{
 		}
-		itsModifyDrawParamDlg->SkipreadingSpecialClassColorIndices(false);
+		itsModifyDrawParamDlg->SkipReadingSpecialClassColorIndices(false);
 	}
 }
 
@@ -969,12 +970,15 @@ BOOL CFmiTMColorIndexDlg::OnInitDialog()
 	SetWindowText(CA2T(itsTitleStr.c_str()));
 	CFmiWin32Helpers::SetDialogItemText(this, IDOK, "IDOK");
 	CFmiWin32Helpers::SetDialogItemText(this, IDCANCEL, "IDCANCEL");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_CLASSES_STR, "IDC_STATIC_DRAW_PARAM_SPECIAL_CLASSES_STR");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_STEP_STR, "IDC_STATIC_DRAW_PARAM_STEP_STR");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_CLASSES_COUNT_STR, "IDC_STATIC_DRAW_PARAM_SPECIAL_CLASSES_COUNT_STR");
-
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_CLASSES_STR, "Special classes (numbers in rising order!)");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_STEP_STR, "Step");
+    CFmiWin32Helpers::SetDialogItemText(this, ID_BUTTOM_REMOVE_COLOR, "Remove Color");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_STEP_CONTOUR_STR, "Contour");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_INSTANT_VIEW_UPDATE, "Instant view update");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COLOR_BLENDING_WITH_CUSTOM_CONTOURS, "Use color blending with contours");
+    
 	// Lisätään jo valitut värit
-	auto specialClassColorIndices = itsDrawParam->SpecialIsoLineColorIndexies();
+	auto specialClassColorIndices = GetSpecialClassColorIndexies();
 	for(size_t i=0; i<specialClassColorIndices.size(); i++)
 	{
 		std::vector<ColorRectInfo>::iterator it = ::FindColorRectWithColorIndex(itsColorRectVector, specialClassColorIndices[i]);
@@ -984,10 +988,12 @@ BOOL CFmiTMColorIndexDlg::OnInitDialog()
 		}
 	}
 
-	itsLatestAcceptedSpecialClasses = itsDrawParam->SpecialIsoLineValues();
+	itsLatestAcceptedSpecialClasses = GetSpecialClassValues();
     itsSpecialClassesValuesStrU_ = CA2T(::VectorValues2Str(itsLatestAcceptedSpecialClasses).c_str());
 	itsContourGab = itsLatestAcceptedContourGap = itsDrawParam->ContourGab();
-	fUseSteps = itsDrawParam->UseIsoLineGabWithCustomContours();
+    // Luokan dataosan fUseColorBlendingWithCustomContours nimi on oikea 
+    // käyttötarkoitus kyseiselle asetukselle (EI UseIsoLineGabWithCustomContours)
+	fUseColorBlendingWithCustomContours = itsDrawParam->UseIsoLineGabWithCustomContours();
     ::InitColorNameMap();
 
 //    ::TESTWriteColorMapToFile(itsColorRectVector);
@@ -997,6 +1003,38 @@ BOOL CFmiTMColorIndexDlg::OnInitDialog()
 	UpdateData(FALSE);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+const std::vector<float>& CFmiTMColorIndexDlg::GetSpecialClassValues()
+{
+    if(fDoIsolineModifications)
+        return itsDrawParam->SpecialIsoLineValues();
+    else
+        return itsDrawParam->SpecialContourValues();
+}
+
+void CFmiTMColorIndexDlg::SetSpecialClassValues(const std::vector<float>& classValues)
+{
+    if(fDoIsolineModifications)
+        itsDrawParam->SetSpecialIsoLineValues(classValues);
+    else
+        itsDrawParam->SetSpecialContourValues(classValues);
+}
+
+const std::vector<int>& CFmiTMColorIndexDlg::GetSpecialClassColorIndexies()
+{
+    if(fDoIsolineModifications)
+        return itsDrawParam->SpecialIsoLineColorIndexies();
+    else
+        return itsDrawParam->SpecialContourColorIndexies();
+}
+
+void CFmiTMColorIndexDlg::SetSpecialClassColorIndexies(const std::vector<int>& classColorIndexies)
+{
+    if(fDoIsolineModifications)
+        itsDrawParam->SetSpecialIsoLineColorIndexies(classColorIndexies);
+    else
+        itsDrawParam->SetSpecialContourColorIndexies(classColorIndexies);
 }
 
 static bool IsGrayColor(COLORREF theColor)
@@ -1076,7 +1114,7 @@ CRect CFmiTMColorIndexDlg::CalcBelowButtonsClientArea(void)
 
 void CFmiTMColorIndexDlg::DoDraw(CDC *theDC)
 {
-	COLORREF backGroundColor = 0x00D8E8EC; // tämä on dialogin perusväri (miten sen saisi ohjelmallisesti?)
+	COLORREF backGroundColor = GetSysColor(CTLCOLOR_DLG);
 
 	if(itsColorRectVector.size())
 	{
@@ -1225,12 +1263,12 @@ void CFmiTMColorIndexDlg::MakeColorUpdatesTodrawParam(void)
 	for(size_t i=0; i<itsSelectedColorsRectVector.size(); i++)
 		specialClassColorIndices.push_back(itsSelectedColorsRectVector[i].itsColorIndex);
 
-	itsDrawParam->SetSpecialIsoLineColorIndexies(specialClassColorIndices);
+	SetSpecialClassColorIndexies(specialClassColorIndices);
 
 	// tehdään muutkin tarvittavat päivitykset drawParamiin
-	itsDrawParam->SetSpecialIsoLineValues(itsLatestAcceptedSpecialClasses);
+	SetSpecialClassValues(itsLatestAcceptedSpecialClasses);
 	itsDrawParam->ContourGab(itsLatestAcceptedContourGap);
-	itsDrawParam->UseIsoLineGabWithCustomContours(fUseSteps == TRUE);
+	itsDrawParam->UseIsoLineGabWithCustomContours(fUseColorBlendingWithCustomContours == TRUE);
 
 }
 
@@ -1491,7 +1529,7 @@ void CFmiTMColorIndexDlg::OnEnChangeContourGap()
 	MakeViewUpdates();
 }
 
-void CFmiTMColorIndexDlg::OnBnClickedCheckDrawParamUseStepsWithCustomContours()
+void CFmiTMColorIndexDlg::OnBnClickedCheckUseColorBlendingWithCustomContours()
 {
 	UpdateData(TRUE);
 

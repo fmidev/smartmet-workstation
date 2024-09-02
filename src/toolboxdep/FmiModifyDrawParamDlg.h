@@ -33,8 +33,8 @@ public:
 	~CFmiModifyDrawParamDlg(void);
 
 	bool RefreshPressed(void) const {return fRefreshPressed;}
-	bool SkipreadingSpecialClassColorIndices(void) const {return fSkipreadingSpecialClassColorIndices;}
-	void SkipreadingSpecialClassColorIndices(bool newValue) {fSkipreadingSpecialClassColorIndices = newValue;}
+	bool SkipReadingSpecialClassColorIndices(void) const {return fSkipReadingSpecialClassColorIndices;}
+	void SkipReadingSpecialClassColorIndices(bool newValue) {fSkipReadingSpecialClassColorIndices = newValue;}
 
 	// Dialog Data
 	//{{AFX_DATA(CFmiModifyDrawParamDlg)
@@ -99,12 +99,15 @@ public:
 	float	itsSymbolsWithColorsEndValue;
 	float	itsSymbolsWithColorsMiddleValue;
 	float	itsSymbolsWithColorsStartValue;
-	int		itsSpecialClassCount;
-    CString	itsSpecialClassColorIndicesStrU_;
-    CString	itsSpecialClassLabelColorIndicesStrU_; // ei löydy drawparamista!!!!! // käytetään väliaikaisesti label korkeuden kanssa
+	int		itsSpecialIsolineClassCount;
+	int		itsSpecialContourClassCount;
+    CString	itsSpecialIsolineColorIndicesStrU_;
+    CString	itsSpecialClassLabelHeightsStrU_; // ei löydy drawparamista!!!!! // käytetään väliaikaisesti label korkeuden kanssa
     CString	itsSpecialClassLineStylesStrU_;
-    CString	itsSpecialClassLineWidthStrU_;
-    CString	itsSpecialClassValuesStrU_;
+    CString	itsSpecialClassLineWidthsStrU_;
+    CString	itsSpecialIsolineClassValuesStrU_;
+	CString itsSpecialContourClassValuesStrU_;
+	CString itsSpecialContourColorIndicesStrU_;
 	double	itsTimeSeriesModifyLimit;
 	double	itsTimeSeriesScaleMax;
 	double	itsTimeSeriesScaleMin;
@@ -126,10 +129,12 @@ public:
 	float itsSimpleColorContourLimit4Value = kFloatMissing; // Saadaan vastaavasta string valuesta
 	//}}AFX_DATA
 
-	// Tämän muuttujan avulla väritetään labeli tarvittaessa punaiseksi että
-	// käyttäjä näkee että annetut luokka rajat ovat virheellisiä.
-	// Suurin ongelma tulee kun kaikki arvot eivät ole nousevassa järjestyksessä. Tällöin ohjelma toimii oudosti.
-	bool fSpecialClassesHaveInvalidValues; 
+	// Tämän muuttujan avulla väritetään static "Isoline classes" kontrolli teksti 
+	// tarvittaessa punaiseksi että käyttäjä näkee että annetut luokka rajat ovat 
+	// jotenkin virheellisiä. Suurin ongelma tulee kun kaikki arvot eivät ole 
+	// nousevassa järjestyksessä. Tällöin ohjelma toimii oudosti.
+	bool fSpecialIsolineClassesHaveInvalidValues;
+	bool fSpecialContourClassesHaveInvalidValues;
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -162,7 +167,7 @@ protected:
 	afx_msg void OnSaveAsButton();
 	afx_msg void OnSaveButton();
 	virtual BOOL OnInitDialog();
-	afx_msg void OnShowColorIndexDlg();
+	afx_msg void OnBnClickedShowIsolineColorIndexDlg();
 	afx_msg void OnButtonHatch2Color();
 	afx_msg void OnButtonColorShowSimpleColorcontourLow();
 	afx_msg void OnButtonColorShowSimpleColorcontourMid();
@@ -228,6 +233,7 @@ private:
 	void DoPostInitializationChecks();
 	void InitTooltipControl();
 	void SetDialogControlTooltip(int controlId, const std::string& tooltipRawText);
+	void OnShowColorIndexDlg(bool doIsolineCase);
 
 	std::string itsDrawParamPath;
 	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
@@ -300,14 +306,14 @@ private:
 	CRect itsHatch1ColorRect;
 	CRect itsHatch2ColorRect;
 
-	bool fSkipreadingSpecialClassColorIndices; // tämä on viritys, mitä tarvitaan että väriindeksi pikapäivitys toimisi
+	bool fSkipReadingSpecialClassColorIndices; // tämä on viritys, mitä tarvitaan että väriindeksi pikapäivitys toimisi
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface; // päivitä napista päivitetään ruudut tämän avulla (ja muita tarpeita)
 	unsigned int itsDescTopIndex; // jos piirto-ominaisuudet liittyvät jonkun karttanäytön (desctop) parametriin, pitää siitä olla tieto, että oikeaa karttanäyttöä osataan päivittää
 	unsigned int itsRealRowNumber; // Tietyissä tilanteissa pitää tietää millä rivillä joku drawParam oli
     CString itsDrawParamFileNameStrU_;
     CComboBox itsStationDataViewSelector;
-    BOOL fUseIsoLineGabWithCustomContours;
+    BOOL fUseColorBlendingWithCustomContours;
     double itsContourGap;
     float itsAlpha;
     CWzComboBox itsFixedDrawParamSelector; // puurakenteinen dropdown lista, missä kansioita ja drawParameita
@@ -338,7 +344,7 @@ public:
 	afx_msg void OnBnClickedDrawParamLoadFrom();
 	afx_msg void OnBnClickedModifyDrwParamUseWithAll();
 	afx_msg void OnClose();
-	afx_msg void OnEnChangeSpecialClassesValues();
+	afx_msg void OnEnChangeSpecialIsolineClassesValues();
     afx_msg void OnCbnSelchangeComboFixedDrawParamSelector();
     afx_msg void OnBnClickedButtonReloadOriginal();
 	afx_msg void OnBnClickedCheckSimpleContourTransparency1();
@@ -357,6 +363,8 @@ public:
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnEnChangeEditDrawParamColorParamStr();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	afx_msg void OnEnChangeSpecialContourClassesValues();
+	afx_msg void OnBnClickedShowContourColorIndexDlg();
 };
 
 //{{AFX_INSERT_LOCATION}}
