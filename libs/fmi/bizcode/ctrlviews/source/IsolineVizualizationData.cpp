@@ -95,11 +95,26 @@ std::pair<std::vector<float>, std::vector<NFmiColor>> IsolineVizualizationData::
 	return std::make_pair(classLimits, colors);
 }
 
+// Ennen smartmet versio 5.14.5.0 pidettiin custom isoviiva ja contour arvot samoina.
+// Tällöin ei siis kannattanut piirtää isoviivoja niiden custom väreillä, koska ne
+// hukkuisivat contour väreihin ja ne korvattiin valitulla (yhdellä) isoviiva värillä.
+// Nämä samat custom värit ja luokkarajat talletettiin näyttömakroihin sekä isoviivan 
+// että contour arvojen kohdalle, joten taaksepäin yhteensopivuuden nimissä tällöin
+// isoviivaväri pitää korvata sillä yhdellä valitulla isoviivavärillä.
+static bool IsJointIsolineContourCase(const boost::shared_ptr<NFmiDrawParam>& drawParam)
+{
+	if(drawParam->SpecialIsoLineValues() != drawParam->SpecialContourValues())
+		return false;
+	if(drawParam->SpecialIsoLineColorIndexies() != drawParam->SpecialContourColorIndexies())
+		return false;
+	return true;
+}
+
 std::pair<std::vector<float>, std::vector<int>> IsolineVizualizationData::getCustomColors(const boost::shared_ptr<NFmiDrawParam>& drawParam)
 {
-	const auto& classLimits = drawParam->SpecialContourValues();
-	std::vector<int> colorIndexies = drawParam->SpecialContourColorIndexies();
-	if(usedViewType_ == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView)
+	const auto& classLimits = drawParam->SpecialIsoLineValues();
+	std::vector<int> colorIndexies = drawParam->SpecialIsoLineColorIndexies();
+	if(usedViewType_ == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView && ::IsJointIsolineContourCase(drawParam))
 	{
 		// Jos colorcontour ja isoviivat piirretään yhtäaikaa, piirretään isoviivat yhdellä 
 		// värillä, koska muuten isoviivat häviävat saman väristen color-contourien sekaan.
