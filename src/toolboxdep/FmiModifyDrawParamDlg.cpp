@@ -2167,6 +2167,13 @@ static std::string MakeOpenColorDialogTooltip(const std::string& titleStr, const
 	return str;
 }
 
+// HUOM! Outouksia miten tooltipit eri kontrolleissa toimivat t‰ss‰ dialogissa:
+// Syy outouksiin on tuntematon, mutta varmaan liittyy siihen ett‰ dialogi on tungettu t‰yteen erilaisia kontrolleja.
+// Joskus static-teksti-kontrollit voivat saada tooltipin toimimaan, mutta varsinkin viime aikoina lis‰tyt kontrollit eiv‰t.
+// Lˆysin keinon mill‰ toiminta voidaan 'pakottaa' static-teksti-kontrolliin: Laita Notify optio true:ksi, niin rupee pelitt‰m‰‰n.
+// Ei ole tietoa onko t‰st‰ asetuksesta haittaa, koska silloin kontolli rupeaa l‰hett‰m‰‰n notifikaatioita, kun sit‰ klikataan jne.
+// Pikaisten testien valossa t‰st‰ viestien l‰hettelyst‰ ei ole haittaa.
+// N‰ytt‰‰ silt‰ ett‰ toimivat/aktiiviset kontrollit voivat aina saada tooltipin.
 void CFmiModifyDrawParamDlg::InitTooltipControl()
 {
 	m_tooltip.Create(this);
