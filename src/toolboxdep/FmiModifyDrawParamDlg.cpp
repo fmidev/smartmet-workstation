@@ -1664,12 +1664,19 @@ HBRUSH CFmiModifyDrawParamDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 }
 
 const std::string gMultiColorIsolinesText = "Multi-color isoline";
+const std::string gColorBlendIsolinesText = "Color-blend isol";
 const std::string gContourColorsText = "Contour colors";
 const std::string gIsolineColorsText = "Isoline colors";
 const std::string gIsolineClassesText = "Isoline classes";
 const std::string gIsolineColorOpenDlgText = "Line colors";
 const std::string gContourColorOpenDlgText = "Cont. colors";
 const std::string gContourClassesText = "Contour classes";
+const std::string gIsolineWidthsText = "Widths [mm]";
+const std::string gIsolineTypesText = "Line types (0 - 30)";
+const std::string gIsolineLabelHeightsText = "Label hgt [mm]";
+const std::string gUseColorBlendingWithContoursText = "Use color blending with contours";
+const std::string gSymbolDrawDensityText = "Symbol draw density";
+const std::string gFixedTextLengthText = "Fixed text length";
 
 // Tämä funktio alustaa kaikki dialogin tekstit editoriin valitulla kielellä.
 // Tämä on ikävä kyllä tehtävä erikseen dialogin muokkaus työkalusta, eli
@@ -1723,15 +1730,15 @@ void CFmiModifyDrawParamDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_ISOLINE_COLORS_STR, gIsolineColorsText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_COLOR_CONTOUR_COLORS_STR, gContourColorsText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COLOR_SCALE_WITH_SIMPLE_ISOLINES, gMultiColorIsolinesText.c_str());
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COLOR_BLEND_WITH_SIMPLE_ISOLINES, "Color-blend isol");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COLOR_BLEND_WITH_SIMPLE_ISOLINES, gColorBlendIsolinesText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_SEPARATOR_LINES_BETWEEN_COLORCONTOUR_CLASSES, "Use separating line with contours");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_SPECIAL_CLASSES, gUseSpecialClassesStr.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_SHOW_ISOLINE_COLOR_INDEX_DLG, gIsolineColorOpenDlgText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SPECIAL_ISOLINE_CLASSES_STR, gIsolineClassesText.c_str());
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_WIDTHS_STR, "Widths\r\n[mm]");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_TYPES_STR, "IDC_STATIC_DRAW_PARAM_SPECIAL_TYPES_STR");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_WIDTHS_STR, gIsolineWidthsText.c_str());
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_TYPES_STR, gIsolineTypesText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SPECIAL_ISOLINE_COLOR_INDEXIES_STR, gIsolineColorsText.c_str());
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_LABEL_SIZES_STR, "Label hgt\r\n[mm]");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SPECIAL_LABEL_SIZES_STR, gIsolineLabelHeightsText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_HATCH_SETTINGS_STR, "IDC_STATIC_DRAW_PARAM_HATCH_SETTINGS_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_HACTH1, "IDC_CHECK_USE_HACTH1");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_HACTH2, "IDC_CHECK_USE_HACTH2");
@@ -1758,10 +1765,10 @@ void CFmiModifyDrawParamDlg::InitDialogTexts(void)
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_FIXED_DRAW_PARAM_LABEL, "Fixed DrawParams");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_CONTOUR_ALPHA_STR, "Alpha 5-100");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DRAW_PARAM_USE_LEGEND, "Use legend");
-    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COLOR_BLENDING_WITH_CUSTOM_CONTOURS, "Use color blending with contours");
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COLOR_BLENDING_WITH_CUSTOM_CONTOURS, gUseColorBlendingWithContoursText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_TREAT_WMS_LAYER_AS_OBSERVATION, "Treat Wms layer as observation (in animations)");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_FIXED_TEXT_SYMBOL_DRAW_LENGTH, "Fixed text length");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SYMBOL_DRAW_DENSITY_STR, "Symbol draw density");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_FIXED_TEXT_SYMBOL_DRAW_LENGTH_STR, gFixedTextLengthText.c_str());
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SYMBOL_DRAW_DENSITY_STR, gSymbolDrawDensityText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_FLIP_ARROW_SYMBOL, "Flip arrow");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SPECIAL_CLASSES_SETTINGS_STR, gSpecialClassesSettingsStr.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_SHOW_CONTOUR_COLOR_INDEX_DLG, gContourColorOpenDlgText.c_str());
@@ -2058,25 +2065,37 @@ static std::string MakeProducerNameOnDataCtrlTooltip()
 	return str;
 }
 
-static std::string MakeIsolineColorsTooltip()
+static std::string MakeIsolineColorsTooltip(const std::string& titleStr)
 {
-	std::string str = "Setup 'simple' multi colored isolines<br>with 4 limits and their max 5 colors.<br>Remember to check the \"";
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Setup 'simple' multi colored isolines<br>with 4 limits and their max 5 colors.<br>Remember to check the \"";
 	str += ::MakeDecoratedTooltipString(gMultiColorIsolinesText, "", true);
 	str += "\" checkbox also.";
 	return str;
 }
 
-static std::string MakeUseMultiColorIsolineTooltip()
+static std::string MakeUseMultiColorIsolineTooltip(const std::string& titleStr)
 {
-	std::string str = "Check this if you want to use multi colored isolines<br>defined by \"";
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Check this if you want to use multi colored isolines<br>defined by \"";
 	str += ::MakeDecoratedTooltipString(gIsolineColorsText, "", true);
 	str += "\" limits and their colors.<br>If not checked, single color isolines are used.<br>If no color blend in use can utilize max 4 limits with 5 colors.";
 	return str;
 }
 
-static std::string MakeContourColorsTooltip()
+static std::string MakeUseColorBlendWithSimpleIsolinesTooltip(const std::string& titleStr)
 {
-	std::string str = "Setup 'simple' contour colors<br>with 4 limits and their max 5 colors.";
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Check this if you want to blend isoline colors";
+	str += "<br>by the isoline steps and limiting colors.";
+	str += "<br>Always uses the same amount limits and colors, max 4.";
+	return str;
+}
+
+static std::string MakeContourColorsTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Setup 'simple' contour colors<br>with 4 limits and their max 5 colors.";
 	str += "<br>Note that used number of colors depend if limits and contour step matches.";
 	str += "<br>So if used step is 5 and given limits are also 5, then max 4 limits and 5 colors are used.";
 	str += "<br>If given step is smaller than gaps between limits, then max 4 limits and colors are used.";
@@ -2114,19 +2133,21 @@ static std::string MakeSpecialIsolineClassesLimitTooltip(const std::string& titl
 	return str;
 }
 
-const std::string gLastValueIsRepeatedStr = "<br>Last value is repeated automatically for the rest of value limits.";
+const std::string gLastValueIsRepeatedStr = "<br>Last value is repeated automatically for the rest of value limits if limits cnt > colors cnt.";
 
-static std::string MakeSpecialClassesLineWidthTooltip()
+static std::string MakeSpecialClassesLineWidthTooltip(const std::string& titleStr)
 {
-	std::string str = "Give a list of isoline widths in mm.";
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Give a list of isoline widths in mm.";
 	str += "<br>You need only give one value, if all the isolines are the same width.";
 	str += gLastValueIsRepeatedStr;
 	return str;
 }
 
-static std::string MakeSpecialClassesLineStyleTooltip()
+static std::string MakeSpecialClassesLineStyleTooltip(const std::string& titleStr)
 {
-	std::string str = "Give a list of isoline drawing style with numbers 0-30.";
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Give a list of isoline drawing style with numbers 0-30.";
 	str += "<br>0 is solid line style and rest are different kind of dot-dash style lines.";
 	str += "<br>Experiment with different values until you find suitable ones.";
 	str += "<br>You need only give one style, if all the isolines are drawn with the same style.";
@@ -2134,9 +2155,10 @@ static std::string MakeSpecialClassesLineStyleTooltip()
 	return str;
 }
 
-static std::string MakeSpecialClassesLabelHeightTooltip()
+static std::string MakeSpecialClassesLabelHeightTooltip(const std::string& titleStr)
 {
-	std::string str = "Give a list of isoline label height in mm.";
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Give a list of isoline label height in mm.";
 	str += "<br>If you don't want a certain isoline to have labels at all, give value 0.";
 	str += "<br>You need only give one value, if all the isolines have the same size labels.";
 	str += gLastValueIsRepeatedStr;
@@ -2167,6 +2189,41 @@ static std::string MakeOpenColorDialogTooltip(const std::string& titleStr, const
 	return str;
 }
 
+static std::string MakeSpecialClassesUseColorBlendingWithContoursTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Usable only with contour coloring schemes.";
+	str += "<br>If this is checked and contours used and contour step smaller";
+	str += "<br>than value limits, then the smaller step colors are constructed by color blending.";
+	return str;
+}
+
+static std::string MakeFixedTextSymbolDrawLengthTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>You can define fixed character length for text based";
+	str += "<br>symbol visualization when Smartmet calculates needed";
+	str += "<br>space for each drawn symbol on map - view.";
+	str += "<br>Default value 0 let's SmartMet to determine needed character length,";
+	str += "<br>but this self determination can be tricky in many cases.";
+	str += "<br>So giving here positive integer value fixes the used space for symbols.";
+	str += "<br>The text will be drawn as whole even if therre are";
+	str += "<br>more characters then the fixed length suggests.";
+	return str;
+}
+
+static std::string MakeSymbolDrawDensityTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>You can adjust symbol drawing density in x- and y-directions (map-view).";
+	str += "<br>Values smaller than 1 will make symbols more dense and values";
+	str += "<br>greater than 1 will make symbols more sparse.";
+	str += "<br>Use sliders to adjust x - and y - values.";
+	str += "<br>With default value 1 SmartMet will use normal";
+	str += "<br>symbol density when visualizing symbols.";
+	return str;
+}
+
 // HUOM! Outouksia miten tooltipit eri kontrolleissa toimivat tässä dialogissa:
 // Syy outouksiin on tuntematon, mutta varmaan liittyy siihen että dialogi on tungettu täyteen erilaisia kontrolleja.
 // Joskus static-teksti-kontrollit voivat saada tooltipin toimimaan, mutta varsinkin viime aikoina lisätyt kontrollit eivät.
@@ -2178,7 +2235,7 @@ void CFmiModifyDrawParamDlg::InitTooltipControl()
 {
 	m_tooltip.Create(this);
 	m_tooltip.SetDelayTime(PPTOOLTIP_TIME_AUTOPOP, 30000); // kuinka kauan tooltippi viipyy, jos kursoria ei liikuteta [ms]
-	m_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 1200); // kuinka nopeasti tooltip ilmestyy näkyviin, jos kursoria ei liikuteta [ms]
+	m_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 500); // kuinka nopeasti tooltip ilmestyy näkyviin, jos kursoria ei liikuteta [ms]
 
 	// Tässä erikseen jokainen kontrolli, jolle halutaan joku tooltip teksti
 	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_COLOR_PARAM_TEXT, ::MakeColorParamCtrlTooltip());
@@ -2189,8 +2246,8 @@ void CFmiModifyDrawParamDlg::InitTooltipControl()
 	SetDialogControlTooltip(IDC_MODIFY_DRW_PARAM_REFRESH, "Check how your changes here affect on this parameter's<br>visualizations on map-view or cross-section-view.");
 	SetDialogControlTooltip(IDC_BUTTON_RESET_DRAW_PARAM, "Reset all drawing-property settings of this parameter to the<br>hard coded general default settings. These default settings doesn't<br>mean the settings that are stored in the file of this parameter.");
 	SetDialogControlTooltip(IDC_MODIFY_DRW_PARAM_USE_WITH_ALL, "Take these setting from this parameter (+level) and use them with all the<br>cases with the same parameter. Affects all the e.g. Temperatures on all<br>map-views with Temperatures from different producers. This doesn't<br>affect on different levels or different views (map-view vs cross-section-view).");
-	SetDialogControlTooltip(IDC_STATIC_FIXED_TEXT_SYMBOL_DRAW_LENGTH_STR, "You can define fixed character length for text based<br>symbol visualization when Smartmet calculates needed<br>space for each drawn symbol on map-view.<br>Default value 0 let's SmartMet to determine needed character length,<br>but this self determination can be tricky in many cases.<br>So giving here positive integer value fixes the used space for symbols.<br>The text will be drawn as whole even if therre are<br>more characters then the fixed length suggests.");
-	SetDialogControlTooltip(IDC_STATIC_SYMBOL_DRAW_DENSITY_STR, "You can adjust symbol drawing density in x- and y-directions (map-view).<br>Values smaller than 1 will make symbols more dense and values<br>greater than 1 will make symbols more sparse.<br>Use sliders to adjust x- and y-values.<br>With default value 1 SmartMet will use normal<br>symbol density when visualizing symbols.");
+	SetDialogControlTooltip(IDC_STATIC_FIXED_TEXT_SYMBOL_DRAW_LENGTH_STR, ::MakeFixedTextSymbolDrawLengthTooltip(gFixedTextLengthText));
+	SetDialogControlTooltip(IDC_STATIC_SYMBOL_DRAW_DENSITY_STR, ::MakeSymbolDrawDensityTooltip(gSymbolDrawDensityText));
 	SetDialogControlTooltip(IDC_CHECK_DO_SPARSE_SYMBOL_VISUALIZATION, "In case drawing grid data with symbols where data happens to be<br>sparse (= a lot of values are missing), visualization can be poorly done.<br>Normally SmartMet visualizes nth data row and mth data column and<br>if on those grid points parameter values are missing,<br>nothing or few values will be drawn.<br>Sparse visualization draws a value to those nth row and mth column,<br>but if at that point is missing value, SmartMet searches near by<br>the closest non-missing value and draws that on the spot.");
 	SetDialogControlTooltip(IDC_STATIC_FIXED_DRAW_PARAM_LABEL, "Fixed DrawParam system is set of sample visualization settings.<br>They are divided in groups of different characteristiks (isoline,color-contour,etc.).<br>Just select one from the dropdown list and it's drawing properties<br>are set into dialog for you to use or further modify.");
 	SetDialogControlTooltip(IDC_PARAM_ST, MakeParamNameOnDataCtrlTooltip());
@@ -2198,25 +2255,24 @@ void CFmiModifyDrawParamDlg::InitTooltipControl()
 	SetDialogControlTooltip(IDC_PRIORITY_ST, MakeProducerNameOnDataCtrlTooltip());
 	SetDialogControlTooltip(IDC_PRODUCER, MakeProducerNameOnDataCtrlTooltip());
 	SetDialogControlTooltip(IDC_PARAM_ST2, "User given abbreviation for this parameter's name.<br>This is used in Smartmet over the actual parameter name on data.");
-	SetDialogControlTooltip(IDC_CHECK_USE_COLOR_SCALE_WITH_SIMPLE_ISOLINES, ::MakeUseMultiColorIsolineTooltip());
-	SetDialogControlTooltip(IDC_CHECK_USE_COLOR_BLEND_WITH_SIMPLE_ISOLINES, "Check this if you want to blend isoline colors<br>by the isoline steps and limiting colors.<br>Always uses the same amount limits and colors, max 4.");
-	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_ISOLINE_COLORS_STR, ::MakeIsolineColorsTooltip());
-	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_COLOR_CONTOUR_COLORS_STR, ::MakeContourColorsTooltip());
+	SetDialogControlTooltip(IDC_CHECK_USE_COLOR_SCALE_WITH_SIMPLE_ISOLINES, ::MakeUseMultiColorIsolineTooltip(gMultiColorIsolinesText));
+	SetDialogControlTooltip(IDC_CHECK_USE_COLOR_BLEND_WITH_SIMPLE_ISOLINES, ::MakeUseColorBlendWithSimpleIsolinesTooltip(gColorBlendIsolinesText));
+	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_ISOLINE_COLORS_STR, ::MakeIsolineColorsTooltip(gIsolineColorsText));
+	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_COLOR_CONTOUR_COLORS_STR, ::MakeContourColorsTooltip(gContourColorsText));
 	SetDialogControlTooltip(IDC_CHECK_USE_SPECIAL_CLASSES, ::MakeUseSpecialClassesTooltip(gUseSpecialClassesStr));
 	// Ei pysty antamaan tooltip juttua tälläiselle group-box tekstille
 	//SetDialogControlTooltip(IDC_STATIC_SPECIAL_CLASSES_SETTINGS_STR, ::MakeUseSpecialClassesTooltip(gSpecialClassesSettingsStr));
 	SetDialogControlTooltip(IDC_STATIC_SPECIAL_ISOLINE_CLASSES_STR, ::MakeSpecialIsolineClassesLimitTooltip(gIsolineClassesText, true));
-	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_SPECIAL_WIDTHS_STR, ::MakeSpecialClassesLineWidthTooltip());
-	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_SPECIAL_TYPES_STR, ::MakeSpecialClassesLineStyleTooltip());
-	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_SPECIAL_LABEL_SIZES_STR, ::MakeSpecialClassesLabelHeightTooltip());
+	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_SPECIAL_WIDTHS_STR, ::MakeSpecialClassesLineWidthTooltip(gIsolineWidthsText));
+	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_SPECIAL_TYPES_STR, ::MakeSpecialClassesLineStyleTooltip(gIsolineTypesText));
+	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_SPECIAL_LABEL_SIZES_STR, ::MakeSpecialClassesLabelHeightTooltip(gIsolineLabelHeightsText));
 	SetDialogControlTooltip(IDC_STATIC_SPECIAL_ISOLINE_COLOR_INDEXIES_STR, ::MakeSpecialClassesColorIndexTooltip(gIsolineColorsText, gIsolineColorOpenDlgText));
-	SetDialogControlTooltip(IDC_CHECK_USE_COLOR_BLENDING_WITH_CUSTOM_CONTOURS, "Usable only with contour coloring schemes.<br>If this checked and contours used and contour step smaller<br>than value limits, then the smaller step colors are constructed by color blending.");
+	SetDialogControlTooltip(IDC_CHECK_USE_COLOR_BLENDING_WITH_CUSTOM_CONTOURS, ::MakeSpecialClassesUseColorBlendingWithContoursTooltip(gUseColorBlendingWithContoursText));
 	SetDialogControlTooltip(IDC_SHOW_ISOLINE_COLOR_INDEX_DLG, ::MakeOpenColorDialogTooltip("Open isoline colors dialogue", gIsolineColorsText));
 	SetDialogControlTooltip(IDC_SHOW_CONTOUR_COLOR_INDEX_DLG, ::MakeOpenColorDialogTooltip("Open contour colors dialogue", gContourColorsText));
 	SetDialogControlTooltip(IDC_STATIC_SPECIAL_CONTOUR_CLASSES_STR, ::MakeSpecialIsolineClassesLimitTooltip(gContourClassesText, false));
 	SetDialogControlTooltip(IDC_STATIC_SPECIAL_CONTOUR_COLOR_INDEXIES_STR, ::MakeSpecialClassesColorIndexTooltip(gContourColorsText, gContourColorOpenDlgText));
 }
-
 
 BOOL CFmiModifyDrawParamDlg::PreTranslateMessage(MSG* pMsg)
 {
