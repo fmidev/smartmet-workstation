@@ -72,6 +72,7 @@ protected:
 	void SetSpecialClassValues(const std::vector<float> &classValues);
 	const std::vector<int>& GetSpecialClassColorIndexies();
 	void SetSpecialClassColorIndexies(const std::vector<int>& classColorIndexies);
+	void ShowDialogControl(UINT controlId, bool show);
 
 	Matrix3D<std::pair<int, COLORREF> >& itsUsedColorsCube;
 

@@ -960,6 +960,18 @@ static void TESTWriteColorMapToFile(std::vector<ColorRectInfo> &colors)
 
 static const int COLOR_INDEX_VIEW_TOOLTIP_ID = 1234570;
 
+void CFmiTMColorIndexDlg::ShowDialogControl(UINT controlId, bool show)
+{
+    auto* dlgCtrl = GetDlgItem(controlId);
+    if(dlgCtrl)
+    {
+        if(show)
+            dlgCtrl->ShowWindow(SW_SHOW);
+        else
+            dlgCtrl->ShowWindow(SW_HIDE);
+    }
+}
+
 BOOL CFmiTMColorIndexDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
@@ -976,7 +988,16 @@ BOOL CFmiTMColorIndexDlg::OnInitDialog()
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_STEP_CONTOUR_STR, "Contour");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_INSTANT_VIEW_UPDATE, "Instant view update");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COLOR_BLENDING_WITH_CUSTOM_CONTOURS, "Use color blending with contours");
-    
+
+    if(fDoIsolineModifications)
+    {
+        // Isoviiva tapauksessa tietyt kontrollit piilotetaan
+        ShowDialogControl(IDC_STATIC_DRAW_PARAM_STEP_CONTOUR_STR, false);
+        ShowDialogControl(IDC_CHECK_USE_COLOR_BLENDING_WITH_CUSTOM_CONTOURS, false);
+        ShowDialogControl(IDC_STATIC_DRAW_PARAM_STEP_STR, false);
+        ShowDialogControl(IDC_CONTOUR_GAP, false);
+    }
+
 	// Lis‰t‰‰n jo valitut v‰rit
 	auto specialClassColorIndices = GetSpecialClassColorIndexies();
 	for(size_t i=0; i<specialClassColorIndices.size(); i++)
@@ -1145,8 +1166,7 @@ void CFmiTMColorIndexDlg::DoDraw(CDC *theDC)
 			clientRect.bottom -= gButtonAreaHeight; // n‰in OK ja Cancel -painonappuloita ei piirret‰ p‰‰lle
 		theDC->FillSolidRect(clientRect, backGroundColor);
 
-		COLORREF back = 0x00b8b8b8;
-		theDC->SetBkColor(back);
+		theDC->SetBkColor(backGroundColor);
 		theDC->TextOut(5, itsColorPaletteBottomY + 2, _TEXT("Selected colors:"));
         theDC->TextOut(4, itsColorPaletteBottomY + 48, CString(CA2T(itsHelpStr.c_str())));
 
@@ -1167,13 +1187,13 @@ void CFmiTMColorIndexDlg::DoDraw(CDC *theDC)
 			   ,NULL); //040397/LW oli NULL
 		theDC->SelectObject(&myFont12);
 
-		::DrawColorRects(theDC, itsSelectedColorsRectVector, back);
-		::DrawColorRects(theDC, itsColorRectVector, back);
+		::DrawColorRects(theDC, itsSelectedColorsRectVector, backGroundColor);
+		::DrawColorRects(theDC, itsColorRectVector, backGroundColor);
 		DrawSelectedColorMarker(theDC);
         ::DrawColorMarkerRectangle(theDC, itsColorRectVector, itsLastColorPaletteColorIndex, RGB(255, 0, 0), 2);
 
 	// piirret‰‰n viel‰ erottava apuviiva v‰ri paletin alle (valitun v‰rin deselectointi tapahtuu klikkaamalle viivan alapuoliseen alueeseen)
-		CPen aPen(0, 1, back);
+		CPen aPen(0, 1, backGroundColor);
 		CPen *oldPen = theDC->SelectObject(&aPen);
 		theDC->MoveTo(clientRect.left, itsColorPaletteBottomY);
 		theDC->LineTo(clientRect.right, itsColorPaletteBottomY);
