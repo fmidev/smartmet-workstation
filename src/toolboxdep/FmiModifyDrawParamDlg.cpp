@@ -121,7 +121,7 @@ CFmiModifyDrawParamDlg::CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartM
 	fDrawLabelBox = FALSE;
 	fDrawOnlyOverMask = FALSE;
 	fUseSpecialClasses = FALSE;
-	itsHatch1Style = 0;
+	itsHatch1Type = 0;
 	itsHatch1EndValue = 0.0;
 	itsHatch1StartValue = 0.0;
 	itsIsoLineGap = 0.0;
@@ -164,7 +164,7 @@ CFmiModifyDrawParamDlg::CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartM
     itsParamUnitStrU_ = _T("");
 	fIsHidden = FALSE;
 	fUseHatch2 = FALSE;
-	itsHatch2Style = 0.0;
+	itsHatch2Type = 0;
 	itsHatch2EndValue = 0.0;
 	itsHatch2StartValue = 0.0;
 	fUSeSeparatingLinesBetweenColorContourClasses = FALSE;
@@ -225,7 +225,7 @@ void CFmiModifyDrawParamDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_USE_LABEL_BOX, fDrawLabelBox);
 	DDX_Check(pDX, IDC_CHECK_USE_REGIONS, fDrawOnlyOverMask);
 	DDX_Check(pDX, IDC_CHECK_USE_SPECIAL_CLASSES, fUseSpecialClasses);
-	DDX_Text(pDX, IDC_HATCH1_HATCH_STYLE, itsHatch1Style);
+	DDX_Text(pDX, IDC_HATCH1_HATCH_STYLE, itsHatch1Type);
 	DDX_Text(pDX, IDC_HATCH1_VALUE_END, itsHatch1EndValue);
 	DDX_Text(pDX, IDC_HATCH1_VALUE_START, itsHatch1StartValue);
 	DDX_Text(pDX, IDC_ISOLINE_GAP, itsIsoLineGap);
@@ -264,7 +264,7 @@ void CFmiModifyDrawParamDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_UNIT, itsParamUnitStrU_);
 	DDX_Check(pDX, IDC_F_HIDDEN, fIsHidden);
 	DDX_Check(pDX, IDC_CHECK_USE_HACTH2, fUseHatch2);
-	DDX_Text(pDX, IDC_HATCH2_HATCH_STYLE, itsHatch2Style);
+	DDX_Text(pDX, IDC_HATCH2_HATCH_STYLE, itsHatch2Type);
 	DDX_Text(pDX, IDC_HATCH2_VALUE_END, itsHatch2EndValue);
 	DDX_Text(pDX, IDC_HATCH2_VALUE_START, itsHatch2StartValue);
 	DDX_Check(pDX, IDC_CHECK_USE_SEPARATOR_LINES_BETWEEN_COLORCONTOUR_CLASSES, fUSeSeparatingLinesBetweenColorContourClasses);
@@ -583,6 +583,17 @@ void CFmiModifyDrawParamDlg::FillStationDataViewSelector(void)
 	}
 }
 
+static int ClampHatchType(int hatchType)
+{
+	const int hatchTypeLowLimit = -1;
+	const int hatchTypeHighLimit = 5;
+	if(hatchType < hatchTypeLowLimit)
+		return hatchTypeLowLimit;
+	if(hatchType > hatchTypeHighLimit)
+		return hatchTypeHighLimit;
+	return hatchType;
+}
+
 void CFmiModifyDrawParamDlg::InitRestOfVersion2Data(void)
 {
 	fUSeChangingColorsWithSymbols = itsDrawParam->ShowColoredNumbers();
@@ -594,7 +605,7 @@ void CFmiModifyDrawParamDlg::InitRestOfVersion2Data(void)
 	fDrawOnlyOverMask = itsDrawParam->DrawOnlyOverMask();
 	fUseSpecialClasses = !itsDrawParam->UseSimpleIsoLineDefinitions();
 	fUSeSeparatingLinesBetweenColorContourClasses = itsDrawParam->UseSeparatorLinesBetweenColorContourClasses();
-	itsHatch1Style = itsDrawParam->IsoLineHatchType1();
+	itsHatch1Type = ::ClampHatchType(itsDrawParam->IsoLineHatchType1());
 	itsHatch1EndValue = itsDrawParam->IsoLineHatchHighValue1();
 	itsHatch1StartValue = itsDrawParam->IsoLineHatchLowValue1();
 	itsIsoLineGap = itsDrawParam->IsoLineGab();
@@ -626,7 +637,7 @@ void CFmiModifyDrawParamDlg::InitRestOfVersion2Data(void)
 	fSimpleContourTransparency4 = itsDrawParam->SimpleColorContourTransparentColor4();
 	fSimpleContourTransparency5 = itsDrawParam->SimpleColorContourTransparentColor5();
 	fUseHatch2 = itsDrawParam->UseWithIsoLineHatch2() == TRUE;
-	itsHatch2Style = itsDrawParam->IsoLineHatchType2();
+	itsHatch2Type = ::ClampHatchType(itsDrawParam->IsoLineHatchType2());
 	itsHatch2EndValue = itsDrawParam->IsoLineHatchHighValue2();
 	itsHatch2StartValue = itsDrawParam->IsoLineHatchLowValue2();
 	// Luokan dataosan fUseColorBlendingWithCustomContours nimi on oikea 
@@ -758,7 +769,7 @@ void CFmiModifyDrawParamDlg::ReadRestOfVersion2Data(void)
 	itsDrawParam->DrawOnlyOverMask(fDrawOnlyOverMask == TRUE);
 	itsDrawParam->UseSimpleIsoLineDefinitions(!fUseSpecialClasses);
 	itsDrawParam->UseSeparatorLinesBetweenColorContourClasses(fUSeSeparatingLinesBetweenColorContourClasses == TRUE);
-	itsDrawParam->IsoLineHatchType1(itsHatch1Style);
+	itsDrawParam->IsoLineHatchType1(::ClampHatchType(itsHatch1Type));
 	itsDrawParam->IsoLineHatchHighValue1(static_cast<float>(itsHatch1EndValue));
 	itsDrawParam->IsoLineHatchLowValue1(static_cast<float>(itsHatch1StartValue));
 	itsDrawParam->IsoLineGab(itsIsoLineGap);
@@ -794,7 +805,7 @@ void CFmiModifyDrawParamDlg::ReadRestOfVersion2Data(void)
 	itsDrawParam->SimpleColorContourTransparentColor4(fSimpleContourTransparency4);
 	itsDrawParam->SimpleColorContourTransparentColor5(fSimpleContourTransparency5);
 	itsDrawParam->UseWithIsoLineHatch2(fUseHatch2 == TRUE);
-	itsDrawParam->IsoLineHatchType2(static_cast<int>(itsHatch2Style));
+	itsDrawParam->IsoLineHatchType2(::ClampHatchType(itsHatch2Type));
 	itsDrawParam->IsoLineHatchHighValue2(static_cast<float>(itsHatch2EndValue));
 	itsDrawParam->IsoLineHatchLowValue2(static_cast<float>(itsHatch2StartValue));
 	if(fSkipReadingSpecialClassColorIndices == false) // nämä on siis jo päivitetty TMColorIndex-dialogissa, ei saa päivittää niitä arvoja päälle
@@ -1271,14 +1282,17 @@ void CFmiModifyDrawParamDlg::ReadAllButtonColors(void)
 	return;
 }
 
-
+const std::string gModifyDrawParamColorIndexTitleForIsoline = "Isoline color indexies";
+const std::string gModifyDrawParamColorIndexTitleForContour = "Contour color indexies";
+const std::string gModifyDrawParamColorIndexHelpStr = "0=background, 1=foreground, 2=invisible, 3=black, 514=white, blue=10, green=59, red=451, cyan=66, yell.=507 ja viol.=458";
 
 void CFmiModifyDrawParamDlg::OnShowColorIndexDlg(bool doIsolineCase)
 {
 	UpdateData(TRUE);
 	GetSelectedDrawParamSetUp();
-    
-	CFmiTMColorIndexDlg dlg(this, ::GetDictionaryString("ModifyDrawParamColorIndexTitle"), ::GetDictionaryString("ModifyDrawParamColorIndexHelpStr"),
+
+	const auto& usedTitleText = doIsolineCase ? gModifyDrawParamColorIndexTitleForIsoline : gModifyDrawParamColorIndexTitleForContour;
+	CFmiTMColorIndexDlg dlg(this, usedTitleText, gModifyDrawParamColorIndexHelpStr,
         ToolMasterColorCube::UsedColorsCube(), itsDrawParam, doIsolineCase, this);
 	if(dlg.DoModal() == IDOK)
 	{
@@ -1672,11 +1686,29 @@ const std::string gIsolineColorOpenDlgText = "Line colors";
 const std::string gContourColorOpenDlgText = "Cont. colors";
 const std::string gContourClassesText = "Contour classes";
 const std::string gIsolineWidthsText = "Widths [mm]";
-const std::string gIsolineTypesText = "Line types (0 - 30)";
+const std::string gIsolineTypesText = "Line types (0 - 20)";
 const std::string gIsolineLabelHeightsText = "Label hgt [mm]";
 const std::string gUseColorBlendingWithContoursText = "Use color blending with contours";
 const std::string gSymbolDrawDensityText = "Symbol draw density";
 const std::string gFixedTextLengthText = "Fixed text length";
+const std::string gParameterAbbreviationText = "Parameter abbr.";
+const std::string gProducerText = "Producer";
+const std::string gParameterText = "Parameter";
+const std::string gDoSparseDataSymbolVisualizationText = "Do sparse data symbol visualization";
+const std::string gFixedDrawParamsText = "Fixed DrawParams";
+const std::string gUseForAllButtonText = "Use for all";
+const std::string gSetToDefaultButtonText = "Set to default";
+const std::string gRefreshButtonText = "Refresh";
+const std::string gSaveButtonText = "Save";
+const std::string gLoadFromButtonText = "Load From";
+const std::string gReloadOriginalButtonText = "Reload Orig";
+const std::string gColorParameterText = "Color parameter";
+const std::string gTreatWmsLayerAsObservationText = "Treat Wms layer as observation (in animations)";
+const std::string gLineTypeSimpleText = "Line type (0 - 20)";
+const std::string gHatchPatternTypeText = "Hatch pattern (-1 - 5)";
+const std::string gAlphaFactorText = "Alpha 5-100";
+const std::string gFlipArrowText = "Flip arrow";
+const std::string gTransparencyText = "tra";
 
 // Tämä funktio alustaa kaikki dialogin tekstit editoriin valitulla kielellä.
 // Tämä on ikävä kyllä tehtävä erikseen dialogin muokkaus työkalusta, eli
@@ -1687,13 +1719,13 @@ void CFmiModifyDrawParamDlg::InitDialogTexts(void)
     SetWindowText(CA2T(::GetDictionaryString("ModifyDrawParamDlgTitle").c_str()));
 	CFmiWin32Helpers::SetDialogItemText(this, IDOK, "IDOK");
 	CFmiWin32Helpers::SetDialogItemText(this, IDCANCEL, "IDCANCEL");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_PARAM_ST, "IDC_PARAM_ST");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_PRIORITY_ST, "IDC_PRIORITY_ST");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_PARAM_ST2, "IDC_PARAM_ST2");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_PARAM_ST, gParameterText.c_str());
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_PRIORITY_ST, gProducerText.c_str());
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_PARAM_ST2, gParameterAbbreviationText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_F_HIDDEN, "IDC_F_HIDDEN");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_SAVE_BUTTON, "IDC_SAVE_BUTTON");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_SAVE_BUTTON, gSaveButtonText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_SAVE_AS_BUTTON, "IDC_SAVE_AS_BUTTON");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RESET_DRAW_PARAM, "IDC_BUTTON_RESET_DRAW_PARAM");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RESET_DRAW_PARAM, gSetToDefaultButtonText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_VIEW_MACRO_DRAW_PARAM_WARNING, "This is loaded from viewmacro, save it through viewmacro dialog!");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_SYMBOL_SETTINGS_STR, "IDC_STATIC_DRAW_PARAM_SYMBOL_SETTINGS_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_ONE_SYMBOL_SIZE_STR, "IDC_STATIC_DRAW_PARAM_ONE_SYMBOL_SIZE_STR");
@@ -1720,7 +1752,7 @@ void CFmiModifyDrawParamDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_DECIMAL_COUNT_STR, "IDC_STATIC_DRAW_PARAM_DECIMAL_COUNT_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_STEP_STR, "IDC_STATIC_DRAW_PARAM_STEP_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_ZERO_POINT_STR, "IDC_STATIC_DRAW_PARAM_ZERO_POINT_STR");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_LINE_TYPE_STR, "IDC_STATIC_DRAW_PARAM_LINE_TYPE_STR");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_LINE_TYPE_STR, gLineTypeSimpleText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_ISOLINE_COLOR_STR, "IDC_STATIC_DRAW_PARAM_ISOLINE_COLOR_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_ISOLINE_LABEL_COLOR_STR, "IDC_STATIC_DRAW_PARAM_ISOLINE_LABEL_COLOR_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_LABEL_BOX_COLOR_STR, "IDC_STATIC_DRAW_PARAM_LABEL_BOX_COLOR_STR");
@@ -1746,8 +1778,8 @@ void CFmiModifyDrawParamDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_HATCH_LOW_STR2, "IDC_STATIC_DRAW_PARAM_HATCH_LOW_STR2");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_HATCH_HIGH_STR1, "IDC_STATIC_DRAW_PARAM_HATCH_HIGH_STR1");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_HATCH_HIGH_STR2, "IDC_STATIC_DRAW_PARAM_HATCH_HIGH_STR2");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_HATCH_PATTERN_STR1, "IDC_STATIC_DRAW_PARAM_HATCH_PATTERN_STR1");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_HATCH_PATTERN_STR2, "IDC_STATIC_DRAW_PARAM_HATCH_PATTERN_STR2");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_HATCH_PATTERN_STR1, gHatchPatternTypeText.c_str());
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_HATCH_PATTERN_STR2, gHatchPatternTypeText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_HATCH_COLOR_STR1, "IDC_STATIC_DRAW_PARAM_HATCH_COLOR_STR1");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_HATCH_COLOR_STR2, "IDC_STATIC_DRAW_PARAM_HATCH_COLOR_STR2");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_LIMITS_STR, "IDC_STATIC_DRAW_PARAM_LIMITS_STR");
@@ -1759,22 +1791,31 @@ void CFmiModifyDrawParamDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_TIME_SERIAL_MOD_LIMIT_CHANGE_STR, "IDC_STATIC_DRAW_PARAM_TIME_SERIAL_MOD_LIMIT_CHANGE_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_VALUE_LOW_STR, "IDC_STATIC_DRAW_PARAM_VALUE_LOW_STR");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_VALUE_HIGH_STR, "IDC_STATIC_DRAW_PARAM_VALUE_HIGH_STR");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_MODIFY_DRW_PARAM_REFRESH, "Refresh");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_DRAW_PARAM_LOAD_FROM, "IDC_DRAW_PARAM_LOAD_FROM");
-    CFmiWin32Helpers::SetDialogItemText(this, IDC_MODIFY_DRW_PARAM_USE_WITH_ALL, "IDC_MODIFY_DRW_PARAM_USE_WITH_ALL");
-    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_FIXED_DRAW_PARAM_LABEL, "Fixed DrawParams");
-    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_CONTOUR_ALPHA_STR, "Alpha 5-100");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_MODIFY_DRW_PARAM_REFRESH, gRefreshButtonText.c_str());
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_DRAW_PARAM_LOAD_FROM, gLoadFromButtonText.c_str());
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RELOAD_ORIGINAL, gReloadOriginalButtonText.c_str());
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_MODIFY_DRW_PARAM_USE_WITH_ALL, gUseForAllButtonText.c_str());
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_FIXED_DRAW_PARAM_LABEL, gFixedDrawParamsText.c_str());
+    CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_CONTOUR_ALPHA_STR, gAlphaFactorText.c_str());
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DRAW_PARAM_USE_LEGEND, "Use legend");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_USE_COLOR_BLENDING_WITH_CUSTOM_CONTOURS, gUseColorBlendingWithContoursText.c_str());
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_TREAT_WMS_LAYER_AS_OBSERVATION, "Treat Wms layer as observation (in animations)");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_TREAT_WMS_LAYER_AS_OBSERVATION, gTreatWmsLayerAsObservationText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_FIXED_TEXT_SYMBOL_DRAW_LENGTH_STR, gFixedTextLengthText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SYMBOL_DRAW_DENSITY_STR, gSymbolDrawDensityText.c_str());
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_FLIP_ARROW_SYMBOL, "Flip arrow");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_DO_SPARSE_SYMBOL_VISUALIZATION, gDoSparseDataSymbolVisualizationText.c_str());
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_FLIP_ARROW_SYMBOL, gFlipArrowText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SPECIAL_CLASSES_SETTINGS_STR, gSpecialClassesSettingsStr.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_SHOW_CONTOUR_COLOR_INDEX_DLG, gContourColorOpenDlgText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SPECIAL_CONTOUR_COLOR_INDEXIES_STR, gContourColorsText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_SPECIAL_CONTOUR_CLASSES_STR, gContourClassesText.c_str());
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DRAW_PARAM_COLOR_PARAM_TEXT, gColorParameterText.c_str());
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY1, gTransparencyText.c_str());
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY2, gTransparencyText.c_str());
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY3, gTransparencyText.c_str());
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY4, gTransparencyText.c_str());
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY5, gTransparencyText.c_str());
 	
+
 //    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_APPLY_FIXED_DRAW_PARAMS_RIGHT_AWAY, "Apply Fixed Settings At Once");
 }
 
@@ -2035,9 +2076,19 @@ static std::string MakeDecoratedTooltipString(const std::string& baseText, const
 	return str;
 }
 
-static std::string MakeColorParamCtrlTooltip()
+static std::string MakeErrorInInputCtrlText(const std::string& titleStr)
 {
-	std::string str = ::MakeDecoratedTooltipString("Color parameter", "darkgreen", true);
+	std::string str = "<br>If \"";
+	str += ::MakeDecoratedTooltipString(titleStr, "", true);
+	str += "\" text turns into ";
+	str += ::MakeDecoratedTooltipString("red", "red", true);
+	str += ", then input was incorrectand and this setting is ignored.";
+	return str;
+}
+
+static std::string MakeColorParamCtrlTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
 	str += "<br>Write e.g. ";
 	str += ::MakeDecoratedTooltipString("T", "green", true);
 	str += " or ";
@@ -2045,23 +2096,21 @@ static std::string MakeColorParamCtrlTooltip()
 	str += " if you want to color viewed parameter's symbols with values of Temperature from the same producer.";
 	str += "<br>Also you must check the \"Show symbol in colors\" checkbox in order to utilize colors.";
 	str += "<br>You can't change producer or level for this color parameter.";
-	str += "<br>If \"";
-	str += ::MakeDecoratedTooltipString("Color Parameter", "", true);
-	str += "\" text turns into ";
-	str += ::MakeDecoratedTooltipString("red", "red", true);
-	str += ", then input was incorrectand and this setting is ignored.";
+	str += ::MakeErrorInInputCtrlText(titleStr);
 	return str;
 }
 
-static std::string MakeParamNameOnDataCtrlTooltip()
+static std::string MakeParamNameOnDataCtrlTooltip(const std::string& titleStr)
 {
-	std::string str = "Name of the parameter in current data file";
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "Name of the parameter in current data file";
 	return str;
 }
 
-static std::string MakeProducerNameOnDataCtrlTooltip()
+static std::string MakeProducerNameOnDataCtrlTooltip(const std::string& titleStr)
 {
-	std::string str = "Name of the producer in current data file";
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Name of the producer in current data file";
 	return str;
 }
 
@@ -2129,7 +2178,9 @@ static std::string MakeSpecialIsolineClassesLimitTooltip(const std::string& titl
 		str += "<br>It needs 7 colors if colors are not blended in order to get all possible colors in use.";
 	}
 	str += "<br>If any of the value limit numbers are not in rising order, nothing will be drawn.";
-	str += "<br>This value limit list is the only list that has to have all the values, other<br>related lists keep using the last value for rest of the value limits.";
+	str += "<br>This value limit list is the only list that has to have all the values, other";
+	str += "<br>related lists keep using the last value for rest of the value limits.";
+	str += ::MakeErrorInInputCtrlText(titleStr);
 	return str;
 }
 
@@ -2144,6 +2195,23 @@ static std::string MakeSpecialClassesLineWidthTooltip(const std::string& titleSt
 	return str;
 }
 
+static std::string MakeLineTypeText()
+{
+	std::string str = "<br>Following line types are available:";
+	str += "<br>0 = solid line";
+	str += "<br>1-3 = dot variants ...";
+	str += "<br>4-9 = dash variants ___";
+	str += "<br>10 = dot-dash ._._";
+	str += "<br>11-12 = more dot variants ...";
+	str += "<br>13-16 = more dash variants ---";
+	str += "<br>17 = dot-dash variant ._._";
+	str += "<br>18 = dot-dot-dash .._.._";
+	str += "<br>19 = dot-dot-dot-dash ..._..._";
+	str += "<br>20 = dot-dot-dot-dot-dash ...._...._";
+	str += "<br>All other values will result solid line";
+	return str;
+}
+
 static std::string MakeSpecialClassesLineStyleTooltip(const std::string& titleStr)
 {
 	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
@@ -2152,6 +2220,7 @@ static std::string MakeSpecialClassesLineStyleTooltip(const std::string& titleSt
 	str += "<br>Experiment with different values until you find suitable ones.";
 	str += "<br>You need only give one style, if all the isolines are drawn with the same style.";
 	str += gLastValueIsRepeatedStr;
+	str += ::MakeLineTypeText();
 	return str;
 }
 
@@ -2224,6 +2293,152 @@ static std::string MakeSymbolDrawDensityTooltip(const std::string& titleStr)
 	return str;
 }
 
+static std::string MakeParameterAbbreviationTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>User given abbreviation for this parameter's name.";
+	str += "<br>This is used in Smartmet over the actual parameter name on data.";
+	return str;
+}
+
+static std::string MakeDoSparseDataSymbolVisualizationTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>In case drawing grid data with symbols where data happens to be";
+	str += "<br>sparse(= a lot of values are missing), visualization can be poorly done.";
+	str += "<br>Normally SmartMet visualizes nth data row and mth data column and";
+	str += "<br>if on those grid points parameter values are missing,";
+	str += "<br>nothing or few values will be drawn.";
+	str += "<br>Sparse visualization draws a value to those nth row and mth column,";
+	str += "<br>but if at that point is missing value, SmartMet searches near by";
+	str += "<br>the closest non-missing value and draws that on the spot.";
+	return str;
+}
+
+static std::string MakeFixedDrawParamsTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Fixed DrawParam system is set of sample visualization settings.";
+	str += "<br>They are divided in groups of different characteristiks(isoline, color - contour, etc.).";
+	str += "<br>Just select one from the dropdown list and it's drawing properties";
+	str += "<br>are set into dialog for you to use or further modify.";
+	return str;
+}
+
+static std::string MakeUseForAllTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Take these setting from this parameter (+level) and use them with all the";
+	str += "<br>cases with the same parameter.Affects all the e.g.Temperatures on all";
+	str += "<br>map - views with Temperatures from different producers.This doesn't";
+	str += "<br>affect on different levels or different views(map - view vs cross - section - view).";
+	return str;
+}
+
+static std::string MakeSetToDefaultTextTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Reset all drawing-property settings of this parameter to the";
+	str += "<br>hard coded general default setting values.";
+	str += "<br>Resetted settings aren't stored in any way until user wants to do so.";
+	return str;
+}
+
+static std::string MakeRefreshTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Check how your changes here affect on this parameter's";
+	str += "<br>visualizations on map - view or cross - section - view.";
+	return str;
+}
+
+static std::string MakeSaveButtonTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Store these settings to this parameter's drawing-property";
+	str += "<br>file permanently to be used in this PC and if file";
+	str += "<br>sharing is in use, for all other PC's in your group as well.";
+	return str;
+}
+
+static std::string MakeLoadFromButtonTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Load drawing-property settings from an other parameter's file.";
+	return str;
+}
+
+static std::string MakeReloadOriginalButtonTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Reload original drawing-property settings from the file";
+	str += "<br>to revert your changes you have made so far here.";
+	return str;
+}
+
+static std::string MakeTreatWmsLayerAsObservationTextTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Mark current e.g. satellite or radar Wms layer as observation type.";
+	str += "<br>Then you can lock map view animations to follow the observed<br>layer to the latest available time.";
+	return str;
+}
+
+static std::string MakeLineTypeSimpleTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>What line style is simple isoline drawn.";
+	str += ::MakeLineTypeText();
+	return str;
+}
+
+static std::string MakeHatchPatternTypeTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>What hatch pattern style is used to fill the";
+	str += "<br>selected value range.";
+	str += "<br>-1 = full color";
+	str += "<br>0 = horizontal hatch \t\t\t====";
+	str += "<br>1 = vertical hatch \t\t\t\t||||";
+	str += "<br>2 = descending diagonal hatch \t\\\\\\\\";
+	str += "<br>3 = rising diagonal hatch \t\t////";
+	str += "<br>4 = orthogonal cross hatch \t\t++++";
+	str += "<br>5 = diagonal cross hatch \t\tXXXX";
+	str += "<br>Other values will be clamped onto this -1 - 5 range.";
+	return str;
+}
+
+static std::string MakeAlphaFactorTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>The whole visualization will be draw with this aplha blending";
+	str += "<br>or transparency factor over background map and parameters below this layer.";
+	str += "<br>Alpha blending factor can be value in 5 - 100 range.";
+	str += "<br>Value 5 is almost transparent (purposefully disabled values 0-5).";
+	str += "<br>Value 100 is totally opaque or non transparent.";
+	str += "<br>Remember that using transparency is always slower than without it.";
+	str += "<br>It can be as much as 2.5x slower, in worst case scenario,";
+	str += "<br>than visualizing without transparency.";
+	return str;
+}
+
+static std::string MakeFlipArrowTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Sometimes you need to flip direction arrow 180 degrees,";
+	str += "<br>because data has values the wrong way, e.g. wind or wave direction.";
+	return str;
+}
+
+static std::string MakeTransparencyTooltip(const std::string& titleStr, const std::string& nthStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Set ";
+	str += nthStr;
+	str += " contour color to transparent.";
+	return str;
+}
+
 // HUOM! Outouksia miten tooltipit eri kontrolleissa toimivat tässä dialogissa:
 // Syy outouksiin on tuntematon, mutta varmaan liittyy siihen että dialogi on tungettu täyteen erilaisia kontrolleja.
 // Joskus static-teksti-kontrollit voivat saada tooltipin toimimaan, mutta varsinkin viime aikoina lisätyt kontrollit eivät.
@@ -2238,23 +2453,23 @@ void CFmiModifyDrawParamDlg::InitTooltipControl()
 	m_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 500); // kuinka nopeasti tooltip ilmestyy näkyviin, jos kursoria ei liikuteta [ms]
 
 	// Tässä erikseen jokainen kontrolli, jolle halutaan joku tooltip teksti
-	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_COLOR_PARAM_TEXT, ::MakeColorParamCtrlTooltip());
+	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_COLOR_PARAM_TEXT, ::MakeColorParamCtrlTooltip(gColorParameterText));
 //	SetDialogControlTooltip(IDC_EDIT_DRAW_PARAM_COLOR_PARAM_STR, ::MakeColorParamCtrlTooltip());
-	SetDialogControlTooltip(IDC_BUTTON_RELOAD_ORIGINAL, "Reload original drawing-property settings from the file<br>to revert your changes you have made so far here.");
-	SetDialogControlTooltip(IDC_DRAW_PARAM_LOAD_FROM, "Load drawing-property settings from an other parameter's file.");
-	SetDialogControlTooltip(IDC_SAVE_BUTTON, "Store these settings to this parameter's drawing-property<br>file permanently to be used in this PC and if file<br>sharing is in use, for all other PC's in your group as well.");
-	SetDialogControlTooltip(IDC_MODIFY_DRW_PARAM_REFRESH, "Check how your changes here affect on this parameter's<br>visualizations on map-view or cross-section-view.");
-	SetDialogControlTooltip(IDC_BUTTON_RESET_DRAW_PARAM, "Reset all drawing-property settings of this parameter to the<br>hard coded general default settings. These default settings doesn't<br>mean the settings that are stored in the file of this parameter.");
-	SetDialogControlTooltip(IDC_MODIFY_DRW_PARAM_USE_WITH_ALL, "Take these setting from this parameter (+level) and use them with all the<br>cases with the same parameter. Affects all the e.g. Temperatures on all<br>map-views with Temperatures from different producers. This doesn't<br>affect on different levels or different views (map-view vs cross-section-view).");
+	SetDialogControlTooltip(IDC_BUTTON_RELOAD_ORIGINAL, ::MakeReloadOriginalButtonTooltip(gReloadOriginalButtonText));
+	SetDialogControlTooltip(IDC_DRAW_PARAM_LOAD_FROM, ::MakeLoadFromButtonTooltip(gLoadFromButtonText));
+	SetDialogControlTooltip(IDC_SAVE_BUTTON, ::MakeSaveButtonTooltip(gSaveButtonText));
+	SetDialogControlTooltip(IDC_MODIFY_DRW_PARAM_REFRESH, ::MakeRefreshTooltip(gRefreshButtonText));
+	SetDialogControlTooltip(IDC_BUTTON_RESET_DRAW_PARAM, ::MakeSetToDefaultTextTooltip(gSetToDefaultButtonText));
+	SetDialogControlTooltip(IDC_MODIFY_DRW_PARAM_USE_WITH_ALL, ::MakeUseForAllTooltip(gUseForAllButtonText));
 	SetDialogControlTooltip(IDC_STATIC_FIXED_TEXT_SYMBOL_DRAW_LENGTH_STR, ::MakeFixedTextSymbolDrawLengthTooltip(gFixedTextLengthText));
 	SetDialogControlTooltip(IDC_STATIC_SYMBOL_DRAW_DENSITY_STR, ::MakeSymbolDrawDensityTooltip(gSymbolDrawDensityText));
-	SetDialogControlTooltip(IDC_CHECK_DO_SPARSE_SYMBOL_VISUALIZATION, "In case drawing grid data with symbols where data happens to be<br>sparse (= a lot of values are missing), visualization can be poorly done.<br>Normally SmartMet visualizes nth data row and mth data column and<br>if on those grid points parameter values are missing,<br>nothing or few values will be drawn.<br>Sparse visualization draws a value to those nth row and mth column,<br>but if at that point is missing value, SmartMet searches near by<br>the closest non-missing value and draws that on the spot.");
-	SetDialogControlTooltip(IDC_STATIC_FIXED_DRAW_PARAM_LABEL, "Fixed DrawParam system is set of sample visualization settings.<br>They are divided in groups of different characteristiks (isoline,color-contour,etc.).<br>Just select one from the dropdown list and it's drawing properties<br>are set into dialog for you to use or further modify.");
-	SetDialogControlTooltip(IDC_PARAM_ST, MakeParamNameOnDataCtrlTooltip());
-	SetDialogControlTooltip(IDC_PARAM, MakeParamNameOnDataCtrlTooltip());
-	SetDialogControlTooltip(IDC_PRIORITY_ST, MakeProducerNameOnDataCtrlTooltip());
-	SetDialogControlTooltip(IDC_PRODUCER, MakeProducerNameOnDataCtrlTooltip());
-	SetDialogControlTooltip(IDC_PARAM_ST2, "User given abbreviation for this parameter's name.<br>This is used in Smartmet over the actual parameter name on data.");
+	SetDialogControlTooltip(IDC_CHECK_DO_SPARSE_SYMBOL_VISUALIZATION, ::MakeDoSparseDataSymbolVisualizationTooltip(gDoSparseDataSymbolVisualizationText));
+	SetDialogControlTooltip(IDC_STATIC_FIXED_DRAW_PARAM_LABEL, MakeFixedDrawParamsTooltip(gFixedDrawParamsText));
+	SetDialogControlTooltip(IDC_PARAM_ST, MakeParamNameOnDataCtrlTooltip(gParameterText));
+	SetDialogControlTooltip(IDC_PARAM, MakeParamNameOnDataCtrlTooltip(gParameterText));
+	SetDialogControlTooltip(IDC_PRIORITY_ST, MakeProducerNameOnDataCtrlTooltip(gProducerText));
+	SetDialogControlTooltip(IDC_PRODUCER, MakeProducerNameOnDataCtrlTooltip(gProducerText));
+	SetDialogControlTooltip(IDC_PARAM_ST2, ::MakeParameterAbbreviationTooltip(gParameterAbbreviationText));
 	SetDialogControlTooltip(IDC_CHECK_USE_COLOR_SCALE_WITH_SIMPLE_ISOLINES, ::MakeUseMultiColorIsolineTooltip(gMultiColorIsolinesText));
 	SetDialogControlTooltip(IDC_CHECK_USE_COLOR_BLEND_WITH_SIMPLE_ISOLINES, ::MakeUseColorBlendWithSimpleIsolinesTooltip(gColorBlendIsolinesText));
 	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_ISOLINE_COLORS_STR, ::MakeIsolineColorsTooltip(gIsolineColorsText));
@@ -2272,6 +2487,17 @@ void CFmiModifyDrawParamDlg::InitTooltipControl()
 	SetDialogControlTooltip(IDC_SHOW_CONTOUR_COLOR_INDEX_DLG, ::MakeOpenColorDialogTooltip("Open contour colors dialogue", gContourColorsText));
 	SetDialogControlTooltip(IDC_STATIC_SPECIAL_CONTOUR_CLASSES_STR, ::MakeSpecialIsolineClassesLimitTooltip(gContourClassesText, false));
 	SetDialogControlTooltip(IDC_STATIC_SPECIAL_CONTOUR_COLOR_INDEXIES_STR, ::MakeSpecialClassesColorIndexTooltip(gContourColorsText, gContourColorOpenDlgText));
+	SetDialogControlTooltip(IDC_TREAT_WMS_LAYER_AS_OBSERVATION, ::MakeTreatWmsLayerAsObservationTextTooltip(gTreatWmsLayerAsObservationText));
+	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_LINE_TYPE_STR, ::MakeLineTypeSimpleTooltip(gLineTypeSimpleText));
+	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_HATCH_PATTERN_STR1, ::MakeHatchPatternTypeTooltip(gHatchPatternTypeText));
+	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_HATCH_PATTERN_STR2, ::MakeHatchPatternTypeTooltip(gHatchPatternTypeText));
+	SetDialogControlTooltip(IDC_STATIC_CONTOUR_ALPHA_STR, ::MakeAlphaFactorTooltip(gAlphaFactorText));
+	SetDialogControlTooltip(IDC_CHECK_FLIP_ARROW_SYMBOL, ::MakeFlipArrowTooltip(gFlipArrowText));
+	SetDialogControlTooltip(IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY1, ::MakeTransparencyTooltip(gTransparencyText, "1st"));
+	SetDialogControlTooltip(IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY2, ::MakeTransparencyTooltip(gTransparencyText, "2nd"));
+	SetDialogControlTooltip(IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY3, ::MakeTransparencyTooltip(gTransparencyText, "3rd"));
+	SetDialogControlTooltip(IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY4, ::MakeTransparencyTooltip(gTransparencyText, "4th"));
+	SetDialogControlTooltip(IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY5, ::MakeTransparencyTooltip(gTransparencyText, "5th"));
 }
 
 BOOL CFmiModifyDrawParamDlg::PreTranslateMessage(MSG* pMsg)

@@ -67,7 +67,7 @@ public:
 	BOOL	fDrawLabelBox;
 	BOOL	fDrawOnlyOverMask; // oikeasti t‰m‰ on piirr‰ vain maskin p‰‰lle optio
 	BOOL	fUseSpecialClasses;
-	int		itsHatch1Style;
+	int		itsHatch1Type;
 	double	itsHatch1EndValue;
 	double	itsHatch1StartValue;
 	double	itsIsoLineGap;
@@ -114,7 +114,7 @@ public:
     CString	itsParamUnitStrU_;
 	BOOL	fIsHidden;
 	BOOL	fUseHatch2;
-	double	itsHatch2Style;
+	int 	itsHatch2Type;
 	double	itsHatch2EndValue;
 	double	itsHatch2StartValue;
 	BOOL	fUSeSeparatingLinesBetweenColorContourClasses;
