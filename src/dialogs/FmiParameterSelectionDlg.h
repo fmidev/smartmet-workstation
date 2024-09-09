@@ -118,7 +118,7 @@ private:
     void AdjustGridControl(void);
     CRect CalcGridArea(void);
     void InitHeaders();
-    void UpdateGridControlValues(bool collapseAll = false);
+    void UpdateGridControlValues(bool searchRemoved, const std::string& searchStr);
     void UpdateGridControlValuesInNormalMode(bool fFirstTime);
     void UpdateGridControlValuesWhenSearchActive(void);
     void UpdateGridControlValuesWhenSearchRemoved(void);
@@ -135,11 +135,12 @@ private:
     std::string MakeActiveViewRowText();
 	void UpdateGridControlIfNeeded();
 	std::string MakeTitleText();
-    bool UpdateSearchIfNeeded();
+    std::pair<bool, std::string> UpdateSearchIfNeeded();
     void CollapseAllButCategories();
     void UpdateAfterSearchText();
     void DoResizerHooking();
     void DoTimeSerialSideParametersCheckboxAdjustments();
+    bool HasViewTypeChanged();
 
     NFmiParameterSelectionGridCtrl itsGridCtrl;
     CTreeColumn itsTreeColumn;   // provides tree column support

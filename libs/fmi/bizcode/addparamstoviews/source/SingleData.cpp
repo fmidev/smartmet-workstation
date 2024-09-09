@@ -4,6 +4,7 @@
 #include "NFmiFastInfoUtils.h"
 #include "ParameterSelectionUtils.h"
 #include "NFmiSettings.h"
+#include "catlog/catlog.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -214,9 +215,7 @@ namespace AddParams
     // Returns true, if data's param or level structure is changed
     bool SingleData::updateOperationalData(const boost::shared_ptr<NFmiFastQueryInfo>& info, const NFmiHelpDataInfo *helpDataInfo)
     {
-        bool dataStructuresChanged = false;
-
-        dataStructuresChanged = ::isDataStructuresChanged(info, latestMetaData_);
+        bool dataStructuresChanged = ::isDataStructuresChanged(info, latestMetaData_);
         latestDataFilePath_ = info->DataFileName();
         totalLocalPath_ = combineTotalFilePath(info->DataFileName(), info->DataFilePattern());
         latestMetaData_ = std::make_unique<NFmiQueryInfo>(*info);
@@ -236,7 +235,7 @@ namespace AddParams
             dataName_ = "Editable data";
         }
 
-        return true;
+        return dataStructuresChanged;
     }
 
     std::vector<SingleRowItem> SingleData::makeDialogRowData(const std::vector<SingleRowItem>& dialogRowDataMemory) const

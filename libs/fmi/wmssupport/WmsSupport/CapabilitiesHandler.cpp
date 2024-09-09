@@ -202,7 +202,7 @@ namespace Wms
                     getCapabilitiesHaveBeenRetrieved_ = true;
                     if(foundAnyWmsServerData)
                     {
-                        firstTimeUpdateCallbackWrapper();
+                        getCapabilitiesUpdateCallbackWrapper();
                     }
 
                     using namespace std::literals;
@@ -212,14 +212,11 @@ namespace Wms
         );
     }
 
-    void CapabilitiesHandler::firstTimeUpdateCallbackWrapper()
+    void CapabilitiesHandler::getCapabilitiesUpdateCallbackWrapper()
     {
-        static bool firstTime = true;
-
-        if(firstTime && parameterSelectionUpdateCallback_ != nullptr)
+        if(parameterSelectionUpdateCallback_)
         {
-            firstTime = false;
-            CatLog::logMessage("CapabilitiesHandler::firstTimeUpdateCallbackWrapper activated", CatLog::Severity::Debug, CatLog::Category::NetRequest);
+            // Aina kun on haettu uudet GetCapabilities haut, kutsutaan tätä
             parameterSelectionUpdateCallback_();
         }
     }

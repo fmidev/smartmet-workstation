@@ -1066,7 +1066,7 @@ NFmiSmartToolInfo* SmartMetDocumentInterfaceForGeneralDataDoc::SmartToolInfo()
     return itsDoc->SmartToolInfo();
 }
 
-NFmiMacroParamSystem& SmartMetDocumentInterfaceForGeneralDataDoc::MacroParamSystem()
+std::shared_ptr<NFmiMacroParamSystem> SmartMetDocumentInterfaceForGeneralDataDoc::MacroParamSystem()
 {
     return itsDoc->MacroParamSystem();
 }

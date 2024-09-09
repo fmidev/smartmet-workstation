@@ -70,7 +70,7 @@ NFmiBasicSmartMetConfigurations::NFmiBasicSmartMetConfigurations(void)
 ,fDeveloperModePath(false)
 ,itsApplicationDataBase()
 ,fVerbose(false)
-,itsStartingTime()
+,itsElapsedRunningTimer()
 ,fToolMasterAvailable(false)
 ,fEnableCrashReporter(true)
 {
@@ -605,7 +605,7 @@ void NFmiBasicSmartMetConfigurations::InitApplicationDataBase(const std::string 
 	{
 		itsApplicationDataBase.InitFromSettings("SmartMet::ApplicationDataBase");
 		itsApplicationDataBase.ControlBasePath(itsControlBasePath);
-		itsApplicationDataBase.CollectSmartMetData(NFmiApplicationDataBase::kStart, itsLanguage, RunningTimeInSeconds(), fToolMasterAvailable, nullptr);
+		itsApplicationDataBase.CollectSmartMetData(NFmiApplicationDataBase::kStart, itsLanguage, boost::math::iround(RunningTimeInSeconds()), fToolMasterAvailable, nullptr);
 
         // AVS Toolmaster version is set once outside of NFmiApplicationDataBase class to remove dependency
         itsApplicationDataBase.avstmversion = avsToolMasterVersion;
@@ -618,61 +618,7 @@ void NFmiBasicSmartMetConfigurations::InitApplicationDataBase(const std::string 
 	}
 }
 
-int NFmiBasicSmartMetConfigurations::RunningTimeInSeconds()
-{
-    NFmiTime currentTime;
-    int runTimeInSeconds = currentTime.DifferenceInMinutes(itsStartingTime) * 60;
-    int secs = currentTime.GetSec() - itsStartingTime.GetSec();
-    if(secs < 0)
-        secs += 60;
-    runTimeInSeconds += secs;
-
-    return runTimeInSeconds;
-}
-
 std::string NFmiBasicSmartMetConfigurations::MakeRunningTimeString(void)
 {
-    std::string str;
-    NFmiTime endingTime;
-    if(endingTime.DifferenceInDays(itsStartingTime) > 0)
-    {
-        int days = endingTime.DifferenceInDays(itsStartingTime);
-        int hours = endingTime.DifferenceInHours(itsStartingTime) % 24;
-        int minutes = endingTime.DifferenceInMinutes(itsStartingTime) % 60;
-        str += NFmiStringTools::Convert<int>(days);
-        str += " d ";
-        str += NFmiStringTools::Convert<int>(hours);
-        str += " h ";
-        str += NFmiStringTools::Convert<int>(minutes);
-        str += " min";
-    }
-    else if(endingTime.DifferenceInHours(itsStartingTime) > 0)
-    {
-        int hours = endingTime.DifferenceInHours(itsStartingTime);
-        int minutes = endingTime.DifferenceInMinutes(itsStartingTime) % 60;
-        str += NFmiStringTools::Convert<int>(hours);
-        str += " h ";
-        str += NFmiStringTools::Convert<int>(minutes);
-        str += " min";
-    }
-    else if(endingTime.DifferenceInMinutes(itsStartingTime) > 0)
-    {
-        int minutes = endingTime.DifferenceInMinutes(itsStartingTime);
-        int secs = endingTime.GetSec() - itsStartingTime.GetSec();
-        if(secs < 0)
-            secs += 60;
-        str += NFmiStringTools::Convert<int>(minutes);
-        str += " min ";
-        str += NFmiStringTools::Convert<int>(secs);
-        str += " s";
-    }
-    else
-    {
-        int secs = endingTime.GetSec() - itsStartingTime.GetSec();
-        if(secs < 0)
-            secs += 60;
-        str += NFmiStringTools::Convert<int>(secs);
-        str += " s";
-    }
-    return str;
+    return NFmiMilliSecondTimer::EasyTimeDiffStr(boost::math::iround(itsElapsedRunningTimer.elapsedTimeInSeconds() * 1000), true);
 }

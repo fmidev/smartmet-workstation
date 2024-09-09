@@ -2,21 +2,20 @@
 
 #include "stdafx.h"
 #include <string>
+#include <memory>
 
 class NFmiMacroParamSystem;
 
 namespace CFmiMacroParamUpdateThread
 {
-	void InitMacroParamSystem(NFmiMacroParamSystem &theMacroParamSystem); // t‰m‰ pit‰‰ kutsua ennen kuin threadi (DoThread) k‰ynnistet‰‰n
+	// t‰m‰ pit‰‰ kutsua ennen kuin threadi (DoThread) k‰ynnistet‰‰n
+	void InitMacroParamSystem(std::shared_ptr<NFmiMacroParamSystem> theMacroParamSystemPtr);
 	UINT DoThread(LPVOID pParam);
 	void CloseNow(void);
 	int WaitToClose(int theMilliSecondsToWait);
-	void ForceUpdate(const std::string *theRootFolder = 0);
+	void ForceUpdate();
 	void SetFirstTimeDelay(int theStartUpDelayInMS);
 
-	// T‰ss‰ on 'lukolliset' macroParamien vaihto metodit. Add on worker-threadin k‰ytt‰m‰ (talleta ett‰ p‰‰ohjelma voi hakea ne)
-	// ja Get on p‰‰ ohjelman k‰ytt‰m‰ (hae worker threadin tekem‰ lista k‰yttˆˆn).
-	void AddMacroParams(NFmiMacroParamSystem &theMacroParamSystem);
-	bool GetMacroParams(NFmiMacroParamSystem &theMacroParamSystem);
+	bool MakePossibleMacroParamSystemUpdateInDoc(std::shared_ptr<NFmiMacroParamSystem> theMacroParamSystemPtr);
 }
 

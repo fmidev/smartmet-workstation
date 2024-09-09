@@ -52,7 +52,6 @@ namespace AddParams
 	,staticDataAdded_(false)
     ,dialogRowData_()
     ,dialogTreePatternArray_()
-    ,dialogDataNeedsUpdate_(true)
     ,modelProducerSystem_(nullptr)
 	,obsProducerSystem_(nullptr)
 	,satelImageProducerSystem_(nullptr)
@@ -97,7 +96,12 @@ namespace AddParams
         updatePending_ = false; 
         dialogRowData_.clear();
         dialogTreePatternArray_.clear();
-        dialogDataNeedsUpdate_ = true;
+        dialogDataNeedsUpdate(true);
+        dataNeedsUpdate(true);
+        queryDataNeedsUpdate(true);
+        imageDataNeedsUpdate(true);
+        wmsDataNeedsUpdate(true);
+        macroParamDataNeedsUpdate(true);
     }
 
     void ParameterSelectionSystem::addHelpData(const NFmiProducer &producer, const std::string &menuString, NFmiInfoData::Type dataType, const std::string &displayName) //Add at the end of help data list
@@ -107,18 +111,170 @@ namespace AddParams
         otherHelpData_.push_back(item);
     }
 
+    std::string MakeBoolLogString(const std::string& name, bool value)
+    {
+        std::string str = name + " = ";
+        str += value ? "true" : "false";
+        return str;
+    }
+
+    std::string MakeInfoDataString(NFmiInfoData::Type infoData)
+    {
+        switch(infoData)
+        {
+        case NFmiInfoData::kNoDataType:
+            return "NoDataType";
+        case NFmiInfoData::kEditable:
+            return "Editable";
+        case NFmiInfoData::kViewable:
+            return "Viewable";
+        case NFmiInfoData::kStationary:
+            return "Stationary";
+        case NFmiInfoData::kCopyOfEdited:
+            return "CopyOfEdited";
+        case NFmiInfoData::kObservations:
+            return "Observations";
+        case NFmiInfoData::kCalculatedValue:
+            return "CalculatedValue";
+        case NFmiInfoData::kKepaData:
+            return "KepaData";
+        case NFmiInfoData::kClimatologyData:
+            return "ClimatologyData";
+        case NFmiInfoData::kAnalyzeData:
+            return "AnalyzeData";
+        case NFmiInfoData::kSatelData:
+            return "SatelData";
+        case NFmiInfoData::kMacroParam:
+        case NFmiInfoData::kCrossSectionMacroParam:
+        case NFmiInfoData::kQ3MacroParam:
+        case NFmiInfoData::kTimeSerialMacroParam:
+            return "MacroParam";
+        case NFmiInfoData::kHybridData:
+            return "HybridData";
+        case NFmiInfoData::kModelHelpData:
+            return "ModelHelpData";
+        case NFmiInfoData::kEditingHelpData:
+            return "EditingHelpData";
+        case NFmiInfoData::kConceptualModelData:
+            return "ConceptualModelData";
+        case NFmiInfoData::kWmsData:
+            return "WmsData";
+        default:
+            return "UnknownData";
+        }
+    }
+
+    void ParameterSelectionSystem::MakeUpdateLogging(const std::string& funcName, const std::string& stepName, const std::string& categoryName, NFmiInfoData::Type dataCategory, std::string extraInfo) const
+    {
+        std::string finalMessage = funcName + " " + stepName + ": " + categoryName + " ";
+        if(dataCategory != NFmiInfoData::kNoDataType)
+        {
+            finalMessage += "'" + MakeInfoDataString(dataCategory) + "' ";
+        }
+        if(!extraInfo.empty())
+        {
+            finalMessage += " " + extraInfo;
+        }
+        CatLog::logMessage(finalMessage, CatLog::Severity::Debug, CatLog::Category::Operational);
+    }
+
     void ParameterSelectionSystem::updateData()
     {
-        updateOperationalData(OperationalDataStr, NFmiInfoData::kEditable);
-        updateData(ModellDataStr, *modelProducerSystem_, NFmiInfoData::kViewable);
-        updateData(ObservationDataStr, *obsProducerSystem_, NFmiInfoData::kObservations);
-        updateData(SatelliteImagesStr, *satelImageProducerSystem_, NFmiInfoData::kSatelData);
-		updateWmsData(WmsStr, NFmiInfoData::kWmsData);
-        updateMacroParamData(MacroParametersStr, NFmiInfoData::kMacroParam);
-        updateCustomCategories();
+        if(dataNeedsUpdate())
+        {
+            dataNeedsUpdate(false);
+            updateQueryData();
+            updateImageData();
+            updateWmsData(WmsStr, NFmiInfoData::kWmsData);
+            updateMacroParamData(MacroParametersStr, NFmiInfoData::kMacroParam);
+        }
+        updatePending(false);
+    }
+
+    void ParameterSelectionSystem::updateQueryData()
+    {
+        if(queryDataNeedsUpdate())
+        {
+            queryDataNeedsUpdate(false);
+            updateOperationalData(OperationalDataStr, NFmiInfoData::kEditable);
+            updateData(ModellDataStr, *modelProducerSystem_, NFmiInfoData::kViewable);
+            updateData(ObservationDataStr, *obsProducerSystem_, NFmiInfoData::kObservations);
+            updateCustomCategories();
+            updateHelpData();
+        }
+    }
+
+    void ParameterSelectionSystem::updateImageData()
+    {
+        if(imageDataNeedsUpdate())
+        {
+            imageDataNeedsUpdate(false);
+            updateData(SatelliteImagesStr, *satelImageProducerSystem_, NFmiInfoData::kSatelData);
+        }
+    }
+
+    void ParameterSelectionSystem::updateHelpData()
+    {
         updateData(HelpDataStr, *modelProducerSystem_, NFmiInfoData::kModelHelpData);
-		updateData(HelpDataStr, *obsProducerSystem_, NFmiInfoData::kModelHelpData);
-		updateData(HelpDataStr, *obsProducerSystem_, NFmiInfoData::kStationary);
+        updateData(HelpDataStr, *obsProducerSystem_, NFmiInfoData::kModelHelpData);
+        updateData(HelpDataStr, *obsProducerSystem_, NFmiInfoData::kStationary);
+    }
+
+    void ParameterSelectionSystem::dataNeedsUpdate(bool value)
+    {
+        dataNeedsUpdate_ = value;
+    }
+
+    void ParameterSelectionSystem::queryDataNeedsUpdate(bool value) 
+    { 
+        queryDataNeedsUpdate_ = value; 
+        setMainDataFlagDirtyIfSubDataIsSet(value);
+    }
+
+    void ParameterSelectionSystem::setMainDataFlagDirtyIfSubDataIsSet(bool value)
+    {
+        if(value)
+        {
+            // Jos jokin ali-data-lippu menee likaiseksi, pitää myös 'pää'-lippu liata
+            dataNeedsUpdate(true);
+        }
+    }
+
+    void ParameterSelectionSystem::setDialogDataFlagDirtyIfSubDataNeedsUpdate(bool value)
+    {
+        if(value)
+        {
+            // Jos jonkin ali-datan jokin kohta on muuttunut, pitää myös dialogiDatan-lippu liata
+            dialogDataNeedsUpdate(true);
+        }
+    }
+
+    void ParameterSelectionSystem::imageDataNeedsUpdate(bool value) 
+    { 
+        imageDataNeedsUpdate_ = value; 
+        setMainDataFlagDirtyIfSubDataIsSet(value);
+    }
+
+    void ParameterSelectionSystem::wmsDataNeedsUpdate(bool value) 
+    { 
+        wmsDataNeedsUpdate_ = value; 
+        setMainDataFlagDirtyIfSubDataIsSet(value);
+    }
+
+    void ParameterSelectionSystem::macroParamDataNeedsUpdate(bool value) 
+    { 
+        macroParamDataNeedsUpdate_ = value; 
+        setMainDataFlagDirtyIfSubDataIsSet(value);
+    }
+
+    void ParameterSelectionSystem::setAllUpdateflagsDirty()
+    {
+        dialogDataNeedsUpdate(true);
+        dataNeedsUpdate(true);
+        queryDataNeedsUpdate(true);
+        imageDataNeedsUpdate(true);
+        wmsDataNeedsUpdate(true);
+        macroParamDataNeedsUpdate(true);
     }
 
     void ParameterSelectionSystem::updateData(const std::string &catName, NFmiProducerSystem &producerSystem, NFmiInfoData::Type dataCategory, bool customCategory)
@@ -127,11 +283,15 @@ namespace AddParams
         auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto &categoryData) {return categoryName == categoryData->categoryName(); });
         if(iter != categoryDataVector_.end())
         {
-            dialogDataNeedsUpdate_ |= (*iter)->updateData(producerSystem, *infoOrganizer_, *helpDataInfoSystem_, dataCategory, helpDataIDs_, customCategory);
+            auto needsUpdate = (*iter)->updateData(producerSystem, *infoOrganizer_, *helpDataInfoSystem_, dataCategory, helpDataIDs_, customCategory);
+            setDialogDataFlagDirtyIfSubDataNeedsUpdate(needsUpdate);
         }
         else
         {
-            addNewCategoryData(categoryName, producerSystem, *infoOrganizer_, *helpDataInfoSystem_, dataCategory, customCategory);
+            if(addNewCategoryData(categoryName, producerSystem, *infoOrganizer_, *helpDataInfoSystem_, dataCategory, customCategory))
+            {
+                MakeUpdateLogging(__FUNCTION__, "add-new-category-section", categoryName, dataCategory);
+            }
         }
 
         updatePending(false);
@@ -142,14 +302,15 @@ namespace AddParams
         auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto &categoryData) {return categoryName == categoryData->categoryName(); });
         if(iter != categoryDataVector_.end())
         {
-            dialogDataNeedsUpdate_ |= (*iter)->updateOperationalData(*infoOrganizer_, *helpDataInfoSystem_, dataCategory);
+            auto needsUpdate = (*iter)->updateOperationalData(*infoOrganizer_, *helpDataInfoSystem_, dataCategory);
+            setDialogDataFlagDirtyIfSubDataNeedsUpdate(needsUpdate);
         }
         else
         {
             auto categoryDataPtr = std::make_unique<CategoryData>(categoryName, dataCategory);
             categoryDataPtr->updateOperationalData(*infoOrganizer_, *helpDataInfoSystem_, dataCategory);
             categoryDataVector_.push_back(std::move(categoryDataPtr));
-            dialogDataNeedsUpdate_ = true;
+            dialogDataNeedsUpdate(true);
         }
     }
 
@@ -157,24 +318,28 @@ namespace AddParams
     {
         if(getMacroParamSystemCallback_)
         {
-            auto &macroParamSystem = getMacroParamSystemCallback_();
-            auto &macroParamTree = macroParamSystem.MacroParamItemTree();
-
-            auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto &categoryData) {return categoryName == categoryData->categoryName(); });
-            if(iter != categoryDataVector_.end())
+            if(macroParamDataNeedsUpdate())
             {
-                    dialogDataNeedsUpdate_ |= (*iter)->updateMacroParamData(macroParamTree, dataCategory);
-            }
-            else
-            {
-                // Add macro params as a new category
-                auto categoryDataPtr = std::make_unique<CategoryData>(categoryName, dataCategory);
-                categoryDataPtr->updateMacroParamData(macroParamTree, dataCategory);
-                categoryDataVector_.push_back(std::move(categoryDataPtr));
-                dialogDataNeedsUpdate_ = true;
-            }
+                macroParamDataNeedsUpdate(false);
+                auto macroParamSystemPtr = getMacroParamSystemCallback_();
+                auto& macroParamTree = macroParamSystemPtr->MacroParamItemTree();
 
-            updatePending(false);
+                auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto& categoryData) {return categoryName == categoryData->categoryName(); });
+                if(iter != categoryDataVector_.end())
+                {
+                    auto needsUpdate = (*iter)->updateMacroParamData(macroParamTree, dataCategory);
+                    setDialogDataFlagDirtyIfSubDataNeedsUpdate(needsUpdate);
+                }
+                else
+                {
+                    // Add macro params as a new category
+                    auto categoryDataPtr = std::make_unique<CategoryData>(categoryName, dataCategory);
+                    categoryDataPtr->updateMacroParamData(macroParamTree, dataCategory);
+                    categoryDataVector_.push_back(std::move(categoryDataPtr));
+                    dialogDataNeedsUpdate(true);
+                    MakeUpdateLogging(__FUNCTION__, "new-category", categoryName, dataCategory);
+                }
+            }
         }
     }
 
@@ -184,29 +349,33 @@ namespace AddParams
 
 		try
 		{
-			auto wmsSupport = getWmsCallback_();
-			if (!wmsSupport->isCapabilityTreeAvailable())
-				return;
-			auto layerTree = wmsSupport->getCapabilityTree();
-            if(layerTree)
+            if(wmsDataNeedsUpdate())
             {
-                const auto& wmsLayerTree = dynamic_cast<const Wms::CapabilityNode&>(*layerTree);
-
-                auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto& categoryData) {return categoryName == categoryData->categoryName(); });
-                if(iter != categoryDataVector_.end())
+                wmsDataNeedsUpdate(false);
+                auto wmsSupport = getWmsCallback_();
+                if(!wmsSupport->isCapabilityTreeAvailable())
+                    return;
+                auto layerTree = wmsSupport->getCapabilityTree();
+                if(layerTree)
                 {
-                    dialogDataNeedsUpdate_ |= (*iter)->updateWmsData(wmsLayerTree, dataCategory);
-                }
-                else
-                {
-                    // Add wms layers as a new category
-                    auto categoryDataPtr = std::make_unique<CategoryData>(categoryName, dataCategory);
-                    categoryDataPtr->updateWmsData(wmsLayerTree, dataCategory);
-                    categoryDataVector_.push_back(std::move(categoryDataPtr));
-                    dialogDataNeedsUpdate_ = true;
-                }
+                    const auto& wmsLayerTree = dynamic_cast<const Wms::CapabilityNode&>(*layerTree);
 
-                updatePending(false);
+                    auto iter = std::find_if(categoryDataVector_.begin(), categoryDataVector_.end(), [categoryName](const auto& categoryData) {return categoryName == categoryData->categoryName(); });
+                    if(iter != categoryDataVector_.end())
+                    {
+                        auto needsUpdate = (*iter)->updateWmsData(wmsLayerTree, dataCategory);
+                        setDialogDataFlagDirtyIfSubDataNeedsUpdate(needsUpdate);
+                    }
+                    else
+                    {
+                        // Add wms layers as a new category
+                        auto categoryDataPtr = std::make_unique<CategoryData>(categoryName, dataCategory);
+                        categoryDataPtr->updateWmsData(wmsLayerTree, dataCategory);
+                        categoryDataVector_.push_back(std::move(categoryDataPtr));
+                        dialogDataNeedsUpdate(true);
+                        MakeUpdateLogging(__FUNCTION__, "new-category", categoryName, dataCategory);
+                    }
+                }
             }
 		}
 		catch (...)
@@ -224,16 +393,20 @@ namespace AddParams
         }
     }
 
-    void ParameterSelectionSystem::addNewCategoryData(const std::string &categoryName, NFmiProducerSystem &producerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory)
+    bool ParameterSelectionSystem::addNewCategoryData(const std::string &categoryName, NFmiProducerSystem &producerSystem, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataCategory, bool customCategory)
     {
         auto categoryDataPtr = std::make_unique<CategoryData>(categoryName, dataCategory);
         if(dataCategory == NFmiInfoData::kObservations) 
             categoryDataPtr->setSoungindLevels(*soundingLevels_);
         categoryDataPtr->updateData(producerSystem, infoOrganizer, helpDataInfoSystem, dataCategory, helpDataIDs_, customCategory);
-        if(categoryDataPtr->producerDataVector().size() > 0) { //Hide categories that don't have data
+        if(categoryDataPtr->producerDataVector().size() > 0) 
+        { 
+            //Hide categories that don't have data
             categoryDataVector_.push_back(std::move(categoryDataPtr));
+            dialogDataNeedsUpdate(true);
+            return true;
         }
-        dialogDataNeedsUpdate_ = true;
+        return false;
     }
 
     std::vector<SingleRowItem>& ParameterSelectionSystem::dialogRowData()
@@ -252,12 +425,12 @@ namespace AddParams
 
     void ParameterSelectionSystem::updateDialogData()
     {
-        if(dialogDataNeedsUpdate_)
+        if(dialogDataNeedsUpdate() || dataNeedsUpdate())
         {
             updateData();
             updateDialogRowData();
             updateDialogTreePatternData();
-            dialogDataNeedsUpdate_ = false;
+            dialogDataNeedsUpdate(false);
         }
     }
 
@@ -476,7 +649,7 @@ namespace AddParams
         if(words.empty())
         {
             updateDialogTreePatternData();
-            dialogDataNeedsUpdate_ = true;
+            dialogDataNeedsUpdate(true);
             return;
         }
              
@@ -495,7 +668,7 @@ namespace AddParams
         if(!resultRowData.empty())
         dialogRowData_.swap(resultRowData);
         updateDialogTreePatternData();
-        dialogDataNeedsUpdate_ = true;
+        dialogDataNeedsUpdate(true);
     }
 
 	void ParameterSelectionSystem::removeNodesThatDontHaveLeafs(std::vector<SingleRowItem>& resultRowData)
@@ -561,6 +734,15 @@ namespace AddParams
 
     void ParameterSelectionSystem::SetLastActiveIndexes(unsigned int desktopIndex, int rowIndex)
     {
+        bool desktopIndexChanged = (desktopIndex != itsLastActivatedDesktopIndex);
+        if(desktopIndexChanged)
+        {
+            // Jos muutetaan näyttöä niin tällöin pitää Parameter-selection dialogia 
+            // päivittää. On siis sallittua vaihtaa kartta1:stä kartta2:een ilman että pitää päivitellä.
+            dialogDataNeedsUpdate(true);
+            CatLog::logMessage(std::string(__FUNCTION__) + ": active view type changed, need to update selection dialog", CatLog::Severity::Debug, CatLog::Category::Operational);
+        }
+
         itsLastActivatedDesktopIndex = desktopIndex;
         if(isMapViewCase())
             itsLastActivatedMapRowIndex = rowIndex;

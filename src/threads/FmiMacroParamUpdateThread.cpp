@@ -5,21 +5,22 @@
 #include "NFmiQueryDataUtil.h"
 #include "NFmiMacroParamSystem.h"
 #include "NFmiMilliSecondTimer.h"
+#include "CtrlViewDocumentInterface.h"
+#include <mutex>
 
 namespace
 {
 	CSemaphore gThreadRunning; // t‰m‰n avulla yritet‰‰n lopettaan jatkuvasti pyˆriv‰ working thread 'siististi'
 	NFmiStopFunctor gStopFunctor;
 	bool fDoUpdateNow; // t‰ll‰ voidaan pakottaa macroParam update v‰littˆm‰sti
-	std::string gNewRootFolder;
 	int gStartUpDelayInMS = 0; // t‰m‰n avulla voidaan s‰‰t‰‰ kuinka kauan alussa odotellaan, ennen kuin tehd‰‰n tyˆt ensimm‰isen kerran
 
-	NFmiMacroParamSystem gWorkerMacroParamSystem; // T‰m‰n olion avulla p‰ivitet‰‰n working threadissa makroParam listaa.
+	std::unique_ptr<NFmiMacroParamSystem> gWorkerMacroParamSystemPtr; // T‰m‰n olion avulla p‰ivitet‰‰n working threadissa makroParam listaa.
 
 	// N‰ill‰ on suojattu macroParamien v‰lityspaikka. T‰h‰n ei saa koskea kuin 
 	// AddMacroParams ja GetMacroParams -metodien kautta (mieti miten t‰m‰n saisi tehty‰ fiksusti).
-	NFmiMacroParamSystem gMediatorMacroParamSystem; // T‰m‰n v‰litt‰j‰-olion avulla siirret‰‰n macroParameja working-threadin ja p‰‰ohjelman v‰lill‰.
-	CSemaphore gDataTranferSemaphore; // t‰m‰ on lukko, jolla estet‰‰n samanaikainen luku/kirjoitus gHAKEMessages-oliosta.
+	std::unique_ptr<NFmiMacroParamSystem> gMediatorMacroParamSystemPtr; // T‰m‰n v‰litt‰j‰-olion avulla siirret‰‰n macroParameja working-threadin ja p‰‰ohjelman v‰lill‰.
+	std::mutex gDataTranferMutex; // t‰m‰ on lukko, jolla estet‰‰n samanaikainen luku/kirjoitus.
 }
 
 void CFmiMacroParamUpdateThread::SetFirstTimeDelay(int theStartUpDelayInMS)
@@ -37,23 +38,20 @@ static bool LetGoAfterFirstTimeDelaying(NFmiMilliSecondTimer &theTimer, bool the
 	return false;
 }
 
+static void AddMacroParams(std::unique_ptr<NFmiMacroParamSystem>& theMacroParamSystemPtr)
+{
+	std::lock_guard<std::mutex> lockGuard(gDataTranferMutex);
+	gMediatorMacroParamSystemPtr.swap(theMacroParamSystemPtr);
+}
+
 static void	RebuildMacroParams(void)
 {
 	NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-	// 0. aseta mahdollinen root-hakemiston muutos
-	if(gNewRootFolder.empty() == false) // jos p‰‰ohjelmalta on tullut uusi macroParam-polku, asetetaan se t‰ss‰.
-	{
-		gWorkerMacroParamSystem.RootPath(gNewRootFolder);
-		CSingleLock singleLock(&gDataTranferSemaphore); // muista ett‰ t‰m‰ vapauttaa semaphoren kun tuhoutuu
-		if(singleLock.Lock(1*1000)) // Attempt to lock the shared resource for 1 second
-			gMediatorMacroParamSystem.RootPath(gNewRootFolder);
-		gNewRootFolder = ""; // pit‰‰ nollata arvo ett‰ ensi kerralla ei aseteta t‰t‰ taas uudestaan.
-	}
 	// 1. rebuild makros in worker object
-	gWorkerMacroParamSystem.Rebuild(&gStopFunctor);
+	gWorkerMacroParamSystemPtr->Rebuild(&gStopFunctor);
 	NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
 	// 2. Put rebuild-macrParams in mediator-object
-	CFmiMacroParamUpdateThread::AddMacroParams(gWorkerMacroParamSystem);
+	AddMacroParams(gWorkerMacroParamSystemPtr);
 	NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
 	AfxGetMainWnd()->PostMessage(ID_MESSAGE_MACRO_PARAMS_UPDATE); // l‰hetet‰‰n tieto ett‰ nyt on data luettu k‰ytett‰v‰ksi
 }
@@ -68,7 +66,7 @@ UINT CFmiMacroParamUpdateThread::DoThread(LPVOID /* pParam */ )
 
 	NFmiMilliSecondTimer timer;
 	bool firstTime = true;
-	gNewRootFolder = "";
+	int usedUpdateTimeIntervalInMilliSeconds = 32 * 60 * 1000; // tehd‰‰n n. puolen tunnin v‰lein
 
 	// T‰ss‰ on iki-looppi, jossa vahditaan onko tullut uusia datoja, jolloin tehd‰‰n yhdistelm‰ datoja SmartMetin luettavaksi.
 	// Lis‰ksi pit‰‰ tarkkailla, onko tullut lopetus k‰sky, joloin pit‰‰ siivota ja lopettaa.
@@ -79,8 +77,9 @@ UINT CFmiMacroParamUpdateThread::DoThread(LPVOID /* pParam */ )
 		{
 			NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
 
-			if(::LetGoAfterFirstTimeDelaying(timer, firstTime, gStartUpDelayInMS) || fDoUpdateNow || timer.CurrentTimeDiffInMSeconds() > (60 * 60 * 1000)) // tarkistetaan 60 minuutin v‰lein onko tullut muutoksia makroParameihin
-			{ // jos on kulunut tarpeeksi aikaa, tarkastetaan, onko jonnekin tullut uusia datatiedostoja jotka pit‰‰ yhdist‰‰
+			if(::LetGoAfterFirstTimeDelaying(timer, firstTime, gStartUpDelayInMS) || fDoUpdateNow || timer.CurrentTimeDiffInMSeconds() > usedUpdateTimeIntervalInMilliSeconds)
+			{ 
+				// jos on kulunut tarpeeksi aikaa, tarkastetaan, onko jonnekin tullut uusia datatiedostoja jotka pit‰‰ yhdist‰‰
 				firstTime = false;
 				fDoUpdateNow = false;
 				try
@@ -113,13 +112,16 @@ UINT CFmiMacroParamUpdateThread::DoThread(LPVOID /* pParam */ )
 }
 
 // T‰t‰ initialisointi funktiota pit‰‰ kutsua ennen kuin itse threadi k‰ynnistet‰‰n MainFramesta. 
-void CFmiMacroParamUpdateThread::InitMacroParamSystem(NFmiMacroParamSystem &theMacroParamSystem)
+void CFmiMacroParamUpdateThread::InitMacroParamSystem(std::shared_ptr<NFmiMacroParamSystem> theMacroParamSystemPtr)
 {
-	gWorkerMacroParamSystem.Init(theMacroParamSystem);
+	gWorkerMacroParamSystemPtr = std::make_unique<NFmiMacroParamSystem>();
+	gWorkerMacroParamSystemPtr->Init(*theMacroParamSystemPtr);
 
-	CSingleLock singleLock(&gDataTranferSemaphore); // muista ett‰ t‰m‰ vapauttaa semaphoren kun tuhoutuu
-	if(singleLock.Lock(1*1000)) // Attempt to lock the shared resource for 1 second
-		gMediatorMacroParamSystem.Init(theMacroParamSystem);
+	{
+		std::lock_guard<std::mutex> lockGuard(gDataTranferMutex);
+		gMediatorMacroParamSystemPtr = std::make_unique<NFmiMacroParamSystem>();
+		gMediatorMacroParamSystemPtr->Init(*theMacroParamSystemPtr);
+	}
 }
 
 void CFmiMacroParamUpdateThread::CloseNow(void)
@@ -127,13 +129,9 @@ void CFmiMacroParamUpdateThread::CloseNow(void)
 	gStopFunctor.Stop(true);
 }
 
-void CFmiMacroParamUpdateThread::ForceUpdate(const std::string *theRootFolder)
+void CFmiMacroParamUpdateThread::ForceUpdate()
 {
 	fDoUpdateNow = true;
-	if(theRootFolder)
-		gNewRootFolder = *theRootFolder;
-	else
-		gNewRootFolder = "";
 }
 
 int CFmiMacroParamUpdateThread::WaitToClose(int theMilliSecondsToWait)
@@ -144,30 +142,19 @@ int CFmiMacroParamUpdateThread::WaitToClose(int theMilliSecondsToWait)
 	return 0;
 }
 
-	// T‰ss‰ on 'lukolliset' sanomien vaihto metodit. Add on worker-threadin k‰ytt‰m‰ ja
-	// Get on p‰‰ ohjelman k‰ytt‰m‰.
-void CFmiMacroParamUpdateThread::AddMacroParams(NFmiMacroParamSystem &theMacroParamSystem)
+bool CFmiMacroParamUpdateThread::MakePossibleMacroParamSystemUpdateInDoc(std::shared_ptr<NFmiMacroParamSystem> theMacroParamSystemPtr)
 {
-	CSingleLock singleLock(&gDataTranferSemaphore); // muista ett‰ t‰m‰ vapauttaa semaphoren kun tuhoutuu
-	if(!singleLock.Lock(1000)) // Attempt to lock the shared resource for 1 second
-	{
-		return ; // oli jo lukossa eik‰ auennut tarpeeksi nopeasti, lopetataan toistaiseksi
-	}
+	std::lock_guard<std::mutex> lockGuard(gDataTranferMutex);
 
-	gMediatorMacroParamSystem.SwapMacroData(theMacroParamSystem);
-}
-
-bool CFmiMacroParamUpdateThread::GetMacroParams(NFmiMacroParamSystem &theMacroParamSystem)
-{
-	CSingleLock singleLock(&gDataTranferSemaphore); // muista ett‰ t‰m‰ vapauttaa semaphoren kun tuhoutuu
-	if(!singleLock.Lock(1000)) // Attempt to lock the shared resource for 1 second
+	if(theMacroParamSystemPtr->IsUpdateNeeded(*gMediatorMacroParamSystemPtr))
 	{
-		return false; // oli jo lukossa eik‰ auennut tarpeeksi nopeasti, lopetataan toistaiseksi
-	}
-
-	if(theMacroParamSystem.IsUpdateNeeded(gMediatorMacroParamSystem))
-	{
-		theMacroParamSystem.SwapMacroData(gMediatorMacroParamSystem);
+		// Siirret‰‰n p‰ivitetty macroParamSystem otus tmp-shared_ptr muuttujalle
+		std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr(gMediatorMacroParamSystemPtr.release());
+		// Luodaan uusi pohja mediator otukselle
+		gMediatorMacroParamSystemPtr = std::make_unique<NFmiMacroParamSystem>();
+		gMediatorMacroParamSystemPtr->Init(*theMacroParamSystemPtr);
+		// Asetetaan p‰ivitetty macroParamSystem otus dokumentille k‰yttˆˆn
+		CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateMacroParamSystemContent(std::move(updatedMacroParamSystemPtr));
 		return true;
 	}
 	return false;

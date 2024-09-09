@@ -153,6 +153,7 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+	void UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr);
 	std::string GetVirtualTimeTooltipText() const;
 	void VirtualTime(const NFmiMetTime& virtualTime);
 	const NFmiMetTime& VirtualTime() const;
@@ -449,7 +450,7 @@ public:
 	void RemoveMacroParam(const std::string &theName); // poistaa halutun macroparamin dokumentista, tiedostoista ja näytöiltä
 	void AddMacroParamToView(unsigned int theDescTopIndex, int theViewRow, const std::string &theName); // lisää halutun nimisen macroParamin halutun karttanäytön riville (1-5)
 	void AddMacroParamToCrossSectionView(int theViewRow, const std::string &theName); // lisää halutun nimisen macroParamin halutun karttanäytön riville (1-5)
-	NFmiMacroParamSystem& MacroParamSystem(void);
+	std::shared_ptr<NFmiMacroParamSystem> MacroParamSystem(void);
 	// Nämä makro tekstin get ja set metodit on makroparam-näyttöä varten tehtyjä virityksiä
 	void SetCurrentSmartToolMacro(const std::string& theMacroText);
 	const std::string& GetCurrentSmartToolMacro(void);

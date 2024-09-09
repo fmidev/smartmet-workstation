@@ -294,7 +294,7 @@ public:
     virtual NFmiFixedDrawParamSystem& FixedDrawParamSystem() = 0;
     virtual void TakeDrawParamInUseEveryWhere(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool useInMap, bool useInTimeSerial, bool useInCrossSection, bool useWithViewMacros) = 0;
     virtual NFmiSmartToolInfo* SmartToolInfo() = 0;
-    virtual NFmiMacroParamSystem& MacroParamSystem() = 0;
+    virtual std::shared_ptr<NFmiMacroParamSystem> MacroParamSystem() = 0;
     virtual bool DoSmartToolEditing(const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly) = 0;
     virtual std::string& SmartToolEditingErrorText() = 0;
     virtual void RemoveMacroParam(const std::string &theName) = 0;

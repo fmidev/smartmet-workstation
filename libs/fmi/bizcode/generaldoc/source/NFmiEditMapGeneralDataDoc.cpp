@@ -342,7 +342,7 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsSmartMetEditingMode(CtrlViewUtils::kFmiEditingModeNormal)
 ,itsSavedDirectory()
 ,itsCurrentMacroText()
-,itsMacroParamSystem()
+,itsMacroParamSystemPtr()
 ,itsCrossSectionSystem(CtrlViewUtils::MaxViewGridYSize)
 ,itsPossibleUsedDataLoadingGrid(0)
 ,itsSynopStationPrioritySystem()
@@ -1284,7 +1284,7 @@ void InitCombinedMapHandler()
 	// parameterSelectionUpdateCallback varmistaa ett‰ kun kaikki Wms serverit on k‰yty 1. kerran l‰pi, 
 	// t‰m‰n j‰lkeen p‰ivitet‰‰n Parameter selection dialogi, jotta siell‰ n‰kyy Wms datat (jos dialogi avattu
 	// ennen t‰t‰, j‰i dialogi ilman Wms datoja ennen kuin jokin muu eventti teki kunnon updaten).
-	std::function<void()> parameterSelectionUpdateCallback = []() {ApplicationInterface::GetApplicationInterfaceImplementation()->SetToDoFirstTimeWmsDataBasedUpdate(); };
+	std::function<void()> parameterSelectionUpdateCallback = [this]() {this->WmsSupportHasDoneGetCapabilitiesQuery(); };
 	Wms::CapabilitiesHandler::setParameterSelectionUpdateCallback(parameterSelectionUpdateCallback);
 	// NFmiCombinedMapHandler luokka hanskaa itse kaikki poikkeukset ja mahdolliset k‰ytt‰j‰n tekem‰t ohjelman lopetukset.
 	itsCombinedMapHandler.initialize(itsBasicConfigurations.ControlPath());
@@ -1293,6 +1293,27 @@ void InitCombinedMapHandler()
 		// Jos wms systeemi‰ ei oteta k‰yttˆˆn, pit‰‰ lopettaa timer joka odottaa 1. data p‰ivityst‰ joka 3. sekunti
 		parameterSelectionUpdateCallback();
 	}
+}
+
+void WmsSupportHasDoneGetCapabilitiesQuery()
+{
+	// T‰h‰n on tarkoitus laittaa p‰ivitys harvennuksia heti kun testaus 
+	// osoittaa ett‰ systeemi toimii. Ei ole j‰rkev‰‰ tehd‰ t‰ysi‰ p‰ivityksi‰ 
+	// joka 5 minuutti, mill‰ tahdilla getCapabilities hakuja tehd‰‰n, kun
+	// varsinaiset ParameterSelection rakenteet muuttuvat harvoin ja dataa on
+	// kuitenkin j‰rkytt‰v‰t m‰‰r‰t.
+	static NFmiNanoSecondTimer updateTimer;
+	static bool firstTime = true;
+	double updateIntervalInSeconds = 42 * 60;
+
+	if(firstTime || updateTimer.elapsedTimeInSeconds() > updateIntervalInSeconds)
+	{
+		firstTime = false;
+		SetupForParameterSelectionSystemUpdate(false, false, true, false);
+		CatLog::logMessage("WmsSupport has done GetCapabilities query and ParameterSelection updates are requested", CatLog::Severity::Debug, CatLog::Category::NetRequest);
+	}
+	else
+		CatLog::logMessage("WmsSupport has done GetCapabilities query and but not doing the ParameterSelection updates yet", CatLog::Severity::Debug, CatLog::Category::NetRequest);
 }
 
 void InitProducerSystem(NFmiProducerSystem &producerSystem, const std::string &baseConfigurationKey, const std::string &callingFunctionName)
@@ -1687,8 +1708,10 @@ void InitMacroParamSystem(bool haveAbortOption)
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	try
 	{
-		itsMacroParamSystem.RootPath(itsMacroPathSettings.MacroParamPath());
-		NFmiFileSystem::CreateDirectory(itsMacroParamSystem.RootPath()); // luodaan varmuuden vuoksi hakemisto, jos ei ole jo
+		std::lock_guard<std::mutex> macroParamSystemLock(itsMacroParamSystemMutex);
+		itsMacroParamSystemPtr = std::make_shared<NFmiMacroParamSystem>();
+		itsMacroParamSystemPtr->RootPath(itsMacroPathSettings.MacroParamPath());
+		NFmiFileSystem::CreateDirectory(itsMacroParamSystemPtr->RootPath()); // luodaan varmuuden vuoksi hakemisto, jos ei ole jo
 
 	}
 	catch(exception &e)
@@ -2263,6 +2286,27 @@ void LogHelpDataInfoSystemCombineDataConfigurationProblems()
 	}
 }
 
+void LogHelpDataInfoSystemCacheDataOptions()
+{
+	if(itsHelpDataInfoSystem.UseQueryDataCache())
+	{
+		CatLog::logMessage("UseQueryDataCache setting was on, Smartmet will use local cache directories to copy query-data files from server for faster usage.", CatLog::Severity::Info, CatLog::Category::Configuration);
+	}
+	else
+	{
+		CatLog::logMessage("UseQueryDataCache setting was OFF, Smartmet will NOT use local cache directories to copy query-data files from server!", CatLog::Severity::Warning, CatLog::Category::Configuration);
+	}
+
+	if(itsHelpDataInfoSystem.DoCleanCache())
+	{
+		CatLog::logMessage("DoCleanCache setting was on, Smartmet will clean local query-data cache directories regularly.", CatLog::Severity::Info, CatLog::Category::Configuration);
+	}
+	else
+	{
+		CatLog::logMessage("DoCleanCache setting was OFF, Smartmet will NOT clean local query-data cache directories at all.", CatLog::Severity::Warning, CatLog::Category::Configuration);
+	}
+}
+
 bool InitHelpDataInfoSystem(void)
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
@@ -2270,6 +2314,7 @@ bool InitHelpDataInfoSystem(void)
 	{
 		itsHelpDataInfoSystem.InitFromSettings("MetEditor::HelpData", itsBasicConfigurations.ControlPath(), CreateHelpEditorFileNameFilter(), StripFilePathAndExtension(itsHelpEditorSystem.FileNameBase()));
 		LogHelpDataInfoSystemCombineDataConfigurationProblems();
+		LogHelpDataInfoSystemCacheDataOptions();
 		// T‰m‰ caseStudy dataan liittyv‰ alustus pit‰‰ tehd‰ heti itsHelpDataInfoSystem:in alustuksen j‰lkeen...
 		NFmiCaseStudySystem::SetAllCustomFolderNames(itsHelpDataInfoSystem);
 		return true;
@@ -2514,7 +2559,7 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 
 		DoPossibleTEMPCodeSoundingDataSetup(theData, theType, theDataFileName);
 		DoPossibleCaseStudyEditedDataSetup(theData, theDataFileName, theType, fDataWasDeletedOut);
-        PrepareForParamAddSystemUpdate();
+		SetupForParameterSelectionSystemUpdate(true, false, false, false);
 		RemoveCombinedDataFromLedChannelReport(theDataFilePattern);
 		RemoveLateDataFromLedChannelReport(theDataFilePattern);
 		AddLoadedDataToTriggerList(theDataFilePattern);
@@ -2702,12 +2747,22 @@ void DoPossibleCaseStudyEditedDataSetup(NFmiQueryData* theData, const std::strin
 	}
 }
 
-void PrepareForParamAddSystemUpdate()
+void SetupForParameterSelectionSystemUpdate(bool queryDataCase, bool imageDataCase, bool wmsDataCase, bool macroParamDataCase)
 {
-    if(!ParameterSelectionSystem().updatePending())
+	auto& parSelectionSystem = ParameterSelectionSystem();
+	if(queryDataCase)
+		parSelectionSystem.queryDataNeedsUpdate(true);
+	if(imageDataCase)
+		parSelectionSystem.imageDataNeedsUpdate(true);
+	if(wmsDataCase)
+		parSelectionSystem.wmsDataNeedsUpdate(true);
+	if(macroParamDataCase)
+		parSelectionSystem.macroParamDataNeedsUpdate(true);
+	
+	if(!parSelectionSystem.updatePending())
     {
-        ApplicationInterface::GetApplicationInterfaceImplementation()->ParameterSelectionSystemUpdateTimerStart(ParameterSelectionSystem().updateWaitTimeoutInSeconds());
-        ParameterSelectionSystem().updatePending(true);
+		parSelectionSystem.updatePending(true);
+        ApplicationInterface::GetApplicationInterfaceImplementation()->ParameterSelectionSystemUpdateTimerStart(parSelectionSystem.updateWaitTimeoutInSeconds());
     }
 }
 
@@ -3580,7 +3635,7 @@ void AddMacroParamPartToPopUpMenu(const MenuCreationSettings &theMenuSettings, N
     auto menuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kMacroParam);
 	NFmiMenuItemList *macroParamsMenuList = new NFmiMenuItemList;
 
-	std::vector<NFmiMacroParamItem> &macroParamItemList = itsMacroParamSystem.MacroParamItemTree();
+	std::vector<NFmiMacroParamItem> &macroParamItemList = MacroParamSystem()->MacroParamItemTree();
 	AddMacroParamPartToPopUpMenu(theMenuSettings, macroParamsMenuList, macroParamItemList, theDataType);
 	menuItem->AddSubMenu(macroParamsMenuList);
 	theMenuList->Add(std::move(menuItem));
@@ -6739,14 +6794,14 @@ bool InitCPManagerSet(void)
 		NFmiViewSettingMacro::CrossSectionView &view = theMacro.GetCrossSectionView();
 
 		view.CrossSectionSystem(itsCrossSectionSystem);
-		view.SetAllRowParams(&GetCombinedMapHandler()->getCrossSectionDrawParamListVector(), itsMacroParamSystem);
+		view.SetAllRowParams(&GetCombinedMapHandler()->getCrossSectionDrawParamListVector(), *MacroParamSystem());
 	}
 
 	void FillExtraMapViewSettingMacro2(NFmiViewSettingMacro::MapViewDescTop &theViewMacro, NFmiMapViewDescTop &theDescTop, int theDescTopIndex)
 	{
         boost::shared_ptr<NFmiMapViewWinRegistry> mapViewWinRegistry = ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex);
         theViewMacro.SetMapViewDescTop(theDescTop, *mapViewWinRegistry.get(), false);
-		theViewMacro.SetAllRowParams(theDescTop.DrawParamListVector(), itsMacroParamSystem);
+		theViewMacro.SetAllRowParams(theDescTop.DrawParamListVector(), *MacroParamSystem());
 		theViewMacro.DipMapHelperList(theDescTop.GetViewMacroDipMapHelperList());
 	}
 
@@ -7221,7 +7276,7 @@ bool InitCPManagerSet(void)
 		// alunperin makron nimi talletettiin tiedostoon. T‰st‰ on seurannut ongelmia. Nyt
 		// makron nimi otetaan tiedoston nimest‰.
         theViewMacro.Name(GetFileNameHeader(theFileName));
-        theViewMacro.SetMacroParamInitFileNames(MacroParamSystem().RootPath());
+        theViewMacro.SetMacroParamInitFileNames(MacroParamSystem()->RootPath());
 		theViewMacro.InitFileName(theFileName);
 
 		return status;
@@ -7655,9 +7710,11 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 		return itsSmartToolInfo.CurrentScript();
 	}
 
-	NFmiMacroParamSystem& MacroParamSystem(void)
+	// Palauttaa kopion shared_ptr:sta, jotta sit‰ voi k‰ytt‰‰ thread-turvallisesti
+	std::shared_ptr<NFmiMacroParamSystem> MacroParamSystem()
 	{
-		return itsMacroParamSystem;
+		std::lock_guard<std::mutex> macroParamSystemLock(itsMacroParamSystemMutex);
+		return itsMacroParamSystemPtr;
 	}
 
 	// lis‰‰ halutun nimisen macroParamin halutun karttan‰ytˆn riville (1-5)
@@ -7670,6 +7727,7 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 	// poistaa halutun macroparamin dokumentista, tiedostoista ja n‰ytˆilt‰
 	void RemoveMacroParam(const std::string &theName)
 	{
+		auto macroParamSystemPtr = MacroParamSystem();
 		if(theName.empty())
 			return ;
 		else if(theName[0] == '<')
@@ -7677,7 +7735,7 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 			string tmp(theName);
 			NFmiStringTools::TrimL(tmp, '<');
 			NFmiStringTools::TrimR(tmp, '>');
-			string totalPath(itsMacroParamSystem.CurrentPath());
+			string totalPath(macroParamSystemPtr->CurrentPath());
 			totalPath += tmp;
 			list<string> fileList = NFmiFileSystem::DirectoryFiles(totalPath);
 			if(fileList.empty())
@@ -7690,7 +7748,7 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 		}
 		else
 		{
-			boost::shared_ptr<NFmiMacroParamFolder> currentFolder = MacroParamSystem().GetCurrentFolder();
+			boost::shared_ptr<NFmiMacroParamFolder> currentFolder = macroParamSystemPtr->GetCurrentFolder();
 			if(currentFolder)
 				currentFolder->Remove(theName); // poista macroparam mpsysteemist‰ (joka tuhoaa myˆs tiedostot)
 			GetCombinedMapHandler()->removeMacroParamFromDrawParamLists(theName); // poista macroparam drawparamlistoista
@@ -8671,6 +8729,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, true, true, true); // laitetaan kartta likaiseksi
 		WindTableSystem().MustaUpdateTable(true);
 		GetCombinedMapHandler()->makeApplyViewMacroDirtyActions(ApplicationWinRegistry().DrawObjectScaleFactor());
+		ParameterSelectionSystem().setAllUpdateflagsDirty();
 
 		if(!makeDirtyActionsOnly)
 		{
@@ -9604,7 +9663,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
                     ApplicationInterface::GetApplicationInterfaceImplementation()->CaseStudyLoadingActions(itsLoadedCaseStudySystem.Time(), "Going into case study mode"); // itsCaseStudyHelpDataInfoSystem -pit‰‰ olla ladattuna ja fCaseStudyModeOn pit‰‰ olla asetettuna true:ksi ennen t‰m‰n kutsua
 
 					ParameterSelectionSystem().reInitialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(), *HelpDataInfoSystem());
-					PrepareForParamAddSystemUpdate();
+					SetupForParameterSelectionSystemUpdate(true, true, true, true);
 					itsVirtualTimeData.UpdateUsedVirtualTime(true, itsLoadedCaseStudySystem.Time());
 					TryAutoStartUpLoad();
 					return true;
@@ -9666,7 +9725,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         QueryDataToLocalCacheLoaderThread::AutoLoadNewCacheDataMode(ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData());
         ApplicationInterface::GetApplicationInterfaceImplementation()->CaseStudyToNormalModeActions();
 		ParameterSelectionSystem().reInitialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(), *HelpDataInfoSystem());
-		PrepareForParamAddSystemUpdate();
+		SetupForParameterSelectionSystemUpdate(true, true, true, true);
 		itsVirtualTimeData.UpdateUsedVirtualTime(false, itsLoadedCaseStudySystem.Time());
 	}
 
@@ -10785,7 +10844,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             parameterSelectionSystem.initialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(),
                 *InfoOrganizer(), *HelpDataInfoSystem(), HelpDataIdsForParameterSelectionSystem(), customCategories);
 
-            auto macroParamSystemCallBackFunction = [this]() {return std::ref(this->MacroParamSystem()); };
+            auto macroParamSystemCallBackFunction = [this]() {return this->MacroParamSystem(); };
             parameterSelectionSystem.setMacroParamSystemCallback(macroParamSystemCallBackFunction);
 
             // Add other data to help data. 
@@ -10836,8 +10895,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     int RunningTimeInSeconds()
     {
-        return itsBasicConfigurations.RunningTimeInSeconds();
-    }
+		return boost::math::iround(BasicSmartMetConfigurations().RunningTimeInSeconds());
+	}
 
     Q2ServerInfo& GetQ2ServerInfo()
     {
@@ -10921,14 +10980,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsLedLightStatusSystem;
 	}
 
-	int GetApplicationRunnningTimeInSeconds()
-	{
-		auto t1 = BasicSmartMetConfigurations().SmartMetStartingTime().UTCTime().EpochTime();
-		auto t2 = time(0);
-		double diff = difftime(t2, t1);
-		return boost::math::iround(diff);
-	}
-
 	// FixDataElapsedTimeInSeconds funktio korjaa yhden mahdollisen querydatoihin tehdyn aikav‰‰rennˆksen.
 	// QueryDatoihin talletetaan timeri joka laskee sen latauksesta k‰yttˆˆn kuluneen ajan.
 	// Kyseisen ajan avulla voidaan merkit‰ k‰yttˆliittym‰ss‰ alle 5 minuuuttia sitten ladatatut datat uusiksi
@@ -10939,7 +10990,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	// silloin kun latausaika on suurempi kuin smartmetin k‰ynniss‰oloaika.
 	int FixDataElapsedTimeInSeconds(int elapsedDataTimeInSeconds)
 	{
-		auto runninTimeInSeconds = GetApplicationRunnningTimeInSeconds();
+		auto runninTimeInSeconds = RunningTimeInSeconds();
 		if(elapsedDataTimeInSeconds > runninTimeInSeconds)
 		{
 			elapsedDataTimeInSeconds -= 4*60;
@@ -10947,45 +10998,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return elapsedDataTimeInSeconds;
 	}
 
-	void AddSpaceToNonEmptyString(std::string &str)
-	{
-		if(!str.empty())
-		{
-			str += " ";
-		}
-	}
-
 	std::string MakeElapsedTimeString(int timeInSeconds)
 	{
-		const int secondsInDay = 3600 * 24;
-		const int secondsInHour = 3600;
-		std::string str;
-		int days = (int)(timeInSeconds / secondsInDay);
-		int remainingTimeInSeconds = timeInSeconds - (days * secondsInDay);
-		int hours = (int)(remainingTimeInSeconds / secondsInHour);
-		remainingTimeInSeconds = remainingTimeInSeconds - (hours * secondsInHour);
-		int minutes = (int)(remainingTimeInSeconds / 60);
-		if(days > 0)
-		{
-			AddSpaceToNonEmptyString(str);
-			str += NFmiStringTools::Convert<int>(days);
-			str += " d";
-		}
-
-		if(hours > 0)
-		{
-			AddSpaceToNonEmptyString(str);
-			str += NFmiStringTools::Convert<int>(hours);
-			str += " h";
-		}
-		
-		if(minutes > 0)
-		{
-			AddSpaceToNonEmptyString(str);
-			str += NFmiStringTools::Convert<int>(minutes);
-			str += " min";
-		}
-		return str;
+		return NFmiMilliSecondTimer::EasyTimeDiffStr(timeInSeconds * 1000, true);
 	}
 
 	void DoIsAnyQueryDataLateChecks()
@@ -11070,6 +11085,19 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	std::string GetVirtualTimeTooltipText() const
 	{
 		return itsVirtualTimeData.GetVirtualTimeTooltipText(CaseStudyModeOn());
+	}
+
+	void UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr)
+	{
+		// MacroParamSystem:in k‰ytˆn synkronointi p‰‰lle
+		std::lock_guard<std::mutex> macroParamSystemLock(itsMacroParamSystemMutex);
+		// P‰ivtet‰‰n uuteen MacroParamSystem:iin tyˆdatan k‰ytˆss‰ olevia asetuksia
+		updatedMacroParamSystemPtr->UpdateToWorkingData(*itsMacroParamSystemPtr);
+		// Tehd‰‰n working-MacroParamSystem:in swappaus
+		itsMacroParamSystemPtr.swap(updatedMacroParamSystemPtr);
+		// K‰ynnistet‰‰n dialogin p‰ivitys rutiinit
+		SetupForParameterSelectionSystemUpdate(false, false, false, true);
+		LogMessage("UpdateMacroParamSystemContent: updated used macroParamSystem from working-thread", CatLog::Severity::Debug, CatLog::Category::Operational);
 	}
 
 	NFmiVirtualTimeData itsVirtualTimeData;
@@ -11292,7 +11320,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	NFmiHPlaceDescriptor *itsPossibleUsedDataLoadingGrid; // jos editorissa halutaan k‰ytt‰‰ muuta kuin apudatojen omia hilam‰‰reit‰, k‰ytet‰‰n t‰t‰ conffi-tiedostosta luettua speksi‰
 	NFmiCrossSectionSystem itsCrossSectionSystem; // poikkileikkaus piirron pisteiden hanskaus systeemi
 	string itsLatestMacroParamErrorText; // kun macroParam piirret‰‰n karttan‰ytˆlle, ja tulee virhe, talletetaan t‰h‰n aina viimeisin virhe ilmoitus
-	NFmiMacroParamSystem itsMacroParamSystem; // t‰m‰ hanskaa macroParamit, joilla voi piirt‰‰ smarttoolmacroja karttan‰ytˆlle
+	std::shared_ptr<NFmiMacroParamSystem> itsMacroParamSystemPtr; // t‰m‰ hanskaa macroParamit, joilla voi piirt‰‰ smarttoolmacroja karttan‰ytˆlle
+	std::mutex itsMacroParamSystemMutex; // T‰ll‰ varmistetaan ett‰ macroParam kyselyj‰ ja p‰ivityksi‰ tehd‰‰n synkronoidusti
 	string itsCurrentMacroText; // t‰ss‰ on tallessa viimeisin smarttool-dialogin teksti
 								// k‰ytet‰‰n macroparam-n‰ytˆn testivaiheessa
 
@@ -12049,7 +12078,7 @@ const std::string& NFmiEditMapGeneralDataDoc::GetCurrentSmartToolMacro(void)
 	return pimpl->GetCurrentSmartToolMacro();
 }
 
-NFmiMacroParamSystem& NFmiEditMapGeneralDataDoc::MacroParamSystem(void)
+std::shared_ptr<NFmiMacroParamSystem> NFmiEditMapGeneralDataDoc::MacroParamSystem(void)
 {
 	return pimpl->MacroParamSystem();
 }
@@ -13436,4 +13465,9 @@ void NFmiEditMapGeneralDataDoc::VirtualTime(const NFmiMetTime& virtualTime)
 std::string NFmiEditMapGeneralDataDoc::GetVirtualTimeTooltipText() const
 {
 	return pimpl->GetVirtualTimeTooltipText();
+}
+
+void NFmiEditMapGeneralDataDoc::UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr)
+{
+	pimpl->UpdateMacroParamSystemContent(std::move(updatedMacroParamSystemPtr));
 }

@@ -170,6 +170,8 @@ namespace AddParams
             NFmiProducer producer(producerInfo.ProducerId(), producerInfo.Name());
             bool helpData = std::find(helpDataIDs.begin(), helpDataIDs.end(), producerInfo.ProducerId()) != helpDataIDs.end();
             auto dataType = getDataType(infoOrganizer, producer);
+            if(dataType == NFmiInfoData::kNoDataType)
+                continue;
 
             if(dataCategory == NFmiInfoData::kEditable)
             {

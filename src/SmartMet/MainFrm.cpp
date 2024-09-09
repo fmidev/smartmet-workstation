@@ -65,10 +65,6 @@ namespace
     UINT g_NewQueryDataReadUpdateViewsTimerId;
     // Here is stored each new query data file name for final updateAllViewsAndDialogs reasonForUpdate message.
     std::string g_NewQueryDataReadList;
-	// Wms datojen kanssa teht‰v‰ 1. Parameter selection dialogi update tehd‰‰n t‰m‰n flagin avulla.
-	// Homma pit‰‰ hoitaa t‰ll‰isen flagin kautta, koska Wms rutiini pyˆrii erillisess‰ thread:issa ja sielt‰ ei saa
-	// kutsua MFC:n timer rutiineja, koska niit‰ saa k‰sitell‰ vain C++ ohjelman main-thread:in kautta.
-	std::atomic<bool> g_WmsFirstTimeUpdate{ false };
 }
 
 static const int STATUSBAR_TOOLTIP_ID = 1234642;
@@ -694,7 +690,6 @@ void CMainFrame::StartSmartMetTimers()
     itsStoreCrashBackupViewMacroTimer = static_cast<UINT>(SetTimer(kFmiStoreCrashBackupViewMacroTimer, 87 * 1000, NULL)); // tehd‰‰n crash backup viewmacro talletuksia n. 1.5 minuutin v‰lein (87 sekuntia)
     itsGenerateBetaProductsTimer = static_cast<UINT>(SetTimer(kFmiGenerateBetaProductsTimer, 60 * 1000, NULL)); // Tarkastellaan minuutin v‰lein, ett‰ pit‰‰kˆ beta-producteja tehd‰ 
     itsLoggingSystemManagementTimer = static_cast<UINT>(SetTimer(kFmiLoggingSystemManagementTimer, 12 * 60 * 1000, NULL)); // Lokitus systeemi‰ pit‰‰ hallinnoida aika ajoin, viestien trimmau muistista ja crash-reporteriin mahdollisesti p‰ivitetty lokitiedoston nimi
-	itsOneTimeWmsBasedDataUpdateTimer = static_cast<UINT>(SetTimer(kFmiOneTimeWmsBasedDataUpdateTimer, 3 * 1000, NULL)); // 1. Wms p‰ivityst‰ tutkitaan 3 sekunnin v‰lein
 	if(itsDoc->LedLightStatusSystem().IsInitilized())
 	{
 		itsLedLightsActionTimer = static_cast<UINT>(SetTimer(kFmiLedLightsActionTimer, 200, NULL)); // ledej‰ s‰‰det‰‰n 1/5 sekunnin v‰lein
@@ -1315,11 +1310,6 @@ void CMainFrame::TrimmInMemoryLogMessages()
     CatLog::trimmOldestMessages(CatLog::Severity::Trace);
 }
 
-void CMainFrame::SetToDoFirstTimeWmsDataBasedUpdate()
-{
-	g_WmsFirstTimeUpdate.store(true);
-}
-
 void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 {
 	static int counter = 0;
@@ -1471,24 +1461,6 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
             itsDoc->UpdateParameterSelectionSystem();
             return;
         }
-
-		case kFmiOneTimeWmsBasedDataUpdateTimer:
-		{
-			if(g_WmsFirstTimeUpdate.load())
-			{
-				if(itsDoc->GetCombinedMapHandler()->wmsSupportAvailable())
-				{
-					CatLog::logMessage("Do one time Wms data update", CatLog::Severity::Debug, CatLog::Category::Operational);
-				}
-				else
-				{
-					CatLog::logMessage("Stopping one time Wms data update timer because Wms system is not used", CatLog::Severity::Debug, CatLog::Category::Operational);
-				}
-				KillTimer(itsOneTimeWmsBasedDataUpdateTimer);
-				itsDoc->UpdateParameterSelectionSystem();
-			}
-			return;
-		}
 
         case kFmiLoggingSystemManagementTimer:
         {
@@ -1686,7 +1658,7 @@ void CMainFrame::DoMacroParamUpdate()
 {
 	if(itsDoc)
 	{
-		if(CFmiMacroParamUpdateThread::GetMacroParams(itsDoc->MacroParamSystem()))
+		if(CFmiMacroParamUpdateThread::MakePossibleMacroParamSystemUpdateInDoc(itsDoc->MacroParamSystem()))
 		{
 			static bool firstTime = true;
 			if(firstTime)
@@ -1695,8 +1667,8 @@ void CMainFrame::DoMacroParamUpdate()
 				firstTime = false;
 				itsDoc->GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, true);
 			}
-            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView | SmartMetViewId::SmartToolDlg);
-            itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: Macro params has been updated"); // t‰m‰n on tarkoitus p‰ivitt‰‰ vain SmartToolView, mutta sill‰ ei ole omaa p‰ivitys k‰sky‰ (ainakaan viel‰)
+            ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView | SmartMetViewId::TimeSerialView | SmartMetViewId::SmartToolDlg);
+            itsDoc->RefreshApplicationViewsAndDialogs("CMainFrame: Macro params have been updated"); // t‰m‰n on tarkoitus p‰ivitt‰‰ vain SmartToolView, mutta sill‰ ei ole omaa p‰ivitys k‰sky‰ (ainakaan viel‰)
 		}
 	}
 }

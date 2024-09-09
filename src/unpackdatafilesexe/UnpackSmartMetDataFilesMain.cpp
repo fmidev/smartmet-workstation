@@ -174,7 +174,71 @@ int main(int argc, const char* argv[])
     return 1; // virheellinen ulostulo
 } 
 
+/*
+#include "NFmiQueryData.h"
+#include "NFmiFastQueryInfo.h"
+#include "NFmiQueryDataUtil.h"
 
+static NFmiVPlaceDescriptor MakeReversedVPlaceDescriptor(const NFmiVPlaceDescriptor& sourceVPlaceDescriptor)
+{
+    auto sourceLevelBag = sourceVPlaceDescriptor.LevelBag();
+    NFmiLevelBag reversedLevelBag;
+    for(sourceLevelBag.Reset(kBackward); sourceLevelBag.Previous();)
+    {
+        reversedLevelBag.AddLevel(*sourceLevelBag.Level());
+    }
+    return NFmiVPlaceDescriptor(reversedLevelBag);
+}
+
+int main(int argc, const char* argv[])
+{
+    // K‰‰nnet‰‰n 1. parametrina annetun querydatan level-j‰rjestys ja talletetaan
+    // tulos uuteen 2. parametrina annettuun tiedostoon.
+    try
+    {
+        std::string sourceFilePath = argv[1];
+        std::string destinationFilePath = argv[2];
+        NFmiQueryData sourceData(sourceFilePath);
+        NFmiFastQueryInfo sourceInfo(&sourceData);
+        NFmiVPlaceDescriptor reversedLevels = ::MakeReversedVPlaceDescriptor(sourceInfo.VPlaceDescriptor());
+        NFmiQueryInfo reversedMetaInfo(sourceInfo.ParamDescriptor(), sourceInfo.TimeDescriptor(), sourceInfo.HPlaceDescriptor(), reversedLevels);
+        auto destinationData = NFmiQueryDataUtil::CreateEmptyData(reversedMetaInfo);
+        if(!destinationData)
+        {
+            std::cerr << "Error: Unable to create new querydata" << std::endl;
+            return 1;
+        }
+
+
+        NFmiFastQueryInfo destInfo(destinationData);
+        for(sourceInfo.ResetLevel(); sourceInfo.NextLevel(); )
+        {
+            if(destInfo.Level(*sourceInfo.Level()))
+            {
+                for(sourceInfo.ResetParam(), destInfo.ResetParam(); sourceInfo.NextParam() && destInfo.NextParam(); )
+                {
+                    for(sourceInfo.ResetLocation(), destInfo.ResetLocation(); sourceInfo.NextLocation() && destInfo.NextLocation(); )
+                    {
+                        for(sourceInfo.ResetTime(), destInfo.ResetTime(); sourceInfo.NextTime() && destInfo.NextTime(); )
+                        {
+                            destInfo.FloatValue(sourceInfo.FloatValue());
+                        }
+                    }
+                }
+            }
+        }
+
+        destinationData->Write(destinationFilePath);
+
+        return 0;
+    }
+    catch(std::exception& e)
+    {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+    return 1;
+}
+*/
 /*
 #include "NFmiDrawParam.h"
 #include "NFmiFileSystem.h"

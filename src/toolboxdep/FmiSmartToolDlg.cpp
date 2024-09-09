@@ -620,9 +620,10 @@ void CFmiSmartToolDlg::Update(void)
 {
     if(IsWindowVisible() && !IsIconic()) // N‰yttˆ‰ p‰ivitet‰‰n vain jos se on n‰kyviss‰ ja se ei ole minimized tilassa
     {
-        if(itsSmartMetDocumentInterface->MacroParamSystem().UpdateMacroParamListView())
+        auto macroParamSystemPtr = itsSmartMetDocumentInterface->MacroParamSystem();
+        if(macroParamSystemPtr->UpdateMacroParamListView())
         {
-            itsSmartMetDocumentInterface->MacroParamSystem().UpdateMacroParamListView(false);
+            macroParamSystemPtr->UpdateMacroParamListView(false);
             UpdateMacroParamDisplayList(false);
         }
         DisableActionButtomIfInViewMode();
@@ -770,7 +771,7 @@ void CFmiSmartToolDlg::LoadFormulaFromSmarttool()
 
 void CFmiSmartToolDlg::LoadFormulaFromMacroParam()
 {
-    LoadSmarttoolFormula(GetMacroParamFilePath(itsSmartMetDocumentInterface->MacroParamSystem()), false);
+    LoadSmarttoolFormula(GetMacroParamFilePath(*(itsSmartMetDocumentInterface->MacroParamSystem())), false);
 }
 
 void CFmiSmartToolDlg::OnButtonSmartToolLoadDbChecker()
@@ -972,7 +973,7 @@ bool CFmiSmartToolDlg::SmarttoolCanBeSaved() const
 void CFmiSmartToolDlg::EnableSaveButtons()
 {
     // macroParam tapaus ensin
-    auto currentMacroParam = itsSmartMetDocumentInterface->MacroParamSystem().GetCurrentMacroParam();
+    auto currentMacroParam = itsSmartMetDocumentInterface->MacroParamSystem()->GetCurrentMacroParam();
     bool enableSaveMacroParamButton = true;
     if(itsLoadedMacroParamPathTextU_.IsEmpty())
         enableSaveMacroParamButton = false;
@@ -993,11 +994,11 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
     {
         if(!itsLoadedMacroParamPathTextU_.IsEmpty())
         {
-            auto& macroParamSystem = itsSmartMetDocumentInterface->MacroParamSystem();
-            auto currentMacroParam = macroParamSystem.GetCurrentMacroParam();
+            auto macroParamSystemPtr = itsSmartMetDocumentInterface->MacroParamSystem();
+            auto currentMacroParam = macroParamSystemPtr->GetCurrentMacroParam();
             if(currentMacroParam && currentMacroParam->IsMacroParamDirectory() == false)
             {
-                std::string absoluteMacroParamDirectory = macroParamSystem.RootPath() + macroParamSystem.RelativePath();
+                std::string absoluteMacroParamDirectory = macroParamSystemPtr->RootPath() + macroParamSystemPtr->RelativePath();
                 PathUtils::addDirectorySeparatorAtEnd(absoluteMacroParamDirectory);
 
                 std::string finalMacroParamPath = absoluteMacroParamDirectory + currentMacroParam->Name() + g_MacroParamFileTotalExtension;
@@ -1037,13 +1038,13 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSaveAs()
 {
     UpdateData(TRUE);
 
-    NFmiMacroParamSystem& mpSystem = itsSmartMetDocumentInterface->MacroParamSystem();
-    std::string initialPath = mpSystem.RootPath() + mpSystem.RelativePath();
+    auto macroParamSystemPtr = itsSmartMetDocumentInterface->MacroParamSystem();
+    std::string initialPath = macroParamSystemPtr->RootPath() + macroParamSystemPtr->RelativePath();
     PathUtils::addDirectorySeparatorAtEnd(initialPath);
     std::string initialFilename;
-    if(mpSystem.GetCurrentMacroParam())
+    if(macroParamSystemPtr->GetCurrentMacroParam())
     {
-        initialFilename = mpSystem.GetCurrentMacroParam()->Name();
+        initialFilename = macroParamSystemPtr->GetCurrentMacroParam()->Name();
     }
     if(initialFilename.empty())
     {
@@ -1052,35 +1053,35 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSaveAs()
     initialFilename += g_MacroParamFileTotalExtension;
 
     std::string filePath;
-    if(BetaProduct::GetFilePathFromUserTotal(g_MacroParamFileFilter, initialPath, filePath, false, initialFilename, g_MacroParamFileExtension, mpSystem.RootPath(), this))
+    if(BetaProduct::GetFilePathFromUserTotal(g_MacroParamFileFilter, initialPath, filePath, false, initialFilename, g_MacroParamFileExtension, macroParamSystemPtr->RootPath(), this))
     {
         NFmiFileString fileString(filePath);
 
         boost::shared_ptr<NFmiMacroParam> macroParamPointer = ::CreateMacroParamPointer(std::string(fileString.Header()), GetSmarttoolFormulaText(), GetUsedMacroParamType());
 
         bool updateViews = false; // kun talletetaan vanhan p‰‰lle, pit‰‰ p‰ivitt‰‰ ruutuja, koska macro-teksti on saattanut muuttua
-        if(mpSystem.SetCurrentToWantedMacroPath(filePath))
+        if(macroParamSystemPtr->SetCurrentToWantedMacroPath(filePath))
         {
-            boost::shared_ptr<NFmiMacroParam> currentMacroParam = mpSystem.GetCurrentMacroParam(); // Otetaan talteen erilliseen muuttujaan, koska ilmeisesti CurrentMacroParam -pointteri voi 'korruptoitua', en tied‰ miksi, mutta SmartMet voi kaatua kun ollaan "pit‰‰ ottaa talteen vanhat piirto-ominaisuudet" -rivill‰ jompaan kumpaan DrawParam() -kutsuun ja oletan ett‰ sen t‰ytyy olla CurrentMacroParam() -kohdasta.
+            boost::shared_ptr<NFmiMacroParam> currentMacroParam = macroParamSystemPtr->GetCurrentMacroParam(); // Otetaan talteen erilliseen muuttujaan, koska ilmeisesti CurrentMacroParam -pointteri voi 'korruptoitua', en tied‰ miksi, mutta SmartMet voi kaatua kun ollaan "pit‰‰ ottaa talteen vanhat piirto-ominaisuudet" -rivill‰ jompaan kumpaan DrawParam() -kutsuun ja oletan ett‰ sen t‰ytyy olla CurrentMacroParam() -kohdasta.
             if(currentMacroParam)
             {
                 macroParamPointer->DrawParam(currentMacroParam->DrawParam()); // pit‰‰ ottaa talteen vanhat piirto-ominaisuudet!
                 updateViews = true; // nyt tiedet‰‰n, ett‰ pit‰‰ p‰ivitt‰‰ n‰yttˆj‰
             }
         }
-        else if(!::IsInCurrentMacroParamDirectory(mpSystem, filePath))
+        else if(!::IsInCurrentMacroParamDirectory(*macroParamSystemPtr, filePath))
         {
             // Jos macroa ei lˆydy nyky hakemistosta, pit‰‰ hakemisto hakea globaalisti root-hakemiston alta
-            mpSystem.SetCurrentPathByAbsolutePath(filePath);
+            macroParamSystemPtr->SetCurrentPathByAbsolutePath(filePath);
         }
         auto realMacroParamDrawParamFileName = ::GetRealMacroParamDrawParamFileName(filePath);
         macroParamPointer->DrawParam()->InitFileName(realMacroParamDrawParamFileName);
-        macroParamPointer->DrawParam()->MacroParamRelativePath(mpSystem.RelativePath());
-        DoFinalMacroParamWrite(mpSystem, macroParamPointer);
+        macroParamPointer->DrawParam()->MacroParamRelativePath(macroParamSystemPtr->RelativePath());
+        DoFinalMacroParamWrite(*macroParamSystemPtr, macroParamPointer);
 
         UpdateMacroParamDisplayList(true);
         CString macroParamNameU = CA2T(fileString.Header());
-        mpSystem.FindMacroFromCurrentFolder(std::string(fileString.Header()));
+        macroParamSystemPtr->FindMacroFromCurrentFolder(std::string(fileString.Header()));
         itsMacroParamList.SetCurSel(itsMacroParamList.FindString(-1, macroParamNameU)); // asettaa talletetun macroParamin aktiiviseksi
         UpdateLoadedMacroParamPathString();
         if(updateViews)
@@ -1105,9 +1106,9 @@ NFmiInfoData::Type CFmiSmartToolDlg::GetUsedMacroParamType()
 void CFmiSmartToolDlg::UpdateMacroParamDisplayListAfterSpeedLoad()
 {
     itsMacroParamList.ResetContent();
-    auto& mpSystem = itsSmartMetDocumentInterface->MacroParamSystem();
-    auto foundMacroParamName = mpSystem.GetCurrentMacroParam()->Name();
-    boost::shared_ptr<NFmiMacroParamFolder> currentFolder = mpSystem.GetCurrentFolder();
+    auto macroParamSystemPtr = itsSmartMetDocumentInterface->MacroParamSystem();
+    auto foundMacroParamName = macroParamSystemPtr->GetCurrentMacroParam()->Name();
+    boost::shared_ptr<NFmiMacroParamFolder> currentFolder = macroParamSystemPtr->GetCurrentFolder();
     if(currentFolder)
     {
         currentFolder->RefreshMacroParams(); // t‰ss‰ p‰ivitet‰‰n vain smartTool-dialogin k‰ytt‰m‰ current-hakemisto, mutta ei esim. pop-up valikoiden k‰ytt‰m‰‰ puu rakennetta
@@ -1125,7 +1126,7 @@ void CFmiSmartToolDlg::UpdateMacroParamDisplayListAfterSpeedLoad()
             itsMacroParamList.SetCurSel(selectedNameIndex);
 
         // currentFolder->RefreshMacroParams operaation j‰lkeen palautetaan valittu macroParam taas oikeasti valituksi
-        mpSystem.FindMacroFromCurrentFolder(foundMacroParamName);
+        macroParamSystemPtr->FindMacroFromCurrentFolder(foundMacroParamName);
     }
 }
 
@@ -1133,8 +1134,8 @@ void CFmiSmartToolDlg::UpdateMacroParamDisplayList(bool fForceThreadUpdate)
 {
 	int currentSelection = itsMacroParamList.GetCurSel();
 	itsMacroParamList.ResetContent();
-    auto &mpSystem = itsSmartMetDocumentInterface->MacroParamSystem();
-	boost::shared_ptr<NFmiMacroParamFolder> currentFolder = mpSystem.GetCurrentFolder();
+    auto macroParamSystemPtr = itsSmartMetDocumentInterface->MacroParamSystem();
+	boost::shared_ptr<NFmiMacroParamFolder> currentFolder = macroParamSystemPtr->GetCurrentFolder();
 	if(currentFolder)
 	{
 		currentFolder->RefreshMacroParams(); // t‰ss‰ p‰ivitet‰‰n vain smartTool-dialogin k‰ytt‰m‰ current-hakemisto, mutta ei esim. pop-up valikoiden k‰ytt‰m‰‰ puu rakennetta
@@ -1145,7 +1146,7 @@ void CFmiSmartToolDlg::UpdateMacroParamDisplayList(bool fForceThreadUpdate)
 	}
     int usedSelectionIndex = std::min(currentSelection, itsMacroParamList.GetCount() - 1);
 	itsMacroParamList.SetCurSel(usedSelectionIndex);
-    if(mpSystem.FindMacroFromCurrentFolder(GetSelectedMacroParamName()))
+    if(macroParamSystemPtr->FindMacroFromCurrentFolder(GetSelectedMacroParamName()))
     {
         // Ei p‰ivitet‰ valitun macroParamin sis‰ltˆ‰, koska se 'resetoi' mahdolliset k‰ytt‰j‰n tekem‰t editoinnit
 ////        LoadFormulaFromMacroParam();
@@ -1277,18 +1278,18 @@ void CFmiSmartToolDlg::DoMacroParamLoad(const std::string& theMacroParamName, bo
 {
     if(!theMacroParamName.empty())
     {
-        NFmiMacroParamSystem& mpSystem = itsSmartMetDocumentInterface->MacroParamSystem();
+        auto macroParamSystemPtr = itsSmartMetDocumentInterface->MacroParamSystem();
         bool macroParamFound = false;
         if(fDoSpeedLoad)
         {
-            macroParamFound = mpSystem.FindMacroParamPath(theMacroParamName);
+            macroParamFound = macroParamSystemPtr->FindMacroParamPath(theMacroParamName);
             if(macroParamFound)
             {
                 UpdateMacroParamDisplayListAfterSpeedLoad();
             }
         }
         else
-            macroParamFound = mpSystem.FindMacroFromCurrentFolder(theMacroParamName);
+            macroParamFound = macroParamSystemPtr->FindMacroFromCurrentFolder(theMacroParamName);
 
         if(macroParamFound)
         {
@@ -1309,7 +1310,7 @@ void CFmiSmartToolDlg::OnLbnDblclkListParamMacros()
     {
 		if(macroParamName[0] == '<')
 		{ // Jos hakemiston nimi, siirryt‰‰n sinne
-            itsSmartMetDocumentInterface->MacroParamSystem().CurrentPath(macroParamName);
+            itsSmartMetDocumentInterface->MacroParamSystem()->CurrentPath(macroParamName);
 			UpdateMacroParamDisplayList(false);
             UpdateLoadedMacroParamPathString();
         }
@@ -1388,11 +1389,11 @@ void CFmiSmartToolDlg::OnBnClickedButtonRemoveAllFromRow5()
 
 void CFmiSmartToolDlg::OnBnClickedButtonMacroParamRefreshList()
 {
-    auto& macroParamSystem = itsSmartMetDocumentInterface->MacroParamSystem();
+    auto macroParamSystemPtr = itsSmartMetDocumentInterface->MacroParamSystem();
     // Varmistetaan ett‰ root kansio on alustettu tai ett‰ edes se on 'valittuna', jos tausta-threadissa 
     // tehty MacroParamSystem olion alustus on jotenkin estynyt tai mennyt pieleen.
-    macroParamSystem.EnsureRootFolderInitialized();
-    boost::shared_ptr<NFmiMacroParamFolder> currentFolder = macroParamSystem.GetCurrentFolder();
+    macroParamSystemPtr->EnsureRootFolderInitialized();
+    boost::shared_ptr<NFmiMacroParamFolder> currentFolder = macroParamSystemPtr->GetCurrentFolder();
 	if(currentFolder)
 	{
 		currentFolder->RefreshMacroParams();
@@ -1497,11 +1498,11 @@ void CFmiSmartToolDlg::UpdateLoadedSmarttoolMacroPathString()
 
 void CFmiSmartToolDlg::UpdateLoadedMacroParamPathString()
 {
-    auto& mpSystem = itsSmartMetDocumentInterface->MacroParamSystem();
-    if(mpSystem.GetCurrentMacroParam())
+    auto macroParamSystemPtr = itsSmartMetDocumentInterface->MacroParamSystem();
+    if(macroParamSystemPtr->GetCurrentMacroParam())
     {
-        std::string usedLoadedMacroPath = mpSystem.RelativePath();
-        usedLoadedMacroPath += "\\" + mpSystem.GetCurrentMacroParam()->Name();
+        std::string usedLoadedMacroPath = macroParamSystemPtr->RelativePath();
+        usedLoadedMacroPath += "\\" + macroParamSystemPtr->GetCurrentMacroParam()->Name();
         itsLoadedMacroParamPathTextU_ = CA2T(usedLoadedMacroPath.c_str());
         UpdateData(FALSE);
     }
@@ -1619,7 +1620,7 @@ void CFmiSmartToolDlg::ResetSpeedSearchResources(bool doSmartTools, bool doMacro
     }
     if(doMacroParams)
     {
-        ::ResetSpeedSearchResourcesForControl(itsSpeedSearchMacroParamControl, itsSmartMetDocumentInterface->MacroParamSystem().MacroParamSpeedSearchPathNames(true));
+        ::ResetSpeedSearchResourcesForControl(itsSpeedSearchMacroParamControl, itsSmartMetDocumentInterface->MacroParamSystem()->MacroParamSpeedSearchPathNames(true));
     }
 }
 

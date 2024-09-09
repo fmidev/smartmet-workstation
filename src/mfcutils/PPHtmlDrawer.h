@@ -372,16 +372,14 @@ protected:
 	//Cells of Table
 	typedef std::vector<STRUCT_CELL> vecRow;	//Alone row
 	typedef std::vector<vecRow> vecTable;		//Vector of the rows is a table
-	typedef std::vector<int> vecSize;			//Width of the columns or height of the rows
-	typedef std::vector<BOOL> vecFlag;			//Flags for fixed widthes of the columns
 
 #pragma pack(1)
 	typedef struct _STRUCT_TABLE
 	{
 		vecTable  cells;	//Info about each cell of the table
-		vecSize   width;	//Dimensions of the width of the columns
-		vecSize	  height;	//Dimensions of the height of the rows
-		vecFlag   fixed_width; //
+		std::vector<int> width;	//Dimensions of the width of the columns
+		std::vector<int> height;	//Dimensions of the height of the rows
+		std::vector<BOOL> fixed_width; //
 	} STRUCT_TABLE;
 #pragma pack()
 

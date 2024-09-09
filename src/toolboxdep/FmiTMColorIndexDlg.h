@@ -31,7 +31,8 @@ class CFmiTMColorIndexDlg : public CDialog
 // Construction
 public:
 	CFmiTMColorIndexDlg(CFmiModifyDrawParamDlg *theModifyDrawParamDlg, const std::string &theTitleStr,	const std::string theHelpStr,
-		                Matrix3D<std::pair<int, COLORREF> >* theColorsCube, boost::shared_ptr<NFmiDrawParam> &theDrawParam, CWnd* pParent = NULL);   // standard constructor
+		                Matrix3D<std::pair<int, COLORREF> >* theColorsCube, boost::shared_ptr<NFmiDrawParam> &theDrawParam,
+						bool doIsolineModifications, CWnd* pParent = NULL);   // standard constructor
 	~CFmiTMColorIndexDlg(void);
 
 	const std::vector<ColorRectInfo>& SelectedColorsRectVector(void) const {return itsSelectedColorsRectVector;}
@@ -67,6 +68,11 @@ protected:
 	void MoveRemainingSelectedColorRectsForward(int theSelectedColorIndex);
 	void InsertBeforeSelectedColor(const ColorRectInfo &theColorRectInfo);
     std::string ComposeToolTipText(const CPoint &point);
+	const std::vector<float>& GetSpecialClassValues();
+	void SetSpecialClassValues(const std::vector<float> &classValues);
+	const std::vector<int>& GetSpecialClassColorIndexies();
+	void SetSpecialClassColorIndexies(const std::vector<int>& classColorIndexies);
+	void ShowDialogControl(UINT controlId, bool show);
 
 	Matrix3D<std::pair<int, COLORREF> >& itsUsedColorsCube;
 
@@ -91,6 +97,7 @@ protected:
 	BOOL fDoViewUpdates; // jos t‰m‰ on true, p‰ivitet‰‰n muokattavan parametrin n‰yttˆ‰ liven‰ heti kun muutos tapahtuu
 	static BOOL fDoViewUpdatesMemory;
 	CFmiModifyDrawParamDlg *itsModifyDrawParamDlg; // t‰m‰n avulla muokattavaa parametria p‰ivitet‰‰n (OnBnClickedModifyDrwParamRefresh-metodia kutsumalla)
+	bool fDoIsolineModifications; // Voidaan muokata joko isoline/contour asetuksia
 
 	// Generated message map functions
 	//{{AFX_MSG(CFmiTMColorIndexDlg)
@@ -109,7 +116,7 @@ private:
     CString itsSpecialClassesValuesStrU_;
 	std::vector<float> itsLatestAcceptedSpecialClasses; // jos syˆte on hetkellisesti v‰‰r‰, k‰ytet‰‰n viimeist‰ hyv‰ksytty‰ arvo listaa piirrossa
 	double itsContourGab;
-	BOOL fUseSteps;
+	BOOL fUseColorBlendingWithCustomContours;
 	double itsLatestAcceptedContourGap; // jos syˆte on hetkellisesti v‰‰r‰, k‰ytet‰‰n viimeist‰ hyv‰ksytty‰ arvoa piirrossa
 	bool fSpecialClassesHaveInvalidValues; // t‰m‰n muuttujan avulla v‰ritet‰‰n labeli tarvittaessa punaiseksi ett‰
 											// k‰ytt‰j‰ n‰kee ett‰ annetut luokka rajat ovat virheellisi‰.
@@ -118,7 +125,7 @@ private:
 public:
 	afx_msg void OnEnChangeSpecialClassesValues();
 	afx_msg void OnEnChangeContourGap();
-	afx_msg void OnBnClickedCheckDrawParamUseStepsWithCustomContours();
+	afx_msg void OnBnClickedCheckUseColorBlendingWithCustomContours();
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnBnClickedButtomRemoveColor();
     afx_msg void NotifyDisplayTooltip(NMHDR * pNMHDR, LRESULT * result);

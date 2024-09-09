@@ -51,7 +51,6 @@ public:
     NFmiApplicationWinRegistry& ApplicationWinRegistry() override;
     void ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag) override;
     std::pair<HICON, HICON> GetUsedIcons() override;
-    void SetToDoFirstTimeWmsDataBasedUpdate() override;
     void OpenVisualizationsettingsDialog() override;
     void OpenLogViewer() override;
     void OpenTimeSerialView() override;

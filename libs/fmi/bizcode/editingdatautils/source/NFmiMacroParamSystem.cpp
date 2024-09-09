@@ -81,14 +81,32 @@ void NFmiMacroParamSystem::SwapMacroData(NFmiMacroParamSystem &theOther)
 	this->itsMacroParamFolders.swap(theOther.itsMacroParamFolders);
 	this->itsMacroItemTree.swap(theOther.itsMacroItemTree);
 
-	// laita osoittamaan vielä oikeisiin current otuksiin
+	UpdateCurrentPath(itsCurrentPath);
+}
+
+// Kun this olio (johon ladattu uusimmat macroParam tiedosto/hakemisto rakenteet) 
+// halutaan ottaa käyttöön dokumentissa, päivitetään se tällä metodilla tarvittavilla 
+// working-data asetuksilla.
+void NFmiMacroParamSystem::UpdateToWorkingData(NFmiMacroParamSystem& theCurrentWorkingData)
+{
+	fUpdateMacroParamListView = true;
+	this->itsRootPath = theCurrentWorkingData.itsRootPath;
+	// itsMacroParamFolders ja itsMacroItemTree pidetään this oliosta
+	UpdateCurrentPath(theCurrentWorkingData.itsCurrentPath);
+	MakeMacroParamSpeedSearchPathNames();
+}
+
+void NFmiMacroParamSystem::UpdateCurrentPath(const std::string &newCurrentPath)
+{
+	itsCurrentPath = newCurrentPath;
+	// Laita vielä osoittamaan oikeisiin current otuksiin
 	int pathIndex = FindPath(itsCurrentPath);
 	if(pathIndex >= 0)
 	{
 		if(itsFoundMacroParam.get())
 			FindMacroFromCurrentFolder((*itsFoundMacroParam).Name());
 		if(itsCurrentFolderIndex < 0 && itsMacroParamFolders.size() > 0)
-            itsCurrentFolderIndex = 0; // jos on polku ok ja löytyy macroParam-hakemisto, laitetaan osoittamaan roottiin, jos muuten indksi osoittaa -1:een
+			itsCurrentFolderIndex = 0; // jos on polku ok ja löytyy macroParam-hakemisto, laitetaan osoittamaan roottiin, jos muuten indksi osoittaa -1:een
 	}
 }
 

@@ -8,6 +8,7 @@
 #include "NFmiMacroParam.h"
 #include "NFmiDrawParam.h"
 #include "NFmiPathUtils.h"
+#include "catlog/catlog.h"
 #ifndef DISABLE_CPPRESTSDK
 #include "CapabilityTree.h"
 #endif // DISABLE_CPPRESTSDK
