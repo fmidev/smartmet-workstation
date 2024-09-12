@@ -92,7 +92,16 @@ void NFmiMacroParamSystem::UpdateToWorkingData(NFmiMacroParamSystem& theCurrentW
 	fUpdateMacroParamListView = true;
 	this->itsRootPath = theCurrentWorkingData.itsRootPath;
 	// itsMacroParamFolders ja itsMacroItemTree pidetään this oliosta
-	UpdateCurrentPath(theCurrentWorkingData.itsCurrentPath);
+	auto currentMacroParam = theCurrentWorkingData.GetCurrentMacroParam();
+	if(currentMacroParam && !currentMacroParam->IsMacroParamDirectory())
+	{
+		std::string totalMacroParamPath = theCurrentWorkingData.itsCurrentPath + currentMacroParam->Name() + ".st";
+		SetCurrentToWantedMacroPath(totalMacroParamPath);
+	}
+	else
+	{
+		UpdateCurrentPath(theCurrentWorkingData.itsCurrentPath);
+	}
 	MakeMacroParamSpeedSearchPathNames();
 }
 
