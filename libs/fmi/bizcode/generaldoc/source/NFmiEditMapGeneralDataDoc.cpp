@@ -11089,12 +11089,14 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	void UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr)
 	{
-		// MacroParamSystem:in k‰ytˆn synkronointi p‰‰lle
-		std::lock_guard<std::mutex> macroParamSystemLock(itsMacroParamSystemMutex);
-		// P‰ivtet‰‰n uuteen MacroParamSystem:iin tyˆdatan k‰ytˆss‰ olevia asetuksia
-		updatedMacroParamSystemPtr->UpdateToWorkingData(*itsMacroParamSystemPtr);
-		// Tehd‰‰n working-MacroParamSystem:in swappaus
-		itsMacroParamSystemPtr.swap(updatedMacroParamSystemPtr);
+		{
+			// MacroParamSystem:in k‰ytˆn synkronointi p‰‰lle
+			std::lock_guard<std::mutex> macroParamSystemLock(itsMacroParamSystemMutex);
+			// P‰ivtet‰‰n uuteen MacroParamSystem:iin tyˆdatan k‰ytˆss‰ olevia asetuksia
+			updatedMacroParamSystemPtr->UpdateToWorkingData(*itsMacroParamSystemPtr);
+			// Tehd‰‰n working-MacroParamSystem:in swappaus
+			itsMacroParamSystemPtr.swap(updatedMacroParamSystemPtr);
+		}
 		// K‰ynnistet‰‰n dialogin p‰ivitys rutiinit
 		SetupForParameterSelectionSystemUpdate(false, false, false, true);
 		LogMessage("UpdateMacroParamSystemContent: updated used macroParamSystem from working-thread", CatLog::Severity::Debug, CatLog::Category::Operational);
