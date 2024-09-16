@@ -1444,6 +1444,11 @@ bool SmartMetDocumentInterfaceForGeneralDataDoc::VirtualTimeUsed() const
     return itsDoc->VirtualTimeUsed();
 }
 
+NFmiMacroParamDataGenerator& SmartMetDocumentInterfaceForGeneralDataDoc::GetMacroParamDataGenerator()
+{
+    return itsDoc->GetMacroParamDataGenerator();
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // =================================================
 

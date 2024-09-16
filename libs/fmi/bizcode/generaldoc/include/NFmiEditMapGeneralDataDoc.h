@@ -120,6 +120,7 @@ class NFmiParameterInterpolationFixer;
 class NFmiSeaLevelPlumeData;
 class NFmiLedLightStatusSystem;
 class NFmiMouseClickUrlActionData;
+class NFmiMacroParamDataGenerator;
 
 namespace Wms
 {
@@ -153,6 +154,7 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+	NFmiMacroParamDataGenerator& GetMacroParamDataGenerator();
 	void UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr);
 	std::string GetVirtualTimeTooltipText() const;
 	void VirtualTime(const NFmiMetTime& virtualTime);

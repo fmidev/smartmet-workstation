@@ -100,6 +100,8 @@
 #include "FmiSoundingDataServerConfigurationsDlg.h"
 #include "NFmiApplicationDataBase.h"
 #include "CFmiVisualizationSettings.h"
+#include "FmiMacroParamDataGeneratorDlg.h"
+
 #ifndef DISABLE_CPPRESTSDK
 #include "WmsSupport.h"
 #endif // DISABLE_CPPRESTSDK
@@ -323,6 +325,8 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
 		ON_COMMAND(ID_ACCELERATOR_TOGGLE_VIRTUAL_TIME_MODE, &CSmartMetDoc::OnAcceleratorToggleVirtualTimeMode)
 		ON_COMMAND(ID_EDIT_VIRTUAL_TIME_MODE, &CSmartMetDoc::OnEditVirtualTimeMode)
 		ON_UPDATE_COMMAND_UI(ID_EDIT_VIRTUAL_TIME_MODE, &CSmartMetDoc::OnUpdateEditVirtualTimeMode)
+		ON_COMMAND(ID_VIEW_MACROPARAMDATAGENERATION, &CSmartMetDoc::OnViewMacroparamdatageneration)
+		ON_COMMAND(ID_MOVEVIEWSVISIBLE_MACROPARAMDATAGENERATORPOSITION, &CSmartMetDoc::OnMoveviewsvisibleMacroparamdatageneratorposition)
 		END_MESSAGE_MAP()
 
 BEGIN_DISPATCH_MAP(CSmartMetDoc, CDocument)
@@ -374,6 +378,7 @@ CSmartMetDoc::CSmartMetDoc()
 ,itsParameterSelectionDlg(nullptr)
 ,itsGriddingOptionsDlg(nullptr)
 ,itsVisualizationSettings(nullptr)
+,itsMacroParamDataGeneratorDlg(nullptr)
 {
 	CSmartMetApp *app = (CSmartMetApp *)AfxGetApp();
 	itsData = app->GeneralDocData();
@@ -443,6 +448,7 @@ CSmartMetDoc::~CSmartMetDoc()
 	::DestroyModalessDialog((CDialog**)(&itsSoundingDataServerConfigurationsDlg));
     ::DestroyModalessDialog((CDialog **)(&itsParameterSelectionDlg));
 	::DestroyModalessDialog((CDialog **)(&itsVisualizationSettings));
+	::DestroyModalessDialog((CDialog**)(&itsMacroParamDataGeneratorDlg));
 }
 
 BOOL CSmartMetDoc::OnNewDocument()
@@ -898,6 +904,11 @@ void CSmartMetDoc::CreateTimeEditor(bool callUpdate)
 void CSmartMetDoc::CreateParameterSelectionDlg(NFmiEditMapGeneralDataDoc *theDoc)
 {
     CreateModalessDialog(&itsParameterSelectionDlg, IDD_DIALOG_PARAM_ADDING, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation());
+}
+
+void CSmartMetDoc::CreateMacroParamDataGeneratorDlg()
+{
+	CreateModalessDialog(&itsMacroParamDataGeneratorDlg, IDD_DIALOG_MACRO_PARAM_DATA_GENERATOR, SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation(), false);
 }
 
 void CSmartMetDoc::CreateSynopDataGridViewDlg(NFmiEditMapGeneralDataDoc *theDoc)
@@ -1814,6 +1825,7 @@ void CSmartMetDoc::SetAllViewIconsDynamically(void)
 	CFmiWin32Helpers::SetWindowIconDynamically(itsSoundingDataServerConfigurationsDlg, usedIcons);
     CFmiWin32Helpers::SetWindowIconDynamically(itsParameterSelectionDlg, usedIcons);
 	CFmiWin32Helpers::SetWindowIconDynamically(itsVisualizationSettings, usedIcons);
+	CFmiWin32Helpers::SetWindowIconDynamically(itsMacroParamDataGeneratorDlg, usedIcons);
 }
 
 // piti tehdä uuden karttaruudukon valinnan lisäksi paikka mistä
@@ -1944,6 +1956,11 @@ void CSmartMetDoc::OnViewSetCrosssectionViewPlaceToDefault()
 void CSmartMetDoc::OnSetParameterSelectionDlgPlaceToDefault()
 {
     ::SetViewPlaceToDefault(this, itsParameterSelectionDlg, "Parameter Selection dialog set to default size and position");
+}
+
+void CSmartMetDoc::OnMoveviewsvisibleMacroparamdatageneratorposition()
+{
+	::SetViewPlaceToDefault(this, itsMacroParamDataGeneratorDlg, "MacroParam data generator dialog set to default size and position");
 }
 
 void CSmartMetDoc::OnViewSetZoomViewPlaceToDefault()
@@ -2843,6 +2860,7 @@ std::map<std::string, std::string> CSmartMetDoc::MakeOtherWindowPosMap(void)
     MakeMakeWindowPosMapInsert<CFmiParameterSelectionDlg>(windowPosMap);
 	MakeMakeWindowPosMapInsert<CFmiWarningMessageOptionsDlg>(windowPosMap);
 	MakeMakeWindowPosMapInsert<CFmiVisualizationSettings>(windowPosMap);
+	MakeMakeWindowPosMapInsert<CFmiMacroParamDataGeneratorDlg>(windowPosMap);
 
     return windowPosMap;
 }
@@ -2884,6 +2902,7 @@ void CSmartMetDoc::SaveViewPositionsToRegistry(void)
 	::SaveViewPositionToRegistry(itsSoundingDataServerConfigurationsDlg, applicationWinRegistry, dummyMapDescTopIndex);
     ::SaveViewPositionToRegistry(itsParameterSelectionDlg, applicationWinRegistry, dummyMapDescTopIndex);
 	::SaveViewPositionToRegistry(itsVisualizationSettings, applicationWinRegistry, dummyMapDescTopIndex);
+	::SaveViewPositionToRegistry(itsMacroParamDataGeneratorDlg, applicationWinRegistry, dummyMapDescTopIndex);
 
     // Talletetaan myös tiettyjä GeneralDocissa olevia juttuja aika-ajoin WinRekisteriin
     itsData->StoreSettingsToWinRegistry();
@@ -3861,4 +3880,14 @@ void CSmartMetDoc::OnEditVirtualTimeMode()
 void CSmartMetDoc::OnUpdateEditVirtualTimeMode(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(itsData->VirtualTimeUsed());
+}
+
+
+void CSmartMetDoc::OnViewMacroparamdatageneration()
+{
+	if(!itsMacroParamDataGeneratorDlg)
+		CreateMacroParamDataGeneratorDlg();
+	itsMacroParamDataGeneratorDlg->ShowWindow(SW_SHOW);
+	itsMacroParamDataGeneratorDlg->SetActiveWindow();
+	itsData->LogMessage("Opening MacroParam data generator dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
 }

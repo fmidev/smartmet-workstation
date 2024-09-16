@@ -150,6 +150,7 @@
 #include "NFmiMouseClickUrlActionData.h"
 #include "NFmiVirtualTimeData.h"
 #include "AnimationProfiler.h"
+#include "NFmiMacroParamDataGenerator.h"
 
 #ifdef OLDGCC
  #include <strstream>
@@ -602,6 +603,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitColorContourLegendSettings();
 	InitParameterInterpolationFixer();
 	InitSeaLevelPlumeData();
+	InitMacroParamDataGenerator();
 	UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();
 
 #ifdef SETTINGS_DUMP // TODO enable this with a command line parameter
@@ -11102,6 +11104,27 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		LogMessage("UpdateMacroParamSystemContent: updated used macroParamSystem from working-thread", CatLog::Severity::Debug, CatLog::Category::Operational);
 	}
 
+	NFmiMacroParamDataGenerator& GetConseptDataGenerator()
+	{
+		return itsMacroParamDataGenerator;
+	}
+
+	void InitMacroParamDataGenerator()
+	{
+		CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
+		try
+		{
+			itsMacroParamDataGenerator.Init(ApplicationWinRegistry().BaseConfigurationRegistryPath(), MacroPathSettings().SmartToolPath());
+			LogMessage(itsMacroParamDataGenerator.GetInitializeLogStr(), CatLog::Severity::Info, CatLog::Category::Configuration);
+		}
+		catch(std::exception& e)
+		{
+			LogAndWarnUser(e.what(), "Problems in InitMacroParamDataGenerator", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
+		}
+	}
+
+
+	NFmiMacroParamDataGenerator itsMacroParamDataGenerator;
 	NFmiVirtualTimeData itsVirtualTimeData;
 	NFmiMouseClickUrlActionData itsMouseClickUrlActionData;
 	std::vector<std::string> itsLoadedDataTriggerList;
@@ -13472,4 +13495,9 @@ std::string NFmiEditMapGeneralDataDoc::GetVirtualTimeTooltipText() const
 void NFmiEditMapGeneralDataDoc::UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr)
 {
 	pimpl->UpdateMacroParamSystemContent(std::move(updatedMacroParamSystemPtr));
+}
+
+NFmiMacroParamDataGenerator& NFmiEditMapGeneralDataDoc::GetMacroParamDataGenerator()
+{
+	return pimpl->GetConseptDataGenerator();
 }

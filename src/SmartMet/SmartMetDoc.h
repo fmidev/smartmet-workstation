@@ -46,6 +46,7 @@ class NFmiApplicationWinRegistry;
 class CFmiSoundingDataServerConfigurationsDlg;
 class CFmiVisualizationSettings;
 enum class BetaProductViewIndex;
+class CFmiMacroParamDataGeneratorDlg;
 
 class CSmartMetDoc : public CDocument
 {
@@ -113,7 +114,8 @@ public:
 	void CreateSoundingDataServerConfigurationsDlg();
 	void CreateVisualizationSettingsDlg();
     void CreateGriddingOptionsDialog(SmartMetDocumentInterface *smartMetDocumentInterface);
-    void UpdateBetaProductDialog();
+	void CreateMacroParamDataGeneratorDlg();
+	void UpdateBetaProductDialog();
     CFmiExtraMapViewDlg* CreateExtraMapViewDlg(NFmiEditMapGeneralDataDoc *theDoc, unsigned int theMapViewDescTopIndex);
 	void StoreViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMacro);
 	void LoadViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMacro);
@@ -277,7 +279,8 @@ private:
     CFmiGriddingOptionsDlg *itsGriddingOptionsDlg;
     CFmiSoundingDataServerConfigurationsDlg *itsSoundingDataServerConfigurationsDlg;
 	CFmiVisualizationSettings* itsVisualizationSettings;
-    unsigned int itsMapViewDescTopIndex;
+	CFmiMacroParamDataGeneratorDlg* itsMacroParamDataGeneratorDlg;
+	unsigned int itsMapViewDescTopIndex;
     // Joskus halutaan sallia päivitys vain osalle näyttöjä (optimointia), vaikka lopulta 
     // käytetäänkin päivityksen aloitukseen yleistä CSmartMetDoc::UpdateAllViewsAndDialogs -metodia, jonka 
     // tarkoitus on päivittää kaikkia mahdollisia näyttöjä (jotka ovat auki).
@@ -413,6 +416,8 @@ public:
 	afx_msg void OnAcceleratorToggleVirtualTimeMode();
 	afx_msg void OnEditVirtualTimeMode();
 	afx_msg void OnUpdateEditVirtualTimeMode(CCmdUI* pCmdUI);
+	afx_msg void OnViewMacroparamdatageneration();
+	afx_msg void OnMoveviewsvisibleMacroparamdatageneratorposition();
 };
 
 

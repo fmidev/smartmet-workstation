@@ -311,6 +311,7 @@ BEGIN
         MENUITEM "Ignore stations\tCtrl+F3",    ID_ACCELERATOR_IGNORE_STATIONS_DLG
         MENUITEM "Case study dialog\tCTRL+F8",  ID_VIEW_CASE_STUDY_DIALOG
         MENUITEM "Beta Production\tSHIFT+F8",   ID_VIEW_BETAPRODUCTION
+        MENUITEM "MacroParam data generation",  ID_VIEW_MACROPARAMDATAGENERATION
         MENUITEM SEPARATOR
         POPUP "Move views visible"
         BEGIN
@@ -334,6 +335,7 @@ BEGIN
             MENUITEM "Case study dialog position",  ID_VIEW_SET_CASE_STUDY_DLG_PLACE_TO_DEFAULT
             MENUITEM "Beta production dialog position", ID_VIEW_SET_BETA_PRODUCTION_DLG_PLACE_TO_DEFAULT
             MENUITEM "Visualization settings position", ID_MOVEVIEWSVISIBLE_VISUALIZATIONSETTINGSPOSITION
+            MENUITEM "MacroParam data generator position", ID_MOVEVIEWSVISIBLE_MACROPARAMDATAGENERATORPOSITION
         END
         MENUITEM SEPARATOR
         POPUP "Notification settings"
