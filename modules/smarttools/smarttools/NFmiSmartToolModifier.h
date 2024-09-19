@@ -180,6 +180,8 @@ class NFmiSmartToolModifier
     return itsPossibleFixedBaseMacroParamData;
   }
 
+  void SetFixedEditedData(boost::shared_ptr<NFmiFastQueryInfo> &fixedEditedData);
+
  private:
   boost::shared_ptr<NFmiFastQueryInfo> GetUsedEditedInfo();
   void ModifyData(NFmiTimeDescriptor *theModifiedTimes,
@@ -361,6 +363,9 @@ class NFmiSmartToolModifier
       int x1, int y1, int x2, int y2, const NFmiPoint &spaceOutSkipFactors);
   void GetExtraMacroParamDataFromIntepreter();
   void DoFixedDataSetup(bool doProbing, const NFmiPoint &spaceOutSkipFactors);
+  bool UseFixedEditedData(NFmiInfoData::Type theType);
+  boost::shared_ptr<NFmiFastQueryInfo> GetFixedEditedData(const NFmiDataIdent &theIdent,
+                                                          const NFmiLevel *theLevel);
 
   // querydata 'database', ei omista ei tuhoa
   NFmiInfoOrganizer *itsInfoOrganizer;
@@ -436,4 +441,8 @@ class NFmiSmartToolModifier
   // Tätä aluetta käytetään kun lasketaan mahdollista FixedBaseData:n määrittelemää infoa
   boost::shared_ptr<NFmiArea> itsUsedMapViewArea;
   boost::shared_ptr<NFmiFastQueryInfo> itsPossibleFixedBaseMacroParamData;
+  // Esim. MacroParam data generoinnissa halutaan käyttää editoituna datana 
+  // jotain muuta kuin Smartmetin oikeaa editoitavaa dataa, asetetaan silloin 
+  // halutta data SetFixedEditedData metodilla.
+  boost::shared_ptr<NFmiFastQueryInfo> itsFixedEditedData;
 };

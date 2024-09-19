@@ -2963,6 +2963,11 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::GetInfoFromOrganizer
     bool fLevelData,
     int theModelRunIndex)
 {
+  if (UseFixedEditedData(theType))
+  {
+    return GetFixedEditedData(theIdent, theLevel);
+  }
+
   boost::shared_ptr<NFmiFastQueryInfo> info = itsInfoOrganizer->Info(
       theIdent, theLevel, theType, fUseParIdOnly, fLevelData, theModelRunIndex);
   if (info == 0)
@@ -3716,4 +3721,28 @@ bool NFmiSmartToolModifier::GetPossibleCropGridPoints(boost::shared_ptr<NFmiFast
     }
   }
   return false;
+}
+
+void NFmiSmartToolModifier::SetFixedEditedData(
+    boost::shared_ptr<NFmiFastQueryInfo> &fixedEditedData)
+{
+  itsFixedEditedData = fixedEditedData;
+}
+
+bool NFmiSmartToolModifier::UseFixedEditedData(NFmiInfoData::Type theType)
+{
+  return (itsFixedEditedData &&
+          (theType == NFmiInfoData::kEditable || theType == NFmiInfoData::kCopyOfEdited));
+}
+
+boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::GetFixedEditedData(
+    const NFmiDataIdent &theIdent, const NFmiLevel *theLevel)
+{
+  auto fixedEditedInfoCopy = NFmiSmartInfo::CreateShallowCopyOfHighestInfo(itsFixedEditedData);
+  fixedEditedInfoCopy->Param(static_cast<FmiParameterName>(theIdent.GetParamIdent()));
+  if(theLevel && theLevel->GetIdent() != 0)
+  {
+    fixedEditedInfoCopy->Level(*theLevel);
+  }
+  return fixedEditedInfoCopy;
 }
