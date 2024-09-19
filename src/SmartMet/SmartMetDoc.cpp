@@ -2937,8 +2937,24 @@ void CSmartMetDoc::OnCloseDocument()
 // Enkä halua muuttaa enää ohjelman rakenteita kovinkaan radikaalisti.
 void CSmartMetDoc::DoOnClose(void)
 {
+	// Jos caseStudy-dialogissa on tehty perus infoihin muutoksia, eikä dialogia ole suljettu, 
+	// pitää arvot ottaa erikseen talteen dokumentin olioon ennen arvojen talletuksia tiedostoon.
 	if(itsCaseStudyDlg)
-		itsCaseStudyDlg->GetBasicInfoFromDialog(); // jos caseStudy-dialogissa on tehty perus infoihin muutoksia, eikä dialogia ole suljettu, pitää arvot ottaa erikseen talteen dokumentin olioon ennen arvojen talletuksia tiedostoon.
+	{
+		itsCaseStudyDlg->GetBasicInfoFromDialog(); 
+	}
+
+	// Samoin macroParam data generator dialogille
+	if(itsMacroParamDataGeneratorDlg)
+	{
+		itsMacroParamDataGeneratorDlg->StoreControlValuesToDocument();
+	}
+
+	// Samoin beta-tuote dialogille
+	if(itsBetaProductDialog)
+	{
+		itsBetaProductDialog->StoreControlValuesToDocument();
+	}
 }
 
 void CSmartMetDoc::OnOhjeVirhetesti()
