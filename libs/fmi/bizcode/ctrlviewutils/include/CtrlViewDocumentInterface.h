@@ -80,6 +80,7 @@ class CombinedMapHandlerInterface;
 class TrueMapViewSizeInfo;
 class NFmiSeaLevelPlumeData;
 class NFmiMouseClickUrlActionData;
+class NFmiGriddingHelperInterface;
 
 namespace Imagine
 {
@@ -414,6 +415,7 @@ public:
     virtual void ToggleVirtualTimeMode(const std::string& logMessage) = 0;
     virtual std::string GetVirtualTimeTooltipText() const = 0;
     virtual void UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr) = 0;
+    virtual NFmiGriddingHelperInterface* GetGriddingHelper() = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem(void) = 0;
