@@ -47,6 +47,8 @@ void CFmiMacroParamDataGeneratorDlg::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CFmiMacroParamDataGeneratorDlg, CDialogEx)
+	ON_WM_CLOSE()
+	ON_BN_CLICKED(IDC_BUTTON_GENERATE_MACRO_PARAM_DATA, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonGenerateMacroParamData)
 END_MESSAGE_MAP()
 
 
@@ -94,7 +96,18 @@ void CFmiMacroParamDataGeneratorDlg::InitControlsFromDocument()
 	itsGeneratedDataStorageFileFilter = CA2T(itsMacroParamDataGenerator->DialogDataStorageFileFilter().c_str());
 }
 
-// Tarksita kaikki syötteet ja jos niissä on vikaa:
+void CFmiMacroParamDataGeneratorDlg::StoreControlValuesToDocument()
+{
+	UpdateData(TRUE);
+
+	itsMacroParamDataGenerator->DialogBaseDataParamProducerLevelString(CFmiWin32Helpers::CT2std(itsBaseDataParamProducerLevelString));
+	itsMacroParamDataGenerator->DialogUsedProducerString(CFmiWin32Helpers::CT2std(itsProducerIdNamePairString));
+	itsMacroParamDataGenerator->DialogDataGeneratingSmarttoolPathString(CFmiWin32Helpers::CT2std(itsUsedDataGenerationSmarttoolPath));
+	itsMacroParamDataGenerator->DialogUsedParameterListString(CFmiWin32Helpers::CT2std(itsUsedParameterListString));
+	itsMacroParamDataGenerator->DialogDataStorageFileFilter(CFmiWin32Helpers::CT2std(itsGeneratedDataStorageFileFilter));
+}
+
+// Tarkista kaikki syötteet ja jos niissä on vikaa:
 // 1. Lokita ongelmasta
 // 2. Maalaa kontrolliin liittyvä static teksti kontrolli punaiseksi
 // 3. Disabloi Generate nappi
@@ -119,5 +132,43 @@ void CFmiMacroParamDataGeneratorDlg::SetDefaultValues(void)
 
 void CFmiMacroParamDataGeneratorDlg::Update()
 {
-	// Tätä dialogia ei tarvitse päivittää oikeasti, vain koska tietyt template apufunktiot sitä vaativat.
+	// Tätä dialogia ei tarvitse päivittää oikeasti, Update metodia tarvitaan vain koska tietyt template apufunktiot sitä vaativat.
+}
+
+
+void CFmiMacroParamDataGeneratorDlg::OnOK()
+{
+	DoWhenClosing();
+
+	CDialogEx::OnOK();
+}
+
+
+void CFmiMacroParamDataGeneratorDlg::OnCancel()
+{
+	DoWhenClosing();
+
+	CDialogEx::OnCancel();
+}
+
+
+void CFmiMacroParamDataGeneratorDlg::OnClose()
+{
+	DoWhenClosing();
+
+	CDialogEx::OnClose();
+}
+
+void CFmiMacroParamDataGeneratorDlg::DoWhenClosing()
+{
+	StoreControlValuesToDocument();
+	// aktivoidaan karttanäyttö eli mainframe
+	AfxGetMainWnd()->SetActiveWindow();
+}
+
+
+void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonGenerateMacroParamData()
+{
+	StoreControlValuesToDocument();
+	itsMacroParamDataGenerator->GenerateMacroParamData();
 }

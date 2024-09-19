@@ -22,10 +22,11 @@ public:
 	virtual ~CFmiMacroParamDataGeneratorDlg();
 	void SetDefaultValues(void);
 	void Update();
+	void StoreControlValuesToDocument();
 
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_DIALOG_CONSEPT_DATA_GENERATOR };
+	enum { IDD = IDD_DIALOG_MACRO_PARAM_DATA_GENERATOR };
 #endif
 
 protected:
@@ -37,6 +38,7 @@ private:
 	void InitDialogTexts();
 	void InitControlsFromDocument();
 	void DoFullInputChecks();
+	void DoWhenClosing();
 
 	// itsSmartMetDocumentInterface ei omista, ei tuhoa
 	SmartMetDocumentInterface* itsSmartMetDocumentInterface;
@@ -54,4 +56,8 @@ private:
 	CString itsGeneratedDataStorageFileFilter;
 public:
 	virtual BOOL OnInitDialog();
+	virtual void OnOK();
+	virtual void OnCancel();
+	afx_msg void OnClose();
+	afx_msg void OnBnClickedButtonGenerateMacroParamData();
 };
