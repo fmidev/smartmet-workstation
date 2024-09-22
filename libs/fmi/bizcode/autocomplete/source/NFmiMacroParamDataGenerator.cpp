@@ -11,6 +11,7 @@
 #include "NFmiQueryDataUtil.h"
 #include "NFmiFileSystem.h"
 #include "NFmiPathUtils.h"
+#include "NFmiSmartInfo.h"
 #include <boost/algorithm/string.hpp>
 #include <filesystem>
 
@@ -21,10 +22,21 @@ namespace
         return (std::filesystem::exists(directoryPath) && std::filesystem::is_directory(directoryPath));
     }
 
+    bool FileExists(const std::string& filePath)
+    {
+        return (std::filesystem::exists(filePath) && std::filesystem::is_regular_file(filePath));
+    }
+
     std::string GetFileExtension(const std::string& filePath)
     {
         std::filesystem::path originalPath(filePath);
         return originalPath.extension().string();
+    }
+
+    NFmiParam MakeWantedParam(const std::string& part1, const std::string& part2)
+    {
+        unsigned long paramId = std::stoul(part1);
+        return NFmiParam(paramId, boost::trim_copy(part2));
     }
 }
 
@@ -35,7 +47,7 @@ namespace
 NFmiMacroParamDataInfo::NFmiMacroParamDataInfo() = default;
 
 NFmiMacroParamDataInfo::NFmiMacroParamDataInfo(const std::string& baseDataParamProducerLevelString, const std::string& usedProducerString, const std::string& dataGeneratingSmarttoolPathString, const std::string& usedParameterListString, const std::string& dataStorageFileFilter)
-:mBaseDataParamProducerLevelString(baseDataParamProducerLevelString)
+:mBaseDataParamProducerString(baseDataParamProducerLevelString)
 ,mUsedProducerString(usedProducerString)
 ,mDataGeneratingSmarttoolPathString(dataGeneratingSmarttoolPathString)
 ,mUsedParameterListString(usedParameterListString)
@@ -59,37 +71,148 @@ std::string NFmiMacroParamDataInfo::MakeDataStorageFilePath(const std::string& d
     return finalFilePath;
 }
 
-const std::string gWantedFileExtension = ".sqd";
+// Perus datan valintaan liittyvan par+prod stringin tarkistus. Palauttaa selityksen virheest‰, jos siin‰ on jotain vikaa.
+// Jos kaikki on ok, palauttaa tyhj‰n stringin.
+std::pair<std::string, NFmiDefineWantedData> NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(const std::string& baseDataParamProducerString)
+{
+    std::string checkStr;
+    std::pair<bool, NFmiDefineWantedData> variableDataType;
+    try
+    {
+        variableDataType = NFmiSmartToolIntepreter::CheckForVariableDataType(baseDataParamProducerString);
+    } 
+    catch(std::exception& e)
+    {
+        checkStr = "CheckBaseDataParamProducerString: Illegal base data parameter '" + baseDataParamProducerString + "' was given with error '" + e.what() + "'.";
+        return std::make_pair(checkStr, variableDataType.second);
+    }
 
-// Talletettavan datan filefiltterin tarkistus. Heitt‰‰ poikkeuksen, jos siin‰ on jotain vikaa.
-void NFmiMacroParamDataInfo::CheckDataStorageFileFilter(const std::string& dataStorageFileFilter)
+    if((!variableDataType.first))
+    {
+        checkStr = "CheckBaseDataParamProducerString: Given base data parameter '" + baseDataParamProducerString + "' doesn't match any of existing querydata in the system.";
+    }
+    else if(variableDataType.second.levelPtr_ != nullptr)
+    {
+        checkStr = "CheckBaseDataParamProducerString: Given base data parameter '" + baseDataParamProducerString + "' did have level information, and level data aren't allowed to be macroParam data.";
+    }
+
+    return std::make_pair(checkStr, variableDataType.second);
+}
+
+// Producer stringin tarkistus, palauttaa mahdollisen virheilmoituksen ja vectorin, jossa id+name palaset.
+std::pair<std::string, std::vector<std::string>> NFmiMacroParamDataInfo::CheckUsedProducerString(const std::string& usedProducerString)
+{
+    std::vector<std::string> parts;
+    boost::split(parts, usedProducerString, boost::is_any_of(","));
+    std::string checkStr;
+    if(parts.size() < 2)
+    {
+        checkStr = std::string("CheckUsedProducerString: given string (" + usedProducerString + ") had too few producer parts(< 2), string should be in format '123,name'");
+    }
+
+    try
+    {
+        unsigned long producerId = std::stoul(parts[0]);
+    }
+    catch(std::exception& )
+    {
+        checkStr = std::string("CheckUsedProducerString: unable to convert produced id part to integer number in '" + usedProducerString + "', string should be in format of 'producer-id-integer,name-string'");
+    }
+    return std::make_pair(checkStr, parts);
+}
+
+std::pair<std::string, NFmiParamBag> NFmiMacroParamDataInfo::CheckUsedParameterListString(const std::string usedParameterListString, const NFmiProducer& wantedProducer)
+{
+    std::vector<std::string> parts;
+    boost::split(parts, usedParameterListString, boost::is_any_of(","));
+    std::string checkStr;
+    NFmiParamBag wantedParams;
+    if(parts.size() < 2)
+    {
+        checkStr = std::string("CheckUsedParameterListString: '") + usedParameterListString + "' had too few parameter (list) parts (< 2), should be in format '123,paramName1[,124,paramName2,...]')";
+    }
+    else
+    {
+        size_t totalPartCounter = 0;
+        for(; totalPartCounter < parts.size() - 1; )
+        {
+            NFmiParam wantedParam;
+            auto paramIdStr = parts[totalPartCounter];
+            try
+            {
+                wantedParam = ::MakeWantedParam(paramIdStr, parts[totalPartCounter + 1]);
+            }
+            catch(std::exception&)
+            {
+                checkStr = std::string("CheckUsedParameterListString: '") + usedParameterListString + "' had an illegal parameter id (" + paramIdStr + ") that couldn't be converted to integer)";
+                break;
+            }
+            wantedParams.Add(NFmiDataIdent(wantedParam, wantedProducer));
+            totalPartCounter += 2;
+        }
+    }
+    return std::make_pair(checkStr, wantedParams);
+}
+
+const std::string gQueryDataFileExtension = ".sqd";
+
+// Talletettavan datan filefiltterin tarkistus. Palauttaa selityksen virheest‰, jos siin‰ on jotain vikaa.
+// Jos kaikki on ok, palauttaa tyhj‰n string:in.
+std::string NFmiMacroParamDataInfo::CheckDataStorageFileFilter(const std::string& dataStorageFileFilter)
 {
     // 1. Polku ei kelpaa, jos talletushakemistoa ei ole.
     // T‰ll‰ tarkoitus est‰‰ datojen vahinkotalletuksia v‰‰riin paikkoihin.
     auto directory = PathUtils::getPathSectionFromTotalFilePath(dataStorageFileFilter);
     if(!::DirectoryExists(directory))
     {
-        throw std::runtime_error(std::string(__FUNCTION__) + " given data output directory '" + directory + "' doesn't exists, make sure that given path for MacroParam data was correct!");
+        return std::string("CheckDataStorageFileFilter") + ": Given data output directory '" + directory + "' doesn't exists, make sure that given path for MacroParam data was correct!";
     }
 
     auto filename = PathUtils::getFilename(dataStorageFileFilter);
     // 2. Tiedoston nimess‰ pit‰‰ olla '*' merkki aikaleimaa varten.
     if(filename.find('*') == std::string::npos)
     {
-        throw std::runtime_error(std::string(__FUNCTION__) + " given data output filename '" + filename + "' (in " + dataStorageFileFilter + ") doesn't have ' * ' character place marker for file's creation time stamp. To store MacroParam data you need to have that asterisk in filename.");
+        return std::string("CheckDataStorageFileFilter") + ": Given data output filename '" + filename + "' (in " + dataStorageFileFilter + ") doesn't have ' * ' character place marker for file's creation time stamp. To store MacroParam data you need to have that asterisk in filename.";
     }
 
     auto fileExtension = ::GetFileExtension(dataStorageFileFilter);
     // 3. Tiedoston extension pit‰‰ olla sqd tyyppinen
-    if(!boost::iequals(fileExtension, gWantedFileExtension))
+    if(!boost::iequals(fileExtension, gQueryDataFileExtension))
     {
-        throw std::runtime_error(std::string(__FUNCTION__) + " given data output extension '" + fileExtension + "' (in " + dataStorageFileFilter + ") is invalid, extension must be '" + gWantedFileExtension + ".sqd' type.");
+        return std::string("CheckDataStorageFileFilter") + ": Given data output extension '" + fileExtension + "' (in " + dataStorageFileFilter + ") is invalid, extension must be '" + gQueryDataFileExtension + "' type.";
     }
+
+    return "";
+}
+
+const std::string gSmarttoolFileExtension = ".st";
+
+std::string NFmiMacroParamDataInfo::CheckDataGeneratingSmarttoolPathString(const std::string& dataGeneratingSmarttoolPathString)
+{
+    if(!::FileExists(dataGeneratingSmarttoolPathString))
+    {
+        auto absoluteSmarttoolPath = PathUtils::getAbsoluteFilePath(dataGeneratingSmarttoolPathString, NFmiMacroParamDataGenerator::RootSmarttoolDirectory());
+        if(!::FileExists(absoluteSmarttoolPath))
+        {
+            return std::string("CheckDataGeneratingSmarttoolPathString") + ": Given smarttool file path '" + dataGeneratingSmarttoolPathString + "' doesn't exists, make sure that given path for MacroParam data generating smarttool was correct!";
+        }
+    }
+
+    auto fileExtension = ::GetFileExtension(dataGeneratingSmarttoolPathString);
+    // 3. Tiedoston extension pit‰‰ olla st tyyppinen
+    if(!boost::iequals(fileExtension, gSmarttoolFileExtension))
+    {
+        return std::string("CheckDataGeneratingSmarttoolPathString") + ": Given data output extension '" + fileExtension + "' (in " + dataGeneratingSmarttoolPathString + ") is invalid, extension must be '" + gSmarttoolFileExtension + "' type.";
+    }
+
+    return "";
 }
 
 // ***********************************************************
 // ************ NFmiMacroParamDataGenerator ******************
 // ***********************************************************
+
+std::string NFmiMacroParamDataGenerator::mRootSmarttoolDirectory = "";
 
 NFmiMacroParamDataGenerator::NFmiMacroParamDataGenerator() = default;
 
@@ -111,7 +234,7 @@ bool NFmiMacroParamDataGenerator::Init(const std::string& theBaseRegistryPath, c
     HKEY usedKey = HKEY_CURRENT_USER;
     // Beta product section
     std::string macroParamDataGeneratorSectionName = "\\MacroParamDataGenerator";
-    mDialogBaseDataParamProducerLevelString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\BaseDataParamProducerLevel", usedKey, "T_ec");
+    mDialogBaseDataParamProducerString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\BaseDataParamProducerLevel", usedKey, "T_ec");
     mDialogUsedProducerString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\UsedProducer", usedKey, "3001,ProducerName");
     mDialogDataGeneratingSmarttoolPathString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\DataGeneratingSmarttoolPath", usedKey, "smarttool.st");
     mDialogUsedParameterListString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\UsedParameterListString", usedKey, "6201, Param1, 6202, Param2");
@@ -122,42 +245,26 @@ bool NFmiMacroParamDataGenerator::Init(const std::string& theBaseRegistryPath, c
 
 static NFmiProducer MakeWantedProducer(const NFmiMacroParamDataInfo& dataInfo)
 {
-    std::vector<std::string> parts;
-    boost::split(parts, dataInfo.UsedProducerString(), boost::is_any_of(","));
-    if(parts.size() < 2)
+    auto producerStringCheck = NFmiMacroParamDataInfo::CheckUsedProducerString(dataInfo.UsedProducerString());
+    if(!producerStringCheck.first.empty())
     {
-        throw std::runtime_error(std::string(__FUNCTION__) + " had too few producer parts (< 2, should be like \"123,producerName\")");
+        throw std::runtime_error(producerStringCheck.first);
     }
 
-    unsigned long producerId = std::stoul(parts[0]);
-    return NFmiProducer(producerId, parts[1]);
-}
-
-static NFmiParam MakeWantedParam(const std::string &part1, const std::string& part2)
-{
-    unsigned long paramId = std::stoul(part1);
-    return NFmiParam(paramId, part2);
+    unsigned long producerId = std::stoul(producerStringCheck.second[0]);
+    return NFmiProducer(producerId, boost::trim_copy(producerStringCheck.second[1]));
 }
 
 static NFmiParamDescriptor MakeWantedParamDescriptor(const NFmiMacroParamDataInfo& dataInfo)
 {
     auto producer = ::MakeWantedProducer(dataInfo);
-    std::vector<std::string> parts;
-    boost::split(parts, dataInfo.UsedParameterListString(), boost::is_any_of(","));
-    if(parts.size() < 2)
+    auto paramListStringCheck = NFmiMacroParamDataInfo::CheckUsedParameterListString(dataInfo.UsedParameterListString(), producer);
+    if(!paramListStringCheck.first.empty())
     {
-        throw std::runtime_error(std::string(__FUNCTION__) + " had too few parameter (list) parts (< 2, should be like \"123,paramName1[,124,paramName2,...]\")");
+        throw std::runtime_error(paramListStringCheck.first);
     }
-    
-    NFmiParamBag wantedParams;
-    size_t totalPartCounter = 0;
-    for( ; totalPartCounter < parts.size() - 1; )
-    {
-        auto wantedParam = ::MakeWantedParam(parts[totalPartCounter], parts[totalPartCounter + 1]);
-        wantedParams.Add(NFmiDataIdent(wantedParam, producer));
-        totalPartCounter += 2;
-    }
-    return NFmiParamDescriptor(wantedParams);
+
+    return NFmiParamDescriptor(paramListStringCheck.second);
 }
 
 // Oletus: foundInfo on jo tarkistettu ettei se ole nullptr
@@ -195,44 +302,35 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDat
 {
     try
     {
-        auto variableDataType = NFmiSmartToolIntepreter::CheckForVariableDataType(dataInfo.BaseDataParamProducerLevelString());
-        if(!variableDataType.first)
+        auto baseDataCheck = NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(dataInfo.BaseDataParamProducerString());
+        if(!baseDataCheck.first.empty())
         {
-            // Raportoi huonosta syˆtteest‰
-            return false;
+            throw std::runtime_error(baseDataCheck.first);
         }
 
         auto* infoOrganizer = ::GetInfoOrganizer();
         if(!infoOrganizer)
         {
-            // Raportoi ongelmasta infoOrganizer:in suhteen
-            return false;
+            throw std::runtime_error("GenerateMacroParamData: Can't get proper InfoOrganizer into works, unknown error in the system");
         }
 
         // NFmiExtraMacroParamData::FindWantedInfo metodin 3. parametri (false) tarkoittaa ett‰ pohjadataksi 
         // ei kelpuuteta asemadataa, vain hiladata kelpaa.
-        auto wantedInfo = NFmiExtraMacroParamData::FindWantedInfo(*infoOrganizer, variableDataType.second, false);
+        auto wantedInfo = NFmiExtraMacroParamData::FindWantedInfo(*infoOrganizer, baseDataCheck.second, false);
         if(!wantedInfo.foundInfo_)
         {
-            // Raportoi ongelmasta kun dataa ei lˆytynyt
-            return false;
+            throw std::runtime_error(std::string("GenerateMacroParamData: unable to fing requested base data with '") + dataInfo.BaseDataParamProducerString() + "' parameter, unable to generate wanted macroParam data");
         }
 
         auto wantedParamDescriptor = ::MakeWantedParamDescriptor(dataInfo);
         auto wantedMacroParamDataPtr = ::MakeWantedEmptyData(wantedInfo.foundInfo_, wantedParamDescriptor);
-        boost::shared_ptr<NFmiFastQueryInfo> wantedMacroParamInfoPtr(new NFmiFastQueryInfo(wantedMacroParamDataPtr.get()));
-        if(!wantedMacroParamInfoPtr)
+        if(!wantedMacroParamDataPtr)
         {
-            // Raportoi ongelmasta kun fastInfo on tyhj‰‰
-            return false;
+            throw std::runtime_error("GenerateMacroParamData: Unable to generate actual macroParam querydata, unknown error in system");
         }
+        boost::shared_ptr<NFmiFastQueryInfo> wantedMacroParamInfoPtr(new NFmiFastQueryInfo(wantedMacroParamDataPtr.get()));
 
         auto smarttoolContent = ReadSmarttoolContentFromFile(dataInfo.DataGeneratingSmarttoolPathString());
-        if(smarttoolContent.empty())
-        {
-            // Raportoi smarttool tiedoston luku ongelmista
-            return false;
-        }
 
         if(CalculateDataWithSmartTool(wantedMacroParamInfoPtr, infoOrganizer, smarttoolContent))
         {
@@ -250,13 +348,31 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDat
 // Oletus: macroParamDataPtr pit‰‰ sis‰ll‰‰n talletettavan datan.
 bool NFmiMacroParamDataGenerator::StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter)
 {
-    // CheckDataStorageFileFilter funktio heitt‰‰ poikkeuksen virheilmoituksineen, jos filefilterissa jotain vikaa.
-    NFmiMacroParamDataInfo::CheckDataStorageFileFilter(dataStorageFileFilter);
+    // CheckDataStorageFileFilter funktio palauttaa virheilmoituksen, jos filefilterissa jotain vikaa.
+    auto checkStr = NFmiMacroParamDataInfo::CheckDataStorageFileFilter(dataStorageFileFilter);
+    if(!checkStr.empty())
+    {
+        throw std::runtime_error(checkStr);
+    }
 
     auto finalDataFilePath = NFmiMacroParamDataInfo::MakeDataStorageFilePath(dataStorageFileFilter);
     // NFmiQueryData::Write heitt‰‰ poikkeuksia, jos tulee ongelmia.
     macroParamDataPtr->Write(finalDataFilePath);
     return true;
+}
+
+static void CalcMultiLevelSmarttoolData(NFmiSmartToolModifier& smartToolModifier, boost::shared_ptr<NFmiFastQueryInfo>& editedInfoCopy)
+{
+    auto usedTimeDescriptor(editedInfoCopy->TimeDescriptor());
+    for(editedInfoCopy->ResetLevel(); editedInfoCopy->NextLevel();)
+    {
+        // jos kyseess‰ on level-data, pit‰‰ l‰pik‰yt‰v‰ leveli ottaa talteen, 
+        // ett‰ smartToolModifier osaa luoda siihen osoittavia fastInfoja.
+        boost::shared_ptr<NFmiLevel> theLevel(new NFmiLevel(*editedInfoCopy->Level()));
+        smartToolModifier.ModifiedLevel(theLevel);
+
+        smartToolModifier.ModifyData_ver2(&usedTimeDescriptor, false, false, nullptr);
+    }
 }
 
 // Oletus: wantedMacroParamInfoPtr on tarkistettu jo ulkopuolella ett‰ ei ole nullptr
@@ -297,7 +413,15 @@ bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(boost::shared_ptr<N
     {
         NFmiThreadCallBacks* threadCallBacks = nullptr;
         auto usedTimeDescriptor(wantedMacroParamInfoPtr->TimeDescriptor());
+        //if(wantedMacroParamInfoPtr->SizeLevels() > 1)
+        //{
+        //    auto editedInfoCopy = NFmiSmartInfo::CreateShallowCopyOfHighestInfo(wantedMacroParamInfoPtr);
+        //    CalcMultiLevelSmarttoolData(smartToolModifier, editedInfoCopy);
+        //}
+        //else
+        //{
         smartToolModifier.ModifyData_ver2(&usedTimeDescriptor, false, false, threadCallBacks);
+        //}
 
         if(!smartToolModifier.LastExceptionMessageFromThreads().empty())
         {
@@ -323,14 +447,14 @@ bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(boost::shared_ptr<N
 }
 
 
-std::string NFmiMacroParamDataGenerator::DialogBaseDataParamProducerLevelString() const
+std::string NFmiMacroParamDataGenerator::DialogBaseDataParamProducerString() const
 {
-    return *mDialogBaseDataParamProducerLevelString;
+    return *mDialogBaseDataParamProducerString;
 }
 
-void NFmiMacroParamDataGenerator::DialogBaseDataParamProducerLevelString(const std::string& newValue)
+void NFmiMacroParamDataGenerator::DialogBaseDataParamProducerString(const std::string& newValue)
 {
-    *mDialogBaseDataParamProducerLevelString = newValue;
+    *mDialogBaseDataParamProducerString = newValue;
 }
 
 std::string NFmiMacroParamDataGenerator::DialogDataGeneratingSmarttoolPathString() const
@@ -390,5 +514,5 @@ void NFmiMacroParamDataGenerator::DialogDataStorageFileFilter(const std::string&
 
 NFmiMacroParamDataInfo NFmiMacroParamDataGenerator::MakeDataInfo() const
 {
-    return NFmiMacroParamDataInfo(DialogBaseDataParamProducerLevelString(), DialogUsedProducerString(), DialogDataGeneratingSmarttoolPathString(), DialogUsedParameterListString(), DialogDataStorageFileFilter());
+    return NFmiMacroParamDataInfo(DialogBaseDataParamProducerString(), DialogUsedProducerString(), DialogDataGeneratingSmarttoolPathString(), DialogUsedParameterListString(), DialogDataStorageFileFilter());
 }

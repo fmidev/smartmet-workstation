@@ -1,5 +1,7 @@
 #pragma once
 #include "NFmiCachedRegistryValue.h"
+#include "NFmiExtraMacroParamData.h"
+#include "NFmiParamBag.h"
 #include <string>
 
 class NFmiQueryData;
@@ -12,11 +14,10 @@ class NFmiInfoOrganizer;
 // Inputit tarkistetään tämän avulla.
 class NFmiMacroParamDataInfo
 {
-    // Pohjadata valitaan antamalla parametri+tuottaja+mahdollinen-level tieto
+    // Pohjadata valitaan antamalla parametri+tuottaja tieto (ei level tietoa ainakaan toistaiseksi)
     // Esim1: T_ec eli Ecmwf:n pinta data, missä lämpötilaparametri
     // Esim2: par4_prod240 eli sama Ec-pinta data, mutta annettuna par+prod id:en avulla
-    // Esim2: par4_prod240_lev120 eli ecmwf hybrid data, missä hybrid-leveli 120
-    std::string mBaseDataParamProducerLevelString; // PAKOLLINEN
+    std::string mBaseDataParamProducerString; // PAKOLLINEN
     // Talletettavan datan tuottajan id,name
     // Esim: "1278,ProducerName"
     std::string mUsedProducerString; // PAKOLLINEN
@@ -46,13 +47,17 @@ public:
     bool DataChecked() const { return fDataChecked; }
     const std::string GetInitializeLogStr() const { return itsInitializeLogStr; }
 
-    const std::string& BaseDataParamProducerLevelString() const { return mBaseDataParamProducerLevelString; }
+    const std::string& BaseDataParamProducerString() const { return mBaseDataParamProducerString; }
     const std::string& UsedProducerString() const { return mUsedProducerString; }
     const std::string& DataGeneratingSmarttoolPathString() const { return mDataGeneratingSmarttoolPathString; }
     const std::string& UsedParameterListString() const { return mUsedParameterListString; }
     const std::string& DataStorageFileFilter() const { return mDataStorageFileFilter; }
 
-    static void CheckDataStorageFileFilter(const std::string& dataStorageFileFilter);
+    static std::pair<std::string, NFmiDefineWantedData> CheckBaseDataParamProducerString(const std::string& baseDataParamProducerString);
+    static std::pair<std::string, std::vector<std::string>> CheckUsedProducerString(const std::string& usedProducerString);
+    static std::pair<std::string, NFmiParamBag> CheckUsedParameterListString(const std::string usedParameterListString, const NFmiProducer &wantedProducer);
+    static std::string CheckDataStorageFileFilter(const std::string& dataStorageFileFilter);
+    static std::string CheckDataGeneratingSmarttoolPathString(const std::string& dataGeneratingSmarttoolPathString);
     static std::string MakeDataStorageFilePath(const std::string& dataStorageFileFilter);
 };
 
@@ -66,15 +71,14 @@ class NFmiMacroParamDataGenerator
     // Perus smartmet polku Windows rekistereissä (tähän tulee SmartMetin konfiguraatio kohtainen polku)
     std::string mBaseRegistryPath; 
     // Juuri smarttool hakemisto, jossa on \ merkki lopussa
-    std::string mRootSmarttoolDirectory;
+    static std::string mRootSmarttoolDirectory;
 
     // HUOM! mDialog -alkuiset data memberit pitävät sisällään vastaavan dialogin kenttien sisällöt.
 
-    // Pohjadata valitaan antamalla parametri+tuottaja+mahdollinen-level tieto
+    // Pohjadata valitaan antamalla parametri+tuottaja tieto (ei level tietoa ainakaan toistaiseksi)
     // Esim1: T_ec eli Ecmwf:n pinta data, missä lämpötilaparametri
     // Esim2: par4_prod240 eli sama Ec-pinta data, mutta annettuna par+prod id:en avulla
-    // Esim2: par4_prod240_lev120 eli ecmwf hybrid data, missä hybrid-leveli 120
-    boost::shared_ptr<CachedRegString> mDialogBaseDataParamProducerLevelString; // PAKOLLINEN
+    boost::shared_ptr<CachedRegString> mDialogBaseDataParamProducerString; // PAKOLLINEN
     // Talletettavan datan tuottajan id,name
     // Esim: "1278,My Producer Name"
     boost::shared_ptr<CachedRegString> mDialogUsedProducerString; // PAKOLLINEN
@@ -106,8 +110,8 @@ public:
 
     bool GenerateMacroParamData();
 
-    std::string DialogBaseDataParamProducerLevelString() const;
-    void DialogBaseDataParamProducerLevelString(const std::string& newValue);
+    std::string DialogBaseDataParamProducerString() const;
+    void DialogBaseDataParamProducerString(const std::string& newValue);
     std::string DialogDataGeneratingSmarttoolPathString() const;
     void DialogDataGeneratingSmarttoolPathString(const std::string& newValue);
     std::string MakeUsedAbsoluteSmarttoolPathString(const std::string& smarttoolPath) const;
@@ -121,6 +125,8 @@ public:
 
     const std::string& GetInitializeLogStr() const { return itsInitializeLogStr; }
     const std::string& GetSmarttoolCalculationLogStr() const { return itsSmarttoolCalculationLogStr; }
+
+    static const std::string& RootSmarttoolDirectory() { return mRootSmarttoolDirectory; }
 
 private:
     NFmiMacroParamDataInfo MakeDataInfo() const;
