@@ -23,7 +23,7 @@ CFmiMacroParamDataGeneratorDlg::CFmiMacroParamDataGeneratorDlg(SmartMetDocumentI
 	: CDialogEx(IDD_DIALOG_MACRO_PARAM_DATA_GENERATOR, pParent),
 	itsSmartMetDocumentInterface(smartMetDocumentInterface),
 	itsMacroParamDataGenerator(smartMetDocumentInterface ? &(smartMetDocumentInterface->GetMacroParamDataGenerator()) : nullptr)
-	, itsBaseDataParamProducerLevelString(_T(""))
+	, itsBaseDataParamProducerString(_T(""))
 	, itsProducerIdNamePairString(_T(""))
 	, itsUsedDataGenerationSmarttoolPath(_T(""))
 	, itsUsedParameterListString(_T(""))
@@ -38,7 +38,7 @@ CFmiMacroParamDataGeneratorDlg::~CFmiMacroParamDataGeneratorDlg()
 void CFmiMacroParamDataGeneratorDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
-	DDX_Text(pDX, IDC_EDIT_BASE_DATA_PAR_PROD_LEV, itsBaseDataParamProducerLevelString);
+	DDX_Text(pDX, IDC_EDIT_BASE_DATA_PAR_PROD_LEV, itsBaseDataParamProducerString);
 	DDX_Text(pDX, IDC_EDIT_PRODUCER_ID_NAME_PAIR, itsProducerIdNamePairString);
 	DDX_Text(pDX, IDC_EDIT_USED_DATA_GENERATION_SMARTTOOL_PATH, itsUsedDataGenerationSmarttoolPath);
 	DDX_Text(pDX, IDC_EDIT_USED_PARAMETER_LIST, itsUsedParameterListString);
@@ -49,6 +49,12 @@ void CFmiMacroParamDataGeneratorDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CFmiMacroParamDataGeneratorDlg, CDialogEx)
 	ON_WM_CLOSE()
 	ON_BN_CLICKED(IDC_BUTTON_GENERATE_MACRO_PARAM_DATA, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonGenerateMacroParamData)
+	ON_EN_CHANGE(IDC_EDIT_BASE_DATA_PARAM_PRODUCER, &CFmiMacroParamDataGeneratorDlg::OnChangeEditBaseDataParamProducer)
+	ON_WM_CTLCOLOR()
+	ON_EN_CHANGE(IDC_EDIT_PRODUCER_ID_NAME_PAIR, &CFmiMacroParamDataGeneratorDlg::OnChangeEditProducerIdNamePair)
+	ON_EN_CHANGE(IDC_EDIT_USED_PARAMETER_LIST, &CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedParameterList)
+	ON_EN_CHANGE(IDC_EDIT_USED_DATA_GENERATION_SMARTTOOL_PATH, &CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedDataGenerationSmarttoolPath)
+	ON_EN_CHANGE(IDC_EDIT_GENERATED_DATA_STORAGE_FILE_FILTER, &CFmiMacroParamDataGeneratorDlg::OnChangeEditGeneratedDataStorageFileFilter)
 END_MESSAGE_MAP()
 
 
@@ -74,7 +80,7 @@ BOOL CFmiMacroParamDataGeneratorDlg::OnInitDialog()
 void CFmiMacroParamDataGeneratorDlg::InitDialogTexts()
 {
 	SetWindowText(CA2T(::GetDictionaryString("MacroParam data generator").c_str()));
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_BASE_DATA_PAR_PROD_LEV_STR, "Base data's parameter+producer[+level] E.g. 'T_Ec' or 'par4_prod240_500'");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_BASE_DATA_PARAM_PRODUCER_STR, "Base data's parameter+producer\nE.g. 'T_Ec' or 'par4_prod240' (no level!)");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_PRODUCER_ID_NAME_PAIR_STR, "Generated data's producer id,name -pair\nE.g. 3001,ProducerName");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_STR, "Used data generation smarttool macro file path");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_BROWSE_USED_SMARTTOOL_PATH, "Browse smarttool");
@@ -89,18 +95,19 @@ void CFmiMacroParamDataGeneratorDlg::InitControlsFromDocument()
 	if(!itsMacroParamDataGenerator)
 		return;
 
-	itsBaseDataParamProducerLevelString = CA2T(itsMacroParamDataGenerator->DialogBaseDataParamProducerLevelString().c_str());
+	itsBaseDataParamProducerString = CA2T(itsMacroParamDataGenerator->DialogBaseDataParamProducerString().c_str());
 	itsProducerIdNamePairString = CA2T(itsMacroParamDataGenerator->DialogUsedProducerString().c_str());
 	itsUsedDataGenerationSmarttoolPath = CA2T(itsMacroParamDataGenerator->DialogDataGeneratingSmarttoolPathString().c_str());
 	itsUsedParameterListString = CA2T(itsMacroParamDataGenerator->DialogUsedParameterListString().c_str());
 	itsGeneratedDataStorageFileFilter = CA2T(itsMacroParamDataGenerator->DialogDataStorageFileFilter().c_str());
+	UpdateData(FALSE);
 }
 
 void CFmiMacroParamDataGeneratorDlg::StoreControlValuesToDocument()
 {
 	UpdateData(TRUE);
 
-	itsMacroParamDataGenerator->DialogBaseDataParamProducerLevelString(CFmiWin32Helpers::CT2std(itsBaseDataParamProducerLevelString));
+	itsMacroParamDataGenerator->DialogBaseDataParamProducerString(CFmiWin32Helpers::CT2std(itsBaseDataParamProducerString));
 	itsMacroParamDataGenerator->DialogUsedProducerString(CFmiWin32Helpers::CT2std(itsProducerIdNamePairString));
 	itsMacroParamDataGenerator->DialogDataGeneratingSmarttoolPathString(CFmiWin32Helpers::CT2std(itsUsedDataGenerationSmarttoolPath));
 	itsMacroParamDataGenerator->DialogUsedParameterListString(CFmiWin32Helpers::CT2std(itsUsedParameterListString));
@@ -113,7 +120,11 @@ void CFmiMacroParamDataGeneratorDlg::StoreControlValuesToDocument()
 // 3. Disabloi Generate nappi
 void CFmiMacroParamDataGeneratorDlg::DoFullInputChecks()
 {
-
+	OnChangeEditBaseDataParamProducer();
+	OnChangeEditProducerIdNamePair();
+	OnChangeEditUsedParameterList();
+	OnChangeEditUsedDataGenerationSmarttoolPath();
+	OnChangeEditGeneratedDataStorageFileFilter();
 }
 
 void CFmiMacroParamDataGeneratorDlg::SetDefaultValues(void)
@@ -171,4 +182,118 @@ void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonGenerateMacroParamData()
 {
 	StoreControlValuesToDocument();
 	itsMacroParamDataGenerator->GenerateMacroParamData();
+}
+
+HBRUSH CFmiMacroParamDataGeneratorDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	if(pWnd->GetDlgCtrlID() == IDC_STATIC_BASE_DATA_PARAM_PRODUCER_STR)
+	{
+		if(fBaseDataParamProducerStringHasInvalidValues)
+			pDC->SetTextColor(RGB(255, 0, 0)); // Virhetilanteissa edit boxin labeli väritetään punaiseksi
+		else
+			pDC->SetTextColor(RGB(0, 0, 0)); // Muuten se värjätään mustaksi
+	}
+	else if(pWnd->GetDlgCtrlID() == IDC_STATIC_PRODUCER_ID_NAME_PAIR_STR)
+	{
+		if(fProducerIdNamePairStringHasInvalidValues)
+			pDC->SetTextColor(RGB(255, 0, 0)); // Virhetilanteissa edit boxin labeli väritetään punaiseksi
+		else
+			pDC->SetTextColor(RGB(0, 0, 0)); // Muuten se värjätään mustaksi
+	}
+	else if(pWnd->GetDlgCtrlID() == IDC_STATIC_USED_PARAMETER_LIST_STR)
+	{
+		if(fUsedParameterListStringHasInvalidValues)
+			pDC->SetTextColor(RGB(255, 0, 0)); // Virhetilanteissa edit boxin labeli väritetään punaiseksi
+		else
+			pDC->SetTextColor(RGB(0, 0, 0)); // Muuten se värjätään mustaksi
+	}
+	else if(pWnd->GetDlgCtrlID() == IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_STR)
+	{
+		if(fUsedDataGenerationSmarttoolPathHasInvalidValues)
+			pDC->SetTextColor(RGB(255, 0, 0)); // Virhetilanteissa edit boxin labeli väritetään punaiseksi
+		else
+			pDC->SetTextColor(RGB(0, 0, 0)); // Muuten se värjätään mustaksi
+	}
+	else if(pWnd->GetDlgCtrlID() == IDC_STATIC_GENERATED_DATA_STORAGE_FILE_FILTER_STR)
+	{
+		if(fGeneratedDataStorageFileFilterHasInvalidValues)
+			pDC->SetTextColor(RGB(255, 0, 0)); // Virhetilanteissa edit boxin labeli väritetään punaiseksi
+		else
+			pDC->SetTextColor(RGB(0, 0, 0)); // Muuten se värjätään mustaksi
+	}
+
+	return hbr;
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnChangeEditBaseDataParamProducer()
+{
+	UpdateData(TRUE);
+
+	std::string tmp = CT2A(itsBaseDataParamProducerString);
+	auto checkResult = NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(tmp);
+	fBaseDataParamProducerStringHasInvalidValues = !checkResult.first.empty();
+
+	// Edit kenttään liittyvä otsikkokontrolli värjätään punaiseksi, jos inputissa on vikaa
+	CWnd* win = GetDlgItem(IDC_STATIC_BASE_DATA_PARAM_PRODUCER_STR);
+	if(win)
+		win->Invalidate(FALSE);
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnChangeEditProducerIdNamePair()
+{
+	UpdateData(TRUE);
+
+	std::string tmp = CT2A(itsProducerIdNamePairString);
+	auto checkResult = NFmiMacroParamDataInfo::CheckUsedProducerString(tmp);
+	fProducerIdNamePairStringHasInvalidValues = !checkResult.first.empty();
+
+	// Edit kenttään liittyvä otsikkokontrolli värjätään punaiseksi, jos inputissa on vikaa
+	CWnd* win = GetDlgItem(IDC_STATIC_PRODUCER_ID_NAME_PAIR_STR);
+	if(win)
+		win->Invalidate(FALSE);
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedParameterList()
+{
+	UpdateData(TRUE);
+
+	std::string tmp = CT2A(itsUsedParameterListString);
+	NFmiProducer dummyProducer;
+	auto checkResult = NFmiMacroParamDataInfo::CheckUsedParameterListString(tmp, dummyProducer);
+	fUsedParameterListStringHasInvalidValues = !checkResult.first.empty();
+
+	// Edit kenttään liittyvä otsikkokontrolli värjätään punaiseksi, jos inputissa on vikaa
+	CWnd* win = GetDlgItem(IDC_STATIC_USED_PARAMETER_LIST_STR);
+	if(win)
+		win->Invalidate(FALSE);
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnChangeEditGeneratedDataStorageFileFilter()
+{
+	UpdateData(TRUE);
+
+	std::string tmp = CT2A(itsGeneratedDataStorageFileFilter);
+	auto checkResult = NFmiMacroParamDataInfo::CheckDataStorageFileFilter(tmp);
+	fGeneratedDataStorageFileFilterHasInvalidValues = !checkResult.empty();
+
+	// Edit kenttään liittyvä otsikkokontrolli värjätään punaiseksi, jos inputissa on vikaa
+	CWnd* win = GetDlgItem(IDC_STATIC_GENERATED_DATA_STORAGE_FILE_FILTER_STR);
+	if(win)
+		win->Invalidate(FALSE);
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedDataGenerationSmarttoolPath()
+{
+	UpdateData(TRUE);
+
+	std::string tmp = CT2A(itsUsedDataGenerationSmarttoolPath);
+	auto checkResult = NFmiMacroParamDataInfo::CheckDataGeneratingSmarttoolPathString(tmp);
+	fUsedDataGenerationSmarttoolPathHasInvalidValues = !checkResult.empty();
+
+	// Edit kenttään liittyvä otsikkokontrolli värjätään punaiseksi, jos inputissa on vikaa
+	CWnd* win = GetDlgItem(IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_STR);
+	if(win)
+		win->Invalidate(FALSE);
 }

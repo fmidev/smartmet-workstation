@@ -45,19 +45,35 @@ private:
 	// itsMacroParamDataGenerator ei omista, ei tuhoa
 	NFmiMacroParamDataGenerator* itsMacroParamDataGenerator;
 	// Annetaan esim. arvo T_Ec, joka tarkoittaa se Ecmwf pintadata, jossa on l‰mpˆtila parametri
-	CString itsBaseDataParamProducerLevelString;
+	CString itsBaseDataParamProducerString;
+	// T‰m‰n avulla v‰ritet‰‰n static_text kontrolli punaiseksi, jos inputissa vikaa
+	bool fBaseDataParamProducerStringHasInvalidValues = false;
 	// Annetaan tuotettavan MacroParam datan tuottaja tiedot, esim. 5601,My Producer Name
 	CString itsProducerIdNamePairString;
+	// T‰m‰n avulla v‰ritet‰‰n static_text kontrolli punaiseksi, jos inputissa vikaa
+	bool fProducerIdNamePairStringHasInvalidValues = false;
 	// Polku siihen smarttool skriptiin, jonka avulla MacroParam dataan lasketaan arvot
 	CString itsUsedDataGenerationSmarttoolPath;
+	// T‰m‰n avulla v‰ritet‰‰n static_text kontrolli punaiseksi, jos inputissa vikaa
+	bool fUsedDataGenerationSmarttoolPathHasInvalidValues = false;
 	// Annetaan pilkuilla erotettu lista parametreja (id,name pareina), joista muodostuu MacroParam datan parametrit
 	CString itsUsedParameterListString;
+	// T‰m‰n avulla v‰ritet‰‰n static_text kontrolli punaiseksi, jos inputissa vikaa
+	bool fUsedParameterListStringHasInvalidValues = false;
 	// Tuotettavan datan polku ja file filter, esim. c:\data\*_mydata.sqd, miss‰ * korvataan YYYYMMDDHHmmSS timestamp tekohetkest‰
 	CString itsGeneratedDataStorageFileFilter;
+	// T‰m‰n avulla v‰ritet‰‰n static_text kontrolli punaiseksi, jos inputissa vikaa
+	bool fGeneratedDataStorageFileFilterHasInvalidValues = false;
 public:
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
 	virtual void OnCancel();
 	afx_msg void OnClose();
 	afx_msg void OnBnClickedButtonGenerateMacroParamData();
+	afx_msg void OnChangeEditBaseDataParamProducer();
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+	afx_msg void OnChangeEditProducerIdNamePair();
+	afx_msg void OnChangeEditUsedParameterList();
+	afx_msg void OnChangeEditUsedDataGenerationSmarttoolPath();
+	afx_msg void OnChangeEditGeneratedDataStorageFileFilter();
 };
