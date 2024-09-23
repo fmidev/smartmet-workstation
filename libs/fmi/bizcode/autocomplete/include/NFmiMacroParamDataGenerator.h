@@ -105,6 +105,8 @@ class NFmiMacroParamDataGenerator
     // Tässä * kohtaan laitetaan lokaaliajan seinäkelloaika sekunteja myöten:
     // Esim. D:\data\20240912183423_mydata.sqd
     boost::shared_ptr<CachedRegString> mDialogDataStorageFileFilter; // PAKOLLINEN
+    // Dialogi muistaa minne/mistä on talletettu/ladattu viimeksi MacroParam data info tiedosto
+    boost::shared_ptr<CachedRegString> mMacroParamDataInfoSaveInitialPath;
 
 
     // Initialisoinnista raportoiva teksti
@@ -114,6 +116,9 @@ class NFmiMacroParamDataGenerator
     // Tiedosto josta luettiin smarttool
     std::string mUsedAbsoluteSmarttoolPath;
 public:
+    static const std::string itsMacroParamDataInfoFileExtension;
+    static const std::string itsMacroParamDataInfoFileFilter;
+
     NFmiMacroParamDataGenerator();
     bool Init(const std::string& theBaseRegistryPath, const std::string& rootSmarttoolDirectory);
 
@@ -134,11 +139,13 @@ public:
 
     const std::string& GetInitializeLogStr() const { return itsInitializeLogStr; }
     const std::string& GetSmarttoolCalculationLogStr() const { return itsSmarttoolCalculationLogStr; }
+    NFmiMacroParamDataInfo MakeDataInfo() const;
+    std::string MacroParamDataInfoSaveInitialPath();
+    void MacroParamDataInfoSaveInitialPath(const std::string& newValue);
 
     static const std::string& RootSmarttoolDirectory() { return mRootSmarttoolDirectory; }
 
 private:
-    NFmiMacroParamDataInfo MakeDataInfo() const;
     bool CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::string& smartToolText, NFmiThreadCallBacks *threadCallBacks);
     std::string ReadSmarttoolContentFromFile(const std::string& filePath);
     bool StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter);

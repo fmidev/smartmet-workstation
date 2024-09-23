@@ -257,6 +257,8 @@ bool NFmiMacroParamDataInfo::ReadInJsonFormat(NFmiMacroParamDataInfo& macroParam
 // ***********************************************************
 
 std::string NFmiMacroParamDataGenerator::mRootSmarttoolDirectory = "";
+const std::string NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileExtension = "mpd";
+const std::string NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileFilter = "MacroParam data info Files (*." + NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileExtension + ")|*." + NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileExtension + "|All Files (*.*)|*.*||";
 
 NFmiMacroParamDataGenerator::NFmiMacroParamDataGenerator() = default;
 
@@ -283,6 +285,7 @@ bool NFmiMacroParamDataGenerator::Init(const std::string& theBaseRegistryPath, c
     mDialogDataGeneratingSmarttoolPathString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\DataGeneratingSmarttoolPath", usedKey, "smarttool.st");
     mDialogUsedParameterListString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\UsedParameterListString", usedKey, "6201, Param1, 6202, Param2");
     mDialogDataStorageFileFilter = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\DataStorageFileFilter", usedKey, "C:\\data\\*_mydata.sqd");
+    mMacroParamDataInfoSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\MacroParamDataInfoSaveInitialPath", usedKey, "C:\\data\\");
 
     return true;
 }
@@ -561,4 +564,14 @@ void NFmiMacroParamDataGenerator::DialogDataStorageFileFilter(const std::string&
 NFmiMacroParamDataInfo NFmiMacroParamDataGenerator::MakeDataInfo() const
 {
     return NFmiMacroParamDataInfo(DialogBaseDataParamProducerString(), DialogUsedProducerString(), DialogDataGeneratingSmarttoolPathString(), DialogUsedParameterListString(), DialogDataStorageFileFilter());
+}
+
+std::string NFmiMacroParamDataGenerator::MacroParamDataInfoSaveInitialPath()
+{
+    return *mMacroParamDataInfoSaveInitialPath;
+}
+
+void NFmiMacroParamDataGenerator::MacroParamDataInfoSaveInitialPath(const std::string& newValue)
+{
+    *mMacroParamDataInfoSaveInitialPath = newValue;
 }

@@ -6,6 +6,7 @@
 
 class SmartMetDocumentInterface;
 class NFmiMacroParamDataGenerator;
+class NFmiMacroParamDataInfo;
 
 // CFmiMacroParamDataGeneratorDlg dialog
 
@@ -50,6 +51,7 @@ private:
 	void DoWhenClosing();
 	void EnableDialogueControl(int controlId, bool enable);
 	void LaunchMacroParamDataGeneration();
+	void InitControlsFromLoadedMacroParamsDataInfo(const NFmiMacroParamDataInfo &macroParamsDataInfo);
 
 	// itsSmartMetDocumentInterface ei omista, ei tuhoa
 	SmartMetDocumentInterface* itsSmartMetDocumentInterface;
@@ -92,4 +94,6 @@ public:
 	afx_msg void OnChangeEditUsedDataGenerationSmarttoolPath();
 	afx_msg void OnChangeEditGeneratedDataStorageFileFilter();
 	virtual BOOL OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult);
+	afx_msg void OnBnClickedButtonSaveMacroParamData();
+	afx_msg void OnBnClickedButtonLoadMacroParamData();
 };

@@ -12,6 +12,7 @@
 #include "FmiWin32TemplateHelpers.h"
 #include "persist2.h"
 #include "CFmiVisualizationSettings.h"
+#include "NFmiBetaProductHelperFunctions.h"
 #include <thread>
 
 const NFmiViewPosRegistryInfo CFmiMacroParamDataGeneratorDlg::s_ViewPosRegistryInfo(CRect(300, 200, 793, 739), "\\MacroParamDataGenerator");
@@ -57,6 +58,8 @@ BEGIN_MESSAGE_MAP(CFmiMacroParamDataGeneratorDlg, CDialogEx)
 	ON_EN_CHANGE(IDC_EDIT_USED_PARAMETER_LIST, &CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedParameterList)
 	ON_EN_CHANGE(IDC_EDIT_USED_DATA_GENERATION_SMARTTOOL_PATH, &CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedDataGenerationSmarttoolPath)
 	ON_EN_CHANGE(IDC_EDIT_GENERATED_DATA_STORAGE_FILE_FILTER, &CFmiMacroParamDataGeneratorDlg::OnChangeEditGeneratedDataStorageFileFilter)
+	ON_BN_CLICKED(IDC_BUTTON_SAVE_MACRO_PARAM_DATA, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonSaveMacroParamData)
+	ON_BN_CLICKED(IDC_BUTTON_LOAD_MACRO_PARAM_DATA, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonLoadMacroParamData)
 END_MESSAGE_MAP()
 
 
@@ -96,6 +99,8 @@ void CFmiMacroParamDataGeneratorDlg::InitDialogTexts()
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_BROWSE_STORED_DATA_FILE_FILTER, "Browse stored path");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_GENERATE_MACRO_PARAM_DATA, "Generate MacroParam data");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_GROUP_MACRO_PARAM_DATA_INFO, "MacroParam data info section");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SAVE_MACRO_PARAM_DATA, "Save MacroPar data info");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_LOAD_MACRO_PARAM_DATA, "Load MacroPar data info");
 }
 
 void CFmiMacroParamDataGeneratorDlg::InitControlsFromDocument()
@@ -108,6 +113,16 @@ void CFmiMacroParamDataGeneratorDlg::InitControlsFromDocument()
 	itsUsedDataGenerationSmarttoolPath = CA2T(itsMacroParamDataGenerator->DialogDataGeneratingSmarttoolPathString().c_str());
 	itsUsedParameterListString = CA2T(itsMacroParamDataGenerator->DialogUsedParameterListString().c_str());
 	itsGeneratedDataStorageFileFilter = CA2T(itsMacroParamDataGenerator->DialogDataStorageFileFilter().c_str());
+	UpdateData(FALSE);
+}
+
+void CFmiMacroParamDataGeneratorDlg::InitControlsFromLoadedMacroParamsDataInfo(const NFmiMacroParamDataInfo& macroParamsDataInfo)
+{
+	itsBaseDataParamProducerString = CA2T(macroParamsDataInfo.BaseDataParamProducerString().c_str());
+	itsProducerIdNamePairString = CA2T(macroParamsDataInfo.UsedProducerString().c_str());
+	itsUsedDataGenerationSmarttoolPath = CA2T(macroParamsDataInfo.DataGeneratingSmarttoolPathString().c_str());
+	itsUsedParameterListString = CA2T(macroParamsDataInfo.UsedParameterListString().c_str());
+	itsGeneratedDataStorageFileFilter = CA2T(macroParamsDataInfo.DataStorageFileFilter().c_str());
 	UpdateData(FALSE);
 }
 
@@ -398,4 +413,33 @@ BOOL CFmiMacroParamDataGeneratorDlg::OnWndMsg(UINT message, WPARAM wParam, LPARA
 	}
 
 	return __super::OnWndMsg(message, wParam, lParam, pResult);
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonSaveMacroParamData()
+{
+	// Ennen tallennusta talletetaan varmuuden vuoksi säädöt myös dokumenttiin
+	StoreControlValuesToDocument(); 
+
+	auto macroParamsDataInfo = itsMacroParamDataGenerator->MakeDataInfo();
+	auto initialSavePath = itsMacroParamDataGenerator->MacroParamDataInfoSaveInitialPath();
+	std::string fullPath;
+	std::string rootMacroParDataInfoPath;
+	if(BetaProduct::SaveObjectInJsonFormat(macroParamsDataInfo, initialSavePath, NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileFilter, NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileExtension, rootMacroParDataInfoPath, "MacroParam data info", "MacroParDataInfo1", false, &fullPath, this))
+	{
+		itsMacroParamDataGenerator->MacroParamDataInfoSaveInitialPath(initialSavePath);
+	}
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonLoadMacroParamData()
+{
+	NFmiMacroParamDataInfo macroParamsDataInfo;
+	auto initialSavePath = itsMacroParamDataGenerator->MacroParamDataInfoSaveInitialPath();
+	std::string fullPath;
+	std::string rootMacroParDataInfoPath;
+	if(BetaProduct::LoadObjectInJsonFormat(macroParamsDataInfo, initialSavePath, NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileFilter, NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileExtension, rootMacroParDataInfoPath, "MacroParam data info", false, &fullPath, this))
+	{
+		itsMacroParamDataGenerator->MacroParamDataInfoSaveInitialPath(initialSavePath);
+//		UpdateMacroParamDataInfoName();
+		InitControlsFromLoadedMacroParamsDataInfo(macroParamsDataInfo);
+	}
 }
