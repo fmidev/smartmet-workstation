@@ -12,6 +12,7 @@
 #include "FmiWin32TemplateHelpers.h"
 #include "persist2.h"
 #include "CFmiVisualizationSettings.h"
+#include <thread>
 
 const NFmiViewPosRegistryInfo CFmiMacroParamDataGeneratorDlg::s_ViewPosRegistryInfo(CRect(300, 200, 793, 739), "\\MacroParamDataGenerator");
 
@@ -43,6 +44,7 @@ void CFmiMacroParamDataGeneratorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_USED_DATA_GENERATION_SMARTTOOL_PATH, itsUsedDataGenerationSmarttoolPath);
 	DDX_Text(pDX, IDC_EDIT_USED_PARAMETER_LIST, itsUsedParameterListString);
 	DDX_Text(pDX, IDC_EDIT_GENERATED_DATA_STORAGE_FILE_FILTER, itsGeneratedDataStorageFileFilter);
+	DDX_Control(pDX, IDC_PROGRESS_OF_OPERATION_BAR, mProgressControl);
 }
 
 
@@ -71,6 +73,11 @@ BOOL CFmiMacroParamDataGeneratorDlg::OnInitDialog()
 	InitDialogTexts();
 	InitControlsFromDocument();
 	DoFullInputChecks();
+
+	mProgressControl.SetRange(0, 100);
+	mProgressControl.SetStep(1);
+	mProgressControl.SetShowPercent(TRUE);
+	mThreadCallBacksPtr = std::make_unique<NFmiThreadCallBacks>(&mStopper, this);
 	UpdateData(FALSE);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -88,6 +95,7 @@ void CFmiMacroParamDataGeneratorDlg::InitDialogTexts()
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_GENERATED_DATA_STORAGE_FILE_FILTER_STR, "Generated data's storage file filter (* is replaced with time-stamp)\nE.g. C:\\data\\*_mydata.sqd");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_BROWSE_STORED_DATA_FILE_FILTER, "Browse stored path");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_GENERATE_MACRO_PARAM_DATA, "Generate MacroParam data");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_GROUP_MACRO_PARAM_DATA_INFO, "MacroParam data info section");
 }
 
 void CFmiMacroParamDataGeneratorDlg::InitControlsFromDocument()
@@ -180,8 +188,24 @@ void CFmiMacroParamDataGeneratorDlg::DoWhenClosing()
 
 void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonGenerateMacroParamData()
 {
+	EnableDialogueControl(IDC_BUTTON_GENERATE_MACRO_PARAM_DATA, false);
 	StoreControlValuesToDocument();
-	itsMacroParamDataGenerator->GenerateMacroParamData();
+	std::thread t(&CFmiMacroParamDataGeneratorDlg::LaunchMacroParamDataGeneration, this);
+	t.detach();
+}
+
+void CFmiMacroParamDataGeneratorDlg::LaunchMacroParamDataGeneration()
+{
+	itsMacroParamDataGenerator->GenerateMacroParamData(mThreadCallBacksPtr.get());
+}
+
+void CFmiMacroParamDataGeneratorDlg::EnableDialogueControl(int controlId, bool enable)
+{
+	auto* ctrl = GetDlgItem(controlId);
+	if(ctrl)
+	{
+		ctrl->EnableWindow(enable ? TRUE : FALSE);
+	}
 }
 
 HBRUSH CFmiMacroParamDataGeneratorDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
@@ -296,4 +320,82 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedDataGenerationSmarttoolPath
 	CWnd* win = GetDlgItem(IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_STR);
 	if(win)
 		win->Invalidate(FALSE);
+}
+
+void CFmiMacroParamDataGeneratorDlg::StepIt(void)
+{
+	mProgressControl.StepIt();
+}
+
+void CFmiMacroParamDataGeneratorDlg::SetRange(int low, int high, int stepCount)
+{
+	mProgressControl.SetRange(low, high);
+	mProgressControl.SetStep(stepCount);
+}
+
+void CFmiMacroParamDataGeneratorDlg::AddRange(int value)
+{
+	int low = 0;
+	int high = 0;
+	mProgressControl.GetRange(low, high);
+	high += value;
+	mProgressControl.SetRange(low, high);
+}
+
+static bool WaitForWindowToInitialize(CWnd* checkedWindow)
+{
+	// Progress dialogi k‰ynnistet‰‰n p‰‰-threadista, mutta sen kanssa operoidaan
+	// tyˆ-threadista k‰sin. T‰m‰n funktion tarkoitus on varmistaa ett‰ tietyt
+	// ikkunat ja kontrollit on alustettu, ennen kuin niit‰ oikeasti k‰ytet‰‰n.
+	// T‰m‰ varmistus tehd‰‰n loopissa jossa testataan onko GetSafeHwnd -metodin palauttama arvo ok. 
+	// Jos ei, odota pikkuisen ja yrit‰ uudestaan...
+	// Jos ikkuna on lopuksi alustettu palauttaa true, mutta jos tarpeeksi monen yrityksen j‰lkeen homma 
+	// ei ole valmis, palautetaan false, jotta ei j‰‰d‰ iki-looppiin.
+	if(checkedWindow)
+	{
+		for(int i = 0; checkedWindow->GetSafeHwnd() == NULL; i++)
+		{
+			if(i > 200)
+				return false; // t‰ll‰ estet‰‰n iki-looppi
+			Sleep(10);
+		}
+		return true;
+	}
+	return false;
+}
+
+bool CFmiMacroParamDataGeneratorDlg::DoPostMessage(unsigned int message, unsigned int wParam, long lParam)
+{
+	if(::WaitForWindowToInitialize(this))
+	{
+		return PostMessage(static_cast<UINT>(message), static_cast<WPARAM>(wParam), static_cast<LPARAM>(lParam)) == TRUE;
+	}
+
+	return false;
+}
+
+bool CFmiMacroParamDataGeneratorDlg::WaitUntilInitialized(void)
+{
+	// Pit‰‰ varmistaa ett‰ dialogi on alustettu
+	if(::WaitForWindowToInitialize(this))
+	{
+		// Lis‰ksi pit‰‰ varmistaa ett‰ itsProgressCtrl on myˆs alustettu!
+		if(::WaitForWindowToInitialize(&mProgressControl))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+BOOL CFmiMacroParamDataGeneratorDlg::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult)
+{
+	if(message == ID_MACRO_PARAM_DATA_GENERATION_FINISHED)
+	{
+		EnableDialogueControl(IDC_BUTTON_GENERATE_MACRO_PARAM_DATA, true);
+	}
+
+	return __super::OnWndMsg(message, wParam, lParam, pResult);
 }

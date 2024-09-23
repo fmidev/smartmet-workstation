@@ -1,13 +1,15 @@
 #pragma once
 #include "afxdialogex.h"
 #include "NFmiViewPosRegistryInfo.h"
+#include "NFmiQueryDataUtil.h"
+#include "TextProgressCtrl.h"
 
 class SmartMetDocumentInterface;
 class NFmiMacroParamDataGenerator;
 
 // CFmiMacroParamDataGeneratorDlg dialog
 
-class CFmiMacroParamDataGeneratorDlg : public CDialogEx
+class CFmiMacroParamDataGeneratorDlg : public CDialogEx, public NFmiOperationProgress
 {
 	// n‰ill‰ talletetaan sijainti ja koko rekisteriin
 	static const NFmiViewPosRegistryInfo s_ViewPosRegistryInfo;
@@ -24,6 +26,13 @@ public:
 	void Update();
 	void StoreControlValuesToDocument();
 
+	// overrides from NFmiOperationProgress
+	void StepIt(void) override;
+	void SetRange(int low, int high, int stepCount) override;
+	void AddRange(int value) override;
+	bool DoPostMessage(unsigned int message, unsigned int wParam = 0, long lParam = 0) override;
+	bool WaitUntilInitialized(void) override;
+
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_MACRO_PARAM_DATA_GENERATOR };
@@ -39,6 +48,8 @@ private:
 	void InitControlsFromDocument();
 	void DoFullInputChecks();
 	void DoWhenClosing();
+	void EnableDialogueControl(int controlId, bool enable);
+	void LaunchMacroParamDataGeneration();
 
 	// itsSmartMetDocumentInterface ei omista, ei tuhoa
 	SmartMetDocumentInterface* itsSmartMetDocumentInterface;
@@ -64,6 +75,10 @@ private:
 	CString itsGeneratedDataStorageFileFilter;
 	// T‰m‰n avulla v‰ritet‰‰n static_text kontrolli punaiseksi, jos inputissa vikaa
 	bool fGeneratedDataStorageFileFilterHasInvalidValues = false;
+	// Jos macroparam dataa ollaan generoimassa, t‰ss‰ o ntarkoitus kertoa sen edistymisest‰
+	CTextProgressCtrl mProgressControl;
+	NFmiStopFunctor mStopper;
+	std::unique_ptr<NFmiThreadCallBacks> mThreadCallBacksPtr;
 public:
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
@@ -76,4 +91,5 @@ public:
 	afx_msg void OnChangeEditUsedParameterList();
 	afx_msg void OnChangeEditUsedDataGenerationSmarttoolPath();
 	afx_msg void OnChangeEditGeneratedDataStorageFileFilter();
+	virtual BOOL OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult);
 };
