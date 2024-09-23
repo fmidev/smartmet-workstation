@@ -12,6 +12,7 @@
 #include "NFmiFileSystem.h"
 #include "NFmiPathUtils.h"
 #include "NFmiSmartInfo.h"
+#include "jsonutils.h"
 #include <boost/algorithm/string.hpp>
 #include <filesystem>
 
@@ -208,6 +209,49 @@ std::string NFmiMacroParamDataInfo::CheckDataGeneratingSmarttoolPathString(const
     return "";
 }
 
+static const std::string gJsonName_BaseDataParamProducer = "BaseDataParamProducer";
+static const std::string gJsonName_UsedProducer = "UsedProducer";
+static const std::string gJsonName_DataGeneratingSmarttoolPath = "DataGeneratingSmarttoolPath";
+static const std::string gJsonName_UsedParameterList = "UsedParameterList";
+static const std::string gJsonName_DataStorageFileFilter = "DataStorageFileFilter";
+
+json_spirit::Object NFmiMacroParamDataInfo::MakeJsonObject(const NFmiMacroParamDataInfo& macroParamDataInfo)
+{
+    json_spirit::Object jsonObject;
+    JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.BaseDataParamProducerString(), gJsonName_BaseDataParamProducer, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.UsedProducerString(), gJsonName_UsedProducer, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.DataGeneratingSmarttoolPathString(), gJsonName_DataGeneratingSmarttoolPath, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.UsedParameterListString(), gJsonName_UsedParameterList, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.DataStorageFileFilter(), gJsonName_DataStorageFileFilter, jsonObject);
+
+    return jsonObject;
+}
+
+void NFmiMacroParamDataInfo::ParseJsonPair(json_spirit::Pair& thePair)
+{
+    // Tässä puretaan NFmiMacroParamDataInfo luokan päätason pareja.
+    if(thePair.name_ == gJsonName_BaseDataParamProducer)
+        mBaseDataParamProducerString = thePair.value_.get_str();
+    else if(thePair.name_ == gJsonName_UsedProducer)
+        mUsedProducerString = thePair.value_.get_str();
+    else if(thePair.name_ == gJsonName_DataGeneratingSmarttoolPath)
+        mDataGeneratingSmarttoolPathString = thePair.value_.get_str();
+    else if(thePair.name_ == gJsonName_UsedParameterList)
+        mUsedParameterListString = thePair.value_.get_str();
+    else if(thePair.name_ == gJsonName_DataStorageFileFilter)
+        mDataStorageFileFilter = thePair.value_.get_str();
+}
+
+bool NFmiMacroParamDataInfo::StoreInJsonFormat(const NFmiMacroParamDataInfo& macroParamDataInfo, const std::string& theFilePath, std::string& theErrorStringOut)
+{
+    return JsonUtils::StoreObjectInJsonFormat(macroParamDataInfo, theFilePath, "MacroParamDataInfo", theErrorStringOut);
+}
+
+bool NFmiMacroParamDataInfo::ReadInJsonFormat(NFmiMacroParamDataInfo& macroParamDataInfoOut, const std::string& theFilePath, std::string& theErrorStringOut)
+{
+    return JsonUtils::ReadObjectInJsonFormat(macroParamDataInfoOut, theFilePath, "MacroParamDataInfo", theErrorStringOut);
+}
+
 // ***********************************************************
 // ************ NFmiMacroParamDataGenerator ******************
 // ***********************************************************
@@ -292,13 +336,16 @@ std::string NFmiMacroParamDataGenerator::ReadSmarttoolContentFromFile(const std:
 }
 
 
-bool NFmiMacroParamDataGenerator::GenerateMacroParamData()
+bool NFmiMacroParamDataGenerator::GenerateMacroParamData(NFmiThreadCallBacks* threadCallBacks)
 {
     auto dataInfo = MakeDataInfo();
-    return GenerateMacroParamData(dataInfo);
+    auto result = GenerateMacroParamData(dataInfo, threadCallBacks);
+    if(threadCallBacks)
+        threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_FINISHED);
+    return result;
 }
 
-bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDataInfo& dataInfo)
+bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDataInfo& dataInfo, NFmiThreadCallBacks* threadCallBacks)
 {
     try
     {
@@ -332,7 +379,7 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDat
 
         auto smarttoolContent = ReadSmarttoolContentFromFile(dataInfo.DataGeneratingSmarttoolPathString());
 
-        if(CalculateDataWithSmartTool(wantedMacroParamInfoPtr, infoOrganizer, smarttoolContent))
+        if(CalculateDataWithSmartTool(wantedMacroParamInfoPtr, infoOrganizer, smarttoolContent, threadCallBacks))
         {
             return StoreMacroParamData(wantedMacroParamDataPtr, dataInfo.DataStorageFileFilter());
         }
@@ -376,7 +423,7 @@ static void CalcMultiLevelSmarttoolData(NFmiSmartToolModifier& smartToolModifier
 }
 
 // Oletus: wantedMacroParamInfoPtr on tarkistettu jo ulkopuolella että ei ole nullptr
-bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::string& smartToolContent)
+bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::string& smartToolContent, NFmiThreadCallBacks *threadCallBacks)
 {
     itsSmarttoolCalculationLogStr.clear();
 
@@ -411,7 +458,6 @@ bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(boost::shared_ptr<N
     // suoritetaan macro sitten
     try
     {
-        NFmiThreadCallBacks* threadCallBacks = nullptr;
         auto usedTimeDescriptor(wantedMacroParamInfoPtr->TimeDescriptor());
         //if(wantedMacroParamInfoPtr->SizeLevels() > 1)
         //{

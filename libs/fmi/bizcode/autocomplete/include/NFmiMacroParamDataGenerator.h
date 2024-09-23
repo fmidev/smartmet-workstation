@@ -2,11 +2,13 @@
 #include "NFmiCachedRegistryValue.h"
 #include "NFmiExtraMacroParamData.h"
 #include "NFmiParamBag.h"
+#include "json_spirit_value.h"
 #include <string>
 
 class NFmiQueryData;
 class NFmiFastQueryInfo;
 class NFmiInfoOrganizer;
+class NFmiThreadCallBacks;
 
 // T‰m‰ on yksi erillinen MacroParam dataan liittyvien datojen kokoelma.
 // Eli systeemiss‰ voi olla useita erilaisia MacroParam datojen reseptej‰,
@@ -53,6 +55,11 @@ public:
     const std::string& UsedParameterListString() const { return mUsedParameterListString; }
     const std::string& DataStorageFileFilter() const { return mDataStorageFileFilter; }
 
+    static json_spirit::Object MakeJsonObject(const NFmiMacroParamDataInfo& macroParamDataInfo);
+    void ParseJsonPair(json_spirit::Pair& thePair);
+    static bool StoreInJsonFormat(const NFmiMacroParamDataInfo& macroParamDataInfo, const std::string& theFilePath, std::string& theErrorStringOut);
+    static bool ReadInJsonFormat(NFmiMacroParamDataInfo& macroParamDataInfoOut, const std::string& theFilePath, std::string& theErrorStringOut);
+
     static std::pair<std::string, NFmiDefineWantedData> CheckBaseDataParamProducerString(const std::string& baseDataParamProducerString);
     static std::pair<std::string, std::vector<std::string>> CheckUsedProducerString(const std::string& usedProducerString);
     static std::pair<std::string, NFmiParamBag> CheckUsedParameterListString(const std::string usedParameterListString, const NFmiProducer &wantedProducer);
@@ -60,6 +67,8 @@ public:
     static std::string CheckDataGeneratingSmarttoolPathString(const std::string& dataGeneratingSmarttoolPathString);
     static std::string MakeDataStorageFilePath(const std::string& dataStorageFileFilter);
 };
+
+inline unsigned int ID_MACRO_PARAM_DATA_GENERATION_FINISHED = 23423;
 
 // T‰ll‰ talletetaan paljon MacroParamDataGenerator dialogin juttuja 
 // Windows rekisteriin pysyv‰‰n muistiin jossa k‰ytet‰‰n
@@ -108,7 +117,7 @@ public:
     NFmiMacroParamDataGenerator();
     bool Init(const std::string& theBaseRegistryPath, const std::string& rootSmarttoolDirectory);
 
-    bool GenerateMacroParamData();
+    bool GenerateMacroParamData(NFmiThreadCallBacks* threadCallBacks);
 
     std::string DialogBaseDataParamProducerString() const;
     void DialogBaseDataParamProducerString(const std::string& newValue);
@@ -130,8 +139,8 @@ public:
 
 private:
     NFmiMacroParamDataInfo MakeDataInfo() const;
-    bool CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::string& smartToolText);
+    bool CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::string& smartToolText, NFmiThreadCallBacks *threadCallBacks);
     std::string ReadSmarttoolContentFromFile(const std::string& filePath);
     bool StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter);
-    bool GenerateMacroParamData(const NFmiMacroParamDataInfo &dataInfo);
+    bool GenerateMacroParamData(const NFmiMacroParamDataInfo &dataInfo, NFmiThreadCallBacks* threadCallBacks);
 };
