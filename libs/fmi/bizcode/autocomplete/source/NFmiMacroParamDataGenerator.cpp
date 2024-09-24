@@ -15,6 +15,7 @@
 #include "jsonutils.h"
 #include <boost/algorithm/string.hpp>
 #include <filesystem>
+#include <regex>
 
 namespace
 {
@@ -39,6 +40,29 @@ namespace
         unsigned long paramId = std::stoul(part1);
         return NFmiParam(paramId, boost::trim_copy(part2));
     }
+
+    std::vector<std::string> GetSplittedAndTrimmedStrings(const std::string& str, const std::string& splitter)
+    {
+        std::vector<std::string> rawParts;
+        boost::split(rawParts, str, boost::is_any_of(splitter));
+        std::vector<std::string> parts;
+        for(auto& part : rawParts)
+        {
+            boost::trim(part);
+            if(!part.empty())
+                parts.push_back(part);
+        }
+        return parts;
+    }
+
+    // Tarkistaa onko inputissa joko pelkkä T_ec tyyppinen teksti
+    // tai vaihtoehtoisesti siinä voi olla vaikka T_ec[0.5h]
+    bool DoParamDataCheckWithOptionalDelayString(const std::string& paramDataStr)
+    {
+        // Regular expression pattern to match any string (a-z,0-9,_) optionally followed by a bracketed number with h or H
+        std::regex pattern(R"(^[A-Za-z0-9_]+(\[([0-9]*\.?[0-9]+[hH])\])?$)");
+        return std::regex_match(paramDataStr, pattern);
+    }
 }
 
 // ***********************************************************
@@ -47,12 +71,13 @@ namespace
 
 NFmiMacroParamDataInfo::NFmiMacroParamDataInfo() = default;
 
-NFmiMacroParamDataInfo::NFmiMacroParamDataInfo(const std::string& baseDataParamProducerLevelString, const std::string& usedProducerString, const std::string& dataGeneratingSmarttoolPathString, const std::string& usedParameterListString, const std::string& dataStorageFileFilter)
+NFmiMacroParamDataInfo::NFmiMacroParamDataInfo(const std::string& baseDataParamProducerLevelString, const std::string& usedProducerString, const std::string& dataGeneratingSmarttoolPathString, const std::string& usedParameterListString, const std::string& dataStorageFileFilter, const std::string& dataTriggerList)
 :mBaseDataParamProducerString(baseDataParamProducerLevelString)
 ,mUsedProducerString(usedProducerString)
 ,mDataGeneratingSmarttoolPathString(dataGeneratingSmarttoolPathString)
 ,mUsedParameterListString(usedParameterListString)
 ,mDataStorageFileFilter(dataStorageFileFilter)
+,mDataTriggerList(dataTriggerList)
 {
 
 }
@@ -74,7 +99,7 @@ std::string NFmiMacroParamDataInfo::MakeDataStorageFilePath(const std::string& d
 
 // Perus datan valintaan liittyvan par+prod stringin tarkistus. Palauttaa selityksen virheestä, jos siinä on jotain vikaa.
 // Jos kaikki on ok, palauttaa tyhjän stringin.
-std::pair<std::string, NFmiDefineWantedData> NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(const std::string& baseDataParamProducerString)
+std::pair<std::string, NFmiDefineWantedData> NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(const std::string& baseDataParamProducerString, bool allowLevelData)
 {
     std::string checkStr;
     std::pair<bool, NFmiDefineWantedData> variableDataType;
@@ -94,7 +119,10 @@ std::pair<std::string, NFmiDefineWantedData> NFmiMacroParamDataInfo::CheckBaseDa
     }
     else if(variableDataType.second.levelPtr_ != nullptr)
     {
-        checkStr = "CheckBaseDataParamProducerString: Given base data parameter '" + baseDataParamProducerString + "' did have level information, and level data aren't allowed to be macroParam data.";
+        if(!allowLevelData)
+        {
+            checkStr = "CheckBaseDataParamProducerString: Given base data parameter '" + baseDataParamProducerString + "' did have level information, and level data aren't allowed to be macroParam data.";
+        }
     }
 
     return std::make_pair(checkStr, variableDataType.second);
@@ -103,8 +131,7 @@ std::pair<std::string, NFmiDefineWantedData> NFmiMacroParamDataInfo::CheckBaseDa
 // Producer stringin tarkistus, palauttaa mahdollisen virheilmoituksen ja vectorin, jossa id+name palaset.
 std::pair<std::string, std::vector<std::string>> NFmiMacroParamDataInfo::CheckUsedProducerString(const std::string& usedProducerString)
 {
-    std::vector<std::string> parts;
-    boost::split(parts, usedProducerString, boost::is_any_of(","));
+    auto parts = ::GetSplittedAndTrimmedStrings(usedProducerString, ",");
     std::string checkStr;
     if(parts.size() < 2)
     {
@@ -124,8 +151,7 @@ std::pair<std::string, std::vector<std::string>> NFmiMacroParamDataInfo::CheckUs
 
 std::pair<std::string, NFmiParamBag> NFmiMacroParamDataInfo::CheckUsedParameterListString(const std::string usedParameterListString, const NFmiProducer& wantedProducer)
 {
-    std::vector<std::string> parts;
-    boost::split(parts, usedParameterListString, boost::is_any_of(","));
+    auto parts = ::GetSplittedAndTrimmedStrings(usedParameterListString, ",");
     std::string checkStr;
     NFmiParamBag wantedParams;
     if(parts.size() < 2)
@@ -209,11 +235,36 @@ std::string NFmiMacroParamDataInfo::CheckDataGeneratingSmarttoolPathString(const
     return "";
 }
 
+std::string NFmiMacroParamDataInfo::CheckDataTriggerListString(const std::string& dataTriggerListString)
+{
+    auto parts = ::GetSplittedAndTrimmedStrings(dataTriggerListString, ",");
+    // Tyhjä on ok
+    if(parts.empty())
+        return "";
+
+    for(const auto& paramDataStr : parts)
+    {
+        auto checkData = CheckBaseDataParamProducerString(paramDataStr, true);
+        if(!checkData.first.empty())
+        {
+            return checkData.first;
+        }
+
+        if(!::DoParamDataCheckWithOptionalDelayString(paramDataStr))
+        {
+            return std::string("CheckDataTriggerListString") + ": Given data parameter '" + paramDataStr + "' (in " + dataTriggerListString + ") had invalid form, should be like 'T_ec' or 'T_ec[0.5h]'";
+        }
+    }
+
+    return "";
+}
+
 static const std::string gJsonName_BaseDataParamProducer = "BaseDataParamProducer";
 static const std::string gJsonName_UsedProducer = "UsedProducer";
 static const std::string gJsonName_DataGeneratingSmarttoolPath = "DataGeneratingSmarttoolPath";
 static const std::string gJsonName_UsedParameterList = "UsedParameterList";
 static const std::string gJsonName_DataStorageFileFilter = "DataStorageFileFilter";
+static const std::string gJsonName_DataTriggerList = "DataTriggerList";
 
 json_spirit::Object NFmiMacroParamDataInfo::MakeJsonObject(const NFmiMacroParamDataInfo& macroParamDataInfo)
 {
@@ -223,6 +274,7 @@ json_spirit::Object NFmiMacroParamDataInfo::MakeJsonObject(const NFmiMacroParamD
     JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.DataGeneratingSmarttoolPathString(), gJsonName_DataGeneratingSmarttoolPath, jsonObject);
     JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.UsedParameterListString(), gJsonName_UsedParameterList, jsonObject);
     JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.DataStorageFileFilter(), gJsonName_DataStorageFileFilter, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.DataTriggerList(), gJsonName_DataTriggerList, jsonObject);
 
     return jsonObject;
 }
@@ -240,6 +292,8 @@ void NFmiMacroParamDataInfo::ParseJsonPair(json_spirit::Pair& thePair)
         mUsedParameterListString = thePair.value_.get_str();
     else if(thePair.name_ == gJsonName_DataStorageFileFilter)
         mDataStorageFileFilter = thePair.value_.get_str();
+    else if(thePair.name_ == gJsonName_DataTriggerList)
+        mDataTriggerList = thePair.value_.get_str();
 }
 
 bool NFmiMacroParamDataInfo::StoreInJsonFormat(const NFmiMacroParamDataInfo& macroParamDataInfo, const std::string& theFilePath, std::string& theErrorStringOut)
@@ -286,6 +340,7 @@ bool NFmiMacroParamDataGenerator::Init(const std::string& theBaseRegistryPath, c
     mDialogUsedParameterListString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\UsedParameterListString", usedKey, "6201, Param1, 6202, Param2");
     mDialogDataStorageFileFilter = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\DataStorageFileFilter", usedKey, "C:\\data\\*_mydata.sqd");
     mMacroParamDataInfoSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\MacroParamDataInfoSaveInitialPath", usedKey, "C:\\data\\");
+    mDialogDataTriggerList = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\DataTriggerList", usedKey, "");
 
     return true;
 }
@@ -352,7 +407,7 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDat
 {
     try
     {
-        auto baseDataCheck = NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(dataInfo.BaseDataParamProducerString());
+        auto baseDataCheck = NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(dataInfo.BaseDataParamProducerString(), false);
         if(!baseDataCheck.first.empty())
         {
             throw std::runtime_error(baseDataCheck.first);
@@ -561,9 +616,19 @@ void NFmiMacroParamDataGenerator::DialogDataStorageFileFilter(const std::string&
     *mDialogDataStorageFileFilter = newValue;
 }
 
+std::string NFmiMacroParamDataGenerator::DialogDataTriggerList() const
+{
+    return *mDialogDataTriggerList;
+}
+
+void NFmiMacroParamDataGenerator::DialogDataTriggerList(const std::string& newValue)
+{
+    *mDialogDataTriggerList = newValue;
+}
+
 NFmiMacroParamDataInfo NFmiMacroParamDataGenerator::MakeDataInfo() const
 {
-    return NFmiMacroParamDataInfo(DialogBaseDataParamProducerString(), DialogUsedProducerString(), DialogDataGeneratingSmarttoolPathString(), DialogUsedParameterListString(), DialogDataStorageFileFilter());
+    return NFmiMacroParamDataInfo(DialogBaseDataParamProducerString(), DialogUsedProducerString(), DialogDataGeneratingSmarttoolPathString(), DialogUsedParameterListString(), DialogDataStorageFileFilter(), DialogDataTriggerList());
 }
 
 std::string NFmiMacroParamDataGenerator::MacroParamDataInfoSaveInitialPath()

@@ -51,7 +51,8 @@ private:
 	void DoWhenClosing();
 	void EnableDialogueControl(int controlId, bool enable);
 	void LaunchMacroParamDataGeneration();
-	void InitControlsFromLoadedMacroParamsDataInfo(const NFmiMacroParamDataInfo &macroParamsDataInfo);
+	void InitControlsFromLoadedMacroParamDataInfo(const NFmiMacroParamDataInfo &macroParamsDataInfo);
+	void UpdateMacroParamDataInfoName(const std::string& fullPath);
 
 	// itsSmartMetDocumentInterface ei omista, ei tuhoa
 	SmartMetDocumentInterface* itsSmartMetDocumentInterface;
@@ -77,10 +78,17 @@ private:
 	CString itsGeneratedDataStorageFileFilter;
 	// Tämän avulla väritetään static_text kontrolli punaiseksi, jos inputissa vikaa
 	bool fGeneratedDataStorageFileFilterHasInvalidValues = false;
+	// Annetaan pilkulla eroteltuja triggeri datoja (T_ec[,...]), voi olla myös tyhjä.
+	CString itsDataTriggerList;
+	// Tämän avulla väritetään static_text kontrolli punaiseksi, jos inputissa vikaa
+	bool fDataTriggerListHasInvalidValues = false;
+
 	// Jos macroparam dataa ollaan generoimassa, tässä o ntarkoitus kertoa sen edistymisestä
 	CTextProgressCtrl mProgressControl;
 	NFmiStopFunctor mStopper;
 	std::unique_ptr<NFmiThreadCallBacks> mThreadCallBacksPtr;
+	// Kun MP-data-info ladataan tai talletetaan, tähän laitetaan sen tiedosto nimi tai polku
+	CString mLoadedMacroParamDataInfoName;
 public:
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
@@ -96,4 +104,5 @@ public:
 	virtual BOOL OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult);
 	afx_msg void OnBnClickedButtonSaveMacroParamData();
 	afx_msg void OnBnClickedButtonLoadMacroParamData();
+	afx_msg void OnEnChangeEditUsedDataTriggerList();
 };

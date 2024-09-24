@@ -37,13 +37,17 @@ class NFmiMacroParamDataInfo
     // Tässä * kohtaan laitetaan lokaaliajan seinäkelloaika sekunteja myöten:
     // Esim. D:\data\20240912183423_mydata.sqd
     std::string mDataStorageFileFilter; // PAKOLLINEN
+    // Lista parametreja eri datoihin, mitkä laukaisevat datan generoinnin, jos sellaisia on
+    // käytössä ja automaattinen datan generaatio on käytössä.
+    // Esim. T_ec[,T_gfs_500, ...] ja myöhästetty laukaisu T_ec[0.5h] (-> 0.5 h myöhästys)
+    std::string mDataTriggerList; // Ei pakollinen
 
     // Initialisoinnista raportoiva teksti
     std::string itsInitializeLogStr;
     bool fDataChecked = false;
 public:
     NFmiMacroParamDataInfo();
-    NFmiMacroParamDataInfo(const std::string &baseDataParamProducerLevelString, const std::string &usedProducerString, const std::string &dataGeneratingSmarttoolPathString, const std::string &usedParameterListString, const std::string &dataStorageFileFilter);
+    NFmiMacroParamDataInfo(const std::string &baseDataParamProducerLevelString, const std::string &usedProducerString, const std::string &dataGeneratingSmarttoolPathString, const std::string &usedParameterListString, const std::string &dataStorageFileFilter, const std::string& dataTriggerList);
 
     bool CheckData();
     bool DataChecked() const { return fDataChecked; }
@@ -54,17 +58,19 @@ public:
     const std::string& DataGeneratingSmarttoolPathString() const { return mDataGeneratingSmarttoolPathString; }
     const std::string& UsedParameterListString() const { return mUsedParameterListString; }
     const std::string& DataStorageFileFilter() const { return mDataStorageFileFilter; }
+    const std::string& DataTriggerList() const { return mDataTriggerList; }
 
     static json_spirit::Object MakeJsonObject(const NFmiMacroParamDataInfo& macroParamDataInfo);
     void ParseJsonPair(json_spirit::Pair& thePair);
     static bool StoreInJsonFormat(const NFmiMacroParamDataInfo& macroParamDataInfo, const std::string& theFilePath, std::string& theErrorStringOut);
     static bool ReadInJsonFormat(NFmiMacroParamDataInfo& macroParamDataInfoOut, const std::string& theFilePath, std::string& theErrorStringOut);
 
-    static std::pair<std::string, NFmiDefineWantedData> CheckBaseDataParamProducerString(const std::string& baseDataParamProducerString);
+    static std::pair<std::string, NFmiDefineWantedData> CheckBaseDataParamProducerString(const std::string& baseDataParamProducerString, bool allowLevelData);
     static std::pair<std::string, std::vector<std::string>> CheckUsedProducerString(const std::string& usedProducerString);
     static std::pair<std::string, NFmiParamBag> CheckUsedParameterListString(const std::string usedParameterListString, const NFmiProducer &wantedProducer);
     static std::string CheckDataStorageFileFilter(const std::string& dataStorageFileFilter);
     static std::string CheckDataGeneratingSmarttoolPathString(const std::string& dataGeneratingSmarttoolPathString);
+    static std::string CheckDataTriggerListString(const std::string& dataTriggerListString);
     static std::string MakeDataStorageFilePath(const std::string& dataStorageFileFilter);
 };
 
@@ -107,7 +113,13 @@ class NFmiMacroParamDataGenerator
     boost::shared_ptr<CachedRegString> mDialogDataStorageFileFilter; // PAKOLLINEN
     // Dialogi muistaa minne/mistä on talletettu/ladattu viimeksi MacroParam data info tiedosto
     boost::shared_ptr<CachedRegString> mMacroParamDataInfoSaveInitialPath;
+    // Lista parametreja eri datoihin, mitkä laukaisevat datan generoinnin, jos sellaisia on
+    // käytössä ja automaattinen datan generaatio on käytössä.
+    // Esim. T_ec[,T_gfs_500, ...] ja myöhästetty laukaisu T_ec[0.5h] (-> 0.5 h myöhästys)
+    boost::shared_ptr<CachedRegString> mDialogDataTriggerList; // Ei pakollinen
 
+    static const std::string itsMacroParamDataInfoFileExtension;
+    static const std::string itsMacroParamDataInfoFileFilter;
 
     // Initialisoinnista raportoiva teksti
     std::string itsInitializeLogStr;
@@ -116,8 +128,6 @@ class NFmiMacroParamDataGenerator
     // Tiedosto josta luettiin smarttool
     std::string mUsedAbsoluteSmarttoolPath;
 public:
-    static const std::string itsMacroParamDataInfoFileExtension;
-    static const std::string itsMacroParamDataInfoFileFilter;
 
     NFmiMacroParamDataGenerator();
     bool Init(const std::string& theBaseRegistryPath, const std::string& rootSmarttoolDirectory);
@@ -136,6 +146,8 @@ public:
     void DialogUsedProducerString(const std::string& newValue);
     std::string DialogDataStorageFileFilter() const;
     void DialogDataStorageFileFilter(const std::string& newValue);
+    std::string DialogDataTriggerList() const;
+    void DialogDataTriggerList(const std::string& newValue);
 
     const std::string& GetInitializeLogStr() const { return itsInitializeLogStr; }
     const std::string& GetSmarttoolCalculationLogStr() const { return itsSmarttoolCalculationLogStr; }
@@ -144,6 +156,8 @@ public:
     void MacroParamDataInfoSaveInitialPath(const std::string& newValue);
 
     static const std::string& RootSmarttoolDirectory() { return mRootSmarttoolDirectory; }
+    static const std::string& MacroParamDataInfoFileExtension() { return itsMacroParamDataInfoFileExtension; }
+    static const std::string& MacroParamDataInfoFileFilter() { return itsMacroParamDataInfoFileFilter; }
 
 private:
     bool CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::string& smartToolText, NFmiThreadCallBacks *threadCallBacks);

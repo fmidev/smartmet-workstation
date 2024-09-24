@@ -30,6 +30,8 @@ CFmiMacroParamDataGeneratorDlg::CFmiMacroParamDataGeneratorDlg(SmartMetDocumentI
 	, itsUsedDataGenerationSmarttoolPath(_T(""))
 	, itsUsedParameterListString(_T(""))
 	, itsGeneratedDataStorageFileFilter(_T(""))
+	, mLoadedMacroParamDataInfoName(_T(""))
+	, itsDataTriggerList(_T(""))
 {
 }
 
@@ -46,6 +48,8 @@ void CFmiMacroParamDataGeneratorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_USED_PARAMETER_LIST, itsUsedParameterListString);
 	DDX_Text(pDX, IDC_EDIT_GENERATED_DATA_STORAGE_FILE_FILTER, itsGeneratedDataStorageFileFilter);
 	DDX_Control(pDX, IDC_PROGRESS_OF_OPERATION_BAR, mProgressControl);
+	DDX_Text(pDX, IDC_STATIC_LOADED_MACRO_PARAM_DATA_INFO_NAME, mLoadedMacroParamDataInfoName);
+	DDX_Text(pDX, IDC_EDIT_USED_DATA_TRIGGER_LIST, itsDataTriggerList);
 }
 
 
@@ -60,6 +64,7 @@ BEGIN_MESSAGE_MAP(CFmiMacroParamDataGeneratorDlg, CDialogEx)
 	ON_EN_CHANGE(IDC_EDIT_GENERATED_DATA_STORAGE_FILE_FILTER, &CFmiMacroParamDataGeneratorDlg::OnChangeEditGeneratedDataStorageFileFilter)
 	ON_BN_CLICKED(IDC_BUTTON_SAVE_MACRO_PARAM_DATA, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonSaveMacroParamData)
 	ON_BN_CLICKED(IDC_BUTTON_LOAD_MACRO_PARAM_DATA, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonLoadMacroParamData)
+	ON_EN_CHANGE(IDC_EDIT_USED_DATA_TRIGGER_LIST, &CFmiMacroParamDataGeneratorDlg::OnEnChangeEditUsedDataTriggerList)
 END_MESSAGE_MAP()
 
 
@@ -101,28 +106,23 @@ void CFmiMacroParamDataGeneratorDlg::InitDialogTexts()
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_GROUP_MACRO_PARAM_DATA_INFO, "MacroParam data info section");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SAVE_MACRO_PARAM_DATA, "Save MacroPar data info");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_LOAD_MACRO_PARAM_DATA, "Load MacroPar data info");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_GROUP_DATA_GENERATION_LIST, "Data generation list");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_USED_DATA_TRIGGER_LIST, "Data trigger list, e.g. T_ec[,T_gfs_500, ...]\nTrigger delayed: T_ec[0.5h] ->delays half an hour");
 }
 
 void CFmiMacroParamDataGeneratorDlg::InitControlsFromDocument()
 {
-	if(!itsMacroParamDataGenerator)
-		return;
-
-	itsBaseDataParamProducerString = CA2T(itsMacroParamDataGenerator->DialogBaseDataParamProducerString().c_str());
-	itsProducerIdNamePairString = CA2T(itsMacroParamDataGenerator->DialogUsedProducerString().c_str());
-	itsUsedDataGenerationSmarttoolPath = CA2T(itsMacroParamDataGenerator->DialogDataGeneratingSmarttoolPathString().c_str());
-	itsUsedParameterListString = CA2T(itsMacroParamDataGenerator->DialogUsedParameterListString().c_str());
-	itsGeneratedDataStorageFileFilter = CA2T(itsMacroParamDataGenerator->DialogDataStorageFileFilter().c_str());
-	UpdateData(FALSE);
+	InitControlsFromLoadedMacroParamDataInfo(itsMacroParamDataGenerator->MakeDataInfo());
 }
 
-void CFmiMacroParamDataGeneratorDlg::InitControlsFromLoadedMacroParamsDataInfo(const NFmiMacroParamDataInfo& macroParamsDataInfo)
+void CFmiMacroParamDataGeneratorDlg::InitControlsFromLoadedMacroParamDataInfo(const NFmiMacroParamDataInfo& macroParamsDataInfo)
 {
 	itsBaseDataParamProducerString = CA2T(macroParamsDataInfo.BaseDataParamProducerString().c_str());
 	itsProducerIdNamePairString = CA2T(macroParamsDataInfo.UsedProducerString().c_str());
 	itsUsedDataGenerationSmarttoolPath = CA2T(macroParamsDataInfo.DataGeneratingSmarttoolPathString().c_str());
 	itsUsedParameterListString = CA2T(macroParamsDataInfo.UsedParameterListString().c_str());
 	itsGeneratedDataStorageFileFilter = CA2T(macroParamsDataInfo.DataStorageFileFilter().c_str());
+	itsDataTriggerList = CA2T(macroParamsDataInfo.DataTriggerList().c_str());
 	UpdateData(FALSE);
 }
 
@@ -135,6 +135,7 @@ void CFmiMacroParamDataGeneratorDlg::StoreControlValuesToDocument()
 	itsMacroParamDataGenerator->DialogDataGeneratingSmarttoolPathString(CFmiWin32Helpers::CT2std(itsUsedDataGenerationSmarttoolPath));
 	itsMacroParamDataGenerator->DialogUsedParameterListString(CFmiWin32Helpers::CT2std(itsUsedParameterListString));
 	itsMacroParamDataGenerator->DialogDataStorageFileFilter(CFmiWin32Helpers::CT2std(itsGeneratedDataStorageFileFilter));
+	itsMacroParamDataGenerator->DialogDataTriggerList(CFmiWin32Helpers::CT2std(itsDataTriggerList));
 }
 
 // Tarkista kaikki syötteet ja jos niissä on vikaa:
@@ -148,6 +149,7 @@ void CFmiMacroParamDataGeneratorDlg::DoFullInputChecks()
 	OnChangeEditUsedParameterList();
 	OnChangeEditUsedDataGenerationSmarttoolPath();
 	OnChangeEditGeneratedDataStorageFileFilter();
+	OnEnChangeEditUsedDataTriggerList();
 }
 
 void CFmiMacroParamDataGeneratorDlg::SetDefaultValues(void)
@@ -262,6 +264,13 @@ HBRUSH CFmiMacroParamDataGeneratorDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCt
 		else
 			pDC->SetTextColor(RGB(0, 0, 0)); // Muuten se värjätään mustaksi
 	}
+	else if(pWnd->GetDlgCtrlID() == IDC_STATIC_USED_DATA_TRIGGER_LIST)
+	{
+		if(fDataTriggerListHasInvalidValues)
+			pDC->SetTextColor(RGB(255, 0, 0)); // Virhetilanteissa edit boxin labeli väritetään punaiseksi
+		else
+			pDC->SetTextColor(RGB(0, 0, 0)); // Muuten se värjätään mustaksi
+	}
 
 	return hbr;
 }
@@ -271,7 +280,7 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditBaseDataParamProducer()
 	UpdateData(TRUE);
 
 	std::string tmp = CT2A(itsBaseDataParamProducerString);
-	auto checkResult = NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(tmp);
+	auto checkResult = NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(tmp, false);
 	fBaseDataParamProducerStringHasInvalidValues = !checkResult.first.empty();
 
 	// Edit kenttään liittyvä otsikkokontrolli värjätään punaiseksi, jos inputissa on vikaa
@@ -333,6 +342,20 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedDataGenerationSmarttoolPath
 
 	// Edit kenttään liittyvä otsikkokontrolli värjätään punaiseksi, jos inputissa on vikaa
 	CWnd* win = GetDlgItem(IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_STR);
+	if(win)
+		win->Invalidate(FALSE);
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnEnChangeEditUsedDataTriggerList()
+{
+	UpdateData(TRUE);
+
+	std::string tmp = CT2A(itsDataTriggerList);
+	auto checkResult = NFmiMacroParamDataInfo::CheckDataTriggerListString(tmp);
+	fDataTriggerListHasInvalidValues = !checkResult.empty();
+
+	// Edit kenttään liittyvä otsikkokontrolli värjätään punaiseksi, jos inputissa on vikaa
+	CWnd* win = GetDlgItem(IDC_STATIC_USED_DATA_TRIGGER_LIST);
 	if(win)
 		win->Invalidate(FALSE);
 }
@@ -424,9 +447,10 @@ void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonSaveMacroParamData()
 	auto initialSavePath = itsMacroParamDataGenerator->MacroParamDataInfoSaveInitialPath();
 	std::string fullPath;
 	std::string rootMacroParDataInfoPath;
-	if(BetaProduct::SaveObjectInJsonFormat(macroParamsDataInfo, initialSavePath, NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileFilter, NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileExtension, rootMacroParDataInfoPath, "MacroParam data info", "MacroParDataInfo1", false, &fullPath, this))
+	if(BetaProduct::SaveObjectInJsonFormat(macroParamsDataInfo, initialSavePath, NFmiMacroParamDataGenerator::MacroParamDataInfoFileFilter(), NFmiMacroParamDataGenerator::MacroParamDataInfoFileExtension(), rootMacroParDataInfoPath, "MacroParam data info", "MacroParDataInfo1", false, &fullPath, this))
 	{
 		itsMacroParamDataGenerator->MacroParamDataInfoSaveInitialPath(initialSavePath);
+		UpdateMacroParamDataInfoName(fullPath);
 	}
 }
 
@@ -436,10 +460,16 @@ void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonLoadMacroParamData()
 	auto initialSavePath = itsMacroParamDataGenerator->MacroParamDataInfoSaveInitialPath();
 	std::string fullPath;
 	std::string rootMacroParDataInfoPath;
-	if(BetaProduct::LoadObjectInJsonFormat(macroParamsDataInfo, initialSavePath, NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileFilter, NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileExtension, rootMacroParDataInfoPath, "MacroParam data info", false, &fullPath, this))
+	if(BetaProduct::LoadObjectInJsonFormat(macroParamsDataInfo, initialSavePath, NFmiMacroParamDataGenerator::MacroParamDataInfoFileFilter(), NFmiMacroParamDataGenerator::MacroParamDataInfoFileExtension(), rootMacroParDataInfoPath, "MacroParam data info", false, &fullPath, this))
 	{
 		itsMacroParamDataGenerator->MacroParamDataInfoSaveInitialPath(initialSavePath);
-//		UpdateMacroParamDataInfoName();
-		InitControlsFromLoadedMacroParamsDataInfo(macroParamsDataInfo);
+		UpdateMacroParamDataInfoName(fullPath);
+		InitControlsFromLoadedMacroParamDataInfo(macroParamsDataInfo);
 	}
+}
+
+void CFmiMacroParamDataGeneratorDlg::UpdateMacroParamDataInfoName(const std::string& fullPath)
+{
+	mLoadedMacroParamDataInfoName = CA2T(fullPath.c_str());
+	UpdateData(FALSE);
 }
