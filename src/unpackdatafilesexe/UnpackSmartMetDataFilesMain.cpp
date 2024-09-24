@@ -175,6 +175,47 @@ int main(int argc, const char* argv[])
 } 
 
 /*
+#include <iostream>
+#include <regex>
+#include <string>
+
+int main() {
+    std::string input1 = "SomeWord";               // Should match (word itself)
+    std::string input2 = "SomeWord[1h]";           // Should match (word with [1h])
+    std::string input3 = "SomeWord[0.5H]";         // Should match (word with [0.5H])
+    std::string input4 = "Word_123[10h]";          // Should match (word with [10h])
+    std::string input5 = "InvalidWord[10m]";       // Should not match (invalid 'm')
+    std::string input6 = "SomeWord[5h]extra";      // Should not match (extra after ])
+    std::string input7 = "SomeWord[5h";            // Should not match (missing closing bracket)
+    std::string input8 = "Word_with_space [5h]";   // Should not match (space before bracket)
+
+    // Regular expression pattern based on the requirements:
+    std::regex pattern(R"(^[A-Za-z0-9_]+(\[([0-9]*\.?[0-9]+[hH])\])?$)");
+
+    // Function to test the match
+    auto testRegexMatch = [&](const std::string& input) {
+        if(std::regex_match(input, pattern)) {
+            std::cout << "Match: " << input << std::endl;
+        }
+        else {
+            std::cout << "No match: " << input << std::endl;
+        }
+        };
+
+    // Test different input strings
+    testRegexMatch(input1);  // Should match (word itself)
+    testRegexMatch(input2);  // Should match (word with [1h])
+    testRegexMatch(input3);  // Should match (word with [0.5H])
+    testRegexMatch(input4);  // Should match (word with [10h])
+    testRegexMatch(input5);  // Should not match (invalid 'm')
+    testRegexMatch(input6);  // Should not match (extra characters after ])
+    testRegexMatch(input7);  // Should not match (missing closing bracket)
+    testRegexMatch(input8);  // Should not match (space before bracket)
+
+    return 0;
+}
+*/
+/*
 #include "NFmiQueryData.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiQueryDataUtil.h"
