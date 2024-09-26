@@ -41,13 +41,17 @@ class NFmiMacroParamDataInfo
     // käytössä ja automaattinen datan generaatio on käytössä.
     // Esim. T_ec[,T_gfs_500, ...] ja myöhästetty laukaisu T_ec[0.5h] (-> 0.5 h myöhästys)
     std::string mDataTriggerList; // Ei pakollinen
+    // Kun dataa generoidaan, kuinka monta viimeisintä kyseistä dataa pidetään
+    // kohdehakemistossa. Jos datan luomisen jälkeen siellä on enemmän kyseisiä tiedostoja,
+    // deletoidaan vanhimmat niistä pois kyseisellä filefilterillä.
+    int mMaxGeneratedFilesKept = 2;
 
     // Initialisoinnista raportoiva teksti
     std::string itsInitializeLogStr;
     bool fDataChecked = false;
 public:
     NFmiMacroParamDataInfo();
-    NFmiMacroParamDataInfo(const std::string &baseDataParamProducerLevelString, const std::string &usedProducerString, const std::string &dataGeneratingSmarttoolPathString, const std::string &usedParameterListString, const std::string &dataStorageFileFilter, const std::string& dataTriggerList);
+    NFmiMacroParamDataInfo(const std::string &baseDataParamProducerLevelString, const std::string &usedProducerString, const std::string &dataGeneratingSmarttoolPathString, const std::string &usedParameterListString, const std::string &dataStorageFileFilter, const std::string& dataTriggerList, int maxGeneratedFilesKept);
 
     bool CheckData();
     bool DataChecked() const { return fDataChecked; }
@@ -59,6 +63,8 @@ public:
     const std::string& UsedParameterListString() const { return mUsedParameterListString; }
     const std::string& DataStorageFileFilter() const { return mDataStorageFileFilter; }
     const std::string& DataTriggerList() const { return mDataTriggerList; }
+    int MaxGeneratedFilesKept() const { return mMaxGeneratedFilesKept; }
+    void CorrectMaxGeneratedFilesKeptValue();
 
     static json_spirit::Object MakeJsonObject(const NFmiMacroParamDataInfo& macroParamDataInfo);
     void ParseJsonPair(json_spirit::Pair& thePair);
@@ -72,6 +78,7 @@ public:
     static std::string CheckDataGeneratingSmarttoolPathString(const std::string& dataGeneratingSmarttoolPathString);
     static std::string CheckDataTriggerListString(const std::string& dataTriggerListString);
     static std::string MakeDataStorageFilePath(const std::string& dataStorageFileFilter);
+    static int FixMaxGeneratedFilesKeptValue(int newValue);
 };
 
 inline unsigned int ID_MACRO_PARAM_DATA_GENERATION_FINISHED = 23423;
@@ -117,6 +124,10 @@ class NFmiMacroParamDataGenerator
     // käytössä ja automaattinen datan generaatio on käytössä.
     // Esim. T_ec[,T_gfs_500, ...] ja myöhästetty laukaisu T_ec[0.5h] (-> 0.5 h myöhästys)
     boost::shared_ptr<CachedRegString> mDialogDataTriggerList; // Ei pakollinen
+    // Kun dataa generoidaan, kuinka monta viimeisintä kyseistä dataa pidetään
+    // kohdehakemistossa. Jos datan luomisen jälkeen siellä on enemmän kyseisiä tiedostoja,
+    // deletoidaan vanhimmat niistä pois kyseisellä filefilterillä.
+    boost::shared_ptr<CachedRegInt> mDialogMaxGeneratedFilesKept;
 
     static const std::string itsMacroParamDataInfoFileExtension;
     static const std::string itsMacroParamDataInfoFileFilter;
@@ -148,6 +159,8 @@ public:
     void DialogDataStorageFileFilter(const std::string& newValue);
     std::string DialogDataTriggerList() const;
     void DialogDataTriggerList(const std::string& newValue);
+    int DialogMaxGeneratedFilesKept() const;
+    void DialogMaxGeneratedFilesKept(int newValue);
 
     const std::string& GetInitializeLogStr() const { return itsInitializeLogStr; }
     const std::string& GetSmarttoolCalculationLogStr() const { return itsSmarttoolCalculationLogStr; }
@@ -162,6 +175,6 @@ public:
 private:
     bool CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::string& smartToolText, NFmiThreadCallBacks *threadCallBacks);
     std::string ReadSmarttoolContentFromFile(const std::string& filePath);
-    bool StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter);
+    bool StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter, int keepMaxFiles);
     bool GenerateMacroParamData(const NFmiMacroParamDataInfo &dataInfo, NFmiThreadCallBacks* threadCallBacks);
 };

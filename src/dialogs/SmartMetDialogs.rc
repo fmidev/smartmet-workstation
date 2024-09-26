@@ -1280,6 +1280,8 @@ BEGIN
     GROUPBOX        "Data generation list",IDC_STATIC_GROUP_DATA_GENERATION_LIST,7,193,426,104
     LTEXT           "Data trigger list, e.g. T_ec[,T_gfs_500, ...]\nTrigger delayed: T_ec[0.5h] ->delays half an hour",IDC_STATIC_USED_DATA_TRIGGER_LIST,253,69,178,18
     EDITTEXT        IDC_EDIT_USED_DATA_TRIGGER_LIST,251,89,178,23,ES_AUTOHSCROLL
+    LTEXT           "Max generated files kept\n(1-10), oldest extras will be\ndeleted on target directory",IDC_STATIC_MAX_GENERATED_FILES_KEPT_STR,326,114,106,24
+    EDITTEXT        IDC_EDIT_MAX_GENERATED_FILES_KEPT,332,141,84,12,ES_AUTOHSCROLL
 END
 
 

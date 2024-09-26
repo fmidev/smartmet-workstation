@@ -13,9 +13,11 @@
 #include "NFmiPathUtils.h"
 #include "NFmiSmartInfo.h"
 #include "jsonutils.h"
+#include "catlog/catlog.h"
 #include <boost/algorithm/string.hpp>
 #include <filesystem>
 #include <regex>
+#include <numeric>
 
 namespace
 {
@@ -63,6 +65,23 @@ namespace
         std::regex pattern(R"(^[A-Za-z0-9_]+(\[([0-9]*\.?[0-9]+[hH])\])?$)");
         return std::regex_match(paramDataStr, pattern);
     }
+
+    void CleanFilePattern(const std::string& theFilePattern, int keepMaxFiles)
+    {
+        try
+        {
+            std::string logMessageStart("NFmiMacroParamDataGenerator-CleanFilePattern: ");
+            logMessageStart += theFilePattern;
+            logMessageStart += ",\nkeep-max-files = ";
+            logMessageStart += NFmiStringTools::Convert(keepMaxFiles);
+            logMessageStart += ",\nDeleted files:\n";
+            CtrlViewUtils::DeleteFilesWithPatternAndLog(theFilePattern, logMessageStart, CatLog::Severity::Debug, CatLog::Category::Data, keepMaxFiles);
+        }
+        catch(...)
+        {
+            // ei tehd‰ toistaiseksi mit‰‰n...
+        }
+    }
 }
 
 // ***********************************************************
@@ -71,20 +90,73 @@ namespace
 
 NFmiMacroParamDataInfo::NFmiMacroParamDataInfo() = default;
 
-NFmiMacroParamDataInfo::NFmiMacroParamDataInfo(const std::string& baseDataParamProducerLevelString, const std::string& usedProducerString, const std::string& dataGeneratingSmarttoolPathString, const std::string& usedParameterListString, const std::string& dataStorageFileFilter, const std::string& dataTriggerList)
+NFmiMacroParamDataInfo::NFmiMacroParamDataInfo(const std::string& baseDataParamProducerLevelString, const std::string& usedProducerString, const std::string& dataGeneratingSmarttoolPathString, const std::string& usedParameterListString, const std::string& dataStorageFileFilter, const std::string& dataTriggerList, int maxGeneratedFilesKept)
 :mBaseDataParamProducerString(baseDataParamProducerLevelString)
 ,mUsedProducerString(usedProducerString)
 ,mDataGeneratingSmarttoolPathString(dataGeneratingSmarttoolPathString)
 ,mUsedParameterListString(usedParameterListString)
 ,mDataStorageFileFilter(dataStorageFileFilter)
 ,mDataTriggerList(dataTriggerList)
+,mMaxGeneratedFilesKept(maxGeneratedFilesKept)
 {
+    CorrectMaxGeneratedFilesKeptValue();
+}
 
+void NFmiMacroParamDataInfo::CorrectMaxGeneratedFilesKeptValue()
+{
+    mMaxGeneratedFilesKept = FixMaxGeneratedFilesKeptValue(mMaxGeneratedFilesKept);
+}
+
+int NFmiMacroParamDataInfo::FixMaxGeneratedFilesKeptValue(int newValue)
+{
+    if(newValue < 1)
+        return 1;
+    else if(newValue > 10)
+        return 10;
+
+    return newValue;
 }
 
 bool NFmiMacroParamDataInfo::CheckData()
 {
-    return false;
+    {
+        auto checkResult = NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(mBaseDataParamProducerString, false);
+        if(!checkResult.first.empty())
+            return false;
+    }
+
+    {
+        auto checkResult = NFmiMacroParamDataInfo::CheckUsedProducerString(mUsedProducerString);
+        if(!checkResult.first.empty())
+            return false;
+    }
+
+    {
+        NFmiProducer dummyProducer;
+        auto checkResult = NFmiMacroParamDataInfo::CheckUsedParameterListString(mUsedParameterListString, dummyProducer);
+        if(!checkResult.first.empty())
+            return false;
+    }
+
+    {
+        auto checkResult = NFmiMacroParamDataInfo::CheckDataStorageFileFilter(mDataStorageFileFilter);
+        if(!checkResult.empty())
+            return false;
+    }
+
+    {
+        auto checkResult = NFmiMacroParamDataInfo::CheckDataGeneratingSmarttoolPathString(mDataGeneratingSmarttoolPathString);
+        if(!checkResult.empty())
+            return false;
+    }
+
+    {
+        auto checkResult = NFmiMacroParamDataInfo::CheckDataTriggerListString(mDataTriggerList);
+        if(!checkResult.empty())
+            return false;
+    }
+
+    return true;
 }
 
 std::string NFmiMacroParamDataInfo::MakeDataStorageFilePath(const std::string& dataStorageFileFilter)
@@ -202,8 +274,19 @@ std::string NFmiMacroParamDataInfo::CheckDataStorageFileFilter(const std::string
         return std::string("CheckDataStorageFileFilter") + ": Given data output filename '" + filename + "' (in " + dataStorageFileFilter + ") doesn't have ' * ' character place marker for file's creation time stamp. To store MacroParam data you need to have that asterisk in filename.";
     }
 
+    // 3. Tiedoston nimess‰ pit‰‰ olla v‰hint‰‰n 3 alpha-numeerista merkki‰, jotta esim. pelkk‰ path\*.sqd ei kelpaa
+    int alnumCount = std::accumulate(filename.begin(), filename.end(), 0,
+        [](int total, char c) {
+            // Check if the character is alphanumeric (alphabet or number)
+            return total + (std::isalnum(c) ? 1 : 0);
+        });
+    if(alnumCount < 3)
+    {
+        return std::string("CheckDataStorageFileFilter") + ": Given data output filename '" + filename + "' (in " + dataStorageFileFilter + ") doesn't have enough alpha-numeric characters (< 3) and it maybe hazardous when system starts cleaning result data file routines.";
+    }
+
     auto fileExtension = ::GetFileExtension(dataStorageFileFilter);
-    // 3. Tiedoston extension pit‰‰ olla sqd tyyppinen
+    // 4. Tiedoston extension pit‰‰ olla sqd tyyppinen
     if(!boost::iequals(fileExtension, gQueryDataFileExtension))
     {
         return std::string("CheckDataStorageFileFilter") + ": Given data output extension '" + fileExtension + "' (in " + dataStorageFileFilter + ") is invalid, extension must be '" + gQueryDataFileExtension + "' type.";
@@ -265,6 +348,7 @@ static const std::string gJsonName_DataGeneratingSmarttoolPath = "DataGenerating
 static const std::string gJsonName_UsedParameterList = "UsedParameterList";
 static const std::string gJsonName_DataStorageFileFilter = "DataStorageFileFilter";
 static const std::string gJsonName_DataTriggerList = "DataTriggerList";
+static const std::string gJsonName_MaxGeneratedFilesKept = "mMaxGeneratedFilesKept";
 
 json_spirit::Object NFmiMacroParamDataInfo::MakeJsonObject(const NFmiMacroParamDataInfo& macroParamDataInfo)
 {
@@ -275,6 +359,7 @@ json_spirit::Object NFmiMacroParamDataInfo::MakeJsonObject(const NFmiMacroParamD
     JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.UsedParameterListString(), gJsonName_UsedParameterList, jsonObject);
     JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.DataStorageFileFilter(), gJsonName_DataStorageFileFilter, jsonObject);
     JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.DataTriggerList(), gJsonName_DataTriggerList, jsonObject);
+    jsonObject.push_back(json_spirit::Pair(gJsonName_MaxGeneratedFilesKept, macroParamDataInfo.MaxGeneratedFilesKept()));
 
     return jsonObject;
 }
@@ -294,6 +379,11 @@ void NFmiMacroParamDataInfo::ParseJsonPair(json_spirit::Pair& thePair)
         mDataStorageFileFilter = thePair.value_.get_str();
     else if(thePair.name_ == gJsonName_DataTriggerList)
         mDataTriggerList = thePair.value_.get_str();
+    else if(thePair.name_ == gJsonName_MaxGeneratedFilesKept)
+    {
+        mMaxGeneratedFilesKept = thePair.value_.get_int();
+        CorrectMaxGeneratedFilesKeptValue();
+    }
 }
 
 bool NFmiMacroParamDataInfo::StoreInJsonFormat(const NFmiMacroParamDataInfo& macroParamDataInfo, const std::string& theFilePath, std::string& theErrorStringOut)
@@ -341,6 +431,7 @@ bool NFmiMacroParamDataGenerator::Init(const std::string& theBaseRegistryPath, c
     mDialogDataStorageFileFilter = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\DataStorageFileFilter", usedKey, "C:\\data\\*_mydata.sqd");
     mMacroParamDataInfoSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\MacroParamDataInfoSaveInitialPath", usedKey, "C:\\data\\");
     mDialogDataTriggerList = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\DataTriggerList", usedKey, "");
+    mDialogMaxGeneratedFilesKept = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\MaxGeneratedFilesKept", usedKey, 2);
 
     return true;
 }
@@ -439,7 +530,7 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDat
 
         if(CalculateDataWithSmartTool(wantedMacroParamInfoPtr, infoOrganizer, smarttoolContent, threadCallBacks))
         {
-            return StoreMacroParamData(wantedMacroParamDataPtr, dataInfo.DataStorageFileFilter());
+            return StoreMacroParamData(wantedMacroParamDataPtr, dataInfo.DataStorageFileFilter(), dataInfo.MaxGeneratedFilesKept());
         }
     }
     catch(std::exception& )
@@ -451,7 +542,7 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDat
 }
 
 // Oletus: macroParamDataPtr pit‰‰ sis‰ll‰‰n talletettavan datan.
-bool NFmiMacroParamDataGenerator::StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter)
+bool NFmiMacroParamDataGenerator::StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter, int keepMaxFiles)
 {
     // CheckDataStorageFileFilter funktio palauttaa virheilmoituksen, jos filefilterissa jotain vikaa.
     auto checkStr = NFmiMacroParamDataInfo::CheckDataStorageFileFilter(dataStorageFileFilter);
@@ -463,6 +554,7 @@ bool NFmiMacroParamDataGenerator::StoreMacroParamData(boost::shared_ptr<NFmiQuer
     auto finalDataFilePath = NFmiMacroParamDataInfo::MakeDataStorageFilePath(dataStorageFileFilter);
     // NFmiQueryData::Write heitt‰‰ poikkeuksia, jos tulee ongelmia.
     macroParamDataPtr->Write(finalDataFilePath);
+    ::CleanFilePattern(dataStorageFileFilter, keepMaxFiles);
     return true;
 }
 
@@ -626,9 +718,19 @@ void NFmiMacroParamDataGenerator::DialogDataTriggerList(const std::string& newVa
     *mDialogDataTriggerList = newValue;
 }
 
+int NFmiMacroParamDataGenerator::DialogMaxGeneratedFilesKept() const
+{
+    return *mDialogMaxGeneratedFilesKept;
+}
+
+void NFmiMacroParamDataGenerator::DialogMaxGeneratedFilesKept(int newValue)
+{
+    *mDialogMaxGeneratedFilesKept = NFmiMacroParamDataInfo::FixMaxGeneratedFilesKeptValue(newValue);
+}
+
 NFmiMacroParamDataInfo NFmiMacroParamDataGenerator::MakeDataInfo() const
 {
-    return NFmiMacroParamDataInfo(DialogBaseDataParamProducerString(), DialogUsedProducerString(), DialogDataGeneratingSmarttoolPathString(), DialogUsedParameterListString(), DialogDataStorageFileFilter(), DialogDataTriggerList());
+    return NFmiMacroParamDataInfo(DialogBaseDataParamProducerString(), DialogUsedProducerString(), DialogDataGeneratingSmarttoolPathString(), DialogUsedParameterListString(), DialogDataStorageFileFilter(), DialogDataTriggerList(), DialogMaxGeneratedFilesKept());
 }
 
 std::string NFmiMacroParamDataGenerator::MacroParamDataInfoSaveInitialPath()

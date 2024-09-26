@@ -82,6 +82,7 @@ private:
 	CString itsDataTriggerList;
 	// T‰m‰n avulla v‰ritet‰‰n static_text kontrolli punaiseksi, jos inputissa vikaa
 	bool fDataTriggerListHasInvalidValues = false;
+	int itsMaxGeneratedFilesKept;
 
 	// Jos macroparam dataa ollaan generoimassa, t‰ss‰ o ntarkoitus kertoa sen edistymisest‰
 	CTextProgressCtrl mProgressControl;
@@ -105,4 +106,5 @@ public:
 	afx_msg void OnBnClickedButtonSaveMacroParamData();
 	afx_msg void OnBnClickedButtonLoadMacroParamData();
 	afx_msg void OnEnChangeEditUsedDataTriggerList();
+	afx_msg void OnEnChangeEditMaxGeneratedFilesKept();
 };

@@ -32,6 +32,7 @@ CFmiMacroParamDataGeneratorDlg::CFmiMacroParamDataGeneratorDlg(SmartMetDocumentI
 	, itsGeneratedDataStorageFileFilter(_T(""))
 	, mLoadedMacroParamDataInfoName(_T(""))
 	, itsDataTriggerList(_T(""))
+	, itsMaxGeneratedFilesKept(2)
 {
 }
 
@@ -50,8 +51,9 @@ void CFmiMacroParamDataGeneratorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_PROGRESS_OF_OPERATION_BAR, mProgressControl);
 	DDX_Text(pDX, IDC_STATIC_LOADED_MACRO_PARAM_DATA_INFO_NAME, mLoadedMacroParamDataInfoName);
 	DDX_Text(pDX, IDC_EDIT_USED_DATA_TRIGGER_LIST, itsDataTriggerList);
+	DDX_Text(pDX, IDC_EDIT_MAX_GENERATED_FILES_KEPT, itsMaxGeneratedFilesKept);
+	DDV_MinMaxInt(pDX, itsMaxGeneratedFilesKept, 1, 10);
 }
-
 
 BEGIN_MESSAGE_MAP(CFmiMacroParamDataGeneratorDlg, CDialogEx)
 	ON_WM_CLOSE()
@@ -65,11 +67,10 @@ BEGIN_MESSAGE_MAP(CFmiMacroParamDataGeneratorDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_SAVE_MACRO_PARAM_DATA, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonSaveMacroParamData)
 	ON_BN_CLICKED(IDC_BUTTON_LOAD_MACRO_PARAM_DATA, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonLoadMacroParamData)
 	ON_EN_CHANGE(IDC_EDIT_USED_DATA_TRIGGER_LIST, &CFmiMacroParamDataGeneratorDlg::OnEnChangeEditUsedDataTriggerList)
+	ON_EN_CHANGE(IDC_EDIT_MAX_GENERATED_FILES_KEPT, &CFmiMacroParamDataGeneratorDlg::OnEnChangeEditMaxGeneratedFilesKept)
 END_MESSAGE_MAP()
 
-
 // CFmiMacroParamDataGeneratorDlg message handlers
-
 
 BOOL CFmiMacroParamDataGeneratorDlg::OnInitDialog()
 {
@@ -123,6 +124,7 @@ void CFmiMacroParamDataGeneratorDlg::InitControlsFromLoadedMacroParamDataInfo(co
 	itsUsedParameterListString = CA2T(macroParamsDataInfo.UsedParameterListString().c_str());
 	itsGeneratedDataStorageFileFilter = CA2T(macroParamsDataInfo.DataStorageFileFilter().c_str());
 	itsDataTriggerList = CA2T(macroParamsDataInfo.DataTriggerList().c_str());
+	itsMaxGeneratedFilesKept = macroParamsDataInfo.MaxGeneratedFilesKept();
 	UpdateData(FALSE);
 }
 
@@ -136,6 +138,7 @@ void CFmiMacroParamDataGeneratorDlg::StoreControlValuesToDocument()
 	itsMacroParamDataGenerator->DialogUsedParameterListString(CFmiWin32Helpers::CT2std(itsUsedParameterListString));
 	itsMacroParamDataGenerator->DialogDataStorageFileFilter(CFmiWin32Helpers::CT2std(itsGeneratedDataStorageFileFilter));
 	itsMacroParamDataGenerator->DialogDataTriggerList(CFmiWin32Helpers::CT2std(itsDataTriggerList));
+	itsMacroParamDataGenerator->DialogMaxGeneratedFilesKept(itsMaxGeneratedFilesKept);
 }
 
 // Tarkista kaikki syötteet ja jos niissä on vikaa:
@@ -358,6 +361,11 @@ void CFmiMacroParamDataGeneratorDlg::OnEnChangeEditUsedDataTriggerList()
 	CWnd* win = GetDlgItem(IDC_STATIC_USED_DATA_TRIGGER_LIST);
 	if(win)
 		win->Invalidate(FALSE);
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnEnChangeEditMaxGeneratedFilesKept()
+{
+	UpdateData(TRUE);
 }
 
 void CFmiMacroParamDataGeneratorDlg::StepIt(void)
