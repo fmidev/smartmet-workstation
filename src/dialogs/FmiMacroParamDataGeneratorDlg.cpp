@@ -32,7 +32,7 @@ CFmiMacroParamDataGeneratorDlg::CFmiMacroParamDataGeneratorDlg(SmartMetDocumentI
 	, itsGeneratedDataStorageFileFilter(_T(""))
 	, mLoadedMacroParamDataInfoName(_T(""))
 	, itsDataTriggerList(_T(""))
-	, itsMaxGeneratedFilesKept(2)
+	, itsMaxGeneratedFilesKept(_T(""))
 {
 }
 
@@ -52,7 +52,6 @@ void CFmiMacroParamDataGeneratorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_STATIC_LOADED_MACRO_PARAM_DATA_INFO_NAME, mLoadedMacroParamDataInfoName);
 	DDX_Text(pDX, IDC_EDIT_USED_DATA_TRIGGER_LIST, itsDataTriggerList);
 	DDX_Text(pDX, IDC_EDIT_MAX_GENERATED_FILES_KEPT, itsMaxGeneratedFilesKept);
-	DDV_MinMaxInt(pDX, itsMaxGeneratedFilesKept, 1, 10);
 }
 
 BEGIN_MESSAGE_MAP(CFmiMacroParamDataGeneratorDlg, CDialogEx)
@@ -68,6 +67,7 @@ BEGIN_MESSAGE_MAP(CFmiMacroParamDataGeneratorDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_LOAD_MACRO_PARAM_DATA, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonLoadMacroParamData)
 	ON_EN_CHANGE(IDC_EDIT_USED_DATA_TRIGGER_LIST, &CFmiMacroParamDataGeneratorDlg::OnEnChangeEditUsedDataTriggerList)
 	ON_EN_CHANGE(IDC_EDIT_MAX_GENERATED_FILES_KEPT, &CFmiMacroParamDataGeneratorDlg::OnEnChangeEditMaxGeneratedFilesKept)
+	ON_WM_GETMINMAXINFO()
 END_MESSAGE_MAP()
 
 // CFmiMacroParamDataGeneratorDlg message handlers
@@ -75,13 +75,16 @@ END_MESSAGE_MAP()
 BOOL CFmiMacroParamDataGeneratorDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
+	// Tätä DoResizerHooking:ia pitää kutsua ennen kuin dialogin talletettu koko otetaan Windows rekisteristä
+	DoResizerHooking(); 
 
 	std::string errorBaseStr("Error in CFmiMacroParamDataGeneratorDlg::OnInitDialog while reading dialog size and position values");
-	CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, true, errorBaseStr, 0);
+	CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
 	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 	InitDialogTexts();
 	InitControlsFromDocument();
 	DoFullInputChecks();
+	EnableButtons();
 
 	mProgressControl.SetRange(0, 100);
 	mProgressControl.SetStep(1);
@@ -124,8 +127,33 @@ void CFmiMacroParamDataGeneratorDlg::InitControlsFromLoadedMacroParamDataInfo(co
 	itsUsedParameterListString = CA2T(macroParamsDataInfo.UsedParameterListString().c_str());
 	itsGeneratedDataStorageFileFilter = CA2T(macroParamsDataInfo.DataStorageFileFilter().c_str());
 	itsDataTriggerList = CA2T(macroParamsDataInfo.DataTriggerList().c_str());
-	itsMaxGeneratedFilesKept = macroParamsDataInfo.MaxGeneratedFilesKept();
+	InitMaxGeneratedFilesKept(macroParamsDataInfo.MaxGeneratedFilesKept());
 	UpdateData(FALSE);
+}
+
+void CFmiMacroParamDataGeneratorDlg::InitMaxGeneratedFilesKept(int maxGeneratedFilesKept)
+{
+	try
+	{
+		itsMaxGeneratedFilesKept = CA2T(std::to_string(maxGeneratedFilesKept).c_str());
+	}
+	catch(...)
+	{
+		itsMaxGeneratedFilesKept = _T("2");
+	}
+}
+
+int CFmiMacroParamDataGeneratorDlg::GetMaxGeneratedFilesKept()
+{
+	try
+	{
+		std::string tmpStr = CT2A(itsMaxGeneratedFilesKept);
+		return NFmiMacroParamDataInfo::FixMaxGeneratedFilesKeptValue(std::stoi(tmpStr));
+	}
+	catch(...)
+	{
+		return NFmiMacroParamDataInfo::FixMaxGeneratedFilesKeptValue(2);
+	}
 }
 
 void CFmiMacroParamDataGeneratorDlg::StoreControlValuesToDocument()
@@ -138,7 +166,7 @@ void CFmiMacroParamDataGeneratorDlg::StoreControlValuesToDocument()
 	itsMacroParamDataGenerator->DialogUsedParameterListString(CFmiWin32Helpers::CT2std(itsUsedParameterListString));
 	itsMacroParamDataGenerator->DialogDataStorageFileFilter(CFmiWin32Helpers::CT2std(itsGeneratedDataStorageFileFilter));
 	itsMacroParamDataGenerator->DialogDataTriggerList(CFmiWin32Helpers::CT2std(itsDataTriggerList));
-	itsMacroParamDataGenerator->DialogMaxGeneratedFilesKept(itsMaxGeneratedFilesKept);
+	itsMacroParamDataGenerator->DialogMaxGeneratedFilesKept(GetMaxGeneratedFilesKept());
 }
 
 // Tarkista kaikki syötteet ja jos niissä on vikaa:
@@ -290,6 +318,7 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditBaseDataParamProducer()
 	CWnd* win = GetDlgItem(IDC_STATIC_BASE_DATA_PARAM_PRODUCER_STR);
 	if(win)
 		win->Invalidate(FALSE);
+	EnableButtons();
 }
 
 void CFmiMacroParamDataGeneratorDlg::OnChangeEditProducerIdNamePair()
@@ -304,6 +333,7 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditProducerIdNamePair()
 	CWnd* win = GetDlgItem(IDC_STATIC_PRODUCER_ID_NAME_PAIR_STR);
 	if(win)
 		win->Invalidate(FALSE);
+	EnableButtons();
 }
 
 void CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedParameterList()
@@ -319,6 +349,7 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedParameterList()
 	CWnd* win = GetDlgItem(IDC_STATIC_USED_PARAMETER_LIST_STR);
 	if(win)
 		win->Invalidate(FALSE);
+	EnableButtons();
 }
 
 void CFmiMacroParamDataGeneratorDlg::OnChangeEditGeneratedDataStorageFileFilter()
@@ -333,6 +364,7 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditGeneratedDataStorageFileFilter(
 	CWnd* win = GetDlgItem(IDC_STATIC_GENERATED_DATA_STORAGE_FILE_FILTER_STR);
 	if(win)
 		win->Invalidate(FALSE);
+	EnableButtons();
 }
 
 void CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedDataGenerationSmarttoolPath()
@@ -347,6 +379,7 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedDataGenerationSmarttoolPath
 	CWnd* win = GetDlgItem(IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_STR);
 	if(win)
 		win->Invalidate(FALSE);
+	EnableButtons();
 }
 
 void CFmiMacroParamDataGeneratorDlg::OnEnChangeEditUsedDataTriggerList()
@@ -361,11 +394,14 @@ void CFmiMacroParamDataGeneratorDlg::OnEnChangeEditUsedDataTriggerList()
 	CWnd* win = GetDlgItem(IDC_STATIC_USED_DATA_TRIGGER_LIST);
 	if(win)
 		win->Invalidate(FALSE);
+	EnableButtons();
 }
 
 void CFmiMacroParamDataGeneratorDlg::OnEnChangeEditMaxGeneratedFilesKept()
 {
 	UpdateData(TRUE);
+	InitMaxGeneratedFilesKept(GetMaxGeneratedFilesKept());
+	UpdateData(FALSE);
 }
 
 void CFmiMacroParamDataGeneratorDlg::StepIt(void)
@@ -480,4 +516,73 @@ void CFmiMacroParamDataGeneratorDlg::UpdateMacroParamDataInfoName(const std::str
 {
 	mLoadedMacroParamDataInfoName = CA2T(fullPath.c_str());
 	UpdateData(FALSE);
+}
+
+void CFmiMacroParamDataGeneratorDlg::EnableButtons()
+{
+	auto macroParamDataInfoOk = !fBaseDataParamProducerStringHasInvalidValues && !fProducerIdNamePairStringHasInvalidValues && !fUsedDataGenerationSmarttoolPathHasInvalidValues && !fUsedParameterListStringHasInvalidValues && !fGeneratedDataStorageFileFilterHasInvalidValues && !fDataTriggerListHasInvalidValues;
+	EnableDialogueControl(IDC_BUTTON_GENERATE_MACRO_PARAM_DATA, macroParamDataInfoOk);
+	EnableDialogueControl(IDC_BUTTON_SAVE_MACRO_PARAM_DATA, macroParamDataInfoOk);
+}
+
+void CFmiMacroParamDataGeneratorDlg::DoResizerHooking(void)
+{
+	BOOL bOk = m_resizer.Hook(this);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_GROUP_MACRO_PARAM_DATA_INFO, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_BASE_DATA_PARAM_PRODUCER_STR, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_EDIT_BASE_DATA_PARAM_PRODUCER, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_PRODUCER_ID_NAME_PAIR_STR, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_EDIT_PRODUCER_ID_NAME_PAIR, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_STR, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_EDIT_USED_DATA_GENERATION_SMARTTOOL_PATH, ANCHOR_HORIZONTALLY | ANCHOR_TOP);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_BROWSE_USED_SMARTTOOL_PATH, ANCHOR_TOP | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_USED_PARAMETER_LIST_STR, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_EDIT_USED_PARAMETER_LIST, ANCHOR_HORIZONTALLY | ANCHOR_TOP);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_USED_DATA_TRIGGER_LIST, ANCHOR_TOP | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_EDIT_USED_DATA_TRIGGER_LIST, ANCHOR_TOP | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_GENERATED_DATA_STORAGE_FILE_FILTER_STR, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_EDIT_GENERATED_DATA_STORAGE_FILE_FILTER, ANCHOR_HORIZONTALLY | ANCHOR_TOP);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_BROWSE_STORED_DATA_FILE_FILTER, ANCHOR_TOP | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_MAX_GENERATED_FILES_KEPT_STR, ANCHOR_TOP | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_EDIT_MAX_GENERATED_FILES_KEPT, ANCHOR_TOP | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_GENERATE_MACRO_PARAM_DATA, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_PROGRESS_OF_OPERATION_BAR, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_SAVE_MACRO_PARAM_DATA, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_LOAD_MACRO_PARAM_DATA, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_LOADED_MACRO_PARAM_DATA_INFO_NAME, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_GROUP_DATA_GENERATION_LIST, ANCHOR_VERTICALLY | ANCHOR_HORIZONTALLY);
+	ASSERT(bOk == TRUE);
+}
+
+
+void CFmiMacroParamDataGeneratorDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
+{
+	// set the minimum tracking width and height of the window
+	lpMMI->ptMinTrackSize.x = 673;
+	lpMMI->ptMinTrackSize.y = 599;
+
+	__super::OnGetMinMaxInfo(lpMMI);
 }

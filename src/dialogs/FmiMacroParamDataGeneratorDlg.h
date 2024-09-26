@@ -3,6 +3,7 @@
 #include "NFmiViewPosRegistryInfo.h"
 #include "NFmiQueryDataUtil.h"
 #include "TextProgressCtrl.h"
+#include "WndResizer.h"
 
 class SmartMetDocumentInterface;
 class NFmiMacroParamDataGenerator;
@@ -53,6 +54,10 @@ private:
 	void LaunchMacroParamDataGeneration();
 	void InitControlsFromLoadedMacroParamDataInfo(const NFmiMacroParamDataInfo &macroParamsDataInfo);
 	void UpdateMacroParamDataInfoName(const std::string& fullPath);
+	void EnableButtons();
+	void InitMaxGeneratedFilesKept(int maxGeneratedFilesKept);
+	int GetMaxGeneratedFilesKept();
+	void DoResizerHooking();
 
 	// itsSmartMetDocumentInterface ei omista, ei tuhoa
 	SmartMetDocumentInterface* itsSmartMetDocumentInterface;
@@ -82,14 +87,16 @@ private:
 	CString itsDataTriggerList;
 	// T‰m‰n avulla v‰ritet‰‰n static_text kontrolli punaiseksi, jos inputissa vikaa
 	bool fDataTriggerListHasInvalidValues = false;
-	int itsMaxGeneratedFilesKept;
+	CString itsMaxGeneratedFilesKept;
 
-	// Jos macroparam dataa ollaan generoimassa, t‰ss‰ o ntarkoitus kertoa sen edistymisest‰
+	// Jos macroparam dataa ollaan generoimassa, t‰ss‰ on tarkoitus kertoa sen edistymisest‰
 	CTextProgressCtrl mProgressControl;
 	NFmiStopFunctor mStopper;
 	std::unique_ptr<NFmiThreadCallBacks> mThreadCallBacksPtr;
 	// Kun MP-data-info ladataan tai talletetaan, t‰h‰n laitetaan sen tiedosto nimi tai polku
 	CString mLoadedMacroParamDataInfoName;
+	CWndResizer m_resizer;
+
 public:
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
@@ -107,4 +114,5 @@ public:
 	afx_msg void OnBnClickedButtonLoadMacroParamData();
 	afx_msg void OnEnChangeEditUsedDataTriggerList();
 	afx_msg void OnEnChangeEditMaxGeneratedFilesKept();
+	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
 };
