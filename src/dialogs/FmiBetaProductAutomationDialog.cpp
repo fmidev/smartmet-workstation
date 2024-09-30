@@ -663,22 +663,13 @@ void CFmiBetaProductAutomationDialog::OnEnChangeEditBetaAutomationEndTimeWallClo
 
 void CFmiBetaProductAutomationDialog::UpdateAutomationList()
 {
-    // En saanut tätä päivittämään muuttuneita väreja ja tekstejä (ainakaan valitulla rivillä) kuin asettamalla 
-    // rivi määräksi ensin 0:n ja sitten takaisin oikeaan rivi määrään ja lisäksi pitää ottaa talteen 
-    // valitut rivit, jotta ne voidaan lopuksi asettaa takaisin päälle. Kaikeilin vähän kaikenlaisia erilaisia
-    // päivitys ja likaus funktioita, mutta ilman haluttua tulosta.
-
-    CCellRange selectedCellRange = itsGridCtrl.GetSelectedCellRange();
     const NFmiBetaProductAutomationList::AutomationContainer &dataVector = itsBetaProductionSystem->UsedAutomationList().AutomationVector();
-    itsGridCtrl.SetRowCount(itsGridCtrl.GetFixedRowCount());
     itsGridCtrl.SetRowCount(static_cast<int>(dataVector.size() + itsGridCtrl.GetFixedRowCount()));
     int currentRowCount = itsGridCtrl.GetFixedRowCount();
     for(size_t i = 0; i < dataVector.size(); i++)
     {
         SetGridRow(currentRowCount++, *dataVector[i]);
     }
-    itsGridCtrl.SetSelectedRange(selectedCellRange);
-
     itsGridCtrl.UpdateData(FALSE);
 }
 
@@ -774,7 +765,8 @@ void CFmiBetaProductAutomationDialog::HandleEnableAutomationCheckBoxClick(int co
         {
             NFmiBetaProductAutomationListItem &listItem = *dataVector[dataIndex];
             listItem.fEnable = newState;
-            UpdateAutomationList();
+            SetGridRow(row, listItem);
+            itsGridCtrl.UpdateData(FALSE);
         }
     }
 }
