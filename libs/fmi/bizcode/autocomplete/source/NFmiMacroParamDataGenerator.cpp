@@ -122,40 +122,59 @@ bool NFmiMacroParamDataInfo::CheckData()
     {
         auto checkResult = NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(mBaseDataParamProducerString, false);
         if(!checkResult.first.empty())
+        {
+            itsCheckShortStatusStr = "Base data param-producer error";
             return false;
+        }
     }
 
     {
         auto checkResult = NFmiMacroParamDataInfo::CheckUsedProducerString(mUsedProducerString);
         if(!checkResult.first.empty())
+        {
+            itsCheckShortStatusStr = "Used producer error";
             return false;
+        }
     }
 
     {
         NFmiProducer dummyProducer;
         auto checkResult = NFmiMacroParamDataInfo::CheckUsedParameterListString(mUsedParameterListString, dummyProducer);
         if(!checkResult.first.empty())
+        {
+            itsCheckShortStatusStr = "Param list error";
             return false;
+        }
     }
 
     {
         auto checkResult = NFmiMacroParamDataInfo::CheckDataStorageFileFilter(mDataStorageFileFilter);
         if(!checkResult.empty())
+        {
+            itsCheckShortStatusStr = "Storage file filter error";
             return false;
+        }
     }
 
     {
         auto checkResult = NFmiMacroParamDataInfo::CheckDataGeneratingSmarttoolPathString(mDataGeneratingSmarttoolPathString);
         if(!checkResult.empty())
+        {
+            itsCheckShortStatusStr = "Smarttool path error";
             return false;
+        }
     }
 
     {
         auto checkResult = NFmiMacroParamDataInfo::CheckDataTriggerListString(mDataTriggerList);
         if(!checkResult.empty())
+        {
+            itsCheckShortStatusStr = "Trigger list error";
             return false;
+        }
     }
 
+    itsCheckShortStatusStr = "Macro param data ok";
     return true;
 }
 
@@ -267,7 +286,7 @@ std::string NFmiMacroParamDataInfo::CheckDataStorageFileFilter(const std::string
         return std::string("CheckDataStorageFileFilter") + ": Given data output directory '" + directory + "' doesn't exists, make sure that given path for MacroParam data was correct!";
     }
 
-    auto filename = PathUtils::getFilename(dataStorageFileFilter);
+    auto filename = PathUtils::getFilename(dataStorageFileFilter, false);
     // 2. Tiedoston nimessä pitää olla '*' merkki aikaleimaa varten.
     if(filename.find('*') == std::string::npos)
     {
@@ -342,6 +361,13 @@ std::string NFmiMacroParamDataInfo::CheckDataTriggerListString(const std::string
     return "";
 }
 
+std::string NFmiMacroParamDataInfo::MakeShortStatusErrorString()
+{
+    CheckData();
+    return itsCheckShortStatusStr;
+}
+
+
 static const std::string gJsonName_BaseDataParamProducer = "BaseDataParamProducer";
 static const std::string gJsonName_UsedProducer = "UsedProducer";
 static const std::string gJsonName_DataGeneratingSmarttoolPath = "DataGeneratingSmarttoolPath";
@@ -396,13 +422,419 @@ bool NFmiMacroParamDataInfo::ReadInJsonFormat(NFmiMacroParamDataInfo& macroParam
     return JsonUtils::ReadObjectInJsonFormat(macroParamDataInfoOut, theFilePath, "MacroParamDataInfo", theErrorStringOut);
 }
 
+// ********************************************************************
+// ***  NFmiMacroParamDataAutomationListItem osio alkaa  *****************
+// ********************************************************************
+
+NFmiMacroParamDataAutomationListItem::NFmiMacroParamDataAutomationListItem()
+    :fEnable(false)
+    , itsMacroParamDataAutomationPath()
+    , itsMacroParamDataAutomationAbsolutePath()
+    , itsMacroParamDataAutomation()
+    , itsLastRunTime(1) // Otetaan viime ajoajaksi nyky utc hetki 1 minuutin tarkkuudella
+    , fProductsHaveBeenGenerated(false)
+//    , itsNextRunTime(NFmiMetTime::gMissingTime)
+{
+}
+
+NFmiMacroParamDataAutomationListItem::NFmiMacroParamDataAutomationListItem(const std::string& theBetaAutomationPath)
+    :fEnable(false)
+    , itsMacroParamDataAutomationPath(theBetaAutomationPath)
+    , itsMacroParamDataAutomationAbsolutePath()
+    , itsMacroParamDataAutomation()
+    , itsLastRunTime(1) // Otetaan viime ajoajaksi nyky utc hetki 1 minuutin tarkkuudella
+    , fProductsHaveBeenGenerated(false)
+//    , itsNextRunTime(NFmiMetTime::gMissingTime)
+{
+}
+
+// Tätä kutsutaan kun esim. luetaan data tiedostosta ja tehdään täysi tarkistus kaikille osille
+void NFmiMacroParamDataAutomationListItem::DoFullChecks(bool automationModeOn)
+{
+    itsStatus = MacroParamDataStatus::kFmiListItemOk;
+    if(itsMacroParamDataAutomation)
+    {
+        if(GetErrorStatus() == MacroParamDataStatus::kFmiListItemOk) // Jos automaatio tuote on ok, lasketaan aina seuraava ajoaika valmiiksi
+        {
+//            itsNextRunTime = itsBetaProductAutomation->TriggerModeInfo().CalcNextDueTime(itsLastRunTime, automationModeOn);
+        }
+    }
+    else
+        itsStatus = MacroParamDataStatus::kFmiListItemReadError;
+
+}
+
+bool NFmiMacroParamDataAutomationListItem::IsEmpty() const
+{
+    if(itsMacroParamDataAutomation)
+        return false;
+    else
+        return true;
+}
+
+std::string NFmiMacroParamDataAutomationListItem::AutomationName() const
+{
+    try
+    {
+        return PathUtils::getFilename(itsMacroParamDataAutomationPath, false);
+    }
+    catch(...)
+    {
+        return "FileName-error";
+    }
+}
+
+std::string NFmiMacroParamDataAutomationListItem::ShortStatusText() const
+{
+    if(itsStatus == MacroParamDataStatus::kFmiListItemReadError)
+        return "Automation read error";
+    else if(itsStatus == MacroParamDataStatus::kFmiListItemSameAutomationsInList)
+        return "Same automation multiple times";
+    else if(itsMacroParamDataAutomation)
+        return itsMacroParamDataAutomation->CheckShortStatusStr();
+    else
+        return "Empty-Automation-error";
+}
+
+MacroParamDataStatus NFmiMacroParamDataAutomationListItem::GetErrorStatus() const
+{
+    if(itsStatus == MacroParamDataStatus::kFmiListItemReadError)
+        return itsStatus;
+    else if(itsMacroParamDataAutomation)
+    {
+        if(!itsMacroParamDataAutomation->CheckData())
+            return MacroParamDataStatus::kFmiListItemAutomationError;
+    }
+
+    return itsStatus;
+}
+
+std::string NFmiMacroParamDataAutomationListItem::FullAutomationPath() const
+{
+    return itsMacroParamDataAutomationAbsolutePath;
+}
+
+
+static const std::string gJsonName_MacroParDataAutomationListItemEnable = "Enable";
+static const std::string gJsonName_MacroParDataAutomationListItemPath = "MacroParamData-automation path";
+static const std::string gJsonName_MacroParDataAutomationListItemAbsolutePath = "MacroParamData-automation absolute path";
+
+// Tämä tallentaa json objektiin vain enable -lipun ja polun käytettyyn MacroParam data -automaatioon. 
+// Mutta ei itse MacroParam data -automaatio otusta!!
+json_spirit::Object NFmiMacroParamDataAutomationListItem::MakeJsonObject(const NFmiMacroParamDataAutomationListItem& listItem)
+{
+    NFmiMacroParamDataAutomationListItem defaultListItem;
+
+    json_spirit::Object jsonObject;
+    if(defaultListItem.fEnable != listItem.fEnable)
+        jsonObject.push_back(json_spirit::Pair(gJsonName_MacroParDataAutomationListItemEnable, listItem.fEnable));
+    JsonUtils::AddNonEmptyStringJsonPair(listItem.itsMacroParamDataAutomationPath, gJsonName_MacroParDataAutomationListItemPath, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(listItem.itsMacroParamDataAutomationAbsolutePath, gJsonName_MacroParDataAutomationListItemAbsolutePath, jsonObject);
+
+    return jsonObject;
+}
+
+void NFmiMacroParamDataAutomationListItem::ParseJsonPair(json_spirit::Pair& thePair)
+{
+    if(thePair.name_ == gJsonName_MacroParDataAutomationListItemEnable)
+        fEnable = thePair.value_.get_bool();
+    else if(thePair.name_ == gJsonName_MacroParDataAutomationListItemPath)
+        itsMacroParamDataAutomationPath = thePair.value_.get_str();
+    else if(thePair.name_ == gJsonName_MacroParDataAutomationListItemAbsolutePath)
+        itsMacroParamDataAutomationAbsolutePath = thePair.value_.get_str();
+}
+
+// ***********************************************************
+// ************ NFmiMacroParamDataAutomationList ******************
+// ***********************************************************
+
+bool NFmiMacroParamDataAutomationList::Add(const std::string& theBetaAutomationPath)
+{
+    auto listItem = std::make_shared<NFmiMacroParamDataAutomationListItem>(theBetaAutomationPath);
+    if(PrepareListItemAfterJsonRead(*listItem)) // Voidaan käyttää tätä metodia, vaikka listItemia ei olekaan luettu json-tiedostosta
+    {
+        listItem->fEnable = true;
+        // Lisättäessä listaan laitetaan CalcNextDueTime funktiolla true optio päälle.
+//        listItem->itsNextRunTime = listItem->itsBetaProductAutomation->TriggerModeInfo().CalcNextDueTime(NFmiMetTime(1), true);
+        mAutomationVector.push_back(listItem);
+        return true;
+    }
+
+    return false;
+}
+
+// Rivi indeksi pitää antaa 0-kantaisena indeksinä, oikeasti rivit grid-controllissa alkavat yhdestä, koska siinä on mukana otsikko rivi.
+bool NFmiMacroParamDataAutomationList::Remove(size_t theZeroBasedRowIndex)
+{
+    if(theZeroBasedRowIndex < mAutomationVector.size())
+    {
+        mAutomationVector.erase(mAutomationVector.begin() + theZeroBasedRowIndex);
+        return true;
+    }
+    else
+        return false; // indeksi ei osoittanut mihinkään vektorin olioon
+}
+
+// ListItem on luettu json-tiedostosta NFmiBetaProductAutomationList -luvun yhteydessä, 
+// sille pitää tehdä seuraavia asioita ennen kuin se voidaan lisätä itsAutomationVector:iin:
+// 1. Säädä polut (abs vs relative)
+// 2. Luo dynaamisesti oletus Beta-automation olio
+// 3. Lue Beta-automation olio käyttöön
+bool NFmiMacroParamDataAutomationList::PrepareListItemAfterJsonRead(NFmiMacroParamDataAutomationListItem& theListItem)
+{
+    MakeListItemPathSettings(theListItem);
+    theListItem.itsMacroParamDataAutomation = std::make_shared<NFmiMacroParamDataInfo>();
+    std::string errorString;
+    return NFmiMacroParamDataInfo::ReadInJsonFormat(*theListItem.itsMacroParamDataAutomation, theListItem.itsMacroParamDataAutomationAbsolutePath, errorString);
+}
+
+// Oletus: theListItem.itsBetaProductAutomationPath:iin on jo laitettu käytetty polku.
+// 1. Tarkistaa onko annettu polku absoluuttinen vai suhteellinen
+// 2. Jos suhteellinen, laske absoluuttinen polku beta-product-base-directoryn mukaan
+// 3. Jos absoluuttinen polku, laske suhteellinen polku em. base-directoryn mukaan.
+// 4. Kokeillaan löytyykö saatu absoluuttinen polku
+bool NFmiMacroParamDataAutomationList::MakeListItemPathSettingsCheck(NFmiMacroParamDataAutomationListItem& theListItem, const std::string& theCheckedPath)
+{
+    std::string givenPath = theCheckedPath;
+    if(givenPath.empty())
+        return false;
+    if(NFmiFileSystem::IsAbsolutePath(givenPath))
+    {
+        theListItem.itsMacroParamDataAutomationAbsolutePath = givenPath;
+        theListItem.itsMacroParamDataAutomationPath = PathUtils::getRelativePathIfPossible(givenPath, NFmiMacroParamDataGenerator::RootMacroParamDataDirectory());
+    }
+    else
+    {
+        theListItem.itsMacroParamDataAutomationAbsolutePath = PathUtils::getTrueFilePath(givenPath, NFmiMacroParamDataGenerator::RootMacroParamDataDirectory(), NFmiMacroParamDataGenerator::MacroParamDataInfoFileExtension());
+        theListItem.itsMacroParamDataAutomationPath = givenPath;
+    }
+    return NFmiFileSystem::FileExists(theListItem.itsMacroParamDataAutomationAbsolutePath);
+}
+
+bool NFmiMacroParamDataAutomationList::MakeListItemPathSettings(NFmiMacroParamDataAutomationListItem& theListItem)
+{
+    auto tmpItem = theListItem;
+    // Kokeillaan ensin löytyykö automaatio-tiedosto käyttäen mahdollista suhteellista polkua vastaan (käyttäjän antama polku, joka voi olla suhteellinen)
+    if(!MakeListItemPathSettingsCheck(tmpItem, tmpItem.itsMacroParamDataAutomationPath))
+    { 
+        // jos ei löytynyt, kokeillaan vielä löytyykö absoluuttisella polulla mitään
+        if(theListItem.itsMacroParamDataAutomationAbsolutePath.empty())
+        {
+            theListItem = tmpItem; // Jos jsonista ei saatu ollenkaan absoluuttista polkua, palautetaan suhteellisen polun tarkastelun tilanne ja palautetaan false
+            return false;
+        }
+        else
+            return MakeListItemPathSettingsCheck(theListItem, theListItem.itsMacroParamDataAutomationPath);
+    }
+    theListItem = tmpItem;
+    return true;
+}
+
+static NFmiMacroParamDataAutomationListItem gDummyMacroParamDataAutomationListItem;
+
+// Rivi indeksi pitää antaa 0-kantaisena indeksinä, oikeasti rivit grid-controllissa alkavat yhdestä, koska siinä on mukana otsikko rivi.
+NFmiMacroParamDataAutomationListItem& NFmiMacroParamDataAutomationList::Get(size_t theZeroBasedRowIndex)
+{
+    if(theZeroBasedRowIndex < mAutomationVector.size())
+        return *mAutomationVector[theZeroBasedRowIndex];
+    else
+        return gDummyMacroParamDataAutomationListItem; // indeksi ei osoittanut mihinkään vektorin olioon
+}
+
+// Rivi indeksi pitää antaa 0-kantaisena indeksinä, oikeasti rivit grid-controllissa alkavat yhdestä, koska siinä on mukana otsikko rivi.
+const NFmiMacroParamDataAutomationListItem& NFmiMacroParamDataAutomationList::Get(size_t theZeroBasedRowIndex) const
+{
+    if(theZeroBasedRowIndex < mAutomationVector.size())
+        return *mAutomationVector[theZeroBasedRowIndex];
+    else
+        return gDummyMacroParamDataAutomationListItem; // indeksi ei osoittanut mihinkään vektorin olioon
+}
+
+static const std::string gJsonName_MacroParamDataAutomationListHeader = "MacroParData-automation list";
+
+json_spirit::Object NFmiMacroParamDataAutomationList::MakeJsonObject(const NFmiMacroParamDataAutomationList& theMacroParamDataAutomationList)
+{
+    json_spirit::Array dataArray;
+    const auto& dataVector = theMacroParamDataAutomationList.AutomationVector();
+    for(size_t i = 0; i < dataVector.size(); i++)
+    {
+        json_spirit::Object tmpObject = NFmiMacroParamDataAutomationListItem::MakeJsonObject(*dataVector[i]);
+        if(tmpObject.size())
+        {
+            json_spirit::Value tmpVal(tmpObject);
+            dataArray.push_back(tmpVal);
+        }
+    }
+
+    json_spirit::Object jsonObject; // luodaan ns. null-objekti
+    if(dataArray.size())
+    { // täytetään objekti vain jos löytyi yhtään talletettavaa dataa
+        jsonObject.push_back(json_spirit::Pair(gJsonName_MacroParamDataAutomationListHeader, dataArray));
+    }
+    return jsonObject;
+}
+
+void NFmiMacroParamDataAutomationList::ParseJsonPair(json_spirit::Pair& thePair)
+{
+    if(thePair.name_ == gJsonName_MacroParamDataAutomationListHeader)
+    {
+        json_spirit::Array dataFileArray = thePair.value_.get_array();
+        if(dataFileArray.size())
+        {
+            for(json_spirit::Array::iterator it = dataFileArray.begin(); it != dataFileArray.end(); ++it)
+            {
+                auto listItem = std::make_shared<NFmiMacroParamDataAutomationListItem>();
+                JsonUtils::ParseJsonValue(*listItem, *it);
+                if(!PrepareListItemAfterJsonRead(*listItem))
+                    listItem->itsStatus = MacroParamDataStatus::kFmiListItemReadError;
+                mAutomationVector.push_back(listItem); // Lisätään virheellisestikin luetut listItemit, jotta käyttäjä saisi palautetta
+            }
+        }
+    }
+}
+
+// Tätä kutsutaan kun esim. luetaan data tiedostosta ja tehdään täysi tarkistus kaikille osille
+MacroParamDataStatus NFmiMacroParamDataAutomationList::DoFullChecks(bool fAutomationModeOn)
+{
+    auto status = MacroParamDataStatus::kFmiListItemOk;
+    // Tutkitaan ensin erikseen jokainen automaatio-olio
+    for(auto& listItem : mAutomationVector)
+    {
+        listItem->DoFullChecks(fAutomationModeOn);
+        if(listItem->GetErrorStatus() != MacroParamDataStatus::kFmiListItemOk)
+            return listItem->GetErrorStatus();
+    }
+
+    // Sitten tehdään yhteis tarkastuksia: 1. onko samoja automaatioita useita listassa
+    if(mAutomationVector.size() > 1)
+    {
+        for(size_t j = 0; j < mAutomationVector.size() - 1; j++)
+        {
+            for(size_t i = j + 1; i < mAutomationVector.size(); i++)
+            {
+                if(mAutomationVector[j]->FullAutomationPath() == mAutomationVector[i]->FullAutomationPath() && !mAutomationVector[j]->FullAutomationPath().empty())
+                {
+                    mAutomationVector[j]->itsStatus = MacroParamDataStatus::kFmiListItemSameAutomationsInList;
+                    return MacroParamDataStatus::kFmiListItemSameAutomationsInList;
+                }
+            }
+        }
+    }
+
+    return MacroParamDataStatus::kFmiListItemOk;
+}
+
+void NFmiMacroParamDataAutomationList::RefreshAutomationList()
+{
+    for(auto& betaAutomation : mAutomationVector)
+    {
+        RefreshAutomationIfNeeded(betaAutomation);
+    }
+}
+
+void NFmiMacroParamDataAutomationList::RefreshAutomationIfNeeded(std::shared_ptr<NFmiMacroParamDataAutomationListItem>& automationListItem)
+{
+    // Lue annettu beta-automaatio uudestaan tiedostosta uuteen olioon
+    auto listItemFromFile = std::make_shared<NFmiMacroParamDataAutomationListItem>(automationListItem->itsMacroParamDataAutomationAbsolutePath);
+    if(PrepareListItemAfterJsonRead(*listItemFromFile)) // Voidaan käyttää tätä metodia, vaikka listItemia ei olekaan luettu json-tiedostosta
+    {
+        // Jos luku meni hyvin, sijoitetaan annettu beta-automaatio päivitettävään otukseen
+        automationListItem->itsMacroParamDataAutomation.swap(listItemFromFile->itsMacroParamDataAutomation);
+        // päivitetään vielä seuraava ajoaika
+//        automationListItem->itsNextRunTime = automationListItem->itsBetaProductAutomation->TriggerModeInfo().CalcNextDueTime(NFmiMetTime(1), true);
+    }
+}
+
+bool NFmiMacroParamDataAutomationList::IsOk() const
+{
+    for(auto& listItem : mAutomationVector)
+    {
+        if(listItem->GetErrorStatus() != MacroParamDataStatus::kFmiListItemOk)
+            return false;
+    }
+    return true;
+}
+
+std::set<std::string> NFmiMacroParamDataAutomationList::GetUniqueFilePathSet() const
+{
+    std::set<std::string> uniqueFilePaths;
+    for(auto& listItem : mAutomationVector)
+        uniqueFilePaths.insert(listItem->FullAutomationPath());
+    return uniqueFilePaths;
+}
+
+bool NFmiMacroParamDataAutomationList::ContainsAutomationMoreThanOnce() const
+{
+    std::set<std::string> uniqueFilePaths = GetUniqueFilePathSet();
+    return mAutomationVector.size() > uniqueFilePaths.size();
+}
+
+bool NFmiMacroParamDataAutomationList::HasAutomationAlready(const std::string& theFullFilePath) const
+{
+    std::set<std::string> uniqueFilePaths = GetUniqueFilePathSet();
+    std::set<std::string>::iterator pos = uniqueFilePaths.find(theFullFilePath);
+    return pos != uniqueFilePaths.end();
+}
+
+static const std::string gMacroParDataAutomationListName = "MacroParData-automation list";
+
+bool NFmiMacroParamDataAutomationList::StoreInJsonFormat(const NFmiMacroParamDataAutomationList& theBetaProductAutomationList, const std::string& theFilePath, std::string& theErrorStringOut)
+{
+    return JsonUtils::StoreObjectInJsonFormat(theBetaProductAutomationList, theFilePath, gMacroParDataAutomationListName, theErrorStringOut);
+}
+
+bool NFmiMacroParamDataAutomationList::ReadInJsonFormat(NFmiMacroParamDataAutomationList& theBetaProductAutomationList, const std::string& theFilePath, std::string& theErrorStringOut)
+{
+    bool status = JsonUtils::ReadObjectInJsonFormat(theBetaProductAutomationList, theFilePath, gMacroParDataAutomationListName, theErrorStringOut);
+    theBetaProductAutomationList.DoFullChecks(true); // Tehdään täällä tarkastelut automaatiomoodi päällä, myöhemmin (tätä funktiota kutsuvassa systeemissä) tarkastelut on tehtävä uudestaan kun oikeasti tiedetään missä moodissa ollaan
+    return status;
+}
+
+// Käyttäjällä on nykyään kolme on-demand -nappia, joista voi käynnistää halutun setin automaatioita työstettäväksi:
+// 1. Jos selectedAutomationIndex:issä on positiivinen numero, ajetaan vain sen osoittama automaatio.
+// 2. Jos selectedAutomationIndex on -1 ja doOnlyEnabled on true, ajetaan kaikki listalle olevat enbloidut automaatiot.
+// 3. Jos selectedAutomationIndex on -1 ja doOnlyEnabled on false, ajetaan kaikki listalle olevat automaatiot.
+// selectedAutomationIndex -parametri on 1:stä alkava indeksi ja -1 tarkoitti siis että käydään koko listaa läpi.
+NFmiMacroParamDataAutomationList::AutomationContainer NFmiMacroParamDataAutomationList::GetOnDemandAutomations(int selectedAutomationIndex, bool doOnlyEnabled)
+{
+    AutomationContainer onDemandAutomations;
+    if(selectedAutomationIndex > 0)
+    {
+        auto actualIndex = selectedAutomationIndex - 1;
+        if(actualIndex < mAutomationVector.size())
+        {
+            const auto& automationItem = mAutomationVector[actualIndex];
+            // Automaation pitää kuitenkin olla ilman virheitä, että se kelpuutetaan ajettavaksi
+            if(automationItem->GetErrorStatus() == MacroParamDataStatus::kFmiListItemOk)
+                onDemandAutomations.push_back(automationItem);
+        }
+    }
+    else
+    {
+        for(const auto& listItem : mAutomationVector)
+        {
+            // Automaation pitää kuitenkin olla ilman virheitä, että se kelpuutetaan ajettavaksi
+            if(listItem->GetErrorStatus() == MacroParamDataStatus::kFmiListItemOk)
+            {
+                if(!doOnlyEnabled || listItem->fEnable)
+                    onDemandAutomations.push_back(listItem);
+            }
+        }
+    }
+
+    return onDemandAutomations;
+}
+
 // ***********************************************************
 // ************ NFmiMacroParamDataGenerator ******************
 // ***********************************************************
 
 std::string NFmiMacroParamDataGenerator::mRootSmarttoolDirectory = "";
+std::string NFmiMacroParamDataGenerator::mRootMacroParamDataDirectory = "";
 const std::string NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileExtension = "mpd";
 const std::string NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileFilter = "MacroParam data info Files (*." + NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileExtension + ")|*." + NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileExtension + "|All Files (*.*)|*.*||";
+const std::string NFmiMacroParamDataGenerator::itsMacroParamDataListFileExtension = "mpdlist";
+const std::string NFmiMacroParamDataGenerator::itsMacroParamDataListFileFilter = "MacroParam data list Files (*." + NFmiMacroParamDataGenerator::itsMacroParamDataListFileExtension + ")|*." + NFmiMacroParamDataGenerator::itsMacroParamDataListFileExtension + "|All Files (*.*)|*.*||";
 
 NFmiMacroParamDataGenerator::NFmiMacroParamDataGenerator() = default;
 
@@ -416,10 +848,11 @@ namespace
     }
 }
 
-bool NFmiMacroParamDataGenerator::Init(const std::string& theBaseRegistryPath, const std::string& rootSmarttoolDirectory)
+bool NFmiMacroParamDataGenerator::Init(const std::string& theBaseRegistryPath, const std::string& rootSmarttoolDirectory, const std::string& rootMacroParamDataDirectory)
 {
     mBaseRegistryPath = theBaseRegistryPath;
     mRootSmarttoolDirectory = ::FixRootPath(rootSmarttoolDirectory);
+    mRootMacroParamDataDirectory = ::FixRootPath(rootMacroParamDataDirectory);
     // HKEY_CURRENT_USER -keys
     HKEY usedKey = HKEY_CURRENT_USER;
     // Beta product section
@@ -430,10 +863,29 @@ bool NFmiMacroParamDataGenerator::Init(const std::string& theBaseRegistryPath, c
     mDialogUsedParameterListString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\UsedParameterListString", usedKey, "6201, Param1, 6202, Param2");
     mDialogDataStorageFileFilter = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\DataStorageFileFilter", usedKey, "C:\\data\\*_mydata.sqd");
     mMacroParamDataInfoSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\MacroParamDataInfoSaveInitialPath", usedKey, "C:\\data\\");
+    mMacroParamDataAutomationListSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\MacroParamDataAutomationListSaveInitialPath", usedKey, "C:\\data\\");
     mDialogDataTriggerList = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\DataTriggerList", usedKey, "");
     mDialogMaxGeneratedFilesKept = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\MaxGeneratedFilesKept", usedKey, 2);
+    mAutomationModeOn = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\AutomationModeOn", usedKey, false);
+    mAutomationPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\AutomationPath", usedKey, "");
+    mAutomationListPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\AutomationListPath", usedKey, "");
+
+    LoadUsedAutomationList(AutomationListPath());
 
     return true;
+}
+
+// Lataa käyttöön annetusta polusta automaatio-listan.
+// Asettaa polun myös mUsedAutomationListPathString:in arvoksi.
+bool NFmiMacroParamDataGenerator::LoadUsedAutomationList(const std::string& thePath)
+{
+    AutomationListPath(thePath);
+    std::string fullPath = PathUtils::getTrueFilePath(thePath, RootMacroParamDataDirectory(), NFmiMacroParamDataGenerator::MacroParamDataListFileExtension());
+    std::string errorString;
+    itsUsedMacroParamDataAutomationList = NFmiMacroParamDataAutomationList(); // Nollataan käytössä ollut lista ennen uuden lukua
+    bool status = NFmiMacroParamDataAutomationList::ReadInJsonFormat(itsUsedMacroParamDataAutomationList, fullPath, errorString);
+    UsedMacroParamDataAutomationList().DoFullChecks(AutomationModeOn());
+    return status;
 }
 
 static NFmiProducer MakeWantedProducer(const NFmiMacroParamDataInfo& dataInfo)
@@ -484,62 +936,20 @@ std::string NFmiMacroParamDataGenerator::ReadSmarttoolContentFromFile(const std:
     throw std::runtime_error(std::string(__FUNCTION__) + " unable to read smarttool file content from given file: " + mUsedAbsoluteSmarttoolPath);
 }
 
-
-bool NFmiMacroParamDataGenerator::GenerateMacroParamData(NFmiThreadCallBacks* threadCallBacks)
+class DataGenerationIsOnHandler
 {
-    auto dataInfo = MakeDataInfo();
-    auto result = GenerateMacroParamData(dataInfo, threadCallBacks);
-    if(threadCallBacks)
-        threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_FINISHED);
-    return result;
-}
-
-bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDataInfo& dataInfo, NFmiThreadCallBacks* threadCallBacks)
-{
-    try
+    bool& dataGenerationIsOn_;
+public:
+    DataGenerationIsOnHandler(bool& dataGenerationIsOn)
+        :dataGenerationIsOn_(dataGenerationIsOn)
     {
-        auto baseDataCheck = NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(dataInfo.BaseDataParamProducerString(), false);
-        if(!baseDataCheck.first.empty())
-        {
-            throw std::runtime_error(baseDataCheck.first);
-        }
-
-        auto* infoOrganizer = ::GetInfoOrganizer();
-        if(!infoOrganizer)
-        {
-            throw std::runtime_error("GenerateMacroParamData: Can't get proper InfoOrganizer into works, unknown error in the system");
-        }
-
-        // NFmiExtraMacroParamData::FindWantedInfo metodin 3. parametri (false) tarkoittaa että pohjadataksi 
-        // ei kelpuuteta asemadataa, vain hiladata kelpaa.
-        auto wantedInfo = NFmiExtraMacroParamData::FindWantedInfo(*infoOrganizer, baseDataCheck.second, false);
-        if(!wantedInfo.foundInfo_)
-        {
-            throw std::runtime_error(std::string("GenerateMacroParamData: unable to fing requested base data with '") + dataInfo.BaseDataParamProducerString() + "' parameter, unable to generate wanted macroParam data");
-        }
-
-        auto wantedParamDescriptor = ::MakeWantedParamDescriptor(dataInfo);
-        auto wantedMacroParamDataPtr = ::MakeWantedEmptyData(wantedInfo.foundInfo_, wantedParamDescriptor);
-        if(!wantedMacroParamDataPtr)
-        {
-            throw std::runtime_error("GenerateMacroParamData: Unable to generate actual macroParam querydata, unknown error in system");
-        }
-        boost::shared_ptr<NFmiFastQueryInfo> wantedMacroParamInfoPtr(new NFmiFastQueryInfo(wantedMacroParamDataPtr.get()));
-
-        auto smarttoolContent = ReadSmarttoolContentFromFile(dataInfo.DataGeneratingSmarttoolPathString());
-
-        if(CalculateDataWithSmartTool(wantedMacroParamInfoPtr, infoOrganizer, smarttoolContent, threadCallBacks))
-        {
-            return StoreMacroParamData(wantedMacroParamDataPtr, dataInfo.DataStorageFileFilter(), dataInfo.MaxGeneratedFilesKept());
-        }
+        dataGenerationIsOn_ = true;
     }
-    catch(std::exception& )
+    ~DataGenerationIsOnHandler()
     {
-        // Raportoi ongelmasta
+        dataGenerationIsOn_ = false;
     }
-
-    return false;
-}
+};
 
 // Oletus: macroParamDataPtr pitää sisällään talletettavan datan.
 bool NFmiMacroParamDataGenerator::StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter, int keepMaxFiles)
@@ -728,6 +1138,36 @@ void NFmiMacroParamDataGenerator::DialogMaxGeneratedFilesKept(int newValue)
     *mDialogMaxGeneratedFilesKept = NFmiMacroParamDataInfo::FixMaxGeneratedFilesKeptValue(newValue);
 }
 
+bool NFmiMacroParamDataGenerator::AutomationModeOn() const
+{
+    return *mAutomationModeOn;
+}
+
+void NFmiMacroParamDataGenerator::AutomationModeOn(bool newState)
+{
+    *mAutomationModeOn = newState;
+}
+
+std::string NFmiMacroParamDataGenerator::AutomationPath() const
+{
+    return *mAutomationPath;
+}
+
+void NFmiMacroParamDataGenerator::AutomationPath(const std::string& newValue) const
+{
+    *mAutomationPath = newValue;
+}
+
+std::string NFmiMacroParamDataGenerator::AutomationListPath() const
+{
+    return *mAutomationListPath;
+}
+
+void NFmiMacroParamDataGenerator::AutomationListPath(const std::string& newValue)
+{
+    *mAutomationListPath = newValue;
+}
+
 NFmiMacroParamDataInfo NFmiMacroParamDataGenerator::MakeDataInfo() const
 {
     return NFmiMacroParamDataInfo(DialogBaseDataParamProducerString(), DialogUsedProducerString(), DialogDataGeneratingSmarttoolPathString(), DialogUsedParameterListString(), DialogDataStorageFileFilter(), DialogDataTriggerList(), DialogMaxGeneratedFilesKept());
@@ -741,4 +1181,93 @@ std::string NFmiMacroParamDataGenerator::MacroParamDataInfoSaveInitialPath()
 void NFmiMacroParamDataGenerator::MacroParamDataInfoSaveInitialPath(const std::string& newValue)
 {
     *mMacroParamDataInfoSaveInitialPath = newValue;
+}
+
+std::string NFmiMacroParamDataGenerator::MacroParamDataAutomationListSaveInitialPath() const
+{
+    return *mMacroParamDataAutomationListSaveInitialPath;
+}
+
+void NFmiMacroParamDataGenerator::MacroParamDataAutomationListSaveInitialPath(const std::string& newValue)
+{
+    *mMacroParamDataAutomationListSaveInitialPath = newValue;
+}
+
+// Käyttäjällä on nykyään kolme on-demand -nappia, joista voi käynnistää halutun setin automaatioita työstettäväksi:
+// 1. Jos selectedAutomationIndex:issä on positiivinen numero, ajetaan vain sen osoittama automaatio.
+// 2. Jos selectedAutomationIndex on -1 ja doOnlyEnabled on true, ajetaan kaikki listalle olevat enbloidut automaatiot.
+// 3. Jos selectedAutomationIndex on -1 ja doOnlyEnabled on false, ajetaan kaikki listalle olevat automaatiot.
+// selectedAutomationIndex -parametri on 1:stä alkava indeksi ja -1 tarkoitti siis että käydään koko listaa läpi.
+bool NFmiMacroParamDataGenerator::DoOnDemandBetaAutomations(int selectedAutomationIndex, bool doOnlyEnabled, NFmiThreadCallBacks* threadCallBacks)
+{
+    DataGenerationIsOnHandler dataGenerationIsOnHandler(fDataGenerationIsOn);
+    bool status = false;
+    auto onDemandAutomations = itsUsedMacroParamDataAutomationList.GetOnDemandAutomations(selectedAutomationIndex, doOnlyEnabled);
+    if(!onDemandAutomations.empty())
+    {
+        for(const auto& automationItem : onDemandAutomations)
+        {
+            status |= GenerateMacroParamData(*automationItem->itsMacroParamDataAutomation, threadCallBacks);
+        }
+    }
+    if(threadCallBacks)
+        threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_FINISHED);
+    return status;
+}
+
+bool NFmiMacroParamDataGenerator::GenerateMacroParamData(NFmiThreadCallBacks* threadCallBacks)
+{
+    DataGenerationIsOnHandler dataGenerationIsOnHandler(fDataGenerationIsOn);
+    auto dataInfo = MakeDataInfo();
+    auto result = GenerateMacroParamData(dataInfo, threadCallBacks);
+    if(threadCallBacks)
+        threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_FINISHED);
+    return result;
+}
+
+bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDataInfo& dataInfo, NFmiThreadCallBacks* threadCallBacks)
+{
+    try
+    {
+        auto baseDataCheck = NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(dataInfo.BaseDataParamProducerString(), false);
+        if(!baseDataCheck.first.empty())
+        {
+            throw std::runtime_error(baseDataCheck.first);
+        }
+
+        auto* infoOrganizer = ::GetInfoOrganizer();
+        if(!infoOrganizer)
+        {
+            throw std::runtime_error("GenerateMacroParamData: Can't get proper InfoOrganizer into works, unknown error in the system");
+        }
+
+        // NFmiExtraMacroParamData::FindWantedInfo metodin 3. parametri (false) tarkoittaa että pohjadataksi 
+        // ei kelpuuteta asemadataa, vain hiladata kelpaa.
+        auto wantedInfo = NFmiExtraMacroParamData::FindWantedInfo(*infoOrganizer, baseDataCheck.second, false);
+        if(!wantedInfo.foundInfo_)
+        {
+            throw std::runtime_error(std::string("GenerateMacroParamData: unable to fing requested base data with '") + dataInfo.BaseDataParamProducerString() + "' parameter, unable to generate wanted macroParam data");
+        }
+
+        auto wantedParamDescriptor = ::MakeWantedParamDescriptor(dataInfo);
+        auto wantedMacroParamDataPtr = ::MakeWantedEmptyData(wantedInfo.foundInfo_, wantedParamDescriptor);
+        if(!wantedMacroParamDataPtr)
+        {
+            throw std::runtime_error("GenerateMacroParamData: Unable to generate actual macroParam querydata, unknown error in system");
+        }
+        boost::shared_ptr<NFmiFastQueryInfo> wantedMacroParamInfoPtr(new NFmiFastQueryInfo(wantedMacroParamDataPtr.get()));
+
+        auto smarttoolContent = ReadSmarttoolContentFromFile(dataInfo.DataGeneratingSmarttoolPathString());
+
+        if(CalculateDataWithSmartTool(wantedMacroParamInfoPtr, infoOrganizer, smarttoolContent, threadCallBacks))
+        {
+            return StoreMacroParamData(wantedMacroParamDataPtr, dataInfo.DataStorageFileFilter(), dataInfo.MaxGeneratedFilesKept());
+        }
+    }
+    catch(std::exception&)
+    {
+        // Raportoi ongelmasta
+    }
+
+    return false;
 }

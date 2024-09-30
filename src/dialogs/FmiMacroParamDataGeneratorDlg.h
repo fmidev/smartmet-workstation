@@ -4,10 +4,66 @@
 #include "NFmiQueryDataUtil.h"
 #include "TextProgressCtrl.h"
 #include "WndResizer.h"
+#include "GridCtrl.h"
 
 class SmartMetDocumentInterface;
 class NFmiMacroParamDataGenerator;
 class NFmiMacroParamDataInfo;
+class NFmiMacroParamDataAutomationListItem;
+
+struct MacroParDataAutomationHeaderParInfo
+{
+	enum ColumnFunction
+	{
+		kRowNumber = 0,
+		kAutomationName,
+		kEnable,
+		kNextRuntime,
+		kLastRuntime,
+		kAutomationStatus,
+		kAutomationPath,
+	};
+
+	MacroParDataAutomationHeaderParInfo()
+		:itsHeader()
+		, itsColumnFunction(kAutomationName)
+		, itsColumnWidth(0)
+	{}
+
+	MacroParDataAutomationHeaderParInfo(const std::string& theHeader, ColumnFunction theColumnFunction, int theColumnWidth)
+		:itsHeader(theHeader)
+		, itsColumnFunction(theColumnFunction)
+		, itsColumnWidth(theColumnWidth)
+	{}
+
+	std::string itsHeader;
+	ColumnFunction itsColumnFunction;
+	int itsColumnWidth;
+};
+
+// Pit‰‰ peri‰ oma gridCtrl-luokka, ett‰ se osaa hanskata parit kikat
+class NFmiMacroParDataAutomationGridCtrl : public CGridCtrl
+{
+	DECLARE_DYNCREATE(NFmiMacroParDataAutomationGridCtrl)
+
+public:
+	NFmiMacroParDataAutomationGridCtrl(int nRows = 0, int nCols = 0, int nFixedRows = 0, int nFixedCols = 0)
+		:CGridCtrl(nRows, nCols, nFixedRows, nFixedCols)
+		, itsLeftClickUpCallback()
+	{}
+
+	void SetLeftClickUpCallback(std::function<void(const CCellID&)> theCallback) { itsLeftClickUpCallback = theCallback; }
+	void SetRightClickUpCallback(std::function<void(const CCellID&)> theCallback) { itsRightClickUpCallback = theCallback; }
+
+public:
+	DECLARE_MESSAGE_MAP()
+	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+
+private:
+	std::function<void(const CCellID&)> itsLeftClickUpCallback;
+	std::function<void(const CCellID&)> itsRightClickUpCallback;
+};
 
 // CFmiMacroParamDataGeneratorDlg dialog
 
@@ -50,15 +106,29 @@ private:
 	void InitControlsFromDocument();
 	void DoFullInputChecks();
 	void DoWhenClosing();
-	void EnableDialogueControl(int controlId, bool enable);
 	void LaunchMacroParamDataGeneration();
-	void InitControlsFromLoadedMacroParamDataInfo(const NFmiMacroParamDataInfo &macroParamsDataInfo);
+	void InitControlsFromLoadedMacroParamDataInfo();
 	void UpdateMacroParamDataInfoName(const std::string& fullPath);
+	void UpdateMacroParamDataAutomationListName(const std::string& fullPath);
 	void EnableButtons();
 	void InitMaxGeneratedFilesKept(int maxGeneratedFilesKept);
 	int GetMaxGeneratedFilesKept();
 	void DoResizerHooking();
+	void SelectedGridCell(const CCellID& theSelectedCell);
+	void DeselectGridCell(const CCellID& theSelectedCell);
+	void InitHeaders();
+	void AddAutomationToList(const std::string& theFullFilePath);
+	void UpdateAutomationList();
+	void SetGridRow(int row, const NFmiMacroParamDataAutomationListItem& theListItem);
+	void HandleEnableAutomationCheckBoxClick(int col, int row);
+	void StartDataGenerationControlEnablations();
+	void LaunchOnDemandMacroParamDataAutomation(int selectedAutomationIndex, bool doOnlyEnabled);
+	void InitEditedMacroParamDataInfo(const NFmiMacroParamDataInfo& macroParamInfoFromDocument);
+	void StoreControlValuesToEditedMacroParamDataInfo();
 
+	NFmiMacroParDataAutomationGridCtrl itsGridCtrl;
+	std::vector<MacroParDataAutomationHeaderParInfo> itsHeaders;
+	bool fGridControlInitialized = false;
 	// itsSmartMetDocumentInterface ei omista, ei tuhoa
 	SmartMetDocumentInterface* itsSmartMetDocumentInterface;
 	// itsMacroParamDataGenerator ei omista, ei tuhoa
@@ -95,7 +165,21 @@ private:
 	std::unique_ptr<NFmiThreadCallBacks> mThreadCallBacksPtr;
 	// Kun MP-data-info ladataan tai talletetaan, t‰h‰n laitetaan sen tiedosto nimi tai polku
 	CString mLoadedMacroParamDataInfoName;
+	std::string mLoadedMacroParamDataInfoFullPath;
 	CWndResizer m_resizer;
+	// Sellaisten nappuloiden jotka halutaan enable/disable tiloihin muuttujat
+	CButton itsGenerateMacroParamDataButton;
+	CButton itsSaveMacroParamDataInfoButton;
+	CButton itsSaveMacroParamDataAutomationListButton;
+	CButton itsRunSelectedMacroParamDataAutomationButton;
+	CButton itsRunEnabledMacroParamDataAutomationButton;
+	CButton itsRunAllMacroParamDataAutomationButton;
+	BOOL fAutomationModeOn;
+	// Kun MP-data-automaatiolista ladataan tai talletetaan, t‰h‰n laitetaan sen tiedosto nimi tai polku
+	CString mLoadedMacroParamDataAutomationListName;
+	std::string mLoadedMacroParamDataAutomationListFullPath;
+	// T‰h‰n talletetaan kaikki MacroParamDataInfo inputit ja t‰m‰ tekee tarkastelut niiden oikeellisuudesta
+	std::shared_ptr<NFmiMacroParamDataInfo> itsEditedMacroParamDataInfo;
 
 public:
 	virtual BOOL OnInitDialog();
@@ -115,4 +199,13 @@ public:
 	afx_msg void OnEnChangeEditUsedDataTriggerList();
 	afx_msg void OnEnChangeEditMaxGeneratedFilesKept();
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
+	afx_msg void OnBnClickedButtonAddEditedMacroParamDataAutomationToList();
+	afx_msg void OnBnClickedButtonAddMacroParamDataAutomationToList();
+	afx_msg void OnBnClickedButtonRemoveMacroParamDataAutomationFromList();
+	afx_msg void OnBnClickedCheckMacroParamDataAutomationModeOn();
+	afx_msg void OnBnClickedButtonSaveMacroParamDataAutomationList();
+	afx_msg void OnBnClickedButtonLoadMacroParamDataAutomationList();
+	afx_msg void OnBnClickedButtonRunSelectedMacroParamDataAutomation();
+	afx_msg void OnBnClickedButtonRunEnabledMacroParamDataAutomations();
+	afx_msg void OnBnClickedButtonRunAllMacroParamDataAutomations();
 };

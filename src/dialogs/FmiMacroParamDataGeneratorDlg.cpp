@@ -13,18 +13,54 @@
 #include "persist2.h"
 #include "CFmiVisualizationSettings.h"
 #include "NFmiBetaProductHelperFunctions.h"
+#include "GridCellCheck.h"
 #include <thread>
 
-const NFmiViewPosRegistryInfo CFmiMacroParamDataGeneratorDlg::s_ViewPosRegistryInfo(CRect(300, 200, 793, 739), "\\MacroParamDataGenerator");
+// ***********************************************
+// NFmiMacroParDataAutomationGridCtrl grid-control
+// ***********************************************
 
+IMPLEMENT_DYNCREATE(NFmiMacroParDataAutomationGridCtrl, CGridCtrl)
+
+BEGIN_MESSAGE_MAP(NFmiMacroParDataAutomationGridCtrl, CGridCtrl)
+	ON_WM_RBUTTONUP()
+	ON_WM_LBUTTONUP()
+END_MESSAGE_MAP()
+
+void NFmiMacroParDataAutomationGridCtrl::OnRButtonUp(UINT nFlags, CPoint point)
+{
+	CGridCtrl::OnRButtonUp(nFlags, point);
+
+	// Tarkoitus on deselectoida kaikki
+	SetSelectedRange(-1, -1, -1, -1, TRUE, TRUE);
+
+	if(itsRightClickUpCallback)
+		itsRightClickUpCallback(GetCellFromPt(point));
+}
+
+void NFmiMacroParDataAutomationGridCtrl::OnLButtonUp(UINT nFlags, CPoint point)
+{
+	CGridCtrl::OnLButtonUp(nFlags, point);
+
+	if(itsLeftClickUpCallback)
+		itsLeftClickUpCallback(GetCellFromPt(point));
+}
+
+
+// ***********************************************
 // CFmiMacroParamDataGeneratorDlg dialog
+// ***********************************************
+
+const NFmiViewPosRegistryInfo CFmiMacroParamDataGeneratorDlg::s_ViewPosRegistryInfo(CRect(300, 200, 793, 739), "\\MacroParamDataGenerator");
 
 IMPLEMENT_DYNAMIC(CFmiMacroParamDataGeneratorDlg, CDialogEx)
 
 CFmiMacroParamDataGeneratorDlg::CFmiMacroParamDataGeneratorDlg(SmartMetDocumentInterface* smartMetDocumentInterface, CWnd* pParent /*=nullptr*/)
-	: CDialogEx(IDD_DIALOG_MACRO_PARAM_DATA_GENERATOR, pParent),
-	itsSmartMetDocumentInterface(smartMetDocumentInterface),
-	itsMacroParamDataGenerator(smartMetDocumentInterface ? &(smartMetDocumentInterface->GetMacroParamDataGenerator()) : nullptr)
+	: CDialogEx(IDD_DIALOG_MACRO_PARAM_DATA_GENERATOR, pParent)
+	,itsGridCtrl()
+	,itsHeaders()
+	,itsSmartMetDocumentInterface(smartMetDocumentInterface)
+	,itsMacroParamDataGenerator(smartMetDocumentInterface ? &(smartMetDocumentInterface->GetMacroParamDataGenerator()) : nullptr)
 	, itsBaseDataParamProducerString(_T(""))
 	, itsProducerIdNamePairString(_T(""))
 	, itsUsedDataGenerationSmarttoolPath(_T(""))
@@ -33,6 +69,8 @@ CFmiMacroParamDataGeneratorDlg::CFmiMacroParamDataGeneratorDlg(SmartMetDocumentI
 	, mLoadedMacroParamDataInfoName(_T(""))
 	, itsDataTriggerList(_T(""))
 	, itsMaxGeneratedFilesKept(_T(""))
+	, fAutomationModeOn(FALSE)
+	, itsEditedMacroParamDataInfo(std::make_shared<NFmiMacroParamDataInfo>())
 {
 }
 
@@ -43,6 +81,7 @@ CFmiMacroParamDataGeneratorDlg::~CFmiMacroParamDataGeneratorDlg()
 void CFmiMacroParamDataGeneratorDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_GridControl(pDX, IDC_CUSTOM_GRID_MACRO_PARAM_DATA_AUTOMATION_LIST, itsGridCtrl);
 	DDX_Text(pDX, IDC_EDIT_BASE_DATA_PAR_PROD_LEV, itsBaseDataParamProducerString);
 	DDX_Text(pDX, IDC_EDIT_PRODUCER_ID_NAME_PAIR, itsProducerIdNamePairString);
 	DDX_Text(pDX, IDC_EDIT_USED_DATA_GENERATION_SMARTTOOL_PATH, itsUsedDataGenerationSmarttoolPath);
@@ -52,6 +91,14 @@ void CFmiMacroParamDataGeneratorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_STATIC_LOADED_MACRO_PARAM_DATA_INFO_NAME, mLoadedMacroParamDataInfoName);
 	DDX_Text(pDX, IDC_EDIT_USED_DATA_TRIGGER_LIST, itsDataTriggerList);
 	DDX_Text(pDX, IDC_EDIT_MAX_GENERATED_FILES_KEPT, itsMaxGeneratedFilesKept);
+	DDX_Control(pDX, IDC_BUTTON_GENERATE_MACRO_PARAM_DATA, itsGenerateMacroParamDataButton);
+	DDX_Control(pDX, IDC_BUTTON_SAVE_MACRO_PARAM_DATA, itsSaveMacroParamDataInfoButton);
+	DDX_Control(pDX, IDC_BUTTON_SAVE_MACRO_PARAM_DATA_AUTOMATION_LIST, itsSaveMacroParamDataAutomationListButton);
+	DDX_Control(pDX, IDC_BUTTON_RUN_SELECTED_MACRO_PARAM_DATA_AUTOMATION, itsRunSelectedMacroParamDataAutomationButton);
+	DDX_Control(pDX, IDC_BUTTON_RUN_ENABLED_MACRO_PARAM_DATA_AUTOMATIONS, itsRunEnabledMacroParamDataAutomationButton);
+	DDX_Control(pDX, IDC_BUTTON_RUN_ALL_MACRO_PARAM_DATA_AUTOMATIONS, itsRunAllMacroParamDataAutomationButton);
+	DDX_Check(pDX, IDC_CHECK_MACRO_PARAM_DATA_AUTOMATION_MODE_ON, fAutomationModeOn);
+	DDX_Text(pDX, IDC_STATIC_MACRO_PARAM_DATA_AUTOMATION_LIST_NAME_VALUE, mLoadedMacroParamDataAutomationListName);
 }
 
 BEGIN_MESSAGE_MAP(CFmiMacroParamDataGeneratorDlg, CDialogEx)
@@ -68,9 +115,44 @@ BEGIN_MESSAGE_MAP(CFmiMacroParamDataGeneratorDlg, CDialogEx)
 	ON_EN_CHANGE(IDC_EDIT_USED_DATA_TRIGGER_LIST, &CFmiMacroParamDataGeneratorDlg::OnEnChangeEditUsedDataTriggerList)
 	ON_EN_CHANGE(IDC_EDIT_MAX_GENERATED_FILES_KEPT, &CFmiMacroParamDataGeneratorDlg::OnEnChangeEditMaxGeneratedFilesKept)
 	ON_WM_GETMINMAXINFO()
+	ON_BN_CLICKED(IDC_BUTTON_ADD_EDITED_MACRO_PARAM_DATA_AUTOMATION_TO_LIST, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonAddEditedMacroParamDataAutomationToList)
+	ON_BN_CLICKED(IDC_BUTTON_ADD_MACRO_PARAM_DATA_AUTOMATION_TO_LIST, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonAddMacroParamDataAutomationToList)
+	ON_BN_CLICKED(IDC_BUTTON_REMOVE_MACRO_PARAM_DATA_AUTOMATION_FROM_LIST, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonRemoveMacroParamDataAutomationFromList)
+	ON_BN_CLICKED(IDC_CHECK_MACRO_PARAM_DATA_AUTOMATION_MODE_ON, &CFmiMacroParamDataGeneratorDlg::OnBnClickedCheckMacroParamDataAutomationModeOn)
+	ON_BN_CLICKED(IDC_BUTTON_SAVE_MACRO_PARAM_DATA_AUTOMATION_LIST, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonSaveMacroParamDataAutomationList)
+	ON_BN_CLICKED(IDC_BUTTON_LOAD_MACRO_PARAM_DATA_AUTOMATION_LIST, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonLoadMacroParamDataAutomationList)
+	ON_BN_CLICKED(IDC_BUTTON_RUN_SELECTED_MACRO_PARAM_DATA_AUTOMATION, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonRunSelectedMacroParamDataAutomation)
+	ON_BN_CLICKED(IDC_BUTTON_RUN_ENABLED_MACRO_PARAM_DATA_AUTOMATIONS, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonRunEnabledMacroParamDataAutomations)
+	ON_BN_CLICKED(IDC_BUTTON_RUN_ALL_MACRO_PARAM_DATA_AUTOMATIONS, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonRunAllMacroParamDataAutomations)
 END_MESSAGE_MAP()
 
 // CFmiMacroParamDataGeneratorDlg message handlers
+
+static void SetHeaders(CGridCtrl& theGridCtrl, const std::vector<MacroParDataAutomationHeaderParInfo>& theHeaders)
+{
+	static const COLORREF gFixedBkColor = RGB(239, 235, 222);
+
+	int columnCount = static_cast<int>(theHeaders.size());
+	theGridCtrl.SetColumnCount(columnCount);
+	theGridCtrl.SetFixedRowCount(1);
+	theGridCtrl.SetFixedColumnCount(1);
+	theGridCtrl.SetGridLines(GVL_BOTH);
+	theGridCtrl.SetListMode(TRUE);
+	theGridCtrl.SetHeaderSort(FALSE);
+	theGridCtrl.SetFixedBkColor(gFixedBkColor);
+	theGridCtrl.SetSingleColSelection(TRUE);
+	theGridCtrl.SetSingleRowSelection(TRUE);
+
+	int currentRow = 0;
+	// 1. on otsikko rivi on parametrien nimiä varten
+	for(int i = 0; i < columnCount; i++)
+	{
+		theGridCtrl.SetItemText(currentRow, i, CA2T(theHeaders[i].itsHeader.c_str()));
+		theGridCtrl.SetItemState(currentRow, i, theGridCtrl.GetItemState(currentRow, i) | GVIS_READONLY);
+		theGridCtrl.SetColumnWidth(i, theHeaders[i].itsColumnWidth);
+	}
+}
+
 
 BOOL CFmiMacroParamDataGeneratorDlg::OnInitDialog()
 {
@@ -81,10 +163,16 @@ BOOL CFmiMacroParamDataGeneratorDlg::OnInitDialog()
 	std::string errorBaseStr("Error in CFmiMacroParamDataGeneratorDlg::OnInitDialog while reading dialog size and position values");
 	CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
 	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
+	itsGridCtrl.SetLeftClickUpCallback(std::bind(&CFmiMacroParamDataGeneratorDlg::SelectedGridCell, this, std::placeholders::_1));
+	itsGridCtrl.SetRightClickUpCallback(std::bind(&CFmiMacroParamDataGeneratorDlg::DeselectGridCell, this, std::placeholders::_1));
+	InitHeaders();
+	SetHeaders(itsGridCtrl, itsHeaders);
+
 	InitDialogTexts();
 	InitControlsFromDocument();
 	DoFullInputChecks();
 	EnableButtons();
+	UpdateAutomationList();
 
 	mProgressControl.SetRange(0, 100);
 	mProgressControl.SetStep(1);
@@ -94,6 +182,42 @@ BOOL CFmiMacroParamDataGeneratorDlg::OnInitDialog()
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CFmiMacroParamDataGeneratorDlg::SelectedGridCell(const CCellID& theSelectedCell)
+{
+	if(theSelectedCell.IsValid())
+	{
+		int zeroBasedRowIndex = theSelectedCell.row - itsGridCtrl.GetFixedRowCount();
+		auto& selectedListItem = itsMacroParamDataGenerator->UsedMacroParamDataAutomationList().Get(zeroBasedRowIndex);
+		if(!selectedListItem.IsEmpty())
+		{
+			itsEditedMacroParamDataInfo = selectedListItem.itsMacroParamDataAutomation;
+			UpdateMacroParamDataInfoName(selectedListItem.itsMacroParamDataAutomationAbsolutePath);
+			InitControlsFromLoadedMacroParamDataInfo();
+			EnableButtons();
+		}
+	}
+}
+
+void CFmiMacroParamDataGeneratorDlg::DeselectGridCell(const CCellID& theSelectedCell)
+{
+	// Grid-ctrl on deselectoinut itsensä, nyt on tarkoitus laittaa eri kontrollit oikeisiin tiloihin
+	EnableButtons();
+}
+
+void CFmiMacroParamDataGeneratorDlg::InitHeaders()
+{
+	int basicColumnWidthUnit = 18;
+	itsHeaders.clear();
+
+	itsHeaders.push_back(MacroParDataAutomationHeaderParInfo(::GetDictionaryString("Row"), MacroParDataAutomationHeaderParInfo::kRowNumber, boost::math::iround(basicColumnWidthUnit * 2.3)));
+	itsHeaders.push_back(MacroParDataAutomationHeaderParInfo(::GetDictionaryString("Name"), MacroParDataAutomationHeaderParInfo::kAutomationName, basicColumnWidthUnit * 9));
+	itsHeaders.push_back(MacroParDataAutomationHeaderParInfo(::GetDictionaryString("Enable"), MacroParDataAutomationHeaderParInfo::kEnable, basicColumnWidthUnit * 3));
+	itsHeaders.push_back(MacroParDataAutomationHeaderParInfo(::GetDictionaryString("Next"), MacroParDataAutomationHeaderParInfo::kNextRuntime, boost::math::iround(basicColumnWidthUnit * 3.2)));
+	itsHeaders.push_back(MacroParDataAutomationHeaderParInfo(::GetDictionaryString("Last"), MacroParDataAutomationHeaderParInfo::kLastRuntime, boost::math::iround(basicColumnWidthUnit * 3.2)));
+	itsHeaders.push_back(MacroParDataAutomationHeaderParInfo(::GetDictionaryString("Status"), MacroParDataAutomationHeaderParInfo::kAutomationStatus, boost::math::iround(basicColumnWidthUnit * 8.)));
+	itsHeaders.push_back(MacroParDataAutomationHeaderParInfo(::GetDictionaryString("Path"), MacroParDataAutomationHeaderParInfo::kAutomationPath, boost::math::iround(basicColumnWidthUnit * 30.)));
 }
 
 void CFmiMacroParamDataGeneratorDlg::InitDialogTexts()
@@ -112,22 +236,47 @@ void CFmiMacroParamDataGeneratorDlg::InitDialogTexts()
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_LOAD_MACRO_PARAM_DATA, "Load MacroPar data info");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_GROUP_DATA_GENERATION_LIST, "Data generation list");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_USED_DATA_TRIGGER_LIST, "Data trigger list, e.g. T_ec[,T_gfs_500, ...]\nTrigger delayed: T_ec[0.5h] ->delays half an hour");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_GROUP_DATA_GENERATION_LIST, "Data generation list");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_MACRO_PARAM_DATA_AUTOMATION_LIST_NAME_TEXT, "List name:");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_ADD_EDITED_MACRO_PARAM_DATA_AUTOMATION_TO_LIST, "Add edited");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_ADD_MACRO_PARAM_DATA_AUTOMATION_TO_LIST, "Add from file");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_REMOVE_MACRO_PARAM_DATA_AUTOMATION_FROM_LIST, "Remove");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SAVE_MACRO_PARAM_DATA_AUTOMATION_LIST, "Save list");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_LOAD_MACRO_PARAM_DATA_AUTOMATION_LIST, "Load list");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_MACRO_PARAM_DATA_AUTOMATION_MODE_ON, "Automation mode on");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RUN_SELECTED_MACRO_PARAM_DATA_AUTOMATION, "Run selected");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RUN_ENABLED_MACRO_PARAM_DATA_AUTOMATIONS, "Run enabled");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RUN_ALL_MACRO_PARAM_DATA_AUTOMATIONS, "Run all");
 }
 
 void CFmiMacroParamDataGeneratorDlg::InitControlsFromDocument()
 {
-	InitControlsFromLoadedMacroParamDataInfo(itsMacroParamDataGenerator->MakeDataInfo());
+	UpdateMacroParamDataInfoName(itsMacroParamDataGenerator->AutomationPath());
+	UpdateMacroParamDataAutomationListName(itsMacroParamDataGenerator->AutomationListPath());
+	InitEditedMacroParamDataInfo(itsMacroParamDataGenerator->MakeDataInfo());
+	InitControlsFromLoadedMacroParamDataInfo();
+	fAutomationModeOn = itsMacroParamDataGenerator->AutomationModeOn() ? TRUE : FALSE;
 }
 
-void CFmiMacroParamDataGeneratorDlg::InitControlsFromLoadedMacroParamDataInfo(const NFmiMacroParamDataInfo& macroParamsDataInfo)
+void CFmiMacroParamDataGeneratorDlg::InitEditedMacroParamDataInfo(const NFmiMacroParamDataInfo& macroParamInfoFromDocument)
 {
-	itsBaseDataParamProducerString = CA2T(macroParamsDataInfo.BaseDataParamProducerString().c_str());
-	itsProducerIdNamePairString = CA2T(macroParamsDataInfo.UsedProducerString().c_str());
-	itsUsedDataGenerationSmarttoolPath = CA2T(macroParamsDataInfo.DataGeneratingSmarttoolPathString().c_str());
-	itsUsedParameterListString = CA2T(macroParamsDataInfo.UsedParameterListString().c_str());
-	itsGeneratedDataStorageFileFilter = CA2T(macroParamsDataInfo.DataStorageFileFilter().c_str());
-	itsDataTriggerList = CA2T(macroParamsDataInfo.DataTriggerList().c_str());
-	InitMaxGeneratedFilesKept(macroParamsDataInfo.MaxGeneratedFilesKept());
+	// 1. Jos mLoadedMacroParamDataInfoFullPath:ista saa ladattua jotain, käytetään sitä
+	if(!BetaProduct::LoadObjectFromKnownFileInJsonFormat(*itsEditedMacroParamDataInfo, mLoadedMacroParamDataInfoFullPath, "EditedMacroParamDataInfo", true))
+	{
+		// 2. Muuten otetaan parametrina annettu käyttöön
+		*itsEditedMacroParamDataInfo = macroParamInfoFromDocument;
+	}
+}
+
+void CFmiMacroParamDataGeneratorDlg::InitControlsFromLoadedMacroParamDataInfo()
+{
+	itsBaseDataParamProducerString = CA2T(itsEditedMacroParamDataInfo->BaseDataParamProducerString().c_str());
+	itsProducerIdNamePairString = CA2T(itsEditedMacroParamDataInfo->UsedProducerString().c_str());
+	itsUsedDataGenerationSmarttoolPath = CA2T(itsEditedMacroParamDataInfo->DataGeneratingSmarttoolPathString().c_str());
+	itsUsedParameterListString = CA2T(itsEditedMacroParamDataInfo->UsedParameterListString().c_str());
+	itsGeneratedDataStorageFileFilter = CA2T(itsEditedMacroParamDataInfo->DataStorageFileFilter().c_str());
+	itsDataTriggerList = CA2T(itsEditedMacroParamDataInfo->DataTriggerList().c_str());
+	InitMaxGeneratedFilesKept(itsEditedMacroParamDataInfo->MaxGeneratedFilesKept());
 	UpdateData(FALSE);
 }
 
@@ -167,6 +316,21 @@ void CFmiMacroParamDataGeneratorDlg::StoreControlValuesToDocument()
 	itsMacroParamDataGenerator->DialogDataStorageFileFilter(CFmiWin32Helpers::CT2std(itsGeneratedDataStorageFileFilter));
 	itsMacroParamDataGenerator->DialogDataTriggerList(CFmiWin32Helpers::CT2std(itsDataTriggerList));
 	itsMacroParamDataGenerator->DialogMaxGeneratedFilesKept(GetMaxGeneratedFilesKept());
+	// Tehdään samalla tämä dialogin macroParamDataInfo olion täyttö
+	StoreControlValuesToEditedMacroParamDataInfo();
+}
+
+void CFmiMacroParamDataGeneratorDlg::StoreControlValuesToEditedMacroParamDataInfo()
+{
+	UpdateData(TRUE);
+
+	itsEditedMacroParamDataInfo->BaseDataParamProducerString(CFmiWin32Helpers::CT2std(itsBaseDataParamProducerString));
+	itsEditedMacroParamDataInfo->UsedProducerString(CFmiWin32Helpers::CT2std(itsProducerIdNamePairString));
+	itsEditedMacroParamDataInfo->DataGeneratingSmarttoolPathString(CFmiWin32Helpers::CT2std(itsUsedDataGenerationSmarttoolPath));
+	itsEditedMacroParamDataInfo->UsedParameterListString(CFmiWin32Helpers::CT2std(itsUsedParameterListString));
+	itsEditedMacroParamDataInfo->DataStorageFileFilter(CFmiWin32Helpers::CT2std(itsGeneratedDataStorageFileFilter));
+	itsEditedMacroParamDataInfo->DataTriggerList(CFmiWin32Helpers::CT2std(itsDataTriggerList));
+	itsEditedMacroParamDataInfo->MaxGeneratedFilesKept(GetMaxGeneratedFilesKept());
 }
 
 // Tarkista kaikki syötteet ja jos niissä on vikaa:
@@ -233,27 +397,10 @@ void CFmiMacroParamDataGeneratorDlg::DoWhenClosing()
 	AfxGetMainWnd()->SetActiveWindow();
 }
 
-
-void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonGenerateMacroParamData()
+void CFmiMacroParamDataGeneratorDlg::StartDataGenerationControlEnablations()
 {
-	EnableDialogueControl(IDC_BUTTON_GENERATE_MACRO_PARAM_DATA, false);
-	StoreControlValuesToDocument();
-	std::thread t(&CFmiMacroParamDataGeneratorDlg::LaunchMacroParamDataGeneration, this);
-	t.detach();
-}
-
-void CFmiMacroParamDataGeneratorDlg::LaunchMacroParamDataGeneration()
-{
-	itsMacroParamDataGenerator->GenerateMacroParamData(mThreadCallBacksPtr.get());
-}
-
-void CFmiMacroParamDataGeneratorDlg::EnableDialogueControl(int controlId, bool enable)
-{
-	auto* ctrl = GetDlgItem(controlId);
-	if(ctrl)
-	{
-		ctrl->EnableWindow(enable ? TRUE : FALSE);
-	}
+	itsMacroParamDataGenerator->DataGenerationIsOn(true);
+	EnableButtons();
 }
 
 HBRUSH CFmiMacroParamDataGeneratorDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
@@ -476,10 +623,23 @@ BOOL CFmiMacroParamDataGeneratorDlg::OnWndMsg(UINT message, WPARAM wParam, LPARA
 {
 	if(message == ID_MACRO_PARAM_DATA_GENERATION_FINISHED)
 	{
-		EnableDialogueControl(IDC_BUTTON_GENERATE_MACRO_PARAM_DATA, true);
+		EnableButtons();
 	}
 
 	return __super::OnWndMsg(message, wParam, lParam, pResult);
+}
+
+static std::string GetUsedSaveFileName(const std::string &loadedMacroParamDataInfoFullPath, bool listCase)
+{
+	auto fileName = PathUtils::getFilename(loadedMacroParamDataInfoFullPath, true);
+	if(fileName.empty())
+	{
+		if(listCase)
+			fileName = "MacroParDataList1." + NFmiMacroParamDataGenerator::MacroParamDataListFileExtension();
+		else
+			fileName = "MacroParDataInfo1." + NFmiMacroParamDataGenerator::MacroParamDataInfoFileExtension();
+	}
+	return fileName;
 }
 
 void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonSaveMacroParamData()
@@ -490,8 +650,9 @@ void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonSaveMacroParamData()
 	auto macroParamsDataInfo = itsMacroParamDataGenerator->MakeDataInfo();
 	auto initialSavePath = itsMacroParamDataGenerator->MacroParamDataInfoSaveInitialPath();
 	std::string fullPath;
-	std::string rootMacroParDataInfoPath;
-	if(BetaProduct::SaveObjectInJsonFormat(macroParamsDataInfo, initialSavePath, NFmiMacroParamDataGenerator::MacroParamDataInfoFileFilter(), NFmiMacroParamDataGenerator::MacroParamDataInfoFileExtension(), rootMacroParDataInfoPath, "MacroParam data info", "MacroParDataInfo1", false, &fullPath, this))
+	auto initialFileName = ::GetUsedSaveFileName(mLoadedMacroParamDataInfoFullPath, false);
+	std::string rootPath = itsMacroParamDataGenerator->RootMacroParamDataDirectory();
+	if(BetaProduct::SaveObjectInJsonFormat(macroParamsDataInfo, initialSavePath, NFmiMacroParamDataGenerator::MacroParamDataInfoFileFilter(), NFmiMacroParamDataGenerator::MacroParamDataInfoFileExtension(), rootPath, "MacroParam data info", initialFileName, false, &fullPath, this))
 	{
 		itsMacroParamDataGenerator->MacroParamDataInfoSaveInitialPath(initialSavePath);
 		UpdateMacroParamDataInfoName(fullPath);
@@ -500,29 +661,70 @@ void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonSaveMacroParamData()
 
 void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonLoadMacroParamData()
 {
-	NFmiMacroParamDataInfo macroParamsDataInfo;
 	auto initialSavePath = itsMacroParamDataGenerator->MacroParamDataInfoSaveInitialPath();
 	std::string fullPath;
 	std::string rootMacroParDataInfoPath;
-	if(BetaProduct::LoadObjectInJsonFormat(macroParamsDataInfo, initialSavePath, NFmiMacroParamDataGenerator::MacroParamDataInfoFileFilter(), NFmiMacroParamDataGenerator::MacroParamDataInfoFileExtension(), rootMacroParDataInfoPath, "MacroParam data info", false, &fullPath, this))
+	if(BetaProduct::LoadObjectInJsonFormat(*itsEditedMacroParamDataInfo, initialSavePath, NFmiMacroParamDataGenerator::MacroParamDataInfoFileFilter(), NFmiMacroParamDataGenerator::MacroParamDataInfoFileExtension(), rootMacroParDataInfoPath, "MacroParam data info", false, &fullPath, this))
 	{
 		itsMacroParamDataGenerator->MacroParamDataInfoSaveInitialPath(initialSavePath);
 		UpdateMacroParamDataInfoName(fullPath);
-		InitControlsFromLoadedMacroParamDataInfo(macroParamsDataInfo);
+		InitControlsFromLoadedMacroParamDataInfo();
+		DoFullInputChecks();
 	}
 }
 
 void CFmiMacroParamDataGeneratorDlg::UpdateMacroParamDataInfoName(const std::string& fullPath)
 {
-	mLoadedMacroParamDataInfoName = CA2T(fullPath.c_str());
+	mLoadedMacroParamDataInfoFullPath = fullPath;
+	itsMacroParamDataGenerator->AutomationPath(fullPath);
+	// Laitetaan suhteellinen polku näkyviin jos mahdollista
+	auto tmpName = PathUtils::getRelativePathIfPossible(fullPath, itsMacroParamDataGenerator->RootMacroParamDataDirectory());
+	mLoadedMacroParamDataInfoName = CA2T(tmpName.c_str());
+	UpdateData(FALSE);
+}
+
+void CFmiMacroParamDataGeneratorDlg::UpdateMacroParamDataAutomationListName(const std::string& fullPath)
+{
+	mLoadedMacroParamDataAutomationListFullPath = fullPath;
+	itsMacroParamDataGenerator->AutomationListPath(fullPath);
+	// Laitetaan suhteellinen polku näkyviin jos mahdollista
+	auto tmpName = PathUtils::getRelativePathIfPossible(fullPath, itsMacroParamDataGenerator->RootMacroParamDataDirectory());
+	mLoadedMacroParamDataAutomationListName = CA2T(tmpName.c_str());
 	UpdateData(FALSE);
 }
 
 void CFmiMacroParamDataGeneratorDlg::EnableButtons()
 {
+	if(itsMacroParamDataGenerator->DataGenerationIsOn())
+	{
+		itsGenerateMacroParamDataButton.EnableWindow(false);
+		itsSaveMacroParamDataInfoButton.EnableWindow(false);
+		itsSaveMacroParamDataAutomationListButton.EnableWindow(false);
+		itsRunSelectedMacroParamDataAutomationButton.EnableWindow(false);
+		itsRunEnabledMacroParamDataAutomationButton.EnableWindow(false);
+		itsRunAllMacroParamDataAutomationButton.EnableWindow(false);
+		return;
+	}
+
 	auto macroParamDataInfoOk = !fBaseDataParamProducerStringHasInvalidValues && !fProducerIdNamePairStringHasInvalidValues && !fUsedDataGenerationSmarttoolPathHasInvalidValues && !fUsedParameterListStringHasInvalidValues && !fGeneratedDataStorageFileFilterHasInvalidValues && !fDataTriggerListHasInvalidValues;
-	EnableDialogueControl(IDC_BUTTON_GENERATE_MACRO_PARAM_DATA, macroParamDataInfoOk);
-	EnableDialogueControl(IDC_BUTTON_SAVE_MACRO_PARAM_DATA, macroParamDataInfoOk);
+	itsGenerateMacroParamDataButton.EnableWindow(macroParamDataInfoOk);
+	itsSaveMacroParamDataInfoButton.EnableWindow(macroParamDataInfoOk);
+
+	auto macroParamDataAutomationListOk = itsMacroParamDataGenerator->UsedMacroParamDataAutomationList().DoFullChecks(itsMacroParamDataGenerator->AutomationModeOn());
+	if(macroParamDataAutomationListOk != MacroParamDataStatus::kFmiListItemOk)
+	{
+		itsSaveMacroParamDataAutomationListButton.EnableWindow(false);
+		itsRunSelectedMacroParamDataAutomationButton.EnableWindow(false);
+		itsRunEnabledMacroParamDataAutomationButton.EnableWindow(false);
+		itsRunAllMacroParamDataAutomationButton.EnableWindow(false);
+	}
+	else
+	{
+		itsSaveMacroParamDataAutomationListButton.EnableWindow(true);
+		itsRunSelectedMacroParamDataAutomationButton.EnableWindow(true);
+		itsRunEnabledMacroParamDataAutomationButton.EnableWindow(true);
+		itsRunAllMacroParamDataAutomationButton.EnableWindow(true);
+	}
 }
 
 void CFmiMacroParamDataGeneratorDlg::DoResizerHooking(void)
@@ -575,6 +777,30 @@ void CFmiMacroParamDataGeneratorDlg::DoResizerHooking(void)
 	ASSERT(bOk == TRUE);
 	bOk = m_resizer.SetAnchor(IDC_STATIC_GROUP_DATA_GENERATION_LIST, ANCHOR_VERTICALLY | ANCHOR_HORIZONTALLY);
 	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_MACRO_PARAM_DATA_AUTOMATION_LIST_NAME_TEXT, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_MACRO_PARAM_DATA_AUTOMATION_LIST_NAME_VALUE, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_CUSTOM_GRID_MACRO_PARAM_DATA_AUTOMATION_LIST, ANCHOR_HORIZONTALLY | ANCHOR_VERTICALLY);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_ADD_EDITED_MACRO_PARAM_DATA_AUTOMATION_TO_LIST, ANCHOR_BOTTOM | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_ADD_MACRO_PARAM_DATA_AUTOMATION_TO_LIST, ANCHOR_BOTTOM | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_REMOVE_MACRO_PARAM_DATA_AUTOMATION_FROM_LIST, ANCHOR_BOTTOM | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_SAVE_MACRO_PARAM_DATA_AUTOMATION_LIST, ANCHOR_BOTTOM | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_LOAD_MACRO_PARAM_DATA_AUTOMATION_LIST, ANCHOR_BOTTOM | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_CHECK_MACRO_PARAM_DATA_AUTOMATION_MODE_ON, ANCHOR_BOTTOM | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_RUN_SELECTED_MACRO_PARAM_DATA_AUTOMATION, ANCHOR_BOTTOM | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_RUN_ENABLED_MACRO_PARAM_DATA_AUTOMATIONS, ANCHOR_BOTTOM | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_RUN_ALL_MACRO_PARAM_DATA_AUTOMATIONS, ANCHOR_BOTTOM | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
 }
 
 
@@ -585,4 +811,253 @@ void CFmiMacroParamDataGeneratorDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 	lpMMI->ptMinTrackSize.y = 599;
 
 	__super::OnGetMinMaxInfo(lpMMI);
+}
+
+
+void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonAddEditedMacroParamDataAutomationToList()
+{
+	AddAutomationToList(mLoadedMacroParamDataInfoFullPath);
+}
+
+void CFmiMacroParamDataGeneratorDlg::AddAutomationToList(const std::string& theFullFilePath)
+{
+	if(itsMacroParamDataGenerator->UsedMacroParamDataAutomationList().Add(theFullFilePath))
+	{
+		UpdateAutomationList();
+		EnableButtons();
+	}
+}
+
+void CFmiMacroParamDataGeneratorDlg::UpdateAutomationList()
+{
+	auto& dataVector = itsMacroParamDataGenerator->UsedMacroParamDataAutomationList().AutomationVector();
+	itsGridCtrl.SetRowCount(static_cast<int>(dataVector.size() + itsGridCtrl.GetFixedRowCount()));
+	int currentRowCount = itsGridCtrl.GetFixedRowCount();
+	for(size_t i = 0; i < dataVector.size(); i++)
+	{
+		SetGridRow(currentRowCount++, *dataVector[i]);
+	}
+	itsGridCtrl.UpdateData(FALSE);
+}
+
+// Halutaan palauttaa HH:mm eli hours:minutes teksti annetulle ajalle.
+// Jos aika oli puuttuvaa, palautetaan --:--.
+// Viimeiselle Beta-automaation ajoaika halutaan kuitenkin merkitä S-kirjaimella (= started),
+// jos tuotetta ei ole ohjelman ajon aikan tehty vielä.
+static std::string GetTimeTextHHmm(const NFmiMetTime& theTime, bool fJustStarted = false)
+{
+	if(theTime == NFmiMetTime::gMissingTime)
+		return "--:--";
+
+	NFmiMetTime aTime(1);
+	bool nextDay = aTime.GetDay() < theTime.GetDay();
+
+	std::string str;
+	if(fJustStarted)
+		str = "S ";
+	else if(nextDay)
+		str = "N ";
+	str += theTime.ToStr("HH:mm", kEnglish);
+	return str;
+}
+
+static std::string GetColumnText(int theRow, int theColumn, const NFmiMacroParamDataAutomationListItem& theListItem)
+{
+	switch(theColumn)
+	{
+	case MacroParDataAutomationHeaderParInfo::kRowNumber:
+		return NFmiStringTools::Convert(theRow);
+	case MacroParDataAutomationHeaderParInfo::kAutomationName:
+		return theListItem.AutomationName();
+	case MacroParDataAutomationHeaderParInfo::kNextRuntime:
+		return ::GetTimeTextHHmm(NFmiMetTime::gMissingTime);
+	case MacroParDataAutomationHeaderParInfo::kLastRuntime:
+		return ::GetTimeTextHHmm(theListItem.itsLastRunTime, !theListItem.fProductsHaveBeenGenerated);
+	case MacroParDataAutomationHeaderParInfo::kAutomationStatus:
+		return theListItem.ShortStatusText();
+	case MacroParDataAutomationHeaderParInfo::kAutomationPath:
+		return theListItem.FullAutomationPath();
+	default:
+		return "";
+	}
+}
+
+void CFmiMacroParamDataGeneratorDlg::SetGridRow(int row, const NFmiMacroParamDataAutomationListItem& theListItem)
+{
+	static const COLORREF gEnabledBkColor = RGB(255, 255, 255);
+	static const COLORREF gDisabledBkColor = RGB(222, 222, 222);
+	static const COLORREF gErrorBkColor = RGB(239, 135, 122);
+
+	auto listItemErrorStatus = theListItem.GetErrorStatus();
+	bool itemEnabled = theListItem.fEnable;
+	for(int column = 0; column < static_cast<int>(itsHeaders.size()); column++)
+	{
+		itsGridCtrl.SetItemText(row, column, CA2T(::GetColumnText(row, column, theListItem).c_str()));
+		if(column >= itsGridCtrl.GetFixedColumnCount())
+		{
+			if(column != MacroParDataAutomationHeaderParInfo::kEnable) // kaikki muut ovat read-only paitsi enable -checkbox
+				itsGridCtrl.SetItemState(row, column, itsGridCtrl.GetItemState(row, column) | GVIS_READONLY); // Laita read-only -bitti päälle
+
+			if(itemEnabled)
+				itsGridCtrl.SetItemBkColour(row, column, gEnabledBkColor);
+			else
+				itsGridCtrl.SetItemBkColour(row, column, gDisabledBkColor);
+
+			if(listItemErrorStatus != MacroParamDataStatus::kFmiListItemOk)
+				itsGridCtrl.SetItemBkColour(row, column, gErrorBkColor);
+
+			if(column == MacroParDataAutomationHeaderParInfo::kEnable)
+			{
+				itsGridCtrl.SetCellType(row, column, RUNTIME_CLASS(CGridCellCheck));
+				CGridCellCheck* pTempCell = (CGridCellCheck*)itsGridCtrl.GetCell(row, column);
+				pTempCell->SetCheck(itemEnabled);
+				pTempCell->SetCheckBoxClickedCallback(std::bind(&CFmiMacroParamDataGeneratorDlg::HandleEnableAutomationCheckBoxClick, this, std::placeholders::_1, std::placeholders::_2));
+			}
+		}
+	}
+}
+
+void CFmiMacroParamDataGeneratorDlg::HandleEnableAutomationCheckBoxClick(int col, int row)
+{
+	UpdateData(TRUE);
+	CGridCellCheck* pCell = dynamic_cast<CGridCellCheck*>(itsGridCtrl.GetCell(row, col));
+	if(pCell)
+	{
+		bool newState = pCell->GetCheck() == TRUE;
+		int dataIndex = row - 1; // rivit alkavat 1:stä, mutta datat on vektorissa 0:sta alkaen
+		auto& dataVector = itsMacroParamDataGenerator->UsedMacroParamDataAutomationList().AutomationVector();
+		if(dataIndex >= 0 && dataIndex < static_cast<int>(dataVector.size()))
+		{
+			auto& listItem = *dataVector[dataIndex];
+			listItem.fEnable = newState;
+			SetGridRow(row, listItem);
+			itsGridCtrl.UpdateData(FALSE);
+		}
+	}
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonAddMacroParamDataAutomationToList()
+{
+	auto initialSavePath = itsMacroParamDataGenerator->MacroParamDataInfoSaveInitialPath();
+	std::string selectedAbsoluteFilePath;
+	if(BetaProduct::GetFilePathFromUser(NFmiMacroParamDataGenerator::MacroParamDataInfoFileFilter(), initialSavePath, selectedAbsoluteFilePath, true, "", this))
+	{
+		itsMacroParamDataGenerator->MacroParamDataInfoSaveInitialPath(initialSavePath);
+		AddAutomationToList(selectedAbsoluteFilePath);
+	}
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonRemoveMacroParamDataAutomationFromList()
+{
+	CCellRange selectedRange(itsGridCtrl.GetSelectedCellRange());
+	for(int row = selectedRange.GetMinRow(); row <= selectedRange.GetMaxRow(); row++)
+	{
+		if(row >= itsGridCtrl.GetFixedRowCount() && row < itsGridCtrl.GetRowCount())
+		{
+			itsMacroParamDataGenerator->UsedMacroParamDataAutomationList().Remove(row - itsGridCtrl.GetFixedRowCount());
+			itsMacroParamDataGenerator->UsedMacroParamDataAutomationList().DoFullChecks(itsMacroParamDataGenerator->AutomationModeOn());
+			UpdateAutomationList();
+			EnableButtons();
+		}
+	}
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnBnClickedCheckMacroParamDataAutomationModeOn()
+{
+	UpdateData(TRUE);
+	itsMacroParamDataGenerator->AutomationModeOn(fAutomationModeOn == TRUE);
+	itsMacroParamDataGenerator->UsedMacroParamDataAutomationList().DoFullChecks(itsMacroParamDataGenerator->AutomationModeOn());
+	UpdateAutomationList();
+	itsSmartMetDocumentInterface->SetAllViewIconsDynamically();
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonSaveMacroParamDataAutomationList()
+{
+	// Ennen tallennusta talletetaan varmuuden vuoksi säädöt myös dokumenttiin
+	StoreControlValuesToDocument();
+
+	auto initialSavePath = itsMacroParamDataGenerator->MacroParamDataAutomationListSaveInitialPath();
+	std::string usedAbsoluteFilePath;
+	auto initialFileName = ::GetUsedSaveFileName(mLoadedMacroParamDataAutomationListFullPath, true);
+	std::string rootPath = itsMacroParamDataGenerator->RootMacroParamDataDirectory();
+	if(BetaProduct::SaveObjectInJsonFormat(itsMacroParamDataGenerator->UsedMacroParamDataAutomationList(), initialSavePath, NFmiMacroParamDataGenerator::MacroParamDataListFileFilter(), NFmiMacroParamDataGenerator::MacroParamDataListFileExtension(), rootPath, "MacroPar data automation-list", initialFileName, false, &usedAbsoluteFilePath, this))
+	{
+		itsMacroParamDataGenerator->MacroParamDataAutomationListSaveInitialPath(initialSavePath);
+		UpdateMacroParamDataAutomationListName(usedAbsoluteFilePath);
+		EnableButtons();
+		UpdateData(FALSE);
+	}
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonLoadMacroParamDataAutomationList()
+{
+	auto initialSavePath = itsMacroParamDataGenerator->MacroParamDataAutomationListSaveInitialPath();
+	std::string usedAbsoluteFilePath;
+	std::string rootPath = itsMacroParamDataGenerator->RootMacroParamDataDirectory();
+	if(BetaProduct::LoadObjectInJsonFormat(itsMacroParamDataGenerator->UsedMacroParamDataAutomationList(), initialSavePath, NFmiMacroParamDataGenerator::MacroParamDataListFileFilter(), NFmiMacroParamDataGenerator::MacroParamDataListFileExtension(), rootPath, "MacroPar data automation-list", false, &usedAbsoluteFilePath, this))
+	{
+		itsMacroParamDataGenerator->MacroParamDataAutomationListSaveInitialPath(initialSavePath);
+		// Tehdään täydet tarkastelut vielä kun tiedetään missä moodissa ollaan
+		itsMacroParamDataGenerator->UsedMacroParamDataAutomationList().DoFullChecks(itsMacroParamDataGenerator->AutomationModeOn());
+		UpdateMacroParamDataAutomationListName(usedAbsoluteFilePath);
+		UpdateAutomationList();
+		EnableButtons();
+		UpdateData(FALSE);
+	}
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonGenerateMacroParamData()
+{
+	StartDataGenerationControlEnablations();
+	StoreControlValuesToDocument();
+	std::thread t(&CFmiMacroParamDataGeneratorDlg::LaunchMacroParamDataGeneration, this);
+	t.detach();
+}
+
+void CFmiMacroParamDataGeneratorDlg::LaunchMacroParamDataGeneration()
+{
+	itsMacroParamDataGenerator->GenerateMacroParamData(mThreadCallBacksPtr.get());
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonRunSelectedMacroParamDataAutomation()
+{
+	UpdateData(TRUE);
+	auto selectedCellRange = itsGridCtrl.GetSelectedCellRange();
+	if(selectedCellRange.IsValid())
+	{
+		StartDataGenerationControlEnablations();
+		StoreControlValuesToDocument();
+		std::thread t(&CFmiMacroParamDataGeneratorDlg::LaunchOnDemandMacroParamDataAutomation, this, selectedCellRange.GetMinRow(), true);
+		t.detach();
+	}
+	else
+		CatLog::logMessage("Nothing was selected for on-demand Beta-automation run", CatLog::Severity::Warning, CatLog::Category::Operational, true);
+	UpdateAutomationList();
+}
+
+void CFmiMacroParamDataGeneratorDlg::LaunchOnDemandMacroParamDataAutomation(int selectedAutomationIndex, bool doOnlyEnabled)
+{
+	itsMacroParamDataGenerator->DoOnDemandBetaAutomations(selectedAutomationIndex, doOnlyEnabled, mThreadCallBacksPtr.get());
+}
+
+
+void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonRunEnabledMacroParamDataAutomations()
+{
+	UpdateData(TRUE);
+	StartDataGenerationControlEnablations();
+	StoreControlValuesToDocument();
+	std::thread t(&CFmiMacroParamDataGeneratorDlg::LaunchOnDemandMacroParamDataAutomation, this, -1, true);
+	t.detach();
+	UpdateAutomationList();
+}
+
+
+void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonRunAllMacroParamDataAutomations()
+{
+	UpdateData(TRUE);
+	StartDataGenerationControlEnablations();
+	StoreControlValuesToDocument();
+	std::thread t(&CFmiMacroParamDataGeneratorDlg::LaunchOnDemandMacroParamDataAutomation, this, -1, false);
+	t.detach();
+	UpdateAutomationList();
 }
