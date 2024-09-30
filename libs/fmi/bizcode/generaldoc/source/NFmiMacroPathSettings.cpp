@@ -21,16 +21,7 @@ NFmiMacroPathSettings::NFmiMacroPathSettings(void)
 {
 }
 
-NFmiMacroPathSettings::NFmiMacroPathSettings(const NFmiMacroPathSettings &theOther)
-:itsSmartMetWorkingDirectory(theOther.itsSmartMetWorkingDirectory)
-,itsOrigSmartToolPath(theOther.itsOrigSmartToolPath)
-,itsOrigViewMacroPath(theOther.itsOrigViewMacroPath)
-,itsOrigMacroParamPath(theOther.itsOrigMacroParamPath)
-,itsOrigDrawParamPath(theOther.itsOrigDrawParamPath)
-
-,itsBaseNameSpace(theOther.itsBaseNameSpace)
-{
-}
+NFmiMacroPathSettings::NFmiMacroPathSettings(const NFmiMacroPathSettings& theOther) = default;
 
 const NFmiMacroPathSettings& NFmiMacroPathSettings::operator=(const NFmiMacroPathSettings &theOther)
 {
@@ -41,6 +32,7 @@ const NFmiMacroPathSettings& NFmiMacroPathSettings::operator=(const NFmiMacroPat
 		itsOrigViewMacroPath = theOther.itsOrigViewMacroPath;
 		itsOrigMacroParamPath = theOther.itsOrigMacroParamPath;
 		itsOrigDrawParamPath = theOther.itsOrigDrawParamPath;
+		itsOrigMacroParamDataPath = theOther.itsOrigMacroParamDataPath;
 
 		itsBaseNameSpace = theOther.itsBaseNameSpace;
 	}
@@ -56,7 +48,8 @@ void NFmiMacroPathSettings::InitFromSettings(const std::string &theInitNameSpace
 	itsOrigMacroParamPath = PathUtils::getFixedAbsolutePathFromSettings("MetEditor::MacroParams::LoadDirectory", itsSmartMetWorkingDirectory);
 	itsOrigDrawParamPath = PathUtils::getFixedAbsolutePathFromSettings("MetEditor::DrawParams::LoadDirectory", itsSmartMetWorkingDirectory);
 	itsOrigViewMacroPath = PathUtils::getFixedAbsolutePathFromSettings("MetEditor::ViewMacro::LoadDirectory", itsSmartMetWorkingDirectory);
-    LogMacroPaths();
+	itsOrigMacroParamDataPath = PathUtils::getFixedAbsolutePathFromSettings("MetEditor::MacroParamData::LoadDirectory", itsSmartMetWorkingDirectory);
+	LogMacroPaths();
 }
 
 void NFmiMacroPathSettings::LogMacroPaths()
@@ -66,6 +59,7 @@ void NFmiMacroPathSettings::LogMacroPaths()
     CatLog::logMessage(std::string("MacroPathSettings::ViewMacroPath = ") + itsOrigViewMacroPath, CatLog::Severity::Info, CatLog::Category::Configuration, true);
     CatLog::logMessage(std::string("MacroPathSettings::MacroParamPath = ") + itsOrigMacroParamPath, CatLog::Severity::Info, CatLog::Category::Configuration, true);
     CatLog::logMessage(std::string("MacroPathSettings::DrawParamPath = ") + itsOrigDrawParamPath, CatLog::Severity::Info, CatLog::Category::Configuration, true);
+	CatLog::logMessage(std::string("MacroPathSettings::MacroParamDataPath = ") + itsOrigMacroParamDataPath, CatLog::Severity::Info, CatLog::Category::Configuration, true);
 }
 
 std::string NFmiMacroPathSettings::SmartToolPath()
@@ -88,3 +82,7 @@ std::string NFmiMacroPathSettings::DrawParamPath()
 	return itsOrigDrawParamPath;
 }
 
+std::string NFmiMacroPathSettings::MacroParamDataPath()
+{
+	return itsOrigMacroParamDataPath;
+}

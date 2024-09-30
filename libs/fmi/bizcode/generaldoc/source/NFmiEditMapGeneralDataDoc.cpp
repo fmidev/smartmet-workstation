@@ -11114,7 +11114,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
 		try
 		{
-			itsMacroParamDataGenerator.Init(ApplicationWinRegistry().BaseConfigurationRegistryPath(), MacroPathSettings().SmartToolPath());
+			itsMacroParamDataGenerator.Init(ApplicationWinRegistry().BaseConfigurationRegistryPath(), MacroPathSettings().SmartToolPath(), MacroPathSettings().MacroParamDataPath());
 			LogMessage(itsMacroParamDataGenerator.GetInitializeLogStr(), CatLog::Severity::Info, CatLog::Category::Configuration);
 		}
 		catch(std::exception& e)

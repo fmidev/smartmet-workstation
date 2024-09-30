@@ -20,6 +20,7 @@ public:
 	std::string ViewMacroPath();
 	std::string MacroParamPath();
 	std::string DrawParamPath();
+	std::string MacroParamDataPath();
 
 private:
     void LogMacroPaths();
@@ -30,6 +31,7 @@ private:
 	std::string itsOrigViewMacroPath;
 	std::string itsOrigMacroParamPath;
 	std::string itsOrigDrawParamPath;
+	std::string itsOrigMacroParamDataPath;
 
 	std::string itsBaseNameSpace;
 };
