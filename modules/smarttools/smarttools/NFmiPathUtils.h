@@ -31,7 +31,7 @@ std::string getFixedAbsolutePathFromSettings(const std::string &theSettingsKey,
 std::string makeFixedAbsolutePath(const std::string &thePath,
                                   const std::string &theAbsoluteWorkingPath,
                                   bool fEnsureEndDirectorySeparator = false);
-std::string getFilename(const std::string &filePath);
+std::string getFilename(const std::string &filePath, bool includeExtension);
 std::string fixPathSeparators(const std::string &pathstring);
 
 }  // namespace PathUtils

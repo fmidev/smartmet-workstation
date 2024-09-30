@@ -371,9 +371,12 @@ std::string makeFixedAbsolutePath(const std::string &thePath,
   return fixedPath;
 }
 
-std::string getFilename(const std::string &filePath)
+std::string getFilename(const std::string &filePath, bool includeExtension)
 {
   std::experimental::filesystem::path originalPath(filePath);
+  if (includeExtension)
+    return originalPath.filename().string();
+
   return originalPath.stem().string();
 }
 
