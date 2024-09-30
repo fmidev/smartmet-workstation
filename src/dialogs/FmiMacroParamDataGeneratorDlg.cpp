@@ -247,6 +247,7 @@ void CFmiMacroParamDataGeneratorDlg::InitDialogTexts()
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RUN_SELECTED_MACRO_PARAM_DATA_AUTOMATION, "Run selected");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RUN_ENABLED_MACRO_PARAM_DATA_AUTOMATIONS, "Run enabled");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RUN_ALL_MACRO_PARAM_DATA_AUTOMATIONS, "Run all");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_MACRO_PARAM_INFO_NAME_STR, "Macro name");
 }
 
 void CFmiMacroParamDataGeneratorDlg::InitControlsFromDocument()
@@ -733,13 +734,15 @@ void CFmiMacroParamDataGeneratorDlg::DoResizerHooking(void)
 	ASSERT(bOk == TRUE);
 	bOk = m_resizer.SetAnchor(IDC_STATIC_GROUP_MACRO_PARAM_DATA_INFO, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
 	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_MACRO_PARAM_INFO_NAME_STR, ANCHOR_TOP | ANCHOR_LEFT);
+	ASSERT(bOk == TRUE);
 	bOk = m_resizer.SetAnchor(IDC_STATIC_BASE_DATA_PARAM_PRODUCER_STR, ANCHOR_TOP | ANCHOR_LEFT);
 	ASSERT(bOk == TRUE);
 	bOk = m_resizer.SetAnchor(IDC_EDIT_BASE_DATA_PARAM_PRODUCER, ANCHOR_TOP | ANCHOR_LEFT);
 	ASSERT(bOk == TRUE);
 	bOk = m_resizer.SetAnchor(IDC_STATIC_PRODUCER_ID_NAME_PAIR_STR, ANCHOR_TOP | ANCHOR_LEFT);
 	ASSERT(bOk == TRUE);
-	bOk = m_resizer.SetAnchor(IDC_EDIT_PRODUCER_ID_NAME_PAIR, ANCHOR_TOP | ANCHOR_LEFT);
+	bOk = m_resizer.SetAnchor(IDC_EDIT_PRODUCER_ID_NAME_PAIR, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
 	ASSERT(bOk == TRUE);
 	bOk = m_resizer.SetAnchor(IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_STR, ANCHOR_TOP | ANCHOR_LEFT);
 	ASSERT(bOk == TRUE);
@@ -769,9 +772,9 @@ void CFmiMacroParamDataGeneratorDlg::DoResizerHooking(void)
 	ASSERT(bOk == TRUE);
 	bOk = m_resizer.SetAnchor(IDC_PROGRESS_OF_OPERATION_BAR, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
 	ASSERT(bOk == TRUE);
-	bOk = m_resizer.SetAnchor(IDC_BUTTON_SAVE_MACRO_PARAM_DATA, ANCHOR_TOP | ANCHOR_LEFT);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_SAVE_MACRO_PARAM_DATA, ANCHOR_TOP | ANCHOR_RIGHT);
 	ASSERT(bOk == TRUE);
-	bOk = m_resizer.SetAnchor(IDC_BUTTON_LOAD_MACRO_PARAM_DATA, ANCHOR_TOP | ANCHOR_LEFT);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_LOAD_MACRO_PARAM_DATA, ANCHOR_TOP | ANCHOR_RIGHT);
 	ASSERT(bOk == TRUE);
 	bOk = m_resizer.SetAnchor(IDC_STATIC_LOADED_MACRO_PARAM_DATA_INFO_NAME, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
 	ASSERT(bOk == TRUE);
@@ -807,8 +810,8 @@ void CFmiMacroParamDataGeneratorDlg::DoResizerHooking(void)
 void CFmiMacroParamDataGeneratorDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 {
 	// set the minimum tracking width and height of the window
-	lpMMI->ptMinTrackSize.x = 673;
-	lpMMI->ptMinTrackSize.y = 599;
+	lpMMI->ptMinTrackSize.x = 713;
+	lpMMI->ptMinTrackSize.y = 699;
 
 	__super::OnGetMinMaxInfo(lpMMI);
 }
