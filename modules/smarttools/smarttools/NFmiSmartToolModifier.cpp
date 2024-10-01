@@ -1260,7 +1260,7 @@ void NFmiSmartToolModifier::CalculateUsedWorkingThreadCount(double wantedHardwar
     }
   }
 
-  itsUsedThreadCount = 1; // Debuggaustestejä varten
+//  itsUsedThreadCount = 1; // Debuggaustestejä varten
   itsUsedThreadCounts.insert(itsUsedThreadCount);
 }
 
