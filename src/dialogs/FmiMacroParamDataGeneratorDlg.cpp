@@ -97,6 +97,11 @@ void CFmiMacroParamDataGeneratorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_BUTTON_RUN_SELECTED_MACRO_PARAM_DATA_AUTOMATION, itsRunSelectedMacroParamDataAutomationButton);
 	DDX_Control(pDX, IDC_BUTTON_RUN_ENABLED_MACRO_PARAM_DATA_AUTOMATIONS, itsRunEnabledMacroParamDataAutomationButton);
 	DDX_Control(pDX, IDC_BUTTON_RUN_ALL_MACRO_PARAM_DATA_AUTOMATIONS, itsRunAllMacroParamDataAutomationButton);
+	DDX_Control(pDX, IDC_BUTTON_ADD_EDITED_MACRO_PARAM_DATA_AUTOMATION_TO_LIST, itsAddEditedMacroParamDataAutomationToListButton);
+	DDX_Control(pDX, IDC_BUTTON_ADD_MACRO_PARAM_DATA_AUTOMATION_TO_LIST, itsAddFromFileMacroParamDataAutomationToListButton);
+	DDX_Control(pDX, IDC_BUTTON_REMOVE_MACRO_PARAM_DATA_AUTOMATION_FROM_LIST, itsRemoveMacroParamDataAutomationFromListButton);
+	DDX_Control(pDX, IDC_BUTTON_LOAD_MACRO_PARAM_DATA_AUTOMATION_LIST, itsLoadMacroParamDataAutomationListButton);
+	DDX_Control(pDX, IDC_BUTTON_LOAD_MACRO_PARAM_DATA, itsLoadMacroParamDataInfoButton);
 	DDX_Check(pDX, IDC_CHECK_MACRO_PARAM_DATA_AUTOMATION_MODE_ON, fAutomationModeOn);
 	DDX_Text(pDX, IDC_STATIC_MACRO_PARAM_DATA_AUTOMATION_LIST_NAME_VALUE, mLoadedMacroParamDataAutomationListName);
 }
@@ -255,8 +260,8 @@ void CFmiMacroParamDataGeneratorDlg::InitControlsFromDocument()
 	UpdateMacroParamDataInfoName(itsMacroParamDataGenerator->AutomationPath());
 	UpdateMacroParamDataAutomationListName(itsMacroParamDataGenerator->AutomationListPath());
 	InitEditedMacroParamDataInfo(itsMacroParamDataGenerator->MakeDataInfo());
-	InitControlsFromLoadedMacroParamDataInfo();
 	fAutomationModeOn = itsMacroParamDataGenerator->AutomationModeOn() ? TRUE : FALSE;
+	InitControlsFromLoadedMacroParamDataInfo();
 }
 
 void CFmiMacroParamDataGeneratorDlg::InitEditedMacroParamDataInfo(const NFmiMacroParamDataInfo& macroParamInfoFromDocument)
@@ -536,7 +541,7 @@ void CFmiMacroParamDataGeneratorDlg::OnEnChangeEditUsedDataTriggerList()
 
 	std::string tmp = CT2A(itsDataTriggerList);
 	auto checkResult = NFmiMacroParamDataInfo::CheckDataTriggerListString(tmp);
-	fDataTriggerListHasInvalidValues = !checkResult.empty();
+	fDataTriggerListHasInvalidValues = !checkResult.first.empty();
 
 	// Edit kenttään liittyvä otsikkokontrolli värjätään punaiseksi, jos inputissa on vikaa
 	CWnd* win = GetDlgItem(IDC_STATIC_USED_DATA_TRIGGER_LIST);
@@ -696,7 +701,7 @@ void CFmiMacroParamDataGeneratorDlg::UpdateMacroParamDataAutomationListName(cons
 
 void CFmiMacroParamDataGeneratorDlg::EnableButtons()
 {
-	if(itsMacroParamDataGenerator->DataGenerationIsOn())
+	if(itsMacroParamDataGenerator->DataGenerationIsOn() || itsMacroParamDataGenerator->AutomationModeOn())
 	{
 		itsGenerateMacroParamDataButton.EnableWindow(false);
 		itsSaveMacroParamDataInfoButton.EnableWindow(false);
@@ -704,6 +709,13 @@ void CFmiMacroParamDataGeneratorDlg::EnableButtons()
 		itsRunSelectedMacroParamDataAutomationButton.EnableWindow(false);
 		itsRunEnabledMacroParamDataAutomationButton.EnableWindow(false);
 		itsRunAllMacroParamDataAutomationButton.EnableWindow(false);
+
+		itsAddEditedMacroParamDataAutomationToListButton.EnableWindow(false);
+		itsAddFromFileMacroParamDataAutomationToListButton.EnableWindow(false);
+		itsRemoveMacroParamDataAutomationFromListButton.EnableWindow(false);
+		itsLoadMacroParamDataAutomationListButton.EnableWindow(false);
+		itsLoadMacroParamDataInfoButton.EnableWindow(false);
+
 		return;
 	}
 
@@ -726,6 +738,12 @@ void CFmiMacroParamDataGeneratorDlg::EnableButtons()
 		itsRunEnabledMacroParamDataAutomationButton.EnableWindow(true);
 		itsRunAllMacroParamDataAutomationButton.EnableWindow(true);
 	}
+
+	itsAddEditedMacroParamDataAutomationToListButton.EnableWindow(true);
+	itsAddFromFileMacroParamDataAutomationToListButton.EnableWindow(true);
+	itsRemoveMacroParamDataAutomationFromListButton.EnableWindow(true);
+	itsLoadMacroParamDataAutomationListButton.EnableWindow(true);
+	itsLoadMacroParamDataInfoButton.EnableWindow(true);
 }
 
 void CFmiMacroParamDataGeneratorDlg::DoResizerHooking(void)
@@ -972,6 +990,7 @@ void CFmiMacroParamDataGeneratorDlg::OnBnClickedCheckMacroParamDataAutomationMod
 	itsMacroParamDataGenerator->UsedMacroParamDataAutomationList().DoFullChecks(itsMacroParamDataGenerator->AutomationModeOn());
 	UpdateAutomationList();
 	itsSmartMetDocumentInterface->SetAllViewIconsDynamically();
+	EnableButtons();
 }
 
 void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonSaveMacroParamDataAutomationList()

@@ -174,6 +174,13 @@ private:
 	CButton itsRunSelectedMacroParamDataAutomationButton;
 	CButton itsRunEnabledMacroParamDataAutomationButton;
 	CButton itsRunAllMacroParamDataAutomationButton;
+
+	CButton itsAddEditedMacroParamDataAutomationToListButton;
+	CButton itsAddFromFileMacroParamDataAutomationToListButton;
+	CButton itsRemoveMacroParamDataAutomationFromListButton;
+	CButton itsLoadMacroParamDataAutomationListButton;
+	CButton itsLoadMacroParamDataInfoButton;
+
 	BOOL fAutomationModeOn;
 	// Kun MP-data-automaatiolista ladataan tai talletetaan, tähän laitetaan sen tiedosto nimi tai polku
 	CString mLoadedMacroParamDataAutomationListName;
