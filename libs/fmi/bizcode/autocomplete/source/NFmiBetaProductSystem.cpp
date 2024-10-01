@@ -1230,45 +1230,39 @@ static void DoPossibleLogWarningAboutNonExistingLevel(NFmiInfoOrganizer& infoOrg
     }
 }
 
-bool NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, const std::string& automationName, bool automationModeOn, int& postponeTriggerInMinutesOut) const
+bool NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(const std::vector<NFmiDefineWantedData>& triggerDataList, const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, const std::string& automationName, int& postponeTriggerInMinutesOut)
 {
-    if(automationModeOn)
+    if(!triggerDataList.empty())
     {
-        if(itsTriggerMode == kFmiDataTrigger)
+        for(const auto& triggerData : triggerDataList)
         {
-            if(!itsTriggerDataList.empty())
+            auto wantedProducerId = triggerData.producer_.GetIdent();
+            if(wantedProducerId == kFmiSYNOP || wantedProducerId == kFmiFlashObs)
             {
-                for(const auto& triggerData : itsTriggerDataList)
+                // Ainakin Suomessa Synop ja Flash datat ovat multi-data juttuja, jolloin
+                // pit‰‰ tutkia ett‰ onko mik‰‰n kyseisen tuottajan datoista juuri nyt ladattu
+                auto infoList = infoOrganizer.GetInfos(wantedProducerId);
+                for(auto& info : infoList)
                 {
-                    auto wantedProducerId = triggerData.producer_.GetIdent();
-                    if(wantedProducerId == kFmiSYNOP || wantedProducerId == kFmiFlashObs)
+                    if(::CheckIfInfoWasOnTriggerList(info, loadedDataTriggerList, automationName, triggerData.dataTriggerRelatedWaitForMinutes_))
                     {
-                        // Ainakin Suomessa Synop ja Flash datat ovat multi-data juttuja, jolloin
-                        // pit‰‰ tutkia ett‰ onko mik‰‰n kyseisen tuottajan datoista juuri nyt ladattu
-                        auto infoList = infoOrganizer.GetInfos(wantedProducerId);
-                        for(auto& info : infoList)
-                        {
-                            if(::CheckIfInfoWasOnTriggerList(info, loadedDataTriggerList, automationName, triggerData.dataTriggerRelatedWaitForMinutes_))
-                            {
-                                postponeTriggerInMinutesOut = triggerData.dataTriggerRelatedWaitForMinutes_;
-                                return true;
-                            }
-                        }
+                        postponeTriggerInMinutesOut = triggerData.dataTriggerRelatedWaitForMinutes_;
+                        return true;
                     }
-                    else
-                    {
-                        // NFmiExtraMacroParamData::FindWantedInfo metodille pit‰‰ sallia etsi‰ myˆs asemadatoja (3. parametri true).
-                        auto wantedInfoData = NFmiExtraMacroParamData::FindWantedInfo(infoOrganizer, triggerData, true);
-                        if(::CheckIfInfoWasOnTriggerList(wantedInfoData.foundInfo_, loadedDataTriggerList, automationName, triggerData.dataTriggerRelatedWaitForMinutes_))
-                        {
-                            postponeTriggerInMinutesOut = triggerData.dataTriggerRelatedWaitForMinutes_;
-                            return true;
-                        }
-                        else if(triggerData.IsParamProducerLevel())
-                        {
-                            ::DoPossibleLogWarningAboutNonExistingLevel(infoOrganizer, triggerData, loadedDataTriggerList, automationName);
-                        }
-                    }
+                }
+            }
+            else
+            {
+                // NFmiExtraMacroParamData::FindWantedInfo metodille pit‰‰ sallia etsi‰ myˆs asemadatoja (3. parametri true).
+                auto wantedInfoData = NFmiExtraMacroParamData::FindWantedInfo(infoOrganizer, triggerData, true);
+                if(::CheckIfInfoWasOnTriggerList(wantedInfoData.foundInfo_, loadedDataTriggerList, automationName, triggerData.dataTriggerRelatedWaitForMinutes_))
+                {
+                    postponeTriggerInMinutesOut = triggerData.dataTriggerRelatedWaitForMinutes_;
+                    return true;
+                }
+                else if(triggerData.IsParamProducerLevel())
+                {
+                    ::DoPossibleLogWarningAboutNonExistingLevel(infoOrganizer, triggerData, loadedDataTriggerList, automationName);
                 }
             }
         }
@@ -2002,7 +1996,7 @@ std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductA
                 if(triggerModeInfo.itsTriggerMode == NFmiBetaProductAutomation::kFmiDataTrigger)
                 {
                     int postponeTriggerInMinutes = 0;
-                    if(triggerModeInfo.HasDataTriggerBeenLoaded(loadedDataTriggerList, infoOrganizer, listItem->AutomationName(), automationModeOn, postponeTriggerInMinutes))
+                    if(NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(triggerModeInfo.itsTriggerDataList, loadedDataTriggerList, infoOrganizer, listItem->AutomationName(), postponeTriggerInMinutes))
                     {
                         if(postponeTriggerInMinutes <= 0)
                             dueAutomations.push_back(listItem);
