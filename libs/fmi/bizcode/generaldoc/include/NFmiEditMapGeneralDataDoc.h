@@ -213,7 +213,7 @@ public:
     void FillViewMacroInfo(NFmiViewSettingMacro &theViewMacro, const std::string &theName, const std::string &theDescription);
     void SetCurrentGeneratedBetaProduct(const NFmiBetaProduct *theBetaProduct);
     const NFmiBetaProduct* GetCurrentGeneratedBetaProduct();
-    void DoGenerateBetaProductsChecks();
+    void DoGenerateAutomationProductChecks();
     LogAndWarnFunctionType GetLogAndWarnFunction();
     NFmiBetaProductionSystem& BetaProductionSystem();
     bool LoadViewMacroFromBetaProduct(const std::string &theAbsoluteVieMacroPath, std::string &theErrorStringOut, bool justLogMessages);

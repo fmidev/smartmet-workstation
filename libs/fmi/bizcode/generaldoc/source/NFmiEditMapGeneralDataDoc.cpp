@@ -10503,7 +10503,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return [this](const std::string &errorStr, const std::string &titleStr, CatLog::Severity severity, CatLog::Category category, bool justLog) {this->LogAndWarnUser(errorStr, titleStr, severity, category, justLog); };
     }
 
-    void DoGenerateBetaProductsChecks()
+	// Tämän pitää tehdä kaksoistoiminto, koska sekä Beta-tuotteet, että
+	// MacroParam-datat käyttävät querydata triggeröintejä ja täällä
+	// GetDataTriggerListOwnership -metodi ottaa sen hetkiset triggerit pois,
+	// joten molemmat työt pitää käsitellä samalla kertaa
+    void DoGenerateAutomationProductChecks()
     {
         static bool firstTime = true;
         if(firstTime)
@@ -10524,6 +10528,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			// haluamme että näemme automaatio listalla päivittyvät next ja last ajo ajat
 			ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Beta-automation triggered, update beta-dialog", SmartMetViewId::BetaProductionDlg);
         }
+
+		GetMacroParamDataGenerator().DoNeededMacroParamDataAutomations(dataTriggerList, *InfoOrganizer());
     }
 
     void SetCurrentGeneratedBetaProduct(const NFmiBetaProduct *theBetaProduct)
@@ -11104,7 +11110,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		LogMessage("UpdateMacroParamSystemContent: updated used macroParamSystem from working-thread", CatLog::Severity::Debug, CatLog::Category::Operational);
 	}
 
-	NFmiMacroParamDataGenerator& GetConseptDataGenerator()
+	NFmiMacroParamDataGenerator& GetMacroParamDataGenerator()
 	{
 		return itsMacroParamDataGenerator;
 	}
@@ -13216,9 +13222,9 @@ LogAndWarnFunctionType NFmiEditMapGeneralDataDoc::GetLogAndWarnFunction()
     return pimpl->GetLogAndWarnFunction();
 }
 
-void NFmiEditMapGeneralDataDoc::DoGenerateBetaProductsChecks()
+void NFmiEditMapGeneralDataDoc::DoGenerateAutomationProductChecks()
 {
-    pimpl->DoGenerateBetaProductsChecks();
+    pimpl->DoGenerateAutomationProductChecks();
 }
 
 void NFmiEditMapGeneralDataDoc::FillViewMacroInfo(NFmiViewSettingMacro &theViewMacro, const std::string &theName, const std::string &theDescription)
@@ -13499,5 +13505,5 @@ void NFmiEditMapGeneralDataDoc::UpdateMacroParamSystemContent(std::shared_ptr<NF
 
 NFmiMacroParamDataGenerator& NFmiEditMapGeneralDataDoc::GetMacroParamDataGenerator()
 {
-	return pimpl->GetConseptDataGenerator();
+	return pimpl->GetMacroParamDataGenerator();
 }
