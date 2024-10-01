@@ -12,12 +12,14 @@
 #include "NFmiFileSystem.h"
 #include "NFmiPathUtils.h"
 #include "NFmiSmartInfo.h"
+#include "NFmiBetaProductSystem.h"
 #include "jsonutils.h"
 #include "catlog/catlog.h"
 #include <boost/algorithm/string.hpp>
 #include <filesystem>
 #include <regex>
 #include <numeric>
+#include <thread>
 
 namespace
 {
@@ -167,11 +169,12 @@ bool NFmiMacroParamDataInfo::CheckData()
 
     {
         auto checkResult = NFmiMacroParamDataInfo::CheckDataTriggerListString(mDataTriggerList);
-        if(!checkResult.empty())
+        if(!checkResult.first.empty())
         {
             itsCheckShortStatusStr = "Trigger list error";
             return false;
         }
+        mWantedDataTriggerList = checkResult.second;
     }
 
     itsCheckShortStatusStr = "Macro param data ok";
@@ -337,28 +340,34 @@ std::string NFmiMacroParamDataInfo::CheckDataGeneratingSmarttoolPathString(const
     return "";
 }
 
-std::string NFmiMacroParamDataInfo::CheckDataTriggerListString(const std::string& dataTriggerListString)
+std::pair<std::string, std::vector<NFmiDefineWantedData>> NFmiMacroParamDataInfo::CheckDataTriggerListString(const std::string& dataTriggerListString)
 {
+    const std::vector<NFmiDefineWantedData> dummyEmptyData;
+
     auto parts = ::GetSplittedAndTrimmedStrings(dataTriggerListString, ",");
     // Tyhj‰ on ok
     if(parts.empty())
-        return "";
+        return std::make_pair("", dummyEmptyData);
+
+    std::vector<NFmiDefineWantedData> triggerDataList;
 
     for(const auto& paramDataStr : parts)
     {
         auto checkData = CheckBaseDataParamProducerString(paramDataStr, true);
         if(!checkData.first.empty())
         {
-            return checkData.first;
+            return std::make_pair(checkData.first, dummyEmptyData);
         }
 
         if(!::DoParamDataCheckWithOptionalDelayString(paramDataStr))
         {
-            return std::string("CheckDataTriggerListString") + ": Given data parameter '" + paramDataStr + "' (in " + dataTriggerListString + ") had invalid form, should be like 'T_ec' or 'T_ec[0.5h]'";
+            auto errorString = std::string("CheckDataTriggerListString") + ": Given data parameter '" + paramDataStr + "' (in " + dataTriggerListString + ") had invalid form, should be like 'T_ec' or 'T_ec[0.5h]'";
+            return std::make_pair(errorString, dummyEmptyData);
         }
+        triggerDataList.push_back(checkData.second);
     }
 
-    return "";
+    return std::make_pair("", triggerDataList);
 }
 
 std::string NFmiMacroParamDataInfo::MakeShortStatusErrorString()
@@ -542,6 +551,21 @@ void NFmiMacroParamDataAutomationListItem::ParseJsonPair(json_spirit::Pair& theP
         itsMacroParamDataAutomationPath = thePair.value_.get_str();
     else if(thePair.name_ == gJsonName_MacroParDataAutomationListItemAbsolutePath)
         itsMacroParamDataAutomationAbsolutePath = thePair.value_.get_str();
+}
+
+// ********************************************************************
+// *******  NFmiPostponedMacroParamDataAutomation osio alkaa  *******************
+// ********************************************************************
+
+NFmiPostponedMacroParamDataAutomation::NFmiPostponedMacroParamDataAutomation(std::shared_ptr<NFmiMacroParamDataAutomationListItem>& postponedDataTriggeredAutomation, int postponeTimeInMinutes)
+    :itsPostponeTimer()
+    , itsPostponedDataTriggeredAutomation(postponedDataTriggeredAutomation)
+    , itsPostponeTimeInMinutes(postponeTimeInMinutes)
+{}
+
+bool NFmiPostponedMacroParamDataAutomation::IsPostponeTimeOver()
+{
+    return itsPostponeTimer.CurrentTimeDiffInMSeconds() >= (itsPostponeTimeInMinutes * 1000 * 60);
 }
 
 // ***********************************************************
@@ -795,9 +819,9 @@ bool NFmiMacroParamDataAutomationList::ReadInJsonFormat(NFmiMacroParamDataAutoma
 // 2. Jos selectedAutomationIndex on -1 ja doOnlyEnabled on true, ajetaan kaikki listalle olevat enbloidut automaatiot.
 // 3. Jos selectedAutomationIndex on -1 ja doOnlyEnabled on false, ajetaan kaikki listalle olevat automaatiot.
 // selectedAutomationIndex -parametri on 1:st‰ alkava indeksi ja -1 tarkoitti siis ett‰ k‰yd‰‰n koko listaa l‰pi.
-NFmiMacroParamDataAutomationList::AutomationContainer NFmiMacroParamDataAutomationList::GetOnDemandAutomations(int selectedAutomationIndex, bool doOnlyEnabled)
+NFmiAutomationContainer NFmiMacroParamDataAutomationList::GetOnDemandAutomations(int selectedAutomationIndex, bool doOnlyEnabled)
 {
-    AutomationContainer onDemandAutomations;
+    NFmiAutomationContainer onDemandAutomations;
     if(selectedAutomationIndex > 0)
     {
         auto actualIndex = selectedAutomationIndex - 1;
@@ -823,6 +847,59 @@ NFmiMacroParamDataAutomationList::AutomationContainer NFmiMacroParamDataAutomati
     }
 
     return onDemandAutomations;
+}
+
+static void AddPostponedAutomationsToDueList(std::vector<std::shared_ptr<NFmiMacroParamDataAutomationListItem>>& dueAutomationsInOut, std::list<NFmiPostponedMacroParamDataAutomation>& postponedDataTriggeredAutomations)
+{
+    for(auto it = postponedDataTriggeredAutomations.begin(); it != postponedDataTriggeredAutomations.end(); )
+    {
+        // Check condition for removal
+        if(it->IsPostponeTimeOver())
+        {
+            std::string debugTriggerMessage = "Postponed MacroParam data automation '";
+            debugTriggerMessage += it->itsPostponedDataTriggeredAutomation->AutomationName();
+            debugTriggerMessage += "' is now triggered after ";
+            debugTriggerMessage += std::to_string(it->itsPostponeTimeInMinutes);
+            debugTriggerMessage += " minutes";
+            CatLog::logMessage(debugTriggerMessage, CatLog::Severity::Debug, CatLog::Category::Operational);
+            // Kopsataan myˆh‰stetty automaatio ajettavien listalle
+            dueAutomationsInOut.push_back(it->itsPostponedDataTriggeredAutomation);
+            // Erase the current element and get the iterator to the next element
+            it = postponedDataTriggeredAutomations.erase(it);
+        }
+        else
+        {
+            // Move iterator to the next element
+            ++it;
+        }
+    }
+}
+
+std::vector<std::shared_ptr<NFmiMacroParamDataAutomationListItem>> NFmiMacroParamDataAutomationList::GetDueAutomations(const NFmiMetTime& theCurrentTime, const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer)
+{
+    std::vector<std::shared_ptr<NFmiMacroParamDataAutomationListItem>> dueAutomations;
+
+    for(auto& listItem : mAutomationVector)
+    {
+        if(listItem->fEnable)
+        {
+            if(listItem->GetErrorStatus() == MacroParamDataStatus::kFmiListItemOk)
+            {
+                int postponeTriggerInMinutes = 0;
+                if(NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(listItem->itsMacroParamDataAutomation->WantedDataTriggerList(), loadedDataTriggerList, infoOrganizer, listItem->AutomationName(), postponeTriggerInMinutes))
+                {
+                    if(postponeTriggerInMinutes <= 0)
+                        dueAutomations.push_back(listItem);
+                    else
+                        itsPostponedDataTriggeredAutomations.push_back(NFmiPostponedMacroParamDataAutomation(listItem, postponeTriggerInMinutes));
+                }
+            }
+        }
+    }
+
+    ::AddPostponedAutomationsToDueList(dueAutomations, itsPostponedDataTriggeredAutomations);
+
+    return dueAutomations;
 }
 
 // ***********************************************************
@@ -1203,17 +1280,25 @@ bool NFmiMacroParamDataGenerator::DoOnDemandBetaAutomations(int selectedAutomati
     DataGenerationIsOnHandler dataGenerationIsOnHandler(fDataGenerationIsOn);
     bool status = false;
     auto onDemandAutomations = itsUsedMacroParamDataAutomationList.GetOnDemandAutomations(selectedAutomationIndex, doOnlyEnabled);
-    if(!onDemandAutomations.empty())
-    {
-        for(const auto& automationItem : onDemandAutomations)
-        {
-            status |= GenerateMacroParamData(*automationItem->itsMacroParamDataAutomation, threadCallBacks);
-        }
-    }
+    status = GenerateAutomationsData(onDemandAutomations, threadCallBacks);
     if(threadCallBacks)
         threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_FINISHED);
     return status;
 }
+
+bool NFmiMacroParamDataGenerator::GenerateAutomationsData(const NFmiAutomationContainer &automations, NFmiThreadCallBacks* threadCallBacks)
+{
+    bool status = false;
+    if(!automations.empty())
+    {
+        for(const auto& automationItem : automations)
+        {
+            status |= GenerateMacroParamData(*(automationItem->itsMacroParamDataAutomation), threadCallBacks);
+        }
+    }
+    return status;
+}
+
 
 bool NFmiMacroParamDataGenerator::GenerateMacroParamData(NFmiThreadCallBacks* threadCallBacks)
 {
@@ -1270,4 +1355,17 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDat
     }
 
     return false;
+}
+
+// SmartMetin CMainFrm::OnTimer kutsuu t‰t‰ funktiota kerran minuutissa ja p‰‰ttelee onko teht‰v‰ mit‰‰n 
+// itsUsedAutomationList:alla olevaa tuotantoa.
+void NFmiMacroParamDataGenerator::DoNeededMacroParamDataAutomations(const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer)
+{
+    if(!AutomationModeOn())
+        return;
+
+    NFmiMetTime currentTime(1); // Otetaan talteen nyky UTC hetki minuutin tarkkuudella
+    auto dueAutomations = itsUsedMacroParamDataAutomationList.GetDueAutomations(currentTime, loadedDataTriggerList, infoOrganizer);
+    std::thread t(&NFmiMacroParamDataGenerator::GenerateAutomationsData, this, dueAutomations, nullptr);
+    t.detach();
 }

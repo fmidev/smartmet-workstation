@@ -3,6 +3,7 @@
 #include "NFmiExtraMacroParamData.h"
 #include "NFmiParamBag.h"
 #include "NFmiMetTime.h"
+#include "NFmiMilliSecondTimer.h"
 #include "json_spirit_value.h"
 #include <string>
 
@@ -42,6 +43,7 @@ class NFmiMacroParamDataInfo
     // käytössä ja automaattinen datan generaatio on käytössä.
     // Esim. T_ec[,T_gfs_500, ...] ja myöhästetty laukaisu T_ec[0.5h] (-> 0.5 h myöhästys)
     std::string mDataTriggerList; // Ei pakollinen
+    std::vector<NFmiDefineWantedData> mWantedDataTriggerList;
     // Kun dataa generoidaan, kuinka monta viimeisintä kyseistä dataa pidetään
     // kohdehakemistossa. Jos datan luomisen jälkeen siellä on enemmän kyseisiä tiedostoja,
     // deletoidaan vanhimmat niistä pois kyseisellä filefilterillä.
@@ -74,6 +76,7 @@ public:
     void MaxGeneratedFilesKept(int newValue) { mMaxGeneratedFilesKept = newValue; }
     void CorrectMaxGeneratedFilesKeptValue();
     std::string MakeShortStatusErrorString();
+    const std::vector<NFmiDefineWantedData>& WantedDataTriggerList() const { return mWantedDataTriggerList; }
 
     static json_spirit::Object MakeJsonObject(const NFmiMacroParamDataInfo& macroParamDataInfo);
     void ParseJsonPair(json_spirit::Pair& thePair);
@@ -85,7 +88,7 @@ public:
     static std::pair<std::string, NFmiParamBag> CheckUsedParameterListString(const std::string usedParameterListString, const NFmiProducer &wantedProducer);
     static std::string CheckDataStorageFileFilter(const std::string& dataStorageFileFilter);
     static std::string CheckDataGeneratingSmarttoolPathString(const std::string& dataGeneratingSmarttoolPathString);
-    static std::string CheckDataTriggerListString(const std::string& dataTriggerListString);
+    static std::pair<std::string, std::vector<NFmiDefineWantedData>> CheckDataTriggerListString(const std::string& dataTriggerListString);
     static std::string MakeDataStorageFilePath(const std::string& dataStorageFileFilter);
     static int FixMaxGeneratedFilesKeptValue(int newValue);
 };
@@ -125,11 +128,23 @@ public:
 //    NFmiMetTime itsNextRunTime; // Milloin tämä tuote pitäisi ajaa seuraavaksi
 };
 
+class NFmiPostponedMacroParamDataAutomation
+{
+public:
+    NFmiMilliSecondTimer itsPostponeTimer;
+    std::shared_ptr<NFmiMacroParamDataAutomationListItem> itsPostponedDataTriggeredAutomation;
+    int itsPostponeTimeInMinutes;
+
+    NFmiPostponedMacroParamDataAutomation(std::shared_ptr<NFmiMacroParamDataAutomationListItem>& postponedDataTriggeredAutomation, int postponeTimeInMinutes);
+    bool IsPostponeTimeOver();
+};
+
+using NFmiAutomationContainer = std::vector<std::shared_ptr<NFmiMacroParamDataAutomationListItem>>;
 
 class NFmiMacroParamDataAutomationList
 {
-    using AutomationContainer = std::vector<std::shared_ptr<NFmiMacroParamDataAutomationListItem>>;
-    AutomationContainer mAutomationVector;
+    NFmiAutomationContainer mAutomationVector;
+    std::list<NFmiPostponedMacroParamDataAutomation> itsPostponedDataTriggeredAutomations;
 public:
     bool Add(const std::string& theMacroParamDataAutomationPath);
     NFmiMacroParamDataAutomationListItem& Get(size_t theZeroBasedRowIndex);
@@ -137,15 +152,16 @@ public:
     bool Remove(size_t theZeroBasedRowIndex);
     // Tätä kutsutaan kun esim. luetaan data tiedostosta ja tehdään täysi tarkistus kaikille osille
     MacroParamDataStatus DoFullChecks(bool fAutomationModeOn);
-    AutomationContainer& AutomationVector() { return mAutomationVector; }
-    const AutomationContainer& AutomationVector() const { return mAutomationVector; }
+    NFmiAutomationContainer& AutomationVector() { return mAutomationVector; }
+    const NFmiAutomationContainer& AutomationVector() const { return mAutomationVector; }
     bool IsOk() const;
     bool IsEmpty() const { return mAutomationVector.empty(); }
     bool ContainsAutomationMoreThanOnce() const;
     bool HasAutomationAlready(const std::string& theFullFilePath) const;
 
     void RefreshAutomationList();
-    AutomationContainer GetOnDemandAutomations(int selectedAutomationIndex, bool doOnlyEnabled);
+    NFmiAutomationContainer GetOnDemandAutomations(int selectedAutomationIndex, bool doOnlyEnabled);
+    NFmiAutomationContainer GetDueAutomations(const NFmiMetTime& theCurrentTime, const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer);
 
     static json_spirit::Object MakeJsonObject(const NFmiMacroParamDataAutomationList& theMacroParamDataAutomationList);
     void ParseJsonPair(json_spirit::Pair& thePair);
@@ -241,6 +257,7 @@ public:
 
     bool GenerateMacroParamData(NFmiThreadCallBacks* threadCallBacks);
     bool DoOnDemandBetaAutomations(int selectedAutomationIndex, bool doOnlyEnabled, NFmiThreadCallBacks* threadCallBacks);
+    void DoNeededMacroParamDataAutomations(const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer);
 
     std::string DialogBaseDataParamProducerString() const;
     void DialogBaseDataParamProducerString(const std::string& newValue);
@@ -289,4 +306,5 @@ private:
     bool StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter, int keepMaxFiles);
     bool GenerateMacroParamData(const NFmiMacroParamDataInfo &dataInfo, NFmiThreadCallBacks* threadCallBacks);
     bool LoadUsedAutomationList(const std::string& thePath);
+    bool GenerateAutomationsData(const NFmiAutomationContainer& automations, NFmiThreadCallBacks* threadCallBacks);
 };
