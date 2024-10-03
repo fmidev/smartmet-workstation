@@ -75,7 +75,7 @@ namespace
             std::string logMessageStart("NFmiMacroParamDataGenerator-CleanFilePattern: ");
             logMessageStart += theFilePattern;
             logMessageStart += ",\nkeep-max-files = ";
-            logMessageStart += NFmiStringTools::Convert(keepMaxFiles);
+            logMessageStart += std::to_string(keepMaxFiles);
             logMessageStart += ",\nDeleted files:\n";
             CtrlViewUtils::DeleteFilesWithPatternAndLog(theFilePattern, logMessageStart, CatLog::Severity::Debug, CatLog::Category::Data, keepMaxFiles);
         }
@@ -281,22 +281,14 @@ const std::string gQueryDataFileExtension = ".sqd";
 // Jos kaikki on ok, palauttaa tyhj‰n string:in.
 std::string NFmiMacroParamDataInfo::CheckDataStorageFileFilter(const std::string& dataStorageFileFilter)
 {
-    // 1. Polku ei kelpaa, jos talletushakemistoa ei ole.
-    // T‰ll‰ tarkoitus est‰‰ datojen vahinkotalletuksia v‰‰riin paikkoihin.
-    auto directory = PathUtils::getPathSectionFromTotalFilePath(dataStorageFileFilter);
-    if(!::DirectoryExists(directory))
-    {
-        return std::string("CheckDataStorageFileFilter") + ": Given data output directory '" + directory + "' doesn't exists, make sure that given path for MacroParam data was correct!";
-    }
-
     auto filename = PathUtils::getFilename(dataStorageFileFilter, false);
-    // 2. Tiedoston nimess‰ pit‰‰ olla '*' merkki aikaleimaa varten.
+    // 1. Tiedoston nimess‰ pit‰‰ olla '*' merkki aikaleimaa varten.
     if(filename.find('*') == std::string::npos)
     {
         return std::string("CheckDataStorageFileFilter") + ": Given data output filename '" + filename + "' (in " + dataStorageFileFilter + ") doesn't have ' * ' character place marker for file's creation time stamp. To store MacroParam data you need to have that asterisk in filename.";
     }
 
-    // 3. Tiedoston nimess‰ pit‰‰ olla v‰hint‰‰n 3 alpha-numeerista merkki‰, jotta esim. pelkk‰ path\*.sqd ei kelpaa
+    // 2. Tiedoston nimess‰ pit‰‰ olla v‰hint‰‰n 3 alpha-numeerista merkki‰, jotta esim. pelkk‰ path\*.sqd ei kelpaa
     int alnumCount = std::accumulate(filename.begin(), filename.end(), 0,
         [](int total, char c) {
             // Check if the character is alphanumeric (alphabet or number)
@@ -308,7 +300,7 @@ std::string NFmiMacroParamDataInfo::CheckDataStorageFileFilter(const std::string
     }
 
     auto fileExtension = ::GetFileExtension(dataStorageFileFilter);
-    // 4. Tiedoston extension pit‰‰ olla sqd tyyppinen
+    // 3. Tiedoston extension pit‰‰ olla sqd tyyppinen
     if(!boost::iequals(fileExtension, gQueryDataFileExtension))
     {
         return std::string("CheckDataStorageFileFilter") + ": Given data output extension '" + fileExtension + "' (in " + dataStorageFileFilter + ") is invalid, extension must be '" + gQueryDataFileExtension + "' type.";
@@ -856,7 +848,7 @@ static void AddPostponedAutomationsToDueList(std::vector<std::shared_ptr<NFmiMac
         // Check condition for removal
         if(it->IsPostponeTimeOver())
         {
-            std::string debugTriggerMessage = "Postponed MacroParam data automation '";
+            std::string debugTriggerMessage = "Postponed MacroParam-data automation '";
             debugTriggerMessage += it->itsPostponedDataTriggeredAutomation->AutomationName();
             debugTriggerMessage += "' is now triggered after ";
             debugTriggerMessage += std::to_string(it->itsPostponeTimeInMinutes);
@@ -925,11 +917,13 @@ namespace
     }
 }
 
-bool NFmiMacroParamDataGenerator::Init(const std::string& theBaseRegistryPath, const std::string& rootSmarttoolDirectory, const std::string& rootMacroParamDataDirectory)
+bool NFmiMacroParamDataGenerator::Init(const std::string& theBaseRegistryPath, const std::string& rootSmarttoolDirectory, const std::string& rootMacroParamDataDirectory, const std::string& localDataBaseDirectory)
 {
     mBaseRegistryPath = theBaseRegistryPath;
     mRootSmarttoolDirectory = ::FixRootPath(rootSmarttoolDirectory);
     mRootMacroParamDataDirectory = ::FixRootPath(rootMacroParamDataDirectory);
+    mLocalDataBaseDirectory = localDataBaseDirectory;
+    InitMacroParamDataTmpDirectory();
     // HKEY_CURRENT_USER -keys
     HKEY usedKey = HKEY_CURRENT_USER;
     // Beta product section
@@ -1028,8 +1022,43 @@ public:
     }
 };
 
+static std::string MakeTmpDataFilePath(const std::string& finalDataFilePath, const std::string& tmpDataDirectory)
+{
+    auto tmpDataFilePath = tmpDataDirectory;
+    tmpDataFilePath += PathUtils::getFilename(finalDataFilePath, true);
+    return tmpDataFilePath;
+}
+
+static bool EnsureFilePathDirectoryExists(const std::string &totalFilePath, const std::string& pathDescription)
+{
+    auto directoryPath = PathUtils::getPathSectionFromTotalFilePath(totalFilePath);
+
+    if(!NFmiFileSystem::CreateDirectory(directoryPath))
+    {
+        std::string errorStr = "MacroParam-data creation: unable to create directory '";
+        errorStr += directoryPath + "' for " + pathDescription + " (unknown reason).";
+        throw std::runtime_error(errorStr);
+    }
+
+    return true;
+}
+
+static void LogDataGenerationCompletes(const std::string& fullAutomationPath, const std::string& finalDataFilePath)
+{
+    std::string logStr = "Finished to generate '";
+    logStr += PathUtils::getFilename(fullAutomationPath, false);
+    logStr += "' MacroParam-data, saved to file '";
+    logStr += finalDataFilePath;
+    logStr += "', from automation: ";
+    logStr += fullAutomationPath;
+    CatLog::logMessage(logStr, CatLog::Severity::Info, CatLog::Category::Operational);
+}
+
 // Oletus: macroParamDataPtr pit‰‰ sis‰ll‰‰n talletettavan datan.
-bool NFmiMacroParamDataGenerator::StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter, int keepMaxFiles)
+// T‰t‰ funktiota ei keskeytet‰ (k‰ytt‰j‰n pyyntˆ/ohjelman lopetus), koska tiedostojen 
+// j‰lkien siivonta tekisi koodista sotkuista. T‰‰ll‰ on vain yksi hidas toimenpide eli qdata->Write jota ei voi keskeytt‰‰.
+// Tiedostojen kirjoitus on kuitenkin suht nopeaa (< 1 s useimmiten), varsinkin jos SSD k‰ytˆss‰.
+bool NFmiMacroParamDataGenerator::StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter, int keepMaxFiles, const std::string& fullAutomationPath)
 {
     // CheckDataStorageFileFilter funktio palauttaa virheilmoituksen, jos filefilterissa jotain vikaa.
     auto checkStr = NFmiMacroParamDataInfo::CheckDataStorageFileFilter(dataStorageFileFilter);
@@ -1039,8 +1068,21 @@ bool NFmiMacroParamDataGenerator::StoreMacroParamData(boost::shared_ptr<NFmiQuer
     }
 
     auto finalDataFilePath = NFmiMacroParamDataInfo::MakeDataStorageFilePath(dataStorageFileFilter);
+    auto tmpDataFilePath = ::MakeTmpDataFilePath(finalDataFilePath, mMacroParamDataTmpDirectory);
+
+    // Talletetaan ensin tmp hakemistoon, ja sitten vasta rename:lla laitetaan lopulliseen hakemistoon.
+    // Tarkoitus on ett‰ data siirtyy Dropboxiin valmiina ja t‰llˆin Dropbox ei ala jakamaan 
+    // keskener‰isesti viel‰ kirjoituksessa olevaa dataa.
     // NFmiQueryData::Write heitt‰‰ poikkeuksia, jos tulee ongelmia.
-    macroParamDataPtr->Write(finalDataFilePath);
+    macroParamDataPtr->Write(tmpDataFilePath);
+    ::EnsureFilePathDirectoryExists(finalDataFilePath, "MacroParam-data directory");
+    if(!NFmiFileSystem::RenameFile(tmpDataFilePath, finalDataFilePath))
+    {
+        std::string errorStr = __FUNCTION__;
+        errorStr += ": Moving generated MacroParam-data tmp file '" + tmpDataFilePath + "' to '" + finalDataFilePath + "' failed for unknown reason.";
+        throw std::runtime_error(errorStr);
+    }
+    ::LogDataGenerationCompletes(fullAutomationPath, finalDataFilePath);
     ::CleanFilePattern(dataStorageFileFilter, keepMaxFiles);
     return true;
 }
@@ -1092,6 +1134,7 @@ bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(boost::shared_ptr<N
         throw std::runtime_error(std::string("Used script '") + mUsedAbsoluteSmarttoolPath + "' was macroParam type. You have to use smarttool scripts when generating MacroParam data, not macroParam scripts, even though data's name might suggest otherwise");
     }
 
+    NFmiQueryDataUtil::CheckIfStopped(threadCallBacks);
     // suoritetaan macro sitten
     try
     {
@@ -1270,6 +1313,28 @@ void NFmiMacroParamDataGenerator::MacroParamDataAutomationListSaveInitialPath(co
     *mMacroParamDataAutomationListSaveInitialPath = newValue;
 }
 
+static void LogDataGenerationInterruption(bool userHasStopped, bool smartmetIsBeenClosed)
+{
+    if(userHasStopped)
+    {
+        // K‰ytt‰j‰ haluaa lopettaa
+        std::string errorStr = "Generating MacroParam-data was canceled due the user has pressed the Cancel button.";
+        CatLog::logMessage(errorStr, CatLog::Severity::Error, CatLog::Category::Operational, true);
+    }
+    else if(smartmetIsBeenClosed)
+    {
+        // Smartmetin sulkeminen vaatii ett‰ datan generointi lopetetaan
+        std::string errorStr = "Generating MacroParam-data was canceled due the Smartmet application is being closed.";
+        CatLog::logMessage(errorStr, CatLog::Severity::Error, CatLog::Category::Operational, true);
+    }
+    else
+    {
+        // Tuntematon poikkeus keskeytti datan generoinnin
+        std::string errorStr = "Generating MacroParam-data was canceled due unknown exception or error.";
+        CatLog::logMessage(errorStr, CatLog::Severity::Error, CatLog::Category::Operational, true);
+    }
+}
+
 // K‰ytt‰j‰ll‰ on nyky‰‰n kolme on-demand -nappia, joista voi k‰ynnist‰‰ halutun setin automaatioita tyˆstett‰v‰ksi:
 // 1. Jos selectedAutomationIndex:iss‰ on positiivinen numero, ajetaan vain sen osoittama automaatio.
 // 2. Jos selectedAutomationIndex on -1 ja doOnlyEnabled on true, ajetaan kaikki listalle olevat enbloidut automaatiot.
@@ -1277,13 +1342,27 @@ void NFmiMacroParamDataGenerator::MacroParamDataAutomationListSaveInitialPath(co
 // selectedAutomationIndex -parametri on 1:st‰ alkava indeksi ja -1 tarkoitti siis ett‰ k‰yd‰‰n koko listaa l‰pi.
 bool NFmiMacroParamDataGenerator::DoOnDemandBetaAutomations(int selectedAutomationIndex, bool doOnlyEnabled, NFmiThreadCallBacks* threadCallBacks)
 {
-    DataGenerationIsOnHandler dataGenerationIsOnHandler(fDataGenerationIsOn);
-    bool status = false;
-    auto onDemandAutomations = itsUsedMacroParamDataAutomationList.GetOnDemandAutomations(selectedAutomationIndex, doOnlyEnabled);
-    status = GenerateAutomationsData(onDemandAutomations, threadCallBacks);
+    try
+    {
+        DataGenerationIsOnHandler dataGenerationIsOnHandler(fDataGenerationIsOn);
+        bool status = false;
+        auto onDemandAutomations = itsUsedMacroParamDataAutomationList.GetOnDemandAutomations(selectedAutomationIndex, doOnlyEnabled);
+        status = GenerateAutomationsData(onDemandAutomations, threadCallBacks);
+        if(threadCallBacks)
+            threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_FINISHED);
+        return status;
+    }
+    catch(NFmiStopThreadException&)
+    {
+        ::LogDataGenerationInterruption(true, false);
+    }
+    catch(...)
+    {
+        ::LogDataGenerationInterruption(false, false);
+    }
     if(threadCallBacks)
-        threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_FINISHED);
-    return status;
+        threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_CANCELED);
+    return false;
 }
 
 bool NFmiMacroParamDataGenerator::GenerateAutomationsData(const NFmiAutomationContainer &automations, NFmiThreadCallBacks* threadCallBacks)
@@ -1293,27 +1372,55 @@ bool NFmiMacroParamDataGenerator::GenerateAutomationsData(const NFmiAutomationCo
     {
         for(const auto& automationItem : automations)
         {
-            status |= GenerateMacroParamData(*(automationItem->itsMacroParamDataAutomation), threadCallBacks);
+            status |= GenerateMacroParamData(*(automationItem->itsMacroParamDataAutomation), automationItem->FullAutomationPath(), threadCallBacks);
         }
     }
     return status;
 }
 
-
 bool NFmiMacroParamDataGenerator::GenerateMacroParamData(NFmiThreadCallBacks* threadCallBacks)
-{
-    DataGenerationIsOnHandler dataGenerationIsOnHandler(fDataGenerationIsOn);
-    auto dataInfo = MakeDataInfo();
-    auto result = GenerateMacroParamData(dataInfo, threadCallBacks);
-    if(threadCallBacks)
-        threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_FINISHED);
-    return result;
-}
-
-bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDataInfo& dataInfo, NFmiThreadCallBacks* threadCallBacks)
 {
     try
     {
+        DataGenerationIsOnHandler dataGenerationIsOnHandler(fDataGenerationIsOn);
+        auto dataInfo = MakeDataInfo();
+        auto result = GenerateMacroParamData(dataInfo, AutomationPath(), threadCallBacks);
+        if(threadCallBacks)
+            threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_FINISHED);
+        return result;
+    }
+    catch(NFmiStopThreadException &)
+    {
+        ::LogDataGenerationInterruption(true, false);
+    }
+    catch(...)
+    {
+        ::LogDataGenerationInterruption(false, false);
+    }
+    if(threadCallBacks)
+        threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_CANCELED);
+    return false;
+}
+
+static void LogDataGenerationStarts(const std::string& fullAutomationPath)
+{
+    std::string logStr = "Starting to generate '";
+    logStr += PathUtils::getFilename(fullAutomationPath, false);
+    logStr += "' MacroParam-data from automation: ";
+    logStr += fullAutomationPath;
+    CatLog::logMessage(logStr, CatLog::Severity::Info, CatLog::Category::Operational);
+}
+
+bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDataInfo& dataInfo, const std::string& fullAutomationPath, NFmiThreadCallBacks* threadCallBacks)
+{
+    try
+    {
+        ::LogDataGenerationStarts(fullAutomationPath);
+
+        if(!EnsureTmpDirectoryExists())
+            return false;
+
+        NFmiQueryDataUtil::CheckIfStopped(threadCallBacks);
         auto baseDataCheck = NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(dataInfo.BaseDataParamProducerString(), false);
         if(!baseDataCheck.first.empty())
         {
@@ -1335,6 +1442,7 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDat
         }
 
         auto wantedParamDescriptor = ::MakeWantedParamDescriptor(dataInfo);
+        NFmiQueryDataUtil::CheckIfStopped(threadCallBacks);
         auto wantedMacroParamDataPtr = ::MakeWantedEmptyData(wantedInfo.foundInfo_, wantedParamDescriptor);
         if(!wantedMacroParamDataPtr)
         {
@@ -1343,15 +1451,17 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDat
         boost::shared_ptr<NFmiFastQueryInfo> wantedMacroParamInfoPtr(new NFmiFastQueryInfo(wantedMacroParamDataPtr.get()));
 
         auto smarttoolContent = ReadSmarttoolContentFromFile(dataInfo.DataGeneratingSmarttoolPathString());
+        NFmiQueryDataUtil::CheckIfStopped(threadCallBacks);
 
         if(CalculateDataWithSmartTool(wantedMacroParamInfoPtr, infoOrganizer, smarttoolContent, threadCallBacks))
         {
-            return StoreMacroParamData(wantedMacroParamDataPtr, dataInfo.DataStorageFileFilter(), dataInfo.MaxGeneratedFilesKept());
+            return StoreMacroParamData(wantedMacroParamDataPtr, dataInfo.DataStorageFileFilter(), dataInfo.MaxGeneratedFilesKept(), fullAutomationPath);
         }
     }
-    catch(std::exception&)
+    catch(std::exception& e)
     {
-        // Raportoi ongelmasta
+        // Normi poikkeukset lokitetaan yhden MacroParam-datan generoinnin tasolla
+        CatLog::logMessage(e.what(), CatLog::Severity::Error, CatLog::Category::Operational, true);
     }
 
     return false;
@@ -1366,6 +1476,52 @@ void NFmiMacroParamDataGenerator::DoNeededMacroParamDataAutomations(const std::v
 
     NFmiMetTime currentTime(1); // Otetaan talteen nyky UTC hetki minuutin tarkkuudella
     auto dueAutomations = itsUsedMacroParamDataAutomationList.GetDueAutomations(currentTime, loadedDataTriggerList, infoOrganizer);
-    std::thread t(&NFmiMacroParamDataGenerator::GenerateAutomationsData, this, dueAutomations, nullptr);
+    std::thread t(&NFmiMacroParamDataGenerator::LaunchGenerateAutomationsData, this, dueAutomations, nullptr);
     t.detach();
+}
+
+// T‰nne tullaan vain MacroParam-data automaatioiden kautta, eli ei k‰ytt‰j‰n toimesta.
+// Kun Automaatiosysteemi on k‰ytˆss‰, on kaikki k‰ytt‰j‰n generoinnit estetty.
+// Eli t‰‰ll‰ ei tarvitse laittaa generointi lippuja p‰‰lle, tai l‰hetell‰ viestej‰, 
+// kun on valmista, tai canceloitu.
+void NFmiMacroParamDataGenerator::LaunchGenerateAutomationsData(const NFmiAutomationContainer& automations, NFmiThreadCallBacks* threadCallBacks)
+{
+    try
+    {
+        GenerateAutomationsData(automations, nullptr);
+        // Ei saa l‰hetell‰ viestej‰ dialogille!
+        //if(threadCallBacks)
+        //    threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_FINISHED);
+    }
+    catch(NFmiStopThreadException&)
+    {
+        // T‰ss‰ lopetus tulee aina Smartmetin sulkemisesta
+        ::LogDataGenerationInterruption(false, true);
+    }
+    catch(...)
+    {
+        ::LogDataGenerationInterruption(false, false);
+    }
+
+    // Ei saa l‰hetell‰ viestej‰ dialogille!
+    //if(threadCallBacks)
+    //    threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_CANCELED);
+}
+
+void NFmiMacroParamDataGenerator::InitMacroParamDataTmpDirectory()
+{
+    mMacroParamDataTmpDirectory = mLocalDataBaseDirectory + "\\MacroParamDataTmp\\";
+    mMacroParamDataTmpDirectory = PathUtils::simplifyWindowsPath(mMacroParamDataTmpDirectory);
+}
+
+bool NFmiMacroParamDataGenerator::EnsureTmpDirectoryExists()
+{
+    if(!NFmiFileSystem::CreateDirectory(mMacroParamDataTmpDirectory))
+    {
+        std::string errorStr = "MacroParam-data creation: unable to create directory '";
+        errorStr += mMacroParamDataTmpDirectory + "' for temporary querydata file (unknown reason).";
+        throw std::runtime_error(errorStr);
+    }
+
+    return true;
 }

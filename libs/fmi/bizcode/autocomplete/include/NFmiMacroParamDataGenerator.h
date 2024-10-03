@@ -177,6 +177,7 @@ private:
 };
 
 inline unsigned int ID_MACRO_PARAM_DATA_GENERATION_FINISHED = 23423;
+inline unsigned int ID_MACRO_PARAM_DATA_GENERATION_CANCELED = 23424;
 
 // T‰ll‰ talletetaan paljon MacroParamDataGenerator dialogin juttuja 
 // Windows rekisteriin pysyv‰‰n muistiin jossa k‰ytet‰‰n
@@ -249,11 +250,18 @@ class NFmiMacroParamDataGenerator
     std::string mUsedAbsoluteSmarttoolPath;
     // Onko smartmet moodissa miss‰ automaatiolistan datoja tuotetaan.
     boost::shared_ptr<CachedRegBool> mAutomationModeOn;
+    // Onko automaatio systeemi k‰ynniss‰ vai ei
     bool fDataGenerationIsOn = false;
+    // T‰m‰ on smartmetin k‰ytt‰m‰n lokaali cachen perushakemisto
+    std::string mLocalDataBaseDirectory;
+    // T‰m‰ on macroParamDatojen tmp tiedostojen generointi hakemisto,
+    // t‰nne luodaan aina uudet tiedostot ja kun ne on kirjoitettu kokonaisuudessaan
+    // levylle, tehd‰‰n file-move lopulliseen (dropbox) hakemistoon
+    std::string mMacroParamDataTmpDirectory;
 public:
 
     NFmiMacroParamDataGenerator();
-    bool Init(const std::string& theBaseRegistryPath, const std::string& rootSmarttoolDirectory, const std::string &rootMacroParamDataDirectory);
+    bool Init(const std::string& theBaseRegistryPath, const std::string& rootSmarttoolDirectory, const std::string &rootMacroParamDataDirectory, const std::string& localDataBaseDirectory);
 
     bool GenerateMacroParamData(NFmiThreadCallBacks* threadCallBacks);
     bool DoOnDemandBetaAutomations(int selectedAutomationIndex, bool doOnlyEnabled, NFmiThreadCallBacks* threadCallBacks);
@@ -303,8 +311,11 @@ public:
 private:
     bool CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::string& smartToolText, NFmiThreadCallBacks *threadCallBacks);
     std::string ReadSmarttoolContentFromFile(const std::string& filePath);
-    bool StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter, int keepMaxFiles);
-    bool GenerateMacroParamData(const NFmiMacroParamDataInfo &dataInfo, NFmiThreadCallBacks* threadCallBacks);
+    bool StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter, int keepMaxFiles, const std::string& fullAutomationPath);
+    bool GenerateMacroParamData(const NFmiMacroParamDataInfo &dataInfo, const std::string &fullAutomationPath, NFmiThreadCallBacks* threadCallBacks);
     bool LoadUsedAutomationList(const std::string& thePath);
     bool GenerateAutomationsData(const NFmiAutomationContainer& automations, NFmiThreadCallBacks* threadCallBacks);
+    void InitMacroParamDataTmpDirectory();
+    bool EnsureTmpDirectoryExists();
+    void LaunchGenerateAutomationsData(const NFmiAutomationContainer& automations, NFmiThreadCallBacks* threadCallBacks);
 };
