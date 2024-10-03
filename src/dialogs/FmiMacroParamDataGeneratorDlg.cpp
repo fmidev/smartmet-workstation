@@ -69,6 +69,7 @@ CFmiMacroParamDataGeneratorDlg::CFmiMacroParamDataGeneratorDlg(SmartMetDocumentI
 	, mLoadedMacroParamDataInfoName(_T(""))
 	, itsDataTriggerList(_T(""))
 	, itsMaxGeneratedFilesKept(_T(""))
+	, mGeneratedDataInfoStr(_T(""))
 	, fAutomationModeOn(FALSE)
 	, itsEditedMacroParamDataInfo(std::make_shared<NFmiMacroParamDataInfo>())
 {
@@ -102,8 +103,10 @@ void CFmiMacroParamDataGeneratorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_BUTTON_REMOVE_MACRO_PARAM_DATA_AUTOMATION_FROM_LIST, itsRemoveMacroParamDataAutomationFromListButton);
 	DDX_Control(pDX, IDC_BUTTON_LOAD_MACRO_PARAM_DATA_AUTOMATION_LIST, itsLoadMacroParamDataAutomationListButton);
 	DDX_Control(pDX, IDC_BUTTON_LOAD_MACRO_PARAM_DATA, itsLoadMacroParamDataInfoButton);
+	DDX_Control(pDX, IDC_BUTTON_CANCEL_DATA_GENERATION, itsCancelDataGenerationButton);
 	DDX_Check(pDX, IDC_CHECK_MACRO_PARAM_DATA_AUTOMATION_MODE_ON, fAutomationModeOn);
 	DDX_Text(pDX, IDC_STATIC_MACRO_PARAM_DATA_AUTOMATION_LIST_NAME_VALUE, mLoadedMacroParamDataAutomationListName);
+	DDX_Text(pDX, IDC_STATIC_GENERATED_DATA_INFO_STR, mGeneratedDataInfoStr);
 }
 
 BEGIN_MESSAGE_MAP(CFmiMacroParamDataGeneratorDlg, CDialogEx)
@@ -129,6 +132,7 @@ BEGIN_MESSAGE_MAP(CFmiMacroParamDataGeneratorDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_RUN_SELECTED_MACRO_PARAM_DATA_AUTOMATION, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonRunSelectedMacroParamDataAutomation)
 	ON_BN_CLICKED(IDC_BUTTON_RUN_ENABLED_MACRO_PARAM_DATA_AUTOMATIONS, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonRunEnabledMacroParamDataAutomations)
 	ON_BN_CLICKED(IDC_BUTTON_RUN_ALL_MACRO_PARAM_DATA_AUTOMATIONS, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonRunAllMacroParamDataAutomations)
+	ON_BN_CLICKED(IDC_BUTTON_CANCEL_DATA_GENERATION, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonCancelDataGeneration)
 END_MESSAGE_MAP()
 
 // CFmiMacroParamDataGeneratorDlg message handlers
@@ -183,6 +187,7 @@ BOOL CFmiMacroParamDataGeneratorDlg::OnInitDialog()
 	mProgressControl.SetStep(1);
 	mProgressControl.SetShowPercent(TRUE);
 	mThreadCallBacksPtr = std::make_unique<NFmiThreadCallBacks>(&mStopper, this);
+	ShowCancelButton(false);
 	UpdateData(FALSE);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -455,8 +460,32 @@ HBRUSH CFmiMacroParamDataGeneratorDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCt
 		else
 			pDC->SetTextColor(RGB(0, 0, 0)); // Muuten se v‰rj‰t‰‰n mustaksi
 	}
+	// CButton kontrollin v‰ri s‰‰dˆt ei toimi
+	//else if(pWnd->GetDlgCtrlID() == IDC_BUTTON_CANCEL_DATA_GENERATION)
+	//{
+	//	// Vain v‰liaikaisesti n‰kyv‰n Cancel nappulan tekstit v‰ritet‰‰n aina punaiseksi
+	//	pDC->SetTextColor(RGB(255, 0, 0));
+
+	//	pDC->SetBkColor(RGB(255, 0, 0)); // Blue background
+
+	//	// If brush is not created, create a new one
+	//	if(!itsCancelButtonBackgroundBrush.GetSafeHandle())
+	//	{
+	//		itsCancelButtonBackgroundBrush.CreateSolidBrush(RGB(0, 100, 255)); // Blue background brush
+	//	}
+
+	//	return itsCancelButtonBackgroundBrush; // Return the brush
+	//}
 
 	return hbr;
+}
+
+void CFmiMacroParamDataGeneratorDlg::DoControlColoringUpdates(int controlId)
+{
+	CWnd* win = GetDlgItem(controlId);
+	if(win)
+		win->Invalidate(FALSE);
+	EnableButtons();
 }
 
 void CFmiMacroParamDataGeneratorDlg::OnChangeEditBaseDataParamProducer()
@@ -468,10 +497,7 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditBaseDataParamProducer()
 	fBaseDataParamProducerStringHasInvalidValues = !checkResult.first.empty();
 
 	// Edit kentt‰‰n liittyv‰ otsikkokontrolli v‰rj‰t‰‰n punaiseksi, jos inputissa on vikaa
-	CWnd* win = GetDlgItem(IDC_STATIC_BASE_DATA_PARAM_PRODUCER_STR);
-	if(win)
-		win->Invalidate(FALSE);
-	EnableButtons();
+	DoControlColoringUpdates(IDC_STATIC_BASE_DATA_PARAM_PRODUCER_STR);
 }
 
 void CFmiMacroParamDataGeneratorDlg::OnChangeEditProducerIdNamePair()
@@ -483,10 +509,7 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditProducerIdNamePair()
 	fProducerIdNamePairStringHasInvalidValues = !checkResult.first.empty();
 
 	// Edit kentt‰‰n liittyv‰ otsikkokontrolli v‰rj‰t‰‰n punaiseksi, jos inputissa on vikaa
-	CWnd* win = GetDlgItem(IDC_STATIC_PRODUCER_ID_NAME_PAIR_STR);
-	if(win)
-		win->Invalidate(FALSE);
-	EnableButtons();
+	DoControlColoringUpdates(IDC_STATIC_PRODUCER_ID_NAME_PAIR_STR);
 }
 
 void CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedParameterList()
@@ -499,10 +522,7 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedParameterList()
 	fUsedParameterListStringHasInvalidValues = !checkResult.first.empty();
 
 	// Edit kentt‰‰n liittyv‰ otsikkokontrolli v‰rj‰t‰‰n punaiseksi, jos inputissa on vikaa
-	CWnd* win = GetDlgItem(IDC_STATIC_USED_PARAMETER_LIST_STR);
-	if(win)
-		win->Invalidate(FALSE);
-	EnableButtons();
+	DoControlColoringUpdates(IDC_STATIC_USED_PARAMETER_LIST_STR);
 }
 
 void CFmiMacroParamDataGeneratorDlg::OnChangeEditGeneratedDataStorageFileFilter()
@@ -514,10 +534,7 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditGeneratedDataStorageFileFilter(
 	fGeneratedDataStorageFileFilterHasInvalidValues = !checkResult.empty();
 
 	// Edit kentt‰‰n liittyv‰ otsikkokontrolli v‰rj‰t‰‰n punaiseksi, jos inputissa on vikaa
-	CWnd* win = GetDlgItem(IDC_STATIC_GENERATED_DATA_STORAGE_FILE_FILTER_STR);
-	if(win)
-		win->Invalidate(FALSE);
-	EnableButtons();
+	DoControlColoringUpdates(IDC_STATIC_GENERATED_DATA_STORAGE_FILE_FILTER_STR);
 }
 
 void CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedDataGenerationSmarttoolPath()
@@ -529,10 +546,7 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedDataGenerationSmarttoolPath
 	fUsedDataGenerationSmarttoolPathHasInvalidValues = !checkResult.empty();
 
 	// Edit kentt‰‰n liittyv‰ otsikkokontrolli v‰rj‰t‰‰n punaiseksi, jos inputissa on vikaa
-	CWnd* win = GetDlgItem(IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_STR);
-	if(win)
-		win->Invalidate(FALSE);
-	EnableButtons();
+	DoControlColoringUpdates(IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_STR);
 }
 
 void CFmiMacroParamDataGeneratorDlg::OnEnChangeEditUsedDataTriggerList()
@@ -544,10 +558,7 @@ void CFmiMacroParamDataGeneratorDlg::OnEnChangeEditUsedDataTriggerList()
 	fDataTriggerListHasInvalidValues = !checkResult.first.empty();
 
 	// Edit kentt‰‰n liittyv‰ otsikkokontrolli v‰rj‰t‰‰n punaiseksi, jos inputissa on vikaa
-	CWnd* win = GetDlgItem(IDC_STATIC_USED_DATA_TRIGGER_LIST);
-	if(win)
-		win->Invalidate(FALSE);
-	EnableButtons();
+	DoControlColoringUpdates(IDC_STATIC_USED_DATA_TRIGGER_LIST);
 }
 
 void CFmiMacroParamDataGeneratorDlg::OnEnChangeEditMaxGeneratedFilesKept()
@@ -555,6 +566,11 @@ void CFmiMacroParamDataGeneratorDlg::OnEnChangeEditMaxGeneratedFilesKept()
 	UpdateData(TRUE);
 	InitMaxGeneratedFilesKept(GetMaxGeneratedFilesKept());
 	UpdateData(FALSE);
+}
+
+void CFmiMacroParamDataGeneratorDlg::ResetProgressControl()
+{
+	mProgressControl.SetPos(0);
 }
 
 void CFmiMacroParamDataGeneratorDlg::StepIt(void)
@@ -624,12 +640,25 @@ bool CFmiMacroParamDataGeneratorDlg::WaitUntilInitialized(void)
 	return false;
 }
 
+void CFmiMacroParamDataGeneratorDlg::DoOnStopDataGeneration(const std::string& stopMethodName)
+{
+	UpdateGeneratedDataInfoStr(stopMethodName);
+	EnableButtons();
+	ShowCancelButton(false);
+	mStopper.Stop(false);
+	ResetProgressControl();
+//	UpdateData(FALSE);
+}
 
 BOOL CFmiMacroParamDataGeneratorDlg::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult)
 {
 	if(message == ID_MACRO_PARAM_DATA_GENERATION_FINISHED)
 	{
-		EnableButtons();
+		DoOnStopDataGeneration("Finished");
+	}
+	else if(message == ID_MACRO_PARAM_DATA_GENERATION_CANCELED)
+	{
+		DoOnStopDataGeneration("Canceled");
 	}
 
 	return __super::OnWndMsg(message, wParam, lParam, pResult);
@@ -821,6 +850,8 @@ void CFmiMacroParamDataGeneratorDlg::DoResizerHooking(void)
 	bOk = m_resizer.SetAnchor(IDC_BUTTON_RUN_ENABLED_MACRO_PARAM_DATA_AUTOMATIONS, ANCHOR_BOTTOM | ANCHOR_RIGHT);
 	ASSERT(bOk == TRUE);
 	bOk = m_resizer.SetAnchor(IDC_BUTTON_RUN_ALL_MACRO_PARAM_DATA_AUTOMATIONS, ANCHOR_BOTTOM | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_GENERATED_DATA_INFO_STR, ANCHOR_TOP | ANCHOR_RIGHT);
 	ASSERT(bOk == TRUE);
 }
 
@@ -1030,10 +1061,18 @@ void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonLoadMacroParamDataAutomati
 
 void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonGenerateMacroParamData()
 {
-	StartDataGenerationControlEnablations();
-	StoreControlValuesToDocument();
+	DoUserStartedDataGenerationPreparations("Started edited");
 	std::thread t(&CFmiMacroParamDataGeneratorDlg::LaunchMacroParamDataGeneration, this);
 	t.detach();
+}
+
+void CFmiMacroParamDataGeneratorDlg::UpdateGeneratedDataInfoStr(const std::string& status)
+{
+	NFmiTime currentTime;
+	auto infoStr = status + " at ";
+	infoStr += currentTime.ToStr("HH:mm:SS");
+	mGeneratedDataInfoStr = CA2T(infoStr.c_str());
+	UpdateData(FALSE);
 }
 
 void CFmiMacroParamDataGeneratorDlg::LaunchMacroParamDataGeneration()
@@ -1047,8 +1086,7 @@ void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonRunSelectedMacroParamDataA
 	auto selectedCellRange = itsGridCtrl.GetSelectedCellRange();
 	if(selectedCellRange.IsValid())
 	{
-		StartDataGenerationControlEnablations();
-		StoreControlValuesToDocument();
+		DoUserStartedDataGenerationPreparations("Started selected");
 		std::thread t(&CFmiMacroParamDataGeneratorDlg::LaunchOnDemandMacroParamDataAutomation, this, selectedCellRange.GetMinRow(), true);
 		t.detach();
 	}
@@ -1065,9 +1103,7 @@ void CFmiMacroParamDataGeneratorDlg::LaunchOnDemandMacroParamDataAutomation(int 
 
 void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonRunEnabledMacroParamDataAutomations()
 {
-	UpdateData(TRUE);
-	StartDataGenerationControlEnablations();
-	StoreControlValuesToDocument();
+	DoUserStartedDataGenerationPreparations("Started enabled");
 	std::thread t(&CFmiMacroParamDataGeneratorDlg::LaunchOnDemandMacroParamDataAutomation, this, -1, true);
 	t.detach();
 	UpdateAutomationList();
@@ -1076,10 +1112,31 @@ void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonRunEnabledMacroParamDataAu
 
 void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonRunAllMacroParamDataAutomations()
 {
-	UpdateData(TRUE);
-	StartDataGenerationControlEnablations();
-	StoreControlValuesToDocument();
+	DoUserStartedDataGenerationPreparations("Started all");
 	std::thread t(&CFmiMacroParamDataGeneratorDlg::LaunchOnDemandMacroParamDataAutomation, this, -1, false);
 	t.detach();
 	UpdateAutomationList();
+}
+
+
+void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonCancelDataGeneration()
+{
+	mStopper.Stop(true);
+}
+
+// Ainakun Cancel button n‰ytet‰‰n, silloin pit‰‰ Generate button piilottaa ja 
+// toisin p‰in, koska ne ovat p‰‰llekk‰in dialogissa.
+void CFmiMacroParamDataGeneratorDlg::ShowCancelButton(bool show)
+{
+	itsCancelDataGenerationButton.ShowWindow(show ? SW_SHOW : SW_HIDE);
+	itsGenerateMacroParamDataButton.ShowWindow(show ? SW_HIDE : SW_SHOW);
+}
+
+void CFmiMacroParamDataGeneratorDlg::DoUserStartedDataGenerationPreparations(const std::string &infoStr)
+{
+	UpdateData(TRUE);
+	StartDataGenerationControlEnablations();
+	StoreControlValuesToDocument();
+	UpdateGeneratedDataInfoStr("Started all");
+	ShowCancelButton(true);
 }

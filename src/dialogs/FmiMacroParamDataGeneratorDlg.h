@@ -125,6 +125,12 @@ private:
 	void LaunchOnDemandMacroParamDataAutomation(int selectedAutomationIndex, bool doOnlyEnabled);
 	void InitEditedMacroParamDataInfo(const NFmiMacroParamDataInfo& macroParamInfoFromDocument);
 	void StoreControlValuesToEditedMacroParamDataInfo();
+	void UpdateGeneratedDataInfoStr(const std::string& status);
+	void ShowCancelButton(bool show);
+	void DoUserStartedDataGenerationPreparations(const std::string& infoStr);
+	void DoOnStopDataGeneration(const std::string& stopMethodName);
+	void ResetProgressControl();
+	void DoControlColoringUpdates(int controlId);
 
 	NFmiMacroParDataAutomationGridCtrl itsGridCtrl;
 	std::vector<MacroParDataAutomationHeaderParInfo> itsHeaders;
@@ -166,6 +172,8 @@ private:
 	// Kun MP-data-info ladataan tai talletetaan, tähän laitetaan sen tiedosto nimi tai polku
 	CString mLoadedMacroParamDataInfoName;
 	std::string mLoadedMacroParamDataInfoFullPath;
+	// Tähän tulee datan nimi ja generoinnin tulos lyhyesti
+	CString mGeneratedDataInfoStr;
 	CWndResizer m_resizer;
 	// Sellaisten nappuloiden jotka halutaan enable/disable tiloihin muuttujat
 	CButton itsGenerateMacroParamDataButton;
@@ -180,6 +188,8 @@ private:
 	CButton itsRemoveMacroParamDataAutomationFromListButton;
 	CButton itsLoadMacroParamDataAutomationListButton;
 	CButton itsLoadMacroParamDataInfoButton;
+	CButton itsCancelDataGenerationButton;
+	CBrush itsCancelButtonBackgroundBrush;
 
 	BOOL fAutomationModeOn;
 	// Kun MP-data-automaatiolista ladataan tai talletetaan, tähän laitetaan sen tiedosto nimi tai polku
@@ -215,4 +225,5 @@ public:
 	afx_msg void OnBnClickedButtonRunSelectedMacroParamDataAutomation();
 	afx_msg void OnBnClickedButtonRunEnabledMacroParamDataAutomations();
 	afx_msg void OnBnClickedButtonRunAllMacroParamDataAutomations();
+	afx_msg void OnBnClickedButtonCancelDataGeneration();
 };
