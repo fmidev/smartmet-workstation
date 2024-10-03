@@ -258,6 +258,7 @@ void CFmiMacroParamDataGeneratorDlg::InitDialogTexts()
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RUN_ENABLED_MACRO_PARAM_DATA_AUTOMATIONS, "Run enabled");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RUN_ALL_MACRO_PARAM_DATA_AUTOMATIONS, "Run all");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_MACRO_PARAM_INFO_NAME_STR, "Macro name");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_CANCEL_DATA_GENERATION, "Cancel data generation");
 }
 
 void CFmiMacroParamDataGeneratorDlg::InitControlsFromDocument()
@@ -852,6 +853,8 @@ void CFmiMacroParamDataGeneratorDlg::DoResizerHooking(void)
 	bOk = m_resizer.SetAnchor(IDC_BUTTON_RUN_ALL_MACRO_PARAM_DATA_AUTOMATIONS, ANCHOR_BOTTOM | ANCHOR_RIGHT);
 	ASSERT(bOk == TRUE);
 	bOk = m_resizer.SetAnchor(IDC_STATIC_GENERATED_DATA_INFO_STR, ANCHOR_TOP | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_CANCEL_DATA_GENERATION, ANCHOR_TOP | ANCHOR_LEFT);
 	ASSERT(bOk == TRUE);
 }
 
