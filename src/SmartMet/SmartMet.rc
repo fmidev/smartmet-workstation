@@ -1156,6 +1156,8 @@ IDI_ICON_LED_YELLOW     ICON                    "res\\ledyellow.ico"
 
 IDB_BITMAP_FMI_LOGO_BETA_PRODUCT_MODE BITMAP                  "res\\fmilogo_beta_product_mode.bmp"
 
+IDB_BITMAP_FMI_LOGO_MACRO_PARAM_DATA_MODE BITMAP                  "res\\fmi_logo_32x32_macro_param_data.bmp"
+
 #endif    // English (United Kingdom) resources
 /////////////////////////////////////////////////////////////////////////////
 

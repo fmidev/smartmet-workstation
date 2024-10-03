@@ -7,6 +7,7 @@
 #include "CloneBitmap.h"
 #include "NFmiEditMapGeneralDataDoc.h"
 #include "NFmiBetaProductSystem.h"
+#include "NFmiMacroParamDataGenerator.h"
 
 namespace
 {
@@ -18,6 +19,8 @@ namespace
         HICON betaProductBigIcon_ = nullptr;
         HICON caseStudySmallIcon_ = nullptr;
         HICON caseStudyBigIcon_ = nullptr;
+        HICON macroParamDataSmallIcon_ = nullptr;
+        HICON macroParamDataBigIcon_ = nullptr;
     public:
         IconHandler()
         {
@@ -27,6 +30,8 @@ namespace
             betaProductBigIcon_ = CCloneBitmap::BitmapToIcon(IDB_BITMAP_FMI_LOGO_BETA_PRODUCT_MODE, ColorPOD(160, 160, 164));
             caseStudySmallIcon_ = CCloneBitmap::BitmapToIcon(IDB_BITMAP_FMI_LOGO_CASE_STUDY, ColorPOD(160, 160, 164));
             caseStudyBigIcon_ = CCloneBitmap::BitmapToIcon(IDB_BITMAP_FMI_LOGO_CASE_STUDY, ColorPOD(160, 160, 164));
+            macroParamDataSmallIcon_ = CCloneBitmap::BitmapToIcon(IDB_BITMAP_FMI_LOGO_MACRO_PARAM_DATA_MODE, ColorPOD(160, 160, 164));
+            macroParamDataBigIcon_ = CCloneBitmap::BitmapToIcon(IDB_BITMAP_FMI_LOGO_MACRO_PARAM_DATA_MODE, ColorPOD(160, 160, 164));
         }
 
         ~IconHandler()
@@ -37,9 +42,11 @@ namespace
             DestroyIcon(betaProductBigIcon_);
             DestroyIcon(caseStudySmallIcon_);
             DestroyIcon(caseStudyBigIcon_);
+            DestroyIcon(macroParamDataSmallIcon_);
+            DestroyIcon(macroParamDataBigIcon_);
         }
 
-        std::pair<HICON, HICON> getUsedIcons(bool betaProductAutomationOn, bool caseStudyModeOn)
+        std::pair<HICON, HICON> getUsedIcons(bool betaProductAutomationOn, bool caseStudyModeOn, bool macroParamDataAutomationOn)
         {
             if(betaProductAutomationOn)
             {
@@ -48,6 +55,10 @@ namespace
             else if(caseStudyModeOn)
             {
                 return std::make_pair(caseStudySmallIcon_, caseStudyBigIcon_);
+            }
+            else if(macroParamDataAutomationOn)
+            {
+                return std::make_pair(macroParamDataSmallIcon_, macroParamDataBigIcon_);
             }
             else
             {
@@ -71,7 +82,7 @@ namespace
     {
         static IconHandler iconHandler;
 
-        return iconHandler.getUsedIcons(generalDataDocument.BetaProductionSystem().AutomationModeOn(), generalDataDocument.CaseStudyModeOn());
+        return iconHandler.getUsedIcons(generalDataDocument.BetaProductionSystem().AutomationModeOn(), generalDataDocument.CaseStudyModeOn(), generalDataDocument.GetMacroParamDataGenerator().AutomationModeOn());
     }
 }
 
