@@ -3541,8 +3541,12 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::GetUsedEditedInfo()
 {
   if (this->fMacroParamCalculation)
     return UsedMacroParamData();
-  else
-    return itsInfoOrganizer->FindInfo(NFmiInfoData::kEditable);
+  
+  auto fixedEditedData = GetFixedEditedData();
+  if (fixedEditedData)
+    return fixedEditedData;
+
+  return itsInfoOrganizer->FindInfo(NFmiInfoData::kEditable);
 }
 
 bool NFmiSmartToolModifier::UseVisualizationOptimazation()
@@ -3745,4 +3749,9 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::GetFixedEditedData(
     fixedEditedInfoCopy->Level(*theLevel);
   }
   return fixedEditedInfoCopy;
+}
+
+boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::GetFixedEditedData()
+{
+  return NFmiSmartInfo::CreateShallowCopyOfHighestInfo(itsFixedEditedData);
 }

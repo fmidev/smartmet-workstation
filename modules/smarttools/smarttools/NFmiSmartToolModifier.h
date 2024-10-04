@@ -366,6 +366,7 @@ class NFmiSmartToolModifier
   bool UseFixedEditedData(NFmiInfoData::Type theType);
   boost::shared_ptr<NFmiFastQueryInfo> GetFixedEditedData(const NFmiDataIdent &theIdent,
                                                           const NFmiLevel *theLevel);
+  boost::shared_ptr<NFmiFastQueryInfo> GetFixedEditedData();
 
   // querydata 'database', ei omista ei tuhoa
   NFmiInfoOrganizer *itsInfoOrganizer;
