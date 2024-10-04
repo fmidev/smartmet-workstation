@@ -85,11 +85,14 @@ NFmiMilliSecondTimer::NFmiMilliSecondTimer()
   ftime(&itsTime2);
 }
 
-std::string NFmiMilliSecondTimer::EasyTimeDiffStr(int theDiffInMS, bool fIgnoreMilliSeconds)
+std::string NFmiMilliSecondTimer::EasyTimeDiffStr(int theDiffInMS,
+                                                  bool fIgnoreMilliSeconds,
+                                                  bool fDenseOutput)
 {
-  static const double dayInMS = 1000. * 60 * 60 * 24;
-  static const double hourInMS = 1000. * 60 * 60;
-  static const double minuteInMS = 1000. * 60;
+  static const double secondInMS = 1000;
+  static const double minuteInMS = secondInMS * 60;
+  static const double hourInMS = minuteInMS * 60;
+  static const double dayInMS = hourInMS * 24;
   int diffInMS = theDiffInMS;
   auto days = static_cast<int>(diffInMS / dayInMS);
   if (days > 0) diffInMS = static_cast<int>(diffInMS - days * dayInMS);
@@ -97,10 +100,40 @@ std::string NFmiMilliSecondTimer::EasyTimeDiffStr(int theDiffInMS, bool fIgnoreM
   if (hours > 0) diffInMS = static_cast<int>(diffInMS - hours * hourInMS);
   auto minutes = static_cast<int>(diffInMS / minuteInMS);
   if (minutes > 0) diffInMS = static_cast<int>(diffInMS - minutes * minuteInMS);
-  auto seconds = static_cast<int>(diffInMS / 1000.);
+  auto seconds = static_cast<int>(diffInMS / secondInMS);
   int msecs = diffInMS % 1000;
   std::string result;
   bool printRest = false;
+  if(fDenseOutput)
+  {
+    if (days > 0)
+    {
+      printRest = true;
+      result += NFmiStringTools::Convert<int>(days) + "d ";
+    }
+    if (hours > 0 || printRest)
+    {
+      printRest = true;
+      result += NFmiStringTools::Convert<int>(hours) + "h ";
+    }
+    if (minutes > 0 || printRest)
+    {
+      // printRest = true;
+      result += NFmiStringTools::Convert<int>(minutes) + "m ";
+    }
+    //	sekunnit tulee aina
+    if (fIgnoreMilliSeconds)
+    {
+      result += NFmiStringTools::Convert<int>(seconds) + "s";
+    }
+    else
+    {
+      double secondWithFractions = seconds + (msecs / 1000.);
+      result += NFmiValueString::GetStringWithMaxDecimalsSmartWay(secondWithFractions, 3) + "s";
+    }
+    return result;
+  }
+
   if (days > 0)
   {
     printRest = true;
@@ -127,8 +160,9 @@ std::string NFmiMilliSecondTimer::EasyTimeDiffStr(int theDiffInMS, bool fIgnoreM
   return result;
 }
 
-std::string NFmiMilliSecondTimer::EasyTimeDiffStr(bool fIgnoreMilliSeconds) const
+std::string NFmiMilliSecondTimer::EasyTimeDiffStr(bool fIgnoreMilliSeconds,
+                                                  bool fDenseOutput) const
 {
   int diffInMS = TimeDiffInMSeconds();
-  return NFmiMilliSecondTimer::EasyTimeDiffStr(diffInMS, fIgnoreMilliSeconds);
+  return NFmiMilliSecondTimer::EasyTimeDiffStr(diffInMS, fIgnoreMilliSeconds, fDenseOutput);
 }
