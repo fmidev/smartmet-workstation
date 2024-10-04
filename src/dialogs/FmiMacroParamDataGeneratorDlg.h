@@ -125,10 +125,10 @@ private:
 	void LaunchOnDemandMacroParamDataAutomation(int selectedAutomationIndex, bool doOnlyEnabled);
 	void InitEditedMacroParamDataInfo(const NFmiMacroParamDataInfo& macroParamInfoFromDocument);
 	void StoreControlValuesToEditedMacroParamDataInfo();
-	void UpdateGeneratedDataInfoStr(const std::string& status);
+	void UpdateGeneratedDataInfoStr(const std::string& status, bool workFinished);
 	void ShowCancelButton(bool show);
 	void DoUserStartedDataGenerationPreparations(const std::string& infoStr);
-	void DoOnStopDataGeneration(const std::string& stopMethodName);
+	void DoOnStopDataGeneration(const std::string& stopMethodName, bool workFinished);
 	void ResetProgressControl();
 	void DoControlColoringUpdates(int controlId);
 

@@ -494,7 +494,7 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditBaseDataParamProducer()
 	UpdateData(TRUE);
 
 	std::string tmp = CT2A(itsBaseDataParamProducerString);
-	auto checkResult = NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(tmp, false);
+	auto checkResult = NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(tmp, true);
 	fBaseDataParamProducerStringHasInvalidValues = !checkResult.first.empty();
 
 	// Edit kenttään liittyvä otsikkokontrolli värjätään punaiseksi, jos inputissa on vikaa
@@ -641,9 +641,9 @@ bool CFmiMacroParamDataGeneratorDlg::WaitUntilInitialized(void)
 	return false;
 }
 
-void CFmiMacroParamDataGeneratorDlg::DoOnStopDataGeneration(const std::string& stopMethodName)
+void CFmiMacroParamDataGeneratorDlg::DoOnStopDataGeneration(const std::string& stopMethodName, bool workFinished)
 {
-	UpdateGeneratedDataInfoStr(stopMethodName);
+	UpdateGeneratedDataInfoStr(stopMethodName, workFinished);
 	EnableButtons();
 	ShowCancelButton(false);
 	mStopper.Stop(false);
@@ -655,11 +655,11 @@ BOOL CFmiMacroParamDataGeneratorDlg::OnWndMsg(UINT message, WPARAM wParam, LPARA
 {
 	if(message == ID_MACRO_PARAM_DATA_GENERATION_FINISHED)
 	{
-		DoOnStopDataGeneration("Finished");
+		DoOnStopDataGeneration("Finished", true);
 	}
 	else if(message == ID_MACRO_PARAM_DATA_GENERATION_CANCELED)
 	{
-		DoOnStopDataGeneration("Canceled");
+		DoOnStopDataGeneration("Canceled", false);
 	}
 
 	return __super::OnWndMsg(message, wParam, lParam, pResult);
@@ -1069,10 +1069,15 @@ void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonGenerateMacroParamData()
 	t.detach();
 }
 
-void CFmiMacroParamDataGeneratorDlg::UpdateGeneratedDataInfoStr(const std::string& status)
+void CFmiMacroParamDataGeneratorDlg::UpdateGeneratedDataInfoStr(const std::string& status, bool workFinished)
 {
 	NFmiTime currentTime;
-	auto infoStr = status + " at ";
+	auto infoStr = status;
+	if(workFinished)
+	{
+		infoStr += " (" + itsMacroParamDataGenerator->LastGeneratedDataMakeTime() + ")";
+	}
+	infoStr += " at ";
 	infoStr += currentTime.ToStr("HH:mm:SS");
 	mGeneratedDataInfoStr = CA2T(infoStr.c_str());
 	UpdateData(FALSE);
@@ -1140,6 +1145,6 @@ void CFmiMacroParamDataGeneratorDlg::DoUserStartedDataGenerationPreparations(con
 	UpdateData(TRUE);
 	StartDataGenerationControlEnablations();
 	StoreControlValuesToDocument();
-	UpdateGeneratedDataInfoStr("Started all");
+	UpdateGeneratedDataInfoStr(infoStr, false);
 	ShowCancelButton(true);
 }

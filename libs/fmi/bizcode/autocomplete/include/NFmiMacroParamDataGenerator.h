@@ -6,11 +6,13 @@
 #include "NFmiMilliSecondTimer.h"
 #include "json_spirit_value.h"
 #include <string>
+#include <mutex>
 
 class NFmiQueryData;
 class NFmiFastQueryInfo;
 class NFmiInfoOrganizer;
 class NFmiThreadCallBacks;
+class NFmiMilliSecondTimer;
 
 // T‰m‰ on yksi erillinen MacroParam dataan liittyvien datojen kokoelma.
 // Eli systeemiss‰ voi olla useita erilaisia MacroParam datojen reseptej‰,
@@ -258,6 +260,10 @@ class NFmiMacroParamDataGenerator
     // t‰nne luodaan aina uudet tiedostot ja kun ne on kirjoitettu kokonaisuudessaan
     // levylle, tehd‰‰n file-move lopulliseen (dropbox) hakemistoon
     std::string mMacroParamDataTmpDirectory;
+    // T‰ll‰ viestit‰‰n kuinka kauan viimeisen datan tekeminen kesti, sit‰ p‰ivitet‰‰n 
+    // ja luetaan eri threadeista, joten se on synkronisoitava mutexilla
+    std::string mLastGeneratedDataMakeTime;
+    mutable std::mutex mLastGeneratedDataMakeTimeMutex;
 public:
 
     NFmiMacroParamDataGenerator();
@@ -296,6 +302,8 @@ public:
     void AutomationListPath(const std::string &newValue);
     bool DataGenerationIsOn() const { return fDataGenerationIsOn; }
     void DataGenerationIsOn(bool newState) { fDataGenerationIsOn = newState; }
+    std::string LastGeneratedDataMakeTime() const;
+    void LastGeneratedDataMakeTime(std::string newValue);
 
     const std::string& GetInitializeLogStr() const { return itsInitializeLogStr; }
     const std::string& GetSmarttoolCalculationLogStr() const { return itsSmarttoolCalculationLogStr; }
@@ -311,7 +319,7 @@ public:
 private:
     bool CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::string& smartToolText, NFmiThreadCallBacks *threadCallBacks);
     std::string ReadSmarttoolContentFromFile(const std::string& filePath);
-    bool StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter, int keepMaxFiles, const std::string& fullAutomationPath);
+    bool StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter, int keepMaxFiles, const std::string& fullAutomationPath, NFmiMilliSecondTimer &timer);
     bool GenerateMacroParamData(const NFmiMacroParamDataInfo &dataInfo, const std::string &fullAutomationPath, NFmiThreadCallBacks* threadCallBacks);
     bool LoadUsedAutomationList(const std::string& thePath);
     bool GenerateAutomationsData(const NFmiAutomationContainer& automations, NFmiThreadCallBacks* threadCallBacks);

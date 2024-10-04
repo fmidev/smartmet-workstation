@@ -13,6 +13,7 @@
 #include "NFmiPathUtils.h"
 #include "NFmiSmartInfo.h"
 #include "NFmiBetaProductSystem.h"
+#include "NFmiTimeList.h"
 #include "jsonutils.h"
 #include "catlog/catlog.h"
 #include <boost/algorithm/string.hpp>
@@ -42,7 +43,7 @@ namespace
     NFmiParam MakeWantedParam(const std::string& part1, const std::string& part2)
     {
         unsigned long paramId = std::stoul(part1);
-        return NFmiParam(paramId, boost::trim_copy(part2));
+        return NFmiParam(paramId, boost::trim_copy(part2), kFloatMissing, kFloatMissing, kFloatMissing, kFloatMissing, "%.1f", kLinearly);
     }
 
     std::vector<std::string> GetSplittedAndTrimmedStrings(const std::string& str, const std::string& splitter)
@@ -122,7 +123,7 @@ int NFmiMacroParamDataInfo::FixMaxGeneratedFilesKeptValue(int newValue)
 bool NFmiMacroParamDataInfo::CheckData()
 {
     {
-        auto checkResult = NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(mBaseDataParamProducerString, false);
+        auto checkResult = NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(mBaseDataParamProducerString, true);
         if(!checkResult.first.empty())
         {
             itsCheckShortStatusStr = "Base data param-producer error";
@@ -983,10 +984,33 @@ static NFmiParamDescriptor MakeWantedParamDescriptor(const NFmiMacroParamDataInf
     return NFmiParamDescriptor(paramListStringCheck.second);
 }
 
+static NFmiVPlaceDescriptor MakeCorrectVPlaceDescriptor(boost::shared_ptr<NFmiFastQueryInfo>& foundInfo)
+{
+    if(foundInfo->SizeLevels() <= 1)
+        return foundInfo->VPlaceDescriptor();
+
+    // Level datasta pit‰‰ tehd‰ surfacedata tyyppinen
+    NFmiLevelBag levelBag(kFmiAnyLevelType, 0, 0, 1);
+    return NFmiVPlaceDescriptor(levelBag);
+}
+
+static NFmiHPlaceDescriptor MakeScaledHPlaceDescriptor(boost::shared_ptr<NFmiFastQueryInfo>& foundInfo, double scale)
+{
+    if(scale <= 1)
+        return foundInfo->HPlaceDescriptor();
+
+    auto usedGridSizeX = boost::math::iround(foundInfo->GridXNumber() / scale);
+    auto usedGridSizeY = boost::math::iround(foundInfo->GridYNumber() / scale);
+    NFmiGrid usedGrid(foundInfo->Area(), usedGridSizeX, usedGridSizeY);
+    return NFmiHPlaceDescriptor(usedGrid);
+}
+
 // Oletus: foundInfo on jo tarkistettu ettei se ole nullptr
 static boost::shared_ptr<NFmiQueryData> MakeWantedEmptyData(boost::shared_ptr<NFmiFastQueryInfo>& foundInfo, const NFmiParamDescriptor& wantedParamDescriptor)
 {
-    NFmiQueryInfo metaInfo(wantedParamDescriptor, foundInfo->TimeDescriptor(), foundInfo->HPlaceDescriptor(), foundInfo->VPlaceDescriptor());
+    auto correctVPlaceDescriptor = ::MakeCorrectVPlaceDescriptor(foundInfo);
+    auto scaledHPlaceDescriptor = ::MakeScaledHPlaceDescriptor(foundInfo, 1);
+    NFmiQueryInfo metaInfo(wantedParamDescriptor, foundInfo->TimeDescriptor(), scaledHPlaceDescriptor, correctVPlaceDescriptor);
     return boost::shared_ptr<NFmiQueryData>(NFmiQueryDataUtil::CreateEmptyData(metaInfo));
 }
 
@@ -1043,11 +1067,13 @@ static bool EnsureFilePathDirectoryExists(const std::string &totalFilePath, cons
     return true;
 }
 
-static void LogDataGenerationCompletes(const std::string& fullAutomationPath, const std::string& finalDataFilePath)
+static void LogDataGenerationCompletes(const std::string& fullAutomationPath, const std::string& finalDataFilePath, const std::string& timeLasted)
 {
     std::string logStr = "Finished to generate '";
     logStr += PathUtils::getFilename(fullAutomationPath, false);
-    logStr += "' MacroParam-data, saved to file '";
+    logStr += "' MacroParam-data (";
+    logStr += timeLasted;
+    logStr += "), saved to file '";
     logStr += finalDataFilePath;
     logStr += "', from automation: ";
     logStr += fullAutomationPath;
@@ -1058,7 +1084,7 @@ static void LogDataGenerationCompletes(const std::string& fullAutomationPath, co
 // T‰t‰ funktiota ei keskeytet‰ (k‰ytt‰j‰n pyyntˆ/ohjelman lopetus), koska tiedostojen 
 // j‰lkien siivonta tekisi koodista sotkuista. T‰‰ll‰ on vain yksi hidas toimenpide eli qdata->Write jota ei voi keskeytt‰‰.
 // Tiedostojen kirjoitus on kuitenkin suht nopeaa (< 1 s useimmiten), varsinkin jos SSD k‰ytˆss‰.
-bool NFmiMacroParamDataGenerator::StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter, int keepMaxFiles, const std::string& fullAutomationPath)
+bool NFmiMacroParamDataGenerator::StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter, int keepMaxFiles, const std::string& fullAutomationPath, NFmiMilliSecondTimer &timer)
 {
     // CheckDataStorageFileFilter funktio palauttaa virheilmoituksen, jos filefilterissa jotain vikaa.
     auto checkStr = NFmiMacroParamDataInfo::CheckDataStorageFileFilter(dataStorageFileFilter);
@@ -1082,7 +1108,10 @@ bool NFmiMacroParamDataGenerator::StoreMacroParamData(boost::shared_ptr<NFmiQuer
         errorStr += ": Moving generated MacroParam-data tmp file '" + tmpDataFilePath + "' to '" + finalDataFilePath + "' failed for unknown reason.";
         throw std::runtime_error(errorStr);
     }
-    ::LogDataGenerationCompletes(fullAutomationPath, finalDataFilePath);
+    timer.StopTimer();
+    auto timeLastedStr = timer.TimeDiffInMSeconds() < 10000 ? timer.EasyTimeDiffStr(false, true) : timer.EasyTimeDiffStr(true, true);
+    LastGeneratedDataMakeTime(timeLastedStr);
+    ::LogDataGenerationCompletes(fullAutomationPath, finalDataFilePath, timeLastedStr);
     ::CleanFilePattern(dataStorageFileFilter, keepMaxFiles);
     return true;
 }
@@ -1288,6 +1317,18 @@ void NFmiMacroParamDataGenerator::AutomationListPath(const std::string& newValue
     *mAutomationListPath = newValue;
 }
 
+std::string NFmiMacroParamDataGenerator::LastGeneratedDataMakeTime() const
+{
+    std::lock_guard<std::mutex> lockGuard(mLastGeneratedDataMakeTimeMutex);
+    return mLastGeneratedDataMakeTime;
+}
+
+void NFmiMacroParamDataGenerator::LastGeneratedDataMakeTime(std::string newValue)
+{
+    std::lock_guard<std::mutex> lockGuard(mLastGeneratedDataMakeTimeMutex);
+    mLastGeneratedDataMakeTime = newValue;
+}
+
 NFmiMacroParamDataInfo NFmiMacroParamDataGenerator::MakeDataInfo() const
 {
     return NFmiMacroParamDataInfo(DialogBaseDataParamProducerString(), DialogUsedProducerString(), DialogDataGeneratingSmarttoolPathString(), DialogUsedParameterListString(), DialogDataStorageFileFilter(), DialogDataTriggerList(), DialogMaxGeneratedFilesKept());
@@ -1415,13 +1456,14 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDat
 {
     try
     {
+        NFmiMilliSecondTimer timer;
         ::LogDataGenerationStarts(fullAutomationPath);
 
         if(!EnsureTmpDirectoryExists())
             return false;
 
         NFmiQueryDataUtil::CheckIfStopped(threadCallBacks);
-        auto baseDataCheck = NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(dataInfo.BaseDataParamProducerString(), false);
+        auto baseDataCheck = NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(dataInfo.BaseDataParamProducerString(), true);
         if(!baseDataCheck.first.empty())
         {
             throw std::runtime_error(baseDataCheck.first);
@@ -1438,7 +1480,7 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDat
         auto wantedInfo = NFmiExtraMacroParamData::FindWantedInfo(*infoOrganizer, baseDataCheck.second, false);
         if(!wantedInfo.foundInfo_)
         {
-            throw std::runtime_error(std::string("GenerateMacroParamData: unable to fing requested base data with '") + dataInfo.BaseDataParamProducerString() + "' parameter, unable to generate wanted macroParam data");
+            throw std::runtime_error(std::string("GenerateMacroParamData: unable to find requested base data with '") + dataInfo.BaseDataParamProducerString() + "' parameter, unable to generate wanted macroParam data");
         }
 
         auto wantedParamDescriptor = ::MakeWantedParamDescriptor(dataInfo);
@@ -1448,6 +1490,10 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDat
         {
             throw std::runtime_error("GenerateMacroParamData: Unable to generate actual macroParam querydata, unknown error in system");
         }
+        if(!wantedMacroParamDataPtr->IsGrid())
+        {
+            throw std::runtime_error("GenerateMacroParamData: Given base data wasn't a grid data, stopping MacroParam-data generation");
+        }
         boost::shared_ptr<NFmiFastQueryInfo> wantedMacroParamInfoPtr(new NFmiFastQueryInfo(wantedMacroParamDataPtr.get()));
 
         auto smarttoolContent = ReadSmarttoolContentFromFile(dataInfo.DataGeneratingSmarttoolPathString());
@@ -1455,7 +1501,7 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDat
 
         if(CalculateDataWithSmartTool(wantedMacroParamInfoPtr, infoOrganizer, smarttoolContent, threadCallBacks))
         {
-            return StoreMacroParamData(wantedMacroParamDataPtr, dataInfo.DataStorageFileFilter(), dataInfo.MaxGeneratedFilesKept(), fullAutomationPath);
+            return StoreMacroParamData(wantedMacroParamDataPtr, dataInfo.DataStorageFileFilter(), dataInfo.MaxGeneratedFilesKept(), fullAutomationPath, timer);
         }
     }
     catch(std::exception& e)
