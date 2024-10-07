@@ -125,12 +125,16 @@ private:
 	void LaunchOnDemandMacroParamDataAutomation(int selectedAutomationIndex, bool doOnlyEnabled);
 	void InitEditedMacroParamDataInfo(const NFmiMacroParamDataInfo& macroParamInfoFromDocument);
 	void StoreControlValuesToEditedMacroParamDataInfo();
-	void UpdateGeneratedDataInfoStr(const std::string& status, bool workFinished);
+	void UpdateGeneratedDataInfoStr(const std::string& status, bool workFinished, bool operationStatus);
 	void ShowCancelButton(bool show);
 	void DoUserStartedDataGenerationPreparations(const std::string& infoStr);
-	void DoOnStopDataGeneration(const std::string& stopMethodName, bool workFinished);
+	void DoOnStopDataGeneration(const std::string& stopMethodName, bool workFinished, bool operationStatus);
 	void ResetProgressControl();
 	void DoControlColoringUpdates(int controlId);
+	void AddSmarttoolToList(const std::string& newFilePath);
+	void DoControlColoring(CDC* pDC, bool status);
+	void InitCpuUsagePercentage(double cpuUsagePercentage);
+	std::pair<bool,double> GetCpuUsagePercentage();
 
 	NFmiMacroParDataAutomationGridCtrl itsGridCtrl;
 	std::vector<MacroParDataAutomationHeaderParInfo> itsHeaders;
@@ -147,10 +151,11 @@ private:
 	CString itsProducerIdNamePairString;
 	// T‰m‰n avulla v‰ritet‰‰n static_text kontrolli punaiseksi, jos inputissa vikaa
 	bool fProducerIdNamePairStringHasInvalidValues = false;
-	// Polku siihen smarttool skriptiin, jonka avulla MacroParam dataan lasketaan arvot
-	CString itsUsedDataGenerationSmarttoolPath;
+	// Polut niihin smarttool skriptein, jonka avulla MacroParam dataan lasketaan arvot.
+	// Voi siis olla yksi tai pilkuilla erotellut polut listassa.
+	CString itsUsedDataGenerationSmarttoolPathList;
 	// T‰m‰n avulla v‰ritet‰‰n static_text kontrolli punaiseksi, jos inputissa vikaa
-	bool fUsedDataGenerationSmarttoolPathHasInvalidValues = false;
+	bool fUsedDataGenerationSmarttoolPathListHasInvalidValues = false;
 	// Annetaan pilkuilla erotettu lista parametreja (id,name pareina), joista muodostuu MacroParam datan parametrit
 	CString itsUsedParameterListString;
 	// T‰m‰n avulla v‰ritet‰‰n static_text kontrolli punaiseksi, jos inputissa vikaa
@@ -174,6 +179,8 @@ private:
 	std::string mLoadedMacroParamDataInfoFullPath;
 	// T‰h‰n tulee datan nimi ja generoinnin tulos lyhyesti
 	CString mGeneratedDataInfoStr;
+	// Jos t‰m‰ on true, laitetaan mGeneratedDataInfoStr teksti punaiseksi, muuten mustaksi
+	bool fDataGenerationStoppedOrFailed = false;
 	CWndResizer m_resizer;
 	// Sellaisten nappuloiden jotka halutaan enable/disable tiloihin muuttujat
 	CButton itsGenerateMacroParamDataButton;
@@ -197,6 +204,11 @@ private:
 	std::string mLoadedMacroParamDataAutomationListFullPath;
 	// T‰h‰n talletetaan kaikki MacroParamDataInfo inputit ja t‰m‰ tekee tarkastelut niiden oikeellisuudesta
 	std::shared_ptr<NFmiMacroParamDataInfo> itsEditedMacroParamDataInfo;
+	// Base data grid scale string esim. 2.0 tai 1.5,2.0
+	CString mBaseDataGridScaleString;
+	bool fBaseDataGridScaleHasInvalidValues = false;
+	CString itsCpuUsagePercentageString;
+	bool fCpuUsagePercentageHasInvalidValues = false;
 
 public:
 	virtual BOOL OnInitDialog();
@@ -208,7 +220,7 @@ public:
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnChangeEditProducerIdNamePair();
 	afx_msg void OnChangeEditUsedParameterList();
-	afx_msg void OnChangeEditUsedDataGenerationSmarttoolPath();
+	afx_msg void OnChangeEditUsedDataGenerationSmarttoolPathList();
 	afx_msg void OnChangeEditGeneratedDataStorageFileFilter();
 	virtual BOOL OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult);
 	afx_msg void OnBnClickedButtonSaveMacroParamData();
@@ -226,4 +238,7 @@ public:
 	afx_msg void OnBnClickedButtonRunEnabledMacroParamDataAutomations();
 	afx_msg void OnBnClickedButtonRunAllMacroParamDataAutomations();
 	afx_msg void OnBnClickedButtonCancelDataGeneration();
+	afx_msg void OnBnClickedButtonAddUsedSmarttoolPath();
+	afx_msg void OnEnChangeEditBaseDataGridScale();
+	afx_msg void OnEnChangeEditCpuUsagePercentage();
 };

@@ -13,8 +13,20 @@
 #include "persist2.h"
 #include "CFmiVisualizationSettings.h"
 #include "NFmiBetaProductHelperFunctions.h"
+#include "NFmiSmartToolModifier.h"
+#include "NFmiValueString.h"
 #include "GridCellCheck.h"
+#include <boost/algorithm/string.hpp>
 #include <thread>
+
+// Jos painaa "Add smarttool" nappia ja avatusta CFileDialog dialogista tekee
+// smarttool tiedoston valinnan tuplaklikkaamalla ja tuplaklikkaus tapahtuu
+// Automaatiolista kontrollin p‰‰ll‰, se j‰lkimm‰inen klikkauksista j‰‰ 'muistiin'
+// ja se toteutetaan ja klikatun rivin automaatio tulee valituksi editoitavaksi.
+// Siksi tehd‰‰n seuraavanlainen operaatio:
+// 1) Kun ollaan CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonAddUsedSmarttoolPath metodissa, laitetaan timer p‰‰lle
+// 2) Kun tullaan NFmiMacroParDataAutomationGridCtrl::OnLButtonUp metodiin, tarkistetaan jos timerin aika on liian lyhyt (n. < 0.2 s), ei tehd‰ mit‰‰n
+NFmiNanoSecondTimer gAddSmarttoolPathDoubleClickBugPreventerTimer;
 
 // ***********************************************
 // NFmiMacroParDataAutomationGridCtrl grid-control
@@ -42,6 +54,9 @@ void NFmiMacroParDataAutomationGridCtrl::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	CGridCtrl::OnLButtonUp(nFlags, point);
 
+	if(gAddSmarttoolPathDoubleClickBugPreventerTimer.elapsedTimeInSeconds() < 0.4)
+		return;
+
 	if(itsLeftClickUpCallback)
 		itsLeftClickUpCallback(GetCellFromPt(point));
 }
@@ -63,7 +78,7 @@ CFmiMacroParamDataGeneratorDlg::CFmiMacroParamDataGeneratorDlg(SmartMetDocumentI
 	,itsMacroParamDataGenerator(smartMetDocumentInterface ? &(smartMetDocumentInterface->GetMacroParamDataGenerator()) : nullptr)
 	, itsBaseDataParamProducerString(_T(""))
 	, itsProducerIdNamePairString(_T(""))
-	, itsUsedDataGenerationSmarttoolPath(_T(""))
+	, itsUsedDataGenerationSmarttoolPathList(_T(""))
 	, itsUsedParameterListString(_T(""))
 	, itsGeneratedDataStorageFileFilter(_T(""))
 	, mLoadedMacroParamDataInfoName(_T(""))
@@ -85,7 +100,7 @@ void CFmiMacroParamDataGeneratorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_GridControl(pDX, IDC_CUSTOM_GRID_MACRO_PARAM_DATA_AUTOMATION_LIST, itsGridCtrl);
 	DDX_Text(pDX, IDC_EDIT_BASE_DATA_PAR_PROD_LEV, itsBaseDataParamProducerString);
 	DDX_Text(pDX, IDC_EDIT_PRODUCER_ID_NAME_PAIR, itsProducerIdNamePairString);
-	DDX_Text(pDX, IDC_EDIT_USED_DATA_GENERATION_SMARTTOOL_PATH, itsUsedDataGenerationSmarttoolPath);
+	DDX_Text(pDX, IDC_EDIT_USED_DATA_GENERATION_SMARTTOOL_PATH_LIST, itsUsedDataGenerationSmarttoolPathList);
 	DDX_Text(pDX, IDC_EDIT_USED_PARAMETER_LIST, itsUsedParameterListString);
 	DDX_Text(pDX, IDC_EDIT_GENERATED_DATA_STORAGE_FILE_FILTER, itsGeneratedDataStorageFileFilter);
 	DDX_Control(pDX, IDC_PROGRESS_OF_OPERATION_BAR, mProgressControl);
@@ -107,6 +122,8 @@ void CFmiMacroParamDataGeneratorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_MACRO_PARAM_DATA_AUTOMATION_MODE_ON, fAutomationModeOn);
 	DDX_Text(pDX, IDC_STATIC_MACRO_PARAM_DATA_AUTOMATION_LIST_NAME_VALUE, mLoadedMacroParamDataAutomationListName);
 	DDX_Text(pDX, IDC_STATIC_GENERATED_DATA_INFO_STR, mGeneratedDataInfoStr);
+	DDX_Text(pDX, IDC_EDIT_BASE_DATA_GRID_SCALE, mBaseDataGridScaleString);
+	DDX_Text(pDX, IDC_EDIT_CPU_USAGE_PERCENTAGE, itsCpuUsagePercentageString);
 }
 
 BEGIN_MESSAGE_MAP(CFmiMacroParamDataGeneratorDlg, CDialogEx)
@@ -116,7 +133,7 @@ BEGIN_MESSAGE_MAP(CFmiMacroParamDataGeneratorDlg, CDialogEx)
 	ON_WM_CTLCOLOR()
 	ON_EN_CHANGE(IDC_EDIT_PRODUCER_ID_NAME_PAIR, &CFmiMacroParamDataGeneratorDlg::OnChangeEditProducerIdNamePair)
 	ON_EN_CHANGE(IDC_EDIT_USED_PARAMETER_LIST, &CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedParameterList)
-	ON_EN_CHANGE(IDC_EDIT_USED_DATA_GENERATION_SMARTTOOL_PATH, &CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedDataGenerationSmarttoolPath)
+	ON_EN_CHANGE(IDC_EDIT_USED_DATA_GENERATION_SMARTTOOL_PATH_LIST, &CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedDataGenerationSmarttoolPathList)
 	ON_EN_CHANGE(IDC_EDIT_GENERATED_DATA_STORAGE_FILE_FILTER, &CFmiMacroParamDataGeneratorDlg::OnChangeEditGeneratedDataStorageFileFilter)
 	ON_BN_CLICKED(IDC_BUTTON_SAVE_MACRO_PARAM_DATA, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonSaveMacroParamData)
 	ON_BN_CLICKED(IDC_BUTTON_LOAD_MACRO_PARAM_DATA, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonLoadMacroParamData)
@@ -133,6 +150,9 @@ BEGIN_MESSAGE_MAP(CFmiMacroParamDataGeneratorDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_RUN_ENABLED_MACRO_PARAM_DATA_AUTOMATIONS, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonRunEnabledMacroParamDataAutomations)
 	ON_BN_CLICKED(IDC_BUTTON_RUN_ALL_MACRO_PARAM_DATA_AUTOMATIONS, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonRunAllMacroParamDataAutomations)
 	ON_BN_CLICKED(IDC_BUTTON_CANCEL_DATA_GENERATION, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonCancelDataGeneration)
+	ON_BN_CLICKED(IDC_BUTTON_ADD_USED_SMARTTOOL_PATH, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonAddUsedSmarttoolPath)
+	ON_EN_CHANGE(IDC_EDIT_BASE_DATA_GRID_SCALE, &CFmiMacroParamDataGeneratorDlg::OnEnChangeEditBaseDataGridScale)
+	ON_EN_CHANGE(IDC_EDIT_CPU_USAGE_PERCENTAGE, &CFmiMacroParamDataGeneratorDlg::OnEnChangeEditCpuUsagePercentage)
 END_MESSAGE_MAP()
 
 // CFmiMacroParamDataGeneratorDlg message handlers
@@ -205,6 +225,7 @@ void CFmiMacroParamDataGeneratorDlg::SelectedGridCell(const CCellID& theSelected
 			itsEditedMacroParamDataInfo = selectedListItem.itsMacroParamDataAutomation;
 			UpdateMacroParamDataInfoName(selectedListItem.itsMacroParamDataAutomationAbsolutePath);
 			InitControlsFromLoadedMacroParamDataInfo();
+			DoFullInputChecks();
 			EnableButtons();
 		}
 	}
@@ -235,9 +256,9 @@ void CFmiMacroParamDataGeneratorDlg::InitDialogTexts()
 	SetWindowText(CA2T(::GetDictionaryString("MacroParam data generator").c_str()));
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_BASE_DATA_PARAM_PRODUCER_STR, "Base data's parameter+producer\nE.g. 'T_Ec' or 'par4_prod240' (no level!)");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_PRODUCER_ID_NAME_PAIR_STR, "Generated data's producer id,name -pair\nE.g. 3001,ProducerName");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_STR, "Used data generation smarttool macro file path");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_BROWSE_USED_SMARTTOOL_PATH, "Browse smarttool");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_USED_PARAMETER_LIST_STR, "Used generated data parameter list (id,name -pairs) \nE.g. \"6201, Param1, 6202, Param2, ...\"");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_LIST_STR, "List of used data generation smarttool paths, comma separated");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_ADD_USED_SMARTTOOL_PATH, "Add smarttool");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_USED_PARAMETER_LIST_STR, "Used generated data parameter list (id,name -pairs) \nE.g. \"6201, Param X, 6202, Param Y, ...\"    (Good id range 5000-9000)");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_GENERATED_DATA_STORAGE_FILE_FILTER_STR, "Generated data's storage file filter (* is replaced with time-stamp)\nE.g. C:\\data\\*_mydata.sqd");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_BROWSE_STORED_DATA_FILE_FILTER, "Browse stored path");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_GENERATE_MACRO_PARAM_DATA, "Generate MacroParam data");
@@ -259,6 +280,9 @@ void CFmiMacroParamDataGeneratorDlg::InitDialogTexts()
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RUN_ALL_MACRO_PARAM_DATA_AUTOMATIONS, "Run all");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_MACRO_PARAM_INFO_NAME_STR, "Macro name");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_CANCEL_DATA_GENERATION, "Cancel data generation");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_MAX_GENERATED_FILES_KEPT_STR, "Max generated files kept\n(1 - 10) on target directory");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_BASE_DATA_GRID_SCALE_STR, "Generated data grid scale\n(1-10) or (1-10),(1-10) x/y");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_CPU_USAGE_PERCENTAGE_STR, "CPU usage [%] (10-100)");
 }
 
 void CFmiMacroParamDataGeneratorDlg::InitControlsFromDocument()
@@ -267,6 +291,7 @@ void CFmiMacroParamDataGeneratorDlg::InitControlsFromDocument()
 	UpdateMacroParamDataAutomationListName(itsMacroParamDataGenerator->AutomationListPath());
 	InitEditedMacroParamDataInfo(itsMacroParamDataGenerator->MakeDataInfo());
 	fAutomationModeOn = itsMacroParamDataGenerator->AutomationModeOn() ? TRUE : FALSE;
+	InitCpuUsagePercentage(itsMacroParamDataGenerator->DialogCpuUsagePercentage());
 	InitControlsFromLoadedMacroParamDataInfo();
 }
 
@@ -284,11 +309,12 @@ void CFmiMacroParamDataGeneratorDlg::InitControlsFromLoadedMacroParamDataInfo()
 {
 	itsBaseDataParamProducerString = CA2T(itsEditedMacroParamDataInfo->BaseDataParamProducerString().c_str());
 	itsProducerIdNamePairString = CA2T(itsEditedMacroParamDataInfo->UsedProducerString().c_str());
-	itsUsedDataGenerationSmarttoolPath = CA2T(itsEditedMacroParamDataInfo->DataGeneratingSmarttoolPathString().c_str());
+	itsUsedDataGenerationSmarttoolPathList = CA2T(itsEditedMacroParamDataInfo->DataGeneratingSmarttoolPathListString().c_str());
 	itsUsedParameterListString = CA2T(itsEditedMacroParamDataInfo->UsedParameterListString().c_str());
 	itsGeneratedDataStorageFileFilter = CA2T(itsEditedMacroParamDataInfo->DataStorageFileFilter().c_str());
 	itsDataTriggerList = CA2T(itsEditedMacroParamDataInfo->DataTriggerList().c_str());
 	InitMaxGeneratedFilesKept(itsEditedMacroParamDataInfo->MaxGeneratedFilesKept());
+	mBaseDataGridScaleString = CA2T(itsEditedMacroParamDataInfo->BaseDataGridScaleString().c_str());
 	UpdateData(FALSE);
 }
 
@@ -317,17 +343,50 @@ int CFmiMacroParamDataGeneratorDlg::GetMaxGeneratedFilesKept()
 	}
 }
 
+void CFmiMacroParamDataGeneratorDlg::InitCpuUsagePercentage(double cpuUsagePercentage)
+{
+	try
+	{
+		itsCpuUsagePercentageString = CA2T(NFmiValueString::GetStringWithMaxDecimalsSmartWay(cpuUsagePercentage, 1));
+	}
+	catch(...)
+	{
+		itsCpuUsagePercentageString = CA2T(NFmiValueString::GetStringWithMaxDecimalsSmartWay(NFmiSmartToolModifier::DefaultUsedCpuCapacityPercentageInCalculations, 1));
+	}
+}
+
+std::pair<bool, double> CFmiMacroParamDataGeneratorDlg::GetCpuUsagePercentage()
+{
+	try
+	{
+		std::string tmpStr = CT2A(itsCpuUsagePercentageString);
+		return std::make_pair(true, std::stod(tmpStr));
+	}
+	catch(...)
+	{
+		return std::make_pair(false, NFmiSmartToolModifier::DefaultUsedCpuCapacityPercentageInCalculations);
+	}
+}
+
 void CFmiMacroParamDataGeneratorDlg::StoreControlValuesToDocument()
 {
 	UpdateData(TRUE);
 
 	itsMacroParamDataGenerator->DialogBaseDataParamProducerString(CFmiWin32Helpers::CT2std(itsBaseDataParamProducerString));
 	itsMacroParamDataGenerator->DialogUsedProducerString(CFmiWin32Helpers::CT2std(itsProducerIdNamePairString));
-	itsMacroParamDataGenerator->DialogDataGeneratingSmarttoolPathString(CFmiWin32Helpers::CT2std(itsUsedDataGenerationSmarttoolPath));
+	itsMacroParamDataGenerator->DialogDataGeneratingSmarttoolPathListString(CFmiWin32Helpers::CT2std(itsUsedDataGenerationSmarttoolPathList));
 	itsMacroParamDataGenerator->DialogUsedParameterListString(CFmiWin32Helpers::CT2std(itsUsedParameterListString));
 	itsMacroParamDataGenerator->DialogDataStorageFileFilter(CFmiWin32Helpers::CT2std(itsGeneratedDataStorageFileFilter));
 	itsMacroParamDataGenerator->DialogDataTriggerList(CFmiWin32Helpers::CT2std(itsDataTriggerList));
 	itsMacroParamDataGenerator->DialogMaxGeneratedFilesKept(GetMaxGeneratedFilesKept());
+	itsMacroParamDataGenerator->DialogBaseDataGridScaleString(CFmiWin32Helpers::CT2std(mBaseDataGridScaleString));
+	// Vain oikein t‰ytetty double arvo voitaan tallettaa dialogimuistiin, Sen oikeellisuus 
+	// varmistetaan ja sen arvo mahdollisesti korjataan viel‰ DialogCpuUsagePercentage metodissa.
+	auto cpuUsageCheckResult = GetCpuUsagePercentage();
+	if(cpuUsageCheckResult.first)
+	{
+		itsMacroParamDataGenerator->DialogCpuUsagePercentage(cpuUsageCheckResult.second);
+	}
 	// Tehd‰‰n samalla t‰m‰ dialogin macroParamDataInfo olion t‰yttˆ
 	StoreControlValuesToEditedMacroParamDataInfo();
 }
@@ -338,11 +397,12 @@ void CFmiMacroParamDataGeneratorDlg::StoreControlValuesToEditedMacroParamDataInf
 
 	itsEditedMacroParamDataInfo->BaseDataParamProducerString(CFmiWin32Helpers::CT2std(itsBaseDataParamProducerString));
 	itsEditedMacroParamDataInfo->UsedProducerString(CFmiWin32Helpers::CT2std(itsProducerIdNamePairString));
-	itsEditedMacroParamDataInfo->DataGeneratingSmarttoolPathString(CFmiWin32Helpers::CT2std(itsUsedDataGenerationSmarttoolPath));
+	itsEditedMacroParamDataInfo->DataGeneratingSmarttoolPathListString(CFmiWin32Helpers::CT2std(itsUsedDataGenerationSmarttoolPathList));
 	itsEditedMacroParamDataInfo->UsedParameterListString(CFmiWin32Helpers::CT2std(itsUsedParameterListString));
 	itsEditedMacroParamDataInfo->DataStorageFileFilter(CFmiWin32Helpers::CT2std(itsGeneratedDataStorageFileFilter));
 	itsEditedMacroParamDataInfo->DataTriggerList(CFmiWin32Helpers::CT2std(itsDataTriggerList));
 	itsEditedMacroParamDataInfo->MaxGeneratedFilesKept(GetMaxGeneratedFilesKept());
+	itsEditedMacroParamDataInfo->BaseDataGridScaleString(CFmiWin32Helpers::CT2std(mBaseDataGridScaleString));
 }
 
 // Tarkista kaikki syˆtteet ja jos niiss‰ on vikaa:
@@ -354,9 +414,10 @@ void CFmiMacroParamDataGeneratorDlg::DoFullInputChecks()
 	OnChangeEditBaseDataParamProducer();
 	OnChangeEditProducerIdNamePair();
 	OnChangeEditUsedParameterList();
-	OnChangeEditUsedDataGenerationSmarttoolPath();
+	OnChangeEditUsedDataGenerationSmarttoolPathList();
 	OnChangeEditGeneratedDataStorageFileFilter();
 	OnEnChangeEditUsedDataTriggerList();
+	OnEnChangeEditBaseDataGridScale();
 }
 
 void CFmiMacroParamDataGeneratorDlg::SetDefaultValues(void)
@@ -415,51 +476,53 @@ void CFmiMacroParamDataGeneratorDlg::StartDataGenerationControlEnablations()
 	EnableButtons();
 }
 
+void CFmiMacroParamDataGeneratorDlg::DoControlColoring(CDC* pDC, bool status)
+{
+	if(status)
+		pDC->SetTextColor(RGB(255, 0, 0)); // Virhetilanteissa edit boxin labeli v‰ritet‰‰n punaiseksi
+	else
+		pDC->SetTextColor(RGB(0, 0, 0)); // Muuten se v‰rj‰t‰‰n mustaksi
+}
+
 HBRUSH CFmiMacroParamDataGeneratorDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
 	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
 
 	if(pWnd->GetDlgCtrlID() == IDC_STATIC_BASE_DATA_PARAM_PRODUCER_STR)
 	{
-		if(fBaseDataParamProducerStringHasInvalidValues)
-			pDC->SetTextColor(RGB(255, 0, 0)); // Virhetilanteissa edit boxin labeli v‰ritet‰‰n punaiseksi
-		else
-			pDC->SetTextColor(RGB(0, 0, 0)); // Muuten se v‰rj‰t‰‰n mustaksi
+		DoControlColoring(pDC, fBaseDataParamProducerStringHasInvalidValues);
 	}
 	else if(pWnd->GetDlgCtrlID() == IDC_STATIC_PRODUCER_ID_NAME_PAIR_STR)
 	{
-		if(fProducerIdNamePairStringHasInvalidValues)
-			pDC->SetTextColor(RGB(255, 0, 0)); // Virhetilanteissa edit boxin labeli v‰ritet‰‰n punaiseksi
-		else
-			pDC->SetTextColor(RGB(0, 0, 0)); // Muuten se v‰rj‰t‰‰n mustaksi
+		DoControlColoring(pDC, fProducerIdNamePairStringHasInvalidValues);
 	}
 	else if(pWnd->GetDlgCtrlID() == IDC_STATIC_USED_PARAMETER_LIST_STR)
 	{
-		if(fUsedParameterListStringHasInvalidValues)
-			pDC->SetTextColor(RGB(255, 0, 0)); // Virhetilanteissa edit boxin labeli v‰ritet‰‰n punaiseksi
-		else
-			pDC->SetTextColor(RGB(0, 0, 0)); // Muuten se v‰rj‰t‰‰n mustaksi
+		DoControlColoring(pDC, fUsedParameterListStringHasInvalidValues);
 	}
-	else if(pWnd->GetDlgCtrlID() == IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_STR)
+	else if(pWnd->GetDlgCtrlID() == IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_LIST_STR)
 	{
-		if(fUsedDataGenerationSmarttoolPathHasInvalidValues)
-			pDC->SetTextColor(RGB(255, 0, 0)); // Virhetilanteissa edit boxin labeli v‰ritet‰‰n punaiseksi
-		else
-			pDC->SetTextColor(RGB(0, 0, 0)); // Muuten se v‰rj‰t‰‰n mustaksi
+		DoControlColoring(pDC, fUsedDataGenerationSmarttoolPathListHasInvalidValues);
 	}
 	else if(pWnd->GetDlgCtrlID() == IDC_STATIC_GENERATED_DATA_STORAGE_FILE_FILTER_STR)
 	{
-		if(fGeneratedDataStorageFileFilterHasInvalidValues)
-			pDC->SetTextColor(RGB(255, 0, 0)); // Virhetilanteissa edit boxin labeli v‰ritet‰‰n punaiseksi
-		else
-			pDC->SetTextColor(RGB(0, 0, 0)); // Muuten se v‰rj‰t‰‰n mustaksi
+		DoControlColoring(pDC, fGeneratedDataStorageFileFilterHasInvalidValues);
 	}
 	else if(pWnd->GetDlgCtrlID() == IDC_STATIC_USED_DATA_TRIGGER_LIST)
 	{
-		if(fDataTriggerListHasInvalidValues)
-			pDC->SetTextColor(RGB(255, 0, 0)); // Virhetilanteissa edit boxin labeli v‰ritet‰‰n punaiseksi
-		else
-			pDC->SetTextColor(RGB(0, 0, 0)); // Muuten se v‰rj‰t‰‰n mustaksi
+		DoControlColoring(pDC, fDataTriggerListHasInvalidValues);
+	}
+	else if(pWnd->GetDlgCtrlID() == IDC_STATIC_BASE_DATA_GRID_SCALE_STR)
+	{
+		DoControlColoring(pDC, fBaseDataGridScaleHasInvalidValues);
+	}
+	else if(pWnd->GetDlgCtrlID() == IDC_STATIC_GENERATED_DATA_INFO_STR)
+	{
+		DoControlColoring(pDC, fDataGenerationStoppedOrFailed);
+	}
+	else if(pWnd->GetDlgCtrlID() == IDC_STATIC_CPU_USAGE_PERCENTAGE_STR)
+	{
+		DoControlColoring(pDC, fCpuUsagePercentageHasInvalidValues);
 	}
 	// CButton kontrollin v‰ri s‰‰dˆt ei toimi
 	//else if(pWnd->GetDlgCtrlID() == IDC_BUTTON_CANCEL_DATA_GENERATION)
@@ -538,16 +601,16 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditGeneratedDataStorageFileFilter(
 	DoControlColoringUpdates(IDC_STATIC_GENERATED_DATA_STORAGE_FILE_FILTER_STR);
 }
 
-void CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedDataGenerationSmarttoolPath()
+void CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedDataGenerationSmarttoolPathList()
 {
 	UpdateData(TRUE);
 
-	std::string tmp = CT2A(itsUsedDataGenerationSmarttoolPath);
-	auto checkResult = NFmiMacroParamDataInfo::CheckDataGeneratingSmarttoolPathString(tmp);
-	fUsedDataGenerationSmarttoolPathHasInvalidValues = !checkResult.empty();
+	std::string tmp = CT2A(itsUsedDataGenerationSmarttoolPathList);
+	auto checkResult = NFmiMacroParamDataInfo::CheckDataGeneratingSmarttoolPathListString(tmp);
+	fUsedDataGenerationSmarttoolPathListHasInvalidValues = !checkResult.empty();
 
 	// Edit kentt‰‰n liittyv‰ otsikkokontrolli v‰rj‰t‰‰n punaiseksi, jos inputissa on vikaa
-	DoControlColoringUpdates(IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_STR);
+	DoControlColoringUpdates(IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_LIST_STR);
 }
 
 void CFmiMacroParamDataGeneratorDlg::OnEnChangeEditUsedDataTriggerList()
@@ -567,6 +630,29 @@ void CFmiMacroParamDataGeneratorDlg::OnEnChangeEditMaxGeneratedFilesKept()
 	UpdateData(TRUE);
 	InitMaxGeneratedFilesKept(GetMaxGeneratedFilesKept());
 	UpdateData(FALSE);
+}
+
+
+void CFmiMacroParamDataGeneratorDlg::OnEnChangeEditCpuUsagePercentage()
+{
+	UpdateData(TRUE);
+	auto cpuUsageCheckResult = GetCpuUsagePercentage();
+	auto checkedCpuUsageValue = NFmiSmartToolModifier::FixCpuCapacityPercentageInCalculations(cpuUsageCheckResult.second);
+	fCpuUsagePercentageHasInvalidValues = !(cpuUsageCheckResult.first && checkedCpuUsageValue == cpuUsageCheckResult.second);
+
+	// Edit kentt‰‰n liittyv‰ otsikkokontrolli v‰rj‰t‰‰n punaiseksi, jos inputissa on vikaa
+	DoControlColoringUpdates(IDC_STATIC_CPU_USAGE_PERCENTAGE_STR);
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnEnChangeEditBaseDataGridScale()
+{
+	UpdateData(TRUE);
+	std::string tmp = CT2A(mBaseDataGridScaleString);
+	auto checkResult = NFmiMacroParamDataInfo::CheckBaseDataGridScaleString(tmp);
+	fBaseDataGridScaleHasInvalidValues = !checkResult.first.empty();
+
+	// Edit kentt‰‰n liittyv‰ otsikkokontrolli v‰rj‰t‰‰n punaiseksi, jos inputissa on vikaa
+	DoControlColoringUpdates(IDC_STATIC_BASE_DATA_GRID_SCALE_STR);
 }
 
 void CFmiMacroParamDataGeneratorDlg::ResetProgressControl()
@@ -641,9 +727,9 @@ bool CFmiMacroParamDataGeneratorDlg::WaitUntilInitialized(void)
 	return false;
 }
 
-void CFmiMacroParamDataGeneratorDlg::DoOnStopDataGeneration(const std::string& stopMethodName, bool workFinished)
+void CFmiMacroParamDataGeneratorDlg::DoOnStopDataGeneration(const std::string& stopMethodName, bool workFinished, bool operationStatus)
 {
-	UpdateGeneratedDataInfoStr(stopMethodName, workFinished);
+	UpdateGeneratedDataInfoStr(stopMethodName, workFinished, operationStatus);
 	EnableButtons();
 	ShowCancelButton(false);
 	mStopper.Stop(false);
@@ -655,11 +741,15 @@ BOOL CFmiMacroParamDataGeneratorDlg::OnWndMsg(UINT message, WPARAM wParam, LPARA
 {
 	if(message == ID_MACRO_PARAM_DATA_GENERATION_FINISHED)
 	{
-		DoOnStopDataGeneration("Finished", true);
+		DoOnStopDataGeneration("Finished", true, true);
 	}
 	else if(message == ID_MACRO_PARAM_DATA_GENERATION_CANCELED)
 	{
-		DoOnStopDataGeneration("Canceled", false);
+		DoOnStopDataGeneration("Canceled", false, false);
+	}
+	else if(message == ID_MACRO_PARAM_DATA_GENERATION_FAILED)
+	{
+		DoOnStopDataGeneration("Failed", false, false);
 	}
 
 	return __super::OnWndMsg(message, wParam, lParam, pResult);
@@ -749,7 +839,7 @@ void CFmiMacroParamDataGeneratorDlg::EnableButtons()
 		return;
 	}
 
-	auto macroParamDataInfoOk = !fBaseDataParamProducerStringHasInvalidValues && !fProducerIdNamePairStringHasInvalidValues && !fUsedDataGenerationSmarttoolPathHasInvalidValues && !fUsedParameterListStringHasInvalidValues && !fGeneratedDataStorageFileFilterHasInvalidValues && !fDataTriggerListHasInvalidValues;
+	auto macroParamDataInfoOk = !fBaseDataParamProducerStringHasInvalidValues && !fProducerIdNamePairStringHasInvalidValues && !fUsedDataGenerationSmarttoolPathListHasInvalidValues && !fUsedParameterListStringHasInvalidValues && !fGeneratedDataStorageFileFilterHasInvalidValues && !fDataTriggerListHasInvalidValues && !fBaseDataGridScaleHasInvalidValues;
 	itsGenerateMacroParamDataButton.EnableWindow(macroParamDataInfoOk);
 	itsSaveMacroParamDataInfoButton.EnableWindow(macroParamDataInfoOk);
 
@@ -792,11 +882,11 @@ void CFmiMacroParamDataGeneratorDlg::DoResizerHooking(void)
 	ASSERT(bOk == TRUE);
 	bOk = m_resizer.SetAnchor(IDC_EDIT_PRODUCER_ID_NAME_PAIR, ANCHOR_TOP | ANCHOR_HORIZONTALLY);
 	ASSERT(bOk == TRUE);
-	bOk = m_resizer.SetAnchor(IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_STR, ANCHOR_TOP | ANCHOR_LEFT);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_LIST_STR, ANCHOR_TOP | ANCHOR_LEFT);
 	ASSERT(bOk == TRUE);
-	bOk = m_resizer.SetAnchor(IDC_EDIT_USED_DATA_GENERATION_SMARTTOOL_PATH, ANCHOR_HORIZONTALLY | ANCHOR_TOP);
+	bOk = m_resizer.SetAnchor(IDC_EDIT_USED_DATA_GENERATION_SMARTTOOL_PATH_LIST, ANCHOR_HORIZONTALLY | ANCHOR_TOP);
 	ASSERT(bOk == TRUE);
-	bOk = m_resizer.SetAnchor(IDC_BUTTON_BROWSE_USED_SMARTTOOL_PATH, ANCHOR_TOP | ANCHOR_RIGHT);
+	bOk = m_resizer.SetAnchor(IDC_BUTTON_ADD_USED_SMARTTOOL_PATH, ANCHOR_TOP | ANCHOR_RIGHT);
 	ASSERT(bOk == TRUE);
 	bOk = m_resizer.SetAnchor(IDC_STATIC_USED_PARAMETER_LIST_STR, ANCHOR_TOP | ANCHOR_LEFT);
 	ASSERT(bOk == TRUE);
@@ -856,13 +946,21 @@ void CFmiMacroParamDataGeneratorDlg::DoResizerHooking(void)
 	ASSERT(bOk == TRUE);
 	bOk = m_resizer.SetAnchor(IDC_BUTTON_CANCEL_DATA_GENERATION, ANCHOR_TOP | ANCHOR_LEFT);
 	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_EDIT_BASE_DATA_GRID_SCALE, ANCHOR_TOP | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_BASE_DATA_GRID_SCALE_STR, ANCHOR_TOP | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_STATIC_CPU_USAGE_PERCENTAGE_STR, ANCHOR_BOTTOM | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
+	bOk = m_resizer.SetAnchor(IDC_EDIT_CPU_USAGE_PERCENTAGE, ANCHOR_BOTTOM | ANCHOR_RIGHT);
+	ASSERT(bOk == TRUE);
 }
 
 
 void CFmiMacroParamDataGeneratorDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 {
 	// set the minimum tracking width and height of the window
-	lpMMI->ptMinTrackSize.x = 713;
+	lpMMI->ptMinTrackSize.x = 773;
 	lpMMI->ptMinTrackSize.y = 699;
 
 	__super::OnGetMinMaxInfo(lpMMI);
@@ -893,6 +991,7 @@ void CFmiMacroParamDataGeneratorDlg::UpdateAutomationList()
 		SetGridRow(currentRowCount++, *dataVector[i]);
 	}
 	itsGridCtrl.UpdateData(FALSE);
+	itsGridCtrl.Invalidate(FALSE);
 }
 
 // Halutaan palauttaa HH:mm eli hours:minutes teksti annetulle ajalle.
@@ -1069,7 +1168,7 @@ void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonGenerateMacroParamData()
 	t.detach();
 }
 
-void CFmiMacroParamDataGeneratorDlg::UpdateGeneratedDataInfoStr(const std::string& status, bool workFinished)
+void CFmiMacroParamDataGeneratorDlg::UpdateGeneratedDataInfoStr(const std::string& status, bool workFinished, bool operationStatus)
 {
 	NFmiTime currentTime;
 	auto infoStr = status;
@@ -1080,6 +1179,9 @@ void CFmiMacroParamDataGeneratorDlg::UpdateGeneratedDataInfoStr(const std::strin
 	infoStr += " at ";
 	infoStr += currentTime.ToStr("HH:mm:SS");
 	mGeneratedDataInfoStr = CA2T(infoStr.c_str());
+	fDataGenerationStoppedOrFailed = !operationStatus;
+	// T‰m‰ tekstikentt‰ v‰rj‰t‰‰n punaiseksi, jos datan generointi keskeytynyt
+	DoControlColoringUpdates(IDC_STATIC_GENERATED_DATA_INFO_STR);
 	UpdateData(FALSE);
 }
 
@@ -1145,6 +1247,42 @@ void CFmiMacroParamDataGeneratorDlg::DoUserStartedDataGenerationPreparations(con
 	UpdateData(TRUE);
 	StartDataGenerationControlEnablations();
 	StoreControlValuesToDocument();
-	UpdateGeneratedDataInfoStr(infoStr, false);
+	UpdateGeneratedDataInfoStr(infoStr, false, true);
 	ShowCancelButton(true);
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonAddUsedSmarttoolPath()
+{
+	UpdateData(TRUE);
+	std::string fileFilter = "Smarttool Files (*.st)|*.st|All Files (*.*)|*.*||";
+	std::string initialDirectory = itsMacroParamDataGenerator->MacroParamDataAutomationAddSmarttoolInitialPath();
+	std::string usedFilePath;
+	std::string initialfileName;
+	if(BetaProduct::GetFilePathFromUser(fileFilter, initialDirectory, usedFilePath, true, initialfileName, this))
+	{
+		gAddSmarttoolPathDoubleClickBugPreventerTimer.restart();
+		itsMacroParamDataGenerator->MacroParamDataAutomationAddSmarttoolInitialPath(PathUtils::getPathSectionFromTotalFilePath(usedFilePath));
+		AddSmarttoolToList(usedFilePath);
+	}
+}
+
+void CFmiMacroParamDataGeneratorDlg::AddSmarttoolToList(const std::string& newFilePath)
+{
+	auto usedNewFilePath = PathUtils::getRelativePathIfPossible(newFilePath, itsMacroParamDataGenerator->RootSmarttoolDirectory());
+	std::string tmpPathList = CT2A(itsUsedDataGenerationSmarttoolPathList);
+	boost::trim(tmpPathList);
+	if(tmpPathList.empty())
+	{
+		tmpPathList = usedNewFilePath;
+	}
+	else
+	{
+		tmpPathList += ", " + usedNewFilePath;
+	}
+	itsEditedMacroParamDataInfo->DataGeneratingSmarttoolPathListString(tmpPathList);
+	itsEditedMacroParamDataInfo->CheckData();
+	itsUsedDataGenerationSmarttoolPathList = CA2T(tmpPathList.c_str());
+	UpdateData(FALSE);
+	OnChangeEditUsedDataGenerationSmarttoolPathList();
+	UpdateAutomationList();
 }

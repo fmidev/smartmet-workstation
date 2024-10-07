@@ -14,6 +14,9 @@ class NFmiInfoOrganizer;
 class NFmiThreadCallBacks;
 class NFmiMilliSecondTimer;
 
+const std::string gDefaultBaseDataGridScaleString = "1";
+const NFmiPoint gDefaultBaseDataGridScaleValues = NFmiPoint(1, 1);
+
 // Tämä on yksi erillinen MacroParam dataan liittyvien datojen kokoelma.
 // Eli systeemissä voi olla useita erilaisia MacroParam datojen reseptejä,
 // ja nee laitetaan tälläisiin otuksiin.
@@ -30,7 +33,9 @@ class NFmiMacroParamDataInfo
     // Polku (suhteellinen/absoluuttinen) siihen smarttool tiedostoon, mitä käytetään 
     // generoimaan lopullinen data ja sen kaikki parametrit.
     // Tähän pyritään saamaan aina suhteellinen polku, jos se osoittaa smarttool kansioon Dropboxissa.
-    std::string mDataGeneratingSmarttoolPathString; // PAKOLLINEN
+    // Tässä voi olla pilkulla eroteltu lista polkuja, koska joskus pitää generoida data useammasta eri 
+    // smarttoolista, koska niissä tulisi muuten saman nimisten var muuttujien törmäyksiä.
+    std::string mDataGeneratingSmarttoolPathListString; // PAKOLLINEN
     // Pohjadatasta otetaan muut dimensiot (hplace/vplace/time), mutta käyttäjä määrää
     // mitkä parametrit dataan generoidaan. Tässä on pilkuilla eroteltuna id1,name1,id2,name2,...
     // Esim. 2501,MyParam1,2502,MyParam2,2503,MyParam3,2504,MyParam4
@@ -50,13 +55,19 @@ class NFmiMacroParamDataInfo
     // kohdehakemistossa. Jos datan luomisen jälkeen siellä on enemmän kyseisiä tiedostoja,
     // deletoidaan vanhimmat niistä pois kyseisellä filefilterillä.
     int mMaxGeneratedFilesKept = 2;
-
+    // Jos käyttäjä haluaa harventaa basedatasta saatua laskentahilaa, tällä kertoimella 
+    // se voidaan tehdä. Jos oletusarvossa eli 1, tällöin mitään skaalausta ei tehdä hilankokoon.
+    // Jos arvo 2, tällöin x- ja y-suuntaista hilakoko jaetaan 2:lla ja pyöristetään lähimpään kokonaislukuun.
+    // Jos arvo 2,1.5, tällöi x koko jaetaan 2:lla ja y suunta 1.5:llä.
+    // Skaalausarvojen pitää olla välillä 1-10.
+    std::string mBaseDataGridScaleString = gDefaultBaseDataGridScaleString; // pakollinen
+    NFmiPoint mBaseDataGridScaleValues = gDefaultBaseDataGridScaleValues;
     // Initialisoinnista raportoiva teksti
     std::string itsCheckShortStatusStr;
     bool fDataChecked = false;
 public:
     NFmiMacroParamDataInfo();
-    NFmiMacroParamDataInfo(const std::string &baseDataParamProducerLevelString, const std::string &usedProducerString, const std::string &dataGeneratingSmarttoolPathString, const std::string &usedParameterListString, const std::string &dataStorageFileFilter, const std::string& dataTriggerList, int maxGeneratedFilesKept);
+    NFmiMacroParamDataInfo(const std::string &baseDataParamProducerLevelString, const std::string &usedProducerString, const std::string &dataGeneratingSmarttoolPathListString, const std::string &usedParameterListString, const std::string &dataStorageFileFilter, const std::string& dataTriggerList, int maxGeneratedFilesKept, const std::string &baseDataGridScaleString);
 
     bool CheckData();
     bool DataChecked() const { return fDataChecked; }
@@ -66,8 +77,8 @@ public:
     void BaseDataParamProducerString(const std::string& newValue) { mBaseDataParamProducerString = newValue; }
     const std::string& UsedProducerString() const { return mUsedProducerString; }
     void UsedProducerString(const std::string& newValue) { mUsedProducerString = newValue; }
-    const std::string& DataGeneratingSmarttoolPathString() const { return mDataGeneratingSmarttoolPathString; }
-    void DataGeneratingSmarttoolPathString(const std::string& newValue) { mDataGeneratingSmarttoolPathString = newValue; }
+    const std::string& DataGeneratingSmarttoolPathListString() const { return mDataGeneratingSmarttoolPathListString; }
+    void DataGeneratingSmarttoolPathListString(const std::string& newValue) { mDataGeneratingSmarttoolPathListString = newValue; }
     const std::string& UsedParameterListString() const { return mUsedParameterListString; }
     void UsedParameterListString(const std::string& newValue) { mUsedParameterListString = newValue; }
     const std::string& DataStorageFileFilter() const { return mDataStorageFileFilter; }
@@ -75,8 +86,12 @@ public:
     const std::string& DataTriggerList() const { return mDataTriggerList; }
     void DataTriggerList(const std::string& newValue) { mDataTriggerList = newValue; }
     int MaxGeneratedFilesKept() const { return mMaxGeneratedFilesKept; }
-    void MaxGeneratedFilesKept(int newValue) { mMaxGeneratedFilesKept = newValue; }
+    void MaxGeneratedFilesKept(int newValue);
+    const std::string& BaseDataGridScaleString() const { return mBaseDataGridScaleString; }
+    void BaseDataGridScaleString(const std::string& newValue);
+    const NFmiPoint& BaseDataGridScaleValues() const { return mBaseDataGridScaleValues; }
     void CorrectMaxGeneratedFilesKeptValue();
+    void CorrectBaseDataGridScaleValue();
     std::string MakeShortStatusErrorString();
     const std::vector<NFmiDefineWantedData>& WantedDataTriggerList() const { return mWantedDataTriggerList; }
 
@@ -89,10 +104,13 @@ public:
     static std::pair<std::string, std::vector<std::string>> CheckUsedProducerString(const std::string& usedProducerString);
     static std::pair<std::string, NFmiParamBag> CheckUsedParameterListString(const std::string usedParameterListString, const NFmiProducer &wantedProducer);
     static std::string CheckDataStorageFileFilter(const std::string& dataStorageFileFilter);
-    static std::string CheckDataGeneratingSmarttoolPathString(const std::string& dataGeneratingSmarttoolPathString);
+    static std::string CheckDataGeneratingSmarttoolPathListString(const std::string& dataGeneratingSmarttoolPathListString);
     static std::pair<std::string, std::vector<NFmiDefineWantedData>> CheckDataTriggerListString(const std::string& dataTriggerListString);
+    static std::pair<std::string, NFmiPoint> CheckBaseDataGridScaleString(const std::string& baseDataGridScaleString);
     static std::string MakeDataStorageFilePath(const std::string& dataStorageFileFilter);
     static int FixMaxGeneratedFilesKeptValue(int newValue);
+    static std::pair<bool, NFmiPoint> CalcBaseDataGridScaleValues(const std::string& baseDataGridScaleString);
+    static std::string MakeBaseDataGridScaleString(NFmiPoint baseDataGridScaleValues);
 };
 
 enum class MacroParamDataStatus
@@ -180,6 +198,7 @@ private:
 
 inline unsigned int ID_MACRO_PARAM_DATA_GENERATION_FINISHED = 23423;
 inline unsigned int ID_MACRO_PARAM_DATA_GENERATION_CANCELED = 23424;
+inline unsigned int ID_MACRO_PARAM_DATA_GENERATION_FAILED = 23425;
 
 // Tällä talletetaan paljon MacroParamDataGenerator dialogin juttuja 
 // Windows rekisteriin pysyvään muistiin jossa käytetään
@@ -208,7 +227,9 @@ class NFmiMacroParamDataGenerator
     // Polku (suhteellinen/absoluuttinen) siihen smarttool tiedostoon, mitä käytetään 
     // generoimaan lopullinen data ja sen kaikki parametrit.
     // Tähän pyritään saamaan aina suhteellinen polku, jos se osoittaa smarttool kansioon Dropboxissa.
-    boost::shared_ptr<CachedRegString> mDialogDataGeneratingSmarttoolPathString; // PAKOLLINEN
+    // Tässä voi olla pilkulla eroteltu lista polkuja, koska joskus pitää generoida data useammasta eri 
+    // smarttoolista, koska niissä tulisi muuten saman nimisten var muuttujien törmäyksiä.
+    boost::shared_ptr<CachedRegString> mDialogDataGeneratingSmarttoolPathListString; // PAKOLLINEN
     // Pohjadatasta otetaan muut dimensiot (hplace/vplace/time), mutta käyttäjä määrää
     // mitkä parametrit dataan generoidaan. Tässä on pilkuilla eroteltuna id1,name1,id2,name2,...
     // Esim. 2501,MyParam1,2502,MyParam2,2503,MyParam3,2504,MyParam4
@@ -235,6 +256,16 @@ class NFmiMacroParamDataGenerator
     boost::shared_ptr<CachedRegString> mMacroParamDataAutomationListSaveInitialPath;
     // Polku mistä viimeksi ladattu MacroParam data Automation list luetaan
     boost::shared_ptr<CachedRegString> mAutomationListPath;
+    // Dialogi muistaa mistä on talletettu/ladattu viimeksi smarttool st tiedoston polku (hakemisto)
+    boost::shared_ptr<CachedRegString> mMacroParamDataAutomationAddSmarttoolInitialPath;
+    // Jos käyttäjä haluaa harventaa basedatasta saatua laskentahilaa, tällä kertoimella 
+    // se voidaan tehdä. Jos oletusarvossa eli 1, tällöin mitään skaalausta ei tehdä hilankokoon.
+    // Jos arvo 2, tällöin x- ja y-suuntaista hilakoko jaetaan 2:lla ja pyöristetään lähimpään kokonaislukuun.
+    // Jos arvo 2,1.5, tällöi x koko jaetaan 2:lla ja y suunta 1.5:llä.
+    // Skaalausarvojen pitää olla välillä 1-10.
+    boost::shared_ptr<CachedRegString> mDialogBaseDataGridScaleString; // pakollinen
+    // Kuinka paljon CPU kapasiteetista halutaan laitta MacroParam-datojen laskentoihin.
+    boost::shared_ptr<CachedRegDouble> mDialogCpuUsagePercentage;
 
     // Käytetty automaatiolista
     NFmiMacroParamDataAutomationList itsUsedMacroParamDataAutomationList;
@@ -248,8 +279,8 @@ class NFmiMacroParamDataGenerator
     std::string itsInitializeLogStr;
     // Mahdollinen smarttool laskuihin tai sen alustuksiin liittyviä ongelmia laitetaan tähän talteen
     std::string itsSmarttoolCalculationLogStr;
-    // Tiedosto josta luettiin smarttool
-    std::string mUsedAbsoluteSmarttoolPath;
+    // Absoluutti polut tiedostoihin joista luettiin datan rakentamiseen käytetyt smarttoolit
+    std::vector<std::string> mUsedAbsoluteSmarttoolPathList;
     // Onko smartmet moodissa missä automaatiolistan datoja tuotetaan.
     boost::shared_ptr<CachedRegBool> mAutomationModeOn;
     // Onko automaatio systeemi käynnissä vai ei
@@ -275,8 +306,8 @@ public:
 
     std::string DialogBaseDataParamProducerString() const;
     void DialogBaseDataParamProducerString(const std::string& newValue);
-    std::string DialogDataGeneratingSmarttoolPathString() const;
-    void DialogDataGeneratingSmarttoolPathString(const std::string& newValue);
+    std::string DialogDataGeneratingSmarttoolPathListString() const;
+    void DialogDataGeneratingSmarttoolPathListString(const std::string& newValue);
     std::string MakeUsedAbsoluteSmarttoolPathString(const std::string& smarttoolPath) const;
     std::string MakeCleanedSmarttoolPathString(const std::string &smarttoolPath) const;
     std::string DialogUsedParameterListString() const;
@@ -304,6 +335,12 @@ public:
     void DataGenerationIsOn(bool newState) { fDataGenerationIsOn = newState; }
     std::string LastGeneratedDataMakeTime() const;
     void LastGeneratedDataMakeTime(std::string newValue);
+    std::string MacroParamDataAutomationAddSmarttoolInitialPath() const;
+    void MacroParamDataAutomationAddSmarttoolInitialPath(const std::string &newValue);
+    std::string DialogBaseDataGridScaleString() const;
+    void DialogBaseDataGridScaleString(const std::string &newValue);
+    double DialogCpuUsagePercentage() const;
+    void DialogCpuUsagePercentage(double newValue) const;
 
     const std::string& GetInitializeLogStr() const { return itsInitializeLogStr; }
     const std::string& GetSmarttoolCalculationLogStr() const { return itsSmarttoolCalculationLogStr; }
@@ -317,8 +354,9 @@ public:
     static const std::string& MacroParamDataListFileFilter() { return itsMacroParamDataListFileFilter; }
 
 private:
-    bool CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::string& smartToolText, NFmiThreadCallBacks *threadCallBacks);
-    std::string ReadSmarttoolContentFromFile(const std::string& filePath);
+    bool CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::vector<std::string>& smartToolContentList, NFmiThreadCallBacks* threadCallBacks);
+    bool CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::string& smartToolText, const std::string& usedSmartToolPath, NFmiThreadCallBacks *threadCallBacks);
+    std::vector<std::string> ReadSmarttoolContentsFromFiles(const std::string& filePathList);
     bool StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter, int keepMaxFiles, const std::string& fullAutomationPath, NFmiMilliSecondTimer &timer);
     bool GenerateMacroParamData(const NFmiMacroParamDataInfo &dataInfo, const std::string &fullAutomationPath, NFmiThreadCallBacks* threadCallBacks);
     bool LoadUsedAutomationList(const std::string& thePath);

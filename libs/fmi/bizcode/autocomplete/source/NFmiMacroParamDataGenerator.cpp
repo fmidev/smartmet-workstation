@@ -14,6 +14,7 @@
 #include "NFmiSmartInfo.h"
 #include "NFmiBetaProductSystem.h"
 #include "NFmiTimeList.h"
+#include "NFmiValueString.h"
 #include "jsonutils.h"
 #include "catlog/catlog.h"
 #include <boost/algorithm/string.hpp>
@@ -85,6 +86,14 @@ namespace
             // ei tehd‰ toistaiseksi mit‰‰n...
         }
     }
+
+    std::string FixBaseDataGridScaleString(const std::string& newValue)
+    {
+        // Korjataan annettu newValue NFmiMacroParamDataInfo olion tarkastelujen kautta
+        NFmiMacroParamDataInfo tmpData;
+        tmpData.BaseDataGridScaleString(newValue);
+        return tmpData.BaseDataGridScaleString();
+    }
 }
 
 // ***********************************************************
@@ -93,16 +102,95 @@ namespace
 
 NFmiMacroParamDataInfo::NFmiMacroParamDataInfo() = default;
 
-NFmiMacroParamDataInfo::NFmiMacroParamDataInfo(const std::string& baseDataParamProducerLevelString, const std::string& usedProducerString, const std::string& dataGeneratingSmarttoolPathString, const std::string& usedParameterListString, const std::string& dataStorageFileFilter, const std::string& dataTriggerList, int maxGeneratedFilesKept)
+NFmiMacroParamDataInfo::NFmiMacroParamDataInfo(const std::string& baseDataParamProducerLevelString, const std::string& usedProducerString, const std::string& dataGeneratingSmarttoolPathListString, const std::string& usedParameterListString, const std::string& dataStorageFileFilter, const std::string& dataTriggerList, int maxGeneratedFilesKept, const std::string& baseDataGridScaleString)
 :mBaseDataParamProducerString(baseDataParamProducerLevelString)
 ,mUsedProducerString(usedProducerString)
-,mDataGeneratingSmarttoolPathString(dataGeneratingSmarttoolPathString)
+,mDataGeneratingSmarttoolPathListString(dataGeneratingSmarttoolPathListString)
 ,mUsedParameterListString(usedParameterListString)
 ,mDataStorageFileFilter(dataStorageFileFilter)
 ,mDataTriggerList(dataTriggerList)
 ,mMaxGeneratedFilesKept(maxGeneratedFilesKept)
+,mBaseDataGridScaleString(baseDataGridScaleString)
 {
     CorrectMaxGeneratedFilesKeptValue();
+    BaseDataGridScaleString(baseDataGridScaleString);
+}
+
+void NFmiMacroParamDataInfo::MaxGeneratedFilesKept(int newValue)
+{ 
+    mMaxGeneratedFilesKept = FixMaxGeneratedFilesKeptValue(newValue);
+}
+
+void NFmiMacroParamDataInfo::BaseDataGridScaleString(const std::string& newValue)
+{
+    auto checkResult = CalcBaseDataGridScaleValues(newValue);
+    mBaseDataGridScaleValues = checkResult.second;
+    if(checkResult.first)
+    {
+        mBaseDataGridScaleString = newValue;
+    }
+    else
+    {
+        // Jos tarkastelu tuotti virheen ja tuli joku default/korjattu 
+        // arvo, korjataan perusstringi sen mukaan
+        mBaseDataGridScaleString = MakeBaseDataGridScaleString(mBaseDataGridScaleValues);
+    }
+}
+
+void NFmiMacroParamDataInfo::CorrectBaseDataGridScaleValue()
+{
+    BaseDataGridScaleString(mBaseDataParamProducerString);
+}
+
+static std::pair<bool, double> FixBaseDataGridScaleValue(double newValue)
+{
+    if(newValue < 1)
+        return std::make_pair(false, 1);
+    else if(newValue > 10)
+        return std::make_pair(false, 10);
+
+    return std::make_pair(true, newValue);
+}
+
+
+std::pair<bool, NFmiPoint> NFmiMacroParamDataInfo::CalcBaseDataGridScaleValues(const std::string& baseDataGridScaleString)
+{
+    auto scaleStrings = ::GetSplittedAndTrimmedStrings(baseDataGridScaleString, ",");
+    if(scaleStrings.empty())
+        return std::make_pair(false, gDefaultBaseDataGridScaleValues);
+    try
+    {
+        auto checkResultX = ::FixBaseDataGridScaleValue(std::stod(scaleStrings[0]));
+        auto status = checkResultX.first;
+        double scaleX = checkResultX.second;
+        double scaleY = scaleX;
+        if(scaleStrings.size() > 1)
+        {
+            auto checkResultY = ::FixBaseDataGridScaleValue(std::stod(scaleStrings[1]));
+            status &= checkResultY.first;
+            scaleY = checkResultY.second;
+        }
+        return std::make_pair(status, NFmiPoint(scaleX, scaleY));
+    }
+    catch(...)
+    {}
+    return std::make_pair(false, gDefaultBaseDataGridScaleValues);
+}
+
+std::string NFmiMacroParamDataInfo::MakeBaseDataGridScaleString(NFmiPoint baseDataGridScaleValues)
+{
+    const int maxDecimals = 5;
+    baseDataGridScaleValues.X(::FixBaseDataGridScaleValue(baseDataGridScaleValues.X()).second);
+    baseDataGridScaleValues.Y(::FixBaseDataGridScaleValue(baseDataGridScaleValues.Y()).second);
+    if(baseDataGridScaleValues.X() == baseDataGridScaleValues.Y())
+    {
+        return std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(baseDataGridScaleValues.X(), maxDecimals));
+    }
+
+    std::string str = NFmiValueString::GetStringWithMaxDecimalsSmartWay(baseDataGridScaleValues.X(), maxDecimals);
+    str += ",";
+    str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(baseDataGridScaleValues.Y(), maxDecimals);
+    return str;
 }
 
 void NFmiMacroParamDataInfo::CorrectMaxGeneratedFilesKeptValue()
@@ -160,7 +248,7 @@ bool NFmiMacroParamDataInfo::CheckData()
     }
 
     {
-        auto checkResult = NFmiMacroParamDataInfo::CheckDataGeneratingSmarttoolPathString(mDataGeneratingSmarttoolPathString);
+        auto checkResult = NFmiMacroParamDataInfo::CheckDataGeneratingSmarttoolPathListString(mDataGeneratingSmarttoolPathListString);
         if(!checkResult.empty())
         {
             itsCheckShortStatusStr = "Smarttool path error";
@@ -178,7 +266,17 @@ bool NFmiMacroParamDataInfo::CheckData()
         mWantedDataTriggerList = checkResult.second;
     }
 
-    itsCheckShortStatusStr = "Macro param data ok";
+    {
+        auto checkResult = NFmiMacroParamDataInfo::CheckBaseDataGridScaleString(mBaseDataGridScaleString);
+        if(!checkResult.first.empty())
+        {
+            itsCheckShortStatusStr = "Grid scale error";
+            return false;
+        }
+        mBaseDataGridScaleValues = checkResult.second;
+    }
+
+    itsCheckShortStatusStr = "Ok";
     return true;
 }
 
@@ -312,22 +410,33 @@ std::string NFmiMacroParamDataInfo::CheckDataStorageFileFilter(const std::string
 
 const std::string gSmarttoolFileExtension = ".st";
 
-std::string NFmiMacroParamDataInfo::CheckDataGeneratingSmarttoolPathString(const std::string& dataGeneratingSmarttoolPathString)
+std::string NFmiMacroParamDataInfo::CheckDataGeneratingSmarttoolPathListString(const std::string& dataGeneratingSmarttoolPathListString)
 {
-    if(!::FileExists(dataGeneratingSmarttoolPathString))
+    auto paths = ::GetSplittedAndTrimmedStrings(dataGeneratingSmarttoolPathListString, ",");
+    bool anyPathExist = false;
+    for(const auto& pathStr : paths)
     {
-        auto absoluteSmarttoolPath = PathUtils::getAbsoluteFilePath(dataGeneratingSmarttoolPathString, NFmiMacroParamDataGenerator::RootSmarttoolDirectory());
-        if(!::FileExists(absoluteSmarttoolPath))
+        if(!::FileExists(pathStr))
         {
-            return std::string("CheckDataGeneratingSmarttoolPathString") + ": Given smarttool file path '" + dataGeneratingSmarttoolPathString + "' doesn't exists, make sure that given path for MacroParam data generating smarttool was correct!";
+            auto absoluteSmarttoolPath = PathUtils::getAbsoluteFilePath(pathStr, NFmiMacroParamDataGenerator::RootSmarttoolDirectory());
+            if(!::FileExists(absoluteSmarttoolPath))
+            {
+                return std::string("CheckDataGeneratingSmarttoolPathString") + ": Given smarttool file path '" + pathStr + "' doesn't exists, make sure that given path for MacroParam data generating smarttool was correct!";
+            }
         }
+
+        auto fileExtension = ::GetFileExtension(pathStr);
+        // 3. Tiedoston extension pit‰‰ olla st tyyppinen
+        if(!boost::iequals(fileExtension, gSmarttoolFileExtension))
+        {
+            return std::string("CheckDataGeneratingSmarttoolPathString") + ": Given data output extension '" + fileExtension + "' (in " + pathStr + ") is invalid, extension must be '" + gSmarttoolFileExtension + "' type.";
+        }
+        anyPathExist = true;
     }
 
-    auto fileExtension = ::GetFileExtension(dataGeneratingSmarttoolPathString);
-    // 3. Tiedoston extension pit‰‰ olla st tyyppinen
-    if(!boost::iequals(fileExtension, gSmarttoolFileExtension))
+    if(!anyPathExist)
     {
-        return std::string("CheckDataGeneratingSmarttoolPathString") + ": Given data output extension '" + fileExtension + "' (in " + dataGeneratingSmarttoolPathString + ") is invalid, extension must be '" + gSmarttoolFileExtension + "' type.";
+        return std::string("CheckDataGeneratingSmarttoolPathString") + ": no valid path was given with input '" + dataGeneratingSmarttoolPathListString + "'";
     }
 
     return "";
@@ -363,6 +472,32 @@ std::pair<std::string, std::vector<NFmiDefineWantedData>> NFmiMacroParamDataInfo
     return std::make_pair("", triggerDataList);
 }
 
+static bool IsOneDimensionalGridScaleCase(const std::string& baseDataGridScaleString, const std::string& correctedString)
+{
+    auto scaleParts = ::GetSplittedAndTrimmedStrings(baseDataGridScaleString, ",");
+    if(scaleParts.size() != 2)
+        return false;
+
+    return (scaleParts[0] == correctedString) && (scaleParts[1] == correctedString);
+}
+
+std::pair<std::string, NFmiPoint> NFmiMacroParamDataInfo::CheckBaseDataGridScaleString(const std::string& baseDataGridScaleString)
+{
+    NFmiMacroParamDataInfo tmpData;
+    tmpData.BaseDataGridScaleString(baseDataGridScaleString);
+    auto correctedValue = tmpData.BaseDataGridScaleString();
+    if(baseDataGridScaleString != correctedValue)
+    {
+        if(!::IsOneDimensionalGridScaleCase(baseDataGridScaleString, correctedValue))
+        {
+            auto errorString = std::string("CheckBaseDataGridScaleString") + ": given value '" + baseDataGridScaleString + "' had invalid form, should be like '1' or '1.5' or '1.5,2.0'";
+            return std::make_pair(errorString, NFmiPoint::gMissingLatlon);
+        }
+    }
+
+    return std::make_pair("", tmpData.BaseDataGridScaleValues());
+}
+
 std::string NFmiMacroParamDataInfo::MakeShortStatusErrorString()
 {
     CheckData();
@@ -372,22 +507,24 @@ std::string NFmiMacroParamDataInfo::MakeShortStatusErrorString()
 
 static const std::string gJsonName_BaseDataParamProducer = "BaseDataParamProducer";
 static const std::string gJsonName_UsedProducer = "UsedProducer";
-static const std::string gJsonName_DataGeneratingSmarttoolPath = "DataGeneratingSmarttoolPath";
+static const std::string gJsonName_DataGeneratingSmarttoolPathList = "DataGeneratingSmarttoolPathList";
 static const std::string gJsonName_UsedParameterList = "UsedParameterList";
 static const std::string gJsonName_DataStorageFileFilter = "DataStorageFileFilter";
 static const std::string gJsonName_DataTriggerList = "DataTriggerList";
 static const std::string gJsonName_MaxGeneratedFilesKept = "mMaxGeneratedFilesKept";
+static const std::string gJsonName_BaseDataGridScale = "BaseDataGridScale";
 
 json_spirit::Object NFmiMacroParamDataInfo::MakeJsonObject(const NFmiMacroParamDataInfo& macroParamDataInfo)
 {
     json_spirit::Object jsonObject;
     JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.BaseDataParamProducerString(), gJsonName_BaseDataParamProducer, jsonObject);
     JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.UsedProducerString(), gJsonName_UsedProducer, jsonObject);
-    JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.DataGeneratingSmarttoolPathString(), gJsonName_DataGeneratingSmarttoolPath, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.DataGeneratingSmarttoolPathListString(), gJsonName_DataGeneratingSmarttoolPathList, jsonObject);
     JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.UsedParameterListString(), gJsonName_UsedParameterList, jsonObject);
     JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.DataStorageFileFilter(), gJsonName_DataStorageFileFilter, jsonObject);
     JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.DataTriggerList(), gJsonName_DataTriggerList, jsonObject);
     jsonObject.push_back(json_spirit::Pair(gJsonName_MaxGeneratedFilesKept, macroParamDataInfo.MaxGeneratedFilesKept()));
+    JsonUtils::AddNonEmptyStringJsonPair(macroParamDataInfo.BaseDataGridScaleString(), gJsonName_BaseDataGridScale, jsonObject);
 
     return jsonObject;
 }
@@ -399,8 +536,8 @@ void NFmiMacroParamDataInfo::ParseJsonPair(json_spirit::Pair& thePair)
         mBaseDataParamProducerString = thePair.value_.get_str();
     else if(thePair.name_ == gJsonName_UsedProducer)
         mUsedProducerString = thePair.value_.get_str();
-    else if(thePair.name_ == gJsonName_DataGeneratingSmarttoolPath)
-        mDataGeneratingSmarttoolPathString = thePair.value_.get_str();
+    else if(thePair.name_ == gJsonName_DataGeneratingSmarttoolPathList)
+        mDataGeneratingSmarttoolPathListString = thePair.value_.get_str();
     else if(thePair.name_ == gJsonName_UsedParameterList)
         mUsedParameterListString = thePair.value_.get_str();
     else if(thePair.name_ == gJsonName_DataStorageFileFilter)
@@ -411,6 +548,11 @@ void NFmiMacroParamDataInfo::ParseJsonPair(json_spirit::Pair& thePair)
     {
         mMaxGeneratedFilesKept = thePair.value_.get_int();
         CorrectMaxGeneratedFilesKeptValue();
+    }
+    else if(thePair.name_ == gJsonName_BaseDataGridScale)
+    {
+        mBaseDataGridScaleString = thePair.value_.get_str();
+        CorrectBaseDataGridScaleValue();
     }
 }
 
@@ -931,16 +1073,25 @@ bool NFmiMacroParamDataGenerator::Init(const std::string& theBaseRegistryPath, c
     std::string macroParamDataGeneratorSectionName = "\\MacroParamDataGenerator";
     mDialogBaseDataParamProducerString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\BaseDataParamProducerLevel", usedKey, "T_ec");
     mDialogUsedProducerString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\UsedProducer", usedKey, "3001,ProducerName");
-    mDialogDataGeneratingSmarttoolPathString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\DataGeneratingSmarttoolPath", usedKey, "smarttool.st");
+    mDialogDataGeneratingSmarttoolPathListString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\DataGeneratingSmarttoolPathList", usedKey, "smarttool.st");
     mDialogUsedParameterListString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\UsedParameterListString", usedKey, "6201, Param1, 6202, Param2");
     mDialogDataStorageFileFilter = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\DataStorageFileFilter", usedKey, "C:\\data\\*_mydata.sqd");
     mMacroParamDataInfoSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\MacroParamDataInfoSaveInitialPath", usedKey, "C:\\data\\");
     mMacroParamDataAutomationListSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\MacroParamDataAutomationListSaveInitialPath", usedKey, "C:\\data\\");
     mDialogDataTriggerList = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\DataTriggerList", usedKey, "");
     mDialogMaxGeneratedFilesKept = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\MaxGeneratedFilesKept", usedKey, 2);
+    // MaxGeneratedFilesKept arvo pit‰‰ korjata varmuuden vuoksi
+    *mDialogMaxGeneratedFilesKept = NFmiMacroParamDataInfo::FixMaxGeneratedFilesKeptValue(*mDialogMaxGeneratedFilesKept);
     mAutomationModeOn = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\AutomationModeOn", usedKey, false);
     mAutomationPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\AutomationPath", usedKey, "");
     mAutomationListPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\AutomationListPath", usedKey, "");
+    mMacroParamDataAutomationAddSmarttoolInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\AddSmarttoolInitialPath", usedKey, mRootSmarttoolDirectory);
+    mDialogBaseDataGridScaleString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\BaseDataGridScale", usedKey, gDefaultBaseDataGridScaleString);
+    // BaseDataGridScaleString pit‰‰ korjata varmuuden vuoksi
+    *mDialogBaseDataGridScaleString = ::FixBaseDataGridScaleString(*mDialogBaseDataGridScaleString);
+    mDialogCpuUsagePercentage = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\CpuUsagePercentage", usedKey, NFmiSmartToolModifier::DefaultUsedCpuCapacityPercentageInCalculations);
+    // CpuUsagePercentage pit‰‰ korjata varmuuden vuoksi
+    *mDialogCpuUsagePercentage = NFmiSmartToolModifier::FixCpuCapacityPercentageInCalculations(*mDialogCpuUsagePercentage);
 
     LoadUsedAutomationList(AutomationListPath());
 
@@ -994,22 +1145,22 @@ static NFmiVPlaceDescriptor MakeCorrectVPlaceDescriptor(boost::shared_ptr<NFmiFa
     return NFmiVPlaceDescriptor(levelBag);
 }
 
-static NFmiHPlaceDescriptor MakeScaledHPlaceDescriptor(boost::shared_ptr<NFmiFastQueryInfo>& foundInfo, double scale)
+static NFmiHPlaceDescriptor MakeScaledHPlaceDescriptor(boost::shared_ptr<NFmiFastQueryInfo>& foundInfo, const NFmiPoint& scale)
 {
-    if(scale <= 1)
+    if(scale == gDefaultBaseDataGridScaleValues)
         return foundInfo->HPlaceDescriptor();
 
-    auto usedGridSizeX = boost::math::iround(foundInfo->GridXNumber() / scale);
-    auto usedGridSizeY = boost::math::iround(foundInfo->GridYNumber() / scale);
+    auto usedGridSizeX = boost::math::iround(foundInfo->GridXNumber() / scale.X());
+    auto usedGridSizeY = boost::math::iround(foundInfo->GridYNumber() / scale.Y());
     NFmiGrid usedGrid(foundInfo->Area(), usedGridSizeX, usedGridSizeY);
     return NFmiHPlaceDescriptor(usedGrid);
 }
 
 // Oletus: foundInfo on jo tarkistettu ettei se ole nullptr
-static boost::shared_ptr<NFmiQueryData> MakeWantedEmptyData(boost::shared_ptr<NFmiFastQueryInfo>& foundInfo, const NFmiParamDescriptor& wantedParamDescriptor)
+static boost::shared_ptr<NFmiQueryData> MakeWantedEmptyData(boost::shared_ptr<NFmiFastQueryInfo>& foundInfo, const NFmiParamDescriptor& wantedParamDescriptor, const NFmiPoint &scale)
 {
     auto correctVPlaceDescriptor = ::MakeCorrectVPlaceDescriptor(foundInfo);
-    auto scaledHPlaceDescriptor = ::MakeScaledHPlaceDescriptor(foundInfo, 1);
+    auto scaledHPlaceDescriptor = ::MakeScaledHPlaceDescriptor(foundInfo, scale);
     NFmiQueryInfo metaInfo(wantedParamDescriptor, foundInfo->TimeDescriptor(), scaledHPlaceDescriptor, correctVPlaceDescriptor);
     return boost::shared_ptr<NFmiQueryData>(NFmiQueryDataUtil::CreateEmptyData(metaInfo));
 }
@@ -1019,16 +1170,27 @@ static NFmiInfoOrganizer* GetInfoOrganizer()
     return CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->InfoOrganizer();
 }
 
-std::string NFmiMacroParamDataGenerator::ReadSmarttoolContentFromFile(const std::string& filePath)
+// filePathList parametrissa on pilkulla eroteltu lista polkuja eri smarttool skripteihin.
+// Luetaan kaikkien niiden sis‰ltˆ ja laitetaan ne palautettavaan vector:iin.
+// Jos yhdenkin polun kanssa tulee ongelmia, heitet‰‰n poikkeus ja lopetetaan.
+std::vector<std::string> NFmiMacroParamDataGenerator::ReadSmarttoolContentsFromFiles(const std::string& filePathList)
 {
-    mUsedAbsoluteSmarttoolPath = MakeUsedAbsoluteSmarttoolPathString(filePath);
-    std::string fileContent;
-    if(NFmiFileSystem::ReadFile2String(mUsedAbsoluteSmarttoolPath, fileContent))
+    std::vector<std::string> fileContentList;
+    mUsedAbsoluteSmarttoolPathList.clear();
+    auto filePaths = ::GetSplittedAndTrimmedStrings(filePathList, ",");
+    for(const auto& filePath : filePaths)
     {
-        return fileContent;
+        auto usedAbsoluteSmarttoolPath = MakeUsedAbsoluteSmarttoolPathString(filePath);
+        std::string fileContent;
+        if(NFmiFileSystem::ReadFile2String(usedAbsoluteSmarttoolPath, fileContent))
+        {
+            fileContentList.push_back(fileContent);
+            mUsedAbsoluteSmarttoolPathList.push_back(usedAbsoluteSmarttoolPath);
+        }
+        else
+            throw std::runtime_error(std::string(__FUNCTION__) + " unable to read smarttool file content from given file: " + usedAbsoluteSmarttoolPath);
     }
-
-    throw std::runtime_error(std::string(__FUNCTION__) + " unable to read smarttool file content from given file: " + mUsedAbsoluteSmarttoolPath);
+    return fileContentList;
 }
 
 class DataGenerationIsOnHandler
@@ -1131,10 +1293,38 @@ static void CalcMultiLevelSmarttoolData(NFmiSmartToolModifier& smartToolModifier
 }
 
 // Oletus: wantedMacroParamInfoPtr on tarkistettu jo ulkopuolella ett‰ ei ole nullptr
-bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::string& smartToolContent, NFmiThreadCallBacks *threadCallBacks)
+bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::vector<std::string>& smartToolContentList, NFmiThreadCallBacks* threadCallBacks)
 {
     itsSmarttoolCalculationLogStr.clear();
+    if(smartToolContentList.size() != mUsedAbsoluteSmarttoolPathList.size())
+    {
+        throw std::runtime_error("MacroParam-data generation error: smarttool script content and used smarttool path counts are different sizes, stopping...");
+    }
 
+    bool status = false;
+    for(size_t index = 0; index < smartToolContentList.size(); index++)
+    {
+        auto usedSmarttoolPath = mUsedAbsoluteSmarttoolPathList[index];
+        try
+        {
+            // Riitt‰‰ ett‰ yhdenkin smarttoolin laskut menev‰t l‰pi, jotta palautetaan 
+            // true ja data talletetaan.
+            status |= CalculateDataWithSmartTool(wantedMacroParamInfoPtr, infoOrganizer, smartToolContentList[index], usedSmarttoolPath, threadCallBacks);
+        }
+        catch(std::exception& e)
+        {
+            // Lokitetaan normi virheet t‰ss‰ ja jatketaan
+            std::string errorStr = "CalculateDataWithSmartTool failed: ";
+            errorStr += e.what();
+            CatLog::logMessage(errorStr, CatLog::Severity::Error, CatLog::Category::Operational, true);
+        }
+    }
+    return status;
+}
+
+// Oletus: wantedMacroParamInfoPtr on tarkistettu jo ulkopuolella ett‰ ei ole nullptr
+bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::string& smartToolContent, const std::string& usedSmartToolPath, NFmiThreadCallBacks *threadCallBacks)
+{
     NFmiSmartToolModifier smartToolModifier(infoOrganizer);
     try // ensin tulkitaan macro
     {
@@ -1142,13 +1332,14 @@ bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(boost::shared_ptr<N
         smartToolModifier.IncludeDirectory(mRootSmarttoolDirectory);
         smartToolModifier.InitSmartTool(smartToolContent);
         smartToolModifier.SetFixedEditedData(wantedMacroParamInfoPtr);
+        smartToolModifier.UsedCpuCapacityPercentageInCalculations(DialogCpuUsagePercentage());
     }
     catch(std::exception& e)
     {
         itsSmarttoolCalculationLogStr = e.what();
         std::string errorString = e.what();
         errorString += ", in macro '";
-        errorString += mUsedAbsoluteSmarttoolPath;
+        errorString += usedSmartToolPath;
         errorString += "'";
         throw std::runtime_error(errorString);
     }
@@ -1160,7 +1351,7 @@ bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(boost::shared_ptr<N
     // Mutta suoritus vaiheen virheet menev‰t t‰ll‰ hetkell‰ vain loki tiedostoon.
     if(smartToolModifier.IsInterpretedSkriptMacroParam())
     {
-        throw std::runtime_error(std::string("Used script '") + mUsedAbsoluteSmarttoolPath + "' was macroParam type. You have to use smarttool scripts when generating MacroParam data, not macroParam scripts, even though data's name might suggest otherwise");
+        throw std::runtime_error(std::string("Used script '") + usedSmartToolPath + "' was macroParam type. You have to use smarttool scripts when generating MacroParam data, not macroParam scripts, even though data's name might suggest otherwise");
     }
 
     NFmiQueryDataUtil::CheckIfStopped(threadCallBacks);
@@ -1183,7 +1374,7 @@ bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(boost::shared_ptr<N
             itsSmarttoolCalculationLogStr = smartToolModifier.LastExceptionMessageFromThreads();
             std::string errorString = smartToolModifier.LastExceptionMessageFromThreads();
             errorString += ", in macro '";
-            errorString += mUsedAbsoluteSmarttoolPath;
+            errorString += usedSmartToolPath;
             errorString += "'";
             throw std::runtime_error(errorString);
         }
@@ -1193,7 +1384,7 @@ bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(boost::shared_ptr<N
         itsSmarttoolCalculationLogStr = e.what();
         std::string errorString = e.what();
         errorString += ", in macro '";
-        errorString += mUsedAbsoluteSmarttoolPath;
+        errorString += usedSmartToolPath;
         errorString += "'";
         throw std::runtime_error(errorString);
     }
@@ -1212,14 +1403,14 @@ void NFmiMacroParamDataGenerator::DialogBaseDataParamProducerString(const std::s
     *mDialogBaseDataParamProducerString = newValue;
 }
 
-std::string NFmiMacroParamDataGenerator::DialogDataGeneratingSmarttoolPathString() const
+std::string NFmiMacroParamDataGenerator::DialogDataGeneratingSmarttoolPathListString() const
 {
-    return *mDialogDataGeneratingSmarttoolPathString;
+    return *mDialogDataGeneratingSmarttoolPathListString;
 }
 
-void NFmiMacroParamDataGenerator::DialogDataGeneratingSmarttoolPathString(const std::string& newValue)
+void NFmiMacroParamDataGenerator::DialogDataGeneratingSmarttoolPathListString(const std::string& newValue)
 {
-    *mDialogDataGeneratingSmarttoolPathString = newValue;
+    *mDialogDataGeneratingSmarttoolPathListString = newValue;
 }
 
 // Jos annettu polku on suhteellinen, lis‰t‰‰n siihen smarttool juuri hakemisto.
@@ -1329,9 +1520,39 @@ void NFmiMacroParamDataGenerator::LastGeneratedDataMakeTime(std::string newValue
     mLastGeneratedDataMakeTime = newValue;
 }
 
+std::string NFmiMacroParamDataGenerator::MacroParamDataAutomationAddSmarttoolInitialPath() const
+{
+    return *mMacroParamDataAutomationAddSmarttoolInitialPath;
+}
+
+void NFmiMacroParamDataGenerator::MacroParamDataAutomationAddSmarttoolInitialPath(const std::string& newValue)
+{
+    *mMacroParamDataAutomationAddSmarttoolInitialPath = newValue;
+}
+
+std::string NFmiMacroParamDataGenerator::DialogBaseDataGridScaleString() const
+{
+    return *mDialogBaseDataGridScaleString;
+}
+
+void NFmiMacroParamDataGenerator::DialogBaseDataGridScaleString(const std::string& newValue)
+{
+    *mDialogBaseDataGridScaleString = ::FixBaseDataGridScaleString(newValue);
+}
+
+double NFmiMacroParamDataGenerator::DialogCpuUsagePercentage() const
+{
+    return *mDialogCpuUsagePercentage;
+}
+
+void NFmiMacroParamDataGenerator::DialogCpuUsagePercentage(double newValue) const
+{
+    *mDialogCpuUsagePercentage = NFmiSmartToolModifier::FixCpuCapacityPercentageInCalculations(newValue);
+}
+
 NFmiMacroParamDataInfo NFmiMacroParamDataGenerator::MakeDataInfo() const
 {
-    return NFmiMacroParamDataInfo(DialogBaseDataParamProducerString(), DialogUsedProducerString(), DialogDataGeneratingSmarttoolPathString(), DialogUsedParameterListString(), DialogDataStorageFileFilter(), DialogDataTriggerList(), DialogMaxGeneratedFilesKept());
+    return NFmiMacroParamDataInfo(DialogBaseDataParamProducerString(), DialogUsedProducerString(), DialogDataGeneratingSmarttoolPathListString(), DialogUsedParameterListString(), DialogDataStorageFileFilter(), DialogDataTriggerList(), DialogMaxGeneratedFilesKept(), DialogBaseDataGridScaleString());
 }
 
 std::string NFmiMacroParamDataGenerator::MacroParamDataInfoSaveInitialPath()
@@ -1390,7 +1611,12 @@ bool NFmiMacroParamDataGenerator::DoOnDemandBetaAutomations(int selectedAutomati
         auto onDemandAutomations = itsUsedMacroParamDataAutomationList.GetOnDemandAutomations(selectedAutomationIndex, doOnlyEnabled);
         status = GenerateAutomationsData(onDemandAutomations, threadCallBacks);
         if(threadCallBacks)
-            threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_FINISHED);
+        {
+            if(status)
+                threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_FINISHED);
+            else
+                threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_FAILED);
+        }
         return status;
     }
     catch(NFmiStopThreadException&)
@@ -1425,10 +1651,15 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(NFmiThreadCallBacks* th
     {
         DataGenerationIsOnHandler dataGenerationIsOnHandler(fDataGenerationIsOn);
         auto dataInfo = MakeDataInfo();
-        auto result = GenerateMacroParamData(dataInfo, AutomationPath(), threadCallBacks);
+        auto status = GenerateMacroParamData(dataInfo, AutomationPath(), threadCallBacks);
         if(threadCallBacks)
-            threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_FINISHED);
-        return result;
+        {
+            if(status)
+                threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_FINISHED);
+            else
+                threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_FAILED);
+        }
+        return status;
     }
     catch(NFmiStopThreadException &)
     {
@@ -1450,6 +1681,15 @@ static void LogDataGenerationStarts(const std::string& fullAutomationPath)
     logStr += "' MacroParam-data from automation: ";
     logStr += fullAutomationPath;
     CatLog::logMessage(logStr, CatLog::Severity::Info, CatLog::Category::Operational);
+}
+
+static void ReportDataGenerationFailure(const std::string& fullAutomationPath)
+{
+    std::string logStr = "Unable to generate '";
+    logStr += PathUtils::getFilename(fullAutomationPath, false);
+    logStr += "' MacroParam-data (see error log(s) above) from automation: ";
+    logStr += fullAutomationPath;
+    CatLog::logMessage(logStr, CatLog::Severity::Error, CatLog::Category::Operational, true);
 }
 
 bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDataInfo& dataInfo, const std::string& fullAutomationPath, NFmiThreadCallBacks* threadCallBacks)
@@ -1485,7 +1725,7 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDat
 
         auto wantedParamDescriptor = ::MakeWantedParamDescriptor(dataInfo);
         NFmiQueryDataUtil::CheckIfStopped(threadCallBacks);
-        auto wantedMacroParamDataPtr = ::MakeWantedEmptyData(wantedInfo.foundInfo_, wantedParamDescriptor);
+        auto wantedMacroParamDataPtr = ::MakeWantedEmptyData(wantedInfo.foundInfo_, wantedParamDescriptor, dataInfo.BaseDataGridScaleValues());
         if(!wantedMacroParamDataPtr)
         {
             throw std::runtime_error("GenerateMacroParamData: Unable to generate actual macroParam querydata, unknown error in system");
@@ -1496,13 +1736,18 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDat
         }
         boost::shared_ptr<NFmiFastQueryInfo> wantedMacroParamInfoPtr(new NFmiFastQueryInfo(wantedMacroParamDataPtr.get()));
 
-        auto smarttoolContent = ReadSmarttoolContentFromFile(dataInfo.DataGeneratingSmarttoolPathString());
+        auto smarttoolContentList = ReadSmarttoolContentsFromFiles(dataInfo.DataGeneratingSmarttoolPathListString());
         NFmiQueryDataUtil::CheckIfStopped(threadCallBacks);
 
-        if(CalculateDataWithSmartTool(wantedMacroParamInfoPtr, infoOrganizer, smarttoolContent, threadCallBacks))
+        if(CalculateDataWithSmartTool(wantedMacroParamInfoPtr, infoOrganizer, smarttoolContentList, threadCallBacks))
         {
-            return StoreMacroParamData(wantedMacroParamDataPtr, dataInfo.DataStorageFileFilter(), dataInfo.MaxGeneratedFilesKept(), fullAutomationPath, timer);
+            auto status = StoreMacroParamData(wantedMacroParamDataPtr, dataInfo.DataStorageFileFilter(), dataInfo.MaxGeneratedFilesKept(), fullAutomationPath, timer);
+            if(status)
+            {
+                return true;
+            }
         }
+        ::ReportDataGenerationFailure(fullAutomationPath);
     }
     catch(std::exception& e)
     {
