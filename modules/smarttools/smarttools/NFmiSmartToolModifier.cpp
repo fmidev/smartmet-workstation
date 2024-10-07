@@ -273,6 +273,8 @@ void NFmiSmartToolCalculationBlock::Calculate_ver2(
 }
 
 bool NFmiSmartToolModifier::fUseVisualizationOptimazation = false;
+const double NFmiSmartToolModifier::DefaultUsedCpuCapacityPercentageInCalculations = 75;
+
 
 //--------------------------------------------------------
 // Constructor/Destructor
@@ -1295,8 +1297,9 @@ void NFmiSmartToolModifier::ModifyConditionalData_ver2(
                                                         : info->TimeDescriptor());
       const NFmiBitMask *usedBitmask = ::GetUsedBitmask(info, fModifySelectedLocationsOnly);
       calculationParams.itsObservationRadiusInKm = ExtraMacroParamData().ObservationRadiusInKm();
-      CalculateUsedWorkingThreadCount(
-          75, ExtraMacroParamData().WorkingThreadCount(), fMacroParamCalculation);
+      CalculateUsedWorkingThreadCount(UsedCpuCapacityPercentageInCalculations(),
+                                      ExtraMacroParamData().WorkingThreadCount(),
+                                      fMacroParamCalculation);
 
       std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector =
           ::MakeInfoCopyVector(itsUsedThreadCount, info);
@@ -1524,8 +1527,9 @@ void NFmiSmartToolModifier::ModifyData2_ver2(
                                                         : info->TimeDescriptor());
       const NFmiBitMask *usedBitmask = ::GetUsedBitmask(info, fModifySelectedLocationsOnly);
       calculationParams.itsObservationRadiusInKm = ExtraMacroParamData().ObservationRadiusInKm();
-      CalculateUsedWorkingThreadCount(
-          75, ExtraMacroParamData().WorkingThreadCount(), fMacroParamCalculation);
+      CalculateUsedWorkingThreadCount(UsedCpuCapacityPercentageInCalculations(),
+                                      ExtraMacroParamData().WorkingThreadCount(),
+                                      fMacroParamCalculation);
 
       std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector =
           ::MakeInfoCopyVector(itsUsedThreadCount, info);
@@ -3743,10 +3747,15 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::GetFixedEditedData(
     const NFmiDataIdent &theIdent, const NFmiLevel *theLevel)
 {
   auto fixedEditedInfoCopy = NFmiSmartInfo::CreateShallowCopyOfHighestInfo(itsFixedEditedData);
-  fixedEditedInfoCopy->Param(static_cast<FmiParameterName>(theIdent.GetParamIdent()));
+  if(!fixedEditedInfoCopy->Param(static_cast<FmiParameterName>(theIdent.GetParamIdent())))
+  {
+   return nullptr;
+  }
+
   if(theLevel && theLevel->GetIdent() != 0)
   {
-    fixedEditedInfoCopy->Level(*theLevel);
+    if(!fixedEditedInfoCopy->Level(*theLevel))
+      return nullptr;
   }
   return fixedEditedInfoCopy;
 }
@@ -3754,4 +3763,18 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::GetFixedEditedData(
 boost::shared_ptr<NFmiFastQueryInfo> NFmiSmartToolModifier::GetFixedEditedData()
 {
   return NFmiSmartInfo::CreateShallowCopyOfHighestInfo(itsFixedEditedData);
+}
+
+void NFmiSmartToolModifier::UsedCpuCapacityPercentageInCalculations(double newValue)
+{
+  itsUsedCpuCapacityPercentageInCalculations = FixCpuCapacityPercentageInCalculations(newValue);
+}
+
+double NFmiSmartToolModifier::FixCpuCapacityPercentageInCalculations(double cpuCapacity)
+{
+  if (cpuCapacity < 10)
+    return 10;
+  if (cpuCapacity > 100)
+    return 100;
+  return cpuCapacity;
 }

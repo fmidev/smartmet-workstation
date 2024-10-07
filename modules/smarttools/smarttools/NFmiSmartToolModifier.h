@@ -181,6 +181,10 @@ class NFmiSmartToolModifier
   }
 
   void SetFixedEditedData(boost::shared_ptr<NFmiFastQueryInfo> &fixedEditedData);
+  double UsedCpuCapacityPercentageInCalculations() const {return itsUsedCpuCapacityPercentageInCalculations;}
+  void UsedCpuCapacityPercentageInCalculations(double newValue);
+  static double FixCpuCapacityPercentageInCalculations(double cpuCapacity);
+  static const double DefaultUsedCpuCapacityPercentageInCalculations;
 
  private:
   boost::shared_ptr<NFmiFastQueryInfo> GetUsedEditedInfo();
@@ -446,4 +450,8 @@ class NFmiSmartToolModifier
   // jotain muuta kuin Smartmetin oikeaa editoitavaa dataa, asetetaan silloin 
   // halutta data SetFixedEditedData metodilla.
   boost::shared_ptr<NFmiFastQueryInfo> itsFixedEditedData;
+  // Smarttool laskuissa käytettävä CPU kapasiteetin määrä asetetaan tästä,
+  // eli oletus 75 %. Käytännössä tällä määrätää käytettyjen CPU corejen määrä.
+  // Arvo alue on 10-100, eli ei ole järkeä voida asettaa 0:aan tai ihan lähelle sitä.
+  double itsUsedCpuCapacityPercentageInCalculations = 75;
 };
