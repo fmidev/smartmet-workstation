@@ -4872,6 +4872,13 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int la
 			menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyDrawParam, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 			itsPopupMenu->Add(std::move(menuItem));
 
+			if(macroParamInCase)
+			{
+				menuString = ::GetDictionaryString("Edit MacroParam formula...");
+				menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyMacroParamFormula, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
+				itsPopupMenu->Add(std::move(menuItem));
+			}
+
 			if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
 				return false;
 			fOpenPopup = true;
@@ -5236,12 +5243,27 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		case kFmiSetTimeBoxToDefaultValues:
 			DoTimeBoxToDefaultValues(*menuItem);
 			break;
+		case kFmiModifyMacroParamFormula:
+			ModifyMacoParamFormula(*menuItem, itsCurrentViewRowIndex);
+			break;
 
 		default:
 			return false;
 		}
 	}
 	return true;
+}
+
+void ModifyMacoParamFormula(NFmiMenuItem& theMenuItem, int viewRowIndex)
+{
+	auto wantedDrawParam = GetCombinedMapHandler()->getDrawParamFromViewLists(theMenuItem, viewRowIndex);
+	if(!wantedDrawParam)
+		return;
+
+	NFmiFileString macroParamFilename = wantedDrawParam->InitFileName();
+	macroParamFilename.Extension("st");
+
+	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenMacroParamInSmarttoolDialog(std::string(macroParamFilename));
 }
 
 void InsertWantedParamLayer(NFmiMenuItem& theMenuItem, int theSelectedViewRowIndex)

@@ -387,3 +387,8 @@ void ApplicationInterfaceForSmartMet::UpdateAllViewsAndDialogs(const std::string
 {
     GetDocument()->UpdateAllViewsAndDialogs(reasonForUpdate, fUpdateOnlyMapViews);
 }
+
+void ApplicationInterfaceForSmartMet::OpenMacroParamInSmarttoolDialog(const std::string& absoluteMacroParamPath)
+{
+    GetDocument()->OpenMacroParamInSmarttoolDialog(absoluteMacroParamPath);
+}

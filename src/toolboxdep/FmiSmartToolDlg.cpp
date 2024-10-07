@@ -1678,7 +1678,6 @@ void CFmiSmartToolDlg::DoTimedResetSearchResource()
     }
 }
 
-
 void CFmiSmartToolDlg::OnSize(UINT nType, int cx, int cy)
 {
     CDialog::OnSize(nType, cx, cy);
@@ -1687,7 +1686,6 @@ void CFmiSmartToolDlg::OnSize(UINT nType, int cx, int cy)
     AdjustSyntaxEditControlWindows();
 #endif // DISABLE_EXTREME_TOOLKITPRO
 }
-
 
 HBRUSH CFmiSmartToolDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
@@ -1699,9 +1697,18 @@ HBRUSH CFmiSmartToolDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
     return hbr;
 }
 
-
 void CFmiSmartToolDlg::OnBnClickedCheckShowTooltipOnSmarttoolDialog()
 {
     UpdateData(TRUE);
     itsSmartMetDocumentInterface->ApplicationWinRegistry().ShowTooltipOnSmarttoolDialog(fShowTooltipsOnSmarttoolDialog == TRUE);
+}
+
+void CFmiSmartToolDlg::OpenMacroParamForEditing(const std::string& absoluteMacroParamPath)
+{
+    auto macroParamSystemPtr = itsSmartMetDocumentInterface->MacroParamSystem();
+    if(!macroParamSystemPtr)
+        return;
+
+    auto usedMacroParamPath = PathUtils::getRelativePathIfPossible(absoluteMacroParamPath, macroParamSystemPtr->RootPath());
+    DoMacroParamLoad(usedMacroParamPath, true);
 }

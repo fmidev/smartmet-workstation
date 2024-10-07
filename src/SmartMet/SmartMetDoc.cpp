@@ -3907,3 +3907,12 @@ void CSmartMetDoc::OnViewMacroparamdatageneration()
 	itsMacroParamDataGeneratorDlg->SetActiveWindow();
 	itsData->LogMessage("Opening MacroParam data generator dialog.", CatLog::Severity::Info, CatLog::Category::Operational);
 }
+
+void CSmartMetDoc::OpenMacroParamInSmarttoolDialog(const std::string& absoluteMacroParamPath)
+{
+	OnButtonOpenSmartToolDlg();
+	if(itsSmartToolDlg)
+	{
+		itsSmartToolDlg->OpenMacroParamForEditing(absoluteMacroParamPath);
+	}
+}

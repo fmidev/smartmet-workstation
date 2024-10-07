@@ -135,6 +135,7 @@ public:
     bool HasUpdatedViewsFlagSignificantValue() const { return itsUpdatedViewsFlag != SmartMetViewId::NoViews; }
 	void OpenLogViewer();
 	void SetAllMapViewTooltipDelays(bool doRestoreAction, int delayInMilliSeconds);
+	void OpenMacroParamInSmarttoolDialog(const std::string& absoluteMacroParamPath);
 
 	NFmiEditMapGeneralDataDoc* GetData(void);
 	virtual ~CSmartMetDoc();

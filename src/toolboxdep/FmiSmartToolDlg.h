@@ -44,6 +44,7 @@ public:
 	void SetMacroErrorText(const std::string &theErrorStr);
     static std::string MakeUsedWinRegistryKeyStr(unsigned int /* theMapViewDescTopIndex */) {return ViewPosRegistryInfo().WinRegistryKeyStr();}
 	void SetDefaultValues(void);
+    void OpenMacroParamForEditing(const std::string& absoluteMacroParamPath);
 
 // Dialog Data
 	//{{AFX_DATA(CFmiSmartToolDlg)
