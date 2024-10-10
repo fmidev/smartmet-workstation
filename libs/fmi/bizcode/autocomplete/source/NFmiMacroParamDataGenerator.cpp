@@ -8,7 +8,6 @@
 #include "NFmiParamDescriptor.h"
 #include "NFmiQueryData.h"
 #include "NFmiFastQueryInfo.h"
-#include "NFmiQueryDataUtil.h"
 #include "NFmiFileSystem.h"
 #include "NFmiPathUtils.h"
 #include "NFmiSmartInfo.h"
@@ -330,14 +329,16 @@ std::pair<std::string, std::vector<std::string>> NFmiMacroParamDataInfo::CheckUs
     {
         checkStr = std::string("CheckUsedProducerString: given string (" + usedProducerString + ") had too few producer parts(< 2), string should be in format '123,name'");
     }
-
-    try
+    else
     {
-        unsigned long producerId = std::stoul(parts[0]);
-    }
-    catch(std::exception& )
-    {
-        checkStr = std::string("CheckUsedProducerString: unable to convert produced id part to integer number in '" + usedProducerString + "', string should be in format of 'producer-id-integer,name-string'");
+        try
+        {
+            unsigned long producerId = std::stoul(parts[0]);
+        }
+        catch(std::exception&)
+        {
+            checkStr = std::string("CheckUsedProducerString: unable to convert produced id part to integer number in '" + usedProducerString + "', string should be in format of 'producer-id-integer,name-string'");
+        }
     }
     return std::make_pair(checkStr, parts);
 }
@@ -954,9 +955,9 @@ bool NFmiMacroParamDataAutomationList::ReadInJsonFormat(NFmiMacroParamDataAutoma
 // 2. Jos selectedAutomationIndex on -1 ja doOnlyEnabled on true, ajetaan kaikki listalle olevat enbloidut automaatiot.
 // 3. Jos selectedAutomationIndex on -1 ja doOnlyEnabled on false, ajetaan kaikki listalle olevat automaatiot.
 // selectedAutomationIndex -parametri on 1:stä alkava indeksi ja -1 tarkoitti siis että käydään koko listaa läpi.
-NFmiAutomationContainer NFmiMacroParamDataAutomationList::GetOnDemandAutomations(int selectedAutomationIndex, bool doOnlyEnabled)
+NFmiUserWorkAutomationContainer NFmiMacroParamDataAutomationList::GetOnDemandAutomations(int selectedAutomationIndex, bool doOnlyEnabled)
 {
-    NFmiAutomationContainer onDemandAutomations;
+    NFmiUserWorkAutomationContainer onDemandAutomations;
     if(selectedAutomationIndex > 0)
     {
         auto actualIndex = selectedAutomationIndex - 1;
@@ -1010,9 +1011,9 @@ static void AddPostponedAutomationsToDueList(std::vector<std::shared_ptr<NFmiMac
     }
 }
 
-std::vector<std::shared_ptr<NFmiMacroParamDataAutomationListItem>> NFmiMacroParamDataAutomationList::GetDueAutomations(const NFmiMetTime& theCurrentTime, const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer)
+NFmiUserWorkAutomationContainer NFmiMacroParamDataAutomationList::GetDueAutomations(const NFmiMetTime& theCurrentTime, const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer)
 {
-    std::vector<std::shared_ptr<NFmiMacroParamDataAutomationListItem>> dueAutomations;
+    NFmiUserWorkAutomationContainer dueAutomations;
 
     for(auto& listItem : mAutomationVector)
     {
@@ -1021,7 +1022,7 @@ std::vector<std::shared_ptr<NFmiMacroParamDataAutomationListItem>> NFmiMacroPara
             if(listItem->GetErrorStatus() == MacroParamDataStatus::kFmiListItemOk)
             {
                 int postponeTriggerInMinutes = 0;
-                if(NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(listItem->itsMacroParamDataAutomation->WantedDataTriggerList(), loadedDataTriggerList, infoOrganizer, listItem->AutomationName(), postponeTriggerInMinutes))
+                if(NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(listItem->itsMacroParamDataAutomation->WantedDataTriggerList(), loadedDataTriggerList, infoOrganizer, listItem->AutomationName(), postponeTriggerInMinutes, false))
                 {
                     if(postponeTriggerInMinutes <= 0)
                         dueAutomations.push_back(listItem);
@@ -1033,7 +1034,6 @@ std::vector<std::shared_ptr<NFmiMacroParamDataAutomationListItem>> NFmiMacroPara
     }
 
     ::AddPostponedAutomationsToDueList(dueAutomations, itsPostponedDataTriggeredAutomations);
-
     return dueAutomations;
 }
 
@@ -1047,6 +1047,9 @@ const std::string NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileExtensio
 const std::string NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileFilter = "MacroParam data info Files (*." + NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileExtension + ")|*." + NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileExtension + "|All Files (*.*)|*.*||";
 const std::string NFmiMacroParamDataGenerator::itsMacroParamDataListFileExtension = "mpdlist";
 const std::string NFmiMacroParamDataGenerator::itsMacroParamDataListFileFilter = "MacroParam data list Files (*." + NFmiMacroParamDataGenerator::itsMacroParamDataListFileExtension + ")|*." + NFmiMacroParamDataGenerator::itsMacroParamDataListFileExtension + "|All Files (*.*)|*.*||";
+
+NFmiStopFunctor NFmiMacroParamDataGenerator::itsStopFunctor;
+NFmiThreadCallBacks NFmiMacroParamDataGenerator::itsThreadCallBacks = NFmiThreadCallBacks(&NFmiMacroParamDataGenerator::itsStopFunctor, nullptr);
 
 NFmiMacroParamDataGenerator::NFmiMacroParamDataGenerator() = default;
 
@@ -1632,7 +1635,7 @@ bool NFmiMacroParamDataGenerator::DoOnDemandBetaAutomations(int selectedAutomati
     return false;
 }
 
-bool NFmiMacroParamDataGenerator::GenerateAutomationsData(const NFmiAutomationContainer &automations, NFmiThreadCallBacks* threadCallBacks)
+bool NFmiMacroParamDataGenerator::GenerateAutomationsData(const NFmiUserWorkAutomationContainer &automations, NFmiThreadCallBacks* threadCallBacks)
 {
     bool status = false;
     if(!automations.empty())
@@ -1762,41 +1765,55 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDat
 // itsUsedAutomationList:alla olevaa tuotantoa.
 void NFmiMacroParamDataGenerator::DoNeededMacroParamDataAutomations(const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer)
 {
+    if(itsStopFunctor.Stop())
+        return;
     if(!AutomationModeOn())
+        return;
+    if(loadedDataTriggerList.empty())
         return;
 
     NFmiMetTime currentTime(1); // Otetaan talteen nyky UTC hetki minuutin tarkkuudella
     auto dueAutomations = itsUsedMacroParamDataAutomationList.GetDueAutomations(currentTime, loadedDataTriggerList, infoOrganizer);
-    std::thread t(&NFmiMacroParamDataGenerator::LaunchGenerateAutomationsData, this, dueAutomations, nullptr);
-    t.detach();
+    auto launchWorkerThread = AddTriggeredWorksToFifoAndCheckIfNewWorkerThreadMustBeLaunched(dueAutomations);
+    if(launchWorkerThread)
+    {
+        std::thread t(&NFmiMacroParamDataGenerator::LaunchGenerateAutomationsData, this, &NFmiMacroParamDataGenerator::itsThreadCallBacks);
+        t.detach();
+    }
 }
 
 // Tänne tullaan vain MacroParam-data automaatioiden kautta, eli ei käyttäjän toimesta.
 // Kun Automaatiosysteemi on käytössä, on kaikki käyttäjän generoinnit estetty.
 // Eli täällä ei tarvitse laittaa generointi lippuja päälle, tai lähetellä viestejä, 
 // kun on valmista, tai canceloitu.
-void NFmiMacroParamDataGenerator::LaunchGenerateAutomationsData(const NFmiAutomationContainer& automations, NFmiThreadCallBacks* threadCallBacks)
+void NFmiMacroParamDataGenerator::LaunchGenerateAutomationsData(NFmiThreadCallBacks* threadCallBacks)
 {
     try
     {
-        GenerateAutomationsData(automations, nullptr);
-        // Ei saa lähetellä viestejä dialogille!
-        //if(threadCallBacks)
-        //    threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_FINISHED);
+        std::string fullAutomationPath;
+        do
+        {
+            NFmiQueryDataUtil::CheckIfStopped(threadCallBacks);
+            auto automationWork = PopWorkFromFifo();
+            if(!automationWork)
+            {
+                throw std::runtime_error("MacroParam-data trigger based automation loop error: Empty work-data, error in programs logic, stopping...");
+            }
+            fullAutomationPath = automationWork->FullAutomationPath();
+            bool status = GenerateMacroParamData(*(automationWork->itsMacroParamDataAutomation), fullAutomationPath, threadCallBacks);
+        } while(MarkLastAutomationWorkAsDoneAndCheckIfMoreWorkLeft(fullAutomationPath));
     }
     catch(NFmiStopThreadException&)
     {
         // Tässä lopetus tulee aina Smartmetin sulkemisesta
         ::LogDataGenerationInterruption(false, true);
+        CatLog::logMessage("Automated MacroParam-data generation has been stopped due Smartmet is been closed", CatLog::Severity::Debug, CatLog::Category::Operational);
+        ClearAutomationWorksLeftToProcessCounter();
     }
     catch(...)
     {
         ::LogDataGenerationInterruption(false, false);
     }
-
-    // Ei saa lähetellä viestejä dialogille!
-    //if(threadCallBacks)
-    //    threadCallBacks->DoPostMessage(ID_MACRO_PARAM_DATA_GENERATION_CANCELED);
 }
 
 void NFmiMacroParamDataGenerator::InitMacroParamDataTmpDirectory()
@@ -1815,4 +1832,95 @@ bool NFmiMacroParamDataGenerator::EnsureTmpDirectoryExists()
     }
 
     return true;
+}
+
+// Lisätään thread-turvallisesti uudet triggeröidyt työt automaatio-fifo work-listaan.
+// Mutta sitä ennen pitää tarkistaa että onko edellinen worker-thread vielä hommissa.
+// Palauttaa true, jos uusi thread pitää käynnistää, muuten false.
+// Tätä kutsutaan kun automaatio on saanut uusi triggeröityjä töitä ja uudet työt annetaan
+// joko vanhalle threadille tai että pitääkö käynnistää uusi worker-thread.
+bool NFmiMacroParamDataGenerator::AddTriggeredWorksToFifoAndCheckIfNewWorkerThreadMustBeLaunched(const NFmiUserWorkAutomationContainer& automationWorkList)
+{
+    if(automationWorkList.empty())
+        return false;
+
+    std::lock_guard<std::mutex> lock(mAutomationWorkFifoMutex);
+    // Ensin pitää tarkistaa onko joku vanha threadi työskentelemässä vai ei.
+    bool launchNewWorkerThread = mAutomationWorksLeftToProcessCounter.load() <= 0;
+    // Sitten lisätää uudet työt listaan.
+    mAutomationWorkFifo.insert(mAutomationWorkFifo.end(), automationWorkList.begin(), automationWorkList.end());
+    mAutomationWorksLeftToProcessCounter += (int)automationWorkList.size();
+    // Lokitetaan tilannetta
+    std::string message = "Adding " + std::to_string(automationWorkList.size()) + " new triggered MacroParam-data automation to the working queue";
+    message += ", total count of works is now " + std::to_string(mAutomationWorksLeftToProcessCounter.load());
+    message += launchNewWorkerThread ? ", must launch new worker thread" : ", continuing with existing working thread";
+    CatLog::logMessage(message, CatLog::Severity::Debug, CatLog::Category::Operational);
+    // Lopuksi palautetaan status
+    return launchNewWorkerThread;
+}
+
+// Otetaan listan ensimmäinen automaatio-work ja palautetaan se.
+// Huom! tällöin ei vielä pienennetä mAutomationWorksLeftToProcessCounter:ia,
+// se tehdään vasta MarkLastWorkAsDoneAndCheckIfMoreWorkLeft metodissa.
+std::shared_ptr<NFmiMacroParamDataAutomationListItem> NFmiMacroParamDataGenerator::PopWorkFromFifo()
+{
+    std::lock_guard<std::mutex> lock(mAutomationWorkFifoMutex);
+    if(mAutomationWorkFifo.empty())
+        return nullptr;
+
+    auto automationWork = mAutomationWorkFifo.front();
+    mAutomationWorkFifo.pop_front();
+    return automationWork;
+}
+
+// Kun worker-thread on tehnyt automaation, merkitään se tehdyksi vähentämällä
+// mAutomationWorksLeftToProcessCounter:ia 1:llä.
+// Palauttaa true, jos vielä töitä jäljellä.
+// Palauttaa false, jos mAutomationWorksLeftToProcessCounter menee 0:aan,
+// tällöin worker-thread lopettaa saman tien.
+bool NFmiMacroParamDataGenerator::MarkLastAutomationWorkAsDoneAndCheckIfMoreWorkLeft(const std::string &fullAutomationPath)
+{
+    std::lock_guard<std::mutex> lock(mAutomationWorkFifoMutex);
+    mAutomationWorksLeftToProcessCounter--;
+    auto workLeft = (mAutomationWorksLeftToProcessCounter.load() > 0);
+
+    // Lokitetaan tilannetta
+    std::string message = "Marking latest automation work as done (";
+    message += PathUtils::getFilename(fullAutomationPath, false);
+    message += "), automations left in the work list " + std::to_string(mAutomationWorksLeftToProcessCounter.load()) + ", ";
+    message += workLeft ? "keep on going with working thread" : "no more work to do, stop working thread";
+    CatLog::logMessage(message, CatLog::Severity::Debug, CatLog::Category::Operational);
+
+    // Lopuksi palautetaan status
+    return workLeft;
+}
+
+// Tätä kutsutaan nollaamaan mAutomationWorksLeftToProcessCounter, kun työskentely
+// on keskeytetty, kun Smartmetia halutaan sulkea.
+void NFmiMacroParamDataGenerator::ClearAutomationWorksLeftToProcessCounter()
+{
+    std::lock_guard<std::mutex> lock(mAutomationWorkFifoMutex);
+    mAutomationWorksLeftToProcessCounter = 0;
+}
+
+void NFmiMacroParamDataGenerator::StopAutomationDueClosingApplication()
+{
+    itsStopFunctor.Stop(true);
+}
+
+bool NFmiMacroParamDataGenerator::WaitForAutomationWorksToStop(double waitForSeconds)
+{
+    NFmiNanoSecondTimer waitTimer;
+    for(;;)
+    {
+        {
+            std::lock_guard<std::mutex> lock(mAutomationWorkFifoMutex);
+            if(mAutomationWorksLeftToProcessCounter.load() <= 0)
+                return true;
+
+            if(waitTimer.elapsedTimeInSeconds() > waitForSeconds)
+                return false;
+        }
+    }
+    return false;
 }

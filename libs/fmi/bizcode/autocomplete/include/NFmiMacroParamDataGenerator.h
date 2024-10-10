@@ -4,6 +4,7 @@
 #include "NFmiParamBag.h"
 #include "NFmiMetTime.h"
 #include "NFmiMilliSecondTimer.h"
+#include "NFmiQueryDataUtil.h"
 #include "json_spirit_value.h"
 #include <string>
 #include <mutex>
@@ -159,12 +160,21 @@ public:
     bool IsPostponeTimeOver();
 };
 
-using NFmiAutomationContainer = std::vector<std::shared_ptr<NFmiMacroParamDataAutomationListItem>>;
+// Tämän tyylistä listaa käytetään kun käyttäjä antaa joukon MacroParam-data 
+// työtehtäviä Smartmetille dialogista käsin.
+using NFmiUserWorkAutomationContainer = std::vector<std::shared_ptr<NFmiMacroParamDataAutomationListItem>>;
+// Kun tehdään thread turvallista Automaatio työtehtäviä, pitää sitä 
+// varten tehdä fifo toimintaa tukeva std::list rakenne.
+// Lisäksi käynnissä olevan data-generation operaation fifo-rakenteeseen voidaan lisätä
+// uusia töitä, kun triggerit niitä laukaisevat, joten sen käsittely pitää tehdä
+// thread turvallisesti eli kaikki siihen tehdyt operaatiot pitää turvata mutexin avulla.
+using NFmiAutomationWorkFifoContainer = std::list<std::shared_ptr<NFmiMacroParamDataAutomationListItem>>;
 
 class NFmiMacroParamDataAutomationList
 {
-    NFmiAutomationContainer mAutomationVector;
+    NFmiUserWorkAutomationContainer mAutomationVector;
     std::list<NFmiPostponedMacroParamDataAutomation> itsPostponedDataTriggeredAutomations;
+
 public:
     bool Add(const std::string& theMacroParamDataAutomationPath);
     NFmiMacroParamDataAutomationListItem& Get(size_t theZeroBasedRowIndex);
@@ -172,16 +182,16 @@ public:
     bool Remove(size_t theZeroBasedRowIndex);
     // Tätä kutsutaan kun esim. luetaan data tiedostosta ja tehdään täysi tarkistus kaikille osille
     MacroParamDataStatus DoFullChecks(bool fAutomationModeOn);
-    NFmiAutomationContainer& AutomationVector() { return mAutomationVector; }
-    const NFmiAutomationContainer& AutomationVector() const { return mAutomationVector; }
+    NFmiUserWorkAutomationContainer& AutomationVector() { return mAutomationVector; }
+    const NFmiUserWorkAutomationContainer& AutomationVector() const { return mAutomationVector; }
     bool IsOk() const;
     bool IsEmpty() const { return mAutomationVector.empty(); }
     bool ContainsAutomationMoreThanOnce() const;
     bool HasAutomationAlready(const std::string& theFullFilePath) const;
 
     void RefreshAutomationList();
-    NFmiAutomationContainer GetOnDemandAutomations(int selectedAutomationIndex, bool doOnlyEnabled);
-    NFmiAutomationContainer GetDueAutomations(const NFmiMetTime& theCurrentTime, const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer);
+    NFmiUserWorkAutomationContainer GetOnDemandAutomations(int selectedAutomationIndex, bool doOnlyEnabled);
+    NFmiUserWorkAutomationContainer GetDueAutomations(const NFmiMetTime& theCurrentTime, const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer);
 
     static json_spirit::Object MakeJsonObject(const NFmiMacroParamDataAutomationList& theMacroParamDataAutomationList);
     void ParseJsonPair(json_spirit::Pair& thePair);
@@ -295,6 +305,19 @@ class NFmiMacroParamDataGenerator
     // ja luetaan eri threadeista, joten se on synkronisoitava mutexilla
     std::string mLastGeneratedDataMakeTime;
     mutable std::mutex mLastGeneratedDataMakeTimeMutex;
+    // Lisäksi käynnissä olevan data-generation operaation fifo-rakenteeseen voidaan lisätä
+    // uusia töitä, kun triggerit niitä laukaisevat, joten sen käsittely pitää tehdä
+    // thread turvallisesti eli kaikki siihen tehdyt operaatiot pitää turvata mutexin avulla.
+    NFmiAutomationWorkFifoContainer mAutomationWorkFifo;
+    std::mutex mAutomationWorkFifoMutex;
+    // Lisäksi jotta tiedetään että pitääkö uudet triggeröidyt työt lisätä jo työn alla 
+    // olevalle threadille vaiko pitääkö käynnistää uusi working-thread, on käynnissä olevien 
+    // töiden lukumäärä atomic rakenteessa. Eli jos sen arvo on 0, laukaistaan uusi working-thread
+    // ja jos se on > 0, tällöin uudet työt vain lisätään fifo:on.
+    std::atomic<int> mAutomationWorksLeftToProcessCounter;
+    // Automaatioiden lopetukseen (Smartmetia suljettaessa) liittyviä dataosioita
+    static NFmiStopFunctor itsStopFunctor;
+    static NFmiThreadCallBacks itsThreadCallBacks;
 public:
 
     NFmiMacroParamDataGenerator();
@@ -303,6 +326,8 @@ public:
     bool GenerateMacroParamData(NFmiThreadCallBacks* threadCallBacks);
     bool DoOnDemandBetaAutomations(int selectedAutomationIndex, bool doOnlyEnabled, NFmiThreadCallBacks* threadCallBacks);
     void DoNeededMacroParamDataAutomations(const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer);
+    void StopAutomationDueClosingApplication();
+    bool WaitForAutomationWorksToStop(double waitForSeconds);
 
     std::string DialogBaseDataParamProducerString() const;
     void DialogBaseDataParamProducerString(const std::string& newValue);
@@ -360,8 +385,12 @@ private:
     bool StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter, int keepMaxFiles, const std::string& fullAutomationPath, NFmiMilliSecondTimer &timer);
     bool GenerateMacroParamData(const NFmiMacroParamDataInfo &dataInfo, const std::string &fullAutomationPath, NFmiThreadCallBacks* threadCallBacks);
     bool LoadUsedAutomationList(const std::string& thePath);
-    bool GenerateAutomationsData(const NFmiAutomationContainer& automations, NFmiThreadCallBacks* threadCallBacks);
+    bool GenerateAutomationsData(const NFmiUserWorkAutomationContainer& automations, NFmiThreadCallBacks* threadCallBacks);
     void InitMacroParamDataTmpDirectory();
     bool EnsureTmpDirectoryExists();
-    void LaunchGenerateAutomationsData(const NFmiAutomationContainer& automations, NFmiThreadCallBacks* threadCallBacks);
+    void LaunchGenerateAutomationsData(NFmiThreadCallBacks* threadCallBacks);
+    bool AddTriggeredWorksToFifoAndCheckIfNewWorkerThreadMustBeLaunched(const NFmiUserWorkAutomationContainer& automationWorkList);
+    std::shared_ptr<NFmiMacroParamDataAutomationListItem> PopWorkFromFifo();
+    bool MarkLastAutomationWorkAsDoneAndCheckIfMoreWorkLeft(const std::string& fullAutomationPath);
+    void ClearAutomationWorksLeftToProcessCounter();
 };

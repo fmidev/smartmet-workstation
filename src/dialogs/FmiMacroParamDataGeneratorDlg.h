@@ -135,6 +135,7 @@ private:
 	void DoControlColoring(CDC* pDC, bool status);
 	void InitCpuUsagePercentage(double cpuUsagePercentage);
 	std::pair<bool,double> GetCpuUsagePercentage();
+	void ForceGridCtrlUpdate();
 
 	NFmiMacroParDataAutomationGridCtrl itsGridCtrl;
 	std::vector<MacroParDataAutomationHeaderParInfo> itsHeaders;

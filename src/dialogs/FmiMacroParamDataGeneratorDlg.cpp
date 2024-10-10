@@ -782,6 +782,8 @@ void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonSaveMacroParamData()
 	{
 		itsMacroParamDataGenerator->MacroParamDataInfoSaveInitialPath(initialSavePath);
 		UpdateMacroParamDataInfoName(fullPath);
+		EnableButtons();
+		UpdateAutomationList();
 	}
 }
 
@@ -990,6 +992,11 @@ void CFmiMacroParamDataGeneratorDlg::UpdateAutomationList()
 	{
 		SetGridRow(currentRowCount++, *dataVector[i]);
 	}
+	ForceGridCtrlUpdate();
+}
+
+void CFmiMacroParamDataGeneratorDlg::ForceGridCtrlUpdate()
+{
 	itsGridCtrl.UpdateData(FALSE);
 	itsGridCtrl.Invalidate(FALSE);
 }
