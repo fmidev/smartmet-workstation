@@ -233,7 +233,7 @@ public:
         NFmiMetTime CalcNextDueTimeWithFixedTimes(const NFmiMetTime& theLastRunTime) const;
         NFmiMetTime CalcNextDueTimeWithTimeSteps(const NFmiMetTime& theLastRunTime) const;
         NFmiMetTime CalcNextDueTime(const NFmiMetTime &theLastRunTime, bool automationModeOn) const;
-        static bool HasDataTriggerBeenLoaded(const std::vector<NFmiDefineWantedData>& triggerDataList, const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, const std::string& automationName, int &postponeTriggerInMinutesOut);
+        static bool HasDataTriggerBeenLoaded(const std::vector<NFmiDefineWantedData>& triggerDataList, const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, const std::string& automationName, int &postponeTriggerInMinutesOut, bool betaProductCase);
         NFmiMetTime MakeFirstRunTimeOfGivenDay(const NFmiMetTime &theTime) const;
         bool operator==(const NFmiTriggerModeInfo &other) const;
         bool operator!=(const NFmiTriggerModeInfo &other) const;

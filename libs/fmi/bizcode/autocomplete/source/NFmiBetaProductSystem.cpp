@@ -1148,14 +1148,14 @@ NFmiMetTime NFmiBetaProductAutomation::NFmiTriggerModeInfo::CalcNextDueTime(cons
     return NFmiMetTime::gMissingTime; // virhetilanne, palautetaan puuttuva aika
 }
 
-static bool CheckIfInfoWasOnTriggerList(boost::shared_ptr<NFmiFastQueryInfo> &info, const std::vector<std::string>& loadedDataTriggerList, const std::string &automationName, int dataTriggerWaitForMinutes)
+static bool CheckIfInfoWasOnTriggerList(boost::shared_ptr<NFmiFastQueryInfo> &info, const std::vector<std::string>& loadedDataTriggerList, const std::string &automationName, int dataTriggerWaitForMinutes, bool betaProductCase)
 {
     if(info)
     {
         auto filePatternIter = std::find(loadedDataTriggerList.begin(), loadedDataTriggerList.end(), info->DataFilePattern());
         if(filePatternIter != loadedDataTriggerList.end())
         {
-            std::string debugTriggerMessage = "Beta automation '";
+            std::string debugTriggerMessage = betaProductCase ? "Beta automation '" : "MacroParam-data automation '";
             debugTriggerMessage += automationName;
             debugTriggerMessage += "' was triggered by loading data: ";
             debugTriggerMessage += info->DataFileName();
@@ -1198,7 +1198,7 @@ static std::string MakeLevelString(const NFmiLevel& level)
     return str;
 }
 
-static void DoPossibleLogWarningAboutNonExistingLevel(NFmiInfoOrganizer& infoOrganizer, const NFmiDefineWantedData& triggerData, const std::vector<std::string>& loadedDataTriggerList, const std::string& automationName)
+static void DoPossibleLogWarningAboutNonExistingLevel(NFmiInfoOrganizer& infoOrganizer, const NFmiDefineWantedData& triggerData, const std::vector<std::string>& loadedDataTriggerList, const std::string& automationName, bool betaProductCase)
 {
     auto* level = triggerData.UsedLevel();
     if(level)
@@ -1214,7 +1214,7 @@ static void DoPossibleLogWarningAboutNonExistingLevel(NFmiInfoOrganizer& infoOrg
                     {
                         if(info->LevelType() == level->LevelType())
                         {
-                            std::string debugTriggerMessage = "Beta automation '";
+                            std::string debugTriggerMessage = betaProductCase ? "Beta automation '" : "MacroParam-data automation '";
                             debugTriggerMessage += automationName;
                             debugTriggerMessage += "' has data trigger level (";
                             debugTriggerMessage += ::MakeLevelString(*level);
@@ -1230,7 +1230,7 @@ static void DoPossibleLogWarningAboutNonExistingLevel(NFmiInfoOrganizer& infoOrg
     }
 }
 
-bool NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(const std::vector<NFmiDefineWantedData>& triggerDataList, const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, const std::string& automationName, int& postponeTriggerInMinutesOut)
+bool NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(const std::vector<NFmiDefineWantedData>& triggerDataList, const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, const std::string& automationName, int& postponeTriggerInMinutesOut, bool betaProductCase)
 {
     if(!triggerDataList.empty())
     {
@@ -1244,7 +1244,7 @@ bool NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(co
                 auto infoList = infoOrganizer.GetInfos(wantedProducerId);
                 for(auto& info : infoList)
                 {
-                    if(::CheckIfInfoWasOnTriggerList(info, loadedDataTriggerList, automationName, triggerData.dataTriggerRelatedWaitForMinutes_))
+                    if(::CheckIfInfoWasOnTriggerList(info, loadedDataTriggerList, automationName, triggerData.dataTriggerRelatedWaitForMinutes_, betaProductCase))
                     {
                         postponeTriggerInMinutesOut = triggerData.dataTriggerRelatedWaitForMinutes_;
                         return true;
@@ -1255,14 +1255,14 @@ bool NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(co
             {
                 // NFmiExtraMacroParamData::FindWantedInfo metodille pitää sallia etsiä myös asemadatoja (3. parametri true).
                 auto wantedInfoData = NFmiExtraMacroParamData::FindWantedInfo(infoOrganizer, triggerData, true);
-                if(::CheckIfInfoWasOnTriggerList(wantedInfoData.foundInfo_, loadedDataTriggerList, automationName, triggerData.dataTriggerRelatedWaitForMinutes_))
+                if(::CheckIfInfoWasOnTriggerList(wantedInfoData.foundInfo_, loadedDataTriggerList, automationName, triggerData.dataTriggerRelatedWaitForMinutes_, betaProductCase))
                 {
                     postponeTriggerInMinutesOut = triggerData.dataTriggerRelatedWaitForMinutes_;
                     return true;
                 }
                 else if(triggerData.IsParamProducerLevel())
                 {
-                    ::DoPossibleLogWarningAboutNonExistingLevel(infoOrganizer, triggerData, loadedDataTriggerList, automationName);
+                    ::DoPossibleLogWarningAboutNonExistingLevel(infoOrganizer, triggerData, loadedDataTriggerList, automationName, betaProductCase);
                 }
             }
         }
@@ -1996,7 +1996,7 @@ std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductA
                 if(triggerModeInfo.itsTriggerMode == NFmiBetaProductAutomation::kFmiDataTrigger)
                 {
                     int postponeTriggerInMinutes = 0;
-                    if(NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(triggerModeInfo.itsTriggerDataList, loadedDataTriggerList, infoOrganizer, listItem->AutomationName(), postponeTriggerInMinutes))
+                    if(NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(triggerModeInfo.itsTriggerDataList, loadedDataTriggerList, infoOrganizer, listItem->AutomationName(), postponeTriggerInMinutes, true))
                     {
                         if(postponeTriggerInMinutes <= 0)
                             dueAutomations.push_back(listItem);
