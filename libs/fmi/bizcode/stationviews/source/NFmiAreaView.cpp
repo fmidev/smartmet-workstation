@@ -14,14 +14,12 @@
 
 NFmiAreaView :: NFmiAreaView(int theMapViewDescTopIndex, const boost::shared_ptr<NFmiArea> &theArea
 							, NFmiToolBox *theToolBox
-							, NFmiDrawingEnvironment* theDrawingEnvi
 							, boost::shared_ptr<NFmiDrawParam> &theDrawParam
                             , int viewGridRowNumber
                             , int viewGridColumnNumber)
 :NFmiCtrlView(theMapViewDescTopIndex
 			 , theArea ? theArea->XYArea() : NFmiRect(0,0,1,1)
 			 , theToolBox
-			 , theDrawingEnvi
 			 , theDrawParam
              , viewGridRowNumber
              , viewGridColumnNumber)

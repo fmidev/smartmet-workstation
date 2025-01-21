@@ -15,7 +15,6 @@
 
 NFmiStationTextView::NFmiStationTextView (int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 								 ,NFmiToolBox * theToolBox
-								 ,NFmiDrawingEnvironment * theDrawingEnvi
 								 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 								 ,FmiParameterName theParamId
 								 ,NFmiPoint theOffSet
@@ -24,7 +23,6 @@ NFmiStationTextView::NFmiStationTextView (int theMapViewDescTopIndex, boost::sha
                                  ,int theColumnIndex)
 :NFmiStationView(theMapViewDescTopIndex, theArea
 				,theToolBox
-				,theDrawingEnvi
 				,theDrawParam
 				,theParamId
 				,theOffSet
@@ -40,15 +38,15 @@ NFmiStationTextView::~NFmiStationTextView(void)
 
 void NFmiStationTextView::ModifyTextEnvironment(void)
 {
-	itsDrawingEnvironment->SetFrameColor(itsDrawParam->FrameColor());
-	itsDrawingEnvironment->DisableFill();
-    itsDrawingEnvironment->SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 45), itsCtrlViewDocumentInterface->Printing()));
+	itsDrawingEnvironment.SetFrameColor(itsDrawParam->FrameColor());
+	itsDrawingEnvironment.DisableFill();
+    itsDrawingEnvironment.SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 45), itsCtrlViewDocumentInterface->Printing()));
 }
 
 // näillä kertoimilla vielä tehdään viimeistely
 NFmiPoint NFmiStationTextView::GetSpaceOutFontFactor(void)
 {
-	if(itsDrawingEnvironment->GetFontType() == kSynop)
+	if(itsDrawingEnvironment.GetFontType() == kSynop)
 		return NFmiPoint(0.4, 0.6);
 	return NFmiStationView::GetSpaceOutFontFactor();
 }

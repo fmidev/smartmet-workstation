@@ -1212,16 +1212,19 @@ static void DoPossibleLogWarningAboutNonExistingLevel(NFmiInfoOrganizer& infoOrg
                 {
                     if(*(info->Producer()) == triggerData.producer_)
                     {
-                        if(info->LevelType() == level->LevelType())
+                        if(*info->Param().GetParam() == triggerData.param_)
                         {
-                            std::string debugTriggerMessage = betaProductCase ? "Beta automation '" : "MacroParam-data automation '";
-                            debugTriggerMessage += automationName;
-                            debugTriggerMessage += "' has data trigger level (";
-                            debugTriggerMessage += ::MakeLevelString(*level);
-                            debugTriggerMessage += ") which was not found in loaded level data of wanted type: ";
-                            debugTriggerMessage += info->DataFileName();
-                            debugTriggerMessage += ", maybe beta-automation trigger data should be fixed?";
-                            CatLog::logMessage(debugTriggerMessage, CatLog::Severity::Warning, CatLog::Category::Operational);
+                            if(info->LevelType() == level->LevelType())
+                            {
+                                std::string debugTriggerMessage = betaProductCase ? "Beta automation '" : "MacroParam-data automation '";
+                                debugTriggerMessage += automationName;
+                                debugTriggerMessage += "' has data trigger level (";
+                                debugTriggerMessage += ::MakeLevelString(*level);
+                                debugTriggerMessage += ") which was not found in loaded level data of wanted type: ";
+                                debugTriggerMessage += info->DataFileName();
+                                debugTriggerMessage += ", maybe beta-automation trigger data should be fixed?";
+                                CatLog::logMessage(debugTriggerMessage, CatLog::Severity::Warning, CatLog::Category::Operational);
+                            }
                         }
                     }
                 }

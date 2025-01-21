@@ -34,8 +34,8 @@
 //--------------------------------------------------------
 // Constructor/Destructor 
 //--------------------------------------------------------
-NFmiParamHandlerView::NFmiParamHandlerView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool theShowMaskSection, bool viewParamsViewHasMapLayer)
-:NFmiParamCommandView(theMapViewDescTopIndex, theRect, theToolBox, theDrawingEnvi, theDrawParam, theRowIndex, theColumnIndex, false)
+NFmiParamHandlerView::NFmiParamHandlerView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool theShowMaskSection, bool viewParamsViewHasMapLayer)
+:NFmiParamCommandView(theMapViewDescTopIndex, theRect, theToolBox, theDrawParam, theRowIndex, theColumnIndex, false)
 ,itsViewList(new NFmiCtrlViewList)
 ,itsViewParamCommandView(0)
 ,itsViewParamsView(0)
@@ -150,27 +150,27 @@ bool NFmiParamHandlerView::Init()
 	NFmiRect viewParamCommandViewRect(rect);
 	viewParamCommandViewRect.Bottom(rect.Top()+rect.Height()/3.);
 	viewParamCommandViewRect.Right(rect.Left()+rect.Width()/2.5);
-	itsViewParamCommandView = new NFmiViewParamCommandView(itsMapViewDescTopIndex, viewParamCommandViewRect, itsToolBox, itsDrawingEnvironment, itsDrawParam, itsViewGridRowNumber, itsViewGridColumnNumber);
+	itsViewParamCommandView = new NFmiViewParamCommandView(itsMapViewDescTopIndex, viewParamCommandViewRect, itsToolBox, itsDrawParam, itsViewGridRowNumber, itsViewGridColumnNumber);
 	itsViewList->Add(itsViewParamCommandView, false);
 
 	NFmiRect viewParamsViewRect(rect);
 	viewParamsViewRect.Bottom(rect.Top()+rect.Height()/3.);
 	viewParamsViewRect.Left(viewParamCommandViewRect.Right());
-	itsViewParamsView = new NFmiViewParamsView(itsMapViewDescTopIndex, viewParamsViewRect, itsToolBox, itsDrawingEnvironment, itsDrawParam, itsViewGridRowNumber, itsViewGridColumnNumber, fViewParamsViewHasMapLayer);
+	itsViewParamsView = new NFmiViewParamsView(itsMapViewDescTopIndex, viewParamsViewRect, itsToolBox, itsDrawParam, itsViewGridRowNumber, itsViewGridColumnNumber, fViewParamsViewHasMapLayer);
 	itsViewList->Add(itsViewParamsView, false);
 
 	NFmiRect maskParamCommandViewRect(rect);
 	maskParamCommandViewRect.Top(viewParamCommandViewRect.Bottom());
 	maskParamCommandViewRect.Bottom(maskParamCommandViewRect.Top()+rect.Height()/3.);
 	maskParamCommandViewRect.Right(viewParamCommandViewRect.Right());
-	itsMaskParamCommandView = new NFmiMaskParamCommandView(itsMapViewDescTopIndex, maskParamCommandViewRect, itsToolBox, itsDrawingEnvironment, itsDrawParam, itsViewGridRowNumber, itsViewGridColumnNumber);
+	itsMaskParamCommandView = new NFmiMaskParamCommandView(itsMapViewDescTopIndex, maskParamCommandViewRect, itsToolBox, itsDrawParam, itsViewGridRowNumber, itsViewGridColumnNumber);
 	itsViewList->Add(itsMaskParamCommandView, false);
 
 	NFmiRect maskParamsViewRect(rect);
 	maskParamsViewRect.Top(maskParamCommandViewRect.Top());
 	maskParamsViewRect.Bottom(maskParamCommandViewRect.Bottom());
 	maskParamsViewRect.Left(viewParamCommandViewRect.Right());
-	itsMaskParamsView = new NFmiMaskParamsView(itsMapViewDescTopIndex, maskParamsViewRect, itsToolBox, itsDrawingEnvironment, itsDrawParam, itsViewGridRowNumber, itsViewGridColumnNumber);
+	itsMaskParamsView = new NFmiMaskParamsView(itsMapViewDescTopIndex, maskParamsViewRect, itsToolBox, itsDrawParam, itsViewGridRowNumber, itsViewGridColumnNumber);
 	itsViewList->Add(itsMaskParamsView, false);
 
 	return true;
@@ -258,14 +258,14 @@ bool NFmiParamHandlerView::IsMouseDraggingOn(void)
 
 void NFmiParamHandlerView::DrawBackground(void)
 {
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
-	itsDrawingEnvironment->SetFillColor(NFmiCtrlView::gGreyColorDefault);
-	itsDrawingEnvironment->EnableFill();
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0,0,0));
+	itsDrawingEnvironment.SetFillColor(NFmiCtrlView::gGreyColorDefault);
+	itsDrawingEnvironment.EnableFill();
 	NFmiRect frame = GetFrame();
 	NFmiRectangle tmp(frame.TopLeft(),
 			  frame.BottomRight(),
 			  0,
-			  itsDrawingEnvironment);
+			  &itsDrawingEnvironment);
 	itsToolBox->Convert(&tmp);
 }
 

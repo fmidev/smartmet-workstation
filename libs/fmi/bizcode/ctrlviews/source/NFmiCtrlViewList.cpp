@@ -41,12 +41,10 @@ NFmiCtrlViewList::NFmiCtrlViewList (void)
 //--------------------------------------------------------
 NFmiCtrlViewList::NFmiCtrlViewList(int theMapViewDescTopIndex, const NFmiRect& theRect
 								  ,NFmiToolBox* theToolBox
-								  ,NFmiDrawingEnvironment* theDrawingEnvi
 								  ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 								  ,bool fResponseToMouse)
 :NFmiCtrlView(theMapViewDescTopIndex, theRect
 			 ,theToolBox
-			 ,theDrawingEnvi
 			 ,theDrawParam)
 ,itsList()
 ,itsIter(itsList.Start())

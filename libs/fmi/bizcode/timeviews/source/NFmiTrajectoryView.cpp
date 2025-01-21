@@ -27,11 +27,9 @@ static char THIS_FILE[] = __FILE__;
 // Constructor/Destructor
 //--------------------------------------------------------
 
-NFmiTrajectoryView::NFmiTrajectoryView(const NFmiRect &theRect, NFmiToolBox * theToolBox
-								 ,NFmiDrawingEnvironment * theDrawingEnvi)
+NFmiTrajectoryView::NFmiTrajectoryView(const NFmiRect &theRect, NFmiToolBox * theToolBox)
 :NFmiCtrlView(0, theRect
-				,theToolBox
-				,theDrawingEnvi)
+				,theToolBox)
 ,itsDataRect()
 ,itsTimeControlView(0)
 ,itsTimeControlViewRect()
@@ -64,8 +62,8 @@ void NFmiTrajectoryView::Draw(NFmiToolBox *theGTB)
 	DrawSelectedPressureLevelMarker();
 	DrawTrajectories();
 	DrawLegend();
-	itsDrawingEnvironment->DisableFill();
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
+	itsDrawingEnvironment.DisableFill();
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0,0,0));
 	DrawFrame(itsDrawingEnvironment, itsDataRect);
 }
 
@@ -73,15 +71,15 @@ void NFmiTrajectoryView::DrawLegend(void)
 {
 	itsToolBox->RelativeClipRect(itsDataRect, true);
 
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
 	NFmiPoint fontSize(16,16);
-	itsDrawingEnvironment->SetFontSize(fontSize);
+	itsDrawingEnvironment.SetFontSize(fontSize);
 	std::string str("P:");
 	str +=NFmiStringTools::Convert<int>(static_cast<int>(itsCtrlViewDocumentInterface->TrajectorySystem()->SelectedPressureLevel()));
 	double xShift = itsToolBox->SX(3);
 	NFmiPoint p1(itsDataRect.TopLeft());
 	p1.X(p1.X() + xShift);
-	NFmiText txt(p1, str, false, 0, itsDrawingEnvironment);
+	NFmiText txt(p1, str, false, 0, &itsDrawingEnvironment);
 	itsToolBox->Convert(&txt);
 
 
@@ -140,8 +138,8 @@ static std::string GetDirectionString(FmiDirection theDirection)
 void NFmiTrajectoryView::DrawTrajectoryLegend(const NFmiTrajectory &theTrajectory, int theIndex)
 {
 	NFmiPoint fontSize(16,16);
-	itsDrawingEnvironment->SetFontSize(fontSize);
-	itsDrawingEnvironment->SetFrameColor(itsCtrlViewDocumentInterface->GeneralColor(theIndex));
+	itsDrawingEnvironment.SetFontSize(fontSize);
+	itsDrawingEnvironment.SetFrameColor(itsCtrlViewDocumentInterface->GeneralColor(theIndex));
 
 	string str(NFmiStringTools::Convert<int>(theIndex+1));
 	str += ". ";
@@ -182,14 +180,14 @@ void NFmiTrajectoryView::DrawTrajectoryLegend(const NFmiTrajectory &theTrajector
 	NFmiPoint strPoint(itsDataRect.TopLeft());
 	strPoint.X(strPoint.X() + letterWidth * 4);
 	strPoint.Y(strPoint.Y() + (rowHeight*0.1) + (theIndex * rowHeight * 0.7));
-	NFmiText txt(strPoint, str2, false, 0, itsDrawingEnvironment);
+	NFmiText txt(strPoint, str2, false, 0, &itsDrawingEnvironment);
 	itsToolBox->Convert(&txt);
 }
 
 void NFmiTrajectoryView::DrawSelectedPressureLevelMarker(void)
 {
-	itsDrawingEnvironment->SetFillColor(NFmiColor(0.8f,0.3f,0.3f));
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
+	itsDrawingEnvironment.SetFillColor(NFmiColor(0.8f,0.3f,0.3f));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
 	DrawFrame(itsDrawingEnvironment, itsStartPressureLevelMarkerRect);
 }
 
@@ -278,15 +276,15 @@ bool NFmiTrajectoryView::RightButtonUp(const NFmiPoint & thePlace, unsigned long
 
 void NFmiTrajectoryView::DrawBackground(void)
 {
-	itsDrawingEnvironment->SetPenSize(NFmiPoint(1,1));
-	itsDrawingEnvironment->EnableFrame();
-	itsDrawingEnvironment->EnableFill();
-	itsDrawingEnvironment->SetFillColor(NFmiColor(0.94f,0.92f,0.87f));
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
+	itsDrawingEnvironment.SetPenSize(NFmiPoint(1,1));
+	itsDrawingEnvironment.EnableFrame();
+	itsDrawingEnvironment.EnableFill();
+	itsDrawingEnvironment.SetFillColor(NFmiColor(0.94f,0.92f,0.87f));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
 	DrawFrame(itsDrawingEnvironment);
 
-	itsDrawingEnvironment->SetFillColor(NFmiColor(0.99f,0.98f,0.92f));
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
+	itsDrawingEnvironment.SetFillColor(NFmiColor(0.99f,0.98f,0.92f));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
 	DrawFrame(itsDrawingEnvironment, itsDataRect);
 }
 
@@ -432,7 +430,6 @@ bool NFmiTrajectoryView::CreateTimeControlView(void)
 	{
 		itsTimeControlView = new NFmiTrajectoryTimeControlView(itsMapViewDescTopIndex, itsTimeControlViewRect
 													,itsToolBox
-													,itsDrawingEnvironment
 													, itsCtrlViewDocumentInterface->DefaultEditedDrawParam());
 		itsTimeControlView->Initialize(true, true);
 		return true;
@@ -558,14 +555,14 @@ void NFmiTrajectoryView::DrawTrajectory(const NFmiTrajectory &theTrajectory, con
 		const std::vector<boost::shared_ptr<NFmiSingleTrajector> >& plumes = theTrajectory.PlumeTrajectories();
 		std::vector<boost::shared_ptr<NFmiSingleTrajector> >::const_iterator it = plumes.begin();
 		for( ; it != plumes.end(); ++it)
-			DrawSingleTrajector(*(*it).get(), &envi, theTrajectory.TimeStepInMinutes(), 5, 1, theTrajectory.Direction());
+			DrawSingleTrajector(*(*it).get(), envi, theTrajectory.TimeStepInMinutes(), 5, 1, theTrajectory.Direction());
 	}
 
 
 	// piirret‰‰n sitten p‰‰-trajektori
 	envi.SetFrameColor(theColor);
 	envi.SetPenSize(NFmiPoint(3,3));
-	DrawSingleTrajector(theTrajectory.MainTrajector(), &envi, theTrajectory.TimeStepInMinutes(), 7, 2, theTrajectory.Direction());
+	DrawSingleTrajector(theTrajectory.MainTrajector(), envi, theTrajectory.TimeStepInMinutes(), 7, 2, theTrajectory.Direction());
 }
 
 static bool IsPointOk(const NFmiPoint &thePoint)
@@ -575,7 +572,7 @@ static bool IsPointOk(const NFmiPoint &thePoint)
 	return true;
 }
 
-void NFmiTrajectoryView::DrawSingleTrajector(const NFmiSingleTrajector &theSingleTrajector, NFmiDrawingEnvironment *theEnvi, int theTimeStepInMinutes, int theTimeMarkerPixelSize, int theTimeMarkerPixelPenSize, FmiDirection theDirection)
+void NFmiTrajectoryView::DrawSingleTrajector(const NFmiSingleTrajector &theSingleTrajector, NFmiDrawingEnvironment &theEnvi, int theTimeStepInMinutes, int theTimeMarkerPixelSize, int theTimeMarkerPixelPenSize, FmiDirection theDirection)
 {
 	bool forwardDir = (theDirection == kForward);
     NFmiMetTime mapTime(itsCtrlViewDocumentInterface->ActiveMapTime());
@@ -599,7 +596,7 @@ void NFmiTrajectoryView::DrawSingleTrajector(const NFmiSingleTrajector &theSingl
 		return ;
 	if(it != pressures.end())
 	{
-		NFmiPolyline trajectorPolyLine(itsRect, 0, theEnvi);
+		NFmiPolyline trajectorPolyLine(itsRect, 0, &theEnvi);
 		double y = p2y(*it);
 		NFmiPoint p1(x, y);
 		trajectorPolyLine.AddPoint(p1);
@@ -652,7 +649,7 @@ void NFmiTrajectoryView::DrawSingleTrajector(const NFmiSingleTrajector &theSingl
 				else
 					vdir1 = ::fmod(vdir1+180, 360); // k‰‰nnet‰‰n nuolen suunta 180 astetta jos takaperin trajektori
 				// piirr‰ etenemis nuolen k‰rki trajektorille
-				NFmiPolyline arrowPolyLine(itsRect, 0, theEnvi);
+				NFmiPolyline arrowPolyLine(itsRect, 0, &theEnvi);
 				arrowPolyLine.AddPoint(::RotatePoint(NFmiPoint(-0.7, 2), vdir1));
 				arrowPolyLine.AddPoint(::RotatePoint(NFmiPoint(0, 0), vdir1));
 				arrowPolyLine.AddPoint(::RotatePoint(NFmiPoint(0.7, 2), vdir1));

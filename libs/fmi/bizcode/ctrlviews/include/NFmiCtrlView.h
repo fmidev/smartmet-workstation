@@ -38,10 +38,10 @@
 #include "NFmiRect.h"
 #include "NFmiMetTime.h"
 #include "NFmiColor.h"
+#include "NFmiDrawingEnvironment.h"
 #include "boost\shared_ptr.hpp"
 
 class NFmiToolBox;
-class NFmiDrawingEnvironment;
 class NFmiDrawParam;
 class NFmiDataParam;
 class CtrlViewDocumentInterface;
@@ -73,13 +73,11 @@ class NFmiCtrlView
    NFmiCtrlView (void); // aiheuttaa ongelmia tiettyjen operaatioiden kanssa, pitäisi poistaa?? Esim vertailuoperaattorit kaatuvat varmasti !!
    NFmiCtrlView (int theMapViewDescTopIndex, const NFmiRect & theRect
 				,NFmiToolBox * theToolBox
-				,NFmiDrawingEnvironment * theDrawingEnvi
 				,boost::shared_ptr<NFmiDrawParam> &theDrawParam
                 ,int viewGridRowNumber = -1
                 ,int viewGridColumnNumber = -1);
    NFmiCtrlView (int theMapViewDescTopIndex, const NFmiRect & theRect
 			    ,NFmiToolBox * theToolBox
-				,NFmiDrawingEnvironment * theDrawingEnvi
                 ,int viewGridRowNumber = -1
                 ,int viewGridColumnNumber = -1);
    NFmiCtrlView (const NFmiCtrlView& theView);
@@ -113,9 +111,9 @@ class NFmiCtrlView
    NFmiToolBox* GetToolBox() {return itsToolBox;}
    virtual const NFmiMetTime& Time(void){return itsTime;};
    virtual void Time(const NFmiMetTime& theTime){itsTime = theTime;};
-   void DrawFrame(NFmiDrawingEnvironment * theEnvi);
-   void DrawFrame(NFmiDrawingEnvironment * theEnvi, const NFmiRect& theFrame);
-   NFmiDrawingEnvironment* GetDrawingEnvironment() { return itsDrawingEnvironment; }
+   void DrawFrame(NFmiDrawingEnvironment & theEnvi);
+   void DrawFrame(NFmiDrawingEnvironment & theEnvi, const NFmiRect& theFrame);
+   NFmiDrawingEnvironment& GetDrawingEnvironment() { return itsDrawingEnvironment; }
 
    virtual std::string ComposeToolTipText(const NFmiPoint& /* theRelativePoint */ ){return std::string();};
    int MapViewDescTopIndex(void) const {return itsMapViewDescTopIndex;}
@@ -161,7 +159,7 @@ class NFmiCtrlView
 
 	NFmiRect itsRect;
 	NFmiToolBox * itsToolBox;
-	NFmiDrawingEnvironment * itsDrawingEnvironment;
+	NFmiDrawingEnvironment itsDrawingEnvironment;
 	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
 	boost::shared_ptr<NFmiFastQueryInfo> itsInfo;
     // ei omista, ei tuhoa

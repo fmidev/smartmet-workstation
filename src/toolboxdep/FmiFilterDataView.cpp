@@ -197,21 +197,18 @@ void CFmiFilterDataView::CreateZoomView(void)
 	{
 		case NFmiCtrlView::kAreaFilterView:
 			itsZoomView = new NFmiFilterGridView(itsToolBox
-												,&itsDrawingEnvironment
 												,itsDrawParam
 												,rect
 												,itsIndex);
 			break;
 		case NFmiCtrlView::kTimeFilterView:
 			itsZoomView = new NFmiTimeFilterView(itsToolBox
-												,&itsDrawingEnvironment
 												,itsDrawParam
 												,rect
 												,itsIndex);
 			break;
 		case NFmiCtrlView::kGridViewSelectorView:
 			itsZoomView = new NFmiGridViewSelectorView(itsMapViewDescTopIndex, itsToolBox
-													,&itsDrawingEnvironment
 													,itsDrawParam
 													,rect
 													,5
@@ -220,7 +217,6 @@ void CFmiFilterDataView::CreateZoomView(void)
 		case NFmiCtrlView::kTimeControlView:
 			itsZoomView = new NFmiTimeControlView(itsMapViewDescTopIndex, rect
 												 ,itsToolBox
-												 ,&itsDrawingEnvironment
 												 ,defaultEditedDrawParam ? defaultEditedDrawParam : itsDrawParam
 												 ,false
 												 ,false
@@ -231,26 +227,22 @@ void CFmiFilterDataView::CreateZoomView(void)
 			break;
 		case NFmiCtrlView::kModelCombineStatusView:
 			itsZoomView = new NFmiModelCombineStatusView(itsToolBox
-														 ,&itsDrawingEnvironment
 														 ,defaultEditedDrawParam ? defaultEditedDrawParam : itsDrawParam
 														 ,rect);
 			break;
 		case NFmiCtrlView::kMovingCPLocationView:
 			itsZoomView = new NFmiModelProducerIndexView(itsToolBox
-														 ,&itsDrawingEnvironment
 														 ,defaultEditedDrawParam ? defaultEditedDrawParam : itsDrawParam
 														 ,rect);
 			break;
 		case NFmiCtrlView::kModelProducerIndexViewWCTR:
 			itsZoomView = new NFmiModelProducerIndexViewWCTR(itsToolBox
-														    ,&itsDrawingEnvironment
 														    ,defaultEditedDrawParam ? defaultEditedDrawParam : itsDrawParam
 														    ,rect);
 			break;
 		default:
 			itsZoomView = new NFmiTimeControlView(itsMapViewDescTopIndex, rect
 												 ,itsToolBox
-												 ,&itsDrawingEnvironment
 												 ,defaultEditedDrawParam ? defaultEditedDrawParam : itsDrawParam
 												 ,false
 												 ,false

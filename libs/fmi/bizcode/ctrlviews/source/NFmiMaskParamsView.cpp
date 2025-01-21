@@ -34,8 +34,8 @@
 //--------------------------------------------------------
 // Constructor/Destructor 
 //--------------------------------------------------------
-NFmiMaskParamsView::NFmiMaskParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex)
-:NFmiParamCommandView(theMapViewDescTopIndex, theRect, theToolBox, theDrawingEnvi, theDrawParam, theRowIndex, theColumnIndex, false)
+NFmiMaskParamsView::NFmiMaskParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex)
+:NFmiParamCommandView(theMapViewDescTopIndex, theRect, theToolBox, theDrawParam, theRowIndex, theColumnIndex, false)
 {
 }
 
@@ -49,8 +49,8 @@ void NFmiMaskParamsView::DrawData(void)
     boost::shared_ptr<NFmiAreaMaskList> maskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
     if(maskList)
     {
-        itsDrawingEnvironment->SetFontSize(itsFontSize);
-        itsDrawingEnvironment->SetFontType(kArial);
+        itsDrawingEnvironment.SetFontSize(itsFontSize);
+        itsDrawingEnvironment.SetFontType(kArial);
         int zeroBasedRowIndex = 0;
 		for(maskList->Reset(); maskList->Next(); zeroBasedRowIndex++)
         {
@@ -58,11 +58,11 @@ void NFmiMaskParamsView::DrawData(void)
             boost::shared_ptr<NFmiAreaMask> mask = maskList->Current();
             NFmiInfoData::Type dataType = mask->GetDataType();
             if(dataType == NFmiInfoData::kViewable || dataType == NFmiInfoData::kStationary)
-                itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f, 0.5f, 0.f));
+                itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f, 0.5f, 0.f));
             else
-                itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f, 0.f, 0.f));
+                itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f, 0.f, 0.f));
             NFmiString str = mask->MaskString();
-            NFmiText text(LineTextPlace(zeroBasedRowIndex, parameterRowRect, true), str, true, 0, itsDrawingEnvironment);
+            NFmiText text(LineTextPlace(zeroBasedRowIndex, parameterRowRect, true), str, true, 0, &itsDrawingEnvironment);
             itsToolBox->Convert(&text);
             DrawCheckBox(parameterRowRect, mask->IsEnabled());
         }

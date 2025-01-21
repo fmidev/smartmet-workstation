@@ -126,7 +126,6 @@ CSmartMetView::CSmartMetView()
 ,itsOverMapBitmap(new CBitmap)
 ,itsEditMapView(0)
 ,itsToolBox(0)
-,itsDrawingEnvironment()
 ,itsDrawParam(new NFmiDrawParam())
 ,itsMapViewDescTopIndex(0)
 ,fMouseCursorOnWnd(false)
@@ -396,7 +395,7 @@ void CSmartMetView::CreateEditMapView()
 	if(!data)
 		return;
 	delete itsEditMapView;
-	itsEditMapView = new NFmiEditMapView(itsMapViewDescTopIndex, itsToolBox, &itsDrawingEnvironment, itsDrawParam);
+	itsEditMapView = new NFmiEditMapView(itsMapViewDescTopIndex, itsToolBox, itsDrawParam);
 }
 
 void CSmartMetView::OnMButtonUp(UINT nFlags, CPoint point)

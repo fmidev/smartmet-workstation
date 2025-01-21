@@ -65,7 +65,6 @@ void AnimationButtonImageHolder::Initialize(void)
 
 NFmiTimeControlView::NFmiTimeControlView(int theMapViewDescTopIndex, const NFmiRect& theRect
 										,NFmiToolBox *theToolBox
-										,NFmiDrawingEnvironment* theDrawingEnvi
 										,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 										,bool theShowResolutionChangerBox
 										,bool theDrawViewInMouseMove
@@ -76,7 +75,6 @@ NFmiTimeControlView::NFmiTimeControlView(int theMapViewDescTopIndex, const NFmiR
 
 :NFmiCtrlView(theMapViewDescTopIndex, theRect
 			 ,theToolBox
-			 ,theDrawingEnvi
 			 ,theDrawParam)
 ,itsTimeView(0)
 ,itsTimeAxis(0)
@@ -1709,14 +1707,14 @@ NFmiRect NFmiTimeControlView::CalcAnimationBoxRect(void)
 void NFmiTimeControlView::DrawBackground()
 {
 	// piirretään pohja harmaalla
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
-	itsDrawingEnvironment->SetFillColor(NFmiColor(1.f,1.f,1.f));
-	itsDrawingEnvironment->EnableFill();
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0,0,0));
+	itsDrawingEnvironment.SetFillColor(NFmiColor(1.f,1.f,1.f));
+	itsDrawingEnvironment.EnableFill();
 	NFmiRect frame = GetFrame();
 	NFmiRectangle tmp(frame.TopLeft(),
 			  frame.BottomRight(),
 			  0,
-			  itsDrawingEnvironment);
+			  &itsDrawingEnvironment);
 	itsToolBox->Convert(&tmp);
 }
 
@@ -1947,7 +1945,6 @@ void NFmiTimeControlView::SetMouseStatusInfo(const MouseStatusInfo &theMouseStat
 NFmiTimeSerialTimeControlView::NFmiTimeSerialTimeControlView(int theMapViewDescTopIndex,
 							 const NFmiRect & theRect
 							,NFmiToolBox * theToolBox
-							,NFmiDrawingEnvironment * theDrawingEnvi
 							,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 							,bool theShowResolutionChangerBox
 							,bool theDrawViewInMouseMove
@@ -1956,7 +1953,6 @@ NFmiTimeSerialTimeControlView::NFmiTimeSerialTimeControlView(int theMapViewDescT
 :NFmiTimeControlView(theMapViewDescTopIndex,
 					 theRect
 					,theToolBox
-					,theDrawingEnvi
 					,theDrawParam
 					,theShowResolutionChangerBox
 					,theDrawViewInMouseMove
@@ -2005,9 +2001,8 @@ void NFmiTimeSerialTimeControlView::SetUsedTimeBag(const NFmiTimeBag &newTimeBag
 
 NFmiTrajectoryTimeControlView::NFmiTrajectoryTimeControlView(int theMapViewDescTopIndex, const NFmiRect & theRect
 															,NFmiToolBox * theToolBox
-															,NFmiDrawingEnvironment * theDrawingEnvi
 															,boost::shared_ptr<NFmiDrawParam> &theDrawParam)
-:NFmiTimeControlView(theMapViewDescTopIndex, theRect, theToolBox, theDrawingEnvi, theDrawParam, false, false, false, false, false)
+:NFmiTimeControlView(theMapViewDescTopIndex, theRect, theToolBox, theDrawParam, false, false, false, false, false)
 {
 }
 

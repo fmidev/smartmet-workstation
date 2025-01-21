@@ -46,12 +46,10 @@
 //--------------------------------------------------------
 NFmiTimeSerialDiscreteDataView::NFmiTimeSerialDiscreteDataView (int theMapViewDescTopIndex, const NFmiRect & theRect
 															   ,NFmiToolBox * theToolBox
-															   ,NFmiDrawingEnvironment * theDrawingEnvi
 															   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 															   ,int theIndex)
 :NFmiTimeSerialView(theMapViewDescTopIndex, theRect
 				  ,theToolBox
-				  ,theDrawingEnvi
 				  ,theDrawParam
 				  ,theIndex)
 ,itsValueAxisTextArray(0)

@@ -21,7 +21,6 @@
 NFmiStationArrowView::NFmiStationArrowView 
 								 (int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 								 ,NFmiToolBox * theToolBox
-								 ,NFmiDrawingEnvironment * theDrawingEnvi
 								 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 								 ,FmiParameterName theParamId
 								 ,NFmiPoint theOffSet
@@ -30,7 +29,6 @@ NFmiStationArrowView::NFmiStationArrowView
                                  , int theColumnIndex)
 :NFmiStationView(theMapViewDescTopIndex, theArea
 				,theToolBox
-				,theDrawingEnvi
 				,theDrawParam
 				,theParamId
 				,theOffSet
@@ -87,7 +85,7 @@ NFmiPoint NFmiStationArrowView::GetSpaceOutFontFactor(void)
 // tuuli vektori ei olekaan fontti pohjainen symboli.
 void NFmiStationArrowView::ModifyTextEnvironment(void)
 {
-    itsDrawingEnvironment->SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 45), itsCtrlViewDocumentInterface->Printing()));
+    itsDrawingEnvironment.SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 45), itsCtrlViewDocumentInterface->Printing()));
 }
 
 int NFmiStationArrowView::GetApproxmationOfDataTextLength(std::vector<float>* )

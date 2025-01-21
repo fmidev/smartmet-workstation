@@ -76,7 +76,6 @@ public:
    void DrawOverBitmapThings(NFmiToolBox * theGTB, bool dummy, int dummy2, float dummy3, void* dummy4); // tällä piirretään tavara, joka tulee myös bitmapin päälle
    NFmiEditMapView(int theMapViewDescTopIndex
 				   ,NFmiToolBox * theToolBox
-				   ,NFmiDrawingEnvironment * theDrawingEnvi
 				   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam);
    ~NFmiEditMapView ();
    const NFmiRect& MapRect(void){return itsMapRect;};

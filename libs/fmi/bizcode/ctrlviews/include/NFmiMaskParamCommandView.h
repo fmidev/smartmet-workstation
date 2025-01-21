@@ -32,7 +32,7 @@ class NFmiMaskParamCommandView : public NFmiParamCommandView
 {
 
  public:
-   NFmiMaskParamCommandView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex);
+   NFmiMaskParamCommandView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex);
    bool RightButtonUp(const NFmiPoint &thePlace, unsigned long theKey) override;
    virtual NFmiRect CalcSize(void); // koko saattaa muuttua, ja uutta kokoa pit‰‰ voida kysy‰ oliolta
 

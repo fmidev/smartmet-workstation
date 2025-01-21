@@ -21,12 +21,10 @@ static char THIS_FILE[]=__FILE__;
 
 NFmiTimeSerialSymbolView::NFmiTimeSerialSymbolView(int theMapViewDescTopIndex, const NFmiRect & theRect
 												  ,NFmiToolBox * theToolBox
-												  ,NFmiDrawingEnvironment * theDrawingEnvi
 												  ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 												  ,int theIndex)
 :NFmiTimeSerialView(theMapViewDescTopIndex, theRect
 				  ,theToolBox
-				  ,theDrawingEnvi
 				  ,theDrawParam
 				  ,theIndex)
 {
@@ -53,8 +51,8 @@ NFmiRect NFmiTimeSerialSymbolView::CalcSymbolRect(NFmiMetTime& time)
 void NFmiTimeSerialSymbolView::DrawSymbol(const NFmiPoint &theLatLonPoint, NFmiMetTime& time, NFmiRect& rect, NFmiTimePerioid& step)
 {
 	
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(1,0,0));
-	itsDrawingEnvironment->DisableFill();
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(1,0,0));
+	itsDrawingEnvironment.DisableFill();
 	
 	//dataparamilta pitäisi saada weatherandCloudiness!!
 	NFmiWeatherAndCloudiness weather((unsigned long)itsInfo->InterpolatedValue(theLatLonPoint),kFmiHessaaWeather, kFloatMissing, itsInfo->InfoVersion());
@@ -75,19 +73,19 @@ void NFmiTimeSerialSymbolView::DrawSymbol(const NFmiPoint &theLatLonPoint, NFmiM
                           ,rect
                           ,itsToolBox
 						  ,0
-						  ,itsDrawingEnvironment).Build();
+						  ,&itsDrawingEnvironment).Build();
 }
 
 void NFmiTimeSerialSymbolView::DrawSimpleSymbol(const NFmiPoint &theLatLonPoint, NFmiMetTime& time, NFmiRect& rect)
 {
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(1,0,0));
-	itsDrawingEnvironment->DisableFill();
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(1,0,0));
+	itsDrawingEnvironment.DisableFill();
 	long symbolValue = (long)itsInfo->InterpolatedValue(theLatLonPoint);
 	NFmiSimpleWeatherSymbol((short)symbolValue
                           ,rect
                           ,itsToolBox
 						  ,0
-						  ,itsDrawingEnvironment).Build();
+						  ,&itsDrawingEnvironment).Build();
 }
 
 void NFmiTimeSerialSymbolView::DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, bool drawModificationLines)

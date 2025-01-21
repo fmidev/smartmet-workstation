@@ -32,8 +32,8 @@
 //--------------------------------------------------------
 // Constructor/Destructor 
 //--------------------------------------------------------
-NFmiMaskParamCommandView::NFmiMaskParamCommandView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex)
-:NFmiParamCommandView(theMapViewDescTopIndex, theRect, theToolBox, theDrawingEnvi, theDrawParam, theRowIndex, theColumnIndex, false)
+NFmiMaskParamCommandView::NFmiMaskParamCommandView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex)
+:NFmiParamCommandView(theMapViewDescTopIndex, theRect, theToolBox, theDrawParam, theRowIndex, theColumnIndex, false)
 {
 }
 //--------------------------------------------------------
@@ -42,11 +42,11 @@ NFmiMaskParamCommandView::NFmiMaskParamCommandView(int theMapViewDescTopIndex, c
 void NFmiMaskParamCommandView::DrawData(void)
 {
 	NFmiString str("M.");
-	itsDrawingEnvironment->SetFontSize(itsFontSize);
-	itsDrawingEnvironment->SetFontType(kArial);
+	itsDrawingEnvironment.SetFontSize(itsFontSize);
+	itsDrawingEnvironment.SetFontType(kArial);
 	int zeroBasedRowIndex = 0;
 	auto parameterRowRect = CalcParameterRowRect(zeroBasedRowIndex);
-	NFmiText text(LineTextPlace(zeroBasedRowIndex, parameterRowRect, false), str, false, 0, itsDrawingEnvironment);
+	NFmiText text(LineTextPlace(zeroBasedRowIndex, parameterRowRect, false), str, false, 0, &itsDrawingEnvironment);
 	ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, kCenter, true);
 	itsToolBox->Convert(&text);
 }

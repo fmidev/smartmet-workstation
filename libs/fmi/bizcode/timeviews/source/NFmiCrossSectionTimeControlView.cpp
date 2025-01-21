@@ -7,7 +7,6 @@
 
 NFmiCrossSectionTimeControlView::NFmiCrossSectionTimeControlView(int theMapViewDescTopIndex, const NFmiRect& theRect
 											,NFmiToolBox *theToolBox
-											,NFmiDrawingEnvironment* theDrawingEnvi
 											,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 											,bool theShowResolutionChangerBox
 											,bool theDrawViewInMouseMove
@@ -17,7 +16,6 @@ NFmiCrossSectionTimeControlView::NFmiCrossSectionTimeControlView(int theMapViewD
 
 :NFmiTimeControlView(theMapViewDescTopIndex, theRect
 					,theToolBox
-					,theDrawingEnvi
 					,theDrawParam
 					,theShowResolutionChangerBox
 					,theDrawViewInMouseMove

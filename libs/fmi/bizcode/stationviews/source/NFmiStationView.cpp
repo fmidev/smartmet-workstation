@@ -167,7 +167,6 @@ bool NFmiStationView::IsQ2ServerUsed(void)
 
 NFmiStationView::NFmiStationView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 								,NFmiToolBox *theToolBox
-								,NFmiDrawingEnvironment* theDrawingEnvi
 								,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 								,FmiParameterName theParamId
 								,NFmiPoint theOffSet
@@ -176,7 +175,6 @@ NFmiStationView::NFmiStationView(int theMapViewDescTopIndex, boost::shared_ptr<N
                                 ,int viewGridColumnNumber)
 : NFmiAreaView(theMapViewDescTopIndex, theArea
 			  ,theToolBox
-			  ,theDrawingEnvi
 			  ,theDrawParam
               ,viewGridRowNumber
               ,viewGridColumnNumber)
@@ -368,7 +366,7 @@ void NFmiStationView::Draw(NFmiToolBox* theGTB)
 		fastInfo->FirstLocation();
 		SetMapViewSettings(fastInfo);
 		UpdateCachedParameterName();
-		FmiFontType oldFont = itsDrawingEnvironment->GetFontType();
+		FmiFontType oldFont = itsDrawingEnvironment.GetFontType();
 
 		ModifyTextEnvironment();
 		if(!PrepareForStationDraw())
@@ -376,7 +374,7 @@ void NFmiStationView::Draw(NFmiToolBox* theGTB)
 		SbdCollectSymbolDrawData(false);
 		DrawObsComparison();
 
-		itsDrawingEnvironment->SetFontType(oldFont);
+		itsDrawingEnvironment.SetFontType(oldFont);
 		fDoTimeInterpolation = false;
 		itsInfo = nullptr;
 	}
@@ -666,7 +664,7 @@ NFmiPoint NFmiStationView::CalcUsedSpaceOutFactors(int theSpaceOutFactor)
         unsigned long centerLocationIndex = centerY * usedInfo->GridXNumber() + centerX;
 		usedInfo->LocationIndex(centerLocationIndex); // nyt tutkitaan hilan keskipistett‰ (ennen tutkittiin alukulmaa, mutta globaali datassa ala- ja yl‰reuna pisteet ovat napapisteit‰, eik‰ laskut toimi t‰llˆin) 
         // 1. get font size
-        NFmiPoint fontSize(itsDrawingEnvironment->GetFontSize());
+        NFmiPoint fontSize(itsDrawingEnvironment.GetFontSize());
         double fontXSize = itsToolBox->SX(static_cast<long>(fontSize.X()));
         double fontYSize = itsToolBox->SY(static_cast<long>(fontSize.Y()));
         // 2. get one value string for estimate string length
@@ -732,7 +730,7 @@ static std::vector<float> matrixToVector(const NFmiDataMatrix<float> &matrix)
 NFmiPoint NFmiStationView::CalcSymbolDrawedMacroParamSpaceOutGridSize(int theSpaceOutFactor)
 {
     // 1. get relative font size
-    NFmiPoint fontSize(itsDrawingEnvironment->GetFontSize());
+    NFmiPoint fontSize(itsDrawingEnvironment.GetFontSize());
     double fontXSize = itsToolBox->SX(static_cast<long>(fontSize.X()));
     double fontYSize = itsToolBox->SY(static_cast<long>(fontSize.Y()));
     // 2. Calc estimate for string lengths for sample values
@@ -1066,7 +1064,7 @@ void NFmiStationView::DrawInvertStationRect(NFmiRect &theRect)
 	theRect.Center(CurrentStationPosition()); // huom! theRect saa muuttua ihan rauhassa
 	NFmiRectangle tmp(theRect,
 						0,
-						itsDrawingEnvironment);
+						&itsDrawingEnvironment);
 	itsToolBox->Convert(&tmp);
 }
 
@@ -1087,8 +1085,7 @@ bool NFmiStationView::CanToolmasterBeUsed(void)
 void NFmiStationView::DrawWithIsolineView(const NFmiDataMatrix<float> &theMatrix, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
 	// K‰ytet‰‰n hiladatan piirrossa isolineView-luokkaa
-	NFmiDrawingEnvironment envi;
-	NFmiIsoLineView isolineView(itsMapViewDescTopIndex, GetArea(), itsToolBox, &envi, theDrawParam, static_cast<FmiParameterName>(NFmiInfoData::kFmiSpMatrixDataDraw), itsObjectOffSet, itsObjectSize, itsViewGridRowNumber, itsViewGridColumnNumber);
+	NFmiIsoLineView isolineView(itsMapViewDescTopIndex, GetArea(), itsToolBox, theDrawParam, static_cast<FmiParameterName>(NFmiInfoData::kFmiSpMatrixDataDraw), itsObjectOffSet, itsObjectSize, itsViewGridRowNumber, itsViewGridColumnNumber);
 	isolineView.Time(itsTime);
 	isolineView.SpecialMatrixData(theMatrix);
 	isolineView.Draw(itsToolBox);
@@ -1159,7 +1156,7 @@ bool NFmiStationView::DrawAllSelectedStationsWithInvertStationRect(unsigned long
         NFmiRect displayRect = ::CalcWantedDisplayRect(itsCtrlViewDocumentInterface, itsToolBox, itsMapViewDescTopIndex, 2.0);
         CPoint firstSelectedPointPixelSize = ::CalcWantedPixelSize(itsCtrlViewDocumentInterface, itsToolBox, itsMapViewDescTopIndex, 1.6);
         EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, theMaskType);
-		itsDrawingEnvironment->EnableInvert();
+		itsDrawingEnvironment.EnableInvert();
 		CDC *usedDC = itsToolBox->GetDC();
 		if(theMaskType == NFmiMetEditorTypes::kFmiSelectionMask)
 		{
@@ -1207,7 +1204,7 @@ bool NFmiStationView::DrawAllSelectedStationsWithInvertStationRect(unsigned long
 		{
             if(itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection())
             {
-                itsDrawingEnvironment->EnableFill();
+				itsDrawingEnvironment.EnableFill();
                 NFmiRect rec1 = displayRect; //(CalcInvertStationRectSize(minSelectedRectXSize, minSelectedRectYSize, maxSelectedRectXSize, maxSelectedRectYSize, 0.1));
                 for(itsInfo->ResetLocation(); itsInfo->NextLocation();)
                     DrawInvertStationRect(rec1);
@@ -1221,11 +1218,11 @@ bool NFmiStationView::DrawAllSelectedStationsWithInvertStationRect(unsigned long
 			{
 				NFmiRect rec1 = displayRect; //(CalcInvertStationRectSize(minSelectedRectXSize, minSelectedRectYSize, maxSelectedRectXSize, maxSelectedRectYSize, 0.1));
 				rec1.Center(LatLonToViewPoint(itsCtrlViewDocumentInterface->OutOfEditedAreaTimeSerialPoint()));
-				NFmiRectangle tmp(rec1, 0, itsDrawingEnvironment);
+				NFmiRectangle tmp(rec1, 0, &itsDrawingEnvironment);
 				itsToolBox->Convert(&tmp);
 			}
 		}
-		itsDrawingEnvironment->DisableInvert();
+		itsDrawingEnvironment.DisableInvert();
 		return true;
 	}
 	return false;
@@ -3196,19 +3193,19 @@ void NFmiStationView::DrawControlPointData(void)
 
 			float height = static_cast<float>(itsToolBox->SY(pixels));
 			// float width = itsToolBox->SX(pixels);
-			itsDrawingEnvironment->SetFontType(kArial);
+			itsDrawingEnvironment.SetFontType(kArial);
 			NFmiPoint fontSize(pixels, pixels);
-			NFmiPoint oldFontSize(itsDrawingEnvironment->GetFontWidth(), itsDrawingEnvironment->GetFontHeight());
-			NFmiColor oldFillColor(itsDrawingEnvironment->GetFillColor());
-			itsDrawingEnvironment->SetFillColor(NFmiColor(1,1,1)); // valkoinen tausta CP-teksti-l‰tkille
-			itsDrawingEnvironment->SetFontSize(fontSize);
-			bool oldBoldStatus = itsDrawingEnvironment->BoldFont();
-			itsDrawingEnvironment->BoldFont(true);
+			NFmiPoint oldFontSize(itsDrawingEnvironment.GetFontWidth(), itsDrawingEnvironment.GetFontHeight());
+			NFmiColor oldFillColor(itsDrawingEnvironment.GetFillColor());
+			itsDrawingEnvironment.SetFillColor(NFmiColor(1,1,1)); // valkoinen tausta CP-teksti-l‰tkille
+			itsDrawingEnvironment.SetFontSize(fontSize);
+			bool oldBoldStatus = itsDrawingEnvironment.BoldFont();
+			itsDrawingEnvironment.BoldFont(true);
 			boost::shared_ptr<NFmiArea> zoomedArea = GetMapHandlerInterface()->Area();
 
 			for(CPMan->ResetCP(); CPMan->NextCP();)
 			{
-				itsDrawingEnvironment->SetFontSize(fontSize);
+				itsDrawingEnvironment.SetFontSize(fontSize);
 				NFmiPoint latLonPoint(CPMan->LatLon());
 				if(!zoomedArea->IsInside(latLonPoint))
 					continue;
@@ -3244,18 +3241,18 @@ void NFmiStationView::DrawControlPointData(void)
 				NFmiPoint textPoint(xy);
 				textPoint.Y(textPoint.Y() - .30 * height);
 				if(changeValue>0)
-					itsDrawingEnvironment->SetFrameColor(NFmiColor(1.f,0.f,0.f));
+					itsDrawingEnvironment.SetFrameColor(NFmiColor(1.f,0.f,0.f));
 				else if(changeValue<0)
-					itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,1.f));
+					itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,1.f));
 				else
-					itsDrawingEnvironment->SetFrameColor(NFmiColor(0.3f,0.7f,0.2f));
-				NFmiText text1(textPoint, changeStr, false, 0, itsDrawingEnvironment);
+					itsDrawingEnvironment.SetFrameColor(NFmiColor(0.3f,0.7f,0.2f));
+				NFmiText text1(textPoint, changeStr, false, 0, &itsDrawingEnvironment);
 				FmiDirection oldAligment = itsToolBox->GetTextAlignment();
 				itsToolBox->SetTextAlignment((FmiDirection)(int(kBottomCenter) + 1000)); // + 1000 SUPERPIKAVIRITYS!!!!
 				itsToolBox->Convert(&text1);  // muutos teksti (+0.5)
 				textPoint.Y(textPoint.Y() + 0.6 * height);
-				itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-				NFmiText text2(textPoint, modifiedStr, false, 0, itsDrawingEnvironment);
+				itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
+				NFmiText text2(textPoint, modifiedStr, false, 0, &itsDrawingEnvironment);
 				itsToolBox->SetTextAlignment((FmiDirection)(int(kTopCenter) + 1000)); // + 1000 SUPERPIKAVIRITYS!!!!
 				itsToolBox->Convert(&text2); // tuleva arvo teksti (12.4)
 
@@ -3263,19 +3260,19 @@ void NFmiStationView::DrawControlPointData(void)
 				if(CPMan->IsActivateCP() || CPMan->ShowCPAllwaysOnTimeView())
 				{
 					NFmiPoint fontSize2(pixels - 2, pixels - 2);
-					itsDrawingEnvironment->SetFontSize(fontSize2);
+					itsDrawingEnvironment.SetFontSize(fontSize2);
 					NFmiValueString indexStr(CPMan->CPIndex() + 1, "%d"); // +1 koska indeksit alkavat 0:sta
 					textPoint.Y(textPoint.Y() - 0.72 * height);
 					textPoint.X(textPoint.X() + 1.2 * height);
-					itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-					NFmiText text3(textPoint, indexStr, false, 0, itsDrawingEnvironment);
+					itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
+					NFmiText text3(textPoint, indexStr, false, 0, &itsDrawingEnvironment);
 					itsToolBox->Convert(&text3);
 				}
 				itsToolBox->SetTextAlignment(oldAligment);
 			}
-			itsDrawingEnvironment->SetFillColor(oldFillColor);
-			itsDrawingEnvironment->SetFontSize(oldFontSize);
-			itsDrawingEnvironment->BoldFont(oldBoldStatus);
+			itsDrawingEnvironment.SetFillColor(oldFillColor);
+			itsDrawingEnvironment.SetFontSize(oldFontSize);
+			itsDrawingEnvironment.BoldFont(oldBoldStatus);
 		}
 	}
 }
@@ -3829,12 +3826,12 @@ void NFmiStationView::DrawObsComparison(void)
 							double relativeBoxWidth = itsToolBox->SX(boxSizeXInPixels);
 							double relativeBoxHeight = itsToolBox->SY(boxSizeYInPixels);
 							if(obsComparisonInfo.DrawBorders())
-								itsDrawingEnvironment->EnableFrame();
+								itsDrawingEnvironment.EnableFrame();
 							else
-								itsDrawingEnvironment->DisableFrame();
-							NFmiColor oldFrameColor(itsDrawingEnvironment->GetFrameColor());
-							itsDrawingEnvironment->SetFrameColor(obsComparisonInfo.FrameColor());
-							itsDrawingEnvironment->EnableFill();
+								itsDrawingEnvironment.DisableFrame();
+							NFmiColor oldFrameColor(itsDrawingEnvironment.GetFrameColor());
+							itsDrawingEnvironment.SetFrameColor(obsComparisonInfo.FrameColor());
+							itsDrawingEnvironment.EnableFill();
 							NFmiRect aRect(0, 0, relativeBoxWidth, relativeBoxHeight);
 							for(obsInfo->ResetLocation(); obsInfo->NextLocation(); )
 							{
@@ -3854,22 +3851,22 @@ void NFmiStationView::DrawObsComparison(void)
 												compColor = extrapolateObs ? obsComparisonInfo.ExtrapolationOverHighColor() : obsComparisonInfo.OverHighColor();
 											else if(diff < tmpParam.itsLowLimit)
 												compColor = extrapolateObs ? obsComparisonInfo.ExtrapolationUnderLowColor() : obsComparisonInfo.UnderLowColor();
-											itsDrawingEnvironment->SetFillColor(compColor);
+											itsDrawingEnvironment.SetFillColor(compColor);
 											if(obsComparisonInfo.SymbolType() == 1)
 											{
-												NFmiRectangle aRec(aRect, 0, itsDrawingEnvironment);
+												NFmiRectangle aRec(aRect, 0, &itsDrawingEnvironment);
 												itsToolBox->Convert(&aRec);
 											}
 											else
 											{
-												itsToolBox->DrawEllipse(aRect, itsDrawingEnvironment);
+												itsToolBox->DrawEllipse(aRect, &itsDrawingEnvironment);
 											}
 										}
 									}
 								}
 							}
-							itsDrawingEnvironment->EnableFrame();
-							itsDrawingEnvironment->SetFrameColor(oldFrameColor);
+							itsDrawingEnvironment.EnableFrame();
+							itsDrawingEnvironment.SetFrameColor(oldFrameColor);
 						}
 					}
 				}

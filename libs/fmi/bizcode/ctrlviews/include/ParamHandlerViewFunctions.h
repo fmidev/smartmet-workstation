@@ -17,7 +17,6 @@ static void GeneralInitParamHandlerView(UsedCtrlview* parentView, std::unique_pt
 		parentView->MapViewDescTopIndex()
 		, initialFrame
 		, parentView->GetToolBox()
-		, parentView->GetDrawingEnvironment()
 		, parentView->DrawParam()
 		, parentView->ViewGridRowNumber()
 		, parentView->ViewGridColumnNumber()

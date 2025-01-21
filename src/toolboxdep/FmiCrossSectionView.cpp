@@ -178,13 +178,12 @@ static const int CROSSSECTIOVIEW_TOOLTIP_ID = 1234568;
 
 void CFmiCrossSectionView::OnInitialUpdate()
 {
-	static NFmiDrawingEnvironment envi;
 	CView::OnInitialUpdate(); // älä kutsu lähintä emoa!!!
 
 	itsToolBox = new NFmiToolBox(this); // tämä on lähimmässä emossa ja luotava tässä!!
 	CtrlView::DeviceContextHandler<CFmiCrossSectionView> deviceContextHandler(this);
 	NFmiRect rect(0.,0.,1.,1.); // 0,0 - 1,1 rect I hope?
-	itsView = new NFmiCrossSectionManagerView(rect, itsToolBox, &envi);
+	itsView = new NFmiCrossSectionManagerView(rect, itsToolBox);
 	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, CROSSSECTIOVIEW_TOOLTIP_ID, CtrlViewUtils::MaxMapViewTooltipWidthInPixels);
 	CRect winRec;
 	GetWindowRect(winRec);

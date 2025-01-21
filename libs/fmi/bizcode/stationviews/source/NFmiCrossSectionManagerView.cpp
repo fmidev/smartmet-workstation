@@ -29,9 +29,8 @@ static NFmiString GetLonLatString(const NFmiPoint &thePoint, int decimals)
 }
 
 NFmiCrossSectionManagerView::NFmiCrossSectionManagerView(const NFmiRect & theRect
-								,NFmiToolBox * theToolBox
-								,NFmiDrawingEnvironment * theDrawingEnvi)
-:NFmiCtrlView(CtrlViewUtils::kFmiCrossSectionView, theRect, theToolBox, theDrawingEnvi)
+								,NFmiToolBox * theToolBox)
+:NFmiCtrlView(CtrlViewUtils::kFmiCrossSectionView, theRect, theToolBox)
 ,itsFooterRect()
 ,itsHeaderRect()
 ,itsViewListRect()
@@ -299,9 +298,9 @@ void NFmiCrossSectionManagerView::DrawBase(void)
 
 void NFmiCrossSectionManagerView::DrawBackground(void)
 {
-	itsDrawingEnvironment->EnableFill();
-	itsDrawingEnvironment->SetFillColor(NFmiColor(1.f,1.f,1.f));
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
+	itsDrawingEnvironment.EnableFill();
+	itsDrawingEnvironment.SetFillColor(NFmiColor(1.f,1.f,1.f));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
 	DrawFrame(itsDrawingEnvironment);
 }
 
@@ -436,78 +435,78 @@ void NFmiCrossSectionManagerView::DrawFooter(void)
 	}
 
 	// ensin alkupiste
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
 	NFmiString txt = GetLonLatString(GetStartLatLonPoint(), 2);
 	if(itsCrossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kRoute)
 		txt += itsCrossSectionSystem->RouteTimes().operator [](0).ToStr(" HH:mm");
 
-	itsDrawingEnvironment->SetFontSize(NFmiPoint(14 * itsDrawSizeFactorX, 14 * itsDrawSizeFactorY));
+	itsDrawingEnvironment.SetFontSize(NFmiPoint(14 * itsDrawSizeFactorX, 14 * itsDrawSizeFactorY));
 	NFmiPoint textPoint(itsFooterRect.TopLeft());
 	int moveTextBy = FmiRound(2 * itsDrawSizeFactorY);
 	double moveDownward = itsToolBox->SY(moveTextBy); // siirretää vielä kuusi pikseliä alas
 	textPoint.Y(textPoint.Y() + moveDownward);
 	FmiDirection oldAlignment = itsToolBox->GetTextAlignment();
 	itsToolBox->SetTextAlignment(kTopLeft);
-	NFmiText text(textPoint, txt, false, 0, itsDrawingEnvironment);
+	NFmiText text(textPoint, txt, false, 0, &itsDrawingEnvironment);
 	itsToolBox->Convert(&text);
 
 	// StartPoint : piirretään vielä kartan väri pallot tänne helpottamaan tunnistusta
 	double circleY = textPoint.Y() - moveDownward * 1.;
 	NFmiPoint circlePoint(itsCrossSectionSystem->StartXYPoint());
 	circlePoint.Y(circleY);
-	itsDrawingEnvironment->SetFillColor(itsCrossSectionSystem->StartPointFillColor());
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,1.f));
-	itsDrawingEnvironment->EnableFill();
+	itsDrawingEnvironment.SetFillColor(itsCrossSectionSystem->StartPointFillColor());
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,1.f));
+	itsDrawingEnvironment.EnableFill();
 	double xWidth2 = itsToolBox->SX(FmiRound(12 * itsDrawSizeFactorX));
 	double yWidth2 = itsToolBox->SY(FmiRound(12 * itsDrawSizeFactorY));
 	NFmiRect circleRect(0, 0, xWidth2, yWidth2);
 	circleRect.Center(circlePoint);
-	itsToolBox->DrawEllipse(circleRect, itsDrawingEnvironment); // piirretään alkupisteen väripallo
+	itsToolBox->DrawEllipse(circleRect, &itsDrawingEnvironment); // piirretään alkupisteen väripallo
 
 	if(itsCrossSectionSystem->GetCrossMode() != NFmiCrossSectionSystem::kTime && itsCrossSectionSystem->GetCrossMode() != NFmiCrossSectionSystem::kObsAndFor)
 	{
 
 		// sitten loppu piste
-		itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
+		itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
 		NFmiString txt2 = GetLonLatString(GetEndLatLonPoint(), 2);
 		if(itsCrossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kRoute)
 			txt2 += itsCrossSectionSystem->RouteTimes().operator [](itsCrossSectionSystem->RouteTimes().size()-1).ToStr(" HH:mm");
 		itsToolBox->SetTextAlignment(kTopRight);
 		textPoint.X(itsFooterRect.Right()); // TÄMÄ ON HUUHAATA!!!!
-		NFmiText text2(textPoint, txt2, false, 0, itsDrawingEnvironment);
+		NFmiText text2(textPoint, txt2, false, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&text2);
 
 		// EndPoint : piirretään vielä kartan väri pallot tänne helpottamaan tunnistusta
 		NFmiPoint circlePoint2(itsCrossSectionSystem->EndXYPoint());
 		circlePoint2.Y(circleY);
-		itsDrawingEnvironment->SetFillColor(itsCrossSectionSystem->EndPointFillColor());
-		itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,1.f));
-		itsDrawingEnvironment->EnableFill();
+		itsDrawingEnvironment.SetFillColor(itsCrossSectionSystem->EndPointFillColor());
+		itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,1.f));
+		itsDrawingEnvironment.EnableFill();
 		NFmiRect circleRect2(0, 0, xWidth2, yWidth2);
 		circleRect2.Center(circlePoint2);
-		itsToolBox->DrawEllipse(circleRect2, itsDrawingEnvironment); // piirretään alkupisteen väripallo
+		itsToolBox->DrawEllipse(circleRect2, &itsDrawingEnvironment); // piirretään alkupisteen väripallo
 
 		if(itsCrossSectionSystem->CrossSectionMode() == NFmiCrossSectionSystem::k3Point)
 		{
 			// sitten loppu piste
-			itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
+			itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
 			NFmiString txt3 = GetLonLatString(GetMiddleLatLonPoint(), 2);
 			if(itsCrossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kRoute)
 				txt3 += itsCrossSectionSystem->RouteTimes().operator [](static_cast<int>(itsCrossSectionSystem->RouteTimes().size()/2)).ToStr(" HH:mm");
 			itsToolBox->SetTextAlignment(kTopCenter);
 			textPoint.X(itsFooterRect.Center().X()); // TÄMÄ ON HUUHAATA!!!!
-			NFmiText text3(textPoint, txt3, false, 0, itsDrawingEnvironment);
+			NFmiText text3(textPoint, txt3, false, 0, &itsDrawingEnvironment);
 			itsToolBox->Convert(&text3);
 
 			// MiddlePoint : piirretään vielä kartan väri pallot tänne helpottamaan tunnistusta
 			NFmiPoint circlePoint3(itsCrossSectionSystem->MiddleXYPoint());
 			circlePoint3.Y(circleY);
-			itsDrawingEnvironment->SetFillColor(itsCrossSectionSystem->MiddlePointFillColor());
-			itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,1.f));
-			itsDrawingEnvironment->EnableFill();
+			itsDrawingEnvironment.SetFillColor(itsCrossSectionSystem->MiddlePointFillColor());
+			itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,1.f));
+			itsDrawingEnvironment.EnableFill();
 			NFmiRect circleRect3(0, 0, xWidth2, yWidth2);
 			circleRect3.Center(circlePoint3);
-			itsToolBox->DrawEllipse(circleRect3, itsDrawingEnvironment); // piirretään alkupisteen väripallo
+			itsToolBox->DrawEllipse(circleRect3, &itsDrawingEnvironment); // piirretään alkupisteen väripallo
 		}
 
 		itsToolBox->SetTextAlignment(oldAlignment);
@@ -525,11 +524,11 @@ void NFmiCrossSectionManagerView::DrawActivatedMinorPoint(void)
 		double xCoordinate = itsTimeControlViewRect.Left() + index * itsFooterRect.Width() / (pointCount+1);
 
 		// piirretään sitten alareunaan aktiivisen pisteen koordinaatit
-		itsDrawingEnvironment->SetFrameColor(NFmiColor(1,0,0)); // laitetaan teksti punaiseksi
+		itsDrawingEnvironment.SetFrameColor(NFmiColor(1,0,0)); // laitetaan teksti punaiseksi
 		NFmiString txt = GetLonLatString(itsCrossSectionSystem->ActivatedMinorPoint(), 2);
 		if(itsCrossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kRoute)
 			txt += itsCrossSectionSystem->RouteTimes().operator [](index).ToStr(" HH:mm");
-		itsDrawingEnvironment->SetFontSize(NFmiPoint(13 * itsDrawSizeFactorX, 13 * itsDrawSizeFactorY));
+		itsDrawingEnvironment.SetFontSize(NFmiPoint(13 * itsDrawSizeFactorX, 13 * itsDrawSizeFactorY));
 		NFmiPoint textPoint(xCoordinate, itsFooterRect.Top());
 		int moveTextBy = FmiRound(-3 * itsDrawSizeFactorY);
 		double moveDownward = itsToolBox->SY(moveTextBy); // siirretää yksi pikseli alas
@@ -541,7 +540,7 @@ void NFmiCrossSectionManagerView::DrawActivatedMinorPoint(void)
 		else if(index > 2*pointCount/3.)
 			alignm = kTopRight;
 		itsToolBox->SetTextAlignment(alignm);
-		NFmiText text(textPoint, txt, false, 0, itsDrawingEnvironment);
+		NFmiText text(textPoint, txt, false, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&text);
 		itsToolBox->SetTextAlignment(oldAlignment);
 	}
@@ -580,7 +579,7 @@ std::string NFmiCrossSectionManagerView::ComposeToolTipText(const NFmiPoint& the
 void NFmiCrossSectionManagerView::CreateViewList(void)
 {
 	DestroyViewList();
-	itsViewList = new NFmiCtrlViewList(itsMapViewDescTopIndex, itsViewListRect, itsToolBox, itsDrawingEnvironment,
+	itsViewList = new NFmiCtrlViewList(itsMapViewDescTopIndex, itsViewListRect, itsToolBox,
 										boost::shared_ptr<NFmiDrawParam>());
 	int maxSize = itsCrossSectionSystem->MaxViewRowSize();
 	NFmiCrossSectionView *tmpView = 0;
@@ -588,7 +587,7 @@ void NFmiCrossSectionManagerView::CreateViewList(void)
     int viewColumnIndex = 1;
 	for(int i=1 ; i <= maxSize ; i++)
 	{
-		tmpView = new NFmiCrossSectionView(itsToolBox, itsDrawingEnvironment, i, viewColumnIndex);
+		tmpView = new NFmiCrossSectionView(itsToolBox, i, viewColumnIndex);
 		NFmiRect tmpRect(CalcListViewRect(i));
 		tmpView->SetFrame(tmpRect);
 		itsViewList->Add(tmpView, false);
@@ -659,15 +658,15 @@ void NFmiCrossSectionManagerView::DrawHeader(void)
 	txt += " hor.-pts:";
 	txt += NFmiValueString::GetStringWithMaxDecimalsSmartWay(static_cast<double>(itsCrossSectionSystem->MinorPoints().size()), 0);
 
-	itsDrawingEnvironment->SetFontSize(NFmiPoint(15 * itsDrawSizeFactorX, 15 * itsDrawSizeFactorY));
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
+	itsDrawingEnvironment.SetFontSize(NFmiPoint(15 * itsDrawSizeFactorX, 15 * itsDrawSizeFactorY));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
 	NFmiPoint textPoint(itsHeaderRect.TopLeft());
 	double moveDownward = itsToolBox->SY(FmiRound(1 * itsDrawSizeFactorY)); // siirretään vielä pikseli alas
 	textPoint.Y(textPoint.Y() + moveDownward);
 	textPoint.X(textPoint.X() + 2*moveDownward); // siirretään myös pari pikseliä oikeaan
 	FmiDirection oldAlignment = itsToolBox->GetTextAlignment();
 	itsToolBox->SetTextAlignment(kTopLeft);
-	NFmiText text(textPoint, txt, false, 0, itsDrawingEnvironment);
+	NFmiText text(textPoint, txt, false, 0, &itsDrawingEnvironment);
 	itsToolBox->Convert(&text);
 	itsToolBox->SetTextAlignment(oldAlignment);
 }
@@ -683,7 +682,6 @@ bool NFmiCrossSectionManagerView::CreateTimeControlView(void)
 	{
 		itsTimeControlView = new NFmiCrossSectionTimeControlView(itsMapViewDescTopIndex, itsTimeControlViewRect
 													,itsToolBox
-													,itsDrawingEnvironment
 													, itsCtrlViewDocumentInterface->DefaultEditedDrawParam()
 													,false
 													,false

@@ -14,11 +14,9 @@
 //////////////////////////////////////////////////////////////////////
 
 NFmiZoomView::NFmiZoomView(int theMapViewDescTopIndex, NFmiToolBox *theToolBox
-    , NFmiDrawingEnvironment* theDrawingEnvi
     , boost::shared_ptr<NFmiDrawParam> &theDrawParam)
     :NFmiCtrlView(theMapViewDescTopIndex, CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->GetMapHandlerInterface(theMapViewDescTopIndex)->TotalArea()->XYArea()
         , theToolBox
-        , theDrawingEnvi
         , theDrawParam)
     , itsZoomedAreaRect()
     , itsZoomedArea()
@@ -28,12 +26,10 @@ NFmiZoomView::NFmiZoomView(int theMapViewDescTopIndex, NFmiToolBox *theToolBox
 }
 
 NFmiZoomView::NFmiZoomView(int theMapViewDescTopIndex, NFmiToolBox *theToolBox
-    , NFmiDrawingEnvironment* theDrawingEnvi
     , boost::shared_ptr<NFmiDrawParam> &theDrawParam
     , const NFmiRect& theRect)
     :NFmiCtrlView(theMapViewDescTopIndex, theRect
         , theToolBox
-        , theDrawingEnvi
         , theDrawParam)
     , itsZoomedAreaRect()
     , itsZoomedArea()
@@ -64,16 +60,16 @@ void NFmiZoomView::DrawConstAreaRects(void)
 
 void NFmiZoomView::DrawInvertRect(const NFmiRect& theRect, const NFmiPoint& thePenSize)
 {
-	NFmiPoint oldPenSize(itsDrawingEnvironment->GetPenSize());
-	itsDrawingEnvironment->SetPenSize(thePenSize);
-	itsDrawingEnvironment->EnableInvert();
+	NFmiPoint oldPenSize(itsDrawingEnvironment.GetPenSize());
+	itsDrawingEnvironment.SetPenSize(thePenSize);
+	itsDrawingEnvironment.EnableInvert();
 	NFmiRectangle rect(theRect.TopLeft(),
 			   theRect.BottomRight(),
 			   0,
-			   itsDrawingEnvironment);
+			   &itsDrawingEnvironment);
 	itsToolBox->Convert(&rect);
-	itsDrawingEnvironment->DisableInvert();
-	itsDrawingEnvironment->SetPenSize(oldPenSize);
+	itsDrawingEnvironment.DisableInvert();
+	itsDrawingEnvironment.SetPenSize(oldPenSize);
 }
 
 void NFmiZoomView::DrawZoomedAreaRect(const NFmiPoint& thePlace)

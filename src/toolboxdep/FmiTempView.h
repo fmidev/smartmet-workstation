@@ -5,6 +5,7 @@
 
 #include "ZoomView.h"
 #include "NFmiMetTime.h"
+#include "NFmiPoint.h"
 #include "PPToolTip.h"
 
 class NFmiSoundingView;

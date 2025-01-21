@@ -12,7 +12,6 @@ class NFmiBitmapZoomView : public NFmiZoomView
 public:
    void Draw (NFmiToolBox * theGTB) override;
    NFmiBitmapZoomView (NFmiToolBox * theToolBox
-						 ,NFmiDrawingEnvironment * theDrawingEnvi
 						 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam);
    ~NFmiBitmapZoomView();
 

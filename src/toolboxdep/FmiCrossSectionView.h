@@ -3,6 +3,7 @@
 #include "ZoomView.h"
 #include "PPToolTip.h"
 #include "NFmiMetTime.h"
+#include "NFmiPoint.h"
 
 class NFmiRect;
 class SmartMetDocumentInterface;

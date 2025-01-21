@@ -81,7 +81,6 @@ void CFmiCPLocationView::CreateZoomView(void)
 	if(itsViewType == NFmiCtrlView::kMovingCPLocationView)
 	{
 			itsZoomView = new NFmiMovingCPLocationView(itsToolBox
-														,&itsDrawingEnvironment
 														,itsDrawParam
 														,rect
 														,itsIndex

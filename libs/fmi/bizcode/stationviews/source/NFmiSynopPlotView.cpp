@@ -37,12 +37,11 @@ static NFmiPoint GetRelativeLocationFromRect(const NFmiRect &theRect, const NFmi
 
 NFmiSynopPlotView::NFmiSynopPlotView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 									,NFmiToolBox * theToolBox
-									,NFmiDrawingEnvironment * theDrawingEnvi
 									,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 									,FmiParameterName theParamId
 									,int theRowIndex
                                     ,int theColumnIndex)
-:NFmiStationView(theMapViewDescTopIndex, theArea, theToolBox, theDrawingEnvi, theDrawParam, theParamId,
+:NFmiStationView(theMapViewDescTopIndex, theArea, theToolBox, theDrawParam, theParamId,
 				 NFmiPoint(), NFmiPoint(), theRowIndex, theColumnIndex)
 ,itsFontSizeX(10)
 ,itsFontSizeY(10)
@@ -180,11 +179,11 @@ void NFmiSynopPlotView::Draw(NFmiToolBox * theGTB)
 	NFmiRect emptySoundingMarkerRect(CalcBaseEmptySoundingMarker());
 
 	NFmiRect rect(0, 0, synopBoxRelWidth, synopBoxRelHeight);
-	itsDrawingEnvironment->DisableFill();
+	itsDrawingEnvironment.DisableFill();
 	// optimointia, nyt filli on disabloitu, mutta myöhemmin tarvitaan valkoista filliä
-	itsDrawingEnvironment->SetFillColor(NFmiColor(1.f, 1.f, 1.f));
-	itsDrawingEnvironment->EnableFrame();
-	itsDrawingEnvironment->SetFrameColor(itsDrawParam->FrameColor());
+	itsDrawingEnvironment.SetFillColor(NFmiColor(1.f, 1.f, 1.f));
+	itsDrawingEnvironment.EnableFrame();
+	itsDrawingEnvironment.SetFrameColor(itsDrawParam->FrameColor());
 
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsArea->XYArea());
 	std::vector<NFmiRect> synopRects;
@@ -335,10 +334,10 @@ void NFmiSynopPlotView::DrawSynopPlot(NFmiToolBox * theGTB, const NFmiLocation &
         itsFontSizeX = boost::math::iround(theFontSize * graphicalInfo.itsPixelsPerMM_x * 1.88);
 		itsFontSizeY = boost::math::iround(theFontSize * graphicalInfo.itsPixelsPerMM_y * 1.88);
 
-		itsDrawingEnvironment->DisableFill();
+		itsDrawingEnvironment.DisableFill();
 		// optimointia, nyt filli on disabloitu, mutta myöhemmin tarvitaan valkoista filliä
-		itsDrawingEnvironment->SetFillColor(NFmiColor(1.f, 1.f, 1.f));
-		itsDrawingEnvironment->EnableFrame();
+		itsDrawingEnvironment.SetFillColor(NFmiColor(1.f, 1.f, 1.f));
+		itsDrawingEnvironment.EnableFrame();
 
 		bool fWindDrawed = false;
 		if(fMinMaxPlotDraw) // min/max-plot
@@ -346,9 +345,9 @@ void NFmiSynopPlotView::DrawSynopPlot(NFmiToolBox * theGTB, const NFmiLocation &
 			DrawMinMaxPlot(info, theRect);
 			NFmiRect markerRect(0,0,itsToolBox->SX(5), itsToolBox->SY(5));
 			markerRect.Center(theRect.Center());
-			itsDrawingEnvironment->EnableFill();
-			itsDrawingEnvironment->SetFillColor(NFmiColor(0.f, 0.f, 0.f));
-			itsToolBox->DrawEllipse(markerRect, itsDrawingEnvironment);
+			itsDrawingEnvironment.EnableFill();
+			itsDrawingEnvironment.SetFillColor(NFmiColor(0.f, 0.f, 0.f));
+			itsToolBox->DrawEllipse(markerRect, &itsDrawingEnvironment);
 		}
 		else if(fDrawMetarPlot) // min/max-plot
 		{
@@ -1238,15 +1237,15 @@ NFmiString NFmiSynopPlotView::GetPrecipitationAmountStr(boost::shared_ptr<NFmiFa
 	}
 }
 
-void NFmiSynopPlotView::SetPressureChangeColor(NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+void NFmiSynopPlotView::SetPressureChangeColor(NFmiDrawingEnvironment & theDrawingEnvi, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	float value = GetPressureChangeValue(theInfo);
 	if(value != kFloatMissing)
 	{
 		if(value >= 0)
-			theDrawingEnvi->SetFrameColor(NFmiColor(0,0,0));
+			theDrawingEnvi.SetFrameColor(NFmiColor(0,0,0));
 		else
-			theDrawingEnvi->SetFrameColor(NFmiColor(0.78f, 0.08f, 0.06f));
+			theDrawingEnvi.SetFrameColor(NFmiColor(0.78f, 0.08f, 0.06f));
 	}
 }
 
@@ -1381,7 +1380,7 @@ bool NFmiSynopPlotView::PrintParameterValue(boost::shared_ptr<NFmiFastQueryInfo>
 	}
 	if(str.GetLen() > 0)
 	{
-		NFmiText text(viewLocation, str, false, 0, itsDrawingEnvironment);
+		NFmiText text(viewLocation, str, false, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&text);
 		return true;
 	}
@@ -1457,11 +1456,11 @@ bool NFmiSynopPlotView::DrawMetarPlot(boost::shared_ptr<NFmiFastQueryInfo> &theI
 	const double rightXpos = 0.6;
 
 	bool anythingDrawed = false;
-	FmiFontType oldFont = itsDrawingEnvironment->GetFontType();
-//	itsDrawingEnvironment->BoldFont(true);
-	itsDrawingEnvironment->SetFontType(kNewber);
-	itsDrawingEnvironment->SetFontSize(NFmiPoint(itsFontSizeX, itsFontSizeY));
-	itsDrawingEnvironment->EnableFill();
+	FmiFontType oldFont = itsDrawingEnvironment.GetFontType();
+//	itsDrawingEnvironment.BoldFont(true);
+	itsDrawingEnvironment.SetFontType(kNewber);
+	itsDrawingEnvironment.SetFontSize(NFmiPoint(itsFontSizeX, itsFontSizeY));
+	itsDrawingEnvironment.EnableFill();
 	itsToolBox->SetTextAlignment(kRight); // tehdään ensin tekstit keskiosan vasemmalle puolelle right-alignmentilla
 
 	NFmiMetarPlotSettings & metarSettings = itsCtrlViewDocumentInterface->SynopPlotSettings()->MetarPlotSettings();
@@ -1473,23 +1472,23 @@ bool NFmiSynopPlotView::DrawMetarPlot(boost::shared_ptr<NFmiFastQueryInfo> &theI
 		auto statusColorData = ::GetMetarPlotStatusColor(theInfo);
 		if(statusColorData.second)
 		{
-			itsDrawingEnvironment->SetFillColor(statusColorData.first);
+			itsDrawingEnvironment.SetFillColor(statusColorData.first);
 			double statusRectSizeFactor = 0.7;
 			NFmiRect statusRect(0, 0, itsToolBox->SX(itsFontSizeX) * statusRectSizeFactor, itsToolBox->SY(itsFontSizeY) * statusRectSizeFactor);
 			statusRect.Center(GetRelativeLocationFromRect(theDrawRect, relativeStatusLocation));
-			NFmiRectangle statusRectangle(statusRect, 0, itsDrawingEnvironment);
+			NFmiRectangle statusRectangle(statusRect, 0, &itsDrawingEnvironment);
 			itsToolBox->Convert(&statusRectangle);
 			anythingDrawed |= true;
 		}
 	}
 
 	// *******  defaulttina seuraavat piirretään mustana tai halutulla värillä ***************
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
-	itsDrawingEnvironment->SetFillColor(NFmiColor(0,0,0));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0,0,0));
+	itsDrawingEnvironment.SetFillColor(NFmiColor(0,0,0));
 	if(metarSettings.UseSingleColor())
 	{
-		itsDrawingEnvironment->SetFrameColor(metarSettings.SingleColor());
-		itsDrawingEnvironment->SetFillColor(metarSettings.SingleColor());
+		itsDrawingEnvironment.SetFrameColor(metarSettings.SingleColor());
+		itsDrawingEnvironment.SetFillColor(metarSettings.SingleColor());
 	}
 
 	// 2. piirrä tuuli viiri (keskelle), sen piirto optiot testataan DrawWindVector funktiossa
@@ -1548,8 +1547,8 @@ bool NFmiSynopPlotView::DrawMetarPlot(boost::shared_ptr<NFmiFastQueryInfo> &theI
 		anythingDrawed |= PrintParameterValue(theInfo, theDrawRect, relativeMetarCloudsPointLocation, kFmi1CloudBase);
 	}
 
-	itsDrawingEnvironment->SetFontType(oldFont);
-//	itsDrawingEnvironment->BoldFont(false);
+	itsDrawingEnvironment.SetFontType(oldFont);
+//	itsDrawingEnvironment.BoldFont(false);
 
 	return anythingDrawed;
 }
@@ -1557,18 +1556,18 @@ bool NFmiSynopPlotView::DrawMetarPlot(boost::shared_ptr<NFmiFastQueryInfo> &theI
 bool NFmiSynopPlotView::DrawMinMaxPlot(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theDrawRect)
 {
 	bool anythingDrawed = false;
-	FmiFontType oldFont = itsDrawingEnvironment->GetFontType();
-	itsDrawingEnvironment->BoldFont(true);
-	itsDrawingEnvironment->SetFontType(kNewber);
-	itsDrawingEnvironment->SetFontSize(NFmiPoint(itsFontSizeX, itsFontSizeY));
+	FmiFontType oldFont = itsDrawingEnvironment.GetFontType();
+	itsDrawingEnvironment.BoldFont(true);
+	itsDrawingEnvironment.SetFontType(kNewber);
+	itsDrawingEnvironment.SetFontSize(NFmiPoint(itsFontSizeX, itsFontSizeY));
 	itsToolBox->SetTextAlignment(kLeft);
 
 	NFmiSynopPlotSettings & synopSettings = *itsCtrlViewDocumentInterface->SynopPlotSettings();
 
 	// *******  defaulttina seuraavat piirretään punaisina tai halutulla värillä ***************
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(1,0,0));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(1,0,0));
 	if(synopSettings.UseSingleColor())
-		itsDrawingEnvironment->SetFrameColor(synopSettings.SingleColor());
+		itsDrawingEnvironment.SetFrameColor(synopSettings.SingleColor());
 
 
 	// piirretään maksimi lämpötila
@@ -1580,9 +1579,9 @@ bool NFmiSynopPlotView::DrawMinMaxPlot(boost::shared_ptr<NFmiFastQueryInfo> &the
 	anythingDrawed |= PrintParameterValue(theInfo, theDrawRect, relativeLocation, kFmiMinimumTemperature);
 
 	// *******  defaulttina seuraavat piirretään vihertävällä tai halutulla värillä ***************
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.16f, 0.64f, 0.30f));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0.16f, 0.64f, 0.30f));
 	if(synopSettings.UseSingleColor())
-		itsDrawingEnvironment->SetFrameColor(synopSettings.SingleColor());
+		itsDrawingEnvironment.SetFrameColor(synopSettings.SingleColor());
 
 	// piirretään lumensyvyys
 	relativeLocation = NFmiPoint(0.6, 0.30); // Tg min sijainti 0,0 1,1 maailmassa synop boxissa
@@ -1593,9 +1592,9 @@ bool NFmiSynopPlotView::DrawMinMaxPlot(boost::shared_ptr<NFmiFastQueryInfo> &the
 	anythingDrawed |= PrintParameterValue(theInfo, theDrawRect, relativeLocation, kFmiPrecipitationAmount);
 
 	// *******  defaulttina seuraavat piirretään mustina tai halutulla värillä ***************
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0,0,0));
 	if(synopSettings.UseSingleColor())
-		itsDrawingEnvironment->SetFrameColor(synopSettings.SingleColor());
+		itsDrawingEnvironment.SetFrameColor(synopSettings.SingleColor());
 
 	itsToolBox->SetTextAlignment(kRight);
 	// piirretään maanpinta minimi lämpötila
@@ -1606,18 +1605,18 @@ bool NFmiSynopPlotView::DrawMinMaxPlot(boost::shared_ptr<NFmiFastQueryInfo> &the
 	// en ole varma toimiiko se kun parametri sitten joskus ilmestyy. Kokeile poistamalla kommentit.
 
 	// *******  seuraavat piirretään mustina tai halutulla värillä synop-fontilla ***************
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0,0,0));
 	if(synopSettings.UseSingleColor())
-		itsDrawingEnvironment->SetFrameColor(synopSettings.SingleColor());
+		itsDrawingEnvironment.SetFrameColor(synopSettings.SingleColor());
 
-	itsDrawingEnvironment->SetFontType(kSynop);
+	itsDrawingEnvironment.SetFontType(kSynop);
 	itsToolBox->SetTextAlignment(kRight);
 	// piirretään maanpinta minimi lämpötila
 	relativeLocation = NFmiPoint(0.47, 0.64); // maanpinnan laadun sijainti 0,0 1,1 maailmassa synop boxissa
 	anythingDrawed |= PrintParameterValue(theInfo, theRect, relativeLocation, kFmiStateOfGround);
 */
-	itsDrawingEnvironment->SetFontType(oldFont);
-	itsDrawingEnvironment->BoldFont(false);
+	itsDrawingEnvironment.SetFontType(oldFont);
+	itsDrawingEnvironment.BoldFont(false);
 
 	return anythingDrawed;
 }
@@ -1625,17 +1624,17 @@ bool NFmiSynopPlotView::DrawMinMaxPlot(boost::shared_ptr<NFmiFastQueryInfo> &the
 bool NFmiSynopPlotView::DrawNormalFontValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theRect)
 {
 	bool anythingDrawed = false;
-	FmiFontType oldFont = itsDrawingEnvironment->GetFontType();
-	itsDrawingEnvironment->SetFontType(kNewber);
-	itsDrawingEnvironment->SetFontSize(NFmiPoint(itsFontSizeX, itsFontSizeY));
+	FmiFontType oldFont = itsDrawingEnvironment.GetFontType();
+	itsDrawingEnvironment.SetFontType(kNewber);
+	itsDrawingEnvironment.SetFontSize(NFmiPoint(itsFontSizeX, itsFontSizeY));
 	itsToolBox->SetTextAlignment(kCenter);
 
 	NFmiSynopPlotSettings & synopSettings = *itsCtrlViewDocumentInterface->SynopPlotSettings();
 
 	// *******  defaulttina seuraavat piirretään mustina tai halutulla värillä ***************
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0,0,0));
 	if(synopSettings.UseSingleColor())
-		itsDrawingEnvironment->SetFrameColor(synopSettings.SingleColor());
+		itsDrawingEnvironment.SetFrameColor(synopSettings.SingleColor());
 
 	if(fSoundingPlotDraw == false)
 	{ // luotaus datasta ei löydy kaikkia parametreja tai niitä ei ole tarkoitus printata
@@ -1668,7 +1667,7 @@ bool NFmiSynopPlotView::DrawNormalFontValues(boost::shared_ptr<NFmiFastQueryInfo
 			// *******  piirretään joko punaisena (laskeva) tai mustana (tasainen/nouseva)
 			SetPressureChangeColor(itsDrawingEnvironment, theInfo);
 			if(synopSettings.UseSingleColor())
-				itsDrawingEnvironment->SetFrameColor(synopSettings.SingleColor());
+				itsDrawingEnvironment.SetFrameColor(synopSettings.SingleColor());
 
 			NFmiPoint relativePreChangeLocation(0.67, 0.62); // paineen muutoksen sijainti 0,0 1,1 maailmassa synop boxissa
 			anythingDrawed |= PrintParameterValue(theInfo, theRect, relativePreChangeLocation, kFmiPressureChange);
@@ -1677,9 +1676,9 @@ bool NFmiSynopPlotView::DrawNormalFontValues(boost::shared_ptr<NFmiFastQueryInfo
 		if(synopSettings.ShowRr())
 		{
 			// *******  defaulttina seuraavat piirretään vihreänä tai halutulla värillä ***************
-			itsDrawingEnvironment->SetFrameColor(NFmiColor(0.137f, 0.627f, 0.3f));
+			itsDrawingEnvironment.SetFrameColor(NFmiColor(0.137f, 0.627f, 0.3f));
 			if(synopSettings.UseSingleColor())
-				itsDrawingEnvironment->SetFrameColor(synopSettings.SingleColor());
+				itsDrawingEnvironment.SetFrameColor(synopSettings.SingleColor());
 
 			NFmiPoint relativePrecipitationAmountLocation(0.74, 1.05); // sademäärän sijainti 0,0 1,1 maailmassa synop boxissa
 			anythingDrawed |= PrintParameterValue(theInfo, theRect, relativePrecipitationAmountLocation, kFmiPrecipitationAmount);
@@ -1687,9 +1686,9 @@ bool NFmiSynopPlotView::DrawNormalFontValues(boost::shared_ptr<NFmiFastQueryInfo
 	} // piirretään vain maanpinta synop-plotissa
 
 	// *******  defaulttina seuraavat piirretään punaisina tai halutulla värillä ***************
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.78f, 0.08f, 0.06f));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0.78f, 0.08f, 0.06f));
 	if(synopSettings.UseSingleColor())
-		itsDrawingEnvironment->SetFrameColor(synopSettings.SingleColor());
+		itsDrawingEnvironment.SetFrameColor(synopSettings.SingleColor());
 
 	if(synopSettings.ShowT())
 	{
@@ -1710,18 +1709,18 @@ bool NFmiSynopPlotView::DrawNormalFontValues(boost::shared_ptr<NFmiFastQueryInfo
 		if(synopSettings.ShowTd()) // vaikka kyse on T-Td arvosta, käytetään tätä ehtoa
 		{
 			// *******  defaulttina seuraavat piirretään vihreänä tai halutulla värillä ***************
-			itsDrawingEnvironment->SetFrameColor(NFmiColor(0.137f, 0.627f, 0.3f));
+			itsDrawingEnvironment.SetFrameColor(NFmiColor(0.137f, 0.627f, 0.3f));
 			if(synopSettings.UseSingleColor())
-				itsDrawingEnvironment->SetFrameColor(synopSettings.SingleColor());
+				itsDrawingEnvironment.SetFrameColor(synopSettings.SingleColor());
 
 			NFmiPoint relativeDewPointLocation(0.265, 0.45); // paineen sijainti 0,0 1,1 maailmassa synop boxissa
 			anythingDrawed |= PrintParameterValue(theInfo, theRect, relativeDewPointLocation, kFmiDewPoint); // haetaan dewpoint paramilla, osaa tehdä kikan kun kyse luotaus-piirrosta
 
 			// piirretään vielä samaa kyytiä korkeus arvo mustalla
 			// *******  defaulttina seuraavat piirretään mustana tai halutulla värillä ***************
-			itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f, 0.f, 0.f));
+			itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f, 0.f, 0.f));
 			if(synopSettings.UseSingleColor())
-				itsDrawingEnvironment->SetFrameColor(synopSettings.SingleColor());
+				itsDrawingEnvironment.SetFrameColor(synopSettings.SingleColor());
 
 			relativeDewPointLocation = NFmiPoint(0.72, 0.62); // paineen sijainti 0,0 1,1 maailmassa synop boxissa
 			anythingDrawed |= PrintParameterValue(theInfo, theRect, relativeDewPointLocation, kFmiGeopHeight);
@@ -1729,7 +1728,7 @@ bool NFmiSynopPlotView::DrawNormalFontValues(boost::shared_ptr<NFmiFastQueryInfo
 		}
 	}
 
-	itsDrawingEnvironment->SetFontType(oldFont);
+	itsDrawingEnvironment.SetFontType(oldFont);
 
 	return anythingDrawed;
 }
@@ -1741,18 +1740,18 @@ bool NFmiSynopPlotView::DrawSynopFontValues(boost::shared_ptr<NFmiFastQueryInfo>
 	if(fSoundingPlotDraw)
 		return anythingDrawed; // näitä juttuja ei löydy luotaus datasta
 
-	itsDrawingEnvironment->BoldFont(true);
-	FmiFontType oldFont = itsDrawingEnvironment->GetFontType();
-	itsDrawingEnvironment->SetFontType(kSynop);
-	itsDrawingEnvironment->SetFontSize(NFmiPoint(itsFontSizeX, itsFontSizeY));
+	itsDrawingEnvironment.BoldFont(true);
+	FmiFontType oldFont = itsDrawingEnvironment.GetFontType();
+	itsDrawingEnvironment.SetFontType(kSynop);
+	itsDrawingEnvironment.SetFontSize(NFmiPoint(itsFontSizeX, itsFontSizeY));
 	itsToolBox->SetTextAlignment(kCenter);
 
 	NFmiSynopPlotSettings & synopSettings = *itsCtrlViewDocumentInterface->SynopPlotSettings();
 
 	// *******  defaulttina seuraavat piirretään mustina tai halutulla värillä ***************
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0,0,0));
 	if(synopSettings.UseSingleColor())
-		itsDrawingEnvironment->SetFrameColor(synopSettings.SingleColor());
+		itsDrawingEnvironment.SetFrameColor(synopSettings.SingleColor());
 
 	if(synopSettings.ShowWw())
 	{
@@ -1783,16 +1782,16 @@ bool NFmiSynopPlotView::DrawSynopFontValues(boost::shared_ptr<NFmiFastQueryInfo>
 		// *******  piirretään joko punaisena (laskeva) tai mustana (tasainen/nouseva) tai halutulla värillä ***************
 		SetPressureChangeColor(itsDrawingEnvironment, theInfo);
 		if(synopSettings.UseSingleColor())
-			itsDrawingEnvironment->SetFrameColor(synopSettings.SingleColor());
+			itsDrawingEnvironment.SetFrameColor(synopSettings.SingleColor());
 
 		NFmiPoint relativePressureTendencyLocation(0.85, 0.62); // paine tendessin sijainti 0,0 1,1 maailmassa synop boxissa
 		anythingDrawed |= PrintParameterValue(theInfo, theRect, relativePressureTendencyLocation, kFmiPressureTendency);
 	}
 
 	// *******  defaulttina seuraavat piirretään punaisina tai halutulla värillä ***************
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.78f, 0.08f, 0.06f));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0.78f, 0.08f, 0.06f));
 	if(synopSettings.UseSingleColor())
-		itsDrawingEnvironment->SetFrameColor(synopSettings.SingleColor());
+		itsDrawingEnvironment.SetFrameColor(synopSettings.SingleColor());
 
 	if(synopSettings.ShowW1())
 	{
@@ -1807,9 +1806,9 @@ bool NFmiSynopPlotView::DrawSynopFontValues(boost::shared_ptr<NFmiFastQueryInfo>
 	}
 
 	// *******  defaulttina seuraavat piirretään mustina tai halutulla värillä ***************
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0,0,0));
 	if(synopSettings.UseSingleColor())
-		itsDrawingEnvironment->SetFrameColor(synopSettings.SingleColor());
+		itsDrawingEnvironment.SetFrameColor(synopSettings.SingleColor());
 
 	if(synopSettings.ShowN())
 	{
@@ -1820,14 +1819,14 @@ bool NFmiSynopPlotView::DrawSynopFontValues(boost::shared_ptr<NFmiFastQueryInfo>
 			if(str != NFmiString("")) // ei piirretä pohjustusta, jos ei piirretä pilvisyyttäkään
 			{
 				NFmiPoint relativeWindLocation(0.505, 0.5); // tuulivektorin sijainti 0,0 1,1 maailmassa synop boxissa
-				itsDrawingEnvironment->EnableFill();
-				itsDrawingEnvironment->DisableFrame();
+				itsDrawingEnvironment.EnableFill();
+				itsDrawingEnvironment.DisableFrame();
 				double circleSizeFactor = 0.67;
 				NFmiRect circleRect(0, 0, itsToolBox->SX(itsFontSizeX) * circleSizeFactor, itsToolBox->SY(itsFontSizeY)* circleSizeFactor);
 				circleRect.Center(GetRelativeLocationFromRect(theRect, relativeWindLocation));
-				itsToolBox->DrawEllipse(circleRect, itsDrawingEnvironment);
-				itsDrawingEnvironment->DisableFill();
-				itsDrawingEnvironment->EnableFrame();
+				itsToolBox->DrawEllipse(circleRect, &itsDrawingEnvironment);
+				itsDrawingEnvironment.DisableFill();
+				itsDrawingEnvironment.EnableFrame();
 				anythingDrawed = true;
 			}
 		}
@@ -1836,13 +1835,13 @@ bool NFmiSynopPlotView::DrawSynopFontValues(boost::shared_ptr<NFmiFastQueryInfo>
 	if(synopSettings.ShowN())
 	{
 		double cloudSymbolFactor = 1.5;
-		itsDrawingEnvironment->SetFontSize(NFmiPoint(itsFontSizeX * cloudSymbolFactor, itsFontSizeY * cloudSymbolFactor));
+		itsDrawingEnvironment.SetFontSize(NFmiPoint(itsFontSizeX * cloudSymbolFactor, itsFontSizeY * cloudSymbolFactor));
 		NFmiPoint relativetotalCloudinessLocation(0.5, 0.70); // kokonais pilvisyyden sijainti 0,0 1,1 maailmassa synop boxissa
 		anythingDrawed |= PrintParameterValue(theInfo, theRect, relativetotalCloudinessLocation, kFmiTotalCloudCover);
 	}
 
-	itsDrawingEnvironment->BoldFont(false);
-	itsDrawingEnvironment->SetFontType(oldFont);
+	itsDrawingEnvironment.BoldFont(false);
+	itsDrawingEnvironment.SetFontType(oldFont);
 
 	return anythingDrawed;
 }
@@ -1881,16 +1880,16 @@ bool NFmiSynopPlotView::DrawWindVector(boost::shared_ptr<NFmiFastQueryInfo> &the
 		if(windSpeed != kFloatMissing && windDir != kFloatMissing)
 		{
 			// *******  defaulttina seuraavat piirretään mustina tai halutulla värillä *************
-			itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
-			NFmiColor oldFillcolor(itsDrawingEnvironment->GetFillColor());
+			itsDrawingEnvironment.SetFrameColor(NFmiColor(0,0,0));
+			NFmiColor oldFillcolor(itsDrawingEnvironment.GetFillColor());
 			bool useSingleColor = metarCase ? metarSettings.UseSingleColor() : synopSettings.UseSingleColor();
 			if(useSingleColor)
 			{
 				const auto &singleColor = metarCase ? metarSettings.SingleColor() : synopSettings.SingleColor();
-				itsDrawingEnvironment->SetFrameColor(singleColor);
+				itsDrawingEnvironment.SetFrameColor(singleColor);
 			}
-			itsDrawingEnvironment->SetFillColor(itsDrawingEnvironment->GetFrameColor());
-			itsDrawingEnvironment->EnableFill();
+			itsDrawingEnvironment.SetFillColor(itsDrawingEnvironment.GetFrameColor());
+			itsDrawingEnvironment.EnableFill();
 
 			// tehdään pohjois korjaus tuuliviirin piirtoon
             NFmiPoint latlon = CurrentLatLon(theInfo);
@@ -1911,14 +1910,14 @@ bool NFmiSynopPlotView::DrawWindVector(boost::shared_ptr<NFmiFastQueryInfo> &the
 				double circleSizeFactor = 0.35;
 				NFmiRect circleRect(0, 0, itsToolBox->SX(itsFontSizeX) * circleSizeFactor, itsToolBox->SY(itsFontSizeY)* circleSizeFactor);
 				circleRect.Center(GetRelativeLocationFromRect(theRect, relativeWindLocation));
-				itsToolBox->DrawEllipse(circleRect, itsDrawingEnvironment);
+				itsToolBox->DrawEllipse(circleRect, &itsDrawingEnvironment);
 			}
 
 			auto fontSizeInMM = metarCase ? metarSettings.FontSize() : synopSettings.FontSize();
 			double windBarbLineWidthFactor = ::CalcLineValue(fontSizeInMM, 8., 2., 12., 7., 7., 13.);
 			int lineWidthInPixels = boost::math::iround(itsFontSizeX / windBarbLineWidthFactor);
-			NFmiPoint oldSize = itsDrawingEnvironment->GetPenSize();
-			itsDrawingEnvironment->SetPenSize(NFmiPoint(lineWidthInPixels, lineWidthInPixels));
+			NFmiPoint oldSize = itsDrawingEnvironment.GetPenSize();
+			itsDrawingEnvironment.SetPenSize(NFmiPoint(lineWidthInPixels, lineWidthInPixels));
 
 			NFmiPoint symbolSize(1, 1);
 			NFmiWindBarb(windSpeed
@@ -1929,16 +1928,16 @@ bool NFmiSynopPlotView::DrawWindVector(boost::shared_ptr<NFmiFastQueryInfo> &the
 						,symbolSize.X() * 0.5
 						,symbolSize.Y() * 0.35
 						,0
-						,itsDrawingEnvironment).Build();
-			itsDrawingEnvironment->SetPenSize(oldSize);
-			itsDrawingEnvironment->SetFillColor(oldFillcolor);
-			itsDrawingEnvironment->DisableFill();
+						,&itsDrawingEnvironment).Build();
+			itsDrawingEnvironment.SetPenSize(oldSize);
+			itsDrawingEnvironment.SetFillColor(oldFillcolor);
+			itsDrawingEnvironment.DisableFill();
 			if(windSpeed < 1)
 			{ // jos tyyntä, piirretään ympyrä kuvaamaan tyyntä
 				double circleSizeFactor = 1.2;
 				NFmiRect circleRect(0, 0, itsToolBox->SX(itsFontSizeX) * circleSizeFactor, itsToolBox->SY(itsFontSizeY)* circleSizeFactor);
 				circleRect.Center(GetRelativeLocationFromRect(theRect, relativeWindLocation));
-				itsToolBox->DrawEllipse(circleRect, itsDrawingEnvironment);
+				itsToolBox->DrawEllipse(circleRect, &itsDrawingEnvironment);
 			}
 		}
 		else

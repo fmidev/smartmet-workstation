@@ -33,7 +33,7 @@ class NFmiParamCommandView : public NFmiCtrlView
 {
 
  public:
-   NFmiParamCommandView (int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer);
+   NFmiParamCommandView (int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer);
    void Draw(NFmiToolBox* theGTB) override;
    virtual NFmiRect CalcSize(void); // koko saattaa muuttua, ja uutta kokoa pit‰‰ voida kysy‰ oliolta
    void UpdateTextData(const NFmiPoint& theFontSize, double theLineHeight, const NFmiPoint &theCheckBoxSize, const NFmiPoint &thePixelSize);

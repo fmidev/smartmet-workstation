@@ -190,8 +190,7 @@ void CTimeEditValuesView::OnInitialUpdate()
 
 	if(itsSmartMetDocumentInterface)
 		itsManagerView = new NFmiTimeValueEditManagerView(rect
-														 ,itsToolBox
-														 ,&itsDrawingEnvironment);
+														 ,itsToolBox);
 	CFmiWin32Helpers::InitializeCPPTooltip(this, m_tooltip, TIMEVIEW_TOOLTIP_ID, 500);
 	CRect winRec;
 	GetWindowRect(winRec);

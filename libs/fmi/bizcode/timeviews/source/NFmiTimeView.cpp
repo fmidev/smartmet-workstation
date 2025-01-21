@@ -13,13 +13,11 @@
 
 NFmiTimeView::NFmiTimeView(int theMapViewDescTopIndex, const NFmiRect &theRect
 						  ,NFmiToolBox *theToolBox
-						  ,NFmiDrawingEnvironment * theDrawingEnvi
   						  ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 						  ,const NFmiTimeDescriptor &theTimeDescriptor
                           ,int theRowIndex)
 :NFmiCtrlView(theMapViewDescTopIndex, theRect
 			 ,theToolBox
-			 ,theDrawingEnvi
 			 ,theDrawParam
              ,theRowIndex)
 ,itsEditedDataTimeDescriptor()

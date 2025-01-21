@@ -18,7 +18,6 @@ public:
 	bool MouseMove (const NFmiPoint & thePlace, unsigned long theKey) override;
 	void Draw(NFmiToolBox * theGTB) override;
 	NFmiMovingCPLocationView(NFmiToolBox * theToolBox
-					 ,NFmiDrawingEnvironment * theDrawingEnvi
 					 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 					 ,const NFmiRect& theRect
 					 ,int theIndex

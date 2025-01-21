@@ -26,7 +26,6 @@
 
 NFmiStationIndexTextView::NFmiStationIndexTextView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 												,NFmiToolBox *theToolBox
-												,NFmiDrawingEnvironment* theDrawingEnvi
 												,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 												,FmiParameterName theParamId
 												,NFmiIndexMessageList* theIndexedWordList
@@ -36,7 +35,6 @@ NFmiStationIndexTextView::NFmiStationIndexTextView(int theMapViewDescTopIndex, b
                                                 ,int theColumnIndex)
 : NFmiStationTextView (theMapViewDescTopIndex, theArea
 					   ,theToolBox
-					   ,theDrawingEnvi
 					   ,theDrawParam
 					   ,theParamId
 					   ,theOffSet
@@ -55,8 +53,8 @@ NFmiStationIndexTextView::~NFmiStationIndexTextView(void)
 void NFmiStationIndexTextView::ModifyTextEnvironment(void)
 {
 	NFmiStationTextView::ModifyTextEnvironment();
-    itsDrawingEnvironment->SetFontSize(CalcFontSize(16, boost::math::iround(MaximumFontSizeFactor() * 72), itsCtrlViewDocumentInterface->Printing())); 
-	itsDrawingEnvironment->SetFontType(kSynop);
+    itsDrawingEnvironment.SetFontSize(CalcFontSize(16, boost::math::iround(MaximumFontSizeFactor() * 72), itsCtrlViewDocumentInterface->Printing())); 
+	itsDrawingEnvironment.SetFontType(kSynop);
 }
 
 void NFmiStationIndexTextView::SbdSetFontName()
@@ -315,7 +313,6 @@ NFmiColor NFmiPrecipitationFormSymbolTextView::GetBasicParamRelatedSymbolColor(f
 
 NFmiRawMirriFontSymbolTextView::NFmiRawMirriFontSymbolTextView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
     , NFmiToolBox * theToolBox
-    , NFmiDrawingEnvironment * theDrawingEnvi
     , boost::shared_ptr<NFmiDrawParam> &theDrawParam
     , FmiParameterName theParamIdent
     , NFmiIndexMessageList * theIndexedWordList
@@ -325,7 +322,6 @@ NFmiRawMirriFontSymbolTextView::NFmiRawMirriFontSymbolTextView(int theMapViewDes
     , int theColumnIndex)
 : NFmiStationIndexTextView(theMapViewDescTopIndex, theArea
     , theToolBox
-    , theDrawingEnvi
     , theDrawParam
     , theParamIdent
     , theIndexedWordList
@@ -339,8 +335,8 @@ NFmiRawMirriFontSymbolTextView::NFmiRawMirriFontSymbolTextView(int theMapViewDes
 void NFmiRawMirriFontSymbolTextView::ModifyTextEnvironment(void)
 {
     NFmiStationTextView::ModifyTextEnvironment();
-    itsDrawingEnvironment->SetFontSize(CalcFontSize(16, boost::math::iround(MaximumFontSizeFactor() * 48), itsCtrlViewDocumentInterface->Printing()));
-    itsDrawingEnvironment->SetFontType(kMirri);
+    itsDrawingEnvironment.SetFontSize(CalcFontSize(16, boost::math::iround(MaximumFontSizeFactor() * 48), itsCtrlViewDocumentInterface->Printing()));
+    itsDrawingEnvironment.SetFontType(kMirri);
 }
 
 NFmiPoint NFmiRawMirriFontSymbolTextView::SbdCalcFixedSymbolSize() const
@@ -506,7 +502,7 @@ NFmiString NFmiCloudSymbolTextView::GetPrintedText(float theValue)
 void NFmiCloudSymbolTextView::ModifyTextEnvironment(void)
 {
 	NFmiStationIndexTextView::ModifyTextEnvironment();
-	itsGeneralFontSize = itsDrawingEnvironment->GetFontSize();
+	itsGeneralFontSize = itsDrawingEnvironment.GetFontSize();
 }
 
 NFmiColor NFmiCloudSymbolTextView::GetBasicParamRelatedSymbolColor(float theValue) const
@@ -539,7 +535,6 @@ NFmiSymbolColorChangingType NFmiCloudSymbolTextView::SbdGetSymbolColorChangingTy
 
 NFmiImageBasedSymbolView::NFmiImageBasedSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea>& theArea
     , NFmiToolBox* theToolBox
-    , NFmiDrawingEnvironment* theDrawingEnvi
     , boost::shared_ptr<NFmiDrawParam>& theDrawParam
     , FmiParameterName theParamIdent
     , NFmiIndexMessageList* theIndexedWordList
@@ -549,7 +544,6 @@ NFmiImageBasedSymbolView::NFmiImageBasedSymbolView(int theMapViewDescTopIndex, b
     , int theColumnIndex)
     :NFmiStationIndexTextView(theMapViewDescTopIndex, theArea
         , theToolBox
-        , theDrawingEnvi
         , theDrawParam
         , theParamIdent
         , theIndexedWordList
@@ -626,7 +620,7 @@ NFmiSymbolColorChangingType NFmiImageBasedSymbolView::SbdGetSymbolColorChangingT
 // tuuli vektori ei olekaan fontti pohjainen symboli.
 void NFmiImageBasedSymbolView::ModifyTextEnvironment(void)
 {
-    itsDrawingEnvironment->SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 48), itsCtrlViewDocumentInterface->Printing()));
+    itsDrawingEnvironment.SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 48), itsCtrlViewDocumentInterface->Printing()));
 }
 
 // ********************************************************************
@@ -637,7 +631,6 @@ NFmiImageMap NFmiBetterWeatherSymbolView::itsBetterWeatherSymbolMap;
 
 NFmiBetterWeatherSymbolView::NFmiBetterWeatherSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
     , NFmiToolBox * theToolBox
-    , NFmiDrawingEnvironment * theDrawingEnvi
     , boost::shared_ptr<NFmiDrawParam> &theDrawParam
     , FmiParameterName theParamIdent
     , NFmiIndexMessageList * theIndexedWordList
@@ -647,7 +640,6 @@ NFmiBetterWeatherSymbolView::NFmiBetterWeatherSymbolView(int theMapViewDescTopIn
     , int theColumnIndex)
 :NFmiImageBasedSymbolView(theMapViewDescTopIndex, theArea
         , theToolBox
-        , theDrawingEnvi
         , theDrawParam
         , theParamIdent
         , theIndexedWordList
@@ -686,7 +678,6 @@ NFmiImageMap NFmiSmartSymbolView::itsSmartSymbolMap;
 
 NFmiSmartSymbolView::NFmiSmartSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
     , NFmiToolBox * theToolBox
-    , NFmiDrawingEnvironment * theDrawingEnvi
     , boost::shared_ptr<NFmiDrawParam> &theDrawParam
     , FmiParameterName theParamIdent
     , NFmiIndexMessageList * theIndexedWordList
@@ -696,7 +687,6 @@ NFmiSmartSymbolView::NFmiSmartSymbolView(int theMapViewDescTopIndex, boost::shar
     , int theColumnIndex)
     :NFmiImageBasedSymbolView(theMapViewDescTopIndex, theArea
         , theToolBox
-        , theDrawingEnvi
         , theDrawParam
         , theParamIdent
         , theIndexedWordList
@@ -735,7 +725,6 @@ NFmiImageMap NFmiCustomSymbolView::itsCustomSymbolMap;
 
 NFmiCustomSymbolView::NFmiCustomSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
     , NFmiToolBox * theToolBox
-    , NFmiDrawingEnvironment * theDrawingEnvi
     , boost::shared_ptr<NFmiDrawParam> &theDrawParam
     , FmiParameterName theParamIdent
     , NFmiIndexMessageList * theIndexedWordList
@@ -745,7 +734,6 @@ NFmiCustomSymbolView::NFmiCustomSymbolView(int theMapViewDescTopIndex, boost::sh
     , int theColumnIndex)
     :NFmiImageBasedSymbolView(theMapViewDescTopIndex, theArea
         , theToolBox
-        , theDrawingEnvi
         , theDrawParam
         , theParamIdent
         , theIndexedWordList

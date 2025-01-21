@@ -41,8 +41,7 @@ class NFmiCrossSectionManagerView : public NFmiCtrlView
 
  public:
 	NFmiCrossSectionManagerView(const NFmiRect & theRect
-								,NFmiToolBox * theToolBox
-								,NFmiDrawingEnvironment * theDrawingEnvi);
+								,NFmiToolBox * theToolBox);
 	~NFmiCrossSectionManagerView(void);
 	void Update(void) override;
 	void Draw(NFmiToolBox* theToolBox) override;

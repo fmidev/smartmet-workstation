@@ -42,7 +42,6 @@ public:
   NFmiCtrlViewList(void);
   NFmiCtrlViewList(int theMapViewDescTopIndex, const NFmiRect & theRect,
 				   NFmiToolBox * theToolBox,
-				   NFmiDrawingEnvironment * theDrawingEnvi,
 				   boost::shared_ptr<NFmiDrawParam> &theDrawParam,
 				   bool fResponseToMouse = false);
   inline NFmiCtrlViewList(NFmiCtrlViewList& theList); 

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "SmartMetToolboxDep_resource.h"
-#include "NFmiDrawingEnvironment.h"
 #include "NFmiMetTime.h"
+#include "NFmiPoint.h"
 #include "PPToolTip.h"
 #include "CtrlViewWin32Functions.h"
 #include "boost/shared_ptr.hpp"
@@ -127,7 +127,6 @@ private:
 	HBITMAP itsSynopPlotBitmapHandle;
 	NFmiEditMapView* itsEditMapView;
 	NFmiToolBox * itsToolBox;
-	NFmiDrawingEnvironment itsDrawingEnvironment;
 	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
 	int itsMapViewDescTopIndex;
 	bool fMouseCursorOnWnd;

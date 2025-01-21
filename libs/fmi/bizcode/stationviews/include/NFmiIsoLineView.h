@@ -157,7 +157,6 @@ class NFmiIsoLineView : public NFmiStationView
  public:
    NFmiIsoLineView (int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 				   ,NFmiToolBox * theToolBox
-				   ,NFmiDrawingEnvironment * theDrawingEnvi
 				   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 				   ,FmiParameterName theParamId
 				   ,NFmiPoint theOffSet

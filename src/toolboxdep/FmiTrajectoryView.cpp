@@ -118,7 +118,6 @@ void CFmiTrajectoryView::Dump(CDumpContext& dc) const
 
 void CFmiTrajectoryView::OnInitialUpdate()
 {
-	static NFmiDrawingEnvironment envi;
 	CView::OnInitialUpdate(); // älä kutsu lähintä emoa!!!
 
 	itsToolBox = new NFmiToolBox(this); // tämä on lähimmässä emossa ja luotava tässä!!
@@ -127,7 +126,7 @@ void CFmiTrajectoryView::OnInitialUpdate()
 		return;
 	itsToolBox->SetDC(theDC);
 	NFmiRect rect(0.,0.,1.,1.); // 0,0 - 1,1 rect I hope?
-	itsView = new NFmiTrajectoryView(rect, itsToolBox, &envi);
+	itsView = new NFmiTrajectoryView(rect, itsToolBox);
 	ReleaseDC(theDC);
 }
 

@@ -82,7 +82,6 @@ class NFmiStationViewHandler : public NFmiCtrlView
  public:
 	NFmiStationViewHandler(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 						   ,NFmiToolBox * theToolBox
-						   ,NFmiDrawingEnvironment * theDrawingEnvi
 						   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 						   ,int theRowIndex
 						   ,int theColumnIndex);
@@ -167,7 +166,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	void DrawSilamStationMarkers(void);
 	void DrawTrajectories(void);
 	void DrawTrajectory(const NFmiTrajectory &theTrajectory, const NFmiColor &theColor);
-	void DrawSingleTrajector(const NFmiSingleTrajector &theSingleTrajector, NFmiDrawingEnvironment *theEnvi, int theTimeStepInMinutes, int theTimeMarkerPixelSize, int theTimeMarkerPixelPenSize, FmiDirection theDirection);
+	void DrawSingleTrajector(const NFmiSingleTrajector &theSingleTrajector, NFmiDrawingEnvironment &theEnvi, int theTimeStepInMinutes, int theTimeMarkerPixelSize, int theTimeMarkerPixelPenSize, FmiDirection theDirection);
 	NFmiPoint MakeSoundingMarkerScale(NFmiToolBox *theToolBox, double theSymbolSizeInMM);
 	void DrawCPCropArea(void);
 	NFmiRect CalcCPCropAreasRelativeRect(const boost::shared_ptr<NFmiArea> &theArea);

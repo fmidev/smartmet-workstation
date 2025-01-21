@@ -171,12 +171,10 @@ static bool HasModelClimatologyDataAnyOfGivenParameters(boost::shared_ptr<NFmiFa
 //--------------------------------------------------------
 NFmiTimeSerialView::NFmiTimeSerialView(int theMapViewDescTopIndex, const NFmiRect &theRect
 						 ,NFmiToolBox *theToolBox
-						 ,NFmiDrawingEnvironment * theDrawingEnvi
 						 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 						 ,int theRowIndex)
 :NFmiTimeView(theMapViewDescTopIndex, theRect
 			 ,theToolBox
-			 ,theDrawingEnvi
 			 ,theDrawParam
 			 ,NFmiTimeDescriptor(NFmiMetTime(60), GetCtrlViewDocumentInterface()->TimeSerialViewTimeBag()) // tämä aika-alue annetaan aika-akselin tekoa varten
              ,theRowIndex)
@@ -1457,15 +1455,15 @@ void NFmiTimeSerialView::DrawParamName(void)
 	itsToolBox->UseClipping(false);
 	if(itsDrawParam)
 	{
-		itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData()));
+		itsDrawingEnvironment.SetFrameColor(CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData()));
 
-		itsDrawingEnvironment->SetFontSize(CalcFontSize());
+		itsDrawingEnvironment.SetFontSize(CalcFontSize());
 
 		bool doNewDataHighlight = !itsCtrlViewDocumentInterface->BetaProductGenerationRunning();
 		auto str = CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, true, doNewDataHighlight, true, nullptr);
 		if(IsNewDataParameterName(str))
 		{
-			itsDrawingEnvironment->BoldFont(true);
+			itsDrawingEnvironment.BoldFont(true);
 		}
 
 		if(itsDrawParam->DataType() == NFmiInfoData::kEditable)
@@ -1488,13 +1486,13 @@ void NFmiTimeSerialView::DrawParamName(void)
 		}
 
 		NFmiPoint place(CalcParamTextPosition());
-		NFmiText text(place, str, true, 0, itsDrawingEnvironment);
+		NFmiText text(place, str, true, 0, &itsDrawingEnvironment);
 		FmiDirection oldDir = itsToolBox->GetTextAlignment();
 		itsToolBox->SetTextAlignment(kTop);
 		itsToolBox->Convert(&text);
 		DrawSideParameterNames(str);
 		itsToolBox->SetTextAlignment(oldDir);
-		itsDrawingEnvironment->BoldFont(false);
+		itsDrawingEnvironment.BoldFont(false);
 	}
 }
 
@@ -1514,9 +1512,9 @@ void NFmiTimeSerialView::DrawSideParameterNames(const NFmiString& mainParamStrin
 		usedMainParamString += "   ";
 		::MoveTextPointByDrawnText(place, usedMainParamString, itsToolBox);
 		// Piirretään pääparametrin perään eri väreillä side-paramit
-		itsDrawingEnvironment->SetFrameColor(NFmiColor(0, 0, 0));
+		itsDrawingEnvironment.SetFrameColor(NFmiColor(0, 0, 0));
 		NFmiString drawnText = "Side-Params:  ";
-		NFmiText headerText(place, drawnText, true, 0, itsDrawingEnvironment);
+		NFmiText headerText(place, drawnText, true, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&headerText);
 		::MoveTextPointByDrawnText(place, drawnText, itsToolBox);
 
@@ -1524,10 +1522,10 @@ void NFmiTimeSerialView::DrawSideParameterNames(const NFmiString& mainParamStrin
 		int sideParameterColorIndex = 1;
 		for(const auto& sideParamName : itsSideParameterNames)
 		{
-			itsDrawingEnvironment->SetFrameColor(itsCtrlViewDocumentInterface->GeneralColor(sideParameterColorIndex));
+			itsDrawingEnvironment.SetFrameColor(itsCtrlViewDocumentInterface->GeneralColor(sideParameterColorIndex));
 			std::string sideParamString = std::to_string(sideParameterColorIndex) + ")" + sideParamName + "  ";
 			drawnText = sideParamString;
-			NFmiText paramText(place, drawnText, true, 0, itsDrawingEnvironment);
+			NFmiText paramText(place, drawnText, true, 0, &itsDrawingEnvironment);
 			itsToolBox->Convert(&paramText);
 			::MoveTextPointByDrawnText(place, drawnText, itsToolBox);
 			sideParameterColorIndex++;
@@ -1550,14 +1548,14 @@ void NFmiTimeSerialView::DrawModifyingUnit(void)
 	itsToolBox->UseClipping(false);
 	if(itsCtrlViewDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // jos ns. edit-moodi päällä, piiretään aikarajoitin viivat
 	{
-		itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
+		itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
 
 		itsModifyingUnitTextRect = CalcModifyingUnitRect();
-		NFmiRectangle rec(itsModifyingUnitTextRect, 0, itsDrawingEnvironment);
+		NFmiRectangle rec(itsModifyingUnitTextRect, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&rec);
 
 		NFmiPoint fontSize = CalcFontSize();						// Pikaratkaisu.
-		itsDrawingEnvironment->SetFontSize(fontSize);				// Pikaratkaisu.
+		itsDrawingEnvironment.SetFontSize(fontSize);				// Pikaratkaisu.
 
 		NFmiString str("");
 
@@ -1572,7 +1570,7 @@ void NFmiTimeSerialView::DrawModifyingUnit(void)
 
 		NFmiPoint place(itsModifyingUnitTextRect.BottomLeft());
 		place.Y(place.Y() - 0.005);
-		NFmiText text(place, str, false, 0, itsDrawingEnvironment);
+		NFmiText text(place, str, false, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&text);
 	}
 	return;
@@ -2703,7 +2701,7 @@ bool NFmiTimeSerialView::AutoAdjustValueScale(void)
 	itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, true);
 	DrawSelectedStationData(); // skannataan piirto-systeemi läpi ilman piirtoa etsien min/max arvoja eri datoista
 	itsToolBox->UseClipping(false);
-	itsDrawingEnvironment->EnableFill();
+	itsDrawingEnvironment.EnableFill();
 	
 	itsOperationMode = TimeSerialOperationMode::NormalDrawMode;
 

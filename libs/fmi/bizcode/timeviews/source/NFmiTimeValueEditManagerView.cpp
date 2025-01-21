@@ -25,11 +25,9 @@ const long kFmiSymbolViewHeigth = 70;
 //--------------------------------------------------------
 NFmiTimeValueEditManagerView::NFmiTimeValueEditManagerView
 					(const NFmiRect & theRect
-					,NFmiToolBox * theToolBox
-					,NFmiDrawingEnvironment * theDrawingEnvi)
+					,NFmiToolBox * theToolBox)
 :NFmiCtrlView(0, theRect
-			 ,theToolBox
-			 ,theDrawingEnvi)
+			 ,theToolBox)
 ,itsViewList(new NFmiCtrlViewList())
 ,itsViewCount(0)
 ,itsSymbolViewCount(0) //laura lisäsi
@@ -398,35 +396,30 @@ NFmiTimeSerialView* NFmiTimeValueEditManagerView::CreateTimeSerialView(boost::sh
             case kFmiPotentialPrecipitationForm:
 				view = new NFmiTimeSerialPrecipitationFormView(itsMapViewDescTopIndex, rect
 															   ,itsToolBox
-															   ,itsDrawingEnvironment
 															   ,theDrawParam
 															   ,index);
 				break;
 			case kFmiPrecipitationType:
 				view = new NFmiTimeSerialPrecipitationTypeView(itsMapViewDescTopIndex, rect
 															   ,itsToolBox
-															   ,itsDrawingEnvironment
 															   ,theDrawParam
 															   ,index);
 				break;
 			case kFmiFogIntensity:
 				view = new NFmiTimeSerialFogIntensityView(itsMapViewDescTopIndex, rect
 														   ,itsToolBox
-														   ,itsDrawingEnvironment
 														   ,theDrawParam
 														   ,index);
 				break;
 			case kFmiWeatherSymbol3:
 				view = new NFmiTimeSerialSymbolView(itsMapViewDescTopIndex, rect
 												   ,itsToolBox
-												   ,itsDrawingEnvironment
 												   ,theDrawParam
 												   ,index);
 				break;
 			default:
 				view = new NFmiTimeSerialView(itsMapViewDescTopIndex, rect
 											 ,itsToolBox
-											 ,itsDrawingEnvironment
 											 ,theDrawParam
 											 ,index);
 				break;
@@ -487,7 +480,6 @@ void NFmiTimeValueEditManagerView::CreateTimeAxisView(const NFmiTimeBag& theTime
 	delete itsUpperTimeView;
 	itsUpperTimeView = new NFmiTimeSerialTimeControlView(itsMapViewDescTopIndex, CalcUpperTimeAxisRect()
 												,itsToolBox
-												,itsDrawingEnvironment
 												, itsCtrlViewDocumentInterface->DefaultEditedDrawParam()
 												,false
 												,false

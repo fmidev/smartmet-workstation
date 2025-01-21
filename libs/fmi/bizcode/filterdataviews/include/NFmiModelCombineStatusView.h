@@ -21,7 +21,6 @@ class NFmiModelCombineStatusView : public NFmiZoomView
 public:
    void Draw(NFmiToolBox * theGTB) override;
    NFmiModelCombineStatusView(NFmiToolBox * theToolBox
-							 ,NFmiDrawingEnvironment * theDrawingEnvi
 							 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 							 ,const NFmiRect& theRect);
 	~NFmiModelCombineStatusView();
