@@ -276,6 +276,8 @@ class NFmiMacroParamDataGenerator
     boost::shared_ptr<CachedRegString> mDialogBaseDataGridScaleString; // pakollinen
     // Kuinka paljon CPU kapasiteetista halutaan laitta MacroParam-datojen laskentoihin.
     boost::shared_ptr<CachedRegDouble> mDialogCpuUsagePercentage;
+    // Dialogi muistaa mikä on viimeisin generoituvan datan talletuspolku
+    boost::shared_ptr<CachedRegString> mGeneratedDataStorageInitialPath;
 
     // Käytetty automaatiolista
     NFmiMacroParamDataAutomationList itsUsedMacroParamDataAutomationList;
@@ -284,6 +286,8 @@ class NFmiMacroParamDataGenerator
     static const std::string itsMacroParamDataInfoFileFilter;
     static const std::string itsMacroParamDataListFileExtension;
     static const std::string itsMacroParamDataListFileFilter;
+    static const std::string itsGeneratedDataFileExtension;
+    static const std::string itsGeneratedDataFileFilter;
 
     // Initialisoinnista raportoiva teksti
     std::string itsInitializeLogStr;
@@ -366,6 +370,8 @@ public:
     void DialogBaseDataGridScaleString(const std::string &newValue);
     double DialogCpuUsagePercentage() const;
     void DialogCpuUsagePercentage(double newValue) const;
+    std::string GeneratedDataStorageInitialPath() const;
+    void GeneratedDataStorageInitialPath(const std::string &newValue);
 
     const std::string& GetInitializeLogStr() const { return itsInitializeLogStr; }
     const std::string& GetSmarttoolCalculationLogStr() const { return itsSmarttoolCalculationLogStr; }
@@ -377,6 +383,8 @@ public:
     static const std::string& MacroParamDataInfoFileFilter() { return itsMacroParamDataInfoFileFilter; }
     static const std::string& MacroParamDataListFileExtension() { return itsMacroParamDataListFileExtension; }
     static const std::string& MacroParamDataListFileFilter() { return itsMacroParamDataListFileFilter; }
+    static const std::string& GeneratedDataFileExtension() { return itsGeneratedDataFileExtension; }
+    static const std::string& GeneratedDataFileFilter() { return itsGeneratedDataFileFilter; }
 
 private:
     bool CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::vector<std::string>& smartToolContentList, NFmiThreadCallBacks* threadCallBacks);

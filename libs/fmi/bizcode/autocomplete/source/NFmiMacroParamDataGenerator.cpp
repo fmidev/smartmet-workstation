@@ -40,10 +40,60 @@ namespace
         return originalPath.extension().string();
     }
 
+    std::size_t length_between_two(std::size_t a, std::size_t b)
+    {
+        if(b < a) return 0;
+
+        return b - a;
+    }
+
+    std::string text_between_two(std::string s, std::string a, std::string b)
+    {
+        std::size_t aPos = s.find(a);
+        std::size_t bPos = s.find(b);
+        if(aPos == std::string::npos || bPos == std::string::npos)
+            return "";
+
+        // The + a.length() is necessary here so we don't get the text that makes up a
+        std::size_t length = ::length_between_two(aPos + a.length(), bPos);
+
+        // See previous comment.
+        std::string sub = s.substr(aPos + a.length(), length);
+        return sub;
+    }
+
+    bool isNumeric(const std::string& str) 
+    {
+        return !str.empty() && std::all_of(str.begin(), str.end(), ::isdigit);
+    }
+
     NFmiParam MakeWantedParam(const std::string& part1, const std::string& part2)
     {
-        unsigned long paramId = std::stoul(part1);
-        return NFmiParam(paramId, boost::trim_copy(part2), kFloatMissing, kFloatMissing, kFloatMissing, kFloatMissing, "%.1f", kLinearly);
+        auto usedParamIdStr = part1;
+        FmiInterpolationMethod usedInterpolation = kLinearly;
+        std::string interpolationMethodStr = ::text_between_two(usedParamIdStr, "{", "}");
+        if(!interpolationMethodStr.empty())
+        {
+            auto interpolationNumber = (FmiInterpolationMethod)std::stoi(interpolationMethodStr);
+            if(interpolationNumber >= kLinearly && interpolationNumber <= kNearestPoint)
+            {
+                usedInterpolation = interpolationNumber;
+            }
+            else
+            {
+                throw std::runtime_error(std::string("Illegal value for parameter's interpolation method: ") + interpolationMethodStr);
+            }
+            auto bracesStartPos = usedParamIdStr.find('{');
+            usedParamIdStr = usedParamIdStr.substr(0, bracesStartPos);
+        }
+
+        if(!::isNumeric(usedParamIdStr))
+        {
+            throw std::runtime_error(std::string("Illegal value for parameter's id: ") + usedParamIdStr);
+        }
+        unsigned long paramId = std::stoul(usedParamIdStr);
+
+        return NFmiParam(paramId, boost::trim_copy(part2), kFloatMissing, kFloatMissing, kFloatMissing, kFloatMissing, "%.1f", usedInterpolation);
     }
 
     std::vector<std::string> GetSplittedAndTrimmedStrings(const std::string& str, const std::string& splitter)
@@ -333,6 +383,12 @@ std::pair<std::string, std::vector<std::string>> NFmiMacroParamDataInfo::CheckUs
     {
         try
         {
+            const auto& producerIdStr = parts[0];
+            if(!::isNumeric(producerIdStr))
+            {
+                throw std::runtime_error(std::string("Illegal value for producer's id: ") + producerIdStr);
+            }
+
             unsigned long producerId = std::stoul(parts[0]);
         }
         catch(std::exception&)
@@ -1047,6 +1103,8 @@ const std::string NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileExtensio
 const std::string NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileFilter = "MacroParam data info Files (*." + NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileExtension + ")|*." + NFmiMacroParamDataGenerator::itsMacroParamDataInfoFileExtension + "|All Files (*.*)|*.*||";
 const std::string NFmiMacroParamDataGenerator::itsMacroParamDataListFileExtension = "mpdlist";
 const std::string NFmiMacroParamDataGenerator::itsMacroParamDataListFileFilter = "MacroParam data list Files (*." + NFmiMacroParamDataGenerator::itsMacroParamDataListFileExtension + ")|*." + NFmiMacroParamDataGenerator::itsMacroParamDataListFileExtension + "|All Files (*.*)|*.*||";
+const std::string NFmiMacroParamDataGenerator::itsGeneratedDataFileExtension = "sqd";
+const std::string NFmiMacroParamDataGenerator::itsGeneratedDataFileFilter = "Generated data Files (*." + NFmiMacroParamDataGenerator::itsGeneratedDataFileExtension + ")|*." + NFmiMacroParamDataGenerator::itsGeneratedDataFileExtension + "|All Files (*.*)|*.*||";
 
 NFmiStopFunctor NFmiMacroParamDataGenerator::itsStopFunctor;
 NFmiThreadCallBacks NFmiMacroParamDataGenerator::itsThreadCallBacks = NFmiThreadCallBacks(&NFmiMacroParamDataGenerator::itsStopFunctor, nullptr);
@@ -1095,6 +1153,7 @@ bool NFmiMacroParamDataGenerator::Init(const std::string& theBaseRegistryPath, c
     mDialogCpuUsagePercentage = ::CreateRegValue<CachedRegDouble>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\CpuUsagePercentage", usedKey, NFmiSmartToolModifier::DefaultUsedCpuCapacityPercentageInCalculations);
     // CpuUsagePercentage pit‰‰ korjata varmuuden vuoksi
     *mDialogCpuUsagePercentage = NFmiSmartToolModifier::FixCpuCapacityPercentageInCalculations(*mDialogCpuUsagePercentage);
+    mGeneratedDataStorageInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, macroParamDataGeneratorSectionName, "\\GeneratedDataStorageInitialPath", usedKey, "C:\\data\\");
 
     LoadUsedAutomationList(AutomationListPath());
 
@@ -1258,7 +1317,10 @@ bool NFmiMacroParamDataGenerator::StoreMacroParamData(boost::shared_ptr<NFmiQuer
         throw std::runtime_error(checkStr);
     }
 
-    auto finalDataFilePath = NFmiMacroParamDataInfo::MakeDataStorageFilePath(dataStorageFileFilter);
+    // Jos dataStorageFileFilter:issa ei ole drive-letteria ja kyse on muuten 
+    // absoluuttisesta polusta, lis‰t‰‰n siihen mMacroParamDataTmpDirectory drive-letter.
+    auto usedDataStorageFileFilter = PathUtils::fixMissingDriveLetterToAbsolutePath(dataStorageFileFilter, mMacroParamDataTmpDirectory);
+    auto finalDataFilePath = NFmiMacroParamDataInfo::MakeDataStorageFilePath(usedDataStorageFileFilter);
     auto tmpDataFilePath = ::MakeTmpDataFilePath(finalDataFilePath, mMacroParamDataTmpDirectory);
 
     // Talletetaan ensin tmp hakemistoon, ja sitten vasta rename:lla laitetaan lopulliseen hakemistoon.
@@ -1277,7 +1339,7 @@ bool NFmiMacroParamDataGenerator::StoreMacroParamData(boost::shared_ptr<NFmiQuer
     auto timeLastedStr = timer.TimeDiffInMSeconds() < 10000 ? timer.EasyTimeDiffStr(false, true) : timer.EasyTimeDiffStr(true, true);
     LastGeneratedDataMakeTime(timeLastedStr);
     ::LogDataGenerationCompletes(fullAutomationPath, finalDataFilePath, timeLastedStr);
-    ::CleanFilePattern(dataStorageFileFilter, keepMaxFiles);
+    ::CleanFilePattern(usedDataStorageFileFilter, keepMaxFiles);
     return true;
 }
 
@@ -1551,6 +1613,16 @@ double NFmiMacroParamDataGenerator::DialogCpuUsagePercentage() const
 void NFmiMacroParamDataGenerator::DialogCpuUsagePercentage(double newValue) const
 {
     *mDialogCpuUsagePercentage = NFmiSmartToolModifier::FixCpuCapacityPercentageInCalculations(newValue);
+}
+
+std::string NFmiMacroParamDataGenerator::GeneratedDataStorageInitialPath() const
+{
+    return *mGeneratedDataStorageInitialPath;
+}
+
+void NFmiMacroParamDataGenerator::GeneratedDataStorageInitialPath(const std::string& newValue)
+{
+    *mGeneratedDataStorageInitialPath = newValue;
 }
 
 NFmiMacroParamDataInfo NFmiMacroParamDataGenerator::MakeDataInfo() const

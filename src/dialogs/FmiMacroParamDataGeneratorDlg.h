@@ -5,6 +5,7 @@
 #include "TextProgressCtrl.h"
 #include "WndResizer.h"
 #include "GridCtrl.h"
+#include "catlog/catlog.h"
 
 class SmartMetDocumentInterface;
 class NFmiMacroParamDataGenerator;
@@ -136,6 +137,7 @@ private:
 	void InitCpuUsagePercentage(double cpuUsagePercentage);
 	std::pair<bool,double> GetCpuUsagePercentage();
 	void ForceGridCtrlUpdate();
+	void DoErrorLogging(std::string errorItem, std::string errorMessage, CatLog::Severity logLevel);
 
 	NFmiMacroParDataAutomationGridCtrl itsGridCtrl;
 	std::vector<MacroParDataAutomationHeaderParInfo> itsHeaders;
@@ -242,4 +244,5 @@ public:
 	afx_msg void OnBnClickedButtonAddUsedSmarttoolPath();
 	afx_msg void OnEnChangeEditBaseDataGridScale();
 	afx_msg void OnEnChangeEditCpuUsagePercentage();
+	afx_msg void OnBnClickedButtonBrowseStoredDataFileFilter();
 };

@@ -153,6 +153,7 @@ BEGIN_MESSAGE_MAP(CFmiMacroParamDataGeneratorDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_ADD_USED_SMARTTOOL_PATH, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonAddUsedSmarttoolPath)
 	ON_EN_CHANGE(IDC_EDIT_BASE_DATA_GRID_SCALE, &CFmiMacroParamDataGeneratorDlg::OnEnChangeEditBaseDataGridScale)
 	ON_EN_CHANGE(IDC_EDIT_CPU_USAGE_PERCENTAGE, &CFmiMacroParamDataGeneratorDlg::OnEnChangeEditCpuUsagePercentage)
+	ON_BN_CLICKED(IDC_BUTTON_BROWSE_STORED_DATA_FILE_FILTER, &CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonBrowseStoredDataFileFilter)
 END_MESSAGE_MAP()
 
 // CFmiMacroParamDataGeneratorDlg message handlers
@@ -559,6 +560,10 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditBaseDataParamProducer()
 	std::string tmp = CT2A(itsBaseDataParamProducerString);
 	auto checkResult = NFmiMacroParamDataInfo::CheckBaseDataParamProducerString(tmp, true);
 	fBaseDataParamProducerStringHasInvalidValues = !checkResult.first.empty();
+	if(fBaseDataParamProducerStringHasInvalidValues)
+	{
+		DoErrorLogging("BaseData", checkResult.first, CatLog::Severity::Error);
+	}
 
 	// Edit kentt‰‰n liittyv‰ otsikkokontrolli v‰rj‰t‰‰n punaiseksi, jos inputissa on vikaa
 	DoControlColoringUpdates(IDC_STATIC_BASE_DATA_PARAM_PRODUCER_STR);
@@ -571,6 +576,10 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditProducerIdNamePair()
 	std::string tmp = CT2A(itsProducerIdNamePairString);
 	auto checkResult = NFmiMacroParamDataInfo::CheckUsedProducerString(tmp);
 	fProducerIdNamePairStringHasInvalidValues = !checkResult.first.empty();
+	if(fProducerIdNamePairStringHasInvalidValues)
+	{
+		DoErrorLogging("Producer", checkResult.first, CatLog::Severity::Error);
+	}
 
 	// Edit kentt‰‰n liittyv‰ otsikkokontrolli v‰rj‰t‰‰n punaiseksi, jos inputissa on vikaa
 	DoControlColoringUpdates(IDC_STATIC_PRODUCER_ID_NAME_PAIR_STR);
@@ -584,9 +593,19 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedParameterList()
 	NFmiProducer dummyProducer;
 	auto checkResult = NFmiMacroParamDataInfo::CheckUsedParameterListString(tmp, dummyProducer);
 	fUsedParameterListStringHasInvalidValues = !checkResult.first.empty();
+	if(fUsedParameterListStringHasInvalidValues)
+	{
+		DoErrorLogging("ParameterList", checkResult.first, CatLog::Severity::Error);
+	}
 
 	// Edit kentt‰‰n liittyv‰ otsikkokontrolli v‰rj‰t‰‰n punaiseksi, jos inputissa on vikaa
 	DoControlColoringUpdates(IDC_STATIC_USED_PARAMETER_LIST_STR);
+}
+
+const std::string g_loggerName = "MacroParamDataGeneratorDlg";
+void CFmiMacroParamDataGeneratorDlg::DoErrorLogging(std::string errorItem, std::string errorMessage, CatLog::Severity logLevel)
+{
+	CatLog::logMessage(g_loggerName + " " + errorItem + ": " + errorMessage, logLevel, CatLog::Category::Operational);
 }
 
 void CFmiMacroParamDataGeneratorDlg::OnChangeEditGeneratedDataStorageFileFilter()
@@ -596,9 +615,27 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditGeneratedDataStorageFileFilter(
 	std::string tmp = CT2A(itsGeneratedDataStorageFileFilter);
 	auto checkResult = NFmiMacroParamDataInfo::CheckDataStorageFileFilter(tmp);
 	fGeneratedDataStorageFileFilterHasInvalidValues = !checkResult.empty();
+	if(fGeneratedDataStorageFileFilterHasInvalidValues)
+	{
+		DoErrorLogging("Data file filter", checkResult, CatLog::Severity::Error);
+	}
 
 	// Edit kentt‰‰n liittyv‰ otsikkokontrolli v‰rj‰t‰‰n punaiseksi, jos inputissa on vikaa
 	DoControlColoringUpdates(IDC_STATIC_GENERATED_DATA_STORAGE_FILE_FILTER_STR);
+}
+
+void CFmiMacroParamDataGeneratorDlg::OnBnClickedButtonBrowseStoredDataFileFilter()
+{
+	auto initialSavePath = itsMacroParamDataGenerator->GeneratedDataStorageInitialPath();
+	std::string selectedAbsoluteFilePath;
+	if(BetaProduct::GetFilePathFromUser(NFmiMacroParamDataGenerator::GeneratedDataFileFilter(), initialSavePath, selectedAbsoluteFilePath, true, "", this))
+	{
+		initialSavePath = PathUtils::getPathSectionFromTotalFilePath(selectedAbsoluteFilePath);
+		itsMacroParamDataGenerator->GeneratedDataStorageInitialPath(initialSavePath);
+		itsGeneratedDataStorageFileFilter = CA2T(selectedAbsoluteFilePath.c_str());
+		UpdateData(FALSE);
+		OnChangeEditGeneratedDataStorageFileFilter();
+	}
 }
 
 void CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedDataGenerationSmarttoolPathList()
@@ -608,6 +645,10 @@ void CFmiMacroParamDataGeneratorDlg::OnChangeEditUsedDataGenerationSmarttoolPath
 	std::string tmp = CT2A(itsUsedDataGenerationSmarttoolPathList);
 	auto checkResult = NFmiMacroParamDataInfo::CheckDataGeneratingSmarttoolPathListString(tmp);
 	fUsedDataGenerationSmarttoolPathListHasInvalidValues = !checkResult.empty();
+	if(fUsedDataGenerationSmarttoolPathListHasInvalidValues)
+	{
+		DoErrorLogging("Smarttool paths", checkResult, CatLog::Severity::Error);
+	}
 
 	// Edit kentt‰‰n liittyv‰ otsikkokontrolli v‰rj‰t‰‰n punaiseksi, jos inputissa on vikaa
 	DoControlColoringUpdates(IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_LIST_STR);
@@ -620,6 +661,10 @@ void CFmiMacroParamDataGeneratorDlg::OnEnChangeEditUsedDataTriggerList()
 	std::string tmp = CT2A(itsDataTriggerList);
 	auto checkResult = NFmiMacroParamDataInfo::CheckDataTriggerListString(tmp);
 	fDataTriggerListHasInvalidValues = !checkResult.first.empty();
+	if(fDataTriggerListHasInvalidValues)
+	{
+		DoErrorLogging("Data triggers", checkResult.first, CatLog::Severity::Error);
+	}
 
 	// Edit kentt‰‰n liittyv‰ otsikkokontrolli v‰rj‰t‰‰n punaiseksi, jos inputissa on vikaa
 	DoControlColoringUpdates(IDC_STATIC_USED_DATA_TRIGGER_LIST);
@@ -639,6 +684,10 @@ void CFmiMacroParamDataGeneratorDlg::OnEnChangeEditCpuUsagePercentage()
 	auto cpuUsageCheckResult = GetCpuUsagePercentage();
 	auto checkedCpuUsageValue = NFmiSmartToolModifier::FixCpuCapacityPercentageInCalculations(cpuUsageCheckResult.second);
 	fCpuUsagePercentageHasInvalidValues = !(cpuUsageCheckResult.first && checkedCpuUsageValue == cpuUsageCheckResult.second);
+	if(fCpuUsagePercentageHasInvalidValues)
+	{
+		DoErrorLogging("CPU usage", "usage percentage has invalid values", CatLog::Severity::Error);
+	}
 
 	// Edit kentt‰‰n liittyv‰ otsikkokontrolli v‰rj‰t‰‰n punaiseksi, jos inputissa on vikaa
 	DoControlColoringUpdates(IDC_STATIC_CPU_USAGE_PERCENTAGE_STR);
