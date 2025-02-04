@@ -238,9 +238,11 @@ void NFmiSmartToolCalculationBlock::Calculate(const NFmiCalculationParams &theCa
   if (itsFirstCalculationSection)
     itsFirstCalculationSection->Calculate(theCalculationParams, theMacroParamValue);
 
-  if (itsIfAreaMaskSection && itsIfAreaMaskSection->IsMasked(theCalculationParams))
+  if (itsIfAreaMaskSection &&
+      itsIfAreaMaskSection->IsMasked(theCalculationParams, theMacroParamValue))
     itsIfCalculationBlocks->Calculate(theCalculationParams, theMacroParamValue);
-  else if (itsElseIfAreaMaskSection && itsElseIfAreaMaskSection->IsMasked(theCalculationParams))
+  else if (itsElseIfAreaMaskSection &&
+           itsElseIfAreaMaskSection->IsMasked(theCalculationParams, theMacroParamValue))
     itsElseIfCalculationBlocks->Calculate(theCalculationParams, theMacroParamValue);
   else if (itsElseCalculationBlocks)
     itsElseCalculationBlocks->Calculate(theCalculationParams, theMacroParamValue);
@@ -258,9 +260,9 @@ void NFmiSmartToolCalculationBlock::Calculate_ver2(
       itsFirstCalculationSection->Calculate_ver2(theCalculationParams);
   }
 
-  if (itsIfAreaMaskSection && itsIfAreaMaskSection->IsMasked(theCalculationParams))
+  if (itsIfAreaMaskSection && itsIfAreaMaskSection->IsMasked_ver2(theCalculationParams))
     itsIfCalculationBlocks->Calculate_ver2(theCalculationParams);
-  else if (itsElseIfAreaMaskSection && itsElseIfAreaMaskSection->IsMasked(theCalculationParams))
+  else if (itsElseIfAreaMaskSection && itsElseIfAreaMaskSection->IsMasked_ver2(theCalculationParams))
     itsElseIfCalculationBlocks->Calculate_ver2(theCalculationParams);
   else if (itsElseCalculationBlocks)
     itsElseCalculationBlocks->Calculate_ver2(theCalculationParams);
@@ -951,12 +953,12 @@ void NFmiSmartToolModifier::ModifyConditionalData(
             calculationParams.itsLocationIndex =
                 info->LocationIndex();  // tämä locationindex juttu liittyy kai optimointiin, jota
                                         // ei tehdä enää, pitäisikö poistaa
-            if (theCalculationBlock->itsIfAreaMaskSection->IsMasked(calculationParams))
+            if (theCalculationBlock->itsIfAreaMaskSection->IsMasked(calculationParams, theMacroParamValue))
               theCalculationBlock->itsIfCalculationBlocks->Calculate(calculationParams,
                                                                      theMacroParamValue);
             else if (theCalculationBlock->itsElseIfAreaMaskSection &&
                      theCalculationBlock->itsElseIfCalculationBlocks &&
-                     theCalculationBlock->itsElseIfAreaMaskSection->IsMasked(calculationParams))
+                     theCalculationBlock->itsElseIfAreaMaskSection->IsMasked(calculationParams, theMacroParamValue))
             {
               theCalculationBlock->itsElseIfCalculationBlocks->Calculate(calculationParams,
                                                                          theMacroParamValue);
@@ -1262,7 +1264,7 @@ void NFmiSmartToolModifier::CalculateUsedWorkingThreadCount(double wantedHardwar
     }
   }
 
-//  itsUsedThreadCount = 1; // Debuggaustestejä varten
+  //itsUsedThreadCount = 1; // Debuggaustestejä varten
   itsUsedThreadCounts.insert(itsUsedThreadCount);
 }
 

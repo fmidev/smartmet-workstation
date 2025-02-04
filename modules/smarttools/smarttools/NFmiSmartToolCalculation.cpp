@@ -92,16 +92,7 @@ NFmiSmartToolCalculation::~NFmiSmartToolCalculation() {}
 void NFmiSmartToolCalculation::Calculate(const NFmiCalculationParams &theCalculationParams,
                                          NFmiMacroParamValue &theMacroParamValue)
 {
-  if (theMacroParamValue.fDoCrossSectionCalculations)
-  {
-    fUsePressureLevelCalculation = true;
-    itsPressureHeightValue = theCalculationParams.itsPressureHeight =
-        theMacroParamValue.itsPressureHeight;
-  }
-  else if (theMacroParamValue.fDoTimeSerialCalculations)
-  {
-    fUseTimeInterpolationAlways = true;
-  }
+  SetupSpecialMacroParamCalculations(theCalculationParams, theMacroParamValue);
   double value = eval_exp(theCalculationParams);
 
   // kohde dataa juoksutetaan, joten lokaatio indeksien pitää olla synkassa!!!
@@ -131,6 +122,22 @@ void NFmiSmartToolCalculation::Calculate(const NFmiCalculationParams &theCalcula
        dataType == NFmiInfoData::kTimeSerialMacroParam ||
        dataType == NFmiInfoData::kScriptVariableData))
     theMacroParamValue.itsValue = static_cast<float>(value);
+}
+
+void NFmiSmartToolCalculation::SetupSpecialMacroParamCalculations(
+    const NFmiCalculationParams &theCalculationParams,
+                              NFmiMacroParamValue &theMacroParamValue)
+{
+  if (theMacroParamValue.fDoCrossSectionCalculations)
+  {
+    fUsePressureLevelCalculation = true;
+    itsPressureHeightValue = theCalculationParams.itsPressureHeight =
+        theMacroParamValue.itsPressureHeight;
+  }
+  else if (theMacroParamValue.fDoTimeSerialCalculations)
+  {
+    fUseTimeInterpolationAlways = true;
+  }
 }
 
 // Poista kommentti tästä, jos haluat lokittaa jokaisen laskennan debuggausmielessä
@@ -267,7 +274,20 @@ static void MakeMaskDebugLogging_SUPER_HEAVY(NFmiSmartToolCalculation &calculati
 }
 #endif
 
-bool NFmiSmartToolCalculation::IsMasked(const NFmiCalculationParams &theCalculationParams)
+bool NFmiSmartToolCalculation::IsMasked(const NFmiCalculationParams &theCalculationParams,
+                                        NFmiMacroParamValue &theMacroParamValue)
+{
+  SetupSpecialMacroParamCalculations(theCalculationParams, theMacroParamValue);
+  auto returnValue = bin_eval_exp(theCalculationParams);
+
+#ifdef LOG_ALL_CALCULATIONS_VERY_HEAVY_AND_SLOW
+  ::MakeMaskDebugLogging_SUPER_HEAVY(*this, itsResultInfo, theCalculationParams, returnValue);
+#endif
+
+  return returnValue;
+}
+
+bool NFmiSmartToolCalculation::IsMasked_ver2(const NFmiCalculationParams& theCalculationParams)
 {
   auto returnValue = bin_eval_exp(theCalculationParams);
 
