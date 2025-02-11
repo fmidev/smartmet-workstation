@@ -135,13 +135,11 @@ using namespace std;
 //--------------------------------------------------------
 NFmiStationViewHandler::NFmiStationViewHandler(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 											   ,NFmiToolBox * theToolBox
-											   ,NFmiDrawingEnvironment * theDrawingEnvi
 											   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 											   ,int theRowIndex
 											   ,int theColumnIndex)
 :NFmiCtrlView(theMapViewDescTopIndex, theArea->XYArea()
 			 ,theToolBox
-			 ,theDrawingEnvi
 			 ,theDrawParam
              ,theRowIndex
              ,theColumnIndex)
@@ -160,7 +158,6 @@ NFmiStationViewHandler::NFmiStationViewHandler(int theMapViewDescTopIndex, boost
 	SetMapAreaAndRect(itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex)->Area(), mapRect);
 	itsViewList = new NFmiCtrlViewList(itsMapViewDescTopIndex, mapRect
 									  ,itsToolBox
-									  ,itsDrawingEnvironment
 									  ,itsMapDrawParam);
 	if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1) // tehd‰‰n t‰m‰ alustus vain 1. rivin ensimm‰iseen ruudun luonnin yhteydess‰
 		itsCtrlViewDocumentInterface->CrossSectionSystem()->CalcMinorPoints(itsMapArea); // t‰m‰ pit‰‰ tehd‰ ainakin kerran
@@ -477,22 +474,22 @@ void NFmiStationViewHandler::DrawCrossSectionPoints(void)
 			NFmiRect littleCircleRect(0, 0, xWidth, yWidth);
 			if(drawWholeLine)
 			{
-				itsDrawingEnvironment->SetFillColor(NFmiColor(0.9f,0.9f,0.9f));
-				itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
+				itsDrawingEnvironment.SetFillColor(NFmiColor(0.9f,0.9f,0.9f));
+				itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
                 crossSectionSystem->CalcMinorPoints(itsMapArea);
 				const auto &points = crossSectionSystem->MinorPoints();
 				for(unsigned int i=0 ; i < points.size(); i++)
 				{
 					littleCircleRect.Center(itsMapArea->ToXY(points[i]));
-					itsToolBox->DrawEllipse(littleCircleRect, itsDrawingEnvironment);
+					itsToolBox->DrawEllipse(littleCircleRect, &itsDrawingEnvironment);
 				}
 			}
 			NFmiPoint startPointXY = itsMapArea->ToXY(crossSectionSystem->StartPoint());
 			NFmiPoint middlePointXY = itsMapArea->ToXY(crossSectionSystem->MiddlePoint());
 			NFmiPoint endPointXY = itsMapArea->ToXY(crossSectionSystem->EndPoint());
-			itsDrawingEnvironment->SetFillColor(crossSectionSystem->StartPointFillColor());
-			itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,1.f));
-			itsDrawingEnvironment->EnableFill();
+			itsDrawingEnvironment.SetFillColor(crossSectionSystem->StartPointFillColor());
+			itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,1.f));
+			itsDrawingEnvironment.EnableFill();
 
 			double bigCircleSizeInMM = 2.8;
             int pixelSizeX2 = static_cast<int>(bigCircleSizeInMM * graphicalInfo.itsPixelsPerMM_x);
@@ -501,43 +498,43 @@ void NFmiStationViewHandler::DrawCrossSectionPoints(void)
 			double yWidth2 = itsToolBox->SY(pixelSizeY2);
 			NFmiRect circleRect(0, 0, xWidth2, yWidth2);
 			circleRect.Center(startPointXY);
-			itsToolBox->DrawEllipse(circleRect, itsDrawingEnvironment); // piirret‰‰n alkupisteen v‰ripallo
+			itsToolBox->DrawEllipse(circleRect, &itsDrawingEnvironment); // piirret‰‰n alkupisteen v‰ripallo
 			NFmiPoint fontSize(20, 20);
-			itsDrawingEnvironment->SetFontSize(fontSize);
+			itsDrawingEnvironment.SetFontSize(fontSize);
 			NFmiPoint textPoint1(startPointXY);
 			textPoint1 += NFmiPoint(textPoint1.X() > 0.95 ? -0.03 : 0.02, textPoint1.Y() > 0.95 ? -0.03 : 0.02);
-			itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-			NFmiText text1(textPoint1, NFmiString("1."), false, 0, itsDrawingEnvironment);
+			itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
+			NFmiText text1(textPoint1, NFmiString("1."), false, 0, &itsDrawingEnvironment);
 			itsToolBox->Convert(&text1);
 
 			if(drawWholeLine)
 			{
 				circleRect.Center(endPointXY);
-				itsDrawingEnvironment->SetFillColor(crossSectionSystem->EndPointFillColor());
-				itsToolBox->DrawEllipse(circleRect, itsDrawingEnvironment); // piirret‰‰n loppupisteen v‰ripallo
+				itsDrawingEnvironment.SetFillColor(crossSectionSystem->EndPointFillColor());
+				itsToolBox->DrawEllipse(circleRect, &itsDrawingEnvironment); // piirret‰‰n loppupisteen v‰ripallo
 				NFmiPoint textPoint2(endPointXY);
 				textPoint2 += NFmiPoint(textPoint2.X() > 0.95 ? -0.03 : 0.02, textPoint2.Y() > 0.95 ? -0.03 : 0.02);
-				itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-				NFmiText text2(textPoint2, NFmiString("2."), false, 0, itsDrawingEnvironment);
+				itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
+				NFmiText text2(textPoint2, NFmiString("2."), false, 0, &itsDrawingEnvironment);
 				itsToolBox->Convert(&text2);
 				if(crossSectionSystem->CrossSectionMode() == NFmiCrossSectionSystem::k3Point)
 				{ // piirret‰‰ viel‰ keski piste v‰ri pallolla
 					circleRect.Center(middlePointXY);
-					itsDrawingEnvironment->SetFillColor(crossSectionSystem->MiddlePointFillColor());
-					itsToolBox->DrawEllipse(circleRect, itsDrawingEnvironment); // piirret‰‰n loppupisteen v‰ripallo
+					itsDrawingEnvironment.SetFillColor(crossSectionSystem->MiddlePointFillColor());
+					itsToolBox->DrawEllipse(circleRect, &itsDrawingEnvironment); // piirret‰‰n loppupisteen v‰ripallo
 					NFmiPoint textPoint3(middlePointXY);
 					textPoint2 += NFmiPoint(textPoint2.X() > 0.95 ? -0.03 : 0.02, textPoint2.Y() > 0.95 ? -0.03 : 0.02);
-					itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-					NFmiText text3(textPoint3, NFmiString("M."), false, 0, itsDrawingEnvironment);
+					itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
+					NFmiText text3(textPoint3, NFmiString("M."), false, 0, &itsDrawingEnvironment);
 					itsToolBox->Convert(&text3);
 				}
 
 				// piirret‰‰n lopuksi viel‰ mahd. aktivoitu minorpoint
 				if(crossSectionSystem->IsMinorPointActivated())
 				{
-					itsDrawingEnvironment->SetFillColor(NFmiColor(0.f,0.f,0.f));
+					itsDrawingEnvironment.SetFillColor(NFmiColor(0.f,0.f,0.f));
 					littleCircleRect.Center(itsMapArea->ToXY(crossSectionSystem->ActivatedMinorPoint()));
-					itsToolBox->DrawEllipse(littleCircleRect, itsDrawingEnvironment);
+					itsToolBox->DrawEllipse(littleCircleRect, &itsDrawingEnvironment);
 				}
 			}
 		}
@@ -602,7 +599,7 @@ void NFmiStationViewHandler::DrawTrajectory(const NFmiTrajectory &theTrajectory,
 		const std::vector<boost::shared_ptr<NFmiSingleTrajector> >& plumes = theTrajectory.PlumeTrajectories();
 		std::vector<boost::shared_ptr<NFmiSingleTrajector> >::const_iterator it = plumes.begin();
 		for( ; it != plumes.end(); ++it)
-			DrawSingleTrajector(*(*it).get(), &envi, theTrajectory.TimeStepInMinutes(), pixelSize1 * 5, pixelSize1, theTrajectory.Direction());
+			DrawSingleTrajector(*(*it).get(), envi, theTrajectory.TimeStepInMinutes(), pixelSize1 * 5, pixelSize1, theTrajectory.Direction());
 	}
 
 
@@ -610,7 +607,7 @@ void NFmiStationViewHandler::DrawTrajectory(const NFmiTrajectory &theTrajectory,
 	envi.SetFrameColor(theColor);
     long pixelSize2 = boost::math::iround(graphicalInfo.itsPixelsPerMM_x * 0.8);
 	envi.SetPenSize(NFmiPoint(pixelSize2, pixelSize2));
-	DrawSingleTrajector(theTrajectory.MainTrajector(), &envi, theTrajectory.TimeStepInMinutes(), pixelSize1 * 8, pixelSize1 * 2, theTrajectory.Direction());
+	DrawSingleTrajector(theTrajectory.MainTrajector(), envi, theTrajectory.TimeStepInMinutes(), pixelSize1 * 8, pixelSize1 * 2, theTrajectory.Direction());
 }
 
 static bool IsPointOk(const NFmiPoint &thePoint)
@@ -620,7 +617,7 @@ static bool IsPointOk(const NFmiPoint &thePoint)
 	return true;
 }
 
-void NFmiStationViewHandler::DrawSingleTrajector(const NFmiSingleTrajector &theSingleTrajector, NFmiDrawingEnvironment *theEnvi, int theTimeStepInMinutes, int theTimeMarkerPixelSize, int theTimeMarkerPixelPenSize, FmiDirection theDirection)
+void NFmiStationViewHandler::DrawSingleTrajector(const NFmiSingleTrajector &theSingleTrajector, NFmiDrawingEnvironment &theEnvi, int theTimeStepInMinutes, int theTimeMarkerPixelSize, int theTimeMarkerPixelPenSize, FmiDirection theDirection)
 {
 	NFmiPoint latlon1(theSingleTrajector.StartLatLon());
 	if(IsPointOk(latlon1))
@@ -640,7 +637,7 @@ void NFmiStationViewHandler::DrawSingleTrajector(const NFmiSingleTrajector &theS
 			return ;
 		if(it != points.end())
 		{
-			NFmiPolyline trajectorPolyLine(itsRect, 0, theEnvi);
+			NFmiPolyline trajectorPolyLine(itsRect, 0, &theEnvi);
 			trajectorPolyLine.AddPoint(p1);
 			std::vector<NFmiPoint>::const_iterator endIt = points.end();
 			++it; // pit‰‰ juoksuttaa yhden pyk‰l‰n verran eteenp‰in
@@ -690,7 +687,7 @@ void NFmiStationViewHandler::DrawSingleTrajector(const NFmiSingleTrajector &theS
 						vdir1 = ::fmod(vdir1+180, 360); // k‰‰nnet‰‰n nuolen suunta 180 astetta jos takaperin trajektori
 
 					// piirr‰ etenemis nuolen k‰rki trajektorille
-					NFmiPolyline arrowPolyLine(itsRect, 0, theEnvi);
+					NFmiPolyline arrowPolyLine(itsRect, 0, &theEnvi);
 					arrowPolyLine.AddPoint(::RotatePoint(NFmiPoint(-0.7, 2), vdir1));
 					arrowPolyLine.AddPoint(::RotatePoint(NFmiPoint(0, 0), vdir1));
 					arrowPolyLine.AddPoint(::RotatePoint(NFmiPoint(0.7, 2), vdir1));
@@ -2162,7 +2159,7 @@ void NFmiStationViewHandler::DrawCurrentFrame(NFmiToolBox* theGTB)
 							,0
 							,&envi);
 	theGTB->Convert(&rectangle);
-	DrawFrame(&envi);
+	DrawFrame(envi);
 }
 
 //--------------------------------------------------------
@@ -2619,10 +2616,10 @@ bool NFmiStationViewHandler::MiddleButtonUp(const NFmiPoint & thePlace, unsigned
 			else
 			{
                 itsCtrlViewDocumentInterface->MiddleMouseButtonDown(false);
-				itsDrawingEnvironment->EnableInvert();
-				NFmiRectangle rec1(itsOldZoomRect, 0, this->itsDrawingEnvironment);
+				itsDrawingEnvironment.EnableInvert();
+				NFmiRectangle rec1(itsOldZoomRect, 0, &itsDrawingEnvironment);
 				itsToolBox->Convert(&rec1);
-				itsDrawingEnvironment->DisableInvert();
+				itsDrawingEnvironment.DisableInvert();
 				double minWidthPix = itsToolBox->SX(30); // zoomi laatikon pit‰‰ olla v‰hint‰‰n tietyn pikseli m‰‰r‰n kokoinen
 				double minHeightPix = itsToolBox->SY(30);
 				if(itsOldZoomRect.Width() > minWidthPix && itsOldZoomRect.Height() > minHeightPix)
@@ -3014,14 +3011,14 @@ bool NFmiStationViewHandler::MouseDragZooming(const NFmiPoint &thePlace)
 	else
 	{ // t‰ss‰ tehd‰‰n kartan p‰‰lle vedetty‰ zoomi laatikkoa
 		itsZoomDragUpPoint = thePlace;
-		itsDrawingEnvironment->EnableInvert();
-		itsDrawingEnvironment->DisableFill();
-		NFmiRectangle rec1(itsOldZoomRect, 0, this->itsDrawingEnvironment);
+		itsDrawingEnvironment.EnableInvert();
+		itsDrawingEnvironment.DisableFill();
+		NFmiRectangle rec1(itsOldZoomRect, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&rec1);
 		NFmiRect zoomRect(itsZoomDragDownPoint, itsZoomDragUpPoint);
-		NFmiRectangle rec2(zoomRect, 0, this->itsDrawingEnvironment);
+		NFmiRectangle rec2(zoomRect, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&rec2);
-		itsDrawingEnvironment->DisableInvert();
+		itsDrawingEnvironment.DisableInvert();
 		itsOldZoomRect = zoomRect;
 	}
 	return true;
@@ -3273,8 +3270,7 @@ void NFmiStationViewHandler::DrawSelectedLocations(void)
     }
     else
     {   // Tarvittaessa luodaan yksi n‰yttˆ, jonka avulla piirret‰‰n valitut pisteet
-        NFmiDrawingEnvironment envi;
-        NFmiStationView stationView(itsMapViewDescTopIndex, GetArea(), itsToolBox, &envi, itsDrawParam, kFmiTemperature, NFmiPoint(0, 0), NFmiPoint(1, 1), itsViewGridRowNumber, itsViewGridColumnNumber);
+        NFmiStationView stationView(itsMapViewDescTopIndex, GetArea(), itsToolBox, itsDrawParam, kFmiTemperature, NFmiPoint(0, 0), NFmiPoint(1, 1), itsViewGridRowNumber, itsViewGridColumnNumber);
         stationView.Time(itsTime);
         stationView.DrawAllSelectedStationsWithInvertStationRect(NFmiMetEditorTypes::kFmiSelectionMask);
         stationView.DrawAllSelectedStationsWithInvertStationRect(NFmiMetEditorTypes::kFmiDisplayedMask);
@@ -3296,8 +3292,8 @@ void NFmiStationViewHandler::DrawControlPoints(void)
 		float height = static_cast<float>(itsToolBox->SY(pixels));
 		float width = static_cast<float>(itsToolBox->SX(pixels));
 		NFmiRect CPRect(NFmiPoint(0, 0), NFmiPoint(width, height));
-		itsDrawingEnvironment->SetFontType(kArial);
-		NFmiPoint oldPenSize = itsDrawingEnvironment->GetPenSize();
+		itsDrawingEnvironment.SetFontType(kArial);
+		NFmiPoint oldPenSize = itsDrawingEnvironment.GetPenSize();
 		NFmiPoint normalRectPenSize(2,2);
 		NFmiPoint activeRectPenSize(3,3);
 		boost::shared_ptr<NFmiArea> zoomedArea = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex)->Area();
@@ -3310,34 +3306,34 @@ void NFmiStationViewHandler::DrawControlPoints(void)
 			NFmiPoint xy(itsMapArea->ToXY(latLonPoint));
 			CPRect.Center(xy);
 
-			itsDrawingEnvironment->EnableFill();
+			itsDrawingEnvironment.EnableFill();
 			if(CPMan->IsActivateCP())
 			{
-				itsDrawingEnvironment->SetFrameColor(NFmiColor(1.f,0.f,0.f));
-				itsDrawingEnvironment->SetFillColor(NFmiColor(0.f,0.f,1.f));
-				itsDrawingEnvironment->SetPenSize(activeRectPenSize);
+				itsDrawingEnvironment.SetFrameColor(NFmiColor(1.f,0.f,0.f));
+				itsDrawingEnvironment.SetFillColor(NFmiColor(0.f,0.f,1.f));
+				itsDrawingEnvironment.SetPenSize(activeRectPenSize);
 			}
 			else
 			{
-				itsDrawingEnvironment->SetFrameColor(NFmiColor(0.3f,0.7f,0.1f));
-				itsDrawingEnvironment->SetFillColor(NFmiColor(0.2f,0.1f,0.7f));
-				itsDrawingEnvironment->SetPenSize(normalRectPenSize);
+				itsDrawingEnvironment.SetFrameColor(NFmiColor(0.3f,0.7f,0.1f));
+				itsDrawingEnvironment.SetFillColor(NFmiColor(0.2f,0.1f,0.7f));
+				itsDrawingEnvironment.SetPenSize(normalRectPenSize);
 			}
 			if(!CPMan->IsEnabledCP())
 			{
-				itsDrawingEnvironment->DisableFill();
+				itsDrawingEnvironment.DisableFill();
 			}
-			NFmiRectangle rectangle(CPRect, 0, itsDrawingEnvironment);
+			NFmiRectangle rectangle(CPRect, 0, &itsDrawingEnvironment);
 			itsToolBox->Convert(&rectangle);
 			if(CPMan->IsCPMovingInTime())
 			{
 				NFmiRect ellipseRect(NFmiPoint(0,0), NFmiPoint(width*0.8, height*0.8));
 				ellipseRect.Center(xy);
-				itsDrawingEnvironment->SetFrameColor(NFmiColor(0.98f,0.987f,0.0115f));
-				itsToolBox->DrawEllipse(ellipseRect, itsDrawingEnvironment);
+				itsDrawingEnvironment.SetFrameColor(NFmiColor(0.98f,0.987f,0.0115f));
+				itsToolBox->DrawEllipse(ellipseRect, &itsDrawingEnvironment);
 			}
 		}
-		itsDrawingEnvironment->SetPenSize(oldPenSize);
+		itsDrawingEnvironment.SetPenSize(oldPenSize);
 		DrawControlPointData();
         DrawCPCropArea();
     }
@@ -3415,7 +3411,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 		{
 			stationView = new NFmiSynopPlotView(itsMapViewDescTopIndex, itsMapArea
 											 ,itsToolBox
-											 ,itsDrawingEnvironment
 											 ,theDrawParam
 											 ,param
 											 ,itsViewGridRowNumber
@@ -3425,7 +3420,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 		{
 			stationView = new NFmiSatelView(itsMapViewDescTopIndex, itsMapArea
 											 ,itsToolBox
-											 ,itsDrawingEnvironment
 											 ,theDrawParam
 											 ,param
                                              ,itsViewGridRowNumber
@@ -3435,7 +3429,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 		{
 			stationView = new NFmiConceptualDataView(itsMapViewDescTopIndex, itsMapArea
 													,itsToolBox
-													,itsDrawingEnvironment
 													,theDrawParam
 													,param
                                                     , itsViewGridRowNumber
@@ -3445,7 +3438,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
         {
             stationView = new NFmiCapView(itsMapViewDescTopIndex, itsMapArea
                 , itsToolBox
-                , itsDrawingEnvironment
                 , theDrawParam
                 , param
                 , itsViewGridRowNumber
@@ -3456,7 +3448,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 #ifndef DISABLE_CPPRESTSDK
             stationView = new NFmiWmsView(itsMapViewDescTopIndex, itsMapArea
                 , itsToolBox
-                , itsDrawingEnvironment
                 , theDrawParam
                 , param
                 , itsViewGridRowNumber
@@ -3467,7 +3458,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 		{
 			stationView = new NFmiStationView(itsMapViewDescTopIndex, itsMapArea
 				, itsToolBox
-				, itsDrawingEnvironment
 				, theDrawParam
 				, param
 				, dataOffSet
@@ -3479,7 +3469,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 		{
 			stationView = new NFmiFlashDataView(itsMapViewDescTopIndex, itsMapArea
 											 ,itsToolBox
-											 ,itsDrawingEnvironment
 											 ,theDrawParam
 											 ,param
 											 ,dataOffSet
@@ -3492,7 +3481,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 		{
 			stationView = new NFmiStationArrowView(itsMapViewDescTopIndex, itsMapArea
 											 ,itsToolBox
-											 ,itsDrawingEnvironment
 											 ,theDrawParam
 											 ,param
 											 ,dataOffSet
@@ -3504,7 +3492,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
         {
 			stationView = new NFmiStreamLineView(itsMapViewDescTopIndex, itsMapArea
 																	,itsToolBox
-																	,itsDrawingEnvironment
 																	,theDrawParam
 																	,param
                                                                     , itsViewGridRowNumber
@@ -3514,7 +3501,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
         { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu sateenolomuoto, piirret‰‰n data sateen olomuoto n‰ytˆll‰, vaikka kyse olisi hiladatasta.
 			stationView = new NFmiPrecipitationFormSymbolTextView(itsMapViewDescTopIndex, itsMapArea
 																	,itsToolBox
-																	,itsDrawingEnvironment
 																	,theDrawParam
 																	,param
 																	,itsCtrlViewDocumentInterface->DataLists()->PrecipitationFormSymbolList()
@@ -3527,7 +3513,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
         { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu mirri-font symbol, piirret‰‰n data mirri font symboleilla niiden suorilla raaka arvoilla.
             stationView = new NFmiRawMirriFontSymbolTextView(itsMapViewDescTopIndex, itsMapArea
                 , itsToolBox
-                , itsDrawingEnvironment
                 , theDrawParam
                 , param
                 , itsCtrlViewDocumentInterface->DataLists()->PrecipitationFormSymbolList()
@@ -3540,7 +3525,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
         { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu mirri-font symbol, piirret‰‰n data mirri font symboleilla niiden suorilla raaka arvoilla.
             stationView = new NFmiBetterWeatherSymbolView(itsMapViewDescTopIndex, itsMapArea
                 , itsToolBox
-                , itsDrawingEnvironment
                 , theDrawParam
                 , param
                 , itsCtrlViewDocumentInterface->DataLists()->PrecipitationFormSymbolList()
@@ -3553,7 +3537,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
         {
             stationView = new NFmiSmartSymbolView(itsMapViewDescTopIndex, itsMapArea
                 , itsToolBox
-                , itsDrawingEnvironment
                 , theDrawParam
                 , param
                 , itsCtrlViewDocumentInterface->DataLists()->PrecipitationFormSymbolList()
@@ -3566,7 +3549,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
         {
             stationView = new NFmiCustomSymbolView(itsMapViewDescTopIndex, itsMapArea
                 , itsToolBox
-                , itsDrawingEnvironment
                 , theDrawParam
                 , param
                 , itsCtrlViewDocumentInterface->DataLists()->PrecipitationFormSymbolList()
@@ -3579,7 +3561,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
         { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu sateenolomuoto, piirret‰‰n data synop-s‰‰ symboleilla, vaikka kyse olisi hiladatasta.
 			stationView = new NFmiStationIndexTextView(itsMapViewDescTopIndex, itsMapArea
 													  ,itsToolBox
-													  ,itsDrawingEnvironment
 													  ,theDrawParam
 													  ,param
 													  , itsCtrlViewDocumentInterface->DataLists()->ParamPictureList(param)
@@ -3592,7 +3573,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 		{
 			stationView = new NFmiStationWindBarbView(itsMapViewDescTopIndex, itsMapArea
 													 ,itsToolBox
-													 ,itsDrawingEnvironment
 													 ,theDrawParam
 													 ,param
 													 ,dataOffSet
@@ -3604,7 +3584,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 		{
 			stationView = new NFmiIsoLineView(itsMapViewDescTopIndex, itsMapArea
 											 ,itsToolBox
-											 ,itsDrawingEnvironment
 											 ,theDrawParam
 											 ,param
 											 ,dataOffSet
@@ -3616,7 +3595,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 		{ // eli tarvittaessa myˆs asema data voidaan haluta piirt‰‰ isoviivoina tai contoureina
 			stationView = new NFmiIsoLineView(itsMapViewDescTopIndex, itsMapArea
 											 ,itsToolBox
-											 ,itsDrawingEnvironment
 											 ,theDrawParam
 											 ,param
 											 ,dataOffSet
@@ -3631,7 +3609,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 			case kFmiWindVectorMS:
 			stationView = new NFmiStationWindBarbView(itsMapViewDescTopIndex, itsMapArea
 													 ,itsToolBox
-													 ,itsDrawingEnvironment
 													 ,theDrawParam
 													 ,param
 													 ,dataOffSet
@@ -3643,7 +3620,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 			case kFmiWeatherSymbol3:
 			stationView = new NFmiStationSimpleWeatherView(itsMapViewDescTopIndex, itsMapArea
 														  ,itsToolBox
-														  ,itsDrawingEnvironment
 														  ,theDrawParam
 														  ,param
 														  ,dataOffSet
@@ -3660,7 +3636,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 			case kFmiAviationWeather3:
 			stationView = new NFmiStationIndexTextView(itsMapViewDescTopIndex, itsMapArea
 													  ,itsToolBox
-													  ,itsDrawingEnvironment
 													  ,theDrawParam
 													  ,param
 													  , itsCtrlViewDocumentInterface->DataLists()->ParamPictureList(param)
@@ -3673,7 +3648,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 			case kFmiFogIntensity:
 			stationView = new NFmiStationFogTextView(itsMapViewDescTopIndex, itsMapArea
 													  ,itsToolBox
-													  ,itsDrawingEnvironment
 													  ,theDrawParam
 													  ,param
 													  , itsCtrlViewDocumentInterface->DataLists()->ParamPictureList(kFmiWeatherSymbol1) // k‰ytet‰‰n HSADE1 listaa, mist‰ symboli haetaan
@@ -3687,7 +3661,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
             case kFmiPotentialPrecipitationForm:
 				stationView = new NFmiPrecipitationFormSymbolTextView(itsMapViewDescTopIndex, itsMapArea
 																	  ,itsToolBox
-																	  ,itsDrawingEnvironment
 																	  ,theDrawParam
 																	  ,param
 																	  , itsCtrlViewDocumentInterface->DataLists()->PrecipitationFormSymbolList() //
@@ -3700,7 +3673,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 			case kFmiCloudSymbol:
 				stationView = new NFmiCloudSymbolTextView(itsMapViewDescTopIndex, itsMapArea
 													  ,itsToolBox
-													  ,itsDrawingEnvironment
 													  ,theDrawParam
 													  ,param
 													  , itsCtrlViewDocumentInterface->DataLists()->PrecipitationFormSymbolList() // t‰ll‰ ei ole v‰li‰, siell‰ lasketaan symbolit toista kautta
@@ -3714,7 +3686,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 			case kFmiPastWeather2:
 				stationView = new NFmiTotalCloudinessSymbolTextView(itsMapViewDescTopIndex, itsMapArea
 													  ,itsToolBox
-													  ,itsDrawingEnvironment
 													  ,theDrawParam
 													  ,param
 													  , itsCtrlViewDocumentInterface->DataLists()->PastWeatherSymbolList() //
@@ -3734,7 +3705,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 					if(synopProducer && totalCloudinessParam && totCloudUnitInProcents == false)
 						stationView = new NFmiTotalCloudinessSymbolTextView(itsMapViewDescTopIndex, itsMapArea
 														,itsToolBox
-														,itsDrawingEnvironment
 														,theDrawParam
 														,param
 														, itsCtrlViewDocumentInterface->DataLists()->TotalCloudinessSymbolList() // k‰ytet‰‰n HSADE1 listaa, mist‰ symboli haetaan
@@ -3745,7 +3715,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                     else if(synopProducer && (param == kFmiLowCloudType || param == kFmiMiddleCloudType || param == kFmiHighCloudType))
 						stationView = new NFmiClCmChSymbolTextView(itsMapViewDescTopIndex, itsMapArea
 														,itsToolBox
-														,itsDrawingEnvironment
 														,theDrawParam
 														,param
 														,dataOffSet
@@ -3755,7 +3724,6 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                     else
 						stationView = new NFmiStationTextView(itsMapViewDescTopIndex, itsMapArea
 															,itsToolBox
-															,itsDrawingEnvironment
 															,theDrawParam
 															,param
 															,dataOffSet
@@ -3835,8 +3803,8 @@ void NFmiStationViewHandler::DrawProjetionLines(NFmiToolBox * theGTB)
 	if(theGTB)
 	{
 		theGTB->SetTextAlignment(kLeft);
-		FmiFontType oldFont = itsDrawingEnvironment->GetFontType();
-		itsDrawingEnvironment->SetFontType(kArial);
+		FmiFontType oldFont = itsDrawingEnvironment.GetFontType();
+		itsDrawingEnvironment.SetFontType(kArial);
         try
         {
             auto projInfo = itsCtrlViewDocumentInterface->ProjectionCurvatureInfo();
@@ -3846,7 +3814,7 @@ void NFmiStationViewHandler::DrawProjetionLines(NFmiToolBox * theGTB)
                 NFmiPoint fontSize(CalcFontSize(usedFontSizeInMM));
                 double usedFontSizeInRelativeUnit = itsMapArea->Width() * usedFontSizeInMM / itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsViewHeightInMM;
                 projInfo->CalcProjectionLinesAndLabels(itsMapArea.get(), fontSize, usedFontSizeInRelativeUnit);
-                theGTB->DrawValueLineList(&projInfo->GetProjectionLines(), itsDrawingEnvironment, itsMapRect); // envi ja rect annetaan turhaan, koska funktio haluaa niit‰!!!
+                theGTB->DrawValueLineList(&projInfo->GetProjectionLines(), &itsDrawingEnvironment, itsMapRect); // envi ja rect annetaan turhaan, koska funktio haluaa niit‰!!!
                 std::list<std::shared_ptr<NFmiText>> &labels = projInfo->GetProjectionLineLabels();
                 std::list<std::shared_ptr<NFmiText>>::iterator it = labels.begin();
                 for(; it != labels.end(); ++it)
@@ -3857,7 +3825,7 @@ void NFmiStationViewHandler::DrawProjetionLines(NFmiToolBox * theGTB)
         {
 //            itsCtrlViewDocumentInterface->LogAndWarnUser("Unknown exception in NFmiStationViewHandler::DrawProjetionLines", "", NFmiLogger::kError, true);
         }
-		itsDrawingEnvironment->SetFontType(oldFont);
+		itsDrawingEnvironment.SetFontType(oldFont);
 	}
 }
 

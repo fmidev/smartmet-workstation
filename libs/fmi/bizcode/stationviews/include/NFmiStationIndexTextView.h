@@ -24,7 +24,6 @@ class NFmiStationIndexTextView : public NFmiStationTextView
 public:
     NFmiStationIndexTextView (int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 							 ,NFmiToolBox * theToolBox
-							 ,NFmiDrawingEnvironment * theDrawingEnvi
 							 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 							 ,FmiParameterName theParamIdent
 							 ,NFmiIndexMessageList * theIndexedWordList
@@ -60,7 +59,6 @@ class NFmiStationFogTextView : public NFmiStationIndexTextView
 public:
     NFmiStationFogTextView (int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 							 ,NFmiToolBox * theToolBox
-							 ,NFmiDrawingEnvironment * theDrawingEnvi
 							 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 							 ,FmiParameterName theParamIdent
 							 ,NFmiIndexMessageList * theIndexedWordList
@@ -70,7 +68,6 @@ public:
                              ,int theColumnIndex)
     :NFmiStationIndexTextView(theMapViewDescTopIndex, theArea
 													 ,theToolBox
-													 ,theDrawingEnvi
 													 ,theDrawParam
 													 ,theParamIdent
 													 ,theIndexedWordList
@@ -94,7 +91,6 @@ class NFmiTotalCloudinessSymbolTextView : public NFmiStationIndexTextView
 public:
     NFmiTotalCloudinessSymbolTextView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 									,NFmiToolBox * theToolBox
-									,NFmiDrawingEnvironment * theDrawingEnvi
 									,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 									,FmiParameterName theParamIdent
 									,NFmiIndexMessageList * theIndexedWordList
@@ -104,7 +100,6 @@ public:
                                     ,int theColumnIndex)
     :NFmiStationIndexTextView(theMapViewDescTopIndex, theArea
 															,theToolBox
-															,theDrawingEnvi
 															,theDrawParam
 															,theParamIdent
 															,theIndexedWordList
@@ -126,7 +121,6 @@ class NFmiPrecipitationFormSymbolTextView : public NFmiStationIndexTextView
 public:
     NFmiPrecipitationFormSymbolTextView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 										,NFmiToolBox * theToolBox
-										,NFmiDrawingEnvironment * theDrawingEnvi
 										,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 										,FmiParameterName theParamIdent
 										,NFmiIndexMessageList * theIndexedWordList
@@ -136,7 +130,6 @@ public:
                                         ,int theColumnIndex)
     :NFmiStationIndexTextView(theMapViewDescTopIndex, theArea
 																,theToolBox
-																,theDrawingEnvi
 																,theDrawParam
 																,theParamIdent
 																,theIndexedWordList
@@ -158,7 +151,6 @@ class NFmiRawMirriFontSymbolTextView : public NFmiStationIndexTextView
 public:
     NFmiRawMirriFontSymbolTextView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
         , NFmiToolBox * theToolBox
-        , NFmiDrawingEnvironment * theDrawingEnvi
         , boost::shared_ptr<NFmiDrawParam> &theDrawParam
         , FmiParameterName theParamIdent
         , NFmiIndexMessageList * theIndexedWordList
@@ -184,7 +176,6 @@ class NFmiClCmChSymbolTextView : public NFmiTotalCloudinessSymbolTextView
 public:
     NFmiClCmChSymbolTextView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 							,NFmiToolBox * theToolBox
-							,NFmiDrawingEnvironment * theDrawingEnvi
 							,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 							,FmiParameterName theParamIdent
 							,NFmiPoint theOffSet
@@ -193,7 +184,6 @@ public:
                             ,int theColumnIndex)
     :NFmiTotalCloudinessSymbolTextView(theMapViewDescTopIndex, theArea
 															,theToolBox
-															,theDrawingEnvi
 															,theDrawParam
 															,theParamIdent
 															,0
@@ -213,7 +203,6 @@ class NFmiCloudSymbolTextView : public NFmiStationIndexTextView
 public:
     NFmiCloudSymbolTextView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 							,NFmiToolBox * theToolBox
-							,NFmiDrawingEnvironment * theDrawingEnvi
 							,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 							,FmiParameterName theParamIdent
 							,NFmiIndexMessageList * theIndexedWordList
@@ -223,7 +212,6 @@ public:
                             ,int theColumnIndex)
     :NFmiStationIndexTextView(theMapViewDescTopIndex, theArea
 													,theToolBox
-													,theDrawingEnvi
 													,theDrawParam
 													,theParamIdent
 													,theIndexedWordList
@@ -251,7 +239,6 @@ class NFmiImageBasedSymbolView : public NFmiStationIndexTextView
 public:
     NFmiImageBasedSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea>& theArea
         , NFmiToolBox* theToolBox
-        , NFmiDrawingEnvironment* theDrawingEnvi
         , boost::shared_ptr<NFmiDrawParam>& theDrawParam
         , FmiParameterName theParamIdent
         , NFmiIndexMessageList* theIndexedWordList
@@ -276,7 +263,6 @@ class NFmiBetterWeatherSymbolView : public NFmiImageBasedSymbolView
 public:
     NFmiBetterWeatherSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
         , NFmiToolBox * theToolBox
-        , NFmiDrawingEnvironment * theDrawingEnvi
         , boost::shared_ptr<NFmiDrawParam> &theDrawParam
         , FmiParameterName theParamIdent
         , NFmiIndexMessageList * theIndexedWordList
@@ -300,7 +286,6 @@ class NFmiSmartSymbolView : public NFmiImageBasedSymbolView
 public:
     NFmiSmartSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
         , NFmiToolBox * theToolBox
-        , NFmiDrawingEnvironment * theDrawingEnvi
         , boost::shared_ptr<NFmiDrawParam> &theDrawParam
         , FmiParameterName theParamIdent
         , NFmiIndexMessageList * theIndexedWordList
@@ -324,7 +309,6 @@ class NFmiCustomSymbolView : public NFmiImageBasedSymbolView
 public:
     NFmiCustomSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
         , NFmiToolBox * theToolBox
-        , NFmiDrawingEnvironment * theDrawingEnvi
         , boost::shared_ptr<NFmiDrawParam> &theDrawParam
         , FmiParameterName theParamIdent
         , NFmiIndexMessageList * theIndexedWordList

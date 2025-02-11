@@ -43,8 +43,8 @@ void NFmiViewParamsView::ModelSelectorButtonImageHolder::Initialize(void)
 //--------------------------------------------------------
 // Constructor/Destructor
 //--------------------------------------------------------
-NFmiViewParamsView::NFmiViewParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer)
-:NFmiParamCommandView(theMapViewDescTopIndex, theRect, theToolBox, theDrawingEnvi, theDrawParam, theRowIndex, theColumnIndex, hasMapLayer)
+NFmiViewParamsView::NFmiViewParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer)
+:NFmiParamCommandView(theMapViewDescTopIndex, theRect, theToolBox, theDrawParam, theRowIndex, theColumnIndex, hasMapLayer)
 ,itsButtonSizeInMM_x(3)
 ,itsButtonSizeInMM_y(3)
 ,fMouseCaptured(false)
@@ -99,7 +99,7 @@ void NFmiViewParamsView::DrawActiveParamMarkers(boost::shared_ptr<NFmiDrawParam>
         drawingEnvi.SetFillColor(NFmiColor(baseGrayIntensity / 255.f, baseGrayIntensity / 255.f, baseGrayIntensity / 255.f));
         drawingEnvi.EnableFill();
         drawingEnvi.DisableFrame();
-        DrawFrame(&drawingEnvi, paramRect);
+        DrawFrame(drawingEnvi, paramRect);
     }
 }
 
@@ -107,10 +107,10 @@ void NFmiViewParamsView::DrawBackgroundMapLayerText(int& zeroBasedRowIndexInOut,
 {
 	if(fHasMapLayer)
 	{
-		itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false));
+		itsDrawingEnvironment.SetFrameColor(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false));
 		NFmiString mapLayerText = itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().getCurrentMapLayerGuiText(itsMapViewDescTopIndex, true);
 		// map-layer rivin indeksi on 0 ja se annetaan LineTextPlace -metodille.
-		NFmiText text(LineTextPlace(zeroBasedRowIndexInOut, parameterRowRect, false), mapLayerText, false, 0, itsDrawingEnvironment);
+		NFmiText text(LineTextPlace(zeroBasedRowIndexInOut, parameterRowRect, false), mapLayerText, false, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&text);
 		zeroBasedRowIndexInOut++;
 	}
@@ -128,8 +128,8 @@ void NFmiViewParamsView::DrawData(void)
 		NFmiDrawParamList* paramList = itsCtrlViewDocumentInterface->DrawParamList(itsMapViewDescTopIndex, GetUsedParamRowIndex());
 		if(paramList)
 		{
-			itsDrawingEnvironment->SetFontSize(itsFontSize);
-			itsDrawingEnvironment->SetFontType(kArial);
+			itsDrawingEnvironment.SetFontSize(itsFontSize);
+			itsDrawingEnvironment.SetFontType(kArial);
 			int zeroBasedRowIndex = 0;
 			NFmiRect parameterRowRect = CalcParameterRowRect(zeroBasedRowIndex);
 			DrawBackgroundMapLayerText(zeroBasedRowIndex, parameterRowRect);
@@ -140,17 +140,17 @@ void NFmiViewParamsView::DrawData(void)
 				if(drawParam)
 				{
                     DrawActiveParamMarkers(drawParam, zeroBasedRowIndex);
-					itsDrawingEnvironment->SetFrameColor(CtrlViewUtils::GetParamTextColor(drawParam->DataType(), drawParam->UseArchiveModelData()));
+					itsDrawingEnvironment.SetFrameColor(CtrlViewUtils::GetParamTextColor(drawParam->DataType(), drawParam->UseArchiveModelData()));
 
 					auto paramNameStr(CtrlViewUtils::GetParamNameString(drawParam, crossSectionView, false, false, 0, false, true, true, nullptr));
 					if(IsNewDataParameterName(paramNameStr))
 					{
-						itsDrawingEnvironment->BoldFont(true);
+						itsDrawingEnvironment.BoldFont(true);
 					}
 
-					NFmiText text(LineTextPlace(zeroBasedRowIndex, parameterRowRect, true), paramNameStr, true, 0, itsDrawingEnvironment);
+					NFmiText text(LineTextPlace(zeroBasedRowIndex, parameterRowRect, true), paramNameStr, true, 0, &itsDrawingEnvironment);
 					itsToolBox->Convert(&text);
-					itsDrawingEnvironment->BoldFont(false);
+					itsDrawingEnvironment.BoldFont(false);
 					DrawCheckBox(parameterRowRect, !drawParam->IsParamHidden());
 					DrawModelSelectorButtons(drawParam, parameterRowRect);
 				}
@@ -175,7 +175,7 @@ void NFmiViewParamsView::DrawMouseDraggingBackground()
         drawEnvi.SetFillColor(NFmiCtrlView::gGreyColorDefault);
         drawEnvi.DisableFrame();
         drawEnvi.EnableFill();
-        DrawFrame(&drawEnvi);
+        DrawFrame(drawEnvi);
     }
 }
 
@@ -188,7 +188,7 @@ void NFmiViewParamsView::DrawMouseDraggingAction()
         NFmiDrawingEnvironment drawingEnvi;
         float baseGrayIntensity = 255.f;
         drawingEnvi.SetFrameColor(NFmiColor(baseGrayIntensity / 255.f, baseGrayIntensity / 255.f, baseGrayIntensity / 255.f)); // from-drop-positio piirret‰‰n vaalealla
-        DrawFrame(&drawingEnvi, draggedParamRect);
+        DrawFrame(drawingEnvi, draggedParamRect);
 
         // 2. Piirret‰‰n viiva siihen v‰liin mihin parametri nyt tiputettaisiin, 
         // jos indeksi ei ole 0 (= ei kunnollista indeksi‰)
@@ -208,7 +208,7 @@ void NFmiViewParamsView::DrawMouseDraggingAction()
                 dropZoneParamRect.Top(newTop); // tehd‰‰n laatikosta yhden pikselin korkuinen alkaen sen alkuper‰isest‰ alaosasta
             }
             drawingEnvi.SetFrameColor(NFmiColor(0, 0, 0)); // to-drop-positio piirret‰‰n mustalla
-            DrawFrame(&drawingEnvi, dropZoneParamRect);
+            DrawFrame(drawingEnvi, dropZoneParamRect);
         }
     }
 }

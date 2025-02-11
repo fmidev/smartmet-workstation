@@ -49,7 +49,7 @@ namespace
     {
         if(rowItem.itemName().empty())
         {
-            rowItem.itemName(PathUtils::getFilename(rowItem.totalFilePath()));
+            rowItem.itemName(PathUtils::getFilename(rowItem.totalFilePath(), false));
         }
     }
 

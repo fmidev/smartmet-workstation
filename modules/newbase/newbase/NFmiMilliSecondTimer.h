@@ -50,8 +50,8 @@ class NFmiMilliSecondTimer
   int TimeDiffInMSeconds() const;
   int CurrentTimeDiffInMSeconds()
       const;  // alkuajan ja nykyhetken erotus milli sekunneissa (eli kelloa ei pysäytetä)
-  std::string EasyTimeDiffStr(bool fIgnoreMilliSeconds = false) const;
-  static std::string EasyTimeDiffStr(int theDiffInMS, bool fIgnoreMilliSeconds = false);
+  std::string EasyTimeDiffStr(bool fIgnoreMilliSeconds = false, bool fDenseOutput = false) const;
+  static std::string EasyTimeDiffStr(int theDiffInMS, bool fIgnoreMilliSeconds = false, bool fDenseOutput = false);
 
   // Deprecated:
   void FirstTime();

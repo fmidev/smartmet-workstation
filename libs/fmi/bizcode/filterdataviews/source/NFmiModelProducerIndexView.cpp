@@ -10,10 +10,9 @@
 #include "boost\math\special_functions\round.hpp"
 
 NFmiModelProducerIndexView::NFmiModelProducerIndexView(NFmiToolBox * theToolBox
-													 ,NFmiDrawingEnvironment * theDrawingEnvi
 													 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 													 ,const NFmiRect& theRect)
-:NFmiModelCombineStatusView(theToolBox, theDrawingEnvi, theDrawParam, theRect)
+:NFmiModelCombineStatusView(theToolBox, theDrawParam, theRect)
 ,itsQueryInfoVector()
 ,itsProducerIndexInTimeVector()
 ,itsLoadedDataTimeBag()

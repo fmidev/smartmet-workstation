@@ -28,14 +28,12 @@ using namespace Gdiplus;
 
 NFmiWmsView::NFmiWmsView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
     , NFmiToolBox *theToolBox
-    , NFmiDrawingEnvironment* theDrawingEnvi
     , boost::shared_ptr<NFmiDrawParam> &theDrawParam
     , FmiParameterName theParamId
     , int theRowIndex
     , int theColumnIndex)
 : NFmiStationView(theMapViewDescTopIndex, theArea
         , theToolBox
-        , theDrawingEnvi
         , theDrawParam
         , theParamId
         , NFmiPoint(0, 0)

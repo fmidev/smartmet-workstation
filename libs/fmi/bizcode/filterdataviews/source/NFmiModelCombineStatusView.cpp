@@ -10,10 +10,9 @@
 #include "CtrlViewDocumentInterface.h"
 
 NFmiModelCombineStatusView::NFmiModelCombineStatusView(NFmiToolBox * theToolBox
-													 ,NFmiDrawingEnvironment * theDrawingEnvi
 													 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 													 ,const NFmiRect& theRect)
-:NFmiZoomView(0, theToolBox, theDrawingEnvi, theDrawParam, theRect)
+:NFmiZoomView(0, theToolBox, theDrawParam, theRect)
 ,itsGridXSize(10)
 ,itsCheckedInfo()
 {
@@ -50,10 +49,10 @@ void NFmiModelCombineStatusView::Draw(NFmiToolBox * theGTB)
 		NFmiTimeBag timebag(GetUsedTimeBag());
 		itsGridXSize = timebag.GetSize();
 
-		itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
-		itsDrawingEnvironment->SetPenSize(NFmiPoint(1,1));
-		itsDrawingEnvironment->EnableFill();
-		itsDrawingEnvironment->SetFillColor(NFmiColor(0.9f,0.9f,0.9f));
+		itsDrawingEnvironment.SetFrameColor(NFmiColor(0,0,0));
+		itsDrawingEnvironment.SetPenSize(NFmiPoint(1,1));
+		itsDrawingEnvironment.EnableFill();
+		itsDrawingEnvironment.SetFillColor(NFmiColor(0.9f,0.9f,0.9f));
 		NFmiRect viewRect(CalcStatusGridViewSize());
 		DrawFrame(itsDrawingEnvironment, viewRect);
 		NFmiColor color(1,0,0);
@@ -64,11 +63,11 @@ void NFmiModelCombineStatusView::Draw(NFmiToolBox * theGTB)
 		for(int i=0; i<itsGridXSize; i++)
 		{
 			color = CheckStatusBoxColor(i);
-			itsDrawingEnvironment->SetFillColor(color);
+			itsDrawingEnvironment.SetFillColor(color);
 
 			NFmiPoint startingPoint(start + (i * boxWidth), top);
 			NFmiPoint endingPoint(start + ((i+1) * boxWidth), bottom);
-			NFmiRectangle box(startingPoint, endingPoint, 0, itsDrawingEnvironment);
+			NFmiRectangle box(startingPoint, endingPoint, 0, &itsDrawingEnvironment);
 			itsToolBox->Convert(&box);
 		}
 	}

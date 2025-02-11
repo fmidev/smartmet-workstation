@@ -5,7 +5,6 @@
 
 class NFmiCtrlViewList;
 class NFmiToolBox;
-class NFmiDrawingEnvironment;
 class NFmiTimeSerialView;
 class NFmiStepTimeScale;
 class NFmiTimeScaleView;
@@ -18,8 +17,7 @@ class NFmiTimeValueEditManagerView : public NFmiCtrlView
 
  public:
 	NFmiTimeValueEditManagerView (const NFmiRect & theRect
-								,NFmiToolBox * theToolBox
-								,NFmiDrawingEnvironment * theDrawingEnvi);
+								,NFmiToolBox * theToolBox);
 	~NFmiTimeValueEditManagerView(void);
 	virtual void Update (const NFmiRect & theRect, NFmiToolBox * theToolBox = 0) override;
 	virtual void Update (void) override;

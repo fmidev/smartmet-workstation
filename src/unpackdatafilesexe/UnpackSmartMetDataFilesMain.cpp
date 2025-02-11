@@ -179,6 +179,451 @@ int main(int argc, const char* argv[])
 #include "NFmiFastQueryInfo.h"
 #include "NFmiQueryDataUtil.h"
 
+static void FillCombinedData(NFmiFastQueryInfo& combinedInfo, NFmiFastQueryInfo& sourceInfo)
+{
+    for(sourceInfo.ResetLevel(); sourceInfo.NextLevel(); )
+    {
+        if(combinedInfo.Level(*sourceInfo.Level()))
+        {
+            for(sourceInfo.ResetParam(); sourceInfo.NextParam(); )
+            {
+                if(combinedInfo.Param(*sourceInfo.Param().GetParam()))
+                {
+                    for(sourceInfo.ResetTime(); sourceInfo.NextTime(); )
+                    {
+                        if(combinedInfo.Time(sourceInfo.Time()))
+                        {
+                            for(sourceInfo.ResetLocation(); sourceInfo.NextLocation(); )
+                            {
+                                if(combinedInfo.Location(*sourceInfo.Location()))
+                                {
+                                    combinedInfo.FloatValue(sourceInfo.FloatValue());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Ohjelma yhdist‰‰ kaksi asemadata sqd tiedostoa yhdeksi.
+// Oletuksia: asemadataa, ei level-dataa
+int main(int argc, const char* argv[])
+{
+    if(argc < 4)
+    {
+        std::cerr << "Needs 3 querydata file paths as arguments to do combining:" << std::endl;
+        NFmiFileString fileStr(argv[0]);
+        std::cerr << fileStr.FileName().CharPtr() << " querydata1 querydata2 outputdata" << std::endl;
+        std::cerr << "Stopping..." << std::endl;
+        return 1;
+    }
+    NFmiQueryData data1(argv[1]);
+    NFmiFastQueryInfo info1(&data1);
+    NFmiQueryData data2(argv[2]);
+    NFmiFastQueryInfo info2(&data2);
+    std::string outputFileName = argv[3];
+
+    if(info1.IsGrid() || info2.IsGrid())
+    {
+        std::cerr << "At least one of data contains grid data, stopping..." << std::endl;
+        return 1;
+    }
+
+    if((info1.SizeLevels() > 1 || info2.SizeLevels() > 1))
+    {
+        std::cerr << "At least one of data contains more than 1 level, stopping..." << std::endl;
+        return 1;
+    }
+
+    auto finalTimeDescriptor = info1.TimeDescriptor().Combine(info2.TimeDescriptor());
+    auto copyOfParamDescriptor1 = info1.ParamDescriptor();
+    auto finalParamDescriptor = copyOfParamDescriptor1.Combine(info2.ParamDescriptor());
+    auto finalLevelDescriptor = info1.VPlaceDescriptor();
+    auto copyOfHPlaceDescriptor1 = info1.HPlaceDescriptor();
+    auto finalHPlaceDescriptor = copyOfHPlaceDescriptor1.Combine(info2.HPlaceDescriptor());
+
+    auto newMetaInfo = std::make_unique<NFmiQueryInfo>(finalParamDescriptor, finalTimeDescriptor, finalHPlaceDescriptor, finalLevelDescriptor);
+    std::unique_ptr<NFmiQueryData> newData(NFmiQueryDataUtil::CreateEmptyData(*newMetaInfo));
+    NFmiFastQueryInfo newInfo(newData.get());
+    ::FillCombinedData(newInfo, info1);
+    ::FillCombinedData(newInfo, info2);
+
+    newData->Write(outputFileName);
+
+    return 0;
+}
+*/
+/*
+
+// Ohjelma joka vertaa kahta eri querydata tiedostoa arvotasolla:
+// 1) Tiedostojen datarakenteiden pit‰‰ olla samat, muuten ilmoitetaan vain rakenteiden erot
+// 2) Ilmoitetaan parametri ja aika-askel tasolla jos datojen arvoissa on eroja
+// 3) Ilmoitetaan kuinka monta arvoa total, eri arvoja, %, suurin ero, suurin ero x,y
+// 4) T‰ss‰ vaiheessa oletetaan ett‰ reportoivat datat ovat 1 levelisi‰, eli k‰yd‰‰n l‰pi vain 1. level
+
+#include "NFmiQueryData.h"
+#include "NFmiFastQueryInfo.h"
+#include "NFmiDataModifierMinMax.h"
+#include "NFmiValueString.h"
+#include "NFmiFileString.h"
+
+struct MaxAbsValueWithLocation
+{
+    float maxAbsValue = kFloatMissing;
+    unsigned long locationIndex = gMissingIndex;
+    NFmiPoint gridIndexies = NFmiPoint::gMissingLatlon;
+    unsigned long timeIndex = gMissingIndex;
+    unsigned long paramId = kFmiBadParameter;
+    std::string paramName;
+
+    void Value(float value, NFmiFastQueryInfo& info)
+    {
+        if(value == kFloatMissing)
+            return;
+
+        if(IsMissing() || std::fabs(maxAbsValue) < std::fabs(value))
+        {
+            maxAbsValue = value;
+            locationIndex = info.LocationIndex();
+            auto xIndex = locationIndex % info.GridXNumber();
+            auto yIndex = locationIndex / info.GridXNumber();
+            gridIndexies = NFmiPoint(xIndex, yIndex);
+            timeIndex = info.TimeIndex();
+            paramId = info.Param().GetParamIdent();
+            paramName = info.Param().GetParamName();
+        }
+    }
+
+    void Value(const MaxAbsValueWithLocation &partialMaxValue)
+    {
+        auto partialMax = partialMaxValue.maxAbsValue;
+        if(partialMax == kFloatMissing)
+            return;
+
+        if(IsMissing() || std::fabs(maxAbsValue) < std::fabs(partialMax))
+        {
+            maxAbsValue = partialMax;
+            locationIndex = partialMaxValue.locationIndex;
+            gridIndexies = partialMaxValue.gridIndexies;
+            timeIndex = partialMaxValue.timeIndex;
+            paramId = partialMaxValue.paramId;
+            paramName = partialMaxValue.paramName;
+        }
+    }
+
+    bool IsMissing() const
+    {
+        return maxAbsValue == kFloatMissing;
+    }
+};
+
+struct ValuesCheckResults
+{
+    std::string checkedParamName;
+    unsigned long checkedParamId = kFmiBadParameter;
+    int totalValues = 0;
+    int differentValues = 0;
+    int missingOnlyIn1Values = 0;
+    int missingOnlyIn2Values = 0;
+    mutable MaxAbsValueWithLocation maxAbsValueWithLocation;
+
+    void ReportMissingValueInOther(const std::string& titleStr, NFmiFastQueryInfo& info)
+    {
+        std::string reportStr = titleStr;
+        reportStr += " at locationIndex = ";
+        reportStr += std::to_string(info.LocationIndex());
+        auto xIndex = info.LocationIndex() % info.GridXNumber();
+        auto yIndex = info.LocationIndex() / info.GridXNumber();
+        reportStr += " (";
+        reportStr += std::to_string(xIndex);
+        reportStr += ", ";
+        reportStr += std::to_string(yIndex);
+        reportStr += "), timeIndex = ";
+        reportStr += std::to_string(info.TimeIndex());
+        reportStr += ", paramIndex = ";
+        reportStr += std::to_string(info.ParamIndex());
+        reportStr += " '";
+        reportStr += info.Param().GetParamName().CharPtr();
+        reportStr += "'";
+        std::cerr << reportStr << std::endl;
+    }
+
+    void CheckValues(float value1, float value2, NFmiFastQueryInfo& info)
+    {
+        totalValues++;
+        if(value1 != value2)
+            differentValues++;
+        if(value1 == kFloatMissing && value2 != kFloatMissing)
+        {
+            missingOnlyIn1Values++;
+            ReportMissingValueInOther("Missing in 1st, not in 2nd", info);
+        }
+        if(value2 == kFloatMissing && value1 != kFloatMissing)
+        {
+            missingOnlyIn2Values++;
+            ReportMissingValueInOther("Missing in 2nd, not in 1st", info);
+        }
+        if(value1 != kFloatMissing && value2 != kFloatMissing)
+            maxAbsValueWithLocation.Value(value1 - value2, info);
+    }
+
+    std::string MakeReportString() const
+    {
+        if(totalValues == 0)
+        {
+            return std::string("No checks were made for ") + checkedParamName;
+        }
+
+        if(differentValues == 0)
+            return "";
+
+        std::string resultStr = checkedParamName + " ";
+        resultStr += "total " + std::to_string(totalValues);
+        resultStr += ", diff " + std::to_string(differentValues);
+
+        if(!maxAbsValueWithLocation.IsMissing())
+        {
+            resultStr += ", max diff = " + std::to_string(maxAbsValueWithLocation.maxAbsValue);
+            resultStr += " (";
+            resultStr += std::to_string(boost::math::iround(maxAbsValueWithLocation.gridIndexies.X()));
+            resultStr += ",";
+            resultStr += std::to_string(boost::math::iround(maxAbsValueWithLocation.gridIndexies.Y()));
+            resultStr += ") - ";
+            resultStr += std::to_string(maxAbsValueWithLocation.locationIndex);
+        }
+
+        if(missingOnlyIn1Values > 0)
+            resultStr += ", missing only in data1 = " + std::to_string(missingOnlyIn1Values);
+        if(missingOnlyIn2Values > 0)
+            resultStr += ", missing only in data2 = " + std::to_string(missingOnlyIn2Values);
+
+        return resultStr;
+    }
+
+    std::string MakeTotalReportString(unsigned long paramCount, const std::set<unsigned long>& diffParamIdList) const
+    {
+        if(totalValues == 0)
+        {
+            return std::string("No checks were made for ") + checkedParamName;
+        }
+
+        std::string resultStr = "Total summary:\n";
+        resultStr += "checks " + std::to_string(totalValues);
+        resultStr += ", diff " + std::to_string(differentValues);
+        double diffProcent = (100. * differentValues) / totalValues;
+        resultStr += ", diff[%] " + std::to_string(diffProcent);
+
+        if(!maxAbsValueWithLocation.IsMissing())
+        {
+            resultStr += "\nmax diff = " + std::to_string(maxAbsValueWithLocation.maxAbsValue);
+            resultStr += ", locationIndex = ";
+            resultStr += std::to_string(maxAbsValueWithLocation.locationIndex);
+            resultStr += " (";
+            resultStr += std::to_string(boost::math::iround(maxAbsValueWithLocation.gridIndexies.X()));
+            resultStr += ",";
+            resultStr += std::to_string(boost::math::iround(maxAbsValueWithLocation.gridIndexies.Y()));
+            resultStr += ")";
+            resultStr += ", timeIndex = ";
+            resultStr += std::to_string(maxAbsValueWithLocation.timeIndex);
+            resultStr += ", param-id = ";
+            resultStr += std::to_string(maxAbsValueWithLocation.paramId);
+            resultStr += " '";
+            resultStr += maxAbsValueWithLocation.paramName;
+            resultStr += "'";
+        }
+
+        if(missingOnlyIn1Values > 0)
+        {
+            resultStr += "\nMissing only in data1 = " + std::to_string(missingOnlyIn1Values);
+            double diffProcent = (100. * missingOnlyIn1Values) / totalValues;
+            resultStr += ", diff[%] " + std::to_string(diffProcent);
+        }
+        if(missingOnlyIn2Values > 0)
+        {
+            resultStr += "\nMissing only in data2 = " + std::to_string(missingOnlyIn2Values);
+            double diffProcent = (100. * missingOnlyIn2Values) / totalValues;
+            resultStr += ", diff[%] " + std::to_string(diffProcent);
+        }
+        if(!diffParamIdList.empty())
+        {
+            resultStr += "\nTotal parameter count = " + std::to_string(paramCount);
+            resultStr += ", parameters with differences count = " + std::to_string(diffParamIdList.size());
+        }
+
+        return resultStr;
+    }
+
+    bool IsOk() const
+    {
+        return MakeReportString().empty();
+    }
+
+    void AddPartialResults(const ValuesCheckResults& partialCheck)
+    {
+        totalValues += partialCheck.totalValues;
+        differentValues += partialCheck.differentValues;
+        missingOnlyIn1Values += partialCheck.missingOnlyIn1Values;
+        missingOnlyIn2Values += partialCheck.missingOnlyIn2Values;
+        maxAbsValueWithLocation.Value(partialCheck.maxAbsValueWithLocation);
+    }
+};
+
+static std::string GetUsedParamName(NFmiFastQueryInfo& info)
+{
+    auto param = info.Param().GetParam();
+    std::string usedName = param->GetName();
+    usedName += " (id=";
+    usedName += std::to_string(param->GetIdent());
+    usedName += ")";
+    return usedName;
+}
+
+static ValuesCheckResults DoParamLevelChecks(NFmiFastQueryInfo& info1, NFmiFastQueryInfo& info2)
+{
+    ValuesCheckResults checkResult;
+    checkResult.checkedParamName = ::GetUsedParamName(info1);
+    checkResult.checkedParamId = info1.Param().GetParamIdent();
+    for(info1.ResetLocation(), info2.ResetLocation(); info1.NextLocation() && info2.NextLocation(); )
+    {
+        checkResult.CheckValues(info1.FloatValue(), info2.FloatValue(), info1);
+    }
+    return checkResult;
+}
+
+static void DoTimeStepReporting(const std::vector<ValuesCheckResults>& paramLevelCheckList, ValuesCheckResults& totalCheckResults, std::set<unsigned long>& diffParamIdList)
+{
+    // Raportoidaan poikkeamista erikseen
+    bool allChecksOk = true;
+    for(const auto& paramCheck : paramLevelCheckList)
+    {
+        if(paramCheck.IsOk())
+            continue;
+
+        allChecksOk = false;
+        std::cout << paramCheck.MakeReportString() << std::endl;
+        totalCheckResults.AddPartialResults(paramCheck);
+        diffParamIdList.insert(paramCheck.checkedParamId);
+    }
+
+    if(allChecksOk)
+        std::cout << "All params OK" << std::endl;
+    else
+        std::cout << std::endl; // extra endl
+}
+
+static void CheckValuesFromTimeStep(NFmiFastQueryInfo& info1, NFmiFastQueryInfo& info2, ValuesCheckResults &totalCheckResults, std::set<unsigned long> &diffParamIdList)
+{
+    std::vector<ValuesCheckResults> paramLevelCheckList;
+    for(info1.ResetParam(), info2.ResetParam(); info1.NextParam() && info2.NextParam(); )
+    {
+        paramLevelCheckList.push_back(::DoParamLevelChecks(info1, info2));
+    }
+    ::DoTimeStepReporting(paramLevelCheckList, totalCheckResults, diffParamIdList);
+}
+
+int main(int argc, const char* argv[])
+{
+    if(argc < 3)
+    {
+        std::cerr << "Needs 2 querydata file paths as arguments to do comparing:" << std::endl;
+        NFmiFileString fileStr(argv[0]);
+        std::cerr << fileStr.FileName().CharPtr() << " querydata1 querydata2" << std::endl;
+        std::cerr << "Stopping..." << std::endl;
+        return 1;
+    }
+    NFmiQueryData data1(argv[1]);
+    NFmiFastQueryInfo info1(&data1);
+    NFmiQueryData data2(argv[2]);
+    NFmiFastQueryInfo info2(&data2);
+
+    if(!(info1.HPlaceDescriptor() == info2.HPlaceDescriptor()))
+    {
+        std::cerr << "HPlaceDescriptors were different, stopping..." << std::endl;
+        return 1;
+    }
+
+    if(!(info1.VPlaceDescriptor() == info2.VPlaceDescriptor()))
+    {
+        std::cerr << "VPlaceDescriptors were different, stopping..." << std::endl;
+        return 1;
+    }
+
+    if(!(info1.TimeDescriptor() == info2.TimeDescriptor()))
+    {
+        std::cerr << "TimeDescriptors were different, stopping..." << std::endl;
+        return 1;
+    }
+
+    if(!(info1.ParamDescriptor() == info2.ParamDescriptor()))
+    {
+        std::cerr << "ParamDescriptor were different, stopping..." << std::endl;
+        return 1;
+    }
+
+    // Tehd‰‰n myˆs kokonais lukemat ja niiden tulostus
+    ValuesCheckResults totalCheckResults;
+    std::set<unsigned long> diffParamIdList;
+
+    for(info1.ResetTime(), info2.ResetTime(); info1.NextTime() && info2.NextTime(); )
+    {
+        std::cout << "Checking " << info1.Time().ToStr("YYYY.MM.DD HH:mm", kEnglish).CharPtr() << std::endl;
+        ::CheckValuesFromTimeStep(info1, info2, totalCheckResults, diffParamIdList);
+    }
+
+    std::cout << std::endl << totalCheckResults.MakeTotalReportString(info1.SizeParams(), diffParamIdList) << std::endl;
+
+    return 0;
+}
+*/
+/*
+#include <iostream>
+#include <regex>
+#include <string>
+
+int main() {
+    std::string input1 = "SomeWord";               // Should match (word itself)
+    std::string input2 = "SomeWord[1h]";           // Should match (word with [1h])
+    std::string input3 = "SomeWord[0.5H]";         // Should match (word with [0.5H])
+    std::string input4 = "Word_123[10h]";          // Should match (word with [10h])
+    std::string input5 = "InvalidWord[10m]";       // Should not match (invalid 'm')
+    std::string input6 = "SomeWord[5h]extra";      // Should not match (extra after ])
+    std::string input7 = "SomeWord[5h";            // Should not match (missing closing bracket)
+    std::string input8 = "Word_with_space [5h]";   // Should not match (space before bracket)
+
+    // Regular expression pattern based on the requirements:
+    std::regex pattern(R"(^[A-Za-z0-9_]+(\[([0-9]*\.?[0-9]+[hH])\])?$)");
+
+    // Function to test the match
+    auto testRegexMatch = [&](const std::string& input) {
+        if(std::regex_match(input, pattern)) {
+            std::cout << "Match: " << input << std::endl;
+        }
+        else {
+            std::cout << "No match: " << input << std::endl;
+        }
+        };
+
+    // Test different input strings
+    testRegexMatch(input1);  // Should match (word itself)
+    testRegexMatch(input2);  // Should match (word with [1h])
+    testRegexMatch(input3);  // Should match (word with [0.5H])
+    testRegexMatch(input4);  // Should match (word with [10h])
+    testRegexMatch(input5);  // Should not match (invalid 'm')
+    testRegexMatch(input6);  // Should not match (extra characters after ])
+    testRegexMatch(input7);  // Should not match (missing closing bracket)
+    testRegexMatch(input8);  // Should not match (space before bracket)
+
+    return 0;
+}
+*/
+/*
+#include "NFmiQueryData.h"
+#include "NFmiFastQueryInfo.h"
+#include "NFmiQueryDataUtil.h"
+
 static NFmiVPlaceDescriptor MakeReversedVPlaceDescriptor(const NFmiVPlaceDescriptor& sourceVPlaceDescriptor)
 {
     auto sourceLevelBag = sourceVPlaceDescriptor.LevelBag();

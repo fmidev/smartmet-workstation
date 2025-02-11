@@ -61,7 +61,6 @@ class NFmiCrossSectionView : public NFmiIsoLineView
 	 // joita emo isolineview vaatii, joten
 	 // niitä voi miettiä vähentää myöhemmin.
 	NFmiCrossSectionView(NFmiToolBox * theToolBox
-						,NFmiDrawingEnvironment * theDrawingEnvi
                         , int viewGridRowNumber
                         , int viewGridColumnNumber);
     ~NFmiCrossSectionView(void);
@@ -115,7 +114,7 @@ private:
     std::vector<NFmiMetTime> MakeMacroParamTimeModeTimeVector(void);
     void PreCalculateTrajectoryLatlonPoints(void);
 	void DrawTrajectory(const NFmiTrajectory &theTrajectory, const NFmiColor &theColor);
-	void DrawSingleTrajector(const NFmiSingleTrajector &theSingleTrajector, NFmiDrawingEnvironment *theEnvi, int theTimeStepInMinutes, int theTimeMarkerPixelSize, int theTimeMarkerPixelPenSize, FmiDirection theDirection);
+	void DrawSingleTrajector(const NFmiSingleTrajector &theSingleTrajector, NFmiDrawingEnvironment &theEnvi, int theTimeStepInMinutes, int theTimeMarkerPixelSize, int theTimeMarkerPixelPenSize, FmiDirection theDirection);
 	const std::vector<NFmiPoint>& GetMinorPoints(void);
 	NFmiMetTime GetCrossSectionTime(const NFmiPoint &theRelativePlace);
 	void FillMainPointXYInfo(NFmiDataMatrix<NFmiPoint> &theCoordinates);

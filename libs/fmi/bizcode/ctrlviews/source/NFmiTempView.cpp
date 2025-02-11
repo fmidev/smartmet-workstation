@@ -82,7 +82,7 @@ static std::string GetStrValue(float value, int decimalCount, int totalChars)
 	return str;
 }
 
-static bool SetHelpLineDrawingAttributes(NFmiToolBox *theTB, NFmiDrawingEnvironment *theEnvi, const NFmiTempLabelInfo &theLabelInfo, const NFmiTempLineInfo &theLineInfo, int &theTrueLineWidth, bool isHelpLine)
+static bool SetHelpLineDrawingAttributes(NFmiToolBox *theTB, NFmiDrawingEnvironment &theEnvi, const NFmiTempLabelInfo &theLabelInfo, const NFmiTempLineInfo &theLineInfo, int &theTrueLineWidth, bool isHelpLine)
 {
 	bool drawSpecialLines = false;
 	theTrueLineWidth = theLineInfo.Thickness();
@@ -90,16 +90,16 @@ static bool SetHelpLineDrawingAttributes(NFmiToolBox *theTB, NFmiDrawingEnvironm
 		if(theTrueLineWidth > 1)
 			drawSpecialLines = true;
 	if(drawSpecialLines)
-		theEnvi->SetPenSize(NFmiPoint(1,1));
+		theEnvi.SetPenSize(NFmiPoint(1,1));
 	else
-		theEnvi->SetPenSize(NFmiPoint(theLineInfo.Thickness(), theLineInfo.Thickness()));
-	theEnvi->SetFillPattern(theLineInfo.LineType());
+		theEnvi.SetPenSize(NFmiPoint(theLineInfo.Thickness(), theLineInfo.Thickness()));
+	theEnvi.SetFillPattern(theLineInfo.LineType());
 	int fontSize = theLabelInfo.FontSize();
-	theEnvi->SetFontSize(NFmiPoint(fontSize, fontSize));
+	theEnvi.SetFontSize(NFmiPoint(fontSize, fontSize));
 	theTB->SetTextAlignment(theLabelInfo.TextAlignment());
 	if(isHelpLine) // apuviivojen kanssa perusteellisemmat asetukset kuin l‰mpp‰ri ja kastepiste luotaus viivojen kanssa
 	{
-		theEnvi->SetFrameColor(theLineInfo.Color());
+		theEnvi.SetFrameColor(theLineInfo.Color());
 	}
 	return drawSpecialLines;
 }
@@ -358,11 +358,8 @@ bool NFmiTempView::IsRectangularTemperatureHelperLines() const
 
 NFmiTempView::NFmiTempView(const NFmiRect& theRect
 						,NFmiToolBox* theToolBox)
-:NFmiCtrlView(0, theRect
-			 ,theToolBox
-			 ,new NFmiDrawingEnvironment()) // t‰m‰ on h‰m‰r‰‰ koodia, mutta hommat on tehty jo aiemmin (luokka suunnittelussa) p‰in peet‰
-			 					   // t‰ss‰ luodaan drawingenvi ja annetaan emolle ja otetaan talteen t‰m‰n luokan dataosaan
-,itsTempDrawingEnvi(itsDrawingEnvironment) // joka sitten tuhotaan destruktorissa (don't try this at home)
+:NFmiCtrlView(0, theRect, theToolBox)
+,itsTempDrawingEnvi()
 ,tmax(50)
 ,tmin(-80)
 ,dt(tmax - tmin)
@@ -385,7 +382,6 @@ NFmiTempView::NFmiTempView(const NFmiRect& theRect
 
 NFmiTempView::~NFmiTempView(void)
 {
-	delete itsTempDrawingEnvi; // koska emo ei tuhoa drawingParamia, se pit‰‰ t‰ss‰ tapuksessa tuhota t‰ss‰, paskaa mutta enjaksa tehd‰ mega muutosta koko Ctrlview systeemiin
 }
 
 double NFmiTempView::y2p(double y)
@@ -534,8 +530,8 @@ void NFmiTempView::DrawSecondaryDataRect()
     if(!itsCtrlViewDocumentInterface->GetMTATempSystem().DrawSecondaryData())
         return ;
 
-    itsDrawingEnvironment->SetFrameColor(NFmiColor(0, 0, 0));
-    itsDrawingEnvironment->SetPenSize(NFmiPoint(1 * itsDrawSizeFactor.X() * ExtraPrintLineThicknesFactor(true), 1 * itsDrawSizeFactor.Y() * ExtraPrintLineThicknesFactor(true)));
+    itsDrawingEnvironment.SetFrameColor(NFmiColor(0, 0, 0));
+    itsDrawingEnvironment.SetPenSize(NFmiPoint(1 * itsDrawSizeFactor.X() * ExtraPrintLineThicknesFactor(true), 1 * itsDrawSizeFactor.Y() * ExtraPrintLineThicknesFactor(true)));
 	const auto& secondaryDataFrame = itsTempViewDataRects.getSecondaryDataFrame();
 	DrawFrame(itsDrawingEnvironment, secondaryDataFrame);
 
@@ -580,7 +576,7 @@ void NFmiTempView::DrawSecondaryVerticalHelpLine(double theBottom, double theTop
 {
     NFmiPoint p1(SecondaryDataFrameXoffset(theValue), theTop);
     NFmiPoint p2(SecondaryDataFrameXoffset(theValue), theBottom);
-    NFmiLine l1(p1, p2, 0, itsDrawingEnvironment);
+    NFmiLine l1(p1, p2, 0, &itsDrawingEnvironment);
     itsToolBox->Convert(&l1);
 }
 
@@ -808,21 +804,21 @@ void NFmiTempView::Draw(NFmiToolBox *theToolBox)
             DrawFlightLevelScale();
             DrawHeightScale();
 
-            NFmiPoint oldFontSize(itsDrawingEnvironment->GetFontSize());
-            NFmiColor oldFillColor(itsDrawingEnvironment->GetFillColor());
-            itsDrawingEnvironment->SetFillColor(NFmiColor(0.9f, 0.9f, 0.9f)); // laitetaan harmaa tausta teksteille, ett‰ ne erottuu
-            itsDrawingEnvironment->SetFontSize(NFmiPoint(18 * itsDrawSizeFactor.X(), 18 * itsDrawSizeFactor.Y()));
-            itsDrawingEnvironment->SetPenSize(NFmiPoint(1 * itsDrawSizeFactor.X(), 1 * itsDrawSizeFactor.Y()));
+            NFmiPoint oldFontSize(itsDrawingEnvironment.GetFontSize());
+            NFmiColor oldFillColor(itsDrawingEnvironment.GetFillColor());
+			itsDrawingEnvironment.SetFillColor(NFmiColor(0.9f, 0.9f, 0.9f)); // laitetaan harmaa tausta teksteille, ett‰ ne erottuu
+			itsDrawingEnvironment.SetFontSize(NFmiPoint(18 * itsDrawSizeFactor.X(), 18 * itsDrawSizeFactor.Y()));
+			itsDrawingEnvironment.SetPenSize(NFmiPoint(1 * itsDrawSizeFactor.X(), 1 * itsDrawSizeFactor.Y()));
 			DrawSoundingsInMTAMode();
 
             // siivotaan piirto ominaisuudet takaisin
-            itsDrawingEnvironment->SetFillColor(oldFillColor);
-            itsDrawingEnvironment->SetFontSize(oldFontSize);
+			itsDrawingEnvironment.SetFillColor(oldFillColor);
+			itsDrawingEnvironment.SetFontSize(oldFontSize);
 
             // piirr‰ lopuksi vain data alueen frame, koska diagrammin piirros on sotkenut sit‰
-            itsDrawingEnvironment->DisableFill();
-            itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f, 0.f, 0.f));
-            itsDrawingEnvironment->SetPenSize(NFmiPoint(1 * itsDrawSizeFactor.X(), 1 * itsDrawSizeFactor.Y()));
+			itsDrawingEnvironment.DisableFill();
+			itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f, 0.f, 0.f));
+			itsDrawingEnvironment.SetPenSize(NFmiPoint(1 * itsDrawSizeFactor.X(), 1 * itsDrawSizeFactor.Y()));
             DrawFrame(itsDrawingEnvironment, dataRect);
         }
 		DrawTextualSideViewRelatedStuff();
@@ -896,9 +892,9 @@ void NFmiTempView::DrawTextualSideViewRelatedStuff()
 
 void NFmiTempView::DrawStabilityIndexBackground(const NFmiRect& sideViewRect)
 {
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
-	itsDrawingEnvironment->SetFillColor(NFmiColor(1.0f, 1.0f, 1.0f));
-	itsDrawingEnvironment->EnableFill();
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0,0,0));
+	itsDrawingEnvironment.SetFillColor(NFmiColor(1.0f, 1.0f, 1.0f));
+	itsDrawingEnvironment.EnableFill();
 	DrawFrame(itsDrawingEnvironment, sideViewRect);
 }
 
@@ -1139,7 +1135,7 @@ bool NFmiTempView::DoTextualSideViewSetup(bool showSideView, const NFmiRect &sid
 
 	// Laitetaan toolboxin piirtoasetukset kuntoon ennen lopullisen piirto funktion kutsua.
 	// Piirret‰‰n vain 1. luotaukseen liittyv‰t indeksit ja ne piirret‰‰n samalla v‰rilla kuin 1. luotaus
-	itsDrawingEnvironment->SetFrameColor(GetSelectedProducersColor());
+	itsDrawingEnvironment.SetFrameColor(GetSelectedProducersColor());
 	int usedFontSize = fontSize;
 	if(itsToolBox->GetDC()->IsPrinting())
 	{
@@ -1147,7 +1143,7 @@ bool NFmiTempView::DoTextualSideViewSetup(bool showSideView, const NFmiRect &sid
 		usedFontSize = boost::math::iround(usedFontSize * 0.9);
 	}
 	usedFontSize = boost::math::iround(usedFontSize * itsDrawSizeFactor.Y());
-	itsDrawingEnvironment->SetFontSize(NFmiPoint(usedFontSize, usedFontSize));
+	itsDrawingEnvironment.SetFontSize(NFmiPoint(usedFontSize, usedFontSize));
 	relativeLineHeightOut = CalcRelativeTextLineHeight(usedFontSize, fontHeightFactor);
 	itsToolBox->SetTextAlignment(kLeft);
 	return true;
@@ -1167,7 +1163,7 @@ void NFmiTempView::DrawStabilityIndexData(NFmiSoundingData& usedData)
 
 	NFmiPoint p(CalcStabilityIndexStartPoint());
 
-	NFmiText text(p, NFmiString(""), false, 0, itsDrawingEnvironment);
+	NFmiText text(p, NFmiString(""), false, 0, &itsDrawingEnvironment);
 	auto lineH = itsStabilityIndexRelativeLineHeight;
 	DrawNextLineToIndexView(lineH, text, ::GetNameText(usedData.Location(), usedData.MovingSounding()), p, false);
 	DrawNextLineToIndexView(lineH, text, ::GetLatText(usedData), p);
@@ -1283,7 +1279,7 @@ void NFmiTempView::DrawSoundingInTextFormat(TotalSoundingData & usedTotalData)
 	NFmiPoint p(textualDataRect.TopLeft());
 	p.X(p.X() + ConvertFixedPixelSizeToRelativeWidth(2)); // siirret‰‰n teksti‰ pikkusen oikealle p‰in
 	auto str(::GetStationsShortName(usedTotalData.itsSoundingData));
-	auto envi = *itsDrawingEnvironment;
+	auto envi = itsDrawingEnvironment;
 	NFmiText text(p, NFmiString(""), true, 0, &envi);
 	auto lineH = itsTextualSoundingDataRelativeLineHeight;
 	DrawNextLineToIndexView(lineH, text, str, p, false);
@@ -1566,7 +1562,7 @@ void NFmiTempView::DrawFlightLevelScale(void)
 		double tickMarkWidth = ConvertFixedPixelSizeToRelativeWidth(6);
 		double unitStringYoffset = itsToolBox->SY(labelInfo.FontSize());
 		int trueLineWidth = boost::math::iround(1 * itsDrawSizeFactor.X());
-		SetHelpLineDrawingAttributes(itsToolBox, &envi, labelInfo, lineInfo, trueLineWidth, true);
+		SetHelpLineDrawingAttributes(itsToolBox, envi, labelInfo, lineInfo, trueLineWidth, true);
 		NFmiPoint moveLabelRelatively(CalcReltiveMoveFromPixels(itsToolBox, labelInfo.StartPointPixelOffSet()));
 
 		const auto& dataRect = itsTempViewDataRects.getSoundingCurveDataRect();
@@ -1589,7 +1585,7 @@ void NFmiTempView::DrawFlightLevelScale(void)
 			itsToolBox->Convert(&l1);
 			if(onlySmallTick == false)
 			{
-				DrawHelpLineLabel(p1, moveLabelRelatively, flLevel, labelInfo, &envi);
+				DrawHelpLineLabel(p1, moveLabelRelatively, flLevel, labelInfo, envi);
 				if(dataRect.IsInside(p2))
 					lastHeightInDataBox = y;
 			}
@@ -1635,7 +1631,7 @@ void NFmiTempView::DrawHeightScale(void)
 			double y = p2y(P);
 			NFmiPoint p1(x, y);
 			NFmiPoint p2(x-tickMarkWidth, y);
-			NFmiLine l1(p1, p2, 0, itsDrawingEnvironment);
+			NFmiLine l1(p1, p2, 0, &itsDrawingEnvironment);
 			itsToolBox->Convert(&l1);
 			DrawHelpLineLabel(p1, moveLabelRelatively, heightKM, labelInfo, itsDrawingEnvironment);
 			if(dataRect.IsInside(p2))
@@ -1645,7 +1641,7 @@ void NFmiTempView::DrawHeightScale(void)
 		{
 			double unitStringY = CalcHelpScaleUnitStringYPos(dataRect, lastHeightInDataBox, unitStringYoffset, moveLabelRelatively.Y());
 			double unitStringX = dataRect.Right();
-			NFmiText txt1(NFmiPoint(unitStringX + moveLabelRelatively.X(), unitStringY), "KM", false, 0, itsDrawingEnvironment);
+			NFmiText txt1(NFmiPoint(unitStringX + moveLabelRelatively.X(), unitStringY), "KM", false, 0, &itsDrawingEnvironment);
 			itsToolBox->Convert(&txt1);
 		}
 	}
@@ -1690,7 +1686,7 @@ void NFmiTempView::DrawCondensationTrailRHValues(NFmiSoundingData &theData, doub
 					if(::fabs(lastY - y) > yShift * 1.1) // piirret‰‰n kosteus arvoja vain jos ei tule liian tihe‰sti
 					{
 						NFmiPoint p1(x, y);
-						DrawHelpLineLabel(p1, moveLabelRelatively, RH, labelInfo, &envi, unitStr);
+						DrawHelpLineLabel(p1, moveLabelRelatively, RH, labelInfo, envi, unitStr);
 						lastY = y;
 					}
 				}
@@ -1715,7 +1711,7 @@ void NFmiTempView::DrawCondensationTrailProbabilityLines(void)
 		double startP = CalcPressureAtHeight(6); // aloitetaan viivan piirto 6 km:sta
 
 		double deltaP = -15;
-		DrawMixingRatio(labelInfo, lineInfo, values, startP, 100, deltaP, &envi);
+		DrawMixingRatio(labelInfo, lineInfo, values, startP, 100, deltaP, envi);
 
 		// piirret‰‰n sitten tod. n‰k. labelit viivoihin (jotka ovat eri juttu kuin piirretyt mixing ratio arvot)
 		labelInfo.DrawLabelText(true);
@@ -1735,7 +1731,7 @@ void NFmiTempView::DrawCondensationTrailProbabilityLines(void)
 			double X = pt2x(P, T);
 			double Y = p2y(P);
 			NFmiPoint p1(X, Y);
-			DrawHelpLineLabel(p1, moveLabelRelatively, *itProb, labelInfo, &envi);
+			DrawHelpLineLabel(p1, moveLabelRelatively, *itProb, labelInfo, envi);
 			P += deltaP;
 		}
 	}
@@ -1744,7 +1740,7 @@ void NFmiTempView::DrawCondensationTrailProbabilityLines(void)
 // T‰nne annetut labelInfo ja lineInfo on jo skaalattu niin ett‰ printtaus kertoimia ei tarvise k‰ytt‰‰ t‰‰ll‰.
 void NFmiTempView::DrawMixingRatio(const NFmiTempLabelInfo &theLabelInfo, const NFmiTempLineInfo &theLineInfo,
 								   const std::vector<double> &theValues, double startP, double endP, double deltaStartLevelP,
-								   NFmiDrawingEnvironment * /* theEnvi */ )
+								   NFmiDrawingEnvironment & /* theEnvi */ )
 {
 	if(theLineInfo.DrawLine() == false)
 		return ;
@@ -1871,22 +1867,22 @@ void NFmiTempView::DrawMoistAdiapaticks(void)
 	::DrawGdiplusStringVector(*itsGdiPlusGraphics, lineLabels, labelInfo, CtrlView::Relative2GdiplusRect(itsToolBox, dataRect), lineInfo.Color());
 }
 
-void NFmiTempView::DrawHelpLineLabel(const NFmiPoint &p1, const NFmiPoint &theMoveLabelRelatively, double theValue, const NFmiTempLabelInfo &theLabelInfo, NFmiDrawingEnvironment * theEnvi, const std::string &thePostStr)
+void NFmiTempView::DrawHelpLineLabel(const NFmiPoint &p1, const NFmiPoint &theMoveLabelRelatively, double theValue, const NFmiTempLabelInfo &theLabelInfo, NFmiDrawingEnvironment & theEnvi, const std::string &thePostStr)
 {
 	if(theLabelInfo.DrawLabelText())
 	{
         ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), theLabelInfo.ClipWithDataRect());
 		std::string str(NFmiStringTools::Convert<double>(theValue));
 		str += thePostStr; // jos joku loppu liite on haluttu laittaa labeliin, se tulee t‰ss‰
-		NFmiText txt(p1 + theMoveLabelRelatively, str, false, 0, theEnvi);
+		NFmiText txt(p1 + theMoveLabelRelatively, str, false, 0, &theEnvi);
 		itsToolBox->Convert(&txt);
 	}
 }
 
-void NFmiTempView::DrawLine(const NFmiPoint &p1, const NFmiPoint &p2, bool drawSpecialLines, int theTrueLineWidth, bool startWithXShift, int theHelpDotPixelSize, NFmiDrawingEnvironment * theEnvi)
+void NFmiTempView::DrawLine(const NFmiPoint &p1, const NFmiPoint &p2, bool drawSpecialLines, int theTrueLineWidth, bool startWithXShift, int theHelpDotPixelSize, NFmiDrawingEnvironment & theEnvi)
 {
 	// yksi viiva piirret‰‰n aina
-	NFmiLine line1(p1, p2, 0, theEnvi);
+	NFmiLine line1(p1, p2, 0, &theEnvi);
 	itsToolBox->Convert(&line1);
 	if(drawSpecialLines)
 	{ // gdi (CDC-luokka) kirjasto ei tarjoa erikois viivoille muuta kuin yhden pikselin paksuista versiota, joten
@@ -1902,7 +1898,7 @@ void NFmiTempView::DrawLine(const NFmiPoint &p1, const NFmiPoint &p2, bool drawS
 			pExtra12.X(pExtra12.X() + _1PixelInRel.X());
 		else
 			pExtra12.Y(pExtra12.Y() + _1PixelInRel.Y());
-		NFmiLine line2(pExtra11, pExtra12, 0, theEnvi);
+		NFmiLine line2(pExtra11, pExtra12, 0, &theEnvi);
 		itsToolBox->Convert(&line2);
 
 		if(theTrueLineWidth > 2)
@@ -1918,7 +1914,7 @@ void NFmiTempView::DrawLine(const NFmiPoint &p1, const NFmiPoint &p2, bool drawS
 				pExtra22.X(pExtra22.X() - _1PixelInRel.X());
 			else
 				pExtra22.Y(pExtra22.Y() - _1PixelInRel.Y());
-			NFmiLine line3(pExtra21, pExtra22, 0, theEnvi);
+			NFmiLine line3(pExtra21, pExtra22, 0, &theEnvi);
 			itsToolBox->Convert(&line3);
 		}
 	}
@@ -1928,22 +1924,22 @@ void NFmiTempView::DrawLine(const NFmiPoint &p1, const NFmiPoint &p2, bool drawS
 		double height = ConvertFixedPixelSizeToRelativeHeight(theHelpDotPixelSize);
 		NFmiRect rec(0,0,width, height);
 		rec.Center(p2);
-		NFmiRectangle rec2(rec, 0, theEnvi);
+		NFmiRectangle rec2(rec, 0, &theEnvi);
 		itsToolBox->Convert(&rec2);
 	}
 }
 
 void NFmiTempView::DrawBackground(void)
 {
-	itsDrawingEnvironment->SetPenSize(NFmiPoint(1,1));
-	itsDrawingEnvironment->EnableFrame();
-	itsDrawingEnvironment->EnableFill();
-	itsDrawingEnvironment->SetFillColor(NFmiColor(1.f, 1.f, 1.f));
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
+	itsDrawingEnvironment.SetPenSize(NFmiPoint(1,1));
+	itsDrawingEnvironment.EnableFrame();
+	itsDrawingEnvironment.EnableFill();
+	itsDrawingEnvironment.SetFillColor(NFmiColor(1.f, 1.f, 1.f));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
 	DrawFrame(itsDrawingEnvironment);
 
-	itsDrawingEnvironment->SetFillColor(NFmiColor(1.f, 1.f, 1.f));
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
+	itsDrawingEnvironment.SetFillColor(NFmiColor(1.f, 1.f, 1.f));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
 	DrawFrame(itsDrawingEnvironment, itsTempViewDataRects.getSoundingCurveDataRect());
 }
 
@@ -2152,7 +2148,7 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
         NFmiColor usedColor(itsCtrlViewDocumentInterface->GetMTATempSystem().SoundingColor(theProducerIndex));
 		if(theBrightningFactor != 0)
 			usedColor = NFmiColorSpaces::GetBrighterColor(usedColor, theBrightningFactor);
-		itsDrawingEnvironment->SetFrameColor(usedColor);
+		itsDrawingEnvironment.SetFrameColor(usedColor);
         bool onSouthernHemiSphere = usedTempInfo.Latlon().Y() < 0;
 		sounding.itsSoundingData.GroundLevelValue(GetPossibleGroundLevelValue(info, usedTempInfo.Latlon(), usedTempInfo.Time()));
 		DrawSounding(sounding, theProducerIndex, usedColor, mainCurve, onSouthernHemiSphere, ::IsNewData(info));
@@ -2659,7 +2655,7 @@ void NFmiTempView::DrawWindModificationArea(void)
 	const NFmiTempLineInfo &lineInfo = mtaTempSystem.WindModificationAreaLineInfo();
 	const NFmiTempLabelInfo labelInfo; // t‰m‰ on feikki, ei v‰li‰
 	int trueLineWidth = boost::math::iround(1 * itsDrawSizeFactor.X());
-	bool drawSpecialLines = SetHelpLineDrawingAttributes(itsToolBox, &envi, labelInfo, lineInfo, trueLineWidth, true);
+	bool drawSpecialLines = SetHelpLineDrawingAttributes(itsToolBox, envi, labelInfo, lineInfo, trueLineWidth, true);
 
 	NFmiPoint windVecSizeInPixels = mtaTempSystem.WindvectorSizeInPixels();
 	windVecSizeInPixels = ScaleOffsetPoint(windVecSizeInPixels);
@@ -2668,8 +2664,8 @@ void NFmiTempView::DrawWindModificationArea(void)
 	double xPos = ::CalcWindBarbXPos(dataRect, windBarbRect, 0); // vain 1. (0:s indeksi) luotausta voi muokata, joten piirret‰‰n siihen liittyv‰ muokkaus alue
 	double width = ConvertFixedPixelSizeToRelativeWidth(gWindModificationAreaWidthInPixels);
 
-	DrawLine(NFmiPoint(xPos-width/2., dataRect.Top()), NFmiPoint(xPos-width/2., dataRect.Bottom()), drawSpecialLines, trueLineWidth, true, 0, &envi);
-	DrawLine(NFmiPoint(xPos+width/2., dataRect.Top()), NFmiPoint(xPos+width/2., dataRect.Bottom()), drawSpecialLines, trueLineWidth, true, 0, &envi);
+	DrawLine(NFmiPoint(xPos-width/2., dataRect.Top()), NFmiPoint(xPos-width/2., dataRect.Bottom()), drawSpecialLines, trueLineWidth, true, 0, envi);
+	DrawLine(NFmiPoint(xPos+width/2., dataRect.Top()), NFmiPoint(xPos+width/2., dataRect.Bottom()), drawSpecialLines, trueLineWidth, true, 0, envi);
 }
 
 bool NFmiTempView::ModifySoundingWinds(const NFmiPoint &thePlace, unsigned long theKey, short theDelta)
@@ -2709,7 +2705,7 @@ void NFmiTempView::DrawHodograf(NFmiSoundingData & theData, int theProducerIndex
 
 	NFmiRect oldRect(itsToolBox->RelativeClipRect());
 	itsToolBox->RelativeClipRect(mtaTempSystem.GetHodografViewData().Rect(), true);
-	NFmiColor oldFillColor(itsDrawingEnvironment->GetFillColor());
+	NFmiColor oldFillColor(itsDrawingEnvironment.GetFillColor());
 
 	DrawHodografBase(theProducerIndex);
 	DrawHodografUpAndDownWinds(theData, theProducerIndex);
@@ -2718,7 +2714,7 @@ void NFmiTempView::DrawHodograf(NFmiSoundingData & theData, int theProducerIndex
 	DrawHodografHeightMarkers(theData, theProducerIndex);
 
 	// lopuksi palautetaan vanhat v‰rit
-	itsDrawingEnvironment->SetFillColor(oldFillColor);
+	itsDrawingEnvironment.SetFillColor(oldFillColor);
 	itsToolBox->RelativeClipRect(oldRect, true);
 }
 
@@ -2932,41 +2928,41 @@ void NFmiTempView::DrawHodografBase(int theProducerIndex)
 	{
 		// piirr‰ pohja laatikko fillill‰
 		int fontSize = boost::math::iround(16 * itsDrawSizeFactor.Y());
-		itsDrawingEnvironment->SetFrameColor(NFmiColor(0, 0, 0));
-		itsDrawingEnvironment->SetFillColor(NFmiColor(0.99f, 0.98f, 0.92f));
-		itsDrawingEnvironment->SetFontSize(NFmiPoint(fontSize, fontSize));
+		itsDrawingEnvironment.SetFrameColor(NFmiColor(0, 0, 0));
+		itsDrawingEnvironment.SetFillColor(NFmiColor(0.99f, 0.98f, 0.92f));
+		itsDrawingEnvironment.SetFontSize(NFmiPoint(fontSize, fontSize));
 		auto& hodografViewData = itsCtrlViewDocumentInterface->GetMTATempSystem().GetHodografViewData();
 		const auto& hodografRect = hodografViewData.Rect();
-		NFmiRectangle rec(hodografRect, 0, itsDrawingEnvironment);
+		NFmiRectangle rec(hodografRect, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&rec);
 
 		// kirjoita hodografi teksti yl‰ nurkkaan
 		itsToolBox->SetTextAlignment(kLeft);
 		std::string titleStr(::GetDictionaryString("TempViewHodographTitle"));
-		NFmiText titleTxt(hodografRect.TopLeft(), titleStr, false, 0, itsDrawingEnvironment);
+		NFmiText titleTxt(hodografRect.TopLeft(), titleStr, false, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&titleTxt);
 
 		// piirr‰ apu ympyr‰t haalealla v‰rill‰
-		itsDrawingEnvironment->SetFrameColor(NFmiColor(0.85f, 0.85f, 0.85f));
-		itsDrawingEnvironment->DisableFill();
+		itsDrawingEnvironment.SetFrameColor(NFmiColor(0.85f, 0.85f, 0.85f));
+		itsDrawingEnvironment.DisableFill();
 		auto hodografScaleMaxValue = hodografViewData.ScaleMaxValue();
 		for(double x = 10; x <= hodografScaleMaxValue; x += 10)
 		{
 			NFmiPoint relP1(GetRelativePointFromHodograf(-x, -x));
 			NFmiPoint relP2(GetRelativePointFromHodograf(x, x));
-			itsToolBox->DrawEllipse(NFmiRect(relP1, relP2), itsDrawingEnvironment);
+			itsToolBox->DrawEllipse(NFmiRect(relP1, relP2), &itsDrawingEnvironment);
 		}
 
-		itsDrawingEnvironment->SetFrameColor(NFmiColor(0, 0, 0));
+		itsDrawingEnvironment.SetFrameColor(NFmiColor(0, 0, 0));
 		// piirr‰ asteikot
 		NFmiPoint leftCenter(hodografRect.Left(), hodografRect.Center().Y());
 		NFmiPoint rightCenter(hodografRect.Right(), hodografRect.Center().Y());
 		NFmiPoint centerTop(hodografRect.Center().X(), hodografRect.Top());
 		NFmiPoint centerBottom(hodografRect.Center().X(), hodografRect.Bottom());
 
-		NFmiLine line1(leftCenter, rightCenter, 0, itsDrawingEnvironment);
+		NFmiLine line1(leftCenter, rightCenter, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&line1);
-		NFmiLine line2(centerTop, centerBottom, 0, itsDrawingEnvironment);
+		NFmiLine line2(centerTop, centerBottom, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&line2);
 
 		double tickHeightRel = ConvertFixedPixelSizeToRelativeHeight(3);
@@ -2978,10 +2974,10 @@ void NFmiTempView::DrawHodografBase(int theProducerIndex)
 			NFmiPoint relP(GetRelativePointFromHodograf(x, 0));
 			NFmiPoint uP1(relP.X(), relP.Y() - tickHeightRel);
 			NFmiPoint uP2(relP.X(), relP.Y() + tickHeightRel);
-			NFmiLine lineU(uP1, uP2, 0, itsDrawingEnvironment);
+			NFmiLine lineU(uP1, uP2, 0, &itsDrawingEnvironment);
 			itsToolBox->Convert(&lineU);
 			std::string str(NFmiStringTools::Convert<double>(x));
-			NFmiText txt(uP2, str.c_str(), false, 0, itsDrawingEnvironment);
+			NFmiText txt(uP2, str.c_str(), false, 0, &itsDrawingEnvironment);
 			itsToolBox->Convert(&txt);
 		}
 		itsToolBox->SetTextAlignment(kLeft);
@@ -2991,19 +2987,19 @@ void NFmiTempView::DrawHodografBase(int theProducerIndex)
 			NFmiPoint relP(GetRelativePointFromHodograf(0, y));
 			NFmiPoint vP1(relP.X() - tickWidthRel, relP.Y());
 			NFmiPoint vP2(relP.X() + tickWidthRel, relP.Y());
-			NFmiLine lineV(vP1, vP2, 0, itsDrawingEnvironment);
+			NFmiLine lineV(vP1, vP2, 0, &itsDrawingEnvironment);
 			itsToolBox->Convert(&lineV);
 			if(y != 0)
 			{
 				std::string str(NFmiStringTools::Convert<double>(y));
 				NFmiPoint txtP(vP2.X(), vP2.Y() - yShift);
-				NFmiText txt(txtP, str.c_str(), false, 0, itsDrawingEnvironment);
+				NFmiText txt(txtP, str.c_str(), false, 0, &itsDrawingEnvironment);
 				itsToolBox->Convert(&txt);
 			}
 		}
 
 		// pit‰‰ viel‰ piirt‰‰ laatikon reunat, koska ne ovat saattaneet sotkeentua
-		NFmiRectangle rec2(hodografRect, 0, itsDrawingEnvironment);
+		NFmiRectangle rec2(hodografRect, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&rec2);
 	}
 }
@@ -3012,7 +3008,7 @@ void NFmiTempView::DrawHodografCurve(NFmiSoundingData &theData, int theProducerI
 {
 	// piirr‰ itse hodografi k‰yr‰
 	NFmiColor soundingColor(itsCtrlViewDocumentInterface->GetMTATempSystem().SoundingColor(theProducerIndex));
-	itsDrawingEnvironment->SetFrameColor(soundingColor); // itse tuuli k‰ppyr‰ piirret‰‰n luotauksen omalla v‰rill‰
+	itsDrawingEnvironment.SetFrameColor(soundingColor); // itse tuuli k‰ppyr‰ piirret‰‰n luotauksen omalla v‰rill‰
 	std::deque<float>&uV = theData.GetParamData(kFmiWindUMS);
 	std::deque<float>&vV = theData.GetParamData(kFmiWindVMS);
 	std::deque<float>&pV = theData.GetParamData(kFmiPressure);
@@ -3031,7 +3027,7 @@ void NFmiTempView::DrawHodografCurve(NFmiSoundingData &theData, int theProducerI
 		double currentV = kFloatMissing;
 		double lastV = kFloatMissing;
 		int ssize = static_cast<int>(uV.size());
-		itsDrawingEnvironment->SetPenSize(NFmiPoint(2 * itsDrawSizeFactor.X(), 2 * itsDrawSizeFactor.Y()));
+		itsDrawingEnvironment.SetPenSize(NFmiPoint(2 * itsDrawSizeFactor.X(), 2 * itsDrawSizeFactor.Y()));
 		for(int i=0; i<ssize;i++)
 		{
 			if(pV[i] != kFloatMissing && pV[i] < minPressureLevel) // ei piirret‰ hodografi k‰yr‰‰ ihan ylˆs asti
@@ -3051,8 +3047,8 @@ void NFmiTempView::DrawHodografCurve(NFmiSoundingData &theData, int theProducerI
 
 					NFmiColor tmpColor(soundingColor);
 					tmpColor.Mix(fadeAwayColor, 1 - (pV[i] - minPressureLevel)/1000);
-					itsDrawingEnvironment->SetFrameColor(tmpColor);
-					NFmiLine lineUV(relP1, relP2, 0, itsDrawingEnvironment);
+					itsDrawingEnvironment.SetFrameColor(tmpColor);
+					NFmiLine lineUV(relP1, relP2, 0, &itsDrawingEnvironment);
 					itsToolBox->Convert(&lineUV);
 				}
 				lastU = currentU;
@@ -3060,7 +3056,7 @@ void NFmiTempView::DrawHodografCurve(NFmiSoundingData &theData, int theProducerI
 			}
 		}
 	}
-	itsDrawingEnvironment->SetFrameColor(soundingColor);
+	itsDrawingEnvironment.SetFrameColor(soundingColor);
 }
 
 void NFmiTempView::DrawHodografTextWithMarker(const std::string &theText, float u, float v, const NFmiColor &theTextColor, const NFmiColor &theMarkerColor, const NFmiColor &theMarkerFillColor, int theMarkerSizeInPixel, int theFontSize, FmiDirection theTextAlignment, MarkerShape theMarkerShape)
@@ -3213,9 +3209,9 @@ void NFmiTempView::DrawSounding(TotalSoundingData &theUsedDataInOut, int theProd
     if(theProducerIndex >= mtaTempSystem.MaxTempsShowed())
 		return ; // lopetetaan kun on piirretty maksi m‰‰r‰ luotauksia yhteen kuvaan
 
-	NFmiDrawingEnvironment* envi = itsDrawingEnvironment;
-	envi->SetPenSize(NFmiPoint(1 * itsDrawSizeFactor.X(), 1 * itsDrawSizeFactor.Y()));
-	envi->SetFrameColor(theUsedSoundingColor);
+	NFmiDrawingEnvironment& envi = itsDrawingEnvironment;
+	envi.SetPenSize(NFmiPoint(1 * itsDrawSizeFactor.X(), 1 * itsDrawSizeFactor.Y()));
+	envi.SetFrameColor(theUsedSoundingColor);
 	itsToolBox->UseClipping(true); // laitetaan clippaus taas p‰‰lle (huonoa koodia, mutta voi voi)
 
     DrawSecondaryData(theUsedDataInOut.itsSoundingData, theUsedSoundingColor, theUsedDataInOut.itsSoundingData.GroundLevelValue());
@@ -3230,7 +3226,7 @@ void NFmiTempView::DrawSounding(TotalSoundingData &theUsedDataInOut, int theProd
 	// voi peitt‰‰ allleen toisen piirrot ja koska l‰mpˆtila on t‰rke‰mpi, sen pit‰‰ tulla pintaan.
 	// P‰‰lle piirto tarkoittaa mm. ett‰ katkoviivat peitt‰v‰t alleen yhten‰isen viivan!!
 
-	envi->SetFrameColor(theUsedSoundingColor);
+	envi.SetFrameColor(theUsedSoundingColor);
 	itsToolBox->UseClipping(true); // laitetaan clippaus taas p‰‰lle (huonoa koodia, mutta voi voi)
 
 	{
@@ -3252,8 +3248,8 @@ void NFmiTempView::DrawSounding(TotalSoundingData &theUsedDataInOut, int theProd
 		DrawHeightValues(theUsedDataInOut.itsSoundingData, theProducerIndex, theUsedDataInOut.itsSoundingData.GroundLevelValue());
 
 	// laitetaan takaisin 'solid' kyn‰
-	envi->SetFillPattern(FMI_SOLID);
-	envi->SetPenSize(NFmiPoint(1, 1));
+	envi.SetFillPattern(FMI_SOLID);
+	envi.SetPenSize(NFmiPoint(1, 1));
 	DrawWind(theUsedDataInOut.itsSoundingData, theProducerIndex, onSouthernHemiSphere, theUsedDataInOut.itsSoundingData.GroundLevelValue());
 
 	if(fMainCurve)
@@ -3340,14 +3336,14 @@ void NFmiTempView::DrawLCL(NFmiSoundingData &theData, int theProducerIndex, FmiL
 					NFmiPoint p1(x - lclLineLength / 2., y);
 					NFmiPoint p2(x + lclLineLength / 2., y);
 					NFmiPoint p3(x + lclLineLength / 1.8, y);
-					p3.Y(p3.Y() - itsToolBox->SY(static_cast<long>(itsDrawingEnvironment->GetFontHeight() / 2.)));
+					p3.Y(p3.Y() - itsToolBox->SY(static_cast<long>(itsDrawingEnvironment.GetFontHeight() / 2.)));
 					DrawLine(p1, p2, drawSpecialLines, trueLineWidth, false, 0, itsDrawingEnvironment);
 					std::string str("LCL (");
 					str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(pLCL, 0);
 					str += ", ";
 					str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(T, 1);
 					str += ")";
-					NFmiText txt(p3, str, false, 0, itsDrawingEnvironment);
+					NFmiText txt(p3, str, false, 0, &itsDrawingEnvironment);
 					itsToolBox->Convert(&txt);
 				}
 			}
@@ -3368,7 +3364,7 @@ void NFmiTempView::DrawHeightValues(NFmiSoundingData &theData, int theProducerIn
 	// t‰ss‰kin on turhaa juttua, koska mit‰‰n viivoje ei piirret‰, mutta t‰m‰ asettaa tietyt piirto-ominaisuudet kohdalleen
 	// Huom! k‰ytet‰‰n tahallaan MoistAdiabaticLineInfo:a, koska korkeus jutulla ei ole omia viiva asetuksia
 	SetHelpLineDrawingAttributes(itsToolBox, itsDrawingEnvironment, labelInfo, mtaTempSystem.MoistAdiabaticLineInfo(), trueLineWidth, false);
-	auto baseColor = itsDrawingEnvironment->GetFrameColor();
+	auto baseColor = itsDrawingEnvironment.GetFrameColor();
 	NFmiPoint moveLabelRelatively(CalcReltiveMoveFromPixels(itsToolBox, labelInfo.StartPointPixelOffSet()));
 
 	if(mtaTempSystem.DrawOnlyHeightValuesOfFirstDrawedSounding() && IsSelectedProducerIndex(theProducerIndex) || mtaTempSystem.DrawOnlyHeightValuesOfFirstDrawedSounding() == false)
@@ -3397,8 +3393,8 @@ void NFmiTempView::DrawHeightValues(NFmiSoundingData &theData, int theProducerIn
 						std::string str(NFmiStringTools::Convert<int>(static_cast<int>(gValue)));
 						str += "m";
 						auto usedColor = ::MakeUndergroundColorSetup(baseColor, groundLevelValue, pValue);
-						itsDrawingEnvironment->SetFrameColor(usedColor);
-						NFmiText txt(p, str, false, 0, itsDrawingEnvironment);
+						itsDrawingEnvironment.SetFrameColor(usedColor);
+						NFmiText txt(p, str, false, 0, &itsDrawingEnvironment);
 						itsToolBox->Convert(&txt);
 						lastPrintedTextY = currentTextY;
 					}
@@ -3407,7 +3403,7 @@ void NFmiTempView::DrawHeightValues(NFmiSoundingData &theData, int theProducerIn
 			itsToolBox->UseClipping(true); // clippaus laitettava uudestaan p‰‰lle
 		}
 	}
-	itsDrawingEnvironment->SetFrameColor(baseColor);
+	itsDrawingEnvironment.SetFrameColor(baseColor);
 }
 
 NFmiPoint NFmiTempView::CalcStringRelativeSize(const std::string &str, double fontSize, const std::string& fontName)
@@ -3451,9 +3447,9 @@ void NFmiTempView::SetupLegendDrawingEnvironment()
 	itsToolBox->SetTextAlignment(static_cast<FmiDirection>(kLeft + 1000));
 	NFmiPoint fontSize = mtaTempSystem.LegendTextSize();
 	fontSize = ScaleOffsetPoint(fontSize);
-	itsDrawingEnvironment->SetFontSize(fontSize);
-	itsToolBox->ConvertEnvironment(itsDrawingEnvironment);
-	NFmiText measuredText(NFmiPoint(-9999, -9999), gMaxLegendLocationNameText, true, 0, itsDrawingEnvironment);
+	itsDrawingEnvironment.SetFontSize(fontSize);
+	itsToolBox->ConvertEnvironment(&itsDrawingEnvironment);
+	NFmiText measuredText(NFmiPoint(-9999, -9999), gMaxLegendLocationNameText, true, 0, &itsDrawingEnvironment);
 	auto relativeTextSize = itsToolBox->MeasureTextCorrect(measuredText);
 	itsLegendDrawingSetup.maxNameLengthRelative = relativeTextSize.X();
 	itsLegendDrawingSetup.textLineHeightRelative = relativeTextSize.Y() * 0.99;
@@ -3552,20 +3548,20 @@ void NFmiTempView::DrawLegendLineData()
 	NFmiPoint point = CalcLegendTextStartPoint();
 	for(const auto& legendLineData : itsLegendDrawingLineData)
 	{
-		itsDrawingEnvironment->SetFrameColor(legendLineData.itsTextColor);
-		itsDrawingEnvironment->SetFillColor(legendLineData.itsBackgroundColor);
+		itsDrawingEnvironment.SetFrameColor(legendLineData.itsTextColor);
+		itsDrawingEnvironment.SetFillColor(legendLineData.itsBackgroundColor);
 		if(legendLineData.itsText.find(newDataSearchText) != std::string::npos)
 		{
-			itsDrawingEnvironment->BoldFont(true);
+			itsDrawingEnvironment.BoldFont(true);
 		}
-		NFmiText text1(point, legendLineData.itsText, true, 0, itsDrawingEnvironment);
+		NFmiText text1(point, legendLineData.itsText, true, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&text1);
 		if(legendLineData.fDoHorizontalLineSeparator)
 		{
 			DrawLegendLineDataSeparator(point);
 		}
 		point.Y(point.Y() + itsLegendDrawingSetup.textLineHeightRelative);
-		itsDrawingEnvironment->BoldFont(false);
+		itsDrawingEnvironment.BoldFont(false);
 	}
 }
 
@@ -3588,7 +3584,7 @@ void NFmiTempView::DrawWind(NFmiSoundingData& theData, int theProducerIndex, boo
 	NFmiMTATempSystem& mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
 	if(!mtaTempSystem.DrawWinds())
 		return;
-	NFmiDrawingEnvironment envi(*itsDrawingEnvironment);
+	NFmiDrawingEnvironment envi(itsDrawingEnvironment);
 	auto baseColor = envi.GetFrameColor();
 	double usedPenSize = 2.0;
 	if(itsToolBox->GetDC()->IsPrinting())
@@ -3938,9 +3934,9 @@ void NFmiTempView::DrawOverBitmapThings(NFmiToolBox *theGTB, const NFmiPoint &th
 	itsDrawSizeFactor.Y(1.);
 	itsDrawSizeFactor.X(1.);
     NFmiMTATempSystem &mtaTempSystem = itsCtrlViewDocumentInterface->GetMTATempSystem();
-    itsDrawingEnvironment->SetFrameColor(GetSelectedProducersColor());
+	itsDrawingEnvironment.SetFrameColor(GetSelectedProducersColor());
 	int fontSize = itsTempViewDataRects.getStabilityIndexFontSize();
-	itsDrawingEnvironment->SetFontSize(NFmiPoint(fontSize * itsDrawSizeFactor.X(), fontSize * itsDrawSizeFactor.Y()));
+	itsDrawingEnvironment.SetFontSize(NFmiPoint(fontSize * itsDrawSizeFactor.X(), fontSize * itsDrawSizeFactor.Y()));
 	itsToolBox->SetTextAlignment(kLeft);
 
 	// 1. mik‰ on kursori kohdan P, T, Tpot (=dry), moistT ja W (=mixing ratio)
@@ -3966,7 +3962,7 @@ void NFmiTempView::DrawOverBitmapThings(NFmiToolBox *theGTB, const NFmiPoint &th
 		// Jos ollaan indeksin‰ytto tilassa, lasketaan kursorin kohdalle arvoja ja laitetaan ne indeksi ikkunaan
 		NFmiPoint p(CalcStabilityIndexStartPoint());
 
-		NFmiText text(p, NFmiString(""), false, 0, itsDrawingEnvironment);
+		NFmiText text(p, NFmiString(""), false, 0, &itsDrawingEnvironment);
 		auto lineH = itsStabilityIndexRelativeLineHeight;
 		for(int i=0; i<4; i++)
 			DrawNextLineToIndexView(lineH, text, "", p, true, false); // n‰it‰ ei lis‰t‰ soundingIndex-stringiin
@@ -4000,7 +3996,7 @@ void NFmiTempView::DrawOverBitmapThings(NFmiToolBox *theGTB, const NFmiPoint &th
 					double y1 = p2y(p);
 					double y2 = p2y(p-deltap);
 					NFmiPoint p1(x1, y1);
-					DrawLine(p1, NFmiPoint(x2, y2), false, 1, true, 0, &envi);
+					DrawLine(p1, NFmiPoint(x2, y2), false, 1, true, 0, envi);
 				}
 
 				// 3. piirr‰ halutunlainen p‰tk‰ kostea adiapaattia
@@ -4027,7 +4023,7 @@ void NFmiTempView::DrawOverBitmapThings(NFmiToolBox *theGTB, const NFmiPoint &th
 							double y0 = p2y(P0);
 							double y = p2y(P);
 							NFmiPoint p1(newx0, y0);
-							DrawLine(p1, NFmiPoint(newx1, y), false, 1, true, 0, &envi);
+							DrawLine(p1, NFmiPoint(newx1, y), false, 1, true, 0, envi);
 						}
 					}
 				}
@@ -4048,7 +4044,7 @@ void NFmiTempView::DrawOverBitmapThings(NFmiToolBox *theGTB, const NFmiPoint &th
 						double y1 = p2y(p);
 						double y2 = p2y(p2);
 						NFmiPoint p1(x1, y1);
-						DrawLine(p1, NFmiPoint(x2, y2), false, 1, true, 0, &envi);
+						DrawLine(p1, NFmiPoint(x2, y2), false, 1, true, 0, envi);
 					}
 				}
 			}

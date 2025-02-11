@@ -305,6 +305,7 @@ public:
     void ToggleVirtualTimeMode(const std::string& logMessage) override;
     std::string GetVirtualTimeTooltipText() const override;
     void UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr) override;
+    NFmiGriddingHelperInterface* GetGriddingHelper() override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;

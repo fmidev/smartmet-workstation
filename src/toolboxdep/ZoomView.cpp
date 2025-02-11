@@ -24,7 +24,6 @@ IMPLEMENT_DYNCREATE(CZoomView, CView)
 CZoomView::CZoomView()
 :itsToolBox(0)
 ,itsZoomView(0)
-,itsDrawingEnvironment()
 ,fMouseDragOn(FALSE)
 ,itsDrawParam(new NFmiDrawParam())
 ,itsSmartMetDocumentInterface(nullptr)
@@ -92,7 +91,6 @@ CZoomView::CZoomView(CWnd * /* theParent */, SmartMetDocumentInterface *smartMet
 :CView()
 ,itsToolBox(0)
 ,itsZoomView(0)
-,itsDrawingEnvironment()
 ,fMouseDragOn(FALSE)
 ,itsDrawParam(new NFmiDrawParam())
 ,itsSmartMetDocumentInterface(smartMetDocumentInterface)
@@ -109,7 +107,6 @@ void CZoomView::CreateZoomView()
 			delete itsZoomView;
 
 		itsZoomView = new NFmiBitmapZoomView(itsToolBox
-									  ,&itsDrawingEnvironment
 									  ,itsDrawParam);
 	}
 }

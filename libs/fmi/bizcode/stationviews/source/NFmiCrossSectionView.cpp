@@ -128,13 +128,11 @@ static void DrawLineWithToolBox(const NFmiPoint& theStartingPoint, const NFmiPoi
 //--------------------------------------------------------
 
 NFmiCrossSectionView::NFmiCrossSectionView(NFmiToolBox * theToolBox
-								 ,NFmiDrawingEnvironment * theDrawingEnvi
                                  ,int viewGridRowNumber
                                  ,int viewGridColumnNumber)
 :NFmiIsoLineView(CtrlViewUtils::kFmiCrossSectionView
 				 ,boost::shared_ptr<NFmiArea>()
 				,theToolBox
-				,theDrawingEnvi
 				,boost::shared_ptr<NFmiDrawParam>()
 				,kFmiTemperature
 				,NFmiPoint()
@@ -273,10 +271,10 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 	itsOptimizedGridPtr.reset();
 
 	CalculateViewRects();
-	itsDrawingEnvironment->EnableFill();
-	itsDrawingEnvironment->SetFillColor(NFmiColor(1.f,1.f,1.0f));
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-	itsDrawingEnvironment->SetPenSize(NFmiPoint(1, 1));
+	itsDrawingEnvironment.EnableFill();
+	itsDrawingEnvironment.SetFillColor(NFmiColor(1.f,1.f,1.0f));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
+	itsDrawingEnvironment.SetPenSize(NFmiPoint(1, 1));
 	DrawFrame(itsDrawingEnvironment);
 
 	//************** QUICKFIX!!!!! *******************
@@ -352,11 +350,11 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 		DrawGround();
 		DrawHybridLevels();
 		// piirretään vielä dataframe
-		itsDrawingEnvironment->DisableFill();
+		itsDrawingEnvironment.DisableFill();
 		NFmiRectangle rect(itsDataViewFrame.TopLeft()
 						,itsDataViewFrame.BottomRight()
 						,0
-						,itsDrawingEnvironment);
+						,&itsDrawingEnvironment);
 		itsToolBox->Convert(&rect);
 		DrawPressureScale();
 
@@ -459,7 +457,7 @@ void NFmiCrossSectionView::DrawTrajectory(const NFmiTrajectory &theTrajectory, c
 	// piirretään sitten pää-trajektori
 	envi.SetFrameColor(theColor);
 	envi.SetPenSize(NFmiPoint(3 * itsDrawSizeFactorX, 3 * itsDrawSizeFactorY));
-	DrawSingleTrajector(theTrajectory.MainTrajector(), &envi, theTrajectory.TimeStepInMinutes(), FmiRound(7 * itsDrawSizeFactorX), FmiRound(2 * itsDrawSizeFactorX), theTrajectory.Direction());
+	DrawSingleTrajector(theTrajectory.MainTrajector(), envi, theTrajectory.TimeStepInMinutes(), FmiRound(7 * itsDrawSizeFactorX), FmiRound(2 * itsDrawSizeFactorX), theTrajectory.Direction());
 }
 
 static double Time2X(const NFmiMetTime &theTime, const NFmiMetTime &theStartTime, double theTotalDiffInMinutes, const NFmiRect &theRect)
@@ -481,7 +479,7 @@ const NFmiMetTime& NFmiCrossSectionView::CurrentTime(void)
     return itsCtrlViewDocumentInterface->ActiveMapTime(); // haetaan aktiivisen karttanäytön current time
 }
 
-void NFmiCrossSectionView::DrawSingleTrajector(const NFmiSingleTrajector &theSingleTrajector, NFmiDrawingEnvironment *theEnvi, int theTimeStepInMinutes, int theTimeMarkerPixelSize, int theTimeMarkerPixelPenSize, FmiDirection theDirection)
+void NFmiCrossSectionView::DrawSingleTrajector(const NFmiSingleTrajector &theSingleTrajector, NFmiDrawingEnvironment &theEnvi, int theTimeStepInMinutes, int theTimeMarkerPixelSize, int theTimeMarkerPixelPenSize, FmiDirection theDirection)
 {
 	const NFmiTimeBag times(GetUsedTimeBagForDataCalculations());
 
@@ -511,7 +509,7 @@ void NFmiCrossSectionView::DrawSingleTrajector(const NFmiSingleTrajector &theSin
 		double pressure2 = kFloatMissing;
 		NFmiPoint p1(x, y);
 		NFmiPoint p2;
-		NFmiPolyline trajectorPolyLine(itsRect, 0, theEnvi);
+		NFmiPolyline trajectorPolyLine(itsRect, 0, &theEnvi);
 		trajectorPolyLine.AddPoint(p1);
 		std::vector<float>::const_iterator endIt = pressures.end();
 		++it; // pitää juoksuttaa yhden pykälän verran eteenpäin
@@ -560,7 +558,7 @@ void NFmiCrossSectionView::DrawSingleTrajector(const NFmiSingleTrajector &theSin
 				else
 					vdir1 = ::fmod(vdir1+180, 360); // käännetään nuolen suunta 180 astetta jos takaperin trajektori
 				// piirrä etenemis nuolen kärki trajektorille
-				NFmiPolyline arrowPolyLine(itsRect, 0, theEnvi);
+				NFmiPolyline arrowPolyLine(itsRect, 0, &theEnvi);
 				arrowPolyLine.AddPoint(::RotatePoint(NFmiPoint(-0.7, 2), vdir1));
 				arrowPolyLine.AddPoint(::RotatePoint(NFmiPoint(0, 0), vdir1));
 				arrowPolyLine.AddPoint(::RotatePoint(NFmiPoint(0.7, 2), vdir1));
@@ -2172,14 +2170,14 @@ void NFmiCrossSectionView::DrawPressureScale(void)
 	// tähän tulee keinotekoinen datan piirto clippaus, koska en saa
 	// trajektori datan toolmaster piirtoa nyt clippaamaan oikein
 	// eli piirrän tähän reuna palkit ennen kuin piirrän paine asteikon
-	itsDrawingEnvironment->EnableFill();
-	itsDrawingEnvironment->DisableFrame();
-	itsDrawingEnvironment->SetFillColor(NFmiColor(1.f,1.f,1.f));
+	itsDrawingEnvironment.EnableFill();
+	itsDrawingEnvironment.DisableFrame();
+	itsDrawingEnvironment.SetFillColor(NFmiColor(1.f,1.f,1.f));
 	NFmiRect marginRectLeft(itsRect.Left(), itsDataViewFrame.Top(), itsDataViewFrame.Left(), itsDataViewFrame.Bottom());
-	NFmiRectangle rec1(marginRectLeft, 0, itsDrawingEnvironment);
+	NFmiRectangle rec1(marginRectLeft, 0, &itsDrawingEnvironment);
 	itsToolBox->Convert(&rec1);
 
-	itsDrawingEnvironment->EnableFrame();
+	itsDrawingEnvironment.EnableFrame();
 
 	NFmiDrawingEnvironment envi;
 	NFmiPoint usedFontSize(itsPressureScaleFontSize.X() * itsDrawSizeFactorX, itsPressureScaleFontSize.Y() * itsDrawSizeFactorY);
@@ -2265,8 +2263,8 @@ void NFmiCrossSectionView::DrawCrosssectionWindVectors(NFmiIsoLineData& theIsoLi
 	// Tuulivektoreita pitää harventaa. Tässä on kaksi eri tapaa tehdä se.
 	// 1. Jos ollaan normaali poikkileikkauksessa, lasketaan tässä sopiva harvennus, esim. piirrä joka toinen tai joka kolmas vektori.
 	// 2. Jos ollaan aika tai vastaavassa tilassa, piirretään sopivan aikaharvennus timebagin avulla piirrettävien vektorien x-paikat.
-	itsDrawingEnvironment->SetFrameColor(itsDrawParam->FrameColor());
-	itsDrawingEnvironment->SetFillColor(itsDrawParam->FillColor());
+	itsDrawingEnvironment.SetFrameColor(itsDrawParam->FrameColor());
+	itsDrawingEnvironment.SetFillColor(itsDrawParam->FillColor());
 	int xSize = static_cast<int>(theIsoLineData.itsIsolineData.NX());
 	int skipFactor = ::CalcSkipFactorX(xSize, itsCtrlViewDocumentInterface->CrossSectionSystem()->GetGraphicalInfo().itsViewWidthInMM);
 	bool doTimeBagSpacing = ::DoTimeBagSpacingOut(itsCtrlViewDocumentInterface, itsDrawParam);
@@ -2322,7 +2320,7 @@ void NFmiCrossSectionView::DrawWindVector(float theValue, const NFmiRect &theSym
         
 		NFmiPoint symbolSize(itsDrawParam->OnlyOneSymbolRelativeSize());
 		long pixelWidth = FmiRound(itsCtrlViewDocumentInterface->CrossSectionSystem()->GetGraphicalInfo().itsPixelsPerMM_x * itsDrawParam->SimpleIsoLineWidth() * itsDrawSizeFactorX);
-		itsDrawingEnvironment->SetPenSize(NFmiPoint(pixelWidth, pixelWidth));
+		itsDrawingEnvironment.SetPenSize(NFmiPoint(pixelWidth, pixelWidth));
 		NFmiWindBarb(windSpeed
 					,windDir
 					,theSymbolRect
@@ -2331,7 +2329,7 @@ void NFmiCrossSectionView::DrawWindVector(float theValue, const NFmiRect &theSym
 					,symbolSize.X() * 0.7
 					,symbolSize.Y() * 0.5
 					,0
-					,itsDrawingEnvironment).Build();
+					,&itsDrawingEnvironment).Build();
 	}
 }
 

@@ -120,6 +120,7 @@ class NFmiParameterInterpolationFixer;
 class NFmiSeaLevelPlumeData;
 class NFmiLedLightStatusSystem;
 class NFmiMouseClickUrlActionData;
+class NFmiMacroParamDataGenerator;
 
 namespace Wms
 {
@@ -153,6 +154,7 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+	NFmiMacroParamDataGenerator& GetMacroParamDataGenerator();
 	void UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr);
 	std::string GetVirtualTimeTooltipText() const;
 	void VirtualTime(const NFmiMetTime& virtualTime);
@@ -211,7 +213,7 @@ public:
     void FillViewMacroInfo(NFmiViewSettingMacro &theViewMacro, const std::string &theName, const std::string &theDescription);
     void SetCurrentGeneratedBetaProduct(const NFmiBetaProduct *theBetaProduct);
     const NFmiBetaProduct* GetCurrentGeneratedBetaProduct();
-    void DoGenerateBetaProductsChecks();
+    void DoGenerateAutomationProductChecks();
     LogAndWarnFunctionType GetLogAndWarnFunction();
     NFmiBetaProductionSystem& BetaProductionSystem();
     bool LoadViewMacroFromBetaProduct(const std::string &theAbsoluteVieMacroPath, std::string &theErrorStringOut, bool justLogMessages);

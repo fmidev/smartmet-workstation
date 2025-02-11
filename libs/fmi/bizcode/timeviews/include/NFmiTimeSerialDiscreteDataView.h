@@ -33,7 +33,6 @@ class NFmiTimeSerialDiscreteDataView : public NFmiTimeSerialView
  public:
     NFmiTimeSerialDiscreteDataView (int theMapViewDescTopIndex, const NFmiRect & theRect
 								   ,NFmiToolBox * theToolBox
-								   ,NFmiDrawingEnvironment * theDrawingEnvi
 								   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 								   ,int theIndex);
    virtual  ~NFmiTimeSerialDiscreteDataView (void);

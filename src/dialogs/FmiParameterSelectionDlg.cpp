@@ -19,6 +19,7 @@
 #include "CtrlViewFunctions.h"
 #include "NFmiHelpDataInfo.h"
 #include "NFmiCrossSectionSystem.h"
+#include "NFmiValueString.h"
 #include "WmsSupport/WmsSupport.h"
 #include "WmsSupport/ChangedLayers.h"
 #include "UnicodeStringConversions.h"
@@ -210,18 +211,143 @@ std::string timeSteps(const boost::shared_ptr<NFmiFastQueryInfo> &info)
     return std::to_string(timeSteps);
 }
 
+std::vector<std::pair<long, double>> getResolutionInminutesAndForecastHourList(NFmiTimeList& timeList)
+{
+    const auto* timeFirst = timeList.Time(0);
+    std::vector<std::pair<long, double>> resoAndFHourList;
+    for(int index = 0; index < timeList.NumberOfItems() - 1; index++)
+    {
+        const auto* time1 = timeList.Time(index);
+        const auto* time2 = timeList.Time(index + 1);
+        long resolution = time2->DifferenceInMinutes(*time1);
+        double fhour = time2->DifferenceInHours(*timeFirst);
+        resoAndFHourList.push_back(std::make_pair(resolution, fhour));
+    }
+    return resoAndFHourList;
+}
+
+bool areResolutionsSame(const std::vector<std::pair<long, double>>& resoAndFHourList)
+{
+    auto firstReso = resoAndFHourList.front().first;
+    for(const auto& resoFHourPair : resoAndFHourList)
+    {
+        if(firstReso != resoFHourPair.first)
+            return false;
+    }
+    return true;
+}
+
+std::pair<bool,long> mostResolutionsSame(const std::vector<std::pair<long, double>>& resoAndFHourList)
+{
+    if(resoAndFHourList.size() < 20)
+        return std::make_pair(false, 0);
+
+    std::map<long, size_t> resolutionCounter;
+    for(const auto& resoFHourPair : resoAndFHourList)
+    {
+        resolutionCounter[resoFHourPair.first]++;
+    }
+    
+    size_t highCount = 0;
+    long highCountReso = 0;
+    for(const auto& counter : resolutionCounter)
+    {
+        if(highCount < counter.second)
+        {
+            highCount = counter.second;
+            highCountReso = counter.first;
+        }
+    }
+
+    double highCountPercentage = 100. * (highCount / (double)resoAndFHourList.size());
+    if(highCountPercentage >= 95)
+        return std::make_pair(true, highCountReso);
+
+    return std::make_pair(false, highCountReso);
+}
+
+bool areResolutionsRisingAndSimple(const std::vector<std::pair<long, double>>& resoAndFHourList)
+{
+    int differentResoCounter = 1;
+    for(size_t index = 0; index < resoAndFHourList.size() - 1; index++)
+    {
+        if(resoAndFHourList[index].first < resoAndFHourList[index + 1].first)
+            differentResoCounter++;
+        if(resoAndFHourList[index].first > resoAndFHourList[index + 1].first)
+            return false; // resoluutio pieneni
+    }
+    return differentResoCounter <= 3;
+}
+
+std::string makeResolutionString(long resolutionInMinutes)
+{
+    if(resolutionInMinutes % 60 == 0)
+    {
+        return std::to_string(resolutionInMinutes/60) + "h";
+    }
+
+    return std::to_string(resolutionInMinutes) + "min";
+}
+
+std::string timeResolutionFromTimeList(NFmiTimeList& timeList)
+{
+    if(timeList.NumberOfItems() < 2)
+    {
+        return "Only 1 time step";
+    }
+
+    auto oldIndex = timeList.Index();
+    auto resoAndFHourList = ::getResolutionInminutesAndForecastHourList(timeList);
+    timeList.Index(oldIndex);
+
+    if(areResolutionsSame(resoAndFHourList))
+    {
+        return makeResolutionString(resoAndFHourList.front().first);
+    }
+
+    auto mostCheckResult = mostResolutionsSame(resoAndFHourList);
+    if(mostCheckResult.first)
+    {
+        return makeResolutionString(mostCheckResult.second) + " (minor variances)";
+    }
+    
+    if(!areResolutionsRisingAndSimple(resoAndFHourList))
+    {
+        return " varies";
+    }
+
+    std::string resolution;
+    double lastStartFHour = 0;
+    for(size_t index = 0; index < resoAndFHourList.size() - 1; index++)
+    {
+        const auto& resoFHourPair1 = resoAndFHourList[index];
+        const auto& resoFHourPair2 = resoAndFHourList[index + 1];
+        if(resoFHourPair1.first != resoFHourPair2.first)
+        {
+            if(!resolution.empty())
+                resolution += ", ";
+            resolution += makeResolutionString(resoFHourPair1.first) + " (";
+            resolution += NFmiValueString::GetStringWithMaxDecimalsSmartWay(lastStartFHour, 2) + "-" + NFmiValueString::GetStringWithMaxDecimalsSmartWay(resoFHourPair1.second, 2) + "h)";
+            lastStartFHour = resoFHourPair1.second;
+        }
+    }
+    resolution += ", " + makeResolutionString(resoAndFHourList.back().first) + " (";
+    resolution += NFmiValueString::GetStringWithMaxDecimalsSmartWay(lastStartFHour, 2) + "-" + NFmiValueString::GetStringWithMaxDecimalsSmartWay(resoAndFHourList.back().second, 2) + "h)";
+    return resolution;
+}
+
 std::string timeResolution(const boost::shared_ptr<NFmiFastQueryInfo> &info)
 {
     std::string resolution;
 
-    if(info->TimeDescriptor().ValidTimeList() != nullptr)
+    auto* validTimeList = info->TimeDescriptor().ValidTimeList();
+    if(validTimeList)
     {
-        resolution = "varies";
+        resolution = ::timeResolutionFromTimeList(*validTimeList);
     }
     else
     {
-        auto timeBag = info->TimeDescriptor().ValidTimeBag();
-        resolution = std::to_string(timeBag->Resolution()) + " min";
+        resolution = makeResolutionString(info->TimeDescriptor().ValidTimeBag()->Resolution());
     }
 
     return resolution;

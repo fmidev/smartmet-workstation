@@ -37,7 +37,6 @@ class NFmiAreaView : public NFmiCtrlView
  public:
 	NFmiAreaView (int theMapViewDescTopIndex, const boost::shared_ptr<NFmiArea> &theArea 
 				 , NFmiToolBox* theToolBox
-				 , NFmiDrawingEnvironment* theDrawingEnvi
 				 , boost::shared_ptr<NFmiDrawParam> &theDrawParam
                  , int viewGridRowNumber
                  , int viewGridColumnNumber);

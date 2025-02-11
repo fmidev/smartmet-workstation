@@ -40,7 +40,6 @@ CFmiExtraMapView::CFmiExtraMapView()
 ,itsSynopPlotBitmapHandle(0)
 ,itsEditMapView(nullptr)
 ,itsToolBox(nullptr)
-,itsDrawingEnvironment()
 ,itsDrawParam()
 ,itsMapViewDescTopIndex(0)
 ,fMouseCursorOnWnd(false)
@@ -64,7 +63,6 @@ CFmiExtraMapView::CFmiExtraMapView(SmartMetDocumentInterface *smartMetDocumentIn
 ,itsSynopPlotBitmapHandle(0)
 ,itsEditMapView(nullptr)
 ,itsToolBox(nullptr)
-,itsDrawingEnvironment()
 ,itsDrawParam(new NFmiDrawParam())
 ,itsMapViewDescTopIndex(theMapViewDescTopIndex)
 ,fMouseCursorOnWnd(false)
@@ -141,7 +139,7 @@ void CFmiExtraMapView::OnInitialUpdate()
 void CFmiExtraMapView::CreateEditMapView()
 {
 	delete itsEditMapView;
-	itsEditMapView = new NFmiEditMapView(itsMapViewDescTopIndex, itsToolBox, &itsDrawingEnvironment, itsDrawParam);
+	itsEditMapView = new NFmiEditMapView(itsMapViewDescTopIndex, itsToolBox, itsDrawParam);
 }
 
 void CFmiExtraMapView::CurrentPrintTime(const NFmiMetTime &theTime)

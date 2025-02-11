@@ -3,6 +3,7 @@
 // TimeEditValuesView.h : header file
 //
 #include "NFmiMetTime.h"
+#include "NFmiPoint.h"
 #include "ZoomView.h"
 #include "PPToolTip.h"
 

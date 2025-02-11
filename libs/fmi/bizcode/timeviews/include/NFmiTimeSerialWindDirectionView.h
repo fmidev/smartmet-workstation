@@ -34,7 +34,6 @@ class NFmiTimeSerialWindDirectionView : public NFmiTimeSerialView
  public:
     NFmiTimeSerialWindDirectionView		(int theMapViewDescTopIndex, const NFmiRect & theRect
 										,NFmiToolBox * theToolBox
-										,NFmiDrawingEnvironment * theDrawingEnvi
 										,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 										,int theIndex);
    virtual  ~NFmiTimeSerialWindDirectionView (void);

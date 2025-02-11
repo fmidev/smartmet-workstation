@@ -5,7 +5,6 @@
 
 /////////////////////////////////////////////////////////////////////////////
 // CZoomView view
-#include "NFmiDrawingEnvironment.h"
 #include "boost/shared_ptr.hpp"
 
 class NFmiToolBox;
@@ -60,7 +59,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 protected:
 	bool fMouseDragOn;
-	NFmiDrawingEnvironment itsDrawingEnvironment;
 	virtual void CreateZoomView(void);
 	NFmiCtrlView* itsZoomView;
 	NFmiToolBox* itsToolBox;

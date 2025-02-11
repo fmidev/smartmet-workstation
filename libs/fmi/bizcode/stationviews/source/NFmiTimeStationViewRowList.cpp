@@ -43,12 +43,10 @@
 //--------------------------------------------------------
 NFmiTimeStationViewRowList::NFmiTimeStationViewRowList(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 													   ,NFmiToolBox * theToolBox
-													   ,NFmiDrawingEnvironment * theDrawingEnvi
 													   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 //:NFmiCtrlView(*theArea
 :NFmiCtrlView(theMapViewDescTopIndex, theArea->XYArea()
 			 ,theToolBox
-			 ,theDrawingEnvi
 			 ,theDrawParam)
 ,itsViewList(0)
 ,itsRowCount(GetViewRowCountFromDocument())
@@ -269,7 +267,6 @@ NFmiTimeStationViewRow* NFmiTimeStationViewRowList::CreateRowView(int theIndex)
 
     NFmiTimeStationViewRow* returnVal = new NFmiTimeStationViewRow(itsMapViewDescTopIndex, itsMapArea
 																  ,itsToolBox
-																  ,itsDrawingEnvironment
 																  ,itsDrawParam
 																  ,theIndex);
    return returnVal;
@@ -298,7 +295,6 @@ void NFmiTimeStationViewRowList::CreateRows(void)
 		delete itsViewList;
 	itsViewList = new NFmiCtrlViewList(itsMapViewDescTopIndex, GetFrame()
 									  ,itsToolBox
-									  ,itsDrawingEnvironment
 									  ,itsDrawParam);
 	for(int i = 1; i <= itsRowCount; i++)
 		itsViewList->Add(CreateRowView(i));

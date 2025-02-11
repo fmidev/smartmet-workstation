@@ -51,11 +51,9 @@ static char THIS_FILE[] = __FILE__;
 
 NFmiEditMapView::NFmiEditMapView(int theMapViewDescTopIndex
 								,NFmiToolBox *theToolBox
-								,NFmiDrawingEnvironment* theDrawingEnvi
 								,boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 :NFmiCtrlView(theMapViewDescTopIndex, GetCtrlViewDocumentInterface()->GetMapHandlerInterface(theMapViewDescTopIndex)->Area()->XYArea()
 			 ,theToolBox
-			 ,theDrawingEnvi
 			 ,theDrawParam)
 ,itsTimeControlView(0)
 ,itsMapArea()
@@ -69,7 +67,6 @@ NFmiEditMapView::NFmiEditMapView(int theMapViewDescTopIndex
 	SetMapAreaAndRect(GetCtrlViewDocumentInterface()->GetMapHandlerInterface(theMapViewDescTopIndex)->Area(), mapRect);
 	itsViewGrid = new NFmiTimeStationViewRowList(itsMapViewDescTopIndex, itsMapArea
 												  ,itsToolBox
-												  ,itsDrawingEnvironment
 												  ,itsMapDrawParam);
 
 	itsTimeControlViewRect = NFmiRect(0, mapRect.Height(), 1., 1);
@@ -94,7 +91,6 @@ bool NFmiEditMapView::CreateTimeControlView(void)
 	{
 		itsTimeControlView = new NFmiTimeControlView(itsMapViewDescTopIndex, itsTimeControlViewRect
 													,itsToolBox
-													,itsDrawingEnvironment
 													, defaultEditedDrawParam
 													,true
 													,false

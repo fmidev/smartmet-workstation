@@ -258,7 +258,6 @@ std::mutex NFmiIsoLineView::sToolMasterOperationMutex;
 
 NFmiIsoLineView::NFmiIsoLineView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
     , NFmiToolBox * theToolBox
-    , NFmiDrawingEnvironment * theDrawingEnvi
     , boost::shared_ptr<NFmiDrawParam> &theDrawParam
     , FmiParameterName theParamId
     , NFmiPoint theOffSet
@@ -267,7 +266,6 @@ NFmiIsoLineView::NFmiIsoLineView(int theMapViewDescTopIndex, boost::shared_ptr<N
     , int viewGridColumnNumber)
 :NFmiStationView(theMapViewDescTopIndex, theArea
         , theToolBox
-        , theDrawingEnvi
         , theDrawParam
         , theParamId
         , theOffSet

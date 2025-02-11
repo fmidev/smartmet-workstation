@@ -45,12 +45,10 @@
 //--------------------------------------------------------
 NFmiTimeStationViewRow::NFmiTimeStationViewRow(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 											   ,NFmiToolBox * theToolBox
-											   ,NFmiDrawingEnvironment * theDrawingEnvi
 											   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 											   ,int theIndex)
 :NFmiCtrlView(theMapViewDescTopIndex, theArea->XYArea()
 			 ,theToolBox
-			 ,theDrawingEnvi
 			 ,theDrawParam)
 ,itsViewList(0)
 ,itsMapArea(theArea->Clone())
@@ -288,7 +286,6 @@ void NFmiTimeStationViewRow::CreateViewRow(void)
 		delete itsViewList;
 	itsViewList = new NFmiCtrlViewList(itsMapViewDescTopIndex, GetFrame()
 									  ,itsToolBox
-									  ,itsDrawingEnvironment
 									  ,itsDrawParam
 									  ,true);
 
@@ -342,7 +339,6 @@ NFmiStationViewHandler* NFmiTimeStationViewRow::CreateMapView(int theIndex)
 
 	NFmiStationViewHandler* stationViewHandler = new NFmiStationViewHandler(itsMapViewDescTopIndex, itsMapArea
 												  ,itsToolBox
-												  ,itsDrawingEnvironment
 												  ,itsDrawParam
 												  ,itsRowIndex
 												  ,theIndex);

@@ -311,6 +311,7 @@ BEGIN
         MENUITEM "Ignore stations\tCtrl+F3",    ID_ACCELERATOR_IGNORE_STATIONS_DLG
         MENUITEM "Case study dialog\tCTRL+F8",  ID_VIEW_CASE_STUDY_DIALOG
         MENUITEM "Beta Production\tSHIFT+F8",   ID_VIEW_BETAPRODUCTION
+        MENUITEM "MacroParam data generation",  ID_VIEW_MACROPARAMDATAGENERATION
         MENUITEM SEPARATOR
         POPUP "Move views visible"
         BEGIN
@@ -334,6 +335,7 @@ BEGIN
             MENUITEM "Case study dialog position",  ID_VIEW_SET_CASE_STUDY_DLG_PLACE_TO_DEFAULT
             MENUITEM "Beta production dialog position", ID_VIEW_SET_BETA_PRODUCTION_DLG_PLACE_TO_DEFAULT
             MENUITEM "Visualization settings position", ID_MOVEVIEWSVISIBLE_VISUALIZATIONSETTINGSPOSITION
+            MENUITEM "MacroParam data generator position", ID_MOVEVIEWSVISIBLE_MACROPARAMDATAGENERATORPOSITION
         END
         MENUITEM SEPARATOR
         POPUP "Notification settings"
@@ -1078,8 +1080,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 5,14,5,1
- PRODUCTVERSION 5,14,5,1
+ FILEVERSION 5,14,7,0
+ PRODUCTVERSION 5,14,7,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -1096,12 +1098,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "FMI (Finnish Meteorological Instituet)"
             VALUE "FileDescription", "SmartMet meteorological workstation"
-            VALUE "FileVersion", "5.14.5.1"
+            VALUE "FileVersion", "5.14.7.0"
             VALUE "InternalName", "SmartMet"
-            VALUE "LegalCopyright", "(C) 1999-2024 FMI (Finnish Meteorological Instituet).  All rights reserved"
+            VALUE "LegalCopyright", "(C) 1999-2025 FMI (Finnish Meteorological Instituet).  All rights reserved"
             VALUE "OriginalFilename", "SmartMet.exe"
             VALUE "ProductName", "SmartMet"
-            VALUE "ProductVersion", "5.14.5.1"
+            VALUE "ProductVersion", "5.14.7.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -1153,6 +1155,8 @@ IDI_ICON_LED_YELLOW     ICON                    "res\\ledyellow.ico"
 //
 
 IDB_BITMAP_FMI_LOGO_BETA_PRODUCT_MODE BITMAP                  "res\\fmilogo_beta_product_mode.bmp"
+
+IDB_BITMAP_FMI_LOGO_MACRO_PARAM_DATA_MODE BITMAP                  "res\\fmi_logo_32x32_macro_param_data.bmp"
 
 #endif    // English (United Kingdom) resources
 /////////////////////////////////////////////////////////////////////////////

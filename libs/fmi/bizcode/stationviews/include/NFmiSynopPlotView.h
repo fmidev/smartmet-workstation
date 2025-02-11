@@ -22,7 +22,6 @@ class NFmiSynopPlotView : public NFmiStationView
 public:
 	NFmiSynopPlotView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 					,NFmiToolBox * theToolBox
-					,NFmiDrawingEnvironment * theDrawingEnvi
 					,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 					,FmiParameterName theParamId
 					,int theRowIndex
@@ -65,7 +64,7 @@ private:
 	NFmiString GetPressureStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theWantedParameter, bool fDoMetarPlotString);
 	float GetPressureChangeValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
 	NFmiString GetPressureChangeStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theWantedParameter);
-	void SetPressureChangeColor(NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+	void SetPressureChangeColor(NFmiDrawingEnvironment & theDrawingEnvi, boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
 	NFmiString GetTemperatureStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theWantedParameter, bool fDoMetarPlotString);
 	NFmiString GetHeightStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
 	NFmiString GetMinMaxTStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theParam);

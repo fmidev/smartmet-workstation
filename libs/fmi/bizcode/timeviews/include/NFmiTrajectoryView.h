@@ -34,8 +34,7 @@ class NFmiColor;
 class NFmiTrajectoryView : public NFmiCtrlView
 {
  public:
-	NFmiTrajectoryView(const NFmiRect &theRect, NFmiToolBox * theToolBox
-						,NFmiDrawingEnvironment * theDrawingEnvi);
+	NFmiTrajectoryView(const NFmiRect &theRect, NFmiToolBox * theToolBox);
 	~NFmiTrajectoryView(void);
 
 	void Draw (NFmiToolBox *theGTB) override;
@@ -48,7 +47,7 @@ class NFmiTrajectoryView : public NFmiCtrlView
 	void DrawLegend(void);
 	void DrawTrajectories(void);
 	void DrawTrajectory(const NFmiTrajectory &theTrajectory, const NFmiColor &theColor);
-	void DrawSingleTrajector(const NFmiSingleTrajector &theSingleTrajector, NFmiDrawingEnvironment *theEnvi, int theTimeStepInMinutes, int theTimeMarkerPixelSize, int theTimeMarkerPixelPenSize, FmiDirection theDirection);
+	void DrawSingleTrajector(const NFmiSingleTrajector &theSingleTrajector, NFmiDrawingEnvironment &theEnvi, int theTimeStepInMinutes, int theTimeMarkerPixelSize, int theTimeMarkerPixelPenSize, FmiDirection theDirection);
 	void DrawSelectedPressureLevelMarker(void);
 	double Time2X(const NFmiMetTime &theTime);
 	double TimeStepWidth(double timeStepInMinutes);

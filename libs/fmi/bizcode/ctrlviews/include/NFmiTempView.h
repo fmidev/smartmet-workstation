@@ -133,7 +133,7 @@ class NFmiTempView : public NFmiCtrlView
 	void DrawCondensationTrailRHValues(NFmiSoundingData &theData, double startP, double endP, double theMixRatio);
 	void DrawMixingRatio(const NFmiTempLabelInfo &theLabelInfo, const NFmiTempLineInfo &theLineInfo,
 						   const std::vector<double> &theValues, double startP, double endP, double deltaStartLevelP,
-						   NFmiDrawingEnvironment * theEnvi);
+						   NFmiDrawingEnvironment & theEnvi);
 	void DrawTemperatures(NFmiSoundingData &theData, FmiParameterName theParId, const NFmiTempLineInfo &theLineInfo, const NFmiGroundLevelValue& groundLevelValue);
 	std::pair<float, std::string> MakeTextualSoundingLevelString(int levelIndex, std::deque<float>& pVec, std::deque<float>& tVec, std::deque<float>& tdVec, std::deque<float>& zVec, std::deque<float>& wsVec, std::deque<float>& wdVec);
 	std::vector<std::pair<float, std::string>> MakeSoundingDataLevelStrings(NFmiSoundingData& theData);
@@ -142,8 +142,8 @@ class NFmiTempView : public NFmiCtrlView
 	double CalcSideViewTextRowCount(const NFmiRect& viewRect, const NFmiPoint &currentRowCursor, double relativeTextRowHeight, bool advanceBeforeDraw);
 	void DrawSimpleLineWithGdiplus(const NFmiTempLineInfo& lineInfo, const NFmiPoint& relativeP1, const NFmiPoint& relativeP2, bool fixEndPixelX, bool fixEndPixelY);
 	double GetPAxisChangeValue(double change);
-	void DrawLine(const NFmiPoint &p1, const NFmiPoint &p2, bool drawSpecialLines, int theTrueLineWidth, bool startWithXShift, int theHelpDotPixelSize, NFmiDrawingEnvironment * theEnvi);
-	void DrawHelpLineLabel(const NFmiPoint &p1, const NFmiPoint &theMoveLabelRelatively, double theValue, const NFmiTempLabelInfo &theLabelInfo, NFmiDrawingEnvironment * theEnvi, const std::string&thePostStr = std::string());
+	void DrawLine(const NFmiPoint &p1, const NFmiPoint &p2, bool drawSpecialLines, int theTrueLineWidth, bool startWithXShift, int theHelpDotPixelSize, NFmiDrawingEnvironment & theEnvi);
+	void DrawHelpLineLabel(const NFmiPoint &p1, const NFmiPoint &theMoveLabelRelatively, double theValue, const NFmiTempLabelInfo &theLabelInfo, NFmiDrawingEnvironment & theEnvi, const std::string&thePostStr = std::string());
 	void DrawWind(NFmiSoundingData &theData, int theProducerIndex, bool onSouthernHemiSphere, const NFmiGroundLevelValue& groundLevelValue);
 	void DrawStationInfo(TotalSoundingData &theData, int theProducerIndex, bool isNewData);
 	void DrawHeightValues(NFmiSoundingData &theData, int theProducerIndex, const NFmiGroundLevelValue& groundLevelValue);
@@ -212,8 +212,7 @@ class NFmiTempView : public NFmiCtrlView
 	double y2p(double y);
 	double xy2t(double x, double y);
 
-	// Tämä piirtoasetus olio luodaan konstruktorissa ja se annetaan emoluokalle ja tuhotaan destruktorissa
-	NFmiDrawingEnvironment* itsTempDrawingEnvi; 
+	NFmiDrawingEnvironment itsTempDrawingEnvi; 
 
 	double tmax;
 	double tmin;

@@ -35,12 +35,10 @@
 NFmiTimeSerialPrecipitationTypeView::NFmiTimeSerialPrecipitationTypeView
 															   (int theMapViewDescTopIndex, const NFmiRect & theRect
 															   ,NFmiToolBox * theToolBox
-															   ,NFmiDrawingEnvironment * theDrawingEnvi
 															   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 															   ,int theIndex)
 :NFmiTimeSerialDiscreteDataView(theMapViewDescTopIndex, theRect
 							   ,theToolBox
-							   ,theDrawingEnvi
 							   ,theDrawParam
 							   ,theIndex)
 {

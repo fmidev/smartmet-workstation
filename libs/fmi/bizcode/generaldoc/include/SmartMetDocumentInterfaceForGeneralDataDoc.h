@@ -297,6 +297,7 @@ public:
     std::shared_ptr<NFmiViewSettingMacro> CurrentViewMacro() override;
     void ToggleVirtualTimeMode(const std::string& logMessage) override;
     bool VirtualTimeUsed() const override;
+    NFmiMacroParamDataGenerator& GetMacroParamDataGenerator() override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem() override;

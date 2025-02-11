@@ -14,10 +14,9 @@
 #include "NFmiText.h"
 
 NFmiModelProducerIndexViewWCTR::NFmiModelProducerIndexViewWCTR(NFmiToolBox * theToolBox
-													 ,NFmiDrawingEnvironment * theDrawingEnvi
 													 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 													 ,const NFmiRect& theRect)
-:NFmiModelCombineStatusView(theToolBox, theDrawingEnvi, theDrawParam, theRect)
+:NFmiModelCombineStatusView(theToolBox, theDrawParam, theRect)
 ,itsQueryInfoVector()
 ,itsProducerIndexInTimeVector()
 ,itsLoadedDataTimeDescriptor()
@@ -60,10 +59,10 @@ void NFmiModelProducerIndexViewWCTR::Draw(NFmiToolBox * theGTB)
 void NFmiModelProducerIndexViewWCTR::DrawStatusBoxView()
 {
 	itsProducerColorIndexViewRect = CalcStatusGridViewSize();
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0, 0, 0));
-	itsDrawingEnvironment->SetPenSize(NFmiPoint(1, 1));
-	itsDrawingEnvironment->EnableFill();
-	itsDrawingEnvironment->SetFillColor(NFmiColor(0.9f, 0.9f, 0.9f));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0, 0, 0));
+	itsDrawingEnvironment.SetPenSize(NFmiPoint(1, 1));
+	itsDrawingEnvironment.EnableFill();
+	itsDrawingEnvironment.SetFillColor(NFmiColor(0.9f, 0.9f, 0.9f));
 	NFmiColor color(1, 0, 0);
 	NFmiTimeBag tmpTimeBag(MaximalCoverageTimeBag());
 
@@ -77,11 +76,11 @@ void NFmiModelProducerIndexViewWCTR::DrawStatusBoxView()
 	{
 		time2 = itsLoadedDataTimeDescriptor.Time();
 		color = CheckStatusBoxColor(itsLoadedDataTimeDescriptor.Index());
-		itsDrawingEnvironment->SetFillColor(color);
+		itsDrawingEnvironment.SetFillColor(color);
 
 		NFmiPoint startingPoint(Time2Value(time1), top);
 		NFmiPoint endingPoint(Time2Value(time2) + 0.002, bottom);
-		NFmiRectangle box(startingPoint, endingPoint, 0, itsDrawingEnvironment);
+		NFmiRectangle box(startingPoint, endingPoint, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&box);
 		time1 = time2;
 	}

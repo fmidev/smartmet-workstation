@@ -61,6 +61,7 @@ class NFmiMacroParamDataCache;
 class NFmiGdiPlusImageMapHandler;
 class CDC;
 class NFmiParameterInterpolationFixer;
+class NFmiMacroParamDataGenerator;
 
 namespace HakeMessage
 {
@@ -370,6 +371,7 @@ public:
     virtual std::shared_ptr<NFmiViewSettingMacro> CurrentViewMacro() = 0;
     virtual void ToggleVirtualTimeMode(const std::string& logMessage) = 0;
     virtual bool VirtualTimeUsed() const = 0;
+    virtual NFmiMacroParamDataGenerator& GetMacroParamDataGenerator() = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem() = 0;

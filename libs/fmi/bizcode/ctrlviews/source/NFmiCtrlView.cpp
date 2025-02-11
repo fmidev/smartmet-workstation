@@ -30,7 +30,7 @@ const NFmiColor NFmiCtrlView::gGreyColorDefault = NFmiColor(NFmiCtrlView::gGreyC
 NFmiCtrlView::NFmiCtrlView(void)
 :itsRect()
 ,itsToolBox(0)
-,itsDrawingEnvironment(0)
+,itsDrawingEnvironment()
 ,itsDrawParam()
 ,itsInfo()
 ,itsCtrlViewDocumentInterface(nullptr)
@@ -45,12 +45,11 @@ NFmiCtrlView::NFmiCtrlView(void)
 
 NFmiCtrlView::NFmiCtrlView (int theMapViewDescTopIndex, const NFmiRect & theRect
 						   ,NFmiToolBox * theToolBox
-						   ,NFmiDrawingEnvironment * theDrawingEnvi
                            , int viewGridRowNumber
                            , int viewGridColumnNumber)
 :itsRect(theRect)
 ,itsToolBox(theToolBox)
-,itsDrawingEnvironment(theDrawingEnvi)
+,itsDrawingEnvironment()
 ,itsDrawParam()
 ,itsInfo()
 ,itsCtrlViewDocumentInterface(nullptr)
@@ -65,13 +64,12 @@ NFmiCtrlView::NFmiCtrlView (int theMapViewDescTopIndex, const NFmiRect & theRect
 
 NFmiCtrlView::NFmiCtrlView (int theMapViewDescTopIndex, const NFmiRect & theRect
 						   ,NFmiToolBox * theToolBox
-						   ,NFmiDrawingEnvironment * theDrawingEnvi
 						   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
                            ,int viewGridRowNumber
                            ,int viewGridColumnNumber)
 :itsRect(theRect)
 ,itsToolBox(theToolBox)
-,itsDrawingEnvironment(theDrawingEnvi)
+,itsDrawingEnvironment()
 ,itsDrawParam(theDrawParam)
 ,itsInfo()
 ,itsCtrlViewDocumentInterface(nullptr)
@@ -136,21 +134,21 @@ bool NFmiCtrlView::operator< (const NFmiCtrlView& theCtrlView) const
 	return (*itsDrawParam < *theCtrlView.itsDrawParam) == true;
 }
 
-void NFmiCtrlView::DrawFrame(NFmiDrawingEnvironment * theEnvi)
+void NFmiCtrlView::DrawFrame(NFmiDrawingEnvironment & theEnvi)
 {
 	NFmiRectangle rect(itsRect.TopLeft()
 					  ,itsRect.BottomRight()
 					  ,0
-					  ,theEnvi);
+					  ,&theEnvi);
 	itsToolBox->Convert(&rect);
 }
 
-void NFmiCtrlView::DrawFrame(NFmiDrawingEnvironment * theEnvi, const NFmiRect& theFrame)
+void NFmiCtrlView::DrawFrame(NFmiDrawingEnvironment & theEnvi, const NFmiRect& theFrame)
 {
 	NFmiRectangle rect(theFrame.TopLeft()
 					  ,theFrame.BottomRight()
 					  ,0
-					  ,theEnvi);
+					  ,&theEnvi);
 	itsToolBox->Convert(&rect);
 }
 

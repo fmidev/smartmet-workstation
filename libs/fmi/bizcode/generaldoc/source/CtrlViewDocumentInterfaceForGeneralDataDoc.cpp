@@ -10,6 +10,8 @@
 #include "CombinedMapHandlerInterface.h"
 #include "SpecialDesctopIndex.h"
 #include "NFmiCrossSectionSystem.h"
+#include "NFmiGriddingHelperInterface.h"
+#include "GeneralDataDocGridding.h"
 
 CtrlViewDocumentInterfaceForGeneralDataDoc::CtrlViewDocumentInterfaceForGeneralDataDoc(NFmiEditMapGeneralDataDoc *theDoc)
     :itsDoc(theDoc)
@@ -1484,6 +1486,12 @@ std::string CtrlViewDocumentInterfaceForGeneralDataDoc::GetVirtualTimeTooltipTex
 void CtrlViewDocumentInterfaceForGeneralDataDoc::UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr)
 {
     return itsDoc->UpdateMacroParamSystemContent(std::move(updatedMacroParamSystemPtr));
+}
+
+NFmiGriddingHelperInterface* CtrlViewDocumentInterfaceForGeneralDataDoc::GetGriddingHelper()
+{
+    static GeneralDataDocGridding generalDataDocGridding(itsDoc);
+    return &generalDataDocGridding;
 }
 
 #ifndef DISABLE_CPPRESTSDK

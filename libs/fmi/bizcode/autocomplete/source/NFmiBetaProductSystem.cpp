@@ -13,132 +13,15 @@
 #include "NFmiSmartToolIntepreter.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiInfoOrganizer.h"
+#include "jsonutils.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include "json_spirit_writer.h"
-#include "json_spirit_reader.h"
 
 #include <fstream>
 #include <algorithm>
 #include "boost/math/special_functions/round.hpp"
-#include "json_spirit_writer_options.h"
 
-
-static std::string MakeErrorString(const std::string &startStr, const std::string &endStr, const std::string &objectName, const std::string &endCharacters)
-{
-    std::string str = ::GetDictionaryString(startStr.c_str());
-    str += " ";
-    str += objectName;
-    str += " ";
-    str += ::GetDictionaryString(endStr.c_str());
-    str += endCharacters;
-
-    return str;
-}
-
-template<typename T>
-static void ParseJsonValue(T &object, json_spirit::Value &theValue)
-{
-    if(theValue.type() == json_spirit::obj_type)
-    {
-        json_spirit::Object tmpObj = theValue.get_obj();
-        for(json_spirit::Object::iterator it = tmpObj.begin(); it != tmpObj.end(); ++it)
-        {
-            object.ParseJsonPair(*it);
-        }
-    }
-}
-
-template<typename T>
-bool StoreObjectInJsonFormat(const T &object, const std::string &theFilePath, const std::string &theObjectName, std::string &theErrorStringOut)
-{
-    json_spirit::Object jsonObject = T::MakeJsonObject(object);
-    if(jsonObject.size() == 0)
-    {
-        theErrorStringOut = ::MakeErrorString("The given", theObjectName, "was completely empty, nothing to store.", "");
-        return false;
-    }
-
-    std::stringstream outStream;
-    json_spirit::write(jsonObject, outStream, json_spirit::pretty_print);
-
-    try
-    {
-        NFmiFileSystem::SafeFileSave(theFilePath, outStream.str());
-        return true;
-    }
-    catch(std::exception &e)
-    {
-        theErrorStringOut = ::MakeErrorString("Error while trying to save given", theObjectName, "to file", ":\n");
-        theErrorStringOut += theFilePath;
-        theErrorStringOut += "\n";
-        theErrorStringOut += e.what();
-    }
-    catch(...)
-    {
-        theErrorStringOut = ::MakeErrorString("Unknown error while trying to save given", theObjectName, "to file", ":\n");
-        theErrorStringOut += theFilePath;
-    }
-    return false;
-}
-
-template<typename T>
-bool ReadObjectInJsonFormat(T &objectOut, const std::string &theFilePath, const std::string &theObjectName, std::string &theErrorStringOut)
-{
-    if(theFilePath.empty())
-    {
-        theErrorStringOut = ::MakeErrorString("Given", theObjectName, "file name was empty, you must provide absolute path and filename for data.\nE.g.C:\\data\\beta1.bpr", "");
-        return false;
-    }
-
-    if(NFmiFileSystem::FileExists(theFilePath) == false)
-    {
-        theErrorStringOut = ::MakeErrorString("Given", theObjectName, "file doesn't exist", ":\n");
-        theErrorStringOut += theFilePath;
-        return false;
-    }
-
-    std::ifstream in(theFilePath.c_str(), std::ios_base::in | std::ios_base::binary);
-    if(!in)
-    {
-        theErrorStringOut = ::MakeErrorString("Unable to open given", theObjectName, "file", ":\n");
-        theErrorStringOut += theFilePath;
-        return false;
-    }
-
-    try
-    {
-        json_spirit::Value jsonValue;
-        if(json_spirit::read(in, jsonValue))
-        {
-            objectOut = T(); // Objekti pit‰‰ nollata oletus arvoilla ennen parsimista
-            ::ParseJsonValue(objectOut, jsonValue);
-            return true;
-        }
-        else
-        {
-            theErrorStringOut = ::MakeErrorString("Unable to read", theObjectName, "(malformatted json?) from file", ":\n");
-            theErrorStringOut += theFilePath;
-        }
-    }
-    catch(std::exception &e)
-    {
-        theErrorStringOut = ::MakeErrorString("Unable to read", theObjectName, "from file", ":\n");
-        theErrorStringOut += theFilePath;
-        theErrorStringOut += "\n";
-        theErrorStringOut += ::GetDictionaryString("Reason");
-        theErrorStringOut += ": ";
-        theErrorStringOut += e.what();
-    }
-    catch(...)
-    {
-        theErrorStringOut = ::MakeErrorString("Unknown error while reading", theObjectName, "from file", ":\n");
-        theErrorStringOut += theFilePath;
-    }
-
-    return false;
-}
 
 // **************************************************************
 // ***********  FixedRunTime osio alkaa  ************************
@@ -783,23 +666,17 @@ static const std::string gJsonName_SynopStationIdList = "SynopStationIdList";
 static const std::string gJsonName_PackImages = "PackImages";
 static const std::string gJsonName_EnsureCurveVisibility = "EnsureCurveVisibility";
 
-static void AddNonEmptyStringJsonPair(const std::string &value, const std::string &valueJsonName, json_spirit::Object &jsonObject)
-{
-    if(!value.empty())
-        jsonObject.push_back(json_spirit::Pair(valueJsonName, value));
-}
-
 json_spirit::Object NFmiBetaProduct::MakeJsonObject(const NFmiBetaProduct &betaProduct)
 {
     static const NFmiBetaProduct defaultBetaProduct;
 
     json_spirit::Object jsonObject;
-    ::AddNonEmptyStringJsonPair(betaProduct.ImageStoragePath(), gJsonName_ImageStoragePath, jsonObject);
-    ::AddNonEmptyStringJsonPair(betaProduct.FileNameTemplate(), gJsonName_FileNameTemplate, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(betaProduct.ImageStoragePath(), gJsonName_ImageStoragePath, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(betaProduct.FileNameTemplate(), gJsonName_FileNameTemplate, jsonObject);
     if(defaultBetaProduct.UseAutoFileNames() != betaProduct.UseAutoFileNames())
         jsonObject.push_back(json_spirit::Pair(gJsonName_UseAutoFileNames, betaProduct.UseAutoFileNames()));
-    ::AddNonEmptyStringJsonPair(betaProduct.TimeLengthInHoursString(), gJsonName_TimeLengthInHours, jsonObject);
-    ::AddNonEmptyStringJsonPair(betaProduct.TimeStepInMinutesString(), gJsonName_TimeStepInMinutes, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(betaProduct.TimeLengthInHoursString(), gJsonName_TimeLengthInHours, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(betaProduct.TimeStepInMinutesString(), gJsonName_TimeStepInMinutes, jsonObject);
     if(defaultBetaProduct.UseUtcTimesInTimeBox() != betaProduct.UseUtcTimesInTimeBox())
         jsonObject.push_back(json_spirit::Pair(gJsonName_UseUtcInTimebox, betaProduct.UseUtcTimesInTimeBox()));
     if(defaultBetaProduct.ParamBoxLocation() != betaProduct.ParamBoxLocation())
@@ -808,14 +685,14 @@ json_spirit::Object NFmiBetaProduct::MakeJsonObject(const NFmiBetaProduct &betaP
         jsonObject.push_back(json_spirit::Pair(gJsonName_DisplayRuntimeInfo, betaProduct.DisplayRunTimeInfo()));
     if(defaultBetaProduct.ShowModelOriginTime() != betaProduct.ShowModelOriginTime())
         jsonObject.push_back(json_spirit::Pair(gJsonName_ShowModelOriginTime, betaProduct.ShowModelOriginTime()));
-    ::AddNonEmptyStringJsonPair(betaProduct.RowIndexListString(), gJsonName_RowIndexList, jsonObject);
-    ::AddNonEmptyStringJsonPair(betaProduct.RowSubdirectoryTemplate(), gJsonName_RowSubdirectoryTemplate, jsonObject);
-    ::AddNonEmptyStringJsonPair(betaProduct.OriginalViewMacroPath(), gJsonName_ViewMacroPath, jsonObject);
-    ::AddNonEmptyStringJsonPair(betaProduct.WebSiteTitleString(), gJsonName_WebSiteTitle, jsonObject);
-    ::AddNonEmptyStringJsonPair(betaProduct.WebSiteDescriptionString(), gJsonName_WebSiteDescription, jsonObject);
-    ::AddNonEmptyStringJsonPair(betaProduct.CommandLineString(), gJsonName_CommandLine, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(betaProduct.RowIndexListString(), gJsonName_RowIndexList, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(betaProduct.RowSubdirectoryTemplate(), gJsonName_RowSubdirectoryTemplate, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(betaProduct.OriginalViewMacroPath(), gJsonName_ViewMacroPath, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(betaProduct.WebSiteTitleString(), gJsonName_WebSiteTitle, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(betaProduct.WebSiteDescriptionString(), gJsonName_WebSiteDescription, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(betaProduct.CommandLineString(), gJsonName_CommandLine, jsonObject);
     jsonObject.push_back(json_spirit::Pair(gJsonName_SelectedViewIndex, static_cast<int>(betaProduct.SelectedViewIndex())));
-    ::AddNonEmptyStringJsonPair(betaProduct.SynopStationIdListString(), gJsonName_SynopStationIdList, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(betaProduct.SynopStationIdListString(), gJsonName_SynopStationIdList, jsonObject);
     if(defaultBetaProduct.PackImages() != betaProduct.PackImages())
         jsonObject.push_back(json_spirit::Pair(gJsonName_PackImages, betaProduct.PackImages()));
     if(defaultBetaProduct.EnsureCurveVisibility() != betaProduct.EnsureCurveVisibility())
@@ -889,12 +766,12 @@ void NFmiBetaProduct::ParseJsonPair(json_spirit::Pair &thePair)
 
 bool NFmiBetaProduct::StoreInJsonFormat(const NFmiBetaProduct &betaProduct, const std::string &theFilePath, std::string &theErrorStringOut)
 {
-    return ::StoreObjectInJsonFormat(betaProduct, theFilePath, "Beta-product", theErrorStringOut);
+    return JsonUtils::StoreObjectInJsonFormat(betaProduct, theFilePath, "Beta-product", theErrorStringOut);
 }
 
 bool NFmiBetaProduct::ReadInJsonFormat(NFmiBetaProduct &betaProductOut, const std::string &theFilePath, std::string &theErrorStringOut)
 {
-    return ::ReadObjectInJsonFormat(betaProductOut, theFilePath, "Beta-product", theErrorStringOut);
+    return JsonUtils::ReadObjectInJsonFormat(betaProductOut, theFilePath, "Beta-product", theErrorStringOut);
 }
 
 
@@ -1271,14 +1148,14 @@ NFmiMetTime NFmiBetaProductAutomation::NFmiTriggerModeInfo::CalcNextDueTime(cons
     return NFmiMetTime::gMissingTime; // virhetilanne, palautetaan puuttuva aika
 }
 
-static bool CheckIfInfoWasOnTriggerList(boost::shared_ptr<NFmiFastQueryInfo> &info, const std::vector<std::string>& loadedDataTriggerList, const std::string &automationName, int dataTriggerWaitForMinutes)
+static bool CheckIfInfoWasOnTriggerList(boost::shared_ptr<NFmiFastQueryInfo> &info, const std::vector<std::string>& loadedDataTriggerList, const std::string &automationName, int dataTriggerWaitForMinutes, bool betaProductCase)
 {
     if(info)
     {
         auto filePatternIter = std::find(loadedDataTriggerList.begin(), loadedDataTriggerList.end(), info->DataFilePattern());
         if(filePatternIter != loadedDataTriggerList.end())
         {
-            std::string debugTriggerMessage = "Beta automation '";
+            std::string debugTriggerMessage = betaProductCase ? "Beta automation '" : "MacroParam-data automation '";
             debugTriggerMessage += automationName;
             debugTriggerMessage += "' was triggered by loading data: ";
             debugTriggerMessage += info->DataFileName();
@@ -1321,7 +1198,7 @@ static std::string MakeLevelString(const NFmiLevel& level)
     return str;
 }
 
-static void DoPossibleLogWarningAboutNonExistingLevel(NFmiInfoOrganizer& infoOrganizer, const NFmiDefineWantedData& triggerData, const std::vector<std::string>& loadedDataTriggerList, const std::string& automationName)
+static void DoPossibleLogWarningAboutNonExistingLevel(NFmiInfoOrganizer& infoOrganizer, const NFmiDefineWantedData& triggerData, const std::vector<std::string>& loadedDataTriggerList, const std::string& automationName, bool betaProductCase)
 {
     auto* level = triggerData.UsedLevel();
     if(level)
@@ -1335,16 +1212,19 @@ static void DoPossibleLogWarningAboutNonExistingLevel(NFmiInfoOrganizer& infoOrg
                 {
                     if(*(info->Producer()) == triggerData.producer_)
                     {
-                        if(info->LevelType() == level->LevelType())
+                        if(*info->Param().GetParam() == triggerData.param_)
                         {
-                            std::string debugTriggerMessage = "Beta automation '";
-                            debugTriggerMessage += automationName;
-                            debugTriggerMessage += "' has data trigger level (";
-                            debugTriggerMessage += ::MakeLevelString(*level);
-                            debugTriggerMessage += ") which was not found in loaded level data of wanted type: ";
-                            debugTriggerMessage += info->DataFileName();
-                            debugTriggerMessage += ", maybe beta-automation trigger data should be fixed?";
-                            CatLog::logMessage(debugTriggerMessage, CatLog::Severity::Warning, CatLog::Category::Operational);
+                            if(info->LevelType() == level->LevelType())
+                            {
+                                std::string debugTriggerMessage = betaProductCase ? "Beta automation '" : "MacroParam-data automation '";
+                                debugTriggerMessage += automationName;
+                                debugTriggerMessage += "' has data trigger level (";
+                                debugTriggerMessage += ::MakeLevelString(*level);
+                                debugTriggerMessage += ") which was not found in loaded level data of wanted type: ";
+                                debugTriggerMessage += info->DataFileName();
+                                debugTriggerMessage += ", maybe beta-automation trigger data should be fixed?";
+                                CatLog::logMessage(debugTriggerMessage, CatLog::Severity::Warning, CatLog::Category::Operational);
+                            }
                         }
                     }
                 }
@@ -1353,45 +1233,39 @@ static void DoPossibleLogWarningAboutNonExistingLevel(NFmiInfoOrganizer& infoOrg
     }
 }
 
-bool NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, const std::string& automationName, bool automationModeOn, int& postponeTriggerInMinutesOut) const
+bool NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(const std::vector<NFmiDefineWantedData>& triggerDataList, const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, const std::string& automationName, int& postponeTriggerInMinutesOut, bool betaProductCase)
 {
-    if(automationModeOn)
+    if(!triggerDataList.empty())
     {
-        if(itsTriggerMode == kFmiDataTrigger)
+        for(const auto& triggerData : triggerDataList)
         {
-            if(!itsTriggerDataList.empty())
+            auto wantedProducerId = triggerData.producer_.GetIdent();
+            if(wantedProducerId == kFmiSYNOP || wantedProducerId == kFmiFlashObs)
             {
-                for(const auto& triggerData : itsTriggerDataList)
+                // Ainakin Suomessa Synop ja Flash datat ovat multi-data juttuja, jolloin
+                // pit‰‰ tutkia ett‰ onko mik‰‰n kyseisen tuottajan datoista juuri nyt ladattu
+                auto infoList = infoOrganizer.GetInfos(wantedProducerId);
+                for(auto& info : infoList)
                 {
-                    auto wantedProducerId = triggerData.producer_.GetIdent();
-                    if(wantedProducerId == kFmiSYNOP || wantedProducerId == kFmiFlashObs)
+                    if(::CheckIfInfoWasOnTriggerList(info, loadedDataTriggerList, automationName, triggerData.dataTriggerRelatedWaitForMinutes_, betaProductCase))
                     {
-                        // Ainakin Suomessa Synop ja Flash datat ovat multi-data juttuja, jolloin
-                        // pit‰‰ tutkia ett‰ onko mik‰‰n kyseisen tuottajan datoista juuri nyt ladattu
-                        auto infoList = infoOrganizer.GetInfos(wantedProducerId);
-                        for(auto& info : infoList)
-                        {
-                            if(::CheckIfInfoWasOnTriggerList(info, loadedDataTriggerList, automationName, triggerData.dataTriggerRelatedWaitForMinutes_))
-                            {
-                                postponeTriggerInMinutesOut = triggerData.dataTriggerRelatedWaitForMinutes_;
-                                return true;
-                            }
-                        }
+                        postponeTriggerInMinutesOut = triggerData.dataTriggerRelatedWaitForMinutes_;
+                        return true;
                     }
-                    else
-                    {
-                        // NFmiExtraMacroParamData::FindWantedInfo metodille pit‰‰ sallia etsi‰ myˆs asemadatoja (3. parametri true).
-                        auto wantedInfoData = NFmiExtraMacroParamData::FindWantedInfo(infoOrganizer, triggerData, true);
-                        if(::CheckIfInfoWasOnTriggerList(wantedInfoData.foundInfo_, loadedDataTriggerList, automationName, triggerData.dataTriggerRelatedWaitForMinutes_))
-                        {
-                            postponeTriggerInMinutesOut = triggerData.dataTriggerRelatedWaitForMinutes_;
-                            return true;
-                        }
-                        else if(triggerData.IsParamProducerLevel())
-                        {
-                            ::DoPossibleLogWarningAboutNonExistingLevel(infoOrganizer, triggerData, loadedDataTriggerList, automationName);
-                        }
-                    }
+                }
+            }
+            else
+            {
+                // NFmiExtraMacroParamData::FindWantedInfo metodille pit‰‰ sallia etsi‰ myˆs asemadatoja (3. parametri true).
+                auto wantedInfoData = NFmiExtraMacroParamData::FindWantedInfo(infoOrganizer, triggerData, true);
+                if(::CheckIfInfoWasOnTriggerList(wantedInfoData.foundInfo_, loadedDataTriggerList, automationName, triggerData.dataTriggerRelatedWaitForMinutes_, betaProductCase))
+                {
+                    postponeTriggerInMinutesOut = triggerData.dataTriggerRelatedWaitForMinutes_;
+                    return true;
+                }
+                else if(triggerData.IsParamProducerLevel())
+                {
+                    ::DoPossibleLogWarningAboutNonExistingLevel(infoOrganizer, triggerData, loadedDataTriggerList, automationName, betaProductCase);
                 }
             }
         }
@@ -1604,8 +1478,8 @@ static const std::string gJsonName_EndTimeModeInfo = "EndTimeModeInfo";
 json_spirit::Object NFmiBetaProductAutomation::MakeJsonObject(const NFmiBetaProductAutomation &betaProductAutomation)
 {
     json_spirit::Object jsonObject;
-    ::AddNonEmptyStringJsonPair(betaProductAutomation.BetaProductPath(), gJsonName_BetaProductPath, jsonObject);
-    ::AddNonEmptyStringJsonPair(betaProductAutomation.OriginalBetaProductPath(), gJsonName_OriginalBetaProductPath, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(betaProductAutomation.BetaProductPath(), gJsonName_BetaProductPath, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(betaProductAutomation.OriginalBetaProductPath(), gJsonName_OriginalBetaProductPath, jsonObject);
     json_spirit::Object triggerModeInfoJsonObject = NFmiTriggerModeInfo::MakeJsonObject(betaProductAutomation.TriggerModeInfo());
     if(!triggerModeInfoJsonObject.empty())
         jsonObject.push_back(json_spirit::Pair(gJsonName_TriggerModeInfo, triggerModeInfoJsonObject));
@@ -1627,11 +1501,11 @@ void NFmiBetaProductAutomation::ParseJsonPair(json_spirit::Pair &thePair)
     else if(thePair.name_ == gJsonName_OriginalBetaProductPath)
         itsOriginalBetaProductPath = thePair.value_.get_str();
     else if(thePair.name_ == gJsonName_TriggerModeInfo)
-        ::ParseJsonValue(itsTriggerModeInfo, thePair.value_);
+        JsonUtils::ParseJsonValue(itsTriggerModeInfo, thePair.value_);
     else if(thePair.name_ == gJsonName_StartTimeModeInfo)
-        ::ParseJsonValue(itsStartTimeModeInfo, thePair.value_);
+        JsonUtils::ParseJsonValue(itsStartTimeModeInfo, thePair.value_);
     else if(thePair.name_ == gJsonName_EndTimeModeInfo)
-        ::ParseJsonValue(itsEndTimeModeInfo, thePair.value_);
+        JsonUtils::ParseJsonValue(itsEndTimeModeInfo, thePair.value_);
 }
 
 // T‰t‰ kutsutaan kun esim. luetaan data tiedostosta ja tehd‰‰n t‰isi tarkistus kaikille osille
@@ -1661,12 +1535,12 @@ std::string NFmiBetaProductAutomation::MakeShortStatusErrorString()
 
 bool NFmiBetaProductAutomation::StoreInJsonFormat(const NFmiBetaProductAutomation &betaProductAutomation, const std::string &theFilePath, std::string &theErrorStringOut)
 {
-    return ::StoreObjectInJsonFormat(betaProductAutomation, theFilePath, "Beta-product-automation", theErrorStringOut);
+    return JsonUtils::StoreObjectInJsonFormat(betaProductAutomation, theFilePath, "Beta-product-automation", theErrorStringOut);
 }
 
 bool NFmiBetaProductAutomation::ReadInJsonFormat(NFmiBetaProductAutomation &betaProductAutomation, const std::string &theFilePath, std::string &theErrorStringOut)
 {
-    bool status = ::ReadObjectInJsonFormat(betaProductAutomation, theFilePath, "Beta-product-automation", theErrorStringOut);
+    bool status = JsonUtils::ReadObjectInJsonFormat(betaProductAutomation, theFilePath, "Beta-product-automation", theErrorStringOut);
     betaProductAutomation.DoFullChecks();
     return status;
 }
@@ -1804,8 +1678,8 @@ json_spirit::Object NFmiBetaProductAutomationListItem::MakeJsonObject(const NFmi
     json_spirit::Object jsonObject;
     if(defaultListItem.fEnable != listItem.fEnable)
         jsonObject.push_back(json_spirit::Pair(gJsonName_BetaAutomationListItemEnable, listItem.fEnable));
-    ::AddNonEmptyStringJsonPair(listItem.itsBetaProductAutomationPath, gJsonName_BetaAutomationListItemPath, jsonObject);
-    ::AddNonEmptyStringJsonPair(listItem.itsBetaProductAutomationAbsolutePath, gJsonName_BetaAutomationListItemAbsolutePath, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(listItem.itsBetaProductAutomationPath, gJsonName_BetaAutomationListItemPath, jsonObject);
+    JsonUtils::AddNonEmptyStringJsonPair(listItem.itsBetaProductAutomationAbsolutePath, gJsonName_BetaAutomationListItemAbsolutePath, jsonObject);
 
     return jsonObject;
 }
@@ -1987,7 +1861,7 @@ void NFmiBetaProductAutomationList::ParseJsonPair(json_spirit::Pair &thePair)
             for(json_spirit::Array::iterator it = dataFileArray.begin(); it != dataFileArray.end(); ++it)
             {
                 std::shared_ptr<NFmiBetaProductAutomationListItem> listItem = std::make_shared<NFmiBetaProductAutomationListItem>();
-                ::ParseJsonValue(*listItem, *it);
+                JsonUtils::ParseJsonValue(*listItem, *it);
                 if(!PrepareListItemAfterJsonRead(*listItem))
                     listItem->itsStatus = NFmiBetaProductAutomationListItem::kFmiListItemReadError;
                 itsAutomationVector.push_back(listItem); // Lis‰t‰‰n virheellisestikin luetut listItemit, jotta k‰ytt‰j‰ saisi palautetta
@@ -2125,7 +1999,7 @@ std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductA
                 if(triggerModeInfo.itsTriggerMode == NFmiBetaProductAutomation::kFmiDataTrigger)
                 {
                     int postponeTriggerInMinutes = 0;
-                    if(triggerModeInfo.HasDataTriggerBeenLoaded(loadedDataTriggerList, infoOrganizer, listItem->AutomationName(), automationModeOn, postponeTriggerInMinutes))
+                    if(NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(triggerModeInfo.itsTriggerDataList, loadedDataTriggerList, infoOrganizer, listItem->AutomationName(), postponeTriggerInMinutes, true))
                     {
                         if(postponeTriggerInMinutes <= 0)
                             dueAutomations.push_back(listItem);
@@ -2191,12 +2065,12 @@ static const std::string gBetaAutomationListName = "Beta-automation list";
 
 bool NFmiBetaProductAutomationList::StoreInJsonFormat(const NFmiBetaProductAutomationList &theBetaProductAutomationList, const std::string &theFilePath, std::string &theErrorStringOut)
 {
-    return ::StoreObjectInJsonFormat(theBetaProductAutomationList, theFilePath, gBetaAutomationListName, theErrorStringOut);
+    return JsonUtils::StoreObjectInJsonFormat(theBetaProductAutomationList, theFilePath, gBetaAutomationListName, theErrorStringOut);
 }
 
 bool NFmiBetaProductAutomationList::ReadInJsonFormat(NFmiBetaProductAutomationList &theBetaProductAutomationList, const std::string &theFilePath, std::string &theErrorStringOut)
 {
-    bool status = ::ReadObjectInJsonFormat(theBetaProductAutomationList, theFilePath, gBetaAutomationListName, theErrorStringOut);
+    bool status = JsonUtils::ReadObjectInJsonFormat(theBetaProductAutomationList, theFilePath, gBetaAutomationListName, theErrorStringOut);
     theBetaProductAutomationList.DoFullChecks(true); // Tehd‰‰n t‰‰ll‰ tarkastelut automaatiomoodi p‰‰ll‰, myˆhemmin (t‰t‰ funktiota kutsuvassa systeemiss‰) tarkastelut on teht‰v‰ uudestaan kun oikeasti tiedet‰‰n miss‰ moodissa ollaan
     return status;
 }

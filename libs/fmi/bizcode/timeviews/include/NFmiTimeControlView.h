@@ -119,7 +119,6 @@ public:
 
     NFmiTimeControlView (int theMapViewDescTopIndex, const NFmiRect & theRect
 						,NFmiToolBox * theToolBox
-						,NFmiDrawingEnvironment * theDrawingEnvi
 						,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 						,bool theShowResolutionChangerBox
 						,bool theDrawViewInMouseMove
@@ -268,7 +267,6 @@ class NFmiTimeSerialTimeControlView : public NFmiTimeControlView
 public:
     NFmiTimeSerialTimeControlView(int theMapViewDescTopIndex,const NFmiRect & theRect
 								,NFmiToolBox * theToolBox
-								,NFmiDrawingEnvironment * theDrawingEnvi
 								,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 								,bool theShowResolutionChangerBox
 								,bool theDrawViewInMouseMove
@@ -294,7 +292,6 @@ class NFmiTrajectoryTimeControlView : public NFmiTimeControlView
 public:
     NFmiTrajectoryTimeControlView(int theMapViewDescTopIndex, const NFmiRect & theRect
 								,NFmiToolBox * theToolBox
-								,NFmiDrawingEnvironment * theDrawingEnvi
 								,boost::shared_ptr<NFmiDrawParam> &theDrawParam);
    ~NFmiTrajectoryTimeControlView(void);
 

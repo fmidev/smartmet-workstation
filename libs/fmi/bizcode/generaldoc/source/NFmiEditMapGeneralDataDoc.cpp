@@ -150,6 +150,7 @@
 #include "NFmiMouseClickUrlActionData.h"
 #include "NFmiVirtualTimeData.h"
 #include "AnimationProfiler.h"
+#include "NFmiMacroParamDataGenerator.h"
 
 #ifdef OLDGCC
  #include <strstream>
@@ -602,6 +603,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitColorContourLegendSettings();
 	InitParameterInterpolationFixer();
 	InitSeaLevelPlumeData();
+	InitMacroParamDataGenerator();
 	UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();
 
 #ifdef SETTINGS_DUMP // TODO enable this with a command line parameter
@@ -4870,6 +4872,13 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int la
 			menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyDrawParam, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 			itsPopupMenu->Add(std::move(menuItem));
 
+			if(macroParamInCase)
+			{
+				menuString = ::GetDictionaryString("Edit MacroParam formula...");
+				menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyMacroParamFormula, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
+				itsPopupMenu->Add(std::move(menuItem));
+			}
+
 			if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
 				return false;
 			fOpenPopup = true;
@@ -5234,12 +5243,27 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 		case kFmiSetTimeBoxToDefaultValues:
 			DoTimeBoxToDefaultValues(*menuItem);
 			break;
+		case kFmiModifyMacroParamFormula:
+			ModifyMacoParamFormula(*menuItem, itsCurrentViewRowIndex);
+			break;
 
 		default:
 			return false;
 		}
 	}
 	return true;
+}
+
+void ModifyMacoParamFormula(NFmiMenuItem& theMenuItem, int viewRowIndex)
+{
+	auto wantedDrawParam = GetCombinedMapHandler()->getDrawParamFromViewLists(theMenuItem, viewRowIndex);
+	if(!wantedDrawParam)
+		return;
+
+	NFmiFileString macroParamFilename = wantedDrawParam->InitFileName();
+	macroParamFilename.Extension("st");
+
+	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenMacroParamInSmarttoolDialog(std::string(macroParamFilename));
 }
 
 void InsertWantedParamLayer(NFmiMenuItem& theMenuItem, int theSelectedViewRowIndex)
@@ -10501,7 +10525,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return [this](const std::string &errorStr, const std::string &titleStr, CatLog::Severity severity, CatLog::Category category, bool justLog) {this->LogAndWarnUser(errorStr, titleStr, severity, category, justLog); };
     }
 
-    void DoGenerateBetaProductsChecks()
+	// Tämän pitää tehdä kaksoistoiminto, koska sekä Beta-tuotteet, että
+	// MacroParam-datat käyttävät querydata triggeröintejä ja täällä
+	// GetDataTriggerListOwnership -metodi ottaa sen hetkiset triggerit pois,
+	// joten molemmat työt pitää käsitellä samalla kertaa
+    void DoGenerateAutomationProductChecks()
     {
         static bool firstTime = true;
         if(firstTime)
@@ -10522,6 +10550,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			// haluamme että näemme automaatio listalla päivittyvät next ja last ajo ajat
 			ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Beta-automation triggered, update beta-dialog", SmartMetViewId::BetaProductionDlg);
         }
+
+		GetMacroParamDataGenerator().DoNeededMacroParamDataAutomations(dataTriggerList, *InfoOrganizer());
     }
 
     void SetCurrentGeneratedBetaProduct(const NFmiBetaProduct *theBetaProduct)
@@ -11102,6 +11132,27 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		LogMessage("UpdateMacroParamSystemContent: updated used macroParamSystem from working-thread", CatLog::Severity::Debug, CatLog::Category::Operational);
 	}
 
+	NFmiMacroParamDataGenerator& GetMacroParamDataGenerator()
+	{
+		return itsMacroParamDataGenerator;
+	}
+
+	void InitMacroParamDataGenerator()
+	{
+		CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
+		try
+		{
+			itsMacroParamDataGenerator.Init(ApplicationWinRegistry().BaseConfigurationRegistryPath(), MacroPathSettings().SmartToolPath(), MacroPathSettings().MacroParamDataPath(), HelpDataInfoSystem()->LocalDataBaseDirectory());
+			LogMessage(itsMacroParamDataGenerator.GetInitializeLogStr(), CatLog::Severity::Info, CatLog::Category::Configuration);
+		}
+		catch(std::exception& e)
+		{
+			LogAndWarnUser(e.what(), "Problems in InitMacroParamDataGenerator", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
+		}
+	}
+
+
+	NFmiMacroParamDataGenerator itsMacroParamDataGenerator;
 	NFmiVirtualTimeData itsVirtualTimeData;
 	NFmiMouseClickUrlActionData itsMouseClickUrlActionData;
 	std::vector<std::string> itsLoadedDataTriggerList;
@@ -13193,9 +13244,9 @@ LogAndWarnFunctionType NFmiEditMapGeneralDataDoc::GetLogAndWarnFunction()
     return pimpl->GetLogAndWarnFunction();
 }
 
-void NFmiEditMapGeneralDataDoc::DoGenerateBetaProductsChecks()
+void NFmiEditMapGeneralDataDoc::DoGenerateAutomationProductChecks()
 {
-    pimpl->DoGenerateBetaProductsChecks();
+    pimpl->DoGenerateAutomationProductChecks();
 }
 
 void NFmiEditMapGeneralDataDoc::FillViewMacroInfo(NFmiViewSettingMacro &theViewMacro, const std::string &theName, const std::string &theDescription)
@@ -13472,4 +13523,9 @@ std::string NFmiEditMapGeneralDataDoc::GetVirtualTimeTooltipText() const
 void NFmiEditMapGeneralDataDoc::UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr)
 {
 	pimpl->UpdateMacroParamSystemContent(std::move(updatedMacroParamSystemPtr));
+}
+
+NFmiMacroParamDataGenerator& NFmiEditMapGeneralDataDoc::GetMacroParamDataGenerator()
+{
+	return pimpl->GetMacroParamDataGenerator();
 }

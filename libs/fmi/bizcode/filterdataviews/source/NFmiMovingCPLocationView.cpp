@@ -13,12 +13,11 @@
 
 
 NFmiMovingCPLocationView::NFmiMovingCPLocationView(NFmiToolBox * theToolBox
-												 ,NFmiDrawingEnvironment * theDrawingEnvi
 												 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 												 ,const NFmiRect& theRect
 												 ,int theIndex
 												 ,NFmiEditorControlPointManager* theCPManager)
-:NFmiFilterGridView(theToolBox,theDrawingEnvi,theDrawParam,theRect,theIndex)
+:NFmiFilterGridView(theToolBox,theDrawParam,theRect,theIndex)
 ,itsCPManager(theCPManager)
 ,itsSplineStart(0.5,0.5)
 ,itsSplineMiddle(0.5,0.5)
@@ -45,19 +44,19 @@ void NFmiMovingCPLocationView::Draw(NFmiToolBox * theGTB)
 
 	DrawSplineData();
 
-	itsDrawingEnvironment->SetPenSize(NFmiPoint(3,3));
+	itsDrawingEnvironment.SetPenSize(NFmiPoint(3,3));
 	NFmiRect ellipseRect(0,0,0.08,0.08);
 	ellipseRect.Center(itsSplineStart);
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.f,0.f,0.f));
-	itsToolBox->DrawEllipse(ellipseRect, itsDrawingEnvironment);
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
+	itsToolBox->DrawEllipse(ellipseRect, &itsDrawingEnvironment);
 
 	ellipseRect.Center(itsSplineMiddle);
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0.5f,0.5f,0.5f));
-	itsToolBox->DrawEllipse(ellipseRect, itsDrawingEnvironment);
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0.5f,0.5f,0.5f));
+	itsToolBox->DrawEllipse(ellipseRect, &itsDrawingEnvironment);
 
 	ellipseRect.Center(itsSplineEnd);
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(1.f,1.f,1.f));
-	itsToolBox->DrawEllipse(ellipseRect, itsDrawingEnvironment);
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(1.f,1.f,1.f));
+	itsToolBox->DrawEllipse(ellipseRect, &itsDrawingEnvironment);
 
 }
 
@@ -117,7 +116,7 @@ void NFmiMovingCPLocationView::DrawSplineData(void)
 	out_pts = new point[resolution];
 
 	bspline(n, t, pts, out_pts, resolution);
-	itsDrawingEnvironment->SetPenSize(NFmiPoint(1,1));
+	itsDrawingEnvironment.SetPenSize(NFmiPoint(1,1));
 	float grayShadeDelta  = 1.f/(resolution-1);
 	float currentGrayShade  = 0.f;
 
@@ -125,10 +124,10 @@ void NFmiMovingCPLocationView::DrawSplineData(void)
 	int i;
 	for(i=0; i<resolution; i++)
 	{
-		itsDrawingEnvironment->SetFrameColor(NFmiColor(currentGrayShade, currentGrayShade, currentGrayShade));
+		itsDrawingEnvironment.SetFrameColor(NFmiColor(currentGrayShade, currentGrayShade, currentGrayShade));
 		NFmiPoint xy(out_pts[i].x, out_pts[i].y);
 		CPRect.Center(xy);
-		NFmiRectangle rectangle(CPRect, 0, itsDrawingEnvironment);
+		NFmiRectangle rectangle(CPRect, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&rectangle);
 		currentGrayShade += grayShadeDelta;
 	}

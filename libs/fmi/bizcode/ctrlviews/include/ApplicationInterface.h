@@ -82,6 +82,7 @@ public:
     virtual void OpenViewMacroDialog() = 0;
     virtual void SetAllMapViewTooltipDelays(bool doRestoreAction, int delayInMilliSeconds) = 0;
     virtual void UpdateAllViewsAndDialogs(const std::string& reasonForUpdate, bool fUpdateOnlyMapViews = false) = 0;
+    virtual void OpenMacroParamInSmarttoolDialog(const std::string& absoluteMacroParamPath) = 0;
 
 private:
     void AddToHatchingToolmasterEpsilonFactor(float addedValue);

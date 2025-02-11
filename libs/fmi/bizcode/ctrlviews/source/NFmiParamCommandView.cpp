@@ -34,8 +34,8 @@ double NFmiParamCommandView::itsParameterRowHorizontalMarginInMM = 0.5;
 //--------------------------------------------------------
 // ParamCommandView 
 //--------------------------------------------------------
-NFmiParamCommandView::NFmiParamCommandView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, NFmiDrawingEnvironment * theDrawingEnvi, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer)
-:NFmiCtrlView(theMapViewDescTopIndex, theRect, theToolBox, theDrawingEnvi, theDrawParam, theRowIndex, theColumnIndex)
+NFmiParamCommandView::NFmiParamCommandView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer)
+:NFmiCtrlView(theMapViewDescTopIndex, theRect, theToolBox, theDrawParam, theRowIndex, theColumnIndex)
 ,fShowView(true)
 ,fHasMapLayer(hasMapLayer)
 {
@@ -75,13 +75,13 @@ void NFmiParamCommandView::DrawBackground(void)
 {
 	if(fShowView)
 	{
-		itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
-		itsDrawingEnvironment->DisableFill();
+		itsDrawingEnvironment.SetFrameColor(NFmiColor(0,0,0));
+		itsDrawingEnvironment.DisableFill();
 		NFmiRect frame = GetFrame();
 		NFmiRectangle tmp(frame.TopLeft(),
 				  frame.BottomRight(),
 				  0,
-				  itsDrawingEnvironment);
+				  &itsDrawingEnvironment);
 		itsToolBox->Convert(&tmp);
 	}
 }

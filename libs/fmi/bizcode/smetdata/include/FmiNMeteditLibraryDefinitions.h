@@ -128,7 +128,8 @@ typedef enum
 	kFmiSetTimeBoxFillColor = 100,
 	kFmiSetTimeBoxFillColorAlpha = 101,
 	kFmiSetTimeBoxCustomFillColor = 102,
-	kFmiSetTimeBoxToDefaultValues = 103
+	kFmiSetTimeBoxToDefaultValues = 103,
+	kFmiModifyMacroParamFormula = 104
 }FmiMenuCommandType;
 
 // s‰‰ koodi annetaan t‰nne. Jos se on AWS wawa koodia (arvo 100-199), konvertoidaan se WW-koodiksi, muuten

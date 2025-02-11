@@ -19,10 +19,8 @@ public:
    bool MouseMove (const NFmiPoint & thePlace, unsigned long theKey) override;
    void Draw (NFmiToolBox * theGTB) override;
     NFmiZoomView (int theMapViewDescTopIndex, NFmiToolBox * theToolBox
-				 ,NFmiDrawingEnvironment * theDrawingEnvi
 				 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam);
 	NFmiZoomView (int theMapViewDescTopIndex, NFmiToolBox *theToolBox
-				  ,NFmiDrawingEnvironment* theDrawingEnvi
 				  ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 				  ,const NFmiRect& theRect);
    ~NFmiZoomView ();

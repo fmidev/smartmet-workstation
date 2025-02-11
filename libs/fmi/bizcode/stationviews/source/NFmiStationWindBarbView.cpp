@@ -12,7 +12,6 @@
 NFmiStationWindBarbView::NFmiStationWindBarbView
 								 (int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 								 ,NFmiToolBox * theToolBox
-								 ,NFmiDrawingEnvironment * theDrawingEnvi
 								 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 								 ,FmiParameterName theParamId
 								 ,NFmiPoint theOffSet
@@ -21,7 +20,6 @@ NFmiStationWindBarbView::NFmiStationWindBarbView
                                  ,int theColumnIndex)
 :NFmiStationView(theMapViewDescTopIndex, theArea
 				,theToolBox
-				,theDrawingEnvi
 				,theDrawParam
 				,theParamId
 				,theOffSet
@@ -43,9 +41,9 @@ void NFmiStationWindBarbView::Draw(NFmiToolBox * theGTB)
 bool NFmiStationWindBarbView::PrepareForStationDraw(void)
 {
 	bool status = NFmiStationView::PrepareForStationDraw();
-	itsDrawingEnvironment->SetFrameColor(itsDrawParam->FrameColor());
-	itsDrawingEnvironment->EnableFill();
-	itsDrawingEnvironment->SetFillColor(itsDrawParam->FillColor());
+	itsDrawingEnvironment.SetFrameColor(itsDrawParam->FrameColor());
+	itsDrawingEnvironment.EnableFill();
+	itsDrawingEnvironment.SetFillColor(itsDrawParam->FillColor());
 	if(NFmiDrawParam::IsMacroParamCase(itsInfo->DataType()))
 	{
 		fUseMacroParamSpecialCalculations = true;
@@ -89,7 +87,7 @@ NFmiPoint NFmiStationWindBarbView::GetSpaceOutFontFactor(void)
 // tuuli vektori ei olekaan fontti pohjainen symboli.
 void NFmiStationWindBarbView::ModifyTextEnvironment(void)
 {
-    itsDrawingEnvironment->SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 48), itsCtrlViewDocumentInterface->Printing()));
+    itsDrawingEnvironment.SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 48), itsCtrlViewDocumentInterface->Printing()));
 }
 
 NFmiPoint NFmiStationWindBarbView::SbdCalcFixedSymbolSize() const

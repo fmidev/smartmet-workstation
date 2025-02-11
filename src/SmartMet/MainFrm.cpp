@@ -36,6 +36,7 @@
 #include "CtrlViewFunctions.h"
 #include "FmiHakeWarningMessages.h"
 #include "NFmiLedLightStatus.h"
+#include "NFmiMacroParamDataGenerator.h"
 #include "CtrlViewGdiPlusFunctions.h"
 #include <numeric>
 
@@ -1228,6 +1229,7 @@ void CMainFrame::OnClose()
             itsDoc->WarningCenterSystem().kill();
 #endif // DISABLE_CPPRESTSDK
             CFmiDataLoadingThread2::CloseNow(); // sama tässä combineData-threadille
+			itsDoc->GetMacroParamDataGenerator().StopAutomationDueClosingApplication(); // Sama MacroParam-data automaatio tuotannolle
 
         	CSmartMetDoc* doc = (CSmartMetDoc*)GetActiveDocument();
 			doc->DoOnClose(); // Tässä tehdään tietyt asiat, ennen kuin mennään NFmiEditMapGeneralDataDoc::StoreSupplementaryData -metodiin.
@@ -1257,6 +1259,10 @@ void CMainFrame::OnClose()
                 itsDoc->LogMessage("SatelliteImageCache-threads stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
             else
                 itsDoc->LogMessage("SatelliteImageCache-threads didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
+			if(itsDoc->GetMacroParamDataGenerator().WaitForAutomationWorksToStop(3))
+				itsDoc->LogMessage("MacroParam-data automation generation stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
+			else
+				itsDoc->LogMessage("MacroParam-data automation generation didn't stop, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
 #ifndef DISABLE_CPPRESTSDK
             if(itsDoc->WarningCenterSystem().isDead(std::chrono::milliseconds(10 * 1000)))
                 itsDoc->LogMessage("Hake message -threads stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
@@ -1449,9 +1455,10 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 			// että onko joku/jotkin querydatat myöhässä. Tehdään se ensin, koska tarkastelu on nopea.
 			itsDoc->DoIsAnyQueryDataLateChecks();
 
-			// Lopuksi tehdään beta-tuotteiden generointi tarkastelut, jotka saattavat jumittaa 
-			// smartmetin pidemmäksikin aikaa.
-            itsDoc->DoGenerateBetaProductsChecks();
+			// Lopuksi tehdään 1) beta-tuotteiden generointi tarkastelut, jotka saattavat jumittaa 
+			// smartmetin pidemmäksikin aikaa. 2) MacroParamData tuotanto
+			// Huom! Molemmat on pakko tehdä samalla funktiolla.
+            itsDoc->DoGenerateAutomationProductChecks();
             return;
         }
 

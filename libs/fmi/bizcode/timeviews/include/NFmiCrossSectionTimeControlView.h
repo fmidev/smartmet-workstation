@@ -22,7 +22,6 @@ class NFmiCrossSectionTimeControlView : public NFmiTimeControlView
 public:
 	NFmiCrossSectionTimeControlView(int theMapViewDescTopIndex, const NFmiRect & theRect
 						,NFmiToolBox * theToolBox
-						,NFmiDrawingEnvironment * theDrawingEnvi
 						,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 						,bool theShowResolutionChangerBox
 						,bool theDrawViewInMouseMove

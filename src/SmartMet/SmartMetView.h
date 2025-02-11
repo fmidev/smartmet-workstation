@@ -4,8 +4,8 @@
 //
 
 
-#include "NFmiDrawingEnvironment.h"
 #include "NFmiMetTime.h"
+#include "NFmiPoint.h"
 #include "SmartMetOpenUrlAction.h"
 
 class NFmiToolBox;
@@ -161,7 +161,6 @@ private:
 	CBitmap* itsOverMapBitmap; // tähän tehdään yksi kartta bitmap, jota sitten 'lätkitään' oikeisiin kohtiin ruudukkonäytössä
 	NFmiEditMapView* itsEditMapView;
 	NFmiToolBox * itsToolBox;
-	NFmiDrawingEnvironment itsDrawingEnvironment;
 	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
 	int itsMapViewDescTopIndex;
 	bool fMouseCursorOnWnd;

@@ -42,7 +42,6 @@ class NFmiTimeStationViewRowList : public NFmiCtrlView
  public:
    NFmiTimeStationViewRowList(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 							   ,NFmiToolBox * theToolBox
-							   ,NFmiDrawingEnvironment * theDrawingEnvi
 							   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam);
    ~NFmiTimeStationViewRowList(void);
    void Draw(NFmiToolBox* theGTB) override;

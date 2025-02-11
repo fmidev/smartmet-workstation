@@ -295,7 +295,7 @@ void CCaseStudyExeDlg::DoCaseDataOperation(void)
     bool operationCanceled = false;
     std::string errorStr;
     std::string baseCaseStudyPath = PathUtils::getPathSectionFromTotalFilePath(itsMetaFileName);
-    std::string baseCaseStudyNamePath = baseCaseStudyPath + PathUtils::getFilename(itsMetaFileName);
+    std::string baseCaseStudyNamePath = baseCaseStudyPath + PathUtils::getFilename(itsMetaFileName, false);
     try
     {
         // 1. Kopioidaan data-tiedostot haluttuun hakemisto rakenteeseen

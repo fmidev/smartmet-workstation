@@ -26,7 +26,6 @@ class NFmiFlashDataView : public NFmiStationView
 public:
    NFmiFlashDataView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 				   ,NFmiToolBox * theToolBox
-				   ,NFmiDrawingEnvironment * theDrawingEnvi
 				   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 				   ,FmiParameterName theParamId
 				   ,NFmiPoint theOffSet

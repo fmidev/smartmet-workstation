@@ -1960,7 +1960,7 @@ bool NFmiCaseStudySystem::StoreMetaData(CWnd *theParentWindow, const std::string
 		return ::DoErrorActions(theParentWindow, errStr, captionStr, showErrorMessageBox);
 	}
 
-	CaseStudyName(PathUtils::getFilename(theMetaDataTotalFilePath));
+	CaseStudyName(PathUtils::getFilename(theMetaDataTotalFilePath, false));
 	// Otetaan currentti aika CaseStudy-ajaksi.
 	itsTime = NFmiMetTime();
 	json_spirit::Object jsonObject = NFmiCaseStudySystem::MakeJsonObject(*this, false);
@@ -2105,7 +2105,7 @@ std::string NFmiCaseStudySystem::MakeBaseDataDirectory(const std::string& theMet
 {
 	std::string dataDir = PathUtils::fixPathSeparators(PathUtils::getPathSectionFromTotalFilePath(theMetaDataFilePath));
 	PathUtils::addDirectorySeparatorAtEnd(dataDir);
-	dataDir += PathUtils::getFilename(theMetaDataFilePath);
+	dataDir += PathUtils::getFilename(theMetaDataFilePath, false);
 	dataDir += "_data";
 	return dataDir;
 }

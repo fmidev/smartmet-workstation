@@ -22,7 +22,6 @@ class NFmiTimeView: public NFmiCtrlView
 
 	NFmiTimeView(int theMapViewDescTopIndex, const NFmiRect &theRect
 				,NFmiToolBox *theToolBox
-				,NFmiDrawingEnvironment * theDrawingEnvi				
 				,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 				,const NFmiTimeDescriptor &theTimeDescriptor
                 ,int theRowIndex);

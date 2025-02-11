@@ -24,7 +24,6 @@ class NFmiModelProducerIndexViewWCTR : public NFmiModelCombineStatusView
 public:
 	void Draw(NFmiToolBox * theGTB) override;
 	NFmiModelProducerIndexViewWCTR(NFmiToolBox * theToolBox
-							 ,NFmiDrawingEnvironment * theDrawingEnvi
 							 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 							 ,const NFmiRect& theRect);
 	~NFmiModelProducerIndexViewWCTR();

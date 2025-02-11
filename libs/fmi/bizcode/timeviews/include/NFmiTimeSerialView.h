@@ -97,7 +97,6 @@ class NFmiTimeSerialView : public NFmiTimeView
  public:
 	NFmiTimeSerialView (int theMapViewDescTopIndex, const NFmiRect & theRect
 					   ,NFmiToolBox * theToolBox
-					   ,NFmiDrawingEnvironment * theDrawingEnvi
 					   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 					   ,int theRowIndex);
 	~NFmiTimeSerialView (void);

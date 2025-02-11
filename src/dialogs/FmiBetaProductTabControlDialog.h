@@ -26,6 +26,8 @@ public:
 
     // näillä talletetaan sijainti ja koko rekisteriin
     void SetDefaultValues(void);
+    void DoWhenClosing(bool calledFromDestructor);
+    void StoreControlValuesToDocument();
     static std::string MakeUsedWinRegistryKeyStr(unsigned int /* theMapViewDescTopIndex */) { return ViewPosRegistryInfo().WinRegistryKeyStr(); }
 
 protected:
@@ -34,7 +36,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
-    void DoWhenClosing(bool calledFromDestructor);
 
     CFmiBetaProductDialog itsBetaProductDialogTab;
     CFmiBetaProductAutomationDialog itsBetaProductAutomationDialogTab;

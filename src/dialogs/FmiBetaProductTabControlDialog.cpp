@@ -170,4 +170,10 @@ void CFmiBetaProductTabControlDialog::DoWhenClosing(bool calledFromDestructor)
     }
 }
 
+void CFmiBetaProductTabControlDialog::StoreControlValuesToDocument()
+{
+    itsSmartMetDocumentInterface->BetaProductionSystem().BetaProductTabControlIndex(itsBetaProductControl.GetSSLActivePage());
+    itsBetaProductDialogTab.DoWhenClosing();
+    itsBetaProductAutomationDialogTab.DoWhenClosing();
+}
 

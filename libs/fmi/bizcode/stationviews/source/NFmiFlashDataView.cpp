@@ -13,7 +13,6 @@
 
 NFmiFlashDataView::NFmiFlashDataView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 									,NFmiToolBox * theToolBox
-									,NFmiDrawingEnvironment * theDrawingEnvi
 									,boost::shared_ptr<NFmiDrawParam> &theDrawParam
 									,FmiParameterName theParamId
 									,NFmiPoint theOffSet
@@ -22,7 +21,6 @@ NFmiFlashDataView::NFmiFlashDataView(int theMapViewDescTopIndex, boost::shared_p
                                     ,int theColumnIndex)
 :NFmiStationView(theMapViewDescTopIndex, theArea
 				,theToolBox
-				,theDrawingEnvi
 				,theDrawParam
 				,theParamId
 				,theOffSet
@@ -48,8 +46,8 @@ void NFmiFlashDataView::Draw(NFmiToolBox * theGTB)
     if(!IsParamDrawn())
 		return;
 
-	itsDrawingEnvironment->EnableFill();
-	itsDrawingEnvironment->EnableFrame();
+	itsDrawingEnvironment.EnableFill();
+	itsDrawingEnvironment.EnableFrame();
 
 	NFmiColor negativeColor(0.f, 0.f, 0.9f); // väri, jolla kehystetään negatiiviset salamat
 	NFmiColor positiveColor(0.9f, 0.f, 0.f); // väri jolla kehystetään positiiviset salamat ruudussa
@@ -179,7 +177,7 @@ void NFmiFlashDataView::CreateFlashPolyLines(void)
 
 	if(itsNegativeFlashPolyLine == 0)
 	{
-		itsNegativeFlashPolyLine = new NFmiPolyline(itsRect, 0, itsDrawingEnvironment);
+		itsNegativeFlashPolyLine = new NFmiPolyline(itsRect, 0, &itsDrawingEnvironment);
 		itsNegativeFlashPolyLine->AddPoint(p1);
 		itsNegativeFlashPolyLine->AddPoint(p2);
 		itsNegativeFlashPolyLine->AddPoint(p3);
@@ -188,7 +186,7 @@ void NFmiFlashDataView::CreateFlashPolyLines(void)
 	}
 	if(itsPositiveFlashPolyLine == 0)
 	{
-		itsPositiveFlashPolyLine = new NFmiPolyline(itsRect, 0, itsDrawingEnvironment);
+		itsPositiveFlashPolyLine = new NFmiPolyline(itsRect, 0, &itsDrawingEnvironment);
 		itsPositiveFlashPolyLine->AddPoint(p1);
 		itsPositiveFlashPolyLine->AddPoint(p5);
 		itsPositiveFlashPolyLine->AddPoint(p6);
@@ -206,7 +204,7 @@ void NFmiFlashDataView::CreateFlashPolyLines(void)
 	if(itsCloudFlashPolyLine == 0)
 	{ // pilvi salama on pieni laatikko
 		const double sizeFactor = 1.7;
-		itsCloudFlashPolyLine = new NFmiPolyline(itsRect, 0, itsDrawingEnvironment);
+		itsCloudFlashPolyLine = new NFmiPolyline(itsRect, 0, &itsDrawingEnvironment);
 		itsCloudFlashPolyLine->AddPoint(p5*sizeFactor);
 		itsCloudFlashPolyLine->AddPoint(p8*sizeFactor);
 		itsCloudFlashPolyLine->AddPoint(p9*sizeFactor);

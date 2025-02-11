@@ -74,7 +74,7 @@ static void InitializeFileNameBasedGuiNameVector(const std::vector<std::string>&
 {
 	guiNamesOut.clear();
 	for(const auto& fileName : fileNames)
-		guiNamesOut.push_back(PathUtils::getFilename(fileName));
+		guiNamesOut.push_back(PathUtils::getFilename(fileName, false));
 }
 
 void NFmiMapConfiguration::InitializeFileNameBasedGuiNameVectors()

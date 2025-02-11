@@ -19,7 +19,9 @@ class NFmiDataModifier;
 class NFmiSmartToolCalculation
 {
  public:
-  bool IsMasked(const NFmiCalculationParams &theCalculationParams);
+  bool IsMasked(const NFmiCalculationParams &theCalculationParams,
+                NFmiMacroParamValue &theMacroParamValue);
+  bool IsMasked_ver2(const NFmiCalculationParams &theCalculationParams);
   void Calculate(const NFmiCalculationParams &theCalculationParams,
                  NFmiMacroParamValue &theMacroParamValue);
   void Calculate_ver2(const NFmiCalculationParams &theCalculationParams);
@@ -112,6 +114,8 @@ class NFmiSmartToolCalculation
                 const NFmiCalculationParams &theCalculationParams);
   void CalcThreeArgumentFunction(double &result, const NFmiCalculationParams &theCalculationParams);
   void CalcVertFunction(double &result, const NFmiCalculationParams &theCalculationParams);
+  void SetupSpecialMacroParamCalculations(const NFmiCalculationParams &theCalculationParams,
+                                NFmiMacroParamValue &theMacroParamValue);
 
   boost::shared_ptr<NFmiFastQueryInfo> itsResultInfo;             // omistaa+tuhoaa
   std::vector<boost::shared_ptr<NFmiAreaMask> > itsCalculations;  // omistaa+tuhoaa

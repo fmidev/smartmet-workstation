@@ -12,11 +12,10 @@
 #include "CtrlViewDocumentInterface.h"
 
 NFmiTimeFilterView::NFmiTimeFilterView(NFmiToolBox * theToolBox
-    , NFmiDrawingEnvironment * theDrawingEnvi
     , boost::shared_ptr<NFmiDrawParam> &theDrawParam
     , const NFmiRect& theRect
     , int theIndex)
-    :NFmiZoomView(0, theToolBox, theDrawingEnvi, theDrawParam, theRect)
+    :NFmiZoomView(0, theToolBox, theDrawParam, theRect)
     , itsFilterRelativeTimeRect()
     , itsGridXSize(1)
     , itsGridXOrigo(0)
@@ -46,10 +45,10 @@ void NFmiTimeFilterView::Update(void)
 
 void NFmiTimeFilterView::Draw(NFmiToolBox * theGTB)
 {
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
-	itsDrawingEnvironment->SetPenSize(NFmiPoint(1,1));
-	itsDrawingEnvironment->EnableFill();
-	itsDrawingEnvironment->SetFillColor(NFmiColor(0.9f,0.9f,0.9f));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0,0,0));
+	itsDrawingEnvironment.SetPenSize(NFmiPoint(1,1));
+	itsDrawingEnvironment.EnableFill();
+	itsDrawingEnvironment.SetFillColor(NFmiColor(0.9f,0.9f,0.9f));
 	DrawFrame(itsDrawingEnvironment);
 	NFmiRect viewRect(GetFrame());
 
@@ -58,24 +57,24 @@ void NFmiTimeFilterView::Draw(NFmiToolBox * theGTB)
 	{
 		NFmiPoint startingPoint(i * (viewRect.Width()/itsGridXSize), timeGridHeight);
 		NFmiPoint endingPoint(i * (viewRect.Width()/itsGridXSize), viewRect.Bottom());
-		NFmiLine line(startingPoint, endingPoint, 0, itsDrawingEnvironment);
+		NFmiLine line(startingPoint, endingPoint, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&line);
 	}
 	NFmiPoint point1(viewRect.Left(), timeGridHeight);
 	NFmiPoint point2(viewRect.Right(), timeGridHeight);
-	NFmiLine line(point1, point2, 0, itsDrawingEnvironment);
+	NFmiLine line(point1, point2, 0, &itsDrawingEnvironment);
 	itsToolBox->Convert(&line); // piirtää keskelle vaaka viivan
 
 	// piirtää pienen väkäsen 0-kohdalle
 	NFmiPoint point3(0.5, timeGridHeight - 0.2); 
 	NFmiPoint point4(0.5, timeGridHeight - 0.02);
-	NFmiLine line2(point3, point4, 0, itsDrawingEnvironment);
+	NFmiLine line2(point3, point4, 0, &itsDrawingEnvironment);
 	itsToolBox->Convert(&line2);
 
 	NFmiRect middleGridPointRect(0, 0, viewRect.Width()/15, viewRect.Height()/3);
 	middleGridPointRect.Center(NFmiPoint(0.5, 0.8));
-	itsDrawingEnvironment->SetFillColor(NFmiColor(1,0,0));
-	NFmiRectangle middlePoint(middleGridPointRect.TopLeft(), middleGridPointRect.BottomRight(), 0, itsDrawingEnvironment);
+	itsDrawingEnvironment.SetFillColor(NFmiColor(1,0,0));
+	NFmiRectangle middlePoint(middleGridPointRect.TopLeft(), middleGridPointRect.BottomRight(), 0, &itsDrawingEnvironment);
 	itsToolBox->Convert(&middlePoint);
 
 	NFmiPoint timeRanges(itsCtrlViewDocumentInterface->TimeFilterRange(itsIndex));
@@ -90,10 +89,10 @@ void NFmiTimeFilterView::Draw(NFmiToolBox * theGTB)
 	NFmiPoint startingPoint = NFmiPoint(x1,y1);
 	NFmiPoint endingPoint = NFmiPoint(x2,y2);
 	itsFilterRelativeTimeRect = NFmiRect(startingPoint, endingPoint); // laitetaan relative recti talteen hiiri-tarkasteluja varten
-	itsDrawingEnvironment->DisableFill();
-	itsDrawingEnvironment->SetPenSize(NFmiPoint(2,2));
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,1));
-	NFmiRectangle filterRectangle(startingPoint, endingPoint, 0, itsDrawingEnvironment);
+	itsDrawingEnvironment.DisableFill();
+	itsDrawingEnvironment.SetPenSize(NFmiPoint(2,2));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0,0,1));
+	NFmiRectangle filterRectangle(startingPoint, endingPoint, 0, &itsDrawingEnvironment);
 	itsToolBox->Convert(&filterRectangle);
 	DrawHourLines();
 	DrawTimeTexts();
@@ -108,8 +107,8 @@ void NFmiTimeFilterView::DrawHourLines(void)
 		double timeStepLength = viewRect.Width()/itsGridXSize;
 		double hourStepLength = viewRect.Width()/itsGridXSize/itsExtraHourTimeLineCount;
 		double timeGridHeight = 0.9;
-		itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
-		itsDrawingEnvironment->SetPenSize(NFmiPoint(1,1));
+		itsDrawingEnvironment.SetFrameColor(NFmiColor(0,0,0));
+		itsDrawingEnvironment.SetPenSize(NFmiPoint(1,1));
 		for(int i=0; i<itsGridXSize; i++)
 		{
 			NFmiPoint startingPoint(i * timeStepLength, timeGridHeight);
@@ -118,7 +117,7 @@ void NFmiTimeFilterView::DrawHourLines(void)
 			{
 				startingPoint.X(startingPoint.X() + hourStepLength);
 				endingPoint.X(endingPoint.X() + hourStepLength);
-				NFmiLine line(startingPoint, endingPoint, 0, itsDrawingEnvironment);
+				NFmiLine line(startingPoint, endingPoint, 0, &itsDrawingEnvironment);
 				itsToolBox->Convert(&line);
 			}
 		}
@@ -325,9 +324,9 @@ void NFmiTimeFilterView::DrawTimeTexts(void)
 		}
 	}
 
-	itsDrawingEnvironment->SetFrameColor(NFmiColor(0,0,0));
-	itsDrawingEnvironment->SetFontSize(NFmiPoint(16,16));
+	itsDrawingEnvironment.SetFrameColor(NFmiColor(0,0,0));
+	itsDrawingEnvironment.SetFontSize(NFmiPoint(16,16));
 	NFmiPoint place(GetFrame().TopLeft());
-	NFmiText text(place, timeStr, false, 0, itsDrawingEnvironment);
+	NFmiText text(place, timeStr, false, 0, &itsDrawingEnvironment);
 	itsToolBox->Convert(&text);
 }
