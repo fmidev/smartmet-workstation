@@ -175,6 +175,88 @@ int main(int argc, const char* argv[])
 } 
 
 /*
+#include "NFmiQueryData.h"
+#include "NFmiFastQueryInfo.h"
+#include "NFmiQueryDataUtil.h"
+
+static void FillCombinedData(NFmiFastQueryInfo& combinedInfo, NFmiFastQueryInfo& sourceInfo)
+{
+    for(sourceInfo.ResetLevel(); sourceInfo.NextLevel(); )
+    {
+        if(combinedInfo.Level(*sourceInfo.Level()))
+        {
+            for(sourceInfo.ResetParam(); sourceInfo.NextParam(); )
+            {
+                if(combinedInfo.Param(*sourceInfo.Param().GetParam()))
+                {
+                    for(sourceInfo.ResetTime(); sourceInfo.NextTime(); )
+                    {
+                        if(combinedInfo.Time(sourceInfo.Time()))
+                        {
+                            for(sourceInfo.ResetLocation(); sourceInfo.NextLocation(); )
+                            {
+                                if(combinedInfo.Location(*sourceInfo.Location()))
+                                {
+                                    combinedInfo.FloatValue(sourceInfo.FloatValue());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Ohjelma yhdist‰‰ kaksi asemadata sqd tiedostoa yhdeksi.
+// Oletuksia: asemadataa, ei level-dataa
+int main(int argc, const char* argv[])
+{
+    if(argc < 4)
+    {
+        std::cerr << "Needs 3 querydata file paths as arguments to do combining:" << std::endl;
+        NFmiFileString fileStr(argv[0]);
+        std::cerr << fileStr.FileName().CharPtr() << " querydata1 querydata2 outputdata" << std::endl;
+        std::cerr << "Stopping..." << std::endl;
+        return 1;
+    }
+    NFmiQueryData data1(argv[1]);
+    NFmiFastQueryInfo info1(&data1);
+    NFmiQueryData data2(argv[2]);
+    NFmiFastQueryInfo info2(&data2);
+    std::string outputFileName = argv[3];
+
+    if(info1.IsGrid() || info2.IsGrid())
+    {
+        std::cerr << "At least one of data contains grid data, stopping..." << std::endl;
+        return 1;
+    }
+
+    if((info1.SizeLevels() > 1 || info2.SizeLevels() > 1))
+    {
+        std::cerr << "At least one of data contains more than 1 level, stopping..." << std::endl;
+        return 1;
+    }
+
+    auto finalTimeDescriptor = info1.TimeDescriptor().Combine(info2.TimeDescriptor());
+    auto copyOfParamDescriptor1 = info1.ParamDescriptor();
+    auto finalParamDescriptor = copyOfParamDescriptor1.Combine(info2.ParamDescriptor());
+    auto finalLevelDescriptor = info1.VPlaceDescriptor();
+    auto copyOfHPlaceDescriptor1 = info1.HPlaceDescriptor();
+    auto finalHPlaceDescriptor = copyOfHPlaceDescriptor1.Combine(info2.HPlaceDescriptor());
+
+    auto newMetaInfo = std::make_unique<NFmiQueryInfo>(finalParamDescriptor, finalTimeDescriptor, finalHPlaceDescriptor, finalLevelDescriptor);
+    std::unique_ptr<NFmiQueryData> newData(NFmiQueryDataUtil::CreateEmptyData(*newMetaInfo));
+    NFmiFastQueryInfo newInfo(newData.get());
+    ::FillCombinedData(newInfo, info1);
+    ::FillCombinedData(newInfo, info2);
+
+    newData->Write(outputFileName);
+
+    return 0;
+}
+*/
+/*
 
 // Ohjelma joka vertaa kahta eri querydata tiedostoa arvotasolla:
 // 1) Tiedostojen datarakenteiden pit‰‰ olla samat, muuten ilmoitetaan vain rakenteiden erot
