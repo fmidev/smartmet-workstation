@@ -78,6 +78,46 @@ void ToolmasterHatchPolygonData::setWorldLimits(const TMWorldLimits& worldLimits
     worldLimits_ = worldLimits;
 }
 
+template<typename T>
+static std::string MakeVectorPointStr(const std::string& titleStr, const T& pointVector)
+{
+    std::string str = titleStr + "\n";
+    std::ostringstream oss;
+    for(const auto& point : pointVector)
+    {
+        if(!oss.str().empty())
+            oss << " , ";
+        oss << std::fixed << std::setprecision(2) << "(" << point.x << "," << point.y << ")";
+    }
+
+    return str + oss.str();
+}
+
+static std::string MakeVectorIntStr(const std::string& titleStr, const std::vector<int>& intVector)
+{
+    std::string str = titleStr + "\n";
+    std::ostringstream oss;
+    for(const auto& value : intVector)
+    {
+        if(!oss.str().empty())
+            oss << ",";
+        oss << value;
+    }
+
+    return str + oss.str();
+}
+
+static void DoDebugLogOfHatchPolygon(int currentPolygonIndex, const std::vector<IntPoint>& toolMasterBottomRowPoints, const std::vector<FloatPoint>& relativeBottomRowPoints, const std::vector<int>& bottomRowPointsInsidePolygon, const std::vector<int>& bottomRowPointValuesInsideHatchLimits)
+{
+    std::string str = "Polygon index = ";
+    str += std::to_string(currentPolygonIndex) + "\n";
+    str += ::MakeVectorPointStr("Bottom row points", toolMasterBottomRowPoints) + "\n";
+    str += ::MakeVectorPointStr("Relative bottom row points", relativeBottomRowPoints) + "\n";
+    str += ::MakeVectorIntStr("Bottom row points inside polygon", bottomRowPointsInsidePolygon) + "\n";
+    str += ::MakeVectorIntStr("Bottom row point values inside hatch limits", bottomRowPointValuesInsideHatchLimits) + "\n";
+    CatLog::logMessage(str, CatLog::Severity::Debug, CatLog::Category::Operational, true);
+}
+
 bool ToolmasterHatchPolygonData::isHatchPolygonDrawn(int currentPolygonIndex, int currentPolygonFloatDataTotalIndex, int currentPolygonIntDataTotalIndex, int currentCoordinateDataTotalIndex)
 {
     // 1. Tee lista ToolMasterin polygoniin liittyvist‰ pohjarivin pisteist‰ int-datasta
@@ -88,10 +128,13 @@ bool ToolmasterHatchPolygonData::isHatchPolygonDrawn(int currentPolygonIndex, in
     auto bottomRowPointsInsidePolygon = areBottomRowPointsInsidePolygon(relativeBottomRowPoints, currentPolygonIndex, currentCoordinateDataTotalIndex);
     // 4. Mik‰ on kunkin pisteen arvo, eli onko se hatch rajojen sis‰ll‰ vai ei
     auto bottomRowPointValuesInsideHatchLimits = areBottomRowPointValuesInsideHatchLimits(currentPolygonIndex, currentPolygonFloatDataTotalIndex);
+
+    // DO some debug logging
+//    DoDebugLogOfHatchPolygon(currentPolygonIndex, toolMasterBottomRowPoints, relativeBottomRowPoints, bottomRowPointsInsidePolygon, bottomRowPointValuesInsideHatchLimits);
+
     // 5. Tee p‰‰telm‰, pit‰‰kˆ polygonin hatch piirt‰‰ vai ei
     return isHatchPolygonDrawn(bottomRowPointsInsidePolygon, bottomRowPointValuesInsideHatchLimits);
 }
-
 
 bool ToolmasterHatchPolygonData::isInsideHatchLimits(float value)
 {
