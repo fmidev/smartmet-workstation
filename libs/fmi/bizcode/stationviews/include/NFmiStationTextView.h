@@ -24,7 +24,6 @@ public:
    bool IsSingleSymbolView(void) override { return false; }; // tulostaa kartalle tekstin pätkän, joten false
 protected:
    void			ModifyTextEnvironment (void) override;
-   NFmiPoint GetSpaceOutFontFactor(void) override;
    NFmiPoint SbdCalcFixedSymbolSize() const override;
 
 };

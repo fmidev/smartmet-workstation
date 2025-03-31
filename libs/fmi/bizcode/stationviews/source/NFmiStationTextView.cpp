@@ -43,14 +43,6 @@ void NFmiStationTextView::ModifyTextEnvironment(void)
     itsDrawingEnvironment.SetFontSize(CalcFontSize(12, boost::math::iround(MaximumFontSizeFactor() * 45), itsCtrlViewDocumentInterface->Printing()));
 }
 
-// n‰ill‰ kertoimilla viel‰ tehd‰‰n viimeistely
-NFmiPoint NFmiStationTextView::GetSpaceOutFontFactor(void)
-{
-	if(itsDrawingEnvironment.GetFontType() == kSynop)
-		return NFmiPoint(0.4, 0.6);
-	return NFmiStationView::GetSpaceOutFontFactor();
-}
-
 NFmiPoint NFmiStationTextView::SbdCalcFixedSymbolSize() const
 {
 	return SbdBasicSymbolSizeCalculation(12, 45);

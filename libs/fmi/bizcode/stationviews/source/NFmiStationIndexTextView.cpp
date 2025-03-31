@@ -111,6 +111,16 @@ NFmiSymbolColorChangingType NFmiStationIndexTextView::SbdGetSymbolColorChangingT
     return NFmiSymbolColorChangingType::Mixed;
 }
 
+NFmiPoint NFmiStationIndexTextView::GetSpaceOutFontFactor(void)
+{
+    if(itsDrawingEnvironment.GetFontType() == kSynop)
+    {
+        // N‰ill‰ mahdollisilla synop-font kertoimilla tehd‰‰n viel‰ erikoisviimeistely
+        return NFmiPoint(0.4, 0.6);
+    }
+    return NFmiStationView::GetSpaceOutFontFactor();
+}
+
 void NFmiStationIndexTextView::Draw(NFmiToolBox *theGTB)
 {
     NFmiStationTextView::Draw(theGTB);
