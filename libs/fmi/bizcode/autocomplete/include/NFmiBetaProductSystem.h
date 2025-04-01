@@ -410,6 +410,7 @@ public:
     bool HasAutomationAlready(const std::string &theFullFilePath) const;
     std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> GetDueAutomations(const NFmiMetTime &theCurrentTime, const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer, bool automationModeOn);
     std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> GetOnDemandAutomations(int selectedAutomationIndex, bool doOnlyEnabled);
+    int MoveAutomationUp(size_t moved1BasedIndex, bool moveUp);
 
     void RefreshAutomationList();
 

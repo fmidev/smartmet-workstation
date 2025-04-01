@@ -144,6 +144,8 @@ BEGIN_MESSAGE_MAP(CFmiBetaProductAutomationDialog, CTabPageSSL)
     ON_BN_CLICKED(IDC_BUTTON_RUN_ALL_AUTOMATIONS, &CFmiBetaProductAutomationDialog::OnBnClickedButtonRunAllAutomations)
     ON_BN_CLICKED(IDC_BUTTON_RUN_ENABLED_AUTOMATIONS, &CFmiBetaProductAutomationDialog::OnBnClickedButtonRunEnabledAutomations)
     ON_EN_CHANGE(IDC_EDIT_BETA_AUTOMATION_DATA_TRIGGERS, &CFmiBetaProductAutomationDialog::OnEnChangeEditBetaAutomationDataTriggers)
+    ON_BN_CLICKED(IDC_BUTTON_MOVE_BETA_AUTOMATION_UP, &CFmiBetaProductAutomationDialog::OnBnClickedButtonMoveBetaAutomationUp)
+    ON_BN_CLICKED(IDC_BUTTON_MOVE_BETA_AUTOMATION_DOWN, &CFmiBetaProductAutomationDialog::OnBnClickedButtonMoveBetaAutomationDown)
 END_MESSAGE_MAP()
 
 
@@ -671,6 +673,7 @@ void CFmiBetaProductAutomationDialog::UpdateAutomationList()
         SetGridRow(currentRowCount++, *dataVector[i]);
     }
     itsGridCtrl.UpdateData(FALSE);
+    itsGridCtrl.Invalidate(FALSE);
 }
 
 // Halutaan palauttaa HH:mm eli hours:minutes teksti annetulle ajalle.
@@ -777,6 +780,34 @@ void CFmiBetaProductAutomationDialog::AddAutomationToList(const std::string &the
     {
         UpdateAutomationList();
         CheckForSaveButtonEnablations();
+    }
+}
+
+void CFmiBetaProductAutomationDialog::OnBnClickedButtonMoveBetaAutomationUp()
+{
+    MoveBetaAutomationInList(true);
+}
+
+void CFmiBetaProductAutomationDialog::OnBnClickedButtonMoveBetaAutomationDown()
+{
+    MoveBetaAutomationInList(false);
+}
+
+void CFmiBetaProductAutomationDialog::MoveBetaAutomationInList(bool moveUp)
+{
+    UpdateData(TRUE);
+    auto selectedCellRange = itsGridCtrl.GetSelectedCellRange();
+    if(selectedCellRange.IsValid())
+    {
+        auto movedItemsNew0BasedIndex = itsBetaProductionSystem->UsedAutomationList().MoveAutomationUp(selectedCellRange.GetMinRow(), moveUp);
+        if(movedItemsNew0BasedIndex >= 0)
+        {
+            selectedCellRange.SetMinRow(movedItemsNew0BasedIndex + 1);
+            selectedCellRange.SetMaxRow(movedItemsNew0BasedIndex + 1);
+            itsGridCtrl.SetSelectedRange(selectedCellRange);
+            itsGridCtrl.EnsureVisible(CCellID(selectedCellRange.GetMinRow(), selectedCellRange.GetMinCol()));
+            UpdateAutomationList();
+        }
     }
 }
 

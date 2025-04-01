@@ -798,7 +798,7 @@ CFmiParameterSelectionDlg::CFmiParameterSelectionDlg(SmartMetDocumentInterface *
     , fDialogInitialized(false)
     , itsSmartMetDocumentInterface(smartMetDocumentInterface)
     , itsParameterSelectionSystem(&(smartMetDocumentInterface->ParameterSelectionSystem()))
-    , itsSearchText(_T(""))
+    , itsSearchTextInControl(_T(""))
     , fTimeSerialSideParameterCase(FALSE)
 {
 
@@ -812,7 +812,7 @@ void CFmiParameterSelectionDlg::DoDataExchange(CDataExchange* pDX)
 {
     CDialogEx::DoDataExchange(pDX);
     DDX_GridControl(pDX, IDC_CUSTOM_GRID_PARAM_ADDING, itsGridCtrl);
-    DDX_Text(pDX, IDC_EDIT_TEXT, itsSearchText);
+    DDX_Text(pDX, IDC_EDIT_TEXT, itsSearchTextInControl);
     DDX_Check(pDX, IDC_CHECK_TIME_SERIAL_SIDE_PARAM_CASE, fTimeSerialSideParameterCase);
 }
 
@@ -1331,6 +1331,7 @@ void CFmiParameterSelectionDlg::Update()
 
 void CFmiParameterSelectionDlg::DoTimeSerialSideParametersCheckboxAdjustments()
 {
+    UpdateData(TRUE);
     CWnd* checkboxControl = GetDlgItem(IDC_CHECK_TIME_SERIAL_SIDE_PARAM_CASE);
     if(checkboxControl)
     {
@@ -1346,7 +1347,7 @@ void CFmiParameterSelectionDlg::DoTimeSerialSideParametersCheckboxAdjustments()
 std::pair<bool, std::string> CFmiParameterSelectionDlg::UpdateSearchIfNeeded()
 {
     //If search word has changed, do update.
-    auto searchtext = CFmiWin32Helpers::CT2std(itsSearchText);
+    auto searchtext = itsActualSearchText;
     // Let's trim all white space away from start and end of input string
     boost::trim(searchtext);
     if(searchtext != itsPreviousSearchText)
@@ -1522,6 +1523,7 @@ std::string CFmiParameterSelectionDlg::MakeTitleText()
 void CFmiParameterSelectionDlg::UpdateAfterSearchText()
 {
     UpdateData(TRUE);
+    itsActualSearchText = CFmiWin32Helpers::CT2std(itsSearchTextInControl);
     Update();
 }
 

@@ -46,6 +46,7 @@ protected:
    void SbdSetFontName() override;
    NFmiColor GetBasicParamRelatedSymbolColor(float theValue) const override;
    NFmiSymbolColorChangingType SbdGetSymbolColorChangingType() const override;
+   NFmiPoint GetSpaceOutFontFactor(void) override;
 
    NFmiIndexMessageList * itsIndexedWordList;
    bool fUseWeatherAndCloudinessForInterpolation;

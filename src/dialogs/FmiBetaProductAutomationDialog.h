@@ -110,6 +110,7 @@ private:
     void MakeAutomationComparisonObject();
     bool HasAutomationChanged();
     void DoNextRuntimeUpdates();
+    void MoveBetaAutomationInList(bool moveUp);
 
     NFmiBetaAutomationGridCtrl itsGridCtrl;
     std::vector<BetaAutomationHeaderParInfo> itsHeaders;
@@ -181,4 +182,6 @@ public:
     afx_msg void OnBnClickedButtonRunAllAutomations();
     afx_msg void OnBnClickedButtonRunEnabledAutomations();
     afx_msg void OnEnChangeEditBetaAutomationDataTriggers();
+    afx_msg void OnBnClickedButtonMoveBetaAutomationUp();
+    afx_msg void OnBnClickedButtonMoveBetaAutomationDown();
 };

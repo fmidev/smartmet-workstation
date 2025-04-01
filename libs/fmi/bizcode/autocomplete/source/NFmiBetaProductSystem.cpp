@@ -1901,6 +1901,26 @@ void NFmiBetaProductAutomationList::RefreshAutomationList()
     }
 }
 
+// Siirrä automaatiota yhden pykälän listassa ylös/alas.
+// Suunta ylös tarkoittaa Beta-automaatio dialogin listassa 
+// visuaalisesti ylös eli kohti pienempää indeksiä.
+// Tässä tehdään swap kahden vector:issa olevan itemin välillä.
+// Onnistuessa palauttaa siirretyn itemin uuden 0-pohjaisen indeksin.
+// Jos siirto ei onnistu, palauttaa -1.
+int NFmiBetaProductAutomationList::MoveAutomationUp(size_t moved1BasedIndex, bool moveUp)
+{
+    int sourceIndex = (int)moved1BasedIndex - 1;
+    if(sourceIndex < 0 || sourceIndex >= (int)itsAutomationVector.size())
+    { return -1; }
+
+    int targetIndex = sourceIndex + (moveUp ? -1 : 1);
+    if(targetIndex < 0 || targetIndex >= (int)itsAutomationVector.size())
+    { return -1; }
+
+    std::swap(itsAutomationVector[sourceIndex], itsAutomationVector[targetIndex]);
+    return targetIndex;
+}
+
 void NFmiBetaProductAutomationList::RefreshAutomationIfNeeded(std::shared_ptr<NFmiBetaProductAutomationListItem> &automationListItem)
 {
     // Lue annettu beta-automaatio uudestaan tiedostosta uuteen olioon

@@ -188,7 +188,7 @@ void NFmiMacroParamDataInfo::BaseDataGridScaleString(const std::string& newValue
 
 void NFmiMacroParamDataInfo::CorrectBaseDataGridScaleValue()
 {
-    BaseDataGridScaleString(mBaseDataParamProducerString);
+    BaseDataGridScaleString(mBaseDataGridScaleString);
 }
 
 static std::pair<bool, double> FixBaseDataGridScaleValue(double newValue)

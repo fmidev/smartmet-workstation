@@ -393,10 +393,10 @@ static void FillHatchedPolygonData(const std::vector<int> &polyPointsXInPixels, 
 
 static void DrawPolygonIndexText(int polygonIndex, int wantedPolygonIndex, CDC *pDC, int xPixelCoordinate, int yPixelCoordinate)
 {
-    if(polygonIndex == wantedPolygonIndex)
+//    if(polygonIndex == wantedPolygonIndex)
     {
         CString polygonIndexText;
-        polygonIndexText.Format(_T("Ind: %d"), wantedPolygonIndex);
+        polygonIndexText.Format(_T("Ind: %d"), polygonIndex);
         pDC->TextOut(xPixelCoordinate, yPixelCoordinate, polygonIndexText);
     }
 }
@@ -422,6 +422,95 @@ static void FixOnePixelGapFromPolygon(int lastRowMinCoordinateY, std::vector<CPo
             point.y++;
     }
 }
+
+static int GetAvgValue(const std::vector<int>& polyPointsXInPixels, int startIndex, int polygonPointsCount)
+{
+    int sum = 0;
+    for(int i = 0; i < polygonPointsCount; i++)
+    {
+        sum += polyPointsXInPixels[startIndex + i];
+    }
+    return sum / polygonPointsCount;
+}
+
+const int PolygonIndexMissing = -1;
+class PolygonHatchDeductionData
+{
+public:
+    int polygonIndex = PolygonIndexMissing;
+    int polygonRowIndex = PolygonIndexMissing;
+    std::vector<IntPoint> bottomRowPoints;
+    std::vector<int> bottomRowPointInsideHatchLimits;
+    bool drawHatch = false;
+    bool sureConclusionMade = false;
+
+    PolygonHatchDeductionData() = default;
+    PolygonHatchDeductionData(int polyIndex, const std::vector<IntPoint>& bottomPoints, const std::vector<int>& pointInsideHatchLimits)
+        :polygonIndex(polyIndex),
+        bottomRowPoints(bottomPoints),
+        bottomRowPointInsideHatchLimits(pointInsideHatchLimits)
+    {
+        if(!bottomPoints.empty())
+        {
+            polygonRowIndex = bottomRowPoints.front().y;
+        }
+    }
+};
+
+class PolygonHatchDeductionDataRow
+{
+public:
+    int polygonRowIndex = PolygonIndexMissing;
+    int firstColumn = 1; // this is always 1
+    int lastColumn = PolygonIndexMissing;
+    std::vector<PolygonHatchDeductionData> hatchDeductionDataRow;
+
+    void AddPolygonData(const PolygonHatchDeductionData &polygonData)
+    {
+        if(polygonData.bottomRowPoints.empty())
+            return;
+
+        if(polygonRowIndex == PolygonIndexMissing)
+        {
+            polygonRowIndex = polygonData.polygonRowIndex;
+        }
+
+        int column1 = polygonData.bottomRowPoints.front().y;
+        UpdateLastColumnValue(column1);
+        int column2 = polygonData.bottomRowPoints.back().y;
+        UpdateLastColumnValue(column2);
+    }
+
+    void UpdateLastColumnValue(int columnIndex)
+    {
+        if(lastColumn == PolygonIndexMissing)
+            lastColumn = columnIndex;
+        else if(lastColumn < columnIndex)
+            lastColumn = columnIndex;
+    }
+};
+
+class PolygonHatchDeductionDataTotal
+{
+public:
+
+    std::vector<PolygonHatchDeductionDataRow> hatchDeductionDataRows;
+
+    void AddPolygonData(const PolygonHatchDeductionData &polygonData)
+    {
+        auto iter = std::find_if(hatchDeductionDataRows.begin(), hatchDeductionDataRows.end(), 
+            [&](const auto& dataRow) {return dataRow.polygonRowIndex == polygonData.polygonRowIndex; });
+        if(iter != hatchDeductionDataRows.end())
+        {
+            iter->AddPolygonData(polygonData);
+            return;
+        }
+
+        PolygonHatchDeductionDataRow dataRow;
+        dataRow.AddPolygonData(polygonData);
+        hatchDeductionDataRows.push_back(dataRow);
+    }
+};
 
 static void DrawShadedPolygons4(ToolmasterHatchPolygonData& theToolmasterHatchPolygonData, CDC *pDC, const CRect& theMfcClipRect)
 {
@@ -460,12 +549,14 @@ static void DrawShadedPolygons4(ToolmasterHatchPolygonData& theToolmasterHatchPo
             // **** HUOM! Pida seuraavia 5 koodi rivia tallessa kommenteissa, niiden ***********
             // **** avulla voidaan metsastaa ongelma polygoneja hatching yhteydessa  ***********
             // ---------------------------------------------------------------------------------
-            //int wantedPolygonIndex1 = theToolmasterHatchPolygonData.debugHelperWantedPolygonIndex1_;
-            //int wantedPolygonIndex2 = theToolmasterHatchPolygonData.debugHelperWantedPolygonIndex2_;
+//            int wantedPolygonIndex1 = theToolmasterHatchPolygonData.debugHelperWantedPolygonIndex1_;
+//            int wantedPolygonIndex2 = theToolmasterHatchPolygonData.debugHelperWantedPolygonIndex2_;
             //if(polygonIndex == wantedPolygonIndex1 || polygonIndex == wantedPolygonIndex2)
             {
-                //::DrawPolygonIndexText(polygonIndex, wantedPolygonIndex1, pDC, polyPointsXInPixels[polygonPointTotalCount], polyPointsYInPixels[polygonPointTotalCount]);
-                //::DrawPolygonIndexText(polygonIndex, wantedPolygonIndex2, pDC, polyPointsXInPixels[polygonPointTotalCount], polyPointsYInPixels[polygonPointTotalCount]);
+//                ::DrawPolygonIndexText(polygonIndex, wantedPolygonIndex1, pDC, polyPointsXInPixels[polygonPointTotalCount], polyPointsYInPixels[polygonPointTotalCount]);
+//                int polygonAvgXInPixels = ::GetAvgValue(polyPointsXInPixels, polygonPointTotalCount, polygonPointsCount);
+//                int polygonAvgYInPixels = ::GetAvgValue(polyPointsYInPixels, polygonPointTotalCount, polygonPointsCount);
+//                ::DrawPolygonIndexText(polygonIndex, wantedPolygonIndex2, pDC, polygonAvgXInPixels, polygonAvgYInPixels);
                 if(theToolmasterHatchPolygonData.isHatchPolygonDrawn(polygonIndex, currentPolygonFloatDataTotalIndex, currentPolygonIntDataTotalIndex, polygonPointTotalCount))
                 {
                     FillHatchedPolygonData(polyPointsXInPixels, polyPointsYInPixels, polygonPointTotalCount, polygonPointsCount, polygonCPoints);

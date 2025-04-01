@@ -255,7 +255,7 @@ void CFmiMacroParamDataGeneratorDlg::InitHeaders()
 void CFmiMacroParamDataGeneratorDlg::InitDialogTexts()
 {
 	SetWindowText(CA2T(::GetDictionaryString("MacroParam data generator").c_str()));
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_BASE_DATA_PARAM_PRODUCER_STR, "Base data's parameter+producer\nE.g. 'T_Ec' or 'par4_prod240' (no level!)");
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_BASE_DATA_PARAM_PRODUCER_STR, "Base data's parameter[+level]+producer\nE.g. T_Ec or par4_prod240 or T_500_Ec");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_PRODUCER_ID_NAME_PAIR_STR, "Generated data's producer id,name -pair\nE.g. 3001,ProducerName");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_DATA_GENERATION_SMARTTOOL_PATH_LIST_STR, "List of used data generation smarttool paths, comma separated");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_ADD_USED_SMARTTOOL_PATH, "Add smarttool");
