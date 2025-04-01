@@ -143,15 +143,26 @@ private:
     bool HasViewTypeChanged();
 
     NFmiParameterSelectionGridCtrl itsGridCtrl;
-    CTreeColumn itsTreeColumn;   // provides tree column support
+    // provides tree column support
+    CTreeColumn itsTreeColumn;
     std::vector<ParameterSelectionHeaderParInfo> itsHeaders;
-    bool fDialogInitialized; // t‰m‰ on OnSize -s‰‰tˆj‰ varten, 1. kerralla ei saa s‰‰t‰‰ ikkunoita, koska niit‰ ei ole viel‰ olemassa.
-
-    SmartMetDocumentInterface *itsSmartMetDocumentInterface; // ei omista, ei tuhoa
+    // t‰m‰ on OnSize -s‰‰tˆj‰ varten, 1. kerralla ei saa s‰‰t‰‰ ikkunoita, koska niit‰ ei ole viel‰ olemassa.
+    bool fDialogInitialized;
+    // ei omista, ei tuhoa
+    SmartMetDocumentInterface *itsSmartMetDocumentInterface;
     AddParams::ParameterSelectionSystem *itsParameterSelectionSystem;
-    unsigned int itsLastActivatedDesktopIndex; // Mik‰ oli viimeksi DesktopIndex, kun otsikon teksti‰ tehtiin
-    int itsLastActivatedRowIndex; // Mik‰ oli viimeksi RowIndex, kun otsikon teksti‰ tehtiin
-    CString itsSearchText;
+    // Mik‰ oli viimeksi DesktopIndex, kun otsikon teksti‰ tehtiin
+    unsigned int itsLastActivatedDesktopIndex;
+    // Mik‰ oli viimeksi RowIndex, kun otsikon teksti‰ tehtiin
+    int itsLastActivatedRowIndex;
+    // Hakuteksti, mika on itse kontrollissa, mutta sita ei suoraan kayteta haussa
+    // Tata tekstia pitaa paivittaa, etta se ei havia kun tehdaan UpdateData(FALSE)
+    CString itsSearchTextInControl;
+    // Kun kayttaja painaa Enter nappia, otetaan itsSearchTextInControl:in
+    // teksti tahan stringiin, jonka avulla todelliset hakuoperaatiot tehdaan
+    std::string itsActualSearchText;
+    // Tahan talletetaan edellinen tehty hakuteksti, jotta voidaan vertailla 
+    // tarvitaanko oikeasti tehda paivityksia, kun uudelleen paivityksia tehdaan
     std::string itsPreviousSearchText;
     BOOL fTimeSerialSideParameterCase;
     CWndResizer m_resizer;
