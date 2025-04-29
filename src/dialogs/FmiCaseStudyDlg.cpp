@@ -1029,7 +1029,7 @@ static bool IsReadOnlyCell(int column, const NFmiCaseStudyDataFile &theCaseData)
 		return false;
 	if(column == CaseStudyHeaderParInfo::kCaseStudyDataOffsetRange)
 	{
-		if(theCaseData.StoreLastDataOnly())
+		if(theCaseData.DataFileWinRegValues().FixedValueForCaseStudyDataCount())
 			return true;
 		else
 			return false;
