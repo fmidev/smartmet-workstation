@@ -580,7 +580,7 @@ bool NFmiCaseStudyDataFile::StoreLastDataOnly(void) const
 
 bool NFmiCaseStudyDataFile::IsReadOnlyDataCount(bool theCaseStudyCase) const
 {
-	if(StoreLastDataOnly())
+	if(itsDataFileWinRegValues.FixedValueForCaseStudyDataCount())
 		return true;
 	if(itsDataType == NFmiInfoData::kSatelData && !theCaseStudyCase)
 		return true;

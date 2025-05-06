@@ -112,6 +112,12 @@ static std::string GetUnpackedTmpFilePath(const std::string& packedFilePath)
     }
 }
 
+
+// ***************************************************************************
+// THIS is actual unpacking executable that is used with smartmet.
+// There are plenty of test and helper programs in comment later in this file.
+// ***************************************************************************
+
 int main(int argc, const char* argv[]) 
 {
     NFmiFileString exeFileNameStr(argv[0]);
@@ -802,6 +808,13 @@ int main(int argc, const char* argv[])
 */
 
 /*
+
+// ***************************************************************************
+// This program changes old querydata times to match current day.
+// With this you can create from old data set to new that work in smartmet
+// like it was just loaded from the server.
+// ***************************************************************************
+
 #include "NFmiQueryData.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiFileSystem.h"
