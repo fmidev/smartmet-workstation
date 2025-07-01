@@ -2304,7 +2304,7 @@ static CaseStudyMatchingFiles DoCropDataToZoomedAreaOperations(const CaseStudyMa
 			{
 				for(const auto &matchingFilePath : theMatchingFiles)
 				{
-					if(matchingFilePath.second || CropDataToDestination(matchingFilePath.first, theDestDir, mapViewArea))
+					if(matchingFilePath.second && CropDataToDestination(matchingFilePath.first, theDestDir, mapViewArea))
 						remainingFiles.remove(matchingFilePath);
 				}
 			}
@@ -2561,7 +2561,7 @@ bool NFmiCaseStudySystem::MakeCaseStudyData(const std::string &theFullPathMetaDa
 {
 	if(ReadMetaData(theFullPathMetaDataFileName, theParentWindow, true))
 	{
-		NFmiMetTime usedWallClockTime(60);
+		NFmiMetTime usedWallClockTime(1);
 		int progressDialogMaxCount = CalculateProgressDialogCount();
 		int progressCounter = 1;
 		std::string dataDir = NFmiCaseStudySystem::MakeBaseDataDirectory(theFullPathMetaDataFileName);

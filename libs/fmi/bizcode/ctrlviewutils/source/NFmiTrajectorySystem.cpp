@@ -218,13 +218,31 @@ void NFmiTrajectorySystem::CalculateTrajectory(boost::shared_ptr<NFmiTrajectory>
 	}
 }
 
+#include <random>
+namespace
+{
+	std::random_device rd;
+	std::mt19937 mt(rd());
+	std::uniform_real_distribution<double> uniformDistribution0to1(0, 1);
+
+	// Get value in limits -1 and 1
+	double GetRandomNumberBetweenMinusOneAndOne()
+	{
+		// Old broken randomizer
+//		double value = (static_cast<double>(2. * rand()) - RAND_MAX) / RAND_MAX;
+		// New better Mercenne-Twister randomizer
+		return (uniformDistribution0to1(mt) * 2.) - 1.;
+	}
+}  // namespace
+
+
 // Oletus: value ei ole kFloatMissing!
 // Laskee annetusta WS:st‰ halutun suuruisen +- muutoksen.
 // Lis‰ksi varmistaa ettei ole negatiivinen nopeus.
 // randFactor on satunnaisuuden suurin vaihtelu arvo verrattuna annettuun WS:‰‰n.
 static double RandomizeWSValue(double WS, double randFactor)
 {
-	double randValue = (static_cast<double>(2.*rand()) - RAND_MAX) / RAND_MAX; // joku reaali luku v‰lill‰ -1 - 1
+	double randValue = GetRandomNumberBetweenMinusOneAndOne(); // joku reaali luku v‰lill‰ -1 - 1
 	double modifyValue = WS * randValue * randFactor * 0.01; // muutetaan luku oikeaksi muutos arvoksi
 	return modifyValue;
 }
@@ -245,7 +263,7 @@ static double WDAdd(double WD, double changeValue, double maxValue)
 // randFactor on satunnaisuuden suurin vaihtelu arvo verrattuna annettuun WS:‰‰n.
 static double RandomizeWDValue(double randFactor, double maxValue)
 {
-	double randValue = (static_cast<double>(2.*rand()) - RAND_MAX) / RAND_MAX; // joku reaali luku v‰lill‰ -1 - 1
+	double randValue = GetRandomNumberBetweenMinusOneAndOne(); // joku reaali luku v‰lill‰ -1 - 1
 	// min/max muutos on 1/3 osa maxValuesta
 	double modifyValue = maxValue * 0.33 * randValue * randFactor * 0.01; // muutetaan luku oikeaksi muutos arvoksi ottaen huomioon max arvo
 	return modifyValue;
@@ -253,7 +271,7 @@ static double RandomizeWDValue(double randFactor, double maxValue)
 
 static double RandomizewValue(double w, double randFactor)
 {
-	double randValue = (static_cast<double>(2.*rand()) - RAND_MAX) / RAND_MAX; // joku reaali luku v‰lill‰ -1 - 1
+	double randValue = GetRandomNumberBetweenMinusOneAndOne(); // joku reaali luku v‰lill‰ -1 - 1
 	double modifyValue = w * randValue * randFactor * 0.01; // muutetaan luku oikeaksi muutos arvoksi
 	return modifyValue;
 }
@@ -341,6 +359,8 @@ static FmiParameterName GetInfoUsedVerticalVelotityParam(boost::shared_ptr<NFmiF
 		usedWParam = kFmiVelocityPotential;
 	else if(theInfo->Param(kFmiVerticalVelocityMMS))
 		usedWParam = kFmiVerticalVelocityMMS;
+	else if(theInfo->Param(kFmiVerticalVelocityHPAS))
+		usedWParam = kFmiVerticalVelocityHPAS;
 	return usedWParam;
 }
 
@@ -428,7 +448,7 @@ static NFmiLocation CalcNewLocation(const NFmiLocation &theCurrentLocation, doub
 // P on yksikˆss‰ Pa (huomioi kerroin 100 jos paineen yksikˆn muuntaa Pa ->hPa),
 // R = 287
 // g = 9.81
-static float CalcOmega_hPa(float T_Celsius, float P_hPa, float w_MMperSeconds)
+static float ConvertMMperSecondToHectoPaPerSecond(float T_Celsius, float P_hPa, float w_MMperSeconds)
 {
     if(T_Celsius != kFloatMissing && P_hPa != kFloatMissing && w_MMperSeconds != kFloatMissing)
     {
@@ -445,12 +465,38 @@ static float CalcOmega_hPa(float T_Celsius, float P_hPa, float w_MMperSeconds)
         return kFloatMissing;
 }
 
+static float CalcOmega_hPa(float T_Celsius, float P_hPa, float verticalSpeed, FmiParameterName usedWParam)
+{
+	if(verticalSpeed == kFloatMissing)
+	{
+		return kFloatMissing;
+	}
 
-static double CalcNewPressureLevel(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, double theCurrentPressure, double w, double xInd, double yInd, double tInd, unsigned long theGroundLevelIndex, bool isForwardDir, int theTimeStepInMinutes, bool hybridData)
+	switch(usedWParam)
+	{
+	case kFmiVerticalVelocityMMS:
+	{
+		return ConvertMMperSecondToHectoPaPerSecond(T_Celsius, P_hPa, verticalSpeed);
+	}
+	case kFmiVelocityPotential:
+	{
+		return verticalSpeed / 100.f;
+	}
+	case kFmiVerticalVelocityHPAS:
+	{
+		return verticalSpeed;
+	}
+	default:
+		return kFloatMissing;
+	}
+}
+
+
+static double CalcNewPressureLevel(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, double theCurrentPressure, double w, double xInd, double yInd, double tInd, unsigned long theGroundLevelIndex, bool isForwardDir, int theTimeStepInMinutes, bool hybridData, FmiParameterName usedWParam)
 {
     theInfo->Param(kFmiTemperature);
 	float T_Celsius = theInfo->FastPressureLevelValue(xInd, yInd, tInd, theGroundLevelIndex);
-    float omega_hPa = ::CalcOmega_hPa(T_Celsius, static_cast<float>(theCurrentPressure), static_cast<float>(w));
+    float omega_hPa = ::CalcOmega_hPa(T_Celsius, static_cast<float>(theCurrentPressure), static_cast<float>(w), usedWParam);
     double nextPressure = kFloatMissing;
     if(omega_hPa != kFloatMissing)
     {
@@ -743,7 +789,7 @@ void NFmiTrajectorySystem::CalculateSingle3DTrajectory(boost::shared_ptr<NFmiFas
 		else if(fCalcBalloonTrajectory)
 			nextPressure = ::CalcNewPressureLevelWithBalloon(theInfo, nextLoc.GetLocation(), currentTime, currentPressure, pressureParamIndex, xInd, yInd, tInd, pInd, groundLevelIndex, topLevelIndex, forwardDir, theTimeStepInMinutes, hybridData, theTempBalloonTrajectorSettings);
 		else
-			nextPressure = ::CalcNewPressureLevel(theInfo, currentPressure, w, xInd, yInd, tInd, groundLevelIndex, forwardDir, theTimeStepInMinutes, hybridData);
+			nextPressure = ::CalcNewPressureLevel(theInfo, currentPressure, w, xInd, yInd, tInd, groundLevelIndex, forwardDir, theTimeStepInMinutes, hybridData, usedWParam);
 		if(nextPressure == kFloatMissing)
 			break;
 		heightValue = ::GetHeightValueForNewPressure(theInfo, nextLoc.GetLocation(), currentTime, nextPressure, groundLevelIndex);

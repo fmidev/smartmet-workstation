@@ -45,6 +45,7 @@ void NFmiInfoOrganizer::InitializeCheckParams()
 
     itsWantedTrajectoryParams.push_back(kFmiVelocityPotential);
     itsWantedTrajectoryParams.push_back(kFmiVerticalVelocityMMS);
+    itsWantedTrajectoryParams.push_back(kFmiVerticalVelocityHPAS);
   }
 }
 
