@@ -151,8 +151,15 @@ protected:  // control bar embedded members
 	NFmiEditMapGeneralDataDoc* itsDoc; // ei omista, ei tuhoa
 	CBitmap *itsRedFlagBitmap;
 	CBitmap *itsOrangeFlagBitmap;
-	int itsFlagButtonIndex; // indeksi toolbarin dataQualityButtoniin (0 pohjainen indeksi, arvo on -1 jos nappi on piilotettu)
-	int itsDisableThreadsVariable; // tämä on normaalisti 0, mutta jos testi mielessä haluaa tiettyjen threadien olevan pois käytöstä, tähän muuttujaan asetetaan tietyt bitit päällä, jolloin kyseiset threadit jätetään käynnistämättä.
+	// indeksi toolbarin dataQualityButtoniin (0 pohjainen indeksi, arvo on -1 jos nappi on piilotettu)
+	int itsFlagButtonIndex;
+	// tämä on normaalisti 0, mutta jos testi mielessä haluaa tiettyjen threadien olevan pois käytöstä, tähän muuttujaan asetetaan tietyt bitit päällä, jolloin kyseiset threadit jätetään käynnistämättä.
+	int itsDisableThreadsVariable;
+
+	// Adding DPI Awareness (in level PerMonitorV2)
+	int m_nCurrentDpi = 96; // default = 100% scaling
+	CFont m_fontUi;         // UI font we will recreate on DPI change
+
 // Generated message map functions
 protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
@@ -171,6 +178,7 @@ protected:
 	afx_msg void OnViewSetMainFramePlaceToDefault();
 	afx_msg BOOL OnToolTipText(UINT nID, NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg LRESULT OnTrayNotification(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnDpiChanged(WPARAM wParam, LPARAM lParam);
 
 	DECLARE_MESSAGE_MAP()
 

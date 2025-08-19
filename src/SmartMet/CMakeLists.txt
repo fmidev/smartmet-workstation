@@ -53,6 +53,14 @@ IF(MSVC)
         )
 ENDIF()
 
+if (MSVC)
+  # Ensure the linker embeds a manifest and merges our file
+  target_link_options(SmartMet PRIVATE
+    "/MANIFEST:EMBED"
+    "/MANIFESTINPUT:${CMAKE_CURRENT_SOURCE_DIR}/app.manifest"
+  )
+endif()
+
 set(TARGET_LINK_LIBRARIES_LIST 
     ${PROJECT_NAME}
     ToolboxDep
