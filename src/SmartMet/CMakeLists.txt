@@ -16,6 +16,7 @@ add_definitions(
 
 set(LINK_DIRECTORIES_LIST 
     ${BOOST_LIB_DIR}
+	${OPENSSL_LIB_DIR}
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
     )
 
@@ -81,6 +82,7 @@ set(TARGET_LINK_LIBRARIES_LIST
     Processes
     AutoComplete
     optimized ${CRASHRPT_LIB}
+    ${OPENSSL_LIBS}
     ${FMT_TARGET_LINK_LIBRARIES}
     )
 
