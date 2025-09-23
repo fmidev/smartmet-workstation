@@ -9,6 +9,7 @@
 static const std::string g_VersionNumberName = "VersionNumber";
 static const std::string g_SmartmetServerBaseUriName = "SmartmetServerBaseUri";
 static const std::string g_SmartmetServerBaseUrlStart = "SmartmetServerBaseUrl_";
+static const std::string g_SmartmetServerBaseUrlStartVer2 = "SmartmetServerBaseUrlVer2_";
 
 // Kun pyydet‰‰n konffeista NFmiSettings::ListChildren:ill‰ mallidata kohtaista listaa, meid‰n pit‰‰ 
 // ohittaa tietyt sanat, koska niill‰ nimill‰ on asetukset 'p‰‰tasolla', ja ne tullaan lis‰‰m‰‰n tuohon
@@ -16,7 +17,7 @@ static const std::string g_SmartmetServerBaseUrlStart = "SmartmetServerBaseUrl_"
 static const std::vector<std::string> g_IgnoredConfigurationVariableNames{ "", g_VersionNumberName, g_SmartmetServerBaseUriName };
 
 // Seuraavan alkuiset sanat ignoorataan myˆs (n‰ill‰ listataan n kpl server url:eja)
-static const std::vector<std::string> g_IgnoredConfigurationVariablesWithStart{ g_SmartmetServerBaseUrlStart };
+static const std::vector<std::string> g_IgnoredConfigurationVariablesWithStart{ g_SmartmetServerBaseUrlStart, g_SmartmetServerBaseUrlStartVer2 };
 
 static bool IsModelNameLegit(const std::string& modelName)
 {
@@ -99,11 +100,18 @@ void SoundingDataServerConfigurations::initBaseUrlVector()
     {
         try
         {
-			std::string usedKey = baseConfigurationPath_ + "::" + g_SmartmetServerBaseUrlStart;
-			usedKey += std::to_string(index);
+            // From version 5.14.7.4 you are supposed to use 'SmartmetServerBaseUrlVer2_n' in settings, which can be address to https server
+            std::string usedKey = baseConfigurationPath_ + "::" + g_SmartmetServerBaseUrlStartVer2 + std::to_string(index);
 			auto serverUrl = SettingsFunctions::GetUrlFromSettings(usedKey, true);
-			if (!serverUrl.empty())
-            serverBaseUrls_.push_back(serverUrl);
+            if(serverUrl.empty())
+            {
+                // But if that fails (setting was empty), try to use original 'SmartmetServerBaseUrl_n' setting
+                usedKey = baseConfigurationPath_ + "::" + g_SmartmetServerBaseUrlStart + std::to_string(index);
+                serverUrl = SettingsFunctions::GetUrlFromSettings(usedKey, true);
+            }
+
+            if (!serverUrl.empty())
+            { serverBaseUrls_.push_back(serverUrl); }
         }
         catch(std::exception &e)
         {
