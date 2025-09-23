@@ -273,7 +273,9 @@ static bool MakeHttpCommand(const std::string& theServerStr,
 			ssl::context ctx(ssl::context::tls_client);
 
 			// Trust store: try system defaults. (On Windows you may need a CA bundle file.)
-			ctx.set_default_verify_paths();
+//			ctx.set_default_verify_paths(); // MARKO if certificate verification used later, take this line out of comment!!!!
+			// Testing if missing certification cause problems: no_entry: Dangerous in production!!!!
+			ctx.set_verify_mode(boost::asio::ssl::verify_none);
 
 			ssl::stream<tcp::socket> stream(ioc, ctx);
 
@@ -291,7 +293,7 @@ static bool MakeHttpCommand(const std::string& theServerStr,
 			if(ec) throw boost::system::system_error(ec);
 
 			// Verify peer + hostname
-			stream.set_verify_mode(ssl::verify_peer);
+//			stream.set_verify_mode(ssl::verify_peer); // MARKO if certificate verification used later, take this line out of comment!!!!
 			stream.set_verify_callback(ssl::rfc2818_verification(theServerStr));
 
 			// TLS handshake
