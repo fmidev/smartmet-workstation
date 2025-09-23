@@ -522,11 +522,11 @@ void NFmiBasicSmartMetConfigurations::MakeSplashScreenTextDataVector(const NFmiT
     copyrightStringU_ += _TEXT(" Finnish Meteorological Institute");
     itsSplashScreenTextDataVector.push_back(DrawStringData(copyrightStringU_, _TEXT("Arial"), 18, RGB(0, 0, 0), CPoint(22, 325), true));
 
-    bool betaVersion = true;
+    bool betaVersion = false;
     if(betaVersion)
         itsSplashScreenTextDataVector.push_back(DrawStringData(_TEXT("Beta"), _TEXT("Arial"), 25, RGB(255, 0, 0), CPoint(122, 267), true));
 
-    CString possibleWarningTextU_ = _TEXT("https support test");
+    CString possibleWarningTextU_; // = _TEXT("https support test");
     if(possibleWarningTextU_.GetLength())
         itsSplashScreenTextDataVector.push_back(DrawStringData(possibleWarningTextU_, _TEXT("Arial"), 25, RGB(255, 0, 0), CPoint(15, 370), true));
 
