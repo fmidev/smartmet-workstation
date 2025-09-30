@@ -72,6 +72,38 @@ set(
     CACHE INTERNAL "" FORCE
     )
 
+# **** OpenSSL library section ****
+set(
+    OPENSSL_VERSION
+    3_5_2
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    OPENSSL_BASE_DIR
+    ${LIBS_3RD}/openssl_${OPENSSL_VERSION}
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    OPENSSL_INCLUDE_DIR
+    ${OPENSSL_BASE_DIR}/include
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    OPENSSL_LIB_DIR
+    ${OPENSSL_BASE_DIR}/lib
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    OPENSSL_LIBS
+    ${OPENSSL_LIB_DIR}/libcrypto.lib
+    ${OPENSSL_LIB_DIR}/libssl.lib
+    CACHE INTERNAL "" FORCE
+    )
+
 # **** Uniras library section ****
 if(NOT DISABLE_UNIRAS_TOOLMASTER)
 set(

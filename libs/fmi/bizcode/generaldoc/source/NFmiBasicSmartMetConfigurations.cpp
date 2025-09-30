@@ -526,7 +526,7 @@ void NFmiBasicSmartMetConfigurations::MakeSplashScreenTextDataVector(const NFmiT
     if(betaVersion)
         itsSplashScreenTextDataVector.push_back(DrawStringData(_TEXT("Beta"), _TEXT("Arial"), 25, RGB(255, 0, 0), CPoint(122, 267), true));
 
-    CString possibleWarningTextU_;// = _TEXT("Mahdollisia ongelmia johtuen kehittimen (VS 2019) päivityksestä");
+    CString possibleWarningTextU_; // = _TEXT("https support test");
     if(possibleWarningTextU_.GetLength())
         itsSplashScreenTextDataVector.push_back(DrawStringData(possibleWarningTextU_, _TEXT("Arial"), 25, RGB(255, 0, 0), CPoint(15, 370), true));
 

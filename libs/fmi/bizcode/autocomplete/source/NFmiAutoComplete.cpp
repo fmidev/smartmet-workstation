@@ -94,7 +94,13 @@ void NFmiAutoComplete::InitFromSettings(const std::string &theBaseNameSpace)
 {
 	itsBaseNameSpace = theBaseNameSpace;
 
-	itsBaseUrl = SettingsFunctions::GetUrlFromSettings(itsBaseNameSpace + "::BaseUrl", true, "");
+	// From version 5.14.7.4 you are supposed to use 'BaseUrlVer2' in settings, which can be address to https server
+	itsBaseUrl = SettingsFunctions::GetUrlFromSettings(itsBaseNameSpace + "::BaseUrlVer2", true, "");
+	if(itsBaseUrl.empty())
+	{
+		// But if that fails (setting was empty), try to use original 'BaseUrl' setting
+		itsBaseUrl = SettingsFunctions::GetUrlFromSettings(itsBaseNameSpace + "::BaseUrl", true, "");
+	}
 	itsMaxResults = NFmiSettings::Require<int>(std::string(itsBaseNameSpace + "::MaxResults").c_str());
 	fUse = NFmiSettings::Require<bool>(std::string(itsBaseNameSpace + "::Use").c_str());
 	itsOutOfMapArroyHeadInMM = NFmiSettings::Require<double>(std::string(itsBaseNameSpace + "::OutOfMapArroyHeadInMM").c_str());
