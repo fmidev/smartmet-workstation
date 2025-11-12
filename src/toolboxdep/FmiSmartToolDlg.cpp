@@ -343,10 +343,9 @@ bool CFmiSmartToolDlg::LoadSmarttoolToSyntaxEditControl(const std::string &theFi
                 itsSyntaxEditControl->SetText(fileContentUnicode);
                 itsSyntaxEditControl->RefreshColors();
                 itsSyntaxEditControl->SetTopRow(1);
+                // This SetCurPos for some reason fixes Windows 11 loading new text on Release build won't update bug.
+                itsSyntaxEditControl->SetCurPos(1, 1, FALSE, TRUE);
                 itsSyntaxEditControl->RecalcScrollBars();
-
-                itsSyntaxEditControl->SendMessage(WM_NCPAINT);
-
                 UpdateSyntaxEditControl();
                 return true;
             }
