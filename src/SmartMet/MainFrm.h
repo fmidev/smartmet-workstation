@@ -117,6 +117,9 @@ public:
 	std::vector<UINT> indicatorVector;
 	CStatusBarResize     m_wndStatusBar;
 	CToolBar       m_wndToolBar;
+	// 256 värisen ja vaihtuva kokoisen tolbarin teko vaatii näiden käyttöön oton
+	CBitmap itsToolBarBitmap;
+	CImageList itsToolBarImagelist;
 protected:
 #else
 	CMFCStatusBar     m_wndStatusBar;
@@ -131,22 +134,22 @@ protected:  // control bar embedded members
 	CMFCCaptionBar    m_wndCaptionBar;
 #endif // FMI_DISABLE_MFC_FEATURE_PACK
 
-	UINT itsAutoSaveTimer;
-	UINT itsCleanDataTimer;
-	UINT itsDebugDataSizeLoggerTimer;
-	UINT itsCheckAnimationLockedModeTimeBagsTimer;
-	UINT itsCheckForNewSatelDataTimer;
-	UINT itsAutoStartUpLoadTimer;
-	UINT itsToggleFlagButtonTimer;
-	UINT itsDataToDBUpdateTimer;
-	UINT itsCleanOldDataFromMemoryTimer;
-    UINT itsStoreViewPosToWinRegistryTimer;
-    UINT itsStoreCrashBackupViewMacroTimer;
-    UINT itsGenerateBetaProductsTimer;
-    UINT itsParameterSelectionSystemUpdateTimer;
-    UINT itsLoggingSystemManagementTimer;
-	UINT itsLedLightsActionTimer;
-	UINT itsWmsSupportRenewerTimer;
+	UINT itsAutoSaveTimer = 0;
+	UINT itsCleanDataTimer = 0;
+	UINT itsDebugDataSizeLoggerTimer = 0;
+	UINT itsCheckAnimationLockedModeTimeBagsTimer = 0;
+	UINT itsCheckForNewSatelDataTimer = 0;
+	UINT itsAutoStartUpLoadTimer = 0;
+	UINT itsToggleFlagButtonTimer = 0;
+	UINT itsDataToDBUpdateTimer = 0;
+	UINT itsCleanOldDataFromMemoryTimer = 0;
+    UINT itsStoreViewPosToWinRegistryTimer = 0;
+    UINT itsStoreCrashBackupViewMacroTimer = 0;
+    UINT itsGenerateBetaProductsTimer = 0;
+    UINT itsParameterSelectionSystemUpdateTimer = 0;
+    UINT itsLoggingSystemManagementTimer = 0;
+	UINT itsLedLightsActionTimer = 0;
+	UINT itsWmsSupportRenewerTimer = 0;
 
 	NFmiEditMapGeneralDataDoc* itsDoc; // ei omista, ei tuhoa
 	CBitmap *itsRedFlagBitmap;
@@ -155,10 +158,6 @@ protected:  // control bar embedded members
 	int itsFlagButtonIndex;
 	// tämä on normaalisti 0, mutta jos testi mielessä haluaa tiettyjen threadien olevan pois käytöstä, tähän muuttujaan asetetaan tietyt bitit päällä, jolloin kyseiset threadit jätetään käynnistämättä.
 	int itsDisableThreadsVariable;
-
-	// Adding DPI Awareness (in level PerMonitorV2)
-	int m_nCurrentDpi = 96; // default = 100% scaling
-	CFont m_fontUi;         // UI font we will recreate on DPI change
 
 // Generated message map functions
 protected:
@@ -178,7 +177,6 @@ protected:
 	afx_msg void OnViewSetMainFramePlaceToDefault();
 	afx_msg BOOL OnToolTipText(UINT nID, NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg LRESULT OnTrayNotification(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT OnDpiChanged(WPARAM wParam, LPARAM lParam);
 
 	DECLARE_MESSAGE_MAP()
 
@@ -210,11 +208,9 @@ private:
 	void DoLedLightsActionUpdates();
 	void MakeStatusBarIndicators();
 	int CreateStatusBar();
-
-	// 256 värisen ja vaihtuva kokoisen tolbarin teko vaatii näiden käyttöön oton
-	HBITMAP itsToolBarBitmapHandle;
-	CBitmap itsToolBarBitmap;
-	CImageList itsToolBarImagelist;
+	int CalcBestFittingToolbarImagePixelSize();
+	void InitToolbarFlagImages(int pixSize);
+	void InitToolbarSizeOnce();
 public:
 	afx_msg void OnEnablenotifications();
 	afx_msg void OnUpdateEnablenotifications(CCmdUI *pCmdUI);

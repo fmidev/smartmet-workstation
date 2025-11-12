@@ -1001,9 +1001,9 @@ IDB_BITMAP_SYNOP_PLOT_TOOLTIP_BASE BITMAP                  "res\\synop_plot_tool
 
 IDB_BITMAP_ABOUT_DLG_VER_5_7 BITMAP                  "res\\SmartMet_5_7_about_image.bmp"
 
-IDB_BITMAP_ORANGE_FLAG  BITMAP                  "res\\flag_orange.bmp"
+IDB_BITMAP_ORANGE_FLAG_16 BITMAP                  "res\\flag_orange.bmp"
 
-IDB_BITMAP_RED_FLAG     BITMAP                  "res\\flag_red.bmp"
+IDB_BITMAP_RED_FLAG_16  BITMAP                  "res\\flag_red.bmp"
 
 IDB_BITMAP_FMI_LOGO_CASE_STUDY BITMAP                  "res\\fmilogo_case_study.bmp"
 
@@ -1157,6 +1157,26 @@ IDI_ICON_LED_YELLOW     ICON                    "res\\ledyellow.ico"
 IDB_BITMAP_FMI_LOGO_BETA_PRODUCT_MODE BITMAP                  "res\\fmilogo_beta_product_mode.bmp"
 
 IDB_BITMAP_FMI_LOGO_MACRO_PARAM_DATA_MODE BITMAP                  "res\\fmi_logo_32x32_macro_param_data.bmp"
+
+IDB_BITMAP_TOOLBAR256_16 BITMAP                  "res\\Toolbar256_16.bmp"
+
+IDB_BITMAP_TOOLBAR256_20 BITMAP                  "res\\Toolbar256_20.bmp"
+
+IDB_BITMAP_TOOLBAR256_24 BITMAP                  "res\\Toolbar256_24.bmp"
+
+IDB_BITMAP_TOOLBAR256_32 BITMAP                  "res\\Toolbar256_32.bmp"
+
+IDB_BITMAP_ORANGE_FLAG_20 BITMAP                  "res\\flag_orange_20.bmp"
+
+IDB_BITMAP_ORANGE_FLAG_24 BITMAP                  "res\\flag_orange_24.bmp"
+
+IDB_BITMAP_ORANGE_FLAG_32 BITMAP                  "res\\flag_orange_32.bmp"
+
+IDB_BITMAP_RED_FLAG_20  BITMAP                  "res\\flag_red_20.bmp"
+
+IDB_BITMAP_RED_FLAG_24  BITMAP                  "res\\flag_red_24.bmp"
+
+IDB_BITMAP_RED_FLAG_32  BITMAP                  "res\\flag_red_32.bmp"
 
 #endif    // English (United Kingdom) resources
 /////////////////////////////////////////////////////////////////////////////

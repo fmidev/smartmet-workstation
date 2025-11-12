@@ -277,7 +277,6 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFmiUsedFrameWndParent)
 	ON_COMMAND(ID_HIDE_SYSTRAY_SYMBOL, &CMainFrame::OnHideSystraySymbol)
 	ON_UPDATE_COMMAND_UI(ID_HIDE_SYSTRAY_SYMBOL, &CMainFrame::OnUpdateHideSystraySymbol)
 	ON_WM_GETMINMAXINFO()
-	ON_MESSAGE(WM_DPICHANGED, &CMainFrame::OnDpiChanged)
 END_MESSAGE_MAP()
 
 const int gDisableMacroParamThread = 1;
@@ -319,13 +318,6 @@ CMainFrame::CMainFrame()
 #endif // FMI_DISABLE_MFC_FEATURE_PACK
 
 	itsDoc = 0;
-
-	itsRedFlagBitmap = new CBitmap;
-	itsRedFlagBitmap->LoadBitmap(IDB_BITMAP_RED_FLAG);
-	itsOrangeFlagBitmap = new CBitmap;
-	itsOrangeFlagBitmap->LoadBitmap(IDB_BITMAP_ORANGE_FLAG);
-	itsFlagButtonIndex = -1;
-	itsDisableThreadsVariable = ::GetDisabledThreads();
 }
 
 CMainFrame::~CMainFrame()
@@ -386,6 +378,16 @@ static void RemoveMenuItem(CMenu* Menu, UINT theCommand)
 	}
 }
 
+int CMainFrame::CalcBestFittingToolbarImagePixelSize()
+{
+	auto dpi = GetDpiForWindow(m_hWnd);
+	// Desired icon size from design 16px at 96 DPI
+	int want = MulDiv(16, dpi, 96);
+	// snap to a reasonable grid
+	int use = (want <= 18) ? 16 : (want <= 22) ? 20 : (want <= 28) ? 24 : 32;
+	return use;
+}
+
 int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if(CFmiUsedFrameWndParent::OnCreate(lpCreateStruct) == -1)
@@ -424,13 +426,8 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	}
 
 #ifdef FMI_DISABLE_MFC_FEATURE_PACK
-	// 256 värisen ja vaihtuva kokoisen tolbarin teko vaatii näiden käyttöön oton
-	itsToolBarBitmapHandle = (HBITMAP) ::LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME_256),
-		IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_LOADMAP3DCOLORS);
-	itsToolBarBitmap.Attach(itsToolBarBitmapHandle);
-	itsToolBarImagelist.Create(16, 16, ILC_COLOR24, 4, 4);
-	itsToolBarImagelist.Add(&itsToolBarBitmap, (CBitmap*)NULL);
-	m_wndToolBar.GetToolBarCtrl().SetImageList(&itsToolBarImagelist);
+
+	InitToolbarSizeOnce();
 
 #else
 	CString strToolBarNameU_;
@@ -535,6 +532,58 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	}
 
 	return 0;
+}
+
+void CMainFrame::InitToolbarSizeOnce()
+{
+	// 256 värisen ja vaihtuva kokoisen tolbarin teko vaatii näiden käyttöön oton
+	int pixSize = CalcBestFittingToolbarImagePixelSize();
+	if(pixSize == 16)
+		itsToolBarBitmap.LoadBitmap(IDB_BITMAP_TOOLBAR256_16);
+	else if(pixSize == 20)
+		itsToolBarBitmap.LoadBitmap(IDB_BITMAP_TOOLBAR256_20);
+	else if(pixSize == 24)
+		itsToolBarBitmap.LoadBitmap(IDB_BITMAP_TOOLBAR256_24);
+	else // if(pixSize == 32)
+		itsToolBarBitmap.LoadBitmap(IDB_BITMAP_TOOLBAR256_32);
+	itsToolBarImagelist.Create(pixSize, pixSize, ILC_COLOR24, 4, 4);
+	itsToolBarImagelist.Add(&itsToolBarBitmap, (CBitmap*)NULL);
+	m_wndToolBar.GetToolBarCtrl().SetImageList(&itsToolBarImagelist);
+	CSize szImg(pixSize, pixSize);
+	m_wndToolBar.GetToolBarCtrl().SetBitmapSize(szImg);
+    const int padding = 5; // toolbar button padding
+	CSize szBtn(pixSize + padding, pixSize + padding);
+	m_wndToolBar.GetToolBarCtrl().SetButtonSize(szBtn);
+	InitToolbarFlagImages(pixSize);
+}
+
+void CMainFrame::InitToolbarFlagImages(int pixSize)
+{
+	itsRedFlagBitmap = new CBitmap;
+	itsOrangeFlagBitmap = new CBitmap;
+	if(pixSize == 16)
+	{
+		itsRedFlagBitmap->LoadBitmap(IDB_BITMAP_RED_FLAG_16);
+		itsOrangeFlagBitmap->LoadBitmap(IDB_BITMAP_ORANGE_FLAG_16);
+	}
+	else if(pixSize == 20)
+	{
+		itsRedFlagBitmap->LoadBitmap(IDB_BITMAP_RED_FLAG_20);
+		itsOrangeFlagBitmap->LoadBitmap(IDB_BITMAP_ORANGE_FLAG_20);
+	}
+	else if(pixSize == 24)
+	{
+		itsRedFlagBitmap->LoadBitmap(IDB_BITMAP_RED_FLAG_24);
+		itsOrangeFlagBitmap->LoadBitmap(IDB_BITMAP_ORANGE_FLAG_24);
+	}
+	else // if(pixSize == 32)
+	{
+		itsRedFlagBitmap->LoadBitmap(IDB_BITMAP_RED_FLAG_32);
+		itsOrangeFlagBitmap->LoadBitmap(IDB_BITMAP_ORANGE_FLAG_32);
+	}
+
+	itsFlagButtonIndex = -1;
+	itsDisableThreadsVariable = ::GetDisabledThreads();
 }
 
 int CMainFrame::CreateStatusBar()
@@ -1862,53 +1911,4 @@ void CMainFrame::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 
 	lpMMI->ptMinTrackSize.x = rc.Width();
 	lpMMI->ptMinTrackSize.y = rc.Height();
-}
-
-LRESULT CMainFrame::OnDpiChanged(WPARAM wParam, LPARAM lParam)
-{
-	// Extract new DPI from wParam
-	UINT dpiX = LOWORD(wParam);
-	UINT dpiY = HIWORD(wParam);
-	m_nCurrentDpi = dpiX; // assuming square pixels
-
-	// Recommended new window rect is in lParam
-	RECT* const prcNewWindow = reinterpret_cast<RECT*>(lParam);
-	SetWindowPos(NULL,
-		prcNewWindow->left,
-		prcNewWindow->top,
-		prcNewWindow->right - prcNewWindow->left,
-		prcNewWindow->bottom - prcNewWindow->top,
-		SWP_NOZORDER | SWP_NOACTIVATE);
-
-	// -------- Rescale toolbar buttons --------
-	if(m_wndToolBar.GetSafeHwnd())
-	{
-		int btnSize = MulDiv(24, dpiX, 96);  // 24px at 96 DPI ? scale up
-		CSize szImage(btnSize, btnSize);
-		CSize szButton(btnSize + 7, btnSize + 7);
-
-		m_wndToolBar.SetSizes(szButton, szImage);
-		// If you have multiple imagelists for different resolutions,
-		// select the closest one here and call SetImageList().
-	}
-
-	// -------- Rescale default UI font --------
-	// Delete old font and create a new scaled one
-	if(m_fontUi.GetSafeHandle())
-		m_fontUi.DeleteObject();
-
-	int pointSize = 9; // base font size at 96 DPI
-	LOGFONT lf = { 0 };
-	lf.lfHeight = -MulDiv(pointSize, dpiY, 72);
-	_tcscpy_s(lf.lfFaceName, _T("Segoe UI"));
-
-	m_fontUi.CreateFontIndirect(&lf);
-
-	SetFont(&m_fontUi);          // Apply to frame
-	m_wndStatusBar.SetFont(&m_fontUi);
-	m_wndToolBar.SetFont(&m_fontUi);
-
-	// You can also propagate the font to child dialogs/controls as needed
-
-	return 0;
 }
