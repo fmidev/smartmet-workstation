@@ -327,6 +327,7 @@ BEGIN_MESSAGE_MAP(CSmartMetDoc, CDocument)
 		ON_UPDATE_COMMAND_UI(ID_EDIT_VIRTUAL_TIME_MODE, &CSmartMetDoc::OnUpdateEditVirtualTimeMode)
 		ON_COMMAND(ID_VIEW_MACROPARAMDATAGENERATION, &CSmartMetDoc::OnViewMacroparamdatageneration)
 		ON_COMMAND(ID_MOVEVIEWSVISIBLE_MACROPARAMDATAGENERATORPOSITION, &CSmartMetDoc::OnMoveviewsvisibleMacroparamdatageneratorposition)
+		ON_COMMAND(ID_EDIT_RELOADFIXEDDRAWPARAMS, &CSmartMetDoc::OnEditReloadfixeddrawparams)
 		END_MESSAGE_MAP()
 
 BEGIN_DISPATCH_MAP(CSmartMetDoc, CDocument)
@@ -3915,4 +3916,9 @@ void CSmartMetDoc::OpenMacroParamInSmarttoolDialog(const std::string& absoluteMa
 	{
 		itsSmartToolDlg->OpenMacroParamForEditing(absoluteMacroParamPath);
 	}
+}
+
+void CSmartMetDoc::OnEditReloadfixeddrawparams()
+{
+    itsData->ReloadFixedDrawParams();
 }

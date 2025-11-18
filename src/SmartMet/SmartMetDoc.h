@@ -419,6 +419,7 @@ public:
 	afx_msg void OnUpdateEditVirtualTimeMode(CCmdUI* pCmdUI);
 	afx_msg void OnViewMacroparamdatageneration();
 	afx_msg void OnMoveviewsvisibleMacroparamdatageneratorposition();
+	afx_msg void OnEditReloadfixeddrawparams();
 };
 
 
