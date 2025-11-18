@@ -359,6 +359,7 @@ BEGIN_MESSAGE_MAP(CFmiModifyDrawParamDlg, CDialog)
 	ON_EN_CHANGE(IDC_EDIT_DRAW_PARAM_COLOR_PARAM_STR, &CFmiModifyDrawParamDlg::OnEnChangeEditDrawParamColorParamStr)
 	ON_EN_CHANGE(IDC_SPECIAL_CONTOUR_CLASSES_VALUES, &CFmiModifyDrawParamDlg::OnEnChangeSpecialContourClassesValues)
 	ON_BN_CLICKED(IDC_SHOW_CONTOUR_COLOR_INDEX_DLG, &CFmiModifyDrawParamDlg::OnBnClickedShowContourColorIndexDlg)
+	ON_BN_CLICKED(IDC_MODIFY_DRW_PARAM_RELOAD_FIXED_DRAW_PARAMS, &CFmiModifyDrawParamDlg::OnBnClickedModifyDrwParamReloadFixedDrawParams)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1709,6 +1710,7 @@ const std::string gHatchPatternTypeText = "Hatch pattern (-1 - 5)";
 const std::string gAlphaFactorText = "Alpha 5-100";
 const std::string gFlipArrowText = "Flip arrow";
 const std::string gTransparencyText = "tra";
+const std::string gReloadFixedDrawParams = "Reload Fixed DrawParams";
 
 // Tämä funktio alustaa kaikki dialogin tekstit editoriin valitulla kielellä.
 // Tämä on ikävä kyllä tehtävä erikseen dialogin muokkaus työkalusta, eli
@@ -1814,7 +1816,8 @@ void CFmiModifyDrawParamDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY3, gTransparencyText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY4, gTransparencyText.c_str());
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY5, gTransparencyText.c_str());
-	
+	CFmiWin32Helpers::SetDialogItemText(this, IDC_MODIFY_DRW_PARAM_RELOAD_FIXED_DRAW_PARAMS, gReloadFixedDrawParams.c_str());
+
 
 //    CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_APPLY_FIXED_DRAW_PARAMS_RIGHT_AWAY, "Apply Fixed Settings At Once");
 }
@@ -2376,6 +2379,14 @@ static std::string MakeReloadOriginalButtonTooltip(const std::string& titleStr)
 	return str;
 }
 
+static std::string MakeReloadFixedDrawParamsTooltip(const std::string& titleStr)
+{
+	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
+	str += "<br>Reload all fixed drawParams from the files";
+	str += "<br>in case there are some new or modified ones in there.";
+	return str;
+}
+
 static std::string MakeTreatWmsLayerAsObservationTextTooltip(const std::string& titleStr)
 {
 	std::string str = ::MakeDecoratedTooltipString(titleStr, "blue", true);
@@ -2498,6 +2509,7 @@ void CFmiModifyDrawParamDlg::InitTooltipControl()
 	SetDialogControlTooltip(IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY3, ::MakeTransparencyTooltip(gTransparencyText, "3rd"));
 	SetDialogControlTooltip(IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY4, ::MakeTransparencyTooltip(gTransparencyText, "4th"));
 	SetDialogControlTooltip(IDC_CHECK_SIMPLE_CONTOUR_TRANSPARENCY5, ::MakeTransparencyTooltip(gTransparencyText, "5th"));
+	SetDialogControlTooltip(IDC_MODIFY_DRW_PARAM_RELOAD_FIXED_DRAW_PARAMS, ::MakeReloadFixedDrawParamsTooltip(gReloadFixedDrawParams));
 }
 
 BOOL CFmiModifyDrawParamDlg::PreTranslateMessage(MSG* pMsg)
@@ -2507,3 +2519,11 @@ BOOL CFmiModifyDrawParamDlg::PreTranslateMessage(MSG* pMsg)
 	return CDialog::PreTranslateMessage(pMsg);
 }
 
+
+void CFmiModifyDrawParamDlg::OnBnClickedModifyDrwParamReloadFixedDrawParams()
+{
+	itsSmartMetDocumentInterface->ReloadFixedDrawParams();
+    itsFixedDrawParamSelector.ResetContent();
+	fFixedDrawParamSelectorInitialized = false;
+    InitFixedDrawParamSelector();
+}

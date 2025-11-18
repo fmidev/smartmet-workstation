@@ -365,6 +365,7 @@ public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	afx_msg void OnEnChangeSpecialContourClassesValues();
 	afx_msg void OnBnClickedShowContourColorIndexDlg();
+	afx_msg void OnBnClickedModifyDrwParamReloadFixedDrawParams();
 };
 
 //{{AFX_INSERT_LOCATION}}
