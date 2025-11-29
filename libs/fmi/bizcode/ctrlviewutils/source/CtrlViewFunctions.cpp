@@ -328,9 +328,16 @@ namespace CtrlViewUtils
                 str += GetEditingDataString("OF", info, ctrlViewDocumentInterface->Language(), minuteOrigTimeFormat);
         }
 
+        bool macroParamOk = isMacroParamCase ? ctrlViewDocumentInterface->IsMacroParamOk(theDrawParam) : false;
+
         if(dataType == NFmiInfoData::kCopyOfEdited)
-            str += "(c)"; // kopioidut parametrit merkitään (c):llä
+        {str += "(c)"; }// kopioidut parametrit merkitään (c):llä
+
+        if(!macroParamOk)
+        {str += "#"; }
         str += theDrawParam->ParameterAbbreviation();
+        if(!macroParamOk)
+        {str += "#"; }
         if(fAddIdInfos)
             str += GetIdString(theDrawParam->Param().GetParamIdent());
 

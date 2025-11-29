@@ -1494,6 +1494,11 @@ NFmiGriddingHelperInterface* CtrlViewDocumentInterfaceForGeneralDataDoc::GetGrid
     return &generalDataDocGridding;
 }
 
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam) const
+{
+    return itsDoc->IsMacroParamOk(theUsedDrawParam);
+}
+
 #ifndef DISABLE_CPPRESTSDK
 // ===============================================
 

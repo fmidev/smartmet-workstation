@@ -691,6 +691,13 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 					DoTimeInterpolationSettingChecks(info);
 					bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
 					auto paramNameString = CtrlViewUtils::GetParamNameString(itsDrawParam, true, showExtraInfo, true, 0, false, true, true, nullptr);
+					auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
+					if(itsDrawParam->IsParamHidden())
+						str += "("; // jos parametri on piilotettu, laita teksti sulkuihin
+					paramNameString = DoBoldingParameterNameTooltipText(paramNameString);
+					paramNameString = AddColorTagsToString(paramNameString, fontColor, true);
+					if(itsDrawParam->IsParamHidden())
+						str += ")"; // jos parametri on piilotettu, laita teksti sulkuihin
 
 					float value = GetLevelValue(info, p, latlon, aTime); // tee log(p) interpoloinnit qinfoon ja käytä tässä!!!!
 					NFmiExtraMacroParamData extraMacroParamData;
@@ -723,14 +730,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 						value = itsIsolineValues.InterpolatedValue(projectedPoint, itsParamId);
 					}
 
-					if(itsDrawParam->IsParamHidden())
-						str += "("; // jos parametri on piilotettu, laita teksti sulkuihin
-					paramNameString = DoBoldingParameterNameTooltipText(paramNameString);
-					auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
-					paramNameString = AddColorTagsToString(paramNameString, fontColor, true);
 					str += paramNameString;
-					if(itsDrawParam->IsParamHidden())
-						str += ")"; // jos parametri on piilotettu, laita teksti sulkuihin
 					str += ":	";
 					str += "<b><font color=blue>";
 					std::string valueStr = (value == kFloatMissing) ? "-" : NFmiValueString::GetStringWithMaxDecimalsSmartWay(value, ((value > 1) ? 1 : 2));

@@ -416,6 +416,7 @@ public:
     virtual std::string GetVirtualTimeTooltipText() const = 0;
     virtual void UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr) = 0;
     virtual NFmiGriddingHelperInterface* GetGriddingHelper() = 0;
+    virtual bool IsMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam) const = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem(void) = 0;

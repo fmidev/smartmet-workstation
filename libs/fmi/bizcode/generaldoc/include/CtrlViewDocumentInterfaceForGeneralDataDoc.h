@@ -306,6 +306,7 @@ public:
     std::string GetVirtualTimeTooltipText() const override;
     void UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr) override;
     NFmiGriddingHelperInterface* GetGriddingHelper() override;
+    bool IsMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam) const override;
 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main& WarningCenterSystem(void) override;

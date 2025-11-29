@@ -99,6 +99,7 @@ public:
    static long GetTimeInterpolationRangeInMinutes(const NFmiHelpDataInfo *theHelpDataInfo);
    static bool AllowNearestTimeInterpolation(long theTimeInterpolationRangeInMinutes);
    static float CalcUsedLegendSizeFactor(double singleMapViewHeightInMM, int visibleViewRowCount);
+   static float CalcMacroParamTooltipValue(NFmiExtraMacroParamData& extraMacroParamData, boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam, const NFmiPoint& latlon, const NFmiMetTime& usedTime, boost::shared_ptr<NFmiArea> &area, int descTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut);
 
 protected:
    bool IsSpecialMatrixDataDraw(void) const;

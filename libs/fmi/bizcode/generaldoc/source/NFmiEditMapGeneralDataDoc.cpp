@@ -11151,6 +11151,17 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		}
 	}
 
+	bool IsMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
+	{
+        auto usedInfo = InfoOrganizer()->FindInfo(NFmiInfoData::kEditable);
+		NFmiExtraMacroParamData extraMacroParamData;
+		NFmiPoint latlon;
+		NFmiMetTime usedTime;
+		boost::shared_ptr<NFmiArea> area = NFmiAreaFactory::Create("latlon:-20, 20, -30, 30");
+		int descTopIndex = 0;
+		NFmiStationView::CalcMacroParamTooltipValue(extraMacroParamData, theUsedDrawParam, latlon, usedTime, area, descTopIndex, usedInfo);
+		return extraMacroParamData.MacroParamErrorMessage().empty();
+	}
 
 	NFmiMacroParamDataGenerator itsMacroParamDataGenerator;
 	NFmiVirtualTimeData itsVirtualTimeData;
@@ -13528,4 +13539,9 @@ void NFmiEditMapGeneralDataDoc::UpdateMacroParamSystemContent(std::shared_ptr<NF
 NFmiMacroParamDataGenerator& NFmiEditMapGeneralDataDoc::GetMacroParamDataGenerator()
 {
 	return pimpl->GetMacroParamDataGenerator();
+}
+
+bool NFmiEditMapGeneralDataDoc::IsMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam) const
+{ 
+	return pimpl->IsMacroParamOk(theUsedDrawParam);
 }
