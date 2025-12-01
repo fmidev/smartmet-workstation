@@ -1250,7 +1250,7 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
 	catch(exception &e)
 	{
 		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter intepretion failed", &e, itsDrawParam, macroParamSystemPtr->RootPath());
-		CtrlViewUtils::SetMacroParamErrorMessage(errorText, *itsCtrlViewDocumentInterface, possibleTooltipData ? &possibleTooltipData->macroParamErrorMessage : nullptr);
+		CtrlViewUtils::SetMacroParamErrorMessage(errorText, itsDrawParam, *itsCtrlViewDocumentInterface, possibleTooltipData ? &possibleTooltipData->macroParamErrorMessage : nullptr);
 	}
 
 	try // suoritetaan macro sitten
@@ -1270,11 +1270,12 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
 		{
 			*possibleExtraMacroParamData = smartToolModifier.ExtraMacroParamData();
 		}
+		CtrlViewUtils::ClearMacroParamErrorMessage(itsDrawParam, *itsCtrlViewDocumentInterface);
 	}
 	catch(exception &e)
 	{
 		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: MacroParam calculation failed", &e, itsDrawParam, macroParamSystemPtr->RootPath());
-		CtrlViewUtils::SetMacroParamErrorMessage(errorText, *itsCtrlViewDocumentInterface, possibleTooltipData ? &possibleTooltipData->macroParamErrorMessage : nullptr);
+		CtrlViewUtils::SetMacroParamErrorMessage(errorText, itsDrawParam, *itsCtrlViewDocumentInterface, possibleTooltipData ? &possibleTooltipData->macroParamErrorMessage : nullptr);
 	}
 }
 

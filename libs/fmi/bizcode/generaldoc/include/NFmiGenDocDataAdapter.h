@@ -75,7 +75,7 @@ public:
 	const std::string& GetCurrentSmartToolMacro(void) override;
 	std::shared_ptr<NFmiMacroParamSystem> MacroParamSystem(void) override;
 	void SetLatestMacroParamErrorText(const std::string& theErrorText) override;
-	void SetMacroErrorText(const std::string &theErrorStr) override;
+	void SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam) override;
 	boost::shared_ptr<NFmiArea> MapHandlerArea(bool fGetZoomedArea) override;
 	FmiLanguage Language(void) override;
 	const NFmiRect& CPGridCropRect(void) override;

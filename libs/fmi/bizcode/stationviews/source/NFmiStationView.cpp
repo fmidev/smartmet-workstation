@@ -2527,14 +2527,14 @@ bool NFmiStationView::GetQ3ScriptData(NFmiDataMatrix<float> &theValues, NFmiGrid
 	{
 		// liatetaan varmuuden vuoksi matriisi 0 kokoiseksi
 		theValues.Resize(0, 0);
-        itsCtrlViewDocumentInterface->SetMacroErrorText(::MakeQ3ErrorStr(&e, itsCtrlViewDocumentInterface->Language()));
+        itsCtrlViewDocumentInterface->SetMacroErrorText(::MakeQ3ErrorStr(&e, itsCtrlViewDocumentInterface->Language()), itsDrawParam);
 		return false;
 	}
 	catch(...)
 	{
 		// liatetaan varmuuden vuoksi matriisi 0 kokoiseksi
 		theValues.Resize(0, 0);
-        itsCtrlViewDocumentInterface->SetMacroErrorText(::MakeQ3ErrorStr(nullptr, itsCtrlViewDocumentInterface->Language()));
+        itsCtrlViewDocumentInterface->SetMacroErrorText(::MakeQ3ErrorStr(nullptr, itsCtrlViewDocumentInterface->Language()), itsDrawParam);
 		return false;
 	}
 	return true;

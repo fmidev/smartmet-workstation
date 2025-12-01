@@ -3217,10 +3217,10 @@ void CSmartMetDoc::OnAcceleratorLocationFinderTool()
     OpenLocationFinderTool(ApplicationInterface::GetSmartMetView());
 }
 
-void CSmartMetDoc::SetMacroErrorText(const std::string &theErrorStr)
+void CSmartMetDoc::SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam)
 {
 	if(itsSmartToolDlg)
-		itsSmartToolDlg->SetMacroErrorText(theErrorStr);
+		itsSmartToolDlg->SetMacroErrorText(theErrorStr, triggerDrawParam);
 }
 
 

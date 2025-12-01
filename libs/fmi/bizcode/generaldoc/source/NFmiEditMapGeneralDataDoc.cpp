@@ -9469,11 +9469,6 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         ApplicationInterface::GetApplicationInterfaceImplementation()->InvalidateMainMapView(bErase);
 	}
 
-	void SetMacroErrorText(const std::string &theErrorStr)
-	{
-        ApplicationInterface::GetApplicationInterfaceImplementation()->SetMacroErrorText(theErrorStr);
-	}
-
 	int MachineThreadCount(void)
 	{
 		return itsMachineThreadCount;
@@ -12805,11 +12800,6 @@ void NFmiEditMapGeneralDataDoc::ForceDrawOverBitmapThings(unsigned int originalC
 void NFmiEditMapGeneralDataDoc::InvalidateMapView(bool bErase)
 {
 	pimpl->InvalidateMapView(bErase);
-}
-
-void NFmiEditMapGeneralDataDoc::SetMacroErrorText(const std::string &theErrorStr)
-{
-	pimpl->SetMacroErrorText(theErrorStr);
 }
 
 void NFmiEditMapGeneralDataDoc::ReportProcessMemoryUsage(void)

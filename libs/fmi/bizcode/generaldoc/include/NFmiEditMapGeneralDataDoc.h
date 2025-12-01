@@ -304,7 +304,6 @@ public:
 	void SatelDataRefreshTimerInMinutes(int newValue);
 	int MachineThreadCount(void);
 	void ReportProcessMemoryUsage(void);
-	void SetMacroErrorText(const std::string &theErrorStr);
 	void InvalidateMapView(bool bErase = true);
 	void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews);
 	void ActivateZoomDialog(int theWantedDescTopIndex);

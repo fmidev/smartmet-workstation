@@ -709,9 +709,9 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::GetDataFromQ2Server(const std::
     itsDoc->GetDataFromQ2Server(theURLStr, theParamsStr, fUseBinaryData, theUsedCompression, theDataMatrixOut, theExtraInfoStrOut);
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::SetMacroErrorText(const std::string &theErrorStr)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam)
 {
-    itsDoc->SetMacroErrorText(theErrorStr);
+    ApplicationInterface::GetApplicationInterfaceImplementation()->SetMacroErrorText(theErrorStr, triggerDrawParam);
 }
 
 const NFmiPoint& CtrlViewDocumentInterfaceForGeneralDataDoc::StationDataGridSize(void)

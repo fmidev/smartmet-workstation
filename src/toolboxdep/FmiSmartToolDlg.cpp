@@ -712,7 +712,7 @@ void CFmiSmartToolDlg::OnButtonAction()
 
 		// Update Window to cause View to redraw.
 		UpdateWindow();
-        // koska smarttool muokkaus menee nykyään omaan threadiin ja pääkarttanäyttö lukitaan Proegress-cancelointi -dialogilla, 
+        // koska smarttool muokkaus menee nykyään omaan threadiin ja pääkarttanäyttö lukitaan Progress-cancelointi -dialogilla, 
         // pitää tässä estää että ei voi painaa uudestaan Muokkaa-nappulaa. Napin normaali tila palautetaan kun lähetetään viesti ID_MESSAGE_SMARTTOOL_MODIFICATION_ENDED
 		EnableDlgItem(IDC_BUTTON_ACTION, false); 
 
@@ -720,7 +720,7 @@ void CFmiSmartToolDlg::OnButtonAction()
 		if(itsSmartMetDocumentInterface->DoSmartToolEditing(macroText, relativePathMacroName, fModifyOnlySelectedLocations == TRUE))
             itsMacroErrorTextU_ = CString(CA2T(string(counterStr + ". " + ::GetDictionaryString("SmartToolDlgExecutionOk")).c_str()));
 		else
-            itsMacroErrorTextU_ = CString(CA2T(counterStr.c_str())) + CString(" ") + CA2T(itsSmartMetDocumentInterface->SmartToolEditingErrorText().c_str());
+            itsMacroErrorTextU_ = CString(CA2T(counterStr.c_str())) + CString(". ") + CA2T(itsSmartMetDocumentInterface->SmartToolEditingErrorText().c_str());
 
 		counter++;
 		UpdateData(FALSE);
@@ -729,8 +729,16 @@ void CFmiSmartToolDlg::OnButtonAction()
 	}
 }
 
-void CFmiSmartToolDlg::SetMacroErrorText(const std::string &theErrorStr)
+void CFmiSmartToolDlg::SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam> &triggerDrawParam)
 {
+    auto currentMacroParam = itsSmartMetDocumentInterface->MacroParamSystem()->GetCurrentMacroParam();
+    if(!currentMacroParam)
+        return;
+    if(triggerDrawParam && currentMacroParam->DrawParam()->InitFileName() != triggerDrawParam->InitFileName())
+        return;
+    if(itsMacroParamList.GetCurSel() == LB_ERR)
+        return;
+
     itsMacroErrorTextU_ = CA2T(theErrorStr.c_str());
 	UpdateData(FALSE);
 }
@@ -759,6 +767,7 @@ void CFmiSmartToolDlg::DoSmartToolLoad(const std::string &theSmartToolName, bool
         CatLog::logMessage(string("Loaded smartTool: ") + theSmartToolName, CatLog::Severity::Info, CatLog::Category::Macro);
         LoadFormulaFromSmarttool();
         itsMacroParamList.SetCurSel(LB_ERR); // laitetaan macroParamlista osoittamaan 'ei mitään'
+        itsMacroErrorTextU_ = "";
         UpdateData(FALSE);
     }
 }
@@ -1294,6 +1303,7 @@ void CFmiSmartToolDlg::DoMacroParamLoad(const std::string& theMacroParamName, bo
         {
             LoadFormulaFromMacroParam();
             itsSmartToolInfo->CurrentScript(GetSmarttoolFormulaText()); // päivitetään myös currentiksi macro-tekstiksi
+            itsMacroErrorTextU_ = "";
         }
     }
 

@@ -47,6 +47,7 @@ class CFmiSoundingDataServerConfigurationsDlg;
 class CFmiVisualizationSettings;
 enum class BetaProductViewIndex;
 class CFmiMacroParamDataGeneratorDlg;
+class NFmiDrawParam;
 
 class CSmartMetDoc : public CDocument
 {
@@ -119,7 +120,7 @@ public:
     CFmiExtraMapViewDlg* CreateExtraMapViewDlg(NFmiEditMapGeneralDataDoc *theDoc, unsigned int theMapViewDescTopIndex);
 	void StoreViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMacro);
 	void LoadViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMacro);
-	void SetMacroErrorText(const std::string &theErrorStr);
+	void SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam);
 	void CaseStudyLoadingActions(const NFmiMetTime &theUsedTime, const std::string &updateReasonText);
 	void CaseStudyToNormalModeActions(void);
 	void SetAllViewIconsDynamically(void);

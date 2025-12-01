@@ -927,9 +927,10 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
 				{
 					::SnapShotData(theAdapter, editedData, modifiedParams, "SmartTool modifications", theTimes.FirstTime(), theTimes.LastTime());
 				}
-				catch(...)
+				catch(std::exception& e)
 				{
-					// heitetty poikkeus eli halutaan lopettaa toiminto
+					theAdapter.SmartToolEditingErrorText() = e.what();
+					::LogMessage(theAdapter, std::string("Error: SmartTool-macro execution failed: ") + theAdapter.SmartToolEditingErrorText(), CatLog::Severity::Warning, CatLog::Category::Editing);
 					return false;
 				}
 
@@ -2635,7 +2636,7 @@ void FmiModifyEditdData::InitializeSmartToolModifierForMacroParam(NFmiSmartToolM
 	theSmartToolModifier.InitSmartToolForMacroParam(macroParamStr, possibleSpacedOutMacroInfo, theAdapter.GetUsedMapViewArea(theMapViewDescTopIndex), doProbing, spaceOutSkipFactors);
 }
 
-static void SetMacroParamErrorMessage(const std::string &theErrorText, TimeSerialModificationDataInterface& theAdapter, NFmiExtraMacroParamData* possibleExtraMacroParamData)
+static void SetMacroParamErrorMessage(const std::string &theErrorText, TimeSerialModificationDataInterface& theAdapter, NFmiExtraMacroParamData* possibleExtraMacroParamData, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam)
 {
 	// Lokitetaan virheviesti
 	::LogMessage(theAdapter, theErrorText, CatLog::Severity::Error, CatLog::Category::Macro);
@@ -2648,7 +2649,12 @@ static void SetMacroParamErrorMessage(const std::string &theErrorText, TimeSeria
 	std::string timeString = aTime.ToStr("YYYY.MM.DD HH:mm:SS\n");
 	auto dialogErrorString = timeString + theErrorText;
 	theAdapter.SetLatestMacroParamErrorText(dialogErrorString);
-	theAdapter.SetMacroErrorText(dialogErrorString);
+	theAdapter.SetMacroErrorText(dialogErrorString, triggerDrawParam);
+}
+
+static void ClearMacroParamErrorMessage(TimeSerialModificationDataInterface& theAdapter, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam)
+{
+	theAdapter.SetMacroErrorText("", triggerDrawParam);
 }
 
 static void SetupPossibleextraMacroParamData(NFmiExtraMacroParamData* possibleExtraMacroParamData, NFmiSmartToolModifier& smartToolModifier)
@@ -2671,7 +2677,7 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 	catch(std::exception &e)
 	{
 		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter intepretion failed", &e, theDrawParam, macroParamRootPath);
-		::SetMacroParamErrorMessage(errorText, theAdapter, possibleExtraMacroParamData);
+		::SetMacroParamErrorMessage(errorText, theAdapter, possibleExtraMacroParamData, theDrawParam);
 		return value;
 	}
 
@@ -2711,16 +2717,17 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
         if(!smartToolModifier.CalculationPoints().empty())
             theUseCalculationPoints = true;
 		SetupPossibleextraMacroParamData(possibleExtraMacroParamData, smartToolModifier);
+        ClearMacroParamErrorMessage(theAdapter, theDrawParam);
 	}
 	catch(std::exception &e)
 	{
 		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter calculation failed", &e, theDrawParam, macroParamRootPath);
-		::SetMacroParamErrorMessage(errorText, theAdapter, possibleExtraMacroParamData);
+		::SetMacroParamErrorMessage(errorText, theAdapter, possibleExtraMacroParamData, theDrawParam);
 	}
 	catch(...)
 	{
 		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter calculation failed: Unknown error!", nullptr, theDrawParam, macroParamRootPath);
-		::SetMacroParamErrorMessage(errorText, theAdapter, possibleExtraMacroParamData);
+		::SetMacroParamErrorMessage(errorText, theAdapter, possibleExtraMacroParamData, theDrawParam);
 	}
 	return value;
 }

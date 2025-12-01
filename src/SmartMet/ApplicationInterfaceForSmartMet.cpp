@@ -238,11 +238,11 @@ void ApplicationInterfaceForSmartMet::InvalidateMainMapView(bool bErase)
         view->Invalidate(bErase);
 }
 
-void ApplicationInterfaceForSmartMet::SetMacroErrorText(const std::string &theErrorStr)
+void ApplicationInterfaceForSmartMet::SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam)
 {
     auto view = ApplicationInterface::GetSmartMetView();
     if(view)
-        view->SetMacroErrorText(theErrorStr);
+        view->SetMacroErrorText(theErrorStr, triggerDrawParam);
 }
 
 void ApplicationInterfaceForSmartMet::CaseStudyLoadingActions(const NFmiMetTime &theUsedTime, const std::string &updateReasonText)

@@ -77,7 +77,7 @@ public:
 	void MakePrintViewDirty(bool fViewDirty, bool fCacheDirty);
 	int CalcPrintingPageShiftInMinutes(void);
 	NFmiMetTime CalcPrintingStartTime(void);
-	void SetMacroErrorText(const std::string &theErrorStr);
+	void SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam);
 	bool DoAllwaysLowMemoryPrint(void) const {return false;} // ks. CFmiWin32TemplateHelpers::OnPrintMapView -metodia.
 	bool IsMapView() const { return true; } // ks. esim. CFmiWin32TemplateHelpers::PrintMapViewWithFullResolution -funktiota.
 	int MapViewDescTopIndex(void) { return itsMapViewDescTopIndex; }
