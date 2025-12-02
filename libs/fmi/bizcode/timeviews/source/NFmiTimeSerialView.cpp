@@ -5098,7 +5098,7 @@ void NFmiTimeSerialView::FillTimeSerialMacroParamData(const NFmiPoint& latlon, s
 	catch(exception& e)
 	{
 		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: Time-serial Macro Parameter intepretion failed", &e, theMacroParamDrawParam, macroParamSystemPtr->RootPath());
-		CtrlViewUtils::SetMacroParamErrorMessage(errorText, *itsCtrlViewDocumentInterface, possibleTooltipData ? &possibleTooltipData->macroParamErrorMessage : nullptr);
+		CtrlViewUtils::SetMacroParamErrorMessage(errorText, theMacroParamDrawParam, *itsCtrlViewDocumentInterface, possibleTooltipData ? &possibleTooltipData->macroParamErrorMessage : nullptr);
 	}
 
 	try // suoritetaan macro sitten
@@ -5116,11 +5116,12 @@ void NFmiTimeSerialView::FillTimeSerialMacroParamData(const NFmiPoint& latlon, s
 		{
 			*possibleExtraMacroParamData = smartToolModifier.ExtraMacroParamData();
 		}
+		CtrlViewUtils::ClearMacroParamErrorMessage(itsDrawParam, *itsCtrlViewDocumentInterface);
 	}
 	catch(exception& e)
 	{
 		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: Time-serial MacroParam calculation failed", &e, itsDrawParam, macroParamSystemPtr->RootPath());
-		CtrlViewUtils::SetMacroParamErrorMessage(errorText, *itsCtrlViewDocumentInterface, possibleTooltipData ? &possibleTooltipData->macroParamErrorMessage : nullptr);
+		CtrlViewUtils::SetMacroParamErrorMessage(errorText, theMacroParamDrawParam, *itsCtrlViewDocumentInterface, possibleTooltipData ? &possibleTooltipData->macroParamErrorMessage : nullptr);
 	}
 }
 

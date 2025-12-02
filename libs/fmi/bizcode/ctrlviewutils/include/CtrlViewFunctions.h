@@ -84,7 +84,8 @@ namespace CtrlViewUtils
    bool IsModularParameter(FmiParameterName theParam);
    std::string GetMacroParamFormula(NFmiMacroParamSystem& macroParamSystem, const boost::shared_ptr<NFmiDrawParam>& theDrawParam);
    std::string MakeMacroParamRelatedFinalErrorMessage(const std::string& baseMessage, const std::exception* exceptionPtr, boost::shared_ptr<NFmiDrawParam>& theDrawParam, const std::string& macroParamSystemRootPath);
-   void SetMacroParamErrorMessage(const std::string& errorText, CtrlViewDocumentInterface& ctrlViewDocumentInterface, std::string* possibleTooltipErrorTextOut = nullptr);
+   void SetMacroParamErrorMessage(const std::string& errorText, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam, CtrlViewDocumentInterface& ctrlViewDocumentInterface, std::string* possibleTooltipErrorTextOut = nullptr);
+   void ClearMacroParamErrorMessage(boost::shared_ptr<NFmiDrawParam>& triggerDrawParam, CtrlViewDocumentInterface& ctrlViewDocumentInterface);
    void DeleteFilesWithPattern(const std::string& directoryPath, const std::string& fileNamePattern, int keepMaxFiles = 0, std::list<std::string>* deletedFileNamesOut = nullptr);
    void DeleteFilesWithPattern(const std::string& filePathPattern, int keepMaxFiles = 0, std::list<std::string>* deletedFileNamesOut = nullptr);
    void DeleteFilesWithPatternAndLog(const std::string& filePathPattern, const std::string &logMessageStart, CatLog::Severity severity, CatLog::Category category, int keepMaxFiles = 0);

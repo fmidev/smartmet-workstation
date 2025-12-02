@@ -3,6 +3,7 @@
 #include "SmartMetViewId.h"
 #include <string>
 #include <functional>
+#include <boost/shared_ptr.hpp>
 
 class CView;
 class CWnd;
@@ -16,6 +17,7 @@ class CSmartMetDoc;
 class CDocument;
 class NFmiApplicationWinRegistry;
 enum class BetaProductViewIndex;
+class NFmiDrawParam;
 
 // Interface that is meant to be used by NFmiEditMapGeneralDataDoc class by using functionalities from SmartMet application.
 class ApplicationInterface
@@ -56,7 +58,7 @@ public:
     virtual void ActivateZoomDialog(int theWantedDescTopIndex) = 0;
     virtual std::string GetToolTipString(unsigned int commandID, const std::string &theMagickWordU_) = 0;
     virtual void InvalidateMainMapView(bool bErase = true) = 0;
-    virtual void SetMacroErrorText(const std::string &theErrorStr) = 0;
+    virtual void SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam) = 0;
     virtual void CaseStudyLoadingActions(const NFmiMetTime &theUsedTime, const std::string &updateReasonText) = 0;
     virtual void CaseStudyToNormalModeActions() = 0;
     virtual void PutWarningFlagTimerOn() = 0;

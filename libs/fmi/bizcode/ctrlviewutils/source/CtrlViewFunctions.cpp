@@ -328,9 +328,16 @@ namespace CtrlViewUtils
                 str += GetEditingDataString("OF", info, ctrlViewDocumentInterface->Language(), minuteOrigTimeFormat);
         }
 
+        bool makeNameErrorMarks = isMacroParamCase ? !ctrlViewDocumentInterface->IsMacroParamOk(theDrawParam) : false;
+
         if(dataType == NFmiInfoData::kCopyOfEdited)
-            str += "(c)"; // kopioidut parametrit merkitään (c):llä
+        {str += "(c)"; }// kopioidut parametrit merkitään (c):llä
+
+        if(makeNameErrorMarks)
+        {str += "#"; }
         str += theDrawParam->ParameterAbbreviation();
+        if(makeNameErrorMarks)
+        {str += "#"; }
         if(fAddIdInfos)
             str += GetIdString(theDrawParam->Param().GetParamIdent());
 
@@ -716,7 +723,7 @@ namespace CtrlViewUtils
         return errorMessage;
     }
 
-    void SetMacroParamErrorMessage(const std::string& errorText, CtrlViewDocumentInterface& ctrlViewDocumentInterface, std::string* possibleTooltipErrorTextOut)
+    void SetMacroParamErrorMessage(const std::string& errorText, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam, CtrlViewDocumentInterface& ctrlViewDocumentInterface, std::string* possibleTooltipErrorTextOut)
     {
         // Lokitetaan virheviesti
         CatLog::logMessage(errorText, CatLog::Severity::Error, CatLog::Category::Macro, true);
@@ -729,7 +736,12 @@ namespace CtrlViewUtils
         std::string timeString = aTime.ToStr("YYYY.MM.DD HH:mm:SS\n");
         auto dialogErrorString = timeString + errorText;
         ctrlViewDocumentInterface.SetLatestMacroParamErrorText(dialogErrorString);
-        ctrlViewDocumentInterface.SetMacroErrorText(dialogErrorString);
+        ctrlViewDocumentInterface.SetMacroErrorText(dialogErrorString, triggerDrawParam);
+    }
+
+    void ClearMacroParamErrorMessage(boost::shared_ptr<NFmiDrawParam>& triggerDrawParam, CtrlViewDocumentInterface& ctrlViewDocumentInterface)
+    {
+        ctrlViewDocumentInterface.SetMacroErrorText("", triggerDrawParam);
     }
 
     std::string wildcardToRegex(const std::string& wildcard) 

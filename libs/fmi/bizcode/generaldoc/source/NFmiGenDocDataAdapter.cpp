@@ -11,6 +11,7 @@
 #include "NFmiApplicationWinRegistry.h"
 #include "CombinedMapHandlerInterface.h"
 #include "GeneralDataDocGridding.h"
+#include "ApplicationInterface.h"
 
 NFmiGenDocDataAdapter::NFmiGenDocDataAdapter(NFmiEditMapGeneralDataDoc *theDoc)
 :itsDoc(theDoc)
@@ -335,9 +336,9 @@ void NFmiGenDocDataAdapter::SetLatestMacroParamErrorText(const std::string& theE
 	itsDoc->SetLatestMacroParamErrorText(theErrorText);
 }
 
-void NFmiGenDocDataAdapter::SetMacroErrorText(const std::string &theErrorStr)
+void NFmiGenDocDataAdapter::SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam)
 {
-	itsDoc->SetMacroErrorText(theErrorStr);
+	ApplicationInterface::GetApplicationInterfaceImplementation()->SetMacroErrorText(theErrorStr, triggerDrawParam);
 }
 
 boost::shared_ptr<NFmiArea> NFmiGenDocDataAdapter::MapHandlerArea(bool fGetZoomedArea)

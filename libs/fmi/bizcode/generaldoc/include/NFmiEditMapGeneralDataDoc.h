@@ -154,6 +154,7 @@ using LogAndWarnFunctionType = std::function<void(const std::string &, const std
 class NFmiEditMapGeneralDataDoc
 {
 public:
+	bool IsMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam) const;
 	NFmiMacroParamDataGenerator& GetMacroParamDataGenerator();
 	void UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr);
 	std::string GetVirtualTimeTooltipText() const;
@@ -303,7 +304,6 @@ public:
 	void SatelDataRefreshTimerInMinutes(int newValue);
 	int MachineThreadCount(void);
 	void ReportProcessMemoryUsage(void);
-	void SetMacroErrorText(const std::string &theErrorStr);
 	void InvalidateMapView(bool bErase = true);
 	void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews);
 	void ActivateZoomDialog(int theWantedDescTopIndex);

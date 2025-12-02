@@ -1055,9 +1055,9 @@ void CSmartMetView::SetNotificationMessage(const std::string &theNotificationMsg
 		pFrame->SetNotificationMessage(theNotificationMsgStr, theNotificationTitle, theStyle, theTimeout, fNoSound);
 }
 
-void CSmartMetView::SetMacroErrorText(const std::string &theErrorStr)
+void CSmartMetView::SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam)
 {
-	GetDocument()->SetMacroErrorText(theErrorStr);
+	GetDocument()->SetMacroErrorText(theErrorStr, triggerDrawParam);
 }
 
 void CSmartMetView::OnAcceleratorChangeTimeByStep1Forward()

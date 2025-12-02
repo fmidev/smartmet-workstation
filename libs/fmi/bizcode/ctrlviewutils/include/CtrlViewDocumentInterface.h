@@ -258,7 +258,7 @@ public:
     virtual NFmiObsComparisonInfo& ObsComparisonInfo(void) = 0;
     virtual void GetDataFromQ2Server(const std::string &theURLStr, const std::string &theParamsStr, bool fUseBinaryData, 
         int theUsedCompression, NFmiDataMatrix<float> &theDataMatrixOut, std::string &theExtraInfoStrOut) = 0;
-    virtual void SetMacroErrorText(const std::string &theErrorStr) = 0;
+    virtual void SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam) = 0;
     virtual const NFmiPoint& StationDataGridSize(void) = 0;
     virtual NFmiLocationSelectionTool* LocationSelectionTool2(void) = 0;
     virtual void SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea,
@@ -416,6 +416,7 @@ public:
     virtual std::string GetVirtualTimeTooltipText() const = 0;
     virtual void UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr) = 0;
     virtual NFmiGriddingHelperInterface* GetGriddingHelper() = 0;
+    virtual bool IsMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam) const = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem(void) = 0;

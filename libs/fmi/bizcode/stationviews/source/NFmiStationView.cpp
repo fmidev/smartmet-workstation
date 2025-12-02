@@ -1938,6 +1938,21 @@ float NFmiStationView::CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extra
 	return FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsMapViewDescTopIndex, theUsedDrawParam, fakeMatrixValues, true, doMultiThread, usedTime, latlon, itsInfo, fUseCalculationPoints, true, CalcUsedSpaceOutFactors(), probeData, &extraMacroParamData);
 }
 
+float NFmiStationView::CalcMacroParamTooltipValue(NFmiExtraMacroParamData& extraMacroParamData, boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam, const NFmiPoint& latlon, const NFmiMetTime& usedTime, boost::shared_ptr<NFmiArea> &area, int descTopIndex, boost::shared_ptr<NFmiFastQueryInfo>& theUsedMacroInfoOut)
+{
+	NFmiDataMatrix<float> fakeMatrixValues;
+	// Ei ole hyötyä käyttää monta threadia kun lasketaan yhtä tooltip arvoa
+	bool doMultiThread = false;
+	// Luodaan mahdollisimman pieni data, jotta tooltippien rakentelu menee joutuisasti.
+	// Ainoa asia mikä menetetään on, että jos joku laskee muuttujaan jotain ja haluaa 
+	// laskea siitä jotain alueellisia keskiarvoja tms., koska sitä ei voi tehdä probe hilalla.
+	auto probeData = ::CreateTooltipProbingMacroParamData(area, latlon);
+	auto& genDocDataAdapter = CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->GenDocDataAdapter();
+	bool useCalculationPoints = false;
+    NFmiPoint spaceOutFactors(1.0, 1.0);
+	return FmiModifyEditdData::CalcMacroParamMatrix(genDocDataAdapter, descTopIndex, theUsedDrawParam, fakeMatrixValues, true, doMultiThread, usedTime, latlon, theUsedMacroInfoOut, useCalculationPoints, true, spaceOutFactors, probeData, &extraMacroParamData);
+}
+
 static void MakeDrawedInfoVector(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
     theGriddingHelper->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
@@ -2512,14 +2527,14 @@ bool NFmiStationView::GetQ3ScriptData(NFmiDataMatrix<float> &theValues, NFmiGrid
 	{
 		// liatetaan varmuuden vuoksi matriisi 0 kokoiseksi
 		theValues.Resize(0, 0);
-        itsCtrlViewDocumentInterface->SetMacroErrorText(::MakeQ3ErrorStr(&e, itsCtrlViewDocumentInterface->Language()));
+        itsCtrlViewDocumentInterface->SetMacroErrorText(::MakeQ3ErrorStr(&e, itsCtrlViewDocumentInterface->Language()), itsDrawParam);
 		return false;
 	}
 	catch(...)
 	{
 		// liatetaan varmuuden vuoksi matriisi 0 kokoiseksi
 		theValues.Resize(0, 0);
-        itsCtrlViewDocumentInterface->SetMacroErrorText(::MakeQ3ErrorStr(nullptr, itsCtrlViewDocumentInterface->Language()));
+        itsCtrlViewDocumentInterface->SetMacroErrorText(::MakeQ3ErrorStr(nullptr, itsCtrlViewDocumentInterface->Language()), itsDrawParam);
 		return false;
 	}
 	return true;

@@ -38,7 +38,7 @@ public:
     //    return tmp;
     //}
     void InvalidateMainMapView(bool bErase = true) override;  // CSmartMetView
-    void SetMacroErrorText(const std::string &theErrorStr) override;  // CSmartMetView
+    void SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam) override;  // CSmartMetView
     void CaseStudyLoadingActions(const NFmiMetTime &theUsedTime, const std::string &updateReasonText) override; // CSmartMetDoc
     void CaseStudyToNormalModeActions() override; // CSmartMetDoc
     void PutWarningFlagTimerOn() override;  // CSmartMetView
