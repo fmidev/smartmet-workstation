@@ -80,6 +80,7 @@ public:
   { return itsList.NumberOfItems(); }
   using NFmiCtrlView::Time;
   void Time(const NFmiMetTime& theTime) override;
+  NFmiCtrlView* First();
 
  private:
   NFmiSortedPtrList<NFmiCtrlView>     itsList;

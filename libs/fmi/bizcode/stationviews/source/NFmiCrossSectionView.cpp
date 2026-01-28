@@ -709,7 +709,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
                         tooltipData.latlons[0] = latlon;
                         tooltipData.times[0] = aTime;
                         tooltipData.pressures[0] = p;
-                        FillCrossSectionMacroParamData(itsIsolineValues, isoLineData, itsPressures, &tooltipData, &extraMacroParamData);
+                        FillCrossSectionMacroParamData(itsIsolineValues, isoLineData, itsPressures, itsDrawParam, &tooltipData, &extraMacroParamData);
 						if(!tooltipData.macroParamErrorMessage.empty())
 						{
 							str += paramNameString;
@@ -751,6 +751,18 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 //		::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), e.what(), "Ongelma poikkileikkaus piirrossa!", MB_OK);
 	}
 	return str;
+}
+
+bool NFmiCrossSectionView::IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
+{
+	NFmiExtraMacroParamData extraMacroParamData;
+	NFmiIsoLineData isoLineData;
+	CrossSectionTooltipData tooltipData;
+	tooltipData.latlons[0] = NFmiPoint(0, 0);
+	tooltipData.times[0] = NFmiMetTime();
+	tooltipData.pressures[0] = 500;
+	FillCrossSectionMacroParamData(itsIsolineValues, isoLineData, itsPressures, itsDrawParam, &tooltipData, &extraMacroParamData);
+	return tooltipData.macroParamErrorMessage.empty();
 }
 
 // HUOM! Tämä ei tue tuulen meta parametreja, eli mm. tooltippiin ei saada oikeita arvoja niissä tapauksissa.
@@ -964,7 +976,7 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 	// Kun käytetään imagine piirtoa,ei dataa talleteta isolinedata-rakenteisiin
 	// kuten toolmaster-piirrossa, koska imagine käyttää erilaista data rakennetta (matriisia)
 	if(itsInfo->DataType() == NFmiInfoData::kCrossSectionMacroParam && crossSectionSystem->GetCrossMode() != NFmiCrossSectionSystem::kObsAndFor)
-		FillCrossSectionMacroParamData(itsIsolineValues, isoLineData, itsPressures);
+		FillCrossSectionMacroParamData(itsIsolineValues, isoLineData, itsPressures, itsDrawParam);
 	else if(itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
 		FillTrajectoryCrossSectionData(itsIsolineValues, isoLineData, itsPressures);
 	else if(crossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kObsAndFor)
@@ -1220,7 +1232,7 @@ void NFmiCrossSectionView::FillTrajectoryCrossSectionData(NFmiDataMatrix<float> 
 	FillRouteCrossSectionData(theValues, theIsoLineData, thePressures, points, times);
 }
 
-void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, CrossSectionTooltipData *possibleTooltipData, NFmiExtraMacroParamData* possibleExtraMacroParamData)
+void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam, CrossSectionTooltipData *possibleTooltipData, NFmiExtraMacroParamData* possibleExtraMacroParamData)
 {
     if(!possibleTooltipData)
     {
@@ -1239,18 +1251,18 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
     {
         smartToolModifier.IncludeDirectory(itsCtrlViewDocumentInterface->SmartToolInfo()->LoadDirectory());
 
-        auto macroParamPtr = macroParamSystemPtr->GetWantedMacro(itsDrawParam->InitFileName());
+        auto macroParamPtr = macroParamSystemPtr->GetWantedMacro(theUsedDrawParam->InitFileName());
         if(macroParamPtr)
         {
             smartToolModifier.InitSmartTool(macroParamPtr->MacroText(), true);
         }
         else
-            throw runtime_error(string("NFmiCrossSectionView::FillCrossSectionMacroParamData: Error, couldn't find macroParam:") + itsDrawParam->ParameterAbbreviation());
+            throw runtime_error(string("NFmiCrossSectionView::FillCrossSectionMacroParamData: Error, couldn't find macroParam:") + theUsedDrawParam->ParameterAbbreviation());
     }
 	catch(exception &e)
 	{
-		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter intepretion failed", &e, itsDrawParam, macroParamSystemPtr->RootPath());
-		CtrlViewUtils::SetMacroParamErrorMessage(errorText, itsDrawParam, *itsCtrlViewDocumentInterface, possibleTooltipData ? &possibleTooltipData->macroParamErrorMessage : nullptr);
+		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: Macro Parameter intepretion failed", &e, theUsedDrawParam, macroParamSystemPtr->RootPath());
+		CtrlViewUtils::SetMacroParamErrorMessage(errorText, theUsedDrawParam, *itsCtrlViewDocumentInterface, possibleTooltipData ? &possibleTooltipData->macroParamErrorMessage : nullptr);
 	}
 
 	try // suoritetaan macro sitten
@@ -1270,12 +1282,12 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
 		{
 			*possibleExtraMacroParamData = smartToolModifier.ExtraMacroParamData();
 		}
-		CtrlViewUtils::ClearMacroParamErrorMessage(itsDrawParam, *itsCtrlViewDocumentInterface);
+		CtrlViewUtils::ClearMacroParamErrorMessage(theUsedDrawParam, *itsCtrlViewDocumentInterface);
 	}
 	catch(exception &e)
 	{
-		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: MacroParam calculation failed", &e, itsDrawParam, macroParamSystemPtr->RootPath());
-		CtrlViewUtils::SetMacroParamErrorMessage(errorText, itsDrawParam, *itsCtrlViewDocumentInterface, possibleTooltipData ? &possibleTooltipData->macroParamErrorMessage : nullptr);
+		std::string errorText = CtrlViewUtils::MakeMacroParamRelatedFinalErrorMessage("Error: MacroParam calculation failed", &e, theUsedDrawParam, macroParamSystemPtr->RootPath());
+		CtrlViewUtils::SetMacroParamErrorMessage(errorText, theUsedDrawParam, *itsCtrlViewDocumentInterface, possibleTooltipData ? &possibleTooltipData->macroParamErrorMessage : nullptr);
 	}
 }
 

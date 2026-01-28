@@ -524,3 +524,8 @@ void CFmiCrossSectionDlg::OnAcceleratorExtraMapToggleVirtualTimeMode()
 	std::string viewName = "Cross-section-view";
 	CFmiWin32TemplateHelpers::OnAcceleratorToggleVirtualTimeMode(itsSmartMetDocumentInterface, viewName);
 }
+
+bool CFmiCrossSectionDlg::IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
+{
+    return itsView->IsCrossSectionMacroParamOk(theUsedDrawParam);
+}

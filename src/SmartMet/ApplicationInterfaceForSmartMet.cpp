@@ -392,3 +392,8 @@ void ApplicationInterfaceForSmartMet::OpenMacroParamInSmarttoolDialog(const std:
 {
     GetDocument()->OpenMacroParamInSmarttoolDialog(absoluteMacroParamPath);
 }
+
+bool ApplicationInterfaceForSmartMet::IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
+{
+    return GetDocument()->IsCrossSectionMacroParamOk(theUsedDrawParam);
+}

@@ -709,3 +709,12 @@ bool NFmiCrossSectionManagerView::MouseWheel(const NFmiPoint &thePlace, unsigned
 	}
 	return false;
 }
+
+bool NFmiCrossSectionManagerView::IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
+{
+    auto view = static_cast<NFmiCrossSectionView*>(itsViewList->First());
+	if(!view)
+		return false;
+
+	return view->IsCrossSectionMacroParamOk(theUsedDrawParam);
+}

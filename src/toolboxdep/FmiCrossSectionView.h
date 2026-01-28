@@ -64,6 +64,7 @@ public:
 	// Couple non used parameters were added, because time-serial-view needs these and this 
 	// method is used used by beta-product system through template interface.
 	void AutoAdjustValueScales(bool justActiveRow, bool redrawOnSuccess);
+	bool IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam);
 
 protected:
 	CFmiCrossSectionView();           // protected constructor used by dynamic creation

@@ -3922,3 +3922,15 @@ void CSmartMetDoc::OnEditReloadfixeddrawparams()
 {
     itsData->ReloadFixedDrawParams();
 }
+
+bool CSmartMetDoc::IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
+{
+	if(!itsCrossSectionDlg)
+	{return false;}
+
+    auto* crossSectionView = itsCrossSectionDlg->GetCrossSectionView();
+	if(!crossSectionView)
+	{return false;}
+
+    return crossSectionView->IsCrossSectionMacroParamOk(theUsedDrawParam);
+}

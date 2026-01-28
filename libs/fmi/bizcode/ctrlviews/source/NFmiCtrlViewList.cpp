@@ -372,3 +372,10 @@ void NFmiCtrlViewList::Time(const NFmiMetTime& theTime)
 		Current()->Time(theTime);
 	}
 }
+
+NFmiCtrlView* NFmiCtrlViewList::First()
+{
+    auto iter = itsList.Start();
+    iter.Next();
+	return iter.CurrentPtr();
+}
