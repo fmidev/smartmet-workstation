@@ -137,6 +137,7 @@ public:
 	void OpenLogViewer();
 	void SetAllMapViewTooltipDelays(bool doRestoreAction, int delayInMilliSeconds);
 	void OpenMacroParamInSmarttoolDialog(const std::string& absoluteMacroParamPath);
+	bool IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam);
 
 	NFmiEditMapGeneralDataDoc* GetData(void);
 	virtual ~CSmartMetDoc();

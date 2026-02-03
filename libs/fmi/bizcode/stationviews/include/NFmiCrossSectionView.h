@@ -88,6 +88,7 @@ class NFmiCrossSectionView : public NFmiIsoLineView
 	void SetParamHandlerViewRect(const NFmiRect& newRect);
 	const NFmiRect& GetFrameForParamBox(void) const override { return itsDataViewFrame; };
 	void UpdateCachedParameterName() override;
+	bool IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam);
 
  protected:
    bool IsToolMasterAvailable(void) override;
@@ -126,7 +127,7 @@ private:
 	void DrawCrossSection(void);
 	void DrawCrosssectionWithImagine(NFmiIsoLineData& theIsoLineData, NFmiDataMatrix<float> &theValues, Imagine::NFmiDataHints &theHelper, NFmiDataMatrix<NFmiPoint> &theCoordinates);
 	void DrawCrosssectionWithToolMaster(NFmiIsoLineData& theIsoLineData);
-	void FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, CrossSectionTooltipData *possibleTooltipData = nullptr, NFmiExtraMacroParamData* possibleExtraMacroParamData = nullptr);
+	void FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam, CrossSectionTooltipData *possibleTooltipData = nullptr, NFmiExtraMacroParamData* possibleExtraMacroParamData = nullptr);
 	void FillTrajectoryCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures);
 	void FillObsAndForCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures);
 	int FillObsPartOfTimeCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, std::vector<float>& thePressures);

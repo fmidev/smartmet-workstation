@@ -575,3 +575,11 @@ void CFmiCrossSectionView::AutoAdjustValueScales(bool /* fJustActive */, bool /*
 {
 	// Tämä ei tee mitään poikkileikkausnäytön yhteydessä.
 }
+
+bool CFmiCrossSectionView::IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
+{ 
+	if(!itsView)
+		return false;
+
+	return itsView->IsCrossSectionMacroParamOk(theUsedDrawParam);
+}

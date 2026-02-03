@@ -3,6 +3,7 @@
 #include "SmartMetToolboxDep_resource.h"
 #include "afxcmn.h"
 #include "NFmiViewPosRegistryInfo.h"
+#include "NFmiDrawParam.h"
 
 class SmartMetDocumentInterface;
 class CFmiCrossSectionView;
@@ -28,6 +29,7 @@ public:
 	void InitFromCrossSectionSystem(void);
     static std::string MakeUsedWinRegistryKeyStr(unsigned int /* theMapViewDescTopIndex */) {return ViewPosRegistryInfo().WinRegistryKeyStr();}
     CFmiCrossSectionView* GetCrossSectionView() { return itsView; }
+	bool IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam);
 
 
 // Dialog Data

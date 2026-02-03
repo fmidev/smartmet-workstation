@@ -1449,6 +1449,7 @@ NFmiMacroParamDataGenerator& SmartMetDocumentInterfaceForGeneralDataDoc::GetMacr
     return itsDoc->GetMacroParamDataGenerator();
 }
 
+
 #ifndef DISABLE_CPPRESTSDK
 // =================================================
 

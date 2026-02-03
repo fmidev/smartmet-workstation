@@ -11148,6 +11148,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	bool IsMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
 	{
+        if (theUsedDrawParam && theUsedDrawParam->DataType() == NFmiInfoData::kCrossSectionMacroParam)
+        { return ApplicationInterface::GetApplicationInterfaceImplementation()->IsCrossSectionMacroParamOk(theUsedDrawParam); }
+
         auto usedInfo = InfoOrganizer()->FindInfo(NFmiInfoData::kEditable);
 		NFmiExtraMacroParamData extraMacroParamData;
 		NFmiPoint latlon;

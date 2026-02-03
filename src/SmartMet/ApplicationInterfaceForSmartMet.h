@@ -63,4 +63,5 @@ public:
     void SetAllMapViewTooltipDelays(bool doRestoreAction, int delayInMilliSeconds) override;
     void UpdateAllViewsAndDialogs(const std::string& reasonForUpdate, bool fUpdateOnlyMapViews = false) override;
     void OpenMacroParamInSmarttoolDialog(const std::string& absoluteMacroParamPath) override;
+    bool IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam) override;
 };
