@@ -828,7 +828,7 @@ bool CSmartMetApp::CrashRptInstall(void)
         if(useHttpTransfer)
         {
             // URL for sending error reports over HTTP.
-            info.pszUrl = _T("http://services.weatherproof.fi/editor/crashrpt.php");
+            info.pszUrl = _T("https://services.weatherproof.fi/editor/crashrpt.php");
             // Use binary encoding for HTTP uploads (recommended).
             info.dwFlags |= CR_INST_HTTP_BINARY_ENCODING;
             info.uPriorities[CR_HTTP] = 3;  // First try send report over HTTP 
