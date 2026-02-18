@@ -2104,6 +2104,16 @@ void NFmiIsoLineView::DoPossibleIsolineSafetyFeatureDownSizing(NFmiIsoLineData* 
     {
         NFmiIsoLineData downSizedIsoLineData;
         ::BuildDownSizedData(*theIsoLineDataInOut, downSizedIsoLineData, downSizeFactor);
+        if(downSizedIsoLineData.itsInfo == nullptr || downSizedIsoLineData.itsInfo->Area() == nullptr)
+        {
+            std::string logMessage = "Down-sizing isoline data for safety reasons failed, from ";
+            logMessage += ::MakeIsoLineDataGridSizeString(theIsoLineDataInOut);
+            logMessage += " to ";
+            logMessage += ::MakeIsoLineDataGridSizeString(&downSizedIsoLineData);
+            logMessage += ", the result data doesn't have info or area";
+            itsCtrlViewDocumentInterface->LogAndWarnUser(logMessage, "dummy dialog title", CatLog::Severity::Warning, CatLog::Category::Visualization, true);
+            return;
+        }
         std::string logMessage = "Down-sizing isoline data for safety reasons from ";
         logMessage += ::MakeIsoLineDataGridSizeString(theIsoLineDataInOut);
         logMessage += " to ";
