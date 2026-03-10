@@ -1250,6 +1250,8 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
     try // ensin tulkitaan macro
     {
         smartToolModifier.IncludeDirectory(itsCtrlViewDocumentInterface->SmartToolInfo()->LoadDirectory());
+		if(!theUsedDrawParam)
+			return; // Cannot continue if theUsedDrawParam points to nullptr
 
         auto macroParamPtr = macroParamSystemPtr->GetWantedMacro(theUsedDrawParam->InitFileName());
         if(macroParamPtr)
