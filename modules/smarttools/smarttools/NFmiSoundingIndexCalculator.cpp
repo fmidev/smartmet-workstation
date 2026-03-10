@@ -122,7 +122,6 @@ static void CalcAllSoundingIndexParamFields(
   // bool useAnalyzeData = false; // toistaiseksi ei käytössä
 
   NFmiSoundingData soundingData;
-  unsigned long counter = 0;
   for (theResultInfo->ResetLocation(); theResultInfo->NextLocation();)
   {
     try
@@ -141,10 +140,7 @@ static void CalcAllSoundingIndexParamFields(
 
       for (theResultInfo->ResetParam(); theResultInfo->NextParam();)
       {
-        counter++;
-        if (counter % 20 == 0)
-          ::CheckIfStopped(
-              theStopFunctor);  // joka 20 hila/paramtrilla -pisteellä katsotaan, pitääkö lopettaa
+        ::CheckIfStopped(theStopFunctor);
 
         FmiSoundingParameters soundingParameter =
             static_cast<FmiSoundingParameters>(theResultInfo->Param().GetParamIdent());
