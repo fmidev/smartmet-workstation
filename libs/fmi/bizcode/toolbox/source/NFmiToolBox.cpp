@@ -1222,6 +1222,9 @@ NFmiPoint NFmiToolBox::MeasureTextCorrect(const NFmiText& theText)
  //---------------SetTextAlignment(FmiDirection theAlignment)
 void NFmiToolBox::SetTextAlignment(FmiDirection theAlignment)
 {
+	if(pDC == nullptr)
+	{ return; }
+
 	// NÄMÄ ON MARKON PIKAVIRITYKSIÄ!!!!!!!!!!!!
 	// Tein tähän funktioon virityksen, jolla voidaan säätää onko piirrettävällä
 	// tekstillä läpinäkyvä tausta vai ei (jos ei, tulee backround colorista tekstille tausta).
