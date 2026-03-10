@@ -180,6 +180,24 @@ int main(int argc, const char* argv[])
     return 1; // virheellinen ulostulo
 } 
 
+
+/*
+#include "NFmiQueryData.h"
+#include "NFmiSoundingIndexCalculator.h"
+#include "NFmiStreamQueryData.h"
+
+// Test sounding data creation code
+int main(int argc, const char* argv[])
+{
+    auto soundingIndexDataPtr = NFmiSoundingIndexCalculator::CreateNewSoundingIndexData("D:\\data\\soundingIndex\\gfs_scandinavia_pressure_short.sqd", "GFS SI", false, nullptr, false);
+    if(soundingIndexDataPtr == nullptr)
+        return 1;
+
+    NFmiStreamQueryData writer(soundingIndexDataPtr.get(), true);
+    writer.WriteData("D:\\data\\soundingIndex\\gfs_scandinavia_SI2.sqd", nullptr, (long)soundingIndexDataPtr->InfoVersion());
+    return 0;
+}
+*/
 /*
 #include "NFmiQueryData.h"
 #include "NFmiFastQueryInfo.h"
