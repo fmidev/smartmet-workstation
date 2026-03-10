@@ -66,4 +66,5 @@ namespace CatLog
     void logLevel(Severity logLevel);
     void setLogViewerUpdateCallback(std::function<void()> updateCallback);
     bool doTraceLevelLogging();
+    void stopLogging(bool newState);
 }
