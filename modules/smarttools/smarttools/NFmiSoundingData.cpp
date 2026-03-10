@@ -1072,7 +1072,7 @@ void NFmiSoundingData::CutEmptyData()
   // tässä pitää käydä läpi kaikki data vektorit!!!! Oikeasti nämä datavektori pitäisi laittaa omaan
   // vektoriin että sitä voitaisiin iteroida oikein!
   for (auto &paramValues : itsParamDataVector)
-    paramValues.resize(greatestNonMissingLevelIndex);
+    paramValues.resize(greatestNonMissingLevelIndex, kFloatMissing);
 }
 
 // Tälle anntaan asema dataa ja ei tehdä minkäänlaisia interpolointeja.
@@ -1581,6 +1581,7 @@ void NFmiSoundingData::ClearDatas()
   fPressureDataAvailable = false;
   fHeightDataAvailable = false;
   itsLFCIndexCache.Clear();
+  itsLiftedAirParcelCache.clear();
   fMovingSounding = false;
 }
 
@@ -3457,6 +3458,7 @@ void NFmiSoundingData::FillMissingServerData()
           });
     }
   }
+  CutEmptyData();
 }
 
 // Kertoo onko annetussa data:ssa parametrien järjestys niin että arvot ovat nousevassa
