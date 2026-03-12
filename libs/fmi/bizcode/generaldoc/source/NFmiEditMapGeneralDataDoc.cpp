@@ -1605,6 +1605,7 @@ void MakeClosingLogMessage(void)
 	LogMessage(itsBasicConfigurations.EditorVersionStr(), CatLog::Severity::Info, CatLog::Category::Configuration);
 	LogMessage(string("Program was running: ") + itsBasicConfigurations.MakeRunningTimeString(), CatLog::Severity::Info, CatLog::Category::Configuration);
     LogMessage(asteriskMarkerLine, CatLog::Severity::Info, CatLog::Category::Configuration);
+    CatLog::stopLogging(true);
 }
 
 // lukee editor.conf-tiedostosta seuraavat m‰‰rittelyt:

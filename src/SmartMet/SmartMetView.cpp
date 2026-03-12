@@ -649,7 +649,7 @@ void CSmartMetView::OnSize(UINT nType, int cx, int cy)
 		CtrlView::DeviceContextHandler<CSmartMetView> deviceContextHandler(this);
         data->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(rect.Width(), rect.Height()), deviceContextHandler.GetDcFromHandler());
 
-        if(counter > 2)
+        if(counter > 6)
             PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(data->GetCombinedMapHandler()->getMapViewDescTop(itsMapViewDescTopIndex)->ActualMapBitmapSizeInPixels(), true));
 
         // Vain tämä näyttö itse ja zoomaus dialogi pitää päivittää

@@ -873,8 +873,14 @@ namespace
 NFmiCombinedMapHandler::~NFmiCombinedMapHandler()
 {
 	// Pitää hankkiutua eroon NFmiPtrList -luokan käytöstä, silloin ei tarvitse erillisiä varatun muistin tuhoamiskomentoja
-	crossSectionDrawParamListVector_->Clear(true);
-	copyPasteDrawParamListVector_->Clear(true);
+	if(crossSectionDrawParamListVector_)
+	{
+		crossSectionDrawParamListVector_->Clear(true);
+	}
+	if(copyPasteDrawParamListVector_)
+	{
+		copyPasteDrawParamListVector_->Clear(true);
+	}
 }
 
 void NFmiCombinedMapHandler::initialize(const std::string & absoluteControlPath)
@@ -3388,7 +3394,7 @@ boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::getUsedMapViewDrawParam
 void NFmiCombinedMapHandler::copyMapViewDescTopParams(unsigned int mapViewDescTopIndex)
 {
 	NFmiPtrList<NFmiDrawParamList>* copiedDrawParamsList = getMapViewDescTop(mapViewDescTopIndex)->DrawParamListVector();
-	if(copiedDrawParamsList)
+	if(copiedDrawParamsList && copyPasteDrawParamListVector_)
 	{
 		copyPasteDrawParamListVectorUsedYet_ = true;
 		CombinedMapHandlerInterface::copyDrawParamsList(copiedDrawParamsList, copyPasteDrawParamListVector_.get());
@@ -3398,7 +3404,7 @@ void NFmiCombinedMapHandler::copyMapViewDescTopParams(unsigned int mapViewDescTo
 void NFmiCombinedMapHandler::pasteMapViewDescTopParams(unsigned int mapViewDescTopIndex)
 {
 	NFmiPtrList<NFmiDrawParamList>* copiedDrawParamsList = getMapViewDescTop(mapViewDescTopIndex)->DrawParamListVector();
-	if(copiedDrawParamsList)
+	if(copiedDrawParamsList && copyPasteDrawParamListVector_)
 	{
 		CombinedMapHandlerInterface::copyDrawParamsList(copyPasteDrawParamListVector_.get(), copiedDrawParamsList);
 		makeWholeDesctopDirtyActions(mapViewDescTopIndex, copiedDrawParamsList);
@@ -4094,7 +4100,7 @@ void NFmiCombinedMapHandler::absoluteActiveViewRow(unsigned int mapViewDescTopIn
 
 NFmiPtrList<NFmiDrawParamList>* NFmiCombinedMapHandler::getDrawParamListVector(unsigned int mapViewDescTopIndex)
 {
-	if(mapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
+	if(mapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView && crossSectionDrawParamListVector_)
 		return crossSectionDrawParamListVector_.get();
 	if(mapViewDescTopIndex == CtrlViewUtils::kFmiTimeSerialView)
 		return nullptr;
@@ -4265,7 +4271,7 @@ void NFmiCombinedMapHandler::takeDrawParamInUseEveryWhere(boost::shared_ptr<NFmi
 	if(useInTimeSerial)
 		::initializeWantedDrawParams(*timeSerialViewDrawParamList_, drawParam, useWithViewMacros);
 	// 3. käy läpi poikkileikkaus drawparamit
-	if(useInCrossSection)
+	if(useInCrossSection && crossSectionDrawParamListVector_)
 		::initializeWantedDrawParams(*crossSectionDrawParamListVector_, drawParam, useWithViewMacros);
 	// 4. käy läpi alussa (kaikelle datalle) tehty drawparamlista
 	::initializeWantedDrawParams(*modifiedPropertiesDrawParamList_, drawParam, useWithViewMacros);

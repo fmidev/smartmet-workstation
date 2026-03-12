@@ -761,7 +761,7 @@ bool NFmiCrossSectionView::IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDraw
 	tooltipData.latlons[0] = NFmiPoint(0, 0);
 	tooltipData.times[0] = NFmiMetTime();
 	tooltipData.pressures[0] = 500;
-	FillCrossSectionMacroParamData(itsIsolineValues, isoLineData, itsPressures, itsDrawParam, &tooltipData, &extraMacroParamData);
+	FillCrossSectionMacroParamData(itsIsolineValues, isoLineData, itsPressures, theUsedDrawParam, &tooltipData, &extraMacroParamData);
 	return tooltipData.macroParamErrorMessage.empty();
 }
 
@@ -1250,6 +1250,8 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
     try // ensin tulkitaan macro
     {
         smartToolModifier.IncludeDirectory(itsCtrlViewDocumentInterface->SmartToolInfo()->LoadDirectory());
+		if(!theUsedDrawParam)
+			return; // Cannot continue if theUsedDrawParam points to nullptr
 
         auto macroParamPtr = macroParamSystemPtr->GetWantedMacro(theUsedDrawParam->InitFileName());
         if(macroParamPtr)

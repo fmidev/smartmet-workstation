@@ -185,6 +185,8 @@ void CFmiExtraMapView::MakePrintViewDirty(bool fViewDirty, bool fCacheDirty)
 
 void CFmiExtraMapView::OnSize(UINT nType, int cx, int cy)
 {
+	static size_t counter = 0; // Nämä viritykset on tosi ärsyttäviä mutta jos en laske kuinka mones kerta ollaan täällä, tekstin laittaminen statusbar:iin kaataa SmartMetin, koska se valmistuu vasta myöhemmin ja en tiedä miten sitä voisi tarkastella että onko se jo valmis
+
     CView::OnSize(nType, cx, cy);
 
     CRect rect;
@@ -193,9 +195,11 @@ void CFmiExtraMapView::OnSize(UINT nType, int cx, int cy)
 
 	CtrlView::DeviceContextHandler<CFmiExtraMapView> deviceContextHandler(this);
     itsSmartMetDocumentInterface->DoMapViewOnSize(itsMapViewDescTopIndex, NFmiPoint(rect.Width(), rect.Height()), deviceContextHandler.GetDcFromHandler());
-    PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->ActualMapBitmapSizeInPixels(), true));
+	if(counter > 6)
+		PutTextInStatusBar(CtrlViewUtils::MakeMapPortionPixelSizeStringForStatusbar(itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->ActualMapBitmapSizeInPixels(), true));
 
-    Invalidate(FALSE);
+	counter++;
+	Invalidate(FALSE);
 }
 
 CtrlViewUtils::GraphicalInfo& CFmiExtraMapView::GetGraphicalInfo(void)

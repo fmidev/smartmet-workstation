@@ -4,11 +4,18 @@
 #include "NFmiStringTools.h"
 #include "FmiWin32Helpers.h"
 #include "NFmiApplicationWinRegistry.h"
+#include "catlog/catlog.h"
 
-static CRect MakeRectFromString(const std::string &theRectStr)
+static CRect MakeRectFromString(const std::string &theRectStr, const std::string& theRegKey)
 {
     std::string rectStr(theRectStr);
 	NFmiStringTools::Trim(rectStr); // trimmataan varmuudenvuoksi molemmat päät spaceista
+
+    // Lokitetaan rekisterista saatu teksti debug mielessa, koska joskus on ollut ongelmia, etta 
+    // rekisterista saatu teksti on ollut jotenkin vaaran muotoinen, ja siitä on aiheutunut ongelmia.
+    auto msg = "Persist2::GetWindowRectFromWinRegistry->MakeRectFromString: " + theRegKey + " registry key value gives: '" + rectStr + "'";
+    CatLog::logMessage(msg, CatLog::Severity::Debug, CatLog::Category::Operational, true);
+
 	std::vector<std::string> valueStrVector = NFmiStringTools::Split(rectStr,",");
 	if(valueStrVector.size() != 4)
 		throw std::runtime_error("Error in MakeRectFromString: There were not 4 values for window position and size.");
@@ -36,7 +43,7 @@ namespace Persist2
 
     CRect GetWindowRectFromWinRegistry(NFmiApplicationWinRegistry &theApplicationWinRegistry, const std::string &theRegKey)
     {
-        return ::MakeRectFromString(theApplicationWinRegistry.WindowRectStr(theRegKey));
+        return ::MakeRectFromString(theApplicationWinRegistry.WindowRectStr(theRegKey), theRegKey);
     }
 
     void ReadWindowRectFromWinRegistry(NFmiApplicationWinRegistry &theApplicationWinRegistry, const std::string &theRegKey, CWnd * win, bool justMoveWindow)

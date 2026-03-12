@@ -28,6 +28,7 @@
 #include "CombinedMapHandlerInterface.h"
 #include "FmiCombineDataThread.h"
 #include "LocalCacheSingleFileLoaderThread.h"
+#include "SettingsFunctions.h"
 
 #include "boost/format.hpp"
 
@@ -816,8 +817,10 @@ bool CSmartMetApp::CrashRptInstall(void)
 #ifdef DO_CRASH_REPORTING
     if(gBasicSmartMetConfigurations.EnableCrashReporter())
     {
-        // http lähetys on varattu lähinnä Latvialaisille, joille sähköpostin lähetys on estetty tietoturva systeemien takia
+        // http lähetys on otettu kayttoon kaikille, koska email attachmenttien koko on rajoitettu ja 
+        // isoja raportteja ei pysty lahettamaan emailina, mutta http:n kautta pystyy.
         bool useHttpTransfer = NFmiSettings::Optional<bool>("SmartMet::UseHttpTransferForCrashReports", false);
+        CatLog::logMessage(useHttpTransfer ? "SmartMet uses HTTP transfer as primary protocol for crash reports" : "SmartMet uses email transfer as primary protocol for crash reports", CatLog::Severity::Info, CatLog::Category::Configuration);
 
         // Install crash reporting
         CR_INSTALL_INFO info;
@@ -828,7 +831,9 @@ bool CSmartMetApp::CrashRptInstall(void)
         if(useHttpTransfer)
         {
             // URL for sending error reports over HTTP.
-            info.pszUrl = _T("http://services.weatherproof.fi/editor/crashrpt.php");
+            std::string urlStr = SettingsFunctions::GetUrlFromSettings("SmartMet::CrashReportHttpUrl", true, "https://services.weatherproof.fi/editor/crashrpt.php");
+            CatLog::logMessage("Used crash report url is " + urlStr, CatLog::Severity::Info, CatLog::Category::Configuration);
+            info.pszUrl = CA2T(urlStr.c_str());
             // Use binary encoding for HTTP uploads (recommended).
             info.dwFlags |= CR_INST_HTTP_BINARY_ENCODING;
             info.uPriorities[CR_HTTP] = 3;  // First try send report over HTTP 

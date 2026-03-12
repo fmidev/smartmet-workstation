@@ -24,6 +24,10 @@ namespace
     std::string baseLogFilePath_;
     // If this callback function is set, it's is called after every log purpose to update view which is showing the log messages to user
     std::function<void()> logViewerUpdateCallback_;
+    // When closing smartmet and after smartmet waits worker threads to stop, logging should be stopped.
+    // This flag prevents logging after that event, which can cause smartmet to crash when closing and
+    // when some threads does not react to closing but want to keep logging while doing their work.
+    bool stopLogging_ = false;
 
     string categoryToString(Category category)
     {
@@ -291,6 +295,9 @@ namespace CatLog
 
     void logMessage(const std::string &message, Severity severity, Category category, bool flushLogger)
     {
+        if(stopLogging_)
+          return;
+
         if(severity >= logLevel())
         {
             // Take time-point before trying logging to file
@@ -363,6 +370,11 @@ namespace CatLog
     bool doTraceLevelLogging()
     {
         return logLevel() == Severity::Trace;
+    }
+
+    void stopLogging(bool newState)
+    {
+        stopLogging_ = newState;
     }
 }
 
