@@ -5,7 +5,9 @@
 
 #include <functional>
 
+#ifndef UNIX
 class CWnd;
+#endif // UNIX
 
 namespace BetaProduct
 {
@@ -15,8 +17,12 @@ namespace BetaProduct
 
     using LogAndWarnFunctionType = std::function<void(const std::string &, const std::string&, CatLog::Severity , CatLog::Category , bool)>;
 
+#ifndef UNIX
     bool GetFilePathFromUser(const std::string &theFileFilter, const std::string &theInitialDirectory, std::string &theFilePathOut, bool fLoadFile, const std::string& theInitialFileName, CWnd *parentView);
+#endif // UNIX
+#ifndef UNIX
     bool GetFilePathFromUserTotal(const std::string& theFileFilter, const std::string& theInitialDirectory, std::string& theFilePathOut, bool fLoadFile, const std::string& theInitialFileName, const std::string& theFileExtension, const std::string& theRootDirectory, CWnd* parentView);
+#endif // UNIX
     void SetLoggerFunction(LogAndWarnFunctionType &theLoggerFunction);
     LogAndWarnFunctionType GetLoggerFunction();
 
@@ -39,6 +45,7 @@ namespace BetaProduct
             }
     }
 
+#ifndef UNIX
     template<typename ObjectType>
     bool SaveObjectInJsonFormat(const ObjectType &theObject, std::string &theInitialPath, const std::string &theFileFilter, const std::string &theFileExtension, const std::string &theBaseDirectory, const std::string &theObjectName, const std::string& theInitialFileName, bool justLogMessages, std::string *theUsedAbsoluteFilePath, CWnd* parentView)
     {
@@ -53,6 +60,7 @@ namespace BetaProduct
         }
         return false;
     }
+#endif // UNIX
 
     template<typename ObjectType>
     bool LoadObjectFromKnownFileInJsonFormat(ObjectType &theObject, const std::string &theAbsoluteFilePath, const std::string &theObjectName, bool justLogMessages)
@@ -74,6 +82,7 @@ namespace BetaProduct
     }
 
 
+#ifndef UNIX
     template<typename ObjectType>
     bool LoadObjectInJsonFormat(ObjectType &theObject, std::string &theInitialPath, const std::string &theFileFilter, const std::string &theFileExtension, const std::string &theBaseDirectory, const std::string &theObjectName, bool justLogMessages, std::string *theUsedAbsoluteFilePath, CWnd* parentView)
     {
@@ -87,5 +96,6 @@ namespace BetaProduct
         }
         return false;
     }
+#endif // UNIX
 
 }; // BetaProduct

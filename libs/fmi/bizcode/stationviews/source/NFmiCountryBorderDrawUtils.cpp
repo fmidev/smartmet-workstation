@@ -19,8 +19,10 @@
 
 namespace
 {
+#ifndef UNIX
     const COLORREF g_transparentColorRGB = RGB(213, 156, 68);
     const Gdiplus::Color g_transparentColorGdiplus(213, 156, 68);
+#endif // UNIX
 
     void traceLogLandBorderLineCounts(size_t polyLineCount, size_t totalLinePointCount, NFmiCtrlView* ctrlView)
     {
@@ -36,7 +38,7 @@ namespace
 
     void drawPolyLineList(NFmiToolBox* theGTB, std::list<NFmiPolyline*>& thePolyLineList, const NFmiPoint& theOffSet, NFmiCtrlView* ctrlView, NFmiDrawingEnvironment &drawingEnvironment)
     {
-        // Maiden rajat piirretään aina samalla värillä ja viivapaksuudella ja se asetetaan tässä ennen polylinejen piirtoa.
+        // Maiden rajat piirretï¿½ï¿½n aina samalla vï¿½rillï¿½ ja viivapaksuudella ja se asetetaan tï¿½ssï¿½ ennen polylinejen piirtoa.
         theGTB->ConvertEnvironment(&drawingEnvironment);
         NFmiPoint scale;
         size_t totalLinePointCount = 0;
@@ -48,11 +50,13 @@ namespace
         ::traceLogLandBorderLineCounts(thePolyLineList.size(), totalLinePointCount, ctrlView);
     }
 
+#ifndef UNIX
     void drawPolyLineListGdiplus(Gdiplus::Graphics& gdiplusGraphics, NFmiToolBox* toolbox, const std::list<std::vector<NFmiPoint>>& polyLineListGdiplus, const NFmiPoint& relativeOffSet, NFmiCtrlView* ctrlView, const NFmiColor& lineColor, int lineThickness)
     {
         size_t totalLinePointCount = CtrlView::DrawGdiplusSimpleMultiPolyLine(gdiplusGraphics, toolbox, polyLineListGdiplus, lineColor, lineThickness, relativeOffSet);
         ::traceLogLandBorderLineCounts(polyLineListGdiplus.size(), totalLinePointCount, ctrlView);
     }
+#endif // UNIX
 
     void pushOldPolyLineAndStartNew(std::list<std::vector<NFmiPoint>>& relativePolyLineList, std::vector<NFmiPoint>& currentPolyLine, const NFmiPoint& newPoint)
     {
@@ -177,7 +181,7 @@ namespace
         }
 
         if(currentPolyLine.size() > 1)
-            relativePolyLineList.push_back(currentPolyLine); // laitetaan vielä viimeinen polyline listaan
+            relativePolyLineList.push_back(currentPolyLine); // laitetaan vielï¿½ viimeinen polyline listaan
 
         return relativePolyLineList;
     }
@@ -190,6 +194,7 @@ namespace
     }
 
 
+#ifndef UNIX
     void drawLandBordersWithGdiplus(NFmiCtrlView* mapView, NFmiToolBox* toolbox, NFmiDrawParam *separateBorderLayerDrawOptions)
     {
         auto ctrlViewDocumentInterface = mapView->GetCtrlViewDocumentInterface();
@@ -197,8 +202,8 @@ namespace
         auto mapArea = mapView->GetArea();
         if(ctrlViewDocumentInterface->DrawLandBorders(mapViewDescTopIndex, separateBorderLayerDrawOptions))
         {
-            // Border viivojen piirto erilliseen cache bitmap:iin pitää tapahtua aina kiinni origossa.
-            // Siksi pitää luoda uusi area-olio, jonka top-left kulma on relatiivisessa origossa (0, 0)
+            // Border viivojen piirto erilliseen cache bitmap:iin pitï¿½ï¿½ tapahtua aina kiinni origossa.
+            // Siksi pitï¿½ï¿½ luoda uusi area-olio, jonka top-left kulma on relatiivisessa origossa (0, 0)
             auto fixedToOrigoMapArea = ::CreateFixedToOrigoMapArea(mapArea);
             if(ctrlViewDocumentInterface->BorderDrawPolylinesGdiplusDirty(mapViewDescTopIndex))
             {
@@ -208,7 +213,7 @@ namespace
                 {
                     Imagine::NFmiPath path(*usedPath.get());
                     path.Project(fixedToOrigoMapArea.get());
-                    // laitetaan piirtovalmis polylinelista talteen dokumenttiin, tämä myös asettaa listaan liittyvän likaisuus lipun pois eli käyttövalmiiksi
+                    // laitetaan piirtovalmis polylinelista talteen dokumenttiin, tï¿½mï¿½ myï¿½s asettaa listaan liittyvï¿½n likaisuus lipun pois eli kï¿½yttï¿½valmiiksi
                     ctrlViewDocumentInterface->DrawBorderPolyLineListGdiplus(mapViewDescTopIndex, ::convertPath2RelativePolyLineListGdiplus(path, false, true));
                 }
                 else
@@ -222,7 +227,7 @@ namespace
                 NFmiPoint offSet(fixedToOrigoMapArea->TopLeft());
                 int penSize = ctrlViewDocumentInterface->LandBorderPenSize(mapViewDescTopIndex, separateBorderLayerDrawOptions);
                 auto lineColor = ctrlViewDocumentInterface->LandBorderColor(mapViewDescTopIndex, separateBorderLayerDrawOptions);
-                // Pitää luoda rajaviiva piirrossa käytössä olevan toolboxin avulla uusi Gdiplus-graphics olio, ei saa käyttää mapView:in vastaavaa oliota!
+                // Pitï¿½ï¿½ luoda rajaviiva piirrossa kï¿½ytï¿½ssï¿½ olevan toolboxin avulla uusi Gdiplus-graphics olio, ei saa kï¿½yttï¿½ï¿½ mapView:in vastaavaa oliota!
                 std::unique_ptr<Gdiplus::Graphics> gdigraphicsPtr(NFmiCtrlView::CreateGdiplusGraphics(toolbox, &fixedToOrigoMapArea->XYArea()));
                 if(gdigraphicsPtr)
                     ::drawPolyLineListGdiplus(*gdigraphicsPtr, toolbox, borderPolyLineList, offSet, mapView, lineColor, penSize);
@@ -233,6 +238,7 @@ namespace
         else
             CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + " no land border drawing here", mapView);
     }
+#endif // UNIX
 
     void drawLandBorders(NFmiCtrlView* mapView, NFmiToolBox* toolbox, NFmiDrawParam* separateBorderLayerDrawOptions)
     {
@@ -241,21 +247,25 @@ namespace
         auto mapArea = mapView->GetArea();
 
         auto penSize = ctrlViewDocumentInterface->LandBorderPenSize(mapViewDescTopIndex, separateBorderLayerDrawOptions);
-        //// Vanha rajaviiva piirto on nopeaa, kun piirto tehdään 1 paksuisella viivalla.
-        //// Jos piirto tehdään 2 tai 3 pikselin kynällä vanha piirto hidastui merkittävästi:
+        //// Vanha rajaviiva piirto on nopeaa, kun piirto tehdï¿½ï¿½n 1 paksuisella viivalla.
+        //// Jos piirto tehdï¿½ï¿½n 2 tai 3 pikselin kynï¿½llï¿½ vanha piirto hidastui merkittï¿½vï¿½sti:
         //// Alue piirrot: suomi n. 25-40x (piirtoaika), skandi n. 45-75x, euro n. 15-30 ja maailma n. 6-10x
         //// Tein uuden piirto koodin, joka on hitaampi 1 pikselin piirrolle, mutta nopeampi 2-3 pikselille:
         //// Uusi vs vanha piirtonopeus: suomi n. 3-5x (nopeampi), skandi n. 7-11x, euro n. 2.5-4.5x ja maailma n. 1.5-3x
-        //// Siksi jos piirto paksuus on 1, käytetään vanhaa piirtoa j muuten käytetään uutta.
+        //// Siksi jos piirto paksuus on 1, kï¿½ytetï¿½ï¿½n vanhaa piirtoa j muuten kï¿½ytetï¿½ï¿½n uutta.
         bool usedGdiPlus = (penSize > 1);
         if(usedGdiPlus)
+        {
+#ifndef UNIX
             ::drawLandBordersWithGdiplus(mapView, toolbox, separateBorderLayerDrawOptions);
+#endif // UNIX
+        }
         else
         {
             if(ctrlViewDocumentInterface->DrawLandBorders(mapViewDescTopIndex, separateBorderLayerDrawOptions))
             {
-                // Border viivojen piirto erilliseen cache bitmap:iin pitää tapahtua aina kiinni origossa.
-                // Siksi pitää luoda uusi area-olio, jonka top-left kulma on relatiivisessa origossa (0, 0)
+                // Border viivojen piirto erilliseen cache bitmap:iin pitï¿½ï¿½ tapahtua aina kiinni origossa.
+                // Siksi pitï¿½ï¿½ luoda uusi area-olio, jonka top-left kulma on relatiivisessa origossa (0, 0)
                 auto fixedToOrigoMapArea = ::CreateFixedToOrigoMapArea(mapArea);
                 if(ctrlViewDocumentInterface->BorderDrawPolylinesDirty(mapViewDescTopIndex))
                 {
@@ -267,10 +277,10 @@ namespace
                         path.Project(fixedToOrigoMapArea.get());
                         std::list<NFmiPolyline*> polyLineList;
                         // NFmiIsoLineView::ConvertPath2PolyLineList funktiolle annetaan viimeisena nullptr parametri, koska ei haluta antaa jokaiselle
-                        // erilliselle polylinelle omaa piirto-ominaisuus oliota. Kun maiden rajaviivat piirretään yhteen karttaruutuun, piirretään ne 
-                        // aina samalla värillä ja viivapaksuudella, joten ei ole tarvetta laitta jokaiselle viivanpätkälle erillisiä asetuksia.
+                        // erilliselle polylinelle omaa piirto-ominaisuus oliota. Kun maiden rajaviivat piirretï¿½ï¿½n yhteen karttaruutuun, piirretï¿½ï¿½n ne 
+                        // aina samalla vï¿½rillï¿½ ja viivapaksuudella, joten ei ole tarvetta laitta jokaiselle viivanpï¿½tkï¿½lle erillisiï¿½ asetuksia.
                         NFmiIsoLineView::ConvertPath2PolyLineList(path, polyLineList, false, true, fixedToOrigoMapArea->XYArea(), nullptr);
-                        // laitetaan piirtovalmis polylinelista talteen dokumenttiin, tämä myös asettaa polyline-listaan liittyvän dirty-flagin pois päältä
+                        // laitetaan piirtovalmis polylinelista talteen dokumenttiin, tï¿½mï¿½ myï¿½s asettaa polyline-listaan liittyvï¿½n dirty-flagin pois pï¿½ï¿½ltï¿½
                         ctrlViewDocumentInterface->DrawBorderPolyLineList(mapViewDescTopIndex, polyLineList);
                     }
                     else
@@ -282,7 +292,7 @@ namespace
                 {
                     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(mapView, std::string(__FUNCTION__) + " doing final border drawing");
                     // Printatessa ei ole cache bitmap piirtoa, joten se on erikoistapaus, jolloin tarvitaan originaali relatiivista kartta-aluetta oikeine offset:eineen
-                    auto* usedMapAreaInDrawing = toolbox->GetDC()->IsPrinting() ? mapArea.get() : fixedToOrigoMapArea.get();
+                    auto* usedMapAreaInDrawing = mapView->IsPrinting() ? mapArea.get() : fixedToOrigoMapArea.get();
                     NFmiPoint offSet(usedMapAreaInDrawing->TopLeft());
                     NFmiDrawingEnvironment envi;
                     envi.SetFrameColor(ctrlViewDocumentInterface->LandBorderColor(mapViewDescTopIndex, separateBorderLayerDrawOptions));
@@ -296,6 +306,7 @@ namespace
         }
     }
 
+#ifndef UNIX
     void fillMapWithTransparentColor(CDC* theUsedCDC, const CRect& mfcRect)
     {
         CBrush whiteBrush(g_transparentColorRGB);
@@ -303,9 +314,11 @@ namespace
         theUsedCDC->Rectangle(mfcRect);
         theUsedCDC->SelectObject(oldBrush);
     }
+#endif // UNIX
 
     void drawLandBordersToCacheBitmap(NFmiCtrlView* mapView, NFmiToolBox* toolbox, NFmiDrawParam* separateBorderLayerDrawOptions)
     {
+#ifndef UNIX
         int mapViewDescTopIndex = mapView->MapViewDescTopIndex();
         auto mfcMapView = ApplicationInterface::GetApplicationInterfaceImplementation()->GetView(mapViewDescTopIndex);
         if(mfcMapView)
@@ -326,10 +339,12 @@ namespace
             //landBorderMapBitmap->DeleteObject();
             delete landBorderMapBitmap;
         }
+#endif // UNIX
     }
 
     void drawLandBordersFromCacheBitmap(NFmiCtrlView* mapView, NFmiToolBox* toolbox, NFmiDrawParam* separateBorderLayerDrawOptions)
     {
+#ifndef UNIX
         CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(__FUNCTION__, mapView);
         int mapViewDescTopIndex = mapView->MapViewDescTopIndex();
         auto ctrlViewDocumentInterface = mapView->GetCtrlViewDocumentInterface();
@@ -340,11 +355,12 @@ namespace
 
         NFmiRect sourcePixels(0, 0, landBorderMapBitmap->GetWidth(), landBorderMapBitmap->GetHeight());
         auto destPixels = CtrlView::Relative2GdiplusRectF(toolbox, mapView->GetArea()->XYArea());
-        // Edellä laskettu piito alueen koko saattaa heittää yhdellä pikselillä, ja se tekee viiva piirrosta hämäävän, 
-        // joten fiksaan tässä piirtoalueen originaali bitmap kokoon, vaikka se ehkä onkin pikkuisen väärin.
+        // Edellï¿½ laskettu piito alueen koko saattaa heittï¿½ï¿½ yhdellï¿½ pikselillï¿½, ja se tekee viiva piirrosta hï¿½mï¿½ï¿½vï¿½n, 
+        // joten fiksaan tï¿½ssï¿½ piirtoalueen originaali bitmap kokoon, vaikka se ehkï¿½ onkin pikkuisen vï¿½ï¿½rin.
         destPixels.Width = static_cast<Gdiplus::REAL>(landBorderMapBitmap->GetWidth());
         destPixels.Height = static_cast<Gdiplus::REAL>(landBorderMapBitmap->GetHeight());
         CtrlView::DrawBitmapToDC_4(usedDc, *landBorderMapBitmap, sourcePixels, destPixels, false, NFmiImageAttributes(g_transparentColorGdiplus));
+#endif // UNIX
     }
 
     void drawLandBordersWithBitmap(NFmiCtrlView* mapView, NFmiToolBox* toolbox, NFmiDrawParam* separateBorderLayerDrawOptions)
@@ -364,7 +380,7 @@ namespace
 
 void NFmiCountryBorderDrawUtils::drawCountryBordersToMapView(NFmiCtrlView* mapView, NFmiToolBox* toolbox, NFmiDrawParam* separateBorderLayerDrawOptions)
 {
-    // Printatessa ei sitten voinutkaan käyttää uutta nopeampaa bitmap optimoitua piirtoa.
+    // Printatessa ei sitten voinutkaan kï¿½yttï¿½ï¿½ uutta nopeampaa bitmap optimoitua piirtoa.
     if(mapView->GetCtrlViewDocumentInterface()->Printing())
         ::drawLandBorders(mapView, toolbox, separateBorderLayerDrawOptions);
     else

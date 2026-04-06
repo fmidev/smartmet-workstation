@@ -6,6 +6,8 @@
 #if !defined(AFX_TREECOLUMN_H__55D4E2A3_EDF9_11D3_B75E_00C04F6A7AE6__INCLUDED_)
 #define AFX_TREECOLUMN_H__55D4E2A3_EDF9_11D3_B75E_00C04F6A7AE6__INCLUDED_
 
+#ifndef UNIX
+
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -176,5 +178,7 @@ protected:
     int m_iRowCount;
 
 };
+
+#endif // UNIX
 
 #endif // !defined(AFX_TREECOLUMN_H__55D4E2A3_EDF9_11D3_B75E_00C04F6A7AE6__INCLUDED_)

@@ -9,8 +9,11 @@
 #include "CtrlViewGdiPlusFunctions.h"
 #include "NFmiToolBox.h"
 #include "CtrlViewWin32Functions.h"
+#ifndef UNIX
 #include <gdiplus.h>
+#endif // UNIX
 
+#ifndef UNIX
 namespace
 {
     // laskee kertoimen, joka vaihtelee 0 ja 2:n välillä. Kerroin on 1 jos näyttöruudun
@@ -285,3 +288,4 @@ namespace StationViews
     }
 
 }
+#endif // UNIX

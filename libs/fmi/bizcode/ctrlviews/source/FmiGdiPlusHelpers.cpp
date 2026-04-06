@@ -1,4 +1,6 @@
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "FmiGdiPlusHelpers.h"
 #include "SmartMetDocumentInterface.h"
 #include "NFmiFileString.h"
@@ -9,6 +11,7 @@
 
 #include "boost/math/special_functions/round.hpp"
 
+#ifndef UNIX
 int CFmiGdiPlusHelpers::GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
 {
 	UINT  num = 0;          // number of image encoders
@@ -295,4 +298,4 @@ bool CFmiGdiPlusHelpers::SafelySaveMfcBitmapToFile(const std::string &theCalling
     }
     return false;
 }
-
+#endif // UNIX

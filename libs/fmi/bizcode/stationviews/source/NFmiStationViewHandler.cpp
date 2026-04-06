@@ -11,27 +11,27 @@
 //  - GD Method         : UML ( 2.1.4 )
 //  - GD System Name    : Met-editor Plan 3
 //  - GD View Type      : Class Diagram
-//  - GD View Name      : ruudukkonäyttö
+//  - GD View Name      : ruudukkonï¿½yttï¿½
 // ---------------------------------------------------
 //  Author         : pietarin
 //  Creation Date  : Fri - Sep 10, 1999
 //
 //
 //  Description:
-//   Tämä luokka pitää sisällään kartan piirron
-//   ja stationviewlistin joita se piirtää.
-//   Tätä luokkaa on tarkoitus käyttää editorin
-//   'ruudukko'-näytön palasena. Näistä ruudunpalasista
+//   Tï¿½mï¿½ luokka pitï¿½ï¿½ sisï¿½llï¿½ï¿½n kartan piirron
+//   ja stationviewlistin joita se piirtï¿½ï¿½.
+//   Tï¿½tï¿½ luokkaa on tarkoitus kï¿½yttï¿½ï¿½ editorin
+//   'ruudukko'-nï¿½ytï¿½n palasena. Nï¿½istï¿½ ruudunpalasista
 //   kootaan 'rivit' NFmiTimeStationViwRow-luokkaan ja
 //   ruudukon muodostaa NFmiTimeStationViwRowList.
-//   Tätä viimeista pitää
-//   taas editorin näyttöluokka omanaan.
+//   Tï¿½tï¿½ viimeista pitï¿½ï¿½
+//   taas editorin nï¿½yttï¿½luokka omanaan.
 //
 //  Change Log:
 //
 //**********************************************************
 #ifdef _MSC_VER
-#pragma warning(disable : 4786) // poistaa n kpl VC++ kääntäjän varoitusta
+#pragma warning(disable : 4786) // poistaa n kpl VC++ kï¿½ï¿½ntï¿½jï¿½n varoitusta
 #endif
 
 #include "NFmiStationViewHandler.h"
@@ -159,8 +159,8 @@ NFmiStationViewHandler::NFmiStationViewHandler(int theMapViewDescTopIndex, boost
 	itsViewList = new NFmiCtrlViewList(itsMapViewDescTopIndex, mapRect
 									  ,itsToolBox
 									  ,itsMapDrawParam);
-	if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1) // tehdään tämä alustus vain 1. rivin ensimmäiseen ruudun luonnin yhteydessä
-		itsCtrlViewDocumentInterface->CrossSectionSystem()->CalcMinorPoints(itsMapArea); // tämä pitää tehdä ainakin kerran
+	if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1) // tehdï¿½ï¿½n tï¿½mï¿½ alustus vain 1. rivin ensimmï¿½iseen ruudun luonnin yhteydessï¿½
+		itsCtrlViewDocumentInterface->CrossSectionSystem()->CalcMinorPoints(itsMapArea); // tï¿½mï¿½ pitï¿½ï¿½ tehdï¿½ ainakin kerran
 
 	InitParamHandlerView();
 }
@@ -170,6 +170,7 @@ NFmiStationViewHandler::~NFmiStationViewHandler()
 	delete itsViewList;
 }
 
+#ifndef UNIX
 static void DoBitBlt(CDC *sourceDc, CDC *destinationDc, CBitmap *usedBitmap, const CSize &sourceOffset)
 {
     BITMAP bm;
@@ -186,7 +187,9 @@ static void DoBitBlt(CDC *sourceDc, CDC *destinationDc, CBitmap *usedBitmap, con
         , SRCCOPY);
     destinationDc->SelectObject(oldBitmap);
 }
+#endif // UNIX
 
+#ifndef UNIX
 static CSize CalcBitmapSizeFromFrame(NFmiToolBox * theGTB, const NFmiRect &mapFrame)
 {
     int bitmapWidth = theGTB->HX(mapFrame.Width());
@@ -200,18 +203,20 @@ static CSize CalcSourceOffsetFromFrame(NFmiToolBox * theGTB, const NFmiRect &map
     int sourceY = theGTB->HY(mapFrame.Top());
     return CSize(sourceX, sourceY);
 }
+#endif // UNIX
 
 void NFmiStationViewHandler::DoBasicDrawing(NFmiToolBox * theGTB, const NFmiRect &theMapFrame)
 {
-    DrawMap(theGTB, theMapFrame); // synop-plot printtausta varten pitää tehdä oma muuttuja, jolloin ei karttaa piirretä
+    DrawMap(theGTB, theMapFrame); // synop-plot printtausta varten pitï¿½ï¿½ tehdï¿½ oma muuttuja, jolloin ei karttaa piirretï¿½
     DrawData(theGTB);
-    DrawOverMap(theGTB, theMapFrame); // piirretään haluttaessa kartan ja datan päälle läpinäkyvä esim. kaupunkien nimet/tiestö kartta
+    DrawOverMap(theGTB, theMapFrame); // piirretï¿½ï¿½n haluttaessa kartan ja datan pï¿½ï¿½lle lï¿½pinï¿½kyvï¿½ esim. kaupunkien nimet/tiestï¿½ kartta
     DrawSilamStationMarkers();
     DrawTrajectories();
     DrawHALYMessageMarkers();
     DrawWindTableAreas();
 }
 
+#ifndef UNIX
 void NFmiStationViewHandler::DoCacheDrawing(NFmiToolBox * theGTB, const NFmiRect &theMapFrame, CDC *destinationDc, int cacheRowIndex)
 {
     CDC* sourceDC = theGTB->GetDC();
@@ -220,7 +225,7 @@ void NFmiStationViewHandler::DoCacheDrawing(NFmiToolBox * theGTB, const NFmiRect
     CSize bitmapSize = ::CalcBitmapSizeFromFrame(theGTB, theMapFrame);
     CSize sourceOffset = ::CalcSourceOffsetFromFrame(theGTB, theMapFrame);
     CBitmap *viewCache = new CBitmap;
-    BOOL status = viewCache->CreateCompatibleBitmap(sourceDC, bitmapSize.cx, bitmapSize.cy); // HUOM! pitää olla sourceDC, eikä destDC!
+    BOOL status = viewCache->CreateCompatibleBitmap(sourceDC, bitmapSize.cx, bitmapSize.cy); // HUOM! pitï¿½ï¿½ olla sourceDC, eikï¿½ destDC!
     if(status)
     {
         ::DoBitBlt(sourceDC, destinationDc, viewCache, sourceOffset);
@@ -229,7 +234,7 @@ void NFmiStationViewHandler::DoCacheDrawing(NFmiToolBox * theGTB, const NFmiRect
     else
     {
         static bool firstTime = true;
-        viewCache->DeleteObject();  // en tiedä pitääkö epäonnistuneen luonnin jälkeen tuhota objectia
+        viewCache->DeleteObject();  // en tiedï¿½ pitï¿½ï¿½kï¿½ epï¿½onnistuneen luonnin jï¿½lkeen tuhota objectia
         delete viewCache;
         if(firstTime)
         {
@@ -243,12 +248,13 @@ void NFmiStationViewHandler::DoCacheDrawing(NFmiToolBox * theGTB, const NFmiRect
         }
     }
 }
+#endif // UNIX
 
-// Lasketaan eri karttanäyttömoodeissa tämän olion käyttämä cache rivi.
-// cacheRowIndex luvut alkavat 0:sta ja menevät 49:ään.
-// itsViewGridRowNumber kertoo kuinka monennella näyttöruudukossa näkyvällä kartta rivillä 
-// ollaan (ylin näkyvä on 1 jne., max 5 riviä kerrallaan eli luvut 1-5).
-// mapRowStartingIndex on karttaruudukon ylimmän rivin oikea rivinumero, joka alkaa 1:stä ja menee 50:een.
+// Lasketaan eri karttanï¿½yttï¿½moodeissa tï¿½mï¿½n olion kï¿½yttï¿½mï¿½ cache rivi.
+// cacheRowIndex luvut alkavat 0:sta ja menevï¿½t 49:ï¿½ï¿½n.
+// itsViewGridRowNumber kertoo kuinka monennella nï¿½yttï¿½ruudukossa nï¿½kyvï¿½llï¿½ kartta rivillï¿½ 
+// ollaan (ylin nï¿½kyvï¿½ on 1 jne., max 5 riviï¿½ kerrallaan eli luvut 1-5).
+// mapRowStartingIndex on karttaruudukon ylimmï¿½n rivin oikea rivinumero, joka alkaa 1:stï¿½ ja menee 50:een.
 int NFmiStationViewHandler::CalcUsedCacheRowIndex() const
 {
     CtrlViewUtils::MapViewMode displayMode = itsCtrlViewDocumentInterface->MapViewDisplayMode(itsMapViewDescTopIndex);
@@ -292,8 +298,11 @@ void NFmiStationViewHandler::Draw(NFmiToolBox * theGTB)
 	itsToolBox = theGTB;
 	// cachessa rivi-indeksit alkavat 0:sta
     int cacheRowIndex = CalcUsedCacheRowIndex();
+#ifndef UNIX
 	CDC* destDC = itsCtrlViewDocumentInterface->CopyCDC(itsMapViewDescTopIndex);
+#endif // UNIX
 	NFmiRect frame(GetFrame());
+#ifndef UNIX
 	CBitmap *viewCache = 0;
     bool useDrawingCache = UseDrawingCache();
     if(useDrawingCache)
@@ -302,7 +311,7 @@ void NFmiStationViewHandler::Draw(NFmiToolBox * theGTB)
 	if(destDC)
 	{
 		if(!viewCache)
-		{ // Tätä ruutua ei löydy cachesta, pitää piirtää.
+		{ // Tï¿½tï¿½ ruutua ei lï¿½ydy cachesta, pitï¿½ï¿½ piirtï¿½ï¿½.
 			try
 			{
                 CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + ": have to draw all data", this);
@@ -321,21 +330,27 @@ void NFmiStationViewHandler::Draw(NFmiToolBox * theGTB)
             catch(...)
 			{
 			}
-			CleanGdiplus(); // tätä pitää kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
+			CleanGdiplus(); // tï¿½tï¿½ pitï¿½ï¿½ kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
 		}
 		else
-		{ // Piirretään karttaruutu suoraan cachesta, nopeaa.
+		{ // Piirretï¿½ï¿½n karttaruutu suoraan cachesta, nopeaa.
             CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + ": using cache image to draw (faster)", this);
             CBitmap* oldBitmap = destDC->SelectObject(viewCache);
 			theGTB->DrawDC(destDC, frame);
 			destDC->SelectObject(oldBitmap);
         }
 	}
+#else
+    // On Linux: no cache drawing, just draw directly
+    InitializeGdiplus(itsToolBox, &GetFrame());
+    DoBasicDrawing(theGTB, frame);
+    CleanGdiplus();
+#endif // UNIX
 }
 
-// Piirto cachea ei käytetä:
+// Piirto cachea ei kï¿½ytetï¿½:
 // 1. Kun ollaan printtaamassa
-// 2. Kun ollaan piirtämässä Beta product moodissa
+// 2. Kun ollaan piirtï¿½mï¿½ssï¿½ Beta product moodissa
 bool NFmiStationViewHandler::UseDrawingCache()
 {
     if(itsCtrlViewDocumentInterface->Printing() || itsCtrlViewDocumentInterface->BetaProductGenerationRunning())
@@ -364,34 +379,37 @@ void NFmiStationViewHandler::DrawCPCropArea(void)
 		{
 			NFmiColor frameColor(0.9f, 0, 0.8f);
 			NFmiColor fillColor;
-			// piirretään uloimpi alue
-			NFmiRect relativeRect = CalcCPCropAreasRelativeRect(itsCtrlViewDocumentInterface->CPGridCropLatlonArea());
+			// piirretï¿½ï¿½n uloimpi alue
+	#ifndef UNIX
+		NFmiRect relativeRect = CalcCPCropAreasRelativeRect(itsCtrlViewDocumentInterface->CPGridCropLatlonArea());
 			Gdiplus::Rect rectInPixels = CtrlView::Relative2GdiplusRect(itsToolBox, relativeRect);
             CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, frameColor, fillColor, false, true, 2, Gdiplus::DashStyleDash);
 			if(itsCtrlViewDocumentInterface->IsCPGridCropNotPlausible())
-			{ // CP croppaus on käytössä, mutta ei mahdollista, piirrä varoittava punainen rasti kartalle
+			{ // CP croppaus on kï¿½ytï¿½ssï¿½, mutta ei mahdollista, piirrï¿½ varoittava punainen rasti kartalle
 				NFmiColor crossColor(1, 0, 0);
                 CtrlView::DrawLine(*itsGdiPlusGraphics, rectInPixels.X, rectInPixels.Y, rectInPixels.X + rectInPixels.Width, rectInPixels.Y + rectInPixels.Height, crossColor, 2, Gdiplus::DashStyleDash);
                 CtrlView::DrawLine(*itsGdiPlusGraphics, rectInPixels.X, rectInPixels.Y + rectInPixels.Height, rectInPixels.X + rectInPixels.Width, rectInPixels.Y, crossColor, 2, Gdiplus::DashStyleDash);
 			}
 			else
 			{
-				// piirretään sisempi alue
+				// piirretï¿½ï¿½n sisempi alue
 				relativeRect = CalcCPCropAreasRelativeRect(itsCtrlViewDocumentInterface->CPGridCropInnerLatlonArea());
 				rectInPixels = CtrlView::Relative2GdiplusRect(itsToolBox, relativeRect);
                 CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, frameColor, fillColor, false, true, 2, Gdiplus::DashStyleDash);
 			}
+#endif // UNIX
 		}
 	}
 }
 
 void NFmiStationViewHandler::DrawAreaMask(Gdiplus::Graphics &theGdiPlusGraphics, NFmiWindTableSystem::AreaMaskData &theAreaMaskData)
 {
+#ifndef UNIX
 	NFmiSvgPath &aPath = theAreaMaskData.SvgPath();
 	float lineWidthInPixels = 1;
-	int lineStyle = 0; // 0=yhtenäinen viiva
+	int lineStyle = 0; // 0=yhtenï¿½inen viiva
 	GdiPlusLineInfo lineInfo(lineWidthInPixels, NFmiColor(0, 0, 0), lineStyle);
-	int fillHatchStyle = -1; // -1 tarkoittaa että fillauksen yhteydessä ei käytetä hatchiä
+	int fillHatchStyle = -1; // -1 tarkoittaa ettï¿½ fillauksen yhteydessï¿½ ei kï¿½ytetï¿½ hatchiï¿½
 	lineInfo.SetSmoothingMode(Gdiplus::SmoothingModeNone);
 
 	NFmiSvgPath::storage_type &pathElements = aPath.GetData();
@@ -424,13 +442,13 @@ void NFmiStationViewHandler::DrawAreaMask(Gdiplus::Graphics &theGdiPlusGraphics,
 		}
 	}
 
-	// piirretään maski alueen nimi vielä 1. pisteen kohdalle
+	// piirretï¿½ï¿½n maski alueen nimi vielï¿½ 1. pisteen kohdalle
 	if(firstPointFound)
 	{
 		double pixelsPerMM = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_y;
         CtrlView::DrawTextToRelativeLocation(theGdiPlusGraphics, NFmiColor(0,0,1), 4.5, theAreaMaskData.Name(), LatLonToViewPoint(firstLatLon), pixelsPerMM, itsToolBox, L"arial", kCenter);
 	}
-
+#endif // UNIX
 }
 
 void NFmiStationViewHandler::DrawWindTableAreas(void)
@@ -441,7 +459,9 @@ void NFmiStationViewHandler::DrawWindTableAreas(void)
 		auto  &areaMaskDataList = windTableSystem.AreaMaskDataList();
 		for(size_t i = 0; i < areaMaskDataList.size(); i++)
 		{
+#ifndef UNIX
 			DrawAreaMask(*itsGdiPlusGraphics, areaMaskDataList[i]);
+#endif // UNIX
 		}
 	}
 }
@@ -452,7 +472,7 @@ bool NFmiStationViewHandler::IsCrossSectionViewStuffShownOnThisMapView() const
 	return crossSectionSystem->CrossSectionViewOn() && crossSectionSystem->CrossSectionSystemActive() && itsCtrlViewDocumentInterface->ShowCrossSectionMarkersOnMap(itsMapViewDescTopIndex);
 }
 
-// piirretään kartalle (jos ollaan oikeassa moodissa) poikkileikkauksen
+// piirretï¿½ï¿½n kartalle (jos ollaan oikeassa moodissa) poikkileikkauksen
 // 'reitti' pallukat
 void NFmiStationViewHandler::DrawCrossSectionPoints(void)
 {
@@ -460,9 +480,9 @@ void NFmiStationViewHandler::DrawCrossSectionPoints(void)
 	{
 	    auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
 		if(itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
-			return ; // ei piirretä näitä kun ollaan poikkileikkaus trajektori moodissa
+			return ; // ei piirretï¿½ nï¿½itï¿½ kun ollaan poikkileikkaus trajektori moodissa
 
-		if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1) // vain 1. rivin ensimmäiseen ruutuun piirto
+		if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1) // vain 1. rivin ensimmï¿½iseen ruutuun piirto
 		{
 			bool drawWholeLine = (crossSectionSystem->GetCrossMode() != NFmiCrossSectionSystem::kTime) && (crossSectionSystem->GetCrossMode() != NFmiCrossSectionSystem::kObsAndFor);
 			double smallCircleSizeInMM = 1.2;
@@ -498,7 +518,7 @@ void NFmiStationViewHandler::DrawCrossSectionPoints(void)
 			double yWidth2 = itsToolBox->SY(pixelSizeY2);
 			NFmiRect circleRect(0, 0, xWidth2, yWidth2);
 			circleRect.Center(startPointXY);
-			itsToolBox->DrawEllipse(circleRect, &itsDrawingEnvironment); // piirretään alkupisteen väripallo
+			itsToolBox->DrawEllipse(circleRect, &itsDrawingEnvironment); // piirretï¿½ï¿½n alkupisteen vï¿½ripallo
 			NFmiPoint fontSize(20, 20);
 			itsDrawingEnvironment.SetFontSize(fontSize);
 			NFmiPoint textPoint1(startPointXY);
@@ -511,17 +531,17 @@ void NFmiStationViewHandler::DrawCrossSectionPoints(void)
 			{
 				circleRect.Center(endPointXY);
 				itsDrawingEnvironment.SetFillColor(crossSectionSystem->EndPointFillColor());
-				itsToolBox->DrawEllipse(circleRect, &itsDrawingEnvironment); // piirretään loppupisteen väripallo
+				itsToolBox->DrawEllipse(circleRect, &itsDrawingEnvironment); // piirretï¿½ï¿½n loppupisteen vï¿½ripallo
 				NFmiPoint textPoint2(endPointXY);
 				textPoint2 += NFmiPoint(textPoint2.X() > 0.95 ? -0.03 : 0.02, textPoint2.Y() > 0.95 ? -0.03 : 0.02);
 				itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
 				NFmiText text2(textPoint2, NFmiString("2."), false, 0, &itsDrawingEnvironment);
 				itsToolBox->Convert(&text2);
 				if(crossSectionSystem->CrossSectionMode() == NFmiCrossSectionSystem::k3Point)
-				{ // piirretää vielä keski piste väri pallolla
+				{ // piirretï¿½ï¿½ vielï¿½ keski piste vï¿½ri pallolla
 					circleRect.Center(middlePointXY);
 					itsDrawingEnvironment.SetFillColor(crossSectionSystem->MiddlePointFillColor());
-					itsToolBox->DrawEllipse(circleRect, &itsDrawingEnvironment); // piirretään loppupisteen väripallo
+					itsToolBox->DrawEllipse(circleRect, &itsDrawingEnvironment); // piirretï¿½ï¿½n loppupisteen vï¿½ripallo
 					NFmiPoint textPoint3(middlePointXY);
 					textPoint2 += NFmiPoint(textPoint2.X() > 0.95 ? -0.03 : 0.02, textPoint2.Y() > 0.95 ? -0.03 : 0.02);
 					itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
@@ -529,7 +549,7 @@ void NFmiStationViewHandler::DrawCrossSectionPoints(void)
 					itsToolBox->Convert(&text3);
 				}
 
-				// piirretään lopuksi vielä mahd. aktivoitu minorpoint
+				// piirretï¿½ï¿½n lopuksi vielï¿½ mahd. aktivoitu minorpoint
 				if(crossSectionSystem->IsMinorPointActivated())
 				{
 					itsDrawingEnvironment.SetFillColor(NFmiColor(0.f,0.f,0.f));
@@ -546,17 +566,17 @@ void NFmiStationViewHandler::DrawTrajectories(void)
     auto trajectorySystem = itsCtrlViewDocumentInterface->TrajectorySystem();
 	if(trajectorySystem->TrajectoryViewOn() && itsCtrlViewDocumentInterface->ShowTrajectorsOnMap(itsMapViewDescTopIndex))
 	{
-		// piirretään trajektorit kartalle
+		// piirretï¿½ï¿½n trajektorit kartalle
 		int index = 0;
 		const std::vector<boost::shared_ptr<NFmiTrajectory> >& trajectories = trajectorySystem->Trajectories();
 		std::vector<boost::shared_ptr<NFmiTrajectory> >::const_iterator it = trajectories.begin();
 		for( ; it != trajectories.end() ; ++it)
 		{
-			DrawTrajectory(*(*it).get(), itsCtrlViewDocumentInterface->GeneralColor(index)); // tässä vaiheessa otetaan vielä luotauksista väritykset
+			DrawTrajectory(*(*it).get(), itsCtrlViewDocumentInterface->GeneralColor(index)); // tï¿½ssï¿½ vaiheessa otetaan vielï¿½ luotauksista vï¿½ritykset
 			index++;
 		}
 
-		// Piirrä hiirellä valittu piste kartalle
+		// Piirrï¿½ hiirellï¿½ valittu piste kartalle
 		NFmiDrawingEnvironment envi;
         auto &graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
         long pixelSize1 = boost::math::iround(graphicalInfo.itsPixelsPerMM_x * 3.0);
@@ -580,19 +600,19 @@ void NFmiStationViewHandler::DrawTrajectories(void)
 	}
 }
 
-// väri otetaan väliaikaisesti ulkoa luotaus systeemistä
+// vï¿½ri otetaan vï¿½liaikaisesti ulkoa luotaus systeemistï¿½
 void NFmiStationViewHandler::DrawTrajectory(const NFmiTrajectory &theTrajectory, const NFmiColor &theColor)
 {
 	NFmiDrawingEnvironment envi;
 
     auto &graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
     long pixelSize1 = boost::math::iround(graphicalInfo.itsPixelsPerMM_x * 0.25);
-	// piirretään ensin mahdollinen pluumi
+	// piirretï¿½ï¿½n ensin mahdollinen pluumi
 	if(theTrajectory.PlumesUsed())
 	{
 		NFmiColor grayColor(0.9f, 0.9f, 0.9f);
 		NFmiColor fadeColor(theColor);
-		fadeColor.Mix(grayColor, 0.62f);  // haalennetaan väriä hiukan
+		fadeColor.Mix(grayColor, 0.62f);  // haalennetaan vï¿½riï¿½ hiukan
 		envi.SetFrameColor(fadeColor);
 		envi.SetPenSize(NFmiPoint(pixelSize1, pixelSize1));
 
@@ -603,7 +623,7 @@ void NFmiStationViewHandler::DrawTrajectory(const NFmiTrajectory &theTrajectory,
 	}
 
 
-	// piirretään sitten pää-trajektori
+	// piirretï¿½ï¿½n sitten pï¿½ï¿½-trajektori
 	envi.SetFrameColor(theColor);
     long pixelSize2 = boost::math::iround(graphicalInfo.itsPixelsPerMM_x * 0.8);
 	envi.SetPenSize(NFmiPoint(pixelSize2, pixelSize2));
@@ -626,8 +646,8 @@ void NFmiStationViewHandler::DrawSingleTrajector(const NFmiSingleTrajector &theS
 		NFmiPoint latlon2;
 		NFmiPoint p1(LatLonToViewPoint(latlon1));
 		NFmiPoint p2;
-		NFmiPoint mapTimeP(kFloatMissing, kFloatMissing); // haetaan tähän se piste, missä trajektori oli menossa kun tämän kartan aika oli
-		NFmiMetTime currentTime(theSingleTrajector.StartTime()); // pidetään laskua currentin pisteen ajasta
+		NFmiPoint mapTimeP(kFloatMissing, kFloatMissing); // haetaan tï¿½hï¿½n se piste, missï¿½ trajektori oli menossa kun tï¿½mï¿½n kartan aika oli
+		NFmiMetTime currentTime(theSingleTrajector.StartTime()); // pidetï¿½ï¿½n laskua currentin pisteen ajasta
 		const std::vector<NFmiPoint> &points = theSingleTrajector.Points();
 		std::vector<NFmiPoint>::const_iterator it = points.begin();
         auto trajectorySystem = itsCtrlViewDocumentInterface->TrajectorySystem();
@@ -640,7 +660,7 @@ void NFmiStationViewHandler::DrawSingleTrajector(const NFmiSingleTrajector &theS
 			NFmiPolyline trajectorPolyLine(itsRect, 0, &theEnvi);
 			trajectorPolyLine.AddPoint(p1);
 			std::vector<NFmiPoint>::const_iterator endIt = points.end();
-			++it; // pitää juoksuttaa yhden pykälän verran eteenpäin
+			++it; // pitï¿½ï¿½ juoksuttaa yhden pykï¿½lï¿½n verran eteenpï¿½in
 			for( ; it != endIt; ++it )
 			{
 				latlon2 = *it;
@@ -678,15 +698,15 @@ void NFmiStationViewHandler::DrawSingleTrajector(const NFmiSingleTrajector &theS
 
 					NFmiLocation loc1(points[points.size()-2]); // 2. viimeinen paikka
 					NFmiPoint lastPoint(points[points.size()-1]);
-					double vdir1 = loc1.Direction(lastPoint); // ja siitä suunta viimeiseen paikkaan
-					// tehdään pohjois korjaus nuolen kärjen piirtoon
+					double vdir1 = loc1.Direction(lastPoint); // ja siitï¿½ suunta viimeiseen paikkaan
+					// tehdï¿½ï¿½n pohjois korjaus nuolen kï¿½rjen piirtoon
 					NFmiAngle ang(itsMapArea->TrueNorthAzimuth(lastPoint));
 					vdir1 += static_cast<float>(ang.Value());
 
 					if(!forwardDir)
-						vdir1 = ::fmod(vdir1+180, 360); // käännetään nuolen suunta 180 astetta jos takaperin trajektori
+						vdir1 = ::fmod(vdir1+180, 360); // kï¿½ï¿½nnetï¿½ï¿½n nuolen suunta 180 astetta jos takaperin trajektori
 
-					// piirrä etenemis nuolen kärki trajektorille
+					// piirrï¿½ etenemis nuolen kï¿½rki trajektorille
 					NFmiPolyline arrowPolyLine(itsRect, 0, &theEnvi);
 					arrowPolyLine.AddPoint(::RotatePoint(NFmiPoint(-0.7, 2), vdir1));
 					arrowPolyLine.AddPoint(::RotatePoint(NFmiPoint(0, 0), vdir1));
@@ -713,10 +733,10 @@ void NFmiStationViewHandler::DrawSingleTrajector(const NFmiSingleTrajector &theS
 	}
 }
 
-// Piirtää ns. MTA moodissa valittujen luotausten paikat omilla väreillään.
-// Nämä piirretään hieman isommalla kolmioilla luotaus asemien alle.
-// Nämä pirretään kaikille karttariveille, koska näitä symboleja on niin vähän
-// ja valitun luotauksen sijainti kiinnostaa käyttäjiä huomattavasti enemmän.
+// Piirtï¿½ï¿½ ns. MTA moodissa valittujen luotausten paikat omilla vï¿½reillï¿½ï¿½n.
+// Nï¿½mï¿½ piirretï¿½ï¿½n hieman isommalla kolmioilla luotaus asemien alle.
+// Nï¿½mï¿½ pirretï¿½ï¿½n kaikille karttariveille, koska nï¿½itï¿½ symboleja on niin vï¿½hï¿½n
+// ja valitun luotauksen sijainti kiinnostaa kï¿½yttï¿½jiï¿½ huomattavasti enemmï¿½n.
 void NFmiStationViewHandler::DrawSelectedMTAModeSoundingPlaces(void)
 {
     if(!IsSoundingMarkersDrawnOnThisMap(true))
@@ -728,14 +748,14 @@ void NFmiStationViewHandler::DrawSelectedMTAModeSoundingPlaces(void)
 	if(temps.size() > 0)
 	{
 		NFmiDrawingEnvironment envi;
-		// piirretään oranssi kolmia osoittamaan asemien paikkaa
+		// piirretï¿½ï¿½n oranssi kolmia osoittamaan asemien paikkaa
 		envi.EnableFill();
 		envi.SetFillColor(NFmiColor(1.f, 0.35f, 0.f));
 		envi.EnableFrame();
 		envi.SetFrameColor(NFmiColor(0.f, 0.f, 0.f));
 
 		NFmiPolyline markerPolyLine(itsRect, 0, &envi);
-			// nämä pisteet on otettu Raimon salama2.eps tiedostosta
+			// nï¿½mï¿½ pisteet on otettu Raimon salama2.eps tiedostosta
 		markerPolyLine.AddPoint(NFmiPoint(-1, 1));
 		markerPolyLine.AddPoint(NFmiPoint(0, -1));
 		markerPolyLine.AddPoint(NFmiPoint(1, 1));
@@ -752,10 +772,10 @@ void NFmiStationViewHandler::DrawSelectedMTAModeSoundingPlaces(void)
 		int index = 0;
 		for( ; it != temps.end(); ++it)
 		{
-            // jos luotaus-aikalukitus päällä ja aika oli sama kuin aktiivisen karttanäytön aika, TAI jos ollaan normaali moodissa, oliko luotaus olion aika ja kartan aika samat
+            // jos luotaus-aikalukitus pï¿½ï¿½llï¿½ ja aika oli sama kuin aktiivisen karttanï¿½ytï¿½n aika, TAI jos ollaan normaali moodissa, oliko luotaus olion aika ja kartan aika samat
             if((soundingViewTimeLock && itsTime == itsCtrlViewDocumentInterface->ActiveMapTime()) || (!soundingViewTimeLock && itsTime == (*it).Time()))
 			{
-				NFmiPoint viewPoint(LatLonToViewPoint((*it).Latlon())); // tämä on offset
+				NFmiPoint viewPoint(LatLonToViewPoint((*it).Latlon())); // tï¿½mï¿½ on offset
 				markerPolyLine.GetEnvironment()->SetFillColor(mtaSystem.SoundingColor(index));
 				itsToolBox->DrawPolyline(&markerPolyLine, viewPoint, scale);
 
@@ -771,13 +791,13 @@ bool NFmiStationViewHandler::IsSoundingMarkersDrawnOnThisMap(bool fDrawThisOnEve
     if(mtaSystem.TempViewOn() && mtaSystem.ShowMapMarkers() && itsCtrlViewDocumentInterface->ShowSoundingMarkersOnMap(itsMapViewDescTopIndex))
     {
         if(fDrawThisOnEveryRow)
-            return true; // Käyttäjän valitsemat luotaukset piirretään joka riville
+            return true; // Kï¿½yttï¿½jï¿½n valitsemat luotaukset piirretï¿½ï¿½n joka riville
 
         CtrlViewUtils::MapViewMode mapViewDisplayMode = itsCtrlViewDocumentInterface->MapViewDisplayMode(itsMapViewDescTopIndex);
-        // Riippuen karttanäytössä käytetystä aikamoodista (mapViewDisplayMode):
-        // 0. Normaali moodi -> piirretään vain alimmalle näyttöruudukon riville (jokaisessa sarakkeessa sama aika)
-        // 1. One-time moodi -> piirretään vain alimman näyttöruudukon rivin oikeaan kulmaan
-        // 2. Running-time moodi -> piirretään kaikille näyttöruudukon ruuduille (kaikilla eri aika)
+        // Riippuen karttanï¿½ytï¿½ssï¿½ kï¿½ytetystï¿½ aikamoodista (mapViewDisplayMode):
+        // 0. Normaali moodi -> piirretï¿½ï¿½n vain alimmalle nï¿½yttï¿½ruudukon riville (jokaisessa sarakkeessa sama aika)
+        // 1. One-time moodi -> piirretï¿½ï¿½n vain alimman nï¿½yttï¿½ruudukon rivin oikeaan kulmaan
+        // 2. Running-time moodi -> piirretï¿½ï¿½n kaikille nï¿½yttï¿½ruudukon ruuduille (kaikilla eri aika)
         auto &viewGridSize = itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex);
         if(mapViewDisplayMode == CtrlViewUtils::MapViewMode::kNormal)
         {
@@ -798,37 +818,37 @@ bool NFmiStationViewHandler::IsSoundingMarkersDrawnOnThisMap(bool fDrawThisOnEve
     return false;
 }
 
-// piirtää havaittujen luotausten paikat kartalle, jos on havainto aika
-// ja halutaan näyttää kyseisiä luotauksia luotaus näytössä (ruksi päällä).
+// piirtï¿½ï¿½ havaittujen luotausten paikat kartalle, jos on havainto aika
+// ja halutaan nï¿½yttï¿½ï¿½ kyseisiï¿½ luotauksia luotaus nï¿½ytï¿½ssï¿½ (ruksi pï¿½ï¿½llï¿½).
 void NFmiStationViewHandler::DrawSoundingPlaces(void)
 {
     if(!IsSoundingMarkersDrawnOnThisMap(false))
         return ;
 
-	// Piirretään ensin kaikki extra sounding data paikat
+	// Piirretï¿½ï¿½n ensin kaikki extra sounding data paikat
 	std::vector<NFmiProducer> &extraSoundingProds = itsCtrlViewDocumentInterface->ExtraSoundingProducerList();
 	for(size_t i = 0; i<extraSoundingProds.size(); i++)
 	{
         const NFmiProducer &prod = extraSoundingProds[i];
 		boost::shared_ptr<NFmiFastQueryInfo> soundingInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(prod);
         if(prod.GetIdent() == kFmiMAST)
-    		DrawSoundingSymbols(soundingInfo, 4, 1.3); // 4=piirrä kolmio väärinpäin mastodatalle
+    		DrawSoundingSymbols(soundingInfo, 4, 1.3); // 4=piirrï¿½ kolmio vï¿½ï¿½rinpï¿½in mastodatalle
         else
-    		DrawSoundingSymbols(soundingInfo, 3, 0.9); // 3=piirrä neliö
+    		DrawSoundingSymbols(soundingInfo, 3, 0.9); // 3=piirrï¿½ neliï¿½
 	}
 
-	// Sitten piirretään TEMP purusta saadut mahdolliset luotaus merkit kartalle
-	NFmiProducer TEMPProd(kFmiRAWTEMP); // TEMP purusta saadut luotaukset ovat tällä tuottajalla
+	// Sitten piirretï¿½ï¿½n TEMP purusta saadut mahdolliset luotaus merkit kartalle
+	NFmiProducer TEMPProd(kFmiRAWTEMP); // TEMP purusta saadut luotaukset ovat tï¿½llï¿½ tuottajalla
 	boost::shared_ptr<NFmiFastQueryInfo> TEMPInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kTEMPCodeSoundingData, TEMPProd, false);
-	DrawSoundingSymbols(TEMPInfo, 2, 1.7); // 2=piirrä salmiakki
+	DrawSoundingSymbols(TEMPInfo, 2, 1.7); // 2=piirrï¿½ salmiakki
 
-	// lopuksi piirretää muiden päälle 'oikeat' luotaukset
-    DrawSoundingSymbols(itsCtrlViewDocumentInterface->InfoOrganizer()->GetPrioritizedSoundingInfo(NFmiInfoOrganizer::ParamCheckFlags(true)), 1, 1.4); // 1=piirrä kolmio
+	// lopuksi piirretï¿½ï¿½ muiden pï¿½ï¿½lle 'oikeat' luotaukset
+    DrawSoundingSymbols(itsCtrlViewDocumentInterface->InfoOrganizer()->GetPrioritizedSoundingInfo(NFmiInfoOrganizer::ParamCheckFlags(true)), 1, 1.4); // 1=piirrï¿½ kolmio
 }
 
 static void SetSoundingSymbolEnvi(NFmiDrawingEnvironment &envi)
 {
-	// piirretään vihreä kolmia osoittamaan asemien paikkaa
+	// piirretï¿½ï¿½n vihreï¿½ kolmia osoittamaan asemien paikkaa
 	envi.EnableFill();
 	envi.SetFillColor(NFmiColor(0.551f, 0.9f, 0.21f));
 	envi.EnableFrame();
@@ -838,27 +858,27 @@ static void SetSoundingSymbolEnvi(NFmiDrawingEnvironment &envi)
 static void MakesoundingSymbolMarker(NFmiPolyline &markerPolyLine, int theUsedSymbol)
 {
 	if(theUsedSymbol == 1)
-	{ // piirrä kolmio
+	{ // piirrï¿½ kolmio
 		markerPolyLine.AddPoint(NFmiPoint(-1, 1));
 		markerPolyLine.AddPoint(NFmiPoint(0, -1));
 		markerPolyLine.AddPoint(NFmiPoint(1, 1));
 	}
 	else if(theUsedSymbol == 2)
-	{ // piirrä salmiakki
+	{ // piirrï¿½ salmiakki
 		markerPolyLine.AddPoint(NFmiPoint(0, 1));
 		markerPolyLine.AddPoint(NFmiPoint(-0.7, 0));
 		markerPolyLine.AddPoint(NFmiPoint(0, -1));
 		markerPolyLine.AddPoint(NFmiPoint(0.7, 0));
 	}
 	else if(theUsedSymbol == 3)
-	{ // piirrä neliö
+	{ // piirrï¿½ neliï¿½
 		markerPolyLine.AddPoint(NFmiPoint(-1, -1));
 		markerPolyLine.AddPoint(NFmiPoint(1, -1));
 		markerPolyLine.AddPoint(NFmiPoint(1, 1));
 		markerPolyLine.AddPoint(NFmiPoint(-1, 1));
 	}
 	else
-	{ // piirrä terävä kolmio
+	{ // piirrï¿½ terï¿½vï¿½ kolmio
 		markerPolyLine.AddPoint(NFmiPoint(-0.6, 1));
 		markerPolyLine.AddPoint(NFmiPoint(0, -1));
 		markerPolyLine.AddPoint(NFmiPoint(0.6, 1));
@@ -877,8 +897,8 @@ NFmiPoint NFmiStationViewHandler::MakeSoundingMarkerScale(NFmiToolBox *theToolBo
 
 void NFmiStationViewHandler::DrawMovingSoundingSymbols(boost::shared_ptr<NFmiFastQueryInfo> &theSoundingInfo, int theUsedSymbol, double theSymbolSizeInMM)
 {
-	// merkitään kartalle kaikki liikkuvien luotauksien +- 30 minuutin sisällä olevat 'luotaukset'
-	theSoundingInfo->FirstLocation();  // Liikkuvissa luotauksissa vain yksi dummy paikka, laitetaan se päälle
+	// merkitï¿½ï¿½n kartalle kaikki liikkuvien luotauksien +- 30 minuutin sisï¿½llï¿½ olevat 'luotaukset'
+	theSoundingInfo->FirstLocation();  // Liikkuvissa luotauksissa vain yksi dummy paikka, laitetaan se pï¿½ï¿½lle
 	NFmiMetTime timeStart(itsTime);
 	timeStart.ChangeByMinutes(-30);
 	unsigned long timeIndex1 = 0;
@@ -968,15 +988,15 @@ void NFmiStationViewHandler::DrawSoundingSymbols(boost::shared_ptr<NFmiFastQuery
         return;
     theSoundingInfo->FirstLevel();
 	if(NFmiFastInfoUtils::IsMovingSoundingData(theSoundingInfo))
-	{ // Liikkuvissa luotauksissa on niin speciaali jutut että niiden piirtoon tarvitaan ihan oma funktio
+	{ // Liikkuvissa luotauksissa on niin speciaali jutut ettï¿½ niiden piirtoon tarvitaan ihan oma funktio
 		DrawMovingSoundingSymbols(theSoundingInfo, 4, theSymbolSizeInMM);
 		return ;
 	}
 
 	if(theSoundingInfo->Time(itsTime))
-	{ // jos luotaus info löytyi ja löytyi vielä aikakin, niin aletaan asemien piirto
+	{ // jos luotaus info lï¿½ytyi ja lï¿½ytyi vielï¿½ aikakin, niin aletaan asemien piirto
 		NFmiDrawingEnvironment envi;
-		// piirretään oranssi kolmia osoittamaan asemien paikkaa
+		// piirretï¿½ï¿½n oranssi kolmia osoittamaan asemien paikkaa
 		envi.EnableFill();
 		envi.SetFillColor(NFmiColor(1.f, 0.35f, 0.f));
 		envi.EnableFrame();
@@ -984,27 +1004,27 @@ void NFmiStationViewHandler::DrawSoundingSymbols(boost::shared_ptr<NFmiFastQuery
 
 		NFmiPolyline markerPolyLine(itsRect, 0, &envi);
 		if(theUsedSymbol == 1)
-		{ // piirrä kolmio
+		{ // piirrï¿½ kolmio
 			markerPolyLine.AddPoint(NFmiPoint(-1, 1));
 			markerPolyLine.AddPoint(NFmiPoint(0, -1));
 			markerPolyLine.AddPoint(NFmiPoint(1, 1));
 		}
 		else if(theUsedSymbol == 2)
-		{ // piirrä salmiakki
+		{ // piirrï¿½ salmiakki
 			markerPolyLine.AddPoint(NFmiPoint(0, 1));
 			markerPolyLine.AddPoint(NFmiPoint(-0.7, 0));
 			markerPolyLine.AddPoint(NFmiPoint(0, -1));
 			markerPolyLine.AddPoint(NFmiPoint(0.7, 0));
 		}
 		else if(theUsedSymbol == 3)
-		{ // piirrä neliö
+		{ // piirrï¿½ neliï¿½
 			markerPolyLine.AddPoint(NFmiPoint(-1, -1));
 			markerPolyLine.AddPoint(NFmiPoint(1, -1));
 			markerPolyLine.AddPoint(NFmiPoint(1, 1));
 			markerPolyLine.AddPoint(NFmiPoint(-1, 1));
 		}
 		else if(theUsedSymbol == 4)
-		{ // piirrä korkea pylväs (mastoille)
+		{ // piirrï¿½ korkea pylvï¿½s (mastoille)
             const double w = 0.5;
             const double h = 1.5;
 			markerPolyLine.AddPoint(NFmiPoint(-w, -h));
@@ -1013,7 +1033,7 @@ void NFmiStationViewHandler::DrawSoundingSymbols(boost::shared_ptr<NFmiFastQuery
 			markerPolyLine.AddPoint(NFmiPoint(-w, h));
 		}
 		else
-		{ // piirrä kolmio ylösalaisin
+		{ // piirrï¿½ kolmio ylï¿½salaisin
 			markerPolyLine.AddPoint(NFmiPoint(-1, -1));
 			markerPolyLine.AddPoint(NFmiPoint(0, 1));
 			markerPolyLine.AddPoint(NFmiPoint(1, -1));
@@ -1029,9 +1049,9 @@ void NFmiStationViewHandler::DrawSoundingSymbols(boost::shared_ptr<NFmiFastQuery
 		NFmiPoint scale(scaleValueX, scaleValueY);
 		for(theSoundingInfo->ResetLocation() ; theSoundingInfo->NextLocation(); )
 		{
-			NFmiPoint viewPoint(LatLonToViewPoint(theSoundingInfo->LatLon())); // tämä on offset
+			NFmiPoint viewPoint(LatLonToViewPoint(theSoundingInfo->LatLon())); // tï¿½mï¿½ on offset
 			if(NFmiSoundingData::HasRealSoundingData(theSoundingInfo))
-				markerPolyLine.GetEnvironment()->SetFillColor(NFmiColor(0.551f, 0.9f, 0.21f)); // löytyy dataa, vihreä kolmio
+				markerPolyLine.GetEnvironment()->SetFillColor(NFmiColor(0.551f, 0.9f, 0.21f)); // lï¿½ytyy dataa, vihreï¿½ kolmio
 			else
 				markerPolyLine.GetEnvironment()->SetFillColor(NFmiColor(1.f, 0.35f, 0.f)); // ei dataa, oranssi kolmio
 			itsToolBox->DrawPolyline(&markerPolyLine, viewPoint, scale);
@@ -1044,9 +1064,9 @@ bool NFmiStationViewHandler::ShowWarningMessages(void)
 #ifndef DISABLE_CPPRESTSDK
     if(itsCtrlViewDocumentInterface->ShowWarningMarkersOnMap(itsMapViewDescTopIndex))
 	{
-		if(itsCtrlViewDocumentInterface->WarningCenterSystem().getLegacyData().WarningCenterViewOn()) // jos HALY dialogi on päällä
+		if(itsCtrlViewDocumentInterface->WarningCenterSystem().getLegacyData().WarningCenterViewOn()) // jos HALY dialogi on pï¿½ï¿½llï¿½
 		{
-			if(itsViewGridRowNumber == itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).Y()) // piirretään HALY symbolit vain viimeiselle riville
+			if(itsViewGridRowNumber == itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).Y()) // piirretï¿½ï¿½n HALY symbolit vain viimeiselle riville
 				return true;
 		}
 	}
@@ -1064,7 +1084,7 @@ void NFmiStationViewHandler::DrawSilamStationMarkers(NFmiSilamStationList &theSt
 		{
 			NFmiPoint p = LatLonToViewPoint(latlon);
 			NFmiPoint p2 = LatLonToViewPoint(latlon);
-			// pelkkä toolbox-alignmentti center (eikä mikään muukaan) vie tekstiä keskelle y-suunnassa, joten tämä siirros siirtää tekstin ihan keskelle
+			// pelkkï¿½ toolbox-alignmentti center (eikï¿½ mikï¿½ï¿½n muukaan) vie tekstiï¿½ keskelle y-suunnassa, joten tï¿½mï¿½ siirros siirtï¿½ï¿½ tekstin ihan keskelle
 			p2.Y(p2.Y() + symbolYShift);
 			p2.X(p2.X() - symbolXShift);
 			NFmiText txt(p2, theSynopStr, false, 0, &theEnvi);
@@ -1081,7 +1101,7 @@ void NFmiStationViewHandler::DrawSilamStationMarkers(void)
         auto trajectorySystem = itsCtrlViewDocumentInterface->TrajectorySystem();
 		if(trajectorySystem->TrajectoryViewOn())
 		{
-			// piirretään vain alimmälle näyttöriville
+			// piirretï¿½ï¿½n vain alimmï¿½lle nï¿½yttï¿½riville
 			if(itsViewGridColumnNumber == 1 && itsViewGridRowNumber == itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).Y())
 			{
 				double fontSizeInMM_x = 3.0;
@@ -1111,7 +1131,7 @@ void NFmiStationViewHandler::DrawSilamStationMarkers(void)
 
 				envi.SetFrameColor(NFmiColor(1,0,0)); // ydin voimalat punasella
 				DrawSilamStationMarkers(trajectorySystem->NuclearPlants(), envi, synopFontStr, fontShiftX, fontShiftY, placeRect);
-				envi.SetFrameColor(NFmiColor(0,0,1)); // muut paikat sinisellä
+				envi.SetFrameColor(NFmiColor(0,0,1)); // muut paikat sinisellï¿½
 				DrawSilamStationMarkers(trajectorySystem->OtherPlaces(), envi, synopFontStr, fontShiftX, fontShiftY, placeRect);
 			}
 		}
@@ -1122,11 +1142,12 @@ void NFmiStationViewHandler::DrawSilamStationMarkers(void)
 	itsToolBox->SetTextAlignment(oldAlingment);
 }
 
+#ifndef UNIX
 namespace
 {
-	// Tähän luokkaan luetaan kyseiset kuva-imaget kerran ja käytetään kaikille NFmiStationViewHandler-instansseille yhteisesti.
-	// Näiden kuvien avulla piirretään sovittuja HAKE-varoitus merkkejä.
-	// Gdiplus::Bitmap-olioita ei tarvitse tuhota, Gdiplus huolehtii siitä automaattisesti.
+	// Tï¿½hï¿½n luokkaan luetaan kyseiset kuva-imaget kerran ja kï¿½ytetï¿½ï¿½n kaikille NFmiStationViewHandler-instansseille yhteisesti.
+	// Nï¿½iden kuvien avulla piirretï¿½ï¿½n sovittuja HAKE-varoitus merkkejï¿½.
+	// Gdiplus::Bitmap-olioita ei tarvitse tuhota, Gdiplus huolehtii siitï¿½ automaattisesti.
 	class AnimationButtonImageHolder
 	{
 	public:
@@ -1181,7 +1202,7 @@ namespace
 		}
 
 		// initialisoinnissa luetaan bitmapit tiedostoista, kutsu vasta kun itsBitmapFolder-dataosa on asetettu
-		void Initialize(void)  // HUOM! heittää poikkeuksia epäonnistuessaan
+		void Initialize(void)  // HUOM! heittï¿½ï¿½ poikkeuksia epï¿½onnistuessaan
 		{
 			fInitialized = true;
 			itsLargeBuildingImage = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "building-large-on-fire.png");
@@ -1244,7 +1265,7 @@ namespace
 		Gdiplus::Bitmap *itsCarCrashPoliceSign; // liikenne onnettomuus varoitus kyltti poliisi
 		Gdiplus::Bitmap *itsTrainCrashSign; // liikenne onnettomuus raiteilla varoitus kyltti
 		Gdiplus::Bitmap *itsTrainCrashPoliceSign; // liikenne onnettomuus raiteilla varoitus kyltti poliisi
-		Gdiplus::Bitmap *itsShipCrashSign; // liikenne onnettomuus vesillä varoitus kyltti
+		Gdiplus::Bitmap *itsShipCrashSign; // liikenne onnettomuus vesillï¿½ varoitus kyltti
         Gdiplus::Bitmap *itsAirplaneCrashSign; // lento onnettomuus varoitus kyltti
 		Gdiplus::Bitmap* itsSmokeObservation; // savuhavainto symboli
         Gdiplus::Bitmap *itsUnknownHakeMessageType; // tuntematon sanoma id, jolloin merkiksi punainen kysymerkki pallo
@@ -1278,14 +1299,15 @@ namespace
 
         Gdiplus::Bitmap *itsUnknownKaHaMessageType; // tuntematon sanoma id, jolloin merkiksi sininen kysymysmerkki
 
-        double itsIconSizeInMM_x; // tämä on haluttujen 16 x 16 pix ikonien koko printatessa
+        double itsIconSizeInMM_x; // tï¿½mï¿½ on haluttujen 16 x 16 pix ikonien koko printatessa
 		double itsIconSizeInMM_y;
 
 		bool fInitialized;
 	};
 
-	AnimationButtonImageHolder gAnimationButtonImageHolder; // yksi instannsi luodaan nimettömään namespaceen
+	AnimationButtonImageHolder gAnimationButtonImageHolder; // yksi instannsi luodaan nimettï¿½mï¿½ï¿½n namespaceen
 }
+#endif // UNIX
 
 void NFmiStationViewHandler::InitializeWarningSymbolFiles(void)
 {
@@ -1369,159 +1391,159 @@ void NFmiStationViewHandler::DrawHakeMessageIcon(const HakeMessage::HakeMsg &the
     switch(theWarningMessage.Category())
     {
     case 201:
-    { // piirrä tieliikenneonnettomuus poliisi
+    { // piirrï¿½ tieliikenneonnettomuus poliisi
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsCarCrashPoliceSign, 0.85f, 0.85);
         break;
     }
     case 202:
-    { // piirrä tieliikenneonnettomuus pelastus pieni
+    { // piirrï¿½ tieliikenneonnettomuus pelastus pieni
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsCarCrashSign, 0.85f, 0.7);
         break;
     }
     case 203:
-    { // piirrä tieliikenneonnettomuus pelastus keskisuuri
+    { // piirrï¿½ tieliikenneonnettomuus pelastus keskisuuri
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsCarCrashSign, 0.85f, 0.85);
         break;
     }
     case 204:
-    { // piirrä tieliikenneonnettomuus pelastus suuri
+    { // piirrï¿½ tieliikenneonnettomuus pelastus suuri
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsCarCrashSign, 0.85f, 1.);
         break;
     }
 
     case 211:
-    { // piirrä raideliikenneonnettomuus poliisi keskisuuri
+    { // piirrï¿½ raideliikenneonnettomuus poliisi keskisuuri
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsTrainCrashPoliceSign, 0.85f, 0.85);
         break;
     }
     case 212:
-    { // piirrä raideliikenneonnettomuus pelastus pieni
+    { // piirrï¿½ raideliikenneonnettomuus pelastus pieni
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsTrainCrashSign, 0.85f, 0.7);
         break;
     }
     case 213:
-    { // piirrä raideliikenneonnettomuus pelastus keskisuuri
+    { // piirrï¿½ raideliikenneonnettomuus pelastus keskisuuri
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsTrainCrashSign, 0.85f, 0.85);
         break;
     }
     case 214:
-    { // piirrä raideliikenneonnettomuus pelastus suuri
+    { // piirrï¿½ raideliikenneonnettomuus pelastus suuri
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsTrainCrashSign, 0.85f, 1.);
         break;
     }
 
     case 220:
-    { // piirrä vesiliikenne onnettomuus muu poliisi
+    { // piirrï¿½ vesiliikenne onnettomuus muu poliisi
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsShipWreckOther, 0.85f, 0.8);
         break;
     }
     case 221:
-    { // piirrä vesiliikenne onnettomuus pieni
+    { // piirrï¿½ vesiliikenne onnettomuus pieni
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsShipWreck, 0.85f, 0.75);
         break;
     }
     case 222:
-    { // piirrä vesiliikenne onnettomuus keskisuuri
+    { // piirrï¿½ vesiliikenne onnettomuus keskisuuri
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsShipWreck, 0.85f, 0.9);
         break;
     }
     case 223:
-    { // piirrä vesiliikenne onnettomuus suuri
+    { // piirrï¿½ vesiliikenne onnettomuus suuri
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsShipWreck, 0.85f, 1.1);
         break;
     }
 
     case 231:
-    { // piirrä ilmaliikenneonnettomuus pelastus pieni
+    { // piirrï¿½ ilmaliikenneonnettomuus pelastus pieni
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsAirplaneCrashSign, 0.85f, 0.7);
         break;
     }
     case 232:
-    { // piirrä ilmaliikenneonnettomuus pelastus keskisuuri
+    { // piirrï¿½ ilmaliikenneonnettomuus pelastus keskisuuri
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsAirplaneCrashSign, 0.85f, 0.85);
         break;
     }
     case 233:
-    { // piirrä ilmaliikenneonnettomuus pelastus suuri
+    { // piirrï¿½ ilmaliikenneonnettomuus pelastus suuri
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsAirplaneCrashSign, 0.85f, 1.);
         break;
     }
     case 234:
-    { // piirrä ilmaliikenneonnettomuus vaara pieni
+    { // piirrï¿½ ilmaliikenneonnettomuus vaara pieni
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsAirplaneCrashSign, 0.85f, 0.7);
         break;
     }
     case 235:
-    { // piirrä ilmaliikenneonnettomuus vaara keskisuuri
+    { // piirrï¿½ ilmaliikenneonnettomuus vaara keskisuuri
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsAirplaneCrashSign, 0.85f, 0.85);
         break;
     }
     case 236:
-    { // piirrä ilmaliikenneonnettomuus vaara suuri
+    { // piirrï¿½ ilmaliikenneonnettomuus vaara suuri
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsAirplaneCrashSign, 0.85f, 1.);
         break;
     }
 
 	case 420:
-	{ // piirrä savuhavainto
+	{ // piirrï¿½ savuhavainto
 		DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsSmokeObservation, 0.85f, 0.8);
 		break;
 	}
 
     case 421:
-    { // piirrä maastopalo pieni
+    { // piirrï¿½ maastopalo pieni
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsFireWideImage, 0.85f, 0.6);
         break;
     }
 
     case 422:
-    { // piirrä maastopalo keskisuuri
+    { // piirrï¿½ maastopalo keskisuuri
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsFireWideImage, 0.85f, 0.8);
         break;
     }
 
     case 423:
-    { // piirrä maastopalo suuri
+    { // piirrï¿½ maastopalo suuri
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsFireWideImage, 0.85f);
         break;
     }
     case 461:
-    { // piirrä vahingontorjunta pieni
+    { // piirrï¿½ vahingontorjunta pieni
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsFireExtinguisher, 0.85f);
         break;
     }
     case 462:
-    { // piirrä vahingontorjunta keskisuuri
+    { // piirrï¿½ vahingontorjunta keskisuuri
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsFireExtinguisherLarge, 0.75f);
         break;
     }
     case 463:
-    { // piirrä vahingontorjunta suuri
+    { // piirrï¿½ vahingontorjunta suuri
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsFireEngine, 0.85f);
         break;
     }
     case 403:
-    { // piirrä rakennuspalo suuri
+    { // piirrï¿½ rakennuspalo suuri
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsLargeBuildingImage, 0.9f);
         break;
     }
     case 451:
-    { // piirrä vahingollista ainetta pieni
+    { // piirrï¿½ vahingollista ainetta pieni
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsHazardousMaterials, 0.9f, 0.6);
         break;
     }
     case 452:
-    { // piirrä vahingollista ainetta keskisuuri
+    { // piirrï¿½ vahingollista ainetta keskisuuri
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsHazardousMaterials, 0.9f, 0.8);
         break;
     }
     case 453:
-    { // piirrä vahingollista ainetta suuri
+    { // piirrï¿½ vahingollista ainetta suuri
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsHazardousMaterials, 0.9f);
         break;
     }
     case 483:
-    { // piirrä Ihmisen pelastaminen vedestä
+    { // piirrï¿½ Ihmisen pelastaminen vedestï¿½
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsLifeBuoy, 0.85f, 1.);
         break;
     }
@@ -1558,7 +1580,7 @@ void NFmiStationViewHandler::DrawKaHaMessageIcon(const HakeMessage::HakeMsg &the
         break;
     }
     case 5:
-    { // sadetta/ei sadetta. Päätettävä kumpi symboli näytetään.
+    { // sadetta/ei sadetta. Pï¿½ï¿½tettï¿½vï¿½ kumpi symboli nï¿½ytetï¿½ï¿½n.
         std::size_t found = theWarningMessage.TotalMessageStr().find("Ei sadetta");
         if(found != std::string::npos)
         {
@@ -1576,7 +1598,7 @@ void NFmiStationViewHandler::DrawKaHaMessageIcon(const HakeMessage::HakeMsg &the
         break;
     }
     case 7:
-    { // Jäänpaksuus
+    { // Jï¿½ï¿½npaksuus
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsKahaIceThickness, 0.85f, 0.85);
         break;
     }
@@ -1586,7 +1608,7 @@ void NFmiStationViewHandler::DrawKaHaMessageIcon(const HakeMessage::HakeMsg &the
         break;
     }
     case 9:
-    { // Sään aiheuttama tieliikennehäiriö
+    { // Sï¿½ï¿½n aiheuttama tieliikennehï¿½iriï¿½
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsKahaRoadSlippery, 0.85f, 0.85);
         break;
     }
@@ -1601,7 +1623,7 @@ void NFmiStationViewHandler::DrawKaHaMessageIcon(const HakeMessage::HakeMsg &the
         break;
     }
     case 13:
-    { // Veden pintalämpötila
+    { // Veden pintalï¿½mpï¿½tila
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsKahaWaterTemperature, 0.85f, 0.85);
         break;
     }
@@ -1626,19 +1648,19 @@ void NFmiStationViewHandler::DrawKaHaMessageIcon(const HakeMessage::HakeMsg &the
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsKahaRain3, 0.85f, 0.85);
         break;
     }
-    // räntäsateet 1131-1133
+    // rï¿½ntï¿½sateet 1131-1133
     case 1131:
-    { // heikkoa räntä sadetta
+    { // heikkoa rï¿½ntï¿½ sadetta
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsKahaSleet1, 0.85f, 0.85);
         break;
     }
     case 1132:
-    { // kohtalaista räntä sadetta
+    { // kohtalaista rï¿½ntï¿½ sadetta
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsKahaSleet2, 0.85f, 0.85);
         break;
     }
     case 1133:
-    { // voimakasta räntä sadetta
+    { // voimakasta rï¿½ntï¿½ sadetta
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsKahaSleet3, 0.85f, 0.85);
         break;
     }
@@ -1658,11 +1680,11 @@ void NFmiStationViewHandler::DrawKaHaMessageIcon(const HakeMessage::HakeMsg &the
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsKahaSnow3, 0.85f, 0.85);
         break;
     }
-    // jäätävät sateet 1151-1153
+    // jï¿½ï¿½tï¿½vï¿½t sateet 1151-1153
     case 1151:
     case 1152:
     case 1153:
-    { // jäätävää sadetta
+    { // jï¿½ï¿½tï¿½vï¿½ï¿½ sadetta
         DrawWarningIcon(latlon, gAnimationButtonImageHolder.itsKahaIcingRain, 0.85f, 0.85);
         break;
     }
@@ -1674,8 +1696,8 @@ void NFmiStationViewHandler::DrawKaHaMessageIcon(const HakeMessage::HakeMsg &the
     }
 }
 
-// piirretään varoitukseen liittyvä symboli halutulla tavalla, jos kyseiseen varoitukseen liittyy joku määrätty symboli.
-// jos mitään ei piirretä, palauttaa false merkiksi että piirto on tehtävä vanhalla tavalla.
+// piirretï¿½ï¿½n varoitukseen liittyvï¿½ symboli halutulla tavalla, jos kyseiseen varoitukseen liittyy joku mï¿½ï¿½rï¿½tty symboli.
+// jos mitï¿½ï¿½n ei piirretï¿½, palauttaa false merkiksi ettï¿½ piirto on tehtï¿½vï¿½ vanhalla tavalla.
 void NFmiStationViewHandler::DrawWantedWarningIcon(const HakeMessage::HakeMsg &theWarningMessage, bool isHakeMessage)
 {
 	NFmiPoint latlon = theWarningMessage.LatlonPoint();
@@ -1692,8 +1714,10 @@ void NFmiStationViewHandler::DrawWantedWarningIcon(const HakeMessage::HakeMsg &t
 
 void NFmiStationViewHandler::DrawWarningIcon(const NFmiPoint &theLatlon, Gdiplus::Bitmap *theImage, float theAlpha, double theSizeFactor)
 {
+#ifndef UNIX
 	NFmiRect symbolrect = CalcSymbolRelativeRect(theLatlon, theImage, theSizeFactor);
     CtrlView::DrawAnimationButton(symbolrect, theImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), theAlpha, true);
+#endif // UNIX
 }
 
 NFmiRect NFmiStationViewHandler::CalcSymbolRelativeRect(const NFmiPoint &theLatlon, Gdiplus::Bitmap *theImage, double theSizeFactor)
@@ -1714,6 +1738,7 @@ NFmiPoint NFmiStationViewHandler::GetViewSizeInPixels(void)
 
 NFmiPoint NFmiStationViewHandler::CalcRelativeWarningIconSize(Gdiplus::Bitmap *theImage)
 {
+#ifndef UNIX
     auto &graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
     double relativeWidth = itsToolBox->SX(boost::math::iround(gAnimationButtonImageHolder.itsIconSizeInMM_x * graphicalInfo.itsPixelsPerMM_x));
     double relativeHeight = itsToolBox->SY(boost::math::iround(gAnimationButtonImageHolder.itsIconSizeInMM_y * graphicalInfo.itsPixelsPerMM_y));
@@ -1730,6 +1755,9 @@ NFmiPoint NFmiStationViewHandler::CalcRelativeWarningIconSize(Gdiplus::Bitmap *t
 		relativeHeight = itsToolBox->SY(bitmapSizeY);
 	}
 	return NFmiPoint(relativeWidth, relativeHeight);
+#else
+    return NFmiPoint(32.0, 32.0); // TODO: implement on Linux
+#endif // UNIX
 }
 
 NFmiPoint NFmiStationViewHandler::LatLonToViewPoint(const NFmiPoint& theLatLon) const
@@ -1769,7 +1797,9 @@ void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
 					NFmiColorContourLegendValues colorContourLegendValues(drawParamPtr, fastInfo);
 					if(colorContourLegendValues.useLegend())
 					{
+#ifndef UNIX
 						CtrlView::DrawNormalColorContourLegend(colorContourLegendSettings, colorContourLegendValues, lastLegendRelativeBottomRightCorner, itsToolBox, graphicalInfo, *itsGdiPlusGraphics, sizeFactor, GetFrame());
+#endif // UNIX
 					}
 				}
 			}
@@ -1783,18 +1813,18 @@ bool NFmiStationViewHandler::DrawContourLegendOnThisMapRow()
     CtrlViewUtils::MapViewMode displayMode = itsCtrlViewDocumentInterface->MapViewDisplayMode(itsMapViewDescTopIndex);
     if(displayMode == CtrlViewUtils::MapViewMode::kOneTime)
     { 
-        // 1-time -moodissa piirretään legenda jokaiseen ruutuun
+        // 1-time -moodissa piirretï¿½ï¿½n legenda jokaiseen ruutuun
         drawLegend = true;
     }
     else if(displayMode == CtrlViewUtils::MapViewMode::kRunningTime)
     {
-        // running-time -moodissa piirretään legenda vain alimman rivin oikean puoleiseen ruutuun
+        // running-time -moodissa piirretï¿½ï¿½n legenda vain alimman rivin oikean puoleiseen ruutuun
         if((itsViewGridRowNumber == itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).Y()) && (itsViewGridColumnNumber == itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).X()))
             drawLegend = true;
     }
     else
     {
-        // normaali -moodissa piirretään legenda vain oikean puoleiseen sarakkeeseen
+        // normaali -moodissa piirretï¿½ï¿½n legenda vain oikean puoleiseen sarakkeeseen
         if((itsViewGridColumnNumber == itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).X()))
             drawLegend = true;
     }
@@ -1823,7 +1853,7 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
 			}
 			else
 			{
-				// Vielä jos piirto-optioissa ei ole legendan piirto päällä, poistetaan rekisteröidyistä (en ymmärrä logiikkaa, miten sen saa taas päälle)
+				// Vielï¿½ jos piirto-optioissa ei ole legendan piirto pï¿½ï¿½llï¿½, poistetaan rekisterï¿½idyistï¿½ (en ymmï¿½rrï¿½ logiikkaa, miten sen saa taas pï¿½ï¿½lle)
 				if(!drawParamList->Current()->ShowColorLegend())
 					wmsSupportPtr->unregisterDynamicLayer(realRowIndex, itsViewGridColumnNumber, itsMapViewDescTopIndex, registered);
 			}
@@ -1905,7 +1935,8 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
 
 			// Draw
 
-			NFmiPoint startPoint(CtrlViewUtils::ConvertPointFromRect1ToRect2(itsRect.TopLeft(), NFmiRect(0, 0, 1, 1), NFmiRect(NFmiPoint(0, 0), itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex))));
+	#ifndef UNIX
+		NFmiPoint startPoint(CtrlViewUtils::ConvertPointFromRect1ToRect2(itsRect.TopLeft(), NFmiRect(0, 0, 1, 1), NFmiRect(NFmiPoint(0, 0), itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex))));
 
 			// horizontal
 			for(auto& self : hSelves.selves)
@@ -1917,7 +1948,7 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
 					auto legendH = legend.height;
 					Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(startPoint.X() + bitmapSize.X() - hSelves.horizontalShift - legendW), static_cast<Gdiplus::REAL>(startPoint.Y() + bitmapSize.Y() - hSelves.verticalShift - legendH), static_cast<Gdiplus::REAL>(legendW), static_cast<Gdiplus::REAL>(legendH));
 					NFmiRect sourceRect(0, 0, legendW, legendH);
-					Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on täysin läpinäkyvä, 0.5 = semi transparent ja 1.0 = opaque
+					Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on tï¿½ysin lï¿½pinï¿½kyvï¿½, 0.5 = semi transparent ja 1.0 = opaque
 					bool doNearestInterpolation = alpha >= 1.f ? true : false;
 					CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *legend.get()->mImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha), itsGdiPlusGraphics);
 
@@ -1940,7 +1971,7 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
 					auto legendH = legend.height;
 					Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(startPoint.X() + bitmapSize.X() - vSelves.horizontalShift - legendW), static_cast<Gdiplus::REAL>(startPoint.Y() + vSelves.verticalShift), static_cast<Gdiplus::REAL>(legendW), static_cast<Gdiplus::REAL>(legendH));
 					NFmiRect sourceRect(0, 0, legendW, legendH);
-					Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on täysin läpinäkyvä, 0.5 = semi transparent ja 1.0 = opaque
+					Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on tï¿½ysin lï¿½pinï¿½kyvï¿½, 0.5 = semi transparent ja 1.0 = opaque
 					bool doNearestInterpolation = alpha >= 1.f ? true : false;
 					CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *legend.get()->mImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha), itsGdiPlusGraphics);
 
@@ -1952,6 +1983,7 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
 				vSelves.horizontalShift += self.getHeight();
 				vSelves.verticalShift = 0;
 			}
+#endif // UNIX
 		}
 		catch(...)
 		{
@@ -1960,29 +1992,29 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
 #endif // DISABLE_CPPRESTSDK
 }
 
-// Piirtää datan ruutuun, eli data-viewlistan ja mm. projektioviivat jos niin on asetukset
+// Piirtï¿½ï¿½ datan ruutuun, eli data-viewlistan ja mm. projektioviivat jos niin on asetukset
 void NFmiStationViewHandler::DrawData(NFmiToolBox* theGTB)
 {
     if(itsViewList)
     {
-        if(itsViewGridRowNumber == 1) // piirretään vain ylimmäiseen riviin maskit
+        if(itsViewGridRowNumber == 1) // piirretï¿½ï¿½n vain ylimmï¿½iseen riviin maskit
         {
             boost::shared_ptr<NFmiAreaMaskList> maskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
             if(maskList)
-                maskList->SyncronizeMaskTime(itsTime); // en ole varma mihin tämä pitää laittaa
-            DrawMasksOnMap(theGTB); // piirretään maski kartan päälle, mutta varsinaisen datan alle
+                maskList->SyncronizeMaskTime(itsTime); // en ole varma mihin tï¿½mï¿½ pitï¿½ï¿½ laittaa
+            DrawMasksOnMap(theGTB); // piirretï¿½ï¿½n maski kartan pï¿½ï¿½lle, mutta varsinaisen datan alle
         }
         itsViewList->Draw(theGTB);
     }
 
-    // piirretään vielä datan päälle projektio viivat, jos asetukset sallivat
+    // piirretï¿½ï¿½n vielï¿½ datan pï¿½ï¿½lle projektio viivat, jos asetukset sallivat
     if(itsCtrlViewDocumentInterface->ProjectionCurvatureInfo()->GetDrawingMode() == NFmiProjectionCurvatureInfo::kOverEverything)
         DrawProjetionLines(theGTB);
 
 	if(!HasSeparateCountryBorderLayer())
 	{
-		// Rajaviivat piirretään kartalle täällä vain jos niitä ei piirretä erillisessä kerroksessa.
-		// nullptr -parametri tarkoittaa että käytetään yleistä rajaviiva piirtoa.
+		// Rajaviivat piirretï¿½ï¿½n kartalle tï¿½ï¿½llï¿½ vain jos niitï¿½ ei piirretï¿½ erillisessï¿½ kerroksessa.
+		// nullptr -parametri tarkoittaa ettï¿½ kï¿½ytetï¿½ï¿½n yleistï¿½ rajaviiva piirtoa.
 		NFmiCountryBorderDrawUtils::drawCountryBordersToMapView(this, theGTB, nullptr);
 	}
 }
@@ -1992,18 +2024,18 @@ bool NFmiStationViewHandler::DrawTimeTextInThisMapViewTile(void)
 	bool drawText = false;
     CtrlViewUtils::MapViewMode displayMode = itsCtrlViewDocumentInterface->MapViewDisplayMode(itsMapViewDescTopIndex);
 	if(displayMode == CtrlViewUtils::MapViewMode::kOneTime)
-	{ // 1-moodissa piirretäänvain alimman rivin 1. ruutuun teksti
+	{ // 1-moodissa piirretï¿½ï¿½nvain alimman rivin 1. ruutuun teksti
 		drawText = (itsViewGridColumnNumber == 1) && (itsViewGridRowNumber == itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).Y());
 	}
 	else if(displayMode == CtrlViewUtils::MapViewMode::kRunningTime)
-		drawText = true; // 2-moodissa piirretään aika joka ruutuun
-	else // normaali/muussa moodissa piirretään tekstit vain viimeiselle riville
+		drawText = true; // 2-moodissa piirretï¿½ï¿½n aika joka ruutuun
+	else // normaali/muussa moodissa piirretï¿½ï¿½n tekstit vain viimeiselle riville
 		drawText = (itsViewGridRowNumber == itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).Y());
 	return drawText;
 }
 
 // Jos ollaan normaali moodissa, palautetaan vain annettu Utc-aika.
-// Jos ollaan Beta-product moodissa ja kyseinen beta-product haluaa että käytetään lokaali aikoja, muunnetaan annettu utc-aika lokaaliksi.
+// Jos ollaan Beta-product moodissa ja kyseinen beta-product haluaa ettï¿½ kï¿½ytetï¿½ï¿½n lokaali aikoja, muunnetaan annettu utc-aika lokaaliksi.
 static NFmiMetTime CalcUsedTimeboxTime(const NFmiMetTime &theOriginalUtcTime, const NFmiBetaProduct *theUsedBetaProduct)
 {
     if(theUsedBetaProduct && !theUsedBetaProduct->UseUtcTimesInTimeBox())
@@ -2013,13 +2045,13 @@ static NFmiMetTime CalcUsedTimeboxTime(const NFmiMetTime &theOriginalUtcTime, co
 }
 
 // Jos ollaan normaali piirto moodissa, palautetaan normaali time formaatti teksti sellaisenaan.
-// Jos ollaan Beta-product moodissa ja kyseinen beta-product haluaa että käytetään lokaali aikoja, yritetään tekstistä poistaa utc -sanat (koska smartmetin konffeissa tulee defaulttina UTC -sana mukaan).
+// Jos ollaan Beta-product moodissa ja kyseinen beta-product haluaa ettï¿½ kï¿½ytetï¿½ï¿½n lokaali aikoja, yritetï¿½ï¿½n tekstistï¿½ poistaa utc -sanat (koska smartmetin konffeissa tulee defaulttina UTC -sana mukaan).
 static std::string MakeUsedTimeboxTimeFormatString(const std::string &theOriginalTimeFormatString, const NFmiBetaProduct *theUsedBetaProduct)
 {
     if(theUsedBetaProduct && !theUsedBetaProduct->UseUtcTimesInTimeBox())
     {
         std::string finalFormatString = theOriginalTimeFormatString;
-        boost::algorithm::ireplace_first(finalFormatString, "utc", ""); // Poistetaan vain 1. löytyvä, jos utc on useita kertoja niin ei voi mitään...
+        boost::algorithm::ireplace_first(finalFormatString, "utc", ""); // Poistetaan vain 1. lï¿½ytyvï¿½, jos utc on useita kertoja niin ei voi mitï¿½ï¿½n...
         return finalFormatString;
     }
     else
@@ -2045,7 +2077,7 @@ void NFmiStationViewHandler::DrawTimeText(void)
 				NFmiString formatStr2 = ::MakeUsedTimeboxTimeFormatString(timeLabelInfo.TimeStringInfo2().itsTimeFormat, currentBetaProduct);
 				NFmiString timeStr2(usedTimeboxTime.ToStr(formatStr2, itsCtrlViewDocumentInterface->Language()));
 				double singleViewGridHeightInMM = graphicalInfo.itsViewHeightInMM;
-				// lasketaan piirto alueen (yhden kartta ikkunan) mm koon mukainen koko kerroin, niin että aikateksteistä ei tule aina joka tapauksessa saman kokoisia
+				// lasketaan piirto alueen (yhden kartta ikkunan) mm koon mukainen koko kerroin, niin ettï¿½ aikateksteistï¿½ ei tule aina joka tapauksessa saman kokoisia
 				double sizeFactor = MathHelper::InterpolateWithTwoPoints(singleViewGridHeightInMM,
 					timeLabelInfo.ViewSize1(),
 					timeLabelInfo.ViewSize2(),
@@ -2063,6 +2095,7 @@ void NFmiStationViewHandler::DrawTimeText(void)
 				font2SizeInMM = FmiMax(timeLabelInfo.AbsoluteMinFontSizeInMM(), FmiMin(font2SizeInMM, timeLabelInfo.AbsoluteMaxFontSizeInMM()));
 				int font2Size = static_cast<int>(font2SizeInMM * graphicalInfo.itsPixelsPerMM_y * 1.88);
 
+#ifndef UNIX
 				Gdiplus::StringFormat stringFormat;
 				stringFormat.SetAlignment(Gdiplus::StringAlignmentCenter);
 				stringFormat.SetLineAlignment(Gdiplus::StringAlignmentNear);
@@ -2099,7 +2132,7 @@ void NFmiStationViewHandler::DrawTimeText(void)
 				NFmiPoint center = timeBox.Center();
 				NFmiPoint topleft = timeBox.TopLeft();
 
-				Gdiplus::PointF timeString1OffSet(static_cast<Gdiplus::REAL>(center.X()), static_cast<Gdiplus::REAL>(topleft.Y())); // tämä offset on suhteellinen laskettuun aika-string boxiin
+				Gdiplus::PointF timeString1OffSet(static_cast<Gdiplus::REAL>(center.X()), static_cast<Gdiplus::REAL>(topleft.Y())); // tï¿½mï¿½ offset on suhteellinen laskettuun aika-string boxiin
 				Gdiplus::PointF timeString2OffSet(timeString1OffSet);
 				timeString2OffSet.Y += font1Size;
 
@@ -2109,11 +2142,12 @@ void NFmiStationViewHandler::DrawTimeText(void)
 				Gdiplus::SolidBrush aBrushText2(CtrlView::NFmiColor2GdiplusColor(timeLabelInfo.TimeStringInfo2().itsColor));
 				itsGdiPlusGraphics->DrawString(wString2.c_str(), static_cast<INT>(wString2.size()), &aFont2, timeString2OffSet, &stringFormat, &aBrushText2);
 				return;
+#endif // UNIX
 			}
 		}
 	}
 
-	// Jos ei aikalaatikkoa piirretty syystä tai toisesta, laitetaan tyhjä laatikko sen merkiksi
+	// Jos ei aikalaatikkoa piirretty syystï¿½ tai toisesta, laitetaan tyhjï¿½ laatikko sen merkiksi
 	itsTimeBoxRelativeRect = NFmiRect();
 }
 
@@ -2122,17 +2156,17 @@ bool NFmiStationViewHandler::IsThisActiveViewRow() const
 	return itsCtrlViewDocumentInterface->AbsoluteActiveViewRow(itsMapViewDescTopIndex) == CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
 }
 
-// piirtää reunat sopivalla värillä ja mahdollisesti levitystyökalun jutut
-// 1. normaali ei aktiivinen väri musta, ohut reuna
-// 2. Aktiivinen näyttö, rivi ja aika punaisella paksulla reunalla
-// 3. aktiivinen näyttö ja rivi ohuella haaleammalla punaisella
+// piirtï¿½ï¿½ reunat sopivalla vï¿½rillï¿½ ja mahdollisesti levitystyï¿½kalun jutut
+// 1. normaali ei aktiivinen vï¿½ri musta, ohut reuna
+// 2. Aktiivinen nï¿½yttï¿½, rivi ja aika punaisella paksulla reunalla
+// 3. aktiivinen nï¿½yttï¿½ ja rivi ohuella haaleammalla punaisella
 void NFmiStationViewHandler::DrawCurrentFrame(NFmiToolBox* theGTB)
 {
     if(itsCtrlViewDocumentInterface->BetaProductGenerationRunning())
-        return;  // jos Beta product piirto käynnissä, ei piirretä reunoja
+        return;  // jos Beta product piirto kï¿½ynnissï¿½, ei piirretï¿½ reunoja
 
     if(itsCtrlViewDocumentInterface->ShowWaitCursorWhileDrawingView() == false)
-		return;  // jos jossain ohjelmassa on animaatio menossa, älä piirrä tätä framea, koska se välkkyy
+		return;  // jos jossain ohjelmassa on animaatio menossa, ï¿½lï¿½ piirrï¿½ tï¿½tï¿½ framea, koska se vï¿½lkkyy
 
     bool activeMapView = true;
     bool activeRow = IsThisActiveViewRow();
@@ -2188,7 +2222,7 @@ void NFmiStationViewHandler::Update(void)
                 if(stationView)
 				    itsViewList->Add(stationView);
 			}
-			itsViewList->Time(itsTime); // pitää asettaa myös aika oikein, koska joskus näyttöjen synkkaus menee pieleen ja luultavasti currentti aika joka on jäänyt tässä updatessa, joutuu mouseMove:ssa taas luotauksen ajaksi jos käyttäjä vääntää hiiri pohjassa karttanäytössä
+			itsViewList->Time(itsTime); // pitï¿½ï¿½ asettaa myï¿½s aika oikein, koska joskus nï¿½yttï¿½jen synkkaus menee pieleen ja luultavasti currentti aika joka on jï¿½ï¿½nyt tï¿½ssï¿½ updatessa, joutuu mouseMove:ssa taas luotauksen ajaksi jos kï¿½yttï¿½jï¿½ vï¿½ï¿½ntï¿½ï¿½ hiiri pohjassa karttanï¿½ytï¿½ssï¿½
 			SetViewListArea();
 		}
 	}
@@ -2215,7 +2249,7 @@ bool NFmiStationViewHandler::LeftButtonDown(const NFmiPoint& thePlace, unsigned 
 	if(itsViewList && GetFrame().IsInside(thePlace))
 	{
 		SetThisAsActiveViewRow();
-		if(IsMouseCursorOverParameterBox(thePlace)) // param-näytön on napattava ensimmäiseksi hiiren toiminnot!!!!!!!!
+		if(IsMouseCursorOverParameterBox(thePlace)) // param-nï¿½ytï¿½n on napattava ensimmï¿½iseksi hiiren toiminnot!!!!!!!!
 		{
             return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->LeftButtonDown(thePlace, theKey); });
 		}
@@ -2295,7 +2329,7 @@ void NFmiStationViewHandler::LeftButtonDownCrossSectionActions(const NFmiPoint& 
         double maxRelDist = 0.03;
         NFmiPoint relPoint(LatLonToViewPoint(crossSectionSystem->StartPoint()));
         if(!(::fabs(relPoint.X() - thePlace.X()) < maxRelDist && ::fabs(relPoint.Y() - thePlace.Y()) < maxRelDist))
-        { // jos klikattu piste oli tarpeeksi kaukana aloituspisteestä
+        { // jos klikattu piste oli tarpeeksi kaukana aloituspisteestï¿½
             crossSectionSystem->DragWholeCrossSection(true);
             crossSectionSystem->LastMousePosition(thePlace);
         }
@@ -2306,7 +2340,7 @@ void NFmiStationViewHandler::LeftButtonDownCrossSectionActions(const NFmiPoint& 
 void NFmiStationViewHandler::SelectLocations(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatLon
 									 ,int theSelectionCombineFunction
 									 ,unsigned long theMask
-									 ,bool fMakeMTAModeAdd // vain tietyistä paikoista kun tätä metodia kutsutaan, saa luotauksen lisätä (left buttom up karttanäytöllä lähinnä)
+									 ,bool fMakeMTAModeAdd // vain tietyistï¿½ paikoista kun tï¿½tï¿½ metodia kutsutaan, saa luotauksen lisï¿½tï¿½ (left buttom up karttanï¿½ytï¿½llï¿½ lï¿½hinnï¿½)
 									 ,bool fDoOnlyMTAModeAdd)
 {
 	itsCtrlViewDocumentInterface->SelectLocations(itsMapViewDescTopIndex, theInfo, itsMapArea, theLatLon, itsTime, theSelectionCombineFunction, theMask, fMakeMTAModeAdd, fDoOnlyMTAModeAdd);
@@ -2316,10 +2350,10 @@ void NFmiStationViewHandler::DoTotalLocationSelection(const NFmiPoint & thePlace
 {
 	try
 	{
-		if(itsViewList->NumberOfItems() > 0) // jos yksikin näyttö listassa, hoidetaan hiiren klikkaus siellä
+		if(itsViewList->NumberOfItems() > 0) // jos yksikin nï¿½yttï¿½ listassa, hoidetaan hiiren klikkaus siellï¿½
 		{
-			// haluamme piirtää vain tässä haarassa tietyissä tilanteissa valitut pisteet pyyhkäisy ikkunaan, ei muulloin
-			// eli 1. Kun ollaan mouse movessa ja 2. kun ruudulla on jotain dataa, mutta EI kun ollaan oikeassa yläkulmassa, koska siihen piirretään jo muutenkin automaattisesti
+			// haluamme piirtï¿½ï¿½ vain tï¿½ssï¿½ haarassa tietyissï¿½ tilanteissa valitut pisteet pyyhkï¿½isy ikkunaan, ei muulloin
+			// eli 1. Kun ollaan mouse movessa ja 2. kun ruudulla on jotain dataa, mutta EI kun ollaan oikeassa ylï¿½kulmassa, koska siihen piirretï¿½ï¿½n jo muutenkin automaattisesti
 			if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).X())
                 itsCtrlViewDocumentInterface->DrawSelectionOnThisView(false);
 			else
@@ -2327,9 +2361,9 @@ void NFmiStationViewHandler::DoTotalLocationSelection(const NFmiPoint & thePlace
 			itsViewList->LeftButtonUp(thePlace, theKey);
 		}
 		else
-		{ // lisäsin koodin NFmiStationView-luokasta, että paikan valinnat onnistuisivat vaikka mitään dataa ei ole
-		  // valittuna karttanäytölle. Nyt voidaan tyhjää karttaa klikkailla ja valita pisteitä esim. luotaus-näytölle.
-		  // HUOM! täältä ei saa valittuja pisteitä piirrettyä karttanäyttöön.
+		{ // lisï¿½sin koodin NFmiStationView-luokasta, ettï¿½ paikan valinnat onnistuisivat vaikka mitï¿½ï¿½n dataa ei ole
+		  // valittuna karttanï¿½ytï¿½lle. Nyt voidaan tyhjï¿½ï¿½ karttaa klikkailla ja valita pisteitï¿½ esim. luotaus-nï¿½ytï¿½lle.
+		  // HUOM! tï¿½ï¿½ltï¿½ ei saa valittuja pisteitï¿½ piirrettyï¿½ karttanï¿½yttï¿½ï¿½n.
 			boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
 			if(info)
 			{
@@ -2348,7 +2382,7 @@ void NFmiStationViewHandler::DoTotalLocationSelection(const NFmiPoint & thePlace
 		}
     }
 	catch(...)
-	{ // haluan vain varmistaa että asetus menee lopuksi pois päältä
+	{ // haluan vain varmistaa ettï¿½ asetus menee lopuksi pois pï¿½ï¿½ltï¿½
         itsCtrlViewDocumentInterface->DrawSelectionOnThisView(false);
 		throw;
 	}
@@ -2360,7 +2394,7 @@ void NFmiStationViewHandler::DoTotalLocationSelection(const NFmiPoint & thePlace
 //--------------------------------------------------------
 bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned long theKey)
 {
-    // mouse captured pitää hanskata, vaikka hiiri olisi itsParamHandlerView -ikkunan ulkona
+    // mouse captured pitï¿½ï¿½ hanskata, vaikka hiiri olisi itsParamHandlerView -ikkunan ulkona
     if(ShowParamHandlerView() && itsParamHandlerView->IsMouseCaptured())
     {
         return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->LeftButtonUp(thePlace, theKey); });
@@ -2372,7 +2406,7 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
 
         itsCtrlViewDocumentInterface->ActiveViewTime(itsTime);
 		bool ctrlKeyDown = (theKey & kCtrlKey);
-		if(IsMouseCursorOverParameterBox(thePlace)) // napattava ensimmäiseksi hiiren toiminnot!!!!!!!!
+		if(IsMouseCursorOverParameterBox(thePlace)) // napattava ensimmï¿½iseksi hiiren toiminnot!!!!!!!!
 		{
             return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->LeftButtonUp(thePlace, theKey); });
 		}
@@ -2408,8 +2442,8 @@ bool NFmiStationViewHandler::LeftButtonUp(const NFmiPoint & thePlace, unsigned l
             NFmiPoint latlon = itsMapArea->ToLatLon(thePlace);
             DoTotalLocationSelection(thePlace, latlon, theKey, false);
         }
-		// 8.2.2000/Marko Muutin tämän palauttamaan aina true:n jos piste on ollut sisällä
-		// toivon, että outo takkuisuus loppuu tällä tavalla, kun klikkaa ruutua, missä ei ole parametreja
+		// 8.2.2000/Marko Muutin tï¿½mï¿½n palauttamaan aina true:n jos piste on ollut sisï¿½llï¿½
+		// toivon, ettï¿½ outo takkuisuus loppuu tï¿½llï¿½ tavalla, kun klikkaa ruutua, missï¿½ ei ole parametreja
 		return true;
 	}
 	return false;
@@ -2422,10 +2456,10 @@ bool NFmiStationViewHandler::LeftButtonUpCrossSectionActions(const NFmiPoint& th
     auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
 	ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView);
 	if(theKey & kCtrlKey)
-    { // CTRL-pohjassa aktivoidaan lähin minor piste
+    { // CTRL-pohjassa aktivoidaan lï¿½hin minor piste
         crossSectionSystem->ActivateNearestMinorPoint(latlon);
         itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-        return true; // ei mennä hilapisteen valintaan
+        return true; // ei mennï¿½ hilapisteen valintaan
     }
     else
     {
@@ -2437,7 +2471,7 @@ bool NFmiStationViewHandler::LeftButtonUpCrossSectionActions(const NFmiPoint& th
         else
         {
             crossSectionSystem->StartPoint(latlon);
-            // täytyy myös mahdollistaa pelkän luotaus paikan valinta kun ollaan poikkileikkaus moodissa
+            // tï¿½ytyy myï¿½s mahdollistaa pelkï¿½n luotaus paikan valinta kun ollaan poikkileikkaus moodissa
             if(itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
                 SelectLocations(boost::shared_ptr<NFmiFastQueryInfo>(), latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiSelectionMask, true, true);
 
@@ -2447,18 +2481,18 @@ bool NFmiStationViewHandler::LeftButtonUpCrossSectionActions(const NFmiPoint& th
     return false; // Jatketaan hilapisteen valintaan
 }
 
-// Jotta hiirellä voidaan manipuloida poikkileikkausnäytön pisteitä, pitää seuraavat ehdot pitää paikkaansa:
-// 1. Poikkileikkausnäytön pitää olla päällä.
-// 2. Siinä ei saa olla trajektori -moodi päällä, koska silloin ei voi säätää aloituspisteitä.
-// 3. Karttanäytön pitää olla moodissa missä pisteet näytetään kartalla.
-// 4. TÄMÄ EI ENÄÄ KÄYTÖSSÄ: Karttaruudun pitää olla vasemmalla ylhäällä (1. ruutu), koska vain siihen piirretään kyseiset pisteet.
+// Jotta hiirellï¿½ voidaan manipuloida poikkileikkausnï¿½ytï¿½n pisteitï¿½, pitï¿½ï¿½ seuraavat ehdot pitï¿½ï¿½ paikkaansa:
+// 1. Poikkileikkausnï¿½ytï¿½n pitï¿½ï¿½ olla pï¿½ï¿½llï¿½.
+// 2. Siinï¿½ ei saa olla trajektori -moodi pï¿½ï¿½llï¿½, koska silloin ei voi sï¿½ï¿½tï¿½ï¿½ aloituspisteitï¿½.
+// 3. Karttanï¿½ytï¿½n pitï¿½ï¿½ olla moodissa missï¿½ pisteet nï¿½ytetï¿½ï¿½n kartalla.
+// 4. Tï¿½Mï¿½ EI ENï¿½ï¿½ Kï¿½YTï¿½SSï¿½: Karttaruudun pitï¿½ï¿½ olla vasemmalla ylhï¿½ï¿½llï¿½ (1. ruutu), koska vain siihen piirretï¿½ï¿½n kyseiset pisteet.
 bool NFmiStationViewHandler::AllowCrossSectionPointManipulations()
 {
     if(IsCrossSectionViewStuffShownOnThisMapView() && !itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
     {
         if(itsCtrlViewDocumentInterface->ShowCrossSectionMarkersOnMap(itsMapViewDescTopIndex))
         {
-//            if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1) // vain 1. rivin ensimmäiseen ruutuun sallitaan crosssection klikkaukset
+//            if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1) // vain 1. rivin ensimmï¿½iseen ruutuun sallitaan crosssection klikkaukset
             {
                 return true;
             }
@@ -2480,7 +2514,7 @@ void NFmiStationViewHandler::LeftButtonUpControlPointModeActions(const NFmiPoint
             cpManager->EnableCP(!cpManager->IsEnabledCP());
     }
     cpManager->MouseCaptured(false);
-    // Päivitystä vaatii vain tämä karttanäyttö, pääkarttanäyttö ja aikasarjaikkuna
+    // Pï¿½ivitystï¿½ vaatii vain tï¿½mï¿½ karttanï¿½yttï¿½, pï¿½ï¿½karttanï¿½yttï¿½ ja aikasarjaikkuna
     ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex) | SmartMetViewId::MainMapView | SmartMetViewId::TimeSerialView);
 }
 
@@ -2500,7 +2534,7 @@ void NFmiStationViewHandler::LeftButtonUpBrushToolActions()
         itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, true, false);
         std::string paramName = "[" + drawParam->ParameterAbbreviation() + "]";
         CatLog::logMessage(paramName + " - modified with Brush tool.", CatLog::Severity::Info, CatLog::Category::Editing, true);
-        // Päivitetään pensseli vedon lopuksi vain karttanäyttöjä (voisi päivittää vielä aikasarja ja taulukkonäytön, mutta optimoidaan)
+        // Pï¿½ivitetï¿½ï¿½n pensseli vedon lopuksi vain karttanï¿½yttï¿½jï¿½ (voisi pï¿½ivittï¿½ï¿½ vielï¿½ aikasarja ja taulukkonï¿½ytï¿½n, mutta optimoidaan)
         ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
     }
 }
@@ -2517,7 +2551,7 @@ bool NFmiStationViewHandler::LeftDoubleClick(const NFmiPoint &thePlace, unsigned
 {
 	if(IsIn(thePlace))
 	{
-        if(IsMouseCursorOverParameterBox(thePlace)) // napattava ensimmäiseksi hiiren toiminnot!!!!!!!!
+        if(IsMouseCursorOverParameterBox(thePlace)) // napattava ensimmï¿½iseksi hiiren toiminnot!!!!!!!!
         {
             return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->LeftDoubleClick(thePlace, theKey); });
         }
@@ -2569,7 +2603,7 @@ bool NFmiStationViewHandler::IsCrossSectionSystemDisableingNormalMiddleMouseButt
 		{
 			NFmiCrossSectionSystem::CrossMode crossMode = crossSectionSystem->GetCrossMode();
 			if(crossMode == NFmiCrossSectionSystem::kNormal || crossMode == NFmiCrossSectionSystem::kRoute)
-				return true; // tällöin keski hiiren nappi pitää jättää poikkileikkausnäytön käyttöön!!
+				return true; // tï¿½llï¿½in keski hiiren nappi pitï¿½ï¿½ jï¿½ttï¿½ï¿½ poikkileikkausnï¿½ytï¿½n kï¿½yttï¿½ï¿½n!!
 		}
 	}
 	return false;
@@ -2581,7 +2615,7 @@ bool NFmiStationViewHandler::MiddleButtonDown(const NFmiPoint & thePlace, unsign
 	{
 		if(!IsCrossSectionSystemDisableingNormalMiddleMouseButtonUse())
 		{ 
-			// poikkileikkaus moodi ei saa olla päällä kun lähdetään tekemään zoomia
+			// poikkileikkaus moodi ei saa olla pï¿½ï¿½llï¿½ kun lï¿½hdetï¿½ï¿½n tekemï¿½ï¿½n zoomia
 			itsCtrlViewDocumentInterface->MiddleMouseButtonDown(true);
 			itsZoomDragDownPoint = thePlace;
 			itsZoomDragUpPoint = thePlace;
@@ -2601,15 +2635,15 @@ bool NFmiStationViewHandler::MiddleButtonUp(const NFmiPoint & thePlace, unsigned
 	if(itsViewList && GetFrame().IsInside(thePlace))
 	{
         itsCtrlViewDocumentInterface->MapMouseDragPanMode(false);
-        if(AllowCrossSectionPointManipulations() && IsCrossSectionSystemDisableingNormalMiddleMouseButtonUse()) // eli käytetään sitten keski nappia poikkileikkausnäytölle
+        if(AllowCrossSectionPointManipulations() && IsCrossSectionSystemDisableingNormalMiddleMouseButtonUse()) // eli kï¿½ytetï¿½ï¿½n sitten keski nappia poikkileikkausnï¿½ytï¿½lle
         {
             itsCtrlViewDocumentInterface->CrossSectionSystem()->MiddlePoint(itsMapArea->ToLatLon(thePlace));
             itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-            return true; // ei mennä hilapisteen valintaan
+            return true; // ei mennï¿½ hilapisteen valintaan
         }
 		else if(itsCtrlViewDocumentInterface->MiddleMouseButtonDown() && itsCtrlViewDocumentInterface->MouseCaptured())
-		{ // tehdää varsinainen zoomaus sitten
-			if(itsCtrlViewDocumentInterface->MapMouseDragPanMode()) // en tiedä miksi tälläinen ehto on, koska juuri aiemmin on tämä laitettu false:ksi
+		{ // tehdï¿½ï¿½ varsinainen zoomaus sitten
+			if(itsCtrlViewDocumentInterface->MapMouseDragPanMode()) // en tiedï¿½ miksi tï¿½llï¿½inen ehto on, koska juuri aiemmin on tï¿½mï¿½ laitettu false:ksi
 			{
                 itsCtrlViewDocumentInterface->MiddleMouseButtonDown(false);
 			}
@@ -2620,7 +2654,7 @@ bool NFmiStationViewHandler::MiddleButtonUp(const NFmiPoint & thePlace, unsigned
 				NFmiRectangle rec1(itsOldZoomRect, 0, &itsDrawingEnvironment);
 				itsToolBox->Convert(&rec1);
 				itsDrawingEnvironment.DisableInvert();
-				double minWidthPix = itsToolBox->SX(30); // zoomi laatikon pitää olla vähintään tietyn pikseli määrän kokoinen
+				double minWidthPix = itsToolBox->SX(30); // zoomi laatikon pitï¿½ï¿½ olla vï¿½hintï¿½ï¿½n tietyn pikseli mï¿½ï¿½rï¿½n kokoinen
 				double minHeightPix = itsToolBox->SY(30);
 				if(itsOldZoomRect.Width() > minWidthPix && itsOldZoomRect.Height() > minHeightPix)
 				{
@@ -2646,20 +2680,20 @@ bool NFmiStationViewHandler::HandleTimeBoxMouseWheel(const NFmiPoint& thePlace, 
 	{
 		if((theKey & kCtrlKey) && (theKey & kShiftKey))
 		{
-			// CTRL + SHIFT pohjassa tehdään taustavärin alpha kanavan säätöä
+			// CTRL + SHIFT pohjassa tehdï¿½ï¿½n taustavï¿½rin alpha kanavan sï¿½ï¿½tï¿½ï¿½
 			auto origAlpha = mapViewDescTop->GetTimeBoxFillColorAlpha();
 			auto newAlphaValue = origAlpha + (theDelta > 0 ? 0.05f : -0.05f);
-			// Arvon asetus pitää tehdä CombinedMapHandler:in kautta, jotta muutos menisi myös WinRegistry:n ja sitten näyttömakroihin
+			// Arvon asetus pitï¿½ï¿½ tehdï¿½ CombinedMapHandler:in kautta, jotta muutos menisi myï¿½s WinRegistry:n ja sitten nï¿½yttï¿½makroihin
 			itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().onSetTimeBoxFillColorAlpha(itsMapViewDescTopIndex, newAlphaValue);
 			// Palautetaan true, jos kerroin on oikeasti muuttunut
 			return origAlpha != mapViewDescTop->GetTimeBoxFillColorAlpha();
 		}
 		if((theKey & kCtrlKey))
 		{
-			// CTRL pohjassa tehdään kokokertoimen säätöä
+			// CTRL pohjassa tehdï¿½ï¿½n kokokertoimen sï¿½ï¿½tï¿½ï¿½
 			auto origTextSizeFactor = mapViewDescTop->TimeBoxTextSizeFactor();
 			auto newValue = origTextSizeFactor + (theDelta > 0 ? 0.1f : -0.1f);
-			// Arvon asetus pitää tehdä CombinedMapHandler:in kautta, jotta muutos menisi myös WinRegistry:n ja sitten näyttömakroihin
+			// Arvon asetus pitï¿½ï¿½ tehdï¿½ CombinedMapHandler:in kautta, jotta muutos menisi myï¿½s WinRegistry:n ja sitten nï¿½yttï¿½makroihin
 			itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().onSetTimeBoxTextSizeFactor(itsMapViewDescTopIndex, newValue);
 			// Palautetaan true, jos kerroin on oikeasti muuttunut
 			return origTextSizeFactor != mapViewDescTop->TimeBoxTextSizeFactor();
@@ -2682,14 +2716,14 @@ bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long
 		}
 		if((theKey & kCtrlKey) && (theKey & kShiftKey))
 		{
-            // Säädetään kaikkia ruudulla olevia level/satel kanavia jne. kerrallaan
+            // Sï¿½ï¿½detï¿½ï¿½n kaikkia ruudulla olevia level/satel kanavia jne. kerrallaan
             bool status = false;
             for(itsViewList->Reset(); itsViewList->Next(); ) // hybrid data muutos ensin
             {
                 status |= ChangeHybridDataLevel((NFmiStationView*)itsViewList->Current(), theDelta); // muuttaa mallipinta ja painepintaa
                 status |= ChangeSatelDataChannel((NFmiStationView*)itsViewList->Current(), theDelta); // sitten mahd. satel image kanava muutos
             }
-            MakeParamLevelChangeDirtyOperations(status); // jos yksikin level vaihtui, päivitetään ikkunat
+            MakeParamLevelChangeDirtyOperations(status); // jos yksikin level vaihtui, pï¿½ivitetï¿½ï¿½n ikkunat
             return status;
         }
 		else if(theKey & kCtrlKey) // jos ctrl-nappi pohjassa zoomataan karttaa
@@ -2697,7 +2731,7 @@ bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long
             itsCtrlViewDocumentInterface->ZoomMapInOrOut(itsMapViewDescTopIndex, itsMapArea, thePlace, (theDelta > 0) ? 0.95 : 1.05);
 			return true;
 		}
-		else if(theKey & kShiftKey) // jos shift-nappi pohjassa muutetaan aktiivisen piirto-layerin hybrid-datojen leveliä ylös/alas tai satel datan kanavaa
+		else if(theKey & kShiftKey) // jos shift-nappi pohjassa muutetaan aktiivisen piirto-layerin hybrid-datojen leveliï¿½ ylï¿½s/alas tai satel datan kanavaa
 		{
 			bool status = false;
 			for(itsViewList->Reset(); itsViewList->Next(); ) // hybrid data muutos ensin
@@ -2709,7 +2743,7 @@ bool NFmiStationViewHandler::MouseWheel(const NFmiPoint &thePlace, unsigned long
 					break;
 				}
 			}
-            MakeParamLevelChangeDirtyOperations(status); // jos yksikin level vaihtui, päivitetään ikkunat
+            MakeParamLevelChangeDirtyOperations(status); // jos yksikin level vaihtui, pï¿½ivitetï¿½ï¿½n ikkunat
 			return status; 
 		}
 		else
@@ -2815,8 +2849,8 @@ bool NFmiStationViewHandler::ChangeSatelDataChannel(NFmiStationView* theView, sh
 	return false;
 }
 
-// Katsoo onko kyseisen karttanäytön data hybrid ja nyt myös painepinta dataa.
-// Jos on, yrittää vaihtaa leveliä hiiren rullauksen mukaan ylös/alas.
+// Katsoo onko kyseisen karttanï¿½ytï¿½n data hybrid ja nyt myï¿½s painepinta dataa.
+// Jos on, yrittï¿½ï¿½ vaihtaa leveliï¿½ hiiren rullauksen mukaan ylï¿½s/alas.
 // Palauttaa true, jos level vaihtui.
 bool NFmiStationViewHandler::ChangeHybridDataLevel(NFmiStationView* theView, short theDelta)
 {
@@ -2840,7 +2874,7 @@ bool NFmiStationViewHandler::ChangeHybridDataLevel(NFmiStationView* theView, sho
 								drawParam->Level(*info->Level());
 								return true;
 							}
-							else // pyöräytetään levelit ympäri jos ollaan tultu loppuun
+							else // pyï¿½rï¿½ytetï¿½ï¿½n levelit ympï¿½ri jos ollaan tultu loppuun
 							{
 								info->FirstLevel();
 								drawParam->Level(*info->Level());
@@ -2854,7 +2888,7 @@ bool NFmiStationViewHandler::ChangeHybridDataLevel(NFmiStationView* theView, sho
 								drawParam->Level(*info->Level());
 								return true;
 							}
-							else // pyöräytetään levelit ympäri jos ollaan tultu alkuun
+							else // pyï¿½rï¿½ytetï¿½ï¿½n levelit ympï¿½ri jos ollaan tultu alkuun
 							{
 								info->LastLevel();
 								drawParam->Level(*info->Level());
@@ -2863,7 +2897,7 @@ bool NFmiStationViewHandler::ChangeHybridDataLevel(NFmiStationView* theView, sho
 						}
 					}
 					else
-					{ // luotaus datalla on omat level säädöt
+					{ // luotaus datalla on omat level sï¿½ï¿½dï¿½t
 						NFmiVPlaceDescriptor soundingPlotLevels(itsCtrlViewDocumentInterface->SoundingPlotLevels());
 						soundingPlotLevels.Level(drawParam->Level());
 						if(theDelta < 0)
@@ -2873,7 +2907,7 @@ bool NFmiStationViewHandler::ChangeHybridDataLevel(NFmiStationView* theView, sho
 								drawParam->Level(*soundingPlotLevels.Level());
 								return true;
 							}
-							else // pyöräytetään levelit ympäri jos ollaan tultu loppuun
+							else // pyï¿½rï¿½ytetï¿½ï¿½n levelit ympï¿½ri jos ollaan tultu loppuun
 							{
 								soundingPlotLevels.Reset();
 								soundingPlotLevels.Next();
@@ -2888,7 +2922,7 @@ bool NFmiStationViewHandler::ChangeHybridDataLevel(NFmiStationView* theView, sho
 								drawParam->Level(*soundingPlotLevels.Level());
 								return true;
 							}
-							else // pyöräytetään levelit ympäri jos ollaan tultu alkuun
+							else // pyï¿½rï¿½ytetï¿½ï¿½n levelit ympï¿½ri jos ollaan tultu alkuun
 							{
 								soundingPlotLevels.Index(soundingPlotLevels.Size() - 1); // ei ollut last-matodia
 								drawParam->Level(*soundingPlotLevels.Level());
@@ -2906,7 +2940,7 @@ bool NFmiStationViewHandler::ChangeHybridDataLevel(NFmiStationView* theView, sho
 void NFmiStationViewHandler::SetThisAsActiveViewRow() const
 {
 	itsCtrlViewDocumentInterface->AbsoluteActiveViewRow(itsMapViewDescTopIndex, CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
-	// Uuden ParameterSelection-dialogin tarvitsemia asetuksia laitetaan tällä uudella funktiolla.
+	// Uuden ParameterSelection-dialogin tarvitsemia asetuksia laitetaan tï¿½llï¿½ uudella funktiolla.
 	itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(itsMapViewDescTopIndex, GetUsedParamRowIndex());
 }
 
@@ -2922,7 +2956,7 @@ bool NFmiStationViewHandler::RightButtonUp(const NFmiPoint & thePlace, unsigned 
 		{
 			return itsCtrlViewDocumentInterface->CreateMapViewTimeBoxPopup(itsMapViewDescTopIndex);
 		}
-		// Sitten pitää handlata parametrin lisäys param boxista 
+		// Sitten pitï¿½ï¿½ handlata parametrin lisï¿½ys param boxista 
         if(IsMouseCursorOverParameterBox(thePlace))
         {
             return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->RightButtonUp(thePlace, theKey); });
@@ -2949,25 +2983,25 @@ bool NFmiStationViewHandler::RightButtonUp(const NFmiPoint & thePlace, unsigned 
         else if(AllowCrossSectionPointManipulations())
         {
             itsCtrlViewDocumentInterface->CrossSectionSystem()->EndPoint(latlon);
-            // täytyy myös mahdollistaa pelkän luotaus paikan valinta kun ollaan poikkileikkaus moodissa
+            // tï¿½ytyy myï¿½s mahdollistaa pelkï¿½n luotaus paikan valinta kun ollaan poikkileikkaus moodissa
             if(itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
                 SelectLocations(boost::shared_ptr<NFmiFastQueryInfo>(), latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiDisplayedMask, true, true);
 			ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::CrossSectionView);
 			itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
-            return true; // ei mennä hilapisteen valintaan
+            return true; // ei mennï¿½ hilapisteen valintaan
         }
-		if(itsViewList->NumberOfItems() > 0) // jos yksikin näyttö listassa, hoidetaan hiiren klikkaus siellä
+		if(itsViewList->NumberOfItems() > 0) // jos yksikin nï¿½yttï¿½ listassa, hoidetaan hiiren klikkaus siellï¿½
 			return itsViewList->RightButtonUp(thePlace, theKey);
 		else
-		{ // lisäsin koodin NFmiStationView-luokasta (vastaava metodi), että paikan valinnat onnistuisivat vaikka mitään dataa ei ole
-		  // valittuna karttanäytölle. Nyt voidaan tyhjää karttaa klikkailla ja valita pisteitä esim. luotaus-näytölle.
-		  // HUOM! täältä ei saa valittuja pisteitä piirrettyä karttanäyttöön.
+		{ // lisï¿½sin koodin NFmiStationView-luokasta (vastaava metodi), ettï¿½ paikan valinnat onnistuisivat vaikka mitï¿½ï¿½n dataa ei ole
+		  // valittuna karttanï¿½ytï¿½lle. Nyt voidaan tyhjï¿½ï¿½ karttaa klikkailla ja valita pisteitï¿½ esim. luotaus-nï¿½ytï¿½lle.
+		  // HUOM! tï¿½ï¿½ltï¿½ ei saa valittuja pisteitï¿½ piirrettyï¿½ karttanï¿½yttï¿½ï¿½n.
 			boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
 			if(info)
 			{
 				if((theKey & kCtrlKey) && (theKey & kShiftKey))
 				{
-					// ctrl+shift+right-mouseclick:in avulla voidaan valita aktiivinen näyttörivi ja aika ilman, että valinnat muuttuvat
+					// ctrl+shift+right-mouseclick:in avulla voidaan valita aktiivinen nï¿½yttï¿½rivi ja aika ilman, ettï¿½ valinnat muuttuvat
 				}
 				else if(itsCtrlViewDocumentInterface->ModifyToolMode() != CtrlViewUtils::kFmiEditorModifyToolModeBrush) // siveltimen kanssa ei voi valita asemia???
 				{
@@ -3004,12 +3038,12 @@ bool NFmiStationViewHandler::IsMouseDraggingOn(void)
 bool NFmiStationViewHandler::MouseDragZooming(const NFmiPoint &thePlace)
 {
 	if(itsCtrlViewDocumentInterface->MapMouseDragPanMode())
-	{ // Tässä on kartan 'pannaus' hoidettu
+	{ // Tï¿½ssï¿½ on kartan 'pannaus' hoidettu
         itsCtrlViewDocumentInterface->PanMap(itsMapViewDescTopIndex, itsMapArea, thePlace, itsZoomDragUpPoint);
 		itsZoomDragUpPoint = thePlace;
 	}
 	else
-	{ // tässä tehdään kartan päälle vedettyä zoomi laatikkoa
+	{ // tï¿½ssï¿½ tehdï¿½ï¿½n kartan pï¿½ï¿½lle vedettyï¿½ zoomi laatikkoa
 		itsZoomDragUpPoint = thePlace;
 		itsDrawingEnvironment.EnableInvert();
 		itsDrawingEnvironment.DisableFill();
@@ -3029,7 +3063,7 @@ bool NFmiStationViewHandler::MouseMoveBrushAction(const NFmiPoint &thePlace)
 	if(itsCtrlViewDocumentInterface->MouseCaptured() && IsIn(thePlace)) // turha, on jo kysytty?
 	{
 		boost::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->ActiveDrawParamFromActiveRow(itsMapViewDescTopIndex);
-		if(drawParam && drawParam->DataType() == NFmiInfoData::kEditable && (!drawParam->IsParamHidden())) // parametri ei saa myös olla piilossa jos sitä meinaa alkaa sutimaan!!
+		if(drawParam && drawParam->DataType() == NFmiInfoData::kEditable && (!drawParam->IsParamHidden())) // parametri ei saa myï¿½s olla piilossa jos sitï¿½ meinaa alkaa sutimaan!!
 		{
 			if(drawParam->Param().Type() == kSymbolicParam)
 				return false;
@@ -3088,7 +3122,7 @@ bool NFmiStationViewHandler::MouseMoveBrushAction(const NFmiPoint &thePlace)
 																		,latlon
 																		,modifySizeX / 2.
 																		,itsCtrlViewDocumentInterface->LeftMouseButtonDown() ? -itsCtrlViewDocumentInterface->BrushValue() : itsCtrlViewDocumentInterface->BrushValue()
-																		,NFmiMetEditorTypes::kFmiNoMask // pitäisi kai olla aktivaatio maski, mutta sitä ei käytetä kuitenkaan nyt
+																		,NFmiMetEditorTypes::kFmiNoMask // pitï¿½isi kai olla aktivaatio maski, mutta sitï¿½ ei kï¿½ytetï¿½ kuitenkaan nyt
 																		, itsCtrlViewDocumentInterface->BrushToolLimitSetting()
 																		, itsCtrlViewDocumentInterface->BrushToolLimitSettingValue());
 							modifier.ModifyData2();
@@ -3132,10 +3166,10 @@ bool NFmiStationViewHandler::MouseMoveControlPointAction(const NFmiPoint &thePla
 	return false;
 }
 
-// HUOM!!! siisti tämä funktio ja poista turhia juttuja ja siirrä osia esim. dociin
+// HUOM!!! siisti tï¿½mï¿½ funktio ja poista turhia juttuja ja siirrï¿½ osia esim. dociin
 bool NFmiStationViewHandler::MouseMove(const NFmiPoint &thePlace, unsigned long theKey)
 {
-    // mouse captured pitää hanskata, vaikka hiiri olisi itsParamHandlerView -ikkunan ulkona
+    // mouse captured pitï¿½ï¿½ hanskata, vaikka hiiri olisi itsParamHandlerView -ikkunan ulkona
     if(ShowParamHandlerView() && itsParamHandlerView->IsMouseCaptured())
     {
         return MakeParamHandlerViewActions([&]() {return itsParamHandlerView->MouseMove(thePlace, theKey); });
@@ -3145,7 +3179,7 @@ bool NFmiStationViewHandler::MouseMove(const NFmiPoint &thePlace, unsigned long 
         return false;
 
     if(IsMouseCursorOverParameterBox(thePlace))
-        return false; // ei move handlausta, jos ollaa parametri boxin sisällä, koska muuten ei voi oikea klikillä lisätä parametreja, jos hiiri liikahtaa
+        return false; // ei move handlausta, jos ollaa parametri boxin sisï¿½llï¿½, koska muuten ei voi oikea klikillï¿½ lisï¿½tï¿½ parametreja, jos hiiri liikahtaa
 
 
     try
@@ -3153,12 +3187,12 @@ bool NFmiStationViewHandler::MouseMove(const NFmiPoint &thePlace, unsigned long 
         InitializeGdiplus(itsToolBox, &GetFrame());
 
         if(itsCtrlViewDocumentInterface->MiddleMouseButtonDown() && itsCtrlViewDocumentInterface->MouseCaptured())
-            return MouseDragZooming(thePlace); // tehdään zoomi laatikon piirtoa suoraan karttanäytölle
+            return MouseDragZooming(thePlace); // tehdï¿½ï¿½n zoomi laatikon piirtoa suoraan karttanï¿½ytï¿½lle
 		else if(IsRangeMeterModeOn(false))
 		{
 			if(!(theKey & kCtrlKey))
 			{
-				// Raahausta tehdään vain jos ei ole CTRL nappula pohjassa
+				// Raahausta tehdï¿½ï¿½n vain jos ei ole CTRL nappula pohjassa
 				SetRangeMeterDragEnd(thePlace, true);
 				return true;
 			}
@@ -3179,7 +3213,7 @@ bool NFmiStationViewHandler::MouseMove(const NFmiPoint &thePlace, unsigned long 
             NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
             NFmiMTATempSystem::Container &temps = const_cast<NFmiMTATempSystem::Container &>(itsCtrlViewDocumentInterface->GetMTATempSystem().GetTemps());
             if(temps.size())
-            { // siirretään 1. luotaus hiiren osoittamaan paikkaan
+            { // siirretï¿½ï¿½n 1. luotaus hiiren osoittamaan paikkaan
                 temps[0].Latlon(latlon);
                 if(itsLastMouseDownRelPlace != thePlace)
                     itsCtrlViewDocumentInterface->MustDrawTempView(true);
@@ -3200,7 +3234,7 @@ bool NFmiStationViewHandler::MouseMove(const NFmiPoint &thePlace, unsigned long 
     catch(...)
     {
     }
-    CleanGdiplus(); // tätä pitää kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
+    CleanGdiplus(); // tï¿½tï¿½ pitï¿½ï¿½ kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
     return false;
 }
 
@@ -3260,7 +3294,7 @@ void NFmiStationViewHandler::DrawSelectedLocations(void)
 		return ;
 
     if(itsViewList->NumberOfItems())
-    {   // Jos yksikin parametri valittuna näytölle, piirretään sen avulla valitut pisteet
+    {   // Jos yksikin parametri valittuna nï¿½ytï¿½lle, piirretï¿½ï¿½n sen avulla valitut pisteet
         for(itsViewList->Reset(); itsViewList->Next();)
         {
             ((NFmiStationView*)itsViewList->Current())->DrawAllSelectedStationsWithInvertStationRect(NFmiMetEditorTypes::kFmiSelectionMask);
@@ -3269,7 +3303,7 @@ void NFmiStationViewHandler::DrawSelectedLocations(void)
         }
     }
     else
-    {   // Tarvittaessa luodaan yksi näyttö, jonka avulla piirretään valitut pisteet
+    {   // Tarvittaessa luodaan yksi nï¿½yttï¿½, jonka avulla piirretï¿½ï¿½n valitut pisteet
         NFmiStationView stationView(itsMapViewDescTopIndex, GetArea(), itsToolBox, itsDrawParam, kFmiTemperature, NFmiPoint(0, 0), NFmiPoint(1, 1), itsViewGridRowNumber, itsViewGridColumnNumber);
         stationView.Time(itsTime);
         stationView.DrawAllSelectedStationsWithInvertStationRect(NFmiMetEditorTypes::kFmiSelectionMask);
@@ -3277,7 +3311,7 @@ void NFmiStationViewHandler::DrawSelectedLocations(void)
     }
 }
 
-// tämä pitää yhdistää NFmiStationView:n CP piirtoon, eikä pidetä erillään!!!!
+// tï¿½mï¿½ pitï¿½ï¿½ yhdistï¿½ï¿½ NFmiStationView:n CP piirtoon, eikï¿½ pidetï¿½ erillï¿½ï¿½n!!!!
 void NFmiStationViewHandler::DrawControlPoints(void)
 {
 	if(itsCtrlViewDocumentInterface->ShowControlPointsOnMap(itsMapViewDescTopIndex) == false)
@@ -3368,25 +3402,25 @@ static bool CheckIsTotalCloudinessUnitInProcents(boost::shared_ptr<NFmiDrawParam
 				}
 			}
 			if(nonMissingValues > 200)
-				return false; // jos ei ole ollut 200 ei-puuttuvaan arvoon yhtään yli 10 arvoa, oletetaan että kok.pilv. on octina
+				return false; // jos ei ole ollut 200 ei-puuttuvaan arvoon yhtï¿½ï¿½n yli 10 arvoa, oletetaan ettï¿½ kok.pilv. on octina
 		}
 		return false;
 	}
 	return true;
 }
 
-// Tämä funktio toimii vain wind-arrow ja wind-vector tyyppien kanssa.
+// Tï¿½mï¿½ funktio toimii vain wind-arrow ja wind-vector tyyppien kanssa.
 static bool IsWantedWindViewType(boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& info, NFmiMetEditorTypes::View wantedViewType)
 {
-	// Jos GridDataPresentationStyle on haluttua tyyppia, se riittää, koska wind-vec ja arrow tyypit ovat erikoisuus
-	// ja se asetus on käytetty vaikka kyse olisi asemadatasta.
+	// Jos GridDataPresentationStyle on haluttua tyyppia, se riittï¿½ï¿½, koska wind-vec ja arrow tyypit ovat erikoisuus
+	// ja se asetus on kï¿½ytetty vaikka kyse olisi asemadatasta.
 	auto gridDataIsWantedType = drawParam->GridDataPresentationStyle() == wantedViewType;
 	if(gridDataIsWantedType)
 		return true;
 	auto stationDataIsWantedType = (info && info->IsGrid() == false) && (drawParam->StationDataViewType() == wantedViewType);
 	if(stationDataIsWantedType)
 		return true;
-	// Jos hiladata halutaan visualisoida halutulla wind piirtotyylillä, nyt sekin onnistuu
+	// Jos hiladata halutaan visualisoida halutulla wind piirtotyylillï¿½, nyt sekin onnistuu
 	auto dataIsVisualizedWithWantedSymbols = drawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiTextView && (drawParam->StationDataViewType() == wantedViewType);
 	return dataIsVisualizedWithWantedSymbols;
 }
@@ -3498,7 +3532,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                                                     , itsViewGridColumnNumber);
         }
         else if(((isGridData && useTextView) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiPrecipFormSymbolView)
-        { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu sateenolomuoto, piirretään data sateen olomuoto näytöllä, vaikka kyse olisi hiladatasta.
+        { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu sateenolomuoto, piirretï¿½ï¿½n data sateen olomuoto nï¿½ytï¿½llï¿½, vaikka kyse olisi hiladatasta.
 			stationView = new NFmiPrecipitationFormSymbolTextView(itsMapViewDescTopIndex, itsMapArea
 																	,itsToolBox
 																	,theDrawParam
@@ -3510,7 +3544,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                                                     , itsViewGridColumnNumber);
         }
         else if(((isGridData && useTextView) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiRawMirriFontSymbolView)
-        { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu mirri-font symbol, piirretään data mirri font symboleilla niiden suorilla raaka arvoilla.
+        { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu mirri-font symbol, piirretï¿½ï¿½n data mirri font symboleilla niiden suorilla raaka arvoilla.
             stationView = new NFmiRawMirriFontSymbolTextView(itsMapViewDescTopIndex, itsMapArea
                 , itsToolBox
                 , theDrawParam
@@ -3522,7 +3556,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                 , itsViewGridColumnNumber);
         }
         else if(((isGridData && useTextView) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiBetterWeatherSymbolView)
-        { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu mirri-font symbol, piirretään data mirri font symboleilla niiden suorilla raaka arvoilla.
+        { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu mirri-font symbol, piirretï¿½ï¿½n data mirri font symboleilla niiden suorilla raaka arvoilla.
             stationView = new NFmiBetterWeatherSymbolView(itsMapViewDescTopIndex, itsMapArea
                 , itsToolBox
                 , theDrawParam
@@ -3558,7 +3592,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                 , itsViewGridColumnNumber);
         }
         else if(((isGridData && useTextView) || (!isGridData)) && theDrawParam->StationDataViewType() == NFmiMetEditorTypes::View::kFmiSynopWeatherSymbolView)
-        { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu sateenolomuoto, piirretään data synop-sää symboleilla, vaikka kyse olisi hiladatasta.
+        { // Jos hila-piirto on symboli piirto ja asema-piirtona on valittu sateenolomuoto, piirretï¿½ï¿½n data synop-sï¿½ï¿½ symboleilla, vaikka kyse olisi hiladatasta.
 			stationView = new NFmiStationIndexTextView(itsMapViewDescTopIndex, itsMapArea
 													  ,itsToolBox
 													  ,theDrawParam
@@ -3592,7 +3626,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
                                              ,itsViewGridColumnNumber);
 		}
 		else if(theDrawParam->StationDataViewType() != NFmiMetEditorTypes::View::kFmiTextView && info && info->IsGrid() == false)
-		{ // eli tarvittaessa myös asema data voidaan haluta piirtää isoviivoina tai contoureina
+		{ // eli tarvittaessa myï¿½s asema data voidaan haluta piirtï¿½ï¿½ isoviivoina tai contoureina
 			stationView = new NFmiIsoLineView(itsMapViewDescTopIndex, itsMapArea
 											 ,itsToolBox
 											 ,theDrawParam
@@ -3650,7 +3684,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 													  ,itsToolBox
 													  ,theDrawParam
 													  ,param
-													  , itsCtrlViewDocumentInterface->DataLists()->ParamPictureList(kFmiWeatherSymbol1) // käytetään HSADE1 listaa, mistä symboli haetaan
+													  , itsCtrlViewDocumentInterface->DataLists()->ParamPictureList(kFmiWeatherSymbol1) // kï¿½ytetï¿½ï¿½n HSADE1 listaa, mistï¿½ symboli haetaan
 													  ,dataOffSet
 													  ,dataSize
                                                     , itsViewGridRowNumber
@@ -3675,7 +3709,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 													  ,itsToolBox
 													  ,theDrawParam
 													  ,param
-													  , itsCtrlViewDocumentInterface->DataLists()->PrecipitationFormSymbolList() // tällä ei ole väliä, siellä lasketaan symbolit toista kautta
+													  , itsCtrlViewDocumentInterface->DataLists()->PrecipitationFormSymbolList() // tï¿½llï¿½ ei ole vï¿½liï¿½, siellï¿½ lasketaan symbolit toista kautta
 													  ,dataOffSet
 													  ,dataSize
                                                       , itsViewGridRowNumber
@@ -3697,7 +3731,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 
 			default:
 				{
-				// kokonais pilvisyys piti laittaa vielä speciaali tapaukseksi, koska synop-datassa pilvisyys on oktina ja hila datassa prosentteina
+				// kokonais pilvisyys piti laittaa vielï¿½ speciaali tapaukseksi, koska synop-datassa pilvisyys on oktina ja hila datassa prosentteina
 					unsigned long prodId = theDrawParam->Param().GetProducer()->GetIdent();
 					bool synopProducer = (prodId == kFmiSYNOP || prodId == kFmiSHIP || prodId == kFmiMETAR);
 					bool totalCloudinessParam = (param == kFmiTotalCloudCover || param == kFmi1CloudCover || param == kFmi2CloudCover || param == kFmi3CloudCover || param == kFmi4CloudCover);
@@ -3707,7 +3741,7 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 														,itsToolBox
 														,theDrawParam
 														,param
-														, itsCtrlViewDocumentInterface->DataLists()->TotalCloudinessSymbolList() // käytetään HSADE1 listaa, mistä symboli haetaan
+														, itsCtrlViewDocumentInterface->DataLists()->TotalCloudinessSymbolList() // kï¿½ytetï¿½ï¿½n HSADE1 listaa, mistï¿½ symboli haetaan
 														,dataOffSet
 														,dataSize
                                                         , itsViewGridRowNumber
@@ -3746,8 +3780,8 @@ void NFmiStationViewHandler::SetMapAreaAndRect(const boost::shared_ptr<NFmiArea>
 	{
         itsMapArea = boost::shared_ptr<NFmiArea>(theArea->Clone());
 		itsMapRect = theRect;
-		itsRect = theRect; // tämä on emon dataa!!!!
-		itsMapArea->SetXYArea(itsMapRect); // siirtää suhteellistä aluetta
+		itsRect = theRect; // tï¿½mï¿½ on emon dataa!!!!
+		itsMapArea->SetXYArea(itsMapRect); // siirtï¿½ï¿½ suhteellistï¿½ aluetta
 	}
 }
 
@@ -3765,8 +3799,9 @@ void NFmiStationViewHandler::DrawMap(NFmiToolBox * theGTB, const NFmiRect& theRe
 		}
 		else 
 		{
-			// Else on hitaampi tapa , jota käytetään ainakin printtauksen yhteydessä
+			// Else on hitaampi tapa , jota kï¿½ytetï¿½ï¿½n ainakin printtauksen yhteydessï¿½
             auto mapHandler = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex);
+#ifndef UNIX
 			Gdiplus::Bitmap *aBitmap = mapHandler->GetBitmap();
 			if(aBitmap)
 			{
@@ -3776,6 +3811,7 @@ void NFmiStationViewHandler::DrawMap(NFmiToolBox * theGTB, const NFmiRect& theRe
 				Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(mfcRect.left), static_cast<Gdiplus::REAL>(mfcRect.top), static_cast<Gdiplus::REAL>(mfcRect.Width()), static_cast<Gdiplus::REAL>(mfcRect.Height()));
                 CtrlView::DrawBitmapToDC_4(theGTB->GetDC(), *aBitmap, bitmapRect, destRect, true, NFmiImageAttributes(), itsGdiPlusGraphics);
 			}
+#endif // UNIX
 		}
 		if(itsCtrlViewDocumentInterface->ProjectionCurvatureInfo()->GetDrawingMode() == NFmiProjectionCurvatureInfo::kOverMap)
 			DrawProjetionLines(theGTB);
@@ -3783,7 +3819,7 @@ void NFmiStationViewHandler::DrawMap(NFmiToolBox * theGTB, const NFmiRect& theRe
 }
 
 //--------------------------------------------------------
-// DrawOverMap Eli tämä kuva piirretään yli perus kartan ja datan
+// DrawOverMap Eli tï¿½mï¿½ kuva piirretï¿½ï¿½n yli perus kartan ja datan
 //--------------------------------------------------------
 void NFmiStationViewHandler::DrawOverMap(NFmiToolBox * theGTB, const NFmiRect& theRect)
 {
@@ -3794,7 +3830,9 @@ void NFmiStationViewHandler::DrawOverMap(NFmiToolBox * theGTB, const NFmiRect& t
         auto destRect = MapDraw::getDestRect(mfcRect);
 
         int wantedDrawOverMapMode = 1; // means overlay is drawn after all the dynamic data is drawn
+#ifndef UNIX
         MapDraw::drawOverlayMap(itsCtrlViewDocumentInterface, itsMapViewDescTopIndex, wantedDrawOverMapMode, theGTB->GetDC(), destRect, bitmapSize, itsGdiPlusGraphics);
+#endif // UNIX
 	}
 }
 
@@ -3814,7 +3852,7 @@ void NFmiStationViewHandler::DrawProjetionLines(NFmiToolBox * theGTB)
                 NFmiPoint fontSize(CalcFontSize(usedFontSizeInMM));
                 double usedFontSizeInRelativeUnit = itsMapArea->Width() * usedFontSizeInMM / itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsViewHeightInMM;
                 projInfo->CalcProjectionLinesAndLabels(itsMapArea.get(), fontSize, usedFontSizeInRelativeUnit);
-                theGTB->DrawValueLineList(&projInfo->GetProjectionLines(), &itsDrawingEnvironment, itsMapRect); // envi ja rect annetaan turhaan, koska funktio haluaa niitä!!!
+                theGTB->DrawValueLineList(&projInfo->GetProjectionLines(), &itsDrawingEnvironment, itsMapRect); // envi ja rect annetaan turhaan, koska funktio haluaa niitï¿½!!!
                 std::list<std::shared_ptr<NFmiText>> &labels = projInfo->GetProjectionLineLabels();
                 std::list<std::shared_ptr<NFmiText>>::iterator it = labels.begin();
                 for(; it != labels.end(); ++it)
@@ -3832,6 +3870,7 @@ void NFmiStationViewHandler::DrawProjetionLines(NFmiToolBox * theGTB)
 // muuttaa millimetrin pikselin kooksi
 double NFmiStationViewHandler::MM2PixelSize(double theWantedMM)
 {
+#ifndef UNIX
 	CDC* dc = itsToolBox->GetDC();
 	int oldMappingMode = dc->SetMapMode(MM_HIMETRIC);
 
@@ -3840,6 +3879,9 @@ double NFmiStationViewHandler::MM2PixelSize(double theWantedMM)
 
 	dc->SetMapMode(oldMappingMode);
 	return size.cy;
+#else
+    return theWantedMM * itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x;
+#endif // UNIX
 }
 
 NFmiPoint NFmiStationViewHandler::CalcFontSize(double theWantedSizeInMM)
@@ -3858,13 +3900,13 @@ void NFmiStationViewHandler::DrawMapInMouseMove(NFmiToolBox * theGTB, const NFmi
 		{
 			NFmiPoint place(theRect.Place());
 			place -= GetFrame().Place();
-			NFmiPoint size(1,1); // koolla ei ole todellisuudessa merkitystä
+			NFmiPoint size(1,1); // koolla ei ole todellisuudessa merkitystï¿½
 			NFmiRect sourceRect(place, size);
 			theGTB->DrawDC(mapDc, theRect, sourceRect);
 		}
 		else
 		{
-			// tänne ei pitäisi mennä!!!!!
+			// tï¿½nne ei pitï¿½isi mennï¿½!!!!!
 		}
 	}
 }
@@ -3880,7 +3922,7 @@ void NFmiStationViewHandler::SetViewListArea(void)
 	}
 }
 
-// muuttaa annetun (esim. hiirellä osoitetun) suhteellisen (0,0 1,1) pisteen oikeaksi
+// muuttaa annetun (esim. hiirellï¿½ osoitetun) suhteellisen (0,0 1,1) pisteen oikeaksi
 // kartan latlon pisteeksi ja tallettaa latlon-pisteen ja ajan dokumenttiin
 void NFmiStationViewHandler::StoreToolTipDataInDoc(const NFmiPoint& theRelativePlace)
 {
@@ -3960,12 +4002,12 @@ void NFmiStationViewHandler::DrawMasksOnMap(NFmiToolBox* theGTB)
 		boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
 		if(!info)
 			return ;
-		if(info->Grid() == 0) // editoitavalle asema datalle ei tehdä maskia
+		if(info->Grid() == 0) // editoitavalle asema datalle ei tehdï¿½ maskia
 			return ;
 		NFmiDrawingEnvironment envi;
 		envi.EnableFill();
 		envi.DisableFrame();
-        EditedInfoMaskHandler editedInfoMaskHandler(info, NFmiMetEditorTypes::kFmiNoMask); // muutin activaatiomaskin käytöstä kaikkien piirtoon, koska muuten harvennetun datan piirto ei toimi oikein
+        EditedInfoMaskHandler editedInfoMaskHandler(info, NFmiMetEditorTypes::kFmiNoMask); // muutin activaatiomaskin kï¿½ytï¿½stï¿½ kaikkien piirtoon, koska muuten harvennetun datan piirto ei toimi oikein
 		NFmiRect maskRect(CalcMaskRectSize(info));
 		NFmiPoint xy;
 		NFmiPoint latLon;
@@ -3977,7 +4019,7 @@ void NFmiStationViewHandler::DrawMasksOnMap(NFmiToolBox* theGTB)
 			{
 				latLon = info->LatLon();
 				float maskValue = static_cast<float>(maskList->MaskValue(latLon));
-				if(maskValue >= 1.f) // jos maski on 1, ei piirretä mitään
+				if(maskValue >= 1.f) // jos maski on 1, ei piirretï¿½ mitï¿½ï¿½n
 					continue;
 				xy = LatLonToViewPoint(latLon);
 				maskRect.Center(xy);
@@ -3994,7 +4036,7 @@ void NFmiStationViewHandler::DrawMasksOnMap(NFmiToolBox* theGTB)
 	}
 }
 
-// tällä piirretään tavara, joka tulee myös bitmapin päälle
+// tï¿½llï¿½ piirretï¿½ï¿½n tavara, joka tulee myï¿½s bitmapin pï¿½ï¿½lle
 void NFmiStationViewHandler::DrawOverBitmapThings(NFmiToolBox * theGTB, bool /* dummy */, int theViewIndex, float /* dummy3 */, void* /* dummy4 */)
 {
     itsToolBox = theGTB;
@@ -4004,23 +4046,23 @@ void NFmiStationViewHandler::DrawOverBitmapThings(NFmiToolBox * theGTB, bool /* 
     DrawLegends(theGTB);
     if(IsControlPointModeOn())
         DrawControlPoints();
-    if((itsViewGridRowNumber == 1 && itsViewGridColumnNumber == theViewIndex) || itsCtrlViewDocumentInterface->IsPreciseTimeSerialLatlonPointUsed()) // vain 1. rivin viimeiseen ruutuun PAITSI jos ollaan tietyssä tarkkuus tilassa, milloin valittu piste piirretään jokaiseen karttaruutuun
+    if((itsViewGridRowNumber == 1 && itsViewGridColumnNumber == theViewIndex) || itsCtrlViewDocumentInterface->IsPreciseTimeSerialLatlonPointUsed()) // vain 1. rivin viimeiseen ruutuun PAITSI jos ollaan tietyssï¿½ tarkkuus tilassa, milloin valittu piste piirretï¿½ï¿½n jokaiseen karttaruutuun
         DrawSelectedLocations();
 
     DrawSelectedMTAModeSoundingPlaces();
     DrawSoundingPlaces();
-    DrawCrossSectionPoints(); // nämä piirretään vain vasempaan ylä kulmaan karttaruudukossa
+    DrawCrossSectionPoints(); // nï¿½mï¿½ piirretï¿½ï¿½n vain vasempaan ylï¿½ kulmaan karttaruudukossa
 
     DrawMouseCursorHelperCrossHair();
     DrawSelectedSynopFromGridView();
 	DrawMapViewRangeMeterData();
 
-	// Parametrilaatikko piirrettävä mahdollisimman lopussa kartan päälle!!!
+	// Parametrilaatikko piirrettï¿½vï¿½ mahdollisimman lopussa kartan pï¿½ï¿½lle!!!
     DrawParamView(theGTB); 
-	// Aikalegenda laatikko piirrettävä parametri boksin päälle, koska se on läpinäkyvä 
-	// ja jos sijoitettu 'vahingossa' päällekkäin, time-box on läpinäkyvä, parambox ei.
+	// Aikalegenda laatikko piirrettï¿½vï¿½ parametri boksin pï¿½ï¿½lle, koska se on lï¿½pinï¿½kyvï¿½ 
+	// ja jos sijoitettu 'vahingossa' pï¿½ï¿½llekkï¿½in, time-box on lï¿½pinï¿½kyvï¿½, parambox ei.
 	DrawTimeText(); 
-	DrawAutocompleteLocations(); // tämä ottaa huomioon, ettei piirrä parametri boxin päälle!
+	DrawAutocompleteLocations(); // tï¿½mï¿½ ottaa huomioon, ettei piirrï¿½ parametri boxin pï¿½ï¿½lle!
     DrawCurrentFrame(theGTB);
     CleanGdiplus();
 }
@@ -4102,18 +4144,19 @@ void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 			float lineWidthInMM = 0.3f;
 			float lineWidthInPixels = static_cast<float>(::CalcPenWidthInPixels(lineWidthInMM, pixelsPerMM));
 
-			// Piirrä range-ympyrä
+#ifndef UNIX
+			// Piirrï¿½ range-ympyrï¿½
 			auto splitLatlonCirclePoints = ::SplitPossibleOverEdgeLongitudeJumps(latlonCirclePoints);
 			for(const auto &latlonCirclePoints : splitLatlonCirclePoints)
 			{
 				auto relativeCirclePoints = ConvertLatlonToRelativePoints(latlonCirclePoints);
 				auto gdiPoints = CtrlView::Relative2GdiplusPolyLine(itsToolBox, relativeCirclePoints, NFmiPoint());
-				int lineStyle = 0; // 0=yhtenäinen viiva
+				int lineStyle = 0; // 0=yhtenï¿½inen viiva
 				GdiPlusLineInfo lineInfo(lineWidthInPixels, color, lineStyle);
 				CtrlView::DrawGdiplusCurve(*itsGdiPlusGraphics, gdiPoints, lineInfo, false, 0, itsCtrlViewDocumentInterface->Printing());
 			}
 
-			// Piirrä aloituspisteen kohdalle pikku risti
+			// Piirrï¿½ aloituspisteen kohdalle pikku risti
 			auto startRelativePosition = LatLonToViewPoint(startLatlon);
 			auto startGdiPosition = CtrlView::Relative2GdiplusPointInt(itsToolBox, startRelativePosition);
 			float crossHairLengthInMM = 2.5f;
@@ -4131,13 +4174,13 @@ void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 			int line2_y2 = boost::math::iround(startGdiPosition.Y + crossHairLengthInPixels);
 			CtrlView::DrawLine(*itsGdiPlusGraphics, line2_x1, line2_y1, line2_x2, line2_y2, color, lineWidthInPixels);
 
-			// Piirrä aloitus ja lopetus pisteiden väliin katkoviiva
+			// Piirrï¿½ aloitus ja lopetus pisteiden vï¿½liin katkoviiva
 			const auto& endLatlon = mapViewRangeMeter.DragEndLatlonPoint();
 			auto endRelativePosition = LatLonToViewPoint(endLatlon);
 			auto endGdiPosition = CtrlView::Relative2GdiplusPointInt(itsToolBox, endRelativePosition);
 			CtrlView::DrawLine(*itsGdiPlusGraphics, startGdiPosition.X, startGdiPosition.Y, endGdiPosition.X, endGdiPosition.Y, color, lineWidthInPixels, Gdiplus::DashStyleDot);
 
-			// Piirretään avustavaa tekstiä karttaruudun oikeaan alakulmaan
+			// Piirretï¿½ï¿½n avustavaa tekstiï¿½ karttaruudun oikeaan alakulmaan
 			auto textRelativeLocation = GetFrame().BottomRight();
 			std::wstring fontName = L"arial";
 			double fontSizeInMM = 6.f;
@@ -4174,7 +4217,7 @@ void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 			textRelativeLocation.Y(textRelativeLocation.Y() - relativeTextLineHeight);
 			double rangeInKm = rangeInMeters / 1000.;
 			std::string speedInfoStr = "Speed: ";
-			// Nopeus laskuissa käytetään mitatun etäisyyden kanssa karttanäytössä olevaa aika-askelta matkaan käytettävänä aikana
+			// Nopeus laskuissa kï¿½ytetï¿½ï¿½n mitatun etï¿½isyyden kanssa karttanï¿½ytï¿½ssï¿½ olevaa aika-askelta matkaan kï¿½ytettï¿½vï¿½nï¿½ aikana
 			auto usedTimeStepInHours = GetUsedTimeResolutionInHours();
 			double speedInKm = rangeInKm / usedTimeStepInHours;
 			speedInfoStr += NFmiValueString::GetStringWithMaxDecimalsSmartWay(speedInKm, 1);
@@ -4200,11 +4243,11 @@ void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 			auto angleInDegrees = startLocation.Direction(endLatlon);
 			if(angleInDegrees < 0)
 			{
-				// halutaan arvot 0-360, mutta NFmiLocation palauttaa arvovälin 180-360 arvot negatiivisina arvoina
+				// halutaan arvot 0-360, mutta NFmiLocation palauttaa arvovï¿½lin 180-360 arvot negatiivisina arvoina
 				angleInDegrees = 180 + (180 + angleInDegrees);
 			}
 			rangeStr += NFmiValueString::GetStringWithMaxDecimalsSmartWay(angleInDegrees, 1);
-			rangeStr += "°"; // Astemerkki tms. ovat aina potentiaalinen ongelma, koska ei kuulu perus ascii merkkeihin
+			rangeStr += "ï¿½"; // Astemerkki tms. ovat aina potentiaalinen ongelma, koska ei kuulu perus ascii merkkeihin
 			rangeStr += ")";
 
 			CtrlView::DrawTextToRelativeLocation(
@@ -4271,6 +4314,7 @@ void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 				itsToolBox,
 				fontName,
 				kRight);
+#endif // UNIX
 		}
 	}
 }
@@ -4298,7 +4342,7 @@ void NFmiStationViewHandler::DrawAutocompleteLocations(void)
 
     itsAutoCompletionRects.clear(); // aluksi aina nollataan laatikot
 
-    // piirretään autocomplete juttuja vain 1. rivin 1. sarakkeeseen
+    // piirretï¿½ï¿½n autocomplete juttuja vain 1. rivin 1. sarakkeeseen
     if(itsViewGridRowNumber == 1 && itsViewGridColumnNumber == 1)
     {
         std::vector<NFmiACLocationInfo> locInfos = autoComplete.AutoCompleteResults();
@@ -4306,16 +4350,18 @@ void NFmiStationViewHandler::DrawAutocompleteLocations(void)
             return;
 
         NFmiRect markerCircleBase = CalcBaseMarkerRect(autoComplete.MarkerSizeInMM());
-        // Lisätään jo tässä vaiheessa kaikki markerit rect-Listaan, että niiden päälle ei piirretä mitään
+        // Lisï¿½tï¿½ï¿½n jo tï¿½ssï¿½ vaiheessa kaikki markerit rect-Listaan, ettï¿½ niiden pï¿½ï¿½lle ei piirretï¿½ mitï¿½ï¿½n
         for(size_t i = 0; i < locInfos.size(); i++)
         {
             markerCircleBase.Center(LatLonToViewPoint(locInfos[i].itsLatlon));
             itsAutoCompletionRects.push_back(markerCircleBase);
         }
 
-        // varsinainen piirto rutiini alkaa tästä
+        // varsinainen piirto rutiini alkaa tï¿½stï¿½
+#ifndef UNIX
         for(size_t i = 0; i < locInfos.size(); i++)
             DrawAutocompleteLocation(itsGdiPlusGraphics, locInfos[i], markerCircleBase);
+#endif // UNIX
     }
 }
 
@@ -4336,7 +4382,7 @@ NFmiPoint NFmiStationViewHandler::CalcNewCenterPoint(double relativeX, double re
 	double radSin = radius * ::sin(angle * trigFactor);
 	double radCos = radius * ::cos(angle * trigFactor);
 	double newCenterX = relativeX + (relativeW / 2.) + radCos;
-	if(radCos < 0) // jos kulma osoittaa relatiivisesta pisteestä vasemmalle, heitetään koko boksia vasemmalle
+	if(radCos < 0) // jos kulma osoittaa relatiivisesta pisteestï¿½ vasemmalle, heitetï¿½ï¿½n koko boksia vasemmalle
 		newCenterX = relativeX - (relativeW / 2.) + radCos;
 	double newCenterY = relativeY - radSin;
 	return NFmiPoint(newCenterX, newCenterY);
@@ -4356,7 +4402,7 @@ bool NFmiStationViewHandler::CheckBoundingBox(NFmiRect &theBoundBox, std::vector
 {
 	theBoundBox.Center(CalcNewCenterPoint(relativeX, relativeY, relativeW, radius, angle));
 	if(::IsBoundinBoxInGoodPlace(theBoundBox, theAutoCompletionRects, GetFrame()))
-	{ // jos ei mennyt päällekkäin vanhojen laatikoiden kanssa, laitetaan teksti tähän
+	{ // jos ei mennyt pï¿½ï¿½llekkï¿½in vanhojen laatikoiden kanssa, laitetaan teksti tï¿½hï¿½n
 		if(::fabs(angle) <= 90)
 			theMarkerConnectingPlace = kMiddleLeft;
 		else
@@ -4366,9 +4412,9 @@ bool NFmiStationViewHandler::CheckBoundingBox(NFmiRect &theBoundBox, std::vector
 	return false;
 }
 
-// etsi paikka theRelativePoint:in ympäriltä (ei päältä), joka ei mene päällekkäin theAutoCompletionRects-listassa olevien rectien kanssa. 
+// etsi paikka theRelativePoint:in ympï¿½riltï¿½ (ei pï¿½ï¿½ltï¿½), joka ei mene pï¿½ï¿½llekkï¿½in theAutoCompletionRects-listassa olevien rectien kanssa. 
 // Halutun rectin koko on theRelativeBoundingBox:in kokoinen.
-// Etsitään uusi paikka puoliympyrän muotoiselta alueelta, kolmella eri säteellä. Säde määräytyy theRelativeBoundingBox:in korkeuden mukaan. 
+// Etsitï¿½ï¿½n uusi paikka puoliympyrï¿½n muotoiselta alueelta, kolmella eri sï¿½teellï¿½. Sï¿½de mï¿½ï¿½rï¿½ytyy theRelativeBoundingBox:in korkeuden mukaan. 
 // 1. kierroksella 1/2 korkeutta, 2. kierroksella 1/3 korkeutta ja lopuksi 2/3 korkeutta.
 NFmiRect NFmiStationViewHandler::SearchNameBoxLocation(const NFmiPoint &theRelativePoint, const NFmiRect &theRelativeBoundingBox, std::vector<NFmiRect> &theAutoCompletionRects, double theOneLineBoxHeight, FmiDirection &theMarkerConnectingPlace)
 {
@@ -4388,7 +4434,7 @@ NFmiRect NFmiStationViewHandler::SearchNameBoxLocation(const NFmiPoint &theRelat
 			// kokeillaan sitten vastaavaa negatiivisella kulmalla
 			else if(CheckBoundingBox(newRelativeBoundingBox, theAutoCompletionRects, relX, relY, relWidth, usedRadius, -angle, theMarkerConnectingPlace))
 				return newRelativeBoundingBox;
-			// Kokeillaan sitten hakea vasemmalta puolelta ylhäältä
+			// Kokeillaan sitten hakea vasemmalta puolelta ylhï¿½ï¿½ltï¿½
 			if(CheckBoundingBox(newRelativeBoundingBox, theAutoCompletionRects, relX, relY, relWidth, usedRadius, 180 - angle, theMarkerConnectingPlace))
 				return newRelativeBoundingBox;
 			// Kokeillaan lopuksi hakea vasemmalta puolelta alhaalta
@@ -4397,13 +4443,14 @@ NFmiRect NFmiStationViewHandler::SearchNameBoxLocation(const NFmiPoint &theRelat
 		}
 	}
 
-	// Jos ei löytynyt paikkaa, laitetaan se siteen vain 1. sijoitus paikkaan
+	// Jos ei lï¿½ytynyt paikkaa, laitetaan se siteen vain 1. sijoitus paikkaan
 	usedRadius = GetUsedRadius(0, theOneLineBoxHeight);
 	newRelativeBoundingBox.Center(CalcNewCenterPoint(relX, relY, relWidth, usedRadius, 0));
 	theMarkerConnectingPlace = kCenter;
 	return newRelativeBoundingBox;
 }
 
+#ifndef UNIX
 void NFmiStationViewHandler::DrawAutocompleteLocation(Gdiplus::Graphics *theGdiPlusGraphics, const NFmiACLocationInfo &theLocInfo, NFmiRect &theMarkerCircleBase)
 {
 	if(theLocInfo.itsLatlon != NFmiACLocationInfo::gMissingLatlon)
@@ -4426,7 +4473,7 @@ void NFmiStationViewHandler::DrawAutocompleteLocation(Gdiplus::Graphics *theGdiP
 
 		std::wstring fontName = CtrlView::StringToWString(autoComplete.FontName()); // L"arial";
 		double fontSizeInMM = autoComplete.FontSizeInMM();
-		std::string oneLineTestStr = "Pasalsmaksljjks"; // tämän stringin avulla halutaan tietää vain yhden rivin 'laatikon' korkeus
+		std::string oneLineTestStr = "Pasalsmaksljjks"; // tï¿½mï¿½n stringin avulla halutaan tietï¿½ï¿½ vain yhden rivin 'laatikon' korkeus
 		Gdiplus::RectF oneLineBoundinBox = CtrlView::GetStringBoundingBox(*theGdiPlusGraphics, oneLineTestStr, static_cast<float>(fontSizeInMM*pixelsPerMM), Gdiplus::PointF(), fontName);
 		Gdiplus::RectF boundinBox = CtrlView::GetWStringBoundingBox(*theGdiPlusGraphics, nameStr, static_cast<float>(fontSizeInMM*pixelsPerMM), Gdiplus::PointF(), fontName);
 		NFmiPoint relativePoint = LatLonToViewPoint(theLocInfo.itsLatlon);
@@ -4435,7 +4482,7 @@ void NFmiStationViewHandler::DrawAutocompleteLocation(Gdiplus::Graphics *theGdiP
 		NFmiRect relativeOneLineBoundingBox = CtrlView::GdiplusRect2Relative(itsToolBox, oneLineBoundinBox);
 		NFmiRect relativeBoundingBox = CtrlView::GdiplusRect2Relative(itsToolBox, boundinBox);
 
-		// etsi laatikon paikka niin että se ei ole päällekkäin muiden kanssa, eikä se ole paikan itsensä päällä
+		// etsi laatikon paikka niin ettï¿½ se ei ole pï¿½ï¿½llekkï¿½in muiden kanssa, eikï¿½ se ole paikan itsensï¿½ pï¿½ï¿½llï¿½
 		FmiDirection markerConnectingPlace = kLeft;
 		NFmiRect foundRect = SearchNameBoxLocation(relativePoint, relativeBoundingBox, itsAutoCompletionRects, relativeOneLineBoundingBox.Height(), markerConnectingPlace);
         itsAutoCompletionRects.push_back(foundRect);
@@ -4446,7 +4493,7 @@ void NFmiStationViewHandler::DrawAutocompleteLocation(Gdiplus::Graphics *theGdiP
 		NFmiColor fillColor = autoComplete.RectangleFillColor(); //(1.f, 1.f, 0.0f, 0.6f);
 		bool doFill = true;
 		if(markerConnectingPlace == kCenter || markerConnectingPlace == kTopCenter)
-			fillColor.Alpha(fillColor.Alpha()*0.8f); // jos boxille ei löytynyt paikkaa, joka ei ole päällekkäin, laitetaan enemmän läpinäkyvyyttä
+			fillColor.Alpha(fillColor.Alpha()*0.8f); // jos boxille ei lï¿½ytynyt paikkaa, joka ei ole pï¿½ï¿½llekkï¿½in, laitetaan enemmï¿½n lï¿½pinï¿½kyvyyttï¿½
         CtrlView::DrawRect(*theGdiPlusGraphics, foundBoundingBox, frameColor, fillColor, doFill, true, FmiMax(1.f, static_cast<float>FmiRound(autoComplete.RectangleFramePenSizeInMM() * pixelsPerMM)));
 
         CtrlView::DrawTextToRelativeLocation(
@@ -4460,10 +4507,11 @@ void NFmiStationViewHandler::DrawAutocompleteLocation(Gdiplus::Graphics *theGdiP
 									fontName,
 									kTopLeft);
 
-		// Piirrä vielä paikan markkeri (musta ympyrä, jossa punainen keskus) ja siitä viiva laatikkoon!!!
+		// Piirrï¿½ vielï¿½ paikan markkeri (musta ympyrï¿½, jossa punainen keskus) ja siitï¿½ viiva laatikkoon!!!
 		DrawMarkerPoint(relativePoint, foundRect, itsAutoCompletionRects, markerConnectingPlace, theMarkerCircleBase);
 	}
 }
+#endif // UNIX
 
 NFmiRect NFmiStationViewHandler::CalcBaseMarkerRect(double theMarkerSizeInMM)
 {
@@ -4501,7 +4549,7 @@ static bool IsPacificViewData(boost::shared_ptr<NFmiFastQueryInfo> &theEditedInf
 {
     if(theEditedInfo)
     {
-        if(theEditedInfo->Grid()) // editoidun datan pitäisi olla hiladata
+        if(theEditedInfo->Grid()) // editoidun datan pitï¿½isi olla hiladata
             return theEditedInfo->Grid()->Area()->PacificView();
     }
 
@@ -4509,8 +4557,8 @@ static bool IsPacificViewData(boost::shared_ptr<NFmiFastQueryInfo> &theEditedInf
 }
 
 void NFmiStationViewHandler::DrawMouseCursorHelperCrossHair(void)
-{ // tämän on tarkoitus piirtää apu hiiri kursorit muihin karttaruutuihin, että käyttäjä
-  // näkee kaikilla ruuduilla, missä hiiren kursori menee
+{ // tï¿½mï¿½n on tarkoitus piirtï¿½ï¿½ apu hiiri kursorit muihin karttaruutuihin, ettï¿½ kï¿½yttï¿½jï¿½
+  // nï¿½kee kaikilla ruuduilla, missï¿½ hiiren kursori menee
 	if(!itsCtrlViewDocumentInterface->ShowMouseHelpCursorsOnMap())
 		return ;
 
@@ -4528,7 +4576,7 @@ void NFmiStationViewHandler::DrawMouseCursorHelperCrossHair(void)
 	NFmiPoint xyPoint(LatLonToViewPoint(itsCtrlViewDocumentInterface->ToolTipLatLonPoint()));
 	aRect1.Center(xyPoint);
 	aRect2.Center(xyPoint);
-	// piirretään eräänlainen tähtäys ristikko hiiren kursorin kohdalle
+	// piirretï¿½ï¿½n erï¿½ï¿½nlainen tï¿½htï¿½ys ristikko hiiren kursorin kohdalle
 	NFmiRectangle aRec1(NFmiPoint(aRect1.Left(), xyPoint.Y() - height3/2.), NFmiPoint(aRect2.Left(), xyPoint.Y() + height3/2.), 0, &envi);
 	itsToolBox->Convert(&aRec1);
 	NFmiRectangle aRec2(NFmiPoint(aRect1.Right(), xyPoint.Y() - height3/2.), NFmiPoint(aRect2.Right(), xyPoint.Y() + height3/2.), 0, &envi);
@@ -4562,7 +4610,7 @@ void NFmiStationViewHandler::DrawSelectedSynopFromGridView(void)
 			aRect1.Center(xyPoint);
 			aRect2.Center(xyPoint);
 			aRect3.Center(xyPoint);
-			// piirretään eräänlainen tähtäys ristikko aseman kohdalle
+			// piirretï¿½ï¿½n erï¿½ï¿½nlainen tï¿½htï¿½ys ristikko aseman kohdalle
 			NFmiLine line1(aRect1.BottomLeft(), aRect2.BottomLeft(), 0, &envi);
 			itsToolBox->Convert(&line1);
 			NFmiLine line2(aRect1.TopLeft(), aRect2.TopLeft(), 0, &envi);
@@ -4576,10 +4624,10 @@ void NFmiStationViewHandler::DrawSelectedSynopFromGridView(void)
 		}
 }
 
-// 1. Jos beforeDataCase == true, tehdään aina background kartta-layerille teksti, 
-// mutta tarkistetaan myös tehdäänkö overlay-layerille teksti, jos se piirretään heti kartan päälle.
-// 2. Jos beforeDataCase == false, ei tehdä ollenkaan background tapausta, vaan katsotaan ainoastaan tehdäänkö 
-// overlay-layerille teksti, jos se piirretään datan päälle.
+// 1. Jos beforeDataCase == true, tehdï¿½ï¿½n aina background kartta-layerille teksti, 
+// mutta tarkistetaan myï¿½s tehdï¿½ï¿½nkï¿½ overlay-layerille teksti, jos se piirretï¿½ï¿½n heti kartan pï¿½ï¿½lle.
+// 2. Jos beforeDataCase == false, ei tehdï¿½ ollenkaan background tapausta, vaan katsotaan ainoastaan tehdï¿½ï¿½nkï¿½ 
+// overlay-layerille teksti, jos se piirretï¿½ï¿½n datan pï¿½ï¿½lle.
 std::string NFmiStationViewHandler::ComposeMapLayerToolTipText(bool beforeDataIsDrawnCase)
 {
 	auto& combinedMapHandlerInterface = itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface();
@@ -4611,8 +4659,8 @@ std::string NFmiStationViewHandler::ComposeToolTipText(const NFmiPoint& theRelat
 {
 	CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
 	std::string str;
-	// Parametri laatikon päältä ei tehdä normi tooltippiä, koska jotkut tooltipien laskut ovat super hitaita ja saattavat häiritä parametrin valinta popupin avautumista.
-	// Tehdään param-boxille vain tiettyjen tapauksien käsittely kuten mikä on kohdalla olevan macroParamin kaava, tms.
+	// Parametri laatikon pï¿½ï¿½ltï¿½ ei tehdï¿½ normi tooltippiï¿½, koska jotkut tooltipien laskut ovat super hitaita ja saattavat hï¿½iritï¿½ parametrin valinta popupin avautumista.
+	// Tehdï¿½ï¿½n param-boxille vain tiettyjen tapauksien kï¿½sittely kuten mikï¿½ on kohdalla olevan macroParamin kaava, tms.
 	if(IsMouseCursorOverParameterBox(theRelativePoint))
 	{
 		return itsParamHandlerView->ComposeToolTipText(theRelativePoint);
@@ -4649,12 +4697,12 @@ std::string NFmiStationViewHandler::ComposeToolTipText(const NFmiPoint& theRelat
 				str += itsViewList->Current()->ComposeToolTipText(theRelativePoint);
 				str += "\n";
 			}
-			// Otetaan viimeisin rivinvaihto pois, tulevat tekstinlisäys funktiot lisäävät tavittaessa alkuun rivinvaihdon
+			// Otetaan viimeisin rivinvaihto pois, tulevat tekstinlisï¿½ys funktiot lisï¿½ï¿½vï¿½t tavittaessa alkuun rivinvaihdon
 			str.pop_back();
 		}
 		str += ComposeWarningMessageToolTipText();
 		str += ComposeSilamLocationsToolTipText();
-		// Lopuksi vielä mahdollinen kartta overlay layer teksti
+		// Lopuksi vielï¿½ mahdollinen kartta overlay layer teksti
 		str += ComposeMapLayerToolTipText(false);
 	}
 	return str;
@@ -4662,7 +4710,7 @@ std::string NFmiStationViewHandler::ComposeToolTipText(const NFmiPoint& theRelat
 
 static void ConvertXML2PlainCode(std::string &theConvertedStr)
 {
-	// Pitää korvata XML tagien < ja > merkit, että tooltip näyttää tekstin sellaisenaan
+	// Pitï¿½ï¿½ korvata XML tagien < ja > merkit, ettï¿½ tooltip nï¿½yttï¿½ï¿½ tekstin sellaisenaan
 	NFmiStringTools::ReplaceAll(theConvertedStr, "<", "&lt;");
 	NFmiStringTools::ReplaceAll(theConvertedStr, ">", "&gt;");
 }
@@ -4723,8 +4771,8 @@ static std::string KahaToolTipText(const HakeMessage::HakeMsg &msg)
     return str;
 }
 
-// Xml pohjaisessa sanomassa pitää eri kokonaisviesti jakaa xml-node riveihin, 
-// jotta siitä saa selvää (originaali viesti on yhdellä rivillä).
+// Xml pohjaisessa sanomassa pitï¿½ï¿½ eri kokonaisviesti jakaa xml-node riveihin, 
+// jotta siitï¿½ saa selvï¿½ï¿½ (originaali viesti on yhdellï¿½ rivillï¿½).
 static std::string GetFinalXmlBaseHakeToolTipText(const HakeMessage::HakeMsg &msg)
 {
     std::string str;
@@ -4734,7 +4782,7 @@ static std::string GetFinalXmlBaseHakeToolTipText(const HakeMessage::HakeMsg &ms
         str += messageNodes[i];
         str += ">\n";
     }
-    // Pitää korvata XML tagien < ja > merkit, että tooltip näyttää tekstin sellaisenaan
+    // Pitï¿½ï¿½ korvata XML tagien < ja > merkit, ettï¿½ tooltip nï¿½yttï¿½ï¿½ tekstin sellaisenaan
     ::ConvertXML2PlainCode(str);
 
     return str;
@@ -4756,7 +4804,7 @@ static std::string HakeToolTipText(const HakeMessage::HakeMsg &msg)
 
 static std::string MakeMessageHeader(std::string&& typeName)
 {
-    std::string message = "Lähin ";
+    std::string message = "Lï¿½hin ";
     message += typeName;
     message += " sanoma:\n";
     return message;

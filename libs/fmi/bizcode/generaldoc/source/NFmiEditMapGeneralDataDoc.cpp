@@ -27,7 +27,9 @@
 #include "NFmiProjectionCurvatureInfo.h"
 #include "NFmiQueryDataUtil.h"
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "NFmiFileSystem.h"
 #include "NFmiSmartToolModifier.h"
 #include "NFmiSmartToolInfo.h"

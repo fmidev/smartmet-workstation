@@ -1,4 +1,6 @@
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "process_helpers.h"
 #include "process_tools.h"
 

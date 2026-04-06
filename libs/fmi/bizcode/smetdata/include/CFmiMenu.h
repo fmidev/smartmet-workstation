@@ -25,6 +25,8 @@
 
 #pragma once
 
+#ifndef UNIX
+
 class NFmiMenuItemList;
 class CPoint;
 class CMenu;
@@ -44,4 +46,6 @@ private:
 	CMenu* itsMenus;
 	NFmiMenuItemList** itsMenuItemLists;
 };
+
+#endif // UNIX
 

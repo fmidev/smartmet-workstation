@@ -1,10 +1,10 @@
-//© Ilmatieteenlaitos/Marko Pietarinen
+//ï¿½ Ilmatieteenlaitos/Marko Pietarinen
 //  Original 3.3.2014
 //
 //
 //-------------------------------------------------------------------- NFmiStreamLineView.cpp
 #ifdef _MSC_VER
-#pragma warning(disable : 4786) // poistaa n kpl VC++ kääntäjän varoitusta (liian pitkä nimi >255 merkkiä joka johtuu 'puretuista' STL-template nimistä)
+#pragma warning(disable : 4786) // poistaa n kpl VC++ kï¿½ï¿½ntï¿½jï¿½n varoitusta (liian pitkï¿½ nimi >255 merkkiï¿½ joka johtuu 'puretuista' STL-template nimistï¿½)
 #endif
 
 #include "NFmiStreamLineView.h"
@@ -27,7 +27,9 @@
 #include "NFmiFastInfoUtils.h"
 #include "NFmiQueryDataUtil.h"
 
+#ifndef UNIX
 #include <gdiplus.h>
+#endif // UNIX
 
 #include <boost/thread.hpp>
 
@@ -37,7 +39,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// Jos haluat nähdä debug infoa piirrettävän ruudulle, laita true tämän arvoksi.
+// Jos haluat nï¿½hdï¿½ debug infoa piirrettï¿½vï¿½n ruudulle, laita true tï¿½mï¿½n arvoksi.
 bool gDrawDebugInfo = false;
 
 
@@ -139,7 +141,7 @@ void CalcVisvaSimplification(std::vector<NFmiPoint> &pathToSimplify, std::vector
 }
 
 // Markon oma Visvalingam-Whyatt polun yksinkertaistus funktio,
-// käytetty pohjana pseudo-koodia seuraavalta sivulta:
+// kï¿½ytetty pohjana pseudo-koodia seuraavalta sivulta:
 // http://web.cs.sunyit.edu/~poissad/projects/Curve/about_algorithms/whyatt
 static std::vector<NFmiPoint> VisvalingamWhyattSimplification(const std::vector<NFmiPoint> &theOrigPath, double theAreaLimit, size_t theSimplificationStartIndex = 0)
 {
@@ -170,7 +172,7 @@ static std::vector<NFmiPoint> VisvalingamWhyattSimplification(const std::vector<
             if(*minElement < theAreaLimit)
             {
                 removed = true;
-                // poistetaan pienintä aluetta vastaava area ja point listoista
+                // poistetaan pienintï¿½ aluetta vastaava area ja point listoista
                 size_t dist = std::distance(areas.begin(), minElement);
                 std::list<NFmiPoint>::iterator removedPoint = points.begin();
                 std::advance(removedPoint, dist+1);
@@ -179,10 +181,10 @@ static std::vector<NFmiPoint> VisvalingamWhyattSimplification(const std::vector<
                 std::list<NFmiPoint>::iterator erasedPointIter = points.erase(removedPoint);
 
                 if(areas.size())
-                { // pitää olla väh. 1 area listassa, ennen kuin niitä päivitetään
-                    // sitten pitää laskea yksi/kaksi areaa uusiksi, koska niiden toinen reunapiste on muuttunut
+                { // pitï¿½ï¿½ olla vï¿½h. 1 area listassa, ennen kuin niitï¿½ pï¿½ivitetï¿½ï¿½n
+                    // sitten pitï¿½ï¿½ laskea yksi/kaksi areaa uusiksi, koska niiden toinen reunapiste on muuttunut
                     if(dist == 0)
-                    { // pitää laskea vain 1. area uusiksi
+                    { // pitï¿½ï¿½ laskea vain 1. area uusiksi
                         pointsIter = points.begin();
                         p1 = &(*pointsIter);
                         p2 = &(*++pointsIter);
@@ -191,7 +193,7 @@ static std::vector<NFmiPoint> VisvalingamWhyattSimplification(const std::vector<
                         *areaIter = ::TriArea(*p1, *p2, *p3);
                     }
                     else if(dist == areas.size())
-                    { // pitää laskea vain viimeinen area uusiksi
+                    { // pitï¿½ï¿½ laskea vain viimeinen area uusiksi
                         pointsIter = points.end();
                         p3 = &(*--pointsIter);
                         p2 = &(*--pointsIter);
@@ -201,7 +203,7 @@ static std::vector<NFmiPoint> VisvalingamWhyattSimplification(const std::vector<
                         *areaIter = ::TriArea(*p1, *p2, *p3);
                     }
                     else
-                    { // päivitetään 2 areaa poistetun pisteen molemmilta puolilta
+                    { // pï¿½ivitetï¿½ï¿½n 2 areaa poistetun pisteen molemmilta puolilta
                         pointsIter = erasedPointIter;
                         --pointsIter;
                         --pointsIter;
@@ -258,7 +260,7 @@ static void TestVisvaFunction(void)
     int x = 0;
 }
 
-// Lähde: http://www.john.geek.nz/2009/03/code-shortest-distance-between-any-two-line-segments/
+// Lï¿½hde: http://www.john.geek.nz/2009/03/code-shortest-distance-between-any-two-line-segments/
 // Muutin koodin newbase:lle ja vain karsittu 2D ratkaisu
 static double GetShortestDistance(const NFmiPoint& A1, const NFmiPoint& A2, const NFmiPoint& B1, const NFmiPoint& B2)
 {
@@ -343,11 +345,11 @@ static double GetShortestDistance(const NFmiPoint& A1, const NFmiPoint& A2, cons
     return ::Norm(dP);
 }
  
-// Menevätkö viivat 1 ja 2 ristiin? 
-// Kun katsotaan viivaa 1, joka on path:ssä ja joka alkaa index:stä.
+// Menevï¿½tkï¿½ viivat 1 ja 2 ristiin? 
+// Kun katsotaan viivaa 1, joka on path:ssï¿½ ja joka alkaa index:stï¿½.
 // Eli viiva 1 on: path[index] -> path[index + 1]
 // Viiva 2 on: p2 -> p3
-// Poikkeus heitetään, jos joku path ei sisällä niin montaa pistettä kuin index+1 odottaa.
+// Poikkeus heitetï¿½ï¿½n, jos joku path ei sisï¿½llï¿½ niin montaa pistettï¿½ kuin index+1 odottaa.
 static bool IsLinesIntersecting(const std::vector<NFmiPoint> &path, size_t index, const NFmiPoint &p2, const NFmiPoint &p3)
 {
     if(path.size() <= index + 1)
@@ -404,13 +406,13 @@ static std::vector<NFmiPoint> CalcLatlonPath(const std::vector<NFmiPoint> &theRe
 static void DoAutoPathUpdate(std::vector<NFmiPoint> &theLatlonPath, std::vector<NFmiPoint> &theRelativePath, NFmiStreamLineView *theView)
 {
     if(theLatlonPath.size() != theRelativePath.size())
-    { // tehdään päivitys vain jos pituuksissa on eroja
-        // päivitetään sen polun avulla joka on lyhyempi, koska sitä polkua on luultavasti juuri leikattu jossain tarkastuksissa
+    { // tehdï¿½ï¿½n pï¿½ivitys vain jos pituuksissa on eroja
+        // pï¿½ivitetï¿½ï¿½n sen polun avulla joka on lyhyempi, koska sitï¿½ polkua on luultavasti juuri leikattu jossain tarkastuksissa
         if(theLatlonPath.size() < theRelativePath.size())
             theRelativePath = ::CalcRelativePath(theLatlonPath, theView);
         else if(theRelativePath.size() < theLatlonPath.size())
             theLatlonPath = ::CalcLatlonPath(theRelativePath, theView);
-        // else jos polut saman mittaisia, ei tarvitse tehdä mitään
+        // else jos polut saman mittaisia, ei tarvitse tehdï¿½ mitï¿½ï¿½n
     }
 }
 
@@ -422,7 +424,7 @@ void NFmiStreamlineData::UpdatePaths(NFmiStreamLineView *theView)
         itsBackwardPathRelative = ::CalcRelativePath(itsBackwardPathLatlon, theView);
     }
     else
-    { // alustus on tehty ainakin kerran, nyt katsotaan kummassa (latlon/relative) on lyhyempi polku ja päivitetään sen kautta toinen
+    { // alustus on tehty ainakin kerran, nyt katsotaan kummassa (latlon/relative) on lyhyempi polku ja pï¿½ivitetï¿½ï¿½n sen kautta toinen
         ::DoAutoPathUpdate(itsForwardPathLatlon, itsForwardPathRelative, theView);
         ::DoAutoPathUpdate(itsBackwardPathLatlon, itsBackwardPathRelative, theView);
     }
@@ -443,11 +445,11 @@ static double CalcLineLengthInKM(const NFmiPoint &p1, const NFmiPoint &p2)
     return loc.Distance(p2) / 1000.;
 }
 
-// Jos on vain 2 pisteen pätkä, yleensä se on turhake ja näyttää 
-// rumalta kartalla ja se kannattaa poistaa piirrettävien joukosta.
-// Leikkaus koodit voivat jättää myös toiseen suuntaan menevän polun 
-// pituudeksi 1:n, joka on siis vain piste, ja se pitää huomioida 
-// tässä poistettavaksi.
+// Jos on vain 2 pisteen pï¿½tkï¿½, yleensï¿½ se on turhake ja nï¿½yttï¿½ï¿½ 
+// rumalta kartalla ja se kannattaa poistaa piirrettï¿½vien joukosta.
+// Leikkaus koodit voivat jï¿½ttï¿½ï¿½ myï¿½s toiseen suuntaan menevï¿½n polun 
+// pituudeksi 1:n, joka on siis vain piste, ja se pitï¿½ï¿½ huomioida 
+// tï¿½ssï¿½ poistettavaksi.
 bool NFmiStreamlineData::IsShorty(double theLengthLimitInKM) const
 {
     if(itsForwardPathLatlon.size() <= 2 && itsBackwardPathLatlon.size() <= 1)
@@ -463,7 +465,7 @@ bool NFmiStreamlineData::IsShorty(double theLengthLimitInKM) const
                 return true;
             else
             {
-                // lasketaan jos toinen viivoista on metreissä todella lyhyt ja luokitellaan se tällöin lyhyeksi
+                // lasketaan jos toinen viivoista on metreissï¿½ todella lyhyt ja luokitellaan se tï¿½llï¿½in lyhyeksi
                 if(::CalcLineLengthInKM(itsForwardPathLatlon[0], itsForwardPathLatlon[1]) <= theLengthLimitInKM)
                     return true;
                 else if(::CalcLineLengthInKM(itsBackwardPathLatlon[0], itsBackwardPathLatlon[1]) <= theLengthLimitInKM)
@@ -474,15 +476,15 @@ bool NFmiStreamlineData::IsShorty(double theLengthLimitInKM) const
     }
 }
 
-// SimplyfyPath kutsutaan latlon poluille, mutta CropCrossingPaths pitää 
+// SimplyfyPath kutsutaan latlon poluille, mutta CropCrossingPaths pitï¿½ï¿½ 
 // kutsua relatiivisille poluille.
 void NFmiStreamlineData::SimplifyData(NFmiStreamLineView *theView, double theAreaLimit)
 {
     itsForwardPathLatlon = SimplifyPath(itsForwardPathLatlon, theAreaLimit, 0);
     itsBackwardPathLatlon = SimplifyPath(itsBackwardPathLatlon, theAreaLimit, 0);
-    UpdatePaths(theView); // pakko päivittää relatiivia polkuja, koska latlon polkujen koko sattoi muuttua
+    UpdatePaths(theView); // pakko pï¿½ivittï¿½ï¿½ relatiivia polkuja, koska latlon polkujen koko sattoi muuttua
     CropCrossingPaths(itsBackwardPathRelative, itsForwardPathRelative, true);
-    ::DoAutoPathUpdate(itsBackwardPathLatlon, itsBackwardPathRelative, theView); // pakko päivittää backward relatiivista polkua, koska sen latlon vastine saattoi muuttua
+    ::DoAutoPathUpdate(itsBackwardPathLatlon, itsBackwardPathRelative, theView); // pakko pï¿½ivittï¿½ï¿½ backward relatiivista polkua, koska sen latlon vastine saattoi muuttua
 }
 
 std::vector<NFmiPoint> NFmiStreamlineData::SimplifyPath(const std::vector<NFmiPoint> &thePath, double theAreaLimit, size_t theSimplificationStartIndex)
@@ -499,8 +501,8 @@ void NFmiStreamlineData::CropCrossingPaths(const NFmiStreamlineData &theOtherPat
     UpdatePaths(theView);
 }
 
-// fromSameData tarkoittaa ovatko polut samasta vai eri otuksesta, jos ne ovat samasta, silloin aloitetaan indeksistä 1, koska muuten
-// samasta datasta tulevat forward ja backward polut voivat mennä pikkuisen ristiin, heti alussa, laskenta tarkkuuden takia.
+// fromSameData tarkoittaa ovatko polut samasta vai eri otuksesta, jos ne ovat samasta, silloin aloitetaan indeksistï¿½ 1, koska muuten
+// samasta datasta tulevat forward ja backward polut voivat mennï¿½ pikkuisen ristiin, heti alussa, laskenta tarkkuuden takia.
 void NFmiStreamlineData::CropCrossingPaths(std::vector<NFmiPoint> &theCheckedPath, const std::vector<NFmiPoint> &theOtherPath, bool fromSameData)
 {
     size_t startinIndex = fromSameData ? 1 : 0;
@@ -511,7 +513,7 @@ void NFmiStreamlineData::CropCrossingPaths(std::vector<NFmiPoint> &theCheckedPat
             for(size_t j = startinIndex; j < theOtherPath.size()-1; j++)
             {
                 if(::IsLinesIntersecting(theOtherPath, j, theCheckedPath[i], theCheckedPath[i+1]))
-                { // joku viiva leikkasi, leikataan theCheckedPath i;stä alkean pois ja lopetetaan
+                { // joku viiva leikkasi, leikataan theCheckedPath i;stï¿½ alkean pois ja lopetetaan
                     theCheckedPath.resize(i);
                     return ;
                 }
@@ -520,7 +522,7 @@ void NFmiStreamlineData::CropCrossingPaths(std::vector<NFmiPoint> &theCheckedPat
     }
 }
 
-// Lasketaan lähestyvien polkujen ongelma vielä latlon maailmassa, koska limitti on laskettu siinä
+// Lasketaan lï¿½hestyvien polkujen ongelma vielï¿½ latlon maailmassa, koska limitti on laskettu siinï¿½
 void NFmiStreamlineData::CropClosingPaths(const NFmiStreamlineData &theOtherPath, double theLimit, NFmiStreamLineView *theView)
 {
     CropClosingPaths(itsForwardPathLatlon, theOtherPath.itsForwardPathLatlon, theLimit);
@@ -539,7 +541,7 @@ void NFmiStreamlineData::CropClosingPaths(std::vector<NFmiPoint> &theCheckedPath
             for(size_t j = 0; j < theOtherPath.size()-1; j++)
             {
                 if(::GetShortestDistance(theCheckedPath[i], theCheckedPath[i+1], theOtherPath[j], theOtherPath[j+1]) < theLimit)
-                { // joku viiva liippaa nyt tarpeeksi läheltä, leikataan theCheckedPath i+1:stä alkean pois ja lopetetaan
+                { // joku viiva liippaa nyt tarpeeksi lï¿½heltï¿½, leikataan theCheckedPath i+1:stï¿½ alkean pois ja lopetetaan
                     theCheckedPath.resize(i+1);
                     return ;
                 }
@@ -570,8 +572,8 @@ StreamlineCalculationParameters::StreamlineCalculationParameters(const boost::sh
         itsTimeStepInMinutes = FmiRound(30 * theDrawParam->ContourGab());
         if(itsTimeStepInMinutes < 1)
             itsTimeStepInMinutes = 1;
-        itsMaxAreaLimit = theDrawParam->SimpleIsoLineLabelHeight() / 2000; // default on 4, joten jaetaan arvo sopivalla luvulla että defaultista saadaan sopiva alkuarvaus (~0.001 - 0.003)
-        itsMaxLengthInKMLimit = theDrawParam->IsoLineSplineSmoothingFactor() * 700;  // default on 6, joten kerrotaan arvo sopivalla luvulla että defaultista saadaan sopiva alkuarvaus (3000 - 6000)
+        itsMaxAreaLimit = theDrawParam->SimpleIsoLineLabelHeight() / 2000; // default on 4, joten jaetaan arvo sopivalla luvulla ettï¿½ defaultista saadaan sopiva alkuarvaus (~0.001 - 0.003)
+        itsMaxLengthInKMLimit = theDrawParam->IsoLineSplineSmoothingFactor() * 700;  // default on 6, joten kerrotaan arvo sopivalla luvulla ettï¿½ defaultista saadaan sopiva alkuarvaus (3000 - 6000)
         itsLineWidthInMM = theDrawParam->SimpleIsoLineWidth();
         itsLineColor = theDrawParam->IsolineColor();
         itsArrowHeadColor = theDrawParam->IsolineTextColor();
@@ -633,13 +635,14 @@ void NFmiStreamLineView::Draw(NFmiToolBox *theGTB)
 	if(!IsParamDrawn())
 		return;
 
-	if(itsToolBox->GetDC()->IsPrinting() == FALSE)
+	if(!IsPrinting())
 		itsScreenPixelSizeInMM = 1./itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x;
 
+#ifndef UNIX
 	try
 	{
 		InitializeGdiplus(itsToolBox, &GetFrame());
-		itsGdiPlusGraphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias); // Huom. antialiasointi saattaa hidastaa yllättävän paljon piirtoa (ei kuitenkaan nyt testien mukaan)
+		itsGdiPlusGraphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias); // Huom. antialiasointi saattaa hidastaa yllï¿½ttï¿½vï¿½n paljon piirtoa (ei kuitenkaan nyt testien mukaan)
 
 		DrawStreamLineData();
 	}
@@ -650,7 +653,8 @@ void NFmiStreamLineView::Draw(NFmiToolBox *theGTB)
 	catch(...)
 	{
 	}
-	CleanGdiplus(); // tätä pitää kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
+	CleanGdiplus(); // tï¿½tï¿½ pitï¿½ï¿½ kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
+#endif // UNIX
 }
 
 void NFmiStreamLineView::LogStreamlineDebugInfo(const StreamlineCalculationParameters &theCalcParams)
@@ -724,7 +728,7 @@ void NFmiStreamLineView::DrawStreamLineData(void)
     }
 }
 
-// Tälle funktiolle voidaan antaa halutunlainen StreamlineCalculationParameters -olio ja tehdä testejä sillä.
+// Tï¿½lle funktiolle voidaan antaa halutunlainen StreamlineCalculationParameters -olio ja tehdï¿½ testejï¿½ sillï¿½.
 void NFmiStreamLineView::DrawStreamLineData2(const StreamlineCalculationParameters &theCalcParams)
 {
     itsDebugTimer1.StartTimer();
@@ -773,29 +777,29 @@ static void UpdateWindValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, cons
 // Tuulen mukana kulkevan partikkelin uusi sijainti
 static NFmiLocation CalcNewLocation(const NFmiLocation &theCurrentLocation, double WS, double WD, int theTimeStepInMinutes, bool isForwardDir, bool pacificView)
 {
-	double dist = WS * theTimeStepInMinutes * 60; // saadaan kuljettu matka metreinä
-	double dir = ::fmod(isForwardDir ? (WD + 180) : WD, 360); // jos backward trajectory pitää kääntää virtaus suunta 180 asteella
+	double dist = WS * theTimeStepInMinutes * 60; // saadaan kuljettu matka metreinï¿½
+	double dir = ::fmod(isForwardDir ? (WD + 180) : WD, 360); // jos backward trajectory pitï¿½ï¿½ kï¿½ï¿½ntï¿½ï¿½ virtaus suunta 180 asteella
 	return theCurrentLocation.GetLocation(dir, dist, pacificView);
 }
 
 // HHilaruudukossa suhteellisen matkan kulkeva partikkeli, kuljettava matka annetaan suoraan parametrina.
 static NFmiLocation CalcNewLocation2(const NFmiLocation &theCurrentLocation, const NFmiPoint &distInMeters, double WD, bool isForwardDir, bool pacificView)
 {
-    double usedDistInMeters = (distInMeters.X() + distInMeters.Y()) / 2.; // tässä pitäisi laskea käytetyn kulman mukaan pituudet x- ja y-suunnassa, nyt lasketaan vain keskiarvo
-	double dir = ::fmod(isForwardDir ? (WD + 180) : WD, 360); // jos backward trajectory pitää kääntää virtaus suunta 180 asteella
+    double usedDistInMeters = (distInMeters.X() + distInMeters.Y()) / 2.; // tï¿½ssï¿½ pitï¿½isi laskea kï¿½ytetyn kulman mukaan pituudet x- ja y-suunnassa, nyt lasketaan vain keskiarvo
+	double dir = ::fmod(isForwardDir ? (WD + 180) : WD, 360); // jos backward trajectory pitï¿½ï¿½ kï¿½ï¿½ntï¿½ï¿½ virtaus suunta 180 asteella
 	return theCurrentLocation.GetLocation(dir, usedDistInMeters, pacificView);
 }
 
-// path:iin ollaan lisäämässä uutta pistettä (newPoint), jos se ei leikkaa polun kanssa.
-// Eli käydään läpi path alusta melkein loppuun ja verrataan jokaista yksittäistä viivaa
+// path:iin ollaan lisï¿½ï¿½mï¿½ssï¿½ uutta pistettï¿½ (newPoint), jos se ei leikkaa polun kanssa.
+// Eli kï¿½ydï¿½ï¿½n lï¿½pi path alusta melkein loppuun ja verrataan jokaista yksittï¿½istï¿½ viivaa
 // path:in viimeisen pisteen ja newPoint:in muodostaman viivan kanssa.
 static bool IsPathIntersectingLastLine(const std::vector<NFmiPoint> &path, const NFmiPoint &newPoint)
 {
-    if(path.size() > 2) // pitää olla vähintää 3 pistettä
+    if(path.size() > 2) // pitï¿½ï¿½ olla vï¿½hintï¿½ï¿½ 3 pistettï¿½
     {
         const NFmiPoint &lastPointInPath = path[path.size()-1];
-        // Looppi käydään 1. pisteestä  3. viimeiseen asti. 3. viimeisestä alkava viiva sisältää siis 2. viimeisen pisteen.
-        // Mutta ei ole kannattavaa katsoa meneeko yhtenäisen polun kaksi viimeistä viivaa ristiin.
+        // Looppi kï¿½ydï¿½ï¿½n 1. pisteestï¿½  3. viimeiseen asti. 3. viimeisestï¿½ alkava viiva sisï¿½ltï¿½ï¿½ siis 2. viimeisen pisteen.
+        // Mutta ei ole kannattavaa katsoa meneeko yhtenï¿½isen polun kaksi viimeistï¿½ viivaa ristiin.
         for(size_t i = 0; i < path.size() - 3; i++)
         {
             if(::IsLinesIntersecting(path, i, lastPointInPath, newPoint))
@@ -805,19 +809,19 @@ static bool IsPathIntersectingLastLine(const std::vector<NFmiPoint> &path, const
     return false;
 }
 
-// Tällä estetään matalapaine pyörteitä tai muuten tulemista itseään lähelle.
-// Tutkitaan path:in viimeisen pisteen ja newPoint:in välisen viivan läheisyyttä aiempaan polkuun.
-// Tutkiminen aloitetaan lopusta (path[size-1] -> path[size-2]) ja mennään alkua kohden.
-// Aluksi kahden tutkittavan viivan läheisyys on selvää, mutta kun kerran tutkittavat viivat ovat 
-// eronneet tarpeeksi, laitetaan lippu päälle. Tämän jälkeen jos jos päästään taas polun lähelle,
-// todetaan että viimeisin piste on tullut liian lähelle polkua (uudestaan) ja polku voidaan lopettaa.
+// Tï¿½llï¿½ estetï¿½ï¿½n matalapaine pyï¿½rteitï¿½ tai muuten tulemista itseï¿½ï¿½n lï¿½helle.
+// Tutkitaan path:in viimeisen pisteen ja newPoint:in vï¿½lisen viivan lï¿½heisyyttï¿½ aiempaan polkuun.
+// Tutkiminen aloitetaan lopusta (path[size-1] -> path[size-2]) ja mennï¿½ï¿½n alkua kohden.
+// Aluksi kahden tutkittavan viivan lï¿½heisyys on selvï¿½ï¿½, mutta kun kerran tutkittavat viivat ovat 
+// eronneet tarpeeksi, laitetaan lippu pï¿½ï¿½lle. Tï¿½mï¿½n jï¿½lkeen jos jos pï¿½ï¿½stï¿½ï¿½n taas polun lï¿½helle,
+// todetaan ettï¿½ viimeisin piste on tullut liian lï¿½helle polkua (uudestaan) ja polku voidaan lopettaa.
 static bool IsPathClosingToItSelf(const std::vector<NFmiPoint> &path, const NFmiPoint &newPoint, double theProximityLimit)
 {
-    if(path.size() > 3) // pitää olla vähintää 4 pistettä, että tässä on järkeä
+    if(path.size() > 3) // pitï¿½ï¿½ olla vï¿½hintï¿½ï¿½ 4 pistettï¿½, ettï¿½ tï¿½ssï¿½ on jï¿½rkeï¿½
     {
         const NFmiPoint &lastPointInPath = path[path.size()-1];
-        bool lineSeparation = false; // viivat eivät ole vielä eronneet toisistaan
-        // Looppi käydään 2. viimeisestä pisteestä alkua kohden. Siten että i menee 3. viimeisestä alkuun.
+        bool lineSeparation = false; // viivat eivï¿½t ole vielï¿½ eronneet toisistaan
+        // Looppi kï¿½ydï¿½ï¿½n 2. viimeisestï¿½ pisteestï¿½ alkua kohden. Siten ettï¿½ i menee 3. viimeisestï¿½ alkuun.
         for(int i = static_cast<int>(path.size() - 2); i >= 0; i--)
         {
             double distance = ::GetShortestDistance(newPoint, lastPointInPath, path[i], path[i+1]);
@@ -836,17 +840,17 @@ static bool IsPathClosingToItSelf(const std::vector<NFmiPoint> &path, const NFmi
     return false;
 }
 
-// path:iin ollaan lisäämässä uutta pistettä (newPoint), jos se ei leikkaa polun kanssa.
-// Eli käydään läpi path lopusta melkein alkuun ja verrataan jokaista yksittäistä viivaa
-// path:in ensimmäisen pisteen ja newPoint:in muodostaman viivan kanssa.
+// path:iin ollaan lisï¿½ï¿½mï¿½ssï¿½ uutta pistettï¿½ (newPoint), jos se ei leikkaa polun kanssa.
+// Eli kï¿½ydï¿½ï¿½n lï¿½pi path lopusta melkein alkuun ja verrataan jokaista yksittï¿½istï¿½ viivaa
+// path:in ensimmï¿½isen pisteen ja newPoint:in muodostaman viivan kanssa.
 static bool IsPathIntersectingFirstLine(const std::vector<NFmiPoint> &path, const NFmiPoint &newPoint)
 {
-    if(path.size() > 2) // pitää olla vähintää 3 pistettä
+    if(path.size() > 2) // pitï¿½ï¿½ olla vï¿½hintï¿½ï¿½ 3 pistettï¿½
     {
         const NFmiPoint &firstPointInPath = path[0];
-        // Looppi käydään 2. viimeisestä pisteestä taaksepäin 2. pisteeseen asti. Muista että IsLinesIntersecting-funktio
-        // tutkii annetun indeksi ja seuraavan pisteen välistä viivaa. Eli ensin tarkastetaan viiva välillä path[size - 2] -> path[size - 1]
-        // Viimeisenä tutkitaan path[1] -> path[2]
+        // Looppi kï¿½ydï¿½ï¿½n 2. viimeisestï¿½ pisteestï¿½ taaksepï¿½in 2. pisteeseen asti. Muista ettï¿½ IsLinesIntersecting-funktio
+        // tutkii annetun indeksi ja seuraavan pisteen vï¿½listï¿½ viivaa. Eli ensin tarkastetaan viiva vï¿½lillï¿½ path[size - 2] -> path[size - 1]
+        // Viimeisenï¿½ tutkitaan path[1] -> path[2]
         // Mutta ei ole kannattavaa katsoa meneeko path[0] -> path[1] ja path[0] -> newPoint viivat ristiin.
         for(size_t i = path.size() - 2; i > 0; i--)
         {
@@ -885,7 +889,7 @@ struct StartingPointMatrixHelper
     bool CalcSizes(int theOrigGridSize, int theCountInData, int theSizeOffset, int thePlaceOffset1, int thePlaceOffset2)
     {
         if(!CalcSizesImpl(theOrigGridSize, theCountInData, theSizeOffset, thePlaceOffset1, thePlaceOffset2))
-            CalcSizesImpl(theOrigGridSize, theCountInData, -theSizeOffset, thePlaceOffset1, thePlaceOffset2); // jos ei osunut, lasketaan koko offset vielä negatiivisena
+            CalcSizesImpl(theOrigGridSize, theCountInData, -theSizeOffset, thePlaceOffset1, thePlaceOffset2); // jos ei osunut, lasketaan koko offset vielï¿½ negatiivisena
         return SizeFound();
     }
 
@@ -899,12 +903,12 @@ struct StartingPointMatrixHelper
         return (itsFoundGoodSize > 0) && (itsFoundGoodStep > 0) && (itsFoundGoodStartIndex >= 0);
     }
 
-    // Kun etsitään optimaalia jakosuhteita, pitää pystyä rankkaamaan suuruusjärjestykseen näitä lukuja.
-    // Mitä pienempi, sen parempi.
+    // Kun etsitï¿½ï¿½n optimaalia jakosuhteita, pitï¿½ï¿½ pystyï¿½ rankkaamaan suuruusjï¿½rjestykseen nï¿½itï¿½ lukuja.
+    // Mitï¿½ pienempi, sen parempi.
     bool operator<(const StartingPointMatrixHelper &other) const
     {
         if(itsFoundGoodStartIndex != other.itsFoundGoodStartIndex)
-            return itsFoundGoodStartIndex < other.itsFoundGoodStartIndex; // aloitus indeksin pienuus on tärkein tekijä, että aloituspisteitä saadaan datan reunoille asti
+            return itsFoundGoodStartIndex < other.itsFoundGoodStartIndex; // aloitus indeksin pienuus on tï¿½rkein tekijï¿½, ettï¿½ aloituspisteitï¿½ saadaan datan reunoille asti
         if(itsFoundGoodSize != other.itsFoundGoodSize)
             return itsFoundGoodSize > other.itsFoundGoodSize; // jos koko oli suurempi, se oli parempi
         if(itsFoundGoodStep < other.itsFoundGoodStep)
@@ -913,13 +917,13 @@ struct StartingPointMatrixHelper
     }
 
     int itsFoundGoodSize; // lasketun sopivan aloitus hilan koko X/Y-suunnassa
-    int itsFoundGoodStep; // lasketun sopivan aloitus hilan steppiväli originaali hilaan nähden X/Y-suunnassa
+    int itsFoundGoodStep; // lasketun sopivan aloitus hilan steppivï¿½li originaali hilaan nï¿½hden X/Y-suunnassa
     int itsFoundGoodStartIndex; // lasketun sopivan aloitus hilan aloitus offset X/Y-suunnassa
 };
 
-// Jos helper todetaan kandidaatiksi (=SizeFound), lisätään tämä helperlistaan.
-// Palauttaa true, jos ehdokas oli 'täysosuma', eli startIndex oli 0 tai 1. Tällöin myöskään ei saa resetoida, 
-// koska kandidaatti palautetaan suoraan käyttöön.
+// Jos helper todetaan kandidaatiksi (=SizeFound), lisï¿½tï¿½ï¿½n tï¿½mï¿½ helperlistaan.
+// Palauttaa true, jos ehdokas oli 'tï¿½ysosuma', eli startIndex oli 0 tai 1. Tï¿½llï¿½in myï¿½skï¿½ï¿½n ei saa resetoida, 
+// koska kandidaatti palautetaan suoraan kï¿½yttï¿½ï¿½n.
 static bool CheckStartMatrixSizes(StartingPointMatrixHelper &theStartMatrixHelper, std::set<StartingPointMatrixHelper> &theHelperList)
 {
     if(theStartMatrixHelper.SizeFound())
@@ -935,7 +939,7 @@ static bool CheckStartMatrixSizes(StartingPointMatrixHelper &theStartMatrixHelpe
 static StartingPointMatrixHelper CalcSuitableStartMatrixSize(int theOrigSize, int theWantedSize)
 {
     if(theOrigSize < theWantedSize)
-    { // jos on zoomattu niin syvälle dataan, että haluttu koko ylittää originaali koon, ei kannata jatkaa koon kasvattamista, vaan tyydytään originaali hilaan
+    { // jos on zoomattu niin syvï¿½lle dataan, ettï¿½ haluttu koko ylittï¿½ï¿½ originaali koon, ei kannata jatkaa koon kasvattamista, vaan tyydytï¿½ï¿½n originaali hilaan
         StartingPointMatrixHelper startMatrixHelper2;
         if(startMatrixHelper2.CalcSizes(theOrigSize, theOrigSize, 0, 0, 0))
             return startMatrixHelper2;
@@ -946,16 +950,16 @@ static StartingPointMatrixHelper CalcSuitableStartMatrixSize(int theOrigSize, in
     int maxOffSetSize = FmiRound(theWantedSize/2.);
     for(int sizeOffset = 0; sizeOffset < maxOffSetSize; sizeOffset++)
     {
-        startMatrixHelper.CalcSizes(theOrigSize, theWantedSize, sizeOffset, 0, 0); // 1. kokeillaan tätä jakoa alkaen vasemmasta reunasta -> loppuun
+        startMatrixHelper.CalcSizes(theOrigSize, theWantedSize, sizeOffset, 0, 0); // 1. kokeillaan tï¿½tï¿½ jakoa alkaen vasemmasta reunasta -> loppuun
         if(::CheckStartMatrixSizes(startMatrixHelper, helperList))
             return startMatrixHelper;
         int maxOffSetPlace = FmiRound(theWantedSize/3.);
         for(int placeOffset = 1; placeOffset < maxOffSetPlace; placeOffset++)
         {
-            startMatrixHelper.CalcSizes(theOrigSize, theWantedSize, sizeOffset, placeOffset, placeOffset-1); // 2. kokeillaan tätä jakoa alkaen vasemmasta reunasta +1 -> loppuun
+            startMatrixHelper.CalcSizes(theOrigSize, theWantedSize, sizeOffset, placeOffset, placeOffset-1); // 2. kokeillaan tï¿½tï¿½ jakoa alkaen vasemmasta reunasta +1 -> loppuun
             if(::CheckStartMatrixSizes(startMatrixHelper, helperList))
                 return startMatrixHelper;
-            startMatrixHelper.CalcSizes(theOrigSize, theWantedSize, sizeOffset, placeOffset, placeOffset); // 3. kokeillaan tätä jakoa alkaen vasemmasta reunasta +1 -> loppuun -1
+            startMatrixHelper.CalcSizes(theOrigSize, theWantedSize, sizeOffset, placeOffset, placeOffset); // 3. kokeillaan tï¿½tï¿½ jakoa alkaen vasemmasta reunasta +1 -> loppuun -1
             if(::CheckStartMatrixSizes(startMatrixHelper, helperList))
                 return startMatrixHelper;
         }
@@ -967,17 +971,17 @@ static StartingPointMatrixHelper CalcSuitableStartMatrixSize(int theOrigSize, in
 }
 
 // Funktio saa originaali datan, ja sen hilaan lasketut ensi arvaukset aloitupiste matriisin kooksi.
-// Jokainen aloitus piste pitää kuitenkin laskea sopimaan originaali hilaan, joten pitää tehdä vielä temppuja.
-// Etsitään originaali hilasta sellainen alihila, johon annettu toivekoko saadaan mahtumaan tasa stepein.
-// Etsitään sellainen iteroimalla. 
-// Lopuksi täytetään matriisi latlon-pisteillä, jotka ovat niissä originaalihilapisteissä, joihin saadaan laskuissa viittaukset.
+// Jokainen aloitus piste pitï¿½ï¿½ kuitenkin laskea sopimaan originaali hilaan, joten pitï¿½ï¿½ tehdï¿½ vielï¿½ temppuja.
+// Etsitï¿½ï¿½n originaali hilasta sellainen alihila, johon annettu toivekoko saadaan mahtumaan tasa stepein.
+// Etsitï¿½ï¿½n sellainen iteroimalla. 
+// Lopuksi tï¿½ytetï¿½ï¿½n matriisi latlon-pisteillï¿½, jotka ovat niissï¿½ originaalihilapisteissï¿½, joihin saadaan laskuissa viittaukset.
 static NFmiDataMatrix<NFmiPoint> MakeFinalStartingPointMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, double startPointCountInDataX, double startPointCountInDataY)
 {
     NFmiDataMatrix<NFmiPoint> startingPoints;
     int countInDataX = FmiRound(startPointCountInDataX);
     int countInDataY = FmiRound(startPointCountInDataY);
     if(countInDataX >= 2 && countInDataY >= 2)
-    { // pitää olla vähintäin 3x3 hila, ennen kuin tehdään tätä iterointia
+    { // pitï¿½ï¿½ olla vï¿½hintï¿½in 3x3 hila, ennen kuin tehdï¿½ï¿½n tï¿½tï¿½ iterointia
         StartingPointMatrixHelper startMatrixHelperX = ::CalcSuitableStartMatrixSize(theInfo->GridXNumber(), countInDataX);
         StartingPointMatrixHelper startMatrixHelperY = ::CalcSuitableStartMatrixSize(theInfo->GridYNumber(), countInDataY);
 
@@ -998,22 +1002,22 @@ static NFmiDataMatrix<NFmiPoint> MakeFinalStartingPointMatrix(boost::shared_ptr<
         }
     }
     else
-    { // ei tehdä vielä alle originaali hilan menevää resoluutiota
+    { // ei tehdï¿½ vielï¿½ alle originaali hilan menevï¿½ï¿½ resoluutiota
     }
     return startingPoints;
 }
 
-// Tehdään matriisi, jossa on potentiaaliset streamline aloituspisteet. 
-// Teen matriisin pohjautuen käytetyn datan alueeseen ja hilaan, täten tarkoitus olisi tehdä
+// Tehdï¿½ï¿½n matriisi, jossa on potentiaaliset streamline aloituspisteet. 
+// Teen matriisin pohjautuen kï¿½ytetyn datan alueeseen ja hilaan, tï¿½ten tarkoitus olisi tehdï¿½
 // aloituspiste matriisista mahdollisimman stabiili. Stabiili sen suhteen, jos aluetta zoomataan tai pannataan, 
-// niin alopituspisteiden paikat eivät hyppisi villisti.
-// Pisteiden pitää olla sopivalla väljyydellä toisistaan, että streamlineista tulee visuallisesti miellyttävän näköisiä.
-// Pisteiden väljyys riippuu sekä datan hilan tarkkuudesta ja karttanäytön (mahdollisen ali ruudun) 
-// fyysisestä koosta ja jostain väljyys parametrista, joka tulee drawParamista.
-// Aloituspisteet lasketaan aina vain datan alueelle, vaikka kartan zoomaustaso olisi mikä.
+// niin alopituspisteiden paikat eivï¿½t hyppisi villisti.
+// Pisteiden pitï¿½ï¿½ olla sopivalla vï¿½ljyydellï¿½ toisistaan, ettï¿½ streamlineista tulee visuallisesti miellyttï¿½vï¿½n nï¿½kï¿½isiï¿½.
+// Pisteiden vï¿½ljyys riippuu sekï¿½ datan hilan tarkkuudesta ja karttanï¿½ytï¿½n (mahdollisen ali ruudun) 
+// fyysisestï¿½ koosta ja jostain vï¿½ljyys parametrista, joka tulee drawParamista.
+// Aloituspisteet lasketaan aina vain datan alueelle, vaikka kartan zoomaustaso olisi mikï¿½.
 NFmiDataMatrix<NFmiPoint> NFmiStreamLineView::CalcPotencialStartingPoints(const StreamlineCalculationParameters &theCalcParams)
 {
-	// yhden aliruudun koko pikseleissä karttanäytöllä
+	// yhden aliruudun koko pikseleissï¿½ karttanï¿½ytï¿½llï¿½
     NFmiPoint viewSizeInPixels = itsCtrlViewDocumentInterface->ActualMapBitmapSizeInPixels(itsMapViewDescTopIndex);
     auto &graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
 	float widthInMM = static_cast<float>(viewSizeInPixels.X() / graphicalInfo.itsPixelsPerMM_x);
@@ -1030,13 +1034,13 @@ NFmiDataMatrix<NFmiPoint> NFmiStreamLineView::CalcPotencialStartingPoints(const 
     double startPointCountInDataX = startPointCountInMapX / map2DataAreaRatioX;
     double startPointCountInDataY = startPointCountInMapY / map2DataAreaRatioY;
 
-    // Nyt pitää yrittää sovittaa datan originaali hilaan saadut startPointCountX+Y luvut 
-    // ja niihin liittyvät aloitus indeksit ja stepit
+    // Nyt pitï¿½ï¿½ yrittï¿½ï¿½ sovittaa datan originaali hilaan saadut startPointCountX+Y luvut 
+    // ja niihin liittyvï¿½t aloitus indeksit ja stepit
     return ::MakeFinalStartingPointMatrix(itsInfo, startPointCountInDataX, startPointCountInDataY);
 }
 
-// Käytetään ns. virallista aika-steppiä, paitsi jos tuulen nopeus menee alle limitin.
-// Tällöin kasvatetaan aika-steppiä sitä enemmän, mitä enemmän WS lähestyy 0:aa.
+// Kï¿½ytetï¿½ï¿½n ns. virallista aika-steppiï¿½, paitsi jos tuulen nopeus menee alle limitin.
+// Tï¿½llï¿½in kasvatetaan aika-steppiï¿½ sitï¿½ enemmï¿½n, mitï¿½ enemmï¿½n WS lï¿½hestyy 0:aa.
 static int CalcUsedTimeStep(int theOfficialTimeStepInMinutes, float WS, float theBoostLimit)
 {
     if(WS >= theBoostLimit)
@@ -1050,7 +1054,7 @@ static int CalcUsedTimeStep(int theOfficialTimeStepInMinutes, float WS, float th
     }
 }
 
-// laskee infosta sen hetkisen hilapisteen kohdasta factoriin suhteutetun hilakoon metreissä.
+// laskee infosta sen hetkisen hilapisteen kohdasta factoriin suhteutetun hilakoon metreissï¿½.
 static NFmiPoint CalcWantedTravelDistanceInMeters(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, double gridSizeFactor)
 {
     unsigned long originalLocationIndex = theInfo->LocationIndex();
@@ -1095,7 +1099,7 @@ static NFmiPoint CalcWantedTravelDistanceInMeters(boost::shared_ptr<NFmiFastQuer
 static double PointToRectangleDistance(const NFmiRect &rect, const NFmiPoint &point)
 {
 #ifdef max
-#undef max // VC++ on määritellyt max/min makrot, jotka sotkevat C++ standardin funktiot
+#undef max // VC++ on mï¿½ï¿½ritellyt max/min makrot, jotka sotkevat C++ standardin funktiot
 #endif
 
     NFmiPoint rectCenter = rect.Center();
@@ -1122,14 +1126,14 @@ static bool IsPointTooFarFromZoomedArea(boost::shared_ptr<NFmiArea> &theZoomedAr
 
 std::vector<NFmiPoint> NFmiStreamLineView::SearchPathOneDirection(const StreamlineCalculationParameters &theCalcParams, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theStartLatlonPoint, int timeStepInMinutes, double theProximityLimit, bool goForwardDir, double theAreaLimit)
 {
-    const double usedAreaLimit = theAreaLimit / 2.; // täällä käytetään hienompaa areaa kuin ulkopuolella
+    const double usedAreaLimit = theAreaLimit / 2.; // tï¿½ï¿½llï¿½ kï¿½ytetï¿½ï¿½n hienompaa areaa kuin ulkopuolella
     const int maxAllowedPathSize = 500;
     const int maxAllowedIndex = 5000;
     bool pacificView = itsArea->PacificView();
     std::vector<NFmiPoint> path;
     NFmiLocation currentLocation(theStartLatlonPoint);
     path.push_back(currentLocation.GetLocation());
-    // joskus pitää käyttää pidempää aikasteppiä, koska varsinkin maanpinnalla tuulien nopeudet voivat lähestyä 0:aa ja polun rakentaminen etenee etanan vauhtia
+    // joskus pitï¿½ï¿½ kï¿½yttï¿½ï¿½ pidempï¿½ï¿½ aikasteppiï¿½, koska varsinkin maanpinnalla tuulien nopeudet voivat lï¿½hestyï¿½ 0:aa ja polun rakentaminen etenee etanan vauhtia
     int usedTimeStepInThisIteration = timeStepInMinutes; 
     int index = 0;
     float WS = kFloatMissing; 
@@ -1149,14 +1153,14 @@ std::vector<NFmiPoint> NFmiStreamLineView::SearchPathOneDirection(const Streamli
             currentLocation = ::CalcNewLocation(currentLocation, WS, WD, usedTimeStepInThisIteration, goForwardDir, pacificView);
         if(::IsPathIntersectingLastLine(path, currentLocation.GetLocation()))
             break;
-        // tutkitaan vain joka 3:lla kerralla meneeko viiva liian lähelle itseään
+        // tutkitaan vain joka 3:lla kerralla meneeko viiva liian lï¿½helle itseï¿½ï¿½n
         if(index && index % theCalcParams.itsClosingToItselfCheck == 0 && ::IsPathClosingToItSelf(path, currentLocation.GetLocation(), theProximityLimit))
             break;
         if(theCalcParams.itsTooFarFromZoomedAreaCheck && index && index % theCalcParams.itsTooFarFromZoomedAreaCheck == 0 && ::IsPointTooFarFromZoomedArea(itsArea, currentLocation.GetLocation(), theCalcParams.itsTooFarFromZoomedAreaCheckFactor))
             break;
-        path.push_back(currentLocation.GetLocation()); // eteenpäin mentäesssä laitetaan loppuun
+        path.push_back(currentLocation.GetLocation()); // eteenpï¿½in mentï¿½esssï¿½ laitetaan loppuun
         if(path.size() > maxAllowedPathSize)
-            break; // joskus polku jää junnaamaan paikalleen ilman että viivat ristiävät, laitetaan josssain vaiheessa poikki, koska tarkasteulut kasvavat kaiken aikaa
+            break; // joskus polku jï¿½ï¿½ junnaamaan paikalleen ilman ettï¿½ viivat ristiï¿½vï¿½t, laitetaan josssain vaiheessa poikki, koska tarkasteulut kasvavat kaiken aikaa
         CalcWindValues(theInfo, currentLocation.GetLocation(), WS, WD);
         usedTimeStepInThisIteration = ::CalcUsedTimeStep(timeStepInMinutes, WS, theCalcParams.itsRelativeCalcWindSpeedLimit);
 /////        closingToItselfCheck = FmiRound(FmiMin(3, ::pow(static_cast<double>(path.size()), 0.33)));
@@ -1167,7 +1171,7 @@ std::vector<NFmiPoint> NFmiStreamLineView::SearchPathOneDirection(const Streamli
         }
 //        if((!theCalcParams.fUseRelativeParticleJumps && WS <= 1) || index > maxAllowedIndex)
         if(WS <= 0.1f || index > maxAllowedIndex)
-            break; // alle 0.1 m/s tuulella on turha jatkaa tai jos ollaan jo junnattu polun kanssa älyttömällä määrällä pisteitä
+            break; // alle 0.1 m/s tuulella on turha jatkaa tai jos ollaan jo junnattu polun kanssa ï¿½lyttï¿½mï¿½llï¿½ mï¿½ï¿½rï¿½llï¿½ pisteitï¿½
     }
 
     itsDebugTotalPointsCalculated += index;
@@ -1177,15 +1181,15 @@ std::vector<NFmiPoint> NFmiStreamLineView::SearchPathOneDirection(const Streamli
 NFmiStreamlineData NFmiStreamLineView::CalcSingleStreamLinePath(const StreamlineCalculationParameters &theCalcParams, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theStartLatlonPoint, const NFmiPoint &theStartPointIndex, int timeStepInMinutes, double theProximityLimit, bool edgeOfDataPoint, double theAreaLimit)
 {
     itsDebugCalculatedStartingPoints++;
-    // 1. Etsitään polkua ensin eteenpäin...
+    // 1. Etsitï¿½ï¿½n polkua ensin eteenpï¿½in...
     std::vector<NFmiPoint> forwardPath = SearchPathOneDirection(theCalcParams, theInfo, theStartLatlonPoint, timeStepInMinutes, theProximityLimit, true, theAreaLimit);
-    // 2. Etsitään polkua sitten taaksepäin...
+    // 2. Etsitï¿½ï¿½n polkua sitten taaksepï¿½in...
     std::vector<NFmiPoint> backwardPath = SearchPathOneDirection(theCalcParams, theInfo, theStartLatlonPoint, timeStepInMinutes, theProximityLimit, false, theAreaLimit);
     return NFmiStreamlineData(forwardPath, backwardPath, this, theStartLatlonPoint, theStartPointIndex, edgeOfDataPoint);
 }
 
-// Katsotaan että theCurrentPath ei mene ristiin olemassa olevien polkujen kanssa.
-// lisäksi katsotaan että se ei mene liian lähelle olemassa olevien polkujen kanssa.
+// Katsotaan ettï¿½ theCurrentPath ei mene ristiin olemassa olevien polkujen kanssa.
+// lisï¿½ksi katsotaan ettï¿½ se ei mene liian lï¿½helle olemassa olevien polkujen kanssa.
 void NFmiStreamLineView::CropOvelappings(NFmiStreamlineData &theCurrentPath, std::vector<NFmiStreamlineData> &theLatlonPaths, double theProximityLimit)
 {
     for(size_t i = 0; i < theLatlonPaths.size(); ++i)
@@ -1196,8 +1200,8 @@ void NFmiStreamLineView::CropOvelappings(NFmiStreamlineData &theCurrentPath, std
     }
 }
 
-// Lasketaan kolmen matriisin keskellä olevan pisteen avulla viivojen etäisyyksien läheisyyttä
-// kuvaava kerroin, jota käytetään lähekkäisten viivojen poistossa rajana.
+// Lasketaan kolmen matriisin keskellï¿½ olevan pisteen avulla viivojen etï¿½isyyksien lï¿½heisyyttï¿½
+// kuvaava kerroin, jota kï¿½ytetï¿½ï¿½n lï¿½hekkï¿½isten viivojen poistossa rajana.
 static double CalcProximityLimit(const NFmiDataMatrix<NFmiPoint> &theStartingPoints)
 {
     if(theStartingPoints.NX() > 2 && theStartingPoints.NY() > 2)
@@ -1209,27 +1213,31 @@ static double CalcProximityLimit(const NFmiDataMatrix<NFmiPoint> &theStartingPoi
         return ::sqrt((diffX*diffX) + (diffY*diffY)) / 8.;
     }
     else
-        return 1; // en jaksa tehdä pienille matriiseille erikoistapausta, menkööt pieleen
+        return 1; // en jaksa tehdï¿½ pienille matriiseille erikoistapausta, menkï¿½ï¿½t pieleen
 }
 
 void NFmiStreamLineView::DrawDebugRect(int sizeInPixels, const NFmiPoint &theLatlon, const NFmiColor &theColor)
 {
+#ifndef UNIX
     // debuggaus koodia
     NFmiRect startPointRect;
     double width = itsToolBox->SX(sizeInPixels);
     startPointRect.Size(NFmiPoint(width, width));
     startPointRect.Center(LatLonToViewPoint(theLatlon));
-    Gdiplus::Rect rectInPixels = CtrlView::Relative2GdiplusRect(itsToolBox, startPointRect);    
+    Gdiplus::Rect rectInPixels = CtrlView::Relative2GdiplusRect(itsToolBox, startPointRect);
     CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, theColor, theColor, false, true, 1, Gdiplus::DashStyleSolid);
+#endif // UNIX
 }
 
 void NFmiStreamLineView::DrawDebugString(double fontSizeInMM, const NFmiPoint &thePoint, const NFmiColor &theColor, const std::string &theText, bool pointInLatlon)
 {
+#ifndef UNIX
     // debuggaus koodia
     std::wstring fontNameStr(L"Arial");
     NFmiPoint relativePoint = pointInLatlon ? (LatLonToViewPoint(thePoint)) : thePoint;
     auto &graphInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
     CtrlView::DrawTextToRelativeLocation(*itsGdiPlusGraphics, theColor, fontSizeInMM, theText, relativePoint, graphInfo.itsPixelsPerMM_x, itsToolBox, fontNameStr, kLeft);
+#endif // UNIX
 }
 
 static void EliminateOutOfZoomedAreaStartingPoints(NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, boost::shared_ptr<NFmiArea> &theZoomedArea, size_t &theDebugOutOfAreaStartingPoints)
@@ -1247,8 +1255,8 @@ static void EliminateOutOfZoomedAreaStartingPoints(NFmiDataMatrix<NFmiStartPoint
     }
 }
 
-// Hakee sen laatikon rajat (indeksit), minkä sisään zoomatun alueen pisteet mahtuvat.
-// Jos zoomattu laatikko on tarpeeksi paljon pienempi kuin koko matriisi, palauta true (tällöin kutsuja laskee uuden pienemmän matriisin), muuten false.
+// Hakee sen laatikon rajat (indeksit), minkï¿½ sisï¿½ï¿½n zoomatun alueen pisteet mahtuvat.
+// Jos zoomattu laatikko on tarpeeksi paljon pienempi kuin koko matriisi, palauta true (tï¿½llï¿½in kutsuja laskee uuden pienemmï¿½n matriisin), muuten false.
 static bool GetZoomedAreaIndexies(const NFmiDataMatrix<NFmiStartPointEliminationData> &theEliminationMatrix, size_t &zoomAreaLeftIndexOut, size_t &zoomAreaTopIndexOut, size_t &zoomAreaRightIndexOut, size_t &zoomAreaBottomIndexOut)
 {
     const size_t maxIndexLimit = 99999999;
@@ -1288,7 +1296,7 @@ static bool GetZoomedAreaIndexies(const NFmiDataMatrix<NFmiStartPointElimination
         double matrixArea = static_cast<double>(theEliminationMatrix.NX() * theEliminationMatrix.NY());
         double ratio = zoomedArea / matrixArea;
         if(ratio < 0.7)
-            return true; // jos zoomatun matriisin ja originaali matriisien koossa on tarpeeksi iso ero, voidaan tehdä zoomattu matriisi
+            return true; // jos zoomatun matriisin ja originaali matriisien koossa on tarpeeksi iso ero, voidaan tehdï¿½ zoomattu matriisi
     }
     return false;
 }
@@ -1302,7 +1310,7 @@ static size_t GetMatrixMidIndex(const Matrix& matrix, bool xDimension)
         throw std::runtime_error("Streamline calculations had starting point matrix size smaller than 2 which would crash application if we continue calculations here");
     else if(actualSize == 2)
     {
-        // Jos matriisin koko on 2, pitää palauttaa 0:aa,muuten jatko laskut kaatavat ohjelman
+        // Jos matriisin koko on 2, pitï¿½ï¿½ palauttaa 0:aa,muuten jatko laskut kaatavat ohjelman
         return 0;
     }
     else
@@ -1322,7 +1330,7 @@ NFmiDataMatrix<NFmiStartPointEliminationData> NFmiStreamLineView::CalcStartingPo
 
     size_t xInd = ::GetMatrixMidIndex(relativeStartingPointMatrix, true);
     size_t yInd = ::GetMatrixMidIndex(relativeStartingPointMatrix, false);
-    // eliminointi laatikon leveys on n. keskellä olevien aloituspisteiden etäisyys kerrottuna jolloin keroimella joka on n. välillä 0.3 - 1
+    // eliminointi laatikon leveys on n. keskellï¿½ olevien aloituspisteiden etï¿½isyys kerrottuna jolloin keroimella joka on n. vï¿½lillï¿½ 0.3 - 1
     double width = (relativeStartingPointMatrix[xInd+1][yInd].X() - relativeStartingPointMatrix[xInd][yInd].X()) * 0.5;
     double height = (relativeStartingPointMatrix[xInd][yInd].Y() - relativeStartingPointMatrix[xInd][yInd+1].Y()) * 0.5;
 
@@ -1337,14 +1345,14 @@ NFmiDataMatrix<NFmiStartPointEliminationData> NFmiStreamLineView::CalcStartingPo
         }
     }
 
-    // Katsotaan mitkä aloituspisteet osuvat zoomatun alueen sisälle
+    // Katsotaan mitkï¿½ aloituspisteet osuvat zoomatun alueen sisï¿½lle
     ::EliminateOutOfZoomedAreaStartingPoints(eliminationMatrix, theZoomedArea, itsDebugOutOfAreaStartingPoints);
     size_t zoomAreaLeftIndex = 0;
     size_t zoomAreaTopIndex = 0;
     size_t zoomAreaRightIndex = 0;
     size_t zoomAreaBottomIndex = 0;
     if(::GetZoomedAreaIndexies(eliminationMatrix, zoomAreaLeftIndex, zoomAreaTopIndex, zoomAreaRightIndex, zoomAreaBottomIndex))
-    { // Laske uusi pienempi matriisi, jossa mukana vain zoomatun alueen sisäosio
+    { // Laske uusi pienempi matriisi, jossa mukana vain zoomatun alueen sisï¿½osio
         size_t zoomedSizeX = zoomAreaRightIndex - zoomAreaLeftIndex + 1;
         size_t zoomedSizeY = zoomAreaTopIndex - zoomAreaBottomIndex + 1;
         NFmiDataMatrix<NFmiStartPointEliminationData> zoomedEliminationMatrix(zoomedSizeX, zoomedSizeY);
@@ -1353,7 +1361,7 @@ NFmiDataMatrix<NFmiStartPointEliminationData> NFmiStreamLineView::CalcStartingPo
             for(size_t i=0; i < zoomedEliminationMatrix.NX(); i++)
             {
                 zoomedEliminationMatrix[i][j] = eliminationMatrix[i + zoomAreaLeftIndex][j + zoomAreaBottomIndex];
-                zoomedEliminationMatrix[i][j].itsStartingPointIndex = NFmiPoint(static_cast<double>(i), static_cast<double>(j)); // indeksit pitää myös päivittää kohdalleen
+                zoomedEliminationMatrix[i][j].itsStartingPointIndex = NFmiPoint(static_cast<double>(i), static_cast<double>(j)); // indeksit pitï¿½ï¿½ myï¿½s pï¿½ivittï¿½ï¿½ kohdalleen
             }
         }
         return zoomedEliminationMatrix;
@@ -1424,7 +1432,7 @@ static void EliminateSinglePathFromStartingPoints(const std::vector<NFmiPoint> &
 
 static void EliminateStartingPoints(const NFmiStreamlineData &theCurrentPath, NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, double relativeWorldWidth)
 {
-    // merkitään ensin että tämän polun aloituspiste aloittajaksi
+    // merkitï¿½ï¿½n ensin ettï¿½ tï¿½mï¿½n polun aloituspiste aloittajaksi
     const NFmiPoint &startIndex = theCurrentPath.StartingPointIndex();
     theStartingPointEliminatioMatrix[static_cast<size_t>(startIndex.X())][static_cast<size_t>(startIndex.Y())].fWasUsedAsStartingPoint = true;
 
@@ -1432,10 +1440,10 @@ static void EliminateStartingPoints(const NFmiStreamlineData &theCurrentPath, NF
     ::EliminateSinglePathFromStartingPoints(theCurrentPath.BackwardPathRelative(), theCurrentPath, theStartingPointEliminatioMatrix, false, relativeWorldWidth);
 }
 
-// Halutaan laskea polun yksinkertaistuksessa käytetty kolmion alueen koko zoomatulle kartta-alueelle.
-// theMaxAreaLimit on maksimi mitä käytetään joka tapauksessa, jos ollaan vaikka maailman kartalla
-// theLenghtLimitInKM tämä on sellaisen alueen leveys/korkeus, mitä pienemmälle alueelle lasketaan jo 
-// tarkempaa eli pienempää alueen koko rajoitusta (= lasketaan tarkempaa polkua yksinkertaistuksessa).
+// Halutaan laskea polun yksinkertaistuksessa kï¿½ytetty kolmion alueen koko zoomatulle kartta-alueelle.
+// theMaxAreaLimit on maksimi mitï¿½ kï¿½ytetï¿½ï¿½n joka tapauksessa, jos ollaan vaikka maailman kartalla
+// theLenghtLimitInKM tï¿½mï¿½ on sellaisen alueen leveys/korkeus, mitï¿½ pienemmï¿½lle alueelle lasketaan jo 
+// tarkempaa eli pienempï¿½ï¿½ alueen koko rajoitusta (= lasketaan tarkempaa polkua yksinkertaistuksessa).
 static double CalcSimplificationAreaLimit(boost::shared_ptr<NFmiArea> &theArea, double theMaxAreaLimit, double theLenghtLimitInKM)
 {
     double widthInKM = theArea->WorldXYWidth() / 1000.;
@@ -1451,7 +1459,7 @@ static double CalcSimplificationAreaLimit(boost::shared_ptr<NFmiArea> &theArea, 
 
 void NFmiStreamLineView::DoStartingPointCalcualtions(const StreamlineCalculationParameters &theCalcParams, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, std::vector<NFmiStreamlineData> &theLatlonPaths, int timeStepInMinutes, double theProximityLimit, NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, size_t xIndex, size_t yIndex, double theLengthLimitInKM)
 {
-    // debuggaus koodia: estää laskemasta muut kuin halutut ongelma pisteet
+    // debuggaus koodia: estï¿½ï¿½ laskemasta muut kuin halutut ongelma pisteet
 //    if(!((xIndex == 4 && yIndex == 2) || (xIndex == 5 && yIndex == 5)))
 //        return ;
 
@@ -1460,7 +1468,7 @@ void NFmiStreamLineView::DoStartingPointCalcualtions(const StreamlineCalculation
     if(theStartingPointEliminatioMatrix[xIndex][yIndex].fWasOutOfZoomedAreaStartingPoint)
         return ;
 
-    // debuggaus koodia, piirretään aloituspisteisiin merkit
+    // debuggaus koodia, piirretï¿½ï¿½n aloituspisteisiin merkit
     if(gDrawDebugInfo)
         DrawDebugRect(5, theStartingPointEliminatioMatrix[xIndex][yIndex].itsStartingPointLatlon, NFmiColor(1,0,0));
 
@@ -1476,7 +1484,7 @@ void NFmiStreamLineView::DoStartingPointCalcualtions(const StreamlineCalculation
         {
             currentPath.SimplifyData(this, simplificationAreaLimit);
 ////            CropOvelappings(currentPath, theLatlonPaths, theProximityLimit);
-////            if(!currentPath.IsShorty(theLengthLimitInKM)) // Jos polut ovat kutistuneet tosi lyhyeksi (n. yhteen viivaan), jätetään turhana ja häiritsevänä pois
+////            if(!currentPath.IsShorty(theLengthLimitInKM)) // Jos polut ovat kutistuneet tosi lyhyeksi (n. yhteen viivaan), jï¿½tetï¿½ï¿½n turhana ja hï¿½iritsevï¿½nï¿½ pois
             {
                 ::EliminateStartingPoints(currentPath, theStartingPointEliminatioMatrix, itsArea->XYArea().Width());
                 itsDebugTotalStreamLineCount++;
@@ -1539,15 +1547,15 @@ static NFmiPoint GetCenterStartingPointFromZoomedArea(NFmiDataMatrix<NFmiStartPo
 
 void NFmiStreamLineView::DoSingleThreadCalculations(const StreamlineCalculationParameters &theCalcParams, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, int timeStepInMinutes, std::vector<NFmiStreamlineData> &theLatlonPathsOut, double theProximityLimit, double theLengthLimitInKM)
 {
-    // Käytetään aluksi aloitus pisteet aloitusPiste matriisin keski pysty ja vaaka janoilta, siten että 
-    // aloitetaan kaskelta ja edetään reinoja kohden, näin toivottavasti saadaan aluksi edustavimmat polut, 
-    // jotka sitten alkavat blokkaamaan muita aloitus pisteitä.
+    // Kï¿½ytetï¿½ï¿½n aluksi aloitus pisteet aloitusPiste matriisin keski pysty ja vaaka janoilta, siten ettï¿½ 
+    // aloitetaan kaskelta ja edetï¿½ï¿½n reinoja kohden, nï¿½in toivottavasti saadaan aluksi edustavimmat polut, 
+    // jotka sitten alkavat blokkaamaan muita aloitus pisteitï¿½.
     size_t xMidInd = ::GetMatrixMidIndex(theStartingPointEliminatioMatrix, true);
     size_t yMidInd = ::GetMatrixMidIndex(theStartingPointEliminatioMatrix, false);
 
     // Ensin keskipiste
     DoStartingPointCalcualtions(theCalcParams, theInfo, theLatlonPathsOut, timeStepInMinutes, theProximityLimit, theStartingPointEliminatioMatrix, xMidInd, yMidInd, theLengthLimitInKM);
-    // Sitten loput keski pysty rivistä (alas ja ylös päin erikseen)
+    // Sitten loput keski pysty rivistï¿½ (alas ja ylï¿½s pï¿½in erikseen)
     for(size_t k = 1; k < yMidInd; k++)
     {
         size_t usedYIndex = yMidInd - k;
@@ -1555,7 +1563,7 @@ void NFmiStreamLineView::DoSingleThreadCalculations(const StreamlineCalculationP
         usedYIndex = yMidInd + k;
         DoStartingPointCalcualtions(theCalcParams, theInfo, theLatlonPathsOut, timeStepInMinutes, theProximityLimit, theStartingPointEliminatioMatrix, xMidInd, usedYIndex, theLengthLimitInKM);
     }
-    // Sitten loput keski vaaka rivistä (vasemmalle ja oikealle erikseen)
+    // Sitten loput keski vaaka rivistï¿½ (vasemmalle ja oikealle erikseen)
     for(size_t k = 1; k < xMidInd; k++)
     {
         size_t usedXIndex = xMidInd - k;
@@ -1582,8 +1590,8 @@ struct StreamlineMultiThreadCalculationData
     {
     }
 
-    int itsPriority; // luku 0-n, mitä pienempi luku, sitä korkeampi prioriteetti. Ota tähän arvo tämän x- ja y-indksin osoittamasta NFmiStartPointEliminationData-rakenteesta.
-    size_t itsXIndex; // käsiteltävän aloituspisteen x- ja y-indeksit
+    int itsPriority; // luku 0-n, mitï¿½ pienempi luku, sitï¿½ korkeampi prioriteetti. Ota tï¿½hï¿½n arvo tï¿½mï¿½n x- ja y-indksin osoittamasta NFmiStartPointEliminationData-rakenteesta.
+    size_t itsXIndex; // kï¿½siteltï¿½vï¿½n aloituspisteen x- ja y-indeksit
     size_t itsYIndex;
     NFmiDataMatrix<NFmiPoint> &itsPotencialStartingPoints;
     NFmiDataMatrix<NFmiStartPointEliminationData> &itsStartingPointEliminatioMatrix;
@@ -1592,15 +1600,15 @@ struct StreamlineMultiThreadCalculationData
 
 void NFmiStreamLineView::DoMultiThreadCalculations(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, int timeStepInMinutes, std::vector<NFmiStreamlineData> &theLatlonPathsOut, double theProximityLimit, double theLengthLimitInKM)
 {
-    // Multi-thread laskuissa tehdään enemmän töitä, mutta rinnakkain. 
-    // Nyt ei voi eliminoida toisia aloituspisteitä laskujen aikana, vaan kaikki aloituspisteet lasketaan.
-    // Jokaiselle streamline oliolle on laskettu prioriteetti indeksi, keskimmäinen on korkein, keskijanoilla
-    // keskustasta ulospäin on seuraavta ja jne.
-    // Kun kaikki pisteet on laskettu, katsotaan prioriteetti järjestyksessä, eliminoiko jokin streamline jonkin aloitus pisteen.
-    // Jos eliminoi, otetaan kyseisen aloituspisteen streamline pois lopullisista piirrettävistä viivoista.
+    // Multi-thread laskuissa tehdï¿½ï¿½n enemmï¿½n tï¿½itï¿½, mutta rinnakkain. 
+    // Nyt ei voi eliminoida toisia aloituspisteitï¿½ laskujen aikana, vaan kaikki aloituspisteet lasketaan.
+    // Jokaiselle streamline oliolle on laskettu prioriteetti indeksi, keskimmï¿½inen on korkein, keskijanoilla
+    // keskustasta ulospï¿½in on seuraavta ja jne.
+    // Kun kaikki pisteet on laskettu, katsotaan prioriteetti jï¿½rjestyksessï¿½, eliminoiko jokin streamline jonkin aloitus pisteen.
+    // Jos eliminoi, otetaan kyseisen aloituspisteen streamline pois lopullisista piirrettï¿½vistï¿½ viivoista.
 
 	unsigned int usedThreadCount = NFmiQueryDataUtil::GetReasonableWorkingThreadCount(75);
-    NFmiPoint dummyPoint = itsInfo->LatLon(); // Varmistetaan että NFmiQueryDatan itsLatLonCache on alustettu!!
+    NFmiPoint dummyPoint = itsInfo->LatLon(); // Varmistetaan ettï¿½ NFmiQueryDatan itsLatLonCache on alustettu!!
 
     // 1. Tee jokaiselle threadille kopio itsInfo:sta
 	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infos(usedThreadCount);
@@ -1630,7 +1638,7 @@ std::vector<NFmiStreamlineData> NFmiStreamLineView::CalcStreamLinePaths(const St
         else
             DoSingleThreadCalculations(theCalcParams, itsInfo, startingPointEliminatioMatrix, timeStepInMinutes, latlonPaths, proximityLimit, lengthLimitInKM);
 
-        // Debuggaus koodia, piirretään ns. eliminaatio matriisin tiedot ruudulle
+        // Debuggaus koodia, piirretï¿½ï¿½n ns. eliminaatio matriisin tiedot ruudulle
         if(gDrawDebugInfo)
             DrawDebugEliminationMatrixInfo(startingPointEliminatioMatrix);
         itsDebugEliminatedStartingPoints = ::CountEliminatedPoints(startingPointEliminatioMatrix);
@@ -1650,10 +1658,11 @@ static std::string MakePointIndexString(const NFmiPoint &thePointIndex)
     return str;
 }
 
-// Piirretään laatikko josta nähdään eliminointi alue ja eri väreillä riippuen oliko piste eliminoitu.
-// Jos oli eliminoitu, llisätään eliminointi tietoa: mikä polku ja mikä sen pisteistä.
+// Piirretï¿½ï¿½n laatikko josta nï¿½hdï¿½ï¿½n eliminointi alue ja eri vï¿½reillï¿½ riippuen oliko piste eliminoitu.
+// Jos oli eliminoitu, llisï¿½tï¿½ï¿½n eliminointi tietoa: mikï¿½ polku ja mikï¿½ sen pisteistï¿½.
 void NFmiStreamLineView::DrawDebugEliminationInfo(const NFmiStartPointEliminationData &theEliminatioInfo)
 {
+#ifndef UNIX
     NFmiColor fontColor(0,0,0);
     double fontSizeInMM = 3;
     double relativeFontHeight = theEliminatioInfo.itsStartPointArea.Height() / 6.;
@@ -1696,6 +1705,7 @@ void NFmiStreamLineView::DrawDebugEliminationInfo(const NFmiStartPointEliminatio
         NFmiColor rectColor(0.7f,0.7f,0.7f);
         CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, rectColor, rectColor, false, true, 1);
     }
+#endif // UNIX
 }
 
 void NFmiStreamLineView::DrawDebugEliminationMatrixInfo(const NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix)
@@ -1738,7 +1748,7 @@ static std::list<std::vector<NFmiPoint> > SplitPathsAtEdgeOfWorld(const std::vec
         {
             double currentLongitude = theOneWayPath[i].X();
             if(::CrossesOverWorldsEdge(lastLongitude, currentLongitude))
-            { // tehdään splitti
+            { // tehdï¿½ï¿½n splitti
                 endIndexOfSplit = i-1;
                 std::vector<NFmiPoint> splitPath(theOneWayPath.data() + startIndexOfSplit, theOneWayPath.data() + endIndexOfSplit);
                 possibleSplittedPaths.push_back(splitPath);
@@ -1747,7 +1757,7 @@ static std::list<std::vector<NFmiPoint> > SplitPathsAtEdgeOfWorld(const std::vec
             lastLongitude = currentLongitude;
         }
         if(possibleSplittedPaths.size())
-        { // jos oli tehty splittejä, laitetaan vielä loppu pätkä mukaan
+        { // jos oli tehty splittejï¿½, laitetaan vielï¿½ loppu pï¿½tkï¿½ mukaan
             endIndexOfSplit = theOneWayPath.size()-1;
             std::vector<NFmiPoint> splitPath(theOneWayPath.data() + startIndexOfSplit, theOneWayPath.data() + endIndexOfSplit);
             possibleSplittedPaths.push_back(splitPath);
@@ -1777,12 +1787,12 @@ void NFmiStreamLineView::DrawStreamLinePaths(const StreamlineCalculationParamete
         const NFmiStreamlineData &streamlineData = theLatlonPaths[i];
         float lineWidthInMM = theCalcParams.itsLineWidthInMM;
 		float lineWidthInPixels = static_cast<float>(lineWidthInMM * itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x);
-        GdiPlusLineInfo lineInfo(lineWidthInPixels, theCalcParams.itsLineColor, 0); // line style 0 => yhtenäinen viiva
+        GdiPlusLineInfo lineInfo(lineWidthInPixels, theCalcParams.itsLineColor, 0); // line style 0 => yhtenï¿½inen viiva
         lineInfo.Tension(0.f);
         DrawOneWayPath(theCalcParams, streamlineData.ForwardPathLatlon(), lineInfo, true, lineWidthInMM);
         DrawOneWayPath(theCalcParams, streamlineData.BackwardPathLatlon(), lineInfo, false, lineWidthInMM);
 
-        // debuggaus koodia, piirretään polkujen pisteet ja indeksit
+        // debuggaus koodia, piirretï¿½ï¿½n polkujen pisteet ja indeksit
 ////        if(gDrawDebugInfo)
 ////            DrawDebugPath(streamlineData, 3, NFmiColor(0,0.5f,0), NFmiColor(0,0,0));
     }
@@ -1791,24 +1801,26 @@ void NFmiStreamLineView::DrawStreamLinePaths(const StreamlineCalculationParamete
         DrawDebugDataOnMap();
 }
 
+#ifndef UNIX
 void NFmiStreamLineView::DrawOneWayPath(const StreamlineCalculationParameters &theCalcParams, std::vector<Gdiplus::PointF> &gdiPoints, const GdiPlusLineInfo &lineInfo, bool forwardDirection, float theLineWidthInMM)
 {
     if(gdiPoints.size() > 1)
     {
-        CtrlView::DrawGdiplusCurve(*itsGdiPlusGraphics, gdiPoints, lineInfo, false, 0, itsToolBox->GetDC()->IsPrinting() == TRUE);
+        CtrlView::DrawGdiplusCurve(*itsGdiPlusGraphics, gdiPoints, lineInfo, false, 0, IsPrinting());
         DrawArroyHeads(theCalcParams, gdiPoints, lineInfo, forwardDirection, theLineWidthInMM);
     }
 }
+#endif // UNIX
 
-// Antaa skaalausarvon, jolla suurennetaan/pienennetään tuulen suuntaa osoittavaa nuolta.
-// Pienillä tuulen nopeuksilla saa arvon 0-1 ja suurilla > 1
+// Antaa skaalausarvon, jolla suurennetaan/pienennetï¿½ï¿½n tuulen suuntaa osoittavaa nuolta.
+// Pienillï¿½ tuulen nopeuksilla saa arvon 0-1 ja suurilla > 1
 static float CalcWindArrowSizeFactor(float WS, float noScaleLimit)
 {
     if(WS == kFloatMissing)
         return 0.f;
-    float wsLimit2 = noScaleLimit; // raja missä kerroin saa arvon 1
+    float wsLimit2 = noScaleLimit; // raja missï¿½ kerroin saa arvon 1
     if(wsLimit2 == 0)
-        return 1; // drawParamin oletus arvo tälle säädölle on 0, jos tämä siis 0, annetaan kaikille arvoilla kerroin 1
+        return 1; // drawParamin oletus arvo tï¿½lle sï¿½ï¿½dï¿½lle on 0, jos tï¿½mï¿½ siis 0, annetaan kaikille arvoilla kerroin 1
     float wsLimit1 = 0;
     float factorMaxLimit = 1.4f;
     float factorLimit2 = 1.0f;
@@ -1820,46 +1832,47 @@ static float CalcWindArrowSizeFactor(float WS, float noScaleLimit)
     return sizeFactor;
 }
 
+#ifndef UNIX
 void NFmiStreamLineView::DrawArroyHeads(const StreamlineCalculationParameters &theCalcParams, std::vector<Gdiplus::PointF> &theStreamLineGdiPoints, const GdiPlusLineInfo &theLineInfo, bool forwardDirection, float theLineWidthInMM)
 {
     FrontType pathType = kFmiFrontTypeStreamLine;
 // 1. laske viivan paksuuden ja rintaman tyypin avulla
 	// a) toivottu pallukan koko [mm]
-	// b) toivottu alku/loppu tyhjä väli [mm]
-	// c) toivottu väli [mm]
+	// b) toivottu alku/loppu tyhjï¿½ vï¿½li [mm]
+	// c) toivottu vï¿½li [mm]
 	float startGapInMM = 0;
 	float objectSizeInMM = 0;
 	float gapInMM = 0;
     NFmiConceptualDataView::CalculateIdealPathObjectMeasures(theLineWidthInMM, pathType, startGapInMM, objectSizeInMM, gapInMM);
 // 2. Laske koko viivan pituus [mm]
-	// laske myös eri osien pituudet taulukkoon
+	// laske myï¿½s eri osien pituudet taulukkoon
 	float pixelLengthInMM = 1.f/static_cast<float>(itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x);
 	std::vector<float> lengthsInMM;
 	float totalLengthInMM = 0;
 	NFmiConceptualDataView::CalculatePathLengths(pixelLengthInMM, theStreamLineGdiPoints, lengthsInMM, totalLengthInMM);
 // 3. Laske kuinka monta pallukkaa mahtuu annetun rintaman alueelle
-	// jos alle 1, sovita pallukan koko, niin että mahtuu yksi (laske kerroin jolla skaalataan ja piirrä viivan keskelle pallukka)
-	// jos alle kaksi, sovita pallukan koko, niin että mahtuu kaksi (laske skaala kerroin ja piirrä kahteen kohtaan pallukat)
-	// muuten pallukat laske lähinpään kokonaislukuun sopiva skaala kerroin
+	// jos alle 1, sovita pallukan koko, niin ettï¿½ mahtuu yksi (laske kerroin jolla skaalataan ja piirrï¿½ viivan keskelle pallukka)
+	// jos alle kaksi, sovita pallukan koko, niin ettï¿½ mahtuu kaksi (laske skaala kerroin ja piirrï¿½ kahteen kohtaan pallukat)
+	// muuten pallukat laske lï¿½hinpï¿½ï¿½n kokonaislukuun sopiva skaala kerroin
 	int objectCount = NFmiConceptualDataView::CalculateUsedSymbolCountAndMeasures(totalLengthInMM, startGapInMM, objectSizeInMM, gapInMM);
 	if(objectCount > 0)
 	{
 	// 4. hae pallukoiden piirto polku (GraphicsPath) rintamatyypin mukaan
         Gdiplus::GraphicsPath decorationPath;
         NFmiConceptualDataView::GetDecorationPath(objectSizeInMM/pixelLengthInMM, pathType, decorationPath);
-	// 5. Laske pallukoiden lukumäärän ja muiden mittojen avulla pallukoiden kohdat ja talleta sijainnit taulukkoon
+	// 5. Laske pallukoiden lukumï¿½ï¿½rï¿½n ja muiden mittojen avulla pallukoiden kohdat ja talleta sijainnit taulukkoon
 	// 6. laske tarvittavat pallukoiden rotaatio kulmat haluttuihin kohtiin viivaa [asteissa]
 		std::vector<Gdiplus::PointF> decoratorPoints;
 		std::vector<float> rotationAngles;
 		NFmiConceptualDataView::CalcPathObjectPoints(theStreamLineGdiPoints, objectCount, startGapInMM, objectSizeInMM, gapInMM, lengthsInMM, totalLengthInMM, decoratorPoints, rotationAngles);
-	// 7. Piirrä pallukat skaalan, sijainnin ja rotaation avulla
-		// jos left/right suunta, säädä rotaatiota 180 asteella
+	// 7. Piirrï¿½ pallukat skaalan, sijainnin ja rotaation avulla
+		// jos left/right suunta, sï¿½ï¿½dï¿½ rotaatiota 180 asteella
         Gdiplus::SolidBrush aBrush(CtrlView::NFmiColor2GdiplusColor(theCalcParams.itsArrowHeadColor));
         float usedLineWidthInPixels = theLineInfo.Thickness();
 		Gdiplus::Pen aPen(CtrlView::NFmiColor2GdiplusColor(theLineInfo.Color()), usedLineWidthInPixels);
 		aPen.SetLineCap(Gdiplus::LineCapRound, Gdiplus::LineCapRound, Gdiplus::DashCapFlat);
 
-		Gdiplus::Matrix transMat; // originaali muutos matriisi tähän
+		Gdiplus::Matrix transMat; // originaali muutos matriisi tï¿½hï¿½n
 		itsGdiPlusGraphics->GetTransform(&transMat);
 		float baseRotationFix = 90;
         if(!forwardDirection)
@@ -1881,10 +1894,11 @@ void NFmiStreamLineView::DrawArroyHeads(const StreamlineCalculationParameters &t
 //            itsGdiPlusGraphics->DrawPath(&aPen, &decorationPath);
             itsGdiPlusGraphics->FillPath(&aBrush, &decorationPath);
 
-            itsGdiPlusGraphics->SetTransform(&transMat); // palautetaan aina originaali muutos msatriisi käyttöön, sillä muuten transformaatiot kumuloituvat
+            itsGdiPlusGraphics->SetTransform(&transMat); // palautetaan aina originaali muutos msatriisi kï¿½yttï¿½ï¿½n, sillï¿½ muuten transformaatiot kumuloituvat
 		}
 	}
 }
+#endif // UNIX
 
 static float CalcTooltipValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long theParamId, const NFmiPoint &theLatLon, const NFmiMetTime &theTime)
 {
@@ -1905,7 +1919,7 @@ std::string NFmiStreamLineView::ComposeToolTipText(const NFmiPoint& theRelativeP
 	std::string str;
 	if(itsDrawParam)
 	{
-		bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
+		bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-nï¿½ppï¿½in on pohjassa, laitetaan lisï¿½ï¿½ infoa nï¿½kyville
 		auto parNameStr = CtrlViewUtils::GetParamNameString(itsDrawParam, false, showExtraInfo, true, 0, false, true, true, nullptr);
         parNameStr = DoBoldingParameterNameTooltipText(parNameStr);
         auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());

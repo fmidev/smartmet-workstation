@@ -3,7 +3,9 @@
 
 
 *****************************************************************************/
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "TreeColumn.h"
 
 #include "GridTreeCell.H"

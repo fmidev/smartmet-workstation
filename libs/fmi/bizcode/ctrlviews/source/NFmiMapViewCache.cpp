@@ -10,8 +10,11 @@
 
 #include "NFmiMapViewCache.h"
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 
+#ifndef UNIX
 static double CalcBitmapSizeInMB(CBitmap* theBitmap)
 {
 	const static double bytesInMB = 1024 * 1024;
@@ -298,3 +301,4 @@ double NFmiMapViewCache::MakeRoomFromUsedRows(double theMinCleareSizeMB)
 	}
 	return clearedSizeMB;
 }
+#endif // UNIX

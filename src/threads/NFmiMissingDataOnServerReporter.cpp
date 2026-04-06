@@ -1,4 +1,6 @@
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "NFmiMissingDataOnServerReporter.h"
 #include "NFmiHelpDataInfo.h"
 #include "SmartMetThreads_resource.h"

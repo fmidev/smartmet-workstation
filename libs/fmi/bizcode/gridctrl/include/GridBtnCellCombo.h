@@ -6,6 +6,8 @@
 #if !defined(AFX_GRIDBTNCELLCOMBO_H__00C20283_F376_11D3_B761_00C04F6A7AE6__INCLUDED_)
 #define AFX_GRIDBTNCELLCOMBO_H__00C20283_F376_11D3_B761_00C04F6A7AE6__INCLUDED_
 
+#ifndef UNIX
+
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -50,5 +52,7 @@ protected:
     CStringArray m_StringArrayCombo;    // combo Items
 
 };
+
+#endif // UNIX
 
 #endif // !defined(AFX_GRIDBTNCELLCOMBO_H__00C20283_F376_11D3_B761_00C04F6A7AE6__INCLUDED_)

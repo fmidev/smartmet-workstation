@@ -60,7 +60,7 @@ void NFmiCrossSectionManagerView::UpdateSize(void)
 void NFmiCrossSectionManagerView::CalcDrawSizeFactors(void)
 {
 	CtrlViewUtils::GraphicalInfo &gInfo = itsCrossSectionSystem->GetGraphicalInfo();
-	if(itsToolBox->GetDC()->IsPrinting())
+	if(itsCtrlViewDocumentInterface->Printing())
 	{
 		itsDrawSizeFactorX = itsLastScreenDrawPixelSizeInMM_x / (1./gInfo.itsPixelsPerMM_x);
 		itsDrawSizeFactorY =  itsLastScreenDrawPixelSizeInMM_y / (1./gInfo.itsPixelsPerMM_y);
@@ -320,7 +320,7 @@ NFmiRect NFmiCrossSectionManagerView::CalcFooterRect(void)
 	NFmiRect rr(GetFrame());
 	// HUOM! Piirrettäessä kuvaa näytölle, tulee mukaan aikakontrolli ikkuna, mutta printatessa se jää pois, jos kyse normaalista moodista
 	double emptySpace = itsToolBox->SY(FmiRound(65 * itsDrawSizeFactorY)); // 60-pikseliä pitää olla tilaa alhaalla, teksti rivi + koordinaatit/aikakontrolli-ikkuna
-	if(itsToolBox->GetDC()->IsPrinting() && itsCrossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kNormal)
+	if(itsCtrlViewDocumentInterface->Printing() && itsCrossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kNormal)
 	{
 		emptySpace = itsToolBox->SY(FmiRound(20 * itsDrawSizeFactorY));
 	}
@@ -428,7 +428,7 @@ void NFmiCrossSectionManagerView::DrawFooter(void)
 {
 	if(itsTimeControlView == 0 || itsCrossSectionSystem->TimeCrossSectionDirty())
 		CreateTimeControlView();
-	if(itsToolBox->GetDC()->IsPrinting() == FALSE || itsCrossSectionSystem->GetCrossMode() != NFmiCrossSectionSystem::kNormal) // ei piirretä printatessa!!!!
+	if(!itsCtrlViewDocumentInterface->Printing() || itsCrossSectionSystem->GetCrossMode() != NFmiCrossSectionSystem::kNormal) // ei piirretä printatessa!!!!
 	{
 		if(itsTimeControlView && itsTimeControlViewRect.Height() > 0.)
 			itsTimeControlView->Draw(itsToolBox);

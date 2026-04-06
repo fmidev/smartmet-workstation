@@ -3,4 +3,6 @@
 //      are changed infrequently
 //
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX

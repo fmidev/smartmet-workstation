@@ -117,7 +117,9 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "MemDC.h"
 #include "GridCtrl.h"
 #include <algorithm>

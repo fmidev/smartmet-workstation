@@ -1,4 +1,6 @@
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "ApplicationInterface.h"
 #include "ToolmasterHatchPolygonData.h"
 #include "NFmiApplicationWinRegistry.h"

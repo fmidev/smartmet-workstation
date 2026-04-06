@@ -17,7 +17,9 @@ class NFmiMapViewDescTop;
 class NFmiDrawParamList;
 class NFmiInfoOrganizer;
 class NFmiBetaProduct;
+#ifndef UNIX
 class CBitmap;
+#endif // UNIX
 class NFmiSatelliteImageCacheSystem;
 class NFmiFastQueryInfo;
 class NFmiDrawParam;
@@ -31,7 +33,9 @@ class NFmiApplicationDataBase;
 class NFmiIgnoreStationsData;
 class NFmiDataLoadingInfo;
 class NFmiModelDataBlender;
+#ifndef UNIX
 class CWnd;
+#endif // UNIX
 class NFmiCrossSectionSystem;
 class NFmiMenuItemList;
 class NFmiDataQualityChecker;
@@ -58,8 +62,12 @@ class NFmiSynopStationPrioritySystem;
 class NFmiLightWeightViewSettingMacro;
 class NFmiWindTableSystem;
 class NFmiMacroParamDataCache;
+#ifndef UNIX
 class NFmiGdiPlusImageMapHandler;
+#endif // UNIX
+#ifndef UNIX
 class CDC;
+#endif // UNIX
 class NFmiParameterInterpolationFixer;
 class NFmiMacroParamDataGenerator;
 
@@ -156,8 +164,10 @@ public:
     virtual boost::shared_ptr<NFmiDrawParam> DefaultEditedDrawParam() = 0;
     virtual double DrawObjectScaleFactor() = 0;
     virtual void DrawObjectScaleFactor(double newValue) = 0;
+#ifndef UNIX
     virtual void TransparencyContourDrawView(CWnd *theView) = 0;
     virtual CWnd* TransparencyContourDrawView() = 0;
+#endif // UNIX
     virtual bool IsToolMasterAvailable() const = 0;
     virtual void ToolMasterAvailable(bool newValue) = 0;
     virtual NFmiCrossSectionSystem* CrossSectionSystem() = 0;
@@ -359,8 +369,12 @@ public:
     virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
     virtual bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage) = 0;
     virtual NFmiMacroParamDataCache& MacroParamDataCache() = 0;
+#ifndef UNIX
     virtual bool DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &clientPixelSize, CDC* pDC) = 0;
+#endif // UNIX
+#ifndef UNIX
     virtual NFmiGdiPlusImageMapHandler* GetMapHandlerInterface(int mapViewDescTopIndex) = 0;
+#endif // UNIX
     virtual bool ChangeTime(int theTypeOfChange, FmiDirection theDirection, unsigned long theMapViewIndex, double theAmountOfChange) = 0;
     virtual void SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor) = 0;
     virtual CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() = 0;

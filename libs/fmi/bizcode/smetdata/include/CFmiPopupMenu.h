@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef UNIX
+
 #include <memory>
 #include <vector>
 
@@ -24,3 +26,4 @@ private:
     std::vector<std::unique_ptr<CMenu>> subMenuContainer;
 };
 
+#endif // UNIX

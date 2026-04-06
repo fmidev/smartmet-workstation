@@ -6,6 +6,8 @@
 #if !defined(AFX_BtnDataBase_H__937E4923_EF80_11D3_B75F_00C04F6A7AE6__INCLUDED_)
 #define AFX_BtnDataBase_H__937E4923_EF80_11D3_B75F_00C04F6A7AE6__INCLUDED_
 
+#ifndef UNIX
+
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -83,5 +85,7 @@ protected:
     CGridCtrl* m_pGrid;     // Parent grid control
     CWnd* m_pEditWnd;
 };
+
+#endif // UNIX
 
 #endif // !defined(AFX_BtnDataBase_H__937E4923_EF80_11D3_B75F_00C04F6A7AE6__INCLUDED_)

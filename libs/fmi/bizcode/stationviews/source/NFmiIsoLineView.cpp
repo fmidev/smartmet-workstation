@@ -24,7 +24,7 @@
 //
 //  Change Log:
 // Changed 1999.08.31/Marko	Muutin isoviivan piirrossa arvojen piirto systeemin niin
-//							, että vain yksi arvo piirretään.
+//							, ettï¿½ vain yksi arvo piirretï¿½ï¿½n.
 //
 //**********************************************************
 #include "NFmiIsoLineView.h"
@@ -76,7 +76,7 @@
 
 #include "boost\math\special_functions\round.hpp"
 
-// eli n. 30 x 30 (=900) hilasta ylöspäin ei tehdä alikolmioita
+// eli n. 30 x 30 (=900) hilasta ylï¿½spï¿½in ei tehdï¿½ alikolmioita
 static const int gMaxGridPointsThatImagineWillSubTriangulate = 900;
 
 using namespace std;
@@ -111,7 +111,7 @@ LabelBox::LabelBox(float theFontHeight, float theIsoLineValue /*int theLabelLett
 void LabelBox::Init(void)
 {
     itsStrategy = 2;
-    itsFontSize = 4; // [mm]. (Tällä hetkellä 4 pix on n. 1 mm);
+    itsFontSize = 4; // [mm]. (Tï¿½llï¿½ hetkellï¿½ 4 pix on n. 1 mm);
     itsIsoLineValue = kFloatMissing;
 
     itsFontColor = NFmiColor(0, 0, 0);
@@ -128,7 +128,7 @@ void LabelBox::Init(void)
 
 void LabelBox::Init(float theFontHeight, float theIsoLineValue, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiToolBox *theToolBox, NFmiDrawingEnvironment &theEnviroment)
 {
-    itsStrategy = 2; //EL: mistä tää revittäisiin?????????????????????
+    itsStrategy = 2; //EL: mistï¿½ tï¿½ï¿½ revittï¿½isiin?????????????????????
     itsFontSize = theFontHeight;  // [mm]
 
     itsIsoLineValue = theIsoLineValue;
@@ -306,20 +306,23 @@ bool NFmiIsoLineView::IsMapViewCase()
     return true;
 }
 
-// valitsin läpinäkyväksi väriksi mahd. läheltä valkoista, mutta siiitä vähän poikkeavan, koska
-// tämä läpinäkyvyys asetus ei toimi. Eli tästä väristä ei tule läpinäkyvää (en osaa käyttää Gdiplus-systeemejä
+// valitsin lï¿½pinï¿½kyvï¿½ksi vï¿½riksi mahd. lï¿½heltï¿½ valkoista, mutta siiitï¿½ vï¿½hï¿½n poikkeavan, koska
+// tï¿½mï¿½ lï¿½pinï¿½kyvyys asetus ei toimi. Eli tï¿½stï¿½ vï¿½ristï¿½ ei tule lï¿½pinï¿½kyvï¿½ï¿½ (en osaa kï¿½yttï¿½ï¿½ Gdiplus-systeemejï¿½
 // funktiossa CFmiGdiPlusHelpers::DrawBitmapToDC???).
-// Valitsin tuon värin siksi että se blendattuna melkein häviää kokonaan näkyvistä eikä tummennat alle jääviä värejä,
-// mutta ei toivottavasti sekoitu mihinkää käytettyyn valkoiseen väriin.
-static const COLORREF gFullyTransparentColor = 0x00fefdfe; // joku random väri joka saa edustaa täysin läpinäkyvää pohjaväriä, joka annetaan läpinäkyvyys kikkailussa pohjaväriksi
+// Valitsin tuon vï¿½rin siksi ettï¿½ se blendattuna melkein hï¿½viï¿½ï¿½ kokonaan nï¿½kyvistï¿½ eikï¿½ tummennat alle jï¿½ï¿½viï¿½ vï¿½rejï¿½,
+// mutta ei toivottavasti sekoitu mihinkï¿½ï¿½ kï¿½ytettyyn valkoiseen vï¿½riin.
+#ifndef UNIX
+static const COLORREF gFullyTransparentColor = 0x00fefdfe; // joku random vï¿½ri joka saa edustaa tï¿½ysin lï¿½pinï¿½kyvï¿½ï¿½ pohjavï¿½riï¿½, joka annetaan lï¿½pinï¿½kyvyys kikkailussa pohjavï¿½riksi
+#endif // UNIX
 
 void NFmiIsoLineView::PrepareForTransparentDraw(void)
 {
-    // ****** läpinäkyvä kenttä ***********************************
-    // tähän tulisi mahdollinen läpinäkyvyyys jutun alku asettelut:
-    // luo Cbitmap tarvittaessa, tee CDC joka käyttää bitmapia
+#ifndef UNIX
+    // ****** lï¿½pinï¿½kyvï¿½ kenttï¿½ ***********************************
+    // tï¿½hï¿½n tulisi mahdollinen lï¿½pinï¿½kyvyyys jutun alku asettelut:
+    // luo Cbitmap tarvittaessa, tee CDC joka kï¿½yttï¿½ï¿½ bitmapia
     // aseta CDC toolmasterille ja toolboxille ja jatka kuvan piirtoa.
-    // ****** läpinäkyvä kenttä ***********************************
+    // ****** lï¿½pinï¿½kyvï¿½ kenttï¿½ ***********************************
 
     fDrawUsingTransparency = false;
     if(itsDrawParam->Alpha() < 100.f && itsDrawParam->IsParamHidden() == false)
@@ -337,14 +340,16 @@ void NFmiIsoLineView::PrepareForTransparentDraw(void)
         }
         itsTransparencyDrawBackupDC = itsToolBox->GetDC();
         itsTransparencyDrawOldBitmap = itsTransparencyDrawDC->SelectObject(itsTransparencyDrawBitmap);
-        // täytetään tyhjä kuva jollain ihmevärillä, joka on sitten loppu pelissä täysin läpinäkyvä
+        // tï¿½ytetï¿½ï¿½n tyhjï¿½ kuva jollain ihmevï¿½rillï¿½, joka on sitten loppu pelissï¿½ tï¿½ysin lï¿½pinï¿½kyvï¿½
         CRect fillArea(0, 0, itsLastBitmapSize.cx, itsLastBitmapSize.cy);
         CBrush aBrush(gFullyTransparentColor);
         itsTransparencyDrawDC->FillRect(fillArea, &aBrush);
         CtrlView::SetToolsDCs(itsTransparencyDrawDC, itsToolBox, clientRect, itsCtrlViewDocumentInterface->IsToolMasterAvailable());
     }
+#endif // UNIX
 }
 
+#ifndef UNIX
 CRect NFmiIsoLineView::GetTrueClientRect()
 {
     if(itsMapViewDescTopIndex > CtrlViewUtils::kFmiMaxMapDescTopIndex)
@@ -355,22 +360,24 @@ CRect NFmiIsoLineView::GetTrueClientRect()
         return CRect(0, 0, static_cast<int>(viewSizeInPixels.X()), static_cast<int>(viewSizeInPixels.Y()));
     }
 }
+#endif // UNIX
 
 void NFmiIsoLineView::EndTransparentDraw(void)
 {
-    // ****** läpinäkyvä kenttä lopetus jutut ******************************
-    // Kun CDC:llä olevaan bitmapiin on piirretty, ota oikea CDC käyttöön
-    // toolboxiin ja toolmasteriin. Piirrä väliaikaisesta CDC:sta
-    // kuva halutulla läpinäkyvyydellä koko kuvan päälle (tee GdiplusHelperiin
+#ifndef UNIX
+    // ****** lï¿½pinï¿½kyvï¿½ kenttï¿½ lopetus jutut ******************************
+    // Kun CDC:llï¿½ olevaan bitmapiin on piirretty, ota oikea CDC kï¿½yttï¿½ï¿½n
+    // toolboxiin ja toolmasteriin. Piirrï¿½ vï¿½liaikaisesta CDC:sta
+    // kuva halutulla lï¿½pinï¿½kyvyydellï¿½ koko kuvan pï¿½ï¿½lle (tee GdiplusHelperiin
     // funktio, joka ottaa CBitmapin ja convertoi sen Gdiplus::Bitmap:iksi
-    // ja piirtää sen CDC:hen halutulla läpinäkyvyydellä).
-    // Ota bitmap pois väliaika CDC:stä ja tuhoa CDC.
-    // ****** läpinäkyvä kenttä lopetus jutut ******************************
+    // ja piirtï¿½ï¿½ sen CDC:hen halutulla lï¿½pinï¿½kyvyydellï¿½).
+    // Ota bitmap pois vï¿½liaika CDC:stï¿½ ja tuhoa CDC.
+    // ****** lï¿½pinï¿½kyvï¿½ kenttï¿½ lopetus jutut ******************************
 
     if(fDrawUsingTransparency)
     {
-        // juuri piirretty kuva on nyt itsTransparencyDrawDC:ssa ja siinä olevassa itsTransparencyDrawBitmap:issa
-        CRect clientRect = itsToolBox->GetClientRect(); // oletus, tähän on jo laskettu oikea alue
+        // juuri piirretty kuva on nyt itsTransparencyDrawDC:ssa ja siinï¿½ olevassa itsTransparencyDrawBitmap:issa
+        CRect clientRect = itsToolBox->GetClientRect(); // oletus, tï¿½hï¿½n on jo laskettu oikea alue
         CtrlView::SetToolsDCs(itsTransparencyDrawBackupDC, itsToolBox, clientRect, itsCtrlViewDocumentInterface->IsToolMasterAvailable());
         itsTransparencyDrawBitmap = itsTransparencyDrawDC->SelectObject(itsTransparencyDrawOldBitmap);
 
@@ -381,16 +388,16 @@ void NFmiIsoLineView::EndTransparentDraw(void)
         gdiBitmap.GetPixel(10, 10, &aColor);
         COLORREF aColRef = aColor.ToCOLORREF();
 
-        // HUOM! kuvan saa piirtää vain oman näytön päälle, muuten jos ollaan moni ruutuisessa kokonaisnäytössä,
-        // tulee alpha piirtoa eri ruutujen päälle useina kerroksina ja tällöin ensin piirrettyjen ruutujen
-        // päälle tulee useita kerroksia 'lakkaa', joka tummentaa sen ruuden enemmän kuin pitäisi.
+        // HUOM! kuvan saa piirtï¿½ï¿½ vain oman nï¿½ytï¿½n pï¿½ï¿½lle, muuten jos ollaan moni ruutuisessa kokonaisnï¿½ytï¿½ssï¿½,
+        // tulee alpha piirtoa eri ruutujen pï¿½ï¿½lle useina kerroksina ja tï¿½llï¿½in ensin piirrettyjen ruutujen
+        // pï¿½ï¿½lle tulee useita kerroksia 'lakkaa', joka tummentaa sen ruuden enemmï¿½n kuin pitï¿½isi.
         CRect mfcRect;
         itsToolBox->ConvertRect(GetFrame(), mfcRect);
 
         NFmiRect sourceRect(mfcRect.left, mfcRect.top, mfcRect.right, mfcRect.bottom);
         Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(mfcRect.left), static_cast<Gdiplus::REAL>(mfcRect.top), static_cast<Gdiplus::REAL>(mfcRect.Width()), static_cast<Gdiplus::REAL>(mfcRect.Height()));
 
-        // alpha: 0 on täysin läpinäkyvä, 0.5 = semi transparent ja 1.0 = opaque
+        // alpha: 0 on tï¿½ysin lï¿½pinï¿½kyvï¿½, 0.5 = semi transparent ja 1.0 = opaque
         Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f;
         CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), gdiBitmap, sourceRect, destRect, true, NFmiImageAttributes(Gdiplus::Color(gFullyTransparentColor), alpha), itsGdiPlusGraphics);
 
@@ -400,6 +407,7 @@ void NFmiIsoLineView::EndTransparentDraw(void)
         itsTransparencyDrawDC = 0;
     }
     fDrawUsingTransparency = false;
+#endif // UNIX
 }
 
 //--------------------------------------------------------
@@ -418,8 +426,8 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
 
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
 
-    itsIsolineValues = kFloatMissing; // varmistetaan että tämä on tyhjää täynnä
-    fGetSynopDataFromQ2 = false; // aluksi laitetaan falseksi, haku tehdään kerran PrepareForStationDraw-metodissa jossa onnistumisen kanssa lippu laitetaan päälle
+    itsIsolineValues = kFloatMissing; // varmistetaan ettï¿½ tï¿½mï¿½ on tyhjï¿½ï¿½ tï¿½ynnï¿½
+    fGetSynopDataFromQ2 = false; // aluksi laitetaan falseksi, haku tehdï¿½ï¿½n kerran PrepareForStationDraw-metodissa jossa onnistumisen kanssa lippu laitetaan pï¿½ï¿½lle
     itsOptimizedGridPtr.reset();
     CalculateGeneralStationRect();
     MakeDrawedInfoVector();
@@ -447,9 +455,9 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
     if(itsInfo->DataType() == NFmiInfoData::kStationary)
         itsInfo->FirstTime(); // staattiselle datalle laitetaan ainoa aika paalle
     else
-        itsInfo->Time(itsTime); // asetetaan aika kohdalleen, että hatchays toimii
+        itsInfo->Time(itsTime); // asetetaan aika kohdalleen, ettï¿½ hatchays toimii
 
-    PrepareForTransparentDraw(); // jos piirto-ominaisuudessa on transparenssia, pitää tehdä kikka vitonen
+    PrepareForTransparentDraw(); // jos piirto-ominaisuudessa on transparenssia, pitï¿½ï¿½ tehdï¿½ kikka vitonen
 
     try
     {
@@ -459,7 +467,7 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
 
             if(IsAccessoryStationDataDrawn())
             {
-                DrawAllAccessoryStationData(); // piirretään aktiivisen parametrin hilapisteet
+                DrawAllAccessoryStationData(); // piirretï¿½ï¿½n aktiivisen parametrin hilapisteet
             }
         }
     }
@@ -467,9 +475,9 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
     {
     }
 
-    EndTransparentDraw(); // jos piirrossa oli läpinäkyvyyttä, pitää vielä tehdä pari kikkaa ja siivota jäljet
+    EndTransparentDraw(); // jos piirrossa oli lï¿½pinï¿½kyvyyttï¿½, pitï¿½ï¿½ vielï¿½ tehdï¿½ pari kikkaa ja siivota jï¿½ljet
 
-    DrawObsComparison(); // vertailut havaintoihin piirretään vaikka data on piilossa
+    DrawObsComparison(); // vertailut havaintoihin piirretï¿½ï¿½n vaikka data on piilossa
 }
 
 static double GetDifferenceDrawIsoLineGab(double theCurrentIsolineGap)
@@ -493,11 +501,11 @@ static double GetDifferenceDrawIsoLineGab(double theCurrentIsolineGap)
     return isolineGap;
 }
 
-// näitä on kutsuttava pareittain RestoreUpDifferenceDrawing-metodin kanssa
+// nï¿½itï¿½ on kutsuttava pareittain RestoreUpDifferenceDrawing-metodin kanssa
 void NFmiIsoLineView::SetUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam)
 {
     fDoDifferenceDrawSwitch = false;
-    // piirretään toistaiseksi erotus vanhalla tavalla
+    // piirretï¿½ï¿½n toistaiseksi erotus vanhalla tavalla
     if(theUsedDrawParam->ShowDifferenceToOriginalData())
     {
         auto differenceDrawParam = itsCtrlViewDocumentInterface->GetDrawDifferenceDrawParam();
@@ -522,8 +530,8 @@ void NFmiIsoLineView::SetUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &t
     }
 }
 
-// näitä on kutsuttava pareittain SetUpDifferenceDrawing-metodin kanssa
-void NFmiIsoLineView::RestoreUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam) // näitä on kutsuttava pareittain
+// nï¿½itï¿½ on kutsuttava pareittain SetUpDifferenceDrawing-metodin kanssa
+void NFmiIsoLineView::RestoreUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam) // nï¿½itï¿½ on kutsuttava pareittain
 {
     if(fDoDifferenceDrawSwitch)
     {
@@ -545,7 +553,7 @@ bool NFmiIsoLineView::RightButtonUp(const NFmiPoint& thePlace, unsigned long the
 
 static void AdjustZoomedAreaRect(NFmiRect &theZoomedAreaRect)
 {
-    // HUOM!!! viilaan zoom laatikon hienoista epätarkkuutta, pitäisi korjata area metodeihin!!!
+    // HUOM!!! viilaan zoom laatikon hienoista epï¿½tarkkuutta, pitï¿½isi korjata area metodeihin!!!
     static const double errorLimit = 0.000001;
     if(fabs(theZoomedAreaRect.Left()) < errorLimit)
         theZoomedAreaRect.Left(0);
@@ -558,24 +566,24 @@ static void AdjustZoomedAreaRect(NFmiRect &theZoomedAreaRect)
 }
 
 //************************************************************************
-//*********** toolmaster juttuja, siirrä pois ****************************
-//*********** täytetään toolmaster piirto functionlle tietoja ************
+//*********** toolmaster juttuja, siirrï¿½ pois ****************************
+//*********** tï¿½ytetï¿½ï¿½n toolmaster piirto functionlle tietoja ************
 //************************************************************************
 
 
-// Tämä funktio palauttaa true, jos pelkän zoomatun alueen datan käyttö ja piirto on mahdollista.
-// Jos mahdollista palauttaa myös uuden zoomed-area-rectin ja zoomatun alueen hilan 'boundingbox' indeksit.
-// Zoomatun datan käyttö mahdollista jos:
-// 1. tehtävä säästö hilapisteissä on riittävä.
-// 2. zoomattu alue on kokonaan datan sisällä (tämä on helppo ohjelmoida, tulevaisuudessa ehdot voivat muuttua joustavimmiksi)
-// 3. datatype ei saa olla macroParam (tämän toteutus vaatii erillistä viilausta, joten tämä ehto poistuu tulevaisuudessa)
+// Tï¿½mï¿½ funktio palauttaa true, jos pelkï¿½n zoomatun alueen datan kï¿½yttï¿½ ja piirto on mahdollista.
+// Jos mahdollista palauttaa myï¿½s uuden zoomed-area-rectin ja zoomatun alueen hilan 'boundingbox' indeksit.
+// Zoomatun datan kï¿½yttï¿½ mahdollista jos:
+// 1. tehtï¿½vï¿½ sï¿½ï¿½stï¿½ hilapisteissï¿½ on riittï¿½vï¿½.
+// 2. zoomattu alue on kokonaan datan sisï¿½llï¿½ (tï¿½mï¿½ on helppo ohjelmoida, tulevaisuudessa ehdot voivat muuttua joustavimmiksi)
+// 3. datatype ei saa olla macroParam (tï¿½mï¿½n toteutus vaatii erillistï¿½ viilausta, joten tï¿½mï¿½ ehto poistuu tulevaisuudessa)
 // Funktio olettaa seuraavia asioita:
 // 1. Annettu data on hilamuotoista.
-// 2. Annettu area ja datan area ovat samaa tyyppiä (ja ne eivät ole 0-pointtereita!).
+// 2. Annettu area ja datan area ovat samaa tyyppiï¿½ (ja ne eivï¿½t ole 0-pointtereita!).
 // 3. Annettu data (theInfo) on olemassa.
 bool NFmiIsoLineView::IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, boost::shared_ptr<NFmiArea>& theMapArea, NFmiRect& theCroppedXyRectOut, int& x1, int& y1, int& x2, int& y2)
 {
-    if(IsQ2ServerUsed() && fGetCurrentDataFromQ2Server) // q2serveriltä haetaan aina vain karttanäytön täyttävään hilaan, eli zooming alueen rajoittamista ei saa käyttää
+    if(IsQ2ServerUsed() && fGetCurrentDataFromQ2Server) // q2serveriltï¿½ haetaan aina vain karttanï¿½ytï¿½n tï¿½yttï¿½vï¿½ï¿½n hilaan, eli zooming alueen rajoittamista ei saa kï¿½yttï¿½ï¿½
         return false;
     if(IsSpecialMatrixDataDraw())
         return false;
@@ -586,11 +594,11 @@ bool NFmiIsoLineView::IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo>& th
     return false;
 }
 
-// Osuvatko data jä näytön alue ollenkaan päällekkäin.
-// EI täydellinen testi:
-// Tutkitään onko alue 1:n mikään kulma piste alue 2:n sisällä.
-// Tarvittaessa tutkitaan vielä toisinpäin, eli onko alue 2:n
-// mikään kulma piste alue 1:en sisällä.
+// Osuvatko data jï¿½ nï¿½ytï¿½n alue ollenkaan pï¿½ï¿½llekkï¿½in.
+// EI tï¿½ydellinen testi:
+// Tutkitï¿½ï¿½n onko alue 1:n mikï¿½ï¿½n kulma piste alue 2:n sisï¿½llï¿½.
+// Tarvittaessa tutkitaan vielï¿½ toisinpï¿½in, eli onko alue 2:n
+// mikï¿½ï¿½n kulma piste alue 1:en sisï¿½llï¿½.
 static bool IsDataInView(const boost::shared_ptr<NFmiArea> &theDataArea, const boost::shared_ptr<NFmiArea> &theViewArea)
 {
     if(theDataArea && theViewArea)
@@ -613,9 +621,9 @@ static bool IsDataInView(const boost::shared_ptr<NFmiArea> &theDataArea, const b
         if(theViewArea->IsInside(theDataArea->TopRightLatLon()))
             return true;
 
-        // koska edellä tehty tarkastelu ei ole täydellinen, paikataan sitä hieman kokeilemalla onko
-        // eri alueiden keskipisteet toisen alueen sisällä. Nurkkapisteitä tarkasteltaessa
-        // voi tulla virheitä, jotka on helposti tarkastettavissa käyttämällä keskipistettä.
+        // koska edellï¿½ tehty tarkastelu ei ole tï¿½ydellinen, paikataan sitï¿½ hieman kokeilemalla onko
+        // eri alueiden keskipisteet toisen alueen sisï¿½llï¿½. Nurkkapisteitï¿½ tarkasteltaessa
+        // voi tulla virheitï¿½, jotka on helposti tarkastettavissa kï¿½yttï¿½mï¿½llï¿½ keskipistettï¿½.
         if(theDataArea->IsInside(theViewArea->ToLatLon(theViewArea->XYArea().Center())))
             return true;
         if(theViewArea->IsInside(theDataArea->ToLatLon(theDataArea->XYArea().Center())))
@@ -632,15 +640,15 @@ bool NFmiIsoLineView::DifferentWorldViews(const NFmiArea *area1, const NFmiArea 
         return false;
 }
 
-// Tuulen suunta on kulma joka alkaa pystysuunnasta (0/360 astetta) ja menee myötäpäivään ympäri. 
-// ToolMaster haluaa kulmat niin että ne alkavat 90 asteen kohdalta (itä suunta) ja menevät
-// vastapäivään ympäri. Joten joudutaan rukkaamaan asteita origon ja suunnan suhteen.
-// Huom! Lisäksi kulmaa säädetään vielä 180 astetta, koska nuolet piirretään 180 astetta toiseen suuntaan.
+// Tuulen suunta on kulma joka alkaa pystysuunnasta (0/360 astetta) ja menee myï¿½tï¿½pï¿½ivï¿½ï¿½n ympï¿½ri. 
+// ToolMaster haluaa kulmat niin ettï¿½ ne alkavat 90 asteen kohdalta (itï¿½ suunta) ja menevï¿½t
+// vastapï¿½ivï¿½ï¿½n ympï¿½ri. Joten joudutaan rukkaamaan asteita origon ja suunnan suhteen.
+// Huom! Lisï¿½ksi kulmaa sï¿½ï¿½detï¿½ï¿½n vielï¿½ 180 astetta, koska nuolet piirretï¿½ï¿½n 180 astetta toiseen suuntaan.
 static float WindAngleToToolMasterAngle(float windAngle)
 {
     if(windAngle == kFloatMissing)
         return kFloatMissing;
-    float toolmasterAngle = -windAngle + 90 + 180; // käännetään suunta ja siirretään origoa
+    float toolmasterAngle = -windAngle + 90 + 180; // kï¿½ï¿½nnetï¿½ï¿½n suunta ja siirretï¿½ï¿½n origoa
     if(toolmasterAngle < 0)
         toolmasterAngle += 360;
     return toolmasterAngle;
@@ -668,7 +676,7 @@ bool NFmiIsoLineView::FillIsoLineVisualizationInfo(boost::shared_ptr<NFmiDrawPar
     {
         if(theDrawParam->UseSimpleIsoLineDefinitions()) // 2=isoline
             FillIsoLineInfoSimple(theDrawParam, theIsoLineData, fToolMasterUsed, fStationData);
-        else // custom isoviivat tähän
+        else // custom isoviivat tï¿½hï¿½n
             FillIsoLineInfoCustom(theDrawParam, theIsoLineData, fToolMasterUsed, fStationData);
         initializationStatus = theIsoLineData->itsIsolineVizualizationData.isCorrectlyInitialized();
     }
@@ -717,15 +725,15 @@ void NFmiIsoLineView::FillHatchInfo(boost::shared_ptr<NFmiDrawParam> &theDrawPar
 
 void NFmiIsoLineView::FillBaseColorContourInfo_new(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed)
 {
-    theIsoLineData->fUseIsoLines = 0; // toistaiseksi vielä ilman isoviivoja!!!
+    theIsoLineData->fUseIsoLines = 0; // toistaiseksi vielï¿½ ilman isoviivoja!!!
     theIsoLineData->fUseColorContours = 1;
-    theIsoLineData->fUseIsoLineGabWithCustomContours = fToolMasterUsed ? theDrawParam->UseIsoLineGabWithCustomContours() : false; // jos imagine piirto, tämä pitää laittaa falseksi, muuten tulee sotkua
+    theIsoLineData->fUseIsoLineGabWithCustomContours = fToolMasterUsed ? theDrawParam->UseIsoLineGabWithCustomContours() : false; // jos imagine piirto, tï¿½mï¿½ pitï¿½ï¿½ laittaa falseksi, muuten tulee sotkua
 
     auto viewType = theDrawParam->GetViewType(fStationData);
     if(viewType == NFmiMetEditorTypes::View::kFmiColorContourView && theDrawParam->UseSeparatorLinesBetweenColorContourClasses())
         theIsoLineData->fUseSeparatorLinesBetweenColorContourClasses = true;
     if(viewType == NFmiMetEditorTypes::View::kFmiQuickColorContourView)
-        theIsoLineData->fUseColorContours = 2; // 2 asettaa quick contourin päälle
+        theIsoLineData->fUseColorContours = 2; // 2 asettaa quick contourin pï¿½ï¿½lle
     if(viewType == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView)
         theIsoLineData->fDrawLabelsOverContours = true;
 }
@@ -801,7 +809,7 @@ NFmiPolyline* NFmiIsoLineView::CreateEmptyPolyLine(const NFmiRect &theRect, NFmi
 {
     return new NFmiPolyline(theRect, 0, theEnvi
         , 1 // 1 = opaque
-        , -1);  // -1 tarkoittaa, ettei käytetä hatchia
+        , -1);  // -1 tarkoittaa, ettei kï¿½ytetï¿½ hatchia
 }
 
 void NFmiIsoLineView::ConvertPath2PolyLineList(Imagine::NFmiPath& thePath, std::list<NFmiPolyline*> &thePolyLineList, bool relative_moves, bool removeghostlines, const NFmiRect &theRect, NFmiDrawingEnvironment *theEnvi)
@@ -927,12 +935,12 @@ void NFmiIsoLineView::ConvertPath2PolyLineList(Imagine::NFmiPath& thePath, std::
         }
     }
     if(currentPolyLine)
-        thePolyLineList.push_back(currentPolyLine); // laitetaan vielä viimeinen polyline listaan
+        thePolyLineList.push_back(currentPolyLine); // laitetaan vielï¿½ viimeinen polyline listaan
 }
 
 static int CalcIsolineWidthInPixels(float wantedLineWidthInMM)
 {
-    float mm_per_pixel = 1000.f / 260.f; // arvio omasta näytöstäni
+    float mm_per_pixel = 1000.f / 260.f; // arvio omasta nï¿½ytï¿½stï¿½ni
     int wantedPenWidthInPixels = boost::math::iround(wantedLineWidthInMM * mm_per_pixel);
     if(wantedPenWidthInPixels < 1)
         wantedPenWidthInPixels = 1;
@@ -987,19 +995,19 @@ static void SetSimpleColorContourEnvi(NFmiIsoLineData& theIsoLineData, NFmiDrawi
 
     if(colorIsColorFullyOpaque && theIsoLineData.fUseSeparatorLinesBetweenColorContourClasses)
     {
-        theEnvi.SetFrameColor(ToolMasterColorCube::ColorIndexToRgb(3)); // jos väliviivat piirretään, piirretään ne toistaiseksi mustalla (=3)
+        theEnvi.SetFrameColor(ToolMasterColorCube::ColorIndexToRgb(3)); // jos vï¿½liviivat piirretï¿½ï¿½n, piirretï¿½ï¿½n ne toistaiseksi mustalla (=3)
         theEnvi.EnableFrame();
     }
     else
     {
-        theEnvi.DisableFrame(); // TÄMÄ RAJAVIIVAN PIIRRON ESTO PITÄÄ KATSOA jotenkin toolboxista, kun ei toimi
+        theEnvi.DisableFrame(); // Tï¿½Mï¿½ RAJAVIIVAN PIIRRON ESTO PITï¿½ï¿½ KATSOA jotenkin toolboxista, kun ei toimi
     }
 
 }
 
 static void DrawPolyLineList(NFmiToolBox *theGTB, list<NFmiPolyline*> &thePolyLineList, const NFmiPoint &theOffSet)
 {
-    NFmiPoint scale; // ei tehdä skaalausta ollenkaan, kun skaalat on 0:aa
+    NFmiPoint scale; // ei tehdï¿½ skaalausta ollenkaan, kun skaalat on 0:aa
     list<NFmiPolyline*>::iterator it = thePolyLineList.begin();
     list<NFmiPolyline*>::iterator endIter = thePolyLineList.end();
     for(; it != endIter; ++it)
@@ -1050,13 +1058,13 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
 
     if(itsInfo->IsGrid())
     {
-        // huom. q2serverilta data voi olla minne tahansa, joten sen käyttö on poikkeus
+        // huom. q2serverilta data voi olla minne tahansa, joten sen kï¿½yttï¿½ on poikkeus
         boost::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
         if(IsQ2ServerUsed() == false && IsDataInView(infoArea, GetArea()) == false)
-            return; // ei tarvitse piirtää ollenkaan, koska data ei osu näytön alueelle ollenkaan.
+            return; // ei tarvitse piirtï¿½ï¿½ ollenkaan, koska data ei osu nï¿½ytï¿½n alueelle ollenkaan.
     }
 
-    // Tyhjennetään aina piirron aluksi
+    // Tyhjennetï¿½ï¿½n aina piirron aluksi
     itsExistingLabels.clear();
 
     int xCount = 0;
@@ -1078,8 +1086,8 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
     isoLineData.itsTime = itsInfo->Time();
 
     {
-        // Laitetaan tämä erilliseen blokkiin, jotta vanha maski arvo saadaan takaisin päälle niin kuin vanhallakin koodilla
-        EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // käydään kaikki pisteet läpi
+        // Laitetaan tï¿½mï¿½ erilliseen blokkiin, jotta vanha maski arvo saadaan takaisin pï¿½ï¿½lle niin kuin vanhallakin koodilla
+        EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // kï¿½ydï¿½ï¿½n kaikki pisteet lï¿½pi
         if(!FillIsoLineDataWithGridData(isoLineData, 0, 0, 0, 0))
             return;
     }
@@ -1093,33 +1101,33 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
 
     coordData.itsOffSet = itsArea->TopLeft();
     NFmiDataMatrix<NFmiPoint> *usedCoordinatesPtr = 0;
-    NFmiPoint usedOffset; // pitää laskea mikä on käytetty offsetti, kun contoureja aletaan piirtämään
+    NFmiPoint usedOffset; // pitï¿½ï¿½ laskea mikï¿½ on kï¿½ytetty offsetti, kun contoureja aletaan piirtï¿½mï¿½ï¿½n
     string gridCacheStr = itsInfo->Grid() ? NFmiGridPointCache::MakeGridCacheStr(*itsInfo->Grid()) : "";
     if(fGetCurrentDataFromQ2Server)
         gridCacheStr = NFmiGridPointCache::MakeGridCacheStr(*itsArea, itsIsolineValues.NX(), itsIsolineValues.NY());
     auto &gridPointCache = itsCtrlViewDocumentInterface->GridPointCache(itsMapViewDescTopIndex);
     NFmiGridPointCache::pointMap::iterator it = gridPointCache.Find(gridCacheStr);
     if(gridCacheStr.empty() == false && it != gridPointCache.End())
-    { // jos löytyi cachesta, laitetaan ne koordinaateiksi
+    { // jos lï¿½ytyi cachesta, laitetaan ne koordinaateiksi
         usedCoordinatesPtr = &(*it).second.itsPoints;
         usedOffset = itsArea->TopLeft() - (*it).second.itsOffSet;
     }
     else if(itsInfo->Grid())
-    { // jos ei löytynyt, lasketaan koordinaatit ja laitetaan ne cacheen talteen
+    { // jos ei lï¿½ytynyt, lasketaan koordinaatit ja laitetaan ne cacheen talteen
         if(fGetCurrentDataFromQ2Server == false)
-            itsInfo->LocationsXY(coordData.itsPoints, *itsArea); // otetaan koordinaatit tämän ruudun arealla, jossa on XYRect kohdallaan
+            itsInfo->LocationsXY(coordData.itsPoints, *itsArea); // otetaan koordinaatit tï¿½mï¿½n ruudun arealla, jossa on XYRect kohdallaan
         else
             ::LocationsXYForArchiveData(coordData.itsPoints, *itsArea, itsIsolineValues.NX(), itsIsolineValues.NY());
 
         gridPointCache.Add(gridCacheStr, coordData);
         usedCoordinatesPtr = &coordData.itsPoints;
-        usedOffset = NFmiPoint(0, 0); // kun kyse on 'originaali' hila pisteistä, offset on (0, 0)
+        usedOffset = NFmiPoint(0, 0); // kun kyse on 'originaali' hila pisteistï¿½, offset on (0, 0)
     }
     else // asema datasta lasketaan hilattua dataa
-    { // pitää laskea hila vielä tässä
-        ::CalcLocationsXYMatrix(coordData.itsPoints, *itsArea, static_cast<int>(itsIsolineValues.NX()), static_cast<int>(itsIsolineValues.NY())); // otetaan koordinaatit tämän ruudun arealla, jossa on XYRect kohdallaan
+    { // pitï¿½ï¿½ laskea hila vielï¿½ tï¿½ssï¿½
+        ::CalcLocationsXYMatrix(coordData.itsPoints, *itsArea, static_cast<int>(itsIsolineValues.NX()), static_cast<int>(itsIsolineValues.NY())); // otetaan koordinaatit tï¿½mï¿½n ruudun arealla, jossa on XYRect kohdallaan
         usedCoordinatesPtr = &coordData.itsPoints;
-        usedOffset = NFmiPoint(0, 0); // kun kyse on 'originaali' hila pisteistä, offset on (0, 0)
+        usedOffset = NFmiPoint(0, 0); // kun kyse on 'originaali' hila pisteistï¿½, offset on (0, 0)
     }
 
     if(isoLineData.itsHatch1.fUseHatch)
@@ -1129,14 +1137,14 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
 
     if(isoLineData.fUseIsoLines)
     {
-        if(!isoLineData.fUseCustomIsoLineClasses) // piirretään tasa väliset isoviivat
+        if(!isoLineData.fUseCustomIsoLineClasses) // piirretï¿½ï¿½n tasa vï¿½liset isoviivat
             DrawSimpleIsoLinesWithImagine(isoLineData, itsIsolineValues, *usedCoordinatesPtr, helper, usedOffset);
         else
             DrawCustomIsoLinesWithImagine(isoLineData, itsIsolineValues, *usedCoordinatesPtr, helper, usedOffset);
     }
     else
     {
-        if(isoLineData.fUseCustomColorContoursClasses) // piirretään tasa väliset isoviivat
+        if(isoLineData.fUseCustomColorContoursClasses) // piirretï¿½ï¿½n tasa vï¿½liset isoviivat
             DrawCustomColorContourWithImagine(isoLineData, itsIsolineValues, *usedCoordinatesPtr, helper, usedOffset);
         else
             DrawSimpleColorContourWithImagine(isoLineData, itsIsolineValues, *usedCoordinatesPtr, helper, usedOffset);
@@ -1163,11 +1171,11 @@ static Imagine::NFmiPath CalcContourPath(float theValue1, float theValue2, NFmiI
 {
     Imagine::NFmiContourTree tree(theValue1, theValue2);
     tree.LinesOnly(fLinesOnly);
-    if(theIsoLineData.itsXNumber * theIsoLineData.itsYNumber > gMaxGridPointsThatImagineWillSubTriangulate) // ei tehdä subtriangle jakoa jos hilapisteitä tarpeeksi paljon muutenkin
-        tree.SubTriangleMode(false);								// eli n. 30 x 30 (=900) hilasta ylöspäin ei tehdä alikolmioita
+    if(theIsoLineData.itsXNumber * theIsoLineData.itsYNumber > gMaxGridPointsThatImagineWillSubTriangulate) // ei tehdï¿½ subtriangle jakoa jos hilapisteitï¿½ tarpeeksi paljon muutenkin
+        tree.SubTriangleMode(false);								// eli n. 30 x 30 (=900) hilasta ylï¿½spï¿½in ei tehdï¿½ alikolmioita
 
-    // HUOM! tässä pitää tarkastella nimenomaan datan mahdollista gridissä olevaa areaa, ei queryInfon Area-metodin palauttavaa areaa.
-    // Tämä siksi, että jos ollaan piirtämässä havainto dataa isoviiva moodissa, pitää mennä else-haaraan, ja sinne pääsee kun gridArea on 0-pointteri
+    // HUOM! tï¿½ssï¿½ pitï¿½ï¿½ tarkastella nimenomaan datan mahdollista gridissï¿½ olevaa areaa, ei queryInfon Area-metodin palauttavaa areaa.
+    // Tï¿½mï¿½ siksi, ettï¿½ jos ollaan piirtï¿½mï¿½ssï¿½ havainto dataa isoviiva moodissa, pitï¿½ï¿½ mennï¿½ else-haaraan, ja sinne pï¿½ï¿½see kun gridArea on 0-pointteri
     NFmiArea *dataGridArea = theIsoLineData.itsInfo->Grid() ? theIsoLineData.itsInfo->Grid()->Area() : 0;
     if(NFmiIsoLineView::DifferentWorldViews(dataGridArea, theMapArea.get()))
     {
@@ -1188,7 +1196,7 @@ static Imagine::NFmiPath CalcContourPath(float theValue1, float theValue2, NFmiI
         }
         else
             usedLatlonMatrix = &latlonCacheIter->second;
-        // datan laittaminen mihin tahansa projektioon ** anna tähän todelliset lat-lon koordinaatit pisteille **
+        // datan laittaminen mihin tahansa projektioon ** anna tï¿½hï¿½n todelliset lat-lon koordinaatit pisteille **
         if(usedLatlonMatrix)
         {
             tree.Contour(*usedLatlonMatrix, theValues, theHelper, Imagine::NFmiContourTree::kFmiContourLinear);
@@ -1231,7 +1239,7 @@ void NFmiIsoLineView::DrawHatchesWithImagine(NFmiIsoLineData& theIsoLineData, co
     }
 }
 
-// ei fillattuja tasa välein olevia contoureja
+// ei fillattuja tasa vï¿½lein olevia contoureja
 void NFmiIsoLineView::DrawSimpleIsoLinesWithImagine(NFmiIsoLineData& theIsoLineData, NFmiDataMatrix<float> &theValues, NFmiDataMatrix<NFmiPoint> &theCoordinates, Imagine::NFmiDataHints &theHelper, const NFmiPoint &theOffSet)
 {
     NFmiDrawingEnvironment envi;
@@ -1259,8 +1267,8 @@ void NFmiIsoLineView::DrawSimpleIsoLinesWithImagine(NFmiIsoLineData& theIsoLineD
             // EL -->
             if(!itsDrawParam->UseSingleColorsWithSimpleIsoLines())
             {
-                // Kyseessä EI ole "single-color" -tyyppinen isoviiva.
-                // Labeltekstin väriksi voidaan siten ottaa jo aikaisemmin SetSimpleIsoLineEnvi():ssa
+                // Kyseessï¿½ EI ole "single-color" -tyyppinen isoviiva.
+                // Labeltekstin vï¿½riksi voidaan siten ottaa jo aikaisemmin SetSimpleIsoLineEnvi():ssa
                 // laskettu envi.FrameColor():n arvo
                 itsDrawParam->FrameColor(envi.GetFrameColor());
             }
@@ -1309,8 +1317,8 @@ void NFmiIsoLineView::DrawCustomIsoLinesWithImagine(NFmiIsoLineData& theIsoLineD
             // EL -->
             if(!itsDrawParam->UseSingleColorsWithSimpleIsoLines())
             {
-                // Kyseessä EI ole "single-color" -tyyppinen isoviiva.
-                // Labeltekstin väriksi voidaan siten ottaa jo aikaisemmin SetSimpleIsoLineEnvi():ssa
+                // Kyseessï¿½ EI ole "single-color" -tyyppinen isoviiva.
+                // Labeltekstin vï¿½riksi voidaan siten ottaa jo aikaisemmin SetSimpleIsoLineEnvi():ssa
                 // laskettu envi.FrameColor():n arvo
                 itsDrawParam->FrameColor(envi.GetFrameColor());
             }
@@ -1326,7 +1334,7 @@ void NFmiIsoLineView::DrawCustomIsoLinesWithImagine(NFmiIsoLineData& theIsoLineD
     DrawAllLabels(theOffSet);
 }
 
-// fillattuja tasavälisiä contoureja
+// fillattuja tasavï¿½lisiï¿½ contoureja
 void NFmiIsoLineView::DrawSimpleColorContourWithImagine(NFmiIsoLineData& theIsoLineData, NFmiDataMatrix<float> &theValues, NFmiDataMatrix<NFmiPoint> &theCoordinates, Imagine::NFmiDataHints &theHelper, const NFmiPoint &theOffSet)
 {
     static int bsCounter = 0;
@@ -1340,7 +1348,7 @@ void NFmiIsoLineView::DrawSimpleColorContourWithImagine(NFmiIsoLineData& theIsoL
     LabelBox labelBox;
     float fontSize = itsDrawParam->SimpleIsoLineLabelHeight() * ::CalcMMSizeFactor(static_cast<float>(itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsViewHeightInMM), 1.1f); // [mm]
     float upperLimit = contourLimits.front();
-    float lowerLimit = upperLimit - colorContouringData.finalBlendingStep(); // HUOM! alarasta pitää vähentää vielä yksi steppi, koska contourit piirretään eri tekniikalla kuin toolmasterissa
+    float lowerLimit = upperLimit - colorContouringData.finalBlendingStep(); // HUOM! alarasta pitï¿½ï¿½ vï¿½hentï¿½ï¿½ vielï¿½ yksi steppi, koska contourit piirretï¿½ï¿½n eri tekniikalla kuin toolmasterissa
     float currentIsoLineValue = lowerLimit;
 
     for(int i = 0; i <= contourLimits.size(); i++)
@@ -1372,8 +1380,8 @@ void NFmiIsoLineView::DrawSimpleColorContourWithImagine(NFmiIsoLineData& theIsoL
             {
                 if(!itsDrawParam->UseSingleColorsWithSimpleIsoLines())
                 {
-                    // Kyseessä EI ole "single-color" -tyyppinen isoviiva.
-                    // Labeltekstin väriksi voidaan siten ottaa jo aikaisemmin SetSimpleColorContourEnvi():ssa
+                    // Kyseessï¿½ EI ole "single-color" -tyyppinen isoviiva.
+                    // Labeltekstin vï¿½riksi voidaan siten ottaa jo aikaisemmin SetSimpleColorContourEnvi():ssa
                     // laskettu envi.FrameColor():n arvo
                     itsDrawParam->FrameColor(envi.GetFrameColor());
                 }
@@ -1413,7 +1421,7 @@ void NFmiIsoLineView::DrawCustomColorContourWithImagine(NFmiIsoLineData& theIsoL
     float fontSize = 0; //itsDrawParam->SimpleIsoLineLabelHeight(); // [mm]
     float fontSizeFactor = ::CalcMMSizeFactor(static_cast<float>(itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsViewHeightInMM), 1.1f);
     float upperLimit = customContourLimits.front();
-    float lowerLimit = upperLimit - colorContouringData.finalBlendingStep(); // HUOM! alarasta pitää vähentää vielä yksi steppi, koska contourit piirretään eri tekniikalla kuin toolmasterissa
+    float lowerLimit = upperLimit - colorContouringData.finalBlendingStep(); // HUOM! alarasta pitï¿½ï¿½ vï¿½hentï¿½ï¿½ vielï¿½ yksi steppi, koska contourit piirretï¿½ï¿½n eri tekniikalla kuin toolmasterissa
     float currentIsoLineValue = lowerLimit;
     for(int i = 0; i <= customContourLimits.size(); i++)
     {
@@ -1450,8 +1458,8 @@ void NFmiIsoLineView::DrawCustomColorContourWithImagine(NFmiIsoLineData& theIsoL
             {
                 if(!itsDrawParam->UseSingleColorsWithSimpleIsoLines())
                 {
-                    // Kyseessä EI ole "single-color" -tyyppinen isoviiva.
-                    // Labeltekstin väriksi voidaan siten ottaa jo aikaisemmin SetCustomColorContourEnvi():ssa
+                    // Kyseessï¿½ EI ole "single-color" -tyyppinen isoviiva.
+                    // Labeltekstin vï¿½riksi voidaan siten ottaa jo aikaisemmin SetCustomColorContourEnvi():ssa
                     // laskettu envi.FrameColor():n arvo
                     itsDrawParam->FrameColor(envi.GetFrameColor());
                 }
@@ -1473,9 +1481,9 @@ void NFmiIsoLineView::DrawCustomColorContourWithImagine(NFmiIsoLineData& theIsoL
 void NFmiIsoLineView::AddLabelsToDrawList(Imagine::NFmiPath &thePath, float theIsoLineValue, const NFmiRect &theRelativeRect, LabelBox &theLabelBox, const NFmiPoint &theOffSet)
 {
     // irroita erilliset isoviivat (moveto kohdalla katkeaa)
-    // irroita myös ghostlinet (skippaa ne)
+    // irroita myï¿½s ghostlinet (skippaa ne)
     // tee NFmiPathData otuksia isoviivoista
-    // laske yhteen stringiä
+    // laske yhteen stringiï¿½
 
     list<NFmiPathData*> pathDataList;
     NFmiPathData *partialPathData = new NFmiPathData;
@@ -1510,14 +1518,14 @@ void NFmiIsoLineView::AddLabelsToDrawList(Imagine::NFmiPath &thePath, float theI
         {
             NFmiPathElement tmpElement(lastElement);
             tmpElement.Oper(kFmiMoveTo);
-            partialPathData->push_back(tmpElement); // viimeisin ghostline pitää muuttaa movetoksi
+            partialPathData->push_back(tmpElement); // viimeisin ghostline pitï¿½ï¿½ muuttaa movetoksi
             partialPathData->push_back(currentElement);
         }
         else if(currentElement.Oper() == kFmiLineTo)
             partialPathData->push_back(currentElement);
         lastElement = currentElement;
     }
-    // lopuksi pitää vielä laittaa loput
+    // lopuksi pitï¿½ï¿½ vielï¿½ laittaa loput
     if(partialPathData->size() > 0)
         pathDataList.push_back(partialPathData);
     else
@@ -1525,14 +1533,14 @@ void NFmiIsoLineView::AddLabelsToDrawList(Imagine::NFmiPath &thePath, float theI
     MakePossiblePathCombinations(pathDataList);
     AddLabelsToDrawList(pathDataList, theIsoLineValue, theRelativeRect, theLabelBox, theOffSet);
 
-    // pitää tuhota dynaaminen data
+    // pitï¿½ï¿½ tuhota dynaaminen data
     std::for_each(pathDataList.begin(), pathDataList.end(), PointerDestroyer());
     pathDataList.clear();
 }
 
 void NFmiIsoLineView::AddLabelsToDrawList(list<Imagine::NFmiPathData*> &thePathDataList, float theIsoLineValue, const NFmiRect &theRelativeRect, LabelBox &theLabelBox, const NFmiPoint &theOffSet)
 {
-    NFmiRect usedRelativeRect(theRelativeRect); // täytyy feikata eli tehdä offset muutos tähän relative rectiin, muuten ei saada labeleita laatikon sisään
+    NFmiRect usedRelativeRect(theRelativeRect); // tï¿½ytyy feikata eli tehdï¿½ offset muutos tï¿½hï¿½n relative rectiin, muuten ei saada labeleita laatikon sisï¿½ï¿½n
     NFmiPoint usedCenter = usedRelativeRect.Center() - theOffSet;
     usedRelativeRect.Center(usedCenter);
     list<NFmiPathData*>::iterator iter = thePathDataList.begin();
@@ -1554,7 +1562,7 @@ void NFmiIsoLineView::AddLabelToSingleIsoLine(const NFmiPathData &thePath, float
 //EL: ----->
 bool NFmiIsoLineView::MoveLabelBoxToBestPossiblePlace(const NFmiPathData &thePath, const NFmiRect &theRelativeRect, LabelBox &theLabelBox)
 {
-    // Määrittää label-laatikolle "parhaan" sijainnin, sijainti annetaan Center()-metodilla.
+    // Mï¿½ï¿½rittï¿½ï¿½ label-laatikolle "parhaan" sijainnin, sijainti annetaan Center()-metodilla.
 
     if(thePath.size() >= 2)
     {
@@ -1562,15 +1570,15 @@ bool NFmiIsoLineView::MoveLabelBoxToBestPossiblePlace(const NFmiPathData &thePat
         float y = static_cast<float>(thePath[1].Y());
 
         NFmiPoint centerPoint(x, y);
-        NFmiPoint sparePoint(centerPoint); // tämä otetaan käyttöön jos muuta paikkaa ei löydy
+        NFmiPoint sparePoint(centerPoint); // tï¿½mï¿½ otetaan kï¿½yttï¿½ï¿½n jos muuta paikkaa ei lï¿½ydy
         bool sparePointUpdated = false;
         int sizeElements = static_cast<int>(thePath.size());
 
-        // Aloitetaan indeksien läpikäynti "keskeltä" path dataa kohti 'traverseDirection' määräämää suuntaa -JA- sen jälkeen vastakkaiseen suuntaan
-        // ==> labelien sijainti jakaantuu tasaisemmin ==> vähemmän "labelruuhkaa" ==> labelien paikan etsintä nopeutuu kolme nanosekuntia ...
+        // Aloitetaan indeksien lï¿½pikï¿½ynti "keskeltï¿½" path dataa kohti 'traverseDirection' mï¿½ï¿½rï¿½ï¿½mï¿½ï¿½ suuntaa -JA- sen jï¿½lkeen vastakkaiseen suuntaan
+        // ==> labelien sijainti jakaantuu tasaisemmin ==> vï¿½hemmï¿½n "labelruuhkaa" ==> labelien paikan etsintï¿½ nopeutuu kolme nanosekuntia ...
         //
-        // traverseDirection -1 ==> keskeltä kohti alkupäätä eli kokonaislukuväli  [0, sizeElements/2],
-        // traverseDirection  1 ==> keskeltä kohti loppupäätä eli kokonaislukuväli [sizeElements/2 + 1, sizeElements[
+        // traverseDirection -1 ==> keskeltï¿½ kohti alkupï¿½ï¿½tï¿½ eli kokonaislukuvï¿½li  [0, sizeElements/2],
+        // traverseDirection  1 ==> keskeltï¿½ kohti loppupï¿½ï¿½tï¿½ eli kokonaislukuvï¿½li [sizeElements/2 + 1, sizeElements[
 
         int beginIndex = 0;
         int endIndex = 0;
@@ -1602,12 +1610,12 @@ bool NFmiIsoLineView::MoveLabelBoxToBestPossiblePlace(const NFmiPathData &thePat
                 if(theRelativeRect.IsInside(theLabelBox.LabelBoxRect()))
                 {
                     if(LabelDontOvelapWithOthers(theLabelBox))
-                    { // löytyi hyvä paikka, otetaan se talteen ja lopetetaan
+                    { // lï¿½ytyi hyvï¿½ paikka, otetaan se talteen ja lopetetaan
                         StoreLabel(theLabelBox);
                         return true;
                     }
                     else if(!sparePointUpdated)
-                    { // otetaan talteen yksi paikka, missä label olisi ainakin relatiivisen alueen sisällä, vaikka muuten olisi overlappia
+                    { // otetaan talteen yksi paikka, missï¿½ label olisi ainakin relatiivisen alueen sisï¿½llï¿½, vaikka muuten olisi overlappia
                         sparePointUpdated = true;
                         sparePoint = theLabelBox.Center();
                     }
@@ -1617,7 +1625,7 @@ bool NFmiIsoLineView::MoveLabelBoxToBestPossiblePlace(const NFmiPathData &thePat
 
         if(!(theLabelBox.Strategy() == 2))
         {
-            theLabelBox.Center(sparePoint); // jos ei löytynyt 'täydellistä' paikaa, käytetään se varapaikka
+            theLabelBox.Center(sparePoint); // jos ei lï¿½ytynyt 'tï¿½ydellistï¿½' paikaa, kï¿½ytetï¿½ï¿½n se varapaikka
             StoreLabel(theLabelBox);
             return true;
         }
@@ -1664,7 +1672,7 @@ void NFmiIsoLineView::DrawAllLabels(const NFmiPoint &theOffSet)
     env.DisableFrame();
     env.BoldFont(true);
 
-    env.SetFontType(kNoneFont); // tämä asettaa default fontin päälle, joka mielestäni näyttää hyvältä
+    env.SetFontType(kNoneFont); // tï¿½mï¿½ asettaa default fontin pï¿½ï¿½lle, joka mielestï¿½ni nï¿½yttï¿½ï¿½ hyvï¿½ltï¿½
     NFmiPoint oldFontSize = env.GetFontSize();
 
     FmiDirection oldTextAlignment = itsToolBox->GetTextAlignment();
@@ -1674,7 +1682,7 @@ void NFmiIsoLineView::DrawAllLabels(const NFmiPoint &theOffSet)
     if(itsDrawParam->UseSingleColorsWithSimpleIsoLines())
     {
         // Kaikilla labeleilla on samat color-attribuutit
-        // ==> voidaan käyttää esim. ensimmäisen labelin (i=0) attribuutteja
+        // ==> voidaan kï¿½yttï¿½ï¿½ esim. ensimmï¿½isen labelin (i=0) attribuutteja
 
         env.SetFrameColor(itsExistingLabels[0].BoxStrokeColor());
         env.SetFillColor(itsExistingLabels[0].BoxFillColor());
@@ -1691,11 +1699,11 @@ void NFmiIsoLineView::DrawAllLabels(const NFmiPoint &theOffSet)
                 itsToolBox->Convert(&aRect);
             }
 
-            // Labeltekstin väri
+            // Labeltekstin vï¿½ri
             env.SetFrameColor(itsExistingLabels[0].FontColor());
 
             int textHeight = static_cast<int>(itsExistingLabels[i].CalcHeightInPixels());
-            // Labeltekstin pituus pikseleissä
+            // Labeltekstin pituus pikseleissï¿½
             int textWidth = static_cast<int>(itsExistingLabels[i].CalcWidthInPixels());
 
             NFmiPoint newFontSize(textWidth, textHeight);
@@ -1704,7 +1712,7 @@ void NFmiIsoLineView::DrawAllLabels(const NFmiPoint &theOffSet)
             NFmiPoint textLocation(itsExistingLabels[i].LabelBoxRect().Left() + itsExistingLabels[i].LabelBoxRect().Width() / 30.,
                 itsExistingLabels[i].LabelBoxRect().Top() - itsExistingLabels[i].LabelBoxRect().Height() / 7.5);
             textLocation += theOffSet;
-            if(itsExistingLabels[i].LabelString().size() == 1) // yhden kokoinen teksti pitää kohdistaa erikseen laatikon keskelle
+            if(itsExistingLabels[i].LabelString().size() == 1) // yhden kokoinen teksti pitï¿½ï¿½ kohdistaa erikseen laatikon keskelle
                 textLocation.X(textLocation.X() + itsExistingLabels[i].LabelBoxRect().Width() / 5.);
 
             NFmiText aText(textLocation, itsExistingLabels[i].LabelString(), false, 0, &env);
@@ -1728,11 +1736,11 @@ void NFmiIsoLineView::DrawAllLabels(const NFmiPoint &theOffSet)
             }
 
 
-            // Labeltekstin väri
+            // Labeltekstin vï¿½ri
             env.SetFrameColor(itsExistingLabels[i].FontColor());
 
             int textHeight = static_cast<int>(itsExistingLabels[i].CalcHeightInPixels());
-            // Labeltekstin pituus pikseleissä
+            // Labeltekstin pituus pikseleissï¿½
             int textWidth = static_cast<int>(itsExistingLabels[i].CalcWidthInPixels());
 
             NFmiPoint newFontSize(textWidth, textHeight);
@@ -1741,7 +1749,7 @@ void NFmiIsoLineView::DrawAllLabels(const NFmiPoint &theOffSet)
             NFmiPoint textLocation(itsExistingLabels[i].LabelBoxRect().Left() + itsExistingLabels[i].LabelBoxRect().Width() / 30.,
                 itsExistingLabels[i].LabelBoxRect().Top() - itsExistingLabels[i].LabelBoxRect().Height() / 7.5);
             textLocation += theOffSet;
-            if(itsExistingLabels[i].LabelString().size() == 1) // yhden kokoinen teksti pitää kohdistaa erikseen laatikon keskelle
+            if(itsExistingLabels[i].LabelString().size() == 1) // yhden kokoinen teksti pitï¿½ï¿½ kohdistaa erikseen laatikon keskelle
                 textLocation.X(textLocation.X() + itsExistingLabels[i].LabelBoxRect().Width() / 5.);
 
             NFmiText aText(textLocation, itsExistingLabels[i].LabelString(), false, 0, &env);
@@ -1772,7 +1780,7 @@ static void MakePossiblePathCombinations(list<NFmiPathData*> &thePathDataList)
     list<NFmiPathData*>::iterator iter = thePathDataList.begin();
     list<NFmiPathData*>::iterator endIter = thePathDataList.end();
 
-    //EL: i ja j -luupperit ovat sinänsä turhia mutta kun en osaa vertailla iteraattoreita ...
+    //EL: i ja j -luupperit ovat sinï¿½nsï¿½ turhia mutta kun en osaa vertailla iteraattoreita ...
     for(long i = 0; iter != endIter; ++iter, i++)
     {
         NFmiPathData &p1 = *(*iter);
@@ -1797,15 +1805,15 @@ static void MakePossiblePathCombinations(list<NFmiPathData*> &thePathDataList)
             }
             else
                 ++iter2;
-            //else ei osaa vielä verrata pelkkästään alkuja tai loppuja  koska se vaatii vielä polun kääntöä
+            //else ei osaa vielï¿½ verrata pelkkï¿½stï¿½ï¿½n alkuja tai loppuja  koska se vaatii vielï¿½ polun kï¿½ï¿½ntï¿½ï¿½
         }
     }
 }
 
 static void CombinePaths(NFmiPathData &first, NFmiPathData &second)
-{ // yhdistää siten, että 1. perään laitetaan 2. datat
+{ // yhdistï¿½ï¿½ siten, ettï¿½ 1. perï¿½ï¿½n laitetaan 2. datat
     int size2 = static_cast<int>(second.size());
-    for(int i = 1; i < size2; i++) // jätetään 1. elementi pois (moveto)
+    for(int i = 1; i < size2; i++) // jï¿½tetï¿½ï¿½n 1. elementi pois (moveto)
         first.push_back(second[i]);
 }
 
@@ -1831,29 +1839,29 @@ void NFmiIsoLineView::DrawIsoLines(void)
     dataUtilitiesAdapter->initializeDrawingData(*itsInfo, *itsArea);
     if(IsIsoLinesDrawnWithImagine())
     {
-        //#ifdef NDEBUG // ei piirretä isoviivoja kuin release moodissa, koska degug-moodissa piirto on niin pirun hidasta
+        //#ifdef NDEBUG // ei piirretï¿½ isoviivoja kuin release moodissa, koska degug-moodissa piirto on niin pirun hidasta
         DrawIsoLinesWithImagine();
-        //#endif // NDEBUG // ei piirretä isoviivoja kuin release moodissa, koska degug-moodissa piirto on niin pirun hidasta
+        //#endif // NDEBUG // ei piirretï¿½ isoviivoja kuin release moodissa, koska degug-moodissa piirto on niin pirun hidasta
     }
     else
         DrawIsoLinesWithToolMaster();
 }
 
-// piirretäänkö toolmasterilla vai imaginella. Piirretään toolmasterilla toistaiseksi
-// nopeuden ja näön takia jos voi.
-// Eli palauta false = piirrä toolmasterilla jos se on käytössä ja
-// jos projektio luokat ovat samoja ja jos kyseessä oli stereographic areat, niiden
-// orientaatiot pitää olla samat.
+// piirretï¿½ï¿½nkï¿½ toolmasterilla vai imaginella. Piirretï¿½ï¿½n toolmasterilla toistaiseksi
+// nopeuden ja nï¿½ï¿½n takia jos voi.
+// Eli palauta false = piirrï¿½ toolmasterilla jos se on kï¿½ytï¿½ssï¿½ ja
+// jos projektio luokat ovat samoja ja jos kyseessï¿½ oli stereographic areat, niiden
+// orientaatiot pitï¿½ï¿½ olla samat.
 bool NFmiIsoLineView::IsIsoLinesDrawnWithImagine(void)
 {
     if(!IsToolMasterAvailable())
         return true;
 
     if(itsInfo->IsGrid() == false)
-        return false; // jos asema-data piirretään hilamoodissa, ei käytetä imaginea, koska silloin piirretään aina 'oikeaan' hilaan.
+        return false; // jos asema-data piirretï¿½ï¿½n hilamoodissa, ei kï¿½ytetï¿½ imaginea, koska silloin piirretï¿½ï¿½n aina 'oikeaan' hilaan.
 
     if(IsQ2ServerUsed() && fGetCurrentDataFromQ2Server)
-        return false;  // q2-data haetaan aina suoraan ruudulle, joten toolmasteria käytetään
+        return false;  // q2-data haetaan aina suoraan ruudulle, joten toolmasteria kï¿½ytetï¿½ï¿½n
 
     if(dataUtilitiesAdapter->isModifiedDataDrawingPossible())
         return false;
@@ -1888,15 +1896,15 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
     return fillGridDataStatus;
 }
 
-// FillGridRelatedData metodin paloittelu osiin, tapaus jossa käsitellään loput normi tapaukset.
-// Tämän ei tarvitse palauttaa tietoa että käsittelikö tämä asiat, koska tämä aina käsittelee loput tapaukset, mitä ei edellä saatu käsiteltyä.
+// FillGridRelatedData metodin paloittelu osiin, tapaus jossa kï¿½sitellï¿½ï¿½n loput normi tapaukset.
+// Tï¿½mï¿½n ei tarvitse palauttaa tietoa ettï¿½ kï¿½sittelikï¿½ tï¿½mï¿½ asiat, koska tï¿½mï¿½ aina kï¿½sittelee loput tapaukset, mitï¿½ ei edellï¿½ saatu kï¿½siteltyï¿½.
 void NFmiIsoLineView::FillGridRelatedData_NormalDataCase(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, bool& fillGridDataStatus)
 {
     isoLineData.itsInfo = itsInfo;
     isoLineData.itsParam = itsInfo->Param();
     isoLineData.itsTime = this->itsTime;
 
-    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // käydään kaikki pisteet läpi
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // kï¿½ydï¿½ï¿½n kaikki pisteet lï¿½pi
     fillGridDataStatus = FillIsoLineDataWithGridData(isoLineData, 0, 0, 0, 0);
     if(IsQ2ServerUsed() && fGetCurrentDataFromQ2Server) // q2server tapauksessa haetaan vain ruudun alueelle dataa, joten poikkeaa normaali piirrosta
         zoomedAreaRect = itsInfo->Area()->XYArea();
@@ -1905,7 +1913,7 @@ void NFmiIsoLineView::FillGridRelatedData_NormalDataCase(NFmiIsoLineData& isoLin
         auto mapArea = GetArea();
         auto origDataArea = itsInfo->Area();
         if(DifferentWorldViews(origDataArea, mapArea.get()))
-        { // tehdään dataArea, joka on karttapohjan maailmassa
+        { // tehdï¿½ï¿½n dataArea, joka on karttapohjan maailmassa
             boost::shared_ptr<NFmiArea> origDataAreaClone(origDataArea->Clone());
             NFmiPoint blLatlon = origDataAreaClone->BottomLeftLatLon();
             NFmiPoint trLatlon = origDataAreaClone->TopRightLatLon();
@@ -1930,10 +1938,10 @@ void NFmiIsoLineView::FillGridRelatedData_NormalDataCase(NFmiIsoLineData& isoLin
     }
 }
 
-// FillGridRelatedData metodin paloittelu osiin, tapaus jossa on käytössä Visualization optimization systeemi.
-// Tällöin lasketaan dataan ja kartta-alueeseen sopiva harvennettu hila ja data täytetään siihen.
-// Palauttaa bool arvon: käsittelikö tämä funktio kyseisen datan tapauksen, eikä tarvitse tehdä enää muuta.
-// Huom! On jo tarkastettu, näkyykö data kartta-alueella, joten sitä ei tavitse tarkastella enää.
+// FillGridRelatedData metodin paloittelu osiin, tapaus jossa on kï¿½ytï¿½ssï¿½ Visualization optimization systeemi.
+// Tï¿½llï¿½in lasketaan dataan ja kartta-alueeseen sopiva harvennettu hila ja data tï¿½ytetï¿½ï¿½n siihen.
+// Palauttaa bool arvon: kï¿½sittelikï¿½ tï¿½mï¿½ funktio kyseisen datan tapauksen, eikï¿½ tarvitse tehdï¿½ enï¿½ï¿½ muuta.
+// Huom! On jo tarkastettu, nï¿½kyykï¿½ data kartta-alueella, joten sitï¿½ ei tavitse tarkastella enï¿½ï¿½.
 bool NFmiIsoLineView::FillGridRelatedData_VisualizationOptimizationChecks(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, bool& fillGridDataStatus)
 {
     auto& visSettings = GetVisualizationSettings();
@@ -1951,7 +1959,7 @@ bool NFmiIsoLineView::FillGridRelatedData_VisualizationOptimizationChecks(NFmiIs
 
 // FillGridRelatedData metodin paloittelu osiin, tapaus jossa datan karttaprojektio sopii yhteen pohjakartan projektioon ja dataa 
 // voidaan hakea croppaamalla pienempi pala visualisointeja varten.
-// Palauttaa bool arvon: käsittelikö tämä funktio kyseisen datan tapauksen, eikä tarvitse tehdä enää muuta.
+// Palauttaa bool arvon: kï¿½sittelikï¿½ tï¿½mï¿½ funktio kyseisen datan tapauksen, eikï¿½ tarvitse tehdï¿½ enï¿½ï¿½ muuta.
 bool NFmiIsoLineView::FillGridRelatedData_ZoomingChecks(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, bool& fillGridDataStatus)
 {
     fillGridDataStatus = false;
@@ -1967,7 +1975,7 @@ bool NFmiIsoLineView::FillGridRelatedData_ZoomingChecks(NFmiIsoLineData& isoLine
         isoLineData.itsTime = this->itsTime;
         isoLineData.fUseOriginalDataInPixelToGridRatioCalculations = true;
 
-        EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // käydään kaikki pisteet läpi
+        EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // kï¿½ydï¿½ï¿½n kaikki pisteet lï¿½pi
         fillGridDataStatus = FillIsoLineDataWithGridData(isoLineData, x1, y1, x2, y2);
         return true;
     }
@@ -1975,8 +1983,8 @@ bool NFmiIsoLineView::FillGridRelatedData_ZoomingChecks(NFmiIsoLineData& isoLine
 }
 
 // FillGridRelatedData metodin paloittelu osiin, tapaus jossa datan karttaporjektio ei sovi pohjakartan projektioon ja dataa 
-// pitää interpoloida suorakulmaiseen hilaan, mutta ilman harvennusoptimointi juttuja.
-// Palauttaa bool arvon: käsittelikö tämä funktio kyseisen datan tapauksen, eikä tarvitse tehdä enää muuta.
+// pitï¿½ï¿½ interpoloida suorakulmaiseen hilaan, mutta ilman harvennusoptimointi juttuja.
+// Palauttaa bool arvon: kï¿½sittelikï¿½ tï¿½mï¿½ funktio kyseisen datan tapauksen, eikï¿½ tarvitse tehdï¿½ enï¿½ï¿½ muuta.
 bool NFmiIsoLineView::FillGridRelatedData_BetterVisualizationChecks(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, bool& fillGridDataStatus)
 {
     fillGridDataStatus = false;
@@ -1986,8 +1994,8 @@ bool NFmiIsoLineView::FillGridRelatedData_BetterVisualizationChecks(NFmiIsoLineD
         {
             isoLineData.itsInfo = itsInfo;
             isoLineData.itsParam = itsInfo->Param();
-            isoLineData.itsTime = this->itsTime; // Tähän pistetään kartalla oleva aika
-            // Mutta pitää varmistaa että data interpoloidaan oikealta ajalta myös klimatologisilta datoilta (kuten Era-5, tms.)
+            isoLineData.itsTime = this->itsTime; // Tï¿½hï¿½n pistetï¿½ï¿½n kartalla oleva aika
+            // Mutta pitï¿½ï¿½ varmistaa ettï¿½ data interpoloidaan oikealta ajalta myï¿½s klimatologisilta datoilta (kuten Era-5, tms.)
             auto usedInterpolationTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(itsInfo, itsTime);
             auto paramId = itsDrawParam->Param().GetParamIdent();
             if(metaWindParamUsage.ParamNeedsMetaCalculations(paramId))
@@ -2012,10 +2020,10 @@ bool NFmiIsoLineView::FillGridRelatedData_IsDataVisible()
 {
     if(itsInfo->IsGrid())
     {
-        // huom. q2serverilta data voi olla minne tahansa, joten sen käyttö on poikkeus
+        // huom. q2serverilta data voi olla minne tahansa, joten sen kï¿½yttï¿½ on poikkeus
         boost::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
         if(IsQ2ServerUsed() == false && IsDataInView(infoArea, GetArea()) == false)
-            return false; // ei tarvitse piirtää ollenkaan, koska data ei osu näytön alueelle ollenkaan.
+            return false; // ei tarvitse piirtï¿½ï¿½ ollenkaan, koska data ei osu nï¿½ytï¿½n alueelle ollenkaan.
     }
     return true;
 }
@@ -2068,9 +2076,9 @@ static void CalcDownSizedMatrix(const NFmiDataMatrix<float>& theOrigData, NFmiDa
         {
             NFmiPoint pt(i * xDiff, j * yDiff);
             if(pt.X() > 1.)
-                pt.X(1.); // tämä on varmistus, jos laskenta tarkkuus ongelmat vie rajan yli
+                pt.X(1.); // tï¿½mï¿½ on varmistus, jos laskenta tarkkuus ongelmat vie rajan yli
             if(pt.Y() > 1.)
-                pt.Y(1.); // tämä on varmistus, jos laskenta tarkkuus ongelmat vie rajan yli
+                pt.Y(1.); // tï¿½mï¿½ on varmistus, jos laskenta tarkkuus ongelmat vie rajan yli
             theDownSizedData[i][j] = theOrigData.InterpolatedValue(pt, paramId, dontInvertY, interpolationMethod);
         }
     }
@@ -2080,7 +2088,7 @@ static void BuildDownSizedData(NFmiIsoLineData& theOrigIsoLineData, NFmiIsoLineD
 {
     int newSizeX = boost::math::iround(theOrigIsoLineData.itsXNumber / theDownSizeFactor.X());
     int newSizeY = boost::math::iround(theOrigIsoLineData.itsYNumber / theDownSizeFactor.Y());
-    // Täytetään uuden isolineDatan hila-arvot halutuille osaalueilleen.
+    // Tï¿½ytetï¿½ï¿½n uuden isolineDatan hila-arvot halutuille osaalueilleen.
     NFmiDataMatrix<float> downSizedGridData(newSizeX, newSizeY, kFloatMissing);
     ::CalcDownSizedMatrix(theOrigIsoLineData.itsIsolineData, downSizedGridData, *theOrigIsoLineData.itsParam.GetParam());
 
@@ -2100,9 +2108,9 @@ void NFmiIsoLineView::DoPossibleIsolineSafetyFeatureDownSizing(NFmiIsoLineData* 
 {
     NFmiPoint pixelToGridRatio = CalcPixelToGridRatio(*theIsoLineDataInOut, zoomedAreaRect);
     NFmiPoint downSizeFactor;
-    // Toolmaster piirto bugi ilmenee kun hila vs. pikseli suhde on n. 1 tai alle. Kierrän siten ongelman niin että kun tämä
-    // ratio on tarpeeksi pieni, lasken uuden hila koon, niin että sen suhdeluku on minimissään 1.3 ja interpoloin tälläiseen
-    // uuteen hilaan datan. Tämän jälkeen piirto onnistuu ilman ongelmia, eikä asiakas huomaa juuri mitään.
+    // Toolmaster piirto bugi ilmenee kun hila vs. pikseli suhde on n. 1 tai alle. Kierrï¿½n siten ongelman niin ettï¿½ kun tï¿½mï¿½
+    // ratio on tarpeeksi pieni, lasken uuden hila koon, niin ettï¿½ sen suhdeluku on minimissï¿½ï¿½n 1.3 ja interpoloin tï¿½llï¿½iseen
+    // uuteen hilaan datan. Tï¿½mï¿½n jï¿½lkeen piirto onnistuu ilman ongelmia, eikï¿½ asiakas huomaa juuri mitï¿½ï¿½n.
     bool doDownSize = IsolineDataDownSizingNeeded(*theIsoLineDataInOut, pixelToGridRatio, downSizeFactor, itsDrawParam);
     if(doDownSize)
     {
@@ -2124,12 +2132,12 @@ void NFmiIsoLineView::DoPossibleIsolineSafetyFeatureDownSizing(NFmiIsoLineData* 
         logMessage += ::MakeIsoLineDataGridSizeString(&downSizedIsoLineData);
         itsCtrlViewDocumentInterface->LogAndWarnUser(logMessage, "dummy dialog title", CatLog::Severity::Debug, CatLog::Category::Visualization, true);
         
-        // Korvataan havennetulla datalla piirrettävä data
+        // Korvataan havennetulla datalla piirrettï¿½vï¿½ data
         *theIsoLineDataInOut = downSizedIsoLineData;
         if(NFmiQueryDataUtil::AreAreasSameKind(itsArea.get(), theIsoLineDataInOut->itsInfo->Area()))
         {
-            // Jos datan ja karttapohjan projektiot ovat samantyyppisiä, pitää itsOptimizedGridPtr päivittää
-            // mahdollista hilapistepiirtoa varten datan näkyvällä alueella.
+            // Jos datan ja karttapohjan projektiot ovat samantyyppisiï¿½, pitï¿½ï¿½ itsOptimizedGridPtr pï¿½ivittï¿½ï¿½
+            // mahdollista hilapistepiirtoa varten datan nï¿½kyvï¿½llï¿½ alueella.
             auto visibleDataArea = itsArea->XYArea().Intersection(itsArea->XYArea(theIsoLineDataInOut->itsInfo->Area()));
             UpdateOptimizedGridValues(visibleDataArea, downSizedIsoLineData.itsXNumber, downSizedIsoLineData.itsYNumber);
         }
@@ -2160,7 +2168,7 @@ bool NFmiIsoLineView::FillIsoLineDataWithGridData(NFmiIsoLineData& theIsoLineDat
 
 bool NFmiIsoLineView::initializeIsoLineData(NFmiIsoLineData &theIsoLineData)
 {
-    // itsInfo on saattanut muuttua esim. macroParam tapauksessa, missä käytetty RESOLUTION = xxx asetuksia
+    // itsInfo on saattanut muuttua esim. macroParam tapauksessa, missï¿½ kï¿½ytetty RESOLUTION = xxx asetuksia
     theIsoLineData.itsInfo = itsInfo;
 
     return theIsoLineData.InitIsoLineData(itsIsolineValues);

@@ -22,7 +22,9 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "shlobj.h"
 #include "objbase.h"
 #include "CShellFileOp.h"

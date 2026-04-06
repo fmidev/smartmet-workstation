@@ -32,7 +32,9 @@
 //
 /////////////////////////////////////////////////////////////////////////////
  
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "gridctrl.h"
 
 #ifndef GRIDCONTROL_NO_TITLETIPS

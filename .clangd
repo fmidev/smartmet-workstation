@@ -9,7 +9,7 @@ CompileFlags:
     - -DDISABLE_EXTREME_TOOLKITPRO
     - -DDISABLE_CPPRESTSDK
     - -std=c++17
-    # Module headers
+    # Module headers (newbase, smarttools, etc.)
     - -I./modules/newbase/newbase
     - -I./modules/newbase
     - -I./modules/smarttools/smarttools
@@ -51,12 +51,11 @@ CompileFlags:
     - -I./libs/fmi/bizcode/json_spirit/include
     - -I./libs/fmi/bizcode/q2clientlib/include
     - -I./libs/fmi/bizcode/stlhelp/include
-    - -I./libs/fmi/bizcode/ctrlviewutils/include
     - -I./libs/fmi/catlog
     - -I./libs/fmi/multiprocesstools/include
     - -I./libs/fmi/datautilities/include
     - -I./libs/fmi/xmlliteutils
-    # trax/giza/imagine2/gis (Linux replacements for ToolMaster/GDI)
+    # trax/giza/imagine2/gis (Linux replacements for ToolMaster/GDI+)
     - -I/home/mheiskan/hub/trax
     - -I/home/mheiskan/hub/giza
     - -I/home/mheiskan/hub/imagine2
@@ -65,6 +64,5 @@ CompileFlags:
     - -I./src/applicationdatabase
     - -I./src/processes
     - -I./src/threads
-    # System Boost
-    - -I/usr/include/boost
+    # System Boost (headers live at /usr/include/boost/*)
     - -I/usr/include

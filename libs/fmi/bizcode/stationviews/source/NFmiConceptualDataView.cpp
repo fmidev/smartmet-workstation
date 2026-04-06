@@ -1,10 +1,10 @@
-//© Ilmatieteenlaitos/Marko Pietarinen
+//ï¿½ Ilmatieteenlaitos/Marko Pietarinen
 //  Original 19.02.2008
 //
 //
 //-------------------------------------------------------------------- NFmiConceptualDataView.cpp
 #ifdef _MSC_VER
-#pragma warning(disable : 4786) // poistaa n kpl VC++ kääntäjän varoitusta (liian pitkä nimi >255 merkkiä joka johtuu 'puretuista' STL-template nimistä)
+#pragma warning(disable : 4786) // poistaa n kpl VC++ kï¿½ï¿½ntï¿½jï¿½n varoitusta (liian pitkï¿½ nimi >255 merkkiï¿½ joka johtuu 'puretuista' STL-template nimistï¿½)
 #endif
 
 #include "NFmiConceptualDataView.h"
@@ -29,12 +29,16 @@
 #include "catlog/catlog.h"
 #include "MathHelper.h"
 
+#ifndef UNIX
 #include <gdiplus.h>
+#endif // UNIX
 #include <list>
 #include "boost\algorithm\string\predicate.hpp"
 
 using namespace std;
+#ifndef UNIX
 using namespace Gdiplus;
+#endif // UNIX
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -42,7 +46,7 @@ using namespace Gdiplus;
 static char THIS_FILE[] = __FILE__;
 #endif
 
-const std::string g_RangeSplitterString = "..."; // tämä on erotin kun piirretään temperature rangea
+const std::string g_RangeSplitterString = "..."; // tï¿½mï¿½ on erotin kun piirretï¿½ï¿½n temperature rangea
 
 ConceptualObjectData::ConceptualObjectData(void)
 :itsPartTypeStr()
@@ -87,15 +91,15 @@ void ConceptualObjectData::Clear(void)
 void ConceptualObjectData::InitializeFromPartNode(LPXNode theNode)
 {
 	itsPartTypeStr = XmlHelper::AttributeValue(theNode, "type"); // conceptual tai symbol
-	itsFrontNameStr = XmlHelper::ChildNodeValue(theNode, "frontName"); // eri rintamat ja PLAIN on alue ja symbolilla ei ole mitään
+	itsFrontNameStr = XmlHelper::ChildNodeValue(theNode, "frontName"); // eri rintamat ja PLAIN on alue ja symbolilla ei ole mitï¿½ï¿½n
 	itsValidTimeStr = XmlHelper::ChildNodeValue(theNode, "validTime");
 	itsInfoTextStr = XmlHelper::ChildNodeValue(theNode, "infoText");
 	itsGmlPosListStr = XmlHelper::ChildNodeValue(theNode, "gml:posList"); // olion koordinaatit lon-lat pareina
 	itsOrientationStr = XmlHelper::ChildNodeValue(theNode, "orientation"); // 1 / 2 (left/right?)
 	itsAppearanceStr = XmlHelper::ChildNodeValue(theNode, "appearance"); // viivan paksuus ja R G B
 	itsRainphaseStr = XmlHelper::ChildNodeValue(theNode, "rainphase"); // alueen sadetyyppi esim snow/sleet jne.
-	itsFontNameStr = XmlHelper::ChildNodeValue(theNode, "fontName"); // symbolissa käytetyn fontin nimi
-	itsFontColorStr = XmlHelper::ChildNodeValue(theNode, "fontColor"); // symbolin väri R G B
+	itsFontNameStr = XmlHelper::ChildNodeValue(theNode, "fontName"); // symbolissa kï¿½ytetyn fontin nimi
+	itsFontColorStr = XmlHelper::ChildNodeValue(theNode, "fontColor"); // symbolin vï¿½ri R G B
 	itsFontScaleFactorStr = XmlHelper::ChildNodeValue(theNode, "scaleFactor"); // suhteellinen fontin koko skaalaus luku
 	itsSymbolCodeStr = XmlHelper::ChildNodeValue(theNode, "symbolCode"); // symbolin koodi annetussa fontissa
 	itsGmlPosStr = XmlHelper::ChildNodeValue(theNode, "gml:pos"); // lat-lon positio
@@ -106,7 +110,7 @@ void ConceptualObjectData::InitializeFromPartNode(LPXNode theNode)
 static std::string GetWomlMemberNameOrType(LPXNode theNode)
 {
 	static const std::string searchStr1 = "womlswo:"; // joillekin otuksille (mm. rintamat, symbolit, sadealueet, jetit, solat)
-	static const std::string searchStr2 = "womlqty:"; // joillekin taas tämä (ainakin parametri-'laatikot' esim. lämpötila ja lämpötila väli) 
+	static const std::string searchStr2 = "womlqty:"; // joillekin taas tï¿½mï¿½ (ainakin parametri-'laatikot' esim. lï¿½mpï¿½tila ja lï¿½mpï¿½tila vï¿½li) 
 	
 	if(theNode->childs.size())
 	{
@@ -129,32 +133,32 @@ static std::string GetWomlMemberNameOrType(LPXNode theNode)
 	return "";
 }
 
-// WOML:issa ei näytä olevan oikeastaan kuin pari kolme hyödyllistä tietoa:
-// 1. Otuksen member-section 1. lapsi-noden nimessä on otuksen tyyppi "womlswo:"-kohdan perässä (esim. womlswo:WarmFront).
-// 2. Samaisessa esim. womlswo:WarmFront -kohdassa voi olla attribuuttina orientation="+" (mitä sitten + ja ehkä - tarkoittavatkaan)
+// WOML:issa ei nï¿½ytï¿½ olevan oikeastaan kuin pari kolme hyï¿½dyllistï¿½ tietoa:
+// 1. Otuksen member-section 1. lapsi-noden nimessï¿½ on otuksen tyyppi "womlswo:"-kohdan perï¿½ssï¿½ (esim. womlswo:WarmFront).
+// 2. Samaisessa esim. womlswo:WarmFront -kohdassa voi olla attribuuttina orientation="+" (mitï¿½ sitten + ja ehkï¿½ - tarkoittavatkaan)
 // 3. gml:posList-nodessa on lon-lat parit
 void ConceptualObjectData::InitializeFromWomlNode(LPXNode theNode)
 {
 /*
 	itsPartTypeStr = ConceptualObjectData::AttributeValue(theNode, "type"); // conceptual tai symbol
-	itsFrontNameStr = ConceptualObjectData::ChildNodeValue(theNode, "frontName"); // eri rintamat ja PLAIN on alue ja symbolilla ei ole mitään
+	itsFrontNameStr = ConceptualObjectData::ChildNodeValue(theNode, "frontName"); // eri rintamat ja PLAIN on alue ja symbolilla ei ole mitï¿½ï¿½n
 	itsValidTimeStr = ConceptualObjectData::ChildNodeValue(theNode, "validTime");
 	itsInfoTextStr = ConceptualObjectData::ChildNodeValue(theNode, "infoText");
 	itsGmlPosListStr = ConceptualObjectData::ChildNodeValue(theNode, "gml:posList"); // olion koordinaatit lon-lat pareina
 	itsOrientationStr = ConceptualObjectData::ChildNodeValue(theNode, "orientation"); // 1 / 2 (left/right?)
 	itsAppearanceStr = ConceptualObjectData::ChildNodeValue(theNode, "appearance"); // viivan paksuus ja R G B
 	itsRainphaseStr = ConceptualObjectData::ChildNodeValue(theNode, "rainphase"); // alueen sadetyyppi esim snow/sleet jne.
-	itsFontNameStr = ConceptualObjectData::ChildNodeValue(theNode, "fontName"); // symbolissa käytetyn fontin nimi
-	itsFontColorStr = ConceptualObjectData::ChildNodeValue(theNode, "fontColor"); // symbolin väri R G B
+	itsFontNameStr = ConceptualObjectData::ChildNodeValue(theNode, "fontName"); // symbolissa kï¿½ytetyn fontin nimi
+	itsFontColorStr = ConceptualObjectData::ChildNodeValue(theNode, "fontColor"); // symbolin vï¿½ri R G B
 	itsFontScaleFactorStr = ConceptualObjectData::ChildNodeValue(theNode, "scaleFactor"); // suhteellinen fontin koko skaalaus luku
 	itsSymbolCodeStr = ConceptualObjectData::ChildNodeValue(theNode, "symbolCode"); // symbolin koodi annetussa fontissa
 */
 	itsWomlMemberNameStr = ::GetWomlMemberNameOrType(theNode);
 
-    // Rintamille ja vastaaville viivoille halutaan gml:LineString -nodessa oleva gml:posList, eikä ennen niitä olevia bezier poslistoja
+    // Rintamille ja vastaaville viivoille halutaan gml:LineString -nodessa oleva gml:posList, eikï¿½ ennen niitï¿½ olevia bezier poslistoja
 	itsGmlPosListStr = XmlHelper::ChildsChildNodeValue(theNode, "gml:LineString", "gml:posList"); // lat-lon positio
     if(itsGmlPosListStr.empty())
-    { // jos ei löytynyt, koetetaan vielä hakea alueellisiin olioihin liittyvä gml:LinearRing -nodessa oleva gml:posList, eikä ennen niitä olevia bezier poslistoja
+    { // jos ei lï¿½ytynyt, koetetaan vielï¿½ hakea alueellisiin olioihin liittyvï¿½ gml:LinearRing -nodessa oleva gml:posList, eikï¿½ ennen niitï¿½ olevia bezier poslistoja
     	itsGmlPosListStr = XmlHelper::ChildsChildNodeValue(theNode, "gml:LinearRing", "gml:posList"); // lat-lon positio
     }
 	itsGmlPosStr = XmlHelper::ChildNodeValue(theNode, "gml:pos"); // lat-lon positio
@@ -164,18 +168,18 @@ void ConceptualObjectData::InitializeFromWomlNode(LPXNode theNode)
     if(childNode)
     {
         itsOrientationStr = XmlHelper::AttributeValue(childNode, "orientation");
-        itsSymbolCodeStr = XmlHelper::ChildsChildNodeValue(theNode, "womlswo:MeteorologicalSymbol", "womlswo:definitionReference"); // toinen symboli nimike, mikä löytyy kaikista PointMeteorologicalSymbol -otuksista
+        itsSymbolCodeStr = XmlHelper::ChildsChildNodeValue(theNode, "womlswo:MeteorologicalSymbol", "womlswo:definitionReference"); // toinen symboli nimike, mikï¿½ lï¿½ytyy kaikista PointMeteorologicalSymbol -otuksista
     }
 
 	InitDataFromWomlStrings(theNode);
 }
 
-// jouduin lisäämään fLonLatOrder -parametrin koska woml:issa on näemmä vaihdettu lat-lon järjestykseen vanhan lon-lat järjestyksen sijasta.
+// jouduin lisï¿½ï¿½mï¿½ï¿½n fLonLatOrder -parametrin koska woml:issa on nï¿½emmï¿½ vaihdettu lat-lon jï¿½rjestykseen vanhan lon-lat jï¿½rjestyksen sijasta.
 void ConceptualObjectData::InitLatlonValues(bool fLonLatOrder)
 {
-    // Siivotaan itsGmlPosListStr -dataosio, koska Mirwan Woml:iin oli tullut space stringin perään, se johti NFmiStringTools::Split -funktiossa poikkeuksen heittoon.
+    // Siivotaan itsGmlPosListStr -dataosio, koska Mirwan Woml:iin oli tullut space stringin perï¿½ï¿½n, se johti NFmiStringTools::Split -funktiossa poikkeuksen heittoon.
     NFmiStringTools::TrimR(itsGmlPosListStr, ' ');
-	// tähän tulee lon-lat pareja
+	// tï¿½hï¿½n tulee lon-lat pareja
 	vector<double> coordinatesVector = NFmiStringTools::Split<vector<double> >(itsGmlPosListStr, " ");
 	size_t latlonSize = coordinatesVector.size()/2;
 	itsLatlonPoints.clear();
@@ -197,14 +201,14 @@ static NFmiPoint GetLatlonPointFromString(const std::string &theLatlonStr)
 		vector<float> symbolLatlonVec = NFmiStringTools::Split<vector<float> >(theLatlonStr, " ");
 		if(symbolLatlonVec.size() != 2)
 			throw runtime_error("Error in conceptual model data, gml:pos was illegal.");
-		return NFmiPoint(symbolLatlonVec[1], symbolLatlonVec[0]); // WOML:issa on lon-lat järjestys
+		return NFmiPoint(symbolLatlonVec[1], symbolLatlonVec[0]); // WOML:issa on lon-lat jï¿½rjestys
 	}
 }
 
 void ConceptualObjectData::InitDataFromWomlStrings(LPXNode theNode)
 {
 	fConceptualType = true;
-	InitLatlonValues(false); // lat-lon järjestys
+	InitLatlonValues(false); // lat-lon jï¿½rjestys
 	fLeft = false;
 	if(itsOrientationStr == std::string("+"))
 		fLeft = true;
@@ -282,50 +286,50 @@ static float GetWindDir(const std::string &windDirStr)
 
 // Asetetaan arvot seuraaville dataosille:
 // itsParameterValueStr jos space, "xx" tai "xx...yy"
-// itsParameterValue joko miss, arvo tai välin ala-raja
-// itsParameterValue2 joko miss tai välin ylä-raja
+// itsParameterValue joko miss, arvo tai vï¿½lin ala-raja
+// itsParameterValue2 joko miss tai vï¿½lin ylï¿½-raja
 void ConceptualObjectData::CalcParameterValues(LPXNode theNode)
 {
     itsParameterValueStr = "";
     itsParameterValue = kFloatMissing;
     itsParameterValue2 = kFloatMissing;
 	std::string paramValueStr;
-	itsFontColor = NFmiColor(1,0,0); // tehdään aluksi kaikista punaisia
+	itsFontColor = NFmiColor(1,0,0); // tehdï¿½ï¿½n aluksi kaikista punaisia
 	if(theNode)
 	{
-        std::string parValueStr = XmlHelper::ChildNodeValue(theNode, "womlqty:numericalValue"); // yksittäinen parametri arvo
+        std::string parValueStr = XmlHelper::ChildNodeValue(theNode, "womlqty:numericalValue"); // yksittï¿½inen parametri arvo
         itsParameterValue = ::GetParamValue(parValueStr);
 		if(parValueStr.empty())
 		{
             std::string lowerLimitValueStr = XmlHelper::ChildNodeValue(theNode, "womlqty:numericalValueLowerLimit"); // parametrin ala-arvo
             itsParameterValue = ::GetParamValue(lowerLimitValueStr);
-            std::string upperLimitValueStr = XmlHelper::ChildNodeValue(theNode, "womlqty:numericalValueUpperLimit"); // parametrin ylä-arvo
+            std::string upperLimitValueStr = XmlHelper::ChildNodeValue(theNode, "womlqty:numericalValueUpperLimit"); // parametrin ylï¿½-arvo
             itsParameterValue2 = ::GetParamValue(upperLimitValueStr);
 
             itsParameterValueStr = ::GetParamValueStr(itsParameterValue);
 			itsParameterValueStr += g_RangeSplitterString;
 			itsParameterValueStr += ::GetParamValueStr(itsParameterValue2);
             if(itsParameterValue < 0 && itsParameterValue2 < 0)
-            	itsFontColor = NFmiColor(0,0,1); // tehdään negatiivisista arvoista sinisiä, HUOM! en jaa osiin piirtoa negatiiviselle ja positiiviselle välille, vaan kaikki piirretään aina samalla värillä
-                                                // Eli jos molemmat on negatiivisia, silloin sininen väritys, muuten aina punainen
+            	itsFontColor = NFmiColor(0,0,1); // tehdï¿½ï¿½n negatiivisista arvoista sinisiï¿½, HUOM! en jaa osiin piirtoa negatiiviselle ja positiiviselle vï¿½lille, vaan kaikki piirretï¿½ï¿½n aina samalla vï¿½rillï¿½
+                                                // Eli jos molemmat on negatiivisia, silloin sininen vï¿½ritys, muuten aina punainen
 		}
         else
         {
             itsParameterValueStr = ::GetParamValueStr(itsParameterValue);
             if(itsParameterValue < 0)
-            	itsFontColor = NFmiColor(0,0,1); // tehdään negatiivisista arvoista sinisiä
+            	itsFontColor = NFmiColor(0,0,1); // tehdï¿½ï¿½n negatiivisista arvoista sinisiï¿½
         }
 	}
 
     if(itsParameterValueStr.empty())
-	    itsParameterValueStr = " "; // jos oli tyhjä stringi, laitetaan sinne space, muuten printtaa itsSymbolCode-arvon ruudulle 
-		    						// (tämä on virhe tilanne ja hanskaan sen nyt piirtämällä ruudulle tyhjää)
+	    itsParameterValueStr = " "; // jos oli tyhjï¿½ stringi, laitetaan sinne space, muuten printtaa itsSymbolCode-arvon ruudulle 
+		    						// (tï¿½mï¿½ on virhe tilanne ja hanskaan sen nyt piirtï¿½mï¿½llï¿½ ruudulle tyhjï¿½ï¿½)
 
     const std::string windReferenceSearchStr = "wind@";
     if(itsReferenceStr.find(windReferenceSearchStr) != std::string::npos)
     { // kyse oli tuulinuolesta
         fIsWindArrow = true;
-		itsFontScaleFactor = 0.6f; // tehdään tuuli tekstistä pientä
+		itsFontScaleFactor = 0.6f; // tehdï¿½ï¿½n tuuli tekstistï¿½ pientï¿½
         std::vector<std::string> parts = NFmiStringTools::Split(itsReferenceStr, "@");
         if(parts.size() != 2)
             throw std::runtime_error("Error in ConceptualObjectData::CalcParameterValues: reference string was ilformatted, should be Wind@XXX");
@@ -395,7 +399,7 @@ static NFmiColor GetWarningAreaColor(const std::string &theReferenceStr)
 {
     const float alpha = 0.7f;
     if(theReferenceStr == "warninglevel@level-1")
-        return NFmiColor(0.f, 0.7f, 0.f, alpha); // vaalean vihreä
+        return NFmiColor(0.f, 0.7f, 0.f, alpha); // vaalean vihreï¿½
     else if(theReferenceStr == "warninglevel@level-2")
         return NFmiColor(0.99f, 0.97f, 0.12f, alpha); // keltainen
     else if(theReferenceStr == "warninglevel@level-3")
@@ -403,88 +407,88 @@ static NFmiColor GetWarningAreaColor(const std::string &theReferenceStr)
     else if(theReferenceStr == "warninglevel@level-4")
         return NFmiColor(0.97f, 0.27f, 0.21f, alpha); // punainen
     else
-        return NFmiColor(0.1f, 0.8f, 0.1f, alpha); // vaalean vihreä
+        return NFmiColor(0.1f, 0.8f, 0.1f, alpha); // vaalean vihreï¿½
 }
 
 void ConceptualObjectData::SetDataFromObjectType(LPXNode theNode)
 {
 	double usedLineWidthInMM = 1.2;
-	if(itsWomlMemberNameStr == "warmfront") // muista vertailu sanojen pitää olla lower casessa!
+	if(itsWomlMemberNameStr == "warmfront") // muista vertailu sanojen pitï¿½ï¿½ olla lower casessa!
 	{
 		fWomlOk = true;
 		itsFrontNameStr = "WARMFRONT";
 		fConceptualType = true; // true jos on conceptual ja false jos symbol type
-		fPlainArea = false; // onko kyseessä alueesta (sadealue tms.)
+		fPlainArea = false; // onko kyseessï¿½ alueesta (sadealue tms.)
 		itsLineWidthInMM = usedLineWidthInMM;
 		itsConceptualColor = NFmiColor(0.96f, 0.2f, 0.04f);
 	}
-	else if(itsWomlMemberNameStr == "coldfront") // muista vertailu sanojen pitää olla lower casessa!
+	else if(itsWomlMemberNameStr == "coldfront") // muista vertailu sanojen pitï¿½ï¿½ olla lower casessa!
 	{
 		fWomlOk = true;
 		itsFrontNameStr = "COLDFRONT";
 		fConceptualType = true; // true jos on conceptual ja false jos symbol type
-		fPlainArea = false; // onko kyseessä alueesta (sadealue tms.)
+		fPlainArea = false; // onko kyseessï¿½ alueesta (sadealue tms.)
 		itsLineWidthInMM = usedLineWidthInMM;
 		itsConceptualColor = NFmiColor(0.06f, 0.57f, 1.f);
 	}
-	else if(itsWomlMemberNameStr == "occludedfront") // muista vertailu sanojen pitää olla lower casessa!
+	else if(itsWomlMemberNameStr == "occludedfront") // muista vertailu sanojen pitï¿½ï¿½ olla lower casessa!
 	{
 		fWomlOk = true;
 		itsFrontNameStr = "OCCLUSION";
 		fConceptualType = true; // true jos on conceptual ja false jos symbol type
-		fPlainArea = false; // onko kyseessä alueesta (sadealue tms.)
+		fPlainArea = false; // onko kyseessï¿½ alueesta (sadealue tms.)
 		itsLineWidthInMM = usedLineWidthInMM;
 		itsConceptualColor = NFmiColor(1.f, 0.f, 1.f);
 	}
-	else if(itsWomlMemberNameStr == "trough") // muista vertailu sanojen pitää olla lower casessa!
+	else if(itsWomlMemberNameStr == "trough") // muista vertailu sanojen pitï¿½ï¿½ olla lower casessa!
 	{
 		fWomlOk = true;
 		itsFrontNameStr = "TROUGH";
 		fConceptualType = true; // true jos on conceptual ja false jos symbol type
-		fPlainArea = false; // onko kyseessä alueesta (sadealue tms.)
+		fPlainArea = false; // onko kyseessï¿½ alueesta (sadealue tms.)
 		itsLineWidthInMM = usedLineWidthInMM / 1.6;
 		itsConceptualColor = NFmiColor(0.6f, 0.f, 0.47f);
 	}
-	else if(itsWomlMemberNameStr == "uppertrough") // muista vertailu sanojen pitää olla lower casessa!
+	else if(itsWomlMemberNameStr == "uppertrough") // muista vertailu sanojen pitï¿½ï¿½ olla lower casessa!
 	{
 		fWomlOk = true;
 		itsFrontNameStr = "UPPER_TROUGH";
 		fConceptualType = true; // true jos on conceptual ja false jos symbol type
-		fPlainArea = false; // onko kyseessä alueesta (sadealue tms.)
+		fPlainArea = false; // onko kyseessï¿½ alueesta (sadealue tms.)
 		itsLineWidthInMM = usedLineWidthInMM / 1.6;
 		itsConceptualColor = NFmiColor(0.06f, 0.57f, 1.f);
 	}
-	else if(itsWomlMemberNameStr == "jetstream") // muista vertailu sanojen pitää olla lower casessa!
+	else if(itsWomlMemberNameStr == "jetstream") // muista vertailu sanojen pitï¿½ï¿½ olla lower casessa!
 	{
 		fWomlOk = true;
 		itsFrontNameStr = "JET_ARROW";
 		fConceptualType = true; // true jos on conceptual ja false jos symbol type
-		fPlainArea = false; // onko kyseessä alueesta (sadealue tms.)
+		fPlainArea = false; // onko kyseessï¿½ alueesta (sadealue tms.)
 		itsLineWidthInMM = usedLineWidthInMM / 2.0;
 		itsConceptualColor = NFmiColor(1.f, 0.f, 1.f);
 	}
-	else if(itsWomlMemberNameStr == "surfaceprecipitationarea") // muista vertailu sanojen pitää olla lower casessa!
+	else if(itsWomlMemberNameStr == "surfaceprecipitationarea") // muista vertailu sanojen pitï¿½ï¿½ olla lower casessa!
 	{
 		fWomlOk = true;
 		fConceptualType = true; // true jos on conceptual ja false jos symbol type
-		fPlainArea = true; // onko kyseessä alueesta (sadealue tms.)
+		fPlainArea = true; // onko kyseessï¿½ alueesta (sadealue tms.)
 		itsLineWidthInMM = usedLineWidthInMM;
-		itsConceptualColor = NFmiColor(0.f, 0.7f, 0.f, 0.5f); // tehdään vihreä kun ei ole tietoa väristä (ja 50 % alpha)
+		itsConceptualColor = NFmiColor(0.f, 0.7f, 0.f, 0.5f); // tehdï¿½ï¿½n vihreï¿½ kun ei ole tietoa vï¿½ristï¿½ (ja 50 % alpha)
         itsFillHatchPattern = HatchStyle30Percent;
 
         std::string rainPhaseStr = NFmiStringTools::LowerCase(XmlHelper::ChildNodeValue(theNode, "womlswo:rainPhase"));
         itsSymbolCodeStr = ::GetRainPhaseSymbolKey(rainPhaseStr);
         if(!itsSymbolCodeStr.empty())
         {
-            // sadealueella oli faasi, pitää laskea yhdelle symbolille paikka, otetaan alueen keskipiste
+            // sadealueella oli faasi, pitï¿½ï¿½ laskea yhdelle symbolille paikka, otetaan alueen keskipiste
             itsSymbolLatlon = ::CalcAreaCenter(itsLatlonPoints);
         }
 	}
-	else if(itsWomlMemberNameStr == "parametervaluesetarea") // muista vertailu sanojen pitää olla lower casessa!
+	else if(itsWomlMemberNameStr == "parametervaluesetarea") // muista vertailu sanojen pitï¿½ï¿½ olla lower casessa!
     {
 		fWomlOk = true;
 		fConceptualType = true; // true jos on conceptual ja false jos symbol type
-		fPlainArea = true; // onko kyseessä alueesta (sadealue tms.)
+		fPlainArea = true; // onko kyseessï¿½ alueesta (sadealue tms.)
 		itsLineWidthInMM = usedLineWidthInMM;
         itsConceptualColor = ::GetWarningAreaColor(itsReferenceStr);
 
@@ -492,42 +496,42 @@ void ConceptualObjectData::SetDataFromObjectType(LPXNode theNode)
         if(!categoryStr.empty() && categoryStr != "Category@Unknow")
         {
             itsSymbolCodeStr = categoryStr;
-            // varoitusalueella oli kategoria, pitää laskea yhdelle symbolille paikka, otetaan alueen keskipiste
+            // varoitusalueella oli kategoria, pitï¿½ï¿½ laskea yhdelle symbolille paikka, otetaan alueen keskipiste
             itsSymbolLatlon = ::CalcAreaCenter(itsLatlonPoints);
         }
     }
-	else if(itsWomlMemberNameStr == "cloudarea") // muista vertailu sanojen pitää olla lower casessa!
+	else if(itsWomlMemberNameStr == "cloudarea") // muista vertailu sanojen pitï¿½ï¿½ olla lower casessa!
 	{
 		fWomlOk = true;
 		itsFrontNameStr = "CLOUDAREA";
 		fConceptualType = true; // true jos on conceptual ja false jos symbol type
-		fPlainArea = true; // onko kyseessä alueesta (sadealue tms.)
+		fPlainArea = true; // onko kyseessï¿½ alueesta (sadealue tms.)
 		itsLineWidthInMM = usedLineWidthInMM;
-		itsConceptualColor = NFmiColor(0.6f, 0.6f, 0.6f, 0.3f); // tehdään vihreä kun ei ole tietoa väristä (ja 70 % alpha)
+		itsConceptualColor = NFmiColor(0.6f, 0.6f, 0.6f, 0.3f); // tehdï¿½ï¿½n vihreï¿½ kun ei ole tietoa vï¿½ristï¿½ (ja 70 % alpha)
 	}
-	else if(itsWomlMemberNameStr == "pointmeteorologicalsymbol") // muista vertailu sanojen pitää olla lower casessa!
+	else if(itsWomlMemberNameStr == "pointmeteorologicalsymbol") // muista vertailu sanojen pitï¿½ï¿½ olla lower casessa!
 	{
 		fWomlOk = true;
 		fConceptualType = false; // true jos on conceptual ja false jos symbol type
-		fPlainArea = false; // onko kyseessä alueesta (sadealue tms.)
+		fPlainArea = false; // onko kyseessï¿½ alueesta (sadealue tms.)
 	}
-	else if(itsWomlMemberNameStr == "parametervaluesetpoint") // muista vertailu sanojen pitää olla lower casessa!
+	else if(itsWomlMemberNameStr == "parametervaluesetpoint") // muista vertailu sanojen pitï¿½ï¿½ olla lower casessa!
 	{
 		fWomlOk = true;
 		fConceptualType = false; // true jos on conceptual ja false jos symbol type
-		fPlainArea = false; // onko kyseessä alueesta (sadealue tms.)
+		fPlainArea = false; // onko kyseessï¿½ alueesta (sadealue tms.)
 
 		itsFontNameStr = "arial";
-		itsFontScaleFactor = 0.8f; // tehdään kaikista aluksi jonkun kokoisia, koska ei ole tietoa
+		itsFontScaleFactor = 0.8f; // tehdï¿½ï¿½n kaikista aluksi jonkun kokoisia, koska ei ole tietoa
         CalcParameterValues(theNode);
 	}
-	else if(itsWomlMemberNameStr == "lowpressurecenter" || itsWomlMemberNameStr == "polarlow" || itsWomlMemberNameStr == "highpressurecenter") // muista vertailu sanojen pitää olla lower casessa!
+	else if(itsWomlMemberNameStr == "lowpressurecenter" || itsWomlMemberNameStr == "polarlow" || itsWomlMemberNameStr == "highpressurecenter") // muista vertailu sanojen pitï¿½ï¿½ olla lower casessa!
 	{
 		fWomlOk = true;
 		fConceptualType = false; // true jos on conceptual ja false jos symbol type
-		fPlainArea = false; // onko kyseessä alueesta (sadealue tms.)
-		itsFontNameStr = "mirri"; // jos tällä on arvo, käytetään symboli piirrossa fontti piirtoa
-		itsFontScaleFactor = 1.6f; // tehdään kaikista aluksi jonkun kokoisia, koska ei ole tietoa
+		fPlainArea = false; // onko kyseessï¿½ alueesta (sadealue tms.)
+		itsFontNameStr = "mirri"; // jos tï¿½llï¿½ on arvo, kï¿½ytetï¿½ï¿½n symboli piirrossa fontti piirtoa
+		itsFontScaleFactor = 1.6f; // tehdï¿½ï¿½n kaikista aluksi jonkun kokoisia, koska ei ole tietoa
         if(itsWomlMemberNameStr == "lowpressurecenter")
         {
 		    itsFontColor = NFmiColor(1,0,0); // punainen
@@ -552,16 +556,16 @@ void ConceptualObjectData::InitDataFromRawStrings(void)
 {
 	fConceptualType = boost::iequals(itsPartTypeStr, std::string("conceptual"));
 
-	// itsValidTime = <- itsValidTimeStr ??? // Tämä on jo tiedosssa, ei tulkita sitä ainakaan nyt
-	InitLatlonValues(true); // lon-lat järjestys
+	// itsValidTime = <- itsValidTimeStr ??? // Tï¿½mï¿½ on jo tiedosssa, ei tulkita sitï¿½ ainakaan nyt
+	InitLatlonValues(true); // lon-lat jï¿½rjestys
 
 	fLeft = false;
 	if(itsOrientationStr == std::string("2"))
 		fLeft = true;
 
-	// itsAppearanceStr sisältää 4 lukua: viivan paksuus (näyttöruudun pikseleissä) ja R G B
-	// Pitää olettaa että yhden pikselin koko ruudulla on jotain, että voidaan laskea viivan paksuus millimetreissä.
-	// Otetaan se, kun ei printata, GraphicalInfosta ja annetaan tänne.
+	// itsAppearanceStr sisï¿½ltï¿½ï¿½ 4 lukua: viivan paksuus (nï¿½yttï¿½ruudun pikseleissï¿½) ja R G B
+	// Pitï¿½ï¿½ olettaa ettï¿½ yhden pikselin koko ruudulla on jotain, ettï¿½ voidaan laskea viivan paksuus millimetreissï¿½.
+	// Otetaan se, kun ei printata, GraphicalInfosta ja annetaan tï¿½nne.
 	if(itsPixelSizeInMM == 0)
 		itsPixelSizeInMM = 0.3;
 
@@ -579,7 +583,7 @@ void ConceptualObjectData::InitDataFromRawStrings(void)
 				itsLineWidthInMM = itsPixelSizeInMM * appearanceVec[0];
 				itsConceptualColor = NFmiColor(appearanceVec[normalFrontalAppearanceSize-3]/255.f, appearanceVec[normalFrontalAppearanceSize-2]/255.f, appearanceVec[normalFrontalAppearanceSize-1]/255.f);
 			}
-			else // yläsolalla on jotain uusia appearance tietoja joista en tiedä mitä neovat
+			else // ylï¿½solalla on jotain uusia appearance tietoja joista en tiedï¿½ mitï¿½ neovat
 			{
 				int upperTroughAppSize = static_cast<int>(appearanceVec.size());
 				itsLineWidthInMM = itsPixelSizeInMM * appearanceVec[0];
@@ -589,7 +593,7 @@ void ConceptualObjectData::InitDataFromRawStrings(void)
 		else
 		{
 			fPlainArea = true;
-			// Näihin loppuihin laitetaan alphaksi 0.5
+			// Nï¿½ihin loppuihin laitetaan alphaksi 0.5
 			float usedAlpha = 0.5f;
 			if(boost::iequals(itsRainphaseStr, "water"))
 				itsConceptualColor = NFmiColor(0.3f, 0.9f, 0.3f, usedAlpha);
@@ -673,7 +677,7 @@ static std::string GetWantedTimeConceptualURLStr(CtrlViewDocumentInterface *theC
 	wantedParams += "&validtimeupper=";
 	wantedParams += validTimeStr;
 
-	std::string wantedUrlStr; // tämä palutetaan funktiosta
+	std::string wantedUrlStr; // tï¿½mï¿½ palutetaan funktiosta
 	int x = 0;
 	try
 	{
@@ -705,7 +709,7 @@ static std::string GetWantedTimeConceptualURLStr(CtrlViewDocumentInterface *theC
 					if(subtypeStr == wantedSubtypeStr)
 					{
                         string storagetimeStr = CT2A(node1->GetAttrValue(_TEXT("storagetime")));
-						NFmiStaticTime aValidTime = gMissingTime; // käytetään static-time, että tulee sekunnitkin mukaan
+						NFmiStaticTime aValidTime = gMissingTime; // kï¿½ytetï¿½ï¿½n static-time, ettï¿½ tulee sekunnitkin mukaan
 						aValidTime.FromStr(storagetimeStr, kYYYYMMDDHHMMSS);
 						if(latestStorageTime == gMissingTime || latestStorageTime < aValidTime)
 						{
@@ -741,11 +745,11 @@ static wchar_t ConvertIntCharCodeToWChar(int theCharCode)
 	return wchArr[0];
 }
 
-// tämä on yleis haku funktio, joka haarautuu konfiguraatioiden mukaisesti erilaisiin hakuihin
+// tï¿½mï¿½ on yleis haku funktio, joka haarautuu konfiguraatioiden mukaisesti erilaisiin hakuihin
 void NFmiConceptualDataView::GetConceptualData(const NFmiMetTime &theTime)
 {
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
-    itsConceptualObjectDatas.clear(); // tyhjennetään ja luetaan datat tietokannasta tai tiedostosta
+    itsConceptualObjectDatas.clear(); // tyhjennetï¿½ï¿½n ja luetaan datat tietokannasta tai tiedostosta
 	if(itsCtrlViewDocumentInterface->ConceptualModelData().UseFileData())
 		GetConceptualsFromFile(theTime);
 	else
@@ -828,9 +832,9 @@ void NFmiConceptualDataView::DecodeConceptualDataFromStr(const std::string &theC
 
 void NFmiConceptualDataView::GetConceptualsDataStrFromFile(const NFmiMetTime &theTime, std::string &theResultStr)
 {
-	// 1. hae file-filtterillä tiedosto lista
+	// 1. hae file-filtterillï¿½ tiedosto lista
 	std::list<std::string> fileList = NFmiFileSystem::PatternFiles(itsCtrlViewDocumentInterface->ConceptualModelData().FileFilter());
-	// 2. tee halutun ajan timestamp-string (tiedoston time stamp on joko YYYYMMDDHHmm- tai YYYYMMDDHHmmSS -muodossa, joten tehdään minuutin tarkkuudella oleva ja etsitään sitä)
+	// 2. tee halutun ajan timestamp-string (tiedoston time stamp on joko YYYYMMDDHHmm- tai YYYYMMDDHHmmSS -muodossa, joten tehdï¿½ï¿½n minuutin tarkkuudella oleva ja etsitï¿½ï¿½n sitï¿½)
 	std::string timeStamp = theTime.ToStr(kYYYYMMDDHHMM);
 	// 3. hae file-listasta tiedosto nimi, jossa on haluttu time-stamp
 	std::string wantedFileName;
@@ -845,7 +849,7 @@ void NFmiConceptualDataView::GetConceptualsDataStrFromFile(const NFmiMetTime &th
 		    }
         }
 	}
-	// 4. lue halutun tiedoston sisältö theResultStr-parametriin
+	// 4. lue halutun tiedoston sisï¿½ltï¿½ theResultStr-parametriin
 	if(wantedFileName.empty() == false)
 	{
 		std::string totalFileName = NFmiFileSystem::PathFromPattern(itsCtrlViewDocumentInterface->ConceptualModelData().FileFilter());
@@ -923,13 +927,14 @@ void NFmiConceptualDataView::Draw(NFmiToolBox *theGTB)
 	if(itsCtrlViewDocumentInterface->ConceptualModelData().Use() == false)
 		return;
 
-	if(itsToolBox->GetDC()->IsPrinting() == FALSE)
+	if(!IsPrinting())
 		itsScreenPixelSizeInMM = 1./ itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x;
 
+#ifndef UNIX
 	try
 	{
 		InitializeGdiplus(itsToolBox, &GetFrame());
-		itsGdiPlusGraphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias); // Huom. antialiasointi saattaa hidastaa yllättävän paljon piirtoa
+		itsGdiPlusGraphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias); // Huom. antialiasointi saattaa hidastaa yllï¿½ttï¿½vï¿½n paljon piirtoa
 		GetConceptualData(itsTime);
 		for(size_t j=0; j<itsConceptualObjectDatas.size(); j++)
 			DrawConseptualData(itsConceptualObjectDatas[j]);
@@ -937,7 +942,8 @@ void NFmiConceptualDataView::Draw(NFmiToolBox *theGTB)
 	catch(...)
 	{
 	}
-	CleanGdiplus(); // tätä pitää kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
+	CleanGdiplus(); // tï¿½tï¿½ pitï¿½ï¿½ kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
+#endif // UNIX
 }
 
 void NFmiConceptualDataView::DrawConseptualData(ConceptualObjectData &theData)
@@ -950,14 +956,14 @@ void NFmiConceptualDataView::DrawConseptualData(ConceptualObjectData &theData)
 
 static double CalcAreaSizeFactor(const boost::shared_ptr<NFmiArea> &theArea)
 {
-	// suomi kartan leveys metreissä on 750 km
-	// skandi kartan leveys metreissä on 2000 km
-	// euro kartan leveys metreissä on 7000 km
-	// maailma kartan leveys metreissä on 40000 km
-	// lasketaan näiden avulla joku kokeellinen skaalauskerroin eri kokoisille alueuille
+	// suomi kartan leveys metreissï¿½ on 750 km
+	// skandi kartan leveys metreissï¿½ on 2000 km
+	// euro kartan leveys metreissï¿½ on 7000 km
+	// maailma kartan leveys metreissï¿½ on 40000 km
+	// lasketaan nï¿½iden avulla joku kokeellinen skaalauskerroin eri kokoisille alueuille
 
 	double widthInMeters = theArea->WorldRect().Width();
-    // Jos leveys on alle 10000 km, lasketaan eri skaalalla (jykemmällä) kuin
+    // Jos leveys on alle 10000 km, lasketaan eri skaalalla (jykemmï¿½llï¿½) kuin
 	double factor = MathHelper::InterpolateWithTwoPoints(widthInMeters, 10000*1000, 1000*1000, 0.4, 1., 0.4, 1.2);
     if(widthInMeters > 10000 * 1000)
 	    factor = MathHelper::InterpolateWithTwoPoints(widthInMeters, 40000*1000, 10000*1000, 0.25, 0.4, 0.3, 0.4);
@@ -965,21 +971,21 @@ static double CalcAreaSizeFactor(const boost::shared_ptr<NFmiArea> &theArea)
 	return factor;
 }
 
-// laske kerroin, millä kaikkia käsitemalli oliota pinennetään/suurennetaan riippuen
-// siitä kuinka suuri näyttö [mm] kulloinkin on käytössä.
+// laske kerroin, millï¿½ kaikkia kï¿½sitemalli oliota pinennetï¿½ï¿½n/suurennetaan riippuen
+// siitï¿½ kuinka suuri nï¿½yttï¿½ [mm] kulloinkin on kï¿½ytï¿½ssï¿½.
 float NFmiConceptualDataView::CalcScreenSizeFactor(CtrlViewDocumentInterface &theCtrlViewDocumentInterface, int theMapViewDesctopIndex)
 {
-	// yhden aliruudun koko pikseleissä karttanäytöllä
+	// yhden aliruudun koko pikseleissï¿½ karttanï¿½ytï¿½llï¿½
 	NFmiPoint viewSizeInPixels(theCtrlViewDocumentInterface.ActualMapBitmapSizeInPixels(theMapViewDesctopIndex));
     auto &graphicalInfo = theCtrlViewDocumentInterface.GetGraphicalInfo(theMapViewDesctopIndex);
 	float widthInMM = static_cast<float>(viewSizeInPixels.X() / graphicalInfo.itsPixelsPerMM_x);
 	float heightInMM = static_cast<float>(viewSizeInPixels.Y() / graphicalInfo.itsPixelsPerMM_y);
 	float lenInMM = ::sqrt(widthInMM*widthInMM + heightInMM*heightInMM);
 
-	// Haetaan sopiva kerroin kokeilemalla erilaisia ala ja ylä rajoja
+	// Haetaan sopiva kerroin kokeilemalla erilaisia ala ja ylï¿½ rajoja
 	float factor = static_cast<float>(MathHelper::InterpolateWithTwoPoints(lenInMM, 50, 500, 0.3, 1.3, 0.2, 1.5));
 
-	// lasketaan vielä toinen kerroin, joka riippuu valitusta maantieteellisestä alueesta
+	// lasketaan vielï¿½ toinen kerroin, joka riippuu valitusta maantieteellisestï¿½ alueesta
 	float areaFactor = static_cast<float>(::CalcAreaSizeFactor(theCtrlViewDocumentInterface.GetMapHandlerInterface(theMapViewDesctopIndex)->Area()));
 	factor = factor * areaFactor;
 
@@ -988,9 +994,10 @@ float NFmiConceptualDataView::CalcScreenSizeFactor(CtrlViewDocumentInterface &th
 
 void NFmiConceptualDataView::DrawTextArea(ConceptualObjectData &theData)
 {
+#ifndef UNIX
 	string usedStr = NFmiStringTools::UrlDecode(theData.itsInfoTextStr);
 
-	double fontSizeInMM = 4.5; // mistä koko?
+	double fontSizeInMM = 4.5; // mistï¿½ koko?
     fontSizeInMM *= CalcScreenSizeFactor(*itsCtrlViewDocumentInterface, itsMapViewDescTopIndex);
 
 	Gdiplus::Color usedColor(CtrlView::NFmiColor2GdiplusColor(theData.itsFontColor));
@@ -1004,7 +1011,7 @@ void NFmiConceptualDataView::DrawTextArea(ConceptualObjectData &theData)
 	RectF boxRect(aPlace1.X, aPlace1.Y, boxWidthInPixels, boxHeightInPixels);
 	boxRect.Offset(-boxRect.Width/2.f, -boxRect.Height/2.f);
 
-	{ // täysin läpinäkyvään boxiin laitetaan hennot reunat
+	{ // tï¿½ysin lï¿½pinï¿½kyvï¿½ï¿½n boxiin laitetaan hennot reunat
 		float penWidthInPixels = static_cast<float>(1.f * 1.f/ graphicalInfo.itsPixelsPerMM_x);
 		Pen aPen(CtrlView::NFmiColor2GdiplusColor(NFmiColor(0.6f, 0.6f, 0.6f, 0.8f)), penWidthInPixels);
 		itsGdiPlusGraphics->DrawRectangle(&aPen, boxRect);
@@ -1016,11 +1023,12 @@ void NFmiConceptualDataView::DrawTextArea(ConceptualObjectData &theData)
 	double pixelsPerMM = graphicalInfo.itsPixelsPerMM_x;
 	std::wstring fontNameStr(L"Arial");
     CtrlView::DrawTextToRelativeLocation(*itsGdiPlusGraphics, fontColor, fontSizeInMM, usedStr, aPlace2, pixelsPerMM, itsToolBox, fontNameStr, kCenter);
+#endif // UNIX
 }
 
 float NFmiConceptualDataView::CalcUsedFontSizeInPixels(float theWantedFontSizeInMM, CtrlViewDocumentInterface &theCtrlViewDocumentInterface, int theMapViewDesctopIndex, float theFontScaleFactor)
 {
-	// mahdollisten printtausten takia fontin koon kanssa pitää kikkailla
+	// mahdollisten printtausten takia fontin koon kanssa pitï¿½ï¿½ kikkailla
 	if(theFontScaleFactor)
         theWantedFontSizeInMM *= theFontScaleFactor;
     theWantedFontSizeInMM *= CalcScreenSizeFactor(theCtrlViewDocumentInterface, theMapViewDesctopIndex);
@@ -1039,17 +1047,20 @@ static double ScaleSymbolSizeBySymbolCodeName(const std::string &theSymbolCodeNa
     return scale;
 }
 
-// Piirtää mapatun Mirwa symbolin toivotun kokoisena
+// Piirtï¿½ï¿½ mapatun Mirwa symbolin toivotun kokoisena
 void NFmiConceptualDataView::DrawSymbol(ConceptualObjectData &theData, double wantedSymbolSizeInMM)
 {
+#ifndef UNIX
     bool printing = itsCtrlViewDocumentInterface->Printing();
 	wantedSymbolSizeInMM *= CalcScreenSizeFactor(*itsCtrlViewDocumentInterface, itsMapViewDescTopIndex);
     wantedSymbolSizeInMM *= ::ScaleSymbolSizeBySymbolCodeName(theData.itsSymbolCodeStr);
     Gdiplus::Bitmap *symbolBitmap = NFmiConceptualDataView::itsMirwaSymbolMap.GetSymbolImage(theData.itsSymbolCodeStr, printing);
     NFmiRect symbolRect(CalcSymbolRelativeRect(theData.itsSymbolLatlon, wantedSymbolSizeInMM));
     CtrlView::DrawAnimationButton(symbolRect, symbolBitmap, itsGdiPlusGraphics, *itsToolBox, printing, itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex), 1.f, true);
+#endif // UNIX
 }
 
+#ifndef UNIX
 static void DrawFinalRangeString(Gdiplus::Graphics *theGdiPlusGraphics, const Gdiplus::Font &theFont, FmiDirection theTextAlignment, const std::wstring &theSymbolStr, const Gdiplus::Color &theColor, const Gdiplus::PointF &thePlace)
 {
     Gdiplus::StringFormat stringFormat;
@@ -1057,6 +1068,7 @@ static void DrawFinalRangeString(Gdiplus::Graphics *theGdiPlusGraphics, const Gd
     Gdiplus::SolidBrush aBrush(theColor);
     theGdiPlusGraphics->DrawString(theSymbolStr.c_str(), static_cast<INT>(theSymbolStr.size()), &theFont, thePlace, &stringFormat, &aBrush);
 }
+#endif // UNIX
 
 static NFmiColor TemperatureColor(float value, float usedAlpha)
 {
@@ -1068,6 +1080,7 @@ static NFmiColor TemperatureColor(float value, float usedAlpha)
         return NFmiColor(1, 0, 0, usedAlpha);
 }
 
+#ifndef UNIX
 void NFmiConceptualDataView::DrawTemperatureRange(ConceptualObjectData &theData, const Gdiplus::PointF &thePlace, const Gdiplus::Font &theFont)
 {
     std::vector<std::string> valuesStrVec = NFmiStringTools::Split(theData.itsParameterValueStr, g_RangeSplitterString);
@@ -1081,7 +1094,7 @@ void NFmiConceptualDataView::DrawTemperatureRange(ConceptualObjectData &theData,
     }
 
     float usedAlpha = theData.itsFontColor.Alpha();
-    float xMoveInPixels = theFont.GetSize() * 0.25f; // kuinka paljon x-suunnassa siirretään alku ja loppu arvoja suhteessa fontin kokoon
+    float xMoveInPixels = theFont.GetSize() * 0.25f; // kuinka paljon x-suunnassa siirretï¿½ï¿½n alku ja loppu arvoja suhteessa fontin kokoon
 
     float leftValue = theData.itsParameterValue;
     std::string leftValueStr = valuesStrVec[0];
@@ -1089,40 +1102,42 @@ void NFmiConceptualDataView::DrawTemperatureRange(ConceptualObjectData &theData,
     std::string rightValueStr = valuesStrVec[1];
 
     if(leftValue < 0 && rightValue < 0)
-    { // Henri Nymanin haluama Mirwa kikka: jos molemmat negatiivisia, laitetaan ne käänteiseen järjestykseen.
+    { // Henri Nymanin haluama Mirwa kikka: jos molemmat negatiivisia, laitetaan ne kï¿½ï¿½nteiseen jï¿½rjestykseen.
         std::swap(leftValue, rightValue);
         std::swap(leftValueStr, rightValueStr);
     }
 
-    // 1. Laitetaan rangen "..." stringi ensin: a) väri=harmaa b) alignment=center c) paikka=originaali paikka d) fontti=normaali
+    // 1. Laitetaan rangen "..." stringi ensin: a) vï¿½ri=harmaa b) alignment=center c) paikka=originaali paikka d) fontti=normaali
     std::wstring symbolStr = CtrlView::StringToWString(g_RangeSplitterString);
     Gdiplus::Color usedColor(CtrlView::NFmiColor2GdiplusColor(NFmiColor(0.5, 0.5, 0.5, usedAlpha)));
     ::DrawFinalRangeString(itsGdiPlusGraphics, theFont, kCenter, symbolStr, usedColor, thePlace);
 
-    // 2. Laitetaan rangen vasen stringi sitten: a) väri=lämpötilasta riippuen b) alignment=right c) paikka=originaali paikka - dx d) fontti=normaali
+    // 2. Laitetaan rangen vasen stringi sitten: a) vï¿½ri=lï¿½mpï¿½tilasta riippuen b) alignment=right c) paikka=originaali paikka - dx d) fontti=normaali
     symbolStr = CtrlView::StringToWString(leftValueStr);
     usedColor = CtrlView::NFmiColor2GdiplusColor(::TemperatureColor(leftValue, usedAlpha));
     Gdiplus::PointF leftPlace(thePlace);
-    leftPlace.X -= xMoveInPixels; // siirretään alku arvoa vasemmalle
+    leftPlace.X -= xMoveInPixels; // siirretï¿½ï¿½n alku arvoa vasemmalle
     ::DrawFinalRangeString(itsGdiPlusGraphics, theFont, kRight, symbolStr, usedColor, leftPlace);
 
-    // 3. Laitetaan rangen oikea stringi sitten: a) väri=lämpötilasta riippuen b) alignment=left c) paikka=originaali paikka + dx d) fontti=normaali
+    // 3. Laitetaan rangen oikea stringi sitten: a) vï¿½ri=lï¿½mpï¿½tilasta riippuen b) alignment=left c) paikka=originaali paikka + dx d) fontti=normaali
     symbolStr = CtrlView::StringToWString(rightValueStr);
     usedColor = CtrlView::NFmiColor2GdiplusColor(::TemperatureColor(rightValue, usedAlpha));
     Gdiplus::PointF rightPlace(thePlace);
-    rightPlace.X += xMoveInPixels; // siirretään alku arvoa vasemmalle
+    rightPlace.X += xMoveInPixels; // siirretï¿½ï¿½n alku arvoa vasemmalle
     ::DrawFinalRangeString(itsGdiPlusGraphics, theFont, kLeft, symbolStr, usedColor, rightPlace);
 }
+#endif // UNIX
 
 void NFmiConceptualDataView::DrawSymbol(ConceptualObjectData &theData)
-{ 
+{
 	if(theData.itsPartTypeStr == "textarea")
 		DrawTextArea(theData);
 	else
 	{
+#ifndef UNIX
         if(theData.fIsWindArrow)
         {
-            // Tuulinuolen rakentamista ei voi tehdä erillisessä funktiossa, koska Gdiplus::GraphicsPath-luokan
+            // Tuulinuolen rakentamista ei voi tehdï¿½ erillisessï¿½ funktiossa, koska Gdiplus::GraphicsPath-luokan
             // copy construktori ja sijoitus operaattori on protected tasoa.
             const float arrowHeadInnerBaseX = 0.3f;
             const float arrowHeadOuterBaseX = 0.65f;
@@ -1172,7 +1187,7 @@ void NFmiConceptualDataView::DrawSymbol(ConceptualObjectData &theData)
 
             CtrlView::DrawPath(*itsGdiPlusGraphics, arrowPath, NFmiColor(0,0,0), theData.itsConceptualColor, true, false, 0);
             if(theData.itsParameterValue != kFloatMissing)
-            { // piirretään nuolen päälle nopeus arvo
+            { // piirretï¿½ï¿½n nuolen pï¿½ï¿½lle nopeus arvo
                 float usedFontSizeInPixels = CalcUsedFontSizeInPixels(6.f, *itsCtrlViewDocumentInterface, itsMapViewDescTopIndex, theData.itsFontScaleFactor);
                 NFmiColor bkColor(0.5f, 0.5f, 0.5f);
     		    Gdiplus::PointF aPlace(CtrlView::ConvertLatlonToGdiPlusPoint(this, theData.itsSymbolLatlon));
@@ -1184,7 +1199,7 @@ void NFmiConceptualDataView::DrawSymbol(ConceptualObjectData &theData)
             DrawSymbol(theData, 14);
         }
         else
-        { // muutamat symbolit piirretään mirri fonteilla tai tavallisilla fonteilla (esim. Arial)
+        { // muutamat symbolit piirretï¿½ï¿½n mirri fonteilla tai tavallisilla fonteilla (esim. Arial)
 		    std::wstring fontNameStr = CtrlView::StringToWString(theData.itsFontNameStr);
             float usedFontSizeInPixels = CalcUsedFontSizeInPixels(10.f, *itsCtrlViewDocumentInterface, itsMapViewDescTopIndex, theData.itsFontScaleFactor);
             if(theData.itsFontNameStr == "mirri")
@@ -1212,6 +1227,7 @@ void NFmiConceptualDataView::DrawSymbol(ConceptualObjectData &theData)
 		        itsGdiPlusGraphics->DrawString(symbolStr.c_str(), static_cast<INT>(symbolStr.size()), &aFont, aPlace, &stringFormat, &aBrush);
             }
         }
+#endif // UNIX
 	}
 }
 
@@ -1257,7 +1273,7 @@ static std::string MakeConceptualObjectInfoString(const ConceptualObjectData &th
 
         if(MacroParam::ci_find_substr(theObject.itsWomlSymbolInfoStr, std::string("wind")) != MacroParam::ci_string_not_found)
         {  // tuulisymbolit hanskataan pikkuisen erilailla
-            str = ""; // tyhjennetään stringi ensin
+            str = ""; // tyhjennetï¿½ï¿½n stringi ensin
             str += theObject.itsWomlSymbolInfoStr;
             str += " ";
             str += theObject.itsParameterValueStr;
@@ -1281,17 +1297,17 @@ static std::string MakeConceptualObjectInfoString(const ConceptualObjectData &th
 
 std::string NFmiConceptualDataView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
 {
-	// Ongelma: SmartMetin optimointi on johtanut siihen että käsiteanalyysi oliot eivät ole aina
-	// tallessa kun tullaan pyytämään tooltip arvoja. Tässä tarkistetaan että löytyykö niitä
-	// ollenkaan tai onko olemassa olevat oikealta ajalta. Jos ei, koetetaan hakea niitä tässä ja nyt.
+	// Ongelma: SmartMetin optimointi on johtanut siihen ettï¿½ kï¿½siteanalyysi oliot eivï¿½t ole aina
+	// tallessa kun tullaan pyytï¿½mï¿½ï¿½n tooltip arvoja. Tï¿½ssï¿½ tarkistetaan ettï¿½ lï¿½ytyykï¿½ niitï¿½
+	// ollenkaan tai onko olemassa olevat oikealta ajalta. Jos ei, koetetaan hakea niitï¿½ tï¿½ssï¿½ ja nyt.
 	try
 	{
 		if(itsConceptualObjectDatas.size() == 0 || (itsConceptualObjectDatas.size() > 0 && itsConceptualObjectDatas[0].itsValidTime != itsTime))
-			GetConceptualData(itsTime); // tarkistetaan joska löytyisi käsiteanalyysi dataa
+			GetConceptualData(itsTime); // tarkistetaan joska lï¿½ytyisi kï¿½siteanalyysi dataa
 	}
 	catch(...)
 	{
-		// ei tehdä mitään, poikkeus heitetään mm. jos ei ole mitään dataa kyseiseen aikaan
+		// ei tehdï¿½ mitï¿½ï¿½n, poikkeus heitetï¿½ï¿½n mm. jos ei ole mitï¿½ï¿½n dataa kyseiseen aikaan
 	}
 
 	string str;
@@ -1299,7 +1315,7 @@ std::string NFmiConceptualDataView::ComposeToolTipText(const NFmiPoint & theRela
 	if(itsConceptualObjectDatas.size())
 	{
 
-		// etsitään lähin käsite-olio ja laitetaan sen info näkyviin
+		// etsitï¿½ï¿½n lï¿½hin kï¿½site-olio ja laitetaan sen info nï¿½kyviin
 		NFmiPoint latlon = ViewPointToLatLon(theRelativePoint);
 		NFmiLocation pointedLocation(latlon);
 		double minDistance = 99999999;
@@ -1308,14 +1324,14 @@ std::string NFmiConceptualDataView::ComposeToolTipText(const NFmiPoint & theRela
 		{
 			ConceptualObjectData &tmpData = itsConceptualObjectDatas[i];
 			if(tmpData.fConceptualType)
-			{ // rintama/muu otus, missä lat-lon vectori
+			{ // rintama/muu otus, missï¿½ lat-lon vectori
 				vector<NFmiPoint> &latlonVec = tmpData.itsLatlonPoints;
 				for(size_t j=0; j<latlonVec.size(); j++)
 				{
 					::MinDistanceSeeker(pointedLocation, latlonVec[j], i, minDistance, minDistInd);
 				}
 			}
-			else // symboli missä vain yksi piste
+			else // symboli missï¿½ vain yksi piste
 				::MinDistanceSeeker(pointedLocation, tmpData.itsSymbolLatlon, i, minDistance, minDistInd);
 		}
 
@@ -1347,25 +1363,25 @@ std::string NFmiConceptualDataView::ComposeToolTipText(const NFmiPoint & theRela
 }
 
 // *************************************************************
-// rintamien piirtoon liittyvää pallukoiden lasku/piirto koodia
+// rintamien piirtoon liittyvï¿½ï¿½ pallukoiden lasku/piirto koodia
 // *************************************************************
 
 // 1. laske viivan paksuuden ja rintaman tyypin avulla
    // a) toivottu pallukan koko [mm]
-   // b) toivottu alku/loppu tyhjä väli [mm]
-   // c) toivottu väli [mm]
+   // b) toivottu alku/loppu tyhjï¿½ vï¿½li [mm]
+   // c) toivottu vï¿½li [mm]
 void NFmiConceptualDataView::CalculateIdealPathObjectMeasures(float lineWidthInMM, FrontType frontType, float &startGapInMM, float &objectSizeInMM, float &gapInMM)
 {
 	objectSizeInMM = lineWidthInMM * 5.f;
 	startGapInMM = objectSizeInMM / 1.f;
 	gapInMM = objectSizeInMM * 4.f;
 
-	if(frontType == kFmiFrontTypeOcclusion) // 2 on okluusio ja se on kaksi kertaa leveämpi
+	if(frontType == kFmiFrontTypeOcclusion) // 2 on okluusio ja se on kaksi kertaa leveï¿½mpi
 		objectSizeInMM *= 2.f;
 
-	if(frontType == kFmiFrontTypeThrough) // 3 on sola ja aloitus pistettä lyhennetään
+	if(frontType == kFmiFrontTypeThrough) // 3 on sola ja aloitus pistettï¿½ lyhennetï¿½ï¿½n
 	{
-		gapInMM = objectSizeInMM * 1.f; // solassa on väkäsiä tiuhempaan
+		gapInMM = objectSizeInMM * 1.f; // solassa on vï¿½kï¿½siï¿½ tiuhempaan
 	}
 
 	if(frontType == kFmiFrontTypeCloudAreaPartArc || frontType == kFmiFrontTypeCloudAreaPartPie1 || frontType == kFmiFrontTypeCloudAreaPartPie2)
@@ -1376,13 +1392,14 @@ void NFmiConceptualDataView::CalculateIdealPathObjectMeasures(float lineWidthInM
 	}
 }
 
+#ifndef UNIX
 static float CalcLength(const PointF &p1, const PointF &p2)
 {
    return ::sqrt((p1.X - p2.X)*(p1.X - p2.X) + (p1.Y - p2.Y)*(p1.Y - p2.Y));
 }
 
 // 2. Laske koko viivan pituus [mm]
-   // laske myös eri osien pituudet taulukkoon
+   // laske myï¿½s eri osien pituudet taulukkoon
 void NFmiConceptualDataView::CalculatePathLengths(float pixelLengthInMM, const std::vector<Gdiplus::PointF> &xyPoints, std::vector<float> &lengthsInMM, float &totalLengthInMM)
 {
    lengthsInMM.clear();
@@ -1411,20 +1428,20 @@ static void AddFrontTriangleToPath(float symbolSizeInPixels, float sizeDivider, 
 	vector<PointF> trianglePoints;
 	trianglePoints.push_back(PointF(-symbolSizeInPixels/sizeDivider + theStartPoint.X, 0 + theStartPoint.Y));
 	trianglePoints.push_back(PointF(symbolSizeInPixels/sizeDivider + theStartPoint.X, 0 + theStartPoint.Y));
-	// teen kolmiosta tasakylkisen ja korkeamman kuin pallukasta, eli siitä kerroin heightVsBaseFactor (kolmin korkeus / leveys)
+	// teen kolmiosta tasakylkisen ja korkeamman kuin pallukasta, eli siitï¿½ kerroin heightVsBaseFactor (kolmin korkeus / leveys)
 	trianglePoints.push_back(PointF(0 + theStartPoint.X, (heightVsBaseFactor*symbolSizeInPixels)/sizeDivider + theStartPoint.Y));
 	thePathOut.AddPolygon(&trianglePoints[0], static_cast<INT>(trianglePoints.size()));
 }
 
-// Toisin kuin kylmän rintaman kolmion kanssa, tässä kolmion keskipisteen pitää olla (0,0) -pisteessä
+// Toisin kuin kylmï¿½n rintaman kolmion kanssa, tï¿½ssï¿½ kolmion keskipisteen pitï¿½ï¿½ olla (0,0) -pisteessï¿½
 static void AddStreamlineArroyHeadToPath(float symbolSizeInPixels, float sizeDivider, GraphicsPath &thePathOut, const PointF &theStartPoint, float heightVsBaseFactor)
 {
     float finalSymbolHeight = (heightVsBaseFactor*symbolSizeInPixels)/sizeDivider;
 	vector<PointF> trianglePoints;
 	trianglePoints.push_back(PointF(-symbolSizeInPixels/sizeDivider + theStartPoint.X, theStartPoint.Y - finalSymbolHeight/2.f));
-	trianglePoints.push_back(PointF(0 + theStartPoint.X, theStartPoint.Y - finalSymbolHeight/4.5f)); // tämä pohjan keskipiste tekee terävämmät peräväkäset nuolen päähän
+	trianglePoints.push_back(PointF(0 + theStartPoint.X, theStartPoint.Y - finalSymbolHeight/4.5f)); // tï¿½mï¿½ pohjan keskipiste tekee terï¿½vï¿½mmï¿½t perï¿½vï¿½kï¿½set nuolen pï¿½ï¿½hï¿½n
 	trianglePoints.push_back(PointF(symbolSizeInPixels/sizeDivider + theStartPoint.X, theStartPoint.Y - finalSymbolHeight/2.f));
-	// teen kolmiosta tasakylkisen ja korkeamman kuin pallukasta, eli siitä kerroin heightVsBaseFactor (kolmin korkeus / leveys)
+	// teen kolmiosta tasakylkisen ja korkeamman kuin pallukasta, eli siitï¿½ kerroin heightVsBaseFactor (kolmin korkeus / leveys)
 	trianglePoints.push_back(PointF(0 + theStartPoint.X, theStartPoint.Y + finalSymbolHeight/2.f));
 	thePathOut.AddPolygon(&trianglePoints[0], static_cast<INT>(trianglePoints.size()));
 }
@@ -1433,11 +1450,11 @@ static void AddTroughBarbWireToPath(float symbolSizeInPixels, float sizeDivider,
 {
 	vector<PointF> trianglePoints;
 	trianglePoints.push_back(PointF(theStartPoint.X, theStartPoint.Y));
-	// viivan pituutta lisätään kertoimella
+	// viivan pituutta lisï¿½tï¿½ï¿½n kertoimella
 	trianglePoints.push_back(PointF(theStartPoint.X, 0 + 3.0f*symbolSizeInPixels/sizeDivider + theStartPoint.Y));
-	// HUOM!!! OUTO feature, polussa pitää olla kolme pistettä että se piirtyy Gdiplussalla
-	// Joten lisää vielä pelkän yhden viivan tapauksessa polkuun alkupisteen uudestaan.
-	trianglePoints.push_back(PointF(theStartPoint.X, theStartPoint.Y)); // polussa pitää olla kolme pistettä?!?!?!?!?
+	// HUOM!!! OUTO feature, polussa pitï¿½ï¿½ olla kolme pistettï¿½ ettï¿½ se piirtyy Gdiplussalla
+	// Joten lisï¿½ï¿½ vielï¿½ pelkï¿½n yhden viivan tapauksessa polkuun alkupisteen uudestaan.
+	trianglePoints.push_back(PointF(theStartPoint.X, theStartPoint.Y)); // polussa pitï¿½ï¿½ olla kolme pistettï¿½?!?!?!?!?
 
 	thePathOut.AddPolygon(&trianglePoints[0], static_cast<INT>(trianglePoints.size()));
 }
@@ -1446,12 +1463,12 @@ static void AddTroughBarbWireToPath(float symbolSizeInPixels, float sizeDivider,
 void NFmiConceptualDataView::GetDecorationPath(float symbolSizeInPixels, FrontType frontType, Gdiplus::GraphicsPath &thePathOut)
 {
    thePathOut.Reset();
-   thePathOut.SetFillMode(FillModeWinding); // tämä ei tee aukkoja polkuun, joita tulee jos esim. pallukka ja kolmio ovat vähän päällekkäin ja käytetään oletus fillmodea (FillModeAlternate)
+   thePathOut.SetFillMode(FillModeWinding); // tï¿½mï¿½ ei tee aukkoja polkuun, joita tulee jos esim. pallukka ja kolmio ovat vï¿½hï¿½n pï¿½ï¿½llekkï¿½in ja kï¿½ytetï¿½ï¿½n oletus fillmodea (FillModeAlternate)
 
    float sizeDivider = 2.f;
    float heightVsBaseFactor = 1.4f;
-   // HUOM! nämä pitää keskittää 0-kohtaan!
-   if(frontType == kFmiFrontTypeWarm || frontType == kFmiFrontTypeCloudAreaPartPie1 || frontType == kFmiFrontTypeCloudAreaPartPie2) // lämmin rintama
+   // HUOM! nï¿½mï¿½ pitï¿½ï¿½ keskittï¿½ï¿½ 0-kohtaan!
+   if(frontType == kFmiFrontTypeWarm || frontType == kFmiFrontTypeCloudAreaPartPie1 || frontType == kFmiFrontTypeCloudAreaPartPie2) // lï¿½mmin rintama
    {
 	   ::AddFrontHalfCircleToPath(symbolSizeInPixels, sizeDivider, thePathOut, PointF(0, 0));
    }
@@ -1459,25 +1476,25 @@ void NFmiConceptualDataView::GetDecorationPath(float symbolSizeInPixels, FrontTy
    {
 	   ::AddCloudAreaHalfArcToPath(symbolSizeInPixels, sizeDivider, thePathOut, PointF(0, 0));
    }
-   else if(frontType == kFmiFrontTypeCold) // kylmä rintama kolmiot
+   else if(frontType == kFmiFrontTypeCold) // kylmï¿½ rintama kolmiot
    {
        ::AddFrontTriangleToPath(symbolSizeInPixels, sizeDivider, thePathOut, PointF(0, 0), heightVsBaseFactor);
    }
-   else if(frontType == kFmiFrontTypeStreamLine) // streamline nuolen pää
+   else if(frontType == kFmiFrontTypeStreamLine) // streamline nuolen pï¿½ï¿½
    {
        float heightVsBaseFactor = 2.8f;
        ::AddStreamlineArroyHeadToPath(symbolSizeInPixels, sizeDivider, thePathOut, PointF(0, 0), heightVsBaseFactor);
    }
    else if(frontType == kFmiFrontTypeOcclusion) // okluusio rintama
-   {    // muista että okluusio symboli oli kaksi kertaa isompi, koska siinä oli kaksi symbolia yhdessä, joten
-       // kokoa pitää jakaa enemmän kuin edellä
+   {    // muista ettï¿½ okluusio symboli oli kaksi kertaa isompi, koska siinï¿½ oli kaksi symbolia yhdessï¿½, joten
+       // kokoa pitï¿½ï¿½ jakaa enemmï¿½n kuin edellï¿½
 		sizeDivider = 4.f;
 		::AddFrontHalfCircleToPath(symbolSizeInPixels, sizeDivider, thePathOut, PointF(-symbolSizeInPixels/sizeDivider, 0));
-		thePathOut.CloseFigure(); // pitää sulkea edellinen kuvio ennen kolmion lisäämistä, muuten tulee outoja juttuja ruudulle
-		// pistän kolmion vähän puolipallon kanssa päällekkäin, koska se näyttää paremmalta (eli siirto PointF:ää fiksataan kertoimella 0.8f)
+		thePathOut.CloseFigure(); // pitï¿½ï¿½ sulkea edellinen kuvio ennen kolmion lisï¿½ï¿½mistï¿½, muuten tulee outoja juttuja ruudulle
+		// pistï¿½n kolmion vï¿½hï¿½n puolipallon kanssa pï¿½ï¿½llekkï¿½in, koska se nï¿½yttï¿½ï¿½ paremmalta (eli siirto PointF:ï¿½ï¿½ fiksataan kertoimella 0.8f)
 		::AddFrontTriangleToPath(symbolSizeInPixels, sizeDivider, thePathOut, PointF((0.8f * symbolSizeInPixels)/sizeDivider, 0), heightVsBaseFactor);
    }
-   else if(frontType == kFmiFrontTypeThrough) // sola väkänen
+   else if(frontType == kFmiFrontTypeThrough) // sola vï¿½kï¿½nen
    {
        ::AddTroughBarbWireToPath(symbolSizeInPixels, sizeDivider, thePathOut, PointF(0, 0));
    }
@@ -1489,7 +1506,7 @@ static float CalcPreferableFrontObjectLength(int objectCount, float startGapInMM
    return tmpValue;
 }
 
-// laskee ritamassa olevan pallukoiden ja välien pituussuhteen
+// laskee ritamassa olevan pallukoiden ja vï¿½lien pituussuhteen
 static float CalcGapVsTotalObjectRatio(int objectCount, float startGapInMM, float objectSizeInMM, float gapInMM)
 {
    float tmpValue = (2.f*startGapInMM + (objectCount-1)*gapInMM)/::CalcPreferableFrontObjectLength(objectCount, startGapInMM, objectSizeInMM, gapInMM);
@@ -1505,12 +1522,12 @@ static float CalcObjectScalingRatio(int decoratorCount, float optimalObjectLengt
 }
 
 // 4. Laske kuinka monta pallukkaa mahtuu annetun rintaman alueelle
-   // jos alle 1, sovita pallukan koko, niin että mahtuu yksi (laske kerroin jolla skaalataan ja piirrä viivan keskelle pallukka)
-   // jos alle kaksi, sovita pallukan koko, niin että mahtuu kaksi (laske skaala kerroin ja piirrä kahteen kohtaan pallukat)
-   // muuten pallukat laske lähinpään kokonaislukuun sopiva skaala kerroin
+   // jos alle 1, sovita pallukan koko, niin ettï¿½ mahtuu yksi (laske kerroin jolla skaalataan ja piirrï¿½ viivan keskelle pallukka)
+   // jos alle kaksi, sovita pallukan koko, niin ettï¿½ mahtuu kaksi (laske skaala kerroin ja piirrï¿½ kahteen kohtaan pallukat)
+   // muuten pallukat laske lï¿½hinpï¿½ï¿½n kokonaislukuun sopiva skaala kerroin
    // Jos sovitus 1:een tai 2:een, sovita piirron kaikkiin osiin skaaloja.
-   // Jos sovitus yli kahteen 'pallukkaan', säädä vain välejä.
-// Jos paluttaa 0, on kyseessä virhe
+   // Jos sovitus yli kahteen 'pallukkaan', sï¿½ï¿½dï¿½ vain vï¿½lejï¿½.
+// Jos paluttaa 0, on kyseessï¿½ virhe
 int NFmiConceptualDataView::CalculateUsedSymbolCountAndMeasures(float totalLengthInMM, float &startGapInMM, float &objectSizeInMM, float &gapInMM)
 {
    int totalCount = 0; // 0 on virhe ilmoitus
@@ -1518,7 +1535,7 @@ int NFmiConceptualDataView::CalculateUsedSymbolCountAndMeasures(float totalLengt
    float minDiff = 999999999.f;
    int minInd = -1;
    float closestLength = 999999999.f;
-   for(int i=1; i<10000; i++) // käydään max 10000 asti pallukoiden lukumäärä laskua, ettei jää ikiluuppiin
+   for(int i=1; i<10000; i++) // kï¿½ydï¿½ï¿½n max 10000 asti pallukoiden lukumï¿½ï¿½rï¿½ laskua, ettei jï¿½ï¿½ ikiluuppiin
    {
        float currentLength = ::CalcPreferableFrontObjectLength(i, startGapInMM, objectSizeInMM, gapInMM);
        float currentDiff = ::fabs(totalLengthInMM - currentLength);
@@ -1535,8 +1552,8 @@ int NFmiConceptualDataView::CalculateUsedSymbolCountAndMeasures(float totalLengt
    if(minInd > 0)
    {
        float tmpCount = static_cast<float>(minInd);
-       tmpCount += (totalLengthInMM - closestLength)/(totalLengthInMM/tmpCount); // tässä lisätään totalcounttiin jäännösosa, jonka avulla lasketaan mm. skaaloja
-	   bool allowDecoratorSizeChange = false; // saako pallukan (=decorator) koko muuttua, vai säädetäänkö vain välien kokoa
+       tmpCount += (totalLengthInMM - closestLength)/(totalLengthInMM/tmpCount); // tï¿½ssï¿½ lisï¿½tï¿½ï¿½n totalcounttiin jï¿½ï¿½nnï¿½sosa, jonka avulla lasketaan mm. skaaloja
+	   bool allowDecoratorSizeChange = false; // saako pallukan (=decorator) koko muuttua, vai sï¿½ï¿½detï¿½ï¿½nkï¿½ vain vï¿½lien kokoa
        if(tmpCount <= 1.f) // jos kertoimeksi saatu alle 1, laitetaan yksi kuvio rintamaan ja skaalataan kaikkia arvoja sen mukaisesti
        {
 			allowDecoratorSizeChange = true;
@@ -1552,21 +1569,21 @@ int NFmiConceptualDataView::CalculateUsedSymbolCountAndMeasures(float totalLengt
 			float tmpScale = ::CalcObjectScalingRatio(totalCount, closestLength, totalLengthInMM, objectSizeInMM, allowDecoratorSizeChange);
 			startGapInMM *= tmpScale;
 			if(allowDecoratorSizeChange)
-				objectSizeInMM *= tmpScale; // ei siis suurenneta pallukoita, vain välejä
+				objectSizeInMM *= tmpScale; // ei siis suurenneta pallukoita, vain vï¿½lejï¿½
 			gapInMM *= tmpScale;
        }
    }
    return totalCount;
 }
 
-// indeksi alkaa 1:stä
+// indeksi alkaa 1:stï¿½
 static float CalcLengthFromStart(size_t objectIndex, float startGapInMM, float objectSizeInMM, float gapInMM)
-{ // etäisyys n:een pallukkaan rintama viivassa (huom! n. objecti lasketaan mukaan puolikkaana, koska halutaan objectin keskikohta)
+{ // etï¿½isyys n:een pallukkaan rintama viivassa (huom! n. objecti lasketaan mukaan puolikkaana, koska halutaan objectin keskikohta)
    float tmpValue = startGapInMM + (objectIndex-1) * gapInMM + (objectIndex-1) * objectSizeInMM + objectSizeInMM / 2.f;
    return tmpValue;
 }
 
-// Jos ratio esim. 0.1, ollaan lähempänä pistettä p1 ja jos se on 0.9 ollaan lähempänä p2:sta.
+// Jos ratio esim. 0.1, ollaan lï¿½hempï¿½nï¿½ pistettï¿½ p1 ja jos se on 0.9 ollaan lï¿½hempï¿½nï¿½ p2:sta.
 static PointF InterpolatePoints(float ratio, const PointF &p1, const PointF &p2)
 {
 	PointF point(static_cast<float>(NFmiInterpolation::Linear(ratio, p1.X, p2.X)), 
@@ -1574,9 +1591,9 @@ static PointF InterpolatePoints(float ratio, const PointF &p1, const PointF &p2)
 	return point;
 }
 
-// Jos ratio esim. 0.1, ollaan lähempänä pistettä p1 ja jos se on 0.9 ollaan lähempänä p2:sta.
-// HUOM! nyt lasketaan kulma vain pisteiden välisen kulmakertoimen avulla, 
-// tämän voisi tehdä cardinal-splini laskujen avulla hienommin.
+// Jos ratio esim. 0.1, ollaan lï¿½hempï¿½nï¿½ pistettï¿½ p1 ja jos se on 0.9 ollaan lï¿½hempï¿½nï¿½ p2:sta.
+// HUOM! nyt lasketaan kulma vain pisteiden vï¿½lisen kulmakertoimen avulla, 
+// tï¿½mï¿½n voisi tehdï¿½ cardinal-splini laskujen avulla hienommin.
 static float CalcRotationAngle(float /* ratio */ , const PointF &p1, const PointF &p2)
 {
 	float dx = p2.X - p1.X;
@@ -1594,9 +1611,9 @@ static float CalcRotationAngle(float /* ratio */ , const PointF &p1, const Point
 	else
 	{
 		if(dy > 0)
-			return -90.f; // mikä tässä pitäisi olla?
+			return -90.f; // mikï¿½ tï¿½ssï¿½ pitï¿½isi olla?
 		else
-			return 90.f; // mikä tässä pitäisi olla?
+			return 90.f; // mikï¿½ tï¿½ssï¿½ pitï¿½isi olla?
 	}
 }
 
@@ -1607,7 +1624,7 @@ static void CalcObjectPlaceAndRotationAngle(float lengthFromStart, const vector<
    if(lengthsInMM.size() > 0 && frontPoints.size() > lengthsInMM.size())
    {
        if(lengthFromStart < lengthsInMM[0])
-       { // piste sijaitsee 1. piste välillä
+       { // piste sijaitsee 1. piste vï¿½lillï¿½
            float ratio = lengthFromStart / lengthsInMM[0];
            point = ::InterpolatePoints(ratio, frontPoints[0], frontPoints[1]);
            rotationAngle = ::CalcRotationAngle(ratio, frontPoints[0], frontPoints[1]);
@@ -1619,7 +1636,7 @@ static void CalcObjectPlaceAndRotationAngle(float lengthFromStart, const vector<
            {
                currentLengthFromStart -= lengthsInMM[i-1];
                if(currentLengthFromStart < lengthsInMM[i])
-               { // piste sijaitsee tässä välissä
+               { // piste sijaitsee tï¿½ssï¿½ vï¿½lissï¿½
                    float ratio = currentLengthFromStart / lengthsInMM[i];
                    point = ::InterpolatePoints(ratio, frontPoints[i], frontPoints[i+1]);
                    rotationAngle = ::CalcRotationAngle(ratio, frontPoints[i], frontPoints[i+1]);
@@ -1632,7 +1649,7 @@ static void CalcObjectPlaceAndRotationAngle(float lengthFromStart, const vector<
        throw runtime_error("Error in CalcObjectPlaceAndRotationAngle");
 }
 
-// 5. Laske pallukoiden lukumäärän ja muiden mittojen avulla pallukoiden kohdat ja talleta sijainnit taulukkoon
+// 5. Laske pallukoiden lukumï¿½ï¿½rï¿½n ja muiden mittojen avulla pallukoiden kohdat ja talleta sijainnit taulukkoon
 // 6. laske tarvittavat pallukoiden rotaatio kulmat haluttuihin kohtiin viivaa [asteissa]
 void NFmiConceptualDataView::CalcPathObjectPoints(const std::vector<Gdiplus::PointF> &frontPoints, size_t objectCount, float startGapInMM, float objectSizeInMM,
                                  float gapInMM, const std::vector<float> &lengthsInMM, float totalLengthInMM, std::vector<Gdiplus::PointF> &objectPoints,
@@ -1686,7 +1703,7 @@ static FrontType GetFrontType(const ConceptualObjectData &theData)
 static vector<float> CalcRotationAngles(const vector<PointF> &theXyPoints)
 {
 	vector<float> angles;
-	if(theXyPoints.size() >= 2) // pitää olla vähintäin 2. pistettä että lasketaan
+	if(theXyPoints.size() >= 2) // pitï¿½ï¿½ olla vï¿½hintï¿½in 2. pistettï¿½ ettï¿½ lasketaan
 	{
 		for(size_t i=0; i<theXyPoints.size(); i++)
 		{
@@ -1697,7 +1714,7 @@ static vector<float> CalcRotationAngles(const vector<PointF> &theXyPoints)
 		}
 	}
 	else if(theXyPoints.size() == 1)
-		angles.push_back(0); // tämä on roska kulma kun on vain yksi piste viivassa
+		angles.push_back(0); // tï¿½mï¿½ on roska kulma kun on vain yksi piste viivassa
 
 	return angles;
 }
@@ -1722,8 +1739,8 @@ void NFmiConceptualDataView::DrawCloudArea(ConceptualObjectData &theData, float 
 
 static void DrawJet(Gdiplus::Graphics &theGdiPlusGraphics, ConceptualObjectData &theData, std::vector<PointF> &theXyPoints, GdiPlusLineInfo &theLineInfo, bool fPrinting, std::vector<Gdiplus::REAL> &theDashPattern, float theLineWidthInPixels, bool fDrawOutLineArrow)
 {
-	// Joudun tekemään oman outline koodin tähän jet-olioita varten
-	std::vector<PointF> leftXyPoints; // jetin pisteet siirrettynä alkuperäisestä viivasta vasemmalle
+	// Joudun tekemï¿½ï¿½n oman outline koodin tï¿½hï¿½n jet-olioita varten
+	std::vector<PointF> leftXyPoints; // jetin pisteet siirrettynï¿½ alkuperï¿½isestï¿½ viivasta vasemmalle
 	std::vector<PointF> rightXyPoints; // ... oikealle
 	vector<float> angles = ::CalcRotationAngles(theXyPoints);
 	if(fDrawOutLineArrow)
@@ -1735,7 +1752,7 @@ static void DrawJet(Gdiplus::Graphics &theGdiPlusGraphics, ConceptualObjectData 
 		}
 	}
 
-	int fillHatchStyle = -1; // -1 tarkoittaa että fillauksen yhteydessä ei käytetä hatchiä
+	int fillHatchStyle = -1; // -1 tarkoittaa ettï¿½ fillauksen yhteydessï¿½ ei kï¿½ytetï¿½ hatchiï¿½
 
 
 	if(fDrawOutLineArrow)
@@ -1748,14 +1765,14 @@ static void DrawJet(Gdiplus::Graphics &theGdiPlusGraphics, ConceptualObjectData 
 
 	if(theXyPoints.size() > 1)
 	{
-		std::vector<PointF> arroyXyPoints; // nuolikärki pisteinä
-		// vasen reuna nuolen kärjestä
+		std::vector<PointF> arroyXyPoints; // nuolikï¿½rki pisteinï¿½
+		// vasen reuna nuolen kï¿½rjestï¿½
 		arroyXyPoints.push_back(::CalcPointLoc(theXyPoints[theXyPoints.size()-1], angles[theXyPoints.size()-1]-90, theLineWidthInPixels*6));
-		// itse kärkipiste
+		// itse kï¿½rkipiste
 		arroyXyPoints.push_back(::CalcPointLoc(theXyPoints[theXyPoints.size()-1], angles[theXyPoints.size()-1]+180, theLineWidthInPixels*10));
-		// oikea reuna kärjestä
+		// oikea reuna kï¿½rjestï¿½
 		arroyXyPoints.push_back(::CalcPointLoc(theXyPoints[theXyPoints.size()-1], angles[theXyPoints.size()-1]+90, theLineWidthInPixels*6));
-		theLineInfo.Tension(0); // laitetaan tensio 0:ksi, että tulee piirrettyä teräväkärkinen nuoli
+		theLineInfo.Tension(0); // laitetaan tensio 0:ksi, ettï¿½ tulee piirrettyï¿½ terï¿½vï¿½kï¿½rkinen nuoli
         CtrlView::DrawGdiplusCurve(theGdiPlusGraphics, arroyXyPoints, theLineInfo, theData.fPlainArea, fillHatchStyle, fPrinting, &theDashPattern);
 	}
 }
@@ -1770,18 +1787,18 @@ void NFmiConceptualDataView::DrawConseptualObject(ConceptualObjectData &theData)
 		for(size_t i = 0; i<theData.itsLatlonPoints.size(); i++)
 			xyPoints.push_back(CtrlView::ConvertLatlonToGdiPlusPoint(this, theData.itsLatlonPoints[i]));
         if(frontType == kFmiFrontTypeCloudArea && xyPoints.size())
-            xyPoints.push_back(xyPoints[0]); // pilvialue on jossain vaiheessa muuttunut suljetuksi alueeksi, tämän takia pitää alkupiste lisätä vielä loppuun, että alue sulkeutuu
+            xyPoints.push_back(xyPoints[0]); // pilvialue on jossain vaiheessa muuttunut suljetuksi alueeksi, tï¿½mï¿½n takia pitï¿½ï¿½ alkupiste lisï¿½tï¿½ vielï¿½ loppuun, ettï¿½ alue sulkeutuu
 
 		float lineWidthInMM = static_cast<float>(theData.itsLineWidthInMM);
 		lineWidthInMM *= CalcScreenSizeFactor(*itsCtrlViewDocumentInterface, itsMapViewDescTopIndex);
 		float lineWidthInPixels = static_cast<float>(lineWidthInMM * itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x);
-		int lineStyle = 0; // 0=yhtenäinen viiva
+		int lineStyle = 0; // 0=yhtenï¿½inen viiva
 		std::string tmpFrontName = theData.itsFrontNameStr;
 		NFmiStringTools::LowerCase(tmpFrontName);
 		std::vector<Gdiplus::REAL> dashPattern;
 		if(tmpFrontName.find(std::string("upper")) != std::string::npos)
 		{
-			lineStyle = 5; // jos löytyi nimesta upper-osio, laitetaan custom katkoviivaa (5=custom)
+			lineStyle = 5; // jos lï¿½ytyi nimesta upper-osio, laitetaan custom katkoviivaa (5=custom)
 			dashPattern.push_back(8); // 9 pituinen viiva
             dashPattern.push_back(2); // 1 pituinen katko
 		}
@@ -1794,7 +1811,7 @@ void NFmiConceptualDataView::DrawConseptualObject(ConceptualObjectData &theData)
 		GdiPlusLineInfo lineInfo(lineWidthInPixels, theData.itsConceptualColor, lineStyle);
 		lineInfo.SetLineCap(Gdiplus::LineCapRound);
 		lineInfo.Tension(0.2f);
-		int fillHatchStyle = -1; // -1 tarkoittaa että fillauksen yhteydessä ei käytetä hatchiä
+		int fillHatchStyle = -1; // -1 tarkoittaa ettï¿½ fillauksen yhteydessï¿½ ei kï¿½ytetï¿½ hatchiï¿½
         if(!theData.itsRainphaseStr.empty())
 			fillHatchStyle = HatchStyleBackwardDiagonal;
 
@@ -1803,7 +1820,7 @@ void NFmiConceptualDataView::DrawConseptualObject(ConceptualObjectData &theData)
 			DrawCloudArea(theData, lineWidthInMM, xyPoints, lineWidthInPixels);
 		}
 		else if(frontType == kFmiFrontTypeJet || frontType == kFmiFrontTypeSlowJet || frontType == kFmiFrontTypeWind)
-		{ // piirretään jet omalla tavalla
+		{ // piirretï¿½ï¿½n jet omalla tavalla
 			bool drawOutLineArrow = true;
 			if(frontType == kFmiFrontTypeWind)
 				drawOutLineArrow = false;
@@ -1813,13 +1830,13 @@ void NFmiConceptualDataView::DrawConseptualObject(ConceptualObjectData &theData)
 		{
             CtrlView::DrawGdiplusCurve(*itsGdiPlusGraphics, xyPoints, lineInfo, theData.fPlainArea, theData.itsFillHatchPattern, itsCtrlViewDocumentInterface->Printing(), &dashPattern);
             if(theData.fPlainArea)
-            { // jos oli ns. plain alue, piirretään sille reunus vähän tummemmalla värillä
+            { // jos oli ns. plain alue, piirretï¿½ï¿½n sille reunus vï¿½hï¿½n tummemmalla vï¿½rillï¿½
                 lineInfo.Color(NFmiColorSpaces::GetBrighterColor(lineInfo.Color(), -40));
-                xyPoints.push_back(xyPoints[0]); // kun suljettu alue reunustetaan viivalla, pitää lisätä alkupiste loppuun, että piiri sulkeutuu
+                xyPoints.push_back(xyPoints[0]); // kun suljettu alue reunustetaan viivalla, pitï¿½ï¿½ lisï¿½tï¿½ alkupiste loppuun, ettï¿½ piiri sulkeutuu
                 CtrlView::DrawGdiplusCurve(*itsGdiPlusGraphics, xyPoints, lineInfo, false, -1, itsCtrlViewDocumentInterface->Printing(), &dashPattern);
 
                 if(!theData.itsSymbolCodeStr.empty())
-                { // tietyillä alueilla on niihin liittyvä symboli, joka piirretään alueen keskelle
+                { // tietyillï¿½ alueilla on niihin liittyvï¿½ symboli, joka piirretï¿½ï¿½n alueen keskelle
                     if(theData.itsWomlMemberNameStr == "parametervaluesetarea")
                         DrawSymbol(theData, 13);
                     else
@@ -1838,50 +1855,50 @@ void NFmiConceptualDataView::DrawFrontDecorations(ConceptualObjectData &theData,
 	// ***** Pallukoiden piirto *******
 	// 1. laske viivan paksuuden ja rintaman tyypin avulla
 		// a) toivottu pallukan koko [mm]
-		// b) toivottu alku/loppu tyhjä väli [mm]
-		// c) toivottu väli [mm]
+		// b) toivottu alku/loppu tyhjï¿½ vï¿½li [mm]
+		// c) toivottu vï¿½li [mm]
 		float startGapInMM = 0;
 		float objectSizeInMM = 0;
 		float gapInMM = 0;
 		CalculateIdealPathObjectMeasures(theLineWidthInMM, theFrontType, startGapInMM, objectSizeInMM, gapInMM);
 	// 2. Laske koko viivan pituus [mm]
-		// laske myös eri osien pituudet taulukkoon
+		// laske myï¿½s eri osien pituudet taulukkoon
 		float pixelLengthInMM = 1.f/static_cast<float>(itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x);
 		vector<float> lengthsInMM;
 		float totalLengthInMM = 0;
 		CalculatePathLengths(pixelLengthInMM, theXyPoints, lengthsInMM, totalLengthInMM);
 	// 3. Laske kuinka monta pallukkaa mahtuu annetun rintaman alueelle
-		// jos alle 1, sovita pallukan koko, niin että mahtuu yksi (laske kerroin jolla skaalataan ja piirrä viivan keskelle pallukka)
-		// jos alle kaksi, sovita pallukan koko, niin että mahtuu kaksi (laske skaala kerroin ja piirrä kahteen kohtaan pallukat)
-		// muuten pallukat laske lähinpään kokonaislukuun sopiva skaala kerroin
+		// jos alle 1, sovita pallukan koko, niin ettï¿½ mahtuu yksi (laske kerroin jolla skaalataan ja piirrï¿½ viivan keskelle pallukka)
+		// jos alle kaksi, sovita pallukan koko, niin ettï¿½ mahtuu kaksi (laske skaala kerroin ja piirrï¿½ kahteen kohtaan pallukat)
+		// muuten pallukat laske lï¿½hinpï¿½ï¿½n kokonaislukuun sopiva skaala kerroin
 		int objectCount = CalculateUsedSymbolCountAndMeasures(totalLengthInMM, startGapInMM, objectSizeInMM, gapInMM);
 		if(objectCount > 0)
 		{
 		// 4. hae pallukoiden piirto polku (GraphicsPath) rintamatyypin mukaan
 			GraphicsPath decorationPath;
 			GetDecorationPath(objectSizeInMM/pixelLengthInMM, theFrontType, decorationPath);
-		// 5. Laske pallukoiden lukumäärän ja muiden mittojen avulla pallukoiden kohdat ja talleta sijainnit taulukkoon
+		// 5. Laske pallukoiden lukumï¿½ï¿½rï¿½n ja muiden mittojen avulla pallukoiden kohdat ja talleta sijainnit taulukkoon
 		// 6. laske tarvittavat pallukoiden rotaatio kulmat haluttuihin kohtiin viivaa [asteissa]
 			vector<PointF> decoratorPoints;
 			vector<float> rotationAngles;
 			CalcPathObjectPoints(theXyPoints, objectCount, startGapInMM, objectSizeInMM, gapInMM, lengthsInMM, totalLengthInMM, decoratorPoints, rotationAngles);
-		// 7. Piirrä pallukat skaalan, sijainnin ja rotaation avulla
-			// jos left/right suunta, säädä rotaatiota 180 asteella
+		// 7. Piirrï¿½ pallukat skaalan, sijainnin ja rotaation avulla
+			// jos left/right suunta, sï¿½ï¿½dï¿½ rotaatiota 180 asteella
 			SolidBrush aBrush(CtrlView::NFmiColor2GdiplusColor(theData.itsConceptualColor));
             float usedLineWidthInPixels = theLineWidthInPixels;
 			if(theFrontType == kFmiFrontTypeThrough)
-                usedLineWidthInPixels *= 0.6f; // solien väkäset ovat sola viivaa ohuemmat
-			// Kynälle laitetaan täysi opacity päälle (NFmiColor alpha = 0)
+                usedLineWidthInPixels *= 0.6f; // solien vï¿½kï¿½set ovat sola viivaa ohuemmat
+			// Kynï¿½lle laitetaan tï¿½ysi opacity pï¿½ï¿½lle (NFmiColor alpha = 0)
 			auto penColor = theData.itsConceptualColor;
 			penColor.Alpha(0);
 			Pen aPen(CtrlView::NFmiColor2GdiplusColor(penColor), usedLineWidthInPixels);
 			aPen.SetLineCap(Gdiplus::LineCapRound, Gdiplus::LineCapRound, Gdiplus::DashCapFlat);
 
 
-			Gdiplus::Matrix transMat; // originaali muutos matriisi tähän
+			Gdiplus::Matrix transMat; // originaali muutos matriisi tï¿½hï¿½n
 			itsGdiPlusGraphics->GetTransform(&transMat);
 			float baseRotationFix = 0;
-			if(theData.fLeft == true) // tämä rintamien pallukoiden orientaatio on muuttunut kesäkuun lopulla 2008, syytä ei ole tiedossa
+			if(theData.fLeft == true) // tï¿½mï¿½ rintamien pallukoiden orientaatio on muuttunut kesï¿½kuun lopulla 2008, syytï¿½ ei ole tiedossa
 				baseRotationFix = 180;
 			float usedRotationFix = baseRotationFix;
 			if(theFrontType == kFmiFrontTypeCloudAreaPartPie2)
@@ -1891,7 +1908,7 @@ void NFmiConceptualDataView::DrawFrontDecorations(ConceptualObjectData &theData,
 			{
 				if(theFrontType == kFmiFrontTypeThrough)
 				{
-					if(j % 2 == 0) // joka toisella kerralla sola väkästä väännetään toiseen suuntaan ja joka toisella toiseen
+					if(j % 2 == 0) // joka toisella kerralla sola vï¿½kï¿½stï¿½ vï¿½ï¿½nnetï¿½ï¿½n toiseen suuntaan ja joka toisella toiseen
 						usedRotationFix = baseRotationFix + 60;
 					else
 						usedRotationFix = baseRotationFix + 120;
@@ -1909,24 +1926,25 @@ void NFmiConceptualDataView::DrawFrontDecorations(ConceptualObjectData &theData,
 						NFmiColor aColor = theData.itsConceptualColor;
 						aColor.Alpha(0.5f);
 						if(theFrontType == kFmiFrontTypeCloudAreaPartPie2)
-							aColor.Alpha(0.65f); // Pie2 laitetaan 'vaaleammaksi' lisäämällä läpinäkyvyyttä
+							aColor.Alpha(0.65f); // Pie2 laitetaan 'vaaleammaksi' lisï¿½ï¿½mï¿½llï¿½ lï¿½pinï¿½kyvyyttï¿½
 						INT pointSize = decorationPath.GetPointCount();
 						std::vector<PointF> points(pointSize);
 						decorationPath.GetPathPoints(&points[0], pointSize);
-						int lineStyle = 0; // 0=yhtenäinen viiva
+						int lineStyle = 0; // 0=yhtenï¿½inen viiva
 						GdiPlusLineInfo lineInfo(usedLineWidthInPixels, aColor, lineStyle);
-                        CtrlView::DrawGdiplusCurve(*itsGdiPlusGraphics, points, lineInfo, true, HatchStyle40Percent, itsToolBox->GetDC()->IsPrinting() == TRUE);
+                        CtrlView::DrawGdiplusCurve(*itsGdiPlusGraphics, points, lineInfo, true, HatchStyle40Percent, IsPrinting());
 					}
 					else
 						itsGdiPlusGraphics->FillPath(&aBrush, &decorationPath);
 				}
-				itsGdiPlusGraphics->SetTransform(&transMat); // palautetaan aina originaali muutos msatriisi käyttöön, sillä muuten transformaatiot kumuloituvat
+				itsGdiPlusGraphics->SetTransform(&transMat); // palautetaan aina originaali muutos msatriisi kï¿½yttï¿½ï¿½n, sillï¿½ muuten transformaatiot kumuloituvat
 			}
 		}
 	}
 }
+#endif // UNIX
 
-// HUOM! tätä pitää kutsua ennen kuin itse luokkaa saa käyttää!!!!
+// HUOM! tï¿½tï¿½ pitï¿½ï¿½ kutsua ennen kuin itse luokkaa saa kï¿½yttï¿½ï¿½!!!!
 void NFmiConceptualDataView::InitMirwaSymbolMap(const std::string &theWomlDirectory)
 {
     if(!NFmiConceptualDataView::itsMirwaSymbolMap.Initialized())
@@ -1942,6 +1960,6 @@ void NFmiConceptualDataView::InitMirwaSymbolMap(const std::string &theWomlDirect
 }
 
 // *************************************************************
-// rintamien piirtoon liittyvää pallukoiden lasku/piirto koodia
+// rintamien piirtoon liittyvï¿½ï¿½ pallukoiden lasku/piirto koodia
 // *************************************************************
 

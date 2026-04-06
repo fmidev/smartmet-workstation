@@ -2,7 +2,9 @@
 #include "NFmiMenuItemList.h"
 #include "catlog/catlog.h"
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 
 CFmiPopupMenu::CFmiPopupMenu()
 :realPopupMenu()

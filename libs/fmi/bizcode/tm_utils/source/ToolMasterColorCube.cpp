@@ -1,4 +1,6 @@
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 
 #ifndef DISABLE_UNIRAS_TOOLMASTER
 

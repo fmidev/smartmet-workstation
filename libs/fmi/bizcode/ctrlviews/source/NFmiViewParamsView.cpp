@@ -25,19 +25,21 @@
 #include "WmsSupportInterface.h"
 #include "wmssupport\ChangedLayers.h"
 
+#ifndef UNIX
 #include <gdiplus.h>
+#endif // UNIX
 #include "boost\math\special_functions\round.hpp"
 
 NFmiViewParamsView::ModelSelectorButtonImageHolder NFmiViewParamsView::statModelSelectorButtonImages;
 
 // initialisoinnissa luetaan bitmapit tiedostoista, kutsu vasta kun itsBitmapFolder-dataosa on asetettu
-// HUOM! heittää poikkeuksia epäonnistuessaan
+// HUOM! heittï¿½ï¿½ poikkeuksia epï¿½onnistuessaan
 void NFmiViewParamsView::ModelSelectorButtonImageHolder::Initialize(void)
 {
 	fInitialized = true;
 	itsNextModelButtonImage = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "control_small_play.png");
 	itsPreviousModelButtonImage = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "control_small_reverse_play.png");
-	itsFindNearestModelButtonImage = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "control_small_pause.png"); // pause saa olla etsi lähin sopiva malli ajo-nappula
+	itsFindNearestModelButtonImage = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "control_small_pause.png"); // pause saa olla etsi lï¿½hin sopiva malli ajo-nappula
 }
 
 //--------------------------------------------------------
@@ -70,8 +72,8 @@ NFmiViewParamsView::NFmiViewParamsView(int theMapViewDescTopIndex, const NFmiRec
 
 NFmiRect NFmiViewParamsView::CalcParameterDragRect(int theParamLineIndex, int leftMargin, int topMargin, int rightMargin, int bottomMargin)
 {
-	// Jos ollaan näytössä, jossa fHasMapLayer = false (esim. poikkileikkausnäyttö),
-	// Pitää indeksiä säätää, jotta raahaus visualisoinnit menevät oikein.
+	// Jos ollaan nï¿½ytï¿½ssï¿½, jossa fHasMapLayer = false (esim. poikkileikkausnï¿½yttï¿½),
+	// Pitï¿½ï¿½ indeksiï¿½ sï¿½ï¿½tï¿½ï¿½, jotta raahaus visualisoinnit menevï¿½t oikein.
 	if(!fHasMapLayer)
 		theParamLineIndex--;
 
@@ -84,13 +86,13 @@ NFmiRect NFmiViewParamsView::CalcParameterDragRect(int theParamLineIndex, int le
     return NFmiRect(left, top, right, bottom);
 }
 
-// Parametrin aktivaation merkiksi piirretään sen pohja vaaleammalla sävyllä
+// Parametrin aktivaation merkiksi piirretï¿½ï¿½n sen pohja vaaleammalla sï¿½vyllï¿½
 void NFmiViewParamsView::DrawActiveParamMarkers(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theParamLineIndex)
 {
     if(theDrawParam->IsActive())
     {
         NFmiRect paramRect = CalcParameterRowRect(theParamLineIndex);
-		// Koko parametri laatikko menee reunoilla reunaviivojen päälle, joten lisätään tähän korostuslaatikkoon marginaalia molempiin reunoihin.
+		// Koko parametri laatikko menee reunoilla reunaviivojen pï¿½ï¿½lle, joten lisï¿½tï¿½ï¿½n tï¿½hï¿½n korostuslaatikkoon marginaalia molempiin reunoihin.
 		auto horizontalMargin = ConvertMilliMeterToRelative(0.5, true);
 		paramRect.Inflate(-horizontalMargin, 0);
 
@@ -161,12 +163,12 @@ void NFmiViewParamsView::DrawData(void)
 	catch(...)
 	{
 	}
-	CleanGdiplus(); // tätä pitää kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
+	CleanGdiplus(); // tï¿½tï¿½ pitï¿½ï¿½ kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
 }
 
-// Pitää piirtää paramboxin tausta uusiksi, jos ollaan hiirellä raahaamassa parametria,
-// koska tällöin pitää piirtää erilaisia markereitä näytölle ja 
-// normaalisti taustan piirtää NFmiParamHandlerView -luokka, jonka sisällä tämä NFmiViewParamsView -luokan ilmentymä on.
+// Pitï¿½ï¿½ piirtï¿½ï¿½ paramboxin tausta uusiksi, jos ollaan hiirellï¿½ raahaamassa parametria,
+// koska tï¿½llï¿½in pitï¿½ï¿½ piirtï¿½ï¿½ erilaisia markereitï¿½ nï¿½ytï¿½lle ja 
+// normaalisti taustan piirtï¿½ï¿½ NFmiParamHandlerView -luokka, jonka sisï¿½llï¿½ tï¿½mï¿½ NFmiViewParamsView -luokan ilmentymï¿½ on.
 void NFmiViewParamsView::DrawMouseDraggingBackground()
 {
     if(fMouseDraggingAction)
@@ -183,31 +185,31 @@ void NFmiViewParamsView::DrawMouseDraggingAction()
 {
     if(fMouseDraggingAction)
     {
-        // 1. Piirretään laatikko raahattavan parametrin ympärille
+        // 1. Piirretï¿½ï¿½n laatikko raahattavan parametrin ympï¿½rille
         NFmiRect draggedParamRect = CalcParameterDragRect(itsCapturedParamRowIndex, 1, 1, 0, -1);
         NFmiDrawingEnvironment drawingEnvi;
         float baseGrayIntensity = 255.f;
-        drawingEnvi.SetFrameColor(NFmiColor(baseGrayIntensity / 255.f, baseGrayIntensity / 255.f, baseGrayIntensity / 255.f)); // from-drop-positio piirretään vaalealla
+        drawingEnvi.SetFrameColor(NFmiColor(baseGrayIntensity / 255.f, baseGrayIntensity / 255.f, baseGrayIntensity / 255.f)); // from-drop-positio piirretï¿½ï¿½n vaalealla
         DrawFrame(drawingEnvi, draggedParamRect);
 
-        // 2. Piirretään viiva siihen väliin mihin parametri nyt tiputettaisiin, 
-        // jos indeksi ei ole 0 (= ei kunnollista indeksiä)
-        // ja parametria ei olla tiputtamassa itsensä paikalle
+        // 2. Piirretï¿½ï¿½n viiva siihen vï¿½liin mihin parametri nyt tiputettaisiin, 
+        // jos indeksi ei ole 0 (= ei kunnollista indeksiï¿½)
+        // ja parametria ei olla tiputtamassa itsensï¿½ paikalle
         if(itsCurrentDragRowIndex && itsCurrentDragRowIndex != itsCapturedParamRowIndex)
         {
-            bool useTopLine = itsCurrentDragRowIndex < itsCapturedParamRowIndex; // jos tiputus on lähtöpaikkaa ylempänä, käytetään paramRectin yläviivaa
+            bool useTopLine = itsCurrentDragRowIndex < itsCapturedParamRowIndex; // jos tiputus on lï¿½htï¿½paikkaa ylempï¿½nï¿½, kï¿½ytetï¿½ï¿½n paramRectin ylï¿½viivaa
             NFmiRect dropZoneParamRect = CalcParameterDragRect(itsCurrentDragRowIndex, 3, 0, 16, -2);
             if(useTopLine)
             {
                 double newBottom = dropZoneParamRect.Top() + itsToolBox->SY(2);
-                dropZoneParamRect.Bottom(newBottom); // tehdään laatikosta yhden pikselin korkuinen alkaen sen alkuperäisestä yläosasta
+                dropZoneParamRect.Bottom(newBottom); // tehdï¿½ï¿½n laatikosta yhden pikselin korkuinen alkaen sen alkuperï¿½isestï¿½ ylï¿½osasta
             }
             else
             {
                 double newTop = dropZoneParamRect.Bottom() - itsToolBox->SY(2);
-                dropZoneParamRect.Top(newTop); // tehdään laatikosta yhden pikselin korkuinen alkaen sen alkuperäisestä alaosasta
+                dropZoneParamRect.Top(newTop); // tehdï¿½ï¿½n laatikosta yhden pikselin korkuinen alkaen sen alkuperï¿½isestï¿½ alaosasta
             }
-            drawingEnvi.SetFrameColor(NFmiColor(0, 0, 0)); // to-drop-positio piirretään mustalla
+            drawingEnvi.SetFrameColor(NFmiColor(0, 0, 0)); // to-drop-positio piirretï¿½ï¿½n mustalla
             DrawFrame(drawingEnvi, dropZoneParamRect);
         }
     }
@@ -223,27 +225,29 @@ NFmiPoint NFmiViewParamsView::GetViewSizeInPixels(void)
 
 void NFmiViewParamsView::DrawModelSelectorButtons(boost::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiRect& parameterRowRect)
 {
-	if(theDrawParam->IsModelRunDataType()) // piirretään tuottajan vaihto napit vain niille datoille, joille löytyy arkisto dataa
+	if(theDrawParam->IsModelRunDataType()) // piirretï¿½ï¿½n tuottajan vaihto napit vain niille datoille, joille lï¿½ytyy arkisto dataa
 	{ // toistaiseksi vain pinta/painepinta/mallipinta datat arkistoissa
+#ifndef UNIX
 		itsGdiPlusGraphics->SetClip(CtrlView::Relative2GdiplusRect(itsToolBox, GetFrame()));
-		// piirrä next-model-button
+		// piirrï¿½ next-model-button
         CtrlView::DrawAnimationButton(CalcModelSelectorButtonRect(parameterRowRect, 2), statModelSelectorButtonImages.itsPreviousModelButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f);
         CtrlView::DrawAnimationButton(CalcModelSelectorButtonRect(parameterRowRect, 1), statModelSelectorButtonImages.itsFindNearestModelButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f);
         CtrlView::DrawAnimationButton(CalcModelSelectorButtonRect(parameterRowRect, 0), statModelSelectorButtonImages.itsNextModelButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f);
+#endif // UNIX
 	}
 }
 
 // Laskee vasempaan alariviin nappuloiden paikkoja indeksin perusteella.
-// theIndex alkaa 1:stä ja indeksin kasvaessa nappuloita sijoitetaan aina enemmän oikealle.
+// theIndex alkaa 1:stï¿½ ja indeksin kasvaessa nappuloita sijoitetaan aina enemmï¿½n oikealle.
 NFmiRect NFmiViewParamsView::CalcModelSelectorButtonRect(const NFmiRect& parameterRowRect, int theButtonIndex)
 {
 	NFmiPoint buttonRelativeSize = CalcModelSelectorButtonRelativeSize(statModelSelectorButtonImages.itsNextModelButtonImage);
 
-	// Pieni marginaali oikean reuna ja nappulan oikean reunan väliin
+	// Pieni marginaali oikean reuna ja nappulan oikean reunan vï¿½liin
 	auto rightSideMargin = ConvertMilliMeterToRelative(0.5, true);
 	auto bottomSideMargin = ConvertMilliMeterToRelative(0.2, false);
 
-	// Sijoitetaan nämä nappulat parametri rivilleen hieman irti reunoista.
+	// Sijoitetaan nï¿½mï¿½ nappulat parametri rivilleen hieman irti reunoista.
 	// nappulat sijoitetaan oikeasta reunasta kohti vasenta reunaa...
 	double rightside = parameterRowRect.Right() - rightSideMargin - (theButtonIndex * buttonRelativeSize.X());
 	double leftSide = rightside - buttonRelativeSize.X();
@@ -256,6 +260,7 @@ NFmiRect NFmiViewParamsView::CalcModelSelectorButtonRect(const NFmiRect& paramet
 
 NFmiPoint NFmiViewParamsView::CalcModelSelectorButtonRelativeSize(Gdiplus::Bitmap *theImage)
 {
+#ifndef UNIX
 	double relativeWidth = itsToolBox->SX(boost::math::iround(itsButtonSizeInMM_x * itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x)); 
     double relativeHeight = itsToolBox->SY(boost::math::iround(itsButtonSizeInMM_y * itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_y));
 	if(itsCtrlViewDocumentInterface->Printing() == false)
@@ -271,6 +276,9 @@ NFmiPoint NFmiViewParamsView::CalcModelSelectorButtonRelativeSize(Gdiplus::Bitma
 		relativeHeight = itsToolBox->SY(bitmapSizeY);
 	}
 	return NFmiPoint(relativeWidth, relativeHeight);
+#else
+    return NFmiPoint(16.0, 16.0); // TODO: implement on Linux
+#endif // UNIX
 }
 
 
@@ -299,21 +307,21 @@ NFmiRect NFmiViewParamsView::CalcSize(void)
 	if(drawParamList && drawParamList->NumberOfItems())
 	{
 		if(fHasMapLayer)
-	        lineCount = drawParamList->NumberOfItems() + 1; // +1 tulee map-layeristä
+	        lineCount = drawParamList->NumberOfItems() + 1; // +1 tulee map-layeristï¿½
 		else
 			lineCount = drawParamList->NumberOfItems();
 	}
 
-	// ruudun korkeus on rivien määrä*rivinkorkeus (rivin korkeudessa on jo mukana oma marginaali)
+	// ruudun korkeus on rivien mï¿½ï¿½rï¿½*rivinkorkeus (rivin korkeudessa on jo mukana oma marginaali)
 	double heigth = lineCount * itsLineHeight;
-	// Lisätään vertikaali marginaali alkuun ja loppuun eli 2x marginaali
+	// Lisï¿½tï¿½ï¿½n vertikaali marginaali alkuun ja loppuun eli 2x marginaali
 	heigth += ConvertMilliMeterToRelative(itsParameterRowVerticalMarginInMM * 2, false);
 
 	returnRect.Bottom(returnRect.Top() + heigth);
 	return returnRect;
 }
 
-// Marko lisäsi 3.4.2002
+// Marko lisï¿½si 3.4.2002
 bool NFmiViewParamsView::LeftDoubleClick(const NFmiPoint &thePlace, unsigned long /* theKey */)
 {
 	if(IsIn(thePlace))
@@ -329,23 +337,23 @@ bool NFmiViewParamsView::LeftDoubleClick(const NFmiPoint &thePlace, unsigned lon
 				{
 					if(drawParam->IsActive())
 					{
-//						if(itsMapViewDescTopIndex == 0) // en saa tätä toimimaan oikein kuin pääkarttanäytöllä (joten estän drawParam muokkauksen muissa ikkunoissa), muissa parametri menee piiloon, enkä saa ikkunoita päivittämään ruutua oikeaan tilaan
+//						if(itsMapViewDescTopIndex == 0) // en saa tï¿½tï¿½ toimimaan oikein kuin pï¿½ï¿½karttanï¿½ytï¿½llï¿½ (joten estï¿½n drawParam muokkauksen muissa ikkunoissa), muissa parametri menee piiloon, enkï¿½ saa ikkunoita pï¿½ivittï¿½mï¿½ï¿½n ruutua oikeaan tilaan
 						{
 							NFmiDataIdent param = drawParam->Param();
                             bool macroParamInCase = (NFmiDrawParam::IsMacroParamCase(drawParam->DataType()));
-							if(macroParamInCase) // macroParamin yhteydessä parametrin nimeksi pitää laittaa sen lyhenne, koska se on macroParamin tunniste!!
+							if(macroParamInCase) // macroParamin yhteydessï¿½ parametrin nimeksi pitï¿½ï¿½ laittaa sen lyhenne, koska se on macroParamin tunniste!!
 								param.GetParam()->SetName(drawParam->InitFileName());
 
 							NFmiMenuItem menuItem(itsMapViewDescTopIndex, "xxx", param, kFmiModifyDrawParam, 
 								NFmiMetEditorTypes::View::kFmiParamsDefaultView, &drawParam->Level(),
 								drawParam->DataType(), index, drawParam->ViewMacroDrawParam());
-                            // Tämä on ruma fixi, mutta tupla klikki tekee tämän piilotus asetuksen jostain syystä ja minun pitää laittaa se tässä pois
+                            // Tï¿½mï¿½ on ruma fixi, mutta tupla klikki tekee tï¿½mï¿½n piilotus asetuksen jostain syystï¿½ ja minun pitï¿½ï¿½ laittaa se tï¿½ssï¿½ pois
                             drawParam->HideParam(!drawParam->IsParamHidden());
-                            // Ikävä kyllä yksöis klikin jälkeen (ennen tätä toista klikkiä, josta syntyy tupla klikkaus) 
-                            // on tehty ruudun päivitys, joka nyt tuplaklikin kohdalla pitää kumota
+                            // Ikï¿½vï¿½ kyllï¿½ yksï¿½is klikin jï¿½lkeen (ennen tï¿½tï¿½ toista klikkiï¿½, josta syntyy tupla klikkaus) 
+                            // on tehty ruudun pï¿½ivitys, joka nyt tuplaklikin kohdalla pitï¿½ï¿½ kumota
 							itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, false); 
 							itsCtrlViewDocumentInterface->RefreshApplicationViewsAndDialogs("ViewParamsView::LeftDoubleClick: Double click has been pressed over parameter to open Draw-param dialog, this update fixes (UGLY) the first left-click's param show/hide action", GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
-							return itsCtrlViewDocumentInterface->ExecuteCommand(menuItem, GetUsedParamRowIndex(), 1); // 1=viewtype ei määrätty vielä
+							return itsCtrlViewDocumentInterface->ExecuteCommand(menuItem, GetUsedParamRowIndex(), 1); // 1=viewtype ei mï¿½ï¿½rï¿½tty vielï¿½
 						}
 					}
 					else
@@ -364,7 +372,7 @@ bool NFmiViewParamsView::ActivateParam(boost::shared_ptr<NFmiDrawParam> &theDraw
     NFmiMenuItem menuItem(itsMapViewDescTopIndex, "xxx", theDrawParam->Param(), kFmiActivateView,
         NFmiMetEditorTypes::View::kFmiParamsDefaultView, &theDrawParam->Level(),
         theDrawParam->DataType(), theParamIndex, theDrawParam->ViewMacroDrawParam());
-    return itsCtrlViewDocumentInterface->ExecuteCommand(menuItem, GetUsedParamRowIndex(), 1); // 1=viewtype ei määrätty vielä
+    return itsCtrlViewDocumentInterface->ExecuteCommand(menuItem, GetUsedParamRowIndex(), 1); // 1=viewtype ei mï¿½ï¿½rï¿½tty vielï¿½
 }
 
 int NFmiViewParamsView::GetParamCount(void)
@@ -405,7 +413,7 @@ bool NFmiViewParamsView::MouseWheel(const NFmiPoint &thePlace, unsigned long the
 bool NFmiViewParamsView::DoAfterParamModeModifications(NFmiDrawParamList *theParamList)
 {
     theParamList->Dirty(true);
-    itsCtrlViewDocumentInterface->CheckAnimationLockedModeTimeBags(itsMapViewDescTopIndex, false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
+    itsCtrlViewDocumentInterface->CheckAnimationLockedModeTimeBags(itsMapViewDescTopIndex, false); // kun parametrin nï¿½kyvyyttï¿½ vaihdetaan, pitï¿½ï¿½ tehdï¿½ mahdollisesti animaatio moodin datan tarkistus
 	auto realRowIndex = CalcRealRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber);
 	itsCtrlViewDocumentInterface->MacroParamDataCache().update(itsMapViewDescTopIndex, static_cast<unsigned long>(realRowIndex), *theParamList);
     itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, true, true, false, false, true);
@@ -421,7 +429,7 @@ bool NFmiViewParamsView::LeftButtonDown(const NFmiPoint & thePlace, unsigned lon
     {
         NFmiDrawParamList* paramList = GetDrawParamList();
         if(paramList && paramList->NumberOfItems() >= 2)
-        { // pitää olla väh. kaksi parametria listassa ennen kuin kannattaa miettiä raahauksia
+        { // pitï¿½ï¿½ olla vï¿½h. kaksi parametria listassa ennen kuin kannattaa miettiï¿½ raahauksia
             itsCapturedParamRowIndex = CalcParameterRowIndex(thePlace);
             if(itsCapturedParamRowIndex)
             {
@@ -436,16 +444,16 @@ bool NFmiViewParamsView::LeftButtonDown(const NFmiPoint & thePlace, unsigned lon
 
 bool NFmiViewParamsView::MouseMove(const NFmiPoint& thePlace, unsigned long theKey)
 {
-    // HUOM!! ei pidä tutkia onko hiiri ikkunan sisällä vaan onko hiiri kaapattu!
+    // HUOM!! ei pidï¿½ tutkia onko hiiri ikkunan sisï¿½llï¿½ vaan onko hiiri kaapattu!
     if(!IsIn(thePlace))
         int x = 0;
 
     if(itsCtrlViewDocumentInterface->MouseCaptured() && fMouseCaptured)
-    { // tämä blokki liittyy parametrin raahaukseen (piirtojärjestyksen muuttoa varten)
-        itsCurrentDragRowIndex = CalcParameterRowIndex(thePlace); // 0 indeksi on puuttuva eli ollaan parambox laatikon ylä/ala puolella
+    { // tï¿½mï¿½ blokki liittyy parametrin raahaukseen (piirtojï¿½rjestyksen muuttoa varten)
+        itsCurrentDragRowIndex = CalcParameterRowIndex(thePlace); // 0 indeksi on puuttuva eli ollaan parambox laatikon ylï¿½/ala puolella
         if(itsCurrentDragRowIndex && itsCurrentDragRowIndex != itsCapturedParamRowIndex)
-        { // Nyt hiirtä on raahattu originaali parametrin kohdalta jonkun toisen parametrin päälle
-            fMouseDraggingAction = true; // Tästä eteenpäin raahaus on piirrettävä tavalla tai toisella, kunnes hiirestä päästetään irti
+        { // Nyt hiirtï¿½ on raahattu originaali parametrin kohdalta jonkun toisen parametrin pï¿½ï¿½lle
+            fMouseDraggingAction = true; // Tï¿½stï¿½ eteenpï¿½in raahaus on piirrettï¿½vï¿½ tavalla tai toisella, kunnes hiirestï¿½ pï¿½ï¿½stetï¿½ï¿½n irti
         }
     }
 
@@ -467,9 +475,9 @@ NFmiDrawParamList* NFmiViewParamsView::GetDrawParamList()
 
 bool NFmiViewParamsView::LeftButtonUp(const NFmiPoint &thePlace, unsigned long theKey)
 {
-    // HUOM!! ei pidä tutkia onko hiiri ikkunan sisällä vaan ollaanko raahaus moodissa!
+    // HUOM!! ei pidï¿½ tutkia onko hiiri ikkunan sisï¿½llï¿½ vaan ollaanko raahaus moodissa!
     if(fMouseDraggingAction)
-    { // tämä blokki liittyy parametrin raahaukseen (piirtojärjestyksen muuttoa varten)
+    { // tï¿½mï¿½ blokki liittyy parametrin raahaukseen (piirtojï¿½rjestyksen muuttoa varten)
         fMouseDraggingAction = false;
         NFmiDrawParamList* paramList = GetDrawParamList();
         if(paramList && paramList->MoveParam(itsCapturedParamRowIndex, itsCurrentDragRowIndex))
@@ -491,7 +499,7 @@ bool NFmiViewParamsView::LeftButtonUp(const NFmiPoint &thePlace, unsigned long t
                         return ActivateParam(drawParam, index);
 					}
 					else if(theKey & kShiftKey)
-					{ // jos shift pohjassa poistetaan parametri näytöltä
+					{ // jos shift pohjassa poistetaan parametri nï¿½ytï¿½ltï¿½
 						paramList->Remove();
                         return DoAfterParamModeModifications(paramList);
                     }
@@ -500,7 +508,7 @@ bool NFmiViewParamsView::LeftButtonUp(const NFmiPoint &thePlace, unsigned long t
 						if(LeftClickOnModelSelectionButtons(thePlace, drawParam, index))
 							return true;
 						else
-						{ // toglataan parametrin näytä/piilota moodia
+						{ // toglataan parametrin nï¿½ytï¿½/piilota moodia
 							drawParam->HideParam(!drawParam->IsParamHidden());
                             return DoAfterParamModeModifications(paramList);
                         }
@@ -512,7 +520,7 @@ bool NFmiViewParamsView::LeftButtonUp(const NFmiPoint &thePlace, unsigned long t
 	return false;
 }
 
-// Ainoa tapaus mikä kiinnostaa on macroParamit ja niiden kaavat
+// Ainoa tapaus mikï¿½ kiinnostaa on macroParamit ja niiden kaavat
 std::string NFmiViewParamsView::ComposeToolTipText(const NFmiPoint& thePlace)
 {
 	NFmiDrawParamList* paramList = GetDrawParamList();
@@ -582,29 +590,29 @@ std::string NFmiViewParamsView::ComposeToolTipText(const NFmiPoint& thePlace)
 	return "";
 }
 
-// HUOM! theRowIndex on parametrin rivi numero tällä karttanäyttö rivillä. Sillä lasketaan painonappien paikat.
-// Dokumentin funktioille pitää antaa taas itsRowNumber, joka on taas tämän näytön sijainti riveissä karttanäyttö ruudukossa,
-// tätä tietoa tarvitaan kun pitää puhdistaa muutoksen takia karttarivi cachesta.
+// HUOM! theRowIndex on parametrin rivi numero tï¿½llï¿½ karttanï¿½yttï¿½ rivillï¿½. Sillï¿½ lasketaan painonappien paikat.
+// Dokumentin funktioille pitï¿½ï¿½ antaa taas itsRowNumber, joka on taas tï¿½mï¿½n nï¿½ytï¿½n sijainti riveissï¿½ karttanï¿½yttï¿½ ruudukossa,
+// tï¿½tï¿½ tietoa tarvitaan kun pitï¿½ï¿½ puhdistaa muutoksen takia karttarivi cachesta.
 bool NFmiViewParamsView::LeftClickOnModelSelectionButtons(const NFmiPoint &thePlace, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theParameterRowIndex)
 {
-	// Jos ollaan näytössä, jossa fHasMapLayer = false (esim. poikkileikkausnäyttö),
-	// Pitää indeksiä säätää, jotta raahaus visualisoinnit menevät oikein.
+	// Jos ollaan nï¿½ytï¿½ssï¿½, jossa fHasMapLayer = false (esim. poikkileikkausnï¿½yttï¿½),
+	// Pitï¿½ï¿½ indeksiï¿½ sï¿½ï¿½tï¿½ï¿½, jotta raahaus visualisoinnit menevï¿½t oikein.
 	if(!fHasMapLayer)
 		theParameterRowIndex--;
 
 	auto parameterRowRect = CalcParameterRowRect(theParameterRowIndex);
     auto usedRowIndex = GetUsedParamRowIndex();
-    if(CalcModelSelectorButtonRect(parameterRowRect, 2).IsInside(thePlace)) // tässä tutkitaan osuiko hiiren klikkaus previous-nappiin (2)
+    if(CalcModelSelectorButtonRect(parameterRowRect, 2).IsInside(thePlace)) // tï¿½ssï¿½ tutkitaan osuiko hiiren klikkaus previous-nappiin (2)
 	{
 		itsCtrlViewDocumentInterface->SetModelRunOffset(theDrawParam, -1, itsMapViewDescTopIndex, usedRowIndex);
 		return true;
 	}
-	else if(CalcModelSelectorButtonRect(parameterRowRect, 0).IsInside(thePlace)) // tässä tutkitaan osuiko hiiren klikkaus next-nappiin (0)
+	else if(CalcModelSelectorButtonRect(parameterRowRect, 0).IsInside(thePlace)) // tï¿½ssï¿½ tutkitaan osuiko hiiren klikkaus next-nappiin (0)
 	{
 		itsCtrlViewDocumentInterface->SetModelRunOffset(theDrawParam, 1, itsMapViewDescTopIndex, usedRowIndex);
 		return true;
 	}
-	else if(CalcModelSelectorButtonRect(parameterRowRect, 1).IsInside(thePlace)) // tässä tutkitaan osuiko hiiren klikkaus nearest-model-nappiin (1)
+	else if(CalcModelSelectorButtonRect(parameterRowRect, 1).IsInside(thePlace)) // tï¿½ssï¿½ tutkitaan osuiko hiiren klikkaus nearest-model-nappiin (1)
 	{
 		itsCtrlViewDocumentInterface->SetNearestBeforeModelOrigTimeRunoff(theDrawParam, itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex), itsMapViewDescTopIndex, usedRowIndex);
 		return true;
@@ -621,7 +629,7 @@ std::string NFmiViewParamsView::MakeMacroParamTooltipText(const boost::shared_pt
 		NFmiFileString macroParamFilename = drawParam->InitFileName();
 		macroParamFilename.Extension("st");
 		macroParamTooltip += macroParamFilename;
-		macroParamTooltip += "<br><hr color=red><br>"; // väliviiva
+		macroParamTooltip += "<br><hr color=red><br>"; // vï¿½liviiva
 		macroParamTooltip += CtrlViewUtils::XmlEncode(CtrlViewUtils::GetMacroParamFormula(*(itsCtrlViewDocumentInterface->MacroParamSystem()), drawParam));
 		return macroParamTooltip;
 	}

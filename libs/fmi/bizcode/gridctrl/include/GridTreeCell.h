@@ -6,6 +6,8 @@
 #if !defined(AFX_GRIDTREECELL_H__97838AF2_EBD9_11D3_B75D_00C04F6A7AE6__INCLUDED_)
 #define AFX_GRIDTREECELL_H__97838AF2_EBD9_11D3_B75D_00C04F6A7AE6__INCLUDED_
 
+#ifndef UNIX
+
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -48,5 +50,6 @@ protected:
     CString  m_strText;     // Cell text (or binary data if you wish...)
 };
 
+#endif // UNIX
 
 #endif // !defined(AFX_GRIDTREECELL_H__97838AF2_EBD9_11D3_B75D_00C04F6A7AE6__INCLUDED_)

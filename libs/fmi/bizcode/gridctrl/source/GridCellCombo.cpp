@@ -34,7 +34,9 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "GridCell.h"
 #include "GridCtrl.h"
 

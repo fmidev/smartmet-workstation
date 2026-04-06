@@ -6,6 +6,8 @@
 #if !defined(AFX_GRIDBTNCELL_H__937E4927_EF80_11D3_B75F_00C04F6A7AE6__INCLUDED_)
 #define AFX_GRIDBTNCELL_H__937E4927_EF80_11D3_B75F_00C04F6A7AE6__INCLUDED_
 
+#ifndef UNIX
+
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -102,5 +104,7 @@ protected:
     STRUCT_DRAWCTL DrawCtl[ NBR_CTLS]; // Stores draw control information
     CString strBtnAry[ NBR_CTLS];         // button text -- for push buttons
 };
+
+#endif // UNIX
 
 #endif // !defined(AFX_GRIDBTNCELL_H__937E4927_EF80_11D3_B75F_00C04F6A7AE6__INCLUDED_)

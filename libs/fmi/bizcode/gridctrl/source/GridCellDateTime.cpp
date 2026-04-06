@@ -13,7 +13,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "GridCtrl.h"
 #include "GridCell.h"
 #include "GridCellDateTime.h"

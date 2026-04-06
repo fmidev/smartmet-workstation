@@ -10,6 +10,7 @@
 //_________________________________________________________ NFmiTimeControlView
 
 #include "NFmiCtrlView.h"
+#include <string>
 
 
 class NFmiToolBox;

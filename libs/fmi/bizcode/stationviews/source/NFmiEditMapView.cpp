@@ -33,7 +33,9 @@
 #include "catlog/catlog.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 
+#ifndef UNIX
 #include <gdiplus.h>
+#endif // UNIX
 
 #include <vector>
 #include <ctime>	// tzset
@@ -111,7 +113,9 @@ void NFmiEditMapView::Draw(NFmiToolBox * theGTB)
     {
         // HUOM! jos GDI tulee laajempaan käyttöön, poista init+clean tästä ja siirrä ne Draw-metodiin!!!!!!!
         InitializeGdiplus(itsToolBox, &GetFrame());
+#ifndef UNIX
         itsGdiPlusGraphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias); // Huom. antialiasointi saattaa hidastaa yllättävän paljon piirtoa
+#endif // UNIX
 
         NFmiMilliSecondTimer timer;
         timer.StartTimer();
@@ -193,6 +197,7 @@ void NFmiEditMapView::DrawLastEditedDataSendTime()
         FmiDirection textAlingment = kTopRight;
         std::wstring fontName = L"Courier New";
         NFmiPoint textOriginPoint = itsViewGrid->GetFrame().TopRight(); // Tekstien piirto alkaa hilanäytön oikeasta yläkulmasta
+#ifndef UNIX
         Gdiplus::PointF textOriginPointInPixel = CtrlView::Relative2GdiplusPoint(itsToolBox, textOriginPoint);
 
         Gdiplus::RectF textBoundingBox = CtrlView::GetStringBoundingBox(*itsGdiPlusGraphics, timeText, fontSizeInPixels, textOriginPointInPixel, fontName);
@@ -207,6 +212,7 @@ void NFmiEditMapView::DrawLastEditedDataSendTime()
         itsLastSendTimeTextRect = CtrlView::GdiplusRect2Relative(itsToolBox, rectInPixels); // otetaan teksti laatikko talteen tooltip tarkasteluja varten
         CtrlView::DrawRect(*itsGdiPlusGraphics, rectInPixels, frameColor, fillColor, true, true, 1.f);
         CtrlView::DrawTextToRelativeLocation(*itsGdiPlusGraphics, usedTextColor, fontSizeInMM, timeText, textOriginPoint, graphInfo.itsPixelsPerMM_x, itsToolBox, fontName, textAlingment, Gdiplus::FontStyleBold);
+#endif // UNIX
     }
 }
 
@@ -312,6 +318,7 @@ static void CalcLabelDimensions(double theMapAreaHeightInMMIn, size_t theLabelCo
 
 void NFmiEditMapView::MakeLabelPath(Gdiplus::GraphicsPath &theLabelPathOut, NFmiRect &theBaseRectInOut)
 {
+#ifndef UNIX
 	// GDI+ GraphicsPath-Outline -metodin vian takia joudun rakentamaan label-pathin kahdesta kaaresta ja kahdesta viivasta
 	double ellipseWidth = theBaseRectInOut.Height() * 1.;
 	theBaseRectInOut.Left(theBaseRectInOut.Left() + ellipseWidth/2.);
@@ -322,6 +329,7 @@ void NFmiEditMapView::MakeLabelPath(Gdiplus::GraphicsPath &theLabelPathOut, NFmi
 	theLabelPathOut.AddLine(CtrlView::Relative2GdiplusPoint(itsToolBox, theBaseRectInOut.BottomRight()), CtrlView::Relative2GdiplusPoint(itsToolBox, theBaseRectInOut.BottomLeft()));
 	NFmiRect leftEllipseRect(theBaseRectInOut.Left() - ellipseWidth/2., theBaseRectInOut.Top(), theBaseRectInOut.Left() + ellipseWidth/2., theBaseRectInOut.Bottom());
 	theLabelPathOut.AddArc(CtrlView::Relative2GdiplusRect(itsToolBox, leftEllipseRect), 90, 180);
+#endif // UNIX
 }
 
 void NFmiEditMapView::DrawVerticalAnimationControl(void)
@@ -341,6 +349,7 @@ void NFmiEditMapView::DrawVerticalAnimationControl(void)
     float yMoveInPixels = static_cast<float>(itsToolBox->HYs(yMove));
     itsVerticalAnimationInfo.itsUsedTimes.First();
 
+#ifndef UNIX
     Gdiplus::GraphicsPath labelPath;
     MakeLabelPath(labelPath, singleLabelRect);
     Gdiplus::Matrix moveMatrix;
@@ -368,7 +377,7 @@ void NFmiEditMapView::DrawVerticalAnimationControl(void)
     CtrlView::DrawPath(*itsGdiPlusGraphics, labelPath, frameColor, usedFillColor, true, true, 1); // pitää kysyä Play statusta, että filli color saadaan oikein
     std::string labelStr = "Play";
     CtrlView::DrawTextToRelativeLocation(*itsGdiPlusGraphics, strColor, fontSizeInMM, labelStr, singleLabelRect.Center(), graphInfo.itsPixelsPerMM_x, itsToolBox, fontNameStr, kCenter);
-
+#endif // UNIX
 }
 
 static double MMtoRelativeLength(double lengthInMM, NFmiToolBox &theToolBox, CtrlViewUtils::GraphicalInfo &theGraphicalInfo, bool doX)

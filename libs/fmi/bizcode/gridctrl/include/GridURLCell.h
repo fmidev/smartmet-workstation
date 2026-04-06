@@ -5,6 +5,8 @@
 #if !defined(AFX_GRIDURLCELL_H__9F4A50B4_D773_11D3_A439_F7E60631F563__INCLUDED_)
 #define AFX_GRIDURLCELL_H__9F4A50B4_D773_11D3_A439_F7E60631F563__INCLUDED_
 
+#ifndef UNIX
+
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -51,5 +53,7 @@ protected:
 	BOOL     m_bLaunchUrl;
     CRect    m_Rect;
 };
+
+#endif // UNIX
 
 #endif // !defined(AFX_GRIDURLCELL_H__9F4A50B4_D773_11D3_A439_F7E60631F563__INCLUDED_)

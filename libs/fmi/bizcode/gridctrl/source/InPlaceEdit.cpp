@@ -43,7 +43,9 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "TCHAR.h"
 #include "InPlaceEdit.h"
 

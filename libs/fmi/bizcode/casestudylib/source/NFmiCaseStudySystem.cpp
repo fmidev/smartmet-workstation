@@ -1,4 +1,6 @@
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "NFmiCaseStudySystem.h"
 #include "NFmiHelpDataInfo.h"
 #include "NFmiFastQueryInfo.h"

@@ -31,7 +31,9 @@ ja vastaus edelliseen:
 
 */
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "NFmiAutoComplete.h"
 #include "NFmiQ2Client.h"
 #include "NFmiSettings.h"

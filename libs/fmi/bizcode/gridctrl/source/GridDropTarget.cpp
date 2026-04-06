@@ -25,7 +25,9 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "GridCtrl.h"
 
 #ifndef GRIDCONTROL_NO_DRAGDROP

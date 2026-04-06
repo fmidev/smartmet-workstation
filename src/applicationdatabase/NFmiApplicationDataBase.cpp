@@ -1,6 +1,8 @@
 // NFmiApplicationDataBase.cpp
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "NFmiApplicationDataBase.h"
 #include "NFmiStringTools.h"
 #include "NFmiSettings.h"

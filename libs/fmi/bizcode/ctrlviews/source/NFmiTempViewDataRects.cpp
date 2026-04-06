@@ -13,11 +13,13 @@ namespace
 		if(showSideView)
 		{
 			fontSizeInPixels = defaultFontSize;
-			if(usedToolBox->GetDC()->IsPrinting())
+	#ifndef UNIX
+		if(usedToolBox->GetDC()->IsPrinting())
 			{
 				// tehd‰‰ printtausta varten v‰h‰n isommat fontit indeksi ikkunaan
 				fontSizeInPixels = boost::math::iround(fontSizeInPixels * 1.15);
 			}
+#endif // UNIX
 		}
 		return fontSizeInPixels;
 	}

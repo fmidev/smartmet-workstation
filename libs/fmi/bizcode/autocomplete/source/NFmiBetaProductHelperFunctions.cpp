@@ -1,4 +1,6 @@
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "NFmiBetaProductHelperFunctions.h"
 #include "NFmiFileString.h"
 #include "NFmiStringTools.h"

@@ -3,7 +3,9 @@
 
 
 *****************************************************************************/
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "GridBtnCellBase.h"
 
 #include "GridCtrl.h"

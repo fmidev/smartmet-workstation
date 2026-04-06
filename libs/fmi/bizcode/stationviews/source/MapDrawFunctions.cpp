@@ -9,6 +9,7 @@
 #include "CombinedMapHandlerInterface.h"
 #include "catlog/catlog.h"
 
+#ifndef UNIX
 namespace
 {
     void fillMapWithWhite(CDC *theUsedCDC, const CRect& mfcRect)
@@ -219,3 +220,4 @@ namespace MapDraw
     }
 
 }
+#endif // UNIX

@@ -1,5 +1,6 @@
 #include "GdiPlusLineInfo.h"
 
+#ifndef UNIX
 GdiPlusLineInfo::GdiPlusLineInfo(float theThickness, const NFmiColor &theColor, int theLineType)
     :itsThickness(theThickness)
     , itsColor(theColor)
@@ -11,4 +12,4 @@ GdiPlusLineInfo::GdiPlusLineInfo(float theThickness, const NFmiColor &theColor, 
     , fUseOutLine(false)
 {
 }
-
+#endif // UNIX

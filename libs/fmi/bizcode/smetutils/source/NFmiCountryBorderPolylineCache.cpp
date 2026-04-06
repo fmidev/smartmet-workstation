@@ -1,4 +1,6 @@
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "NFmiCountryBorderPolylineCache.h"
 #include "NFmiPolyline.h"
 

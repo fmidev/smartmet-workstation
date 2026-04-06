@@ -2,7 +2,9 @@
 
 #include "NFmiRect.h"
 
+#ifndef UNIX
 class CDC;
+#endif // UNIX
 
 // TrueViewSizeInfo luokkaaan lasketaan oikeat tiedot erilaisista kartta-alue koista.
 // Nykyisin lasketut eri arvot ovat vanhoja ja eri tilanteissa erilailla laskettuja 
@@ -35,14 +37,20 @@ public:
 	TrueMapViewSizeInfo(int mapViewDescTopIndex);
 	TrueMapViewSizeInfo(const TrueMapViewSizeInfo&);
 	TrueMapViewSizeInfo& operator=(const TrueMapViewSizeInfo&);
+#ifndef UNIX
 	void onSize(const NFmiPoint& clientPixelSize, CDC* pDC, const NFmiPoint& viewGridSize, bool isTimeControlViewVisible, double drawObjectScaleFactor);
+#endif // UNIX
 	void onViewGridSizeChange(const NFmiPoint& viewGridSize, bool isTimeControlViewVisible);
 	static double calculateTimeControlViewHeightInPixels(double pixelsPerMilliMeterX);
 	const NFmiPoint& singleMapSizeInMM() const { return singleMapSizeInMM_; }
 	const NFmiPoint& logicalPixelsPerMilliMeter() const { return logicalPixelsPerMilliMeter_; }
 	const NFmiPoint& clientAreaSizeInPixels() const { return clientAreaSizeInPixels_; }
 private:
+#ifndef UNIX
 	void calculateViewSizeInfo(CDC* pDC, const NFmiPoint& viewGridSize, bool isTimeControlViewVisible, double drawObjectScaleFactor);
+#endif // UNIX
+#ifndef UNIX
 	void updatePixelsPerMilliMeterValues(CDC* pDC, double drawObjectScaleFactor);
+#endif // UNIX
 	void updateMapSizes(const NFmiPoint& viewGridSize, bool isTimeControlViewVisible);
 };

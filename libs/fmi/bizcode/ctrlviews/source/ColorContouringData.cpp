@@ -1,4 +1,6 @@
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "ColorContouringData.h"
 #include "ToolMasterColorCube.h"
 #include "NFmiDrawParam.h"

@@ -1,5 +1,5 @@
 #ifdef _MSC_VER
-#pragma warning(disable : 4786) // poistaa n kpl VC++ kääntäjän varoitusta (liian pitkä nimi >255 merkkiä joka johtuu 'puretuista' STL-template nimistä)
+#pragma warning(disable : 4786) // poistaa n kpl VC++ kï¿½ï¿½ntï¿½jï¿½n varoitusta (liian pitkï¿½ nimi >255 merkkiï¿½ joka johtuu 'puretuista' STL-template nimistï¿½)
 #define _USE_MATH_DEFINES
 #endif
 
@@ -28,7 +28,9 @@
 #include <algorithm>
 
 using namespace std;
+#ifndef UNIX
 using namespace Gdiplus;
+#endif // UNIX
 using namespace NFmiStringTools;
 using namespace Warnings;
 
@@ -77,9 +79,10 @@ void NFmiCapView::Draw(NFmiToolBox *theGTB)
     if(!IsParamDrawn())
         return;
 
-    if(itsToolBox->GetDC()->IsPrinting() == FALSE)
+    if(!IsPrinting())
         itsScreenPixelSizeInMM = 1. / itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x;
 
+#ifndef UNIX
     try
     {
         InitializeGdiplus(itsToolBox, &GetFrame());
@@ -133,6 +136,7 @@ void NFmiCapView::Draw(NFmiToolBox *theGTB)
         throw std::runtime_error(std::string("NFmiCapView::Draw - failed \n"));
     }
     CleanGdiplus(); // needs to be run in the end as a counter method for InitializeGdiplus.
+#endif // UNIX
 }
 
 std::string getSymbolCode(const std::shared_ptr<WarningMember>& warning)
@@ -155,12 +159,13 @@ std::string getSymbolCode(const std::shared_ptr<WarningMember>& warning)
 //Draws mapped symbol in desired size
 void NFmiCapView::drawSymbol(const std::shared_ptr<WarningMember>& warning, double wantedSymbolSizeInMM)
 {
+#ifndef UNIX
     bool printing = itsCtrlViewDocumentInterface->Printing();
     wantedSymbolSizeInMM *= NFmiConceptualDataView::CalcScreenSizeFactor(*itsCtrlViewDocumentInterface, itsMapViewDescTopIndex);
     auto &graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
     double symbolSizeInPixels = graphicalInfo.itsPixelsPerMM_y * wantedSymbolSizeInMM;
     Gdiplus::Bitmap *symbolBitmap = NFmiCapView::itsCapSymbolMap.GetRightSizeImage(symbolSizeInPixels, printing, getSymbolCode(warning));
-    
+
     //Draw wind icons dynamically
     if(warning->getWarningContext() == "sea-wind" || warning->getWarningContext() == "wind")
     {
@@ -171,7 +176,7 @@ void NFmiCapView::drawSymbol(const std::shared_ptr<WarningMember>& warning, doub
         NFmiRect symbolRect(CalcSymbolRelativeRect(warning->getCenter(), wantedSymbolSizeInMM));
         CtrlView::DrawAnimationButton(symbolRect, symbolBitmap, itsGdiPlusGraphics, *itsToolBox, printing, itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex), 1.f, true);
     }
-  
+#endif // UNIX
 }
 
 std::string NFmiCapView::ComposeToolTipText(const NFmiPoint& theRelativePoint)
@@ -272,7 +277,7 @@ NFmiColor NFmiCapView::getWarningColor(const std::shared_ptr<WarningMember>& war
 
 
 void NFmiCapView::drawArrow(const std::shared_ptr<WarningMember>& warning, double wantedSymbolSizeInMM) {
-    
+#ifndef UNIX
     Gdiplus::GraphicsPath arrowPath;
     float originalSymbolLengthInPixels;
     // Wind arrow cannot be constructed in separate functions, because Gdiplus::GraphicsPath-class'
@@ -359,6 +364,7 @@ void NFmiCapView::drawArrow(const std::shared_ptr<WarningMember>& warning, doubl
         Gdiplus::PointF aPlace(CtrlView::ConvertLatlonToGdiPlusPoint(this, warning->getCenter()));
         CtrlView::DrawSimpleText(*itsGdiPlusGraphics, NFmiColor(1, 1, 1), usedFontSizeInPixels, std::to_string((int)warning->getPhysicalValue()), NFmiPoint(aPlace.X, aPlace.Y), L"Arial", kCenter);
     }
+#endif // UNIX
 }
 
 

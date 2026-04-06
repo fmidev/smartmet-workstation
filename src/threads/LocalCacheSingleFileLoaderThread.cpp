@@ -1,4 +1,6 @@
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "LocalCacheSingleFileLoaderThread.h"
 #include "NFmiCachedDataFileInfo.h"
 #include "NFmiHelpDataInfo.h"

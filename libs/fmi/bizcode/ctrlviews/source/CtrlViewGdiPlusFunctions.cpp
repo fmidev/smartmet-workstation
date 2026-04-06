@@ -10,6 +10,7 @@
 #include "NFmiDrawParam.h"
 #include "ToolMasterColorCube.h"
 
+#ifndef UNIX
 NFmiImageAttributes::NFmiImageAttributes() = default;
 
 NFmiImageAttributes::NFmiImageAttributes(Gdiplus::REAL alpha)
@@ -742,3 +743,4 @@ namespace CtrlView
         return NFmiPoint(widthInPixels, heightInPixels);
     }
 }
+#endif // UNIX

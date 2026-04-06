@@ -52,10 +52,14 @@ class NFmiSynopStationPrioritySystem;
 class NFmiConceptualModelData;
 class NFmiSmartToolInfo;
 class NFmiSatelliteImageCacheSystem;
+#ifndef UNIX
 class CWnd;
+#endif // UNIX
 class NFmiGridPointCache;
 class NFmiMapViewCache;
+#ifndef UNIX
 class CDC;
+#endif // UNIX
 class NFmiWindTableSystem;
 class NFmiProjectionCurvatureInfo;
 class NFmiPolyline;
@@ -68,7 +72,9 @@ class NFmiVPlaceDescriptor;
 class NFmiBetaProductionSystem;
 class NFmiApplicationWinRegistry;
 class Q2ServerInfo;
+#ifndef UNIX
 class CBitmap;
+#endif // UNIX
 class NFmiMacroParamDataCache;
 class NFmiParam;
 class TimeSerialParameters;
@@ -90,10 +96,12 @@ namespace HakeMessage
 {
     class Main;
 }
+#ifndef UNIX
 namespace Gdiplus
 {
     class Bitmap;
 }
+#endif // UNIX
 namespace CtrlViewUtils
 {
     struct GraphicalInfo;
@@ -299,17 +307,23 @@ public:
     virtual void MapMouseDragPanMode(bool newState) = 0;
     virtual void MapViewBitmapDirty(int theDescTopIndex, bool dirtyFlag) = 0;
     virtual NFmiSatelliteImageCacheSystem& SatelliteImageCacheSystem() = 0;
+#ifndef UNIX
     virtual CWnd* TransparencyContourDrawView(void) = 0;
+#endif // UNIX
     virtual NFmiGridPointCache& GridPointCache(int theDescTopIndex) = 0;
     virtual NFmiMapViewCache& MapViewCache(int theDescTopIndex) = 0;
+#ifndef UNIX
     virtual CDC* CopyCDC(int theDescTopIndex) = 0;
+#endif // UNIX
     virtual bool IsCPGridCropInAction(void) = 0;
     virtual bool ShowSoundingMarkersOnMap(int theDescTopIndex) = 0;
     virtual bool ShowCrossSectionMarkersOnMap(int theDescTopIndex) = 0;
     virtual bool ShowTrajectorsOnMap(int theDescTopIndex) = 0;
     virtual std::vector<NFmiProducer>& ExtraSoundingProducerList(void) = 0;
     virtual bool ShowWarningMarkersOnMap(int theDescTopIndex) = 0;
+#ifndef UNIX
     virtual CDC* MapBlitDC(int theDescTopIndex) = 0;
+#endif // UNIX
     virtual int ToolTipColumnIndex() const = 0;
     virtual void ToolTipColumnIndex(int newIndex) = 0;
     virtual int ToolTipMapViewDescTopIndex() const = 0;
@@ -326,8 +340,12 @@ public:
     virtual bool DrawLandBorders(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
     virtual const NFmiColor& LandBorderColor(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
     virtual int LandBorderPenSize(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
+#ifndef UNIX
     virtual Gdiplus::Bitmap* LandBorderMapBitmap(unsigned int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) const = 0;
+#endif // UNIX
+#ifndef UNIX
     virtual void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
+#endif // UNIX
     virtual boost::shared_ptr<Imagine::NFmiPath> LandBorderPath(int theDescTopIndex) = 0;
     virtual void DrawBorderPolyLineList(int theDescTopIndex, std::list<NFmiPolyline*> &polyLineList) = 0;
     virtual std::list<NFmiPolyline*>& DrawBorderPolyLineList(int theDescTopIndex) = 0;

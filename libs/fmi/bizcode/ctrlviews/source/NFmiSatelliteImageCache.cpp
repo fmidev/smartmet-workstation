@@ -97,7 +97,9 @@ static NFmiImageHolder LoadImageTask(std::string imageFileName)
         imageHolder->mState = NFmiImageData::kLoading;
 
 //        std::this_thread::sleep_for(std::chrono::milliseconds(2000)); // Testausta varten hidastus imagen lukuun
+#ifndef UNIX
         imageHolder->mImage = std::shared_ptr<Gdiplus::Bitmap>(CtrlView::CreateBitmapFromFile(imageFileName));
+#endif // UNIX
         return imageHolder;
     }
     catch(std::exception &e)

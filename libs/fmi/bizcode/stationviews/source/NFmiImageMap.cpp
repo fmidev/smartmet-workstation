@@ -1,10 +1,10 @@
-//© Ilmatieteenlaitos/Marko Pietarinen
+//ï¿½ Ilmatieteenlaitos/Marko Pietarinen
 //  Original 19.02.2016
 //
 //
 //-------------------------------------------------------------------- NFmiImageMap.cpp
 #ifdef _MSC_VER
-#pragma warning(disable : 4786) // poistaa n kpl VC++ kääntäjän varoitusta (liian pitkä nimi >255 merkkiä joka johtuu 'puretuista' STL-template nimistä)
+#pragma warning(disable : 4786) // poistaa n kpl VC++ kï¿½ï¿½ntï¿½jï¿½n varoitusta (liian pitkï¿½ nimi >255 merkkiï¿½ joka johtuu 'puretuista' STL-template nimistï¿½)
 #endif
 
 #include "NFmiImageMap.h"
@@ -16,7 +16,9 @@
 #include <list>
 
 using namespace std;
+#ifndef UNIX
 using namespace Gdiplus;
+#endif // UNIX
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -24,7 +26,7 @@ using namespace Gdiplus;
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// Tähän luokkaan luetaan Mirwa analyyseissä käytettyjä kuvia.
+// Tï¿½hï¿½n luokkaan luetaan Mirwa analyyseissï¿½ kï¿½ytettyjï¿½ kuvia.
 // Kuvat mapataan taikasanan taakse std::map:iin.
 // Kullekin kuvalle on kaksi kokoa, yksi ruudulle ja toinen printterille.
 NFmiImageMap::ImageHolder::ImageHolder(void)
@@ -78,7 +80,7 @@ NFmiImageMap::NFmiImageMap(void)
 }
 
 // initialisoinnissa luetaan bitmapit tiedostoista, kutsu vasta kun itsBitmapFolder-dataosa on asetettu
-void NFmiImageMap::Initialize(const std::string &theImageBaseFolder, const std::string &theInitFile)  // HUOM! heittää poikkeuksia epäonnistuessaan
+void NFmiImageMap::Initialize(const std::string &theImageBaseFolder, const std::string &theInitFile)  // HUOM! heittï¿½ï¿½ poikkeuksia epï¿½onnistuessaan
 {
     fInitialized = true;
     itsSymbolMap.clear();
@@ -86,7 +88,7 @@ void NFmiImageMap::Initialize(const std::string &theImageBaseFolder, const std::
     if(!NFmiFileSystem::DirectoryExists(itsImageBaseFolder))
         throw std::runtime_error(std::string("Error in MirwaSymbolMap::Initialize - the given base imagefolder doesn't exist:\n'") + theImageBaseFolder + "'");
 
-    // init tiedoston nimen voi antaa tyhjänä, jolloin ei tehdä mitään.
+    // init tiedoston nimen voi antaa tyhjï¿½nï¿½, jolloin ei tehdï¿½ mitï¿½ï¿½n.
     if(!theInitFile.empty())
     {
 	    std::string fileContent;
@@ -94,7 +96,7 @@ void NFmiImageMap::Initialize(const std::string &theImageBaseFolder, const std::
 	    {
 		    std::stringstream in(fileContent);
 
-		    const int maxBufferSize = 1024; // kuinka pitkä yhden rivin maksimissaan oletetaan olevan
+		    const int maxBufferSize = 1024; // kuinka pitkï¿½ yhden rivin maksimissaan oletetaan olevan
 		    std::string buffer;
 		    int i = 0;
 		    int counter = 0;
@@ -118,6 +120,7 @@ void NFmiImageMap::Initialize(const std::string &theImageBaseFolder, const std::
     fOperational = true;
 }
 
+#ifndef UNIX
 Gdiplus::Bitmap* NFmiImageMap::GetSymbolImage(const std::string &theSymbolCodeStr, bool fPrinted)
 {
     if(fOperational)
@@ -155,7 +158,7 @@ std::pair<std::string, NFmiImageMap::ImagesHolder> NFmiImageMap::GetImageHolderI
             ImagesHolder imageHolder(file1, file2);
             return make_pair(parts[0], imageHolder);
         }
-        else if(parts.size() == 2 || parts.size() > 3) // tehdään poikkeus, jos riviltä on löytynyt ';'-merkkejä, mutta ei tasan kahta kappaletta
+        else if(parts.size() == 2 || parts.size() > 3) // tehdï¿½ï¿½n poikkeus, jos riviltï¿½ on lï¿½ytynyt ';'-merkkejï¿½, mutta ei tasan kahta kappaletta
         {
             std::string errStr("Error in MirwaSymbolMap::GetImageHolderInfo - malformatted line:\n");
             errStr += theConfFileLine;
@@ -166,23 +169,24 @@ std::pair<std::string, NFmiImageMap::ImagesHolder> NFmiImageMap::GetImageHolderI
             throw std::runtime_error(errStr);
         }
     }
-    return std::pair<std::string, ImagesHolder>(); // rivi oli tyhjä
+    return std::pair<std::string, ImagesHolder>(); // rivi oli tyhjï¿½
 }
 
-// 1. Jos ei printata (= ei tarvita välttämättä isoa/paras laatuista kuvaa), katsotaan löytyykö pienempi kuva
-// 2. Jos löytyy ja sen pikseli koko vastaa haluttua kuvan koko, palautetaan se.
-// 3. Kaikissa muissa tapauksissa yritetään palauttaa iso kuva (löytyi se tai ei)
+// 1. Jos ei printata (= ei tarvita vï¿½lttï¿½mï¿½ttï¿½ isoa/paras laatuista kuvaa), katsotaan lï¿½ytyykï¿½ pienempi kuva
+// 2. Jos lï¿½ytyy ja sen pikseli koko vastaa haluttua kuvan koko, palautetaan se.
+// 3. Kaikissa muissa tapauksissa yritetï¿½ï¿½n palauttaa iso kuva (lï¿½ytyi se tai ei)
 Gdiplus::Bitmap* NFmiImageMap::GetRightSizeImage(double drawedSymbolSizeInPixels, bool isPrinting, const std::string &theSymbolCode)
 {
     if(!isPrinting)
     {
-        Gdiplus::Bitmap *smallerSymbolImage = GetSymbolImage(theSymbolCode, false); // false = hae pienempää kuvaa
+        Gdiplus::Bitmap *smallerSymbolImage = GetSymbolImage(theSymbolCode, false); // false = hae pienempï¿½ï¿½ kuvaa
         if(smallerSymbolImage)
         {
-            if(smallerSymbolImage->GetHeight()*1.2 >= drawedSymbolSizeInPixels) // Jos pienempi kuvista on tarpeeksi lähellä haluttua piirtokoko tai pienempi, käytetään pientä kuvaa
+            if(smallerSymbolImage->GetHeight()*1.2 >= drawedSymbolSizeInPixels) // Jos pienempi kuvista on tarpeeksi lï¿½hellï¿½ haluttua piirtokoko tai pienempi, kï¿½ytetï¿½ï¿½n pientï¿½ kuvaa
                 return smallerSymbolImage;
         }
     }
-    // Kokeillaan löytyykö isompaa kuvaa true parametrilla
+    // Kokeillaan lï¿½ytyykï¿½ isompaa kuvaa true parametrilla
     return GetSymbolImage(theSymbolCode, true);
 }
+#endif // UNIX

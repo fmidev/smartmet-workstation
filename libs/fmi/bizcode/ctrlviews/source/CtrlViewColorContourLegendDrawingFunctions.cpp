@@ -1,4 +1,6 @@
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "CtrlViewColorContourLegendDrawingFunctions.h"
 #include "NFmiColorContourLegendSettings.h"
 #include "NFmiColorContourLegendValues.h"
@@ -6,8 +8,11 @@
 #include "CtrlViewGdiPlusFunctions.h"
 #include "GraphicalInfo.h"
 #include "ToolMasterColorCube.h"
+#ifndef UNIX
 #include <gdiplus.h>
+#endif // UNIX
 
+#ifndef UNIX
 namespace
 {
     class LegendDrawingMeasures
@@ -201,3 +206,4 @@ namespace CtrlView
         return NFmiPoint(x, y);
     }
 }
+#endif // UNIX

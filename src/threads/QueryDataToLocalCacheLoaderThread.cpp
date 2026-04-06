@@ -1,4 +1,6 @@
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "QueryDataToLocalCacheLoaderThread.h"
 #include "NFmiQueryDataUtil.h"
 #include "NFmiMissingDataOnServerReporter.h"

@@ -8,10 +8,12 @@
 
 typedef std::list<std::pair<NFmiDataIdent, NFmiMetTime>> ImageCacheUpdateData; // Tällä tietorakenteella siirretään päivitys tarvetietoja imageCachen ja clientin (SmartMet) välillä
 
+#ifndef UNIX
 namespace Gdiplus
 {
     class Bitmap;
 }
+#endif // UNIX
 
 // NFmiImageHolder:issa on ladattavasta kuvasta oleellisimmat tiedot:
 // 1. Mahdollinen virheilmoitus, jos kuvan lataus on syystä tai toisesta epäonnistunut.
@@ -34,7 +36,9 @@ struct NFmiImageData
     bool IsImageUsable() const;
     
     std::string mErrorMessage;
+#ifndef UNIX
     std::shared_ptr<Gdiplus::Bitmap> mImage;
+#endif // UNIX
     ImageStateEnum mState; // Kuvan luku/käyttö tila.
     NFmiMetTime mImageTime; // Kuvan kartta/valid -aika UTC (esim. 2015 4.9. 12:45)
     std::string mFilePath; // Kuvan tiedostopolku mm. tooltippia ja debuggausta varten

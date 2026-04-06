@@ -26,7 +26,9 @@
 #include "CFmiMenu.h"
 #include "NFmiMenuItemList.h"
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 
 CFmiMenu::CFmiMenu()
 :itsNumberOfSubMenus(0)

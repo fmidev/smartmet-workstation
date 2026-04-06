@@ -1,5 +1,7 @@
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "process_tools.h"
 #include "logging.h"
 

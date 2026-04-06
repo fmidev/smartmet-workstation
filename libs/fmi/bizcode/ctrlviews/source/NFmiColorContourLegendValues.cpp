@@ -1,4 +1,6 @@
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "NFmiColorContourLegendValues.h"
 #include "NFmiDrawParam.h"
 #include "NFmiFastQueryInfo.h"

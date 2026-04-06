@@ -1,5 +1,7 @@
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "SmartMetThreads_resource.h"
 #include "FmiQueryDataCacheLoaderThread.h"
 #include "afxmt.h"

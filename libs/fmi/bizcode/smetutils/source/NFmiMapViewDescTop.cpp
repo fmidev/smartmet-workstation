@@ -28,7 +28,9 @@
 #include "CtrlViewTimeConsumptionReporter.h"
 
 #include <algorithm>
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 
 #pragma warning( push )
 

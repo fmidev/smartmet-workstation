@@ -91,6 +91,7 @@ void NFmiSatelView::Draw(NFmiToolBox *theGTB)
             DrawImageOnDifferentProjection(imageArea, imageHolder);
         else
         {
+#ifndef UNIX
             std::shared_ptr<Gdiplus::Bitmap> usedImage = imageHolder->mImage;
 //            std::shared_ptr<Gdiplus::Bitmap> usedImage = testBitmap;
             NFmiPoint bitmapSize(itsCtrlViewDocumentInterface->ActualMapBitmapSizeInPixels(itsMapViewDescTopIndex));
@@ -104,10 +105,12 @@ void NFmiSatelView::Draw(NFmiToolBox *theGTB)
             Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on t‰ysin l‰pin‰kyv‰, 0.5 = semi transparent ja 1.0 = opaque
             bool doNearestInterpolation = alpha >= 1.f ? true : false;
             CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *usedImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha), itsGdiPlusGraphics);
+#endif // UNIX
         }
     }
 }
 
+#ifndef UNIX
 static Gdiplus::Color GetColor(Gdiplus::Bitmap &theImage, const NFmiPoint &theGridPoint, const Gdiplus::Color &theTransparentColor)
 {
    try
@@ -172,6 +175,7 @@ void NFmiSatelView::DrawImageOnDifferentProjection(boost::shared_ptr<NFmiArea> &
         delete projectedBitmap; // t‰m‰ kuva pit‰‰ tuhota, mutta ei satelImagea
     }
 }
+#endif // UNIX
 
 std::string NFmiSatelView::ComposeToolTipText(const NFmiPoint& /* theRelativePoint */ )
 {

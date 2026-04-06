@@ -1,4 +1,4 @@
-//© Ilmatieteenlaitos/Marko
+//ï¿½ Ilmatieteenlaitos/Marko
 //  Original 23.09.1998
 // 
 //                                  
@@ -18,7 +18,9 @@
 #include "CtrlViewFunctions.h"
 #include "ColorStringFunctions.h"
 
+#ifndef UNIX
 #include <gdiplus.h>
+#endif // UNIX
 
 const float NFmiCtrlView::gGreyColorBaseComponent = 192.f;
 const NFmiColor NFmiCtrlView::gGreyColorDefault = NFmiColor(NFmiCtrlView::gGreyColorBaseComponent / 255.f, NFmiCtrlView::gGreyColorBaseComponent / 255.f, NFmiCtrlView::gGreyColorBaseComponent / 255.f);
@@ -37,9 +39,12 @@ NFmiCtrlView::NFmiCtrlView(void)
 ,itsMapViewDescTopIndex(-1)
 ,itsViewGridRowNumber(-1)
 ,itsViewGridColumnNumber(-1)
-,itsTime() // aika pitää asettaa erikseen Time()-metodilla, jos haluaa siihen jotain järkevämpää kuin nykyhetken
+,itsTime() // aika pitï¿½ï¿½ asettaa erikseen Time()-metodilla, jos haluaa siihen jotain jï¿½rkevï¿½mpï¿½ï¿½ kuin nykyhetken
+
+#ifndef UNIX
 ,itsGdiPlusGraphics(0)
-{ // itsDataParam ei voi toimia tämän jälkeen!!!!!
+#endif // UNIX
+{ // itsDataParam ei voi toimia tï¿½mï¿½n jï¿½lkeen!!!!!
     SetupCtrlViewDocumentInterface(__FUNCTION__);
 }
 
@@ -56,8 +61,11 @@ NFmiCtrlView::NFmiCtrlView (int theMapViewDescTopIndex, const NFmiRect & theRect
 ,itsMapViewDescTopIndex(theMapViewDescTopIndex)
 ,itsViewGridRowNumber(viewGridRowNumber)
 ,itsViewGridColumnNumber(viewGridColumnNumber)
-,itsTime() // aika pitää asettaa erikseen Time()-metodilla, jos haluaa siihen jotain järkevämpää kuin nykyhetken
+,itsTime() // aika pitï¿½ï¿½ asettaa erikseen Time()-metodilla, jos haluaa siihen jotain jï¿½rkevï¿½mpï¿½ï¿½ kuin nykyhetken
+
+#ifndef UNIX
 ,itsGdiPlusGraphics(0)
+#endif // UNIX
 {
     SetupCtrlViewDocumentInterface(__FUNCTION__);
 }
@@ -76,8 +84,11 @@ NFmiCtrlView::NFmiCtrlView (int theMapViewDescTopIndex, const NFmiRect & theRect
 ,itsMapViewDescTopIndex(theMapViewDescTopIndex)
 ,itsViewGridRowNumber(viewGridRowNumber)
 ,itsViewGridColumnNumber(viewGridColumnNumber)
-,itsTime() // aika pitää asettaa erikseen Time()-metodilla, jos haluaa siihen jotain järkevämpää kuin nykyhetken
+,itsTime() // aika pitï¿½ï¿½ asettaa erikseen Time()-metodilla, jos haluaa siihen jotain jï¿½rkevï¿½mpï¿½ï¿½ kuin nykyhetken
+
+#ifndef UNIX
 ,itsGdiPlusGraphics(0)
+#endif // UNIX
 {
     SetupCtrlViewDocumentInterface(__FUNCTION__);
 }
@@ -92,8 +103,11 @@ NFmiCtrlView::NFmiCtrlView(const NFmiCtrlView& theView)
 ,itsMapViewDescTopIndex(theView.itsMapViewDescTopIndex)
 ,itsViewGridRowNumber(theView.itsViewGridRowNumber)
 ,itsViewGridColumnNumber(theView.itsViewGridColumnNumber)
-,itsTime() // aika pitää asettaa erikseen Time()-metodilla, jos haluaa siihen jotain järkevämpää kuin nykyhetken
+,itsTime() // aika pitï¿½ï¿½ asettaa erikseen Time()-metodilla, jos haluaa siihen jotain jï¿½rkevï¿½mpï¿½ï¿½ kuin nykyhetken
+
+#ifndef UNIX
 ,itsGdiPlusGraphics(0)
+#endif // UNIX
 {
 }
 
@@ -155,22 +169,22 @@ void NFmiCtrlView::DrawFrame(NFmiDrawingEnvironment & theEnvi, const NFmiRect& t
 int NFmiCtrlView::GetUsedParamRowIndex(int theRowIndex, int theColumnIndex) const
 {
 	if(itsMapViewDescTopIndex > CtrlViewUtils::kFmiMaxMapDescTopIndex)
-		return theRowIndex; // tämä on muut kuin karttanäytöt
+		return theRowIndex; // tï¿½mï¿½ on muut kuin karttanï¿½ytï¿½t
 
     CtrlViewUtils::MapViewMode mapViewMode = itsCtrlViewDocumentInterface->MapViewDisplayMode(itsMapViewDescTopIndex);
 
 	if(mapViewMode == CtrlViewUtils::MapViewMode::kOneTime)
-	{ // jokainen näyttöruutu on samaa aikaa, jokaisella ruudulla on omat parametrit. Ruudukon juoksutus menee 
-		// vasemmalta oikealle ja ylhäältä alas. Esim. Näyttö on 4x3 ruudukossa. 
-		// theRowIndex = 2 eli 2. rivi (indeksit alkavat 1:stä).
-		// theColumnIndex on 3 eli 3. sarake (indeksit 1:stä)
+	{ // jokainen nï¿½yttï¿½ruutu on samaa aikaa, jokaisella ruudulla on omat parametrit. Ruudukon juoksutus menee 
+		// vasemmalta oikealle ja ylhï¿½ï¿½ltï¿½ alas. Esim. Nï¿½yttï¿½ on 4x3 ruudukossa. 
+		// theRowIndex = 2 eli 2. rivi (indeksit alkavat 1:stï¿½).
+		// theColumnIndex on 3 eli 3. sarake (indeksit 1:stï¿½)
 		// ((2-1) * 4) + 3 = 7    (4 on siis ruudukon x-koko)
 		int totalViewTileIndex = ((theRowIndex-1) * static_cast<int>(itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).X())) + theColumnIndex;
 		return totalViewTileIndex;
 	}
 	else if(mapViewMode == CtrlViewUtils::MapViewMode::kRunningTime)
 		return 1; // juokseva aika moodissa palautetaan aina 1. param rivi, koska joka ruudussa on eri aika ja samat 1. rivin
-					// parametrit (muista että kyseessä on virtuaali 1. rivi eli näyttö luokat elävät 1:stä alkavassa maailmassa)
+					// parametrit (muista ettï¿½ kyseessï¿½ on virtuaali 1. rivi eli nï¿½yttï¿½ luokat elï¿½vï¿½t 1:stï¿½ alkavassa maailmassa)
 	else
 		return theRowIndex; // normaali moodissa (tai muissa tapauksissa) palautetaan normaali rivi indeksi
 }
@@ -191,14 +205,18 @@ bool NFmiCtrlView::IsPrinting() const
 {
     if(itsToolBox)
     {
+#ifndef UNIX
         return itsToolBox->GetDC()->IsPrinting() == TRUE;
+#else
+        return false; // TODO: implement printing check on Linux
+#endif // UNIX
     }
     else
         return false;
 }
 
-// Näytetty rivi numero täällä (theRowIndex) ei ole aina sama kuin dokumentin
-// rivi, koska nykyään näyttörivejä voi selata myös pystysuunnassa.
+// Nï¿½ytetty rivi numero tï¿½ï¿½llï¿½ (theRowIndex) ei ole aina sama kuin dokumentin
+// rivi, koska nykyï¿½ï¿½n nï¿½yttï¿½rivejï¿½ voi selata myï¿½s pystysuunnassa.
 int NFmiCtrlView::CalcRealRowIndex(int theRowIndex, int theColumnIndex) const
 {
 	int realRowIndex = GetUsedParamRowIndex(theRowIndex, theColumnIndex); 
@@ -221,6 +239,7 @@ std::unique_ptr<MapHandlerInterface> NFmiCtrlView::GetMapHandlerInterface()
 // Jos piirtoaluetta halutaan rajata, annetaan alue theRelativeClipRect -parametrissa.
 Gdiplus::Graphics* NFmiCtrlView::CreateGdiplusGraphics(NFmiToolBox *theToolBox, const NFmiRect *theRelativeClipRect)
 {
+#ifndef UNIX
     if(theToolBox == 0)
         throw std::runtime_error(std::string("Error in ") + __FUNCTION__ + " -method, given toolbox was 0-pointer, unable to initialize Gdiplus::Graphics, application error.");
 
@@ -229,25 +248,32 @@ Gdiplus::Graphics* NFmiCtrlView::CreateGdiplusGraphics(NFmiToolBox *theToolBox, 
         throw std::runtime_error(std::string("Error in ") + __FUNCTION__ + " -method, unable to initialize Gdiplus::Graphics, application error.");
 
     if(theToolBox->GetDC()->IsPrinting())
-        gdiPlusGraphics->SetPageUnit(Gdiplus::UnitPixel); // tähän asti on pelattu printatessa aina pikseli maailmassa, joten gdiplus:in pitää laittaa siihen
+        gdiPlusGraphics->SetPageUnit(Gdiplus::UnitPixel); // tï¿½hï¿½n asti on pelattu printatessa aina pikseli maailmassa, joten gdiplus:in pitï¿½ï¿½ laittaa siihen
     if(theRelativeClipRect)
         gdiPlusGraphics->SetClip(CtrlView::Relative2GdiplusRect(theToolBox, *theRelativeClipRect));
     return gdiPlusGraphics;
+#else
+    return nullptr;
+#endif // UNIX
 }
 
 void NFmiCtrlView::InitializeGdiplus(NFmiToolBox *theToolBox, const NFmiRect *theRelativeClipRect)
 {
+#ifndef UNIX
     itsGdiPlusGraphics = NFmiCtrlView::CreateGdiplusGraphics(theToolBox, theRelativeClipRect);
+#endif // UNIX
 }
 
-// Tätä pitää kutsua, kun lopetetaan näyttöluokan piirto, joka on alustettu InitializeGdiplus -metodi kutsulla.
+// Tï¿½tï¿½ pitï¿½ï¿½ kutsua, kun lopetetaan nï¿½yttï¿½luokan piirto, joka on alustettu InitializeGdiplus -metodi kutsulla.
 void NFmiCtrlView::CleanGdiplus(void)
 {
+#ifndef UNIX
 	if(itsGdiPlusGraphics)
 	{
 		delete itsGdiPlusGraphics;
 		itsGdiPlusGraphics = nullptr;
 	}
+#endif // UNIX
 }
 
 NFmiRect NFmiCtrlView::CalcMaskRectSize(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
@@ -259,7 +285,7 @@ NFmiRect NFmiCtrlView::CalcMaskRectSize(boost::shared_ptr<NFmiFastQueryInfo> &th
 	NFmiPoint p1(LatLonToViewPoint(latlon1));
 	NFmiPoint p2(LatLonToViewPoint(latlon2));
 	NFmiPoint p3(LatLonToViewPoint(latlon3));
-	double factor = 1.2; // pitää vähän suurentaa laatikoiden kokoa, jos hila ja karttapohja eivät ole samaa projektiota, tällöin voi jäädä pieniä aukkoja maskiin
+	double factor = 1.2; // pitï¿½ï¿½ vï¿½hï¿½n suurentaa laatikoiden kokoa, jos hila ja karttapohja eivï¿½t ole samaa projektiota, tï¿½llï¿½in voi jï¿½ï¿½dï¿½ pieniï¿½ aukkoja maskiin
 	double distX = ::fabs(p1.X() - p2.X()) * factor;
 	// 4. Calc relative dist of two vertical neighbor grid point in y dir
 	double distY = ::fabs(p1.Y() - p3.Y()) * factor;
@@ -268,7 +294,7 @@ NFmiRect NFmiCtrlView::CalcMaskRectSize(boost::shared_ptr<NFmiFastQueryInfo> &th
 	return rect;
 }
 
-// Lyhyesti: movedRect halutaan siirtää paikkaan, jonka positionalRect:in jonkun kulmapisteen sijainti sanelee.
+// Lyhyesti: movedRect halutaan siirtï¿½ï¿½ paikkaan, jonka positionalRect:in jonkun kulmapisteen sijainti sanelee.
 NFmiRect NFmiCtrlView::CalcWantedDirectionalPosition(const NFmiRect& positionalRect, const NFmiRect& movedRect, FmiDirection wantedPosition)
 {
 	NFmiRect finalRect(movedRect);
@@ -324,7 +350,7 @@ void NFmiCtrlView::CachedParameterName(const std::string& newName, bool tooltipV
 
 void NFmiCtrlView::UpdateCachedParameterName()
 {
-	// Tämä on normi karttanäytön alustus, josta tehtiin oletustoiminto (override jutut tehdään mm. aikasarjaan ja poikkileikkaus luokkiin).
+	// Tï¿½mï¿½ on normi karttanï¿½ytï¿½n alustus, josta tehtiin oletustoiminto (override jutut tehdï¿½ï¿½n mm. aikasarjaan ja poikkileikkaus luokkiin).
 	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, false, 0, false, true, true, itsInfo), false);
 	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, false, true, true, itsInfo), true);
 }
@@ -341,7 +367,7 @@ std::string NFmiCtrlView::MakePossibleVirtualTimeTooltipText()
 
 std::string NFmiCtrlView::DoBoldingParameterNameTooltipText(std::string parameterStr)
 {
-	// Jos annettu parameterStr alkaa highlight merkillä, lisätään alkuun ja loppuun html bold tagit
+	// Jos annettu parameterStr alkaa highlight merkillï¿½, lisï¿½tï¿½ï¿½n alkuun ja loppuun html bold tagit
 	if(IsNewDataParameterName(parameterStr))
 	{
 		parameterStr = "<b>" + parameterStr + "</b>";

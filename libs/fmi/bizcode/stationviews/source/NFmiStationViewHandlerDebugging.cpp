@@ -4,6 +4,7 @@
 #include "CtrlViewGdiPlusFunctions.h"
 #include "CtrlViewDocumentInterface.h"
 
+#ifndef UNIX
 #include <gdiplus.h>
 
 using namespace std;
@@ -88,3 +89,4 @@ namespace NFmiStationViewHandlerDebugging
         drawBorders(params, lineType, leftRight, topBottom);
     }
 }
+#endif // UNIX

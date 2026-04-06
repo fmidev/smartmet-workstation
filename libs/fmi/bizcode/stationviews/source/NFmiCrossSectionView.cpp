@@ -61,7 +61,7 @@ using namespace std;
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// tämä viritetty viivan piirto pitäisi korvata GDI+ piirroilla!!!!!
+// tï¿½mï¿½ viritetty viivan piirto pitï¿½isi korvata GDI+ piirroilla!!!!!
 static void DrawLineWithToolBox(const NFmiPoint& theStartingPoint, const NFmiPoint& theEndingPoint, NFmiDrawingEnvironment *theEnvi, NFmiToolBox *theToolBox, bool moveXDir, bool moveYDir)
 {
 	FmiPattern pattern = theEnvi->GetFillPattern();
@@ -72,7 +72,7 @@ static void DrawLineWithToolBox(const NFmiPoint& theStartingPoint, const NFmiPoi
 		theToolBox->Convert(&line);
 	}
 	else
-	{ // tehdään tarvittaessa 1 pikseliä paksumpaa dash-viivaa omalla virityksellä
+	{ // tehdï¿½ï¿½n tarvittaessa 1 pikseliï¿½ paksumpaa dash-viivaa omalla virityksellï¿½
 		NFmiPoint oldPenSize = theEnvi->GetPenSize();
 		theEnvi->SetPenSize(NFmiPoint(1,1));
 		double pixelShiftX = theToolBox->SX(1);
@@ -82,7 +82,7 @@ static void DrawLineWithToolBox(const NFmiPoint& theStartingPoint, const NFmiPoi
 		double lineX2 = theEndingPoint.X();
 		double lineY2 = theEndingPoint.Y();
 		int forLoopSize = penSize/2;
-		// piierretään ensin viivan 'vasemmalle' puolelle yksittäisiä viivoja (joista paksu viiva koostuu)
+		// piierretï¿½ï¿½n ensin viivan 'vasemmalle' puolelle yksittï¿½isiï¿½ viivoja (joista paksu viiva koostuu)
 		for(int i = 0; i < forLoopSize; i++)
 		{
 			if(moveXDir)
@@ -197,8 +197,8 @@ void NFmiCrossSectionView::DrawParamView(NFmiToolBox * theGTB)
 {
     if(itsCtrlViewDocumentInterface->BetaProductGenerationRunning())
     {
-        // HUOM! Gdiplus piirtoja käytetään poikkileikkaus piirrossa vain tässä erikoistapauksessa. 
-        // Jos se otetaan muuallakin käyttöön, alustus ja siivous pitää siirtää NFmiCrossSectionView::Draw metodiin.
+        // HUOM! Gdiplus piirtoja kï¿½ytetï¿½ï¿½n poikkileikkaus piirrossa vain tï¿½ssï¿½ erikoistapauksessa. 
+        // Jos se otetaan muuallakin kï¿½yttï¿½ï¿½n, alustus ja siivous pitï¿½ï¿½ siirtï¿½ï¿½ NFmiCrossSectionView::Draw metodiin.
         InitializeGdiplus(itsToolBox, &GetFrame());
         StationViews::DrawBetaProductParamBox(this, true, nullptr);
         CleanGdiplus();
@@ -219,14 +219,14 @@ NFmiCrossSectionView::~NFmiCrossSectionView(void)
 
 void NFmiCrossSectionView::StorePressureScaleLimits(void)
 {
-	NFmiCrossSectionSystem::ExtraRowInfo &extraRowInfo = itsCtrlViewDocumentInterface->CrossSectionSystem()->GetRowInfo(itsViewGridRowNumber -1); // itsViewGridRowNumber alkaa 1:stä, mutta GetRowInfo:n indeksit alkavat 0:sta.
+	NFmiCrossSectionSystem::ExtraRowInfo &extraRowInfo = itsCtrlViewDocumentInterface->CrossSectionSystem()->GetRowInfo(itsViewGridRowNumber -1); // itsViewGridRowNumber alkaa 1:stï¿½, mutta GetRowInfo:n indeksit alkavat 0:sta.
 	extraRowInfo.itsLowerEndOfPressureAxis = itsLowerEndOfPressureAxis;
 	extraRowInfo.itsUpperEndOfPressureAxis = itsUpperEndOfPressureAxis;
 }
 
 double NFmiCrossSectionView::y2p(double y) const
 {
-	const double errLimit = 0.001; // onko y framen sisällä pitää sallia pieni virhe raja
+	const double errLimit = 0.001; // onko y framen sisï¿½llï¿½ pitï¿½ï¿½ sallia pieni virhe raja
 	double p = kFloatMissing;
 	if(y <= itsDataViewFrame.Bottom() + errLimit && y >= itsDataViewFrame.Top() - errLimit)
 	{
@@ -261,12 +261,12 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, std::string(__FUNCTION__) + ": starting to draw cross-section row");
     if(!theGTB)
 		return;
-	itsToolBox = theGTB; // vähän arvelluttaa tämä, koska toolboxien pitäisi olla jo samoja
+	itsToolBox = theGTB; // vï¿½hï¿½n arvelluttaa tï¿½mï¿½, koska toolboxien pitï¿½isi olla jo samoja
 
 	if(!itsCtrlViewDocumentInterface->CrossSectionSystem()->IsViewVisible(itsViewGridRowNumber))
 		return ;
     InitializeGdiplus(itsToolBox, &itsRect);
-	// Tyhjennetään aina piirron aluksi
+	// Tyhjennetï¿½ï¿½n aina piirron aluksi
 	itsExistingLabels.clear(); //EL
 	itsOptimizedGridPtr.reset();
 
@@ -278,15 +278,15 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 	DrawFrame(itsDrawingEnvironment);
 
 	//************** QUICKFIX!!!!! *******************
-	// itsArea:n rectiä tarvitaan NFmiIsoLineView::DrawSimpleIsoLinesWithImagine-metodissa
-	// kun tehdään clippausta ja tämä pitää korvata jotenkin virtuaali jutulla
+	// itsArea:n rectiï¿½ tarvitaan NFmiIsoLineView::DrawSimpleIsoLinesWithImagine-metodissa
+	// kun tehdï¿½ï¿½n clippausta ja tï¿½mï¿½ pitï¿½ï¿½ korvata jotenkin virtuaali jutulla
 	itsArea = GetZoomedArea();
 
 	//************** QUICKFIX!!!!! *******************
 	boost::shared_ptr<NFmiDrawParam> oldDrawParam = itsDrawParam;
 	PreCalculateTrajectoryLatlonPoints();
-    itsCtrlViewDocumentInterface->CrossSectionSystem()->CalcMinorPoints(itsArea); // päivitetään poikkileikkaus pisteet
-    itsCtrlViewDocumentInterface->CrossSectionSystem()->CalcRouteTimes(); // tämäkin pitää varmistaa
+    itsCtrlViewDocumentInterface->CrossSectionSystem()->CalcMinorPoints(itsArea); // pï¿½ivitetï¿½ï¿½n poikkileikkaus pisteet
+    itsCtrlViewDocumentInterface->CrossSectionSystem()->CalcRouteTimes(); // tï¿½mï¿½kin pitï¿½ï¿½ varmistaa
 	CalcRouteDistances();
 	NFmiDrawParamList *dpList = itsCtrlViewDocumentInterface->CrossSectionViewDrawParamList(itsViewGridRowNumber);
 	if(dpList)
@@ -297,24 +297,24 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 		for(dpList->Reset(); dpList->Next(); i++)
 		{
 			itsExistingLabels.clear(); //EL
-			itsDrawParam = dpList->Current(); // asetetaan todella käytetty drawParam käyttöön
+			itsDrawParam = dpList->Current(); // asetetaan todella kï¿½ytetty drawParam kï¿½yttï¿½ï¿½n
 			itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, true, true, fGetCurrentDataFromQ2Server);
             NFmiStationView::SetupPossibleWindMetaParamData();
             if(itsInfo == 0 || itsDrawParam == 0)
-			{ // voi mennä tähän esim. jos on tiputtanut ensin editoriin level dataa ja katsoo
-			  // editoituna datana vaikka lämpötilaa. Sitten laitetaan editori operatiiviseen
+			{ // voi mennï¿½ tï¿½hï¿½n esim. jos on tiputtanut ensin editoriin level dataa ja katsoo
+			  // editoituna datana vaikka lï¿½mpï¿½tilaa. Sitten laitetaan editori operatiiviseen
 			  // tilaan painamalla Lataa-nappia, jolloin editoitava data on pinta dataa (nyt
-			  // se katsottu lämpötila drawParam pitää poistaa)
-			  // itsCrossSectionDrawParam voi olla 0-pointteri, jos kyseessä viallinen MacroParam
+			  // se katsottu lï¿½mpï¿½tila drawParam pitï¿½ï¿½ poistaa)
+			  // itsCrossSectionDrawParam voi olla 0-pointteri, jos kyseessï¿½ viallinen MacroParam
 
-				//dpList->Remove(true); // Ei poisteta enää jos dataa ei löydy
+				//dpList->Remove(true); // Ei poisteta enï¿½ï¿½ jos dataa ei lï¿½ydy
 				continue;
 			}
 			DoTimeInterpolationSettingChecks(itsInfo);
 			UpdateCachedParameterName();
 			if(!itsDrawParam->IsParamHidden())
 			{
-				PrepareForTransparentDraw(); // jos piirto-ominaisuudessa on transparenssia, pitää tehdä kikka vitonen
+				PrepareForTransparentDraw(); // jos piirto-ominaisuudessa on transparenssia, pitï¿½ï¿½ tehdï¿½ kikka vitonen
 				try
 				{
 					DrawCrossSection();
@@ -337,7 +337,7 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 					errorMessage += itsDrawParam->ParameterAbbreviation();
 					CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::Visualization, true);
 				}
-				EndTransparentDraw(); // jos piirrossa oli läpinäkyvyyttä, pitää vielä tehdä pari kikkaa ja siivota jäljet
+				EndTransparentDraw(); // jos piirrossa oli lï¿½pinï¿½kyvyyttï¿½, pitï¿½ï¿½ vielï¿½ tehdï¿½ pari kikkaa ja siivota jï¿½ljet
 			}
 		}
 
@@ -349,7 +349,7 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 		DrawHeightScale();
 		DrawGround();
 		DrawHybridLevels();
-		// piirretään vielä dataframe
+		// piirretï¿½ï¿½n vielï¿½ dataframe
 		itsDrawingEnvironment.DisableFill();
 		NFmiRectangle rect(itsDataViewFrame.TopLeft()
 						,itsDataViewFrame.BottomRight()
@@ -358,10 +358,10 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 		itsToolBox->Convert(&rect);
 		DrawPressureScale();
 
-		DrawParamView(theGTB); // piirrettävä viimeiseksi kartan päälle!!!
+		DrawParamView(theGTB); // piirrettï¿½vï¿½ viimeiseksi kartan pï¿½ï¿½lle!!!
 	}
 	//************** QUICKFIX!!!!! *******************
-	itsDrawParam = oldDrawParam; // laitetaan mikä oli sitten ennen piirtoa drawParam takaisin
+	itsDrawParam = oldDrawParam; // laitetaan mikï¿½ oli sitten ennen piirtoa drawParam takaisin
 	itsInfo = boost::shared_ptr<NFmiFastQueryInfo>();
 	//************** QUICKFIX!!!!! *******************
     CleanGdiplus();
@@ -385,7 +385,9 @@ void NFmiCrossSectionView::DrawLegends()
             NFmiColorContourLegendValues colorContourLegendValues(drawParamPtr, fastInfo);
             if(colorContourLegendValues.useLegend())
             {
+#ifndef UNIX
                 CtrlView::DrawNormalColorContourLegend(colorContourLegendSettings, colorContourLegendValues, lastLegendRelativeBottomRightCorner, itsToolBox, graphicalInfo, *itsGdiPlusGraphics, sizeFactor, itsDataViewFrame);
+#endif // UNIX
             }
         }
     }
@@ -445,7 +447,7 @@ std::string NFmiCrossSectionView::ComposeTrajectoryToolTipText()
 	return str;
 }
 
-// väri otetaan väliaikaisesti ulkoa luotaus systeemistä
+// vï¿½ri otetaan vï¿½liaikaisesti ulkoa luotaus systeemistï¿½
 void NFmiCrossSectionView::DrawTrajectory(const NFmiTrajectory &theTrajectory, const NFmiColor &theColor)
 {
 	if(!itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
@@ -454,7 +456,7 @@ void NFmiCrossSectionView::DrawTrajectory(const NFmiTrajectory &theTrajectory, c
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsDataViewFrame);
 
 	NFmiDrawingEnvironment envi;
-	// piirretään sitten pää-trajektori
+	// piirretï¿½ï¿½n sitten pï¿½ï¿½-trajektori
 	envi.SetFrameColor(theColor);
 	envi.SetPenSize(NFmiPoint(3 * itsDrawSizeFactorX, 3 * itsDrawSizeFactorY));
 	DrawSingleTrajector(theTrajectory.MainTrajector(), envi, theTrajectory.TimeStepInMinutes(), FmiRound(7 * itsDrawSizeFactorX), FmiRound(2 * itsDrawSizeFactorX), theTrajectory.Direction());
@@ -476,7 +478,7 @@ static double TimeStepWidth(double theTotalDiffInMinutes, double timeStepInMinut
 
 const NFmiMetTime& NFmiCrossSectionView::CurrentTime(void)
 {
-    return itsCtrlViewDocumentInterface->ActiveMapTime(); // haetaan aktiivisen karttanäytön current time
+    return itsCtrlViewDocumentInterface->ActiveMapTime(); // haetaan aktiivisen karttanï¿½ytï¿½n current time
 }
 
 void NFmiCrossSectionView::DrawSingleTrajector(const NFmiSingleTrajector &theSingleTrajector, NFmiDrawingEnvironment &theEnvi, int theTimeStepInMinutes, int theTimeMarkerPixelSize, int theTimeMarkerPixelPenSize, FmiDirection theDirection)
@@ -494,8 +496,8 @@ void NFmiCrossSectionView::DrawSingleTrajector(const NFmiSingleTrajector &theSin
 	if(!forwardDir)
 		stepX = -stepX;
 	NFmiMetTime time2;
-	NFmiPoint mapTimeP(kFloatMissing, kFloatMissing); // haetaan tähän se piste, missä trajektori oli menossa kun tämän kartan aika oli
-	NFmiMetTime currentTime(theSingleTrajector.StartTime()); // pidetään laskua currentin pisteen ajasta
+	NFmiPoint mapTimeP(kFloatMissing, kFloatMissing); // haetaan tï¿½hï¿½n se piste, missï¿½ trajektori oli menossa kun tï¿½mï¿½n kartan aika oli
+	NFmiMetTime currentTime(theSingleTrajector.StartTime()); // pidetï¿½ï¿½n laskua currentin pisteen ajasta
 	const std::vector<float> &pressures = theSingleTrajector.Pressures();
 	std::vector<float>::const_iterator it = pressures.begin();
 	bool showTrajectoryArrows = itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoryArrows();
@@ -512,7 +514,7 @@ void NFmiCrossSectionView::DrawSingleTrajector(const NFmiSingleTrajector &theSin
 		NFmiPolyline trajectorPolyLine(itsRect, 0, &theEnvi);
 		trajectorPolyLine.AddPoint(p1);
 		std::vector<float>::const_iterator endIt = pressures.end();
-		++it; // pitää juoksuttaa yhden pykälän verran eteenpäin
+		++it; // pitï¿½ï¿½ juoksuttaa yhden pykï¿½lï¿½n verran eteenpï¿½in
 		for( ; it != endIt; ++it )
 		{
 			x += stepX;
@@ -527,7 +529,7 @@ void NFmiCrossSectionView::DrawSingleTrajector(const NFmiSingleTrajector &theSin
 
 			currentTime.ChangeByMinutes(forwardDir ? theTimeStepInMinutes : -theTimeStepInMinutes);
 
-			if(showTrajectoryArrows) // HUOM! looppia pitää kuitenkin käydä läpi vaikka ei piirretä, jos markerit piirretään
+			if(showTrajectoryArrows) // HUOM! looppia pitï¿½ï¿½ kuitenkin kï¿½ydï¿½ lï¿½pi vaikka ei piirretï¿½, jos markerit piirretï¿½ï¿½n
 				trajectorPolyLine.AddPoint(p2);
 			p1 = p2;
 		}
@@ -551,13 +553,13 @@ void NFmiCrossSectionView::DrawSingleTrajector(const NFmiSingleTrajector &theSin
 				double y2 = p2y(pressures[pressures.size()-2]);
 				double deltaY = y - y2;
 				double vdirRad = ::atan2(deltaY, stepX);
-				double vdir1 = vdirRad * 360 / (2. * kPii); // ja siitä suunta viimeiseen paikkaan
+				double vdir1 = vdirRad * 360 / (2. * kPii); // ja siitï¿½ suunta viimeiseen paikkaan
 				vdir1 += 90;
 				if(forwardDir)
 					vdir1 = ::fmod(vdir1, 360);
 				else
-					vdir1 = ::fmod(vdir1+180, 360); // käännetään nuolen suunta 180 astetta jos takaperin trajektori
-				// piirrä etenemis nuolen kärki trajektorille
+					vdir1 = ::fmod(vdir1+180, 360); // kï¿½ï¿½nnetï¿½ï¿½n nuolen suunta 180 astetta jos takaperin trajektori
+				// piirrï¿½ etenemis nuolen kï¿½rki trajektorille
 				NFmiPolyline arrowPolyLine(itsRect, 0, &theEnvi);
 				arrowPolyLine.AddPoint(::RotatePoint(NFmiPoint(-0.7, 2), vdir1));
 				arrowPolyLine.AddPoint(::RotatePoint(NFmiPoint(0, 0), vdir1));
@@ -598,12 +600,12 @@ NFmiMetTime NFmiCrossSectionView::GetCrossSectionTime(const NFmiPoint &theRelati
 		const NFmiTimeBag usedtimeBag = GetUsedTimeBagForDataCalculations();
 		int timeCount = usedtimeBag.GetSize();
 		double pos = (theRelativePlace.X() - itsDataViewFrame.Left())/(itsDataViewFrame.Width()) * (timeCount - 1);
-		int timeIndex = boost::math::iround(pos); // haetaan lähin aika käytetystä timebagista
-		NFmiTimeBag times(usedtimeBag); // pitää tehdä kopio
+		int timeIndex = boost::math::iround(pos); // haetaan lï¿½hin aika kï¿½ytetystï¿½ timebagista
+		NFmiTimeBag times(usedtimeBag); // pitï¿½ï¿½ tehdï¿½ kopio
 		if(times.SetTime(static_cast<unsigned long>(timeIndex)))
 			return times.CurrentTime();
 		else
-			return times.FirstTime(); // JOKIN MENI OIKEASTI PIELEEN; TÄMÄ ON HÄTÄ PASKA
+			return times.FirstTime(); // JOKIN MENI OIKEASTI PIELEEN; Tï¿½Mï¿½ ON Hï¿½Tï¿½ PASKA
 	}
 	else if(crossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kRoute)
 	{
@@ -631,7 +633,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 	std::string str;
     auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
     auto crossMode = crossSectionSystem->GetCrossMode();
-	// tooltippiä ei piirretä, jos tooltip mode on pois päältä (HUOM!, tein funktion nimestä huolimatta universaalin on/off säätimen tooltipeille)
+	// tooltippiï¿½ ei piirretï¿½, jos tooltip mode on pois pï¿½ï¿½ltï¿½ (HUOM!, tein funktion nimestï¿½ huolimatta universaalin on/off sï¿½ï¿½timen tooltipeille)
     if(crossSectionSystem->ShowTooltipOnCrossSectionView() == false)
 		return str;
 	else if(itsParamHandlerView && itsParamHandlerView->IsIn(theRelativePoint))
@@ -662,9 +664,9 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 				str += " mb";
 
 				if(crossMode != NFmiCrossSectionSystem::kTime && crossMode != NFmiCrossSectionSystem::kObsAndFor)
-				{ // lisätään etäisyys [km] alku ja loppu pisteisiin
+				{ // lisï¿½tï¿½ï¿½n etï¿½isyys [km] alku ja loppu pisteisiin
 					str += "\n";
-					str += "1. &lt;- "; // < -merkki pitää escapeta (&lt; :llä)
+					str += "1. &lt;- "; // < -merkki pitï¿½ï¿½ escapeta (&lt; :llï¿½)
 					int column = GetNearestCrossSectionColumn(theRelativePoint);
 					if(itsRoutePointsDistToEndPoint[column] != kFloatMissing)
 						str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(itsRoutePointsDistToEndPoint[column]/1000., 0);
@@ -675,7 +677,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 						str += NFmiValueString::GetStringWithMaxDecimalsSmartWay((itsRoutePointsDistToEndPoint[itsRoutePointsDistToEndPoint.size()-1] - itsRoutePointsDistToEndPoint[column])/1000., 0);
 					else
 						str += "??";
-					str += "km -&gt; 2.";  // < -merkki pitää escapeta (&gt; :llä)
+					str += "km -&gt; 2.";  // < -merkki pitï¿½ï¿½ escapeta (&gt; :llï¿½)
 				}
 
 				str += "<br><hr color=red><br>";
@@ -684,12 +686,12 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 
 				for(dpList->Reset(); dpList->Next(); )
 				{
-					itsDrawParam = dpList->Current(); // asetetaan todella käytetty drawParam käyttöön
+					itsDrawParam = dpList->Current(); // asetetaan todella kï¿½ytetty drawParam kï¿½yttï¿½ï¿½n
 					boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, true, true, fGetCurrentDataFromQ2Server);
 					if(info == 0)
-						continue; // tämä on virhe tilanne oikeasti!!!!
+						continue; // tï¿½mï¿½ on virhe tilanne oikeasti!!!!
 					DoTimeInterpolationSettingChecks(info);
-					bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
+					bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-nï¿½ppï¿½in on pohjassa, laitetaan lisï¿½ï¿½ infoa nï¿½kyville
 					auto paramNameString = CtrlViewUtils::GetParamNameString(itsDrawParam, true, showExtraInfo, true, 0, false, true, true, nullptr);
 					auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
 					if(itsDrawParam->IsParamHidden())
@@ -699,7 +701,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 					if(itsDrawParam->IsParamHidden())
 						str += ")"; // jos parametri on piilotettu, laita teksti sulkuihin
 
-					float value = GetLevelValue(info, p, latlon, aTime); // tee log(p) interpoloinnit qinfoon ja käytä tässä!!!!
+					float value = GetLevelValue(info, p, latlon, aTime); // tee log(p) interpoloinnit qinfoon ja kï¿½ytï¿½ tï¿½ssï¿½!!!!
 					NFmiExtraMacroParamData extraMacroParamData;
 
                     if(info->DataType() == NFmiInfoData::kCrossSectionMacroParam)
@@ -723,9 +725,9 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
                     }
 					else if(crossMode == NFmiCrossSectionSystem::kObsAndFor)
 					{
-                        // HUOM! tämä ei toimi, jos 
-                        // 1. On useita parametreja käytössä (koska vain viimeisen piirretyn layerin arvot jäävät käytettyyn matriisiin)
-                        // 2. Jos parametri on piilotettu (tällöin matriisiin ei lasketa arvoja ollenkaan)
+                        // HUOM! tï¿½mï¿½ ei toimi, jos 
+                        // 1. On useita parametreja kï¿½ytï¿½ssï¿½ (koska vain viimeisen piirretyn layerin arvot jï¿½ï¿½vï¿½t kï¿½ytettyyn matriisiin)
+                        // 2. Jos parametri on piilotettu (tï¿½llï¿½in matriisiin ei lasketa arvoja ollenkaan)
 						NFmiPoint projectedPoint(itsDataViewFrame.Project(theRelativePoint));
 						value = itsIsolineValues.InterpolatedValue(projectedPoint, itsParamId);
 					}
@@ -747,7 +749,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 	}
 	catch(exception & /* e */ )
 	{
-		// ei onnistunut voi, voi, ei tehdä mitään
+		// ei onnistunut voi, voi, ei tehdï¿½ mitï¿½ï¿½n
 //		::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), e.what(), "Ongelma poikkileikkaus piirrossa!", MB_OK);
 	}
 	return str;
@@ -765,7 +767,7 @@ bool NFmiCrossSectionView::IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDraw
 	return tooltipData.macroParamErrorMessage.empty();
 }
 
-// HUOM! Tämä ei tue tuulen meta parametreja, eli mm. tooltippiin ei saada oikeita arvoja niissä tapauksissa.
+// HUOM! Tï¿½mï¿½ ei tue tuulen meta parametreja, eli mm. tooltippiin ei saada oikeita arvoja niissï¿½ tapauksissa.
 float NFmiCrossSectionView::GetLevelValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, bool doMetaParamCheck)
 {
     if(theInfo)
@@ -830,7 +832,7 @@ float NFmiCrossSectionView::GetLevelValueForMetaParam(boost::shared_ptr<NFmiFast
     return kFloatMissing;
 }
 
-// laskee (interpoloi) kahden lähimmän minor-pisteen avulla hiiren 'osoittaman'
+// laskee (interpoloi) kahden lï¿½himmï¿½n minor-pisteen avulla hiiren 'osoittaman'
 // latlon-pisteen ja palauttaa sen
 NFmiPoint NFmiCrossSectionView::GetCrossSectionLatlonPoint(const NFmiPoint &theRelativePlace)
 {
@@ -839,7 +841,7 @@ NFmiPoint NFmiCrossSectionView::GetCrossSectionLatlonPoint(const NFmiPoint &theR
         auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
         auto crossSectionMode = itsCtrlViewDocumentInterface->CrossSectionSystem()->GetCrossMode();
 		if(crossSectionMode == NFmiCrossSectionSystem::kTime || crossSectionMode == NFmiCrossSectionSystem::kObsAndFor)
-		{ // jos ollaan aika-leikkaus moodissa, piste on selvä, palautetaan 1. main-pointti
+		{ // jos ollaan aika-leikkaus moodissa, piste on selvï¿½, palautetaan 1. main-pointti
 			return crossSectionSystem->StartPoint();
 		}
 		else
@@ -860,7 +862,7 @@ NFmiPoint NFmiCrossSectionView::GetCrossSectionLatlonPoint(const NFmiPoint &theR
 					return latlon1;
 				if(latlon2.X() == kFloatMissing)
 					return latlon2;
-				// tässä joudutaan tekemään vähän ikävä latlon pisteiden interpolointi
+				// tï¿½ssï¿½ joudutaan tekemï¿½ï¿½n vï¿½hï¿½n ikï¿½vï¿½ latlon pisteiden interpolointi
 				double lon = latlon1.X() * (1. - factor) + latlon2.X() * factor;
 				double lat = latlon1.Y() * (1. - factor) + latlon2.Y() * factor;
 				NFmiPoint wantedLatlon(lon, lat);
@@ -876,11 +878,11 @@ NFmiPoint NFmiCrossSectionView::GetCrossSectionLatlonPoint(const NFmiPoint &theR
 
 int NFmiCrossSectionView::CalcHorizontalPointCount(void)
 {
-	// parempi pyytää todelliset pisteet ja katsoa kuinka monta niitä oli, kuin haluttujen lukumäärää
+	// parempi pyytï¿½ï¿½ todelliset pisteet ja katsoa kuinka monta niitï¿½ oli, kuin haluttujen lukumï¿½ï¿½rï¿½ï¿½
 	int mpcount = static_cast<int>(GetMinorPoints().size());
     auto crossSectionMode = itsCtrlViewDocumentInterface->CrossSectionSystem()->GetCrossMode();
     if(crossSectionMode == NFmiCrossSectionSystem::kTime || crossSectionMode == NFmiCrossSectionSystem::kObsAndFor)
-	{ // jos ollaan aika-leikkaus moodissa, pitää katsoa kuinka monta aikaa leikkauksessa on
+	{ // jos ollaan aika-leikkaus moodissa, pitï¿½ï¿½ katsoa kuinka monta aikaa leikkauksessa on
 		boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, true, true);
 		if(info)
 		{
@@ -891,7 +893,7 @@ int NFmiCrossSectionView::CalcHorizontalPointCount(void)
 	return mpcount;
 }
 
-// jos epäonnistuu, palautetaan -1, muuten annetun xy-paikan lähin vastaava
+// jos epï¿½onnistuu, palautetaan -1, muuten annetun xy-paikan lï¿½hin vastaava
 // poikkileikkaus pisteiden indeksi alkaen 0:sta.
 int NFmiCrossSectionView::GetNearestCrossSectionColumn(const NFmiPoint &thePlace)
 {
@@ -913,13 +915,13 @@ double NFmiCrossSectionView::Column2x(int theColumn)
 	return pos;
 }
 
-// kun uutta dataa on ladattu ja crossSectiondrawParam pitää päivittää,
-// kutsutaan tätä funktiota.
+// kun uutta dataa on ladattu ja crossSectiondrawParam pitï¿½ï¿½ pï¿½ivittï¿½ï¿½,
+// kutsutaan tï¿½tï¿½ funktiota.
 void NFmiCrossSectionView::Update(void)
 {
-	// jos on esim. ladattu viewMacro käyttöön, pitää paine asteikon rajat päivittää
-	NFmiCrossSectionSystem::ExtraRowInfo &extraRowInfo = itsCtrlViewDocumentInterface->CrossSectionSystem()->GetRowInfo(itsViewGridRowNumber - 1);  // itsViewGridRowNumber alkaa 1:stä, mutta GetRowInfo:n indeksit alkavat 0:sta.
-	if(extraRowInfo.itsLowerEndOfPressureAxis != extraRowInfo.itsUpperEndOfPressureAxis) // ei vedetä vahingossakaan paineakselia lyttyyn
+	// jos on esim. ladattu viewMacro kï¿½yttï¿½ï¿½n, pitï¿½ï¿½ paine asteikon rajat pï¿½ivittï¿½ï¿½
+	NFmiCrossSectionSystem::ExtraRowInfo &extraRowInfo = itsCtrlViewDocumentInterface->CrossSectionSystem()->GetRowInfo(itsViewGridRowNumber - 1);  // itsViewGridRowNumber alkaa 1:stï¿½, mutta GetRowInfo:n indeksit alkavat 0:sta.
+	if(extraRowInfo.itsLowerEndOfPressureAxis != extraRowInfo.itsUpperEndOfPressureAxis) // ei vedetï¿½ vahingossakaan paineakselia lyttyyn
 	{
 		if(extraRowInfo.itsLowerEndOfPressureAxis != kFloatMissing)
 			itsLowerEndOfPressureAxis = extraRowInfo.itsLowerEndOfPressureAxis;
@@ -927,7 +929,7 @@ void NFmiCrossSectionView::Update(void)
 			itsUpperEndOfPressureAxis = extraRowInfo.itsUpperEndOfPressureAxis;
 	}
 
-    itsCtrlViewDocumentInterface->CrossSectionSystem()->CrossSectionViewNeedsUpdate(false); // nollataan flagi kun päivitys suoritettu
+    itsCtrlViewDocumentInterface->CrossSectionSystem()->CrossSectionViewNeedsUpdate(false); // nollataan flagi kun pï¿½ivitys suoritettu
 }
 
 bool NFmiCrossSectionView::IsToolMasterAvailable(void)
@@ -935,8 +937,8 @@ bool NFmiCrossSectionView::IsToolMasterAvailable(void)
 	return itsCtrlViewDocumentInterface->IsToolMasterAvailable();
 }
 
-// Jostain syystä karttanäytöille transparency piirtoon liittyvä bitmap pitää deletoida (muuten vuotaa),
-// mutta poikkileikkausnäytössä sitä ei saa tehdä, muuten kaatuu (ei vuoda, vaikka ei deletoida).
+// Jostain syystï¿½ karttanï¿½ytï¿½ille transparency piirtoon liittyvï¿½ bitmap pitï¿½ï¿½ deletoida (muuten vuotaa),
+// mutta poikkileikkausnï¿½ytï¿½ssï¿½ sitï¿½ ei saa tehdï¿½, muuten kaatuu (ei vuoda, vaikka ei deletoida).
 bool NFmiCrossSectionView::DeleteTransparencyBitmap()
 {
     return false;
@@ -951,9 +953,9 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 {
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, std::string(__FUNCTION__) + ": starting to draw layer");
 	if(fGetCurrentDataFromQ2Server)
-		return ; // ei vielä q2server tukea poikkileikkausnäytössä!!!!
+		return ; // ei vielï¿½ q2server tukea poikkileikkausnï¿½ytï¿½ssï¿½!!!!
 
-	itsIsolineValues = kFloatMissing; // tyhjennetään aina ensin data-setti ennen niiden laskua
+	itsIsolineValues = kFloatMissing; // tyhjennetï¿½ï¿½n aina ensin data-setti ennen niiden laskua
 	fDoCrossSectionDifferenceData = false;
 	NFmiIsoLineData isoLineData;
 	isoLineData.itsInfo = this->itsInfo;
@@ -965,16 +967,16 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 	int oldVerticalPointCount = crossSectionSystem->VerticalPointCount();
 	int usedVerticalPointCount = oldVerticalPointCount;
 	if(isoLineData.itsParam.GetParamIdent() == kFmiWindVectorMS)
-	{ // tuuli viiri piirtoa varten vertikaali tiheyttä pitää harventaa
+	{ // tuuli viiri piirtoa varten vertikaali tiheyttï¿½ pitï¿½ï¿½ harventaa
 		usedVerticalPointCount = (oldVerticalPointCount-1) / 3;
-		// tuuli viirit piirretään harvemmassa, joten haluan alkaa piirtää niitä alempaa, muuten alas jää niin paljon tyhjää
+		// tuuli viirit piirretï¿½ï¿½n harvemmassa, joten haluan alkaa piirtï¿½ï¿½ niitï¿½ alempaa, muuten alas jï¿½ï¿½ niin paljon tyhjï¿½ï¿½
 	}
 
 	itsPressures = MakePressureVector(usedVerticalPointCount, oldVerticalPointCount);
 
-    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // käydään kaikki pisteet läpi
-	// Kun käytetään imagine piirtoa,ei dataa talleteta isolinedata-rakenteisiin
-	// kuten toolmaster-piirrossa, koska imagine käyttää erilaista data rakennetta (matriisia)
+    EditedInfoMaskHandler editedInfoMaskHandler(itsInfo, NFmiMetEditorTypes::kFmiNoMask); // kï¿½ydï¿½ï¿½n kaikki pisteet lï¿½pi
+	// Kun kï¿½ytetï¿½ï¿½n imagine piirtoa,ei dataa talleteta isolinedata-rakenteisiin
+	// kuten toolmaster-piirrossa, koska imagine kï¿½yttï¿½ï¿½ erilaista data rakennetta (matriisia)
 	if(itsInfo->DataType() == NFmiInfoData::kCrossSectionMacroParam && crossSectionSystem->GetCrossMode() != NFmiCrossSectionSystem::kObsAndFor)
 		FillCrossSectionMacroParamData(itsIsolineValues, isoLineData, itsPressures, itsDrawParam);
 	else if(itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
@@ -989,17 +991,17 @@ void NFmiCrossSectionView::DrawCrossSection(void)
         FillCrossSectionData(itsIsolineValues, isoLineData, itsPressures);
 
 	if(!isoLineData.InitIsoLineData(itsIsolineValues))
-		return; // Jos data hila (isoLineData.Init() ==> false) oli tyhjä, pitää lopettaa
+		return; // Jos data hila (isoLineData.Init() ==> false) oli tyhjï¿½, pitï¿½ï¿½ lopettaa
 
-	// HUOM! TÄMÄ ON VIRITYS!!!! -alkaa
-	// Tuulensuunta-parametri on saatettu laittaa suuntanuoli asetukseen ja se toimiikiin hyvin karttanäytöllä. 
-	// Mutta minusta olisi hämäävää jos tuuulen suunta piirretään nuolella poikkileikkausnäytössä ,koska se ei osoittaisi tuulen suuntaa
-	// näytöllä vaan maantieteellisesti. WindBarb on eri asia ja se piirretään kuten kartalla, mutta siihen ollaan totuttu...
-	// Lisäksi nyt kun valitsin tuulen suunnan näytölle, ei tapahdu mitään, koska piirto ei tue suunta-nuolen piirtoa.
+	// HUOM! Tï¿½Mï¿½ ON VIRITYS!!!! -alkaa
+	// Tuulensuunta-parametri on saatettu laittaa suuntanuoli asetukseen ja se toimiikiin hyvin karttanï¿½ytï¿½llï¿½. 
+	// Mutta minusta olisi hï¿½mï¿½ï¿½vï¿½ï¿½ jos tuuulen suunta piirretï¿½ï¿½n nuolella poikkileikkausnï¿½ytï¿½ssï¿½ ,koska se ei osoittaisi tuulen suuntaa
+	// nï¿½ytï¿½llï¿½ vaan maantieteellisesti. WindBarb on eri asia ja se piirretï¿½ï¿½n kuten kartalla, mutta siihen ollaan totuttu...
+	// Lisï¿½ksi nyt kun valitsin tuulen suunnan nï¿½ytï¿½lle, ei tapahdu mitï¿½ï¿½n, koska piirto ei tue suunta-nuolen piirtoa.
 	// ELI JOS paramtri on tuulen suunta ja hilaesitys on nuoli, muuta se isoviiva esitykseksi.
 	if(isoLineData.itsParam.GetParamIdent() == kFmiWindDirection && itsDrawParam->GridDataPresentationStyle() == NFmiMetEditorTypes::View::kFmiArrowView)
 		itsDrawParam->GridDataPresentationStyle(NFmiMetEditorTypes::View::kFmiIsoLineView);
-	// HUOM! TÄMÄ ON VIRITYS!!!! - loppuu
+	// HUOM! Tï¿½Mï¿½ ON VIRITYS!!!! - loppuu
 
 	if(fDoCrossSectionDifferenceData)
 		SetUpDifferenceDrawing(itsDrawParam);
@@ -1029,8 +1031,8 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 			if(fDoCrossSectionDifferenceData)
 				RestoreUpDifferenceDrawing(itsDrawParam);
 
-             // nämä pitäisi siirtää ulos täältä, että ne voitaisiin piirtää koko roskan päälle yhden kerran
-             // HUOM! ei piirretä jos windVector ja monta parametria ruudulla, koska windvectorit piirretään hieman eri paikkoihin ja tulee sekamelska
+             // nï¿½mï¿½ pitï¿½isi siirtï¿½ï¿½ ulos tï¿½ï¿½ltï¿½, ettï¿½ ne voitaisiin piirtï¿½ï¿½ koko roskan pï¿½ï¿½lle yhden kerran
+             // HUOM! ei piirretï¿½ jos windVector ja monta parametria ruudulla, koska windvectorit piirretï¿½ï¿½n hieman eri paikkoihin ja tulee sekamelska
             if(isoLineData.itsParam.GetParamIdent() != kFmiWindVectorMS || itsCtrlViewDocumentInterface->CrossSectionViewDrawParamList(itsViewGridRowNumber)->NumberOfItems() == 1)
                 DrawGridPoints(koordinaatit);
             DrawActivatedMinorPointLine();
@@ -1060,7 +1062,7 @@ void NFmiCrossSectionView::DrawCrosssectionWithToolMaster(NFmiIsoLineData& theIs
 
 	if(theIsoLineData.fUseIsoLines)
 		itsCrossSectionIsoLineDrawIndex++;
-	NFmiPoint grid2PixelRatio(0, 0); // tätä ei käytetä vielä toistaiseksi poikkileikkaus näytössä, siksi alustetaan 0:ksi.
+	NFmiPoint grid2PixelRatio(0, 0); // tï¿½tï¿½ ei kï¿½ytetï¿½ vielï¿½ toistaiseksi poikkileikkaus nï¿½ytï¿½ssï¿½, siksi alustetaan 0:ksi.
 #ifndef UNIX
 	::ToolMasterDraw(itsToolBox->GetDC(), &theIsoLineData, relRect, zoomedAreaRect, grid2PixelRatio, itsCrossSectionIsoLineDrawIndex, GetVisualizationSettings());
 #endif // UNIX
@@ -1068,7 +1070,7 @@ void NFmiCrossSectionView::DrawCrosssectionWithToolMaster(NFmiIsoLineData& theIs
 
 void NFmiCrossSectionView::DrawCrosssectionWithImagine(NFmiIsoLineData& theIsoLineData, NFmiDataMatrix<float> &theValues, Imagine::NFmiDataHints &theHelper, NFmiDataMatrix<NFmiPoint> &theCoordinates)
 {
-	const NFmiPoint dummyOffSet; // pitää tehdä tyhjä offset, koska emoluokassa käytetään offsetteja, muuta ei täällä
+	const NFmiPoint dummyOffSet; // pitï¿½ï¿½ tehdï¿½ tyhjï¿½ offset, koska emoluokassa kï¿½ytetï¿½ï¿½n offsetteja, muuta ei tï¿½ï¿½llï¿½
     auto &graphicalInfo = itsCtrlViewDocumentInterface->CrossSectionSystem()->GetGraphicalInfo();
 
 	if(theIsoLineData.itsHatch1.fUseHatch)
@@ -1078,14 +1080,14 @@ void NFmiCrossSectionView::DrawCrosssectionWithImagine(NFmiIsoLineData& theIsoLi
 
 	if(theIsoLineData.fUseIsoLines)
 	{
-		if(!theIsoLineData.fUseCustomIsoLineClasses) // piirretään tasa väliset isoviivat
+		if(!theIsoLineData.fUseCustomIsoLineClasses) // piirretï¿½ï¿½n tasa vï¿½liset isoviivat
 			DrawSimpleIsoLinesWithImagine(theIsoLineData, theValues, theCoordinates, theHelper, dummyOffSet);
 		else
 			DrawCustomIsoLinesWithImagine(theIsoLineData, theValues, theCoordinates, theHelper, dummyOffSet);
 	}
 	else
 	{
-		if(theIsoLineData.fUseCustomColorContoursClasses) // piirretään tasa väliset isoviivat
+		if(theIsoLineData.fUseCustomColorContoursClasses) // piirretï¿½ï¿½n tasa vï¿½liset isoviivat
 			DrawCustomColorContourWithImagine(theIsoLineData, theValues, theCoordinates, theHelper, dummyOffSet);
 		else
 			DrawSimpleColorContourWithImagine(theIsoLineData, theValues, theCoordinates, theHelper, dummyOffSet);
@@ -1116,7 +1118,7 @@ void NFmiCrossSectionView::DrawActivatedMinorPointLine(void)
 	}
 }
 
-// piirretään laskettu hilapisteikko näkyviin kaiken päälle
+// piirretï¿½ï¿½n laskettu hilapisteikko nï¿½kyviin kaiken pï¿½ï¿½lle
 void NFmiCrossSectionView::DrawGridPoints(NFmiDataMatrix<NFmiPoint> &theCoordinates)
 {
 	NFmiDrawingEnvironment envi;
@@ -1139,11 +1141,11 @@ void NFmiCrossSectionView::DrawGridPoints(NFmiDataMatrix<NFmiPoint> &theCoordina
 	}
 }
 
-// tee vektori, jossa on halutut paineet vektorissa. Tämän avulla lasketaan
+// tee vektori, jossa on halutut paineet vektorissa. Tï¿½mï¿½n avulla lasketaan
 // se matriisi, jossa on haluttuihin pisteisiin ja haluttuihin korkeuksiin lasketut
 // eri parametrien arvot.
-// tehdään niin että jaetaan data-laatikko halutun moneen osaan, lasketaan y pisteet
-// tasavälein ala ja ylä reinojen väliin, sitten lasketaan y arvot log(p) konversion avulla paine arvoiksi
+// tehdï¿½ï¿½n niin ettï¿½ jaetaan data-laatikko halutun moneen osaan, lasketaan y pisteet
+// tasavï¿½lein ala ja ylï¿½ reinojen vï¿½liin, sitten lasketaan y arvot log(p) konversion avulla paine arvoiksi
 // usedCount ja normalCount lukujen avulla voidaan laskea tuuliviirien tai symbolien
 // harvennettu jaotus ja aloitus muualta kuin alimman normaali rivin kohdalta (koska pinnassa puuttuvaa
 // dataa ja harvennuksen takia symbolit alkaisivat vasta korkeammalta kuin voisivat). Siis jos aloitus korkeus
@@ -1167,14 +1169,14 @@ std::vector<float> NFmiCrossSectionView::MakePressureVector(int usedCount, int n
 	{
 		float p = static_cast<float>(y2p(y));
 		pressures[i] = p;
-		y -= step; // mennään pinnasta pienempiä paineita kohti (=korkeammalle)
+		y -= step; // mennï¿½ï¿½n pinnasta pienempiï¿½ paineita kohti (=korkeammalle)
 	}
 	return pressures;
 }
 
-// Täytetään isoviivapiirtoa varten xy-piste matriisi, jossa pisteet sijaitsevat näytön suhteellisessa avaruudessa.
-// Pisteiden sijainnit lasketaan annetun korkeus vektorin mukaan (y-aks.) ja jaetaan tasaväleihin
-// poikkileikkaus pisteiden muodostaman pistejoukon läpi (x-aks.)
+// Tï¿½ytetï¿½ï¿½n isoviivapiirtoa varten xy-piste matriisi, jossa pisteet sijaitsevat nï¿½ytï¿½n suhteellisessa avaruudessa.
+// Pisteiden sijainnit lasketaan annetun korkeus vektorin mukaan (y-aks.) ja jaetaan tasavï¿½leihin
+// poikkileikkaus pisteiden muodostaman pistejoukon lï¿½pi (x-aks.)
 void NFmiCrossSectionView::FillXYMatrix(NFmiIsoLineData &theIsoLineData, NFmiDataMatrix<NFmiPoint> &theCoordinates, std::vector<float> &thePressures)
 {
 	NFmiPoint tmpPoint;
@@ -1192,9 +1194,9 @@ void NFmiCrossSectionView::FillXYMatrix(NFmiIsoLineData &theIsoLineData, NFmiDat
 			}
 		}
 	}
-	else // trajektorien kanssa pitää hieman viilailla, koska trajektorit piirretään vain siihen kohtaa
-		// aikanäyttöä, mikä on valittu. Osa jää tyhjäksi tai ei tule näkyviin. Dataa haetaan vain
-		// trajektorin reitille ja xy koordinaatit pitää laskea oikein niille
+	else // trajektorien kanssa pitï¿½ï¿½ hieman viilailla, koska trajektorit piirretï¿½ï¿½n vain siihen kohtaa
+		// aikanï¿½yttï¿½ï¿½, mikï¿½ on valittu. Osa jï¿½ï¿½ tyhjï¿½ksi tai ei tule nï¿½kyviin. Dataa haetaan vain
+		// trajektorin reitille ja xy koordinaatit pitï¿½ï¿½ laskea oikein niille
 	{
 		const NFmiTimeBag totalTimes = GetUsedTimeBagForDataCalculations();
 		NFmiMetTime startTime(totalTimes.FirstTime());
@@ -1202,8 +1204,8 @@ void NFmiCrossSectionView::FillXYMatrix(NFmiIsoLineData &theIsoLineData, NFmiDat
 		const std::vector<NFmiMetTime> &trajectoryTimes = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes();
 		if(trajectoryTimes.size() > 1)
 		{
-			// trajektorin aika-steppi lasketaan kahden 1. ajan perusteella. Tämä siksi että muodostettu aika-vektorin
-			// aika-steppi ei ole sama kuin laskuissa käytetty aika-steppi tai sama kuin aikakontrolli-ikkunan steppi
+			// trajektorin aika-steppi lasketaan kahden 1. ajan perusteella. Tï¿½mï¿½ siksi ettï¿½ muodostettu aika-vektorin
+			// aika-steppi ei ole sama kuin laskuissa kï¿½ytetty aika-steppi tai sama kuin aikakontrolli-ikkunan steppi
 			int trajektorytimeStepInMinutes = trajectoryTimes[1].DifferenceInMinutes(trajectoryTimes[0]);
 			double startX = ::Time2X(trajectoryTimes[0], totalTimes.FirstTime(), timeDiffInMinutes, itsDataViewFrame);
 			double stepX = ::TimeStepWidth(timeDiffInMinutes, trajektorytimeStepInMinutes, itsDataViewFrame);
@@ -1224,7 +1226,7 @@ void NFmiCrossSectionView::FillXYMatrix(NFmiIsoLineData &theIsoLineData, NFmiDat
 
 boost::shared_ptr<NFmiArea> NFmiCrossSectionView::GetZoomedArea(void)
 {
-	return itsCtrlViewDocumentInterface->GetMapHandlerInterface(0)->Area(); // tassa haetaan vain pääkarttanäytön area
+	return itsCtrlViewDocumentInterface->GetMapHandlerInterface(0)->Area(); // tassa haetaan vain pï¿½ï¿½karttanï¿½ytï¿½n area
 }
 
 void NFmiCrossSectionView::FillTrajectoryCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures)
@@ -1242,9 +1244,9 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
             return;
 
         theIsoLineData.itsInfo->First(); // asetetaan varmuuden vuoksi First:iin
-    // laitetaan myös tämä matriisi aluksi puuttuvaksi, että sitä ei virhetilanteissa tarvitse erikseen säädellä
+    // laitetaan myï¿½s tï¿½mï¿½ matriisi aluksi puuttuvaksi, ettï¿½ sitï¿½ ei virhetilanteissa tarvitse erikseen sï¿½ï¿½dellï¿½
         NFmiExtraMacroParamData::AdjustValueMatrixToMissing(theIsoLineData.itsInfo, theValues);
-        theIsoLineData.itsInfo->SetValues(theValues); // nollataan infossa ollut data missing-arvoilla, että saadaan puhdas kenttä laskuihin
+        theIsoLineData.itsInfo->SetValues(theValues); // nollataan infossa ollut data missing-arvoilla, ettï¿½ saadaan puhdas kenttï¿½ laskuihin
     }
 
 	auto macroParamSystemPtr = itsCtrlViewDocumentInterface->MacroParamSystem();
@@ -1295,7 +1297,7 @@ void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> 
 	}
 }
 
-// Tätä käytetään vain NFmiCrossSectionView::FillCrossSectionMacroParamData -metodissa.
+// Tï¿½tï¿½ kï¿½ytetï¿½ï¿½n vain NFmiCrossSectionView::FillCrossSectionMacroParamData -metodissa.
 std::vector<NFmiPoint> NFmiCrossSectionView::MakeLatlonVector(void)
 {
 	std::vector<NFmiPoint> latlons;
@@ -1307,14 +1309,14 @@ std::vector<NFmiPoint> NFmiCrossSectionView::MakeLatlonVector(void)
 		latlons = crossSectionSystem->MinorPoints();
 	else if(crossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kTime)
 	{
-		NFmiPoint point = crossSectionSystem->StartPoint(); // otetaan 1. pääpiste aikapoikkileikkauksen kohteeksi
+		NFmiPoint point = crossSectionSystem->StartPoint(); // otetaan 1. pï¿½ï¿½piste aikapoikkileikkauksen kohteeksi
         size_t wantedPoints = MakeMacroParamTimeModeTimeVector().size();
 		for(size_t i=0; i<wantedPoints; i++)
 			latlons.push_back(point);
 	}
 	else if(crossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kObsAndFor)
 	{
-		NFmiPoint point = crossSectionSystem->StartPoint(); // otetaan 1. pääpiste aikapoikkileikkauksen kohteeksi
+		NFmiPoint point = crossSectionSystem->StartPoint(); // otetaan 1. pï¿½ï¿½piste aikapoikkileikkauksen kohteeksi
 		int wantedPoints = static_cast<int>(GetUsedTimeBagForDataCalculations().GetSize());
 		for(int i=0; i<wantedPoints; i++)
 			latlons.push_back(point);
@@ -1325,7 +1327,7 @@ std::vector<NFmiPoint> NFmiCrossSectionView::MakeLatlonVector(void)
 	return latlons;
 }
 
-// Tätä käytetään vain NFmiCrossSectionView::FillCrossSectionMacroParamData -metodissa.
+// Tï¿½tï¿½ kï¿½ytetï¿½ï¿½n vain NFmiCrossSectionView::FillCrossSectionMacroParamData -metodissa.
 std::vector<NFmiMetTime> NFmiCrossSectionView::MakeTimeVector(void)
 {
     auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
@@ -1342,7 +1344,7 @@ std::vector<NFmiMetTime> NFmiCrossSectionView::MakeTimeVector(void)
 	{
 		int wantedTimes = crossSectionSystem->WantedMinorPointCount();
 		for(int i=0; i<wantedTimes; i++)
-			times.push_back(CurrentTime()); // itsTime ei käy, vaan pitää ottaa aika dokumentista
+			times.push_back(CurrentTime()); // itsTime ei kï¿½y, vaan pitï¿½ï¿½ ottaa aika dokumentista
 	}
 	return times;
 }
@@ -1350,12 +1352,12 @@ std::vector<NFmiMetTime> NFmiCrossSectionView::MakeTimeVector(void)
 #ifdef min
 #undef min
 #endif
-// Lasketaan macroParam laskuja varten erillinen timeVector, jossa on sopiva määrä 
-// tasavälein olevia aikoja. Koska aika-macroParam laskut ainakin vielä ovat niin hitaita,
-// yritetään tässä laskea jokin sopiva aika-askel, millä saadaan sopivan vähän aika-askelia.
+// Lasketaan macroParam laskuja varten erillinen timeVector, jossa on sopiva mï¿½ï¿½rï¿½ 
+// tasavï¿½lein olevia aikoja. Koska aika-macroParam laskut ainakin vielï¿½ ovat niin hitaita,
+// yritetï¿½ï¿½n tï¿½ssï¿½ laskea jokin sopiva aika-askel, millï¿½ saadaan sopivan vï¿½hï¿½n aika-askelia.
 std::vector<NFmiMetTime> NFmiCrossSectionView::MakeMacroParamTimeModeTimeVector(void)
 {
-    const long suitableTimeCount = 35; // pyrimme lähimmäksi tätä lukua el ilaskemme kuinka monta aika-askelta millekin stepille tulisi ja lähimmäksi tätä päässyt valitaan
+    const long suitableTimeCount = 35; // pyrimme lï¿½himmï¿½ksi tï¿½tï¿½ lukua el ilaskemme kuinka monta aika-askelta millekin stepille tulisi ja lï¿½himmï¿½ksi tï¿½tï¿½ pï¿½ï¿½ssyt valitaan
     std::vector<long> suitableTimeStepsInMinutes = { 60, 120, 180, 360, 720, 1440 };
     std::vector<long> timeCounts;
     std::vector<long> absDiffsInMinutes;
@@ -1405,7 +1407,7 @@ static void InterpolateSoundingDatasInMatrix(NFmiDataMatrix<float> &theValues, i
 	if(pos1 == pos2)
 		throw runtime_error("Error in NFmiCrossSectionView - InterpolateSoundingDatasInMatrix : pos1 and pos2 were the same.");
 	if(pos2 - pos1 == 1)
-		return; // peräkkäiset ajat, ei tarvitse interpoloida
+		return; // perï¿½kkï¿½iset ajat, ei tarvitse interpoloida
 	for(double i = pos1+1; i < pos2; i++)
 	{
 		double factor = (i-pos1)/(pos2 - pos1);
@@ -1436,7 +1438,7 @@ static void InterpolateSoundingDatasInMatrixWithBeforeTimeData(NFmiDataMatrix<fl
 
 static void InterpolateSoundingDatasInMatrix(NFmiDataMatrix<float> &theValues, vector<int> &theDataFoundTimes, FmiParameterName parId, int theBeforeStartIndex, NFmiDataMatrix<float> &theBeforeStartValues)
 {
-	// etsitään sellaiset ajanhetket, missä on dataa. Kutsutaan väliin interpolointi tälläisiin hetkiin
+	// etsitï¿½ï¿½n sellaiset ajanhetket, missï¿½ on dataa. Kutsutaan vï¿½liin interpolointi tï¿½llï¿½isiin hetkiin
 	int currentPos = -1;
 	int nextPos = -1;
 	if(::FindNextTimePosition(theDataFoundTimes, currentPos, currentPos))
@@ -1447,7 +1449,7 @@ static void InterpolateSoundingDatasInMatrix(NFmiDataMatrix<float> &theValues, v
 		for( ; ::FindNextTimePosition(theDataFoundTimes, currentPos, nextPos); )
 		{
 			::InterpolateSoundingDatasInMatrix(theValues, currentPos, nextPos, parId);
-			currentPos = nextPos; // lopuksi positiot päivitetään
+			currentPos = nextPos; // lopuksi positiot pï¿½ivitetï¿½ï¿½n
 		}
 	}
 	else
@@ -1472,7 +1474,7 @@ static void FillBeforeStartTimeWithCrossSectionValues(boost::shared_ptr<NFmiFast
 		do
 		{
 			if(NFmiSoundingData::HasRealSoundingData(theInfo))
-			{ // dataa löytyi asemalta johonkin aikaan, täytetään vektori siltä kohdalta, ja lasketaan aika-indeksi talteen
+			{ // dataa lï¿½ytyi asemalta johonkin aikaan, tï¿½ytetï¿½ï¿½n vektori siltï¿½ kohdalta, ja lasketaan aika-indeksi talteen
 				theBeforeStartIndex = theInfo->Time().DifferenceInMinutes(theTimes.FirstTime())/theTimes.Resolution();
 				::FillCrossSectionMatrixWithSoundingData(theBeforeStartValues, theInfo, theDrawParam, thePressures, 0);
 				break;
@@ -1492,9 +1494,9 @@ static void FillCrossSectionMatrixWithObservedSoundings(NFmiDataMatrix<float> &t
 		if(theInfo->Time(theTimes.CurrentTime()))
 		{
 			if(NFmiSoundingData::HasRealSoundingData(theInfo))
-			{ // dataa löytyi asemalta johonkin aikaan, täytetään matriisi siltä kohdalta, ja merkitään viimeksi löytynyt aika-indeksi talteen
+			{ // dataa lï¿½ytyi asemalta johonkin aikaan, tï¿½ytetï¿½ï¿½n matriisi siltï¿½ kohdalta, ja merkitï¿½ï¿½n viimeksi lï¿½ytynyt aika-indeksi talteen
 				FmiParameterName parId = static_cast<FmiParameterName>(theDrawParam->Param().GetParamIdent());
-				if(theInfo->Param(parId) || parId == kFmiHumidity || metaWindParamUsage.ParamNeedsMetaCalculations(theDrawParam->Param().GetParamIdent())) // humidity lasketaan vaikka sitä ei löydy infosta
+				if(theInfo->Param(parId) || parId == kFmiHumidity || metaWindParamUsage.ParamNeedsMetaCalculations(theDrawParam->Param().GetParamIdent())) // humidity lasketaan vaikka sitï¿½ ei lï¿½ydy infosta
 				{
 					theFirstForecastTimeIndex = theTimes.CurrentIndex();
 					if(foundDataYet == false)
@@ -1503,7 +1505,7 @@ static void FillCrossSectionMatrixWithObservedSoundings(NFmiDataMatrix<float> &t
 						foundDataYet = true;
 					}
 					theObsForModeFoundObsTimes.push_back(theTimes.CurrentTime());
-					dataFoundTimes[theFirstForecastTimeIndex] = 1; // asetetaan myös taulukkoon että tälle ajalle on löytynyt dataa
+					dataFoundTimes[theFirstForecastTimeIndex] = 1; // asetetaan myï¿½s taulukkoon ettï¿½ tï¿½lle ajalle on lï¿½ytynyt dataa
 					::FillCrossSectionMatrixWithSoundingData(theValues, theInfo, theDrawParam, thePressures, theFirstForecastTimeIndex);
 				}
 			}
@@ -1512,32 +1514,32 @@ static void FillCrossSectionMatrixWithObservedSoundings(NFmiDataMatrix<float> &t
 	int beforeStartIndex = 0;
 	NFmiDataMatrix<float> beforeStartValues(1, thePressures.size(), kFloatMissing);
 	if(foundDataYet && firstDataIndex > 0)
-	{ // on löytynyt luotauksia, mutta 1. timebagin aikaan (= indeksi 0) ei ollut mitään luotausta.
-	  // Nyt pitää etsiä mahd. löytyvä edellinen luotaus aikaikkunan ulkopuolelta, että
-	  // aikaikkunan alkukin saadaan täytettyä interpoloimalla.
+	{ // on lï¿½ytynyt luotauksia, mutta 1. timebagin aikaan (= indeksi 0) ei ollut mitï¿½ï¿½n luotausta.
+	  // Nyt pitï¿½ï¿½ etsiï¿½ mahd. lï¿½ytyvï¿½ edellinen luotaus aikaikkunan ulkopuolelta, ettï¿½
+	  // aikaikkunan alkukin saadaan tï¿½ytettyï¿½ interpoloimalla.
 		::FillBeforeStartTimeWithCrossSectionValues(theInfo, theTimes, theDrawParam, thePressures, beforeStartIndex, beforeStartValues);
 	}
 
 	if(theFirstForecastTimeIndex != -1)
 	{
-		theFirstForecastTimeIndex = theFirstForecastTimeIndex + 1; // ennuste dataa aletaan täyttämään viimeisen löydetyn havainto data ajan jälkeen
+		theFirstForecastTimeIndex = theFirstForecastTimeIndex + 1; // ennuste dataa aletaan tï¿½yttï¿½mï¿½ï¿½n viimeisen lï¿½ydetyn havainto data ajan jï¿½lkeen
 		::InterpolateSoundingDatasInMatrix(theValues, dataFoundTimes, static_cast<FmiParameterName>(theDrawParam->Param().GetParamIdent()), beforeStartIndex, beforeStartValues);
 	}
 	else
-		theFirstForecastTimeIndex = 0;// (theTimes.GetSize() / 2) + 1;  // jos ei löytynyt kuitenkaan havainto dataa, ennusteita aletaan täyttämään vasta puolesta välistä, että käyttäjä huomaa  puutteen
+		theFirstForecastTimeIndex = 0;// (theTimes.GetSize() / 2) + 1;  // jos ei lï¿½ytynyt kuitenkaan havainto dataa, ennusteita aletaan tï¿½yttï¿½mï¿½ï¿½n vasta puolesta vï¿½listï¿½, ettï¿½ kï¿½yttï¿½jï¿½ huomaa  puutteen
 }
 
 int NFmiCrossSectionView::FillObsPartOfTimeCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, std::vector<float>& thePressures)
 {
-	// kerää dataa matriisiin siten, että alhaalla (pinnalla) olevat datat ovat
-	// matriisin y-akselin alapäässä.
-	// x-akseli täytetään timebagistä tulevilla ajoilla
-	// 1. Katsotaan siis mikä on lähinnä StartPoint:ia oleva luotaus asema.
-	// 2. Täytetään se havainto datalla niin hyvin kuin voidaan.
-	// 3. Jatketaan siitä mihin havainnot loppuivat ja täytetään valitulla ennusteella.
-	NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitää tehdä kopio
+	// kerï¿½ï¿½ dataa matriisiin siten, ettï¿½ alhaalla (pinnalla) olevat datat ovat
+	// matriisin y-akselin alapï¿½ï¿½ssï¿½.
+	// x-akseli tï¿½ytetï¿½ï¿½n timebagistï¿½ tulevilla ajoilla
+	// 1. Katsotaan siis mikï¿½ on lï¿½hinnï¿½ StartPoint:ia oleva luotaus asema.
+	// 2. Tï¿½ytetï¿½ï¿½n se havainto datalla niin hyvin kuin voidaan.
+	// 3. Jatketaan siitï¿½ mihin havainnot loppuivat ja tï¿½ytetï¿½ï¿½n valitulla ennusteella.
+	NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitï¿½ï¿½ tehdï¿½ kopio
 	auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
-	NFmiPoint point = crossSectionSystem->StartPoint(); // otetaan 1. pääpiste aikapoikkileikkauksen kohteeksi
+	NFmiPoint point = crossSectionSystem->StartPoint(); // otetaan 1. pï¿½ï¿½piste aikapoikkileikkauksen kohteeksi
 	theValues.Resize(times.GetSize(), thePressures.size(), kFloatMissing);
 
 	int firstForecastTimeIndex = -1;
@@ -1550,14 +1552,14 @@ int NFmiCrossSectionView::FillObsPartOfTimeCrossSectionData(NFmiDataMatrix<float
 			::FillCrossSectionMatrixWithObservedSoundings(theValues, soundingInfo, itsDrawParam, times, thePressures, firstForecastTimeIndex, itsObsForModeFoundObsTimes, metaWindParamUsage);
 		}
 		catch(...)
-		{ // luultavasti haluttua parametria ei löytynyt
-			firstForecastTimeIndex = 0; //(times.GetSize() / 2) + 1;  // jos ei löytynyt havainto dataa, parametria tai asemaa tarpeeksi läheltä, ennusteita aletaan täyttämään vasta puolesta välistä, että käyttäjä huomaa  puutteen
+		{ // luultavasti haluttua parametria ei lï¿½ytynyt
+			firstForecastTimeIndex = 0; //(times.GetSize() / 2) + 1;  // jos ei lï¿½ytynyt havainto dataa, parametria tai asemaa tarpeeksi lï¿½heltï¿½, ennusteita aletaan tï¿½yttï¿½mï¿½ï¿½n vasta puolesta vï¿½listï¿½, ettï¿½ kï¿½yttï¿½jï¿½ huomaa  puutteen
 		}
 	}
 	else
 	{
-		crossSectionSystem->ObsForModeLocation(NFmiLocation()); // jos asemaa ei löytynyt, laitetaan ns. default location, missä asema id on 0
-		firstForecastTimeIndex = 0; //(times.GetSize() / 2) + 1;  // jos ei löytynyt havainto dataa, parametria tai asemaa tarpeeksi läheltä, ennusteita aletaan täyttämään vasta puolesta välistä, että käyttäjä huomaa  puutteen
+		crossSectionSystem->ObsForModeLocation(NFmiLocation()); // jos asemaa ei lï¿½ytynyt, laitetaan ns. default location, missï¿½ asema id on 0
+		firstForecastTimeIndex = 0; //(times.GetSize() / 2) + 1;  // jos ei lï¿½ytynyt havainto dataa, parametria tai asemaa tarpeeksi lï¿½heltï¿½, ennusteita aletaan tï¿½yttï¿½mï¿½ï¿½n vasta puolesta vï¿½listï¿½, ettï¿½ kï¿½yttï¿½jï¿½ huomaa  puutteen
 	}
 
 	return firstForecastTimeIndex;
@@ -1567,14 +1569,14 @@ void NFmiCrossSectionView::FillObsAndForCrossSectionData(NFmiDataMatrix<float> &
 { 
 	itsFirstForecastTimeIndex = FillObsPartOfTimeCrossSectionData(theValues, theIsoLineData, thePressures);
 
-	// lopuksi täytetään loppu osa matriisista halutulla ennuste datalla
+	// lopuksi tï¿½ytetï¿½ï¿½n loppu osa matriisista halutulla ennuste datalla
     auto wantedParamId = itsDrawParam->Param().GetParamIdent();
     if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
         FillTimeCrossSectionDataForMetaWindParam(theValues, theIsoLineData, thePressures, itsFirstForecastTimeIndex, wantedParamId, false);
     else
     {
-		NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitää tehdä kopio
-		NFmiPoint point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. pääpiste aikapoikkileikkauksen kohteeksi
+		NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitï¿½ï¿½ tehdï¿½ kopio
+		NFmiPoint point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. pï¿½ï¿½piste aikapoikkileikkauksen kohteeksi
 		theIsoLineData.itsInfo->TimeCrossSectionValuesLogP(theValues, thePressures, point, times, itsFirstForecastTimeIndex);
     }
 }
@@ -1674,9 +1676,9 @@ void NFmiCrossSectionView::FillRouteCrossSectionData(NFmiDataMatrix<float> &theV
 
 bool NFmiCrossSectionView::FillTimeCrossSectionDataForMetaWindParam(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, unsigned int theStartTimeIndex, unsigned long wantedParamId, bool doUserDrawData)
 {
-    auto point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. pääpiste aikapoikkileikkauksen kohteeksi
+    auto point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. pï¿½ï¿½piste aikapoikkileikkauksen kohteeksi
     const auto &info = theIsoLineData.itsInfo;
-    NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitää tehdä kopio
+    NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitï¿½ï¿½ tehdï¿½ kopio
 	if(doUserDrawData)
 		return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float>& valuesOut) { valuesOut = NFmiFastQueryInfo::CalcTimeCrossSectionLeveldata(*info, point, times); });
 	else
@@ -1684,16 +1686,16 @@ bool NFmiCrossSectionView::FillTimeCrossSectionDataForMetaWindParam(NFmiDataMatr
 }
 
 void NFmiCrossSectionView::FillTimeCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures)
-{ // kerää dataa matriisiin siten, että alhaalla (pinnalla) olevat datat ovat
-  // matriisin y-akselin alapäässä.
+{ // kerï¿½ï¿½ dataa matriisiin siten, ettï¿½ alhaalla (pinnalla) olevat datat ovat
+  // matriisin y-akselin alapï¿½ï¿½ssï¿½.
     auto wantedParamId = itsDrawParam->Param().GetParamIdent();
     if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
         FillTimeCrossSectionDataForMetaWindParam(theValues, theIsoLineData, thePressures, 0, wantedParamId, false);
     else
     {
-        // x-akseli täytetään timebagistä tulevilla ajoilla
-        NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitää tehdä kopio
-        NFmiPoint point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. pääpiste aikapoikkileikkauksen kohteeksi
+        // x-akseli tï¿½ytetï¿½ï¿½n timebagistï¿½ tulevilla ajoilla
+        NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitï¿½ï¿½ tehdï¿½ kopio
+        NFmiPoint point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. pï¿½ï¿½piste aikapoikkileikkauksen kohteeksi
         theIsoLineData.itsInfo->TimeCrossSectionValuesLogP(theValues, thePressures, point, times);
     }
 
@@ -1718,8 +1720,8 @@ static bool IsContourDrawUsed(const boost::shared_ptr<NFmiDrawParam> &drawParam)
 
 void NFmiCrossSectionView::FillCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures)
 { 
-	// kerää dataa matriisiin siten, että alhaalla (pinnalla) olevat datat ovat
-    // matriisin y-akselin alapäässä
+	// kerï¿½ï¿½ dataa matriisiin siten, ettï¿½ alhaalla (pinnalla) olevat datat ovat
+    // matriisin y-akselin alapï¿½ï¿½ssï¿½
     auto wantedParamId = itsDrawParam->Param().GetParamIdent();
     if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
         FillCrossSectionDataForMetaWindParam(theValues, theIsoLineData, thePressures, wantedParamId, false);
@@ -1732,16 +1734,16 @@ void NFmiCrossSectionView::FillCrossSectionData(NFmiDataMatrix<float> &theValues
     FillCrossSectionUserDrawData(theIsoLineData);
 }
 
-// Tämä funktio laskee koordinaatit annetun paine-matriisin arvoista (y-akseli), ja matriisin sarakkeiden indekseistä x-koordinaatin.
-// Koordinaatit sijoitetaan 0,0 - 1,1 maailmaan. Eli x-coordinaatit menevät aina 0:sta (1. sarake eli 0-indeksi) 1:een (viimeinen sarake).
-// Y-koordinaatit lasketaan niin, että itsDataViewFrame:n katsojan kulmasta oleva alareuna on 0 ja yläreuna on 1. Koska
-// paineet on otettu koko datasta eli kaikki levelit on mukana, saattaa y-koordinaattien arvot mennä alle 0:n ja yli 1:en, mutta kyseiset 
-// pisteet jäävät katsojalta sitten piiloon (mutta niitä ei voi jättää pois, koska isoviivat/contourit jatkuvat piirtoreunojen yli).
+// Tï¿½mï¿½ funktio laskee koordinaatit annetun paine-matriisin arvoista (y-akseli), ja matriisin sarakkeiden indekseistï¿½ x-koordinaatin.
+// Koordinaatit sijoitetaan 0,0 - 1,1 maailmaan. Eli x-coordinaatit menevï¿½t aina 0:sta (1. sarake eli 0-indeksi) 1:een (viimeinen sarake).
+// Y-koordinaatit lasketaan niin, ettï¿½ itsDataViewFrame:n katsojan kulmasta oleva alareuna on 0 ja ylï¿½reuna on 1. Koska
+// paineet on otettu koko datasta eli kaikki levelit on mukana, saattaa y-koordinaattien arvot mennï¿½ alle 0:n ja yli 1:en, mutta kyseiset 
+// pisteet jï¿½ï¿½vï¿½t katsojalta sitten piiloon (mutta niitï¿½ ei voi jï¿½ttï¿½ï¿½ pois, koska isoviivat/contourit jatkuvat piirtoreunojen yli).
 NFmiDataMatrix<NFmiPoint> NFmiCrossSectionView::CalcRelativeCoordinatesFromPressureMatrix(const NFmiDataMatrix<float>& pressureValues) const
 {
-	// Näissä koordinaatti laskuissa käytetään 0,0 - 1,1 aluetta (koska itse Toolmaster piirrossakin käytetään sitä)
+	// Nï¿½issï¿½ koordinaatti laskuissa kï¿½ytetï¿½ï¿½n 0,0 - 1,1 aluetta (koska itse Toolmaster piirrossakin kï¿½ytetï¿½ï¿½n sitï¿½)
 	NFmiRect usedDataViewFrame(0,0,1,1);
-	// Käännetään y-akseli, jotta koordinaatit menee toolmaster systeemien kanssa oikein päin (ei voi tehdä suoraan constructor:in kanssa, koska siellä pirun min/max tarkasteluja)
+	// Kï¿½ï¿½nnetï¿½ï¿½n y-akseli, jotta koordinaatit menee toolmaster systeemien kanssa oikein pï¿½in (ei voi tehdï¿½ suoraan constructor:in kanssa, koska siellï¿½ pirun min/max tarkasteluja)
 	usedDataViewFrame.Top(1);
 	usedDataViewFrame.Bottom(0);
 	NFmiDataMatrix<NFmiPoint> coordinates(pressureValues.NX(), pressureValues.NY());
@@ -1772,7 +1774,7 @@ static NFmiDataMatrix<float> MakePressureLevelBasedPressureMatrix(size_t xSize, 
 	if((usedInfo.HeightDataAvailable() && !usedInfo.HeightParamIsRising()) ||
 		((usedInfo.PressureDataAvailable()) && usedInfo.PressureParamIsRising()))
 	{
-		// paineet pitää kääntää, koska ne käännetään myös datan haussa
+		// paineet pitï¿½ï¿½ kï¿½ï¿½ntï¿½ï¿½, koska ne kï¿½ï¿½nnetï¿½ï¿½n myï¿½s datan haussa
 		for(auto& pressureVector : pressureValues)
 		{
 			std::reverse(pressureVector.begin(), pressureVector.end());
@@ -1800,7 +1802,7 @@ static NFmiDataMatrix<float> ConvertMetricHeightsToPressureValues(const NFmiData
 	{
 		for(size_t xIndex = 0; xIndex < pressureValues.NX(); xIndex++)
 		{
-			// Annetut metri arvot pitää muuttaa kilometreiksi ennen konversiota
+			// Annetut metri arvot pitï¿½ï¿½ muuttaa kilometreiksi ennen konversiota
 			pressureValues[xIndex][yIndex] = static_cast<float>(CalcPressureAtHeight(heightValues[xIndex][yIndex] / 1000.));
 		}
 	}
@@ -1924,8 +1926,8 @@ NFmiDataMatrix<float> NFmiCrossSectionView::MakeTimeCrossSectionUserDrawValueDat
 	}
 	else
 	{
-		auto point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. pääpiste aikapoikkileikkauksen kohteeksi
-		NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitää tehdä kopio
+		auto point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. pï¿½ï¿½piste aikapoikkileikkauksen kohteeksi
+		NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitï¿½ï¿½ tehdï¿½ kopio
 		values = NFmiFastQueryInfo::CalcTimeCrossSectionLeveldata(*theIsoLineData.itsInfo, point, times);
 	}
 	return values;
@@ -1966,8 +1968,8 @@ void NFmiCrossSectionView::FillTimeCrossSectionUserDrawData(NFmiIsoLineData& the
 	if(IsUserDrawDataNeeded(*theIsoLineData.itsInfo))
 	{
 		auto values = MakeTimeCrossSectionUserDrawValueData(theIsoLineData);
-		auto point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. pääpiste aikapoikkileikkauksen kohteeksi
-		NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitää tehdä kopio
+		auto point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. pï¿½ï¿½piste aikapoikkileikkauksen kohteeksi
+		NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitï¿½ï¿½ tehdï¿½ kopio
 		auto pressureValues = ::MakeTimeCrossSectionUserDrawPressureData(theIsoLineData, point, times);
 		auto coordinates = CalcRelativeCoordinatesFromPressureMatrix(pressureValues);
 		theIsoLineData.InitContourUserDrawData(values, coordinates);
@@ -1999,20 +2001,20 @@ static bool DoTimeBagSpacingOut(CtrlViewDocumentInterface *theCtrlViewDocumentIn
 	return false;
 }
 
-// tällä haetaan käytettävää timabagiä kun lasketaan eri moodeissa dataa.
-// Tämä on tehty sitä varten että kun hiirellä raahataan aikakontrolli ikkunaa, tehdään 
+// tï¿½llï¿½ haetaan kï¿½ytettï¿½vï¿½ï¿½ timabagiï¿½ kun lasketaan eri moodeissa dataa.
+// Tï¿½mï¿½ on tehty sitï¿½ varten ettï¿½ kun hiirellï¿½ raahataan aikakontrolli ikkunaa, tehdï¿½ï¿½n 
 // aikaikkunan liu'utuksen takia timebagi, jossa resoluutio 5 minuuttia.
-// Tästä seuraa että muuten laskettaisiin ja piirrettäisiin data tällä 5 minuutin askeleella.
-// Eli jos ollaan aika/obsAndFor -moodissa ja ollaan raahaamassa aikakontrolli-ikkunaa, tehdään
-// tällöin timebagi, jossa onkin yhden tunnin aika-askel (=> vähemmän turhaa työtä ja nopeampi ruudun päivitys)
+// Tï¿½stï¿½ seuraa ettï¿½ muuten laskettaisiin ja piirrettï¿½isiin data tï¿½llï¿½ 5 minuutin askeleella.
+// Eli jos ollaan aika/obsAndFor -moodissa ja ollaan raahaamassa aikakontrolli-ikkunaa, tehdï¿½ï¿½n
+// tï¿½llï¿½in timebagi, jossa onkin yhden tunnin aika-askel (=> vï¿½hemmï¿½n turhaa tyï¿½tï¿½ ja nopeampi ruudun pï¿½ivitys)
 NFmiTimeBag NFmiCrossSectionView::GetUsedTimeBagForDataCalculations(void)
 {
     auto crossMode = itsCtrlViewDocumentInterface->CrossSectionSystem()->CrossSectionMode();
     NFmiTimeBag usedTimeBag = itsCtrlViewDocumentInterface->CrossSectionSystem()->CrossSectionTimeControlTimeBag();
 	if(crossMode == NFmiCrossSectionSystem::kObsAndFor || crossMode == NFmiCrossSectionSystem::kTime)
 	{
-		// jos pääkarttanäytön (sieltä otetaan perus aika-askel) aika-askel on suurempi kuin nykyisen käytössä ollen timebagin,
-		// oletetaan että ollaan raahaamassa poikkileikkausnäytön aika-ikkunaa
+		// jos pï¿½ï¿½karttanï¿½ytï¿½n (sieltï¿½ otetaan perus aika-askel) aika-askel on suurempi kuin nykyisen kï¿½ytï¿½ssï¿½ ollen timebagin,
+		// oletetaan ettï¿½ ollaan raahaamassa poikkileikkausnï¿½ytï¿½n aika-ikkunaa
 		if(::round(itsCtrlViewDocumentInterface->TimeControlTimeStep(0)*60.) > usedTimeBag.Resolution())
 			usedTimeBag = CtrlViewUtils::GetAdjustedTimeBag(usedTimeBag.FirstTime(), usedTimeBag.LastTime(), 60);
 	}
@@ -2028,7 +2030,7 @@ NFmiTimeBag NFmiCrossSectionView::GetUsedTimeBagForDataCalculations(void)
 
 bool NFmiCrossSectionView::LeftButtonUp(const NFmiPoint& thePlace, unsigned long theKey)
 {
-    // mouse captured pitää hanskata, vaikka hiiri olisi itsParamHandlerView -ikkunan ulkona
+    // mouse captured pitï¿½ï¿½ hanskata, vaikka hiiri olisi itsParamHandlerView -ikkunan ulkona
     if(ShowParamHandlerView() && itsParamHandlerView->IsMouseCaptured())
         return itsParamHandlerView->LeftButtonUp(thePlace, theKey);
 
@@ -2038,7 +2040,7 @@ bool NFmiCrossSectionView::LeftButtonUp(const NFmiPoint& thePlace, unsigned long
 	itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(itsMapViewDescTopIndex, 
 		GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
 
-	// ensin pitää handlata parametrin lisäys param boxista jos hiiren oikea klikattu
+	// ensin pitï¿½ï¿½ handlata parametrin lisï¿½ys param boxista jos hiiren oikea klikattu
 	if(ShowParamHandlerView() && itsParamHandlerView->IsIn(thePlace))
 		return itsParamHandlerView->LeftButtonUp(thePlace, theKey);
 
@@ -2046,9 +2048,9 @@ bool NFmiCrossSectionView::LeftButtonUp(const NFmiPoint& thePlace, unsigned long
 	if(itsPressureScaleFrame.IsInside(thePlace))
 	{
 		if(itsPressureScaleFrame.Center().Y() > thePlace.Y())
-			return ChangePressureScale(kDown, true, ctrlKeyDown); // true liikuttaa asteikon yläpäätä ja false alapäätä
+			return ChangePressureScale(kDown, true, ctrlKeyDown); // true liikuttaa asteikon ylï¿½pï¿½ï¿½tï¿½ ja false alapï¿½ï¿½tï¿½
 		else
-			return ChangePressureScale(kDown, false, ctrlKeyDown); // true liikuttaa asteikon yläpäätä ja false alapäätä
+			return ChangePressureScale(kDown, false, ctrlKeyDown); // true liikuttaa asteikon ylï¿½pï¿½ï¿½tï¿½ ja false alapï¿½ï¿½tï¿½
 	}
 	if(ctrlKeyDown)
 	{
@@ -2057,8 +2059,8 @@ bool NFmiCrossSectionView::LeftButtonUp(const NFmiPoint& thePlace, unsigned long
 	return true;
 }
 
-// theDir joko arvo kUp siirtää asteikkoa halutulla määrällä ylöspäin muut arvot alaspäin
-// fChangeUpperAxis jos true, siirtää asteikon yläpäätä, jos false, muuttaa asteikon alapäätä.
+// theDir joko arvo kUp siirtï¿½ï¿½ asteikkoa halutulla mï¿½ï¿½rï¿½llï¿½ ylï¿½spï¿½in muut arvot alaspï¿½in
+// fChangeUpperAxis jos true, siirtï¿½ï¿½ asteikon ylï¿½pï¿½ï¿½tï¿½, jos false, muuttaa asteikon alapï¿½ï¿½tï¿½.
 bool NFmiCrossSectionView::ChangePressureScale(FmiDirection theDir, bool fChangeUpperAxis, bool ctrlKeyDown)
 {
 	double minPressure = 10;
@@ -2067,7 +2069,7 @@ bool NFmiCrossSectionView::ChangePressureScale(FmiDirection theDir, bool fChange
     double absChangeValue = ctrlKeyDown ? 10 : 50;
 	if(startValue - endValue <= 2.f * absChangeValue)
 	{
-		// kun asteikko on vedetty tarpeeksi lyhyeksi, muutetaan muutos arvoa pienemmäksi, että voidaan tehdä tarkempia säätöjä
+		// kun asteikko on vedetty tarpeeksi lyhyeksi, muutetaan muutos arvoa pienemmï¿½ksi, ettï¿½ voidaan tehdï¿½ tarkempia sï¿½ï¿½tï¿½jï¿½
 		absChangeValue = ctrlKeyDown ? 1 : 5;
 	}
     double changeValue = theDir == kUp ? -absChangeValue : absChangeValue;
@@ -2076,10 +2078,10 @@ bool NFmiCrossSectionView::ChangePressureScale(FmiDirection theDir, bool fChange
 	else
 		startValue += changeValue;
 	if(startValue - endValue <= absChangeValue)
-		return false; // ei tehdä mitään, jos akselista tulisi liian kapea tai jopa negatiivinen
+		return false; // ei tehdï¿½ mitï¿½ï¿½n, jos akselista tulisi liian kapea tai jopa negatiivinen
 	if(endValue < minPressure)
-		endValue = minPressure; // ei voida mennä 0 tasolle paineessa, asetetaan maksi paineeksi vaikka 10 mb taso.
-	if(endValue > absChangeValue && fmod(endValue, absChangeValue) != 0) // tämä palauttaa loppu arvon taas tasa jakoväleihin, mikä saattaa mennä sekaisin kun ollaan oltu ylä rajoilla
+		endValue = minPressure; // ei voida mennï¿½ 0 tasolle paineessa, asetetaan maksi paineeksi vaikka 10 mb taso.
+	if(endValue > absChangeValue && fmod(endValue, absChangeValue) != 0) // tï¿½mï¿½ palauttaa loppu arvon taas tasa jakovï¿½leihin, mikï¿½ saattaa mennï¿½ sekaisin kun ollaan oltu ylï¿½ rajoilla
 		endValue = round(endValue / absChangeValue) * absChangeValue;
 	itsLowerEndOfPressureAxis = startValue;
 	itsUpperEndOfPressureAxis = endValue;
@@ -2095,7 +2097,7 @@ bool NFmiCrossSectionView::RightButtonUp(const NFmiPoint& thePlace, unsigned lon
 	itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(itsMapViewDescTopIndex,
 		GetUsedParamRowIndex(itsViewGridRowNumber, itsViewGridColumnNumber));
 
-	// ensin pitää handlata parametrin lisäys param boxista jos hiiren oikea klikattu
+	// ensin pitï¿½ï¿½ handlata parametrin lisï¿½ys param boxista jos hiiren oikea klikattu
 	if(ShowParamHandlerView() && itsParamHandlerView->IsIn(thePlace))
 		return itsParamHandlerView->RightButtonUp(thePlace, theKey);
 
@@ -2103,9 +2105,9 @@ bool NFmiCrossSectionView::RightButtonUp(const NFmiPoint& thePlace, unsigned lon
 	{
 		auto ctrlKeyDown = theKey & kCtrlKey;
 		if(itsPressureScaleFrame.Center().Y() > thePlace.Y())
-			return ChangePressureScale(kUp, true, ctrlKeyDown); // true liikuttaa asteikon yläpäätä ja false alapäätä
+			return ChangePressureScale(kUp, true, ctrlKeyDown); // true liikuttaa asteikon ylï¿½pï¿½ï¿½tï¿½ ja false alapï¿½ï¿½tï¿½
 		else
-			return ChangePressureScale(kUp, false, ctrlKeyDown); // true liikuttaa asteikon yläpäätä ja false alapäätä
+			return ChangePressureScale(kUp, false, ctrlKeyDown); // true liikuttaa asteikon ylï¿½pï¿½ï¿½tï¿½ ja false alapï¿½ï¿½tï¿½
 	}
 
 	itsCtrlViewDocumentInterface->CreateCrossSectionViewPopup(itsViewGridRowNumber);
@@ -2114,7 +2116,7 @@ bool NFmiCrossSectionView::RightButtonUp(const NFmiPoint& thePlace, unsigned lon
 
 bool NFmiCrossSectionView::LeftDoubleClick(const NFmiPoint& thePlace, unsigned long theKey)
 {
-	// ensin pitää handlata parametrin lisäys param boxista jos hiiren oikea klikattu
+	// ensin pitï¿½ï¿½ handlata parametrin lisï¿½ys param boxista jos hiiren oikea klikattu
 	if(ShowParamHandlerView() && itsParamHandlerView->IsIn(thePlace))
 		return itsParamHandlerView->LeftDoubleClick(thePlace, theKey);
 	return false;
@@ -2163,7 +2165,7 @@ NFmiRect NFmiCrossSectionView::CalcPressureScaleRect(void)
 	return axisRect;
 }
 
-// Lasketaan itse data näytön koko korkeus akselin avulla.
+// Lasketaan itse data nï¿½ytï¿½n koko korkeus akselin avulla.
 // Oletus: itsPressureScaleFrame on jo laskettu.
 NFmiRect NFmiCrossSectionView::CalcDataViewRect(void)
 {
@@ -2184,9 +2186,9 @@ double NFmiCrossSectionView::CalcDataRectPressureScaleRatio(void)
 //--------------------------------------------------------
 void NFmiCrossSectionView::DrawPressureScale(void)
 {
-	// tähän tulee keinotekoinen datan piirto clippaus, koska en saa
+	// tï¿½hï¿½n tulee keinotekoinen datan piirto clippaus, koska en saa
 	// trajektori datan toolmaster piirtoa nyt clippaamaan oikein
-	// eli piirrän tähän reuna palkit ennen kuin piirrän paine asteikon
+	// eli piirrï¿½n tï¿½hï¿½n reuna palkit ennen kuin piirrï¿½n paine asteikon
 	itsDrawingEnvironment.EnableFill();
 	itsDrawingEnvironment.DisableFrame();
 	itsDrawingEnvironment.SetFillColor(NFmiColor(1.f,1.f,1.f));
@@ -2277,9 +2279,9 @@ static double Time2XLocation(const NFmiMetTime &theTime, const NFmiMetTime &theS
 
 void NFmiCrossSectionView::DrawCrosssectionWindVectors(NFmiIsoLineData& theIsoLineData, const NFmiDataMatrix<NFmiPoint> &theXYCoordinates)
 {
-	// Tuulivektoreita pitää harventaa. Tässä on kaksi eri tapaa tehdä se.
-	// 1. Jos ollaan normaali poikkileikkauksessa, lasketaan tässä sopiva harvennus, esim. piirrä joka toinen tai joka kolmas vektori.
-	// 2. Jos ollaan aika tai vastaavassa tilassa, piirretään sopivan aikaharvennus timebagin avulla piirrettävien vektorien x-paikat.
+	// Tuulivektoreita pitï¿½ï¿½ harventaa. Tï¿½ssï¿½ on kaksi eri tapaa tehdï¿½ se.
+	// 1. Jos ollaan normaali poikkileikkauksessa, lasketaan tï¿½ssï¿½ sopiva harvennus, esim. piirrï¿½ joka toinen tai joka kolmas vektori.
+	// 2. Jos ollaan aika tai vastaavassa tilassa, piirretï¿½ï¿½n sopivan aikaharvennus timebagin avulla piirrettï¿½vien vektorien x-paikat.
 	itsDrawingEnvironment.SetFrameColor(itsDrawParam->FrameColor());
 	itsDrawingEnvironment.SetFillColor(itsDrawParam->FillColor());
 	int xSize = static_cast<int>(theIsoLineData.itsIsolineData.NX());
@@ -2351,8 +2353,8 @@ void NFmiCrossSectionView::DrawWindVector(float theValue, const NFmiRect &theSym
 }
 
 // Kaksi paikkaa mihin label voidaan sijoittaa:
-// 1. Heti viimeisen labelin ylä puolelle jos on tilaa.
-// 2. Heti viimeisen labeli ala puolelle, jos ylhäällä ei ole tilaa.
+// 1. Heti viimeisen labelin ylï¿½ puolelle jos on tilaa.
+// 2. Heti viimeisen labeli ala puolelle, jos ylhï¿½ï¿½llï¿½ ei ole tilaa.
 static double CalcHelpScaleUnitStringYPos(const NFmiRect &theRect, double lastLabelHeight, double relFontHeight, double relFontYmove)
 {
 	double unitStringY = 0;
@@ -2372,8 +2374,8 @@ void NFmiCrossSectionView::DrawFlightLevelScale(void)
 	envi.SetFontSize(NFmiPoint(fontSize, fontSize));
 	NFmiPoint moveLabelRelatively(-itsToolBox->SX(FmiRound(2 * itsDrawSizeFactorX)), -itsToolBox->SY(fontSize)/2.);
 	long extraOffsetInPixels = 0;
-//	if(itsDoc->GetMTATempSystem().ShowKilometerScale()) // jos olisi säätö että piirretäänkö km-asteikko vai ei, olisi ehto laitettava tähän
-//		extraOffsetInPixels = static_cast<long>(fontSize*1.6); // siirretään asteikkoa, jos myös kilometri asteikko on näkyvissä
+//	if(itsDoc->GetMTATempSystem().ShowKilometerScale()) // jos olisi sï¿½ï¿½tï¿½ ettï¿½ piirretï¿½ï¿½nkï¿½ km-asteikko vai ei, olisi ehto laitettava tï¿½hï¿½n
+//		extraOffsetInPixels = static_cast<long>(fontSize*1.6); // siirretï¿½ï¿½n asteikkoa, jos myï¿½s kilometri asteikko on nï¿½kyvissï¿½
 	double extraOffset = itsToolBox->SX(extraOffsetInPixels);
 
 	double tickMarkWidth = itsToolBox->SX(FmiRound(6 * itsDrawSizeFactorX));
@@ -2422,7 +2424,7 @@ void NFmiCrossSectionView::GetStartAndEndTimes(NFmiMetTime &theStartTimeOut, NFm
 
 static short CalcTimeHelperLineStepInMinutes(long theDiffInMinutes, double theViewWidthInMM)
 {
-	// pyritään että apuviiva on n. 2 cm välein
+	// pyritï¿½ï¿½n ettï¿½ apuviiva on n. 2 cm vï¿½lein
 	double widthPerHourFactor = theViewWidthInMM / (theDiffInMinutes/60.);
 	if(widthPerHourFactor > 80)
 		return 15;
@@ -2442,8 +2444,8 @@ static short CalcTimeHelperLineStepInMinutes(long theDiffInMinutes, double theVi
 		return 2880;
 }
 
-// Lasketaan sopivan harva timebagi, jolla piirretään mm. aikapoikkileikkauseen pysty-apupuviivoja tärkeiden aikojen kohdalle.
-// Tätä timebagia käytetään myös tuuliviirien piirron harvennuksessa.
+// Lasketaan sopivan harva timebagi, jolla piirretï¿½ï¿½n mm. aikapoikkileikkauseen pysty-apupuviivoja tï¿½rkeiden aikojen kohdalle.
+// Tï¿½tï¿½ timebagia kï¿½ytetï¿½ï¿½n myï¿½s tuuliviirien piirron harvennuksessa.
 NFmiTimeBag NFmiCrossSectionView::CalcHelperLineTimeBag(void)
 {
 	NFmiMetTime startTime(NFmiMetTime::gMissingTime);
@@ -2459,7 +2461,7 @@ NFmiTimeBag NFmiCrossSectionView::CalcHelperLineTimeBag(void)
 	return usedTimeBag;
 }
 
-// piirtää aika/reitti/trajektori moodeissa aika apu viivat
+// piirtï¿½ï¿½ aika/reitti/trajektori moodeissa aika apu viivat
 void NFmiCrossSectionView::DrawHelperTimeLines(void)
 {
 	NFmiTimeBag usedHelperLineTimeBag = CalcHelperLineTimeBag();
@@ -2488,8 +2490,8 @@ void NFmiCrossSectionView::DrawHelperTimeLines(void)
 	}
 }
 
-// piirtää  ensimmäisen ennuste ajan harmaalla viivalla
-// piirtää myös kaikki ajanhetket, mistä on havaittu luotaus
+// piirtï¿½ï¿½  ensimmï¿½isen ennuste ajan harmaalla viivalla
+// piirtï¿½ï¿½ myï¿½s kaikki ajanhetket, mistï¿½ on havaittu luotaus
 void NFmiCrossSectionView::DrawObsForModeTimeLine(void)
 {
 	if(itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView() == false)
@@ -2510,7 +2512,7 @@ void NFmiCrossSectionView::DrawObsForModeTimeLine(void)
 			NFmiPoint p2(x, y2);
 			::DrawLineWithToolBox(p1, p2, &envi, itsToolBox, true, false);
 
-			// piirrä myös viiva havaittujen luotauksien kohdalle
+			// piirrï¿½ myï¿½s viiva havaittujen luotauksien kohdalle
 			if(itsObsForModeFoundObsTimes.size())
 			{
 				envi.SetPenSize(NFmiPoint(1 * itsDrawSizeFactorX, 1 * itsDrawSizeFactorY));
@@ -2565,7 +2567,7 @@ static std::string ComposeHeightValueString(double theHeightKm, int theUsedDecim
 	return str;
 }
 
-// Piirtää standardi ilmakehän mukaiset kilometri palkit ja tekstit näyttöruudun 
+// Piirtï¿½ï¿½ standardi ilmakehï¿½n mukaiset kilometri palkit ja tekstit nï¿½yttï¿½ruudun 
 // oikeaan laitaan, data ruudun ulkopuolelle.
 void NFmiCrossSectionView::DrawHeightScale(void)
 {
@@ -2587,10 +2589,10 @@ void NFmiCrossSectionView::DrawHeightScale(void)
 
 		const auto& usedRelativeFrame = GetFrame();
 
-		// Laitetaanko korkeus arvot kilometreinä vai metreinä. 
+		// Laitetaanko korkeus arvot kilometreinï¿½ vai metreinï¿½. 
 		// Samalla unit label on joko KM tai m.
-		// Metreihin halutaan siirtyä vain jos asteikko on lähellä 0 korkeutta ja kilometridesimaaleja olisi 
-		// käytössä ainakin 2, mikä tarkoittaa kymmenien metrien tarkkuutta
+		// Metreihin halutaan siirtyï¿½ vain jos asteikko on lï¿½hellï¿½ 0 korkeutta ja kilometridesimaaleja olisi 
+		// kï¿½ytï¿½ssï¿½ ainakin 2, mikï¿½ tarkoittaa kymmenien metrien tarkkuutta
 		bool useKmAsUnit = true;
 		const double minMaxHeightInKmForMetresUnit = 0.5;
 		if(usedDecimals >= 2 && ::fabs(minHeightKm) < minMaxHeightInKmForMetresUnit && ::fabs(maxHeightKm) < minMaxHeightInKmForMetresUnit)
@@ -2668,8 +2670,8 @@ std::vector<float> NFmiCrossSectionView::CalcCurrentLevelPressures(boost::shared
 		}
 		else if(crossMode == NFmiCrossSectionSystem::kTime || obsForMode)
 		{
-			NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitää tehdä kopio
-			NFmiPoint point = crossSectionSystem->StartPoint(); // otetaan 1. pääpiste aikapoikkileikkauksen kohteeksi
+			NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitï¿½ï¿½ tehdï¿½ kopio
+			NFmiPoint point = crossSectionSystem->StartPoint(); // otetaan 1. pï¿½ï¿½piste aikapoikkileikkauksen kohteeksi
 			for(times.Reset(); times.Next(); )
 				values.push_back(theInfo->InterpolatedValue(point, times.CurrentTime()));
 		}
@@ -2696,8 +2698,8 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiCrossSectionView::GetFirstHybridInfo(vo
 void NFmiCrossSectionView::DrawHybridLevels(void)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> hybridInfo = GetFirstHybridInfo();
-	if(hybridInfo) // vain 1. mallipinta datan levelit piirretään
-	{ // piirretään hybridilevelit oikeille kohdilleen poikkileikkaukseen
+	if(hybridInfo) // vain 1. mallipinta datan levelit piirretï¿½ï¿½n
+	{ // piirretï¿½ï¿½n hybridilevelit oikeille kohdilleen poikkileikkaukseen
 		if(itsCtrlViewDocumentInterface->CrossSectionSystem()->ShowHybridLevels())
 		{
             ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsDataViewFrame);
@@ -2729,7 +2731,7 @@ void NFmiCrossSectionView::DrawHybridLevels(void)
 						{
 							::DrawLineWithToolBox(p1, p2, &envi, itsToolBox, false, true);
 
-							if(firstFoundPoint) // eli 1. kerralla piirretään hybridille label (tulee siis vasempaan reunaan)
+							if(firstFoundPoint) // eli 1. kerralla piirretï¿½ï¿½n hybridille label (tulee siis vasempaan reunaan)
 							{
 								NFmiString labelStr(NFmiStringTools::Convert<float>(hybridInfo->Level()->LevelValue()));
 								NFmiPoint labelPoint(p1.X() + labelMoveX, p1.Y() - labelMoveY);
@@ -2746,8 +2748,8 @@ void NFmiCrossSectionView::DrawHybridLevels(void)
 	}
 }
 
-// DrawGroundLevel-metodissa pitää varmistaa että CrossSectionSystemin
-// Main XY-pisteet on initialisoitu, että pinta profiili saadaan piirrettyä.
+// DrawGroundLevel-metodissa pitï¿½ï¿½ varmistaa ettï¿½ CrossSectionSystemin
+// Main XY-pisteet on initialisoitu, ettï¿½ pinta profiili saadaan piirrettyï¿½.
 static void QuickInitMainXYPoints(NFmiCrossSectionSystem &theCrossSectionSystem, const NFmiRect &theDataRect)
 {
 	theCrossSectionSystem.StartXYPoint(NFmiPoint(theDataRect.Left(), 0));
@@ -2757,28 +2759,28 @@ static void QuickInitMainXYPoints(NFmiCrossSectionSystem &theCrossSectionSystem,
 
 static bool DrawBatymetria(NFmiDrawParamList &theDrawParamList, NFmiInfoOrganizer &theInfoOrganizer)
 {
-	if(theDrawParamList.Index(1)) // etsitään 1. drawParam
+	if(theDrawParamList.Index(1)) // etsitï¿½ï¿½n 1. drawParam
 	{
 		boost::shared_ptr<NFmiFastQueryInfo> firstDataInfo = theInfoOrganizer.Info(theDrawParamList.Current(), true, true);
-		if(firstDataInfo && firstDataInfo->SizeLevels() > 1) // datassa pitää olla useita leveleitä
+		if(firstDataInfo && firstDataInfo->SizeLevels() > 1) // datassa pitï¿½ï¿½ olla useita leveleitï¿½
 		{
 			for(firstDataInfo->ResetLevel(); firstDataInfo->NextLevel(); )
 			{
 				if(firstDataInfo->Level()->LevelValue() < 0)
-					return true; // jos datan yksikin level value on negatiivinen, tällöin oletetaan että tarvitaan batymetria piirtoa
+					return true; // jos datan yksikin level value on negatiivinen, tï¿½llï¿½in oletetaan ettï¿½ tarvitaan batymetria piirtoa
 			}
 		}
 	}
 	return false;
 }
 
-// Piirretään maanpinta seuraavin prioriteetti säännöin:
-// 0. Jos 1. piirrettävä data vaatii batymetriaa (= level heigth sisältää negatiivisia arvoja), piirretään maanpinta topo-datasta.
-// 1. Jos näytössä mallidataa, jolta löytyy pintadatasta kFmiPressureAtStationLevel -parametri, 
-//    käytetään sitä määrittämään maanpintaa (paine-asteikolle)
-// 2. Jos näytössä mallipinta dataa, piirrä mallipintadatan alinkerros maanpintana (paine-asteikolle)
-// 3. Käy drawParam-Listaa läpi kunnes löytyy data, jolta löytyy pinnan piirto kohdasta 1 tai 2.
-// 4. Muuten piirrä topografia datasta korkeus parametri (korkeus-asteikolle)
+// Piirretï¿½ï¿½n maanpinta seuraavin prioriteetti sï¿½ï¿½nnï¿½in:
+// 0. Jos 1. piirrettï¿½vï¿½ data vaatii batymetriaa (= level heigth sisï¿½ltï¿½ï¿½ negatiivisia arvoja), piirretï¿½ï¿½n maanpinta topo-datasta.
+// 1. Jos nï¿½ytï¿½ssï¿½ mallidataa, jolta lï¿½ytyy pintadatasta kFmiPressureAtStationLevel -parametri, 
+//    kï¿½ytetï¿½ï¿½n sitï¿½ mï¿½ï¿½rittï¿½mï¿½ï¿½n maanpintaa (paine-asteikolle)
+// 2. Jos nï¿½ytï¿½ssï¿½ mallipinta dataa, piirrï¿½ mallipintadatan alinkerros maanpintana (paine-asteikolle)
+// 3. Kï¿½y drawParam-Listaa lï¿½pi kunnes lï¿½ytyy data, jolta lï¿½ytyy pinnan piirto kohdasta 1 tai 2.
+// 4. Muuten piirrï¿½ topografia datasta korkeus parametri (korkeus-asteikolle)
 void NFmiCrossSectionView::DrawGround(void)
 { 
 	// yleiset piirto optio maanpinta piirtoa varten
@@ -2804,7 +2806,7 @@ void NFmiCrossSectionView::DrawGround(void)
     					return ; // voidaan lopettaa
 				}
 
-				// Haetaan paras verkikaali data, mikä mallista löytyy (1. hybrid-data, 2. pressure-data), ja jos se oli hybrid, piirretään sen alin kerros
+				// Haetaan paras verkikaali data, mikï¿½ mallista lï¿½ytyy (1. hybrid-data, 2. pressure-data), ja jos se oli hybrid, piirretï¿½ï¿½n sen alin kerros
 				boost::shared_ptr<NFmiFastQueryInfo> hybridInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(*(drawParam->Param().GetProducer()));
 				if(hybridInfo && hybridInfo->DataType() == NFmiInfoData::kHybridData)
 				{
@@ -2814,15 +2816,15 @@ void NFmiCrossSectionView::DrawGround(void)
 			}
 		}
 	}
-	DrawGroundLevel(envi); // jos muu ei auta, piirretään maanpinta topografian avulla
+	DrawGroundLevel(envi); // jos muu ei auta, piirretï¿½ï¿½n maanpinta topografian avulla
 }
 
-// piirretään karkea maanpinta poikkileikkaus näyttöön
+// piirretï¿½ï¿½n karkea maanpinta poikkileikkaus nï¿½yttï¿½ï¿½n
 void NFmiCrossSectionView::DrawGroundLevel(NFmiDrawingEnvironment &theEnvi)
 {
     auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
 	::QuickInitMainXYPoints(*crossSectionSystem, itsDataViewFrame);
-	CalcGroundHeights(); // kerää pinta profiili tästä
+	CalcGroundHeights(); // kerï¿½ï¿½ pinta profiili tï¿½stï¿½
 
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsDataViewFrame);
     
@@ -2839,14 +2841,14 @@ void NFmiCrossSectionView::DrawGroundLevel(NFmiDrawingEnvironment &theEnvi)
 	}
 	itsToolBox->DrawPolyline(&groundPolyLine, NFmiPoint(0,0), NFmiPoint(1,1));
 
-	// Siitä lähtien kun batymetria otettiin mukaan topografia dataan, pitää piirtää meren pinta viiva 
-	// sellaisiin kohtiin missä topo arvot ovat negatiivisia.
+	// Siitï¿½ lï¿½htien kun batymetria otettiin mukaan topografia dataan, pitï¿½ï¿½ piirtï¿½ï¿½ meren pinta viiva 
+	// sellaisiin kohtiin missï¿½ topo arvot ovat negatiivisia.
 	DrawSeaLevel(); 
 }
 
 using NFmiSoundingFunctions::MyPoint;
 
-// Tämä laskee kahden annetun pisteen ja meren viiva pisteiden välisen leikkauksen x-kohdan.
+// Tï¿½mï¿½ laskee kahden annetun pisteen ja meren viiva pisteiden vï¿½lisen leikkauksen x-kohdan.
 static double CalcSeaLevelLinePlaceX(const NFmiPoint &theStartPoint, const NFmiPoint &theEndPoint)
 {
 	MyPoint p1(theStartPoint.X(), theStartPoint.Y());
@@ -2862,7 +2864,7 @@ static double CalcRelativeXplace(int theIndex, double theRelativeStartX, double 
 {
 	if(theIndex == 0)
 		return theRelativeStartX;
-	else if(theIndex == theGroundHeights.size()) // tämä on erikoistapaus eli kun ollaan käyty ground-pisteet läpi ja ollaan vielä pinnan alla
+	else if(theIndex == theGroundHeights.size()) // tï¿½mï¿½ on erikoistapaus eli kun ollaan kï¿½yty ground-pisteet lï¿½pi ja ollaan vielï¿½ pinnan alla
 	{
 		double relativeX = theRelativeStartX + (theIndex * thrRelativeWidth / theRelativePlaceDividor);
 		return relativeX;
@@ -2877,16 +2879,16 @@ static double CalcRelativeXplace(int theIndex, double theRelativeStartX, double 
 }
 
 // Oletus DrawSeaLevel-funktiolle:
-// Tätä kutsutaan NFmiCrossSectionView::DrawGroundLevel-metodin lopussa ennen kuin
-// kuin toolboxin clippaus laitetaan falseksi. Tällöin on kutsuttu QuickInitMainXYPoints
-// -funktiota ja CalcGroundHeights-metodia, missä on laskettu maanpinta/merenpohja pisteet.
-// Lisäksi clippaus on päällä eikä sitä tarvitse erikseen asetellä päälle ja pois täällä.
+// Tï¿½tï¿½ kutsutaan NFmiCrossSectionView::DrawGroundLevel-metodin lopussa ennen kuin
+// kuin toolboxin clippaus laitetaan falseksi. Tï¿½llï¿½in on kutsuttu QuickInitMainXYPoints
+// -funktiota ja CalcGroundHeights-metodia, missï¿½ on laskettu maanpinta/merenpohja pisteet.
+// Lisï¿½ksi clippaus on pï¿½ï¿½llï¿½ eikï¿½ sitï¿½ tarvitse erikseen asetellï¿½ pï¿½ï¿½lle ja pois tï¿½ï¿½llï¿½.
 void NFmiCrossSectionView::DrawSeaLevel(void)
 {
 	double lineWidthInMM = 0.7;
     auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
 	int pixelSize = static_cast<int>(lineWidthInMM * crossSectionSystem->GetGraphicalInfo().itsPixelsPerMM_y);
-	pixelSize = FmiMax(pixelSize, 1); // pitää kuitenkin olla väh. 1 pikselin paksuinen viiva
+	pixelSize = FmiMax(pixelSize, 1); // pitï¿½ï¿½ kuitenkin olla vï¿½h. 1 pikselin paksuinen viiva
 	NFmiDrawingEnvironment seaLevelLineStyle;
 	seaLevelLineStyle.SetPenSize(NFmiPoint(pixelSize, pixelSize));
 	seaLevelLineStyle.SetFrameColor(NFmiColor(0.f, 0.f, 0.6f));
@@ -2894,7 +2896,7 @@ void NFmiCrossSectionView::DrawSeaLevel(void)
 	double relativeWidth = crossSectionSystem->EndXYPoint().X() - relativeStartX;
 	double relativePlaceDividor = itsGroundHeights.size() - 1.;
 
-	bool belowZero = false; // tämän muuttujan avulla tiedetään ollaanko jo menossa merenpinnan alla topo-datan kanssa.
+	bool belowZero = false; // tï¿½mï¿½n muuttujan avulla tiedetï¿½ï¿½n ollaanko jo menossa merenpinnan alla topo-datan kanssa.
 	double zeroHeightRelative = p2y(CalcPressureAtHeight(0.));
 	NFmiPoint startPoint(0, zeroHeightRelative);
 	NFmiPoint endPoint(0, zeroHeightRelative);
@@ -2906,7 +2908,7 @@ void NFmiCrossSectionView::DrawSeaLevel(void)
 			{
 			}
 			else
-			{ // merkitään tämä merenpinnan viivan alkupisteeksi
+			{ // merkitï¿½ï¿½n tï¿½mï¿½ merenpinnan viivan alkupisteeksi
 				belowZero = true;
 				startPoint.X(::CalcRelativeXplace(i, relativeStartX, relativeWidth, relativePlaceDividor, itsGroundHeights));
 			}
@@ -2914,7 +2916,7 @@ void NFmiCrossSectionView::DrawSeaLevel(void)
 		else
 		{
 			if(belowZero)
-			{ // jos oltiin pinnan alla, merkitään loppupisteeksi ja piirretään tämä osio merenpintaa
+			{ // jos oltiin pinnan alla, merkitï¿½ï¿½n loppupisteeksi ja piirretï¿½ï¿½n tï¿½mï¿½ osio merenpintaa
 				endPoint.X(::CalcRelativeXplace(i, relativeStartX, relativeWidth, relativePlaceDividor, itsGroundHeights)); 
 
 				NFmiLine line(startPoint, endPoint, 0, &seaLevelLineStyle);
@@ -2925,7 +2927,7 @@ void NFmiCrossSectionView::DrawSeaLevel(void)
 	}
 
 	if(belowZero)
-	{ // jos oltiin lopuksi vielä pinnan alla, annetaan indeksiksi itsGroundHeights.size(), jolloin loppupisteeksi saadaan loppureuna
+	{ // jos oltiin lopuksi vielï¿½ pinnan alla, annetaan indeksiksi itsGroundHeights.size(), jolloin loppupisteeksi saadaan loppureuna
 		endPoint.X(::CalcRelativeXplace(static_cast<int>(itsGroundHeights.size()), relativeStartX, relativeWidth, relativePlaceDividor, itsGroundHeights)); 
 
 		NFmiLine line(startPoint, endPoint, 0, &seaLevelLineStyle);
@@ -2934,7 +2936,7 @@ void NFmiCrossSectionView::DrawSeaLevel(void)
 
 }
 
-// Jos annetusta vektorista löytyy yksikin ei missing arvo, palauta true, muuten false
+// Jos annetusta vektorista lï¿½ytyy yksikin ei missing arvo, palauta true, muuten false
 static void ClearValueVectorIfOnlyMissingValues(std::vector<float>& values)
 {
 	auto nonMissingIter = std::find_if(values.begin(), values.end(), [](auto value) {return value != kFloatMissing; });
@@ -2944,20 +2946,20 @@ static void ClearValueVectorIfOnlyMissingValues(std::vector<float>& values)
 	}
 }
 
-// Piirretään mallista saatu karkea maanpinta profiili näyttöön.
+// Piirretï¿½ï¿½n mallista saatu karkea maanpinta profiili nï¿½yttï¿½ï¿½n.
 // Palauttaa true, jos piirretty jotain, muuten false.
 bool NFmiCrossSectionView::DrawModelGroundLevel(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDrawingEnvironment &theEnvi, bool fUseHybridCalculations)
 {
 	if(theInfo)
 	{
 		if(fUseHybridCalculations)
-			CalcModelGroundPressures(theInfo); // kerää pinta profiili mallipintadatasta
+			CalcModelGroundPressures(theInfo); // kerï¿½ï¿½ pinta profiili mallipintadatasta
 		else
-			CalcModelPressuresAtStation(theInfo); // kerää pinta profiili pintadatan kFmiPressureAtStationLevel -parametrista
+			CalcModelPressuresAtStation(theInfo); // kerï¿½ï¿½ pinta profiili pintadatan kFmiPressureAtStationLevel -parametrista
 
 		::ClearValueVectorIfOnlyMissingValues(itsModelGroundPressures);
 
-        // Jos datassa ei ollutkaan haluttua parametria, tällöin itsModelGroundPressures on tyhjä ja ei voida piirtää mitään.
+        // Jos datassa ei ollutkaan haluttua parametria, tï¿½llï¿½in itsModelGroundPressures on tyhjï¿½ ja ei voida piirtï¿½ï¿½ mitï¿½ï¿½n.
         if(itsModelGroundPressures.size())
         {
             ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &itsDataViewFrame);
@@ -2991,7 +2993,7 @@ void NFmiCrossSectionView::CalcRouteDistances(void)
 		{
 			loc2 = NFmiLocation(points[i]);
 			if(loc1.GetLongitude() != kFloatMissing && loc2.GetLongitude() != kFloatMissing)
-				itsRoutePointsDistToEndPoint[i] = static_cast<float>(loc2.Distance(loc1) + itsRoutePointsDistToEndPoint[i-1]); // poikkileikkauslinjaa pitkin laskettu kumulatiivinen etäisyys alusta
+				itsRoutePointsDistToEndPoint[i] = static_cast<float>(loc2.Distance(loc1) + itsRoutePointsDistToEndPoint[i-1]); // poikkileikkauslinjaa pitkin laskettu kumulatiivinen etï¿½isyys alusta
 			else
 				itsRoutePointsDistToEndPoint[i] = kFloatMissing;
 			loc1 = loc2;
@@ -3031,8 +3033,8 @@ void NFmiCrossSectionView::CalcGroundHeights(void) //NFmiSmartInfo *theInfo)
 		}
 		else if((crossMode == NFmiCrossSectionSystem::kTime) || (crossMode == NFmiCrossSectionSystem::kObsAndFor))
 		{
-			NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitää tehdä kopio
-			NFmiPoint point = crossSectionSystem->StartPoint(); // otetaan 1. pääpiste aikapoikkileikkauksen kohteeksi
+			NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitï¿½ï¿½ tehdï¿½ kopio
+			NFmiPoint point = crossSectionSystem->StartPoint(); // otetaan 1. pï¿½ï¿½piste aikapoikkileikkauksen kohteeksi
 			for(times.Reset(); times.Next(); )
 				itsGroundHeights.push_back(topoInfo->InterpolatedValue(point));
 		}
@@ -3076,8 +3078,8 @@ void NFmiCrossSectionView::CalcModelGroundPressures(boost::shared_ptr<NFmiFastQu
 		}
 		else if(crossMode == NFmiCrossSectionSystem::kTime || obsForMode)
 		{
-			NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitää tehdä kopio
-			NFmiPoint point = crossSectionSystem->StartPoint(); // otetaan 1. pääpiste aikapoikkileikkauksen kohteeksi
+			NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitï¿½ï¿½ tehdï¿½ kopio
+			NFmiPoint point = crossSectionSystem->StartPoint(); // otetaan 1. pï¿½ï¿½piste aikapoikkileikkauksen kohteeksi
 			for(times.Reset(); times.Next(); )
 				itsModelGroundPressures.push_back(theInfo->InterpolatedValue(point, times.CurrentTime()));
 		}
@@ -3118,8 +3120,8 @@ void NFmiCrossSectionView::CalcModelPressuresAtStation(boost::shared_ptr<NFmiFas
 		}
 		else if(crossMode == NFmiCrossSectionSystem::kTime || obsForMode)
 		{
-			NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitää tehdä kopio
-			NFmiPoint point = crossSectionSystem->StartPoint(); // otetaan 1. pääpiste aikapoikkileikkauksen kohteeksi
+			NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pitï¿½ï¿½ tehdï¿½ kopio
+			NFmiPoint point = crossSectionSystem->StartPoint(); // otetaan 1. pï¿½ï¿½piste aikapoikkileikkauksen kohteeksi
 			for(times.Reset(); times.Next(); )
 				itsModelGroundPressures.push_back(theInfo->InterpolatedValue(point, times.CurrentTime()));
 		}
@@ -3138,9 +3140,9 @@ bool NFmiCrossSectionView::MouseWheel(const NFmiPoint &thePlace, unsigned long t
 		{
 			auto ctrlKeyDown = theKey & kCtrlKey;
 			if(itsPressureScaleFrame.Center().Y() > thePlace.Y())
-				return ChangePressureScale(theDelta < 0 ? kDown : kUp, true, ctrlKeyDown); // true liikuttaa asteikon yläpäätä ja false alapäätä
+				return ChangePressureScale(theDelta < 0 ? kDown : kUp, true, ctrlKeyDown); // true liikuttaa asteikon ylï¿½pï¿½ï¿½tï¿½ ja false alapï¿½ï¿½tï¿½
 			else
-				return ChangePressureScale(theDelta < 0 ? kDown : kUp, false, ctrlKeyDown); // true liikuttaa asteikon yläpäätä ja false alapäätä
+				return ChangePressureScale(theDelta < 0 ? kDown : kUp, false, ctrlKeyDown); // true liikuttaa asteikon ylï¿½pï¿½ï¿½tï¿½ ja false alapï¿½ï¿½tï¿½
 		}
 		else
 			return itsCtrlViewDocumentInterface->CrossSectionSystem()->MouseWheel(thePlace, theKey, theDelta);
@@ -3164,7 +3166,7 @@ bool NFmiCrossSectionView::LeftButtonDown(const NFmiPoint & thePlace, unsigned l
 
 bool NFmiCrossSectionView::MouseMove(const NFmiPoint& thePlace, unsigned long theKey)
 {
-    // mouse captured pitää hanskata, vaikka hiiri olisi itsParamHandlerView -ikkunan ulkona
+    // mouse captured pitï¿½ï¿½ hanskata, vaikka hiiri olisi itsParamHandlerView -ikkunan ulkona
     if(ShowParamHandlerView() && itsParamHandlerView->IsMouseCaptured())
         return itsParamHandlerView->MouseMove(thePlace, theKey);
 

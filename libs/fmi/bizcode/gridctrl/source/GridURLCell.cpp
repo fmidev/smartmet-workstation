@@ -2,7 +2,9 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "GridURLCell.h"
 #include "GridCtrl.h"
 

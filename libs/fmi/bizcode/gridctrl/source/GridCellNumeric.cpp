@@ -4,7 +4,9 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "GridCellNumeric.h"
 #include "inplaceedit.h"
 #include "GridCtrl.h"

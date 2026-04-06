@@ -42,7 +42,9 @@
 //        
 /////////////////////////////////////////////////////////////////////////////
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include "GridCtrl.h"
 #include "GridCellBase.h"
 

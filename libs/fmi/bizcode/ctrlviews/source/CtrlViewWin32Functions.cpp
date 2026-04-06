@@ -9,6 +9,7 @@
 
 #include <stdexcept>
 
+#ifndef UNIX
 namespace
 {
     CButton g_DummyButton;
@@ -335,3 +336,4 @@ namespace CtrlView
     }
 
 } // namespace CtrlView
+#endif // UNIX

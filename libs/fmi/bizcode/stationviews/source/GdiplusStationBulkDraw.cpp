@@ -5,6 +5,7 @@
 #include "CtrlViewGdiPlusFunctions.h"
 #include "catlog/catlog.h"
 
+#ifndef UNIX
 namespace
 {
 	// Oletus: gdiPlusGraphics, usedSymbolMap, toolBox ovat tarkastettuja ja käyttövalmiina.
@@ -95,3 +96,4 @@ namespace GdiplusStationBulkDraw
 		}
 	}
 }
+#endif // UNIX
