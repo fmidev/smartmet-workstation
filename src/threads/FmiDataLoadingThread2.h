@@ -1,24 +1,26 @@
 #pragma once
 
 // FmiDataLoadingThread2.h
-// Tämä on uudempi versio querydatojen luku threadista. Tässä on seuraavia ominaisuuksia:
-// 1. Rakenne on muutettu saman tyyppiseksi kuin muissakin uudemmissa threadeissa, eli tässä on namespace, jossa tuttuja funktioita
-// 2. Tämä kykenee hakemaan dataa joko originaali verkko palvelimelta tai sitten lokaali cachesta.
-// 3. Dataa siirretään niin että ohjelmaa lopettaessa ei jää vuotoja kuten usein vanhalla tuntui jäävän.
-// 4. Datan välitykseen threadin ja pääohjelman väliä käytetään nyt vektoria ja thread-safe semaphoreja.
-// 5. Pääohjelmalle ilmoitus vasta pieneen viiveen jälkeen, jolloin mahd. luetaan useita datoja siirtolistaan.
+// Tï¿½mï¿½ on uudempi versio querydatojen luku threadista. Tï¿½ssï¿½ on seuraavia ominaisuuksia:
+// 1. Rakenne on muutettu saman tyyppiseksi kuin muissakin uudemmissa threadeissa, eli tï¿½ssï¿½ on namespace, jossa tuttuja funktioita
+// 2. Tï¿½mï¿½ kykenee hakemaan dataa joko originaali verkko palvelimelta tai sitten lokaali cachesta.
+// 3. Dataa siirretï¿½ï¿½n niin ettï¿½ ohjelmaa lopettaessa ei jï¿½ï¿½ vuotoja kuten usein vanhalla tuntui jï¿½ï¿½vï¿½n.
+// 4. Datan vï¿½litykseen threadin ja pï¿½ï¿½ohjelman vï¿½liï¿½ kï¿½ytetï¿½ï¿½n nyt vektoria ja thread-safe semaphoreja.
+// 5. Pï¿½ï¿½ohjelmalle ilmoitus vasta pieneen viiveen jï¿½lkeen, jolloin mahd. luetaan useita datoja siirtolistaan.
 
 #include "NFmiInfoData.h"
 #include "NFmiQueryData.h"
-#include "stdafx.h"
 #include <vector>
 #include <memory>
+#ifndef UNIX
+#include "stdafx.h"
+#endif // UNIX
 
 class NFmiQueryData;
 class NFmiHelpDataInfoSystem;
 class NFmiDataNotificationSettingsWinRegistry;
 
-// tämän tietorakenteen avulla välitetään ladattu qdata worker-threadista
+// tï¿½mï¿½n tietorakenteen avulla vï¿½litetï¿½ï¿½n ladattu qdata worker-threadista
 // main-threadin gendocille.
 struct LoadedQueryDataHolder
 {
@@ -55,15 +57,17 @@ struct LoadedQueryDataHolder
 
 namespace CFmiDataLoadingThread2
 {
-	void InitDynamicHelpDataInfo(const NFmiHelpDataInfoSystem &helpDataInfoSystem, const NFmiDataNotificationSettingsWinRegistry &dataNotificationSettings, FmiLanguage usedLanguage); // tämä pitää kutsua ennen kuin threadi (DoThread) käynnistetään
-	void SettingsChanged(const NFmiHelpDataInfoSystem &helpDataInfoSystem, bool fDoHelpDataInfo); // pääohjelma kutsuu tätä kun se on muuttanut threadin käynnistyksen jälkeen datan lukuun liittyviä asetuksia (esim. verkko/lokaali asetus)
+	void InitDynamicHelpDataInfo(const NFmiHelpDataInfoSystem &helpDataInfoSystem, const NFmiDataNotificationSettingsWinRegistry &dataNotificationSettings, FmiLanguage usedLanguage); // tï¿½mï¿½ pitï¿½ï¿½ kutsua ennen kuin threadi (DoThread) kï¿½ynnistetï¿½ï¿½n
+	void SettingsChanged(const NFmiHelpDataInfoSystem &helpDataInfoSystem, bool fDoHelpDataInfo); // pï¿½ï¿½ohjelma kutsuu tï¿½tï¿½ kun se on muuttanut threadin kï¿½ynnistyksen jï¿½lkeen datan lukuun liittyviï¿½ asetuksia (esim. verkko/lokaali asetus)
+#ifndef UNIX
 	UINT DoThread(LPVOID pParam);
+#endif // UNIX
 	void CloseNow(void);
 	int WaitToClose(int theMilliSecondsToWait);
 
-	bool GetLoadedDatas(std::vector<LoadedQueryDataHolder> &theLoadedDatasOut); // tällä pääohjelma pyytää ladattuja datoja (funktiossa tehdään vector swap!!)
-	void LoadDataNow(void); // tämä pakottaa että datan luku tehdään heti
-	void ResetTimeStamps(void); // tämä asettaa NFmiHelpDataSystemin dynaamisten datojen aikaleimoiksi -1:en
+	bool GetLoadedDatas(std::vector<LoadedQueryDataHolder> &theLoadedDatasOut); // tï¿½llï¿½ pï¿½ï¿½ohjelma pyytï¿½ï¿½ ladattuja datoja (funktiossa tehdï¿½ï¿½n vector swap!!)
+	void LoadDataNow(void); // tï¿½mï¿½ pakottaa ettï¿½ datan luku tehdï¿½ï¿½n heti
+	void ResetTimeStamps(void); // tï¿½mï¿½ asettaa NFmiHelpDataSystemin dynaamisten datojen aikaleimoiksi -1:en
 	void ResetFirstTimeGoingThroughState();
 	void SetCaseStudyMode(bool isInCaseStudyMode);
 }

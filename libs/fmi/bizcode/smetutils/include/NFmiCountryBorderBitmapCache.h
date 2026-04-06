@@ -6,22 +6,25 @@
 #include <string>
 #include <memory>
 
+#ifndef UNIX
 namespace Gdiplus
 {
     class Bitmap;
 }
+#endif // UNIX
 
-// Luokka pitää sisällään yhden karttanäytön mahdolliset erilliset rajaviivan piirto
-// bitmapit, joita on tarkoitus käyttää näytön piirrossa 'leimasimina'.
-// Eri näyttöriveillä voi olla erilaiset säädöt, joten jokainen rivi saa potentiaalisesti
+// Luokka pitï¿½ï¿½ sisï¿½llï¿½ï¿½n yhden karttanï¿½ytï¿½n mahdolliset erilliset rajaviivan piirto
+// bitmapit, joita on tarkoitus kï¿½yttï¿½ï¿½ nï¿½ytï¿½n piirrossa 'leimasimina'.
+// Eri nï¿½yttï¿½riveillï¿½ voi olla erilaiset sï¿½ï¿½dï¿½t, joten jokainen rivi saa potentiaalisesti
 // oman bitmapin cacheen talteen.
 // Cachen avain koostuu seuraavista asioista: 
-// 1. Viivan paksuus pikseleissä (0-3 ja 0 on tällöin ei piirtoa) esim. 1
-// 2. Viivan väri esim. musta joka ilmaistaa seuraavasti RRGGBB (eli RGB arvot heksana 00 on 0 ja FF on 255) esim. musta olisi 000000 ja valkoinen olisi FFFFFF
-// Avain kokonaisena esim. 1_000000 joka olisi viivan paksuus 1 ja väri musta.
-// Koska jokaisella näytöllä on oma cache, voidaan tämä cache siivota kokonaisuudessaan, aina kun esim. zooaus muuttuu tai tehdään jotain mikä
+// 1. Viivan paksuus pikseleissï¿½ (0-3 ja 0 on tï¿½llï¿½in ei piirtoa) esim. 1
+// 2. Viivan vï¿½ri esim. musta joka ilmaistaa seuraavasti RRGGBB (eli RGB arvot heksana 00 on 0 ja FF on 255) esim. musta olisi 000000 ja valkoinen olisi FFFFFF
+// Avain kokonaisena esim. 1_000000 joka olisi viivan paksuus 1 ja vï¿½ri musta.
+// Koska jokaisella nï¿½ytï¿½llï¿½ on oma cache, voidaan tï¿½mï¿½ cache siivota kokonaisuudessaan, aina kun esim. zooaus muuttuu tai tehdï¿½ï¿½n jotain mikï¿½
 // muuttaa pohjakartan kokoa tms.
-// Eri rivit voivat jakaa cache-kuvia, koska yhdessä näytössä on aina sama kartta-alue ja koko joka karttaruudulla.
+// Eri rivit voivat jakaa cache-kuvia, koska yhdessï¿½ nï¿½ytï¿½ssï¿½ on aina sama kartta-alue ja koko joka karttaruudulla.
+#ifndef UNIX
 class NFmiCountryBorderBitmapCache
 {
     std::map<std::string, std::unique_ptr<Gdiplus::Bitmap>> bitmapCacheMap_;
@@ -36,3 +39,4 @@ public:
     void clearCache();
     void setBorderDrawDirtyState(CountryBorderDrawDirtyState newState, const std::string& keyString = "");
 };
+#endif // UNIX

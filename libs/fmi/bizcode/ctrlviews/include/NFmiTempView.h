@@ -6,7 +6,9 @@
 #include "NFmiSoundingData.h"
 #include "NFmiTempViewDataRects.h"
 #include "NFmiTempViewScrollingData.h"
+#ifndef UNIX
 #include <gdiplus.h>
+#endif
 
 class NFmiFastQueryInfo;
 class NFmiProducer;
@@ -42,7 +44,7 @@ class NFmiTempView : public NFmiCtrlView
  public:
 	typedef enum
 	{
-		kNone = 0, // jos ei haluta mitään merkkiä, vaan pelkkä teksti markerin piirto funktiossa
+		kNone = 0, // jos ei haluta mitï¿½ï¿½n merkkiï¿½, vaan pelkkï¿½ teksti markerin piirto funktiossa
 		kCircle = 1,
 		kTriangle = 2,
 		kCross = 3
@@ -163,7 +165,9 @@ class NFmiTempView : public NFmiCtrlView
     void DrawSecondaryVerticalHelpLine(double theBottom, double theTop, double theValue);
     bool FillSoundingDataFromServer(const NFmiMTATempSystem::SoundingProducer &theProducer, NFmiSoundingData &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation);
 	bool FillServerGribSoundingData(NFmiSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, const ModelDataServerConfiguration& modelDataServerConf, const std::string& gribSoundingDataResponseFromServer);
+#ifndef UNIX
 	Gdiplus::SmoothingMode GetUsedCurveDrawSmoothingMode() const;
+#endif
     bool IsRectangularTemperatureHelperLines() const;
 	bool IsAnyTextualSideViewVisible() const;
 	void DrawTextualSideViewRelatedStuff();
@@ -223,34 +227,36 @@ class NFmiTempView : public NFmiCtrlView
 
 	double tdegree;
 
-	double dtperpix; // kuinka paljon lämpötila muuttuu x-pixelin suuntaan
+	double dtperpix; // kuinka paljon lï¿½mpï¿½tila muuttuu x-pixelin suuntaan
 	double dlogpperpix; // kuinka paljon log(p) muuttuu y-pixelin suuntaan
-	int xpix; // kuinka monta pikseliä data alueella x-suunnassa
-	int ypix; // kuinka monta pikseliä data alueella y-suunnassa
+	int xpix; // kuinka monta pikseliï¿½ data alueella x-suunnassa
+	int ypix; // kuinka monta pikseliï¿½ data alueella y-suunnassa
 	NFmiPoint _1PixelInRel; // kuinka paljon on yksi pikseli relatiivisessa maailmassa
 
-	// Tähän talletetaan valitun tuottajan piirrettävän luotauksen datat, että niitä käytetään indeksi osio laskuissa
-	// Valitun luotaustuottajan dataa käytetään myös luotausten muokkauksessa!!!!
+	// Tï¿½hï¿½n talletetaan valitun tuottajan piirrettï¿½vï¿½n luotauksen datat, ettï¿½ niitï¿½ kï¿½ytetï¿½ï¿½n indeksi osio laskuissa
+	// Valitun luotaustuottajan dataa kï¿½ytetï¿½ï¿½n myï¿½s luotausten muokkauksessa!!!!
 	TotalSoundingData itsSelectedProducerSoundingData;
-	bool fMustResetFirstSoundingData; // joskus käyttäjä haluaa resetoida muokattua luotausta
-	bool fHodografInitialized; // kun ikkuna piirretään 1. kerran, pitää laskea alkuarvaus, muutoin ei
+	bool fMustResetFirstSoundingData; // joskus kï¿½yttï¿½jï¿½ haluaa resetoida muokattua luotausta
+	bool fHodografInitialized; // kun ikkuna piirretï¿½ï¿½n 1. kerran, pitï¿½ï¿½ laskea alkuarvaus, muutoin ei
 	double itsFirstSoundinWindBarbXPos;
-	std::string itsSoundingIndexStr; // tähän talletetaan aina piirretty stabiilisuus indeksi teksti rimpsu / luotaus numeroina, riippuen mikä moodi on valittuna, tai molemmat
+	std::string itsSoundingIndexStr; // tï¿½hï¿½n talletetaan aina piirretty stabiilisuus indeksi teksti rimpsu / luotaus numeroina, riippuen mikï¿½ moodi on valittuna, tai molemmat
 
-	NFmiPoint itsGdiplusScale; // GDI+ piirrossa kaikki koordinaatit pitää muuttaa pikseli maailmaan (toolbaxin relatiivisesta 0,0 - 1,1 maailmasta)
+	NFmiPoint itsGdiplusScale; // GDI+ piirrossa kaikki koordinaatit pitï¿½ï¿½ muuttaa pikseli maailmaan (toolbaxin relatiivisesta 0,0 - 1,1 maailmasta)
 
-	// Teen seuraavanlaisen systeemin että printtauksessa tulee sopivan kokoisia fontteja ja viiva paksuuksia:
+	// Teen seuraavanlaisen systeemin ettï¿½ printtauksessa tulee sopivan kokoisia fontteja ja viiva paksuuksia:
 	// Otan talteen viimeisen ruudulla piirrettyjen pikselien koot mm.
-	// Kun ollaan printtaamassa kuvaa, lasketaan kerroin, millä ruutu piirrossa olevat pikseli määrät on kerrottava
-	// että saadaan saman kokoisia piirto-olioita myös paperille.
-	NFmiPoint itsDrawSizeFactor; // ruutu piirrossa 1, lasketaan printatessa tälle erillinen arvo
+	// Kun ollaan printtaamassa kuvaa, lasketaan kerroin, millï¿½ ruutu piirrossa olevat pikseli mï¿½ï¿½rï¿½t on kerrottava
+	// ettï¿½ saadaan saman kokoisia piirto-olioita myï¿½s paperille.
+	NFmiPoint itsDrawSizeFactor; // ruutu piirrossa 1, lasketaan printatessa tï¿½lle erillinen arvo
 	NFmiPoint itsLastScreenDrawPixelSizeInMM;
-    // tämän avulla yritetään vielä korjata koko laskuja, koska näytönohjaimet eivät anna aina 
-    // oikeita millimetri kokoja näytöille. Jos 0, ei ole tietoa suhteesta, eikä korjausta voi tehdä.
+    // tï¿½mï¿½n avulla yritetï¿½ï¿½n vielï¿½ korjata koko laskuja, koska nï¿½ytï¿½nohjaimet eivï¿½t anna aina 
+    // oikeita millimetri kokoja nï¿½ytï¿½ille. Jos 0, ei ole tietoa suhteesta, eikï¿½ korjausta voi tehdï¿½.
 	double itsLastScreenDataRectPressureScaleRatio; 
-    // Jotta luotauskäyrien tooltipit saadaan varmasti laskettua kaikissa tilanteissa, laitetaan kaikki piirretyt luotausdatat erilliseen cacheen talteen.
+    // Jotta luotauskï¿½yrien tooltipit saadaan varmasti laskettua kaikissa tilanteissa, laitetaan kaikki piirretyt luotausdatat erilliseen cacheen talteen.
     SoundingDataCacheMap itsSoundingDataCacheForTooltips;
+#ifndef UNIX
     Gdiplus::SmoothingMode itsCurveDrawSmoothingMode = Gdiplus::SmoothingMode::SmoothingModeAntiAlias;
+#endif
 	NFmiTempViewDataRects itsTempViewDataRects;
 	double itsStabilityIndexNextLineFontHeightFactor = 1.;
 	double itsTextualSoundingDataNextLineFontHeightFactor = 0.8;

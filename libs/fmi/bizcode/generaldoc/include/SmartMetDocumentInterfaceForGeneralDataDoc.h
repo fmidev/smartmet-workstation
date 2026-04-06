@@ -82,8 +82,10 @@ public:
     boost::shared_ptr<NFmiDrawParam> DefaultEditedDrawParam() override;
     double DrawObjectScaleFactor() override;
     void DrawObjectScaleFactor(double newValue) override;
+#ifndef UNIX
     void TransparencyContourDrawView(CWnd *theView) override;
     CWnd* TransparencyContourDrawView() override;
+#endif // UNIX
     bool IsToolMasterAvailable() const override;
     void ToolMasterAvailable(bool newValue) override;
     NFmiCrossSectionSystem* CrossSectionSystem() override;
@@ -285,8 +287,10 @@ public:
     int GetTimeRangeForWarningMessagesOnMapViewInMinutes() override;
     bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage) override;
     NFmiMacroParamDataCache& MacroParamDataCache() override;
+#ifndef UNIX
     bool DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &clientPixelSize, CDC* pDC) override;
     NFmiGdiPlusImageMapHandler* GetMapHandlerInterface(int mapViewDescTopIndex) override;
+#endif // UNIX
     bool ChangeTime(int theTypeOfChange, FmiDirection theDirection, unsigned long theMapViewIndex, double theAmountOfChange) override;
     void SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor) override;
     CombinedMapHandlerInterface& GetCombinedMapHandlerInterface() override;

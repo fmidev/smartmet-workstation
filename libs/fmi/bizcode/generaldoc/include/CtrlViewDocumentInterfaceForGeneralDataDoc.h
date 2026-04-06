@@ -191,17 +191,23 @@ public:
     void MapMouseDragPanMode(bool newState) override;
     void MapViewBitmapDirty(int theDescTopIndex, bool dirtyFlag) override;
     NFmiSatelliteImageCacheSystem& SatelliteImageCacheSystem() override;
+#ifndef UNIX
     CWnd* TransparencyContourDrawView(void) override;
+#endif // UNIX
     NFmiGridPointCache& GridPointCache(int theDescTopIndex) override;
     NFmiMapViewCache& MapViewCache(int theDescTopIndex) override;
+#ifndef UNIX
     CDC* CopyCDC(int theDescTopIndex) override;
+#endif // UNIX
     bool IsCPGridCropInAction(void) override;
     bool ShowSoundingMarkersOnMap(int theDescTopIndex) override;
     bool ShowCrossSectionMarkersOnMap(int theDescTopIndex) override;
     bool ShowTrajectorsOnMap(int theDescTopIndex) override;
     std::vector<NFmiProducer>& ExtraSoundingProducerList(void) override;
     bool ShowWarningMarkersOnMap(int theDescTopIndex) override;
+#ifndef UNIX
     CDC* MapBlitDC(int theDescTopIndex) override;
+#endif // UNIX
     int ToolTipColumnIndex() const override;
     void ToolTipColumnIndex(int newIndex) override;
     bool HasActiveViewChanged(void) override;
@@ -216,8 +222,10 @@ public:
     bool DrawLandBorders(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) override;
     const NFmiColor& LandBorderColor(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) override;
     int LandBorderPenSize(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) override;
+#ifndef UNIX
     Gdiplus::Bitmap* LandBorderMapBitmap(unsigned int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) const override;
     void SetLandBorderMapBitmap(unsigned int theDescTopIndex, Gdiplus::Bitmap *newBitmap, NFmiDrawParam* separateBorderLayerDrawOptions) override;
+#endif // UNIX
     boost::shared_ptr<Imagine::NFmiPath> LandBorderPath(int theDescTopIndex) override;
     void DrawBorderPolyLineList(int theDescTopIndex, std::list<NFmiPolyline*> &polyLineList) override;
     const std::list<std::vector<NFmiPoint>>& DrawBorderPolyLineListGdiplus(int theDescTopIndex) override;

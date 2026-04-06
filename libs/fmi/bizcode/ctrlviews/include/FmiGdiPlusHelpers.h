@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef UNIX
+
 #include <string>
 
 class CBitmap;
@@ -17,3 +19,6 @@ namespace CFmiGdiPlusHelpers
 };
 
 
+
+#else  // UNIX - Windows-only header; Linux implementation will use Qt
+#endif // UNIX

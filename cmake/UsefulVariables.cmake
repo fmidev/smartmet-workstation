@@ -1,5 +1,5 @@
 set(
-    ROOT 
+    ROOT
     ${CMAKE_SOURCE_DIR}
     CACHE INTERNAL "" FORCE
     )
@@ -21,6 +21,71 @@ set(
     ${ROOT}/libs/3rd
     CACHE INTERNAL "" FORCE
     )
+
+# **** Linux library paths ****
+if(UNIX)
+
+set(
+    TRAX_INCLUDE_DIR
+    /home/mheiskan/hub/trax
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    TRAX_LIB
+    /home/mheiskan/hub/trax/libsmartmet-trax.so
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    GIZA_INCLUDE_DIR
+    /home/mheiskan/hub/giza
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    GIZA_LIB
+    /home/mheiskan/hub/giza/libsmartmet-giza.so
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    IMAGINE2_INCLUDE_DIR
+    /home/mheiskan/hub/imagine2
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    IMAGINE2_LIB
+    /home/mheiskan/hub/imagine2/libsmartmet-imagine2.so
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    GIS_INCLUDE_DIR
+    /home/mheiskan/hub/gis
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    GIS_LIB
+    /home/mheiskan/hub/gis/libsmartmet-gis.so
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    NEWBASE_INCLUDE_DIR
+    /home/mheiskan/hub/newbase/newbase
+    CACHE INTERNAL "" FORCE
+    )
+
+set(
+    NEWBASE_LIB
+    /home/mheiskan/hub/newbase/libsmartmet-newbase.so
+    CACHE INTERNAL "" FORCE
+    )
+
+endif() # UNIX
 
 # **** Boost library section ****
 set(

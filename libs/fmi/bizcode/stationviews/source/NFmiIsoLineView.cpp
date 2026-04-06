@@ -165,12 +165,14 @@ void LabelBox::InitPixelPerMMRatio(NFmiToolBox * theGTB)
     {
         fInitialized = true;
 
+#ifndef UNIX
         int screenWidthInMM = GetDeviceCaps(theGTB->GetDC()->GetSafeHdc(), HORZSIZE);
         int screenHeightInMM = GetDeviceCaps(theGTB->GetDC()->GetSafeHdc(), VERTSIZE);
         int screenWidthInPixels = GetDeviceCaps(theGTB->GetDC()->GetSafeHdc(), HORZRES);
         int screenHeightInPixels = GetDeviceCaps(theGTB->GetDC()->GetSafeHdc(), VERTRES);
         itsPixelsPerMM_x = static_cast<double>(screenWidthInPixels) / static_cast<double>(screenWidthInMM);
         itsPixelsPerMM_y = static_cast<double>(screenHeightInPixels) / static_cast<double>(screenHeightInMM);
+#endif // UNIX
     }
 }
 
@@ -2045,7 +2047,9 @@ void NFmiIsoLineView::DoGridRelatedVisualization(NFmiIsoLineData &isoLineData, N
             {
                 isoLineData.itsParam.GetParam()->SetName(itsDrawParam->ParameterAbbreviation());
             }
+#ifndef UNIX
             ::ToolMasterDraw(itsToolBox->GetDC(), &isoLineData, relRect, zoomedAreaRect, pixelToGridRatio, -1, GetVisualizationSettings());
+#endif // UNIX
         }
     }
     RestoreUpDifferenceDrawing(itsDrawParam);

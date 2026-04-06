@@ -1,4 +1,4 @@
-//© Ilmatieteenlaitos/software by Marko
+//ï¿½ Ilmatieteenlaitos/software by Marko
 //  Original 23.09.1998
 // 
 //                                  
@@ -20,18 +20,21 @@ namespace CtrlViewUtils
 {
     struct GraphicalInfo;
 }
+#ifndef UNIX
 namespace Gdiplus
 {
 	class Bitmap;
 }
+#endif // UNIX
 
-// Tähän luokkaan luetaan ksyeiset kuva-imaget kerran ja käytetään kaikille NFmiTimeControlView-instansseille yhteisesti.
-// Gdiplus::Bitmap-olioita ei tarvitse tuhota, Gdiplus huolehtii siitä automaattisesti.
+// Tï¿½hï¿½n luokkaan luetaan ksyeiset kuva-imaget kerran ja kï¿½ytetï¿½ï¿½n kaikille NFmiTimeControlView-instansseille yhteisesti.
+// Gdiplus::Bitmap-olioita ei tarvitse tuhota, Gdiplus huolehtii siitï¿½ automaattisesti.
 class AnimationButtonImageHolder
 {
 public:
 	AnimationButtonImageHolder(void)
 	:itsBitmapFolder()
+#ifndef UNIX
 	,itsPlayButtonImage(0)
 	,itsPauseButtonImage(0)
 	,itsDelayButtonImage(0)
@@ -43,14 +46,16 @@ public:
 	,itsVerticalTimeControlOnImage(0)
 	,itsVerticalTimeControlOffImage(0)
     , itsSetFullTimeRangeImage(0)
+#endif // UNIX
 	,fInitialized(false)
 	{
 	}
 
 	// initialisoinnissa luetaan bitmapit tiedostoista, kutsu vasta kun itsBitmapFolder-dataosa on asetettu
-	void Initialize(void);  // HUOM! heittää poikkeuksia epäonnistuessaan
+	void Initialize(void);  // HUOM! heittï¿½ï¿½ poikkeuksia epï¿½onnistuessaan
 
 	std::string itsBitmapFolder;
+#ifndef UNIX
 	Gdiplus::Bitmap *itsPlayButtonImage;
 	Gdiplus::Bitmap *itsPauseButtonImage;
 	Gdiplus::Bitmap *itsDelayButtonImage;
@@ -64,6 +69,7 @@ public:
 	Gdiplus::Bitmap *itsVerticalTimeControlOffImage;
 
     Gdiplus::Bitmap *itsSetFullTimeRangeImage;
+#endif // UNIX
     bool fInitialized;
 };
 
@@ -71,7 +77,7 @@ class NFmiTimeControlView : public NFmiCtrlView
 {
 
 public:
-	class MouseStatusInfo // joudun tekemään tälläisen info paketin, että saan talteen hiirenkäsittely informaation, koska NFmiTimeControlView-oliota luodaan ja tuhotaan jatkuvasti ruudun päivityksen yhteydessä uudestaan
+	class MouseStatusInfo // joudun tekemï¿½ï¿½n tï¿½llï¿½isen info paketin, ettï¿½ saan talteen hiirenkï¿½sittely informaation, koska NFmiTimeControlView-oliota luodaan ja tuhotaan jatkuvasti ruudun pï¿½ivityksen yhteydessï¿½ uudestaan
 	{
 	public:
 	   MouseStatusInfo(void)
@@ -99,14 +105,14 @@ public:
 		   return (fMouseCaptured || fMouseCapturedMoveTimeLine || fMouseCapturedMoveSelectedTime || fMouseCapturedAnimationBox);
 	   }
 
-	   bool fMouseCaptured; // tämä pitäisi siirtää dokumenttiin??? siirretäänkö aikamuokkauskahvoja hiirellä vetämällä
-	   bool fMouseCapturedMoveTimeLine; // siirretäänkö hiirellä koko aikaikkunan alku/loppu aikoja
-	   bool fMouseCapturedMoveSelectedTime; // raahataanko hiirellä sitä vihreää laatikkoa, jolla osoitetaan 1. valittua aikaa
-	   bool fMouseCapturedAnimationBox; // hiirellä raahataan animaatio boxia (sinertävää llatikkoa)
-	   FmiDirection itsAnimationDragDirection; // jos fMouseCapturedAnimationBox ollessa true, arvo on kLeft, venytetään vasenta reunaa, jos arvo on kRight, venytetään oikeaa reunaa ja jos kCenter, raahataa laatikkoa hiirellä kokonaisena
+	   bool fMouseCaptured; // tï¿½mï¿½ pitï¿½isi siirtï¿½ï¿½ dokumenttiin??? siirretï¿½ï¿½nkï¿½ aikamuokkauskahvoja hiirellï¿½ vetï¿½mï¿½llï¿½
+	   bool fMouseCapturedMoveTimeLine; // siirretï¿½ï¿½nkï¿½ hiirellï¿½ koko aikaikkunan alku/loppu aikoja
+	   bool fMouseCapturedMoveSelectedTime; // raahataanko hiirellï¿½ sitï¿½ vihreï¿½ï¿½ laatikkoa, jolla osoitetaan 1. valittua aikaa
+	   bool fMouseCapturedAnimationBox; // hiirellï¿½ raahataan animaatio boxia (sinertï¿½vï¿½ï¿½ llatikkoa)
+	   FmiDirection itsAnimationDragDirection; // jos fMouseCapturedAnimationBox ollessa true, arvo on kLeft, venytetï¿½ï¿½n vasenta reunaa, jos arvo on kRight, venytetï¿½ï¿½n oikeaa reunaa ja jos kCenter, raahataa laatikkoa hiirellï¿½ kokonaisena
 	   FmiDirection itsTimeScaleDragDirection;
-	   bool fMouseMovedWhenCaptured; // tieto siitä onko hiirtä liikutettu, kun se on kaapattu aikakontrolliin
-	   NFmiPoint itsLastMousePosition; // kun hiirellä raahataan aikakontrollia, tämän avulla lasketaan liike verrattuna edelliseen MouseMove viestiin, että aikaikkunaa osataan liikuttaa oikea määrä
+	   bool fMouseMovedWhenCaptured; // tieto siitï¿½ onko hiirtï¿½ liikutettu, kun se on kaapattu aikakontrolliin
+	   NFmiPoint itsLastMousePosition; // kun hiirellï¿½ raahataan aikakontrollia, tï¿½mï¿½n avulla lasketaan liike verrattuna edelliseen MouseMove viestiin, ettï¿½ aikaikkunaa osataan liikuttaa oikea mï¿½ï¿½rï¿½
 		bool fAnimationCloseButtonPressed;
 		bool fAnimationPlayButtonPressed;
 		bool fAnimationDelayButtonPressed;
@@ -137,8 +143,8 @@ public:
    bool MouseMove(const NFmiPoint& thePlace, unsigned long theKey) override;
    bool IsMouseCaptured(void){return (fMouseCaptured || fMouseCapturedMoveTimeLine || fMouseCapturedMoveSelectedTime || fMouseCapturedAnimationBox);};
    void MouseCaptured(bool newState){fMouseCaptured = newState;};
-   void Initialize(bool theShowSelectedTimes, bool theUseActiveMapTime); // HUOM! älä kutsu konstruktorissa, kutsu sen jälkeen yritys korjata konstruktorissa olevaa virtuaalisuus ongelmaa 
-   void DrawOverBitmapThings(NFmiToolBox * theGTB, bool dummy, int dummy2, float dummy3, void* dummy4);// tällä piirretään tavara, joka tulee myös bitmapin päälle
+   void Initialize(bool theShowSelectedTimes, bool theUseActiveMapTime); // HUOM! ï¿½lï¿½ kutsu konstruktorissa, kutsu sen jï¿½lkeen yritys korjata konstruktorissa olevaa virtuaalisuus ongelmaa 
+   void DrawOverBitmapThings(NFmiToolBox * theGTB, bool dummy, int dummy2, float dummy3, void* dummy4);// tï¿½llï¿½ piirretï¿½ï¿½n tavara, joka tulee myï¿½s bitmapin pï¿½ï¿½lle
    bool SetTime(const NFmiPoint & thePlace, bool fStayInsideAnimationTimes = false);
    std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
    MouseStatusInfo GetMouseStatusInfo(void);
@@ -173,8 +179,8 @@ protected:
 	void Clear(void);
 	NFmiRect CalcTimeAxisRect(void);
 	NFmiRect CalcAnimationBoxRect(void);
-	// Sallitaanko ylipäänsä animaatio boxin näkyä aikasarjaikkunassa. Normalisti palauttaa
-	// true, mutta mm. trajektori versiossä, tämä palauttaa false.
+	// Sallitaanko ylipï¿½ï¿½nsï¿½ animaatio boxin nï¿½kyï¿½ aikasarjaikkunassa. Normalisti palauttaa
+	// true, mutta mm. trajektori versiossï¿½, tï¿½mï¿½ palauttaa false.
 	virtual bool AllowAnimationBoxShown(void) const {return true;}
 	virtual NFmiPoint GetViewSizeInPixels(void);
 	virtual const NFmiTimeBag& GetUsedTimeBag(void);
@@ -189,7 +195,9 @@ protected:
 	double Time2Value(const NFmiMetTime& theTime);
 	NFmiMetTime GetTimeFromPosition(const NFmiPoint & thePlace, int theUsedResolution);
 	NFmiRect CalcSelectedTimeArea(const NFmiMetTime &theTime) const;
+#ifndef UNIX
     void DrawFullTimeRangeButton(Gdiplus::Graphics *theUsedGdiPlusGraphics);
+#endif // UNIX
     bool IsAnimationViewVisible() const;
 	void DrawVirtualTimeData();
 	void DrawVirtualTimeDataBox();
@@ -205,22 +213,22 @@ protected:
    NFmiTimeScaleView * itsTimeView;
    NFmiStepTimeScale * itsTimeAxis;
    NFmiTimeBag * itsTimeBag;
-   bool fHasData; // jos ei ole dataa olemassa, ei tehdä tiettyjä asioita
+   bool fHasData; // jos ei ole dataa olemassa, ei tehdï¿½ tiettyjï¿½ asioita
    bool fShowEditTimeHandles; // niin...
-   bool fMouseCaptured; // tämä pitäisi siirtää dokumenttiin??? siirretäänkö aikamuokkauskahvoja hiirellä vetämällä
-   bool fMouseCapturedMoveTimeLine; // siirretäänkö hiirellä koko aikaikkunan alku/loppu aikoja
-   bool fMouseCapturedMoveSelectedTime; // raahataanko hiirellä sitä vihreää laatikkoa, jolla osoitetaan 1. valittua aikaa
-   bool fMouseCapturedAnimationBox = false; // hiirellä raahataan animaatio boxia (sinertävää llatikkoa)
+   bool fMouseCaptured; // tï¿½mï¿½ pitï¿½isi siirtï¿½ï¿½ dokumenttiin??? siirretï¿½ï¿½nkï¿½ aikamuokkauskahvoja hiirellï¿½ vetï¿½mï¿½llï¿½
+   bool fMouseCapturedMoveTimeLine; // siirretï¿½ï¿½nkï¿½ hiirellï¿½ koko aikaikkunan alku/loppu aikoja
+   bool fMouseCapturedMoveSelectedTime; // raahataanko hiirellï¿½ sitï¿½ vihreï¿½ï¿½ laatikkoa, jolla osoitetaan 1. valittua aikaa
+   bool fMouseCapturedAnimationBox = false; // hiirellï¿½ raahataan animaatio boxia (sinertï¿½vï¿½ï¿½ llatikkoa)
    FmiDirection itsAnimationDragDirection; // jos fMouseCapturedAnimationBox ollessa true, 
-										// arvo on kLeft, venytetään vasenta reunaa, 
-										// jos arvo on kRight, venytetään oikeaa reunaa ja 
-										// jos kCenter, raahataa laatikkoa hiirellä kokonaisena
-										// jos arvo on kBase, luodaan animaatio laatikkoa, ja siinä on hieman eri säännöt, eli venytys voi tapahtua molempiin suuntiin
+										// arvo on kLeft, venytetï¿½ï¿½n vasenta reunaa, 
+										// jos arvo on kRight, venytetï¿½ï¿½n oikeaa reunaa ja 
+										// jos kCenter, raahataa laatikkoa hiirellï¿½ kokonaisena
+										// jos arvo on kBase, luodaan animaatio laatikkoa, ja siinï¿½ on hieman eri sï¿½ï¿½nnï¿½t, eli venytys voi tapahtua molempiin suuntiin
    FmiDirection itsTimeScaleDragDirection; // jos fMouseCapturedAnimationBox ollessa true, 
-											// jos arvo on kLeft, siirretään aikajanan vasenta reunaa
-											// jos arvo on kRight, siirretään aikajanan oikeaa reunaa
-											// jos arvo on kCenter, siirretään aikajanaa kokonaisuutena
-   bool fMouseMovedWhenCaptured; // tieto siitä onko hiirtä liikutettu, kun se on kaapattu aikakontrolliin
+											// jos arvo on kLeft, siirretï¿½ï¿½n aikajanan vasenta reunaa
+											// jos arvo on kRight, siirretï¿½ï¿½n aikajanan oikeaa reunaa
+											// jos arvo on kCenter, siirretï¿½ï¿½n aikajanaa kokonaisuutena
+   bool fMouseMovedWhenCaptured; // tieto siitï¿½ onko hiirtï¿½ liikutettu, kun se on kaapattu aikakontrolliin
    // animaatiossa on eri nappuloita, joita voi painaa
    bool fAnimationCloseButtonPressed;
    bool fAnimationPlayButtonPressed;
@@ -230,18 +238,18 @@ protected:
    bool fAnimationLockModeButtonPressed;
    bool fAnimationVerticalControlButtonPressed;
 
-   NFmiPoint itsLeftButtonDownMousePosition; // tämä on viri viri. Jotenkin en saa hiiren aikasarja raahausta ja pelkkää vasen klik aika siirtoa kuntoon muuten kuin mittaamalla totaali hiiren liike
-   NFmiPoint itsLastMousePosition; // kun hiirellä raahataan aikakontrollia, tämän avulla lasketaan liike verrattuna edelliseen MouseMove viestiin, että aikaikkunaa osataan liikuttaa oikea määrä
+   NFmiPoint itsLeftButtonDownMousePosition; // tï¿½mï¿½ on viri viri. Jotenkin en saa hiiren aikasarja raahausta ja pelkkï¿½ï¿½ vasen klik aika siirtoa kuntoon muuten kuin mittaamalla totaali hiiren liike
+   NFmiPoint itsLastMousePosition; // kun hiirellï¿½ raahataan aikakontrollia, tï¿½mï¿½n avulla lasketaan liike verrattuna edelliseen MouseMove viestiin, ettï¿½ aikaikkunaa osataan liikuttaa oikea mï¿½ï¿½rï¿½
    NFmiRect itsLeftTimeHandle; // aloitusaikamuokkauskahvan sijainti
    NFmiRect itsRightTimeHandle; // lopuetussaikamuokkauskahvan sijainti
-   bool fDrawViewInMouseMove; // eri näytöissä (esim. pääkarttanäytön alaosa ja muokkaudialogin aikakontrolli osa) ei (näytön päivitys-tyylin takia) kannata piirtää näyttöä aina MouseMove-metodissa kun se piirretään muutenkin ja käyttäen double bufferointia
-   double itsAxisShrinkFactor; // tämä pienentää näytön aika-akselin leveyttä defaultti 0.02 tulee jostain kokeilusta
-   bool fDrawTimeFilterTimesInNormalDraw; // jossain paikoissa aika filtteri jana piirretään vain DrawOverBitmapThings-metodissa, jossain taas normaali Draw:ssa
-   double itsButtonSizeInMM_x; // paino nappuloiden koko millimetreissä x-suunnassa
-   double itsButtonSizeInMM_y; // paino nappuloiden koko millimetreissä y-suunnassa
+   bool fDrawViewInMouseMove; // eri nï¿½ytï¿½issï¿½ (esim. pï¿½ï¿½karttanï¿½ytï¿½n alaosa ja muokkaudialogin aikakontrolli osa) ei (nï¿½ytï¿½n pï¿½ivitys-tyylin takia) kannata piirtï¿½ï¿½ nï¿½yttï¿½ï¿½ aina MouseMove-metodissa kun se piirretï¿½ï¿½n muutenkin ja kï¿½yttï¿½en double bufferointia
+   double itsAxisShrinkFactor; // tï¿½mï¿½ pienentï¿½ï¿½ nï¿½ytï¿½n aika-akselin leveyttï¿½ defaultti 0.02 tulee jostain kokeilusta
+   bool fDrawTimeFilterTimesInNormalDraw; // jossain paikoissa aika filtteri jana piirretï¿½ï¿½n vain DrawOverBitmapThings-metodissa, jossain taas normaali Draw:ssa
+   double itsButtonSizeInMM_x; // paino nappuloiden koko millimetreissï¿½ x-suunnassa
+   double itsButtonSizeInMM_y; // paino nappuloiden koko millimetreissï¿½ y-suunnassa
    double itsButtonOffSetFromEdgeFactor; // kuinka kaukana paino nappula on reunoista irti suhteessa napulan kokoon
-   static AnimationButtonImageHolder statAnimationButtonImages; // tämä on staattinen dataosa, koska näitä timekontrol-instansseja luodaan lennossa jatkuvasti uudelleen ja uudelleen eli bitmapit luetaan vain kerran kaikkien käyttöön
-   NFmiRect itsVirtualTimeSliderRect; // Kun tähän klikataan hiirellä, voidaan virtual-time:a säätää
+   static AnimationButtonImageHolder statAnimationButtonImages; // tï¿½mï¿½ on staattinen dataosa, koska nï¿½itï¿½ timekontrol-instansseja luodaan lennossa jatkuvasti uudelleen ja uudelleen eli bitmapit luetaan vain kerran kaikkien kï¿½yttï¿½ï¿½n
+   NFmiRect itsVirtualTimeSliderRect; // Kun tï¿½hï¿½n klikataan hiirellï¿½, voidaan virtual-time:a sï¿½ï¿½tï¿½ï¿½
    NFmiRect itsVirtualTimeBoxRect;
 private:
    int RelativeLength2Minutes(double theLength);
@@ -254,7 +262,7 @@ private:
    void DrawResolutionChangerBox(void);
    NFmiStepTimeScale MakeEmptySelectedTimeScale(void);
 
-// resolution changer box on laatikko, jossa näytetään käytetty aikaresoluutio
+// resolution changer box on laatikko, jossa nï¿½ytetï¿½ï¿½n kï¿½ytetty aikaresoluutio
 // ja kun laatikkoa klikkaa vasemmalla hiiren painikkeella, resoluutio pienenee ja oikealla kasvaa
    bool fShowResolutionChangerBox; 
    NFmiRect itsResolutionChangerBox;

@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef UNIX
+
 #include "stdafx.h"
 #include <utility>
 #include "NFmiColor.h"
@@ -45,14 +47,14 @@ namespace CtrlView
 
     // asettaa toolmasterin ja toolboxin DC:t
     // esim. ennen piirto tai ennen kuin tarkastellaan hiiren klikkausta ruudulta
-    // HUOM!! printtauksen yhteydessä kutsu ensin DC:n asetus ja sitten printinfon!!!
-    void SetToolsDCs(CDC* theDC, CWnd *theView, NFmiToolBox *theToolBox, bool fToolMasterAvailable); // tämä asettaa kaikki kerralla
+    // HUOM!! printtauksen yhteydessï¿½ kutsu ensin DC:n asetus ja sitten printinfon!!!
+    void SetToolsDCs(CDC* theDC, CWnd *theView, NFmiToolBox *theToolBox, bool fToolMasterAvailable); // tï¿½mï¿½ asettaa kaikki kerralla
     void SetToolBoxsDC(CDC* theDC, NFmiToolBox *theToolBox);
     void SetToolMastersDC(CDC* theDC, CWnd *theView, bool fToolMasterAvailable);
 
-    // uudet versiot SetToolsDC:stä, jossa haluttu piirtoalue annetaan parametrina, tällöin
-    // printti alueen erilainen käsittely ei jää huomiotta
-    void SetToolsDCs(CDC* theDC, NFmiToolBox *theToolBox, const CRect &theClientRect, bool fToolMasterAvailable); // tämä asettaa kaikki kerralla
+    // uudet versiot SetToolsDC:stï¿½, jossa haluttu piirtoalue annetaan parametrina, tï¿½llï¿½in
+    // printti alueen erilainen kï¿½sittely ei jï¿½ï¿½ huomiotta
+    void SetToolsDCs(CDC* theDC, NFmiToolBox *theToolBox, const CRect &theClientRect, bool fToolMasterAvailable); // tï¿½mï¿½ asettaa kaikki kerralla
     void SetToolBoxsDC(CDC* theDC, NFmiToolBox *theToolBox, const CRect &theClientRect);
     void SetToolMastersDC(CDC* theDC, const CRect &theClientRect);
 
@@ -64,22 +66,22 @@ namespace CtrlView
     template<typename SearchFunction>
     BOOL DoReturnKeyOperation(MSG* pMsg, SearchFunction& searchFunction)
     {
-        // Erikoiskäsittely, jos kyse RETURN napin painalluksesta (alas/ylös)
+        // Erikoiskï¿½sittely, jos kyse RETURN napin painalluksesta (alas/ylï¿½s)
         auto messageType = pMsg->message;
         if((WM_KEYDOWN == messageType || WM_KEYUP == messageType) && VK_RETURN == pMsg->wParam)
         {
-            // Toimitaan lopulta vain silloin kun RETURN nappi päätetään ylös
+            // Toimitaan lopulta vain silloin kun RETURN nappi pï¿½ï¿½tetï¿½ï¿½n ylï¿½s
             if(WM_KEYUP == messageType)
             {
                 WaitCursorHelper waitCursorHelper(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->ShowWaitCursorWhileDrawingView());
                 searchFunction();
             }
-            return TRUE; // Palautetaan true, jotta tätä messagea ei käsitellä enää muualla
+            return TRUE; // Palautetaan true, jotta tï¿½tï¿½ messagea ei kï¿½sitellï¿½ enï¿½ï¿½ muualla
         }
-        return FALSE; // Palautetaan false, että message käsitellään virallisia teitä pitkin
+        return FALSE; // Palautetaan false, ettï¿½ message kï¿½sitellï¿½ï¿½n virallisia teitï¿½ pitkin
     }
 
-    // SimpleDeviceContextHandler luokka tekee ikävästä normi CDC handlauksesta siedettävämpää...
+    // SimpleDeviceContextHandler luokka tekee ikï¿½vï¿½stï¿½ normi CDC handlauksesta siedettï¿½vï¿½mpï¿½ï¿½...
     class SimpleDeviceContextHandler
     {
         CWnd* window_ = nullptr;
@@ -104,7 +106,7 @@ namespace CtrlView
     };
 
 
-    // DeviceContextHandler luokka tekee ikävästä Fmi CDC handlauksesta siedettävämpää...
+    // DeviceContextHandler luokka tekee ikï¿½vï¿½stï¿½ Fmi CDC handlauksesta siedettï¿½vï¿½mpï¿½ï¿½...
     template<typename SetToolsDCsView>
     class DeviceContextHandler
     {
@@ -130,3 +132,6 @@ namespace CtrlView
         CDC* GetDcFromHandler() { return dcPtr_; }
     };
 }
+
+#else  // UNIX - Windows-only header; Linux implementation will use Qt
+#endif // UNIX

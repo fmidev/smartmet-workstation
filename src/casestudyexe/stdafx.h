@@ -5,6 +5,7 @@
 
 #pragma once
 
+#ifndef UNIX
 #ifndef _SECURE_ATL
 #define _SECURE_ATL 1
 #endif
@@ -24,4 +25,5 @@
 #include <afxext.h>         // MFC extensions
 
 #include <afxcontrolbars.h>     // MFC support for ribbons and control bars
+#endif // UNIX
 

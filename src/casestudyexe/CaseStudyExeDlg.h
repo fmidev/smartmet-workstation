@@ -1,6 +1,7 @@
 
 #pragma once
 
+#ifndef UNIX
 #include "NFmiCaseStudySystem.h"
 #include "WndResizer.h"
 
@@ -43,16 +44,17 @@ private:
 
 	std::string itsSimpleCommandLineStr;
 	std::string itsMetaFileName;
-	// Tässä on käytetyn zippaus ohjelman absoluuttinen polku lainausmerkeissä (jotta spacet ei polussa häiritse), esim:
+	// Tï¿½ssï¿½ on kï¿½ytetyn zippaus ohjelman absoluuttinen polku lainausmerkeissï¿½ (jotta spacet ei polussa hï¿½iritse), esim:
 	// "D:\SmartMet\Dropbox (FMI)\SmartMet\utils\7-zip\7z.exe"
 	std::string itsZipExe;
-	// Tässä on mahdollisesti HAKE sanomien file-filter absoluuttisen polun kanssa lainausmerkeissä (jotta spacet ei polussa häiritse), esim:
+	// Tï¿½ssï¿½ on mahdollisesti HAKE sanomien file-filter absoluuttisen polun kanssa lainausmerkeissï¿½ (jotta spacet ei polussa hï¿½iritse), esim:
 	// "D:\SmartMet\Dropbox (FMI)\data_FMI\HAKE\*.json"
 	std::string itsHakeMessagesFileFilterPath;
 	std::string itsCropDataAreaString;
 	NFmiCaseStudySystem itsCaseStudySystem;
-	UINT itsStartOperationTimer; // käynnistetään OnInitDialog:in lopuksi timer, joka laukaisee halutun toiminnan initialisoinnin lopuksi pienellä viiveellä (että dialogi on varmasti alustettu)
+	UINT itsStartOperationTimer; // kï¿½ynnistetï¿½ï¿½n OnInitDialog:in lopuksi timer, joka laukaisee halutun toiminnan initialisoinnin lopuksi pienellï¿½ viiveellï¿½ (ettï¿½ dialogi on varmasti alustettu)
     CWndResizer m_resizer;
 public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
+#endif // UNIX

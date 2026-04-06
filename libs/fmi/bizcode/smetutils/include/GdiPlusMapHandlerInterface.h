@@ -2,6 +2,7 @@
 
 #include "MapHandlerInterface.h"
 
+#ifndef UNIX
 class NFmiGdiPlusImageMapHandler;
 
 class GdiPlusMapHandlerInterface : public MapHandlerInterface
@@ -30,3 +31,4 @@ public:
     NFmiRect ZoomedAbsolutRect(void) override;
 
 };
+#endif // UNIX

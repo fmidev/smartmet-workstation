@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.14.4)
 project(CaseStudyExe)
 
+if(NOT UNIX)
 set(CMAKE_MFC_FLAG 2)
+endif()
 
 link_directories(
     ${BOOST_LIB_DIR}

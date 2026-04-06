@@ -29,7 +29,9 @@
 #pragma once
 
 #include "NFmiStationView.h"
+#ifndef UNIX
 #include "stdafx.h"
+#endif
 #include "matrix3d.h"
 #include "NFmiPath.h"
 #include "ColorContouringData.h"
@@ -37,16 +39,20 @@
 #include <mutex>
 
 
+#ifndef UNIX
 typedef unsigned long       DWORD;
 typedef DWORD   COLORREF;
+#endif // UNIX
 
 class NFmiGridBase;
 class NFmiValueLineList;
 class NFmiIsoLineData;
 class NFmiHatchingSettings;
+class NFmiPolyline;
+#ifndef UNIX
 class CBitmap;
 class CDC;
-class NFmiPolyline;
+#endif
 
 namespace SmartMetDataUtilities
 {
@@ -61,7 +67,7 @@ namespace Imagine
 	class NFmiImage;
 }
 
-bool ColorTableInitialized(void); // laitoin esittelyn globaalista funktiosta tähän
+bool ColorTableInitialized(void); // laitoin esittelyn globaalista funktiosta tï¿½hï¿½n
 
 struct LabelingInfo
 {
@@ -79,14 +85,14 @@ struct LabelingInfo
 	{
 	}
 
-	int itsStrategy; // 0 = ei labeleita, 1 = simppeli, 2 = simppeli, muutta ei päällekkäisiä labeleita (jos ei löydy paikkaa, ei labelia)
+	int itsStrategy; // 0 = ei labeleita, 1 = simppeli, 2 = simppeli, muutta ei pï¿½ï¿½llekkï¿½isiï¿½ labeleita (jos ei lï¿½ydy paikkaa, ei labelia)
 	float itsFontSize;
 	NFmiColor itsFontColor;
-	float itsFontOpacity; // arvo 0-1, 0 ei näy ollenkaan ja 1 täysin läpinäkymätön
+	float itsFontOpacity; // arvo 0-1, 0 ei nï¿½y ollenkaan ja 1 tï¿½ysin lï¿½pinï¿½kymï¿½tï¿½n
 	NFmiColor itsBoxFillColor;
-	float itsBoxFillOpacity; // arvo 0-1, 0 ei näy ollenkaan ja 1 täysin läpinäkymätön
+	float itsBoxFillOpacity; // arvo 0-1, 0 ei nï¿½y ollenkaan ja 1 tï¿½ysin lï¿½pinï¿½kymï¿½tï¿½n
 	NFmiColor itsBoxStrokeColor;
-	float itsBoxStrokeOpacity; // arvo 0-1, 0 ei näy ollenkaan ja 1 täysin läpinäkymätön
+	float itsBoxStrokeOpacity; // arvo 0-1, 0 ei nï¿½y ollenkaan ja 1 tï¿½ysin lï¿½pinï¿½kymï¿½tï¿½n
 	float itsBoxStrokeWidth;
 	float itsIsoLineLabelHeight;  //EL
 };
@@ -130,14 +136,14 @@ protected:
 		void CalcLabelBoxRect(/*int theLabelLetterCount,*/ NFmiToolBox *theToolBox);
 		void CalcLabelString(void);
 
-		int itsStrategy; // 0 = ei labeleita, 1 = simppeli, 2 = simppeli, muutta ei päällekkäisiä labeleita (jos ei löydy paikkaa, ei labelia)
+		int itsStrategy; // 0 = ei labeleita, 1 = simppeli, 2 = simppeli, muutta ei pï¿½ï¿½llekkï¿½isiï¿½ labeleita (jos ei lï¿½ydy paikkaa, ei labelia)
 		float itsFontSize;
 		NFmiColor itsFontColor;
-		float itsFontOpacity; // arvo 0-1, 0 ei näy ollenkaan ja 1 täysin läpinäkymätön
+		float itsFontOpacity; // arvo 0-1, 0 ei nï¿½y ollenkaan ja 1 tï¿½ysin lï¿½pinï¿½kymï¿½tï¿½n
 		NFmiColor itsBoxFillColor;
-		float itsBoxFillOpacity; // arvo 0-1, 0 ei näy ollenkaan ja 1 täysin läpinäkymätön
+		float itsBoxFillOpacity; // arvo 0-1, 0 ei nï¿½y ollenkaan ja 1 tï¿½ysin lï¿½pinï¿½kymï¿½tï¿½n
 		NFmiColor itsBoxStrokeColor;
-		float itsBoxStrokeOpacity; // arvo 0-1, 0 ei näy ollenkaan ja 1 täysin läpinäkymätön
+		float itsBoxStrokeOpacity; // arvo 0-1, 0 ei nï¿½y ollenkaan ja 1 tï¿½ysin lï¿½pinï¿½kymï¿½tï¿½n
 		float itsBoxStrokeWidth;
 		float itsIsoLineLabelHeight;  //EL
 
@@ -209,9 +215,11 @@ class NFmiIsoLineView : public NFmiStationView
 	void DrawSimpleColorContourWithImagine(NFmiIsoLineData& theIsoLineData, NFmiDataMatrix<float> &theValues, NFmiDataMatrix<NFmiPoint> &theCoordinates, Imagine::NFmiDataHints &theHelper, const NFmiPoint &theOffSet);
 	void DrawCustomColorContourWithImagine(NFmiIsoLineData& theIsoLineData, NFmiDataMatrix<float> &theValues, NFmiDataMatrix<NFmiPoint> &theCoordinates, Imagine::NFmiDataHints &theHelper, const NFmiPoint &theOffSet);
 	void DrawHatchesWithImagine(NFmiIsoLineData& theIsoLineData, const NFmiHatchingSettings& theHatchSettings, NFmiDataMatrix<float> &theValues, NFmiDataMatrix<NFmiPoint> &theCoordinates, Imagine::NFmiDataHints &theHelper, const NFmiPoint &theOffSet);
-	void SetUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam); // näitä on kutsuttava pareittain RestoreUpDifferenceDrawing-metodin kanssa
-	void RestoreUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam); // näitä on kutsuttava pareittain SetUpDifferenceDrawing-metodin kanssa
+	void SetUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam); // nï¿½itï¿½ on kutsuttava pareittain RestoreUpDifferenceDrawing-metodin kanssa
+	void RestoreUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam); // nï¿½itï¿½ on kutsuttava pareittain SetUpDifferenceDrawing-metodin kanssa
+#ifndef UNIX
     CRect GetTrueClientRect();
+#endif
 	void DoPossibleIsolineSafetyFeatureDownSizing(NFmiIsoLineData* theIsoLineDataInOut, const NFmiRect& zoomedAreaRect);
 private:
 	bool IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theMapArea, NFmiRect & theCroppedXyRectOut, int &theLeftIndex, int &theRightIndex, int &theTopIndex, int &theBottomIndex);
@@ -219,14 +227,16 @@ private:
 	void DrawIsoLines(void);
 
 protected:
-	bool fDataOk; // false, jos pitäisi piirtää tasainen kenttä (min = max)
-	NFmiDataMatrix<float> itsIsolineValues; // tähän kerätään isoviivoja varten dataa, tämän avulla tehdään myös hatch-laskut ToolMaster-piirrossa
+	bool fDataOk; // false, jos pitï¿½isi piirtï¿½ï¿½ tasainen kenttï¿½ (min = max)
+	NFmiDataMatrix<float> itsIsolineValues; // tï¿½hï¿½n kerï¿½tï¿½ï¿½n isoviivoja varten dataa, tï¿½mï¿½n avulla tehdï¿½ï¿½n myï¿½s hatch-laskut ToolMaster-piirrossa
 
+#ifndef UNIX
 	CBitmap *itsTransparencyDrawBitmap;
 	CBitmap *itsTransparencyDrawOldBitmap;
 	CDC *itsTransparencyDrawDC;
-	CDC *itsTransparencyDrawBackupDC; // tähän talletetaan väliaikaisesti oikea DC, kun piirto suoritetaan väliaikaisesti tranparentti DC:lle
+	CDC *itsTransparencyDrawBackupDC; // tï¿½hï¿½n talletetaan vï¿½liaikaisesti oikea DC, kun piirto suoritetaan vï¿½liaikaisesti tranparentti DC:lle
 	CSize itsLastBitmapSize;
+#endif
 	bool fDrawUsingTransparency;
     std::unique_ptr<SmartMetDataUtilities::DataUtilitiesAdapter<>> dataUtilitiesAdapter;
     // Preventing to calling drawing related ToolMaster functions simultaneously from different places
@@ -244,7 +254,7 @@ protected:
 
 
 	// label dataa
-/*/EL*/	std::vector<LabelBox> itsExistingLabels; // laitetaan kaikki käytetyt label paikat talteen tarkistuksia varten (taas globaali pikaviritys)
+/*/EL*/	std::vector<LabelBox> itsExistingLabels; // laitetaan kaikki kï¿½ytetyt label paikat talteen tarkistuksia varten (taas globaali pikaviritys)
 
 };
 

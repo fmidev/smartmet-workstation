@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.14.4)
 project(Processes)
 
+if(NOT UNIX)
 set(CMAKE_MFC_FLAG 2)
+endif()
 
 file(GLOB CPP_FILES *.cpp)
 file(GLOB H_FILES *.h)

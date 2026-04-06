@@ -11,7 +11,9 @@
 
 #include <list>
 
+#ifndef UNIX
 class CBitmap;
+#endif
 
 class NFmiMapViewCache
 {
@@ -19,15 +21,19 @@ public:
 	struct CacheSlot
 	{
 		CacheSlot(void);
+#ifndef UNIX
 		CacheSlot(const NFmiMetTime &theTime, CBitmap* theMapImage);
+#endif
 		~CacheSlot(void);
 		void DestroyData(void);
 
+#ifndef UNIX
 		CBitmap* itsMapImage; // ei omista, ei tuhoa, siksi erillinen DestroyData-metodi
 							  // bitmap on tavallaan CacheRow-luokan omistuksessa, koska se paattaa tuhoamisesta
+#endif
 		NFmiMetTime itsTime;
 		double itsSizeInMB;
-		NFmiTime itsDrawTime; // milloin cache kuva on piirretty, käytetään kun tutkitaan, pitääkö esim. uuden satel-kuvan takia piirtää kuva uudestaan
+		NFmiTime itsDrawTime; // milloin cache kuva on piirretty, kï¿½ytetï¿½ï¿½n kun tutkitaan, pitï¿½ï¿½kï¿½ esim. uuden satel-kuvan takia piirtï¿½ï¿½ kuva uudestaan
 	};
 
 	class CacheRow
@@ -38,8 +44,10 @@ public:
 
 		void Clear(void);
 		void ClearTime(const NFmiMetTime &theTime);
+#ifndef UNIX
 		CBitmap* MapImage(const NFmiMetTime &theTime);
 		void MapImage(const NFmiMetTime &theTime, CBitmap* theMapImage);
+#endif
 		double CalcUsedSize(void);
 		double MakeRoom(double theMinCleareSizeMB);
 		void MakeTimesDirty(const NFmiMetTime &theMinTime, const NFmiMetTime &theMaxTime);
@@ -60,8 +68,10 @@ public:
 	void MakeRowDirty(int theRowIndex);
 	void MakeTimeDirty(const NFmiMetTime &theTime);
 	void MakeTimesDirty(const NFmiMetTime &theMinTime, const NFmiMetTime &theMaxTime, int theRowIndex);
+#ifndef UNIX
 	CBitmap* MapImage(const NFmiMetTime &theTime, int theRowIndex);
 	void MapImage(const NFmiMetTime &theTime, int theRowIndex, CBitmap* theMapImage);
+#endif
 	double MaxSizeMB(void) const {return itsMaxSizeMB;}
 	void MaxSizeMB(double newValue) 
 	{itsMaxSizeMB = newValue; if(itsMaxSizeMB == 0) MakeDirty();}

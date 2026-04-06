@@ -1,17 +1,20 @@
+#ifndef UNIX
 #include "stdafx.h"
+#endif // UNIX
 #include <locale>
 #include <codecvt>
+#include <string>
 
-// Tällä funktiolla on tarkoitus muuttaa annettu 8-bit stringi Win32 sopivaksi UNICODE stringiksi.
-// Konversio tehdään yrittämällä ensiksi käyttää C++11 mukana tulleita utf8->wstring -konversiota.
-// Tämä konversio kuitenkin epäonnistuu, jos käytössä oli ei-utf8 stringi, jossa onkin esim. ääkkösiä.
-// Näissä tapauksissa konversio tehdään Win32:en CA2T makrolla.
-// Tarve funktiolle tuli kun Kirgisiassa on tehty synop qdataa, jossa on asemien nimissä käytetty
-// kyrillisiä kirjaimia ja ne on talletettu siis utf8:ina. Juttu juontaa myös siihen että Linuxissa
-// normi 8-bit stringiä käsitellään utf8:ina, mutta Windowsissa asciina.
-// HUOM! Pitää keksiä miten hanskataan tietyt stringit, mitkä auheuttavat poikkeuksen from_bytes -funktiossa,
-// Olen huomannut että jos lähtö stringissä on merkkejä, jotka ovat yli 128, tällöin poikkeus lentää, esim.
-// aste-merkki ja ääkköset.
+// Tï¿½llï¿½ funktiolla on tarkoitus muuttaa annettu 8-bit stringi Win32 sopivaksi UNICODE stringiksi.
+// Konversio tehdï¿½ï¿½n yrittï¿½mï¿½llï¿½ ensiksi kï¿½yttï¿½ï¿½ C++11 mukana tulleita utf8->wstring -konversiota.
+// Tï¿½mï¿½ konversio kuitenkin epï¿½onnistuu, jos kï¿½ytï¿½ssï¿½ oli ei-utf8 stringi, jossa onkin esim. ï¿½ï¿½kkï¿½siï¿½.
+// Nï¿½issï¿½ tapauksissa konversio tehdï¿½ï¿½n Win32:en CA2T makrolla.
+// Tarve funktiolle tuli kun Kirgisiassa on tehty synop qdataa, jossa on asemien nimissï¿½ kï¿½ytetty
+// kyrillisiï¿½ kirjaimia ja ne on talletettu siis utf8:ina. Juttu juontaa myï¿½s siihen ettï¿½ Linuxissa
+// normi 8-bit stringiï¿½ kï¿½sitellï¿½ï¿½n utf8:ina, mutta Windowsissa asciina.
+// HUOM! Pitï¿½ï¿½ keksiï¿½ miten hanskataan tietyt stringit, mitkï¿½ auheuttavat poikkeuksen from_bytes -funktiossa,
+// Olen huomannut ettï¿½ jos lï¿½htï¿½ stringissï¿½ on merkkejï¿½, jotka ovat yli 128, tï¿½llï¿½in poikkeus lentï¿½ï¿½, esim.
+// aste-merkki ja ï¿½ï¿½kkï¿½set.
 std::wstring convertPossibleUtf8StringToWideString(const std::string& utf8str)
 {
     if(utf8str.empty())
@@ -25,7 +28,12 @@ std::wstring convertPossibleUtf8StringToWideString(const std::string& utf8str)
         }
         catch(...)
         {
+#ifndef UNIX
             return std::wstring(CA2T(utf8str.c_str()));
+#else
+            // On Linux, strings are UTF-8; do a simple widening for the fallback
+            return std::wstring(utf8str.begin(), utf8str.end());
+#endif
         }
     }
 }

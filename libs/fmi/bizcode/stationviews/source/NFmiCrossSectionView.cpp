@@ -1061,7 +1061,9 @@ void NFmiCrossSectionView::DrawCrosssectionWithToolMaster(NFmiIsoLineData& theIs
 	if(theIsoLineData.fUseIsoLines)
 		itsCrossSectionIsoLineDrawIndex++;
 	NFmiPoint grid2PixelRatio(0, 0); // tätä ei käytetä vielä toistaiseksi poikkileikkaus näytössä, siksi alustetaan 0:ksi.
+#ifndef UNIX
 	::ToolMasterDraw(itsToolBox->GetDC(), &theIsoLineData, relRect, zoomedAreaRect, grid2PixelRatio, itsCrossSectionIsoLineDrawIndex, GetVisualizationSettings());
+#endif // UNIX
 }
 
 void NFmiCrossSectionView::DrawCrosssectionWithImagine(NFmiIsoLineData& theIsoLineData, NFmiDataMatrix<float> &theValues, Imagine::NFmiDataHints &theHelper, NFmiDataMatrix<NFmiPoint> &theCoordinates)

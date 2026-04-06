@@ -5,45 +5,56 @@
 #include <functional>
 #include <boost/shared_ptr.hpp>
 
-class CView;
-class CWnd;
 class NFmiViewSettingMacro;
 class NFmiToolBox;
 class NFmiMetTime;
 class SmartMetDocumentInterface;
-class CBitmap;
-class CSmartMetView;
-class CSmartMetDoc;
-class CDocument;
 class NFmiApplicationWinRegistry;
 enum class BetaProductViewIndex;
 class NFmiDrawParam;
 
+#ifndef UNIX
+class CView;
+class CWnd;
+class CBitmap;
+class CSmartMetView;
+class CSmartMetDoc;
+class CDocument;
+#endif // UNIX
+
 // Interface that is meant to be used by NFmiEditMapGeneralDataDoc class by using functionalities from SmartMet application.
 class ApplicationInterface
 {
+#ifndef UNIX
     static CSmartMetView *itsSmartMetView;
     static CView *itsSmartMetViewAsCView;
+#endif
 public:
     using GetApplicationInterfaceImplementationCallBackType = std::function<ApplicationInterface*(void)>;
-    // Tämä pitää asettaa johonkin konkreettiseen funktioon, jotta käyttäjä koodi saa käyttöönsä halutun interface toteutuksen
+    // Tï¿½mï¿½ pitï¿½ï¿½ asettaa johonkin konkreettiseen funktioon, jotta kï¿½yttï¿½jï¿½ koodi saa kï¿½yttï¿½ï¿½nsï¿½ halutun interface toteutuksen
     static GetApplicationInterfaceImplementationCallBackType GetApplicationInterfaceImplementation;
 
 	virtual ~ApplicationInterface() = default;
 
+#ifndef UNIX
     // SmartMetView is complicated, there is problems when it's created and initialized and when you are supposed to use it through this interface class.
     // Basicly set SmartMetView pointers in CSmartMetView::OnInitialUpdate method right after CView::OnInitialUpdate method call.
     static void SetSmartMetView(CSmartMetView *view);
     static void SetSmartMetViewAsCView(CView *view);
     static CSmartMetView* GetSmartMetView();
     static CView* GetSmartMetViewAsCView();
+#endif // UNIX
 
     virtual void ParameterSelectionSystemUpdateTimerStart(int waitTimeInSeconds) = 0;
     virtual void SetNotificationMessage(const std::string &theNotificationMsgStr, const std::string &theNotificationTitle, int theStyle, int theTimeout, bool fNoSound) = 0;
+#ifndef UNIX
     virtual CSmartMetDoc* GetDocument() = 0; // returns CSmartMetDoc
     virtual CDocument* GetDocumentAsCDocument() = 0; // returns CSmartMetDoc but as CDocument (needed with classes that don't know about CSmartMetView)
+#endif
     virtual void PostMessageToDialog(SmartMetViewId dialogId, unsigned int theMessage) = 0;
+#ifndef UNIX
     virtual CWnd* GetView(int theWantedDescTopIndex) = 0;
+#endif
     virtual void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, bool fMakeAreaViewDirty = false, bool fClearCache = false, int theWantedMapViewDescTop = -1) = 0;
     virtual void RefreshApplicationViewsAndDialogs(const std::string &reasonForUpdate, SmartMetViewId updatedViewsFlag, bool fMakeAreaViewDirty = false, bool fClearCache = false, int theWantedMapViewDescTop = -1) = 0;
     virtual void StoreViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMacro) = 0;
@@ -64,13 +75,19 @@ public:
     virtual void PutWarningFlagTimerOn() = 0;
     virtual void CreateBetaProductDialog(SmartMetDocumentInterface *smartMetDocumentInterface) = 0;
     virtual void SetAllViewIconsDynamically() = 0;
+#ifndef UNIX
     virtual void DoOffScreenDraw(BetaProductViewIndex selectedViewRadioButtonIndex, CBitmap &theDrawedScreenBitmapOut) = 0;
+#endif
     virtual void UpdateViewForOffScreenDraw(BetaProductViewIndex selectedViewRadioButtonIndex) = 0;
     virtual void UpdateMainFrameTitle() = 0;
+#ifndef UNIX
     virtual void OpenLocationFinderDialog(CWnd *parentView) = 0;
+#endif
     virtual NFmiApplicationWinRegistry& ApplicationWinRegistry() = 0;
     virtual void ApplyUpdatedViewsFlag(SmartMetViewId updatedViewsFlag) = 0;
+#ifndef UNIX
     virtual std::pair<HICON, HICON> GetUsedIcons() = 0;
+#endif
     virtual void SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor);
     virtual void SetHatchingDebuggingPolygonIndex(int action);
     virtual void OpenVisualizationsettingsDialog() = 0;

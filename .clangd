@@ -1,0 +1,70 @@
+---
+# clangd configuration for SmartMet Workstation Linux port.
+# Defines UNIX so #ifndef UNIX guards correctly hide Windows-only code
+# from the LSP, matching the -DUNIX flag passed by the Makefile/CMake.
+CompileFlags:
+  Add:
+    - -DUNIX
+    - -DDISABLE_UNIRAS_TOOLMASTER
+    - -DDISABLE_EXTREME_TOOLKITPRO
+    - -DDISABLE_CPPRESTSDK
+    - -std=c++17
+    # Module headers
+    - -I./modules/newbase/newbase
+    - -I./modules/newbase
+    - -I./modules/smarttools/smarttools
+    - -I./modules/smarttools
+    - -I./modules/imagine/imagine
+    - -I./modules/imagine
+    - -I./modules/macgyver/macgyver
+    - -I./modules/macgyver
+    - -I./modules/calculator/calculator
+    - -I./modules/calculator
+    - -I./modules/cppext/cppext
+    - -I./modules/cppext
+    - -I./modules/cppback/cppback
+    - -I./modules/cppback
+    - -I./modules/textgen/textgen
+    - -I./modules/textgen
+    - -I./modules/3rd/spdlog/include
+    # Platform compatibility
+    - -I./libs/fmi/bizcode/platform
+    # FMI library headers
+    - -I./libs/fmi/bizcode/stationviews/include
+    - -I./libs/fmi/bizcode/ctrlviews/include
+    - -I./libs/fmi/bizcode/ctrlviewutils/include
+    - -I./libs/fmi/bizcode/toolbox/include
+    - -I./libs/fmi/bizcode/toolboxviews/include
+    - -I./libs/fmi/bizcode/timeviews/include
+    - -I./libs/fmi/bizcode/tm_utils/include
+    - -I./libs/fmi/bizcode/smetdata/include
+    - -I./libs/fmi/bizcode/smetutils/include
+    - -I./libs/fmi/bizcode/editingdatautils/include
+    - -I./libs/fmi/bizcode/modifyediteddata/include
+    - -I./libs/fmi/bizcode/autocomplete/include
+    - -I./libs/fmi/bizcode/capdata/include
+    - -I./libs/fmi/bizcode/casestudylib/include
+    - -I./libs/fmi/bizcode/filterdataviews/include
+    - -I./libs/fmi/bizcode/generaldoc/include
+    - -I./libs/fmi/bizcode/gridctrl/include
+    - -I./libs/fmi/bizcode/addparamstoviews/include
+    - -I./libs/fmi/bizcode/json_spirit/include
+    - -I./libs/fmi/bizcode/q2clientlib/include
+    - -I./libs/fmi/bizcode/stlhelp/include
+    - -I./libs/fmi/bizcode/ctrlviewutils/include
+    - -I./libs/fmi/catlog
+    - -I./libs/fmi/multiprocesstools/include
+    - -I./libs/fmi/datautilities/include
+    - -I./libs/fmi/xmlliteutils
+    # trax/giza/imagine2/gis (Linux replacements for ToolMaster/GDI)
+    - -I/home/mheiskan/hub/trax
+    - -I/home/mheiskan/hub/giza
+    - -I/home/mheiskan/hub/imagine2
+    - -I/home/mheiskan/hub/gis
+    # src headers
+    - -I./src/applicationdatabase
+    - -I./src/processes
+    - -I./src/threads
+    # System Boost
+    - -I/usr/include/boost
+    - -I/usr/include

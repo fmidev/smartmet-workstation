@@ -5,6 +5,7 @@
 
 #pragma once
 
+#ifndef UNIX
 #include "targetver.h"
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
@@ -16,3 +17,4 @@
 
 #include <afx.h>
 #include <afxwin.h>         // MFC core and standard components
+#endif // UNIX

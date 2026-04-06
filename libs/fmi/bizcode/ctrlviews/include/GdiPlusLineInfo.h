@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef UNIX
+
 #include "stdafx.h"
 #include "NFmiColor.h"
 #include <gdiplus.h>
@@ -34,3 +36,6 @@ public:
     bool UseOutLine(void) const { return fUseOutLine; }
     void UseOutLine(bool newValue) { fUseOutLine = newValue; }
 };
+
+#else  // UNIX - Windows-only header; Linux implementation will use Qt
+#endif // UNIX

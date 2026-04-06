@@ -29,16 +29,19 @@
 
 class NFmiDrawParamList;
 
+#ifndef UNIX
 namespace Gdiplus
 {
 	class Bitmap;
 }
+#endif
 
 class NFmiViewParamsView : public NFmiParamCommandView
 {
  public:
-	// Tähän luokkaan luetaan ksyeiset kuva-imaget kerran ja käytetään kaikille NFmiTimeControlView-instansseille yhteisesti.
-	// Gdiplus::Bitmap-olioita ei tarvitse tuhota, Gdiplus huolehtii siitä automaattisesti.
+	// Tï¿½hï¿½n luokkaan luetaan ksyeiset kuva-imaget kerran ja kï¿½ytetï¿½ï¿½n kaikille NFmiTimeControlView-instansseille yhteisesti.
+	// Gdiplus::Bitmap-olioita ei tarvitse tuhota, Gdiplus huolehtii siitï¿½ automaattisesti.
+#ifndef UNIX
 	class ModelSelectorButtonImageHolder
 	{
 	public:
@@ -52,7 +55,7 @@ class NFmiViewParamsView : public NFmiParamCommandView
 		}
 
 		// initialisoinnissa luetaan bitmapit tiedostoista, kutsu vasta kun itsBitmapFolder-dataosa on asetettu
-		void Initialize(void);  // HUOM! heittää poikkeuksia epäonnistuessaan
+		void Initialize(void);  // HUOM! heittï¿½ï¿½ poikkeuksia epï¿½onnistuessaan
 
 		std::string itsBitmapFolder;
 		Gdiplus::Bitmap *itsNextModelButtonImage;
@@ -60,6 +63,7 @@ class NFmiViewParamsView : public NFmiParamCommandView
 		Gdiplus::Bitmap *itsFindNearestModelButtonImage;
 		bool fInitialized;
 	};
+#endif // UNIX
 
 
 	NFmiViewParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer);
@@ -67,9 +71,9 @@ class NFmiViewParamsView : public NFmiParamCommandView
     bool LeftButtonUp(const NFmiPoint &, unsigned long) override;
 	bool RightButtonUp(const NFmiPoint &, unsigned long) override;
     bool MouseMove(const NFmiPoint& thePlace, unsigned long theKey) override;
-    bool LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey) override; // Marko lisäsi 3.4.2002
+    bool LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey) override; // Marko lisï¿½si 3.4.2002
     bool IsMouseDraggingOn(void) override;
-	NFmiRect CalcSize(void); // koko saattaa muuttua, ja uutta kokoa pitää voida kysyä oliolta
+	NFmiRect CalcSize(void); // koko saattaa muuttua, ja uutta kokoa pitï¿½ï¿½ voida kysyï¿½ oliolta
 	bool MouseWheel(const NFmiPoint &thePlace, unsigned long theKey, short theDelta) override;
     bool IsMouseCaptured(void) { return fMouseCaptured; }
 	std::string ComposeToolTipText(const NFmiPoint& thePlace) override;
@@ -77,11 +81,15 @@ class NFmiViewParamsView : public NFmiParamCommandView
  protected:
     int GetParamCount(void);
 	bool LeftClickOnModelSelectionButtons(const NFmiPoint &thePlace, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theParameterRowIndex);
-	static ModelSelectorButtonImageHolder statModelSelectorButtonImages; // tämä on staattinen dataosa, koska näitä timekontrol-instansseja luodaan lennossa jatkuvasti uudelleen ja uudelleen eli bitmapit luetaan vain kerran kaikkien käyttöön
+#ifndef UNIX
+	static ModelSelectorButtonImageHolder statModelSelectorButtonImages; // tï¿½mï¿½ on staattinen dataosa, koska nï¿½itï¿½ timekontrol-instansseja luodaan lennossa jatkuvasti uudelleen ja uudelleen eli bitmapit luetaan vain kerran kaikkien kï¿½yttï¿½ï¿½n
+#endif // UNIX
 	void DrawData(void) override;
 	void DrawModelSelectorButtons(boost::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiRect& parameterRowRect);
+#ifndef UNIX
 	NFmiPoint CalcModelSelectorButtonRelativeSize(Gdiplus::Bitmap *theImage);
 	NFmiRect CalcModelSelectorButtonRect(const NFmiRect& parameterRowRect, int theButtonIndex);
+#endif // UNIX
 	NFmiPoint GetViewSizeInPixels(void);
     bool DoAfterParamModeModifications(NFmiDrawParamList *theParamList);
     bool ActivateParam(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theParamIndex);
@@ -94,16 +102,16 @@ class NFmiViewParamsView : public NFmiParamCommandView
 	std::string MakeMacroParamTooltipText(const boost::shared_ptr<NFmiDrawParam>& drawParam, const std::string& paramStr);
 	std::string MakeWmsTooltipText(const boost::shared_ptr<NFmiDrawParam>& drawParam, const std::string &paramStr);
 private:
-   double itsButtonSizeInMM_x; // paino nappuloiden koko millimetreissä x-suunnassa
-   double itsButtonSizeInMM_y; // paino nappuloiden koko millimetreissä y-suunnassa
+   double itsButtonSizeInMM_x; // paino nappuloiden koko millimetreissï¿½ x-suunnassa
+   double itsButtonSizeInMM_y; // paino nappuloiden koko millimetreissï¿½ y-suunnassa
 
-   // Hiirellä raahaamis piirtojärjestyksen vaihtoon liittyvät muuttujat
-   bool fMouseCaptured; // Tämä asetetaan päälle heti LeftButtonDown:issa
-   int itsCapturedParamRowIndex; // Mikä parametri rivi on kaapattu raahattavaksi (LeftButtonDown), -1 on reset tila
-   int itsCurrentDragRowIndex; // Mihin riville ollaan kaapattua parametria raahaamassa tällä hetkellä (MouseMove:ssa), -1 on reset tila
-   // Jos hiirtä on siirretty vasen nappi pohjassa tarpeeksi, mennään dragging moodiin, jolloin LeftButtonUp osaa toimia erilailla kuin normaalisti,
-   // Mutta jos vasen painetaan pohjaan ja se liikkuu hieman ja päästetään taas ylös, tällöin halutaan normaali toiminta kuten esim. show-param on/off tms. toimintoja.
-   // Tämä myös pakottaa näytön piirron MouseMove:ssa, jos ollaan menty drag-moodiin.
+   // Hiirellï¿½ raahaamis piirtojï¿½rjestyksen vaihtoon liittyvï¿½t muuttujat
+   bool fMouseCaptured; // Tï¿½mï¿½ asetetaan pï¿½ï¿½lle heti LeftButtonDown:issa
+   int itsCapturedParamRowIndex; // Mikï¿½ parametri rivi on kaapattu raahattavaksi (LeftButtonDown), -1 on reset tila
+   int itsCurrentDragRowIndex; // Mihin riville ollaan kaapattua parametria raahaamassa tï¿½llï¿½ hetkellï¿½ (MouseMove:ssa), -1 on reset tila
+   // Jos hiirtï¿½ on siirretty vasen nappi pohjassa tarpeeksi, mennï¿½ï¿½n dragging moodiin, jolloin LeftButtonUp osaa toimia erilailla kuin normaalisti,
+   // Mutta jos vasen painetaan pohjaan ja se liikkuu hieman ja pï¿½ï¿½stetï¿½ï¿½n taas ylï¿½s, tï¿½llï¿½in halutaan normaali toiminta kuten esim. show-param on/off tms. toimintoja.
+   // Tï¿½mï¿½ myï¿½s pakottaa nï¿½ytï¿½n piirron MouseMove:ssa, jos ollaan menty drag-moodiin.
    bool fMouseDraggingAction; 
 };
 

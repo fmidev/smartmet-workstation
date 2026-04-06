@@ -1,15 +1,18 @@
 #pragma once
 
 /*
-* Tähän tietorakenteeseen laitetaan kaikki tieto, mitä esim. kolme eri 
+* Tï¿½hï¿½n tietorakenteeseen laitetaan kaikki tieto, mitï¿½ esim. kolme eri
 * CFmiQueryDataCacheLoaderThread:ia tarvitsee.
 * Mm. threadi-prioriteetti, ja tiedostokoko rajat ja ajo-semaphore.
 */
 
-#include "stdafx.h"
 #include <string>
 
+#ifndef UNIX
+#include "stdafx.h"
+
 class CSemaphore;
+#endif // UNIX
 
 class CFmiCacheLoaderData
 {
@@ -17,12 +20,14 @@ public:
 	CFmiCacheLoaderData(void);
 	~CFmiCacheLoaderData(void);
 
-	int itsThreadPriority; // prioriteetit 1, 2 ja 3. 1. on pienille (ja tärkeille) datoille, 2. on keskisuurille 
-							// ja 3. on isoille (ja vähemmän tärkeille)
+	int itsThreadPriority; // prioriteetit 1, 2 ja 3. 1. on pienille (ja tï¿½rkeille) datoille, 2. on keskisuurille
+							// ja 3. on isoille (ja vï¿½hemmï¿½n tï¿½rkeille)
 	double itsMinDataSizeInMB;
 	double itsMaxDataSizeInMB;
-	CSemaphore *itsThreadRunning; // tämän avulla yritetään lopettaan jatkuvasti pyörivä working thread 'siististi'
-	std::string itsThreadName; // tässä on threadin nimi esim. "thread #1"
+#ifndef UNIX
+	CSemaphore *itsThreadRunning; // tï¿½mï¿½n avulla yritetï¿½ï¿½n lopettaan jatkuvasti pyï¿½rivï¿½ working thread 'siististi'
+#endif // UNIX
+	std::string itsThreadName; // tï¿½ssï¿½ on threadin nimi esim. "thread #1"
 	int itsStartUpWaitTimeInMS;
 };
 

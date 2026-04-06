@@ -1,16 +1,21 @@
 #pragma once
 
-#include "stdafx.h"
 #include <string>
 #include <memory>
+
+#ifndef UNIX
+#include "stdafx.h"
+#endif // UNIX
 
 class NFmiMacroParamSystem;
 
 namespace CFmiMacroParamUpdateThread
 {
-	// tämä pitää kutsua ennen kuin threadi (DoThread) käynnistetään
+	// tï¿½mï¿½ pitï¿½ï¿½ kutsua ennen kuin threadi (DoThread) kï¿½ynnistetï¿½ï¿½n
 	void InitMacroParamSystem(std::shared_ptr<NFmiMacroParamSystem> theMacroParamSystemPtr);
+#ifndef UNIX
 	UINT DoThread(LPVOID pParam);
+#endif // UNIX
 	void CloseNow(void);
 	int WaitToClose(int theMilliSecondsToWait);
 	void ForceUpdate();

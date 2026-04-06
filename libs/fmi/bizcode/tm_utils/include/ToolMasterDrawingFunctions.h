@@ -14,13 +14,21 @@ class NFmiVisualizationSpaceoutSettings;
 const int s_rgbDefCount = 4;
 
 #ifndef DISABLE_UNIRAS_TOOLMASTER
-// Here are normal function declarations if Uniras ToolMaster is supported
+#ifndef UNIX
+// Windows with ToolMaster: real implementation using MFC CDC
 int ToolMasterDraw(CDC* pDC, NFmiIsoLineData* theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiPoint &thePixelToGridPointRatio, int theCrossSectionIsoLineDrawIndex, const NFmiVisualizationSpaceoutSettings & visualizationSettings);
 float CalcMMSizeFactor(float theViewHeightInMM, float theMaxFactor);
+#endif // UNIX
 #else
-// Here are dummy versions of functions with dummy definitions, if Uniras ToolMaster isn't supported (must be inline because VC++ linker...)
-inline int ToolMasterDraw(CDC* pDC, NFmiIsoLineData* theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiPoint &thePixelToGridPointRatio, int theCrossSectionIsoLineDrawIndex)
+// Stub (used on Linux and when ToolMaster is disabled on Windows)
+#ifndef UNIX
+inline int ToolMasterDraw(CDC* pDC, NFmiIsoLineData* theIsoLineData, const NFmiRect& theRelViewRect, const NFmiRect& theZoomedViewRect, const NFmiPoint &thePixelToGridPointRatio, int theCrossSectionIsoLineDrawIndex, const NFmiVisualizationSpaceoutSettings & visualizationSettings)
 {return 0;}
-inline float CalcMMSizeFactor(float theViewHeightInMM, float theMaxFactor)
+#else
+// Linux: CDC is not available; callers are guarded by #ifndef UNIX
+inline int ToolMasterDraw(void* /*pDC*/, NFmiIsoLineData* /*theIsoLineData*/, const NFmiRect& /*theRelViewRect*/, const NFmiRect& /*theZoomedViewRect*/, const NFmiPoint& /*thePixelToGridPointRatio*/, int /*theCrossSectionIsoLineDrawIndex*/, const NFmiVisualizationSpaceoutSettings& /*visualizationSettings*/)
+{return 0;}
+#endif // UNIX
+inline float CalcMMSizeFactor(float /*theViewHeightInMM*/, float /*theMaxFactor*/)
 {return 0;}
 #endif // DISABLE_UNIRAS_TOOLMASTER

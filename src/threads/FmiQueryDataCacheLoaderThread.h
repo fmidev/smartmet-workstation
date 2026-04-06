@@ -1,19 +1,21 @@
 #pragma once
 
 /*
-* Tämä threadi lukee querydata-tiedostoja verkkopalvelimelta SmartMetin cache-hakemistoon.
+* Tï¿½mï¿½ threadi lukee querydata-tiedostoja verkkopalvelimelta SmartMetin cache-hakemistoon.
 * Siis jos SmartMet on laitettu ns. lokaali-levy moodiin.
 */
 
-#include "stdafx.h"
 #include <string>
 
 class NFmiHelpDataInfoSystem;
 class CFmiCacheLoaderData;
 
+#ifndef UNIX
+#include "stdafx.h"
+
 namespace CFmiQueryDataCacheLoaderThread
 {
-    // tämä pitää kutsua ennen kuin threadi (DoThread) käynnistetään
+    // tï¿½mï¿½ pitï¿½ï¿½ kutsua ennen kuin threadi (DoThread) kï¿½ynnistetï¿½ï¿½n
 	void InitHelpDataInfo(const NFmiHelpDataInfoSystem &helpDataInfoSystem, const std::string &smartMetBinariesDirectory, double cacheCleaningIntervalInHours, const std::string & smartMetWorkingDirectory, int usedDataLoaderThreadCount);
 	UINT DoThread(LPVOID pParam);
 	void CloseNow(void);
@@ -25,4 +27,5 @@ namespace CFmiQueryDataCacheLoaderThread
 
 	UINT DoHistoryThread(LPVOID pParam);
 }
+#endif // UNIX
 

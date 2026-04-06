@@ -3,15 +3,17 @@
 #include "NFmiGlobals.h"
 
 #include <vector>
+#ifndef UNIX
 #include "stdafx.h" // GUID-struct
+#endif // UNIX
 
 class NFmiInfoOrganizer;
 
 class NFmiApplicationDataBase
 {
 public:
-	// tämä typedef on string:in ja bool:in yhdistelmä. string on exen nimi ja bool kertoo otetaanko
-	// kyseisen exen versio numero myös talteen
+	// tï¿½mï¿½ typedef on string:in ja bool:in yhdistelmï¿½. string on exen nimi ja bool kertoo otetaanko
+	// kyseisen exen versio numero myï¿½s talteen
 	typedef std::pair<std::string, bool>  AppSpyData;
 	typedef std::vector<AppSpyData> AppSpyList;
 
@@ -38,18 +40,22 @@ public:
 	void ControlBasePath(const std::string &newValue) {itsControlBasePath = newValue;}
     // infoOrganizer -parametri voi olla puuttuva
 	void CollectSmartMetData(NFmiApplicationDataBase::Action theAction, FmiLanguage applicationLanguage, int applicationRunningTimeInSeconds, bool toolMasterAvailable, NFmiInfoOrganizer *infoOrganizer); 
-	static bool SendSmartMetDataToDB(NFmiApplicationDataBase theData, std::string &theResponceStr); // HUOM! tahallaan kopio, koska dataa voidaan lähettää teoriassa kahta samaan aikaan (esim. jos käynnistää ja sammuttaa editorin muutaman sekunnin sisällä)
-	static std::string GetApplicationName(void); // vain nimi ilman polkuja ja päätteitä
-	static std::string GetFullApplicationName(void); // exe:n nimi polkuineen päätteineen
+	static bool SendSmartMetDataToDB(NFmiApplicationDataBase theData, std::string &theResponceStr); // HUOM! tahallaan kopio, koska dataa voidaan lï¿½hettï¿½ï¿½ teoriassa kahta samaan aikaan (esim. jos kï¿½ynnistï¿½ï¿½ ja sammuttaa editorin muutaman sekunnin sisï¿½llï¿½)
+	static std::string GetApplicationName(void); // vain nimi ilman polkuja ja pï¿½ï¿½tteitï¿½
+	static std::string GetFullApplicationName(void); // exe:n nimi polkuineen pï¿½ï¿½tteineen
 	static std::string GetFileVersionOfApplication(const std::string &theFullAppName);
 	static int CountProcessCount(const NFmiApplicationDataBase::AppSpyData &theAppData, std::string &theAppVersionsStrOut);
+#ifndef UNIX
     static std::string GetProcessPathAndName(DWORD processID);
+#endif // UNIX
     const std::string& GuidStr(void) const;
     float GetApplicationHardDriveFreeSpaceInMB(void) const;
 	std::string GetDecodedApplicationDirectory() const;
 
+#ifndef UNIX
 	// guid
 	GUID guid;
+#endif // UNIX
 	std::string guidstring;
 	// checksum
 	std::string checksum;
@@ -142,7 +148,7 @@ private:
 	std::string itsBaseUrlString;
 	bool fUseDataSending;
 	double itsUpdateIntervalInHours;
-	std::string itsControlBasePath; // Tässä on haluttu ohjaus-hakemisto, mista tietyt ohjaus tiedostot luetaan, polku on suhteellinen.
+	std::string itsControlBasePath; // Tï¿½ssï¿½ on haluttu ohjaus-hakemisto, mista tietyt ohjaus tiedostot luetaan, polku on suhteellinen.
 
 
 	std::string itsBaseNameSpace;

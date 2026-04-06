@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.14.4)
 project(CatLog)
 
+if(NOT UNIX)
 set(CMAKE_MFC_FLAG 0)
+endif()
 
 file( GLOB SOURCE_FILES *.cpp *.h )
 

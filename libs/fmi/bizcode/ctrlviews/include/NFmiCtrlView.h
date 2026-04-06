@@ -27,9 +27,9 @@
 //Ver. 23.09.1998/Marko Added new button control functions.
 //Ver. 23.09.1998/Marko Added the cpp file.
 //Ver  16.04.1999/Persa Added fDirty member and Dirty methods
-// Changed 1999.09.10/Marko Tästä lähtien haluttu näytettävä aika annetaan ulkoa päin.
+// Changed 1999.09.10/Marko Tï¿½stï¿½ lï¿½htien haluttu nï¿½ytettï¿½vï¿½ aika annetaan ulkoa pï¿½in.
 // Changed 1999.09.28/Marko Muutin DrawFrame()-metodin public:iksi.
-// Changed 1999.09.28/Marko Lisäsin uuden Draw-metodin, mikä piirtää vain annetun rect:in alueen.
+// Changed 1999.09.28/Marko Lisï¿½sin uuden Draw-metodin, mikï¿½ piirtï¿½ï¿½ vain annetun rect:in alueen.
 //
 //**********************************************************
 
@@ -39,7 +39,7 @@
 #include "NFmiMetTime.h"
 #include "NFmiColor.h"
 #include "NFmiDrawingEnvironment.h"
-#include "boost\shared_ptr.hpp"
+#include <boost/shared_ptr.hpp>
 
 class NFmiToolBox;
 class NFmiDrawParam;
@@ -51,10 +51,12 @@ class NFmiFastQueryInfo;
 class MapHandlerInterface;
 class NFmiArea;
 
+#ifndef UNIX
 namespace Gdiplus
 {
 	class Graphics;
 }
+#endif
 
 class NFmiCtrlView
 {
@@ -70,7 +72,7 @@ class NFmiCtrlView
 		kModelProducerIndexViewWCTR = 9
 	};
 
-   NFmiCtrlView (void); // aiheuttaa ongelmia tiettyjen operaatioiden kanssa, pitäisi poistaa?? Esim vertailuoperaattorit kaatuvat varmasti !!
+   NFmiCtrlView (void); // aiheuttaa ongelmia tiettyjen operaatioiden kanssa, pitï¿½isi poistaa?? Esim vertailuoperaattorit kaatuvat varmasti !!
    NFmiCtrlView (int theMapViewDescTopIndex, const NFmiRect & theRect
 				,NFmiToolBox * theToolBox
 				,boost::shared_ptr<NFmiDrawParam> &theDrawParam
@@ -97,12 +99,12 @@ class NFmiCtrlView
    inline virtual bool RightButtonUp(const NFmiPoint &, unsigned long){ return false; } ;
    inline virtual bool MouseMove(const NFmiPoint &, unsigned long){ return false; } ;
    inline virtual bool MouseWheel(const NFmiPoint &, unsigned long, short ){ return false; } ;
-   inline virtual bool LeftDoubleClick(const NFmiPoint &, unsigned long){ return false; } ; // Marko lisäsi 14.12.2001
+   inline virtual bool LeftDoubleClick(const NFmiPoint &, unsigned long){ return false; } ; // Marko lisï¿½si 14.12.2001
    inline virtual bool RightDoubleClick(const NFmiPoint &, unsigned long){ return false; };
    inline virtual bool IsMouseDraggingOn(void){ return false; };
    boost::shared_ptr<NFmiDrawParam> DrawParam(void){return itsDrawParam;};
    virtual boost::shared_ptr<NFmiArea> GetArea() const { return nullptr; };
-   virtual void SetArea(const boost::shared_ptr<NFmiArea>& theArea) { /* Ei tehdä emoluokassa mitään */ };
+   virtual void SetArea(const boost::shared_ptr<NFmiArea>& theArea) { /* Ei tehdï¿½ emoluokassa mitï¿½ï¿½n */ };
 
    bool operator==(const NFmiCtrlView& theCtrlView) const;
    bool operator< (const NFmiCtrlView& theCtrlView) const;
@@ -136,14 +138,16 @@ class NFmiCtrlView
 
    virtual NFmiPoint LatLonToViewPoint(const NFmiPoint & /* theLatLon */ ) const {return NFmiPoint(kFloatMissing, kFloatMissing);}
    virtual NFmiPoint ViewPointToLatLon(const NFmiPoint & /* theViewPoint */ ) const {return NFmiPoint(kFloatMissing, kFloatMissing);}
-   inline virtual bool IsSingleSymbolView(void) { return true; }; // Tätä käytetään, kun arvioidaan kartalle piirrettävän tekstin pituutta (liittyy hiladatan piirron harvennukseen). Eli jos true, 'tekstin' pituus on aina 1, muuten se lasketaan lennossa
+   inline virtual bool IsSingleSymbolView(void) { return true; }; // Tï¿½tï¿½ kï¿½ytetï¿½ï¿½n, kun arvioidaan kartalle piirrettï¿½vï¿½n tekstin pituutta (liittyy hiladatan piirron harvennukseen). Eli jos true, 'tekstin' pituus on aina 1, muuten se lasketaan lennossa
    inline virtual bool IsTimeSerialView(void) { return false; };
-   static const float gGreyColorBaseComponent; // millä kertoimella rakennetaan gGreyColorDefault
-   static const NFmiColor gGreyColorDefault; // Mikä on Windowssin perus harmaa värisävy
+   static const float gGreyColorBaseComponent; // millï¿½ kertoimella rakennetaan gGreyColorDefault
+   static const NFmiColor gGreyColorDefault; // Mikï¿½ on Windowssin perus harmaa vï¿½risï¿½vy
    CtrlViewDocumentInterface* GetCtrlViewDocumentInterface();
+#ifndef UNIX
    Gdiplus::Graphics* GdiPlusGraphics() { return itsGdiPlusGraphics; }
-   // Tätä käyttää mm. InitializeGdiplus, mutta piti tiettyjä tapauksia varten tehdä irrallinen funktio, jolla luonti voidaan tehdä mista tahansa toolbox oliosta.
+   // Tï¿½tï¿½ kï¿½yttï¿½ï¿½ mm. InitializeGdiplus, mutta piti tiettyjï¿½ tapauksia varten tehdï¿½ irrallinen funktio, jolla luonti voidaan tehdï¿½ mista tahansa toolbox oliosta.
    static Gdiplus::Graphics* CreateGdiplusGraphics(NFmiToolBox *theToolBox, const NFmiRect *theRelativeClipRect);
+#endif
    static NFmiRect CalcWantedDirectionalPosition(const NFmiRect& positionalRect, const NFmiRect& movedRect, FmiDirection wantedPosition);
    static std::string DoBoldingParameterNameTooltipText(std::string parameterStr);
    static bool IsNewDataParameterName(const std::string &parameterStr);
@@ -164,7 +168,7 @@ class NFmiCtrlView
 	boost::shared_ptr<NFmiFastQueryInfo> itsInfo;
     // ei omista, ei tuhoa
     CtrlViewDocumentInterface* itsCtrlViewDocumentInterface;
-    // ctrl-view:issä on tieto minkä desctopin alla se on. Tämä ei koske muita kuin karttanäytöllä olevia viewtä, muilla tämä indeksi on -1 joka on puuttuva arvo
+    // ctrl-view:issï¿½ on tieto minkï¿½ desctopin alla se on. Tï¿½mï¿½ ei koske muita kuin karttanï¿½ytï¿½llï¿½ olevia viewtï¿½, muilla tï¿½mï¿½ indeksi on -1 joka on puuttuva arvo
 	int itsMapViewDescTopIndex; 
     // E.g. in map view there might be sub view grid with 3 rows and 4 columns
     // This is view grid's row number (starts from 1)
@@ -174,16 +178,18 @@ class NFmiCtrlView
     // If there is list of ctrl-views drawn over each others (like on map view theere is different parameters on same row), this might hold that layer order number (starts from 1)
     int itsViewRowLayerNumber = -1;
 
-	// aikaa tarvitaan joissain näyttöluokissa, joten laitoin ajan asetuksen mukaan
-	NFmiMetTime itsTime;	// 1999.09.10/Marko Tämän ajan mukaan asetetaan info (siis jos tarvitsee).
-	// Parametrin nimi stringin teko on yllättävän raskasta ja se kannattaa laskea kullakin piirtokerralla kerran muistiin.
+	// aikaa tarvitaan joissain nï¿½yttï¿½luokissa, joten laitoin ajan asetuksen mukaan
+	NFmiMetTime itsTime;	// 1999.09.10/Marko Tï¿½mï¿½n ajan mukaan asetetaan info (siis jos tarvitsee).
+	// Parametrin nimi stringin teko on yllï¿½ttï¿½vï¿½n raskasta ja se kannattaa laskea kullakin piirtokerralla kerran muistiin.
 	// Parametrin nimi riippu paljon erilaisista datatyypeista ja tilanteista, se on mm. seuraavaa 'normi' muotoa: E00/06.09 CAPE
 	std::string itsCachedParameterName;
-	// Tehdään parametrin nimi pareina, toinen näytön piirtoa varten ja toinen tooltippejä varten. Se missä on tooltip versio, hanskaa
-	// erikoismerkit kuten '>' jne. edelleen, joilla on erikoismerkitys html kielessä.
+	// Tehdï¿½ï¿½n parametrin nimi pareina, toinen nï¿½ytï¿½n piirtoa varten ja toinen tooltippejï¿½ varten. Se missï¿½ on tooltip versio, hanskaa
+	// erikoismerkit kuten '>' jne. edelleen, joilla on erikoismerkitys html kielessï¿½.
 	std::string itsCachedParameterNameForTooltip;
 
-	Gdiplus::Graphics *itsGdiPlusGraphics; // tehdään GDI+ piirto tällä
+#ifndef UNIX
+	Gdiplus::Graphics *itsGdiPlusGraphics; // tehdï¿½ï¿½n GDI+ piirto tï¿½llï¿½
+#endif
 private:
     void SetupCtrlViewDocumentInterface(const std::string &callerFunctionName);
 };

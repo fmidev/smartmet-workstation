@@ -52,7 +52,9 @@ namespace
 #define new DEBUG_NEW
 #endif
 
+#ifndef UNIX
 using namespace Gdiplus;
+#endif // UNIX
 
 // CSmartMetApp
 
@@ -84,7 +86,9 @@ CSmartMetApp::CSmartMetApp()
 
 CSmartMetApp::~CSmartMetApp()
 {
+#ifndef UNIX
 	CrashRptUninstall();
+#endif // UNIX
 }
 
 // The one and only CSmartMetApp object
@@ -140,6 +144,7 @@ BOOL CSmartMetApp::InitInstance()
 	}
 #endif // FMI_DISABLE_MFC_FEATURE_PACK
 
+#ifndef UNIX
 	// Initialize OLE libraries
 	if (!AfxOleInit())
 	{
@@ -147,6 +152,7 @@ BOOL CSmartMetApp::InitInstance()
 		return FALSE;
 	}
 	AfxEnableControlContainer();
+#endif // UNIX
 	// Standard initialization
 	// If you are not using these features and wish to reduce the size
 	// of your final executable, you should remove from the following
@@ -738,6 +744,7 @@ bool CSmartMetApp::ParseCommandLineArguments()
     return true;
 }
 
+#ifndef UNIX
 bool CSmartMetApp::InitGdiplus()
 {
 	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
@@ -750,6 +757,7 @@ void CSmartMetApp::TermGdiplus()
 {
    GdiplusShutdown(m_gdiplusToken);
 }
+#endif // UNIX
 
 bool CSmartMetApp::InitGeneralDataDoc(void)
 {

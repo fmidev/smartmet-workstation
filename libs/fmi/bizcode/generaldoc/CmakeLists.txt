@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.14.4)
 project(GeneralDoc)
 
+if(NOT UNIX)
 set(CMAKE_MFC_FLAG 2)
+endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 
 add_definitions(
@@ -18,7 +20,7 @@ add_library(
     ${H_FILES} 
     )
 
-set(TARGET_LINK_LIBRARIES_LIST 
+set(TARGET_LINK_LIBRARIES_LIST
 	${PROJECT_NAME}
     Newbase
     EditingDataUtils
@@ -27,15 +29,12 @@ set(TARGET_LINK_LIBRARIES_LIST
     SmetData
     SmetUtils
     CtrlViews
-    WinRegistryUtils
     Imagine
     ModifyEditedData
-    MfcUtils
     Q2ClientLib
     Threads
     CaseStudyLib
     ToolboxViews
-    HakeMessage
     Processes
     ToolboxDep
     Dialogs
@@ -45,6 +44,13 @@ set(TARGET_LINK_LIBRARIES_LIST
     ApplicationDataBase
 	CapData
     )
+if(NOT UNIX)
+    set(TARGET_LINK_LIBRARIES_LIST ${TARGET_LINK_LIBRARIES_LIST}
+        WinRegistryUtils
+        MfcUtils
+        HakeMessage
+    )
+endif()
 if(NOT DISABLE_CPPRESTSDK)
 	set(TARGET_LINK_LIBRARIES_LIST ${TARGET_LINK_LIBRARIES_LIST} WmsSupport)
 endif()
@@ -61,15 +67,12 @@ target_include_directories(
     PUBLIC ${SmetData_INCLUDE_DIRS}
     PUBLIC ${SmetUtils_INCLUDE_DIRS}
     PUBLIC ${CtrlViews_INCLUDE_DIRS}
-    PUBLIC ${WinRegistryUtils_INCLUDE_DIRS}
     PUBLIC ${Imagine_INCLUDE_DIRS}
     PUBLIC ${ModifyEditedData_INCLUDE_DIRS}
-    PUBLIC ${MfcUtils_INCLUDE_DIRS}
     PUBLIC ${Q2ClientLib_INCLUDE_DIRS}
     PUBLIC ${Threads_INCLUDE_DIRS}
     PUBLIC ${CaseStudyLib_INCLUDE_DIRS}
     PUBLIC ${ToolboxViews_INCLUDE_DIRS}
-    PUBLIC ${HakeMessage_INCLUDE_DIRS}
     PUBLIC ${Processes_INCLUDE_DIRS}
     PUBLIC ${ToolboxDep_INCLUDE_DIRS}
     PUBLIC ${Dialogs_INCLUDE_DIRS}
@@ -81,6 +84,14 @@ target_include_directories(
 	PUBLIC ${CapData_INCLUDE_DIRS}
     PUBLIC ${BOOST_INCLUDE_DIR}
     )
+if(NOT UNIX)
+target_include_directories(
+    ${PROJECT_NAME}
+    PUBLIC ${WinRegistryUtils_INCLUDE_DIRS}
+    PUBLIC ${MfcUtils_INCLUDE_DIRS}
+    PUBLIC ${HakeMessage_INCLUDE_DIRS}
+    )
+endif()
 
 set(
     ${PROJECT_NAME}_INCLUDE_DIRS
@@ -92,15 +103,12 @@ set(
     ${SmetData_INCLUDE_DIRS}
     ${SmetUtils_INCLUDE_DIRS}
     ${CtrlViews_INCLUDE_DIRS}
-    ${WinRegistryUtils_INCLUDE_DIRS}
     ${Imagine_INCLUDE_DIRS}
     ${ModifyEditedData_INCLUDE_DIRS}
-    ${MfcUtils_INCLUDE_DIRS}
     ${Q2ClientLib_INCLUDE_DIRS}
     ${Threads_INCLUDE_DIRS}
     ${CaseStudyLib_INCLUDE_DIRS}
     ${ToolboxViews_INCLUDE_DIRS}
-    ${HakeMessage_INCLUDE_DIRS}
     ${Processes_INCLUDE_DIRS}
     ${ToolboxDep_INCLUDE_DIRS}
     ${Dialogs_INCLUDE_DIRS}

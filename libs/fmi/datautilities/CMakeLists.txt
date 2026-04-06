@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.14.4)
 project(DataUtilities)
 
+if(NOT UNIX)
 set(CMAKE_MFC_FLAG 0)
+endif()
 
 add_compile_options(
     $<$<CXX_COMPILER_ID:MSVC>:/wd4503>

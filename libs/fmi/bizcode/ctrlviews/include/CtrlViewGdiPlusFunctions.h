@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef UNIX
+
 #include "stdafx.h"
 #include "NFmiColor.h"
 #include "NFmiRect.h"
@@ -38,8 +40,8 @@ namespace CtrlView
 {
     // Color related functions
     Gdiplus::Color NFmiColor2GdiplusColor(const NFmiColor &theColor);
-    // theBrightningFactor on prosentti luku, jolla annettua väriä saadaan vaalennettua tai tummennettua.
-    // jos prosentti luku on > 0, vaalenee väri, jos se on < 0, tummenee väri.
+    // theBrightningFactor on prosentti luku, jolla annettua vï¿½riï¿½ saadaan vaalennettua tai tummennettua.
+    // jos prosentti luku on > 0, vaalenee vï¿½ri, jos se on < 0, tummenee vï¿½ri.
     double CalcBrightningFactor(int theStartIndex, int theModelRunCount, int theCurrentIndex);
     NFmiColor ColorRef2Color(COLORREF color);
     COLORREF Color2ColorRef(const NFmiColor &theColor);
@@ -92,3 +94,5 @@ namespace CtrlView
     void DrawImageButton(const CRect &theAbsRect, Gdiplus::Bitmap *theButtonImage, Gdiplus::Graphics *theGdiPlusGraphics, Gdiplus::REAL theAlpha, bool isPrinting);
     void DrawBitmap(Gdiplus::Bitmap &theBitmap, const NFmiRect &theSourcePixels, const Gdiplus::RectF &theDestPixels, Gdiplus::REAL theAlpha, Gdiplus::Graphics *theGdiPlusGraphics, bool isPrinting, bool fDoNearestInterpolation);
 }
+#else  // UNIX - Windows-only header; Linux implementation will use Qt
+#endif // UNIX

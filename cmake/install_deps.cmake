@@ -7,6 +7,8 @@ include("${CMAKE_CURRENT_LIST_DIR}/scripts/helpers.cmake")
 #    download_and_unpack("${SERVER}/${PACKAGE_NAME}.tar.gz" ${INSTALL_DIR})
 #endfunction(download_and_install)
 
+if(WIN32)
 if (NOT EXISTS ${BOOST_BASE_DIR} )
 	message( FATAL_ERROR "You need to get 3rd party lib binaries first installed, CMake will exit." )
 endif()
+endif() # WIN32

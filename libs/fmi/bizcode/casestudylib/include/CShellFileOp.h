@@ -29,6 +29,7 @@
 #pragma once
 #endif // _MSC_VER >= 1000
 
+#ifndef UNIX
 #include "objbase.h"
 
 //////////////////////////////////////////////////////////////////////
@@ -103,6 +104,6 @@ protected:
     
 	void  FillSzzBuffer ( TCHAR*, const CStringList& );
 };
-
+#endif // UNIX
 
 #endif // ndef __CSHELLFILEOP_H__

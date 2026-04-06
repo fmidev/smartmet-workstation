@@ -1,7 +1,9 @@
 #pragma once
 
+#ifndef UNIX
 #include <stdafx.h>
 #include <WinDef.h>
+#endif // UNIX
 
 #include "NFmiDataMatrix.h"
 #include "NFmiMetTime.h"
@@ -39,9 +41,11 @@ class NFmiDataLoadingInfo;
 class NFmiLocationSelectionTool;
 class NFmiLevel;
 class NFmiArea;
-class NFmiEditMapDataListHandler; //laura lisäsi 30081999
-class CDC; // toivottavasti vain väliaikaisesti/Marko
+class NFmiEditMapDataListHandler; //laura lisï¿½si 30081999
+#ifndef UNIX
+class CDC; // toivottavasti vain vï¿½liaikaisesti/Marko
 class CBitmap;
+#endif // UNIX
 class NFmiMilliSecondTimer;
 class NFmiDataModifier;
 class NFmiStringList;
@@ -77,10 +81,12 @@ namespace CtrlViewUtils
 }
 class NFmiConceptualModelData;
 class NFmiQ2Client;
+#ifndef UNIX
 class CWnd;
+class CSize;
+#endif // UNIX
 class NFmiMapViewTimeLabelInfo;
 class NFmiWindTableSystem;
-class CSize;
 class NFmiAutoComplete;
 class NFmiModelDataBlender;
 class NFmiParamBag;
@@ -177,7 +183,9 @@ public:
     void ResetPrintedDescTopIndex();
     NFmiColorContourLegendSettings& ColorContourLegendSettings();
     TimeSerialParameters& GetTimeSerialParameters();
+#ifndef UNIX
 	bool DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& clientPixelSize, CDC* pDC);
+#endif // UNIX
     NFmiMacroParamDataCache& MacroParamDataCache();
     void InitGriddingProperties();
     bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage);
@@ -311,7 +319,7 @@ public:
 	void ActivateViewParamSelectorDlg(unsigned int theMapViewDescTopIndex);
 	void UpdateTempView(void);
 	void UpdateCrossSectionView(void);
-	void DrawOverBitmapThings(NFmiToolBox * theGTB); // tämä on kirjastojen pilkkomiseen vaadittuja funktioita
+	void DrawOverBitmapThings(NFmiToolBox * theGTB); // tï¿½mï¿½ on kirjastojen pilkkomiseen vaadittuja funktioita
 	NFmiDataQualityChecker& DataQualityChecker(void);
 	NFmiAnalyzeToolData& AnalyzeToolData(void);
 	NFmiModelDataBlender& ModelDataBlender(void);
@@ -341,7 +349,7 @@ public:
 	void ToggleTimeControlAnimationView(unsigned int theDescTopIndex);
 	bool DoAutoLoadDataAtStartUp(void) const;
 	void DoAutoLoadDataAtStartUp(bool newValue);
-	bool ShowWaitCursorWhileDrawingView(void); // tarkasta CView-näyttöluokissa, onko mahdollisesti animaatiota käynnissä. Jos on, älä laita odota-cursoria näkyviin, koska se vilkuttaa ikävästi
+	bool ShowWaitCursorWhileDrawingView(void); // tarkasta CView-nï¿½yttï¿½luokissa, onko mahdollisesti animaatiota kï¿½ynnissï¿½. Jos on, ï¿½lï¿½ laita odota-cursoria nï¿½kyviin, koska se vilkuttaa ikï¿½vï¿½sti
 	int DoAllAnimations(void);
 	void TimeSerialViewTimeBag(const NFmiTimeBag &theTimeBag);
 	const NFmiTimeBag& TimeSerialViewTimeBag(void) const;
@@ -355,8 +363,10 @@ public:
 	void ShowToolTipTrajectoryView(bool newValue);
 	void ToggleShowHelperDatasInTimeView(int theCommand);
 	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1);
+#ifndef UNIX
 	void TransparencyContourDrawView(CWnd *theView);
 	CWnd* TransparencyContourDrawView(void);
+#endif // UNIX
 	int SoundingViewWindBarbSpaceOutFactor(void);
 	void SoundingViewWindBarbSpaceOutFactor(int newValue);
 	NFmiWindTableSystem& WindTableSystem(void);
@@ -449,17 +459,17 @@ public:
 	NFmiCrossSectionSystem* CrossSectionSystem(void);
 	void SetLatestMacroParamErrorText(const std::string& theErrorText);
 	const std::string& GetLatestMacroParamErrorText(void);
-	void RemoveMacroParam(const std::string &theName); // poistaa halutun macroparamin dokumentista, tiedostoista ja näytöiltä
-	void AddMacroParamToView(unsigned int theDescTopIndex, int theViewRow, const std::string &theName); // lisää halutun nimisen macroParamin halutun karttanäytön riville (1-5)
-	void AddMacroParamToCrossSectionView(int theViewRow, const std::string &theName); // lisää halutun nimisen macroParamin halutun karttanäytön riville (1-5)
+	void RemoveMacroParam(const std::string &theName); // poistaa halutun macroparamin dokumentista, tiedostoista ja nï¿½ytï¿½iltï¿½
+	void AddMacroParamToView(unsigned int theDescTopIndex, int theViewRow, const std::string &theName); // lisï¿½ï¿½ halutun nimisen macroParamin halutun karttanï¿½ytï¿½n riville (1-5)
+	void AddMacroParamToCrossSectionView(int theViewRow, const std::string &theName); // lisï¿½ï¿½ halutun nimisen macroParamin halutun karttanï¿½ytï¿½n riville (1-5)
 	std::shared_ptr<NFmiMacroParamSystem> MacroParamSystem(void);
-	// Nämä makro tekstin get ja set metodit on makroparam-näyttöä varten tehtyjä virityksiä
+	// Nï¿½mï¿½ makro tekstin get ja set metodit on makroparam-nï¿½yttï¿½ï¿½ varten tehtyjï¿½ virityksiï¿½
 	void SetCurrentSmartToolMacro(const std::string& theMacroText);
 	const std::string& GetCurrentSmartToolMacro(void);
 
-	bool ChangeToEditorsWorkingDirectory(void); // asettaa editorin hakemiston ja aseman käyttöön
-	bool SaveCurrentPath(void); // ottaa nykyisen työhakemiston ja aseman talteen
-	bool LoadSavedPath(void); // lataa edellisessä talletetut polut ja asemat käyttöön
+	bool ChangeToEditorsWorkingDirectory(void); // asettaa editorin hakemiston ja aseman kï¿½yttï¿½ï¿½n
+	bool SaveCurrentPath(void); // ottaa nykyisen tyï¿½hakemiston ja aseman talteen
+	bool LoadSavedPath(void); // lataa edellisessï¿½ talletetut polut ja asemat kï¿½yttï¿½ï¿½n
 	void SnapShotData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiDataIdent &theDataIdent, const std::string &theModificationText
 				 , const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime);
 	CtrlViewUtils::FmiSmartMetEditingMode SmartMetEditingMode(void);
@@ -495,7 +505,7 @@ public:
 
 	void SetDataLoadingProducerIndexVector(const std::vector<int>& theIndexVector);
 
-	void StoreSupplementaryData(void); // tallettaa mm. CP pisteet, muutoskäyrät jne.
+	void StoreSupplementaryData(void); // tallettaa mm. CP pisteet, muutoskï¿½yrï¿½t jne.
 	bool IsToolMasterAvailable() const;
 	void ToolMasterAvailable(bool newValue);
 	boost::shared_ptr<NFmiEditorControlPointManager> CPManager(bool getOldSchoolCPManager = false);
@@ -554,7 +564,7 @@ public:
 	const NFmiMetTime& ToolTipTime(void);
 	NFmiParamBag& AllStaticParams(void);
 	boost::shared_ptr<NFmiDrawParam> DefaultEditedDrawParam(void);
-	NFmiPoint ActualMapBitmapSizeInPixels(unsigned int theDescTopIndex); // laskee näyttöruudukon yhden ruudun koon pikseleissä
+	NFmiPoint ActualMapBitmapSizeInPixels(unsigned int theDescTopIndex); // laskee nï¿½yttï¿½ruudukon yhden ruudun koon pikseleissï¿½
 	boost::shared_ptr<NFmiFastQueryInfo> EditedSmartInfo(void);
 	bool DoAreaFiltering();
 	bool DoTimeFiltering(void);
@@ -635,6 +645,6 @@ public:
 private:
     void SetGeneralDataDocInterfaceCallbacks();
 
-	GeneralDocImpl *pimpl; // tähän laitetaan kaikki toiminnot dokumentista!!!
+	GeneralDocImpl *pimpl; // tï¿½hï¿½n laitetaan kaikki toiminnot dokumentista!!!
 
 };

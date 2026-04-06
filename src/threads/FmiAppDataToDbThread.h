@@ -1,5 +1,6 @@
 #pragma once
 
+#ifndef UNIX
 #include "stdafx.h"
 
 namespace CFmiAppDataToDbThread
@@ -8,4 +9,5 @@ namespace CFmiAppDataToDbThread
 	void CloseNow(void);
 	int WaitToClose(int theMilliSecondsToWait);
 }
+#endif // UNIX
 
