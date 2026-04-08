@@ -1,0 +1,32 @@
+cmake_minimum_required(VERSION 3.14.4)
+project(DataCombinationExe)
+
+if(NOT UNIX)
+set(CMAKE_MFC_FLAG 0)
+endif()
+
+link_directories(
+    ${BOOST_LIB_DIR}
+    )
+
+file( GLOB CPP_FILES *.cpp )
+
+add_executable( 
+    ${PROJECT_NAME}
+    ${CPP_FILES} 
+    )
+
+target_link_libraries(
+    ${PROJECT_NAME}
+    Newbase
+    EditingDataUtils
+    ${FMT_TARGET_LINK_LIBRARIES}
+    )
+
+target_include_directories( 
+    ${PROJECT_NAME}
+    PUBLIC ${PROJECT_SOURCE_DIR}
+    PUBLIC ${Newbase_INCLUDE_DIRS}
+    PUBLIC ${EditingDataUtils_INCLUDE_DIRS}
+    )
+

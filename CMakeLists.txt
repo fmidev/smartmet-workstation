@@ -103,16 +103,25 @@ if(NOT UNIX)
         )
 endif()
 
-# ---- Linux: find Qt6 ----
+# ---- Linux: find Qt6 (optional until devel package installed) ----
 if(UNIX)
-    find_package(Qt6 REQUIRED COMPONENTS Widgets Network PrintSupport)
+    find_package(Qt6 COMPONENTS Widgets Network PrintSupport)
+    if(Qt6_FOUND)
+        message(STATUS "Qt6 found: ${Qt6_DIR}")
+        add_definitions(-DHAVE_QT6)
+    else()
+        message(WARNING "Qt6 not found. UI targets will be skipped. Install qt6-qtbase-devel to enable.")
+    endif()
     # Linux: add platform compatibility header to all targets
     include_directories(${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform)
 endif()
 
 # ---- Linux: find system Boost ----
 if(UNIX)
-    find_package(Boost REQUIRED)
+    find_package(Boost REQUIRED COMPONENTS thread filesystem iostreams)
+    find_package(boost_math_c99 REQUIRED CONFIG)
+    # Make Boost libraries available globally on Linux
+    link_libraries(Boost::thread Boost::filesystem Boost::iostreams Boost::math_c99)
 endif()
 
 include(
@@ -138,9 +147,15 @@ add_subdirectory(
 
 set(SPDLOG_BUILD_TESTING OFF CACHE BOOL "Do not build spdlog tests" FORCE)
 
+if(UNIX)
+add_subdirectory(
+    modules/3rd/spdlog114
+    )
+else()
 add_subdirectory(
     modules/3rd/spdlog
     )
+endif()
 
 add_subdirectory(
     libs/fmi/catlog
@@ -154,9 +169,11 @@ add_subdirectory(
     libs/fmi/bizcode/stlhelp
     )
 
+if(NOT UNIX)
 add_subdirectory(
     libs/fmi/bizcode/gridctrl
     )
+endif()
 
 add_subdirectory(
     src/applicationdatabase
@@ -206,9 +223,11 @@ add_subdirectory(
     )
 endif()
 
+if(NOT UNIX)
 add_subdirectory(
     libs/fmi/multiprocesstools
     )
+endif()
 
 add_subdirectory(
     libs/fmi/bizcode/q2clientlib
@@ -346,9 +365,11 @@ add_subdirectory(
     src/datacombinationexe
     )
 
+if(NOT UNIX)
 add_subdirectory(
     src/casestudyexe
     )
+endif()
 
 # Put these Master and Worker process projects in comments after
 # generating a new version binaries. We don't want to generate them all the time.

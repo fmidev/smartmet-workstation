@@ -1,0 +1,36 @@
+cmake_minimum_required(VERSION 3.14.4)
+project(UnpackSmartMetDataFilesExe)
+
+if(NOT UNIX)
+set(CMAKE_MFC_FLAG 2)
+endif()
+
+link_directories(
+    ${BOOST_LIB_DIR}
+    )
+
+file( GLOB CPP_FILES *.cpp )
+
+add_executable( 
+    ${PROJECT_NAME}
+    ${CPP_FILES} 
+    )
+
+target_link_libraries(
+    ${PROJECT_NAME}
+    Newbase
+    SmartTools
+    CatLog
+    Processes
+    ${FMT_TARGET_LINK_LIBRARIES}
+    )
+
+target_include_directories( 
+    ${PROJECT_NAME}
+    PUBLIC ${PROJECT_SOURCE_DIR}
+    PUBLIC ${Newbase_INCLUDE_DIRS}
+    PUBLIC ${SmartTools_INCLUDE_DIRS}
+    PUBLIC ${CatLog_INCLUDE_DIRS}
+    PUBLIC ${Processes_INCLUDE_DIRS}
+    )
+

@@ -1,0 +1,42 @@
+cmake_minimum_required(VERSION 3.14.4)
+project(ToolboxViews)
+
+if(NOT UNIX)
+set(CMAKE_MFC_FLAG 2)
+endif()
+
+file( GLOB CPP_FILES source/*.cpp )
+file( GLOB H_FILES include/*.h )
+
+add_library( 
+    ${PROJECT_NAME} STATIC
+    ${CPP_FILES} 
+    ${H_FILES} 
+    )
+
+target_link_libraries(
+    ${PROJECT_NAME} 
+    Toolbox
+    Newbase
+    CtrlViewUtils
+    )
+
+target_include_directories( 
+    ${PROJECT_NAME}
+    PUBLIC ${PROJECT_SOURCE_DIR}/include
+    PUBLIC ${Toolbox_INCLUDE_DIRS}
+    PUBLIC ${Newbase_INCLUDE_IRS}
+    PUBLIC ${CtrlViewUtils_INCLUDE_DIRS}
+    PUBLIC ${BOOST_INCLUDE_DIR}
+    )
+
+set(
+    ${PROJECT_NAME}_INCLUDE_DIRS
+    ${PROJECT_SOURCE_DIR}/include
+    ${Toolbox_INCLUDE_DIRS}
+    ${Newbase_INCLUDE_IRS}
+    ${CtrlViewUtils_INCLUDE_DIRS}
+    ${BOOST_INCLUDE_DIR}
+    CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
+    )
+
