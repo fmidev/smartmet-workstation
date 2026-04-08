@@ -28,7 +28,8 @@ namespace
 
 namespace CFmiProcessHelpers
 {
-    // theWorkingDirectory parametri: Ei saa olla ympäröiviä lainausmerkkejä välilyönti polkujen varalla, tällöin koko CreateProcess funktio ei toimi silloin ollenkaan.
+#ifndef UNIX
+    // theWorkingDirectory parametri: Ei saa olla ympï¿½rï¿½iviï¿½ lainausmerkkejï¿½ vï¿½lilyï¿½nti polkujen varalla, tï¿½llï¿½in koko CreateProcess funktio ei toimi silloin ollenkaan.
     bool ExecuteCommandInSeparateProcess(std::string& theCommand, bool logEvents, bool showErrorMessageBox, WORD theShowWindow, bool waitExecutionToStop, DWORD dwCreationFlags, const std::string* theWorkingDirectory)
     {
         STARTUPINFO si;
@@ -87,7 +88,7 @@ namespace CFmiProcessHelpers
             }
             return false;
         }
-        DWORD waitTimeInMS = waitExecutionToStop ? INFINITE : 0; // joko odotetaan että prosessi saadaan päätökseen, tai ei odoteta ollenkaan
+        DWORD waitTimeInMS = waitExecutionToStop ? INFINITE : 0; // joko odotetaan ettï¿½ prosessi saadaan pï¿½ï¿½tï¿½kseen, tai ei odoteta ollenkaan
         WaitForSingleObject(pi.hProcess, waitTimeInMS);
 
         CloseHandle(pi.hProcess); // Close process and thread handles.
@@ -101,6 +102,25 @@ namespace CFmiProcessHelpers
         }
         return true;
     }
+#else // UNIX
+    bool ExecuteCommandInSeparateProcess(std::string& theCommand, bool logEvents, bool showErrorMessageBox, int /*theShowWindow*/, bool waitExecutionToStop, int /*dwCreationFlags*/, const std::string* theWorkingDirectory)
+    {
+        std::string cmd = theCommand;
+        if(theWorkingDirectory && !theWorkingDirectory->empty())
+            cmd = "cd \"" + *theWorkingDirectory + "\" && " + cmd;
+        if(!waitExecutionToStop)
+            cmd += " &";
+        int ret = std::system(cmd.c_str());
+        if(logEvents)
+        {
+            std::string logStr("ExecuteCommandInSeparateProcess: Command '");
+            logStr += theCommand;
+            logStr += (ret == 0 ? "' executed." : "' failed.");
+            CatLog::logMessage(logStr, (ret == 0 ? CatLog::Severity::Info : CatLog::Severity::Error), CatLog::Category::Operational);
+        }
+        return ret == 0;
+    }
+#endif // UNIX
 
     std::string Make7zipExePath(const std::string& workingDirectory)
     {
@@ -109,7 +129,7 @@ namespace CFmiProcessHelpers
             auto zipExePath = ::Construct7zipExePath(workingDirectory);
             CatLog::logMessage(std::string("Used 7z.exe path is: ") + zipExePath, CatLog::Severity::Info, CatLog::Category::Configuration);
 
-            // Lopullisessa polussa pitää olla vielä lainausmerkit ympärillä, koska tätä käytetään komentoriviltä
+            // Lopullisessa polussa pitï¿½ï¿½ olla vielï¿½ lainausmerkit ympï¿½rillï¿½, koska tï¿½tï¿½ kï¿½ytetï¿½ï¿½n komentoriviltï¿½
             // ja jos polussa spaceja, menee homma muuten pieleen eli:
             // D:\polku jonnekin\7z.exe ==>> "D:\polku jonnekin\7z.exe"
             g_cached7zipExePath = "\"" + zipExePath + "\"";
