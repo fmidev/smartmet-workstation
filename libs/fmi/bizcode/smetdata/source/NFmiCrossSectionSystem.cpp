@@ -1,4 +1,4 @@
-//© Ilmatieteenlaitos/Marko.
+//ï¿½ Ilmatieteenlaitos/Marko.
 //Original 7.4.2004
 //
 
@@ -14,7 +14,7 @@
 #include "CtrlViewDocumentInterface.h"
 #include "CtrlViewFunctions.h"
 #include "SpecialDesctopIndex.h"
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
 
 double NFmiCrossSectionSystem::itsLatestVersionNumber = 1.0;
 int NFmiCrossSectionSystem::itsNumberOfMainPoints = 3;
@@ -101,7 +101,7 @@ void NFmiCrossSectionSystem::InitializeFromSettings(const CrossSectionInitValues
     itsWantedMinorPointCountWinReg = initValuesFromWinReg.itsWantedMinorPointCount;
 }
 
-// Tämä asettaa kaikki talletettavat asiat Windows rekistereihin.
+// Tï¿½mï¿½ asettaa kaikki talletettavat asiat Windows rekistereihin.
 void NFmiCrossSectionSystem::StoreSettings(CrossSectionInitValuesWinReg &storeValuesToWinReg)
 {
     storeValuesToWinReg.itsStartPointStr = ::GetStringFromPoint(StartPoint());
@@ -189,11 +189,11 @@ void NFmiCrossSectionSystem::SetMainPointsFromVector(const std::vector<NFmiPoint
         itsEndPointWinReg = theMainPointVector[2];
 }
 
-// laskee  välipisteet pääpisteiden avulla käyttäen
-// hyväkseen annettua areaa (josta laskuissa käytetään arean xy-maailmaa)
+// laskee  vï¿½lipisteet pï¿½ï¿½pisteiden avulla kï¿½yttï¿½en
+// hyvï¿½kseen annettua areaa (josta laskuissa kï¿½ytetï¿½ï¿½n arean xy-maailmaa)
 void NFmiCrossSectionSystem::CalcMinorPoints(const boost::shared_ptr<NFmiArea> &theArea)
 {
-	// alipisteitä on oltava väh. saman verran kuin pääpisteitä
+	// alipisteitï¿½ on oltava vï¿½h. saman verran kuin pï¿½ï¿½pisteitï¿½
 	if(itsNumberOfMainPoints > static_cast<int>(itsWantedMinorPointCountWinReg))
 	{
 		itsMinorPoints = MakeMainPointsVector();
@@ -204,7 +204,7 @@ void NFmiCrossSectionSystem::CalcMinorPoints(const boost::shared_ptr<NFmiArea> &
 	if(itsCrossSectionMode == k2Point)
 	{
 		xyPoints = std::vector<NFmiPoint>(realMinorPointCount);
-		// Poikkileikkausjana pitää jakaa ali pisteisiin xy-maailmassa
+		// Poikkileikkausjana pitï¿½ï¿½ jakaa ali pisteisiin xy-maailmassa
 		NFmiPoint xy1(theArea->ToXY(StartPoint()));
 		NFmiPoint xy2(theArea->ToXY(EndPoint()));
 		double xDiff = (xy2.X() - xy1.X())/(realMinorPointCount - 1.0);
@@ -216,9 +216,9 @@ void NFmiCrossSectionSystem::CalcMinorPoints(const boost::shared_ptr<NFmiArea> &
 	{ // 3-piste moodissa tilanne toisella tavalla
 		realMinorPointCount = itsWantedMinorPointCountWinReg;
 		if(itsWantedMinorPointCountWinReg%2 == 0)
-			realMinorPointCount++; // pitää olla pariton luku
+			realMinorPointCount++; // pitï¿½ï¿½ olla pariton luku
 		xyPoints = std::vector<NFmiPoint>(realMinorPointCount);
-		// Poikkileikkausjana pitää jakaa ali pisteisiin xy-maailmassa
+		// Poikkileikkausjana pitï¿½ï¿½ jakaa ali pisteisiin xy-maailmassa
 		NFmiPoint xy1(theArea->ToXY(StartPoint()));
 		NFmiPoint xy2(theArea->ToXY(MiddlePoint()));
 		NFmiPoint xy3(theArea->ToXY(EndPoint()));
@@ -236,16 +236,16 @@ void NFmiCrossSectionSystem::CalcMinorPoints(const boost::shared_ptr<NFmiArea> &
 	itsMinorPoints.resize(realMinorPointCount);
 	std::vector<NFmiPoint>::iterator xyIt = xyPoints.begin();
 	std::vector<NFmiPoint>::iterator minorIt = itsMinorPoints.begin();
-	// konvertoidaan sitten lista xy-pisteitä halutuiksi latlon-pisteiksi
+	// konvertoidaan sitten lista xy-pisteitï¿½ halutuiksi latlon-pisteiksi
 	for( ; minorIt != itsMinorPoints.end(); ++xyIt, ++minorIt)
 		*minorIt = theArea->ToLatLon(*xyIt);
 
-    itsCtrlViewDocumentInterface->UpdateCrossSectionMacroParamDataSize(); // Pitää päivittää macroParam laskuja varten poikkileikkaus hilakoot
+    itsCtrlViewDocumentInterface->UpdateCrossSectionMacroParamDataSize(); // Pitï¿½ï¿½ pï¿½ivittï¿½ï¿½ macroParam laskuja varten poikkileikkaus hilakoot
 }
 
-// Jos annettu data (eli tämä on juuri ladattu metkun editoriin) on jonkinlaista level-dataa
-// niin päivitystä tarvitaan. Mutta tyypin pitää olla editable, viewable tai hybrid, koska mm.
-// havainnoissa on level-dataa ja päivitystä ei haluta
+// Jos annettu data (eli tï¿½mï¿½ on juuri ladattu metkun editoriin) on jonkinlaista level-dataa
+// niin pï¿½ivitystï¿½ tarvitaan. Mutta tyypin pitï¿½ï¿½ olla editable, viewable tai hybrid, koska mm.
+// havainnoissa on level-dataa ja pï¿½ivitystï¿½ ei haluta
 void NFmiCrossSectionSystem::CheckIfCrossSectionViewNeedsUpdate(NFmiQueryData *theData, NFmiInfoData::Type theType)
 {
 	if(theData)
@@ -278,11 +278,11 @@ int NFmiCrossSectionSystem::WantedMinorPointCount(void) const
     return itsWantedMinorPointCountWinReg;
 }
 
-// aktivoi lähimmän ali-pisteen, mutta jos kyseinen piste jo aktivoitu, deaktivoi se
+// aktivoi lï¿½himmï¿½n ali-pisteen, mutta jos kyseinen piste jo aktivoitu, deaktivoi se
 void NFmiCrossSectionSystem::ActivateNearestMinorPoint(const NFmiPoint &thePlace)
 {
 	int minDistIndex = -1;
-	double tmpDist = 0; // etäisyydet metreissä
+	double tmpDist = 0; // etï¿½isyydet metreissï¿½
 	double minDist = 9999999999.; // minimiksi aluksi joku iso luku
 	std::vector<NFmiPoint>::iterator it = itsMinorPoints.begin();
 	NFmiLocation clickedLoc(thePlace);
@@ -296,7 +296,7 @@ void NFmiCrossSectionSystem::ActivateNearestMinorPoint(const NFmiPoint &thePlace
 			minDistIndex = static_cast<int>(it - itsMinorPoints.begin());
 		}
 	}
-	if(minDist < 1000 * 200) // minimi etäisyyden pitää olla alle halutun rajan (nyt 200km), että jokin piste aktivoidaan, muuten tehdään deaktivointi
+	if(minDist < 1000 * 200) // minimi etï¿½isyyden pitï¿½ï¿½ olla alle halutun rajan (nyt 200km), ettï¿½ jokin piste aktivoidaan, muuten tehdï¿½ï¿½n deaktivointi
 	{
 		if(itsActivatedMinorPointIndex == minDistIndex)
 			itsActivatedMinorPointIndex = -1; // deaktivoidaan, jos jo valittuna
@@ -313,7 +313,7 @@ const NFmiPoint& NFmiCrossSectionSystem::ActivatedMinorPoint(void)
 	if(itsActivatedMinorPointIndex >= 0 && itsActivatedMinorPointIndex < static_cast<int>(itsMinorPoints.size()))
 		return itsMinorPoints[itsActivatedMinorPointIndex];
 	else
-		return dummy; // dummy arvo, ennen tämän funktion kutsua pitäisi tarkistaa, löytyykö aktivoitua pistettä ollenkaan
+		return dummy; // dummy arvo, ennen tï¿½mï¿½n funktion kutsua pitï¿½isi tarkistaa, lï¿½ytyykï¿½ aktivoitua pistettï¿½ ollenkaan
 }
 
 void NFmiCrossSectionSystem::CrossSectionDrawParam(boost::shared_ptr<NFmiDrawParam> &newValue)
@@ -321,7 +321,7 @@ void NFmiCrossSectionSystem::CrossSectionDrawParam(boost::shared_ptr<NFmiDrawPar
 	itsCrossSectionDrawParam = newValue;
 }
 
-// Paluuarvo kertoo tarvitaanko näytön päivitystä
+// Paluuarvo kertoo tarvitaanko nï¿½ytï¿½n pï¿½ivitystï¿½
 bool NFmiCrossSectionSystem::ChangeStartRowIndex(bool fMoveUp)
 {
 	int oldIndex = itsStartRowIndex;
@@ -340,7 +340,7 @@ bool NFmiCrossSectionSystem::ChangeStartRowIndex(bool fMoveUp)
 	return oldIndex != itsStartRowIndex;
 }
 
-// paluu arvo kertoo tarvitaanko näytön päivitystä
+// paluu arvo kertoo tarvitaanko nï¿½ytï¿½n pï¿½ivitystï¿½
 bool NFmiCrossSectionSystem::RowCount(int newValue)
 {
 	int oldIndex = itsStartRowIndex;
@@ -350,7 +350,7 @@ bool NFmiCrossSectionSystem::RowCount(int newValue)
 		itsRowCount = 1;
 	if(itsRowCount > itsMaxViewRowSize)
 		itsRowCount = itsMaxViewRowSize;
-	// jos rivien määrä vaikuttaa nyt alku rivin indeksiin, se tarkistetaan tässä
+	// jos rivien mï¿½ï¿½rï¿½ vaikuttaa nyt alku rivin indeksiin, se tarkistetaan tï¿½ssï¿½
 	if(itsStartRowIndex > itsMaxViewRowSize - itsRowCount + 1)
 		itsStartRowIndex = itsMaxViewRowSize - itsRowCount + 1;
 
@@ -423,7 +423,7 @@ void NFmiCrossSectionSystem::CalcRouteTimes(void)
 	}
 }
 
-// kun poikkileikkaus näytössä on nyt 3 eri moodia, pitää se päätellä jotenkin kahden booleanin avulla
+// kun poikkileikkaus nï¿½ytï¿½ssï¿½ on nyt 3 eri moodia, pitï¿½ï¿½ se pï¿½ï¿½tellï¿½ jotenkin kahden booleanin avulla
 NFmiCrossSectionSystem::CrossMode NFmiCrossSectionSystem::GetCrossMode(void) const
 {
 	if(fUseObsAndForCrossSection)
@@ -446,19 +446,19 @@ void NFmiCrossSectionSystem::VerticalPointCount(int newValue)
         itsCtrlViewDocumentInterface->UpdateCrossSectionMacroParamDataSize();
 }
 
-// vähän mousewheel käsittelyä tänne, koska tätä kutsutaan parista eri view-luokasta
+// vï¿½hï¿½n mousewheel kï¿½sittelyï¿½ tï¿½nne, koska tï¿½tï¿½ kutsutaan parista eri view-luokasta
 bool NFmiCrossSectionSystem::MouseWheel(const NFmiPoint & /* thePlace */ , unsigned long theKey, short theDelta)
 {
 	if(theKey & CtrlViewUtils::kCtrlKey)
-	{ // vertikaali pisteiden säätö
+	{ // vertikaali pisteiden sï¿½ï¿½tï¿½
 		if(theDelta > 0)
-			VerticalPointCount(VerticalPointCount()+1); // lisätään yksi vert. piste
+			VerticalPointCount(VerticalPointCount()+1); // lisï¿½tï¿½ï¿½n yksi vert. piste
 		else
-			VerticalPointCount(VerticalPointCount()-1);  // vähennetään yksi vert. piste
+			VerticalPointCount(VerticalPointCount()-1);  // vï¿½hennetï¿½ï¿½n yksi vert. piste
 	}
 	else if(theKey & CtrlViewUtils::kShiftKey)
-	{ // vaakapisteiden määrän säätö
-		// 2-piste moodissa yksi piste lisää ja 3-piste moodissa 2 lisää (tai vähemmän)
+	{ // vaakapisteiden mï¿½ï¿½rï¿½n sï¿½ï¿½tï¿½
+		// 2-piste moodissa yksi piste lisï¿½ï¿½ ja 3-piste moodissa 2 lisï¿½ï¿½ (tai vï¿½hemmï¿½n)
 		int changeValue = CrossSectionMode() == NFmiCrossSectionSystem::k2Point ? 1 : 2;
 		if(theDelta > 0)
 			WantedMinorPointCount(WantedMinorPointCount()+changeValue);
@@ -510,7 +510,7 @@ static std::string GetCrossSectionViewPressureLevelsStr(const std::vector<NFmiCr
 static void SetCrossSectionViewPressureLevels(NFmiCrossSectionSystem &theCrossSectionSystem, const std::string &thePressureLevelsStr)
 {
 	std::vector<float> pressureLevels = NFmiStringTools::Split<std::vector<float> >(thePressureLevelsStr, ",");
-	int maxSize = static_cast<int>(pressureLevels.size()/2); // näin moneen riviin limit löytyy maksimissaan
+	int maxSize = static_cast<int>(pressureLevels.size()/2); // nï¿½in moneen riviin limit lï¿½ytyy maksimissaan
 	for(int i=0; i<maxSize; i++)
 	{
 		if(i < theCrossSectionSystem.MaxViewRowSize())
@@ -529,7 +529,7 @@ void NFmiCrossSectionSystem::Write(std::ostream& os) const
 	os << "// NFmiCrossSectionSystem::Write..." << std::endl;
 
 	os << "// version number" << std::endl;
-	itsCurrentVersionNumber = itsLatestVersionNumber; // aina kirjoitetaan viimeisellä versio numerolla
+	itsCurrentVersionNumber = itsLatestVersionNumber; // aina kirjoitetaan viimeisellï¿½ versio numerolla
 	os << itsCurrentVersionNumber << std::endl;
 
 	os << "// Container<MainPoints>" << std::endl;
@@ -558,18 +558,18 @@ void NFmiCrossSectionSystem::Write(std::ostream& os) const
 	os << itsObsForModeLocation;
 
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 
-	// 'double' muotoisten lisädatojen lisäys
+	// 'double' muotoisten lisï¿½datojen lisï¿½ys
 	extraData.Add(static_cast<double>(itsParamWindowViewPosition)); // talletetaan 1. double extra-datana parametri-laatikon sijainti
 
-	// *** 1. uusi tallennus itsCrossSectionTimeBag talletetaan aikasiirtoina ja siitä tehdään yksi aika-stringi ***
+	// *** 1. uusi tallennus itsCrossSectionTimeBag talletetaan aikasiirtoina ja siitï¿½ tehdï¿½ï¿½n yksi aika-stringi ***
 	std::string crossSectionTimeBagOffSetStr = NFmiDataStoringHelpers::GetTimeBagOffSetStr(usedViewMacroTime, CrossSectionTimeControlTimeBag());
 	extraData.Add(crossSectionTimeBagOffSetStr);
 
-	// *** 2. uusi tallennus jokaisen rivin paineasteikon alku ja loppu päät talletetaan ja siitä tehdään yksi stringi ***
+	// *** 2. uusi tallennus jokaisen rivin paineasteikon alku ja loppu pï¿½ï¿½t talletetaan ja siitï¿½ tehdï¿½ï¿½n yksi stringi ***
 	std::string crossSectionViewPressureLevelsStr = ::GetCrossSectionViewPressureLevelsStr(ExtraRowInfos());
 	extraData.Add(crossSectionViewPressureLevelsStr);
 
@@ -603,7 +603,7 @@ void NFmiCrossSectionSystem::Read(std::istream& is)
 		throw std::runtime_error("NFmiCrossSectionSystem::Read failed");
 
 	NFmiMetTime usedViewMacroTime = NFmiDataStoringHelpers::GetUsedViewMacroTime();
-	NFmiMetTime dummyTime; // erilliset itsRouteStartTime ja itsRouteEndTime on poistettu käytöstä, luetaan vain dummy arvot pois
+	NFmiMetTime dummyTime; // erilliset itsRouteStartTime ja itsRouteEndTime on poistettu kï¿½ytï¿½stï¿½, luetaan vain dummy arvot pois
 	NFmiDataStoringHelpers::ReadTimeWithOffsets(usedViewMacroTime, dummyTime, is);
 	NFmiDataStoringHelpers::ReadTimeWithOffsets(usedViewMacroTime, dummyTime, is);
 
@@ -621,22 +621,22 @@ void NFmiCrossSectionSystem::Read(std::istream& is)
 
 	if(is.fail())
 		throw std::runtime_error("NFmiCrossSectionSystem::Read failed");
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	is >> extraData;
-	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+	// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+	// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 
 	// Luetaan 1. double extra-datana parametri parametri-laatikon sijainti, oletusarvona itsParamWindowViewPosition:ille on top-left.
 	itsParamWindowViewPosition = kTopLeft;
 	if(extraData.itsDoubleValues.size() >= 1)
 		itsParamWindowViewPosition = static_cast<FmiDirection>(extraData.itsDoubleValues[0]);
 
-	// *** 1. uusi tallennus itsCrossSectionTimeBag talletetaan aikasiirtoina ja siitä tehdään yksi aika-stringi ***
+	// *** 1. uusi tallennus itsCrossSectionTimeBag talletetaan aikasiirtoina ja siitï¿½ tehdï¿½ï¿½n yksi aika-stringi ***
 	if(extraData.itsStringValues.size() >= 1)
 	{
 		CrossSectionTimeControlTimeBag(NFmiDataStoringHelpers::GetTimeBagOffSetFromStr(usedViewMacroTime, extraData.itsStringValues[0]));
 	}
-	// *** 2. uusi tallennus jokaisen rivin paineasteikon alku ja loppu päät talletetaan ja siitä tehdään yksi stringi ***
+	// *** 2. uusi tallennus jokaisen rivin paineasteikon alku ja loppu pï¿½ï¿½t talletetaan ja siitï¿½ tehdï¿½ï¿½n yksi stringi ***
 	if(extraData.itsStringValues.size() >= 2)
 	{
 		std::string crossSectionViewPressureLevelsStr = extraData.itsStringValues[1];
@@ -645,7 +645,7 @@ void NFmiCrossSectionSystem::Read(std::istream& is)
 	if(is.fail())
 		throw std::runtime_error("NFmiCrossSectionSystem::Read failed");
 
-	itsCurrentVersionNumber = itsLatestVersionNumber; // aina jatketaan viimeisellä versio numerolla
+	itsCurrentVersionNumber = itsLatestVersionNumber; // aina jatketaan viimeisellï¿½ versio numerolla
 }
 
 void NFmiCrossSectionSystem::Init(const NFmiCrossSectionSystem &theData, bool disableWindowManipulations)
@@ -668,7 +668,7 @@ void NFmiCrossSectionSystem::Init(const NFmiCrossSectionSystem &theData, bool di
 		fCrossSectionViewOn = theData.fCrossSectionViewOn;
 	}
 	fShowHybridLevels = theData.fShowHybridLevels;
-	if(theData.itsCrossSectionTimeControlTimeBag.GetSize() > 1) // vanhoissa makroissa timebagin koko voi olla 1, sitä ei sijoiteta käyttöön
+	if(theData.itsCrossSectionTimeControlTimeBag.GetSize() > 1) // vanhoissa makroissa timebagin koko voi olla 1, sitï¿½ ei sijoiteta kï¿½yttï¿½ï¿½n
 		itsCrossSectionTimeControlTimeBag = theData.itsCrossSectionTimeControlTimeBag;
 	itsCrossSectionDrawParam = theData.itsCrossSectionDrawParam;
 
@@ -714,7 +714,7 @@ void NFmiCrossSectionSystem::GetStartAndEndTimes(NFmiMetTime &theStartTimeOut, N
 	}
 }
 
-// Säädetään kaikki aikaa liittyvät jutut parametrina annettuun aikaan, että SmartMet säätyy ladattuun CaseStudy-dataan mahdollisimman hyvin.
+// Sï¿½ï¿½detï¿½ï¿½n kaikki aikaa liittyvï¿½t jutut parametrina annettuun aikaan, ettï¿½ SmartMet sï¿½ï¿½tyy ladattuun CaseStudy-dataan mahdollisimman hyvin.
 void NFmiCrossSectionSystem::SetCaseStudyTimes(const NFmiMetTime &theCaseStudyTime)
 {
 	itsCrossSectionTimeControlTimeBag.SetNewStartTime(theCaseStudyTime);
@@ -757,19 +757,19 @@ void NFmiCrossSectionSystem::SetCrossSectionSpecialAxisAll(void)
 	}
 }
 
-// Ottaa 1. näkyvän rivin akseli arvot ja laittaa ne default-akseli arvoiksi.
-// Talettaa samalla myös settings arvot ja tekee NFmiSettings -save:n levylle.
+// Ottaa 1. nï¿½kyvï¿½n rivin akseli arvot ja laittaa ne default-akseli arvoiksi.
+// Talettaa samalla myï¿½s settings arvot ja tekee NFmiSettings -save:n levylle.
 void NFmiCrossSectionSystem::SaveCrossSectionDefaultAxisValues(void)
 {
-	// itsStartRowIndex - 1, koska itsStartRowIndex alkaa 1:stä ja vektorin indeksit 0:sta
+	// itsStartRowIndex - 1, koska itsStartRowIndex alkaa 1:stï¿½ ja vektorin indeksit 0:sta
 	itsAxisValuesDefaultWinReg = itsExtraRowInfos[itsStartRowIndex - 1];
 }
 
-// Ottaa 1. näkyvän rivin akseli arvot ja laittaa ne special-akseli arvoiksi.
-// Talettaa samalla myös settings arvot ja tekee NFmiSettings -save:n levylle.
+// Ottaa 1. nï¿½kyvï¿½n rivin akseli arvot ja laittaa ne special-akseli arvoiksi.
+// Talettaa samalla myï¿½s settings arvot ja tekee NFmiSettings -save:n levylle.
 void NFmiCrossSectionSystem::SaveCrossSectionSpecialAxisValues(void)
 {
-	// itsStartRowIndex - 1, koska itsStartRowIndex alkaa 1:stä ja vektorin indeksit 0:sta
+	// itsStartRowIndex - 1, koska itsStartRowIndex alkaa 1:stï¿½ ja vektorin indeksit 0:sta
 	itsAxisValuesSpecialWinReg = itsExtraRowInfos[itsStartRowIndex - 1];
 }
 

@@ -1,7 +1,8 @@
+#ifndef UNIX
 #include "FmiHakeWarningMessages.h"
 #include "SmartMetThreads_resource.h"
 
-// TODO Mitä jos käyttäjä säätää sanomien lukua kesken ajon, pitääkö ohjelma käynnistää uudestaan, vai tehdäänkö muutokset lennossa?
+// TODO Mitï¿½ jos kï¿½yttï¿½jï¿½ sï¿½ï¿½tï¿½ï¿½ sanomien lukua kesken ajon, pitï¿½ï¿½kï¿½ ohjelma kï¿½ynnistï¿½ï¿½ uudestaan, vai tehdï¿½ï¿½nkï¿½ muutokset lennossa?
 
 static UINT PostMessageThread(LPVOID pParam)
 {
@@ -10,9 +11,10 @@ static UINT PostMessageThread(LPVOID pParam)
 
 void CFmiHakeWarningMessages::UpdateApplicationAfterChanges()
 {
-    // HakeWarning systeemi pyörii c++11 std::thread:issa. Sille annetaan tämä updatefunktio callbackinä.
-    // Jostain syystä std::thread:ista lähetetyt PostMessage:t joko kaatuvat tai eivät mene perille CMainFrm:een.
-    // Siksi on luotava erillinen CWinThread, joka tekee PostMessage kutsun, koska siitä sanomat menevät perille.
+    // HakeWarning systeemi pyï¿½rii c++11 std::thread:issa. Sille annetaan tï¿½mï¿½ updatefunktio callbackinï¿½.
+    // Jostain syystï¿½ std::thread:ista lï¿½hetetyt PostMessage:t joko kaatuvat tai eivï¿½t mene perille CMainFrm:een.
+    // Siksi on luotava erillinen CWinThread, joka tekee PostMessage kutsun, koska siitï¿½ sanomat menevï¿½t perille.
     CWinThread *postMessageThread = AfxBeginThread(::PostMessageThread, nullptr, THREAD_PRIORITY_NORMAL);
 }
+#endif // UNIX
 

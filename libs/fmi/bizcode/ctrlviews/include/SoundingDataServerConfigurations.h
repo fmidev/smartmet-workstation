@@ -1,6 +1,8 @@
 #pragma once
 
+#ifndef UNIX
 #include "NFmiCachedRegistryValue.h"
+#endif // UNIX
 #include "NFmiParameterName.h"
 #include "NFmiMetTime.h"
 #include "NFmiPoint.h"
@@ -10,21 +12,29 @@
 class NFmiArea;
 class ModelDataServerConfiguration;
 
-// Tämä luokka tietää mille mallidatoille luotaukset haetaan smartmet-serveriltä eikä käytetä lokaali querydatoja.
-// Se tietää onko server optio käytössä ja minkä niminen data on serverillä.
+// Tï¿½mï¿½ luokka tietï¿½ï¿½ mille mallidatoille luotaukset haetaan smartmet-serveriltï¿½ eikï¿½ kï¿½ytetï¿½ lokaali querydatoja.
+// Se tietï¿½ï¿½ onko server optio kï¿½ytï¿½ssï¿½ ja minkï¿½ niminen data on serverillï¿½.
 // Konffit luetaan lokaali konffitiedostoista ja talletetaan Windows rekisteriin.
-// Lokaali konffeja voidaan päivittää 'pakolla' kasvattamalla näihin konffeihin liittyvää
-// versionumeroa. Jos lokaali tiedostossa on isompi versio kuin rekiterissä, 
+// Lokaali konffeja voidaan pï¿½ivittï¿½ï¿½ 'pakolla' kasvattamalla nï¿½ihin konffeihin liittyvï¿½ï¿½
+// versionumeroa. Jos lokaali tiedostossa on isompi versio kuin rekiterissï¿½, 
 // otetaan kaikki arvot lokaalitiedostosta.
 class SoundingDataServerConfigurations
 {
     std::vector<ModelDataServerConfiguration> modelConfigurations_;
+#ifndef UNIX
     boost::shared_ptr<CachedRegInt> versionNumber_;
+#else
+    int versionNumber_ = 0;
+#endif
     std::string baseRegistryPath_;
     std::string registrySectionName_ = "\\SoundingDataServerConfigurations";
     std::string baseConfigurationPath_;
     std::vector<std::string> serverBaseUrls_;
+#ifndef UNIX
     boost::shared_ptr<CachedRegInt> selectedBaseUrlIndex_;
+#else
+    int selectedBaseUrlIndex_ = 0;
+#endif
     std::vector<FmiParameterName> wantedParameters_;
     std::string wantedParametersString_;
     bool initialized_ = false;
@@ -43,7 +53,9 @@ public:
     const ModelDataServerConfiguration* getServerConfiguration(int producerId) const;
 
 private:
+#ifndef UNIX
     bool mustDoConfigurationOverride(HKEY usedKey);
+#endif
     ModelDataServerConfiguration MakeModelConfiguration(const std::string &modelName, bool configurationOverride);
     std::string makeWantedParametersString() const;
     std::string dataNameOnServer(int producerId) const;

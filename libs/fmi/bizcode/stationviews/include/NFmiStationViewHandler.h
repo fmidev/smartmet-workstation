@@ -11,21 +11,21 @@
 //  - GD Method         : UML ( 2.1.4 )
 //  - GD System Name    : Met-editor Plan 3
 //  - GD View Type      : Class Diagram
-//  - GD View Name      : ruudukkonäyttö
+//  - GD View Name      : ruudukkonï¿½yttï¿½
 // ---------------------------------------------------
 //  Author         : pietarin
 //  Creation Date  : Fri - Sep 10, 1999
 //
 //
 //  Description:
-//   Tämä luokka pitää sisällään kartan piirron
-//   ja stationviewlistin joita se piirtää.
-//   Tätä luokkaa on tarkoitus käyttää editorin
-//   'ruudukko'-näytön palasena. Näistä ruudunpalasista
+//   Tï¿½mï¿½ luokka pitï¿½ï¿½ sisï¿½llï¿½ï¿½n kartan piirron
+//   ja stationviewlistin joita se piirtï¿½ï¿½.
+//   Tï¿½tï¿½ luokkaa on tarkoitus kï¿½yttï¿½ï¿½ editorin
+//   'ruudukko'-nï¿½ytï¿½n palasena. Nï¿½istï¿½ ruudunpalasista
 //   kootaan 'rivit' NFmiTimeStationViwRow-luokkaan ja
 //   ruudukon muodostaa NFmiTimeStationViwRowList.
-//   Tätä viimeista pitää
-//   taas editorin näyttöluokka omanaan.
+//   Tï¿½tï¿½ viimeista pitï¿½ï¿½
+//   taas editorin nï¿½yttï¿½luokka omanaan.
 //
 //  Change Log:
 //
@@ -33,11 +33,17 @@
 
 #pragma once
 
+#ifndef UNIX
 #include "stdafx.h"
+#endif
 #include "NFmiCtrlView.h"
 #include "NFmiWindTableSystem.h"
-#include "HakeMessage\Main.h"
+#ifndef DISABLE_CPPRESTSDK
+#include "HakeMessage/Main.h"
+#endif // DISABLE_CPPRESTSDK
+#ifndef UNIX
 #include <gdiplus.h>
+#endif // UNIX
 
 class NFmiArea;
 class NFmiCtrlViewList;
@@ -55,6 +61,7 @@ class NFmiBetaProduct;
 class NFmiColorContourLegendValues;
 class NFmiColorRectSettings;
 
+#ifndef UNIX
 namespace Gdiplus
 {
 	class Bitmap;
@@ -63,6 +70,7 @@ namespace Gdiplus
     class StringFormat;
     class Rect;
 }
+#endif // UNIX
 
 class LegendDrawingMeasures
 {
@@ -73,7 +81,9 @@ public:
     double paddingLengthInPixels = 0;
     double usedFontSizeInPixels = 0;
     double usedFontSizeInMM = 0;
+#ifndef UNIX
     Gdiplus::Rect backgroundRectInPixels;
+#endif // UNIX
 };
 
 class NFmiStationViewHandler : public NFmiCtrlView
@@ -104,7 +114,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	void StoreToolTipDataInDoc(const NFmiPoint& theRelativePlace);
 	void DrawTimeText(void);
 
-	void DrawOverBitmapThings(NFmiToolBox * theGTB, bool dummy, int dummy2, float dummy3, void* dummy4);// tällä piirretään tavara, joka tulee myös bitmapin päälle
+	void DrawOverBitmapThings(NFmiToolBox * theGTB, bool dummy, int dummy2, float dummy3, void* dummy4);// tï¿½llï¿½ piirretï¿½ï¿½n tavara, joka tulee myï¿½s bitmapin pï¿½ï¿½lle
 	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
 	NFmiCtrlView* GetView(const NFmiDataIdent &theDataIdent, bool fUseParamIdOnly);
 	void DrawParamView(NFmiToolBox * theGTB);
@@ -116,9 +126,11 @@ class NFmiStationViewHandler : public NFmiCtrlView
  private:
 	void DoTotalLocationSelection(const NFmiPoint & thePlace, const NFmiPoint &theLatlon, unsigned long theKey, bool fDrawSelectionOnThisView);
 	NFmiPoint GetViewSizeInPixels(void);
+#ifndef UNIX
 	NFmiPoint CalcRelativeWarningIconSize(Gdiplus::Bitmap *theImage);
 	NFmiRect CalcSymbolRelativeRect(const NFmiPoint &theLatlon, Gdiplus::Bitmap *theImage, double theSizeFactor = 1.0);
 	void DrawWarningIcon(const NFmiPoint &theLatlon, Gdiplus::Bitmap *theImage, float theAlpha, double theSizeFactor = 1.0);
+#endif // UNIX
 #ifndef DISABLE_CPPRESTSDK
     void DrawWantedWarningIcon(const HakeMessage::HakeMsg &theWarningMessage, bool isHakeMessage);
     void DrawHakeMessageIcon(const HakeMessage::HakeMsg &theWarningMessage, const NFmiPoint &latlon);
@@ -133,8 +145,10 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	NFmiRect CalcBaseMarkerRect(double theMarkerSizeInMM);
 	void DrawMarkerPoint(const NFmiPoint &theRelativePlace, const NFmiRect &theTextRect, std::vector<NFmiRect> &theAutoCompletionRects, FmiDirection theMarkerConnectingPlace, NFmiRect &theMarkerCircleBase);
 	void DrawAutocompleteLocations(void);
+#ifndef UNIX
 	void DrawAutocompleteLocation(Gdiplus::Graphics *theGdiPlusGraphics, const NFmiACLocationInfo &theLocInfo, NFmiRect &theMarkerCircleBase);
 	void DrawAreaMask(Gdiplus::Graphics &theGdiPlusGraphics, NFmiWindTableSystem::AreaMaskData &theAreaMaskData);
+#endif // UNIX
 	void DrawWindTableAreas(void);
 	void DrawSilamStationMarkers(NFmiSilamStationList &theStationList, NFmiDrawingEnvironment &theEnvi, const NFmiString &theSynopStr, double symbolXShift, double symbolYShift, NFmiRect &thePlaceRect);
 	bool ShowParamHandlerView(void);
@@ -183,7 +197,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	void SetMapAreaAndRect(const boost::shared_ptr<NFmiArea> &theArea, const NFmiRect& theRect);
 	void DrawMap(NFmiToolBox* theGTB, const NFmiRect& theRect);
 	void DrawOverMap(NFmiToolBox* theGTB, const NFmiRect& theRect);
-	void DrawData(NFmiToolBox* theGTB); // Piirtää datan ruutuun
+	void DrawData(NFmiToolBox* theGTB); // Piirtï¿½ï¿½ datan ruutuun
     void DrawLegends(NFmiToolBox* theGTB);
     void DrawWmsLegends(NFmiToolBox* theGTB);
 	void DrawMapInMouseMove(NFmiToolBox * theGTB, const NFmiRect& theRect);
@@ -226,10 +240,10 @@ class NFmiStationViewHandler : public NFmiCtrlView
     template<typename T>
     bool MakeParamHandlerViewActions(T action)
     {
-        // Ensin pitää suorittaa toiminto, ja ottaa status talteen
+        // Ensin pitï¿½ï¿½ suorittaa toiminto, ja ottaa status talteen
         auto status = action();
-        // Vasta sitten laitetaan optimointi likauslippu päälle. Ainakin yhdessä action funktiossa (double-click) tehdään 
-        // ruudun päivitys välissä jonka jälkeen pitää tehdä vielä lopuksi toinen ruudun päivitys, kun täältä palataan.
+        // Vasta sitten laitetaan optimointi likauslippu pï¿½ï¿½lle. Ainakin yhdessï¿½ action funktiossa (double-click) tehdï¿½ï¿½n 
+        // ruudun pï¿½ivitys vï¿½lissï¿½ jonka jï¿½lkeen pitï¿½ï¿½ tehdï¿½ vielï¿½ lopuksi toinen ruudun pï¿½ivitys, kun tï¿½ï¿½ltï¿½ palataan.
         UpdateOnlyThisMapViewAtNextGeneralViewUpdate();
         // Palautetaan status lopuksi
         return status;
@@ -238,17 +252,17 @@ class NFmiStationViewHandler : public NFmiCtrlView
     boost::shared_ptr<NFmiArea> itsMapArea;
 	NFmiRect itsMapRect;
 	NFmiCtrlViewList * itsViewList;
-	boost::shared_ptr<NFmiDrawParam> itsMapDrawParam; // tämä on feikki, mikä annetaan ctrllist:alle
-	NFmiPoint itsZoomDragDownPoint; // kun tehdään middlemouse dragia eli vedetään zoomi laatikkoa, tässä on sen alku ja loppu pisteet
+	boost::shared_ptr<NFmiDrawParam> itsMapDrawParam; // tï¿½mï¿½ on feikki, mikï¿½ annetaan ctrllist:alle
+	NFmiPoint itsZoomDragDownPoint; // kun tehdï¿½ï¿½n middlemouse dragia eli vedetï¿½ï¿½n zoomi laatikkoa, tï¿½ssï¿½ on sen alku ja loppu pisteet
 	NFmiPoint itsZoomDragUpPoint;
-	NFmiRect itsOldZoomRect; // tällä piirretään vanha laatikko pois (käänteis väri kikka)
-	NFmiPoint itsLastMouseDownRelPlace; //yritän tällä selvittää miksi mouse klick tekee joskus kaksikin turhaa mousemovea
+	NFmiRect itsOldZoomRect; // tï¿½llï¿½ piirretï¿½ï¿½n vanha laatikko pois (kï¿½ï¿½nteis vï¿½ri kikka)
+	NFmiPoint itsLastMouseDownRelPlace; //yritï¿½n tï¿½llï¿½ selvittï¿½ï¿½ miksi mouse klick tekee joskus kaksikin turhaa mousemovea
 
 	std::unique_ptr<NFmiParamHandlerView> itsParamHandlerView;
 	NFmiRect itsParamHandlerViewRect;
 	bool fWholeCrossSectionReallyMoved; 
-    // Tähän talletetään autocompletionissa piirrettyjen nimi laatikkojen ja piste makkerien laatikot. 
-    // Kun etsitään paikkaa seuraavalle laatikoille, ne eivät saa mennä päällekkäin.
+    // Tï¿½hï¿½n talletetï¿½ï¿½n autocompletionissa piirrettyjen nimi laatikkojen ja piste makkerien laatikot. 
+    // Kun etsitï¿½ï¿½n paikkaa seuraavalle laatikoille, ne eivï¿½t saa mennï¿½ pï¿½ï¿½llekkï¿½in.
     std::vector<NFmiRect> itsAutoCompletionRects;
 	NFmiRect itsTimeBoxRelativeRect;
 

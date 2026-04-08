@@ -18,16 +18,16 @@ static NFmiMetTime ConvertStampToTime(const std::string &theTimeStamp)
         return NFmiMetTime::gMissingTime;
 }
 
-// Etsii tarpeeksi pitkän numero stringin tiedosto nimestä, hajottaa ensin filenamen '_'-merkeillä osiin.
-// timestampissa pitää olla muotoa YYYYMMDDHHMM eli 12 merkkiä.
+// Etsii tarpeeksi pitkï¿½n numero stringin tiedosto nimestï¿½, hajottaa ensin filenamen '_'-merkeillï¿½ osiin.
+// timestampissa pitï¿½ï¿½ olla muotoa YYYYMMDDHHMM eli 12 merkkiï¿½.
 static std::string GetTimeStamp(const std::string &theFileName)
 {
 	NFmiFileString fileString(theFileName);
 	std::string fileBaseName(fileString.Header());
-	std::vector<std::string> parts2 = NFmiStringTools::Split(fileBaseName, "_"); // kokeillaan ensin _-merkillä eroteltua aikaleimaa
+	std::vector<std::string> parts2 = NFmiStringTools::Split(fileBaseName, "_"); // kokeillaan ensin _-merkillï¿½ eroteltua aikaleimaa
 	if(parts2.size() <= 1)
-        parts2 = NFmiStringTools::Split(fileBaseName, "."); // kokeillaan sitten .-merkillä eroteltua aikaleimaa
-	if(parts2.size() > 1) // tiedoston nimessä pitää olla _-merkillä erotettu timestamp-osio
+        parts2 = NFmiStringTools::Split(fileBaseName, "."); // kokeillaan sitten .-merkillï¿½ eroteltua aikaleimaa
+	if(parts2.size() > 1) // tiedoston nimessï¿½ pitï¿½ï¿½ olla _-merkillï¿½ erotettu timestamp-osio
 	{
 		for(unsigned int i=0; i<parts2.size(); i++)
 		{
@@ -36,7 +36,7 @@ static std::string GetTimeStamp(const std::string &theFileName)
 				try
 				{
 					/* double tmp = */ NFmiStringTools::Convert<double>(parts2[i]);
-					return parts2[i]; // jos double konversio onnistui, oletetaan että kyseessä on numeroita sisältävä stringi
+					return parts2[i]; // jos double konversio onnistui, oletetaan ettï¿½ kyseessï¿½ on numeroita sisï¿½ltï¿½vï¿½ stringi
 				}
 				catch(std::exception & /* e */ )
 				{
@@ -61,7 +61,7 @@ NFmiSatelliteImageCache::NFmiSatelliteImageCache(const std::string &fileName, in
 ,mImageLoadingFailedWaitTimeMs(imageLoadingFailedWaitTimeMs)
 {
     mImageHolder->mFilePath = fileName;
-    mImageHolder->mImageTime = NFmiSatelliteImageCache::GetTimeFromFileName(fileName); // Alustamattomassa imageHolderissa pitää olla aikatieto mukana
+    mImageHolder->mImageTime = NFmiSatelliteImageCache::GetTimeFromFileName(fileName); // Alustamattomassa imageHolderissa pitï¿½ï¿½ olla aikatieto mukana
 }
 
 NFmiMetTime NFmiSatelliteImageCache::GetTimeFromFileName(const std::string &fileName)
@@ -91,9 +91,9 @@ static NFmiImageHolder LoadImageTask(std::string imageFileName)
     NFmiImageHolder imageHolder = std::make_shared<NFmiImageData>();
     try
     {
-        // Latdattava ImageHolder pitää alustaa ajalla ja statuksella
+        // Latdattava ImageHolder pitï¿½ï¿½ alustaa ajalla ja statuksella
         imageHolder->mFilePath = imageFileName;
-        imageHolder->mImageTime = NFmiSatelliteImageCache::GetTimeFromFileName(imageFileName); // imageHolderissa pitää olla aikatieto mukana
+        imageHolder->mImageTime = NFmiSatelliteImageCache::GetTimeFromFileName(imageFileName); // imageHolderissa pitï¿½ï¿½ olla aikatieto mukana
         imageHolder->mState = NFmiImageData::kLoading;
 
 //        std::this_thread::sleep_for(std::chrono::milliseconds(2000)); // Testausta varten hidastus imagen lukuun
@@ -113,10 +113,10 @@ static NFmiImageHolder LoadImageTask(std::string imageFileName)
     return imageHolder;
 }
 
-// Tätä funktiota saa kutsua vain NFmiSatelliteImageCache::Image -metodista ja silloin vain kun ollaan uninitialized -tilassa.
+// Tï¿½tï¿½ funktiota saa kutsua vain NFmiSatelliteImageCache::Image -metodista ja silloin vain kun ollaan uninitialized -tilassa.
 // Kuvan lataus laitetaan erilliseen threadiin ja mImageState kLoading -tilaan. 
-// Jos se valmistuu tarpeeksi nopeasti, tämä metodi odottaa ja palauttaa ladatun kuvan.
-// Jos lataus kestää liikaa, palautetaan tyhjää, mutta kun threadi lopulta valmistuu, 
+// Jos se valmistuu tarpeeksi nopeasti, tï¿½mï¿½ metodi odottaa ja palauttaa ladatun kuvan.
+// Jos lataus kestï¿½ï¿½ liikaa, palautetaan tyhjï¿½ï¿½, mutta kun threadi lopulta valmistuu, 
 // asetetaan kuva mImage:en ja laitetaan mImageState kJustLoaded -tilaan.
 NFmiImageHolder NFmiSatelliteImageCache::StartLoadingImage()
 {
@@ -125,15 +125,15 @@ NFmiImageHolder NFmiSatelliteImageCache::StartLoadingImage()
         SetImageState(NFmiImageData::kLoading);
         mLoadingTimer.StartTimer();
         mImageHolderFuture = std::async(std::launch::async, ::LoadImageTask, mImageFileName);
-        if(CheckOnImageLoading(mFirstTimeLoadingWaitTimeMs)) // Odotetaan vähän aikaa josko kuva latautuu
-            return mImageHolder; // palautetaan se sitten välittömästi
+        if(CheckOnImageLoading(mFirstTimeLoadingWaitTimeMs)) // Odotetaan vï¿½hï¿½n aikaa josko kuva latautuu
+            return mImageHolder; // palautetaan se sitten vï¿½littï¿½mï¿½sti
     }
     catch(...)
     {
         SetImageState(NFmiImageData::kErrorneus);
     }
 
-    return mImageHolder; // No kävi miten kävi, niin palautetaan imageholder joka tapauksessa
+    return mImageHolder; // No kï¿½vi miten kï¿½vi, niin palautetaan imageholder joka tapauksessa
 }
 
 // Tarkistetaan onko latautumassa oleva image latautunut. 
@@ -154,20 +154,24 @@ bool NFmiSatelliteImageCache::CheckOnImageLoading(int waitForMs)
             {
                 std::lock_guard<std::mutex> lock(mImageLoadingMutex);
                 mImageHolder = mImageHolderFuture.get();
-                // HUOM! Ei saa käyttää SetImageState-metodia statuksen asetuksessa, koska sielläkin on lukitus
+                // HUOM! Ei saa kï¿½yttï¿½ï¿½ SetImageState-metodia statuksen asetuksessa, koska siellï¿½kin on lukitus
+#ifndef UNIX
                 if(!mImageHolder->mErrorMessage.empty() || mImageHolder->mImage == nullptr)
-                    mImageHolder->mState = NFmiImageData::kErrorneus; // Jos image holderin error-text osiossa on jotain tai image-ptr oli nullptr, epäonnistui lataus
+#else
+                if(!mImageHolder->mErrorMessage.empty())
+#endif
+                    mImageHolder->mState = NFmiImageData::kErrorneus; // Jos image holderin error-text osiossa on jotain tai image-ptr oli nullptr, epï¿½onnistui lataus
                 else
                     mImageHolder->mState = NFmiImageData::kOk; // Laitetaan status ok:ksi
                 return true;
             }
 
             if(mLoadingTimer.CurrentTimeDiffInMSeconds() > mImageLoadingFailedWaitTimeMs)
-            { // Kuvaa on latailtu tuloksetta tarpeeksi kauan, laitetaan error -tila päälle ja laitetaan imageHolderille error teksti
+            { // Kuvaa on latailtu tuloksetta tarpeeksi kauan, laitetaan error -tila pï¿½ï¿½lle ja laitetaan imageHolderille error teksti
                 std::lock_guard<std::mutex> lock(mImageLoadingMutex);
                 mImageHolder->mErrorMessage = std::string("Image loading took too long time, loading failed for image-file:") + "\n" + mImageFileName;
                 mImageHolder->mState = NFmiImageData::kErrorLoadingTookTooLong;
-                mImageHolderFuture = std::future<NFmiImageHolder>(); // nollataan tässä tilanteessa future
+                mImageHolderFuture = std::future<NFmiImageHolder>(); // nollataan tï¿½ssï¿½ tilanteessa future
                 return true; // Palautetaan true, koska saatiin joku ratkaisu aikaiseksi (loading lasted too long error)
             }
         }
@@ -175,14 +179,14 @@ bool NFmiSatelliteImageCache::CheckOnImageLoading(int waitForMs)
     return false;
 }
 
-// Tämä on threadi turvallinen tapa muuttaa imagen statusta.
+// Tï¿½mï¿½ on threadi turvallinen tapa muuttaa imagen statusta.
 void NFmiSatelliteImageCache::SetImageState(NFmiImageData::ImageStateEnum imageState)
 {
     std::lock_guard<std::mutex> lock(mImageLoadingMutex);
     mImageHolder->mState = imageState;
 }
 
-// Tyhjennetään imageHolder, jolloin kuva joudutaan lataamaan uudestaan, jos sitä käytetään.
+// Tyhjennetï¿½ï¿½n imageHolder, jolloin kuva joudutaan lataamaan uudestaan, jos sitï¿½ kï¿½ytetï¿½ï¿½n.
 void NFmiSatelliteImageCache::ResetImage()
 {
     std::lock_guard<std::mutex> lock(mImageLoadingMutex);

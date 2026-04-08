@@ -8,7 +8,9 @@
 #include "NFmiDictionaryFunction.h"
 #include "NFmiMacroParamfunctions.h"
 #include "CtrlViewFunctions.h"
+#ifndef UNIX
 #include <afxdlgs.h>
+#endif
 
 namespace BetaProduct
 {
@@ -40,7 +42,7 @@ namespace BetaProduct
 
             if(absolutePath.empty() || absoluteDirectory.empty())
                 return false;
-            // Tämä etsintä työ pitää tehdä case-insensitiivisti, Koska Windows käsittelee polkuja siten.
+            // Tï¿½mï¿½ etsintï¿½ tyï¿½ pitï¿½ï¿½ tehdï¿½ case-insensitiivisti, Koska Windows kï¿½sittelee polkuja siten.
             auto pos = MacroParam::ci_find_substr(absolutePath, absoluteDirectory); 
             return pos != MacroParam::ci_string_not_found;
         }
@@ -57,13 +59,14 @@ namespace BetaProduct
         return gLoggerFunction;
     }
 
+#ifndef UNIX
     // theInitialFileName on siis vain polku/xxx.ext -tyyppisessa polussa xxx -osio.
-    // Kun CFileDialog:ille annetaan alkuarvaus tiedoston nimestä täysine polkuineen, avataan dialogi aina halutussa kansiossa.
+    // Kun CFileDialog:ille annetaan alkuarvaus tiedoston nimestï¿½ tï¿½ysine polkuineen, avataan dialogi aina halutussa kansiossa.
     bool GetFilePathFromUser(const std::string &theFileFilter, const std::string &theInitialDirectory, std::string &theFilePathOut, bool fLoadFile, const std::string& theInitialFileName, CWnd* parentView)
     {
         auto originalPathString = theInitialDirectory + theInitialFileName;
         // Esim. "D:\\smartmet\\Dropbox (FMI)\\SmartMet\\MetEditor_5_13_2_0\\..\\..\\Macros\\FMI\\ViewMacros\\"
-        // => "D:\\smartmet\\Dropbox (FMI)\\Macros\\FMI\\ViewMacros\\", muuten CFileDialog ei toimi kuten pitää.
+        // => "D:\\smartmet\\Dropbox (FMI)\\Macros\\FMI\\ViewMacros\\", muuten CFileDialog ei toimi kuten pitï¿½ï¿½.
         std::string simplyfiedPathString = PathUtils::simplifyWindowsPath(originalPathString);
 
         CString initialFilePath = CA2T(simplyfiedPathString.c_str());
@@ -114,5 +117,6 @@ namespace BetaProduct
         }
         return false;
     }
+#endif // UNIX
 
 }

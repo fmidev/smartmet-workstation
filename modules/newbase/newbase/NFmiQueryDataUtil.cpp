@@ -5412,7 +5412,7 @@ unsigned int NFmiQueryDataUtil::GetReasonableWorkingThreadCount(double wantedHar
 {
   auto maxThreadCount = std::thread::hardware_concurrency();
   auto threadCount = static_cast<unsigned int>(
-      boost::math::iround(maxThreadCount * (wantedHardwareThreadPercent / 100.)));
+      static_cast<unsigned int>(std::lround(maxThreadCount * (wantedHardwareThreadPercent / 100.))));
   ::CheckThreadCountLimits(threadCount, maxThreadCount);
   if (separateTaskCount == 0)
     return threadCount;

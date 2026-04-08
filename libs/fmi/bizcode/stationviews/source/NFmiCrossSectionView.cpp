@@ -14,7 +14,7 @@
 #include "NFmiStringTools.h"
 #include "NFmiDrawParamList.h"
 #include "NFmiWindBarb.h"
-#include "NFmiPolyLine.h"
+#include "NFmiPolyline.h"
 #include "NFmiTrajectorySystem.h"
 #include "NFmiDictionaryFunction.h"
 #include "NFmiMacroParamSystem.h"
@@ -43,7 +43,9 @@
 #include "NFmiColorContourLegendSettings.h"
 #include "NFmiColorContourLegendValues.h"
 #include "catlog/catlog.h"
+#ifndef UNIX
 #include "NFmiApplicationWinRegistry.h"
+#endif // UNIX
 #include "NFmiPathUtils.h"
 #include "TimeSerialModification.h"
 #include "ParamHandlerViewFunctions.h"
@@ -127,13 +129,16 @@ static void DrawLineWithToolBox(const NFmiPoint& theStartingPoint, const NFmiPoi
 // Constructor/Destructor
 //--------------------------------------------------------
 
+static boost::shared_ptr<NFmiArea> s_emptyArea;
+static boost::shared_ptr<NFmiDrawParam> s_emptyDrawParam;
+
 NFmiCrossSectionView::NFmiCrossSectionView(NFmiToolBox * theToolBox
                                  ,int viewGridRowNumber
                                  ,int viewGridColumnNumber)
 :NFmiIsoLineView(CtrlViewUtils::kFmiCrossSectionView
-				 ,boost::shared_ptr<NFmiArea>()
+				 ,s_emptyArea
 				,theToolBox
-				,boost::shared_ptr<NFmiDrawParam>()
+				,s_emptyDrawParam
 				,kFmiTemperature
 				,NFmiPoint()
 				,NFmiPoint()
@@ -735,7 +740,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 					str += paramNameString;
 					str += ":	";
 					str += "<b><font color=blue>";
-					std::string valueStr = (value == kFloatMissing) ? "-" : NFmiValueString::GetStringWithMaxDecimalsSmartWay(value, ((value > 1) ? 1 : 2));
+					std::string valueStr = (value == kFloatMissing) ? std::string("-") : std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(value, ((value > 1) ? 1 : 2)).CharPtr());
 					str += valueStr;
 					str += "</font></b>";
 					str += GetPossibleMacroParamSymbolText(value, valueStr, extraMacroParamData);
@@ -961,7 +966,9 @@ void NFmiCrossSectionView::DrawCrossSection(void)
 	isoLineData.itsInfo = this->itsInfo;
 	isoLineData.itsParam = itsDrawParam->Param();
 	isoLineData.itsTime = CurrentTime();
+#ifndef UNIX
     isoLineData.itsIsolineMinLengthFactor = itsCtrlViewDocumentInterface->ApplicationWinRegistry().IsolineMinLengthFactor();
+#endif // UNIX
 
     auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
 	int oldVerticalPointCount = crossSectionSystem->VerticalPointCount();
@@ -2761,7 +2768,8 @@ static bool DrawBatymetria(NFmiDrawParamList &theDrawParamList, NFmiInfoOrganize
 {
 	if(theDrawParamList.Index(1)) // etsit��n 1. drawParam
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> firstDataInfo = theInfoOrganizer.Info(theDrawParamList.Current(), true, true);
+		auto currentDrawParam = theDrawParamList.Current();
+		boost::shared_ptr<NFmiFastQueryInfo> firstDataInfo = theInfoOrganizer.Info(currentDrawParam, true, true);
 		if(firstDataInfo && firstDataInfo->SizeLevels() > 1) // datassa pit�� olla useita leveleit�
 		{
 			for(firstDataInfo->ResetLevel(); firstDataInfo->NextLevel(); )

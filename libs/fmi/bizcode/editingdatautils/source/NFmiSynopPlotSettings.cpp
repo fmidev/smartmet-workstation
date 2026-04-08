@@ -54,7 +54,7 @@ void NFmiSynopPlotSettings::Init(void)
 		fShowTw = NFmiSettings::Require<bool>("MetEditor::SynopPlotSettings::ShowTw");
 		fUseSingleColor = NFmiSettings::Require<bool>("MetEditor::SynopPlotSettings::UseSingleColor");
 
-		// värin luku vaatii hieman kikkailua stringstreamin kanssa
+		// vï¿½rin luku vaatii hieman kikkailua stringstreamin kanssa
 		std::string tmp;
 		tmp = NFmiSettings::Require<std::string>("MetEditor::SynopPlotSettings::SingleColor");
 #ifdef OLDGCC
@@ -71,7 +71,7 @@ void NFmiSynopPlotSettings::Init(void)
 	}
 	catch(...)
 	{
-		throw; // laitetaan poikkeus eteenpäin vain
+		throw; // laitetaan poikkeus eteenpï¿½in vain
 	}
 }
 
@@ -116,7 +116,7 @@ void NFmiSynopPlotSettings::Store(void)
 	}
 	catch(...)
 	{
-		throw; // laitetaan poikkeus eteenpäin vain
+		throw; // laitetaan poikkeus eteenpï¿½in vain
 	}
 }
 
@@ -142,7 +142,7 @@ void NFmiSynopPlotSettings::ShowAllParams(bool newValue)
 	fShowTw = newValue;
 }
 
-// HUOM!! Tämä laittaa kommentteja mukaan!
+// HUOM!! Tï¿½mï¿½ laittaa kommentteja mukaan!
 void NFmiSynopPlotSettings::Write(std::ostream& os) const
 {
 	os << "// NFmiSynopPlotSettings::Write..." << std::endl;
@@ -168,9 +168,9 @@ void NFmiSynopPlotSettings::Write(std::ostream& os) const
 	os << "// itsFontSize + itsPlotSpacing" << std::endl;
 	os << itsFontSize << " " << itsPlotSpacing << std::endl;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 
 	// 1. uusi string data on metar-plot asetukset
 	extraData.Add(itsMetarPlotSettings.MakeViewMacroString());
@@ -182,9 +182,9 @@ void NFmiSynopPlotSettings::Write(std::ostream& os) const
 		throw std::runtime_error("NFmiSynopPlotSettings::Write failed");
 }
 
-// HUOM!! ennen kuin tämä luokka luetaan sisään tiedostosta, poista kommentit
+// HUOM!! ennen kuin tï¿½mï¿½ luokka luetaan sisï¿½ï¿½n tiedostosta, poista kommentit
 // NFmiCommentStripper-luokalla, koska kirjoitettaessa kommentteja laitetaan
-// sekaan. Eli älä käytä suoraan tätä metodia, vaan Init(filename)-metodia!!!!
+// sekaan. Eli ï¿½lï¿½ kï¿½ytï¿½ suoraan tï¿½tï¿½ metodia, vaan Init(filename)-metodia!!!!
 void NFmiSynopPlotSettings::Read(std::istream& is)
 {
 	is >> fShowT >> fShowTd >> fShowV >> fShowWw;
@@ -204,10 +204,10 @@ void NFmiSynopPlotSettings::Read(std::istream& is)
 	if(is.fail())
 		throw std::runtime_error("NFmiSynopPlotSettings::Read failed");
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	is >> extraData;
-	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+	// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+	// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 
 	// 1. uusi string data on metar-plot asetukset
 	if(extraData.itsStringValues.size() >= 1)
@@ -216,9 +216,10 @@ void NFmiSynopPlotSettings::Read(std::istream& is)
 	}
 	else
 	{
-		// Jos viewMacro talletus oli tehty vanhalla versiolla, pitää antaa tyhjä string tässä, 
-		// jotta saadaan halutu asetukset päälle, eli kaikki parametrit näkyviksi ja tietyt synop-plot optiot käyttöön
-		itsMetarPlotSettings.InitFromViewMacroString(std::string(), *this);
+		// Jos viewMacro talletus oli tehty vanhalla versiolla, pitï¿½ï¿½ antaa tyhjï¿½ string tï¿½ssï¿½, 
+		// jotta saadaan halutu asetukset pï¿½ï¿½lle, eli kaikki parametrit nï¿½kyviksi ja tietyt synop-plot optiot kï¿½yttï¿½ï¿½n
+		std::string emptyStr;
+		itsMetarPlotSettings.InitFromViewMacroString(emptyStr, *this);
 	}
 
 	if(is.fail())

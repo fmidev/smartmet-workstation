@@ -35,20 +35,20 @@ namespace Warnings
         void Initialize(LPXNode aNode);
 
         //Setters
-        void setPublicationId(std::string &publicationId) { publicationId_ = publicationId; }
-        void setWarningContext(std::string &warningContext) { warningContext_ = warningContext; }
-        void setSeverity(std::string &severity) { severity_ = severity; }
-        void setCauses(std::string &causes) { causes_ = causes; }
-        void setPhysicalReference(std::string &physicalReference) { physicalReference_ = physicalReference; }
+        void setPublicationId(const std::string &publicationId) { publicationId_ = publicationId; }
+        void setWarningContext(const std::string &warningContext) { warningContext_ = warningContext; }
+        void setSeverity(const std::string &severity) { severity_ = severity; }
+        void setCauses(const std::string &causes) { causes_ = causes; }
+        void setPhysicalReference(const std::string &physicalReference) { physicalReference_ = physicalReference; }
         void setPhysicalValue(float physicalValue) { physicalValue_ = physicalValue; }
         void setPhysicalDirection(float physicalDirection) { physicalDirection_ = physicalDirection; }
-        void setPhysicalUnit(std::string &physicalUnit) { physicalUnit_ = physicalUnit; }
-        void setEffectiveFrom(NFmiMetTime &effectiveFrom) { effectiveFrom_ = effectiveFrom; }
-        void setEffectiveUntil(NFmiMetTime &effectiveUntil) { effectiveUntil_ = effectiveUntil; }
-        void setInfoEnglish(std::string &infoEnglish) { infoEnglish_ = infoEnglish; }
-        void setReference(std::string &reference) { reference_ = reference; }
-        void setWarningAreaPolygons(std::vector<std::vector<NFmiPoint>> &warningAreaPolygons) { warningAreaPolygons_ = warningAreaPolygons; }
-        void setCenter(NFmiPoint &center) { center_ = center; }
+        void setPhysicalUnit(const std::string &physicalUnit) { physicalUnit_ = physicalUnit; }
+        void setEffectiveFrom(const NFmiMetTime &effectiveFrom) { effectiveFrom_ = effectiveFrom; }
+        void setEffectiveUntil(const NFmiMetTime &effectiveUntil) { effectiveUntil_ = effectiveUntil; }
+        void setInfoEnglish(const std::string &infoEnglish) { infoEnglish_ = infoEnglish; }
+        void setReference(const std::string &reference) { reference_ = reference; }
+        void setWarningAreaPolygons(const std::vector<std::vector<NFmiPoint>> &warningAreaPolygons) { warningAreaPolygons_ = warningAreaPolygons; }
+        void setCenter(const NFmiPoint &center) { center_ = center; }
 
         //Getters
         std::string& getPublicationId() { return publicationId_; }

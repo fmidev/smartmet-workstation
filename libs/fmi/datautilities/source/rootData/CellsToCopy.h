@@ -60,7 +60,7 @@ namespace SmartMetDataUtilities
     private:
         void calculateRowsAndColumsToCopy()
         {
-            auto& rootGrid = rootData_.getGrid();
+            auto rootGrid = rootData_.getGrid();
             auto gridBottomLeft = rootGrid->LatLonToGrid(mapArea_.BottomLeftLatLon());
             auto gridTopRight = rootGrid->LatLonToGrid(mapArea_.TopRightLatLon());
             lastColumnToCopy_ = static_cast<int>(ceil(gridTopRight.X()));

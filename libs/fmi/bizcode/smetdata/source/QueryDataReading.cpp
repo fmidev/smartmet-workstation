@@ -18,8 +18,8 @@ namespace
     {
         std::string errMsg(theExceptionMsg);
 
-        // Datan luku virhetilanteissa ei enää haluta siirtää ongelma tiedostoja pois monistakin syistä.
-        // Tehdään vain hieman erilaiset virheilmoitukset ja jos muisti on loppunut, varoitetaan käyttäjää,
+        // Datan luku virhetilanteissa ei enï¿½ï¿½ haluta siirtï¿½ï¿½ ongelma tiedostoja pois monistakin syistï¿½.
+        // Tehdï¿½ï¿½n vain hieman erilaiset virheilmoitukset ja jos muisti on loppunut, varoitetaan kï¿½yttï¿½jï¿½ï¿½,
         // mutta vain 1. kerralla.
         std::string::size_type pos = theExceptionMsg.find("SmartMet:");
         if(badAllocExeption == false && pos == std::string::npos)
@@ -27,7 +27,7 @@ namespace
             errMsg += "\nFile reading problem but file was not moved to error directory.";
         }
         else
-        { // jos smartmet teksti löytyi messagesta, tai oli bad_alloc-exception, laitetaan tähän varoitus messageBox yhden kerran, että
+        { // jos smartmet teksti lï¿½ytyi messagesta, tai oli bad_alloc-exception, laitetaan tï¿½hï¿½n varoitus messageBox yhden kerran, ettï¿½
           // joku data ei ole luettu koska ei saatu varattua tarpeeksi isoa taulukkoa.
             static bool firstTime = true;
             if(firstTime)
@@ -44,7 +44,9 @@ namespace
 
                 msgStr += theExceptionMsg;
                 CatLog::logMessage(msgStr, CatLog::Severity::Error, CatLog::Category::Data);
+#ifndef UNIX
                 ::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(msgStr.c_str()), CA2T(msgTitle.c_str()), MB_OK);
+#endif // UNIX
             }
         }
         throw std::runtime_error(errMsg);
@@ -54,7 +56,7 @@ namespace
 namespace QueryDataReading
 {
     // theFileFilter voi olla tarkka tiedoston nimi polkuineen tai esim. Hirlam_data_*.sqd, jolloin haetaan viimeisin
-    // kyseisellä filterillä löytyvästä tiedostoista.
+    // kyseisellï¿½ filterillï¿½ lï¿½ytyvï¿½stï¿½ tiedostoista.
     // Anna theLimitingTimeStamp arvo 0 jos haluat lukea tiedoston joka tapauksessa.
     std::unique_ptr<NFmiQueryData> ReadLatestDataWithFileFilterAfterTimeStamp(const std::string& theFileFilter, time_t theLimitingTimeStamp, std::string& theFileNameOut, time_t& theTimeStampOut)
     {
@@ -86,14 +88,14 @@ namespace QueryDataReading
             {
                 catchedAllready = true;
                 if(badAllocHandled)
-                    throw; // jos bad_alloc haarasta heitetty tuli tähän, heitetään se vain edelleen
+                    throw; // jos bad_alloc haarasta heitetty tuli tï¿½hï¿½n, heitetï¿½ï¿½n se vain edelleen
                 else
                 {
                     ::LogQueryDataFileReadError(usedFileName, std::string("), std::exception thrown:\n") + e.what());
                     DoLatestDataReadingProblem(tmpFileName, e.what(), false);
                 }
             }
-            catch(char *msg) // HUOM! tämän (catch(char *msg)) pitää olla catch(std::exception & e) perässä koska DoLatestDataReadingProblem heittää std::runtime_error:in joka otettaisiin ttaas uudestaan kiinni
+            catch(char *msg) // HUOM! tï¿½mï¿½n (catch(char *msg)) pitï¿½ï¿½ olla catch(std::exception & e) perï¿½ssï¿½ koska DoLatestDataReadingProblem heittï¿½ï¿½ std::runtime_error:in joka otettaisiin ttaas uudestaan kiinni
             {
                 catchedAllready = true;
                 ::LogQueryDataFileReadError(usedFileName, std::string("), char * -exception thrown:\n") + msg);
@@ -102,7 +104,7 @@ namespace QueryDataReading
             catch(...)
             {
                 if(catchedAllready)
-                    throw; // jos on jo käsitelty, heitä poikkeus vain eteenpäin
+                    throw; // jos on jo kï¿½sitelty, heitï¿½ poikkeus vain eteenpï¿½in
                 else
                 {
                     ::LogQueryDataFileReadError(usedFileName, "), unknown-exception thrown");

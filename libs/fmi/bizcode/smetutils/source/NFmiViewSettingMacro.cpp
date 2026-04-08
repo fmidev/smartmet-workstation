@@ -52,9 +52,9 @@ bool SkipViewMacroFileCommentLine(std::istream &is)
         is.get(ch);
         if(is.fail())
             return false;
-    } while(std::isspace(ch)); // etsitään merkki kerrallaan kunnes vastaan tulee ei space (oletus, stream alkaa aina rivin alusta)
+    } while(std::isspace(ch)); // etsitï¿½ï¿½n merkki kerrallaan kunnes vastaan tulee ei space (oletus, stream alkaa aina rivin alusta)
     if(ch == '/' || ch == '#')
-    { // Jos oli kommentti merkki rivin alussa (spacejen jälkeen), luetaan loppu rivi pois
+    { // Jos oli kommentti merkki rivin alussa (spacejen jï¿½lkeen), luetaan loppu rivi pois
         ::SkipRestOfTheLine(is);
         return true;
     }
@@ -79,7 +79,7 @@ bool GetNextNumberFromViewMacroFile(std::istream &is, double &number)
     }
 }
 
-// Tämä luetaan raa'asta tiedostosta, ilman että poistetaan kommentteja ja että luetaan ensin koko tiedosto streamiin muistiin.
+// Tï¿½mï¿½ luetaan raa'asta tiedostosta, ilman ettï¿½ poistetaan kommentteja ja ettï¿½ luetaan ensin koko tiedosto streamiin muistiin.
 void NFmiLightWeightViewSettingMacro::Read(std::istream& is)
 {
     fViewMacroOk = true;
@@ -89,19 +89,19 @@ void NFmiLightWeightViewSettingMacro::Read(std::istream& is)
     {
         ::SkipRestOfTheLine(is);
         double nameStringLength = -1;
-        // Luetaan sitten nimi-stringiin liittyvä numero
+        // Luetaan sitten nimi-stringiin liittyvï¿½ numero
         if(::GetNextNumberFromViewMacroFile(is, nameStringLength))
         {
             ::SkipRestOfTheLine(is);
             double descriptionStringLength = -1;
-            // Luetaan sitten description-stringiin liittyvä numero
+            // Luetaan sitten description-stringiin liittyvï¿½ numero
             if(::GetNextNumberFromViewMacroFile(is, descriptionStringLength))
             {
                 int stringSize = static_cast<int>(descriptionStringLength);
                 if(stringSize > 0)
                 {
                     if(stringSize > 4000)
-                        stringSize = 4000; // rajoitetaan luetun descriptionin kooksi 4000 merkkiä
+                        stringSize = 4000; // rajoitetaan luetun descriptionin kooksi 4000 merkkiï¿½
                     char ch;
                     is.get(ch); // luetaan space pois
                     itsDescription.resize(stringSize);
@@ -167,7 +167,7 @@ void NFmiViewSettingMacro::Param::DrawParam(const boost::shared_ptr<NFmiDrawPara
 
 void NFmiViewSettingMacro::Param::SetMacroParamInitFileNames(const std::string &theRootPath)
 {
-	// siis jos kyseessä macroParam, pitää sille asettaa initFileName oikein, että
+	// siis jos kyseessï¿½ macroParam, pitï¿½ï¿½ sille asettaa initFileName oikein, ettï¿½
 	// macroParamit saadaan ladattua oikein alihakemistoistakin.
 	if(NFmiDrawParam::IsMacroParamCase(DataType()))
 	{
@@ -200,14 +200,14 @@ void NFmiViewSettingMacro::Param::Write(std::ostream& os) const
     // fShowTimeDifference is removed option, storing dummy value for backward compatibility
 	os << fHidden << " " << fActive << " " << false << " " << fShowDifferenceToOriginalData << endl;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::Param::Write epäonnistui");
+		throw runtime_error("NFmiViewSettingMacro::Param::Write epï¿½onnistui");
 }
 
 void NFmiViewSettingMacro::Param::Read(std::istream& is)
@@ -220,11 +220,11 @@ void NFmiViewSettingMacro::Param::Read(std::istream& is)
 	if(is)
 		is >> itsDataIdent;
 	if(is)
-		itsDrawParam->Param(itsDataIdent); // pitää asettaa myös parametri kohdalleen drawParamiin, muuten koiranpennut rupee juhlimaan
+		itsDrawParam->Param(itsDataIdent); // pitï¿½ï¿½ asettaa myï¿½s parametri kohdalleen drawParamiin, muuten koiranpennut rupee juhlimaan
 	if(is)
 		is >> itsLevel;
 	if(is)
-		itsDrawParam->Level(itsLevel); // myös level pitää asettaa tässä heti
+		itsDrawParam->Level(itsLevel); // myï¿½s level pitï¿½ï¿½ asettaa tï¿½ssï¿½ heti
 	if(is)
 	{
 		int tmp = 0;
@@ -242,10 +242,10 @@ void NFmiViewSettingMacro::Param::Read(std::istream& is)
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	is >> extraData;
-	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+	// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+	// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -279,14 +279,14 @@ void NFmiViewSettingMacro::Mask::Write(std::ostream& os) const
 	os << "// MaskEnabled" << endl;
 	os << fMaskEnabled << endl;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::Mask::Write epäonnistui");
+		throw runtime_error("NFmiViewSettingMacro::Mask::Write epï¿½onnistui");
 }
 
 void NFmiViewSettingMacro::Mask::Read(std::istream& is)
@@ -299,10 +299,10 @@ void NFmiViewSettingMacro::Mask::Read(std::istream& is)
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	is >> extraData;
-	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+	// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+	// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 }
@@ -363,14 +363,14 @@ void NFmiViewSettingMacro::MaskSettings::Write(std::ostream& os) const
 	os << "// ShowMasksOnMapView UseMasksInTimeSerialViews fUseMasksWithFilterTool fUseMaskWithBrush" << endl;
 	os << fShowMasksOnMapView << " " << fUseMasksInTimeSerialViews << " " << fUseMasksWithFilterTool << " " << fUseMaskWithBrush << endl;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::MaskSettings::Write epäonnistui");
+		throw runtime_error("NFmiViewSettingMacro::MaskSettings::Write epï¿½onnistui");
 }
 
 void NFmiViewSettingMacro::MaskSettings::Read(std::istream& is)
@@ -383,10 +383,10 @@ void NFmiViewSettingMacro::MaskSettings::Read(std::istream& is)
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	is >> extraData;
-	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+	// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+	// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 }
@@ -440,14 +440,14 @@ void NFmiViewSettingMacro::MapRow::Write(std::ostream& os) const
 	NFmiDataStoringHelpers::WriteContainer(itsRowParams, os, string("\n"));
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::MapRow::Write epäonnistui");
+		throw runtime_error("NFmiViewSettingMacro::MapRow::Write epï¿½onnistui");
 }
 
 void NFmiViewSettingMacro::MapRow::Read(std::istream& is)
 { // toivottavasti olet poistanut kommentit luettavasta streamista!!
 	NFmiDataStoringHelpers::ReadContainer(itsRowParams, is);
 	if(is.fail())
-		throw runtime_error("NFmiViewSettingMacro::MapRow::Read epäonnistui");
+		throw runtime_error("NFmiViewSettingMacro::MapRow::Read epï¿½onnistui");
 }
 
 NFmiViewSettingMacro::TimeViewRow::TimeViewRow(void)
@@ -515,21 +515,21 @@ void NFmiViewSettingMacro::TimeViewRow::Write(std::ostream& os) const
 	os << "// Param" << endl;
 	os << itsParam << endl;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 
-	// 1. lisättynä ominaisuutena on lista side-parametereista yhtenä stringinä (HUOM! pakko lisätä myös tyhjä lista)
+	// 1. lisï¿½ttynï¿½ ominaisuutena on lista side-parametereista yhtenï¿½ stringinï¿½ (HUOM! pakko lisï¿½tï¿½ myï¿½s tyhjï¿½ lista)
 	std::stringstream stringOut;
 	NFmiDataStoringHelpers::WriteContainer(itsSideParameters, stringOut, string("\n"));
-	// Huom! talletettavasta stringistä pitää myös poistaa kaikki kommentit ensin, muuten homma ei toimi!!!
+	// Huom! talletettavasta stringistï¿½ pitï¿½ï¿½ myï¿½s poistaa kaikki kommentit ensin, muuten homma ei toimi!!!
 	extraData.Add(::removeComments(stringOut.str()));
 
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::TimeViewRow::Write epäonnistui");
+		throw runtime_error("NFmiViewSettingMacro::TimeViewRow::Write epï¿½onnistui");
 }
 
 void NFmiViewSettingMacro::TimeViewRow::Read(std::istream& is)
@@ -541,12 +541,12 @@ void NFmiViewSettingMacro::TimeViewRow::Read(std::istream& is)
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	is >> extraData;
-	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+	// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+	// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 
-	// 1. lisättynä ominaisuutena on lista side-parametereista yhtenä stringinä
+	// 1. lisï¿½ttynï¿½ ominaisuutena on lista side-parametereista yhtenï¿½ stringinï¿½
 	itsSideParameters.clear();
 	if(extraData.itsStringValues.size() >= 1)
 	{
@@ -566,10 +566,10 @@ static NFmiViewSettingMacro::MapRow MakeMapRow(NFmiDrawParamList *theDrawParamLi
 		boost::shared_ptr<NFmiDrawParam> drawParam = theDrawParamList->Current();
 		if(NFmiDrawParam::IsMacroParamCase(drawParam->DataType()))
 		{ 
-            // tämä on ikävää koodia, mutta en keksinyt tähän hätään parempaa. Eli pitää saada viewMacrossa olevaan macroParamiin
-			// suhteellinen polku talteen, joka talletetaan drawParamiin. Mutta tämä drawParam on kahdessa paikassa
-			// hieman erilaisena ja oikean suht.polun saa vain MacroParamSystemistä löytyvästä macroParamin DrawParamista
-			// eika dokumentista löytyvästä DrawParamListasta.
+            // tï¿½mï¿½ on ikï¿½vï¿½ï¿½ koodia, mutta en keksinyt tï¿½hï¿½n hï¿½tï¿½ï¿½n parempaa. Eli pitï¿½ï¿½ saada viewMacrossa olevaan macroParamiin
+			// suhteellinen polku talteen, joka talletetaan drawParamiin. Mutta tï¿½mï¿½ drawParam on kahdessa paikassa
+			// hieman erilaisena ja oikean suht.polun saa vain MacroParamSystemistï¿½ lï¿½ytyvï¿½stï¿½ macroParamin DrawParamista
+			// eika dokumentista lï¿½ytyvï¿½stï¿½ DrawParamListasta.
             auto macroParamPtr = theMacroParamSystem.GetWantedMacro(drawParam->InitFileName());
 			if(macroParamPtr)
 				drawParam->MacroParamRelativePath(macroParamPtr->DrawParam()->MacroParamRelativePath());
@@ -598,14 +598,14 @@ void NFmiViewSettingMacro::GeneralDoc::Write(std::ostream& os) const
 	os << "// CPLocationVector" << endl;
 	NFmiDataStoringHelpers::WriteContainer(itsCPLocationVector, os, string(" "));
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::GeneralDoc::Write epäonnistui");
+		throw runtime_error("NFmiViewSettingMacro::GeneralDoc::Write epï¿½onnistui");
 }
 
 void NFmiViewSettingMacro::GeneralDoc::Read(std::istream& is)
@@ -621,10 +621,10 @@ void NFmiViewSettingMacro::GeneralDoc::Read(std::istream& is)
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	is >> extraData;
-	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+	// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+	// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -696,14 +696,14 @@ void NFmiViewSettingMacro::CrossSectionView::Write(std::ostream& os) const
 	os << "// CrossSectionSystem" << endl;
 	os << itsCrossSectionSystem;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::CrossSectionView::Write epäonnistui");
+		throw runtime_error("NFmiViewSettingMacro::CrossSectionView::Write epï¿½onnistui");
 
 }
 
@@ -723,10 +723,10 @@ void NFmiViewSettingMacro::CrossSectionView::Read(std::istream& is)
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	is >> extraData;
-	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+	// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+	// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -818,21 +818,21 @@ void NFmiViewSettingMacro::TimeView::Write(std::ostream& os) const
 	os << "// itsStartTimeOffset itsEndTimeOffset" << endl;
 	os << itsStartTimeOffset << " " << itsEndTimeOffset << endl;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 
-    // Lisätään apudata2 ja 3 ja 4 asetukset näyttömakroon
+    // Lisï¿½tï¿½ï¿½n apudata2 ja 3 ja 4 asetukset nï¿½yttï¿½makroon
     extraData.Add(static_cast<double>(fShowHelpData2));
     extraData.Add(static_cast<double>(fShowHelpData3));
     extraData.Add(static_cast<double>(fShowHelpData4));
 
 	NFmiMetTime usedViewMacroTime = NFmiDataStoringHelpers::GetUsedViewMacroTime();
 	std::string timeBagStr = NFmiDataStoringHelpers::GetTimeBagOffSetStr(usedViewMacroTime, itsTimeBag);
-	extraData.Add(timeBagStr); // lisätään 1. extra-string-datana aikaikkunan timebagi offsettina currenttiin aikaan
+	extraData.Add(timeBagStr); // lisï¿½tï¿½ï¿½n 1. extra-string-datana aikaikkunan timebagi offsettina currenttiin aikaan
 	if(itsPreciseTimeSerialLatlonPoint != NFmiPoint::gMissingLatlon)
 	{
-		// lisätään 2. extra-string-datana aikasarjaan valitun latlon-pisteen paikka
+		// lisï¿½tï¿½ï¿½n 2. extra-string-datana aikasarjaan valitun latlon-pisteen paikka
 		extraData.Add(CtrlViewUtils::Point2String(itsPreciseTimeSerialLatlonPoint)); 
 	}
 	
@@ -840,7 +840,7 @@ void NFmiViewSettingMacro::TimeView::Write(std::ostream& os) const
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::TimeView::Write epäonnistui");
+		throw runtime_error("NFmiViewSettingMacro::TimeView::Write epï¿½onnistui");
 }
 
 void NFmiViewSettingMacro::TimeView::Read(std::istream& is)
@@ -859,12 +859,12 @@ void NFmiViewSettingMacro::TimeView::Read(std::istream& is)
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	is >> extraData;
-	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+	// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+	// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 
-    // Apudata2 ja 3 asetukset näyttömakrosta
+    // Apudata2 ja 3 asetukset nï¿½yttï¿½makrosta
     fShowHelpData2 = false;
     if(extraData.itsDoubleValues.size() >= 1)
         fShowHelpData2 = extraData.itsDoubleValues[0] != 0;
@@ -886,7 +886,7 @@ void NFmiViewSettingMacro::TimeView::Read(std::istream& is)
 		fTimeBagUpdated = true;
 	}
 
-	// Oletusarvoisesti laitetaan latlon-point puuttuvaksi, jolloin jätetään nykyinen käytössä oleva piste voimaan.
+	// Oletusarvoisesti laitetaan latlon-point puuttuvaksi, jolloin jï¿½tetï¿½ï¿½n nykyinen kï¿½ytï¿½ssï¿½ oleva piste voimaan.
 	itsPreciseTimeSerialLatlonPoint = NFmiPoint::gMissingLatlon;
 	if(extraData.itsStringValues.size() >= 2)
 	{
@@ -930,18 +930,18 @@ void NFmiViewSettingMacro::TempView::Write(std::ostream& os) const
 	os << fShowHirlam << " " << fShowEcmwf << " " << fShowRealSounding << endl;
 
 	// ************************************
-	// Tästä eteenpäin on versio 2. tavaraa
+	// Tï¿½stï¿½ eteenpï¿½in on versio 2. tavaraa
 	// ************************************
 	os << "// MTATempSystem" << endl;
 	os << itsMTATempSystem << endl;
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::TempView::Write epäonnistui");
+		throw runtime_error("NFmiViewSettingMacro::TempView::Write epï¿½onnistui");
 }
 
 void NFmiViewSettingMacro::TempView::Read(std::istream& is)
@@ -955,22 +955,22 @@ void NFmiViewSettingMacro::TempView::Read(std::istream& is)
 
 	if(itsCurrentVersionNumber > 1.0)
 	{
-		// luetaan uudet ver 2.0 ja myöh. jutut
+		// luetaan uudet ver 2.0 ja myï¿½h. jutut
 		if(is.fail())
 			throw runtime_error(exceptionErrorMessage);
 		is >> itsMTATempSystem;
 
 		if(is.fail())
 			throw runtime_error(exceptionErrorMessage);
-		NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+		NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 		is >> extraData;
-		// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-		// eli jos uusia muutujia tai arvoja, käsittele tässä.
+		// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+		// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 	}
 	else
 	{
-		// muuten tehdään sopivia alustuksia uusiin muuttujiin
-		// mennään itsMTATempSystem-olion defaultti arvoilla
+		// muuten tehdï¿½ï¿½n sopivia alustuksia uusiin muuttujiin
+		// mennï¿½ï¿½n itsMTATempSystem-olion defaultti arvoilla
 		itsMTATempSystem = NFmiMTATempSystem();
 	}
 
@@ -1006,14 +1006,14 @@ void NFmiViewSettingMacro::TrajectoryView::Write(std::ostream& os) const
 	os << "// TrajectorySystem" << endl;
 	os << itsTrajectorySystem << endl;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::TrajectoryView::Write epäonnistui");
+		throw runtime_error("NFmiViewSettingMacro::TrajectoryView::Write epï¿½onnistui");
 }
 
 void NFmiViewSettingMacro::TrajectoryView::Read(std::istream& is)
@@ -1029,10 +1029,10 @@ void NFmiViewSettingMacro::TrajectoryView::Read(std::istream& is)
 	is >> itsTrajectorySystem;
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	is >> extraData;
-	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+	// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+	// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -1043,7 +1043,9 @@ void NFmiViewSettingMacro::TrajectoryView::Read(std::istream& is)
 NFmiViewSettingMacro::WarningCenterView::WarningCenterView()
 :itsAbsolutRect()
 ,itsViewStatus()
+#ifndef UNIX
 ,itsWarningCenterSystem()
+#endif
 ,fShowHakeMessages(true)
 ,fShowKaHaMessages(false)
 ,itsMinimumTimeRangeForWarningsOnMapViewsInMinutes(0)
@@ -1062,15 +1064,17 @@ void NFmiViewSettingMacro::WarningCenterView::Write(std::ostream& os) const
 	os << "// Status + ShowWindow" << endl;
     ::WriteMfcViewStatus(os, itsViewStatus) << endl;
 
+#ifndef UNIX
 	os << "// WarningCenterSystem" << endl;
 	os << itsWarningCenterSystem << endl;
+#endif
 
 	os << "// Container<Header-Column-Widths-In-Pixels>" << endl;
 	NFmiDataStoringHelpers::WriteContainer(itsHeaderColumnWidthsInPixels, os, string(" "));
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 
     extraData.Add(static_cast<double>(fShowHakeMessages)); // fShowHakeMessages on 1. uusi 'double' arvo
     extraData.Add(static_cast<double>(fShowKaHaMessages)); // fShowKaHaMessages on 2. uusi 'double' arvo
@@ -1080,7 +1084,7 @@ void NFmiViewSettingMacro::WarningCenterView::Write(std::ostream& os) const
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::WarningCenterView::Write epäonnistui");
+		throw runtime_error("NFmiViewSettingMacro::WarningCenterView::Write epï¿½onnistui");
 }
 
 void NFmiViewSettingMacro::WarningCenterView::Read(std::istream& is)
@@ -1093,18 +1097,20 @@ void NFmiViewSettingMacro::WarningCenterView::Read(std::istream& is)
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
+#ifndef UNIX
 	is >> itsWarningCenterSystem;
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
+#endif
 	NFmiDataStoringHelpers::ReadContainer(itsHeaderColumnWidthsInPixels, is);
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	is >> extraData;
-	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+	// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+	// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 
     fShowHakeMessages = true;
     if(extraData.itsDoubleValues.size() >= 1)
@@ -1163,14 +1169,14 @@ void NFmiViewSettingMacro::SynopDataGridView::Write(std::ostream& os) const
 	os << "// Container<Header-Column-Widths-In-Pixels>" << endl;
 	NFmiDataStoringHelpers::WriteContainer(itsHeaderColumnWidthsInPixels, os, string(" "));
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::SynopDataGridView::Write epäonnistui");
+		throw runtime_error("NFmiViewSettingMacro::SynopDataGridView::Write epï¿½onnistui");
 }
 
 void NFmiViewSettingMacro::SynopDataGridView::Read(std::istream& is)
@@ -1204,10 +1210,10 @@ void NFmiViewSettingMacro::SynopDataGridView::Read(std::istream& is)
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	is >> extraData;
-	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+	// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+	// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -1229,18 +1235,18 @@ void NFmiViewSettingMacro::SynopPlotSettings::Write(std::ostream& os) const
 
 	os << itsSynopPlotSettings << endl;
 
-	// ei käytetä extradata talletusta tässä, koska se on jo NFmiSynopPlotSettings-luokassa
-//	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	// ei kï¿½ytetï¿½ extradata talletusta tï¿½ssï¿½, koska se on jo NFmiSynopPlotSettings-luokassa
+//	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::SynopPlotSettings::Write epäonnistui");
+		throw runtime_error("NFmiViewSettingMacro::SynopPlotSettings::Write epï¿½onnistui");
 }
 
 void NFmiViewSettingMacro::SynopPlotSettings::Read(std::istream& is)
 {
 	is >> itsSynopPlotSettings;
 	if(is.fail())
-		throw runtime_error("NFmiViewSettingMacro::SynopPlotSettings::Read epäonnistui");
+		throw runtime_error("NFmiViewSettingMacro::SynopPlotSettings::Read epï¿½onnistui");
 }
 
 NFmiViewSettingMacro::ObsComparisonInfo::ObsComparisonInfo(void)
@@ -1258,18 +1264,18 @@ void NFmiViewSettingMacro::ObsComparisonInfo::Write(std::ostream& os) const
 
 	os << itsObsComparisonInfo << endl;
 
-	// ei käytetä extradata talletusta tässä, koska se on jo NFmiSynopPlotSettings-luokassa
-//	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	// ei kï¿½ytetï¿½ extradata talletusta tï¿½ssï¿½, koska se on jo NFmiSynopPlotSettings-luokassa
+//	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::ObsComparisonInfo::Write epäonnistui");
+		throw runtime_error("NFmiViewSettingMacro::ObsComparisonInfo::Write epï¿½onnistui");
 }
 
 void NFmiViewSettingMacro::ObsComparisonInfo::Read(std::istream& is)
 {
 	is >> itsObsComparisonInfo;
 	if(is.fail())
-		throw runtime_error("NFmiViewSettingMacro::ObsComparisonInfo::Read epäonnistui");
+		throw runtime_error("NFmiViewSettingMacro::ObsComparisonInfo::Read epï¿½onnistui");
 }
 
 
@@ -1323,20 +1329,20 @@ void NFmiViewSettingMacro::Write(std::ostream& os) const
     static const std::string exceptionErrorMessage = "NFmiViewSettingMacro::Write failed";
 
 	if(fViewMacroDirectory)
-		return ; // hakemisto viritystä ei ole tarkoitus tallettaa
+		return ; // hakemisto viritystï¿½ ei ole tarkoitus tallettaa
 
 	os << "// NFmiViewSettingMacro::Write..." << endl;
 	os << "// version number" << endl;
-	itsCurrentVersionNumber = itsLatestVersionNumber; // aina kirjoitetaan viimeisellä versio numerolla
+	itsCurrentVersionNumber = itsLatestVersionNumber; // aina kirjoitetaan viimeisellï¿½ versio numerolla
 	os << itsCurrentVersionNumber << endl;
 	os << "// itsName" << endl;
-	// talletan itsName ja itsDescription NFmiString:einä, että luku ja kirjoitus menevät ok vaikka olisi white spaceja
+	// talletan itsName ja itsDescription NFmiString:einï¿½, ettï¿½ luku ja kirjoitus menevï¿½t ok vaikka olisi white spaceja
 	NFmiString tmp1(itsName);
-	ChangePossibleComments(tmp1); // pitää korvata mahd. kommentti-merkit, koska luettaessa kommentit poistetaan ja sitten oltaisiin pulassa
+	ChangePossibleComments(tmp1); // pitï¿½ï¿½ korvata mahd. kommentti-merkit, koska luettaessa kommentit poistetaan ja sitten oltaisiin pulassa
 	os << tmp1;
 	os << "// Description" << endl;
 	NFmiString tmp2(itsDescription);
-	ChangePossibleComments(tmp2); // pitää korvata mahd. kommentti-merkit, koska luettaessa kommentit poistetaan ja sitten oltaisiin pulassa
+	ChangePossibleComments(tmp2); // pitï¿½ï¿½ korvata mahd. kommentti-merkit, koska luettaessa kommentit poistetaan ja sitten oltaisiin pulassa
 	os << tmp2;
 	os << "// GeneralDoc-settings" << endl;
 	os << itsGeneralDoc << endl;
@@ -1349,7 +1355,7 @@ void NFmiViewSettingMacro::Write(std::ostream& os) const
 	os << "// IsPrinterPortrait" << endl;
 	os << fIsPrinterPortrait << endl;
 	os << "// fUseBrushTool fUseAnalyzeTool fUseTextGenTool (removed feature legacy storage) fUseChangeSpreaderTool fUseControlPoinTool fUseAnimationTool" << endl;
-    // ViewMacrojen eteen/taaksepäin yhteensopivuuksien takia pitää tallettaa ja lukea yksi boolean muuttuja
+    // ViewMacrojen eteen/taaksepï¿½in yhteensopivuuksien takia pitï¿½ï¿½ tallettaa ja lukea yksi boolean muuttuja
     bool legacy_UseChangeSpreaderTool = false;
 	os << fUseBrushTool << " " << fUseAnalyzeTool << " " << false << " " << legacy_UseChangeSpreaderTool << " " << fUseControlPoinTool << " " << fUseAnimationTool << endl;
 	os << "// itsAnimationStartPosition itsAnimationEndPosition itsAnimationDelayInMS" << endl;
@@ -1359,7 +1365,7 @@ void NFmiViewSettingMacro::Write(std::ostream& os) const
 		throw runtime_error(exceptionErrorMessage);
 
 	// ************************************
-	// Tästä eteenpäin on versio 2. tavaraa
+	// Tï¿½stï¿½ eteenpï¿½in on versio 2. tavaraa
 	// ************************************
 	os << "// Here starts View Macro version 2 stuff" << endl;
 	os << itsTrajectoryView << endl;
@@ -1378,9 +1384,9 @@ void NFmiViewSettingMacro::Write(std::ostream& os) const
 		os << itsExtraMapViewDescTops[i] << endl;
 	}
 
-    // Lopuksi vielä mahdollinen extra data:
-    // Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-    // edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+    // Lopuksi vielï¿½ mahdollinen extra data:
+    // Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+    // edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; 
     // KeepMapAspectRatio (F10 toiminto Smartmetissa) on siis 1. uusista double-extra-parametreista
     extraData.Add(fKeepMapAspectRatio);
@@ -1410,12 +1416,12 @@ void NFmiViewSettingMacro::Read(std::istream& is)
 	is >> itsGeneralDoc;
 	is >> itsTimeView;
 
-	itsTempView.CurrentVersionNumber(itsCurrentVersionNumber); // versio numeroa pitää jakaa eteenpäin
+	itsTempView.CurrentVersionNumber(itsCurrentVersionNumber); // versio numeroa pitï¿½ï¿½ jakaa eteenpï¿½in
 	is >> itsTempView;
 	is >> itsMaskSettings;
 	is >> fIsPrinterPortrait;
     bool removedLegacyUseGsmToolflag = false;
-    // ViewMacrojen eteen/taaksepäin yhteensopivuuksien takia pitää tallettaa ja lukea yksi boolean muuttuja
+    // ViewMacrojen eteen/taaksepï¿½in yhteensopivuuksien takia pitï¿½ï¿½ tallettaa ja lukea yksi boolean muuttuja
     bool legacy_UseChangeSpreaderTool = false;
     is >> fUseBrushTool >> fUseAnalyzeTool >> removedLegacyUseGsmToolflag >> legacy_UseChangeSpreaderTool >> fUseControlPoinTool >> fUseAnimationTool;
 	is >> itsAnimationStartPosition >> itsAnimationEndPosition >> itsAnimationDelayInMS;
@@ -1425,7 +1431,7 @@ void NFmiViewSettingMacro::Read(std::istream& is)
 
 	if(itsCurrentVersionNumber > 1.0)
 	{
-		// luetaan uudet ver 2.0 ja myöh. jutut
+		// luetaan uudet ver 2.0 ja myï¿½h. jutut
 		if(is.fail())
 			throw runtime_error(exceptionErrorMessage);
 		is >> itsTrajectoryView;
@@ -1459,35 +1465,35 @@ void NFmiViewSettingMacro::Read(std::istream& is)
 
 		if(is.fail())
 			throw runtime_error(exceptionErrorMessage);
-		NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+		NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 		is >> extraData;
-		// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-		// eli jos uusia muutujia tai arvoja, käsittele tässä.
+		// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+		// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 
-        // tämä on siis default arvo KeepMapAspectRatio (eli älä pakota pitämään oikeita karttasuhteita)
+        // tï¿½mï¿½ on siis default arvo KeepMapAspectRatio (eli ï¿½lï¿½ pakota pitï¿½mï¿½ï¿½n oikeita karttasuhteita)
         fKeepMapAspectRatio = false;
         if(extraData.itsDoubleValues.size() >= 1)
             fKeepMapAspectRatio = extraData.itsDoubleValues[0] != 0;
     }
 	else
 	{
-		// muuten tehdään sopivia alustuksia uusiin muuttujiin
+		// muuten tehdï¿½ï¿½n sopivia alustuksia uusiin muuttujiin
 
-		// itsTrajectoryView ; // älä koske trajektori-systeemiin kuitenkaan
-		// itsCrossSectionView ; // älä koske crosssection-systeemiin kuitenkaan
-		// itsSynopPlotSettings ; // älä koske synop-plot-asetuksiin kuitenkaan
-		// itsWarningCenterView ; // älä koske warning-center-asetuksiin kuitenkaan
-		// itsSynopDataGridView ; // älä koske synop-taulukko-asetuksiin kuitenkaan
+		// itsTrajectoryView ; // ï¿½lï¿½ koske trajektori-systeemiin kuitenkaan
+		// itsCrossSectionView ; // ï¿½lï¿½ koske crosssection-systeemiin kuitenkaan
+		// itsSynopPlotSettings ; // ï¿½lï¿½ koske synop-plot-asetuksiin kuitenkaan
+		// itsWarningCenterView ; // ï¿½lï¿½ koske warning-center-asetuksiin kuitenkaan
+		// itsSynopDataGridView ; // ï¿½lï¿½ koske synop-taulukko-asetuksiin kuitenkaan
 	}
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 
-	itsCurrentVersionNumber = itsLatestVersionNumber; // aina jatketaan viimeisellä versio numerolla
+	itsCurrentVersionNumber = itsLatestVersionNumber; // aina jatketaan viimeisellï¿½ versio numerolla
 }
 
-// Jos jollekin toisille näytöille halutaan vielä lisätä macroParam tuki, 
-// tähän pitää lisätä kyseisen näytön macroParam polkujen alustukset.
+// Jos jollekin toisille nï¿½ytï¿½ille halutaan vielï¿½ lisï¿½tï¿½ macroParam tuki, 
+// tï¿½hï¿½n pitï¿½ï¿½ lisï¿½tï¿½ kyseisen nï¿½ytï¿½n macroParam polkujen alustukset.
 void NFmiViewSettingMacro::SetMacroParamInitFileNames(const std::string &theRootPath)
 {
 	itsTimeView.SetMacroParamInitFileNames(theRootPath);
@@ -1497,7 +1503,7 @@ void NFmiViewSettingMacro::SetMacroParamInitFileNames(const std::string &theRoot
 }
 
 // ****************************************
-// *** MapViewDescTop osio alkaa tästä ****
+// *** MapViewDescTop osio alkaa tï¿½stï¿½ ****
 // ****************************************
 
 NFmiViewSettingMacro::MapViewDescTop::MapViewDescTop(void)
@@ -1541,9 +1547,9 @@ void NFmiViewSettingMacro::MapViewDescTop::SetMapViewDescTop(const NFmiMapViewDe
 	itsMapViewDescTop.InitForViewMacro(theData, theMapViewWinRegistry ,true, disableWindowManipulations);
 }
 
-// tutkii missä näyttö rivissä on viimeiset parametrit. Tällä pyritään säästämään
-// talletuksissa, että jos vaikka 3. rivin jälkeen ei ole parametreja, ei tallleteta tyhjiä rivejä sen jälkeen,
-// koska tyhjätkin rivit vievät tilaa.
+// tutkii missï¿½ nï¿½yttï¿½ rivissï¿½ on viimeiset parametrit. Tï¿½llï¿½ pyritï¿½ï¿½n sï¿½ï¿½stï¿½mï¿½ï¿½n
+// talletuksissa, ettï¿½ jos vaikka 3. rivin jï¿½lkeen ei ole parametreja, ei tallleteta tyhjiï¿½ rivejï¿½ sen jï¿½lkeen,
+// koska tyhjï¿½tkin rivit vievï¿½t tilaa.
 static int CalcStoredMapRowCount(const std::vector<NFmiViewSettingMacro::MapRow> &theMapRowSettings)
 {
 	size_t totalSize = theMapRowSettings.size();
@@ -1551,7 +1557,7 @@ static int CalcStoredMapRowCount(const std::vector<NFmiViewSettingMacro::MapRow>
 	for(size_t i=0; i < totalSize; i++)
 	{
 		if(theMapRowSettings[i].RowParams().size() > 0)
-			lastRowWithParams = i+1; // pitää lisätä 1, koska indeksit alkavat 0:sta
+			lastRowWithParams = i+1; // pitï¿½ï¿½ lisï¿½tï¿½ 1, koska indeksit alkavat 0:sta
 	}
 	return static_cast<int>(lastRowWithParams);
 }
@@ -1565,12 +1571,12 @@ void NFmiViewSettingMacro::MapViewDescTop::Write(std::ostream& os) const
     ::WriteMfcViewStatus(os, itsViewStatus) << endl;
 
 	os << "// vector<MapRow> MapRowSettings" << endl;
-    // Talletetaan rivejä vain niin pitkälle kuin sieltä löytyy jotain talletettavaa (nyt siis rivejä voi potentiaalisesti olla aina 50 kpl)
+    // Talletetaan rivejï¿½ vain niin pitkï¿½lle kuin sieltï¿½ lï¿½ytyy jotain talletettavaa (nyt siis rivejï¿½ voi potentiaalisesti olla aina 50 kpl)
     int mapRowWriteSize = ::CalcStoredMapRowCount(itsMapRowSettings); 
     NFmiDataStoringHelpers::WriteContainer(itsMapRowSettings, os, string("\n"), mapRowWriteSize);
 
 	os << "// vector<MapRow> ExtraMapRowSettings" << endl;
-    std::vector<MapRow> emptyLegacyMapRowSettings; //  Pakko tallettaa tyhjä vektori näyttömakroon taaksepäin yhteensopivuuden takia
+    std::vector<MapRow> emptyLegacyMapRowSettings; //  Pakko tallettaa tyhjï¿½ vektori nï¿½yttï¿½makroon taaksepï¿½in yhteensopivuuden takia
     NFmiDataStoringHelpers::WriteContainer(emptyLegacyMapRowSettings, os, string("\n"), 0);
 
 	os << "// MapViewDescTop" << endl;
@@ -1579,26 +1585,26 @@ void NFmiViewSettingMacro::MapViewDescTop::Write(std::ostream& os) const
 	os << "// DipMapHelperList" << endl;
 	NFmiDataStoringHelpers::WriteContainer(itsDipMapHelperList, os, "\n");
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::MapViewDescTop::Write epäonnistui");
+		throw runtime_error("NFmiViewSettingMacro::MapViewDescTop::Write epï¿½onnistui");
 
 }
 
-// Tämä on legacy funktio, jolla siirretään legacy-extraMapRow:iin talletetut rivit päävektoriin.
-// Jos theLegacyExtraMapRowSettings vektorissa on tavaraa, siirretään ne theMapRowSettings:in perään.
+// Tï¿½mï¿½ on legacy funktio, jolla siirretï¿½ï¿½n legacy-extraMapRow:iin talletetut rivit pï¿½ï¿½vektoriin.
+// Jos theLegacyExtraMapRowSettings vektorissa on tavaraa, siirretï¿½ï¿½n ne theMapRowSettings:in perï¿½ï¿½n.
 // Jos theMapRowSettings:in koko on pienempi kuin preferredSizeAfterExtraRowsAreAppended, kasvata sen kokoa annettuun lukuun.
 static void CombineMapRowSettings(std::vector<NFmiViewSettingMacro::MapRow> &theMapRowSettings, std::vector<NFmiViewSettingMacro::MapRow> &theLegacyExtraMapRowSettings, int preferredSizeAfterExtraRowsAreAppended)
 {
     if(theLegacyExtraMapRowSettings.size())
     {
         if(theMapRowSettings.size() > preferredSizeAfterExtraRowsAreAppended)
-            return; // Tämä on joku virhetilanne, enkä tee mitään
+            return; // Tï¿½mï¿½ on joku virhetilanne, enkï¿½ tee mitï¿½ï¿½n
         if(theMapRowSettings.size() < preferredSizeAfterExtraRowsAreAppended)
             theMapRowSettings.resize(preferredSizeAfterExtraRowsAreAppended);
         theMapRowSettings.insert(theMapRowSettings.end(), theLegacyExtraMapRowSettings.begin(), theLegacyExtraMapRowSettings.end());
@@ -1617,7 +1623,7 @@ void NFmiViewSettingMacro::MapViewDescTop::Read(std::istream& is)
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 
-    std::vector<MapRow> legacyExtraMapRowSettings; //  Pakko lukea näyttömakroista mahdolliset extraParamit taaksepäin yhteensopivuuden takia
+    std::vector<MapRow> legacyExtraMapRowSettings; //  Pakko lukea nï¿½yttï¿½makroista mahdolliset extraParamit taaksepï¿½in yhteensopivuuden takia
 	NFmiDataStoringHelpers::ReadContainer(legacyExtraMapRowSettings, is);
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -1631,10 +1637,10 @@ void NFmiViewSettingMacro::MapViewDescTop::Read(std::istream& is)
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	is >> extraData;
-	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+	// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+	// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -1642,5 +1648,5 @@ void NFmiViewSettingMacro::MapViewDescTop::Read(std::istream& is)
 }
 
 // *****************************************
-// *** MapViewDescTop osio loppuu tähän ****
+// *** MapViewDescTop osio loppuu tï¿½hï¿½n ****
 // *****************************************

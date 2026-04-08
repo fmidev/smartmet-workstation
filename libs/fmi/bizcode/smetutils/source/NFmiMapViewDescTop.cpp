@@ -8,17 +8,21 @@
 // ======================================================================
 
 #pragma warning( push )
-#pragma warning( disable : 4458 ) // mm. gdiplusheaders.h tekee läjän meille täysin turhia "declaration hides class member" varoituksia
+#pragma warning( disable : 4458 ) // mm. gdiplusheaders.h tekee lï¿½jï¿½n meille tï¿½ysin turhia "declaration hides class member" varoituksia
 
 #include "NFmiMapViewDescTop.h"
 #include "NFmiMapConfigurationSystem.h"
+#ifndef UNIX
 #include "NFmiGdiPlusImageMapHandler.h"
+#endif
 
 #include "NFmiSettings.h"
 #include "NFmiArea.h"
 #include "NFmiAreaFactory.h"
 #include "NFmiDataStoringHelpers.h"
+#ifndef UNIX
 #include "NFmiApplicationWinRegistry.h"
+#endif
 #include "CtrlViewFunctions.h"
 #include "CtrlViewWin32Functions.h"
 #include "CtrlViewDocumentInterface.h"
@@ -51,7 +55,7 @@ namespace
 {
 	const NFmiRect g_TotalRelativeMapRect(0., 0., 1., 1.);
 
-	// Muuttaa suhteellisen väri kanava arvon (arvoväli 0-1) 8-bit arvoksi (arvoväli 0-255)
+	// Muuttaa suhteellisen vï¿½ri kanava arvon (arvovï¿½li 0-1) 8-bit arvoksi (arvovï¿½li 0-255)
 	int colorRelativeTo8bit(double colorValue)
 	{
 		int eightBitColor = boost::math::iround(colorValue * 255.);
@@ -67,7 +71,7 @@ namespace
 	std::string colorToHex(int red, int green, int blue)
 	{
 		std::stringstream stream;
-		// Nämä stream manipulaattorit ovat voimassa vain yhden arvon tulostuksen ajan, joten jokaiselle värikanavalle piti tehdä oma tulostusrivi
+		// Nï¿½mï¿½ stream manipulaattorit ovat voimassa vain yhden arvon tulostuksen ajan, joten jokaiselle vï¿½rikanavalle piti tehdï¿½ oma tulostusrivi
 		::colorChannelToHex(stream, red);
 		::colorChannelToHex(stream, green);
 		::colorChannelToHex(stream, blue);
@@ -91,6 +95,7 @@ namespace
 		}
 	};
 
+#ifndef UNIX
 	std::vector<NFmiGdiPlusImageMapHandler*> CopyMapHandlerVector(const std::vector<NFmiGdiPlusImageMapHandler*>& mapHandlerVector)
 	{
 		std::vector<NFmiGdiPlusImageMapHandler*> copiedVector;
@@ -100,6 +105,7 @@ namespace
 		}
 		return copiedVector;
 	}
+#endif // !UNIX
 
 	void SetGridSize(const string& theKey, const NFmiPoint& theGridSize)
 	{
@@ -150,7 +156,7 @@ NFmiMapViewDescTop::ViewMacroDipMapHelper::ViewMacroDipMapHelper() = default;
 // ******* NFmiMapViewDescTop::ViewMacroDipMapHelper -luokka **************
 // ************************************************************************
 
-// HUOM!! Tämä laittaa kommentteja mukaan!
+// HUOM!! Tï¿½mï¿½ laittaa kommentteja mukaan!
 void NFmiMapViewDescTop::ViewMacroDipMapHelper::Write(std::ostream& os) const
 {
 	os << "// NFmiMapViewDescTop::ViewMacroDipMapHelper::Write..." << std::endl;
@@ -161,15 +167,15 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Write(std::ostream& os) const
 	os << "// itsZoomedAreaStr" << std::endl;
 	os << itsZoomedAreaStr << std::endl;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 
-	// 'double' muotoisten lisädatojen lisäys
-	extraData.Add(itsUsedCombinedModeMapIndex); // talletetaan 1. extra-datana käytetty combined-mode karttaindeksi
-	extraData.Add(itsUsedCombinedModeOverMapDibIndex); // talletetaan 2. extra-datana käytetty combined-mode overlay-karttaindeksi
+	// 'double' muotoisten lisï¿½datojen lisï¿½ys
+	extraData.Add(itsUsedCombinedModeMapIndex); // talletetaan 1. extra-datana kï¿½ytetty combined-mode karttaindeksi
+	extraData.Add(itsUsedCombinedModeOverMapDibIndex); // talletetaan 2. extra-datana kï¿½ytetty combined-mode overlay-karttaindeksi
 
-	// 'string' muotoisten lisädatojen lisäys
+	// 'string' muotoisten lisï¿½datojen lisï¿½ys
 	extraData.Add(itsBackgroundMacroReference); // talletetaan 1. extra-datana mahdollinen taustakartan macro-referenssi nimi
 	extraData.Add(itsOverlayMacroReference); // talletetaan 2. extra-datana mahdollinen overlay-kartan macro-referenssi nimi
 
@@ -180,9 +186,9 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Write(std::ostream& os) const
 		throw std::runtime_error("NFmiMapViewDescTop::ViewMacroDipMapHelper::Write failed");
 }
 
-// HUOM!! ennen kuin tämä luokka luetaan sisään tiedostosta, poista kommentit
+// HUOM!! ennen kuin tï¿½mï¿½ luokka luetaan sisï¿½ï¿½n tiedostosta, poista kommentit
 // NFmiCommentStripper-luokalla, koska kirjoitettaessa kommentteja laitetaan
-// sekaan. Eli älä käytä suoraan tätä metodia, vaan Init(filename)-metodia!!!!
+// sekaan. Eli ï¿½lï¿½ kï¿½ytï¿½ suoraan tï¿½tï¿½ metodia, vaan Init(filename)-metodia!!!!
 void NFmiMapViewDescTop::ViewMacroDipMapHelper::Read(std::istream& is)
 {
 	is >> itsUsedMapIndex >> itsUsedOverMapDibIndex;
@@ -192,12 +198,12 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Read(std::istream& is)
 	if(is.fail())
 		throw std::runtime_error("NFmiMapViewDescTop::ViewMacroDipMapHelper::Read failed");
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	is >> extraData;
-	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+	// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+	// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 
-	// 'double' muotoisten lisädatojen poiminta, alustetaan ensin datat oletusarvoilla, ja sitten katsotaan onko ne talletettu
+	// 'double' muotoisten lisï¿½datojen poiminta, alustetaan ensin datat oletusarvoilla, ja sitten katsotaan onko ne talletettu
 	itsUsedCombinedModeMapIndex = itsUsedMapIndex; // oletuksena normi karttaindeksi
 	itsUsedCombinedModeOverMapDibIndex = itsUsedOverMapDibIndex; // oletuksena normi karttaindeksi
 	if(extraData.itsDoubleValues.size() >= 1)
@@ -205,7 +211,7 @@ void NFmiMapViewDescTop::ViewMacroDipMapHelper::Read(std::istream& is)
 	if(extraData.itsDoubleValues.size() >= 2)
 		itsUsedCombinedModeOverMapDibIndex = static_cast<int>(extraData.itsDoubleValues[1]); // luetaan 2. extra-datana combined-mode overlay karttaindeksi
 
-	// 'string' muotoisten lisädatojen poiminta, alustetaan ensin datat oletusarvoilla, ja sitten katsotaan onko ne talletettu
+	// 'string' muotoisten lisï¿½datojen poiminta, alustetaan ensin datat oletusarvoilla, ja sitten katsotaan onko ne talletettu
 	itsBackgroundMacroReference.clear();
 	if(extraData.itsStringValues.size() >= 1)
 		itsBackgroundMacroReference = extraData.itsStringValues[0]; // luetaan 1. extra-datana taustakartan macro-referenssi nimi
@@ -231,7 +237,9 @@ NFmiMapViewDescTop::NFmiMapViewDescTop()
 :itsSettingsBaseName()
 ,itsMapViewDescTopIndex(0)
 ,itsControlPath()
+#ifndef UNIX
 ,itsGdiPlusImageMapHandlerList()
+#endif // UNIX
 ,itsMapViewCache(CtrlViewUtils::MaxViewGridYSize)
 ,fRedrawMapView(true)
 ,itsLandBorderColors()
@@ -239,7 +247,7 @@ NFmiMapViewDescTop::NFmiMapViewDescTop()
 ,itsLandBorderPenSize(1,1)
 ,itsTimeControlViewTimes()
 ,itsClientViewXperYRatio(1.)
-,itsRelativeMapRect(0.,0.,1.,0.9) // tämän suhteellisen osan näytöstä valtaa kartasto, loput menee aikakontrolli ikkunalle
+,itsRelativeMapRect(0.,0.,1.,0.9) // tï¿½mï¿½n suhteellisen osan nï¿½ytï¿½stï¿½ valtaa kartasto, loput menee aikakontrolli ikkunalle
 ,itsMapViewSizeInPixels(10, 10)
 ,itsParamWindowViewPosition(kTopLeft)
 ,itsDrawOverMapMode(0)
@@ -271,7 +279,9 @@ NFmiMapViewDescTop::NFmiMapViewDescTop()
 ,itsSelectedMapIndexVM(1)
 ,fShowStationPlotVM(false)
 ,itsViewGridSizeVM(1,1)
+#ifndef UNIX
 ,itsSeparateCountryBorderBitmapCache()
+#endif // UNIX
 ,itsTrueMapViewSizeInfo(0)
 {
 }
@@ -283,7 +293,9 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, N
 ,itsMapConfigurationSystem(theMapConfigurationSystem)
 ,itsProjectionCurvatureInfo(theProjectionCurvatureInfo)
 ,itsControlPath(theControlPath)
+#ifndef UNIX
 ,itsGdiPlusImageMapHandlerList()
+#endif // UNIX
 ,itsMapViewCache(CtrlViewUtils::MaxViewGridXSize * CtrlViewUtils::MaxViewGridYSize)
 ,fRedrawMapView(true)
 ,itsLandBorderColors()
@@ -291,7 +303,7 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, N
 ,itsLandBorderPenSize(1,1)
 ,itsTimeControlViewTimes()
 ,itsClientViewXperYRatio(1.)
-,itsRelativeMapRect(0.,0.,1.,0.9) // tämän suhteellisen osan näytöstä valtaa kartasto, loput menee aikakontrolli ikkunalle
+,itsRelativeMapRect(0.,0.,1.,0.9) // tï¿½mï¿½n suhteellisen osan nï¿½ytï¿½stï¿½ valtaa kartasto, loput menee aikakontrolli ikkunalle
 ,itsMapViewSizeInPixels(10, 10)
 ,itsParamWindowViewPosition(kTopLeft)
 ,itsDrawOverMapMode(0)
@@ -323,18 +335,22 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const std::string &theSettingsBaseName, N
 ,itsSelectedMapIndexVM(1)
 ,fShowStationPlotVM(false)
 ,itsViewGridSizeVM(1,1)
+#ifndef UNIX
 ,itsSeparateCountryBorderBitmapCache()
+#endif // UNIX
 ,itsTrueMapViewSizeInfo(theMapViewDescTopIndex)
 {
 }
 
-// Huomioitavaa että copy-constructor ei tee täydellistä kopioita.
-// Varsinaiseen kopiointiin käytetään sijoitus operatoria.
+// Huomioitavaa ettï¿½ copy-constructor ei tee tï¿½ydellistï¿½ kopioita.
+// Varsinaiseen kopiointiin kï¿½ytetï¿½ï¿½n sijoitus operatoria.
 NFmiMapViewDescTop::NFmiMapViewDescTop(const NFmiMapViewDescTop& other)
 	:itsSettingsBaseName()
 	, itsMapViewDescTopIndex(0)
 	, itsControlPath()
+#ifndef UNIX
 	, itsGdiPlusImageMapHandlerList()
+#endif // UNIX
 	, itsMapViewCache(CtrlViewUtils::MaxViewGridXSize* CtrlViewUtils::MaxViewGridYSize)
 	, fRedrawMapView(true)
 	, itsLandBorderColors()
@@ -345,7 +361,7 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const NFmiMapViewDescTop& other)
 	, itsRelativeMapRect()
 	, itsMapViewSizeInPixels()
 	, itsParamWindowViewPosition(kTopLeft)
-	, itsDrawParamListVector(new NFmiPtrList<NFmiDrawParamList>()) // Tehdään lopullinen kopiointi metodin rungossa
+	, itsDrawParamListVector(new NFmiPtrList<NFmiDrawParamList>()) // Tehdï¿½ï¿½n lopullinen kopiointi metodin rungossa
 	, itsDrawOverMapMode(0)
 	, itsMapRowStartingIndex(0)
 	, itsShowTimeOnMapMode(0)
@@ -358,7 +374,9 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const NFmiMapViewDescTop& other)
 	, itsMapViewDisplayMode(CtrlViewUtils::MapViewMode::kNormal)
 	, fDescTopOn(true)
 	, fMapViewBitmapDirty(true)
-	, itsMapView(other.itsMapView) // MapView pointteri pitää kopioida tässä, se ei muutu ajon aikana
+#ifndef UNIX
+	, itsMapView(other.itsMapView) // MapView pointteri pitï¿½ï¿½ kopioida tï¿½ssï¿½, se ei muutu ajon aikana
+#endif // UNIX
 	, itsGraphicalInfo()
 	, itsGridPointCache()
 	, itsAnimationData()
@@ -376,14 +394,16 @@ NFmiMapViewDescTop::NFmiMapViewDescTop(const NFmiMapViewDescTop& other)
 	, itsSelectedMapIndexVM(0)
 	, fShowStationPlotVM(false)
 	, itsViewGridSizeVM()
+#ifndef UNIX
 	, itsSeparateCountryBorderBitmapCache()
+#endif // UNIX
 	, itsTrueMapViewSizeInfo(0)
 {
 	*this = other;
 }
 
-// Huomioitavaa että sijoitus operator ei tee täydellistä kopioita.
-// Kaikkea ei voi eikä saa kopioida, kommentit erikoistapauksista ja syistä erikseen.
+// Huomioitavaa ettï¿½ sijoitus operator ei tee tï¿½ydellistï¿½ kopioita.
+// Kaikkea ei voi eikï¿½ saa kopioida, kommentit erikoistapauksista ja syistï¿½ erikseen.
 NFmiMapViewDescTop& NFmiMapViewDescTop::operator=(const NFmiMapViewDescTop& other)
 {
 	if(this != &other)
@@ -393,9 +413,11 @@ NFmiMapViewDescTop& NFmiMapViewDescTop::operator=(const NFmiMapViewDescTop& othe
 		itsMapConfigurationSystem = other.itsMapConfigurationSystem; // pointteri kopioidaan, ei omistusta kummallakaan
 		itsProjectionCurvatureInfo = other.itsProjectionCurvatureInfo; // pointteri kopioidaan, ei omistusta kummallakaan
 		itsControlPath = other.itsControlPath;
+#ifndef UNIX
 		itsGdiPlusImageMapHandlerList = std::move(::CopyMapHandlerVector(other.itsGdiPlusImageMapHandlerList));
-		itsMapViewCache.MakeDirty(); // Tämä bitmap cache pitää vain tyhjentää
-		fRedrawMapView = true; // Kopion jälkeen kaikki piirretään uusiksi
+#endif // !UNIX
+		itsMapViewCache.MakeDirty(); // Tï¿½mï¿½ bitmap cache pitï¿½ï¿½ vain tyhjentï¿½ï¿½
+		fRedrawMapView = true; // Kopion jï¿½lkeen kaikki piirretï¿½ï¿½n uusiksi
 		itsLandBorderColors = other.itsLandBorderColors;
 		itsLandBorderColorIndex = other.itsLandBorderColorIndex;
 		itsLandBorderPenSize = other.itsLandBorderPenSize;
@@ -405,10 +427,14 @@ NFmiMapViewDescTop& NFmiMapViewDescTop::operator=(const NFmiMapViewDescTop& othe
 		itsMapViewSizeInPixels = other.itsMapViewSizeInPixels;
 		itsParamWindowViewPosition = other.itsParamWindowViewPosition;
 		CombinedMapHandlerInterface::copyDrawParamsList(other.itsDrawParamListVector, itsDrawParamListVector);
-		itsMapBlitDC = nullptr; // Tälläisiin MFC pointtereihin vain nullptr:ää
+#ifndef UNIX
+		itsMapBlitDC = nullptr; // Tï¿½llï¿½isiin MFC pointtereihin vain nullptr:ï¿½ï¿½
+#endif
 		itsDrawOverMapMode = other.itsDrawOverMapMode;
 		itsMapRowStartingIndex = other.itsMapRowStartingIndex;
-		itsCopyCDC = nullptr; // Tälläisiin MFC pointtereihin vain nullptr:ää
+#ifndef UNIX
+		itsCopyCDC = nullptr; // Tï¿½llï¿½isiin MFC pointtereihin vain nullptr:ï¿½ï¿½
+#endif
 		itsShowTimeOnMapMode = other.itsShowTimeOnMapMode;
 		fShowTimeString = other.fShowTimeString;
 		itsCurrentTime = other.itsCurrentTime;
@@ -419,10 +445,12 @@ NFmiMapViewDescTop& NFmiMapViewDescTop::operator=(const NFmiMapViewDescTop& othe
 		itsMapViewDisplayMode = other.itsMapViewDisplayMode;
 		itsAbsoluteActiveViewRow = other.itsAbsoluteActiveViewRow;
 		fDescTopOn = other.fDescTopOn;
-		fMapViewBitmapDirty = true; // Kopioinnin jälkeen kaikki on 'likaista'
-		itsMapView = other.itsMapView; // MapView pointteri pitää kopioida tässä, se ei muutu ajon aikana
+		fMapViewBitmapDirty = true; // Kopioinnin jï¿½lkeen kaikki on 'likaista'
+#ifndef UNIX
+		itsMapView = other.itsMapView; // MapView pointteri pitï¿½ï¿½ kopioida tï¿½ssï¿½, se ei muutu ajon aikana
+#endif
 		itsGraphicalInfo = other.itsGraphicalInfo;
-		itsGridPointCache.Clear(); // Nollataan tämäkin cache
+		itsGridPointCache.Clear(); // Nollataan tï¿½mï¿½kin cache
 		itsAnimationData = other.itsAnimationData;
 		fLockToMainMapViewTime = other.fLockToMainMapViewTime;
 		fLockToMainMapViewRow = other.fLockToMainMapViewRow;
@@ -438,8 +466,10 @@ NFmiMapViewDescTop& NFmiMapViewDescTop::operator=(const NFmiMapViewDescTop& othe
 		itsSelectedMapIndexVM = other.itsSelectedMapIndexVM;
 		fShowStationPlotVM = other.fShowStationPlotVM;
 		itsViewGridSizeVM = other.itsViewGridSizeVM;
+#ifndef UNIX
 		ClearBaseLandBorderMapBitmap(); // deletoi ja nollaa itsLandBorderMapBitmap:in
 		itsSeparateCountryBorderBitmapCache = other.itsSeparateCountryBorderBitmapCache;
+#endif // UNIX
 		itsTrueMapViewSizeInfo = other.itsTrueMapViewSizeInfo;
 		itsTimeBoxLocationVM = other.itsTimeBoxLocationVM;
 		itsTimeBoxTextSizeFactorVM = other.itsTimeBoxTextSizeFactorVM;
@@ -455,7 +485,9 @@ NFmiMapViewDescTop::~NFmiMapViewDescTop()
 
 void NFmiMapViewDescTop::Clear(void)
 {
+#ifndef UNIX
 	std::for_each(itsGdiPlusImageMapHandlerList.begin(), itsGdiPlusImageMapHandlerList.end(), PointerDestroyer());
+#endif
 
 	if(itsDrawParamListVector)
 	{
@@ -463,34 +495,41 @@ void NFmiMapViewDescTop::Clear(void)
 		delete itsDrawParamListVector;
 		itsDrawParamListVector = nullptr;
 	}
+#ifndef UNIX
 	ClearBaseLandBorderMapBitmap();
 	itsSeparateCountryBorderBitmapCache.clearCache();
+#endif
 }
 
+#ifndef UNIX
 boost::shared_ptr<Imagine::NFmiPath> NFmiMapViewDescTop::LandBorderPath(void)
 {
     return MapHandler()->LandBorderPath();
 }
+#endif // !UNIX
 
+#ifndef UNIX
 void NFmiMapViewDescTop::Init(NFmiMapViewWinRegistry &theMapViewWinRegistry)
 {
 	Clear();
 	InitGdiPlusImageMapHandlerSystem();
 	InitLandBorderDrawingSystem();
 	InitMapViewDescTopFromSettings();
-	InitMapViewDrawParamListVector(); // luo tyhjät listat
-	AnimationDataRef().TimeStepInMinutes(static_cast<int>(::round(TimeControlTimeStep()*60))); // animaatiodataan pitää päivittää aikaresoluutio
+	InitMapViewDrawParamListVector(); // luo tyhjï¿½t listat
+	AnimationDataRef().TimeStepInMinutes(static_cast<int>(::round(TimeControlTimeStep()*60))); // animaatiodataan pitï¿½ï¿½ pï¿½ivittï¿½ï¿½ aikaresoluutio
     InitFromMapViewWinRegistry(theMapViewWinRegistry);
 }
+#endif // UNIX
 
+#ifndef UNIX
 void NFmiMapViewDescTop::InitFromMapViewWinRegistry(NFmiMapViewWinRegistry &theMapViewWinRegistry)
 {
     fShowMasksOnMapVM = theMapViewWinRegistry.ShowMasksOnMap();
     itsSpacingOutFactorVM = theMapViewWinRegistry.SpacingOutFactor();
-	// SelectedMapIndex:ille pitää tehdä järkevyys tarkastelut
+	// SelectedMapIndex:ille pitï¿½ï¿½ tehdï¿½ jï¿½rkevyys tarkastelut
     SelectedMapIndex(theMapViewWinRegistry.SelectedMapIndex());
 	fShowStationPlotVM = theMapViewWinRegistry.ShowStationPlot();
-    // stringi pitää muuttaa point-otukseksi ja lopuksi pitää tehdä järkevyys tarkastelut
+    // stringi pitï¿½ï¿½ muuttaa point-otukseksi ja lopuksi pitï¿½ï¿½ tehdï¿½ jï¿½rkevyys tarkastelut
     ViewGridSize(CtrlViewUtils::String2Point(theMapViewWinRegistry.ViewGridSizeStr()), nullptr);
 	TimeBoxLocation(theMapViewWinRegistry.TimeBoxLocation());
 	TimeBoxTextSizeFactor(theMapViewWinRegistry.TimeBoxTextSizeFactor());
@@ -499,18 +538,19 @@ void NFmiMapViewDescTop::InitFromMapViewWinRegistry(NFmiMapViewWinRegistry &theM
 
 void NFmiMapViewDescTop::StoreToMapViewWinRegistry(NFmiMapViewWinRegistry &theMapViewWinRegistry)
 {
-    // Näitä säädetään ja käytetään suoraan Win-rekistereistä, joten näiden arvoja ei saa laittaa sinne lopuksi takaisin.
+    // Nï¿½itï¿½ sï¿½ï¿½detï¿½ï¿½n ja kï¿½ytetï¿½ï¿½n suoraan Win-rekistereistï¿½, joten nï¿½iden arvoja ei saa laittaa sinne lopuksi takaisin.
 //    theMapViewWinRegistry.ShowMasksOnMap(fShowMasksOnMapVM);
 //    theMapViewWinRegistry.SpacingOutFactor(itsSpacingOutFactorVM);
 //    theMapViewWinRegistry.SelectedMapIndex(itsSelectedMapIndexVM);
 //    theMapViewWinRegistry.ShowStationPlot(fShowStationPlotVM);
 
-    // Tätä säädetään vain tänne, joten loppu tulos on aika-ajoin laitettava takaisin Win-rekistereihin.
+    // Tï¿½tï¿½ sï¿½ï¿½detï¿½ï¿½n vain tï¿½nne, joten loppu tulos on aika-ajoin laitettava takaisin Win-rekistereihin.
     theMapViewWinRegistry.ViewGridSizeStr(CtrlViewUtils::Point2String(itsViewGridSizeVM));
 	theMapViewWinRegistry.TimeBoxLocation(itsTimeBoxLocationVM);
 	theMapViewWinRegistry.TimeBoxTextSizeFactor(itsTimeBoxTextSizeFactorVM);
 	theMapViewWinRegistry.TimeBoxFillColor(itsTimeBoxFillColorVM);
 }
+#endif // UNIX
 
 
 void NFmiMapViewDescTop::InitMapViewDescTopFromSettings(void)
@@ -530,7 +570,7 @@ void NFmiMapViewDescTop::InitMapViewDescTopFromSettings(void)
 	itsTimeControlTimeStep = ReadValueFromSettings<float>(itsSettingsBaseName, "TimeControlTimeStep") / 60.f;
 
 	itsShowTimeOnMapMode = ReadValueFromSettings<int>(itsSettingsBaseName, "ShowTimeOnMapMode");
-    ShowTimeOnMapMode(itsShowTimeOnMapMode); // tämä asettaa myös fShowTimeString:in arvon oikeaan
+    ShowTimeOnMapMode(itsShowTimeOnMapMode); // tï¿½mï¿½ asettaa myï¿½s fShowTimeString:in arvon oikeaan
 	itsDrawOverMapMode = ReadValueFromSettings<int>(itsSettingsBaseName, "DrawOverMapMode");
 	fLockToMainMapViewTime = ReadValueFromSettings<bool>(itsSettingsBaseName, "LockToMainMapViewTime");
     fLockToMainMapViewRow = NFmiSettings::Optional<bool>(itsSettingsBaseName + "LockToMainMapViewRow", false);
@@ -582,6 +622,7 @@ void NFmiMapViewDescTop::InitLandBorderDrawingSystem(void)
 	itsLandBorderColors.push_back(NFmiColor(0.0f, 0.0f, 1.0f)); // sininen
 }
 
+#ifndef UNIX
 void NFmiMapViewDescTop::InitGdiPlusImageMapHandlerSystem(void)
 {
 	CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(nullptr, __FUNCTION__);
@@ -609,15 +650,19 @@ NFmiGdiPlusImageMapHandler* NFmiMapViewDescTop::CreateGdiPlusImageMapHandler(std
 	mHandler->Init(theMapConfiguration);
 	return mHandler;
 }
+#endif // !UNIX
 
 void NFmiMapViewDescTop::SelectedMapIndex(unsigned int newValue)
 {
 	itsSelectedMapIndexVM = newValue;
-    // Huom! ViewMakroissa itsGdiPlusImageMapHandlerList-otusta ei ole alustettu, joten jos sen size = 0, silloin ei tehdä indeksin tarkistusta ja korjausta
+#ifndef UNIX
+    // Huom! ViewMakroissa itsGdiPlusImageMapHandlerList-otusta ei ole alustettu, joten jos sen size = 0, silloin ei tehdï¿½ indeksin tarkistusta ja korjausta
 	if(itsGdiPlusImageMapHandlerList.size() > 0 && itsSelectedMapIndexVM >= itsGdiPlusImageMapHandlerList.size())
 		itsSelectedMapIndexVM = static_cast<int>(itsGdiPlusImageMapHandlerList.size() - 1);
+#endif
 }
 
+#ifndef UNIX
 NFmiGdiPlusImageMapHandler* NFmiMapViewDescTop::MapHandler(void) const
 {
 	if(itsSelectedMapIndexVM < itsGdiPlusImageMapHandlerList.size())
@@ -631,6 +676,7 @@ NFmiGdiPlusImageMapHandler* NFmiMapViewDescTop::MapHandler(unsigned int mapAreaI
 		return itsGdiPlusImageMapHandlerList[mapAreaIndex];
 	throw std::runtime_error("ERROR in NFmiMapViewDescTop::GdiPlusImageMapHandler - given MapIndex was out of bounds, error in program or configurations.");
 }
+#endif // !UNIX
 
 int NFmiMapViewDescTop::CalcVisibleRowCount() const
 {
@@ -642,7 +688,7 @@ int NFmiMapViewDescTop::CalcVisibleRowCount() const
         return 1;
 }
 
-// scrollaa näyttöriveja halutun määrän (negatiivinen skrollaa ylös ja positiivinen count alas)
+// scrollaa nï¿½yttï¿½riveja halutun mï¿½ï¿½rï¿½n (negatiivinen skrollaa ylï¿½s ja positiivinen count alas)
 bool NFmiMapViewDescTop::ScrollViewRow(int theCount)
 {
     int oldValue = itsMapRowStartingIndex;
@@ -650,7 +696,7 @@ bool NFmiMapViewDescTop::ScrollViewRow(int theCount)
 
     int currentRowCount = CalcVisibleRowCount();
     int maxRowSize = static_cast<int>(itsViewGridSizeMax.X()*itsViewGridSizeMax.Y());
-    // mennään aina reunojen 'yli'
+    // mennï¿½ï¿½n aina reunojen 'yli'
     if(itsMapRowStartingIndex < 1)
         itsMapRowStartingIndex = maxRowSize - currentRowCount + 1;
     else if(itsMapRowStartingIndex > maxRowSize - currentRowCount + 1)
@@ -679,10 +725,12 @@ void NFmiMapViewDescTop::ViewGridSize(const NFmiPoint& newSize, NFmiMapViewWinRe
 	if(itsViewGridSizeVM.Y() > itsViewGridSizeMax.Y())
 		itsViewGridSizeVM.Y(itsViewGridSizeMax.Y());
 
+#ifndef UNIX
     if(theMapViewWinRegistry)
         theMapViewWinRegistry->ViewGridSizeStr(CtrlViewUtils::Point2String(itsViewGridSizeVM));
+#endif // UNIX
 
-	// lasketaan sitten mikä on maksimi karttarivin alku indeksi (riippuu mak ruudukon koosta ja nyky hila ruudukosta)
+	// lasketaan sitten mikï¿½ on maksimi karttarivin alku indeksi (riippuu mak ruudukon koosta ja nyky hila ruudukosta)
 	int maxStartIndex = CalcMaxRowStartingIndex();
 	itsMapRowStartingIndex = FmiMin(maxStartIndex, itsMapRowStartingIndex);
 	itsTrueMapViewSizeInfo.onViewGridSizeChange(itsViewGridSizeVM, IsTimeControlViewVisibleTotal());
@@ -690,13 +738,13 @@ void NFmiMapViewDescTop::ViewGridSize(const NFmiPoint& newSize, NFmiMapViewWinRe
 
 void NFmiMapViewDescTop::MapRowStartingIndex(int newIndex)
 {
-	// lasketaan sitten mikä on maksimi karttarivin alku indeksi (riippuu mak ruudukon koosta ja nyky hila ruudukosta)
+	// lasketaan sitten mikï¿½ on maksimi karttarivin alku indeksi (riippuu mak ruudukon koosta ja nyky hila ruudukosta)
 	int maxStartIndex = CalcMaxRowStartingIndex();
 	itsMapRowStartingIndex = FmiMin(maxStartIndex, newIndex);
 	MapViewDirty(false, false, true, true);
 }
 
-// Näkyykö kyseinen karttarivi nyt karttanäytössä. TheRowIndex on rivi indeksi, jonka arvo alkaa 1:stä.
+// Nï¿½kyykï¿½ kyseinen karttarivi nyt karttanï¿½ytï¿½ssï¿½. TheRowIndex on rivi indeksi, jonka arvo alkaa 1:stï¿½.
 bool NFmiMapViewDescTop::IsVisibleRow(int theRowIndex)
 {
 	if(theRowIndex < itsMapRowStartingIndex)
@@ -712,24 +760,25 @@ long NFmiMapViewDescTop::TimeControlTimeStepInMinutes() const
 	return boost::math::iround(TimeControlTimeStep() * 60.f);
 }
 
-// MapViewDirty metodi tekee kaiken sen mitä ennen tekivät sekavasti AreaViewDirty- ja 
-// MapDirty -metodit yhdessä. Niitä käytettiin sekaisin eri tilanteissa ja yhdessä (sekaisin taas).
+// MapViewDirty metodi tekee kaiken sen mitï¿½ ennen tekivï¿½t sekavasti AreaViewDirty- ja 
+// MapDirty -metodit yhdessï¿½. Niitï¿½ kï¿½ytettiin sekaisin eri tilanteissa ja yhdessï¿½ (sekaisin taas).
 // Yksi pahimmista sekaannuksista aiheutti fAreaViewDirty muuttujan asetus, joka meni 
-// MapDirty -metodin kautta epäsuorasti false:ksi, jos mapDirty ja clearCache parametrit  olivat molemmat true.
-// Uudessa metodissa ei pääse tapahtumaan sekaannuksia.
+// MapDirty -metodin kautta epï¿½suorasti false:ksi, jos mapDirty ja clearCache parametrit  olivat molemmat true.
+// Uudessa metodissa ei pï¿½ï¿½se tapahtumaan sekaannuksia.
 // ======================================================
 // Seuraavassa selitykset parametreille:
 // ======================================================
 // 1. makeNewBackgroundBitmap, jos true, on tarve laskea uusi zoomaus karttapohjalle tai karttapohja vaihtuu 
-//    ja samalla piirtää karttapohja uudestaan cacheen.
-// 2. clearMapViewBitmapCacheRows, jos true, tyhjennetään karttanäyttöjen kuva-cachet täysin. Kuva cache:lla tarkoitetaan eri 
-//    näyttöriveillä olevat eri aika-askeleilla olevat karttapohjan ja parametri piirto-layereiden yhteistulos.
-//    Tähän cache kuvaan ei kuulu ns. DrawOverBitmaptThings, joilla piirretään erilaisia merkkejä karttanäytöille.
-// 3. redrawMapView parametrilla säädetään piirretäänkö karttanäyttö uudestaan, vai käytetäänkö piirrossa suoraan
-//    karttanäyttö-luokkien (CSmartMetView ja CFmiExtraMapView) tallettamaa cache kuvaa. Tämä yksittäinen cache kuva on 
-//    siis vain kulloisellakin hetkellä käytössä siksi että piti tehdä double-buffer kuva, jos esim. toinen ohjelma/näyttö 
-//    siirretään SmartMet näyttöjen yli ja niitä ei tarvitse muuten päivittää.
-// 4. updateMapViewDrawingLayers parametrilla varmistetaan että karttanäyttöluokat tekevät päivityksiä piirto-layer rakenteisiin.
+//    ja samalla piirtï¿½ï¿½ karttapohja uudestaan cacheen.
+// 2. clearMapViewBitmapCacheRows, jos true, tyhjennetï¿½ï¿½n karttanï¿½yttï¿½jen kuva-cachet tï¿½ysin. Kuva cache:lla tarkoitetaan eri 
+//    nï¿½yttï¿½riveillï¿½ olevat eri aika-askeleilla olevat karttapohjan ja parametri piirto-layereiden yhteistulos.
+//    Tï¿½hï¿½n cache kuvaan ei kuulu ns. DrawOverBitmaptThings, joilla piirretï¿½ï¿½n erilaisia merkkejï¿½ karttanï¿½ytï¿½ille.
+// 3. redrawMapView parametrilla sï¿½ï¿½detï¿½ï¿½n piirretï¿½ï¿½nkï¿½ karttanï¿½yttï¿½ uudestaan, vai kï¿½ytetï¿½ï¿½nkï¿½ piirrossa suoraan
+//    karttanï¿½yttï¿½-luokkien (CSmartMetView ja CFmiExtraMapView) tallettamaa cache kuvaa. Tï¿½mï¿½ yksittï¿½inen cache kuva on 
+//    siis vain kulloisellakin hetkellï¿½ kï¿½ytï¿½ssï¿½ siksi ettï¿½ piti tehdï¿½ double-buffer kuva, jos esim. toinen ohjelma/nï¿½yttï¿½ 
+//    siirretï¿½ï¿½n SmartMet nï¿½yttï¿½jen yli ja niitï¿½ ei tarvitse muuten pï¿½ivittï¿½ï¿½.
+// 4. updateMapViewDrawingLayers parametrilla varmistetaan ettï¿½ karttanï¿½yttï¿½luokat tekevï¿½t pï¿½ivityksiï¿½ piirto-layer rakenteisiin.
+#ifndef UNIX
 void NFmiMapViewDescTop::MapViewDirty(bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool updateMapViewDrawingLayers)
 {
     SetRedrawMapView(redrawMapView);
@@ -744,28 +793,31 @@ void NFmiMapViewDescTop::MapViewDirty(bool makeNewBackgroundBitmap, bool clearMa
         }
     }
 }
+#endif // UNIX
 
-// tälle funktiolle annetaan client view:ssä 'kartastolle' käytetty alue pikseleinä
-// funktio laskee tämän koon ja käytetyn kartta ruudukon avulla yhden ruudun x/y suhteen,
-// jota sitten käytetään mm. automaattizoomauksessa
+// tï¿½lle funktiolle annetaan client view:ssï¿½ 'kartastolle' kï¿½ytetty alue pikseleinï¿½
+// funktio laskee tï¿½mï¿½n koon ja kï¿½ytetyn kartta ruudukon avulla yhden ruudun x/y suhteen,
+// jota sitten kï¿½ytetï¿½ï¿½n mm. automaattizoomauksessa
 void NFmiMapViewDescTop::CalcClientViewXperYRatio(const NFmiPoint& theViewSize)
 {
 	itsClientViewXperYRatio = (RelativeMapRect().Width() * theViewSize.X() / itsViewGridSizeVM.X()) /
 							  (RelativeMapRect().Height() * theViewSize.Y() / itsViewGridSizeVM.Y());
 }
 
+#ifndef UNIX
+#ifndef UNIX
 void NFmiMapViewDescTop::MapViewSizeInPixels(const NFmiPoint& newSize, CDC* pDC, double theDrawObjectScaleFactor, bool fHideTimeControlView)
 {
     itsMapViewSizeInPixels = newSize;
 	auto timeControlViewIsHidden = fHideTimeControlView || !IsTimeControlViewVisible();
 
 	itsTrueMapViewSizeInfo.onSize(newSize, pDC, itsViewGridSizeVM, !timeControlViewIsHidden, theDrawObjectScaleFactor);
-	// Ei saa tehdä itsRelativeMapRect jos timeControlViewIsHidden on true, 
-	// koska siitä tulee max-area laatikko eli (0,0-1,1). Tämä on erikoistapaus ja ne hoidetaan
-	// RelativeMapRect -metodeissa omalla tavalla. itsRelativeMapRect:in arvoksi ei saa tulla sitä!
+	// Ei saa tehdï¿½ itsRelativeMapRect jos timeControlViewIsHidden on true, 
+	// koska siitï¿½ tulee max-area laatikko eli (0,0-1,1). Tï¿½mï¿½ on erikoistapaus ja ne hoidetaan
+	// RelativeMapRect -metodeissa omalla tavalla. itsRelativeMapRect:in arvoksi ei saa tulla sitï¿½!
     if(!timeControlViewIsHidden)
 	{
-		// Säädetään samalla suhteellista osiota, minkä karttanäyttö ottaa ja jättää loput aikakontrolli-ikkunalle.
+		// Sï¿½ï¿½detï¿½ï¿½n samalla suhteellista osiota, minkï¿½ karttanï¿½yttï¿½ ottaa ja jï¿½ttï¿½ï¿½ loput aikakontrolli-ikkunalle.
 		int wantedTimeControlHeightInPixels = FmiRound(TrueMapViewSizeInfo::calculateTimeControlViewHeightInPixels(itsTrueMapViewSizeInfo.logicalPixelsPerMilliMeter().X()));
 	    double mapVerticalPortion = (newSize.Y() - wantedTimeControlHeightInPixels) / newSize.Y();
 		auto modifiedRelativeMapRect = itsRelativeMapRect;
@@ -773,17 +825,21 @@ void NFmiMapViewDescTop::MapViewSizeInPixels(const NFmiPoint& newSize, CDC* pDC,
 		RelativeMapRect(modifiedRelativeMapRect);
 	}
 
-    // lopuksi pitää vielä päivittää x-y suhde
+    // lopuksi pitï¿½ï¿½ vielï¿½ pï¿½ivittï¿½ï¿½ x-y suhde
     CalcClientViewXperYRatio(newSize);
 
     UpdateOneMapViewSize();
 }
+#endif // UNIX
 
+#ifndef UNIX
 void NFmiMapViewDescTop::RecalculateMapViewSizeInPixels(double theDrawObjectScaleFactor)
 {
 	auto timeControlViewIsHidden = !IsTimeControlViewVisibleTotal();
 	MapViewSizeInPixels(itsMapViewSizeInPixels, nullptr, theDrawObjectScaleFactor, timeControlViewIsHidden);
 }
+#endif // UNIX
+#endif // !UNIX
 
 const NFmiRect& NFmiMapViewDescTop::RelativeMapRect(void)
 { 
@@ -807,60 +863,64 @@ bool NFmiMapViewDescTop::IsTimeControlViewVisible() const
 	return itsShowTimeOnMapMode < 2;
 }
 
-// neljä tilaa:
-// 0 = näytä aikakontrolliikkuna+teksti
+// neljï¿½ tilaa:
+// 0 = nï¿½ytï¿½ aikakontrolliikkuna+teksti
 // 1=vain aik.kont.ikkuna
-// 2=älä näytä kumpaakaan
-// 3= näytä vain teksti
+// 2=ï¿½lï¿½ nï¿½ytï¿½ kumpaakaan
+// 3= nï¿½ytï¿½ vain teksti
+#ifndef UNIX
 // palauttaa currentin tilan
 int NFmiMapViewDescTop::ToggleShowTimeOnMapMode(void)
 {
 	itsShowTimeOnMapMode++;
 	if(itsShowTimeOnMapMode > 3)
 		itsShowTimeOnMapMode = 0;
-	// Jos vaikka on luettu joku negatiivinen luku näyttömakrosta, se pitää korjata
+	// Jos vaikka on luettu joku negatiivinen luku nï¿½yttï¿½makrosta, se pitï¿½ï¿½ korjata
 	if(itsShowTimeOnMapMode < 0)
 		itsShowTimeOnMapMode = 0;
 	bool mapAreaDirty = false;
 	switch(itsShowTimeOnMapMode)
 	{
-	case 0: // 0 = näytä aikakontrolliikkuna+teksti
+	case 0: // 0 = nï¿½ytï¿½ aikakontrolliikkuna+teksti
 		fShowTimeString = true;
 		mapAreaDirty = true;
 		break;
 	case 1: // 1=vain aik.kont.ikkuna
 		fShowTimeString = false;
 		break;
-	case 2: // 2=älä näytä kumpaakaan
+	case 2: // 2=ï¿½lï¿½ nï¿½ytï¿½ kumpaakaan
 		fShowTimeString = false;
 		mapAreaDirty = true;
 		break;
-	case 3: // 3= näytä vain teksti
+	case 3: // 3= nï¿½ytï¿½ vain teksti
 		fShowTimeString = true;
 		break;
 	}
 	MapViewDirty(mapAreaDirty, true, true, false);
 	if(mapAreaDirty)
 	{
-		SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry); // ikkunan koko muuttuu tietyissä tapauksissa, joten rajaviivat on laskettava uudestaan
+		SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry); // ikkunan koko muuttuu tietyissï¿½ tapauksissa, joten rajaviivat on laskettava uudestaan
 	}
-	// Kartta-alueen koot pitää myös päivittää, jos aikakontrolli-ikkuna menee pois näkyvistä tai tulee taas näkyviin
+	// Kartta-alueen koot pitï¿½ï¿½ myï¿½s pï¿½ivittï¿½ï¿½, jos aikakontrolli-ikkuna menee pois nï¿½kyvistï¿½ tai tulee taas nï¿½kyviin
 	RecalculateMapViewSizeInPixels(CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->ApplicationWinRegistry().DrawObjectScaleFactor());
 	return itsShowTimeOnMapMode;
 }
+#endif // UNIX
 
+#ifndef UNIX
 void NFmiMapViewDescTop::ShowTimeOnMapMode(int newValue)
 {
-	// käytetään hyväksi ToggleShowTimeOnMapMode-metodin
-	// tekemiä tarkastuksia ja asetuksia.
+	// kï¿½ytetï¿½ï¿½n hyvï¿½ksi ToggleShowTimeOnMapMode-metodin
+	// tekemiï¿½ tarkastuksia ja asetuksia.
 	itsShowTimeOnMapMode = newValue-1;
 	ToggleShowTimeOnMapMode();
 }
+#endif // UNIX
 
 void NFmiMapViewDescTop::TimeControlTimeStep(float newValue)
 {
 	itsTimeControlTimeStep = newValue;
-	if(itsTimeControlTimeStep < 0.02f) // 0.02 on sama kuin yhden minuutin time steppi, mikä on pienin mahdollinen
+	if(itsTimeControlTimeStep < 0.02f) // 0.02 on sama kuin yhden minuutin time steppi, mikï¿½ on pienin mahdollinen
 		itsTimeControlTimeStep = 0.02f;
 	itsAnimationData.TimeStepInMinutes(boost::math::iround(itsTimeControlTimeStep*60.f));
 }
@@ -869,14 +929,14 @@ void NFmiMapViewDescTop::ToggleLandBorderColor(void)
 {
 	itsLandBorderColorIndex++;
 	if(itsLandBorderColorIndex >= static_cast<int>(itsLandBorderColors.size()))
-		itsLandBorderColorIndex = -1; // kun menee ympäri, laitetaan 'tyhjä' väri päälle
+		itsLandBorderColorIndex = -1; // kun menee ympï¿½ri, laitetaan 'tyhjï¿½' vï¿½ri pï¿½ï¿½lle
 	SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Cosmetic);
 }
 
-// Nämä border layer piirtoon liittyvät metodit jotka ottavat separateBorderLayerDrawOptions parametrin
+// Nï¿½mï¿½ border layer piirtoon liittyvï¿½t metodit jotka ottavat separateBorderLayerDrawOptions parametrin
 // toimivat seuraavalla periaatteella:
-// Jos käyttäjä haluaa tietoja yleisestä border-draw asetuksista, on em. parametri nullptr.
-// Jos se on nullptr:stä poikkeava, kyse on erillinen border-layer, jonka tiedot haetaan erikseen.
+// Jos kï¿½yttï¿½jï¿½ haluaa tietoja yleisestï¿½ border-draw asetuksista, on em. parametri nullptr.
+// Jos se on nullptr:stï¿½ poikkeava, kyse on erillinen border-layer, jonka tiedot haetaan erikseen.
 // *************************************************************************************************
 const NFmiColor& NFmiMapViewDescTop::LandBorderColor(NFmiDrawParam* separateBorderLayerDrawOptions)
 {
@@ -885,7 +945,7 @@ const NFmiColor& NFmiMapViewDescTop::LandBorderColor(NFmiDrawParam* separateBord
 
 	if(itsLandBorderColorIndex >= 0 && itsLandBorderColorIndex < static_cast<int>(itsLandBorderColors.size()))
 		return itsLandBorderColors[itsLandBorderColorIndex];
-	return itsLandBorderColors[0]; // virhetilanteessa palautetaan 1. väri
+	return itsLandBorderColors[0]; // virhetilanteessa palautetaan 1. vï¿½ri
 }
 
 bool NFmiMapViewDescTop::DrawLandBorders(NFmiDrawParam* separateBorderLayerDrawOptions)
@@ -906,13 +966,14 @@ int NFmiMapViewDescTop::LandBorderPenSize(NFmiDrawParam* separateBorderLayerDraw
 	return static_cast<int>(itsLandBorderPenSize.X());
 }
 
+#ifndef UNIX
 bool NFmiMapViewDescTop::BorderDrawBitmapDirty(NFmiDrawParam* separateBorderLayerDrawOptions) const
-{ 
+{
 	if(separateBorderLayerDrawOptions)
 	{
 		auto cacheKey = NFmiMapViewDescTop::MakeSeparateBorderLayerCacheKey(*separateBorderLayerDrawOptions);
 		const auto* bitmap = itsSeparateCountryBorderBitmapCache.getCacheBitmap(cacheKey);
-		return (bitmap == nullptr); // Jos ei löydy erillis-layer-cachesta kuvaa, on se 'likainen'
+		return (bitmap == nullptr); // Jos ei lï¿½ydy erillis-layer-cachesta kuvaa, on se 'likainen'
 	}
 	else
 		return (itsLandBorderMapBitmap == nullptr);
@@ -944,7 +1005,7 @@ void NFmiMapViewDescTop::SetLandBorderMapBitmap(Gdiplus::Bitmap* newBitmap, NFmi
 	if(separateBorderLayerDrawOptions)
 	{
 		auto cacheKey = NFmiMapViewDescTop::MakeSeparateBorderLayerCacheKey(*separateBorderLayerDrawOptions);
-		// Annettu newBitmap otetaan tässä omistukseen unique_ptr:iin
+		// Annettu newBitmap otetaan tï¿½ssï¿½ omistukseen unique_ptr:iin
 		itsSeparateCountryBorderBitmapCache.insertCacheBitmap(cacheKey, std::unique_ptr<Gdiplus::Bitmap>(newBitmap));
 	}
 	else
@@ -953,6 +1014,7 @@ void NFmiMapViewDescTop::SetLandBorderMapBitmap(Gdiplus::Bitmap* newBitmap, NFmi
 		itsLandBorderMapBitmap = newBitmap;
 	}
 }
+#endif // !UNIX
 
 // *************************************************************************************************
 
@@ -999,7 +1061,7 @@ const NFmiColor& NFmiMapViewDescTop::StationPointColor(void) const
 {
 	if(itsStationPointColorIndex >= 0 && itsStationPointColorIndex < static_cast<int>(itsLandBorderColors.size()))
 		return itsLandBorderColors[itsStationPointColorIndex];
-	return itsLandBorderColors[0]; // virhetilanteessa palautetaan 1. väri
+	return itsLandBorderColors[0]; // virhetilanteessa palautetaan 1. vï¿½ri
 }
 
 const NFmiPoint& NFmiMapViewDescTop::StationPointSize(void) const
@@ -1011,7 +1073,7 @@ void NFmiMapViewDescTop::ToggleStationPointColor(void)
 {
 	itsStationPointColorIndex++;
 	if(itsStationPointColorIndex >= static_cast<int>(itsLandBorderColors.size()))
-		itsStationPointColorIndex = 0; // kun menee ympäri, laitetaan 1. väri takaisin päälle
+		itsStationPointColorIndex = 0; // kun menee ympï¿½ri, laitetaan 1. vï¿½ri takaisin pï¿½ï¿½lle
 	if(fShowStationPlotVM)
 		MapViewDirty(false, true, true, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 }
@@ -1033,14 +1095,15 @@ void NFmiMapViewDescTop::ToggleStationPointSize(void)
 		MapViewDirty(false, true, true, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 }
 
-// tämä asettaa uuden karttanäytön hilaruudukon koon.
+#ifndef UNIX
+// tï¿½mï¿½ asettaa uuden karttanï¿½ytï¿½n hilaruudukon koon.
 // tekee tarvittavat 'likaukset' ja palauttaa true, jos
-// näyttöjä tarvitsee päivittää, muuten false (eli ruudukko ei muuttunut).
+// nï¿½yttï¿½jï¿½ tarvitsee pï¿½ivittï¿½ï¿½, muuten false (eli ruudukko ei muuttunut).
 bool NFmiMapViewDescTop::SetMapViewGrid(const NFmiPoint &newValue, NFmiMapViewWinRegistry *theMapViewWinRegistry)
 {
 	NFmiPoint oldSize(itsViewGridSizeVM);
 	ViewGridSize(newValue, theMapViewWinRegistry);
-	MapRowStartingIndex(MapRowStartingIndex()); // HUOM! pitää myös säätää aloitus rivi
+	MapRowStartingIndex(MapRowStartingIndex()); // HUOM! pitï¿½ï¿½ myï¿½s sï¿½ï¿½tï¿½ï¿½ aloitus rivi
 	if(oldSize != itsViewGridSizeVM)
 	{
 		CRect aRect;
@@ -1054,16 +1117,18 @@ bool NFmiMapViewDescTop::SetMapViewGrid(const NFmiPoint &newValue, NFmiMapViewWi
 	}
 	return false;
 }
+#endif // !UNIX
 
 void NFmiMapViewDescTop::UpdateOneMapViewSize()
 {
-    // lasketaan myös yhden kartta ruudun koko mm uudestaan
+    // lasketaan myï¿½s yhden kartta ruudun koko mm uudestaan
     NFmiPoint oneMapViewSizeInPixels = ActualMapBitmapSizeInPixels();
     itsGraphicalInfo.itsViewWidthInMM = oneMapViewSizeInPixels.X() / itsGraphicalInfo.itsPixelsPerMM_x;
     itsGraphicalInfo.itsViewHeightInMM = oneMapViewSizeInPixels.Y() / itsGraphicalInfo.itsPixelsPerMM_y;
 	itsTrueMapViewSizeInfo.onViewGridSizeChange(itsViewGridSizeVM, IsTimeControlViewVisibleTotal());
 }
 
+#ifndef UNIX
 void NFmiMapViewDescTop::SetSelectedMapsFromSettings(void)
 {
 	for(size_t i=0; i<itsGdiPlusImageMapHandlerList.size(); i++)
@@ -1111,6 +1176,7 @@ void NFmiMapViewDescTop::StoreHandlerSelectedMapsToSettings(NFmiGdiPlusImageMapH
 	int overlayIndex = theGdiPlusImageMapHandler.OverMapBitmapIndex();
 	NFmiSettings::Set(usedOverlayIndexKey.c_str(), NFmiStringTools::Convert<int>(overlayIndex).c_str(), true);
 }
+#endif // !UNIX
 
 
 void NFmiMapViewDescTop::InitStationPointDrawingSystem(void)
@@ -1120,6 +1186,7 @@ void NFmiMapViewDescTop::InitStationPointDrawingSystem(void)
 	itsStationPointSize = NFmiPoint(stationPointSize, stationPointSize);
 }
 
+#ifndef UNIX
 void NFmiMapViewDescTop::ToggleMapViewDisplayMode(void)
 {
     if(itsMapViewDisplayMode == CtrlViewUtils::MapViewMode::kNormal)
@@ -1142,7 +1209,7 @@ void NFmiMapViewDescTop::InitForViewMacro(const NFmiMapViewDescTop& theOther, NF
 
 	RelativeMapRect(theOther.itsRelativeMapRect);
 
-	// drawparamlistoje ei initialisoida tässä!!!!
+	// drawparamlistoje ei initialisoida tï¿½ssï¿½!!!!
 //	itsDrawParamListVector = theOther.itsDrawParamListVector;
 //	itsExtraDrawParamListVector = theOther.itsExtraDrawParamListVector;
 
@@ -1161,11 +1228,11 @@ void NFmiMapViewDescTop::InitForViewMacro(const NFmiMapViewDescTop& theOther, NF
 		InitFromMapViewWinRegistry(theMapViewWinRegistry);
 	else
 	{
-		fShowMasksOnMapVM = theOther.fShowMasksOnMapVM; // talletetaan viewMacrosta arvo sekä lokaali arvoon että rekisteriin
+		fShowMasksOnMapVM = theOther.fShowMasksOnMapVM; // talletetaan viewMacrosta arvo sekï¿½ lokaali arvoon ettï¿½ rekisteriin
 		theMapViewWinRegistry.ShowMasksOnMap(theOther.fShowMasksOnMapVM);
-		itsSpacingOutFactorVM = theOther.itsSpacingOutFactorVM; // talletetaan viewMacrosta arvo sekä lokaali arvoon että rekisteriin
+		itsSpacingOutFactorVM = theOther.itsSpacingOutFactorVM; // talletetaan viewMacrosta arvo sekï¿½ lokaali arvoon ettï¿½ rekisteriin
 		theMapViewWinRegistry.SpacingOutFactor(theOther.itsSpacingOutFactorVM);
-		SelectedMapIndex(theOther.itsSelectedMapIndexVM); // tämä indeksi pitää tarkistaa, joten se laitetaan asetus-metodin läpi
+		SelectedMapIndex(theOther.itsSelectedMapIndexVM); // tï¿½mï¿½ indeksi pitï¿½ï¿½ tarkistaa, joten se laitetaan asetus-metodin lï¿½pi
 		theMapViewWinRegistry.SelectedMapIndex(itsSelectedMapIndexVM);
 
 		fShowStationPlotVM = theOther.fShowStationPlotVM;
@@ -1195,12 +1262,13 @@ void NFmiMapViewDescTop::InitForViewMacro(const NFmiMapViewDescTop& theOther, NF
 	fShowObsComparisonOnMap = theOther.fShowObsComparisonOnMap;
 	fShowWarningMarkersOnMap = theOther.fShowWarningMarkersOnMap;
 
-	if(theOther.itsTimeControlViewTimes.Size() > 1) // vanhoista makroista tähän tulee tyhjä aikabagi, joka pitää ignoorata
+	if(theOther.itsTimeControlViewTimes.Size() > 1) // vanhoista makroista tï¿½hï¿½n tulee tyhjï¿½ aikabagi, joka pitï¿½ï¿½ ignoorata
 		itsTimeControlViewTimes = theOther.itsTimeControlViewTimes;
 	itsAnimationData = theOther.itsAnimationData;
 }
+#endif // UNIX
 
-// HUOM!! Tämä laittaa kommentteja mukaan!
+// HUOM!! Tï¿½mï¿½ laittaa kommentteja mukaan!
 void NFmiMapViewDescTop::Write(std::ostream& os) const
 {
 	os << "// NFmiMapViewDescTop::Write..." << std::endl;
@@ -1218,8 +1286,8 @@ void NFmiMapViewDescTop::Write(std::ostream& os) const
 	os << "// RelativeMapRect" << std::endl;
 	os << itsRelativeMapRect;
 
-	// itsDrawParamListVector; // Tämän talletus tehdään erikseen näyttömakroluokassa
-	// itsExtraDrawParamListVector; // Tämän talletus tehdään erikseen näyttömakroluokassa
+	// itsDrawParamListVector; // Tï¿½mï¿½n talletus tehdï¿½ï¿½n erikseen nï¿½yttï¿½makroluokassa
+	// itsExtraDrawParamListVector; // Tï¿½mï¿½n talletus tehdï¿½ï¿½n erikseen nï¿½yttï¿½makroluokassa
 
 	os << "// DrawOverMapMode + MapRowStartingIndex + ShowTimeOnMapMode + ShowTimeString" << std::endl;
 	os << itsDrawOverMapMode << " " << itsMapRowStartingIndex << " " << itsShowTimeOnMapMode << " " << fShowTimeString << std::endl;
@@ -1244,27 +1312,27 @@ void NFmiMapViewDescTop::Write(std::ostream& os) const
 	os << fDescTopOn << " " << fLockToMainMapViewTime << " " << fShowTrajectorsOnMap << " " << fShowSoundingMarkersOnMap << " " << fShowCrossSectionMarkersOnMap << std::endl;
 
 	os << "// ShowSelectedPointsOnMap + ShowControlPointsOnMap + ShowObsComparisonOnMap + ShowWarningMarkersOnMap + ShowRedCrossOverMapIfNotEditedDataTime" << std::endl;
-    // Näyttömakrojen taakse/eteenpäin yhteen sopivuuden nimissä, tämä pitää tallettaa falsena
+    // Nï¿½yttï¿½makrojen taakse/eteenpï¿½in yhteen sopivuuden nimissï¿½, tï¿½mï¿½ pitï¿½ï¿½ tallettaa falsena
     bool legacy_fShowRedCrossOverMapIfNotEditedDataTime = false;
 	os << fShowSelectedPointsOnMap << " " << fShowControlPointsOnMap << " " << fShowObsComparisonOnMap << " " << fShowWarningMarkersOnMap << " " << legacy_fShowRedCrossOverMapIfNotEditedDataTime << std::endl;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 
-    // 'double' muotoisten lisädatojen lisäys
+    // 'double' muotoisten lisï¿½datojen lisï¿½ys
 	extraData.Add(static_cast<double>(fLockToMainMapViewRow)); // talletetaan 1. extra-datana parametri rivin lukitus
 	extraData.Add(static_cast<double>(itsParamWindowViewPosition)); // talletetaan 2. extra-datana parametri-laatikon sijainti
 	extraData.Add(static_cast<double>(itsTimeBoxLocationVM)); // talletetaan 3. extra-datana time-laatikon sijainti
 	extraData.Add(static_cast<double>(itsTimeBoxTextSizeFactorVM)); // talletetaan 4. extra-datana time-laatikon tekstien kokokerroin
 
-    // string muotoisten lisädatojen lisäys
+    // string muotoisten lisï¿½datojen lisï¿½ys
     std::stringstream extraDataStream;
     itsAnimationData.Write(extraDataStream);
-	extraData.Add(extraDataStream.str()); // talletetaan 1. extra-datana animaatioon liittyvä data yhtenä stringinä
+	extraData.Add(extraDataStream.str()); // talletetaan 1. extra-datana animaatioon liittyvï¿½ data yhtenï¿½ stringinï¿½
 	std::string timeBagStr = NFmiDataStoringHelpers::GetTimeBagOffSetStr(usedViewMacroTime, *(TimeControlViewTimes().ValidTimeBag()));
-	extraData.Add(timeBagStr); // lisätään 2. extra-datana aikaikkunan timebagi offsettina currenttiin aikaan
-	extraData.Add(NFmiDrawParam::Color2String(itsTimeBoxFillColorVM)); // lisätään 3. extra-datana kartan aikalegendan taustaväri tekstinä
+	extraData.Add(timeBagStr); // lisï¿½tï¿½ï¿½n 2. extra-datana aikaikkunan timebagi offsettina currenttiin aikaan
+	extraData.Add(NFmiDrawParam::Color2String(itsTimeBoxFillColorVM)); // lisï¿½tï¿½ï¿½n 3. extra-datana kartan aikalegendan taustavï¿½ri tekstinï¿½
 
 	os << "// possible extra data" << std::endl;
 	os << extraData;
@@ -1273,9 +1341,9 @@ void NFmiMapViewDescTop::Write(std::ostream& os) const
 		throw std::runtime_error("NFmiMapViewDescTop::Write failed");
 }
 
-// HUOM!! ennen kuin tämä luokka luetaan sisään tiedostosta, poista kommentit
+// HUOM!! ennen kuin tï¿½mï¿½ luokka luetaan sisï¿½ï¿½n tiedostosta, poista kommentit
 // NFmiCommentStripper-luokalla, koska kirjoitettaessa kommentteja laitetaan
-// sekaan. Eli älä käytä suoraan tätä metodia, vaan Init(filename)-metodia!!!!
+// sekaan. Eli ï¿½lï¿½ kï¿½ytï¿½ suoraan tï¿½tï¿½ metodia, vaan Init(filename)-metodia!!!!
 void NFmiMapViewDescTop::Read(std::istream& is)
 {
 	is >> itsSelectedMapIndexVM;
@@ -1288,8 +1356,8 @@ void NFmiMapViewDescTop::Read(std::istream& is)
 	is >> tmpMapRect;
 	RelativeMapRect(tmpMapRect);
 
-	// itsDrawParamListVector; // Tämän talletus tehdään erikseen näyttömakroluokassa
-	// itsExtraDrawParamListVector; // Tämän talletus tehdään erikseen näyttömakroluokassa
+	// itsDrawParamListVector; // Tï¿½mï¿½n talletus tehdï¿½ï¿½n erikseen nï¿½yttï¿½makroluokassa
+	// itsExtraDrawParamListVector; // Tï¿½mï¿½n talletus tehdï¿½ï¿½n erikseen nï¿½yttï¿½makroluokassa
 
 	is >> itsDrawOverMapMode >> itsMapRowStartingIndex >> itsShowTimeOnMapMode >> fShowTimeString;
 
@@ -1308,27 +1376,27 @@ void NFmiMapViewDescTop::Read(std::istream& is)
 
 	is >> fDescTopOn >> fLockToMainMapViewTime >> fShowTrajectorsOnMap >> fShowSoundingMarkersOnMap >> fShowCrossSectionMarkersOnMap;
 
-    // Näyttömakrojen taakse/eteenpäin yhteen sopivuuden nimissä, tämä pitää lukea
+    // Nï¿½yttï¿½makrojen taakse/eteenpï¿½in yhteen sopivuuden nimissï¿½, tï¿½mï¿½ pitï¿½ï¿½ lukea
     bool legacy_fShowRedCrossOverMapIfNotEditedDataTime = false;
     is >> fShowSelectedPointsOnMap >> fShowControlPointsOnMap >> fShowObsComparisonOnMap >> fShowWarningMarkersOnMap >> legacy_fShowRedCrossOverMapIfNotEditedDataTime;
 
 	if(is.fail())
 		throw std::runtime_error("NFmiMapViewDescTop::Read failed");
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	is >> extraData;
-	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+	// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+	// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 
-    // 'double' muotoisten lisädatojen poiminta
+    // 'double' muotoisten lisï¿½datojen poiminta
 
 	// Luetaan 1. extra-datana parametri rivin lukitus, oletusarvona fLockToMainMapViewRow:ille on false
 	fLockToMainMapViewRow = false;
     if(extraData.itsDoubleValues.size() >= 1)
-        fLockToMainMapViewRow = extraData.itsDoubleValues[0] != 0; // (HUOM! ei voi static_cast:ata bool:iksi, koska VC++ tekee ystävällisen varoituksen hitaudesta)
+        fLockToMainMapViewRow = extraData.itsDoubleValues[0] != 0; // (HUOM! ei voi static_cast:ata bool:iksi, koska VC++ tekee ystï¿½vï¿½llisen varoituksen hitaudesta)
 
 	// Luetaan 2. extra-datana parametri parametri-laatikon sijainti, oletusarvona itsParamWindowViewPosition:ille riippuu potentiaalisesti 
-	// vanhalla versiolla tehdyn näyttömakron showParamWindowView muuttujaan luetusta originaali asetuksesta.
+	// vanhalla versiolla tehdyn nï¿½yttï¿½makron showParamWindowView muuttujaan luetusta originaali asetuksesta.
 	itsParamWindowViewPosition = showParamWindowView ? kTopLeft : kNoDirection;
 	if(extraData.itsDoubleValues.size() >= 2)
 		itsParamWindowViewPosition = static_cast<FmiDirection>(extraData.itsDoubleValues[1]);
@@ -1343,9 +1411,9 @@ void NFmiMapViewDescTop::Read(std::istream& is)
 	if(extraData.itsDoubleValues.size() >= 4)
 		TimeBoxTextSizeFactor(static_cast<float>(extraData.itsDoubleValues[3]));
 
-    // string muotoisten lisädatojen poiminta
+    // string muotoisten lisï¿½datojen poiminta
     if(extraData.itsStringValues.size() >= 1)
-	{// luetaan 1. extra-datana animaatioon liittyvä data yhtenä stringinä
+	{// luetaan 1. extra-datana animaatioon liittyvï¿½ data yhtenï¿½ stringinï¿½
 		if(is.fail())
 			throw std::runtime_error("NFmiMapViewDescTop::Read failed");
 		std::stringstream extraDataStream;
@@ -1362,7 +1430,7 @@ void NFmiMapViewDescTop::Read(std::istream& is)
 	itsTimeBoxFillColorVM = TimeBoxFillColorDefault;
 	if(extraData.itsStringValues.size() >= 3)
 	{
-		// luetaan 3. extra-datana aikalegendan pohjaväritys
+		// luetaan 3. extra-datana aikalegendan pohjavï¿½ritys
 		if(is.fail())
 			throw std::runtime_error("NFmiMapViewDescTop::Read failed");
 		itsTimeBoxFillColorVM = NFmiDrawParam::String2Color(extraData.itsStringValues[2]);
@@ -1372,6 +1440,7 @@ void NFmiMapViewDescTop::Read(std::istream& is)
 		throw std::runtime_error("NFmiMapViewDescTop::Read failed");
 }
 
+#ifndef UNIX
 std::vector<NFmiMapViewDescTop::ViewMacroDipMapHelper> NFmiMapViewDescTop::GetViewMacroDipMapHelperList(void)
 {
 	std::vector<NFmiMapViewDescTop::ViewMacroDipMapHelper> helperList;
@@ -1415,8 +1484,9 @@ void NFmiMapViewDescTop::SetViewMacroDipMapHelperList(const std::vector<NFmiMapV
 		mapHandler.Area(NFmiAreaFactory::Create(static_cast<char*>(tmpData.itsZoomedAreaStr)));
 	}
 }
+#endif // !UNIX
 
-// laskee näyttöruudukon yhden ruudun koon pikseleissä
+// laskee nï¿½yttï¿½ruudukon yhden ruudun koon pikseleissï¿½
 NFmiPoint NFmiMapViewDescTop::ActualMapBitmapSizeInPixels(void)
 {
 	NFmiPoint returnValue(MapViewSizeInPixels().X() * RelativeMapRect().Width() / itsViewGridSizeVM.X()
@@ -1427,7 +1497,7 @@ NFmiPoint NFmiMapViewDescTop::ActualMapBitmapSizeInPixels(void)
 void NFmiMapViewDescTop::TimeControlViewTimes(const NFmiTimeDescriptor &newTimeDescriptor)
 {
 	if(newTimeDescriptor.UseTimeList())
-	{ // pitää tehdä timebag tyyppinen timedescriptori, jos annettu oli timelist tyyppinen
+	{ // pitï¿½ï¿½ tehdï¿½ timebag tyyppinen timedescriptori, jos annettu oli timelist tyyppinen
         int usedTimeStepInMinutes = boost::math::iround(itsTimeControlTimeStep * 60);
 		if(usedTimeStepInMinutes > 60)
 			usedTimeStepInMinutes = 60; // maksimissaan kuitenkin 60 mkinuutin aikasteppi
@@ -1441,7 +1511,7 @@ void NFmiMapViewDescTop::TimeControlViewTimes(const NFmiTimeDescriptor &newTimeD
 			newEndTime.NextMetTime();
 		}
         int diffInHours = newEndTime.DifferenceInHours(newStartTime);
-        if(diffInHours > 2*24*366) // ei yli kahden vuoden aikaikkunaa tähän, kyse on luultavasti virheestä???
+        if(diffInHours > 2*24*366) // ei yli kahden vuoden aikaikkunaa tï¿½hï¿½n, kyse on luultavasti virheestï¿½???
 		{
 			newEndTime = newStartTime;
 			newEndTime.NextMetTime();
@@ -1472,20 +1542,21 @@ void NFmiMapViewDescTop::MapViewDisplayMode(CtrlViewUtils::MapViewMode newValue)
 {
 	itsMapViewDisplayMode = newValue;
 
-	// Kutsutaan lopuksi vielä skrollaus-metodia 0-siirrolla. Tämä asettaa näyttörivit niin, 
-	// kuin ne voivat kulloisessakin moodissa olla. Esim. Jos ollaan ensin yksi-aika-moodissa rivillä 35
-	// ja siirrytään yksi-aika-per-sarake eli normaali moodiiin, silloin ei voida olla rivillä 35, vaan 
-	// aloitus riviä pitää säätää, niin että se mahtuu 5 ensimmäiseen riviin riippuen ruudukon koosta.
+	// Kutsutaan lopuksi vielï¿½ skrollaus-metodia 0-siirrolla. Tï¿½mï¿½ asettaa nï¿½yttï¿½rivit niin, 
+	// kuin ne voivat kulloisessakin moodissa olla. Esim. Jos ollaan ensin yksi-aika-moodissa rivillï¿½ 35
+	// ja siirrytï¿½ï¿½n yksi-aika-per-sarake eli normaali moodiiin, silloin ei voida olla rivillï¿½ 35, vaan 
+	// aloitus riviï¿½ pitï¿½ï¿½ sï¿½ï¿½tï¿½ï¿½, niin ettï¿½ se mahtuu 5 ensimmï¿½iseen riviin riippuen ruudukon koosta.
 	ScrollViewRow(0);
 }
 
-// Säädetään kaikki aikaa liittyvät jutut parametrina annettuun aikaan, että SmartMet säätyy ladattuun CaseStudy-dataan mahdollisimman hyvin.
+// Sï¿½ï¿½detï¿½ï¿½n kaikki aikaa liittyvï¿½t jutut parametrina annettuun aikaan, ettï¿½ SmartMet sï¿½ï¿½tyy ladattuun CaseStudy-dataan mahdollisimman hyvin.
 void NFmiMapViewDescTop::SetCaseStudyTimes(const NFmiMetTime &theCaseStudyTime)
 {
 	itsTimeControlViewTimes.SetNewStartTime(theCaseStudyTime);
 	itsCurrentTime = theCaseStudyTime;
 }
 
+#ifndef UNIX
 std::list<NFmiPolyline*>& NFmiMapViewDescTop::DrawBorderPolyLineList()
 {
 	return MapHandler()->DrawBorderPolyLineList();
@@ -1546,15 +1617,16 @@ std::string NFmiMapViewDescTop::GetCurrentGuiMapLayerText(bool backgroundMap)
 {
 	return MapHandler()->GetCurrentGuiMapLayerText(backgroundMap);
 }
+#endif // !UNIX
 
 
 // Laitoin karttojen likaus systeemit uusiksi monellakin tapaa:
 // 1. Nimi muuttui toivottavasti kuvaavammaksi eli RedrawMapView, eli se tarkoittaa
-//    että seuraavalla piirrooskierroksella näyttö pitää piirtää uusiksi, eikä saa vain käyttää double buffer bitmap:ia.
-// 2. Ns. set-funktiolla voi lipun laittaa vain päälle, false arvo jätetään huomiotta. Vain clear-funktiolla
-//    lipun tila voidaan nollata. Tämä muutos siksi että eri paikoista voi tulla samalla likaus kerralla eri arvoja
-//    eikä toisaalta tehdystä false asetuksesta ei haluta nollata toisesta tehtyä true asetusta.
-// 3. Lippu siis nollataan clear-funktiolla, jota kutsutaan piirto toimintojen jälkeen.
+//    ettï¿½ seuraavalla piirrooskierroksella nï¿½yttï¿½ pitï¿½ï¿½ piirtï¿½ï¿½ uusiksi, eikï¿½ saa vain kï¿½yttï¿½ï¿½ double buffer bitmap:ia.
+// 2. Ns. set-funktiolla voi lipun laittaa vain pï¿½ï¿½lle, false arvo jï¿½tetï¿½ï¿½n huomiotta. Vain clear-funktiolla
+//    lipun tila voidaan nollata. Tï¿½mï¿½ muutos siksi ettï¿½ eri paikoista voi tulla samalla likaus kerralla eri arvoja
+//    eikï¿½ toisaalta tehdystï¿½ false asetuksesta ei haluta nollata toisesta tehtyï¿½ true asetusta.
+// 3. Lippu siis nollataan clear-funktiolla, jota kutsutaan piirto toimintojen jï¿½lkeen.
 bool NFmiMapViewDescTop::RedrawMapView(void) const
 { 
     return fRedrawMapView; 
@@ -1618,9 +1690,9 @@ void NFmiMapViewDescTop::TimeBoxTextSizeFactor(float newFactor)
 
 void NFmiMapViewDescTop::SetTimeBoxFillColor(NFmiColor newColorNotAlpha)
 {
-	// Asetetaan uuteen väriin ensin alpha
+	// Asetetaan uuteen vï¿½riin ensin alpha
 	newColorNotAlpha.Alpha(itsTimeBoxFillColorVM.Alpha());
-	// Sitten vasta korvataan uudella vanha väri kokonaisuudessaan
+	// Sitten vasta korvataan uudella vanha vï¿½ri kokonaisuudessaan
 	itsTimeBoxFillColorVM = newColorNotAlpha;
 }
 

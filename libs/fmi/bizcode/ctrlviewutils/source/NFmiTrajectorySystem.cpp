@@ -12,7 +12,7 @@
 
 #include <fstream>
 
-#include <boost\math\special_functions\round.hpp>
+#include <boost/math/special_functions/round.hpp>
 
 
 double NFmiTrajectorySystem::itsLatestVersionNumber = 1.0;
@@ -31,15 +31,15 @@ NFmiTrajectorySystem::NFmiTrajectorySystem(NFmiInfoOrganizer *theInfoOrganizer, 
 ,itsSelectedTime()
 ,itsSelectedProducer()
 ,itsSelectedDataType(2)
-,itsSelectedTimeStepInMinutes(30) // siirrä tämä asetus myös tiedostoon konffeihin
-,itsSelectedTimeLengthInHours(24) // siirrä tämä asetus myös tiedostoon konffeihin
-,itsSelectedPlumeProbFactor(25) // siirrä tämä asetus myös tiedostoon konffeihin
-,itsSelectedPlumeParticleCount(10) // siirrä tämä asetus myös tiedostoon konffeihin
-,itsSelectedStartLocationRangeInKM(0) // siirrä tämä asetus myös tiedostoon konffeihin
-,itsSelectedPressureLevel(850) // siirrä tämä asetus myös tiedostoon konffeihin
-,itsSelectedStartPressureLevelRange(0) // siirrä tämä asetus myös tiedostoon konffeihin
-,itsSelectedDirection(kForward) // siirrä tämä asetus myös tiedostoon konffeihin
-,itsSelectedStartTimeRangeInMinutes(0) // siirrä tämä asetus myös tiedostoon konffeihin
+,itsSelectedTimeStepInMinutes(30) // siirrï¿½ tï¿½mï¿½ asetus myï¿½s tiedostoon konffeihin
+,itsSelectedTimeLengthInHours(24) // siirrï¿½ tï¿½mï¿½ asetus myï¿½s tiedostoon konffeihin
+,itsSelectedPlumeProbFactor(25) // siirrï¿½ tï¿½mï¿½ asetus myï¿½s tiedostoon konffeihin
+,itsSelectedPlumeParticleCount(10) // siirrï¿½ tï¿½mï¿½ asetus myï¿½s tiedostoon konffeihin
+,itsSelectedStartLocationRangeInKM(0) // siirrï¿½ tï¿½mï¿½ asetus myï¿½s tiedostoon konffeihin
+,itsSelectedPressureLevel(850) // siirrï¿½ tï¿½mï¿½ asetus myï¿½s tiedostoon konffeihin
+,itsSelectedStartPressureLevelRange(0) // siirrï¿½ tï¿½mï¿½ asetus myï¿½s tiedostoon konffeihin
+,itsSelectedDirection(kForward) // siirrï¿½ tï¿½mï¿½ asetus myï¿½s tiedostoon konffeihin
+,itsSelectedStartTimeRangeInMinutes(0) // siirrï¿½ tï¿½mï¿½ asetus myï¿½s tiedostoon konffeihin
 ,itsTrajectoryViewTimeBag()
 ,fTrajectoryViewTimeBagDirty(true)
 ,fPlumesUsed(true)
@@ -65,27 +65,27 @@ NFmiTrajectorySystem::~NFmiTrajectorySystem(void)
 {
 }
 
-// Tämä funktio on jätetty demo mielessä tänne, että näkee, miten trajektoreita voi laske itse.
+// Tï¿½mï¿½ funktio on jï¿½tetty demo mielessï¿½ tï¿½nne, ettï¿½ nï¿½kee, miten trajektoreita voi laske itse.
 static void CalcMyTrajectory(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
     boost::shared_ptr<NFmiTrajectory> trajectory(new NFmiTrajectory());
-    trajectory->Producer(NFmiProducer(kFmiMTAHIRLAM, "Hirlam")); // tämä merkitään esim. XML-outputin tietoihin
-//	trajectory->DataType(itsSelectedDataType); // tätä ei tarvita tässä käytössä
+    trajectory->Producer(NFmiProducer(kFmiMTAHIRLAM, "Hirlam")); // tï¿½mï¿½ merkitï¿½ï¿½n esim. XML-outputin tietoihin
+//	trajectory->DataType(itsSelectedDataType); // tï¿½tï¿½ ei tarvita tï¿½ssï¿½ kï¿½ytï¿½ssï¿½
     trajectory->LatLon(NFmiPoint(25.12, 60.36));
     trajectory->Time(NFmiMetTime()); // trajektorin aloitushetki
-	trajectory->TimeStepInMinutes(10); // minkäpituisin stepein trajektoria lasketaan, tämä on myös output tarkkuus
+	trajectory->TimeStepInMinutes(10); // minkï¿½pituisin stepein trajektoria lasketaan, tï¿½mï¿½ on myï¿½s output tarkkuus
 	trajectory->TimeLengthInHours(24);
 	trajectory->PlumesUsed(false);
-	trajectory->PlumeProbFactor(25); // prosentuaalinen häirintä kerroin (vain pluumin partikkeleille)
+	trajectory->PlumeProbFactor(25); // prosentuaalinen hï¿½irintï¿½ kerroin (vain pluumin partikkeleille)
 	trajectory->PlumeParticleCount(0); // kuinka monta partikkelia on pluumissa
-	trajectory->StartLocationRangeInKM(0); // säde minkä sisältä partikkelit alueellisesti lähtevät
-	trajectory->StartTimeRangeInMinutes(0); // aikahaarukka, minkä sisältä partikkelit lähtevät
-	trajectory->PressureLevel(850); // lähtöpainepinta
-	trajectory->StartPressureLevelRange(0); // korkeushaarukka minkä painepintojen sisältä (+- haarukka) partikkelit lähtevät
+	trajectory->StartLocationRangeInKM(0); // sï¿½de minkï¿½ sisï¿½ltï¿½ partikkelit alueellisesti lï¿½htevï¿½t
+	trajectory->StartTimeRangeInMinutes(0); // aikahaarukka, minkï¿½ sisï¿½ltï¿½ partikkelit lï¿½htevï¿½t
+	trajectory->PressureLevel(850); // lï¿½htï¿½painepinta
+	trajectory->StartPressureLevelRange(0); // korkeushaarukka minkï¿½ painepintojen sisï¿½ltï¿½ (+- haarukka) partikkelit lï¿½htevï¿½t
     trajectory->Direction(kForward); // kForward tai kBackward
-	trajectory->Isentropic(false); // seuraako trajektori potentiaalilämpötilaa
-//	trajectory->CalcTempBalloonTrajectories(false); // tätä ei tarvita tässä käytössä
-//	trajectory->TempBalloonTrajectorSettings(NFmiTempBalloonTrajectorSettings()); // tätä ei tarvita tässä käytössä
+	trajectory->Isentropic(false); // seuraako trajektori potentiaalilï¿½mpï¿½tilaa
+//	trajectory->CalcTempBalloonTrajectories(false); // tï¿½tï¿½ ei tarvita tï¿½ssï¿½ kï¿½ytï¿½ssï¿½
+//	trajectory->TempBalloonTrajectorSettings(NFmiTempBalloonTrajectorSettings()); // tï¿½tï¿½ ei tarvita tï¿½ssï¿½ kï¿½ytï¿½ssï¿½
 
     NFmiTrajectorySystem::CalculateTrajectory(trajectory, theInfo);
 
@@ -105,7 +105,7 @@ void NFmiTrajectorySystem::AddTrajectory(bool fCalculateData)
 	itsTrajectories.push_back(tmp);
 }
 
-// laskee kuinka monen aika-askeleen jälkeen pitää aina
+// laskee kuinka monen aika-askeleen jï¿½lkeen pitï¿½ï¿½ aina
 // laskea pluumi trajektoreihin haluttu satunnaisuus
 static int CalcRandomizerStep(int theTimeStepInMinutes, int theRandomizerStepInMinutes)
 {
@@ -118,7 +118,7 @@ static int CalcRandomizerStep(int theTimeStepInMinutes, int theRandomizerStepInM
 
 static NFmiMetTime CalcRandStartTime(const NFmiMetTime &theStartTime, double theStartTimeRangeInMinutes, int theRoundStepInMinutes)
 {
-	double rangeRandValue = theStartTimeRangeInMinutes * static_cast<double>(2.*rand()-RAND_MAX) / RAND_MAX; // joku reaali luku välillä -1 ja - 1
+	double rangeRandValue = theStartTimeRangeInMinutes * static_cast<double>(2.*rand()-RAND_MAX) / RAND_MAX; // joku reaali luku vï¿½lillï¿½ -1 ja - 1
 	long usedRangeRandValue = boost::math::iround(rangeRandValue/theRoundStepInMinutes) * theRoundStepInMinutes;
 	NFmiMetTime aTime(theStartTime);
 	aTime.SetTimeStep(static_cast<short>(theRoundStepInMinutes));
@@ -128,8 +128,8 @@ static NFmiMetTime CalcRandStartTime(const NFmiMetTime &theStartTime, double the
 
 static NFmiPoint CalcRandStartPoint(const NFmiPoint &theStartPoint, double theStartLocationRangeInKM, bool usePacificView)
 {
-	double rangeRandValue = theStartLocationRangeInKM * 1000. * static_cast<double>(rand()) / RAND_MAX; // joku reaali luku välillä 0 - 1
-	double dirRandValue = 360. * static_cast<double>(rand()) / RAND_MAX; // joku reaali luku välillä 0 - 1
+	double rangeRandValue = theStartLocationRangeInKM * 1000. * static_cast<double>(rand()) / RAND_MAX; // joku reaali luku vï¿½lillï¿½ 0 - 1
+	double dirRandValue = 360. * static_cast<double>(rand()) / RAND_MAX; // joku reaali luku vï¿½lillï¿½ 0 - 1
 	NFmiLocation loc(theStartPoint);
 	loc.SetLocation(dirRandValue, rangeRandValue, usePacificView);
 	return loc.GetLocation();
@@ -137,7 +137,7 @@ static NFmiPoint CalcRandStartPoint(const NFmiPoint &theStartPoint, double theSt
 
 static double CalcRandStartPressureLevel(double theStartPressureLevel, double theStartPressureLevelRange, double theMaxPressureLevel)
 {
-	double rangeRandValue = theStartPressureLevelRange * static_cast<double>(2.*rand()-RAND_MAX) / RAND_MAX; // joku reaali luku välillä -1 ja 1
+	double rangeRandValue = theStartPressureLevelRange * static_cast<double>(2.*rand()-RAND_MAX) / RAND_MAX; // joku reaali luku vï¿½lillï¿½ -1 ja 1
 	double value = theStartPressureLevel + rangeRandValue;
 	if(value < 1)
 		value = 1;
@@ -150,7 +150,7 @@ static bool IsPacificViewData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
     if(theInfo)
     {
-        if(theInfo->Grid()) // trajektori datojen pitäisi olla hiladatoja
+        if(theInfo->Grid()) // trajektori datojen pitï¿½isi olla hiladatoja
             return theInfo->Grid()->Area()->PacificView();
     }
 
@@ -161,7 +161,7 @@ void NFmiTrajectorySystem::MakeSureThatTrajectoriesAreCalculated(void)
 {
 	for(auto &trajectory : itsTrajectories)
 	{
-		if(trajectory->Calculated() == false) // lasketaan trajektorit vain jos niitä ei ole jo laskettu
+		if(trajectory->Calculated() == false) // lasketaan trajektorit vain jos niitï¿½ ei ole jo laskettu
 			CalculateTrajectory(trajectory);
 	}
 }
@@ -174,7 +174,7 @@ void NFmiTrajectorySystem::CalculateTrajectory(boost::shared_ptr<NFmiTrajectory>
 
 void NFmiTrajectorySystem::CalculateTrajectory(boost::shared_ptr<NFmiTrajectory> &theTrajectory, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
-    // Datasta pitää löytyä joko WS+WD tai u+v komponentit
+    // Datasta pitï¿½ï¿½ lï¿½ytyï¿½ joko WS+WD tai u+v komponentit
 	if(theInfo)
 	{
         if((theInfo->Param(kFmiWindSpeedMS) && theInfo->Param(kFmiWindDirection)) || (theInfo->Param(kFmiWindUMS) && theInfo->Param(kFmiWindVMS)))
@@ -182,16 +182,16 @@ void NFmiTrajectorySystem::CalculateTrajectory(boost::shared_ptr<NFmiTrajectory>
             bool pacificView = ::IsPacificViewData(theInfo);
             theInfo->First();
             theTrajectory->Clear(); // nollataan trajektori varmuuden vuoksi
-            theTrajectory->Calculated(true); // merkitään trajektori lasketuksi
+            theTrajectory->Calculated(true); // merkitï¿½ï¿½n trajektori lasketuksi
             theTrajectory->OriginTime(theInfo->OriginTime());
-            // lasketaan ensin "pää" trajektory
+            // lasketaan ensin "pï¿½ï¿½" trajektory
             NFmiTempBalloonTrajectorSettings balloonTrajectorSettings(theTrajectory->TempBalloonTrajectorSettings());
             NFmiSingleTrajector trajector(theTrajectory->LatLon(), theTrajectory->Time(), theTrajectory->PressureLevel());
             CalculateSingleTrajectory(theInfo, trajector, theTrajectory->TimeStepInMinutes(), theTrajectory->TimeLengthInHours(), 0, 0, theTrajectory->Direction(), theTrajectory->Isentropic(), theTrajectory->CalcTempBalloonTrajectories(), balloonTrajectorSettings);
             theTrajectory->MainTrajector(trajector);
 
             if(theTrajectory->PlumesUsed())
-            { // lasketaan halutut pluumi tarjektorit myös
+            { // lasketaan halutut pluumi tarjektorit myï¿½s
                 int trajCount = theTrajectory->PlumeParticleCount();
                 int randStep = CalcRandomizerStep(theTrajectory->TimeStepInMinutes(), 30);
                 double randFactor = theTrajectory->PlumeProbFactor();
@@ -237,12 +237,12 @@ namespace
 
 
 // Oletus: value ei ole kFloatMissing!
-// Laskee annetusta WS:stä halutun suuruisen +- muutoksen.
-// Lisäksi varmistaa ettei ole negatiivinen nopeus.
-// randFactor on satunnaisuuden suurin vaihtelu arvo verrattuna annettuun WS:ään.
+// Laskee annetusta WS:stï¿½ halutun suuruisen +- muutoksen.
+// Lisï¿½ksi varmistaa ettei ole negatiivinen nopeus.
+// randFactor on satunnaisuuden suurin vaihtelu arvo verrattuna annettuun WS:ï¿½ï¿½n.
 static double RandomizeWSValue(double WS, double randFactor)
 {
-	double randValue = GetRandomNumberBetweenMinusOneAndOne(); // joku reaali luku välillä -1 - 1
+	double randValue = GetRandomNumberBetweenMinusOneAndOne(); // joku reaali luku vï¿½lillï¿½ -1 - 1
 	double modifyValue = WS * randValue * randFactor * 0.01; // muutetaan luku oikeaksi muutos arvoksi
 	return modifyValue;
 }
@@ -258,12 +258,12 @@ static double WDAdd(double WD, double changeValue, double maxValue)
 }
 
 // Oletus: value ei ole kFloatMissing!
-// Laskee annetusta WS:stä halutun suuruisen +- muutoksen.
-// Lisäksi varmistaa ettei ole negatiivinen nopeus.
-// randFactor on satunnaisuuden suurin vaihtelu arvo verrattuna annettuun WS:ään.
+// Laskee annetusta WS:stï¿½ halutun suuruisen +- muutoksen.
+// Lisï¿½ksi varmistaa ettei ole negatiivinen nopeus.
+// randFactor on satunnaisuuden suurin vaihtelu arvo verrattuna annettuun WS:ï¿½ï¿½n.
 static double RandomizeWDValue(double randFactor, double maxValue)
 {
-	double randValue = GetRandomNumberBetweenMinusOneAndOne(); // joku reaali luku välillä -1 - 1
+	double randValue = GetRandomNumberBetweenMinusOneAndOne(); // joku reaali luku vï¿½lillï¿½ -1 - 1
 	// min/max muutos on 1/3 osa maxValuesta
 	double modifyValue = maxValue * 0.33 * randValue * randFactor * 0.01; // muutetaan luku oikeaksi muutos arvoksi ottaen huomioon max arvo
 	return modifyValue;
@@ -271,7 +271,7 @@ static double RandomizeWDValue(double randFactor, double maxValue)
 
 static double RandomizewValue(double w, double randFactor)
 {
-	double randValue = GetRandomNumberBetweenMinusOneAndOne(); // joku reaali luku välillä -1 - 1
+	double randValue = GetRandomNumberBetweenMinusOneAndOne(); // joku reaali luku vï¿½lillï¿½ -1 - 1
 	double modifyValue = w * randValue * randFactor * 0.01; // muutetaan luku oikeaksi muutos arvoksi
 	return modifyValue;
 }
@@ -367,14 +367,14 @@ static FmiParameterName GetInfoUsedVerticalVelotityParam(boost::shared_ptr<NFmiF
 void NFmiTrajectorySystem::Make3DRandomizing(double &WS, double &WD, double &w, int theRandStep, int theCounter, double theRandomFactor, NFmiSingleTrajector &theTrajector)
 {
 	if(theRandStep && (theCounter % theRandStep) == 0)
-	{ // halutuin väliajoin lasketaan satunnaisuus 'korjaus' luvut joilla rukataan currentteja suuntia ja nopeuksia aina
-	  // eli ei lasketa satunnais lukuja joka aika askeleella että ei tule hirveetä syheröä, vaan aina tietyin väliajoin
+	{ // halutuin vï¿½liajoin lasketaan satunnaisuus 'korjaus' luvut joilla rukataan currentteja suuntia ja nopeuksia aina
+	  // eli ei lasketa satunnais lukuja joka aika askeleella ettï¿½ ei tule hirveetï¿½ syherï¿½ï¿½, vaan aina tietyin vï¿½liajoin
 		double WSdiff = RandomizeWSValue(WS, theRandomFactor);
 		double WDdiff = RandomizeWDValue(theRandomFactor, 360);
 		double wdiff = RandomizewValue(w, theRandomFactor);
 		theTrajector.SetRandomValues(WDdiff, WSdiff, wdiff);
 	}
-	WS = ::fabs(WS + theTrajector.RandWSdiff()); // fabs = varmistetaan että lopullinen nopeus aina positiivinen
+	WS = ::fabs(WS + theTrajector.RandWSdiff()); // fabs = varmistetaan ettï¿½ lopullinen nopeus aina positiivinen
 	WD = ::WDAdd(WD, theTrajector.RandWDdiff(), 360);
 	w += theTrajector.Randwdiff();
 }
@@ -402,10 +402,10 @@ static void GetWsAndWsValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, cons
 static bool MakeGroundAdjustment(double &WS, double &WD, double &w, double &P, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, double xInd, double yInd, double tInd, unsigned long theLevelIndex, bool isHybridData, FmiParameterName theUsedWParam)
 {
 	if(WS == kFloatMissing || WD == kFloatMissing || w == kFloatMissing)
-	{ // jos joku näistä puuttuvaa, voi olla että ollaan menty maan "sisään" ja pitää laskea pinta arvot
+	{ // jos joku nï¿½istï¿½ puuttuvaa, voi olla ettï¿½ ollaan menty maan "sisï¿½ï¿½n" ja pitï¿½ï¿½ laskea pinta arvot
 		double limitPressure = isHybridData ? 600 : 900;  // hybridi, 600 mb onko esim. Alpit 500 mb asti?!?!, painepinta datalle lasketaan data 1000mb:en joka tapauksessa
 		if(P > limitPressure)
-		{ // jos ollaan tarpeeksi lähellä maanpintaa (hybridi datan ollessa kyseessä)
+		{ // jos ollaan tarpeeksi lï¿½hellï¿½ maanpintaa (hybridi datan ollessa kyseessï¿½)
 
 			theInfo->Param(kFmiPressure);
 			double groundP = theInfo->FastPressureLevelValue(xInd, yInd, tInd, theLevelIndex);
@@ -425,7 +425,7 @@ static bool MakeGroundAdjustment(double &WS, double &WD, double &w, double &P, b
 				w = groundw;
 			}
 		}
-		else // ollaan liian korkealla että haluttaisiin laskea maanpinta arvoja
+		else // ollaan liian korkealla ettï¿½ haluttaisiin laskea maanpinta arvoja
 			return false;
 	}
 	return true;
@@ -433,19 +433,19 @@ static bool MakeGroundAdjustment(double &WS, double &WD, double &w, double &P, b
 
 static NFmiLocation CalcNewLocation(const NFmiLocation &theCurrentLocation, double WS, double WD, int theTimeStepInMinutes, bool isForwardDir, bool pacificView)
 {
-		double dist = WS * theTimeStepInMinutes * 60; // saadaan kuljettu matka metreinä
-		double dir = ::fmod(isForwardDir ? (WD + 180) : WD, 360); // jos backward trajectory pitää kääntää virtaus suunta 180 asteella
+		double dist = WS * theTimeStepInMinutes * 60; // saadaan kuljettu matka metreinï¿½
+		double dir = ::fmod(isForwardDir ? (WD + 180) : WD, 360); // jos backward trajectory pitï¿½ï¿½ kï¿½ï¿½ntï¿½ï¿½ virtaus suunta 180 asteella
 		return theCurrentLocation.GetLocation(dir, dist, pacificView);
 }
 
 // Konversio w [mm/s] -> VER eli paineen muutokseksi [Pa/s]
-// w = -VER RT/( g P)  ja yksikkö [w] = m/s
-// eli käännettynä haluamme VER:in arvon:
+// w = -VER RT/( g P)  ja yksikkï¿½ [w] = m/s
+// eli kï¿½ï¿½nnettynï¿½ haluamme VER:in arvon:
 // VER = -w g P/(RT)
-// missä: 
-// VER on yksikössä Pa/s,
-// T on yksikössä K,
-// P on yksikössä Pa (huomioi kerroin 100 jos paineen yksikön muuntaa Pa ->hPa),
+// missï¿½: 
+// VER on yksikï¿½ssï¿½ Pa/s,
+// T on yksikï¿½ssï¿½ K,
+// P on yksikï¿½ssï¿½ Pa (huomioi kerroin 100 jos paineen yksikï¿½n muuntaa Pa ->hPa),
 // R = 287
 // g = 9.81
 static float ConvertMMperSecondToHectoPaPerSecond(float T_Celsius, float P_hPa, float w_MMperSeconds)
@@ -504,12 +504,12 @@ static double CalcNewPressureLevel(boost::shared_ptr<NFmiFastQueryInfo> &theInfo
         double deltaP = omega_hPa * theTimeStepInMinutes * 60 * directionFactor;
 	    double maxP = 1000;
 	    if(hybridData)
-	    { // pyydetään maanpinta levelin paine maanpinta arvoksi
+	    { // pyydetï¿½ï¿½n maanpinta levelin paine maanpinta arvoksi
 		    theInfo->Param(kFmiPressure);
 		    maxP = theInfo->FastPressureLevelValue(xInd, yInd, tInd, theGroundLevelIndex);
 	    }
 
-	    // laitetaan saatu paine maanpinnan ja 1 hPa:n väliin
+	    // laitetaan saatu paine maanpinnan ja 1 hPa:n vï¿½liin
 	    nextPressure = FmiMin(maxP, theCurrentPressure+deltaP);
     }
 	return nextPressure;
@@ -524,7 +524,7 @@ static double CalcNewPressureLevelWithBalloon(boost::shared_ptr<NFmiFastQueryInf
 		deltaP = -deltaP;
 	double maxP = 1000;
 	if(hybridData)
-	{ // pyydetään maanpinta levelin paine maanpinta arvoksi
+	{ // pyydetï¿½ï¿½n maanpinta levelin paine maanpinta arvoksi
 
 		theInfo->LevelIndex(theGroundLevelIndex);
 		theInfo->ParamIndex(thePressureParamIndex);
@@ -532,7 +532,7 @@ static double CalcNewPressureLevelWithBalloon(boost::shared_ptr<NFmiFastQueryInf
 	}
 
 	double nextPressure = kFloatMissing;
-	// laitetaan saatu paine maanpinnan ja 1 hPa:n väliin
+	// laitetaan saatu paine maanpinnan ja 1 hPa:n vï¿½liin
 	nextPressure = theCurrentPressure+deltaP;
 
 	if(nextPressure > maxP || nextPressure < 1)
@@ -540,7 +540,7 @@ static double CalcNewPressureLevelWithBalloon(boost::shared_ptr<NFmiFastQueryInf
 	return nextPressure;
 }
 
-// onko value limittien välissä. limitit voivat olla missä järjestyksessä tahansa ja
+// onko value limittien vï¿½lissï¿½. limitit voivat olla missï¿½ jï¿½rjestyksessï¿½ tahansa ja
 // ne voivat olla puuttuvia, jolloin palautetaan false
 // Oletus: value ei voi olla puuttuva.
 static bool IsValueBetween(double value, double limit1, double limit2)
@@ -554,7 +554,7 @@ static bool IsValueBetween(double value, double limit1, double limit2)
 	return false;
 }
 
-// kun tiedetään lineaarinen arvo ja halutaan laskea sitä vastaava logaritmisen P:n arvo
+// kun tiedetï¿½ï¿½n lineaarinen arvo ja halutaan laskea sitï¿½ vastaava logaritmisen P:n arvo
 static double CalcLogPFromLinearValues(double v1, double v2, double v, double p1, double p2)
 {
 	double w = (v-v1)/(v2-v1);
@@ -573,7 +573,7 @@ static double GetPressureValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, do
 		theInfo->ParamIndex(oldParamIndex);
 		return p;
 	}
-	else // muuten oletetaan että kyseessä on painepinta dataa
+	else // muuten oletetaan ettï¿½ kyseessï¿½ on painepinta dataa
 		return theInfo->Level()->LevelValue();
 }
 
@@ -600,10 +600,10 @@ static double CalcNewPressureLevelIsentropically(boost::shared_ptr<NFmiFastQuery
 	if(IsValueBetween(theWantedTpot, value1, value2))
 		nextPressure = ::CalcLogPFromLinearValues(value1, value2, theWantedTpot, P1, P2);
 	else
-	{ // etsitään leveliä mistä haluttu tpot löytyy
+	{ // etsitï¿½ï¿½n leveliï¿½ mistï¿½ haluttu tpot lï¿½ytyy
 		bool valueRisingInLevels = value2 > value1;
 		bool firstDirectionUp = (valueRisingInLevels && (theWantedTpot > value1));
-		unsigned long startLevel = levelIndex1; // otetaan muistiin aloitus kerros, jos pitää etsiä toisesta suunnasta
+		unsigned long startLevel = levelIndex1; // otetaan muistiin aloitus kerros, jos pitï¿½ï¿½ etsiï¿½ toisesta suunnasta
 		double startP = P1;
 		double startValue = value1;
 		do
@@ -621,7 +621,7 @@ static double CalcNewPressureLevelIsentropically(boost::shared_ptr<NFmiFastQuery
 			}
 		} while(levelIndex2 > 0 && levelIndex2 < theInfo->SizeLevels() - 1);
 
-		// jos ei löytynyt toisesta suunnasta, kokeillaan toista suuntaa
+		// jos ei lï¿½ytynyt toisesta suunnasta, kokeillaan toista suuntaa
 		levelIndex2 = startLevel;
 		P2 = startP;
 		value2 = startValue;
@@ -630,7 +630,7 @@ static double CalcNewPressureLevelIsentropically(boost::shared_ptr<NFmiFastQuery
 			value1 = value2;
 			P1 = P2;
 			levelIndex1 = levelIndex2;
-			levelIndex2 = (firstDirectionUp) ? --levelIndex2  : ++levelIndex2; // tässä piti kääntää level laskuria!
+			levelIndex2 = (firstDirectionUp) ? --levelIndex2  : ++levelIndex2; // tï¿½ssï¿½ piti kï¿½ï¿½ntï¿½ï¿½ level laskuria!
 			value2 = theInfo->FastPressureLevelValue(xInd, yInd, tInd, levelIndex2);
 			P2 = GetPressureValue(theInfo, xInd, yInd, tInd, levelIndex2, hybridData, thePressureParamIndex);
 			if(IsValueBetween(theWantedTpot, value1, value2))
@@ -646,7 +646,7 @@ static double CalcNewPressureLevelIsentropically(boost::shared_ptr<NFmiFastQuery
 
 // katsoo onko annettu paine currentPressure alle hybridi-datan pinnan
 // jos on, laskee uuden paineen maanpinnalle ja sijoittaa arvon currentPressure
-// parametriin, muuten ei tee mitään.
+// parametriin, muuten ei tee mitï¿½ï¿½n.
 static void CalcStartingPointGroundAdjustment(NFmiFastQueryInfo &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, unsigned long groundLevelIndex, bool hybridData, double &currentPressure, double &theHeightValue)
 {
 	if(currentPressure != kFloatMissing && theInfo.LevelIndex(groundLevelIndex))
@@ -683,7 +683,7 @@ static float GetHeightValueForNewPressure(boost::shared_ptr<NFmiFastQueryInfo> &
 	theInfo->ParamIndex(theInfo->HeightParamIndex());
 	float heightValue = theInfo->PressureLevelValue(static_cast<float>(thePressure), theLatlon, theTime);
 	if(heightValue == kFloatMissing)
-	{ // kokeillaan löytyykö sitten pinta arvoa, jos paineen avulla haettu meni esim. tarkkuus ongelman takia juuri alle alimman kerroksen
+	{ // kokeillaan lï¿½ytyykï¿½ sitten pinta arvoa, jos paineen avulla haettu meni esim. tarkkuus ongelman takia juuri alle alimman kerroksen
 		theInfo->LevelIndex(theGroundLevelIndex);
 		heightValue = theInfo->InterpolatedValue(theLatlon, theTime);
 	}
@@ -695,14 +695,14 @@ static float GetHeightValueForNewPressure(boost::shared_ptr<NFmiFastQueryInfo> &
 void NFmiTrajectorySystem::CalculateSingle3DTrajectory(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSingleTrajector &theTrajector, int theTimeStepInMinutes, int theTimeLengthInHours, double theRandFactor, int theRandStep, FmiDirection theDirection, bool fIsentropic, bool fCalcBalloonTrajectory, NFmiTempBalloonTrajectorSettings &theTempBalloonTrajectorSettings)
 {
 	// jos hybrid dataa, voidaan maanpinta laskea alimman painepinnan paineen avulla
-	// jos ei, eli painepinta dataa, pidetään 1000 hPa:ta maanpintana
+	// jos ei, eli painepinta dataa, pidetï¿½ï¿½n 1000 hPa:ta maanpintana
 	bool hybridData = IsInfoHybridData(theInfo);
 	unsigned long groundLevelIndex = ::GetInfoGroundLevelIndex(theInfo, hybridData);
 	unsigned long topLevelIndex = ::GetInfoTopLevelIndex(theInfo, hybridData);
 	bool forwardDir = (theDirection == kForward);
 
 	if(fIsentropic && (!theInfo->Param(kFmiPotentialTemperature)))
-		return ; // haluttiin isentrooppista trajektoria, mutta datassa ei ole pot-T:tä ei jatketa
+		return ; // haluttiin isentrooppista trajektoria, mutta datassa ei ole pot-T:tï¿½ ei jatketa
 	if(fIsentropic && fCalcBalloonTrajectory)
 		return ; // haluttiin isentrooppista trajektoria ja samalla luotauspallo juttua, ei toimi!
 	unsigned long tpotParamIndex = theInfo->ParamIndex();
@@ -718,14 +718,14 @@ void NFmiTrajectorySystem::CalculateSingle3DTrajectory(boost::shared_ptr<NFmiFas
 	NFmiLocation currentLoc(theTrajector.StartLatLon());
 	NFmiMetTime startTime(theTrajector.StartTime());
 	double pInd = 0;
-	// Aloituspisteen paine pitää fiksata, että se menee käytetyn datan rajojen sisään vertikaalisti
+	// Aloituspisteen paine pitï¿½ï¿½ fiksata, ettï¿½ se menee kï¿½ytetyn datan rajojen sisï¿½ï¿½n vertikaalisti
 	theInfo->GetFixedPressureLevelIndex(currentLoc.GetLocation(), startTime, currentPressure, pInd);
 	theInfo->ParamIndex(theInfo->HeightParamIndex());
 	double heightValue = theInfo->PressureLevelValue(static_cast<float>(currentPressure), currentLoc.GetLocation(), startTime);
 	double nextPressure = currentPressure;
 	if(!fCalcBalloonTrajectory)
 	{
-		// 1. piste pitää lisätä erikseen listaan
+		// 1. piste pitï¿½ï¿½ lisï¿½tï¿½ erikseen listaan
 		theTrajector.AddPoint(theTrajector.StartLatLon(), static_cast<float>(currentPressure), static_cast<float>(heightValue));
 	}
 	NFmiLocation nextLoc;
@@ -736,7 +736,7 @@ void NFmiTrajectorySystem::CalculateSingle3DTrajectory(boost::shared_ptr<NFmiFas
 	double WS = kFloatMissing;
 	double WD = kFloatMissing;
 	double w = kFloatMissing;
-	double isentropicTpotValue = kFloatMissing; // jos isentrooppi trajektori, pysytään tällä potentiaali tasolla
+	double isentropicTpotValue = kFloatMissing; // jos isentrooppi trajektori, pysytï¿½ï¿½n tï¿½llï¿½ potentiaali tasolla
 	int index = 0;
 	double xInd = 0;
 	double yInd = 0;
@@ -760,7 +760,7 @@ void NFmiTrajectorySystem::CalculateSingle3DTrajectory(boost::shared_ptr<NFmiFas
 			nextPressure = currentPressure = theInfo->InterpolatedValue(currentLatLon, currentTime);
 			theInfo->ParamIndex(theInfo->HeightParamIndex());
 			heightValue = theInfo->InterpolatedValue(currentLatLon, currentTime);
-			theTrajector.AddPoint(theTrajector.StartLatLon(), static_cast<float>(currentPressure), static_cast<float>(heightValue)); // 1. piste pitää lisätä erikseen listaan
+			theTrajector.AddPoint(theTrajector.StartLatLon(), static_cast<float>(currentPressure), static_cast<float>(heightValue)); // 1. piste pitï¿½ï¿½ lisï¿½tï¿½ erikseen listaan
 		}
 		bool status3 = theInfo->GetFixedPressureLevelIndex(currentLatLon, currentTime, currentPressure, pInd);
 		if(status1 && status2 && status3)
@@ -783,7 +783,7 @@ void NFmiTrajectorySystem::CalculateSingle3DTrajectory(boost::shared_ptr<NFmiFas
 		NFmiTrajectorySystem::Make3DRandomizing(WS, WD, w, theRandStep, index, theRandFactor, theTrajector);
         nextLoc = ::CalcNewLocation(currentLoc, WS, WD, theTimeStepInMinutes, forwardDir, pacificView);
 
-		(forwardDir) ? currentTime.NextMetTime() : currentTime.PreviousMetTime(); // isentrooppi laskuja varten pitää laskea seuraava aika
+		(forwardDir) ? currentTime.NextMetTime() : currentTime.PreviousMetTime(); // isentrooppi laskuja varten pitï¿½ï¿½ laskea seuraava aika
 		if(fIsentropic)
 			nextPressure = ::CalcNewPressureLevelIsentropically(theInfo, nextLoc, currentTime, isentropicTpotValue, tpotParamIndex, pressureParamIndex, pInd, hybridData);
 		else if(fCalcBalloonTrajectory)
@@ -818,9 +818,9 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiTrajectorySystem::GetWantedInfo(boost::
 		useGroundData = true;
 	boost::shared_ptr<NFmiFastQueryInfo> tmp = itsInfoOrganizer->FindInfo(dataType, theTrajectory->Producer(), useGroundData);
 	if(tmp == 0 && theTrajectory->Producer().GetIdent() == kFmiMETEOR)
-	{ // Jos ei löytynyt infoa ja jos editoitu oli valittu dataksi
-	  // pitää etsiä editoitavasta datasta.
-		// Tämä palauttaa minkä tahansa editoitavan datan eikä tarkastele tyyppeja tai leveleitä!!
+	{ // Jos ei lï¿½ytynyt infoa ja jos editoitu oli valittu dataksi
+	  // pitï¿½ï¿½ etsiï¿½ editoitavasta datasta.
+		// Tï¿½mï¿½ palauttaa minkï¿½ tahansa editoitavan datan eikï¿½ tarkastele tyyppeja tai leveleitï¿½!!
 		tmp = itsInfoOrganizer->FindInfo(NFmiInfoData::kEditable, theTrajectory->Producer(), useGroundData);
 		if(tmp)
 		{
@@ -838,7 +838,7 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiTrajectorySystem::GetWantedInfo(boost::
 				else if(dataType == NFmiInfoData::kViewable && lType != kFmiPressureLevel)
 					::SetFastInfoToZero(tmp);
 				else if(dataType == NFmiInfoData::kTrajectoryHistoryData)
-					::SetFastInfoToZero(tmp); // editoirdusta datasta ei saa tätä
+					::SetFastInfoToZero(tmp); // editoirdusta datasta ei saa tï¿½tï¿½
 			}
 		}
 	}
@@ -851,7 +851,7 @@ void NFmiTrajectorySystem::ClearTrajectories(void)
 	itsTrajectories.clear();
 }
 
-// pitää päätellä tuottaja id:n perusteella mikä on halutun dadio buttonin indeksi alkaa 0
+// pitï¿½ï¿½ pï¿½ï¿½tellï¿½ tuottaja id:n perusteella mikï¿½ on halutun dadio buttonin indeksi alkaa 0
 static const NFmiProducer GetSelectedProducer(NFmiProducerSystem &theProducerSystem, int theRadioIndex)
 {
 	if(theProducerSystem.Producers().size() > static_cast<size_t>(theRadioIndex))
@@ -862,7 +862,7 @@ static const NFmiProducer GetSelectedProducer(NFmiProducerSystem &theProducerSys
 
 static void InitializeSilamStationList(NFmiSilamStationList &theStationList, const std::string &theFileName)
 {
-	if(theFileName.empty()) // jos ei ole annettu asetuksissa tiedoston nimeä, ei heitetä poikkeusta. Muissa virheissä (esim. tiedostoa ei löydy) lentää kyllä.
+	if(theFileName.empty()) // jos ei ole annettu asetuksissa tiedoston nimeï¿½, ei heitetï¿½ poikkeusta. Muissa virheissï¿½ (esim. tiedostoa ei lï¿½ydy) lentï¿½ï¿½ kyllï¿½.
 		return ;
 	theStationList.Clear();
 	theStationList.Init(theFileName);
@@ -894,7 +894,7 @@ void NFmiTrajectorySystem::InitializeFromSettings(const std::string &basePathAbs
 	InitializeSilamStationList(itsOtherPlaces, silamOtherPlacesFileName);
 }
 
-// Huom! tämä asettaa kaikki talletettavat asiat settingseihin, mutta ei tee save:a.
+// Huom! tï¿½mï¿½ asettaa kaikki talletettavat asiat settingseihin, mutta ei tee save:a.
 void NFmiTrajectorySystem::StoreSettings(void)
 {
 	int model = itsProducerSystem->FindProducerInfo(itsSelectedProducer);
@@ -905,20 +905,20 @@ void NFmiTrajectorySystem::StoreSettings(void)
 //	fTrajectorySaveEnabled = NFmiSettings::Require<bool>("MetEditor::TrajectorySystem::TrajectorySaveEnabled");
 //	itsTrajectorySavePath = NFmiSettings::Require<std::string>("MetEditor::TrajectorySystem::TrajectorySavePath");
 //	itsTrajectorySaveFilePattern = NFmiSettings::Require<std::string>("MetEditor::TrajectorySystem::TrajectorySaveFilePattern");
-// HUOM2: itsLastTrajectoryLegendStr ei voi tallettaa takaisin konffeihin, koska NFmiSettings-systeemi ei tue monirivisiä arvoja asetuksilla
+// HUOM2: itsLastTrajectoryLegendStr ei voi tallettaa takaisin konffeihin, koska NFmiSettings-systeemi ei tue monirivisiï¿½ arvoja asetuksilla
 //	itsLastTrajectoryLegendStr = NFmiSettings::Require<std::string>("MetEditor::TrajectorySystem::LastTrajectoryLegendStr");
 }
 
 std::string NFmiTrajectorySystem::MakeCurrentTrajectorySaveFileName(void)
 {
 	NFmiMetTime currentTime(1);
-	// tässä siis rakennetaan ajan perusteella tiedosto nimi, olettaen että itsTrajectorySaveFilePattern
-	// sisältää ToStr:n mukaiset aikapatternit
-	std::string fileNameWithTimeStamp = currentTime.ToStr(itsTrajectorySaveFilePattern, kFinnish);
+	// tï¿½ssï¿½ siis rakennetaan ajan perusteella tiedosto nimi, olettaen ettï¿½ itsTrajectorySaveFilePattern
+	// sisï¿½ltï¿½ï¿½ ToStr:n mukaiset aikapatternit
+	std::string fileNameWithTimeStamp = currentTime.ToStr(itsTrajectorySaveFilePattern, kFinnish).CharPtr();
 	std::string finalFileName = itsTrajectorySavePath;
 	if(finalFileName.size())
 	{
-		// jos on polku ja se ei pääty hakemiston erottimeen, lisätään se
+		// jos on polku ja se ei pï¿½ï¿½ty hakemiston erottimeen, lisï¿½tï¿½ï¿½n se
 		if(!(finalFileName[finalFileName.size()-1] == '\\' || finalFileName[finalFileName.size()-1] == '/'))
 			finalFileName += kFmiDirectorySeparator;
 	}
@@ -966,7 +966,7 @@ static bool OnlyOneProducerAndDataType(std::vector<boost::shared_ptr<NFmiTraject
 	return true;
 }
 
-// Asetetaan tietyt valitut arvot kaikille trajektoreille, mutta ei esim. mallia tai datatyyppiä!
+// Asetetaan tietyt valitut arvot kaikille trajektoreille, mutta ei esim. mallia tai datatyyppiï¿½!
 // Asetetaan mm. alkupiste, alkuaika jne.
 void NFmiTrajectorySystem::SetSelectedValuesToAllTrajectories(void)
 {
@@ -989,7 +989,7 @@ void NFmiTrajectorySystem::SetSelectedValuesToLastTrajectory(void)
 	--it;
 	if(it != itsTrajectories.end())
 	{
-		SetSelectedValuesToTrajectory(*it, true, false); // true= myös tuottaja ja data tyyppi vaihtuu
+		SetSelectedValuesToTrajectory(*it, true, false); // true= myï¿½s tuottaja ja data tyyppi vaihtuu
 		CalculateTrajectory(*it);
 	}
 }
@@ -1080,7 +1080,7 @@ void NFmiTrajectorySystem::CalculateTrajectoryViewTimeBag(void)
 	if(firstTime != gMissingTime && lastTime != gMissingTime)
 		itsTrajectoryViewTimeBag = NFmiTimeBag(firstTime, lastTime, 60);
 	else
-	{ // ei ollut aikoja, tehdään jonkunlainen default timebagi
+	{ // ei ollut aikoja, tehdï¿½ï¿½n jonkunlainen default timebagi
 		NFmiMetTime time1;
 		NFmiMetTime time2;
 		time2.ChangeByHours(6);
@@ -1088,7 +1088,7 @@ void NFmiTrajectorySystem::CalculateTrajectoryViewTimeBag(void)
 	}
 }
 
-// theIndex on 0-pohjainen järjestys luku
+// theIndex on 0-pohjainen jï¿½rjestys luku
 const NFmiTrajectory& NFmiTrajectorySystem::Trajectory(int theIndex) const
 {
 	static const NFmiTrajectory dummy;
@@ -1104,7 +1104,7 @@ void NFmiTrajectorySystem::Write(std::ostream& os) const
 	os << "// NFmiTrajectorySystem::Write..." << std::endl;
 
 	os << "// version number" << std::endl;
-	itsCurrentVersionNumber = itsLatestVersionNumber; // aina kirjoitetaan viimeisellä versio numerolla
+	itsCurrentVersionNumber = itsLatestVersionNumber; // aina kirjoitetaan viimeisellï¿½ versio numerolla
 	os << itsCurrentVersionNumber << std::endl;
 
 	os << "// Container<Trajectories>" << std::endl;
@@ -1132,7 +1132,7 @@ void NFmiTrajectorySystem::Write(std::ostream& os) const
 	os << "// SelectedDirection + SelectedStartTimeRangeInMinutes" << std::endl;
 	os << itsSelectedDirection << " " << itsSelectedStartTimeRangeInMinutes << std::endl;
 
-    bool useMapTimeDummy = true; // tämä on poistettu optio, mutta pitää tallettaa taaksepäin yhteensopivuuden takia
+    bool useMapTimeDummy = true; // tï¿½mï¿½ on poistettu optio, mutta pitï¿½ï¿½ tallettaa taaksepï¿½in yhteensopivuuden takia
 	os << "// PlumesUsed + TrajectoryViewOn + ShowTrajectoryArrows + ShowTrajectoryAnimationMarkers + SelectedTrajectoryIsentropic + ShowTrajectoriesInCrossSectionView + UseMapTime" << std::endl;
     os << fPlumesUsed << " " << fTrajectoryViewOn << " " << fShowTrajectoryArrows << " " << fShowTrajectoryAnimationMarkers << " " << fSelectedTrajectoryIsentropic << " " << fShowTrajectoriesInCrossSectionView << " " << useMapTimeDummy << std::endl;
 
@@ -1141,9 +1141,9 @@ void NFmiTrajectorySystem::Write(std::ostream& os) const
 	os << "// CalcTempBalloonTrajectors" << std::endl;
 	os << fCalcTempBalloonTrajectors << std::endl;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
@@ -1188,9 +1188,9 @@ void NFmiTrajectorySystem::Read(std::istream& is)
 	is >> tmpValue >> itsSelectedStartTimeRangeInMinutes;
 	itsSelectedDirection = static_cast<FmiDirection>(tmpValue);
 
-	fTrajectoryViewTimeBagDirty = true; // trajektori timebagi pitää laskea uudestaan
+	fTrajectoryViewTimeBagDirty = true; // trajektori timebagi pitï¿½ï¿½ laskea uudestaan
 
-    bool useMapTimeDummy = true; // tämä on poistettu optio, mutta pitää lukea taaksepäin yhteensopivuuden takia
+    bool useMapTimeDummy = true; // tï¿½mï¿½ on poistettu optio, mutta pitï¿½ï¿½ lukea taaksepï¿½in yhteensopivuuden takia
     is >> fPlumesUsed >> fTrajectoryViewOn >> fShowTrajectoryArrows >> fShowTrajectoryAnimationMarkers >> fSelectedTrajectoryIsentropic >> fShowTrajectoriesInCrossSectionView >> useMapTimeDummy;
 
 	if(is.fail())
@@ -1201,15 +1201,15 @@ void NFmiTrajectorySystem::Read(std::istream& is)
 
 	if(is.fail())
 		throw std::runtime_error("NFmiTrajectorySystem::Read failed");
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	is >> extraData;
-	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+	// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+	// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 
 	if(is.fail())
 		throw std::runtime_error("NFmiTrajectorySystem::Read failed");
 
-	itsCurrentVersionNumber = itsLatestVersionNumber; // aina jatketaan viimeisellä versio numerolla
+	itsCurrentVersionNumber = itsLatestVersionNumber; // aina jatketaan viimeisellï¿½ versio numerolla
 }
 
 void NFmiTrajectorySystem::Init(const NFmiTrajectorySystem &theOther, bool disableWindowManipulations)
@@ -1263,10 +1263,10 @@ bool NFmiTrajectorySystem::SaveXML(const std::string &theFileName)
 		NFmiMetTime metTime(1);
 		NFmiTime localTime = metTime.CorrectLocalTime();
 		
-		xmlStr +=  (char*)localTime.ToStr("YYYYMMDDHHmm"); //Miten tähän saa minuutit ja ehkä paikalliseksi??
+		xmlStr +=  (char*)localTime.ToStr("YYYYMMDDHHmm"); //Miten tï¿½hï¿½n saa minuutit ja ehkï¿½ paikalliseksi??
 		xmlStr +="\n</time>\n";
 
-		xmlStr += "<legendtext>\n";						// Ja tämä pitäisi napata kuvaruudulta
+		xmlStr += "<legendtext>\n";						// Ja tï¿½mï¿½ pitï¿½isi napata kuvaruudulta
 		xmlStr += itsLastTrajectoryLegendStr;
 		xmlStr +="\n</legendtext>\n";
 		xmlStr += "</header>\n";  
@@ -1300,7 +1300,7 @@ bool NFmiTrajectorySystem::SaveXML(const std::string &theFileName)
 std::string NFmiTrajectory::ToXMLStr(void)
 {
 	std::string xmlStr;
-															// 2. Kirjoitetaan PÄÄtrajektori
+															// 2. Kirjoitetaan Pï¿½ï¿½trajektori
 	NFmiSingleTrajector mainTrajector(MainTrajector());  
 
 	int TimeStepInMinutes(itsTimeStepInMinutes);
@@ -1348,7 +1348,7 @@ std::string NFmiSingleTrajector::ToXMLStr(int TimeStepInMinutes, NFmiProducer &P
 {
 	std::string str;
 
-	str += "<producer>\n";		// Tarkista, koska tämä puutuu VAX-versiosta, mutta voisi olla looginen 
+	str += "<producer>\n";		// Tarkista, koska tï¿½mï¿½ puutuu VAX-versiosta, mutta voisi olla looginen 
 	str +=  (char*)Producer.GetName();		
 	str += "\n</producer>\n";  
 
@@ -1374,13 +1374,13 @@ std::string NFmiSingleTrajector::ToXMLStr(int TimeStepInMinutes, NFmiProducer &P
 		const NFmiPoint &latlon = itsPoints[i];
 
 		str += ::Point2XML(latlon);  
-//pitäisiköhän olla metodina paineen kirjailu. Ainakin sitten kun saadaan metrinen korkeus mukaan
+//pitï¿½isikï¿½hï¿½n olla metodina paineen kirjailu. Ainakin sitten kun saadaan metrinen korkeus mukaan
 		float P = itsPressures[i];
 		str += ::MakeValueStr(P, 2, "-999.0");
 
 		float zValue = itsHeightValues[i];
 		str += " ";
-		str += ::MakeValueStr(zValue, 2, "-999.0");			//HUOM! tähän tulee korkeus metreinä
+		str += ::MakeValueStr(zValue, 2, "-999.0");			//HUOM! tï¿½hï¿½n tulee korkeus metreinï¿½
 		str += " ";
 
 		str += "</location> </point>\n";
@@ -1392,7 +1392,7 @@ std::string NFmiSingleTrajector::ToXMLStr(int TimeStepInMinutes, NFmiProducer &P
 	return str;
 }
 
-// Säädetään kaikki aikaa liittyvät jutut parametrina annettuun aikaan, että SmartMet säätyy ladattuun CaseStudy-dataan mahdollisimman hyvin.
+// Sï¿½ï¿½detï¿½ï¿½n kaikki aikaa liittyvï¿½t jutut parametrina annettuun aikaan, ettï¿½ SmartMet sï¿½ï¿½tyy ladattuun CaseStudy-dataan mahdollisimman hyvin.
 void NFmiTrajectorySystem::SetCaseStudyTimes(const NFmiMetTime &theCaseStudyTime)
 {
 	if(itsTrajectories.size() > 0)

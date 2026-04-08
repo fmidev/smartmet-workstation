@@ -1,11 +1,15 @@
 #pragma once
 
 #include "worker_process_info.h"
+#include "work_queue.h"
 #include "logging.h"
 
 #include "NFmiStaticTime.h"
 
 #include <boost/function.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #ifdef _MSC_VER
 #pragma warning (disable : 4239)
@@ -27,7 +31,7 @@ template<typename QueueType>
 QueueType make_queue(const std::string &queue_name, const std::string &queue_shared_name, size_t segment_size, bool client)
 {
     if(!client)
-    { // client ei saa yrittää ensin tuhota työjonoja eikä myöskään master, koska jos data on jo käytössä toisaalla, tämä tuhoaa sen ilman sen kummempia tarkasteluja
+    { // client ei saa yrittï¿½ï¿½ ensin tuhota tyï¿½jonoja eikï¿½ myï¿½skï¿½ï¿½n master, koska jos data on jo kï¿½ytï¿½ssï¿½ toisaalla, tï¿½mï¿½ tuhoaa sen ilman sen kummempia tarkasteluja
         //log_message(std::string("Remove earlier existing ") + queue_name + " Shared memory", logging::trivial::info);
         //boost::interprocess::shared_memory_object::remove(queue_shared_name.c_str());
     }
@@ -39,7 +43,7 @@ QueueType make_queue(const std::string &queue_name, const std::string &queue_sha
     log_string += boost::lexical_cast<std::string>(size_in_mb);
     log_string += " MB";
     log_message(log_string, logging::trivial::info);
-    return QueueType(new QueueType::element_type(queue_shared_name, boost::interprocess::open_or_create, segment_size));
+    return QueueType(new typename QueueType::element_type(queue_shared_name, boost::interprocess::open_or_create, segment_size));
 }
 
 struct multi_process_pool_options
@@ -54,9 +58,9 @@ struct multi_process_pool_options
 
     size_t task_queue_size_in_bytes; // kuinka suuri tila varataan task-queuelle shared-memoryyn [B]
     size_t result_queue_size_in_bytes; // kuinka suuri tila varataan result-queuelle shared-memoryyn [B]
-    double total_wait_time_limit_in_seconds; // Kuinka kauan SmartMet odottaa maksimissaan että joku annetty työ-sarja (= kokonainen CP-editointi) valmistuu
-    bool verbose_logging; // käytetäänkö multi-process lokituksessa pidempiä vai lyhyempiä lokitus tekstejä
-    std::string worker_executable_absolute_path; // jos tässä on arvo, käytetään tätä worker-prosessin käynnistykseen, muuten polku rakennetaan toista kautta
+    double total_wait_time_limit_in_seconds; // Kuinka kauan SmartMet odottaa maksimissaan ettï¿½ joku annetty tyï¿½-sarja (= kokonainen CP-editointi) valmistuu
+    bool verbose_logging; // kï¿½ytetï¿½ï¿½nkï¿½ multi-process lokituksessa pidempiï¿½ vai lyhyempiï¿½ lokitus tekstejï¿½
+    std::string worker_executable_absolute_path; // jos tï¿½ssï¿½ on arvo, kï¿½ytetï¿½ï¿½n tï¿½tï¿½ worker-prosessin kï¿½ynnistykseen, muuten polku rakennetaan toista kautta
 };
 
 
@@ -121,7 +125,7 @@ public:
     typedef result_allocator_holder<task_type> result_allocator_holder_type;
     typedef boost::shared_ptr<result_allocator_holder_type> result_allocator_holder_ptr_type;
 
-    // Tämä on master-konstruktori
+    // Tï¿½mï¿½ on master-konstruktori
 //    master_process_stuff(int worker_count, size_t &running_task_index, const base_worker_process_start_info &base_info, bool generate_start_fake_tasks)
     master_process_stuff(int worker_count, const base_worker_process_start_info &base_info, const multi_process_pool_options &mpp_options_in)
     :mpp_options(mpp_options_in)
@@ -144,7 +148,7 @@ public:
         worker_process_infos = create_workers(worker_count, base_info, mpp_options_in);
     }
 
-    // Tämä on client-konstruktori (SmartMetille)
+    // Tï¿½mï¿½ on client-konstruktori (SmartMetille)
     master_process_stuff(const multi_process_pool_options &mpp_options_in)
     :mpp_options(mpp_options_in)
     ,workqueue()
@@ -212,12 +216,12 @@ class gridding_result
 public:
     gridding_result(const result_holder_t &result_holder);
 
-    std::size_t job_index_; // smartmetin sisäinen työindeksi
+    std::size_t job_index_; // smartmetin sisï¿½inen tyï¿½indeksi
     std::size_t data_time_index_; // editoitavan datan aika-indeksi
-    std::size_t job_time_t_; // milloin työ on annettu, eli sekunteja kulunut sitten 1.1. 1970 (tämän avulla voidaan poistaa vanhentuneita roikkumaan jääneitä tuloksia, jos esim. työn antanut smartmet on kaatunut, tai lopettanut)
+    std::size_t job_time_t_; // milloin tyï¿½ on annettu, eli sekunteja kulunut sitten 1.1. 1970 (tï¿½mï¿½n avulla voidaan poistaa vanhentuneita roikkumaan jï¿½ï¿½neitï¿½ tuloksia, jos esim. tyï¿½n antanut smartmet on kaatunut, tai lopettanut)
     std::size_t size_x_; // halutun tuloshilan koko x-suunnassa
     std::size_t size_y_; // halutun tuloshilan koko y-suunnassa
-    std::string smartmet_guid_; // työn antaneen smartmet instanssin guid
+    std::string smartmet_guid_; // tyï¿½n antaneen smartmet instanssin guid
     std::vector<float> values_; // hilauksen lopputulos vektorissa
 };
 
@@ -243,8 +247,8 @@ public:
     typedef typename result_type::float_allocator_type float_allocator_type;
     typedef boost::shared_ptr<float_allocator_type> float_allocator_ptr_type;
 
-    typedef typename result_allocator_holder<result_type> result_allocator_holder_type;
-    typedef typename boost::shared_ptr<result_allocator_holder_type> result_allocator_holder_ptr_type;
+    typedef result_allocator_holder<result_type> result_allocator_holder_type;
+    typedef boost::shared_ptr<result_allocator_holder_type> result_allocator_holder_ptr_type;
 
     worker_process_stuff(const std::string &index_string, const multi_process_pool_options &mpp_options_in)
     :mpp_options(mpp_options_in)
@@ -257,7 +261,7 @@ public:
 
         result_char_allocator = char_allocator_ptr_type(new char_allocator_type(work_result_queue->get_segment()->get_segment_manager()));
         result_float_allocator = float_allocator_ptr_type(new float_allocator_type(work_result_queue->get_segment()->get_segment_manager()));
-        result_allocator_holder = result_allocator_holder_ptr_type(new result_allocator_holder_type(result_char_allocator, result_float_allocator));
+        result_alloc_holder_ = result_allocator_holder_ptr_type(new result_allocator_holder_type(result_char_allocator, result_float_allocator));
 
         log_message("Opening worker_running_info", logging::trivial::info);
         running_info = worker_running_info_ptr_t(new worker_running_info(worker_running_info_shared_base_name + index_string, boost::interprocess::open_only));
@@ -271,22 +275,22 @@ public:
     result_queue_ptr_type work_result_queue;
     char_allocator_ptr_type result_char_allocator;
     float_allocator_ptr_type result_float_allocator;
-    result_allocator_holder_ptr_type result_allocator_holder;
+    result_allocator_holder_ptr_type result_alloc_holder_;
     worker_running_info_ptr_t running_info;
     worker_running_info_ptr_t master_info;
 };
 
-// Tehdään joku höpö työn tulos float vektoriin
+// Tehdï¿½ï¿½n joku hï¿½pï¿½ tyï¿½n tulos float vektoriin
 work_result_t make_some_fake_result(const task_holder_t &task, result_allocator_holder_ptr_t &result_allocator_holder);
 
-const std::size_t killer_work_time_in_ms = 3*5; // tämän pituinen työ tappaa workerprosessin testausmielessä do_some_fake_work-funktiossa
+const std::size_t killer_work_time_in_ms = 3*5; // tï¿½mï¿½n pituinen tyï¿½ tappaa workerprosessin testausmielessï¿½ do_some_fake_work-funktiossa
 
 template<typename WorkerProcessStuff>
 bool do_some_fake_work(WorkerProcessStuff &workerProcessStuff)
 {
     task_holder_t &task = workerProcessStuff.workqueue->try_pop_task();
     result_queue_ptr_t &work_result_queue = workerProcessStuff.work_result_queue;
-    result_allocator_holder_ptr_t &result_allocator_holder = workerProcessStuff.result_allocator_holder;
+    result_allocator_holder_ptr_t &result_allocator_holder = workerProcessStuff.result_alloc_holder_;
     if(task)
     {
         workerProcessStuff.running_info->increase_task_counter();
@@ -303,7 +307,7 @@ bool do_some_fake_work(WorkerProcessStuff &workerProcessStuff)
         log_message(task_estimate_string, logging::trivial::info);
 
         if(work_time_in_ms == killer_work_time_in_ms)
-            throw 1; // tietyn pituiset fake tehtävät kaatavat workerin
+            throw 1; // tietyn pituiset fake tehtï¿½vï¿½t kaatavat workerin
 
         boost::this_thread::sleep(boost::posix_time::milliseconds(work_time_in_ms));
         log_message("Task finished", logging::trivial::info);
@@ -348,7 +352,7 @@ void do_work(WorkerProcessStuff &workerProcessStuff, WorkerFunction workerFuncti
 
         if(!workerFunction(workerProcessStuff))
         { 
-            // ei ollut töitä, nukutaan vähän
+            // ei ollut tï¿½itï¿½, nukutaan vï¿½hï¿½n
             boost::this_thread::sleep(boost::posix_time::milliseconds(50));
         }
         workerProcessStuff.running_info->increase_counter();

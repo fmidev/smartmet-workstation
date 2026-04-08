@@ -1,3 +1,4 @@
+#ifndef UNIX
 // FmiDataLoadingThread.cpp
 
 #include "FmiDataLoadingThread2.h"
@@ -13,7 +14,7 @@
 #include "NFmiFileSystem.h"
 #include "CtrlViewFunctions.h"
 
-// MSVC++ 2010 Beta 2 kääntäjä ei käännä ellei tämä ole muiden headereiden perässä
+// MSVC++ 2010 Beta 2 kï¿½ï¿½ntï¿½jï¿½ ei kï¿½ï¿½nnï¿½ ellei tï¿½mï¿½ ole muiden headereiden perï¿½ssï¿½
 #include "afxmt.h"
 
 using namespace std;
@@ -28,39 +29,39 @@ static bool gUseDebugLog = true;
 
 namespace
 {
-	// Tämän avulla yritetään lopettaan jatkuvasti pyörivä working thread 'siististi'
+	// Tï¿½mï¿½n avulla yritetï¿½ï¿½n lopettaan jatkuvasti pyï¿½rivï¿½ working thread 'siististi'
 	CSemaphore gThreadRunning; 
 	NFmiStopFunctor gStopFunctor;
-	// Tämän olion avulla working thread osaa lukea haluttuja datoja
+	// Tï¿½mï¿½n olion avulla working thread osaa lukea haluttuja datoja
 	NFmiHelpDataInfoSystem gWorkerHelpDataSystem; 
-	// Tämän avulla tehdään eri datoille halutunlaisia notifikaatio tekstejä
+	// Tï¿½mï¿½n avulla tehdï¿½ï¿½n eri datoille halutunlaisia notifikaatio tekstejï¿½
     NFmiDataNotificationSettingsWinRegistry gWorkerDataNotificationSettings; 
-	// Minkä kielisiä sanakirjaja käytetään kun tehdään notifikaatio tekstejä
+	// Minkï¿½ kielisiï¿½ sanakirjaja kï¿½ytetï¿½ï¿½n kun tehdï¿½ï¿½n notifikaatio tekstejï¿½
 	FmiLanguage gWorkerUsedLanguage; 
-	// Tämän avulla päivitetään datan luku asetuksia thread safetysti
+	// Tï¿½mï¿½n avulla pï¿½ivitetï¿½ï¿½n datan luku asetuksia thread safetysti
 	CSemaphore gSettingsChanged; 
-	// Tämän avulla säädetään threadin asetuksia thread safetysti
+	// Tï¿½mï¿½n avulla sï¿½ï¿½detï¿½ï¿½n threadin asetuksia thread safetysti
 	NFmiHelpDataInfoSystem gMediatorHelpDataSystem; 
 	bool gSettingsHaveChanged;
-	// Tämän avulla lisätään ja luetaan qdatoja listasta data-threadin ja pääohjelman välillä thread-safesti
+	// Tï¿½mï¿½n avulla lisï¿½tï¿½ï¿½n ja luetaan qdatoja listasta data-threadin ja pï¿½ï¿½ohjelman vï¿½lillï¿½ thread-safesti
 	CSemaphore gDataExchange; 
 	std::vector<LoadedQueryDataHolder> gLoadedDatas;
-	// tämän avulla voidaan pakottaa threadi tarkistamaan datan lukua heti
+	// tï¿½mï¿½n avulla voidaan pakottaa threadi tarkistamaan datan lukua heti
 	bool gDoDataCheckNow = false; 
-	// tämän avulla voidaan pakottaa NFmiHelpDataSystem:in kaikkien dynaamisten
+	// tï¿½mï¿½n avulla voidaan pakottaa NFmiHelpDataSystem:in kaikkien dynaamisten
 	bool gResetTimeStamps = false; 
-	// tätä käytetään mm. CaseStudy-datan yhteydessä, tällä varmistetaan että uudet data polut tulevat käyttöön
+	// tï¿½tï¿½ kï¿½ytetï¿½ï¿½n mm. CaseStudy-datan yhteydessï¿½, tï¿½llï¿½ varmistetaan ettï¿½ uudet data polut tulevat kï¿½yttï¿½ï¿½n
 	bool gApplyHelpDataInfos = false; 
-	// Tiedetään onko datan luku looppi menossa 1. kertaa vai ei, luettuihin datoihin merkitään kyseinen tieto.
+	// Tiedetï¿½ï¿½n onko datan luku looppi menossa 1. kertaa vai ei, luettuihin datoihin merkitï¿½ï¿½n kyseinen tieto.
 	bool gFirstTimeGoingThrough = true;
-	// Tietyt data poistuvat käytöstä, mutta niiden käyttöä pitää tukea, kun ollaan CaseStudy moodissa,
-	// koska mikä tahansa data on voitu joskus tallettaa johonkin CaseStudy pakettiin.
-	// Eli jos tämä on false (SmartMetin normi moodi), ei tälläisi poistettuja datoja edes yritetä lukea.
-	// Jos true, kaikkia datoja yritetään lukea.
+	// Tietyt data poistuvat kï¿½ytï¿½stï¿½, mutta niiden kï¿½yttï¿½ï¿½ pitï¿½ï¿½ tukea, kun ollaan CaseStudy moodissa,
+	// koska mikï¿½ tahansa data on voitu joskus tallettaa johonkin CaseStudy pakettiin.
+	// Eli jos tï¿½mï¿½ on false (SmartMetin normi moodi), ei tï¿½llï¿½isi poistettuja datoja edes yritetï¿½ lukea.
+	// Jos true, kaikkia datoja yritetï¿½ï¿½n lukea.
 	bool gIsInCaseStudyMode = false;
 }
 
-// Tätä initialisointi funktiota pitää kutsua ennen kuin itse threadi käynnistetään MainFramesta. 
+// Tï¿½tï¿½ initialisointi funktiota pitï¿½ï¿½ kutsua ennen kuin itse threadi kï¿½ynnistetï¿½ï¿½n MainFramesta. 
 void CFmiDataLoadingThread2::InitDynamicHelpDataInfo(const NFmiHelpDataInfoSystem &helpDataInfoSystem, const NFmiDataNotificationSettingsWinRegistry &dataNotificationSettings, FmiLanguage usedLanguage)
 {
 	gWorkerHelpDataSystem.InitSettings(helpDataInfoSystem, true);
@@ -132,19 +133,19 @@ static void MakeDataNotificationTexts(const NFmiDataNotificationSettingsWinRegis
     }
 }
 
-// Annetaan semaphoren lukitukselle aina tämä aika kokeilla lukkoa, ennen 
-// kuin epäonnistuu ja jolloin data menetetään, 3 sekuntia pitäisi riittää ruhtinaallisesti.
+// Annetaan semaphoren lukitukselle aina tï¿½mï¿½ aika kokeilla lukkoa, ennen 
+// kuin epï¿½onnistuu ja jolloin data menetetï¿½ï¿½n, 3 sekuntia pitï¿½isi riittï¿½ï¿½ ruhtinaallisesti.
 const int gDataExchangeTimeInMS = 3000;
 
-// tällä pääohjelma pyytää ladattuja datoja (funktiossa tehdään vector swap!!)
-// palauttaa true, jos uutta dataa tuli käyttöön, muuten jos lukitus failaa, tai ei ollut dataa, palautetaan false.
+// tï¿½llï¿½ pï¿½ï¿½ohjelma pyytï¿½ï¿½ ladattuja datoja (funktiossa tehdï¿½ï¿½n vector swap!!)
+// palauttaa true, jos uutta dataa tuli kï¿½yttï¿½ï¿½n, muuten jos lukitus failaa, tai ei ollut dataa, palautetaan false.
 bool CFmiDataLoadingThread2::GetLoadedDatas(std::vector<LoadedQueryDataHolder> &theLoadedDatasOut)
 {
-	CSingleLock singleLock(&gDataExchange); // muista että tämä vapauttaa semaphoren kun tuhoutuu
+	CSingleLock singleLock(&gDataExchange); // muista ettï¿½ tï¿½mï¿½ vapauttaa semaphoren kun tuhoutuu
 	if(singleLock.Lock(gDataExchangeTimeInMS))
 	{
 		theLoadedDatasOut.swap(gLoadedDatas);
-		gLoadedDatas.clear(); // tyhjennetään vielä varmuuden vuoksi
+		gLoadedDatas.clear(); // tyhjennetï¿½ï¿½n vielï¿½ varmuuden vuoksi
 		return theLoadedDatasOut.empty() == false;
 	}
 	return false;
@@ -152,12 +153,12 @@ bool CFmiDataLoadingThread2::GetLoadedDatas(std::vector<LoadedQueryDataHolder> &
 
 static void AddLoadedData(LoadedQueryDataHolder &&theLoadedData)
 {
-	CSingleLock singleLock(&gDataExchange); // muista että tämä vapauttaa semaphoren kun tuhoutuu
+	CSingleLock singleLock(&gDataExchange); // muista ettï¿½ tï¿½mï¿½ vapauttaa semaphoren kun tuhoutuu
 	if(singleLock.Lock(gDataExchangeTimeInMS))
 	{
         NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
         gLoadedDatas.push_back(std::move(theLoadedData));
-		AfxGetMainWnd()->PostMessage(ID_MESSAGE_WORKING_THREAD_DATA_READ2); // lähetetään tieto että nyt on data luettu käytettäväksi
+		AfxGetMainWnd()->PostMessage(ID_MESSAGE_WORKING_THREAD_DATA_READ2); // lï¿½hetetï¿½ï¿½n tieto ettï¿½ nyt on data luettu kï¿½ytettï¿½vï¿½ksi
 	}
 }
 
@@ -167,7 +168,7 @@ static std::list<std::pair<std::string, std::time_t>> GetLatestTimeSortedFilenam
 	if(filesWithTimes.empty())
 		return filesWithTimes;
 
-	// Järjestetään tiedostot ajan suhteen laskevassa järjestyksessä, jolloin uusimmat ovat listan kärjessä
+	// Jï¿½rjestetï¿½ï¿½n tiedostot ajan suhteen laskevassa jï¿½rjestyksessï¿½, jolloin uusimmat ovat listan kï¿½rjessï¿½
 	return CtrlViewUtils::TimeSortFiles(filesWithTimes);
 }
 
@@ -206,36 +207,36 @@ static std::unique_ptr<NFmiQueryData> ReadLatestAcceptableDataWithFileFilterAfte
 {
 	try
 	{
-		// Yritetään lukea viimeisin data annetulla fileFilter:illä ja palautetaan data
+		// Yritetï¿½ï¿½n lukea viimeisin data annetulla fileFilter:illï¿½ ja palautetaan data
 		return QueryDataReading::ReadLatestDataWithFileFilterAfterTimeStamp(fileFilter, limitingTimeStamp, fileNameOut, timeStampOut);
 	}
 	catch(...)
 	{
-		// Jos viimeisin datatiedosto oli korruptoitunut ja ollaan gFirstTimeGoingThrough moodissa, yritetään lukea joku vanhempi data tiedostoista
+		// Jos viimeisin datatiedosto oli korruptoitunut ja ollaan gFirstTimeGoingThrough moodissa, yritetï¿½ï¿½n lukea joku vanhempi data tiedostoista
 		if(gFirstTimeGoingThrough)
 		{
-			// Haetaan kaikki fileFilter:iin liittyneet tiedostot järjestettynä uudesta vanhaan
+			// Haetaan kaikki fileFilter:iin liittyneet tiedostot jï¿½rjestettynï¿½ uudesta vanhaan
 			auto timeSortedFiles = ::GetLatestTimeSortedFilenames(fileFilter, limitingTimeStamp);
 			if(timeSortedFiles.size() > 1)
 			{
-				// Jos tiedostoja oli enemmän kuin 1, kokeillaan lukea jotain vanhempaa jos ne datat eivät olisi korruptoituneita
-				// Poistetaan viimeisin, koska sitä on jo yritetty lukea
+				// Jos tiedostoja oli enemmï¿½n kuin 1, kokeillaan lukea jotain vanhempaa jos ne datat eivï¿½t olisi korruptoituneita
+				// Poistetaan viimeisin, koska sitï¿½ on jo yritetty lukea
 				timeSortedFiles.pop_front();
 				auto data = TryReadingFirstGoodBackupData(timeSortedFiles, fileFilter, fileNameOut);
-				// Vain jos backup data saatiin oikeasti luettua, palautetaan se, muuten mennään poikkeuskäsittelyihin
+				// Vain jos backup data saatiin oikeasti luettua, palautetaan se, muuten mennï¿½ï¿½n poikkeuskï¿½sittelyihin
 				if(data)
 					return data;
 			}
 		}
 
-		// Jos backup tiedoston luku ei onnistunut tai ei olla moodissa missä 
-		// niitä yritetään lukea, heitetään vain jo heitetty poikkeus uudestaan
+		// Jos backup tiedoston luku ei onnistunut tai ei olla moodissa missï¿½ 
+		// niitï¿½ yritetï¿½ï¿½n lukea, heitetï¿½ï¿½n vain jo heitetty poikkeus uudestaan
 		throw;
 	}
 }
 
-// Kaatumisraportit ovat kertoneet että latlon cachen alustus on kaatanut smartmetia usein.
-// Lokitetaan että mikä data ja kuinka iso vector<NFmiPoint> on pitänyt alustaa, kaatuu vector<NFmiPoint>::reserve kutsuun.
+// Kaatumisraportit ovat kertoneet ettï¿½ latlon cachen alustus on kaatanut smartmetia usein.
+// Lokitetaan ettï¿½ mikï¿½ data ja kuinka iso vector<NFmiPoint> on pitï¿½nyt alustaa, kaatuu vector<NFmiPoint>::reserve kutsuun.
 static void LogLatlonCacheInitialization(NFmiQueryData& data, const std::string & latestFileName)
 {
 	std::string logMessage = "Starting to initialize latlon-cache after reading queryData file ";
@@ -249,15 +250,15 @@ static void LogLatlonCacheInitialization(NFmiQueryData& data, const std::string 
 // Laittaa sen luettujen datojen listaan.
 // Palauttaa 0, jos ei ollut uutta dataa.
 // Palauttaa 1:n, jos oli uutta dataa ja luku onnistui.
-// Plauttaa 2:n jos oli uutta dataa, mutta oli jotain ongelmia datan luvun kanssa (muisti ei riitä, data korruptoitunut jne.)
+// Plauttaa 2:n jos oli uutta dataa, mutta oli jotain ongelmia datan luvun kanssa (muisti ei riitï¿½, data korruptoitunut jne.)
 static int ReadData(NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem &theHelpDataSystem)
 {
 	int status = 0;
-	if(theDataInfo.DataType() != NFmiInfoData::kSatelData) // satelliitti data on kuva, eikä sitä ladata täällä
+	if(theDataInfo.DataType() != NFmiInfoData::kSatelData) // satelliitti data on kuva, eikï¿½ sitï¿½ ladata tï¿½ï¿½llï¿½
 	{
 		string fileFilter(theDataInfo.UsedFileNameFilter(theHelpDataSystem));
 		if(theDataInfo.IsCombineData())
-			fileFilter = theDataInfo.CombinedResultDataFileFilter(); // jos kyse yhdistelemällä rakennetusta datasta, käytetään tätä lataamaan data (FileNameFilter:in avulla haettiin koottavat tiedostot)
+			fileFilter = theDataInfo.CombinedResultDataFileFilter(); // jos kyse yhdistelemï¿½llï¿½ rakennetusta datasta, kï¿½ytetï¿½ï¿½n tï¿½tï¿½ lataamaan data (FileNameFilter:in avulla haettiin koottavat tiedostot)
 		time_t timeStamp = 0;
 		time_t latestTimeStamp = theDataInfo.LatestFileTimeStamp();
 		string latestFileName;
@@ -267,7 +268,7 @@ static int ReadData(NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem 
             if(data)
             {
 				::LogLatlonCacheInitialization(*data, latestFileName);
-                data->LatLonCache(); // Tämä alustaa latlon cachen worker threadissa, jotta se olisi sitten käytössä SmartMetissa multi-thread koodeissa
+                data->LatLonCache(); // Tï¿½mï¿½ alustaa latlon cachen worker threadissa, jotta se olisi sitten kï¿½ytï¿½ssï¿½ SmartMetissa multi-thread koodeissa
                 if(theDataInfo.FakeProducerId() != 0)
                 {
                     data->Info()->First();
@@ -292,18 +293,18 @@ static int ReadData(NFmiHelpDataInfo &theDataInfo, const NFmiHelpDataInfoSystem 
         catch(...)
         {
             status = 2;
-            // QueryDatan luku epäonnistunut syystä tai toisesta.
+            // QueryDatan luku epï¿½onnistunut syystï¿½ tai toisesta.
             // Ongelmasta on jo lokitettu tarkempi analyysi QueryDataReading::ReadLatestDataWithFileFilterAfterTimeStamp funktiossa.
-            // Datatiedostoa ei haluta siirtää pois viallisena error-hakemistoon, eikä siitä haluta raportoida minuutin
-            // välein eli laitetaan viallisen tiedoston timestamp talteen.
+            // Datatiedostoa ei haluta siirtï¿½ï¿½ pois viallisena error-hakemistoon, eikï¿½ siitï¿½ haluta raportoida minuutin
+            // vï¿½lein eli laitetaan viallisen tiedoston timestamp talteen.
             theDataInfo.LatestFileTimeStamp(timeStamp);
         }
 	}
 	return status;
 }
 
-// Yritää lukea kaikki dynaamiset data (jos tullut uusia).
-// Palauttaa jos, jos ei lukenut yhtään mitään, muuten palauttaa 1:n.
+// Yritï¿½ï¿½ lukea kaikki dynaamiset data (jos tullut uusia).
+// Palauttaa jos, jos ei lukenut yhtï¿½ï¿½n mitï¿½ï¿½n, muuten palauttaa 1:n.
 static int GoThroughAllHelpDataInfos(NFmiHelpDataInfoSystem &theHelpDataSystem)
 {
 	::ApplyChangedSettings(); // katsotaan onko asetuksia muutettu
@@ -322,7 +323,7 @@ static int GoThroughAllHelpDataInfos(NFmiHelpDataInfoSystem &theHelpDataSystem)
 	return status;
 }
 
-// tämä pakottaa että datan luku tehdään heti
+// tï¿½mï¿½ pakottaa ettï¿½ datan luku tehdï¿½ï¿½n heti
 void CFmiDataLoadingThread2::LoadDataNow(void)
 {
 	gDoDataCheckNow = true;
@@ -336,7 +337,7 @@ void CFmiDataLoadingThread2::ResetTimeStamps(void)
 
 UINT CFmiDataLoadingThread2::DoThread(LPVOID /* pParam */ )
 {
-	CSingleLock singleLock(&gThreadRunning); // muista että tämä vapauttaa semaphoren kun tuhoutuu
+	CSingleLock singleLock(&gThreadRunning); // muista ettï¿½ tï¿½mï¿½ vapauttaa semaphoren kun tuhoutuu
 	if(!singleLock.Lock(5000)) // Attempt to lock the shared resource, 5000 means 5 sec wait, 0 wait resulted sometimes to wait for next minute for unknown reason
 	{
 //		DebugThread(logger, "CFmiDataLoadingThread2::DoThread was allready running, stopping...");
@@ -346,8 +347,8 @@ UINT CFmiDataLoadingThread2::DoThread(LPVOID /* pParam */ )
 	NFmiMilliSecondTimer timer;
 	int loadingStatus = 0;
 
-	// Tässä on iki-looppi, jossa vahditaan onko tullut uusia datoja, jolloin tehdään yhdistelmä datoja SmartMetin luettavaksi.
-	// Lisäksi pitää tarkkailla, onko tullut lopetus käsky, joloin pitää siivota ja lopettaa.
+	// Tï¿½ssï¿½ on iki-looppi, jossa vahditaan onko tullut uusia datoja, jolloin tehdï¿½ï¿½n yhdistelmï¿½ datoja SmartMetin luettavaksi.
+	// Lisï¿½ksi pitï¿½ï¿½ tarkkailla, onko tullut lopetus kï¿½sky, joloin pitï¿½ï¿½ siivota ja lopettaa.
 	int counter = 0;
 	try
 	{
@@ -355,7 +356,7 @@ UINT CFmiDataLoadingThread2::DoThread(LPVOID /* pParam */ )
 		{
 			NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
 
-			if(gFirstTimeGoingThrough || gDoDataCheckNow || loadingStatus || timer.CurrentTimeDiffInMSeconds() > (30 * 1000)) // tarkistetaan vähintään puolen minuutin välein onko tullut uusia datoja
+			if(gFirstTimeGoingThrough || gDoDataCheckNow || loadingStatus || timer.CurrentTimeDiffInMSeconds() > (30 * 1000)) // tarkistetaan vï¿½hintï¿½ï¿½n puolen minuutin vï¿½lein onko tullut uusia datoja
 			{
 				NFmiInfoOrganizer::MarkLoadedDataAsOld(gFirstTimeGoingThrough);
 				gDoDataCheckNow = false;
@@ -369,14 +370,14 @@ UINT CFmiDataLoadingThread2::DoThread(LPVOID /* pParam */ )
 				}
 				catch(...)
 				{
-					// tämä oli joku 'tavallinen' virhe tilanne,
+					// tï¿½mï¿½ oli joku 'tavallinen' virhe tilanne,
 					// jatketaan vain loopitusta
 				}
 
 				if(gFirstTimeGoingThrough)
 				{
-					// Jos oltiin tekemässä 1. ajo kertaa, nukutaan vähän aikaa, ennen kuin laitetaan lippu 
-					// pois päältä, jotta systeemi ehtii ottaa kierroksella tulleet datat käyttöön ennen moodin vaihtoa,
+					// Jos oltiin tekemï¿½ssï¿½ 1. ajo kertaa, nukutaan vï¿½hï¿½n aikaa, ennen kuin laitetaan lippu 
+					// pois pï¿½ï¿½ltï¿½, jotta systeemi ehtii ottaa kierroksella tulleet datat kï¿½yttï¿½ï¿½n ennen moodin vaihtoa,
 					Sleep(1 * 1000);
 				}
 				gFirstTimeGoingThrough = false;
@@ -385,12 +386,12 @@ UINT CFmiDataLoadingThread2::DoThread(LPVOID /* pParam */ )
 			}
 
 			NFmiQueryDataUtil::CheckIfStopped(&gStopFunctor);
-			Sleep(1*1000); // nukutaan aina lyhyitä aikoja (1 s), että osataan tutkia usein, joska pääohjelma haluaa jo sulkea
+			Sleep(1*1000); // nukutaan aina lyhyitï¿½ aikoja (1 s), ettï¿½ osataan tutkia usein, joska pï¿½ï¿½ohjelma haluaa jo sulkea
 		}
 	}
 	catch(...)
 	{
-		// tämä oli luultavasti StopThreadException, lopetetaan joka tapauksessa
+		// tï¿½mï¿½ oli luultavasti StopThreadException, lopetetaan joka tapauksessa
 	}
 
     return 0;   // thread completed successfully
@@ -405,3 +406,5 @@ void CFmiDataLoadingThread2::SetCaseStudyMode(bool isInCaseStudyMode)
 {
 	gIsInCaseStudyMode = isInCaseStudyMode;
 }
+
+#endif // UNIX

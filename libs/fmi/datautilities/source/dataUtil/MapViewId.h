@@ -23,7 +23,7 @@ namespace SmartMetDataUtilities
 
         MapViewId() = default;
         MapViewId(const MapViewId& rhs) = default;
-        MapViewId& MapViewId::operator=(MapViewId& rhs) = default;
+        MapViewId& operator=(MapViewId& rhs) = default;
         MapViewId(MapViewId&& rhs) = default;
         MapViewId& operator=(MapViewId&& rhs) = default;
     };

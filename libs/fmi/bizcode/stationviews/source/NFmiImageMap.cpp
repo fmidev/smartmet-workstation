@@ -45,7 +45,9 @@ void NFmiImageMap::ImageHolder::ReadImage(void)
     itsImage = 0;
     try
     {
+#ifndef UNIX
         itsImage = CtrlView::CreateBitmapFromFile(itsImageFile);
+#endif // UNIX
     }
     catch(std::exception &e)
     {

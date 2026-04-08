@@ -80,8 +80,10 @@
 #include "NFmiSmartInfo.h"
 #include "NFmiStreamLineView.h"
 #include "NFmiBetaProductSystem.h"
+#ifndef DISABLE_CPPRESTSDK
 #include "HakeMessage/HakeSystemConfigurations.h"
 #include "HakeMessage/HakeMsg.h"
+#endif // DISABLE_CPPRESTSDK
 #include "CtrlViewDocumentInterface.h"
 #include "MapHandlerInterface.h"
 #include "CtrlViewGdiPlusFunctions.h"
@@ -95,7 +97,9 @@
 #include "NFmiWmsView.h"
 #include "NFmiDataParamModifierAreaConeChange.h"
 #include "MapDrawFunctions.h"
+#ifndef UNIX
 #include "NFmiApplicationWinRegistry.h"
+#endif // UNIX
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "catlog/catlog.h"
 #include "NFmiVoidPtrList.h"
@@ -125,7 +129,7 @@
 
 #include <list>
 #include <regex>
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
 
 using namespace std;
 
@@ -402,9 +406,9 @@ void NFmiStationViewHandler::DrawCPCropArea(void)
 	}
 }
 
+#ifndef UNIX
 void NFmiStationViewHandler::DrawAreaMask(Gdiplus::Graphics &theGdiPlusGraphics, NFmiWindTableSystem::AreaMaskData &theAreaMaskData)
 {
-#ifndef UNIX
 	NFmiSvgPath &aPath = theAreaMaskData.SvgPath();
 	float lineWidthInPixels = 1;
 	int lineStyle = 0; // 0=yhten�inen viiva
@@ -448,8 +452,8 @@ void NFmiStationViewHandler::DrawAreaMask(Gdiplus::Graphics &theGdiPlusGraphics,
 		double pixelsPerMM = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_y;
         CtrlView::DrawTextToRelativeLocation(theGdiPlusGraphics, NFmiColor(0,0,1), 4.5, theAreaMaskData.Name(), LatLonToViewPoint(firstLatLon), pixelsPerMM, itsToolBox, L"arial", kCenter);
 	}
-#endif // UNIX
 }
+#endif // UNIX
 
 void NFmiStationViewHandler::DrawWindTableAreas(void)
 {
@@ -843,7 +847,8 @@ void NFmiStationViewHandler::DrawSoundingPlaces(void)
 	DrawSoundingSymbols(TEMPInfo, 2, 1.7); // 2=piirr� salmiakki
 
 	// lopuksi piirret�� muiden p��lle 'oikeat' luotaukset
-    DrawSoundingSymbols(itsCtrlViewDocumentInterface->InfoOrganizer()->GetPrioritizedSoundingInfo(NFmiInfoOrganizer::ParamCheckFlags(true)), 1, 1.4); // 1=piirr� kolmio
+    auto prioritizedSoundingInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->GetPrioritizedSoundingInfo(NFmiInfoOrganizer::ParamCheckFlags(true));
+    DrawSoundingSymbols(prioritizedSoundingInfo, 1, 1.4); // 1=piirr� kolmio
 }
 
 static void SetSoundingSymbolEnvi(NFmiDrawingEnvironment &envi)
@@ -1309,6 +1314,7 @@ namespace
 }
 #endif // UNIX
 
+#ifndef UNIX
 void NFmiStationViewHandler::InitializeWarningSymbolFiles(void)
 {
 	std::string confName = "SmartMet::WomlDirectoryPath";
@@ -1341,6 +1347,7 @@ void NFmiStationViewHandler::InitializeWarningSymbols(void)
 		}
 	}
 }
+#endif // UNIX
 
 void NFmiStationViewHandler::GetShownMessages()
 {
@@ -1712,12 +1719,11 @@ void NFmiStationViewHandler::DrawWantedWarningIcon(const HakeMessage::HakeMsg &t
 }
 #endif // DISABLE_CPPRESTSDK
 
+#ifndef UNIX
 void NFmiStationViewHandler::DrawWarningIcon(const NFmiPoint &theLatlon, Gdiplus::Bitmap *theImage, float theAlpha, double theSizeFactor)
 {
-#ifndef UNIX
 	NFmiRect symbolrect = CalcSymbolRelativeRect(theLatlon, theImage, theSizeFactor);
     CtrlView::DrawAnimationButton(symbolrect, theImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), theAlpha, true);
-#endif // UNIX
 }
 
 NFmiRect NFmiStationViewHandler::CalcSymbolRelativeRect(const NFmiPoint &theLatlon, Gdiplus::Bitmap *theImage, double theSizeFactor)
@@ -1731,14 +1737,8 @@ NFmiRect NFmiStationViewHandler::CalcSymbolRelativeRect(const NFmiPoint &theLatl
 	return symbolRect;
 }
 
-NFmiPoint NFmiStationViewHandler::GetViewSizeInPixels(void)
-{
-	return itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex);
-}
-
 NFmiPoint NFmiStationViewHandler::CalcRelativeWarningIconSize(Gdiplus::Bitmap *theImage)
 {
-#ifndef UNIX
     auto &graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
     double relativeWidth = itsToolBox->SX(boost::math::iround(gAnimationButtonImageHolder.itsIconSizeInMM_x * graphicalInfo.itsPixelsPerMM_x));
     double relativeHeight = itsToolBox->SY(boost::math::iround(gAnimationButtonImageHolder.itsIconSizeInMM_y * graphicalInfo.itsPixelsPerMM_y));
@@ -1755,9 +1755,12 @@ NFmiPoint NFmiStationViewHandler::CalcRelativeWarningIconSize(Gdiplus::Bitmap *t
 		relativeHeight = itsToolBox->SY(bitmapSizeY);
 	}
 	return NFmiPoint(relativeWidth, relativeHeight);
-#else
-    return NFmiPoint(32.0, 32.0); // TODO: implement on Linux
+}
 #endif // UNIX
+
+NFmiPoint NFmiStationViewHandler::GetViewSizeInPixels(void)
+{
+	return itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex);
 }
 
 NFmiPoint NFmiStationViewHandler::LatLonToViewPoint(const NFmiPoint& theLatLon) const
@@ -2218,7 +2221,8 @@ void NFmiStationViewHandler::Update(void)
 			itsViewList->Clear(true);
 			for(drawParamList->Reset(); drawParamList->Next();)
 			{
-                auto stationView = CreateStationView(drawParamList->Current());
+                auto currentDrawParam = drawParamList->Current();
+                auto stationView = CreateStationView(currentDrawParam);
                 if(stationView)
 				    itsViewList->Add(stationView);
 			}
@@ -2278,6 +2282,7 @@ bool NFmiStationViewHandler::LeftButtonDown(const NFmiPoint& thePlace, unsigned 
 	return false;
 }
 
+#ifndef UNIX
 bool NFmiStationViewHandler::IsRangeMeterModeOn(bool checkAlsoIfMouseDragIsOn) const
 {
 	auto& mapViewRangeMeter = itsCtrlViewDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
@@ -2318,6 +2323,12 @@ void NFmiStationViewHandler::MoveRangeMeterStart(const NFmiPoint& thePlace)
 	mapViewRangeMeter.MouseDragOn(false);
 	mapViewRangeMeter.MoveStartLatlonPoint(ViewPointToLatLon(thePlace));
 }
+#else
+bool NFmiStationViewHandler::IsRangeMeterModeOn(bool) const { return false; }
+void NFmiStationViewHandler::SetRangeMeterDragStart(const NFmiPoint&) {}
+void NFmiStationViewHandler::SetRangeMeterDragEnd(const NFmiPoint&, bool) {}
+void NFmiStationViewHandler::MoveRangeMeterStart(const NFmiPoint&) {}
+#endif // UNIX
 
 void NFmiStationViewHandler::LeftButtonDownCrossSectionActions(const NFmiPoint& thePlace, unsigned long )
 {
@@ -2473,7 +2484,10 @@ bool NFmiStationViewHandler::LeftButtonUpCrossSectionActions(const NFmiPoint& th
             crossSectionSystem->StartPoint(latlon);
             // t�ytyy my�s mahdollistaa pelk�n luotaus paikan valinta kun ollaan poikkileikkaus moodissa
             if(itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
-                SelectLocations(boost::shared_ptr<NFmiFastQueryInfo>(), latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiSelectionMask, true, true);
+            {
+                boost::shared_ptr<NFmiFastQueryInfo> emptyInfo;
+                SelectLocations(emptyInfo, latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiSelectionMask, true, true);
+            }
 
             itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
         }
@@ -2985,7 +2999,10 @@ bool NFmiStationViewHandler::RightButtonUp(const NFmiPoint & thePlace, unsigned 
             itsCtrlViewDocumentInterface->CrossSectionSystem()->EndPoint(latlon);
             // t�ytyy my�s mahdollistaa pelk�n luotaus paikan valinta kun ollaan poikkileikkaus moodissa
             if(itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
-                SelectLocations(boost::shared_ptr<NFmiFastQueryInfo>(), latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiDisplayedMask, true, true);
+            {
+                boost::shared_ptr<NFmiFastQueryInfo> emptyInfo;
+                SelectLocations(emptyInfo, latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiDisplayedMask, true, true);
+            }
 			ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::CrossSectionView);
 			itsCtrlViewDocumentInterface->MapViewDirty(itsMapViewDescTopIndex, false, false, true, false, false, false);
             return true; // ei menn� hilapisteen valintaan
@@ -3304,7 +3321,8 @@ void NFmiStationViewHandler::DrawSelectedLocations(void)
     }
     else
     {   // Tarvittaessa luodaan yksi n�ytt�, jonka avulla piirret��n valitut pisteet
-        NFmiStationView stationView(itsMapViewDescTopIndex, GetArea(), itsToolBox, itsDrawParam, kFmiTemperature, NFmiPoint(0, 0), NFmiPoint(1, 1), itsViewGridRowNumber, itsViewGridColumnNumber);
+        auto area = GetArea();
+        NFmiStationView stationView(itsMapViewDescTopIndex, area, itsToolBox, itsDrawParam, kFmiTemperature, NFmiPoint(0, 0), NFmiPoint(1, 1), itsViewGridRowNumber, itsViewGridColumnNumber);
         stationView.Time(itsTime);
         stationView.DrawAllSelectedStationsWithInvertStationRect(NFmiMetEditorTypes::kFmiSelectionMask);
         stationView.DrawAllSelectedStationsWithInvertStationRect(NFmiMetEditorTypes::kFmiDisplayedMask);
@@ -3792,16 +3810,16 @@ void NFmiStationViewHandler::DrawMap(NFmiToolBox * theGTB, const NFmiRect& theRe
 {
 	if(theGTB)
 	{
+#ifndef UNIX
 		auto* mapDc = itsCtrlViewDocumentInterface->MapBlitDC(itsMapViewDescTopIndex);
 		if(!itsCtrlViewDocumentInterface->Printing() && mapDc)
 		{
 			theGTB->DrawDC(mapDc, theRect);
 		}
-		else 
+		else
 		{
 			// Else on hitaampi tapa , jota k�ytet��n ainakin printtauksen yhteydess�
             auto mapHandler = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex);
-#ifndef UNIX
 			Gdiplus::Bitmap *aBitmap = mapHandler->GetBitmap();
 			if(aBitmap)
 			{
@@ -3811,8 +3829,8 @@ void NFmiStationViewHandler::DrawMap(NFmiToolBox * theGTB, const NFmiRect& theRe
 				Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(mfcRect.left), static_cast<Gdiplus::REAL>(mfcRect.top), static_cast<Gdiplus::REAL>(mfcRect.Width()), static_cast<Gdiplus::REAL>(mfcRect.Height()));
                 CtrlView::DrawBitmapToDC_4(theGTB->GetDC(), *aBitmap, bitmapRect, destRect, true, NFmiImageAttributes(), itsGdiPlusGraphics);
 			}
-#endif // UNIX
 		}
+#endif // UNIX
 		if(itsCtrlViewDocumentInterface->ProjectionCurvatureInfo()->GetDrawingMode() == NFmiProjectionCurvatureInfo::kOverMap)
 			DrawProjetionLines(theGTB);
 	}
@@ -3823,6 +3841,7 @@ void NFmiStationViewHandler::DrawMap(NFmiToolBox * theGTB, const NFmiRect& theRe
 //--------------------------------------------------------
 void NFmiStationViewHandler::DrawOverMap(NFmiToolBox * theGTB, const NFmiRect& theRect)
 {
+#ifndef UNIX
 	if(theGTB)
 	{
         auto mfcRect = MapDraw::getMfcRect(itsMapRect, itsToolBox);
@@ -3830,10 +3849,9 @@ void NFmiStationViewHandler::DrawOverMap(NFmiToolBox * theGTB, const NFmiRect& t
         auto destRect = MapDraw::getDestRect(mfcRect);
 
         int wantedDrawOverMapMode = 1; // means overlay is drawn after all the dynamic data is drawn
-#ifndef UNIX
         MapDraw::drawOverlayMap(itsCtrlViewDocumentInterface, itsMapViewDescTopIndex, wantedDrawOverMapMode, theGTB->GetDC(), destRect, bitmapSize, itsGdiPlusGraphics);
-#endif // UNIX
 	}
+#endif // UNIX
 }
 
 void NFmiStationViewHandler::DrawProjetionLines(NFmiToolBox * theGTB)
@@ -3893,6 +3911,7 @@ NFmiPoint NFmiStationViewHandler::CalcFontSize(double theWantedSizeInMM)
 
 void NFmiStationViewHandler::DrawMapInMouseMove(NFmiToolBox * theGTB, const NFmiRect& theRect)
 {
+#ifndef UNIX
 	if(theGTB)
 	{
 		auto* mapDc = itsCtrlViewDocumentInterface->MapBlitDC(itsMapViewDescTopIndex);
@@ -3909,6 +3928,7 @@ void NFmiStationViewHandler::DrawMapInMouseMove(NFmiToolBox * theGTB, const NFmi
 			// t�nne ei pit�isi menn�!!!!!
 		}
 	}
+#endif // UNIX
 }
 
 void NFmiStationViewHandler::SetViewListArea(void)
@@ -4119,6 +4139,7 @@ std::vector<NFmiPoint> NFmiStationViewHandler::ConvertLatlonToRelativePoints(con
 
 void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 {
+#ifndef UNIX
 	auto &mapViewRangeMeter = itsCtrlViewDocumentInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter();
 	if(mapViewRangeMeter.ModeOn())
 	{
@@ -4144,7 +4165,6 @@ void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 			float lineWidthInMM = 0.3f;
 			float lineWidthInPixels = static_cast<float>(::CalcPenWidthInPixels(lineWidthInMM, pixelsPerMM));
 
-#ifndef UNIX
 			// Piirr� range-ympyr�
 			auto splitLatlonCirclePoints = ::SplitPossibleOverEdgeLongitudeJumps(latlonCirclePoints);
 			for(const auto &latlonCirclePoints : splitLatlonCirclePoints)
@@ -4314,9 +4334,9 @@ void NFmiStationViewHandler::DrawMapViewRangeMeterData()
 				itsToolBox,
 				fontName,
 				kRight);
-#endif // UNIX
 		}
 	}
+#endif // UNIX
 }
 
 float NFmiStationViewHandler::GetUsedTimeResolutionInHours()
@@ -4682,9 +4702,11 @@ std::string NFmiStationViewHandler::ComposeToolTipText(const NFmiPoint& theRelat
 		str += "\n";
 		str += MakePossibleVirtualTimeTooltipText();
 
+#ifndef UNIX
 		auto viewGridSizePoint = itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex);
 		auto viewGridSize = int(viewGridSizePoint.X() * viewGridSizePoint.Y());
 		str += itsCtrlViewDocumentInterface->ApplicationWinRegistry().VisualizationSpaceoutSettings().composePossibleTooltipWarningText(*itsMapArea, viewGridSize);
+#endif // UNIX
 
 		if(!itsViewList->NumberOfItems())
 		{

@@ -238,7 +238,9 @@ protected:
 	CSize itsLastBitmapSize;
 #endif
 	bool fDrawUsingTransparency;
+#ifndef UNIX
     std::unique_ptr<SmartMetDataUtilities::DataUtilitiesAdapter<>> dataUtilitiesAdapter;
+#endif // UNIX
     // Preventing to calling drawing related ToolMaster functions simultaneously from different places
     static std::mutex sToolMasterOperationMutex;
 

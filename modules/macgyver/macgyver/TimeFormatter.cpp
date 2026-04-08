@@ -12,9 +12,7 @@
 #include <boost/date_time/gregorian/gregorian.hpp>
 
 #include <fmt/format.h>
-#if defined(_WIN32) || defined(WIN32)
 #include <fmt/printf.h>
-#endif
 
 #include <stdexcept>
 
@@ -315,9 +313,9 @@ std::string HttpFormatter::format(const boost::posix_time::ptime& t) const
 
   return fmt::sprintf("%s, %02d %s %d %02d:%02d:%02d GMT",
                       weekdays[t.date().day_of_week()],
-                      t.date().day(),
-                      months[t.date().month()],
-                      t.date().year(),
+                      static_cast<int>(t.date().day()),
+                      months[static_cast<int>(t.date().month())],
+                      static_cast<int>(t.date().year()),
                       t.time_of_day().hours(),
                       t.time_of_day().minutes(),
                       t.time_of_day().seconds());

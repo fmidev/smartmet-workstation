@@ -21,14 +21,14 @@ namespace cppext
     {
     public:
         Node() = default;
-        Node(ValueT val, std::vector<std::unique_ptr<Tree>> childs)
+        Node(ValueT val, std::vector<std::unique_ptr<Tree<ValueT>>> childs)
         {
             Tree<ValueT>::value = std::move(val);
             children = std::move(childs);
         }
         ~Node() = default;
 
-        std::vector<std::unique_ptr<Tree>> children;
+        std::vector<std::unique_ptr<Tree<ValueT>>> children;
     private:
         void type() const final {}
     };

@@ -15,7 +15,7 @@ namespace MacroParam
     void RemoveLastPartOfDirectory(std::string &thePath);
     std::string ConvertPathToOneUsedFormat(const std::string &thePath);
 
-    // Case-insensitive-find stringille, haettu webistä: http://stackoverflow.com/questions/3152241/case-insensitive-stdstring-find
+    // Case-insensitive-find stringille, haettu webistï¿½: http://stackoverflow.com/questions/3152241/case-insensitive-stdstring-find
     // templated version of my_equal so it could work with both char and wchar_t
     template<typename charT>
     struct case_insensitive_equal {
@@ -38,12 +38,12 @@ namespace MacroParam
             return ci_string_not_found;
     }
 
-    // pitää tehdä oma rutiini vertaamaan vektoreiden samanarvoisuutta, jos on käytetty boost::shared_ptr:eita apuna.
-    // Tämä siksi että shared_ptr tekee vertailun suoraan pointtereilla eikä niiden referensseillä.
+    // pitï¿½ï¿½ tehdï¿½ oma rutiini vertaamaan vektoreiden samanarvoisuutta, jos on kï¿½ytetty boost::shared_ptr:eita apuna.
+    // Tï¿½mï¿½ siksi ettï¿½ shared_ptr tekee vertailun suoraan pointtereilla eikï¿½ niiden referensseillï¿½.
     template<typename T>
     static bool CheckSharedPtrContainerEquality(const std::vector<boost::shared_ptr<T> > &items1, const std::vector<boost::shared_ptr<T> > &items2)
     {
-        typedef std::vector<boost::shared_ptr<T> >::const_iterator Iter;
+        typedef typename std::vector<boost::shared_ptr<T> >::const_iterator Iter;
         if(items1.size() == items2.size())
         {
             Iter it1 = items1.begin();
@@ -53,7 +53,7 @@ namespace MacroParam
                 if((*(*it1) == *(*it2)) == false)
                     return false; // jos yksikin itemi poikkeaa, palautetaan false
             }
-            return true; // jos kaikki on käyty läpi ja kaikki oli samoja, palautetaan true
+            return true; // jos kaikki on kï¿½yty lï¿½pi ja kaikki oli samoja, palautetaan true
         }
         return false;
     }

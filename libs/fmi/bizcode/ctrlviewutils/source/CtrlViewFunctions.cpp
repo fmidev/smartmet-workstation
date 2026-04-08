@@ -48,28 +48,28 @@ namespace CtrlViewUtils
         double valueRemainder = value - valueInt;
         double minutes = valueRemainder*60.;
         if(decimals)
-            minutes = round(minutes * 10) / 10.; // näin saadaan pyöristettynä arvona luku yhden desimaalin tarkkuudella
+            minutes = round(minutes * 10) / 10.; // nï¿½in saadaan pyï¿½ristettynï¿½ arvona luku yhden desimaalin tarkkuudella
         else
             minutes = round(minutes); // ei desimaaleja mukaan
         if(minutes >= 60.)
-        { // jos minuutit pyöristyivät 60:een, pitää lisätä asteisiin 1 ja laittaa minuutit 0:ksi
+        { // jos minuutit pyï¿½ristyivï¿½t 60:een, pitï¿½ï¿½ lisï¿½tï¿½ asteisiin 1 ja laittaa minuutit 0:ksi
             valueInt += 1;
             minutes = 0;
         }
 
         std::string retStr;
         retStr += NFmiStringTools::Convert<int>(valueInt);
-        retStr += "°";
+        retStr += "ï¿½";
         size_t strSize = retStr.size();
         if(minutes < 10.)
-            retStr += "0"; // lisätään etu nolla
+            retStr += "0"; // lisï¿½tï¿½ï¿½n etu nolla
         retStr += NFmiStringTools::Convert<double>(minutes);
         if(decimals)
         {
             if(retStr.size() - strSize == 1)
-                retStr += "0"; // lisätään desimaali nolla
+                retStr += "0"; // lisï¿½tï¿½ï¿½n desimaali nolla
             else if(retStr.size() - strSize == 2)
-                retStr += ".0"; // lisätään desimaali piste ja nolla
+                retStr += ".0"; // lisï¿½tï¿½ï¿½n desimaali piste ja nolla
         }
         retStr += "'";
 
@@ -82,7 +82,7 @@ namespace CtrlViewUtils
         lat = ::fabs(lat);
         std::string retStr;
         if(lat < 10.)
-            retStr += "0"; // lisätään tarvittaessa etu nolla
+            retStr += "0"; // lisï¿½tï¿½ï¿½n tarvittaessa etu nolla
         retStr += GetLatLonValue2MinuteStr(lat, decimals);
         if(northernSide)
             retStr += "N";
@@ -109,9 +109,9 @@ namespace CtrlViewUtils
         lon = ::fabs(lon);
         std::string retStr;
         if(lon < 10.)
-            retStr += "00"; // lisätään tarvittaessa etu nollia
+            retStr += "00"; // lisï¿½tï¿½ï¿½n tarvittaessa etu nollia
         else if(lon < 100.)
-            retStr += "0"; // lisätään tarvittaessa etu nolla
+            retStr += "0"; // lisï¿½tï¿½ï¿½n tarvittaessa etu nolla
         retStr += GetLatLonValue2MinuteStr(lon, decimals);
         if(eastSide)
             retStr += "E";
@@ -168,15 +168,15 @@ namespace CtrlViewUtils
     NFmiPoint ConvertPointFromRect1ToRect2(const NFmiPoint &thePointInRect1, const NFmiRect &theRect1, const NFmiRect &theRect2)
     { // palauttaa pisteen joka on samassa suhteessa rect2:ssa kuin annettu piste
 
-      // HUOM!!! ei ole täydellisesti tehty, molemmat rect:it alkavat tässä 0,0 pisteestä!!!!!!!!!
+      // HUOM!!! ei ole tï¿½ydellisesti tehty, molemmat rect:it alkavat tï¿½ssï¿½ 0,0 pisteestï¿½!!!!!!!!!
         return NFmiPoint(thePointInRect1.X() * theRect2.Width() / theRect1.Width(), thePointInRect1.Y() * theRect2.Height() / theRect1.Height());
     }
 
-    // tämä tekee sellaisen timebagin, missä on annetut alku ja loopu ajat säädettyinä lähimpään aikasteppiin
-    // kuitenkin siten että maksimi aikasteppi on 60 minuuttia.
+    // tï¿½mï¿½ tekee sellaisen timebagin, missï¿½ on annetut alku ja loopu ajat sï¿½ï¿½dettyinï¿½ lï¿½himpï¿½ï¿½n aikasteppiin
+    // kuitenkin siten ettï¿½ maksimi aikasteppi on 60 minuuttia.
     NFmiTimeBag GetAdjustedTimeBag(const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime, int theTimeStepInMinutes)
     {
-        int timebagAdjustmentTimeStepInMinutes = (theTimeStepInMinutes > 60) ? 60 : theTimeStepInMinutes; // ei yli 60 minuutin säätöä lopullisen timebagin aikoihin
+        int timebagAdjustmentTimeStepInMinutes = (theTimeStepInMinutes > 60) ? 60 : theTimeStepInMinutes; // ei yli 60 minuutin sï¿½ï¿½tï¿½ï¿½ lopullisen timebagin aikoihin
 
         NFmiMetTime newStartTime = theStartTime;
         newStartTime.SetTimeStep(timebagAdjustmentTimeStepInMinutes);
@@ -200,18 +200,18 @@ namespace CtrlViewUtils
     }
 
     // Jos annettu positiivinen arvo thelongerProducerNameMaxCharCount -parametrille, 
-    // tällöin haetaan pitempää nimeä tuottajalta ja lopuksi se leikataan haluttuun maksimi pituuteen.
+    // tï¿½llï¿½in haetaan pitempï¿½ï¿½ nimeï¿½ tuottajalta ja lopuksi se leikataan haluttuun maksimi pituuteen.
     std::string GetProducerName(NFmiProducerSystem &theProducerSystem, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, bool fAddProdId, size_t theLongerProducerNameMaxCharCount)
     {
         bool betaProductCase = theLongerProducerNameMaxCharCount > 0;
-        std::string prodNameStr = "X?"; // asetetaan aluksi nimeksi tuntematon tuottaja nimi, laitetaan siihen sitten myöhemmin parempaa, jos löytyy
+        std::string prodNameStr = "X?"; // asetetaan aluksi nimeksi tuntematon tuottaja nimi, laitetaan siihen sitten myï¿½hemmin parempaa, jos lï¿½ytyy
                                         // etsi mallin nimi
         unsigned int modelIndex = theProducerSystem.FindProducerInfo(*(theDrawParam->Param().GetProducer()));
         if(modelIndex > 0)
             prodNameStr = betaProductCase ? theProducerSystem.Producer(modelIndex).Name() : theProducerSystem.Producer(modelIndex).UltraShortName();
         else
         {
-            // on tapauksia, missä drawParamissa ei ole oikeaa tuottajaa (esim. synop-plot), tällöin katsotaan löytyykö löydetyn infon avulla tuottaja nimeä
+            // on tapauksia, missï¿½ drawParamissa ei ole oikeaa tuottajaa (esim. synop-plot), tï¿½llï¿½in katsotaan lï¿½ytyykï¿½ lï¿½ydetyn infon avulla tuottaja nimeï¿½
             if(theInfo)
             {
                 unsigned int modelIndex2 = theProducerSystem.FindProducerInfo(*(theInfo->Producer()));
@@ -224,7 +224,7 @@ namespace CtrlViewUtils
             prodNameStr += GetIdString(theInfo->Producer()->GetIdent());
 
         if(betaProductCase && theLongerProducerNameMaxCharCount < prodNameStr.size())
-            prodNameStr.resize(theLongerProducerNameMaxCharCount); // leikataan nimeä jos tarvis
+            prodNameStr.resize(theLongerProducerNameMaxCharCount); // leikataan nimeï¿½ jos tarvis
 
         return prodNameStr;
     }
@@ -251,7 +251,7 @@ namespace CtrlViewUtils
         boost::shared_ptr<NFmiFastQueryInfo> info = possibleInfo ? possibleInfo : ctrlViewDocumentInterface->InfoOrganizer()->Info(theDrawParam, fCrossSectionInfoWanted, true);
         if(doNewDataHighlight && IsConsideredAsNewData(info, theDrawParam->ModelRunIndex(), isMacroParamCase))
         {
-            // Korostetaan uudet datat jollain merkillä
+            // Korostetaan uudet datat jollain merkillï¿½
             str += ParameterStringHighlightCharacter;
         }
 
@@ -267,7 +267,7 @@ namespace CtrlViewUtils
                     if(theDrawParam->ModelRunIndex() != 0)
                         str += NFmiStringTools::Convert<int>(theDrawParam->ModelRunIndex());
                     else
-                        str += "?"; // katsotaan myöhemmin miten absoluutti aika laitetaan
+                        str += "?"; // katsotaan myï¿½hemmin miten absoluutti aika laitetaan
                     str += "]";
                 }
                 else
@@ -281,7 +281,7 @@ namespace CtrlViewUtils
                 }
 
                 if(fTimeSerialViewCase && theDrawParam->TimeSerialModelRunCount() > 0)
-                { // laitetaan multimodelrun merkit näkyviin
+                { // laitetaan multimodelrun merkit nï¿½kyviin
                     str += " (";
                     str += NFmiStringTools::Convert<int>(theDrawParam->TimeSerialModelRunCount());
                     str += "x)";
@@ -289,7 +289,7 @@ namespace CtrlViewUtils
 
                 str += " ";
             }
-            else // jos infoa ei löytynyt, laitetaan merkit mahdollisen tuottaja nimen ympärille sen merkiksi
+            else // jos infoa ei lï¿½ytynyt, laitetaan merkit mahdollisen tuottaja nimen ympï¿½rille sen merkiksi
             {
                 str += "#";
                 str += GetProducerName(ctrlViewDocumentInterface->ProducerSystem(), theDrawParam, info, fAddIdInfos, theLongerProducerNameMaxCharCount);
@@ -297,7 +297,7 @@ namespace CtrlViewUtils
             }
         }
         else if(dataType == NFmiInfoData::kSingleStationRadarData && info)
-        { // tähän laitetaan toistaiseksi tuottaja suoraan infon parametrista
+        { // tï¿½hï¿½n laitetaan toistaiseksi tuottaja suoraan infon parametrista
             NFmiProducer *prod = info->Producer();
             if(prod)
             {
@@ -331,7 +331,7 @@ namespace CtrlViewUtils
         bool makeNameErrorMarks = isMacroParamCase ? !ctrlViewDocumentInterface->IsMacroParamOk(theDrawParam) : false;
 
         if(dataType == NFmiInfoData::kCopyOfEdited)
-        {str += "(c)"; }// kopioidut parametrit merkitään (c):llä
+        {str += "(c)"; }// kopioidut parametrit merkitï¿½ï¿½n (c):llï¿½
 
         if(makeNameErrorMarks)
         {str += "#"; }
@@ -343,18 +343,18 @@ namespace CtrlViewUtils
 
         if(fCrossSectionInfoWanted == false && info && info->SizeLevels() > 1)
         { 
-            // muualla kuin poikkileikkauksissa halutaan level infoa, jos datassa on enemmän kuin 1 leveli
+            // muualla kuin poikkileikkauksissa halutaan level infoa, jos datassa on enemmï¿½n kuin 1 leveli
             if(dataType == NFmiInfoData::kHybridData || theDrawParam->Level().LevelType() == kFmiHybridLevel)
-            { // laitetaan hybrid datalle parametrin perään viel "xx", missä xx on hybrid levelin numero
+            { // laitetaan hybrid datalle parametrin perï¿½ï¿½n viel "xx", missï¿½ xx on hybrid levelin numero
                 str += "_L" + NFmiStringTools::Convert(theDrawParam->Level().LevelValue());
             }
             else if(theDrawParam->Level().LevelType() == kFmiHeight)
-            { // laitetaan hybrid datalle parametrin perään viel "xx", missä xx on hybrid levelin numero
+            { // laitetaan hybrid datalle parametrin perï¿½ï¿½n viel "xx", missï¿½ xx on hybrid levelin numero
                 str += "_" + NFmiStringTools::Convert(theDrawParam->Level().LevelValue()) + "m";
             }
             else if(theDrawParam->Level().LevelType() == kFmiPressureLevel || theDrawParam->Level().LevelType() == kFmiSoundingLevel)
-            { // laitetaan painepinta datalle parametrin perään viel "xxx", missä xxx on painepinta levelin arvo tarvittavien etu nollien kera
-              // tehdään se myös kFmiSpSoundingPlot eli sounding plot paramille
+            { // laitetaan painepinta datalle parametrin perï¿½ï¿½n viel "xxx", missï¿½ xxx on painepinta levelin arvo tarvittavien etu nollien kera
+              // tehdï¿½ï¿½n se myï¿½s kFmiSpSoundingPlot eli sounding plot paramille
                 std::string levStr;
                 levStr += "_";
                 if(theDrawParam->Level().LevelValue() < 10)
@@ -488,7 +488,7 @@ namespace CtrlViewUtils
         std::stringstream in(str);
         double x = 0;
         double y = 0;
-        char ch = 0; // pilkku pitää lukea välistä
+        char ch = 0; // pilkku pitï¿½ï¿½ lukea vï¿½listï¿½
         in >> x >> ch >> y;
         return NFmiPoint(x, y);
     }
@@ -731,9 +731,9 @@ namespace CtrlViewUtils
         if(possibleTooltipErrorTextOut)
             *possibleTooltipErrorTextOut = errorText;
 
-        // talletetaan virheteksti aikaleimalla, että käyttäjä voi tarkastella sitä sitten smarttool dialogissa
+        // talletetaan virheteksti aikaleimalla, ettï¿½ kï¿½yttï¿½jï¿½ voi tarkastella sitï¿½ sitten smarttool dialogissa
         NFmiTime aTime;
-        std::string timeString = aTime.ToStr("YYYY.MM.DD HH:mm:SS\n");
+        std::string timeString = aTime.ToStr("YYYY.MM.DD HH:mm:SS\n").CharPtr();
         auto dialogErrorString = timeString + errorText;
         ctrlViewDocumentInterface.SetLatestMacroParamErrorText(dialogErrorString);
         ctrlViewDocumentInterface.SetMacroErrorText(dialogErrorString, triggerDrawParam);
@@ -822,7 +822,7 @@ namespace CtrlViewUtils
         }
     }
 
-    // Huom! std::filesystem::path::extension metodi palauttaa myös pisteen eli jos
+    // Huom! std::filesystem::path::extension metodi palauttaa myï¿½s pisteen eli jos
     // filePath:in arvo oli "c:\polku\filename.txt" palautetaan arvo ".txt"
     std::string GetFileExtension(const std::string& filePath)
     {
@@ -871,16 +871,16 @@ namespace CtrlViewUtils
                     }
                     catch(...)
                     {
-                        // Ei tehdä mitään, estetään vain loopin lopetus.
-                        // Esim. kun yritetään deletoida vanhaa, mutta Smartmetin käytössä (= ei voi deletoida) olevaa tiedostoa, lentää poikkeus ja se on ihan ok
+                        // Ei tehdï¿½ mitï¿½ï¿½n, estetï¿½ï¿½n vain loopin lopetus.
+                        // Esim. kun yritetï¿½ï¿½n deletoida vanhaa, mutta Smartmetin kï¿½ytï¿½ssï¿½ (= ei voi deletoida) olevaa tiedostoa, lentï¿½ï¿½ poikkeus ja se on ihan ok
                     }
                 }
             }
         }
         catch(...) 
         {
-            // Ei tehdä mitään, estetään vain funktiosta ulostulo poikkeuksella.
-            // Esim. kun yritetään puhdistaa hakemistoa, jota ei ole, tällöin lentää poikkeus ja se on ihan ok
+            // Ei tehdï¿½ mitï¿½ï¿½n, estetï¿½ï¿½n vain funktiosta ulostulo poikkeuksella.
+            // Esim. kun yritetï¿½ï¿½n puhdistaa hakemistoa, jota ei ole, tï¿½llï¿½in lentï¿½ï¿½ poikkeus ja se on ihan ok
         }
     }
 

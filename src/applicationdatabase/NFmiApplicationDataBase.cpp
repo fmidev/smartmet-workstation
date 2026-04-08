@@ -9,9 +9,11 @@
 #include "md5.h"
 #include "NFmiString.h"
 #include "NFmiFileString.h"
+#ifndef UNIX
 #include "Monitors.h"
 #include "MultiMonitor.h"
 #include "Psapi.h"
+#endif // UNIX
 #include "NFmiInfoOrganizer.h"
 #include "NFmiQ2Client.h"
 #include "NFmiValueString.h"
@@ -20,12 +22,18 @@
 #include "NFmiMetTime.h"
 #include <thread>
 
+#ifndef UNIX
 #pragma comment(lib, "psapi.lib")
 #pragma comment(lib, "version.lib")
+#endif // UNIX
 
 NFmiApplicationDataBase::NFmiApplicationDataBase(void)
+#ifndef UNIX
 :guid()
 ,checksum()
+#else
+:checksum()
+#endif // UNIX
 ,itsAction(kStart)
 ,action()
 ,appname()
@@ -97,6 +105,7 @@ void NFmiApplicationDataBase::StoreToSettings(void) const
 		throw std::runtime_error("Error in NFmiApplicationDataBase::StoreToSettings, unable to store setting.");
 }
 
+#ifndef UNIX
 static std::string MakeGuidStr(const GUID &guid)
 {
     CString guidStrU_;
@@ -104,26 +113,27 @@ static std::string MakeGuidStr(const GUID &guid)
     std::string resultStr = CT2A(guidStrU_);
 	return resultStr;
 }
+#endif // UNIX
 
 static std::string MakeDecimalNumberStr(float theValue, int maxDecimals)
 {
 	return std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(theValue, maxDecimals));
 }
 
-// HUOM! muutos pitää tehdä -> utf8 -> urlencode -järjestyksessä.
+// HUOM! muutos pitï¿½ï¿½ tehdï¿½ -> utf8 -> urlencode -jï¿½rjestyksessï¿½.
 static std::string FixStringWithUtf8AndUrlEncode(const std::string &theString)
 {
-	std::string str = fromLocaleStringToUtf8(theString); // ensin muutetaan mahdolliset ääkköset ja muut utf8:ksi
-	str = NFmiStringTools::UrlEncode(str); // tässä voisi olla spaceja ja muita vastaavia, siksi pitää varmuuden vuoksi encodata
+	std::string str = fromLocaleStringToUtf8(theString); // ensin muutetaan mahdolliset ï¿½ï¿½kkï¿½set ja muut utf8:ksi
+	str = NFmiStringTools::UrlEncode(str); // tï¿½ssï¿½ voisi olla spaceja ja muita vastaavia, siksi pitï¿½ï¿½ varmuuden vuoksi encodata
 	return str;
 }
 
-// Jos tekstissä on vahingossa \u tai \U ilman XXXX- tai XXXXXXXX- osiota, pitää niitä muuttaa, muuten
+// Jos tekstissï¿½ on vahingossa \u tai \U ilman XXXX- tai XXXXXXXX- osiota, pitï¿½ï¿½ niitï¿½ muuttaa, muuten
 // tulee ongelmia unicode tulkintojen kanssa.
-// Nyt tuli ongelmia Turun siitepöly editointi konffien kanssa, koska siinä oli control-polku seuraava:
+// Nyt tuli ongelmia Turun siitepï¿½ly editointi konffien kanssa, koska siinï¿½ oli control-polku seuraava:
 // -p \smartmet\smartcloud\UTU\control
-// eli tuossa tuo \UTU... aiheutti ongelman vastaanotto päässä.
-// Teen korjauksen niin että muutan '\U'- ja '\u' -merkit '/U' tai '/u' :ksi
+// eli tuossa tuo \UTU... aiheutti ongelman vastaanotto pï¿½ï¿½ssï¿½.
+// Teen korjauksen niin ettï¿½ muutan '\U'- ja '\u' -merkit '/U' tai '/u' :ksi
 static std::string QuickFixPossibleUnicodeMixupWithPathStrings(const std::string &theString)
 {
     std::string modifiedStr = theString;
@@ -131,7 +141,7 @@ static std::string QuickFixPossibleUnicodeMixupWithPathStrings(const std::string
     return NFmiStringTools::ReplaceAll(modifiedStr, "\\U", "/U");
 }
 
-// HUOM! url-stringiä ei saa urlencodata lopuksi kerralla, eli eri kentät pitää urlencodata erikseen.
+// HUOM! url-stringiï¿½ ei saa urlencodata lopuksi kerralla, eli eri kentï¿½t pitï¿½ï¿½ urlencodata erikseen.
 std::string NFmiApplicationDataBase::MakeUrlParamString(void)
 {
 	std::string resultStr;
@@ -154,7 +164,7 @@ std::string NFmiApplicationDataBase::MakeUrlParamString(void)
 	if(appname.empty() == false)
 	{
 		resultStr += "&appname=";
-		appname = ::FixStringWithUtf8AndUrlEncode(appname); // tässä voisi olla spaceja, siksi pitää varmuuden vuoksi encodata
+		appname = ::FixStringWithUtf8AndUrlEncode(appname); // tï¿½ssï¿½ voisi olla spaceja, siksi pitï¿½ï¿½ varmuuden vuoksi encodata
 		resultStr += appname;
 	}
 
@@ -167,8 +177,8 @@ std::string NFmiApplicationDataBase::MakeUrlParamString(void)
 	if(confname.empty() == false)
 	{
 		resultStr += "&confname=";
-        confname = ::QuickFixPossibleUnicodeMixupWithPathStrings(confname); // pitää tehdä ennen url-encodea
-		confname = ::FixStringWithUtf8AndUrlEncode(confname); // tässä voisi olla spaceja, siksi pitää varmuuden vuoksi encodata
+        confname = ::QuickFixPossibleUnicodeMixupWithPathStrings(confname); // pitï¿½ï¿½ tehdï¿½ ennen url-encodea
+		confname = ::FixStringWithUtf8AndUrlEncode(confname); // tï¿½ssï¿½ voisi olla spaceja, siksi pitï¿½ï¿½ varmuuden vuoksi encodata
 		resultStr += confname;
 	}
 
@@ -187,9 +197,9 @@ std::string NFmiApplicationDataBase::MakeUrlParamString(void)
 	if(apppath.empty() == false)
 	{
 		resultStr += "&apppath=";
-		NFmiStringTools::TrimR(apppath, '\\'); // pitää ottaa mahdollinen viimeinen \-merkki pois, koska se sotkee vastaanotto puolen
-        apppath = ::QuickFixPossibleUnicodeMixupWithPathStrings(apppath); // pitää tehdä ennen url-encodea
-		apppath = ::FixStringWithUtf8AndUrlEncode(apppath); // tässä voisi olla spaceja, siksi pitää varmuuden vuoksi encodata
+		NFmiStringTools::TrimR(apppath, '\\'); // pitï¿½ï¿½ ottaa mahdollinen viimeinen \-merkki pois, koska se sotkee vastaanotto puolen
+        apppath = ::QuickFixPossibleUnicodeMixupWithPathStrings(apppath); // pitï¿½ï¿½ tehdï¿½ ennen url-encodea
+		apppath = ::FixStringWithUtf8AndUrlEncode(apppath); // tï¿½ssï¿½ voisi olla spaceja, siksi pitï¿½ï¿½ varmuuden vuoksi encodata
 		resultStr += apppath;
 	}
 
@@ -226,14 +236,14 @@ std::string NFmiApplicationDataBase::MakeUrlParamString(void)
 	if(pcname.empty() == false)
 	{
 		resultStr += "&pcname=";
-		pcname = ::FixStringWithUtf8AndUrlEncode(pcname); // tässä voisi olla spaceja ja ääkkösiä, siksi pitää varmuuden vuoksi encodata
+		pcname = ::FixStringWithUtf8AndUrlEncode(pcname); // tï¿½ssï¿½ voisi olla spaceja ja ï¿½ï¿½kkï¿½siï¿½, siksi pitï¿½ï¿½ varmuuden vuoksi encodata
 		resultStr += pcname;
 	}
 
 	if(username.empty() == false)
 	{
 		resultStr += "&username=";
-		username = ::FixStringWithUtf8AndUrlEncode(username); // tässä voisi olla spaceja ja ääkkösiä, siksi pitää varmuuden vuoksi encodata
+		username = ::FixStringWithUtf8AndUrlEncode(username); // tï¿½ssï¿½ voisi olla spaceja ja ï¿½ï¿½kkï¿½siï¿½, siksi pitï¿½ï¿½ varmuuden vuoksi encodata
 		resultStr += username;
 	}
 
@@ -258,21 +268,21 @@ std::string NFmiApplicationDataBase::MakeUrlParamString(void)
 	if(sendtime.empty() == false)
 	{
 		resultStr += "&sendtime=";
-//		sendtime = ::FixStringWithUtf8AndUrlEncode(sendtime); // tässä voisi olla spaceja tai +-merkki, siksi pitää varmuuden vuoksi encodata
+//		sendtime = ::FixStringWithUtf8AndUrlEncode(sendtime); // tï¿½ssï¿½ voisi olla spaceja tai +-merkki, siksi pitï¿½ï¿½ varmuuden vuoksi encodata
 		resultStr += sendtime;
 	}
 
 	if(osname.empty() == false)
 	{
 		resultStr += "&osname=";
-		osname = ::FixStringWithUtf8AndUrlEncode(osname); // tässä voisi olla spaceja, siksi pitää varmuuden vuoksi encodata
+		osname = ::FixStringWithUtf8AndUrlEncode(osname); // tï¿½ssï¿½ voisi olla spaceja, siksi pitï¿½ï¿½ varmuuden vuoksi encodata
 		resultStr += osname;
 	}
 
 	if(osrevision.empty() == false)
 	{
 		resultStr += "&osrevision=";
-//		osrevision = ::FixStringWithUtf8AndUrlEncode(osrevision); // tässä voisi olla spaceja, siksi pitää varmuuden vuoksi encodata
+//		osrevision = ::FixStringWithUtf8AndUrlEncode(osrevision); // tï¿½ssï¿½ voisi olla spaceja, siksi pitï¿½ï¿½ varmuuden vuoksi encodata
         if(osrevision.size() > 10)
     		osrevision.resize(10); // toistaiseksi koko on rajattu 10 merkkiin
 		resultStr += osrevision;
@@ -281,7 +291,7 @@ std::string NFmiApplicationDataBase::MakeUrlParamString(void)
 	if(osspinfo.empty() == false)
 	{
 		resultStr += "&osspinfo=";
-		osspinfo = ::FixStringWithUtf8AndUrlEncode(osspinfo); // tässä voisi olla spaceja, siksi pitää varmuuden vuoksi encodata
+		osspinfo = ::FixStringWithUtf8AndUrlEncode(osspinfo); // tï¿½ssï¿½ voisi olla spaceja, siksi pitï¿½ï¿½ varmuuden vuoksi encodata
 		resultStr += osspinfo;
 	}
 
@@ -390,7 +400,7 @@ std::string NFmiApplicationDataBase::MakeUrlParamString(void)
 	if(gcname.empty() == false)
 	{
 		resultStr += "&gcname=";
-		gcname = ::FixStringWithUtf8AndUrlEncode(gcname); // tässä voisi olla spaceja, siksi pitää varmuuden vuoksi encodata
+		gcname = ::FixStringWithUtf8AndUrlEncode(gcname); // tï¿½ssï¿½ voisi olla spaceja, siksi pitï¿½ï¿½ varmuuden vuoksi encodata
 		resultStr += gcname;
 	}
 
@@ -409,9 +419,10 @@ std::string NFmiApplicationDataBase::MakeUrlParamString(void)
 	return resultStr;
 }
 
-char gSmetStr[] = "smet-4391@%{?#52¤&!";
+char gSmetStr[] = "smet-4391@%{?#52ï¿½&!";
 
 //give your application full path
+#ifndef UNIX
 static std::string GetFileVersionOfApplication(LPCTSTR theFileName)
 {
      DWORD dwDummy;
@@ -444,7 +455,9 @@ static std::string GetFileVersionOfApplication(LPCTSTR theFileName)
      }
      return "";
 }
+#endif // UNIX
 
+#ifndef UNIX
 static CString GetFullAppName(const CString &theExeNameU_)
 {
     CString fullNameU_ = theExeNameU_;
@@ -455,8 +468,10 @@ static CString GetFullAppName(const CString &theExeNameU_)
     fullPathU_.ReleaseBuffer(pathLen); // Note that ReleaseBuffer doesn't need a +1 for the null byte.
     return fullPathU_;
 }
+#endif // UNIX
 
-// tätä ei ole jostain syystä määritelty winkkarin headereissa
+// tï¿½tï¿½ ei ole jostain syystï¿½ mï¿½ï¿½ritelty winkkarin headereissa
+#ifndef UNIX
 #ifndef VER_SUITE_WH_SERVER
 #define VER_SUITE_WH_SERVER 0x00008000
 #endif
@@ -506,11 +521,13 @@ static std::string GetWindowsName(OSVERSIONINFOEX &osvi, SYSTEM_INFO &sys_info)
 
 	return winName;
 }
+#endif // UNIX
 
+#ifndef UNIX
 static std::string GetWindowsRevision(void)
 {
 	std::string revisionNumber;
-	// haetaan winkkarin revisio rekisteristä
+	// haetaan winkkarin revisio rekisteristï¿½
 	HKEY hKey = 0;
 	char buf[255] = {0};
 	DWORD dwType = 0;
@@ -519,20 +536,22 @@ static std::string GetWindowsRevision(void)
 	{
 		dwType = REG_SZ;
         if(::RegQueryValueEx(hKey, _TEXT("BuildLabEx"), 0, &dwType, (BYTE*)buf, &dwBufSize) == ERROR_SUCCESS)
-			revisionNumber = buf; // BuildLabEx:ista tulee hieman enemmän tavaraa, esim. omalla tyo koneellani Win7 tulee seuraava arvo:
-									// "7600.16695.amd64fre.win7_gdr.101026-1503", 
-									// missä 7600 on buil-number
+			revisionNumber = buf; // BuildLabEx:ista tulee hieman enemmï¿½n tavaraa, esim. omalla tyo koneellani Win7 tulee seuraava arvo:
+									// "7600.16695.amd64fre.win7_gdr.101026-1503",
+									// missï¿½ 7600 on buil-number
 									// 16695 on revision number
-									// sitten tulee ilmeisesti processori tietoa, käyttiksen nimeä ja muuta sälää....
+									// sitten tulee ilmeisesti processori tietoa, kï¿½yttiksen nimeï¿½ ja muuta sï¿½lï¿½ï¿½....
 		RegCloseKey(hKey);
 	}
 	return revisionNumber;
 }
+#endif // UNIX
 
+#ifndef UNIX
 static std::string GetGraphicsAdapterName(void)
 {
 	std::string graphicsAdapter;
-	// haetaan winkkarin rekisteristä
+	// haetaan winkkarin rekisteristï¿½
 	HKEY hKey = 0;
 	char buf[255] = {0};
 	DWORD dwType = 0;
@@ -546,14 +565,16 @@ static std::string GetGraphicsAdapterName(void)
 	}
 	return graphicsAdapter;
 }
+#endif // UNIX
 
 const double kMegaByte = 1024*1024;
 
+#ifndef UNIX
 static float GetGraphicsAdapterMemoryMB(void)
 {
 	float memMB = 0;
 	std::string memTotalStr;
-	// haetaan winkkarin rekisteristä
+	// haetaan winkkarin rekisteristï¿½
 	HKEY hKey = 0;
 	DWORD dwType = 0;
 	DWORD value = 0;
@@ -575,7 +596,9 @@ static float GetGraphicsAdapterMemoryMB(void)
 	}
 	return memMB;
 }
+#endif // UNIX
 
+#ifndef UNIX
 static std::string GetIPAddress(void)
 {
 	WSADATA WSAData;
@@ -605,7 +628,7 @@ static std::string GetIPAddress(void)
 	{
 		memcpy(&SocketAddress.sin_addr, pHost->h_addr_list[iCnt], pHost->h_length);
 		ipAddress = inet_ntoa(SocketAddress.sin_addr);
-		break; // otetaan vain ensimmäinen
+		break; // otetaan vain ensimmï¿½inen
 	}
 
 	// Cleanup
@@ -613,18 +636,20 @@ static std::string GetIPAddress(void)
 
 	return ipAddress;
 }
+#endif // UNIX
 
-// Otta seinäkello ajan sekunnin tarkkuudella ja tekee siitä halutun formaalin mukaisen stringin.
+// Otta seinï¿½kello ajan sekunnin tarkkuudella ja tekee siitï¿½ halutun formaalin mukaisen stringin.
 // Formaatti: YYYY-MM-DDThh:mm:ssTZD
 // Esim. 1997-07-16T19:20:30+01:00
+#ifndef UNIX
 static 	std::string GetCurrentTimeString(void)
 {
-	NFmiTime aTime; // otetaan seinäkello aika
-	NFmiTime utcTime = aTime.UTCTime(); // tässä häipyy sekunnit
+	NFmiTime aTime; // otetaan seinï¿½kello aika
+	NFmiTime utcTime = aTime.UTCTime(); // tï¿½ssï¿½ hï¿½ipyy sekunnit
 	std::string timeStr = utcTime.ToStr("YYYY-MM-DDTHH:mm:");
 	timeStr += aTime.ToStr("SS");
-	if(aTime.GetZoneDifferenceHour() < 0) // en tiedä voiko olla NFmiTime:n itsZoneDifferenceHour positiivinen, mutta varmuuden vuoksi tulee joko + tai -
-		timeStr += "%2B"; // huom! NFmiTime:ssa itsZoneDifferenceHour etu merkki on toisin päin kuin itse tekstiin halutaan eli -2:n tapauksessa pitää olla +02:00 teksti
+	if(aTime.GetZoneDifferenceHour() < 0) // en tiedï¿½ voiko olla NFmiTime:n itsZoneDifferenceHour positiivinen, mutta varmuuden vuoksi tulee joko + tai -
+		timeStr += "%2B"; // huom! NFmiTime:ssa itsZoneDifferenceHour etu merkki on toisin pï¿½in kuin itse tekstiin halutaan eli -2:n tapauksessa pitï¿½ï¿½ olla +02:00 teksti
 	else
 		timeStr += "-";
 	short absZoneValue = ::abs(aTime.GetZoneDifferenceHour());
@@ -637,16 +662,20 @@ static 	std::string GetCurrentTimeString(void)
 	{
 		timeStr += NFmiStringTools::Convert(absZoneValue);
 	}
-	timeStr += ":00"; // NFmi*Time -luokassa ei ole tietoa esim. puolen tunnin siirroista, mitä jossain on, siksi pitää laittaa vain 00
+	timeStr += ":00"; // NFmi*Time -luokassa ei ole tietoa esim. puolen tunnin siirroista, mitï¿½ jossain on, siksi pitï¿½ï¿½ laittaa vain 00
 
 	return timeStr;
 }
+#endif // UNIX
 
+#ifndef UNIX
 #pragma warning( push )
 #pragma warning( disable : 4996 )
+#endif // UNIX
 
-// En voinut käyttää CFmiGdiPlusHelpers::WStringToString -funktiota, koska
-// jostain syystä kyseisen headerin includointi tanne sekoittaa kääntäjän pahasti. Joten kopsasin funktion tähän.
+// En voinut kï¿½yttï¿½ï¿½ CFmiGdiPlusHelpers::WStringToString -funktiota, koska
+// jostain syystï¿½ kyseisen headerin includointi tanne sekoittaa kï¿½ï¿½ntï¿½jï¿½n pahasti. Joten kopsasin funktion tï¿½hï¿½n.
+#ifndef UNIX
 static std::string WStringToString(const std::wstring& s)
 {
 	std::locale loc;
@@ -655,10 +684,14 @@ static std::string WStringToString(const std::wstring& s)
 	std::use_facet<std::ctype<wchar_t> >(loc).narrow(&s[0], &s[0]+s.size(), '?', &ns[0]);
 	return ns;
 }
+#endif // UNIX
 
 // Undo the above warning disabling.
+#ifndef UNIX
 #pragma warning( pop )
+#endif // UNIX
 
+#ifndef UNIX
 static size_t GetAppMemoryUsage(void)
 {
 	DWORD currentProcessId = ::GetCurrentProcessId();
@@ -676,7 +709,9 @@ static size_t GetAppMemoryUsage(void)
 	CloseHandle( hProcess );
 	return memUsage;
 }
+#endif // UNIX
 
+#ifndef UNIX
 static float GetHardDriveFreSpaceMB(const std::string &theDrive)
 {
     CString cDriveU_ = CA2T(theDrive.c_str());
@@ -689,14 +724,16 @@ static float GetHardDriveFreSpaceMB(const std::string &theDrive)
 #ifdef _WIN64
 		memFreeMB = static_cast<float>(totalFreeBytes.QuadPart / kMegaByte);
 #else
-		double totMemMB = totalFreeBytes.HighPart * 4096.; // pitää kertoa oikeasti 2 potenssiin 32 / megabyte -> 4096
+		double totMemMB = totalFreeBytes.HighPart * 4096.; // pitï¿½ï¿½ kertoa oikeasti 2 potenssiin 32 / megabyte -> 4096
 		totMemMB += totalFreeBytes.LowPart / kMegaByte;
 		memFreeMB = static_cast<float>(totMemMB);
 #endif
 	}
 	return memFreeMB;
 }
+#endif // UNIX
 
+#ifndef UNIX
 std::string NFmiApplicationDataBase::GetProcessPathAndName(DWORD processID)
 {
     TCHAR szProcessPathName[MAX_PATH] = _TEXT("");
@@ -716,11 +753,13 @@ std::string NFmiApplicationDataBase::GetProcessPathAndName(DWORD processID)
 		}
 	}
 
-	CloseHandle(hProcess); // vapauta handle käytön jälkeen
+	CloseHandle(hProcess); // vapauta handle kï¿½ytï¿½n jï¿½lkeen
 
 	return name;
 }
+#endif // UNIX
 
+#ifndef UNIX
 int NFmiApplicationDataBase::CountProcessCount(const NFmiApplicationDataBase::AppSpyData &theAppData, std::string &theAppVersionsStrOut)
 {
 	std::string lowerCaseAppName = theAppData.first;
@@ -746,7 +785,7 @@ int NFmiApplicationDataBase::CountProcessCount(const NFmiApplicationDataBase::Ap
 				{
 					foundCounter++;
 					if(theAppData.second)
-					{ // tämän ohjelman versio numero halutaan theAppVersionsStrOut -stringiin lisättäväksi
+					{ // tï¿½mï¿½n ohjelman versio numero halutaan theAppVersionsStrOut -stringiin lisï¿½ttï¿½vï¿½ksi
 						if(theAppVersionsStrOut.empty() == false)
 							theAppVersionsStrOut += ";";
 						theAppVersionsStrOut += ::GetFileVersionOfApplication(CA2T(testedProcessNameStr.c_str()));
@@ -758,7 +797,14 @@ int NFmiApplicationDataBase::CountProcessCount(const NFmiApplicationDataBase::Ap
 
 	return foundCounter;
 }
+#else
+int NFmiApplicationDataBase::CountProcessCount(const NFmiApplicationDataBase::AppSpyData &theAppData, std::string &theAppVersionsStrOut)
+{
+	return 0;
+}
+#endif // UNIX
 
+#ifndef UNIX
 static std::string GetAppCountString(NFmiApplicationDataBase::AppSpyList &theAppSpyList, std::string &theAppVersionsStrOut)
 {
 	std::string resultStr;
@@ -774,22 +820,35 @@ static std::string GetAppCountString(NFmiApplicationDataBase::AppSpyList &theApp
 	}
 	return resultStr;
 }
+#endif // UNIX
 
 std::string NFmiApplicationDataBase::GetApplicationName(void)
 {
+#ifndef UNIX
 	return std::string(CT2A(AfxGetApp()->m_pszExeName));
+#else
+	return std::string();
+#endif // UNIX
 }
 
 std::string NFmiApplicationDataBase::GetFullApplicationName(void)
 {
+#ifndef UNIX
     CString appFullNameU_ = ::GetFullAppName(AfxGetApp()->m_pszExeName);
     std::string appFullNameStr = CT2A(appFullNameU_);
     return appFullNameStr;
+#else
+    return std::string();
+#endif // UNIX
 }
 
 std::string NFmiApplicationDataBase::GetFileVersionOfApplication(const std::string &theFullAppName)
 {
+#ifndef UNIX
 	return ::GetFileVersionOfApplication(CA2T(theFullAppName.c_str()));
+#else
+	return std::string();
+#endif // UNIX
 }
 
 const std::string& NFmiApplicationDataBase::GuidStr(void) const
@@ -797,9 +856,10 @@ const std::string& NFmiApplicationDataBase::GuidStr(void) const
     return guidstring;
 }
 
+#ifndef UNIX
 static std::string GetOsLangName()
 {
-	// Kokeillaan ensin C++ tapaa, joka on toiminut joskus aiemmin, mutta ei enää tietyillä systeemeillä (en tiedä johtuuko ongelma Windows vai Visual C++ versioista)
+	// Kokeillaan ensin C++ tapaa, joka on toiminut joskus aiemmin, mutta ei enï¿½ï¿½ tietyillï¿½ systeemeillï¿½ (en tiedï¿½ johtuuko ongelma Windows vai Visual C++ versioista)
 	std::locale loc("");
 	std::string oslang = loc.name();
 	if(oslang.empty())
@@ -811,18 +871,26 @@ static std::string GetOsLangName()
 	}
 
 	if(oslang.size() > 2)
-		oslang.resize(2); // vain kaksi ensimmäistä kirjainta kiinnostaa.... (fi, en, tms)
+		oslang.resize(2); // vain kaksi ensimmï¿½istï¿½ kirjainta kiinnostaa.... (fi, en, tms)
 	return oslang;
 }
+#else
+static std::string GetOsLangName()
+{
+	std::string oslang = std::locale("").name().substr(0, 2);
+	return oslang;
+}
+#endif // UNIX
 
-// Windows versionin haku systeemistä on ihan rikki, MicroSoft on ryssinyt pahasti sen kanssa:
-// 1. Joskus toiminut GetVersionEx((LPOSVERSIONINFO)&osvi); systeemi palauttaa nykyään vain versiota 6.2 eli Windows 8.0:aa.
-// 2. Windows rekisterissä on tieto versiosta Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\CurrentMajorVersionNumber ja CurrentMinorVersionNumber
-//   - Mutta jostain syystä niitä ei saa ulos normi kyselyillä, muita saman paikan arvoja saa kyllä ulos (esim. CurrentVersion saa ulos, mutta siinä on arvo 6.3)
-//   - Ongelma johtuu jotenkin WOW64 jutuista ja että niillä on omat rekisteri arvonsa ja nämä pitäisi ehkä hakea sieltä (WOW o nWindows on Windows ja siinä voidaan ajaa eri bittisiä windows ohjelmia eri bittisissä käyttiksissä)
-// 3. Tämä uuden GetWindowsVersion funktion jutut on haettu https://www.codeproject.com/Articles/5336372/Windows-Version-Detection
-//   - Siinä otetaan joku randomin näköinen muistiosoite talteen ja siitä nysvätään sopivilla siirtymillä major/minor/build numerot
-//   - Ainoa lohtu on että se toimii ainakin Windows 10:issä, muita koneita ei ole minulla käytössä
+// Windows versionin haku systeemistï¿½ on ihan rikki, MicroSoft on ryssinyt pahasti sen kanssa:
+// 1. Joskus toiminut GetVersionEx((LPOSVERSIONINFO)&osvi); systeemi palauttaa nykyï¿½ï¿½n vain versiota 6.2 eli Windows 8.0:aa.
+// 2. Windows rekisterissï¿½ on tieto versiosta Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\CurrentMajorVersionNumber ja CurrentMinorVersionNumber
+//   - Mutta jostain syystï¿½ niitï¿½ ei saa ulos normi kyselyillï¿½, muita saman paikan arvoja saa kyllï¿½ ulos (esim. CurrentVersion saa ulos, mutta siinï¿½ on arvo 6.3)
+//   - Ongelma johtuu jotenkin WOW64 jutuista ja ettï¿½ niillï¿½ on omat rekisteri arvonsa ja nï¿½mï¿½ pitï¿½isi ehkï¿½ hakea sieltï¿½ (WOW o nWindows on Windows ja siinï¿½ voidaan ajaa eri bittisiï¿½ windows ohjelmia eri bittisissï¿½ kï¿½yttiksissï¿½)
+// 3. Tï¿½mï¿½ uuden GetWindowsVersion funktion jutut on haettu https://www.codeproject.com/Articles/5336372/Windows-Version-Detection
+//   - Siinï¿½ otetaan joku randomin nï¿½kï¿½inen muistiosoite talteen ja siitï¿½ nysvï¿½tï¿½ï¿½n sopivilla siirtymillï¿½ major/minor/build numerot
+//   - Ainoa lohtu on ettï¿½ se toimii ainakin Windows 10:issï¿½, muita koneita ei ole minulla kï¿½ytï¿½ssï¿½
+#ifndef UNIX
 static std::string GetWindowsVersion()
 {
 	auto sharedUserData = (BYTE*)0x7FFE0000;
@@ -834,9 +902,16 @@ static std::string GetWindowsVersion()
 	osVersionStr += std::to_string(minorVersion);
 	return osVersionStr;
 }
+#else
+static std::string GetWindowsVersion()
+{
+	return "linux";
+}
+#endif // UNIX
 
 void NFmiApplicationDataBase::CollectSmartMetData(NFmiApplicationDataBase::Action theAction, FmiLanguage applicationLanguage, int applicationRunningTimeInSeconds, bool toolMasterAvailable, NFmiInfoOrganizer *infoOrganizer)
 {
+#ifndef UNIX
 	// guid
 	// action
 	itsAction = theAction;
@@ -880,7 +955,7 @@ void NFmiApplicationDataBase::CollectSmartMetData(NFmiApplicationDataBase::Actio
     else
         applang = "??";
 
-	// apppath (tämä on siis exe:n polku)
+	// apppath (tï¿½mï¿½ on siis exe:n polku)
 	NFmiFileString appPathAndName(appFullName);
 	NFmiString appPath = appPathAndName.Device();
 	appPath += appPathAndName.Path();
@@ -897,8 +972,8 @@ void NFmiApplicationDataBase::CollectSmartMetData(NFmiApplicationDataBase::Actio
         avstmstatus = "error";
 
 
-	// avsexpstatus  // AVS Express ei vielä käytössä
-	// avsexpversion // AVS Express ei vielä käytössä
+	// avsexpstatus  // AVS Express ei vielï¿½ kï¿½ytï¿½ssï¿½
+	// avsexpversion // AVS Express ei vielï¿½ kï¿½ytï¿½ssï¿½
 
 	// pcname
 	TCHAR buffer[256] = TEXT("");
@@ -917,7 +992,7 @@ void NFmiApplicationDataBase::CollectSmartMetData(NFmiApplicationDataBase::Actio
 	// ipaddress
 	ipaddress = GetIPAddress();
 	// pcuptime [s]
-	DWORD upTimeInMilliSeconds = ::GetTickCount(); // HUOM! tämä nollautuu aina 49.7 päivän kuluttua
+	DWORD upTimeInMilliSeconds = ::GetTickCount(); // HUOM! tï¿½mï¿½ nollautuu aina 49.7 pï¿½ivï¿½n kuluttua
 	pcuptime = upTimeInMilliSeconds/1000;
 
 	// sendtime [UTC + zone]
@@ -935,9 +1010,9 @@ void NFmiApplicationDataBase::CollectSmartMetData(NFmiApplicationDataBase::Actio
 	::GetVersionEx((LPOSVERSIONINFO)&osvi);
 
 	if(osvi.dwMajorVersion >= 6)
-	{  // käytetään tätä jos voidaan, tämä ei mene heti ympäri, kuten GetTickCount() menee 49.7 vrk:ssa, kun on 64-bittiä käytössä (liikkumavara on n. 0.5 mrd vuotta).
-		// HUOM! tätä voi kutsua Vistasta (6.0) ja WinServer2008:sta (6.0) alkaen
-		// HUOM! Tätä koko GetTickCount64 -funktiota ei voi käyttää ollenkaan, koska sitä ei löydy Kernel32.dll:stä esim. XP:ssä ja ohjelman suoritys tyssää heti käynnnistyessä, vaikka koko funktiota ei oikeasti käytettäisi
+	{  // kï¿½ytetï¿½ï¿½n tï¿½tï¿½ jos voidaan, tï¿½mï¿½ ei mene heti ympï¿½ri, kuten GetTickCount() menee 49.7 vrk:ssa, kun on 64-bittiï¿½ kï¿½ytï¿½ssï¿½ (liikkumavara on n. 0.5 mrd vuotta).
+		// HUOM! tï¿½tï¿½ voi kutsua Vistasta (6.0) ja WinServer2008:sta (6.0) alkaen
+		// HUOM! Tï¿½tï¿½ koko GetTickCount64 -funktiota ei voi kï¿½yttï¿½ï¿½ ollenkaan, koska sitï¿½ ei lï¿½ydy Kernel32.dll:stï¿½ esim. XP:ssï¿½ ja ohjelman suoritys tyssï¿½ï¿½ heti kï¿½ynnnistyessï¿½, vaikka koko funktiota ei oikeasti kï¿½ytettï¿½isi
 //		ULONGLONG upTimeInMilliSeconds64 = ::GetTickCount64();
 //		pcuptime = upTimeInMilliSeconds/1000;
 	}
@@ -947,7 +1022,7 @@ void NFmiApplicationDataBase::CollectSmartMetData(NFmiApplicationDataBase::Actio
 	// osrevision
 	osrevision = ::GetWindowsRevision();
 	// osspinfo
-	osspinfo = CT2A(osvi.szCSDVersion); // sisältää tekstin winkkarin viimeisestä asennetusta service packista (esim. "Service Pack 3" tai tyhjä, jos ei ole asennettu ensimmäistäkään)
+	osspinfo = CT2A(osvi.szCSDVersion); // sisï¿½ltï¿½ï¿½ tekstin winkkarin viimeisestï¿½ asennetusta service packista (esim. "Service Pack 3" tai tyhjï¿½, jos ei ole asennettu ensimmï¿½istï¿½kï¿½ï¿½n)
 	// oskernelversion
 	oskernelversion = ::GetWindowsVersion();
 	// osbits
@@ -1003,10 +1078,10 @@ void NFmiApplicationDataBase::CollectSmartMetData(NFmiApplicationDataBase::Actio
 	DWORD fileSystemFlags = 0;
 	if (GetVolumeInformation(_TEXT("C:\\"), volumeName, ARRAYSIZE(volumeName), &serialNumber, &maxComponentLen, &fileSystemFlags, fileSystemName, ARRAYSIZE(fileSystemName)))
 	{
-		int firstPart = serialNumber >> 16;  // otetaan 16 ylintä bittiä talteen
-		int secondPart = serialNumber & 65535; // otetaan 16 alinta bittiä talteen
+		int firstPart = serialNumber >> 16;  // otetaan 16 ylintï¿½ bittiï¿½ talteen
+		int secondPart = serialNumber & 65535; // otetaan 16 alinta bittiï¿½ talteen
         CString serialStrU_;
-        serialStrU_.Format(_TEXT("%X-%X"), firstPart, secondPart); // formaatti on 16 bittiä heksana ja viiva välissä (esim. 23B1-5DA2)
+        serialStrU_.Format(_TEXT("%X-%X"), firstPart, secondPart); // formaatti on 16 bittiï¿½ heksana ja viiva vï¿½lissï¿½ (esim. 23B1-5DA2)
         cdriveserial = CT2A(serialStrU_);
 	}
 	// cdrivefree [MB]
@@ -1018,14 +1093,14 @@ void NFmiApplicationDataBase::CollectSmartMetData(NFmiApplicationDataBase::Actio
 	// sysappmemusage [MB]
 	sysappmemusage =  static_cast<float>(::GetAppMemoryUsage() / kMegaByte);
 	// runappcount
-	AppSpyList appSpyList; // HUOM! kun tulee uusia tarkkailtavia ohjelmia, ne pitää laittaa listan alkuun!!!!!
-    appSpyList.push_back(std::make_pair(std::string("msiexec.exe"), false)); // tämä pitää laittaa 7. viimeissenä!
-    appSpyList.push_back(std::make_pair(std::string("wmiprvse.exe"), false)); // tämä pitää laittaa 6. viimeissenä!
-    appSpyList.push_back(std::make_pair(std::string("explorer.exe"), false)); // tämä pitää laittaa 5. viimeissenä!
-	appSpyList.push_back(std::make_pair(std::string("javaw.exe"), false)); // tämä pitää laittaa 4. viimeissenä! (Mirwa tai joku muu java ohjelma?!?!?)
-	appSpyList.push_back(std::make_pair(std::string("firefox.exe"), false)); // tämä pitää laittaa 3. viimeissenä!
-	appSpyList.push_back(std::make_pair(std::string("zeditmap2.exe"), true)); // tämä pitää laittaa toiseksi viimeissenä!
-	appSpyList.push_back(std::make_pair(std::string("SmartMet.exe"), true)); // tämä pitää laittaa viimeissenä!
+	AppSpyList appSpyList; // HUOM! kun tulee uusia tarkkailtavia ohjelmia, ne pitï¿½ï¿½ laittaa listan alkuun!!!!!
+    appSpyList.push_back(std::make_pair(std::string("msiexec.exe"), false)); // tï¿½mï¿½ pitï¿½ï¿½ laittaa 7. viimeissenï¿½!
+    appSpyList.push_back(std::make_pair(std::string("wmiprvse.exe"), false)); // tï¿½mï¿½ pitï¿½ï¿½ laittaa 6. viimeissenï¿½!
+    appSpyList.push_back(std::make_pair(std::string("explorer.exe"), false)); // tï¿½mï¿½ pitï¿½ï¿½ laittaa 5. viimeissenï¿½!
+	appSpyList.push_back(std::make_pair(std::string("javaw.exe"), false)); // tï¿½mï¿½ pitï¿½ï¿½ laittaa 4. viimeissenï¿½! (Mirwa tai joku muu java ohjelma?!?!?)
+	appSpyList.push_back(std::make_pair(std::string("firefox.exe"), false)); // tï¿½mï¿½ pitï¿½ï¿½ laittaa 3. viimeissenï¿½!
+	appSpyList.push_back(std::make_pair(std::string("zeditmap2.exe"), true)); // tï¿½mï¿½ pitï¿½ï¿½ laittaa toiseksi viimeissenï¿½!
+	appSpyList.push_back(std::make_pair(std::string("SmartMet.exe"), true)); // tï¿½mï¿½ pitï¿½ï¿½ laittaa viimeissenï¿½!
 	std::string runninAppVersions;
 	runappcount = ::GetAppCountString(appSpyList, runninAppVersions);
 	// runningversions
@@ -1033,25 +1108,30 @@ void NFmiApplicationDataBase::CollectSmartMetData(NFmiApplicationDataBase::Actio
 	// gcname
 	gcname = ::GetGraphicsAdapterName();
 	// gcdriverversion
-	// TÄHÄN kohtaan en löytänyt nyt keinoa saada yksiselitteisesti arvoa, en rekisteristä, enkä win32 API:sta
+	// Tï¿½Hï¿½N kohtaan en lï¿½ytï¿½nyt nyt keinoa saada yksiselitteisesti arvoa, en rekisteristï¿½, enkï¿½ win32 API:sta
 
 	// gcmemory [MB]
 	gcmemory = ::GetGraphicsAdapterMemoryMB();
 
+#endif // UNIX
 }
 
 float NFmiApplicationDataBase::GetApplicationHardDriveFreeSpaceInMB(void) const
 {
+#ifndef UNIX
 	std::string appFullName = NFmiApplicationDataBase::GetFullApplicationName();
 	NFmiFileString appPathAndName(appFullName);
-	std::string appDrive = appPathAndName.Device();
+	std::string appDrive = appPathAndName.Device().CharPtr();
 	appDrive += "\\";
 	float appDriveFreeInMB = ::GetHardDriveFreSpaceMB(appDrive);
     return appDriveFreeInMB;
+#else
+    return 0.f;
+#endif // UNIX
 }
 
-// HUOM! tahallaan kopio, koska dataa voidaan lähettää teoriassa kahta samaan aikaan 
-// (esim. jos käynnistää ja sammuttaa editorin muutaman sekunnin sisällä).
+// HUOM! tahallaan kopio, koska dataa voidaan lï¿½hettï¿½ï¿½ teoriassa kahta samaan aikaan 
+// (esim. jos kï¿½ynnistï¿½ï¿½ ja sammuttaa editorin muutaman sekunnin sisï¿½llï¿½).
 bool NFmiApplicationDataBase::SendSmartMetDataToDB(NFmiApplicationDataBase theData, std::string &theResponceStr) 
 {
 	theResponceStr = "";
@@ -1062,7 +1142,7 @@ bool NFmiApplicationDataBase::SendSmartMetDataToDB(NFmiApplicationDataBase theDa
 	std::string responseStr;
 	try
 	{
-		httpClient.MakeHTTPRequest(totalUrlStr, responseStr, false); // false tarkoittaa että tehdään http-POST
+		httpClient.MakeHTTPRequest(totalUrlStr, responseStr, false); // false tarkoittaa ettï¿½ tehdï¿½ï¿½n http-POST
 		if(responseStr.empty() == false)
 		{
 			std::string lowerCaseResponseStr = responseStr;

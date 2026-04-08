@@ -1,8 +1,6 @@
 #ifndef UNIX
 #include "stdafx.h"
-#endif // UNIX
 #include "NFmiCountryBorderBitmapCache.h"
-
 #include <gdiplus.h>
 
 
@@ -19,7 +17,7 @@ NFmiCountryBorderBitmapCache& NFmiCountryBorderBitmapCache::operator=(const NFmi
 {
     if(this != &other)
     {
-        // cachea ei saa kopioida, se pitää vain tyhjentää
+        // cachea ei saa kopioida, se pitï¿½ï¿½ vain tyhjentï¿½ï¿½
         bitmapCacheMap_.clear();
     }
     return *this;
@@ -38,7 +36,7 @@ Gdiplus::Bitmap* NFmiCountryBorderBitmapCache::getCacheBitmap(const std::string&
 
 void NFmiCountryBorderBitmapCache::insertCacheBitmap(const std::string& keyString, std::unique_ptr<Gdiplus::Bitmap>&& cacheBitmap)
 {
-    // Joko lisää uudella avaimella bitmapin tai sitten korvaa jo talletetulla avaimella olevan bitmapin tällä.
+    // Joko lisï¿½ï¿½ uudella avaimella bitmapin tai sitten korvaa jo talletetulla avaimella olevan bitmapin tï¿½llï¿½.
     bitmapCacheMap_[keyString] = std::move(cacheBitmap);
 }
 
@@ -47,9 +45,9 @@ void NFmiCountryBorderBitmapCache::clearCache()
     bitmapCacheMap_.clear();
 }
 
-// Säädettävä cachen likaus funktio: 
-// 1. Jos newState = Geometry, kaikki cachet menee sileäksi.
-// 2. Jos cosmetic, pitää keyString pointterissa olla jokin arvo, ja sillä avaimella oleva kuva pyyhitään pois.
+// Sï¿½ï¿½dettï¿½vï¿½ cachen likaus funktio:
+// 1. Jos newState = Geometry, kaikki cachet menee sileï¿½ksi.
+// 2. Jos cosmetic, pitï¿½ï¿½ keyString pointterissa olla jokin arvo, ja sillï¿½ avaimella oleva kuva pyyhitï¿½ï¿½n pois.
 void NFmiCountryBorderBitmapCache::setBorderDrawDirtyState(CountryBorderDrawDirtyState newState, const std::string& keyString)
 {
     if(newState == CountryBorderDrawDirtyState::Geometry)
@@ -59,3 +57,7 @@ void NFmiCountryBorderBitmapCache::setBorderDrawDirtyState(CountryBorderDrawDirt
         bitmapCacheMap_.erase(keyString);
     }
 }
+#else
+// On Linux, NFmiCountryBorderBitmapCache is not compiled (class is #ifndef UNIX guarded in header)
+#include "NFmiCountryBorderBitmapCache.h"
+#endif

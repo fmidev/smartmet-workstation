@@ -1,7 +1,9 @@
 #include "NFmiCombinedMapHandler.h"
 #include "NFmiMapViewDescTop.h"
 #include "WmsSupportInterface.h"
+#ifndef UNIX
 #include "NFmiApplicationWinRegistry.h"
+#endif
 #include "NFmiMapConfigurationSystem.h"
 #include "NFmiProjectionCurvatureInfo.h"
 #include "NFmiGeoShape.h"
@@ -34,14 +36,20 @@
 #include "NFmiMacroParamSystem.h"
 #include "NFmiMacroParamFolder.h"
 #include "NFmiMacroParam.h"
+#ifndef UNIX
 #include "FmiModifyDrawParamDlg.h"
+#endif
 #include "SmartMetDocumentInterface.h"
 #include "NFmiMacroPathSettings.h"
+#ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/WmsSupportState.h"
 #include "wmssupport/WmsClient.h"
 #include "wmssupport/Setup.h"
+#endif // DISABLE_CPPRESTSDK
 #include "CtrlViewTimeConsumptionReporter.h"
+#ifndef DISABLE_CPPRESTSDK
 #include "wmssupport/ChangedLayers.h"
+#endif // DISABLE_CPPRESTSDK
 #include "NFmiBasicSmartMetConfigurations.h"
 
 #ifndef DISABLE_CPPRESTSDK
@@ -59,26 +67,26 @@ static char THIS_FILE[] = __FILE__;
 
 namespace
 {
-	// Laitetaan tämä piiloon cpp tiedostoon, koska haluan tehdä Wms::WmsSupport -luokan objektin käyttöön tänne,
-	// missä on koko luokan kaikki metodit käytössä, mutta palauttaa WmsSupportInterface -pointterin ulkopuolelle.
-	// Lisäksi kaikki #ifndef DISABLE_CPPRESTSDK -jutut saa piiloon myös cpp:hen.
+	// Laitetaan tï¿½mï¿½ piiloon cpp tiedostoon, koska haluan tehdï¿½ Wms::WmsSupport -luokan objektin kï¿½yttï¿½ï¿½n tï¿½nne,
+	// missï¿½ on koko luokan kaikki metodit kï¿½ytï¿½ssï¿½, mutta palauttaa WmsSupportInterface -pointterin ulkopuolelle.
+	// Lisï¿½ksi kaikki #ifndef DISABLE_CPPRESTSDK -jutut saa piiloon myï¿½s cpp:hen.
 #ifndef DISABLE_CPPRESTSDK
-	// Tähän wmsSupport_:iin laitetaan kulloinkin käytössä oleva WmsSupport olio.
-	// Koska on huomattu että esim. Beta-tuotteiden luonnissa jos käytetään paljon wms dataa, on wms osio mennyt rikki 2-3 vuorokauden kuluttua.
-	// Nyt on siis tarkoitus että WmsSupport olio vaihdetaan määräajoin. Tämä vaihto pitää tehdä niin että vaikka
-	// 12 tunnin välein MainFramen timer käynnistää vaihto operaation, jolloin tapahtuu seuraavaa:
+	// Tï¿½hï¿½n wmsSupport_:iin laitetaan kulloinkin kï¿½ytï¿½ssï¿½ oleva WmsSupport olio.
+	// Koska on huomattu ettï¿½ esim. Beta-tuotteiden luonnissa jos kï¿½ytetï¿½ï¿½n paljon wms dataa, on wms osio mennyt rikki 2-3 vuorokauden kuluttua.
+	// Nyt on siis tarkoitus ettï¿½ WmsSupport olio vaihdetaan mï¿½ï¿½rï¿½ajoin. Tï¿½mï¿½ vaihto pitï¿½ï¿½ tehdï¿½ niin ettï¿½ vaikka
+	// 12 tunnin vï¿½lein MainFramen timer kï¿½ynnistï¿½ï¿½ vaihto operaation, jolloin tapahtuu seuraavaa:
 	// 1) Luodaan uusi WmsSupport olio tmpWmsSupport_ muuttujalle
-	// 2) Mutex lukon turvissa vaihdetaan swap:illa wmsSupport_ ja tmpWmsSupport_ olioiden sisältö
-	// 3) Nyt tmpWmsSupport_ oliolle annetaan käsky tappaa itsensä
+	// 2) Mutex lukon turvissa vaihdetaan swap:illa wmsSupport_ ja tmpWmsSupport_ olioiden sisï¿½ltï¿½
+	// 3) Nyt tmpWmsSupport_ oliolle annetaan kï¿½sky tappaa itsensï¿½
 	// 4) Kun se on kuollut, nollataan tmpWmsSupport_ olio
-	// 5) Tähän soppaan luo omat hankaluutensa kun uutta WmsSupport oliota luodaan, tällöin pitää tarkastella onko vanhaa haluttu jo tappaa, jolloin uusi pitää myös laittaa tappamaan itsensä ja mitään vaihtoa ei enää tehdä.
+	// 5) Tï¿½hï¿½n soppaan luo omat hankaluutensa kun uutta WmsSupport oliota luodaan, tï¿½llï¿½in pitï¿½ï¿½ tarkastella onko vanhaa haluttu jo tappaa, jolloin uusi pitï¿½ï¿½ myï¿½s laittaa tappamaan itsensï¿½ ja mitï¿½ï¿½n vaihtoa ei enï¿½ï¿½ tehdï¿½.
 	std::shared_ptr<WmsSupportInterface> wmsSupport_;
-	// capabilityTree_ olion käyttö pitää suojata thread turvallisella lukolla.
+	// capabilityTree_ olion kï¿½yttï¿½ pitï¿½ï¿½ suojata thread turvallisella lukolla.
 	std::mutex wmsSupportMutex_;
-	// Koska WmsSupport olion tappaminen vaatii odottelua, pitää tehdä tälläinen tmp-oliolle oma kuolin paikka.
-	// Eli kun wmsSupport_ oli on vaihdettu tmpWmsSupport_ olioon, voidaan odotella että se tappaa itsensä ja se voidaan deletoida.
+	// Koska WmsSupport olion tappaminen vaatii odottelua, pitï¿½ï¿½ tehdï¿½ tï¿½llï¿½inen tmp-oliolle oma kuolin paikka.
+	// Eli kun wmsSupport_ oli on vaihdettu tmpWmsSupport_ olioon, voidaan odotella ettï¿½ se tappaa itsensï¿½ ja se voidaan deletoida.
 	std::shared_ptr<WmsSupportInterface> tmpWmsSupport_;
-	// Tämä atomic-flagin avulla estetään samanaikaisten renewal prosessien käynnistyksen
+	// Tï¿½mï¿½ atomic-flagin avulla estetï¿½ï¿½n samanaikaisten renewal prosessien kï¿½ynnistyksen
 	std::mutex isWmsSupportRenewalProcessRunningMutex_;
 #endif // DISABLE_CPPRESTSDK
 
@@ -139,13 +147,13 @@ namespace
 			throw std::runtime_error("Error in IsTotalWorld: zero-pointer given as parameter.");
 	}
 
-	// Tässä lasketaan tietynlaisille datoille 'minimi' näyttöjen likaus aikaväli.
-// Näitä datoja ovat mm. tutka, mesan analyysi(, laps datat?). Niiden pitää olla hila dataa.
-// Dataa, millä on yksiselitteiset valitimet, eli yksi havainto per aika.
-// Jos palautettavan timebagin resoluutio on 0, ei timebagia käytetä jatkossa.
+	// Tï¿½ssï¿½ lasketaan tietynlaisille datoille 'minimi' nï¿½yttï¿½jen likaus aikavï¿½li.
+// Nï¿½itï¿½ datoja ovat mm. tutka, mesan analyysi(, laps datat?). Niiden pitï¿½ï¿½ olla hila dataa.
+// Dataa, millï¿½ on yksiselitteiset valitimet, eli yksi havainto per aika.
+// Jos palautettavan timebagin resoluutio on 0, ei timebagia kï¿½ytetï¿½ jatkossa.
 	NFmiTimeBag getDirtyViewTimes(NFmiQueryData* queryData, NFmiInfoData::Type dataType, const NFmiTimeDescriptor& removedDatasTimes)
 	{
-		NFmiTimeBag times; // tässä menee resoluutio 0:ksi, toivottavasti kukaan ei muuta default konstruktorin käyttäytymistä.
+		NFmiTimeBag times; // tï¿½ssï¿½ menee resoluutio 0:ksi, toivottavasti kukaan ei muuta default konstruktorin kï¿½yttï¿½ytymistï¿½.
 		if(dataType == NFmiInfoData::kObservations || dataType == NFmiInfoData::kAnalyzeData)
 		{
 			if(queryData->Info()->Grid())
@@ -162,7 +170,7 @@ namespace
 						aTime.NextMetTime();
 					}
 					else if(step == 0)
-						step = 1; // asetetaan 0::sta poikkeava, muulla ei ole väliä
+						step = 1; // asetetaan 0::sta poikkeava, muulla ei ole vï¿½liï¿½
 					times = NFmiTimeBag(aTime, queryData->Info()->TimeDescriptor().LastTime(), step);
 				}
 			}
@@ -170,19 +178,19 @@ namespace
 		return times;
 	}
 
-	// HUOM! tämä ei läitä päivityksiä päälle Parameter-selection dialogille, se hoidetaan toista kautta
+	// HUOM! tï¿½mï¿½ ei lï¿½itï¿½ pï¿½ivityksiï¿½ pï¿½ï¿½lle Parameter-selection dialogille, se hoidetaan toista kautta
 	void setUpdatedViewIdMaskAfterDataLoaded(NFmiFastQueryInfo& fastInfo)
 	{
-		// Kaikkien datojen kanssa pitää päivittää varmuuden vuoksi karttanäytöt, aikasarja ja case-study
+		// Kaikkien datojen kanssa pitï¿½ï¿½ pï¿½ivittï¿½ï¿½ varmuuden vuoksi karttanï¿½ytï¿½t, aikasarja ja case-study
 		ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::TimeSerialView | SmartMetViewId::CaseStudyDlg);
 		if(fastInfo.SizeLevels() > 2)
 		{
-			// vertikaali datojen kanssa pitää päivittää myös luotaus, poikkileikkaus ja trajektori näytöt
+			// vertikaali datojen kanssa pitï¿½ï¿½ pï¿½ivittï¿½ï¿½ myï¿½s luotaus, poikkileikkaus ja trajektori nï¿½ytï¿½t
 			ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::SoundingView | SmartMetViewId::CrossSectionView | SmartMetViewId::TrajectoryView);
 		}
 		else if(fastInfo.SizeLevels() == 1)
 		{
-			// surface datojen kanssa pitää päivittää myös asema-data-taulukko, wind-table
+			// surface datojen kanssa pitï¿½ï¿½ pï¿½ivittï¿½ï¿½ myï¿½s asema-data-taulukko, wind-table
 			ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::StationDataTableView | SmartMetViewId::WindTableDlg);
 		}
 	}
@@ -228,8 +236,8 @@ namespace
 		}
 	}
 
-	// Synop-plot ja muut vastaavat ovat erikoistapauksia, koska sillä erikois param-id (kFmiSpSynoPlot, etc.), ja ne pitää tarkistaa erikseen.
-	// Palauttaa true, jos pitää tehdä päivityksiä näyttöriville.
+	// Synop-plot ja muut vastaavat ovat erikoistapauksia, koska sillï¿½ erikois param-id (kFmiSpSynoPlot, etc.), ja ne pitï¿½ï¿½ tarkistaa erikseen.
+	// Palauttaa true, jos pitï¿½ï¿½ tehdï¿½ pï¿½ivityksiï¿½ nï¿½yttï¿½riville.
 	bool checkAllSynopPlotTypeUpdates(unsigned int mapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam>& drawParam, NFmiProducer& newDataProducer, NFmiMapViewDescTop& descTop, int cacheRowNumber, const std::string& theFileName)
 	{
 		unsigned long parId = drawParam->Param().GetParamIdent();
@@ -257,9 +265,9 @@ namespace
 
 	bool makeNormalDataDrawingLayerCahceChecks(unsigned int mapViewDescTopIndex, NFmiFastQueryInfo& fastInfo, NFmiInfoData::Type dataType, const NFmiTimeBag& dirtyViewTimes, const std::string& fileName, boost::shared_ptr<NFmiDrawParam>& drawParam, NFmiProducer& dataProducer, NFmiMapViewDescTop& descTop, int cacheRowNumber)
 	{
-		const NFmiLevel* level = fastInfo.SizeLevels() <= 1 ? 0 : fastInfo.Level(); // ns. pinta datan kanssa ei välitetä leveleistä
+		const NFmiLevel* level = fastInfo.SizeLevels() <= 1 ? 0 : fastInfo.Level(); // ns. pinta datan kanssa ei vï¿½litetï¿½ leveleistï¿½
 		if(drawParam->DataType() == dataType && *drawParam->Param().GetProducer() == dataProducer && fastInfo.Param(drawParam->Param()) && (level == 0 || drawParam->Level().LevelType() == level->LevelType()))
-		{ // jos päivitetty data oli samaa tyyppiä ja sillä oli sama tuottaja kuin näytöllä olevalla drawParamilla, laitetaan rivin piirto uusiksi
+		{ // jos pï¿½ivitetty data oli samaa tyyppiï¿½ ja sillï¿½ oli sama tuottaja kuin nï¿½ytï¿½llï¿½ olevalla drawParamilla, laitetaan rivin piirto uusiksi
 			if(dirtyViewTimes.Resolution() == 0) // jos dirty-timebagia ei ole alustettu arvoilla, liataan koko rivi
 				descTop.MapViewCache().MakeRowDirty(cacheRowNumber);// clean cache row
 			else
@@ -283,10 +291,10 @@ namespace
 			limit1Out.ChangeByMinutes(-timeStepInMinutes);
 		limit2Out = currentTime;
 		if(currentTime > limit2Out)
-			limit2Out.NextMetTime(); // jos limit2 oli pyöristynyt taaksepäin, laitetaan se askel eteenpäin
+			limit2Out.NextMetTime(); // jos limit2 oli pyï¿½ristynyt taaksepï¿½in, laitetaan se askel eteenpï¿½in
 	}
 
-	// Liataan descTopin view-cachesta ne ajat uudesta timebagistä, mitä ei ole vanhassa timebagissa
+	// Liataan descTopin view-cachesta ne ajat uudesta timebagistï¿½, mitï¿½ ei ole vanhassa timebagissa
 	void makeNewTimesDirtyFromViewCache(NFmiMapViewDescTop& mapViewDescTop, NFmiTimeBag& oldAnimationTimes, NFmiTimeBag& newAnimationTimes)
 	{
 		for(newAnimationTimes.Reset(); newAnimationTimes.Next(); )
@@ -331,10 +339,10 @@ namespace
 			return false;
 	}
 
-	// etsi timedescriptorista viimeisin aika joka sopii annettuun aika-steppiin ja joka on lisäksi annettujen aikarajojen alueella.
-	// Jos ei löydy, palauttaa false.
-	// fDemandExactCheck muuttuja vaatii että aikojen pitää olla juuri tarkalleen aika stepissä. Mutta jos kyse on
-	// esim. salama datasta, haetaan se aika, joka sopii steppiin ja joka on myöhäisin aika.
+	// etsi timedescriptorista viimeisin aika joka sopii annettuun aika-steppiin ja joka on lisï¿½ksi annettujen aikarajojen alueella.
+	// Jos ei lï¿½ydy, palauttaa false.
+	// fDemandExactCheck muuttuja vaatii ettï¿½ aikojen pitï¿½ï¿½ olla juuri tarkalleen aika stepissï¿½. Mutta jos kyse on
+	// esim. salama datasta, haetaan se aika, joka sopii steppiin ja joka on myï¿½hï¿½isin aika.
 	bool getLatestValidTimeWithCorrectTimeStep(NFmiTimeDescriptor& checkedTimes, int timeStepInMinutes, bool demandExactCheck, const NFmiMetTime& limit1, const NFmiMetTime& limit2, NFmiMetTime& foundTimeOut)
 	{
 		checkedTimes.Time(checkedTimes.LastTime()); // asetetaan viimeiseen aikaan
@@ -344,9 +352,9 @@ namespace
 			aTime.SetTimeStep(timeStepInMinutes, true);
 			if(demandExactCheck)
 			{
-				if(aTime == checkedTimes.Time()) // kun vaaditaan tarkaa checkkiä, eihän aika muuttunut, kun sitä rukattiin halutulla timestepillä
+				if(aTime == checkedTimes.Time()) // kun vaaditaan tarkaa checkkiï¿½, eihï¿½n aika muuttunut, kun sitï¿½ rukattiin halutulla timestepillï¿½
 				{
-					if(aTime >= limit1 && aTime <= limit2) // onko aika annettujen rajojen sisällä
+					if(aTime >= limit1 && aTime <= limit2) // onko aika annettujen rajojen sisï¿½llï¿½
 					{
 						foundTimeOut = aTime;
 						return true;
@@ -356,7 +364,7 @@ namespace
 			else
 			{
 				if(checkedTimes.Time() < aTime)
-					aTime.NextMetTime(); // jos aika oli pyöristynyt taaksepäin, laitetaan se askeleen verran eteenpäin
+					aTime.NextMetTime(); // jos aika oli pyï¿½ristynyt taaksepï¿½in, laitetaan se askeleen verran eteenpï¿½in
 				if(aTime >= limit1 && aTime <= limit2)
 				{
 					foundTimeOut = aTime;
@@ -364,7 +372,7 @@ namespace
 				}
 			}
 			if(checkedTimes.Time() <= limit1)
-				break; // ei tarvetta jatkaa enää, koska loput ajoista ovat kaikki pienempiä kuin ala rajan aika
+				break; // ei tarvetta jatkaa enï¿½ï¿½, koska loput ajoista ovat kaikki pienempiï¿½ kuin ala rajan aika
 		} while(checkedTimes.Previous());
 		return false;
 	}
@@ -404,10 +412,12 @@ namespace
 		CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->SetCPCropGridSettings(newArea, mapViewDescTopIndex);
 	}
 
+#ifndef UNIX
 	NFmiApplicationWinRegistry& getApplicationWinRegistry()
 	{
 		return CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->ApplicationWinRegistry();
 	}
+#endif
 
 	NFmiCrossSectionSystem& getCrossSectionSystem()
 	{
@@ -464,14 +474,14 @@ namespace
 		auto dataType = menuItem.DataType();
 		if(NFmiDrawParam::IsMacroParamCase(dataType))
 		{
-			drawParam->ParameterAbbreviation(menuItem.MenuText()); // macroParamin tapauksessa pitää nimi asettaa tässä (tätä nimilyhennettä käytetään tunnisteenä myöhemmin!!)
+			drawParam->ParameterAbbreviation(menuItem.MenuText()); // macroParamin tapauksessa pitï¿½ï¿½ nimi asettaa tï¿½ssï¿½ (tï¿½tï¿½ nimilyhennettï¿½ kï¿½ytetï¿½ï¿½n tunnisteenï¿½ myï¿½hemmin!!)
 			boost::shared_ptr<NFmiMacroParam> usedMacroParam;
 			auto macroParamSystemPtr = ::getMacroParamSystem();
 			const auto& macroParamInitFile = menuItem.MacroParamInitName();
 			if(!macroParamInitFile.empty())
 			{
-				// Tämä on toivottu tapa alustaa, koska muuten saman nimiset 
-				// macroParamit eri hakemistoissa voivat aiheuttaa päällekkäisyyksiä
+				// Tï¿½mï¿½ on toivottu tapa alustaa, koska muuten saman nimiset 
+				// macroParamit eri hakemistoissa voivat aiheuttaa pï¿½ï¿½llekkï¿½isyyksiï¿½
 				usedMacroParam = macroParamSystemPtr->GetWantedMacro(macroParamInitFile);
 			}
 			else
@@ -485,8 +495,8 @@ namespace
 			if(usedMacroParam != 0 && usedMacroParam->ErrorInMacro() == false) 
 			{
 				drawParam->Init(usedMacroParam->DrawParam());
-				// Datatyyppi pitää ottaa lopuksi menuItemista, koska niitä on nyt jo 4 erilaista 
-				// ja usedMacroParam ei tiedä siitä mitään
+				// Datatyyppi pitï¿½ï¿½ ottaa lopuksi menuItemista, koska niitï¿½ on nyt jo 4 erilaista 
+				// ja usedMacroParam ei tiedï¿½ siitï¿½ mitï¿½ï¿½n
 				drawParam->DataType(dataType);
 			}
 		}
@@ -507,9 +517,9 @@ namespace
 	}
 
 	// jos on katsottu hirlma mallipinta dataa poikkileikkaus ikkunassa ja tuottaja vaihdetaan GFS:ksi,
-	// tällöin ei tule mitään näkyviin, koska GFS:llä ei ole hybridi dataa. Ja jos on katsottu painepintadataa
-	// ja vaihdetaan Arome tuottajaan, tällöin ei tule mitään näkyviin, koska ei ole kuin hybridi dataa.
-	// Tätä varten tämä funktio tekee vielä viimeiset tarkastelut, löytyykö dataa ja säätää datatyyppiä tarvittaessa.
+	// tï¿½llï¿½in ei tule mitï¿½ï¿½n nï¿½kyviin, koska GFS:llï¿½ ei ole hybridi dataa. Ja jos on katsottu painepintadataa
+	// ja vaihdetaan Arome tuottajaan, tï¿½llï¿½in ei tule mitï¿½ï¿½n nï¿½kyviin, koska ei ole kuin hybridi dataa.
+	// Tï¿½tï¿½ varten tï¿½mï¿½ funktio tekee vielï¿½ viimeiset tarkastelut, lï¿½ytyykï¿½ dataa ja sï¿½ï¿½tï¿½ï¿½ datatyyppiï¿½ tarvittaessa.
 	NFmiInfoData::Type checkCrossSectionLevelData(NFmiInfoData::Type dataType, const NFmiProducer& givenProducer)
 	{
 		NFmiInfoData::Type finalDataType = dataType;
@@ -525,7 +535,7 @@ namespace
 		return CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->EditedSmartInfo();
 	}
 
-	// Perus-oliolle (list-list) on jo varattu muistia, tässä alustetaan vain tyhjät listat kokonaislistaan.
+	// Perus-oliolle (list-list) on jo varattu muistia, tï¿½ssï¿½ alustetaan vain tyhjï¿½t listat kokonaislistaan.
 	std::unique_ptr<NFmiPtrList<NFmiDrawParamList>> createDrawParamListVector(int wantedSize)
 	{
 		std::unique_ptr<NFmiPtrList<NFmiDrawParamList>> drawParamListVector = std::make_unique<NFmiPtrList<NFmiDrawParamList>>();
@@ -546,7 +556,7 @@ namespace
 		}
 	}
 
-	// Muuta changedDrawParam:ia niin että muuten asetukset tulevat newDrawParamSettings:ista, paitsi muutamat erikseen asetettavat on otettava vanhasta.
+	// Muuta changedDrawParam:ia niin ettï¿½ muuten asetukset tulevat newDrawParamSettings:ista, paitsi muutamat erikseen asetettavat on otettava vanhasta.
 	void setUpChangedDrawParam(boost::shared_ptr<NFmiDrawParam>& changedDrawParam, boost::shared_ptr<NFmiDrawParam>& newDrawParamSettings)
 	{
 		// 1. Ota ensin tietyt asetukset vanhasta uuteen
@@ -600,8 +610,8 @@ namespace
 			::initializeWantedDrawParams((*iter.CurrentPtr()), drawParam, useWithViewMacros);
 	}
 
-	// Lokaali+wms karttojen yhdistelmä moodiin liittyvät valitut taustakarttaindeksit kaikille eri kartta-alueille (suomi,skandi,euro,maailma).
-	// Teksti on seuraavaa muotoa (tämä luokka ei tosin parseroi tai tee muuta kuin säilyttää stringin): 
+	// Lokaali+wms karttojen yhdistelmï¿½ moodiin liittyvï¿½t valitut taustakarttaindeksit kaikille eri kartta-alueille (suomi,skandi,euro,maailma).
+	// Teksti on seuraavaa muotoa (tï¿½mï¿½ luokka ei tosin parseroi tai tee muuta kuin sï¿½ilyttï¿½ï¿½ stringin): 
 	// mapAreaCount:area1Index,area1Index,area1Index,area1Index     (esim. 4:2,1,4,3)
 	std::vector<int> parseSelectedMapIndices(const std::string& indicesString)
 	{
@@ -647,6 +657,7 @@ namespace
 		return usedWmsLayerIndex;
 	}
 
+#ifndef DISABLE_CPPRESTSDK
 	std::string getWmsMapLayerGuiName(int mapLayerIndex, Wms::UserUrlServerSetup& userUrlServerSetup, bool addServerName)
 	{
 		if(mapLayerIndex >= userUrlServerSetup.parsedServers.size())
@@ -666,7 +677,7 @@ namespace
 
 		if(addServerName)
 		{
-			// Lisätään host:in osoite sulkuihin perään
+			// Lisï¿½tï¿½ï¿½n host:in osoite sulkuihin perï¿½ï¿½n
 			layerName += " (";
 			layerName += usedLayerParsedServer.host;
 			layerName += ")";
@@ -684,7 +695,7 @@ namespace
 			indicesString += std::to_string(index);
 			indicesString += ",";
 		}
-		// Poistetaan viimeisen numeron jälkeinen pilkku, pilkku tulee loopissa jokaisen indeksin perään, ja näin poppaamalla koodi on yksinkertaisempaa.
+		// Poistetaan viimeisen numeron jï¿½lkeinen pilkku, pilkku tulee loopissa jokaisen indeksin perï¿½ï¿½n, ja nï¿½in poppaamalla koodi on yksinkertaisempaa.
 		indicesString.pop_back();
 		return indicesString;
 	}
@@ -702,13 +713,14 @@ namespace
 		mapLayerRelatedInfos.clear();
 		for(size_t mapLayerIndex = 0; mapLayerIndex < wmsMapLayerSetup.parsedServers.size(); mapLayerIndex++)
 		{
-			// Lisätään tähän listaan serverin nimi perään (viimeinen parametri true)
+			// Lisï¿½tï¿½ï¿½n tï¿½hï¿½n listaan serverin nimi perï¿½ï¿½n (viimeinen parametri true)
 			auto guiMapLayerName = ::getWmsMapLayerGuiName(static_cast<int>(mapLayerIndex), wmsMapLayerSetup, true);
 			auto& usedLayerParsedServer = wmsMapLayerSetup.parsedServers[mapLayerIndex];
 			NFmiMapLayerRelatedInfo mapLayerRelatedInfo{ guiMapLayerName, usedLayerParsedServer.macroReference, true };
 			mapLayerRelatedInfos.push_back(mapLayerRelatedInfo);
 		}
 	}
+#endif // DISABLE_CPPRESTSDK
 
 	int calcWantedMapLayerIndex(const MapAreaMapLayerRelatedInfo& mapLayerRelatedInfos, const std::string& mapLayerName)
 	{
@@ -717,7 +729,7 @@ namespace
 		if(iter != mapLayerRelatedInfos.end())
 			return static_cast<int>(std::distance(mapLayerRelatedInfos.begin(), iter));
 		else
-			return 0; // Tämä on virhetilanne, palautetaan kuitenkin vain 0 indeksi (ei poikkeusta, vaikka pitäisi)
+			return 0; // Tï¿½mï¿½ on virhetilanne, palautetaan kuitenkin vain 0 indeksi (ei poikkeusta, vaikka pitï¿½isi)
 	}
 
 	std::string getMacroReferenceNameForViewMacro(const NFmiCombinedMapModeState& mapModeState, const MapAreaMapLayerRelatedInfo& staticMapLayerRelatedInfos, const MapAreaMapLayerRelatedInfo& wmsMapLayerRelatedInfos)
@@ -743,7 +755,7 @@ namespace
 		return name;
 	}
 
-	// Kun tutkitaan löytyykö macro-referencen perusteella vastinetta, tehdään tarkastelu varmuuden vuoksi case-insensitiivisesti.
+	// Kun tutkitaan lï¿½ytyykï¿½ macro-referencen perusteella vastinetta, tehdï¿½ï¿½n tarkastelu varmuuden vuoksi case-insensitiivisesti.
 	int getMacroReferenceMapLayerIndex(const std::string& nonPrefixMacroReferenceName, const MapAreaMapLayerRelatedInfo& mapLayerRelatedInfos)
 	{
 		auto layerIter = std::find_if(mapLayerRelatedInfos.begin(), mapLayerRelatedInfos.end(),
@@ -752,15 +764,15 @@ namespace
 		return layerIndex;
 	}
 
-	// Tässä haetaan macro-referenssiä seuraavin keinoin ja prioriteetein:
-	// 1. macroReferenceName ei saa olla tyhjä
-	// 2. Tarkistetaan sisälsikö macroReferenceName wms prefixin "[wms]"
-	// 3. Riippuen siitä onko originaali ollut wms pohjainen layer, tehdään seuraavaa:
-	// 3.1. Jos wms pohjaisista löytyy vastaava macroReference nimi, palautetaan sen ja static layereiden yhteisindeksi
-	// 3.2. Jos löytyy vain staattisista layereista vastaava macroReference nimi, palautetaan sen indeksi
-	// 4. Jos originaali ei ollut wms pohjainen layer, tehdään seuraavaa:
-	// 4.1. Jos löytyy staattisista layereista macroReference nimi, palautetaan sen indeksi
-	// 4.2. Jos löytyy vain wms pohjaisista vastaava macroReference nimi, palautetaan sen ja static layereiden yhteisindeksi
+	// Tï¿½ssï¿½ haetaan macro-referenssiï¿½ seuraavin keinoin ja prioriteetein:
+	// 1. macroReferenceName ei saa olla tyhjï¿½
+	// 2. Tarkistetaan sisï¿½lsikï¿½ macroReferenceName wms prefixin "[wms]"
+	// 3. Riippuen siitï¿½ onko originaali ollut wms pohjainen layer, tehdï¿½ï¿½n seuraavaa:
+	// 3.1. Jos wms pohjaisista lï¿½ytyy vastaava macroReference nimi, palautetaan sen ja static layereiden yhteisindeksi
+	// 3.2. Jos lï¿½ytyy vain staattisista layereista vastaava macroReference nimi, palautetaan sen indeksi
+	// 4. Jos originaali ei ollut wms pohjainen layer, tehdï¿½ï¿½n seuraavaa:
+	// 4.1. Jos lï¿½ytyy staattisista layereista macroReference nimi, palautetaan sen indeksi
+	// 4.2. Jos lï¿½ytyy vain wms pohjaisista vastaava macroReference nimi, palautetaan sen ja static layereiden yhteisindeksi
 	int getCombinedMapModeIndexByMacroReferenceName(const std::string& macroReferenceName, const MapAreaMapLayerRelatedInfo& staticMapLayerRelatedInfos, const MapAreaMapLayerRelatedInfo& wmsMapLayerRelatedInfos, bool localOnlyMapModeInUse)
 	{
 		if(!macroReferenceName.empty())
@@ -784,7 +796,7 @@ namespace
 					return static_cast<int>(staticMapLayerRelatedInfos.size()) + wmsLayerIndex;
 			}
 		}
-		// Ei löytynyt mitään annetun macroReferenceName:n avulla, -1 on merkki siitä, että mitään ei tehdä.
+		// Ei lï¿½ytynyt mitï¿½ï¿½n annetun macroReferenceName:n avulla, -1 on merkki siitï¿½, ettï¿½ mitï¿½ï¿½n ei tehdï¿½.
 		return -1;
 	}
 
@@ -807,7 +819,7 @@ namespace
 
 	bool checkLastObservationTime(bool *newerTimeFoundInOut, const NFmiMetTime & checkedTime, const NFmiMetTime& currentTime, NFmiMetTime *newLastTimeInOut, int timeStepInMinutes)
 	{
-		// Tarkasteltu aika pitää pyöristää animaatiossa käytetyn time-stepin kanssa ja vielä taaksepäin.
+		// Tarkasteltu aika pitï¿½ï¿½ pyï¿½ristï¿½ï¿½ animaatiossa kï¿½ytetyn time-stepin kanssa ja vielï¿½ taaksepï¿½in.
 		NFmiMetTime backwardRoundedCheckTime(checkedTime);
 		backwardRoundedCheckTime.SetTimeStep(timeStepInMinutes, true, kBackward);
 		if(*newerTimeFoundInOut == false || backwardRoundedCheckTime > *newLastTimeInOut)
@@ -816,7 +828,7 @@ namespace
 			*newLastTimeInOut = backwardRoundedCheckTime;
 			if(*newLastTimeInOut >= currentTime)
 			{
-				// Ei tarvitse enää jatkaa, koska aika joka löytyi on viimeisin mahdollinen.
+				// Ei tarvitse enï¿½ï¿½ jatkaa, koska aika joka lï¿½ytyi on viimeisin mahdollinen.
 				return true;
 			}
 		}
@@ -827,7 +839,7 @@ namespace
 	{
 		if(CtrlViewFastInfoFunctions::IsObservationLockModeDataType(drawParam->DataType()))
 		{
-			// Ignooraa toistaiseksi tuottaja kFmiTEMP, koska niiden par haku tuottaa ajallisesti liian pitkälle meneviä datoja (viimeinen aika on tyhjää).
+			// Ignooraa toistaiseksi tuottaja kFmiTEMP, koska niiden par haku tuottaa ajallisesti liian pitkï¿½lle meneviï¿½ datoja (viimeinen aika on tyhjï¿½ï¿½).
 			if(!NFmiInfoOrganizer::IsTempData(drawParam->Param().GetProducer()->GetIdent(), true))
 			{
 				return true;
@@ -856,7 +868,7 @@ namespace
 
 	void checkEarliestLastObservationTime(bool * anyTimeFoundInOut, const NFmiMetTime & checkedTime, NFmiMetTime* earliestLastTimeInOut, int timeStepInMinutes)
 	{
-		// Tarkasteltu aika pitää pyöristää animaatiossa käytetyn time-stepin kanssa ja vielä taaksepäin.
+		// Tarkasteltu aika pitï¿½ï¿½ pyï¿½ristï¿½ï¿½ animaatiossa kï¿½ytetyn time-stepin kanssa ja vielï¿½ taaksepï¿½in.
 		NFmiMetTime backwardRoundedCheckTime(checkedTime);
 		backwardRoundedCheckTime.SetTimeStep(timeStepInMinutes, true, kBackward);
 		if(*anyTimeFoundInOut == false || backwardRoundedCheckTime < *earliestLastTimeInOut)
@@ -872,7 +884,7 @@ namespace
 
 NFmiCombinedMapHandler::~NFmiCombinedMapHandler()
 {
-	// Pitää hankkiutua eroon NFmiPtrList -luokan käytöstä, silloin ei tarvitse erillisiä varatun muistin tuhoamiskomentoja
+	// Pitï¿½ï¿½ hankkiutua eroon NFmiPtrList -luokan kï¿½ytï¿½stï¿½, silloin ei tarvitse erillisiï¿½ varatun muistin tuhoamiskomentoja
 	if(crossSectionDrawParamListVector_)
 	{
 		crossSectionDrawParamListVector_->Clear(true);
@@ -915,6 +927,7 @@ void NFmiCombinedMapHandler::initialize(const std::string & absoluteControlPath)
 	}
 }
 
+#ifndef UNIX
 void NFmiCombinedMapHandler::initMapViewDescTops()
 {
 	try
@@ -935,7 +948,9 @@ void NFmiCombinedMapHandler::initMapViewDescTops()
 		NFmiBasicSmartMetConfigurations::DoInitializationAbortMessageBox(errStr, "Map view settings error", true);
 	}
 }
+#endif
 
+#ifndef UNIX
 std::pair<unsigned int, NFmiCombinedMapHandler::MapViewCombinedMapModeState> NFmiCombinedMapHandler::makeTotalMapViewCombinedMapModeState(unsigned int mapViewIndex, unsigned int usedWmsMapLayerCount, bool doBackgroundCase)
 {
 	MapViewCombinedMapModeState mapViewState;
@@ -974,7 +989,9 @@ void NFmiCombinedMapHandler::initCombinedMapStates()
 	initCombinedMapSelectionIndices();
 	initWmsSupportSelectionIndices();
 }
+#endif
 
+#ifndef UNIX
 void NFmiCombinedMapHandler::storeCombinedMapStates()
 {
 	auto mapViewCount = getMapViewCount();
@@ -993,14 +1010,18 @@ void NFmiCombinedMapHandler::storeCombinedMapStates()
 		mapViewWinRegistry->CombinedMapModeSelectedOverlayIndices(::makeSelectedMapIndicesString(overlayIndices));
 	}
 }
+#endif
 
+#ifndef UNIX
 std::vector<int> NFmiCombinedMapHandler::getCombinedModeSelectedMapIndicesFromWinRegistry(unsigned int mapViewDescTopIndex, bool doBackgroundMaps)
 {
 	auto mapViewWinRegistry = getApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(mapViewDescTopIndex);
 	auto selectedMapIndicesStr = doBackgroundMaps ? mapViewWinRegistry->CombinedMapModeSelectedBackgroundIndices() : mapViewWinRegistry->CombinedMapModeSelectedOverlayIndices();
 	return ::parseSelectedMapIndices(selectedMapIndicesStr);
 }
+#endif
 
+#ifndef UNIX
 void NFmiCombinedMapHandler::initCombinedMapSelectionIndices()
 {
 	auto mapViewCount = getMapViewCount();
@@ -1019,7 +1040,9 @@ void NFmiCombinedMapHandler::initCombinedMapSelectionIndices()
 		}
 	}
 }
+#endif
 
+#ifndef UNIX
 void NFmiCombinedMapHandler::initWmsSupportSelectionIndices()
 {
 	if(!wmsSupportAvailable())
@@ -1033,24 +1056,27 @@ void NFmiCombinedMapHandler::initWmsSupportSelectionIndices()
 		for(auto mapAreaIndex = 0u; mapAreaIndex < mapAreaCount; mapAreaIndex++)
 		{
 			auto &staticMapClientState = wmsSupportPtr->getStaticMapClientState(mapViewIndex, mapAreaIndex);
-			// Tehdään ensin background map indeksin asetus
+			// Tehdï¿½ï¿½n ensin background map indeksin asetus
 			staticMapClientState.state_->setBackgroundIndex(::calcInitialWmsLayerIndex(getCombinedMapModeState(mapViewIndex, mapAreaIndex)));
 
-			// Tehdään sitten overlay map indeksin asetus
+			// Tehdï¿½ï¿½n sitten overlay map indeksin asetus
 			staticMapClientState.state_->setOverlayIndex(::calcInitialWmsLayerIndex(getCombinedOverlayMapModeState(mapViewIndex, mapAreaIndex)));
 		}
 	}
 }
+#endif
 
 unsigned int NFmiCombinedMapHandler::getMapViewCount() const
 {
 	return static_cast<unsigned int>(mapViewDescTops_.size());
 }
 
+#ifndef UNIX
 unsigned int NFmiCombinedMapHandler::getMapAreaCount() const
 {
 	return static_cast<unsigned int>(getMapViewDescTop(0)->GdiPlusImageMapHandlerList().size());
 }
+#endif
 
 void NFmiCombinedMapHandler::initCrossSectionDrawParamListVector()
 {
@@ -1075,6 +1101,7 @@ bool NFmiCombinedMapHandler::wmsSupportAvailable() const
 		return false;
 }
 
+#ifndef UNIX
 std::unique_ptr<NFmiMapViewDescTop> NFmiCombinedMapHandler::createMapViewDescTop(const std::string& baseSettingStr, int mapViewIndex)
 {
 	doVerboseFunctionStartingLogReporting(__FUNCTION__);
@@ -1085,8 +1112,9 @@ std::unique_ptr<NFmiMapViewDescTop> NFmiCombinedMapHandler::createMapViewDescTop
 	descTop->Init(*applicationWinRegistry.ConfigurationRelatedWinRegistry().MapView(mapViewIndex));
 	return descTop;
 }
+#endif
 
-// Metodi saa 0-pohjaisen mapViewIndeksin (index), mutta se pitää muuttaa 1-pohjaiseksi, kun tehdään settings stringiä.
+// Metodi saa 0-pohjaisen mapViewIndeksin (index), mutta se pitï¿½ï¿½ muuttaa 1-pohjaiseksi, kun tehdï¿½ï¿½n settings stringiï¿½.
 std::string NFmiCombinedMapHandler::getMapViewDescTopSettingString(const std::string& baseStr, int mapViewDescTopIndex)
 {
 	std::string str(baseStr);
@@ -1223,9 +1251,9 @@ void NFmiCombinedMapHandler::initLandBorderDrawingSystem()
 	doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	try
 	{
-		// release versiolle on määrätty eri shape-file kuin debug versiolle, koska 
+		// release versiolle on mï¿½ï¿½rï¿½tty eri shape-file kuin debug versiolle, koska 
 		// debug versio on tolkuttoman hidas laskiessaan koordinaatteja ja siksi
-		// on parempi käyttää harvempaa dataa debug versiolle.
+		// on parempi kï¿½yttï¿½ï¿½ harvempaa dataa debug versiolle.
 #ifdef NDEBUG 
 		landBorderShapeFile_ = NFmiSettings::Require<std::string>("MetEditor::LandBorderShapeFile");
 #else // debug versio
@@ -1253,12 +1281,13 @@ void NFmiCombinedMapHandler::initLandBorderDrawingSystem()
 	}
 }
 
+#ifndef UNIX
 void NFmiCombinedMapHandler::doCutBorderDrawInitialization()
 {
-	{ 
-		// tehdään omassa blokissa!!
+	{
+		// tehdï¿½ï¿½n omassa blokissa!!
 		cutLandBorderPaths_.clear();
-		auto &mapHandlerList = mapViewDescTops_[0]->GdiPlusImageMapHandlerList(); // otetaan pääkarttanäytön mapHandlerList
+		auto &mapHandlerList = mapViewDescTops_[0]->GdiPlusImageMapHandlerList(); // otetaan pï¿½ï¿½karttanï¿½ytï¿½n mapHandlerList
 		// Ensin lasketaan eri karttapohjille leikatut rajaviivat
 		for(auto *mapHandler : mapHandlerList)
 		{
@@ -1285,7 +1314,7 @@ void NFmiCombinedMapHandler::doCutBorderDrawInitialization()
 		}
 	}
 
-	// Sitten asetetaan kaikkien karttanäyttöjen kaikille karttapohjille leikatut rajaviivat
+	// Sitten asetetaan kaikkien karttanï¿½yttï¿½jen kaikille karttapohjille leikatut rajaviivat
 	for(const auto & mapViewDescTop : mapViewDescTops_)
 	{
 		std::vector<NFmiGdiPlusImageMapHandler*>& mapHandlerList = mapViewDescTop->GdiPlusImageMapHandlerList();
@@ -1295,6 +1324,7 @@ void NFmiCombinedMapHandler::doCutBorderDrawInitialization()
 		}
 	}
 }
+#endif
 
 void NFmiCombinedMapHandler::makeNeededDirtyOperationsWhenDataAdded(NFmiQueryData* queryData, NFmiInfoData::Type dataType, const NFmiTimeDescriptor& removedDataTimes, const std::string& fileName)
 {
@@ -1329,14 +1359,14 @@ void NFmiCombinedMapHandler::makeNeededDirtyOperationsWhenDataAdded(unsigned int
 			for(aList->Reset(); aList->Next(); )
 			{
 				boost::shared_ptr<NFmiDrawParam> drawParam = aList->Current();
-				// Ei tarvitse tarkastella mitenkään, jos drawParam layer on piilossa
+				// Ei tarvitse tarkastella mitenkï¿½ï¿½n, jos drawParam layer on piilossa
 				if(drawParam->IsParamHidden())
 					continue;
 
 				makeNormalDataDrawingLayerCahceChecks(mapViewDescTopIndex, fastInfo, dataType, dirtyViewTimes, fileName, drawParam, *dataProducer, *descTop, cacheRowNumber);
 				if(dataType == NFmiInfoData::kEditable && (drawParam->DataType() == NFmiInfoData::kEditable || drawParam->DataType() == NFmiInfoData::kCopyOfEdited))
 				{
-					// jos kyseessä oli editoitavan datan päivitys, laitetaan uusiksi ne rivit missä on editoitavan datan ja sen kopion parametreja näkyvissä (tuottajalla ei ole väliä)
+					// jos kyseessï¿½ oli editoitavan datan pï¿½ivitys, laitetaan uusiksi ne rivit missï¿½ on editoitavan datan ja sen kopion parametreja nï¿½kyvissï¿½ (tuottajalla ei ole vï¿½liï¿½)
 					descTop->MapViewCache().MakeRowDirty(cacheRowNumber);// clean cache row
 				}
 				makeMacroParamDrawingLayerCacheChecks(drawParam, fastInfo, dataType, *descTop, mapViewDescTopIndex, cacheRowNumber, fileName);
@@ -1350,30 +1380,30 @@ void NFmiCombinedMapHandler::makeNeededDirtyOperationsWhenDataAdded(unsigned int
 // Halutaan vain laittaa viesti lokiin
 void NFmiCombinedMapHandler::logMessage(const std::string& logMessage, CatLog::Severity severity, CatLog::Category category, bool flushAlways) const
 {
-	// Kaikki warning/error/fatal tason viestit pitää flushata heti lokitiedostoon, jos ongelmista seuraa kaatuminen
+	// Kaikki warning/error/fatal tason viestit pitï¿½ï¿½ flushata heti lokitiedostoon, jos ongelmista seuraa kaatuminen
 	auto flushLogger = (flushAlways ? true : (severity > CatLog::Severity::Info));
 	CatLog::logMessage(logMessage, severity, category, flushLogger);
 }
 
-// On kohdattu vakava virhe, laitetaan käyttäjälle kysely, että lopetetaanko suosiolla ohjelman ajo
+// On kohdattu vakava virhe, laitetaan kï¿½yttï¿½jï¿½lle kysely, ettï¿½ lopetetaanko suosiolla ohjelman ajo
 void NFmiCombinedMapHandler::logAndWarnUser(const std::string& logMessage, const std::string& titleString, CatLog::Severity severity, CatLog::Category category, bool addAbortOption)
 {
-	// Lopun parametrit false (kysy käyttäjältä dialogilla) ja true (flushaa lokiviestit heti tiedostoon, jos vaikka kaatuu kohta)
+	// Lopun parametrit false (kysy kï¿½yttï¿½jï¿½ltï¿½ dialogilla) ja true (flushaa lokiviestit heti tiedostoon, jos vaikka kaatuu kohta)
 	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->LogAndWarnUser(logMessage, titleString, severity, category, false, addAbortOption, true);
 }
 
-// Tätä kutsutaan mm. CFmiMainFrame:n OnTimer:ista kerran minuutissa.
-// Tarkistaa eri näyttöjen animaation tilan ja moodit.
-// Päivittää tarvittaessa lukittujen moodien animaatio timebagit.
-// 'Likaa' tarvittaessa uudet ajat cache:sta ja tekee ruudun päivitykset.
-// mapViewDescTopIndex:illä voidaan antaa jos halutaan tarkistaa vain tietyn näytön päivitys tarve.
-// Jos mapViewDescTopIndex:in arvo on kDoAllMapViewDescTopIndex, silloin tarkistus tehdään kaikille näytöille.
+// Tï¿½tï¿½ kutsutaan mm. CFmiMainFrame:n OnTimer:ista kerran minuutissa.
+// Tarkistaa eri nï¿½yttï¿½jen animaation tilan ja moodit.
+// Pï¿½ivittï¿½ï¿½ tarvittaessa lukittujen moodien animaatio timebagit.
+// 'Likaa' tarvittaessa uudet ajat cache:sta ja tekee ruudun pï¿½ivitykset.
+// mapViewDescTopIndex:illï¿½ voidaan antaa jos halutaan tarkistaa vain tietyn nï¿½ytï¿½n pï¿½ivitys tarve.
+// Jos mapViewDescTopIndex:in arvo on kDoAllMapViewDescTopIndex, silloin tarkistus tehdï¿½ï¿½n kaikille nï¿½ytï¿½ille.
 void NFmiCombinedMapHandler::checkAnimationLockedModeTimeBags(unsigned int mapViewDescTopIndex, bool ignoreSatelImages)
 {
 	if(isAnimationTimebagCheckNeeded(mapViewDescTopIndex))
-	{ // edellinen metodi tarkisti, onko jossain animaatio boksi näkyvissä.
+	{ // edellinen metodi tarkisti, onko jossain animaatio boksi nï¿½kyvissï¿½.
 		bool needToUpdateViews = false;
-		// tutkitaan eri näyttöjen animaattoreita ja niiden tiloja
+		// tutkitaan eri nï¿½yttï¿½jen animaattoreita ja niiden tiloja
 		for(unsigned int checkedDescTopIndex = 0; checkedDescTopIndex < mapViewDescTops_.size(); checkedDescTopIndex++)
 		{
 			if(mapViewDescTopIndex == CtrlViewUtils::kDoAllMapViewDescTopIndex || checkedDescTopIndex == mapViewDescTopIndex)
@@ -1384,15 +1414,15 @@ void NFmiCombinedMapHandler::checkAnimationLockedModeTimeBags(unsigned int mapVi
 				if(lockMode == NFmiAnimationData::kFollowLastObservation || lockMode == NFmiAnimationData::kFollowEarliestLastObservation)
 				{
 					NFmiMetTime lastTime = animData.Times().LastTime();
-					NFmiMetTime currentTime(1); // otetaan vielä seinäkelloaika
+					NFmiMetTime currentTime(1); // otetaan vielï¿½ seinï¿½kelloaika
 					if(currentTime < lastTime || currentTime.DifferenceInMinutes(lastTime) > g_StatObservationSeekTimeLimitInMinutes)
-					{ // pitää fiksata viimeistä aikaa, koska se ei oikeastaan voi olla tulevaisuudessa, tai joku havainto on tulevaisuudesta
-						// Lisäksi pitää fiksata jos alkuaika oli liian kaukana menneisyydessä, turha käydä läpi esim. viikon verran dataa ja etsi viimeistä
+					{ // pitï¿½ï¿½ fiksata viimeistï¿½ aikaa, koska se ei oikeastaan voi olla tulevaisuudessa, tai joku havainto on tulevaisuudesta
+						// Lisï¿½ksi pitï¿½ï¿½ fiksata jos alkuaika oli liian kaukana menneisyydessï¿½, turha kï¿½ydï¿½ lï¿½pi esim. viikon verran dataa ja etsi viimeistï¿½
 						lastTime = currentTime;
 						lastTime.SetTimeStep(static_cast<short>(animData.TimeStepInMinutes()));
-						lastTime.ChangeByHours(-2); // lähdetään etsimää viimeistä havaintoa 3 tuntia menneisyydestä
+						lastTime.ChangeByHours(-2); // lï¿½hdetï¿½ï¿½n etsimï¿½ï¿½ viimeistï¿½ havaintoa 3 tuntia menneisyydestï¿½
 					}
-					NFmiMetTime newLastTime(animData.TimeStepInMinutes()); // tähän sijoitetaan se aika, josta löytyi viimeinen näytössä olevan parametrin havainto data
+					NFmiMetTime newLastTime(animData.TimeStepInMinutes()); // tï¿½hï¿½n sijoitetaan se aika, josta lï¿½ytyi viimeinen nï¿½ytï¿½ssï¿½ olevan parametrin havainto data
 					bool foundObservations = false;
 					if(lockMode == NFmiAnimationData::kFollowLastObservation)
 						foundObservations = findLastObservation(static_cast<unsigned long>(checkedDescTopIndex), animData.TimeStepInMinutes(), newLastTime, ignoreSatelImages);
@@ -1400,29 +1430,29 @@ void NFmiCombinedMapHandler::checkAnimationLockedModeTimeBags(unsigned int mapVi
 						foundObservations = findEarliestLastObservation(static_cast<unsigned long>(checkedDescTopIndex), animData.TimeStepInMinutes(), newLastTime, ignoreSatelImages);
 
 					if(foundObservations)
-					{ // löytyi jotain ennusteita, jossa uusi lastTime (=newLastTime), joten voidaan päivittää animaation timebagi.
+					{ // lï¿½ytyi jotain ennusteita, jossa uusi lastTime (=newLastTime), joten voidaan pï¿½ivittï¿½ï¿½ animaation timebagi.
 						int timeDiffInMinutes = animData.Times().LastTime().DifferenceInMinutes(animData.Times().FirstTime());
 						NFmiMetTime newFirstTime(newLastTime);
 						newFirstTime.ChangeByMinutes(-timeDiffInMinutes);
 						NFmiTimeBag newAnimTimes(newFirstTime, newLastTime, animData.TimeStepInMinutes());
 						NFmiTimeBag oldAnimTimes = animData.Times();
 						animData.Times(newAnimTimes);
-						// Laitetaan myös aikakontrolli-ikkuna seuraavaan animaatio ikkunaa, eli keskitetään aikaikkuna animaatioaikojen keskikohtaan
+						// Laitetaan myï¿½s aikakontrolli-ikkuna seuraavaan animaatio ikkunaa, eli keskitetï¿½ï¿½n aikaikkuna animaatioaikojen keskikohtaan
 						int animDiffInMinutes = newAnimTimes.LastTime().DifferenceInMinutes(newAnimTimes.FirstTime());
 						NFmiMetTime animMiddleTime(newAnimTimes.FirstTime());
 						animMiddleTime.ChangeByMinutes(boost::math::lround(animDiffInMinutes / 2.));
 						animMiddleTime.SetTimeStep(animData.TimeStepInMinutes());
 						centerTimeControlView(static_cast<unsigned long>(checkedDescTopIndex), animMiddleTime, false);
-						// Lisäksi likaa näyttö cachesta uudet löytyneet ajat
+						// Lisï¿½ksi likaa nï¿½yttï¿½ cachesta uudet lï¿½ytyneet ajat
 						::makeNewTimesDirtyFromViewCache(checkedMapViewDescTop, oldAnimTimes, newAnimTimes);
-						mapViewDirty(static_cast<unsigned long>(checkedDescTopIndex), false, false, true, false, false, false); // tämän pitäisi asettaa näyttö päivitys tilaan, mutta cachea ei tarvitse enää erikseen tyhjentää
+						mapViewDirty(static_cast<unsigned long>(checkedDescTopIndex), false, false, true, false, false, false); // tï¿½mï¿½n pitï¿½isi asettaa nï¿½yttï¿½ pï¿½ivitys tilaan, mutta cachea ei tarvitse enï¿½ï¿½ erikseen tyhjentï¿½ï¿½
 					}
 				}
 			}
 		}
 
 		if(needToUpdateViews)
-			ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Animation related update because locked time mode event occured", getUpdatedViewIdMaskForChangingTime()); // vielä päivitetään näytöt
+			ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Animation related update because locked time mode event occured", getUpdatedViewIdMaskForChangingTime()); // vielï¿½ pï¿½ivitetï¿½ï¿½n nï¿½ytï¿½t
 	}
 }
 
@@ -1437,12 +1467,12 @@ NFmiMapViewDescTop* NFmiCombinedMapHandler::getMapViewDescTop(unsigned int mapVi
 	{
 		if(allowNullptrReturn)
 		{
-			// Eli ei palauteta defaultti arvoa eli pääikkunan mapViewDescToppia, jos kyse oli ei-karttanäytön indeksistä
+			// Eli ei palauteta defaultti arvoa eli pï¿½ï¿½ikkunan mapViewDescToppia, jos kyse oli ei-karttanï¿½ytï¿½n indeksistï¿½
 			return nullptr;
 		}
 		else
 		{
-			// Palautetaan erikoisnäyttöjä (aikasarja-, poikkileikkaus-, luotaus-, datanmuokkaus-dialogit, jne.) varten pääkarttanaytön desctop
+			// Palautetaan erikoisnï¿½yttï¿½jï¿½ (aikasarja-, poikkileikkaus-, luotaus-, datanmuokkaus-dialogit, jne.) varten pï¿½ï¿½karttanaytï¿½n desctop
 			return mapViewDescTops_[0].get();
 		}
 	}
@@ -1452,7 +1482,7 @@ void NFmiCombinedMapHandler::mapViewDirty(unsigned int mapViewDescTopIndex, bool
 {
 	if(redrawMapView)
 	{
-		// Ainakin toistaiseksi laitan aikasarjan likauksen tänne
+		// Ainakin toistaiseksi laitan aikasarjan likauksen tï¿½nne
 		timeSerialViewDirty_ = true;
 	}
 
@@ -1466,7 +1496,7 @@ void NFmiCombinedMapHandler::mapViewDirty(unsigned int mapViewDescTopIndex, bool
 		}
 		catch(...)
 		{
-		} // Jos tätä kutsutaan esim. poikkileikkaus näytölle, lentää poikkeus, mikä on täysin ok
+		} // Jos tï¿½tï¿½ kutsutaan esim. poikkileikkaus nï¿½ytï¿½lle, lentï¿½ï¿½ poikkeus, mikï¿½ on tï¿½ysin ok
 
 		clearMacroParamDataCache(mapViewDescTopIndex, doClearMacroParamDataCache, clearEditedDataDependentCaches);
 	}
@@ -1482,7 +1512,7 @@ void NFmiCombinedMapHandler::mapViewDirtyForAllDescTops(bool makeNewBackgroundBi
 		}
 		catch(...)
 		{
-		} // Jos tätä kutsutaan esim. poikkileikkaus näytölle, lentää poikkeus, mikä on täysin ok
+		} // Jos tï¿½tï¿½ kutsutaan esim. poikkileikkaus nï¿½ytï¿½lle, lentï¿½ï¿½ poikkeus, mikï¿½ on tï¿½ysin ok
 
 		clearMacroParamDataCache(mapViewDescTopIndex, doClearMacroParamDataCache, clearEditedDataDependentCaches);
 	}
@@ -1505,7 +1535,7 @@ void NFmiCombinedMapHandler::setBorderDrawDirtyState(unsigned int mapViewDescTop
 		}
 		catch(...)
 		{
-		} // Jos tätä kutsutaan esim. poikkileikkaus näytölle, lentää poikkeus, mikä on täysin ok
+		} // Jos tï¿½tï¿½ kutsutaan esim. poikkileikkaus nï¿½ytï¿½lle, lentï¿½ï¿½ poikkeus, mikï¿½ on tï¿½ysin ok
 	}
 }
 
@@ -1531,14 +1561,14 @@ bool NFmiCombinedMapHandler::makeMacroParamDrawingLayerCacheChecks(boost::shared
 		{
 			if(fastInfo.Param(macroParamDataInfo.dataIdent_))
 			{
-				// Jos macroParamDataInfo:n level on 'tyhjä' (ident = 0, tarkoittaa pinta parametria) tai jos annettu level löytyy infosta
+				// Jos macroParamDataInfo:n level on 'tyhjï¿½' (ident = 0, tarkoittaa pinta parametria) tai jos annettu level lï¿½ytyy infosta
 				if(macroParamDataInfo.level_.GetIdent() == 0 || fastInfo.Level(macroParamDataInfo.level_))
 				{
 					if(doMacroParamVerticalDataChecks(fastInfo, dataType, macroParamDataInfo))
 					{
 						// clean image cache row
 						descTop.MapViewCache().MakeRowDirty(cacheRowNumber);
-						// MacroParam data cachen rivit alkavat 1:stä, joten image-cachen riviin on lisättävä +1
+						// MacroParam data cachen rivit alkavat 1:stï¿½, joten image-cachen riviin on lisï¿½ttï¿½vï¿½ +1
 						getMacroParamDataCache().clearMacroParamCache(mapViewDescTopIndex, cacheRowNumber + 1, drawParam->InitFileName());
 						::macroParamDirtiesCacheRowTraceLog(drawParam, macroParamDataInfo, mapViewDescTopIndex, cacheRowNumber, fileName);
 						return true;
@@ -1614,6 +1644,7 @@ std::shared_ptr<WmsSupportInterface> NFmiCombinedMapHandler::createWmsSupport(co
 	return nullptr;
 }
 
+#ifndef DISABLE_CPPRESTSDK
 void NFmiCombinedMapHandler::setWmsSupport(std::shared_ptr<WmsSupportInterface> wmsSupportPtr)
 {
 	if(wmsSupportPtr)
@@ -1633,10 +1664,10 @@ void NFmiCombinedMapHandler::setWmsSupport(std::shared_ptr<WmsSupportInterface> 
 		}
 
 		{
-			// Vaihdetaan ensin uusi tmp-olioon, oletetaan että edellinen vanha on jo ehditty tappaa ja tuhota pois alta.
+			// Vaihdetaan ensin uusi tmp-olioon, oletetaan ettï¿½ edellinen vanha on jo ehditty tappaa ja tuhota pois alta.
 			tmpWmsSupport_.swap(wmsSupportPtr);
 
-			// Jos vanha tmp-Wms-support olio on vielä hengissä, sen pakotetusta taposta tämän metodin loppuessa tulee varmaan ongelmia, lokitetaan siitä
+			// Jos vanha tmp-Wms-support olio on vielï¿½ hengissï¿½, sen pakotetusta taposta tï¿½mï¿½n metodin loppuessa tulee varmaan ongelmia, lokitetaan siitï¿½
 			if(wmsSupportPtr && !wmsSupportPtr->isDead(std::chrono::milliseconds(0)))
 			{
 				logMessage("Old already replaced Wms-support object hasn't been killed by the time new replacemnt arrived, destroing it now forcefully will probably cause problems", CatLog::Severity::Warning, CatLog::Category::Operational, true);
@@ -1650,7 +1681,7 @@ void NFmiCombinedMapHandler::setWmsSupport(std::shared_ptr<WmsSupportInterface> 
 			
 			if(tmpWmsSupport_)
 			{
-				// Jos oli jo käytössä wmsSupport olio, sitä pitää alkaa tappamaan
+				// Jos oli jo kï¿½ytï¿½ssï¿½ wmsSupport olio, sitï¿½ pitï¿½ï¿½ alkaa tappamaan
 				tmpWmsSupport_->kill();
 			}
 		}
@@ -1683,14 +1714,14 @@ void NFmiCombinedMapHandler::startWmsSupportRenewalProcess(bool startedByUser)
 
 void NFmiCombinedMapHandler::doWmsSupportRenewalProcessInSeparateThread(const std::string& creationName)
 {
-	// Tarkistetaan ettei systeemi ole jo käynnissä
+	// Tarkistetaan ettei systeemi ole jo kï¿½ynnissï¿½
 	if(!isWmsSupportRenewalProcessRunningMutex_.try_lock())
 	{
 		logMessage("Wms-support renewal process was already running, stopping this call", CatLog::Severity::Warning, CatLog::Category::Operational, true);
 	}
 	else
 	{
-		// Avaan lukon ja laitan sen lock_guard:iin, jotta ei tarvitse laittaan kaikkiin return kohtiin erillistä avausta
+		// Avaan lukon ja laitan sen lock_guard:iin, jotta ei tarvitse laittaan kaikkiin return kohtiin erillistï¿½ avausta
 		isWmsSupportRenewalProcessRunningMutex_.unlock();
 		std::lock_guard<std::mutex> lock(isWmsSupportRenewalProcessRunningMutex_);
 
@@ -1699,10 +1730,10 @@ void NFmiCombinedMapHandler::doWmsSupportRenewalProcessInSeparateThread(const st
 		{
 			for(;;)
 			{
-				// Odotetaan että juuri luotu wmsSupport otus saa tehtyä getcapabilities haut ennen kuin otus otetaan käyttöön
+				// Odotetaan ettï¿½ juuri luotu wmsSupport otus saa tehtyï¿½ getcapabilities haut ennen kuin otus otetaan kï¿½yttï¿½ï¿½n
 				if(isWmsSupportBeenKilled())
 				{
-					// Jos smartmetia ollaan sulkemassa, voidaan tämä odottelu lopettaa ja sijoitetaan wmsSupportPtr odottelemaan 
+					// Jos smartmetia ollaan sulkemassa, voidaan tï¿½mï¿½ odottelu lopettaa ja sijoitetaan wmsSupportPtr odottelemaan 
 					// loppuaan tmpWmsSupport_ olioon...
 					tmpWmsSupport_.swap(wmsSupportPtr);
 					tmpWmsSupport_->kill();
@@ -1713,23 +1744,23 @@ void NFmiCombinedMapHandler::doWmsSupportRenewalProcessInSeparateThread(const st
 					logMessage("Replacement Wms-support object has been properly initialized and it's getCapabilities have been retrieved once", CatLog::Severity::Debug, CatLog::Category::Operational, true);
 					break;
 				}
-				// Tässä laitetaan threadi nukkumaan pieneksi aikaa, jotta tarkasteluja voidaan sitten jatkaa
+				// Tï¿½ssï¿½ laitetaan threadi nukkumaan pieneksi aikaa, jotta tarkasteluja voidaan sitten jatkaa
 				std::this_thread::sleep_for(std::chrono::milliseconds(500));
 			}
-			// Nyt täysin toiminta valmis wmsSupport olio voidaan ottaa käyttöön
+			// Nyt tï¿½ysin toiminta valmis wmsSupport olio voidaan ottaa kï¿½yttï¿½ï¿½n
 			setWmsSupport(wmsSupportPtr);
 			if(tmpWmsSupport_)
 			{
-				// Lopuksi odotellaan että tmp-wms-support olio tappaa itsensä ja että se voidaan poistaa ja nollata
+				// Lopuksi odotellaan ettï¿½ tmp-wms-support olio tappaa itsensï¿½ ja ettï¿½ se voidaan poistaa ja nollata
 				for(;;)
 				{
 					if(isWmsSupportBeenKilled())
 					{
-						// Jos smartmetia ollaan sulkemassa, voidaan tämä odottelu lopettaa
+						// Jos smartmetia ollaan sulkemassa, voidaan tï¿½mï¿½ odottelu lopettaa
 						return;
 					}
 
-					// tässä pika tarkastus (0 lukko aika), voidaanko nollata
+					// tï¿½ssï¿½ pika tarkastus (0 lukko aika), voidaanko nollata
 					{
 						std::lock_guard<std::mutex> lock(wmsSupportMutex_);
 						if(tmpWmsSupport_->isDead(std::chrono::milliseconds(0)))
@@ -1739,7 +1770,7 @@ void NFmiCombinedMapHandler::doWmsSupportRenewalProcessInSeparateThread(const st
 							break;
 						}
 					}
-					// Tässä laitetaan threadi nukkumaan pieneksi aikaa, jotta tarkasteluja voidaan sitten jatkaa
+					// Tï¿½ssï¿½ laitetaan threadi nukkumaan pieneksi aikaa, jotta tarkasteluja voidaan sitten jatkaa
 					std::this_thread::sleep_for(std::chrono::milliseconds(500));
 				}
 			}
@@ -1767,6 +1798,7 @@ bool NFmiCombinedMapHandler::waitWmsSupportToDie(const std::chrono::milliseconds
 	}
 	return (mainWmsSupportIsDead && tmpWmsSupportIsDead);
 }
+#endif // DISABLE_CPPRESTSDK
 
 bool NFmiCombinedMapHandler::isAnimationTimebagCheckNeeded(unsigned int mapviewDescTopIndex)
 {
@@ -1796,9 +1828,10 @@ bool NFmiCombinedMapHandler::isAnimationTimebagCheckNeeded(unsigned int mapviewD
 	return false;
 }
 
+#ifndef UNIX
 bool NFmiCombinedMapHandler::findLastObservation(unsigned long mapViewDescTopIndex, int timeStepInMinutes, NFmiMetTime& newLastTime, bool ignoreSatelImages)
 {
-	// tämä on jonkinlainen rajapyykki, eli tämän yli kun mennään (ei pitäisi mennä), lopetetaan havaintojen etsiminene siihen
+	// tï¿½mï¿½ on jonkinlainen rajapyykki, eli tï¿½mï¿½n yli kun mennï¿½ï¿½n (ei pitï¿½isi mennï¿½), lopetetaan havaintojen etsiminene siihen
 	NFmiMetTime currentTime(1);
 	// haetaan min ja maksimi aika limitit, jotka on n. nykyhetki ja 2h - nykyhetki
 	NFmiMetTime timeLimit1;
@@ -1812,7 +1845,7 @@ bool NFmiCombinedMapHandler::findLastObservation(unsigned long mapViewDescTopInd
 	for(; iter.Next(); viewRowIndex++)
 	{
 		if(mapViewDescTop.IsVisibleRow(viewRowIndex) == false)
-			continue; // ei käydä läpi piilossa olevia rivejä
+			continue; // ei kï¿½ydï¿½ lï¿½pi piilossa olevia rivejï¿½
 		NFmiDrawParamList* aList = iter.CurrentPtr();
 		if(aList)
 		{
@@ -1827,7 +1860,7 @@ bool NFmiCombinedMapHandler::findLastObservation(unsigned long mapViewDescTopInd
 						makeDrawedInfoVectorForMapView(infoVector, drawParam, mapViewDescTop.MapHandler()->Area());
 						for(size_t i = 0; i < infoVector.size(); i++)
 						{
-							bool demandExactTimeChecking = drawParam->DataType() != NFmiInfoData::kFlashData; // tässä vaiheessa salama data on sellainen jossa ei vaadita tarkkoja aika tarkasteluja
+							bool demandExactTimeChecking = drawParam->DataType() != NFmiInfoData::kFlashData; // tï¿½ssï¿½ vaiheessa salama data on sellainen jossa ei vaadita tarkkoja aika tarkasteluja
 							boost::shared_ptr<NFmiFastQueryInfo>& info = infoVector[i];
 							NFmiMetTime dataLastTime;
 							NFmiTimeDescriptor timeDesc = info->TimeDescriptor();
@@ -1835,7 +1868,7 @@ bool NFmiCombinedMapHandler::findLastObservation(unsigned long mapViewDescTopInd
 							{
 								if(::checkLastObservationTime(&newerTimeFound, dataLastTime, currentTime, &newLastTime, timeStepInMinutes))
 								{
-									// Ei tarvitse enää jatkaa, koska aika joka löytyi on viimeisin mahdollinen.
+									// Ei tarvitse enï¿½ï¿½ jatkaa, koska aika joka lï¿½ytyi on viimeisin mahdollinen.
 									return true;
 								}
 							}
@@ -1843,26 +1876,26 @@ bool NFmiCombinedMapHandler::findLastObservation(unsigned long mapViewDescTopInd
 					}
 					else if(::isObservationLockModeSatelData(drawParam, ignoreSatelImages))
 					{ 
-						// tutki löytyykö satel-data hakemistosta uudempia datoja, kuin annettu theLastTime
+						// tutki lï¿½ytyykï¿½ satel-data hakemistosta uudempia datoja, kuin annettu theLastTime
 						NFmiMetTime satelLastTime;
 						if(::getLatestSatelImageTime(drawParam->Param(), satelLastTime))
 						{
 							if(::checkLastObservationTime(&newerTimeFound, satelLastTime, currentTime, &newLastTime, timeStepInMinutes))
 							{
-								// Ei tarvitse enää jatkaa, koska aika joka löytyi on viimeisin mahdollinen.
+								// Ei tarvitse enï¿½ï¿½ jatkaa, koska aika joka lï¿½ytyi on viimeisin mahdollinen.
 								return true;
 							}
 						}
 					}
 					else if(::isObservationLockModeWmsData(drawParam))
 					{ 
-						// tutki löytyykö wms-datasta aikoja datoja, kuin annettu theLastTime
+						// tutki lï¿½ytyykï¿½ wms-datasta aikoja datoja, kuin annettu theLastTime
 						NFmiMetTime wmsLastTime;
 						if(getLatestWmsImageTime(drawParam->Param(), wmsLastTime))
 						{
 							if(::checkLastObservationTime(&newerTimeFound, wmsLastTime, currentTime, &newLastTime, timeStepInMinutes))
 							{
-								// Ei tarvitse enää jatkaa, koska aika joka löytyi on viimeisin mahdollinen.
+								// Ei tarvitse enï¿½ï¿½ jatkaa, koska aika joka lï¿½ytyi on viimeisin mahdollinen.
 								return true;
 							}
 						}
@@ -1873,7 +1906,9 @@ bool NFmiCombinedMapHandler::findLastObservation(unsigned long mapViewDescTopInd
 	}
 	return newerTimeFound;
 }
+#endif // UNIX
 
+#ifndef DISABLE_CPPRESTSDK
 bool NFmiCombinedMapHandler::getLatestWmsImageTime(const NFmiDataIdent& dataIdent, NFmiMetTime& foundTimeOut)
 {
 	try
@@ -1887,13 +1922,15 @@ bool NFmiCombinedMapHandler::getLatestWmsImageTime(const NFmiDataIdent& dataIden
 	}
 	return false;
 }
+#endif // DISABLE_CPPRESTSDK
 
-// Tutkii käikki näkyvät havainto datat ja etsii sen ajan, mikä on aikaisin eri datojen viimeisistä ajoista.
-// Tällä on pyrkimys siihen että animaatio ei välky, kun kaikilta datoilta periaattessa löytyy dataa myös
-// tällä tavalla etsittyyn viimeiseen aikaan.
+#ifndef UNIX
+// Tutkii kï¿½ikki nï¿½kyvï¿½t havainto datat ja etsii sen ajan, mikï¿½ on aikaisin eri datojen viimeisistï¿½ ajoista.
+// Tï¿½llï¿½ on pyrkimys siihen ettï¿½ animaatio ei vï¿½lky, kun kaikilta datoilta periaattessa lï¿½ytyy dataa myï¿½s
+// tï¿½llï¿½ tavalla etsittyyn viimeiseen aikaan.
 bool NFmiCombinedMapHandler::findEarliestLastObservation(unsigned long mapViewDescTopIndex, int timeStepInMinutes, NFmiMetTime& newLastTime, bool ignoreSatelImages)
 {
-	NFmiMetTime currentTime(timeStepInMinutes); // tämä on jonkinlainen rajapyykki, eli tämän yli kun mennään (ei pitäisi mennä), lopetetaan havaintojen etsiminene siihen
+	NFmiMetTime currentTime(timeStepInMinutes); // tï¿½mï¿½ on jonkinlainen rajapyykki, eli tï¿½mï¿½n yli kun mennï¿½ï¿½n (ei pitï¿½isi mennï¿½), lopetetaan havaintojen etsiminene siihen
 	// haetaan min ja maksimi aika limitit, jotka on n. nykyhetki ja 2h - nykyhetki
 	NFmiMetTime timeLimit1;
 	NFmiMetTime timeLimit2;
@@ -1903,12 +1940,12 @@ bool NFmiCombinedMapHandler::findEarliestLastObservation(unsigned long mapViewDe
 	NFmiPtrList<NFmiDrawParamList>* drawParamListVector = mapViewDescTop.DrawParamListVector();
 	NFmiPtrList<NFmiDrawParamList>::Iterator iter = drawParamListVector->Start();
 	bool anyTimeFound = false;
-	NFmiMetTime earliestLastTime(2200, 1, 1); // tähän vain iso tulevaisuuden luku
+	NFmiMetTime earliestLastTime(2200, 1, 1); // tï¿½hï¿½n vain iso tulevaisuuden luku
 	int viewRowIndex = 1;
 	for(; iter.Next(); viewRowIndex++)
 	{
 		if(mapViewDescTop.IsVisibleRow(viewRowIndex) == false)
-			continue; // ei käydä läpi piilossa olevia rivejä
+			continue; // ei kï¿½ydï¿½ lï¿½pi piilossa olevia rivejï¿½
 		NFmiDrawParamList* aList = iter.CurrentPtr();
 		if(aList)
 		{
@@ -1921,7 +1958,7 @@ bool NFmiCombinedMapHandler::findEarliestLastObservation(unsigned long mapViewDe
 					{
 						std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
 						makeDrawedInfoVectorForMapView(infoVector, drawParam, mapViewDescTop.MapHandler()->Area());
-						NFmiMetTime lastTimeOfThisDataType; // mm. synop datan tapauksessa haetaan ehkä jopa 6:sta datat tiedostosta viimeisintä aikaa
+						NFmiMetTime lastTimeOfThisDataType; // mm. synop datan tapauksessa haetaan ehkï¿½ jopa 6:sta datat tiedostosta viimeisintï¿½ aikaa
 						bool lastTimeOfThisDataTypeFoundYet = false;
 						for(size_t i = 0; i < infoVector.size(); i++)
 						{
@@ -1941,7 +1978,7 @@ bool NFmiCombinedMapHandler::findEarliestLastObservation(unsigned long mapViewDe
 								}
 							}
 						}
-						// tässä drawParam kohtaisten datojen aika tarkastelut
+						// tï¿½ssï¿½ drawParam kohtaisten datojen aika tarkastelut
 						if(lastTimeOfThisDataTypeFoundYet)
 						{
 							::checkEarliestLastObservationTime(&anyTimeFound, lastTimeOfThisDataType, &earliestLastTime, timeStepInMinutes);
@@ -1949,7 +1986,7 @@ bool NFmiCombinedMapHandler::findEarliestLastObservation(unsigned long mapViewDe
 					}
 					else if(::isObservationLockModeSatelData(drawParam, ignoreSatelImages))
 					{
-						// tutki löytyykö satel-data hakemistosta uudempia datoja, kuin annettu theLastTime
+						// tutki lï¿½ytyykï¿½ satel-data hakemistosta uudempia datoja, kuin annettu theLastTime
 						NFmiMetTime satelLastTime;
 						if(::getLatestSatelImageTime(drawParam->Param(), satelLastTime))
 						{
@@ -1958,7 +1995,7 @@ bool NFmiCombinedMapHandler::findEarliestLastObservation(unsigned long mapViewDe
 					}
 					else if(::isObservationLockModeWmsData(drawParam))
 					{
-						// tutki löytyykö wms-datasta aikoja datoja, kuin annettu theLastTime
+						// tutki lï¿½ytyykï¿½ wms-datasta aikoja datoja, kuin annettu theLastTime
 						NFmiMetTime wmsLastTime;
 						if(getLatestWmsImageTime(drawParam->Param(), wmsLastTime))
 						{
@@ -1977,9 +2014,10 @@ bool NFmiCombinedMapHandler::findEarliestLastObservation(unsigned long mapViewDe
 	else
 		return false;
 }
+#endif // UNIX
 
-// Funktio säätää halutun aikakontrolli ikkunan siten että se keskittää annetun ajan näkyviin.
-// Eli annettu aika menee aikakontrolli ikkunan keskelle. Halutessa myös päivitetään
+// Funktio sï¿½ï¿½tï¿½ï¿½ halutun aikakontrolli ikkunan siten ettï¿½ se keskittï¿½ï¿½ annetun ajan nï¿½kyviin.
+// Eli annettu aika menee aikakontrolli ikkunan keskelle. Halutessa myï¿½s pï¿½ivitetï¿½ï¿½n
 // valittu aika siihen.
 void NFmiCombinedMapHandler::centerTimeControlView(unsigned int mapViewDescTopIndex, const NFmiMetTime& wantedTime, bool updateSelectedTime)
 {
@@ -1999,7 +2037,7 @@ void NFmiCombinedMapHandler::centerTimeControlView(unsigned int mapViewDescTopIn
 		newTime.SetTimeStep(timeStepInMinutes, true);
 		currentTime(mapViewDescTopIndex, newTime, false);
 	}
-	mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, false); // tämän pitäisi asettaa näyttö päivitys tilaan, mutta cachea ei tarvitse enää erikseen tyhjentää
+	mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, false); // tï¿½mï¿½n pitï¿½isi asettaa nï¿½yttï¿½ pï¿½ivitys tilaan, mutta cachea ei tarvitse enï¿½ï¿½ erikseen tyhjentï¿½ï¿½
 }
 
 SmartMetViewId NFmiCombinedMapHandler::getUpdatedViewIdMaskForChangingTime()
@@ -2014,19 +2052,19 @@ SmartMetViewId NFmiCombinedMapHandler::getUpdatedViewIdMaskForChangingTime()
 
 void NFmiCombinedMapHandler::updateTimeInLockedDescTops(const NFmiMetTime& wantedTime, unsigned int originalMapViewDescTopIndex)
 {
-	// Jos tehdään jotain aika muutoksia mihinkään karttanäyttöön, laitetaan optimoitu update maski päälle
+	// Jos tehdï¿½ï¿½n jotain aika muutoksia mihinkï¿½ï¿½n karttanï¿½yttï¿½ï¿½n, laitetaan optimoitu update maski pï¿½ï¿½lle
 	ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(getUpdatedViewIdMaskForChangingTime());
 
-	// Päivitetään ajan muutoksessa myös aina luotausnäyttöä, jos säädöt ovat kohdallaan
+	// Pï¿½ivitetï¿½ï¿½n ajan muutoksessa myï¿½s aina luotausnï¿½yttï¿½ï¿½, jos sï¿½ï¿½dï¿½t ovat kohdallaan
 	if(::getMTATempSystem().GetSoundingViewSettingsFromWindowsRegisty().SoundingTimeLockWithMapView() && ::getMTATempSystem().TempViewOn())
 		ApplicationInterface::GetApplicationInterfaceImplementation()->UpdateTempView();
 	
-	// Jos originaali ikkunassa on animaatio päällä tai on edes animointi alue näkyvissä, ei tehdä mitään
+	// Jos originaali ikkunassa on animaatio pï¿½ï¿½llï¿½ tai on edes animointi alue nï¿½kyvissï¿½, ei tehdï¿½ mitï¿½ï¿½n
 	auto& originalMapViewdescTop = *getMapViewDescTop(originalMapViewDescTopIndex);
 	if(originalMapViewdescTop.AnimationDataRef().AnimationOn() || originalMapViewdescTop.AnimationDataRef().ShowTimesOnTimeControl())
 		return;
 
-	// eli jos origIndex oli pääikkuna (index = 0) tai apuikkuna oli lukittu pääikkunaan, silloin tehdään aika päivityksiä
+	// eli jos origIndex oli pï¿½ï¿½ikkuna (index = 0) tai apuikkuna oli lukittu pï¿½ï¿½ikkunaan, silloin tehdï¿½ï¿½n aika pï¿½ivityksiï¿½
 	if(originalMapViewDescTopIndex == 0 || originalMapViewdescTop.LockToMainMapViewTime())
 	{
 		for(unsigned int currentMapViewDescTopIndex = 0; currentMapViewDescTopIndex < mapViewDescTops_.size(); currentMapViewDescTopIndex++)
@@ -2034,7 +2072,7 @@ void NFmiCombinedMapHandler::updateTimeInLockedDescTops(const NFmiMetTime& wante
 			auto& currentMapViewdescTop = *getMapViewDescTop(currentMapViewDescTopIndex);
 			if(currentMapViewDescTopIndex == 0 || currentMapViewdescTop.LockToMainMapViewTime())
 			{
-				// jos läpikäytävässä ikkunassa on animointia tai edes anim.-ikkuna näkyvissä, ei tehdä mitään
+				// jos lï¿½pikï¿½ytï¿½vï¿½ssï¿½ ikkunassa on animointia tai edes anim.-ikkuna nï¿½kyvissï¿½, ei tehdï¿½ mitï¿½ï¿½n
 				if(currentMapViewdescTop.AnimationDataRef().AnimationOn() || currentMapViewdescTop.AnimationDataRef().ShowTimesOnTimeControl())
 					continue;
 				currentMapViewdescTop.CurrentTime(wantedTime);
@@ -2062,7 +2100,7 @@ std::vector<std::string> NFmiCombinedMapHandler::makeListOfUsedMacroParamsDepend
 					if(isMacroParamDependentOfEditedData(drawParam))
 					{
 						macroParamPathList.push_back(drawParam->InitFileName());
-						// Tyhjennetään myös kyseisten näyttörivien bitmap cache (ikävä kaksois vastuu metodilla)
+						// Tyhjennetï¿½ï¿½n myï¿½s kyseisten nï¿½yttï¿½rivien bitmap cache (ikï¿½vï¿½ kaksois vastuu metodilla)
 						mapViewDescTop->MapViewCache().MakeRowDirty(cacheRowNumber);
 					}
 				}
@@ -2095,8 +2133,8 @@ bool NFmiCombinedMapHandler::isMacroParamDependentOfEditedData(boost::shared_ptr
 	return false;
 }
 
-// Tyhjennetään bitmap cached eri karttanäytöistä niiltä riveiltä, missä on editoitua dataa katseltavana.
-// Lisäksi liataan aikasarja ikkuna, jos siellä on editoitua parametria valittuna.
+// Tyhjennetï¿½ï¿½n bitmap cached eri karttanï¿½ytï¿½istï¿½ niiltï¿½ riveiltï¿½, missï¿½ on editoitua dataa katseltavana.
+// Lisï¿½ksi liataan aikasarja ikkuna, jos siellï¿½ on editoitua parametria valittuna.
 void NFmiCombinedMapHandler::clearAllViewRowsWithEditedData()
 {
 	for(auto& mapViewDescTop : mapViewDescTops_)
@@ -2115,7 +2153,7 @@ void NFmiCombinedMapHandler::clearAllViewRowsWithEditedData()
 		}
 	}
 
-	// Lopuksi vielä likaus aikasarjaan, jos tarvis
+	// Lopuksi vielï¿½ likaus aikasarjaan, jos tarvis
 	if(::drawParamListContainsEditedData(*CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->TimeSerialViewDrawParamList()))
 		timeSerialViewDirty_ = true;
 }
@@ -2133,7 +2171,7 @@ void NFmiCombinedMapHandler::makeDrawedInfoVectorForMapView(std::vector<boost::s
 		infoVectorOut = infoOrganizer.GetInfos(NFmiInfoData::kFlashData);
 	}
 	else if(notEditedData && (producerId == kFmiSYNOP || producerId == NFmiInfoData::kFmiSpSynoXProducer || paramId == NFmiInfoData::kFmiSpSynoPlot || paramId == NFmiInfoData::kFmiSpMinMaxPlot))
-	{ // synop-data on aluksi poikkeus, mille tehdään vektori, missä useita infoja, jos niitä löytyy
+	{ // synop-data on aluksi poikkeus, mille tehdï¿½ï¿½n vektori, missï¿½ useita infoja, jos niitï¿½ lï¿½ytyy
 		if(producerId == NFmiInfoData::kFmiSpSynoXProducer)
 			infoVectorOut = ::getSortedSynopInfoVector(kFmiSYNOP, kFmiTestBed);
 		else
@@ -2148,7 +2186,7 @@ void NFmiCombinedMapHandler::makeDrawedInfoVectorForMapView(std::vector<boost::s
 		{
 			if(dataType == NFmiInfoData::kMacroParam || dataType == NFmiInfoData::kQ3MacroParam)
 			{ 
-				// makroparamille pitää säätää laskettavan hilan alue vastaamaan karttanäytön aluetta
+				// makroparamille pitï¿½ï¿½ sï¿½ï¿½tï¿½ï¿½ laskettavan hilan alue vastaamaan karttanï¿½ytï¿½n aluetta
 				if(area)
 				{
 					NFmiExtraMacroParamData::SetUsedAreaForData(info, area.get());
@@ -2158,20 +2196,20 @@ void NFmiCombinedMapHandler::makeDrawedInfoVectorForMapView(std::vector<boost::s
 			infoVectorOut.push_back(info);
 		}
 	}
-	// Lopuksi pitää vielä säätää piirrettävien infojen maskit knomask-tilaan, koska 
-	// olen poistanut ns. aktivationMaskin käytön ja info on voinut jäädä esim. selected-mask tilaan
+	// Lopuksi pitï¿½ï¿½ vielï¿½ sï¿½ï¿½tï¿½ï¿½ piirrettï¿½vien infojen maskit knomask-tilaan, koska 
+	// olen poistanut ns. aktivationMaskin kï¿½ytï¿½n ja info on voinut jï¿½ï¿½dï¿½ esim. selected-mask tilaan
 	::setInfosMask(infoVectorOut, NFmiMetEditorTypes::kFmiNoMask);
 }
 
-// Tutkii vertikaali macroParam funktioiden kanssa että jos kyse on pressure datasta, että löytyykö 
-// samalta tuottajalta myös hybrid dataa, missä on haluttu parametri.
-// Kaikissa muissa tapauksissa palauttaa true (eli tehdään rivin cache likaus), paitsi jos data 
-// pressure dataa ja löytyy vastaava hybrid data infoOrganizerista.
+// Tutkii vertikaali macroParam funktioiden kanssa ettï¿½ jos kyse on pressure datasta, ettï¿½ lï¿½ytyykï¿½ 
+// samalta tuottajalta myï¿½s hybrid dataa, missï¿½ on haluttu parametri.
+// Kaikissa muissa tapauksissa palauttaa true (eli tehdï¿½ï¿½n rivin cache likaus), paitsi jos data 
+// pressure dataa ja lï¿½ytyy vastaava hybrid data infoOrganizerista.
 bool NFmiCombinedMapHandler::doMacroParamVerticalDataChecks(NFmiFastQueryInfo& info, NFmiInfoData::Type dataType, const MacroParamDataInfo& macroParamDataInfo)
 {
 	if(macroParamDataInfo.usedWithVerticalFunction_)
 	{
-		// Jos dataa käytetty vertikaali funktioiden kanssa, pitää siinä olla yli 2 leveliä, muuten sitä ei käytetä macroParam laskuissa
+		// Jos dataa kï¿½ytetty vertikaali funktioiden kanssa, pitï¿½ï¿½ siinï¿½ olla yli 2 leveliï¿½, muuten sitï¿½ ei kï¿½ytetï¿½ macroParam laskuissa
 		if(info.SizeLevels() > 2)
 		{
 			if(dataType == NFmiInfoData::kViewable)
@@ -2180,7 +2218,7 @@ bool NFmiCombinedMapHandler::doMacroParamVerticalDataChecks(NFmiFastQueryInfo& i
 				{
 					auto hybridData = ::getInfoOrganizer().Info(macroParamDataInfo.dataIdent_, nullptr, NFmiInfoData::kHybridData, false, true);
 					if(hybridData)
-						return false; // löytyi vastaava hybrid data, eli ei tehdä rivin päivitystä tälle datalle
+						return false; // lï¿½ytyi vastaava hybrid data, eli ei tehdï¿½ rivin pï¿½ivitystï¿½ tï¿½lle datalle
 				}
 			}
 		}
@@ -2195,8 +2233,8 @@ NFmiMetTime NFmiCombinedMapHandler::adjustTimeToDescTopTimeStep(unsigned int map
 {
 	NFmiMetTime aTime(wantedTime);
 	auto timeStepInMinutes = getMapViewDescTop(mapViewDescTopIndex)->TimeControlTimeStepInMinutes();
-	if(timeStepInMinutes == 0) // ei voi olla 0 timesteppi, muuten kaatuu (negatiivisesta en tiedä)
-		timeStepInMinutes = 60; // hätä korjaus defaultti arvoksi jos oli 0
+	if(timeStepInMinutes == 0) // ei voi olla 0 timesteppi, muuten kaatuu (negatiivisesta en tiedï¿½)
+		timeStepInMinutes = 60; // hï¿½tï¿½ korjaus defaultti arvoksi jos oli 0
 	if(aTime.GetTimeStep() > timeStepInMinutes)
 		aTime.SetTimeStep(timeStepInMinutes);
 	return aTime;
@@ -2249,17 +2287,20 @@ NFmiMetTime NFmiCombinedMapHandler::calcAnimationRestrictedTime(unsigned int map
 	return fixedTime;
 }
 
+#ifndef UNIX
 void NFmiCombinedMapHandler::setSelectedMap(unsigned int mapViewDescTopIndex, int newMapIndex)
 {
-	// newMapIndex pitää ensin asettaa mapViewDescTopiin!
+	// newMapIndex pitï¿½ï¿½ ensin asettaa mapViewDescTopiin!
 	auto& mapViewDescTop = *getMapViewDescTop(mapViewDescTopIndex);
 	mapViewDescTop.SelectedMapIndex(newMapIndex);
-	// Sen arvo saattaa muuttua ja lopullinen arvo pitää tallettaa myös Windows rekistereihin
+	// Sen arvo saattaa muuttua ja lopullinen arvo pitï¿½ï¿½ tallettaa myï¿½s Windows rekistereihin
 	::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(mapViewDescTopIndex)->SelectedMapIndex(mapViewDescTop.SelectedMapIndex());
 
 	setMapArea(mapViewDescTopIndex, mapViewDescTop.MapHandler()->Area());
 }
+#endif
 
+#ifndef UNIX
 void NFmiCombinedMapHandler::setSelectedMapHandler(unsigned int mapViewDescTopIndex, unsigned int newMapIndex)
 {
 	setSelectedMap(mapViewDescTopIndex, newMapIndex);
@@ -2273,21 +2314,21 @@ void NFmiCombinedMapHandler::setMapArea(unsigned int mapViewDescTopIndex, const 
 	{
 		auto *mapDescTop = getMapViewDescTop(mapViewDescTopIndex);
 		auto& totalArea = mapDescTop->MapHandler()->TotalArea();
-		// tähän laitetaan tarkistus, että zoomi area ja karttapohjan areat ovat saman tyyppiset
-		// Jos eivät ole, tehdään mahd. samanlainen area, mikä newArea on, mutta mikä sopii
-		// käytössä olevan dipmaphandlerin kartta pohjaan
+		// tï¿½hï¿½n laitetaan tarkistus, ettï¿½ zoomi area ja karttapohjan areat ovat saman tyyppiset
+		// Jos eivï¿½t ole, tehdï¿½ï¿½n mahd. samanlainen area, mikï¿½ newArea on, mutta mikï¿½ sopii
+		// kï¿½ytï¿½ssï¿½ olevan dipmaphandlerin kartta pohjaan
 		if(NFmiQueryDataUtil::AreAreasSameKind(newArea.get(), totalArea.get()))
 		{
 			mapDescTop->MapHandler()->Area(newArea);
 			::SetCPCropGridSettings(newArea, mapViewDescTopIndex);
 		}
 		else
-		{ // tehdään sitten karttapohjalle sopiva area
+		{ // tehdï¿½ï¿½n sitten karttapohjalle sopiva area
 			boost::shared_ptr<NFmiArea> correctTypeArea(totalArea->NewArea(newArea->BottomLeftLatLon(), newArea->TopRightLatLon()));
 			if(correctTypeArea)
 			{
 				if(!totalArea->IsInside(*correctTypeArea))
-				{ // pitää vähän viilata areaa, koska se ei mene kartta-alueen sisälle
+				{ // pitï¿½ï¿½ vï¿½hï¿½n viilata areaa, koska se ei mene kartta-alueen sisï¿½lle
 					NFmiRect xyRect(totalArea->XYArea(correctTypeArea.get()));
 					if(xyRect.Left() < 0)
 						xyRect.Left(0);
@@ -2319,6 +2360,7 @@ void NFmiCombinedMapHandler::setMapArea(unsigned int mapViewDescTopIndex, const 
 		}
 	}
 }
+#endif // UNIX
 
 NFmiProjectionCurvatureInfo* NFmiCombinedMapHandler::projectionCurvatureInfo()
 {
@@ -2342,11 +2384,11 @@ void NFmiCombinedMapHandler::checkForNewConceptualModelData()
 
 bool NFmiCombinedMapHandler::checkForNewConceptualModelDataBruteForce(unsigned int mapViewDescTopIndex)
 {
-	// Tämä on ns. brute force ratkaisu ei-queryData pohjaisten datojen päivitys tarpeelle.
-	// Jos näytön rivillä on jotain tälläistä dataa, 'liataan' aina koko rivi varmuuden vuoksi.
-	// HUOM! jos jossain karttanäytössä on animaattori päällä, ei tehdä likausta, koska animaatioidulle datalle oli omia tarkastuksia.
+	// Tï¿½mï¿½ on ns. brute force ratkaisu ei-queryData pohjaisten datojen pï¿½ivitys tarpeelle.
+	// Jos nï¿½ytï¿½n rivillï¿½ on jotain tï¿½llï¿½istï¿½ dataa, 'liataan' aina koko rivi varmuuden vuoksi.
+	// HUOM! jos jossain karttanï¿½ytï¿½ssï¿½ on animaattori pï¿½ï¿½llï¿½, ei tehdï¿½ likausta, koska animaatioidulle datalle oli omia tarkastuksia.
 
-	// 1. Tarkita onko karttanäytön näyttöriveillä käsiteanalyysi datoja
+	// 1. Tarkita onko karttanï¿½ytï¿½n nï¿½yttï¿½riveillï¿½ kï¿½siteanalyysi datoja
 	// 2. Jos on, liataan kyseinen rivi
 	auto* mapViewDescTop = getMapViewDescTop(mapViewDescTopIndex);
 	if(mapViewDescTop->AnimationDataRef().AnimationOn())
@@ -2369,7 +2411,7 @@ bool NFmiCombinedMapHandler::checkForNewConceptualModelDataBruteForce(unsigned i
 					NFmiInfoData::Type dataType = drawParam->DataType();
 					if(dataType == NFmiInfoData::kConceptualModelData || dataType == NFmiInfoData::kCapData)
 					{
-						mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, false); // liataan mapView, mutta ei vielä tällä rivillä cachea (menisi kaikki rivit kerralla)
+						mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, false); // liataan mapView, mutta ei vielï¿½ tï¿½llï¿½ rivillï¿½ cachea (menisi kaikki rivit kerralla)
 						mapViewDescTop->MapViewCache().MakeRowDirty(cacheRowNumber);// clean cache row
 						needsToUpdateViews = true;
 						if(dataType == NFmiInfoData::kCapData)
@@ -2387,11 +2429,11 @@ bool NFmiCombinedMapHandler::checkForNewConceptualModelDataBruteForce(unsigned i
 
 void NFmiCombinedMapHandler::updateRowInLockedDescTops(unsigned int originalMapViewDescTopIndex)
 {
-	// Tehdään ensin theOrigDescTopIndex:iin liittyvän mapView päivitys, koska tätä funktiota 
-	// käytetään monista rivin vaihtoon liittyvistä funktioista, on se hyvä saada yhteen paikkaan suoritetuksi yhteisesti.
+	// Tehdï¿½ï¿½n ensin theOrigDescTopIndex:iin liittyvï¿½n mapView pï¿½ivitys, koska tï¿½tï¿½ funktiota 
+	// kï¿½ytetï¿½ï¿½n monista rivin vaihtoon liittyvistï¿½ funktioista, on se hyvï¿½ saada yhteen paikkaan suoritetuksi yhteisesti.
 	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(originalMapViewDescTopIndex);
 	auto* originalMapViewDescTop = getMapViewDescTop(originalMapViewDescTopIndex);
-	// eli jos origIndex oli pääikkuna (index = 0) tai apuikkuna oli lukittu pääikkunaan, silloin tehdään rivi päivityksiä
+	// eli jos origIndex oli pï¿½ï¿½ikkuna (index = 0) tai apuikkuna oli lukittu pï¿½ï¿½ikkunaan, silloin tehdï¿½ï¿½n rivi pï¿½ivityksiï¿½
 	if(originalMapViewDescTopIndex == 0 || originalMapViewDescTop->LockToMainMapViewRow())
 	{
 		auto mapRowStartingIndex = originalMapViewDescTop->MapRowStartingIndex();
@@ -2410,7 +2452,7 @@ void NFmiCombinedMapHandler::updateRowInLockedDescTops(unsigned int originalMapV
 const NFmiMetTime& NFmiCombinedMapHandler::currentTime(unsigned int mapViewDescTopIndex)
 {
 	if(mapViewDescTopIndex > CtrlViewUtils::kFmiMaxMapDescTopIndex)
-		return getMapViewDescTop(0)->CurrentTime(); // erikois näytöille palautetaan vain pääkarttaikkunan valittu aika
+		return getMapViewDescTop(0)->CurrentTime(); // erikois nï¿½ytï¿½ille palautetaan vain pï¿½ï¿½karttaikkunan valittu aika
 	else
 		return getMapViewDescTop(mapViewDescTopIndex)->CurrentTime();
 }
@@ -2422,16 +2464,16 @@ bool NFmiCombinedMapHandler::isAnimationTimeBoxVisibleOverTimeControlView(unsign
 	auto timeControlTimes = mapViewDescTop->TimeControlViewTimes().ValidTimeBag();
 	if(timeControlTimes)
 	{
-		// Peittääkö animaatio ajat koko aikakontrolli-ikkunan
+		// Peittï¿½ï¿½kï¿½ animaatio ajat koko aikakontrolli-ikkunan
 		if(animationTimes.IsInside(timeControlTimes->FirstTime()) && animationTimes.IsInside(timeControlTimes->LastTime()))
 			return true;
 		// Onko animaatio ajat kokonaan aikakontrolli-ikkunassa
 		if(timeControlTimes->IsInside(animationTimes.FirstTime()) && timeControlTimes->IsInside(animationTimes.LastTime()))
 			return true;
-		// Onko animaation 1. aika on selkeästi aikakontrolli-ikkunan sisällä
+		// Onko animaation 1. aika on selkeï¿½sti aikakontrolli-ikkunan sisï¿½llï¿½
 		if(timeControlTimes->IsInside(animationTimes.FirstTime()) && timeControlTimes->FirstTime() < animationTimes.FirstTime() && timeControlTimes->LastTime() > animationTimes.FirstTime())
 			return true;
-		// Onko animaation viimeinen aika on selkeästi aikakontrolli-ikkunan sisällä
+		// Onko animaation viimeinen aika on selkeï¿½sti aikakontrolli-ikkunan sisï¿½llï¿½
 		if(timeControlTimes->IsInside(animationTimes.LastTime()) && timeControlTimes->FirstTime() < animationTimes.LastTime() && timeControlTimes->LastTime() > animationTimes.LastTime())
 			return true;
 
@@ -2467,7 +2509,7 @@ void NFmiCombinedMapHandler::setAnimationBoxToVisibleIfNecessary(unsigned int ma
 }
 
 // asettaa kaikki datat seuraavaan aikaan (jos mahdollista), riippuen aika-askeleesta
-// käy läpi kaikki kartalla näkyvät datat ja asettaa ne oikeaan aikaan
+// kï¿½y lï¿½pi kaikki kartalla nï¿½kyvï¿½t datat ja asettaa ne oikeaan aikaan
 bool NFmiCombinedMapHandler::setDataToNextTime(unsigned int mapViewDescTopIndex, bool stayInsideAnimationTimes)
 {
 	NFmiMetTime newTime;
@@ -2496,7 +2538,7 @@ bool NFmiCombinedMapHandler::setDataToNextTimeForAllDescTops(bool stayInsideAnim
 }
 
 // asettaa kaikki datat edelliseen aikaan (jos mahdollista), riippuen aikaaskeleesta
-// käy läpi kaikki kartalla näkyvät datat ja asettaa ne oikeaan aikaan
+// kï¿½y lï¿½pi kaikki kartalla nï¿½kyvï¿½t datat ja asettaa ne oikeaan aikaan
 bool NFmiCombinedMapHandler::setDataToPreviousTime(unsigned int mapViewDescTopIndex, bool stayInsideAnimationTimes)
 {
 	NFmiMetTime newTime;
@@ -2529,8 +2571,8 @@ unsigned int NFmiCombinedMapHandler::activeMapDescTopIndex()
 	return activeMapDescTopIndex_;
 }
 
-// Tätä ei saa asettaa GenDocin ulkoa suoraan, tämän asetukset tapahtuvat tämän 
-// luokan sisällä, joten tämä ei ole julkinen metodi
+// Tï¿½tï¿½ ei saa asettaa GenDocin ulkoa suoraan, tï¿½mï¿½n asetukset tapahtuvat tï¿½mï¿½n 
+// luokan sisï¿½llï¿½, joten tï¿½mï¿½ ei ole julkinen metodi
 void NFmiCombinedMapHandler::activeMapDescTopIndex(unsigned int mapViewDescTopIndex)
 {
 	if(mapViewDescTopIndex < mapViewDescTops_.size())
@@ -2558,11 +2600,11 @@ const NFmiTimeDescriptor& NFmiCombinedMapHandler::timeControlViewTimes(unsigned 
 	return 	getMapViewDescTop(mapViewDescTopIndex)->TimeControlViewTimes();
 }
 
-// funktio palauttaa oikean rivi numero. Karttanäyttö systeemissä on ikävä virtuaali rivitys
-// jolloin karttanäyttö-luokka voi luulla olevansa rivillä 1 (= yli karttanäytössä oleva rivi)
-// vaikka onkin oikeasti vaikka rivillä 4. Tällöin pitää käyttää apuna desctopin tietoja että 
+// funktio palauttaa oikean rivi numero. Karttanï¿½yttï¿½ systeemissï¿½ on ikï¿½vï¿½ virtuaali rivitys
+// jolloin karttanï¿½yttï¿½-luokka voi luulla olevansa rivillï¿½ 1 (= yli karttanï¿½ytï¿½ssï¿½ oleva rivi)
+// vaikka onkin oikeasti vaikka rivillï¿½ 4. Tï¿½llï¿½in pitï¿½ï¿½ kï¿½yttï¿½ï¿½ apuna desctopin tietoja ettï¿½ 
 // voidaan laskea oikea karttarivi.
-// Oikeat karttarivit alkavat siis 1:stä.
+// Oikeat karttarivit alkavat siis 1:stï¿½.
 unsigned int NFmiCombinedMapHandler::getRealRowNumber(unsigned int mapViewDescTopIndex, int rowIndex)
 {
 	if(mapViewDescTopIndex >= CtrlViewUtils::kFmiSoundingView)
@@ -2579,7 +2621,7 @@ unsigned int NFmiCombinedMapHandler::getRelativeRowNumber(unsigned int mapViewDe
 		return realRowIndex - getMapViewDescTop(mapViewDescTopIndex)->MapRowStartingIndex() + 1;
 }
 
-// muuta käyttämään DrawParamListWithRealRowNumber-funktiota
+// muuta kï¿½yttï¿½mï¿½ï¿½n DrawParamListWithRealRowNumber-funktiota
 NFmiDrawParamList* NFmiCombinedMapHandler::getDrawParamList(unsigned int mapViewDescTopIndex, int rowIndex)
 {
 	if(mapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
@@ -2590,9 +2632,9 @@ NFmiDrawParamList* NFmiCombinedMapHandler::getDrawParamList(unsigned int mapView
 		return getDrawParamListWithRealRowNumber(mapViewDescTopIndex, getRealRowNumber(mapViewDescTopIndex, rowIndex));
 }
 
-// Tämä on otettu käyttöön ,että voisi unohtaa tuon kamalan indeksi jupinan, mikä johtuu
-// 'virtuaali' karttanäyttöriveistä.
-// Karttarivi indeksit alkavat 1:stä. 1. rivi on 1 ja 2. rivi on kaksi jne.
+// Tï¿½mï¿½ on otettu kï¿½yttï¿½ï¿½n ,ettï¿½ voisi unohtaa tuon kamalan indeksi jupinan, mikï¿½ johtuu
+// 'virtuaali' karttanï¿½yttï¿½riveistï¿½.
+// Karttarivi indeksit alkavat 1:stï¿½. 1. rivi on 1 ja 2. rivi on kaksi jne.
 NFmiDrawParamList* NFmiCombinedMapHandler::getDrawParamListWithRealRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex)
 {
 	if(mapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
@@ -2617,9 +2659,9 @@ boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::activeDrawParamFromActi
 	return activeDrawParamWithRealRowNumber(mapViewDescTopIndex, absoluteActiveViewRow(mapViewDescTopIndex));
 }
 
-// Tämä on otettu käyttöön ,että voisi unohtaa tuon kamalan indeksi jupinan, mikä johtuu
-// 'virtuaali' karttanäyttöriveistä.
-// Karttarivi indeksit alkavat 1:stä. 1. rivi on 1 ja 2. rivi on kaksi jne.
+// Tï¿½mï¿½ on otettu kï¿½yttï¿½ï¿½n ,ettï¿½ voisi unohtaa tuon kamalan indeksi jupinan, mikï¿½ johtuu
+// 'virtuaali' karttanï¿½yttï¿½riveistï¿½.
+// Karttarivi indeksit alkavat 1:stï¿½. 1. rivi on 1 ja 2. rivi on kaksi jne.
 boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::activeDrawParamWithRealRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex)
 {
 	NFmiDrawParamList* drawParamList = getDrawParamListWithRealRowNumber(mapViewDescTopIndex, realRowIndex);
@@ -2632,6 +2674,7 @@ boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::activeDrawParamWithReal
 	return boost::shared_ptr<NFmiDrawParam>();
 }
 
+#ifndef UNIX
 // asettaa zoomausalueen riippuvaiseksi yhden karttaikkunan x/y-suhteesta
 void NFmiCombinedMapHandler::doAutoZoom(unsigned int mapViewDescTopIndex)
 {
@@ -2643,8 +2686,8 @@ void NFmiCombinedMapHandler::doAutoZoom(unsigned int mapViewDescTopIndex)
 		{
 			double currentAreaAspectRatio = oldArea->WorldXYAspectRatio();
 			double clientAspectRatio = mapViewDescTop->ClientViewXperYRatio();
-			if(CtrlViewUtils::IsEqualEnough(clientAspectRatio, currentAreaAspectRatio, 0.000001) == false) // Tässä pitäisi tutkia mikä on sellainen pieni arvo, jonka verran ratiot saavat heittää, ettei tätä kuitenkaan tarvitsisi laskea
-			{ // pitää muuttaa zoomattua areaa niin, että sen aspectratio vastaa ikkunan aspectratiota
+			if(CtrlViewUtils::IsEqualEnough(clientAspectRatio, currentAreaAspectRatio, 0.000001) == false) // Tï¿½ssï¿½ pitï¿½isi tutkia mikï¿½ on sellainen pieni arvo, jonka verran ratiot saavat heittï¿½ï¿½, ettei tï¿½tï¿½ kuitenkaan tarvitsisi laskea
+			{ // pitï¿½ï¿½ muuttaa zoomattua areaa niin, ettï¿½ sen aspectratio vastaa ikkunan aspectratiota
 				boost::shared_ptr<NFmiArea> newArea(oldArea->CreateNewArea(mapViewDescTop->ClientViewXperYRatio(), kCenter, true));
 				if(newArea)
 				{
@@ -2654,6 +2697,7 @@ void NFmiCombinedMapHandler::doAutoZoom(unsigned int mapViewDescTopIndex)
 		}
 	}
 }
+#endif
 
 void NFmiCombinedMapHandler::makeViewRowDirtyActions(unsigned int mapViewDescTopIndex, int realRowIndex, NFmiDrawParamList* drawParamList)
 {
@@ -2664,7 +2708,7 @@ void NFmiCombinedMapHandler::makeViewRowDirtyActions(unsigned int mapViewDescTop
 	}
 	catch(...)
 	{
-	} // Jos jokin muu kuin karttanäyttö, MapViewDescTop(mapViewDescTopIndex) -kutsu heittää poikkeuksen ja se on ok tässä
+	} // Jos jokin muu kuin karttanï¿½yttï¿½, MapViewDescTop(mapViewDescTopIndex) -kutsu heittï¿½ï¿½ poikkeuksen ja se on ok tï¿½ssï¿½
 
 	if(drawParamList)
 		::getMacroParamDataCache().update(mapViewDescTopIndex, realRowIndex, *drawParamList);
@@ -2680,7 +2724,7 @@ void NFmiCombinedMapHandler::drawParamSettingsChangedDirtyActions(unsigned int m
 	}
 	catch(...)
 	{
-	} // Jos jokin muu kuin karttanäyttö, MapViewDescTop(mapViewDescTopIndex) -kutsu heittää poikkeuksen ja se on ok tässä
+	} // Jos jokin muu kuin karttanï¿½yttï¿½, MapViewDescTop(mapViewDescTopIndex) -kutsu heittï¿½ï¿½ poikkeuksen ja se on ok tï¿½ssï¿½
 
 	if(drawParam && drawParam->IsMacroParamCase(true))
 	{
@@ -2689,7 +2733,8 @@ void NFmiCombinedMapHandler::drawParamSettingsChangedDirtyActions(unsigned int m
 	mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, true);
 }
 
-// Liataan vain 1. näkyvät karttarivit niistä karttanäytöistä, missä näytä-maski on päällä
+#ifndef UNIX
+// Liataan vain 1. nï¿½kyvï¿½t karttarivit niistï¿½ karttanï¿½ytï¿½istï¿½, missï¿½ nï¿½ytï¿½-maski on pï¿½ï¿½llï¿½
 void NFmiCombinedMapHandler::maskChangedDirtyActions()
 {
 	for(unsigned int mapViewDescTopIndex = 0; mapViewDescTopIndex < mapViewDescTops_.size(); mapViewDescTopIndex++)
@@ -2699,7 +2744,7 @@ void NFmiCombinedMapHandler::maskChangedDirtyActions()
 		{
 			if(::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(mapViewDescTopIndex)->ShowMasksOnMap())
 			{
-				// Maskit ovat siis näkyvissä 1. relatiivisella rivillä
+				// Maskit ovat siis nï¿½kyvissï¿½ 1. relatiivisella rivillï¿½
 				unsigned int firstVisibleRowIndex = 1;
 				auto cleanedCacheRowIndex = getRealRowNumber(mapViewDescTopIndex, firstVisibleRowIndex) - 1;
 				desctop->MapViewCache().MakeRowDirty(cleanedCacheRowIndex);
@@ -2708,6 +2753,7 @@ void NFmiCombinedMapHandler::maskChangedDirtyActions()
 		}
 	}
 }
+#endif
 
 // Next/Previous fixedDrawParam vaihdetaan parametri-laatikosta hiiren rullalla SHIFT nappi pohjassa.
 bool NFmiCombinedMapHandler::changeParamSettingsToNextFixedDrawParam(unsigned int mapViewDescTopIndex, int realRowIndex, int paramIndex, bool gotoNext)
@@ -2736,18 +2782,18 @@ bool NFmiCombinedMapHandler::changeParamSettingsToNextFixedDrawParam(unsigned in
 	return false;
 }
 
-// neljä tilaa:
-// 0 = näytä aikakontrolliikkuna+teksti
+// neljï¿½ tilaa:
+// 0 = nï¿½ytï¿½ aikakontrolliikkuna+teksti
 // 1=vain aik.kont.ikkuna
-// 2=älä näytä kumpaakaan
-// 3= näytä vain teksti
+// 2=ï¿½lï¿½ nï¿½ytï¿½ kumpaakaan
+// 3= nï¿½ytï¿½ vain teksti
 // palauttaa currentin tilan
 int NFmiCombinedMapHandler::toggleShowTimeOnMapMode(unsigned int mapViewDescTopIndex)
 {
 	return getMapViewDescTop(mapViewDescTopIndex)->ToggleShowTimeOnMapMode();
 }
 
-// aikasarja ikkunat asetetaan samalla likaiseksi kuin karttanäyttökin (ainakin toistaiseksi)
+// aikasarja ikkunat asetetaan samalla likaiseksi kuin karttanï¿½yttï¿½kin (ainakin toistaiseksi)
 bool NFmiCombinedMapHandler::timeSerialViewDirty()
 {
 	return timeSerialViewDirty_;
@@ -2758,6 +2804,7 @@ void NFmiCombinedMapHandler::timeSerialViewDirty(bool newValue)
 	timeSerialViewDirty_ = newValue;
 }
 
+#ifndef UNIX
 void NFmiCombinedMapHandler::setMapViewCacheSize(double theNewSizeInMB)
 {
 	::getApplicationWinRegistry().MapViewCacheMaxSizeInMB(theNewSizeInMB);
@@ -2765,11 +2812,12 @@ void NFmiCombinedMapHandler::setMapViewCacheSize(double theNewSizeInMB)
 	for(unsigned int mapViewDescTopIndex = 0; mapViewDescTopIndex < mapViewDescTops_.size(); mapViewDescTopIndex++)
 		mapViewDescTops_[mapViewDescTopIndex]->MapViewCache().MaxSizeMB(theNewSizeInMB);
 }
+#endif
 
 // typeOfChange 0 = minutes, 1 = 6hrs, 2 = day, 3 = week, 4 = month, 5 = year
 // direction vaihtoehdot ovat kBackward ja kForward eli ajan siirto suunta
-// mapViewDescTopIndex eli karttanäytön indeksi, joita on 3 kpl
-// amountOfChange eli kuinka monta päivää/viikkoa/kuukautta jne. liikutaan ajassa eteen/taakse (yleensä 1)
+// mapViewDescTopIndex eli karttanï¿½ytï¿½n indeksi, joita on 3 kpl
+// amountOfChange eli kuinka monta pï¿½ivï¿½ï¿½/viikkoa/kuukautta jne. liikutaan ajassa eteen/taakse (yleensï¿½ 1)
 bool NFmiCombinedMapHandler::changeTime(int typeOfChange, FmiDirection direction, unsigned long mapViewDescTopIndex, double amountOfChange)
 {
 	NFmiMetTime selectedTime = currentTime(mapViewDescTopIndex);
@@ -2794,8 +2842,8 @@ bool NFmiCombinedMapHandler::changeTime(int typeOfChange, FmiDirection direction
 		else
 			selectedTime.PreviousMetTime(period);
 		// Previous/NextMetTime(period) metodeissa on bugi, ei osaa ottaa 
-		// huomioon eri pituisia kuukausia, siksi pitää tarkistaa että ei mene esim.
-		// toukokuun 31. päivästä kesäkuun 31. päivään, jota ei ole olemassa.
+		// huomioon eri pituisia kuukausia, siksi pitï¿½ï¿½ tarkistaa ettï¿½ ei mene esim.
+		// toukokuun 31. pï¿½ivï¿½stï¿½ kesï¿½kuun 31. pï¿½ivï¿½ï¿½n, jota ei ole olemassa.
 		auto daysInMonth = NFmiTime::DaysInMonth(selectedTime.GetMonth(), selectedTime.GetYear());
 		if(selectedTime.GetDay() > daysInMonth)
 			selectedTime.SetDay(daysInMonth);
@@ -2804,19 +2852,19 @@ bool NFmiCombinedMapHandler::changeTime(int typeOfChange, FmiDirection direction
 	{
 		NFmiTimePerioid period(1,0,0,0,0,0);
 		if(direction == kForward)
-			selectedTime.NextMetTime(period);  // HUOM! näissä bugi, ei osaa ottaa huomioon eri pituisia kuukausia!!!!!
+			selectedTime.NextMetTime(period);  // HUOM! nï¿½issï¿½ bugi, ei osaa ottaa huomioon eri pituisia kuukausia!!!!!
 		else
-			selectedTime.PreviousMetTime(period);  // HUOM! näissä bugi, ei osaa ottaa huomioon eri pituisia kuukausia!!!!!
+			selectedTime.PreviousMetTime(period);  // HUOM! nï¿½issï¿½ bugi, ei osaa ottaa huomioon eri pituisia kuukausia!!!!!
 	}
 
-	centerTimeControlView(mapViewDescTopIndex, selectedTime, true); // tämä asettaa ajan, myös lukittuihin näyttöihin ja likaa näytön
+	centerTimeControlView(mapViewDescTopIndex, selectedTime, true); // tï¿½mï¿½ asettaa ajan, myï¿½s lukittuihin nï¿½yttï¿½ihin ja likaa nï¿½ytï¿½n
 	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Times changed by PageUp/Down keys");
 	return true;
 }
 
 void NFmiCombinedMapHandler::makeMapViewRowDirty(int mapViewDescTopIndex, int viewRowIndex)
 {
-	// mapview cached alkaa 0:sta ja theViewRowIndex alkaa 1:stä
+	// mapview cached alkaa 0:sta ja theViewRowIndex alkaa 1:stï¿½
 	getMapViewDescTop(mapViewDescTopIndex)->MapViewCache().MakeRowDirty(getRealRowNumber(mapViewDescTopIndex, viewRowIndex) - 1);
 	mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, true);
 }
@@ -2831,31 +2879,33 @@ const NFmiMetTime& NFmiCombinedMapHandler::activeMapTime()
 	return currentTime(activeMapDescTopIndex_);
 }
 
-// Joitain arvoja säädetään suoraan NFmiMapViewDescTop-luokan läpi, joten näitä pitää päivittää takaisin rekistereihin
+#ifndef UNIX
+// Joitain arvoja sï¿½ï¿½detï¿½ï¿½n suoraan NFmiMapViewDescTop-luokan lï¿½pi, joten nï¿½itï¿½ pitï¿½ï¿½ pï¿½ivittï¿½ï¿½ takaisin rekistereihin
 void NFmiCombinedMapHandler::storeMapViewSettingsToWinRegistry()
 {
 	for(unsigned int mapViewDescTopIndex = 0; mapViewDescTopIndex < mapViewDescTops_.size(); mapViewDescTopIndex++)
 		getMapViewDescTop(mapViewDescTopIndex)->StoreToMapViewWinRegistry(*::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(mapViewDescTopIndex));
 }
+#endif
 
 const std::unique_ptr<NFmiFastDrawParamList>& NFmiCombinedMapHandler::getModifiedPropertiesDrawParamList() const
 {
 	return modifiedPropertiesDrawParamList_;
 }
 
-// Päivittää drawParam -parametriin modifiedPropertiesDrawParamList_:ista mahdollisesti löytyvät asetukset.
+// Pï¿½ivittï¿½ï¿½ drawParam -parametriin modifiedPropertiesDrawParamList_:ista mahdollisesti lï¿½ytyvï¿½t asetukset.
 void NFmiCombinedMapHandler::updateFromModifiedDrawParam(boost::shared_ptr<NFmiDrawParam>& drawParam, bool groundData)
 {
 	if(drawParam)
 	{
-		if(!drawParam->ViewMacroDrawParam()) // ei päivitetä ominaisuuksia modified listasta, jos oli viewmacro-drawparam
+		if(!drawParam->ViewMacroDrawParam()) // ei pï¿½ivitetï¿½ ominaisuuksia modified listasta, jos oli viewmacro-drawparam
 		{
 			if(modifiedPropertiesDrawParamList_->Find(drawParam, groundData)) // 1999.08.30/Marko
 				drawParam->Init(modifiedPropertiesDrawParamList_->Current());
 			else
 			{ 
-				// ei löytynyt 'lisättävää' drawParamia listasta, joten lisätään tässä sen kopio modified-listaan (nykyään ei lisätä 
-				// järjettömästi kaikkien datojen kaikki drawParam yhdistelmiä)
+				// ei lï¿½ytynyt 'lisï¿½ttï¿½vï¿½ï¿½' drawParamia listasta, joten lisï¿½tï¿½ï¿½n tï¿½ssï¿½ sen kopio modified-listaan (nykyï¿½ï¿½n ei lisï¿½tï¿½ 
+				// jï¿½rjettï¿½mï¿½sti kaikkien datojen kaikki drawParam yhdistelmiï¿½)
 				boost::shared_ptr<NFmiDrawParam> tmpDrawParam(new NFmiDrawParam(*drawParam.get()));
 				modifiedPropertiesDrawParamList_->Add(tmpDrawParam, groundData);
 			}
@@ -2863,13 +2913,13 @@ void NFmiCombinedMapHandler::updateFromModifiedDrawParam(boost::shared_ptr<NFmiD
 	}
 }
 
-// Tein tämän version joka muuttaa modifiedPropertiesDrawParamList_:in otusta annetulla drawParamilla.
-// Lisäsin tähän myös annetun drawlist-rivin likaamisen.
+// Tein tï¿½mï¿½n version joka muuttaa modifiedPropertiesDrawParamList_:in otusta annetulla drawParamilla.
+// Lisï¿½sin tï¿½hï¿½n myï¿½s annetun drawlist-rivin likaamisen.
 void NFmiCombinedMapHandler::updateToModifiedDrawParam(unsigned int mapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam>& drawParam, int viewRowIndex)
 {
 	if(drawParam)
 	{
-		if(!drawParam->ViewMacroDrawParam()) // jos kyseessä oli viewmacro-drawparam, ei päivitetä modified-listalla olevaa drawparamia!
+		if(!drawParam->ViewMacroDrawParam()) // jos kyseessï¿½ oli viewmacro-drawparam, ei pï¿½ivitetï¿½ modified-listalla olevaa drawparamia!
 		{
 			boost::shared_ptr<NFmiFastQueryInfo> info = ::getInfoOrganizer().Info(drawParam, false, true);
 			bool groundData = ::isGroundDataType(drawParam);
@@ -2934,7 +2984,7 @@ void NFmiCombinedMapHandler::hideShowAllMapViewParams(unsigned int mapViewDescTo
 			}
 		}
 	}
-	checkAnimationLockedModeTimeBags(mapViewDescTopIndex, false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
+	checkAnimationLockedModeTimeBags(mapViewDescTopIndex, false); // kun parametrin nï¿½kyvyyttï¿½ vaihdetaan, pitï¿½ï¿½ tehdï¿½ mahdollisesti animaatio moodin datan tarkistus
 	makeWholeDesctopDirtyActions(mapViewDescTopIndex, nullptr);
 }
 
@@ -2962,12 +3012,12 @@ bool NFmiCombinedMapHandler::setModelRunOffset(boost::shared_ptr<NFmiDrawParam> 
 		if(command == kFmiModelRunOffsetPrevious)
 		{
 			drawParam->ModelOriginTime(NFmiMetTime::gMissingTime); // nollataan mahd. fiksattu origin aika
-			drawParam->ModelRunIndex(drawParam->ModelRunIndex() - 1); // siirretään offset edelliseen aikaan
+			drawParam->ModelRunIndex(drawParam->ModelRunIndex() - 1); // siirretï¿½ï¿½n offset edelliseen aikaan
 		}
 		else if(command == kFmiModelRunOffsetNext)
 		{
 			drawParam->ModelOriginTime(NFmiMetTime::gMissingTime); // nollataan mahd. fiksattu origin aika
-			drawParam->ModelRunIndex(drawParam->ModelRunIndex() + 1); // siirretään offset seuraavaan aikaan
+			drawParam->ModelRunIndex(drawParam->ModelRunIndex() + 1); // siirretï¿½ï¿½n offset seuraavaan aikaan
 			if(drawParam->ModelRunIndex() > 0)
 				drawParam->ModelRunIndex(0);
 		}
@@ -3009,9 +3059,9 @@ void NFmiCombinedMapHandler::setModelRunOffsetForAllModelDataOnActiveRow(unsigne
 	}
 }
 
-// Tämä on otettu käyttöön ,että voisi unohtaa tuon kamalan indeksi jupinan, mikä johtuu
-// 'virtuaali' karttanäyttöriveistä.
-// Karttarivi indeksit alkavat 1:stä. 1. rivi on 1 ja 2. rivi on kaksi jne.
+// Tï¿½mï¿½ on otettu kï¿½yttï¿½ï¿½n ,ettï¿½ voisi unohtaa tuon kamalan indeksi jupinan, mikï¿½ johtuu
+// 'virtuaali' karttanï¿½yttï¿½riveistï¿½.
+// Karttarivi indeksit alkavat 1:stï¿½. 1. rivi on 1 ja 2. rivi on kaksi jne.
 void NFmiCombinedMapHandler::removeAllViewsWithRealRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex)
 {
 	NFmiDrawParamList* drawParamList = getDrawParamListWithRealRowNumber(mapViewDescTopIndex, realRowIndex);
@@ -3033,12 +3083,14 @@ void NFmiCombinedMapHandler::activateView(const NFmiMenuItem& menuItem, int rowI
 		{
 			drawParamList->Current()->Activate(true);
 			drawParamList->Dirty(true);
+#ifndef UNIX
 			if(::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(menuItem.MapViewDescTopIndex())->ShowStationPlot())
 			{
-				// Jos karttanäytöllä näytetään aktiivisen datan pisteet, pitää tässä liata kaikki kuva cachet
+				// Jos karttanï¿½ytï¿½llï¿½ nï¿½ytetï¿½ï¿½n aktiivisen datan pisteet, pitï¿½ï¿½ tï¿½ssï¿½ liata kaikki kuva cachet
 				auto cacheRowIndex = getRealRowNumber(menuItem.MapViewDescTopIndex(), rowIndex) - 1;
 				getMapViewDescTop(menuItem.MapViewDescTopIndex())->MapViewCache().MakeRowDirty(cacheRowIndex);
 			}
+#endif
 			activeEditedParameterMayHaveChangedViewUpdateFlagSetting(menuItem.MapViewDescTopIndex());
 			mapViewDirty(menuItem.MapViewDescTopIndex(), false, false, true, false, false, false);
 		}
@@ -3047,26 +3099,26 @@ void NFmiCombinedMapHandler::activateView(const NFmiMenuItem& menuItem, int rowI
 
 static void DoSpecialDataInitializations(boost::shared_ptr<NFmiDrawParam>& drawParam, bool normalParameterAdd, const NFmiMenuItem& menuItem)
 {
-	// Näyttömakron latauksessa (normalParameterAdd = false) ei satelImagen alphaa saa enää laiteta  default 80%:iin, koska joku on saattanut säätää sen muuksi.
+	// Nï¿½yttï¿½makron latauksessa (normalParameterAdd = false) ei satelImagen alphaa saa enï¿½ï¿½ laiteta  default 80%:iin, koska joku on saattanut sï¿½ï¿½tï¿½ï¿½ sen muuksi.
 	if(menuItem.DataType() == NFmiInfoData::kSatelData && normalParameterAdd)
 	{
-		drawParam->Alpha(80.f); // laitetaan satelliitti/kuva tyyppiselle datalle defaulttina 80% opaque eli pikkuisen läpinäkyvä
+		drawParam->Alpha(80.f); // laitetaan satelliitti/kuva tyyppiselle datalle defaulttina 80% opaque eli pikkuisen lï¿½pinï¿½kyvï¿½
 	}
 }
 
-// Tämä on otettu käyttöön ,että voisi unohtaa tuon kamalan indeksi jupinan, mikä johtuu
-// 'virtuaali' karttanäyttöriveistä.
-// Karttarivi indeksit alkavat 1:stä. 1. rivi on 1 ja 2. rivi on kaksi jne.
-// macroParamInitFileName on sitä varten että jos viewmacrosta ladataan macroparam, tähän pitää antaa init tiedoston nimi
-// muuten macroparamin yhteydessä etsitään menuitemista annettua nimeä
-// normalParameterAdd -parametrilla kerrotaan tuleeko normaali lisäys vai erilaisista viewmakroista lisäys. Tämä
-// haluttiin erottaa vielä isViewMacroDrawParam:ista, jolla merkitään vain drawParamin ViewMacroDrawParam -asetus.
+// Tï¿½mï¿½ on otettu kï¿½yttï¿½ï¿½n ,ettï¿½ voisi unohtaa tuon kamalan indeksi jupinan, mikï¿½ johtuu
+// 'virtuaali' karttanï¿½yttï¿½riveistï¿½.
+// Karttarivi indeksit alkavat 1:stï¿½. 1. rivi on 1 ja 2. rivi on kaksi jne.
+// macroParamInitFileName on sitï¿½ varten ettï¿½ jos viewmacrosta ladataan macroparam, tï¿½hï¿½n pitï¿½ï¿½ antaa init tiedoston nimi
+// muuten macroparamin yhteydessï¿½ etsitï¿½ï¿½n menuitemista annettua nimeï¿½
+// normalParameterAdd -parametrilla kerrotaan tuleeko normaali lisï¿½ys vai erilaisista viewmakroista lisï¿½ys. Tï¿½mï¿½
+// haluttiin erottaa vielï¿½ isViewMacroDrawParam:ista, jolla merkitï¿½ï¿½n vain drawParamin ViewMacroDrawParam -asetus.
 void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, const NFmiMenuItem& menuItem, int realRowIndex, bool isViewMacroDrawParam)
 {
 	auto& infoOrganizer = ::getInfoOrganizer();
 	boost::shared_ptr<NFmiDrawParam> drawParam = infoOrganizer.CreateDrawParam(menuItem.DataIdent(), menuItem.Level(), menuItem.DataType());
 	if(!drawParam)
-		return; // HUOM!! Ei saisi mennä tähän!!!!!!!
+		return; // HUOM!! Ei saisi mennï¿½ tï¿½hï¿½n!!!!!!!
 
 	DoSpecialDataInitializations(drawParam, normalParameterAdd, menuItem);
 	::setMacroParamDrawParamSettings(menuItem, drawParam);
@@ -3088,18 +3140,18 @@ void NFmiCombinedMapHandler::addViewWithRealRowNumber(bool normalParameterAdd, c
 			logStartStr = "Changed parameter to selected ";
 		logParameterAction(logStartStr, menuItem, drawParam, info);
 
-		// ChangeParam tapauksessa vaihdettava parametri on jo poistettu listasta, ja siksi tässä vain uusi samaan paikkaan
+		// ChangeParam tapauksessa vaihdettava parametri on jo poistettu listasta, ja siksi tï¿½ssï¿½ vain uusi samaan paikkaan
 		if(insertParamCase || changeParamCase)
 			drawParamList->Add(drawParam, menuItem.IndexInViewRow());
 		else if(!normalParameterAdd)
 		{
-			// jos näyttö macrosta kyse, pitää parametri laittaa tarkalleen siihen mikä rivi oli
-			// kyseessä (eli listan perään järjestyksessä). Tämä sen takia että satel-kanavat heitetään aina pohjalle ja
-			// näyttömakroissa kaksi satelliitti kuvaa samalla rivillä aiheutti ongelmia.
+			// jos nï¿½yttï¿½ macrosta kyse, pitï¿½ï¿½ parametri laittaa tarkalleen siihen mikï¿½ rivi oli
+			// kyseessï¿½ (eli listan perï¿½ï¿½n jï¿½rjestyksessï¿½). Tï¿½mï¿½ sen takia ettï¿½ satel-kanavat heitetï¿½ï¿½n aina pohjalle ja
+			// nï¿½yttï¿½makroissa kaksi satelliitti kuvaa samalla rivillï¿½ aiheutti ongelmia.
 			drawParamList->Add(drawParam, drawParamList->NumberOfItems() + 1);
 		}
 		else
-			drawParamList->Add(drawParam); // laittaa parametrit listan perään, paitsi satel-kuvat laitetaan keulille (näin satelkuva ei peitä mahdollisia muita parametreja alleen)
+			drawParamList->Add(drawParam); // laittaa parametrit listan perï¿½ï¿½n, paitsi satel-kuvat laitetaan keulille (nï¿½in satelkuva ei peitï¿½ mahdollisia muita parametreja alleen)
 	}
 
 	bool groundData = ::isGroundDataType(drawParam);
@@ -3121,7 +3173,7 @@ void NFmiCombinedMapHandler::logParameterAction(const std::string &parameterActi
 	else 
 	{
 		bool satelDataCase = drawParam->DataType() == NFmiInfoData::kSatelData;
-		// Esim. satelliitti jutuissa tai jos ei löydy ladattavaa dataa, ei ole infoa, joten otetaan halutut tiedot muualta
+		// Esim. satelliitti jutuissa tai jos ei lï¿½ydy ladattavaa dataa, ei ole infoa, joten otetaan halutut tiedot muualta
 		if(satelDataCase)
 			logStr += menuItem.DataIdent().GetParamName();
 		else
@@ -3132,7 +3184,7 @@ void NFmiCombinedMapHandler::logParameterAction(const std::string &parameterActi
 
 void NFmiCombinedMapHandler::toggleShowDifferenceToOriginalData(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
-	boost::shared_ptr<NFmiDrawParam>& modifiedDrawParam = getDrawParamFromViewLists(menuItem, viewRowIndex);
+	auto modifiedDrawParam = getDrawParamFromViewLists(menuItem, viewRowIndex);
 	if(modifiedDrawParam)
 	{
 		modifiedDrawParam->ShowDifferenceToOriginalData(!(modifiedDrawParam->ShowDifferenceToOriginalData()));
@@ -3143,14 +3195,14 @@ void NFmiCombinedMapHandler::toggleShowDifferenceToOriginalData(const NFmiMenuIt
 
 void NFmiCombinedMapHandler::addView(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
-	// lasketaan todellinen rivinumero (johtuu karttanäytön virtuaali riveistä)
+	// lasketaan todellinen rivinumero (johtuu karttanï¿½ytï¿½n virtuaali riveistï¿½)
 	addViewWithRealRowNumber(true, menuItem, getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), false);
 
-	// lisään tämän CheckAnimationLockedModeTimeBags -kutsun vain perus AddView-metodin yhteyteen, mutta en esim.
-	// AddViewWithRealRowNumber -metodin yhteyteen, että homma ei mene pelkäksi tarkasteluksi.
-	// AddViewWithRealRowNumber -metodia käytetään varsin laajasti ja tarkasteluja tulisi tehtyä liikaa.
+	// lisï¿½ï¿½n tï¿½mï¿½n CheckAnimationLockedModeTimeBags -kutsun vain perus AddView-metodin yhteyteen, mutta en esim.
+	// AddViewWithRealRowNumber -metodin yhteyteen, ettï¿½ homma ei mene pelkï¿½ksi tarkasteluksi.
+	// AddViewWithRealRowNumber -metodia kï¿½ytetï¿½ï¿½n varsin laajasti ja tarkasteluja tulisi tehtyï¿½ liikaa.
 	if(CtrlViewFastInfoFunctions::IsObservationLockModeDataType(menuItem.DataType()) || menuItem.DataType() == NFmiInfoData::kSatelData)
-		checkAnimationLockedModeTimeBags(menuItem.MapViewDescTopIndex(), false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
+		checkAnimationLockedModeTimeBags(menuItem.MapViewDescTopIndex(), false); // kun parametrin nï¿½kyvyyttï¿½ vaihdetaan, pitï¿½ï¿½ tehdï¿½ mahdollisesti animaatio moodin datan tarkistus
 }
 
 void NFmiCombinedMapHandler::addCrossSectionView(const NFmiMenuItem& menuItem, int viewRowIndex, bool treatAsViewMacro)
@@ -3162,7 +3214,7 @@ void NFmiCombinedMapHandler::addCrossSectionView(const NFmiMenuItem& menuItem, i
 	else
 		drawParam = infoOrganizer.CreateCrossSectionDrawParam(menuItem.DataIdent(), menuItem.DataType());
 	if(!drawParam)
-		return; // HUOM!! Ei saisi mennä tähän!!!!!!!
+		return; // HUOM!! Ei saisi mennï¿½ tï¿½hï¿½n!!!!!!!
 	::setMacroParamDrawParamSettings(menuItem, drawParam);
 	drawParam->ViewMacroDrawParam(treatAsViewMacro);
 
@@ -3177,7 +3229,7 @@ void NFmiCombinedMapHandler::addCrossSectionView(const NFmiMenuItem& menuItem, i
 			crossSectionViewDrawParamList->Add(drawParam, menuItem.IndexInViewRow());
 		else
 			crossSectionViewDrawParamList->Add(drawParam);
-		crossSectionViewDrawParamList->ActivateOnlyOne(); // varmistaa, että yksi ja vain yksi paramtri listassa on aktiivinen
+		crossSectionViewDrawParamList->ActivateOnlyOne(); // varmistaa, ettï¿½ yksi ja vain yksi paramtri listassa on aktiivinen
 	}
 	drawParamSettingsChangedDirtyActions(menuItem.MapViewDescTopIndex(), getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), drawParam);
 }
@@ -3212,9 +3264,10 @@ void NFmiCombinedMapHandler::removeView(const NFmiMenuItem& menuItem, int viewRo
 			NFmiInfoData::Type dataType = drawParamList->Current()->DataType();
 			drawParamList->Remove();
 			if(CtrlViewFastInfoFunctions::IsObservationLockModeDataType(dataType))
-				checkAnimationLockedModeTimeBags(mapViewDesctopIndex, false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
+				checkAnimationLockedModeTimeBags(mapViewDesctopIndex, false); // kun parametrin nï¿½kyvyyttï¿½ vaihdetaan, pitï¿½ï¿½ tehdï¿½ mahdollisesti animaatio moodin datan tarkistus
 
-			drawParamSettingsChangedDirtyActions(mapViewDesctopIndex, getRealRowNumber(mapViewDesctopIndex, viewRowIndex), boost::shared_ptr<NFmiDrawParam>());
+			boost::shared_ptr<NFmiDrawParam> emptyDrawParam;
+			drawParamSettingsChangedDirtyActions(mapViewDesctopIndex, getRealRowNumber(mapViewDesctopIndex, viewRowIndex), emptyDrawParam);
 		}
 		if(drawParamList->NumberOfItems() && (!activeDrawParamWithRealRowNumber(mapViewDesctopIndex, getRealRowNumber(mapViewDesctopIndex, viewRowIndex))))
 		{
@@ -3326,12 +3379,12 @@ void NFmiCombinedMapHandler::changeAllProducersInMapRow(const NFmiMenuItem& menu
 			if(dataType != NFmiInfoData::kSatelData && dataType != NFmiInfoData::kMacroParam && dataType != NFmiInfoData::kQ3MacroParam)
 			{
 				bool groundData = ::isGroundDataType(drawParam);
-				NFmiInfoData::Type finalDataType = ::getFinalDataType(drawParam, givenProducer, useCrossSectionParams, groundData); // pitää päättää vielä muutentun tuottajan datatyyppi
-				// pitää hakea FindInfo:lla tuottajan mukaan dataa, josta saadaan oikea tuottaja (nimineen kaikkineen)
+				NFmiInfoData::Type finalDataType = ::getFinalDataType(drawParam, givenProducer, useCrossSectionParams, groundData); // pitï¿½ï¿½ pï¿½ï¿½ttï¿½ï¿½ vielï¿½ muutentun tuottajan datatyyppi
+				// pitï¿½ï¿½ hakea FindInfo:lla tuottajan mukaan dataa, josta saadaan oikea tuottaja (nimineen kaikkineen)
 				boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer.FindInfo(finalDataType, givenProducer, groundData);
 				if(info)
-					drawParam->Param().SetProducers(*info->Producer()); // pitää laittaa tuottaja datasta, koska tuottajan nimikin ratkaisee, kun haetaan dataa
-				else // jos ei löytynyt dataa, tämä luultavasti menee pieleen, mutta laitetaan kuitenkin tuottaja kohdalleen
+					drawParam->Param().SetProducers(*info->Producer()); // pitï¿½ï¿½ laittaa tuottaja datasta, koska tuottajan nimikin ratkaisee, kun haetaan dataa
+				else // jos ei lï¿½ytynyt dataa, tï¿½mï¿½ luultavasti menee pieleen, mutta laitetaan kuitenkin tuottaja kohdalleen
 					drawParam->Param().SetProducers(*(menuItem.DataIdent().GetProducer()));
 				drawParam->DataType(finalDataType);
 			}
@@ -3363,7 +3416,7 @@ void NFmiCombinedMapHandler::copyDrawParamOptions(const NFmiMenuItem& menuItem, 
 	if(wantedDrawParamList && wantedDrawParamList->Index(menuItem.IndexInViewRow()))
 	{
 		copyPasteDrawParam_->Init(wantedDrawParamList->Current(), true);
-		// Pastettavan drawParamin pitää aina olla näkyvä, muuten tulee hämmennystä käyttäjissä!
+		// Pastettavan drawParamin pitï¿½ï¿½ aina olla nï¿½kyvï¿½, muuten tulee hï¿½mmennystï¿½ kï¿½yttï¿½jissï¿½!
 		copyPasteDrawParam_->HideParam(false);
 		copyPasteDrawParamAvailableYet_ = true;
 	}
@@ -3423,6 +3476,7 @@ NFmiDrawParamList* NFmiCombinedMapHandler::getCrossSectionViewDrawParamList(int 
 	return nullptr;
 }
 
+#ifndef UNIX
 void NFmiCombinedMapHandler::modifyCrossSectionDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
 	boost::shared_ptr<NFmiDrawParam> modifiedDrawParam = getCrosssectionDrawParamFromViewLists(menuItem, viewRowIndex);
@@ -3438,6 +3492,7 @@ void NFmiCombinedMapHandler::modifyCrossSectionDrawParam(const NFmiMenuItem& men
 		}
 	}
 }
+#endif
 
 void NFmiCombinedMapHandler::activateCrossSectionParam(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
@@ -3490,7 +3545,7 @@ void NFmiCombinedMapHandler::swapViewRows(const NFmiMenuItem& menuItem)
 	if(drawParamList1 && drawParamList2)
 	{
 		drawParamList1->Swap(drawParamList2);
-		// HUOM! tosi rivi numerosta pitää vähentää 1, kun manipuloidaan bitmap cache rivejä!!!
+		// HUOM! tosi rivi numerosta pitï¿½ï¿½ vï¿½hentï¿½ï¿½ 1, kun manipuloidaan bitmap cache rivejï¿½!!!
 		getMapViewDescTop(viewIndex)->MapViewCache().SwapRows(realRowNumber1 - 1, realRowNumber2 - 1);
 		getMacroParamDataCache().swapMacroParamCacheRows(viewIndex, realRowNumber1, realRowNumber2);
 		activeEditedParameterMayHaveChangedViewUpdateFlagSetting(menuItem.MapViewDescTopIndex());
@@ -3533,7 +3588,8 @@ void NFmiCombinedMapHandler::saveDrawParamSettings(boost::shared_ptr<NFmiDrawPar
 
 void NFmiCombinedMapHandler::saveDrawParamSettings(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
-	saveDrawParamSettings(getUsedMapViewDrawParam(menuItem, viewRowIndex));
+	auto drawParam = getUsedMapViewDrawParam(menuItem, viewRowIndex);
+	saveDrawParamSettings(drawParam);
 }
 
 void NFmiCombinedMapHandler::forceStationViewRowUpdate(unsigned int mapViewDescTopIndex, unsigned int theRealRowIndex)
@@ -3541,7 +3597,7 @@ void NFmiCombinedMapHandler::forceStationViewRowUpdate(unsigned int mapViewDescT
 	NFmiDrawParamList* drawParamList = getDrawParamListWithRealRowNumber(mapViewDescTopIndex, theRealRowIndex);
 	if(drawParamList)
 	{
-		// Liataan haluttu drawParamList, jotta käytössä karttanäytössä ollut stationView päivittyy oikein tarvittaessa jos esim. isoline piirto vaihtuu teksti esitykseen.
+		// Liataan haluttu drawParamList, jotta kï¿½ytï¿½ssï¿½ karttanï¿½ytï¿½ssï¿½ ollut stationView pï¿½ivittyy oikein tarvittaessa jos esim. isoline piirto vaihtuu teksti esitykseen.
 		drawParamList->Dirty(true);
 	}
 }
@@ -3551,7 +3607,7 @@ void NFmiCombinedMapHandler::reloadDrawParamSettings(const NFmiMenuItem& menuIte
 	boost::shared_ptr<NFmiDrawParam> drawParam = getUsedMapViewDrawParam(menuItem, viewRowIndex);
 	if(drawParam)
 	{
-		// Pitää ladata erikseen originaali drawParam asetukset omaan olioon ja sen avulla initialisoida käytössä olevan asetukset
+		// Pitï¿½ï¿½ ladata erikseen originaali drawParam asetukset omaan olioon ja sen avulla initialisoida kï¿½ytï¿½ssï¿½ olevan asetukset
 		NFmiDrawParam origDrawParam;
 		origDrawParam.Init(drawParam->InitFileName());
 		drawParam->Init(&origDrawParam, true);
@@ -3591,7 +3647,8 @@ void NFmiCombinedMapHandler::removeCrosssectionDrawParam(const NFmiMenuItem& men
 	if(drawParamList && drawParamList->Index(menuItem.IndexInViewRow()))
 	{
 		drawParamList->Remove();
-		drawParamSettingsChangedDirtyActions(menuItem.MapViewDescTopIndex(), getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), boost::shared_ptr<NFmiDrawParam>());
+		boost::shared_ptr<NFmiDrawParam> emptyDrawParam;
+		drawParamSettingsChangedDirtyActions(menuItem.MapViewDescTopIndex(), getRealRowNumber(menuItem.MapViewDescTopIndex(), viewRowIndex), emptyDrawParam);
 	}
 }
 
@@ -3605,16 +3662,17 @@ void NFmiCombinedMapHandler::hideView(const NFmiMenuItem& menuItem, int viewRowI
 	{
 		drawParamList->Current()->HideParam(true);
 		if(drawParamList->Current()->IsActive())
-		{// deaktivoidaan piilotettu näyttöparametri (jos oli aktiivinen), ettei pensselillä yritetä sutia sitä vahingossa
+		{// deaktivoidaan piilotettu nï¿½yttï¿½parametri (jos oli aktiivinen), ettei pensselillï¿½ yritetï¿½ sutia sitï¿½ vahingossa
 			drawParamList->Current()->Activate(false);
 			ActivateFirstNonHiddenViewParam(drawParamList);
 		}
 		drawParamList->Dirty(true);
-		checkAnimationLockedModeTimeBags(mapViewDesctopIndex, false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
+		checkAnimationLockedModeTimeBags(mapViewDesctopIndex, false); // kun parametrin nï¿½kyvyyttï¿½ vaihdetaan, pitï¿½ï¿½ tehdï¿½ mahdollisesti animaatio moodin datan tarkistus
 		getMapViewDescTop(mapViewDesctopIndex)->MapViewCache().MakeRowDirty(getRealRowNumber(mapViewDesctopIndex, viewRowIndex));
 		mapViewDirty(mapViewDesctopIndex, false, false, true, false, false, false);
 	}
-	updateToModifiedDrawParam(mapViewDesctopIndex, drawParamList->Current(), viewRowIndex);
+	auto currentDrawParam = drawParamList->Current();
+	updateToModifiedDrawParam(mapViewDesctopIndex, currentDrawParam, viewRowIndex);
 }
 
 void NFmiCombinedMapHandler::showView(const NFmiMenuItem& menuItem, int viewRowIndex)
@@ -3627,11 +3685,12 @@ void NFmiCombinedMapHandler::showView(const NFmiMenuItem& menuItem, int viewRowI
 	{
 		drawParamList->Current()->HideParam(false);
 		drawParamList->Dirty(true);
-		checkAnimationLockedModeTimeBags(mapViewDesctopIndex, false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
+		checkAnimationLockedModeTimeBags(mapViewDesctopIndex, false); // kun parametrin nï¿½kyvyyttï¿½ vaihdetaan, pitï¿½ï¿½ tehdï¿½ mahdollisesti animaatio moodin datan tarkistus
 		getMapViewDescTop(mapViewDesctopIndex)->MapViewCache().MakeRowDirty(getRealRowNumber(mapViewDesctopIndex, viewRowIndex));
 		mapViewDirty(mapViewDesctopIndex, false, false, true, false, false, false);
 	}
-	updateToModifiedDrawParam(mapViewDesctopIndex, drawParamList->Current(), viewRowIndex);
+	auto currentDrawParam = drawParamList->Current();
+	updateToModifiedDrawParam(mapViewDesctopIndex, currentDrawParam, viewRowIndex);
 }
 
 NFmiPtrList<NFmiDrawParamList>& NFmiCombinedMapHandler::getCrossSectionDrawParamListVector()
@@ -3657,7 +3716,7 @@ NFmiCombinedMapHandler::SideParametersIterator NFmiCombinedMapHandler::getTimeSe
 	return timeSerialViewSideParameters_.end();
 }
 
-// viewRowIndex parametri on 1:stä alkava rivi indeksi.
+// viewRowIndex parametri on 1:stï¿½ alkava rivi indeksi.
 NFmiDrawParamList* NFmiCombinedMapHandler::getTimeSerialViewSideParameters(int viewRowIndex)
 {
 	auto sideParameterIter = getTimeSerialViewSideParameterIterator(viewRowIndex);
@@ -3674,7 +3733,7 @@ CombinedMapHandlerInterface::SideParametersContainer& NFmiCombinedMapHandler::ge
 	return timeSerialViewSideParameters_;
 }
 
-// viewRowIndex parametri on 1:stä alkava rivi indeksi
+// viewRowIndex parametri on 1:stï¿½ alkava rivi indeksi
 void NFmiCombinedMapHandler::addEmptySideParamList(int viewRowIndex)
 {
 	auto sideParameterIter = getTimeSerialViewSideParameterIterator(viewRowIndex);
@@ -3690,8 +3749,8 @@ void NFmiCombinedMapHandler::removeSideParamList(int viewRowIndex)
 	}
 }
 
-// Lisätty drawParam pitää myös palauttaa lopussa, jotta sille voidaan tehdä tarvittavia jatkoasetuksia.
-// Tämä on tarpeen varsinkin kun ladataan näyttömakroja ja niissä eritoten macroParam jutut ovat todella hankalia käsitellä.
+// Lisï¿½tty drawParam pitï¿½ï¿½ myï¿½s palauttaa lopussa, jotta sille voidaan tehdï¿½ tarvittavia jatkoasetuksia.
+// Tï¿½mï¿½ on tarpeen varsinkin kun ladataan nï¿½yttï¿½makroja ja niissï¿½ eritoten macroParam jutut ovat todella hankalia kï¿½sitellï¿½.
 boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::addTimeSerialViewSideParameter(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam)
 {
 	auto rowSideParameters = getTimeSerialViewSideParameters(timeSerialViewIndex_);
@@ -3742,7 +3801,7 @@ void NFmiCombinedMapHandler::removeAllTimeSerialViews()
 {
 	timeSerialViewDirty(true);
 	timeSerialViewDrawParamList_->Clear();
-	// Tyhjennetään samalla side-parameter lista
+	// Tyhjennetï¿½ï¿½n samalla side-parameter lista
 	timeSerialViewSideParameters_.clear();
 }
 
@@ -3756,6 +3815,7 @@ void NFmiCombinedMapHandler::showCrossSectionDrawParam(const NFmiMenuItem& menuI
 	}
 }
 
+#ifndef UNIX
 bool NFmiCombinedMapHandler::modifyDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex)
 {
 	boost::shared_ptr<NFmiDrawParam> modifiedDrawParam = getDrawParamFromViewLists(menuItem, viewRowIndex);
@@ -3772,18 +3832,19 @@ bool NFmiCombinedMapHandler::modifyDrawParam(const NFmiMenuItem& menuItem, int v
 		}
 		else
 		{
-			bool updateStatus = dlg.RefreshPressed(); // myös false:lla halutaan ruudun päivitys, koska jos painettu päivitä-nappia ja sitten cancelia, pitää ruutu päivittää
+			bool updateStatus = dlg.RefreshPressed(); // myï¿½s false:lla halutaan ruudun pï¿½ivitys, koska jos painettu pï¿½ivitï¿½-nappia ja sitten cancelia, pitï¿½ï¿½ ruutu pï¿½ivittï¿½ï¿½
 			drawParamSettingsChangedDirtyActions(mapViewDescTopIndex, realRowNumber, modifiedDrawParam);
 			return updateStatus;
 
-			// Huom! Jos on muutettu border-layer piirtoa niin että se muuttuisi kyseisellä näyttörivillä, niin älä kuitenkaan
-			// tyhjennä kuvaa cachesta. Jollain muulla parametri rivillä voi olla samat asetukset ja se voi niitä vielä käyttää.
-			// Kuvat eivät vie paljoa muistia nyky koneiden RAM määrillä ja aina kun kartta/alue/kuvan geometria muuttuu, ladataan 
-			// näyttömakro, menee kaikki nämä cachet uusiksi kuitenkin.
+			// Huom! Jos on muutettu border-layer piirtoa niin ettï¿½ se muuttuisi kyseisellï¿½ nï¿½yttï¿½rivillï¿½, niin ï¿½lï¿½ kuitenkaan
+			// tyhjennï¿½ kuvaa cachesta. Jollain muulla parametri rivillï¿½ voi olla samat asetukset ja se voi niitï¿½ vielï¿½ kï¿½yttï¿½ï¿½.
+			// Kuvat eivï¿½t vie paljoa muistia nyky koneiden RAM mï¿½ï¿½rillï¿½ ja aina kun kartta/alue/kuvan geometria muuttuu, ladataan
+			// nï¿½yttï¿½makro, menee kaikki nï¿½mï¿½ cachet uusiksi kuitenkin.
 		}
 	}
 	return false;
 }
+#endif
 
 boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::createTimeSerialViewDrawParam(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam)
 {
@@ -3796,10 +3857,10 @@ boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::createTimeSerialViewDra
 	return drawParam;
 }
 
-// laitetaan drawparam aikasarjan omaan listaa ja jos vertailutila käytössä, lisätää
-// vielä eri tuottajien drawparamit erilliseen listaan.
-// Lisätty drawParam palautetaan, koska joskus lisätylle oliolle pitää tehdä vielä lisä asetuksia,
-// varsinkin kun ladataan näyttömakroja ja niiden drawParameja.
+// laitetaan drawparam aikasarjan omaan listaa ja jos vertailutila kï¿½ytï¿½ssï¿½, lisï¿½tï¿½ï¿½
+// vielï¿½ eri tuottajien drawparamit erilliseen listaan.
+// Lisï¿½tty drawParam palautetaan, koska joskus lisï¿½tylle oliolle pitï¿½ï¿½ tehdï¿½ vielï¿½ lisï¿½ asetuksia,
+// varsinkin kun ladataan nï¿½yttï¿½makroja ja niiden drawParameja.
 boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::addTimeSerialView(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam)
 {
 	timeSerialViewDirty(true);
@@ -3838,7 +3899,7 @@ void NFmiCombinedMapHandler::timeSerialViewModelRunCountSet(const NFmiMenuItem& 
 		drawParam->TimeSerialModelRunCount(static_cast<int>(menuItem.ExtraParam()));
 
 		timeSerialViewDrawParamList_->Dirty(true);
-		checkAnimationLockedModeTimeBags(menuItem.MapViewDescTopIndex(), false); // kun parametrin näkyvyyttä vaihdetaan, pitää tehdä mahdollisesti animaatio moodin datan tarkistus
+		checkAnimationLockedModeTimeBags(menuItem.MapViewDescTopIndex(), false); // kun parametrin nï¿½kyvyyttï¿½ vaihdetaan, pitï¿½ï¿½ tehdï¿½ mahdollisesti animaatio moodin datan tarkistus
 		mapViewDirty(menuItem.MapViewDescTopIndex(), false, false, true, false, false, false);
 		updateToModifiedDrawParam(menuItem.MapViewDescTopIndex(), drawParam, timeSerialViewIndex_);
 		if(menuItem.MapViewDescTopIndex() == CtrlViewUtils::kFmiTimeSerialView)
@@ -3874,7 +3935,7 @@ void NFmiCombinedMapHandler::selectMapLayer(unsigned int mapViewDescTopIndex, co
 	mapLayerChangedRefreshActions(mapViewDescTopIndex, refreshMessage);
 }
 
-// Palauttaa pair:issa 1. background nimen ja 2. overlay nimen, jos sellaiset on määritetty
+// Palauttaa pair:issa 1. background nimen ja 2. overlay nimen, jos sellaiset on mï¿½ï¿½ritetty
 std::pair<std::string, std::string> NFmiCombinedMapHandler::getMacroReferenceNamesForViewMacro(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex)
 {
 	std::pair<std::string, std::string> macroReferenceNamePair;
@@ -3883,8 +3944,8 @@ std::pair<std::string, std::string> NFmiCombinedMapHandler::getMacroReferenceNam
 	return macroReferenceNamePair;
 }
 
-// Tämä siis tekee vain tarvittavat background ja overlay indeksien asetukset, mutta ei mitään likauksia tai muita juttuja.
-// Tätä on tarkoitus käyttää vain kun näyttömakroa ladataan, jolloin kaikki tarvittava liataan jo muutenkin.
+// Tï¿½mï¿½ siis tekee vain tarvittavat background ja overlay indeksien asetukset, mutta ei mitï¿½ï¿½n likauksia tai muita juttuja.
+// Tï¿½tï¿½ on tarkoitus kï¿½yttï¿½ï¿½ vain kun nï¿½yttï¿½makroa ladataan, jolloin kaikki tarvittava liataan jo muutenkin.
 void NFmiCombinedMapHandler::selectMapLayersByMacroReferenceNamesFromViewMacro(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, const std::string& backgroundMacroReferenceName, const std::string& overlayMacroReferenceName)
 {
 	selectMapLayerByMacroReferenceNameFromViewMacro(true, mapViewDescTopIndex, mapAreaIndex, getCombinedMapModeState(mapViewDescTopIndex, mapAreaIndex), backgroundMacroReferenceName, staticBackgroundMapLayerRelatedInfos_[mapAreaIndex], wmsBackgroundMapLayerRelatedInfos_);
@@ -3945,6 +4006,7 @@ int NFmiCombinedMapHandler::getSelectedCombinedModeMapIndex(int mapViewDescTopIn
 	}
 }
 
+#ifndef UNIX
 void NFmiCombinedMapHandler::setWantedLayerIndex(const NFmiCombinedMapModeState& combinedMapModeState, unsigned int mapViewDescTopIndex, bool backgroundCase)
 {
 	setWantedLayerIndex(combinedMapModeState, mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex), backgroundCase);
@@ -3967,6 +4029,7 @@ void NFmiCombinedMapHandler::setWantedLayerIndex(const NFmiCombinedMapModeState&
 			getWmsSupport()->getStaticMapClientState(mapViewDescTopIndex, mapAreaIndex).state_->setOverlayIndex(combinedMapModeState.currentMapSectionIndex());
 	}
 }
+#endif // UNIX
 
 void NFmiCombinedMapHandler::mapLayerChangedRefreshActions(unsigned int mapViewDescTopIndex, const std::string &refreshMessage)
 {
@@ -3990,7 +4053,7 @@ void NFmiCombinedMapHandler::onToggleShowNamesOnMap(unsigned int mapViewDescTopI
 	mapLayerChangedRefreshActions(mapViewDescTopIndex, refreshMessage);
 }
 
-// scrollaa näyttöriveja halutun määrän (negatiivinen skrollaa ylös ja positiivinen count alas)
+// scrollaa nï¿½yttï¿½riveja halutun mï¿½ï¿½rï¿½n (negatiivinen skrollaa ylï¿½s ja positiivinen count alas)
 bool NFmiCombinedMapHandler::scrollViewRow(unsigned int mapViewDescTopIndex, int scrollCount)
 {
 	if(getMapViewDescTop(mapViewDescTopIndex)->ScrollViewRow(scrollCount))
@@ -4010,12 +4073,12 @@ void NFmiCombinedMapHandler::timeControlTimeStep(unsigned int mapViewDescTopInde
 	{
 		mapViewDescTop->TimeControlTimeStep(timeStepInMinutes);
 		// laitetaan viela kaikki ajat likaisiksi cachesta kun aika-askel muuttuu, 
-		// pitää mahdollisesti piirtää uusiksi salama dataa (ja ehkä jotain muuta?), 
-		// joten varmuuden vuoksi laitan aina välimuistin likaiseksi
+		// pitï¿½ï¿½ mahdollisesti piirtï¿½ï¿½ uusiksi salama dataa (ja ehkï¿½ jotain muuta?), 
+		// joten varmuuden vuoksi laitan aina vï¿½limuistin likaiseksi
 		mapViewDirty(mapViewDescTopIndex, false, true, true, false, false, false);
 	}
 }
-// palauttaa käytetyn aikastepin tunteina. Jos asetuksissa määrätty aikasteppi
+// palauttaa kï¿½ytetyn aikastepin tunteina. Jos asetuksissa mï¿½ï¿½rï¿½tty aikasteppi
 // on pienempi, kuin datan aikaresoluutio, palautetaan datan aikaresoluutio tunteina.
 float NFmiCombinedMapHandler::timeControlTimeStep(unsigned int mapViewDescTopIndex)
 {
@@ -4113,7 +4176,7 @@ void NFmiCombinedMapHandler::clearDesctopsAllParams(unsigned int mapViewDescTopI
 	auto drawParamListVector = getDrawParamListVector(mapViewDescTopIndex);
 	if(drawParamListVector)
 	{
-		// Huom! NFmiPtrList:issä indeksit alkavat 1:stä...
+		// Huom! NFmiPtrList:issï¿½ indeksit alkavat 1:stï¿½...
 		for(unsigned long rowIndex = 1; rowIndex <= drawParamListVector->NumberOfItems(); rowIndex++)
 		{
 			auto* drawParamList = drawParamListVector->Index(rowIndex).CurrentPtr();
@@ -4127,9 +4190,10 @@ void NFmiCombinedMapHandler::clearDesctopsAllParams(unsigned int mapViewDescTopI
 	}
 }
 
+#ifndef UNIX
 void NFmiCombinedMapHandler::makeApplyViewMacroDirtyActions(double drawObjectScaleFactor)
 {
-	// läjä dirty funktio kutsuja, ota nyt tästä selvää. Pitäisi laittaa uuteen uskoon koko päivitys asetus juttu.
+	// lï¿½jï¿½ dirty funktio kutsuja, ota nyt tï¿½stï¿½ selvï¿½ï¿½. Pitï¿½isi laittaa uuteen uskoon koko pï¿½ivitys asetus juttu.
 	mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, true);
 	for(unsigned int mapViewDescTopIndex = 0; mapViewDescTopIndex < mapViewDescTops_.size(); mapViewDescTopIndex++)
 	{
@@ -4137,7 +4201,7 @@ void NFmiCombinedMapHandler::makeApplyViewMacroDirtyActions(double drawObjectSca
 		mapDescTop->MapViewBitmapDirty(true);
 		mapDescTop->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
 
-		// Päivitetään väkisin tämä pixelSize juttu ja siihen liittyvät laskut
+		// Pï¿½ivitetï¿½ï¿½n vï¿½kisin tï¿½mï¿½ pixelSize juttu ja siihen liittyvï¿½t laskut
 		auto currentPixelSize = mapDescTop->MapViewSizeInPixels();
 		mapDescTop->MapViewSizeInPixels(currentPixelSize, nullptr, drawObjectScaleFactor, !mapDescTop->IsTimeControlViewVisible());
 		mapDescTop->UpdateOneMapViewSize();
@@ -4148,7 +4212,7 @@ void NFmiCombinedMapHandler::makeApplyViewMacroDirtyActions(double drawObjectSca
 void NFmiCombinedMapHandler::makeSwapBaseArea(unsigned int mapViewDescTopIndex)
 {
 	getMapViewDescTop(mapViewDescTopIndex)->MapHandler()->MakeSwapBaseArea();
-	// täällä ei tarvitse liata mitää eikä päivittää mitään
+	// tï¿½ï¿½llï¿½ ei tarvitse liata mitï¿½ï¿½ eikï¿½ pï¿½ivittï¿½ï¿½ mitï¿½ï¿½n
 }
 
 void NFmiCombinedMapHandler::swapArea(unsigned int mapViewDescTopIndex)
@@ -4156,12 +4220,13 @@ void NFmiCombinedMapHandler::swapArea(unsigned int mapViewDescTopIndex)
 	NFmiMapViewDescTop* mapDescTop = getMapViewDescTop(mapViewDescTopIndex);
 	mapDescTop->MapHandler()->SwapArea();
 
-	// sitten vielä tarvittävät likaukset ja päivitykset
+	// sitten vielï¿½ tarvittï¿½vï¿½t likaukset ja pï¿½ivitykset
 	mapDescTop->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
 	mapViewDirty(mapViewDescTopIndex, true, true, true, true, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
 	mapDescTop->GridPointCache().Clear();
 }
+#endif // UNIX
 
 void NFmiCombinedMapHandler::removeMacroParamFromDrawParamLists(const std::string& macroParamName)
 {
@@ -4178,11 +4243,11 @@ void NFmiCombinedMapHandler::removeMacroParamFromDrawParamLists(const std::strin
 	}
 }
 
-// Kun ollaan hiiren kanssa Näytä-ikkunan päällä (karttanäytössä) ja rullataan
-// hiiren rullaa, yritetään siirtää sillä rivillä olevaa aktiivista parametria
-// ylös/alas riippuen rullauksen suunnasta. Jos raiseParam on true, tuodaan aktiivista
-// parametria piirto järjestyksessä pintaan päin.
-// Palauttaa true jos siirto onnistui ja pitää päivittää näytöt, muuten false.
+// Kun ollaan hiiren kanssa Nï¿½ytï¿½-ikkunan pï¿½ï¿½llï¿½ (karttanï¿½ytï¿½ssï¿½) ja rullataan
+// hiiren rullaa, yritetï¿½ï¿½n siirtï¿½ï¿½ sillï¿½ rivillï¿½ olevaa aktiivista parametria
+// ylï¿½s/alas riippuen rullauksen suunnasta. Jos raiseParam on true, tuodaan aktiivista
+// parametria piirto jï¿½rjestyksessï¿½ pintaan pï¿½in.
+// Palauttaa true jos siirto onnistui ja pitï¿½ï¿½ pï¿½ivittï¿½ï¿½ nï¿½ytï¿½t, muuten false.
 bool NFmiCombinedMapHandler::moveActiveMapViewParamInDrawingOrderList(unsigned int mapViewDescTopIndex, int viewRowIndex, bool raiseParam, bool useCrossSectionParams)
 {
 	NFmiDrawParamList* list = getDrawParamListWithRealRowNumber(mapViewDescTopIndex, viewRowIndex);
@@ -4192,7 +4257,7 @@ bool NFmiCombinedMapHandler::moveActiveMapViewParamInDrawingOrderList(unsigned i
 	{
 		if(list->MoveActiveParam(raiseParam ? -1 : 1))
 		{
-			getMapViewDescTop(mapViewDescTopIndex)->MapViewCache().MakeRowDirty(viewRowIndex - 1); // täällä rivit alkavat 1:stä, mutta cachessa 0:sta!!!
+			getMapViewDescTop(mapViewDescTopIndex)->MapViewCache().MakeRowDirty(viewRowIndex - 1); // tï¿½ï¿½llï¿½ rivit alkavat 1:stï¿½, mutta cachessa 0:sta!!!
 			makeMacroParamCacheUpdatesForWantedRow(mapViewDescTopIndex, viewRowIndex);
 			return true;
 		}
@@ -4200,13 +4265,13 @@ bool NFmiCombinedMapHandler::moveActiveMapViewParamInDrawingOrderList(unsigned i
 	return false;
 }
 
-// Kun ollaan hiiren kanssa Näytä-ikkunan päällä (karttanäytössä) ja rullataan
-// hiiren rullaa CTRL-nappi pohjassa, yritetään muuttaa sillä rivillä olevaa
-// aktiivista parametria seuraavaan/edelliseen mitä datasta löytyy riippuen rullauksen
+// Kun ollaan hiiren kanssa Nï¿½ytï¿½-ikkunan pï¿½ï¿½llï¿½ (karttanï¿½ytï¿½ssï¿½) ja rullataan
+// hiiren rullaa CTRL-nappi pohjassa, yritetï¿½ï¿½n muuttaa sillï¿½ rivillï¿½ olevaa
+// aktiivista parametria seuraavaan/edelliseen mitï¿½ datasta lï¿½ytyy riippuen rullauksen
 // suunnasta. Jos nextParam on true, haetaan seuraava parametri (querydatan) parametrilistasta,
-// muuten edellinen. Menee päädyistä yli, eli viimeisestä menee 1. parametriin.
-// Käy läpi myös aliparametri (TotalWind ja W&C).
-// Palauttaa true jos parametrin vaihto onnistui ja pitää päivittää näytöt, muuten false.
+// muuten edellinen. Menee pï¿½ï¿½dyistï¿½ yli, eli viimeisestï¿½ menee 1. parametriin.
+// Kï¿½y lï¿½pi myï¿½s aliparametri (TotalWind ja W&C).
+// Palauttaa true jos parametrin vaihto onnistui ja pitï¿½ï¿½ pï¿½ivittï¿½ï¿½ nï¿½ytï¿½t, muuten false.
 bool NFmiCombinedMapHandler::changeActiveMapViewParam(unsigned int mapViewDescTopIndex, int realRowIndex, int paramIndex, bool nextParam, bool useCrossSectionParams)
 {
 	//	TRACE("ChangeActiveMapViewParam 1\n");
@@ -4233,7 +4298,7 @@ bool NFmiCombinedMapHandler::changeActiveMapViewParam(unsigned int mapViewDescTo
 				{
 					setUpChangedDrawParam(drawParam, drawParamTmp);
 					drawParamList->Dirty(true);
-					auto cacheMapRow = realRowIndex - 1; // real-map-row alkaa 1:stä ja cache-map-row 0:sta
+					auto cacheMapRow = realRowIndex - 1; // real-map-row alkaa 1:stï¿½ ja cache-map-row 0:sta
 					getMapViewDescTop(mapViewDescTopIndex)->MapViewCache().MakeRowDirty(cacheMapRow);
 					mapViewDirty(mapViewDescTopIndex, false, false, true, false, false, true);
 					return true;
@@ -4253,27 +4318,27 @@ void NFmiCombinedMapHandler::makeMacroParamCacheUpdatesForWantedRow(int mapViewD
 	}
 }
 
-// Kun jonkun parametrin piirto-ominaisuuksia muutetaan, eivät ne tulevoimaan kuin sille yhdelle
-// lämpötilalle tai paine parametrille mitä säädetään. Tai jos on erilaisia malli datoja, niillä on jo
-// ladattu valmiiksi omat drawparamit vaikka niitä ei katsottaisikaan ja niihinkään ei tule muutokset
-// voimaan, ennen kuin editori käynnistetään uudestaan. Tämä mahdollistaa sen että
-// piirto-ominaisuudet saadaan heti käyttöön esim. kaikille lämpötila (T eli par id 4) parametreille.
+// Kun jonkun parametrin piirto-ominaisuuksia muutetaan, eivï¿½t ne tulevoimaan kuin sille yhdelle
+// lï¿½mpï¿½tilalle tai paine parametrille mitï¿½ sï¿½ï¿½detï¿½ï¿½n. Tai jos on erilaisia malli datoja, niillï¿½ on jo
+// ladattu valmiiksi omat drawparamit vaikka niitï¿½ ei katsottaisikaan ja niihinkï¿½ï¿½n ei tule muutokset
+// voimaan, ennen kuin editori kï¿½ynnistetï¿½ï¿½n uudestaan. Tï¿½mï¿½ mahdollistaa sen ettï¿½
+// piirto-ominaisuudet saadaan heti kï¿½yttï¿½ï¿½n esim. kaikille lï¿½mpï¿½tila (T eli par id 4) parametreille.
 // Tekee siis vain piirto-ominaisuuksien kopioinnin.
 void NFmiCombinedMapHandler::takeDrawParamInUseEveryWhere(boost::shared_ptr<NFmiDrawParam>& drawParam, bool useInMap, bool useInTimeSerial, bool useInCrossSection, bool useWithViewMacros)
 {
-	// 1. käy läpi kartta drawparam listat (ota huomioon view-macrot)
+	// 1. kï¿½y lï¿½pi kartta drawparam listat (ota huomioon view-macrot)
 	if(useInMap)
 	{
 		for(unsigned int mapViewDescTopIndex = 0; mapViewDescTopIndex < mapViewDescTops_.size(); mapViewDescTopIndex++)
 			::initializeWantedDrawParams(*(getMapViewDescTop(mapViewDescTopIndex)->DrawParamListVector()), drawParam, useWithViewMacros);
 	}
-	// 2. käy läpi aikasarja drawparam listat
+	// 2. kï¿½y lï¿½pi aikasarja drawparam listat
 	if(useInTimeSerial)
 		::initializeWantedDrawParams(*timeSerialViewDrawParamList_, drawParam, useWithViewMacros);
-	// 3. käy läpi poikkileikkaus drawparamit
+	// 3. kï¿½y lï¿½pi poikkileikkaus drawparamit
 	if(useInCrossSection && crossSectionDrawParamListVector_)
 		::initializeWantedDrawParams(*crossSectionDrawParamListVector_, drawParam, useWithViewMacros);
-	// 4. käy läpi alussa (kaikelle datalle) tehty drawparamlista
+	// 4. kï¿½y lï¿½pi alussa (kaikelle datalle) tehty drawparamlista
 	::initializeWantedDrawParams(*modifiedPropertiesDrawParamList_, drawParam, useWithViewMacros);
 }
 
@@ -4286,7 +4351,7 @@ void NFmiCombinedMapHandler::borrowParams(unsigned int mapViewDescTopIndex, int 
 	{
 		if(doDebugging)
 		{
-			// Joskus tehdään hatching testejä ja silloi muutetaan testattavan polygonin indeksiä
+			// Joskus tehdï¿½ï¿½n hatching testejï¿½ ja silloi muutetaan testattavan polygonin indeksiï¿½
 			ApplicationInterface::GetApplicationInterfaceImplementation()->SetHatchingDebuggingPolygonIndex(realViewRowIndex);
 		}
 		else
@@ -4302,9 +4367,10 @@ void NFmiCombinedMapHandler::borrowParams(unsigned int mapViewDescTopIndex, int 
 	}
 }
 
-// tämä asettaa uuden karttanäytön hilaruudukon koon.
+#ifndef UNIX
+// tï¿½mï¿½ asettaa uuden karttanï¿½ytï¿½n hilaruudukon koon.
 // tekee tarvittavat 'likaukset' ja palauttaa true, jos
-// näyttöjä tarvitsee päivittää, muuten false (eli ruudukko ei muuttunut).
+// nï¿½yttï¿½jï¿½ tarvitsee pï¿½ivittï¿½ï¿½, muuten false (eli ruudukko ei muuttunut).
 bool NFmiCombinedMapHandler::setMapViewGrid(unsigned int mapViewDescTopIndex, const NFmiPoint& newValue)
 {
 	logMessage("Map view grid changed.", CatLog::Severity::Info, CatLog::Category::Visualization);
@@ -4318,6 +4384,7 @@ bool NFmiCombinedMapHandler::setMapViewGrid(unsigned int mapViewDescTopIndex, co
 	else
 		return false;
 }
+#endif
 
 CtrlViewUtils::GraphicalInfo& NFmiCombinedMapHandler::getGraphicalInfo(unsigned int mapViewDescTopIndex)
 {
@@ -4327,17 +4394,19 @@ CtrlViewUtils::GraphicalInfo& NFmiCombinedMapHandler::getGraphicalInfo(unsigned 
 		return getMapViewDescTop(mapViewDescTopIndex)->GetGraphicalInfo();
 }
 
-// tämä on oikeasti toggle funktio, eli näytä/piilota hila/asemapisteet
+#ifndef UNIX
+// tï¿½mï¿½ on oikeasti toggle funktio, eli nï¿½ytï¿½/piilota hila/asemapisteet
 void NFmiCombinedMapHandler::onShowGridPoints(unsigned int mapViewDescTopIndex)
 {
 	auto& applicationWinRegistry = ::getApplicationWinRegistry();
 	bool newState = !applicationWinRegistry.ConfigurationRelatedWinRegistry().MapView(mapViewDescTopIndex)->ShowStationPlot();
 	applicationWinRegistry.ConfigurationRelatedWinRegistry().MapView(mapViewDescTopIndex)->ShowStationPlot(newState);
-	getMapViewDescTop(mapViewDescTopIndex)->ShowStationPlotVM(newState); // tämä pitää päivittää molempiin paikkoihin, koska jotkin operaatiot riippuvat että MapViewDescTop:issa on päivitetty arvo
-	mapViewDirty(mapViewDescTopIndex, false, true, true, false, false, false); // tämä laittaa cachen likaiseksi
+	getMapViewDescTop(mapViewDescTopIndex)->ShowStationPlotVM(newState); // tï¿½mï¿½ pitï¿½ï¿½ pï¿½ivittï¿½ï¿½ molempiin paikkoihin, koska jotkin operaatiot riippuvat ettï¿½ MapViewDescTop:issa on pï¿½ivitetty arvo
+	mapViewDirty(mapViewDescTopIndex, false, true, true, false, false, false); // tï¿½mï¿½ laittaa cachen likaiseksi
 	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
 	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Show/hide active parameters data's grid/station points");
 }
+#endif
 
 void NFmiCombinedMapHandler::onToggleGridPointColor(unsigned int mapViewDescTopIndex)
 {
@@ -4353,14 +4422,16 @@ void NFmiCombinedMapHandler::onToggleGridPointSize(unsigned int mapViewDescTopIn
 	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Change active parameters data's grid/station points size");
 }
 
+#ifndef UNIX
 void NFmiCombinedMapHandler::onEditSpaceOut(unsigned int mapViewDescTopIndex)
 {
 	::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(mapViewDescTopIndex)->ToggleSpacingOutFactor();
-	// MacroParamDataCache ongelma (MAPADACA): Kun harvennusta muutetaan, pitää liata sellaiset macroParamit, jotka piirretään symboleilla
+	// MacroParamDataCache ongelma (MAPADACA): Kun harvennusta muutetaan, pitï¿½ï¿½ liata sellaiset macroParamit, jotka piirretï¿½ï¿½n symboleilla
 	mapViewDirty(mapViewDescTopIndex, false, true, true, false, false, false);
 	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
 	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Toggle spacing out factor");
 }
+#endif
 
 void NFmiCombinedMapHandler::onChangeParamWindowPosition(unsigned int mapViewDescTopIndex, bool forward)
 {
@@ -4411,6 +4482,7 @@ bool NFmiCombinedMapHandler::onSetTimeBoxTextSizeFactor(unsigned int mapViewDesc
 	return false;
 }
 
+#ifndef UNIX
 void NFmiCombinedMapHandler::setTimeBoxValuesToWinRegistry(unsigned int mapViewDescTopIndex)
 {
 	auto* mapViewDescTop = getMapViewDescTop(mapViewDescTopIndex);
@@ -4422,6 +4494,7 @@ void NFmiCombinedMapHandler::setTimeBoxValuesToWinRegistry(unsigned int mapViewD
 		mapViewWinRegistry->TimeBoxTextSizeFactor(mapViewDescTop->TimeBoxTextSizeFactor());
 	}
 }
+#endif
 
 void NFmiCombinedMapHandler::onSetTimeBoxFillColor(unsigned int mapViewDescTopIndex, NFmiColor newColorNoAlpha)
 {
@@ -4458,11 +4531,13 @@ void NFmiCombinedMapHandler::onShowTimeString(unsigned int mapViewDescTopIndex)
 	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Toggle show time on map view mode");
 }
 
+#ifndef DISABLE_CPPRESTSDK
 std::shared_ptr<WmsSupportInterface> NFmiCombinedMapHandler::getWmsSupport() const
 {
 	std::lock_guard<std::mutex> lock(wmsSupportMutex_);
 	return wmsSupport_;
 }
+#endif // DISABLE_CPPRESTSDK
 
 void NFmiCombinedMapHandler::onToggleLandBorderDrawColor(unsigned int mapViewDescTopIndex)
 {
@@ -4507,30 +4582,33 @@ void NFmiCombinedMapHandler::onToggleOverMapBackForeGround(unsigned int mapViewD
 	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: changed map overlay's draw order");
 }
 
+#ifndef UNIX
 void NFmiCombinedMapHandler::onAcceleratorToggleKeepMapRatio()
 {
 	auto& applicationWinRegistry = ::getApplicationWinRegistry();
 	auto newKeepAspectRatioState = !applicationWinRegistry.KeepMapAspectRatio();
 	applicationWinRegistry.KeepMapAspectRatio(newKeepAspectRatioState);
 
-	// keep ratio laskut pitää tehdä kaikille karttanäytöille!!!
+	// keep ratio laskut pitï¿½ï¿½ tehdï¿½ kaikille karttanï¿½ytï¿½ille!!!
 	for(unsigned int mapViewDescTopIndex = 0; mapViewDescTopIndex < mapViewDescTops_.size(); mapViewDescTopIndex++)
 	{
 		CRect rect;
 		auto* mapViewDescTop = getMapViewDescTop(mapViewDescTopIndex);
 		mapViewDescTop->MapView()->GetClientRect(rect);
 		mapViewDescTop->CalcClientViewXperYRatio(NFmiPoint(rect.Width(), rect.Height()));
-		// tämä 'aiheuttaa' datan harvennuksen. Jos newKeepAspectRatioState on true, tapahtuu silloin 
-		// automaattinen kartan zoomaus ja macroParamCacheData pitää silloin tyhjentää kaikille karttanäytöille
+		// tï¿½mï¿½ 'aiheuttaa' datan harvennuksen. Jos newKeepAspectRatioState on true, tapahtuu silloin
+		// automaattinen kartan zoomaus ja macroParamCacheData pitï¿½ï¿½ silloin tyhjentï¿½ï¿½ kaikille karttanï¿½ytï¿½ille
 		mapViewDirty(mapViewDescTopIndex, true, true, true, newKeepAspectRatioState, false, false);
 		ApplicationInterface::GetApplicationInterfaceImplementation()->UpdateMapView(mapViewDescTopIndex);
 	}
 	ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
 	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: toggle keep map's aspect ratio setting");
 }
+#endif
 
+#ifndef UNIX
 // Jos datan area ja kartta ovat "samanlaisia", laitetaan zoomiksi editoiavan datan alue
-// muuten laitetaan kurrentti kartta kokonaisuudessaan näkyviin.
+// muuten laitetaan kurrentti kartta kokonaisuudessaan nï¿½kyviin.
 void NFmiCombinedMapHandler::onButtonDataArea(unsigned int mapViewDescTopIndex)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> info = ::getEditedInfo();
@@ -4548,7 +4626,7 @@ void NFmiCombinedMapHandler::onButtonDataArea(unsigned int mapViewDescTopIndex)
 	if(areasAreSameKind)
 	{
 		static int counter = 0;
-		counter++; // tämän avulla jos kartan alue ja datan alue samat, joka toisella kerralla zoomataan dataa, ja joka toisella kartan alueeseen
+		counter++; // tï¿½mï¿½n avulla jos kartan alue ja datan alue samat, joka toisella kerralla zoomataan dataa, ja joka toisella kartan alueeseen
 		NFmiRect intersectionRect(mapViewDescTop->MapHandler()->TotalArea()->XYArea().Intersection(mapViewDescTop->MapHandler()->TotalArea()->XYArea(info->Area())));
 		boost::shared_ptr<NFmiArea> usedArea(mapViewDescTop->MapHandler()->TotalArea()->CreateNewArea(intersectionRect));
 		logMessage("Setting zoomed area the same as edited data.", CatLog::Severity::Info, CatLog::Category::Visualization);
@@ -4564,7 +4642,9 @@ void NFmiCombinedMapHandler::onButtonDataArea(unsigned int mapViewDescTopIndex)
 	}
 	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: data area button pressed", GetWantedMapViewIdFlag(mapViewDescTopIndex));
 }
+#endif // UNIX
 
+#ifndef UNIX
 double NFmiCombinedMapHandler::drawObjectScaleFactor()
 {
 	return ::getApplicationWinRegistry().DrawObjectScaleFactor();
@@ -4574,21 +4654,23 @@ void NFmiCombinedMapHandler::drawObjectScaleFactor(double newValue)
 {
 	::getApplicationWinRegistry().DrawObjectScaleFactor(newValue);
 
-	// laitetaan säädön yhteydessä kaikki desctop graphicalinfot likaisiksi
+	// laitetaan sï¿½ï¿½dï¿½n yhteydessï¿½ kaikki desctop graphicalinfot likaisiksi
 	for(unsigned int mapViewDescTopIndex = 0; mapViewDescTopIndex < mapViewDescTops_.size(); mapViewDescTopIndex++)
 		getGraphicalInfo(mapViewDescTopIndex).fInitialized = false;
 }
+#endif
 
 boost::shared_ptr<NFmiDrawParam> NFmiCombinedMapHandler::getUsedDrawParamForEditedData(const NFmiDataIdent& dataIdent)
 {
 	if(modifiedPropertiesDrawParamList_->Find(dataIdent, 0, NFmiInfoData::kEditable, "", true))
-		return modifiedPropertiesDrawParamList_->Current(); // katsotaan löytyykö ensin jo käytössä olevista DrawParameista haluttu (jos siinä on muutoksia arvoissa)
+		return modifiedPropertiesDrawParamList_->Current(); // katsotaan lï¿½ytyykï¿½ ensin jo kï¿½ytï¿½ssï¿½ olevista DrawParameista haluttu (jos siinï¿½ on muutoksia arvoissa)
 	else
 		return ::getInfoOrganizer().CreateDrawParam(dataIdent, 0, NFmiInfoData::kEditable);
 }
 
 std::string NFmiCombinedMapHandler::getCurrentMapLayerGuiName(int mapViewDescTopIndex, bool backgroundMap)
 {
+#ifndef DISABLE_CPPRESTSDK
 	auto useWmsMapLayer = backgroundMap ? useWmsMapDrawForThisDescTop(mapViewDescTopIndex) : useWmsOverlayMapDrawForThisDescTop(mapViewDescTopIndex);
 	if(useWmsMapLayer)
 	{
@@ -4604,6 +4686,7 @@ std::string NFmiCombinedMapHandler::getCurrentMapLayerGuiName(int mapViewDescTop
 		}
 	}
 	else
+#endif // DISABLE_CPPRESTSDK
 	{
 		return getMapViewDescTop(mapViewDescTopIndex)->GetCurrentGuiMapLayerText(backgroundMap);
 	}
@@ -4621,6 +4704,7 @@ std::string NFmiCombinedMapHandler::getCurrentMapLayerGuiText(int mapViewDescTop
 	return mapLayerText;
 }
 
+#ifndef UNIX
 bool NFmiCombinedMapHandler::useCombinedMapMode() const
 {
 	return ::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().UseCombinedMapMode();
@@ -4629,10 +4713,11 @@ bool NFmiCombinedMapHandler::useCombinedMapMode() const
 void NFmiCombinedMapHandler::useCombinedMapMode(bool newValue)
 {
 	::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().UseCombinedMapMode(newValue);
-	// Varmuuden vuoksi kaikki kartta piirrot uusiksi (voi optimoida myöhemmin, koska on tapauksia, missä ei mitkään asiat muutu)
+	// Varmuuden vuoksi kaikki kartta piirrot uusiksi (voi optimoida myï¿½hemmin, koska on tapauksia, missï¿½ ei mitkï¿½ï¿½n asiat muutu)
 	mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, false, false, false);
 	ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews);
 }
+#endif
 
 bool NFmiCombinedMapHandler::useWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex)
 {
@@ -4646,15 +4731,16 @@ bool NFmiCombinedMapHandler::useWmsOverlayMapDrawForThisDescTop(unsigned int map
 
 bool NFmiCombinedMapHandler::isOverlayMapDrawnForThisDescTop(unsigned int mapViewDescTopIndex, int wantedDrawOverMapMode)
 {
-	// Onko piirtokoodi oikeassa kohassa ,että voitaisiin piirtää overlay kerros?
+	// Onko piirtokoodi oikeassa kohassa ,ettï¿½ voitaisiin piirtï¿½ï¿½ overlay kerros?
 	if(getMapViewDescTop(mapViewDescTopIndex)->DrawOverMapMode() == wantedDrawOverMapMode)
 	{
-		// Onko joku overlay kerros valittuna (indeksi ei saa olla -1, jolloin ei ole tarkoitus piirtää mitään)?
+		// Onko joku overlay kerros valittuna (indeksi ei saa olla -1, jolloin ei ole tarkoitus piirtï¿½ï¿½ mitï¿½ï¿½n)?
 		return getCombinedOverlayMapModeState(mapViewDescTopIndex, getCurrentMapAreaIndex(mapViewDescTopIndex)).currentMapSectionIndex() >= 0;
 	}
 	return false;
 }
 
+#ifndef UNIX
 bool NFmiCombinedMapHandler::localOnlyMapModeUsed() const
 {
 	if(wmsSupportAvailable())
@@ -4663,6 +4749,7 @@ bool NFmiCombinedMapHandler::localOnlyMapModeUsed() const
 	}
 	return true;
 }
+#endif
 
 NFmiCombinedMapModeState& NFmiCombinedMapHandler::getCombinedMapModeState(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex)
 {
@@ -4682,9 +4769,9 @@ void NFmiCombinedMapHandler::addBorderLineLayer(const NFmiMenuItem& menuItem, in
 	{
 		drawParam->DataType(dataType);
 		drawParam->ParameterAbbreviation(::GetDictionaryString("Country border layer"));
-		// Laitetaan viivan paksuudeksi 1 pikseli (border-layer tapauksessa yksikkö on siis pikseli)
+		// Laitetaan viivan paksuudeksi 1 pikseli (border-layer tapauksessa yksikkï¿½ on siis pikseli)
 		drawParam->SimpleIsoLineWidth(1);
-		// Oletus väri on musta (mikä on luultavasti muutenkin IsolineColor:in oletusväri, mutta asetus varmuuden vuoksi)
+		// Oletus vï¿½ri on musta (mikï¿½ on luultavasti muutenkin IsolineColor:in oletusvï¿½ri, mutta asetus varmuuden vuoksi)
 		drawParam->IsolineColor(NFmiColor(0, 0, 0));
 
 		auto mapViewDescTopIndex = menuItem.MapViewDescTopIndex();
@@ -4725,7 +4812,9 @@ void NFmiCombinedMapHandler::initializeMapLayerInfos()
 {
 	initializeStaticMapLayerInfos(staticBackgroundMapLayerRelatedInfos_, true);
 	initializeStaticMapLayerInfos(staticOverlayMapLayerRelatedInfos_, false);
+#ifndef DISABLE_CPPRESTSDK
 	initializeWmsMapLayerInfos();
+#endif // DISABLE_CPPRESTSDK
 }
 
 void NFmiCombinedMapHandler::initializeStaticMapLayerInfos(std::vector<MapAreaMapLayerRelatedInfo>& mapLayerRelatedInfos, bool backgroundMapCase)
@@ -4748,6 +4837,7 @@ void NFmiCombinedMapHandler::initializeStaticMapLayerInfos(std::vector<MapAreaMa
 	}
 }
 
+#ifndef DISABLE_CPPRESTSDK
 void NFmiCombinedMapHandler::initializeWmsMapLayerInfos()
 {
 	if(wmsSupportAvailable())
@@ -4757,6 +4847,7 @@ void NFmiCombinedMapHandler::initializeWmsMapLayerInfos()
 		::initializeWmsMapLayerInfos(wmsOverlayMapLayerRelatedInfos_, wmsSupportPtr->getSetup()->overlay);
 	}
 }
+#endif // DISABLE_CPPRESTSDK
 
 const MapAreaMapLayerRelatedInfo& NFmiCombinedMapHandler::getCurrentMapLayerRelatedInfos(int mapViewDescTopIndex, bool backgroundMapCase, bool wmsCase)
 {
@@ -4776,7 +4867,7 @@ const MapAreaMapLayerRelatedInfo& NFmiCombinedMapHandler::getCurrentMapLayerRela
 			return staticOverlayMapLayerRelatedInfos_[mapAreaIndex];
 	}
 
-	// Virhetilanteissa tai jos wms:ää ei ole ollenkaan edes initialisoitu, palautetaan tyhjää
+	// Virhetilanteissa tai jos wms:ï¿½ï¿½ ei ole ollenkaan edes initialisoitu, palautetaan tyhjï¿½ï¿½
 	const static MapAreaMapLayerRelatedInfo emptyDummy;
 	return emptyDummy;
 }

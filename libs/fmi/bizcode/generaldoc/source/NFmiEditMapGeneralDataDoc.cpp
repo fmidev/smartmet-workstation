@@ -1,5 +1,5 @@
 #ifdef _MSC_VER
-#pragma warning(disable : 4786 4996) // poistaa n kpl VC++ kääntäjän "liian pitkä tyyppi nimi" varoitusta
+#pragma warning(disable : 4786 4996) // poistaa n kpl VC++ kï¿½ï¿½ntï¿½jï¿½n "liian pitkï¿½ tyyppi nimi" varoitusta
 #endif
 
 #include "NFmiEditMapGeneralDataDoc.h"
@@ -14,7 +14,7 @@
 #include "NFmiAreaMaskList.h"
 #include "NFmiAreaMask.h"
 #include "NFmiLocationSelectionTool.h"
-#include "NFmiEditMapDataListHandler.h" //laura lisäsi 30081999
+#include "NFmiEditMapDataListHandler.h" //laura lisï¿½si 30081999
 #include "NFmiFileString.h"
 #include "NFmiCombinedParam.h"
 #include "NFmiEditorControlPointManager.h"
@@ -26,6 +26,11 @@
 #include "NFmiValueString.h"
 #include "NFmiProjectionCurvatureInfo.h"
 #include "NFmiQueryDataUtil.h"
+
+#ifdef UNIX
+#include <unistd.h>
+#include <climits>
+#endif
 
 #ifndef UNIX
 #include "stdafx.h"
@@ -47,11 +52,13 @@
 #include "NFmiMapViewCache.h"
 #include "NFmiTotalWind.h"
 
+#ifndef UNIX
 #include "FmiMaskOperationDlg.h"
 #include "DataLoadingProblemsDlg.h"
 #include "SaveDataDlg.h"
 #include "FmiCPModifyingDlg.h"
 #include "FmiModifyDrawParamDlg.h"
+#endif
 #include "NFmiMacroParamSystem.h"
 #include "NFmiMacroParamItem.h"
 #include "NFmiMacroParamFolder.h"
@@ -62,7 +69,9 @@
 #include "NFmiObsComparisonInfo.h"
 #include "NFmiMetEditorOptionsData.h"
 #include "NFmiMTATempSystem.h"
+#ifndef UNIX
 #include "FmiLanguageSelectionDlg.h"
+#endif
 #include "NFmiTrajectorySystem.h"
 #include "NFmiTEMPCode.h"
 #include "NFmiFileCleanerSystem.h"
@@ -77,7 +86,9 @@
 #include "NFmiConceptualModelData.h"
 #include "NFmiSatelView.h"
 #include "NFmiWindTableSystem.h"
+#ifndef UNIX
 #include "NFmiDataNotificationSettingsWinRegistry.h"
+#endif
 #include "NFmiAutoComplete.h"
 #include "NFmiModelDataBlender.h"
 #include "NFmiDataStoringHelpers.h"
@@ -89,21 +100,29 @@
 #include "NFmiApplicationDataBase.h"
 
 #include "NFmiMacroPathSettings.h"
+#ifndef UNIX
 #include "FmiWin32DirectoryUtils.h"
+#endif
 #include "NFmiCaseStudySystem.h"
 #include "NFmiAviationStationInfoSystem.h"
 #include "NFmiGenDocDataAdapter.h"
 #include "TimeSerialModification.h"
+#ifndef UNIX
 #include "CFmiOperationProgressAndCancellationDlg.h"
 #include "SmartMetToolboxDep_resource.h"
+#endif
 #include "NFmiBasicSmartMetConfigurations.h"
 #include "NFmiLatLonArea.h"
 #include "NFmiCPManagerSet.h"
+#ifndef UNIX
 #include "NFmiApplicationWinRegistry.h"
+#endif
 #include "NFmiConceptualDataView.h"
 #include "NFmiCapView.h"
 #include "MultiProcessClientData.h"
+#ifndef UNIX
 #include "NFmiMultiProcessPoolOptions.h"
+#endif
 #include "NFmiFixedDrawParamSystem.h"
 #include "NFmiSatelliteImageCacheSystem.h"
 #include "NFmiBetaProductSystem.h"
@@ -111,7 +130,9 @@
 #include "NFmiEditDataUserList.h"
 #include "NFmiStationIndexTextView.h"
 #include "NFmiInfoAreaMaskOccurrance.h"
+#ifndef UNIX
 #include "HakeMessage/Main.h"
+#endif
 #include "NFmiExtraMacroParamData.h"
 #include "NFmiStation2GridMask.h"
 #include "ToolboxViewsInterfaceForGeneralDataDoc.h"
@@ -126,8 +147,10 @@
 #include "ParameterSelectionSystem.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "QueryDataReading.h"
+#ifndef UNIX
 #include <direct.h> // working directory juttuja varten
-#include "psapi.h" // ei löytynyt toshibasta, pitää korjata tilanne!!!
+#include "psapi.h" // ei lï¿½ytynyt toshibasta, pitï¿½ï¿½ korjata tilanne!!!
+#endif
 #include "NFmiPathUtils.h"
 #include "Q2ServerInfo.h"
 #include "SettingsFunctions.h"
@@ -169,7 +192,7 @@
 #include "boost/algorithm/string.hpp"
 
 #ifdef _MSC_VER
-#pragma warning (disable : 4244 4267) // boost:in thread kirjastosta tulee ikävästi 4244 varoituksia
+#pragma warning (disable : 4244 4267) // boost:in thread kirjastosta tulee ikï¿½vï¿½sti 4244 varoituksia
 #endif
 #include <boost/thread.hpp>
 #include "execute-command-in-separate-process.h"
@@ -182,7 +205,7 @@
 
 #include <functional>
 #ifdef _MSC_VER
-#pragma warning (default : 4244 4267) // laitetaan 4244 takaisin päälle, koska se on tärkeä (esim. double -> int auto castaus varoitus)
+#pragma warning (default : 4244 4267) // laitetaan 4244 takaisin pï¿½ï¿½lle, koska se on tï¿½rkeï¿½ (esim. double -> int auto castaus varoitus)
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -199,10 +222,10 @@ static char THIS_FILE[] = __FILE__;
 
 namespace
 {
-	// Tämä palauttaa aina kopion, mikä on threadi turvallisempaa.
-	// Threadi-lukko takaa että kopioita pyydetään vain yksi kerrallaan
+	// Tï¿½mï¿½ palauttaa aina kopion, mikï¿½ on threadi turvallisempaa.
+	// Threadi-lukko takaa ettï¿½ kopioita pyydetï¿½ï¿½n vain yksi kerrallaan
 	typedef boost::shared_mutex MutexType;
-	typedef boost::shared_lock<MutexType> ReadLock; // Read-lockia ei oikeasti tarvita, mutta laitan sen tähän, jos joskus tarvitaankin
+	typedef boost::shared_lock<MutexType> ReadLock; // Read-lockia ei oikeasti tarvita, mutta laitan sen tï¿½hï¿½n, jos joskus tarvitaankin
 	typedef boost::unique_lock<MutexType> WriteLock;
 	MutexType gParamMaskListMutex;
 
@@ -210,7 +233,7 @@ namespace
     const std::string tmWorkerTcpProcessName = "WorkerProcessTcpMFC.exe";
     const NFmiMetEditorTypes::View g_DefaultParamView = g_DefaultParamView;
 
-	// Kartta-layereiden suoravalinta käyttää näytä arvoja kertoakseen menuIten oliolle onko
+	// Kartta-layereiden suoravalinta kï¿½yttï¿½ï¿½ nï¿½ytï¿½ arvoja kertoakseen menuIten oliolle onko
 	// valittu karttapohja tiedosto vai Wms pohjainen.
 	const double g_mapLayerSelectionIsFileBased = 987654321.01;
 	const double g_mapLayerSelectionIsWmsBased = 987654321.02;
@@ -231,8 +254,8 @@ public:
 	std::string itsReportTimeFormat;
 };
 
-// Tieto havainto tuottajista, mikä on viimeisin ajanhetki, miltä löytyy dataa.
-// Tein oman luokan, joka yhditää tuottajien tidon, jos samalta tuottajalta on useita data lähteitä.
+// Tieto havainto tuottajista, mikï¿½ on viimeisin ajanhetki, miltï¿½ lï¿½ytyy dataa.
+// Tein oman luokan, joka yhditï¿½ï¿½ tuottajien tidon, jos samalta tuottajalta on useita data lï¿½hteitï¿½.
 class ObsDataLoadedReporter
 {
 public:
@@ -260,7 +283,7 @@ private:
 static const std::string g_ObservationMenuName = "Observation";
 static const std::string gDummyParamName = "dummyName";
 static const NFmiPoint kMissingLatlon(kFloatMissing, kFloatMissing);
-// Tämän pitää olla pieni arvo (~epsilon) koska muuten pienet rajat eivät toimi, mutta pelkkä epsilon on liian pieni
+// Tï¿½mï¿½n pitï¿½ï¿½ olla pieni arvo (~epsilon) koska muuten pienet rajat eivï¿½t toimi, mutta pelkkï¿½ epsilon on liian pieni
 static const double gUsedEpsilon = std::numeric_limits<double>::epsilon() * 3; 
 
 using namespace std;
@@ -330,7 +353,7 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,fCPDataBackupUsed(false)
 ,itsBrushToolLimitSetting(0)
 ,itsBrushToolLimitSettingValue(0)
-,itsShowHelperDataInTimeSerialView(1) // 1= näytä apu dataa aikasarjassa
+,itsShowHelperDataInTimeSerialView(1) // 1= nï¿½ytï¿½ apu dataa aikasarjassa
 ,fShowHelperData3InTimeSerialView(false)
 ,fShowHelperData4InTimeSerialView(false)
 ,fActivateParamSelectionDlgAfterLeftDoubleClick(false)
@@ -371,7 +394,7 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,fWmoStationInfoSystemInitialized(false)
 #ifndef DISABLE_CPPRESTSDK
 ,itsWarningCenterSystem()
-#endif DISABLE_CPPRESTSDK
+#endif // DISABLE_CPPRESTSDK
 ,itsProducerSystem()
 ,itsObsProducerSystem()
 ,itsSatelImageProducerSystem()
@@ -390,7 +413,9 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsDataToDBCheckMethod(2)
 ,itsOutOfEditedAreaTimeSerialPoint(kFloatMissing, kFloatMissing)
 ,itsConceptualModelData()
+#ifndef UNIX
 ,itsTransparencyContourDrawView(0)
+#endif
 ,itsSynopDataFilePatternSortOrderVector()
 ,itsShowToolTipTimeView(true)
 ,itsShowToolTipTempView(true)
@@ -426,12 +451,16 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 ,itsCPGridCropLatlonArea()
 ,itsCPGridCropInnerLatlonArea()
 ,itsCPGridCropMargin()
+#ifndef UNIX
 ,itsApplicationWinRegistry()
+#endif
 ,fStoreLastLoadedFileNameToFile(false)
 ,itsMultiProcessClientData()
 ,itsMultiProcessLogFilePath()
 ,itsMultiProcessLogFilePattern()
+#ifndef UNIX
 ,itsMultiProcessPoolOptions()
+#endif
 ,itsFixedDrawParamSystem()
 ,itsSatelliteImageCacheSystemPtr(new NFmiSatelliteImageCacheSystem)
 ,itsImageCacheUpdateData()
@@ -455,7 +484,7 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 	// Seed the random-number generator with current time so that
 	// the numbers will be different every time we run. 
 	// Random numbers are used in smarttools (RAND-unction) and in trajectories.
-	srand( static_cast<unsigned int>(time( NULL ))); // mahd. satunnais funktion käytön takia, pitää 'sekoittaa' random generaattori
+	srand( static_cast<unsigned int>(time( NULL ))); // mahd. satunnais funktion kï¿½ytï¿½n takia, pitï¿½ï¿½ 'sekoittaa' random generaattori
 }
 
 ~GeneralDocImpl(void)
@@ -469,13 +498,13 @@ GeneralDocImpl(unsigned long thePopupMenuStartId)
 	delete itsTrajectorySystem;
 }
 
-// tein pikaviritys funktion että saisin tämän timebagin kaivettua dokumentin syövereistä
+// tein pikaviritys funktion ettï¿½ saisin tï¿½mï¿½n timebagin kaivettua dokumentin syï¿½vereistï¿½
 const NFmiTimeBag& MaximalCoverageTimeBag(void)
 {
 	return GetUsedDataLoadingInfo().MaximalCoverageTimeBag();
 }
 
-// tein pikaviritys funktion että saisin tämän editormodedatan kaivettua dokumentin syövereistä
+// tein pikaviritys funktion ettï¿½ saisin tï¿½mï¿½n editormodedatan kaivettua dokumentin syï¿½vereistï¿½
 NFmiMetEditorModeDataWCTR* EditorModeDataWCTR(void)
 {
 	return GetUsedDataLoadingInfo().MetEditorModeDataWCTR();
@@ -489,7 +518,7 @@ void TestDataModifiers()
 
 bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::map<std::string, std::string> &mapViewsPositionMap, std::map<std::string, std::string> &otherViewsPositionPosMap)
 {
-/* // tämä on remote debug sessiota varten MSVC71 feature
+/* // tï¿½mï¿½ on remote debug sessiota varten MSVC71 feature
 	for(int remoteDebug = 1; remoteDebug == 1; )
 	{
 		int x = 1;
@@ -503,7 +532,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 	SetupQueryDataSetKeeperCallbacks();
 
 	LogMessage("SmartMet document initialization starts...", CatLog::Severity::Info, CatLog::Category::Configuration);
-	// Laitetaan peruskonffihakemisto lokiin näkyviin
+	// Laitetaan peruskonffihakemisto lokiin nï¿½kyviin
 	string infoStr("SmartMet uses configurations from base configuration file: ");
 	infoStr += itsBasicConfigurations.BaseConfigurationFilePath();
 	LogMessage(infoStr, CatLog::Severity::Info, CatLog::Category::Configuration);
@@ -513,11 +542,13 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     CheckRunningStatusAtStartup(SpecialFileStoragePath()); 
 
 	InitMachineThreadCount();
-	InitMacroPathSettings(); // pitää olla ennen InfoOrganizer + SmartToolInfo + ViewMacroSystem alustuksia!!!
-	InitInfoOrganizer(); // pitää alustaa ennen InitSettingsFromConfFile-metodia
-	InitHelpEditorSystem(); // tätä pitää kutsua ennen InitHelpDataInfoSystem-metodia
-	InitHelpDataInfoSystem(); // Tätä pitää kutsua ennen InitApplicationWinRegistry ja InitCaseStudySystem -kutsuja!
+	InitMacroPathSettings(); // pitï¿½ï¿½ olla ennen InfoOrganizer + SmartToolInfo + ViewMacroSystem alustuksia!!!
+	InitInfoOrganizer(); // pitï¿½ï¿½ alustaa ennen InitSettingsFromConfFile-metodia
+	InitHelpEditorSystem(); // tï¿½tï¿½ pitï¿½ï¿½ kutsua ennen InitHelpDataInfoSystem-metodia
+	InitHelpDataInfoSystem(); // Tï¿½tï¿½ pitï¿½ï¿½ kutsua ennen InitApplicationWinRegistry ja InitCaseStudySystem -kutsuja!
+#ifndef UNIX
     InitApplicationWinRegistry(mapViewsPositionMap, otherViewsPositionPosMap);
+#endif
 
 	InitSettingsFromConfFile();
     MakeMultiProcessLogPathValues();
@@ -526,7 +557,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitObsComparisonInfo();
     InitDataToDBCheckMethodMain();
 	InitOptionsData();
-	// InitLedLightStatusSystem kutsu pitää olla InitApplicationWinRegistry:n jälkeen, mutta ennen InitCombinedMapHandler:ia.
+	// InitLedLightStatusSystem kutsu pitï¿½ï¿½ olla InitApplicationWinRegistry:n jï¿½lkeen, mutta ennen InitCombinedMapHandler:ia.
 	InitLedLightStatusSystem();
 
     CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting("NFmiEditMapDataListHandler::Init");
@@ -537,7 +568,7 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 	InitCombinedMapHandler();
 	InitParamMaskList();
 	LoadFileDialogDirectoryMemory();
-	InitModelProducerSystem(); // producer system pitää initialisoida ennen trajektori systeemiä
+	InitModelProducerSystem(); // producer system pitï¿½ï¿½ initialisoida ennen trajektori systeemiï¿½
 	InitObsProducerSystem();
 	InitSatelImageProducerSystem();
 	InitTrajectorySystem();
@@ -546,32 +577,34 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 	InitSoundingPlotLevels();
 	itsWindTableSystem.ControlDirectory(itsBasicConfigurations.ControlPath());
 	InitializeGeneralColors();
-    InitSatelliteImageCacheTotal(); // Pitää alustaa InitHelpDataInfoSystem -kutsun jälkeen
+    InitSatelliteImageCacheTotal(); // Pitï¿½ï¿½ alustaa InitHelpDataInfoSystem -kutsun jï¿½lkeen
     InitDataLoadingInfo();
     InitMetEditorModeDataWCTR();
 
 	InitLocationSelectionTool();
 
-	InitEditedDataParamDescriptor(); // pitää olla itsDataLoadingInfoManager -otuksen luomisen jälkeen
-	InitWarningCenterSystem(); // tämän initialisointi pitää olla itsDataLoadingInfoManager-olion initialisoinnin perässä
+	InitEditedDataParamDescriptor(); // pitï¿½ï¿½ olla itsDataLoadingInfoManager -otuksen luomisen jï¿½lkeen
+	InitWarningCenterSystem(); // tï¿½mï¿½n initialisointi pitï¿½ï¿½ olla itsDataLoadingInfoManager-olion initialisoinnin perï¿½ssï¿½
 	InitWindTableSystem();
 	InitExtraSoundingProducerListFromSettings();
-    InitMTATempSystem(); // pitää kutsua vasta InitProducerSystem- ja InitExtraSoundingProducerListFromSettings -kutsujen jälkeen
+#ifndef UNIX
+    InitMTATempSystem(); // pitï¿½ï¿½ kutsua vasta InitProducerSystem- ja InitExtraSoundingProducerListFromSettings -kutsujen jï¿½lkeen
+#endif
 
 	InitCPManagerSet();
 	InitDrawDifferenceDrawParam();
 	InitSmartToolInfo();
-	InitMacroParamSystem(true); // macroParamsystem pitää initialisoida ennen viewMacroSystemin initialisointia!!!!!!!
+	InitMacroParamSystem(true); // macroParamsystem pitï¿½ï¿½ initialisoida ennen viewMacroSystemin initialisointia!!!!!!!
 	InitViewMacroSystem(true);
 	InitConceptualModelData();
 	InitAutoComplete();
-	InitAnalyzeToolData(); // tätä pitää kutsua InitHelpDataInfoSystem-metodin jälkeen
+	InitAnalyzeToolData(); // tï¿½tï¿½ pitï¿½ï¿½ kutsua InitHelpDataInfoSystem-metodin jï¿½lkeen
 	InitDataQualityChecker();
 
 	InitUsedDataLoadingGrid();
 	InitSynopDataFilePatternSortOrderVector();
 	InitStationIgnoreList();
-	InitCrossSectionSystem(); // tätä on kutsuttava InitApplicationWinRegistry-kutsun jälkeen
+	InitCrossSectionSystem(); // tï¿½tï¿½ on kutsuttava InitApplicationWinRegistry-kutsun jï¿½lkeen
 	UpdateCrossSectionMacroParamDataSize();
 	InitSmartToolSystem();
 	InitCaseStudySystem();
@@ -580,14 +613,18 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
     InitCapSymbolMap();
     InitSmartSymbolMap();
     InitCustomSymbolMap();
-    InitMultiProcessPoolOptions(); // HUOM! tämä pitää kutsua vasta 
+#ifndef UNIX
+    InitMultiProcessPoolOptions(); // HUOM! tï¿½mï¿½ pitï¿½ï¿½ kutsua vasta
+#endif
     LoadCrashBackUpViewMacro();
-    InitBetaProductionSystem(); // Tätä on kutsuttava InitMacroPathSettings- ja InitApplicationWinRegistry -metodien kutsujen jälkeen!!
+#ifndef UNIX
+    InitBetaProductionSystem(); // Tï¿½tï¿½ on kutsuttava InitMacroPathSettings- ja InitApplicationWinRegistry -metodien kutsujen jï¿½lkeen!!
+#endif
     InitEditDataUserList();
     InitGriddingCallback();
 	InitMouseClickUrlActionData();
 
-	// Asetetaan alustuksessa jonkinlainen timeDescriptor, ennen kuin ladataan mitään datoja
+	// Asetetaan alustuksessa jonkinlainen timeDescriptor, ennen kuin ladataan mitï¿½ï¿½n datoja
 	NFmiMetTime origTime;
 	NFmiMetTime endTime(origTime);
 	endTime.ChangeByDays(2);
@@ -606,7 +643,9 @@ bool Init(const NFmiBasicSmartMetConfigurations &theBasicConfigurations, std::ma
 	InitParameterInterpolationFixer();
 	InitSeaLevelPlumeData();
 	InitMacroParamDataGenerator();
+#ifndef UNIX
 	UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();
+#endif
 
 #ifdef SETTINGS_DUMP // TODO enable this with a command line parameter
 	std::string str = NFmiSettings::ToString();
@@ -643,8 +682,8 @@ void InitSeaLevelPlumeData()
 void SetupQueryDataSetKeeperCallbacks()
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
-	// Laitetaan mallidata-ajo systeemin loggaus callbackit kuntoon, että voidaan tutkia, 
-	// miksi joskus viittaukset edellisiin malliajoihin epäonnistuvat.
+	// Laitetaan mallidata-ajo systeemin loggaus callbackit kuntoon, ettï¿½ voidaan tutkia, 
+	// miksi joskus viittaukset edellisiin malliajoihin epï¿½onnistuvat.
 	try
 	{
 		TraceLogMessageCallback traceLogCallback = [](const std::string& message) {CatLog::logMessage(message, CatLog::Severity::Trace, CatLog::Category::Data); };
@@ -676,7 +715,7 @@ void InitMacroParamDataCache()
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
     try
     {
-        // Alustetaan macroParam cache kaikkien karttanäyttöjen indekseillä (0-2) ja vielä poikkileikkausnäytön indeksillä
+        // Alustetaan macroParam cache kaikkien karttanï¿½yttï¿½jen indekseillï¿½ (0-2) ja vielï¿½ poikkileikkausnï¿½ytï¿½n indeksillï¿½
         itsMacroParamDataCache.init({ 0ul, 1ul, 2ul, CtrlViewUtils::kFmiCrossSectionView });
     }
     catch(exception &e)
@@ -731,7 +770,7 @@ NFmiMetTime CalcStartTime_Debug(const NFmiMetEditorModeDataWCTR::TimeSectionData
 		startTime.PreviousMetTime();
 	if(theStartSection.itsStartTimeResolutionInMinutes <= 60)
 	{
-		startTime.PreviousMetTime(); // laitetaan koko jutun (1. osion 1h aikaresoluutio-alue) aloitusaika aina niin, että se on yhden tunnin ennen currenttia aikaa
+		startTime.PreviousMetTime(); // laitetaan koko jutun (1. osion 1h aikaresoluutio-alue) aloitusaika aina niin, ettï¿½ se on yhden tunnin ennen currenttia aikaa
 	}
 	return startTime;
 }
@@ -767,7 +806,7 @@ void InitDataLoadingInfo()
     try
     {
         itsDataLoadingInfoNormal.Configure(WorkingDirectory(), itsHelpDataInfoSystem.LocalDataBaseDirectory(), itsHelpDataInfoSystem.LocalDataLocalDirectory(), itsHelpDataInfoSystem.UseQueryDataCache());
-        AddWorkingDataPathToCleaner(); // HUOM! DataLoadingInfo ja FileCleanerSystem molemmat pitää olla initilaisoituina!!!!
+        AddWorkingDataPathToCleaner(); // HUOM! DataLoadingInfo ja FileCleanerSystem molemmat pitï¿½ï¿½ olla initilaisoituina!!!!
         itsDataLoadingInfoCaseStudy = itsDataLoadingInfoNormal; // otetaan CaseStudy dataLoadingInfon pohjatiedot normaalista dataLoadingInfosta
     }
     catch(exception &e)
@@ -833,8 +872,8 @@ void InitEditDataUserList(void)
 
 void MakeMultiProcessLogPathValues(void)
 {
-    const std::string dateStr("%Y%m%d"); // tiedostoon tulee YYYYMMDD.log -pääte
-    itsMultiProcessLogFilePath = itsBasicConfigurations.LogFileDirectory() + "\\"; // tämä on normaali loki-hakemisto, laitetaan multi-process lokit samaan hakemistoon
+    const std::string dateStr("%Y%m%d"); // tiedostoon tulee YYYYMMDD.log -pï¿½ï¿½te
+    itsMultiProcessLogFilePath = itsBasicConfigurations.LogFileDirectory() + "\\"; // tï¿½mï¿½ on normaali loki-hakemisto, laitetaan multi-process lokit samaan hakemistoon
     itsMultiProcessLogFilePath += "tm_process_pool_";
     itsMultiProcessLogFilePath += dateStr + ".log"; 
 
@@ -842,16 +881,17 @@ void MakeMultiProcessLogPathValues(void)
     boost::replace_first(itsMultiProcessLogFilePattern, dateStr, "*");
     try
     {
-        NFmiFileSystem::CleanFilePattern(itsMultiProcessLogFilePattern, 15); // siivotaan alustuksen/käynnistyksen yhteydessä vanhat lokit pois
+        NFmiFileSystem::CleanFilePattern(itsMultiProcessLogFilePattern, 15); // siivotaan alustuksen/kï¿½ynnistyksen yhteydessï¿½ vanhat lokit pois
     }
     catch(...)
     {
-        // NFmiFileSystem::CleanFilePattern -funktio heittää poikkeuksen, jos patternin hakemistoa ei ole olemassa, mutta sillä ei ole väliä, joten otetaan vain poikkeus kiinni
+        // NFmiFileSystem::CleanFilePattern -funktio heittï¿½ï¿½ poikkeuksen, jos patternin hakemistoa ei ole olemassa, mutta sillï¿½ ei ole vï¿½liï¿½, joten otetaan vain poikkeus kiinni
     }
 
     itsMultiProcessClientData.MultiProcessLogPath(itsMultiProcessLogFilePath); // alustetaan samalla Multi-process -olion lokitiedosto polku
 }
 
+#ifndef UNIX
 void InitMTATempSystem()
 {
     try
@@ -863,6 +903,7 @@ void InitMTATempSystem()
         LogAndWarnUser(string("Sounding settings problem: ") + e.what(), "Problems with sounding view settings", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
     }
 }
+#endif
 
 void InitFixedDrawParamSystem(void)
 {
@@ -870,8 +911,10 @@ void InitFixedDrawParamSystem(void)
 	try
     {
         auto fixedDrawParamInitRootPath = MakeUsedFixedDrawParamsRootPath();
-        // Laitetaan 'siivottu' polku takaisin, sitä ei laiteta minnekään talteen, mutta se näytetään Settings dialogissa
+        // Laitetaan 'siivottu' polku takaisin, sitï¿½ ei laiteta minnekï¿½ï¿½n talteen, mutta se nï¿½ytetï¿½ï¿½n Settings dialogissa
+#ifndef UNIX
         ApplicationWinRegistry().FixedDrawParamsPath(fixedDrawParamInitRootPath);
+#endif
         CatLog::logMessage(std::string("Starting to initilize Fixed DrawParams from directory: ") + fixedDrawParamInitRootPath, CatLog::Severity::Debug, CatLog::Category::Configuration);
         itsFixedDrawParamSystem.Initialize(fixedDrawParamInitRootPath);
         CatLog::logMessage(std::string("Fixed DrawParams initialized with ") + std::to_string(itsFixedDrawParamSystem.FlatDrawParamList().size()) + " drawParams", CatLog::Severity::Debug, CatLog::Category::Configuration);
@@ -884,6 +927,7 @@ void InitFixedDrawParamSystem(void)
     }
 }
 
+#ifndef UNIX
 void InitBetaProductionSystem()
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
@@ -899,7 +943,9 @@ void InitBetaProductionSystem()
         LogAndWarnUser(errStr, "Problems with Beta production system", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
     }
 }
+#endif
 
+#ifndef UNIX
 void InitMultiProcessPoolOptions(void)
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
@@ -907,7 +953,7 @@ void InitMultiProcessPoolOptions(void)
 	{
         itsMultiProcessPoolOptions.InitFromSettings("SmartMet::MultiProcessPoolOptions");
 
-        // alustetaan tässä myös itsMultiProcessClientData:n MultiProcessPoolOptions -osio
+        // alustetaan tï¿½ssï¿½ myï¿½s itsMultiProcessClientData:n MultiProcessPoolOptions -osio
         itsMultiProcessClientData.PresetMultiProcessPoolOptions(itsMultiProcessPoolOptions.MultiProcessPoolOptions(), itsMultiProcessPoolOptions.LogLevel());
 	}
 	catch(std::exception &e)
@@ -917,6 +963,7 @@ void InitMultiProcessPoolOptions(void)
         LogAndWarnUser(errStr, "Problems in InitMultiProcessPoolOptions", CatLog::Severity::Error, CatLog::Category::Configuration, false, true);
 	}
 }
+#endif
 
 std::string WomlDirectoryPath()
 {
@@ -1006,9 +1053,10 @@ void InitCrossSectionSystem(void)
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	try
 	{
-		// alustetaan crosssection-systeemi alku- ja loppupisteillä
-        auto &crossSectionView = ApplicationWinRegistry().ConfigurationRelatedWinRegistry().CrossSectionViewWinRegistry();
+		// alustetaan crosssection-systeemi alku- ja loppupisteillï¿½
         NFmiCrossSectionSystem::CrossSectionInitValuesWinReg initValues;
+#ifndef UNIX
+        auto &crossSectionView = ApplicationWinRegistry().ConfigurationRelatedWinRegistry().CrossSectionViewWinRegistry();
         initValues.itsStartPointStr = crossSectionView.StartPointStr();
         initValues.itsMiddlePointStr = crossSectionView.MiddlePointStr();
         initValues.itsEndPointStr = crossSectionView.EndPointStr();
@@ -1018,6 +1066,7 @@ void InitCrossSectionSystem(void)
         initValues.itsAxisValuesSpecial.itsUpperEndOfPressureAxis = crossSectionView.AxisValuesSpecialUpperEndValue();
         initValues.itsVerticalPointCount = crossSectionView.VerticalPointCount();
         initValues.itsWantedMinorPointCount = crossSectionView.HorizontalPointCount();
+#endif
         itsCrossSectionSystem.InitializeFromSettings(initValues);
 	}
 	catch(std::exception &e)
@@ -1099,7 +1148,9 @@ void InitCaseStudySystem(void)
 		{
 			itsCaseStudySystem.SmartMetLocalCachePath(HelpDataInfoSystem()->LocalDataLocalDirectory());
 		}
+#ifndef UNIX
 		itsCaseStudySystem.Init(*HelpDataInfoSystem(), *InfoOrganizer(), ApplicationWinRegistry().CaseStudySettingsWinRegistry());
+#endif
 
         itsCaseStudySystemOrig = itsCaseStudySystem;
 	}
@@ -1111,7 +1162,7 @@ void InitCaseStudySystem(void)
 	}
 }
 
-// HUOM! DataLoadingInfo ja FileCleanerSystem molemmat pitää olla initilaisoituina!!!!
+// HUOM! DataLoadingInfo ja FileCleanerSystem molemmat pitï¿½ï¿½ olla initilaisoituina!!!!
 void AddWorkingDataPathToCleaner(void)
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
@@ -1119,16 +1170,17 @@ void AddWorkingDataPathToCleaner(void)
 	NFmiDirectorCleanerInfo dCleanInfo(static_cast<char*>(GetUsedDataLoadingInfo().WorkingPath()), 1);
 	FileCleanerSystem().Add(dCleanInfo);
 
-	// ja jätä vain max 25 tiedostoa
+	// ja jï¿½tï¿½ vain max 25 tiedostoa
 	NFmiFilePatternCleanerInfo pattCleanInfo(static_cast<char*>(GetUsedDataLoadingInfo().CreateWorkingFileNameFilter()), 20);
 	FileCleanerSystem().Add(pattCleanInfo);
 }
 
 void InitLedLightStatusSystem()
 {
+#ifndef UNIX
 	if(ApplicationWinRegistry().UseLedLightStatusSystem())
 	{
-		// Katso g_maximumNumberOfLedsInStatusbar vakion selitys, jos haluat lisätä ledien määrää
+		// Katso g_maximumNumberOfLedsInStatusbar vakion selitys, jos haluat lisï¿½tï¿½ ledien mï¿½ï¿½rï¿½ï¿½
 		auto usedLedChannelAndColors = std::vector<NFmiLedChannelInitializer>
 		{
 			{NFmiLedChannel::QueryData, NFmiLedColor::Green, "QueryData related operations", "No queryData operations at the moment", false},
@@ -1141,6 +1193,7 @@ void InitLedLightStatusSystem()
 	}
 	else
 		LogAndWarnUser("LedLightStatusSystem (on statusbar) was disabled, if you want to enabled it, do it from Settings dialog and restart SmartMet", "", CatLog::Severity::Info, CatLog::Category::Configuration, true);
+#endif
 }
 
 void InitMouseClickUrlActionData()
@@ -1170,10 +1223,10 @@ void InitSmartToolSystem(void)
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	try
 	{
-		// tämä pitää tehdä dokumentin initialisoinnin yhteydessä, että smarttoolintepreterin tuottaja listat alustetaan varmasti oikein!!!!
+		// tï¿½mï¿½ pitï¿½ï¿½ tehdï¿½ dokumentin initialisoinnin yhteydessï¿½, ettï¿½ smarttoolintepreterin tuottaja listat alustetaan varmasti oikein!!!!
         NFmiSmartToolIntepreter intepreter(&itsProducerSystem, &itsObsProducerSystem);
-		// Tämä korjaa mm. SymbolTooltipFile asetukset kuntoon, jos skriptissä polku annetaan ilman drive-letter:iä,
-		// mikä onkin jatkossa suositeltavaa.
+		// Tï¿½mï¿½ korjaa mm. SymbolTooltipFile asetukset kuntoon, jos skriptissï¿½ polku annetaan ilman drive-letter:iï¿½,
+		// mikï¿½ onkin jatkossa suositeltavaa.
 		NFmiSmartToolIntepreter::SetAbsoluteBasePaths(MacroPathSettings().SmartToolPath(), MacroPathSettings().MacroParamPath());
 	}
 	catch(std::exception &e)
@@ -1220,6 +1273,7 @@ std::string GetShortAppVersionString(void)
     return appVersionStr;
 }
 
+#ifndef UNIX
 void InitApplicationWinRegistry(std::map<std::string, std::string> &mapViewsPositionMap, std::map<std::string, std::string> &otherViewsPositionPosMap)
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
@@ -1228,10 +1282,10 @@ void InitApplicationWinRegistry(std::map<std::string, std::string> &mapViewsPosi
         std::string shortAppVerStr = GetShortAppVersionString();
         if(shortAppVerStr.size() < 3)
             throw std::runtime_error(std::string("Invalid application's short version number: '") + shortAppVerStr + "', should be in format X.Y");
-        // 3 = 3 eri karttanäyttöä, ei vieläkään missään asetusta tälle, koska pääkarttanäyttö poikkeaa kahdesta apukarttanäytöstä
+        // 3 = 3 eri karttanï¿½yttï¿½ï¿½, ei vielï¿½kï¿½ï¿½n missï¿½ï¿½n asetusta tï¿½lle, koska pï¿½ï¿½karttanï¿½yttï¿½ poikkeaa kahdesta apukarttanï¿½ytï¿½stï¿½
         itsApplicationWinRegistry.Init(ApplicationDataBase().appversion, shortAppVerStr, itsBasicConfigurations.GetShortConfigurationName(), 3, mapViewsPositionMap, otherViewsPositionPosMap, *HelpDataInfoSystem(), NFmiCaseStudySystem::GetCategoryHeaders());
 
-		// Vähän nurinkurisesti tässä asetetaan rekisteristä yksi arvo edelleen pariin paikkaan (mm. takaisin itseensä, mutta modulaarisuus vaatii tämän)
+		// Vï¿½hï¿½n nurinkurisesti tï¿½ssï¿½ asetetaan rekisteristï¿½ yksi arvo edelleen pariin paikkaan (mm. takaisin itseensï¿½, mutta modulaarisuus vaatii tï¿½mï¿½n)
 		ApplicationInterface::GetApplicationInterfaceImplementation()->SetHatchingToolmasterEpsilonFactor(itsApplicationWinRegistry.HatchingToolmasterEpsilonFactor());
 
         // We have to set log level here, now that used log level is read from registry
@@ -1249,6 +1303,7 @@ void UpdateEnableDataChangesToWinReg(void)
 {
     itsApplicationWinRegistry.CaseStudySettingsWinRegistry().HelpDataEnableWinRegistry().Update(*HelpDataInfoSystem());
 }
+#endif
 
 void InitConceptualModelData(void)
 {
@@ -1285,27 +1340,29 @@ void InitAutoComplete(void)
 void InitCombinedMapHandler()
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
-	// parameterSelectionUpdateCallback varmistaa että kun kaikki Wms serverit on käyty 1. kerran läpi, 
-	// tämän jälkeen päivitetään Parameter selection dialogi, jotta siellä näkyy Wms datat (jos dialogi avattu
-	// ennen tätä, jäi dialogi ilman Wms datoja ennen kuin jokin muu eventti teki kunnon updaten).
+	// parameterSelectionUpdateCallback varmistaa ettï¿½ kun kaikki Wms serverit on kï¿½yty 1. kerran lï¿½pi, 
+	// tï¿½mï¿½n jï¿½lkeen pï¿½ivitetï¿½ï¿½n Parameter selection dialogi, jotta siellï¿½ nï¿½kyy Wms datat (jos dialogi avattu
+	// ennen tï¿½tï¿½, jï¿½i dialogi ilman Wms datoja ennen kuin jokin muu eventti teki kunnon updaten).
 	std::function<void()> parameterSelectionUpdateCallback = [this]() {this->WmsSupportHasDoneGetCapabilitiesQuery(); };
+#ifndef DISABLE_CPPRESTSDK
 	Wms::CapabilitiesHandler::setParameterSelectionUpdateCallback(parameterSelectionUpdateCallback);
-	// NFmiCombinedMapHandler luokka hanskaa itse kaikki poikkeukset ja mahdolliset käyttäjän tekemät ohjelman lopetukset.
+#endif
+	// NFmiCombinedMapHandler luokka hanskaa itse kaikki poikkeukset ja mahdolliset kï¿½yttï¿½jï¿½n tekemï¿½t ohjelman lopetukset.
 	itsCombinedMapHandler.initialize(itsBasicConfigurations.ControlPath());
 	if(!itsCombinedMapHandler.wmsSupportAvailable())
 	{
-		// Jos wms systeemiä ei oteta käyttöön, pitää lopettaa timer joka odottaa 1. data päivitystä joka 3. sekunti
+		// Jos wms systeemiï¿½ ei oteta kï¿½yttï¿½ï¿½n, pitï¿½ï¿½ lopettaa timer joka odottaa 1. data pï¿½ivitystï¿½ joka 3. sekunti
 		parameterSelectionUpdateCallback();
 	}
 }
 
 void WmsSupportHasDoneGetCapabilitiesQuery()
 {
-	// Tähän on tarkoitus laittaa päivitys harvennuksia heti kun testaus 
-	// osoittaa että systeemi toimii. Ei ole järkevää tehdä täysiä päivityksiä 
-	// joka 5 minuutti, millä tahdilla getCapabilities hakuja tehdään, kun
+	// Tï¿½hï¿½n on tarkoitus laittaa pï¿½ivitys harvennuksia heti kun testaus 
+	// osoittaa ettï¿½ systeemi toimii. Ei ole jï¿½rkevï¿½ï¿½ tehdï¿½ tï¿½ysiï¿½ pï¿½ivityksiï¿½ 
+	// joka 5 minuutti, millï¿½ tahdilla getCapabilities hakuja tehdï¿½ï¿½n, kun
 	// varsinaiset ParameterSelection rakenteet muuttuvat harvoin ja dataa on
-	// kuitenkin järkyttävät määrät.
+	// kuitenkin jï¿½rkyttï¿½vï¿½t mï¿½ï¿½rï¿½t.
 	static NFmiNanoSecondTimer updateTimer;
 	static bool firstTime = true;
 	double updateIntervalInSeconds = 42 * 60;
@@ -1397,10 +1454,12 @@ void InitMacroParamData(void)
 		if(maxGridValues.size() != 2)
 			throw runtime_error("MetEditor::MacroParamDataMaxGridSize had invalid setting, has to be to numbers (e.g. x,y).");
 
-		// Annetaan ensin rajat, että kun annetaan itse koko, infoorganizer voi tarkistaa annetun koon
+		// Annetaan ensin rajat, ettï¿½ kun annetaan itse koko, infoorganizer voi tarkistaa annetun koon
 		InfoOrganizer()->SetMacroParamDataMinGridSize(minGridValues[0], minGridValues[1]);
 		InfoOrganizer()->SetMacroParamDataMaxGridSize(maxGridValues[0], maxGridValues[1]);
+#ifndef UNIX
 		InfoOrganizer()->SetMacroParamDataGridSize(ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MacroParamGridSizeX(), ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MacroParamGridSizeY());
+#endif
 	}
 	catch(exception &e)
 	{
@@ -1414,7 +1473,7 @@ NFmiPoint GetMacroParamGridSize(const std::string &theSettingsStr)
 {
 	int sizeX = 50;
 	int sizeY = 50;
-	string gridStr = NFmiSettings::Require<string>(theSettingsStr.c_str()); // annetaan tyhjä defaultiksi
+	string gridStr = NFmiSettings::Require<string>(theSettingsStr.c_str()); // annetaan tyhjï¿½ defaultiksi
 	if(!gridStr.empty())
 	{
 		std::vector<int> values = NFmiStringTools::Split<std::vector<int> >(gridStr, ",");
@@ -1434,7 +1493,7 @@ void InitWmoStationInfoSystem(void)
 		return ;
 	try
 	{
-		fWmoStationInfoSystemInitialized = true; // laitetaan initialisointi lippu trueksi, vaikka ei ehkä onnistukaan
+		fWmoStationInfoSystemInitialized = true; // laitetaan initialisointi lippu trueksi, vaikka ei ehkï¿½ onnistukaan
 		string fileName;
 		std::string tmpPathAndFile = NFmiSettings::Require<std::string>("MetEditor::RAWSoundingStationInfoFile");
     	fileName = PathUtils::getAbsoluteFilePath(tmpPathAndFile, itsBasicConfigurations.ControlPath());
@@ -1476,13 +1535,13 @@ void InitEditedDataParamDescriptor(void)
 
 		fUseEditedDataParamDescriptor = NFmiSettings::Optional("MetEditor::UseConfigurationDataLoadingParams", false); // annetaan false defaultiksi
 		string paramsStr;
-		paramsStr = NFmiSettings::Optional("MetEditor::ConfigurationDataLoadingParams", paramsStr); // annetaan tyhjä defaultiksi
+		paramsStr = NFmiSettings::Optional("MetEditor::ConfigurationDataLoadingParams", paramsStr); // annetaan tyhjï¿½ defaultiksi
 		if(!paramsStr.empty())
 		{
 			try
 			{
 				NFmiParamBag params;
-				// oletus: paramStr:ässä on parametreja muodossa parID1,nimi1,parID2,nimi2,....
+				// oletus: paramStr:ï¿½ssï¿½ on parametreja muodossa parID1,nimi1,parID2,nimi2,....
 				std::vector<std::string> valuesStr = NFmiStringTools::Split<std::vector<std::string> >(paramsStr, ",");
 				std::vector<std::string>::iterator it = valuesStr.begin();
 				std::vector<std::string>::iterator endIt = valuesStr.end();
@@ -1517,8 +1576,8 @@ void InitEditedDataParamDescriptor(void)
 }
 
 // Funktio tutkii onko nimee laitettu interpolaatio tietoa vai ei.
-// Esim. 1 Normaali tilanne, nimessä ei ole interpolaatiotietoa, "Lämpötila" -> "Lämpötila",kLinearly  (pari)
-// Esim. 2 Nimessä on interpolaatiotietoa (lopussa kaarisuluissa luku, joka myös jätetään nimestä pois), "Lämpötila{2}" -> "Lämpötila",kNearestPoint  (pari)
+// Esim. 1 Normaali tilanne, nimessï¿½ ei ole interpolaatiotietoa, "Lï¿½mpï¿½tila" -> "Lï¿½mpï¿½tila",kLinearly  (pari)
+// Esim. 2 Nimessï¿½ on interpolaatiotietoa (lopussa kaarisuluissa luku, joka myï¿½s jï¿½tetï¿½ï¿½n nimestï¿½ pois), "Lï¿½mpï¿½tila{2}" -> "Lï¿½mpï¿½tila",kNearestPoint  (pari)
 std::pair<std::string, FmiInterpolationMethod> GetEditedParamFinalNameAndInterpolationMethod(const std::string &theParamName)
 {
     std::vector<std::string> nameParts = NFmiStringTools::Split<std::vector<std::string> >(theParamName, "{");
@@ -1526,7 +1585,7 @@ std::pair<std::string, FmiInterpolationMethod> GetEditedParamFinalNameAndInterpo
         return std::make_pair(theParamName, kLinearly);
     else
     {
-        if(theParamName[theParamName.size() - 1] != '}') // nimen pitää myös loppua kaarisulkuun, ennen kuin siinä olevat osiot hyväksytään interpolaatio menetelmäksi
+        if(theParamName[theParamName.size() - 1] != '}') // nimen pitï¿½ï¿½ myï¿½s loppua kaarisulkuun, ennen kuin siinï¿½ olevat osiot hyvï¿½ksytï¿½ï¿½n interpolaatio menetelmï¿½ksi
             return std::make_pair(theParamName, kLinearly);
         else
         {
@@ -1552,7 +1611,7 @@ NFmiDataIdent MakeEditedParam(FmiParameterName theParId, const std::string &theP
 {
 	if(theParId == kFmiTotalWindMS)
 	{
-		// tämä temppuilu CreateParam-jutun kanssa johtuu huonosta koodi suunnittelusta. Pitäisi tehdä NFmiTotalWind ja W&C CreateParam systeemi uusiksi kokonaan
+		// tï¿½mï¿½ temppuilu CreateParam-jutun kanssa johtuu huonosta koodi suunnittelusta. Pitï¿½isi tehdï¿½ NFmiTotalWind ja W&C CreateParam systeemi uusiksi kokonaan
 		NFmiTotalWind tmp;
         std::unique_ptr<NFmiDataIdent> dataIdentPtr(tmp.CreateParam(theDefaultProducer));
         dataIdentPtr->GetParam()->SetName(theParamName);
@@ -1560,7 +1619,7 @@ NFmiDataIdent MakeEditedParam(FmiParameterName theParId, const std::string &theP
 	}
 	else if(theParId == kFmiWeatherAndCloudiness)
 	{
-		// tämä temppuilu CreateParam-jutun kanssa johtuu huonosta koodi suunnittelusta. Pitäisi tehdä NFmiTotalWind ja W&C CreateParam systeemi uusiksi kokonaan
+		// tï¿½mï¿½ temppuilu CreateParam-jutun kanssa johtuu huonosta koodi suunnittelusta. Pitï¿½isi tehdï¿½ NFmiTotalWind ja W&C CreateParam systeemi uusiksi kokonaan
 		NFmiWeatherAndCloudiness tmp;
         std::unique_ptr<NFmiDataIdent> dataIdentPtr(tmp.CreateParam(theDefaultProducer));
         dataIdentPtr->GetParam()->SetName(theParamName);
@@ -1610,24 +1669,24 @@ void MakeClosingLogMessage(void)
     CatLog::stopLogging(true);
 }
 
-// lukee editor.conf-tiedostosta seuraavat määrittelyt:
+// lukee editor.conf-tiedostosta seuraavat mï¿½ï¿½rittelyt:
 // MetEditor::DataLoadingArea ja MetEditor::DataLoadingGridSize,
-// joiden avulla rakennetaan haluttu area+hila määritys, jota käytetään pohjana kun
-// rakennetaan ladattaessa dataa. Jos molempia ei löydy, ei kyseistä hila määritystä oteta
-// käyttöön ja tällöin hilamääritykset otetaan primääri datasta (mikä on prioriteetti 1
+// joiden avulla rakennetaan haluttu area+hila mï¿½ï¿½ritys, jota kï¿½ytetï¿½ï¿½n pohjana kun
+// rakennetaan ladattaessa dataa. Jos molempia ei lï¿½ydy, ei kyseistï¿½ hila mï¿½ï¿½ritystï¿½ oteta
+// kï¿½yttï¿½ï¿½n ja tï¿½llï¿½in hilamï¿½ï¿½ritykset otetaan primï¿½ï¿½ri datasta (mikï¿½ on prioriteetti 1
 // datan lataus dialogissa).
 void InitUsedDataLoadingGrid(void)
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
-	// lue tämä oikeasti conffi tiedostosta, älä vaadi, vaan testaa vain
+	// lue tï¿½mï¿½ oikeasti conffi tiedostosta, ï¿½lï¿½ vaadi, vaan testaa vain
 	if(itsPossibleUsedDataLoadingGrid)
 		delete itsPossibleUsedDataLoadingGrid;
 	itsPossibleUsedDataLoadingGrid = 0;
 
 	string areaStr;
-	areaStr = NFmiSettings::Optional("MetEditor::DataLoadingArea", areaStr); // annetaan tyhjä defaultiksi
+	areaStr = NFmiSettings::Optional("MetEditor::DataLoadingArea", areaStr); // annetaan tyhjï¿½ defaultiksi
 	string gridStr;
-	gridStr = NFmiSettings::Optional("MetEditor::DataLoadingGridSize", gridStr); // annetaan tyhjä defaultiksi
+	gridStr = NFmiSettings::Optional("MetEditor::DataLoadingGridSize", gridStr); // annetaan tyhjï¿½ defaultiksi
 	if((!areaStr.empty()) && (!gridStr.empty()))
 	{
 		try
@@ -1691,7 +1750,7 @@ void SaveSettingsToConfFile(void)
 	}
 	catch(exception &e)
 	{
-        ::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(e.what()), _TEXT("Problems with InitSettingsFromConfFile!"), MB_OK);
+        LogAndWarnUser(e.what(), "Problems with InitSettingsFromConfFile", CatLog::Severity::Error, CatLog::Category::Configuration, false);
 	}
 }
 
@@ -1704,7 +1763,7 @@ void InitColorContourLegendSettings()
     }
     catch(exception& e)
     {
-        ::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(e.what()), _TEXT("Problems with InitColorContourLegendSettings!"), MB_OK);
+        LogAndWarnUser(e.what(), "Problems with InitColorContourLegendSettings", CatLog::Severity::Error, CatLog::Category::Configuration, false);
     }
 }
 
@@ -1750,7 +1809,7 @@ void InitDrawDifferenceDrawParam(void)
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
 	if(itsSmartInfoOrganizer)
 	{
-		// korjaa tämä kohta niin että tulee kolmivärinen isoviiva esitys!!!
+		// korjaa tï¿½mï¿½ kohta niin ettï¿½ tulee kolmivï¿½rinen isoviiva esitys!!!
 		itsDrawDifferenceDrawParam = itsSmartInfoOrganizer->CreateDrawParam(NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpDrawDifferenceParam, "Diff to orig")), 0, NFmiInfoData::kAnyData);
 		itsDrawDifferenceDrawParam->SimpleIsoLineColorShadeClassCount(3);
 		itsDrawDifferenceDrawParam->SimpleIsoLineLabelHeight(3.1f);
@@ -1763,7 +1822,7 @@ void InitDrawDifferenceDrawParam(void)
 		itsDrawDifferenceDrawParam->SimpleIsoLineColorShadeHighValueColor(NFmiColor(1.f,0.f,0.f));
 		itsDrawDifferenceDrawParam->StationDataViewType(NFmiMetEditorTypes::View::kFmiIsoLineView);
 
-		// Laitoin alustamaan myös valittujen hilapisteiden uuden visualisointi piirron
+		// Laitoin alustamaan myï¿½s valittujen hilapisteiden uuden visualisointi piirron
 		itsSelectedGridPointDrawParam = itsSmartInfoOrganizer->CreateDrawParam(NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpSelectedGridPoints, "Selected grid points")), 0, NFmiInfoData::kAnyData);
 		if(itsSelectedGridPointDrawParam)
 		{
@@ -1771,14 +1830,14 @@ void InitDrawDifferenceDrawParam(void)
 			bool doBorders = NFmiSettings::Optional<bool>("SmartMet::SelectedGridPointsDrawBorders", false);
 			itsSelectedGridPointDrawParam->IsoLineGab(doBorders ? 1 : 5);
 //			NFmiColor isolineColor(0.7f, 0.f, 0.f);
-//			itsSelectedGridPointDrawParam->IsolineColor(isolineColor);  // isoviivan piirto ei onnistu tässä (valittujen editointi pisteiden piirto) jostain syystä johdonmukaisesti, sen takia piirretään vain hatch
+//			itsSelectedGridPointDrawParam->IsolineColor(isolineColor);  // isoviivan piirto ei onnistu tï¿½ssï¿½ (valittujen editointi pisteiden piirto) jostain syystï¿½ johdonmukaisesti, sen takia piirretï¿½ï¿½n vain hatch
 			itsSelectedGridPointDrawParam->SimpleIsoLineLabelHeight(0);
 			itsSelectedGridPointDrawParam->UseWithIsoLineHatch1(true);
 			itsSelectedGridPointDrawParam->IsoLineHatchLowValue1(0.8f);
 			itsSelectedGridPointDrawParam->IsoLineHatchHighValue1(10.f);
 			int usedHatchType = NFmiSettings::Optional<int>("SmartMet::SelectedGridPointsDrawHatchType", 5);
 			itsSelectedGridPointDrawParam->IsoLineHatchType1(usedHatchType);
-//			itsSelectedGridPointDrawParam->DrawIsoLineHatchWithBorders1(true); // hatch with borders ei myöskään onnistu jostain mystisestä syystä
+//			itsSelectedGridPointDrawParam->DrawIsoLineHatchWithBorders1(true); // hatch with borders ei myï¿½skï¿½ï¿½n onnistu jostain mystisestï¿½ syystï¿½
 			NFmiColor defaultHatchColor(0.2f, 0.2f, 0.5f);
 			NFmiColor usedHatchColor = SettingsFunctions::GetColorFromSettings("SmartMet::SelectedGridPointsDrawHatchColor", &defaultHatchColor);
 			itsSelectedGridPointDrawParam->IsoLineHatchColor1(usedHatchColor);
@@ -1786,15 +1845,15 @@ void InitDrawDifferenceDrawParam(void)
 	}
 }
 
-// Laskee halutun tiedoston nimen sekunneissa. Jos paluu arvo on -99, ei tiedostoa löytynyt.
-// Huom! tämä voi olla ongelma, koska tiedosto voi olla 1 sekunnin päästä tulevaisuudesta.
-// Eli negatiiviset arvot tarkoittaa, että tiedosto on 'tulevaisuudesta'.
+// Laskee halutun tiedoston nimen sekunneissa. Jos paluu arvo on -99, ei tiedostoa lï¿½ytynyt.
+// Huom! tï¿½mï¿½ voi olla ongelma, koska tiedosto voi olla 1 sekunnin pï¿½ï¿½stï¿½ tulevaisuudesta.
+// Eli negatiiviset arvot tarkoittaa, ettï¿½ tiedosto on 'tulevaisuudesta'.
 int GetFileAgeInSeconds(const string& theFileName)
 {
 	time_t currentTime;
 	::time(&currentTime);
 	int fileAge = -1;
-	string foundFileName; // tämä on turha, mutta FindFile vaatii sitä
+	string foundFileName; // tï¿½mï¿½ on turha, mutta FindFile vaatii sitï¿½
 	time_t fileTime = NFmiFileSystem::FindFile(theFileName, true, &foundFileName);
 	if(fileTime)
 	{
@@ -1805,19 +1864,19 @@ int GetFileAgeInSeconds(const string& theFileName)
 
 const std::string cantCreateRunningStatusFileError = "Cannot create 'running_status.dat' file (which may help to comfirm that previous SmartMet run has been crashed).";
 
-// Metkuneditori pitää tietoa tilastaan työhakemistossa olevalla tiedostolla, johon
-// kirjoitetaan 'running' kun editori käynnistetään. Tiedostoon kirjoitetaan stopped,
+// Metkuneditori pitï¿½ï¿½ tietoa tilastaan tyï¿½hakemistossa olevalla tiedostolla, johon
+// kirjoitetaan 'running' kun editori kï¿½ynnistetï¿½ï¿½n. Tiedostoon kirjoitetaan stopped,
 // kun editori suljetaan hallitusti.
-// Käynnistettäessä tarkistaa, onko edellisen kerran ohjelma suljettu hallitusti. Jos ei ole, kirjoittaa
-// lokiin varoituksen ja mahd. lähettää varoitus viestin (email, gsm-viesti?) asetuksista riippuen.
-// Tarkistaa samalla kuitenkin myös, onko samasta editorista useita versioita (prosesseja) käynnissä.
-// 'Sama' tarkoittaa, että onko olemassa muuta samannimistä prosessia, joka on käynnistetty
-// samasta paikasta (polusta). Jos löytyy muita samanaikaisia 'samoja' prosesseja, ei tee hälytystä,
-// jos käynnistyessä löytyy tarkistus tiedostosta "running" sana.
+// Kï¿½ynnistettï¿½essï¿½ tarkistaa, onko edellisen kerran ohjelma suljettu hallitusti. Jos ei ole, kirjoittaa
+// lokiin varoituksen ja mahd. lï¿½hettï¿½ï¿½ varoitus viestin (email, gsm-viesti?) asetuksista riippuen.
+// Tarkistaa samalla kuitenkin myï¿½s, onko samasta editorista useita versioita (prosesseja) kï¿½ynnissï¿½.
+// 'Sama' tarkoittaa, ettï¿½ onko olemassa muuta samannimistï¿½ prosessia, joka on kï¿½ynnistetty
+// samasta paikasta (polusta). Jos lï¿½ytyy muita samanaikaisia 'samoja' prosesseja, ei tee hï¿½lytystï¿½,
+// jos kï¿½ynnistyessï¿½ lï¿½ytyy tarkistus tiedostosta "running" sana.
 void CheckRunningStatusAtStartup(const NFmiString& theCheckedDirectory)
 {
 	CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
-	if(IsOtherSimilarProcessesRunning()) // jos toinen samanlainen prosessi käynnissä, ei tehdä mitään
+	if(IsOtherSimilarProcessesRunning()) // jos toinen samanlainen prosessi kï¿½ynnissï¿½, ei tehdï¿½ mitï¿½ï¿½n
 	{
 		LogMessage("When SmartMet was started there were other SmartMets running. So can't check if SmartMet was crashed before it's was started up again ('running_status.dat' file check).", CatLog::Severity::Debug, CatLog::Category::Operational);
 		return ;
@@ -1829,15 +1888,15 @@ void CheckRunningStatusAtStartup(const NFmiString& theCheckedDirectory)
 	if(!NFmiFileSystem::FileExists(fileName)) // globaali NFmiFileSystem-funktio
 	{
 		LogMessage("The 'running_status.dat' file didn't exist, is SmartMet started first time ion this machine?", CatLog::Severity::Warning, CatLog::Category::Operational);
-		ofstream ofile(fileName.c_str()); // tehdään tarkistus tiedosto sitten jos ei ollut
+		ofstream ofile(fileName.c_str()); // tehdï¿½ï¿½n tarkistus tiedosto sitten jos ei ollut
 		if(ofile)
 		{
-			ofile << "running" << endl; // laitetaan sinne 'käynnissä' tila tieto
+			ofile << "running" << endl; // laitetaan sinne 'kï¿½ynnissï¿½' tila tieto
 			ofile.close();
 		}
 		else
 			LogMessage(cantCreateRunningStatusFileError, CatLog::Severity::Error, CatLog::Category::Operational);
-		return ; // paluu kun on saatu status tiedoto tehtyä
+		return ; // paluu kun on saatu status tiedoto tehtyï¿½
 	}
 
 	ifstream ifile(fileName.c_str());
@@ -1846,16 +1905,16 @@ void CheckRunningStatusAtStartup(const NFmiString& theCheckedDirectory)
 		string testStr;
 		ifile >> testStr;
 		ifile.close();
-		if(testStr == string("running")) // status väärä (onko ohjelma kaatunut edellisen kerran)
+		if(testStr == string("running")) // status vï¿½ï¿½rï¿½ (onko ohjelma kaatunut edellisen kerran)
 		{
 			LogMessage("The 'running_status.dat' file was in 'running'-mode, did SmartMet crash before that?", CatLog::Severity::Warning, CatLog::Category::Operational);
-			// TÄHÄN TULEE SITTEN HÄLYTYS VIESTIN LÄHETYS!!!!!!
+			// Tï¿½Hï¿½N TULEE SITTEN Hï¿½LYTYS VIESTIN Lï¿½HETYS!!!!!!
 			return ; // paluu jo nyt, koska teksti on jo oikea
 		}
 	}
 
 	// jos oli muuta kuin 'running' teksti, talletetaan tarkistus tiedostoon 'running' tila
-	ofstream ofile(fileName.c_str()); // tehdään tarkistus tiedosto sitten jos ei ollut
+	ofstream ofile(fileName.c_str()); // tehdï¿½ï¿½n tarkistus tiedosto sitten jos ei ollut
 	if(ofile)
 	{
 		ofile << "running" << endl; // laitetaan sinne kaikki ok tila tieto
@@ -1870,7 +1929,7 @@ void CheckRunningStatusAtStartup(const NFmiString& theCheckedDirectory)
 
 void CheckRunningStatusAtClosing(const NFmiString& theCheckedDirectory)
 {
-	if(IsOtherSimilarProcessesRunning()) // jos toinen samanlainen prosessi käynnissä, ei tehdä mitään
+	if(IsOtherSimilarProcessesRunning()) // jos toinen samanlainen prosessi kï¿½ynnissï¿½, ei tehdï¿½ mitï¿½ï¿½n
 	{
 		LogMessage("When closing SmartMet, there was another SmartMet running so won't do anything to 'running_status.dat' file.", CatLog::Severity::Debug, CatLog::Category::Operational);
 		return ;
@@ -1879,7 +1938,7 @@ void CheckRunningStatusAtClosing(const NFmiString& theCheckedDirectory)
 	string fileName(theCheckedDirectory);
 	fileName += kFmiDirectorySeparator;
 	fileName += "running_status.dat";
-	ofstream ofile(fileName.c_str()); // tehdään tarkistus tiedosto sitten jos ei ollut
+	ofstream ofile(fileName.c_str()); // tehdï¿½ï¿½n tarkistus tiedosto sitten jos ei ollut
 	if(ofile)
 	{
 		ofile << "closed" << endl; // laitetaan sinne kaikki ok tila tieto
@@ -1892,6 +1951,7 @@ void CheckRunningStatusAtClosing(const NFmiString& theCheckedDirectory)
 	}
 }
 
+#ifndef UNIX
 bool GetHardDriveInfo(char driveLetter, double &freeGigaBytesAvailable, double &totalNumberOfGigaBytes, double &freeDriveSpaceInProcents)
 {
     const double gigaByte = 1024 * 1024 * 1024;
@@ -1913,21 +1973,23 @@ bool GetHardDriveInfo(char driveLetter, double &freeGigaBytesAvailable, double &
         freeDriveSpaceInProcents = (100. * freeGigaBytesAvailable) / totalNumberOfGigaBytes;
     return status == TRUE;
 }
+#endif
 
 char GetSmartMetDriveLetter()
 {
     auto controlPathAbsolute = BasicSmartMetConfigurations().ControlPath();
     NFmiFileString fileStr(controlPathAbsolute);
-    std::string driveLetter = fileStr.Device();
+    std::string driveLetter(fileStr.Device().CharPtr());
     if(driveLetter.size())
         return static_cast<char>(std::toupper(driveLetter[0]));
     else
     {
         LogMessage("GetSmartMetDriveLetter: Unable to get SmartMet drive letter info", CatLog::Severity::Error, CatLog::Category::Operational, true);
-        return 'C'; // En tiedä mitä pitäisi tehdä jos aseman kirjainta ei saada, mutta en halua heittää poikkeustakaan
+        return 'C'; // En tiedï¿½ mitï¿½ pitï¿½isi tehdï¿½ jos aseman kirjainta ei saada, mutta en halua heittï¿½ï¿½ poikkeustakaan
     }
 }
 
+#ifndef UNIX
 bool IsSystemDriveSameAsApplicationDrive()
 {
     auto driveLetter = GetSmartMetDriveLetter();
@@ -1961,7 +2023,7 @@ std::string GetHardDriveReportString(const std::string driverDescription, double
 
 void DoLedLightFreeSpaceReport(char driveLetter, std::string logMessage, CatLog::Severity severity)
 {
-	// C ja D asemilta tehdään eri raportit
+	// C ja D asemilta tehdï¿½ï¿½n eri raportit
 	std::string reporterName = "HardDriveUsage-" + driveLetter;
 	if(severity <= CatLog::Severity::Info)
 		NFmiLedLightStatusSystem::StopReportToChannelFromThread(NFmiLedChannel::OperationalInfo, reporterName);
@@ -2021,12 +2083,14 @@ void ReportHardDriveUsage()
     ReportSmartMetHardDriveUsage();
     LogSystemInfo("------------------------------------------------------");
 }
+#endif
 
 void LogSystemInfo(std::string message, CatLog::Severity logSeverity = CatLog::Severity::Debug, CatLog::Category logCategory = CatLog::Category::Operational, bool flushLog = true)
 {
     LogMessage(message, logSeverity, logCategory, flushLog);
 }
 
+#ifndef UNIX
 void ReportProcessMemoryUsage(void)
 {
     ReportHardDriveUsage();
@@ -2078,8 +2142,10 @@ void ReportSystemMemoryUsage(void)
     LogSystemInfo(std::string("\t\tFree virtual memory: \t\t") + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(statex.ullAvailVirtual/gigabyte, 1)) + " GB");
     LogSystemInfo("------------------------------------------------------");
 }
+#endif
 
-// onko samanlaisia prosesseja muita käynnissä (= sama nimi ja exe-polku)
+#ifndef UNIX
+// onko samanlaisia prosesseja muita kï¿½ynnissï¿½ (= sama nimi ja exe-polku)
 bool IsOtherSimilarProcessesRunning(void)
 {
 
@@ -2105,8 +2171,14 @@ bool IsOtherSimilarProcessesRunning(void)
 		}
 	}
 
-	return false; // pieleen meni jostain syystä!!!
+	return false; // pieleen meni jostain syystï¿½!!!
 }
+#else
+bool IsOtherSimilarProcessesRunning(void)
+{
+	return false;
+}
+#endif
 
 bool InitOptionsData(void)
 {
@@ -2131,11 +2203,11 @@ bool StoreOptionsData(void)
 	{
         DoConfigurationsCanBeSavedCheck(true);
 
-        // Tänne tullaan mm. CMainFrame:n OnClose -metodista
+        // Tï¿½nne tullaan mm. CMainFrame:n OnClose -metodista
 		StoreCaseStudyMemory();
     	itsMetEditorOptionsData.StoreToSettings();
-    	itsHelpDataInfoSystem.StoreToSettings(); // näitä asetuksia muutetaan myös options-dialogissa (HUOM! pitää tallettaa normaalit datat, ei CaseStudy:yn liittyviä juttuja)
-		SaveSettingsToConfFile(); // näitä asetuksia muutetaan myös options-dialogissa
+    	itsHelpDataInfoSystem.StoreToSettings(); // nï¿½itï¿½ asetuksia muutetaan myï¿½s options-dialogissa (HUOM! pitï¿½ï¿½ tallettaa normaalit datat, ei CaseStudy:yn liittyviï¿½ juttuja)
+		SaveSettingsToConfFile(); // nï¿½itï¿½ asetuksia muutetaan myï¿½s options-dialogissa
     	itsBasicConfigurations.ApplicationDataBase().StoreToSettings();
     	itsCPManagerSet.StoreToSettings();
 		NFmiSettings::Save();
@@ -2150,7 +2222,7 @@ bool StoreOptionsData(void)
 	return false;
 }
 
-// Tarkastaa onko kovalevylla tarpeeksi tilaa, ja jos ei, heittää poikkeuksen.
+// Tarkastaa onko kovalevylla tarpeeksi tilaa, ja jos ei, heittï¿½ï¿½ poikkeuksen.
 void DoConfigurationsCanBeSavedCheck(bool useConfigurationLimit, const std::string &optionalExplanationStr = "")
 {
     float freeLimitInMB = useConfigurationLimit ? itsHardDriveFreeLimitForConfSavesInMB : itsHardDriveFreeLimitForEditedDataSavesInMB;
@@ -2244,7 +2316,7 @@ bool InitInfoOrganizer(void)
 	itsSmartInfoOrganizer->WorkingDirectory(WorkingDirectory());
 	int undoredoDepth = (SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) ? itsMetEditorOptionsData.UndoRedoDepth() : 0; // ns. viewmodessa undo/redo syvyydeksi 0!
 	bool makeCopyOfEditedData = undoredoDepth > 0;
-	itsSmartInfoOrganizer->Init(itsMacroPathSettings.DrawParamPath(), false, makeCopyOfEditedData, fUseOnePressureLevelDrawParam); // 2. parametri (false) tarkoittaa että jos drawparam-tiedostoja ei ole, ei niitä luoda automaattisesti
+	itsSmartInfoOrganizer->Init(itsMacroPathSettings.DrawParamPath(), false, makeCopyOfEditedData, fUseOnePressureLevelDrawParam); // 2. parametri (false) tarkoittaa ettï¿½ jos drawparam-tiedostoja ei ole, ei niitï¿½ luoda automaattisesti
 	NFmiFileSystem::CreateDirectory(itsSmartInfoOrganizer->GetDrawParamPath());
 
 	return true;
@@ -2267,7 +2339,7 @@ const std::string& HelpDataPath(void) const
 std::string CreateHelpEditorFileNameFilter(void)
 {
 	std::string fileName(itsHelpEditorSystem.DataPath());
-	fileName += "\\"; // varmuudeksi laitetaan polku deliminator perään
+	fileName += "\\"; // varmuudeksi laitetaan polku deliminator perï¿½ï¿½n
 	fileName += "*_";
 	fileName += itsHelpEditorSystem.FileNameBase();
 	return fileName;
@@ -2276,7 +2348,7 @@ std::string CreateHelpEditorFileNameFilter(void)
 std::string StripFilePathAndExtension(const std::string &theFileName)
 {
 	NFmiFileString fileStr(theFileName);
-	std::string fileName = fileStr.Header();
+	std::string fileName(fileStr.Header().CharPtr());
 	return fileName;
 }
 
@@ -2320,7 +2392,7 @@ bool InitHelpDataInfoSystem(void)
 		itsHelpDataInfoSystem.InitFromSettings("MetEditor::HelpData", itsBasicConfigurations.ControlPath(), CreateHelpEditorFileNameFilter(), StripFilePathAndExtension(itsHelpEditorSystem.FileNameBase()));
 		LogHelpDataInfoSystemCombineDataConfigurationProblems();
 		LogHelpDataInfoSystemCacheDataOptions();
-		// Tämä caseStudy dataan liittyvä alustus pitää tehdä heti itsHelpDataInfoSystem:in alustuksen jälkeen...
+		// Tï¿½mï¿½ caseStudy dataan liittyvï¿½ alustus pitï¿½ï¿½ tehdï¿½ heti itsHelpDataInfoSystem:in alustuksen jï¿½lkeen...
 		NFmiCaseStudySystem::SetAllCustomFolderNames(itsHelpDataInfoSystem);
 		return true;
 	}
@@ -2335,9 +2407,9 @@ bool InitHelpDataInfoSystem(void)
 	return false;
 }
 
-// tätä on tarkoitus kutsua AddData-metodista ja vain 1. kerran kun tulee editoitavaa dataa, tai
-// kun SmartMetiä käytetään tiputus moodissa eli tiputetaan 'editoitavaa' dataa.
-// HUOM! tätä käytetään myös säätämään  aikasarjaikkunan aikabagia, koska tämä on siis tarkoitus kutsua vain kerran AddData-metodista!!!!
+// tï¿½tï¿½ on tarkoitus kutsua AddData-metodista ja vain 1. kerran kun tulee editoitavaa dataa, tai
+// kun SmartMetiï¿½ kï¿½ytetï¿½ï¿½n tiputus moodissa eli tiputetaan 'editoitavaa' dataa.
+// HUOM! tï¿½tï¿½ kï¿½ytetï¿½ï¿½n myï¿½s sï¿½ï¿½tï¿½mï¿½ï¿½n  aikasarjaikkunan aikabagia, koska tï¿½mï¿½ on siis tarkoitus kutsua vain kerran AddData-metodista!!!!
 void SetCrossSectionSystemTimes(const NFmiTimeDescriptor &theTimeDesc)
 {
 	if(theTimeDesc.ValidTimeBag())
@@ -2350,21 +2422,21 @@ void SetCrossSectionSystemTimes(const NFmiTimeDescriptor &theTimeDesc)
 
 void NormalizeGridDataArea(NFmiQueryData* theData)
 {
-	// HUOM! tämä arean size juttu pitää säätää ennen kuin tarkastellaan siivouksia, koska muuten areat eivät ole samanlaisia, jos tapahtuu
-	// tämä säätö ja tällöin infoOrganizeriin jää talteen vanhat datat
+	// HUOM! tï¿½mï¿½ arean size juttu pitï¿½ï¿½ sï¿½ï¿½tï¿½ï¿½ ennen kuin tarkastellaan siivouksia, koska muuten areat eivï¿½t ole samanlaisia, jos tapahtuu
+	// tï¿½mï¿½ sï¿½ï¿½tï¿½ ja tï¿½llï¿½in infoOrganizeriin jï¿½ï¿½ talteen vanhat datat
 	if(theData && theData->Info() && theData->Info()->Grid() && theData->Info()->Grid()->Area())
-	{ // tässä varmistetaan että hiladatassa on arean XYWorld-recti 0,0 - 1,1 maailmassa, että editori osaa piirtää datan oikein
+	{ // tï¿½ssï¿½ varmistetaan ettï¿½ hiladatassa on arean XYWorld-recti 0,0 - 1,1 maailmassa, ettï¿½ editori osaa piirtï¿½ï¿½ datan oikein
 		if(theData->Info()->Grid()->Area()->Width() != 1 || theData->Info()->Grid()->Area()->Height() != 1)
-		{ // tehdään kuitenkin säädöt vain jos leveys/korkeus poikkeaa 1:stä (varmuuden vuoksi)
+		{ // tehdï¿½ï¿½n kuitenkin sï¿½ï¿½dï¿½t vain jos leveys/korkeus poikkeaa 1:stï¿½ (varmuuden vuoksi)
 			theData->Info()->Grid()->Area()->Size(NFmiPoint(1,1));
 			theData->Info()->Grid()->Area()->Init();
 		}
 	}
 }
 
-// CaseStudy systeemi tietää nykyään kuinka monta tiedostoa halutaan säilyttää lokaaleissa 
+// CaseStudy systeemi tietï¿½ï¿½ nykyï¿½ï¿½n kuinka monta tiedostoa halutaan sï¿½ilyttï¿½ï¿½ lokaaleissa 
 // cache hakemistoissa.
-// HUOM! maxLatestDataCount on lukuna yhden pienempi kuin LocalCacheDataCount, joten se pitää vähentää.
+// HUOM! maxLatestDataCount on lukuna yhden pienempi kuin LocalCacheDataCount, joten se pitï¿½ï¿½ vï¿½hentï¿½ï¿½.
 int GetMaxLatestDataCount(NFmiInfoData::Type theType, const std::string& theFileNameFilter)
 {
 	int maxLatestDataCount = 0;
@@ -2389,15 +2461,15 @@ int GetModelRunTimeGap(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 	tmpDrawParam->ModelRunIndex(0);
 	boost::shared_ptr<NFmiFastQueryInfo> aInfo = InfoOrganizer()->Info(tmpDrawParam, false, false); // kokeillaa ensin ei poikkileikmkaus dataa
 	if(aInfo == 0)
-		aInfo = InfoOrganizer()->Info(tmpDrawParam, true, false); // jos ei löytynyt, kokeillaan poikkileikkausdataa
+		aInfo = InfoOrganizer()->Info(tmpDrawParam, true, false); // jos ei lï¿½ytynyt, kokeillaan poikkileikkausdataa
 	if(aInfo)
 		return NFmiCaseStudyDataFile::GetModelRunTimeGapInMinutes(aInfo.get(), aInfo->DataType(), HelpDataInfoSystem()->FindHelpDataInfo(aInfo->DataFilePattern()));
 	else
 		return 0;
 }
 
-// Päivittää maskilistaa juuri lisätyn datan mukaan. Eli jos AddData-metodissa lisätty data on jonkin
-// maski-otuksen käytössä, pitää vain sellainen maski päivittää.
+// Pï¿½ivittï¿½ï¿½ maskilistaa juuri lisï¿½tyn datan mukaan. Eli jos AddData-metodissa lisï¿½tty data on jonkin
+// maski-otuksen kï¿½ytï¿½ssï¿½, pitï¿½ï¿½ vain sellainen maski pï¿½ivittï¿½ï¿½.
 void UpdateParamMaskList(NFmiInfoData::Type theType, const std::string& theDataFilePattern, NFmiQueryData* theData)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> fastInfo = GetMatchingFastInfo(theType, theDataFilePattern, theData);
@@ -2413,7 +2485,7 @@ void UpdateParamMaskList(NFmiInfoData::Type theType, const std::string& theDataF
 				{
 					if(fastInfo->DataFilePattern() == maskInfo->DataFilePattern())
 					{
-						boost::shared_ptr<NFmiFastQueryInfo> fastInfoCopy = NFmiInfoOrganizer::DoDynamicShallowCopy(fastInfo); // pitää tehdä dynaaminen kopio, että saadaan NFmiOwnerInfo-tasoinen matala kopio maskin UpdateInfo-metodille.
+						boost::shared_ptr<NFmiFastQueryInfo> fastInfoCopy = NFmiInfoOrganizer::DoDynamicShallowCopy(fastInfo); // pitï¿½ï¿½ tehdï¿½ dynaaminen kopio, ettï¿½ saadaan NFmiOwnerInfo-tasoinen matala kopio maskin UpdateInfo-metodille.
 						paramMaskList->Current()->UpdateInfo(fastInfoCopy);
 					}
 				}
@@ -2422,8 +2494,8 @@ void UpdateParamMaskList(NFmiInfoData::Type theType, const std::string& theDataF
 	}
 }
 
-// Tällä funktiolla saadaan juuri se FastInfo, minkä data on lisätty AddData-funktiossa. 
-// Sen hakuun InfoOrganizerista vaaditaan minimissään parametrina olevat tiedot.
+// Tï¿½llï¿½ funktiolla saadaan juuri se FastInfo, minkï¿½ data on lisï¿½tty AddData-funktiossa. 
+// Sen hakuun InfoOrganizerista vaaditaan minimissï¿½ï¿½n parametrina olevat tiedot.
 boost::shared_ptr<NFmiFastQueryInfo> GetMatchingFastInfo(NFmiInfoData::Type theType, const std::string& theDataFilePattern, NFmiQueryData* theData)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> foundFastInfo;
@@ -2435,7 +2507,7 @@ boost::shared_ptr<NFmiFastQueryInfo> GetMatchingFastInfo(NFmiInfoData::Type theT
 	{
 		std::vector<boost::shared_ptr<NFmiFastQueryInfo> > fastInfoVector = itsSmartInfoOrganizer->GetInfos(theDataFilePattern);
 		if(fastInfoVector.empty() == false)
-			foundFastInfo = fastInfoVector[0]; // otetaan vain ensimmäinen vektorista, koska oikeasti siinä ei voi olla kuin yksi löytynyt fastInfo
+			foundFastInfo = fastInfoVector[0]; // otetaan vain ensimmï¿½inen vektorista, koska oikeasti siinï¿½ ei voi olla kuin yksi lï¿½ytynyt fastInfo
 	}
 
 	if(foundFastInfo)
@@ -2447,10 +2519,10 @@ boost::shared_ptr<NFmiFastQueryInfo> GetMatchingFastInfo(NFmiInfoData::Type theT
 	return boost::shared_ptr<NFmiFastQueryInfo>();
 }
 
-// Yritetään estää liiallisen muistin käyttöä kun varataan tilaa undo-redo datalle editoinnissa.
-// Jos undo-redo vaatii liikaa muistia, ei oteta sitä käyttöön ollenkaan.
-// Muistin loppuminen kaataa tietyissä systeemeissä olevan SmartMetin, vaikka ei pitäisi 
-// esim. MacOs:ssä olevan virtuaali Winkkarin.
+// Yritetï¿½ï¿½n estï¿½ï¿½ liiallisen muistin kï¿½yttï¿½ï¿½ kun varataan tilaa undo-redo datalle editoinnissa.
+// Jos undo-redo vaatii liikaa muistia, ei oteta sitï¿½ kï¿½yttï¿½ï¿½n ollenkaan.
+// Muistin loppuminen kaataa tietyissï¿½ systeemeissï¿½ olevan SmartMetin, vaikka ei pitï¿½isi 
+// esim. MacOs:ssï¿½ olevan virtuaali Winkkarin.
 int DoMemoryCheckForUndoRedoDepth(NFmiQueryData* theData, int currentUndoRedoDepth)
 {
     int usedUndoRedoDepth = currentUndoRedoDepth;
@@ -2476,10 +2548,10 @@ bool ModifyParametersInterpolationToLinear(NFmiDataIdent& editedData)
     return false;
 }
 
-// TotalWind yhdistelmä parametrilla on jostain syystä valittu wind-vector metaparametrin 
-// interpolaatioksi nearest, mikä on turhaa ja aiheuttaa ristiriitoja tuulen suunnan ja 
-// nopeuksien kanssa, kun niitä interpoloidaan lineaarisesti. Tämä on jälkikäteen tehty
-// dataan tehtävä fiksaus ja tässä asetetaan interpolaatio halutuksia, jos datasta löytyy total-wind.
+// TotalWind yhdistelmï¿½ parametrilla on jostain syystï¿½ valittu wind-vector metaparametrin 
+// interpolaatioksi nearest, mikï¿½ on turhaa ja aiheuttaa ristiriitoja tuulen suunnan ja 
+// nopeuksien kanssa, kun niitï¿½ interpoloidaan lineaarisesti. Tï¿½mï¿½ on jï¿½lkikï¿½teen tehty
+// dataan tehtï¿½vï¿½ fiksaus ja tï¿½ssï¿½ asetetaan interpolaatio halutuksia, jos datasta lï¿½ytyy total-wind.
 void FixTotalWindsWindVectorInterpolation(NFmiQueryData* data, const std::string& theDataFileName)
 {
 	itsParameterInterpolationFixer.fixCheckedParametersInterpolation(data, theDataFileName);
@@ -2500,7 +2572,7 @@ int GetDataFakeProducerId(const std::string& theDataFilePattern)
 	if(helpData)
 		return helpData->FakeProducerId();
 	else
-		return 0; // 0 tarkoittaa että datalla ei ole fake-producer-id:tä
+		return 0; // 0 tarkoittaa ettï¿½ datalla ei ole fake-producer-id:tï¿½
 }
 
 void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, const std::string& theDataFilePattern,
@@ -2509,8 +2581,8 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 	StoreLastLoadedFileNameToLog(theDataFileName);
 	if(theData == nullptr || theData->Info() == nullptr)
 	{
-		// HUOM! joskus tulee ehkä jonkin luku virheen takia queryData, jonka rawData on roskaa ja info on 0-pointteri. Sellainen data ignoorataan 
-		// tässä, huom vuotaa muistia, koska en voi deletoida kun rawData-pointteri osoittaa ties minne.
+		// HUOM! joskus tulee ehkï¿½ jonkin luku virheen takia queryData, jonka rawData on roskaa ja info on 0-pointteri. Sellainen data ignoorataan 
+		// tï¿½ssï¿½, huom vuotaa muistia, koska en voi deletoida kun rawData-pointteri osoittaa ties minne.
 		std::string errMessage = "Data loading failed, following data was read, but it was invalid and not used: ";
 		errMessage += theDataFileName;
 		LogMessage(errMessage, CatLog::Severity::Error, CatLog::Category::Data);
@@ -2519,7 +2591,7 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 
 	NormalizeGridDataArea(theData);
     FixTotalWindsWindVectorInterpolation(theData, theDataFileName);
-	NFmiTimeDescriptor removedDatasTimesOut; // tätä käytetään mm. tutka-datan ruudun likaus optimointiin
+	NFmiTimeDescriptor removedDatasTimesOut; // tï¿½tï¿½ kï¿½ytetï¿½ï¿½n mm. tutka-datan ruudun likaus optimointiin
 
 	if(theData)
 		itsSmartInfoOrganizer->ClearThisKindOfData(theData->Info(), theType, theDataFilePattern, removedDatasTimesOut);
@@ -2557,10 +2629,12 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 		UpdateParamMaskList(theType, theDataFilePattern, theData);
 		DoNewEditedDataLoadedSetups(theType, loadFromFileState, undoredoDepth, setCurrentTimeToNearestHour);
 
+#ifndef UNIX
 		if(DataNotificationSettings().Use() && DataNotificationSettings().ShowIcon())
 		{
 			DoNewDataNotifications(theData, theNotificationStr, theDataFilePattern);
 		}
+#endif
 
 		DoPossibleTEMPCodeSoundingDataSetup(theData, theType, theDataFileName);
 		DoPossibleCaseStudyEditedDataSetup(theData, theDataFileName, theType, fDataWasDeletedOut);
@@ -2573,9 +2647,9 @@ void AddQueryData(NFmiQueryData* theData, const std::string& theDataFileName, co
 
 void DoPossibleTEMPCodeSoundingDataSetup(NFmiQueryData* theData, NFmiInfoData::Type theType, const std::string& theDataFileName)
 {
-	// Tämä on kTEMPCodeSoundingData-speciaali. Jos editori käyttää vain luotaus datan katseluun,
-	// eikä ole olemassa editoitua dataa, laitetaan tämän tyyppinen data myös editoitavaksi dataksi,
-	// jotta dataa voisi kätevästi katsella editorilla, ilman että tarvitsee erikseen tiputella editoitavia datoja
+	// Tï¿½mï¿½ on kTEMPCodeSoundingData-speciaali. Jos editori kï¿½yttï¿½ï¿½ vain luotaus datan katseluun,
+	// eikï¿½ ole olemassa editoitua dataa, laitetaan tï¿½mï¿½n tyyppinen data myï¿½s editoitavaksi dataksi,
+	// jotta dataa voisi kï¿½tevï¿½sti katsella editorilla, ilman ettï¿½ tarvitsee erikseen tiputella editoitavia datoja
 	bool dataWasDeletedInInnerCall = false;
 	if(theType == NFmiInfoData::kTEMPCodeSoundingData && (EditedInfo() == nullptr || fIsTEMPCodeSoundingDataAlsoCopiedToEditedData))
 	{
@@ -2591,22 +2665,22 @@ void DoNewEditedDataLoadedSetups(NFmiInfoData::Type theType, bool loadFromFileSt
 	if(theType == NFmiInfoData::kEditable) // 1999.08.30/Marko
 	{
 
-		FilterDialogUpdateStatus(1); // 1 = filterdialogin aikakontrolli-ikkuna pitää päivittää
-		itsLastBrushedViewRealRowIndex = -1; // sivellintä varten pitää 'nollata' tämä
+		FilterDialogUpdateStatus(1); // 1 = filterdialogin aikakontrolli-ikkuna pitï¿½ï¿½ pï¿½ivittï¿½ï¿½
+		itsLastBrushedViewRealRowIndex = -1; // sivellintï¿½ varten pitï¿½ï¿½ 'nollata' tï¿½mï¿½
 		boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo();
 		if(editedInfo)
 		{
 			if((SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal || SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeStartUpLoading) && undoredoDepth > 0)
-				undoredoDepth++; // +1 tulee virheestä, mitä en jaksa nyt etsiä maskiotuksesta (Marko: eli leveleitä tulee yksi vähemmän kuin pyydetään)
+				undoredoDepth++; // +1 tulee virheestï¿½, mitï¿½ en jaksa nyt etsiï¿½ maskiotuksesta (Marko: eli leveleitï¿½ tulee yksi vï¿½hemmï¿½n kuin pyydetï¿½ï¿½n)
 			dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->LocationSelectionUndoLevel(undoredoDepth);
-			editedInfo->First(); // tämä asetetaan siksi, että jos edellisessä datassa oli leveleitä ja nykyisessä ei ole ja oli levelparameja näytöllä, levelit menee pieleen jos leveliä ei aseteta tässä
+			editedInfo->First(); // tï¿½mï¿½ asetetaan siksi, ettï¿½ jos edellisessï¿½ datassa oli leveleitï¿½ ja nykyisessï¿½ ei ole ja oli levelparameja nï¿½ytï¿½llï¿½, levelit menee pieleen jos leveliï¿½ ei aseteta tï¿½ssï¿½
 
 			NFmiParamBag tempbag(itsFilteringParamBag);
 			itsFilteringParamBag = editedInfo->ParamBag();
 			itsFilteringParamBag.SetActivities(tempbag, false);
 
 			if(firstTime || loadFromFileState)
-			{ // säädetään täällä aikakontrolli ikkunan aikoja vain 1. kun editoitu data laitetaan SmartMetiin tai jos editoitu data on ladattu suoraan tiedostosta (esim. tiputtamalla)
+			{ // sï¿½ï¿½detï¿½ï¿½n tï¿½ï¿½llï¿½ aikakontrolli ikkunan aikoja vain 1. kun editoitu data laitetaan SmartMetiin tai jos editoitu data on ladattu suoraan tiedostosta (esim. tiputtamalla)
 				firstTime = false;
 				GetCombinedMapHandler()->timeControlViewTimes(CtrlViewUtils::kDoAllMapViewDescTopIndex, editedInfo->TimeDescriptor());
 				SetCrossSectionSystemTimes(editedInfo->TimeDescriptor());
@@ -2620,7 +2694,7 @@ void DoNewEditedDataLoadedSetups(NFmiInfoData::Type theType, bool loadFromFileSt
 			fileName += "controlpoint.dat";
 			CPManager()->Area(editedInfo->Area());
 			CPManager()->Init(editedInfo->TimeDescriptor(), editedInfo->ParamBag(), fileName, false, true);
-			if(CPManagerSet().UseOldSchoolStyle() == false) // jos ollaan uudessa multi CPManager setissä, pitää oldSchool CPManager vielä päivittää, että viewMakroista ladatut CPManagerit ovat kunnossa
+			if(CPManagerSet().UseOldSchoolStyle() == false) // jos ollaan uudessa multi CPManager setissï¿½, pitï¿½ï¿½ oldSchool CPManager vielï¿½ pï¿½ivittï¿½ï¿½, ettï¿½ viewMakroista ladatut CPManagerit ovat kunnossa
 			{
 				CPManager(true)->Area(editedInfo->Area());
 				CPManager(true)->Init(editedInfo->TimeDescriptor(), editedInfo->ParamBag(), fileName, false, true);
@@ -2639,9 +2713,9 @@ bool ReportPossibleRejectedLoadedData(bool fDataWasDeletedOut, const std::string
 	if(fDataWasDeletedOut)
 	{
 		auto virtualTimeCase = itsVirtualTimeData.VirtualTimeUsed();
-		// 1. Data on deletoitu, näin voi käydä jos esim. annetun datan origin aika on pielessä esim. 1900.0.0 jne (kuten on ollut mtl_ecmwf_aalto-datan kanssa joskus)
-		// tehdään raportti lokiin ja ei jatketa funktiota eteenpäin...
-		// 2. Jos ollaan Virtual-time moodissa, oletetaan että uutta dataa ei lueta sen vuoksi että valittu VT on latadun datan edellä, tällöin
+		// 1. Data on deletoitu, nï¿½in voi kï¿½ydï¿½ jos esim. annetun datan origin aika on pielessï¿½ esim. 1900.0.0 jne (kuten on ollut mtl_ecmwf_aalto-datan kanssa joskus)
+		// tehdï¿½ï¿½n raportti lokiin ja ei jatketa funktiota eteenpï¿½in...
+		// 2. Jos ollaan Virtual-time moodissa, oletetaan ettï¿½ uutta dataa ei lueta sen vuoksi ettï¿½ valittu VT on latadun datan edellï¿½, tï¿½llï¿½in
 		// raportoidaan vain Debug tasolla lokiin.
 		string errorStr("Following data was not accepted to SmartMet: ");
 		if(virtualTimeCase)
@@ -2657,8 +2731,8 @@ bool ReportPossibleRejectedLoadedData(bool fDataWasDeletedOut, const std::string
 	return false;
 }
 
-// Luettu data lisätään listaan vain jos ei olla 1. kierroksen jo lokaali cachehakemistossa 
-// olevia datoja lukemassa eli kun smartmet käynnistyy tai ladataan caseStudy settiä.
+// Luettu data lisï¿½tï¿½ï¿½n listaan vain jos ei olla 1. kierroksen jo lokaali cachehakemistossa 
+// olevia datoja lukemassa eli kun smartmet kï¿½ynnistyy tai ladataan caseStudy settiï¿½.
 void AddLoadedDataToTriggerList(const std::string& theDataFilePattern)
 {
 	if(!NFmiInfoOrganizer::IsLoadedDataTreatedAsOld())
@@ -2667,8 +2741,8 @@ void AddLoadedDataToTriggerList(const std::string& theDataFilePattern)
 	}
 }
 
-// Tässä siis palautetaan triggerList ja nollataan se samalla, eli
-// kunkin dataTriggerin voi pyytää vain kerran.
+// Tï¿½ssï¿½ siis palautetaan triggerList ja nollataan se samalla, eli
+// kunkin dataTriggerin voi pyytï¿½ï¿½ vain kerran.
 std::vector<std::string> GetDataTriggerListOwnership()
 {
 	std::vector<std::string> returnedDataTriggerList;
@@ -2695,8 +2769,8 @@ void DoEditedInfoTimeSetup(boost::shared_ptr<NFmiFastQueryInfo>& editedInfo, boo
 	if(editedInfo)
 	{
 		dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->LoadedFromFile(loadFromFileState);
-		// asetetaan vielä editorin currenttime sopivaksi
-		bool foundTime = editedInfo->TimeToNearestStep(GetCombinedMapHandler()->currentTime(0), kCenter); // asetetaan current time pääkarttaikunan mukaan desctop-indeksi 0
+		// asetetaan vielï¿½ editorin currenttime sopivaksi
+		bool foundTime = editedInfo->TimeToNearestStep(GetCombinedMapHandler()->currentTime(0), kCenter); // asetetaan current time pï¿½ï¿½karttaikunan mukaan desctop-indeksi 0
 		if(foundTime)
 		{
 			auto dataTime = editedInfo->Time();
@@ -2708,7 +2782,7 @@ void DoEditedInfoTimeSetup(boost::shared_ptr<NFmiFastQueryInfo>& editedInfo, boo
 				logMessage += dataTime.ToStr(kYYYYMMDDHHMMSS);
 				logMessage += " had to be fixed to have 0 minutes and seconds for user convienience";
 				CatLog::logMessage(logMessage, CatLog::Severity::Info, CatLog::Category::Operational);
-				// Sallitaan vain tasa minuutit ja sekunnit tässä karttapohjien aika-asetuksessa
+				// Sallitaan vain tasa minuutit ja sekunnit tï¿½ssï¿½ karttapohjien aika-asetuksessa
 				dataTime.SetMin(0);
 				dataTime.SetSec(0);
 			}
@@ -2717,13 +2791,13 @@ void DoEditedInfoTimeSetup(boost::shared_ptr<NFmiFastQueryInfo>& editedInfo, boo
 	}
 }
 
-// Jos on ladattu caseStudy, eikä ollut pohjilla mitään editoitavaa dataa, laitetaan 1. sopiva ladattu data 'editoitavaksi dataksi'
+// Jos on ladattu caseStudy, eikï¿½ ollut pohjilla mitï¿½ï¿½n editoitavaa dataa, laitetaan 1. sopiva ladattu data 'editoitavaksi dataksi'
 void DoPossibleCaseStudyEditedDataSetup(NFmiQueryData* theData, const std::string& theDataFileName, NFmiInfoData::Type theType, bool fDataWasDeletedOut)
 {
-	// Jos ei ole editoitavaa dataa ja on jonkinnäköinen case-study lataus/sulkeminen -tilanne
+	// Jos ei ole editoitavaa dataa ja on jonkinnï¿½kï¿½inen case-study lataus/sulkeminen -tilanne
 	if(EditedInfo() == nullptr && CaseStudyModeOn() || fChangingCaseStudyToNormalMode)
 	{
-		// Jos data oli jo deletoitu, ei yritetä änkeä sitä enää tähän
+		// Jos data oli jo deletoitu, ei yritetï¿½ ï¿½nkeï¿½ sitï¿½ enï¿½ï¿½ tï¿½hï¿½n
 		if(fDataWasDeletedOut)
 			return;
 		// Vain tietyn tyyppiset datat kannattaa kelpuuttaa 'editoitavaksi' dataksi
@@ -2734,7 +2808,7 @@ void DoPossibleCaseStudyEditedDataSetup(NFmiQueryData* theData, const std::strin
 			if(theData->Info()->SizeLevels() == 1) // mutta vain pintadatalle, koska leveldatat voivat olla niin jumalattoman isoja
 			{
 				auto producerId = theData->Info()->Producer()->GetIdent();
-				// Havainnoista vain synop ja metar tuottaja kelpää tässä tilanteessa
+				// Havainnoista vain synop ja metar tuottaja kelpï¿½ï¿½ tï¿½ssï¿½ tilanteessa
 				if(theType != NFmiInfoData::kObservations || (producerId == kFmiSYNOP || producerId == kFmiMETAR))
 				{
 					fChangingCaseStudyToNormalMode = false;
@@ -2787,11 +2861,11 @@ bool IsAnyDataAtThisTime(NFmiFastQueryInfo &theInfo)
 	return false;
 }
 
-// Etsi viimeinen aika, miltä qDatasta löytyy mitään dataa (mikä tahansa par, lev, loc).
-// Ajan pitää olla kuitenkin 'uudenpi' kuin annetun latestTimen ja vieläpä niin että se menee
+// Etsi viimeinen aika, miltï¿½ qDatasta lï¿½ytyy mitï¿½ï¿½n dataa (mikï¿½ tahansa par, lev, loc).
+// Ajan pitï¿½ï¿½ olla kuitenkin 'uudenpi' kuin annetun latestTimen ja vielï¿½pï¿½ niin ettï¿½ se menee
 // synkanssa annetun resoluution kanssa. Eli jos resoluutio 60 (= 1 tunti) ja latestTime on esim. klo 6:00.
-// Tällöin sallittuja aikoja ovat mm. klo 7:00, klo 8:00 jne. (päiväys huomioiden tietenkin).
-// Jos uudempaa sallittua aikaa ei löydy, palautetaan missing-aika, muuten palautetaan löydetty oikea aika.
+// Tï¿½llï¿½in sallittuja aikoja ovat mm. klo 7:00, klo 8:00 jne. (pï¿½ivï¿½ys huomioiden tietenkin).
+// Jos uudempaa sallittua aikaa ei lï¿½ydy, palautetaan missing-aika, muuten palautetaan lï¿½ydetty oikea aika.
 NFmiMetTime FindLatestTimeWithAnyData(NFmiQueryData *thedata, const NFmiMetTime &theLatestTime, int theReolutionInMinutes)
 {
 	NFmiMetTime foundTime = NFmiMetTime::gMissingTime;
@@ -2803,12 +2877,12 @@ NFmiMetTime FindLatestTimeWithAnyData(NFmiQueryData *thedata, const NFmiMetTime 
 		for( ; ; dataTime.PreviousMetTime())
 		{
 			if(theLatestTime >= dataTime)
-				break; // lopetetaan homma tähän
+				break; // lopetetaan homma tï¿½hï¿½n
 			if(fInfo.TimeDescriptor().FirstTime() > dataTime)
-				break; // lopetetaan viimeistään, kun tutkittava aika on mennyt datan alkuajan ohi
+				break; // lopetetaan viimeistï¿½ï¿½n, kun tutkittava aika on mennyt datan alkuajan ohi
 			if(fInfo.Time(dataTime))
 			{
-				// etsi löytyykö tältä ajan hetkeltä mitään dataa
+				// etsi lï¿½ytyykï¿½ tï¿½ltï¿½ ajan hetkeltï¿½ mitï¿½ï¿½n dataa
 				if(IsAnyDataAtThisTime(fInfo))
 				{
 					foundTime = dataTime;
@@ -2824,29 +2898,31 @@ NFmiMetTime FindLatestTimeWithAnyData(NFmiQueryData *thedata, const NFmiMetTime 
 void DoNewDataNotifications(NFmiQueryData *theData, const std::string &theNotificationStr, const std::string &theDataFilePattern)
 {
 	if(theNotificationStr.empty() == false)
-	{ // jos notifikaatio stringi ei ollut tyhjä, laitetaan se menemään SmartMetin system tray iconille
+	{ // jos notifikaatio stringi ei ollut tyhjï¿½, laitetaan se menemï¿½ï¿½n SmartMetin system tray iconille
+#ifndef UNIX
         ApplicationInterface::GetApplicationInterfaceImplementation()->SetNotificationMessage(theNotificationStr, DataNotificationSettings().BalloonHeader(), 2, DataNotificationSettings().TimeOutInSeconds(), !DataNotificationSettings().UseSound());
+#endif
 	}
-	else // Jos kyseiselle datalle ei tehdä tavallista uusi data notifikaatiota, tarkastetaan pitää tehdä ns. uutta dataa uudelle tunnille ilmoitus
+	else // Jos kyseiselle datalle ei tehdï¿½ tavallista uusi data notifikaatiota, tarkastetaan pitï¿½ï¿½ tehdï¿½ ns. uutta dataa uudelle tunnille ilmoitus
 	{
-		// Tarkastetaan onko kyseessä sellainen data josta pitää raportoida, 
+		// Tarkastetaan onko kyseessï¿½ sellainen data josta pitï¿½ï¿½ raportoida, 
 		// josko on tullut uutta dataa esim. uudelle tasatunnille.
 		NFmiHelpDataInfo *helpDataInfo = HelpDataInfoSystem()->FindHelpDataInfo(theDataFilePattern);
 		if(helpDataInfo && helpDataInfo->ReportNewDataTimeStepInMinutes() != 0)
 		{
-			// 1. Onko kyseisestä datasta vielä merkintää 'arkistossa'?
-			// 1.a) Mikä on viimeisin aika miltä on ollut todistettavasti dataa
+			// 1. Onko kyseisestï¿½ datasta vielï¿½ merkintï¿½ï¿½ 'arkistossa'?
+			// 1.a) Mikï¿½ on viimeisin aika miltï¿½ on ollut todistettavasti dataa
 			unsigned long prodId = theData->Info()->Producer()->GetIdent();
 			ObsDataReport *obsDataReport = itsObsDataLoadedReporter.Find(prodId);
 			NFmiMetTime lastDataTime = NFmiMetTime::gMissingTime;
 			if(obsDataReport)
 				lastDataTime = obsDataReport->itsLastDataTime;
 
-			// 2.a) pitää kuitenkin etsiä se viimeisin aika, milloin dataa on
-			// 4. Käy dataa läpi viimeisestä ajasta taaksepäin ja etsi ensimmäinen data miltä tahansa parametrilta, paikalta tai leveliltä
-			// 5. Looppi - Kunnes ollaan tultu sellaiseen aikaa millä ei ole merkitystä
+			// 2.a) pitï¿½ï¿½ kuitenkin etsiï¿½ se viimeisin aika, milloin dataa on
+			// 4. Kï¿½y dataa lï¿½pi viimeisestï¿½ ajasta taaksepï¿½in ja etsi ensimmï¿½inen data miltï¿½ tahansa parametrilta, paikalta tai leveliltï¿½
+			// 5. Looppi - Kunnes ollaan tultu sellaiseen aikaa millï¿½ ei ole merkitystï¿½
 			NFmiMetTime foundTime = FindLatestTimeWithAnyData(theData, lastDataTime, obsDataReport ? obsDataReport->itsTimeStepInMinutes : helpDataInfo->ReportNewDataTimeStepInMinutes());
-			// 2. Jos ei ole, lisätään arkistoon, mutta ei raportoida mitään (oletus: SmartMetin käynnistyessä ei raportilla ole väliä).
+			// 2. Jos ei ole, lisï¿½tï¿½ï¿½n arkistoon, mutta ei raportoida mitï¿½ï¿½n (oletus: SmartMetin kï¿½ynnistyessï¿½ ei raportilla ole vï¿½liï¿½).
 			if(obsDataReport == 0)
 			{
 				ObsDataReport odr;
@@ -2859,12 +2935,14 @@ void DoNewDataNotifications(NFmiQueryData *theData, const std::string &theNotifi
 			}
 			else if(foundTime != NFmiMetTime::gMissingTime)
 			{
-			// 6. Jos löytyi dataa ajalta, millä on merkitystä, 
-			// 6.b) laita aika talteen tälle tuotttajalle
+			// 6. Jos lï¿½ytyi dataa ajalta, millï¿½ on merkitystï¿½, 
+			// 6.b) laita aika talteen tï¿½lle tuotttajalle
 				obsDataReport->itsLastDataTime = foundTime;
 			// 6.a) tee raportti 
 				std::string obsNotifStr = GetObsDataReportStr(*obsDataReport);
+#ifndef UNIX
                 ApplicationInterface::GetApplicationInterfaceImplementation()->SetNotificationMessage(obsNotifStr, DataNotificationSettings().BalloonHeader(), 2, DataNotificationSettings().TimeOutInSeconds(), !DataNotificationSettings().UseSound());
+#endif
 			}
 		}
 	}
@@ -2892,9 +2970,11 @@ void DoLastEditedDataSendHasComeBackChecks(NFmiInfoData::Type theType)
 	{
 		bool flagChanged = !fLastEditedDataSendHasComeBack;
 		fLastEditedDataSendHasComeBack = true;
+#ifndef UNIX
 		if(flagChanged && ApplicationWinRegistry().ConfigurationRelatedWinRegistry().ShowLastSendTimeOnMapView())
-			// 0 = vain pääkarttanäyttö liataan, cacheja ei tarvitse tyhjentää, koska tähän liittyvät jutut piirretään vain karttanäytön päälle, ei karttaruudukkoihin
-			GetCombinedMapHandler()->mapViewDirty(0, false, false, true, false, true, false); 
+			// 0 = vain pï¿½ï¿½karttanï¿½yttï¿½ liataan, cacheja ei tarvitse tyhjentï¿½ï¿½, koska tï¿½hï¿½n liittyvï¿½t jutut piirretï¿½ï¿½n vain karttanï¿½ytï¿½n pï¿½ï¿½lle, ei karttaruudukkoihin
+			GetCombinedMapHandler()->mapViewDirty(0, false, false, true, false, true, false);
+#endif 
 		LogMessage("Operational data has been loaded.", CatLog::Severity::Info, CatLog::Category::Editing);
 	}
 }
@@ -2922,21 +3002,21 @@ boost::shared_ptr<NFmiFastQueryInfo> EditedInfo(void)
 	if(itsSmartInfoOrganizer)
 	{
 		boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartInfoOrganizer->FindInfo(NFmiInfoData::kEditable);
-		// 27.12.2001/Marko Jouduin lisäämään tähän levelin säätö virityksen, koska joskus
-		// editoitava data ei ole leveleiden suhteen kohdallaan. Tämä korjaa asian ainakin tilapäisesti.
-		// Quickfix joka pitäisi tehdä kai muillekin datoille kuin editoitavalle datalle.
+		// 27.12.2001/Marko Jouduin lisï¿½ï¿½mï¿½ï¿½n tï¿½hï¿½n levelin sï¿½ï¿½tï¿½ virityksen, koska joskus
+		// editoitava data ei ole leveleiden suhteen kohdallaan. Tï¿½mï¿½ korjaa asian ainakin tilapï¿½isesti.
+		// Quickfix joka pitï¿½isi tehdï¿½ kai muillekin datoille kuin editoitavalle datalle.
 		if(info && info->SizeLevels() == 1)
 		{
 			unsigned long levelIndex = info->LevelIndex();
-			if(levelIndex == 1 || levelIndex == static_cast<unsigned long>(-1)) // level indeksit 1 ja -1 tarkoittavat taulukon ulkopuolisia indeksejä tässä tapauksessa (0 on oikea).
+			if(levelIndex == 1 || levelIndex == static_cast<unsigned long>(-1)) // level indeksit 1 ja -1 tarkoittavat taulukon ulkopuolisia indeksejï¿½ tï¿½ssï¿½ tapauksessa (0 on oikea).
 			{
 				info->FirstLevel(); // korjataan levelindeksi 0:aan
-				LogMessage("Editoitava-data oli mennyt leveleiden osalta 'väärään' tilaan, korjataan asia tässä.", CatLog::Severity::Warning, CatLog::Category::Editing);
+				LogMessage("Editoitava-data oli mennyt leveleiden osalta 'vï¿½ï¿½rï¿½ï¿½n' tilaan, korjataan asia tï¿½ssï¿½.", CatLog::Severity::Warning, CatLog::Category::Editing);
 			}
 		}
 		return info;
 	}
-	return boost::shared_ptr<NFmiFastQueryInfo>(); // jos muu ei auta, palautetaan tyhjä shared_ptr
+	return boost::shared_ptr<NFmiFastQueryInfo>(); // jos muu ei auta, palautetaan tyhjï¿½ shared_ptr
 }
 
 bool CheckEditedDataForStartUpLoadErrors(int theMessageBoxButtunOptions)
@@ -2963,7 +3043,7 @@ bool CheckEditedDataForStartUpLoadErrors(int theMessageBoxButtunOptions)
 				errorStr = e.what();
 			}
 			catch(...)
-			{ // tähän ei pitäisi mennä
+			{ // tï¿½hï¿½n ei pitï¿½isi mennï¿½
 				errorStr = "Unknown error with edited datan.";
 			}
 			std::string dlgTitleStr("Problem with edited data");
@@ -2975,18 +3055,20 @@ bool CheckEditedDataForStartUpLoadErrors(int theMessageBoxButtunOptions)
 			msgStr += "Press Ok to ignore this warning and continue. Press Cancel otherwise.\n";
 
 			LogMessage(msgStr, CatLog::Severity::Warning, CatLog::Category::Editing);
+#ifndef UNIX
 			if(theMessageBoxButtunOptions == MB_OKCANCEL)
 			{
                 if(::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(msgStr.c_str()), CA2T(dlgTitleStr.c_str()), theMessageBoxButtunOptions) == IDOK)
 					return true;
 				else
 				{
-					fStartUpDataLoadCheckDone = false; // laitetaan takaisin falseksi (tämä tietokantaan vienti on poikkeustapaus)
+					fStartUpDataLoadCheckDone = false; // laitetaan takaisin falseksi (tï¿½mï¿½ tietokantaan vienti on poikkeustapaus)
 					return false;
 				}
 			}
 			else
                 ::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(msgStr.c_str()), CA2T(dlgTitleStr.c_str()), theMessageBoxButtunOptions);
+#endif
 
 			return false;
 		}
@@ -2996,7 +3078,8 @@ bool CheckEditedDataForStartUpLoadErrors(int theMessageBoxButtunOptions)
 
 bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1)
 {
-	// Tehdään aikasarjamuokkauksille progress ja peruutus dialogi ja toiminnot.
+#ifndef UNIX
+	// Tehdï¿½ï¿½n aikasarjamuokkauksille progress ja peruutus dialogi ja toiminnot.
 	// Aluksi vain control-point moodille!!!
 	if(MetEditorOptionsData().ControlPointMode())
 	{
@@ -3018,22 +3101,24 @@ bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDr
 		modifyFunctionParamHolder.fDoMultiThread = UseMultithreaddingWithModifyingFunctions();
 		modifyFunctionParamHolder.itsThreadCallBacks = &threadCallBacks;
 
-		// HUOM! Opin tässä kaksi asiaa boost:in threadeista:
-		// 1. Käytettävällä funktiolla ei voi olla kuin max 9 parametria.
-		// 2. boost::thread-templaatti konstruktori ei osaa hanskata saman nimisiä funktioita (eri parametreilla)
+		// HUOM! Opin tï¿½ssï¿½ kaksi asiaa boost:in threadeista:
+		// 1. Kï¿½ytettï¿½vï¿½llï¿½ funktiolla ei voi olla kuin max 9 parametria.
+		// 2. boost::thread-templaatti konstruktori ei osaa hanskata saman nimisiï¿½ funktioita (eri parametreilla)
 //		return FmiModifyEditdData::DoTimeSerialModifications(GenDocDataAdapter(), theModifiedDrawParam, fUsedMask, theTimeDescriptor, theModificationFactorCurvePoints, theEditorTool, fUseSetForDiscreteData, theUnchangedValue, UseMultithreaddingWithModifyingFunctions());
 		boost::thread wrk_thread(FmiModifyEditdData::DoTimeSerialModifications2, boost::ref(modifyFunctionParamHolder), boost::ref(theTimeDescriptor), boost::ref(theModificationFactorCurvePoints), fUseSetForDiscreteData, theUnchangedValue);
-		dlg.DoModal(); // tämä dialogi lopettaa kun threadissa kutsutaan threadCallBacks:ille DoPostMessage joko ID_MESSAGE_WORKING_THREAD_COMPLETED tai ID_MESSAGE_WORKING_THREAD_CANCELED parametrilla
+		dlg.DoModal(); // tï¿½mï¿½ dialogi lopettaa kun threadissa kutsutaan threadCallBacks:ille DoPostMessage joko ID_MESSAGE_WORKING_THREAD_COMPLETED tai ID_MESSAGE_WORKING_THREAD_CANCELED parametrilla
         ApplicationInterface::GetApplicationInterfaceImplementation()->PostMessageToDialog(SmartMetViewId::TimeSerialView, ID_MESSAGE_TIME_SERIAL_MODIFICATION_ENDED);
 		return modifyFunctionParamHolder.fReturnValue;
 	}
 	else
+#endif
 		return FmiModifyEditdData::DoTimeSerialModifications(GenDocDataAdapter(), theModifiedDrawParam, fUsedMask, theTimeDescriptor, theModificationFactorCurvePoints, theEditorTool, fUseSetForDiscreteData, theUnchangedValue, UseMultithreaddingWithModifyingFunctions(), 0);
 }
 
-// Tätä kutusutaan ulkopuolelta
+// Tï¿½tï¿½ kutusutaan ulkopuolelta
 bool DoSmartToolEditing(const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly)
 {
+#ifndef UNIX
     std::string operationText = ::GetDictionaryString("Doing smarttool modifications...");
     bool operationTextIsWarning = false;
     NFmiStopFunctor stopper;
@@ -3045,9 +3130,13 @@ bool DoSmartToolEditing(const std::string &theSmartToolText, const std::string &
 	modifyFunctionParamHolder.itsThreadCallBacks = &threadCallBacks;
 
 	boost::thread wrk_thread(FmiModifyEditdData::DoSmartToolEditing2, boost::ref(modifyFunctionParamHolder), boost::ref(theSmartToolText), boost::ref(theRelativePathMacroName), fSelectedLocationsOnly);
-	dlg.DoModal(); // tämä dialogi lopettaa kun threadissa kutsutaan threadCallBacks:ille DoPostMessage joko ID_MESSAGE_WORKING_THREAD_COMPLETED tai ID_MESSAGE_WORKING_THREAD_CANCELED parametrilla
+	dlg.DoModal(); // tï¿½mï¿½ dialogi lopettaa kun threadissa kutsutaan threadCallBacks:ille DoPostMessage joko ID_MESSAGE_WORKING_THREAD_COMPLETED tai ID_MESSAGE_WORKING_THREAD_CANCELED parametrilla
     ApplicationInterface::GetApplicationInterfaceImplementation()->PostMessageToDialog(SmartMetViewId::SmartToolDlg, ID_MESSAGE_SMARTTOOL_MODIFICATION_ENDED);
 	return modifyFunctionParamHolder.fReturnValue;
+#else
+	// TODO: implement non-dialog smarttool editing for Linux
+	return false;
+#endif
 }
 
 boost::shared_ptr<NFmiAreaMaskList> ParamMaskListMT(void)
@@ -3059,7 +3148,7 @@ boost::shared_ptr<NFmiAreaMaskList> ParamMaskListMT(void)
 		return itsParamMaskListMT;
 }
 
-// Tämä tekee kopion annetusta paramMaskListasta, ja kopiointi on suojassa threadi lukolla
+// Tï¿½mï¿½ tekee kopion annetusta paramMaskListasta, ja kopiointi on suojassa threadi lukolla
 void ParamMaskListMT(const boost::shared_ptr<NFmiAreaMaskList> &theParamMaskList)
 {
 	WriteLock lock(gParamMaskListMutex);
@@ -3070,15 +3159,15 @@ void ParamMaskListMT(const boost::shared_ptr<NFmiAreaMaskList> &theParamMaskList
     GetCombinedMapHandler()->maskChangedDirtyActions();
 }
 
-// säätää annetun timebagin niin, että se on editoitavien aikojen sisällä
+// sï¿½ï¿½tï¿½ï¿½ annetun timebagin niin, ettï¿½ se on editoitavien aikojen sisï¿½llï¿½
 NFmiTimeBag AdjustToEditedDataTimeBag(const NFmiTimeBag& wantedTimebag)
 {
 	return AdjustTimeBagToGivenTimeBag(EditedDataTimeBag(), wantedTimebag);
 }
 
-// tätä metodia voidaan käyttää aina kaikkialla kun tehdään muokkauksia dataan
+// tï¿½tï¿½ metodia voidaan kï¿½yttï¿½ï¿½ aina kaikkialla kun tehdï¿½ï¿½n muokkauksia dataan
 // theModifyingTool 1 = muokkausdialogi, 2 = pensseli ja 3 = aikasarjaeditori
-// kun työkalu on 2 tai 3, annetaan mukana myös editoitava parametri
+// kun tyï¿½kalu on 2 tai 3, annetaan mukana myï¿½s editoitava parametri
 bool CheckAndValidateAfterModifications(NFmiMetEditorTypes::FmiUsedSmartMetTool theModifyingTool, bool fMakeDataSnapshotAction, unsigned int theLocationMask, FmiParameterName theParam)
 {
 	return FmiModifyEditdData::CheckAndValidateAfterModifications(GenDocDataAdapter(), theModifyingTool, fMakeDataSnapshotAction, theLocationMask, theParam, UseMultithreaddingWithModifyingFunctions());
@@ -3137,13 +3226,13 @@ bool MakeAndStoreFileDialogDirectoryMemory(const std::string& thePathAndFileName
 	unsigned char keno[3] = "\\";
     NFmiString tmpPath = thePathAndFileName;
 	unsigned long index = tmpPath.SearchLast(keno);
-	std::string path = tmpPath.GetChars(1,index);
+	std::string path(tmpPath.GetChars(1,index).CharPtr());
 	itsFileDialogDirectoryMemory = path;
 	NFmiSettings::Set(string("MetEditor::FileDialogDirectoryMemory"), itsFileDialogDirectoryMemory, true);
 	return true;
 }
 
-// oletus theErrorPath päättyy / tai \ merkkiin.
+// oletus theErrorPath pï¿½ï¿½ttyy / tai \ merkkiin.
 void MoveFileToDirectory(const NFmiFileString &theFileNameWithPath, const std::string &theErrorPath) const
 {
 	NFmiFileSystem::CreateDirectory(theErrorPath);
@@ -3156,6 +3245,7 @@ bool DataLoadingOK(bool noError)
 {
 	if(noError)
 		return true;
+#ifndef UNIX
 	else
 	{
 		CDataLoadingProblemsDlg dlg(_TEXT("Error occured in GeneralDocImpl::DataLoadingOK."));
@@ -3163,6 +3253,9 @@ bool DataLoadingOK(bool noError)
 			return false;
 	}
 	return true;
+#else
+	return false;
+#endif
 }
 
 bool InitLocationSelectionTool()
@@ -3176,24 +3269,24 @@ class MenuCreationSettings
 {
 public:
 	unsigned int itsDescTopIndex = static_cast<unsigned int>(-1);
-	// mikä komento on nyt kyseessä
+	// mikï¿½ komento on nyt kyseessï¿½
 	FmiMenuCommandType itsMenuCommand = kFmiNoCommand;
 	// vain vertikaali data kelpaa
 	bool fLevelDataOnly = false;
 	// vain hiladata kelpaa
 	bool fGridDataOnly = false;
-	// tietyt parametri saa lisätä vain karttanäyttöön
+	// tietyt parametri saa lisï¿½tï¿½ vain karttanï¿½yttï¿½ï¿½n
 	bool fDoMapMenu = false;
-	// näitä ei sallita toistaiseksi kuin karttanäytölle ja poikkileikkaukseen
+	// nï¿½itï¿½ ei sallita toistaiseksi kuin karttanï¿½ytï¿½lle ja poikkileikkaukseen
 	bool fAcceptMacroParams = false;
-	// nämä (lat, lon ja elevation angle) hyväksytään vain maskeiksi
+	// nï¿½mï¿½ (lat, lon ja elevation angle) hyvï¿½ksytï¿½ï¿½n vain maskeiksi
 	bool fAcceptCalculateParams = false;
-	// tämä pitää asettaa erikseen päälle kun rakennetaan custom-menuja
+	// tï¿½mï¿½ pitï¿½ï¿½ asettaa erikseen pï¿½ï¿½lle kun rakennetaan custom-menuja
 	bool fMakeCustomMenu = false;
 
 	MenuCreationSettings() = default;
 
-	// Tätä käytetään kartta- poikkileikkausnäytöille
+	// Tï¿½tï¿½ kï¿½ytetï¿½ï¿½n kartta- poikkileikkausnï¿½ytï¿½ille
 	void SetIsolineViewSettings(unsigned int theDescTopIndex, FmiMenuCommandType theMenuCommand)
 	{
 		if(theDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
@@ -3261,44 +3354,44 @@ void CreateParamSelectionBasePopup(const MenuCreationSettings &theMenuSettings, 
     auto menuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
 	NFmiMenuItemList *menuList = new NFmiMenuItemList;
 
-// ********** lisätään "editoitava" data osa *************************
+// ********** lisï¿½tï¿½ï¿½n "editoitava" data osa *************************
 	AddFirstOfDataTypeToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kEditable, "MapViewParamPopUpEdited");
 
-// ********** lisätään "vertailu-data" data osa *************************
+// ********** lisï¿½tï¿½ï¿½n "vertailu-data" data osa *************************
 	AddFirstOfDataTypeToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kCopyOfEdited, "MapViewParamPopUpComparisonData");
 
-// ********** lisätään "operatiivinen data" data osa *************************
+// ********** lisï¿½tï¿½ï¿½n "operatiivinen data" data osa *************************
 	AddFirstOfDataTypeToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kKepaData, "MapViewParamPopUpOperativeData");
 
-// ********** lisätään "helpEditor mode data" data osa *************************
+// ********** lisï¿½tï¿½ï¿½n "helpEditor mode data" data osa *************************
 	AddFirstOfDataTypeToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kEditingHelpData, "MapViewParamPopUpHelpEditorData");
 
-// ********** lisätään eri mallien omat aliosiot (esim. Hirlam Ecmwf, GFS, jne.)  *************************
+// ********** lisï¿½tï¿½ï¿½n eri mallien omat aliosiot (esim. Hirlam Ecmwf, GFS, jne.)  *************************
 	int modelCount = static_cast<int>(this->ProducerSystem().Producers().size());
 	int i=0;
 	for(i=0; i<modelCount; i++)
 		AddConfiguredModelProducerDataToParamSelectionPopup(theMenuSettings, menuList, i+1, NFmiInfoData::kViewable, NFmiInfoData::kHybridData, NFmiInfoData::kModelHelpData, NFmiInfoData::kClimatologyData, NFmiInfoData::kTrajectoryHistoryData, NFmiInfoData::kAnalyzeData);
 
-// ********** lisätään havaintoparametri osa *************************
+// ********** lisï¿½tï¿½ï¿½n havaintoparametri osa *************************
 	menuString = ::GetDictionaryString("MapViewParamPopUpObservations");
     auto menuItem6 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kObservations);
 	AddObservationDataToParamSelectionPopup(theMenuSettings, menuItem6.get());
 	if(menuItem6->SubMenu()->NumberOfMenuItems() > 0)
 		menuList->Add(std::move(menuItem6));
-// ********** lisätään havaintoparametri osa *************************
+// ********** lisï¿½tï¿½ï¿½n havaintoparametri osa *************************
 
 // ********** WMS *************************
     AddWmsDataToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kWmsData);
 
-// ********** lisätään apudata-parametri osa *************************
+// ********** lisï¿½tï¿½ï¿½n apudata-parametri osa *************************
 	menuString = ::GetDictionaryString("MapViewParamPopUpHelpData");
     auto menuItem7 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(), theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kViewable);
 	AddHelpDataToParamSelectionPopup(theMenuSettings, menuItem7.get());
 	if(menuItem7->SubMenu()->NumberOfMenuItems() > 0)
 		menuList->Add(std::move(menuItem7));
-// ********** lisätään apudata-parametri osa *************************
+// ********** lisï¿½tï¿½ï¿½n apudata-parametri osa *************************
 
-// ********** lisätään talletetut macroParamit osa *************************
+// ********** lisï¿½tï¿½ï¿½n talletetut macroParamit osa *************************
 	if(theMenuSettings.fAcceptMacroParams)
 	{
 		if(theMenuSettings.fDoMapMenu)
@@ -3309,7 +3402,7 @@ void CreateParamSelectionBasePopup(const MenuCreationSettings &theMenuSettings, 
 			AddMacroParamPartToPopUpMenu(theMenuSettings, menuList, NFmiInfoData::kCrossSectionMacroParam);
 	}
 
-// ********** lisätään laskettavat parametrit *************************
+// ********** lisï¿½tï¿½ï¿½n laskettavat parametrit *************************
 	if(theMenuSettings.fAcceptCalculateParams)
 		AddCalculatedParamsToMenu(theMenuSettings, menuList, "MapViewMaskSelectionPopUpCalculatedParams");
 
@@ -3360,7 +3453,7 @@ void AddAllWmsProducersToParamSelectionPopup(
 }
 #endif // DISABLE_CPPRESTSDK
 
-//Wms datan lisäys popupiin
+//Wms datan lisï¿½ys popupiin
 void AddWmsDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings, NFmiMenuItemList *theMenuItemList, NFmiInfoData::Type theDataType)
 {
 #ifndef DISABLE_CPPRESTSDK
@@ -3427,9 +3520,9 @@ void AddCustomFolderToMenuItemList(const MenuCreationSettings &theMenuSettings, 
 {
 	MenuCreationSettings usedMenuSettings(theMenuSettings);
 	usedMenuSettings.fMakeCustomMenu = true;
-	// pyydetää kutakin custom-menua varten siihen kuuluvien helpdatainfojen lista
+	// pyydetï¿½ï¿½ kutakin custom-menua varten siihen kuuluvien helpdatainfojen lista
 	std::vector<NFmiHelpDataInfo> helpDataList = HelpDataInfoSystem()->GetCustomMenuHelpDataList(theCustomMenuName);
-	// jokaisen info-datan avulla etsitää info-organizerilta siihen sopiva data fileNameFilterin avulla
+	// jokaisen info-datan avulla etsitï¿½ï¿½ info-organizerilta siihen sopiva data fileNameFilterin avulla
 	for(size_t j=0; j < helpDataList.size(); j++)
 	{
 		std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoList = itsSmartInfoOrganizer->GetInfos(helpDataList[j].UsedFileNameFilter(*HelpDataInfoSystem()));
@@ -3450,7 +3543,7 @@ void AddCustomFoldersToMenu(const MenuCreationSettings &theMenuSettings, NFmiMen
 	{
 		std::string customMenuName = customMenuList[i];
         if(customMenuName == g_ObservationMenuName)
-            continue; // Observation-menu pitää skipata täällä, koska se lisätään havaintojen alivalikkoon
+            continue; // Observation-menu pitï¿½ï¿½ skipata tï¿½ï¿½llï¿½, koska se lisï¿½tï¿½ï¿½n havaintojen alivalikkoon
         auto customMenuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, customMenuName, NFmiDataIdent(), theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kAnyData);
 		NFmiMenuItemList *customMenuItemList = new NFmiMenuItemList;
 
@@ -3471,7 +3564,7 @@ void AddMapLayerRelatedInfosToMapLayerSelectionPopup(unsigned int theDescTopInde
 		auto mainMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, finalMenuString, NFmiDataIdent(), menuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
 		auto menuItemList = std::make_unique<NFmiMenuItemList>();
 
-		// Lisätään overlay tapauksessa 'none' layer 1. vaihtoehdoksi
+		// Lisï¿½tï¿½ï¿½n overlay tapauksessa 'none' layer 1. vaihtoehdoksi
 		if(menuCommand == kFmiSelectOverlayMapLayer)
 		{
 			auto noneSelectionMenuString = CombinedMapHandlerInterface::getNoneOverlayName();
@@ -3482,12 +3575,12 @@ void AddMapLayerRelatedInfosToMapLayerSelectionPopup(unsigned int theDescTopInde
 		for(const auto& mapLayerRelatedInfo : mapAreaMapLayerRelatedInfos)
 		{
 			auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, mapLayerRelatedInfo.guiName_, NFmiDataIdent(), menuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
-			// Laitetaan näin menu-itemiin tieto siitä että oliko kyse tiedosto vai Wms pohjaisesta kartta layerista
+			// Laitetaan nï¿½in menu-itemiin tieto siitï¿½ ettï¿½ oliko kyse tiedosto vai Wms pohjaisesta kartta layerista
 			menuItem->ExtraParam(mapLayerRelatedInfo.isWmsLayer_ ? g_mapLayerSelectionIsWmsBased : g_mapLayerSelectionIsFileBased);
 			menuItemList->Add(std::move(menuItem));
 		}
 
-		// Kuinka monta ei none layeria lisätty
+		// Kuinka monta ei none layeria lisï¿½tty
 		auto actualLayersAdded = (menuCommand == kFmiSelectOverlayMapLayer) ? menuItemList->NumberOfMenuItems() - 1 : menuItemList->NumberOfMenuItems();
 
 		if(actualLayersAdded > 0)
@@ -3523,7 +3616,7 @@ void AddToMapLayerSelectionPopup(unsigned int theDescTopIndex, const std::string
 // Luodaan popup, jossa kaksi perustoimintoa:
 // 1. Background map-layerin valinta
 // 2. Overlay map-layerin valinta
-// Molemmat valinnat menevät omaan haaraan. Lisäksi nämä haarat jakaantuvat sekä static bitmap ja wms haaroihin.
+// Molemmat valinnat menevï¿½t omaan haaraan. Lisï¿½ksi nï¿½mï¿½ haarat jakaantuvat sekï¿½ static bitmap ja wms haaroihin.
 bool CreateMapLayerSelectionPopup(unsigned int theDescTopIndex)
 {
 	if(theDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
@@ -3600,14 +3693,14 @@ bool CreateParamSelectionPopup(unsigned int theDescTopIndex)
 			itsPopupMenu->Add(std::move(menuItem));
 		}
 
-// ********* muuta näyttörivin kaikkien datojen tuottajat halutuiksi *********
+// ********* muuta nï¿½yttï¿½rivin kaikkien datojen tuottajat halutuiksi *********
 		AddChangeAllProducersToParamSelectionPopup(theDescTopIndex, itsPopupMenu.get(), kFmiChangeAllProducersInMapRow, false);
-// ********* muuta näyttörivin kaikkien datojen tuottajat halutuiksi *********
+// ********* muuta nï¿½yttï¿½rivin kaikkien datojen tuottajat halutuiksi *********
 
-		// ************ tässä muutetaan kaikki rivin datatyypit (fiksataan ongelma mikä syntyi kun LAPS muuttui kViewable:ista kAnalyze -tyyppiseksi)
+		// ************ tï¿½ssï¿½ muutetaan kaikki rivin datatyypit (fiksataan ongelma mikï¿½ syntyi kun LAPS muuttui kViewable:ista kAnalyze -tyyppiseksi)
 		AddChangeAllDataTypesToParamSelectionPopup(theDescTopIndex, itsPopupMenu.get(), kFmiChangeAllDataTypesInMapRow);
 
-// ********* piilota/näytä kaikki  -  havainnot/ennusteet *********
+// ********* piilota/nï¿½ytï¿½ kaikki  -  havainnot/ennusteet *********
 		menuString = ::GetDictionaryString("MapViewParamPopUpToggleShowAll");
 		menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, NFmiDataIdent(), kFmiHideAllMapViewObservations, g_DefaultParamView, nullptr, NFmiInfoData::kEditable));
 		NFmiMenuItemList *showHideMenuList = new NFmiMenuItemList;
@@ -3622,7 +3715,7 @@ bool CreateParamSelectionPopup(unsigned int theDescTopIndex)
 		menuItem->AddSubMenu(showHideMenuList);
 
 		itsPopupMenu->Add(std::move(menuItem));
-// ********* piilota/näytä kaikki  -  havainnot/ennusteet *********
+// ********* piilota/nï¿½ytï¿½ kaikki  -  havainnot/ennusteet *********
 
 		if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
 			return false;
@@ -3678,7 +3771,7 @@ void AddSwapViewRowsToToMenuItem(unsigned int theDescTopIndex, NFmiMenuItem* the
 
 void AddChangeAllProducersOperativeModelPart(unsigned int theDescTopIndex, NFmiMenuItemList* changeProducersMenuList, FmiMenuCommandType theMenuCommandType, bool crossSectionPopup)
 {
-	// Laitetaan alkuun editoitu data ja virallinen data tuottajat listaan, jos ei kyse poikkileikkausnäytöstä
+	// Laitetaan alkuun editoitu data ja virallinen data tuottajat listaan, jos ei kyse poikkileikkausnï¿½ytï¿½stï¿½
 	if(crossSectionPopup == false)
 	{
 		boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo();
@@ -3710,7 +3803,7 @@ void AddChangeAllProducersFromVectorPart(unsigned int theDescTopIndex, std::vect
 			auto infoVector = itsSmartInfoOrganizer->GetInfos(producer.GetIdent());
 			if(!infoVector.empty())
 			{
-				// Jos löytyy jotain dataa, laitetaan feikki parametri ja tuottaja listasta
+				// Jos lï¿½ytyy jotain dataa, laitetaan feikki parametri ja tuottaja listasta
 				NFmiDataIdent dataIdent(NFmiParam(), producer);
 				changeProducersMenuList->Add(std::make_unique<NFmiMenuItem>(theDescTopIndex, producerInfo.Name(), dataIdent, theMenuCommandType, g_DefaultParamView, nullptr, NFmiInfoData::kEditable));
 			}
@@ -3795,14 +3888,14 @@ void AddMacroParamPartToPopUpMenu(const MenuCreationSettings &theMenuSettings, N
 			if(macroParamItem.itsMacroParam->ErrorInMacro())
 				macroParamName += " (ERROR)";
             auto macroParamsItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, macroParamName.c_str(), NFmiDataIdent(NFmiParam(998, "makro")), theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, theDataType);
-			// HUOM! TÄSSÄ pitää käyttää drawParamin initfile-namea, koska muuten ei löydy macroparamia kuin juuri tasolta
+			// HUOM! Tï¿½SSï¿½ pitï¿½ï¿½ kï¿½yttï¿½ï¿½ drawParamin initfile-namea, koska muuten ei lï¿½ydy macroparamia kuin juuri tasolta
 			macroParamsItem->MacroParamInitName(macroParamItem.itsMacroParam->DrawParam()->InitFileName());
 			theMenuList->Add(std::move(macroParamsItem));
 		}
 	}
 }
 
-// tässä lisätään popup apudata valikko
+// tï¿½ssï¿½ lisï¿½tï¿½ï¿½n popup apudata valikko
 // mm. mesan, tuliset,verifikaatiot, fuzzy, geo-data, macroparamit jne.
 void AddHelpDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings, NFmiMenuItem *theMenuItem)
 {
@@ -3813,13 +3906,13 @@ void AddHelpDataToParamSelectionPopup(const MenuCreationSettings &theMenuSetting
 	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, kFmiRADARNRD, NFmiInfoData::kObservations); // tuliset dataa, mutta ei 'tutka'-dataa eli ignooraa kObservations-data tyyppi joka normaali tutkalla on
 	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, 108); // 108 = lumikuorma-datan tuottaja numero
     AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, 101); // 101 = kriging-datan tuottaja numero
-	AddFirstOfDataTypeToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kStationary, ""); // kun annetaan tyhjä dictionary -stringi, käytetään tuottaja nimea menu otsikossa
-	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, kFmiHakeMessages); // hake-sanoma (hälytyskeskus) dataa
+	AddFirstOfDataTypeToParamSelectionPopup(theMenuSettings, menuList, NFmiInfoData::kStationary, ""); // kun annetaan tyhjï¿½ dictionary -stringi, kï¿½ytetï¿½ï¿½n tuottaja nimea menu otsikossa
+	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, kFmiHakeMessages); // hake-sanoma (hï¿½lytyskeskus) dataa
 	AddProducerDataToParamSelectionPopup(theMenuSettings, menuList, kFmiKaHaMessages); // kaha-sanoma (kansalaishavainto) dataa
 
-	if(theMenuSettings.fDoMapMenu && ConceptualModelData().Use()) // jos käsiteanalyysi systeemi käytössä, lisätään sen lisäämismahdollisuus popup-valikkoon
+	if(theMenuSettings.fDoMapMenu && ConceptualModelData().Use()) // jos kï¿½siteanalyysi systeemi kï¿½ytï¿½ssï¿½, lisï¿½tï¿½ï¿½n sen lisï¿½ï¿½mismahdollisuus popup-valikkoon
 	{
-		NFmiProducer prod(1028); // tällä ei ole vielä virallista tuottaja id:tä
+		NFmiProducer prod(1028); // tï¿½llï¿½ ei ole vielï¿½ virallista tuottaja id:tï¿½
 		std::string menuString = "Conceptual analysis";
         auto menuItem1 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(kFmiLastParameter, ConceptualModelData().DefaultUserName()), prod), theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kConceptualModelData);
 		menuList->Add(std::move(menuItem1));
@@ -3833,9 +3926,9 @@ void AddHelpDataToParamSelectionPopup(const MenuCreationSettings &theMenuSetting
         menuList->Add(std::move(menuItem1));
     }
 
-	// Tässä tehdään sekaisin kaikkia mahdollisia datoja yhteen popup-osioon.
+	// Tï¿½ssï¿½ tehdï¿½ï¿½n sekaisin kaikkia mahdollisia datoja yhteen popup-osioon.
 	// Toivottavasti auttaa erilaisten datojen selaamisessa mm. drag'n drop tilanteissa.
-	// Mix popup-osiota ei tehdä operatiivisessa moodissa, koska se hidastaa käyttöä
+	// Mix popup-osiota ei tehdï¿½ operatiivisessa moodissa, koska se hidastaa kï¿½yttï¿½ï¿½
 	if(EditorModeDataWCTR()->EditorMode() == NFmiMetEditorModeDataWCTR::kNormal)
 	{
         auto mixMenuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, "Mix", NFmiDataIdent(), theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kViewable);
@@ -3877,7 +3970,7 @@ bool WantedMetarPlotObsFound(void)
 	return status;
 }
 
-// Lisätää ali-listaan kaikki tämän tyyppiset datat
+// Lisï¿½tï¿½ï¿½ ali-listaan kaikki tï¿½mï¿½n tyyppiset datat
 void AddToListAllThisDataTypes(const MenuCreationSettings &theMenuSettings, NFmiMenuItemList *theMenuList, NFmiInfoData::Type theDataType)
 {
 	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infos(itsSmartInfoOrganizer->GetInfos(theDataType));
@@ -3915,7 +4008,7 @@ void AddSatelliteImagesToMenu(const MenuCreationSettings &theMenuSettings, NFmiM
 		int helpDataSize = HelpDataInfoSystem()->DynamicCount();
 		for(int i=0; i<helpDataSize; i++)
 		{ 
-			// etsitään currentin tuottajan kuva kanavat/parametrit
+			// etsitï¿½ï¿½n currentin tuottajan kuva kanavat/parametrit
 			const NFmiHelpDataInfo &helpDataInfo = HelpDataInfoSystem()->DynamicHelpDataInfo(i);
 			if(helpDataInfo.IsEnabled() && helpDataInfo.IsDataUsedCaseStudyChecks(CaseStudyModeOn()) && helpDataInfo.DataType() == NFmiInfoData::kSatelData)
 			{
@@ -3944,7 +4037,7 @@ void AddSatelliteImagesToMenu(const MenuCreationSettings &theMenuSettings, NFmiM
 	}
 }
 
-// tässä lisätään popup havainto valikko
+// tï¿½ssï¿½ lisï¿½tï¿½ï¿½n popup havainto valikko
 // mm. synop, tutka, salamat, satel jne.
 void AddObservationDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings, NFmiMenuItem *theMenuItem)
 {
@@ -3953,18 +4046,18 @@ void AddObservationDataToParamSelectionPopup(const MenuCreationSettings &theMenu
 	AddProducerDataToParamSelectionPopup(theMenuSettings, obsMenuList, kFmiRADARNRD, NFmiInfoData::kViewable); // tutka dataa, mutta ei tuliset-dataa eli ignooraa kViewable-data tyyppi joka tulisetilla on
 	AddProducerDataToParamSelectionPopup(theMenuSettings, obsMenuList, kFmiMETAR);
 	AddProducerDataToParamSelectionPopup(theMenuSettings, obsMenuList, 10002); // sadeasema dataa
-	AddProducerDataToParamSelectionPopup(theMenuSettings, obsMenuList, kFmiRoadObs); // kFmiRoadObs = tiesääasema-datan tuottaja numero
+	AddProducerDataToParamSelectionPopup(theMenuSettings, obsMenuList, kFmiRoadObs); // kFmiRoadObs = tiesï¿½ï¿½asema-datan tuottaja numero
 	AddProducerDataToParamSelectionPopup(theMenuSettings, obsMenuList, kFmiTestBed);
 	AddToListAllThisDataTypes(theMenuSettings, obsMenuList, NFmiInfoData::kSingleStationRadarData);
     AddCustomFolderToMenuItemList(theMenuSettings, obsMenuList, g_ObservationMenuName);
 
-// ********** lisätään salama osa *************************
-	if(theMenuSettings.fDoMapMenu) // nämä osiot menevät vain karttanäyttä menuun
+// ********** lisï¿½tï¿½ï¿½n salama osa *************************
+	if(theMenuSettings.fDoMapMenu) // nï¿½mï¿½ osiot menevï¿½t vain karttanï¿½yttï¿½ menuun
 	{
 		NFmiInfoData::Type flashType = NFmiInfoData::kFlashData;
 		boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo();
 		if(editedInfo && editedInfo->Producer()->GetIdent() == kFmiFlashObs)
-			flashType = NFmiInfoData::kEditable; // jos salama data editoitavana, pitää tyypiksi laittaa editable
+			flashType = NFmiInfoData::kEditable; // jos salama data editoitavana, pitï¿½ï¿½ tyypiksi laittaa editable
 		if(flashType == NFmiInfoData::kEditable || itsSmartInfoOrganizer->FindInfo(NFmiInfoData::kFlashData, 0))
 		{
 			NFmiProducer flashProducer(flashType == NFmiInfoData::kEditable ? *(editedInfo->Producer()) : *(itsSmartInfoOrganizer->FindInfo(NFmiInfoData::kFlashData, 0)->Producer()));
@@ -3972,49 +4065,49 @@ void AddObservationDataToParamSelectionPopup(const MenuCreationSettings &theMenu
             auto menuItem1 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(kFmiFlashStrength, "salama"), flashProducer), theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, flashType);
 			obsMenuList->Add(std::move(menuItem1));
 		}
-// ********** lisätään satelliitti osa dynaamisesti *************************
+// ********** lisï¿½tï¿½ï¿½n satelliitti osa dynaamisesti *************************
 		AddSatelliteImagesToMenu(theMenuSettings, obsMenuList);
 
-// ********** lisätään synop-plot data osa *************************
+// ********** lisï¿½tï¿½ï¿½n synop-plot data osa *************************
 		// kFmiSpSynoPlot on parid synopplotille
 		NFmiInfoData::Type synopType = NFmiInfoData::kObservations;
 		if(editedInfo)
 		{
 			if(IsProducerWanted(editedInfo->Producer()->GetIdent(), kFmiSYNOP, kFmiTestBed, kFmiSHIP, kFmiBUOY))
-				synopType = NFmiInfoData::kEditable; // jos tietynlaista asema data editoitavana, pitää tyypiksi laittaa editable
+				synopType = NFmiInfoData::kEditable; // jos tietynlaista asema data editoitavana, pitï¿½ï¿½ tyypiksi laittaa editable
 		}
 		bool wantedPlotObsFound = WantedSynopPlotObsFound();
 		if(synopType == NFmiInfoData::kEditable || wantedPlotObsFound)
-		{ // lisätään tämä siis vain jos editoitavassa datassa on synop-dataa, tai löytyy yleensä synop dataa
+		{ // lisï¿½tï¿½ï¿½n tï¿½mï¿½ siis vain jos editoitavassa datassa on synop-dataa, tai lï¿½ytyy yleensï¿½ synop dataa
 			std::string menuString = ::GetDictionaryString("MapViewParamPopUpSynopPlot");
             auto menuItem3 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpSynoPlot, "synop")), theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, synopType);
 			obsMenuList->Add(std::move(menuItem3));
 
-			// lisätään myös min/max plot
+			// lisï¿½tï¿½ï¿½n myï¿½s min/max plot
 			std::string menuStringMinMax = "Min/Max";
             auto menuItem4 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuStringMinMax, NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpMinMaxPlot, "min/max")), theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, synopType);
 			obsMenuList->Add(std::move(menuItem4));
 		}
-// ********** lisätään synop-plot data osa *************************
+// ********** lisï¿½tï¿½ï¿½n synop-plot data osa *************************
 
-// ********** lisätään metar-plot data osa *************************
+// ********** lisï¿½tï¿½ï¿½n metar-plot data osa *************************
 		// kFmiSpMetarPlot on parid synopplotille
 		NFmiInfoData::Type metarType = NFmiInfoData::kObservations;
 		if(editedInfo)
 		{
 			if(IsProducerWanted(editedInfo->Producer()->GetIdent(), kFmiMETAR))
-				metarType = NFmiInfoData::kEditable; // jos tietynlaista asema data editoitavana, pitää tyypiksi laittaa editable
+				metarType = NFmiInfoData::kEditable; // jos tietynlaista asema data editoitavana, pitï¿½ï¿½ tyypiksi laittaa editable
 		}
 		bool wantedMetarPlotObsFound = WantedMetarPlotObsFound();
 		if(metarType == NFmiInfoData::kEditable || wantedMetarPlotObsFound)
-		{ // lisätään tämä siis vain jos editoitavassa datassa on metar-dataa, tai löytyy yleensä metar dataa
+		{ // lisï¿½tï¿½ï¿½n tï¿½mï¿½ siis vain jos editoitavassa datassa on metar-dataa, tai lï¿½ytyy yleensï¿½ metar dataa
 			std::string menuString = ::GetDictionaryString("Metar-plot");
             auto menuItem3 = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuString, NFmiDataIdent(NFmiParam(NFmiInfoData::kFmiSpMetarPlot, "metar")), theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, metarType);
 			obsMenuList->Add(std::move(menuItem3));
 		}
-// ********** lisätään metar-plot data osa *************************
+// ********** lisï¿½tï¿½ï¿½n metar-plot data osa *************************
 
-// ********** lisätään luotaus synop-plot data osa *************************
+// ********** lisï¿½tï¿½ï¿½n luotaus synop-plot data osa *************************
         boost::shared_ptr<NFmiFastQueryInfo> soundingInfo = InfoOrganizer()->GetPrioritizedSoundingInfo(NFmiInfoOrganizer::ParamCheckFlags(true));
 		if(soundingInfo)
 		{
@@ -4030,7 +4123,7 @@ void AddObservationDataToParamSelectionPopup(const MenuCreationSettings &theMenu
 			menuItem5->AddSubMenu(soundingMenuList);
 			obsMenuList->Add(std::move(menuItem5));
 		}
-// ********** lisätään luotaus synop-plot data osa *************************
+// ********** lisï¿½tï¿½ï¿½n luotaus synop-plot data osa *************************
 	} // addOnlyToMapView
 
 	theMenuItem->AddSubMenu(obsMenuList);
@@ -4050,7 +4143,7 @@ void AddProducerDataToParamSelectionPopup(const MenuCreationSettings &theMenuSet
 		for(int i=0; i<size; i++)
 		{
 			if(infos[i]->DataType() == theIgnoreDataType1 || infos[i]->DataType() == theIgnoreDataType2 || infos[i]->DataType() == theIgnoreDataType3)
-				continue; // tiettyjä data tyyppeja ei haluttukkaan listaan
+				continue; // tiettyjï¿½ data tyyppeja ei haluttukkaan listaan
 			NFmiParamBag paramBag(infos[i]->ParamBag());
 			if(fTakeOnlyFirst)
 				paramBag = itsSmartInfoOrganizer->GetParams(theProducerId);
@@ -4112,10 +4205,10 @@ void AddConfiguredModelProducerDataToParamSelectionPopup(const MenuCreationSetti
 }
 
 // TODO
-// Että tämän mixdata jutun saa toimimaan kunnolla, pitää laittaa MenuItem:iin mukaan
-// myös tiedoston nimi että kyseisen datan datan (tiedoston) parametrien valinta onnistuisi
+// Ettï¿½ tï¿½mï¿½n mixdata jutun saa toimimaan kunnolla, pitï¿½ï¿½ laittaa MenuItem:iin mukaan
+// myï¿½s tiedoston nimi ettï¿½ kyseisen datan datan (tiedoston) parametrien valinta onnistuisi
 // tarvittaessa. Nyt homma menee sekaisin kun jos tiputetaan esim. pari saman tuottajan saman
-// tyyppistä dataa editoriin ja tällöin vain 1. datoista oikeasti voidaan valita näytölle, koska
+// tyyppistï¿½ dataa editoriin ja tï¿½llï¿½in vain 1. datoista oikeasti voidaan valita nï¿½ytï¿½lle, koska
 // tuottaja/datatyyppi/leveltype on kaikilla sama.
 bool AddMixDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings, NFmiMenuItem *theMenuItem)
 {
@@ -4137,7 +4230,7 @@ bool AddMixDataToParamSelectionPopup(const MenuCreationSettings &theMenuSettings
 			for(int i=0; i<ssize; i++)
 			{
 				foundAnyData = true;
-				AddSmartInfoToMenuList(theMenuSettings, infos[i], producerMenuList, dataTypes[typeCounter], ""); // "" -> käytetään menu itemissä tuottajan nimeä
+				AddSmartInfoToMenuList(theMenuSettings, infos[i], producerMenuList, dataTypes[typeCounter], ""); // "" -> kï¿½ytetï¿½ï¿½n menu itemissï¿½ tuottajan nimeï¿½
 			}
 		}
 	}
@@ -4153,10 +4246,10 @@ void AddSmartInfoToMenuItem(const MenuCreationSettings &theMenuSettings, boost::
 		return ;
 	else if(theSmartInfo && theMenuItem)
 	{
-		// tarkistetaan, löytyykö kyseiselle datalle custom-valikkoa
+		// tarkistetaan, lï¿½ytyykï¿½ kyseiselle datalle custom-valikkoa
 		NFmiHelpDataInfo *helpDataInfo = HelpDataInfoSystem()->FindHelpDataInfo(dynamic_cast<NFmiOwnerInfo*>(theSmartInfo.get())->DataFilePattern());
 		if(helpDataInfo && helpDataInfo->CustomMenuFolder().empty() == false && theMenuSettings.fMakeCustomMenu == false)
-			return ; // tätä ei laiteta menuun, koska se menee erikseen rakennettavaan custom-menuun
+			return ; // tï¿½tï¿½ ei laiteta menuun, koska se menee erikseen rakennettavaan custom-menuun
 
 		NFmiParamBag paramBag(theSmartInfo->ParamBag());
 		if(theWantedParamBag)
@@ -4168,7 +4261,7 @@ void AddSmartInfoToMenuItem(const MenuCreationSettings &theMenuSettings, boost::
         auto possibleWindMetaParams = NFmiFastInfoUtils::MakePossibleWindMetaParams(*theSmartInfo, allowStreamlineParameter);
 		NFmiMenuItemList *menuList = 0;
 		bool doCrossSectionMenu = theMenuSettings.fLevelDataOnly && theMenuSettings.fGridDataOnly;
-		if(doCrossSectionMenu == false && levels) // poikkileikkaus menun yhteydessä ei halutakaan laittaa level tietoja menu-popupiin, vain parametrit
+		if(doCrossSectionMenu == false && levels) // poikkileikkaus menun yhteydessï¿½ ei halutakaan laittaa level tietoja menu-popupiin, vain parametrit
             menuList = new NFmiMenuItemList(theMenuSettings.itsDescTopIndex, &paramBag, theMenuSettings.itsMenuCommand, g_DefaultParamView, levels, theDataType, kFmiLastParameter, &possibleWindMetaParams);
 		else
 			menuList = new NFmiMenuItemList(theMenuSettings.itsDescTopIndex, &paramBag, theMenuSettings.itsMenuCommand, g_DefaultParamView, theDataType, &possibleWindMetaParams);
@@ -4180,7 +4273,7 @@ void AddSmartInfoToMenuItem(const MenuCreationSettings &theMenuSettings, boost::
 		throw std::runtime_error("Error when making param selection popup menu in function AddSmartInfoToMenuItem. One was zero pointer: menuIten or smartInfo.");
 }
 
-// Jos lisättävä data on salama tyyppistä, sallitaan sen lisäys vain karttanäytöille
+// Jos lisï¿½ttï¿½vï¿½ data on salama tyyppistï¿½, sallitaan sen lisï¿½ys vain karttanï¿½ytï¿½ille
 bool DoLightningDataTypePopupCheck(const MenuCreationSettings& theMenuSettings, boost::shared_ptr<NFmiFastQueryInfo>& info)
 {
 	if(NFmiFastInfoUtils::IsLightningTypeData(info))
@@ -4197,9 +4290,9 @@ bool DoLightningDataTypePopupCheck(const MenuCreationSettings& theMenuSettings, 
 	return true;
 }
 
-// Lisätään annetun menuListan perään menuItem, joka on muodostettu annetun smartInfon avulla.
-// Jos theDictionaryStr on tyhjä, annetaan menuItemi otsikoksi smartInfon tuottaja nimi, muuten 
-// pyydetään sanakirjasta käytetty otsikko.
+// Lisï¿½tï¿½ï¿½n annetun menuListan perï¿½ï¿½n menuItem, joka on muodostettu annetun smartInfon avulla.
+// Jos theDictionaryStr on tyhjï¿½, annetaan menuItemi otsikoksi smartInfon tuottaja nimi, muuten 
+// pyydetï¿½ï¿½n sanakirjasta kï¿½ytetty otsikko.
 void AddSmartInfoToMenuList(const MenuCreationSettings &theMenuSettings, boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, NFmiMenuItemList *theMenuItemList, NFmiInfoData::Type theDataType, const std::string &theDictionaryStr = "", NFmiParamBag *theWantedParamBag = 0)
 {
 	if(theSmartInfo == 0 && theMenuItemList == 0)
@@ -4212,10 +4305,10 @@ void AddSmartInfoToMenuList(const MenuCreationSettings &theMenuSettings, boost::
 		if(!DoLightningDataTypePopupCheck(theMenuSettings, theSmartInfo))
 			return;
 
-		// jos kyseessä olisi poikkileikkaus menu rakentelua, ei ole syytä päästää läpi dataa, missä on vain yksi leveli ja se ei ole hila dataa
+		// jos kyseessï¿½ olisi poikkileikkaus menu rakentelua, ei ole syytï¿½ pï¿½ï¿½stï¿½ï¿½ lï¿½pi dataa, missï¿½ on vain yksi leveli ja se ei ole hila dataa
 		if(theMenuSettings.fLevelDataOnly == false || (theMenuSettings.fLevelDataOnly == true && theSmartInfo->SizeLevels() > 1))
 		{
-			std::string menuTitleStr = theDictionaryStr.empty() ? theSmartInfo->FirstParamProducer().GetName() : ::GetDictionaryString(theDictionaryStr.c_str());
+			std::string menuTitleStr(theDictionaryStr.empty() ? theSmartInfo->FirstParamProducer().GetName().CharPtr() : ::GetDictionaryString(theDictionaryStr.c_str()).c_str());
             auto menuItem = std::make_unique<NFmiMenuItem>(theMenuSettings.itsDescTopIndex, menuTitleStr, NFmiDataIdent(), theMenuSettings.itsMenuCommand, g_DefaultParamView, nullptr, theDataType);
 			AddSmartInfoToMenuItem(theMenuSettings, theSmartInfo, menuItem.get(), theDataType, theWantedParamBag);
 			if(menuItem)
@@ -4305,7 +4398,7 @@ void AddMultiModelRunToMenu(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmi
 }
 
 
-// Tätä popupia käytetään kun on klikattu olemassa olevaa näyttöä.
+// Tï¿½tï¿½ popupia kï¿½ytetï¿½ï¿½n kun on klikattu olemassa olevaa nï¿½yttï¿½ï¿½.
 bool CreateTimeSerialDialogOnViewPopup(int index)
 {
 	itsCurrentViewRowIndex = CtrlViewUtils::kFmiTimeSerialView;
@@ -4320,7 +4413,7 @@ bool CreateTimeSerialDialogOnViewPopup(int index)
 	auto sideParamList = GetCombinedMapHandler()->getTimeSerialViewSideParameters(index);
 	if(sideParamList && sideParamList->NumberOfItems() > 0)
 	{
-		// Yksittäisen side-paramin poistot
+		// Yksittï¿½isen side-paramin poistot
 		auto removeSideParamMenuItem = std::make_unique<NFmiMenuItem>(CtrlViewUtils::kFmiTimeSerialView, "Remove side parameter", kFmiBadParameter, kFmiRemoveSelectedTimeSerialSideParam, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
 		auto removeSideParamMenuItemList = new NFmiMenuItemList();
 		for(sideParamList->Reset(); sideParamList->Next(); )
@@ -4342,7 +4435,10 @@ bool CreateTimeSerialDialogOnViewPopup(int index)
 
 	auto& timeSerialViewDrawParamList = GetCombinedMapHandler()->getTimeSerialViewDrawParamList();
 	if(timeSerialViewDrawParamList.Index(index))
-		AddMultiModelRunToMenu(timeSerialViewDrawParamList.Current(), *itsPopupMenu, CtrlViewUtils::kFmiTimeSerialView);
+	{
+		auto currentDrawParam = timeSerialViewDrawParamList.Current();
+		AddMultiModelRunToMenu(currentDrawParam, *itsPopupMenu, CtrlViewUtils::kFmiTimeSerialView);
+	}
 
 	if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
 		return false;
@@ -4401,7 +4497,7 @@ void AddShowHelperData4OntimeSerialViewPopup(const NFmiDataIdent &param, NFmiInf
     }
 }
 
-// Tätä popupia käytetään kun lisätään aikasarjaikkunaan uusia näyttöjä.
+// Tï¿½tï¿½ popupia kï¿½ytetï¿½ï¿½n kun lisï¿½tï¿½ï¿½n aikasarjaikkunaan uusia nï¿½yttï¿½jï¿½.
 bool CreateTimeSerialDialogPopup(int index)
 {
 	itsCurrentViewRowIndex = CtrlViewUtils::kFmiTimeSerialView;
@@ -4482,7 +4578,7 @@ void AddFixedDrawParamsToMenu(const NFmiFixedDrawParamFolder &theFixedDrawParamF
         {
             std::string menuText = GetFileName(drawParam->InitFileName());
             auto drawParamMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, menuText, theParam, kFmiFixedDrawParam, NFmiMetEditorTypes::View::kFmiIsoLineView, theLevel, theDataType, index, theDrawParam->ViewMacroDrawParam());
-            drawParamMenuItem->MacroParamInitName(drawParam->InitFileName()); // tämän avulla haluttu drawParam etsitään
+            drawParamMenuItem->MacroParamInitName(drawParam->InitFileName()); // tï¿½mï¿½n avulla haluttu drawParam etsitï¿½ï¿½n
             subFolderMenuList->Add(std::move(drawParamMenuItem));
         }
 
@@ -4490,7 +4586,7 @@ void AddFixedDrawParamsToMenu(const NFmiFixedDrawParamFolder &theFixedDrawParamF
         thePopupMenu.Add(std::move(menuItem));
     }
     else
-    { // theFixedDrawParamFolder oli tyhjä, varoitetaan käyttäjää että ei ole löytynyt yhtään tehdasasetuksia
+    { // theFixedDrawParamFolder oli tyhjï¿½, varoitetaan kï¿½yttï¿½jï¿½ï¿½ ettï¿½ ei ole lï¿½ytynyt yhtï¿½ï¿½n tehdasasetuksia
         auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, ::GetDictionaryString("No FixedDrawParams were found!"), theParam, kFmiFixedDrawParam, NFmiMetEditorTypes::View::kFmiIsoLineView, theLevel, theDataType, index, theDrawParam->ViewMacroDrawParam());
         thePopupMenu.Add(std::move(menuItem));
     }
@@ -4538,7 +4634,7 @@ void AddChangeParamSectionIntoPopupMenu(NFmiMenuItemList* thePopupMenu, unsigned
 			bool allowStreamlineParameter = theDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex;
 			auto possibleWindMetaParams = NFmiFastInfoUtils::MakePossibleWindMetaParams(*smartInfo, allowStreamlineParameter);
 			NFmiMenuItemList* menuList = nullptr;
-			// Poikkileikkaus menun yhteydessä ei halutakaan laittaa level tietoja menu-popupiin, vain parametrit
+			// Poikkileikkaus menun yhteydessï¿½ ei halutakaan laittaa level tietoja menu-popupiin, vain parametrit
 			if(crossSectionCase == false && levels.GetSize() > 1)
 				menuList = new NFmiMenuItemList(theDescTopIndex, &paramBag, menuCommand, g_DefaultParamView, &levels, dataType, kFmiLastParameter, &possibleWindMetaParams);
 			else
@@ -4563,7 +4659,7 @@ bool IsMapLayerSelectionCase(unsigned int theDescTopIndex, int theRowIndex, int 
 void AddSetLocationForTimeBoxPopup(std::unique_ptr<NFmiMenuItemList>& subMenuList, unsigned int theDescTopIndex, FmiDirection wantedLocation, std::string menuNameString)
 {
 	auto mapViewDescTop = GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex);
-	// Lisätään annettu uusi paikka popupiin, vain jos se ei ole sama kuin nykyinen sijainti
+	// Lisï¿½tï¿½ï¿½n annettu uusi paikka popupiin, vain jos se ei ole sama kuin nykyinen sijainti
 	if(mapViewDescTop && mapViewDescTop->TimeBoxLocation() != wantedLocation)
 	{
 		// Varsinaiset halutut locationit talletetaan menuItem luokan extraParam kohdassa (FmiDirection enum castataan doubleksi)
@@ -4592,10 +4688,10 @@ void AddSetLocationSubMenuForTimeBoxPopup(std::unique_ptr<NFmiMenuItemList>& mai
 void AddSetTextSizeFactorToSubMenu(std::unique_ptr<NFmiMenuItemList>& subMenuList, unsigned int theDescTopIndex, float textSizeFactor)
 {
 	auto mapViewDescTop = GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex);
-	// Lisätään annettu uusi paikka popupiin, vain jos se ei ole sama kuin nykyinen sijainti
+	// Lisï¿½tï¿½ï¿½n annettu uusi paikka popupiin, vain jos se ei ole sama kuin nykyinen sijainti
 	if(mapViewDescTop && mapViewDescTop->TimeBoxTextSizeFactor() != textSizeFactor)
 	{
-		std::string textSizeFactorStr = NFmiValueString::GetStringWithMaxDecimalsSmartWay(textSizeFactor, 1);
+		std::string textSizeFactorStr(NFmiValueString::GetStringWithMaxDecimalsSmartWay(textSizeFactor, 1).CharPtr());
 		auto setTextSizeValueMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, textSizeFactorStr, NFmiDataIdent(), kFmiSetTimeBoxTextSizeFactor, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
 		// Haluttu size factor talletetaan menuItem luokan extraParam kohdassa
 		setTextSizeValueMenuItem->ExtraParam(textSizeFactor);
@@ -4620,13 +4716,13 @@ void AddSetTextSizeFactorSubMenuForTimeBoxPopup(std::unique_ptr<NFmiMenuItemList
 void AddSetAlphaToSubMenu(std::unique_ptr<NFmiMenuItemList>& subMenuList, unsigned int theDescTopIndex, float alphaValue)
 {
 	auto mapViewDescTop = GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex);
-	// Lisätään annettu uusi paikka popupiin, vain jos se ei ole sama kuin nykyinen sijainti
+	// Lisï¿½tï¿½ï¿½n annettu uusi paikka popupiin, vain jos se ei ole sama kuin nykyinen sijainti
 	if(mapViewDescTop && mapViewDescTop->GetTimeBoxFillColorAlpha() != alphaValue)
 	{
 		std::string alphaStr = std::to_string(boost::math::iround(alphaValue * 100));
 		alphaStr += " %";
 		auto setAlphaMenuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, alphaStr, NFmiDataIdent(), kFmiSetTimeBoxFillColorAlpha, g_DefaultParamView, nullptr, NFmiInfoData::kEditable);
-		// Haluttu alpha kerroin talletetaan käänteisenä arvona (johtuen NFmiColor luokan käänteisestä alpha kanavan jutusta) menuItem luokan extraParam kohdassa
+		// Haluttu alpha kerroin talletetaan kï¿½ï¿½nteisenï¿½ arvona (johtuen NFmiColor luokan kï¿½ï¿½nteisestï¿½ alpha kanavan jutusta) menuItem luokan extraParam kohdassa
 		setAlphaMenuItem->ExtraParam(alphaValue);
 		subMenuList->Add(std::move(setAlphaMenuItem));
 	}
@@ -4653,7 +4749,7 @@ const std::string gTimeBoxFillColorCustomName = "custom color";
 void AddSetTimeBoxFillColorToSubMenu(std::unique_ptr<NFmiMenuItemList>& subMenuList, unsigned int theDescTopIndex, const std::string& name, const NFmiColor& color)
 {
 	auto mapViewDescTop = GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex);
-	// Lisätään annettu uusi paikka popupiin, vain jos se ei ole sama kuin nykyinen sijainti
+	// Lisï¿½tï¿½ï¿½n annettu uusi paikka popupiin, vain jos se ei ole sama kuin nykyinen sijainti
 	if(mapViewDescTop)
 	{
 		bool useCustomColor = (name == gTimeBoxFillColorCustomName);
@@ -4665,6 +4761,7 @@ void AddSetTimeBoxFillColorToSubMenu(std::unique_ptr<NFmiMenuItemList>& subMenuL
 	}
 }
 
+#ifndef UNIX
 void DoTimeBoxCustomFillColorSetup(NFmiMenuItem& theMenuItem)
 {
 	auto* parentView = ApplicationInterface::GetApplicationInterfaceImplementation()->GetView(theMenuItem.MapViewDescTopIndex());
@@ -4679,6 +4776,7 @@ void DoTimeBoxCustomFillColorSetup(NFmiMenuItem& theMenuItem)
 		GetCombinedMapHandler()->onSetTimeBoxFillColor(theMenuItem.MapViewDescTopIndex(), newColor);
 	}
 }
+#endif
 
 void DoTimeBoxToDefaultValues(NFmiMenuItem& theMenuItem)
 {
@@ -4693,7 +4791,9 @@ void SetTimeBoxFillColorFromMenu(NFmiMenuItem& theMenuItem)
 {
 	if(theMenuItem.ExtraTextParam() == gTimeBoxFillColorCustomName)
 	{
+#ifndef UNIX
 		DoTimeBoxCustomFillColorSetup(theMenuItem);
+#endif
 	}
 	else
 	{
@@ -4776,7 +4876,7 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int la
 			NFmiDataIdent param = drawParam->Param();
 			NFmiInfoData::Type dataType2 = drawParam->DataType();
 			bool macroParamInCase = NFmiDrawParam::IsMacroParamCase(dataType2);
-			if(macroParamInCase) // macroParamin yhteydessä parametrin nimeksi pitää laittaa sen makroparamin alustus tiedosto, koska se on macroParamin yksi tunniste!!
+			if(macroParamInCase) // macroParamin yhteydessï¿½ parametrin nimeksi pitï¿½ï¿½ laittaa sen makroparamin alustus tiedosto, koska se on macroParamin yksi tunniste!!
 				param.GetParam()->SetName(drawParam->InitFileName());
 			const NFmiLevel* level = &rowDrawParamList->Current()->Level();
 			NFmiInfoData::Type dataType = rowDrawParamList->Current()->DataType();
@@ -4788,7 +4888,7 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int la
 			AddChangeParamSectionIntoPopupMenu(itsPopupMenu.get(), theDescTopIndex, layerIndex, drawParam);
 
 			if(crossSectionPopup == false)
-			{ // poikkileikkaus-näyttö ei tue tekstimuotoista piirtoa
+			{ // poikkileikkaus-nï¿½yttï¿½ ei tue tekstimuotoista piirtoa
 				menuString = ::GetDictionaryString("MapViewParamOptionPopUpText");
 				menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiModifyView, NFmiMetEditorTypes::View::kFmiTextView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 				itsPopupMenu->Add(std::move(menuItem));
@@ -4826,7 +4926,7 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int la
 			itsPopupMenu->Add(std::move(menuItem));
 			menuString = ::GetDictionaryString("MapViewParamOptionPopUpActivate");
             menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiActivateView, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
-			menuItem->ExtraParam(0); // kun parametria aktivoidaan (tai tulevaisuudessa tehdään mitä vain), käytetään extraParamia kertomaan missä parametri on, 0=karttanäyttö, 1=poikkileikkaus ja 2=aikasarja
+			menuItem->ExtraParam(0); // kun parametria aktivoidaan (tai tulevaisuudessa tehdï¿½ï¿½n mitï¿½ vain), kï¿½ytetï¿½ï¿½n extraParamia kertomaan missï¿½ parametri on, 0=karttanï¿½yttï¿½, 1=poikkileikkaus ja 2=aikasarja
 			itsPopupMenu->Add(std::move(menuItem));
             menuString = ::GetDictionaryString("Save DrawParam");
             menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiStoreDrawParam, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
@@ -4836,10 +4936,10 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int la
             menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiReloadDrawParam, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
             itsPopupMenu->Add(std::move(menuItem));
 
-            // FixedDrawParam valikko tähän väliin
+            // FixedDrawParam valikko tï¿½hï¿½n vï¿½liin
             AddFixedDrawParamsToMenu(itsFixedDrawParamSystem.RootFolder(), ::GetDictionaryString("FixedDrawParams"), *itsPopupMenu, theDescTopIndex, theRowIndex, layerIndex, param, level, dataType, drawParam);
 
-			// copy/paste komennot tähän
+			// copy/paste komennot tï¿½hï¿½n
 			menuString = "Copy draw options";
             menuItem.reset(new NFmiMenuItem(theDescTopIndex, menuString, param, kFmiCopyDrawParamOptions, NFmiMetEditorTypes::View::kFmiIsoLineView, level, dataType, layerIndex, drawParam->ViewMacroDrawParam()));
 			itsPopupMenu->Add(std::move(menuItem));
@@ -4894,7 +4994,7 @@ bool CreateViewParamsPopup(unsigned int theDescTopIndex, int theRowIndex, int la
 void AddBorderLayerActionToPopup(unsigned int theDescTopIndex, int theRowIndex, int layerIndex, double layerIndexRealValue, NFmiMenuItemList* theMenuList)
 {
 	if(theDescTopIndex > CtrlViewUtils::kFmiMaxMapDescTopIndex)
-		return; // Jos kyse muusta kuin karttanäytöstä, ei tehdä mitään...
+		return; // Jos kyse muusta kuin karttanï¿½ytï¿½stï¿½, ei tehdï¿½ mitï¿½ï¿½n...
 
 	auto *drawParamList = GetCombinedMapHandler()->getDrawParamList(theDescTopIndex, theRowIndex);
 	if(drawParamList)
@@ -4903,14 +5003,14 @@ void AddBorderLayerActionToPopup(unsigned int theDescTopIndex, int theRowIndex, 
 		std::string commandText = ::GetDictionaryString("Add country border layer here");
 		auto existingBorderLayerIndex = CombinedMapHandlerInterface::getBorderLayerIndex(drawParamList);
 		if(layerIndex == existingBorderLayerIndex)
-			return; // Ei tarvitse tehdä mitään, jos hiirellä osoitetaan jo suoraan border-layeria
+			return; // Ei tarvitse tehdï¿½ mitï¿½ï¿½n, jos hiirellï¿½ osoitetaan jo suoraan border-layeria
 		auto borderLayerExist = (existingBorderLayerIndex != -1);
 		if(borderLayerExist)
 		{
 			commandType = kFmiMoveBorderLineLayer;
 			commandText = ::GetDictionaryString("Move country border layer here");
 		}
-		// Todellinen käyttäjän haluama layer-indeksi (mihin uusi layer lisätään tai siirretään) on pyöristys layerIndexRealValue:sta.
+		// Todellinen kï¿½yttï¿½jï¿½n haluama layer-indeksi (mihin uusi layer lisï¿½tï¿½ï¿½n tai siirretï¿½ï¿½n) on pyï¿½ristys layerIndexRealValue:sta.
 		int wantedLayerIndex = boost::math::iround(layerIndexRealValue);
 		auto menuItem = std::make_unique<NFmiMenuItem>(theDescTopIndex, commandText, NFmiDataIdent(), commandType, g_DefaultParamView, nullptr, NFmiInfoData::kMapLayer, wantedLayerIndex);
 		theMenuList->Add(std::move(menuItem));
@@ -4957,12 +5057,12 @@ bool CreateMaskParamsPopup(int theRowIndex, int index)
 	return false;
 }
 
-// näyttökomentoja, joita voi antaa dokumentille.
-// Käytetään aluksi ainakin erilaisten tuplaklikkausten toteutuksia varten.
-// Tulevaisuudessa näyttö makrot voisi toteuttaa tätä kautta?
-// Menuitemiin on sisällytetty mm. komento, parametri ja level ja tuottaja tiedot.
+// nï¿½yttï¿½komentoja, joita voi antaa dokumentille.
+// Kï¿½ytetï¿½ï¿½n aluksi ainakin erilaisten tuplaklikkausten toteutuksia varten.
+// Tulevaisuudessa nï¿½yttï¿½ makrot voisi toteuttaa tï¿½tï¿½ kautta?
+// Menuitemiin on sisï¿½llytetty mm. komento, parametri ja level ja tuottaja tiedot.
 // viewIndex on esim. joko karttarivi tai aikasarjaikkunan indeksi.
-// viewType voi kertoa esim. onko kyseeessä kartta tai aikasarja näyttö (tulevaisuudessa lisää esim. luotaus jne.).
+// viewType voi kertoa esim. onko kyseeessï¿½ kartta tai aikasarja nï¿½yttï¿½ (tulevaisuudessa lisï¿½ï¿½ esim. luotaus jne.).
 bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theRowIndex, int /* theViewTypeId */ )
 {
 	FmiMenuCommandType command = theMenuItem.CommandType();
@@ -4999,7 +5099,7 @@ bool ExecuteCommand(const NFmiMenuItem &theMenuItem, int theRowIndex, int /* the
     return true;
 }
 
-// uusi versio MakePopUpCommand:ista, joka käyttää hyväkseen itsCurrentViewRowIndex-attribuuttia
+// uusi versio MakePopUpCommand:ista, joka kï¿½yttï¿½ï¿½ hyvï¿½kseen itsCurrentViewRowIndex-attribuuttia
 bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 {
 	NFmiMetTime time;
@@ -5099,10 +5199,14 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 			GetCombinedMapHandler()->pasteDrawParamOptions(*menuItem, itsCurrentCrossSectionRowIndex, true);
 			break;
 		case kFmiAddMask:
+#ifndef UNIX
 			AddMask(*menuItem, itsCurrentViewRowIndex, false);
+#endif
 			break;
 		case kFmiAddAsOnlyMask:
+#ifndef UNIX
 			AddAsOnlyMask(*menuItem, itsCurrentViewRowIndex);
+#endif
 			break;
 		case kFmiRemoveAllMasks:
 			RemoveAllMasks(itsCurrentViewRowIndex);
@@ -5123,7 +5227,9 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 			EnableMask(*menuItem);
 			break;
 		case kFmiModifyMask:
+#ifndef UNIX
 			ModifyMask(*menuItem);
+#endif
 			break;
 		case kFmiModifyDrawParam:
 			GetCombinedMapHandler()->modifyDrawParam(*menuItem, itsCurrentViewRowIndex);
@@ -5241,7 +5347,9 @@ bool MakePopUpCommandUsingRowIndex(unsigned short theCommandID)
 			SetTimeBoxFillColorFromMenu(*menuItem);
 			break;
 		case kFmiSetTimeBoxCustomFillColor:
+#ifndef UNIX
 			DoTimeBoxCustomFillColorSetup(*menuItem);
+#endif
 			break;
 		case kFmiSetTimeBoxToDefaultValues:
 			DoTimeBoxToDefaultValues(*menuItem);
@@ -5263,7 +5371,7 @@ void ModifyMacoParamFormula(NFmiMenuItem& theMenuItem, int viewRowIndex)
 	if(!wantedDrawParam)
 		return;
 
-	NFmiFileString macroParamFilename = wantedDrawParam->InitFileName();
+	NFmiFileString macroParamFilename(NFmiString(wantedDrawParam->InitFileName()));
 	macroParamFilename.Extension("st");
 
 	ApplicationInterface::GetApplicationInterfaceImplementation()->OpenMacroParamInSmarttoolDialog(std::string(macroParamFilename));
@@ -5327,6 +5435,7 @@ void DoControlPointCommand(FmiMenuCommandType command)
     break;
     case kFmiModifyCPAttributes:
     {
+#ifndef UNIX
         if(CPManager()->FindNearestCP(itsToolTipLatLonPoint, true))
         {
             boost::shared_ptr<NFmiEditorControlPointManager> tempCPMan(new NFmiEditorControlPointManager(*CPManager()));
@@ -5340,6 +5449,7 @@ void DoControlPointCommand(FmiMenuCommandType command)
                 itsCPManagerSet.SetCPManager(tempCPMan);
             }
         }
+#endif
     }
     break;
     }
@@ -5377,7 +5487,7 @@ NFmiAreaMask* CreateMask(const NFmiMenuItem& theMenuItem)
 		boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartInfoOrganizer->Info(theMenuItem.DataIdent(), theMenuItem.Level(), theMenuItem.DataType());
 		if(info)
 		{
-			// Tässä tehdää dynaaminen pinta kopio infosta, jotta ainakin NFmiOwnerInfo-osio tulee mukaan.
+			// Tï¿½ssï¿½ tehdï¿½ï¿½ dynaaminen pinta kopio infosta, jotta ainakin NFmiOwnerInfo-osio tulee mukaan.
 			boost::shared_ptr<NFmiFastQueryInfo> infoCopy = NFmiInfoOrganizer::DoDynamicShallowCopy(info);
 			if(infoCopy)
 			{
@@ -5400,6 +5510,7 @@ NFmiAreaMask* CreateMask(const NFmiMenuItem& theMenuItem)
 	return mask;
 }
 
+#ifndef UNIX
 void AddMask(const NFmiMenuItem& theMenuItem, int /* theRowIndex */ , bool fClearListFirst)
 {
 	GetCombinedMapHandler()->timeSerialViewDirty(true);
@@ -5420,16 +5531,19 @@ void AddMask(const NFmiMenuItem& theMenuItem, int /* theRowIndex */ , bool fClea
 				if(fClearListFirst)
 					paramMaskList->Clear();
 				paramMaskList->Add(mask);
-				ParamMaskListMT(paramMaskList); // maskilistaan tuli lisäys/poisto, tällöin lista pitää asettaa dokumenttiin käyttöön, muutokset yksittäisiin maskeihin menevät automaattisesti käyttöön
+				ParamMaskListMT(paramMaskList); // maskilistaan tuli lisï¿½ys/poisto, tï¿½llï¿½in lista pitï¿½ï¿½ asettaa dokumenttiin kï¿½yttï¿½ï¿½n, muutokset yksittï¿½isiin maskeihin menevï¿½t automaattisesti kï¿½yttï¿½ï¿½n
 			}
 		}
 	}
 }
+#endif
 
+#ifndef UNIX
 void AddAsOnlyMask(const NFmiMenuItem& theMenuItem, int theRowIndex)
 {
 	AddMask(theMenuItem, theRowIndex, true);
 }
+#endif
 
 void RemoveAllMasks(int /* theRowIndex */ )
 {
@@ -5438,7 +5552,7 @@ void RemoveAllMasks(int /* theRowIndex */ )
 	if(paramMaskList)
 	{
 		paramMaskList->Clear();
-		ParamMaskListMT(paramMaskList); // maskilistaan tuli lisäys/poisto, tällöin lista pitää asettaa dokumenttiin käyttöön, muutokset yksittäisiin maskeihin menevät automaattisesti käyttöön
+		ParamMaskListMT(paramMaskList); // maskilistaan tuli lisï¿½ys/poisto, tï¿½llï¿½in lista pitï¿½ï¿½ asettaa dokumenttiin kï¿½yttï¿½ï¿½n, muutokset yksittï¿½isiin maskeihin menevï¿½t automaattisesti kï¿½yttï¿½ï¿½n
 	}
 }
 
@@ -5451,7 +5565,7 @@ void RemoveMask(const NFmiMenuItem& theMenuItem)
 		if(paramMaskList->Index(theMenuItem.IndexInViewRow()))
 		{
 			paramMaskList->Remove();
-			ParamMaskListMT(paramMaskList); // maskilistaan tuli lisäys/poisto, tällöin lista pitää asettaa dokumenttiin käyttöön, muutokset yksittäisiin maskeihin menevät automaattisesti käyttöön
+			ParamMaskListMT(paramMaskList); // maskilistaan tuli lisï¿½ys/poisto, tï¿½llï¿½in lista pitï¿½ï¿½ asettaa dokumenttiin kï¿½yttï¿½ï¿½n, muutokset yksittï¿½isiin maskeihin menevï¿½t automaattisesti kï¿½yttï¿½ï¿½n
 		}
 	}
 }
@@ -5465,7 +5579,7 @@ void DisableMask(const NFmiMenuItem& theMenuItem)
 		if(paramMaskList->Index(theMenuItem.IndexInViewRow()))
 		{
 			paramMaskList->Current()->Enable(false);
-            ParamMaskListMT(paramMaskList); // maskilistaan tuli muutos, tällöin lista pitää asettaa dokumenttiin käyttöön, jolloin myös näyttöjen likaukset tehdään oikein
+            ParamMaskListMT(paramMaskList); // maskilistaan tuli muutos, tï¿½llï¿½in lista pitï¿½ï¿½ asettaa dokumenttiin kï¿½yttï¿½ï¿½n, jolloin myï¿½s nï¿½yttï¿½jen likaukset tehdï¿½ï¿½n oikein
         }
 	}
 }
@@ -5479,11 +5593,12 @@ void EnableMask(const NFmiMenuItem& theMenuItem)
 		if(paramMaskList->Index(theMenuItem.IndexInViewRow()))
 		{
 			paramMaskList->Current()->Enable(true);
-            ParamMaskListMT(paramMaskList); // maskilistaan tuli muutos, tällöin lista pitää asettaa dokumenttiin käyttöön, jolloin myös näyttöjen likaukset tehdään oikein
+            ParamMaskListMT(paramMaskList); // maskilistaan tuli muutos, tï¿½llï¿½in lista pitï¿½ï¿½ asettaa dokumenttiin kï¿½yttï¿½ï¿½n, jolloin myï¿½s nï¿½yttï¿½jen likaukset tehdï¿½ï¿½n oikein
         }
 	}
 }
 
+#ifndef UNIX
 void ModifyMask(const NFmiMenuItem& theMenuItem)
 {
 	GetCombinedMapHandler()->timeSerialViewDirty(true);
@@ -5497,11 +5612,12 @@ void ModifyMask(const NFmiMenuItem& theMenuItem)
 			dlg.ParamMask(mask.get());
 			if(dlg.DoModal() == IDOK)
 			{
-                ParamMaskListMT(paramMaskList); // maskilistaan tuli muutos, tällöin lista pitää asettaa dokumenttiin käyttöön, jolloin myös näyttöjen likaukset tehdään oikein
+                ParamMaskListMT(paramMaskList); // maskilistaan tuli muutos, tï¿½llï¿½in lista pitï¿½ï¿½ asettaa dokumenttiin kï¿½yttï¿½ï¿½n, jolloin myï¿½s nï¿½yttï¿½jen likaukset tehdï¿½ï¿½n oikein
             }
 		}
 	}
 }
+#endif
 
 void SetCrossSectionTrajectoryParams()
 {
@@ -5511,10 +5627,10 @@ void SetCrossSectionTrajectoryParams()
 	int ssize = GetCombinedMapHandler()->getCrossSectionDrawParamListVector().NumberOfItems();
 	for(int i = 1; i <= ssize; i++)
 	{
-		NFmiDrawParamList *aList = GetCombinedMapHandler()->getCrossSectionViewDrawParamList(i); // HUOM! täällä indeksointi alkaa 1:stä
+		NFmiDrawParamList *aList = GetCombinedMapHandler()->getCrossSectionViewDrawParamList(i); // HUOM! tï¿½ï¿½llï¿½ indeksointi alkaa 1:stï¿½
 		if(aList)
 		{
-			const NFmiTrajectory &trajectory = this->TrajectorySystem()->Trajectory(i-1); // HUOM! tässä -1, koska indeksointi alkaa 0:sta
+			const NFmiTrajectory &trajectory = this->TrajectorySystem()->Trajectory(i-1); // HUOM! tï¿½ssï¿½ -1, koska indeksointi alkaa 0:sta
 			for(aList->Reset(); aList->Next(); )
 			{
 				boost::shared_ptr<NFmiDrawParam> aDParam = aList->Current();
@@ -5530,7 +5646,7 @@ void SetCrossSectionTrajectoryParams()
 					aDParam->Level().SetIdent(kFmiPressureLevel);
 				}
 				else
-				{ // pinta dataa, joka ei näy kuitenkaan poikkileikkaus näytössä
+				{ // pinta dataa, joka ei nï¿½y kuitenkaan poikkileikkaus nï¿½ytï¿½ssï¿½
 					aDParam->DataType(NFmiInfoData::kHybridData);
 					aDParam->Level().SetIdent(kFmiHeight);
 				}
@@ -5552,8 +5668,8 @@ void SetCrossSectionTrajectoryTimes(int theRowIndex)
 		}
 	}
 	else if(CrossSectionSystem()->GetCrossMode() == NFmiCrossSectionSystem::kTime)
-	{ // muutin systeemin asettamaan ajat myös aika-moodissa. Ottaa ensimmäisen drawParamia
-	  // vastaavan infon ja säätää alku ja loppu ajat sen mukaan
+	{ // muutin systeemin asettamaan ajat myï¿½s aika-moodissa. Ottaa ensimmï¿½isen drawParamia
+	  // vastaavan infon ja sï¿½ï¿½tï¿½ï¿½ alku ja loppu ajat sen mukaan
 		NFmiDrawParamList *aList = GetCombinedMapHandler()->getCrossSectionViewDrawParamList(theRowIndex);
 		if(aList)
 		{
@@ -5571,7 +5687,7 @@ void SetCrossSectionTrajectoryTimes(int theRowIndex)
 	}
 }
 
-// laskee näyttöruudukon yhden ruudun koon pikseleissä
+// laskee nï¿½yttï¿½ruudukon yhden ruudun koon pikseleissï¿½
 NFmiPoint ActualMapBitmapSizeInPixels(unsigned int theDescTopIndex)
 {
 	return GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->ActualMapBitmapSizeInPixels();
@@ -5595,12 +5711,12 @@ bool StoreMatrixToGridFileFinal(const NFmiDataMatrix<float>& dataMatrix, const s
 
 bool StoreMatrixToGridfile(const NFmiDataMatrix<float> &dataMatrix, const NFmiString& theFileName)
 {
-	// Yritetään ensin D-aseman juureen talletusta
-	std::string fileName1 = "D:\\" + theFileName;
+	// Yritetï¿½ï¿½n ensin D-aseman juureen talletusta
+	std::string fileName1 = std::string("D:\\") + theFileName.CharPtr();
 	if(!StoreMatrixToGridFileFinal(dataMatrix, fileName1))
 	{
-		// Yritetään sitten C-aseman juureen talletusta
-		std::string fileName1 = "C:\\" + theFileName;
+		// Yritetï¿½ï¿½n sitten C-aseman juureen talletusta
+		std::string fileName1 = std::string("C:\\") + theFileName.CharPtr();
 		return StoreMatrixToGridFileFinal(dataMatrix, fileName1);
 	}
 	return true;
@@ -5623,11 +5739,11 @@ bool MakeGridFileForMacroParam(unsigned long usedMapViewIndex, boost::shared_ptr
 	return false;
 }
 
-// tallettaa aktiivisen näyttörivin aktiivisen parametrin currentin ajan gridin tiedostoon,
-// jonka nimi annetaan parametrina, mutta se talletetaan työhakemistoon
+// tallettaa aktiivisen nï¿½yttï¿½rivin aktiivisen parametrin currentin ajan gridin tiedostoon,
+// jonka nimi annetaan parametrina, mutta se talletetaan tyï¿½hakemistoon
 bool MakeGridFile(const NFmiString& theFileName)
 {
-	// tehdään vain pääkarttaikkunasta näitä talletuksia
+	// tehdï¿½ï¿½n vain pï¿½ï¿½karttaikkunasta nï¿½itï¿½ talletuksia
 	auto usedMapViewIndex = 0ul;
 	boost::shared_ptr<NFmiDrawParam> drawParam = GetCombinedMapHandler()->activeDrawParamFromActiveRow(usedMapViewIndex);
 	bool status = false;
@@ -5699,7 +5815,7 @@ void AdjustAreaFilterRanges(NFmiRect& theRanges)
 
 	if(right < maxLeft)
 		right = maxLeft;
-	if(right < left) // turha tarkastelu, tehty jo edellä(??)
+	if(right < left) // turha tarkastelu, tehty jo edellï¿½(??)
 		right = left;
 	if(right > maxRight)
 		right = maxRight;
@@ -5718,7 +5834,7 @@ void AdjustAreaFilterRanges(NFmiRect& theRanges)
 
 	if(top < maxTop)
 		top = maxTop;
-	if(top > bottom) // turha tarkastelu, tehty jo edellä(??)
+	if(top > bottom) // turha tarkastelu, tehty jo edellï¿½(??)
 		top = bottom;
 	if(top > maxBottom)
 		top = maxBottom;
@@ -5743,7 +5859,7 @@ void TimeFilterRange(int index, const NFmiPoint& thePoint, bool fRoundToNearestH
 			boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo();
 			if(editedInfo)
 			{
-				if(editedInfo->TimeResolution() > 60) // piirretään apu-tunti-viivat jos resoluutio on yli tunnin
+				if(editedInfo->TimeResolution() > 60) // piirretï¿½ï¿½n apu-tunti-viivat jos resoluutio on yli tunnin
 					hoursInDataTimeResolution = int(editedInfo->TimeResolution()/60);
 			}
 			double xValue = round(thePoint.X() * hoursInDataTimeResolution)/double(hoursInDataTimeResolution);
@@ -5775,7 +5891,7 @@ void TimeFilterRange(int index, const NFmiPoint& thePoint, bool fRoundToNearestH
 			second = int(itsTimeFilterLimits.X());
 		if(second > itsTimeFilterLimits.Y())
 			second = int(itsTimeFilterLimits.Y());
-		if(second < first) // turha tarkastelu, tehty jo yllä
+		if(second < first) // turha tarkastelu, tehty jo yllï¿½
 			second = first;
 
 		if(index == 1)
@@ -5821,8 +5937,8 @@ bool HasActiveViewChanged(void)
 }
 void SetTimeFilterStartTime(const NFmiMetTime& theTime)
 {
-	// etsitään lähin aika, koska nyt on mahdollista että aikaresoluutio muuttuu datassa
-	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo(); // HUOM! EditedInfo pitää ottaa omaan muuttujaan, ja käyttää siitä. Jos pyytää EditedInfo-funktion kautta kokoajan uutta, voi palautua eri iteraattori ja säädöt menevät pieleen.
+	// etsitï¿½ï¿½n lï¿½hin aika, koska nyt on mahdollista ettï¿½ aikaresoluutio muuttuu datassa
+	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo(); // HUOM! EditedInfo pitï¿½ï¿½ ottaa omaan muuttujaan, ja kï¿½yttï¿½ï¿½ siitï¿½. Jos pyytï¿½ï¿½ EditedInfo-funktion kautta kokoajan uutta, voi palautua eri iteraattori ja sï¿½ï¿½dï¿½t menevï¿½t pieleen.
 	if(editedInfo && editedInfo->TimeToNearestStep(theTime, kCenter))
 	{
 		NFmiMetTime nearestTime(editedInfo->Time());
@@ -5835,7 +5951,7 @@ void SetTimeFilterStartTime(const NFmiMetTime& theTime)
 
 void SetTimeFilterEndTime(const NFmiMetTime& theTime)
 {
-	// etsitään lähin aika, koska nyt on mahdollista että aikaresoluutio muuttuu datassa
+	// etsitï¿½ï¿½n lï¿½hin aika, koska nyt on mahdollista ettï¿½ aikaresoluutio muuttuu datassa
 	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo();
 	if(editedInfo && editedInfo->TimeToNearestStep(theTime, kCenter))
 	{
@@ -5870,7 +5986,7 @@ bool LoadStaticHelpData(void)
 
 bool LoadHelpData(NFmiHelpDataInfo& theHelpDataInfo, bool fMustFindData, bool useControlPathIfFileFilterNotAbsolute = false)
 {
-	if(theHelpDataInfo.DataType() == NFmiInfoData::kSatelData) // satelliitti data on kuva, eikä sitä ladata täällä
+	if(theHelpDataInfo.DataType() == NFmiInfoData::kSatelData) // satelliitti data on kuva, eikï¿½ sitï¿½ ladata tï¿½ï¿½llï¿½
 		return false;
 	NFmiMilliSecondTimer timer;
 	timer.StartTimer();
@@ -5941,10 +6057,10 @@ bool IsMacroParamAndDrawWithSymbols(boost::shared_ptr<NFmiDrawParam> &drawParam)
     return false;
 }
 
-// Jos karttanäytön koko muutetaan, muuttuu tällöin piirrettävän karttaalueen koko pikseleissä.
-// Tällöin jos näytöllä on macroParametreja, jotka piirretään symboleilla, pitää niiden macroParamCachet 
-// laittaa uusiksi, koska piirto harvennus saattaa muuttua. Ei ole väliä, onko parametri piilotettu tai
-// ei, koska kun alue muuuttuu, pitää varmuuden vuoksi kaikki kyseiset macroParamien datacachet tyhjentää.
+// Jos karttanï¿½ytï¿½n koko muutetaan, muuttuu tï¿½llï¿½in piirrettï¿½vï¿½n karttaalueen koko pikseleissï¿½.
+// Tï¿½llï¿½in jos nï¿½ytï¿½llï¿½ on macroParametreja, jotka piirretï¿½ï¿½n symboleilla, pitï¿½ï¿½ niiden macroParamCachet 
+// laittaa uusiksi, koska piirto harvennus saattaa muuttua. Ei ole vï¿½liï¿½, onko parametri piilotettu tai
+// ei, koska kun alue muuuttuu, pitï¿½ï¿½ varmuuden vuoksi kaikki kyseiset macroParamien datacachet tyhjentï¿½ï¿½.
 void MapViewSizeChangedDoSymbolMacroParamCacheChecks(int mapViewDescTopIndex)
 {
     auto mapViewDesctop = GetCombinedMapHandler()->getMapViewDescTop(mapViewDescTopIndex);
@@ -5972,6 +6088,7 @@ void MapViewSizeChangedDoSymbolMacroParamCacheChecks(int mapViewDescTopIndex)
     }
 }
 
+#ifndef UNIX
 void UpdateCrossSectionViewTrueSizeViewAfterViewMacro()
 {
 	auto drawObjectScaleFactor = ApplicationWinRegistry().DrawObjectScaleFactor();
@@ -5981,7 +6098,9 @@ void UpdateCrossSectionViewTrueSizeViewAfterViewMacro()
 	NFmiPoint crossSectionViewGridSize(1, crossSectionSystem.RowCount());
 	trueMapViewSizeInfo.onSize(clientPixelSize, nullptr, crossSectionViewGridSize, true, drawObjectScaleFactor);
 }
+#endif
 
+#ifndef UNIX
 bool DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& clientPixelSize, CDC* pDC)
 {
 	auto isMapView = mapViewDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex;
@@ -5989,17 +6108,17 @@ bool DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& clientPixelSize, 
 	auto mapViewDesctop = GetCombinedMapHandler()->getMapViewDescTop(mapViewDescTopIndex, true);
 	if(mapViewDesctop)
 	{
-		// MapViewSizeInPixels(clientPixelSize) -kutsu pitää olla ennen CFmiWin32Helpers::SetDescTopGraphicalInfo funktio kutsua.
+		// MapViewSizeInPixels(clientPixelSize) -kutsu pitï¿½ï¿½ olla ennen CFmiWin32Helpers::SetDescTopGraphicalInfo funktio kutsua.
 		mapViewDesctop->MapViewSizeInPixels(clientPixelSize, pDC, drawObjectScaleFactor, !mapViewDesctop->IsTimeControlViewVisible());
 		CFmiWin32Helpers::SetDescTopGraphicalInfo(isMapView, mapViewDesctop->GetGraphicalInfo(), pDC, clientPixelSize, drawObjectScaleFactor, true, &mapViewDesctop->GetTrueMapViewSizeInfo().singleMapSizeInMM());
 
-		// Nykyään jos kartan koko muuttuu, pitää macroParam cache tyhjentää, koska sen koko saattaa muuttua.
-		// Laskentahilan koko lasketaan aina uudestaan, jolloin tehdään hila- vs pikseli-koko vertailuja.
+		// Nykyï¿½ï¿½n jos kartan koko muuttuu, pitï¿½ï¿½ macroParam cache tyhjentï¿½ï¿½, koska sen koko saattaa muuttua.
+		// Laskentahilan koko lasketaan aina uudestaan, jolloin tehdï¿½ï¿½n hila- vs pikseli-koko vertailuja.
 		auto cleanMacroParamCache = true;
 		GetCombinedMapHandler()->mapViewDirty(mapViewDescTopIndex, true, true, true, cleanMacroParamCache, false, false);
 		MapViewSizeChangedDoSymbolMacroParamCacheChecks(mapViewDescTopIndex);
 		mapViewDesctop->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
-		return true; // Jos kyse oli karttanäytön asetuksesta, palautetaan true
+		return true; // Jos kyse oli karttanï¿½ytï¿½n asetuksesta, palautetaan true
 	}
 	else if(mapViewDescTopIndex == CtrlViewUtils::kFmiCrossSectionView)
 	{
@@ -6008,10 +6127,11 @@ bool DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint& clientPixelSize, 
 		NFmiPoint crossSectionViewGridSize(1, crossSectionSystem.RowCount());
 		trueMapViewSizeInfo.onSize(clientPixelSize, pDC, crossSectionViewGridSize,  true, drawObjectScaleFactor);
 		CFmiWin32Helpers::SetDescTopGraphicalInfo(isMapView, crossSectionSystem.GetGraphicalInfo(), pDC, clientPixelSize, drawObjectScaleFactor, true);
-		return true; // Jos kyse oli poikkileikkausnäytön asetuksesta, palautetaan true
+		return true; // Jos kyse oli poikkileikkausnï¿½ytï¿½n asetuksesta, palautetaan true
 	}
-	return false; // Jos kyse oli jostain muusta kuin karttanäytöstä, palautetaan false sen merkiksi että mitään ei tehty
+	return false; // Jos kyse oli jostain muusta kuin karttanï¿½ytï¿½stï¿½, palautetaan false sen merkiksi ettï¿½ mitï¿½ï¿½n ei tehty
 }
+#endif
 
 NFmiTimeBag AdjustTimeBagToGivenTimeBag(const NFmiTimeBag& theRestrictingTimebag, const NFmiTimeBag& wantedTimebag)
 {
@@ -6027,10 +6147,10 @@ NFmiTimeBag AdjustTimeBagToGivenTimeBag(const NFmiTimeBag& theRestrictingTimebag
 	return returnbag;
 }
 
-// Tämä on pika toiminto editorille.
-// Kun 'Klapse'-nappia painaa, otetaan aikarajat aikasäätimistä ja yhdistämiskertoimet
-// ja käytetty maski (valittu,kaikki) muokkausdialogista. Sitten yhdistetään
-// Klapse ja mallin sateet mallinsateisiin halutulle aikavälille.
+// Tï¿½mï¿½ on pika toiminto editorille.
+// Kun 'Klapse'-nappia painaa, otetaan aikarajat aikasï¿½ï¿½timistï¿½ ja yhdistï¿½miskertoimet
+// ja kï¿½ytetty maski (valittu,kaikki) muokkausdialogista. Sitten yhdistetï¿½ï¿½n
+// Klapse ja mallin sateet mallinsateisiin halutulle aikavï¿½lille.
 bool DoCombineModelAndKlapse(void)
 {
 	return FmiModifyEditdData::DoCombineModelAndKlapse(GenDocDataAdapter(), UseMultithreaddingWithModifyingFunctions());
@@ -6043,18 +6163,18 @@ NFmiMetEditorOptionsData& MetEditorOptionsData(void)
 void DoAutoSaveData(void)
 {
 	if(DataModificationInProgress())
-		return ; // jos ollaan modifioimassa dataa, ei sallita auto-save -toimintoa, koska modifiointi on erillisessä threadissa 
-				 // ja voi aiheuttaa ongelmia tämän talletuksen kanssa. Esim. kontrollipiste editointi ja CP-pisteiden backup ongelma.
+		return ; // jos ollaan modifioimassa dataa, ei sallita auto-save -toimintoa, koska modifiointi on erillisessï¿½ threadissa 
+				 // ja voi aiheuttaa ongelmia tï¿½mï¿½n talletuksen kanssa. Esim. kontrollipiste editointi ja CP-pisteiden backup ongelma.
 
-    static bool hasMadeWarningWithDialog = false; // Varoitetaan käyttäjää vain yhden kerran, jos levytila loppuu ja ei tehdä enää auto talletuksia.
+    static bool hasMadeWarningWithDialog = false; // Varoitetaan kï¿½yttï¿½jï¿½ï¿½ vain yhden kerran, jos levytila loppuu ja ei tehdï¿½ enï¿½ï¿½ auto talletuksia.
     try
     {
 	    if(MetEditorOptionsData().UseAutoSave())
 	    {
-		    if(MetEditorOptionsData().ControlPointMode()) // talletetaan CP-dataa vain kun käytetään kyseistä työkalua, eikä joka ikinen minuutti
+		    if(MetEditorOptionsData().ControlPointMode()) // talletetaan CP-dataa vain kun kï¿½ytetï¿½ï¿½n kyseistï¿½ tyï¿½kalua, eikï¿½ joka ikinen minuutti
             {
                 DoConfigurationsCanBeSavedCheck(true, "SmartMet won't store any modified control-point information to backup files.");
-			    StoreAllCPDataToFiles(); // tämä tallentaa CP-datan (mm. muutos käyrät joka pisteeseen jokaiselle parametrille) backuppiin kaatumisten varalta (ladataan sitten käynnistettäessä)
+			    StoreAllCPDataToFiles(); // tï¿½mï¿½ tallentaa CP-datan (mm. muutos kï¿½yrï¿½t joka pisteeseen jokaiselle parametrille) backuppiin kaatumisten varalta (ladataan sitten kï¿½ynnistettï¿½essï¿½)
             }
 
 		    boost::shared_ptr<NFmiFastQueryInfo> smart = EditedInfo();
@@ -6091,9 +6211,9 @@ void DoAutoSaveData(void)
     }
 }
 
-// Ns. working data talletetaan vain jos on käytössä undo/redo toiminto (editointia ei voi tehdä ilman sitä: memorymapping read-only jutun takia)
+// Ns. working data talletetaan vain jos on kï¿½ytï¿½ssï¿½ undo/redo toiminto (editointia ei voi tehdï¿½ ilman sitï¿½: memorymapping read-only jutun takia)
 // JA jos ollaan ns. normaali editointi moodissa.
-// Muissa tapauksissa ei talletetan tätä editointiin liittyvää backup tiedostoa.
+// Muissa tapauksissa ei talletetan tï¿½tï¿½ editointiin liittyvï¿½ï¿½ backup tiedostoa.
 bool IsWorkingDataSaved()
 {
     if(MetEditorOptionsData().UndoRedoDepth() > 0)
@@ -6140,12 +6260,14 @@ bool StoreData(bool newFile, bool askForSave)
 
 std::string GetHelperForecasterId()
 {
+#ifndef UNIX
     if(ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AddHelpDataIdAtSendindDataToDatabase())
     {
         boost::shared_ptr<NFmiFastQueryInfo> helperData = InfoOrganizer()->FindInfo(NFmiInfoData::kEditingHelpData);
-        if(helperData && helperData->FindFirstKey(FmiModifyEditdData::ForecasterIDKey)) // Löytyikö helperData ja löytyykö siitä ForecasterID:tä?
+        if(helperData && helperData->FindFirstKey(FmiModifyEditdData::ForecasterIDKey)) // Lï¿½ytyikï¿½ helperData ja lï¿½ytyykï¿½ siitï¿½ ForecasterID:tï¿½?
             return std::string(helperData->GetCurrentKeyValue());
     }
+#endif
 
     return "";
 }
@@ -6161,7 +6283,7 @@ bool StoreDataToDataBase(const std::string &theForecasterId)
 std::string CreateHelpEditorFileNameWithPath(void)
 {
 	std::string fileName(itsHelpEditorSystem.DataPath());
-	fileName += "\\"; // varmuudeksi laitetaan polku deliminator perään
+	fileName += "\\"; // varmuudeksi laitetaan polku deliminator perï¿½ï¿½n
 	NFmiMetTime aTime(1); // currentti aika aikaleimaa varten
 	fileName += aTime.ToStr(kYYYYMMDDHHMM);
 	fileName += "_";
@@ -6182,16 +6304,16 @@ bool StoreDataToDataBase(const std::string &theForecasterId, const std::string &
     return status;
 }
 
-// writeLocalDiskThenCopyToDestination talletus on erikoistapaus. Jos kopiointi serveriin (esim. wiuhti:in) on normaalia c++ stream binääri write 
-// operaatiota käyttäen jostain syystä hidasta, talletetaan data ensin lokaaliin hakemistoon. Sitten se kopioidaan serverille käyttäen CopyFileEx 
-// win32-funktiota tmp-nimellä, sitten rename oikeaksi nimeksi, sitten lokaali tmp-tiedosto pitää siivota pois.
+// writeLocalDiskThenCopyToDestination talletus on erikoistapaus. Jos kopiointi serveriin (esim. wiuhti:in) on normaalia c++ stream binï¿½ï¿½ri write 
+// operaatiota kï¿½yttï¿½en jostain syystï¿½ hidasta, talletetaan data ensin lokaaliin hakemistoon. Sitten se kopioidaan serverille kï¿½yttï¿½en CopyFileEx 
+// win32-funktiota tmp-nimellï¿½, sitten rename oikeaksi nimeksi, sitten lokaali tmp-tiedosto pitï¿½ï¿½ siivota pois.
 bool StoreData(bool fDoSaveTmpRename, const NFmiString& theFileName, NFmiQueryData *theData, bool writeLocalDiskThenCopyToDestination)
 {
 	if(theData)
 	{
 		NFmiStreamQueryData sQData;
 		if(fDoSaveTmpRename)
-		{ // tehdään kirjoitus tmp-tiedostoon ja lopuksi tehdään rename tiedostolle lopullisen nimiseksi
+		{ // tehdï¿½ï¿½n kirjoitus tmp-tiedostoon ja lopuksi tehdï¿½ï¿½n rename tiedostolle lopullisen nimiseksi
 			NFmiFileString tmpFileNameStr(theFileName);
 			NFmiString tmpFileName = "TMP_";
 			tmpFileName += tmpFileNameStr.FileName();
@@ -6199,6 +6321,7 @@ bool StoreData(bool fDoSaveTmpRename, const NFmiString& theFileName, NFmiQueryDa
 			tmpFileNameStr.FileName(tmpFileName);
 
             bool status = false;
+#ifndef UNIX
             if(writeLocalDiskThenCopyToDestination)
             {
                 std::string localTmpDirectory("C:\\tmp");
@@ -6216,6 +6339,7 @@ bool StoreData(bool fDoSaveTmpRename, const NFmiString& theFileName, NFmiQueryDa
                 }
             }
             else
+#endif
                 status = sQData.WriteData(tmpFileNameStr, theData, static_cast<long>(theData->InfoVersion()));
 
 			if(status)
@@ -6260,26 +6384,28 @@ bool StoreData(bool fDoSaveTmpRename, const NFmiString& theFileName, NFmiQueryDa
 
 bool StoreData(const NFmiString& theFileName, boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, bool askForSave)
 {
-	if(askForSave) // lisäsin askForSaven, että ei aina kysyttäisi talletetaanko
+	if(askForSave) // lisï¿½sin askForSaven, ettï¿½ ei aina kysyttï¿½isi talletetaanko
 	{
+#ifndef UNIX
         CSaveDataDlg dlg;
         if(dlg.DoModal() != IDOK)
 			return false;
+#endif
 	}
-	if(theSmartInfo && (theFileName != NFmiString())) // MITÄ JOS EI OLE NIMEÄ!!!!!!!
+	if(theSmartInfo && (theFileName != NFmiString())) // MITï¿½ JOS EI OLE NIMEï¿½!!!!!!!
 	{
 		NFmiQueryData *data = dynamic_cast<NFmiOwnerInfo*>(theSmartInfo.get())->DataReference().get();
 		bool status = false;
 		if(itsHelpEditorSystem.UsedHelpEditorStatus())
-		{ // pitää muuttaa help-datan tuottaja id, mutta kopioon!
+		{ // pitï¿½ï¿½ muuttaa help-datan tuottaja id, mutta kopioon!
 			NFmiQueryData helpData(*data);
 			helpData.Info()->SetProducer(NFmiProducer(NFmiProducerSystem::gHelpEditorDataProdId, "HelpData"));
-			status = StoreData(true, theFileName, &helpData, true); // tämän talletukseen on laitettava tmp-file välivaihe, koska tähän help-dataan muut SmartMetit voi tarrata heti kiinni
+			status = StoreData(true, theFileName, &helpData, true); // tï¿½mï¿½n talletukseen on laitettava tmp-file vï¿½livaihe, koska tï¿½hï¿½n help-dataan muut SmartMetit voi tarrata heti kiinni
 		}
         else
         {
-            // Laitetaan normaali talletus myös ensin lokaali tmp-tiedostoon josta kopiointi win32 funktiolla serverille, missä rename lopulliseksi.
-            // Tämä siksi että nyt myös normaali talletus on alkanut tökkimään ja se saattaa kestää kymmeniä minuutteja.
+            // Laitetaan normaali talletus myï¿½s ensin lokaali tmp-tiedostoon josta kopiointi win32 funktiolla serverille, missï¿½ rename lopulliseksi.
+            // Tï¿½mï¿½ siksi ettï¿½ nyt myï¿½s normaali talletus on alkanut tï¿½kkimï¿½ï¿½n ja se saattaa kestï¿½ï¿½ kymmeniï¿½ minuutteja.
             status = StoreData(true, theFileName, data, true);
         }
 		if(status)
@@ -6412,7 +6538,7 @@ bool CreateCPPopup()
 	return false;
 }
 
-// Havaintodatan asemista voidaan tehdä ControlPoint pisteet
+// Havaintodatan asemista voidaan tehdï¿½ ControlPoint pisteet
 void AddObservationStationsToCpPointsCommands(NFmiMenuItemList *mainPopupMenu)
 {
     auto &cpObsBlendingData = AnalyzeToolData().ControlPointObservationBlendingData();
@@ -6446,24 +6572,26 @@ void AddObservationStationsToCpPointsCommands(NFmiMenuItemList *mainPopupMenu, c
 
 void MakeObservationStationsToCpPoints(NFmiMenuItem &menuItem)
 {
-    // Haetaan käytössä oleva CP-manager
+    // Haetaan kï¿½ytï¿½ssï¿½ oleva CP-manager
     auto controlPointManager = itsCPManagerSet.CPManager(itsCPManagerSet.UseOldSchoolStyle());
     if(controlPointManager)
     {
-        // Haetaan käytetyn datatyypin, halutun tuottajan kaikki tiedostot, jotka ovat pinta datoja (= leveleitä on vain 1)
+        // Haetaan kï¿½ytetyn datatyypin, halutun tuottajan kaikki tiedostot, jotka ovat pinta datoja (= leveleitï¿½ on vain 1)
         auto producerId = menuItem.DataIdent().GetProducer()->GetIdent();
         auto observationInfos = InfoOrganizer()->GetInfos(menuItem.DataType(), true, producerId);
+#ifndef UNIX
         controlPointManager->SetZoomedAreaStationsAsControlPoints(observationInfos, GetCombinedMapHandler()->getMapViewDescTop(0)->MapHandler()->Area());
+#endif
         AnalyzeToolData().ControlPointObservationBlendingData().SelectProducer(producerId);
 
-        // Vain aikasarja pitää laittaa tässä likaiseksi, sieltä mistä tätä kutsutaan (MakePopUpCommandUsingRowIndex) laitetaan karttanäytöt likaisiksi.
+        // Vain aikasarja pitï¿½ï¿½ laittaa tï¿½ssï¿½ likaiseksi, sieltï¿½ mistï¿½ tï¿½tï¿½ kutsutaan (MakePopUpCommandUsingRowIndex) laitetaan karttanï¿½ytï¿½t likaisiksi.
 		GetCombinedMapHandler()->timeSerialViewDirty(true);
     }
 }
 
 void AddCpManagerSetsToCpPopupMenu(NFmiMenuItemList *mainPopupMenu, NFmiInfoData::Type infoDataType)
 {
-    // Lisätään mahdollisen CPManagerSetin valinnat
+    // Lisï¿½tï¿½ï¿½n mahdollisen CPManagerSetin valinnat
     size_t cpSetSize = itsCPManagerSet.CPSetSize();
     if(cpSetSize > 1)
     {
@@ -6498,28 +6626,34 @@ void ToolMasterAvailable(bool newValue)
     itsBasicConfigurations.ToolMasterAvailable(newValue);
 }
 
-// Tallettaa mm. CP pisteet, muutoskäyrät jne.
-// Tätä kutsutaan kun editori suljetaan.
+// Tallettaa mm. CP pisteet, muutoskï¿½yrï¿½t jne.
+// Tï¿½tï¿½ kutsutaan kun editori suljetaan.
 void StoreSupplementaryData(void)
 {
-	// armeija / military / CD rom editor versiossa on try - catch blokki käytössä!!
-	// tämä on vain pikaviritys sellaiselle editorille, joka ei voi tallettaa asetuksia.
-	// Koko tämä try - catch koodi on normaalisti kommenteissa!!!!
+	// armeija / military / CD rom editor versiossa on try - catch blokki kï¿½ytï¿½ssï¿½!!
+	// tï¿½mï¿½ on vain pikaviritys sellaiselle editorille, joka ei voi tallettaa asetuksia.
+	// Koko tï¿½mï¿½ try - catch koodi on normaalisti kommenteissa!!!!
 	try
 	{
         DoConfigurationsCanBeSavedCheck(true);
 
-		::_chdir(itsBasicConfigurations.WorkingDirectory().c_str()); // palautetaan alkuperäinen työhakemisto voimaan talletuksia varten
+#ifdef UNIX
+		::chdir(itsBasicConfigurations.WorkingDirectory().c_str()); // palautetaan alkuperï¿½inen tyï¿½hakemisto voimaan talletuksia varten
+#else
+		::_chdir(itsBasicConfigurations.WorkingDirectory().c_str()); // palautetaan alkuperï¿½inen tyï¿½hakemisto voimaan talletuksia varten
+#endif
 		itsMTATempSystem.StoreSettings();
-        // Nämä sounding dialogin asetukset pitää ottaa MTATempSystem:istä takaisin Win-registeriin, koska niitä on mahdollisesti latailtu näyttömakroista
+        // Nï¿½mï¿½ sounding dialogin asetukset pitï¿½ï¿½ ottaa MTATempSystem:istï¿½ takaisin Win-registeriin, koska niitï¿½ on mahdollisesti latailtu nï¿½yttï¿½makroista
+#ifndef UNIX
 		ApplicationWinRegistry().SetSoundingViewSettings(itsMTATempSystem.GetSoundingViewSettingsFromWindowsRegisty());
+#endif
 
         itsTrajectorySystem->StoreSettings();
 		GetCombinedMapHandler()->storeMapViewDescTopToSettings();
 		StoreAnalyzeToolData();
 		StoreDataQualityChecker();
 		IgnoreStationsData().StoreToSettings();
-		StoreOptionsData(); // tämä tekee myös asetuksien talletuksen konfiguraatio tiedostoihin! Tämä pitää siis kutsua viimeisenä.
+		StoreOptionsData(); // tï¿½mï¿½ tekee myï¿½s asetuksien talletuksen konfiguraatio tiedostoihin! Tï¿½mï¿½ pitï¿½ï¿½ siis kutsua viimeisenï¿½.
 
 		CheckRunningStatusAtClosing(SpecialFileStoragePath());
 		StoreAllCPDataToFiles();
@@ -6732,9 +6866,9 @@ bool InitCPManagerSet(void)
 
 		itsSmartToolInfo.DBCheckerFileName(fileName2);
 		bool status2 = itsSmartToolInfo.LoadDBChecker();
-		SetCurrentSmartToolMacro(itsSmartToolInfo.CurrentScript()); // laitetaan currentti skripti myös dociin
+		SetCurrentSmartToolMacro(itsSmartToolInfo.CurrentScript()); // laitetaan currentti skripti myï¿½s dociin
 
-        // Alustetaan myös yksi smartTool kieleen liittyvät callback funktiot
+        // Alustetaan myï¿½s yksi smartTool kieleen liittyvï¿½t callback funktiot
         NFmiInfoAreaMask::SetMultiSourceDataGetterCallback(
 			[this](std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, 
 				const NFmiDataIdent& dataIdent,
@@ -6824,6 +6958,7 @@ bool InitCPManagerSet(void)
 		view.SetAllRowParams(&GetCombinedMapHandler()->getCrossSectionDrawParamListVector(), *MacroParamSystem());
 	}
 
+#ifndef UNIX
 	void FillExtraMapViewSettingMacro2(NFmiViewSettingMacro::MapViewDescTop &theViewMacro, NFmiMapViewDescTop &theDescTop, int theDescTopIndex)
 	{
         boost::shared_ptr<NFmiMapViewWinRegistry> mapViewWinRegistry = ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex);
@@ -6831,7 +6966,9 @@ bool InitCPManagerSet(void)
 		theViewMacro.SetAllRowParams(theDescTop.DrawParamListVector(), *MacroParamSystem());
 		theViewMacro.DipMapHelperList(theDescTop.GetViewMacroDipMapHelperList());
 	}
+#endif
 
+#ifndef UNIX
 	void FillExtraMapViewSettingsMacro(NFmiViewSettingMacro &theMacro)
 	{
 		std::vector<NFmiViewSettingMacro::MapViewDescTop> &extraMapViewDescTops = theMacro.ExtraMapViewDescTops();
@@ -6841,6 +6978,7 @@ bool InitCPManagerSet(void)
 		for(size_t i = 0; i < mapViewDescTops.size(); i++)
 			FillExtraMapViewSettingMacro2(extraMapViewDescTops[i], *mapViewDescTops[i], static_cast<int>(i));
 	}
+#endif
 
 	void FillWarningCenterViewMacro(NFmiViewSettingMacro &theMacro)
 	{
@@ -6849,15 +6987,18 @@ bool InitCPManagerSet(void)
 #ifndef DISABLE_CPPRESTSDK
 		view.WarningCenterSystem(itsWarningCenterSystem.getLegacyData());
 #endif // DISABLE_CPPRESTSDK
+#ifndef UNIX
         view.ShowHakeMessages(ApplicationWinRegistry().ShowHakeMessages());
         view.ShowKaHaMessages(ApplicationWinRegistry().ShowKaHaMessages());
         view.MinimumTimeRangeForWarningsOnMapViewsInMinutes(ApplicationWinRegistry().MinimumTimeRangeForWarningsOnMapViewsInMinutes());
+#endif
 	}
 
 #ifdef max
 #undef max
 #endif
 
+#ifndef UNIX
     int GetTimeRangeForWarningMessagesOnMapViewInMinutes()
     {
         int timeStepInMapView = static_cast<int>(::round(GetCombinedMapHandler()->getMapViewDescTop(0)->TimeControlTimeStep() * 60));
@@ -6867,6 +7008,7 @@ bool InitCPManagerSet(void)
         else
             return std::max(timeStepInMapView, minimumTimeRange);
     }
+#endif
 
 	void FillSynopPlotSettingsMacro(NFmiViewSettingMacro &theMacro)
 	{
@@ -6882,9 +7024,10 @@ bool InitCPManagerSet(void)
 		settings.SetObsComparisonInfo(itsObsComparisonInfo);
 	}
 
+#ifndef UNIX
 	void FillMaskSettingsMacro(NFmiViewSettingMacro &theMacro)
 	{
-        boost::shared_ptr<NFmiMapViewWinRegistry> mapViewWinRegistry0 = ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(0); // tämä on pääkarttaikkunan asetuksia
+        boost::shared_ptr<NFmiMapViewWinRegistry> mapViewWinRegistry0 = ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(0); // tï¿½mï¿½ on pï¿½ï¿½karttaikkunan asetuksia
 		NFmiViewSettingMacro::MaskSettings &masks = theMacro.GetMaskSettings();
 		boost::shared_ptr<NFmiAreaMaskList> paramMaskList(ParamMaskListMT());
 		masks.SetAllMasks(*paramMaskList);
@@ -6893,9 +7036,11 @@ bool InitCPManagerSet(void)
 		masks.UseMasksWithFilterTool(fUseMasksWithFilterTool);
 		masks.UseMaskWithBrush(fUseMaskWithBrush);
 	}
+#endif
 
+#ifndef UNIX
 	void FillViewMacro(NFmiViewSettingMacro &theMacro, const std::string &theName, const std::string &theDescription)
-	{ // täytä makro editorin näyttö asetuksilla
+	{ // tï¿½ytï¿½ makro editorin nï¿½yttï¿½ asetuksilla
 		theMacro.Name(theName);
 		theMacro.Description(theDescription);
 		FillGeneralDocMacro(theMacro);
@@ -6918,6 +7063,7 @@ bool InitCPManagerSet(void)
         theMacro.KeepMapAspectRatio(ApplicationWinRegistry().KeepMapAspectRatio());
         theMacro.UseControlPoinTool(MetEditorOptionsData().ControlPointMode());
     }
+#endif
 
 	void SetGeneralDoc(NFmiViewSettingMacro &theMacro)
 	{
@@ -6952,7 +7098,7 @@ bool InitCPManagerSet(void)
 			boost::shared_ptr<NFmiDrawParam> dPar;
 			if(theRowIndex == CtrlViewUtils::kFmiTimeSerialView)
 			{
-				// jos data on editoitavaa, silloin ei ole väliä makroon säilytetyistä tuottajista jne. jolloin Find:in viimeinen parametri on true
+				// jos data on editoitavaa, silloin ei ole vï¿½liï¿½ makroon sï¿½ilytetyistï¿½ tuottajista jne. jolloin Find:in viimeinen parametri on true
 				if(dList->Find(theParam.DataIdent(), &theParam.Level(), theParam.DataType(), (theParam.DataType() == NFmiInfoData::kEditable)))
 					dPar = dList->Current();
 			}
@@ -6993,14 +7139,14 @@ bool InitCPManagerSet(void)
 		for( ;counter < ssize ; counter++)
 		{
 			auto& macroTimeRow = rows[counter];
-			timeSerialViewIndexReference++; // tätä juoksuttamalla saan parametrit menemään aikasarja ikkunaan oikeaan järjestykseen
+			timeSerialViewIndexReference++; // tï¿½tï¿½ juoksuttamalla saan parametrit menemï¿½ï¿½n aikasarja ikkunaan oikeaan jï¿½rjestykseen
 			const NFmiViewSettingMacro::Param &par = macroTimeRow.Param();
 			NFmiMenuItem menuItem(-1, "x", par.DataIdent(), kFmiAddTimeSerialView, g_DefaultParamView, &par.Level(), par.DataType());
 			auto addedDrawParam = combinedMapHandler.addTimeSerialView(menuItem, fTreatAsViewMacro);
-            // Kaikki makroon talletetut drawparam asetukset pitää vielä ladata luotuun ja listoihin laitettuun drawparamiin
+            // Kaikki makroon talletetut drawparam asetukset pitï¿½ï¿½ vielï¿½ ladata luotuun ja listoihin laitettuun drawparamiin
 			AdjustDrawParam(addedDrawParam, par, fTreatAsViewMacro);
 
-			// Tehdään side-parameter osio tässä
+			// Tehdï¿½ï¿½n side-parameter osio tï¿½ssï¿½
 			const auto& sideParameters = macroTimeRow.SideParameters();
 			if(sideParameters.size())
 			{
@@ -7054,9 +7200,11 @@ bool InitCPManagerSet(void)
 #ifndef DISABLE_CPPRESTSDK
 		itsWarningCenterSystem.getLegacyData().Init(view.WarningCenterSystem());
 #endif // DISABLE_CPPRESTSDK
+#ifndef UNIX
         ApplicationWinRegistry().ShowHakeMessages(view.ShowHakeMessages());
         ApplicationWinRegistry().ShowKaHaMessages(view.ShowKaHaMessages());
         ApplicationWinRegistry().MinimumTimeRangeForWarningsOnMapViewsInMinutes(view.MinimumTimeRangeForWarningsOnMapViewsInMinutes());
+#endif
     }
 
 	void SetSynopPlotSettings(NFmiViewSettingMacro &theMacro)
@@ -7079,7 +7227,7 @@ bool InitCPManagerSet(void)
 
 		itsCrossSectionSystem.Init(view.CrossSectionSystem(), MetEditorOptionsData().DisableWindowManipulations());
 
-        // Pitää tyhjentää aluksi poikkileikkausnäytön kaikkien rivien parametrit, koska sen täyttö looppia (joka tyhjentää kulloisenkin rivin ensin) ei välttämättä edes ajeta
+        // Pitï¿½ï¿½ tyhjentï¿½ï¿½ aluksi poikkileikkausnï¿½ytï¿½n kaikkien rivien parametrit, koska sen tï¿½yttï¿½ looppia (joka tyhjentï¿½ï¿½ kulloisenkin rivin ensin) ei vï¿½lttï¿½mï¿½ttï¿½ edes ajeta
 		GetCombinedMapHandler()->clearDesctopsAllParams(CtrlViewUtils::kFmiCrossSectionView);
 
 		// asetetaan poikkileikkaus parametrit riveilleen
@@ -7098,7 +7246,7 @@ bool InitCPManagerSet(void)
 					const NFmiViewSettingMacro::Param &par = params[j];
 					NFmiMenuItem menuItem(-1, gDummyParamName, par.DataIdent(), kFmiAddParamCrossSectionView, g_DefaultParamView, &par.Level(), par.DataType());
 					GetCombinedMapHandler()->addCrossSectionView(menuItem, static_cast<int>(i + 1), fTreatAsViewMacro);
-                    // Kaikki makroon talletetut drawparam asetukset pitää vielä ladata luotuun ja listoihin laitettuun drawparamiin
+                    // Kaikki makroon talletetut drawparam asetukset pitï¿½ï¿½ vielï¿½ ladata luotuun ja listoihin laitettuun drawparamiin
 					AdjustCrossSectionDrawParam(par, static_cast<int>(i+1), static_cast<int>(j+1), fTreatAsViewMacro); 
 				}
 			}
@@ -7107,12 +7255,12 @@ bool InitCPManagerSet(void)
 		}
 	}
 
-    // fTreatAsViewMacro -parametria tarvitaan, koska ns. backupViewMacro:jen latauksien yhteydessä halutaan ladata parametreja näytöille
-    // niin että niitä ei pidetä viewMacro -paramereina. Jos parametri on ladattu normaalista viewMacrosta, ja halutaan tehdä sen piirto-ominaisuuksiin
-    // muutoksia, se ei onnistu Piirto-ominaisuus dialogista (dialogissa varoitus ja nappuloiden estot), vaan talletus pitää tehdä itse viewMacroon.
+    // fTreatAsViewMacro -parametria tarvitaan, koska ns. backupViewMacro:jen latauksien yhteydessï¿½ halutaan ladata parametreja nï¿½ytï¿½ille
+    // niin ettï¿½ niitï¿½ ei pidetï¿½ viewMacro -paramereina. Jos parametri on ladattu normaalista viewMacrosta, ja halutaan tehdï¿½ sen piirto-ominaisuuksiin
+    // muutoksia, se ei onnistu Piirto-ominaisuus dialogista (dialogissa varoitus ja nappuloiden estot), vaan talletus pitï¿½ï¿½ tehdï¿½ itse viewMacroon.
 	void SetMapViewRowsParams(const std::vector<NFmiViewSettingMacro::MapRow>& theMapRows, unsigned int theDescTopIndex, bool fTreatAsViewMacro)
 	{
-        // Pitää tyhjentää aluksi karttanäytön kaikkien rivien parametrit, koska sen täyttö looppia (joka tyhjentää kulloisenkin rivin ensin) ei välttämättä edes ajeta
+        // Pitï¿½ï¿½ tyhjentï¿½ï¿½ aluksi karttanï¿½ytï¿½n kaikkien rivien parametrit, koska sen tï¿½yttï¿½ looppia (joka tyhjentï¿½ï¿½ kulloisenkin rivin ensin) ei vï¿½lttï¿½mï¿½ttï¿½ edes ajeta
 		GetCombinedMapHandler()->clearDesctopsAllParams(theDescTopIndex);
 
 		auto mapRowsSize = theMapRows.size();
@@ -7125,28 +7273,29 @@ bool InitCPManagerSet(void)
 				auto usedDataType = viewMacroLayerParam.DataType();
                 if(usedDataType >= NFmiInfoData::kSoundingParameterData)
                 {
-                    // vanhoissa makroissa on käytetty tätä NFmiInfoData::kSoundingParameterData viritystä. 
-                    // SmartMet versiosta 5.6 lähtien sounding-index datat lasketaan valmiiksi datoiksi ja sen tyyppi 
-                    // on NFmiInfoData::kModelHelpData. Tämä siis vain pitää yllä taaksepäin yhteen sopivuutta näyttömakroissa.
+                    // vanhoissa makroissa on kï¿½ytetty tï¿½tï¿½ NFmiInfoData::kSoundingParameterData viritystï¿½. 
+                    // SmartMet versiosta 5.6 lï¿½htien sounding-index datat lasketaan valmiiksi datoiksi ja sen tyyppi 
+                    // on NFmiInfoData::kModelHelpData. Tï¿½mï¿½ siis vain pitï¿½ï¿½ yllï¿½ taaksepï¿½in yhteen sopivuutta nï¿½yttï¿½makroissa.
                     usedDataType = NFmiInfoData::kModelHelpData; 
                 }
 				NFmiMenuItem addParamMenuItem(theDescTopIndex, gDummyParamName, viewMacroLayerParam.DataIdent(), kFmiAddView, g_DefaultParamView, &viewMacroLayerParam.Level(), usedDataType);
 				addParamMenuItem.MacroParamInitName(viewMacroLayerParam.DrawParam()->InitFileName());
                 auto realRowNumber = rowVectorCounter + 1;
 				GetCombinedMapHandler()->addViewWithRealRowNumber(false, addParamMenuItem, static_cast<int>(realRowNumber), fTreatAsViewMacro);
-                // Kaikki makroon talletetut drawparam asetukset pitää vielä ladata luotuun ja listoihin laitettuun drawparamiin
+                // Kaikki makroon talletetut drawparam asetukset pitï¿½ï¿½ vielï¿½ ladata luotuun ja listoihin laitettuun drawparamiin
 				AdjustDrawParam(theDescTopIndex, viewMacroLayerParam, static_cast<int>(realRowNumber), static_cast<int>(viewMacroLayerIndex + 1), fTreatAsViewMacro); 
 			}
 		}
 	}
 
+#ifndef UNIX
     void SetSingleExtraMapViewSettingMacro(NFmiViewSettingMacro::MapViewDescTop &theViewMacro, unsigned int theDescTopIndex, bool fTreatAsViewMacro)
 	{
 		NFmiMapViewDescTop &descTop = *GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex);
         boost::shared_ptr<NFmiMapViewWinRegistry> mapViewWinRegistry = ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theDescTopIndex);
 
 		descTop.InitForViewMacro(theViewMacro.GetMapViewDescTop(), *mapViewWinRegistry.get(), false, MetEditorOptionsData().DisableWindowManipulations());
-		// Mitä tehdään extra rows:ien kanssa
+		// Mitï¿½ tehdï¿½ï¿½n extra rows:ien kanssa
 //		theViewMacro.SetAllExtraRowParams(descTop.ExtraDrawParamListVector(), itsMacroParamSystem);
 		descTop.SetViewMacroDipMapHelperList(theViewMacro.DipMapHelperList());
 
@@ -7160,6 +7309,7 @@ bool InitCPManagerSet(void)
 		for(size_t i = 0; i < extraMapViewDescTops.size(); i++)
             SetSingleExtraMapViewSettingMacro(extraMapViewDescTops[i], static_cast<unsigned int>(i), fTreatAsViewMacro);
 	}
+#endif
 
 	void SetMasksParams(NFmiViewSettingMacro &theMacro)
 	{
@@ -7179,22 +7329,25 @@ bool InitCPManagerSet(void)
 				paramMaskList->Add(areaMask);
 			}
 		}
-		ParamMaskListMT(paramMaskList); // asetetaan lopuksi uudet maskit käyttöön
+		ParamMaskListMT(paramMaskList); // asetetaan lopuksi uudet maskit kï¿½yttï¿½ï¿½n
 	}
 
 	void SetMaskSettings(NFmiViewSettingMacro &theMacro)
 	{
 		NFmiViewSettingMacro::MaskSettings &masks = theMacro.GetMaskSettings();
 		SetMasksParams(theMacro);
+#ifndef UNIX
         SetShowMaskOnMap(0, masks.ShowMasksOnMapView());
+#endif
 		fUseMasksInTimeSerialViews = masks.UseMasksInTimeSerialViews();
 		fUseMasksWithFilterTool = masks.UseMasksWithFilterTool();
 		fUseMaskWithBrush = masks.UseMaskWithBrush();
 	}
 
+#ifndef UNIX
     void ApplyViewMacro(NFmiViewSettingMacro &theMacro, bool fTreatAsViewMacro, bool undoRedoAction)
-	{ 
-		// ota käyttöön kaikki makron asetukset ja tee näytöistä 'likaisia'
+	{
+		// ota kï¿½yttï¿½ï¿½n kaikki makron asetukset ja tee nï¿½ytï¿½istï¿½ 'likaisia'
 		SetGeneralDoc(theMacro);
         SetTimeViewParams(theMacro, fTreatAsViewMacro);
 		SetTempView(theMacro);
@@ -7213,13 +7366,14 @@ bool InitCPManagerSet(void)
         GetCombinedMapHandler()->makeApplyViewMacroDirtyActions(ApplicationWinRegistry().DrawObjectScaleFactor());
 		UpdateCrossSectionViewTrueSizeViewAfterViewMacro();
 
-        // Lopuksi (jos poikkeuksia ei ole lentänyt) laitetaan ladatun macron nimi talteen pääkarttanäytön title tekstiä varten
+        // Lopuksi (jos poikkeuksia ei ole lentï¿½nyt) laitetaan ladatun macron nimi talteen pï¿½ï¿½karttanï¿½ytï¿½n title tekstiï¿½ varten
         SetLastLoadedViewMacroName(theMacro, fTreatAsViewMacro, undoRedoAction);
-        ApplicationInterface::GetApplicationInterfaceImplementation()->UpdateMainFrameTitle(); // tämä sitten päivittää pääkarttanäytön otsikko tekstiin viimeisimmän viewMacron nimen
+        ApplicationInterface::GetApplicationInterfaceImplementation()->UpdateMainFrameTitle(); // tï¿½mï¿½ sitten pï¿½ivittï¿½ï¿½ pï¿½ï¿½karttanï¿½ytï¿½n otsikko tekstiin viimeisimmï¿½n viewMacron nimen
     }
+#endif
 
     // Jos normaali view macro lataus, haetaan nimeen mukaan suhteellinen polku.
-    // Jos erikois viewMacro kuten F12, CTRL+F12 ja SHIFT+F12 toiminnot, käytetään nimeä suoraan.
+    // Jos erikois viewMacro kuten F12, CTRL+F12 ja SHIFT+F12 toiminnot, kï¿½ytetï¿½ï¿½n nimeï¿½ suoraan.
     void SetLastLoadedViewMacroName(NFmiViewSettingMacro &theMacro, bool fTreatAsViewMacro, bool undoRedoAction)
     {
         if(fTreatAsViewMacro && !undoRedoAction)
@@ -7258,10 +7412,10 @@ bool InitCPManagerSet(void)
 			throw runtime_error(errorMessage);
 		}
 		else
-			return false; // ei tehdä virheilmoitus vialliselle makrolle kuin 1. kerran
+			return false; // ei tehdï¿½ virheilmoitus vialliselle makrolle kuin 1. kerran
 	}
 
-	// palauttaa nykyään tiedon onnistuiko viewmakron luku vai ei
+	// palauttaa nykyï¿½ï¿½n tiedon onnistuiko viewmakron luku vai ei
 	bool ReadViewMacro(NFmiViewSettingMacro &theViewMacro, const std::string &theFileName, bool fShowErrorDialog = true)
 	{
 		bool status = true;
@@ -7296,12 +7450,14 @@ bool InitCPManagerSet(void)
 		}
 		catch (exception &e)
 		{
+#ifndef UNIX
             if(fShowErrorDialog)
     			::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(e.what()), CA2T(::GetDictionaryString("ViewMacroErrorFileTitle").c_str()), MB_OK);
+#endif
 			status = false;
 		}
-		// alunperin makron nimi talletettiin tiedostoon. Tästä on seurannut ongelmia. Nyt
-		// makron nimi otetaan tiedoston nimestä.
+		// alunperin makron nimi talletettiin tiedostoon. Tï¿½stï¿½ on seurannut ongelmia. Nyt
+		// makron nimi otetaan tiedoston nimestï¿½.
         theViewMacro.Name(GetFileNameHeader(theFileName));
         theViewMacro.SetMacroParamInitFileNames(MacroParamSystem()->RootPath());
 		theViewMacro.InitFileName(theFileName);
@@ -7324,17 +7480,21 @@ bool InitCPManagerSet(void)
 		}
 		catch (exception &e)
 		{
+#ifndef UNIX
 			::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(e.what()), _TEXT("View Macro write error"), MB_OK);
+#endif
 		}
 	}
 
     void LoadViewMacroInfo(NFmiViewSettingMacro &theViewMacro, bool fTreatAsViewMacro, bool undoRedoAction)
 	{
+#ifndef UNIX
         ApplyViewMacro(theViewMacro, fTreatAsViewMacro, undoRedoAction);
-        ApplicationInterface::GetApplicationInterfaceImplementation()->LoadViewMacroWindowsSettings(theViewMacro); // tämä hoitaa CView ikkunoiden asetukset makroista
+        ApplicationInterface::GetApplicationInterfaceImplementation()->LoadViewMacroWindowsSettings(theViewMacro); // tï¿½mï¿½ hoitaa CView ikkunoiden asetukset makroista
+#endif
 	}
 
-    // Jos näyttömakro oli korruptoitunut, palautetaan false, muuten true
+    // Jos nï¿½yttï¿½makro oli korruptoitunut, palautetaan false, muuten true
 	bool LoadViewMacro(const std::string &theName)
 	{
 		std::string initFileName = itsViewMacroPath + theName + ".vmr";
@@ -7343,19 +7503,19 @@ bool InitCPManagerSet(void)
 		{
 			LogMessage(std::string("Starting to load viewMacro: ") + loggedLongMacroName, CatLog::Severity::Debug, CatLog::Category::Macro, true);
 
-			SnapshotViewMacro(true); // true = tyhjennetään redo-lista
+			SnapshotViewMacro(true); // true = tyhjennetï¿½ï¿½n redo-lista
 
-			// HUOM! tässä vaiheessa pitää näyttömakro lukea uudestaan, että ajat päivittyvät nykyhetkeen.
-			// Muuten ajat voivat olla lukittuna suunnilleen siihen aikaa kun editori on käynnistetty
+			// HUOM! tï¿½ssï¿½ vaiheessa pitï¿½ï¿½ nï¿½yttï¿½makro lukea uudestaan, ettï¿½ ajat pï¿½ivittyvï¿½t nykyhetkeen.
+			// Muuten ajat voivat olla lukittuna suunnilleen siihen aikaa kun editori on kï¿½ynnistetty
             if(ReadViewMacro(*CurrentViewMacro(), initFileName))
             {
                 itsHelperViewMacro = *CurrentViewMacro();
 
                 LoadViewMacroInfo(*CurrentViewMacro(), true, false);
 
-                ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Loading view-macro in use"); // tämä sitten päivittää kaikki ruudut
+                ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Loading view-macro in use"); // tï¿½mï¿½ sitten pï¿½ivittï¿½ï¿½ kaikki ruudut
 
-                // lokitetaan, mikä makro on ladattu käyttöön...
+                // lokitetaan, mikï¿½ makro on ladattu kï¿½yttï¿½ï¿½n...
                 string logStr("Finished loading the view-macro: ");
                 logStr += loggedLongMacroName;
                 LogMessage(logStr, CatLog::Severity::Info, CatLog::Category::Macro);
@@ -7383,16 +7543,16 @@ bool InitCPManagerSet(void)
     {
         try
         {
-            SnapshotViewMacro(true); // true = tyhjennetään redo-lista
+            SnapshotViewMacro(true); // true = tyhjennetï¿½ï¿½n redo-lista
 
             NFmiViewSettingMacro betaProductMacro;
             if(ReadViewMacro(betaProductMacro, theAbsoluteVieMacroPath, false))
             {
                 LoadViewMacroInfo(betaProductMacro, true, false);
 
-                ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Loading view-macro from beta product"); // tämä sitten päivittää kaikki ruudut
+                ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Loading view-macro from beta product"); // tï¿½mï¿½ sitten pï¿½ivittï¿½ï¿½ kaikki ruudut
 
-                // lokitetaan, mikä makro on ladattu käyttöön...
+                // lokitetaan, mikï¿½ makro on ladattu kï¿½yttï¿½ï¿½n...
                 string logStr("Applying the Beta product view-macro: ");
                 logStr += theAbsoluteVieMacroPath;
                 LogMessage(logStr, CatLog::Severity::Info, CatLog::Category::Macro);
@@ -7429,23 +7589,23 @@ void AdjustViewMacroUndoListSize(size_t maxSize)
 	}
 }
 
-// kun ladataan normaalisti viewMacro, pitää redo-lista tyhjentää
+// kun ladataan normaalisti viewMacro, pitï¿½ï¿½ redo-lista tyhjentï¿½ï¿½
 void SnapshotViewMacro(bool fClearRedoList)
 {
-	// 1. tyhjennä redolista-osio jos haluttu
+	// 1. tyhjennï¿½ redolista-osio jos haluttu
 	if(fClearRedoList)
 	{
 		size_t newSize = itsUndoRedoViewMacroList.size() - (itsUndoRedoViewMacroList.size() - itsUndoRedoViewMacroListPointer) + 1;
 		itsUndoRedoViewMacroList.resize(newSize);
 		itsUndoRedoViewMacroListPointer++;
 	}
-	// 2. Ota kuva nykyhetkestä
+	// 2. Ota kuva nykyhetkestï¿½
 	NFmiViewSettingMacro currentSnapShot;
 	FillViewMacroInfo(currentSnapShot, itsLastLoadedViewMacroName, "snapshot description");
-	// 3. talleta se undoredoListaan perään
+	// 3. talleta se undoredoListaan perï¿½ï¿½n
 	itsUndoRedoViewMacroList.emplace_back(std::move(currentSnapShot));
 
-	AdjustViewMacroUndoListSize(50); // pidetään undoredo listan koko max 50:ssä
+	AdjustViewMacroUndoListSize(50); // pidetï¿½ï¿½n undoredo listan koko max 50:ssï¿½
 }
 
 void UndoViewMacro(void)
@@ -7453,19 +7613,19 @@ void UndoViewMacro(void)
 	// 0. onko undo mahdollista
 	if(IsUndoableViewMacro())
 	{
-	    // 0.1 ollaanko viimeisessä kohdassa undolistaa, jos ollaan, voidaan tehdä SnapshotViewMacro
+	    // 0.1 ollaanko viimeisessï¿½ kohdassa undolistaa, jos ollaan, voidaan tehdï¿½ SnapshotViewMacro
 		if(itsUndoRedoViewMacroListPointer == itsUndoRedoViewMacroList.size()-1)
 		{
-	    // 1. ota kuva nyky hetkestä talteen
-			SnapshotViewMacro(false); // false = ei tyhjennetä redo-listaa, ei ole tarvetta
+	    // 1. ota kuva nyky hetkestï¿½ talteen
+			SnapshotViewMacro(false); // false = ei tyhjennetï¿½ redo-listaa, ei ole tarvetta
 		}
-	    // 2. Lataa käyttöön undoredoListasta edellinen makro käyttöön
+	    // 2. Lataa kï¿½yttï¿½ï¿½n undoredoListasta edellinen makro kï¿½yttï¿½ï¿½n
 		LoadViewMacroInfo(itsUndoRedoViewMacroList[itsUndoRedoViewMacroListPointer], true, true);
 	    // 3. aseta pointteri edelliseen kohtaan
 		itsUndoRedoViewMacroListPointer--;
 
-	    // 4. Pitää vielä varmuuden vuoksi päivittää kaikki ruudut
-        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Undo current view-macro"); // tämä sitten päivittää kaikki ruudut
+	    // 4. Pitï¿½ï¿½ vielï¿½ varmuuden vuoksi pï¿½ivittï¿½ï¿½ kaikki ruudut
+        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Undo current view-macro"); // tï¿½mï¿½ sitten pï¿½ivittï¿½ï¿½ kaikki ruudut
     }
 }
 void RedoViewMacro(void)
@@ -7473,12 +7633,12 @@ void RedoViewMacro(void)
 	// 1. onko redo mahdollista
 	if(IsRedoableViewMacro())
 	{
-    	// 2. Lataa käyttöön undoredoListasta seuraava makro käyttöön
+    	// 2. Lataa kï¿½yttï¿½ï¿½n undoredoListasta seuraava makro kï¿½yttï¿½ï¿½n
 		itsUndoRedoViewMacroListPointer++;
-		LoadViewMacroInfo(itsUndoRedoViewMacroList[itsUndoRedoViewMacroListPointer+1], true, true); // redo:ssa pitää ladata yksi yli currentin paikan
+		LoadViewMacroInfo(itsUndoRedoViewMacroList[itsUndoRedoViewMacroListPointer+1], true, true); // redo:ssa pitï¿½ï¿½ ladata yksi yli currentin paikan
 
-        // 3. Pitää vielä varmuuden vuoksi päivittää kaikki ruudut
-        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Redo last view-macro"); // tämä sitten päivittää kaikki ruudut
+        // 3. Pitï¿½ï¿½ vielï¿½ varmuuden vuoksi pï¿½ivittï¿½ï¿½ kaikki ruudut
+        ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Redo last view-macro"); // tï¿½mï¿½ sitten pï¿½ivittï¿½ï¿½ kaikki ruudut
     }
 }
 bool IsUndoableViewMacro(void)
@@ -7496,8 +7656,10 @@ bool IsRedoableViewMacro(void)
 
 	void FillViewMacroInfo(NFmiViewSettingMacro &theViewMacro, const std::string &theName, const std::string &theDescription)
 	{
-        ApplicationInterface::GetApplicationInterfaceImplementation()->StoreViewMacroWindowsSettings(theViewMacro); // tämä täyttää itsHelperViewMacro:on CView osat viewmacrosta
-		FillViewMacro(theViewMacro, theName, theDescription); // tähän on jo täytetty windows ikkunoiden asetukset ulkopuolella
+#ifndef UNIX
+        ApplicationInterface::GetApplicationInterfaceImplementation()->StoreViewMacroWindowsSettings(theViewMacro); // tï¿½mï¿½ tï¿½yttï¿½ï¿½ itsHelperViewMacro:on CView osat viewmacrosta
+		FillViewMacro(theViewMacro, theName, theDescription); // tï¿½hï¿½n on jo tï¿½ytetty windows ikkunoiden asetukset ulkopuolella
+#endif
 	}
 
 	void StoreViewMacro(const std::string & theAbsoluteMacroFilePath, const std::string &theDescription)
@@ -7519,13 +7681,13 @@ bool IsRedoableViewMacro(void)
 		return itsHelperViewMacro;
 	}
 
-	// funktio palauttaa tiedoston nimestä header-osion eli esim.
-	// "d:\directory\filename.ext" -tiedostonimestä palautetaan
+	// funktio palauttaa tiedoston nimestï¿½ header-osion eli esim.
+	// "d:\directory\filename.ext" -tiedostonimestï¿½ palautetaan
 	// "filename"
 	std::string GetFileNameHeader(const std::string &theFileName)
 	{
 		NFmiFileString fileStr(theFileName);
-		string realNameStr = fileStr.Header();
+		string realNameStr(fileStr.Header().CharPtr());
 		return realNameStr;
 	}
 
@@ -7576,10 +7738,10 @@ bool IsRedoableViewMacro(void)
 
 	void RefreshViewMacroList(void)
 	{
-		// tyhjennetään ensin olemassa oleva lista
+		// tyhjennetï¿½ï¿½n ensin olemassa oleva lista
         itsViewMacroDescriptionList.clear();
 
-		// listataan alkuun hakemistot ja jos ei olla rootissa, laitetaan vielä ..-hakemsito mukaan
+		// listataan alkuun hakemistot ja jos ei olla rootissa, laitetaan vielï¿½ ..-hakemsito mukaan
 		std::list<std::string> directories = NFmiFileSystem::Directories(itsViewMacroPath);
 		std::list<std::string>::iterator itDir = directories.begin();
 		std::list<std::string>::iterator itEndDir = directories.end();
@@ -7599,7 +7761,7 @@ bool IsRedoableViewMacro(void)
 		{
 			std::string initFileName = GetViewMacroTotalFileName(*it);
             NFmiLightWeightViewSettingMacro viewMacroDescription = MakeViewMacroDescriptionFromFile(initFileName);
-			itsViewMacroDescriptionList.push_back(viewMacroDescription); // laitetaan myös virheellinen listaan, että se voidaan poistaa ViewMacro-dialogin avulla
+			itsViewMacroDescriptionList.push_back(viewMacroDescription); // laitetaan myï¿½s virheellinen listaan, ettï¿½ se voidaan poistaa ViewMacro-dialogin avulla
 		}
 	}
 
@@ -7619,12 +7781,20 @@ bool IsRedoableViewMacro(void)
 			if(fileList.empty())
 			{
 				if(::rmdir(totalPath.c_str()) != 0)
+				{
+#ifndef UNIX
                     ::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(::GetDictionaryString("ViewMacroErrorFolder1").c_str()), CA2T(::GetDictionaryString("ViewMacroErrorFolder2").c_str()), MB_OK | MB_ICONERROR);
+#endif
+				}
                 else
                     removalSuccessful = true;
 			}
 			else
+			{
+#ifndef UNIX
                 ::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(::GetDictionaryString("ViewMacroErrorFolder3").c_str()), CA2T(::GetDictionaryString("ViewMacroErrorFolder2").c_str()), MB_OK | MB_ICONERROR);
+#endif
+			}
 
 		}
 		else
@@ -7665,10 +7835,10 @@ boost::shared_ptr<NFmiArea> MakeCPCropArea(boost::shared_ptr<NFmiFastQueryInfo> 
 void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned int theDescTopIndex)
 {
     if(theDescTopIndex != 0)
-        return; // Ei tehdä CP-crop juttuja kuin pääkarttanäytön kanssa
+        return; // Ei tehdï¿½ CP-crop juttuja kuin pï¿½ï¿½karttanï¿½ytï¿½n kanssa
 
 	itsCPGridCropMargin = NFmiPoint();
-	itsCPGridCropRect = NFmiRect(); // asetetaan tyhjä crop-recti aluksi
+	itsCPGridCropRect = NFmiRect(); // asetetaan tyhjï¿½ crop-recti aluksi
 	itsCPGridCropLatlonArea = boost::shared_ptr<NFmiArea>();
 	itsCPGridCropInnerLatlonArea = boost::shared_ptr<NFmiArea>();
 	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo();
@@ -7676,7 +7846,7 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 	{
         boost::shared_ptr<NFmiArea> editedArea(editedInfo->Area()->Clone());
 		if(NFmiQueryDataUtil::AreAreasSameKind(theArea.get(), editedArea.get()))
-		{ // crop rect voidaan laskea vain kun editoidun datan area ja zoomattu area ovat samaa tyyppiä, tällöin zoomi alue on neliskanttinen editoidulla datalla
+		{ // crop rect voidaan laskea vain kun editoidun datan area ja zoomattu area ovat samaa tyyppiï¿½, tï¿½llï¿½in zoomi alue on neliskanttinen editoidulla datalla
 			editedInfo->NearestPoint(theArea->BottomLeftLatLon());
 			unsigned long bottomLeftCornerLocationIndex = editedInfo->LocationIndex();
 			editedInfo->NearestPoint(theArea->TopRightLatLon());
@@ -7696,12 +7866,12 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 					itsCPGridCropMargin = NFmiPoint(shrinkX, shrinkY);
 					itsCPGridCropRect = NFmiRect(x1 + shrinkX, y2 - shrinkY, x2 - shrinkX, y1 + shrinkY);
 					itsCPGridCropLatlonArea = MakeCPCropArea(editedInfo, 1, x1, y1, x2, y2, shrinkX, shrinkY);
-					// lasketaan vielä inner crop rect
+					// lasketaan vielï¿½ inner crop rect
 					itsCPGridCropInnerLatlonArea = MakeCPCropArea(editedInfo, 2, x1, y1, x2, y2, shrinkX, shrinkY);
 				}
 				else
-				{ // CP crop ei ole järkevää, on zoomattu datassa liian lähelle ja käytössä on liian vähän hilapisteitä.
-					// Nyt lasketaan vain ulompi laatiiko, jonka sisään voidaan karttanäytössä piirtää punainen rasti.
+				{ // CP crop ei ole jï¿½rkevï¿½ï¿½, on zoomattu datassa liian lï¿½helle ja kï¿½ytï¿½ssï¿½ on liian vï¿½hï¿½n hilapisteitï¿½.
+					// Nyt lasketaan vain ulompi laatiiko, jonka sisï¿½ï¿½n voidaan karttanï¿½ytï¿½ssï¿½ piirtï¿½ï¿½ punainen rasti.
 					itsCPGridCropLatlonArea = MakeCPCropArea(editedInfo, 1, x1, y1, x2, y2, shrinkX, shrinkY);
 				}
 			}
@@ -7711,20 +7881,34 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 
 	bool ChangeToEditorsWorkingDirectory(void)
 	{
+#ifdef UNIX
+		bool status = ::chdir(itsBasicConfigurations.WorkingDirectory().c_str()) == 0;
+#else
 		bool status = ::_chdir(itsBasicConfigurations.WorkingDirectory().c_str()) == 0; // _chdir palauttaa 0, jos onnistuu
+#endif
 		return status;
 	}
 	bool SaveCurrentPath(void)
 	{
+#ifdef UNIX
+		char path[PATH_MAX];
+		bool status = ::getcwd(path, PATH_MAX) != nullptr;
+		itsSavedDirectory = NFmiString(path);
+#else
 		static char path[_MAX_PATH];
 		int savedDrive = ::_getdrive(); // _getdrive:lla ei virhe paluu arvoa
-		bool status = ::_getdcwd(savedDrive , path, _MAX_PATH ) != 0; // _getdcwd palauttaa 0-pointterin, jos epäonnistuu
+		bool status = ::_getdcwd(savedDrive , path, _MAX_PATH ) != 0; // _getdcwd palauttaa 0-pointterin, jos epï¿½onnistuu
 		itsSavedDirectory = NFmiString(path);
+#endif
 		return status;
 	}
 	bool LoadSavedPath(void)
 	{
+#ifdef UNIX
+		bool status = ::chdir(itsSavedDirectory) == 0;
+#else
 		bool status = ::_chdir(itsSavedDirectory) == 0; // _chdir palauttaa 0, jos onnistuu
+#endif
 		return status;
 	}
 
@@ -7737,21 +7921,21 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 		return itsSmartToolInfo.CurrentScript();
 	}
 
-	// Palauttaa kopion shared_ptr:sta, jotta sitä voi käyttää thread-turvallisesti
+	// Palauttaa kopion shared_ptr:sta, jotta sitï¿½ voi kï¿½yttï¿½ï¿½ thread-turvallisesti
 	std::shared_ptr<NFmiMacroParamSystem> MacroParamSystem()
 	{
 		std::lock_guard<std::mutex> macroParamSystemLock(itsMacroParamSystemMutex);
 		return itsMacroParamSystemPtr;
 	}
 
-	// lisää halutun nimisen macroParamin halutun karttanäytön riville (1-5)
+	// lisï¿½ï¿½ halutun nimisen macroParamin halutun karttanï¿½ytï¿½n riville (1-5)
 	void AddMacroParamToView(unsigned int theDescTopIndex, int theViewRow, const std::string &theName)
 	{
 		NFmiMenuItem menuItem(theDescTopIndex, theName, static_cast<FmiParameterName>(998), kFmiAddView, g_DefaultParamView, 0, NFmiInfoData::kMacroParam, theViewRow);
 		GetCombinedMapHandler()->addViewWithRealRowNumber(true, menuItem, theViewRow, false);
 	}
 
-	// poistaa halutun macroparamin dokumentista, tiedostoista ja näytöiltä
+	// poistaa halutun macroparamin dokumentista, tiedostoista ja nï¿½ytï¿½iltï¿½
 	void RemoveMacroParam(const std::string &theName)
 	{
 		auto macroParamSystemPtr = MacroParamSystem();
@@ -7768,16 +7952,24 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 			if(fileList.empty())
 			{
 				if(::rmdir(totalPath.c_str()) != 0)
+				{
+#ifndef UNIX
 					::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), _TEXT("Directory removal failed!"), _TEXT("Directory removal failed!"), MB_OK | MB_ICONERROR);
+#endif
+				}
 			}
 			else
+			{
+#ifndef UNIX
 				::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), _TEXT("Directory contains macros, that you have to remove first!"), _TEXT("Directory removal failed!"), MB_OK | MB_ICONERROR);
+#endif
+			}
 		}
 		else
 		{
 			boost::shared_ptr<NFmiMacroParamFolder> currentFolder = macroParamSystemPtr->GetCurrentFolder();
 			if(currentFolder)
-				currentFolder->Remove(theName); // poista macroparam mpsysteemistä (joka tuhoaa myös tiedostot)
+				currentFolder->Remove(theName); // poista macroparam mpsysteemistï¿½ (joka tuhoaa myï¿½s tiedostot)
 			GetCombinedMapHandler()->removeMacroParamFromDrawParamLists(theName); // poista macroparam drawparamlistoista
 			GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, false, true); // laitetaan viela kaikki ajat likaisiksi cachesta
 		}
@@ -7909,7 +8101,7 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 		menuString = ::GetDictionaryString("NormalWordCapitalProperties");
 		AddToCrossSectionPopupMenu(itsPopupMenu.get(), dpList, menuString, kFmiModifyCrossSectionDrawParam);
 
-		// copy/paste komennot tähän
+		// copy/paste komennot tï¿½hï¿½n
 		menuString = "Copy draw options";
 		AddToCrossSectionPopupMenu(itsPopupMenu.get(), dpList, menuString, kFmiCopyDrawParamOptionsCrossSectionView);
 		if(GetCombinedMapHandler()->copyPasteDrawParamAvailableYet())
@@ -7937,17 +8129,17 @@ void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea> &theArea, unsigned 
 			itsPopupMenu->Add(std::move(menuItem));
 		}
 
-// ********* muuta näyttörivin kaikkien datojen tuottajat halutuiksi *********
+// ********* muuta nï¿½yttï¿½rivin kaikkien datojen tuottajat halutuiksi *********
 		AddChangeAllProducersToParamSelectionPopup(static_cast<unsigned int>(-1), itsPopupMenu.get(), kFmiChangeAllProducersInCrossSectionRow, true);
-// ********* muuta näyttörivin kaikkien datojen tuottajat halutuiksi *********
+// ********* muuta nï¿½yttï¿½rivin kaikkien datojen tuottajat halutuiksi *********
 
-		// ************ tässä muutetaan kaikki rivin datatyypit (fiksataan ongelma mikä syntyi kun LAPS muuttui kViewable:ista kAnalyze -tyyppiseksi)
+		// ************ tï¿½ssï¿½ muutetaan kaikki rivin datatyypit (fiksataan ongelma mikï¿½ syntyi kun LAPS muuttui kViewable:ista kAnalyze -tyyppiseksi)
 		AddChangeAllDataTypesToParamSelectionPopup(static_cast<unsigned int>(-1), itsPopupMenu.get(), kFmiChangeAllDataTypesInCrossSectionRow);
 
-		// ********** lisätään mahdollinen aika-moodin aikasäätö komento osa *************************
+		// ********** lisï¿½tï¿½ï¿½n mahdollinen aika-moodin aikasï¿½ï¿½tï¿½ komento osa *************************
 		AddTimeSettingToCrossSectionPopupMenu(itsPopupMenu.get());
 
-		// ********** lisätään mahdollinen trajektori komento osa *************************
+		// ********** lisï¿½tï¿½ï¿½n mahdollinen trajektori komento osa *************************
 		AddTrajectoryOptionsToCrossSectionPopupMenu(itsPopupMenu.get());
 
 		if(!itsPopupMenu->InitializeCommandIDs(itsPopupMenuStartId))
@@ -7975,7 +8167,7 @@ void AddTrajectoryOptionsToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu)
 {
 	if(TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
 	{
-        auto menuItem = std::make_unique<NFmiMenuItem>(-1, "Trajectories", NFmiDataIdent(), kFmiCrossSectionSetTrajectoryTimes, g_DefaultParamView, nullptr, NFmiInfoData::kViewable); // NFmiInfoData::kViewable on vain merkityksetön default arvo
+        auto menuItem = std::make_unique<NFmiMenuItem>(-1, "Trajectories", NFmiDataIdent(), kFmiCrossSectionSetTrajectoryTimes, g_DefaultParamView, nullptr, NFmiInfoData::kViewable); // NFmiInfoData::kViewable on vain merkityksetï¿½n default arvo
 		NFmiMenuItemList *menuList = new NFmiMenuItemList;
         auto item = std::make_unique<NFmiMenuItem>(-1, ::GetDictionaryString("CrossSectionViewSelectionPopUpSetTimes")
 											,NFmiDataIdent()
@@ -8002,7 +8194,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 {
 	if(theDrawParamList && theDrawParamList->NumberOfItems() > 0)
 	{
-        auto menuItem = std::make_unique<NFmiMenuItem>(-1, theMenuTitle, NFmiDataIdent(), theMenuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kViewable); // NFmiInfoData::kViewable on vain merkityksetön default arvo
+        auto menuItem = std::make_unique<NFmiMenuItem>(-1, theMenuTitle, NFmiDataIdent(), theMenuCommand, g_DefaultParamView, nullptr, NFmiInfoData::kViewable); // NFmiInfoData::kViewable on vain merkityksetï¿½n default arvo
 		NFmiMenuItemList *menuList = new NFmiMenuItemList;
 		int aIndex = 1;
 		for(theDrawParamList->Reset(); theDrawParamList->Next();)
@@ -8014,11 +8206,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			if(macroParam)
 				param.GetParam()->SetName(drawParam->InitFileName());
 			else
-			{ // muuten laitetaan parametrin nimeen myös mallitietoa, jos data löytyy
+			{ // muuten laitetaan parametrin nimeen myï¿½s mallitietoa, jos data lï¿½ytyy
 				boost::shared_ptr<NFmiFastQueryInfo> info = InfoOrganizer()->Info(drawParam, true, true);
 				if(info)
 				{
-					info->FirstLevel(); // varmistetaan että 1. leveli kohdalla
+					info->FirstLevel(); // varmistetaan ettï¿½ 1. leveli kohdalla
 					usedParamName += " ";
 					usedParamName += ProducerSystem().GetProducerAndLevelTypeString(*info->Producer(), *info->Level(), info->OriginTime(), true);
 				}
@@ -8032,7 +8224,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 												,drawParam->DataType()
 												,aIndex
 												,drawParam->ViewMacroDrawParam());
-			item->ExtraParam(1); // kun parametria aktivoidaan (tai tulevaisuudessa tehdään mitä vain), käytetään extraParamia kertomaan missä parametri on, 0=karttanäyttö, 1=poikkileikkaus ja 2=aikasarja
+			item->ExtraParam(1); // kun parametria aktivoidaan (tai tulevaisuudessa tehdï¿½ï¿½n mitï¿½ vain), kï¿½ytetï¿½ï¿½n extraParamia kertomaan missï¿½ parametri on, 0=karttanï¿½yttï¿½, 1=poikkileikkaus ja 2=aikasarja
 			menuList->Add(std::move(item));
 			aIndex++;
 		}
@@ -8041,8 +8233,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	}
 }
 
-	// editorin pitää siivota aina välillä (latauksen yhteydessä, koska niitä tehdään siinä yhteydessä)
-	// omat-hakemistoa, ettei sinne jää älyttömiä määriä tiedostoja roikkumaan
+	// editorin pitï¿½ï¿½ siivota aina vï¿½lillï¿½ (latauksen yhteydessï¿½, koska niitï¿½ tehdï¿½ï¿½n siinï¿½ yhteydessï¿½)
+	// omat-hakemistoa, ettei sinne jï¿½ï¿½ ï¿½lyttï¿½miï¿½ mï¿½ï¿½riï¿½ tiedostoja roikkumaan
 	bool CleanFilesFromDirectory(const NFmiString& theWorkingPath, int theTimeLimitInHours)
 	{
 		NFmiTime currentTime;
@@ -8057,7 +8249,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				fullFileName += *it;
 				time_t tim = NFmiFileSystem::FileModificationTime(fullFileName);
 				if(tim < 0)
-					continue; // NFmiTime:n konstruktori kaatuu, jos tim on negatiivinen, ja luku on negatiivinen jos tiedopstoa ei kaikesta huolimatta löydykään.
+					continue; // NFmiTime:n konstruktori kaatuu, jos tim on negatiivinen, ja luku on negatiivinen jos tiedopstoa ei kaikesta huolimatta lï¿½ydykï¿½ï¿½n.
 				NFmiTime aTime(tim);
 				if(currentTime.DifferenceInHours(aTime) > theTimeLimitInHours)
 					NFmiFileSystem::RemoveFile(fullFileName);
@@ -8135,7 +8327,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	// poistaa viimeisen osan polusta
 	// c:\data\src\inc\ -> c:\data\src\
-	// eli inc pois esimerkistä
+	// eli inc pois esimerkistï¿½
 	void RemoveLastPartOfDirectory(string &thePath)
 	{
 		NFmiStringTools::TrimR(thePath, '\\');
@@ -8165,7 +8357,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         itsViewMacroPath = fileString.Device();
         itsViewMacroPath += fileString.Path();
         PathUtils::addDirectorySeparatorAtEnd(itsViewMacroPath);
-        // HUOM! tässä ei ole tarkoitus päivittää rootti-hakemistoa, koska nyt mennään
+        // HUOM! tï¿½ssï¿½ ei ole tarkoitus pï¿½ivittï¿½ï¿½ rootti-hakemistoa, koska nyt mennï¿½ï¿½n
         // vain johonkin rootin alihakemistoihin
         RefreshViewMacroList();
     }
@@ -8179,7 +8371,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         }
         else
         {
-            // nimi tulee <> sulkujen sisällä joten ne on poistettava ensin
+            // nimi tulee <> sulkujen sisï¿½llï¿½ joten ne on poistettava ensin
             std::string usedDirectoryName(theDirectoryName);
             NFmiStringTools::TrimL(usedDirectoryName, '<');
             NFmiStringTools::TrimR(usedDirectoryName, '>');
@@ -8194,7 +8386,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             }
         }
         PathUtils::addDirectorySeparatorAtEnd(itsViewMacroPath);
-        // HUOM! tässä ei ole tarkoitus päivittää rootti-hakemistoa, koska nyt mennään
+        // HUOM! tï¿½ssï¿½ ei ole tarkoitus pï¿½ivittï¿½ï¿½ rootti-hakemistoa, koska nyt mennï¿½ï¿½n
 		// vain johonkin rootin alihakemistoihin
 		RefreshViewMacroList();
 	}
@@ -8223,6 +8415,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				usedLanguage = 1;
             else
 				throw std::runtime_error("Cannot find currently used language,\nerror in program or in configuration files.");
+#ifndef UNIX
 			CFmiLanguageSelectionDlg dlg(usedLanguage, AfxGetMainWnd());
 			if(dlg.DoModal() == IDOK)
 			{
@@ -8241,10 +8434,13 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				}
 				return true;
 			}
+#endif
 		}
 		catch(std::exception &e)
 		{
+#ifndef UNIX
 			::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(e.what()), _TEXT("Problem with language setting!"), MB_OK);
+#endif
 		}
 		return false;
 	}
@@ -8263,7 +8459,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(reasonForUpdate, fMakeAreaViewDirty, fClearCache, theWantedMapViewDescTop);
 	}
 
-	// Sama koodi löytyy NFmiStationViewHandler-luokasta
+	// Sama koodi lï¿½ytyy NFmiStationViewHandler-luokasta
 	NFmiSilamStationList::Station GetClosestSilamStation(NFmiSilamStationList &theLocations, const NFmiLocation &theSearchPlace)
 	{
 		NFmiSilamStationList::Station closestLoc;
@@ -8283,8 +8479,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return closestLoc;
 	}
 
-	// Melkein vastaava koodi löytyy NFmiStationViewHandler::ComposeSilamLocationsToolTipText -metodista
-	// kannattaa varmaan yhdistää koodistoa vähän.
+	// Melkein vastaava koodi lï¿½ytyy NFmiStationViewHandler::ComposeSilamLocationsToolTipText -metodista
+	// kannattaa varmaan yhdistï¿½ï¿½ koodistoa vï¿½hï¿½n.
 	NFmiPoint GetClosestSilamPlace()
 	{
 		NFmiPoint latlon = kMissingLatlon;
@@ -8311,20 +8507,20 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	}
 
 
-	// Tämä funktio oli alun peri kahdessa paikassa NFmiStationView ja NFmiStationViewHandler:issa
-	// Laitoin funktion tänne että ei tarvitse duplikoida hankalaa koodia.
+	// Tï¿½mï¿½ funktio oli alun peri kahdessa paikassa NFmiStationView ja NFmiStationViewHandler:issa
+	// Laitoin funktion tï¿½nne ettï¿½ ei tarvitse duplikoida hankalaa koodia.
 	void SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint& theLatLon
 						,const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
-						,bool fMakeMTAModeAdd // vain tietyistä paikoista kun tätä metodia kutsutaan, saa luotauksen lisätä (left buttom up karttanäytöllä lähinnä)
+						,bool fMakeMTAModeAdd // vain tietyistï¿½ paikoista kun tï¿½tï¿½ metodia kutsutaan, saa luotauksen lisï¿½tï¿½ (left buttom up karttanï¿½ytï¿½llï¿½ lï¿½hinnï¿½)
 						,bool fDoOnlyMTAModeAdd)
 	{
 		bool doMTAModeAdd = fDoOnlyMTAModeAdd || (fMakeMTAModeAdd && GetMTATempSystem().TempViewOn());
 		bool doTrajectoryModeAdd = (fMakeMTAModeAdd || (theSelectionCombineFunction == 1)) && TrajectorySystem()->TrajectoryViewOn();
 		if(fDoOnlyMTAModeAdd == false)
-		{ // ei tehdä oikean hiiren klikkauksen displayedMask valintaa, jos tehdään MTA-luotaus nollaus
+		{ // ei tehdï¿½ oikean hiiren klikkauksen displayedMask valintaa, jos tehdï¿½ï¿½n MTA-luotaus nollaus
             if(AllowRightClickDisplaySelection() || theMask != NFmiMetEditorTypes::kFmiDisplayedMask)
             {
-                PreciseTimeSerialLatlonPoint(theLatLon); // Tämä tarkka arvo asetetaan nyt aina talteen
+                PreciseTimeSerialLatlonPoint(theLatLon); // Tï¿½mï¿½ tarkka arvo asetetaan nyt aina talteen
                 ResetOutOfEditedAreaTimeSerialPoint();
                 fEditedPointsSelectionChanged = true;
                 itsLocationSelectionTool2->SelectLocations(theInfo
@@ -8339,12 +8535,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			}
 		}
 
-		// jos ollaan luotaus näytön MTA-moodissa, lisätään myös valittu luotaus info dokumenttiin
+		// jos ollaan luotaus nï¿½ytï¿½n MTA-moodissa, lisï¿½tï¿½ï¿½n myï¿½s valittu luotaus info dokumenttiin
 		if(doMTAModeAdd)
 		{
 			ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::SoundingView);
 			if(theMask == NFmiMetEditorTypes::kFmiDisplayedMask) // HUOM! Hiiren oikealla saa valita useita luotauspaikkoja hiiren oikealla, vaikka se olisi estetty aikasarja ikkunassa
-			{ // jos oikealla klikkaus, lisätään yksi luotaus listaan
+			{ // jos oikealla klikkaus, lisï¿½tï¿½ï¿½n yksi luotaus listaan
 				NFmiMTATempSystem::TempInfo tempInfo(theLatLon, theTime, GetMTATempSystem().CurrentProducer());
 				GetMTATempSystem().AddTemp(tempInfo);
 //				MakeEditorDirty(theDescTopIndex, true, true, true);
@@ -8352,7 +8548,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			}
 			else
 			{
-				// Jos vasen klikkaus karttanäytöllä ja ollaan MTA-moodissa, nollataan luotaukset ja lisätään yksi
+				// Jos vasen klikkaus karttanï¿½ytï¿½llï¿½ ja ollaan MTA-moodissa, nollataan luotaukset ja lisï¿½tï¿½ï¿½n yksi
 				GetMTATempSystem().ClearTemps();
 				NFmiMTATempSystem::TempInfo tempInfo(theLatLon, theTime, GetMTATempSystem().CurrentProducer());
 				GetMTATempSystem().AddTemp(tempInfo);
@@ -8361,7 +8557,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		}
 		if(doTrajectoryModeAdd)
 		{
-			if(theSelectionCombineFunction == 0) // eli pelkkä hiiren klikkaus
+			if(theSelectionCombineFunction == 0) // eli pelkkï¿½ hiiren klikkaus
 				TrajectorySystem()->SelectedLatLon(theLatLon);
 			else // ctrl tai shift on ollut pohjassa
 			{
@@ -8371,7 +8567,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				else
 					TrajectorySystem()->SelectedLatLon(theLatLon);
 			}
-            // Trajektorien muutos vaikuttaa kaikkiin karttanäytön ruutuihin joka rivillä (siksi 3. parametri on true)
+            // Trajektorien muutos vaikuttaa kaikkiin karttanï¿½ytï¿½n ruutuihin joka rivillï¿½ (siksi 3. parametri on true)
 			ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::TrajectoryView);
 			GetCombinedMapHandler()->mapViewDirty(theDescTopIndex, false, true, true, false, false, false);
 		}
@@ -8389,7 +8585,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		auto newDataPtr = NFmiTempDataGenerator::GenerateDataFromText(theTEMPCodeTextStr, theTEMPCodeCheckReportStr, WmoStationInfoSystem(), itsRawTempUnknownStartLonLat, NFmiProducer(kFmiRAWTEMP, "TEMP"), fRawTempRoundSynopTimes);
 		if(newDataPtr && fJustCheckTEMPCode == false)
 		{
-			// otetaan TEMP koodi data käyttöön jos löytyi ja  ei ollut pelkkä tarkistus operaatio
+			// otetaan TEMP koodi data kï¿½yttï¿½ï¿½n jos lï¿½ytyi ja  ei ollut pelkkï¿½ tarkistus operaatio
 			bool dataWasDeleted = false;
 			AddQueryData(newDataPtr.release(), "TEMPData.sqd", "TEMPDataFilePattern", NFmiInfoData::kTEMPCodeSoundingData, "", false, dataWasDeleted);
 		}
@@ -8397,9 +8593,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	void ClearTEMPData(void)
 	{
-        // tyhjennetään TEMP-data
+        // tyhjennetï¿½ï¿½n TEMP-data
 		InfoOrganizer()->ClearData(NFmiInfoData::kTEMPCodeSoundingData); 
-		// Karttanäyttö on piirrettävä uudestaan, koska siellä saattaa näkyä  uusia luotaus merkkejä.
+		// Karttanï¿½yttï¿½ on piirrettï¿½vï¿½ uudestaan, koska siellï¿½ saattaa nï¿½kyï¿½  uusia luotaus merkkejï¿½.
 		GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, false, true, false, false, false);
 	}
 
@@ -8429,6 +8625,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsFileCleanerSystem;
 	}
 
+#ifndef UNIX
 	void UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged()
 	{
 		auto& visSettings = ApplicationWinRegistry().VisualizationSpaceoutSettings();
@@ -8437,12 +8634,13 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		NFmiSmartToolModifier::UseVisualizationOptimazation(visSettings.useGlobalVisualizationSpaceoutFactorOptimization());
 		InfoOrganizer()->SetOptimizedVisualizationMacroParamDataGridSize(boost::math::iround(optimizedVisualizationGridSize.X()), boost::math::iround(optimizedVisualizationGridSize.Y()));
 	}
+#endif
 
 	void SetMacroParamDataGridSize(int xSize, int ySize)
 	{
 		InfoOrganizer()->SetMacroParamDataGridSize(xSize, ySize);
 		SaveMacroParamDataGridSizeSettings();
-        // Pitää tyhjentää kaikkien ikkunoiden kaikkien rivien macroParam datat (voisi optimoida, jos tiedettäisiin, missä on käytössä "RESOLUTION = xxx", niitä ei tarvitsisi tyhjentää)
+        // Pitï¿½ï¿½ tyhjentï¿½ï¿½ kaikkien ikkunoiden kaikkien rivien macroParam datat (voisi optimoida, jos tiedettï¿½isiin, missï¿½ on kï¿½ytï¿½ssï¿½ "RESOLUTION = xxx", niitï¿½ ei tarvitsisi tyhjentï¿½ï¿½)
         MacroParamDataCache().clearAllLayers();
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Set macro-param general data grid size", SmartMetViewId::AllMapViews, true, true);
 	}
@@ -8450,8 +8648,10 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void SaveMacroParamDataGridSizeSettings(void)
 	{
 		NFmiPoint gridSize(InfoOrganizer()->GetMacroParamDataGridSize());
+#ifndef UNIX
         ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MacroParamGridSizeX(static_cast<int>(gridSize.X()));
         ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MacroParamGridSizeY(static_cast<int>(gridSize.Y()));
+#endif
 	}
 
 #ifndef DISABLE_CPPRESTSDK
@@ -8642,7 +8842,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             itsDataToDBCheckMethod = 2;
 	}
 
-    // Tämä on ainoa Q2Serveriin liittyvä kysely, jonka pitää mennä genDataDocin kautta, johtuen IsOperationalModeOn kyselystä!!!
+    // Tï¿½mï¿½ on ainoa Q2Serveriin liittyvï¿½ kysely, jonka pitï¿½ï¿½ mennï¿½ genDataDocin kautta, johtuen IsOperationalModeOn kyselystï¿½!!!
 	bool UseQ2Server(void)
 	{
 		return itsQ2ServerInfo.UseQ2Server() && IsOperationalModeOn();
@@ -8716,7 +8916,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = (thePossibleInfoVector == 0) ? GetSortedSynopInfoVector(kFmiSYNOP, kFmiTestBed, kFmiSHIP, kFmiBUOY) : *thePossibleInfoVector;
 
 		if(infoVector.size() > 0)
-		{ // etsitään useasta infosta lähintä asemaa
+		{ // etsitï¿½ï¿½n useasta infosta lï¿½hintï¿½ asemaa
 			const double defaultDist = 999999999.;
 			double minDist = defaultDist;
 			int wantedInfoIndex = -1;
@@ -8755,7 +8955,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		LogMessage(message, CatLog::Severity::Info, CatLog::Category::Visualization);
 		GetCombinedMapHandler()->mapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, true, true, true, true, true, true); // laitetaan kartta likaiseksi
 		WindTableSystem().MustaUpdateTable(true);
+#ifndef UNIX
 		GetCombinedMapHandler()->makeApplyViewMacroDirtyActions(ApplicationWinRegistry().DrawObjectScaleFactor());
+#endif
 		ParameterSelectionSystem().setAllUpdateflagsDirty();
 
 		if(!makeDirtyActionsOnly)
@@ -8771,12 +8973,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	void ReloadAllDynamicHelpData()
 	{
-		InfoOrganizer()->ClearDynamicHelpData(false); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eikä staattisia helpdatoja kuten topografia ja fraktiilit)
-		HelpDataInfoSystem()->ResetAllDynamicDataTimeStamps(); // merkitään kaikkien dynaamisten help datojen aikaleimaksi -1, eli ei ole luettu ollenkaan
+		InfoOrganizer()->ClearDynamicHelpData(false); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eikï¿½ staattisia helpdatoja kuten topografia ja fraktiilit)
+		HelpDataInfoSystem()->ResetAllDynamicDataTimeStamps(); // merkitï¿½ï¿½n kaikkien dynaamisten help datojen aikaleimaksi -1, eli ei ole luettu ollenkaan
 		SatelliteImageCacheSystem().ResetImages();
-		// Tänne pitäisi lisätä muidenkin datojen uudelleen lataus, kuten kaikki Wms jutut, CAP, Hake, KaHa, muita?
+		// Tï¿½nne pitï¿½isi lisï¿½tï¿½ muidenkin datojen uudelleen lataus, kuten kaikki Wms jutut, CAP, Hake, KaHa, muita?
 		DoSmartMetRefreshActions("Reloading all the dynamic data (CTRL+SHIFT+F5)", false);
-		// Tämän jälkeen pitää laittaa datan luku threadi heti päälle ylemmällä tasolla eli CSmartMetDoc-luokassa, mistä tätä metodia on kutsuttukkin.
+		// Tï¿½mï¿½n jï¿½lkeen pitï¿½ï¿½ laittaa datan luku threadi heti pï¿½ï¿½lle ylemmï¿½llï¿½ tasolla eli CSmartMetDoc-luokassa, mistï¿½ tï¿½tï¿½ metodia on kutsuttukkin.
 	}
 
 	void OnChangeMapType(unsigned int theDescTopIndex, bool fForward)
@@ -8784,14 +8986,15 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		GetCombinedMapHandler()->changeMapType(theDescTopIndex, fForward);
 	}
 
-    // Tämä asettaa maskOnMap -asetuksen kahteen paikkaan, windows rekistereihin ja 
-    // SmartMetin sisäiseen käyttöön.
+#ifndef UNIX
+    // Tï¿½mï¿½ asettaa maskOnMap -asetuksen kahteen paikkaan, windows rekistereihin ja
+    // SmartMetin sisï¿½iseen kï¿½yttï¿½ï¿½n.
     void SetShowMaskOnMap(unsigned int theDescTopIndex, bool newValue)
     {
         ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(static_cast<int>(theDescTopIndex))->ShowMasksOnMap(newValue);
     }
 
-	// vaihtaaa "näytä maskit kartalla" -tilaa ja päivittää ruudut
+	// vaihtaaa "nï¿½ytï¿½ maskit kartalla" -tilaa ja pï¿½ivittï¿½ï¿½ ruudut
 	void OnShowMasksOnMap(unsigned int theDescTopIndex)
 	{
         bool newValue = !ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(static_cast<int>(theDescTopIndex))->ShowMasksOnMap();
@@ -8800,6 +9003,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theDescTopIndex);
         ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Show/hide masks on map views");
 	}
+#endif
 
 	void OnShowProjectionLines(void)
 	{
@@ -8837,6 +9041,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		itsMTATempSystem.WindBarbSpaceOutFactor(newValue);
 	}
 
+#ifndef UNIX
 	void TransparencyContourDrawView(CWnd *theView)
 	{
 		itsTransparencyContourDrawView = theView;
@@ -8846,33 +9051,34 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		return itsTransparencyContourDrawView;
 	}
+#endif
 
-	// Tämä funktio takaa että haluttaessa synop-data tulevat käyttöön aina samassa järjestyksessä.
-	// Eli kun nyt synop-dataa on euro+maailma+10min+testbed+ship+poiju jne., ja niiden järjestys annetussa
-	// info-vektorissa riippuu vähän siitä, milloin mikin datan on luettu viimeksi.
-	// Tästä seuraa että jos synop-datoja ei järjestetä, voi ei niin tärkeä automaatti asema
-	// peittää synop-plotissa tarkeän havaintoaseman.
+	// Tï¿½mï¿½ funktio takaa ettï¿½ haluttaessa synop-data tulevat kï¿½yttï¿½ï¿½n aina samassa jï¿½rjestyksessï¿½.
+	// Eli kun nyt synop-dataa on euro+maailma+10min+testbed+ship+poiju jne., ja niiden jï¿½rjestys annetussa
+	// info-vektorissa riippuu vï¿½hï¿½n siitï¿½, milloin mikin datan on luettu viimeksi.
+	// Tï¿½stï¿½ seuraa ettï¿½ jos synop-datoja ei jï¿½rjestetï¿½, voi ei niin tï¿½rkeï¿½ automaatti asema
+	// peittï¿½ï¿½ synop-plotissa tarkeï¿½n havaintoaseman.
 	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1)
 	{
 		std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = InfoOrganizer()->GetInfos(theProducerId, theProducerId2, theProducerId3, theProducerId4);
 
 		if(itsSynopDataFilePatternSortOrderVector.size())
-		{ // jos on määrätty sorttaus järjestys, tehdään sorttaus
-			std::vector<boost::shared_ptr<NFmiFastQueryInfo> > copyOfInfoVector(infoVector); // tästä listasta otetaan sorttauksessa löydetyt infot pois,
-																	// että lopuksi voidaan laittaa jäljelle jääneet tästä listasta lopulliseen
-																	// sortattuun listaan. Alkuperäisestä listasta ei voi poistaa infoja kesken loopin.
+		{ // jos on mï¿½ï¿½rï¿½tty sorttaus jï¿½rjestys, tehdï¿½ï¿½n sorttaus
+			std::vector<boost::shared_ptr<NFmiFastQueryInfo> > copyOfInfoVector(infoVector); // tï¿½stï¿½ listasta otetaan sorttauksessa lï¿½ydetyt infot pois,
+																	// ettï¿½ lopuksi voidaan laittaa jï¿½ljelle jï¿½ï¿½neet tï¿½stï¿½ listasta lopulliseen
+																	// sortattuun listaan. Alkuperï¿½isestï¿½ listasta ei voi poistaa infoja kesken loopin.
 			std::vector<boost::shared_ptr<NFmiFastQueryInfo> > sortedInfoVector;
 			for(size_t i = 0; i < itsSynopDataFilePatternSortOrderVector.size(); i++)
 			{
 				for(size_t j = 0; j < infoVector.size(); j++)
 				{
 					NFmiFileString fileString(infoVector[j]->DataFilePattern());
-					fileString.NormalizeDelimiter(); // hakemisto erottimet pitää saada oikein päin, että FileName-metodi toimisi
+					fileString.NormalizeDelimiter(); // hakemisto erottimet pitï¿½ï¿½ saada oikein pï¿½in, ettï¿½ FileName-metodi toimisi
 					std::string noPathFilePattern(fileString.FileName());
 					if(itsSynopDataFilePatternSortOrderVector[i] == noPathFilePattern)
 					{
 						sortedInfoVector.push_back(infoVector[j]);
-						copyOfInfoVector[j] = boost::shared_ptr<NFmiFastQueryInfo>(); // laitetaan 0-pointteri tähän merkiksi, että on otettu jo käyttöön
+						copyOfInfoVector[j] = boost::shared_ptr<NFmiFastQueryInfo>(); // laitetaan 0-pointteri tï¿½hï¿½n merkiksi, ettï¿½ on otettu jo kï¿½yttï¿½ï¿½n
 						break;
 					}
 				}
@@ -8880,7 +9086,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			for(size_t k = 0; k < copyOfInfoVector.size(); k++)
 			{
 				if(copyOfInfoVector[k] != 0)
-					sortedInfoVector.push_back(copyOfInfoVector[k]); // tätä ei löytynyt sorttaus listasta, eli laitetaan se perään
+					sortedInfoVector.push_back(copyOfInfoVector[k]); // tï¿½tï¿½ ei lï¿½ytynyt sorttaus listasta, eli laitetaan se perï¿½ï¿½n
 			}
 
 			return sortedInfoVector;
@@ -8970,11 +9176,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		ParameterSelectionSystem().SetLastActiveIndexes(theDesktopIndex, finalActiveRowIndex);
     }
 
-    // Kun animaatio on päällä, aina ei haluta mennä animaation loppuun asti kokonaan.
-    // Tapaus 1: Kun animaatiossa on havaintoja seuraava moodi päällä ja on isompi ruudukko käytössä (esim. 3x2 eli 3 aikaa ja 2 riviä), 
-    // tällöin on tarkoitus jättää animaatio looppi vajaaksi, niin että animaatio loppuu silloin kun viimeisten havaintojen aika on juuri
-    // ruudukon oikeassa reunassa. Muuten kävisi niin että kun on 3 aikasaraketta, animaatio menisi niin pitkälle että havaintojen viimeinen aika
-    // olisi vasemmassa sarakkeessa ja sen oikealla puolella olevissa sarakkeissa ei näkyisi havainto datoja.
+    // Kun animaatio on pï¿½ï¿½llï¿½, aina ei haluta mennï¿½ animaation loppuun asti kokonaan.
+    // Tapaus 1: Kun animaatiossa on havaintoja seuraava moodi pï¿½ï¿½llï¿½ ja on isompi ruudukko kï¿½ytï¿½ssï¿½ (esim. 3x2 eli 3 aikaa ja 2 riviï¿½), 
+    // tï¿½llï¿½in on tarkoitus jï¿½ttï¿½ï¿½ animaatio looppi vajaaksi, niin ettï¿½ animaatio loppuu silloin kun viimeisten havaintojen aika on juuri
+    // ruudukon oikeassa reunassa. Muuten kï¿½visi niin ettï¿½ kun on 3 aikasaraketta, animaatio menisi niin pitkï¿½lle ettï¿½ havaintojen viimeinen aika
+    // olisi vasemmassa sarakkeessa ja sen oikealla puolella olevissa sarakkeissa ei nï¿½kyisi havainto datoja.
     int CalcReducedAnimationSteps(NFmiAnimationData::AnimationLockMode theLockMode, CtrlViewUtils::MapViewMode theMapViewDisplayMode, int theViewGridSizeX)
     {
         if(theLockMode != NFmiAnimationData::kNoLock && theMapViewDisplayMode == CtrlViewUtils::MapViewMode::kNormal && theViewGridSizeX > 1)
@@ -8984,16 +9190,16 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     }
 
 	// Do all animations funktiota kutsutaan SmartMetin Application luokasta (CSmartMetApp) OnIdle-metodista.
-	// Jos jossain on menossa animaatiota,  tarkista onko aika tehdä askelliuksia (animaatio viive riippuvuus).
-	// Jos ei ole aniomaatioita käynnissä, palauta 0.
-	// Jos joku animaatio on jossain käynnissä, palauta 1.
+	// Jos jossain on menossa animaatiota,  tarkista onko aika tehdï¿½ askelliuksia (animaatio viive riippuvuus).
+	// Jos ei ole aniomaatioita kï¿½ynnissï¿½, palauta 0.
+	// Jos joku animaatio on jossain kï¿½ynnissï¿½, palauta 1.
 	int DoAllAnimations(void)
 	{
-		int status = 0; // status voi saada arvon 0 (ei animaatiota), 1 (animaatio päällä, mutta odota) ja 2 (animaatio päällä, päivitä ruudut)
+		int status = 0; // status voi saada arvon 0 (ei animaatiota), 1 (animaatio pï¿½ï¿½llï¿½, mutta odota) ja 2 (animaatio pï¿½ï¿½llï¿½, pï¿½ivitï¿½ ruudut)
 		int maxStatus = 0;
-		bool mainViewMustBeUpdated = false; // tässä yritetään optimoida päivitys rutiinia. Jos pää ikkunaa pitää päivittää,
-										// pitää päivittää smartmetin kaikkia näyttöjä. Jos animaatiot pyörivät vain apukarttanäytöissä
-										// voidaan päivittää vain niitä ja se on kevyempää!!!
+		bool mainViewMustBeUpdated = false; // tï¿½ssï¿½ yritetï¿½ï¿½n optimoida pï¿½ivitys rutiinia. Jos pï¿½ï¿½ ikkunaa pitï¿½ï¿½ pï¿½ivittï¿½ï¿½,
+										// pitï¿½ï¿½ pï¿½ivittï¿½ï¿½ smartmetin kaikkia nï¿½yttï¿½jï¿½. Jos animaatiot pyï¿½rivï¿½t vain apukarttanï¿½ytï¿½issï¿½
+										// voidaan pï¿½ivittï¿½ï¿½ vain niitï¿½ ja se on kevyempï¿½ï¿½!!!
 		bool helpView1Updated = false;
 		bool helpView2Updated = false;
 		double minWaitTimeInMS = NFmiAnimationData::kNoAnimationWaitTime;
@@ -9005,7 +9211,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		{
 			NFmiMapViewDescTop &descTop = *mapViewDescTops[mapViewDescTopIndex];
             NFmiAnimationData &animationData = descTop.AnimationDataRef();
-			animationData.CurrentTime(descTop.CurrentTime()); // currentti aika pitää ottaa desctopista ja antaa animaattorille
+			animationData.CurrentTime(descTop.CurrentTime()); // currentti aika pitï¿½ï¿½ ottaa desctopista ja antaa animaattorille
  
 			int reducedAnimationTimeSteps = CalcReducedAnimationSteps(animationData.LockMode(), descTop.MapViewDisplayMode(), static_cast<int>(descTop.ViewGridSize().X()));
             status = animationData.Animate(reducedAnimationTimeSteps);
@@ -9041,12 +9247,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			}
 			else
 			{
-				// jos ei ollut välitöntä animaatio tarvetta, lasketaan tässä pieni nukkumis aika, 
-				// että SmartMet ei jauha OnIdle-looppia täydellä höyryllä kokoaikaa. Aika on joko 
+				// jos ei ollut vï¿½litï¿½ntï¿½ animaatio tarvetta, lasketaan tï¿½ssï¿½ pieni nukkumis aika, 
+				// ettï¿½ SmartMet ei jauha OnIdle-looppia tï¿½ydellï¿½ hï¿½yryllï¿½ kokoaikaa. Aika on joko 
 				// 30 ms tai minimi odostus aika jos se on alle 30 ms.
 
 #ifdef min
-#undef min // MSVC:n määrittelemä min-makro pitää disabloida
+#undef min // MSVC:n mï¿½ï¿½rittelemï¿½ min-makro pitï¿½ï¿½ disabloida
 #endif
 				int sleepTimeInMS = boost::math::iround(std::min(30., minWaitTimeInMS));
 				if(sleepTimeInMS > 0)
@@ -9145,7 +9351,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Stopping profiling view updates");
 	}
 
-	// tarkasta CView-näyttöluokissa, onko mahdollisesti animaatiota käynnissä. Jos on, älä laita odota-cursoria näkyviin, koska se vilkuttaa ikävästi
+	// tarkasta CView-nï¿½yttï¿½luokissa, onko mahdollisesti animaatiota kï¿½ynnissï¿½. Jos on, ï¿½lï¿½ laita odota-cursoria nï¿½kyviin, koska se vilkuttaa ikï¿½vï¿½sti
 	bool ShowWaitCursorWhileDrawingView(void)
 	{
 		for(auto& mapViewDescTop : GetCombinedMapHandler()->getMapViewDescTops())
@@ -9156,6 +9362,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return true;
 	}
 
+#ifndef UNIX
 	bool DoAutoLoadDataAtStartUp(void) const
 	{
         return  itsApplicationWinRegistry.ConfigurationRelatedWinRegistry().LoadDataAtStartUp();
@@ -9164,6 +9371,10 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		itsApplicationWinRegistry.ConfigurationRelatedWinRegistry().LoadDataAtStartUp(newValue);
 	}
+#else
+	bool DoAutoLoadDataAtStartUp(void) const { return true; }
+	void DoAutoLoadDataAtStartUp(bool /*newValue*/) {}
+#endif
 
 	void ToggleTimeControlAnimationView(unsigned int theDescTopIndex)
 	{
@@ -9171,7 +9382,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		if(descTop)
 		{
 			descTop->AnimationDataRef().ShowTimesOnTimeControl(!(descTop->AnimationDataRef().ShowTimesOnTimeControl()));
-			GetCombinedMapHandler()->mapViewDirty(theDescTopIndex, false, false, true, false, false, false); // tämän pitäisi asettaa näyttö päivitys tilaan, mutta cachea ei tarvitse enää erikseen tyhjentää
+			GetCombinedMapHandler()->mapViewDirty(theDescTopIndex, false, false, true, false, false, false); // tï¿½mï¿½n pitï¿½isi asettaa nï¿½yttï¿½ pï¿½ivitys tilaan, mutta cachea ei tarvitse enï¿½ï¿½ erikseen tyhjentï¿½ï¿½
             ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: Show/hide animation times on map view's time control view", GetWantedMapViewIdFlag(theDescTopIndex));
 		}
 	}
@@ -9198,7 +9409,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		int usedDestHeight = static_cast<int>(oldSize.Y());
 		NFmiRect oldRelativeMapRect = descTop.RelativeMapRect();
 		if(oldRelativeMapRect.Height() < 1.0)
-		{ // pitää laskea uusi printti alue ilman käytössä olevaa aikakortrolli-ikkuna osiota 
+		{ // pitï¿½ï¿½ laskea uusi printti alue ilman kï¿½ytï¿½ssï¿½ olevaa aikakortrolli-ikkuna osiota 
 			usedDestHeight = boost::math::iround(usedDestHeight * oldRelativeMapRect.Height());
 		}
 		return NFmiPoint(usedDestWidth, usedDestHeight);
@@ -9213,11 +9424,14 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		itsBasicConfigurations.DeveloperModePath(newValue);
 	}
 
+#ifndef UNIX
 	NFmiDataNotificationSettingsWinRegistry& DataNotificationSettings(void)
 	{
         return ApplicationWinRegistry().DataNotificationSettingsWinRegistry();
 	}
+#endif
 
+#ifndef UNIX
 	bool UseTimeSerialAxisAutoAdjust(void)
 	{
         return itsApplicationWinRegistry.UseTimeSerialAxisAutoAdjust();
@@ -9226,6 +9440,10 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		itsApplicationWinRegistry.UseTimeSerialAxisAutoAdjust(newValue);
 	}
+#else
+	bool UseTimeSerialAxisAutoAdjust(void) { return false; }
+	void UseTimeSerialAxisAutoAdjust(bool /*newValue*/) {}
+#endif
 
 	NFmiMetTime GetNewerOriginTimeFromInfos(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfos, const NFmiMetTime &theCurrentLatestTime)
 	{
@@ -9247,7 +9465,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		NFmiMetTime latestTime = NFmiMetTime::gMissingTime;
 		NFmiInfoData::Type dataType = theDrawParam->DataType();
-		if(dataType == NFmiInfoData::kViewable || dataType == NFmiInfoData::kHybridData || dataType == NFmiInfoData::kModelHelpData) // jos kyseessä tavallinen mallidata, tarkastellaan kolmea eri dataa ja etsitään niistä uusin origin aika
+		if(dataType == NFmiInfoData::kViewable || dataType == NFmiInfoData::kHybridData || dataType == NFmiInfoData::kModelHelpData) // jos kyseessï¿½ tavallinen mallidata, tarkastellaan kolmea eri dataa ja etsitï¿½ï¿½n niistï¿½ uusin origin aika
 		{
 			unsigned long prodId = theDrawParam->Param().GetProducer()->GetIdent();
 			// haetaan halutun mallin eri datoista (pinta, painepinta ja mallipinta) viimeisin origin aika
@@ -9269,14 +9487,14 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return latestTime;
 	}
 
-	// palauttaa annettuun aikaan lähimmän sopivan edellisen malliajan. Eli jos annettu aika on 2009.12.07 klo 05 UTC, olisi lähin edellinen HIR RCR aika 00 UTC samalta päivältä
+	// palauttaa annettuun aikaan lï¿½himmï¿½n sopivan edellisen malliajan. Eli jos annettu aika on 2009.12.07 klo 05 UTC, olisi lï¿½hin edellinen HIR RCR aika 00 UTC samalta pï¿½ivï¿½ltï¿½
 	bool SetNearestBeforeModelOrigTimeRunoff(boost::shared_ptr<NFmiDrawParam> &theDrawParam ,const NFmiMetTime &theTime, unsigned int theDescTopIndex, int theViewRowIndex)
 	{
-		// laske se origin-aika, mikä tulee suhteellisesta aikasiirrosta
+		// laske se origin-aika, mikï¿½ tulee suhteellisesta aikasiirrosta
 		int modelRunTimeGapInMinutes = GetModelRunTimeGap(theDrawParam);
-		// 3.1 Katso mikä on halutun mallin viimeisin aika (pinta, painepinta ja mallipinta datoista viimeinen)
+		// 3.1 Katso mikï¿½ on halutun mallin viimeisin aika (pinta, painepinta ja mallipinta datoista viimeinen)
 		NFmiMetTime latestTime = GetLatestOriginTimeFromModel(theDrawParam);
-		// 3.2 jos ei aikaa, tee nyky ajan hetkestä aika pyöristettynä lähimpään edelliseen mahdolliseen malliaikaan
+		// 3.2 jos ei aikaa, tee nyky ajan hetkestï¿½ aika pyï¿½ristettynï¿½ lï¿½himpï¿½ï¿½n edelliseen mahdolliseen malliaikaan
 		if(latestTime != NFmiMetTime::gMissingTime)
 		{
 			if(modelRunTimeGapInMinutes < 0)
@@ -9286,7 +9504,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			else if(modelRunTimeGapInMinutes > 0)
 			{
 				long diffInMinutes = theTime.DifferenceInMinutes(latestTime);
-				// pitää hakea lähin edellinen indeksi eli floorilla mennään
+				// pitï¿½ï¿½ hakea lï¿½hin edellinen indeksi eli floorilla mennï¿½ï¿½n
 				int runoffIndex = static_cast<int>(::floor(diffInMinutes / static_cast<float>(modelRunTimeGapInMinutes)));
 				theDrawParam->ModelOriginTime(NFmiMetTime::gMissingTime);
 				if(runoffIndex > 0)
@@ -9305,7 +9523,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		int oldModelRunIndex = theDrawParam->ModelRunIndex();
 		theDrawParam->ModelOriginTime(NFmiMetTime::gMissingTime); // nollataan mahd. fiksattu origin aika
-		theDrawParam->ModelRunIndex(theDrawParam->ModelRunIndex() + theMoveByValue); // siirretään offset edelliseen aikaan
+		theDrawParam->ModelRunIndex(theDrawParam->ModelRunIndex() + theMoveByValue); // siirretï¿½ï¿½n offset edelliseen aikaan
 		if(theDrawParam->ModelRunIndex() > 0)
 			theDrawParam->ModelRunIndex(0);
 		if(oldModelRunIndex != theDrawParam->ModelRunIndex())
@@ -9324,11 +9542,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 				return theDrawParam->ModelOriginTime();
 		// 3. Jos suhteellinen origin aika
 			else
-			{ // laske se origin-aika, mikä tulee suhteellisesta aikasiirrosta
+			{ // laske se origin-aika, mikï¿½ tulee suhteellisesta aikasiirrosta
 				long timeBetweenRunsInMinutes = GetModelRunTimeGap(theDrawParam);
-		// 3.1 Katso mikä on halutun mallin viimeisin aika (pinta, painepinta ja mallipinta datoista viimeinen)
+		// 3.1 Katso mikï¿½ on halutun mallin viimeisin aika (pinta, painepinta ja mallipinta datoista viimeinen)
 				NFmiMetTime latestTime = GetLatestOriginTimeFromModel(theDrawParam);
-		// 3.2 jos ei aikaa, tee nyky ajan hetkestä aika pyöristettynä lähimpään edelliseen mahdolliseen malliaikaan
+		// 3.2 jos ei aikaa, tee nyky ajan hetkestï¿½ aika pyï¿½ristettynï¿½ lï¿½himpï¿½ï¿½n edelliseen mahdolliseen malliaikaan
 				if(latestTime == NFmiMetTime::gMissingTime && timeBetweenRunsInMinutes > 0)
 				{
 					NFmiMetTime aTime;
@@ -9338,7 +9556,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 						aTime2.PreviousMetTime();
 					latestTime = aTime2;
 				}
-		// 3.3 siirrä saatu aika kyseisen mallin ajon välin (hirlamissa 6 h, EC 12 h jne.) verran taaksepäin kerrottuna suhteelisella indeksillä drawParamista
+		// 3.3 siirrï¿½ saatu aika kyseisen mallin ajon vï¿½lin (hirlamissa 6 h, EC 12 h jne.) verran taaksepï¿½in kerrottuna suhteelisella indeksillï¿½ drawParamista
 				if(theIndex < 0)
 					latestTime.ChangeByMinutes(timeBetweenRunsInMinutes * theIndex);
 				else
@@ -9370,7 +9588,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	const NFmiColor& GeneralColor(int theIndex)
 	{
-		static NFmiColor dummy(0.f,0.f,0.f);  // musta on dummy väri
+		static NFmiColor dummy(0.f,0.f,0.f);  // musta on dummy vï¿½ri
 		if(theIndex >= 0 && theIndex < static_cast<int>(itsGeneralColors.size()))
 			return itsGeneralColors[theIndex];
 		else
@@ -9386,8 +9604,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			std::string colorText("SmartMet::General::Color");
 			for(int i=0; i<colorCount; i++)
 			{
-				// värin luku vaatii hieman kikkailua stringstreamin kanssa
-				std::string settingStr(colorText + NFmiStringTools::Convert<int>(i+1)); // colorText-stringiin pitää saada järjestys numero perään
+				// vï¿½rin luku vaatii hieman kikkailua stringstreamin kanssa
+				std::string settingStr(colorText + NFmiStringTools::Convert<int>(i+1)); // colorText-stringiin pitï¿½ï¿½ saada jï¿½rjestys numero perï¿½ï¿½n
 				itsGeneralColors.push_back(SettingsFunctions::GetColorFromSettings(settingStr));
 			}
 		}
@@ -9398,8 +9616,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	}
 
 	// Jos jonkin mallidatan leveldatasta lasketaan automaattisesti soundingIndex data,
-    // täällä luetaan datan talletushakemiston peruspolku.
-    // Legacy syistä polkua yritetään lukea myös vanhasta dataPath4 -asetuksesta.
+    // tï¿½ï¿½llï¿½ luetaan datan talletushakemiston peruspolku.
+    // Legacy syistï¿½ polkua yritetï¿½ï¿½n lukea myï¿½s vanhasta dataPath4 -asetuksesta.
     std::string AutoGeneratedSoundingIndexBasePath(void)
     {
 		// Auto generoidut soundingIndex datat talletetaan local-data hakemiston cache alihakemiston alle
@@ -9415,7 +9633,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		static NFmiParamBag staticParams;
 
-		staticParams = NFmiParamBag(); // tyhjennetään static-parBagi ensin
+		staticParams = NFmiParamBag(); // tyhjennetï¿½ï¿½n static-parBagi ensin
 		boost::shared_ptr<NFmiFastQueryInfo> statInfo = itsSmartInfoOrganizer->FindInfo(NFmiInfoData::kStationary);
 		if(statInfo)
 			staticParams = statInfo->ParamBag();
@@ -9524,7 +9742,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		auto editedData = EditedInfo();
 		if(editedData)
 			return editedData->RefRawData()->IsReadOnly();
-		// Jos editoitua dataa ei ole, palautetaan arvo että se on read-only moodissa
+		// Jos editoitua dataa ei ole, palautetaan arvo ettï¿½ se on read-only moodissa
 		return true;
 	}
 
@@ -9591,7 +9809,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	NFmiAviationStationInfoSystem& WmoStationInfoSystem(void)
 	{
 		if(fWmoStationInfoSystemInitialized == false)
-			InitWmoStationInfoSystem(); // lazy-init, koska tätä dataa käytetään ainakin toistaiseksi vain yhdessä paikassa ja initialisointi kestää useita sekunteja.
+			InitWmoStationInfoSystem(); // lazy-init, koska tï¿½tï¿½ dataa kï¿½ytetï¿½ï¿½n ainakin toistaiseksi vain yhdessï¿½ paikassa ja initialisointi kestï¿½ï¿½ useita sekunteja.
 		return itsWmoStationInfoSystem;
 	}
 
@@ -9635,10 +9853,10 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     void InitializeSatelImageCacheForCaseStudy()
     {
-        // Päivitys threadit pitää laittaa tauolle
+        // Pï¿½ivitys threadit pitï¿½ï¿½ laittaa tauolle
         if(NFmiSatelliteImageCacheSystem::WaitUpdateThreadsToTakeABreak(5000))
-            SatelliteImageCacheSystem().Init(*HelpDataInfoSystem()); // Jos tauko onnistui annetussa ajassa, SatelliteImageCacheTotal pitää alustaa käyttämään CaseStudyn datoja
-        // Lopuksi sanotaan working threadeille että tauko ohi
+            SatelliteImageCacheSystem().Init(*HelpDataInfoSystem()); // Jos tauko onnistui annetussa ajassa, SatelliteImageCacheTotal pitï¿½ï¿½ alustaa kï¿½yttï¿½mï¿½ï¿½n CaseStudyn datoja
+        // Lopuksi sanotaan working threadeille ettï¿½ tauko ohi
         NFmiSatelliteImageCacheSystem::TellUpdateThreadsToStopTheBreak();
     }
 
@@ -9646,7 +9864,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	bool LoadCaseStudyData(const std::string &theCaseStudyMetaFile)
 	{
 		std::string specificError;
-		// 0. ota talteen erilaisia muuttujia, jos CaseStudyn lataus epäonnistuu ja pitää palauttaa olemassa oleva tila takaisin
+		// 0. ota talteen erilaisia muuttujia, jos CaseStudyn lataus epï¿½onnistuu ja pitï¿½ï¿½ palauttaa olemassa oleva tila takaisin
 		bool oldCaseStudyModeOn = CaseStudyModeOn();
 		boost::shared_ptr<NFmiHelpDataInfoSystem> oldCaseStudyHelpDataInfoSystem = itsCaseStudyHelpDataInfoSystem;
 		NFmiCaseStudySystem oldLoadedCaseStudySystem = itsLoadedCaseStudySystem;
@@ -9655,34 +9873,40 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			// 1. Ota metadatasta polku talteen
 			std::string caseStudyBasePath = NFmiFileSystem::PathFromPattern(theCaseStudyMetaFile);
 			// 2. Lataa metadata
+#ifndef UNIX
 			if(itsLoadedCaseStudySystem.ReadMetaData(theCaseStudyMetaFile, ApplicationInterface::GetSmartMetViewAsCView(), true))
+#else
+			if(itsLoadedCaseStudySystem.ReadMetaData(theCaseStudyMetaFile, nullptr, true))
+#endif
 			{
-			// 3. Luo metadatan avulla HelpDataInfoSystem (HUOM! tässä pitää käyttää suoraan itsHelpDataInfoSystem-dataosiota, kun siltä pyydetään static datoja)
+			// 3. Luo metadatan avulla HelpDataInfoSystem (HUOM! tï¿½ssï¿½ pitï¿½ï¿½ kï¿½yttï¿½ï¿½ suoraan itsHelpDataInfoSystem-dataosiota, kun siltï¿½ pyydetï¿½ï¿½n static datoja)
 				itsCaseStudyHelpDataInfoSystem = itsLoadedCaseStudySystem.MakeHelpDataInfoSystem(itsHelpDataInfoSystem, caseStudyBasePath);
 				if(itsCaseStudyHelpDataInfoSystem)
 				{
-			// 3.1. Laita CaseStudy-moodi päälle
+			// 3.1. Laita CaseStudy-moodi pï¿½ï¿½lle
 					CaseStudyModeOn(true);
-			// 4. Laita CaseStudyn kellonaika seinäkelloajaksi
-			// 5. Laita kaikkien näyttöjen kello CaseStudy-aikaan
+			// 4. Laita CaseStudyn kellonaika seinï¿½kelloajaksi
+			// 5. Laita kaikkien nï¿½yttï¿½jen kello CaseStudy-aikaan
                     NFmiMetTime oldWallClockTime = oldCaseStudyModeOn ? oldLoadedCaseStudySystem.Time() : NFmiMetTime();
                     SetAllSystemsToCaseStudyModeChangeTime(oldWallClockTime, itsLoadedCaseStudySystem.Time(), false);
 					itsLoadedCaseStudySystem.SetUpDataLoadinInfoForCaseStudy(itsDataLoadingInfoCaseStudy, caseStudyBasePath);
 
-			// 6. Heitä kaikki dynaaminen data roskiin
-					InfoOrganizer()->ClearDynamicHelpData(true); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eikä staattisia helpdatoja kuten topografia ja fraktiilit)
+			// 6. Heitï¿½ kaikki dynaaminen data roskiin
+					InfoOrganizer()->ClearDynamicHelpData(true); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eikï¿½ staattisia helpdatoja kuten topografia ja fraktiilit)
                     InitializeSatelImageCacheForCaseStudy();
 					auto usedAbsoluteCaseStudyHakeDirectory = NFmiCaseStudySystem::MakeCaseStudyDataHakeDirectory(NFmiCaseStudySystem::MakeBaseDataDirectory(theCaseStudyMetaFile));
+#ifndef UNIX
 					itsWarningCenterSystem.goIntoCaseStudyMode(usedAbsoluteCaseStudyHakeDirectory);
-					// Merkitään taas aluksi luetut datat 'vanhoiksi'
+#endif
+					// Merkitï¿½ï¿½n taas aluksi luetut datat 'vanhoiksi'
 					CFmiDataLoadingThread2::ResetFirstTimeGoingThroughState();
 
                     // Lopetetaan cache datojen lataus ja siivous
                     QueryDataToLocalCacheLoaderThread::AutoLoadNewCacheDataMode(false);
 
-                    // 7. Laita HelpDataInfoSystem-tarvittaviin paikkoihin käyttöön (HelpDataInfoSystem-funktio, datanlataus-threadeihin jne.) JA aloita dynaamisen datan uudelleen lataus
-			// CSmartMetDoc:in CaseStudyLoadingActions myös likaa cachet ja päivittää lopuksi kaikki näytöt!!, joten se pitää tehdä viimeisenä...
-                    ApplicationInterface::GetApplicationInterfaceImplementation()->CaseStudyLoadingActions(itsLoadedCaseStudySystem.Time(), "Going into case study mode"); // itsCaseStudyHelpDataInfoSystem -pitää olla ladattuna ja fCaseStudyModeOn pitää olla asetettuna true:ksi ennen tämän kutsua
+                    // 7. Laita HelpDataInfoSystem-tarvittaviin paikkoihin kï¿½yttï¿½ï¿½n (HelpDataInfoSystem-funktio, datanlataus-threadeihin jne.) JA aloita dynaamisen datan uudelleen lataus
+			// CSmartMetDoc:in CaseStudyLoadingActions myï¿½s likaa cachet ja pï¿½ivittï¿½ï¿½ lopuksi kaikki nï¿½ytï¿½t!!, joten se pitï¿½ï¿½ tehdï¿½ viimeisenï¿½...
+                    ApplicationInterface::GetApplicationInterfaceImplementation()->CaseStudyLoadingActions(itsLoadedCaseStudySystem.Time(), "Going into case study mode"); // itsCaseStudyHelpDataInfoSystem -pitï¿½ï¿½ olla ladattuna ja fCaseStudyModeOn pitï¿½ï¿½ olla asetettuna true:ksi ennen tï¿½mï¿½n kutsua
 
 					ParameterSelectionSystem().reInitialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(), *HelpDataInfoSystem());
 					SetupForParameterSelectionSystemUpdate(true, true, true, true);
@@ -9700,7 +9924,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		{
 			specificError = ::GetDictionaryString("Unknown error occured");
 		}
-		// 10. Tee MessageBox ilmenneestä virheestä
+		// 10. Tee MessageBox ilmenneestï¿½ virheestï¿½
 		// 11. Palauta virhetilanteessa vanhat muuttuja arvot takaisin
 		CaseStudyModeOn(oldCaseStudyModeOn);
 		itsCaseStudyHelpDataInfoSystem = oldCaseStudyHelpDataInfoSystem;
@@ -9715,7 +9939,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		errStr += "'\n";
 		errStr += "SmartMet can't be using that data";
 		std::string titleStr(::GetDictionaryString("Error while loading Case Study data"));
+#ifndef UNIX
 		::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(errStr.c_str()), CA2T(titleStr.c_str()), MB_OK | MB_ICONERROR);
+#endif
 		return false;
 	}
 
@@ -9733,18 +9959,22 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	void CaseStudyToNormalMode()
 	{
-		// 3.1. Laita CaseStudy-moodi päälle
+		// 3.1. Laita CaseStudy-moodi pï¿½ï¿½lle
 		CaseStudyModeOn(false);
 		fChangingCaseStudyToNormalMode = true;
         SetAllSystemsToCaseStudyModeChangeTime(itsLoadedCaseStudySystem.Time(), NFmiMetTime(), true);
-		InfoOrganizer()->ClearDynamicHelpData(true); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eikä staattisia helpdatoja kuten topografia ja fraktiilit)
+		InfoOrganizer()->ClearDynamicHelpData(true); // tuhoa kaikki olemassa olevat dynaamiset help-datat (ei edit-data tai sen kopiota ,eikï¿½ staattisia helpdatoja kuten topografia ja fraktiilit)
         InitializeSatelImageCacheForCaseStudy();
+#ifndef UNIX
 		itsWarningCenterSystem.goIntoNormalModeFromStudyMode();
-		// Merkitään taas aluksi luetut datat 'vanhoiksi'
+#endif
+		// Merkitï¿½ï¿½n taas aluksi luetut datat 'vanhoiksi'
 		CFmiDataLoadingThread2::ResetFirstTimeGoingThroughState();
 
 		// Palataan taas normaaliin cache datojen lataukseen ja siivoukseen
+#ifndef UNIX
         QueryDataToLocalCacheLoaderThread::AutoLoadNewCacheDataMode(ApplicationWinRegistry().ConfigurationRelatedWinRegistry().AutoLoadNewCacheData());
+#endif
         ApplicationInterface::GetApplicationInterfaceImplementation()->CaseStudyToNormalModeActions();
 		ParameterSelectionSystem().reInitialize(ProducerSystem(), ObsProducerSystem(), SatelImageProducerSystem(), *HelpDataInfoSystem());
 		SetupForParameterSelectionSystemUpdate(true, true, true, true);
@@ -9753,12 +9983,14 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	bool StoreCaseStudyMemory(void)
 	{
-		if(itsCaseStudySystem.CategoriesData().size() > 0) // turha tallettaa mitään, jos CaseStudy-systeemiä ei ole edes alustettu
+		if(itsCaseStudySystem.CategoriesData().size() > 0) // turha tallettaa mitï¿½ï¿½n, jos CaseStudy-systeemiï¿½ ei ole edes alustettu
 		{
             if(itsCaseStudySystem.AreStoredMetaDataChanged(itsCaseStudySystemOrig))
             {
 				itsCaseStudySystemOrig = itsCaseStudySystem;
+	#ifndef UNIX
 				itsCaseStudySystem.UpdateValuesBackToWinRegistry(ApplicationWinRegistry().CaseStudySettingsWinRegistry());
+#endif
 			    return true;
             }
 		}
@@ -9767,7 +9999,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	int DoMessageBox(const std::string & theMessage, const std::string &theTitle, unsigned int theMessageBoxType)
 	{
+#ifndef UNIX
         return ::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(theMessage.c_str()), CA2T(theTitle.c_str()), theMessageBoxType);
+#else
+        return 0;
+#endif
 	}
 
 	const NFmiPoint& TimeFilterRangeStart(void)
@@ -9817,8 +10053,10 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	void DoDataLoadingProblemsDlg(const std::string &theMessage)
 	{
+#ifndef UNIX
         CDataLoadingProblemsDlg dlg(CString(CA2T(theMessage.c_str())));
 		dlg.DoModal();
+#endif
 	}
 
     TimeSerialModificationDataInterface& GenDocDataAdapter(void)
@@ -9834,10 +10072,10 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	bool UseMultithreaddingWithModifyingFunctions(void)
 	{
 		if(fUseMultiThreaddingWithEditingtools == false)
-			return false; // jos käyttäjä on säätänyt että ei käytetä multi-threaddausta, niin ei sitten
+			return false; // jos kï¿½yttï¿½jï¿½ on sï¿½ï¿½tï¿½nyt ettï¿½ ei kï¿½ytetï¿½ multi-threaddausta, niin ei sitten
 		if(itsMachineThreadCount <= 1)
-			return false; // jos oli käytössä vain yksi core, turha multi-threadata, koska se vain hidastaa
-		return true; // muuten voidaan käyttää multi-threaddausta
+			return false; // jos oli kï¿½ytï¿½ssï¿½ vain yksi core, turha multi-threadata, koska se vain hidastaa
+		return true; // muuten voidaan kï¿½yttï¿½ï¿½ multi-threaddausta
 	}
 
 	bool DataModificationInProgress(void)
@@ -9908,7 +10146,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return false;
 	}
 
-	// Halutaan kysyä NFmiStationViewHAndler-luokasta, että onko  CP-crop mahdollisuus päällä, mutta sitä ei voi käyttää, jolloin piirretään crop-laatikkoon punainen rasti sen merkiksi.
+	// Halutaan kysyï¿½ NFmiStationViewHAndler-luokasta, ettï¿½ onko  CP-crop mahdollisuus pï¿½ï¿½llï¿½, mutta sitï¿½ ei voi kï¿½yttï¿½ï¿½, jolloin piirretï¿½ï¿½n crop-laatikkoon punainen rasti sen merkiksi.
 	bool IsCPGridCropNotPlausible(void)
 	{
 		if(IsCPGridCropInAction() && itsCPGridCropLatlonArea && itsCPGridCropInnerLatlonArea == 0)
@@ -9936,21 +10174,23 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsCPManagerSet;
 	}
 
+#ifndef UNIX
     NFmiApplicationWinRegistry& ApplicationWinRegistry()
     {
 	    return itsApplicationWinRegistry;
     }
+#endif
 
     void InitSpecialFileStoragePath(void)
     {
 		CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
-		itsSpecialFileStoragePath = NFmiSettings::Optional<std::string>("SmartMet::SpecialFileStoragePath", ""); // oletus arvo on tyhjä
+		itsSpecialFileStoragePath = NFmiSettings::Optional<std::string>("SmartMet::SpecialFileStoragePath", ""); // oletus arvo on tyhjï¿½
         if(!itsSpecialFileStoragePath.empty())
         {
 			itsSpecialFileStoragePath = PathUtils::makeFixedAbsolutePath(itsSpecialFileStoragePath, itsBasicConfigurations.ControlPath(), true);
 			CatLog::logMessage(std::string("SpecialFileStoragePath = ") + itsSpecialFileStoragePath, CatLog::Severity::Info, CatLog::Category::Configuration);
 
-            // varmistetaan vielä että hakemisto on olemassa
+            // varmistetaan vielï¿½ ettï¿½ hakemisto on olemassa
             if(!NFmiFileSystem::CreateDirectory(itsSpecialFileStoragePath))
             {
                 std::string dialogTitle("Error in creating directory");
@@ -9974,17 +10214,17 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
  	    boost::shared_ptr<NFmiArea> newZoomedArea(theMapArea->CreateNewArea(theZoomedRect));
 	    if(newZoomedArea)
 	    {
-		    newZoomedArea->SetXYArea(NFmiRect(0,0,1,1)); // Tämä on hämärä juttu, muttu jos xy-areaa ei laiteta 0,0 - 1,1:ksi, macroParam-systeemi ei toimi jos ollaan usean kartan ruudukossa
+		    newZoomedArea->SetXYArea(NFmiRect(0,0,1,1)); // Tï¿½mï¿½ on hï¿½mï¿½rï¿½ juttu, muttu jos xy-areaa ei laiteta 0,0 - 1,1:ksi, macroParam-systeemi ei toimi jos ollaan usean kartan ruudukossa
 		    GetCombinedMapHandler()->mapViewDirty(theMapViewDescTopIndex, true, true, true, true, false, false);
 			GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->SetBorderDrawDirtyState(CountryBorderDrawDirtyState::Geometry);
 			GetCombinedMapHandler()->setMapArea(theMapViewDescTopIndex, newZoomedArea);
-            // Laitetaan tähän "Ohitetaan normi päivitä kaikki näytöt ja päivitä vain muuttunutta karttanäyttöä" -toiminto optimoinnin takia.
-            // HUOM! Optimoinnin voi laittaa tänne, koska esim. viewMacrojen latauksissa ei käytetä tätä metodia (jolloin tarvitsee päivittää kaikkia näyttöjä)
+            // Laitetaan tï¿½hï¿½n "Ohitetaan normi pï¿½ivitï¿½ kaikki nï¿½ytï¿½t ja pï¿½ivitï¿½ vain muuttunutta karttanï¿½yttï¿½ï¿½" -toiminto optimoinnin takia.
+            // HUOM! Optimoinnin voi laittaa tï¿½nne, koska esim. viewMacrojen latauksissa ei kï¿½ytetï¿½ tï¿½tï¿½ metodia (jolloin tarvitsee pï¿½ivittï¿½ï¿½ kaikkia nï¿½yttï¿½jï¿½)
             CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(theMapViewDescTopIndex);
             if(GetWantedMapViewIdFlag(theMapViewDescTopIndex) == SmartMetViewId::MainMapView)
             {
-                // Jos kyse pääkarttanäytön zoomista, pitää myös päivittää asemadatataulukkonäyttöä, koska siihen laitetaan
-                // vain päkartalla näkyvät synop asemat ja Warning dialogia (HAKE sanomat näytetään pääkartan zoomin mukaan).
+                // Jos kyse pï¿½ï¿½karttanï¿½ytï¿½n zoomista, pitï¿½ï¿½ myï¿½s pï¿½ivittï¿½ï¿½ asemadatataulukkonï¿½yttï¿½ï¿½, koska siihen laitetaan
+                // vain pï¿½kartalla nï¿½kyvï¿½t synop asemat ja Warning dialogia (HAKE sanomat nï¿½ytetï¿½ï¿½n pï¿½ï¿½kartan zoomin mukaan).
                 ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::StationDataTableView | SmartMetViewId::WarningCenterDlg);
             }
         }
@@ -9992,7 +10232,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     void PanMap(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, const NFmiPoint &theZoomDragUpPoint)
     {
+#ifndef UNIX
         NFmiRect maxXYRect(theMapArea->XYArea(GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->MapHandler()->TotalArea().get()));
+#else
+        NFmiRect maxXYRect(theMapArea->XYArea());
+#endif
 		NFmiRect pannedRect(theMapArea->XYArea());
 		NFmiPoint panMove(theZoomDragUpPoint - theMousePoint);
 		if(pannedRect.Right() + panMove.X() > maxXYRect.Right())
@@ -10018,11 +10262,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	    if(height > theMaxRect.Height())
 		    height = theMaxRect.Height();
 	    newRect.Size(NFmiPoint(width, height));
-        newRect.Center(currentXYRect.Center()); // pitää asettaa myös keskipiste vanhan rect:in keskipisteen kohdalle, että keskitys laskut onnistuvat
+        newRect.Center(currentXYRect.Center()); // pitï¿½ï¿½ asettaa myï¿½s keskipiste vanhan rect:in keskipisteen kohdalle, ettï¿½ keskitys laskut onnistuvat
 
         boost::shared_ptr<NFmiArea> tmpArea(theMapArea->CreateNewArea(newRect));
         if(tmpArea)
-        { // yritetään laskea uusi keskipiste siten, että hiiren paikka (laskettu latlon) pysyy zoomatessa paikallaan
+        { // yritetï¿½ï¿½n laskea uusi keskipiste siten, ettï¿½ hiiren paikka (laskettu latlon) pysyy zoomatessa paikallaan
             NFmiPoint origOffset = theMousePoint - currentXYRect.Center();
             NFmiPoint newOffset = origOffset * theScaleFactor;
             NFmiPoint movePoint = origOffset - newOffset;
@@ -10030,7 +10274,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             newRect.Center(newRect.Center() - movePoint);
         }
 
-	    // rajoitetaan uutta rectiä siten että se ei mene yli valitun kartta-alueen
+	    // rajoitetaan uutta rectiï¿½ siten ettï¿½ se ei mene yli valitun kartta-alueen
 	    if(newRect.Left() < theMaxRect.Left())
 	    {
 		    NFmiPoint newCenter(newRect.Center());
@@ -10056,7 +10300,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		    newRect.Center(newCenter);
 	    }
 
-	    // Pieni hienosäätö tarvitaan jossain tapauksissa vielä, että ei varmasti mennä max alueen yli (tämä on tärkeää ainakin koko maailman karttojen kanssa)
+	    // Pieni hienosï¿½ï¿½tï¿½ tarvitaan jossain tapauksissa vielï¿½, ettï¿½ ei varmasti mennï¿½ max alueen yli (tï¿½mï¿½ on tï¿½rkeï¿½ï¿½ ainakin koko maailman karttojen kanssa)
 	    if(newRect.Left() < theMaxRect.Left())
 		    newRect.Left(theMaxRect.Left());
 
@@ -10065,17 +10309,22 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     void ZoomMapInOrOut(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, double theZoomFactor)
     {
+#ifndef UNIX
         boost::shared_ptr<NFmiArea> totalMapArea = GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->MapHandler()->TotalArea();
         NFmiRect maxXYRect(theMapArea->XYArea(totalMapArea.get()));
+#else
+        NFmiRect maxXYRect(theMapArea->XYArea());
+#endif
         NFmiRect zoomedXYRect(ScaleZoomedAreaRect(theMapArea, maxXYRect, theMousePoint, theZoomFactor));
         ZoomMapWithRelativeRect(theMapViewDescTopIndex, theMapArea, zoomedXYRect);
     }
 
-    // tätä kutsutaan aika-ajoin tallettamaan erilaisia asetuksia Windows rekistereihin 
+    // tï¿½tï¿½ kutsutaan aika-ajoin tallettamaan erilaisia asetuksia Windows rekistereihin 
     // ja kun SmartMetin CSmartMetDoc suljetaan eli ohjelmaa suljettaessa.
+#ifndef UNIX
     void StoreSettingsToWinRegistry(void)
     {
-        // Joitain arvoja säädetään suoraan NFmiCrossSectionSystem-luokan läpi, joten tätä pitää päivittää takaisin rekistereihin
+        // Joitain arvoja sï¿½ï¿½detï¿½ï¿½n suoraan NFmiCrossSectionSystem-luokan lï¿½pi, joten tï¿½tï¿½ pitï¿½ï¿½ pï¿½ivittï¿½ï¿½ takaisin rekistereihin
         NFmiCrossSectionSystem::CrossSectionInitValuesWinReg initValues;
         CrossSectionSystem()->StoreSettings(initValues);
         auto &crossSectionView = ApplicationWinRegistry().ConfigurationRelatedWinRegistry().CrossSectionViewWinRegistry();
@@ -10091,6 +10340,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 		GetCombinedMapHandler()->storeMapViewSettingsToWinRegistry();
     }
+#endif
 
     MultiProcessClientData& GetMultiProcessClientData(void)
     {
@@ -10102,6 +10352,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return ApplicationDataBase().GuidStr();
     }
 
+#ifndef UNIX
     bool UseMultiProcessCpCalc(void)
     {
         return itsApplicationWinRegistry.UseMultiProcessCpCalc();
@@ -10110,6 +10361,10 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     {
         itsApplicationWinRegistry.UseMultiProcessCpCalc(newValue);
     }
+#else
+    bool UseMultiProcessCpCalc(void) { return false; }
+    void UseMultiProcessCpCalc(bool /*newValue*/) {}
+#endif
 
     const std::string& GetMasterProcessExeName()
     {
@@ -10123,18 +10378,18 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     int MasterProcessRunningCount()
     {
-        // Tarkista kuinka monta Master-prosessia on käynnissä
-        NFmiApplicationDataBase::AppSpyData appData(std::make_pair(GetMasterProcessExeName(), false)); // false tarkoittaa että aplikaatiolta ei pyydetä versionumeroa
-		std::string appVersionsStrOutDummy; // tämä pitää antaa NFmiApplicationDataBase::CountProcessCount-funktiolle, mutta sitä ei käytetä
+        // Tarkista kuinka monta Master-prosessia on kï¿½ynnissï¿½
+        NFmiApplicationDataBase::AppSpyData appData(std::make_pair(GetMasterProcessExeName(), false)); // false tarkoittaa ettï¿½ aplikaatiolta ei pyydetï¿½ versionumeroa
+		std::string appVersionsStrOutDummy; // tï¿½mï¿½ pitï¿½ï¿½ antaa NFmiApplicationDataBase::CountProcessCount-funktiolle, mutta sitï¿½ ei kï¿½ytetï¿½
 		return NFmiApplicationDataBase::CountProcessCount(appData, appVersionsStrOutDummy);
     }
 
-    // MP-CP systeemissä on marter ja worker prosessi executablet.
-    // Tämä funktio rakentaa tilanteeseen sopivan (master/worker) prosessin binäärin absoluuttisen polun.
+    // MP-CP systeemissï¿½ on marter ja worker prosessi executablet.
+    // Tï¿½mï¿½ funktio rakentaa tilanteeseen sopivan (master/worker) prosessin binï¿½ï¿½rin absoluuttisen polun.
     // Polku rakennetaan 3 eri tavalla:
-    // 1. binäärien polkuja ei ole annettu konffeissa, rakenna polku niin että binääreillä on oletus nimet ja ne sijaitsevat SmartMet binääri hakemistossa.
+    // 1. binï¿½ï¿½rien polkuja ei ole annettu konffeissa, rakenna polku niin ettï¿½ binï¿½ï¿½reillï¿½ on oletus nimet ja ne sijaitsevat SmartMet binï¿½ï¿½ri hakemistossa.
     // 2. Polut on annettu konffeissa absoluuttisina, palauta se suoraan
-    // 3. Polut on annettu suhteellisina, jolloin lopullinen polku rakennetaan SmartMet binäärihakemiston suhteen
+    // 3. Polut on annettu suhteellisina, jolloin lopullinen polku rakennetaan SmartMet binï¿½ï¿½rihakemiston suhteen
     std::string MakeMpcpProcessPath(const std::string &absoluteSmartMetAppPath, const std::string &processSettingsKey, const std::string &defaultProcessName)
     {
 		std::string finalMpcpProcessPath;
@@ -10162,32 +10417,33 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return finalMpcpProcessPath;
     }
 
+#ifndef UNIX
     bool MakeSureToolMasterPoolIsRunning2()
     {
-        // Tarkista onko Master-prosessi jo käynnissä, jos oli, lopetetaan
+        // Tarkista onko Master-prosessi jo kï¿½ynnissï¿½, jos oli, lopetetaan
         if(MasterProcessRunningCount() <= 0)
         {
             std::string usedAppPath = ApplicationDataBase().GetDecodedApplicationDirectory();
 
-            // Jos ei ollut, käynnistä Master-prosessi
+            // Jos ei ollut, kï¿½ynnistï¿½ Master-prosessi
             std::string commandStr;
-            commandStr += "\""; // laitetaan lainausmerkit Master-prosessi komento polun ympärille, jos siinä sattuisi olemaan spaceja
+            commandStr += "\""; // laitetaan lainausmerkit Master-prosessi komento polun ympï¿½rille, jos siinï¿½ sattuisi olemaan spaceja
             commandStr += MakeMpcpProcessPath(usedAppPath, "SmartMet::MP-CP::MasterProcessPath", GetMasterProcessExeName());
-            commandStr += "\""; // laitetaan lainausmerkit Master-prosessi komento polun ympärille, jos siinä sattuisi olemaan spaceja
+            commandStr += "\""; // laitetaan lainausmerkit Master-prosessi komento polun ympï¿½rille, jos siinï¿½ sattuisi olemaan spaceja
 
             commandStr += " -H"; // laitetaan TM-master prosessi piiloon -h optiolla
             commandStr += " -l \""; // laitetaan lokitiedosto -l optiolla
             commandStr += itsMultiProcessLogFilePath;
-            commandStr += "\""; // laitetaan lainausmerkit lokitiedoston polun ympärille, jos siinä sattuisi olemaan spaceja
+            commandStr += "\""; // laitetaan lainausmerkit lokitiedoston polun ympï¿½rille, jos siinï¿½ sattuisi olemaan spaceja
             commandStr += " -L "; // laitetaan lokitus taso -L optiolla
             commandStr += boost::lexical_cast<std::string>((int)itsMultiProcessPoolOptions.LogLevel());
             if(itsMultiProcessPoolOptions.MultiProcessPoolOptions().verbose_logging)
-                commandStr += " -v"; // laitetaan verbose lokitus päälle
+                commandStr += " -v"; // laitetaan verbose lokitus pï¿½ï¿½lle
 
             commandStr += " -W "; // laitetaan Worker-prosessin polku -W optiolla
-            commandStr += "\""; // laitetaan lainausmerkit Worker-prosessi komento polun ympärille, jos siinä sattuisi olemaan spaceja
+            commandStr += "\""; // laitetaan lainausmerkit Worker-prosessi komento polun ympï¿½rille, jos siinï¿½ sattuisi olemaan spaceja
             commandStr += MakeMpcpProcessPath(usedAppPath, "SmartMet::MP-CP::WorkerProcessPath", GetWorkerProcessExeName());
-            commandStr += "\""; // laitetaan lainausmerkit Worker-prosessi komento polun ympärille, jos siinä sattuisi olemaan spaceja
+            commandStr += "\""; // laitetaan lainausmerkit Worker-prosessi komento polun ympï¿½rille, jos siinï¿½ sattuisi olemaan spaceja
 
 //            WORD showWindow = SW_HIDE;
             return CFmiProcessHelpers::ExecuteCommandInSeparateProcess(commandStr, true);
@@ -10203,14 +10459,18 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     {
         return MakeSureToolMasterPoolIsRunning2();
 //        boost::thread tt(boost::bind(&GeneralDocImpl::MakeSureToolMasterPoolIsRunning2, this));
-        // Eli ei jäädä odottamaan lopetusta tt.join():illa
+        // Eli ei jï¿½ï¿½dï¿½ odottamaan lopetusta tt.join():illa
     }
 
     NFmiMultiProcessPoolOptions& MultiProcessPoolOptions(void)
     {
         return itsMultiProcessPoolOptions;
     }
+#else
+    bool MakeSureToolMasterPoolIsRunning(void) { return false; }
+#endif
 
+#ifndef UNIX
     bool AllowRightClickDisplaySelection(void)
     {
         return itsApplicationWinRegistry.AllowRightClickDisplaySelection();
@@ -10219,6 +10479,10 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     {
         itsApplicationWinRegistry.AllowRightClickDisplaySelection(newValue);
     }
+#else
+    bool AllowRightClickDisplaySelection(void) { return false; }
+    void AllowRightClickDisplaySelection(bool /*newValue*/) {}
+#endif
 
     NFmiFixedDrawParamSystem& FixedDrawParamSystem()
     {
@@ -10227,7 +10491,11 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     std::string MakeUsedFixedDrawParamsRootPath()
     {
+#ifndef UNIX
         std::string rootPath = ApplicationWinRegistry().FixedDrawParamsPath();
+#else
+        std::string rootPath = ControlDirectory();
+#endif
         rootPath = PathUtils::makeFixedAbsolutePath(rootPath, ControlDirectory());
         return rootPath;
     }
@@ -10251,7 +10519,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     {
         try
         {
-            // 1. Ota 'kuva' nykyhetkestä
+            // 1. Ota 'kuva' nykyhetkestï¿½
             NFmiViewSettingMacro currentStateViewMacro;
             FillViewMacroInfo(currentStateViewMacro, "Current state", "Current state view macro description");
             // 2. Talleta viewmacro stringiin
@@ -10260,7 +10528,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             // 3. Talleta stringi viewmacro 'turvallisesti' backup tiedostoon
             NFmiFileSystem::SafeFileSave(MakeBackUpViewMacroFileName(fUseNormalBackup), out.str());
             if(fUseNormalBackup)
-                NFmiFileSystem::SafeFileSave(MakeBackUpViewMacroFileName(false), out.str()); // Jos normaali lopetus, talletetaan tässä samalla myös crashBackupViewMacro
+                NFmiFileSystem::SafeFileSave(MakeBackUpViewMacroFileName(false), out.str()); // Jos normaali lopetus, talletetaan tï¿½ssï¿½ samalla myï¿½s crashBackupViewMacro
         }
         catch(std::exception &e)
         {
@@ -10274,13 +10542,13 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     {
         try
         {
-            SnapshotViewMacro(true); // true = tyhjennetään redo-lista
+            SnapshotViewMacro(true); // true = tyhjennetï¿½ï¿½n redo-lista
             NFmiViewSettingMacro backupViewMacro;
-            bool status = ReadViewMacro(backupViewMacro, MakeBackUpViewMacroFileName(true), false); // false = Ei näytetä error dialogia, jos esim. tiedostoa ei ole
+            bool status = ReadViewMacro(backupViewMacro, MakeBackUpViewMacroFileName(true), false); // false = Ei nï¿½ytetï¿½ error dialogia, jos esim. tiedostoa ei ole
             if(!status)
                 throw std::runtime_error("BackupViewMacro was not correctly loaded, maybe there were no file...");
             LoadViewMacroInfo(backupViewMacro, false, false);
-            ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Loading backup view-macro (F12)"); // tämä sitten päivittää kaikki ruudut
+            ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Loading backup view-macro (F12)"); // tï¿½mï¿½ sitten pï¿½ivittï¿½ï¿½ kaikki ruudut
         }
         catch(std::exception &e)
         {
@@ -10296,9 +10564,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         {
             if(theViewMacro.ViewMacroWasCorrupted())
                 throw std::runtime_error(theViewMacroName + " was not correctly loaded, maybe there were no file...");
-            SnapshotViewMacro(true); // true = tyhjennetään redo-lista
+            SnapshotViewMacro(true); // true = tyhjennetï¿½ï¿½n redo-lista
             LoadViewMacroInfo(theViewMacro, false, false);
-            ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(std::string("Loading view-macro: ") + theViewMacroName); // tämä sitten päivittää kaikki ruudut
+            ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs(std::string("Loading view-macro: ") + theViewMacroName); // tï¿½mï¿½ sitten pï¿½ivittï¿½ï¿½ kaikki ruudut
         }
         catch(std::exception &e)
         {
@@ -10310,8 +10578,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     void ApplyCrashBackUpViewMacro()
     {
-        // Kun lisäsin toisen ApplyViewMacro metodiin toisen bool parametrin, meni kääntäjä sekaisin ja 
-        // muuttaa "xxx" c-string:in osoitteen booleaniksi, eikä edes varoita 4. tasolla vaikka yleensä bool muunnoksia ei saa millään vaikenemaan.
+        // Kun lisï¿½sin toisen ApplyViewMacro metodiin toisen bool parametrin, meni kï¿½ï¿½ntï¿½jï¿½ sekaisin ja 
+        // muuttaa "xxx" c-string:in osoitteen booleaniksi, eikï¿½ edes varoita 4. tasolla vaikka yleensï¿½ bool muunnoksia ei saa millï¿½ï¿½n vaikenemaan.
         ApplyViewMacro(itsCrashBackupViewMacro, std::string("CrashBackupViewMacro"), "(CTRL + F12)");
     }
 
@@ -10319,7 +10587,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     {
         try
         {
-            bool status = ReadViewMacro(itsCrashBackupViewMacro, MakeBackUpViewMacroFileName(false), false); // false = Ei näytetä error dialogia, jos esim. tiedostoa ei ole
+            bool status = ReadViewMacro(itsCrashBackupViewMacro, MakeBackUpViewMacroFileName(false), false); // false = Ei nï¿½ytetï¿½ error dialogia, jos esim. tiedostoa ei ole
             if(!status)
                 itsCrashBackupViewMacro.ViewMacroWasCorrupted(true);
         }
@@ -10353,7 +10621,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     bool IsPreciseTimeSerialLatlonPointUsed()
     {
         if(!AllowRightClickDisplaySelection())
-        { // Sallittu käyttää vain kun ei olla vanhassa Right-click -moodissa
+        { // Sallittu kï¿½yttï¿½ï¿½ vain kun ei olla vanhassa Right-click -moodissa
             boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedInfo();
             if(editedInfo && CtrlViewFastInfoFunctions::GetMaskedCount(editedInfo, NFmiMetEditorTypes::kFmiSelectionMask, AllowRightClickDisplaySelection()) <= 1)
             {
@@ -10406,7 +10674,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
             if(foundUpdates)
             {
-                ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: satellite images from files loaded update", SmartMetViewId::AllMapViews); // tämä sitten päivittää kaikki ruudut
+                ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Map view: satellite images from files loaded update", SmartMetViewId::AllMapViews); // tï¿½mï¿½ sitten pï¿½ivittï¿½ï¿½ kaikki ruudut
                 return 1;
             }
         }
@@ -10416,8 +10684,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     bool DoImageCacheUpdates(unsigned int theDescTopIndex, const ImageCacheUpdateData &theImageCacheUpdateData)
     {
-        // Tutkitaan löytyykö karttanäytöstä mitään theImageCacheUpdateData -listan jutuista.
-        // Jos löytyy, liataan sen karttanäyttöcache ja palautetaan true.
+        // Tutkitaan lï¿½ytyykï¿½ karttanï¿½ytï¿½stï¿½ mitï¿½ï¿½n theImageCacheUpdateData -listan jutuista.
+        // Jos lï¿½ytyy, liataan sen karttanï¿½yttï¿½cache ja palautetaan true.
         // Jos ei, palautetaan false.
 
         bool updateStatus = false;
@@ -10454,19 +10722,19 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return updateStatus;
     }
 
-    // Katsoo onko imageCachesta tulleita ruudunpäivitys tarpeita. 
-    // Jos on, tee tarvittavat näyttöjen likaukset, päivitä ne jos oli tarvetta.
-    // Jos näyttöjä päivitettiin palauta 1 jos ei, palauta 0.
-    // HUOM! Vaikka olisi joku päivitys tarve listalla, ei se tarkoita sitä että 
-    // kyseinen kuva olisi millään näytöllä valittuna. Eli voi tulla ilmoitus että
-    // on tullut uusi meteosat9 HRV kanavan kuva, mutta sitä ei välttämättä ole millään
-    // karttanäytön rivillä valittuna.
+    // Katsoo onko imageCachesta tulleita ruudunpï¿½ivitys tarpeita. 
+    // Jos on, tee tarvittavat nï¿½yttï¿½jen likaukset, pï¿½ivitï¿½ ne jos oli tarvetta.
+    // Jos nï¿½yttï¿½jï¿½ pï¿½ivitettiin palauta 1 jos ei, palauta 0.
+    // HUOM! Vaikka olisi joku pï¿½ivitys tarve listalla, ei se tarkoita sitï¿½ ettï¿½ 
+    // kyseinen kuva olisi millï¿½ï¿½n nï¿½ytï¿½llï¿½ valittuna. Eli voi tulla ilmoitus ettï¿½
+    // on tullut uusi meteosat9 HRV kanavan kuva, mutta sitï¿½ ei vï¿½lttï¿½mï¿½ttï¿½ ole millï¿½ï¿½n
+    // karttanï¿½ytï¿½n rivillï¿½ valittuna.
     int DoImageCacheUpdates(void)
     {
         ImageCacheUpdateData tmpImageCacheUpdateData;
 
         { 
-            // Tässä tehdään säie turvallinen siirto updatedatoista väliaikaiseen muuttujaan, näin lukko on päällä minimaalisen ajan
+            // Tï¿½ssï¿½ tehdï¿½ï¿½n sï¿½ie turvallinen siirto updatedatoista vï¿½liaikaiseen muuttujaan, nï¿½in lukko on pï¿½ï¿½llï¿½ minimaalisen ajan
             std::lock_guard<std::mutex> lock(itsImageCacheUpdateDataMutex);
             tmpImageCacheUpdateData.swap(itsImageCacheUpdateData);
         }
@@ -10493,7 +10761,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     {
         NFmiMetTime currentTime(1);
         if(CaseStudyModeOn())
-            currentTime = itsLoadedCaseStudySystem.Time(); // CaseStudy moodissa seinäkelloksi otetaan CasStudyn oma aika
+            currentTime = itsLoadedCaseStudySystem.Time(); // CaseStudy moodissa seinï¿½kelloksi otetaan CasStudyn oma aika
 		GetCombinedMapHandler()->centerTimeControlView(theMapViewDescTopIndex, currentTime, true);
         RefreshApplicationViewsAndDialogs("Map view: Selected map time is set to wall clock time", true, false, theMapViewDescTopIndex);
     }
@@ -10523,17 +10791,17 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return [this](const std::string &errorStr, const std::string &titleStr, CatLog::Severity severity, CatLog::Category category, bool justLog) {this->LogAndWarnUser(errorStr, titleStr, severity, category, justLog); };
     }
 
-	// Tämän pitää tehdä kaksoistoiminto, koska sekä Beta-tuotteet, että
-	// MacroParam-datat käyttävät querydata triggeröintejä ja täällä
+	// Tï¿½mï¿½n pitï¿½ï¿½ tehdï¿½ kaksoistoiminto, koska sekï¿½ Beta-tuotteet, ettï¿½
+	// MacroParam-datat kï¿½yttï¿½vï¿½t querydata triggerï¿½intejï¿½ ja tï¿½ï¿½llï¿½
 	// GetDataTriggerListOwnership -metodi ottaa sen hetkiset triggerit pois,
-	// joten molemmat työt pitää käsitellä samalla kertaa
+	// joten molemmat tyï¿½t pitï¿½ï¿½ kï¿½sitellï¿½ samalla kertaa
     void DoGenerateAutomationProductChecks()
     {
         static bool firstTime = true;
         if(firstTime)
         {
-            // 1. kerralla pitää mahdollisesti avata piilossa Beta-product dialogi, muuten tuotteiden generointia ei voi tehdä.
-            // Jos generointi ei ole päällä tai ladatussa Beta-automaatio listassa ei ole tuotteita, ei dialogia tarvitse initialisoida.
+            // 1. kerralla pitï¿½ï¿½ mahdollisesti avata piilossa Beta-product dialogi, muuten tuotteiden generointia ei voi tehdï¿½.
+            // Jos generointi ei ole pï¿½ï¿½llï¿½ tai ladatussa Beta-automaatio listassa ei ole tuotteita, ei dialogia tarvitse initialisoida.
             firstTime = false;
             if(BetaProductionSystem().AutomationModeOn() && !BetaProductionSystem().UsedAutomationList().IsEmpty())
             {
@@ -10544,8 +10812,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		auto dataTriggerList = GetDataTriggerListOwnership();
         if(BetaProductionSystem().DoNeededBetaAutomation(dataTriggerList, *InfoOrganizer()))
         {
-			// Päivitetään beta-dialogia, sillä jos se on auki ja beta-automaatio tabi on päällä, 
-			// haluamme että näemme automaatio listalla päivittyvät next ja last ajo ajat
+			// Pï¿½ivitetï¿½ï¿½n beta-dialogia, sillï¿½ jos se on auki ja beta-automaatio tabi on pï¿½ï¿½llï¿½, 
+			// haluamme ettï¿½ nï¿½emme automaatio listalla pï¿½ivittyvï¿½t next ja last ajo ajat
 			ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Beta-automation triggered, update beta-dialog", SmartMetViewId::BetaProductionDlg);
         }
 
@@ -10605,7 +10873,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
             }
         }
         catch(...)
-        { // jos esim. hakemistoa ei ole olemassa, recursive_directory_iterator konstruktori heittää poikkeuksen
+        { // jos esim. hakemistoa ei ole olemassa, recursive_directory_iterator konstruktori heittï¿½ï¿½ poikkeuksen
         }
     }
 
@@ -10627,7 +10895,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     // Jos itsViewMacroPath     on C:\xxx\yyy\zzz
     // ja itsRootViewMacroPath  on C:\xxx\
-    // tällöin tämä funktio palauttaa arvon: yyy\zzz
+    // tï¿½llï¿½in tï¿½mï¿½ funktio palauttaa arvon: yyy\zzz
     std::string GetRelativeViewMacroPath()
     {
         std::string relativePath = itsViewMacroPath;
@@ -10682,8 +10950,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     void ApplyStartupViewMacro()
     {
-        // Kun lisäsin toisen ApplyViewMacro metodiin toisen bool parametrin, meni kääntäjä sekaisin ja 
-        // muuttaa "xxx" c-string:in osoitteen booleaniksi, eikä edes varoita 4. tasolla vaikka yleensä bool muunnoksia ei saa millään vaikenemaan.
+        // Kun lisï¿½sin toisen ApplyViewMacro metodiin toisen bool parametrin, meni kï¿½ï¿½ntï¿½jï¿½ sekaisin ja 
+        // muuttaa "xxx" c-string:in osoitteen booleaniksi, eikï¿½ edes varoita 4. tasolla vaikka yleensï¿½ bool muunnoksia ei saa millï¿½ï¿½n vaikenemaan.
         ApplyViewMacro(itsStartupViewMacro, std::string("StartupViewMacro"), "(SHIFT + F12)");
     }
 
@@ -10711,7 +10979,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 					if(info->Level(theLevel))
 						return info; // returns the first suitable data with suitable level
 					else
-						info->FirstLevel(); // Jos kyse oli pintadatasta, josta ei löydy haluttua leveliä, pitää info laittaa osoittamaan taas pinta-leveliin
+						info->FirstLevel(); // Jos kyse oli pintadatasta, josta ei lï¿½ydy haluttua leveliï¿½, pitï¿½ï¿½ info laittaa osoittamaan taas pinta-leveliin
 				}
 				else
 				{
@@ -10773,7 +11041,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         {
 			boost::shared_ptr<NFmiFastQueryInfo> backupData = nullptr;
 			size_t backupDataIndex = 999;
-			// Katsotaan ensin löytyykö ihan täysosuma dataa
+			// Katsotaan ensin lï¿½ytyykï¿½ ihan tï¿½ysosuma dataa
 			for(auto& info : dataVector)
 			{
 				auto isLevelDataWanted = actualLevel != nullptr;
@@ -10812,7 +11080,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         // 199 = harmonie, 54 = gfs, 260 = MEPS
         std::vector<unsigned long> favoriteProducers{kFmiMTAECMWF, 260, 54, kFmiMTAHIRLAM, 199 };
 		const NFmiLevel* level = nullptr;
-		// Jos ei ole annettu usedOriginalInfo:a, niin silloin haetaan pääsääntöisesti Ec:n fraktiilidataa
+		// Jos ei ole annettu usedOriginalInfo:a, niin silloin haetaan pï¿½ï¿½sï¿½ï¿½ntï¿½isesti Ec:n fraktiilidataa
 		NFmiProducer wantedProducer(kFmiMTAECMWF, "Ecmwf");
 		if(usedOriginalInfo)
 		{
@@ -10951,10 +11219,12 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
         return false;
     }
 
+#ifndef UNIX
     void InitGriddingProperties()
     {
         ApplicationWinRegistry().InitGriddingProperties(IsToolMasterAvailable());
     }
+#endif
 
     NFmiMacroParamDataCache& MacroParamDataCache()
     {
@@ -11008,14 +11278,14 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		return itsLedLightStatusSystem;
 	}
 
-	// FixDataElapsedTimeInSeconds funktio korjaa yhden mahdollisen querydatoihin tehdyn aikaväärennöksen.
-	// QueryDatoihin talletetaan timeri joka laskee sen latauksesta käyttöön kuluneen ajan.
-	// Kyseisen ajan avulla voidaan merkitä käyttöliittymässä alle 5 minuuuttia sitten ladatatut datat uusiksi
+	// FixDataElapsedTimeInSeconds funktio korjaa yhden mahdollisen querydatoihin tehdyn aikavï¿½ï¿½rennï¿½ksen.
+	// QueryDatoihin talletetaan timeri joka laskee sen latauksesta kï¿½yttï¿½ï¿½n kuluneen ajan.
+	// Kyseisen ajan avulla voidaan merkitï¿½ kï¿½yttï¿½liittymï¿½ssï¿½ alle 5 minuuuttia sitten ladatatut datat uusiksi
 	// erilaisin korostuksin.
-	// Mutta kun smartmet lataa dataa heti käynnistyksen yhteydessä lokaali cachesta, ei datoja
-	// haluttu olevan 'uusia' kuin minuutin, joten niihin lisättiin 4 minuuttia latausaikaa.
-	// Nyt kun tutkitaan onko uutta dataa tullut tarpeeksi nopeasti, tämä 4:n minuutin aika pitää poistaa,
-	// silloin kun latausaika on suurempi kuin smartmetin käynnissäoloaika.
+	// Mutta kun smartmet lataa dataa heti kï¿½ynnistyksen yhteydessï¿½ lokaali cachesta, ei datoja
+	// haluttu olevan 'uusia' kuin minuutin, joten niihin lisï¿½ttiin 4 minuuttia latausaikaa.
+	// Nyt kun tutkitaan onko uutta dataa tullut tarpeeksi nopeasti, tï¿½mï¿½ 4:n minuutin aika pitï¿½ï¿½ poistaa,
+	// silloin kun latausaika on suurempi kuin smartmetin kï¿½ynnissï¿½oloaika.
 	int FixDataElapsedTimeInSeconds(int elapsedDataTimeInSeconds)
 	{
 		auto runninTimeInSeconds = RunningTimeInSeconds();
@@ -11033,9 +11303,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	void DoIsAnyQueryDataLateChecks()
 	{
-		// Katsotaan onko missään queryDatassa konffattuna ns. myöhästymisaikaraja.
-		// Jos on, katsotaan milloin kyseistä dataa on ladattu viimeksi. 
-		// Jos aikaa on kulunut enemmän kuin konffeissa on säädetty, laitetaan 
+		// Katsotaan onko missï¿½ï¿½n queryDatassa konffattuna ns. myï¿½hï¿½stymisaikaraja.
+		// Jos on, katsotaan milloin kyseistï¿½ dataa on ladattu viimeksi. 
+		// Jos aikaa on kulunut enemmï¿½n kuin konffeissa on sï¿½ï¿½detty, laitetaan 
 		// StatusBarin ledissysteemiin varoitus asiasta.
 		const auto& helpDataInfoVector = HelpDataInfoSystem()->DynamicHelpDataInfos();
 		for(const auto& helpInfo : helpDataInfoVector)
@@ -11043,7 +11313,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 			if(helpInfo.IsAgingTimeLimitUsed())
 			{
 				auto fileFilter = helpInfo.UsedFileNameFilter(*HelpDataInfoSystem());
-				auto& infos = InfoOrganizer()->GetInfos(fileFilter);
+				auto infos = InfoOrganizer()->GetInfos(fileFilter);
 				if(!infos.empty())
 				{
 					auto& info = infos.front();
@@ -11082,9 +11352,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		DoSmartMetRefreshActions(logMessage, true);
 		if(SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation())
 		{
-			// Päivitetään normi editoidun datan muutoksiin liittyvät näytöt (kartat, aikasarja, stationdata-taulukko, wind-taulukko)
+			// Pï¿½ivitetï¿½ï¿½n normi editoidun datan muutoksiin liittyvï¿½t nï¿½ytï¿½t (kartat, aikasarja, stationdata-taulukko, wind-taulukko)
 			auto updatedViews = GetUpdatedViewIdMaskForEditingData();
-			// Lisätään siihen vielä poikkileikkaus ja luotaus näytöt
+			// Lisï¿½tï¿½ï¿½n siihen vielï¿½ poikkileikkaus ja luotaus nï¿½ytï¿½t
 			updatedViews = updatedViews | SmartMetViewId::CrossSectionView | SmartMetViewId::SoundingView;
 			SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->ApplyUpdatedViewsFlag(updatedViews);
 		}
@@ -11118,14 +11388,14 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	void UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr)
 	{
 		{
-			// MacroParamSystem:in käytön synkronointi päälle
+			// MacroParamSystem:in kï¿½ytï¿½n synkronointi pï¿½ï¿½lle
 			std::lock_guard<std::mutex> macroParamSystemLock(itsMacroParamSystemMutex);
-			// Päivtetään uuteen MacroParamSystem:iin työdatan käytössä olevia asetuksia
+			// Pï¿½ivtetï¿½ï¿½n uuteen MacroParamSystem:iin tyï¿½datan kï¿½ytï¿½ssï¿½ olevia asetuksia
 			updatedMacroParamSystemPtr->UpdateToWorkingData(*itsMacroParamSystemPtr);
-			// Tehdään working-MacroParamSystem:in swappaus
+			// Tehdï¿½ï¿½n working-MacroParamSystem:in swappaus
 			itsMacroParamSystemPtr.swap(updatedMacroParamSystemPtr);
 		}
-		// Käynnistetään dialogin päivitys rutiinit
+		// Kï¿½ynnistetï¿½ï¿½n dialogin pï¿½ivitys rutiinit
 		SetupForParameterSelectionSystemUpdate(false, false, false, true);
 		LogMessage("UpdateMacroParamSystemContent: updated used macroParamSystem from working-thread", CatLog::Severity::Debug, CatLog::Category::Operational);
 	}
@@ -11140,7 +11410,9 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 		CombinedMapHandlerInterface::doVerboseFunctionStartingLogReporting(__FUNCTION__);
 		try
 		{
+#ifndef UNIX
 			itsMacroParamDataGenerator.Init(ApplicationWinRegistry().BaseConfigurationRegistryPath(), MacroPathSettings().SmartToolPath(), MacroPathSettings().MacroParamDataPath(), HelpDataInfoSystem()->LocalDataBaseDirectory());
+#endif
 			LogMessage(itsMacroParamDataGenerator.GetInitializeLogStr(), CatLog::Severity::Info, CatLog::Category::Configuration);
 		}
 		catch(std::exception& e)
@@ -11176,183 +11448,189 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
     NFmiColorContourLegendSettings itsColorContourLegendSettings;
     TimeSerialParameters itsTimeSerialParameters;
     NFmiMacroParamDataCache itsMacroParamDataCache;
-	// Tätä nimeä käytetään smartmet:in pääikkunan title tekstissä (jotta käyttäjä näkee mikä viewMacro on ladattuna)
+	// Tï¿½tï¿½ nimeï¿½ kï¿½ytetï¿½ï¿½n smartmet:in pï¿½ï¿½ikkunan title tekstissï¿½ (jotta kï¿½yttï¿½jï¿½ nï¿½kee mikï¿½ viewMacro on ladattuna)
 	std::string itsLastLoadedViewMacroName; 
     Warnings::CapDataSystem capDataSystem;
     Q2ServerInfo itsQ2ServerInfo;
     AddParams::ParameterSelectionSystem parameterSelectionSystem;
-	// Tähän ladataan SmartMetin tyhjä alkutilanne, jotta SHIFT + F12 pikanäppäimellä pääsee takaisin alkutilaan milloin tahansa ajon aikana.
+	// Tï¿½hï¿½n ladataan SmartMetin tyhjï¿½ alkutilanne, jotta SHIFT + F12 pikanï¿½ppï¿½imellï¿½ pï¿½ï¿½see takaisin alkutilaan milloin tahansa ajon aikana.
 	NFmiViewSettingMacro itsStartupViewMacro; 
-	// Jos konffeissa on niin määrätty, tähän luetaan editoijien tunnukset, ja tätä listaa käytetään Lähetä-data-tietokantaan dialogissa
+	// Jos konffeissa on niin mï¿½ï¿½rï¿½tty, tï¿½hï¿½n luetaan editoijien tunnukset, ja tï¿½tï¿½ listaa kï¿½ytetï¿½ï¿½n Lï¿½hetï¿½-data-tietokantaan dialogissa
 	NFmiEditDataUserList itsEditDataUserList; 
-	// Tähän on listattu rekursiivisesti kaikki perus smarttool hakemistosta haetut tiedostot, joissa on oikea vmr -pääte. 
-	// Tiedoston nimillä on relatiivienn polku (suhteessa perus hakemistoon)
+	// Tï¿½hï¿½n on listattu rekursiivisesti kaikki perus smarttool hakemistosta haetut tiedostot, joissa on oikea vmr -pï¿½ï¿½te. 
+	// Tiedoston nimillï¿½ on relatiivienn polku (suhteessa perus hakemistoon)
 	std::vector<std::string> itsSmartToolFileNames; 
-	// Tähän talletetaan havaitut korruptoituneet näyttömakro nimet, että niiden avulla voidaan varoittaa käyttäjiä niistä viewMacro-dialogissa 
+	// Tï¿½hï¿½n talletetaan havaitut korruptoituneet nï¿½yttï¿½makro nimet, ettï¿½ niiden avulla voidaan varoittaa kï¿½yttï¿½jiï¿½ niistï¿½ viewMacro-dialogissa 
 	std::vector<std::string> itsCorruptedViewMacroFileList; 
     std::vector<NFmiLightWeightViewSettingMacro> itsViewMacroDescriptionList;
-	// Tähän on listattu rekursiivisesti kaikki perus viewMacro hakemistosta haetut tiedostot, 
-	// joissa on oikea vmr -pääte. Tiedoston nimillä on relatiivienn polku (suhteessa perus hakemistoon)
+	// Tï¿½hï¿½n on listattu rekursiivisesti kaikki perus viewMacro hakemistosta haetut tiedostot, 
+	// joissa on oikea vmr -pï¿½ï¿½te. Tiedoston nimillï¿½ on relatiivienn polku (suhteessa perus hakemistoon)
 	std::vector<std::string> itsViewMacroFileNames; 
-	// Milloin on viimeksi lähetetty editoitu data tietokantaan
+	// Milloin on viimeksi lï¿½hetetty editoitu data tietokantaan
 	NFmiMetTime itsLastEditedDataSendTime; 
-	// Onko viimeisen editoidun datan tietokantaan lähetyksen jälkeen tullut operatiivista dataa käyttöön?
+	// Onko viimeisen editoidun datan tietokantaan lï¿½hetyksen jï¿½lkeen tullut operatiivista dataa kï¿½yttï¿½ï¿½n?
 	bool fLastEditedDataSendHasComeBack; 
-	// Tähän asetetaan beta-tuotannossa se juuri nyt generoitava beta-tuote, muuten tässä pitää olla nullptr (ei omista, ei tuhoa)
+	// Tï¿½hï¿½n asetetaan beta-tuotannossa se juuri nyt generoitava beta-tuote, muuten tï¿½ssï¿½ pitï¿½ï¿½ olla nullptr (ei omista, ei tuhoa)
 	const NFmiBetaProduct *itsCurrentGeneratedBetaProduct; 
     NFmiBetaProductionSystem itsBetaProductionSystem;
-	// Tähän tulee tietoa päivitettävistä satel/muut parametrien kuvista ja niiden ajoista
+	// Tï¿½hï¿½n tulee tietoa pï¿½ivitettï¿½vistï¿½ satel/muut parametrien kuvista ja niiden ajoista
 	ImageCacheUpdateData itsImageCacheUpdateData; 
-	// tällä lukitaan itsImageCacheUpdateData, koska siihen tulee lisäyksiä worker-threadista ja siitä siitä luetaan pää-threadista
+	// tï¿½llï¿½ lukitaan itsImageCacheUpdateData, koska siihen tulee lisï¿½yksiï¿½ worker-threadista ja siitï¿½ siitï¿½ luetaan pï¿½ï¿½-threadista
 	std::mutex itsImageCacheUpdateDataMutex; 
     std::shared_ptr<NFmiSatelliteImageCacheSystem> itsSatelliteImageCacheSystemPtr;
-	// Aina kun tehdään hiirellä kartalta vasen click valintaa, laitetaan tähän tarkat koordinaatit
+	// Aina kun tehdï¿½ï¿½n hiirellï¿½ kartalta vasen click valintaa, laitetaan tï¿½hï¿½n tarkat koordinaatit
 	NFmiPoint itsPreciseTimeSerialLatlonPoint; 
-	// Tämä viewMacro saadaan ladattua käyttöön SmartMetissa pikanäppäimellä CTRL + F12. 
-	// Kyseessä on edellisen SmartMet istunnon aikana talletettu viewMacro, tätä talletetaan määräajoin (joka 1.5 minuutti) 
-	// crashBackupViewMacro.wmr tiedostoon. Tämä siis ladataan käynnistyksen yhteydessä ja sitten SmartMet alkaa tekemään kyseiseen tiedostoon uusia talletuksia.
+	// Tï¿½mï¿½ viewMacro saadaan ladattua kï¿½yttï¿½ï¿½n SmartMetissa pikanï¿½ppï¿½imellï¿½ CTRL + F12. 
+	// Kyseessï¿½ on edellisen SmartMet istunnon aikana talletettu viewMacro, tï¿½tï¿½ talletetaan mï¿½ï¿½rï¿½ajoin (joka 1.5 minuutti) 
+	// crashBackupViewMacro.wmr tiedostoon. Tï¿½mï¿½ siis ladataan kï¿½ynnistyksen yhteydessï¿½ ja sitten SmartMet alkaa tekemï¿½ï¿½n kyseiseen tiedostoon uusia talletuksia.
 	NFmiViewSettingMacro itsCrashBackupViewMacro; 
-	// Tähän on tallletettu kaikki ns. tehdasasetus drawParamit. Käyttäjät voivat käyttää näitä, mutta eivät voi muuttaa.
+	// Tï¿½hï¿½n on tallletettu kaikki ns. tehdasasetus drawParamit. Kï¿½yttï¿½jï¿½t voivat kï¿½yttï¿½ï¿½ nï¿½itï¿½, mutta eivï¿½t voi muuttaa.
 	NFmiFixedDrawParamSystem itsFixedDrawParamSystem; 
-	// Kuinka paljon levytilaa pitää olla minimissään, jotta SmartMet suostuu tekemään konffi/muita asetus tiedosto talletuksia
+	// Kuinka paljon levytilaa pitï¿½ï¿½ olla minimissï¿½ï¿½n, jotta SmartMet suostuu tekemï¿½ï¿½n konffi/muita asetus tiedosto talletuksia
 	float itsHardDriveFreeLimitForConfSavesInMB; 
-	// Kuinka paljon levytilaa pitää olla minimissään, jotta SmartMet suostuu tekemään editoidun datan backup tiedosto talletuksia
+	// Kuinka paljon levytilaa pitï¿½ï¿½ olla minimissï¿½ï¿½n, jotta SmartMet suostuu tekemï¿½ï¿½n editoidun datan backup tiedosto talletuksia
     float itsHardDriveFreeLimitForEditedDataSavesInMB; 
+#ifndef UNIX
     NFmiMultiProcessPoolOptions itsMultiProcessPoolOptions;
-	// tämän avulla initialisoidaan boost-log
+#endif
+	// tï¿½mï¿½n avulla initialisoidaan boost-log
 	std::string itsMultiProcessLogFilePath; 
-	// tämän avulla siivotaan loki hakemistosta vanhat lokit pois
+	// tï¿½mï¿½n avulla siivotaan loki hakemistosta vanhat lokit pois
 	std::string itsMultiProcessLogFilePattern; 
     MultiProcessClientData itsMultiProcessClientData;
-	// joskus on tarpeen että SmartMet tallettaa viimeisen ladatun tiedoston nimen talteen, mutta oletuksena se ei ole tarpeen.
+	// joskus on tarpeen ettï¿½ SmartMet tallettaa viimeisen ladatun tiedoston nimen talteen, mutta oletuksena se ei ole tarpeen.
     bool fStoreLastLoadedFileNameToFile; 
-	// SmartMetin voi säätää halutessa tallettamaan tietyt tiedostot pois SmartMetin kontrollihakemistosta. 
-	// Tätä tarvitaan erityisesti ulkomaisissa Dropbox-asennuksissa (ks. SMARTMET-393).
-	// Jos asetusta ei ole säädetty, käytetään polkuna normaalia kontrollihakemistoa.
+	// SmartMetin voi sï¿½ï¿½tï¿½ï¿½ halutessa tallettamaan tietyt tiedostot pois SmartMetin kontrollihakemistosta. 
+	// Tï¿½tï¿½ tarvitaan erityisesti ulkomaisissa Dropbox-asennuksissa (ks. SMARTMET-393).
+	// Jos asetusta ei ole sï¿½ï¿½detty, kï¿½ytetï¿½ï¿½n polkuna normaalia kontrollihakemistoa.
     std::string itsSpecialFileStoragePath; 
+#ifndef UNIX
     NFmiApplicationWinRegistry itsApplicationWinRegistry;
+#endif
 	// Jos kontrollipiste muokkaukset halutaan rajoittaa tietyn ali-hilan alueelle, 
-	// käytetään tätä hilapiste-rect:iä. Täällä on siis bottom-left ja top-right editoidun datan hila-indeksit.
-	// Tämän arvoa päivitetään kun zoomataan pääikkunaa.
+	// kï¿½ytetï¿½ï¿½n tï¿½tï¿½ hilapiste-rect:iï¿½. Tï¿½ï¿½llï¿½ on siis bottom-left ja top-right editoidun datan hila-indeksit.
+	// Tï¿½mï¿½n arvoa pï¿½ivitetï¿½ï¿½n kun zoomataan pï¿½ï¿½ikkunaa.
 	NFmiRect itsCPGridCropRect; 
-	// flagi että käytetäänkö croppia vai ei. Tämä menee päälle aikasarjaikkunasta.
+	// flagi ettï¿½ kï¿½ytetï¿½ï¿½nkï¿½ croppia vai ei. Tï¿½mï¿½ menee pï¿½ï¿½lle aikasarjaikkunasta.
 	bool fUseCPGridCrop; 
-	// Tässä on tallessa latlon kulmapisteet croppi laatikosta (kartalle piirtoa varten)
+	// Tï¿½ssï¿½ on tallessa latlon kulmapisteet croppi laatikosta (kartalle piirtoa varten)
 	boost::shared_ptr<NFmiArea> itsCPGridCropLatlonArea; 
-	// Tässä on tallessa latlon kulmapisteet sisemmästä croppi laatikosta (kartalle piirtoa varten)
+	// Tï¿½ssï¿½ on tallessa latlon kulmapisteet sisemmï¿½stï¿½ croppi laatikosta (kartalle piirtoa varten)
 	boost::shared_ptr<NFmiArea> itsCPGridCropInnerLatlonArea; 
-	// tässä kerrotaan kuinka monta hilapistettä x- ja y-suunnassa on ulko- ja sisä-laatikon välissä. 
-	// Tällä alueella muutokset menevät täydestä lähes nollaan, jotta reunoista tulisi mahdollisimman pehmeät.
+	// tï¿½ssï¿½ kerrotaan kuinka monta hilapistettï¿½ x- ja y-suunnassa on ulko- ja sisï¿½-laatikon vï¿½lissï¿½. 
+	// Tï¿½llï¿½ alueella muutokset menevï¿½t tï¿½ydestï¿½ lï¿½hes nollaan, jotta reunoista tulisi mahdollisimman pehmeï¿½t.
 	NFmiPoint itsCPGridCropMargin; 
-	// haluan piirtää maalattaessa valitut pisteet piirto ikkunaan, tämä on sitä varten tehty kikka vitonen
+	// haluan piirtï¿½ï¿½ maalattaessa valitut pisteet piirto ikkunaan, tï¿½mï¿½ on sitï¿½ varten tehty kikka vitonen
 	bool fDrawSelectionOnThisView; 
-	// onko muutettu editoinnissa valittuja pisteitä, jos on, niin ruutua pitää päivittää tietyllä tavalla.
+	// onko muutettu editoinnissa valittuja pisteitï¿½, jos on, niin ruutua pitï¿½ï¿½ pï¿½ivittï¿½ï¿½ tietyllï¿½ tavalla.
 	bool fEditedPointsSelectionChanged; 
-	// Täällä on tietyt perus asetukset, mitkä alustetaan jo ennen GenDocin alustusta
+	// Tï¿½ï¿½llï¿½ on tietyt perus asetukset, mitkï¿½ alustetaan jo ennen GenDocin alustusta
 	// CSmartMetApp:in InitInstance-metodissa. Uusi CrashRpt-systeemi vaatii tiettyjen tietojen asetuksia
-	// ennen kuin GenDoc saadaan alustetuksia, ja siksi tämä piti tehdä näin osissa ja ehkä hieman hankalasti.
+	// ennen kuin GenDoc saadaan alustetuksia, ja siksi tï¿½mï¿½ piti tehdï¿½ nï¿½in osissa ja ehkï¿½ hieman hankalasti.
 	NFmiBasicSmartMetConfigurations itsBasicConfigurations; 
-	// uudet datan modifiointi rutiinit (FmiModifyEditdData -namespacessa) saattavat häiriintyä multi-thread koodin tai 
-	// erillisessä threadissa ajosta johtuen (progress/Cancel vaatii erillistä säiettä). Tästä johtuen kokeilen, 
-	// josko muokkausten aikan SmartMetin päivityksen esto auttaisi asiaa. Tämä esto toimii ainakin printtauksien 
-	// yhteydessä koettujen ongelmien kanssa.
+	// uudet datan modifiointi rutiinit (FmiModifyEditdData -namespacessa) saattavat hï¿½iriintyï¿½ multi-thread koodin tai 
+	// erillisessï¿½ threadissa ajosta johtuen (progress/Cancel vaatii erillistï¿½ sï¿½iettï¿½). Tï¿½stï¿½ johtuen kokeilen, 
+	// josko muokkausten aikan SmartMetin pï¿½ivityksen esto auttaisi asiaa. Tï¿½mï¿½ esto toimii ainakin printtauksien 
+	// yhteydessï¿½ koettujen ongelmien kanssa.
 	bool fDataModificationInProgress;	
-	// käyttäjä voi asettaa erikseen sallitaanko multi-threaddaavan koodin käyttö editoitaessa
+	// kï¿½yttï¿½jï¿½ voi asettaa erikseen sallitaanko multi-threaddaavan koodin kï¿½yttï¿½ editoitaessa
 	bool fUseMultiThreaddingWithEditingtools; 
 	boost::shared_ptr<TimeSerialModificationDataInterface> itsGenDocDataAdapter;
-	// eri apudatojen tiedot ovat tässä ja ne luetaan tiedostosta
+	// eri apudatojen tiedot ovat tï¿½ssï¿½ ja ne luetaan tiedostosta
 	NFmiHelpDataInfoSystem itsHelpDataInfoSystem; 
-	// Käytössä olevan CaseStudyn eri apudatojen tiedot ovat tässä
+	// Kï¿½ytï¿½ssï¿½ olevan CaseStudyn eri apudatojen tiedot ovat tï¿½ssï¿½
 	boost::shared_ptr<NFmiHelpDataInfoSystem> itsCaseStudyHelpDataInfoSystem; 
 	bool fCaseStudyModeOn;
 
 	NFmiAviationStationInfoSystem itsWmoStationInfoSystem;
 	bool fWmoStationInfoSystemInitialized;
-	// tällä tehdään uusia CaseStudy-datoja
+	// tï¿½llï¿½ tehdï¿½ï¿½n uusia CaseStudy-datoja
 	NFmiCaseStudySystem itsCaseStudySystem; 
 	// Lopussa kun SmartMetia suljetaan, tarkistetaan onko tehty muutoksia suhteessa 
-	// originaali olioon ja vasta sitten tehdään talletukset asetuksiin
+	// originaali olioon ja vasta sitten tehdï¿½ï¿½n talletukset asetuksiin
 	NFmiCaseStudySystem itsCaseStudySystemOrig; 
-	// Tähän ladataan olemassa oleva CaseStudy-data käyttöön
+	// Tï¿½hï¿½n ladataan olemassa oleva CaseStudy-data kï¿½yttï¿½ï¿½n
 	NFmiCaseStudySystem itsLoadedCaseStudySystem; 
-	// Kun todetaan että editoitua dataa pitää alkaa kyttäämään, käynnistetään tämä timeri, että tiedetään kuinka kauan ollaan odotettu. 
-	// Jotta käyttäjää voidaan informoida asiasta ja lisäksi ehkä tietyn ajan yrittämisen jälkeen voidaan lopettaa homma toivottomana.
+	// Kun todetaan ettï¿½ editoitua dataa pitï¿½ï¿½ alkaa kyttï¿½ï¿½mï¿½ï¿½n, kï¿½ynnistetï¿½ï¿½n tï¿½mï¿½ timeri, ettï¿½ tiedetï¿½ï¿½n kuinka kauan ollaan odotettu. 
+	// Jotta kï¿½yttï¿½jï¿½ï¿½ voidaan informoida asiasta ja lisï¿½ksi ehkï¿½ tietyn ajan yrittï¿½misen jï¿½lkeen voidaan lopettaa homma toivottomana.
 	NFmiMilliSecondTimer itsEditedDataNeedsToBeLoadedTimer;
-	// Jos auto startup epäonnistuu lataamasta mitää editoitua dataa, laitetaan tämä lippu päälle.
-	// Sen jälkeen pitää MainFramessa timerillä käydä väliajoin katsomassa onko tullut sopivaa dataa ladattavaksi, kunnes sitä löytyy.
+	// Jos auto startup epï¿½onnistuu lataamasta mitï¿½ï¿½ editoitua dataa, laitetaan tï¿½mï¿½ lippu pï¿½ï¿½lle.
+	// Sen jï¿½lkeen pitï¿½ï¿½ MainFramessa timerillï¿½ kï¿½ydï¿½ vï¿½liajoin katsomassa onko tullut sopivaa dataa ladattavaksi, kunnes sitï¿½ lï¿½ytyy.
 	bool fEditedDataNeedsToBeLoaded; 
 
 	NFmiMacroPathSettings itsMacroPathSettings;
 	NFmiIgnoreStationsData itsIgnoreStationsData;
-	// Tämä on brute force ratkaisu ei queryData pohjaisten datojen (mm. satel kuvat, käsite analyysit)
-	// ruudunpäivityksen varmistamiseen. Tämä kertoo kuinka usein tarkasteluja tehdään. Jos arvo on <= 0, ei tarkastella ollenkaan.
+	// Tï¿½mï¿½ on brute force ratkaisu ei queryData pohjaisten datojen (mm. satel kuvat, kï¿½site analyysit)
+	// ruudunpï¿½ivityksen varmistamiseen. Tï¿½mï¿½ kertoo kuinka usein tarkasteluja tehdï¿½ï¿½n. Jos arvo on <= 0, ei tarkastella ollenkaan.
 	int itsSatelDataRefreshTimerInMinutes; 
 	// kertoo kuinka paljon koneessa on theaddaus mahdollisuutta (CPU x core x hyper-threading)
 	int itsMachineThreadCount; 
 	NFmiDataQualityChecker itsDataQualityChecker;
 	NFmiAnalyzeToolData itsAnalyzeToolData;
 	NFmiModelDataBlender itsModelDataBlender;
-	// Erilaisissa paikoissa on aiemmin käytetty luotausnäytön värisettiä hyväkseen kuvaamaan eri käyriä (aikasarja, trajektori, jne)
-	// Nyt teen oman väri setin tälläiseen käyttöön, koska esim. LENissä on väritetty kaikki luotaukset mustaksi
+	// Erilaisissa paikoissa on aiemmin kï¿½ytetty luotausnï¿½ytï¿½n vï¿½risettiï¿½ hyvï¿½kseen kuvaamaan eri kï¿½yriï¿½ (aikasarja, trajektori, jne)
+	// Nyt teen oman vï¿½ri setin tï¿½llï¿½iseen kï¿½yttï¿½ï¿½n, koska esim. LENissï¿½ on vï¿½ritetty kaikki luotaukset mustaksi
 	std::vector<NFmiColor> itsGeneralColors; 
 
 	ObsDataLoadedReporter itsObsDataLoadedReporter;
 	NFmiAutoComplete itsAutoComplete;
 	std::deque<NFmiViewSettingMacro> itsUndoRedoViewMacroList;
-	// Tämä osoittaa nykyiseen kohtaan yllä olevaan undo-listaan.
-	// Tämä indeksi osoittaa siis siihen viewMacroon, johon seuraava undo kohdistuu.
-	// Jos arvo on -1, ollaan listan alun ohi ja undo:ta ei voi tehdä
+	// Tï¿½mï¿½ osoittaa nykyiseen kohtaan yllï¿½ olevaan undo-listaan.
+	// Tï¿½mï¿½ indeksi osoittaa siis siihen viewMacroon, johon seuraava undo kohdistuu.
+	// Jos arvo on -1, ollaan listan alun ohi ja undo:ta ei voi tehdï¿½
 	int itsUndoRedoViewMacroListPointer; 
-	// Kun SmartMet lataa datan alussa automaattisesti, se ei tarkista luettua dataa mitenkään.
-	// Jos editoidaan dataa, pitää datan olla oikeanlaista, konfiguraatioiden mukaista. Tein vivun,josta
-	// näkee, että pitääkö data tarkistaa vielä kun editoidaan tai dataa lähetetään tietokantaan.
+	// Kun SmartMet lataa datan alussa automaattisesti, se ei tarkista luettua dataa mitenkï¿½ï¿½n.
+	// Jos editoidaan dataa, pitï¿½ï¿½ datan olla oikeanlaista, konfiguraatioiden mukaista. Tein vivun,josta
+	// nï¿½kee, ettï¿½ pitï¿½ï¿½kï¿½ data tarkistaa vielï¿½ kun editoidaan tai dataa lï¿½hetetï¿½ï¿½n tietokantaan.
 	bool fStartUpDataLoadCheckDone; 
 	NFmiWindTableSystem itsWindTableSystem;
 	NFmiPoint itsTimeSerialViewSizeInPixels;
-	// tämä on aikasarja ikkunassa näkyvä aikaväli
+	// tï¿½mï¿½ on aikasarja ikkunassa nï¿½kyvï¿½ aikavï¿½li
 	NFmiTimeBag itsTimeSerialViewTimeBag; 
 	NFmiMapViewTimeLabelInfo itsMapViewTimeLabelInfo;
 	bool itsShowToolTipTimeView;
 	bool itsShowToolTipTempView;
 	bool itsShowToolTipTrajectoryView;
-	// tämä on määrätty asetuksissa helpdatainfo.conf-tiedostossa.
-	// tämä pitää asettaa aina kun joku näyttö piirtää isoviiva/contoureja. Tämän avulla piirretään
-	// läpinäkyvät parametrit pinellä kikalla ja Gdiplus-piirtoa hyväksi käyttäen.
+	// tï¿½mï¿½ on mï¿½ï¿½rï¿½tty asetuksissa helpdatainfo.conf-tiedostossa.
+	// tï¿½mï¿½ pitï¿½ï¿½ asettaa aina kun joku nï¿½yttï¿½ piirtï¿½ï¿½ isoviiva/contoureja. Tï¿½mï¿½n avulla piirretï¿½ï¿½n
+	// lï¿½pinï¿½kyvï¿½t parametrit pinellï¿½ kikalla ja Gdiplus-piirtoa hyvï¿½ksi kï¿½yttï¿½en.
 	std::vector<std::string> itsSynopDataFilePatternSortOrderVector; 
-	CWnd *itsTransparencyContourDrawView; 
-	// rintama piirto ominaisuudet on täällä
+#ifndef UNIX
+	CWnd *itsTransparencyContourDrawView;
+#endif
+	// rintama piirto ominaisuudet on tï¿½ï¿½llï¿½
 	NFmiConceptualModelData itsConceptualModelData;
 	NFmiPoint itsOutOfEditedAreaTimeSerialPoint;
-	// luotauksia piirretään karttanäytölle vain tiettyihin vakio painepinnoille
+	// luotauksia piirretï¿½ï¿½n karttanï¿½ytï¿½lle vain tiettyihin vakio painepinnoille
 	NFmiVPlaceDescriptor itsSoundingPlotLevels; 
-	// kun dataa lähetetään tietokantaan, kysytään lähetys dialogissa, mitä tarkastuus metodia
-	// halutaan käyttää. 1=datavalidation, 2= niin kuin asetuksissa sanotaan
-	// DBChecker ohitetaan tässä.
+	// kun dataa lï¿½hetetï¿½ï¿½n tietokantaan, kysytï¿½ï¿½n lï¿½hetys dialogissa, mitï¿½ tarkastuus metodia
+	// halutaan kï¿½yttï¿½ï¿½. 1=datavalidation, 2= niin kuin asetuksissa sanotaan
+	// DBChecker ohitetaan tï¿½ssï¿½.
 	int itsDataToDBCheckMethod; 
-	// settingseissa on lista mahdollisista ylimääräisistä tuottajista,
-	// joita on tarkoitus katsella luotaus-näytöllä
+	// settingseissa on lista mahdollisista ylimï¿½ï¿½rï¿½isistï¿½ tuottajista,
+	// joita on tarkoitus katsella luotaus-nï¿½ytï¿½llï¿½
 	std::vector<NFmiProducer> itsExtraSoundingProducerList; 
 	NFmiQ2Client itsQ2Client;
-	// missä hilassa asema/piste datan hilaus lasketaan
+	// missï¿½ hilassa asema/piste datan hilaus lasketaan
 	NFmiPoint itsStationDataGridSize; 
-	// tietyssä tilanteessa CDokumentti voidaan pakottaa piirtämään aikasarjanäyttö
+	// tietyssï¿½ tilanteessa CDokumentti voidaan pakottaa piirtï¿½mï¿½ï¿½n aikasarjanï¿½yttï¿½
 	bool fMustDrawTimeSerialView; 
-	// tietyssä tilanteessa CDokumentti voidaan pakottaa piirtämään poikkileikkausnäyttönäyttö
+	// tietyssï¿½ tilanteessa CDokumentti voidaan pakottaa piirtï¿½mï¿½ï¿½n poikkileikkausnï¿½yttï¿½nï¿½yttï¿½
 	bool fMustDrawCrossSectionView; 
-	// tietyssä tilanteessa CDokumentti voidaan pakottaa piirtämään luotausnäyttö
+	// tietyssï¿½ tilanteessa CDokumentti voidaan pakottaa piirtï¿½mï¿½ï¿½n luotausnï¿½yttï¿½
 	bool fMustDrawTempView; 
 	bool fUseOnePressureLevelDrawParam;
 	bool fRawTempRoundSynopTimes;
 	NFmiPoint itsRawTempUnknownStartLonLat;
-	// kaikilla konfiguraatioilla ei voi tallettaa työtiedostoa, eikä siitä tarvitse varoittaa, tämä luetaan settingseistä
+	// kaikilla konfiguraatioilla ei voi tallettaa tyï¿½tiedostoa, eikï¿½ siitï¿½ tarvitse varoittaa, tï¿½mï¿½ luetaan settingseistï¿½
 	bool fWarnIfCantSaveWorkingFile; 
-	// poikkileikkausnäyttö ikkunan clientti osan koko pikseleissä
+	// poikkileikkausnï¿½yttï¿½ ikkunan clientti osan koko pikseleissï¿½
 	NFmiPoint itsCrossSectionViewSizeInPixels; 
 	NFmiHelpEditorSystem itsHelpEditorSystem;
 
 	NFmiProducerSystem itsProducerSystem;
 	NFmiProducerSystem itsObsProducerSystem;
-	// satelliitti/tutka kuvien tuottajat laitetaan tähän (käytetään mm. parametri pop-up valikoiden tekoon)
+	// satelliitti/tutka kuvien tuottajat laitetaan tï¿½hï¿½n (kï¿½ytetï¿½ï¿½n mm. parametri pop-up valikoiden tekoon)
 	NFmiProducerSystem itsSatelImageProducerSystem; 
 #ifndef DISABLE_CPPRESTSDK
     HakeMessage::Main itsWarningCenterSystem;
@@ -11360,76 +11638,76 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	NFmiFileCleanerSystem itsFileCleanerSystem;
 
 	bool fIsTEMPCodeSoundingDataAlsoCopiedToEditedData;
-	// tähän on talletettu aina viimeksi käytetty TEMP koodin purussa ollut stringi
+	// tï¿½hï¿½n on talletettu aina viimeksi kï¿½ytetty TEMP koodin purussa ollut stringi
 	std::string itsLastTEMPDataStr; 
-	// jos true, CreateLoadedData-metodissa käytetään alla olevaa parambagiä, muuten se otetaan 1. source datsta
+	// jos true, CreateLoadedData-metodissa kï¿½ytetï¿½ï¿½n alla olevaa parambagiï¿½, muuten se otetaan 1. source datsta
 	bool fUseEditedDataParamDescriptor; 
-	// editor.conf-tiedostossa voidaan halutessa määrittä rakennettava
-	// ladatun datan parambagi. Jos ei määritelty, ottaa parambagin 1. source-datsta
+	// editor.conf-tiedostossa voidaan halutessa mï¿½ï¿½rittï¿½ rakennettava
+	// ladatun datan parambagi. Jos ei mï¿½ï¿½ritelty, ottaa parambagin 1. source-datsta
 	NFmiParamDescriptor itsEditedDataParamDescriptor; 
 
 	NFmiTrajectorySystem* itsTrajectorySystem;
-	bool fShowMouseHelpCursorsOnMap; // kartta ruudukolla näytettävien apukursorien tila, halutaan säädettäväksi, koska mm. kontrollipiste työkalu vilkkuu vielä liikaa
-	int itsLastSelectedSynopWmoId; // mikä on synop-taulukkonäyttö ikkunassa viimeksi valitun aseman wmoid
-	bool fMouseOnMapView; // onko hiiren kursori kartan päällä vai ei
+	bool fShowMouseHelpCursorsOnMap; // kartta ruudukolla nï¿½ytettï¿½vien apukursorien tila, halutaan sï¿½ï¿½dettï¿½vï¿½ksi, koska mm. kontrollipiste tyï¿½kalu vilkkuu vielï¿½ liikaa
+	int itsLastSelectedSynopWmoId; // mikï¿½ on synop-taulukkonï¿½yttï¿½ ikkunassa viimeksi valitun aseman wmoid
+	bool fMouseOnMapView; // onko hiiren kursori kartan pï¿½ï¿½llï¿½ vai ei
 	int itsSynopHighlightStationWmoId;
-	bool fShowSynopHighlightStationMarker; // näytetäänkö merkki kartta näytössä, kun jokin asema on mahdollisesti valittu
-	NFmiPoint itsSynopHighlightLatlon; // tässä latlon pisteessä oli viimeksi merkattu synop asema synop-teksti-taulukko näytössä
-	bool fSynopDataGridViewOn; // onko synop teksti muodossa katselu ikkuna näkyvissä vai ei
-	bool fTimeSerialDataViewOn; // onko aikasarja näyttö päällä vai ei
-	NFmiMTATempSystem itsMTATempSystem; // tieto luotaus moodista ja jos MTA-moodi päällä, tietoa luotausnäytössä näytettävistä luotauksista
+	bool fShowSynopHighlightStationMarker; // nï¿½ytetï¿½ï¿½nkï¿½ merkki kartta nï¿½ytï¿½ssï¿½, kun jokin asema on mahdollisesti valittu
+	NFmiPoint itsSynopHighlightLatlon; // tï¿½ssï¿½ latlon pisteessï¿½ oli viimeksi merkattu synop asema synop-teksti-taulukko nï¿½ytï¿½ssï¿½
+	bool fSynopDataGridViewOn; // onko synop teksti muodossa katselu ikkuna nï¿½kyvissï¿½ vai ei
+	bool fTimeSerialDataViewOn; // onko aikasarja nï¿½yttï¿½ pï¿½ï¿½llï¿½ vai ei
+	NFmiMTATempSystem itsMTATempSystem; // tieto luotaus moodista ja jos MTA-moodi pï¿½ï¿½llï¿½, tietoa luotausnï¿½ytï¿½ssï¿½ nï¿½ytettï¿½vistï¿½ luotauksista
 	NFmiObsComparisonInfo itsObsComparisonInfo;
-	bool fMapMouseDragPanMode; // ollaanko karttanäytöllä tekemässä pan:iä hiiren keski nappia vetämällä
+	bool fMapMouseDragPanMode; // ollaanko karttanï¿½ytï¿½llï¿½ tekemï¿½ssï¿½ pan:iï¿½ hiiren keski nappia vetï¿½mï¿½llï¿½
 	NFmiSynopPlotSettings itsSynopPlotSettings;
 	NFmiSynopStationPrioritySystem itsSynopStationPrioritySystem;
-	NFmiHPlaceDescriptor *itsPossibleUsedDataLoadingGrid; // jos editorissa halutaan käyttää muuta kuin apudatojen omia hilamääreitä, käytetään tätä conffi-tiedostosta luettua speksiä
+	NFmiHPlaceDescriptor *itsPossibleUsedDataLoadingGrid; // jos editorissa halutaan kï¿½yttï¿½ï¿½ muuta kuin apudatojen omia hilamï¿½ï¿½reitï¿½, kï¿½ytetï¿½ï¿½n tï¿½tï¿½ conffi-tiedostosta luettua speksiï¿½
 	NFmiCrossSectionSystem itsCrossSectionSystem; // poikkileikkaus piirron pisteiden hanskaus systeemi
-	string itsLatestMacroParamErrorText; // kun macroParam piirretään karttanäytölle, ja tulee virhe, talletetaan tähän aina viimeisin virhe ilmoitus
-	std::shared_ptr<NFmiMacroParamSystem> itsMacroParamSystemPtr; // tämä hanskaa macroParamit, joilla voi piirtää smarttoolmacroja karttanäytölle
-	std::mutex itsMacroParamSystemMutex; // Tällä varmistetaan että macroParam kyselyjä ja päivityksiä tehdään synkronoidusti
-	string itsCurrentMacroText; // tässä on tallessa viimeisin smarttool-dialogin teksti
-								// käytetään macroparam-näytön testivaiheessa
+	string itsLatestMacroParamErrorText; // kun macroParam piirretï¿½ï¿½n karttanï¿½ytï¿½lle, ja tulee virhe, talletetaan tï¿½hï¿½n aina viimeisin virhe ilmoitus
+	std::shared_ptr<NFmiMacroParamSystem> itsMacroParamSystemPtr; // tï¿½mï¿½ hanskaa macroParamit, joilla voi piirtï¿½ï¿½ smarttoolmacroja karttanï¿½ytï¿½lle
+	std::mutex itsMacroParamSystemMutex; // Tï¿½llï¿½ varmistetaan ettï¿½ macroParam kyselyjï¿½ ja pï¿½ivityksiï¿½ tehdï¿½ï¿½n synkronoidusti
+	string itsCurrentMacroText; // tï¿½ssï¿½ on tallessa viimeisin smarttool-dialogin teksti
+								// kï¿½ytetï¿½ï¿½n macroparam-nï¿½ytï¿½n testivaiheessa
 
-	NFmiString itsSavedDirectory; // talletettu työhakemisto, mikä voidaan ladata käyttöön myöhemmin
+	NFmiString itsSavedDirectory; // talletettu tyï¿½hakemisto, mikï¿½ voidaan ladata kï¿½yttï¿½ï¿½n myï¿½hemmin
 
     CtrlViewUtils::FmiSmartMetEditingMode itsSmartMetEditingMode;
 
 	string itsViewMacroPath;
 	string itsRootViewMacroPath; // jos ollaan 'rootti' hakemistossa, ei laiteta ..-hakemistoa viewparamlistaan
     std::shared_ptr<NFmiViewSettingMacro> itsCurrentViewMacro;
-    NFmiViewSettingMacro itsHelperViewMacro; // tämä on apuna näyttö-makrojen latauksessa ja talletuksessa. Todelliset makrot ovat makrolistassa
-											// mutta esim. windows asetukset talletetaan tämän avulla ennen kuin todellinen makro on edes olemassa ja kopioidaan
-											// tästä lopulliseen makroon makro listaan.
+    NFmiViewSettingMacro itsHelperViewMacro; // tï¿½mï¿½ on apuna nï¿½yttï¿½-makrojen latauksessa ja talletuksessa. Todelliset makrot ovat makrolistassa
+											// mutta esim. windows asetukset talletetaan tï¿½mï¿½n avulla ennen kuin todellinen makro on edes olemassa ja kopioidaan
+											// tï¿½stï¿½ lopulliseen makroon makro listaan.
 
-	NFmiProducerIdLister itsProducerIdLister; // jos ajon aikana tarvitaan ladatun datan alkuperäisiä tuottajia, ovat ne tässä tallessa
+	NFmiProducerIdLister itsProducerIdLister; // jos ajon aikana tarvitaan ladatun datan alkuperï¿½isiï¿½ tuottajia, ovat ne tï¿½ssï¿½ tallessa
 
 	NFmiSmartToolInfo itsSmartToolInfo;
 
 	boost::shared_ptr<NFmiDrawParam> GetDrawDifferenceDrawParam(void){return itsDrawDifferenceDrawParam;}
-	boost::shared_ptr<NFmiDrawParam> itsDrawDifferenceDrawParam; // tämän avulla piirretää toolmasterilla erotus kentät eri parametreille
+	boost::shared_ptr<NFmiDrawParam> itsDrawDifferenceDrawParam; // tï¿½mï¿½n avulla piirretï¿½ï¿½ toolmasterilla erotus kentï¿½t eri parametreille
 	boost::shared_ptr<NFmiDrawParam> GetSelectedGridPointDrawParam(void){return itsSelectedGridPointDrawParam;}
-	boost::shared_ptr<NFmiDrawParam> itsSelectedGridPointDrawParam; // tämän avulla piirretään toolmasterilla editoinnissa valittujen pisteiden joukko
-	size_t itsSelectedGridPointLimit; // kuinka monta hilapistettä pitää vähintään olla valittuna ennen kuin mennään uuteen hatchillä visualisointi tapaan
+	boost::shared_ptr<NFmiDrawParam> itsSelectedGridPointDrawParam; // tï¿½mï¿½n avulla piirretï¿½ï¿½n toolmasterilla editoinnissa valittujen pisteiden joukko
+	size_t itsSelectedGridPointLimit; // kuinka monta hilapistettï¿½ pitï¿½ï¿½ vï¿½hintï¿½ï¿½n olla valittuna ennen kuin mennï¿½ï¿½n uuteen hatchillï¿½ visualisointi tapaan
 	string itsSmartToolEditingErrorText;
 
-	bool fActivateParamSelectionDlgAfterLeftDoubleClick; // kikka 6, jotta zeditmap2view tietää, pitääkö dialogi aktivoida
+	bool fActivateParamSelectionDlgAfterLeftDoubleClick; // kikka 6, jotta zeditmap2view tietï¿½ï¿½, pitï¿½ï¿½kï¿½ dialogi aktivoida
 
-    // Näytetäänkö erilaisia apudatoja aikasarjaikkunoissa?
-    // 0 = ei apudatoja käytössä,
-    // 1. bitti päällä, näytetään asema fraktiili dataa ja havaintoja, analyysi dataa, viim. editoitu data ja läjä eri malli datoja
-    // 2. bitti päällä näytetään lyhyttä fraktiili dataa
+    // Nï¿½ytetï¿½ï¿½nkï¿½ erilaisia apudatoja aikasarjaikkunoissa?
+    // 0 = ei apudatoja kï¿½ytï¿½ssï¿½,
+    // 1. bitti pï¿½ï¿½llï¿½, nï¿½ytetï¿½ï¿½n asema fraktiili dataa ja havaintoja, analyysi dataa, viim. editoitu data ja lï¿½jï¿½ eri malli datoja
+    // 2. bitti pï¿½ï¿½llï¿½ nï¿½ytetï¿½ï¿½n lyhyttï¿½ fraktiili dataa
     int itsShowHelperDataInTimeSerialView;
-    // Näytetään yhden vuoden mallipohjaista klimatologia dataa
+    // Nï¿½ytetï¿½ï¿½n yhden vuoden mallipohjaista klimatologia dataa
     bool fShowHelperData3InTimeSerialView;
-    // Näytetään T-min ja max dataa halutusta datalähteestä apuna
+    // Nï¿½ytetï¿½ï¿½n T-min ja max dataa halutusta datalï¿½hteestï¿½ apuna
     bool fShowHelperData4InTimeSerialView;
 
-	int itsBrushToolLimitSetting; // 0=ei rajoitusta, 1=ei alle, 2= ei yli ja 3= arvon abs. asetus (rajoittaa miten siveltimellä voi rajoittaa arvoja)
+	int itsBrushToolLimitSetting; // 0=ei rajoitusta, 1=ei alle, 2= ei yli ja 3= arvon abs. asetus (rajoittaa miten siveltimellï¿½ voi rajoittaa arvoja)
 	float itsBrushToolLimitSettingValue;
 
-	bool fCPDataBackupUsed; // Tarkistus bitti sille onko jostain syystä pitänyt lukea kÿnnistyksen yhteydessä CP-datan backup. Tiedon avulla ei tarvitse lukea uudestaan Init vaiheessa CP-pisteitä (ja tuhota muutos käyriä).
+	bool fCPDataBackupUsed; // Tarkistus bitti sille onko jostain syystï¿½ pitï¿½nyt lukea kï¿½nnistyksen yhteydessï¿½ CP-datan backup. Tiedon avulla ei tarvitse lukea uudestaan Init vaiheessa CP-pisteitï¿½ (ja tuhota muutos kï¿½yriï¿½).
 
-	std::vector<int> itsDataLoadingProducerIndexVector; // tässä on tiedot siitä, mitä tuottajaa käytetään milläkin ajan hetkellä latauksen yhteydessä
+	std::vector<int> itsDataLoadingProducerIndexVector; // tï¿½ssï¿½ on tiedot siitï¿½, mitï¿½ tuottajaa kï¿½ytetï¿½ï¿½n millï¿½kin ajan hetkellï¿½ latauksen yhteydessï¿½
 
 	bool Printing(void){return fPrinting;};
 
@@ -11442,7 +11720,7 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
     int itsPrintedDescTopIndex = CtrlViewUtils::kFmiDescTopIndexNone;
 
-	NFmiEditMapDataListHandler* itsListHandler; //laura lisäsi 30081999
+	NFmiEditMapDataListHandler* itsListHandler; //laura lisï¿½si 30081999
 	NFmiDataLoadingInfo itsDataLoadingInfoNormal;
 	NFmiDataLoadingInfo itsDataLoadingInfoCaseStudy;
 
@@ -11458,57 +11736,57 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 
 	bool fUseMasksInTimeSerialViews;
 
-	int itsToolTipRealRowIndex; // hiiren kursorin lepopaikan näyttörivi tooltippiä varten
-	int itsToolTipColumnIndex; // hiiren kursorin lepopaikan näyttörivin sarake numero tooltippiä varten
-	NFmiPoint itsToolTipLatLonPoint; // hiiren kursorin lepopaikka tooltippiä varten (kartan koordinaatistossa latlon-piste)
-	NFmiMetTime itsToolTipTime; // tooltipillä voi olla mikä tahansa ruudukon aika, ja se talletetaan tähän
-	int itsToolTipMapViewDescTopIndex; // Mistä karttanäytöltä tooltip otettiin
-	boost::shared_ptr<NFmiDrawParam> itsDefaultEditedDrawParam; // tämän jouduin ottamaan käyttöön kun upudatat
-											  // alkoivat tuottaa ongelmia tälläinen luodaan aina
-											  // uudesta datasta (esim. 1. parametri). Jos käyttäjä
-											  // on laittanut esim apuparametrin näyttöön, ei ole
-											  // olemassa mitään EditedDrawParam:ia jonka voisi antaa
+	int itsToolTipRealRowIndex; // hiiren kursorin lepopaikan nï¿½yttï¿½rivi tooltippiï¿½ varten
+	int itsToolTipColumnIndex; // hiiren kursorin lepopaikan nï¿½yttï¿½rivin sarake numero tooltippiï¿½ varten
+	NFmiPoint itsToolTipLatLonPoint; // hiiren kursorin lepopaikka tooltippiï¿½ varten (kartan koordinaatistossa latlon-piste)
+	NFmiMetTime itsToolTipTime; // tooltipillï¿½ voi olla mikï¿½ tahansa ruudukon aika, ja se talletetaan tï¿½hï¿½n
+	int itsToolTipMapViewDescTopIndex; // Mistï¿½ karttanï¿½ytï¿½ltï¿½ tooltip otettiin
+	boost::shared_ptr<NFmiDrawParam> itsDefaultEditedDrawParam; // tï¿½mï¿½n jouduin ottamaan kï¿½yttï¿½ï¿½n kun upudatat
+											  // alkoivat tuottaa ongelmia tï¿½llï¿½inen luodaan aina
+											  // uudesta datasta (esim. 1. parametri). Jos kï¿½yttï¿½jï¿½
+											  // on laittanut esim apuparametrin nï¿½yttï¿½ï¿½n, ei ole
+											  // olemassa mitï¿½ï¿½n EditedDrawParam:ia jonka voisi antaa
 											  // mm. NFmiTimeControlView:lle ja ajan juoksutus saattaa
-											  // mennä pieleen apuparametrien kanssa.
-	boost::shared_ptr<NFmiAreaMaskList> itsParamMaskListMT; // universaali maskilista, olen tehnyt siitä nyt multi-threaddausta tukevan version. Tästä pitää aina pyytää kopio ParamMaskList -metodilla
-	int itsCurrentViewRowIndex; // jokaisella näyttörivillä (ruudukossa) on indeksi ja
-								// kun tehdään valintoja popup-menun kautta, rivin indeksi
-								// talletetaan tähän muuttujaan, että näyttöparametrien
-								// muutokset saadaan tehtyä oikeaan kohtaan drawparamlist-listissä
+											  // mennï¿½ pieleen apuparametrien kanssa.
+	boost::shared_ptr<NFmiAreaMaskList> itsParamMaskListMT; // universaali maskilista, olen tehnyt siitï¿½ nyt multi-threaddausta tukevan version. Tï¿½stï¿½ pitï¿½ï¿½ aina pyytï¿½ï¿½ kopio ParamMaskList -metodilla
+	int itsCurrentViewRowIndex; // jokaisella nï¿½yttï¿½rivillï¿½ (ruudukossa) on indeksi ja
+								// kun tehdï¿½ï¿½n valintoja popup-menun kautta, rivin indeksi
+								// talletetaan tï¿½hï¿½n muuttujaan, ettï¿½ nï¿½yttï¿½parametrien
+								// muutokset saadaan tehtyï¿½ oikeaan kohtaan drawparamlist-listissï¿½
 	int itsCurrentCrossSectionRowIndex;
-	int itsFilterFunction; // testi käytössä toistaiseksi 0 = avg, 1 = max ja 2 = min filtterit
+	int itsFilterFunction; // testi kï¿½ytï¿½ssï¿½ toistaiseksi 0 = avg, 1 = max ja 2 = min filtterit
 	int itsTestFilterUsedMask; // joko 1 = NFmiMetEditorTypes::kFmiNoMask tai 4 = kFmiSelectionMask
 	bool fUseMasksWithFilterTool;
-	NFmiRect itsAreaFilterRangeLimits;	// filtterimuokkauksen aluerajojen min ja max tässä
+	NFmiRect itsAreaFilterRangeLimits;	// filtterimuokkauksen aluerajojen min ja max tï¿½ssï¿½
 	NFmiRect itsAreaFilterRangeStart;	// filtterimuokkauksen aluerajat on nyt talletettu rect:iin (muokkausdialogin 1. kohta)
-// Aluemuokkausfiltterin laskenta-alue määrätään näillä
-// neljällä 'säätimellä'. rect:in Top ja Left tarkoittavat alueen
-// vasenta- ja alareunaa. Bottom ja Right oikeaa- ja yläreunaa.
+// Aluemuokkausfiltterin laskenta-alue mï¿½ï¿½rï¿½tï¿½ï¿½n nï¿½illï¿½
+// neljï¿½llï¿½ 'sï¿½ï¿½timellï¿½'. rect:in Top ja Left tarkoittavat alueen
+// vasenta- ja alareunaa. Bottom ja Right oikeaa- ja ylï¿½reunaa.
 // Luvut annetaan positiivisina, esim. seuraavilla luvuilla
 //        1(Bottom)         alueesta tulee   .....
-// 2(Left)       2(Right)       ==>          .....  eli tältä hila-alueelta lasketaan
+// 2(Left)       2(Right)       ==>          .....  eli tï¿½ltï¿½ hila-alueelta lasketaan
 //        1(Top)                             .....  joku luku (esim avg), joka
-//                                                  talletetaan keskimmäiseen hilaan
-	NFmiRect itsAreaFilterRangeEnd;		// lisäksi nyt on alkuajankohdalle ja lopulle omat rectit (muokkausdialogin 2. kohta)
-	NFmiPoint itsTimeFilterLimits; // aikafiltteröinnissä olevien rajojen minimi ja maksimi arvot minuuteissa
-	NFmiPoint itsTimeFilterRangeStart;	// aikasarjafiltteröinnin aloitus rajat (x=alkuaikasiirtymä ja y=loppuaikasiirtymä) (muokkausdialogin 1. kohta)
+//                                                  talletetaan keskimmï¿½iseen hilaan
+	NFmiRect itsAreaFilterRangeEnd;		// lisï¿½ksi nyt on alkuajankohdalle ja lopulle omat rectit (muokkausdialogin 2. kohta)
+	NFmiPoint itsTimeFilterLimits; // aikafiltterï¿½innissï¿½ olevien rajojen minimi ja maksimi arvot minuuteissa
+	NFmiPoint itsTimeFilterRangeStart;	// aikasarjafiltterï¿½innin aloitus rajat (x=alkuaikasiirtymï¿½ ja y=loppuaikasiirtymï¿½) (muokkausdialogin 1. kohta)
 	NFmiPoint itsTimeFilterRangeEnd; // (muokkausdialogin 2. kohta)
-	NFmiMetTime itsActiveViewTime; // kun näyttöruudukkoa klikataan hiirellä, yksi ruuduista muuttuu aktiiviseksi, sen ruudun aika talletetaan tähän
+	NFmiMetTime itsActiveViewTime; // kun nï¿½yttï¿½ruudukkoa klikataan hiirellï¿½, yksi ruuduista muuttuu aktiiviseksi, sen ruudun aika talletetaan tï¿½hï¿½n
 	int itsFilteringParameterUsageState; // onko valittuna 0=aktiivinen parametri, 1=kaikkiparametrit vai 2=valitutParametrit
-	NFmiParamBag itsFilteringParamBag; // tätä bagia aktivoidaan kun halutaan valita tietyt parametrit, jotka filtteröidään
+	NFmiParamBag itsFilteringParamBag; // tï¿½tï¿½ bagia aktivoidaan kun halutaan valita tietyt parametrit, jotka filtterï¿½idï¿½ï¿½n
 
-	NFmiGrid* itsClipBoardData; // käytetään copy, paste toimintoihin (kopioidaan aktiivinen ja pastetaan aktiiviseen)
+	NFmiGrid* itsClipBoardData; // kï¿½ytetï¿½ï¿½n copy, paste toimintoihin (kopioidaan aktiivinen ja pastetaan aktiiviseen)
 
 	bool fMouseCapturedInTimeWindow; // onko aikasarja ikkunassa hiiri seurannassa?
 	bool fMouseCaptured;		// onko jollain ikkunalla hiiri kaapattu
     CtrlViewUtils::FmiEditorModifyToolMode itsModifyToolMode;
-	NFmiRect itsUpdateRect; // piirrä tämä alue näytöstä uudelleen (ei ehkä tarvita)
-	NFmiPoint itsBrushSize; // prosenteissa näyttöruudun koosta
-	double itsBrushValue; // jos tehdään simppeli muutos, esim pilvisyyttä lisää 10%, tulee tähän arvo 10
-	double itsBrushSpecialParamValue; // tähän ehkä laitetaan esim. sateen olomuodon tapauksessa 2=räntää jne.
+	NFmiRect itsUpdateRect; // piirrï¿½ tï¿½mï¿½ alue nï¿½ytï¿½stï¿½ uudelleen (ei ehkï¿½ tarvita)
+	NFmiPoint itsBrushSize; // prosenteissa nï¿½yttï¿½ruudun koosta
+	double itsBrushValue; // jos tehdï¿½ï¿½n simppeli muutos, esim pilvisyyttï¿½ lisï¿½ï¿½ 10%, tulee tï¿½hï¿½n arvo 10
+	double itsBrushSpecialParamValue; // tï¿½hï¿½n ehkï¿½ laitetaan esim. sateen olomuodon tapauksessa 2=rï¿½ntï¿½ï¿½ jne.
 	bool fUseMaskWithBrush;
-	bool fViewBrushed; // kun tämä on true, päivitetään vain aktiivinen ikkuna
-	NFmiRect itsActiveViewRect; // pensselipiiron jälkeen päivitetään vain aktiivinen ikkuna
+	bool fViewBrushed; // kun tï¿½mï¿½ on true, pï¿½ivitetï¿½ï¿½n vain aktiivinen ikkuna
+	NFmiRect itsActiveViewRect; // pensselipiiron jï¿½lkeen pï¿½ivitetï¿½ï¿½n vain aktiivinen ikkuna
 	bool fLeftMouseButtonDown;
 	bool fRightMouseButtonDown;
 	bool fMiddleMouseButtonDown;
@@ -11518,8 +11796,8 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	NFmiMetTime itsTimeFilterStartTime;
 	NFmiMetTime itsTimeFilterEndTime;
 
-	int itsFilterDialogUpdateStatus; // 0 = ei tarvii tehdä mitään, 1 = päivitä aikakontrolli-ikkunaa
-									 // 2 = päivitä koko ruutu
+	int itsFilterDialogUpdateStatus; // 0 = ei tarvii tehdï¿½ mitï¿½ï¿½n, 1 = pï¿½ivitï¿½ aikakontrolli-ikkunaa
+									 // 2 = pï¿½ivitï¿½ koko ruutu
 	bool fUseTimeInterpolation;
 
 	NFmiMetEditorOptionsData itsMetEditorOptionsData;
@@ -11586,7 +11864,7 @@ bool NFmiEditMapGeneralDataDoc::Init(const NFmiBasicSmartMetConfigurations &theB
 	{
 		std::string message = "User has stopped application due to an error occured";
 		LogMessage(message, CatLog::Severity::Info, CatLog::Category::Configuration, true);
-		throw; // Heitetään poikkeus edelleen, se napataan CSmartMetApp::InitGeneralDataDoc -metodissa
+		throw; // Heitetï¿½ï¿½n poikkeus edelleen, se napataan CSmartMetApp::InitGeneralDataDoc -metodissa
 	}
 	catch(std::exception& e)
     {
@@ -11631,7 +11909,7 @@ bool NFmiEditMapGeneralDataDoc::CreateTimeSerialDialogOnViewPopup(int index)
 
 bool NFmiEditMapGeneralDataDoc::SelectAllLocations(bool newState)
 {
-// valitsee kaikki editoitavan parametrin paikat (PITÄISI VALITA VAIN NE, JOTKA OVAT AKTIIVISIA!!)
+// valitsee kaikki editoitavan parametrin paikat (PITï¿½ISI VALITA VAIN NE, JOTKA OVAT AKTIIVISIA!!)
 	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = EditedSmartInfo();
 	if(editedInfo)
 	{
@@ -11968,7 +12246,7 @@ void NFmiEditMapGeneralDataDoc::StopProfiling() {
 	pimpl->StopProfiling();
 }
 
-// tallettaa mm. CP pisteet, muutoskäyrät jne.
+// tallettaa mm. CP pisteet, muutoskï¿½yrï¿½t jne.
 void NFmiEditMapGeneralDataDoc::StoreSupplementaryData(void)
 {pimpl->StoreSupplementaryData();}
 
@@ -12148,7 +12426,7 @@ std::shared_ptr<NFmiMacroParamSystem> NFmiEditMapGeneralDataDoc::MacroParamSyste
 	return pimpl->MacroParamSystem();
 }
 
-void NFmiEditMapGeneralDataDoc::AddMacroParamToView(unsigned int theDescTopIndex, int theViewRow, const std::string &theName) // lisää halutun nimisen macroParamin halutun karttanäytön riville (1-5)
+void NFmiEditMapGeneralDataDoc::AddMacroParamToView(unsigned int theDescTopIndex, int theViewRow, const std::string &theName) // lisï¿½ï¿½ halutun nimisen macroParamin halutun karttanï¿½ytï¿½n riville (1-5)
 {
 	pimpl->AddMacroParamToView(theDescTopIndex, theViewRow, theName);
 }
@@ -12500,10 +12778,12 @@ void NFmiEditMapGeneralDataDoc::OnChangeMapType(unsigned int theDescTopIndex, bo
 	pimpl->OnChangeMapType(theDescTopIndex, fForward);
 }
 
+#ifndef UNIX
 void NFmiEditMapGeneralDataDoc::OnShowMasksOnMap(unsigned int theDescTopIndex)
 {
 	pimpl->OnShowMasksOnMap(theDescTopIndex);
 }
+#endif
 
 void NFmiEditMapGeneralDataDoc::OnShowProjectionLines(void)
 {
@@ -12548,6 +12828,7 @@ void NFmiEditMapGeneralDataDoc::SoundingViewWindBarbSpaceOutFactor(int newValue)
 	pimpl->SoundingViewWindBarbSpaceOutFactor(newValue);
 }
 
+#ifndef UNIX
 void NFmiEditMapGeneralDataDoc::TransparencyContourDrawView(CWnd *theView)
 {
 	pimpl->TransparencyContourDrawView(theView);
@@ -12557,6 +12838,7 @@ CWnd* NFmiEditMapGeneralDataDoc::TransparencyContourDrawView(void)
 {
 	return pimpl->TransparencyContourDrawView();
 }
+#endif
 
 std::vector<boost::shared_ptr<NFmiFastQueryInfo> > NFmiEditMapGeneralDataDoc::GetSortedSynopInfoVector(int theProducerId, int theProducerId2, int theProducerId3, int theProducerId4)
 {
@@ -12687,10 +12969,12 @@ void NFmiEditMapGeneralDataDoc::DeveloperModePath(bool newValue)
 	pimpl->DeveloperModePath(newValue);
 }
 
+#ifndef UNIX
 NFmiDataNotificationSettingsWinRegistry& NFmiEditMapGeneralDataDoc::DataNotificationSettings(void)
 {
 	return pimpl->DataNotificationSettings();
 }
+#endif
 
 bool NFmiEditMapGeneralDataDoc::UseTimeSerialAxisAutoAdjust(void)
 {
@@ -12810,7 +13094,9 @@ void NFmiEditMapGeneralDataDoc::InvalidateMapView(bool bErase)
 
 void NFmiEditMapGeneralDataDoc::ReportProcessMemoryUsage(void)
 {
+#ifndef UNIX
 	pimpl->ReportProcessMemoryUsage();
+#endif
 }
 
 int NFmiEditMapGeneralDataDoc::MachineThreadCount(void)
@@ -13096,10 +13382,12 @@ NFmiCPManagerSet& NFmiEditMapGeneralDataDoc::CPManagerSet(void)
 	return pimpl->CPManagerSet();
 }
 
+#ifndef UNIX
 NFmiApplicationWinRegistry& NFmiEditMapGeneralDataDoc::ApplicationWinRegistry()
 {
 	return pimpl->ApplicationWinRegistry();
 }
+#endif
 
 void NFmiEditMapGeneralDataDoc::ZoomMapWithRelativeRect(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiRect &theZoomedRect)
 {
@@ -13116,6 +13404,7 @@ void NFmiEditMapGeneralDataDoc::ZoomMapInOrOut(int theMapViewDescTopIndex, boost
     pimpl->ZoomMapInOrOut(theMapViewDescTopIndex, theMapArea, theMousePoint, theZoomFactor);
 }
 
+#ifndef UNIX
 void NFmiEditMapGeneralDataDoc::StoreSettingsToWinRegistry(void)
 {
     pimpl->StoreSettingsToWinRegistry();
@@ -13125,6 +13414,7 @@ void NFmiEditMapGeneralDataDoc::UpdateEnableDataChangesToWinReg(void)
 {
         pimpl->UpdateEnableDataChangesToWinReg();
 }
+#endif
 
 MultiProcessClientData& NFmiEditMapGeneralDataDoc::GetMultiProcessClientData(void)
 {
@@ -13151,10 +13441,12 @@ bool NFmiEditMapGeneralDataDoc::MakeSureToolMasterPoolIsRunning(void)
     return pimpl->MakeSureToolMasterPoolIsRunning();
 }
 
+#ifndef UNIX
 NFmiMultiProcessPoolOptions& NFmiEditMapGeneralDataDoc::MultiProcessPoolOptions(void)
 {
     return pimpl->MultiProcessPoolOptions();
 }
+#endif
 
 bool NFmiEditMapGeneralDataDoc::AllowRightClickDisplaySelection(void)
 {
@@ -13263,7 +13555,7 @@ void NFmiEditMapGeneralDataDoc::FillViewMacroInfo(NFmiViewSettingMacro &theViewM
 
 void NFmiEditMapGeneralDataDoc::LoadViewMacroInfo(NFmiViewSettingMacro &theViewMacro, bool fTreatAsViewMacro)
 {
-    // Tätä kutsutaan GenDocin ulkoa vain BetaProduct dialogista, siksi kyse ei ole undoRedo-actionista ja siksi viimeinen parametri on false
+    // Tï¿½tï¿½ kutsutaan GenDocin ulkoa vain BetaProduct dialogista, siksi kyse ei ole undoRedo-actionista ja siksi viimeinen parametri on false
     pimpl->LoadViewMacroInfo(theViewMacro, fTreatAsViewMacro, false); 
 }
 
@@ -13402,30 +13694,36 @@ Warnings::CapDataSystem& NFmiEditMapGeneralDataDoc::GetCapDataSystem()
     return pimpl->GetCapDataSystem();
 }
 
+#ifndef UNIX
 int NFmiEditMapGeneralDataDoc::GetTimeRangeForWarningMessagesOnMapViewInMinutes()
 {
     return pimpl->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
 }
+#endif
 
 bool NFmiEditMapGeneralDataDoc::MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage)
 {
     return pimpl->MakeControlPointAcceleratorAction(action, updateMessage);
 }
 
+#ifndef UNIX
 void NFmiEditMapGeneralDataDoc::InitGriddingProperties()
 {
     pimpl->InitGriddingProperties();
 }
+#endif
 
 NFmiMacroParamDataCache& NFmiEditMapGeneralDataDoc::MacroParamDataCache()
 {
     return pimpl->MacroParamDataCache();
 }
 
+#ifndef UNIX
 bool NFmiEditMapGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &clientPixelSize, CDC* pDC)
 {
     return pimpl->DoMapViewOnSize(mapViewDescTopIndex, clientPixelSize, pDC);
 }
+#endif
 
 TimeSerialParameters& NFmiEditMapGeneralDataDoc::GetTimeSerialParameters()
 {
@@ -13472,10 +13770,12 @@ NFmiParameterInterpolationFixer& NFmiEditMapGeneralDataDoc::ParameterInterpolati
 	return pimpl->ParameterInterpolationFixer();
 }
 
+#ifndef UNIX
 void NFmiEditMapGeneralDataDoc::UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged()
 {
 	pimpl->UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();
 }
+#endif
 
 NFmiSeaLevelPlumeData& NFmiEditMapGeneralDataDoc::SeaLevelPlumeData()
 {

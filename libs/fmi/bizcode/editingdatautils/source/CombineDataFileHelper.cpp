@@ -4,7 +4,7 @@
 #include "NFmiMilliSecondTimer.h"
 #include "NFmiQueryDataUtil.h"
 
-#include "boost\algorithm\string\replace.hpp"
+#include "boost/algorithm/string/replace.hpp"
 
 namespace
 {
@@ -13,13 +13,13 @@ namespace
 		auto combinedDataDirectory = NFmiFileSystem::PathFromPattern(combinedDataFileFilter);
 		// Poistetaan yli 5 tuntia vanhat tiedostot pois
 		NFmiFileSystem::CleanDirectory(combinedDataDirectory, 5);
-		// Poistetaan vielä muut paitsi 3 viimeistä tiedostoa, jotka osuvat filefilteriin
+		// Poistetaan vielï¿½ muut paitsi 3 viimeistï¿½ tiedostoa, jotka osuvat filefilteriin
 		NFmiFileSystem::CleanFilePattern(combinedDataFileFilter, 1);
 	}
 
 	void createCombinedDataDirectory(const std::string& combinedDataFileFilter)
 	{
-		// varmistetaan että kohde hakemisto on olemassa
+		// varmistetaan ettï¿½ kohde hakemisto on olemassa
 		auto combinedDataDirectory = NFmiFileSystem::PathFromPattern(combinedDataFileFilter);
 		NFmiFileSystem::CreateDirectory(combinedDataDirectory);
 	}
@@ -38,14 +38,14 @@ CombineDataFileHelper::CombineDataFileHelper(const std::string& partialDataFileF
 
 void CombineDataFileHelper::doDataCombinationWork()
 {
-	// Mitataan datanyhdistelyyn menevä aika
+	// Mitataan datanyhdistelyyn menevï¿½ aika
 	NFmiNanoSecondTimer timer;
 
-	// 1. Yritetään ensin vanhojen tmp-tiedostojen siivousta varmuuden vuoksi
+	// 1. Yritetï¿½ï¿½n ensin vanhojen tmp-tiedostojen siivousta varmuuden vuoksi
 	tryCleaningUpTemporaryFiles();
 	if(isDataCombinationNeeded())
 	{
-		// 4. parametri on true => tehdään aika-askel yhdisteltyä dataa
+		// 4. parametri on true => tehdï¿½ï¿½n aika-askel yhdisteltyï¿½ dataa
 		std::unique_ptr<NFmiQueryData> data(NFmiQueryDataUtil::CombineQueryDatas(doRebuildCheck_, combinedDataFileFilter_, partialDataFileFilter_, true, maxTimeSteps_, nullptr, &loggingFunction_));
 		if(data)
 		{
@@ -79,7 +79,7 @@ void CombineDataFileHelper::doDataCombinationWork()
 	}
 }
 
-// Tätä on tarkoitus kutsua ennnen kuin tehdään isDataCombinationNeeded metodin testit.
+// Tï¿½tï¿½ on tarkoitus kutsua ennnen kuin tehdï¿½ï¿½n isDataCombinationNeeded metodin testit.
 void CombineDataFileHelper::tryCleaningUpTemporaryFiles() const
 {
 	std::string basePath = NFmiFileSystem::PathFromPattern(temporaryDataFileFilter_);
@@ -124,14 +124,14 @@ static bool doPartialDataFileTimeChecks(std::time_t newestPartialDataFileTime, s
 	return true;
 }
 
-// Tätä on tarkoitus kutsua vasta kun tryCleaningUpTemporaryFiles metodia on kutsuttu.
+// Tï¿½tï¿½ on tarkoitus kutsua vasta kun tryCleaningUpTemporaryFiles metodia on kutsuttu.
 bool CombineDataFileHelper::isDataCombinationNeeded(std::time_t* lastCheckedPartialDataFileTimeInOut) const
 {
-	// Katsotaan löytyykö rakenteilla olevaa temporary tiedostoa ensin
+	// Katsotaan lï¿½ytyykï¿½ rakenteilla olevaa temporary tiedostoa ensin
 	if(NFmiFileSystem::NewestPatternFileTime(temporaryDataFileFilter_) == 0)
 	{
 		auto newestPartialDataFileTime = NFmiFileSystem::NewestPatternFileTime(partialDataFileFilter_);
-		if(newestPartialDataFileTime) // löytyikö tiedostoja ollenkaan?
+		if(newestPartialDataFileTime) // lï¿½ytyikï¿½ tiedostoja ollenkaan?
 		{
 			if(::doPartialDataFileTimeChecks(newestPartialDataFileTime, lastCheckedPartialDataFileTimeInOut))
 			{
@@ -196,7 +196,7 @@ void CombineDataFileHelper::initTemporaryDataFileFilter()
 std::string CombineDataFileHelper::makeFileTimeStamp()
 {
 	NFmiStaticTime currentTime;
-	// Tehdään minuutin tarkkuudella aikaleima
+	// Tehdï¿½ï¿½n minuutin tarkkuudella aikaleima
 	return std::string(currentTime.ToStr(kYYYYMMDDHHMM));
 }
 

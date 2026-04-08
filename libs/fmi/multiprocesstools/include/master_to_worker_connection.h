@@ -55,7 +55,7 @@ public:
     static boost::asio::io_service& master_service();
     static tcp_tools::concurrent_queue<tcp_tools::task_structure>& work_queue();
     static tcp_tools::concurrent_queue<tcp_tools::work_result_structure>& work_result_queue();
-    static void master_to_worker_connection::handle_accept_first_connection();
+    static void handle_accept_first_connection();
     static void handle_accept_connection(connection_ptr client, const error_code &err);
     static void initialize_master(bool verbose_logging);
     static void startup_workers(int worker_count, const std::string &worker_base_name, const std::string &worker_executable_absolute_path, const std::string &worker_executable_name, const std::string &worker_project_name, const std::vector<std::string> &extra_args, bool add_command_line_flags);
@@ -72,7 +72,7 @@ public:
     static void post_clean_old_results_timeout();
     static void on_check_workers_running_timeout(const error_code & error);
     static void post_check_workers_running_timeout();
-    // Aina kun joku tekee jotain työtä tai kun saadaan uusia töitä, tätä pitää kutsua.
+    // Aina kun joku tekee jotain tyï¿½tï¿½ tai kun saadaan uusia tï¿½itï¿½, tï¿½tï¿½ pitï¿½ï¿½ kutsua.
     static void set_last_working_action_time();
     static void set_keyboard_check_function(const keyboard_input_interface &keyboard_check_function);
     static void do_time_out_checks(bool new_value) {do_time_out_checks_ = new_value;}
@@ -115,42 +115,42 @@ private:
     size_t binary_read_complete(const boost::system::error_code & err, size_t bytes);
 private:
     boost::asio::ip::tcp::socket sock_;
-    std::vector<char> fixed_size_read_buffer_; // Asio:n kautta luetaan fiksatun kokoisissa paketeissa (ei saa muuttaa kokoa konstruktorin jälkeen)
-    std::string complete_message_from_read_; // kokonainen luettu viesti talletetaan tähän (tarvittaessa monessa osassa luettuna)
-    bool transmission_incomplete_; // tämän avulla tiedetään onko saapuva lähetys luettu loppuun, vai pitääkö fixed_size_read_buffer_ lisätä välillä complete_message_from_read:iin
-    std::vector<char> write_buffer_; // tämän kokoa muutetaan tarvittaessa, jos lähetettävä viesti olisi muuten liian iso
+    std::vector<char> fixed_size_read_buffer_; // Asio:n kautta luetaan fiksatun kokoisissa paketeissa (ei saa muuttaa kokoa konstruktorin jï¿½lkeen)
+    std::string complete_message_from_read_; // kokonainen luettu viesti talletetaan tï¿½hï¿½n (tarvittaessa monessa osassa luettuna)
+    bool transmission_incomplete_; // tï¿½mï¿½n avulla tiedetï¿½ï¿½n onko saapuva lï¿½hetys luettu loppuun, vai pitï¿½ï¿½kï¿½ fixed_size_read_buffer_ lisï¿½tï¿½ vï¿½lillï¿½ complete_message_from_read:iin
+    std::vector<char> write_buffer_; // tï¿½mï¿½n kokoa muutetaan tarvittaessa, jos lï¿½hetettï¿½vï¿½ viesti olisi muuten liian iso
     bool started_;
     std::string username_;
-    bool actual_client_connection_; // Jos tämä on false, ollaan yhteydessä oikeaan workeriin ja jos true, ollaan yhteydessä oikeaan clientiin (esim. SmartMet)
-    std::string client_guid_; // eri clientit ja niiden työt tunnistetaan tämän avulla (saadaan username:sta)
-    boost::asio::deadline_timer timer_; // jokaisella yhteydellä on oma timer
+    bool actual_client_connection_; // Jos tï¿½mï¿½ on false, ollaan yhteydessï¿½ oikeaan workeriin ja jos true, ollaan yhteydessï¿½ oikeaan clientiin (esim. SmartMet)
+    std::string client_guid_; // eri clientit ja niiden tyï¿½t tunnistetaan tï¿½mï¿½n avulla (saadaan username:sta)
+    boost::asio::deadline_timer timer_; // jokaisella yhteydellï¿½ on oma timer
     boost::posix_time::ptime last_ping_;
     static bool use_verbose_logging_;
     static keyboard_input_interface keyboard_check_function_;
-    static boost::asio::deadline_timer static_stopping_service_timer_; // tehdään luokan staattisille funktioille oma yhteinen timer (stopping_service)
-    static boost::asio::deadline_timer static_check_keyboard_timer_; // tehdään luokan staattisille funktioille omat timerit (check_keyboard)
-    static boost::asio::deadline_timer static_check_idle_timer_; // tehdään luokan staattisille funktioille omat timerit (idle)
-    static boost::asio::deadline_timer static_clean_old_results__timer_; // tehdään luokan staattisille funktioille omat timerit (idle)
-    static boost::asio::deadline_timer static_check_workers_running_timer_; // tehdään luokan staattisille funktioille omat timerit (idle)
-    static bool do_time_out_checks_; // Kun debugataan systeemiä, ei haluta tehdä timeout testejä, jolloin tämä laitetaan false:ksi.
+    static boost::asio::deadline_timer static_stopping_service_timer_; // tehdï¿½ï¿½n luokan staattisille funktioille oma yhteinen timer (stopping_service)
+    static boost::asio::deadline_timer static_check_keyboard_timer_; // tehdï¿½ï¿½n luokan staattisille funktioille omat timerit (check_keyboard)
+    static boost::asio::deadline_timer static_check_idle_timer_; // tehdï¿½ï¿½n luokan staattisille funktioille omat timerit (idle)
+    static boost::asio::deadline_timer static_clean_old_results__timer_; // tehdï¿½ï¿½n luokan staattisille funktioille omat timerit (idle)
+    static boost::asio::deadline_timer static_check_workers_running_timer_; // tehdï¿½ï¿½n luokan staattisille funktioille omat timerit (idle)
+    static bool do_time_out_checks_; // Kun debugataan systeemiï¿½, ei haluta tehdï¿½ timeout testejï¿½, jolloin tï¿½mï¿½ laitetaan false:ksi.
     
-    // Näitä staattisia muutujia käytetään käynnistämään kuollutta workeriä uudestaan eloon.
-    // Nämä on tarkoitus asettaa startup_workers -metodilla (joka myös käynnistää halutun määrän workereitä alkuun).
-    static int worker_count_; // Kuinka monta workeriä halutaan työskentelemään (koneen säikeiden määrä on hyvä arvaus)
-    static std::string worker_base_name_; // Tästä tulee workerin useaname:n pohja esim. worker -> worker#1
+    // Nï¿½itï¿½ staattisia muutujia kï¿½ytetï¿½ï¿½n kï¿½ynnistï¿½mï¿½ï¿½n kuollutta workeriï¿½ uudestaan eloon.
+    // Nï¿½mï¿½ on tarkoitus asettaa startup_workers -metodilla (joka myï¿½s kï¿½ynnistï¿½ï¿½ halutun mï¿½ï¿½rï¿½n workereitï¿½ alkuun).
+    static int worker_count_; // Kuinka monta workeriï¿½ halutaan tyï¿½skentelemï¿½ï¿½n (koneen sï¿½ikeiden mï¿½ï¿½rï¿½ on hyvï¿½ arvaus)
+    static std::string worker_base_name_; // Tï¿½stï¿½ tulee workerin useaname:n pohja esim. worker -> worker#1
     static std::string worker_executable_absolute_path_;
     static std::string worker_executable_name_;
     static std::string worker_project_name_;
     static std::vector<std::string> extra_args_; // workerille annettava erillinen argumentti lista.
-    static bool add_command_line_flags_; // Dos worker ohjelmassa ei ole optioiden purkua, joten sinne annetaan argumentit peräkkäin. MFC-versiolle pitää argumenteissa olla kirjain optiot, jotka lisätään erikseen tarvittaessa.
+    static bool add_command_line_flags_; // Dos worker ohjelmassa ei ole optioiden purkua, joten sinne annetaan argumentit perï¿½kkï¿½in. MFC-versiolle pitï¿½ï¿½ argumenteissa olla kirjain optiot, jotka lisï¿½tï¿½ï¿½n erikseen tarvittaessa.
 
-    tcp_tools::binary_read_state binary_reading_state_; // Tätä tilaa käytetään binaari sanomien lukuun ja sen eri tilojen merkitsemiseen (jos luettavan sanoman 1. sana on kokonaisluku ja space on sen perässä)
-    size_t binary_read_buffer_size_; // Binary sanoman alussa kerrotaan sanoman koko tavuissa, tähän talletetaan tuo koko
-    std::vector<char> binary_read_buffer_; // Binary luvussa käytetään puskurina tätä, ja sen koon voi laittaa suoraan binary_read_buffer_size_:en mukaan
+    tcp_tools::binary_read_state binary_reading_state_; // Tï¿½tï¿½ tilaa kï¿½ytetï¿½ï¿½n binaari sanomien lukuun ja sen eri tilojen merkitsemiseen (jos luettavan sanoman 1. sana on kokonaisluku ja space on sen perï¿½ssï¿½)
+    size_t binary_read_buffer_size_; // Binary sanoman alussa kerrotaan sanoman koko tavuissa, tï¿½hï¿½n talletetaan tuo koko
+    std::vector<char> binary_read_buffer_; // Binary luvussa kï¿½ytetï¿½ï¿½n puskurina tï¿½tï¿½, ja sen koon voi laittaa suoraan binary_read_buffer_size_:en mukaan
     bool worker_is_doing_task_; 
-    size_t on_check_ping_counter; // lasketaan kuinka monta kertaa ollaan on_check_ping -metodissa ja tehdään vain joka n. tarkistukselle lokitus (muuten niitä voi tulla kerran sekunnissa n kpl workeriltä)
-    const static int no_work_client_ping_time_out_in_ms_ = 5*1000; // kuinka kauan maksimissaan odotetaan clientin pingiä ennen kuin lopetetaan yhteys (vaihtelee no-work 5000 vs. work tiloissa 50 * 1000)
+    size_t on_check_ping_counter; // lasketaan kuinka monta kertaa ollaan on_check_ping -metodissa ja tehdï¿½ï¿½n vain joka n. tarkistukselle lokitus (muuten niitï¿½ voi tulla kerran sekunnissa n kpl workeriltï¿½)
+    const static int no_work_client_ping_time_out_in_ms_ = 5*1000; // kuinka kauan maksimissaan odotetaan clientin pingiï¿½ ennen kuin lopetetaan yhteys (vaihtelee no-work 5000 vs. work tiloissa 50 * 1000)
     const static int working_client_ping_time_out_in_ms_ = 50*1000;
-    const static int no_work_server_time_out_in_ms_ = 5*60*1000; // kuinka kauan maksimissaan odotetaan uusia töitä ennen kuin lopetetaan serverin käynnissä olo (5 minuuttia)
+    const static int no_work_server_time_out_in_ms_ = 5*60*1000; // kuinka kauan maksimissaan odotetaan uusia tï¿½itï¿½ ennen kuin lopetetaan serverin kï¿½ynnissï¿½ olo (5 minuuttia)
 };
 

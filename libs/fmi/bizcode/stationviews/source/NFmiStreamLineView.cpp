@@ -1766,6 +1766,7 @@ static std::list<std::vector<NFmiPoint> > SplitPathsAtEdgeOfWorld(const std::vec
     return possibleSplittedPaths;
 }
 
+#ifndef UNIX
 void NFmiStreamLineView::DrawOneWayPath(const StreamlineCalculationParameters &theCalcParams, const std::vector<NFmiPoint> &theOneWayPath, const GdiPlusLineInfo &theLineInfo, bool forwardDirection, float theLineWidthInMM)
 {
     std::list<std::vector<NFmiPoint> > possibleSplittedPaths = SplitPathsAtEdgeOfWorld(theOneWayPath, itsArea->PacificView());
@@ -1780,7 +1781,7 @@ void NFmiStreamLineView::DrawOneWayPath(const StreamlineCalculationParameters &t
 }
 
 void NFmiStreamLineView::DrawStreamLinePaths(const StreamlineCalculationParameters &theCalcParams, const std::vector<NFmiStreamlineData> &theLatlonPaths)
-{ 
+{
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
     for(size_t i = 0; i < theLatlonPaths.size(); ++i)
     {
@@ -1800,6 +1801,7 @@ void NFmiStreamLineView::DrawStreamLinePaths(const StreamlineCalculationParamete
     if(gDrawDebugInfo)
         DrawDebugDataOnMap();
 }
+#endif // UNIX
 
 #ifndef UNIX
 void NFmiStreamLineView::DrawOneWayPath(const StreamlineCalculationParameters &theCalcParams, std::vector<Gdiplus::PointF> &gdiPoints, const GdiPlusLineInfo &lineInfo, bool forwardDirection, float theLineWidthInMM)

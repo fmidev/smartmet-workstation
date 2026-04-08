@@ -4,8 +4,13 @@
 #include <newbase/NFmiSettings.h>
 #include <newbase/NFmiStringTools.h>
 #include "boost/algorithm/string/replace.hpp"
+#ifdef UNIX
+#include <filesystem>
+namespace std { namespace experimental { namespace filesystem = std::filesystem; } }
+#else
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #include <experimental/filesystem>
+#endif
 
 namespace
 {
@@ -132,8 +137,8 @@ std::string getAbsoluteFilePath(const std::string &filePath,
 std::string getPathSectionFromTotalFilePath(const std::string &theFilePath)
 {
   NFmiFileString filePath(theFilePath);
-  std::string directoryPart = filePath.Device();
-  directoryPart += filePath.Path();
+  std::string directoryPart = filePath.Device().CharPtr();
+  directoryPart += filePath.Path().CharPtr();
   return simplifyWindowsPath(directoryPart);
 }
 
@@ -148,11 +153,11 @@ std::string getRelativeStrippedFileName(const std::string &theAbsoluteFilePath,
   std::string usedFileExtension = theStrippedFileExtension;
   if (usedFileExtension.size() && usedFileExtension[0] != '.')
     usedFileExtension =
-        "." + theStrippedFileExtension;  // pitää mahdollisesti lisätä . -merkki alkuun
+        "." + theStrippedFileExtension;  // pitï¿½ï¿½ mahdollisesti lisï¿½tï¿½ . -merkki alkuun
   return NFmiStringTools::ReplaceAll(relativeFilePath, usedFileExtension, "");
 }
 
-// Lisätään loppuun kenoviiva, jos siellä ei jo sellaista ole.
+// Lisï¿½tï¿½ï¿½n loppuun kenoviiva, jos siellï¿½ ei jo sellaista ole.
 void addDirectorySeparatorAtEnd(std::string &thePathInOut)
 {
   if (thePathInOut.size() && thePathInOut[thePathInOut.size() - 1] != '\\' &&
@@ -160,8 +165,8 @@ void addDirectorySeparatorAtEnd(std::string &thePathInOut)
     thePathInOut += kFmiDirectorySeparator;
 }
 
-// Yrittää palauttaa annetusta theFilePath:ista sen suhteellisen osion, joka jää jäljelle
-// theBaseDirectoryPath:in jälkeen. Jos theFilePath:in ja theBaseDirectoryPath eivät osu
+// Yrittï¿½ï¿½ palauttaa annetusta theFilePath:ista sen suhteellisen osion, joka jï¿½ï¿½ jï¿½ljelle
+// theBaseDirectoryPath:in jï¿½lkeen. Jos theFilePath:in ja theBaseDirectoryPath eivï¿½t osu
 // yhteen, palautetaan originaali arvo.
 // Jos theFilePath on suhteellinen polku, palautetaan originaali arvo.
 // Esim1: "C:\xxx\data.txt", "C:\xxx"   => "data.txt"
@@ -191,7 +196,7 @@ std::string getRelativePathIfPossible(const std::string &theFilePath,
         std::string finalRelativePath;
         if (pos2 != std::string::npos)
         {
-          // Otetaan vielä polun alusta pois mahdolliset kenoviivat
+          // Otetaan vielï¿½ polun alusta pois mahdolliset kenoviivat
           finalRelativePath = std::string(relativePath.begin() + pos2, relativePath.end());
         }
         else
@@ -206,7 +211,7 @@ std::string getRelativePathIfPossible(const std::string &theFilePath,
   return theFilePath;
 }
 
-// Yrittää hakea tiedostolle sen lopullisen absoluuttisen polun extensioineen kaikkineen.
+// Yrittï¿½ï¿½ hakea tiedostolle sen lopullisen absoluuttisen polun extensioineen kaikkineen.
 // Esim1 "beta1" "D:\betaProducts" "BetaProd"  =>
 // D:\betaProducts\beta1.BetaProd" 
 // Esim2 "D:\betaProducts\beta1.1" "D:\betaProducts" "BetaProd" =>
@@ -229,8 +234,8 @@ std::string getTrueFilePath(const std::string &theOriginalFilePath,
     return filePath;
   else
   {
-    // Tutkitaan onko kyseessä absoluuttinen vai suhteellinen polku
-    // ja tehdään lopullisesti tutkittava polku.
+    // Tutkitaan onko kyseessï¿½ absoluuttinen vai suhteellinen polku
+    // ja tehdï¿½ï¿½n lopullisesti tutkittava polku.
     NFmiFileString fileString(filePath);
     std::string finalFilePath;
     if (fileString.IsAbsolutePath())
@@ -242,8 +247,8 @@ std::string getTrueFilePath(const std::string &theOriginalFilePath,
       finalFilePath += filePath;
     }
 
-    // Lisätään vielä tarvittaessa polkuun tiedoston wmr -pääte
-    std::string fileExtension = fileString.Extension();
+    // Lisï¿½tï¿½ï¿½n vielï¿½ tarvittaessa polkuun tiedoston wmr -pï¿½ï¿½te
+    std::string fileExtension = fileString.Extension().CharPtr();
     if (fileExtension.empty())
     {
       finalFilePath += "." + theFileExtension;
@@ -252,8 +257,8 @@ std::string getTrueFilePath(const std::string &theOriginalFilePath,
     }
     else
     {
-      // Vaikka tiedostonimessä olisi extensio, se ei tarkoita että se olisi oikean tyyppinen (esim.
-      // beta4.1, missä '1' on väärän tyyppinen extensio)
+      // Vaikka tiedostonimessï¿½ olisi extensio, se ei tarkoita ettï¿½ se olisi oikean tyyppinen (esim.
+      // beta4.1, missï¿½ '1' on vï¿½ï¿½rï¿½n tyyppinen extensio)
       NFmiStringTools::LowerCase(fileExtension);
       std::string wantedFileExtensionLowerCase = theFileExtension;
       NFmiStringTools::LowerCase(wantedFileExtensionLowerCase);
@@ -284,9 +289,9 @@ std::string simplifyWindowsPath(const std::string &pathstring)
 {
   auto fixedSeparatorPathString = fixPathSeparators(pathstring);
   std::experimental::filesystem::path originalPath(fixedSeparatorPathString);
-  // Tähän tulee windowsissa esim. D:
+  // Tï¿½hï¿½n tulee windowsissa esim. D:
   auto rootNamePath = originalPath.root_name();
-  // Tähän tulee absoluuttinen polku ilman driveria, esim. \xxx\yyy
+  // Tï¿½hï¿½n tulee absoluuttinen polku ilman driveria, esim. \xxx\yyy
   std::string basicRootPathString =
       originalPath.root_directory().string() + originalPath.relative_path().string();
   auto unixRootPathString = boost::replace_all_copy(basicRootPathString, "\\", "/");
@@ -301,12 +306,12 @@ std::string simplifyWindowsPath(const std::string &pathstring)
 std::string fixPathSeparators(const std::string &pathstring)
 {
   std::experimental::filesystem::path originalPath(pathstring);
-  // Käännetään kaikki separaattorit oikein päin
+  // Kï¿½ï¿½nnetï¿½ï¿½n kaikki separaattorit oikein pï¿½in
   originalPath = originalPath.make_preferred();
-  // Poistetaan kaikki tupla tai useammat peräkkäiset separaattorit
+  // Poistetaan kaikki tupla tai useammat perï¿½kkï¿½iset separaattorit
   // Esim. dir1\\dir2\dir3\file => dir1\dir2\dir3\file
-  // paitsi jos kyse on Winows polusta missä on serveri nimi alussa
-  // Esim. tässä ei alun tuplaa 'korjata': \\servername\dir1\dir2\file
+  // paitsi jos kyse on Winows polusta missï¿½ on serveri nimi alussa
+  // Esim. tï¿½ssï¿½ ei alun tuplaa 'korjata': \\servername\dir1\dir2\file
   auto fixedPathString = originalPath.string();
   if (fixedPathString.size() < 2)
   {
@@ -319,13 +324,13 @@ std::string fixPathSeparators(const std::string &pathstring)
                            fixedPathString[1] == kFmiDirectorySeparator);
   if (isWinServerStart)
   {
-    // poistetaan 1. kirjain tässä poikkeustapauksessa
+    // poistetaan 1. kirjain tï¿½ssï¿½ poikkeustapauksessa
     fixedPathString.erase(0, 1);
   }
 
   for (;;)
   {
-    // Tehdään korjauksia niin kauan, kunnes tulos-stringin koko ei eroa originaalin koosta.
+    // Tehdï¿½ï¿½n korjauksia niin kauan, kunnes tulos-stringin koko ei eroa originaalin koosta.
     auto originalStr = fixedPathString;
     boost::replace_all(fixedPathString, searchStr, replaceStr);
     if (originalStr.size() == fixedPathString.size())

@@ -26,7 +26,7 @@
 #include "NFmiSettings.h"
 #include <cmath>
 
-#include <boost\math\special_functions\round.hpp>
+#include <boost/math/special_functions/round.hpp>
 
 using namespace std;
 

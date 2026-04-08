@@ -12,6 +12,7 @@
 #include "NFmiColor.h"
 #include "NFmiInfoData.h"
 #include "NFmiMetEditorTypes.h"
+#include "NFmiTimeBag.h"
 #include "FmiSmartMetEditingMode.h"
 #include "FmiEditorModifyToolMode.h"
 #include "catlog/catlog.h"

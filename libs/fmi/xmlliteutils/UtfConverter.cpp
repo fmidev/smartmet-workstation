@@ -1,6 +1,9 @@
 #include "xmlliteutils/stdafx.h"
 #include "xmlliteutils/UtfConverter.h"
 #include "xmlliteutils/ConvertUTF.h"
+#ifdef UNIX
+#include <stdexcept>
+#endif
 
 namespace UtfConverter
 {
@@ -19,7 +22,11 @@ namespace UtfConverter
 			ConversionResult res = ConvertUTF8toUTF16(&sourcestart, sourceend, &targetstart, targetend, strictConversion);
 			if (res != conversionOK)
 			{
+#ifdef UNIX
+				throw std::runtime_error("La falla!");
+#else
 				throw std::exception("La falla!");
+#endif
 			}
 			*targetstart = 0;
 			return resultstring;
@@ -35,14 +42,22 @@ namespace UtfConverter
 			ConversionResult res = ConvertUTF8toUTF32(&sourcestart, sourceend, &targetstart, targetend, strictConversion);
 			if (res != conversionOK)
 			{
+#ifdef UNIX
+				throw std::runtime_error("La falla!");
+#else
 				throw std::exception("La falla!");
+#endif
 			}
 			*targetstart = 0;
 			return resultstring;
 		}
 		else
 		{
+#ifdef UNIX
+			throw std::runtime_error("La falla!");
+#else
 			throw std::exception("La falla!");
+#endif
 		}
 		return L"";
 	}
@@ -63,7 +78,11 @@ namespace UtfConverter
 			ConversionResult res = ConvertUTF16toUTF8(&sourcestart, sourceend, &targetstart, targetend, strictConversion);
 			if (res != conversionOK)
 			{
+#ifdef UNIX
+				throw std::runtime_error("La falla!");
+#else
 				throw std::exception("La falla!");
+#endif
 			}
 			*targetstart = 0;
 			return resultstring;
@@ -80,14 +99,22 @@ namespace UtfConverter
 			ConversionResult res = ConvertUTF32toUTF8(&sourcestart, sourceend, &targetstart, targetend, strictConversion);
 			if (res != conversionOK)
 			{
+#ifdef UNIX
+				throw std::runtime_error("La falla!");
+#else
 				throw std::exception("La falla!");
+#endif
 			}
 			*targetstart = 0;
 			return resultstring;
 		}
 		else
 		{
+#ifdef UNIX
+			throw std::runtime_error("La falla!");
+#else
 			throw std::exception("La falla!");
+#endif
 		}
 		return "";
 	}
@@ -95,7 +122,12 @@ namespace UtfConverter
     std::string ConvertUtf_8ToString(const std::string &theUtf8Str)
     {
         std::wstring wstr = UtfConverter::FromUtf8(theUtf8Str);
+#ifdef UNIX
+        // On Linux, convert wstring to UTF-8 string using the ToUtf8 helper
+        std::string asciiStr = UtfConverter::ToUtf8(wstr);
+#else
         std::string asciiStr = CT2A(CString(wstr.c_str()));
+#endif
         return asciiStr;
     }
 

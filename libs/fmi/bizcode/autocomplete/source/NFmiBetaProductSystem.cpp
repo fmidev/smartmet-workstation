@@ -1,5 +1,5 @@
 #ifdef _MSC_VER
-#pragma warning( disable : 4800 ) // tämä estää pitkän varoituksen joka tulee kun käytetään CachedRegBool -> registry_int<bool> -tyyppistä dataa, siellä operator T -metodissa DWORD muuttuu bool:iksi (Huom! static_cast ei auta)
+#pragma warning( disable : 4800 ) // tï¿½mï¿½ estï¿½ï¿½ pitkï¿½n varoituksen joka tulee kun kï¿½ytetï¿½ï¿½n CachedRegBool -> registry_int<bool> -tyyppistï¿½ dataa, siellï¿½ operator T -metodissa DWORD muuttuu bool:iksi (Huom! static_cast ei auta)
 #endif
 
 #include "NFmiBetaProductSystem.h"
@@ -76,7 +76,7 @@ NFmiMetTime FixedRunTime::MakeMetTime() const
     return aTime;
 }
 
-// fixedRunTimeString pitää olla muotoa HH:mm esim. 4:15 tai 04:15
+// fixedRunTimeString pitï¿½ï¿½ olla muotoa HH:mm esim. 4:15 tai 04:15
 // Oletus: fixedRunTimeString on jo trimmattu whitespace:n suhteen.
 FixedRunTime FixedRunTime::ParseFixedRunTimeString(const std::string& fixedRunTimeString, std::string& possibleErrorString)
 {
@@ -116,7 +116,7 @@ std::vector<FixedRunTime> FixedRunTime::ParseFixedRunTimesString(const std::stri
     if(usedStr.empty())
     {
         possibleErrorString = ::GetDictionaryString("Fixed run times were empty");
-        return std::vector<FixedRunTime>(); // virhetilanteessa palkautetaan tyhjä vector
+        return std::vector<FixedRunTime>(); // virhetilanteessa palkautetaan tyhjï¿½ vector
     }
 
     std::vector<std::string> fixedRunTimeParts;
@@ -129,7 +129,7 @@ std::vector<FixedRunTime> FixedRunTime::ParseFixedRunTimesString(const std::stri
         if(fixedRunTime.IsValid())
             fixedRunTimes.push_back(fixedRunTime);
         else
-            return std::vector<FixedRunTime>(); // virhetilanteessa palkautetaan tyhjä vector
+            return std::vector<FixedRunTime>(); // virhetilanteessa palkautetaan tyhjï¿½ vector
     }
 
     return fixedRunTimes;
@@ -178,7 +178,7 @@ NFmiBetaProduct::NFmiBetaProduct()
 {
 }
 
-// Käy läpi kaikki tarkastelut ja tekee virheilmoituksia
+// Kï¿½y lï¿½pi kaikki tarkastelut ja tekee virheilmoituksia
 bool NFmiBetaProduct::CheckTimeRelatedInputs(const NFmiMetTime &theStartingTime, const std::string &theTimeLengthInHoursString, const std::string &theTimeStepInMinutesString, bool theUseUtcTimesInTimeBox)
 {
     // Nollataan status dataosiot
@@ -188,7 +188,7 @@ bool NFmiBetaProduct::CheckTimeRelatedInputs(const NFmiMetTime &theStartingTime,
     // Alustetaan ns. transientit dataosiot
     itsStartingTime = theStartingTime;
 
-    // Alustetaan pysyvät dataosiot
+    // Alustetaan pysyvï¿½t dataosiot
     itsTimeLengthInHoursString = theTimeLengthInHoursString;
     itsTimeStepInMinutesString = theTimeStepInMinutesString;
     fUseUtcTimesInTimeBox = theUseUtcTimesInTimeBox;
@@ -209,12 +209,12 @@ std::string NFmiBetaProduct::GetUsedFileNameTemplate(bool addStationIdMarker) co
     {
         if(addStationIdMarker)
         {
-            // auto on tyyppiä validTime_obs/for_stationid.png
+            // auto on tyyppiï¿½ validTime_obs/for_stationid.png
             return NFmiBetaProductionSystem::FileNameTemplateValidTimeStamp() + "_" + NFmiBetaProductionSystem::BetaAutomationAutoFileNameTypeStamp() + "_" + NFmiBetaProductionSystem::FileNameTemplateStationIdStamp() + ".png";
         }
         else
         {
-            // auto on tyyppiä validTime_obs/for.png
+            // auto on tyyppiï¿½ validTime_obs/for.png
             return NFmiBetaProductionSystem::FileNameTemplateValidTimeStamp() + "_" + NFmiBetaProductionSystem::BetaAutomationAutoFileNameTypeStamp() + ".png";
         }
     }
@@ -222,7 +222,7 @@ std::string NFmiBetaProduct::GetUsedFileNameTemplate(bool addStationIdMarker) co
         return itsFileNameTemplate;
 }
 
-const double gMissingTimeRelatedValue = -99999.; // Kaikki aika kontrolleihin liittyvät arvot ovat positiivisia
+const double gMissingTimeRelatedValue = -99999.; // Kaikki aika kontrolleihin liittyvï¿½t arvot ovat positiivisia
 
 template<typename T>
 static T GetTimeControlRelatedValueFromString(const std::string &theValueString)
@@ -256,7 +256,7 @@ static std::string MakeInvalidInputString(const std::string &theStartPartDiction
 NFmiMetTime NFmiBetaProduct::CalcEndTime()
 {
     double tmpTimeLengthInHours = ::GetTimeControlRelatedValueFromString<double>(itsTimeLengthInHoursString);
-    if(tmpTimeLengthInHours < 0) // Formaalisesti virheellisen inputin paluuarvo on myös negatiivinen, joten sitä ei tarvitse tarkastella erikseen
+    if(tmpTimeLengthInHours < 0) // Formaalisesti virheellisen inputin paluuarvo on myï¿½s negatiivinen, joten sitï¿½ ei tarvitse tarkastella erikseen
     {
         itsTimeInputErrorString = ::MakeInvalidInputString(itsTimeLengthLabel, "Give positive real value like: 15", itsTimeLengthInHoursString);
         return NFmiMetTime::gMissingTime;
@@ -265,7 +265,7 @@ NFmiMetTime NFmiBetaProduct::CalcEndTime()
         itsTimeLengthInHours = tmpTimeLengthInHours;
 
     int tmpTimeStepInMinutes = GetTimeControlRelatedValueFromString<int>(itsTimeStepInMinutesString);
-    if(tmpTimeStepInMinutes < 1) // Formaalisti virheellisen paluu arvo on negatiivinen, eikä saa myöskään olla 0, koska tällöin tulisi 0:lla jako
+    if(tmpTimeStepInMinutes < 1) // Formaalisti virheellisen paluu arvo on negatiivinen, eikï¿½ saa myï¿½skï¿½ï¿½n olla 0, koska tï¿½llï¿½in tulisi 0:lla jako
     {
         itsTimeInputErrorString = ::MakeInvalidInputString(itsTimeStepLabel, "Give positive integer value like: 60", itsTimeStepInMinutesString);
         return NFmiMetTime::gMissingTime;
@@ -337,8 +337,8 @@ std::string NFmiBetaProduct::MakeTimeRangeInfoString()
     return infoStr;
 }
 
-// Oletus: theRowIndexListStr on jo tarkastettu, että se ei ole tyhjä ja siitä on poistettu kaikki whitespacet ja
-// on tarkastettu, että indexRangeString:ista löytyy '-' merkki (ja indeksi ei saanut olla negatiivinen, joten esim. "-12" ei kelpaa)
+// Oletus: theRowIndexListStr on jo tarkastettu, ettï¿½ se ei ole tyhjï¿½ ja siitï¿½ on poistettu kaikki whitespacet ja
+// on tarkastettu, ettï¿½ indexRangeString:ista lï¿½ytyy '-' merkki (ja indeksi ei saanut olla negatiivinen, joten esim. "-12" ei kelpaa)
 static void AddPossibleRangeToList(std::vector<int> &indexListInOut, const std::string &indexRangeString)
 {
     try
@@ -408,15 +408,15 @@ static void AddPossibleIndicesToList(std::vector<int> &indexListInOut, const std
     }
 }
 
-// Muuttujassa itsRowIndexListStringU_ pitää olla jotain seuraavaa:
-// 1. tyhjä
-// 2. int1,int2,int3-int4,... eli pilkuilla erotettuja positiivisia lukuja (0 ei kelpaa) listassa joissa voi olla yksittäisiä lukuja tai lukuvälejä
-// 2.1. Jos kyse lukuvälistä, on mukana kaksi lukua, missä niiden erottimena on '-' -merkki
+// Muuttujassa itsRowIndexListStringU_ pitï¿½ï¿½ olla jotain seuraavaa:
+// 1. tyhjï¿½
+// 2. int1,int2,int3-int4,... eli pilkuilla erotettuja positiivisia lukuja (0 ei kelpaa) listassa joissa voi olla yksittï¿½isiï¿½ lukuja tai lukuvï¿½lejï¿½
+// 2.1. Jos kyse lukuvï¿½listï¿½, on mukana kaksi lukua, missï¿½ niiden erottimena on '-' -merkki
 // Esim. "1,3,6-8,12,..."
-// Heittää poikkeuksia, jos virheellinen input.
+// Heittï¿½ï¿½ poikkeuksia, jos virheellinen input.
 static std::vector<int> MakeIndexList(std::string indexListString)
 {
-    indexListString = ::RemoveAllWhiteSpaces(indexListString); // Poistetaan varmuuden vuoksi kaikki white-spacet input stringistä
+    indexListString = ::RemoveAllWhiteSpaces(indexListString); // Poistetaan varmuuden vuoksi kaikki white-spacet input stringistï¿½
     if(indexListString.empty())
         return std::vector<int>();
     else
@@ -453,13 +453,13 @@ bool NFmiBetaProduct::ContainsStringCaseInsensitive(const std::string &searchThi
     return !findRange.empty();
 }
 
-// Oletus: tänne tullaan vain jos itsRowIndexList EI ole tyhjä.
-// 1. Jos itsRowSubdirectoryTemplateStringU_ -muuttujassa on jotain, siitä pitää löytyä '#' -markki, muuten se ei kelpaa
-// 2. Jos tämä on tyhjä, mutta itsRowIndexList -muuttujassa on arvoja, pitää itsFileNameTemplateU_ -muuttujassa olla "rowIndex" -leima
+// Oletus: tï¿½nne tullaan vain jos itsRowIndexList EI ole tyhjï¿½.
+// 1. Jos itsRowSubdirectoryTemplateStringU_ -muuttujassa on jotain, siitï¿½ pitï¿½ï¿½ lï¿½ytyï¿½ '#' -markki, muuten se ei kelpaa
+// 2. Jos tï¿½mï¿½ on tyhjï¿½, mutta itsRowIndexList -muuttujassa on arvoja, pitï¿½ï¿½ itsFileNameTemplateU_ -muuttujassa olla "rowIndex" -leima
 std::string NFmiBetaProduct::CheckUsedRowSubdirectoryTemplate()
 {
     std::string subdirTemplateStr = itsRowSubdirectoryTemplate;
-    subdirTemplateStr = ::RemoveAllWhiteSpaces(subdirTemplateStr); // Poistetaan varmuuden vuoksi kaikki white-spacet input stringistä
+    subdirTemplateStr = ::RemoveAllWhiteSpaces(subdirTemplateStr); // Poistetaan varmuuden vuoksi kaikki white-spacet input stringistï¿½
     if(subdirTemplateStr.empty())
     {
             itsRowInputErrorString = ::GetDictionaryString("Multiple rows were selected but no row subdirectory template.");
@@ -471,7 +471,7 @@ std::string NFmiBetaProduct::CheckUsedRowSubdirectoryTemplate()
     {
         std::string::size_type pos = subdirTemplateStr.find('#');
         if(pos != std::string::npos)
-            return subdirTemplateStr; // templaatista löytyi # -merkki, templaatti kunnossa
+            return subdirTemplateStr; // templaatista lï¿½ytyi # -merkki, templaatti kunnossa
         else
         {
             itsRowInputErrorString = ::GetDictionaryString("Multiple rows were selected but invalid input in row subdirectory template");
@@ -496,7 +496,7 @@ const std::string gSupportedRowSubdirectoryFormats = "<empty>  OR  Row#  OR  #  
 std::string NFmiBetaProduct::MakeRowIndexInfoString()
 {
     itsRowIndexies = CalcRowIndexies();
-    if(itsRowInputErrorString.empty() && !itsRowIndexies.empty()) // Jos CalcRowIndexList:issa ei virheitä ja palautettu itsRowIndexList ei ollut tyhjä, tutkitaan row-subdirectory-template:ia
+    if(itsRowInputErrorString.empty() && !itsRowIndexies.empty()) // Jos CalcRowIndexList:issa ei virheitï¿½ ja palautettu itsRowIndexList ei ollut tyhjï¿½, tutkitaan row-subdirectory-template:ia
         itsRowSubdirectoryTemplate = CheckUsedRowSubdirectoryTemplate();
 
     std::string infoStr;
@@ -552,7 +552,7 @@ std::string NFmiBetaProduct::MakeRowIndexInfoString()
     return infoStr;
 }
 
-// Käy läpi kaikki tarkastelut ja tekee virheilmoituksia
+// Kï¿½y lï¿½pi kaikki tarkastelut ja tekee virheilmoituksia
 bool NFmiBetaProduct::CheckRowRelatedInputs(const std::string &theRowIndexListString, const std::string &theRowSubdirectoryTemplate, const std::string &theFileNameTemplate, bool useAutoFileNames, FmiDirection theParamBoxLocation)
 {
     fRowIndexInputOk = false;
@@ -569,7 +569,7 @@ bool NFmiBetaProduct::CheckRowRelatedInputs(const std::string &theRowIndexListSt
     return InputWasGood();
 }
 
-// Käy läpi kaikki tarkastelut ja tekee status asetuksia.
+// Kï¿½y lï¿½pi kaikki tarkastelut ja tekee status asetuksia.
 bool NFmiBetaProduct::CheckSynopStationIdListRelatedInputs(const std::string &theSynopStationIdListString)
 {
     fSynopStationIdListInputOk = false;
@@ -592,7 +592,7 @@ std::vector<int> NFmiBetaProduct::GetUsedRowIndexies(int theOrigRowIndex) const
         return itsRowIndexies;
     else
     {
-        // Jos käyttäjä ei ole antanut listaa, tehdään sellainen käytössä olevasta theOrigRowIndex:istä
+        // Jos kï¿½yttï¿½jï¿½ ei ole antanut listaa, tehdï¿½ï¿½n sellainen kï¿½ytï¿½ssï¿½ olevasta theOrigRowIndex:istï¿½
         return std::vector<int>{theOrigRowIndex};
     }
 }
@@ -628,7 +628,7 @@ const std::string& NFmiBetaProduct::MakeViewMacroInfoText(const std::string &the
     {
         NFmiFileString fileString(itsViewMacroPath);
 
-        // Tutkitaan löytyykö annettua viewMacroa ollenkaan
+        // Tutkitaan lï¿½ytyykï¿½ annettua viewMacroa ollenkaan
         if(NFmiFileSystem::FileExists(itsViewMacroPath))
         {
             itsViewMacroInfoText = ::GetDictionaryString("Using viewMacro");
@@ -711,12 +711,12 @@ void NFmiBetaProduct::InitFromJsonRead(const NFmiMetTime &theStartingTime)
 
 static void FixPathDirectorySeparatorSlashes(std::string &thePath)
 {
-    NFmiStringTools::ReplaceChars(thePath, '/', '\\'); // muutetaan polku niin että kenoviivat on oikein päin
+    NFmiStringTools::ReplaceChars(thePath, '/', '\\'); // muutetaan polku niin ettï¿½ kenoviivat on oikein pï¿½in
 }
 
 void NFmiBetaProduct::ParseJsonPair(json_spirit::Pair &thePair)
 {
-    // Tässä puretään NFmiBetaProduct luokan päätason pareja.
+    // Tï¿½ssï¿½ puretï¿½ï¿½n NFmiBetaProduct luokan pï¿½ï¿½tason pareja.
     if(thePair.name_ == gJsonName_ImageStoragePath)
     {
         itsImageStoragePath = thePair.value_.get_str();
@@ -787,7 +787,7 @@ NFmiBetaProductAutomation::NFmiTimeModeInfo::NFmiTimeModeInfo()
 {
 }
 
-// Tämä on suoraa NFmiTimeModeInfo -luokan käyttöä, jolloin ei tehdä sen kummempia tarkasteluja parametreille.
+// Tï¿½mï¿½ on suoraa NFmiTimeModeInfo -luokan kï¿½yttï¿½ï¿½, jolloin ei tehdï¿½ sen kummempia tarkasteluja parametreille.
 NFmiBetaProductAutomation::NFmiTimeModeInfo::NFmiTimeModeInfo(TimeMode theTimeMode, double theWallClockOffsetInHours)
 :itsTimeMode(theTimeMode)
 , itsWallClockOffsetInHoursString()
@@ -828,7 +828,7 @@ json_spirit::Object NFmiBetaProductAutomation::NFmiTimeModeInfo::MakeJsonObject(
     json_spirit::Object jsonObject;
     jsonObject.push_back(json_spirit::Pair(gJsonName_TimeMode, timeModeInfo.itsTimeMode));
 
-    // Tietyissä dataosissa vain default arvosta poikkeavat arvot talletetaan json objektiin.
+    // Tietyissï¿½ dataosissa vain default arvosta poikkeavat arvot talletetaan json objektiin.
     if(defaultTimeModeObject.itsWallClockOffsetInHoursString != timeModeInfo.itsWallClockOffsetInHoursString)
         jsonObject.push_back(json_spirit::Pair(gJsonName_WallClockOffsetInHours, timeModeInfo.itsWallClockOffsetInHoursString));
 
@@ -837,15 +837,15 @@ json_spirit::Object NFmiBetaProductAutomation::NFmiTimeModeInfo::MakeJsonObject(
 
 void NFmiBetaProductAutomation::NFmiTimeModeInfo::ParseJsonPair(json_spirit::Pair &thePair)
 {
-    // Tässä puretään NFmiTimeModeInfo luokan päätason pareja.
+    // Tï¿½ssï¿½ puretï¿½ï¿½n NFmiTimeModeInfo luokan pï¿½ï¿½tason pareja.
     if(thePair.name_ == gJsonName_TimeMode)
         itsTimeMode = static_cast<NFmiBetaProductAutomation::TimeMode>(thePair.value_.get_int());
     else if(thePair.name_ == gJsonName_WallClockOffsetInHours)
         itsWallClockOffsetInHoursString = thePair.value_.get_str();
 }
 
-// Testataanvain todellisia käyttäjän antamia arvoja, ei testata mitään statuksia, 
-// tai status stringeja, koska verrokkia ei välttämättä päivitetä.
+// Testataanvain todellisia kï¿½yttï¿½jï¿½n antamia arvoja, ei testata mitï¿½ï¿½n statuksia, 
+// tai status stringeja, koska verrokkia ei vï¿½lttï¿½mï¿½ttï¿½ pï¿½ivitetï¿½.
 bool NFmiBetaProductAutomation::NFmiTimeModeInfo::operator==(const NFmiBetaProductAutomation::NFmiTimeModeInfo &other) const
 {
     if(itsTimeMode != other.itsTimeMode)
@@ -1073,7 +1073,7 @@ void NFmiBetaProductAutomation::NFmiTriggerModeInfo::CheckTriggerData()
     }
 }
 
-// Tämä toimii vain itsTriggerMode == kFmiTimeStep -moodissa!!!!
+// Tï¿½mï¿½ toimii vain itsTriggerMode == kFmiTimeStep -moodissa!!!!
 NFmiMetTime NFmiBetaProductAutomation::NFmiTriggerModeInfo::MakeFirstRunTimeOfGivenDay(const NFmiMetTime &theTime) const
 {
     NFmiMetTime aTime(theTime.GetYear(), theTime.GetMonth(), theTime.GetDay(), 0, 0, 0, 1);
@@ -1083,7 +1083,7 @@ NFmiMetTime NFmiBetaProductAutomation::NFmiTriggerModeInfo::MakeFirstRunTimeOfGi
 
 NFmiMetTime NFmiBetaProductAutomation::NFmiTriggerModeInfo::CalcNextDueTimeWithFixedTimes(const NFmiMetTime& theLastRunTime) const
 {
-    // Etsitään fixed listasta seuraava theLastRunTime:ia suurempi aika (HH:mm tasolla suurempi)
+    // Etsitï¿½ï¿½n fixed listasta seuraava theLastRunTime:ia suurempi aika (HH:mm tasolla suurempi)
     auto iter = std::find_if(itsFixedRunTimes.begin(), itsFixedRunTimes.end(), [&](const auto& fixedTime) {return fixedTime > theLastRunTime; });
     if(iter != itsFixedRunTimes.end())
     {
@@ -1091,7 +1091,7 @@ NFmiMetTime NFmiBetaProductAutomation::NFmiTriggerModeInfo::CalcNextDueTimeWithF
     }
     else
     {
-        // Jos ei löydy tälle päivälle enää aikoja, tehdään listan 1. ajasta seuraavan päivän aika
+        // Jos ei lï¿½ydy tï¿½lle pï¿½ivï¿½lle enï¿½ï¿½ aikoja, tehdï¿½ï¿½n listan 1. ajasta seuraavan pï¿½ivï¿½n aika
         auto firstIter = itsFixedRunTimes.begin();
         if(firstIter != itsFixedRunTimes.end())
         {
@@ -1101,7 +1101,7 @@ NFmiMetTime NFmiBetaProductAutomation::NFmiTriggerModeInfo::CalcNextDueTimeWithF
         }
     }
 
-    return NFmiMetTime::gMissingTime; // Mahdollinen virhetilanne ja jos aikalista oli tyhjä, palautetaan puuttuva aika
+    return NFmiMetTime::gMissingTime; // Mahdollinen virhetilanne ja jos aikalista oli tyhjï¿½, palautetaan puuttuva aika
 }
 
 NFmiMetTime NFmiBetaProductAutomation::NFmiTriggerModeInfo::CalcNextDueTimeWithTimeSteps(const NFmiMetTime& theLastRunTime) const
@@ -1112,25 +1112,25 @@ NFmiMetTime NFmiBetaProductAutomation::NFmiTriggerModeInfo::CalcNextDueTimeWithT
         if(aTime > theLastRunTime)
         {
             if(aTime.GetDay() != theLastRunTime.GetDay())
-                aTime = MakeFirstRunTimeOfGivenDay(aTime); // jos ollaan menty jo toiseen päivään, pitää sille laskea uusi alkuaika!
+                aTime = MakeFirstRunTimeOfGivenDay(aTime); // jos ollaan menty jo toiseen pï¿½ivï¿½ï¿½n, pitï¿½ï¿½ sille laskea uusi alkuaika!
             return aTime;
         }
 
-        // Loput tarkastelut ovat ns sanity checkejä, jos on vääriä lähtöarvoja datassta, ja niitä ei ole tarkasteltu kunnolla, jotta koodi ei jää ikilooppiin.
+        // Loput tarkastelut ovat ns sanity checkejï¿½, jos on vï¿½ï¿½riï¿½ lï¿½htï¿½arvoja datassta, ja niitï¿½ ei ole tarkasteltu kunnolla, jotta koodi ei jï¿½ï¿½ ikilooppiin.
         if(aTime.GetDay() != theLastRunTime.GetDay())
             break;
         if(itsRunTimeStepInHours <= 0)
             break;
     }
 
-    // Jos ei löytynyt enää tälle päivälle aikoja, tehdään seuraavan päivän 1. aika tässä
+    // Jos ei lï¿½ytynyt enï¿½ï¿½ tï¿½lle pï¿½ivï¿½lle aikoja, tehdï¿½ï¿½n seuraavan pï¿½ivï¿½n 1. aika tï¿½ssï¿½
     NFmiMetTime firstNextDayTime = MakeFirstRunTimeOfGivenDay(theLastRunTime);
     firstNextDayTime.ChangeByDays(1);
     return firstNextDayTime;
 }
 
-// Lasketaan milloin automaatio pitää suorittaa seuraavan kerrran, kun tiedetään milloin se 
-// on viimeksi ajettu ja mikä on nykyhetki
+// Lasketaan milloin automaatio pitï¿½ï¿½ suorittaa seuraavan kerrran, kun tiedetï¿½ï¿½n milloin se 
+// on viimeksi ajettu ja mikï¿½ on nykyhetki
 NFmiMetTime NFmiBetaProductAutomation::NFmiTriggerModeInfo::CalcNextDueTime(const NFmiMetTime &theLastRunTime, bool automationModeOn) const
 {
     if(automationModeOn)
@@ -1243,7 +1243,7 @@ bool NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(co
             if(wantedProducerId == kFmiSYNOP || wantedProducerId == kFmiFlashObs)
             {
                 // Ainakin Suomessa Synop ja Flash datat ovat multi-data juttuja, jolloin
-                // pitää tutkia että onko mikään kyseisen tuottajan datoista juuri nyt ladattu
+                // pitï¿½ï¿½ tutkia ettï¿½ onko mikï¿½ï¿½n kyseisen tuottajan datoista juuri nyt ladattu
                 auto infoList = infoOrganizer.GetInfos(wantedProducerId);
                 for(auto& info : infoList)
                 {
@@ -1256,7 +1256,7 @@ bool NFmiBetaProductAutomation::NFmiTriggerModeInfo::HasDataTriggerBeenLoaded(co
             }
             else
             {
-                // NFmiExtraMacroParamData::FindWantedInfo metodille pitää sallia etsiä myös asemadatoja (3. parametri true).
+                // NFmiExtraMacroParamData::FindWantedInfo metodille pitï¿½ï¿½ sallia etsiï¿½ myï¿½s asemadatoja (3. parametri true).
                 auto wantedInfoData = NFmiExtraMacroParamData::FindWantedInfo(infoOrganizer, triggerData, true);
                 if(::CheckIfInfoWasOnTriggerList(wantedInfoData.foundInfo_, loadedDataTriggerList, automationName, triggerData.dataTriggerRelatedWaitForMinutes_, betaProductCase))
                 {
@@ -1286,7 +1286,7 @@ json_spirit::Object NFmiBetaProductAutomation::NFmiTriggerModeInfo::MakeJsonObje
     json_spirit::Object jsonObject;
     jsonObject.push_back(json_spirit::Pair(gJsonName_TriggerMode, triggerModeInfo.itsTriggerMode));
 
-    // Tietyissä dataosissa vain default arvosta poikkeavat arvot talletetaan json objektiin.
+    // Tietyissï¿½ dataosissa vain default arvosta poikkeavat arvot talletetaan json objektiin.
     if(defaultTriggerModeInfo.itsFixedRunTimesString != triggerModeInfo.itsFixedRunTimesString)
         jsonObject.push_back(json_spirit::Pair(gJsonName_FixedRunTimes, triggerModeInfo.itsFixedRunTimesString));
     if(defaultTriggerModeInfo.itsRunTimeStepInHoursString != triggerModeInfo.itsRunTimeStepInHoursString)
@@ -1301,13 +1301,13 @@ json_spirit::Object NFmiBetaProductAutomation::NFmiTriggerModeInfo::MakeJsonObje
 
 void NFmiBetaProductAutomation::NFmiTriggerModeInfo::ParseJsonPair(json_spirit::Pair &thePair)
 {
-    // Tässä puretään NFmiTriggerModeInfo luokan päätason pareja.
+    // Tï¿½ssï¿½ puretï¿½ï¿½n NFmiTriggerModeInfo luokan pï¿½ï¿½tason pareja.
     if(thePair.name_ == gJsonName_TriggerMode)
         itsTriggerMode = static_cast<NFmiBetaProductAutomation::TriggerMode>(thePair.value_.get_int());
     else if(thePair.name_ == gJsonName_FixedRunTimes)
     {
         itsFixedRunTimesString = thePair.value_.get_str();
-        // HUOM! Laske ajoajat tässä
+        // HUOM! Laske ajoajat tï¿½ssï¿½
     }
     else if(thePair.name_ == gJsonName_RunTimeStepInHours)
         itsRunTimeStepInHoursString = thePair.value_.get_str();
@@ -1320,8 +1320,8 @@ void NFmiBetaProductAutomation::NFmiTriggerModeInfo::ParseJsonPair(json_spirit::
     }
 }
 
-// Testataanvain todellisia käyttäjän antamia arvoja, ei testata mitään statuksia, 
-// tai status stringeja, koska verrokkia ei välttämättä päivitetä.
+// Testataanvain todellisia kï¿½yttï¿½jï¿½n antamia arvoja, ei testata mitï¿½ï¿½n statuksia, 
+// tai status stringeja, koska verrokkia ei vï¿½lttï¿½mï¿½ttï¿½ pï¿½ivitetï¿½.
 bool NFmiBetaProductAutomation::NFmiTriggerModeInfo::operator==(const NFmiBetaProductAutomation::NFmiTriggerModeInfo &other) const
 {
     if(itsTriggerMode != other.itsTriggerMode)
@@ -1389,7 +1389,7 @@ void NFmiBetaProductAutomation::CheckBetaProductPath(const std::string &theBetaP
     {
         NFmiFileString fileString(itsBetaProductPath);
 
-        // Tutkitaan löytyykö annettua viewMacroa ollenkaan
+        // Tutkitaan lï¿½ytyykï¿½ annettua viewMacroa ollenkaan
         if(NFmiFileSystem::FileExists(itsBetaProductPath))
         {
             fBetaProductPathStatus = true;
@@ -1452,7 +1452,7 @@ const std::string& NFmiBetaProductAutomation::EndTimeModeInfoStatusString() cons
 }
 
 // Jos fReloadFromFile on tosi, pakotetaan Beta-product luettavaksi tiedostosta aina.
-// Tämä on hyvä tehdä kun ajetaan automaatioita ja joku on saattanut tehdä muutoksia tuotteeseen.
+// Tï¿½mï¿½ on hyvï¿½ tehdï¿½ kun ajetaan automaatioita ja joku on saattanut tehdï¿½ muutoksia tuotteeseen.
 std::shared_ptr<NFmiBetaProduct> NFmiBetaProductAutomation::GetBetaProduct(bool fReloadFromFile)
 {
     if(fReloadFromFile || !(itsBetaProduct && itsBetaProductPath == itsLoadedBetaProductAbsolutePath))
@@ -1495,7 +1495,7 @@ json_spirit::Object NFmiBetaProductAutomation::MakeJsonObject(const NFmiBetaProd
 
 void NFmiBetaProductAutomation::ParseJsonPair(json_spirit::Pair &thePair)
 {
-    // Tässä puretään NFmiTriggerModeInfo luokan päätason pareja.
+    // Tï¿½ssï¿½ puretï¿½ï¿½n NFmiTriggerModeInfo luokan pï¿½ï¿½tason pareja.
     if(thePair.name_ == gJsonName_BetaProductPath)
         itsBetaProductPath = thePair.value_.get_str();
     else if(thePair.name_ == gJsonName_OriginalBetaProductPath)
@@ -1508,7 +1508,7 @@ void NFmiBetaProductAutomation::ParseJsonPair(json_spirit::Pair &thePair)
         JsonUtils::ParseJsonValue(itsEndTimeModeInfo, thePair.value_);
 }
 
-// Tätä kutsutaan kun esim. luetaan data tiedostosta ja tehdään täisi tarkistus kaikille osille
+// Tï¿½tï¿½ kutsutaan kun esim. luetaan data tiedostosta ja tehdï¿½ï¿½n tï¿½isi tarkistus kaikille osille
 void NFmiBetaProductAutomation::DoFullChecks()
 {
     CheckBetaProductPath(itsOriginalBetaProductPath);
@@ -1517,8 +1517,8 @@ void NFmiBetaProductAutomation::DoFullChecks()
     CheckEndTimeModeInfo(itsEndTimeModeInfo.itsTimeMode, itsEndTimeModeInfo.itsWallClockOffsetInHoursString);
 }
 
-// Tässä tehdään beta automation listassa oleville Beta-automaation tilaa kuvaava satus info teksti.
-// Kyseessä on siis vain parilla sanalla sanottu tilanne, jotta se mahtuisi dialogissa olevaan sarakkeeseen.
+// Tï¿½ssï¿½ tehdï¿½ï¿½n beta automation listassa oleville Beta-automaation tilaa kuvaava satus info teksti.
+// Kyseessï¿½ on siis vain parilla sanalla sanottu tilanne, jotta se mahtuisi dialogissa olevaan sarakkeeseen.
 std::string NFmiBetaProductAutomation::MakeShortStatusErrorString()
 {
     if(!fBetaProductPathStatus)
@@ -1545,8 +1545,8 @@ bool NFmiBetaProductAutomation::ReadInJsonFormat(NFmiBetaProductAutomation &beta
     return status;
 }
 
-// Testataanvain todellisia käyttäjän antamia arvoja, ei testata mitään statuksia, 
-// tai status stringeja, koska verrokkia ei välttämättä päivitetä.
+// Testataanvain todellisia kï¿½yttï¿½jï¿½n antamia arvoja, ei testata mitï¿½ï¿½n statuksia, 
+// tai status stringeja, koska verrokkia ei vï¿½lttï¿½mï¿½ttï¿½ pï¿½ivitetï¿½.
 bool NFmiBetaProductAutomation::operator==(const NFmiBetaProductAutomation &other) const
 {
     if(itsBetaProductPath != other.itsBetaProductPath)
@@ -1596,7 +1596,7 @@ NFmiBetaProductAutomationListItem::NFmiBetaProductAutomationListItem(const std::
 {
 }
 
-// Tätä kutsutaan kun esim. luetaan data tiedostosta ja tehdään täysi tarkistus kaikille osille
+// Tï¿½tï¿½ kutsutaan kun esim. luetaan data tiedostosta ja tehdï¿½ï¿½n tï¿½ysi tarkistus kaikille osille
 void NFmiBetaProductAutomationListItem::DoFullChecks(bool automationModeOn)
 {
     itsStatus = kFmiListItemOk;
@@ -1669,7 +1669,7 @@ static const std::string gJsonName_BetaAutomationListItemEnable = "Enable";
 static const std::string gJsonName_BetaAutomationListItemPath = "Beta-automation path";
 static const std::string gJsonName_BetaAutomationListItemAbsolutePath = "Beta-automation absolute path";
 
-// Tämä tallentaa json objektiin vain enable -lipun ja polun käytettyyn Beta-automaatioon. 
+// Tï¿½mï¿½ tallentaa json objektiin vain enable -lipun ja polun kï¿½ytettyyn Beta-automaatioon. 
 // Mutta ei itse Beta-automaatio otusta!!
 json_spirit::Object NFmiBetaProductAutomationListItem::MakeJsonObject(const NFmiBetaProductAutomationListItem &listItem)
 {
@@ -1726,11 +1726,11 @@ NFmiBetaProductAutomationList::NFmiBetaProductAutomationList()
 {
 }
 
-// Oletus: theListItem.itsBetaProductAutomationPath:iin on jo laitettu käytetty polku.
+// Oletus: theListItem.itsBetaProductAutomationPath:iin on jo laitettu kï¿½ytetty polku.
 // 1. Tarkistaa onko annettu polku absoluuttinen vai suhteellinen
 // 2. Jos suhteellinen, laske absoluuttinen polku beta-product-base-directoryn mukaan
 // 3. Jos absoluuttinen polku, laske suhteellinen polku em. base-directoryn mukaan.
-// 4. Kokeillaan löytyykö saatu absoluuttinen polku
+// 4. Kokeillaan lï¿½ytyykï¿½ saatu absoluuttinen polku
 bool NFmiBetaProductAutomationList::MakeListItemPathSettingsCheck(NFmiBetaProductAutomationListItem &theListItem, const std::string &theCheckedPath)
 {
     std::string givenPath = theCheckedPath;
@@ -1752,9 +1752,9 @@ bool NFmiBetaProductAutomationList::MakeListItemPathSettingsCheck(NFmiBetaProduc
 bool NFmiBetaProductAutomationList::MakeListItemPathSettings(NFmiBetaProductAutomationListItem &theListItem)
 {
     NFmiBetaProductAutomationListItem tmpItem = theListItem;
-    // Kokeillaan ensin löytyykö automaatio-tiedosto käyttäen mahdollista suhteellista polkua vastaan (käyttäjän antama polku, joka voi olla suhteellinen)
+    // Kokeillaan ensin lï¿½ytyykï¿½ automaatio-tiedosto kï¿½yttï¿½en mahdollista suhteellista polkua vastaan (kï¿½yttï¿½jï¿½n antama polku, joka voi olla suhteellinen)
     if(!MakeListItemPathSettingsCheck(tmpItem, tmpItem.itsBetaProductAutomationPath))
-    { // jos ei löytynyt, kokeillaan vielä löytyykö absoluuttisella polulla mitään
+    { // jos ei lï¿½ytynyt, kokeillaan vielï¿½ lï¿½ytyykï¿½ absoluuttisella polulla mitï¿½ï¿½n
         if(theListItem.itsBetaProductAutomationAbsolutePath.empty())
         {
             theListItem = tmpItem; // Jos jsonista ei saatu ollenkaan absoluuttista polkua, palautetaan suhteellisen polun tarkastelun tilanne ja palautetaan false
@@ -1770,10 +1770,10 @@ bool NFmiBetaProductAutomationList::MakeListItemPathSettings(NFmiBetaProductAuto
 bool NFmiBetaProductAutomationList::Add(const std::string &theBetaAutomationPath)
 {
     std::shared_ptr<NFmiBetaProductAutomationListItem> listItem = std::make_shared<NFmiBetaProductAutomationListItem>(theBetaAutomationPath);
-    if(PrepareListItemAfterJsonRead(*listItem)) // Voidaan käyttää tätä metodia, vaikka listItemia ei olekaan luettu json-tiedostosta
+    if(PrepareListItemAfterJsonRead(*listItem)) // Voidaan kï¿½yttï¿½ï¿½ tï¿½tï¿½ metodia, vaikka listItemia ei olekaan luettu json-tiedostosta
     {
         listItem->fEnable = true;
-        // Lisättäessä listaan laitetaan CalcNextDueTime funktiolla true optio päälle.
+        // Lisï¿½ttï¿½essï¿½ listaan laitetaan CalcNextDueTime funktiolla true optio pï¿½ï¿½lle.
         listItem->itsNextRunTime = listItem->itsBetaProductAutomation->TriggerModeInfo().CalcNextDueTime(NFmiMetTime(1), true);
         itsAutomationVector.push_back(listItem);
         return true;
@@ -1782,7 +1782,7 @@ bool NFmiBetaProductAutomationList::Add(const std::string &theBetaAutomationPath
     return false;
 }
 
-// Rivi indeksi pitää antaa 0-kantaisena indeksinä, oikeasti rivit grid-controllissa alkavat yhdestä, koska siinä on mukana otsikko rivi.
+// Rivi indeksi pitï¿½ï¿½ antaa 0-kantaisena indeksinï¿½, oikeasti rivit grid-controllissa alkavat yhdestï¿½, koska siinï¿½ on mukana otsikko rivi.
 bool NFmiBetaProductAutomationList::Remove(size_t theZeroBasedRowIndex)
 {
     if(theZeroBasedRowIndex < itsAutomationVector.size())
@@ -1791,27 +1791,27 @@ bool NFmiBetaProductAutomationList::Remove(size_t theZeroBasedRowIndex)
         return true;
     }
     else
-        return false; // indeksi ei osoittanut mihinkään vektorin olioon
+        return false; // indeksi ei osoittanut mihinkï¿½ï¿½n vektorin olioon
 }
 
 static NFmiBetaProductAutomationListItem gDummyBetaProductAutomationListItem;
 
-// Rivi indeksi pitää antaa 0-kantaisena indeksinä, oikeasti rivit grid-controllissa alkavat yhdestä, koska siinä on mukana otsikko rivi.
+// Rivi indeksi pitï¿½ï¿½ antaa 0-kantaisena indeksinï¿½, oikeasti rivit grid-controllissa alkavat yhdestï¿½, koska siinï¿½ on mukana otsikko rivi.
 NFmiBetaProductAutomationListItem& NFmiBetaProductAutomationList::Get(size_t theZeroBasedRowIndex)
 {
     if(theZeroBasedRowIndex < itsAutomationVector.size())
         return *itsAutomationVector[theZeroBasedRowIndex];
     else
-        return gDummyBetaProductAutomationListItem; // indeksi ei osoittanut mihinkään vektorin olioon
+        return gDummyBetaProductAutomationListItem; // indeksi ei osoittanut mihinkï¿½ï¿½n vektorin olioon
 }
 
-// Rivi indeksi pitää antaa 0-kantaisena indeksinä, oikeasti rivit grid-controllissa alkavat yhdestä, koska siinä on mukana otsikko rivi.
+// Rivi indeksi pitï¿½ï¿½ antaa 0-kantaisena indeksinï¿½, oikeasti rivit grid-controllissa alkavat yhdestï¿½, koska siinï¿½ on mukana otsikko rivi.
 const NFmiBetaProductAutomationListItem& NFmiBetaProductAutomationList::Get(size_t theZeroBasedRowIndex) const
 {
     if(theZeroBasedRowIndex < itsAutomationVector.size())
         return *itsAutomationVector[theZeroBasedRowIndex];
     else
-        return gDummyBetaProductAutomationListItem; // indeksi ei osoittanut mihinkään vektorin olioon
+        return gDummyBetaProductAutomationListItem; // indeksi ei osoittanut mihinkï¿½ï¿½n vektorin olioon
 }
 
 static const std::string gJsonName_BetaAutomationListHeader = "Beta-automation list";
@@ -1832,17 +1832,17 @@ json_spirit::Object NFmiBetaProductAutomationList::MakeJsonObject(const NFmiBeta
 
     json_spirit::Object jsonObject; // luodaan ns. null-objekti
     if(dataArray.size())
-    { // täytetään objekti vain jos löytyi yhtään talletettavaa dataa
+    { // tï¿½ytetï¿½ï¿½n objekti vain jos lï¿½ytyi yhtï¿½ï¿½n talletettavaa dataa
         jsonObject.push_back(json_spirit::Pair(gJsonName_BetaAutomationListHeader, dataArray));
     }
     return jsonObject;
 }
 
-// ListItem on luettu json-tiedostosta NFmiBetaProductAutomationList -luvun yhteydessä, 
-// sille pitää tehdä seuraavia asioita ennen kuin se voidaan lisätä itsAutomationVector:iin:
-// 1. Säädä polut (abs vs relative)
+// ListItem on luettu json-tiedostosta NFmiBetaProductAutomationList -luvun yhteydessï¿½, 
+// sille pitï¿½ï¿½ tehdï¿½ seuraavia asioita ennen kuin se voidaan lisï¿½tï¿½ itsAutomationVector:iin:
+// 1. Sï¿½ï¿½dï¿½ polut (abs vs relative)
 // 2. Luo dynaamisesti oletus Beta-automation olio
-// 3. Lue Beta-automation olio käyttöön
+// 3. Lue Beta-automation olio kï¿½yttï¿½ï¿½n
 bool NFmiBetaProductAutomationList::PrepareListItemAfterJsonRead(NFmiBetaProductAutomationListItem &theListItem)
 {
     MakeListItemPathSettings(theListItem);
@@ -1864,20 +1864,20 @@ void NFmiBetaProductAutomationList::ParseJsonPair(json_spirit::Pair &thePair)
                 JsonUtils::ParseJsonValue(*listItem, *it);
                 if(!PrepareListItemAfterJsonRead(*listItem))
                     listItem->itsStatus = NFmiBetaProductAutomationListItem::kFmiListItemReadError;
-                itsAutomationVector.push_back(listItem); // Lisätään virheellisestikin luetut listItemit, jotta käyttäjä saisi palautetta
+                itsAutomationVector.push_back(listItem); // Lisï¿½tï¿½ï¿½n virheellisestikin luetut listItemit, jotta kï¿½yttï¿½jï¿½ saisi palautetta
             }
         }
     }
 }
 
-// Tätä kutsutaan kun esim. luetaan data tiedostosta ja tehdään täysi tarkistus kaikille osille
+// Tï¿½tï¿½ kutsutaan kun esim. luetaan data tiedostosta ja tehdï¿½ï¿½n tï¿½ysi tarkistus kaikille osille
 void NFmiBetaProductAutomationList::DoFullChecks(bool fAutomationModeOn)
 {
     // Tutkitaan ensin erikseen jokainen automaatio-olio
     for(auto &listItem : itsAutomationVector)
         listItem->DoFullChecks(fAutomationModeOn);
 
-    // Sitten tehdään yhteis tarkastuksia: 1. onko samoja automaatioita useita listassa
+    // Sitten tehdï¿½ï¿½n yhteis tarkastuksia: 1. onko samoja automaatioita useita listassa
     if(itsAutomationVector.size() > 1)
     {
         for(size_t j = 0; j < itsAutomationVector.size() - 1; j++)
@@ -1901,10 +1901,10 @@ void NFmiBetaProductAutomationList::RefreshAutomationList()
     }
 }
 
-// Siirrä automaatiota yhden pykälän listassa ylös/alas.
-// Suunta ylös tarkoittaa Beta-automaatio dialogin listassa 
-// visuaalisesti ylös eli kohti pienempää indeksiä.
-// Tässä tehdään swap kahden vector:issa olevan itemin välillä.
+// Siirrï¿½ automaatiota yhden pykï¿½lï¿½n listassa ylï¿½s/alas.
+// Suunta ylï¿½s tarkoittaa Beta-automaatio dialogin listassa 
+// visuaalisesti ylï¿½s eli kohti pienempï¿½ï¿½ indeksiï¿½.
+// Tï¿½ssï¿½ tehdï¿½ï¿½n swap kahden vector:issa olevan itemin vï¿½lillï¿½.
 // Onnistuessa palauttaa siirretyn itemin uuden 0-pohjaisen indeksin.
 // Jos siirto ei onnistu, palauttaa -1.
 int NFmiBetaProductAutomationList::MoveAutomationUp(size_t moved1BasedIndex, bool moveUp)
@@ -1925,11 +1925,11 @@ void NFmiBetaProductAutomationList::RefreshAutomationIfNeeded(std::shared_ptr<NF
 {
     // Lue annettu beta-automaatio uudestaan tiedostosta uuteen olioon
     std::shared_ptr<NFmiBetaProductAutomationListItem> listItemFromFile = std::make_shared<NFmiBetaProductAutomationListItem>(automationListItem->itsBetaProductAutomationAbsolutePath);
-    if(PrepareListItemAfterJsonRead(*listItemFromFile)) // Voidaan käyttää tätä metodia, vaikka listItemia ei olekaan luettu json-tiedostosta
+    if(PrepareListItemAfterJsonRead(*listItemFromFile)) // Voidaan kï¿½yttï¿½ï¿½ tï¿½tï¿½ metodia, vaikka listItemia ei olekaan luettu json-tiedostosta
     {
-        // Jos luku meni hyvin, sijoitetaan annettu beta-automaatio päivitettävään otukseen
+        // Jos luku meni hyvin, sijoitetaan annettu beta-automaatio pï¿½ivitettï¿½vï¿½ï¿½n otukseen
         automationListItem->itsBetaProductAutomation.swap(listItemFromFile->itsBetaProductAutomation);
-        // päivitetään vielä seuraava ajoaika
+        // pï¿½ivitetï¿½ï¿½n vielï¿½ seuraava ajoaika
         automationListItem->itsNextRunTime = automationListItem->itsBetaProductAutomation->TriggerModeInfo().CalcNextDueTime(NFmiMetTime(1), true);
     }
 }
@@ -1993,7 +1993,7 @@ static void AddPostponedAutomationsToDueList(std::vector<std::shared_ptr<NFmiBet
             debugTriggerMessage += std::to_string(it->itsPostponeTimeInMinutes);
             debugTriggerMessage += " minutes";
             CatLog::logMessage(debugTriggerMessage, CatLog::Severity::Debug, CatLog::Category::Operational);
-            // Kopsataan myöhästetty automaatio ajettavien listalle
+            // Kopsataan myï¿½hï¿½stetty automaatio ajettavien listalle
             dueAutomationsInOut.push_back(it->itsPostponedDataTriggeredAutomation);
             // Erase the current element and get the iterator to the next element
             it = postponedDataTriggeredAutomations.erase(it);
@@ -2045,11 +2045,11 @@ std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductA
     return dueAutomations;
 }
 
-// Käyttäjällä on nykyään kolme on-demand -nappia, joista voi käynnistää halutun setin automaatioita työstettäväksi:
-// 1. Jos selectedAutomationIndex:issä on positiivinen numero, ajetaan vain sen osoittama automaatio.
+// Kï¿½yttï¿½jï¿½llï¿½ on nykyï¿½ï¿½n kolme on-demand -nappia, joista voi kï¿½ynnistï¿½ï¿½ halutun setin automaatioita tyï¿½stettï¿½vï¿½ksi:
+// 1. Jos selectedAutomationIndex:issï¿½ on positiivinen numero, ajetaan vain sen osoittama automaatio.
 // 2. Jos selectedAutomationIndex on -1 ja doOnlyEnabled on true, ajetaan kaikki listalle olevat enbloidut automaatiot.
 // 3. Jos selectedAutomationIndex on -1 ja doOnlyEnabled on false, ajetaan kaikki listalle olevat automaatiot.
-// selectedAutomationIndex -parametri on 1:stä alkava indeksi ja -1 tarkoitti siis että käydään koko listaa läpi.
+// selectedAutomationIndex -parametri on 1:stï¿½ alkava indeksi ja -1 tarkoitti siis ettï¿½ kï¿½ydï¿½ï¿½n koko listaa lï¿½pi.
 std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductAutomationList::GetOnDemandAutomations(int selectedAutomationIndex, bool doOnlyEnabled)
 {
     std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> onDemandAutomations;
@@ -2059,7 +2059,7 @@ std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductA
         if(actualIndex < itsAutomationVector.size())
         {
             const auto &automationItem = itsAutomationVector[actualIndex];
-            // Automaation pitää kuitenkin olla ilman virheitä, että se kelpuutetaan ajettavaksi
+            // Automaation pitï¿½ï¿½ kuitenkin olla ilman virheitï¿½, ettï¿½ se kelpuutetaan ajettavaksi
             if(automationItem->GetErrorStatus() == NFmiBetaProductAutomationListItem::kFmiListItemOk)
                 onDemandAutomations.push_back(automationItem);
         }
@@ -2068,7 +2068,7 @@ std::vector<std::shared_ptr<NFmiBetaProductAutomationListItem>> NFmiBetaProductA
     {
         for(const auto& listItem : itsAutomationVector)
         {
-            // Automaation pitää kuitenkin olla ilman virheitä, että se kelpuutetaan ajettavaksi
+            // Automaation pitï¿½ï¿½ kuitenkin olla ilman virheitï¿½, ettï¿½ se kelpuutetaan ajettavaksi
             if(listItem->GetErrorStatus() == NFmiBetaProductAutomationListItem::kFmiListItemOk)
             {
                 if(!doOnlyEnabled || listItem->fEnable)
@@ -2091,7 +2091,7 @@ bool NFmiBetaProductAutomationList::StoreInJsonFormat(const NFmiBetaProductAutom
 bool NFmiBetaProductAutomationList::ReadInJsonFormat(NFmiBetaProductAutomationList &theBetaProductAutomationList, const std::string &theFilePath, std::string &theErrorStringOut)
 {
     bool status = JsonUtils::ReadObjectInJsonFormat(theBetaProductAutomationList, theFilePath, gBetaAutomationListName, theErrorStringOut);
-    theBetaProductAutomationList.DoFullChecks(true); // Tehdään täällä tarkastelut automaatiomoodi päällä, myöhemmin (tätä funktiota kutsuvassa systeemissä) tarkastelut on tehtävä uudestaan kun oikeasti tiedetään missä moodissa ollaan
+    theBetaProductAutomationList.DoFullChecks(true); // Tehdï¿½ï¿½n tï¿½ï¿½llï¿½ tarkastelut automaatiomoodi pï¿½ï¿½llï¿½, myï¿½hemmin (tï¿½tï¿½ funktiota kutsuvassa systeemissï¿½) tarkastelut on tehtï¿½vï¿½ uudestaan kun oikeasti tiedetï¿½ï¿½n missï¿½ moodissa ollaan
     return status;
 }
 
@@ -2161,12 +2161,13 @@ NFmiBetaProductionSystem::NFmiBetaProductionSystem()
 
 bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, const std::string& theAbsoluteWorkingDirectory, const std::string& possibleStartingBetaAutomationListPath)
 {
-    // Nämä alustetaan vain ja ainoastaan konffeista ainakin toistaiseksi
+    // Nï¿½mï¿½ alustetaan vain ja ainoastaan konffeista ainakin toistaiseksi
     itsBetaProductionBaseDirectory = NFmiSettings::Optional<std::string>("BetaProduction::BaseDirectory", "C:\\smartmet\\BetaProducts\\");
     itsBetaProductionBaseDirectory = PathUtils::makeFixedAbsolutePath(itsBetaProductionBaseDirectory, theAbsoluteWorkingDirectory);
     CatLog::logMessage(std::string("BetaProduction::BaseDirectory = ") + itsBetaProductionBaseDirectory, CatLog::Severity::Info, CatLog::Category::Configuration);
 
     mBaseRegistryPath = theBaseRegistryPath;
+#ifndef UNIX
     // HKEY_CURRENT_USER -keys
     HKEY usedKey = HKEY_CURRENT_USER;
     // Beta product section
@@ -2197,8 +2198,8 @@ bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, cons
     mBetaProductPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\BetaProductPath", usedKey, "");
     mBetaProductTabControlIndex = ::CreateRegValue<CachedRegInt>(mBaseRegistryPath, betaProductSectionName, "\\BetaProductTabControlIndex", usedKey, 0);
 
-    // otetaan Beta-product base-directory oletus arvoksi näihin kolmeen polkuun
-    mBetaProductSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\BetaProductSaveInitialPath", usedKey, itsBetaProductionBaseDirectory); 
+    // otetaan Beta-product base-directory oletus arvoksi nï¿½ihin kolmeen polkuun
+    mBetaProductSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\BetaProductSaveInitialPath", usedKey, itsBetaProductionBaseDirectory);
     mBetaAutomationSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\BetaAutomationSaveInitialPath", usedKey, itsBetaProductionBaseDirectory);
     mBetaAutomationListSaveInitialPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\BetaAutomationListSaveInitialPath", usedKey, itsBetaProductionBaseDirectory);
 
@@ -2212,6 +2213,7 @@ bool NFmiBetaProductionSystem::Init(const std::string &theBaseRegistryPath, cons
     mEndTimeClockOffsetInHoursString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\EndTimeClockOffsetInHours", usedKey, "");
     mAutomationPath = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\AutomationPath", usedKey, "");
     mTriggerDataString = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, betaProductSectionName, "\\TriggerData", usedKey, "");
+#endif // !UNIX
 
     std::function<std::string()> getterFunction = [this]() {return this->GetBetaProductionBaseDirectory(); };
     NFmiBetaProductAutomation::SetBetaProductionBaseDirectoryGetter(getterFunction);
@@ -2264,7 +2266,7 @@ bool NFmiBetaProductionSystem::InitImagePackingExe(const std::string& theAbsolut
     if(itsImagePackingExePath.empty())
     {
         itsImagePackingExePath = ExePathHelper::MakeHardCodedExePath(theAbsoluteWorkingDirectory, "\\utils\\pngquant\\pngquant.exe", exeNameInErrorMessages);
-        // Jos ei ole tullut tähän mennessä järkevää arvoa exelle, ollaan jo tehty virheilmoituksia lokiin
+        // Jos ei ole tullut tï¿½hï¿½n mennessï¿½ jï¿½rkevï¿½ï¿½ arvoa exelle, ollaan jo tehty virheilmoituksia lokiin
     }
 
     if(itsImagePackingExePath.empty())
@@ -2287,7 +2289,7 @@ bool NFmiBetaProductionSystem::InitImagePackingExe(const std::string& theAbsolut
     return true;
 }
 
-// SmartMetin CMainFrm::OnTimer kutsuu tätä funktiota kerran minuutissa ja päättelee onko tehtävä mitään 
+// SmartMetin CMainFrm::OnTimer kutsuu tï¿½tï¿½ funktiota kerran minuutissa ja pï¿½ï¿½ttelee onko tehtï¿½vï¿½ mitï¿½ï¿½n 
 // itsUsedAutomationList:alla olevaa tuotantoa.
 bool NFmiBetaProductionSystem::DoNeededBetaAutomation(const std::vector<std::string>& loadedDataTriggerList, NFmiInfoOrganizer& infoOrganizer)
 {
@@ -2309,11 +2311,11 @@ bool NFmiBetaProductionSystem::DoNeededBetaAutomation(const std::vector<std::str
     return false;
 }
 
-// Käyttäjällä on nykyään kolme on-demand -nappia, joista voi käynnistää halutun setin automaatioita työstettäväksi:
-// 1. Jos selectedAutomationIndex:issä on positiivinen numero, ajetaan vain sen osoittama automaatio.
+// Kï¿½yttï¿½jï¿½llï¿½ on nykyï¿½ï¿½n kolme on-demand -nappia, joista voi kï¿½ynnistï¿½ï¿½ halutun setin automaatioita tyï¿½stettï¿½vï¿½ksi:
+// 1. Jos selectedAutomationIndex:issï¿½ on positiivinen numero, ajetaan vain sen osoittama automaatio.
 // 2. Jos selectedAutomationIndex on -1 ja doOnlyEnabled on true, ajetaan kaikki listalle olevat enbloidut automaatiot.
 // 3. Jos selectedAutomationIndex on -1 ja doOnlyEnabled on false, ajetaan kaikki listalle olevat automaatiot.
-// selectedAutomationIndex -parametri on 1:stä alkava indeksi ja -1 tarkoitti siis että käydään koko listaa läpi.
+// selectedAutomationIndex -parametri on 1:stï¿½ alkava indeksi ja -1 tarkoitti siis ettï¿½ kï¿½ydï¿½ï¿½n koko listaa lï¿½pi.
 bool NFmiBetaProductionSystem::DoOnDemandBetaAutomations(int selectedAutomationIndex, bool doOnlyEnabled)
 {
     NFmiMetTime currentTime(1); // Otetaan talteen nyky UTC hetki minuutin tarkkuudella
@@ -2331,14 +2333,14 @@ bool NFmiBetaProductionSystem::DoOnDemandBetaAutomations(int selectedAutomationI
 }
 
 
-// Lataa käyttöön annetusta polusta automaatio-listan.
-// Asettaa polun myös mUsedAutomationListPathString:in arvoksi.
+// Lataa kï¿½yttï¿½ï¿½n annetusta polusta automaatio-listan.
+// Asettaa polun myï¿½s mUsedAutomationListPathString:in arvoksi.
 bool NFmiBetaProductionSystem::LoadUsedAutomationList(const std::string &thePath)
 {
     UsedAutomationListPathString(thePath);
     std::string fullPath = PathUtils::getTrueFilePath(thePath, GetBetaProductionBaseDirectory(), NFmiBetaProductionSystem::BetaAutomationListFileExtension());
     std::string errorString;
-    itsUsedAutomationList = NFmiBetaProductAutomationList(); // Nollataan käytössä ollut lista ennen uuden lukua
+    itsUsedAutomationList = NFmiBetaProductAutomationList(); // Nollataan kï¿½ytï¿½ssï¿½ ollut lista ennen uuden lukua
     bool status = NFmiBetaProductAutomationList::ReadInJsonFormat(itsUsedAutomationList, fullPath, errorString);
     UsedAutomationList().DoFullChecks(AutomationModeOn());
     return status;

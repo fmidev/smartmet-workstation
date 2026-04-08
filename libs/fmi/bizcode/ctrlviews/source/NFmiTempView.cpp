@@ -31,7 +31,9 @@
 #include "SoundingDataServerConfigurations.h"
 #include "catlog/catlog.h"
 #include "ModelDataServerConfiguration.h"
+#ifndef UNIX
 #include "SoundingViewSettingsFromWindowsRegisty.h"
+#endif // UNIX
 #include "NFmiHelpDataInfo.h"
 #include "ColorStringFunctions.h"
 #include "NFmiDataModifierAvg.h"
@@ -40,15 +42,13 @@
 #include "WaitCursorHelper.h"
 
 #include <stdexcept>
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
 #include <boost/algorithm/string.hpp>
 
 #include <thread>
 
 using namespace std;
-#ifndef UNIX
 using namespace Gdiplus;
-#endif // UNIX
 
 #ifdef max
 #undef max
@@ -71,7 +71,7 @@ static std::string GetStrValue(float value, int decimalCount, int totalChars)
 			else
 				formatStr = "%0.3f";
 			NFmiValueString valStr(value, formatStr.c_str());
-			str += valStr;
+			str += valStr.CharPtr();
 		}
 	}
 	else
@@ -239,7 +239,10 @@ static void DrawGdiplusCurve(Gdiplus::Graphics &theGraphics, std::vector<PointF>
     }
 }
 
-// Tehd��n vaalean harmaa maanalaisten juttujen miksaus v�riksi
+// Tehd��n vaalean harmaa maanalaisten juttujen miksaus v�riksi --- these are used
+// both within and outside #ifndef UNIX blocks, so they must be available on all platforms.
+#endif // UNIX (temporarily close to make underground helpers cross-platform)
+
 static const NFmiColor gUndergroundMixColor(0.8f, 0.8f, 0.8f);
 
 static NFmiColor MakeUndergroundColor(const NFmiColor& color)
@@ -280,6 +283,7 @@ static void MakeUndergroundColorSetup(const NFmiColor& baseColor, const NFmiPoin
 	}
 }
 
+#ifndef UNIX // reopen Windows-only block for GDI+ code
 static bool gUseThinLine = true;
 
 static void DrawUndergroundGdiplusCurve(Gdiplus::Graphics& theGraphics, std::vector<PointF>& thePoints, const NFmiTempLineInfo& theLineInfo, Gdiplus::SmoothingMode theWantedSmoothMode, bool fPrinting, bool fRectangularLine)
@@ -954,7 +958,7 @@ static std::string GetLonText(NFmiSoundingData &theData)
 	return str;
 }
 
-static std::string GetElevationText(NFmiSoundingData &theData, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static std::string GetElevationText(NFmiSoundingData &theData, boost::shared_ptr<NFmiFastQueryInfo> theInfo)
 {
 	std::string str("SELEV=");
 	if(theInfo && theInfo->Param(kFmiTopoGraf))

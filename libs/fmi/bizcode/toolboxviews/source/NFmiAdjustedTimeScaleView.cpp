@@ -1,4 +1,4 @@
-//© Ilmatieteenlaitos/Marko.
+//ï¿½ Ilmatieteenlaitos/Marko.
 //Original 1.12.1999
 // 
 //Ver. 1.12.1999
@@ -16,7 +16,7 @@
 #include "NFmiDictionaryFunction.h"
 #include "MapViewMode.h"
 
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
 
 NFmiAdjustedTimeScaleView::NFmiAdjustedTimeScaleView(int theMapViewDescTopIndex, const NFmiRect &theRect
 													,NFmiToolBox *theToolBox
@@ -160,7 +160,7 @@ NFmiVoidPtrList& NFmiAdjustedTimeScaleView::CollectOwnDrawingItems(NFmiVoidPtrLi
 NFmiRect NFmiAdjustedTimeScaleView::CalcTimeArea(const NFmiMetTime& startTime, const NFmiMetTime& endTime, double theMaxWidth) const
 {    
   NFmiRect baseScaleRect(CalcScaleArea());
-  baseScaleRect.Height(baseScaleRect.Height() + theMaxWidth/20.); // korotetaan hieman SmartMEtin vihreän laatikon korkeutta
+  baseScaleRect.Height(baseScaleRect.Height() + theMaxWidth/20.); // korotetaan hieman SmartMEtin vihreï¿½n laatikon korkeutta
 
   double startX = ((NFmiTimeScale*)itsBaseScale->Scale())->RelTimeLocation(startTime) * baseScaleRect.Width();
   double endX = ((NFmiTimeScale*)itsBaseScale->Scale())->RelTimeLocation(endTime) * baseScaleRect.Width();
@@ -180,7 +180,7 @@ NFmiRect NFmiAdjustedTimeScaleView::CalcTimeArea(const NFmiMetTime& startTime, c
 		  subScaleRect.Center(center);
 	  }
   }
-// lasketaan laatikolle vielä minimi koko, ettei katoa ihan kokonaan näytöltä
+// lasketaan laatikolle vielï¿½ minimi koko, ettei katoa ihan kokonaan nï¿½ytï¿½ltï¿½
 	NFmiPoint sizeOfRect(subScaleRect.Size());
 	NFmiPoint centerOfRect(subScaleRect.Center());
 	int xPix = itsToolBox->HX(sizeOfRect.X());
@@ -214,16 +214,16 @@ void NFmiAdjustedTimeScaleView::CalcTickMarkHelperValues(const NFmiRect &theScal
 }
 
 
-// Laskee 'normaali' aika-akselinäytön leveyden suhteessa currenttiin tilanteeseen.
-// Käytetään harventamaan liian kaposten näyttöjen lukemia ja tickmarkkeja.
-// Normaali näytön leveys tarkoittaa leveyttä, millä akselit näyttävät muuten
-// ilamn tätä harvennusta ihan ok:lta.
+// Laskee 'normaali' aika-akselinï¿½ytï¿½n leveyden suhteessa currenttiin tilanteeseen.
+// Kï¿½ytetï¿½ï¿½n harventamaan liian kaposten nï¿½yttï¿½jen lukemia ja tickmarkkeja.
+// Normaali nï¿½ytï¿½n leveys tarkoittaa leveyttï¿½, millï¿½ akselit nï¿½yttï¿½vï¿½t muuten
+// ilamn tï¿½tï¿½ harvennusta ihan ok:lta.
 double NFmiAdjustedTimeScaleView::GetNormalToCurrentViewPixelRatio(void)
 {
-	// tämä luku kertoo aika-akselin suht noormaalin leveyden (pikseleissä), 
-	// jolloin akselin luvut ja tickmarkit ovat suht. selkeitä. tämän
-	// luvun avulla on tarkoitus alkaa harventaa lukuja ja tickmarkkeja (lisää)
-	// jos aika-akseli näytön leveys on riittävän verran kapeampi kuin tämä.
+	// tï¿½mï¿½ luku kertoo aika-akselin suht noormaalin leveyden (pikseleissï¿½), 
+	// jolloin akselin luvut ja tickmarkit ovat suht. selkeitï¿½. tï¿½mï¿½n
+	// luvun avulla on tarkoitus alkaa harventaa lukuja ja tickmarkkeja (lisï¿½ï¿½)
+	// jos aika-akseli nï¿½ytï¿½n leveys on riittï¿½vï¿½n verran kapeampi kuin tï¿½mï¿½.
 	static double gNormalScaleWidthInPixels = 500;
 
 	int longWayPixelCount = itsToolBox->HX(GetFrame().Width());
@@ -272,10 +272,10 @@ int NFmiAdjustedTimeScaleView::GetFinalSkipValue(int theCurrentValue, std::vecto
 	return theCurrentValue;
 }
 
-// lasketaan, millä jaolliset tunnit piirretään aikaikkunaan
+// lasketaan, millï¿½ jaolliset tunnit piirretï¿½ï¿½n aikaikkunaan
 // Tarkoitus on harventaa printattavia lukuja, riippuen
 // aika-akselin koosta/timestepista eli theStepNumber:ista
-// ja näytön koosta
+// ja nï¿½ytï¿½n koosta
 int NFmiAdjustedTimeScaleView::CalcSkipHourPrintValue(int theStepNumber) // theStepNumber eli oikeasti kuinka monta tuntia on koko aika-kontrollin alueella (=hoursInTimeScale)
 {
 	static const int SSIZE = 4;
@@ -297,10 +297,10 @@ int NFmiAdjustedTimeScaleView::CalcSkipHourPrintValue(int theStepNumber) // theS
 	return GetFinalSkipValue(skipHourPrintUnlessDivident, vvalues, maxValue);
 }
 
-// lasketaan, millä jaolliset tunteihin piirretään aikaikkunaan merkillä
-// Tarkoitus on harventaa piirrettäviä tickmarkkeja, riippuen
+// lasketaan, millï¿½ jaolliset tunteihin piirretï¿½ï¿½n aikaikkunaan merkillï¿½
+// Tarkoitus on harventaa piirrettï¿½viï¿½ tickmarkkeja, riippuen
 // aika-akselin koosta/timestepista eli theStepNumber:ista
-// ja näytön koosta
+// ja nï¿½ytï¿½n koosta
 int NFmiAdjustedTimeScaleView::CalcSkipTickMarkValue(int theStepNumber) // theStepNumber eli oikeasti kuinka monta tuntia on koko aika-kontrollin alueella (=hoursInTimeScale)
 {
 	static const int SSIZE = 4;
@@ -355,10 +355,10 @@ double NFmiAdjustedTimeScaleView::CalcTimeScaleWidthInMM(void)
 	return RelativeXToMM(CalcScaleArea().Width());
 }
 
-// Laskee aikaikkunan todellisen leveyden ja aikavälin avulla sopivat major- ja minor -tick markkien resoluutiot minuuteissa.
+// Laskee aikaikkunan todellisen leveyden ja aikavï¿½lin avulla sopivat major- ja minor -tick markkien resoluutiot minuuteissa.
 // Major-tick mark on se merkki johon tulee tunti lukema.
-// Minor-tick on merkki johon tulee viiva (ellei sse ole myös major samalla)
-// Kun Major-step on laskettu, minor on aina yksi pykälä siitä pienempi tai jos ollaan jo alarajalla, se on sitten sama.
+// Minor-tick on merkki johon tulee viiva (ellei sse ole myï¿½s major samalla)
+// Kun Major-step on laskettu, minor on aina yksi pykï¿½lï¿½ siitï¿½ pienempi tai jos ollaan jo alarajalla, se on sitten sama.
 void NFmiAdjustedTimeScaleView::GetTimeSteps(NFmiDrawingEnvironment &theDrawingEnvi, int &theMajorStepInMinutesOut, int &theMinorStepInMinutesOut)
 {
 	// 1. Calc width of time scale in [mm]
@@ -386,12 +386,12 @@ void NFmiAdjustedTimeScaleView::GetTimeSteps(NFmiDrawingEnvironment &theDrawingE
 	}
 	// 8. When proper major step is determined, the minor step will be one below that
 	if(indexCounter >= itsTickMarkStepsLimitsInMinutes.size())
-		indexCounter = itsTickMarkStepsLimitsInMinutes.size()-1; // jos ei löytynyt sopivaa steppiä, laitetaan sitten tuo viimeinen steppi päälle
+		indexCounter = itsTickMarkStepsLimitsInMinutes.size()-1; // jos ei lï¿½ytynyt sopivaa steppiï¿½, laitetaan sitten tuo viimeinen steppi pï¿½ï¿½lle
 	theMajorStepInMinutesOut = itsTickMarkStepsLimitsInMinutes[indexCounter];
 	if(indexCounter > 0)
 		theMinorStepInMinutesOut = itsTickMarkStepsLimitsInMinutes[indexCounter-1];
 	else
-		theMinorStepInMinutesOut = itsTickMarkStepsLimitsInMinutes[0]; // pakka laitta tähänkin ensimmäinen steppi vaihtoehto
+		theMinorStepInMinutesOut = itsTickMarkStepsLimitsInMinutes[0]; // pakka laitta tï¿½hï¿½nkin ensimmï¿½inen steppi vaihtoehto
 }
 
 double NFmiAdjustedTimeScaleView::Time2Value(const NFmiMetTime& theTime) const
@@ -405,20 +405,20 @@ double NFmiAdjustedTimeScaleView::Time2Value(const NFmiMetTime& theTime) const
 void NFmiAdjustedTimeScaleView::DrawWallClockRectangle(void)
 {
 	NFmiDrawingEnvironment theEnvironment;
-	// piirretään ensin 'seinäkello' siten että piirretään asteikon pohja vaalen vihreällä nykyhetkestä tulevaisuuteen.
+	// piirretï¿½ï¿½n ensin 'seinï¿½kello' siten ettï¿½ piirretï¿½ï¿½n asteikon pohja vaalen vihreï¿½llï¿½ nykyhetkestï¿½ tulevaisuuteen.
 	NFmiMetTime currentTime(1);
 	NFmiRect wallClockRec = GetFrame();
-	wallClockRec.Top(wallClockRec.Top() + itsToolBox->SY(1)); // siirretään yläreunaa yhden pikselin verran alaspäin
-	wallClockRec.Bottom(wallClockRec.Bottom() - itsToolBox->SY(1)); // siirretään alareunaa yhden pikselin verran ylöspäin
+	wallClockRec.Top(wallClockRec.Top() + itsToolBox->SY(1)); // siirretï¿½ï¿½n ylï¿½reunaa yhden pikselin verran alaspï¿½in
+	wallClockRec.Bottom(wallClockRec.Bottom() - itsToolBox->SY(1)); // siirretï¿½ï¿½n alareunaa yhden pikselin verran ylï¿½spï¿½in
 	double wallTimeLocation = Time2Value(currentTime);
 	if(wallClockRec.IsInside(NFmiPoint(wallTimeLocation, wallClockRec.Center().Y())))
 		wallClockRec.Left(wallTimeLocation);
 	if(wallTimeLocation < wallClockRec.Right())
-	{ // piirretään seinäkello värjäys, koska 'tulevaisuus' aikaa tulee ainakin jonkin verran näkyviin
+	{ // piirretï¿½ï¿½n seinï¿½kello vï¿½rjï¿½ys, koska 'tulevaisuus' aikaa tulee ainakin jonkin verran nï¿½kyviin
 		theEnvironment.SetFillColor(NFmiColor(0.86f,0.92f,0.85f));
 		theEnvironment.DisableFrame();
 		theEnvironment.EnableFill();
-		NFmiRect timeScaleRect = CalcTotalTimeScaleArea(); // rajoitetaan piirto aikaskaalaan alueelle ja siitä vielä pikselin verran sisään
+		NFmiRect timeScaleRect = CalcTotalTimeScaleArea(); // rajoitetaan piirto aikaskaalaan alueelle ja siitï¿½ vielï¿½ pikselin verran sisï¿½ï¿½n
 		if(wallClockRec.Left() <= timeScaleRect.Left())
 		{
 			wallClockRec.Left(timeScaleRect.Left());
@@ -445,8 +445,8 @@ static int GetMinutesOfTheDay(const NFmiTime &theTime)
 enum TimeLabelPrintMode
 {
 	kFmiLabelModeNormal = 0,
-	kFmiLabelModeFirstMainTime = 1, // ensimmäinen 00 tai 12
-	kFmiLabelModeFirstSynopTime = 2, // ensimmäinen 00, 03, 06, 09, 12, 15, 18, 21
+	kFmiLabelModeFirstMainTime = 1, // ensimmï¿½inen 00 tai 12
+	kFmiLabelModeFirstSynopTime = 2, // ensimmï¿½inen 00, 03, 06, 09, 12, 15, 18, 21
 	kFmiLabelModeFirstFullHour = 3
 };
 
@@ -508,17 +508,17 @@ NFmiVoidPtrList& NFmiAdjustedTimeScaleView::DrawScale(NFmiVoidPtrList &theDrawin
 		for(cursor = theScale->StartValue(); cursor <= endOfCursor; cursor += usedStepInMinutes, aTime.ChangeByMinutes(static_cast<long>(usedStepInMinutes)))
 		{
 			if(cursor == 0 && theScale->StepValue() == 0)
-				break; // tässä on timebagi ollut tyhjä, ja jää iki looppiin, ellei poikkaista
+				break; // tï¿½ssï¿½ on timebagi ollut tyhjï¿½, ja jï¿½ï¿½ iki looppiin, ellei poikkaista
 			double x = theRect.Left() + theScale->Scale()->RelLocation(cursor) * theRect.Width();
 
 			if(aTime.GetYear() != lastDate.GetYear() || aTime.GetMonth() != lastDate.GetMonth() || aTime.GetDay() != lastDate.GetDay())
 				datePrinted = false;
 
-			// 1. määrää piirtoväri, joka toinen päivä punainen ja joka toinen sininen. Ota väri suoraan päivämäärän päivän numeron mukaan, vaikka siinä on tiettyjä huonoja puolia.
+			// 1. mï¿½ï¿½rï¿½ï¿½ piirtovï¿½ri, joka toinen pï¿½ivï¿½ punainen ja joka toinen sininen. Ota vï¿½ri suoraan pï¿½ivï¿½mï¿½ï¿½rï¿½n pï¿½ivï¿½n numeron mukaan, vaikka siinï¿½ on tiettyjï¿½ huonoja puolia.
 			int odd = aTime.GetDay()%2;
 			theEnvironment.SetFrameColor(NFmiColor(odd*1.0f, 0.0f,(1-odd)*1.0f));
 
-			// 2. Piirrä tick-mark (= minor aika merkki, joka voi olla myös major-merkin kohdalla)
+			// 2. Piirrï¿½ tick-mark (= minor aika merkki, joka voi olla myï¿½s major-merkin kohdalla)
 			if(GetMinutesOfTheDay(aTime) % minorStepInMinutes == 0)
 			{
 				if(minorStepInMinutes <= 24*60 || aTime.DifferenceInMinutes(lastPrintedMinorTickMark) >= minorStepInMinutes)
@@ -529,7 +529,7 @@ NFmiVoidPtrList& NFmiAdjustedTimeScaleView::DrawScale(NFmiVoidPtrList &theDrawin
 				}
 			}
 
-			// 3. Piirrä tunti/minuutti-lukema (= major aika merkki)
+			// 3. Piirrï¿½ tunti/minuutti-lukema (= major aika merkki)
 			if(GetMinutesOfTheDay(aTime) % majorStepInMinutes == 0)
 			{
 				if(majorStepInMinutes <= 24*60 || aTime.DifferenceInMinutes(lastPrintedMajorTickMark) >= majorStepInMinutes)
@@ -542,11 +542,11 @@ NFmiVoidPtrList& NFmiAdjustedTimeScaleView::DrawScale(NFmiVoidPtrList &theDrawin
 					GetToolBox()->Convert(&tmptext);
 					lastPrintedMajorTickMark = aTime;
 
-					// 4. Piirrä päiväys aikaleima ja viikopäivä Jos mahdollista laita päivämää klo 12 utc kohtaan, 
+					// 4. Piirrï¿½ pï¿½ivï¿½ys aikaleima ja viikopï¿½ivï¿½ Jos mahdollista laita pï¿½ivï¿½mï¿½ï¿½ klo 12 utc kohtaan, 
 					// mutta jos majorStep on suurempi kuin 12h, laita leima 00-kohtaan.
 					if(datePrinted)
 						continue;
-					bool printDateNow = false; // tässä hanskataan pri erikois tapausta
+					bool printDateNow = false; // tï¿½ssï¿½ hanskataan pri erikois tapausta
 					if(timeLabelPrintMode != kFmiLabelModeNormal)
 					{
 						if(timeLabelPrintMode == kFmiLabelModeFirstFullHour && aTime.GetMin() == 0)
@@ -563,7 +563,7 @@ NFmiVoidPtrList& NFmiAdjustedTimeScaleView::DrawScale(NFmiVoidPtrList &theDrawin
 						NFmiText tmptext(NFmiPoint(x, y4), dateString, false, 0, &theEnvironment);
 						GetToolBox()->Convert(&tmptext);
 
-						// piirretään myös viikon päivä päiväyksen alle
+						// piirretï¿½ï¿½n myï¿½s viikon pï¿½ivï¿½ pï¿½ivï¿½yksen alle
 						NFmiString weekDayStr("Www");
 						if(itsToolboxViewsInterface->Language() == kFinnish)
 							weekDayStr = "Ww";

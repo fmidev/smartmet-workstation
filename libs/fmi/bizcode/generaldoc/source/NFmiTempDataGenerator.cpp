@@ -48,7 +48,7 @@ namespace
             return true;
         }
 
-        // Onko yhtään ei-puuttuvaa arvoa datassa
+        // Onko yhtï¿½ï¿½n ei-puuttuvaa arvoa datassa
         bool HasAnyData() const
         {
             return !(*this == SoundingLevelValues());
@@ -92,9 +92,9 @@ namespace
     };
 
 
-    // Wyomingin CSV datassa on seuraavat parametrikentät (tällä hetkellä).
-    // Ne joiden FmiParameterName arvo on kFmiBadParameter, jätetään huomioimatta, 
-    // koska niitä ei meidän systeemit ainakaan vielä käsittele luotausdatan kanssa.
+    // Wyomingin CSV datassa on seuraavat parametrikentï¿½t (tï¿½llï¿½ hetkellï¿½).
+    // Ne joiden FmiParameterName arvo on kFmiBadParameter, jï¿½tetï¿½ï¿½n huomioimatta, 
+    // koska niitï¿½ ei meidï¿½n systeemit ainakaan vielï¿½ kï¿½sittele luotausdatan kanssa.
     std::map<std::string, FmiParameterName> gKnownDescriptionParameterMappings =
     {
         {"time", kFmiUTCTime},
@@ -118,10 +118,10 @@ namespace
         std::vector<FmiParameterName> parameters;
         std::vector<std::string> parameterParts;
         boost::split(parameterParts, thePossibleParameterDescriptionLine, boost::is_any_of(","));
-        // Parametrin nimet otetaan tarkoituksella omaan kopioon, koska sille tehdään sitten to_lower operaatio
+        // Parametrin nimet otetaan tarkoituksella omaan kopioon, koska sille tehdï¿½ï¿½n sitten to_lower operaatio
         for(auto parameterStr : parameterParts)
         {
-            // Varmistetaan että kaikki toiminta tehdään aina lower case stringeillä
+            // Varmistetaan ettï¿½ kaikki toiminta tehdï¿½ï¿½n aina lower case stringeillï¿½
             boost::algorithm::to_lower(parameterStr);
             auto iter = gKnownDescriptionParameterMappings.find(parameterStr);
             if(iter != gKnownDescriptionParameterMappings.end())
@@ -150,7 +150,7 @@ namespace
             return false; // Jos on luettu input loppuun, palautetaan false
         }
         std::getline(input, nextLineStrOut); // Read line
-        boost::trim(nextLineStrOut); // Siivotaan mahdolliset whitespacet pois riviltä
+        boost::trim(nextLineStrOut); // Siivotaan mahdolliset whitespacet pois riviltï¿½
         return nextLineStrOut.empty();
     }
 
@@ -168,7 +168,7 @@ namespace
         }
         else
         {
-            // Syöte oli jo lopussa, palautetaan vain tyhjää
+            // Syï¿½te oli jo lopussa, palautetaan vain tyhjï¿½ï¿½
             return "";
         }
     }
@@ -240,7 +240,7 @@ namespace
         {
             std::vector<std::string> valueParts;
             boost::split(valueParts, levelValuesStr, boost::is_any_of(","));
-            // Minimissään arvorivin pitää saman määrä arvoja kuin parameters vectorissa on parametreja
+            // Minimissï¿½ï¿½n arvorivin pitï¿½ï¿½ saman mï¿½ï¿½rï¿½ arvoja kuin parameters vectorissa on parametreja
             if(valueParts.size() >= parameters.size())
             {
                 SoundingLevelValues soundingLevelValues;
@@ -254,13 +254,13 @@ namespace
         catch(...)
         { }
 
-        // Jos ei saatu purettua mielekkäästi riviä, palautetaan sen merkiksi false ja missing arvoilla oleva data
+        // Jos ei saatu purettua mielekkï¿½ï¿½sti riviï¿½, palautetaan sen merkiksi false ja missing arvoilla oleva data
         return std::make_pair(false, SoundingLevelValues());
     }
 
     NFmiMetTime DeduceSoundingDataTime(const std::vector<SoundingLevelValues>& soundingLevelValuesVector)
     {
-        // Haetaan ensimmäinen ei-puuttuva aika listasta ja pyöristetään se seuraavaan tasatuntiin.
+        // Haetaan ensimmï¿½inen ei-puuttuva aika listasta ja pyï¿½ristetï¿½ï¿½n se seuraavaan tasatuntiin.
         for(const auto& levelValues : soundingLevelValuesVector)
         {
             if(levelValues.time != NFmiMetTime::gMissingTime)
@@ -270,13 +270,13 @@ namespace
                 return finalTime;
             }
         }
-        // Jos luotaus datasta ei löydy mitään järkevää aikaa, ei kannata tehdä sitä ollenkaan
+        // Jos luotaus datasta ei lï¿½ydy mitï¿½ï¿½n jï¿½rkevï¿½ï¿½ aikaa, ei kannata tehdï¿½ sitï¿½ ollenkaan
         throw std::runtime_error("Couldn't find any non-missing time from this sounding data");
     }
 
     NFmiPoint GetLowestLevelLatlon(const std::vector<SoundingLevelValues>& soundingLevelValuesVector)
     {
-        // Haetaan ensimmäinen ei-puuttuva latlon paikka
+        // Haetaan ensimmï¿½inen ei-puuttuva latlon paikka
         for(const auto& levelValues : soundingLevelValuesVector)
         {
             if(levelValues.latlon != NFmiPoint::gMissingLatlon)
@@ -284,7 +284,7 @@ namespace
                 return levelValues.latlon;
             }
         }
-        // Jos luotaus datasta ei löydy mitään järkevää aikaa, ei kannata tehdä sitä ollenkaan
+        // Jos luotaus datasta ei lï¿½ydy mitï¿½ï¿½n jï¿½rkevï¿½ï¿½ aikaa, ei kannata tehdï¿½ sitï¿½ ollenkaan
         throw std::runtime_error("Couldn't find any non-missing latlon location from this sounding data");
     }
 
@@ -344,7 +344,7 @@ namespace
                 WD_values.push_back(soundingLevelValues.WD);
             }
 
-            // Tuulidatan eri parametrit pitää täyttää seuraavaksi
+            // Tuulidatan eri parametrit pitï¿½ï¿½ tï¿½yttï¿½ï¿½ seuraavaksi
             NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage(false, false, true, false);
             soundingDataPtr->FillRestOfWindData(metaWindParamUsage);
             boost::shared_ptr<NFmiFastQueryInfo> emptyDummyInfoPtr;
@@ -402,7 +402,7 @@ namespace
         float maxLevelSize = 0;
         for(const auto &sounding : soundingDataList)
         {  
-            // Etsitään se luotaus missä on eniten levelejä, ja otetaan se koko 'pohjaksi' levelbagiin
+            // Etsitï¿½ï¿½n se luotaus missï¿½ on eniten levelejï¿½, ja otetaan se koko 'pohjaksi' levelbagiin
             auto levelCount = (float)sounding->GetParamData(kFmiPressure).size();
             if(maxLevelSize < levelCount)
             {
@@ -410,7 +410,8 @@ namespace
             }
         }
 
-        return NFmiVPlaceDescriptor(NFmiLevelBag(kFmiSoundingLevel, 1, maxLevelSize, 1));
+        NFmiLevelBag levelBag(kFmiSoundingLevel, 1, maxLevelSize, 1);
+        return NFmiVPlaceDescriptor(levelBag);
     }
 
     struct TimeListCollector
@@ -439,7 +440,7 @@ namespace
         for(const auto& time : timeListCollector.timeSet)
         {
             // Huom! NFmiTimeList::Add metodi ei tee Clone:a annetuista ajoista, vaan ottaa ne sellaisenaan omistukseensa.
-            // Lisätään ajat vain loppuun (3. parametri true), koska on vain erilaisia aikoja aikajärjestyksessä.
+            // Lisï¿½tï¿½ï¿½n ajat vain loppuun (3. parametri true), koska on vain erilaisia aikoja aikajï¿½rjestyksessï¿½.
             timeList.Add(new NFmiMetTime(time), false, true);
         }
         return NFmiTimeDescriptor(originTime, timeList);
@@ -556,13 +557,13 @@ namespace
         return ::GetDictionaryString("Unable to genereate any TEMP data from give input string.");
     }
 
-    // Pseudo koodi ja ajatuksia miten sanomien käsittely pitäisi tehdä
-    // 1. Jokainen yksittäinen luotaus on peräkkäisillä riveillä
-    // 2. Luotaukset erotetaan toisistaan yhdellä tai useammalla tyhjällä rivillä
-    // 3. Jokainen luotaus alkaa parametrien nimi rivillä
-    // 4. Sitä seuraa 0-n kpl arvorivejä peräkkäin
-    // 5. Joka kohdassa kysytään onko nyt tyhjä rivi vai ei ja tehdään päätöksiä sen mukaan
-    // 6. Tyhjän rivin tarkastus tehdään seuraavalla tavalla
+    // Pseudo koodi ja ajatuksia miten sanomien kï¿½sittely pitï¿½isi tehdï¿½
+    // 1. Jokainen yksittï¿½inen luotaus on perï¿½kkï¿½isillï¿½ riveillï¿½
+    // 2. Luotaukset erotetaan toisistaan yhdellï¿½ tai useammalla tyhjï¿½llï¿½ rivillï¿½
+    // 3. Jokainen luotaus alkaa parametrien nimi rivillï¿½
+    // 4. Sitï¿½ seuraa 0-n kpl arvorivejï¿½ perï¿½kkï¿½in
+    // 5. Joka kohdassa kysytï¿½ï¿½n onko nyt tyhjï¿½ rivi vai ei ja tehdï¿½ï¿½n pï¿½ï¿½tï¿½ksiï¿½ sen mukaan
+    // 6. Tyhjï¿½n rivin tarkastus tehdï¿½ï¿½n seuraavalla tavalla
     //   auto len = fs.tellg();             // Get current position
     //   getline(fs, line);                 // Read line
     //   fs.seekg(len, std::ios_base::beg); // Return to position before "Read line".
@@ -610,7 +611,7 @@ namespace NFmiTempDataGenerator
                 return newDataPtr;
             }
 
-            // Kokeillaan onko tekstidata uutta CSV formaattia luotausdatalle, mitä Wyomingin yliopisto käyttää palveluissaan
+            // Kokeillaan onko tekstidata uutta CSV formaattia luotausdatalle, mitï¿½ Wyomingin yliopisto kï¿½yttï¿½ï¿½ palveluissaan
             return GenerateDataFromWyomingCsvText(tempRelatedStr, checkReportStr, tempStations, unknownStationLocation, wantedProducer, roundTimesToNearestSynopticTimes);
         }
         catch(std::exception& e)

@@ -4,20 +4,24 @@
 #include "WaitCursorHelper.h"
 
 
-// Tiimalasi halutaan laittaa päälle vain jos esim. ei ole animaatiota karttanäytössä käynnissä
+// Tiimalasi halutaan laittaa pï¿½ï¿½lle vain jos esim. ei ole animaatiota karttanï¿½ytï¿½ssï¿½ kï¿½ynnissï¿½
 WaitCursorHelper::WaitCursorHelper(bool showWaitCursor)
     :fShowWaitCursor(showWaitCursor)
 {
+#ifndef UNIX
     if(fShowWaitCursor)
     {
         AfxGetApp()->BeginWaitCursor();
     }
+#endif
 }
 
 WaitCursorHelper::~WaitCursorHelper()
 {
+#ifndef UNIX
     if(fShowWaitCursor)
     {
         AfxGetApp()->EndWaitCursor();
     }
+#endif
 }

@@ -1,6 +1,8 @@
 #include "NFmiParameterInterpolationFixer.h"
 #include "NFmiQueryData.h"
+#ifndef UNIX
 #include "NFmiApplicationWinRegistry.h"
+#endif
 #include "NFmiSettings.h"
 #include "catlog/catlog.h"
 #include <boost/algorithm/string.hpp>
@@ -77,7 +79,7 @@ namespace
         return params;
     }
 
-    // TotalWind parametrin wind-vector pitää aina korjata lineaariseksi ja ilman mitään lokituksia.
+    // TotalWind parametrin wind-vector pitï¿½ï¿½ aina korjata lineaariseksi ja ilman mitï¿½ï¿½n lokituksia.
     bool fixTotalWindSubparamWindVector(NFmiParamDescriptor& paramDescriptor)
     {
         if(paramDescriptor.Param(kFmiTotalWindMS))
@@ -132,15 +134,17 @@ void NFmiParameterInterpolationFixer::init()
         throw std::runtime_error("NFmiParameterInterpolationFixer::Init: already initialized.");
 
     initialized_ = true;
+#ifndef UNIX
     auto baseRegistryPath = NFmiApplicationWinRegistry::MakeBaseRegistryPath();
     auto sectionName = NFmiApplicationWinRegistry::MakeGeneralSectionName();
     // HKEY_CURRENT_USER -keys
     HKEY usedKey = HKEY_CURRENT_USER;
 
-    // Laitetaan oletus arvo true:ksi, jotta sitä ei tarvitse erikseen säätä päälle kaikissa koneissa
+    // Laitetaan oletus arvo true:ksi, jotta sitï¿½ ei tarvitse erikseen sï¿½ï¿½tï¿½ pï¿½ï¿½lle kaikissa koneissa
     doForcedParameterInterpolationChanges_ = ::CreateRegValue<CachedRegBool>(baseRegistryPath, sectionName, "\\DoForcedParameterInterpolationChanges", usedKey, true);
-    // Itse oletus checkedParameters_ -lista on taas tyhjä, kun sitä asetetaan makeCheckedParametersFromConfigurations 
-    // funktiossa, joten se pitää laittaa konfiguraatioista aina erikseen käyttöön
+#endif // !UNIX
+    // Itse oletus checkedParameters_ -lista on taas tyhjï¿½, kun sitï¿½ asetetaan makeCheckedParametersFromConfigurations 
+    // funktiossa, joten se pitï¿½ï¿½ laittaa konfiguraatioista aina erikseen kï¿½yttï¿½ï¿½n
     checkedParameters_ = makeCheckedParametersFromConfigurations(makeConfigurationKey());
     doFinalChecksForCheckedParameters();
 }
@@ -173,7 +177,7 @@ void NFmiParameterInterpolationFixer::doFinalChecksForCheckedParameters() const
         {
             if(!parameterList.empty())
             {
-                // Lisätään 1. jälkeen aina pilkku erotin
+                // Lisï¿½tï¿½ï¿½n 1. jï¿½lkeen aina pilkku erotin
                 parameterList += ", ";
             }
             parameterList += ::makeParameterLogName(param);
@@ -195,20 +199,20 @@ void NFmiParameterInterpolationFixer::doForcedParameterInterpolationChanges(bool
 
 void NFmiParameterInterpolationFixer::fixCheckedParametersInterpolation(NFmiQueryData* data, const std::string& dataFileName)
 {
-    // Huom! asema/havainto dataa ei muuteta mitenkään, data->IsGrid() pitää olla true.
+    // Huom! asema/havainto dataa ei muuteta mitenkï¿½ï¿½n, data->IsGrid() pitï¿½ï¿½ olla true.
     if(data && data->IsGrid() && !checkedParameters_.empty())
     {
         auto paramDescriptor = data->Info()->ParamDescriptor();
         auto totalWindSubparamWindVectorrFixed = ::fixTotalWindSubparamWindVector(paramDescriptor);
 
-        // Tutkitaan kaikki checkedParameters_ listalla olevat parametrit. Jos niitä löytyy annetusta 
-        // datasta, tehdään seuraavaa:
-        // 1. Jos doForcedParameterInterpolationChanges_ optio on pois päältä, tehdään seuraavaa:
-        // 1.1. Tehdään varoitus viesti että kyseisen datan tarkastettavalla parametrilla oli ei-lineaarinen 
-        //      interpolaatio käytössä
-        // 2. Jos doForcedParameterInterpolationChanges_ optio on päällä, tehdään seuraavaa:
+        // Tutkitaan kaikki checkedParameters_ listalla olevat parametrit. Jos niitï¿½ lï¿½ytyy annetusta 
+        // datasta, tehdï¿½ï¿½n seuraavaa:
+        // 1. Jos doForcedParameterInterpolationChanges_ optio on pois pï¿½ï¿½ltï¿½, tehdï¿½ï¿½n seuraavaa:
+        // 1.1. Tehdï¿½ï¿½n varoitus viesti ettï¿½ kyseisen datan tarkastettavalla parametrilla oli ei-lineaarinen 
+        //      interpolaatio kï¿½ytï¿½ssï¿½
+        // 2. Jos doForcedParameterInterpolationChanges_ optio on pï¿½ï¿½llï¿½, tehdï¿½ï¿½n seuraavaa:
         // 2.1. Muutetaan parametrin interpolaatio lineaariseksi
-        // 2.2. Lokitetaan että kyseinen muutos on tehty parametreille debug tasolla
+        // 2.2. Lokitetaan ettï¿½ kyseinen muutos on tehty parametreille debug tasolla
         bool parameterModified = false;
         std::string forceFixedParameterNames;
         for(const auto& param : checkedParameters_)
@@ -221,7 +225,7 @@ void NFmiParameterInterpolationFixer::fixCheckedParametersInterpolation(NFmiQuer
                     parameterModified = true;
                     if(!forceFixedParameterNames.empty())
                     {
-                        // Lisätään 1. jälkeen aina pilkku erotin
+                        // Lisï¿½tï¿½ï¿½n 1. jï¿½lkeen aina pilkku erotin
                         forceFixedParameterNames += ", ";
                     }
                     forceFixedParameterNames += ::makeParameterLogName(*checkedParam.GetParam());

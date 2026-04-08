@@ -1,4 +1,4 @@
-//© Ilmatieteenlaitos/Marko.
+//ï¿½ Ilmatieteenlaitos/Marko.
 //Original 6.3.2007
 // 
 // NFmiQ2Client luokan implementointi.
@@ -8,7 +8,7 @@
 #pragma warning(disable : 4996) // poistaa varoituksen "warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead"
 #endif
 
-#define _WIN32_WINNT 0x0600 // boost/asio.hpp include pyytää että _WIN32_WINNT määritettäisiin, nyt minimi platformi on tässä Windows Vista (600)
+#define _WIN32_WINNT 0x0600 // boost/asio.hpp include pyytï¿½ï¿½ ettï¿½ _WIN32_WINNT mï¿½ï¿½ritettï¿½isiin, nyt minimi platformi on tï¿½ssï¿½ Windows Vista (600)
 
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
@@ -30,7 +30,7 @@ static std::istream& operator>>(std::istream& s, NFmiDataMatrix<float>& m)
 
 	char tmp,tmp2,tmp3;
 	s >> columns >> tmp >> rows >> tmp2;
-	if(columns == 0 || rows == 0) // luultavasti istreamissä olevassa stringissä oli virheilmoitus tai jotain roskaa ja nyt heitetään poikkeus
+	if(columns == 0 || rows == 0) // luultavasti istreamissï¿½ olevassa stringissï¿½ oli virheilmoitus tai jotain roskaa ja nyt heitetï¿½ï¿½n poikkeus
 		throw std::runtime_error("Failed to read matrix.");
 	m.Resize(columns, rows);
 	for (sz_type j = 0; j < rows; j++)
@@ -39,8 +39,8 @@ static std::istream& operator>>(std::istream& s, NFmiDataMatrix<float>& m)
 		{
 			if(s.peek() == ',')
 			{
-				m[i][j] = kFloatMissing; // tämä on mahd. turha sijoitus, mutta varmuuden vuoksi
-				s >> tmp3; // q3-server palauttaa puuttuvan arvon tyhjänä, eli seuraava pilkku on jo kohdalla ja luetaan vain se
+				m[i][j] = kFloatMissing; // tï¿½mï¿½ on mahd. turha sijoitus, mutta varmuuden vuoksi
+				s >> tmp3; // q3-server palauttaa puuttuvan arvon tyhjï¿½nï¿½, eli seuraava pilkku on jo kohdalla ja luetaan vain se
 			}
 			else
 				s >> m[i][j] >> tmp3;
@@ -343,7 +343,7 @@ static bool MakeHttpCommand(const std::string& theServerStr,
 	return true;
 }
 
-// Halutaan etsiä annetusta stringista annetusta lähtöpisteestä maksimissaan tarkastaen halutun määrän merrkejä ja etsien haluttua merkkiä.
+// Halutaan etsiï¿½ annetusta stringista annetusta lï¿½htï¿½pisteestï¿½ maksimissaan tarkastaen halutun mï¿½ï¿½rï¿½n merrkejï¿½ ja etsien haluttua merkkiï¿½.
 static std::string::size_type FindSubStringWithInGivenChars(const std::string &theSearchedStr, std::string::size_type theStartPos, char theSearchedChar, size_t theCheckedCharCount)
 {
 	for(size_t i = 0; i < theCheckedCharCount; i++)
@@ -361,21 +361,21 @@ static std::string::size_type FindSubStringWithInGivenChars(const std::string &t
 static void GetMatrixFromString3(const std::string &theResponseStr, NFmiDataMatrix<float> &theDataOut, std::string &theExtraInfoStr)
 {
 	std::string::size_type pos1 = theResponseStr.find(";", 0); // FindChar3(chunk, 0, ';', chunk.itsMemory.size());
-	if(pos1 == std::string::npos) // ei löytynyt ;-merkkiä, pakko olla joku virhe
+	if(pos1 == std::string::npos) // ei lï¿½ytynyt ;-merkkiï¿½, pakko olla joku virhe
 		throw std::runtime_error(std::string("Error message from server:\n") + theResponseStr);
 	else
-	{ // tutkitaan löytyykö 1. ;-merkin jälkeen numero,numero; yhdistelmä, jos löytyy, on alussa extra infoa. Jos ei löydy, ei kannata
-		// käydä koko jäljellä olevaa stringiä läpi etsimässä toista mahd. ;-merkkiä
-		// Käytännössä etsin seuraavat max 40 merkkiä, löytyykö toista;-merkkiä
+	{ // tutkitaan lï¿½ytyykï¿½ 1. ;-merkin jï¿½lkeen numero,numero; yhdistelmï¿½, jos lï¿½ytyy, on alussa extra infoa. Jos ei lï¿½ydy, ei kannata
+		// kï¿½ydï¿½ koko jï¿½ljellï¿½ olevaa stringiï¿½ lï¿½pi etsimï¿½ssï¿½ toista mahd. ;-merkkiï¿½
+		// Kï¿½ytï¿½nnï¿½ssï¿½ etsin seuraavat max 40 merkkiï¿½, lï¿½ytyykï¿½ toista;-merkkiï¿½
 		std::string::size_type pos2 = ::FindSubStringWithInGivenChars(theResponseStr, pos1 + 1, ';', 40);
 		
 		if(pos2 != std::string::npos)
-		{ // nyt löytyi toinenkin ;-merkki, mikä merkitsee sitä että on olemassa extrainfo-osuus.
-			// Oletus: ei saa olla kuin kaksi ;-merkkiä vastauksessa!!!! Haluan vain estää että ei tarvitse käydä koko stringiä läpi aina, koska stringi voi olla pitkä
+		{ // nyt lï¿½ytyi toinenkin ;-merkki, mikï¿½ merkitsee sitï¿½ ettï¿½ on olemassa extrainfo-osuus.
+			// Oletus: ei saa olla kuin kaksi ;-merkkiï¿½ vastauksessa!!!! Haluan vain estï¿½ï¿½ ettï¿½ ei tarvitse kï¿½ydï¿½ koko stringiï¿½ lï¿½pi aina, koska stringi voi olla pitkï¿½
 			theExtraInfoStr = std::string(theResponseStr.begin(), theResponseStr.begin()+pos1);
 		}
 		else
-			pos1 = static_cast<std::string::size_type>(-1); // pitää säätää pos1:n arvo kun ei ollut extrainfo osiota
+			pos1 = static_cast<std::string::size_type>(-1); // pitï¿½ï¿½ sï¿½ï¿½tï¿½ï¿½ pos1:n arvo kun ei ollut extrainfo osiota
 	}
 
 	if(::isdigit(theResponseStr[pos1+1]))
@@ -416,15 +416,15 @@ static void GetMatrixFromBinaryData3(const std::string &theBinaryResponseStr, NF
 	char* extraInfoChars = const_cast<char*>(theBinaryResponseStr.c_str());
 	int intExtraSize = ::GetIntegerFromCharArrayBits(extraInfoChars);
 	if(intExtraSize)
-	{ // löytyi tavaraa, luetaan ne sstringiin talteen
+	{ // lï¿½ytyi tavaraa, luetaan ne sstringiin talteen
 		if(intExtraSize > static_cast<int>(theBinaryResponseStr.size()) - 4)
 			throw std::runtime_error("Error: ExtraInfo size was too big, probably the server responce format is not the wanted one.");
 
-		extraInfoChars += 4; // siirretään ensin osoitin oikeaan paikkaan
+		extraInfoChars += 4; // siirretï¿½ï¿½n ensin osoitin oikeaan paikkaan
 		theExtraInfoStr = std::string(extraInfoChars, extraInfoChars+intExtraSize);
 	}
 
-	char* dataChars = const_cast<char*>(theBinaryResponseStr.c_str() + 4 + intExtraSize); // matriisi data löytyy integer luvun ja extrainfon jälkeen
+	char* dataChars = const_cast<char*>(theBinaryResponseStr.c_str() + 4 + intExtraSize); // matriisi data lï¿½ytyy integer luvun ja extrainfon jï¿½lkeen
 	size_t dataCharsSize = theBinaryResponseStr.size() - (4 + intExtraSize);
 
 	// matriisin ns. header osio on 6 integer lukua
@@ -461,17 +461,17 @@ static void GetDataMatrixData(const std::string &theResponseStr, bool fUseBinary
 		else if(theUsedCompression == kComprBZ2)
 			::UncompressMemoryChunkBZ2_3(theMemoryChunk);
 */
-		// tässä tarkistetaan, löytyykö error sanaa stringin alusta, jolloin tiedetään että 
+		// tï¿½ssï¿½ tarkistetaan, lï¿½ytyykï¿½ error sanaa stringin alusta, jolloin tiedetï¿½ï¿½n ettï¿½ 
 		// paluuna tuli virheviesti.
 		if(theResponseStr.size() > 5)
 		{
 			std::string firstLetters;
-			firstLetters.resize(5); // tehdään tilaa mahdolliselle "error" sanalle
+			firstLetters.resize(5); // tehdï¿½ï¿½n tilaa mahdolliselle "error" sanalle
 			std::copy(theResponseStr.begin(), theResponseStr.begin()+5, firstLetters.begin());
 			NFmiStringTools::LowerCase(firstLetters);
 
 			// Q2-serveri palautti "error" sanan virhetilanteissa.
-			// q3-serveri asettaa http-header flagin päälle virheen merkiksi.
+			// q3-serveri asettaa http-header flagin pï¿½ï¿½lle virheen merkiksi.
 			if(firstLetters == std::string("error"))
 			{
 				std::string errorStr(theResponseStr.begin(), theResponseStr.end());
@@ -504,7 +504,7 @@ static void GetDataMatrixData(const std::string &theResponseStr, bool fUseBinary
 // and param part is "/q2?requestType=grid&paramId=4&validTime=NOW+6&producerId=230"
 // and port part is "8089"
 
-static bool SplitUrlStr(const std::string &theUrlStrIn, std::string &theServerAddressStrOut, std::string &theParamStrOut, std::string &thePortStrOut, std::string& scheme = std::string())
+static bool SplitUrlStr(const std::string &theUrlStrIn, std::string &theServerAddressStrOut, std::string &theParamStrOut, std::string &thePortStrOut, std::string scheme = std::string())
 {
 	std::string tmpUrlStr = theUrlStrIn;
 
@@ -512,12 +512,12 @@ static bool SplitUrlStr(const std::string &theUrlStrIn, std::string &theServerAd
 	if (pos3 != std::string::npos)
 		scheme = std::string(theUrlStrIn.begin(), theUrlStrIn.begin() + pos3);
 
-	std::string::size_type currentPos = tmpUrlStr.find("//"); // etsitään, löytyykö tupla kenoa
-	if(currentPos != std::string::npos) // jos löytyi, poistetaan alku osa koodista 
+	std::string::size_type currentPos = tmpUrlStr.find("//"); // etsitï¿½ï¿½n, lï¿½ytyykï¿½ tupla kenoa
+	if(currentPos != std::string::npos) // jos lï¿½ytyi, poistetaan alku osa koodista 
 		tmpUrlStr = std::string(tmpUrlStr.begin()+currentPos+2, tmpUrlStr.end());
 
-	std::string::size_type pos1 = tmpUrlStr.find("/"); // etsitään, 1. keno
-	std::string::size_type pos2 = tmpUrlStr.find(":"); // etsitään, 1. :-merkki
+	std::string::size_type pos1 = tmpUrlStr.find("/"); // etsitï¿½ï¿½n, 1. keno
+	std::string::size_type pos2 = tmpUrlStr.find(":"); // etsitï¿½ï¿½n, 1. :-merkki
 	if(pos1 != std::string::npos)
 	{
 		bool portPartFound = (pos2 != std::string::npos && pos2 < pos1);
@@ -540,7 +540,7 @@ static bool SplitUrlStr(const std::string &theUrlStrIn, std::string &theServerAd
 
 void NFmiQ2Client::GetDataFromQ2Server(const std::string &theURLStr, const std::string &theParamsStr, bool fUseBinaryData, CompressionType theUsedCompression, NFmiDataMatrix<float> &theDataMatrixOut, string &theExtraInfoStrOut, bool logDataRequest)
 {
-	// alustetaan vielä parametri stringiä annetuilla optioilla
+	// alustetaan vielï¿½ parametri stringiï¿½ annetuilla optioilla
 	string finalParamsStr(theParamsStr);
 	if(fUseBinaryData)
         finalParamsStr += "&output=bin";
@@ -556,7 +556,7 @@ void NFmiQ2Client::GetDataFromQ2Server(const std::string &theURLStr, const std::
 	if(logDataRequest)
 	{
 		std::string logMsg("The Q2/Q3 url string was:\n");
-		logMsg += NFmiStringTools::UrlDecode(finalUrlStr); // Puretaan lokitukseen url encodaus, jotta haku näyttää ihmismäiseltä
+		logMsg += NFmiStringTools::UrlDecode(finalUrlStr); // Puretaan lokitukseen url encodaus, jotta haku nï¿½yttï¿½ï¿½ ihmismï¿½iseltï¿½
         CatLog::logMessage(logMsg, CatLog::Severity::Debug, CatLog::Category::NetRequest);
 	}
 

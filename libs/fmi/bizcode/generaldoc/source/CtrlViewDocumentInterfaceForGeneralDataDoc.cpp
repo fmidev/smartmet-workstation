@@ -3,8 +3,10 @@
 #include "NFmiMapViewDescTop.h"
 #include "NFmiHelpEditorSystem.h"
 #include "GraphicalInfo.h"
+#ifndef UNIX
 #include "GdiPlusMapHandlerInterface.h"
 #include "NFmiApplicationWinRegistry.h"
+#endif
 #include "TimeSerialModification.h"
 #include "ApplicationInterface.h"
 #include "CombinedMapHandlerInterface.h"
@@ -263,15 +265,19 @@ int CtrlViewDocumentInterfaceForGeneralDataDoc::SoundingViewWindBarbSpaceOutFact
     return itsDoc->SoundingViewWindBarbSpaceOutFactor();
 }
 
+#ifndef UNIX
 std::unique_ptr<MapHandlerInterface> CtrlViewDocumentInterfaceForGeneralDataDoc::GetMapHandlerInterface(int theMapViewDescTopIndex)
 {
     return std::make_unique<GdiPlusMapHandlerInterface>(itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->MapHandler());
 }
+#endif
 
+#ifndef UNIX
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::KeepMapAspectRatio()
 {
     return itsDoc->ApplicationWinRegistry().KeepMapAspectRatio();
 }
+#endif
 
 double CtrlViewDocumentInterfaceForGeneralDataDoc::ClientViewXperYRatio(int theMapViewDescTopIndex)
 {
@@ -578,6 +584,7 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::UseQ2Server(void)
     return itsDoc->UseQ2Server();
 }
 
+#ifndef UNIX
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::Registry_ShowLastSendTimeOnMapView()
 {
     return itsDoc->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().ShowLastSendTimeOnMapView();
@@ -602,6 +609,7 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::Registry_ShowMasksOnMap(int the
 {
     return itsDoc->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theMapViewDescTopIndex)->ShowMasksOnMap();
 }
+#endif
 
 NFmiIgnoreStationsData& CtrlViewDocumentInterfaceForGeneralDataDoc::IgnoreStationsData(void)
 {
@@ -907,10 +915,12 @@ NFmiSatelliteImageCacheSystem& CtrlViewDocumentInterfaceForGeneralDataDoc::Satel
     return itsDoc->SatelliteImageCacheSystem();
 }
 
+#ifndef UNIX
 CWnd* CtrlViewDocumentInterfaceForGeneralDataDoc::TransparencyContourDrawView(void)
 {
     return itsDoc->TransparencyContourDrawView();
 }
+#endif
 
 NFmiGridPointCache& CtrlViewDocumentInterfaceForGeneralDataDoc::GridPointCache(int theDescTopIndex)
 {
@@ -922,10 +932,12 @@ NFmiMapViewCache& CtrlViewDocumentInterfaceForGeneralDataDoc::MapViewCache(int t
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->MapViewCache();
 }
 
+#ifndef UNIX
 CDC* CtrlViewDocumentInterfaceForGeneralDataDoc::CopyCDC(int theDescTopIndex)
 {
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->CopyCDC();
 }
+#endif
 
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsCPGridCropInAction(void)
 {
@@ -957,10 +969,12 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::ShowWarningMarkersOnMap(int the
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->ShowWarningMarkersOnMap();
 }
 
+#ifndef UNIX
 CDC* CtrlViewDocumentInterfaceForGeneralDataDoc::MapBlitDC(int theDescTopIndex)
 {
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->MapBlitDC();
 }
+#endif
 
 int CtrlViewDocumentInterfaceForGeneralDataDoc::ToolTipColumnIndex() const
 {
@@ -1032,8 +1046,9 @@ int CtrlViewDocumentInterfaceForGeneralDataDoc::LandBorderPenSize(int theDescTop
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->LandBorderPenSize(separateBorderLayerDrawOptions);
 }
 
+#ifndef UNIX
 Gdiplus::Bitmap* CtrlViewDocumentInterfaceForGeneralDataDoc::LandBorderMapBitmap(unsigned int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) const
-{ 
+{
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->LandBorderMapBitmap(separateBorderLayerDrawOptions);
 }
 
@@ -1041,6 +1056,7 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::SetLandBorderMapBitmap(unsigned
 {
     itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->SetLandBorderMapBitmap(newBitmap, separateBorderLayerDrawOptions);
 }
+#endif
 
 boost::shared_ptr<Imagine::NFmiPath> CtrlViewDocumentInterfaceForGeneralDataDoc::LandBorderPath(int theDescTopIndex)
 {
@@ -1312,10 +1328,12 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::SetLastActiveDescTopAndViewRow(
     itsDoc->SetLastActiveDescTopAndViewRow(theDescTopIndex, theActiveRowIndex);
 }
 
+#ifndef UNIX
 NFmiApplicationWinRegistry& CtrlViewDocumentInterfaceForGeneralDataDoc::ApplicationWinRegistry()
 {
     return itsDoc->ApplicationWinRegistry();
 }
+#endif
 
 Q2ServerInfo& CtrlViewDocumentInterfaceForGeneralDataDoc::GetQ2ServerInfo()
 {

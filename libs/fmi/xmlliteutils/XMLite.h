@@ -19,12 +19,12 @@
 // 2004-06-15 : add GetText()/ Find() functions
 // 2004-06-15 : add force_parse : now can parse HTML (not-welformed xml)
 // 
-// HUOM!!!! Tämän headerin includointi joidenkin muiden include tiedostojen kanssa voi
-// aiheuttaa ongelmia, kun koodia käännetään C++17 asetuksilla. Ongelman aiheuttaa
-// #include "xmlliteutils/stdafx.h", jossa on taas #include <afx.h> eli nämä on ihan perus MFC/win32 headereita.
-// Kääntäjä törmää C++17 määrittelemän uuden tyypin byte ja jossain muualla
-// määriteltyjen byte juttujen kanssa ambiguous tilanteeseen ja tulee virheilmoitus rivejä sivukaupalla.
-// Sen voi estää laittamalla "#define _HAS_STD_BYTE 0" ongelma cpp tiedostoon alkuun ennen includeja.
+// HUOM!!!! Tï¿½mï¿½n headerin includointi joidenkin muiden include tiedostojen kanssa voi
+// aiheuttaa ongelmia, kun koodia kï¿½ï¿½nnetï¿½ï¿½n C++17 asetuksilla. Ongelman aiheuttaa
+// #include "xmlliteutils/stdafx.h", jossa on taas #include <afx.h> eli nï¿½mï¿½ on ihan perus MFC/win32 headereita.
+// Kï¿½ï¿½ntï¿½jï¿½ tï¿½rmï¿½ï¿½ C++17 mï¿½ï¿½rittelemï¿½n uuden tyypin byte ja jossain muualla
+// mï¿½ï¿½riteltyjen byte juttujen kanssa ambiguous tilanteeseen ja tulee virheilmoitus rivejï¿½ sivukaupalla.
+// Sen voi estï¿½ï¿½ laittamalla "#define _HAS_STD_BYTE 0" ongelma cpp tiedostoon alkuun ennen includeja.
 
 //////////////////////////////////////////////////////////////////////
 
@@ -34,6 +34,9 @@
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
+#ifdef UNIX
+#include "linux_compat.h"
+#endif
 #include "xmlliteutils/stdafx.h"
 #include <vector>
 #include <deque>

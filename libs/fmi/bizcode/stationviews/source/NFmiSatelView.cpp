@@ -1,9 +1,10 @@
 #ifdef _MSC_VER
-#pragma warning(disable : 4786) // poistaa n kpl VC++ kääntäjän varoitusta (liian pitkä nimi >255 merkkiä joka johtuu 'puretuista' STL-template nimistä)
+#pragma warning(disable : 4786) // poistaa n kpl VC++ kï¿½ï¿½ntï¿½jï¿½n varoitusta (liian pitkï¿½ nimi >255 merkkiï¿½ joka johtuu 'puretuista' STL-template nimistï¿½)
 #endif
 
 #include "NFmiSatelView.h"
 #include "NFmiToolBox.h"
+#include <thread>
 #include "NFmiDrawParam.h"
 #include "NFmiSatelliteImageCacheSystem.h"
 #include "NFmiDictionaryFunction.h"
@@ -43,9 +44,9 @@ NFmiSatelView::~NFmiSatelView(void)
 {
 }
 
-// Joillakin satelliiteilla on epämääräiset ajat kuvilleen (esim. NOAA:n ei-geostationaarinen). 
-// Sen takia pitää antaa jokin aikaraja, jonka sisällä tietty kuva sallitaan piirrettäväksi karttanäytölle.
-// Normaaleille geostationaarisille satelliitti kuville offset on 0 (ne tuottavat kuvia määrätyn väliajoin).
+// Joillakin satelliiteilla on epï¿½mï¿½ï¿½rï¿½iset ajat kuvilleen (esim. NOAA:n ei-geostationaarinen). 
+// Sen takia pitï¿½ï¿½ antaa jokin aikaraja, jonka sisï¿½llï¿½ tietty kuva sallitaan piirrettï¿½vï¿½ksi karttanï¿½ytï¿½lle.
+// Normaaleille geostationaarisille satelliitti kuville offset on 0 (ne tuottavat kuvia mï¿½ï¿½rï¿½tyn vï¿½liajoin).
 long NFmiSatelView::ImagesOffsetInMinutes(const NFmiDataIdent &theDataIdent)
 {
     if(theDataIdent.GetProducer()->GetIdent() == 3041)
@@ -62,12 +63,12 @@ NFmiImageHolder NFmiSatelView::GetImageFromCache()
         return satelliteImageCacheSystem.FindImage(dataIdent, itsTime, NFmiSatelView::ImagesOffsetInMinutes(dataIdent));
     else
     {
-        // Nyt ollaan Beta-tuotannossa, tällöin pitää kuvien latausta odottaa loppuun asti loopissa eli kunnes ei olla enää loading-moodissa
+        // Nyt ollaan Beta-tuotannossa, tï¿½llï¿½in pitï¿½ï¿½ kuvien latausta odottaa loppuun asti loopissa eli kunnes ei olla enï¿½ï¿½ loading-moodissa
         NFmiImageHolder imageHolder = satelliteImageCacheSystem.FindImage(dataIdent, itsTime, NFmiSatelView::ImagesOffsetInMinutes(dataIdent));
         for(; imageHolder && imageHolder->mState == NFmiImageData::kLoading;)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(20));
-            imageHolder = satelliteImageCacheSystem.FindImage(dataIdent, itsTime, NFmiSatelView::ImagesOffsetInMinutes(dataIdent)); // Haetaan holder-olio aina määrä ajoin uudestaan tarkasteltavaksi
+            imageHolder = satelliteImageCacheSystem.FindImage(dataIdent, itsTime, NFmiSatelView::ImagesOffsetInMinutes(dataIdent)); // Haetaan holder-olio aina mï¿½ï¿½rï¿½ ajoin uudestaan tarkasteltavaksi
         }
         return imageHolder;
     }
@@ -102,7 +103,7 @@ void NFmiSatelView::Draw(NFmiToolBox *theGTB)
             sourceRect.Top(sourceRect.Top() * usedImage->GetHeight());
             sourceRect.Right(sourceRect.Right() * usedImage->GetWidth());
             sourceRect.Bottom(sourceRect.Bottom() * usedImage->GetHeight());
-            Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on täysin läpinäkyvä, 0.5 = semi transparent ja 1.0 = opaque
+            Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on tï¿½ysin lï¿½pinï¿½kyvï¿½, 0.5 = semi transparent ja 1.0 = opaque
             bool doNearestInterpolation = alpha >= 1.f ? true : false;
             CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *usedImage, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(alpha), itsGdiPlusGraphics);
 #endif // UNIX
@@ -116,7 +117,7 @@ static Gdiplus::Color GetColor(Gdiplus::Bitmap &theImage, const NFmiPoint &theGr
    try
    {
        int x = boost::math::iround(theGridPoint.X());
-       int y = boost::math::iround(theImage.GetHeight() - theGridPoint.Y() - 1); // aina pitää kääntää y-akseli kun kyseessä on newbase vs. gdiplus bitmap
+       int y = boost::math::iround(theImage.GetHeight() - theGridPoint.Y() - 1); // aina pitï¿½ï¿½ kï¿½ï¿½ntï¿½ï¿½ y-akseli kun kyseessï¿½ on newbase vs. gdiplus bitmap
        Gdiplus::Color aColor;
        if(x >= 0 && x < static_cast<int>(theImage.GetWidth()) && y >= 0 && y < static_cast<int>(theImage.GetHeight()))
        {
@@ -134,7 +135,7 @@ Gdiplus::Bitmap* CreateProjectedImage(Gdiplus::Bitmap &theSourceImage, const boo
 {
     NFmiGrid grid1(theSourceArea.get(), theSourceImage.GetWidth(), theSourceImage.GetHeight());
     NFmiGrid grid2(theDestArea.get(), static_cast<unsigned long>(theDestImageSize.X()), static_cast<unsigned long>(theDestImageSize.Y()));
-   Gdiplus::Bitmap *img2 = new Gdiplus::Bitmap(grid2.XNumber(), grid2.YNumber(), PixelFormat24bppRGB); // HUOM! SetPixel ei toimi monocrome tai grayscale kuville, pitää olla 24ppb
+   Gdiplus::Bitmap *img2 = new Gdiplus::Bitmap(grid2.XNumber(), grid2.YNumber(), PixelFormat24bppRGB); // HUOM! SetPixel ei toimi monocrome tai grayscale kuville, pitï¿½ï¿½ olla 24ppb
    if(img2)
    {
        for(grid2.Reset(); grid2.Next(); )
@@ -144,7 +145,7 @@ Gdiplus::Bitmap* CreateProjectedImage(Gdiplus::Bitmap &theSourceImage, const boo
            Gdiplus::Color color1(::GetColor(theSourceImage, gridPoint1, theTransparentColor));
            NFmiPoint gridPoint2(grid2.GridPoint());
            int xInd2 = boost::math::iround(gridPoint2.X());
-           int yInd2 = img2->GetHeight() - boost::math::iround(gridPoint2.Y()) - 1; // pitää kääntää y-akseli
+           int yInd2 = img2->GetHeight() - boost::math::iround(gridPoint2.Y()) - 1; // pitï¿½ï¿½ kï¿½ï¿½ntï¿½ï¿½ y-akseli
            img2->SetPixel(xInd2, yInd2, color1);
        }
 
@@ -152,14 +153,14 @@ Gdiplus::Bitmap* CreateProjectedImage(Gdiplus::Bitmap &theSourceImage, const boo
    return img2;
 }
 
-// yritetään piirtää kuva erilaisen projektion päälle kuin missä alkuperäinen
-// kuva on. Tämä vaati kuvan konvertointia haluttuun projektioon.
+// yritetï¿½ï¿½n piirtï¿½ï¿½ kuva erilaisen projektion pï¿½ï¿½lle kuin missï¿½ alkuperï¿½inen
+// kuva on. Tï¿½mï¿½ vaati kuvan konvertointia haluttuun projektioon.
 // Oletus: theImageArea ja theImageHolder on jo tarkistettu.
 void NFmiSatelView::DrawImageOnDifferentProjection(boost::shared_ptr<NFmiArea> &theImageArea, NFmiImageHolder &theImageHolder)
 {
     CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + ": must project satel image to different map projection", this);
     Gdiplus::Color transColor(0, 1, 2, 5); // ((static_cast<Gdiplus::ARGB>(Gdiplus::Color::Purple));
-    // nyt pitää tehdä kuvasta lennossa konversio haluttuun projektioon
+    // nyt pitï¿½ï¿½ tehdï¿½ kuvasta lennossa konversio haluttuun projektioon
     NFmiPoint bitmapSize(itsCtrlViewDocumentInterface->ActualMapBitmapSizeInPixels(itsMapViewDescTopIndex));
     Gdiplus::Bitmap* projectedBitmap = ::CreateProjectedImage(*theImageHolder->mImage, theImageArea, itsArea, bitmapSize, transColor);
     if(projectedBitmap)
@@ -169,10 +170,10 @@ void NFmiSatelView::DrawImageOnDifferentProjection(boost::shared_ptr<NFmiArea> &
         NFmiRect sourceRect;
         sourceRect.Size(bitmapSize);
 
-        Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on täysin läpinäkyvä, 0.5 = semi transparent ja 1.0 = opaque
+        Gdiplus::REAL alpha = itsDrawParam->Alpha() / 100.f; // 0 on tï¿½ysin lï¿½pinï¿½kyvï¿½, 0.5 = semi transparent ja 1.0 = opaque
         bool doNearestInterpolation = alpha >= 1.f ? true : false;
         CtrlView::DrawBitmapToDC_4(itsToolBox->GetDC(), *projectedBitmap, sourceRect, destRect, doNearestInterpolation, NFmiImageAttributes(transColor, alpha), itsGdiPlusGraphics);
-        delete projectedBitmap; // tämä kuva pitää tuhota, mutta ei satelImagea
+        delete projectedBitmap; // tï¿½mï¿½ kuva pitï¿½ï¿½ tuhota, mutta ei satelImagea
     }
 }
 #endif // UNIX
@@ -211,14 +212,14 @@ std::string NFmiSatelView::ComposeToolTipText(const NFmiPoint& /* theRelativePoi
             str += ::GetDictionaryString("Unknown image status, report developer");
         str += ")";
         
-        // Jos lataus virhe, laitetaan virhe viesti, koska siinä on mukana koko kuvan polku, muuten vain kuvan nimi/polku
+        // Jos lataus virhe, laitetaan virhe viesti, koska siinï¿½ on mukana koko kuvan polku, muuten vain kuvan nimi/polku
         if(imageHolder->mState == NFmiImageData::kErrorLoadingTookTooLong || imageHolder->mState == NFmiImageData::kErrorneus)
             str += "\n" + imageHolder->mErrorMessage;
         else
         {
-            bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
+            bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-nï¿½ppï¿½in on pohjassa, laitetaan lisï¿½ï¿½ infoa nï¿½kyville
 
-            // Laitetaan tooltippiin vielä sulkuihin seuraavalle riville kuvan polku
+            // Laitetaan tooltippiin vielï¿½ sulkuihin seuraavalle riville kuvan polku
             str += "\n(";
             if(showExtraInfo) // joko koko polku tai vain tiedosto nimi
                 str += imageHolder->mFilePath;

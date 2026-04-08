@@ -1,13 +1,18 @@
 #pragma once
 
-// Tämä luokka tekee haluttujen parametrien interpolaatio muutokset SmartMetin lukemiin
-// datoihin. Jos doForcedParameterInterpolationChanges_ on päällä, tehdään muutokset ja
-// lokitetaan muuttuneet parametrit. Jos em. optio ei ole päällä, lokitetaan vain varoitusviesti.
-// Lisäksi jos datassa on kFmiWindVectorMS aliparametri kFmiTotalWindMS yhdistelmä parametrissa,
-// tehdään siihen aina automaattisesti lineaarisuus korjaus. Tästä ei tehdä mitään lokitusta.
+// Tï¿½mï¿½ luokka tekee haluttujen parametrien interpolaatio muutokset SmartMetin lukemiin
+// datoihin. Jos doForcedParameterInterpolationChanges_ on pï¿½ï¿½llï¿½, tehdï¿½ï¿½n muutokset ja
+// lokitetaan muuttuneet parametrit. Jos em. optio ei ole pï¿½ï¿½llï¿½, lokitetaan vain varoitusviesti.
+// Lisï¿½ksi jos datassa on kFmiWindVectorMS aliparametri kFmiTotalWindMS yhdistelmï¿½ parametrissa,
+// tehdï¿½ï¿½n siihen aina automaattisesti lineaarisuus korjaus. Tï¿½stï¿½ ei tehdï¿½ mitï¿½ï¿½n lokitusta.
 
 #include "NFmiParam.h"
+#ifndef UNIX
 #include "NFmiCachedRegistryValue.h"
+#else
+#include "linux_compat.h"
+#endif
+#include "boost/shared_ptr.hpp"
 #include <vector>
 
 class NFmiQueryData;

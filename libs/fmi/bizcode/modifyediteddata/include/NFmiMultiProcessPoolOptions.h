@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+
+#ifndef UNIX
 #include "logging.h"
 #include "process_helpers.h"
 
@@ -10,7 +13,6 @@ public:
 	~NFmiMultiProcessPoolOptions(void);
 
 	void InitFromSettings(const std::string &theBaseNameSpace);
-//	void StoreToSettings(void) const;
 
     process_helpers::multi_process_pool_options& MultiProcessPoolOptions(void) {return itsMultiProcessPoolOptions;}
     logging::trivial::severity_level LogLevel(void) const {return itsLogLevel;}
@@ -22,3 +24,12 @@ private:
 
 	std::string itsBaseNameSpace;
 };
+#else // UNIX
+class NFmiMultiProcessPoolOptions
+{
+public:
+    NFmiMultiProcessPoolOptions(void) = default;
+    ~NFmiMultiProcessPoolOptions(void) = default;
+    void InitFromSettings(const std::string &) {}
+};
+#endif // UNIX

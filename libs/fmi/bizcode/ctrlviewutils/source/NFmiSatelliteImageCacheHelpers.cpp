@@ -2,7 +2,9 @@
 
 NFmiImageData::NFmiImageData()
 :mErrorMessage()
+#ifndef UNIX
 ,mImage()
+#endif
 ,mState(kUninitialized)
 ,mImageTime(NFmiMetTime::gMissingTime)
 {
@@ -10,7 +12,9 @@ NFmiImageData::NFmiImageData()
 
 NFmiImageData::NFmiImageData(const NFmiMetTime &time)
 :mErrorMessage()
+#ifndef UNIX
 ,mImage()
+#endif
 ,mState(kUninitialized)
 , mImageTime(time)
 {
@@ -18,9 +22,13 @@ NFmiImageData::NFmiImageData(const NFmiMetTime &time)
 
 bool NFmiImageData::IsImageUsable() const
 {
-    // Tämä on ehkä vähän vainoharhaista tutkia kaikkia kolmea dataosaa, 
-    // periaatteessa jos mImage:ssa on jotain, se riittäisi.
+    // Tï¿½mï¿½ on ehkï¿½ vï¿½hï¿½n vainoharhaista tutkia kaikkia kolmea dataosaa,
+    // periaatteessa jos mImage:ssa on jotain, se riittï¿½isi.
+#ifndef UNIX
     if(mState == kOk && mErrorMessage.empty() && mImage != nullptr)
+#else
+    if(mState == kOk && mErrorMessage.empty())
+#endif
         return true;
     else
         return false;

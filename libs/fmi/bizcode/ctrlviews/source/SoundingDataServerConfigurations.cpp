@@ -11,12 +11,12 @@ static const std::string g_SmartmetServerBaseUriName = "SmartmetServerBaseUri";
 static const std::string g_SmartmetServerBaseUrlStart = "SmartmetServerBaseUrl_";
 static const std::string g_SmartmetServerBaseUrlStartVer2 = "SmartmetServerBaseUrlVer2_";
 
-// Kun pyydetään konffeista NFmiSettings::ListChildren:illä mallidata kohtaista listaa, meidän pitää 
-// ohittaa tietyt sanat, koska niillä nimillä on asetukset 'päätasolla', ja ne tullaan lisäämään tuohon
-// ListChildren listaan. Lisätään myös tyhjää sana listaan, jotta tarkastelut  yksinkertaistuvat.
+// Kun pyydetï¿½ï¿½n konffeista NFmiSettings::ListChildren:illï¿½ mallidata kohtaista listaa, meidï¿½n pitï¿½ï¿½ 
+// ohittaa tietyt sanat, koska niillï¿½ nimillï¿½ on asetukset 'pï¿½ï¿½tasolla', ja ne tullaan lisï¿½ï¿½mï¿½ï¿½n tuohon
+// ListChildren listaan. Lisï¿½tï¿½ï¿½n myï¿½s tyhjï¿½ï¿½ sana listaan, jotta tarkastelut  yksinkertaistuvat.
 static const std::vector<std::string> g_IgnoredConfigurationVariableNames{ "", g_VersionNumberName, g_SmartmetServerBaseUriName };
 
-// Seuraavan alkuiset sanat ignoorataan myös (näillä listataan n kpl server url:eja)
+// Seuraavan alkuiset sanat ignoorataan myï¿½s (nï¿½illï¿½ listataan n kpl server url:eja)
 static const std::vector<std::string> g_IgnoredConfigurationVariablesWithStart{ g_SmartmetServerBaseUrlStart, g_SmartmetServerBaseUrlStartVer2 };
 
 static bool IsModelNameLegit(const std::string& modelName)
@@ -44,15 +44,17 @@ bool SoundingDataServerConfigurations::init(const std::string &baseRegistryPath,
     baseRegistryPath_ = baseRegistryPath;
     baseConfigurationPath_ = baseConfigurationPath;
     // Huom. 1. kFmiModelLevel parametri on vain debuggaus tarkoituksessa haettu parametri
-    // Huom. 2. OriginTimeParameterId on 'feikki' parametri, jonka sijasta haetaan mallidatan origintime:a, tälle erikoiskäsittely
+    // Huom. 2. OriginTimeParameterId on 'feikki' parametri, jonka sijasta haetaan mallidatan origintime:a, tï¿½lle erikoiskï¿½sittely
     wantedParameters_ = std::vector<FmiParameterName>{ kFmiTemperature, kFmiDewPoint, kFmiHumidity, kFmiPressure, kFmiGeomHeight, kFmiTotalCloudCover
 		, kFmiWindSpeedMS, kFmiWindDirection, kFmiModelLevel, NFmiSoundingData::OriginTimeParameterId, NFmiSoundingData::LevelParameterId
 		, kFmiWindUMS, kFmiWindVMS, kFmiGeopHeight };
     wantedParametersString_ = makeWantedParametersString();
     initBaseUrlVector();
 
+#ifndef UNIX
     // HKEY_CURRENT_USER -keys
     HKEY usedKey = HKEY_CURRENT_USER;
+#endif
 
     // 1. Hae kaikkien eri mallien nimet konffeista
     auto modelNames = NFmiSettings::ListChildren(baseConfigurationPath);
@@ -61,8 +63,12 @@ bool SoundingDataServerConfigurations::init(const std::string &baseRegistryPath,
     else
     {
         bool catchedAnyExceptions = false;
-        // 2. Pitää tehdä versionumeron perusteella tehdä pakotettu päivitys konffeista?
+        // 2. Pitï¿½ï¿½ tehdï¿½ versionumeron perusteella tehdï¿½ pakotettu pï¿½ivitys konffeista?
+#ifndef UNIX
         bool configurationOverride = mustDoConfigurationOverride(usedKey);
+#else
+        bool configurationOverride = false;
+#endif
         // 3. Luo kaikille malleille omat datat
         for(const auto &modelName : modelNames)
         {
@@ -81,11 +87,13 @@ bool SoundingDataServerConfigurations::init(const std::string &baseRegistryPath,
             }
         }
 
-        // 4. Mikä oli valittu serveri
+#ifndef UNIX
+        // 4. Mikï¿½ oli valittu serveri
         selectedBaseUrlIndex_ = ::CreateRegValue<CachedRegInt>(baseRegistryPath_, registrySectionName_, "\\SelectedBaseUrlIndex", usedKey, 0);
 
-        // HKEY_LOCAL_MACHINE -keys (HUOM! nämä vaatii Admin oikeuksia Vista/Win7/Win10)
+        // HKEY_LOCAL_MACHINE -keys (HUOM! nï¿½mï¿½ vaatii Admin oikeuksia Vista/Win7/Win10)
         usedKey = HKEY_LOCAL_MACHINE;
+#endif
 
         if(modelConfigurations_.empty() && catchedAnyExceptions)
             return false;
@@ -148,8 +156,9 @@ std::string SoundingDataServerConfigurations::makeWantedParametersString() const
     return str;
 }
 
-// Jos rekisterissä ollut SoundingDataServerConfigurations versionumero on pienempi kuin
-// mitä on konffeissa, pitää arvot ottaa käyttöön konffeista.
+// Jos rekisterissï¿½ ollut SoundingDataServerConfigurations versionumero on pienempi kuin
+// mitï¿½ on konffeissa, pitï¿½ï¿½ arvot ottaa kï¿½yttï¿½ï¿½n konffeista.
+#ifndef UNIX
 bool SoundingDataServerConfigurations::mustDoConfigurationOverride(HKEY usedKey)
 {
     std::string parameterRegistryName = std::string("\\") + g_VersionNumberName;
@@ -159,13 +168,14 @@ bool SoundingDataServerConfigurations::mustDoConfigurationOverride(HKEY usedKey)
     int versionNumberFromConfiguration = NFmiSettings::Optional<int>(finalParameterConfigurationPath, nonLegalVersionNumber);
     if(*versionNumber_ < versionNumberFromConfiguration)
     {
-        // Uusi versio numero pitää ottaa myös talteen Win-rekisteriin
+        // Uusi versio numero pitï¿½ï¿½ ottaa myï¿½s talteen Win-rekisteriin
         *versionNumber_ = versionNumberFromConfiguration;
         return true;
     }
     else
         return false;
 }
+#endif // UNIX
 
 ModelDataServerConfiguration SoundingDataServerConfigurations::MakeModelConfiguration(const std::string &modelName, bool configurationOverride)
 {
@@ -260,16 +270,16 @@ std::string SoundingDataServerConfigurations::makeBaseUrlParameterString(const N
     urlParameterStr += "&timesteps=1";
     urlParameterStr += "&format=ascii";
     urlParameterStr += "&precision=double";
-    // Oletus paluu formaatti on YYYYMMDDTHHMISS eli siinä on 'T' kirjain päiväyksen ja kellon välissä
-    // Nyt halutaan käyttää timestamp formaattia, jossa iso integer luku ilman sekunteja ja 'T' kirjainta eli muotoa: YYYYMMDDHHmm
+    // Oletus paluu formaatti on YYYYMMDDTHHMISS eli siinï¿½ on 'T' kirjain pï¿½ivï¿½yksen ja kellon vï¿½lissï¿½
+    // Nyt halutaan kï¿½yttï¿½ï¿½ timestamp formaattia, jossa iso integer luku ilman sekunteja ja 'T' kirjainta eli muotoa: YYYYMMDDHHmm
     urlParameterStr += "&timeformat=timestamp";
     // Kaikki requestissa ja palauuarvoissa olevat ajat halutaan UTC ajassa
     urlParameterStr += "&tz=utc";
-    // Ei haeta origintime:n avulla, haetaan toistaiseksi vain viimeisintä mallidataa, joka löytyy serveriltä
+    // Ei haeta origintime:n avulla, haetaan toistaiseksi vain viimeisintï¿½ mallidataa, joka lï¿½ytyy serveriltï¿½
     //urlParameterStr += "&origintime=";
     //urlParameterStr += originTime.ToStr(kYYYYMMDDHHMM);
     urlParameterStr += "&starttime=";
-    urlParameterStr += validTime.ToStr(kYYYYMMDDHHMM);
+    urlParameterStr += validTime.ToStr(kYYYYMMDDHHMM).CharPtr();
 
     return urlParameterStr;
 }
@@ -285,19 +295,31 @@ std::string SoundingDataServerConfigurations::makeFinalGribDataServerRequestUrl(
 
 int SoundingDataServerConfigurations::selectedBaseUrlIndex() const
 {
+#ifndef UNIX
     return *selectedBaseUrlIndex_;
+#else
+    return selectedBaseUrlIndex_;
+#endif
 }
 
 void SoundingDataServerConfigurations::setSelectedBaseUrlIndex(int newValue)
 {
+#ifndef UNIX
     *selectedBaseUrlIndex_ = newValue;
+#else
+    selectedBaseUrlIndex_ = newValue;
+#endif
 }
 
 const std::string& SoundingDataServerConfigurations::getSelectedBaseUrl() const
 {
+#ifndef UNIX
     auto selectedIndex = *selectedBaseUrlIndex_;
-    if(selectedIndex < serverBaseUrls_.size())
-        return serverBaseUrls_[selectedIndex];
+#else
+    auto selectedIndex = selectedBaseUrlIndex_;
+#endif
+    if(static_cast<size_t>(selectedIndex) < serverBaseUrls_.size())
+        return serverBaseUrls_[static_cast<size_t>(selectedIndex)];
     else
     {
         static const std::string emptyValue;

@@ -4,11 +4,25 @@
 #include "NFmiInfoData.h"
 #include "NFmiMetTime.h"
 #include "NFmiParam.h"
+#ifndef UNIX
 #include "NFmiCachedRegistryValue.h"
-#include "NFmiCategoryHeaderInitData.h"
 #include "NFmiApplicationWinRegistry.h"
+#endif // UNIX
+#include "NFmiCategoryHeaderInitData.h"
 
 #include <vector>
+#include <list>
+#include <set>
+
+#ifdef UNIX
+// Stub types for Windows registry types not available on Linux
+using ModelDataOffsetRangeInHours = std::pair<int, int>;
+const ModelDataOffsetRangeInHours gMissingOffsetRangeInHours = std::make_pair(-1, -1);
+const ModelDataOffsetRangeInHours gLatestDataOnlyRangeInHours = std::make_pair(0, 0);
+const ModelDataOffsetRangeInHours gDefaultModelDataOffsetRangeInHours = std::make_pair(24, 0);
+using CachedRegString = std::string;
+using CachedRegBool = bool;
+#endif // UNIX
 
 #include "json_spirit_value.h"
 #include "boost/shared_ptr.hpp"
@@ -54,8 +68,8 @@ public:
 	NFmiProducerSystem *itsSatelImageProducerSystem; // ei omista, ei tuhoa
 };
 
-// Nämä CaseStudyDataFile:a koskevat dataosat ovat tallessa Windows rekisterissä,
-// paitsi jos kyse on CaseStudy dialogin Category tai Producer riveistä, jolloin niiden arvot
+// Nï¿½mï¿½ CaseStudyDataFile:a koskevat dataosat ovat tallessa Windows rekisterissï¿½,
+// paitsi jos kyse on CaseStudy dialogin Category tai Producer riveistï¿½, jolloin niiden arvot
 // otetaan lokaali CaseStudyMemory.csmeta tiedostosta.
 class NFmiCsDataFileWinReg
 {
@@ -179,27 +193,27 @@ private:
 	NFmiProducer itsProducer;
 	std::string itsFileFilter;
 	NFmiCsDataFileWinReg itsDataFileWinRegValues;
-	std::string itsRelativeStoredFileFilter; // tähän talletetaan suhteellinen polku, mihin data lopulta talletetaan CaseStudy-rakenteessa, tätä käytetään sitten kun dataa käytetään tulevaisuudessa
-	int itsDataIntervalInMinutes; // kuinka usein dataa tuotetaan (malliajo väli tai kuvan tuotanto väli), tämän avulla lasketaan arvio itsTotalFileSize-arvoksi
-	double itsSingleFileSize; // viimeisimmän datatiedoston koko
+	std::string itsRelativeStoredFileFilter; // tï¿½hï¿½n talletetaan suhteellinen polku, mihin data lopulta talletetaan CaseStudy-rakenteessa, tï¿½tï¿½ kï¿½ytetï¿½ï¿½n sitten kun dataa kï¿½ytetï¿½ï¿½n tulevaisuudessa
+	int itsDataIntervalInMinutes; // kuinka usein dataa tuotetaan (malliajo vï¿½li tai kuvan tuotanto vï¿½li), tï¿½mï¿½n avulla lasketaan arvio itsTotalFileSize-arvoksi
+	double itsSingleFileSize; // viimeisimmï¿½n datatiedoston koko
 	double itsTotalFileSize; // lasketaan arvio yhden datan perusteella ja alku/loppu offsettien ja intervallin avulla
-	double itsMaxFileSize; // tätä käytetään producer- ja category- header infojen yhteydessä kertomaan arvio kaikkien mahdollisten datojen yhteis koosta vaikka niitä ei olisi valittu talletettavaksi
+	double itsMaxFileSize; // tï¿½tï¿½ kï¿½ytetï¿½ï¿½n producer- ja category- header infojen yhteydessï¿½ kertomaan arvio kaikkien mahdollisten datojen yhteis koosta vaikka niitï¿½ ei olisi valittu talletettavaksi
 	NFmiCaseStudyDataCategory itsCategory;
-	NFmiInfoData::Type itsDataType; // käytetään priorisoinnissa
-	int itsLevelCount; // käytetään priorisoinnissa
-	std::string itsImageAreaStr; // jos kyse on kuva-datasta, pitää tallettaa myös kuvan alue
-	NFmiParam itsImageParam; // jos kyseessä kuva-data, pitää tallettaa myös parametrin id ja nimi
-	bool fImageFile; // jos kyseessä on kuva tyyppistä dataa, tähän true, jos queryDataa, laitetaan false
+	NFmiInfoData::Type itsDataType; // kï¿½ytetï¿½ï¿½n priorisoinnissa
+	int itsLevelCount; // kï¿½ytetï¿½ï¿½n priorisoinnissa
+	std::string itsImageAreaStr; // jos kyse on kuva-datasta, pitï¿½ï¿½ tallettaa myï¿½s kuvan alue
+	NFmiParam itsImageParam; // jos kyseessï¿½ kuva-data, pitï¿½ï¿½ tallettaa myï¿½s parametrin id ja nimi
+	bool fImageFile; // jos kyseessï¿½ on kuva tyyppistï¿½ dataa, tï¿½hï¿½n true, jos queryDataa, laitetaan false
 	bool fCategoryHeader;
 	bool fProducerHeader;
-	// Onko tämän datan tuottajalla yksi tai usemapia datoja (esim. Ec:llä on usein pinta/painepinta/mallipinta jne., mutta joku SHIP tuottaja on varmaan vain yhdellä datalla)
+	// Onko tï¿½mï¿½n datan tuottajalla yksi tai usemapia datoja (esim. Ec:llï¿½ on usein pinta/painepinta/mallipinta jne., mutta joku SHIP tuottaja on varmaan vain yhdellï¿½ datalla)
 	bool fOnlyOneData;
 
-	bool fNotifyOnLoad; // Jos datan latauksen yhteydessä halutaan tehdä ilmoitus, tämä on true. Oletus arvo on false
-	std::string itsNotificationLabel; // Jos notifikaatioon halutaan tietty sanoma, se voidaan antaa tähän. Defaulttina annetaan tiedoston nimi
-	std::string itsCustomMenuFolder; // Jos data halutaan laittaa haluttuun hakemistoon param-popupeissa, tehdään sellainen asetus helpdatassa tässä 
-	int itsAdditionalArchiveFileCount;	// defaultti on 0, joitakin datoja (esim. kepa-datoja, joita tuotetaan n. 15-20 per päivä) , ei normaali asetus riitä, joten tähän lisätään vähän extraa arkistoa varten
-	bool fDataEnabled; // Tämä tieto tulee NFmiHelpDataInfo:n IsEnabled-metodista. Eli käyttääkö SmartMet kyseistä dataa alkuunkaan. Jos tämä on false, ei sitä talletetan dataan vaikka store-asetus olisi true.
+	bool fNotifyOnLoad; // Jos datan latauksen yhteydessï¿½ halutaan tehdï¿½ ilmoitus, tï¿½mï¿½ on true. Oletus arvo on false
+	std::string itsNotificationLabel; // Jos notifikaatioon halutaan tietty sanoma, se voidaan antaa tï¿½hï¿½n. Defaulttina annetaan tiedoston nimi
+	std::string itsCustomMenuFolder; // Jos data halutaan laittaa haluttuun hakemistoon param-popupeissa, tehdï¿½ï¿½n sellainen asetus helpdatassa tï¿½ssï¿½ 
+	int itsAdditionalArchiveFileCount;	// defaultti on 0, joitakin datoja (esim. kepa-datoja, joita tuotetaan n. 15-20 per pï¿½ivï¿½) , ei normaali asetus riitï¿½, joten tï¿½hï¿½n lisï¿½tï¿½ï¿½n vï¿½hï¿½n extraa arkistoa varten
+	bool fDataEnabled; // Tï¿½mï¿½ tieto tulee NFmiHelpDataInfo:n IsEnabled-metodista. Eli kï¿½yttï¿½ï¿½kï¿½ SmartMet kyseistï¿½ dataa alkuunkaan. Jos tï¿½mï¿½ on false, ei sitï¿½ talletetan dataan vaikka store-asetus olisi true.
 	std::string itsPossibleCustomMenuFolder;
 };
 
@@ -278,8 +292,8 @@ private:
 
 	NFmiCaseStudyDataFile itsCategoryHeaderInfo;
 	std::list<NFmiCaseStudyProducerData> itsProducersData;
-	NFmiCaseStudyDataCategory itsParsingCategory; // parsittaessa categori-dataa, otetaan tähän talteen yleis-kategoria, joka annetaan kaikille datoille 
-															// En talleta sitä NFmiCaseStudyDataFile:n json-dataan, koska halusin karsia datamäärää, mielestäni tämä on muutenkin turha, kun luetaan datoja
+	NFmiCaseStudyDataCategory itsParsingCategory; // parsittaessa categori-dataa, otetaan tï¿½hï¿½n talteen yleis-kategoria, joka annetaan kaikille datoille 
+															// En talleta sitï¿½ NFmiCaseStudyDataFile:n json-dataan, koska halusin karsia datamï¿½ï¿½rï¿½ï¿½, mielestï¿½ni tï¿½mï¿½ on muutenkin turha, kun luetaan datoja
 };
 
 class NFmiCaseStudySystem
@@ -292,7 +306,7 @@ public:
 	void UpdateValuesBackToWinRegistry(NFmiCaseStudySettingsWinRegistry& theCaseStudySettingsWinRegistry);
     void UpdateNoProducerData(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiInfoOrganizer &theInfoOrganizer);
     void Update(void);
-	void Reset(void); // HUOM! ei saa kutsua konstruktorissa, koska tämä kutsuu konstruktoria
+	void Reset(void); // HUOM! ei saa kutsua konstruktorissa, koska tï¿½mï¿½ kutsuu konstruktoria
 	void Update(NFmiCaseStudyDataFile& theCaseStudyDataFile);
 	void ProducerStore(NFmiCaseStudyDataFile& theCaseStudyDataFile, bool newValue);
 	void CategoryStore(NFmiCaseStudyDataFile& theCaseStudyDataFile, bool newValue);
@@ -336,7 +350,7 @@ public:
 	bool StoreMetaData(CWnd *theParentWindow, const std::string &theMetaDataTotalFilePath, bool showErrorMessageBox);
     bool AreStoredMetaDataChanged(const NFmiCaseStudySystem &other);
 	bool ReadMetaData(const std::string &theFullPathFileName, CWnd *theParentWindow, bool showErrorMessageBox);
-	// Voi heittää CaseStudyOperationCanceledException -poikkeuksen!!!
+	// Voi heittï¿½ï¿½ CaseStudyOperationCanceledException -poikkeuksen!!!
 	bool MakeCaseStudyData(const std::string &theFullPathMetaDataFileName, CWnd *theParentWindow, CWnd *theCopyWindowPos, const std::string& theCropDataAreaString); 
 	boost::shared_ptr<NFmiHelpDataInfoSystem> MakeHelpDataInfoSystem(NFmiHelpDataInfoSystem &theOriginalHelpDataInfoSystem, const std::string &theBasePath);
 	NFmiCaseStudyDataFile* FindCaseStudyDataFile(const std::string& theUniqueHelpDataInfoName);
@@ -365,18 +379,18 @@ private:
 
 	std::string itsCaseStudyName; // talletettavan case-studyn nimi
 	std::string itsCaseStudyInfo; // talletettavan case-studyn info
-    boost::shared_ptr<CachedRegString> itsCaseStudyPath; // tässä on abs polku hakemistoon johon on tarkoitus tehdä case study talletuksia
+    boost::shared_ptr<CachedRegString> itsCaseStudyPath; // tï¿½ssï¿½ on abs polku hakemistoon johon on tarkoitus tehdï¿½ case study talletuksia
 	boost::shared_ptr<CachedRegBool> fZipFiles; // pakataanko tehty case-study data lopuksi vai ei
-	boost::shared_ptr<CachedRegBool> fStoreWarningMessages; // Talletetaanko mitään sanomia (lähinnä HAKE) CaseStudy dataan
-	boost::shared_ptr<CachedRegBool> fCropDataToZoomedMapArea; // Laikataanko datat pienemmäksi (jos mahdollista) pääkarttanäytön zoomin perusteella
-    std::string itsSmartMetLocalCachePath; // polku johon smartmet tallettaa queryDatat, jos data löytyy tämän polun alta, sen koko voidaan aina arvioida
-	NFmiMetTime itsTime; // talletetttavan case-studyn ns. seinäkello aika
-	bool fDeleteTmpFiles; // deletoidaanko case-study datat zippauksen jälkeen
-	bool fApproximateOnlyLocalDataSize; // arvioidaan vain lokaali cachellä olevien datojen koko, kaikki muualla olevat tavarat merkitään 0:ksi
+	boost::shared_ptr<CachedRegBool> fStoreWarningMessages; // Talletetaanko mitï¿½ï¿½n sanomia (lï¿½hinnï¿½ HAKE) CaseStudy dataan
+	boost::shared_ptr<CachedRegBool> fCropDataToZoomedMapArea; // Laikataanko datat pienemmï¿½ksi (jos mahdollista) pï¿½ï¿½karttanï¿½ytï¿½n zoomin perusteella
+    std::string itsSmartMetLocalCachePath; // polku johon smartmet tallettaa queryDatat, jos data lï¿½ytyy tï¿½mï¿½n polun alta, sen koko voidaan aina arvioida
+	NFmiMetTime itsTime; // talletetttavan case-studyn ns. seinï¿½kello aika
+	bool fDeleteTmpFiles; // deletoidaanko case-study datat zippauksen jï¿½lkeen
+	bool fApproximateOnlyLocalDataSize; // arvioidaan vain lokaali cachellï¿½ olevien datojen koko, kaikki muualla olevat tavarat merkitï¿½ï¿½n 0:ksi
 	std::vector<NFmiCaseStudyCategoryData> itsCategoriesData;
-	std::vector<NFmiCaseStudyDataFile*> itsCaseStudyDialogData; // tähän talletetaan lista CSDataFile-olioita, joiden avulla on tarkoitus täyttää CaseStudy-dialogin Grid Control
-																// vektoriin laitetaan vain pointterit, jotta muokkaukset menevät perille molempiin datarakenteisiin.
-																// HUOM! Ei omista eikä tuhoa olioita.
-	std::vector<unsigned char> itsTreePatternArray; // tätä on grid-controlliin laitettavan puurakenteen syvyys rakenne päätaso eli category on 1, producer taso on 2 ja fileData taso on 3
+	std::vector<NFmiCaseStudyDataFile*> itsCaseStudyDialogData; // tï¿½hï¿½n talletetaan lista CSDataFile-olioita, joiden avulla on tarkoitus tï¿½yttï¿½ï¿½ CaseStudy-dialogin Grid Control
+																// vektoriin laitetaan vain pointterit, jotta muokkaukset menevï¿½t perille molempiin datarakenteisiin.
+																// HUOM! Ei omista eikï¿½ tuhoa olioita.
+	std::vector<unsigned char> itsTreePatternArray; // tï¿½tï¿½ on grid-controlliin laitettavan puurakenteen syvyys rakenne pï¿½ï¿½taso eli category on 1, producer taso on 2 ja fileData taso on 3
 	static std::set<std::string> itsAllCustomFolderNames;
 };

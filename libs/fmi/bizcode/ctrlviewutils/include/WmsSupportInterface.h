@@ -19,7 +19,7 @@ class WmsSupportInterface
 {
 public:
     using GetWmsSupportInterfaceImplementationCallBackType = std::function<WmsSupportInterface*(void)>;
-    // Tämä pitää asettaa johonkin konkreettiseen funktioon, jotta käyttäjä koodi saa käyttöönsä halutun interface toteutuksen
+    // Tï¿½mï¿½ pitï¿½ï¿½ asettaa johonkin konkreettiseen funktioon, jotta kï¿½yttï¿½jï¿½ koodi saa kï¿½yttï¿½ï¿½nsï¿½ halutun interface toteutuksen
     static GetWmsSupportInterfaceImplementationCallBackType GetWmsSupportInterfaceImplementation;
 
     virtual ~WmsSupportInterface();
@@ -32,7 +32,9 @@ public:
     virtual void previousOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex) = 0;
     virtual NFmiImageHolder getBackground(unsigned int mapViewIndex, unsigned int mapAreaIndex, const NFmiArea& area, int resolutionX, int resolutionY) = 0;
     virtual NFmiImageHolder getOverlay(unsigned int mapViewIndex, unsigned int mapAreaIndex, const NFmiArea& area, int resolutionX, int resolutionY) = 0;
+#ifndef DISABLE_CPPRESTSDK
     virtual const Wms::LegendIdentSet& getRegisteredLayers(int row, int col, int descTop) = 0;
+#endif // DISABLE_CPPRESTSDK
     virtual std::vector<NFmiImageHolder> getLegends(int row, int col, int descTop) = 0;
     virtual void registerDynamicLayer(int row, int col, int descTop, const NFmiDataIdent& dataIdent) = 0;
     virtual void unregisterDynamicLayer(int row, int col, int descTop, const NFmiDataIdent& dataIdent) = 0;
@@ -49,7 +51,7 @@ public:
     virtual std::string makeWmsLayerTimeDimensionTooltipString(const NFmiDataIdent& dataIdent, bool shortVersion) const = 0;
 #ifndef DISABLE_CPPRESTSDK
     virtual std::shared_ptr<Wms::CapabilityTree> getCapabilityTree() const = 0;
-    // Kun varsinaisia kyselyjä on tarkoitus tehdä, kannattaa varmistaa tällä että onko systeemi jo käytössä
+    // Kun varsinaisia kyselyjï¿½ on tarkoitus tehdï¿½, kannattaa varmistaa tï¿½llï¿½ ettï¿½ onko systeemi jo kï¿½ytï¿½ssï¿½
     virtual bool isCapabilityTreeAvailable() const = 0;
 #endif // DISABLE_CPPRESTSDK
 

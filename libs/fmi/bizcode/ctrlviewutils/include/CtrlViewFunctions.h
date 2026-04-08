@@ -3,6 +3,7 @@
 #include "NFmiTimeBag.h"
 #include "NFmiInfoData.h"
 #include "NFmiParameterName.h"
+#include <numeric>
 #include <vector>
 #include <list>
 #include <boost/shared_ptr.hpp>
@@ -22,9 +23,9 @@ namespace CatLog
 
 namespace CtrlViewUtils
 {
-    // SmartMetin karttanäyttö ruudukun maksimi koot x- ja y-suunnassa
+    // SmartMetin karttanï¿½yttï¿½ ruudukun maksimi koot x- ja y-suunnassa
     const int MaxViewGridXSize = 10;
-    const int MaxViewGridYSize = 5; // tämä on myös viewcachen max rivikoko
+    const int MaxViewGridYSize = 5; // tï¿½mï¿½ on myï¿½s viewcachen max rivikoko
     const unsigned int kDoAllMapViewDescTopIndex = 999;
     const int MaxMapViewTooltipWidthInPixels = 900;
     const char ParameterStringHighlightCharacter = '*';
@@ -32,7 +33,7 @@ namespace CtrlViewUtils
    NFmiPoint CalcTimeScaleFontSizeInPixels(double thePixelsPerMMinX);
    // lat/lon-string helpers
    std::string GetLatLonValue2MinuteStr(double value, int decimals); // voi olla lat/lon arvo
-   std::string GetLatitudeMinuteStr(double lat, int decimals); // desimaali jutut toimivat nyt vain niin että jos 0, ei desimaaleja, muuten yksi desimaali
+   std::string GetLatitudeMinuteStr(double lat, int decimals); // desimaali jutut toimivat nyt vain niin ettï¿½ jos 0, ei desimaaleja, muuten yksi desimaali
    std::string GetLongitudeMinuteStr(double lon, int decimals);
 
    std::string MakeSizeString(const NFmiPoint &theSize);
@@ -93,7 +94,7 @@ namespace CtrlViewUtils
    std::string GetParentPath(const std::string& filePath);
    void CleanDirectory(const std::string& directoryPathString, double keepHours, std::list<std::string> *deletedFilesOut = nullptr);
 
-   // Haetaan sortatusta container:ista value:ta lähimmän arvon elementin iteraattori.
+   // Haetaan sortatusta container:ista value:ta lï¿½himmï¿½n arvon elementin iteraattori.
    // Koodi haettu: https://stackoverflow.com/questions/698520/search-for-nearest-value-in-an-array-of-doubles-in-c
    template <typename BidirectionalIterator, typename T>
    BidirectionalIterator GetClosestValue(BidirectionalIterator first,
@@ -111,7 +112,7 @@ namespace CtrlViewUtils
        return (*after - value) < (value - *before) ? after : before;
    }
 
-   // Haetaan sortatusta container:ista value:ta lähimmän arvon elementin indeksi.
+   // Haetaan sortatusta container:ista value:ta lï¿½himmï¿½n arvon elementin indeksi.
    // Koodi haettu: https://stackoverflow.com/questions/698520/search-for-nearest-value-in-an-array-of-doubles-in-c
    template <typename BidirectionalIterator, typename T>
    std::size_t GetClosestIndex(BidirectionalIterator first,
@@ -133,7 +134,7 @@ namespace CtrlViewUtils
        return container.at(GetClosestValueIndex(value, container));
    }
 
-   // Tälle annettu container ei sää sisältää std::string olioita, koska sille ei ole std::to_string funktiota.
+   // Tï¿½lle annettu container ei sï¿½ï¿½ sisï¿½ltï¿½ï¿½ std::string olioita, koska sille ei ole std::to_string funktiota.
    template<typename Container>
    std::string MakeCommaSeparatedStringFromValues(const Container& container)
    {
@@ -148,7 +149,7 @@ namespace CtrlViewUtils
        return result;
    }
 
-   // Tässä on viimein tapa miten tehdään template funtio, joka saa jonkun stl containerin, joka sisältää tietyn tyyppisiä olioita.
+   // Tï¿½ssï¿½ on viimein tapa miten tehdï¿½ï¿½n template funtio, joka saa jonkun stl containerin, joka sisï¿½ltï¿½ï¿½ tietyn tyyppisiï¿½ olioita.
    template <template<typename...> class Container, typename... Args>
    std::string MakeCommaSeparatedStringFromStrings(const Container<std::string, Args...>& container)
    {

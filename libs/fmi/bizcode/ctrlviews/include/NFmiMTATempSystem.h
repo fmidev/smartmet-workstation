@@ -1,9 +1,9 @@
-//© Ilmatieteenlaitos/Marko.
+//ï¿½ Ilmatieteenlaitos/Marko.
 //Original 28.12.2004
 //
-// Luokka pitää tietoa onko MetEditori ns. MTA luotaus moodissa, vai noormaali moodissa.
-// Jos ollaan MTA moodissa, pitää myös listaa eri luotauksista, mitä näytetään (tiedot
-// näyttöön lisätyistä luotauksista pitää sisällään ajan,paikan ja tuottajan).
+// Luokka pitï¿½ï¿½ tietoa onko MetEditori ns. MTA luotaus moodissa, vai noormaali moodissa.
+// Jos ollaan MTA moodissa, pitï¿½ï¿½ myï¿½s listaa eri luotauksista, mitï¿½ nï¿½ytetï¿½ï¿½n (tiedot
+// nï¿½yttï¿½ï¿½n lisï¿½tyistï¿½ luotauksista pitï¿½ï¿½ sisï¿½llï¿½ï¿½n ajan,paikan ja tuottajan).
 //---------------------------------------------------------- NFmiMTATempSystem.h
 
 #pragma once
@@ -17,7 +17,22 @@
 #include "NFmiTempLineInfo.h"
 #include "NFmiTempLabelInfo.h"
 #include "SoundingDataServerConfigurations.h"
+#ifndef UNIX
 #include "SoundingViewSettingsFromWindowsRegisty.h"
+#else
+// Stub: SoundingViewSettingsFromWindowsRegisty not available on Linux
+class SoundingViewSettingsFromWindowsRegisty {
+public:
+    bool SoundingTextUpward() const { return false; }
+    void SoundingTextUpward(bool) {}
+    bool SoundingTimeLockWithMapView() const { return false; }
+    void SoundingTimeLockWithMapView(bool) {}
+    bool ShowStabilityIndexSideView() const { return false; }
+    void ShowStabilityIndexSideView(bool) {}
+    bool ShowTextualSoundingDataSideView() const { return false; }
+    void ShowTextualSoundingDataSideView(bool) {}
+};
+#endif // UNIX
 
 class NFmiProducerSystem;
 
@@ -30,11 +45,11 @@ class NFmiMTATempSystem
 
 	class HodografViewData
 	{
-		// Tähän piirretään hodograafi (relatiivinen laatikko)
+		// Tï¿½hï¿½n piirretï¿½ï¿½n hodograafi (relatiivinen laatikko)
 		NFmiRect itsRect; 
-		// Tämän avulla säädetään hodografin arvoalueen suuruutta
+		// Tï¿½mï¿½n avulla sï¿½ï¿½detï¿½ï¿½n hodografin arvoalueen suuruutta
 		double itsScaleMaxValue = 50.;
-		// Tämän avulla säädetään hodografin ikkunan suhteellista kokoa
+		// Tï¿½mï¿½n avulla sï¿½ï¿½detï¿½ï¿½n hodografin ikkunan suhteellista kokoa
 		double itsRelativiHeightFactor = 0.35;
 	public:
 
@@ -53,7 +68,7 @@ class NFmiMTATempSystem
 		void InitializeFromSettingsString(const std::string &settingsString);
 	};
 
-    // ServerProducer luokalla on tieto, käyttääkö se data lähteenään lokaali queryDataa vai serveriä.
+    // ServerProducer luokalla on tieto, kï¿½yttï¿½ï¿½kï¿½ se data lï¿½hteenï¿½ï¿½n lokaali queryDataa vai serveriï¿½.
     class ServerProducer : public NFmiProducer
     {
         bool useServer_ = false;
@@ -66,8 +81,8 @@ class NFmiMTATempSystem
         bool useServer() const { return useServer_; }
         void useServer(bool useServer) { useServer_ = useServer; }
 
-        // Tehdään vertailu operaattorit, jotka vertaavat prod-id, name ja ServerProducer tapauksissa myös useServer -tilaa.
-        // Originaali NFmiProducer vertailut vertaavat vain prod-id:tä.
+        // Tehdï¿½ï¿½n vertailu operaattorit, jotka vertaavat prod-id, name ja ServerProducer tapauksissa myï¿½s useServer -tilaa.
+        // Originaali NFmiProducer vertailut vertaavat vain prod-id:tï¿½.
         bool operator==(const ServerProducer &other) const;
         bool operator==(const NFmiProducer &other) const;
         bool operator!=(const ServerProducer &other) const;
@@ -120,9 +135,9 @@ class NFmiMTATempSystem
         bool operator<(const SoundingDataCacheMapKey &other) const;
     };
 
-    // voidaan helposti siirtyä käyttämään tavallista vector-luokkaa jos haluaa halutaan
+    // voidaan helposti siirtyï¿½ kï¿½yttï¿½mï¿½ï¿½n tavallista vector-luokkaa jos haluaa halutaan
 	using Container = std::vector<TempInfo>; 
-    // SoundingProducer:in bool osa tarkoittaa sitä että haetaanko itse luotausdata lokaali queryDatasta (false) vai serveriltä (true)
+    // SoundingProducer:in bool osa tarkoittaa sitï¿½ ettï¿½ haetaanko itse luotausdata lokaali queryDatasta (false) vai serveriltï¿½ (true)
     using SoundingProducer = ServerProducer;
     using SelectedProducerContainer = std::vector<SoundingProducer>;
     using SelectedProducerLegacyContainer = std::vector<NFmiProducer>;
@@ -130,7 +145,7 @@ class NFmiMTATempSystem
 	NFmiMTATempSystem(void);
 	virtual ~NFmiMTATempSystem(void);
 
-	// Heittää poikkeuksia virhetilanteissa
+	// Heittï¿½ï¿½ poikkeuksia virhetilanteissa
     void Init(NFmiProducerSystem &theProducerSystem, const std::vector<NFmiProducer>& theExtraSoundingProducers, const SoundingViewSettingsFromWindowsRegisty & soundingViewSettingsFromWindowsRegisty);
 	void InitFromViewMacro(const NFmiMTATempSystem &theOther, bool disableWindowManipulations);
 	void AddTemp(const TempInfo &theTempInfo);
@@ -315,52 +330,52 @@ private:
 	void SetSelectedProducerFromViewMacroString(const std::string &str);
 
 	Container itsTempInfos;
-	// MTA-moodissa tämän enempää ei oteta listaan näytettäviä temppejä. Jos joku lisää tempin ja 
-	// listassa on jo näin monta, tyhjennetään ensin lista ja lisätään sitten tämä uusi luotaus tieto
+	// MTA-moodissa tï¿½mï¿½n enempï¿½ï¿½ ei oteta listaan nï¿½ytettï¿½viï¿½ temppejï¿½. Jos joku lisï¿½ï¿½ tempin ja 
+	// listassa on jo nï¿½in monta, tyhjennetï¿½ï¿½n ensin lista ja lisï¿½tï¿½ï¿½n sitten tï¿½mï¿½ uusi luotaus tieto
 	int itsMaxTempsShowed; 
 	// Lista kaikista mahdollisista luotaus tuottajista
     SelectedProducerContainer itsPossibleProducerList; 
-	// Näiden tuottajien luotauksia näytetään comp-moodissa luotaus näytössä
+	// Nï¿½iden tuottajien luotauksia nï¿½ytetï¿½ï¿½n comp-moodissa luotaus nï¿½ytï¿½ssï¿½
     SelectedProducerContainer itsSoundingComparisonProducers; 
-	// Indeksi edelliseen listaan, -1 jos ei ole valittu mitään
-	// HUOM! en muista miksi tämä on oikeasti tehty, mutta en uskalla muuttaa sitä siihen 
-	// käyttöön mihin uusi itsSelectedProducerIndex dataosa otetaan käyttöön.
-	// Siksi tämä itsSelectedProducer jää sellaisenaan olemaan tässä.
+	// Indeksi edelliseen listaan, -1 jos ei ole valittu mitï¿½ï¿½n
+	// HUOM! en muista miksi tï¿½mï¿½ on oikeasti tehty, mutta en uskalla muuttaa sitï¿½ siihen 
+	// kï¿½yttï¿½ï¿½n mihin uusi itsSelectedProducerIndex dataosa otetaan kï¿½yttï¿½ï¿½n.
+	// Siksi tï¿½mï¿½ itsSelectedProducer jï¿½ï¿½ sellaisenaan olemaan tï¿½ssï¿½.
 	int itsSelectedProducer; 
 	bool fTempViewOn; // onko luotaus ikkuna auki vai kiinni
 	double itsSkewTDegree; // tuetaan ainakin 0 ja 45 astetta
 
-	std::vector<NFmiColor> itsSoundingColors; // eri luotaukset piirretään eri väreillä, tähän on ne värit talletettu
+	std::vector<NFmiColor> itsSoundingColors; // eri luotaukset piirretï¿½ï¿½n eri vï¿½reillï¿½, tï¿½hï¿½n on ne vï¿½rit talletettu
 
-	// tähän tulee kaikenlaisia säätöjä luotaus näytöstä.
-	// mm. akselien säädöt, eri viivojen värit, viivatyypit ja paksuudet on/off tila ja
-	// labelointi on/off, fontti koko, väri jne
-	// lisäksi on piirrettävien apuviivojen arvolistat. Kuten mitkä paineet, mixing ratiot jne piirretään
-	double itsTAxisStart0Degree; // pysty lämpötila-asteikolle omat arvot
-	double itsTAxisEnd0Degree; // pysty lämpötila-asteikolle omat arvot
-	double itsTAxisStart45Degree; // näitä käytetään lämpötila asteikolle kaikilla positiivisilla asteilla
-	double itsTAxisEnd45Degree; // näitä käytetään lämpötila asteikolle kaikilla positiivisilla asteilla
-	double itsTAxisStartNegDegree; // näitä käytetään lämpötila asteikolle kaikilla negatiivisilla asteilla
-	double itsTAxisEndNegDegree; // näitä käytetään lämpötila asteikolle kaikilla negatiivisilla asteilla
-	double itsTemperatureHelpLineStart; // jos vino T diagrammi, pitää lämpötila apuviivoja piirrellä enemmän, tästä lähtien aletaan piirtämään niitä
-	double itsTemperatureHelpLineEnd; // jos vino T diagrammi, pitää lämpötila apuviivoja piirrellä enemmän, tähän asti niitä piirretään
-	double itsTemperatureHelpLineStep; // millä jakovälillä lämppärin apuviivoja piirretään
-    NFmiTempLineInfo itsTemperatureHelpLineInfo; // lämppäri apuviivojen piirto-ominaisuudet
-    NFmiTempLabelInfo itsTemperatureHelpLabelInfo; // lämppäri apuviivojen label tekstin piirto-ominaisuudet
+	// tï¿½hï¿½n tulee kaikenlaisia sï¿½ï¿½tï¿½jï¿½ luotaus nï¿½ytï¿½stï¿½.
+	// mm. akselien sï¿½ï¿½dï¿½t, eri viivojen vï¿½rit, viivatyypit ja paksuudet on/off tila ja
+	// labelointi on/off, fontti koko, vï¿½ri jne
+	// lisï¿½ksi on piirrettï¿½vien apuviivojen arvolistat. Kuten mitkï¿½ paineet, mixing ratiot jne piirretï¿½ï¿½n
+	double itsTAxisStart0Degree; // pysty lï¿½mpï¿½tila-asteikolle omat arvot
+	double itsTAxisEnd0Degree; // pysty lï¿½mpï¿½tila-asteikolle omat arvot
+	double itsTAxisStart45Degree; // nï¿½itï¿½ kï¿½ytetï¿½ï¿½n lï¿½mpï¿½tila asteikolle kaikilla positiivisilla asteilla
+	double itsTAxisEnd45Degree; // nï¿½itï¿½ kï¿½ytetï¿½ï¿½n lï¿½mpï¿½tila asteikolle kaikilla positiivisilla asteilla
+	double itsTAxisStartNegDegree; // nï¿½itï¿½ kï¿½ytetï¿½ï¿½n lï¿½mpï¿½tila asteikolle kaikilla negatiivisilla asteilla
+	double itsTAxisEndNegDegree; // nï¿½itï¿½ kï¿½ytetï¿½ï¿½n lï¿½mpï¿½tila asteikolle kaikilla negatiivisilla asteilla
+	double itsTemperatureHelpLineStart; // jos vino T diagrammi, pitï¿½ï¿½ lï¿½mpï¿½tila apuviivoja piirrellï¿½ enemmï¿½n, tï¿½stï¿½ lï¿½htien aletaan piirtï¿½mï¿½ï¿½n niitï¿½
+	double itsTemperatureHelpLineEnd; // jos vino T diagrammi, pitï¿½ï¿½ lï¿½mpï¿½tila apuviivoja piirrellï¿½ enemmï¿½n, tï¿½hï¿½n asti niitï¿½ piirretï¿½ï¿½n
+	double itsTemperatureHelpLineStep; // millï¿½ jakovï¿½lillï¿½ lï¿½mppï¿½rin apuviivoja piirretï¿½ï¿½n
+    NFmiTempLineInfo itsTemperatureHelpLineInfo; // lï¿½mppï¿½ri apuviivojen piirto-ominaisuudet
+    NFmiTempLabelInfo itsTemperatureHelpLabelInfo; // lï¿½mppï¿½ri apuviivojen label tekstin piirto-ominaisuudet
 
 
 	double itsPAxisStart; // paineasteikon alku (maanpinta eli iso arvo)
 	double itsPAxisEnd; // paineasteikon loppu
-	std::vector<double> itsPressureValues; // nämä paine pinnat piirretään ja niihin laitetaan label
+	std::vector<double> itsPressureValues; // nï¿½mï¿½ paine pinnat piirretï¿½ï¿½n ja niihin laitetaan label
     NFmiTempLineInfo itsPressureLineInfo; // paine apuviivojen piirto-ominaisuudet
     NFmiTempLabelInfo itsPressureLabelInfo; // paine apuviivojen label tekstin piirto-ominaisuudet
-	std::vector<double> itsMixingRatioValues; // nämä mixing ratio arvot piirretään ja niihin laitetaan label
+	std::vector<double> itsMixingRatioValues; // nï¿½mï¿½ mixing ratio arvot piirretï¿½ï¿½n ja niihin laitetaan label
     NFmiTempLineInfo itsMixingRatioLineInfo; // MixingRatio apuviivojen piirto-ominaisuudet
     NFmiTempLabelInfo itsMixingRatioLabelInfo; // MixingRatio apuviivojen label tekstin piirto-ominaisuudet
-	std::vector<double> itsMoistAdiabaticValues; // nämä kostea adiabaatti arvot piirretään ja niihin laitetaan label
+	std::vector<double> itsMoistAdiabaticValues; // nï¿½mï¿½ kostea adiabaatti arvot piirretï¿½ï¿½n ja niihin laitetaan label
     NFmiTempLineInfo itsMoistAdiabaticLineInfo; // MoistAdiabatic apuviivojen piirto-ominaisuudet
     NFmiTempLabelInfo itsMoistAdiabaticLabelInfo; // MoistAdiabatic apuviivojen label tekstin piirto-ominaisuudet
-	std::vector<double> itsDryAdiabaticValues; // nämä kuiva adiabaatti arvot piirretään ja niihin laitetaan label
+	std::vector<double> itsDryAdiabaticValues; // nï¿½mï¿½ kuiva adiabaatti arvot piirretï¿½ï¿½n ja niihin laitetaan label
     NFmiTempLineInfo itsDryAdiabaticLineInfo; // DryAdiabatic apuviivojen piirto-ominaisuudet
     NFmiTempLabelInfo itsDryAdiabaticLabelInfo; // DryAdiabatic apuviivojen label tekstin piirto-ominaisuudet
 
@@ -377,15 +392,15 @@ private:
 	NFmiPoint itsLegendTextSize;
 	bool fDrawLegendText;
 
-    NFmiTempLineInfo itsTemperatureLineInfo; // itse lämpötila luotaus viivojen asetukset
+    NFmiTempLineInfo itsTemperatureLineInfo; // itse lï¿½mpï¿½tila luotaus viivojen asetukset
     NFmiTempLineInfo itsDewPointLineInfo; // itse kastepiste luotaus viivojen asetukset
 
-	// korkeus teksti piirretään paine akselin viereen.
+	// korkeus teksti piirretï¿½ï¿½n paine akselin viereen.
     NFmiTempLabelInfo itsHeightValueLabelInfo;
 	bool fDrawOnlyHeightValuesOfFirstDrawedSounding;
 
-	int itsIndexiesFontSize; // indeksi taulukon fontin koko pikseleinä
-	int itsSoundingTextFontSize; // luotaus tekstinä fontin koko pikseleinä
+	int itsIndexiesFontSize; // indeksi taulukon fontin koko pikseleinï¿½
+	int itsSoundingTextFontSize; // luotaus tekstinï¿½ fontin koko pikseleinï¿½
 
 	bool fShowHodograf;
 	bool fShowCondensationTrailProbabilityLines;
@@ -397,10 +412,10 @@ private:
 
 	bool fLeftMouseDown;
 	bool fRightMouseDown;
-	bool fInitializationOk; // alustuksen onnistuessa tämä asetetaan true:ksi, jos epäonnistunut, ei talleteta takaisin konffiin, koska voi olla roskaa
+	bool fInitializationOk; // alustuksen onnistuessa tï¿½mï¿½ asetetaan true:ksi, jos epï¿½onnistunut, ei talleteta takaisin konffiin, koska voi olla roskaa
 
-	// Nämä ovat luotaus näytön reset-skales buttonia varten, joka asettelee asteikot
-	// johonkin sopiviin default arvoihin, jos joku on säädellyt asteikot ihan poskelleen.
+	// Nï¿½mï¿½ ovat luotaus nï¿½ytï¿½n reset-skales buttonia varten, joka asettelee asteikot
+	// johonkin sopiviin default arvoihin, jos joku on sï¿½ï¿½dellyt asteikot ihan poskelleen.
 	double itsResetScalesStartP;
 	double itsResetScalesEndP;
 	double itsResetScalesStartT;
@@ -409,30 +424,30 @@ private:
 	double itsResetScalesSkewTEndT;
 
 	int itsAnimationTimeStepInMinutes;
-	int itsWindBarbSpaceOutFactor; // 0 = ei harvennusta, 1 vähän ja 2 enemmän
+	int itsWindBarbSpaceOutFactor; // 0 = ei harvennusta, 1 vï¿½hï¿½n ja 2 enemmï¿½n
 
-	bool fUpdateFromViewMacro; // tätä käytetään vain kertomaan että luotaus-dialogia päivitetään viewMacrosta ja täytyy toimia hieman erilailla kuin normaalisti
+	bool fUpdateFromViewMacro; // tï¿½tï¿½ kï¿½ytetï¿½ï¿½n vain kertomaan ettï¿½ luotaus-dialogia pï¿½ivitetï¿½ï¿½n viewMacrosta ja tï¿½ytyy toimia hieman erilailla kuin normaalisti
     CtrlViewUtils::GraphicalInfo itsGraphicalInfo;
-	int itsModelRunCount; // Kuinka monta viimeisintä malliajoa näytetään luotausnäytössä, jos katsotaan jotain malli luotausta (0 = vain viimeisin data, 1 on viimeisin + edellinen malliajo, 2 = viimeisin ja kaksi edellista jne.)
-    bool fDrawSecondaryData; // piirretäänkö apudatat (0-100 asteikkoon WS, N, RH, muita?) vai ei (SmartMetin luotausnäytössä CTRL + F säätää on/off tilaa)
-    double itsSecondaryDataFrameWidthFactor; // Kuinka leveä apudatalaatikko on suhteessa koko luotausnäyttöön. Tällä on aina arvo, vaikka apudataa ei piirettäisi.
-    NFmiTempLineInfo itsWSLineInfo; // Apudatanäytön WS (tuulen nopeus) viivan piirto-ominaisuudet
-    NFmiTempLineInfo itsNLineInfo; // Apudatanäytön N (kokonaispilvisyys) viivan piirto-ominaisuudet
-    NFmiTempLineInfo itsRHLineInfo; // Apudatanäytön RH (suhteellinen kosteus prosentti) viivan piirto-ominaisuudet
+	int itsModelRunCount; // Kuinka monta viimeisintï¿½ malliajoa nï¿½ytetï¿½ï¿½n luotausnï¿½ytï¿½ssï¿½, jos katsotaan jotain malli luotausta (0 = vain viimeisin data, 1 on viimeisin + edellinen malliajo, 2 = viimeisin ja kaksi edellista jne.)
+    bool fDrawSecondaryData; // piirretï¿½ï¿½nkï¿½ apudatat (0-100 asteikkoon WS, N, RH, muita?) vai ei (SmartMetin luotausnï¿½ytï¿½ssï¿½ CTRL + F sï¿½ï¿½tï¿½ï¿½ on/off tilaa)
+    double itsSecondaryDataFrameWidthFactor; // Kuinka leveï¿½ apudatalaatikko on suhteessa koko luotausnï¿½yttï¿½ï¿½n. Tï¿½llï¿½ on aina arvo, vaikka apudataa ei piirettï¿½isi.
+    NFmiTempLineInfo itsWSLineInfo; // Apudatanï¿½ytï¿½n WS (tuulen nopeus) viivan piirto-ominaisuudet
+    NFmiTempLineInfo itsNLineInfo; // Apudatanï¿½ytï¿½n N (kokonaispilvisyys) viivan piirto-ominaisuudet
+    NFmiTempLineInfo itsRHLineInfo; // Apudatanï¿½ytï¿½n RH (suhteellinen kosteus prosentti) viivan piirto-ominaisuudet
 
-    // Windows registry:ssä oikeasti talletetut muuttujat, jotka otetaan myös tänne talteen, että ne saadaan mukaan näyttömakroihin
+    // Windows registry:ssï¿½ oikeasti talletetut muuttujat, jotka otetaan myï¿½s tï¿½nne talteen, ettï¿½ ne saadaan mukaan nï¿½yttï¿½makroihin
 	SoundingViewSettingsFromWindowsRegisty itsSoundingViewSettingsFromWindowsRegisty;
 	SoundingDataServerConfigurations itsSoundingDataServerConfigurations;
 	HodografViewData itsHodografViewData;
-	// Luotausnäytössä voidaan valita multi-select listasta tuottajat, jotka näytetään erivärisillä viivoilla.
-	// Tämä mennessä 1. niistä on ollut ns. pääluotaus, josta on piirretty mm. teksti ja indeksi tietoja luotaunäytölle.
-	// Nyt halutun luotauksen voi välitä pääluotaukseksi luotausnäytössä CTRL + SHIFT + rullalla.
-	// Indeksit alkavat 0:sta ja jos indeksi on isompi kuin valittujen luotausten määrä, valituksi tulee viimeisin tuottaja listalta.
+	// Luotausnï¿½ytï¿½ssï¿½ voidaan valita multi-select listasta tuottajat, jotka nï¿½ytetï¿½ï¿½n erivï¿½risillï¿½ viivoilla.
+	// Tï¿½mï¿½ mennessï¿½ 1. niistï¿½ on ollut ns. pï¿½ï¿½luotaus, josta on piirretty mm. teksti ja indeksi tietoja luotaunï¿½ytï¿½lle.
+	// Nyt halutun luotauksen voi vï¿½litï¿½ pï¿½ï¿½luotaukseksi luotausnï¿½ytï¿½ssï¿½ CTRL + SHIFT + rullalla.
+	// Indeksit alkavat 0:sta ja jos indeksi on isompi kuin valittujen luotausten mï¿½ï¿½rï¿½, valituksi tulee viimeisin tuottaja listalta.
 	int itsSelectedProducerIndex = 0;
-	// Luotauksien kokoomalaskentoihin liittyvät asetukset
-	// Jos itsIntegrationRangeInKm arvo on 0, ei tehdä kokoomalaskuja alueen suhteen ollenkaan
+	// Luotauksien kokoomalaskentoihin liittyvï¿½t asetukset
+	// Jos itsIntegrationRangeInKm arvo on 0, ei tehdï¿½ kokoomalaskuja alueen suhteen ollenkaan
 	double itsIntegrationRangeInKm = 0;
-	// Jos aikakokooma asetukset ovat 0:aa, ei tehdä ajansuhteen mitään kokoomalaskuja
+	// Jos aikakokooma asetukset ovat 0:aa, ei tehdï¿½ ajansuhteen mitï¿½ï¿½n kokoomalaskuja
 	double itsIntegrationTimeOffset1InHours = 0;
 	double itsIntegrationTimeOffset2InHours = 0;
 };

@@ -21,10 +21,7 @@
 #include <cmath>
 #include <functional>
 
-#ifdef UNIX
-long int abs(long int theValue);
-long int abs(long int theValue) { return (theValue < 0 ? -theValue : theValue); }
-#endif
+// std::abs(long) is defined in <cstdlib>/<cmath> on Linux; no custom definition needed
 
 // ----------------------------------------------------------------------
 /*!

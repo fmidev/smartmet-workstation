@@ -57,8 +57,8 @@ namespace
         {
             auto lvl = levels->Level();
             const std::shared_ptr<NFmiLevel> level = std::make_shared<NFmiLevel>(NFmiLevel(lvl->GetIdent(), lvl->GetName(), lvl->LevelValue()));
-            std::string levelStr = level->GetName();
-            std::string menuString = dataIdent.GetParamName() + " " + levelStr;
+            std::string levelStr = level->GetName().CharPtr();
+            std::string menuString = std::string(dataIdent.GetParamName().CharPtr()) + " " + levelStr;
             std::string uniqueDataId = "Temp - " + menuString;
 
             AddParams::SingleRowItem item = AddParams::SingleRowItem(rowType, menuString, dataIdent.GetParamIdent(), true, uniqueDataId, NFmiInfoData::kObservations, parentId, "", true, level, treeDepth, menuString);
@@ -85,7 +85,7 @@ namespace
 
             for(const auto &dataIdent : paramsVector)
             {
-                std::string menuString = dataIdent.GetParamName();
+                std::string menuString = dataIdent.GetParamName().CharPtr();
                 std::string uniqueDataId = "Temp - " + menuString;
 
                 AddParams::SingleRowItem item = AddParams::SingleRowItem(rowType, menuString, dataIdent.GetParamIdent(), true, uniqueDataId, NFmiInfoData::kObservations, parentId, "", false, nullptr, treeDepth, menuString);
@@ -107,7 +107,7 @@ namespace
 
     bool isObservationCustomMenuFolder(NFmiInfoData::Type dataCategory, const NFmiHelpDataInfo &helpDataInfo)
     {
-        // Jos kategoria on havainnot, pitää tehdä poikkeus "observation" nimisistä CustomMenuFolder:eista
+        // Jos kategoria on havainnot, pitï¿½ï¿½ tehdï¿½ poikkeus "observation" nimisistï¿½ CustomMenuFolder:eista
         if(dataCategory == NFmiInfoData::kObservations && boost::iequals(helpDataInfo.CustomMenuFolder(), "observation"))
             return true;
         else

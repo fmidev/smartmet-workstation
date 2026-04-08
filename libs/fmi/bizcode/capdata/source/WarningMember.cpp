@@ -10,7 +10,7 @@ using namespace std;
 
 namespace
 {
-    // Tätä käytetään Cap datoista saatujen koordinaattien konvertoimiseen newbase vastaaviksi
+    // Tï¿½tï¿½ kï¿½ytetï¿½ï¿½n Cap datoista saatujen koordinaattien konvertoimiseen newbase vastaaviksi
     std::unique_ptr<NFmiArea> gYkjAreaCoordinateConverionPtr = std::make_unique<NFmiYKJArea>(NFmiPoint(19, 59), NFmiPoint(32, 70));
 }
 
@@ -38,8 +38,10 @@ namespace Warnings
         this->setPhysicalUnit(XmlHelper::GetChildNodeText(aNode, "alert:physical_unit"));
         this->setEffectiveFrom(convertTimeToMetTime(XmlHelper::GetChildNodeText(aNode, "alert:effective_from")));
         this->setEffectiveUntil(convertTimeToMetTime(XmlHelper::GetChildNodeText(aNode, "alert:effective_until")));
-        this->setInfoEnglish(NFmiStringTools::Trim(XmlHelper::GetChildNodeText(aNode, "alert:info_en")));
-        std::string reference = NFmiStringTools::Trim(XmlHelper::GetChildNodeText(aNode, "alert:reference"));
+        std::string infoEn = XmlHelper::GetChildNodeText(aNode, "alert:info_en");
+        this->setInfoEnglish(NFmiStringTools::Trim(infoEn));
+        std::string reference = XmlHelper::GetChildNodeText(aNode, "alert:reference");
+        reference = NFmiStringTools::Trim(reference);
         this->setReference((reference.size() < 10) ? "" : reference); //skip random nonsense in reference
         setCoordinates(aNode);
         setCenter(aNode);
@@ -48,9 +50,9 @@ namespace Warnings
     void WarningMember::setCoordinates(LPXNode aNode)
     {
         auto node = XmlHelper::GetChildNode(aNode, 0);
-        if(node->Find(L"gml:MultiPolygon")) //Area consists of multiple polygons
+        if(node->Find("gml:MultiPolygon")) //Area consists of multiple polygons
         {
-            LPXNode multiPolygonNode = node->Find(L"gml:MultiPolygon");
+            LPXNode multiPolygonNode = node->Find("gml:MultiPolygon");
             XNodes childs = multiPolygonNode->GetChilds(_TEXT("gml:polygonMember"));
             for(size_t i = 0; i < childs.size(); i++)
             {
@@ -59,9 +61,9 @@ namespace Warnings
                 this->coordinates_.push_back(NFmiStringTools::Trim(s));
             }
         } 
-        else if(node->Find(L"gml:Polygon"))
+        else if(node->Find("gml:Polygon"))
         {
-            LPXNode polygonNode = node->Find(L"gml:Polygon"); //Only one polygon
+            LPXNode polygonNode = node->Find("gml:Polygon"); //Only one polygon
             std::string s = CT2A(polygonNode->GetText());
             this->coordinates_.push_back(NFmiStringTools::Trim(s));
         }
@@ -71,13 +73,13 @@ namespace Warnings
     void WarningMember::setCenter(LPXNode aNode)
     {
         auto node = XmlHelper::GetChildNode(aNode, 0);
-        if(node->Find(L"alert:representative_x"))
+        if(node->Find("alert:representative_x"))
         {
-            LPXNode x = node->Find(L"alert:representative_x");
-            LPXNode y = node->Find(L"alert:representative_y");
+            LPXNode x = node->Find("alert:representative_x");
+            LPXNode y = node->Find("alert:representative_y");
 
-            double longitude = _wtof(x->GetText());
-            double latitude = _wtof(y->GetText());
+            double longitude = atof(x->GetText());
+            double latitude = atof(y->GetText());
 
             longitude += 3000000; //Fix difference between coordinate systems
             NFmiPoint point = gYkjAreaCoordinateConverionPtr->WorldXYToLatLon(NFmiPoint(longitude, latitude));

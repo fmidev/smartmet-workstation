@@ -2,6 +2,7 @@
 
 #include <string>
 #include <iomanip>
+#include <stdexcept>
 
 class NFmiColor;
 
@@ -15,7 +16,7 @@ namespace ColorString
    {
        std::ostringstream oss;
        if(!(oss << std::setw(minWidth) << std::setfill(paddingchar) << std::hex << value))
-           throw std::exception("ToHex - Invalid argument");
+           throw std::runtime_error("ToHex - Invalid argument");
        return oss.str();
    }
 }

@@ -1,6 +1,7 @@
 #include "catlog/catlog.h"
 #include "catlog/catlogutils.h"
 #include "spdlog/spdlog.h"
+#include "spdlog/sinks/daily_file_sink.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/range/adaptor/reversed.hpp>
@@ -173,15 +174,24 @@ namespace
     struct precise_daily_file_name_calculator
     {
         // Create filename for the form basename_YYYY-MM-DD_hh-mm-ss.ext
+#ifdef UNIX
+        // spdlog 1.14 API: calc_filename receives pre-computed now_tm
+        static spdlog::filename_t calc_filename(const spdlog::filename_t& filename, const std::tm& tm)
+        {
+            spdlog::filename_t basename, ext;
+            std::tie(basename, ext) = spdlog::details::file_helper::split_by_extension(filename);
+            return fmt::format(SPDLOG_FILENAME_T("{}_{:04d}-{:02d}-{:02d}_{:02d}-{:02d}-{:02d}{}"), basename, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, ext);
+        }
+#else
+        // spdlog 1.x legacy API: no now_tm parameter
         static spdlog::filename_t calc_filename(const spdlog::filename_t& filename)
         {
             spdlog::filename_t basename, ext;
             std::tie(basename, ext) = split_by_extension(filename);
             std::tm tm = spdlog::details::os::localtime();
-            std::conditional<std::is_same<spdlog::filename_t::value_type, char>::value, fmt::MemoryWriter, fmt::WMemoryWriter>::type w;
-            w.write(SPDLOG_FILENAME_T("{}_{:04d}-{:02d}-{:02d}_{:02d}-{:02d}-{:02d}{}"), basename, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, ext);
-            return w.str();
+            return fmt::format(SPDLOG_FILENAME_T("{}_{:04d}-{:02d}-{:02d}_{:02d}-{:02d}-{:02d}{}"), basename, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, ext);
         }
+#endif
     };
 
     typedef spdlog::sinks::daily_file_sink<std::mutex, precise_daily_file_name_calculator> precise_daily_file_sink_mt;
@@ -339,7 +349,18 @@ namespace CatLog
 
     std::string currentLogFilePath()
     {
+#ifdef UNIX
+        // spdlog 1.14: logger has no current_filename(); retrieve it from the sink
+        if (logger_ && !logger_->sinks().empty())
+        {
+            auto sink = std::dynamic_pointer_cast<precise_daily_file_sink_mt>(logger_->sinks().front());
+            if (sink)
+                return sink->filename();
+        }
+        return baseLogFilePath_;
+#else
         return logger_->current_filename();
+#endif
     }
 
     std::string baseLogFilePath()

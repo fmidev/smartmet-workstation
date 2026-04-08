@@ -1,5 +1,5 @@
 // Query datojen yhdistely ohjelma saa seuraavat argumentit:
-// 0. ohjelman nimi (ei välitetä tästä)
+// 0. ohjelman nimi (ei vï¿½litetï¿½ tï¿½stï¿½)
 // 1. work1 ("partial-data-filter,combined-data-filter,time-steps" comma separated values in quates!)
 // 2. work2
 // 3. ...
@@ -41,8 +41,8 @@ namespace
         if(!theLogFilePath.empty())
         {
             NFmiFileString logFilePathStr(theLogFilePath);
-            std::string logFilePath = logFilePathStr.Device() + logFilePathStr.Path();
-            std::string logFileBaseName = logFilePathStr.FileName();
+            std::string logFilePath = std::string(logFilePathStr.Device().CharPtr()) + logFilePathStr.Path().CharPtr();
+            std::string logFileBaseName = logFilePathStr.FileName().CharPtr();
             auto dailyTimeStamp = ::makeDailyTimeStamp();
             boost::replace_all(logFileBaseName, "*", dailyTimeStamp);
             bool useBackUpSystem = true;
@@ -112,7 +112,7 @@ namespace
             throw std::runtime_error(message);
         }
 
-        // stoi heittää poikkeuksen jos epäonnistuu
+        // stoi heittï¿½ï¿½ poikkeuksen jos epï¿½onnistuu
         int timeSteps = std::stoi(parameterStrings[2]);
         return CombinationWork(partialDataFilter, combinedDataFilter, timeSteps);
     }
@@ -121,7 +121,7 @@ namespace
 int main(int argc, const char* argv[]) 
 {
     NFmiFileString exeFileNameStr(argv[0]);
-    std::string exeName = exeFileNameStr.FileName();
+    std::string exeName = exeFileNameStr.FileName().CharPtr();
     if(argc <= 2)
     {
         std::cout << "Error when executing " << exeName << ", not enough arguments, atleast 2 required:" << std::endl;
@@ -166,7 +166,7 @@ int main(int argc, const char* argv[])
             bool doLongDebugWait = false;
             for(const auto& combinationWork : combinationWorks)
             {
-                // Kaikki työt tehdään rebuild tyyliin, se on varmaa ja helpottaa logiikkaa
+                // Kaikki tyï¿½t tehdï¿½ï¿½n rebuild tyyliin, se on varmaa ja helpottaa logiikkaa
                 // ja SSD aikakaudella se ei rasita levy I/O:n puolesta paljoakaan.
                 CombineDataFileHelper combineDataFileHelper(combinationWork.partialDataFilter_, combinationWork.combinedDataFilter_, combinationWork.timeSteps_, true, loggingFunction);
                 combineDataFileHelper.doDataCombinationWork();

@@ -18,7 +18,9 @@
 #include "NFmiCrossSectionSystem.h"
 #include "NFmiSynopPlotSettings.h"
 #include "NFmiObsComparisonInfo.h"
+#ifndef UNIX
 #include "HakeMessage/HakeSystemConfigurations.h"
+#endif
 #include "NFmiMapViewDescTop.h"
 
 class NFmiArea;
@@ -27,8 +29,8 @@ class NFmiAreaMaskList;
 class NFmiMacroParamSystem;
 class NFmiMapViewWinRegistry;
 
-// Tähän luetaan vain viewmacron nimi (tiedosto nimestä) ja description.
-// Alustus on nopeaa ja näiden avulla päivitetään viewMacro-dialogin listaa.
+// Tï¿½hï¿½n luetaan vain viewmacron nimi (tiedosto nimestï¿½) ja description.
+// Alustus on nopeaa ja nï¿½iden avulla pï¿½ivitetï¿½ï¿½n viewMacro-dialogin listaa.
 class NFmiLightWeightViewSettingMacro
 {
 public:
@@ -44,7 +46,7 @@ public:
     std::string itsDescription;
     std::string itsInitFilePath;
     bool fIsViewMacroDirectory;
-    bool fViewMacroOk; // Jos erityisesti havaitaan että näyttömakro tiedostossa on jotain vikaa, laitetaan tämä false tilaan.
+    bool fViewMacroOk; // Jos erityisesti havaitaan ettï¿½ nï¿½yttï¿½makro tiedostossa on jotain vikaa, laitetaan tï¿½mï¿½ false tilaan.
     NFmiTime itsFileModificationTime;
 
     void Read(std::istream& is);
@@ -97,18 +99,18 @@ public:
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);
 	private:
-		boost::shared_ptr<NFmiDrawParam> itsDrawParam; // sis. mm. data identin // talletetaan koko drawparam, että voisi tehdä esim. eri värisiä/erilaisia virityksiä samalle parametrille / eri tuottajalle
-		NFmiDataIdent itsDataIdent; // tämä pitää olla erikseen, koska drawparam ei talleta sen omaa dataidenttiään.
+		boost::shared_ptr<NFmiDrawParam> itsDrawParam; // sis. mm. data identin // talletetaan koko drawparam, ettï¿½ voisi tehdï¿½ esim. eri vï¿½risiï¿½/erilaisia virityksiï¿½ samalle parametrille / eri tuottajalle
+		NFmiDataIdent itsDataIdent; // tï¿½mï¿½ pitï¿½ï¿½ olla erikseen, koska drawparam ei talleta sen omaa dataidenttiï¿½ï¿½n.
 		NFmiLevel itsLevel;
 		NFmiInfoData::Type itsDataType;
-		int itsModelOrigTimeOffsetInHours; // tämä kertoo mahdollisen ed. hirlam vai sitä edellinen esim. -6h tai -12h
+		int itsModelOrigTimeOffsetInHours; // tï¿½mï¿½ kertoo mahdollisen ed. hirlam vai sitï¿½ edellinen esim. -6h tai -12h
 
 		// ***********************************************************************************************************
-		// Nämä ovat DrawParamin ominaisuuksia, mutta koska niitä ei talleteta tiedostoon, talletan ne tähän
+		// Nï¿½mï¿½ ovat DrawParamin ominaisuuksia, mutta koska niitï¿½ ei talleteta tiedostoon, talletan ne tï¿½hï¿½n
 		// koska en halua juuri nyt muuttaa drawparamin talletus versiota.
-		bool fHidden;	// näyttö voidaan piiloittaa tämän mukaisesti
-		bool fActive;	// onko kyseinen parametri näytön aktiivinen parametri (jokaisella näyttörivillä aina yksi aktivoitunut parametri)
-		bool fShowDifferenceToOriginalData; // ero originaaliin dataan karttanäytössä
+		bool fHidden;	// nï¿½yttï¿½ voidaan piiloittaa tï¿½mï¿½n mukaisesti
+		bool fActive;	// onko kyseinen parametri nï¿½ytï¿½n aktiivinen parametri (jokaisella nï¿½yttï¿½rivillï¿½ aina yksi aktivoitunut parametri)
+		bool fShowDifferenceToOriginalData; // ero originaaliin dataan karttanï¿½ytï¿½ssï¿½
 		// ***********************************************************************************************************
 
 	};
@@ -135,7 +137,7 @@ public:
 		bool fMaskEnabled;
 	};
 
-	// sisältää maski listan ja yleiset asetukset maskeille
+	// sisï¿½ltï¿½ï¿½ maski listan ja yleiset asetukset maskeille
 	class MaskSettings
 	{
 	public:
@@ -222,7 +224,7 @@ public:
 		void Read(std::istream& is);
 	private:
 
-		NFmiProjectionCurvatureInfo itsProjectionCurvatureInfo; // kartan päälle piirrettävät lat-lon apuviivasto asetukset
+		NFmiProjectionCurvatureInfo itsProjectionCurvatureInfo; // kartan pï¿½ï¿½lle piirrettï¿½vï¿½t lat-lon apuviivasto asetukset
 		std::vector<NFmiPoint> itsCPLocationVector; // controllipisteet talteen (latlon pisteet)
 	};
 
@@ -267,17 +269,17 @@ public:
 		void Clear(void);
 		void Add(const TimeViewRow &theTimeViewRow);
 
-		std::vector<TimeViewRow> itsRows; //  kaikkien karttanäyttörivien asetukset
-		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
+		std::vector<TimeViewRow> itsRows; //  kaikkien karttanï¿½yttï¿½rivien asetukset
+		NFmiRect itsAbsolutRect; // nï¿½ytï¿½n koko ja sijainti pixeleissï¿½
         MfcViewStatus itsViewStatus;
-        bool fShowHelpData; // näytetäänkö malli+havainto+klimatologiset data operatiivisessä käytössä aikasarjassa editoidun datan ohella
-        bool fShowHelpData2; // näytetäänkö lyhyt fraktiili mallidata aikasarjanäytössä
-        bool fShowHelpData3; // näytetäänkö mallidatasta lasketun klimatologia data aikasarjanäytössä
-        bool fShowHelpData4; // näytetäänkö jostain apudatasta T-min ja T-max lämpötilakäyriä apuna aikasarjanäytössä
-		int itsStartTimeOffset; // jos aikaikkunaa on zoomattu ajallisesti, tässä offsetti editoitavan datan alkuaikaan
-		int itsEndTimeOffset; // jos aikaikkunaa on zoomattu ajallisesti, tässä offsetti editoitavan datan loppuaikaan
-		NFmiTimeBag itsTimeBag; // tässä on aikasarjassa käytetty timebag (talletetaan siirtymänä kellonajasta)
-		bool fTimeBagUpdated; // jos timebagi on luettu, asetetaan tähän true
+        bool fShowHelpData; // nï¿½ytetï¿½ï¿½nkï¿½ malli+havainto+klimatologiset data operatiivisessï¿½ kï¿½ytï¿½ssï¿½ aikasarjassa editoidun datan ohella
+        bool fShowHelpData2; // nï¿½ytetï¿½ï¿½nkï¿½ lyhyt fraktiili mallidata aikasarjanï¿½ytï¿½ssï¿½
+        bool fShowHelpData3; // nï¿½ytetï¿½ï¿½nkï¿½ mallidatasta lasketun klimatologia data aikasarjanï¿½ytï¿½ssï¿½
+        bool fShowHelpData4; // nï¿½ytetï¿½ï¿½nkï¿½ jostain apudatasta T-min ja T-max lï¿½mpï¿½tilakï¿½yriï¿½ apuna aikasarjanï¿½ytï¿½ssï¿½
+		int itsStartTimeOffset; // jos aikaikkunaa on zoomattu ajallisesti, tï¿½ssï¿½ offsetti editoitavan datan alkuaikaan
+		int itsEndTimeOffset; // jos aikaikkunaa on zoomattu ajallisesti, tï¿½ssï¿½ offsetti editoitavan datan loppuaikaan
+		NFmiTimeBag itsTimeBag; // tï¿½ssï¿½ on aikasarjassa kï¿½ytetty timebag (talletetaan siirtymï¿½nï¿½ kellonajasta)
+		bool fTimeBagUpdated; // jos timebagi on luettu, asetetaan tï¿½hï¿½n true
 		NFmiPoint itsPreciseTimeSerialLatlonPoint = NFmiPoint::gMissingLatlon; // Kartalta aikakasarjaan valittu piste talteen
 	};
 
@@ -305,15 +307,15 @@ public:
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);
 	private:
-		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
+		NFmiRect itsAbsolutRect; // nï¿½ytï¿½n koko ja sijainti pixeleissï¿½
         MfcViewStatus itsViewStatus;
 
-		bool fShowHirlam; // onko hirlam näyttö ruksi päällä vai ei
-		bool fShowEcmwf; // onko ecmwf näyttö ruksi päällä vai ei
-		bool fShowRealSounding; // Tulevaisuudessa: onko havainto näyttö ruksi päällä vai ei
+		bool fShowHirlam; // onko hirlam nï¿½yttï¿½ ruksi pï¿½ï¿½llï¿½ vai ei
+		bool fShowEcmwf; // onko ecmwf nï¿½yttï¿½ ruksi pï¿½ï¿½llï¿½ vai ei
+		bool fShowRealSounding; // Tulevaisuudessa: onko havainto nï¿½yttï¿½ ruksi pï¿½ï¿½llï¿½ vai ei
 
 		NFmiMTATempSystem itsMTATempSystem;
-		double itsCurrentVersionNumber; // tämä ei ole talletettuna TempView dataosiossa tiedostossa vaan tämä annetaan NFmiViewSettingMacro:lta tänne käyttöön
+		double itsCurrentVersionNumber; // tï¿½mï¿½ ei ole talletettuna TempView dataosiossa tiedostossa vaan tï¿½mï¿½ annetaan NFmiViewSettingMacro:lta tï¿½nne kï¿½yttï¿½ï¿½n
 	};
 
 	class TrajectoryView
@@ -334,11 +336,11 @@ public:
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);
 	private:
-		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
+		NFmiRect itsAbsolutRect; // nï¿½ytï¿½n koko ja sijainti pixeleissï¿½
         MfcViewStatus itsViewStatus;
 
 		NFmiTrajectorySystem itsTrajectorySystem;
-		double itsCurrentVersionNumber; // tämä ei ole talletettuna TempView dataosiossa tiedostossa vaan tämä annetaan NFmiViewSettingMacro:lta tänne käyttöön
+		double itsCurrentVersionNumber; // tï¿½mï¿½ ei ole talletettuna TempView dataosiossa tiedostossa vaan tï¿½mï¿½ annetaan NFmiViewSettingMacro:lta tï¿½nne kï¿½yttï¿½ï¿½n
 	};
 
 	class CrossSectionView
@@ -366,9 +368,9 @@ public:
 		void Clear(void);
 		void Add(const MapRow &theMapRow);
 
-		std::vector<MapRow> itsMapRowSettings; //  kaikkien karttanäyttörivien asetukset
+		std::vector<MapRow> itsMapRowSettings; //  kaikkien karttanï¿½yttï¿½rivien asetukset
 		NFmiCrossSectionSystem itsCrossSectionSystem;
-		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
+		NFmiRect itsAbsolutRect; // nï¿½ytï¿½n koko ja sijainti pixeleissï¿½
         MfcViewStatus itsViewStatus;
     };
 
@@ -400,12 +402,12 @@ public:
 		void Clear(std::vector<MapRow> &theMapRowSettings);
 		void Add(std::vector<MapRow> &theMapRowSettings, const MapRow &theMapRow);
 
-		std::vector<MapRow> itsMapRowSettings; //  kaikkien karttanäyttörivien asetukset
+		std::vector<MapRow> itsMapRowSettings; //  kaikkien karttanï¿½yttï¿½rivien asetukset
 		NFmiMapViewDescTop itsMapViewDescTop;
-		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
+		NFmiRect itsAbsolutRect; // nï¿½ytï¿½n koko ja sijainti pixeleissï¿½
         MfcViewStatus itsViewStatus;
 
-		// dipmaphandler osio pitää ottaa tähän erikois käsittelyyn
+		// dipmaphandler osio pitï¿½ï¿½ ottaa tï¿½hï¿½n erikois kï¿½sittelyyn
 		std::vector<NFmiMapViewDescTop::ViewMacroDipMapHelper> itsDipMapHelperList;
 	};
 
@@ -420,8 +422,10 @@ public:
 		void AbsolutRect(const NFmiRect& newValue) {itsAbsolutRect = newValue;}
         const MfcViewStatus& ViewStatus() const { return itsViewStatus; }
         MfcViewStatus& ViewStatus() { return itsViewStatus; }
+#ifndef UNIX
         const HakeLegacySupport::HakeSystemConfigurations& WarningCenterSystem(void) const {return itsWarningCenterSystem;}
 		void WarningCenterSystem(const HakeLegacySupport::HakeSystemConfigurations &theData) {itsWarningCenterSystem.Init(theData);}
+#endif
 		const std::vector<int>& HeaderColumnWidthsInPixels(void) const {return itsHeaderColumnWidthsInPixels;}
 		void HeaderColumnWidthsInPixels(const std::vector<int> &theValues) {itsHeaderColumnWidthsInPixels = theValues;}
         bool ShowHakeMessages() const { return fShowHakeMessages; }
@@ -435,8 +439,10 @@ public:
 		void Read(std::istream& is);
 
 	private:
+#ifndef UNIX
         HakeLegacySupport::HakeSystemConfigurations itsWarningCenterSystem;
-		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
+#endif
+		NFmiRect itsAbsolutRect; // nï¿½ytï¿½n koko ja sijainti pixeleissï¿½
         MfcViewStatus itsViewStatus;
         std::vector<int> itsHeaderColumnWidthsInPixels;
         bool fShowHakeMessages; // HAKE sanomien checkbox asetus dialogissa
@@ -475,11 +481,11 @@ public:
 		void Read(std::istream& is);
 
 	private:
-		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
+		NFmiRect itsAbsolutRect; // nï¿½ytï¿½n koko ja sijainti pixeleissï¿½
         MfcViewStatus itsViewStatus;
 
 		NFmiProducer itsSelectedProducer;
-		NFmiMetTime itsMinMaxRangeStartTime; // tätä  säädetään aika ja kalenteri kontrollien avulla
+		NFmiMetTime itsMinMaxRangeStartTime; // tï¿½tï¿½  sï¿½ï¿½detï¿½ï¿½n aika ja kalenteri kontrollien avulla
 		bool fMinMaxModeOn;
 		double itsDayRangeValue;
 
@@ -533,14 +539,14 @@ public:
 	const std::string& InitFileName(void) const {return itsInitFileName;}
 	void InitFileName(const std::string &theFileName) {itsInitFileName = theFileName;}
 
-	GeneralDoc& GetGeneralDoc(void) {return itsGeneralDoc;} // arvojen asetus tätä kautta
-	TimeView& GetTimeView(void) {return itsTimeView;} // arvojen asetus tätä kautta
-	TempView& GetTempView(void) {return itsTempView;} // arvojen asetus tätä kautta
-	TrajectoryView& GetTrajectoryView(void) {return itsTrajectoryView;} // arvojen asetus tätä kautta
+	GeneralDoc& GetGeneralDoc(void) {return itsGeneralDoc;} // arvojen asetus tï¿½tï¿½ kautta
+	TimeView& GetTimeView(void) {return itsTimeView;} // arvojen asetus tï¿½tï¿½ kautta
+	TempView& GetTempView(void) {return itsTempView;} // arvojen asetus tï¿½tï¿½ kautta
+	TrajectoryView& GetTrajectoryView(void) {return itsTrajectoryView;} // arvojen asetus tï¿½tï¿½ kautta
 	CrossSectionView& GetCrossSectionView(void) {return itsCrossSectionView;}
 	SynopPlotSettings& GetSynopPlotSettings(void) {return itsSynopPlotSettings;}
 	ObsComparisonInfo& GetObsComparisonInfo(void) {return itsObsComparisonInfo;}
-	MaskSettings& GetMaskSettings(void) {return itsMaskSettings;} // arvojen asetus tätä kautta
+	MaskSettings& GetMaskSettings(void) {return itsMaskSettings;} // arvojen asetus tï¿½tï¿½ kautta
 	WarningCenterView& GetWarningCenterView(void) {return itsWarningCenterView;}
 	SynopDataGridView& GetSynopDataGridView(void) {return itsSynopDataGridView;}
 	std::vector<MapViewDescTop>& ExtraMapViewDescTops(void) {return itsExtraMapViewDescTops;}
@@ -571,18 +577,18 @@ public:
 	bool ViewMacroWasCorrupted(void) const {return fViewMacroWasCorrupted;}
 	void ViewMacroWasCorrupted(bool newValue) {fViewMacroWasCorrupted = newValue;}
 
-	// HUOM!! Tämä laittaa kommentteja mukaan!
+	// HUOM!! Tï¿½mï¿½ laittaa kommentteja mukaan!
 	void Write(std::ostream& os) const;
-	// HUOM!! ennen kuin tämä luokka luetaan sisään tiedostosta, poista kommentit
+	// HUOM!! ennen kuin tï¿½mï¿½ luokka luetaan sisï¿½ï¿½n tiedostosta, poista kommentit
 	// NFmiCommentStripper-luokalla, koska kirjoitettaessa kommentteja laitetaan
 	// sekaan.
 	void Read(std::istream& is);
 private:
 
-	// talletan nämä NFmiString:einä, että luku ja kirjoitus menevät ok vaikka olisi white spaceja
-	mutable std::string itsName; // macron nimi -> tiedoston nimi kun lisätään polku ja tyyppi
+	// talletan nï¿½mï¿½ NFmiString:einï¿½, ettï¿½ luku ja kirjoitus menevï¿½t ok vaikka olisi white spaceja
+	mutable std::string itsName; // macron nimi -> tiedoston nimi kun lisï¿½tï¿½ï¿½n polku ja tyyppi
 	mutable std::string itsDescription; // macron pidempi kuvaus
-	std::string itsInitFileName; // kun makro ladataan, laitetaan tähän tiedoston nimi polun kanssa, että makro voidaan tarvittaessa ladata uudestaan
+	std::string itsInitFileName; // kun makro ladataan, laitetaan tï¿½hï¿½n tiedoston nimi polun kanssa, ettï¿½ makro voidaan tarvittaessa ladata uudestaan
 
 	GeneralDoc itsGeneralDoc;
 	TimeView itsTimeView;
@@ -590,12 +596,12 @@ private:
 	MaskSettings itsMaskSettings; //  kaikkien maskien asetukset
 	bool fIsPrinterPortrait;
 
-	bool fViewMacroDirectory; // jos tämä on true, valinta dialogissa toimitaan erilailla
-							  // lisäksi tälläistä makroa ei talleteta tiedostoon
-							  // Tämän avulla on tarkoitus laittaa kansio systeemi näyttömakroihin
+	bool fViewMacroDirectory; // jos tï¿½mï¿½ on true, valinta dialogissa toimitaan erilailla
+							  // lisï¿½ksi tï¿½llï¿½istï¿½ makroa ei talleteta tiedostoon
+							  // Tï¿½mï¿½n avulla on tarkoitus laittaa kansio systeemi nï¿½yttï¿½makroihin
 
-	bool fViewMacroWasCorrupted; // jos tiedoston luku epäonnistui, on se merkittävä korruptoituneeksi
-	// mitkä työkalut ovat päällä
+	bool fViewMacroWasCorrupted; // jos tiedoston luku epï¿½onnistui, on se merkittï¿½vï¿½ korruptoituneeksi
+	// mitkï¿½ tyï¿½kalut ovat pï¿½ï¿½llï¿½
 	bool fUseBrushTool;
 	bool fUseAnalyzeTool;
 	bool fUseControlPoinTool;
@@ -606,7 +612,7 @@ private:
 	int itsAnimationEndPosition; // kuinka monennestako framesta editoitavaa dataa lopetetaan
 	int itsAnimationDelayInMS; // viiva animaatiossa millisekunneissa
 
-	double itsOriginalLoadVersionNumber; // kun viewMacro ladattiin, tämä oli sen alkuperäinen versio
+	double itsOriginalLoadVersionNumber; // kun viewMacro ladattiin, tï¿½mï¿½ oli sen alkuperï¿½inen versio
 	// versio 2 osasia
 	TrajectoryView itsTrajectoryView;
 	CrossSectionView itsCrossSectionView;

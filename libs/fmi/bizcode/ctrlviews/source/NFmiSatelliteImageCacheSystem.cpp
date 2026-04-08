@@ -3,20 +3,22 @@
 #include "NFmiStringTools.h"
 #include "NFmiHelpDataInfo.h"
 #include "CtrlViewGdiPlusFunctions.h"
+#include <thread>
+#include <chrono>
 
 namespace
-{ // päivitys threadi funktioihin liittyviä asetuksia
+{ // pï¿½ivitys threadi funktioihin liittyviï¿½ asetuksia
 
-    // Pääohjelma ilmoittaa gStopWorking -lipun avulla että on aika sulkea Smartmet
+    // Pï¿½ï¿½ohjelma ilmoittaa gStopWorking -lipun avulla ettï¿½ on aika sulkea Smartmet
     std::atomic<bool> gStopWorking = false;
-    // Working-threadit ilmoittavat näillä lipuilla (gUpdateThreadRunning ja gLoadingThreadRunning) pääohjelmalle kun ne ovat lopettaneet toimintansa
+    // Working-threadit ilmoittavat nï¿½illï¿½ lipuilla (gUpdateThreadRunning ja gLoadingThreadRunning) pï¿½ï¿½ohjelmalle kun ne ovat lopettaneet toimintansa
     std::atomic<bool> gUpdateThreadRunning = false;
     std::atomic<bool> gLoadingThreadRunning = false;
 
-    // En voi laittaa NFmiSatelliteImageCacheTotal::mSatelliteImageChannelCacheList:in käytön ympärille mutex-lukkoja, 
+    // En voi laittaa NFmiSatelliteImageCacheTotal::mSatelliteImageChannelCacheList:in kï¿½ytï¿½n ympï¿½rille mutex-lukkoja, 
     // koska se olisi liian hidasta monissa tilanteissa.
-    // Kun gTakeABreakInUpdating arvo on true, tällöin Update-funktiot eivät tee mitään työtä ja laittavat omat lippunsa päälle että ovat tauolla.
-    // Tälläistä toimintaa tarvitaan kun ladataan CaseStudy tai kun palataan CaseStudysta takaisin normaaliin tilaan, jolloin 
+    // Kun gTakeABreakInUpdating arvo on true, tï¿½llï¿½in Update-funktiot eivï¿½t tee mitï¿½ï¿½n tyï¿½tï¿½ ja laittavat omat lippunsa pï¿½ï¿½lle ettï¿½ ovat tauolla.
+    // Tï¿½llï¿½istï¿½ toimintaa tarvitaan kun ladataan CaseStudy tai kun palataan CaseStudysta takaisin normaaliin tilaan, jolloin 
     // ImageCachet on initialisoitava uudestaan.
     std::atomic<bool> gTakeABreakInUpdating = false;
     std::atomic<bool> gUpdateThreadTakingABreak = false;
@@ -47,7 +49,7 @@ NFmiSatelliteImageCacheSystem::NFmiSatelliteImageCacheSystem()
 {
 }
 
-// Alustaa vain eri satelkuvakanavat, mutta ei alusta vielä image tiedosto cacheja.
+// Alustaa vain eri satelkuvakanavat, mutta ei alusta vielï¿½ image tiedosto cacheja.
 void NFmiSatelliteImageCacheSystem::Init(NFmiHelpDataInfoSystem &satelInfoSystem)
 {
     Clear(); // Clear:issa on oma mutex lukitus
@@ -57,7 +59,7 @@ void NFmiSatelliteImageCacheSystem::Init(NFmiHelpDataInfoSystem &satelInfoSystem
     int imageLoadingFailedWaitTimeMs = 2 * 60 * 1000;
     for(const auto &satelDataInfo : satelInfoSystem.DynamicHelpDataInfos())
     {
-        if(satelDataInfo.DataType() == NFmiInfoData::kSatelData) // Otetaan tietenkin käyttöön vain satel tyyppiset datainfot
+        if(satelDataInfo.DataType() == NFmiInfoData::kSatelData) // Otetaan tietenkin kï¿½yttï¿½ï¿½n vain satel tyyppiset datainfot
         {
             std::unique_ptr<NFmiSatelliteImageChannelCache> tmp(new NFmiSatelliteImageChannelCache(satelDataInfo.FileNameFilter(), satelDataInfo.ImageArea(), satelDataInfo.ImageDataIdent(), firstTimeUpdateDelayTimeInMS, firstTimeLoadingWaitTimeMs, imageLoadingFailedWaitTimeMs));
             mSatelliteImageChannelCacheList.push_back(std::move(tmp));
@@ -113,7 +115,7 @@ void NFmiSatelliteImageCacheSystem::DoCacheFileChecks()
         if(updatedImageList.size())
         {
             ::DoThreadStoppageCheck();
-            // Joku uusi kuva on saatu cacheen, pitää kutsua päivitys callback-funktiota
+            // Joku uusi kuva on saatu cacheen, pitï¿½ï¿½ kutsua pï¿½ivitys callback-funktiota
             if(mUpdatedCacheCallback)
                 mUpdatedCacheCallback(updatedImageList);
         }
@@ -130,27 +132,27 @@ void NFmiSatelliteImageCacheSystem::DoLoadingStatusChecks()
         ::DoThreadStoppageCheck();
         if(loadedImageList.size())
         {
-            // Lisätään (splice = move) tämän kanavan päivitykset totaalilistaan
+            // Lisï¿½tï¿½ï¿½n (splice = move) tï¿½mï¿½n kanavan pï¿½ivitykset totaalilistaan
             totalLoadedImageList.splice(totalLoadedImageList.end(), loadedImageList);
         }
     }
 
-    // Kun joku/jotain kuv(i)a on saatu ladattua, pitää kutsua päivitys callback-funktiota.
-    // Tehdään tämä päivitys kutsu vain kerran kaikille ladatuille kuville.
+    // Kun joku/jotain kuv(i)a on saatu ladattua, pitï¿½ï¿½ kutsua pï¿½ivitys callback-funktiota.
+    // Tehdï¿½ï¿½n tï¿½mï¿½ pï¿½ivitys kutsu vain kerran kaikille ladatuille kuville.
     if((!totalLoadedImageList.empty()) && mLoadedCacheCallback)
         mLoadedCacheCallback(totalLoadedImageList);
 }
 
-// 'Resetoi' kaikkien kanavien kaikkien kuvien imageen liittyvän datan, jolloin ne on ladattava uudestaan, kun ruutuja päivitetään.
-// Oletus, kun tätä on kutsuttu, on liattu kaikkien näyttöjen kaikki ajat, joten täältä ei tarvitse palauttaa mitään päivitys tietoa.
+// 'Resetoi' kaikkien kanavien kaikkien kuvien imageen liittyvï¿½n datan, jolloin ne on ladattava uudestaan, kun ruutuja pï¿½ivitetï¿½ï¿½n.
+// Oletus, kun tï¿½tï¿½ on kutsuttu, on liattu kaikkien nï¿½yttï¿½jen kaikki ajat, joten tï¿½ï¿½ltï¿½ ei tarvitse palauttaa mitï¿½ï¿½n pï¿½ivitys tietoa.
 void NFmiSatelliteImageCacheSystem::ResetImages()
 {
     for(auto &channelCacheItem : mSatelliteImageChannelCacheList)
         channelCacheItem->ResetImages();
 }
 
-// Jos kuvan lataus on jostain syystä epäonnistunut, tällä resetoidaan kyseiset kuvat uudelleen lukua varten.
-// Palauttaa resetedImagesOut -parametrissa tiedot resetoiduista kucvista, jotta näyttöjä osataan kutsuvasta koodista päivittää.
+// Jos kuvan lataus on jostain syystï¿½ epï¿½onnistunut, tï¿½llï¿½ resetoidaan kyseiset kuvat uudelleen lukua varten.
+// Palauttaa resetedImagesOut -parametrissa tiedot resetoiduista kucvista, jotta nï¿½yttï¿½jï¿½ osataan kutsuvasta koodista pï¿½ivittï¿½ï¿½.
 void NFmiSatelliteImageCacheSystem::ResetFailedImages(ImageCacheUpdateData &resetedImagesOut)
 {
     for(auto &channelCacheItem : mSatelliteImageChannelCacheList)
@@ -197,28 +199,28 @@ static void FileUpdateFunction(std::function<void(void)> workingMethod, int upda
         {
             timer.StartTimer();
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(stoppingCheckIntervalInMs)); // Halutuin välein tarkistetaan että haluaako SmartMet lopettaa...
+        std::this_thread::sleep_for(std::chrono::milliseconds(stoppingCheckIntervalInMs)); // Halutuin vï¿½lein tarkistetaan ettï¿½ haluaako SmartMet lopettaa...
     }
     runningStatus = false;
 }
 
 void NFmiSatelliteImageCacheSystem::StartUpdateThreads(std::shared_ptr<NFmiSatelliteImageCacheSystem> &satelliteImageCacheTotal)
 {
-    // Käynnistää kaksi totalCachee liittyvää päivitys threadia:
-    // 1. Threadin joka tarkastelee n. minuutin välein, onko tullut uusia satel tiedostoja tai onko niitä poistettu levyltä.
+    // Kï¿½ynnistï¿½ï¿½ kaksi totalCachee liittyvï¿½ï¿½ pï¿½ivitys threadia:
+    // 1. Threadin joka tarkastelee n. minuutin vï¿½lein, onko tullut uusia satel tiedostoja tai onko niitï¿½ poistettu levyltï¿½.
     int updateIntervalInMs = 60 * 1000;
     int stoppingCheckIntervalInMs = 500;
     std::function<void(void)> fileCheckingMethod = std::bind(&NFmiSatelliteImageCacheSystem::DoCacheFileChecks, satelliteImageCacheTotal);
     std::thread{ ::FileUpdateFunction, fileCheckingMethod, updateIntervalInMs, stoppingCheckIntervalInMs, std::ref(gUpdateThreadRunning), std::ref(gUpdateThreadTakingABreak) }.detach();
 
-    // 2. Threadi joka tutkii onko yhtään kuvia latauksessa ja tarkastelee onko lataus kestänyt liikaa ja joka latauksen loputtua ilmoittaa clientille että lataus on valmis.
+    // 2. Threadi joka tutkii onko yhtï¿½ï¿½n kuvia latauksessa ja tarkastelee onko lataus kestï¿½nyt liikaa ja joka latauksen loputtua ilmoittaa clientille ettï¿½ lataus on valmis.
     updateIntervalInMs = 1000;
     std::function<void(void)> loadingCheckingMethod = std::bind(&NFmiSatelliteImageCacheSystem::DoLoadingStatusChecks, satelliteImageCacheTotal);
     std::thread{ ::FileUpdateFunction, loadingCheckingMethod, updateIntervalInMs, stoppingCheckIntervalInMs, std::ref(gLoadingThreadRunning), std::ref(gLoadingThreadTakingABreak) }.detach();
 }
 
-// Kun client (SmartMet) halutaan sulkea, pitää tätä kutsua, jotta lopetus on hallittu. 
-// HUOM! tämä ei siis jää odottamaan että työsäikeet lopettavat, tämä antaa niille vain käskyn lopettaa.
+// Kun client (SmartMet) halutaan sulkea, pitï¿½ï¿½ tï¿½tï¿½ kutsua, jotta lopetus on hallittu. 
+// HUOM! tï¿½mï¿½ ei siis jï¿½ï¿½ odottamaan ettï¿½ tyï¿½sï¿½ikeet lopettavat, tï¿½mï¿½ antaa niille vain kï¿½skyn lopettaa.
 void NFmiSatelliteImageCacheSystem::StopUpdateThreads()
 {
     gStopWorking = true;
@@ -240,14 +242,14 @@ static bool WaitingToHappenFunction(int maxWaitTimeInMS, int sleepPeriodInMS, st
         std::this_thread::sleep_for(std::chrono::milliseconds(sleepPeriodInMS));
         totalWaitTime += sleepPeriodInMS;
         if(totalWaitTime > maxWaitTimeInMS)
-            return false; // ollaan odotettu yli maksimi odotusajan, tullaan ulos epäonnistuneesti
+            return false; // ollaan odotettu yli maksimi odotusajan, tullaan ulos epï¿½onnistuneesti
     }
 
-    return false; // tänne ei pitäisi mennä millloinkaan, pitäisi heittää poikkeus, mutta en näe hyötyä siinä, nyt pitää lopettaa eikä heitellä poikkeuksia
+    return false; // tï¿½nne ei pitï¿½isi mennï¿½ millloinkaan, pitï¿½isi heittï¿½ï¿½ poikkeus, mutta en nï¿½e hyï¿½tyï¿½ siinï¿½, nyt pitï¿½ï¿½ lopettaa eikï¿½ heitellï¿½ poikkeuksia
 }
 
-// Tällä odotellaan että työsäikeet todella lopettavat, tai jos kestää enemmän 
-// kuin annettu maxWaitTimeInMS, niin sitten on pakko lopettaa epähallitusti.
+// Tï¿½llï¿½ odotellaan ettï¿½ tyï¿½sï¿½ikeet todella lopettavat, tai jos kestï¿½ï¿½ enemmï¿½n 
+// kuin annettu maxWaitTimeInMS, niin sitten on pakko lopettaa epï¿½hallitusti.
 // Palauttaa true, jos alasajo oli hallittu, muuten palautuu  false.
 bool NFmiSatelliteImageCacheSystem::WaitUpdateThreadsToStop(int maxWaitTimeInMS)
 {

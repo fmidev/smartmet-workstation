@@ -1,5 +1,6 @@
 #pragma once
 
+#include "NFmiPoint.h"
 #include <memory>
 #include <string>
 

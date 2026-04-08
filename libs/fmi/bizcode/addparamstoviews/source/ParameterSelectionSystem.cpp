@@ -7,14 +7,15 @@
 #include "NFmiMetEditorTypes.h"
 #include "NFmiInfoOrganizer.h"
 #include "NFmiProducerSystem.h"
-#include "..\..\..\catlog\catlog\catlogutils.h"
+#include "catlog/catlog.h"
+#include "catlog/catlogutils.h"
 #include "SpecialDesctopIndex.h"
 #include "NFmiHelpDataInfo.h"
 #include "NFmiFastInfoUtils.h"
 #ifndef DISABLE_CPPRESTSDK
 #include "WmsSupportInterface.h"
 #include "CapabilityTree.h"
-#include "CapabilitiesHandler.h" // Tuottaa C++17 ympäristössä ParameterSelectionSystem.cpp tiedostossa byte ongelman
+#include "CapabilitiesHandler.h" // Tuottaa C++17 ympï¿½ristï¿½ssï¿½ ParameterSelectionSystem.cpp tiedostossa byte ongelman
 #endif // DISABLE_CPPRESTSDK
 
 #ifdef _DEBUG
@@ -78,7 +79,7 @@ namespace AddParams
         customCategories_ = customCategories;
     } 
 
-    // Kun esim. luetaan Case-study dataa, pitää koko systeemi alustaa uusiksi
+    // Kun esim. luetaan Case-study dataa, pitï¿½ï¿½ koko systeemi alustaa uusiksi
     void ParameterSelectionSystem::reInitialize(NFmiProducerSystem& modelProducerSystem, NFmiProducerSystem& obsProducerSystem, 
         NFmiProducerSystem& satelImageProducerSystem, NFmiHelpDataInfoSystem& helpDataInfoSystem)
     {
@@ -92,7 +93,7 @@ namespace AddParams
     void ParameterSelectionSystem::clearData()
     {
         categoryDataVector_.clear();
-        // Laitetaan tämä false:ksi, jotta varmistetaan dialogin update toiminto myöhemmin
+        // Laitetaan tï¿½mï¿½ false:ksi, jotta varmistetaan dialogin update toiminto myï¿½hemmin
         updatePending_ = false; 
         dialogRowData_.clear();
         dialogTreePatternArray_.clear();
@@ -235,7 +236,7 @@ namespace AddParams
     {
         if(value)
         {
-            // Jos jokin ali-data-lippu menee likaiseksi, pitää myös 'pää'-lippu liata
+            // Jos jokin ali-data-lippu menee likaiseksi, pitï¿½ï¿½ myï¿½s 'pï¿½ï¿½'-lippu liata
             dataNeedsUpdate(true);
         }
     }
@@ -244,7 +245,7 @@ namespace AddParams
     {
         if(value)
         {
-            // Jos jonkin ali-datan jokin kohta on muuttunut, pitää myös dialogiDatan-lippu liata
+            // Jos jonkin ali-datan jokin kohta on muuttunut, pitï¿½ï¿½ myï¿½s dialogiDatan-lippu liata
             dialogDataNeedsUpdate(true);
         }
     }
@@ -471,11 +472,13 @@ namespace AddParams
 
 		if (itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiCrossSectionView)
 		{
-			dialogRowData_.swap(crossSectionData());
+			auto crossData = crossSectionData();
+			dialogRowData_.swap(crossData);
 		}
 		else if (itsLastActivatedDesktopIndex == CtrlViewUtils::kFmiTimeSerialView)
 		{
-			dialogRowData_.swap(timeSeriesData());
+			auto timeData = timeSeriesData();
+			dialogRowData_.swap(timeData);
 		}
 	}
 
@@ -566,8 +569,8 @@ namespace AddParams
             return true;
         }
 
-        // Editoitavan datan erikoistapaus: aikasarjaan pitää hyväksyä editoitava data, vaikka 
-        // sitä ei löydy infoOrganizerilta (sille löytyy syy) ja se ei ole hiladataa.
+        // Editoitavan datan erikoistapaus: aikasarjaan pitï¿½ï¿½ hyvï¿½ksyï¿½ editoitava data, vaikka 
+        // sitï¿½ ei lï¿½ydy infoOrganizerilta (sille lï¿½ytyy syy) ja se ei ole hiladataa.
         if(row.itemName() == AddParams::CategoryData::GetEditableDataRowName())
         {
             return true;
@@ -578,7 +581,7 @@ namespace AddParams
 
 	bool ParameterSelectionSystem::isObservationsData(const SingleRowItem& row, int index)
 	{
-        // Ensin pitää blokata mahdolliset lightning tyyppiset datat, sillä niitä ei voi visualisoida aikasarjassa.
+        // Ensin pitï¿½ï¿½ blokata mahdolliset lightning tyyppiset datat, sillï¿½ niitï¿½ ei voi visualisoida aikasarjassa.
         auto info = getFastInfo(*infoOrganizer_, row.uniqueDataId());
         if(info)
         {
@@ -737,8 +740,8 @@ namespace AddParams
         bool desktopIndexChanged = (desktopIndex != itsLastActivatedDesktopIndex);
         if(desktopIndexChanged)
         {
-            // Jos muutetaan näyttöä niin tällöin pitää Parameter-selection dialogia 
-            // päivittää. On siis sallittua vaihtaa kartta1:stä kartta2:een ilman että pitää päivitellä.
+            // Jos muutetaan nï¿½yttï¿½ï¿½ niin tï¿½llï¿½in pitï¿½ï¿½ Parameter-selection dialogia 
+            // pï¿½ivittï¿½ï¿½. On siis sallittua vaihtaa kartta1:stï¿½ kartta2:een ilman ettï¿½ pitï¿½ï¿½ pï¿½ivitellï¿½.
             dialogDataNeedsUpdate(true);
             CatLog::logMessage(std::string(__FUNCTION__) + ": active view type changed, need to update selection dialog", CatLog::Severity::Debug, CatLog::Category::Operational);
         }
@@ -761,7 +764,7 @@ namespace AddParams
         else if(desktopIndex == CtrlViewUtils::kFmiTimeSerialView)
             return itsLastActivatedTimeSerialRowIndex;
         else
-            return 1; // virhe, pitäisi oikeasti kai heittää poikkeus
+            return 1; // virhe, pitï¿½isi oikeasti kai heittï¿½ï¿½ poikkeus
     }
 
 }

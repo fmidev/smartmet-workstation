@@ -38,7 +38,7 @@ bool IsValue(const std::string &theString);
 std::string &TrimL(std::string &theString, char theChar = ' ');
 std::string &TrimR(std::string &theString, char theChar = ' ');
 std::string &Trim(std::string &theString, char theChar = ' ');
-std::string TrimAll(std::string &theString, bool replaceInsideNewlinesWithSpace = false);
+std::string TrimAll(const std::string &theString, bool replaceInsideNewlinesWithSpace = false);
 
 const std::string ReadFile(std::istream &is);
 

@@ -1,5 +1,9 @@
 #pragma once
+#ifndef UNIX
 #include "NFmiCachedRegistryValue.h"
+#else
+#include "linux_compat.h"
+#endif
 #include "NFmiExtraMacroParamData.h"
 #include "NFmiParamBag.h"
 #include "NFmiMetTime.h"
@@ -18,49 +22,49 @@ class NFmiMilliSecondTimer;
 const std::string gDefaultBaseDataGridScaleString = "1";
 const NFmiPoint gDefaultBaseDataGridScaleValues = NFmiPoint(1, 1);
 
-// Tämä on yksi erillinen MacroParam dataan liittyvien datojen kokoelma.
-// Eli systeemissä voi olla useita erilaisia MacroParam datojen reseptejä,
-// ja nee laitetaan tälläisiin otuksiin.
-// Inputit tarkistetään tämän avulla.
+// Tï¿½mï¿½ on yksi erillinen MacroParam dataan liittyvien datojen kokoelma.
+// Eli systeemissï¿½ voi olla useita erilaisia MacroParam datojen reseptejï¿½,
+// ja nee laitetaan tï¿½llï¿½isiin otuksiin.
+// Inputit tarkistetï¿½ï¿½n tï¿½mï¿½n avulla.
 class NFmiMacroParamDataInfo
 {
     // Pohjadata valitaan antamalla parametri+tuottaja tieto (ei level tietoa ainakaan toistaiseksi)
-    // Esim1: T_ec eli Ecmwf:n pinta data, missä lämpötilaparametri
+    // Esim1: T_ec eli Ecmwf:n pinta data, missï¿½ lï¿½mpï¿½tilaparametri
     // Esim2: par4_prod240 eli sama Ec-pinta data, mutta annettuna par+prod id:en avulla
     std::string mBaseDataParamProducerString; // PAKOLLINEN
     // Talletettavan datan tuottajan id,name
     // Esim: "1278,ProducerName"
     std::string mUsedProducerString; // PAKOLLINEN
-    // Polku (suhteellinen/absoluuttinen) siihen smarttool tiedostoon, mitä käytetään 
+    // Polku (suhteellinen/absoluuttinen) siihen smarttool tiedostoon, mitï¿½ kï¿½ytetï¿½ï¿½n 
     // generoimaan lopullinen data ja sen kaikki parametrit.
-    // Tähän pyritään saamaan aina suhteellinen polku, jos se osoittaa smarttool kansioon Dropboxissa.
-    // Tässä voi olla pilkulla eroteltu lista polkuja, koska joskus pitää generoida data useammasta eri 
-    // smarttoolista, koska niissä tulisi muuten saman nimisten var muuttujien törmäyksiä.
+    // Tï¿½hï¿½n pyritï¿½ï¿½n saamaan aina suhteellinen polku, jos se osoittaa smarttool kansioon Dropboxissa.
+    // Tï¿½ssï¿½ voi olla pilkulla eroteltu lista polkuja, koska joskus pitï¿½ï¿½ generoida data useammasta eri 
+    // smarttoolista, koska niissï¿½ tulisi muuten saman nimisten var muuttujien tï¿½rmï¿½yksiï¿½.
     std::string mDataGeneratingSmarttoolPathListString; // PAKOLLINEN
-    // Pohjadatasta otetaan muut dimensiot (hplace/vplace/time), mutta käyttäjä määrää
-    // mitkä parametrit dataan generoidaan. Tässä on pilkuilla eroteltuna id1,name1,id2,name2,...
+    // Pohjadatasta otetaan muut dimensiot (hplace/vplace/time), mutta kï¿½yttï¿½jï¿½ mï¿½ï¿½rï¿½ï¿½
+    // mitkï¿½ parametrit dataan generoidaan. Tï¿½ssï¿½ on pilkuilla eroteltuna id1,name1,id2,name2,...
     // Esim. 2501,MyParam1,2502,MyParam2,2503,MyParam3,2504,MyParam4
     std::string mUsedParameterListString; // PAKOLLINEN
-    // Mihin hakemistoon ja millä nimellä data talletetaan, kun se generoidaan.
-    // Tämä voi olla myös tyhjä, jolloin data otetaan vain lokaali käyttöön Smartmetin sisäiseen muistiin.
+    // Mihin hakemistoon ja millï¿½ nimellï¿½ data talletetaan, kun se generoidaan.
+    // Tï¿½mï¿½ voi olla myï¿½s tyhjï¿½, jolloin data otetaan vain lokaali kï¿½yttï¿½ï¿½n Smartmetin sisï¿½iseen muistiin.
     // Esim. D:\data\*_mydata.sqd
-    // Tässä * kohtaan laitetaan lokaaliajan seinäkelloaika sekunteja myöten:
+    // Tï¿½ssï¿½ * kohtaan laitetaan lokaaliajan seinï¿½kelloaika sekunteja myï¿½ten:
     // Esim. D:\data\20240912183423_mydata.sqd
     std::string mDataStorageFileFilter; // PAKOLLINEN
-    // Lista parametreja eri datoihin, mitkä laukaisevat datan generoinnin, jos sellaisia on
-    // käytössä ja automaattinen datan generaatio on käytössä.
-    // Esim. T_ec[,T_gfs_500, ...] ja myöhästetty laukaisu T_ec[0.5h] (-> 0.5 h myöhästys)
+    // Lista parametreja eri datoihin, mitkï¿½ laukaisevat datan generoinnin, jos sellaisia on
+    // kï¿½ytï¿½ssï¿½ ja automaattinen datan generaatio on kï¿½ytï¿½ssï¿½.
+    // Esim. T_ec[,T_gfs_500, ...] ja myï¿½hï¿½stetty laukaisu T_ec[0.5h] (-> 0.5 h myï¿½hï¿½stys)
     std::string mDataTriggerList; // Ei pakollinen
     std::vector<NFmiDefineWantedData> mWantedDataTriggerList;
-    // Kun dataa generoidaan, kuinka monta viimeisintä kyseistä dataa pidetään
-    // kohdehakemistossa. Jos datan luomisen jälkeen siellä on enemmän kyseisiä tiedostoja,
-    // deletoidaan vanhimmat niistä pois kyseisellä filefilterillä.
+    // Kun dataa generoidaan, kuinka monta viimeisintï¿½ kyseistï¿½ dataa pidetï¿½ï¿½n
+    // kohdehakemistossa. Jos datan luomisen jï¿½lkeen siellï¿½ on enemmï¿½n kyseisiï¿½ tiedostoja,
+    // deletoidaan vanhimmat niistï¿½ pois kyseisellï¿½ filefilterillï¿½.
     int mMaxGeneratedFilesKept = 2;
-    // Jos käyttäjä haluaa harventaa basedatasta saatua laskentahilaa, tällä kertoimella 
-    // se voidaan tehdä. Jos oletusarvossa eli 1, tällöin mitään skaalausta ei tehdä hilankokoon.
-    // Jos arvo 2, tällöin x- ja y-suuntaista hilakoko jaetaan 2:lla ja pyöristetään lähimpään kokonaislukuun.
-    // Jos arvo 2,1.5, tällöi x koko jaetaan 2:lla ja y suunta 1.5:llä.
-    // Skaalausarvojen pitää olla välillä 1-10.
+    // Jos kï¿½yttï¿½jï¿½ haluaa harventaa basedatasta saatua laskentahilaa, tï¿½llï¿½ kertoimella 
+    // se voidaan tehdï¿½. Jos oletusarvossa eli 1, tï¿½llï¿½in mitï¿½ï¿½n skaalausta ei tehdï¿½ hilankokoon.
+    // Jos arvo 2, tï¿½llï¿½in x- ja y-suuntaista hilakoko jaetaan 2:lla ja pyï¿½ristetï¿½ï¿½n lï¿½himpï¿½ï¿½n kokonaislukuun.
+    // Jos arvo 2,1.5, tï¿½llï¿½i x koko jaetaan 2:lla ja y suunta 1.5:llï¿½.
+    // Skaalausarvojen pitï¿½ï¿½ olla vï¿½lillï¿½ 1-10.
     std::string mBaseDataGridScaleString = gDefaultBaseDataGridScaleString; // pakollinen
     NFmiPoint mBaseDataGridScaleValues = gDefaultBaseDataGridScaleValues;
     // Initialisoinnista raportoiva teksti
@@ -129,7 +133,7 @@ public:
     NFmiMacroParamDataAutomationListItem();
     NFmiMacroParamDataAutomationListItem(const std::string& theBetaAutomationPath);
 
-    void DoFullChecks(bool automationModeOn); // Tätä kutsutaan kun esim. luetaan data tiedostosta ja tehdään täysi tarkistus kaikille osille
+    void DoFullChecks(bool automationModeOn); // Tï¿½tï¿½ kutsutaan kun esim. luetaan data tiedostosta ja tehdï¿½ï¿½n tï¿½ysi tarkistus kaikille osille
     bool IsEmpty() const;
     std::string AutomationName() const;
     std::string ShortStatusText() const;
@@ -140,13 +144,13 @@ public:
     void ParseJsonPair(json_spirit::Pair& thePair);
 
     bool fEnable;
-    std::string itsMacroParamDataAutomationPath; // Tähän yritetaan saada beta-product -base-directoria vastaava suhteellinen polku jos mahdollista. Tämä talletetaan myös json-objectiin tiedostoon
+    std::string itsMacroParamDataAutomationPath; // Tï¿½hï¿½n yritetaan saada beta-product -base-directoria vastaava suhteellinen polku jos mahdollista. Tï¿½mï¿½ talletetaan myï¿½s json-objectiin tiedostoon
     std::string itsMacroParamDataAutomationAbsolutePath;
     std::shared_ptr<NFmiMacroParamDataInfo> itsMacroParamDataAutomation;
     MacroParamDataStatus itsStatus = MacroParamDataStatus::kFmiListItemOk;
-    NFmiMetTime itsLastRunTime; // Milloin tämä tuote on ajettu viimeksi, tai milloin tämä tuote luotiin (= olio luotiin muistiin)
-    bool fProductsHaveBeenGenerated; // Onko tätä tuotetta oikeasti luotu tämän ohjelman ajon aikana
-//    NFmiMetTime itsNextRunTime; // Milloin tämä tuote pitäisi ajaa seuraavaksi
+    NFmiMetTime itsLastRunTime; // Milloin tï¿½mï¿½ tuote on ajettu viimeksi, tai milloin tï¿½mï¿½ tuote luotiin (= olio luotiin muistiin)
+    bool fProductsHaveBeenGenerated; // Onko tï¿½tï¿½ tuotetta oikeasti luotu tï¿½mï¿½n ohjelman ajon aikana
+//    NFmiMetTime itsNextRunTime; // Milloin tï¿½mï¿½ tuote pitï¿½isi ajaa seuraavaksi
 };
 
 class NFmiPostponedMacroParamDataAutomation
@@ -160,14 +164,14 @@ public:
     bool IsPostponeTimeOver();
 };
 
-// Tämän tyylistä listaa käytetään kun käyttäjä antaa joukon MacroParam-data 
-// työtehtäviä Smartmetille dialogista käsin.
+// Tï¿½mï¿½n tyylistï¿½ listaa kï¿½ytetï¿½ï¿½n kun kï¿½yttï¿½jï¿½ antaa joukon MacroParam-data 
+// tyï¿½tehtï¿½viï¿½ Smartmetille dialogista kï¿½sin.
 using NFmiUserWorkAutomationContainer = std::vector<std::shared_ptr<NFmiMacroParamDataAutomationListItem>>;
-// Kun tehdään thread turvallista Automaatio työtehtäviä, pitää sitä 
-// varten tehdä fifo toimintaa tukeva std::list rakenne.
-// Lisäksi käynnissä olevan data-generation operaation fifo-rakenteeseen voidaan lisätä
-// uusia töitä, kun triggerit niitä laukaisevat, joten sen käsittely pitää tehdä
-// thread turvallisesti eli kaikki siihen tehdyt operaatiot pitää turvata mutexin avulla.
+// Kun tehdï¿½ï¿½n thread turvallista Automaatio tyï¿½tehtï¿½viï¿½, pitï¿½ï¿½ sitï¿½ 
+// varten tehdï¿½ fifo toimintaa tukeva std::list rakenne.
+// Lisï¿½ksi kï¿½ynnissï¿½ olevan data-generation operaation fifo-rakenteeseen voidaan lisï¿½tï¿½
+// uusia tï¿½itï¿½, kun triggerit niitï¿½ laukaisevat, joten sen kï¿½sittely pitï¿½ï¿½ tehdï¿½
+// thread turvallisesti eli kaikki siihen tehdyt operaatiot pitï¿½ï¿½ turvata mutexin avulla.
 using NFmiAutomationWorkFifoContainer = std::list<std::shared_ptr<NFmiMacroParamDataAutomationListItem>>;
 
 class NFmiMacroParamDataAutomationList
@@ -180,7 +184,7 @@ public:
     NFmiMacroParamDataAutomationListItem& Get(size_t theZeroBasedRowIndex);
     const NFmiMacroParamDataAutomationListItem& Get(size_t theZeroBasedRowIndex) const;
     bool Remove(size_t theZeroBasedRowIndex);
-    // Tätä kutsutaan kun esim. luetaan data tiedostosta ja tehdään täysi tarkistus kaikille osille
+    // Tï¿½tï¿½ kutsutaan kun esim. luetaan data tiedostosta ja tehdï¿½ï¿½n tï¿½ysi tarkistus kaikille osille
     MacroParamDataStatus DoFullChecks(bool fAutomationModeOn);
     NFmiUserWorkAutomationContainer& AutomationVector() { return mAutomationVector; }
     const NFmiUserWorkAutomationContainer& AutomationVector() const { return mAutomationVector; }
@@ -210,76 +214,76 @@ inline unsigned int ID_MACRO_PARAM_DATA_GENERATION_FINISHED = 23423;
 inline unsigned int ID_MACRO_PARAM_DATA_GENERATION_CANCELED = 23424;
 inline unsigned int ID_MACRO_PARAM_DATA_GENERATION_FAILED = 23425;
 
-// Tällä talletetaan paljon MacroParamDataGenerator dialogin juttuja 
-// Windows rekisteriin pysyvään muistiin jossa käytetään
+// Tï¿½llï¿½ talletetaan paljon MacroParamDataGenerator dialogin juttuja 
+// Windows rekisteriin pysyvï¿½ï¿½n muistiin jossa kï¿½ytetï¿½ï¿½n
 // boost::shared_ptr<CachedRegString> datarakennetta.
-// Luokan tarkoitus on luoda uusia MacroParam datoja halutuilla skripteillä ja asetuksilla.
+// Luokan tarkoitus on luoda uusia MacroParam datoja halutuilla skripteillï¿½ ja asetuksilla.
 class NFmiMacroParamDataGenerator
 {
     // General MacroParam Data Generator dialog options
-    // Perus smartmet polku Windows rekistereissä (tähän tulee SmartMetin konfiguraatio kohtainen polku)
+    // Perus smartmet polku Windows rekistereissï¿½ (tï¿½hï¿½n tulee SmartMetin konfiguraatio kohtainen polku)
     std::string mBaseRegistryPath; 
     // Juuri smarttool hakemisto, jossa on \ merkki lopussa
     static std::string mRootSmarttoolDirectory;
     // Juuri MacroParam data hakemisto, jossa on \ merkki lopussa,
-    // eli hakemisto, josta MacroParam data infot ja niiden listat löytyvät yleensä.
+    // eli hakemisto, josta MacroParam data infot ja niiden listat lï¿½ytyvï¿½t yleensï¿½.
     static std::string mRootMacroParamDataDirectory;
 
-    // HUOM! mDialog -alkuiset data memberit pitävät sisällään vastaavan dialogin kenttien sisällöt.
+    // HUOM! mDialog -alkuiset data memberit pitï¿½vï¿½t sisï¿½llï¿½ï¿½n vastaavan dialogin kenttien sisï¿½llï¿½t.
 
     // Pohjadata valitaan antamalla parametri+tuottaja tieto (ei level tietoa ainakaan toistaiseksi)
-    // Esim1: T_ec eli Ecmwf:n pinta data, missä lämpötilaparametri
+    // Esim1: T_ec eli Ecmwf:n pinta data, missï¿½ lï¿½mpï¿½tilaparametri
     // Esim2: par4_prod240 eli sama Ec-pinta data, mutta annettuna par+prod id:en avulla
     boost::shared_ptr<CachedRegString> mDialogBaseDataParamProducerString; // PAKOLLINEN
     // Talletettavan datan tuottajan id,name
     // Esim: "1278,My Producer Name"
     boost::shared_ptr<CachedRegString> mDialogUsedProducerString; // PAKOLLINEN
-    // Polku (suhteellinen/absoluuttinen) siihen smarttool tiedostoon, mitä käytetään 
+    // Polku (suhteellinen/absoluuttinen) siihen smarttool tiedostoon, mitï¿½ kï¿½ytetï¿½ï¿½n 
     // generoimaan lopullinen data ja sen kaikki parametrit.
-    // Tähän pyritään saamaan aina suhteellinen polku, jos se osoittaa smarttool kansioon Dropboxissa.
-    // Tässä voi olla pilkulla eroteltu lista polkuja, koska joskus pitää generoida data useammasta eri 
-    // smarttoolista, koska niissä tulisi muuten saman nimisten var muuttujien törmäyksiä.
+    // Tï¿½hï¿½n pyritï¿½ï¿½n saamaan aina suhteellinen polku, jos se osoittaa smarttool kansioon Dropboxissa.
+    // Tï¿½ssï¿½ voi olla pilkulla eroteltu lista polkuja, koska joskus pitï¿½ï¿½ generoida data useammasta eri 
+    // smarttoolista, koska niissï¿½ tulisi muuten saman nimisten var muuttujien tï¿½rmï¿½yksiï¿½.
     boost::shared_ptr<CachedRegString> mDialogDataGeneratingSmarttoolPathListString; // PAKOLLINEN
-    // Pohjadatasta otetaan muut dimensiot (hplace/vplace/time), mutta käyttäjä määrää
-    // mitkä parametrit dataan generoidaan. Tässä on pilkuilla eroteltuna id1,name1,id2,name2,...
+    // Pohjadatasta otetaan muut dimensiot (hplace/vplace/time), mutta kï¿½yttï¿½jï¿½ mï¿½ï¿½rï¿½ï¿½
+    // mitkï¿½ parametrit dataan generoidaan. Tï¿½ssï¿½ on pilkuilla eroteltuna id1,name1,id2,name2,...
     // Esim. 2501,MyParam1,2502,MyParam2,2503,MyParam3,2504,MyParam4
     boost::shared_ptr<CachedRegString> mDialogUsedParameterListString; // PAKOLLINEN
-    // Mihin hakemistoon ja millä nimellä data talletetaan, kun se generoidaan.
-    // Tämä voi olla myös tyhjä, jolloin data otetaan vain lokaali käyttöön Smartmetin sisäiseen muistiin.
+    // Mihin hakemistoon ja millï¿½ nimellï¿½ data talletetaan, kun se generoidaan.
+    // Tï¿½mï¿½ voi olla myï¿½s tyhjï¿½, jolloin data otetaan vain lokaali kï¿½yttï¿½ï¿½n Smartmetin sisï¿½iseen muistiin.
     // Esim. D:\data\*_mydata.sqd
-    // Tässä * kohtaan laitetaan lokaaliajan seinäkelloaika sekunteja myöten:
+    // Tï¿½ssï¿½ * kohtaan laitetaan lokaaliajan seinï¿½kelloaika sekunteja myï¿½ten:
     // Esim. D:\data\20240912183423_mydata.sqd
     boost::shared_ptr<CachedRegString> mDialogDataStorageFileFilter; // PAKOLLINEN
-    // Dialogi muistaa minne/mistä on talletettu/ladattu viimeksi MacroParam data info tiedosto (hakemisto)
+    // Dialogi muistaa minne/mistï¿½ on talletettu/ladattu viimeksi MacroParam data info tiedosto (hakemisto)
     boost::shared_ptr<CachedRegString> mMacroParamDataInfoSaveInitialPath;
-    // Lista parametreja eri datoihin, mitkä laukaisevat datan generoinnin, jos sellaisia on
-    // käytössä ja automaattinen datan generaatio on käytössä.
-    // Esim. T_ec[,T_gfs_500, ...] ja myöhästetty laukaisu T_ec[0.5h] (-> 0.5 h myöhästys)
+    // Lista parametreja eri datoihin, mitkï¿½ laukaisevat datan generoinnin, jos sellaisia on
+    // kï¿½ytï¿½ssï¿½ ja automaattinen datan generaatio on kï¿½ytï¿½ssï¿½.
+    // Esim. T_ec[,T_gfs_500, ...] ja myï¿½hï¿½stetty laukaisu T_ec[0.5h] (-> 0.5 h myï¿½hï¿½stys)
     boost::shared_ptr<CachedRegString> mDialogDataTriggerList; // Ei pakollinen
-    // Kun dataa generoidaan, kuinka monta viimeisintä kyseistä dataa pidetään
-    // kohdehakemistossa. Jos datan luomisen jälkeen siellä on enemmän kyseisiä tiedostoja,
-    // deletoidaan vanhimmat niistä pois kyseisellä filefilterillä.
+    // Kun dataa generoidaan, kuinka monta viimeisintï¿½ kyseistï¿½ dataa pidetï¿½ï¿½n
+    // kohdehakemistossa. Jos datan luomisen jï¿½lkeen siellï¿½ on enemmï¿½n kyseisiï¿½ tiedostoja,
+    // deletoidaan vanhimmat niistï¿½ pois kyseisellï¿½ filefilterillï¿½.
     boost::shared_ptr<CachedRegInt> mDialogMaxGeneratedFilesKept;
-    // Polku mistä viimeksi ladattu MacroParam data Automation luetaan
+    // Polku mistï¿½ viimeksi ladattu MacroParam data Automation luetaan
     boost::shared_ptr<CachedRegString> mAutomationPath;
-    // Dialogi muistaa minne/mistä on talletettu/ladattu viimeksi MacroParam data automaatio lista (hakemisto)
+    // Dialogi muistaa minne/mistï¿½ on talletettu/ladattu viimeksi MacroParam data automaatio lista (hakemisto)
     boost::shared_ptr<CachedRegString> mMacroParamDataAutomationListSaveInitialPath;
-    // Polku mistä viimeksi ladattu MacroParam data Automation list luetaan
+    // Polku mistï¿½ viimeksi ladattu MacroParam data Automation list luetaan
     boost::shared_ptr<CachedRegString> mAutomationListPath;
-    // Dialogi muistaa mistä on talletettu/ladattu viimeksi smarttool st tiedoston polku (hakemisto)
+    // Dialogi muistaa mistï¿½ on talletettu/ladattu viimeksi smarttool st tiedoston polku (hakemisto)
     boost::shared_ptr<CachedRegString> mMacroParamDataAutomationAddSmarttoolInitialPath;
-    // Jos käyttäjä haluaa harventaa basedatasta saatua laskentahilaa, tällä kertoimella 
-    // se voidaan tehdä. Jos oletusarvossa eli 1, tällöin mitään skaalausta ei tehdä hilankokoon.
-    // Jos arvo 2, tällöin x- ja y-suuntaista hilakoko jaetaan 2:lla ja pyöristetään lähimpään kokonaislukuun.
-    // Jos arvo 2,1.5, tällöi x koko jaetaan 2:lla ja y suunta 1.5:llä.
-    // Skaalausarvojen pitää olla välillä 1-10.
+    // Jos kï¿½yttï¿½jï¿½ haluaa harventaa basedatasta saatua laskentahilaa, tï¿½llï¿½ kertoimella 
+    // se voidaan tehdï¿½. Jos oletusarvossa eli 1, tï¿½llï¿½in mitï¿½ï¿½n skaalausta ei tehdï¿½ hilankokoon.
+    // Jos arvo 2, tï¿½llï¿½in x- ja y-suuntaista hilakoko jaetaan 2:lla ja pyï¿½ristetï¿½ï¿½n lï¿½himpï¿½ï¿½n kokonaislukuun.
+    // Jos arvo 2,1.5, tï¿½llï¿½i x koko jaetaan 2:lla ja y suunta 1.5:llï¿½.
+    // Skaalausarvojen pitï¿½ï¿½ olla vï¿½lillï¿½ 1-10.
     boost::shared_ptr<CachedRegString> mDialogBaseDataGridScaleString; // pakollinen
     // Kuinka paljon CPU kapasiteetista halutaan laitta MacroParam-datojen laskentoihin.
     boost::shared_ptr<CachedRegDouble> mDialogCpuUsagePercentage;
-    // Dialogi muistaa mikä on viimeisin generoituvan datan talletuspolku
+    // Dialogi muistaa mikï¿½ on viimeisin generoituvan datan talletuspolku
     boost::shared_ptr<CachedRegString> mGeneratedDataStorageInitialPath;
 
-    // Käytetty automaatiolista
+    // Kï¿½ytetty automaatiolista
     NFmiMacroParamDataAutomationList itsUsedMacroParamDataAutomationList;
 
     static const std::string itsMacroParamDataInfoFileExtension;
@@ -291,35 +295,35 @@ class NFmiMacroParamDataGenerator
 
     // Initialisoinnista raportoiva teksti
     std::string itsInitializeLogStr;
-    // Mahdollinen smarttool laskuihin tai sen alustuksiin liittyviä ongelmia laitetaan tähän talteen
+    // Mahdollinen smarttool laskuihin tai sen alustuksiin liittyviï¿½ ongelmia laitetaan tï¿½hï¿½n talteen
     std::string itsSmarttoolCalculationLogStr;
-    // Absoluutti polut tiedostoihin joista luettiin datan rakentamiseen käytetyt smarttoolit
+    // Absoluutti polut tiedostoihin joista luettiin datan rakentamiseen kï¿½ytetyt smarttoolit
     std::vector<std::string> mUsedAbsoluteSmarttoolPathList;
-    // Onko smartmet moodissa missä automaatiolistan datoja tuotetaan.
+    // Onko smartmet moodissa missï¿½ automaatiolistan datoja tuotetaan.
     boost::shared_ptr<CachedRegBool> mAutomationModeOn;
-    // Onko automaatio systeemi käynnissä vai ei
+    // Onko automaatio systeemi kï¿½ynnissï¿½ vai ei
     bool fDataGenerationIsOn = false;
-    // Tämä on smartmetin käyttämän lokaali cachen perushakemisto
+    // Tï¿½mï¿½ on smartmetin kï¿½yttï¿½mï¿½n lokaali cachen perushakemisto
     std::string mLocalDataBaseDirectory;
-    // Tämä on macroParamDatojen tmp tiedostojen generointi hakemisto,
-    // tänne luodaan aina uudet tiedostot ja kun ne on kirjoitettu kokonaisuudessaan
-    // levylle, tehdään file-move lopulliseen (dropbox) hakemistoon
+    // Tï¿½mï¿½ on macroParamDatojen tmp tiedostojen generointi hakemisto,
+    // tï¿½nne luodaan aina uudet tiedostot ja kun ne on kirjoitettu kokonaisuudessaan
+    // levylle, tehdï¿½ï¿½n file-move lopulliseen (dropbox) hakemistoon
     std::string mMacroParamDataTmpDirectory;
-    // Tällä viestitään kuinka kauan viimeisen datan tekeminen kesti, sitä päivitetään 
+    // Tï¿½llï¿½ viestitï¿½ï¿½n kuinka kauan viimeisen datan tekeminen kesti, sitï¿½ pï¿½ivitetï¿½ï¿½n 
     // ja luetaan eri threadeista, joten se on synkronisoitava mutexilla
     std::string mLastGeneratedDataMakeTime;
     mutable std::mutex mLastGeneratedDataMakeTimeMutex;
-    // Lisäksi käynnissä olevan data-generation operaation fifo-rakenteeseen voidaan lisätä
-    // uusia töitä, kun triggerit niitä laukaisevat, joten sen käsittely pitää tehdä
-    // thread turvallisesti eli kaikki siihen tehdyt operaatiot pitää turvata mutexin avulla.
+    // Lisï¿½ksi kï¿½ynnissï¿½ olevan data-generation operaation fifo-rakenteeseen voidaan lisï¿½tï¿½
+    // uusia tï¿½itï¿½, kun triggerit niitï¿½ laukaisevat, joten sen kï¿½sittely pitï¿½ï¿½ tehdï¿½
+    // thread turvallisesti eli kaikki siihen tehdyt operaatiot pitï¿½ï¿½ turvata mutexin avulla.
     NFmiAutomationWorkFifoContainer mAutomationWorkFifo;
     std::mutex mAutomationWorkFifoMutex;
-    // Lisäksi jotta tiedetään että pitääkö uudet triggeröidyt työt lisätä jo työn alla 
-    // olevalle threadille vaiko pitääkö käynnistää uusi working-thread, on käynnissä olevien 
-    // töiden lukumäärä atomic rakenteessa. Eli jos sen arvo on 0, laukaistaan uusi working-thread
-    // ja jos se on > 0, tällöin uudet työt vain lisätään fifo:on.
+    // Lisï¿½ksi jotta tiedetï¿½ï¿½n ettï¿½ pitï¿½ï¿½kï¿½ uudet triggerï¿½idyt tyï¿½t lisï¿½tï¿½ jo tyï¿½n alla 
+    // olevalle threadille vaiko pitï¿½ï¿½kï¿½ kï¿½ynnistï¿½ï¿½ uusi working-thread, on kï¿½ynnissï¿½ olevien 
+    // tï¿½iden lukumï¿½ï¿½rï¿½ atomic rakenteessa. Eli jos sen arvo on 0, laukaistaan uusi working-thread
+    // ja jos se on > 0, tï¿½llï¿½in uudet tyï¿½t vain lisï¿½tï¿½ï¿½n fifo:on.
     std::atomic<int> mAutomationWorksLeftToProcessCounter;
-    // Automaatioiden lopetukseen (Smartmetia suljettaessa) liittyviä dataosioita
+    // Automaatioiden lopetukseen (Smartmetia suljettaessa) liittyviï¿½ dataosioita
     static NFmiStopFunctor itsStopFunctor;
     static NFmiThreadCallBacks itsThreadCallBacks;
 public:

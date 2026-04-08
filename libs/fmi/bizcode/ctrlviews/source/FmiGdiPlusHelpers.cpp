@@ -6,8 +6,10 @@
 #include "NFmiFileString.h"
 #include "NFmiRect.h"
 #include "CtrlViewGdiPlusFunctions.h"
+#ifndef UNIX
 #include "NFmiApplicationWinRegistry.h"
 #include <afxdlgs.h>
+#endif // UNIX
 
 #include "boost/math/special_functions/round.hpp"
 
@@ -63,7 +65,7 @@ static std::string GetFinalFilePath(CFileDialog &fileSaveDlg, NFmiApplicationWin
     return "";
 }
 
-// filterIndex parametri alkaa 1:stä.
+// filterIndex parametri alkaa 1:stï¿½.
 static std::string GetDefaultFilename(NFmiApplicationWinRegistry &applicationWinRegistry)
 {
     std::string filename = "image1.";
@@ -196,7 +198,7 @@ bool CFmiGdiPlusHelpers::SaveMfcBitmapToFile(const std::string &theCallingFuncti
 			result = GetEncoderClsid(L"image/gif", &encoderClsid);
 		else if(fileExtension == "tiff")
 			result = GetEncoderClsid(L"image/tiff", &encoderClsid);
-		else // if(fileExtension == "png") tehdään defaulttina png kuva
+		else // if(fileExtension == "png") tehdï¿½ï¿½n defaulttina png kuva
 			result = GetEncoderClsid(L"image/png", &encoderClsid);
 
 		try
@@ -242,7 +244,7 @@ bool CFmiGdiPlusHelpers::SaveMfcBitmapToFile(const std::string &theCallingFuncti
             else
                 ::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(errStr.c_str()), _TEXT("File saving warning!"), MB_OK | MB_ICONWARNING);
 		}
-		catch(...) // en tiedä mitä GdiPlus systeemit heittää
+		catch(...) // en tiedï¿½ mitï¿½ GdiPlus systeemit heittï¿½ï¿½
 		{
 			std::string errStr("Cannot save image to file:\n");
 			errStr += theFileName;
@@ -284,8 +286,8 @@ BOOL ChangeFileCreationTimeToCurrent(const CString& filePath)
     return FALSE;
 }
 
-// Käytetään kuvan tallennuksessa "store tmpFile -> rename to finalName" -toimintoa.
-// throwError -parametri, jos true => heittää std::runtime_error:in, jos false => avaa messageboxin
+// Kï¿½ytetï¿½ï¿½n kuvan tallennuksessa "store tmpFile -> rename to finalName" -toimintoa.
+// throwError -parametri, jos true => heittï¿½ï¿½ std::runtime_error:in, jos false => avaa messageboxin
 bool CFmiGdiPlusHelpers::SafelySaveMfcBitmapToFile(const std::string &theCallingFunctionName, CBitmap *bm, const std::string &theFileName, const NFmiRect *theRelativeOutputArea, bool throwError)
 {
     std::string temporaryFileName = theFileName;

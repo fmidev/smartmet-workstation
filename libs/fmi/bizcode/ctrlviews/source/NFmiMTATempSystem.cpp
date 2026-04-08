@@ -4,7 +4,9 @@
 #include "NFmiProducerSystem.h"
 #include "NFmiDataStoringHelpers.h"
 #include "SettingsFunctions.h"
+#ifndef UNIX
 #include "NFmiApplicationWinRegistry.h"
+#endif // UNIX
 #include "catlog/catlog.h"
 #include "ModelDataServerConfiguration.h"
 #include <boost/algorithm/string.hpp>
@@ -26,18 +28,18 @@ static char THIS_FILE[] = __FILE__;
 double NFmiMTATempSystem::itsLatestVersionNumber = 1.0;
 
 // ************************************************************
-// ** Tästä alkaa NFmiMTATempSystem::HodografViewData osio ****
+// ** Tï¿½stï¿½ alkaa NFmiMTATempSystem::HodografViewData osio ****
 // ************************************************************
 
 void NFmiMTATempSystem::HodografViewData::AdjustScaleMaxValue(short theDelta)
 {
-	// säädetään arvoalueen kokoa riippuen annetusta hiiren rullan suunnasta (theDelta)
+	// sï¿½ï¿½detï¿½ï¿½n arvoalueen kokoa riippuen annetusta hiiren rullan suunnasta (theDelta)
 	if(theDelta > 0)
 		itsScaleMaxValue -= 10;
 	else
 		itsScaleMaxValue += 10;
 
-	// Rajataan muuttujan koko 10 ja 150 välille
+	// Rajataan muuttujan koko 10 ja 150 vï¿½lille
 	if(itsScaleMaxValue < 10)
 		itsScaleMaxValue = 10;
 	if(itsScaleMaxValue > 150)
@@ -46,13 +48,13 @@ void NFmiMTATempSystem::HodografViewData::AdjustScaleMaxValue(short theDelta)
 
 void NFmiMTATempSystem::HodografViewData::AdjustRelativiHeightFactor(short theDelta)
 {
-	// säädetään suhteellista kokoa riippuen annetusta hiiren rullan suunnasta (theDelta)
+	// sï¿½ï¿½detï¿½ï¿½n suhteellista kokoa riippuen annetusta hiiren rullan suunnasta (theDelta)
 	if(theDelta > 0)
 		itsRelativiHeightFactor -= 0.05;
 	else
 		itsRelativiHeightFactor += 0.05;
 
-	// Rajataan muuttujan koko 0.2 ja 0.6 välille
+	// Rajataan muuttujan koko 0.2 ja 0.6 vï¿½lille
 	if(itsRelativiHeightFactor < 0.2)
 		itsRelativiHeightFactor = 0.2;
 	if(itsRelativiHeightFactor > 0.6)
@@ -69,7 +71,7 @@ std::string NFmiMTATempSystem::HodografViewData::GenerateSettingsString() const
 	std::stringstream out;
 	out << itsRect << itsScaleMaxValue << " " << itsRelativiHeightFactor << std::endl;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	out << extraData;
 
 	return out.str();
@@ -80,12 +82,12 @@ void NFmiMTATempSystem::HodografViewData::InitializeFromSettingsString(const std
 	std::stringstream in(settingsString);
 	in >> itsRect >> itsScaleMaxValue >> itsRelativiHeightFactor;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	in >> extraData;
 }
 
 // **********************************************************
-// ** Tästä alkaa NFmiMTATempSystem::ServerProducer osio ****
+// ** Tï¿½stï¿½ alkaa NFmiMTATempSystem::ServerProducer osio ****
 // **********************************************************
 
 NFmiMTATempSystem::ServerProducer::ServerProducer()
@@ -133,7 +135,7 @@ bool NFmiMTATempSystem::ServerProducer::operator<(const ServerProducer &other) c
 
 
 // ****************************************************
-// ** Tästä alkaa NFmiMTATempSystem::TempInfo osio ****
+// ** Tï¿½stï¿½ alkaa NFmiMTATempSystem::TempInfo osio ****
 // ****************************************************
 
 bool NFmiMTATempSystem::TempInfo::operator<(const TempInfo &other) const
@@ -157,9 +159,9 @@ void NFmiMTATempSystem::TempInfo::Write(std::ostream& os) const
 	NFmiMetTime usedViewMacroTime = NFmiDataStoringHelpers::GetUsedViewMacroTime();
 	NFmiDataStoringHelpers::WriteTimeWithOffsets(usedViewMacroTime, itsTime, os);
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
@@ -177,10 +179,10 @@ void NFmiMTATempSystem::TempInfo::Read(std::istream& is)
 	NFmiDataStoringHelpers::ReadTimeWithOffsets(usedViewMacroTime, itsTime, is);
 	if(is.fail())
 		throw std::runtime_error("NFmiMTATempSystem::TempInfo::Read failed");
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	is >> extraData;
-	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+	// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+	// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 
 	if(is.fail())
 		throw std::runtime_error("NFmiMTATempSystem::TempInfo::Read failed");
@@ -207,7 +209,7 @@ bool NFmiMTATempSystem::SoundingDataCacheMapKey::operator<(const SoundingDataCac
 const double gDefaultSecondaryDataFrameWidthFactor = 0.15;
 
 // ******************************************
-// ** Tästä alkaa NFmiMTATempSystem osio ****
+// ** Tï¿½stï¿½ alkaa NFmiMTATempSystem osio ****
 // ******************************************
 
 NFmiMTATempSystem::NFmiMTATempSystem(void)
@@ -230,7 +232,7 @@ NFmiMTATempSystem::NFmiMTATempSystem(void)
 ,itsModelRunCount(0)
 ,fDrawSecondaryData(false)
 ,itsSecondaryDataFrameWidthFactor(gDefaultSecondaryDataFrameWidthFactor)
-// Näille viiva asetuksille pitää antaa valmiit oletusarvot, koska näitä ei välttämättä löydy asetuksista
+// Nï¿½ille viiva asetuksille pitï¿½ï¿½ antaa valmiit oletusarvot, koska nï¿½itï¿½ ei vï¿½lttï¿½mï¿½ttï¿½ lï¿½ydy asetuksista
 ,itsWSLineInfo(NFmiColor(), 2, FMI_SOLID, true)
 ,itsNLineInfo(NFmiColor(), 2, FMI_DASH, true)
 ,itsRHLineInfo(NFmiColor(), 2, FMI_DOT, true)
@@ -250,14 +252,18 @@ void NFmiMTATempSystem::Init(NFmiProducerSystem &theProducerSystem, const std::v
     InitializeSoundingDataServerConfigurations();
     InitializeSoundingColors();
     InitPossibleProducerList(theProducerSystem, theExtraSoundingProducers);
-	fInitializationOk = true; // jos ei poikkeuksia lentänyt laitetaan true:ksi
+	fInitializationOk = true; // jos ei poikkeuksia lentï¿½nyt laitetaan true:ksi
 }
 
 void NFmiMTATempSystem::InitializeSoundingDataServerConfigurations()
 {
     try
     {
+#ifndef UNIX
         itsSoundingDataServerConfigurations.init(NFmiApplicationWinRegistry::MakeBaseRegistryPath(), "SmartMet::SoundingDataServerConfigurations");
+#else
+        itsSoundingDataServerConfigurations.init("", "SmartMet::SoundingDataServerConfigurations");
+#endif
     }
     catch(std::exception &e)
     {
@@ -286,7 +292,7 @@ static std::string MakeValueStr(const std::vector<double> &theValues)
 	for(int i = 0; i < ssize; i++)
 	{
 		str += NFmiStringTools::Convert<double>(theValues[i]);
-		if(i<ssize-1) // viimeisen perään ei laiteta pilkkua
+		if(i<ssize-1) // viimeisen perï¿½ï¿½n ei laiteta pilkkua
 			str += ",";
 	}
 	return str;
@@ -295,7 +301,7 @@ static std::string MakeValueStr(const std::vector<double> &theValues)
 static void GetOptionalHelpLineInfoSettings(const std::string &theSettingsBaseKey, NFmiTempLineInfo &theLineInfo)
 {
     try
-    { // yritetään hakea asetuksista arvoja, mutta jos niitä ei löydy, otetaan poikkeus kiinni ja jätetään oletusarvot
+    { // yritetï¿½ï¿½n hakea asetuksista arvoja, mutta jos niitï¿½ ei lï¿½ydy, otetaan poikkeus kiinni ja jï¿½tetï¿½ï¿½n oletusarvot
         theLineInfo.Color(SettingsFunctions::GetColorFromSettings(theSettingsBaseKey + "::Color"));
         theLineInfo.LineType(static_cast<FmiPattern>(NFmiSettings::Require<int>(std::string(theSettingsBaseKey + "::Type").c_str())));
         theLineInfo.Thickness(NFmiSettings::Require<int>(std::string(theSettingsBaseKey + "::Thickness").c_str()));
@@ -349,13 +355,13 @@ void NFmiMTATempSystem::InitializeSoundingColors(void)
 	std::string colorText("MetEditor::TempView::Color");
 	for(int i=0; i<colorCount; i++)
 	{
-		// värin luku vaatii hieman kikkailua stringstreamin kanssa
-		std::string settingStr(colorText + NFmiStringTools::Convert<int>(i+1)); // colorText-stringiin pitää saada järjestys numero perään
+		// vï¿½rin luku vaatii hieman kikkailua stringstreamin kanssa
+		std::string settingStr(colorText + NFmiStringTools::Convert<int>(i+1)); // colorText-stringiin pitï¿½ï¿½ saada jï¿½rjestys numero perï¿½ï¿½n
 		itsSoundingColors.push_back(SettingsFunctions::GetColorFromSettings(settingStr));
 	}
 
-	// ********* initialisoidaan vielä luotaus näytön kaikki viiva systeemit ********
-	// nämä otetaan lopuksi konffi filestä, mutta nyt alustetaan tästä
+	// ********* initialisoidaan vielï¿½ luotaus nï¿½ytï¿½n kaikki viiva systeemit ********
+	// nï¿½mï¿½ otetaan lopuksi konffi filestï¿½, mutta nyt alustetaan tï¿½stï¿½
 
 	itsTAxisStart0Degree = NFmiSettings::Require<double>("MetEditor::TempView::TAxisZero::Start");
 	itsTAxisEnd0Degree = NFmiSettings::Require<double>("MetEditor::TempView::TAxisZero::End");
@@ -445,7 +451,7 @@ void NFmiMTATempSystem::InitializeSoundingColors(void)
 void NFmiMTATempSystem::StoreSettings(void)
 {
 	if(fInitializationOk == false)
-		return; // jos alustus on epäonnistunut, ei talletuksia tehdä, koska tuloksena voi olla roskaa
+		return; // jos alustus on epï¿½onnistunut, ei talletuksia tehdï¿½, koska tuloksena voi olla roskaa
 
 	NFmiSettings::Set("MetEditor::TempView::MTAMaxShowed", NFmiStringTools::Convert<int>(itsMaxTempsShowed), true);
 	NFmiSettings::Set("MetEditor::TempView::SkewTDegree", NFmiStringTools::Convert<double>(itsSkewTDegree), true);
@@ -455,8 +461,8 @@ void NFmiMTATempSystem::StoreSettings(void)
 	std::string colorText("MetEditor::TempView::Color");
 	for(int i=0; i<colorCount; i++)
 	{
-		// värin talletus vaatii hieman kikkailua stringstreamin kanssa
-		std::string settingStr(colorText + NFmiStringTools::Convert<int>(i+1)); // colorText-stringiin pitää saada järjestys numero perään
+		// vï¿½rin talletus vaatii hieman kikkailua stringstreamin kanssa
+		std::string settingStr(colorText + NFmiStringTools::Convert<int>(i+1)); // colorText-stringiin pitï¿½ï¿½ saada jï¿½rjestys numero perï¿½ï¿½n
         SettingsFunctions::SetColorToSettings(settingStr, itsSoundingColors[i]);
 	}
 
@@ -546,7 +552,7 @@ void NFmiMTATempSystem::StoreSettings(void)
 
 const NFmiColor& NFmiMTATempSystem::SoundingColor(int theIndex)
 {
-	static NFmiColor dummy(0.f,0.f,0.f);  // musta on dummy väri
+	static NFmiColor dummy(0.f,0.f,0.f);  // musta on dummy vï¿½ri
 	if(theIndex >= 0 && theIndex < static_cast<int>(itsSoundingColors.size()))
 		return itsSoundingColors[theIndex];
 	else
@@ -709,22 +715,22 @@ void NFmiMTATempSystem::AddSoundingDataFromServerToPossibleProducerList(Selected
 
 void NFmiMTATempSystem::AddExtraSoundingDataToPossibleProducerList(SelectedProducerContainer &possibleProducerList, const std::vector<NFmiProducer>& theExtraSoundingProducers)
 {
-    // 4. extra tuottajat, jotka saadaan myös docilta
+    // 4. extra tuottajat, jotka saadaan myï¿½s docilta
     for(const auto &producer : theExtraSoundingProducers)
         possibleProducerList.push_back(SoundingProducer(producer, false));
 }
 
 void NFmiMTATempSystem::AddVerticalModelDataToPossibleProducerList(SelectedProducerContainer &possibleProducerList, NFmiProducerSystem &theProducerSystem)
 {
-    // 2. malli datat jotka on määritelty docin producer listassa
+    // 2. malli datat jotka on mï¿½ï¿½ritelty docin producer listassa
     const auto &producers = theProducerSystem.Producers();
     for(auto producerIndex = 0u; producerIndex < static_cast<unsigned int>(producers.size()); producerIndex++)
     {
         if(theProducerSystem.Producer(producerIndex + 1).HasRealVerticalData())
         {
-            NFmiProducerInfo &producerInfo = theProducerSystem.Producer(producerIndex + 1); // +1 johtuu producersystemin 1-pohjaisesta indeksi systeemistä
+            NFmiProducerInfo &producerInfo = theProducerSystem.Producer(producerIndex + 1); // +1 johtuu producersystemin 1-pohjaisesta indeksi systeemistï¿½
             NFmiProducer producer = producerInfo.GetProducer();
-            const unsigned long nameLengthLimit = 12; // Jos tuottajan normaalinimi menee yli tämä rajan, käytetään ShortName:a
+            const unsigned long nameLengthLimit = 12; // Jos tuottajan normaalinimi menee yli tï¿½mï¿½ rajan, kï¿½ytetï¿½ï¿½n ShortName:a
             if(producer.GetName().GetLen() > nameLengthLimit)
                 producer.SetName(producerInfo.ShortName());
             itsPossibleProducerList.push_back(SoundingProducer(producer, false));
@@ -839,7 +845,7 @@ void NFmiMTATempSystem::SetSelectedProducerIndex(int newValue, bool ignoreHighLi
 	if(newValue < 0 || itsSoundingComparisonProducers.empty())
 		newValue = 0;
 	
-	// ignoreHighLimit tapaus kiinnostaa vain näyttömakron latauksen yhteydessä
+	// ignoreHighLimit tapaus kiinnostaa vain nï¿½yttï¿½makron latauksen yhteydessï¿½
 	if(!ignoreHighLimit && newValue >= itsSoundingComparisonProducers.size())
 	{
 		newValue = static_cast<int>(itsSoundingComparisonProducers.size() - 1);
@@ -855,7 +861,7 @@ void NFmiMTATempSystem::ToggleSelectedProducerIndex(FmiDirection direction)
 	else
 		itsSelectedProducerIndex--;
 
-	// Jos indeksi menee ali tai yli rajojen, mennään ympäri toiseen päähän
+	// Jos indeksi menee ali tai yli rajojen, mennï¿½ï¿½n ympï¿½ri toiseen pï¿½ï¿½hï¿½n
 	if(itsSelectedProducerIndex < 0)
 	{
 		if(itsSoundingComparisonProducers.empty())
@@ -906,7 +912,7 @@ void NFmiMTATempSystem::Write(std::ostream& os) const
 	os << "// NFmiMTATempSystem::Write..." << std::endl;
 
 	os << "// version number" << std::endl;
-	itsCurrentVersionNumber = itsLatestVersionNumber; // aina kirjoitetaan viimeisellä versio numerolla
+	itsCurrentVersionNumber = itsLatestVersionNumber; // aina kirjoitetaan viimeisellï¿½ versio numerolla
 	os << itsCurrentVersionNumber << std::endl;
 
 	os << "// Container<TempInfos>" << std::endl;
@@ -1015,9 +1021,9 @@ void NFmiMTATempSystem::Write(std::ostream& os) const
 	os << "// AnimationTimeStepInMinutes" << std::endl;
 	os << itsAnimationTimeStepInMinutes << std::endl;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-	// edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+	// Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+	// edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
     extraData.Add(static_cast<double>(itsWindBarbSpaceOutFactor)); // itsWindBarbSpaceOutFactor on 1. uusi double arvo
     extraData.Add(static_cast<double>(ShowSideViewViewMacroLegacy())); // fShowSideView on 2. uusi double arvo
     extraData.Add(static_cast<double>(itsModelRunCount)); // itsModelRunCount on 3. uusi double arvo
@@ -1031,10 +1037,10 @@ void NFmiMTATempSystem::Write(std::ostream& os) const
 	extraData.Add(itsIntegrationTimeOffset1InHours); // IntegrationTimeOffset1InHours on 11. uusi double arvo
 	extraData.Add(itsIntegrationTimeOffset2InHours); // IntegrationTimeOffset2InHours on 12. uusi double arvo
 
-    extraData.Add(MakeSecondaryDataLineInfoString()); // WS + N + RH lineInfor yhtenä stringinä on 1. uusi string arvo extroissa
-    extraData.Add(::MakeProducerContainerServerUsageString(itsSoundingComparisonProducers)); // 2. uusi string arvo extroissa on valittujen tuottajien server/local data käyttötila tyyliin "0 1 0 0"
-	extraData.Add(itsHodografViewData.GenerateSettingsString()); // 3. uusi string arvo extroissa on hodografi säädöt
-	extraData.Add(MakeSelectedProducerStringForViewMacro()); // 4. uusi string arvo extroissa on valitun tuottajan indeksiin liittyvät arvot
+    extraData.Add(MakeSecondaryDataLineInfoString()); // WS + N + RH lineInfor yhtenï¿½ stringinï¿½ on 1. uusi string arvo extroissa
+    extraData.Add(::MakeProducerContainerServerUsageString(itsSoundingComparisonProducers)); // 2. uusi string arvo extroissa on valittujen tuottajien server/local data kï¿½yttï¿½tila tyyliin "0 1 0 0"
+	extraData.Add(itsHodografViewData.GenerateSettingsString()); // 3. uusi string arvo extroissa on hodografi sï¿½ï¿½dï¿½t
+	extraData.Add(MakeSelectedProducerStringForViewMacro()); // 4. uusi string arvo extroissa on valitun tuottajan indeksiin liittyvï¿½t arvot
 
 	os << "// possible extra data" << std::endl;
 	os << extraData;
@@ -1043,11 +1049,11 @@ void NFmiMTATempSystem::Write(std::ostream& os) const
 		throw std::runtime_error("NFmiMTATempSystem::Write failed");
 }
 
-// Tehdään stringi, jossa on valitun tuottajan producer-id ja valitun tuottajan index pilkuilla eroteltuna.
-// Oletetaan että itsSelectedProducerIndex on 2 (eli 3. valituista multivalinta tuottajista) ja se on Gfs
-// tuottaja (id = 54), tällöin tehdään seuraava stringi: "2,54"
-// Huom! Jos valittu index on suurempi kuin on valittuja tuottajia, käytetään silloin listan viimeistä tuottajaa,
-// mutta originaali indeksiä, joka osoittaa tuottaja listan ulkopuolelle.
+// Tehdï¿½ï¿½n stringi, jossa on valitun tuottajan producer-id ja valitun tuottajan index pilkuilla eroteltuna.
+// Oletetaan ettï¿½ itsSelectedProducerIndex on 2 (eli 3. valituista multivalinta tuottajista) ja se on Gfs
+// tuottaja (id = 54), tï¿½llï¿½in tehdï¿½ï¿½n seuraava stringi: "2,54"
+// Huom! Jos valittu index on suurempi kuin on valittuja tuottajia, kï¿½ytetï¿½ï¿½n silloin listan viimeistï¿½ tuottajaa,
+// mutta originaali indeksiï¿½, joka osoittaa tuottaja listan ulkopuolelle.
 std::string NFmiMTATempSystem::MakeSelectedProducerStringForViewMacro() const
 {
 	auto usedProducerIndex = GetSelectedProducerIndex(true);
@@ -1089,7 +1095,7 @@ void NFmiMTATempSystem::SetSelectedProducerFromViewMacroString(const std::string
 	}
 }
 
-// Jos textual-sounding sivuikkuna on auki, avataan se myös legacy näyttömakroissa, 
+// Jos textual-sounding sivuikkuna on auki, avataan se myï¿½s legacy nï¿½yttï¿½makroissa, 
 // eli sen prioriteetti on valittu suuremmaksi kuin stability-index sivuikkunan, 
 // jos molemmat 'teksti' sivuikkunoista ovat auki.
 bool NFmiMTATempSystem::ShowIndexiesViewMacroLegacy() const
@@ -1097,7 +1103,7 @@ bool NFmiMTATempSystem::ShowIndexiesViewMacroLegacy() const
 	return !itsSoundingViewSettingsFromWindowsRegisty.ShowTextualSoundingDataSideView();
 }
 
-// Jos jompikumpi tai molemmat 'teksti' sivuikkunoista on auki, on vanhassa systeemissä ShowSideView = true
+// Jos jompikumpi tai molemmat 'teksti' sivuikkunoista on auki, on vanhassa systeemissï¿½ ShowSideView = true
 bool NFmiMTATempSystem::ShowSideViewViewMacroLegacy() const
 {
 	return itsSoundingViewSettingsFromWindowsRegisty.ShowStabilityIndexSideView() || itsSoundingViewSettingsFromWindowsRegisty.ShowTextualSoundingDataSideView();
@@ -1237,10 +1243,10 @@ void NFmiMTATempSystem::Read(std::istream& is)
 
 	if(is.fail())
 		throw std::runtime_error("NFmiMTATempSystem::Read failed");
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
 	is >> extraData;
-	// Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, käsittele tässä.
+	// Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+	// eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 	itsWindBarbSpaceOutFactor = 0;
     if(extraData.itsDoubleValues.size() > 0)
         itsWindBarbSpaceOutFactor = static_cast<int>(extraData.itsDoubleValues[0]);
@@ -1267,13 +1273,13 @@ void NFmiMTATempSystem::Read(std::istream& is)
 
 	if(extraData.itsDoubleValues.size() > 8)
 	{
-		// Version 5.13.12.0 jälkeisillä versioilla tehty näyttömakro hanskataan käyttämällä extraData arvoja suoraan
+		// Version 5.13.12.0 jï¿½lkeisillï¿½ versioilla tehty nï¿½yttï¿½makro hanskataan kï¿½yttï¿½mï¿½llï¿½ extraData arvoja suoraan
 		itsSoundingViewSettingsFromWindowsRegisty.ShowStabilityIndexSideView(extraData.itsDoubleValues[7] != 0);
 		itsSoundingViewSettingsFromWindowsRegisty.ShowTextualSoundingDataSideView(extraData.itsDoubleValues[8] != 0);
 	}
 	else
 	{
-		// Versiolla 5.13.12.0 ja sitä edeltävillä versioilla tehty näyttömakro pitää tehdä erityis legacy metodeilla
+		// Versiolla 5.13.12.0 ja sitï¿½ edeltï¿½villï¿½ versioilla tehty nï¿½yttï¿½makro pitï¿½ï¿½ tehdï¿½ erityis legacy metodeilla
 		SetupSideViewsFromLegacyViewMacroValues(showIndexiesLegacyValue, showSideViewLegacyValue);
 	}
 
@@ -1304,7 +1310,7 @@ void NFmiMTATempSystem::Read(std::istream& is)
 	if(is.fail())
 		throw std::runtime_error("NFmiMTATempSystem::Read failed");
 
-	itsCurrentVersionNumber = itsLatestVersionNumber; // aina jatketaan viimeisellä versio numerolla
+	itsCurrentVersionNumber = itsLatestVersionNumber; // aina jatketaan viimeisellï¿½ versio numerolla
 }
 
 void NFmiMTATempSystem::InitFromViewMacro(const NFmiMTATempSystem &theOther, bool disableWindowManipulations)
@@ -1383,7 +1389,7 @@ void NFmiMTATempSystem::InitFromViewMacro(const NFmiMTATempSystem &theOther, boo
     itsNLineInfo = theOther.itsNLineInfo;
     itsRHLineInfo = theOther.itsRHLineInfo;
 	itsSoundingViewSettingsFromWindowsRegisty = theOther.itsSoundingViewSettingsFromWindowsRegisty;
-	// Pitäisikö myös itsSoundingDataServerConfigurations asetukset kopioida tässä???
+	// Pitï¿½isikï¿½ myï¿½s itsSoundingDataServerConfigurations asetukset kopioida tï¿½ssï¿½???
 	// itsSoundingDataServerConfigurations = theOther.itsSoundingDataServerConfigurations;
 	itsHodografViewData = theOther.itsHodografViewData;
 	itsSelectedProducerIndex = theOther.itsSelectedProducerIndex;
@@ -1392,7 +1398,7 @@ void NFmiMTATempSystem::InitFromViewMacro(const NFmiMTATempSystem &theOther, boo
 	itsIntegrationTimeOffset2InHours = theOther.itsIntegrationTimeOffset2InHours;
 }
 
-// Säädetään kaikki aikaa liittyvät jutut parametrina annettuun aikaan, että SmartMet säätyy ladattuun CaseStudy-dataan mahdollisimman hyvin.
+// Sï¿½ï¿½detï¿½ï¿½n kaikki aikaa liittyvï¿½t jutut parametrina annettuun aikaan, ettï¿½ SmartMet sï¿½ï¿½tyy ladattuun CaseStudy-dataan mahdollisimman hyvin.
 void NFmiMTATempSystem::SetCaseStudyTimes(const NFmiMetTime &theCaseStudyTime)
 {
 	if(itsTempInfos.size() > 0)
@@ -1424,9 +1430,9 @@ void NFmiMTATempSystem::SetAllTempTimes(const NFmiMetTime &theTime)
     }
 }
 
-// Kun luotaus-dialogista annetaan takaisin valitut tuottajat, ne annetaan pelkkänä tuottaja listana,
-// ilman tietoa onko kyseessä serveriltä haettava data vai ei.
-// Täällä päätellää tuottajanimien avulla, mitkä tuottajat oikeasti on kyseessä.
+// Kun luotaus-dialogista annetaan takaisin valitut tuottajat, ne annetaan pelkkï¿½nï¿½ tuottaja listana,
+// ilman tietoa onko kyseessï¿½ serveriltï¿½ haettava data vai ei.
+// Tï¿½ï¿½llï¿½ pï¿½ï¿½tellï¿½ï¿½ tuottajanimien avulla, mitkï¿½ tuottajat oikeasti on kyseessï¿½.
 void NFmiMTATempSystem::SoundingComparisonProducers(const SelectedProducerLegacyContainer &selectedProducersLegacyContainer)
 {
     SelectedProducerContainer selectedProducers;

@@ -1,10 +1,12 @@
 #include "ModelDataServerConfiguration.h"
 #include "NFmiGlobals.h"
+#include "NFmiSettings.h"
 #include <boost/algorithm/string.hpp>
 
-// CreateRegValue -funktio hakee ensin arvoa Win-rekisteristä ja sitten optionaalisesti konfiguraatioista ja lopuksi käyttää oletusarvoa.
-// Haluan tehdä homman nyt niin että rakennetaan normaalisti rekisteri-olio, mutta jos configurationOverride on true,
-// tällöin hataan lopullinen arvo pakotetusti konfiguraatioista.
+// CreateRegValue -funktio hakee ensin arvoa Win-rekisteristï¿½ ja sitten optionaalisesti konfiguraatioista ja lopuksi kï¿½yttï¿½ï¿½ oletusarvoa.
+// Haluan tehdï¿½ homman nyt niin ettï¿½ rakennetaan normaalisti rekisteri-olio, mutta jos configurationOverride on true,
+// tï¿½llï¿½in hataan lopullinen arvo pakotetusti konfiguraatioista.
+#ifndef UNIX
 template<typename RegValueType, typename ValueType>
 static boost::shared_ptr<RegValueType> CreateOverrideRegValue(const std::string &baseRegistryPath, const std::string &registrySection, const std::string &parameterName, HKEY usedKey, ValueType defaultValue, const std::string &baseConfigurationPath, bool configurationOverride)
 {
@@ -18,6 +20,7 @@ static boost::shared_ptr<RegValueType> CreateOverrideRegValue(const std::string 
     }
     return regValuePtr;
 }
+#endif // UNIX
 
 // ***************************************************
 // *****  GribDataParameterMapping   *****************
@@ -57,7 +60,7 @@ void GribDataParameterMapping::init(const std::string& mappingStr)
     }
 }
 
-// value:n pitää olla double, koska siinä voi olla origintime timestamp muodossa, ja sellainen ei mahdu float:iin.
+// value:n pitï¿½ï¿½ olla double, koska siinï¿½ voi olla origintime timestamp muodossa, ja sellainen ei mahdu float:iin.
 double GribDataParameterMapping::doValueConversion(double value, const std::string& conversionFunctionName)
 {
     if(std::isinf(value) || std::isnan(value) || value == kFloatMissing)
@@ -90,6 +93,7 @@ bool ModelDataServerConfiguration::init(const std::string &configurationModelNam
     baseRegistryPath_ = baseRegistryPath;
     baseConfigurationPath_ = baseConfigurationPath;
     auto usedConfigurationPath = baseConfigurationPath_ + "::" + configurationModelName;
+#ifndef UNIX
     std::string usedRegistrySectionName = "\\" + configurationModelName;
 
     // HKEY_CURRENT_USER -keys
@@ -100,12 +104,16 @@ bool ModelDataServerConfiguration::init(const std::string &configurationModelNam
     if(*producerId_ == nonLegalProducerId)
         throw std::runtime_error(std::string(__FUNCTION__) + ": unable to get legal value for ProducerId (non 0 value) with model '" + configurationModelName + "'");
     dataNameOnServer_ = ::CreateOverrideRegValue<CachedRegString>(baseRegistryPath, usedRegistrySectionName, "DataNameOnServer", usedKey, std::string(""), usedConfigurationPath, configurationOverride);
-    // Jostain syystä string-olion saaminen CachedRegString oliosta on hankalaa, siksi käytetään operator std::string():iä...
+    // Jostain syystï¿½ string-olion saaminen CachedRegString oliosta on hankalaa, siksi kï¿½ytetï¿½ï¿½n operator std::string():iï¿½...
     if((*dataNameOnServer_).operator std::string().empty())
         throw std::runtime_error(std::string(__FUNCTION__) + ": unable to get legal value for DataNameOnServer (non empty) with model '" + configurationModelName + "'");
 
-    // HKEY_LOCAL_MACHINE -keys (HUOM! nämä vaatii Admin oikeuksia Vista/Win7/Win10)
+    // HKEY_LOCAL_MACHINE -keys (HUOM! nï¿½mï¿½ vaatii Admin oikeuksia Vista/Win7/Win10)
     usedKey = HKEY_LOCAL_MACHINE;
+#else
+    producerId_ = 0;
+    dataNameOnServer_ = "";
+#endif // UNIX
 
     return initGribDataPart(usedConfigurationPath);
 }

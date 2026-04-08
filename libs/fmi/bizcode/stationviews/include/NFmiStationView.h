@@ -1,4 +1,4 @@
-//© Ilmatieteenlaitos/software by Marko
+//ï¿½ Ilmatieteenlaitos/software by Marko
 //  Original 21.09.1998
 //
 //
@@ -36,10 +36,13 @@ namespace CtrlViewUtils
 	struct GraphicalInfo;
 }
 
+#ifndef UNIX
 class CRect;
 class CDC;
+#endif
 
 #include <fstream>
+#include <list>
 
 template<typename T>
 static void StoreMatrix(NFmiDataMatrix<T> &theMatrix, const std::string &theFileName)
@@ -94,7 +97,7 @@ public:
    NFmiPoint ViewPointToLatLon(const NFmiPoint& theViewPoint) const override;
    NFmiDataMatrix<float>& SpecialMatrixData(void) {return itsSpecialMatrixData;}
    void SpecialMatrixData(const NFmiDataMatrix<float> &theMatrix) {itsSpecialMatrixData = theMatrix;}
-   // tämä on asemadatan griddaus funktio, jota voidaan käyttää nyt staattisena funktiona
+   // tï¿½mï¿½ on asemadatan griddaus funktio, jota voidaan kï¿½yttï¿½ï¿½ nyt staattisena funktiona
    static void GridStationData(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, const NFmiGriddingProperties &griddingProperties);
    static long GetTimeInterpolationRangeInMinutes(const NFmiHelpDataInfo *theHelpDataInfo);
    static bool AllowNearestTimeInterpolation(long theTimeInterpolationRangeInMinutes);
@@ -122,8 +125,10 @@ protected:
    float ToolTipValue(const NFmiPoint& theRelativePoint, boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
    void DrawWithIsolineView(const NFmiDataMatrix<float> &theMatrix, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
    bool CanToolmasterBeUsed(void);
+#ifndef UNIX
    void DrawMouseSelectionMarker(const NFmiPoint &theLatlon, bool fDrawBiggerMarker, CRect &theBiggerBaseMfcRect, CRect &theSmallerBaseMfcRect, CDC *theUsedDC);
-   // tämä avulla skaalataan maksimi fontti kokoa
+#endif
+   // tï¿½mï¿½ avulla skaalataan maksimi fontti kokoa
    double MaximumFontSizeFactor() const;
    NFmiRect CalcSymbolRelativeRect(const NFmiPoint &theLatlon, double theSymbolSizeInMM) const;
    void AddLatestObsInfoToString(std::string &tooltipString);
@@ -136,7 +141,7 @@ protected:
    NFmiRect CurrentDataRect () const;
    virtual float InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, const NFmiPoint& theLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
    virtual std::string Value2ToolTipString(float theValue, int theDigitCount, FmiInterpolationMethod theInterpolationMethod, FmiParamType theParamType);
-   // Tämä hakee näytettävän datan riippuen asetuksista
+   // Tï¿½mï¿½ hakee nï¿½ytettï¿½vï¿½n datan riippuen asetuksista
    virtual float ViewFloatValue(bool doTooltipValue); 
    virtual void SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo); // tarvittavat jutut optimointia varten
    bool CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2, bool & useOriginalDataInPixelToGridRatioCalculations, NFmiGrid* optimizedDataGrid = nullptr);
@@ -148,9 +153,9 @@ protected:
    NFmiVisualizationSpaceoutSettings& GetVisualizationSettings() const;
    void DoSymboldrawDensityAdjustments(double &xSizeFactorInOut, double &ySizeFactorInOut);
 
-   // Tähän tehdään kaikki metodit jotka liittyvät uuteen Symbol-Bulk-Draw toimintoon.
-   // Metodien eteen laitetaan ainakin aluksi Sbd -etuliite, jotta tiedetään että ne liittyvät siihen.
-   // Toivottavasti myöhemmin voidaan siivota yleisesti piirtokoodeja kun S-B-D on jo täysin käytössä.
+   // Tï¿½hï¿½n tehdï¿½ï¿½n kaikki metodit jotka liittyvï¿½t uuteen Symbol-Bulk-Draw toimintoon.
+   // Metodien eteen laitetaan ainakin aluksi Sbd -etuliite, jotta tiedetï¿½ï¿½n ettï¿½ ne liittyvï¿½t siihen.
+   // Toivottavasti myï¿½hemmin voidaan siivota yleisesti piirtokoodeja kun S-B-D on jo tï¿½ysin kï¿½ytï¿½ssï¿½.
    // ******** Symbol-Bulk-Draw toimintojen alku *********
    void SbdCollectSymbolDrawData(bool doStationPlotOnly);
    void SbdCollectNormalSymbolDrawData(bool doStationPlotOnly);
@@ -193,7 +198,7 @@ protected:
    NFmiPoint itsObjectOffSet;
    NFmiPoint itsObjectSize;
    bool fDrawText;
-   NFmiPoint itsFontSize; // lasketaan vain kerran piiron yhteydessä!
+   NFmiPoint itsFontSize; // lasketaan vain kerran piiron yhteydessï¿½!
 
 protected:
    boost::shared_ptr<NFmiFastQueryInfo> GetNearestQ2SynopStation(const NFmiLocation &theWantedLocation);
@@ -270,85 +275,85 @@ protected:
 
    NFmiRect itsGeneralStationRect;
    FmiParameterName itsParamId;
-   // Tämä info vektori käydään läpi kun piirretään dataa (aluksi useita infoja vain synop-data tapauksessa)
+   // Tï¿½mï¿½ info vektori kï¿½ydï¿½ï¿½n lï¿½pi kun piirretï¿½ï¿½n dataa (aluksi useita infoja vain synop-data tapauksessa)
    std::vector<boost::shared_ptr<NFmiFastQueryInfo> > itsInfoVector; 
-   // multi synop infojen takia pientä viritystä
+   // multi synop infojen takia pientï¿½ viritystï¿½
    NFmiLocation itsNearestTooltipLocation; 
-   // Laitetaan tähän talteen alkuperäiset asetukset, jos piirto tapahtuu erotuksena, voidaan palauttaa alkuperäinen tästä
+   // Laitetaan tï¿½hï¿½n talteen alkuperï¿½iset asetukset, jos piirto tapahtuu erotuksena, voidaan palauttaa alkuperï¿½inen tï¿½stï¿½
    boost::shared_ptr<NFmiDrawParam> itsBackupDrawParamForDifferenceDrawing;  
-   // Tähän talletetaan tieto onko käytetty drawParam palautettava piirron jälkeen 
+   // Tï¿½hï¿½n talletetaan tieto onko kï¿½ytetty drawParam palautettava piirron jï¿½lkeen 
    bool fDoDifferenceDrawSwitch; 
-   // jos datalle voi tehdä aikainterpolaation piirrettäessä kartalle esim. symboleja, 
-   // on tämä true (tarvitaan tieto, ettei vahingossa piirretä oikeasti puuttuvaa dataa)
+   // jos datalle voi tehdï¿½ aikainterpolaation piirrettï¿½essï¿½ kartalle esim. symboleja, 
+   // on tï¿½mï¿½ true (tarvitaan tieto, ettei vahingossa piirretï¿½ oikeasti puuttuvaa dataa)
    bool fDoTimeInterpolation; 
-   // normaalisti asemadatassa paikka pyydetään suoraan datan asema tiedoista. Mutta
-   // esim. SHIP-havaintojen yhteydessä pitää sijainti katsoa lat-lon parametreistä
-   // kulloisellakin ajan hetkellä. Tätä  varten tehtiin metodi CurrentLatLon, joka osaa palauttaa
-   // datan oikean paikan myös ns. laiva tms havaintojen yhteydessä.
+   // normaalisti asemadatassa paikka pyydetï¿½ï¿½n suoraan datan asema tiedoista. Mutta
+   // esim. SHIP-havaintojen yhteydessï¿½ pitï¿½ï¿½ sijainti katsoa lat-lon parametreistï¿½
+   // kulloisellakin ajan hetkellï¿½. Tï¿½tï¿½  varten tehtiin metodi CurrentLatLon, joka osaa palauttaa
+   // datan oikean paikan myï¿½s ns. laiva tms havaintojen yhteydessï¿½.
    bool fDoMovingStationDataLocations; 
    NFmiPoint itsCurrentShipLatlon;
 
-   // Kun erikois tilanne esim. laskemacroParam, mutta piirrä se wind-barbilla
-   // pitää käyttää matriisia ja muita dataosia laskuissa.
+   // Kun erikois tilanne esim. laskemacroParam, mutta piirrï¿½ se wind-barbilla
+   // pitï¿½ï¿½ kï¿½yttï¿½ï¿½ matriisia ja muita dataosia laskuissa.
    // ************************************************************************
    bool fUseMacroParamSpecialCalculations;
    NFmiDataMatrix<float> itsMacroParamSpecialCalculationsValues;
    // ************************************************************************
 
-   // Tämä on tehty siksi että kun erilaisia symboli/teksti datoja piirretään
-   // eri karttanäyttöluokissa (paitsi NFmiIsolineView-luokka on poikkeus) voi olla harvennus 
-   // tms. juttu päällä, joten kun nämä on kerran laskettu ja pyydetään arvoja halutulle pisteelle,
-   // interpoloidaan arvot tästä matriisista.
+   // Tï¿½mï¿½ on tehty siksi ettï¿½ kun erilaisia symboli/teksti datoja piirretï¿½ï¿½n
+   // eri karttanï¿½yttï¿½luokissa (paitsi NFmiIsolineView-luokka on poikkeus) voi olla harvennus 
+   // tms. juttu pï¿½ï¿½llï¿½, joten kun nï¿½mï¿½ on kerran laskettu ja pyydetï¿½ï¿½n arvoja halutulle pisteelle,
+   // interpoloidaan arvot tï¿½stï¿½ matriisista.
    NFmiDataMatrix<float> itsQ2ServerDataValues;
 
-   // Kun ollaan ollaan tarpeeksi menneisyydessä ajassa, jolle ei 
-   // normaaleista synop datoista löydy arvoja, haetaan ne q2serveriltä sitten 
+   // Kun ollaan ollaan tarpeeksi menneisyydessï¿½ ajassa, jolle ei 
+   // normaaleista synop datoista lï¿½ydy arvoja, haetaan ne q2serveriltï¿½ sitten 
    // jos se on sallittu.
    // ************************************************************************
    bool fGetSynopDataFromQ2;
    NFmiDataMatrix<float> itsSynopDataValuesFromQ2;
    StationIdSeekContainer itsSynopDataFromQ2StationIndexies;
-   ParamIdSeekContainer itsSynopPlotParamIndexies; // tämän avulla etsitään halutun parametrin arvo kun tehdään synop-plottausta q2-datoilla
+   ParamIdSeekContainer itsSynopPlotParamIndexies; // tï¿½mï¿½n avulla etsitï¿½ï¿½n halutun parametrin arvo kun tehdï¿½ï¿½n synop-plottausta q2-datoilla
    // ************************************************************************
 
-   bool fGetCurrentDataFromQ2Server; // kun dataa piirretään, pitää olla jokin dataInfo käytössä. Jos haetaan dataa, joka on tarpeeksi kaukana menneisyydessä, 
-									// ettei sitä saada lähi-cachesta, pitää data yrittää hakea q2serveriltä.
-									// Tämä arvo asetetaan NFmiStationView::MakeDrawedInfoVector -metodissa kohdalleen.
+   bool fGetCurrentDataFromQ2Server; // kun dataa piirretï¿½ï¿½n, pitï¿½ï¿½ olla jokin dataInfo kï¿½ytï¿½ssï¿½. Jos haetaan dataa, joka on tarpeeksi kaukana menneisyydessï¿½, 
+									// ettei sitï¿½ saada lï¿½hi-cachesta, pitï¿½ï¿½ data yrittï¿½ï¿½ hakea q2serveriltï¿½.
+									// Tï¿½mï¿½ arvo asetetaan NFmiStationView::MakeDrawedInfoVector -metodissa kohdalleen.
 
    float itsToolTipDiffValue1;
    float itsToolTipDiffValue2;
 
-   // Tähän asetetaann erikois data, joka halutaan piirtää esim. isoviivoina tai contoureina NFmiIsolineView-luokalla
+   // Tï¿½hï¿½n asetetaann erikois data, joka halutaan piirtï¿½ï¿½ esim. isoviivoina tai contoureina NFmiIsolineView-luokalla
    NFmiDataMatrix<float> itsSpecialMatrixData;
 
-   // MacroParam laskuissa saattaa olla käytössä calculationpoint:eja. 
-   // Ne piirretään tekstinä ja niiden piirtoa ei saa harventaa spaceoutFactorilla.
+   // MacroParam laskuissa saattaa olla kï¿½ytï¿½ssï¿½ calculationpoint:eja. 
+   // Ne piirretï¿½ï¿½n tekstinï¿½ ja niiden piirtoa ei saa harventaa spaceoutFactorilla.
    bool fUseCalculationPoints; 
-   // MacroParam laskuja halutaan optimoida, jos ne piirretään harvennetussa symboli muodossa.
-   // Jos tämä tapaus on piirrossa, ei saa enää alkaa laskemaan, tarvitseeko piirtoa harventaa edelleen.
+   // MacroParam laskuja halutaan optimoida, jos ne piirretï¿½ï¿½n harvennetussa symboli muodossa.
+   // Jos tï¿½mï¿½ tapaus on piirrossa, ei saa enï¿½ï¿½ alkaa laskemaan, tarvitseeko piirtoa harventaa edelleen.
    bool fUseAlReadySpacedOutData;
 
-   // Rajoitettuihin aikainterpolaatioihin liittyviä muuttujia
+   // Rajoitettuihin aikainterpolaatioihin liittyviï¿½ muuttujia
    long itsTimeInterpolationRangeInMinutes;
    bool fAllowNearestTimeInterpolation;
    NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage;
    NFmiSymbolBulkDrawData itsSymbolBulkDrawData;
-   // Symbolipiirtoa halutaan vähän venyttää zoomatun karttaalueen ulkopuolelle, 
-   // jolloin voidaan piirtää näkyviin edes osia kartta-alueen ulkopuolelle jäävistä pisteistä7asemista.
+   // Symbolipiirtoa halutaan vï¿½hï¿½n venyttï¿½ï¿½ zoomatun karttaalueen ulkopuolelle, 
+   // jolloin voidaan piirtï¿½ï¿½ nï¿½kyviin edes osia kartta-alueen ulkopuolelle jï¿½ï¿½vistï¿½ pisteistï¿½7asemista.
    NFmiRect itsEnlargedDrawArea;
-   // Lasketaan joka piirtokerralla vain kerran mahdolliset spaceout kertoimet, laitetaan se tähän cacheen
+   // Lasketaan joka piirtokerralla vain kerran mahdolliset spaceout kertoimet, laitetaan se tï¿½hï¿½n cacheen
    NFmiPoint itsCachedSpaceOutFactors = NFmiPoint::gMissingLatlon;
-   // Jos isoviiva/contour piirrossa mennään visualisoitavan hilan optimointiin, kyseinen hila talletetaan
-   // tähän, jotta mahdollinen hilapisteiden piirto rutiini osaa piirtää nämä tarvittaessa.
+   // Jos isoviiva/contour piirrossa mennï¿½ï¿½n visualisoitavan hilan optimointiin, kyseinen hila talletetaan
+   // tï¿½hï¿½n, jotta mahdollinen hilapisteiden piirto rutiini osaa piirtï¿½ï¿½ nï¿½mï¿½ tarvittaessa.
    // Nollataan aina piirron aluksi.
    std::unique_ptr<NFmiGrid> itsOptimizedGridPtr;
    std::vector<float> itsMacroParamProbingValues;
    NFmiExtraMacroParamData itsProbingExtraMacroParamData;
    MacroParamPhase itsMacroParamPhase = MacroParamPhase::NoPhase;
-   // Jos piirto-ominaisuuksissa sanottu että käytetään toista parametria näytössä 
-   // olevan parametrin symbolien värityksessä, niin tähän otetaan se talteen.
+   // Jos piirto-ominaisuuksissa sanottu ettï¿½ kï¿½ytetï¿½ï¿½n toista parametria nï¿½ytï¿½ssï¿½ 
+   // olevan parametrin symbolien vï¿½rityksessï¿½, niin tï¿½hï¿½n otetaan se talteen.
    boost::shared_ptr<NFmiFastQueryInfo> itsPossibleColorValueInfo;
-   // Tooltip interpolaatioissa pitää tietää ns. final-calculation-grid, jotta 
+   // Tooltip interpolaatioissa pitï¿½ï¿½ tietï¿½ï¿½ ns. final-calculation-grid, jotta 
    // voidaan aina laskea oikein tooltip arvo cachesta.
    boost::shared_ptr<NFmiGrid> itsMacroParamCalculationGrid;
 };

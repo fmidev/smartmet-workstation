@@ -1,27 +1,33 @@
 #pragma once
 
-// Tämä luokka pitää sisällään tiettyjä SmartMet -työaseman perus konfiguraatioita,
+// Tï¿½mï¿½ luokka pitï¿½ï¿½ sisï¿½llï¿½ï¿½n tiettyjï¿½ SmartMet -tyï¿½aseman perus konfiguraatioita,
 // jotka on tarkoitus alustaa ennen kuin SmartMetin NFmiEditMapGeneralDataDoc -otus 
 // alustetaan. 
-// Näitä tiettyjä arvoja tarvitaan ennen tuon doc-otuksen alustusta kun alustetaan 
-// SmartMetissa käytettyä CrashRpt -systeemiä (kaato raportointi systeemi).
-// Tämän luokan pitää alustaa seuraavat asiat:
-// 1. Käytetyt SmartMet konfiguraatiot, jotka luetaan sitten NFmiSetting luokan avulla. 
+// Nï¿½itï¿½ tiettyjï¿½ arvoja tarvitaan ennen tuon doc-otuksen alustusta kun alustetaan 
+// SmartMetissa kï¿½ytettyï¿½ CrashRpt -systeemiï¿½ (kaato raportointi systeemi).
+// Tï¿½mï¿½n luokan pitï¿½ï¿½ alustaa seuraavat asiat:
+// 1. Kï¿½ytetyt SmartMet konfiguraatiot, jotka luetaan sitten NFmiSetting luokan avulla. 
 // 2. NFmiApplicationDataBase-luokka. 
 // 3. CatLog systeemi.
 
 #include "catlog/catlog.h"
 #include "NFmiApplicationDataBase.h"
+#ifndef UNIX
 #include "NFmiCachedRegistryValue.h"
+#else
+#include "linux_compat.h"
+#endif
 #include "NFmiMilliSecondTimer.h"
+#ifndef UNIX
 #include "FmiWin32Helpers.h"
 #include "Splasher.h"
+#endif
 
 #include "boost/shared_ptr.hpp"
 
 #include <list>
 
-// Kun tämä poikkeus lentää initialisoinnin yhteydessä, SmartMet lopettaa toimintansa 'hallitusti'
+// Kun tï¿½mï¿½ poikkeus lentï¿½ï¿½ initialisoinnin yhteydessï¿½, SmartMet lopettaa toimintansa 'hallitusti'
 class AbortSmartMetInitializationGracefullyException
 {
 };
@@ -56,7 +62,9 @@ public:
     bool Verbose() const {return fVerbose;}
     void Verbose(bool newValue) {fVerbose = newValue;}
     void DoStartupLogging(const std::string &theAction);
+#ifndef UNIX
     const std::vector<DrawStringData>& SplashScreenTextDataVector() const { return itsSplashScreenTextDataVector; }
+#endif
     double RunningTimeInSeconds() { return itsElapsedRunningTimer.elapsedTimeInSeconds(); }
     std::string MakeRunningTimeString();
     bool IsToolMasterAvailable() const { return fToolMasterAvailable; }
@@ -72,7 +80,9 @@ private:
     bool ReadPreConfigurationSettings();
     bool InitLogger(void);
 	void SetEditorVersionStr(void);
+#ifndef UNIX
     void MakeSplashScreenTextDataVector(const NFmiTime &theExeModTimeLocal, const std::string &theVersionString);
+#endif
 	void InitApplicationDataBase(const std::string &avsToolMasterVersion);
     bool DoControlPathChecks(std::string theControlPath);
     void SetupFactorySettingFile(const std::string &theConfigurationFile);
@@ -87,56 +97,58 @@ private:
     void LogOtherPaths();
 
 
-    // SmartMetin työhakemisto
+    // SmartMetin tyï¿½hakemisto
 	std::string itsWorkingDirectory; 
-    // Tämä on -p option arvo kun SmartMet käynnistetään. Siinä voi olla hakemisto (mistä smartmet.conf 
-    // luetaan) tai suora tiedoston nimi, jota käsitellään kuten smartmet.conf -tiedostoa. Tällöin itsControlPath
-    // on se hakemisto, mikä on polkuna annetulle tiedostolle.
+    // Tï¿½mï¿½ on -p option arvo kun SmartMet kï¿½ynnistetï¿½ï¿½n. Siinï¿½ voi olla hakemisto (mistï¿½ smartmet.conf 
+    // luetaan) tai suora tiedoston nimi, jota kï¿½sitellï¿½ï¿½n kuten smartmet.conf -tiedostoa. Tï¿½llï¿½in itsControlPath
+    // on se hakemisto, mikï¿½ on polkuna annetulle tiedostolle.
 	std::string itsControlBasePath; 
-    // Tässä on haluttu ohjaus-hakemisto, mista kaikki ohjaus tiedostot luetaan, polku on absoluuttinen, 
+    // Tï¿½ssï¿½ on haluttu ohjaus-hakemisto, mista kaikki ohjaus tiedostot luetaan, polku on absoluuttinen, 
     // joten ohjaus hakemisto voi olla riippumaton editori hakemistosta
     std::string itsControlPath;
-    // Tässä on smartmet.conf tiedoston koko polku. Se voi olla eri nimellä, jos -p optiossa on annettu
+    // Tï¿½ssï¿½ on smartmet.conf tiedoston koko polku. Se voi olla eri nimellï¿½, jos -p optiossa on annettu
     // suoraan halutun tiedoston nimi.
     std::string itsBaseConfigurationFilePath;
-    // Tässä hakemistossa on ns. tehdasasetus GUI konffeja, eli tiedostoja, joihin SmartMet tekee
-    // Käyttöliittymän kautta muutoksia. Ne voidaan tuottaa oletus tiedostoista, jos ne puuttuvat, 
-    // tällöin niihin tehdyt muutokset ovat konekohtaisia.
+    // Tï¿½ssï¿½ hakemistossa on ns. tehdasasetus GUI konffeja, eli tiedostoja, joihin SmartMet tekee
+    // Kï¿½yttï¿½liittymï¿½n kautta muutoksia. Ne voidaan tuottaa oletus tiedostoista, jos ne puuttuvat, 
+    // tï¿½llï¿½in niihin tehdyt muutokset ovat konekohtaisia.
     // Se on workingDirectory\FactorySettings -hakemisto.
     std::string itsFactorySettingsConfigurationFilePath;
-    // Tähän luetaan tehdasasetus tiedotojen nimet em. hakemistosta.
+    // Tï¿½hï¿½n luetaan tehdasasetus tiedotojen nimet em. hakemistosta.
     std::list<std::string> itsFactorySettingsConfigurationFiles;
-    // SmartMet lukee tietyt tiedostot ns. help_data -hakemistosta. Tämä on optionaalinen asetus
+    // SmartMet lukee tietyt tiedostot ns. help_data -hakemistosta. Tï¿½mï¿½ on optionaalinen asetus
     // jonka oletusarvo on itsControlDirectory + "\\help_data".
-    // Pilvipalvelu asennuksien mukana on tullut tarve että hakemsito voi olla muuallakin kuin workinDirectoryn alla.
+    // Pilvipalvelu asennuksien mukana on tullut tarve ettï¿½ hakemsito voi olla muuallakin kuin workinDirectoryn alla.
     std::string itsHelpDataPath;
     // Otetaan talteen lokitiedostojen hakemisto
     std::string itsLogFileDirectory;
 
-    // Tässä on käytetyn kielen lyhenne stringinä, joka on tallessa Windows rekisterissä
+    // Tï¿½ssï¿½ on kï¿½ytetyn kielen lyhenne stringinï¿½, joka on tallessa Windows rekisterissï¿½
     boost::shared_ptr<CachedRegString> itsDictionaryLanguageString;
-    // Editorin käyttöliittymän kieli, joka saadaan itsDictionaryLanguageString:in avulla.
+    // Editorin kï¿½yttï¿½liittymï¿½n kieli, joka saadaan itsDictionaryLanguageString:in avulla.
 	FmiLanguage itsLanguage; 
-	std::string itsEditorVersionStr; // tähän talletetaan versio teksti, mikä logataan editoria käynnistettäessä ja suljettaessa, muotoa: SmartMet version 5.8.7.1 (06 Aug 2012)
-	std::string itsApplicationTitle; // Tämä teksti näkyy mainframessa ohjelman nimenä, saadaan winappin -t -argumenttina
-	bool fDeveloperModePath; // oletus arvoisesti false, jolloin itsWorkingPath kiipeää yhden askeleen ylöspäin hakemistopuussa.
-							// Normaalisti kun SmartMet (5.4:sta alkaen) käynnistetään, lukee se halutut konfiguraatiot workingPath + "\..\" + controlPath -hakemistosta.
-							// Tämä siksi että 5.4:sta alkaen 32 ja 64-bit ohjelmat ovat samassa SmartMet rakenteessa, mutta omissa bin-hakemistoissaan.
-							// Nämä bin-hakikset ovat myös alun perin workingPath:eja. Mutta niistä pitää siis tulla yksi taso ylöspäin että päästään oikeaan paikkaan.
-							// Kun taas SmartMet käynnistetään MS developer Studiosta, ollaankin jo oikeassa hakemistossa ja ei tarvitse tulla ylöspäin. Eli
-							// kun SmartMet:iä (5.4 ->) käynnistetään MSDev:illä, pitää laittaa optio -d!!!!
-	NFmiApplicationDataBase itsApplicationDataBase; // tässä on tallessa systeemi ja muita tietoja, joita SmartMet lähettää SmartMet-käyttötietokantaan 
-													// aina käynnistyessä, kerran päivässä ja sulkeutuessa. Tämä pitää ottaa talteen, koska siinä oleva GUID
-													// luodaan aina instanssi kohtaisesti, että tiedetään mikä open kuuluu mihinkin update ja close tietoihin.
-    bool fVerbose; // Onko lokituksen verbose moodi päällä vai ei 
+	std::string itsEditorVersionStr; // tï¿½hï¿½n talletetaan versio teksti, mikï¿½ logataan editoria kï¿½ynnistettï¿½essï¿½ ja suljettaessa, muotoa: SmartMet version 5.8.7.1 (06 Aug 2012)
+	std::string itsApplicationTitle; // Tï¿½mï¿½ teksti nï¿½kyy mainframessa ohjelman nimenï¿½, saadaan winappin -t -argumenttina
+	bool fDeveloperModePath; // oletus arvoisesti false, jolloin itsWorkingPath kiipeï¿½ï¿½ yhden askeleen ylï¿½spï¿½in hakemistopuussa.
+							// Normaalisti kun SmartMet (5.4:sta alkaen) kï¿½ynnistetï¿½ï¿½n, lukee se halutut konfiguraatiot workingPath + "\..\" + controlPath -hakemistosta.
+							// Tï¿½mï¿½ siksi ettï¿½ 5.4:sta alkaen 32 ja 64-bit ohjelmat ovat samassa SmartMet rakenteessa, mutta omissa bin-hakemistoissaan.
+							// Nï¿½mï¿½ bin-hakikset ovat myï¿½s alun perin workingPath:eja. Mutta niistï¿½ pitï¿½ï¿½ siis tulla yksi taso ylï¿½spï¿½in ettï¿½ pï¿½ï¿½stï¿½ï¿½n oikeaan paikkaan.
+							// Kun taas SmartMet kï¿½ynnistetï¿½ï¿½n MS developer Studiosta, ollaankin jo oikeassa hakemistossa ja ei tarvitse tulla ylï¿½spï¿½in. Eli
+							// kun SmartMet:iï¿½ (5.4 ->) kï¿½ynnistetï¿½ï¿½n MSDev:illï¿½, pitï¿½ï¿½ laittaa optio -d!!!!
+	NFmiApplicationDataBase itsApplicationDataBase; // tï¿½ssï¿½ on tallessa systeemi ja muita tietoja, joita SmartMet lï¿½hettï¿½ï¿½ SmartMet-kï¿½yttï¿½tietokantaan 
+													// aina kï¿½ynnistyessï¿½, kerran pï¿½ivï¿½ssï¿½ ja sulkeutuessa. Tï¿½mï¿½ pitï¿½ï¿½ ottaa talteen, koska siinï¿½ oleva GUID
+													// luodaan aina instanssi kohtaisesti, ettï¿½ tiedetï¿½ï¿½n mikï¿½ open kuuluu mihinkin update ja close tietoihin.
+    bool fVerbose; // Onko lokituksen verbose moodi pï¿½ï¿½llï¿½ vai ei 
+#ifndef UNIX
     std::vector<DrawStringData> itsSplashScreenTextDataVector;
-    // Smartmetin käynnissäoloajan laskuri
+#endif
+    // Smartmetin kï¿½ynnissï¿½oloajan laskuri
     NFmiNanoSecondTimer itsElapsedRunningTimer;
-    // Onko agx Uniras ToolMaster lisenssi kunnossa, jos on, käytä toolmasteria, muuten älä
+    // Onko agx Uniras ToolMaster lisenssi kunnossa, jos on, kï¿½ytï¿½ toolmasteria, muuten ï¿½lï¿½
     bool fToolMasterAvailable;
-    // CrashReporter on systeemi, joka tekee SmartMetin kaatuessa kaatumisraportin, joka voidaan lähettää kehittäjille sähköpostilla.
-    // Jossain tapauksissa (kuten Beta tuote automaatio käytössä) tätä ominaisuutta ei haluta päälle. Jos tämän arvo on false, ei ominaisuutta laiteta päälle.
+    // CrashReporter on systeemi, joka tekee SmartMetin kaatuessa kaatumisraportin, joka voidaan lï¿½hettï¿½ï¿½ kehittï¿½jille sï¿½hkï¿½postilla.
+    // Jossain tapauksissa (kuten Beta tuote automaatio kï¿½ytï¿½ssï¿½) tï¿½tï¿½ ominaisuutta ei haluta pï¿½ï¿½lle. Jos tï¿½mï¿½n arvo on false, ei ominaisuutta laiteta pï¿½ï¿½lle.
     bool fEnableCrashReporter;
-    // Jos SmartMetille halutaan joskus antaa käytetyn betaAutomaatioListan polku komentoriviargumenttina
+    // Jos SmartMetille halutaan joskus antaa kï¿½ytetyn betaAutomaatioListan polku komentoriviargumenttina
     std::string itsBetaAutomationListPath;
 };

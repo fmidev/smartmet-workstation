@@ -43,7 +43,7 @@ namespace SmartMetDataUtilities
         void clear();
 
         DataUtilitiesSingleton(const DataUtilitiesSingleton& rhs) = delete;
-        DataUtilitiesSingleton& DataUtilitiesSingleton::operator=(DataUtilitiesSingleton& rhs) = delete;
+        DataUtilitiesSingleton& operator=(DataUtilitiesSingleton& rhs) = delete;
         DataUtilitiesSingleton(DataUtilitiesSingleton&& rhs) = delete;
         DataUtilitiesSingleton& operator=(DataUtilitiesSingleton&& rhs) = delete;
     protected:

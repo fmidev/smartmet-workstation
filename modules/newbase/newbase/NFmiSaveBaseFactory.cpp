@@ -8,7 +8,9 @@
 #include "NFmiSaveBaseFactory.h"
 
 #include "NFmiEquidistArea.h"
+#ifndef DISABLE_GDAL
 #include "NFmiGdalArea.h"
+#endif
 #include "NFmiGnomonicArea.h"
 #include "NFmiGrid.h"
 #include "NFmiLambertEqualArea.h"
@@ -77,7 +79,7 @@ void *CreateSaveBase(unsigned int classId)
       return static_cast<void *>(new NFmiLocationBag);
     case kNFmiStationBag:
       return static_cast<void *>(new NFmiStationBag);
-#ifdef UNIX
+#if defined(UNIX) && !defined(DISABLE_GDAL)
     case kNFmiGdalArea:
       return static_cast<void *>(new NFmiGdalArea);
 #endif

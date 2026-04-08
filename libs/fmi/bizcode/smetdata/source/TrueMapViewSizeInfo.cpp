@@ -20,6 +20,7 @@ TrueMapViewSizeInfo::TrueMapViewSizeInfo(const TrueMapViewSizeInfo&) = default;
 TrueMapViewSizeInfo& TrueMapViewSizeInfo::operator=(const TrueMapViewSizeInfo&) = default;
 
 
+#ifndef UNIX
 void TrueMapViewSizeInfo::onSize(const NFmiPoint& clientPixelSize, CDC* pDC, const NFmiPoint& viewGridSize, bool isTimeControlViewVisible, double drawObjectScaleFactor)
 {
 	clientAreaSizeInPixels_ = clientPixelSize;
@@ -31,6 +32,7 @@ void TrueMapViewSizeInfo::onSize(const NFmiPoint& clientPixelSize, CDC* pDC, con
 		CatLog::logMessage(message, CatLog::Severity::Trace, CatLog::Category::Operational);
 	}
 }
+#endif // UNIX
 
 void TrueMapViewSizeInfo::onViewGridSizeChange(const NFmiPoint& viewGridSize, bool isTimeControlViewVisible)
 {
@@ -43,9 +45,10 @@ void TrueMapViewSizeInfo::onViewGridSizeChange(const NFmiPoint& viewGridSize, bo
 	}
 }
 
+#ifndef UNIX
 void TrueMapViewSizeInfo::calculateViewSizeInfo(CDC* pDC, const NFmiPoint& viewGridSize, bool isTimeControlViewVisible, double drawObjectScaleFactor)
 {
-	// Päivitetään nämäkin perusarvot joka, jos joku on mennyt säätämään vaikka monitorin asetuksia, 
+	// Pï¿½ivitetï¿½ï¿½n nï¿½mï¿½kin perusarvot joka, jos joku on mennyt sï¿½ï¿½tï¿½mï¿½ï¿½n vaikka monitorin asetuksia,
 	// tai ollaan vaikka eri monitorilla.
 	if(pDC)
 	{
@@ -57,21 +60,23 @@ void TrueMapViewSizeInfo::calculateViewSizeInfo(CDC* pDC, const NFmiPoint& viewG
 	updatePixelsPerMilliMeterValues(pDC, drawObjectScaleFactor);
 	updateMapSizes(viewGridSize, isTimeControlViewVisible);
 }
+#endif // UNIX
 
 void TrueMapViewSizeInfo::updateMapSizes(const NFmiPoint &viewGridSize, bool isTimeControlViewVisible)
 {
-	// Mikä on aikakontrolli-ikkunan korkeus pikseleissä?
+	// Mikï¿½ on aikakontrolli-ikkunan korkeus pikseleissï¿½?
 	auto timeControlViewHeightInPixels = isTimeControlViewVisible ? calculateTimeControlViewHeightInPixels(pixelsPerMilliMeter_.X()) : 0;
 
 	// Laske koko karttaosion koko
 	totalMapSectionSizeInPixels_ = NFmiPoint(clientAreaSizeInPixels_.X(), clientAreaSizeInPixels_.Y() - timeControlViewHeightInPixels);
 	// Laske yhden karttaruudun koko
 	singleMapSizeInPixels_ = NFmiPoint(totalMapSectionSizeInPixels_.X() / viewGridSize.X(), totalMapSectionSizeInPixels_.Y() / viewGridSize.Y());
-	// Laske yhden karttaruudun koko millimetreissä
+	// Laske yhden karttaruudun koko millimetreissï¿½
 	singleMapSizeInMM_ = NFmiPoint(singleMapSizeInPixels_.X() / pixelsPerMilliMeter_.X(), singleMapSizeInPixels_.Y() / pixelsPerMilliMeter_.Y());
 }
 
 
+#ifndef UNIX
 void TrueMapViewSizeInfo::updatePixelsPerMilliMeterValues(CDC* pDC, double drawObjectScaleFactor)
 {
 	pixelsPerMilliMeter_.X(monitorSizeInPixels_.X() / monitorSizeInMilliMeters_.X());
@@ -87,10 +92,11 @@ void TrueMapViewSizeInfo::updatePixelsPerMilliMeterValues(CDC* pDC, double drawO
 		logicalPixelsPerMilliMeter_.Y((logpixY / inchToMillimeterConversion) * drawObjectScaleFactor);
 	}
 }
+#endif // UNIX
 
 double TrueMapViewSizeInfo::calculateTimeControlViewHeightInPixels(double thePixelsPerMilliMeterX)
 {
 	NFmiPoint fontSizeInPixels = CtrlViewUtils::CalcTimeScaleFontSizeInPixels(thePixelsPerMilliMeterX);
-	// Kerrotaan noin tekstirivien lukumäärällä
+	// Kerrotaan noin tekstirivien lukumï¿½ï¿½rï¿½llï¿½
 	return fontSizeInPixels.X() * 3.5;
 }

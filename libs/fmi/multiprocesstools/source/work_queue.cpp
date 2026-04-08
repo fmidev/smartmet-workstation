@@ -1,5 +1,6 @@
 
 #include "work_queue.h"
+#include <iterator>
 
 namespace
 {

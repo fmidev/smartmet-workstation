@@ -137,7 +137,8 @@ namespace CtrlViewUtils
         if(hasActualDataWithName)
         {
             identifier += "'";
-            identifier += ::makeParameterName(ctrlView->DrawParam());
+            auto drawParam = ctrlView->DrawParam();
+            identifier += ::makeParameterName(drawParam);
             identifier += "' ";
         }
 

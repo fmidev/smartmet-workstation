@@ -1130,7 +1130,7 @@ NFmiDataMatrix<float> NFmiLocalAreaMinMaxMask::CalculateLocalMinMaxMatrix()
         // launch a task asynchronously
         results.emplace_back(std::async(std::launch::async,
                                         ::CalculateLocalExtremesFromGivenSubGrid,
-                                        infos[index],
+                                        std::ref(infos[index]),
                                         boundaryVector[index],
                                         itsLocalAreaSearchRangeInKm,
                                         itsTime,

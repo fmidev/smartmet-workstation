@@ -7,6 +7,16 @@
 namespace SmartMetDataUtilities {
     namespace GridUtil
     {
+        // Forward declarations for use within anonymous namespace below
+        template<typename Grid>
+        inline bool setGridToLatLonPoint(Grid& grid, const NFmiPoint &latLonPoint);
+
+        template<typename Grid>
+        inline bool setGridToPoint(Grid& grid, const NFmiPoint &gridPoint);
+
+        template<typename Grid>
+        inline NFmiLocation mapPointToSurface(const Grid &grid, const NFmiPoint &point);
+
         namespace
         {
             template<typename Grid>

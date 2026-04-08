@@ -42,6 +42,7 @@
 #include <newbase/NFmiSimpleCondition.h>
 
 #include <stdexcept>
+#include <thread>
 
 #ifdef _MSC_VER
 #pragma warning( \
@@ -2570,7 +2571,7 @@ void NFmiSmartToolModifier::DoFinalAreaMaskInitializations(
 
 // Simple-condition tapauksessa pitää tietää ovatko annetut maski-parametrit vertikaali dataa vai
 // ei. Tehdään päätelmä käytetyn datan ja sen perusteella että onko erityistä leveliä valittuna.
-static bool UsesVerticalData(boost::shared_ptr<NFmiFastQueryInfo> &usedBaseInfo,
+static bool UsesVerticalData(const boost::shared_ptr<NFmiFastQueryInfo> &usedBaseInfo,
                              const NFmiLevel *usedLevel)
 {
   if (usedBaseInfo)
@@ -2588,8 +2589,9 @@ void NFmiSmartToolModifier::DoSimpleConditionInitialization(
     auto simpleConditionInfo = theAreaMaskInfo.SimpleConditionInfo();
     if (simpleConditionInfo)
     {
-      areaMask->SimpleCondition(CreateSimpleCondition(
-          simpleConditionInfo, ::UsesVerticalData(areaMask->Info(), theAreaMaskInfo.GetLevel())));
+      auto simpleCondition = CreateSimpleCondition(
+          simpleConditionInfo, ::UsesVerticalData(areaMask->Info(), theAreaMaskInfo.GetLevel()));
+      areaMask->SimpleCondition(simpleCondition);
     }
   }
 }
@@ -2608,7 +2610,7 @@ boost::shared_ptr<NFmiAreaMask> NFmiSmartToolModifier::CreateSimpleConditionArea
 }
 
 boost::shared_ptr<NFmiSimpleConditionPart> NFmiSmartToolModifier::CreateSimpleConditionPart(
-    boost::shared_ptr<NFmiSimpleConditionPartInfo> &theSimpleConditionPartInfo,
+    const boost::shared_ptr<NFmiSimpleConditionPartInfo> &theSimpleConditionPartInfo,
     bool usesVerticalData)
 {
   auto areaMask1 =
@@ -2624,7 +2626,7 @@ boost::shared_ptr<NFmiSimpleConditionPart> NFmiSmartToolModifier::CreateSimpleCo
 }
 
 boost::shared_ptr<NFmiSingleCondition> NFmiSmartToolModifier::CreateSingleCondition(
-    boost::shared_ptr<NFmiSingleConditionInfo> &theSingleConditionInfo, bool usesVerticalData)
+    const boost::shared_ptr<NFmiSingleConditionInfo> &theSingleConditionInfo, bool usesVerticalData)
 {
   auto part1 = CreateSimpleConditionPart(theSingleConditionInfo->Part1(), usesVerticalData);
   auto part2 = CreateSimpleConditionPart(theSingleConditionInfo->Part2(), usesVerticalData);
@@ -2644,7 +2646,7 @@ boost::shared_ptr<NFmiSingleCondition> NFmiSmartToolModifier::CreateSingleCondit
 
 // Oletus: theSimpleCondition pointer on jo tarkastettu, ettei se ole nullptr
 boost::shared_ptr<NFmiSimpleCondition> NFmiSmartToolModifier::CreateSimpleCondition(
-    boost::shared_ptr<NFmiSimpleConditionInfo> &theSimpleConditionInfo, bool usesVerticalData)
+    const boost::shared_ptr<NFmiSimpleConditionInfo> &theSimpleConditionInfo, bool usesVerticalData)
 {
   auto singlecondition1 =
       CreateSingleCondition(theSimpleConditionInfo->Condition1(), usesVerticalData);
@@ -3270,7 +3272,7 @@ const std::string &NFmiSmartToolModifier::GetStrippedMacroText() const
   return itsSmartToolIntepreter->GetStrippedMacroText();
 }
 
-static unsigned long GetDataGridSize(boost::shared_ptr<NFmiFastQueryInfo> &data)
+static unsigned long GetDataGridSize(const boost::shared_ptr<NFmiFastQueryInfo> &data)
 {
   if (data && data->IsGrid())
   {
@@ -3280,7 +3282,7 @@ static unsigned long GetDataGridSize(boost::shared_ptr<NFmiFastQueryInfo> &data)
 }
 
 static boost::shared_ptr<NFmiFastQueryInfo> GetSmallerGridData(
-    boost::shared_ptr<NFmiFastQueryInfo> &data1, boost::shared_ptr<NFmiFastQueryInfo> &data2)
+    const boost::shared_ptr<NFmiFastQueryInfo> &data1, const boost::shared_ptr<NFmiFastQueryInfo> &data2)
 {
   if (::GetDataGridSize(data1) <= ::GetDataGridSize(data2))
   {
@@ -3291,11 +3293,11 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetSmallerGridData(
 
 static boost::shared_ptr<NFmiFastQueryInfo> GetOptimalResolutionMacroParamData(
     bool useSpecialResolution,
-    boost::shared_ptr<NFmiFastQueryInfo> &resolutionMacroParamData,
-    boost::shared_ptr<NFmiFastQueryInfo> &macroParamData,
-    boost::shared_ptr<NFmiFastQueryInfo> &optimizedVisualizationMacroParamData,
+    const boost::shared_ptr<NFmiFastQueryInfo> &resolutionMacroParamData,
+    const boost::shared_ptr<NFmiFastQueryInfo> &macroParamData,
+    const boost::shared_ptr<NFmiFastQueryInfo> &optimizedVisualizationMacroParamData,
     bool useCalculationPoints,
-    boost::shared_ptr<NFmiFastQueryInfo> &possibleFixedBaseMacroParamData)
+    const boost::shared_ptr<NFmiFastQueryInfo> &possibleFixedBaseMacroParamData)
 {
   if (!NFmiSmartToolModifier::UseVisualizationOptimazation() || useCalculationPoints)
   {

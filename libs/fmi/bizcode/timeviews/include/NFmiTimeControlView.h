@@ -126,7 +126,7 @@ public:
 
     NFmiTimeControlView (int theMapViewDescTopIndex, const NFmiRect & theRect
 						,NFmiToolBox * theToolBox
-						,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+						,boost::shared_ptr<NFmiDrawParam> theDrawParam
 						,bool theShowResolutionChangerBox
 						,bool theDrawViewInMouseMove
 						,bool theShowEditTimeHandles
@@ -276,7 +276,7 @@ class NFmiTimeSerialTimeControlView : public NFmiTimeControlView
 public:
     NFmiTimeSerialTimeControlView(int theMapViewDescTopIndex,const NFmiRect & theRect
 								,NFmiToolBox * theToolBox
-								,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+								,boost::shared_ptr<NFmiDrawParam> theDrawParam
 								,bool theShowResolutionChangerBox
 								,bool theDrawViewInMouseMove
 								,bool theShowEditTimeHandles
@@ -301,7 +301,7 @@ class NFmiTrajectoryTimeControlView : public NFmiTimeControlView
 public:
     NFmiTrajectoryTimeControlView(int theMapViewDescTopIndex, const NFmiRect & theRect
 								,NFmiToolBox * theToolBox
-								,boost::shared_ptr<NFmiDrawParam> &theDrawParam);
+								,boost::shared_ptr<NFmiDrawParam> theDrawParam);
    ~NFmiTrajectoryTimeControlView(void);
 
 

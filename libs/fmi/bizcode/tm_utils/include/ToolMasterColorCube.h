@@ -2,6 +2,9 @@
 
 #include "NFmiColor.h"
 #include "matrix3d.h"
+#ifdef UNIX
+#include "linux_compat.h"
+#endif
 
 namespace ToolMasterColorCube 
 {
@@ -40,5 +43,17 @@ namespace ToolMasterColorCube
     {return 0;}
     inline NFmiColor ColorIndexToRgb(int theColorIndex)
     { return NFmiColor(); }
+    inline int ColorCubeColorChannelSize()
+    { return 256; }
+    inline int SpecialColorCountInColorTableStart()
+    { return 0; }
+    inline NFmiColor ColorToActualCubeColor(const NFmiColor& color)
+    { return color; }
+    inline void SetupSpecialColorsForActiveColorTable()
+    {}
+    inline bool IsColorFullyOpaque(const NFmiColor& /*color*/)
+    { return true; }
+    inline bool IsColorFullyTransparent(const NFmiColor& /*color*/)
+    { return false; }
 #endif // DISABLE_UNIRAS_TOOLMASTER
 }

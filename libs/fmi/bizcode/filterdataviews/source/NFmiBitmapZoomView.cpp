@@ -2,7 +2,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 #ifdef _MSC_VER
-#pragma warning(disable : 4786) // poistaa n kpl VC++ kääntäjän varoitusta (liian pitkä nimi >255 merkkiä joka johtuu 'puretuista' STL-template nimistä)
+#pragma warning(disable : 4786) // poistaa n kpl VC++ kï¿½ï¿½ntï¿½jï¿½n varoitusta (liian pitkï¿½ nimi >255 merkkiï¿½ joka johtuu 'puretuista' STL-template nimistï¿½)
 #endif
 
 #include "NFmiBitmapZoomView.h"
@@ -13,6 +13,7 @@
 
 void NFmiBitmapZoomView::Draw(NFmiToolBox * theGTB)
 {
+#ifndef UNIX
 	if(theGTB)
 	{
         auto mapHandlerInterface = GetMapHandlerInterface();
@@ -21,12 +22,13 @@ void NFmiBitmapZoomView::Draw(NFmiToolBox * theGTB)
 		{
 			NFmiRect bitmapRect = mapHandlerInterface->TotalAbsolutRect();
 			CRect mfcRect;
-			itsToolBox->UpdateClientRect(); // poista tämä kun voit
+			itsToolBox->UpdateClientRect(); // poista tï¿½mï¿½ kun voit
 			itsToolBox->ConvertRect(GetFrame(), mfcRect);
 			Gdiplus::RectF destRect(static_cast<Gdiplus::REAL>(mfcRect.left), static_cast<Gdiplus::REAL>(mfcRect.top), static_cast<Gdiplus::REAL>(mfcRect.right), static_cast<Gdiplus::REAL>(mfcRect.bottom));
 			CtrlView::DrawBitmapToDC_4(theGTB->GetDC(), *aBitmap, bitmapRect, destRect, true);
 		}
 	}
+#endif
 	DrawConstAreaRects();
 	DrawZoomedAreaRect();
 }

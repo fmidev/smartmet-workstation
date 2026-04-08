@@ -1,13 +1,15 @@
 // XMLite.cpp: implementation of the XMLite class.
 //
 //////////////////////////////////////////////////////////////////////
+#ifndef UNIX
 #include "xmlliteutils/stdafx.h"
+#endif
 #include "xmlliteutils/XMLite.h"
 #include <iostream>
 #include <sstream>
 #include <string>
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && !defined(UNIX)
 #undef THIS_FILE
 static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
@@ -923,7 +925,7 @@ LPTSTR _tagXMLNode::Load( LPCTSTR pszXml, LPPARSEINFO pi /*= &piDefault*/ )
 					}
 				}
 				else	// Alone child Tag Loaded
-						// else ÇØ¾ßÇÏ´ÂÁö ¸»¾Æ¾ßÇÏ´ÂÁö ÀÇ½É°£´Ù.
+						// else ï¿½Ø¾ï¿½ï¿½Ï´ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Æ¾ï¿½ï¿½Ï´ï¿½ï¿½ï¿½ ï¿½Ç½É°ï¿½ï¿½ï¿½.
 				{
 					
 					//if( xml && this->value.IsEmpty() && *xml !=chXMLTagOpen )
@@ -1161,13 +1163,13 @@ CString _tagXMLNode::GetXML( LPDISP_OPT opt /*= &optDefault*/ )
 }
 
 //========================================================
-// ÇÔ¼ö¸í : GetText
-// ¼³  ¸í : ³ëµå ÇÏ³ª¸¦ ÅØ½ºÆ® ¹®ÀÚ¿­·Î ¹ÝÈ¯
-// ÀÎ  ÀÚ :
-// ¸®ÅÏ°ª : º¯È¯µÈ ¹®ÀÚ¿­
+// ï¿½Ô¼ï¿½ï¿½ï¿½ : GetText
+// ï¿½ï¿½  ï¿½ï¿½ : ï¿½ï¿½ï¿½ ï¿½Ï³ï¿½ï¿½ï¿½ ï¿½Ø½ï¿½Æ® ï¿½ï¿½ï¿½Ú¿ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
+// ï¿½ï¿½  ï¿½ï¿½ :
+// ï¿½ï¿½ï¿½Ï°ï¿½ : ï¿½ï¿½È¯ï¿½ï¿½ ï¿½ï¿½ï¿½Ú¿ï¿½
 //--------------------------------------------------------
-// ÀÛ¼ºÀÚ   ÀÛ¼ºÀÏ                 ÀÛ¼ºÀÌÀ¯
-// Á¶°æ¹Î   2004-06-15
+// ï¿½Û¼ï¿½ï¿½ï¿½   ï¿½Û¼ï¿½ï¿½ï¿½                 ï¿½Û¼ï¿½ï¿½ï¿½ï¿½ï¿½
+// ï¿½ï¿½ï¿½ï¿½ï¿½   2004-06-15
 //========================================================
 CString _tagXMLNode::GetText( LPDISP_OPT opt /*= &optDefault*/ )
 {

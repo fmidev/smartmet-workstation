@@ -274,6 +274,9 @@ JulianTime SolNoon(const local_date_time& ldt, double lon_e)
 
 #ifdef _MSC_VER
 #define isnan _isnan
+#else
+#include <cmath>
+using std::isnan;
 #endif
 
 /*

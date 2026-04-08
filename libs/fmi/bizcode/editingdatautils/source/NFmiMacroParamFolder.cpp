@@ -1,10 +1,10 @@
 #include "NFmiMacroParamFolder.h"
 #include "NFmiMacroParam.h"
-#include "NFmiMacroParamFunctions.h"
+#include "NFmiMacroParamfunctions.h"
 #include "NFmiFileSystem.h"
 #include "NFmiDrawParam.h"
 #include "NFmiFileString.h"
-#include <boost\algorithm\string.hpp>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 

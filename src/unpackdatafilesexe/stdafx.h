@@ -5,7 +5,9 @@
 
 #pragma once
 
-#ifndef UNIX
+#ifdef UNIX
+#include "linux_compat.h"
+#else
 #include "targetver.h"
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers

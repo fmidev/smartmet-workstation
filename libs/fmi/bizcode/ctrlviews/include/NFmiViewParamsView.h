@@ -100,7 +100,9 @@ class NFmiViewParamsView : public NFmiParamCommandView
     void DrawMouseDraggingBackground();
 	void DrawBackgroundMapLayerText(int &zeroBasedRowIndexInOut, const NFmiRect &parameterRowRect);
 	std::string MakeMacroParamTooltipText(const boost::shared_ptr<NFmiDrawParam>& drawParam, const std::string& paramStr);
+#ifndef DISABLE_CPPRESTSDK
 	std::string MakeWmsTooltipText(const boost::shared_ptr<NFmiDrawParam>& drawParam, const std::string &paramStr);
+#endif
 private:
    double itsButtonSizeInMM_x; // paino nappuloiden koko millimetreiss� x-suunnassa
    double itsButtonSizeInMM_y; // paino nappuloiden koko millimetreiss� y-suunnassa

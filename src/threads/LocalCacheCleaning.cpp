@@ -18,20 +18,20 @@ static char THIS_FILE[] = __FILE__;
 
 namespace
 {
-    // Jos tämä on false, se estää datan latauksen cacheen ja hakemistojen siivouksen
+    // Jos tï¿½mï¿½ on false, se estï¿½ï¿½ datan latauksen cacheen ja hakemistojen siivouksen
     bool gLoadDataAtStartUp = true;
-    // Onko SmartMet ns. operatiivisessa moodissa, eli silloin se automaattisesti latailee uusia datoja cacheen ja silloin myös vanhoja pitää siivoilla pois.
-    // Joskus halutaan että uutta dataa ei lueta eikä vanhoja siivota, silloin tämä moodi pitää laittaa pois päältä.
-    // Myös jos ollaan ns. no-data/tiputus moodissa, tällöin ei saa tuhota vanhoja tiedostoja.
+    // Onko SmartMet ns. operatiivisessa moodissa, eli silloin se automaattisesti latailee uusia datoja cacheen ja silloin myï¿½s vanhoja pitï¿½ï¿½ siivoilla pois.
+    // Joskus halutaan ettï¿½ uutta dataa ei lueta eikï¿½ vanhoja siivota, silloin tï¿½mï¿½ moodi pitï¿½ï¿½ laittaa pois pï¿½ï¿½ltï¿½.
+    // Myï¿½s jos ollaan ns. no-data/tiputus moodissa, tï¿½llï¿½in ei saa tuhota vanhoja tiedostoja.
     bool gAutoLoadNewCacheDataMode = true;
-    // Tähän otetaan GeneralDocista siivousintervalli, oletus 0.16 [h] eli n. 10 minuutin välein.
+    // Tï¿½hï¿½n otetaan GeneralDocista siivousintervalli, oletus 0.16 [h] eli n. 10 minuutin vï¿½lein.
     double gCacheCleaningIntervalInHours = 0.16;
 
     NFmiMilliSecondTimer gLocalCacheCleanerTimer;
-    // Kun ohjelma halutaan sulkea (käyttäjä), tähän tulee tieto asiasta
+    // Kun ohjelma halutaan sulkea (kï¿½yttï¿½jï¿½), tï¿½hï¿½n tulee tieto asiasta
     std::shared_ptr<NFmiStopFunctor> gStopFunctorPtr;
 
-    // Tämä heittää erikoispoikkeuksen, jos käyttäjä on halunnut sulkea ohjelman.
+    // Tï¿½mï¿½ heittï¿½ï¿½ erikoispoikkeuksen, jos kï¿½yttï¿½jï¿½ on halunnut sulkea ohjelman.
     void CheckIfProgramWantsToStop()
     {
         NFmiQueryDataUtil::CheckIfStopped(gStopFunctorPtr.get());
@@ -69,7 +69,7 @@ namespace
         }
         catch(...)
         {
-            // ei tehdä toistaiseksi mitään...
+            // ei tehdï¿½ toistaiseksi mitï¿½ï¿½n...
         }
     }
 
@@ -86,7 +86,7 @@ namespace
         }
         catch(...)
         {
-            // ei tehdä toistaiseksi mitään...
+            // ei tehdï¿½ toistaiseksi mitï¿½ï¿½n...
         }
     }
 
@@ -95,7 +95,7 @@ namespace
         NFmiInfoData::Type dataType = helpDataInfo.DataType();
         if(NFmiInfoData::IsLatestOnlyBasedData(dataType))
         {
-            return 1; // näitä datatyyppeja on turhaa säilöä 1 enempää
+            return 1; // nï¿½itï¿½ datatyyppeja on turhaa sï¿½ilï¿½ï¿½ 1 enempï¿½ï¿½
         }
         else
         {
@@ -108,7 +108,7 @@ namespace
     }
 
     // Siivotaan combine-data cachet.
-    // Nämä olivat omissa alihakemistoissaan ja niille oli omat keep-files määrät.
+    // Nï¿½mï¿½ olivat omissa alihakemistoissaan ja niille oli omat keep-files mï¿½ï¿½rï¿½t.
     // siivotaan kuitenkin jokaista ali-hakemistoa yhteisen keepMaxDays:in mukaan.
     void CleanCombineDataCache(NFmiHelpDataInfoSystem& theHelpDataSystem)
     {
@@ -122,9 +122,9 @@ namespace
                 double keepDays = theHelpDataSystem.CacheFileKeepMaxDays();
                 if(keepDays > 0)
                 {
-                    NFmiFileString usedFileFilterStr = helpData.UsedFileNameFilter(theHelpDataSystem);
-                    std::string cacheDir = usedFileFilterStr.Device();
-                    cacheDir += usedFileFilterStr.Path();
+                    NFmiFileString usedFileFilterStr(NFmiString(helpData.UsedFileNameFilter(theHelpDataSystem)));
+                    std::string cacheDir = usedFileFilterStr.Device().CharPtr();
+                    cacheDir += usedFileFilterStr.Path().CharPtr();
                     ::CleanDirectory(cacheDir, keepDays * 24);
                 }
                 ::CleanFilePattern(helpData.UsedFileNameFilter(theHelpDataSystem), helpData.CombineDataMaxTimeSteps() + 3);
@@ -132,22 +132,22 @@ namespace
         }
     }
 
-    // HUOM! siivouksessa ei tarkisteta onko jokin data käytössä vai ei (NFmiHelpDataInfo:n IsEnabled-metodi tarkistus), vanhoja tiedostoja ei 
-// jätetä levyille lojumaan, vaikka joku data on joskus otettu pois käytöstä.
+    // HUOM! siivouksessa ei tarkisteta onko jokin data kï¿½ytï¿½ssï¿½ vai ei (NFmiHelpDataInfo:n IsEnabled-metodi tarkistus), vanhoja tiedostoja ei 
+// jï¿½tetï¿½ levyille lojumaan, vaikka joku data on joskus otettu pois kï¿½ytï¿½stï¿½.
     void CleanCache(NFmiHelpDataInfoSystem& theHelpDataSystem)
     {
         CheckIfProgramWantsToStop();
-        // 1. siivotaan ensin pois kaikki yli halutun aikamääreen olevat tiedostot
+        // 1. siivotaan ensin pois kaikki yli halutun aikamï¿½ï¿½reen olevat tiedostot
         if(theHelpDataSystem.CacheFileKeepMaxDays() > 0)
             ::CleanDirectory(theHelpDataSystem.LocalDataLocalDirectory(), theHelpDataSystem.CacheFileKeepMaxDays() * 24);
-        // 2. siivotaan tmp-hakemistosta kaikki yli puoli tuntia vanhemmat tiedostot (jos ne eivät lukossa), oletetaan
-        // että yhden tiedoston kopiointi ei kestä yli puolta tuntia, vaan kyse on jostain virheestä.
+        // 2. siivotaan tmp-hakemistosta kaikki yli puoli tuntia vanhemmat tiedostot (jos ne eivï¿½t lukossa), oletetaan
+        // ettï¿½ yhden tiedoston kopiointi ei kestï¿½ yli puolta tuntia, vaan kyse on jostain virheestï¿½.
         CheckIfProgramWantsToStop();
         ::CleanDirectory(theHelpDataSystem.LocalDataTmpDirectory(), 0.5);
 
         auto& caseStudySystem = SmartMetDocumentInterface::GetSmartMetDocumentInterfaceImplementation()->CaseStudySystem();
 
-        // 3. siivotaan pois file-pattern -kohtaisesti ylimääräiset tiedostot n-kpl
+        // 3. siivotaan pois file-pattern -kohtaisesti ylimï¿½ï¿½rï¿½iset tiedostot n-kpl
         for(size_t i = 0; i < theHelpDataSystem.DynamicHelpDataInfos().size(); i++)
         {
             CheckIfProgramWantsToStop();
@@ -156,8 +156,8 @@ namespace
                 ::CleanFilePattern(helpDataInfo.UsedFileNameFilter(theHelpDataSystem), ::CalcMaxKeepFileCount(helpDataInfo, caseStudySystem));
         }
 
-        // HUOM! yhdistelmä datat pitää siivota tässä erillisillä asetuksilla ja 
-        // hieman eri lailla ja sitä varten on oma funktio.
+        // HUOM! yhdistelmï¿½ datat pitï¿½ï¿½ siivota tï¿½ssï¿½ erillisillï¿½ asetuksilla ja 
+        // hieman eri lailla ja sitï¿½ varten on oma funktio.
         ::CleanCombineDataCache(theHelpDataSystem);
     }
 

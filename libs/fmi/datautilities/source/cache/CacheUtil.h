@@ -16,14 +16,14 @@ namespace SmartMetDataUtilities
         decltype(auto) get(CacheT&& cache, const MapViewId& id, const NFmiArea& area, const NFmiGrid& originalGrid)
         {
             auto cacheSpecificKeys = createKeys<CacheT>(id, area, originalGrid);
-            return cache.get(std::move(cacheSpecificKeys));
+            return cache.get(cacheSpecificKeys);
         }
 
         template <typename CacheT, typename DataT>
         decltype(auto) put(CacheT&& cache, const MapViewId& id, const NFmiArea& area, DataT&& data, const NFmiGrid& originalGrid)
         {
             auto cacheSpecificKeys = createKeys<CacheT>(id, area, originalGrid);
-            cache.put(std::move(cacheSpecificKeys), std::forward<DataT>(data));
+            cache.put(cacheSpecificKeys, std::forward<DataT>(data));
         }
     }
 }

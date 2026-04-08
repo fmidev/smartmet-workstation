@@ -762,7 +762,7 @@ std::string &Trim(std::string &theString, char theChar)
  */
 // ----------------------------------------------------------------------
 
-std::string TrimAll(std::string &theString, bool replaceInsideNewlinesWithSpace)
+std::string TrimAll(const std::string &theString, bool replaceInsideNewlinesWithSpace)
 {
   std::string tmp(theString);
 
@@ -790,8 +790,7 @@ std::string TrimAll(std::string &theString, bool replaceInsideNewlinesWithSpace)
       result.push_back(i);
     }
   }
-  theString.swap(result);
-  return theString;
+  return result;
 }
 
 // ----------------------------------------------------------------------

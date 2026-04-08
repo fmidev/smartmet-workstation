@@ -4,7 +4,9 @@
 #include "cppback/error.h"
 #include "catlog/catlog.h"
 
+#include <chrono>
 #include <future>
+#include <thread>
 #include <type_traits>
 
 namespace cppback

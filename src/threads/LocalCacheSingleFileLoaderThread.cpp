@@ -1,6 +1,9 @@
 #ifndef UNIX
 #include "stdafx.h"
 #endif // UNIX
+#ifdef UNIX
+#include "linux_compat.h"
+#endif // UNIX
 #include "LocalCacheSingleFileLoaderThread.h"
 #include "NFmiCachedDataFileInfo.h"
 #include "NFmiHelpDataInfo.h"
@@ -22,21 +25,21 @@ static char THIS_FILE[] = __FILE__;
 
 namespace
 {
-    // Jos ohjelma halutaan lopettaa ulkoapäin, tälle gStopFunctorPtr:ille asetetaan tieto siitä CloseNow funktion kautta.
+    // Jos ohjelma halutaan lopettaa ulkoapï¿½in, tï¿½lle gStopFunctorPtr:ille asetetaan tieto siitï¿½ CloseNow funktion kautta.
     std::shared_ptr<NFmiStopFunctor> gStopFunctorPtr;
-    // Jos jotain datoja ei löydy serveriltä, halutaan siitä raportoida eri paikkoihin, 
+    // Jos jotain datoja ei lï¿½ydy serveriltï¿½, halutaan siitï¿½ raportoida eri paikkoihin, 
     // paremmat kuvaukset QueryDataToLocalCacheLoaderThread:in vastaavan muuttujan kohdalla.
     std::shared_ptr<NFmiMissingDataOnServerReporter> gMissingDataOnServerReporterPtr;
     // Tuetut pakkausformaatit
     const std::vector<std::string> g_ZippedFileExtensions{ ".7z", ".zip", ".bz2" }; //, ".gz" , ".tar" , ".xz" , ".wim" };
-    // Jos tiedosto on isompi kuin tässä oleva raja, sitä ei kopioida ollenkaan
+    // Jos tiedosto on isompi kuin tï¿½ssï¿½ oleva raja, sitï¿½ ei kopioida ollenkaan
     double gMaxDataFileSizeInMB;
-    // Tämä pitää kirjaa tiedostoista, joita on jo kertaalleen yritetty ladata, jotta voidaan
-    // välttää tietynlaisten ongelmatiedostojen uudelleen ja uudelleen lataaminen.
+    // Tï¿½mï¿½ pitï¿½ï¿½ kirjaa tiedostoista, joita on jo kertaalleen yritetty ladata, jotta voidaan
+    // vï¿½lttï¿½ï¿½ tietynlaisten ongelmatiedostojen uudelleen ja uudelleen lataaminen.
     NFmiOnceLoadedDataFiles gOnceLoadedDataFiles;
-    // Tämän avulla CopyFileEx-funktio voidaan keskeyttää kun sen arvo muutetaan TRUE:ksi.
+    // Tï¿½mï¿½n avulla CopyFileEx-funktio voidaan keskeyttï¿½ï¿½ kun sen arvo muutetaan TRUE:ksi.
     BOOL gCopyFileExCancel = FALSE;
-    // SmartMetin binääri-hakemistoa tarvitaan ainakin kun tehdään tiedostojen purkua erillisessä prosessissa (purku ohjelma sijaitsee siellä missä smartmetin exe)
+    // SmartMetin binï¿½ï¿½ri-hakemistoa tarvitaan ainakin kun tehdï¿½ï¿½n tiedostojen purkua erillisessï¿½ prosessissa (purku ohjelma sijaitsee siellï¿½ missï¿½ smartmetin exe)
     std::string gSmartMetBinDirectory;
     // SmartMetin Working-hakemistoa tarvitaan kun rakennetaan polkua 7-zip ohjelmalle (purku ohjelma sijaitsee sen utils-hakemistossa)
     std::string gSmartMetWorkingDirectory;
@@ -44,13 +47,13 @@ namespace
     const double gKiloByte = 1024;
     const double gMegaByte = gKiloByte * gKiloByte;
 
-    // Tämä heittää erikoispoikkeuksen, jos käyttäjä on halunnut sulkea ohjelman.
+    // Tï¿½mï¿½ heittï¿½ï¿½ erikoispoikkeuksen, jos kï¿½yttï¿½jï¿½ on halunnut sulkea ohjelman.
     void CheckIfProgramWantsToStop()
     {
         NFmiQueryDataUtil::CheckIfStopped(gStopFunctorPtr.get());
     }
 
-    // Kokeillaan eri pakkaus päätteitä prioriteetti järjestyksessä, heti kun löytyy jotain jollain päätteellä, etsintä loppuu.
+    // Kokeillaan eri pakkaus pï¿½ï¿½tteitï¿½ prioriteetti jï¿½rjestyksessï¿½, heti kun lï¿½ytyy jotain jollain pï¿½ï¿½tteellï¿½, etsintï¿½ loppuu.
     std::string TryToFindNewestPackedFileName(const std::string& theFileFilter)
     {
         for(auto& zipExtension : g_ZippedFileExtensions)
@@ -62,9 +65,9 @@ namespace
         return "";
     }
 
-    // Etsii uusimman tiedoston, joka vastaa annettua fileFilteriä ja löytyy server puolelta 
+    // Etsii uusimman tiedoston, joka vastaa annettua fileFilteriï¿½ ja lï¿½ytyy server puolelta 
     // ja palauttaa sen koko nimen polkuineen.
-    // Tutkii ensin löytyykö tiedostosta 7z, zip tai bz2-päätteistä versiota, koska pakatut tiedostot ovat 
+    // Tutkii ensin lï¿½ytyykï¿½ tiedostosta 7z, zip tai bz2-pï¿½ï¿½tteistï¿½ versiota, koska pakatut tiedostot ovat 
     // prioriteetissa ensin. Jos oli pakattu tiedosto, asetetaan pair:in second-arvoon true, 
     // muuten se on false.
     void GetNewestFileInfo(const std::string& theFileFilter, NFmiCachedDataFileInfo& theCachedDataFileInfoOut)
@@ -85,34 +88,34 @@ namespace
 
     NFmiFileString MakeFileStringWithoutCompressionFileExtension(const NFmiCachedDataFileInfo& theCachedDataFileInfo)
     {
-        NFmiFileString fileStr(theCachedDataFileInfo.itsTotalServerFileName);
+        NFmiFileString fileStr(NFmiString(theCachedDataFileInfo.itsTotalServerFileName));
         if(theCachedDataFileInfo.fFilePacked)
-            fileStr = fileStr.Device() + fileStr.Path() + fileStr.Header(); // pakatun tiedoston tapauksessa jätetaan pois tiedoston viimeinen extensio
+            fileStr = fileStr.Device() + fileStr.Path() + fileStr.Header(); // pakatun tiedoston tapauksessa jï¿½tetaan pois tiedoston viimeinen extensio
         return fileStr;
     }
 
     std::string MakeFinalTargetFileName(const NFmiCachedDataFileInfo& theCachedDataFileInfo, const NFmiHelpDataInfo& theDataInfo, const NFmiHelpDataInfoSystem& theHelpDataSystem)
     {
-        // datatiedoston target polku+nimi saadaan käyttämällä NFmiHelpDataInfo:n UsedFileFilter:in polkua ja source-filen nimi osaa
+        // datatiedoston target polku+nimi saadaan kï¿½yttï¿½mï¿½llï¿½ NFmiHelpDataInfo:n UsedFileFilter:in polkua ja source-filen nimi osaa
         NFmiFileString fileStr = ::MakeFileStringWithoutCompressionFileExtension(theCachedDataFileInfo);
         NFmiString fileNameStr = fileStr.FileName();
-        NFmiFileString usedFileFilterStr = theDataInfo.UsedFileNameFilter(theHelpDataSystem);
-        std::string totalCacheFileName = usedFileFilterStr.Device();
-        totalCacheFileName += usedFileFilterStr.Path();
-        totalCacheFileName += fileNameStr;
+        NFmiFileString usedFileFilterStr(NFmiString(theDataInfo.UsedFileNameFilter(theHelpDataSystem)));
+        std::string totalCacheFileName = usedFileFilterStr.Device().CharPtr();
+        totalCacheFileName += usedFileFilterStr.Path().CharPtr();
+        totalCacheFileName += fileNameStr.CharPtr();
         return totalCacheFileName;
     }
 
     std::string MakeFinalTmpFileName(const NFmiCachedDataFileInfo& theCachedDataFileInfo, const NFmiHelpDataInfo& theDataInfo, const NFmiHelpDataInfoSystem& theHelpDataSystem, bool fGetPackedName)
     {
-        NFmiFileString fileStr = fGetPackedName ? NFmiFileString(theCachedDataFileInfo.itsTotalServerFileName) : ::MakeFileStringWithoutCompressionFileExtension(theCachedDataFileInfo);
+        NFmiFileString fileStr = fGetPackedName ? NFmiFileString(NFmiString(theCachedDataFileInfo.itsTotalServerFileName)) : ::MakeFileStringWithoutCompressionFileExtension(theCachedDataFileInfo);
         NFmiString fileNameStr = fileStr.FileName();
         std::string totalCacheTmpFileName = theHelpDataSystem.LocalDataTmpDirectory();
         if(!theCachedDataFileInfo.fFilePacked)
         {
             // Etu TMP-liite laitetaan vain ei pakattuihin datoihin.
-            // SYY: Jostain syystä bzip2 tyyppi puretaan niin että purettuun datatiedostoon tulee mukaan pakatun tiedoston etiliite, jos purkaus tehdään 7-zip ohjelmalla.
-            // Jos purku tehdään zip tai 7zip pakattuihin datoihin, etuliitettä ei tule purettuun tiedostoon (this behaviour really sucks!!!).
+            // SYY: Jostain syystï¿½ bzip2 tyyppi puretaan niin ettï¿½ purettuun datatiedostoon tulee mukaan pakatun tiedoston etiliite, jos purkaus tehdï¿½ï¿½n 7-zip ohjelmalla.
+            // Jos purku tehdï¿½ï¿½n zip tai 7zip pakattuihin datoihin, etuliitettï¿½ ei tule purettuun tiedostoon (this behaviour really sucks!!!).
             totalCacheTmpFileName += theHelpDataSystem.CacheTmpFileNameFix() + "_"; // laitetaan tmp-nimi fixi tiedosto nimen alkuun ja loppuun
         }
         totalCacheTmpFileName += fileNameStr;
@@ -121,14 +124,14 @@ namespace
         return totalCacheTmpFileName;
     }
 
-    // Tarkistetaan tmp-tiedoston tila. Jos sitä ei ole, voidaan kopiointiproseduuria jatkaa.
-    // Jos se on olemassa, mutta sen voi poistaa (jäänyt virhetilanteessa ja siinä ei ole nyt mikään kiinni?), voidaan jatkaa.
-    // Jos sitä ei voi poistaa, ei jatketa eteenpäin, koska joku muu threadi tai prosessi on luultavasti tekemässä sille jotain.
+    // Tarkistetaan tmp-tiedoston tila. Jos sitï¿½ ei ole, voidaan kopiointiproseduuria jatkaa.
+    // Jos se on olemassa, mutta sen voi poistaa (jï¿½ï¿½nyt virhetilanteessa ja siinï¿½ ei ole nyt mikï¿½ï¿½n kiinni?), voidaan jatkaa.
+    // Jos sitï¿½ ei voi poistaa, ei jatketa eteenpï¿½in, koska joku muu threadi tai prosessi on luultavasti tekemï¿½ssï¿½ sille jotain.
     CFmiCopyingStatus CheckTmpFileStatus(const std::string& theTmpFileName)
     {
         if(NFmiFileSystem::FileExists(theTmpFileName))
         {
-            // kokeillaan, voiko tmp-tiedoston deletoida, jos voi (eli kukaan ei ole sinä kiinni), se on jäänyt jostain virhetilanteesta ja se voidaan deletoida ja aloittaa kopio uudestaan
+            // kokeillaan, voiko tmp-tiedoston deletoida, jos voi (eli kukaan ei ole sinï¿½ kiinni), se on jï¿½ï¿½nyt jostain virhetilanteesta ja se voidaan deletoida ja aloittaa kopio uudestaan
             if(NFmiFileSystem::RemoveFile(theTmpFileName) == false)
                 return kFmiNoCopyNeeded;
         }
@@ -139,19 +142,19 @@ namespace
     {
         if(fileSizeInMB <= 0.1)
         {
-            std::string str = NFmiValueString::GetStringWithMaxDecimalsSmartWay(fileSizeInMB * gKiloByte, 1);
+            std::string str = NFmiValueString::GetStringWithMaxDecimalsSmartWay(fileSizeInMB * gKiloByte, 1).CharPtr();
             str += " kB";
             return str;
         }
 
         if(fileSizeInMB >= 900)
         {
-            std::string str = NFmiValueString::GetStringWithMaxDecimalsSmartWay(fileSizeInMB / gKiloByte, 2);
+            std::string str = NFmiValueString::GetStringWithMaxDecimalsSmartWay(fileSizeInMB / gKiloByte, 2).CharPtr();
             str += " GB";
             return str;
         }
 
-        std::string str = NFmiValueString::GetStringWithMaxDecimalsSmartWay(fileSizeInMB, 1);
+        std::string str = NFmiValueString::GetStringWithMaxDecimalsSmartWay(fileSizeInMB, 1).CharPtr();
         str += " MB";
         return str;
     }
@@ -177,8 +180,8 @@ namespace
         std::string reportStr = std::string("Loading ") + dataTypeStr + " file from server(";
         reportStr += ::MakeFileSizeString(cachedDataFileInfo.itsFileSizeInMB);
         reportStr += "):\n";
-        NFmiFileString fileStr(cachedDataFileInfo.itsTotalCacheFileName);
-        reportStr += fileStr.FileName();
+        NFmiFileString fileStr(NFmiString(cachedDataFileInfo.itsTotalCacheFileName));
+        reportStr += fileStr.FileName().CharPtr();
         return reportStr;
     }
 
@@ -186,9 +189,10 @@ namespace
     {
         if(theDataInfo.IsCombineData())
         { // partial-datoille on varmistettava hakemisto, koska ne laitetaan cachessakin eri hakemistoihin
-            NFmiFileString fileStr(theTotalCacheFileName);
-            std::string partialDataDirectory = fileStr.Device();
-            partialDataDirectory += fileStr.Path();
+            NFmiString tmpStr(theTotalCacheFileName);
+            NFmiFileString fileStr(tmpStr);
+            std::string partialDataDirectory = fileStr.Device().CharPtr();
+            partialDataDirectory += fileStr.Path().CharPtr();
             NFmiFileSystem::CreateDirectory(partialDataDirectory);
         }
     }
@@ -220,11 +224,12 @@ namespace
         CatLog::logMessage(logStr, CatLog::Severity::Error, CatLog::Category::Data);
     }
 
-    // Katso miten haluttu komentorivi pitää rakentaa smartmet_workstation\src\unpackdatafilesexe\UnpackSmartMetDataFilesMain.cpp
+#ifndef UNIX
+    // Katso miten haluttu komentorivi pitï¿½ï¿½ rakentaa smartmet_workstation\src\unpackdatafilesexe\UnpackSmartMetDataFilesMain.cpp
     // tiedoston main -funktion alusta, kun virhetilanteessa laitetaan ohjeita cout:iin.
     std::string MakeUnpackCommand(NFmiCachedDataFileInfo& theCachedDataFileInfo)
     {
-        // HUOM! laitetaan kaikki käskyn osat lainausmerkkeihin, jos polut sattuisivat sisältämään spaceja
+        // HUOM! laitetaan kaikki kï¿½skyn osat lainausmerkkeihin, jos polut sattuisivat sisï¿½ltï¿½mï¿½ï¿½n spaceja
         std::string commandStr("\"");
         // 1. ajettava exe
         commandStr += gSmartMetBinDirectory;
@@ -233,13 +238,13 @@ namespace
         // 2. pakattu tmp tiedosto
         commandStr += theCachedDataFileInfo.itsTotalCacheTmpPackedFileName;
         commandStr += "\" \"";
-        // 3. purettu tiedosto siirrettynä lokaali cacheen
+        // 3. purettu tiedosto siirrettynï¿½ lokaali cacheen
         commandStr += theCachedDataFileInfo.itsTotalCacheFileName;
         // 4. pakattu tiedosto deletoidaan = 1
         commandStr += "\" 1 ";
-        // 5. käytetty 7-zip exe polku
+        // 5. kï¿½ytetty 7-zip exe polku
         commandStr += CFmiProcessHelpers::Make7zipExePath(gSmartMetWorkingDirectory);
-        // 6. käytetty lokitiedosto
+        // 6. kï¿½ytetty lokitiedosto
         commandStr += " \"";
         commandStr += LocalCacheSingleFileLoaderThread::MakeDailyUnpackLogFilePath();
         commandStr += "\"";
@@ -254,7 +259,7 @@ namespace
             // 1.1. Puretaan 7z, zip tai bz2 pakattu tiedosto
             try
             {
-                // Tehdään purku aina omassa erillisessä prosessissa, koska siihen pitää käyttää erillista 7z.exe ohjelmaa ja purku voi kestaa minuutteja
+                // Tehdï¿½ï¿½n purku aina omassa erillisessï¿½ prosessissa, koska siihen pitï¿½ï¿½ kï¿½yttï¿½ï¿½ erillista 7z.exe ohjelmaa ja purku voi kestaa minuutteja
                 std::string unpackCommandStr = ::MakeUnpackCommand(theCachedDataFileInfo);
                 bool status = CFmiProcessHelpers::ExecuteCommandInSeparateProcess(unpackCommandStr, true, false, SW_HIDE, false, NORMAL_PRIORITY_CLASS);
                 if(status)
@@ -279,15 +284,15 @@ namespace
         return kFmiGoOnWithCopying;
     }
 
-    // Tämä on copy-rename käyttäen win32:en CopyFileEx funktiota. 
-    // Tässä on keskeytys ja progres-seuranta mahdollisuudet.
+    // Tï¿½mï¿½ on copy-rename kï¿½yttï¿½en win32:en CopyFileEx funktiota. 
+    // Tï¿½ssï¿½ on keskeytys ja progres-seuranta mahdollisuudet.
     // Jos server-datatiedosto oli pakattu (theNewestFileInfo.second == true),
-    // pitää tiedosto kopioida normaalisti tmp-hakemistoon, mutta sen jälkeen riippuen 
-    // pakatun tiedoston koosta, tiedosto pitää joko purkaa täällä tai jos se on iso
-    // tiedosto, pitää käynnistää erillinen prosessi, joka purkaa ja siirtää tiedoston oikeaan 
-    // paikkaan. Oma purku-prosessi on pakko käynnistää, koska purkua ei voi keskeyttää ja se voi kestää 
-    // vaikka 3 minuuttia (esim. nykyinen arome mallipintadata). Jos käyttäjä sulkee SmartMetin, 
-    // ei voi odottaa 3 minuuttia, vaan purku keskeytettäisiin väkivaltaisesti, eikä seuraamuksia tiedetä vielä.
+    // pitï¿½ï¿½ tiedosto kopioida normaalisti tmp-hakemistoon, mutta sen jï¿½lkeen riippuen 
+    // pakatun tiedoston koosta, tiedosto pitï¿½ï¿½ joko purkaa tï¿½ï¿½llï¿½ tai jos se on iso
+    // tiedosto, pitï¿½ï¿½ kï¿½ynnistï¿½ï¿½ erillinen prosessi, joka purkaa ja siirtï¿½ï¿½ tiedoston oikeaan 
+    // paikkaan. Oma purku-prosessi on pakko kï¿½ynnistï¿½ï¿½, koska purkua ei voi keskeyttï¿½ï¿½ ja se voi kestï¿½ï¿½ 
+    // vaikka 3 minuuttia (esim. nykyinen arome mallipintadata). Jos kï¿½yttï¿½jï¿½ sulkee SmartMetin, 
+    // ei voi odottaa 3 minuuttia, vaan purku keskeytettï¿½isiin vï¿½kivaltaisesti, eikï¿½ seuraamuksia tiedetï¿½ vielï¿½.
     CFmiCopyingStatus CopyFileEx_CopyRename(NFmiCachedDataFileInfo& theCachedDataFileInfo)
     {
         CheckIfProgramWantsToStop();
@@ -309,7 +314,7 @@ namespace
             //    if(NFmiFileSystem::CopyFile((LPCSTR)totFileStr, (LPCSTR)totCacheTmpFileStr))
         {
             timer.StopTimer();
-            ::LogCopySuccess(theCachedDataFileInfo.itsTotalServerFileName, timer); // pitää laittaa lokiin tiedoston kopion lokaalilevylle kesto ennen mahdollista bzip2 purkua
+            ::LogCopySuccess(theCachedDataFileInfo.itsTotalServerFileName, timer); // pitï¿½ï¿½ laittaa lokiin tiedoston kopion lokaalilevylle kesto ennen mahdollista bzip2 purkua
 
             CFmiCopyingStatus tmpFileStatus = ::DoFileUnpacking(theCachedDataFileInfo);
             if(tmpFileStatus == kFmiGoOnWithCopying)
@@ -317,14 +322,14 @@ namespace
                 // 2. jos onnistui renamea data-tiedosto lopulliseen muotoon ja hakemistoon.
                 if(NFmiFileSystem::RenameFile(theCachedDataFileInfo.itsTotalCacheTmpFileName, theCachedDataFileInfo.itsTotalCacheFileName))
                 {
-                    // Laitetaan tietoa data-loading threadille että on tullut uutta dataa
+                    // Laitetaan tietoa data-loading threadille ettï¿½ on tullut uutta dataa
                     CFmiDataLoadingThread2::LoadDataNow();
                     return kFmiCopyWentOk;
                 }
                 else
                 {
                     ::LogRenameFailure(theCachedDataFileInfo.itsTotalCacheTmpFileName, theCachedDataFileInfo.itsTotalCacheFileName);
-                    // jos rename epäonnistui, ei poisteta tmp-tiedostoa ainakaan vielä, että jää jotain näyttöä ongelmista
+                    // jos rename epï¿½onnistui, ei poisteta tmp-tiedostoa ainakaan vielï¿½, ettï¿½ jï¿½ï¿½ jotain nï¿½yttï¿½ï¿½ ongelmista
                 }
             }
             else
@@ -332,17 +337,18 @@ namespace
         }
         else
         {
-            if(gCopyFileExCancel == FALSE) // raportoidaan epäonnistumisesta vain jos threadia ei oltu canceloitu
+            if(gCopyFileExCancel == FALSE) // raportoidaan epï¿½onnistumisesta vain jos threadia ei oltu canceloitu
             {
                 ::LogCopyFailure(theCachedDataFileInfo.itsTotalServerFileName, theCachedDataFileInfo.itsTotalCacheTmpFileName);
                 return kFmiCopyNotSuccessfull;
             }
             else
-                return kFmiNoCopyNeeded; // jos threadi haluttiin lopettaa, palautetaan no-copy-needed status, eikä virhettä
+                return kFmiNoCopyNeeded; // jos threadi haluttiin lopettaa, palautetaan no-copy-needed status, eikï¿½ virhettï¿½
         }
 
         return kFmiCopyNotSuccessfull;
     }
+#endif // UNIX
 
 } // nameless namespace ends
 
@@ -357,21 +363,21 @@ namespace LocalCacheSingleFileLoaderThread
         gSmartMetWorkingDirectory = smartMetWorkingDirectory;
     }
 
-    // Funktio tutkii annetun theDataInfo:n avulla onko kyseessä cacheen ladattava data
+    // Funktio tutkii annetun theDataInfo:n avulla onko kyseessï¿½ cacheen ladattava data
     // ja onko levypalvelimella uudempaa tiedostoa kuin paikallisessa cachessa.
     // Paluu arvot:
-    // kFmiNoCopyNeeded = ei ollut mitään luettavaa
+    // kFmiNoCopyNeeded = ei ollut mitï¿½ï¿½n luettavaa
     // kFmiCopyWentOk = oli luettavaa ja se on luettu ilman ongelmia cacheen
-    // kFmiCopyNotSuccessfull = oli luettavaa, mutta ei voitu kopioida tiedostoa (yksi mahd. syy on että 
-    // toinen SmartMet on juuri kopioimassa sitä), tämä tulkitaan siten että ei ollut mitään luettavaa/kopioitavaa
-    // HUOM! helpDataInfoSystemPtr parametri on tarkoituksella shared_ptr kopio, älä laita referenssiksi!
+    // kFmiCopyNotSuccessfull = oli luettavaa, mutta ei voitu kopioida tiedostoa (yksi mahd. syy on ettï¿½ 
+    // toinen SmartMet on juuri kopioimassa sitï¿½), tï¿½mï¿½ tulkitaan siten ettï¿½ ei ollut mitï¿½ï¿½n luettavaa/kopioitavaa
+    // HUOM! helpDataInfoSystemPtr parametri on tarkoituksella shared_ptr kopio, ï¿½lï¿½ laita referenssiksi!
     CFmiCopyingStatus CopyQueryDataToCache(const NFmiHelpDataInfo& theDataInfo, std::shared_ptr<NFmiHelpDataInfoSystem> helpDataInfoSystemPtr, std::string callingThreadName)
     {
         try
         {
             if(NFmiCachedDataFileInfo::IsDataCached(theDataInfo))
             {
-                // 1. Mikä on uusimman file-filterin mukaisen tiedoston nimi, ja oliko kyse pakatusta tiedostosta
+                // 1. Mikï¿½ on uusimman file-filterin mukaisen tiedoston nimi, ja oliko kyse pakatusta tiedostosta
                 std::string fileFilter = theDataInfo.FileNameFilter();
                 NFmiCachedDataFileInfo cachedDataFileInfo;
                 ::GetNewestFileInfo(fileFilter, cachedDataFileInfo);
@@ -390,7 +396,7 @@ namespace LocalCacheSingleFileLoaderThread
         }
         catch(...)
         {
-            // tämä oli luultavasti StopThreadException, lopetetaan joka tapauksessa
+            // tï¿½mï¿½ oli luultavasti StopThreadException, lopetetaan joka tapauksessa
         }
 
         return kFmiNoCopyNeeded;
@@ -401,15 +407,16 @@ namespace LocalCacheSingleFileLoaderThread
         gCopyFileExCancel = TRUE;
     }
 
-    // Kun catlog ja sen speedlog systeemit otettiin käyttöön, ovat smartmetin
-    // lokitiedostot lukossa ja niihin ei voi mennä ulkopuoliset loggerit lisäämään mitään.
-    // Siksi luodaan oma unpack lokitiedosto. Jokaiselle päivälle oma jotta niitä saadaan vähän niputettua.
+    // Kun catlog ja sen speedlog systeemit otettiin kï¿½yttï¿½ï¿½n, ovat smartmetin
+    // lokitiedostot lukossa ja niihin ei voi mennï¿½ ulkopuoliset loggerit lisï¿½ï¿½mï¿½ï¿½n mitï¿½ï¿½n.
+    // Siksi luodaan oma unpack lokitiedosto. Jokaiselle pï¿½ivï¿½lle oma jotta niitï¿½ saadaan vï¿½hï¿½n niputettua.
     std::string MakeDailyUnpackLogFilePath()
     {
         auto basicLogFile = CatLog::currentLogFilePath();
-        NFmiFileString fileString = basicLogFile;
-        std::string dailyLogFilePath = fileString.Device();
-        dailyLogFilePath += fileString.Path();
+        NFmiString tmpStr(basicLogFile);
+        NFmiFileString fileString(tmpStr);
+        std::string dailyLogFilePath = fileString.Device().CharPtr();
+        dailyLogFilePath += fileString.Path().CharPtr();
         dailyLogFilePath += "unpacking_data_daily_log_";
         NFmiTime atime;
         dailyLogFilePath += atime.ToStr(kYYYYMMDD);
@@ -434,9 +441,9 @@ namespace LocalCacheSingleFileLoaderThread
         theCachedDataFileInfoInOut.itsTotalCacheTmpPackedFileName = ::MakeFinalTmpFileName(theCachedDataFileInfoInOut, theDataInfo, theHelpDataSystem, true);
     }
 
-    // 1. onko sen nimistä tiedostoa jo cachessa
-    // 2. tee cache kopiointia varten tmp-nimi tiedostosta (joka kopioinnin jälkeen renametaan oikeaksi)
-    // 3. onko tmp-nimi jo cachessa (tällöin mahd. toisen SmartMetin kopio on jo käynnissä)
+    // 1. onko sen nimistï¿½ tiedostoa jo cachessa
+    // 2. tee cache kopiointia varten tmp-nimi tiedostosta (joka kopioinnin jï¿½lkeen renametaan oikeaksi)
+    // 3. onko tmp-nimi jo cachessa (tï¿½llï¿½in mahd. toisen SmartMetin kopio on jo kï¿½ynnissï¿½)
     // 4. tee varsinainen tiedosto kopio cacheen
     CFmiCopyingStatus CopyFileToLocalCache(NFmiCachedDataFileInfo& theCachedDataFileInfo, const NFmiHelpDataInfo& theDataInfo, const std::string& callingThreadName)
     {
@@ -457,7 +464,12 @@ namespace LocalCacheSingleFileLoaderThread
         {
             NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::QueryData, callingThreadName, ::MakeLedChannelStartLoadingString(theCachedDataFileInfo, callingThreadName));
             ::EnsureCacheDirectoryForPartialData(theCachedDataFileInfo.itsTotalCacheFileName, theDataInfo);
+#ifndef UNIX
             return ::CopyFileEx_CopyRename(theCachedDataFileInfo);
+#else
+            // TODO: Implement Linux file copy equivalent
+            return kFmiCopyNotSuccessfull;
+#endif // UNIX
         }
         else
         {
@@ -473,14 +485,14 @@ namespace LocalCacheSingleFileLoaderThread
         return kFmiNoCopyNeeded;
     }
 
-    // tässä tarkastetaan kuuluuko kyseinen data-tiedosto tälle threadille, eli tiedoston koon
-    // pitää mennä rajojen sisään.
+    // tï¿½ssï¿½ tarkastetaan kuuluuko kyseinen data-tiedosto tï¿½lle threadille, eli tiedoston koon
+    // pitï¿½ï¿½ mennï¿½ rajojen sisï¿½ï¿½n.
     bool DoesThisThreadCopyFile(NFmiCachedDataFileInfo& theCachedDataFileInfo)
     {
         theCachedDataFileInfo.itsFileSizeInMB = NFmiFileSystem::FileSize(theCachedDataFileInfo.itsTotalServerFileName) / gMegaByte;
         if(theCachedDataFileInfo.itsFileSizeInMB <= 0)
         {
-            return false; // jostain syystä tiedoston kokoa ei saatu
+            return false; // jostain syystï¿½ tiedoston kokoa ei saatu
         }
 
         if(theCachedDataFileInfo.itsFileSizeInMB < gMaxDataFileSizeInMB)

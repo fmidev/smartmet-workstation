@@ -237,9 +237,9 @@ std::unique_ptr<MapHandlerInterface> NFmiCtrlView::GetMapHandlerInterface()
 
 // Luodaan GDI++ piirto olio annetun toolboxin avulla.
 // Jos piirtoaluetta halutaan rajata, annetaan alue theRelativeClipRect -parametrissa.
+#ifndef UNIX
 Gdiplus::Graphics* NFmiCtrlView::CreateGdiplusGraphics(NFmiToolBox *theToolBox, const NFmiRect *theRelativeClipRect)
 {
-#ifndef UNIX
     if(theToolBox == 0)
         throw std::runtime_error(std::string("Error in ") + __FUNCTION__ + " -method, given toolbox was 0-pointer, unable to initialize Gdiplus::Graphics, application error.");
 
@@ -252,10 +252,8 @@ Gdiplus::Graphics* NFmiCtrlView::CreateGdiplusGraphics(NFmiToolBox *theToolBox, 
     if(theRelativeClipRect)
         gdiPlusGraphics->SetClip(CtrlView::Relative2GdiplusRect(theToolBox, *theRelativeClipRect));
     return gdiPlusGraphics;
-#else
-    return nullptr;
-#endif // UNIX
 }
+#endif // UNIX
 
 void NFmiCtrlView::InitializeGdiplus(NFmiToolBox *theToolBox, const NFmiRect *theRelativeClipRect)
 {

@@ -5,7 +5,9 @@
 #include "CtrlViewDocumentInterface.h"
 #include "NFmiMouseClickUrlActionData.h"
 #include "CtrlViewKeyboardFunctions.h"
+#ifndef UNIX
 #include "NFmiApplicationWinRegistry.h"
+#endif // UNIX
 
 #include <stdexcept>
 
@@ -21,10 +23,10 @@ namespace
         auto whiteColorRef = RGB(255, 255, 255);
         auto redColorRef = RGB(255, 0, 0);
         CRect frameRect(0, 0, x, y);
-        if(colorIsdisabled) // Disablointi on prioreteettillä 1.
+        if(colorIsdisabled) // Disablointi on prioreteettillï¿½ 1.
         {
-            // Jos väri oli disabloitu, piirretään valkoinen pohja ja siihen
-            // päälle punaisilla viivoilla piirretty rasti (X).
+            // Jos vï¿½ri oli disabloitu, piirretï¿½ï¿½n valkoinen pohja ja siihen
+            // pï¿½ï¿½lle punaisilla viivoilla piirretty rasti (X).
             dc.FillSolidRect(&frameRect, whiteColorRef);
             CPen redPen(PS_SOLID, 2, redColorRef);
             auto oldPen = dc.SelectObject(&redPen);
@@ -34,12 +36,12 @@ namespace
             dc.LineTo(1, y-1);
             dc.SelectObject(oldPen);
         }
-        else if(colorIsTransparent) // Läpinäkyvyys on prioreteettillä 2.
+        else if(colorIsTransparent) // Lï¿½pinï¿½kyvyys on prioreteettillï¿½ 2.
         {
-            // Jos väri oli läpinäkyvä, piirretään valkoinen pohja ja siihen
-            // päälle katkoviivoilla piirretty punainen laatikko.
-            // Sen jälkeen piirretään välittu väri vielä pikkuisella laatikolla 
-            // (Transparentin väriä käytetään kuitenkin värien blendailuissa)
+            // Jos vï¿½ri oli lï¿½pinï¿½kyvï¿½, piirretï¿½ï¿½n valkoinen pohja ja siihen
+            // pï¿½ï¿½lle katkoviivoilla piirretty punainen laatikko.
+            // Sen jï¿½lkeen piirretï¿½ï¿½n vï¿½littu vï¿½ri vielï¿½ pikkuisella laatikolla 
+            // (Transparentin vï¿½riï¿½ kï¿½ytetï¿½ï¿½n kuitenkin vï¿½rien blendailuissa)
 
             // 1. Valkoinen pohja
             dc.FillSolidRect(&frameRect, whiteColorRef);
@@ -47,12 +49,12 @@ namespace
             CPen dashedRedPen(PS_DOT, 1, redColorRef);
             auto oldPen = dc.SelectObject(&dashedRedPen);
             dc.Rectangle(&frameRect);
-            // 3. Valitun värinen fillattu pienempi laatikko
+            // 3. Valitun vï¿½rinen fillattu pienempi laatikko
             frameRect.InflateRect(-2, -2);
             dc.FillSolidRect(&frameRect, drawingData.color_);
             dc.SelectObject(oldPen);
         }
-        else // Normipiirto (fillattu laatikko) on prioriteetillä 3.
+        else // Normipiirto (fillattu laatikko) on prioriteetillï¿½ 3.
             dc.FillSolidRect(&frameRect, drawingData.color_);
     }
 
@@ -161,7 +163,7 @@ namespace CtrlView
             (*theMemoryBitmap)->DeleteObject();
         else
             *theMemoryBitmap = new CBitmap;
-        // Muista että CClientDC:n kanssa ei tehdä lopuksi DeleteDC -kutsua kuten muiden Device Context otusten kanssa tehdään.
+        // Muista ettï¿½ CClientDC:n kanssa ei tehdï¿½ lopuksi DeleteDC -kutsua kuten muiden Device Context otusten kanssa tehdï¿½ï¿½n.
         CClientDC dc(theView);
         CRect clientArea(0, 0, cx, cy);
         if(cx == 0 && cy == 0)
@@ -217,7 +219,7 @@ namespace CtrlView
 
     // asettaa toolmasterin ja toolboxin DC:t
     // esim. ennen piirto tai ennen kuin tarkastellaan hiiren klikkausta ruudulta
-    // HUOM!! printtauksen yhteydessä kutsu ensin DC:n asetus ja sitten printinfon!!!
+    // HUOM!! printtauksen yhteydessï¿½ kutsu ensin DC:n asetus ja sitten printinfon!!!
     void SetToolsDCs(CDC* theDC, CWnd *theView, NFmiToolBox *theToolBox, bool fToolMasterAvailable)
     {
         SetToolBoxsDC(theDC, theToolBox);
@@ -241,9 +243,9 @@ namespace CtrlView
         }
     }
 
-    // uudet versiot SetToolsDC:stä, jossa haluttu piirtoalue annetaan parametrina, tällöin
-    // printti alueen erilainen käsittely ei jää huomiotta
-    void SetToolsDCs(CDC* theDC, NFmiToolBox *theToolBox, const CRect &theClientRect, bool fToolMasterAvailable) // tämä asettaa kaikki kerralla
+    // uudet versiot SetToolsDC:stï¿½, jossa haluttu piirtoalue annetaan parametrina, tï¿½llï¿½in
+    // printti alueen erilainen kï¿½sittely ei jï¿½ï¿½ huomiotta
+    void SetToolsDCs(CDC* theDC, NFmiToolBox *theToolBox, const CRect &theClientRect, bool fToolMasterAvailable) // tï¿½mï¿½ asettaa kaikki kerralla
     {
         SetToolBoxsDC(theDC, theToolBox, theClientRect);
         if(fToolMasterAvailable)
@@ -274,8 +276,8 @@ namespace CtrlView
             float currentRadiusInKm = float(ctrlViewInterface->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapViewRangeMeter().CalculateStartEndDistanceInMeters() / 1000.);
             if(currentRadiusInKm < 0)
             {
-                // Jos distance measure työkalua ei ole vielä käytetty, palauttaa se mitatun matkan pituudeksi -1:n,
-                // tällöin laitetaan vain joku default arvo eli vaikka 50 km
+                // Jos distance measure tyï¿½kalua ei ole vielï¿½ kï¿½ytetty, palauttaa se mitatun matkan pituudeksi -1:n,
+                // tï¿½llï¿½in laitetaan vain joku default arvo eli vaikka 50 km
                 currentRadiusInKm = 50.f;
             }
             auto baseUrl = ctrlViewInterface->MouseClickUrlActionData().GetMouseActionUrl(currentOpenUrlAction, pointedLatlonPoint, mapTime, currentRadiusInKm);
@@ -293,7 +295,7 @@ namespace CtrlView
         // 1. Jos ALT nappi pohjassa
         if(CtrlView::IsKeyboardKeyDown(VK_MENU))
         {
-            // 2. Etsi ensimmäinen näppäin joka on pohjassa ja joka on mapattu url-actionille
+            // 2. Etsi ensimmï¿½inen nï¿½ppï¿½in joka on pohjassa ja joka on mapattu url-actionille
             for(const auto& mappedActionKeyPair : CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->MouseClickUrlActionData().OpenUrlActionKeyMappings())
             {
                 if(CtrlView::IsKeyboardKeyDown(mappedActionKeyPair.first))
@@ -320,17 +322,17 @@ namespace CtrlView
         theToolbox->ConvertPoint(relativePlace, absolutePlace);
         theObjectBoxAbsolute.Place(NFmiPoint(absolutePlace.x, absolutePlace.y));
 
-        // Riippuen halutusta paikasta, pitää absoluuttista laatikkoa vielä säätää tietyissä tilanteissa
+        // Riippuen halutusta paikasta, pitï¿½ï¿½ absoluuttista laatikkoa vielï¿½ sï¿½ï¿½tï¿½ï¿½ tietyissï¿½ tilanteissa
 
-        // 1. Jos ollaan alareunassa, pitää laatikkoa nostaa itsensä korkeuden verran
+        // 1. Jos ollaan alareunassa, pitï¿½ï¿½ laatikkoa nostaa itsensï¿½ korkeuden verran
         if(theWantedLocation == kBottomLeft || theWantedLocation == kBottomRight || theWantedLocation == kBottomCenter)
             theObjectBoxAbsolute.Place(NFmiPoint(theObjectBoxAbsolute.Left(), theObjectBoxAbsolute.Top() - theObjectBoxAbsolute.Height()));
 
-        // 2. Jos ollaan oikeassa reunassa, pitää laatikkoa siirtää vasemmalle itsensä leveyden verran
+        // 2. Jos ollaan oikeassa reunassa, pitï¿½ï¿½ laatikkoa siirtï¿½ï¿½ vasemmalle itsensï¿½ leveyden verran
         if(theWantedLocation == kBottomRight || theWantedLocation == kTopRight)
             theObjectBoxAbsolute.Place(NFmiPoint(theObjectBoxAbsolute.Left() - theObjectBoxAbsolute.Width(), theObjectBoxAbsolute.Top()));
 
-        // 3. Jos ollaan vaaka suunnassa keskellä, pitää laatikon keskipiste siirtää x-suunnassa puoli laatikon leveyttä vasemmalle
+        // 3. Jos ollaan vaaka suunnassa keskellï¿½, pitï¿½ï¿½ laatikon keskipiste siirtï¿½ï¿½ x-suunnassa puoli laatikon leveyttï¿½ vasemmalle
         if(theWantedLocation == kBottomCenter || theWantedLocation == kTopCenter)
             theObjectBoxAbsolute.Place(NFmiPoint(theObjectBoxAbsolute.Left() - (theObjectBoxAbsolute.Width() / 2.), theObjectBoxAbsolute.Top()));
     }

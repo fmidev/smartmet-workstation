@@ -3,12 +3,17 @@
 #endif // UNIX
 #include "ApplicationInterface.h"
 #include "ToolmasterHatchPolygonData.h"
+#ifndef UNIX
 #include "NFmiApplicationWinRegistry.h"
+#endif // UNIX
 
+#ifndef UNIX
 CSmartMetView* ApplicationInterface::itsSmartMetView = nullptr;
 CView* ApplicationInterface::itsSmartMetViewAsCView = nullptr;
+#endif // UNIX
 ApplicationInterface::GetApplicationInterfaceImplementationCallBackType ApplicationInterface::GetApplicationInterfaceImplementation;
 
+#ifndef UNIX
 void ApplicationInterface::SetSmartMetView(CSmartMetView *view)
 {
     ApplicationInterface::itsSmartMetView = view;
@@ -28,14 +33,20 @@ CView* ApplicationInterface::GetSmartMetViewAsCView()
 {
     return ApplicationInterface::itsSmartMetViewAsCView;
 }
+#endif // UNIX
 
 void ApplicationInterface::SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor)
 {
+#ifndef DISABLE_UNIRAS_TOOLMASTER
     ToolmasterHatchPolygonData::toolmasterRelatedBigEpsilonFactor_ = newEpsilonFactor;
+#else
+    (void)newEpsilonFactor;
+#endif
 }
 
 void ApplicationInterface::SetHatchingDebuggingPolygonIndex(int action)
 {
+#ifndef DISABLE_UNIRAS_TOOLMASTER
     switch(action)
     {
     case 1:
@@ -65,14 +76,21 @@ void ApplicationInterface::SetHatchingDebuggingPolygonIndex(int action)
     default:
         break;
     }
+#else
+    (void)action;
+#endif
 }
 
 void ApplicationInterface::AddToHatchingToolmasterEpsilonFactor(float addedValue)
 {
+#ifndef UNIX
     auto& winRegistry = ApplicationWinRegistry();
     auto factor = winRegistry.HatchingToolmasterEpsilonFactor();
     factor -= addedValue;
     winRegistry.HatchingToolmasterEpsilonFactor(factor);
     SetHatchingToolmasterEpsilonFactor(factor);
+#else
+    (void)addedValue;
+#endif // UNIX
 }
 

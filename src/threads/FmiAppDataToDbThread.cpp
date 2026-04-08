@@ -1,3 +1,4 @@
+#ifndef UNIX
 
 #include "FmiAppDataToDbThread.h"
 #include "NFmiApplicationDataBase.h"
@@ -11,7 +12,7 @@ namespace
 	CSemaphore gThreadRunningUpdate;
 	CSemaphore gThreadRunningStop;
 
-//	NFmiStopFunctor gAppDataToDbThreadStopFunctor; // ei saa eikä voi lopettaa http-lähetystä!!
+//	NFmiStopFunctor gAppDataToDbThreadStopFunctor; // ei saa eikï¿½ voi lopettaa http-lï¿½hetystï¿½!!
 
 }
 
@@ -32,7 +33,7 @@ UINT CFmiAppDataToDbThread::DoThread(LPVOID pParam)
 	if(usedSemaphore == 0)
 		return 1;
 
-	CSingleLock singleLock(usedSemaphore); // muista että tämä vapauttaa semaphoren kun tuhoutuu
+	CSingleLock singleLock(usedSemaphore); // muista ettï¿½ tï¿½mï¿½ vapauttaa semaphoren kun tuhoutuu
 	if(!singleLock.Lock(5000)) // Attempt to lock the shared resource, 5000 means 5 sec wait, 0 wait resulted sometimes to wait for next minute for unknown reason
 	{
 //		DebugThread(logger, "CFmiAppDataToDbThread::DoThread oli jo lukittuna, lopetetaan...");
@@ -67,10 +68,11 @@ int CFmiAppDataToDbThread::WaitToClose(int theMilliSecondsToWait)
 			CSingleLock singleLock3(&gThreadRunningStop);
 			if(singleLock3.Lock(theMilliSecondsToWait))
 			{
-				return 1; // vain jos kaikki kolme eri mahdollista datan lähetystä ovat loppuneet, on tämä onnistunut...
+				return 1; // vain jos kaikki kolme eri mahdollista datan lï¿½hetystï¿½ ovat loppuneet, on tï¿½mï¿½ onnistunut...
 			}
 		}
 	}
-	return 0; // jos mikä tahansa lähetyksistä on jäänyt päälle, tämä epäonnistuu...
+	return 0; // jos mikï¿½ tahansa lï¿½hetyksistï¿½ on jï¿½ï¿½nyt pï¿½ï¿½lle, tï¿½mï¿½ epï¿½onnistuu...
 }
 
+#endif // UNIX

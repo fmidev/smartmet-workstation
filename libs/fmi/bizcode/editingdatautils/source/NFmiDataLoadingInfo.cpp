@@ -18,13 +18,13 @@
 // 
 // 
 //  Description: 
-//   Luokkaa käytetään meteorologin editorissa 
-//   datan lukemiseen ja talletukseen. Tietää 
+//   Luokkaa kï¿½ytetï¿½ï¿½n meteorologin editorissa 
+//   datan lukemiseen ja talletukseen. Tietï¿½ï¿½ 
 //   mm. 
 //   haettavat tuottajat, niiden tiedostojen nimet, 
 //   polut ja datan kopioiden versio-numeron. 
 //   
-//   Tämä luokka hallitsee aina yhden tyyppisen 
+//   Tï¿½mï¿½ luokka hallitsee aina yhden tyyppisen 
 //   datan tiedot (joita voi olla esim. 'Eurooppa 
 //   Data', 'Suomi Data', 'Meri Data' jne.).
 // 
@@ -171,7 +171,7 @@ NFmiDataLoadingInfo::~NFmiDataLoadingInfo()
 
 void NFmiDataLoadingInfo::InitFileNameLists()
 {
-	//jos joku seuraavista palauttaa false, voisi tehdä jotain!!
+	//jos joku seuraavista palauttaa false, voisi tehdï¿½ jotain!!
 	InitHirlamFileNameList();
 	InitEcmwfFileNameList();
 	InitWorkingFileNameList();
@@ -282,12 +282,12 @@ void NFmiDataLoadingInfo::Configure(const std::string& theAbsoluteWorkingDirecto
 	itsCacheDir = theCacheLocalDir;
 	itsWorkingPath = theCacheBaseDir + "edited\\";
 	fUseDataCache = useDataCache;
-	NormalizeAllPathDelimiters(theAbsoluteWorkingDirectory); // tämä pitää tehdä ensin, että kenoviivat on oikein
+	NormalizeAllPathDelimiters(theAbsoluteWorkingDirectory); // tï¿½mï¿½ pitï¿½ï¿½ tehdï¿½ ensin, ettï¿½ kenoviivat on oikein
 	itsModel1CacheFilePattern = MakeCacheFilePattern(itsModel1FilePattern);
 	itsModel2CacheFilePattern = MakeCacheFilePattern(itsModel2FilePattern);
 
-	NormalizeAllPathDelimiters(theAbsoluteWorkingDirectory); // tehdään tämä vielä toistamiseen että varmasti kaikki kenot on oikein päin
-	InitFileNameLists(); //luodaan tiedostonnimilistat valmiiksi, koska tämä on yleisin tapa luoda info
+	NormalizeAllPathDelimiters(theAbsoluteWorkingDirectory); // tehdï¿½ï¿½n tï¿½mï¿½ vielï¿½ toistamiseen ettï¿½ varmasti kaikki kenot on oikein pï¿½in
+	InitFileNameLists(); //luodaan tiedostonnimilistat valmiiksi, koska tï¿½mï¿½ on yleisin tapa luoda info
 	UpdatedTimeDescriptor(false);
 
 }
@@ -302,13 +302,13 @@ NFmiString NFmiDataLoadingInfo::MakeCacheFilePattern(const NFmiString &theNormal
 
 static NFmiString DoTotalPathFix(const NFmiString &thePath, const std::string& theAbsoluteWorkingDirectory)
 {
-	std::string tmpPath = thePath;
+	std::string tmpPath = thePath.CharPtr();
 	tmpPath = PathUtils::makeFixedAbsolutePath(tmpPath, theAbsoluteWorkingDirectory, false);
 	return NFmiString(tmpPath);
 }
 
-// Joskus konffeissa voi mennä eri polkujen kanssa hakemisto erottimet eri suuntiin
-// ja sen jälkeen ei ehkä tietyt metodit mm. NFmiFileString-luokassa ehkä enää toimikaan toivotulla tavalla.
+// Joskus konffeissa voi mennï¿½ eri polkujen kanssa hakemisto erottimet eri suuntiin
+// ja sen jï¿½lkeen ei ehkï¿½ tietyt metodit mm. NFmiFileString-luokassa ehkï¿½ enï¿½ï¿½ toimikaan toivotulla tavalla.
 // Siksi kun asetukset on luettu konfiguraatioista, laitetaan kaikki polku erottimet
 // samanlaisiksi varmuuden vuoksi.
 void NFmiDataLoadingInfo::NormalizeAllPathDelimiters(const std::string& theAbsoluteWorkingDirectory)
@@ -336,7 +336,7 @@ NFmiString NFmiDataLoadingInfo::CreateDataBaseInFileNameFilter(int /* index */ )
 {
 	NFmiString dataBaseFileName("");
 	dataBaseFileName += DataBaseInPath();
-	if(DataBaseFileNameIn().Search(reinterpret_cast<const unsigned char *>("*"))) // 11.6.2001/Marko Jos filtteri on jo annettu kokonaisuudessaan ohjaustiedostossa, käytetään suoraan sitä eikä rakenneta
+	if(DataBaseFileNameIn().Search(reinterpret_cast<const unsigned char *>("*"))) // 11.6.2001/Marko Jos filtteri on jo annettu kokonaisuudessaan ohjaustiedostossa, kï¿½ytetï¿½ï¿½n suoraan sitï¿½ eikï¿½ rakenneta
 		dataBaseFileName += DataBaseFileNameIn();
 	else
 	{
@@ -365,11 +365,11 @@ NFmiString NFmiDataLoadingInfo::CreateWorkingFileNameTimeFilter()
 }
 
 NFmiString NFmiDataLoadingInfo::CreateDataBaseInFileNameTimeFilter(int /* theIndex */ )
-{ // HUOM!!! onko tämä sama koodi kahdesti!!!!!
+{ // HUOM!!! onko tï¿½mï¿½ sama koodi kahdesti!!!!!
 	NFmiString dataBaseFileName("");
 	dataBaseFileName += DataBaseInPath();
 	// Jos filtteri on jo annettu kokonaisuudessaan ohjaustiedostossa,
-	// käytetään suoraan sitä eikä rakenneta
+	// kï¿½ytetï¿½ï¿½n suoraan sitï¿½ eikï¿½ rakenneta
 	if(DataBaseFileNameIn().Search(reinterpret_cast<const unsigned char *>("*")))
 		dataBaseFileName += DataBaseFileNameIn();
 	else
@@ -401,7 +401,7 @@ static NFmiString MakeTimeStampForFileName(const std::string &theTimeStringTempl
 
 NFmiString NFmiDataLoadingInfo::CreateTimeString(bool fileLength, float theTimeResolutionInMinutes)
 {
-	NFmiString fileName;//("Tätä_ei_ole_vielä_toteutettu");
+	NFmiString fileName;//("Tï¿½tï¿½_ei_ole_vielï¿½_toteutettu");
 	if(itsMetEditorModeDataWCTR)
 	{
 		const NFmiTimeBag& tmpTimes = itsMetEditorModeDataWCTR->MaximalCoverageTimeBag();
@@ -437,9 +437,9 @@ NFmiString NFmiDataLoadingInfo::CreateTimeString(bool fileLength, float theTimeR
 //--------------------------------------------------------
 // CreateWorkingFileName 
 //--------------------------------------------------------
-//   Luo tiedoston nimi talletuksen yhteydessä, 
-//   mukaan liitetään työversion indeksi. "KEPA_SUOMI_48_1_3112_V1.sqd"
-//   Versio saadaan katsomalla jo olemassa olevia työtiedostoja.
+//   Luo tiedoston nimi talletuksen yhteydessï¿½, 
+//   mukaan liitetï¿½ï¿½n tyï¿½version indeksi. "KEPA_SUOMI_48_1_3112_V1.sqd"
+//   Versio saadaan katsomalla jo olemassa olevia tyï¿½tiedostoja.
 //
 NFmiString NFmiDataLoadingInfo::CreateWorkingFileName(int theVersion)
 {
@@ -452,7 +452,7 @@ NFmiString NFmiDataLoadingInfo::CreateWorkingFileName(int theVersion)
 	workingFileName += CreateTimeString();
 	workingFileName += "_V";
 
-	// tein 0 ja 00 lisäy systeemin versionumeron eteen, että lataus dialogissa versiot näkyvät järjestyksessä (aakkosjärjestyksessä)
+	// tein 0 ja 00 lisï¿½y systeemin versionumeron eteen, ettï¿½ lataus dialogissa versiot nï¿½kyvï¿½t jï¿½rjestyksessï¿½ (aakkosjï¿½rjestyksessï¿½)
 	if(theVersion < 10)
 		workingFileName += "00";
 	else if(theVersion < 100)
@@ -465,8 +465,8 @@ NFmiString NFmiDataLoadingInfo::CreateWorkingFileName(int theVersion)
 //--------------------------------------------------------
 // CreateDataBaseFileName 
 //--------------------------------------------------------
-//   Luo tiedoston nimi tietokantaan viennin yhteydessä, 
-//   mukaan liitetään DB-version indeksi. "KEPA_SUOMI_48_1_3112_DB1.sqd"
+//   Luo tiedoston nimi tietokantaan viennin yhteydessï¿½, 
+//   mukaan liitetï¿½ï¿½n DB-version indeksi. "KEPA_SUOMI_48_1_3112_DB1.sqd"
 //   Versio saadaan katsomalla jo olemassa olevia tiedostoja.
 //
 NFmiString NFmiDataLoadingInfo::CreateDataBaseOutFileName(int theVersion)
@@ -500,7 +500,7 @@ int NFmiDataLoadingInfo::CalculateVersion(unsigned long index, const NFmiString&
 //--------------------------------------------------------
 // LatestWorkingVersion 
 //--------------------------------------------------------
-//   Käy työtiedostot läpi ja etsii viimeisen version.
+//   Kï¿½y tyï¿½tiedostot lï¿½pi ja etsii viimeisen version.
 //
 int NFmiDataLoadingInfo::LatestWorkingVersion()
 {
@@ -537,14 +537,14 @@ int NFmiDataLoadingInfo::LatestDataBaseInVersion(int theIndex)
 {
 	NFmiString filterTmp = CreateDataBaseInFileNameTimeFilter(theIndex);
 	int version = 0;
-	// jotain hämminkiä vanhassa koodissa, ei välttämättä ole hakenut viimeisimmän tietokanta datan DB-numeroa
-	// korjasin koodin uuteen uskoon etsimällä viimeisimmän tiedoston aikaleiman avulla.
+	// jotain hï¿½mminkiï¿½ vanhassa koodissa, ei vï¿½lttï¿½mï¿½ttï¿½ ole hakenut viimeisimmï¿½n tietokanta datan DB-numeroa
+	// korjasin koodin uuteen uskoon etsimï¿½llï¿½ viimeisimmï¿½n tiedoston aikaleiman avulla.
 	std::string filter(filterTmp);
 	std::string foundFileName;
 	NFmiFileSystem::FindFile(filter, true, &foundFileName);
 	NFmiString foundFileName2(foundFileName.c_str());
 	NFmiString newDateString(CreateTimeString());
-	if(foundFileName2.Search(newDateString)) // katsotaan löytyykö samalla aikaleimalla se viimeisin tietokanta tiedosto
+	if(foundFileName2.Search(newDateString)) // katsotaan lï¿½ytyykï¿½ samalla aikaleimalla se viimeisin tietokanta tiedosto
 	{
 		unsigned long index = foundFileName2.SearchLast(NFmiString("_"));
 		if(foundFileName2[++index] == 'D')
@@ -557,11 +557,11 @@ int NFmiDataLoadingInfo::LatestDataBaseInVersion(int theIndex)
 	return version;
 }
 
-// korjaa path-parametri referenssiksi ja metodi niin, ettei se aina yritä luoda kaikkia hakemistoja
+// korjaa path-parametri referenssiksi ja metodi niin, ettei se aina yritï¿½ luoda kaikkia hakemistoja
 bool NFmiDataLoadingInfo::CheckAndCreateDirectory(const NFmiString& thePath)
 {
     if(NFmiFileSystem::DirectoryExists(thePath.CharPtr()))
-		return true; // jos hakemisto on jo olemassa, turha tehdä muuta kuin palauttaa true
+		return true; // jos hakemisto on jo olemassa, turha tehdï¿½ muuta kuin palauttaa true
 	NFmiString path(thePath);
 	path += "/";
 	unsigned long index = 1;
@@ -579,7 +579,7 @@ bool NFmiDataLoadingInfo::ReadList(NFmiSortedStringList& fileNameList, const NFm
 	if(filter.GetLen() <= 0)
 		return false;
 
-	std::string filePattern = filter;
+	std::string filePattern = filter.CharPtr();
 	std::string directory = NFmiFileSystem::PathFromPattern(filePattern);
 	if(NFmiFileSystem::CreateDirectory(directory) == false)
 		return false;

@@ -16,10 +16,10 @@ static char THIS_FILE[] = __FILE__;
 
 namespace
 {
-    // 80 on perusoletus maksimi, mutta käyttäjä voi ohittää sen konfiguraatiolla (SmartMet::ParameterSelection::MaxLevelCountInMakingDialogRowData).
-    // Tämä siis rajoittaa kun tehdään level-datasta jokaiselle parametrille jokaiselle levelille omaa riviä dialogiin.
-    // Dialogi voisi jumitellä todella pahasti, jos tulee data, missä olisi vaikka 8000 leveliä ja muutama (esim. 8) parametria
-    // tällöin ilman rajoituksia datalle tulisi aina rakennettua 8x8000 64000 riviä turhaa riviä, jota kukaan ei koskaa oikeasti käyttäisi.
+    // 80 on perusoletus maksimi, mutta kï¿½yttï¿½jï¿½ voi ohittï¿½ï¿½ sen konfiguraatiolla (SmartMet::ParameterSelection::MaxLevelCountInMakingDialogRowData).
+    // Tï¿½mï¿½ siis rajoittaa kun tehdï¿½ï¿½n level-datasta jokaiselle parametrille jokaiselle levelille omaa riviï¿½ dialogiin.
+    // Dialogi voisi jumitellï¿½ todella pahasti, jos tulee data, missï¿½ olisi vaikka 8000 leveliï¿½ ja muutama (esim. 8) parametria
+    // tï¿½llï¿½in ilman rajoituksia datalle tulisi aina rakennettua 8x8000 64000 riviï¿½ turhaa riviï¿½, jota kukaan ei koskaa oikeasti kï¿½yttï¿½isi.
     int g_maxLevelCountInMakingDialogRowData = 80;
 
     bool isDataStructuresChanged(const boost::shared_ptr<NFmiFastQueryInfo>& newInfo, const std::unique_ptr<NFmiQueryInfo> &latestMetaData)
@@ -57,7 +57,7 @@ namespace
 
     AddParams::SingleRowItem makeLevelRowItem(const NFmiDataIdent &dataIdent, NFmiInfoData::Type dataType, AddParams::RowType rowType, const std::shared_ptr<NFmiLevel>& level, const std::string& uniqueIdForBaseData)
     {
-        std::string name = dataIdent.GetParamName() + " " + std::to_string(int(level->LevelValue()));
+        std::string name = std::string(dataIdent.GetParamName().CharPtr()) + " " + std::to_string(int(level->LevelValue()));
         return AddParams::SingleRowItem(rowType, name, dataIdent.GetParamIdent(), true, "", 
                         dataType, dataIdent.GetProducer()->GetIdent(), std::string(dataIdent.GetProducer()->GetName()), true, 
                         level, 0, "", "", uniqueIdForBaseData);
@@ -77,7 +77,7 @@ namespace
 
     void addMetaWindParameters(std::vector<NFmiDataIdent> &paramsVectorInOut, NFmiQueryInfo &queryInfo)
     {
-        bool allowStreamlineParameter = true; // Mahdollinen lisäys vain karttanäyttö tilanteissa
+        bool allowStreamlineParameter = true; // Mahdollinen lisï¿½ys vain karttanï¿½yttï¿½ tilanteissa
         auto possibleWindMetaParams = NFmiFastInfoUtils::MakePossibleWindMetaParams(queryInfo, allowStreamlineParameter);
 
         for(const auto &metaParameter : possibleWindMetaParams)

@@ -27,9 +27,10 @@
 #include "json_spirit_reader.h"
 #include "json_spirit_writer_options.h"
 #include <mutex>
+#include <fstream>
 
 #ifdef _MSC_VER
-#pragma warning( disable : 4503 ) // tämä estää varoituksen joka tulee VC++ 2012 kääntäjällä, kun jonkun boost-luokan nimi merkkeinä ylittää jonkun rajan
+#pragma warning( disable : 4503 ) // tï¿½mï¿½ estï¿½ï¿½ varoituksen joka tulee VC++ 2012 kï¿½ï¿½ntï¿½jï¿½llï¿½, kun jonkun boost-luokan nimi merkkeinï¿½ ylittï¿½ï¿½ jonkun rajan
 #endif
 
 #ifdef _DEBUG
@@ -197,7 +198,7 @@ bool NFmiCsDataFileWinReg::operator != (const NFmiCsDataFileWinReg & other) cons
 	if(fStore != other.fStore)
 		return true;
 
-	// fProperlyInitialized data osio ei kiinnosta tässä vertailussa
+	// fProperlyInitialized data osio ei kiinnosta tï¿½ssï¿½ vertailussa
 
 	return false;
 }
@@ -232,7 +233,7 @@ NFmiCaseStudyDataFile::NFmiCaseStudyDataFile(void)
 ,itsAdditionalArchiveFileCount(0)
 ,fDataEnabled(true)
 {
-	// HUOM! ei saa kutsua Reset-metodia, koska siellä kutsutaan taas oletus konstruktoria!!!
+	// HUOM! ei saa kutsua Reset-metodia, koska siellï¿½ kutsutaan taas oletus konstruktoria!!!
 }
 
 NFmiCaseStudyDataFile::~NFmiCaseStudyDataFile(void)
@@ -255,13 +256,13 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetInfo(NFmiInfoOrganizer &theInfoOr
 
 int NFmiCaseStudyDataFile::GetModelRunTimeGapInMinutes(NFmiQueryInfo *theInfo, NFmiInfoData::Type theType, NFmiHelpDataInfo *theHelpDataInfo)
 {
-    // Pakko laittaa osoittamaan 1. parametriiin, koska tänne tulee aito NFmiQueryInfo olio, ja se ei osaa hakea 1. Producer:ia automaattisesti.
+    // Pakko laittaa osoittamaan 1. parametriiin, koska tï¿½nne tulee aito NFmiQueryInfo olio, ja se ei osaa hakea 1. Producer:ia automaattisesti.
     theInfo->FirstParam();
 
 	if(theHelpDataInfo && theHelpDataInfo->NonFixedTimeGab())
-		return -1; // Jos datan konffissa on erikseen määrätty määrittelemätön aikaväli, niin käytetään sitä.
+		return -1; // Jos datan konffissa on erikseen mï¿½ï¿½rï¿½tty mï¿½ï¿½rittelemï¿½tï¿½n aikavï¿½li, niin kï¿½ytetï¿½ï¿½n sitï¿½.
 	if(theType == NFmiInfoData::kKepaData)
-		return -1; // editoidulla datalla ei ole vakio ajoväliä, niitä editoidaan ja lähetetään milloin vain
+		return -1; // editoidulla datalla ei ole vakio ajovï¿½liï¿½, niitï¿½ editoidaan ja lï¿½hetetï¿½ï¿½n milloin vain
 	
 	if(theHelpDataInfo)
 	{
@@ -269,15 +270,15 @@ int NFmiCaseStudyDataFile::GetModelRunTimeGapInMinutes(NFmiQueryInfo *theInfo, N
 		if(modelRunTimeGapInHours < 0)
 			return -1;
 		if(modelRunTimeGapInHours > 0)
-			return static_cast<int>(std::round(theHelpDataInfo->ModelRunTimeGapInHours() * 60)); // Jos datan konffissa on erikseen määrätty malliajoväli, niin käytetään sitä.
+			return static_cast<int>(std::round(theHelpDataInfo->ModelRunTimeGapInHours() * 60)); // Jos datan konffissa on erikseen mï¿½ï¿½rï¿½tty malliajovï¿½li, niin kï¿½ytetï¿½ï¿½n sitï¿½.
 	}
 
-	int modelRunTimeGap = 0; // defaultti on 0, joka pätee kaikkiin datoihin, mistä ei ole arkistodataa käytössä, kuten analyysi, havainnot jne.
+	int modelRunTimeGap = 0; // defaultti on 0, joka pï¿½tee kaikkiin datoihin, mistï¿½ ei ole arkistodataa kï¿½ytï¿½ssï¿½, kuten analyysi, havainnot jne.
 	if(NFmiDrawParam::IsModelRunDataType(theType))
 	{
 		if(theType == NFmiInfoData::kViewable && theInfo->Producer()->GetIdent() == kFmiRADARNRD)
 		{
-			modelRunTimeGap = 1*60; // tutka-tuliset on poikkeustapaus, sillä malliajoväli on 1 h
+			modelRunTimeGap = 1*60; // tutka-tuliset on poikkeustapaus, sillï¿½ malliajovï¿½li on 1 h
 		}
 		else
 		{
@@ -286,11 +287,11 @@ int NFmiCaseStudyDataFile::GetModelRunTimeGapInMinutes(NFmiQueryInfo *theInfo, N
 			{
 				unsigned long prodId = theInfo->Producer()->GetIdent();
 				if(prodId == kFmiMTAECMWF || prodId == kFmiECMWF)
-					modelRunTimeGap = 12*60; // Ecmwf:lle aikaväli on 12h
-				else if(prodId == 118) // 118 on EC Kalman-Laps tuottaja, se on myös 12 tunnin välein kun se lasketaan EC:n pohjalta
-					modelRunTimeGap = 12*60; // Ecmwf:lle aikaväli on 12h
-				else if(prodId == 199) // 199 on Harmonie ja sitä ajetaan ainakin päiväs aikaan 3h välein
-					modelRunTimeGap = 3*60; // Ecmwf:lle aikaväli on 12h
+					modelRunTimeGap = 12*60; // Ecmwf:lle aikavï¿½li on 12h
+				else if(prodId == 118) // 118 on EC Kalman-Laps tuottaja, se on myï¿½s 12 tunnin vï¿½lein kun se lasketaan EC:n pohjalta
+					modelRunTimeGap = 12*60; // Ecmwf:lle aikavï¿½li on 12h
+				else if(prodId == 199) // 199 on Harmonie ja sitï¿½ ajetaan ainakin pï¿½ivï¿½s aikaan 3h vï¿½lein
+					modelRunTimeGap = 3*60; // Ecmwf:lle aikavï¿½li on 12h
 			}
 		}
 	}
@@ -299,7 +300,7 @@ int NFmiCaseStudyDataFile::GetModelRunTimeGapInMinutes(NFmiQueryInfo *theInfo, N
 
 static int GetImageGapInMinutes(const NFmiHelpDataInfo &theDataInfo)
 {
-	int gapInMinutes = 60; // default on 60 min, esim. noaa kuvat tulevat epämääräisesti, eikä ole oikeaa arvoa sille, tämän avulla lasketaan vain arvio data määristä
+	int gapInMinutes = 60; // default on 60 min, esim. noaa kuvat tulevat epï¿½mï¿½ï¿½rï¿½isesti, eikï¿½ ole oikeaa arvoa sille, tï¿½mï¿½n avulla lasketaan vain arvio data mï¿½ï¿½ristï¿½
 	FmiProducerName prodId = static_cast<FmiProducerName>(theDataInfo.ImageDataIdent().GetProducer()->GetIdent());
 	if(prodId == 3050) // cinesat/meteosat9
 		gapInMinutes = 15;
@@ -335,8 +336,8 @@ static double LatestFileByteCount(const std::string & theFilePattern)
 	return ::BoostFileSize(NFmiFileSystem::NewestPatternFileName(theFilePattern));
 }
 
-// mm. satel kuvien koon tarkistus on muuten liian hidasta (luetaan verkosta viimeisimmän tiedoston koko), 
-// joten etsitään vain ensimmäinen patterniin sopiva tiedosto ja otetaan sen koko.
+// mm. satel kuvien koon tarkistus on muuten liian hidasta (luetaan verkosta viimeisimmï¿½n tiedoston koko), 
+// joten etsitï¿½ï¿½n vain ensimmï¿½inen patterniin sopiva tiedosto ja otetaan sen koko.
 static double FastFileByteCount(const std::string & theFilePattern, const NFmiCaseStudySystem &theCaseStudySystem)
 {
 	if(theCaseStudySystem.DoApproximateDataSize(theFilePattern))
@@ -351,8 +352,8 @@ double NFmiCaseStudyDataFile::EvaluateTotalDataSize(void)
 		return itsSingleFileSize;
 	else
 	{
-		// Käytä GetTimeOffsetMatchingFileList funktiota ja laske kuinka paljon ne vievät tilaa
-		// TOTEUTA VIELÄ!!!!!!
+		// Kï¿½ytï¿½ GetTimeOffsetMatchingFileList funktiota ja laske kuinka paljon ne vievï¿½t tilaa
+		// TOTEUTA VIELï¿½!!!!!!
 		return 1 * itsSingleFileSize;
 	}
 }
@@ -369,7 +370,7 @@ static NFmiCaseStudyDataCategory GetDataCategory(const NFmiHelpDataInfo &theData
 	if(type == NFmiInfoData::kViewable || type == NFmiInfoData::kHybridData|| type == NFmiInfoData::kModelHelpData || type == NFmiInfoData::kTrajectoryHistoryData)
 		return NFmiCaseStudyDataCategory::Model;
     else if(type == NFmiInfoData::kClimatologyData)
-        return NFmiCaseStudyDataCategory::Model; // Kaikki fraktiili mallidatat on laitettu tähän kategoriaan. Miten erotella havainto fraktiilit?
+        return NFmiCaseStudyDataCategory::Model; // Kaikki fraktiili mallidatat on laitettu tï¿½hï¿½n kategoriaan. Miten erotella havainto fraktiilit?
     else if(type == NFmiInfoData::kAnalyzeData)
 		return NFmiCaseStudyDataCategory::Analyze;
 	else if(type == NFmiInfoData::kObservations || type == NFmiInfoData::kFlashData || type == NFmiInfoData::kSingleStationRadarData)
@@ -401,7 +402,7 @@ bool NFmiCaseStudyDataFile::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, cons
 	if(theDataInfo.DataType() == NFmiInfoData::kSatelData)
 	{ 
 		// Kyse on kuva datasta.
-		// Kuvia ei cacheteta, joten pitää pyytää 'originaali' polkua, ei UsedFileNameFilter -polkua
+		// Kuvia ei cacheteta, joten pitï¿½ï¿½ pyytï¿½ï¿½ 'originaali' polkua, ei UsedFileNameFilter -polkua
 		itsFileFilter = PathUtils::fixPathSeparators(theDataInfo.FileNameFilter()); 
 		itsName = theDataInfo.ImageDataIdent().GetParamName();
 		itsProducer = *(theDataInfo.ImageDataIdent().GetProducer());
@@ -421,7 +422,7 @@ bool NFmiCaseStudyDataFile::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, cons
 		// Kyse on queryDatasta.
 		if(theDataInfo.IsCombineData())
 		{
-			// Yhdistelmädatoille otetaan yhdistelmän fileFilter
+			// Yhdistelmï¿½datoille otetaan yhdistelmï¿½n fileFilter
 			itsFileFilter = PathUtils::fixPathSeparators(theDataInfo.CombinedResultDataFileFilter());
 		}
 		else
@@ -466,18 +467,18 @@ json_spirit::Object NFmiCaseStudyDataFile::MakeJsonObject(const NFmiCaseStudyDat
 	jsonObject.push_back(json_spirit::Pair(gJsonName_ProducerId, static_cast<int>(theData.Producer().GetIdent())));
 	jsonObject.push_back(json_spirit::Pair(gJsonName_FileFilter, theData.FileFilter()));
 	jsonObject.push_back(json_spirit::Pair(gJsonName_RelativeStoredFileFilter, theData.RelativeStoredFileFilter()));
-	// start ja end offsetit laitetaan vain, jotta systeemi olisi taaksepäin vanhoihin versioihin nähden mahdollisimman yhteensopiva
+	// start ja end offsetit laitetaan vain, jotta systeemi olisi taaksepï¿½in vanhoihin versioihin nï¿½hden mahdollisimman yhteensopiva
 	jsonObject.push_back(json_spirit::Pair(gJsonName_StartOffsetInMinutes_legacy, 10 * 60));
 	jsonObject.push_back(json_spirit::Pair(gJsonName_EndOffsetInMinutes_legacy, 0));
 	jsonObject.push_back(json_spirit::Pair(gJsonName_ModelDataOffsetRangeInHours, NFmiCaseStudySystem::MakeModelDataOffsetRangeInHoursString(theData.DataFileWinRegValues().CaseStudyModelDataOffsetRangeInHours())));
 	jsonObject.push_back(json_spirit::Pair(gJsonName_LocalCacheDataCount, theData.DataFileWinRegValues().LocalCacheDataCount()));
-//	int itsDataIntervalInMinutes;	// ei ole hyötyä tallettaa case-study metadataan? johdettavissa?
-//	double itsSingleFileSize;		// ei ole hyötyä tallettaa case-study metadataan? johdettavissa?
-//	double itsTotalFileSize;		// ei ole hyötyä tallettaa case-study metadataan? johdettavissa?
-//	double itsMaxFileSize;			// ei ole hyötyä tallettaa case-study metadataan? johdettavissa?
-//	DataCategory itsCategory;		// ei ole hyötyä tallettaa case-study metadataan? johdettavissa?
+//	int itsDataIntervalInMinutes;	// ei ole hyï¿½tyï¿½ tallettaa case-study metadataan? johdettavissa?
+//	double itsSingleFileSize;		// ei ole hyï¿½tyï¿½ tallettaa case-study metadataan? johdettavissa?
+//	double itsTotalFileSize;		// ei ole hyï¿½tyï¿½ tallettaa case-study metadataan? johdettavissa?
+//	double itsMaxFileSize;			// ei ole hyï¿½tyï¿½ tallettaa case-study metadataan? johdettavissa?
+//	DataCategory itsCategory;		// ei ole hyï¿½tyï¿½ tallettaa case-study metadataan? johdettavissa?
 	jsonObject.push_back(json_spirit::Pair(gJsonName_DataType, static_cast<int>(theData.itsDataType)));
-//	int itsLevelCount;				// ei ole hyötyä tallettaa case-study metadataan? johdettavissa?
+//	int itsLevelCount;				// ei ole hyï¿½tyï¿½ tallettaa case-study metadataan? johdettavissa?
 	jsonObject.push_back(json_spirit::Pair(gJsonName_Store, theData.DataFileWinRegValues().Store()));
 	jsonObject.push_back(json_spirit::Pair(gJsonName_ImageFile, theData.ImageFile()));
 	jsonObject.push_back(json_spirit::Pair(gJsonName_StoreLastDataOnly, theData.StoreLastDataOnly()));
@@ -515,7 +516,7 @@ void NFmiCaseStudyDataFile::ParseJsonValue(json_spirit::Value &theValue)
 
 void NFmiCaseStudyDataFile::ParseJsonPair(json_spirit::Pair &thePair)
 {
-	// Tässä puretään CaseStudySystem luokan päätason pareja.
+	// Tï¿½ssï¿½ puretï¿½ï¿½n CaseStudySystem luokan pï¿½ï¿½tason pareja.
 	if(thePair.name_ == gJsonName_Name)
 		itsName = thePair.value_.get_str();
 	else if(thePair.name_ == gJsonName_ProducerName)
@@ -524,12 +525,12 @@ void NFmiCaseStudyDataFile::ParseJsonPair(json_spirit::Pair &thePair)
 		itsProducer.SetIdent(thePair.value_.get_int());
 	else if(thePair.name_ == gJsonName_FileFilter)
 	{
-		// Muutetaan vielä luetut polut niin että SHFileOperation-funktio ymmärtää ne varmasti
+		// Muutetaan vielï¿½ luetut polut niin ettï¿½ SHFileOperation-funktio ymmï¿½rtï¿½ï¿½ ne varmasti
 		itsFileFilter = PathUtils::fixPathSeparators(thePair.value_.get_str());
 	}
 	else if(thePair.name_ == gJsonName_RelativeStoredFileFilter)
 	{
-		// Muutetaan vielä luetut polut niin että SHFileOperation-funktio ymmärtää ne varmasti
+		// Muutetaan vielï¿½ luetut polut niin ettï¿½ SHFileOperation-funktio ymmï¿½rtï¿½ï¿½ ne varmasti
 		itsRelativeStoredFileFilter = PathUtils::fixPathSeparators(thePair.value_.get_str());
 	}
 	else if(thePair.name_ == gJsonName_ModelDataOffsetRangeInHours)
@@ -552,7 +553,7 @@ void NFmiCaseStudyDataFile::ParseJsonPair(json_spirit::Pair &thePair)
 	else if(thePair.name_ == gJsonName_ImageFile)
 		fImageFile = thePair.value_.get_bool();
 	else if(thePair.name_ == gJsonName_StoreLastDataOnly)
-		; // tyhjää legacy koodia, ei tehdä mitään, voisi varmaan poistaa
+		; // tyhjï¿½ï¿½ legacy koodia, ei tehdï¿½ mitï¿½ï¿½n, voisi varmaan poistaa
 	else if(thePair.name_ == gJsonName_IsCategoryHeader)
 		fCategoryHeader = thePair.value_.get_bool();
 	else if(thePair.name_ == gJsonName_IsProducerHeader)
@@ -636,7 +637,7 @@ void NFmiCaseStudyDataFile::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHe
 		}
 	}
 	if(itsDataType == NFmiInfoData::kKepaData || itsDataType == NFmiInfoData::kEditingHelpData || itsDataType == NFmiInfoData::kSingleStationRadarData)
-		helpDataInfo.FakeProducerId(static_cast<int>(Producer().GetIdent())); // näillä datatyypeillä on poikkeus tuottajat, siis eri tuottaja smartmetissa kuin mitä löytyy itse datasta
+		helpDataInfo.FakeProducerId(static_cast<int>(Producer().GetIdent())); // nï¿½illï¿½ datatyypeillï¿½ on poikkeus tuottajat, siis eri tuottaja smartmetissa kuin mitï¿½ lï¿½ytyy itse datasta
 
 	::DoFinalSetupsFromOriginalHelpDataInfo(helpDataInfo, FileFilter(), theOriginalHelpDataInfoSystem);
 	theHelpDataInfoSystem->AddDynamic(helpDataInfo);
@@ -723,7 +724,7 @@ static TimeRangeMatch CalcTimeRangeMatch(const ModelDataOffsetRangeInHours &rang
 }
 
 // Havaintodatoissa ja vastaavissa talletetaan vain yksi data, se on joko viimeinen, joka sopii aikahaarukkaan
-// tai annetun aikahaarukan jälkeisistä ajoista ensimmäinen (= varhaisin)
+// tai annetun aikahaarukan jï¿½lkeisistï¿½ ajoista ensimmï¿½inen (= varhaisin)
 static CaseStudyMatchingFiles GetNonModelDataMatchingFiles(const NFmiCaseStudyDataFile& theDataFile, const CtrlViewUtils::FileNameWithTimeList& fileNameWithTimeListAscending, const NFmiMetTime& usedWallClockTime)
 {
 	CaseStudyMatchingFiles matchingFiles;
@@ -754,21 +755,21 @@ static CaseStudyMatchingFiles GetNonModelDataMatchingFiles(const NFmiCaseStudyDa
 		{
 			foundUsedFileYet = true;
 		}
-		// Tässä laitetaan parista aina se ensimmäinen listaan
+		// Tï¿½ssï¿½ laitetaan parista aina se ensimmï¿½inen listaan
 		matchingFiles.push_back(std::make_pair(firstData.first, firstIsSelected));
 	}
 
-	// Loopin lopuksi laitetaan vielä viimeisin data listaan ja selaitetaan valituksi, jos ei ole vielä löytynyt valittua
+	// Loopin lopuksi laitetaan vielï¿½ viimeisin data listaan ja selaitetaan valituksi, jos ei ole vielï¿½ lï¿½ytynyt valittua
 	matchingFiles.push_back(std::make_pair(fileNameWithTimeListAscending.back().first, !foundUsedFileYet));
-	// Käännetään lopuksi lista, jotta siinä on uusimmat tiedostot ensin, jolloin siinä on käyttäjälle sama 
-	// logiikka kuin mallidatojen kanssa ainakin käyttäliittymässä.
+	// Kï¿½ï¿½nnetï¿½ï¿½n lopuksi lista, jotta siinï¿½ on uusimmat tiedostot ensin, jolloin siinï¿½ on kï¿½yttï¿½jï¿½lle sama 
+	// logiikka kuin mallidatojen kanssa ainakin kï¿½yttï¿½liittymï¿½ssï¿½.
 	matchingFiles.reverse();
 
 	return matchingFiles;
 }
 
 // Muuten normi mallidatoille talletetaan aina kaikki malliajot, jotka
-// menevät säädetyn aikaikkunan sisään.
+// menevï¿½t sï¿½ï¿½detyn aikaikkunan sisï¿½ï¿½n.
 static CaseStudyMatchingFiles GetModelDataMatchingFiles(const NFmiCaseStudyDataFile& theDataFile, const CtrlViewUtils::FileNameWithTimeList& fileNameWithTimeListAscending, const NFmiMetTime& usedWallClockTime)
 {
 	const auto& rangeInHours = theDataFile.DataFileWinRegValues().CaseStudyModelDataOffsetRangeInHours();
@@ -794,16 +795,16 @@ static CaseStudyMatchingFiles GetModelDataMatchingFiles(const NFmiCaseStudyDataF
 
 // 1. Tekee listan kopioitavista tiedostoista.
 // 2. Ottaa huomioon aikarajoitteet.
-// 3. Jos endOffset on 0 tai positiivinen, ei ole rajoitusta tiedoston aikaleiman 'uutuuteen' nähden, 
-// eli silloin kopsataan uusimmat tiedostot, vaikka niissä olisi seinäkelloa uudempi aika.
+// 3. Jos endOffset on 0 tai positiivinen, ei ole rajoitusta tiedoston aikaleiman 'uutuuteen' nï¿½hden, 
+// eli silloin kopsataan uusimmat tiedostot, vaikka niissï¿½ olisi seinï¿½kelloa uudempi aika.
 // 4. Mukana on koko polku ja tiedoston nimi.
-// 5. Tee lista missä on kaikki kyseisen datan polut ja niihin liittyvä bool muuttuja, joka kertoo talletetaanko tiedosto vai ei.
+// 5. Tee lista missï¿½ on kaikki kyseisen datan polut ja niihin liittyvï¿½ bool muuttuja, joka kertoo talletetaanko tiedosto vai ei.
 CaseStudyMatchingFiles NFmiCaseStudyDataFile::GetTimeOffsetMatchingFileList(const NFmiCaseStudyDataFile& theDataFile, const NFmiMetTime& usedWallClockTime, bool getFilesInAnyCase)
 {
-	// Haetaan kaikki tiedostot mitä FileFilter:illä löytyy (annettu aikaraja 1 on 1970.01.01 00:00:01)
+	// Haetaan kaikki tiedostot mitï¿½ FileFilter:illï¿½ lï¿½ytyy (annettu aikaraja 1 on 1970.01.01 00:00:01)
 	time_t earliestTimeLimit = 1;
 	auto filesWithTimes = NFmiFileSystem::PatternFiles(theDataFile.FileFilter(), earliestTimeLimit);
-	// Yleensä datojen kanssa järjestetään tiedostot ajan suhteen laskevassa järjestyksessä, jolloin uusimmat ovat listan kärjessä
+	// Yleensï¿½ datojen kanssa jï¿½rjestetï¿½ï¿½n tiedostot ajan suhteen laskevassa jï¿½rjestyksessï¿½, jolloin uusimmat ovat listan kï¿½rjessï¿½
 	auto timeSortedFiles = CtrlViewUtils::TimeSortFiles(filesWithTimes, true);
 	const auto& dataFileWinRegValues = theDataFile.DataFileWinRegValues();
 	if(!dataFileWinRegValues.Store() && getFilesInAnyCase)
@@ -822,7 +823,7 @@ CaseStudyMatchingFiles NFmiCaseStudyDataFile::GetTimeOffsetMatchingFileList(cons
 		{
 			if(theDataFile.StoreLastDataOnly() || dataFileWinRegValues.StoreLastDataOnly())
 			{
-				// Havaintodatojen kanssa järjestetään tiedostot ajan suhteen nousevassa järjestyksessä, jolloin vanhimmat ovat listan kärjessä
+				// Havaintodatojen kanssa jï¿½rjestetï¿½ï¿½n tiedostot ajan suhteen nousevassa jï¿½rjestyksessï¿½, jolloin vanhimmat ovat listan kï¿½rjessï¿½
 				auto timeSortedFiles = CtrlViewUtils::TimeSortFiles(filesWithTimes, false);
 				return ::GetNonModelDataMatchingFiles(theDataFile, timeSortedFiles, usedWallClockTime);
 			}
@@ -869,7 +870,7 @@ void NFmiCaseStudyProducerData::AddData(const NFmiCaseStudyDataFile &theData)
 	itsFilesData.push_back(theData);
 }
 
-// updeittaa kaikki tuottajan data koot ja paivittää totalSize ja maxSize-koot
+// updeittaa kaikki tuottajan data koot ja paivittï¿½ï¿½ totalSize ja maxSize-koot
 void NFmiCaseStudyProducerData::Update(const NFmiCaseStudySystem &theCaseStudySystem)
 {
 	double totalFileSize = 0;
@@ -960,7 +961,7 @@ json_spirit::Object NFmiCaseStudyProducerData::MakeJsonObject(const NFmiCaseStud
 
 	json_spirit::Object jsonObject; // luodaan ns. null-objekti
 	if(dataArray.size())
-	{ // täytetään objekti vain jos löytyi yhtään talletettavaa dataa
+	{ // tï¿½ytetï¿½ï¿½n objekti vain jos lï¿½ytyi yhtï¿½ï¿½n talletettavaa dataa
 		json_spirit::Object jsonHeaderObject = NFmiCaseStudyDataFile::MakeJsonObject(theData.ProducerHeaderInfo());
 		jsonObject.push_back(json_spirit::Pair(gJsonName_ProducerHeader, jsonHeaderObject));
 		jsonObject.push_back(json_spirit::Pair(gJsonName_ProducerDataArray, dataArray));
@@ -982,7 +983,7 @@ void NFmiCaseStudyProducerData::ParseJsonValue(json_spirit::Value &theValue)
 
 void NFmiCaseStudyProducerData::ParseJsonPair(json_spirit::Pair &thePair)
 {
-	// Tässä puretään CaseStudySystem luokan päätason pareja.
+	// Tï¿½ssï¿½ puretï¿½ï¿½n CaseStudySystem luokan pï¿½ï¿½tason pareja.
 	if(thePair.name_ == gJsonName_ProducerHeader)
 	{
 		itsProducerHeaderInfo.ParseJsonValue(thePair.value_);
@@ -1015,8 +1016,8 @@ void NFmiCaseStudyProducerData::AddDataToHelpDataInfoSystem(boost::shared_ptr<NF
 		itsFilesData[i].AddDataToHelpDataInfoSystem(theHelpDataInfoSystem, theBasePath, theOriginalHelpDataInfoSystem);
 }
 
-// Joskus kun tehdään UpdateNoProducerData -päöivityksiä, tulee samalle tuottajelle useampi kuin yksi data. Tällöin 
-// NFmiCaseStudyDataFile -luokan fOnlyOneData -attribuutti pitää käydä nollaamassa sen tuottajan datoille. 
+// Joskus kun tehdï¿½ï¿½n UpdateNoProducerData -pï¿½ï¿½ivityksiï¿½, tulee samalle tuottajelle useampi kuin yksi data. Tï¿½llï¿½in 
+// NFmiCaseStudyDataFile -luokan fOnlyOneData -attribuutti pitï¿½ï¿½ kï¿½ydï¿½ nollaamassa sen tuottajan datoille. 
 void NFmiCaseStudyProducerData::UpdateOnlyOneDataStates()
 {
     if(itsFilesData.size() >= 2)
@@ -1033,7 +1034,7 @@ void NFmiCaseStudyProducerData::InitDataWithStoredSettings(NFmiCaseStudyProducer
 	// otetaan talteen header-osiosta offsetit ja store -tieto
 	ProducerHeaderInfo().DataFileWinRegValues().DoCheckedAssignment(theOriginalProducerData.ProducerHeaderInfo().DataFileWinRegValues());
 
-	// Lisäksi jokaisen löytyneen vastin parin tiedot päivitetään
+	// Lisï¿½ksi jokaisen lï¿½ytyneen vastin parin tiedot pï¿½ivitetï¿½ï¿½n
 	std::vector<NFmiCaseStudyDataFile> &origDataFiles = theOriginalProducerData.FilesData();
 	if(origDataFiles.size() > 0)
 	{
@@ -1121,7 +1122,7 @@ static void SetProducerHeaderInfoValues(NFmiCaseStudyProducerData &theProducerDa
 void NFmiCaseStudyCategoryData::AddData(NFmiCaseStudyDataFile &theData)
 {
 	theData.DataFileWinRegValues().AdaptFixedSettings(CategoryHeaderInfo().DataFileWinRegValues());
-	// onko tuotttajalle jo omaa datasetti, jos ei ole, luo ensin se ja lisää data sitten tuottajelle
+	// onko tuotttajalle jo omaa datasetti, jos ei ole, luo ensin se ja lisï¿½ï¿½ data sitten tuottajelle
 	for(auto& producerData : itsProducersData)
 	{
 		if(producerData.GetProducerIdent() == theData.Producer().GetIdent())
@@ -1130,15 +1131,15 @@ void NFmiCaseStudyCategoryData::AddData(NFmiCaseStudyDataFile &theData)
 			return;
 		}
 	}
-	// jos siis ei löytynyt tuottajaa, lisätään sellainen tässä
+	// jos siis ei lï¿½ytynyt tuottajaa, lisï¿½tï¿½ï¿½n sellainen tï¿½ssï¿½
 	NFmiCaseStudyProducerData newProdData(theData.Producer());
 	::SetProducerHeaderInfoValues(newProdData, theData);
 	newProdData.AddData(theData);
 	itsProducersData.push_back(newProdData);
 }
 
-// Etsii löytyykö itsProducersData -vektorista 0-tuottajaa. 
-// Jos löytyy, poista se vektorista ja palauta. Muuten palauta tyhjä otus.
+// Etsii lï¿½ytyykï¿½ itsProducersData -vektorista 0-tuottajaa. 
+// Jos lï¿½ytyy, poista se vektorista ja palauta. Muuten palauta tyhjï¿½ otus.
 NFmiCaseStudyProducerData NFmiCaseStudyCategoryData::RemoveNoProducerData()
 {
     auto iter = std::find_if(itsProducersData.begin(), itsProducersData.end(), [](const auto &producerData) {return producerData.GetProducerIdent() == 0; });
@@ -1169,10 +1170,10 @@ void NFmiCaseStudyCategoryData::UpdateNoProducerData(NFmiHelpDataInfoSystem &the
         noProducerDataFile.UpdateWithInfo(theInfoOrganizer, theDataInfoSystem);
         AddData(noProducerDataFile);
     }
-    UpdateOnlyOneDataStates(); // Pitää päivittää OnlyOneData statukset, jos löytyi uusia datoja jollekin tuottajalle.
+    UpdateOnlyOneDataStates(); // Pitï¿½ï¿½ pï¿½ivittï¿½ï¿½ OnlyOneData statukset, jos lï¿½ytyi uusia datoja jollekin tuottajalle.
 }
 
-// updeittaa kaikki kategorian tuottajien data koot ja paivittää omat totalSize ja maxSize-koot
+// updeittaa kaikki kategorian tuottajien data koot ja paivittï¿½ï¿½ omat totalSize ja maxSize-koot
 void NFmiCaseStudyCategoryData::Update(const NFmiCaseStudySystem &theCaseStudySystem)
 {
 	double totalFileSize = 0;
@@ -1187,7 +1188,7 @@ void NFmiCaseStudyCategoryData::Update(const NFmiCaseStudySystem &theCaseStudySy
 	itsCategoryHeaderInfo.MaxFileSize(maxFileSize);
 }
 
-// updeittaa kategorian halutun tuottajan data koot ja paivittää omat totalSize ja maxSize-koot
+// updeittaa kategorian halutun tuottajan data koot ja paivittï¿½ï¿½ omat totalSize ja maxSize-koot
 void NFmiCaseStudyCategoryData::Update(unsigned long theProdId, const NFmiCaseStudySystem &theCaseStudySystem)
 {
 	double totalFileSize = 0;
@@ -1308,7 +1309,7 @@ json_spirit::Object NFmiCaseStudyCategoryData::MakeJsonObject(const NFmiCaseStud
 
 	json_spirit::Object jsonObject; // luodaan aluksi ns. null-objekti
 	if(dataArray.size())
-	{ // täytetään objekti vain jos löytyi yhtään talletettua tuottajaa
+	{ // tï¿½ytetï¿½ï¿½n objekti vain jos lï¿½ytyi yhtï¿½ï¿½n talletettua tuottajaa
 		json_spirit::Object jsonHeaderObject = NFmiCaseStudyDataFile::MakeJsonObject(theData.CategoryHeaderInfo());
 		jsonObject.push_back(json_spirit::Pair(gJsonName_Category, (int)theData.CategoryHeaderInfo().Category()));
 		jsonObject.push_back(json_spirit::Pair(gJsonName_CategoryHeader, jsonHeaderObject));
@@ -1326,13 +1327,13 @@ void NFmiCaseStudyCategoryData::ParseJsonValue(json_spirit::Value &theValue)
 		{
 			ParseJsonPair(*it);
 		}
-		CategoryHeaderInfo().Category(itsParsingCategory); // categoria pitää asettaa lopuksi vielä headeriinkin
+		CategoryHeaderInfo().Category(itsParsingCategory); // categoria pitï¿½ï¿½ asettaa lopuksi vielï¿½ headeriinkin
 	}
 }
 
 void NFmiCaseStudyCategoryData::ParseJsonPair(json_spirit::Pair &thePair)
 {
-	// Tässä puretään CaseStudySystem luokan päätason pareja.
+	// Tï¿½ssï¿½ puretï¿½ï¿½n CaseStudySystem luokan pï¿½ï¿½tason pareja.
 	if(thePair.name_ == gJsonName_Category)
 	{
 		itsParsingCategory = static_cast<NFmiCaseStudyDataCategory>(thePair.value_.get_int());
@@ -1368,7 +1369,7 @@ void NFmiCaseStudyCategoryData::InitDataWithStoredSettings(NFmiCaseStudyCategory
 	// otetaan talteen header-osiosta DataFileWinRegValues -tieto
 	CategoryHeaderInfo().DataFileWinRegValues().DoCheckedAssignment(theOriginalCategoryData.CategoryHeaderInfo().DataFileWinRegValues());
 
-	// Lisäksi jokaisen löytyneen producerDatan vastin parin tiedot päivitetään
+	// Lisï¿½ksi jokaisen lï¿½ytyneen producerDatan vastin parin tiedot pï¿½ivitetï¿½ï¿½n
 	auto& originalProducersData = theOriginalCategoryData.ProducersData();
 	for(auto& originalProducerData : originalProducersData)
 	{
@@ -1387,7 +1388,7 @@ void NFmiCaseStudyCategoryData::PutNoneProducerDataToEndFix()
 	);
 	if(iter != itsProducersData.end())
 	{
-		// Jos löytyi ns. None producer, siirretään se listan loppuun
+		// Jos lï¿½ytyi ns. None producer, siirretï¿½ï¿½n se listan loppuun
 		itsProducersData.splice(itsProducersData.end(), itsProducersData, iter);
 	}
 }
@@ -1451,13 +1452,20 @@ NFmiCaseStudySystem::NFmiCaseStudySystem(void)
 ,itsCaseStudyDialogData()
 ,itsTreePatternArray()
 {
-    HKEY usedKey = HKEY_CURRENT_USER;   
+#ifndef UNIX
+    HKEY usedKey = HKEY_CURRENT_USER;
     std::string sectionName = "\\General";
     std::string baseRegistryPath = "Software\\Fmi\\SmartMet";
     itsCaseStudyPath = ::CreateRegValue<CachedRegString>(baseRegistryPath, sectionName, "\\CaseStudyPath", usedKey, "D:\\data\\case");
     fZipFiles = ::CreateRegValue<CachedRegBool>(baseRegistryPath, sectionName, "\\ZipFiles", usedKey, true);
 	fStoreWarningMessages = ::CreateRegValue<CachedRegBool>(baseRegistryPath, sectionName, "\\StoreWarningMessages", usedKey, true);
 	fCropDataToZoomedMapArea = ::CreateRegValue<CachedRegBool>(baseRegistryPath, sectionName, "\\CropDataToZoomedMapArea", usedKey, false);
+#else // UNIX
+    itsCaseStudyPath = boost::make_shared<CachedRegString>("data/case");
+    fZipFiles = boost::make_shared<CachedRegBool>(true);
+    fStoreWarningMessages = boost::make_shared<CachedRegBool>(true);
+    fCropDataToZoomedMapArea = boost::make_shared<CachedRegBool>(false);
+#endif // UNIX
 }
 
 NFmiCaseStudySystem::~NFmiCaseStudySystem(void)
@@ -1479,6 +1487,7 @@ static void SetCategoryHeaderInfoValues(NFmiCaseStudyCategoryData &theCategory, 
 	theCategory.CategoryHeaderInfo().HelpDataInfoName(theCategory.CategoryHeaderInfo().Name());
 }
 
+#ifndef UNIX
 static NFmiCsDataFileWinReg MakeCsDataFileWinRegValues(const std::string& uniqueName, NFmiInfoData::Type dataType, NFmiCaseStudySettingsWinRegistry& theCaseStudySettingsWinRegistry)
 {
 	const int defaultModelDataCaseStudyCount = NFmiCaseStudySettingsWinRegistry::GetDefaultCaseStudyCountValue(dataType);
@@ -1495,6 +1504,7 @@ static NFmiCsDataFileWinReg MakeCsDataFileWinRegValues(const NFmiHelpDataInfo& i
 {
 	return ::MakeCsDataFileWinRegValues(info.Name(), info.DataType(), theCaseStudySettingsWinRegistry);
 }
+#endif // UNIX
 
 static auto SeekCustomFolderName(const std::string& customFolderName, std::vector<NFmiCategoryHeaderInitData>& categoryHeaders)
 {
@@ -1516,14 +1526,14 @@ static void InitCategoryHeaders(std::vector<NFmiCategoryHeaderInitData>& categor
 	for(const auto& customFolderName : customFolderNames)
 	{
 		auto iter = ::SeekCustomFolderName(customFolderName, categoryHeaders);
-		// Jos customFolderName:a ei löydy listasta, lisätään sellainen
+		// Jos customFolderName:a ei lï¿½ydy listasta, lisï¿½tï¿½ï¿½n sellainen
 		if(iter == categoryHeaders.end())
 		{
 			categoryHeaders.push_back(NFmiCategoryHeaderInitData(customFolderName, NFmiInfoData::kViewable, NFmiCaseStudyDataCategory::CustomFolder));
 		}
 	}
 
-	// Laitetaan vielä mahdollinen Silam custom kansio aina ihan viimeiseksi!
+	// Laitetaan vielï¿½ mahdollinen Silam custom kansio aina ihan viimeiseksi!
 	auto silamIter = ::SeekCustomFolderName(NFmiCaseStudySystem::GetSilamCustomFolderName(), categoryHeaders);
 	if(silamIter != categoryHeaders.end())
 	{
@@ -1567,6 +1577,7 @@ void NFmiCaseStudySystem::SetAllCustomFolderNames(NFmiHelpDataInfoSystem& theDat
 	}
 }
 
+#ifndef UNIX
 bool NFmiCaseStudySystem::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiInfoOrganizer &theInfoOrganizer, NFmiCaseStudySettingsWinRegistry& theCaseStudySettingsWinRegistry)
 {
 	const auto& categoryHeaders = NFmiCaseStudySystem::GetCategoryHeaders();
@@ -1580,7 +1591,7 @@ bool NFmiCaseStudySystem::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiIn
 
 	for(const auto& info : theDataInfoSystem.DynamicHelpDataInfos())
 	{
-		// Edes CaseStudy dialogissa ei haluta nähdä datoja, joita pidetään pelkkinä CaseStudy legacy datoina
+		// Edes CaseStudy dialogissa ei haluta nï¿½hdï¿½ datoja, joita pidetï¿½ï¿½n pelkkinï¿½ CaseStudy legacy datoina
 		if(!info.CaseStudyLegacyOnly())
 		{
 			NFmiCaseStudyDataFile data;
@@ -1593,6 +1604,7 @@ bool NFmiCaseStudySystem::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiIn
 	Update();
 	return true;
 }
+#endif // UNIX
 
 // Kun data on alustettu 1. kerran, laitetaan tuntemattomien datojen (None) producer osio aina viimeiseksi kategorian listoissa.
 void NFmiCaseStudySystem::PutNoneProducerDataToEndFix()
@@ -1619,6 +1631,7 @@ static void UpdateStoredValueBackToMap(T& updatedMap, U value, const std::string
 		*updatedMapIter->second = value;
 }
 
+#ifndef UNIX
 static void StoreDataFileValuesToWinRegistry(const NFmiCaseStudyDataFile &dataFile, NFmiCaseStudySettingsWinRegistry& theCaseStudySettingsWinRegistry)
 {
 	// 1. CaseStudy data count
@@ -1652,6 +1665,7 @@ void NFmiCaseStudySystem::UpdateValuesBackToWinRegistry(NFmiCaseStudySettingsWin
 		}
 	}
 }
+#endif // UNIX
 
 NFmiCaseStudyCategoryData* NFmiCaseStudySystem::GetCategoryData(NFmiCaseStudyDataFile& theCaseStudyDataFile)
 {
@@ -1677,7 +1691,7 @@ void NFmiCaseStudySystem::AddData(NFmiCaseStudyDataFile &theData)
 		categoryData->AddData(theData);
 }
 
-// updeittaa kaikki kategorian tuottajien data koot ja paivittää omat totalSize ja maxSize-koot
+// updeittaa kaikki kategorian tuottajien data koot ja paivittï¿½ï¿½ omat totalSize ja maxSize-koot
 void NFmiCaseStudySystem::Update(void)
 {
 	for(auto& categoryData : itsCategoriesData)
@@ -1686,9 +1700,9 @@ void NFmiCaseStudySystem::Update(void)
 	}
 }
 
-// Jos CaseStudy dialogi on avattu enenn kuin kaikkia datoja on ehditty lukea SmartMetiin, jäävät
-// puuttuvat datat 0 producer Id tuottajan alle. Nyt pitää käydä kaikki ne datat uudestaan läpi
-// ja katsoa onko kyseinen data luettu käyttöön. Sitten data pitää lisätä systeemiin uudestaan, että 
+// Jos CaseStudy dialogi on avattu enenn kuin kaikkia datoja on ehditty lukea SmartMetiin, jï¿½ï¿½vï¿½t
+// puuttuvat datat 0 producer Id tuottajan alle. Nyt pitï¿½ï¿½ kï¿½ydï¿½ kaikki ne datat uudestaan lï¿½pi
+// ja katsoa onko kyseinen data luettu kï¿½yttï¿½ï¿½n. Sitten data pitï¿½ï¿½ lisï¿½tï¿½ systeemiin uudestaan, ettï¿½ 
 // se menee oikeaan lokeroon.
 void NFmiCaseStudySystem::UpdateNoProducerData(NFmiHelpDataInfoSystem &theDataInfoSystem, NFmiInfoOrganizer &theInfoOrganizer)
 {
@@ -1700,7 +1714,7 @@ void NFmiCaseStudySystem::UpdateNoProducerData(NFmiHelpDataInfoSystem &theDataIn
 	PutNoneProducerDataToEndFix();
 }
 
-// updeittaa halutun kategorian halutun tuottajien data koot ja paivittää omat totalSize ja maxSize-koot
+// updeittaa halutun kategorian halutun tuottajien data koot ja paivittï¿½ï¿½ omat totalSize ja maxSize-koot
 void NFmiCaseStudySystem::Update(NFmiCaseStudyDataFile& theCaseStudyDataFile)
 {
 	auto categoryData = GetCategoryData(theCaseStudyDataFile);
@@ -1809,7 +1823,7 @@ static NFmiProducerSystem* GetProducerSystem(NFmiProducerSystemsHolder &theProdu
 	else if(theCategory == NFmiCaseStudyDataCategory::Observation)
 		return theProducerSystemsHolder.itsObsProducerSystem;
 	else if(theCategory == NFmiCaseStudyDataCategory::Analyze)
-		return theProducerSystemsHolder.itsObsProducerSystem; // analyysi tuottajat on sijoitettu myös obs-tuottaja listaan
+		return theProducerSystemsHolder.itsObsProducerSystem; // analyysi tuottajat on sijoitettu myï¿½s obs-tuottaja listaan
 	else if(theCategory == NFmiCaseStudyDataCategory::SatelImage)
 		return theProducerSystemsHolder.itsSatelImageProducerSystem;
 
@@ -1821,12 +1835,12 @@ void NFmiCaseStudySystem::SetProducerName(NFmiProducerSystemsHolder &theProducer
 	NFmiCaseStudyDataFile &prodHeaderInfo = theProducerData.ProducerHeaderInfo();
 	NFmiProducer tmpProd(prodHeaderInfo.Producer());
 	// 1. tuottajanimi arvaus on jo jostain producerin datasta otettu tuottaja nimi
-	std::string prodName = tmpProd.GetName();
+	std::string prodName = tmpProd.GetName().CharPtr();
 
 	NFmiProducerSystem *producerSystem = ::GetProducerSystem(theProducerSystemsHolder, prodHeaderInfo.Category());
 	if(producerSystem)
 	{
-		unsigned long index = producerSystem->FindProducerInfo(tmpProd); // palauttaa 0-indeksin, jos ei löytynyt
+		unsigned long index = producerSystem->FindProducerInfo(tmpProd); // palauttaa 0-indeksin, jos ei lï¿½ytynyt
 		if(index)
 		{
 			NFmiProducerInfo &prodInfo = producerSystem->Producer(index);
@@ -1834,7 +1848,7 @@ void NFmiCaseStudySystem::SetProducerName(NFmiProducerSystemsHolder &theProducer
 		}
 	}
 	
-	// asetetaan lopuksi saatu nimi sekä nimeksi että tuottaja-olion nimeksi
+	// asetetaan lopuksi saatu nimi sekï¿½ nimeksi ettï¿½ tuottaja-olion nimeksi
 	prodHeaderInfo.Name(prodName);
 	tmpProd.SetName(prodName);
 	prodHeaderInfo.Producer(tmpProd);
@@ -1850,7 +1864,7 @@ void NFmiCaseStudySystem::FillCaseStudyDialogData(NFmiProducerSystemsHolder &the
 	{
 		NFmiCaseStudyCategoryData &categoryData = categoryDataVec[i];
 		itsCaseStudyDialogData.push_back(&categoryData.CategoryHeaderInfo());
-		itsTreePatternArray.push_back(1); // päätaso puussa
+		itsTreePatternArray.push_back(1); // pï¿½ï¿½taso puussa
 
 		auto &producersData = categoryData.ProducersData();
 		for(auto & producerData : producersData)
@@ -1858,7 +1872,7 @@ void NFmiCaseStudySystem::FillCaseStudyDialogData(NFmiProducerSystemsHolder &the
 			std::vector<NFmiCaseStudyDataFile> &filesDataVec = producerData.FilesData();
 			bool hasOnlyOneData = filesDataVec.size() <= 1;
 			if(hasOnlyOneData == false)
-			{ // producer-taso tehdään, vain jos tuotttajalla on useita datoja
+			{ // producer-taso tehdï¿½ï¿½n, vain jos tuotttajalla on useita datoja
 				SetProducerName(theProducerSystemsHolder, producerData);
 				itsCaseStudyDialogData.push_back(&producerData.ProducerHeaderInfo());
 				itsTreePatternArray.push_back(2); // toinen taso puussa
@@ -1886,13 +1900,13 @@ json_spirit::Object NFmiCaseStudySystem::MakeJsonObject(NFmiCaseStudySystem &the
 		if(tmpObject.size())
 		{
 			json_spirit::Value tmpVal(tmpObject);
-			dataArray.push_back(tmpVal); // talletetaan categoria data vain jos siellä oli yhtään dataa talletettavaksi
+			dataArray.push_back(tmpVal); // talletetaan categoria data vain jos siellï¿½ oli yhtï¿½ï¿½n dataa talletettavaksi
 		}
 	}
 
 	json_spirit::Object jsonObject; // luodaan aluksi ns. null-objekti
 	if(dataArray.size())
-	{  // talletetaan CaseStudy-data vain jos oli yhtään categoriaa, jolla talletettiin yhtään dataa
+	{  // talletetaan CaseStudy-data vain jos oli yhtï¿½ï¿½n categoriaa, jolla talletettiin yhtï¿½ï¿½n dataa
 		jsonObject.push_back(json_spirit::Pair(gJsonName_Name, theData.CaseStudyName()));
 		jsonObject.push_back(json_spirit::Pair(gJsonName_Info, theData.CaseStudyInfo()));
         jsonObject.push_back(json_spirit::Pair(gJsonName_Path, theData.CaseStudyPath()));
@@ -1912,7 +1926,7 @@ bool NFmiCaseStudySystem::AreStoredMetaDataChanged(const NFmiCaseStudySystem &ot
         return true;
     if(itsCaseStudyPath != other.itsCaseStudyPath)
         return true;
-    // Huom! aikaa ei tässä tarkastella, koska siihen otetaan aina vain nykyinen ajan hetki ja se muuttuisi aina
+    // Huom! aikaa ei tï¿½ssï¿½ tarkastella, koska siihen otetaan aina vain nykyinen ajan hetki ja se muuttuisi aina
     if(*fZipFiles != *other.fZipFiles)
         return true;
 	if(*fStoreWarningMessages != *other.fStoreWarningMessages)
@@ -1925,16 +1939,22 @@ bool NFmiCaseStudySystem::AreStoredMetaDataChanged(const NFmiCaseStudySystem &ot
     return false;
 }
 
-#ifdef CreateDirectory // win32/MFC makro pitää undef:ata, muuten voi tulla ongelmia
+#ifdef CreateDirectory // win32/MFC makro pitï¿½ï¿½ undef:ata, muuten voi tulla ongelmia
 #undef CreateDirectory
 #endif
 
 static bool DoErrorActions(CWnd *theParentWindow, const std::string &theErrorStr, const std::string &theCaptionStr, bool showErrorMessageBox)
 {
+#ifndef UNIX
 	if(showErrorMessageBox)
 	{
 		::MessageBox(theParentWindow ? theParentWindow->GetSafeHwnd() : AfxGetMainWnd()->GetSafeHwnd(), CA2T(theErrorStr.c_str()), CA2T(theCaptionStr.c_str()), MB_OK | MB_ICONWARNING);
 	}
+#else
+	(void)theParentWindow;
+	(void)theCaptionStr;
+	(void)showErrorMessageBox;
+#endif
 	CatLog::logMessage(theErrorStr, CatLog::Severity::Error, CatLog::Category::Operational, true);
 	return false;
 }
@@ -1976,7 +1996,7 @@ bool NFmiCaseStudySystem::StoreMetaData(CWnd *theParentWindow, const std::string
 	auto pathOnlyPart = PathUtils::getPathSectionFromTotalFilePath(theMetaDataTotalFilePath);
 	if(NFmiFileSystem::DirectoryExists(pathOnlyPart) == false)
 	{ 
-		// yritetään luoda polkua
+		// yritetï¿½ï¿½n luoda polkua
 		if(NFmiFileSystem::CreateDirectory(pathOnlyPart) == false)
 		{
 			std::string errStr(::GetDictionaryString("Unable to create directory"));
@@ -2004,7 +2024,7 @@ bool NFmiCaseStudySystem::StoreMetaData(CWnd *theParentWindow, const std::string
 
 bool NFmiCaseStudySystem::ReadMetaData(const std::string &theFullPathFileName, CWnd *theParentWindow, bool showErrorMessageBox)
 {
-    // CaseStudySystem pitää resetoida ennen kuin aletaan lukemaan uutta tietoa tiedostosta.
+    // CaseStudySystem pitï¿½ï¿½ resetoida ennen kuin aletaan lukemaan uutta tietoa tiedostosta.
     Reset();
 
 	if(theFullPathFileName.empty())
@@ -2068,7 +2088,7 @@ void NFmiCaseStudySystem::ParseJsonValue(json_spirit::Value &theValue)
 
 void NFmiCaseStudySystem::ParseJsonPair(json_spirit::Pair &thePair)
 {
-	// Tässä puretään CaseStudySystem luokan päätason pareja.
+	// Tï¿½ssï¿½ puretï¿½ï¿½n CaseStudySystem luokan pï¿½ï¿½tason pareja.
 	if(thePair.name_ == gJsonName_Name)
 		itsCaseStudyName = thePair.value_.get_str();
 	else if(thePair.name_ == gJsonName_Info)
@@ -2120,12 +2140,12 @@ std::string NFmiCaseStudySystem::MakeCaseStudyDataHakeDirectory(const std::strin
 	return caseStudyDataHakeDirectory;
 }
 
-// tämä ottaa viimeisen polun osion annetusta polusta. Esim.
+// tï¿½mï¿½ ottaa viimeisen polun osion annetusta polusta. Esim.
 // "C:\\data\case1_data" -> "case1_data"
 static std::string GetRelativeDataDirectory(const std::string &theDataDir)
 {
 	std::string tmpStr = PathUtils::fixPathSeparators(theDataDir);
-	// Pitää poistaa perässä mahdollisesti oleva(t) kenoviiva(t)
+	// Pitï¿½ï¿½ poistaa perï¿½ssï¿½ mahdollisesti oleva(t) kenoviiva(t)
 	NFmiStringTools::TrimR(tmpStr, '\\'); 
 	std::string::size_type pos = tmpStr.find_last_of("\\");
 	if(pos != std::string::npos)
@@ -2279,11 +2299,11 @@ static bool CropDataToDestination(const std::string& filePath, const std::string
 
 			if(!::AreAreasOverlapping(sourceFastInfo.Area(), mapViewArea.get()))
 			{
-				// Jos kartan ja datan alueet eivät ole päällekkäin millään tavalla, palautetaan tässä true, jotta 
-				// kyseistä dataa ei talleteta 'turhaan' case-studyyn.
+				// Jos kartan ja datan alueet eivï¿½t ole pï¿½ï¿½llekkï¿½in millï¿½ï¿½n tavalla, palautetaan tï¿½ssï¿½ true, jotta 
+				// kyseistï¿½ dataa ei talleteta 'turhaan' case-studyyn.
 				// Esimerkkitapaus: 
-				// Maailmadatasta tehdään Australian alueelle caseStudy-data. Kartalla on latlon-projektio.
-				// Halutaan että euro-alueen stereograafiset (hirlam jne.) datat jäävät pois.
+				// Maailmadatasta tehdï¿½ï¿½n Australian alueelle caseStudy-data. Kartalla on latlon-projektio.
+				// Halutaan ettï¿½ euro-alueen stereograafiset (hirlam jne.) datat jï¿½ï¿½vï¿½t pois.
 				return true;
 			}
 		}
@@ -2318,12 +2338,13 @@ static CaseStudyMatchingFiles DoCropDataToZoomedAreaOperations(const CaseStudyMa
 }
 
 
-#ifdef CopyFile // winkkari makro pitää disabloida ensin ennen kuin voi käyttää NFmiFileSystem:in FileCopy-funktiota
+#ifdef CopyFile // winkkari makro pitï¿½ï¿½ disabloida ensin ennen kuin voi kï¿½yttï¿½ï¿½ NFmiFileSystem:in FileCopy-funktiota
 #undef CopyFile
 #endif 
 
 // 1. kopioi annetut tiedostot theDestDir-hakemistoon.
-// 2. Pitääkö muokata NFmiCaseStudyDataFile:en uusi suhteellinen polku, että myöhemmin sitä voidaan käyttää kun dataa ladataan katsottavaksi?
+// 2. Pitï¿½ï¿½kï¿½ muokata NFmiCaseStudyDataFile:en uusi suhteellinen polku, ettï¿½ myï¿½hemmin sitï¿½ voidaan kï¿½yttï¿½ï¿½ kun dataa ladataan katsottavaksi?
+#ifndef UNIX
 static void CopyFilesToDestination(const CaseStudyMatchingFiles &theMatchingFiles, const std::string &theDestDir, int theProgressDialogMaxCount, int &theProgressCounter, CWnd *theCopyWindowPos, const std::string& theCropDataAreaString)
 {
 	auto remainingCopyedFiles = theMatchingFiles;
@@ -2349,7 +2370,7 @@ static void CopyFilesToDestination(const CaseStudyMatchingFiles &theMatchingFile
     sfo.AddDestFile(CA2T(theDestDir.c_str()));
 
 	// Set up a few flags that control the operation.
-    sfo.SetOperationFlags( 
+    sfo.SetOperationFlags(
 	  FO_COPY,			// the operation type (copy in this case)
 	  theCopyWindowPos ? theCopyWindowPos : AfxGetMainWnd(),	// pointer to parent window
       FALSE,			// flag - silent mode?
@@ -2367,7 +2388,7 @@ static void CopyFilesToDestination(const CaseStudyMatchingFiles &theMatchingFile
 	progresstitleStr += "/";
 	progresstitleStr += NFmiStringTools::Convert(theProgressDialogMaxCount);
 	progresstitleStr += ")\0\0";
-    sfo.SetProgressDlgTitle(CA2T(progresstitleStr.c_str())); // toimii vain simple progress dialog -flagi päällä
+    sfo.SetProgressDlgTitle(CA2T(progresstitleStr.c_str())); // toimii vain simple progress dialog -flagi pï¿½ï¿½llï¿½
 
 	BOOL anyOperationsAborted = FALSE;
     // Start the operation.
@@ -2391,7 +2412,7 @@ static void CopyFilesToDestination(const CaseStudyMatchingFiles &theMatchingFile
 	}
 	if(anyOperationsAborted)
 	{
-		// copy-dialogille on sanottu Cancel, kysytään, halutaanko koko operaatio keskeyttää kokonaisuudessaa...
+		// copy-dialogille on sanottu Cancel, kysytï¿½ï¿½n, halutaanko koko operaatio keskeyttï¿½ï¿½ kokonaisuudessaa...
 		std::string questionStr(::GetDictionaryString("Do you want to cancel the whole CaseStudy operation?"));;
 		questionStr += "\n\n";
 		questionStr += ::GetDictionaryString("Press Yes if you want to cancel the whole\nCaseStudy-data making operation.");
@@ -2405,12 +2426,34 @@ static void CopyFilesToDestination(const CaseStudyMatchingFiles &theMatchingFile
 
 	theProgressCounter++;
 }
+#else // UNIX
+static void CopyFilesToDestination(const CaseStudyMatchingFiles &theMatchingFiles, const std::string &theDestDir, int /*theProgressDialogMaxCount*/, int &theProgressCounter, CWnd* /*theCopyWindowPos*/, const std::string& theCropDataAreaString)
+{
+	auto remainingCopyedFiles = theMatchingFiles;
+	if(!theCropDataAreaString.empty())
+		remainingCopyedFiles = ::DoCropDataToZoomedAreaOperations(remainingCopyedFiles, theDestDir, theCropDataAreaString);
+	for(const auto &copyedFile : remainingCopyedFiles)
+	{
+		if(copyedFile.second)
+		{
+			boost::filesystem::path src(copyedFile.first);
+			boost::filesystem::path dst(theDestDir);
+			dst /= src.filename();
+			boost::system::error_code ec;
+			boost::filesystem::copy_file(src, dst, boost::filesystem::copy_option::overwrite_if_exists, ec);
+			if(ec)
+				CatLog::logMessage(std::string("CopyFilesToDestination: ") + ec.message(), CatLog::Severity::Error, CatLog::Category::Operational);
+		}
+	}
+	theProgressCounter++;
+}
+#endif // UNIX
 
 static std::string GetDataFileDir(const std::string &theBaseDir, NFmiCaseStudyDataFile &theDataFile)
 {
 	std::string usedDir = theBaseDir;
 	if(theDataFile.ImageFile())
-	{ // kuville tehdään vielä omat kanava/data kohtaiset hakemistot
+	{ // kuville tehdï¿½ï¿½n vielï¿½ omat kanava/data kohtaiset hakemistot
 		usedDir += "\\";
 		usedDir += theDataFile.ImageParam().GetName();
 	}
@@ -2422,7 +2465,7 @@ static void StoreFileData(const std::string &theProducerDir, const std::string &
 	std::string usedDestDir = ::GetDataFileDir(theProducerDir, theDataFile);
 	std::string usedRelativeDestDir = ::GetDataFileDir(theRelativeProducerDir, theDataFile);
 	usedRelativeDestDir += "\\";
-	usedRelativeDestDir += ::GetRelativeDataDirectory(theDataFile.FileFilter()); // käytetään taas GetRelativeDataDirectory funktiota että saadaan käytetty tiedosto-filter -loppuosio talteen
+	usedRelativeDestDir += ::GetRelativeDataDirectory(theDataFile.FileFilter()); // kï¿½ytetï¿½ï¿½n taas GetRelativeDataDirectory funktiota ettï¿½ saadaan kï¿½ytetty tiedosto-filter -loppuosio talteen
 	theDataFile.RelativeStoredFileFilter(usedRelativeDestDir);
 
 	if(NFmiFileSystem::CreateDirectory(usedDestDir))
@@ -2437,7 +2480,7 @@ static void AddDataFilesToList(const std::string &theProducerDirIn, const std::s
 	std::string usedDestDir = ::GetDataFileDir(theProducerDirIn, theDataFileInOut);
 	std::string usedRelativeDestDir = ::GetDataFileDir(theRelativeProducerDirIn, theDataFileInOut);
 	usedRelativeDestDir += "\\";
-	usedRelativeDestDir += ::GetRelativeDataDirectory(theDataFileInOut.FileFilter()); // käytetään taas GetRelativeDataDirectory funktiota että saadaan käytetty tiedosto-filter -loppuosio talteen
+	usedRelativeDestDir += ::GetRelativeDataDirectory(theDataFileInOut.FileFilter()); // kï¿½ytetï¿½ï¿½n taas GetRelativeDataDirectory funktiota ettï¿½ saadaan kï¿½ytetty tiedosto-filter -loppuosio talteen
 	theDataFileInOut.RelativeStoredFileFilter(usedRelativeDestDir);
 
 	auto matchingFiles = NFmiCaseStudyDataFile::GetTimeOffsetMatchingFileList(theDataFileInOut, usedWallClockTime, false);
@@ -2449,7 +2492,7 @@ static void AddProducerDataFilesToList(const std::string &theCategoryDirIn, cons
 	std::vector<NFmiCaseStudyDataFile> &fileDataVec = theProducerData.FilesData();
 	for(size_t i=0; i < fileDataVec.size(); i++)
 	{
-		if(fileDataVec[i].DataEnabled()) // jos data on disabloitu smartmetin konffeissa, sitä ei myöskään yritetä ottaa mukaan case-study -dataan
+		if(fileDataVec[i].DataEnabled()) // jos data on disabloitu smartmetin konffeissa, sitï¿½ ei myï¿½skï¿½ï¿½n yritetï¿½ ottaa mukaan case-study -dataan
 			::AddDataFilesToList(theCategoryDirIn, theRelativeCategoryDirIn, fileDataVec[i], theCopyedFilesInOut, usedWallClockTime);
 	}
 }
@@ -2474,7 +2517,7 @@ static void StoreProducerData(const std::string &theCategoryDir, const std::stri
 		for(size_t i=0; i < fileDataVec.size(); i++)
 		{
 			NFmiCaseStudyDataFile &dataFile = fileDataVec[i];
-			if(dataFile.DataEnabled()) // jos data on disabloitu smartmetin konffeissa, sitä ei myöskään yritetä ottaa mukaan case-study -dataan
+			if(dataFile.DataEnabled()) // jos data on disabloitu smartmetin konffeissa, sitï¿½ ei myï¿½skï¿½ï¿½n yritetï¿½ ottaa mukaan case-study -dataan
 			{
 				if(dataFile.ImageFile())
 				{
@@ -2540,7 +2583,7 @@ int NFmiCaseStudySystem::CalculateProgressDialogCount(void) const
 						if(imageProducer == false)
 							break; // tullaan ulos jos ei ole imageTuottaja, koska silloin on vain yksi kopiointi
 						if(storeLastDataOnlyCategory)
-							goto storeLastDataOnlyBailOut; // tämä koodi oli yksinkertaisin goto-lausekkeen avulla, jos kyse on analyysi/havainto datasta, tehdään kyseisille datoille kerta kopio koko kategorialle
+							goto storeLastDataOnlyBailOut; // tï¿½mï¿½ koodi oli yksinkertaisin goto-lausekkeen avulla, jos kyse on analyysi/havainto datasta, tehdï¿½ï¿½n kyseisille datoille kerta kopio koko kategorialle
 					}
 				} // fileVec -for
 			}
@@ -2550,15 +2593,15 @@ storeLastDataOnlyBailOut: ;
 	return counter;
 }
 
-// tästä tulee joskus varmaan erillinen funktio, mutta nyt teen CaseStudy-datan teko funktiota. 
-// Sen tehtävät ovat:
+// tï¿½stï¿½ tulee joskus varmaan erillinen funktio, mutta nyt teen CaseStudy-datan teko funktiota. 
+// Sen tehtï¿½vï¿½t ovat:
 // 1. Lue annettu metadata-tiedosto ja tee sen avulla CaseStudy-tietorakenteet.
 // 2. Tee annettuun polkuun hakemisto CaseStudyName"_data"
 // 3. Tee sen alle hakemisto jokaiselle kategorialle
 // 4. Tee kategoria-hakemistojen alle jokaiselle tuottajalle oma hakemisto
-// 5. Tee image datoille vielä jokaiselle parametrille oma hakemisto
-// 6. Kopioi halutut datat omiin hakemistoihinha annetuista poluista annetuilla fileFiltereillä ja aikavälillä
-// HUOM! Voi heittää CaseStudyOperationCanceledException -poikkeuksen!!!
+// 5. Tee image datoille vielï¿½ jokaiselle parametrille oma hakemisto
+// 6. Kopioi halutut datat omiin hakemistoihinha annetuista poluista annetuilla fileFiltereillï¿½ ja aikavï¿½lillï¿½
+// HUOM! Voi heittï¿½ï¿½ CaseStudyOperationCanceledException -poikkeuksen!!!
 bool NFmiCaseStudySystem::MakeCaseStudyData(const std::string &theFullPathMetaDataFileName, CWnd *theParentWindow, CWnd *theCopyWindowPos, const std::string& theCropDataAreaString)
 {
 	if(ReadMetaData(theFullPathMetaDataFileName, theParentWindow, true))
@@ -2574,13 +2617,13 @@ bool NFmiCaseStudySystem::MakeCaseStudyData(const std::string &theFullPathMetaDa
 				::StoreCategoryData(dataDir, relativeDataDir, itsCategoriesData[i], progressDialogMaxCount, progressCounter, theCopyWindowPos, theCropDataAreaString, usedWallClockTime);
 		}
 
-		StoreMetaData(theParentWindow, theFullPathMetaDataFileName, true); // tehdään uudelleen talletus päivitetyillä relatiivisilla poluilla
+		StoreMetaData(theParentWindow, theFullPathMetaDataFileName, true); // tehdï¿½ï¿½n uudelleen talletus pï¿½ivitetyillï¿½ relatiivisilla poluilla
 	}
 	return false;
 }
 
 // Tekee nyt ladattuna olevasta caseStudy-datasta NFmiHelpDataInfoSystem -olion. Staattinen data-osio annetaan argumenttina, 
-// koska niitä ei talleteta CaseStudy-dataan.
+// koska niitï¿½ ei talleteta CaseStudy-dataan.
 boost::shared_ptr<NFmiHelpDataInfoSystem> NFmiCaseStudySystem::MakeHelpDataInfoSystem(NFmiHelpDataInfoSystem &theOriginalHelpDataInfoSystem, const std::string &theBasePath)
 {
 	boost::shared_ptr<NFmiHelpDataInfoSystem> helpDataInfoSystem;
@@ -2629,9 +2672,9 @@ std::string NFmiCaseStudySystem::MakeCaseStudyFilePattern(const std::string &the
 				auto &dataFileVector = producerData.FilesData();
 				for(auto & dataFile : dataFileVector)
 				{
-					auto pos = MacroParam::ci_find_substr(dataFile.RelativeStoredFileFilter(), patternWithoutPath); // tämä etsintä työ pitää tehdä case-insensitiivisti, tai muuten kaikkien eri konffeissa olevien juttujen pitää olla tarkalleen samalla lailla kirjoitettu
+					auto pos = MacroParam::ci_find_substr(dataFile.RelativeStoredFileFilter(), patternWithoutPath); // tï¿½mï¿½ etsintï¿½ tyï¿½ pitï¿½ï¿½ tehdï¿½ case-insensitiivisti, tai muuten kaikkien eri konffeissa olevien juttujen pitï¿½ï¿½ olla tarkalleen samalla lailla kirjoitettu
 					if(pos != MacroParam::ci_string_not_found)
-					{ // löytyi haluttu data, rakenna nyt siihen sopiva file-filter
+					{ // lï¿½ytyi haluttu data, rakenna nyt siihen sopiva file-filter
 						std::string newFilePattern = theBasePath;
 						newFilePattern += dataFile.RelativeStoredFileFilter();
 						if(fMakeOnlyPath)
@@ -2646,21 +2689,21 @@ std::string NFmiCaseStudySystem::MakeCaseStudyFilePattern(const std::string &the
 	return "";
 }
 
-// Asettaa annettuun dataloadingInfoon kaikki tavittavat CaseStudy-datoihin viittaavat polut ja muut kuntoon, että
+// Asettaa annettuun dataloadingInfoon kaikki tavittavat CaseStudy-datoihin viittaavat polut ja muut kuntoon, ettï¿½
 // CaseStudy-moodissa voidaan ladata editoitavaa dataa halutulla tavalla.
 void NFmiCaseStudySystem::SetUpDataLoadinInfoForCaseStudy(NFmiDataLoadingInfo &theDataLoadingInfo, const std::string &theBasePath)
 {
 	theDataLoadingInfo.UseDataCache(false); // case-studyssa dataa ei lueta cachesta, vaan case-studyn omista data hakemistoista
 
-	std::string model1FilePattern = theDataLoadingInfo.Model1FilePattern();
+	std::string model1FilePattern = theDataLoadingInfo.Model1FilePattern().CharPtr();
 	std::string model1NewFilePattern = MakeCaseStudyFilePattern(model1FilePattern, theBasePath, false);
 	theDataLoadingInfo.Model1FilePattern(model1NewFilePattern);
 
-	std::string model2FilePattern = theDataLoadingInfo.Model2FilePattern();
+	std::string model2FilePattern = theDataLoadingInfo.Model2FilePattern().CharPtr();
 	std::string model2NewFilePattern = MakeCaseStudyFilePattern(model2FilePattern, theBasePath, false);
 	theDataLoadingInfo.Model2FilePattern(model2NewFilePattern);
 
-	std::string dataBaseInPattern = theDataLoadingInfo.DataBaseFileNameIn();
+	std::string dataBaseInPattern = theDataLoadingInfo.DataBaseFileNameIn().CharPtr();
 	std::string dataBaseInNewPattern = MakeCaseStudyFilePattern(dataBaseInPattern, theBasePath, true);
 	theDataLoadingInfo.DataBaseInPath(dataBaseInNewPattern);
 
@@ -2720,12 +2763,12 @@ std::string NFmiCaseStudySystem::MakeModelDataOffsetRangeInHoursString(const Mod
 ModelDataOffsetRangeInHours NFmiCaseStudySystem::MakeTimeOffsetRange(const std::string& str)
 {
 	std::vector<std::string> parts;
-	// Tehdään varmuuden vuoksi splittaus kaikilla mahdollisilla erotinmerkeillä, vaikka virallinen onkin '-' merkki.
+	// Tehdï¿½ï¿½n varmuuden vuoksi splittaus kaikilla mahdollisilla erotinmerkeillï¿½, vaikka virallinen onkin '-' merkki.
 	boost::split(parts, str, boost::is_any_of(",-:;/|\\"));
 	if(parts.size() == 1)
 	{
 		auto index1 = boost::lexical_cast<int>(parts.back());
-		// Vain yksi mahdollinen luku, toinen indeksi on tällöin aina 0
+		// Vain yksi mahdollinen luku, toinen indeksi on tï¿½llï¿½in aina 0
 		return std::make_pair(index1, 0);
 	}
 	else if(parts.size() == 2)

@@ -1,6 +1,6 @@
-// NFmiViewPosRegistryInfo-luokka pitää sisällään tiettyjä tietoja mitä tarvitaan
-// kun näytön koko ja sijainti laitetaan rekisteriin. Tämä ei siis hallitse itse 
-// rekisteriä, mutta tietää avaimen ja ikkunan default aseman.
+// NFmiViewPosRegistryInfo-luokka pitï¿½ï¿½ sisï¿½llï¿½ï¿½n tiettyjï¿½ tietoja mitï¿½ tarvitaan
+// kun nï¿½ytï¿½n koko ja sijainti laitetaan rekisteriin. Tï¿½mï¿½ ei siis hallitse itse 
+// rekisteriï¿½, mutta tietï¿½ï¿½ avaimen ja ikkunan default aseman.
 #pragma once
 
 #include <string>
@@ -8,10 +8,17 @@
 class NFmiViewPosRegistryInfo
 {
 public:
+#ifndef UNIX
     NFmiViewPosRegistryInfo(const CRect &rectDefault, const std::string &winRegistryKeyStr);
     const CRect& DefaultWindowRect(void) const {return mRectDefault;}
+#else
+    NFmiViewPosRegistryInfo(const std::string &winRegistryKeyStr) : mWinRegistryKeyStr(winRegistryKeyStr) {}
+    NFmiViewPosRegistryInfo() = default;
+#endif
     const std::string& WinRegistryKeyStr(void) const {return mWinRegistryKeyStr;}
 private:
-    CRect mRectDefault; // oletus koko jos rekisterissä ei ole arvoa
+#ifndef UNIX
+    CRect mRectDefault; // oletus koko jos rekisterissï¿½ ei ole arvoa
+#endif
     std::string mWinRegistryKeyStr;
 };

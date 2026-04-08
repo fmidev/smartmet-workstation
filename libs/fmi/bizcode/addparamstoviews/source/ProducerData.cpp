@@ -24,10 +24,10 @@ static char THIS_FILE[] = __FILE__;
 
 namespace
 {
-    // SmartMetin CaseStudy moodi laitetaan tähän talteen, jotta voidaan jättää
-    // normi moodissa tietyt datat (satelliittikuva datat, jotka on muuten käytöstä poistetut) 
-    // pois dialogista. Jos taas ollaan CaseStudy moodissa, silloin ne lisätään käyttöön, 
-    // koska talletetussa CaseStudydatapaketissa saattaa olla sellaisia vielä käytössä.
+    // SmartMetin CaseStudy moodi laitetaan tï¿½hï¿½n talteen, jotta voidaan jï¿½ttï¿½ï¿½
+    // normi moodissa tietyt datat (satelliittikuva datat, jotka on muuten kï¿½ytï¿½stï¿½ poistetut) 
+    // pois dialogista. Jos taas ollaan CaseStudy moodissa, silloin ne lisï¿½tï¿½ï¿½n kï¿½yttï¿½ï¿½n, 
+    // koska talletetussa CaseStudydatapaketissa saattaa olla sellaisia vielï¿½ kï¿½ytï¿½ssï¿½.
     bool gCaseStudyModeOn = false;
 
     bool isDataOnlyOnOneLevel(const boost::shared_ptr<NFmiFastQueryInfo> &info)
@@ -361,7 +361,7 @@ namespace AddParams
     // Unique id: name + "_" + prodId (e.g. "Ecmwf_240")
     std::string ProducerData::makeUniqueProducerIdString() const
     {
-        std::string uniqueId = producer_.GetName();
+        std::string uniqueId = producer_.GetName().CharPtr();
         uniqueId += "_";
         uniqueId += std::to_string(producer_.GetIdent());
         return uniqueId;

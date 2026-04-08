@@ -8,7 +8,9 @@
 #include "CtrlViewFunctions.h"
 #include "catlog/catlog.h"
 
+#ifndef UNIX
 #include <agX/agx.h>
+#endif // UNIX
 
 #include <numeric>
 #include <math.h>
@@ -22,18 +24,18 @@ namespace
 {
 	const NFmiColor g_DefaultValueRangeColor;
 
-	// Kun toolmaster piirtää isoviivan discreetistä datasta tulokset voivat olla hieman yllättäviä.
-	// Esim. kokonaispilvisyys (10% tarkkuudella) voi mennä pieleen jos joillain alueilla on paljon
-	// samoja arvoja (esim. 90% ja 80% sekaisin) ja raja menee siinä 'välissä' eli 90%.
-	// Ongelma voidaan kiertää, kun esim. kaikkia rajoja pienennetään sisäisesti hieman, jolloin
-	// 90% rajasta tuleekin oikeasti 89.99999%. Tällöin isoviivat kiertavat kauniisti 90% arvot.
-	static const float gToolMasterContourLimitChangeValue = std::numeric_limits<float>::epsilon() * 3; // tämä pitää olla pieni arvo (~epsilon) koska muuten pienet rajat eivät toimi, mutta pelkkä epsilon on liian pieni
+	// Kun toolmaster piirtï¿½ï¿½ isoviivan discreetistï¿½ datasta tulokset voivat olla hieman yllï¿½ttï¿½viï¿½.
+	// Esim. kokonaispilvisyys (10% tarkkuudella) voi mennï¿½ pieleen jos joillain alueilla on paljon
+	// samoja arvoja (esim. 90% ja 80% sekaisin) ja raja menee siinï¿½ 'vï¿½lissï¿½' eli 90%.
+	// Ongelma voidaan kiertï¿½ï¿½, kun esim. kaikkia rajoja pienennetï¿½ï¿½n sisï¿½isesti hieman, jolloin
+	// 90% rajasta tuleekin oikeasti 89.99999%. Tï¿½llï¿½in isoviivat kiertavat kauniisti 90% arvot.
+	static const float gToolMasterContourLimitChangeValue = std::numeric_limits<float>::epsilon() * 3; // tï¿½mï¿½ pitï¿½ï¿½ olla pieni arvo (~epsilon) koska muuten pienet rajat eivï¿½t toimi, mutta pelkkï¿½ epsilon on liian pieni
 
 
-	// Custom color laskuissa tulee mukaan transparenttien värien yhdistäminen toisiin väreihin.
-	// Jos läpikäytävä väri on transparentti, pitää se yhdistää seuraavaan väriin, jos sellainen löytyy.
-	// Jos seuraava väri-indeksi on myös transparentti, ei tehdä yhdistelyä.
-	// Jos viimeinen väri-indeksi on transparentti, mutta sitä edelltävä ei ole, pitää nekin yhdistää.
+	// Custom color laskuissa tulee mukaan transparenttien vï¿½rien yhdistï¿½minen toisiin vï¿½reihin.
+	// Jos lï¿½pikï¿½ytï¿½vï¿½ vï¿½ri on transparentti, pitï¿½ï¿½ se yhdistï¿½ï¿½ seuraavaan vï¿½riin, jos sellainen lï¿½ytyy.
+	// Jos seuraava vï¿½ri-indeksi on myï¿½s transparentti, ei tehdï¿½ yhdistelyï¿½.
+	// Jos viimeinen vï¿½ri-indeksi on transparentti, mutta sitï¿½ edelltï¿½vï¿½ ei ole, pitï¿½ï¿½ nekin yhdistï¿½ï¿½.
 	std::vector<NFmiColor> calcDefaultColorTableColorsFromCustomColorIndexies(const std::vector<int>& colorIndexies)
 	{
 		std::vector<NFmiColor> colors;
@@ -46,14 +48,14 @@ namespace
 				auto lastColorIsTransparent = (colorIndex == ToolMasterColorCube::UsedHollowColorIndex());
 				if(lastColorIsTransparent)
 				{
-					// Jos viimeinen väri oli läpinäkyvä, pitää se yhdistää listalle viimeiseksi lisättyyn väriin
-					// laittamalla kyseisen värin alpha täysin läpinäkyväksi.
+					// Jos viimeinen vï¿½ri oli lï¿½pinï¿½kyvï¿½, pitï¿½ï¿½ se yhdistï¿½ï¿½ listalle viimeiseksi lisï¿½ttyyn vï¿½riin
+					// laittamalla kyseisen vï¿½rin alpha tï¿½ysin lï¿½pinï¿½kyvï¿½ksi.
 					if(!colors.empty())
 						colors.back().Alpha(1.f);
 				}
 				else
 				{
-					// Jos viimeinen väri ei ollut transparentti, lisätään se vain listaan.
+					// Jos viimeinen vï¿½ri ei ollut transparentti, lisï¿½tï¿½ï¿½n se vain listaan.
 					colors.push_back(ToolMasterColorCube::ColorIndexToRgb(colorIndex));
 				}
 			}
@@ -66,18 +68,18 @@ namespace
 				{
 					if(color1IsTransparent && color2IsTransparent)
 					{
-						// Kaksi peräkkäistä läpinäkyvää väriä, laitetaan nykyinen sellaisenaan värilistaan
+						// Kaksi perï¿½kkï¿½istï¿½ lï¿½pinï¿½kyvï¿½ï¿½ vï¿½riï¿½, laitetaan nykyinen sellaisenaan vï¿½rilistaan
 						colors.push_back(ToolMasterColorCube::ColorIndexToRgb(colorIndex));
 					}
 					else if(color1IsTransparent)
 					{
 						// Nykyinen on transparentti ja seuraava ei ole ==>
-						// Otetaan itse väri seuraavasta indeksistä
+						// Otetaan itse vï¿½ri seuraavasta indeksistï¿½
 						auto combinedTransparentColor = ToolMasterColorCube::ColorIndexToRgb(nextColorIndex);
-						// Laitetaan opaciteetti täysin pois päältä
+						// Laitetaan opaciteetti tï¿½ysin pois pï¿½ï¿½ltï¿½
 						combinedTransparentColor.Alpha(1.f);
 						colors.push_back(combinedTransparentColor);
-						// Hypätään seuraava väri yli
+						// Hypï¿½tï¿½ï¿½n seuraava vï¿½ri yli
 						++index;
 					}
 					else
@@ -108,29 +110,29 @@ namespace
 		return colorIndexies;
 	}
 
-	// On havaittu, että jos lasketaan originaali stepeillä blendausrajat ja värit, niitä
-	// tulee niin paljon että ihmissilmä ei enää erota värejä toisistaan ja piirto vain
-	// turhan takia hidastuu, tällöin halutaan etsia sopiva steppi, millä saadaan riittävän
-	// hyvää jälkeä, ilman että contouraus kuitenkaan hidastuu liikaa.
-	// Esim. On haluttu piirtää pintapaineen arvoja välillä 980 - 1010 (limitRange = 30) 
-	// ja haluttu tehdä se 0.001 välein, tulisi eri contouraus rajoja ja värejä  30000 kpl. 
-	// Mikään kone ei voisi visualisoida värien siirtymä tuolla tarkkuudella (10000 sävyn 
-	// muutos yhdestä väristä toiseen), eikä mikään olento pystyisi niitä silmillään erottelemaan.
-	// Nyt halutaan laskea sellainen steppi, mikä tuottaa maksimissaan ehkä n. 300-500 väriä koko skaalaan.
+	// On havaittu, ettï¿½ jos lasketaan originaali stepeillï¿½ blendausrajat ja vï¿½rit, niitï¿½
+	// tulee niin paljon ettï¿½ ihmissilmï¿½ ei enï¿½ï¿½ erota vï¿½rejï¿½ toisistaan ja piirto vain
+	// turhan takia hidastuu, tï¿½llï¿½in halutaan etsia sopiva steppi, millï¿½ saadaan riittï¿½vï¿½n
+	// hyvï¿½ï¿½ jï¿½lkeï¿½, ilman ettï¿½ contouraus kuitenkaan hidastuu liikaa.
+	// Esim. On haluttu piirtï¿½ï¿½ pintapaineen arvoja vï¿½lillï¿½ 980 - 1010 (limitRange = 30) 
+	// ja haluttu tehdï¿½ se 0.001 vï¿½lein, tulisi eri contouraus rajoja ja vï¿½rejï¿½  30000 kpl. 
+	// Mikï¿½ï¿½n kone ei voisi visualisoida vï¿½rien siirtymï¿½ tuolla tarkkuudella (10000 sï¿½vyn 
+	// muutos yhdestï¿½ vï¿½ristï¿½ toiseen), eikï¿½ mikï¿½ï¿½n olento pystyisi niitï¿½ silmillï¿½ï¿½n erottelemaan.
+	// Nyt halutaan laskea sellainen steppi, mikï¿½ tuottaa maksimissaan ehkï¿½ n. 300-500 vï¿½riï¿½ koko skaalaan.
 	float calcSuitableBlendingStep(float originalStep, float limitRange, float maximumAllowedLimitCount)
 	{
 		auto originalBlendedColorCount = (limitRange / originalStep) + 2.f;
 		if(originalBlendedColorCount < maximumAllowedLimitCount)
 			return originalStep;
 
-		// Värejä on tulossa liikaa, pitää alkaa harventamaan
+		// Vï¿½rejï¿½ on tulossa liikaa, pitï¿½ï¿½ alkaa harventamaan
 		float sparsingFactor = originalBlendedColorCount / maximumAllowedLimitCount;
 		auto sparsedRawStep = originalStep * sparsingFactor;
-		// Päätellään uuden stepin suuruusluokka
+		// Pï¿½ï¿½tellï¿½ï¿½n uuden stepin suuruusluokka
 		auto log10Value = std::log10f(sparsedRawStep);
 		auto roundedLog10ValueInteger = std::roundf(log10Value);
 		auto normilizedSparsedRawStep = sparsedRawStep / std::pow(10.f, roundedLog10ValueInteger);
-		// Tässä on listattu kaikki halutut 'järkevät' stepit välillä [1,10[ (>=1 ja <10).
+		// Tï¿½ssï¿½ on listattu kaikki halutut 'jï¿½rkevï¿½t' stepit vï¿½lillï¿½ [1,10[ (>=1 ja <10).
 		// Lopullinen steppi laitetaan sitten vain oikeaan koko luokkaan 
 		// (esim. 2:n tapauksessa ...,0.02, 0.2, 2, 20, 200,...).
 		std::vector<float> suitablePowerOfOneSteps{0.5f, 1.f, 2.f, 2.5f, 5.f, 10.f };
@@ -145,15 +147,15 @@ namespace
 			return kFloatMissing;
 	}
 
-	// Tässä lasketaan kuinka monta väriä voidaan blendata annettujen värien välille 
-	// käyttämällä oletus värikuutiota, jossa 8x8x8 väriä. 
-	// Suurin väriskaala muutos saadaan, jos color1:n jokin kanava eroaa color2:n 
-	// vastaavasta 1:llä. Tällöin näiden kahden värin väliin mahtuu 6 väriä värikuutiosta,
-	// tällöin funktio palauttaa maksimi arvon 6.
-	// Jos värien maksimi kanava ero on 0, tällöin värit ovat käytännössä samoja ja 
-	// mahdollisten steppien määrä on 0 mikä on minimi. 
-	// Jos maksimi kanava ero on luokkaa 1/(8-1) eli ~0.143, ovat annetut värit yhden stepin verran erilaisia,
-	// mutta niiden väliin ei voi laskea yhtään uutta väriä, tällöin steppien määrä on myös 0.
+	// Tï¿½ssï¿½ lasketaan kuinka monta vï¿½riï¿½ voidaan blendata annettujen vï¿½rien vï¿½lille 
+	// kï¿½yttï¿½mï¿½llï¿½ oletus vï¿½rikuutiota, jossa 8x8x8 vï¿½riï¿½. 
+	// Suurin vï¿½riskaala muutos saadaan, jos color1:n jokin kanava eroaa color2:n 
+	// vastaavasta 1:llï¿½. Tï¿½llï¿½in nï¿½iden kahden vï¿½rin vï¿½liin mahtuu 6 vï¿½riï¿½ vï¿½rikuutiosta,
+	// tï¿½llï¿½in funktio palauttaa maksimi arvon 6.
+	// Jos vï¿½rien maksimi kanava ero on 0, tï¿½llï¿½in vï¿½rit ovat kï¿½ytï¿½nnï¿½ssï¿½ samoja ja 
+	// mahdollisten steppien mï¿½ï¿½rï¿½ on 0 mikï¿½ on minimi. 
+	// Jos maksimi kanava ero on luokkaa 1/(8-1) eli ~0.143, ovat annetut vï¿½rit yhden stepin verran erilaisia,
+	// mutta niiden vï¿½liin ei voi laskea yhtï¿½ï¿½n uutta vï¿½riï¿½, tï¿½llï¿½in steppien mï¿½ï¿½rï¿½ on myï¿½s 0.
 	int calcPossibleColorStepsBetweenColors(const NFmiColor& color1, const NFmiColor& color2)
 	{
 		auto actualColorCubeColor1 = ToolMasterColorCube::ColorToActualCubeColor(color1);
@@ -163,14 +165,14 @@ namespace
 		float colorChannelDifference3 = std::fabs(actualColorCubeColor1.Blue() - actualColorCubeColor2.Blue());
 		float maxDifference = std::max(colorChannelDifference1, colorChannelDifference2);
 		maxDifference = std::max(maxDifference, colorChannelDifference3);
-		// Varmistetaan vielä että maxDifference arvo on 0 - 1
+		// Varmistetaan vielï¿½ ettï¿½ maxDifference arvo on 0 - 1
 		maxDifference = std::min(maxDifference, 1.f);
 		maxDifference = std::max(maxDifference, 0.f);
-		// colorStepLimit saadaan kun 1 jaetaan värikuution sivun koolla miinus 1
+		// colorStepLimit saadaan kun 1 jaetaan vï¿½rikuution sivun koolla miinus 1
 		float colorStepLimit = 1.f / (ToolMasterColorCube::ColorCubeColorChannelSize() - 1);
-		// Vähennetään lopputuloksesta 1, jotta lopputulos on välillä -1 - 6
+		// Vï¿½hennetï¿½ï¿½n lopputuloksesta 1, jotta lopputulos on vï¿½lillï¿½ -1 - 6
 		int possibleColorSteps = boost::math::iround(maxDifference / colorStepLimit) - 1;
-		// Arvo ei saa kuitenkaan olla negatiivinen, joten minimissään arvoksi 0
+		// Arvo ei saa kuitenkaan olla negatiivinen, joten minimissï¿½ï¿½n arvoksi 0
 		if(possibleColorSteps < 0)
 			possibleColorSteps = 0;
 		return possibleColorSteps;
@@ -203,7 +205,7 @@ namespace
 	std::vector<float> createBlendedClassLimits(const std::vector<float>& originalClassLimits, float usedStep)
 	{
 		std::vector<float> blendedClassLimits;
-		// Loopissa mennään viimeistä edelliseen limittiin asti
+		// Loopissa mennï¿½ï¿½n viimeistï¿½ edelliseen limittiin asti
 		for(size_t originalLimitsIndex = 0; originalLimitsIndex < originalClassLimits.size() - 1; originalLimitsIndex++)
 		{
 			float currentBaseLimit = originalClassLimits[originalLimitsIndex];
@@ -214,7 +216,7 @@ namespace
 				blendedClassLimits.push_back(currentLimit);
 			}
 		}
-		// Viimeinen limiitti lisätään vain suoraan perään
+		// Viimeinen limiitti lisï¿½tï¿½ï¿½n vain suoraan perï¿½ï¿½n
 		blendedClassLimits.push_back(originalClassLimits.back());
 
 		return blendedClassLimits;
@@ -230,14 +232,14 @@ namespace
 		return mixedColor;
 	}
 
-	// Oletus: kun tullaan tänne, on kaikki eri vektorit tarkastettu, niin että niissä on oikeat
-	// koko suhteet toisiinsa nähden ja että niissä on tarpeeksi arvoja talletettuina.
+	// Oletus: kun tullaan tï¿½nne, on kaikki eri vektorit tarkastettu, niin ettï¿½ niissï¿½ on oikeat
+	// koko suhteet toisiinsa nï¿½hden ja ettï¿½ niissï¿½ on tarpeeksi arvoja talletettuina.
 	// Seuraavat laskut vaativat tietyt alku koot ja koko suhteet...
 	std::vector<NFmiColor> createBlendedColors(const std::vector<NFmiColor>& originalColors, const std::vector<float>& originalClassLimits, const std::vector<float>& finalClassLimits, float usedStep)
 	{
 		std::vector<NFmiColor> finalColors;
 		finalColors.push_back(originalColors.front());
-		// Loopissa mennään viimeistä edelliseen limittiin asti
+		// Loopissa mennï¿½ï¿½n viimeistï¿½ edelliseen limittiin asti
 		for(size_t originalLimitsIndex = 0; originalLimitsIndex < originalClassLimits.size() - 1; originalLimitsIndex++)
 		{
 			bool lastLimitRangeCase = originalLimitsIndex == originalClassLimits.size() - 2;
@@ -266,19 +268,19 @@ namespace
 			}
 			if(lastLimitRangeCase)
 			{
-				// Viimeisin välin viimeinen väri pitää blendata erikseen listaan
+				// Viimeisin vï¿½lin viimeinen vï¿½ri pitï¿½ï¿½ blendata erikseen listaan
 				auto distanceFromCurrentColor = rangeIsStepSize ? usedRangeWidthForBlending : (usedRangeWidthForBlending - usedStep);
 				auto clearAlpha = opaqueToTransparentChange;
 				finalColors.push_back(::MakeBlendedColor(currentLimitValueColor, nextLimitValueColor, usedRangeWidthForBlending, distanceFromCurrentColor, clearAlpha));
 			}
 			else
 			{
-				// Ollaan päästy normivälin seuraavaan limittiin asti, jolloin lisätään sen väri listaan suoraan
+				// Ollaan pï¿½ï¿½sty normivï¿½lin seuraavaan limittiin asti, jolloin lisï¿½tï¿½ï¿½n sen vï¿½ri listaan suoraan
 				finalColors.push_back(nextLimitValueColor);
 			}
 		}
 
-		// Viimeinen väri lopusta lisätään vain suoraan perään
+		// Viimeinen vï¿½ri lopusta lisï¿½tï¿½ï¿½n vain suoraan perï¿½ï¿½n
 		finalColors.push_back(originalColors.back());
 		return finalColors;
 	}
@@ -387,9 +389,9 @@ bool ColorContouringData::initialize(const ContouringJobData& contouringJobData,
 
 bool ColorContouringData::initializeForLegendCalculations(const boost::shared_ptr<NFmiDrawParam>& drawParam, int maxAllowedLimits)
 {
-	// Legendoja varten pitää rajoittaa laskettuja limittejä rankemmalla kädellä
+	// Legendoja varten pitï¿½ï¿½ rajoittaa laskettuja limittejï¿½ rankemmalla kï¿½dellï¿½
 	maximumAllowedLimitCount_ = maxAllowedLimits;
-	// Tehdään dummy job-data objekti
+	// Tehdï¿½ï¿½n dummy job-data objekti
 	ContouringJobData contouringJobData; 
 	return initialize(contouringJobData, drawParam);
 }
@@ -426,13 +428,13 @@ bool ColorContouringData::doSimpleContourInitialization()
 bool ColorContouringData::doCustomContourInitialization()
 {
 	useColorBlending_ = checkIfColorBlendingIsUsed();
-	// Lasketaan ensin originaali värit indeksien avulla, color blendauksen yhteydessä 
-	// transparentti värit pitää hanskata erilailla kuin ilman.
+	// Lasketaan ensin originaali vï¿½rit indeksien avulla, color blendauksen yhteydessï¿½ 
+	// transparentti vï¿½rit pitï¿½ï¿½ hanskata erilailla kuin ilman.
 	if(useColorBlending())
 		originalColors_ = ::calcDefaultColorTableColorsFromCustomColorIndexies(originalColorIndexies_);
 	else
 		originalColors_ = ColorContouringData::calcDefaultColorTableColors(originalColorIndexies_);
-	// Sen jälkeen voidaan käyttää simple-contour juttuja sellaisenaan alustamaan systeemi
+	// Sen jï¿½lkeen voidaan kï¿½yttï¿½ï¿½ simple-contour juttuja sellaisenaan alustamaan systeemi
 	return doSimpleContourInitialization();
 }
 
@@ -488,7 +490,7 @@ bool ColorContouringData::doBlendingWithinColorCubeColors()
 
 bool ColorContouringData::doBlendingWithNewColorTable()
 {
-	// Kun tänne asti on tultu, pitää olla vähintäin 2 limit:ia
+	// Kun tï¿½nne asti on tultu, pitï¿½ï¿½ olla vï¿½hintï¿½in 2 limit:ia
 	auto limitRange = originalClassLimits_.back() - originalClassLimits_.front();
 	auto possibleSparsedStep = calcSuitableBlendingStep(originalBlendingStep_, limitRange, float(maximumAllowedLimitCount_));
 	if(possibleSparsedStep == kFloatMissing)
@@ -524,12 +526,12 @@ bool ColorContouringData::doBlendingWithNewColorTable()
 
 std::vector<float> ColorContouringData::calcNeededStepsBetweenLimits()
 {
-	// Laske limit-välien tarve stepeille, lasketaan se reaalilukuna ainakin aluksi
+	// Laske limit-vï¿½lien tarve stepeille, lasketaan se reaalilukuna ainakin aluksi
 	std::vector<float> neededStepsBetweenLimits;
 	for(size_t index = 0; index < originalClassLimits_.size() - 1; index++)
 	{
 		auto limitDifference = originalClassLimits_[index + 1] - originalClassLimits_[index];
-		// Huom! jakolaskusta pitää vielä vähentää 1:n, jotta saadaan väliaskelten oikea lukumäärä
+		// Huom! jakolaskusta pitï¿½ï¿½ vielï¿½ vï¿½hentï¿½ï¿½ 1:n, jotta saadaan vï¿½liaskelten oikea lukumï¿½ï¿½rï¿½
 		neededStepsBetweenLimits.push_back((limitDifference / originalBlendingStep_) - 1.f);
 	}
 	return neededStepsBetweenLimits;
@@ -537,9 +539,9 @@ std::vector<float> ColorContouringData::calcNeededStepsBetweenLimits()
 
 std::vector<int> ColorContouringData::calcColorStepsBetweenLimitColors()
 {
-	// Laske eri limitvälien värien välille laskettavat steppimäärät
-	// Koska tänne tultaessa on selvää että tehdään blendausta, on color:ien määrä
-	// sama kuin limittien määrä ja tarkastelu alkaa 1. väristä alkaen.
+	// Laske eri limitvï¿½lien vï¿½rien vï¿½lille laskettavat steppimï¿½ï¿½rï¿½t
+	// Koska tï¿½nne tultaessa on selvï¿½ï¿½ ettï¿½ tehdï¿½ï¿½n blendausta, on color:ien mï¿½ï¿½rï¿½
+	// sama kuin limittien mï¿½ï¿½rï¿½ ja tarkastelu alkaa 1. vï¿½ristï¿½ alkaen.
 	std::vector<int> colorStepsBetweenLimitColors;
 	for(size_t index = 0; index < originalColors_.size() - 1; index++)
 	{
@@ -557,18 +559,18 @@ bool ColorContouringData::doSimpleContourNonBlendingSetups()
 	return true;
 }
 
-// Tätä kutsutaan vasta sen jälkeen kun missingLimitCleanUp -metodia on kutsuttu.
+// Tï¿½tï¿½ kutsutaan vasta sen jï¿½lkeen kun missingLimitCleanUp -metodia on kutsuttu.
 bool ColorContouringData::checkIfColorBlendingIsUsed() const
 {
-	// Jos steppi on 0 tai pienempi, ei tehdä blendausta ollenkaan
+	// Jos steppi on 0 tai pienempi, ei tehdï¿½ blendausta ollenkaan
 	if(originalBlendingStep_ <= 0)
 		return false;
 
-	// Jos luokka rajoja on alle 2 kpl, ei tehdä blendausta ollenkaan
+	// Jos luokka rajoja on alle 2 kpl, ei tehdï¿½ blendausta ollenkaan
 	if(originalClassLimits_.size() < 2)
 		return false;
 
-	// Jos steppi on ~ >= kuin kaikki arvovälit, ei tehdä blendausta ollenkaan
+	// Jos steppi on ~ >= kuin kaikki arvovï¿½lit, ei tehdï¿½ blendausta ollenkaan
 	for(size_t index = 0; index < originalClassLimits_.size() - 1; index++)
 	{
 		auto limitDifference = originalClassLimits_[index + 1] - originalClassLimits_[index];
@@ -576,14 +578,14 @@ bool ColorContouringData::checkIfColorBlendingIsUsed() const
 			return true;
 	}
 
-	// Steppi oli isompi kuin mikään luokkarajaväleistä, ei voi tehdä blendausta
+	// Steppi oli isompi kuin mikï¿½ï¿½n luokkarajavï¿½leistï¿½, ei voi tehdï¿½ blendausta
 	return false;
 }
 
-// Tutkitaan onko rajoja ja väreja tarpeeksi. 
-// Niiden määrä riippuu siitä käytetäänkö color blendausta vai ei.
-// Palauttaa false, jos jokin on pielessä ja raportoi siitä.
-// Kutsutaan missingLimitCleanUp- ja checkIfColorBlendingIsUsed metodi kutsujen jälkeen. 
+// Tutkitaan onko rajoja ja vï¿½reja tarpeeksi. 
+// Niiden mï¿½ï¿½rï¿½ riippuu siitï¿½ kï¿½ytetï¿½ï¿½nkï¿½ color blendausta vai ei.
+// Palauttaa false, jos jokin on pielessï¿½ ja raportoi siitï¿½.
+// Kutsutaan missingLimitCleanUp- ja checkIfColorBlendingIsUsed metodi kutsujen jï¿½lkeen. 
 bool ColorContouringData::doFinalLimitsAndColorsChecks()
 {
 	auto limitSize = originalClassLimits_.size();
@@ -602,7 +604,7 @@ bool ColorContouringData::doFinalLimitsAndColorsChecks()
 
 	if(useColorBlending_)
 	{
-		// color blending tapauksessa tarvitaan sama määrä limit ja color:eja
+		// color blending tapauksessa tarvitaan sama mï¿½ï¿½rï¿½ limit ja color:eja
 		auto minSize = std::min(limitSize, colorSize);
 		originalColors_.resize(minSize);
 		originalClassLimits_.resize(minSize);
@@ -621,13 +623,13 @@ bool ColorContouringData::doFinalLimitsAndColorsChecks()
 	return true;
 }
 
-// Tässä poistetaan kaikki missing limit arvot (originalClassLimits_ vektorista) ja 
-// niihin liittyvät värit (originalColors_ vektorista kohdasta index+1).
-// Poistetaan myös limit+väri, jos kahden peräkkäisen limitin arvo on sama (tyhjä väli, jolloin jälkimmäinen raja+väri poistuu).
-// Oletus: Kun tätä kutsutaan custom-contour alustuksesta, pitää originalColors_ olla alustettuna jo.
+// Tï¿½ssï¿½ poistetaan kaikki missing limit arvot (originalClassLimits_ vektorista) ja 
+// niihin liittyvï¿½t vï¿½rit (originalColors_ vektorista kohdasta index+1).
+// Poistetaan myï¿½s limit+vï¿½ri, jos kahden perï¿½kkï¿½isen limitin arvo on sama (tyhjï¿½ vï¿½li, jolloin jï¿½lkimmï¿½inen raja+vï¿½ri poistuu).
+// Oletus: Kun tï¿½tï¿½ kutsutaan custom-contour alustuksesta, pitï¿½ï¿½ originalColors_ olla alustettuna jo.
 void ColorContouringData::missingLimitCleanUp()
 {
-	// Tehdään nämä tarkastelut vain simple tapaukselle, koska kukaan ei annna custom osiossa rajoiksi puuttuvia arvoja
+	// Tehdï¿½ï¿½n nï¿½mï¿½ tarkastelut vain simple tapaukselle, koska kukaan ei annna custom osiossa rajoiksi puuttuvia arvoja
 	if(!doSimpleContourChecks_)
 		return;
 
@@ -637,15 +639,15 @@ void ColorContouringData::missingLimitCleanUp()
 	{
 		std::vector<float> tmpLimits;
 		std::vector<NFmiColor> tmpColors;
-		// 1. väri laitetaan aina mukaan, koska siihen ei liity rajaa, joka voisi olla missing arvoinen
+		// 1. vï¿½ri laitetaan aina mukaan, koska siihen ei liity rajaa, joka voisi olla missing arvoinen
 		tmpColors.push_back(originalColors_.front());
 
 		for(size_t index = 0; index < limitsSize && index < colorsSize - 1; index++)
 		{
-			// 2. Siivotaan pois missing limitit ja niihin liittyvät värit.
+			// 2. Siivotaan pois missing limitit ja niihin liittyvï¿½t vï¿½rit.
 			if(originalClassLimits_[index] != kFloatMissing)
 			{
-				// 3. Siivotaan myös pois sellaiset rajat (ja värit), missä peräkkäiset limitit ovat samoja (etäisyys on 0)
+				// 3. Siivotaan myï¿½s pois sellaiset rajat (ja vï¿½rit), missï¿½ perï¿½kkï¿½iset limitit ovat samoja (etï¿½isyys on 0)
 				if(index > 0 && originalClassLimits_[index] == originalClassLimits_[index - 1])
 					continue;
 
@@ -661,6 +663,7 @@ void ColorContouringData::missingLimitCleanUp()
 
 bool ColorContouringData::createNewToolMasterColorTable(int colorTableIndex)
 {
+#ifndef UNIX
 	if(useDefaultColorTable_)
 		return false;
 
@@ -674,7 +677,7 @@ bool ColorContouringData::createNewToolMasterColorTable(int colorTableIndex)
 
 	ToolMasterColorCube::SetupSpecialColorsForActiveColorTable();
 
-	int index = ToolMasterColorCube::SpecialColorCountInColorTableStart(); // aletaan rakentaan väri taulukkoa hollow värin jälkeen
+	int index = ToolMasterColorCube::SpecialColorCountInColorTableStart(); // aletaan rakentaan vï¿½ri taulukkoa hollow vï¿½rin jï¿½lkeen
 	for(size_t i = 0; i < finalColors_.size(); i++)
 	{
 		const auto& currentColor = finalColors_[i];
@@ -688,6 +691,10 @@ bool ColorContouringData::createNewToolMasterColorTable(int colorTableIndex)
 	}
 
 	return true;
+#else
+	(void)colorTableIndex;
+	return false;
+#endif // UNIX
 }
 
 void ColorContouringData::makePossibleErrorLogging() const
@@ -707,8 +714,8 @@ void ColorContouringData::makePossibleErrorLogging(const std::string& initializa
 	}
 }
 
-// Jos ei joudu blendaamaan värejä, käytetään custom väri-indeksi konversiota sellaisenaan, 
-// kun lasketaan käytettyjä värejä.
+// Jos ei joudu blendaamaan vï¿½rejï¿½, kï¿½ytetï¿½ï¿½n custom vï¿½ri-indeksi konversiota sellaisenaan, 
+// kun lasketaan kï¿½ytettyjï¿½ vï¿½rejï¿½.
 std::vector<NFmiColor> ColorContouringData::calcDefaultColorTableColors(const std::vector<int>& colorIndexies)
 {
 	std::vector<NFmiColor> colors;
@@ -745,17 +752,17 @@ const NFmiColor& ColorContouringData::getValueRangeColor(float value1, float val
 		return finalColors_[index2];
 }
 
-// Tämän gToolMasterContourLimitChangeValue- globaalin muuttujan käyttö on jäänyt minulle nyt hieman hämärän peittoon,
-// Mutta luulen että se liittyy enemmänkin diskreettien parametrien piirtoon. 
-// Se kuitenkin pienentää rajoja hyvin pienellä luvulla ,jolloin tarkoitu oli saada aikaan efekti että isoviivat tai contourit 
-// kiersivät tietyn arvoiset alueet paremmin. Tästä rajojen pikkuriikkisestä muutoksesta ei ole haittaa kun operoidaan normaalin kokoisien
+// Tï¿½mï¿½n gToolMasterContourLimitChangeValue- globaalin muuttujan kï¿½yttï¿½ on jï¿½ï¿½nyt minulle nyt hieman hï¿½mï¿½rï¿½n peittoon,
+// Mutta luulen ettï¿½ se liittyy enemmï¿½nkin diskreettien parametrien piirtoon. 
+// Se kuitenkin pienentï¿½ï¿½ rajoja hyvin pienellï¿½ luvulla ,jolloin tarkoitu oli saada aikaan efekti ettï¿½ isoviivat tai contourit 
+// kiersivï¿½t tietyn arvoiset alueet paremmin. Tï¿½stï¿½ rajojen pikkuriikkisestï¿½ muutoksesta ei ole haittaa kun operoidaan normaalin kokoisien
 // luku arvojen kanssa esim. n. 0.00001 - 10000000000000.
-// MUTTA kun arvo joukko on tarpeeksi pientä eli ollaan tarpeeksi lähellä gToolMasterContourLimitChangeValue, alkaa vaikutus häiritsemään.
-// Sen takia pitää tarkastella onko annettu raja tarpeeksi lähellä 'epsilonia' ja jos on, ei rajaa siirretä ollenkaan.
+// MUTTA kun arvo joukko on tarpeeksi pientï¿½ eli ollaan tarpeeksi lï¿½hellï¿½ gToolMasterContourLimitChangeValue, alkaa vaikutus hï¿½iritsemï¿½ï¿½n.
+// Sen takia pitï¿½ï¿½ tarkastella onko annettu raja tarpeeksi lï¿½hellï¿½ 'epsilonia' ja jos on, ei rajaa siirretï¿½ ollenkaan.
 float ColorContouringData::GetToolMasterContourLimitChangeValue(float theValue)
 {
 	if(::fabs(theValue / gToolMasterContourLimitChangeValue) < 1000.f)
-		return theValue; // jos theValue:n ja 'epsilonin' kokoero on alle 1000x, ei rajaa siirretä enää
+		return theValue; // jos theValue:n ja 'epsilonin' kokoero on alle 1000x, ei rajaa siirretï¿½ enï¿½ï¿½
 	else
 		return theValue - gToolMasterContourLimitChangeValue;
 }

@@ -3,7 +3,9 @@
 #include "NFmiMapViewDescTop.h"
 #include "ApplicationInterface.h"
 #include "CombinedMapHandlerInterface.h"
+#ifndef UNIX
 #include "NFmiApplicationWinRegistry.h"
+#endif
 #include "SpecialDesctopIndex.h"
 #include "NFmiCrossSectionSystem.h"
 
@@ -118,10 +120,12 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::MakeDrawedInfoVectorForMapView(
     itsDoc->GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
 }
 
+#ifndef UNIX
 NFmiApplicationWinRegistry& SmartMetDocumentInterfaceForGeneralDataDoc::ApplicationWinRegistry()
 {
     return itsDoc->ApplicationWinRegistry();
 }
+#endif
 
 const NFmiPoint& SmartMetDocumentInterfaceForGeneralDataDoc::BrushSize()
 {
@@ -368,6 +372,7 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::DrawObjectScaleFactor(double ne
     itsDoc->GetCombinedMapHandler()->drawObjectScaleFactor(newValue);
 }
 
+#ifndef UNIX
 void SmartMetDocumentInterfaceForGeneralDataDoc::TransparencyContourDrawView(CWnd *theView)
 {
     itsDoc->TransparencyContourDrawView(theView);
@@ -377,6 +382,7 @@ CWnd* SmartMetDocumentInterfaceForGeneralDataDoc::TransparencyContourDrawView()
 {
     return itsDoc->TransparencyContourDrawView();
 }
+#endif
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::IsToolMasterAvailable() const
 {
@@ -1380,27 +1386,33 @@ NFmiMacroParamDataCache& SmartMetDocumentInterfaceForGeneralDataDoc::MacroParamD
     return itsDoc->MacroParamDataCache();
 }
 
+#ifndef UNIX
 bool SmartMetDocumentInterfaceForGeneralDataDoc::DoMapViewOnSize(int mapViewDescTopIndex, const NFmiPoint &clientPixelSize, CDC* pDC)
 {
     return itsDoc->DoMapViewOnSize(mapViewDescTopIndex, clientPixelSize, pDC);
 }
+#endif
 
+#ifndef UNIX
 NFmiGdiPlusImageMapHandler* SmartMetDocumentInterfaceForGeneralDataDoc::GetMapHandlerInterface(int mapViewDescTopIndex)
 {
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(mapViewDescTopIndex)->MapHandler();
 }
+#endif
 
 bool SmartMetDocumentInterfaceForGeneralDataDoc::ChangeTime(int theTypeOfChange, FmiDirection theDirection, unsigned long theMapViewIndex, double theAmountOfChange)
 {
     return itsDoc->GetCombinedMapHandler()->changeTime(theTypeOfChange, theDirection, theMapViewIndex, theAmountOfChange);
 }
 
+#ifndef UNIX
 void SmartMetDocumentInterfaceForGeneralDataDoc::SetHatchingToolmasterEpsilonFactor(float newEpsilonFactor)
 {
     ApplicationWinRegistry().HatchingToolmasterEpsilonFactor(newEpsilonFactor);
     if(ApplicationInterface::GetApplicationInterfaceImplementation)
         ApplicationInterface::GetApplicationInterfaceImplementation()->SetHatchingToolmasterEpsilonFactor(newEpsilonFactor);
 }
+#endif
 
 CombinedMapHandlerInterface& SmartMetDocumentInterfaceForGeneralDataDoc::GetCombinedMapHandlerInterface()
 {

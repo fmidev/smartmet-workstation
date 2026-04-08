@@ -26,7 +26,7 @@ namespace SmartMetDataUtilities
         static Keys createKeysFrom(Key1&& key1, Key2&& key2, const NFmiArea& area, const NFmiGrid& originalGrid);
 
         template<typename Key1, typename Key2>
-        static Keys createKeysFrom(Key1&& key1, Key2&& key2, const NFmiArea& area, const std::string& originalGridResolution);
+        static Keys createKeysFrom(Key1&& key1, Key2&& key2, const NFmiArea& area, const std::string& originalGridResolution = "default");
     };
 
     template<typename Key1, typename Key2>
@@ -38,7 +38,7 @@ namespace SmartMetDataUtilities
     }
 
     template<typename Key1, typename Key2>
-    RootDataCache::Keys RootDataCache::createKeysFrom(Key1&& key1, Key2&& key2, const NFmiArea& area, const std::string& originalGridResolution = "default")
+    RootDataCache::Keys RootDataCache::createKeysFrom(Key1&& key1, Key2&& key2, const NFmiArea& area, const std::string& originalGridResolution)
     {
         auto firstPartOfAreaStr = AreaUtil::firstPartOfAreaStrFor(area);
         return Keys(std::forward<Key1>(key1), std::forward<Key2>(key2), firstPartOfAreaStr +":"+ originalGridResolution);

@@ -234,6 +234,16 @@ set(
     )
 
 # **** Fmt library section ****
+if(UNIX)
+    # On Linux, use system fmt library
+    find_package(fmt QUIET)
+    if(fmt_FOUND)
+        set(FMT_TARGET_LINK_LIBRARIES fmt::fmt)
+    else()
+        set(FMT_TARGET_LINK_LIBRARIES fmt)
+    endif()
+    set(FMT_INCLUDE_DIR "" CACHE INTERNAL "" FORCE)
+else()
 set(
     FMT_VERSION
     4_1_0
@@ -275,6 +285,7 @@ set(
     debug ${FMT_LIB_DEBUG}
     optimized ${FMT_LIB_RELEASE}
     )
+endif()
 
 # **** CppRestSdk library section ****
 if(NOT DISABLE_CPPRESTSDK)	

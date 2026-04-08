@@ -9,7 +9,7 @@
 // ---------------------------------------------------
 //  - GD Symbol Type    : CLD_Class 
 //  - GD Method         : UML ( 4.0 ) 
-//  - GD System Name    : editori virityksiä 2000 syksy 
+//  - GD System Name    : editori virityksiï¿½ 2000 syksy 
 //  - GD View Type      : Class Diagram 
 //  - GD View Name      : interpolation luokka 
 // ---------------------------------------------------  
@@ -20,7 +20,7 @@
 // 
 //**********************************************************
 #ifdef _MSC_VER
-#pragma warning(disable : 4786) // poistaa n kpl VC++ kääntäjän varoitusta
+#pragma warning(disable : 4786) // poistaa n kpl VC++ kï¿½ï¿½ntï¿½jï¿½n varoitusta
 #endif
 
 #include "NFmiEditorControlPointManager.h"
@@ -85,7 +85,7 @@ std::ostream& NFmiEditorControlPointManager::Write(ostream& file) const
 	return file;
 }
 
-// apufunktio, joka kirjoittaa ensin lukumäärän tiedostoon kirjoittaa otukset jonoon erottimena space.
+// apufunktio, joka kirjoittaa ensin lukumï¿½ï¿½rï¿½n tiedostoon kirjoittaa otukset jonoon erottimena space.
 template<typename T>
 static bool WriteVectorToFile(std::vector<T>& theVector, ostream& file)
 {
@@ -95,8 +95,8 @@ static bool WriteVectorToFile(std::vector<T>& theVector, ostream& file)
 	return !file.fail();
 }
 
-// apufunktio, joka lukee ensin tiedostosta lukumäärän ja sitten niin monta otusta ja tallettaa ne vectoriin.
-// vectorin koko muutetaan lukumäärän suuruiseksi.
+// apufunktio, joka lukee ensin tiedostosta lukumï¿½ï¿½rï¿½n ja sitten niin monta otusta ja tallettaa ne vectoriin.
+// vectorin koko muutetaan lukumï¿½ï¿½rï¿½n suuruiseksi.
 template<typename T>
 static bool ReadVectorFromFile(std::vector<T>& theVector, istream& file)
 {
@@ -157,7 +157,7 @@ bool NFmiEditorControlPointManager::ReadBackup(istream& file)
 	if(!ReadVectorFromFile(itsShowCPAllwaysOnTimeView, file))
 		return false;
 	if(file.fail() == false)
-	{ // yritetään lukea nimi lopusta, mutta jos ei onnistu, ei failaaa
+	{ // yritetï¿½ï¿½n lukea nimi lopusta, mutta jos ei onnistu, ei failaaa
 		NFmiString nameStr;
 		try
 		{
@@ -193,7 +193,7 @@ bool NFmiEditorControlPointManager::StoreCPs(void) const
 		std::ofstream out(FilePath().c_str(), std::ios::binary);
 		if(out)
 		{
-			WriteCPs(out); // tässä talletetaan vain lat-lon pisteet
+			WriteCPs(out); // tï¿½ssï¿½ talletetaan vain lat-lon pisteet
 			out.close();
 			return out.fail() == false;
 		}
@@ -254,8 +254,8 @@ bool NFmiEditorControlPointManager::Init(const NFmiTimeDescriptor& theTimes, con
 	itsCPMovingInTimeHelpPoints.resize(itsCPCount, ThreePoints());
 	itsShowCPAllwaysOnTimeView.resize(itsCPCount, false);
 
-	// vielä lopuksi pitää laitta aikasarjamuutos vectorit oikean kokoisiksi varmuuden vuoksi,
-	// eli käydään läpi kaikki controllipisteet ja tehdään muutosarvo taululle resize
+	// vielï¿½ lopuksi pitï¿½ï¿½ laitta aikasarjamuutos vectorit oikean kokoisiksi varmuuden vuoksi,
+	// eli kï¿½ydï¿½ï¿½n lï¿½pi kaikki controllipisteet ja tehdï¿½ï¿½n muutosarvo taululle resize
 	for(size_t j=0; j < itsCPMatrix.NY(); j++) // huom! loopituksessa haku [parIndex][cpindex]
 		for(size_t i=0; i < itsCPMatrix.NX(); i++)
 			itsCPMatrix[i][j].Resize(timeSize);
@@ -263,13 +263,13 @@ bool NFmiEditorControlPointManager::Init(const NFmiTimeDescriptor& theTimes, con
 	return true;
 }
 
-// tällä asetetaan uudet CP pisteet managerille ja nollataa muuten olion tila
+// tï¿½llï¿½ asetetaan uudet CP pisteet managerille ja nollataa muuten olion tila
 bool NFmiEditorControlPointManager::Init(const std::vector<NFmiPoint> &newCPs, bool keepModificationsIfPossible)
 {
     if(keepModificationsIfPossible)
     {
         if(itsCPLocationVector == newCPs)
-            return true; // uudet CP-pisteet olivat samoja kuin vanhat, ei tarvitse tehdä mitään
+            return true; // uudet CP-pisteet olivat samoja kuin vanhat, ei tarvitse tehdï¿½ mitï¿½ï¿½n
     }
 
 	itsCPLocationVector = newCPs;
@@ -288,8 +288,8 @@ bool NFmiEditorControlPointManager::Init(const std::vector<NFmiPoint> &newCPs, b
 	itsCPMovingInTimeHelpPoints.resize(itsCPCount, ThreePoints());
 	itsShowCPAllwaysOnTimeView.resize(itsCPCount, false);
 
-	// vielä lopuksi pitää laitta aikasarjamuutos vectorit oikean kokoisiksi varmuuden vuoksi,
-	// eli käydään läpi kaikki controllipisteet ja tehdään muutosarvo taululle resize
+	// vielï¿½ lopuksi pitï¿½ï¿½ laitta aikasarjamuutos vectorit oikean kokoisiksi varmuuden vuoksi,
+	// eli kï¿½ydï¿½ï¿½n lï¿½pi kaikki controllipisteet ja tehdï¿½ï¿½n muutosarvo taululle resize
 	for(size_t j=0; j < itsCPMatrix.NY(); j++) // huom! loopituksessa haku [parIndex][cpindex]
 		for(size_t i=0; i < itsCPMatrix.NX(); i++)
 			itsCPMatrix[i][j].Resize(timeSize);
@@ -297,8 +297,8 @@ bool NFmiEditorControlPointManager::Init(const std::vector<NFmiPoint> &newCPs, b
 	return true;
 }
 
-// Tämä liittyy CPManagerin vaihtoon (kun niitä on setti käytössä).
-//  Eli otetaan kaikki ulkoiset tekijät theOther:ista käyttöön: 
+// Tï¿½mï¿½ liittyy CPManagerin vaihtoon (kun niitï¿½ on setti kï¿½ytï¿½ssï¿½).
+//  Eli otetaan kaikki ulkoiset tekijï¿½t theOther:ista kï¿½yttï¿½ï¿½n: 
 // area, times, params, etc.
 // Mutta itse CP-pisteisiin ja niiden arvoihin ei kosketa!
 bool NFmiEditorControlPointManager::Init(const NFmiEditorControlPointManager &theOther)
@@ -349,7 +349,7 @@ void NFmiEditorControlPointManager::FilePath(const std::string &newValue)
 //--------------------------------------------------------
 // Size 
 //--------------------------------------------------------
-// palautta CP lukumäärän
+// palautta CP lukumï¿½ï¿½rï¿½n
 int NFmiEditorControlPointManager::Size (void)
 {
 	return itsCPCount;
@@ -381,7 +381,7 @@ void NFmiEditorControlPointManager::ChangeValue (float newValue)
 			if(itsCPActivityVector[i])
 			{
 				itsCPMatrix[itsParamIndex][i].TimeIndex(itsTimeDescriptor.Index());
-				itsCPMatrix[itsParamIndex][i].ChangeValue(newValue); // missä järjestyksessä indeksit???
+				itsCPMatrix[itsParamIndex][i].ChangeValue(newValue); // missï¿½ jï¿½rjestyksessï¿½ indeksit???
 			}
 		}
 	}
@@ -392,7 +392,7 @@ void NFmiEditorControlPointManager::CurrentCPChangeValue(float newValue)
 	if(AreCPIndexiesGood(itsParamIndex, itsCPIndex))
 	{
 		itsCPMatrix[itsParamIndex][itsCPIndex].TimeIndex(itsTimeDescriptor.Index());
-		itsCPMatrix[itsParamIndex][itsCPIndex].ChangeValue(newValue); // missä järjestyksessä indeksit???
+		itsCPMatrix[itsParamIndex][itsCPIndex].ChangeValue(newValue); // missï¿½ jï¿½rjestyksessï¿½ indeksit???
 	}
 }
 
@@ -580,7 +580,7 @@ bool NFmiEditorControlPointManager::AddCP (const NFmiPoint& theLatLon)
 	itsCPEnabledVector.push_back(true);
 	itsCPChangeInTimeVector.push_back(false);
 	itsCPCount++;
-	itsCPIndex = itsCPCount - 1; // laitetaan indeksi osoittamaan uutta pistettä
+	itsCPIndex = itsCPCount - 1; // laitetaan indeksi osoittamaan uutta pistettï¿½
 	int timeSize = itsTimeDescriptor.Size();
 	itsCPChangeInTimeRelativeLocationMatrix.Resize(itsCPCount, timeSize, NFmiPoint());
 	itsCPChangeInTimeLatLonLocationMatrix.Resize(itsCPCount, timeSize, NFmiPoint());
@@ -602,14 +602,14 @@ bool NFmiEditorControlPointManager::RemoveCP (void)
 		if(itsCPActivityVector[i])
 		{
 			itsCPLocationVector.erase(itsCPLocationVector.begin()+i);
-			if(itsCPRelativeLocationVector.size()) // tämä vektori saattaa olla vielä tyhjä, jos ei ole dataa ladattuna editoriin, siksi pitää tarkistaa
+			if(itsCPRelativeLocationVector.size()) // tï¿½mï¿½ vektori saattaa olla vielï¿½ tyhjï¿½, jos ei ole dataa ladattuna editoriin, siksi pitï¿½ï¿½ tarkistaa
 				itsCPRelativeLocationVector.erase(itsCPRelativeLocationVector.begin()+i);
 			itsCPActivityVector.erase(itsCPActivityVector.begin()+i);
 			itsCPEnabledVector.erase(itsCPEnabledVector.begin()+i);
 			itsCPChangeInTimeVector.erase(itsCPChangeInTimeVector.begin()+i);
 			itsCPChangeInTimeRelativeLocationMatrix.RemoveColumn(i);
 			itsCPChangeInTimeLatLonLocationMatrix.RemoveColumn(i);
-			itsCPMatrix.RemoveRow(i); // en tiedä miksi olen laittanut tähän cpindexin toisin päin kuin ylläolevissa matriiseissa, mutta nyt pitää poistaa rivi eikä sarake
+			itsCPMatrix.RemoveRow(i); // en tiedï¿½ miksi olen laittanut tï¿½hï¿½n cpindexin toisin pï¿½in kuin yllï¿½olevissa matriiseissa, mutta nyt pitï¿½ï¿½ poistaa rivi eikï¿½ sarake
 			itsCPMovingInTimeHelpPoints.erase(itsCPMovingInTimeHelpPoints.begin()+i);
 
 			itsShowCPAllwaysOnTimeView.erase(itsShowCPAllwaysOnTimeView.begin()+i);
@@ -620,7 +620,7 @@ bool NFmiEditorControlPointManager::RemoveCP (void)
 	if(itsCPCount == 0)
 		itsCPIndex = -1;
 	if(itsCPIndex >= itsCPCount)
-		itsCPIndex = 0; // jos indeksi jäi taulukon ulkopuolelle
+		itsCPIndex = 0; // jos indeksi jï¿½i taulukon ulkopuolelle
 	return true;
 }
 //--------------------------------------------------------
@@ -633,7 +633,7 @@ void NFmiEditorControlPointManager::EnableCP (bool newState)
 			itsCPEnabledVector[i] = newState;
 }
 void NFmiEditorControlPointManager::EnableCP (int theCPIndex, bool newState)
-{ // tehdään kun keritään, pitää kai tehdä enable taulukko (eri kuin aktiivisuus!)
+{ // tehdï¿½ï¿½n kun keritï¿½ï¿½n, pitï¿½ï¿½ kai tehdï¿½ enable taulukko (eri kuin aktiivisuus!)
 	if(AreCPIndexiesGood(0, theCPIndex))
 		itsCPEnabledVector[theCPIndex] = newState;
 }
@@ -665,7 +665,7 @@ void NFmiEditorControlPointManager::ShowAllCPsAllwaysOnTimeView(bool newValue)
 //--------------------------------------------------------
 // MoveCP 
 //--------------------------------------------------------
-// Siirtää 1. aktiivisen CP:n paikkaa.
+// Siirtï¿½ï¿½ 1. aktiivisen CP:n paikkaa.
 void NFmiEditorControlPointManager::MoveCP (const NFmiPoint& newLatLon)
 {
 	for(int i = 0; i < itsCPCount; i++)
@@ -686,10 +686,10 @@ void NFmiEditorControlPointManager::MoveCP (const NFmiPoint& newLatLon)
 //--------------------------------------------------------
 // ActivateCP 
 //--------------------------------------------------------
-// Aktivoidaan CP:tä muokattaviksi, haetaan lähin annettua pistettä
+// Aktivoidaan CP:tï¿½ muokattaviksi, haetaan lï¿½hin annettua pistettï¿½
 // keepOld:in avulla voidaan
-// kontrolloida, lisätäänkö aktiivinen jo aktiivisten listaan vai
-// tuleeko siitä ainoa aktiivinen CP.
+// kontrolloida, lisï¿½tï¿½ï¿½nkï¿½ aktiivinen jo aktiivisten listaan vai
+// tuleeko siitï¿½ ainoa aktiivinen CP.
 void NFmiEditorControlPointManager::ActivateCP(const NFmiPoint& theLatLon, bool newState)
 {
     if(FindNearestCP(theLatLon))
@@ -709,7 +709,8 @@ void NFmiEditorControlPointManager::ActivateCP(int theCPIndex, bool newState)
 
 void NFmiEditorControlPointManager::ResetActivityVector()
 {
-    itsCPActivityVector.swap(std::vector<bool>(itsCPActivityVector.size(), false));
+    std::vector<bool> resetVec(itsCPActivityVector.size(), false);
+    itsCPActivityVector.swap(resetVec);
 }
 
 bool NFmiEditorControlPointManager::IsActivateCP(void)
@@ -764,9 +765,9 @@ void NFmiEditorControlPointManager::ActivateAllCPs (bool newState)
 //--------------------------------------------------------
 // ChangeValues 
 //--------------------------------------------------------
-// Palauttaa enabloitujen CP:n x ja y koordinaatit, vektorissa sekä niiden
-// muutos arvot z-vektorissa ja lisäksi aktiivisten pisteiden lukumäärä.
-// pitää tehdä enabled-vector!!!! Nyt palauttaa kaikkien CP:en arvot.
+// Palauttaa enabloitujen CP:n x ja y koordinaatit, vektorissa sekï¿½ niiden
+// muutos arvot z-vektorissa ja lisï¿½ksi aktiivisten pisteiden lukumï¿½ï¿½rï¿½.
+// pitï¿½ï¿½ tehdï¿½ enabled-vector!!!! Nyt palauttaa kaikkien CP:en arvot.
 bool NFmiEditorControlPointManager::ChangeValues (std::vector<float>& xValues, std::vector<float>& yValues, std::vector<float>& zValues, int& theArraySize)
 {
 	bool status = false;
@@ -850,8 +851,8 @@ bool NFmiEditorControlPointManager::NextCP(void)
 
 const int g_missingCpIndex = -1;
 
-// Etsi ensimmäinen aktiivinen CP-piste ja palauta sen indeksi.
-// Jos aktiivista CP:tä ei ole, palauta g_missingCpIndex.
+// Etsi ensimmï¿½inen aktiivinen CP-piste ja palauta sen indeksi.
+// Jos aktiivista CP:tï¿½ ei ole, palauta g_missingCpIndex.
 int NFmiEditorControlPointManager::GetActiveCpIndex() const
 {
     for(auto cpIndex = 0; cpIndex < itsCPActivityVector.size(); cpIndex++)
@@ -866,12 +867,12 @@ bool NFmiEditorControlPointManager::ActivateNextCP()
 {
     auto activeCpIndex = GetActiveCpIndex();
     if(activeCpIndex == g_missingCpIndex)
-        return ActivateFirstCp(); // Yritetään aktivoida 1. CP-piste
+        return ActivateFirstCp(); // Yritetï¿½ï¿½n aktivoida 1. CP-piste
     if(activeCpIndex >= itsCPCount - 1)
-        return false; // Viimeinen CP-piste oli jo aktiivinen, jätetään homma siihen
+        return false; // Viimeinen CP-piste oli jo aktiivinen, jï¿½tetï¿½ï¿½n homma siihen
     else 
     {
-        // Deaktivoidaan löydetty piste, ja aktivoidaan sitä seuraava
+        // Deaktivoidaan lï¿½ydetty piste, ja aktivoidaan sitï¿½ seuraava
         ActivateCP(activeCpIndex + 1, true);
         return true;
     }
@@ -881,12 +882,12 @@ bool NFmiEditorControlPointManager::ActivatePreviousCP()
 {
     auto activeCpIndex = GetActiveCpIndex();
     if(activeCpIndex == g_missingCpIndex)
-        return ActivateFirstCp(); // Yritetään aktivoida 1. CP-piste
+        return ActivateFirstCp(); // Yritetï¿½ï¿½n aktivoida 1. CP-piste
     if(activeCpIndex <= 0)
-        return false; // Viimeinen CP-piste oli jo aktiivinen, jätetään homma siihen
+        return false; // Viimeinen CP-piste oli jo aktiivinen, jï¿½tetï¿½ï¿½n homma siihen
     else
     {
-        // Deaktivoidaan löydetty piste, ja aktivoidaan sitä edellinen
+        // Deaktivoidaan lï¿½ydetty piste, ja aktivoidaan sitï¿½ edellinen
         ActivateCP(activeCpIndex - 1, true);
         return true;
     }
@@ -919,7 +920,7 @@ static float GetAngleTowardsDirection(ControlPointAcceleratorActions direction)
 }
 
 // Lasketaan kerroin currentin CP pisteen suunnalle suhteessa haluttuun suuntaan.
-// Jos suunta on täydellinen, saadaan kertoimeksi tasan 1, mutta jos suunnissa on eroa, voi se kasvaa kohti ~3.2:sta (jos lähestytään 180 asteen heittoa)
+// Jos suunta on tï¿½ydellinen, saadaan kertoimeksi tasan 1, mutta jos suunnissa on eroa, voi se kasvaa kohti ~3.2:sta (jos lï¿½hestytï¿½ï¿½n 180 asteen heittoa)
 static double CalcDirectionalFactor(const NFmiPoint &activeCpRelativePoint, const NFmiPoint &currentCpRelativePoint, ControlPointAcceleratorActions direction)
 {
     const double angleDivider = 90.;
@@ -928,12 +929,12 @@ static double CalcDirectionalFactor(const NFmiPoint &activeCpRelativePoint, cons
     auto factor = 1.;
     if(std::fabs(directionAngle - directionToCurrentPoint) > 180.)
     {
-        directionToCurrentPoint -= 360.; // Pitää varmistaa että erotusta ei lasketa ympyrän pitkää kaarta pitkin
+        directionToCurrentPoint -= 360.; // Pitï¿½ï¿½ varmistaa ettï¿½ erotusta ei lasketa ympyrï¿½n pitkï¿½ï¿½ kaarta pitkin
         factor = 1. + (std::fabs(directionToCurrentPoint - directionAngle) / angleDivider);
     }
     else
         factor = 1. + (std::fabs(directionAngle - directionToCurrentPoint)/ angleDivider);
-    // Korostetaan factor:ia vielä niin että hyvät suunnat saava suhteessa pienempää kerrointa
+    // Korostetaan factor:ia vielï¿½ niin ettï¿½ hyvï¿½t suunnat saava suhteessa pienempï¿½ï¿½ kerrointa
     return std::pow(factor, 1.7);
 }
 
@@ -950,7 +951,7 @@ static int FindBestSuitedCpTowardsDirection(NFmiEditorControlPointManager &cpMan
             const auto &currentCpRelativePoint = cpManager.RelativePoint(cpIndex);
             if(compare(activeCpRelativePoint, currentCpRelativePoint))
             {
-                // Etäisyys laskuissa otetaan huomioon pisteiden etäisyys ja 'hyvä' suunta
+                // Etï¿½isyys laskuissa otetaan huomioon pisteiden etï¿½isyys ja 'hyvï¿½' suunta
                 auto directionalFactor = ::CalcDirectionalFactor(activeCpRelativePoint, currentCpRelativePoint, direction);
                 auto currentDistance = activeCpRelativePoint.Distance(currentCpRelativePoint) * directionalFactor;
                 if(currentDistance < minRelativeDistance)
@@ -983,7 +984,7 @@ bool NFmiEditorControlPointManager::ActivateCPToward(ControlPointAcceleratorActi
 {
     auto activeCpIndex = GetActiveCpIndex();
     if(activeCpIndex == g_missingCpIndex)
-        return ActivateFirstCp(); // Yritetään aktivoida 1. CP-piste
+        return ActivateFirstCp(); // Yritetï¿½ï¿½n aktivoida 1. CP-piste
     else
     {
         auto closestCpIndex = ::FindBestSuitedCpTowardsDirection(*this, activeCpIndex, ::GetTowardsComparisonFunction(direction), direction);
@@ -1070,9 +1071,9 @@ const NFmiTimeDescriptor& NFmiEditorControlPointManager::TimeDescriptor(void) co
 	return itsTimeDescriptor;
 }
 
-// laskee annetun parambagin kaikkien parametrien lukumäärän (aliparametrit
-// otetaan mukaa siten että ne lasketaan ,mutta niiden yliparametri jää laskuista)
-// esim. TotalWind lisää lukumäärää nyt 3:lla (totalwind sinänsä 0, mutta suunta,
+// laskee annetun parambagin kaikkien parametrien lukumï¿½ï¿½rï¿½n (aliparametrit
+// otetaan mukaa siten ettï¿½ ne lasketaan ,mutta niiden yliparametri jï¿½ï¿½ laskuista)
+// esim. TotalWind lisï¿½ï¿½ lukumï¿½ï¿½rï¿½ï¿½ nyt 3:lla (totalwind sinï¿½nsï¿½ 0, mutta suunta,
 // nopeus ja windvector = 3)
 int NFmiEditorControlPointManager::CalcParamSize(NFmiParamBag& theParams)
 {
@@ -1096,7 +1097,7 @@ int NFmiEditorControlPointManager::CalcParamIndex(const NFmiDataIdent& theParam)
 	return index;
 }
 
-// laskee latlon pisteistä vastaavan relative point vektorin itsArean avulla
+// laskee latlon pisteistï¿½ vastaavan relative point vektorin itsArean avulla
 bool NFmiEditorControlPointManager::InitRelativeLocations(void)
 {
 	bool returnStatus = false;
@@ -1135,8 +1136,8 @@ NFmiPoint NFmiEditorControlPointManager::RelativeToLatLon(const NFmiPoint& thePo
 	return NFmiPoint();
 }
 
-// Palauttaa tiedon, siirtyykö annetun indeksin osoittama CP paikkaa ajassa?
-// jos annettu indeksi on -1, käyttää itsCPIndex:iä
+// Palauttaa tiedon, siirtyykï¿½ annetun indeksin osoittama CP paikkaa ajassa?
+// jos annettu indeksi on -1, kï¿½yttï¿½ï¿½ itsCPIndex:iï¿½
 bool NFmiEditorControlPointManager::IsCPMovingInTime(int theIndex)
 {
 	if(theIndex == -1)
@@ -1153,8 +1154,8 @@ bool NFmiEditorControlPointManager::IsCPMovingInTime(int theIndex)
 	return false;
 }
 
-// Asettaa tiedon, siirtyykö annetun indeksin osoittaman CP:n paikka ajassa?
-// jos annettu indeksi on -1, käyttää itsCPIndex:iä
+// Asettaa tiedon, siirtyykï¿½ annetun indeksin osoittaman CP:n paikka ajassa?
+// jos annettu indeksi on -1, kï¿½yttï¿½ï¿½ itsCPIndex:iï¿½
 void NFmiEditorControlPointManager::CPMovingInTime(bool newState, int theIndex)
 {
 	if(theIndex == -1)
@@ -1169,9 +1170,9 @@ void NFmiEditorControlPointManager::CPMovingInTime(bool newState, int theIndex)
 	}
 }
 
-// sisään annetaan relatiiviset pisteet, pitää laske latlon pisteet itse!
-// jos annettu indeksi on -1, käyttää itsCPIndex:iä
-// Päivittää samalla latlon-taulukon?
+// sisï¿½ï¿½n annetaan relatiiviset pisteet, pitï¿½ï¿½ laske latlon pisteet itse!
+// jos annettu indeksi on -1, kï¿½yttï¿½ï¿½ itsCPIndex:iï¿½
+// Pï¿½ivittï¿½ï¿½ samalla latlon-taulukon?
 void NFmiEditorControlPointManager::SetInTimeMovingCPRelativeLocations(const std::vector<NFmiPoint>& theRelativeVector, int theIndex)
 {
 	int timeSize = itsTimeDescriptor.Size();
@@ -1199,7 +1200,7 @@ void NFmiEditorControlPointManager::SetInTimeMovingCPRelativeLocations(const std
 	}
 }
 
-// jos annettu indeksi on -1, käyttää itsCPIndex:iä
+// jos annettu indeksi on -1, kï¿½yttï¿½ï¿½ itsCPIndex:iï¿½
 const std::vector<NFmiPoint>& NFmiEditorControlPointManager::GetInTimeMovingCPRelativeLocations(int theIndex) const
 {
 	if(theIndex == -1)
@@ -1217,7 +1218,7 @@ const std::vector<NFmiPoint>& NFmiEditorControlPointManager::GetInTimeMovingCPRe
 	return dummyPoints;
 }
 
-// jos annettu indeksi on -1, käyttää itsCPIndex:iä
+// jos annettu indeksi on -1, kï¿½yttï¿½ï¿½ itsCPIndex:iï¿½
 const NFmiPoint& NFmiEditorControlPointManager::StartingRelativeLocation(int theIndex) const
 {
 	if(theIndex == -1)

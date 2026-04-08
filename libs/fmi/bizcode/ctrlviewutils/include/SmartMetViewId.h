@@ -39,8 +39,8 @@ enum class SmartMetViewId : size_t
     LastViewId = BetaProductionDlg, // set the last view id here also
     // Special combo view ids
     AllMapViews = MainMapView | MapView2 | MapView3, // | MapView4 | MapView5,
-    // Laitetaan kaikki bitit päälle kun size_t:hen (unsigned __int64/long long) asetetaan -1
-    AllViews = -1 // kaikkien näyttöjen päivitys
+    // Laitetaan kaikki bitit pï¿½ï¿½lle kun size_t:hen (unsigned __int64/long long) asetetaan -1
+    AllViews = ~static_cast<size_t>(0) // kaikkien nï¿½yttï¿½jen pï¿½ivitys
 };
 
 bool SmartMetViewIdFlagCheck(SmartMetViewId viewsFlag, SmartMetViewId checkedSingleViewId);

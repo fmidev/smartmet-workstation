@@ -13,11 +13,12 @@ static void GeneralInitParamHandlerView(UsedCtrlview* parentView, std::unique_pt
 	auto initialFrame = parentView->CalcParamHandlerViewRect();
 	parentView->SetParamHandlerViewRect(initialFrame);
 
+	auto drawParam = parentView->DrawParam();
 	paramHandlerView.reset(new NFmiParamHandlerView(
 		parentView->MapViewDescTopIndex()
 		, initialFrame
 		, parentView->GetToolBox()
-		, parentView->DrawParam()
+		, drawParam
 		, parentView->ViewGridRowNumber()
 		, parentView->ViewGridColumnNumber()
 		, showMaskSection
@@ -39,8 +40,8 @@ static void GeneralUpdateParamHandlerView(UsedCtrlview* parentView, std::unique_
 			, parentView->GetToolBox()
 			, parentView->GetCtrlViewDocumentInterface()->ParamWindowViewPosition(parentView->MapViewDescTopIndex())
 		);
-		// NFmiParamHandlerView::Update metodi ottaa täällä esilasketun itsParamHandlerViewRect:in ja tekee siihen muutoksia, 
-		// ja se pitää ottaa taas talteen tässä.
+		// NFmiParamHandlerView::Update metodi ottaa tï¿½ï¿½llï¿½ esilasketun itsParamHandlerViewRect:in ja tekee siihen muutoksia, 
+		// ja se pitï¿½ï¿½ ottaa taas talteen tï¿½ssï¿½.
 		parentView->SetParamHandlerViewRect(paramHandlerView->GetFrame());
 	}
 }

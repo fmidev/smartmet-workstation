@@ -31,8 +31,8 @@ namespace
         {
             if(!usedUrlName.empty() && (letter == '_' || std::isupper(letter)))
             {
-                // Lisätään lopulliseen nimeen aina space jos usedUrlName ei ollut tyhjä
-                // ja jos kyseinen kirjain oli joko alaviiva tai isokirjain, näin
+                // Lisï¿½tï¿½ï¿½n lopulliseen nimeen aina space jos usedUrlName ei ollut tyhjï¿½
+                // ja jos kyseinen kirjain oli joko alaviiva tai isokirjain, nï¿½in
                 // saadaaan halutu sanat erilleen
                 usedUrlName += " ";
             }
@@ -100,7 +100,7 @@ namespace
 
     std::string makeTimeInfoString(const NFmiMetTime & atime)
     {
-        std::string timeInfoStr = atime.ToStr("YYYY-MM-DDTHH:mm:SS", kEnglish);
+        std::string timeInfoStr = atime.ToStr("YYYY-MM-DDTHH:mm:SS", kEnglish).CharPtr();
         return timeInfoStr;
     }
 

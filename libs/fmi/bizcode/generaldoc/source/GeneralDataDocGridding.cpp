@@ -1,7 +1,11 @@
 #include "GeneralDataDocGridding.h"
 #include "NFmiEditMapGeneralDataDoc.h"
 #include "CombinedMapHandlerInterface.h"
+#ifndef UNIX
 #include "NFmiApplicationWinRegistry.h"
+#else
+#include <stdexcept>
+#endif
 
 void GeneralDataDocGridding::MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea)
 {
@@ -15,6 +19,10 @@ NFmiIgnoreStationsData& GeneralDataDocGridding::IgnoreStationsData()
 
 const NFmiGriddingProperties& GeneralDataDocGridding::GriddingProperties(bool getEditingRelatedProperties)
 {
+#ifndef UNIX
     return itsDoc->ApplicationWinRegistry().GriddingProperties(getEditingRelatedProperties);
+#else
+    throw std::runtime_error("GeneralDataDocGridding::GriddingProperties not implemented on Linux");
+#endif
 }
 

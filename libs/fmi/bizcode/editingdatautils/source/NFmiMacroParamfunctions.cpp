@@ -1,4 +1,4 @@
-#include "NFmiMacroParamFunctions.h"
+#include "NFmiMacroParamfunctions.h"
 #include "NFmiStringTools.h"
 
 using namespace std;

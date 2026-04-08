@@ -9,11 +9,11 @@
 #include <boost/random.hpp>
 #include <boost/bind.hpp>
 
-// Nämä apu funktiot on peräisin "Boost.Asio C++ Networking Programming" -kirjan
-// esimerkeistä. Niiden tarkoitus pakottaa käyttämään Asio:n asynkronisia kutsuja
+// Nï¿½mï¿½ apu funktiot on perï¿½isin "Boost.Asio C++ Networking Programming" -kirjan
+// esimerkeistï¿½. Niiden tarkoitus pakottaa kï¿½yttï¿½mï¿½ï¿½n Asio:n asynkronisia kutsuja
 // 'oikein'. Eli esim. shared_from_this tekee kutsuvasta oliosta shared_ptr -otuksen
-// ja siten olio pakotetaan olemaan elossa asynkroonisen kutsun ajan. En sinänsä 
-// ymmärrä tätä tekniikkaa, mutta joku on miettinyt näitä.
+// ja siten olio pakotetaan olemaan elossa asynkroonisen kutsun ajan. En sinï¿½nsï¿½ 
+// ymmï¿½rrï¿½ tï¿½tï¿½ tekniikkaa, mutta joku on miettinyt nï¿½itï¿½.
 #define MEMBER_FUNC(func)    boost::bind(&self_type::func, shared_from_this())
 #define MEMBER_FUNC1(func,par1)    boost::bind(&self_type::func, shared_from_this(),par1)
 #define MEMBER_FUNC2(func,par1,par2)    boost::bind(&self_type::func, shared_from_this(),par1,par2)
@@ -22,12 +22,12 @@ namespace tcp_tools
 {
     enum binary_read_state
     {
-        binary_read_state_no = 0, // ei käytetä ollenkaan binary siirtoja
-        binary_read_state_searching, // etsitään sanomasta binary osiota, eli 1. sana on kokonaisluku ja sen perässä on space
-        binary_read_state_not_found, // ei löytynyt kokonaisluku + space -yhdistelmää, jatketaan normaalia lukua
-        binary_read_state_found, // löytyi kokonaisluku + space -yhdistelmä, jatketaan binary luvulla
+        binary_read_state_no = 0, // ei kï¿½ytetï¿½ ollenkaan binary siirtoja
+        binary_read_state_searching, // etsitï¿½ï¿½n sanomasta binary osiota, eli 1. sana on kokonaisluku ja sen perï¿½ssï¿½ on space
+        binary_read_state_not_found, // ei lï¿½ytynyt kokonaisluku + space -yhdistelmï¿½ï¿½, jatketaan normaalia lukua
+        binary_read_state_found, // lï¿½ytyi kokonaisluku + space -yhdistelmï¿½, jatketaan binary luvulla
         binary_read_state_finished, // luettu binary sanoma onnistuneesti
-        binary_read_state_failed // binary sanoman luku epäonnistui
+        binary_read_state_failed // binary sanoman luku epï¿½onnistui
     };
 
     const std::string g_sample_guid("9991842d-9afb-4f85-832f-f0522d28dbe9");
@@ -58,18 +58,18 @@ namespace tcp_tools
 
         std::string to_string(void) const;
 
-        std::size_t job_index_; // smartmetin sisäinen työindeksi
+        std::size_t job_index_; // smartmetin sisï¿½inen tyï¿½indeksi
         std::size_t data_time_index_; // editoitavan datan aika-indeksi
-        std::size_t job_time_t_; // milloin työ on annettu, eli sekunteja kulunut sitten 1.1. 1970 (tämän avulla voidaan poistaa vanhentuneita roikkumaan jääneitä tuloksia, jos esim. työn antanut smartmet on kaatunut, tai lopettanut)
-        std::string relative_area_string_; // tuloshilan relatiivinen alue stringinä, muotoa: left,top,right,bottom (HUOM! ei saa sisältää spaceja!)
+        std::size_t job_time_t_; // milloin tyï¿½ on annettu, eli sekunteja kulunut sitten 1.1. 1970 (tï¿½mï¿½n avulla voidaan poistaa vanhentuneita roikkumaan jï¿½ï¿½neitï¿½ tuloksia, jos esim. tyï¿½n antanut smartmet on kaatunut, tai lopettanut)
+        std::string relative_area_string_; // tuloshilan relatiivinen alue stringinï¿½, muotoa: left,top,right,bottom (HUOM! ei saa sisï¿½ltï¿½ï¿½ spaceja!)
         std::size_t size_x_; // halutun tuloshilan koko x-suunnassa
         std::size_t size_y_; // halutun tuloshilan koko y-suunnassa
         std::vector<float> x_values_; // hilattavien pisteiden relatiiviset x-sijainnit
         std::vector<float> y_values_; // hilattavien pisteiden relatiiviset y-sijainnit
-        std::vector<float> z_values_; // hilattavien pisteiden arvot eli ns. 'korkeuskenttä'
-        std::string smartmet_guid_; // työn antaneen smartmet instanssin guid, esim. "9999842d-9afb-4f85-832f-f0522d28dbe9" (HUOM! ei saa sisältää spaceja!)
-        std::string gridding_properties_string_; // ToolMaster hilauslaskuissa käytetyt optiot, esim. "1,0,1,0.5,0,1.25,0.15" (HUOM! ei saa sisältää spaceja!)
-        float cp_range_limit_relative_; // Jos CP-pisteiden laskennassa halutaan laittaa rajoitus kunkin CP-pisteen vaikutus alueelle, annetaan tähän relatiivinen säde, jos kFloatMissing, käytetään 'rajatonta' laskua.
+        std::vector<float> z_values_; // hilattavien pisteiden arvot eli ns. 'korkeuskenttï¿½'
+        std::string smartmet_guid_; // tyï¿½n antaneen smartmet instanssin guid, esim. "9999842d-9afb-4f85-832f-f0522d28dbe9" (HUOM! ei saa sisï¿½ltï¿½ï¿½ spaceja!)
+        std::string gridding_properties_string_; // ToolMaster hilauslaskuissa kï¿½ytetyt optiot, esim. "1,0,1,0.5,0,1.25,0.15" (HUOM! ei saa sisï¿½ltï¿½ï¿½ spaceja!)
+        float cp_range_limit_relative_; // Jos CP-pisteiden laskennassa halutaan laittaa rajoitus kunkin CP-pisteen vaikutus alueelle, annetaan tï¿½hï¿½n relatiivinen sï¿½de, jos kFloatMissing, kï¿½ytetï¿½ï¿½n 'rajatonta' laskua.
     };
 
     std::ostream& operator <<(std::ostream &out, const task_structure &object);
@@ -85,13 +85,13 @@ namespace tcp_tools
         std::string to_binary_string(const std::string &start_of_str) const;
         void from_binary_string(const std::string &binary_str);
 
-        std::size_t job_index_; // smartmetin sisäinen työindeksi
+        std::size_t job_index_; // smartmetin sisï¿½inen tyï¿½indeksi
         std::size_t data_time_index_; // editoitavan datan aika-indeksi
-        std::size_t job_time_t_; // milloin työ on annettu, eli sekunteja kulunut sitten 1.1. 1970 (tämän avulla voidaan poistaa vanhentuneita roikkumaan jääneitä tuloksia, jos esim. työn antanut smartmet on kaatunut, tai lopettanut)
+        std::size_t job_time_t_; // milloin tyï¿½ on annettu, eli sekunteja kulunut sitten 1.1. 1970 (tï¿½mï¿½n avulla voidaan poistaa vanhentuneita roikkumaan jï¿½ï¿½neitï¿½ tuloksia, jos esim. tyï¿½n antanut smartmet on kaatunut, tai lopettanut)
         std::size_t size_x_; // halutun tuloshilan koko x-suunnassa
         std::size_t size_y_; // halutun tuloshilan koko y-suunnassa
         std::vector<float> values_; // hilauksen lopputulos vektorissa
-        std::string smartmet_guid_; // työn antaneen smartmet instanssin guid
+        std::string smartmet_guid_; // tyï¿½n antaneen smartmet instanssin guid
 
     };
 
@@ -138,7 +138,7 @@ namespace tcp_tools
             std::list<Data> list_copy(data_queue_);
             if(clear_list)
                 data_queue_.clear();
-            return list_copy; // en tiedä olisinko voinut palauttaa tässä suoraan data_queue_:n, koska en tiedä mitä tapahtuu (tehdäänkö ensin kopio palautettavasta queue:sta ja sitten lukko aukeaa ja palataan metodista, vai jotenkin eri järjestyksessä)
+            return list_copy; // en tiedï¿½ olisinko voinut palauttaa tï¿½ssï¿½ suoraan data_queue_:n, koska en tiedï¿½ mitï¿½ tapahtuu (tehdï¿½ï¿½nkï¿½ ensin kopio palautettavasta queue:sta ja sitten lukko aukeaa ja palataan metodista, vai jotenkin eri jï¿½rjestyksessï¿½)
         }
 
         // Funktio, joka poistaa originaali listasta (data_queue_) kaikki halutut datat
@@ -163,7 +163,7 @@ namespace tcp_tools
 
         // Funktio, joka poistaa originaali listasta (data_queue_) seuraavan datan
         // joka sopii predikaatti condition:in ehtoihin ja palauttaa sen
-        // popped_data -parametrissa. Palauttaa true, jos löytyi data ja false jos ei.
+        // popped_data -parametrissa. Palauttaa true, jos lï¿½ytyi data ja false jos ei.
         template<typename Pred>
         bool try_get_next(const Pred &condition, Data &popped_data)
         {
@@ -173,8 +173,8 @@ namespace tcp_tools
             {
                 if(condition(*iter))
                 {
-                    popped_data = *iter; // löytyi haluttu data, otetaan se talteen
-                    iter = data_queue_.erase(iter); // poistetaan löydetty listasta
+                    popped_data = *iter; // lï¿½ytyi haluttu data, otetaan se talteen
+                    iter = data_queue_.erase(iter); // poistetaan lï¿½ydetty listasta
                     return true;
                 }
                 else
@@ -229,7 +229,7 @@ namespace tcp_tools
             for(auto iter = alist.begin(); iter != alist.end(); ++iter)
             {
                 if(i++)
-                    out << " "; // laitetaan space otusten väliin
+                    out << " "; // laitetaan space otusten vï¿½liin
                 out << *iter;
             }
         }
@@ -248,7 +248,7 @@ namespace tcp_tools
         {
             try
             {
-                Queue::value_type queue_item;
+                typename Queue::value_type queue_item;
                 in >> queue_item;
                 if(in)
                     queue.push(queue_item);
@@ -257,11 +257,11 @@ namespace tcp_tools
             }
             catch(std::exception &)
             {
-                break; // queue_item -luku heittää poikkeuksen, kun tullaan streamin loppuun
+                break; // queue_item -luku heittï¿½ï¿½ poikkeuksen, kun tullaan streamin loppuun
             }
             catch(...)
             {
-                break; // queue_item -luku heittää poikkeuksen, kun tullaan streamin loppuun
+                break; // queue_item -luku heittï¿½ï¿½ poikkeuksen, kun tullaan streamin loppuun
             }
         }
     }
@@ -280,12 +280,12 @@ namespace tcp_tools
     // Rikkovia muutoksia seuraavassa tiedostossa boost kirjastion asio:ssa:
     // boost_1_70_0\boost\asio\impl\read.hpp
     // class read_op::operator()(const boost::system::error_code& ec, std::size_t bytes_transferred, int start = 0) -metodissa.
-    // Mitä koodi teki aina ennen: Tutki onko ollut virheitä, jos ei, kutsuttiin aina check_for_completion -funktiota, joka tekee
-    // SmartMetin päässä tiettyjä tarkistuksia ja asetuksia (mm. binary_reading_state_ = tcp_tools::binary_read_state_finished)
-    // Mitä koodi tekee muutoksen jälkeen (en tiedä minkä versioon muutos tehtiin):
+    // Mitï¿½ koodi teki aina ennen: Tutki onko ollut virheitï¿½, jos ei, kutsuttiin aina check_for_completion -funktiota, joka tekee
+    // SmartMetin pï¿½ï¿½ssï¿½ tiettyjï¿½ tarkistuksia ja asetuksia (mm. binary_reading_state_ = tcp_tools::binary_read_state_finished)
+    // Mitï¿½ koodi tekee muutoksen jï¿½lkeen (en tiedï¿½ minkï¿½ versioon muutos tehtiin):
     // 1) Tutki virhe tilanne
-    // 2) Katso onko bufferi luettu tyhjiin, jos on, kutsu handler funktiota (tämä oikopolku aiheuttaa ongelman!!!)
-    // 3) Jos bufferi ei oltu luettu tyhjäksi, kutsu check_for_completion -funktiota...
+    // 2) Katso onko bufferi luettu tyhjiin, jos on, kutsu handler funktiota (tï¿½mï¿½ oikopolku aiheuttaa ongelman!!!)
+    // 3) Jos bufferi ei oltu luettu tyhjï¿½ksi, kutsu check_for_completion -funktiota...
     template<typename BinaryBuffer>
     void boost_asio_async_read_behaviour_change_fix(size_t bytes, const BinaryBuffer& binary_read_buffer, tcp_tools::binary_read_state* binary_reading_state_in_out)
     {
@@ -324,9 +324,9 @@ struct multi_process_tcp_pool_options
     {}
 
     std::string worker_name;
-    double total_wait_time_limit_in_seconds; // Kuinka kauan SmartMet odottaa maksimissaan että joku annetty työ-sarja (= kokonainen CP-editointi) valmistuu
-    bool verbose_logging; // käytetäänkö multi-process lokituksessa pidempiä vai lyhyempiä lokitus tekstejä
-    std::string worker_executable_absolute_path; // jos tässä on arvo, käytetään tätä worker-prosessin käynnistykseen, muuten polku rakennetaan toista kautta
+    double total_wait_time_limit_in_seconds; // Kuinka kauan SmartMet odottaa maksimissaan ettï¿½ joku annetty tyï¿½-sarja (= kokonainen CP-editointi) valmistuu
+    bool verbose_logging; // kï¿½ytetï¿½ï¿½nkï¿½ multi-process lokituksessa pidempiï¿½ vai lyhyempiï¿½ lokitus tekstejï¿½
+    std::string worker_executable_absolute_path; // jos tï¿½ssï¿½ on arvo, kï¿½ytetï¿½ï¿½n tï¿½tï¿½ worker-prosessin kï¿½ynnistykseen, muuten polku rakennetaan toista kautta
 };
 
 } // tcp_tools

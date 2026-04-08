@@ -24,9 +24,9 @@
 
 #ifndef UNIX
 #include "stdafx.h"
-#endif // UNIX
 #include "shlobj.h"
 #include "objbase.h"
+#endif // UNIX
 #include "CShellFileOp.h"
 #include "NFmiStringTools.h"
 #include "NFmiFileSystem.h"
@@ -59,8 +59,8 @@ CShellFileOp::~CShellFileOp()
 static std::string FixPathStr(LPCTSTR szPath)
 {
 	std::string tmpStr = CT2A(szPath);
-	NFmiStringTools::ReplaceChars(tmpStr, '/', '\\'); // muutetaan mahdolliset väärinpäin olevat kenoviivat niin että SHFileOperation-funktio ei ota nokkiinsa eli mahd. '/' -> '\'
-	NFmiStringTools::TrimR(tmpStr, '\\'); // jos kyse oli polusta, lopussa ei saa olla kenoviivaa, koska tällöin SHFileOperation-funktio ei toimi XP:ssä (toimisi Win7:ssa ok)
+	NFmiStringTools::ReplaceChars(tmpStr, '/', '\\'); // muutetaan mahdolliset vï¿½ï¿½rinpï¿½in olevat kenoviivat niin ettï¿½ SHFileOperation-funktio ei ota nokkiinsa eli mahd. '/' -> '\'
+	NFmiStringTools::TrimR(tmpStr, '\\'); // jos kyse oli polusta, lopussa ei saa olla kenoviivaa, koska tï¿½llï¿½in SHFileOperation-funktio ei toimi XP:ssï¿½ (toimisi Win7:ssa ok)
 	return tmpStr;
 }
 
@@ -412,12 +412,12 @@ bool CShellFileOp::MakeSureDestinationDirectoryExist(void)
 // Updated in v1.1 - Changed the two 'new' calls to allocate BYTEs insetad
 // of TCHARs.
 //////////////////////////////////////////////////////////////////////////
-// Marko: Enen Go:n kutsua pitää varmistaa että kohde polut ovat olemassa, muuten SHFileOperation ei toimi. 
-// En voi varmistaa sitä täällä, koska en tiedä onko annetun kohdepolun päässä hakemisto vai tiedosto.
+// Marko: Enen Go:n kutsua pitï¿½ï¿½ varmistaa ettï¿½ kohde polut ovat olemassa, muuten SHFileOperation ei toimi. 
+// En voi varmistaa sitï¿½ tï¿½ï¿½llï¿½, koska en tiedï¿½ onko annetun kohdepolun pï¿½ï¿½ssï¿½ hakemisto vai tiedosto.
 // "C:\\aaa\\bbb\\ccc" , ei voi olla varma, onko 'ccc' hakemisto vai tiedoston nimi, joka on 'bbb'-hakemistossa.
-// Voin tehdä kuitenkin kaksi poikkeusta (ks. MakeSureDestinationDirectoryExist): 
-// 1. Kun kyse on kopioinnista (tai movesta) ja on monia lähde-tiedostoja, mutta vain yksi kohde polku.
-// 2. Kun kyse on kopioinnista (tai movesta) ja on yksi lähde-polku ja yksi kohde polku (oletus tätä ohjelmaa ei kutsuta kopioimaan yhtä tiedostoa vaan tässä on aina kyse hakemisto-kopiosta).
+// Voin tehdï¿½ kuitenkin kaksi poikkeusta (ks. MakeSureDestinationDirectoryExist): 
+// 1. Kun kyse on kopioinnista (tai movesta) ja on monia lï¿½hde-tiedostoja, mutta vain yksi kohde polku.
+// 2. Kun kyse on kopioinnista (tai movesta) ja on yksi lï¿½hde-polku ja yksi kohde polku (oletus tï¿½tï¿½ ohjelmaa ei kutsuta kopioimaan yhtï¿½ tiedostoa vaan tï¿½ssï¿½ on aina kyse hakemisto-kopiosta).
 BOOL CShellFileOp::Go ( BOOL* lpbOperationStarted,
                         int*  lpnAPIReturn /*=NULL*/,
                         BOOL* lpbAnyOperationsAborted  /*=NULL*/ )

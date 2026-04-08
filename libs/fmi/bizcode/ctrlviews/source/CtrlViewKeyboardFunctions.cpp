@@ -3,6 +3,7 @@
 
 namespace CtrlView
 {
+#ifndef UNIX
     bool IsKeyboardKeyDown(int theKey)
     {
         return (::GetAsyncKeyState(theKey) & 0x8000) ? 1 : 0;
@@ -38,5 +39,9 @@ namespace CtrlView
             }
         }
     }
+#else // UNIX
+    bool IsKeyboardKeyDown(int /*theKey*/) { return false; }
+    bool IsKeyboardKeyUp(int /*theKey*/) { return true; }
+#endif // UNIX
 
 }

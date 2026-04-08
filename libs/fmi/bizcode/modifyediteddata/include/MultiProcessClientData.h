@@ -1,10 +1,14 @@
 
 #pragma once
 
-#include "process_helpers.h"
+#include <string>
 
-// Tämän luokan ainoa tarkoitus oli poistaa älytön määrä riippuvuuksia MultiProcessTools-kirjaston template koodien
-// ja NFmiEditMapGeneralDataDoc -luokan väliltä (ja liian moni muu kirjasto+luokka on taas riippuvainen GenDataDoc-luokasta).
+#ifndef UNIX
+#include "process_helpers.h"
+#include "logging.h"
+
+// Tï¿½mï¿½n luokan ainoa tarkoitus oli poistaa ï¿½lytï¿½n mï¿½ï¿½rï¿½ riippuvuuksia MultiProcessTools-kirjaston template koodien
+// ja NFmiEditMapGeneralDataDoc -luokan vï¿½liltï¿½ (ja liian moni muu kirjasto+luokka on taas riippuvainen GenDataDoc-luokasta).
 class MultiProcessClientData
 {
 public:
@@ -12,7 +16,7 @@ public:
 
     const std::string& MultiProcessLogPath(void) const {return itsMultiProcessLogPath;}
     void MultiProcessLogPath(const std::string &newPath) {itsMultiProcessLogPath = newPath;}
-    // HUOM! tätä pitää kutsua ennen ensimmäistä GetMultiProcessClientData -kutsua
+    // HUOM! tï¿½tï¿½ pitï¿½ï¿½ kutsua ennen ensimmï¿½istï¿½ GetMultiProcessClientData -kutsua
     void PresetMultiProcessPoolOptions(const process_helpers::multi_process_pool_options &theMppOptions, logging::trivial::severity_level theMppLogLevel);
     process_helpers::multi_process_pool_options& MultiProcessPoolOptions(void) {return itsMultiProcessPoolOptions;}
     logging::trivial::severity_level MppLogLevel(void) const {return itsMppLogLevel;}
@@ -20,6 +24,17 @@ public:
 private:
 
     std::string itsMultiProcessLogPath;
-    process_helpers::multi_process_pool_options itsMultiProcessPoolOptions; // tämä asetetaan etukäteen, ennen kuin itsMultiProcessClientData -dataosio alustetaan, halusin viivyttää itsMultiProcessClientData:n alustusta mahd. pitkään, siksi monimutkaisia alustus virityksiä
+    process_helpers::multi_process_pool_options itsMultiProcessPoolOptions;
     logging::trivial::severity_level itsMppLogLevel;
 };
+#else // UNIX
+class MultiProcessClientData
+{
+public:
+    MultiProcessClientData(void) = default;
+    const std::string& MultiProcessLogPath(void) const {return itsMultiProcessLogPath;}
+    void MultiProcessLogPath(const std::string &newPath) {itsMultiProcessLogPath = newPath;}
+private:
+    std::string itsMultiProcessLogPath;
+};
+#endif // UNIX

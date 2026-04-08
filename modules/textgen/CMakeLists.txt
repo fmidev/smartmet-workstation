@@ -16,10 +16,18 @@ file(
     )
 
 list(
-    REMOVE_ITEM SOURCE_FILES 
+    REMOVE_ITEM SOURCE_FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/textgen/MySQLDictionary.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/textgen/MySQLDictionary.cpp"
     )
+
+if(UNIX)
+    find_package(GDAL QUIET)
+    if(NOT GDAL_FOUND)
+        list(FILTER SOURCE_FILES EXCLUDE REGEX "PostGISDataSource\\.(cpp|h)$")
+        message(STATUS "Textgen: GDAL not found, excluding PostGISDataSource")
+    endif()
+endif()
 
 add_library( 
     ${PROJECT_NAME} STATIC

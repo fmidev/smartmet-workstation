@@ -25,7 +25,7 @@ namespace SmartMetDataUtilities
         DataUtilitiesAdapterPimpl();
         virtual ~DataUtilitiesAdapterPimpl();
         DataUtilitiesAdapterPimpl(const DataUtilitiesAdapterPimpl& rhs);
-        DataUtilitiesAdapterPimpl& DataUtilitiesAdapterPimpl::operator=(DataUtilitiesAdapterPimpl rhs);
+        DataUtilitiesAdapterPimpl& operator=(DataUtilitiesAdapterPimpl rhs);
         DataUtilitiesAdapterPimpl(DataUtilitiesAdapterPimpl&& rhs);
         DataUtilitiesAdapterPimpl& operator=(DataUtilitiesAdapterPimpl&& rhs);
 

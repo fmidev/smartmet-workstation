@@ -5,9 +5,19 @@ set(CMAKE_MFC_FLAG 0)
 
 disable_linux_side_compiler_warnings()
 
-add_definitions( 
+add_definitions(
     -DIMAGINE_IGNORE_FORMATS
     )
+
+if(UNIX)
+    find_package(Freetype QUIET)
+    if(FREETYPE_FOUND)
+        include_directories(${FREETYPE_INCLUDE_DIRS})
+    else()
+        add_definitions(-DIMAGINE_WITH_CAIRO)
+        message(STATUS "Imagine: FreeType not found, excluding NFmiFreeType.cpp via IMAGINE_WITH_CAIRO")
+    endif()
+endif()
 
 file( GLOB SOURCE_FILES imagine/*.cpp imagine/*.h )
 

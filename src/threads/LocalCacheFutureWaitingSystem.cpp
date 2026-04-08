@@ -1,6 +1,8 @@
 #include "LocalCacheFutureWaitingSystem.h"
 #include "NFmiQueryDataUtil.h"
 #include "catlog/catlog.h"
+#include <thread>
+#include <chrono>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

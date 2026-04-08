@@ -5,15 +5,22 @@
 #include "NFmiFileSystem.h"
 #include "NFmiFileString.h"
 #include "NFmiApplicationDataBase.h"
+#ifndef UNIX
 #include "NFmiApplicationWinRegistry.h"
+#endif
 #include "NFmiBetaProductHelperFunctions.h"
 #include "NFmiPathUtils.h"
 
+#ifndef UNIX
 #include <direct.h> // working directory juttuja varten
+#else
+#include <unistd.h>
+#endif
 #include <boost/algorithm/string.hpp>
 #include <regex>
 
 
+#ifndef UNIX
 static int GetUsedMessageBoxIcon(CatLog::Severity severity)
 {
     switch(severity)
@@ -42,15 +49,18 @@ static void DoInitializationAbortOrContinueMessageBox(const std::string &errorSt
         throw AbortSmartMetInitializationGracefullyException();
     }
 }
+#endif
 
 void NFmiBasicSmartMetConfigurations::DoInitializationAbortMessageBox(const std::string &errorString, const std::string &titleString, bool throwAbortException)
 {
-    int usedIcon = ::GetUsedMessageBoxIcon(CatLog::Severity::Critical);
     std::string finalErrorString = errorString;
     finalErrorString += "\n\n";
     finalErrorString += "Too severe errors in initialization, press Ok to abort";
     CatLog::logMessage(finalErrorString, CatLog::Severity::Error, CatLog::Category::Configuration, true);
+#ifndef UNIX
+    int usedIcon = ::GetUsedMessageBoxIcon(CatLog::Severity::Critical);
     ::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(finalErrorString.c_str()), CA2T(titleString.c_str()), MB_OK | usedIcon);
+#endif
     if(throwAbortException)
     {
         throw AbortSmartMetInitializationGracefullyException();
@@ -86,14 +96,14 @@ static FmiLanguage GetLanguageFromString(const std::string & theLanguageAbbrevia
     if(tmpUpperString == "FI")
         return kFinnish;
 
-    // default on englanti, eli ei välitetä vaikka olisi annettu parametrina mitä roskaa
+    // default on englanti, eli ei vï¿½litetï¿½ vaikka olisi annettu parametrina mitï¿½ roskaa
     return kEnglish; 
 }
 
 
 static std::string GetDictionaryFilename(const std::string &languageAbbreviation)
 {
-    const std::string languagePlacerString = "¤¤";
+    const std::string languagePlacerString = "ï¿½ï¿½";
     const std::string baseName = std::string("Dictionary_") + languagePlacerString + ".conf";
     std::string dictionaryFilename(baseName);
     boost::replace_all(dictionaryFilename, languagePlacerString, languageAbbreviation);
@@ -126,7 +136,11 @@ void NFmiBasicSmartMetConfigurations::LogOtherPaths()
 bool NFmiBasicSmartMetConfigurations::Init(const std::string &avsToolMasterVersion)
 {
 	GetWorkingDirectory();
-	::_chdir(itsWorkingDirectory.c_str()); // kun versiosta 5.4 alkaen exe:t ajetaan 32/64-bit hakemistoistaan, pitää workin directory asettaa tässä oikeaan
+#ifndef UNIX
+	::_chdir(itsWorkingDirectory.c_str()); // kun versiosta 5.4 alkaen exe:t ajetaan 32/64-bit hakemistoistaan, pitï¿½ï¿½ workin directory asettaa tï¿½ssï¿½ oikeaan
+#else
+	chdir(itsWorkingDirectory.c_str());
+#endif
     LogBasicPaths();
 	// Read all configurations compatible NFmiSettings
 	if(!ReadConfigurations())
@@ -137,12 +151,16 @@ bool NFmiBasicSmartMetConfigurations::Init(const std::string &avsToolMasterVersi
         itsHelpDataPath = NFmiSettings::Optional<std::string>("SmartMet::HelpDataPath", itsControlPath + "\\help_data");
         itsHelpDataPath = PathUtils::makeFixedAbsolutePath(itsHelpDataPath, itsControlPath);
 
+#ifndef UNIX
         HKEY usedKey = HKEY_CURRENT_USER;
         std::string sectionName = "\\General";
         std::string baseRegistryPath = NFmiApplicationWinRegistry::MakeBaseRegistryPath();
-        // Sanakirja luetaan itsHelpDataPath:ista. 
-        // Käytetty kieli talletetaan rekisteriin ja kielen avulla tehdään luettavan sanakirjan tiedostonimi.
+        // Sanakirja luetaan itsHelpDataPath:ista.
+        // Kï¿½ytetty kieli talletetaan rekisteriin ja kielen avulla tehdï¿½ï¿½n luettavan sanakirjan tiedostonimi.
         itsDictionaryLanguageString = ::CreateRegValue<CachedRegString>(baseRegistryPath, sectionName, "\\GuiLanguage", usedKey, "EN");
+#else
+        itsDictionaryLanguageString = boost::shared_ptr<CachedRegString>(new CachedRegString("EN"));
+#endif
         itsLanguage = ::GetLanguageFromString(*itsDictionaryLanguageString);
         std::string dictionaryFilePath = MakeDictionaryFilePath();
 
@@ -161,9 +179,9 @@ bool NFmiBasicSmartMetConfigurations::Init(const std::string &avsToolMasterVersi
 		return false;
 	}
 
-    // tätä pitää kutsua ennen kuin loggeri alustetaan
+    // tï¿½tï¿½ pitï¿½ï¿½ kutsua ennen kuin loggeri alustetaan
 	SetEditorVersionStr(); 
-    // logger pitää alustaan ennen InitApplicationDataBase -kutsua
+    // logger pitï¿½ï¿½ alustaan ennen InitApplicationDataBase -kutsua
     if(!InitLogger())
         return false;
 	InitApplicationDataBase(avsToolMasterVersion);
@@ -172,7 +190,7 @@ bool NFmiBasicSmartMetConfigurations::Init(const std::string &avsToolMasterVersi
 	return true;
 }
 
-// Palauttaa itsControlBasePath:sta, jossa on täydellinen absoluuttinen polku, sen loppuosion, esim:
+// Palauttaa itsControlBasePath:sta, jossa on tï¿½ydellinen absoluuttinen polku, sen loppuosion, esim:
 // D:\smartmet\MetEditor_5_9\control_scand_saa2_edit_conf -> control_scand_saa2_edit_conf
 std::string NFmiBasicSmartMetConfigurations::GetShortConfigurationName(void)
 {
@@ -181,10 +199,10 @@ std::string NFmiBasicSmartMetConfigurations::GetShortConfigurationName(void)
     {
         NFmiStringTools::ReplaceAll(tmpConfName, "/", "\\");  // muutetaan mahd. /-merkit \-merkeiksi
         while(tmpConfName.empty() == false && tmpConfName[tmpConfName.size()-1] == '\\')
-            tmpConfName.resize(tmpConfName.size()-1); // jos konffinimessä sattui olemaan viimeinen merkki \-merkki, pitää se poistaa
+            tmpConfName.resize(tmpConfName.size()-1); // jos konffinimessï¿½ sattui olemaan viimeinen merkki \-merkki, pitï¿½ï¿½ se poistaa
         std::string::size_type pos = tmpConfName.find_last_of('\\');
         if(pos != std::string::npos)
-            tmpConfName = std::string(tmpConfName.begin() + pos + 1, tmpConfName.end()); // rakennetaan lopullinen nimi viimeisestä \-merkistä loppuun
+            tmpConfName = std::string(tmpConfName.begin() + pos + 1, tmpConfName.end()); // rakennetaan lopullinen nimi viimeisestï¿½ \-merkistï¿½ loppuun
     }
     return tmpConfName;
 }
@@ -210,8 +228,8 @@ void NFmiBasicSmartMetConfigurations::Language(FmiLanguage newValue)
 }
 
 
-// Funktio tekee caseless testin, että löytyykö kyseinen testisana tiedoston nimestä.
-// Jos löytyy, palauta true, jolloin kyseinen konfiguraatiotiedosto ohitetaan.
+// Funktio tekee caseless testin, ettï¿½ lï¿½ytyykï¿½ kyseinen testisana tiedoston nimestï¿½.
+// Jos lï¿½ytyy, palauta true, jolloin kyseinen konfiguraatiotiedosto ohitetaan.
 static bool IsConfigurationFileIgnored(const std::string &theFileName, const std::string &theTestStr)
 {
 	std::string lcFileName = theFileName;
@@ -220,7 +238,7 @@ static bool IsConfigurationFileIgnored(const std::string &theFileName, const std
 	NFmiStringTools::LowerCase(lcTestStr);
 	std::string::size_type pos = lcFileName.find(lcTestStr);
 	if(pos == std::string::npos)
-		return false; // testi stringiä ei löytynyt, eli ei ohiteta tiedostoa
+		return false; // testi stringiï¿½ ei lï¿½ytynyt, eli ei ohiteta tiedostoa
 	return true;
 }
 
@@ -252,8 +270,8 @@ static bool MakeSureDestinationDirectoryExists(const std::string &theFilePath)
 }
 
 // Tarkistaa onko annettu theConfigurationFile ns. tehdasasetustiedosto.
-// Jos on, tarkista löytyykö sitä annetulta polulta.
-// Jos ei löytynyt, kopioi tehdastiedosto haluttuun paikkaan.
+// Jos on, tarkista lï¿½ytyykï¿½ sitï¿½ annetulta polulta.
+// Jos ei lï¿½ytynyt, kopioi tehdastiedosto haluttuun paikkaan.
 void NFmiBasicSmartMetConfigurations::SetupFactorySettingFile(const std::string &theConfigurationFile)
 {
     std::string factorySettingFileName;
@@ -355,11 +373,13 @@ bool NFmiBasicSmartMetConfigurations::ReadConfigurations()
 		std::string confFileListStr = NFmiSettings::Require<std::string>("SmartMet::ConfigurationFiles");
 		std::vector<std::string> rawConfFileNameVector = NFmiStringTools::Split(confFileListStr);
 
-		std::string ignoreFileTestStr; // 32- ja 64-bit winkkareille voidaan tehdä omat konffit, jotka toisessa systeemissä sitten ohitetaan.
-										// eli jos win32-sana löytyy konffitiedoston nimestä, se ohitetaan x64-platformilla. Jos 
-										// taas tiedoston nimestä löytyy x64, se ohitetaan win32 platformilla.
+		std::string ignoreFileTestStr; // 32- ja 64-bit winkkareille voidaan tehdï¿½ omat konffit, jotka toisessa systeemissï¿½ sitten ohitetaan.
+										// eli jos win32-sana lï¿½ytyy konffitiedoston nimestï¿½, se ohitetaan x64-platformilla. Jos 
+										// taas tiedoston nimestï¿½ lï¿½ytyy x64, se ohitetaan win32 platformilla.
 
-#ifdef _WIN64  // HUOM! niissä koodeissä missä Windows on mukana, ei saa viitata win32:een pelkästään, koska ATL tuki ilmeisesti definoi WIN32:n aina mukaan oli kyse 32- tai 64-bit koodista
+#ifdef UNIX
+		ignoreFileTestStr = "win32"; // On Linux, ignore win32-specific configs
+#elif defined(_WIN64)
 		ignoreFileTestStr = "win32";
 #else // WIN32
 		ignoreFileTestStr = "x64";
@@ -370,7 +390,7 @@ bool NFmiBasicSmartMetConfigurations::ReadConfigurations()
             fileName = rawConfFileNameVector[i];
 
 			if(::IsConfigurationFileIgnored(fileName, ignoreFileTestStr))
-				continue; // skipataan tämä conffi-tiedosto
+				continue; // skipataan tï¿½mï¿½ conffi-tiedosto
 
             ReadConfigurationFile(fileName);
 		}
@@ -387,10 +407,10 @@ bool NFmiBasicSmartMetConfigurations::ReadConfigurations()
 	return true;
 }
 
-// smartmet.conf tiedostossa voidaan määritellä tietyt konffi tiedostot, jotka on tarkoitus lukea
-// ennen kuin normaalit konfiguraatiot luetaan. Näissä konffeissa voidaan tehdä mm. seuraavia asioita:
-// 1. Määritellä yhteisiä polku asetuksia, joita käytetään kun varsinaista "SmartMet::ConfigurationFiles" asetuksia käsitellään.
-// 2. Täällä voidaan määritellä FactorySettingFiles-polku.
+// smartmet.conf tiedostossa voidaan mï¿½ï¿½ritellï¿½ tietyt konffi tiedostot, jotka on tarkoitus lukea
+// ennen kuin normaalit konfiguraatiot luetaan. Nï¿½issï¿½ konffeissa voidaan tehdï¿½ mm. seuraavia asioita:
+// 1. Mï¿½ï¿½ritellï¿½ yhteisiï¿½ polku asetuksia, joita kï¿½ytetï¿½ï¿½n kun varsinaista "SmartMet::ConfigurationFiles" asetuksia kï¿½sitellï¿½ï¿½n.
+// 2. Tï¿½ï¿½llï¿½ voidaan mï¿½ï¿½ritellï¿½ FactorySettingFiles-polku.
 bool NFmiBasicSmartMetConfigurations::ReadPreConfigurationSettings()
 {
     try
@@ -434,19 +454,25 @@ void NFmiBasicSmartMetConfigurations::GetWorkingDirectory(bool fDontInitializeAg
 	if(fDontInitializeAgain && itsWorkingDirectory != std::string(""))
 		return ;
 
-	// Otetaan talteen editorin työ-'asema' ja työhakemisto
+#ifndef UNIX
+	// Otetaan talteen editorin tyï¿½-'asema' ja tyï¿½hakemisto
 	static char path[_MAX_PATH];
 	int workingDirectoryDrive = ::_getdrive();
 	::_getdcwd(workingDirectoryDrive , path, _MAX_PATH );
 	itsWorkingDirectory = std::string(path);
+#else
+	char path[4096];
+	if(getcwd(path, sizeof(path)))
+		itsWorkingDirectory = std::string(path);
+#endif
 
 	if(fDeveloperModePath == false)
-	{ // jos ei olla ns. developer moodissa, pitääkin tulla yksi askel hakemistossa ylöspäin!!
+	{ // jos ei olla ns. developer moodissa, pitï¿½ï¿½kin tulla yksi askel hakemistossa ylï¿½spï¿½in!!
 		itsWorkingDirectory = ::RemoveLastDirectory(itsWorkingDirectory);
 		if(itsWorkingDirectory.empty() == false)
 		{
 			if(itsWorkingDirectory[itsWorkingDirectory.size()-1] == kFmiDirectorySeparator)
-			{ // jos viimeinen merkki oli hakemisto-viiva, poistetaan se, koska itsWorkingDirectory annetaan ilman sitä
+			{ // jos viimeinen merkki oli hakemisto-viiva, poistetaan se, koska itsWorkingDirectory annetaan ilman sitï¿½
 				itsWorkingDirectory.resize(itsWorkingDirectory.size()-1);
 			}
 		}
@@ -455,10 +481,13 @@ void NFmiBasicSmartMetConfigurations::GetWorkingDirectory(bool fDontInitializeAg
 
 void NFmiBasicSmartMetConfigurations::DoStartupLogging(const std::string &theAction)
 {
-
     std::string asteriskMarkerLine(itsEditorVersionStr.size() + 1, '*');
     LogMessage(asteriskMarkerLine, CatLog::Severity::Info, CatLog::Category::Configuration);
+#ifndef UNIX
     std::string actionMessage = std::string(CT2A(AfxGetApp()->m_pszExeName)) + std::string(" ");
+#else
+    std::string actionMessage = std::string("SmartMet ");
+#endif
     actionMessage += theAction;
     LogMessage(actionMessage, CatLog::Severity::Info, CatLog::Category::Configuration);
 	LogMessage(itsEditorVersionStr, CatLog::Severity::Info, CatLog::Category::Configuration);
@@ -466,7 +495,7 @@ void NFmiBasicSmartMetConfigurations::DoStartupLogging(const std::string &theAct
 }
 
 #ifdef CreateDirectory
-#undef CreateDirectory // pitää poistaa winkkarin tekemiä definejä
+#undef CreateDirectory // pitï¿½ï¿½ poistaa winkkarin tekemiï¿½ definejï¿½
 #endif
 
 bool NFmiBasicSmartMetConfigurations::InitLogger(void)
@@ -497,23 +526,30 @@ bool NFmiBasicSmartMetConfigurations::InitLogger(void)
 
 void NFmiBasicSmartMetConfigurations::SetEditorVersionStr(void)
 {
+#ifndef UNIX
 	std::string appNameStr = CT2A(AfxGetApp()->m_pszExeName);
+#else
+	std::string appNameStr = "SmartMet";
+#endif
 	std::string appFullNameStr = NFmiApplicationDataBase::GetFullApplicationName();
 	std::string appversionStr = NFmiApplicationDataBase::GetFileVersionOfApplication(appFullNameStr);
 	std::time_t exeModTime = NFmiFileSystem::FileModificationTime(appFullNameStr);
 	NFmiTime exeModTimeLocal(exeModTime);
 
-	NFmiString modTimeStr = exeModTimeLocal.ToStr(" (Build DD Nnn YYYY)", kEnglish);
+	std::string modTimeStr = static_cast<std::string>(exeModTimeLocal.ToStr(" (Build DD Nnn YYYY)", kEnglish));
 
 	itsEditorVersionStr = appNameStr + " version " + appversionStr + modTimeStr; // esim. -> "SmartMet version 5.10.6.0 (Build 22 Feb 2016)")
     std::string shortVersionString = "Version " + appversionStr + modTimeStr; // esim. -> "Version 5.10.6.0 (Build 22 Feb 2016)")
 
-    MakeSplashScreenTextDataVector(exeModTimeLocal, shortVersionString); // tätä pitää kutsua vasta kun itsEditorVersionStr -dataosa on rakennettu
+#ifndef UNIX
+    MakeSplashScreenTextDataVector(exeModTimeLocal, shortVersionString); // tï¿½tï¿½ pitï¿½ï¿½ kutsua vasta kun itsEditorVersionStr -dataosa on rakennettu
+#endif
 }
 
+#ifndef UNIX
 void NFmiBasicSmartMetConfigurations::MakeSplashScreenTextDataVector(const NFmiTime &theExeModTimeLocal, const std::string &theVersionString)
 {
-    // Tehdään dynaamiset tekstit bitmapin päälle
+    // Tehdï¿½ï¿½n dynaamiset tekstit bitmapin pï¿½ï¿½lle
     itsSplashScreenTextDataVector.push_back(DrawStringData(_TEXT("SmartMet Workstation"), _TEXT("Arial"), 37, RGB(0, 0, 0), CPoint(22, 177), true));
     CString versionStringU_ = CA2T(theVersionString.c_str());
     itsSplashScreenTextDataVector.push_back(DrawStringData(versionStringU_, _TEXT("Arial"), 25, RGB(0, 0, 0), CPoint(22, 298), true));
@@ -534,6 +570,7 @@ void NFmiBasicSmartMetConfigurations::MakeSplashScreenTextDataVector(const NFmiT
     if(possibleWarningText2U_.GetLength())
         itsSplashScreenTextDataVector.push_back(DrawStringData(possibleWarningText2U_, _TEXT("Arial"), 25, RGB(255, 0, 0), CPoint(15, 400), true));
 }
+#endif // UNIX
 
 // Oletus, theControlPath on absoluuttinen polku joko tiedostoon tai hakemistoon.
 bool NFmiBasicSmartMetConfigurations::DoControlPathChecks(std::string theControlPath)
@@ -587,6 +624,7 @@ void NFmiBasicSmartMetConfigurations::LogMessage(const std::string& message, Cat
 void NFmiBasicSmartMetConfigurations::LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption, bool flushLogger)
 {
 	LogMessage(theMessageStr, severity, category, flushLogger);
+#ifndef UNIX
     if(justLog == false)
     {
         if(addAbortOption)
@@ -597,6 +635,7 @@ void NFmiBasicSmartMetConfigurations::LogAndWarnUser(const std::string &theMessa
             ::MessageBox(AfxGetMainWnd()->GetDesktopWindow()->GetSafeHwnd(), CA2T(theMessageStr.c_str()), CA2T(theDialogTitleStr.c_str()), MB_OK | usedIcon);
         }
     }
+#endif
 }
 
 void NFmiBasicSmartMetConfigurations::InitApplicationDataBase(const std::string &avsToolMasterVersion)

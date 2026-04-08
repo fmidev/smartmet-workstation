@@ -350,11 +350,11 @@ class NFmiSmartToolModifier
   void DoSimpleConditionInitialization(boost::shared_ptr<NFmiAreaMask> &areaMask,
                                        const NFmiAreaMaskInfo &theAreaMaskInfo);
   boost::shared_ptr<NFmiSimpleCondition> CreateSimpleCondition(
-      boost::shared_ptr<NFmiSimpleConditionInfo> &theSimpleConditionInfo, bool usesVerticalData);
+      const boost::shared_ptr<NFmiSimpleConditionInfo> &theSimpleConditionInfo, bool usesVerticalData);
   boost::shared_ptr<NFmiSingleCondition> CreateSingleCondition(
-      boost::shared_ptr<NFmiSingleConditionInfo> &theSingleConditionInfo, bool usesVerticalData);
+      const boost::shared_ptr<NFmiSingleConditionInfo> &theSingleConditionInfo, bool usesVerticalData);
   boost::shared_ptr<NFmiSimpleConditionPart> CreateSimpleConditionPart(
-      boost::shared_ptr<NFmiSimpleConditionPartInfo> &theSimpleConditionPartInfo,
+      const boost::shared_ptr<NFmiSimpleConditionPartInfo> &theSimpleConditionPartInfo,
       bool usesVerticalData);
   bool IsMultiDataSynopCase(const NFmiAreaMaskInfo &theAreaMaskInfo);
   void UpdateInfoVariableStatistics(const boost::shared_ptr<NFmiFastQueryInfo> &info);

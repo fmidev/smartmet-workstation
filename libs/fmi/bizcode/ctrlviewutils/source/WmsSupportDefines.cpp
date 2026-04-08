@@ -1,5 +1,6 @@
 #include "WmsSupportDefines.h"
 
+#ifndef DISABLE_CPPRESTSDK
 namespace Wms
 {
     bool CustomIdentCompare::operator() (const NFmiDataIdent& el1, const NFmiDataIdent& el2) const
@@ -17,3 +18,4 @@ namespace Wms
         return producerId1 < producerId2;
     }
 }
+#endif // DISABLE_CPPRESTSDK

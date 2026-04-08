@@ -36,6 +36,7 @@ documentation and/or software.
 /* system implementation headers */
 #include <stdio.h>
 #include <string>
+#include <cstring>
 
 
 // Constants for MD5Transform routine.

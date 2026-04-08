@@ -23,7 +23,7 @@
 #include <boost/foreach.hpp>
 
 #ifdef _MSC_VER
-#pragma warning( disable : 4503 ) // tämä estää varoituksen joka tulee VC++ kääntäjällä, kun jonkun boost-luokan nimi merkkeinä ylittää jonkun rajan
+#pragma warning( disable : 4503 ) // tï¿½mï¿½ estï¿½ï¿½ varoituksen joka tulee VC++ kï¿½ï¿½ntï¿½jï¿½llï¿½, kun jonkun boost-luokan nimi merkkeinï¿½ ylittï¿½ï¿½ jonkun rajan
 #endif
 
 BOOST_GEOMETRY_REGISTER_BOOST_TUPLE_CS(cs::cartesian)
@@ -34,7 +34,7 @@ using namespace Warnings;
 
 namespace
 {
-    // Tätä käytetään Cap datoista saatujen koordinaattien konvertoimiseen newbase vastaaviksi
+    // Tï¿½tï¿½ kï¿½ytetï¿½ï¿½n Cap datoista saatujen koordinaattien konvertoimiseen newbase vastaaviksi
     std::unique_ptr<NFmiArea> gYkjAreaCoordinateConverionPtr = std::make_unique<NFmiYKJArea>(NFmiPoint(19, 59), NFmiPoint(32, 70));
 }
 
@@ -74,7 +74,7 @@ namespace Warnings
         {
             CString sxmlU_(CA2T(fileContent.c_str()));
             XNode xmlRoot;
-            if(xmlRoot.Load(sxmlU_) == false)
+            if(!xmlRoot.Load(sxmlU_))
             {
                 throw std::runtime_error(std::string("CapData::load - xmlRoot.Load(sxmlU_) failed for string: \n") + fileContent);
             }
@@ -306,7 +306,7 @@ namespace Warnings
         {
             CString sxmlU_(CA2T(fileContent.c_str()));
             XNode xmlRoot;
-            if(xmlRoot.Load(sxmlU_) == false)
+            if(!xmlRoot.Load(sxmlU_))
             {
                 throw std::runtime_error(std::string("NFmiCapView::Draw - xmlRoot.Load(sxml) failed for string: \n") + fileContent);
             }
@@ -424,7 +424,7 @@ namespace Warnings
         }
     }
 
-    boolean CapData::checkIfTimesOverlap(std::shared_ptr<WarningMember> &w1, std::shared_ptr<WarningMember> &w2)
+    bool CapData::checkIfTimesOverlap(std::shared_ptr<WarningMember> &w1, std::shared_ptr<WarningMember> &w2)
     {
         if(((w1)->getEffectiveFrom() <= (w2)->getEffectiveFrom() && (w2)->getEffectiveFrom() <= (w1)->getEffectiveUntil())
             || ((w1)->getEffectiveFrom() <= (w2)->getEffectiveUntil() && (w2)->getEffectiveUntil() <= (w1)->getEffectiveUntil())
@@ -446,12 +446,12 @@ namespace Warnings
         }
     }
 
-    double CapData::distance(double x, double y, NFmiPoint& loc)
+    double CapData::distance(double x, double y, const NFmiPoint& loc)
     {
         return sqrt(pow(x - loc.X(), 2.0) + pow(y - loc.Y(), 2.0));
     }
 
-    double CapData::distance(NFmiPoint& a, NFmiPoint& b)
+    double CapData::distance(const NFmiPoint& a, const NFmiPoint& b)
     {
         return sqrt(pow(a.X() - b.X(), 2.0) + pow(a.Y() - b.Y(), 2.0));
     }

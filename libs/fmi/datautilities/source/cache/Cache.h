@@ -1,5 +1,6 @@
 #pragma once
 
+#include "source/error/Error.h"
 #include <unordered_map>
 #include <tuple>
 

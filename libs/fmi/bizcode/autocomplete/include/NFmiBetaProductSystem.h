@@ -3,11 +3,16 @@
 
 #include "NFmiMetTime.h"
 #include "json_spirit_value.h"
+#ifndef UNIX
 #include "NFmiCachedRegistryValue.h"
+#else
+#include "linux_compat.h"
+#endif
 #include "NFmiExtraMacroParamData.h"
 #include "NFmiMilliSecondTimer.h"
 
 #include <set>
+#include <list>
 
 using BaseDirectoryGetterFunctionType = std::function<std::string()>;
 
@@ -21,9 +26,9 @@ enum class BetaProductViewIndex
     CrossSectionView = 5
 };
 
-// Luokka tietää halutusta ajoajasta vain tunnin ja minuutin [Utc aika]. Sitä ei ole sidottu muuten mitenkään kalenteriin.
-// Luokka osaa parsia listan ajoaikoja string:istä.
-// Luokka käsittelee aikoja aina lokaali moodissa, eli annetut NFmiMetTime oliot muutetaan ennen vertailuja lokaaleiksi.
+// Luokka tietï¿½ï¿½ halutusta ajoajasta vain tunnin ja minuutin [Utc aika]. Sitï¿½ ei ole sidottu muuten mitenkï¿½ï¿½n kalenteriin.
+// Luokka osaa parsia listan ajoaikoja string:istï¿½.
+// Luokka kï¿½sittelee aikoja aina lokaali moodissa, eli annetut NFmiMetTime oliot muutetaan ennen vertailuja lokaaleiksi.
 class FixedRunTime
 {
     short itsHour = -1;
@@ -41,25 +46,25 @@ public:
     bool IsValid() const;
     NFmiMetTime MakeMetTime() const;
 
-    // fixedRunTimeString pitää olla muotoa HH:mm esim. 4:15 tai 04:15
+    // fixedRunTimeString pitï¿½ï¿½ olla muotoa HH:mm esim. 4:15 tai 04:15
     // Oletus: fixedRunTimeString on jo trimmattu whitespace:n suhteen.
     static FixedRunTime ParseFixedRunTimeString(const std::string& fixedRunTimeString, std::string& possibleErrorString);
     static std::vector<FixedRunTime> ParseFixedRunTimesString(const std::string& fixedRunTimesString, std::string& possibleErrorString);
 };
 
-// NFmiBetaProduct -luokka pitää sisällään yhden beta-tuotteen tiedot.
-// Tuotteessa on mm. seuraavia tietoja: käytetty viewMacro, aika-askel ja pituus. 
-// Piirretyt välilehdet (= näyttö rivit), eli tuottteessa voi olla esim. 1-50 kpl animaatio sarjoja.
-// Mistä näytöstä tuote tehdään. 
-// Lisäksi mahdollista web-site title+description tekstiä.
+// NFmiBetaProduct -luokka pitï¿½ï¿½ sisï¿½llï¿½ï¿½n yhden beta-tuotteen tiedot.
+// Tuotteessa on mm. seuraavia tietoja: kï¿½ytetty viewMacro, aika-askel ja pituus. 
+// Piirretyt vï¿½lilehdet (= nï¿½yttï¿½ rivit), eli tuottteessa voi olla esim. 1-50 kpl animaatio sarjoja.
+// Mistï¿½ nï¿½ytï¿½stï¿½ tuote tehdï¿½ï¿½n. 
+// Lisï¿½ksi mahdollista web-site title+description tekstiï¿½.
 class NFmiBetaProduct
 {
 public:
     NFmiBetaProduct();
     
-    bool CheckTimeRelatedInputs(const NFmiMetTime &theStartingTime, const std::string &theTimeLengthInHoursString, const std::string &theTimeStepInMinutesString, bool theUseUtcTimesInTimeBox); // Käy läpi kaikki tarkastelut ja tekee virheilmoituksia
-    bool CheckRowRelatedInputs(const std::string &theRowIndexListString, const std::string &theRowSubdirectoryTemplate, const std::string &theFileNameTemplate, bool useAutoFileNames, FmiDirection theParamBoxLocation); // Käy läpi kaikki tarkastelut ja tekee virheilmoituksia
-    bool CheckSynopStationIdListRelatedInputs(const std::string &theSynopStationIdListString); // Käy läpi kaikki tarkastelut ja tekee status asetuksia
+    bool CheckTimeRelatedInputs(const NFmiMetTime &theStartingTime, const std::string &theTimeLengthInHoursString, const std::string &theTimeStepInMinutesString, bool theUseUtcTimesInTimeBox); // Kï¿½y lï¿½pi kaikki tarkastelut ja tekee virheilmoituksia
+    bool CheckRowRelatedInputs(const std::string &theRowIndexListString, const std::string &theRowSubdirectoryTemplate, const std::string &theFileNameTemplate, bool useAutoFileNames, FmiDirection theParamBoxLocation); // Kï¿½y lï¿½pi kaikki tarkastelut ja tekee virheilmoituksia
+    bool CheckSynopStationIdListRelatedInputs(const std::string &theSynopStationIdListString); // Kï¿½y lï¿½pi kaikki tarkastelut ja tekee status asetuksia
     bool InputWasGood(); // Palauttaa vain tiedon onko viimeinen tarkastelu mennyt hyvin vai ei
 
     const std::string& ImageStoragePath() const { return itsImageStoragePath; }
@@ -71,10 +76,10 @@ public:
     void UseAutoFileNames(bool newValue) { fUseAutoFileNames = newValue; }
     const std::string& TimeLengthInHoursString() const { return itsTimeLengthInHoursString; }
     void TimeLengthInHoursString(const std::string &newValue) { itsTimeLengthInHoursString = newValue; }
-    double TimeLengthInHours() const { return itsTimeLengthInHours; } // Tälle vain getter, koska sen arvo saadaan itsTimeLengthInHoursString:istä
+    double TimeLengthInHours() const { return itsTimeLengthInHours; } // Tï¿½lle vain getter, koska sen arvo saadaan itsTimeLengthInHoursString:istï¿½
     const std::string& TimeStepInMinutesString() const { return itsTimeStepInMinutesString; }
     void TimeStepInMinutesString(const std::string &newValue) { itsTimeStepInMinutesString = newValue; }
-    int TimeStepInMinutes() const { return itsTimeStepInMinutes; } // Tälle vain getter, koska sen arvo saadaan itsTimeStepInMinutesString:istä
+    int TimeStepInMinutes() const { return itsTimeStepInMinutes; } // Tï¿½lle vain getter, koska sen arvo saadaan itsTimeStepInMinutesString:istï¿½
     bool UseUtcTimesInTimeBox() const { return fUseUtcTimesInTimeBox; }
     void UseUtcTimesInTimeBox(bool newValue) { fUseUtcTimesInTimeBox = newValue; }
     FmiDirection ParamBoxLocation() const { return itsParamBoxLocation; }
@@ -88,7 +93,7 @@ public:
 
     const std::string& RowIndexListString() const { return itsRowIndexListString; }
     void RowIndexListString(const std::string &newValue) { itsRowIndexListString = newValue; }
-    std::vector<int> GetUsedRowIndexies(int theOrigRowIndex) const; // Riippuu asetuksista, minkälainen indeksi lista palautetaan
+    std::vector<int> GetUsedRowIndexies(int theOrigRowIndex) const; // Riippuu asetuksista, minkï¿½lainen indeksi lista palautetaan
     const std::vector<int>& GetOriginalRowIndexies() const { return itsRowIndexies; }
     const std::string& RowSubdirectoryTemplate() const { return itsRowSubdirectoryTemplate; }
     void RowSubdirectoryTemplate(const std::string &newValue) { itsRowSubdirectoryTemplate = newValue; }
@@ -145,34 +150,34 @@ private:
     std::vector<int> CalcRowIndexies();
     std::string CheckUsedRowSubdirectoryTemplate();
 
-    NFmiMetTime itsStartingTime; // tätä ei talleteta mihinkään, tämä on vain aikalaskuissa mukana väliaikaisesti
-    static FmiLanguage itsLanguage; // tätä tarvitaan väliaikaisesti aikoihin liittyvien tekstien tekemisessä
+    NFmiMetTime itsStartingTime; // tï¿½tï¿½ ei talleteta mihinkï¿½ï¿½n, tï¿½mï¿½ on vain aikalaskuissa mukana vï¿½liaikaisesti
+    static FmiLanguage itsLanguage; // tï¿½tï¿½ tarvitaan vï¿½liaikaisesti aikoihin liittyvien tekstien tekemisessï¿½
     std::string itsImageStoragePath;
     std::string itsFileNameTemplate;
-    bool fUseAutoFileNames; // Jos automaatio on päällä, tulee tiedostoista validTime_obs.png ja validTime_for.png nimisiä riippuen siitä onko kullekin ajalle havaintoja vai ei
+    bool fUseAutoFileNames; // Jos automaatio on pï¿½ï¿½llï¿½, tulee tiedostoista validTime_obs.png ja validTime_for.png nimisiï¿½ riippuen siitï¿½ onko kullekin ajalle havaintoja vai ei
     std::string itsTimeLengthInHoursString;
-    static const std::string itsTimeLengthLabel; // Tämän avulla tehdään info/virhe tekstejä
+    static const std::string itsTimeLengthLabel; // Tï¿½mï¿½n avulla tehdï¿½ï¿½n info/virhe tekstejï¿½
     double itsTimeLengthInHours; // Saatu konvertoimalla itsTimeLengthInHoursString
     std::string itsTimeStepInMinutesString;
-    bool fUseUtcTimesInTimeBox; // Käytetäänkö kuvissa olevissa vaaleissa aikaa merkitsevissä laatikoissa UTC aikaa vai lokaali aikaa
+    bool fUseUtcTimesInTimeBox; // Kï¿½ytetï¿½ï¿½nkï¿½ kuvissa olevissa vaaleissa aikaa merkitsevissï¿½ laatikoissa UTC aikaa vai lokaali aikaa
     FmiDirection itsParamBoxLocation; // Mihin kohtaa karttaa parametriboxi laitetaan (disabled, bottom-left, top-center, jne.)
-    static const std::string itsTimeStepLabel; // Tämän avulla tehdään info/virhe tekstejä
+    static const std::string itsTimeStepLabel; // Tï¿½mï¿½n avulla tehdï¿½ï¿½n info/virhe tekstejï¿½
     int itsTimeStepInMinutes; // Saatu konvertoimalla itsTimeStepInMinutesString
     int itsTimeStepCount; // Johdettu suure, saatu time-length:in ja time-stepin avulla
     bool fTimeInputOk;
     std::string itsTimeInputErrorString; // Aikaan liittyvien input arvojen virheraportointia
-    std::string itsTimeRangeInfoText; // Tähän päätellään kuvien tuotannon aika-ranget ja niihin liittyvät mahdolliset virhetekstit
+    std::string itsTimeRangeInfoText; // Tï¿½hï¿½n pï¿½ï¿½tellï¿½ï¿½n kuvien tuotannon aika-ranget ja niihin liittyvï¿½t mahdolliset virhetekstit
 
-    std::string itsRowIndexListString; // Tähän annetaan rivin indeksit joko pilkulla erotettuna listana (1,3,4) tai rangena (1-5)
-    std::vector<int> itsRowIndexies; // Tähän lasketaan indeksit itsRowIndexListString -muuttujasta
-    std::string itsRowSubdirectoryTemplate; // Jos eri rivien kuvat halutaan omiin alihakemistoihin, tähän tulee alihakemiston templaatti (Row# => Row1, Row2, ...)
+    std::string itsRowIndexListString; // Tï¿½hï¿½n annetaan rivin indeksit joko pilkulla erotettuna listana (1,3,4) tai rangena (1-5)
+    std::vector<int> itsRowIndexies; // Tï¿½hï¿½n lasketaan indeksit itsRowIndexListString -muuttujasta
+    std::string itsRowSubdirectoryTemplate; // Jos eri rivien kuvat halutaan omiin alihakemistoihin, tï¿½hï¿½n tulee alihakemiston templaatti (Row# => Row1, Row2, ...)
     bool fRowIndexInputOk;
     std::string itsRowInputErrorString; // Riveihin liittyvien input arvojen virheraportointia
-    std::string itsRowIndexListInfoText; // Tähän päätellään kuvien tuotannon rivi-indeksit, alihakemisto infoa ja niihin liittyvät mahdolliset virhetekstit
+    std::string itsRowIndexListInfoText; // Tï¿½hï¿½n pï¿½ï¿½tellï¿½ï¿½n kuvien tuotannon rivi-indeksit, alihakemisto infoa ja niihin liittyvï¿½t mahdolliset virhetekstit
 
     BetaProductViewIndex itsSelectedViewIndex;
     std::string itsViewMacroPath;
-    std::string itsOriginalViewMacroPath; // Tähän talletetaan se polku, minkä käyttäjä on antanut dialogissa, tämä talletetaan myös lopulta tiedostoon
+    std::string itsOriginalViewMacroPath; // Tï¿½hï¿½n talletetaan se polku, minkï¿½ kï¿½yttï¿½jï¿½ on antanut dialogissa, tï¿½mï¿½ talletetaan myï¿½s lopulta tiedostoon
     bool fGivenViewMacroOk;
     static std::string itsRootViewMacroPath;
     std::string itsViewMacroInfoText;
@@ -180,32 +185,32 @@ private:
     std::string itsWebSiteTitleString;
     std::string itsWebSiteDescriptionString;
 
-    std::string itsCommandLineString; // Kun kuvat on tuotettu kohde hakemistoon, mikä on käyttäjän haluama komentorivi ajo, jolla esim. generoidaan avi-tiedosto, tai pakataan ja kopsataan kuvat jonnekin erikois paikkaan.
+    std::string itsCommandLineString; // Kun kuvat on tuotettu kohde hakemistoon, mikï¿½ on kï¿½yttï¿½jï¿½n haluama komentorivi ajo, jolla esim. generoidaan avi-tiedosto, tai pakataan ja kopsataan kuvat jonnekin erikois paikkaan.
     // Is image generation run time information displayed in beta-product parambox or not.
     bool fDisplayRunTimeInfo;
     // Is model's origin time shown in parameter box or not.
     bool fShowModelOriginTime;
-    std::string itsSynopStationIdListString; // Mistä kaikista synop asemista halutaan tehdä kuvia (käy vain tietyille näytöille ja moodeille)
+    std::string itsSynopStationIdListString; // Mistï¿½ kaikista synop asemista halutaan tehdï¿½ kuvia (kï¿½y vain tietyille nï¿½ytï¿½ille ja moodeille)
     bool fSynopStationIdListInputOk;
-    std::vector<int> itsSynopStationIdList; // Tähän puretaan synop station id:t itsSynopStationIdListString -muuttujasta
+    std::vector<int> itsSynopStationIdList; // Tï¿½hï¿½n puretaan synop station id:t itsSynopStationIdListString -muuttujasta
     bool fPackImages = false; // Pakataanko tuotetut kuvat vai ei
-    bool fEnsureCurveVisibility = false; // Aikasarja- ja luotauskäyrät voidaan varmistaa näkyviksi säätämällä asteikoita
+    bool fEnsureCurveVisibility = false; // Aikasarja- ja luotauskï¿½yrï¿½t voidaan varmistaa nï¿½kyviksi sï¿½ï¿½tï¿½mï¿½llï¿½ asteikoita
 };
 
-// NFmiBetaProductAutomation -luokka pitää tietoa yhdestä automaatio tuotteesta. Se pitää tietoa mm. seuraavista asioista:
-// Käytetty Beta-product (polku).
-// Miten tuote triggeröidään (joku kolmesta vaihtoehdosta): 
+// NFmiBetaProductAutomation -luokka pitï¿½ï¿½ tietoa yhdestï¿½ automaatio tuotteesta. Se pitï¿½ï¿½ tietoa mm. seuraavista asioista:
+// Kï¿½ytetty Beta-product (polku).
+// Miten tuote triggerï¿½idï¿½ï¿½n (joku kolmesta vaihtoehdosta): 
 //  - fiksatut ajat (vuorokauden tunti+minuutti lista)
 //  - haluttu steppi ja offset minuutti vuorokauden 00:00 ajasta
-//  - data triggeröinti: joku tietty data/datat laukaisee/laukaisevat tuotannon
-// Miten animaation alkuaika käyttäytyy (joku kolmesta vaihtoehdosta):
-//  - Beta-product määrää (ajetun viewMacron alkuaika määrää)
-//  - seinäkello offset, esim. -6 h eli halutaan mukaan n. 6 tuntia havaintoja
-//  - välilehden 1. löytyneen mallidatan alkuaika
-// Miten animaatio sarjan pituus määrätään (kolme vaihtoehtoa)
-//  - Beta-productissa ollut pituus määrää 
-//  - seinäkello offset, esim. +48 h eli halutaan mukaan vielä n. 2 vrk ennusteita
-//  - välilehden 1. löytyneen mallidatan loppuaika
+//  - data triggerï¿½inti: joku tietty data/datat laukaisee/laukaisevat tuotannon
+// Miten animaation alkuaika kï¿½yttï¿½ytyy (joku kolmesta vaihtoehdosta):
+//  - Beta-product mï¿½ï¿½rï¿½ï¿½ (ajetun viewMacron alkuaika mï¿½ï¿½rï¿½ï¿½)
+//  - seinï¿½kello offset, esim. -6 h eli halutaan mukaan n. 6 tuntia havaintoja
+//  - vï¿½lilehden 1. lï¿½ytyneen mallidatan alkuaika
+// Miten animaatio sarjan pituus mï¿½ï¿½rï¿½tï¿½ï¿½n (kolme vaihtoehtoa)
+//  - Beta-productissa ollut pituus mï¿½ï¿½rï¿½ï¿½ 
+//  - seinï¿½kello offset, esim. +48 h eli halutaan mukaan vielï¿½ n. 2 vrk ennusteita
+//  - vï¿½lilehden 1. lï¿½ytyneen mallidatan loppuaika
 class NFmiBetaProductAutomation
 {
 public:
@@ -249,8 +254,8 @@ public:
         double itsRunTimeStepInHours;
         std::string itsFirstRunTimeOfDayString;
         int itsFirstRunTimeOffsetInMinutes;
-        // Tässä on listassa triggeri datojen lista, missä haluttu data 
-        // on kerrottu sen fileFilterillä ja ne on pilkulla eroteltuna.
+        // Tï¿½ssï¿½ on listassa triggeri datojen lista, missï¿½ haluttu data 
+        // on kerrottu sen fileFilterillï¿½ ja ne on pilkulla eroteltuna.
         std::string itsTriggerDataString; 
         std::vector<NFmiDefineWantedData> itsTriggerDataList;
         bool fTriggerModeInfoStatus;
@@ -299,10 +304,10 @@ public:
     const NFmiTimeModeInfo& EndTimeModeInfo() const { return itsEndTimeModeInfo; }
     bool EndTimeModeInfoStatus() const;
     const std::string& EndTimeModeInfoStatusString() const;
-    void DoFullChecks(); // Tätä kutsutaan kun esim. luetaan data tiedostosta ja tehdään täysi tarkistus kaikille osille
+    void DoFullChecks(); // Tï¿½tï¿½ kutsutaan kun esim. luetaan data tiedostosta ja tehdï¿½ï¿½n tï¿½ysi tarkistus kaikille osille
     std::string MakeShortStatusErrorString();
 
-    std::shared_ptr<NFmiBetaProduct> GetBetaProduct(bool fReloadFromFile = false); // Vain tätä saanti metodia saa käyttää kun käytetään itsBetaProduct -dataosaa
+    std::shared_ptr<NFmiBetaProduct> GetBetaProduct(bool fReloadFromFile = false); // Vain tï¿½tï¿½ saanti metodia saa kï¿½yttï¿½ï¿½ kun kï¿½ytetï¿½ï¿½n itsBetaProduct -dataosaa
 
     static json_spirit::Object MakeJsonObject(const NFmiBetaProductAutomation &betaProductAutomation);
     void ParseJsonPair(json_spirit::Pair &thePair);
@@ -317,31 +322,31 @@ public:
     bool operator!=(const NFmiBetaProductAutomation &other) const;
 
 private:
-    // Time-step-hours -kontrolliin liittyvä vakio teksti. Tämän avulla tehdään info/virhe 
-    // tekstejä ja tämä tulee myös CFmiBetaAutomationDialog -dialogin teksteihin
+    // Time-step-hours -kontrolliin liittyvï¿½ vakio teksti. Tï¿½mï¿½n avulla tehdï¿½ï¿½n info/virhe 
+    // tekstejï¿½ ja tï¿½mï¿½ tulee myï¿½s CFmiBetaAutomationDialog -dialogin teksteihin
     static const std::string itsRunTimeStepInHoursTitle;
-    // First-run-of-day -kontrolliin liittyvä vakio teksti. Tämän avulla tehdään info/virhe 
-    // tekstejä ja tämä tulee myös CFmiBetaAutomationDialog -dialogin teksteihin
+    // First-run-of-day -kontrolliin liittyvï¿½ vakio teksti. Tï¿½mï¿½n avulla tehdï¿½ï¿½n info/virhe 
+    // tekstejï¿½ ja tï¿½mï¿½ tulee myï¿½s CFmiBetaAutomationDialog -dialogin teksteihin
     static const std::string itsFirstRunTimeOfDayTitle; 
     std::string itsBetaProductPath;
-    // Tähän talletetaan se polku, minkä käyttäjä on antanut dialogissa, 
-    // tämä talletetaan myös lopulta tiedostoon
+    // Tï¿½hï¿½n talletetaan se polku, minkï¿½ kï¿½yttï¿½jï¿½ on antanut dialogissa, 
+    // tï¿½mï¿½ talletetaan myï¿½s lopulta tiedostoon
     std::string itsOriginalBetaProductPath; 
     bool fBetaProductPathStatus;
     std::string itsBetaProductPathStatusString;
-    // Mikä laukaisee tämän tuotteen tuotannon
+    // Mikï¿½ laukaisee tï¿½mï¿½n tuotteen tuotannon
     NFmiTriggerModeInfo itsTriggerModeInfo;
-    // Miten määrätään tämän tuotteen alkuaika
+    // Miten mï¿½ï¿½rï¿½tï¿½ï¿½n tï¿½mï¿½n tuotteen alkuaika
     NFmiTimeModeInfo itsStartTimeModeInfo; 
-    // Miten määrätään tämän tuotteen pituus
+    // Miten mï¿½ï¿½rï¿½tï¿½ï¿½n tï¿½mï¿½n tuotteen pituus
     NFmiTimeModeInfo itsEndTimeModeInfo; 
-    // Tähän luetaan tarvittaessa itsBetaProductPath:in osoittaman tiedoston Beta-product -olio
+    // Tï¿½hï¿½n luetaan tarvittaessa itsBetaProductPath:in osoittaman tiedoston Beta-product -olio
     std::shared_ptr<NFmiBetaProduct> itsBetaProduct; 
-    // Tähän talletetaan luetun Beta-productin polku, jos tämä poikkeaa itsBetaProductPath:in 
-    // arvosta, pitää GetBetaProduct -metodissa lukea uusi olio uudesta tiedostosta
+    // Tï¿½hï¿½n talletetaan luetun Beta-productin polku, jos tï¿½mï¿½ poikkeaa itsBetaProductPath:in 
+    // arvosta, pitï¿½ï¿½ GetBetaProduct -metodissa lukea uusi olio uudesta tiedostosta
     std::string itsLoadedBetaProductAbsolutePath; 
-    // Tämä tieto löytyy NFmiBetaProductionSystem -luokasta. Annan siis näille luokille käyttöön 
-    // kyseisen luokan metodin, jolta polku tarvittaessa pyydetään (näin luokien ei tarvitse tietää toisistaan mitään)
+    // Tï¿½mï¿½ tieto lï¿½ytyy NFmiBetaProductionSystem -luokasta. Annan siis nï¿½ille luokille kï¿½yttï¿½ï¿½n 
+    // kyseisen luokan metodin, jolta polku tarvittaessa pyydetï¿½ï¿½n (nï¿½in luokien ei tarvitse tietï¿½ï¿½ toisistaan mitï¿½ï¿½n)
     static BaseDirectoryGetterFunctionType itsBetaProductionBaseDirectoryGetter; 
 };
 
@@ -359,7 +364,7 @@ public:
     NFmiBetaProductAutomationListItem();
     NFmiBetaProductAutomationListItem(const std::string &theBetaAutomationPath);
 
-    void DoFullChecks(bool automationModeOn); // Tätä kutsutaan kun esim. luetaan data tiedostosta ja tehdään täysi tarkistus kaikille osille
+    void DoFullChecks(bool automationModeOn); // Tï¿½tï¿½ kutsutaan kun esim. luetaan data tiedostosta ja tehdï¿½ï¿½n tï¿½ysi tarkistus kaikille osille
     bool IsEmpty() const;
     std::string AutomationName() const;
     std::string ShortStatusText() const;
@@ -370,13 +375,13 @@ public:
     void ParseJsonPair(json_spirit::Pair &thePair);
 
     bool fEnable;
-    std::string itsBetaProductAutomationPath; // Tähän yritetaan saada beta-product -base-directoria vastaava suhteellinen polku jos mahdollista. Tämä talletetaan myös json-objectiin tiedostoon
+    std::string itsBetaProductAutomationPath; // Tï¿½hï¿½n yritetaan saada beta-product -base-directoria vastaava suhteellinen polku jos mahdollista. Tï¿½mï¿½ talletetaan myï¿½s json-objectiin tiedostoon
     std::string itsBetaProductAutomationAbsolutePath;
     std::shared_ptr<NFmiBetaProductAutomation> itsBetaProductAutomation;
     ErrorStatus itsStatus;
-    NFmiMetTime itsLastRunTime; // Milloin tämä tuote on ajettu viimeksi, tai milloin tämä tuote luotiin (= olio luotiin muistiin)
-    bool fProductsHaveBeenGenerated; // Onko tätä tuotetta oikeasti luotu tämän ohjelman ajon aikana
-    NFmiMetTime itsNextRunTime; // Milloin tämä tuote pitäisi ajaa seuraavaksi
+    NFmiMetTime itsLastRunTime; // Milloin tï¿½mï¿½ tuote on ajettu viimeksi, tai milloin tï¿½mï¿½ tuote luotiin (= olio luotiin muistiin)
+    bool fProductsHaveBeenGenerated; // Onko tï¿½tï¿½ tuotetta oikeasti luotu tï¿½mï¿½n ohjelman ajon aikana
+    NFmiMetTime itsNextRunTime; // Milloin tï¿½mï¿½ tuote pitï¿½isi ajaa seuraavaksi
 };
 
 class NFmiPostponedBetaAutomation
@@ -401,7 +406,7 @@ public:
     NFmiBetaProductAutomationListItem& Get(size_t theZeroBasedRowIndex);
     const NFmiBetaProductAutomationListItem& Get(size_t theZeroBasedRowIndex) const;
     bool Remove(size_t theZeroBasedRowIndex);
-    void DoFullChecks(bool fAutomationModeOn); // Tätä kutsutaan kun esim. luetaan data tiedostosta ja tehdään täysi tarkistus kaikille osille
+    void DoFullChecks(bool fAutomationModeOn); // Tï¿½tï¿½ kutsutaan kun esim. luetaan data tiedostosta ja tehdï¿½ï¿½n tï¿½ysi tarkistus kaikille osille
     AutomationContainer& AutomationVector() { return itsAutomationVector; }
     const AutomationContainer& AutomationVector() const { return itsAutomationVector; }
     bool IsOk() const;
@@ -431,7 +436,7 @@ private:
     AutomationContainer itsAutomationVector;
     std::list<NFmiPostponedBetaAutomation> itsPostponedDataTriggeredAutomations;
 
-    static BaseDirectoryGetterFunctionType itsBetaProductionBaseDirectoryGetter; // Tämä tieto löytyy NFmiBetaProductionSystem -luokasta. Annan siis näille luokille käyttöön kyseisen luokan metodin, jolta polku tarvittaessa pyydetään (näin luokien ei tarvitse tietää toisistaan mitään)
+    static BaseDirectoryGetterFunctionType itsBetaProductionBaseDirectoryGetter; // Tï¿½mï¿½ tieto lï¿½ytyy NFmiBetaProductionSystem -luokasta. Annan siis nï¿½ille luokille kï¿½yttï¿½ï¿½n kyseisen luokan metodin, jolta polku tarvittaessa pyydetï¿½ï¿½n (nï¿½in luokien ei tarvitse tietï¿½ï¿½ toisistaan mitï¿½ï¿½n)
 };
 
 
@@ -475,7 +480,7 @@ public:
     int BetaProductTabControlIndex();
     void BetaProductTabControlIndex(int newValue);
 
-    // Tässä joukko metodeja, joilla dialogit muistavat talletus/lataus hakemistonsa eri olioille.
+    // Tï¿½ssï¿½ joukko metodeja, joilla dialogit muistavat talletus/lataus hakemistonsa eri olioille.
     // std::function -otuksilla annetaan tietyt get/set funktiot yleisille templaatti funktoille, jotka toimivat kaikille Beta-otuksille.
     std::string BetaProductSaveInitialPath();
     void BetaProductSaveInitialPath(const std::string &newValue);
@@ -484,8 +489,8 @@ public:
     std::string BetaAutomationListSaveInitialPath();
     void BetaAutomationListSaveInitialPath(const std::string& newValue);
 
-    // Laitoin tälle BetaProductionBaseDirectory get-funktioille Get -etuliitteen, jotta kääntäjä erottaa 
-    // sen, kun teen NFmiBetaProductAutomation -luokalle tähän liittyvää getter-funktion:ia.
+    // Laitoin tï¿½lle BetaProductionBaseDirectory get-funktioille Get -etuliitteen, jotta kï¿½ï¿½ntï¿½jï¿½ erottaa 
+    // sen, kun teen NFmiBetaProductAutomation -luokalle tï¿½hï¿½n liittyvï¿½ï¿½ getter-funktion:ia.
     std::string GetBetaProductionBaseDirectory() const;
     std::string UsedAutomationListPathString();
     void UsedAutomationListPathString(const std::string &newValue);
@@ -564,8 +569,8 @@ private:
     bool InitImagePackingExe(const std::string& theAbsoluteWorkingDirectory);
     void SetupFinalBataAutomationListPath(const std::string& possibleStartingBetaAutomationListPath);
 
-    bool fBetaProductGenerationRunning; // Onko SmartMet juuri tekemässä kuvia Beta product systeemillä (vaikuttaa mm. joihinkin piirtoihin)
-    NFmiMetTime itsBetaProductRuntime; // Millä hetkellä on kuvatuotantoa alettu tekemään (käytetään jos display runtime info käytössä)
+    bool fBetaProductGenerationRunning; // Onko SmartMet juuri tekemï¿½ssï¿½ kuvia Beta product systeemillï¿½ (vaikuttaa mm. joihinkin piirtoihin)
+    NFmiMetTime itsBetaProductRuntime; // Millï¿½ hetkellï¿½ on kuvatuotantoa alettu tekemï¿½ï¿½n (kï¿½ytetï¿½ï¿½n jos display runtime info kï¿½ytï¿½ssï¿½)
     static std::string itsRunTimeTitleString;
     static std::string itsRunTimeFormatString;
     NFmiBetaProductAutomationList itsUsedAutomationList;
@@ -584,43 +589,43 @@ private:
     static const std::string itsFileNameTemplateOrigTimeStamp;
     static const std::string itsFileNameTemplateMakeTimeStamp;
 
-    // Perushakemisto, jonne talletetaan Beta-produt:eja ja automaatioita ja automaatiolistoja. Tämä voi olla jaetulla verkkolevyllä.
+    // Perushakemisto, jonne talletetaan Beta-produt:eja ja automaatioita ja automaatiolistoja. Tï¿½mï¿½ voi olla jaetulla verkkolevyllï¿½.
     std::string itsBetaProductionBaseDirectory;
-    // Kuvien pakkaukseen käytetyn ohjelman koko polku
+    // Kuvien pakkaukseen kï¿½ytetyn ohjelman koko polku
     std::string itsImagePackingExePath;
-    // Kuvien pakkaukseen käytetyn ohjelman peruskomentorivi
+    // Kuvien pakkaukseen kï¿½ytetyn ohjelman peruskomentorivi
     std::string itsImagePackingExeCommandLine;
 
     // General Beta Product dialog options
-    std::string mBaseRegistryPath; // Perus smartmet polku Windows rekistereissä (tähän tulee SmartMetin konfiguraatio kohtainen polku)
-    boost::shared_ptr<CachedRegString> mBetaProductSaveInitialPath; // Beta product dialogi muistaa minne/mistä on talletettu/ladattu viimeksi Beta-product tiedosto
-    boost::shared_ptr<CachedRegString> mBetaAutomationSaveInitialPath; // Beta product dialogi muistaa minne/mistä on talletettu/ladattu viimeksi Beta-automaatio tiedosto
-    boost::shared_ptr<CachedRegString> mBetaAutomationListSaveInitialPath; // Beta product dialogi muistaa minne/mistä on talletettu/ladattu viimeksi Beta-automaatiolist tiedosto
-    boost::shared_ptr<CachedRegInt> mBetaProductTabControlIndex; // Mikä Beta-product dialogin tabi on aktiivinen
-    boost::shared_ptr<CachedRegString> mUsedAutomationListPathString; // Polku smartMetin käyttämään automaatiolistaan, joka ladataan käynnistyessä
+    std::string mBaseRegistryPath; // Perus smartmet polku Windows rekistereissï¿½ (tï¿½hï¿½n tulee SmartMetin konfiguraatio kohtainen polku)
+    boost::shared_ptr<CachedRegString> mBetaProductSaveInitialPath; // Beta product dialogi muistaa minne/mistï¿½ on talletettu/ladattu viimeksi Beta-product tiedosto
+    boost::shared_ptr<CachedRegString> mBetaAutomationSaveInitialPath; // Beta product dialogi muistaa minne/mistï¿½ on talletettu/ladattu viimeksi Beta-automaatio tiedosto
+    boost::shared_ptr<CachedRegString> mBetaAutomationListSaveInitialPath; // Beta product dialogi muistaa minne/mistï¿½ on talletettu/ladattu viimeksi Beta-automaatiolist tiedosto
+    boost::shared_ptr<CachedRegInt> mBetaProductTabControlIndex; // Mikï¿½ Beta-product dialogin tabi on aktiivinen
+    boost::shared_ptr<CachedRegString> mUsedAutomationListPathString; // Polku smartMetin kï¿½yttï¿½mï¿½ï¿½n automaatiolistaan, joka ladataan kï¿½ynnistyessï¿½
     // Beta Product dialog tab control settings
-    boost::shared_ptr<CachedRegInt> mBetaProductTimeStepInMinutes; // Käytetty aika-steppi minuuteissa
-    boost::shared_ptr<CachedRegDouble> mBetaProductTimeLengthInHours; // Käytetty aika-pituus tunneissa
-    boost::shared_ptr<CachedRegBool> mBetaProductUseUtcTimesInTimeBox; // Käytetäänkö kuvissa olevissa vaaleissa aikaa merkitsevissä laatikoissa UTC aikaa vai lokaali aikaa
+    boost::shared_ptr<CachedRegInt> mBetaProductTimeStepInMinutes; // Kï¿½ytetty aika-steppi minuuteissa
+    boost::shared_ptr<CachedRegDouble> mBetaProductTimeLengthInHours; // Kï¿½ytetty aika-pituus tunneissa
+    boost::shared_ptr<CachedRegBool> mBetaProductUseUtcTimesInTimeBox; // Kï¿½ytetï¿½ï¿½nkï¿½ kuvissa olevissa vaaleissa aikaa merkitsevissï¿½ laatikoissa UTC aikaa vai lokaali aikaa
     boost::shared_ptr<CachedRegInt> mBetaProductParamBoxLocation; // Mihin kohtaa kartan paramboxi laitetaan (disabled, bottom-left, top-center, jne.)
     boost::shared_ptr<CachedRegString> mBetaProductStoragePath; // Polku minne kuvat talletetaan
     boost::shared_ptr<CachedRegString> mBetaProductFileNameTemplate; // Talletettavien kuvien tiedosto nimien sapluuna
-    boost::shared_ptr<CachedRegBool> mBetaProductUseAutoFileNames; // Nimetäänkö tiedosto nimet automaattisesti tyyliin validtime_obs.png ja validTime_for.png, vai annetaanko käyttäjän antaa tiedostonimi templaatti
-    boost::shared_ptr<CachedRegString> mBetaProductRowIndexListString; // Tallennuksessa mahdollisesti käytetyt rivien indeksit stringinä
-    boost::shared_ptr<CachedRegString> mBetaProductRowSubDirectoryTemplate; // Tallennuksessa mahdollisesti käytettyjen rivien alihakemisto templaatti stringinä
-    boost::shared_ptr<CachedRegInt> mBetaProductSelectedViewIndex; // Valitun näytön indeksi (0=main-map-view, 1 = map-view-2, 2 = map-view-3, 3 = time-serial-view, 4 = sounding-view, 5 = cross-section-view)
-    boost::shared_ptr<CachedRegString> mBetaProductViewMacroPath; // Mahdollisesti käytetyn ViewMacron polku
+    boost::shared_ptr<CachedRegBool> mBetaProductUseAutoFileNames; // Nimetï¿½ï¿½nkï¿½ tiedosto nimet automaattisesti tyyliin validtime_obs.png ja validTime_for.png, vai annetaanko kï¿½yttï¿½jï¿½n antaa tiedostonimi templaatti
+    boost::shared_ptr<CachedRegString> mBetaProductRowIndexListString; // Tallennuksessa mahdollisesti kï¿½ytetyt rivien indeksit stringinï¿½
+    boost::shared_ptr<CachedRegString> mBetaProductRowSubDirectoryTemplate; // Tallennuksessa mahdollisesti kï¿½ytettyjen rivien alihakemisto templaatti stringinï¿½
+    boost::shared_ptr<CachedRegInt> mBetaProductSelectedViewIndex; // Valitun nï¿½ytï¿½n indeksi (0=main-map-view, 1 = map-view-2, 2 = map-view-3, 3 = time-serial-view, 4 = sounding-view, 5 = cross-section-view)
+    boost::shared_ptr<CachedRegString> mBetaProductViewMacroPath; // Mahdollisesti kï¿½ytetyn ViewMacron polku
     boost::shared_ptr<CachedRegString> mBetaProductWebSiteTitle; // Beta product web-site Title (otsikko, iso teksti), talletetaan erilliseen tekstitiedostoon kohde hakemistoissa
     boost::shared_ptr<CachedRegString> mBetaProductWebSiteDescription; // Beta product web-site Description (tarkempi kuvaus, pienempi teksti), talletetaan erilliseen tekstitiedostoon kohde hakemistoissa
-    boost::shared_ptr<CachedRegString> mBetaProductCommandLine; // Minkälaisen komentorivi komennnon käyttäjä haluaa ajaa jokaiselle tuottamalleen välilehti tuotteelle
+    boost::shared_ptr<CachedRegString> mBetaProductCommandLine; // Minkï¿½laisen komentorivi komennnon kï¿½yttï¿½jï¿½ haluaa ajaa jokaiselle tuottamalleen vï¿½lilehti tuotteelle
     boost::shared_ptr<CachedRegBool> mBetaProductDisplayRuntime;
     boost::shared_ptr<CachedRegBool> mBetaProductShowModelOriginTime;
-    boost::shared_ptr<CachedRegString> mBetaProductSynopStationIdListString; // Mistä kaikista synop asemista halutaan tehdä kuvia (käy vain tietyille näytöille ja moodeille)
+    boost::shared_ptr<CachedRegString> mBetaProductSynopStationIdListString; // Mistï¿½ kaikista synop asemista halutaan tehdï¿½ kuvia (kï¿½y vain tietyille nï¿½ytï¿½ille ja moodeille)
     boost::shared_ptr<CachedRegBool> mBetaProductPackImages; // Pakataanko tuotetut kuvat vai ei
-    boost::shared_ptr<CachedRegBool> mBetaProductEnsureCurveVisibility; // Varmistetaanko että aikasarja- ja luotauskäyrät tulevat näkyviin
+    boost::shared_ptr<CachedRegBool> mBetaProductEnsureCurveVisibility; // Varmistetaanko ettï¿½ aikasarja- ja luotauskï¿½yrï¿½t tulevat nï¿½kyviin
     // Beta Product Automation dialog tab control settings
-    boost::shared_ptr<CachedRegBool> mAutomationModeOn; // Onko SmartMet ns. Beta tuotanto automaatio moodissa, jolloin kuvia tuotetaan säädösten mukaan haluttuina aikoina.
-    boost::shared_ptr<CachedRegString> mBetaProductPath; // Polku mistä Beta-product-automation lataa Beta-product tuotteensa
+    boost::shared_ptr<CachedRegBool> mAutomationModeOn; // Onko SmartMet ns. Beta tuotanto automaatio moodissa, jolloin kuvia tuotetaan sï¿½ï¿½dï¿½sten mukaan haluttuina aikoina.
+    boost::shared_ptr<CachedRegString> mBetaProductPath; // Polku mistï¿½ Beta-product-automation lataa Beta-product tuotteensa
     boost::shared_ptr<CachedRegInt> mTriggerModeIndex; // fixed-times, time-step tai data-trigger -moodin indeksi
     boost::shared_ptr<CachedRegString> mFixedTimesString; // HH:mm[,HH:mm,...]
     boost::shared_ptr<CachedRegString> mAutomationTimeStepInHoursString; 
@@ -629,7 +634,7 @@ private:
     boost::shared_ptr<CachedRegInt> mEndTimeModeIndex;
     boost::shared_ptr<CachedRegString> mStartTimeClockOffsetInHoursString;
     boost::shared_ptr<CachedRegString> mEndTimeClockOffsetInHoursString;
-    boost::shared_ptr<CachedRegString> mAutomationPath; // Polku mistä viimeksi ladattu Automation luetaan
+    boost::shared_ptr<CachedRegString> mAutomationPath; // Polku mistï¿½ viimeksi ladattu Automation luetaan
     boost::shared_ptr<CachedRegString> mTriggerDataString; // T_ec[,par10_prod240_500,...]
 
 };

@@ -33,44 +33,44 @@ namespace
         HistoryData
     };
 
-    // Jos ohjelma halutaan lopettaa ulkoapäin, tälle gStopFunctorPtr:ille asetetaan tieto siitä CloseNow funktion kautta.
+    // Jos ohjelma halutaan lopettaa ulkoapï¿½in, tï¿½lle gStopFunctorPtr:ille asetetaan tieto siitï¿½ CloseNow funktion kautta.
     std::shared_ptr<NFmiStopFunctor> gStopFunctorPtr;
-    // Jos jotain datoja ei löydy serveriltä, halutaan siitä raportoida kerran lokiin.
-    // Lisäksi tämä pitää jatkuvaa kirjaa siitä kuinka monta dataa löytyy löytyy sieltä serveriltä ja
-    // tämä raportoi siitä Smartmetin tarvittaessa statusbarissa olevaan "operationaaliset ongelmat" ledikontrolliin.
+    // Jos jotain datoja ei lï¿½ydy serveriltï¿½, halutaan siitï¿½ raportoida kerran lokiin.
+    // Lisï¿½ksi tï¿½mï¿½ pitï¿½ï¿½ jatkuvaa kirjaa siitï¿½ kuinka monta dataa lï¿½ytyy lï¿½ytyy sieltï¿½ serveriltï¿½ ja
+    // tï¿½mï¿½ raportoi siitï¿½ Smartmetin tarvittaessa statusbarissa olevaan "operationaaliset ongelmat" ledikontrolliin.
     std::shared_ptr<NFmiMissingDataOnServerReporter> gMissingDataOnServerReporterPtr;
-    // Tämän olion avulla working thread osaa lukea/kopioida haluttuja datoja
+    // Tï¿½mï¿½n olion avulla working thread osaa lukea/kopioida haluttuja datoja
     LocalCacheHelpDataSystem gLocalCacheHelpDataSystem;
-    // Tämän avulla tiedetään, suljettaessa ohjelmaa että onko working-thread 
-    // lopettanut työnsä ja sen puolesta voidaan ohjelman sulkemista jatkaa.
+    // Tï¿½mï¿½n avulla tiedetï¿½ï¿½n, suljettaessa ohjelmaa ettï¿½ onko working-thread 
+    // lopettanut tyï¿½nsï¿½ ja sen puolesta voidaan ohjelman sulkemista jatkaa.
     std::timed_mutex gThreadRunningMutex;
     std::string gThreadName = "Main-qdata-file-loader-thread";
-    // Tämän avulla kontrolloidaan sitä kuinka monta single-data-loader threadia 
-    // voi olla käynnissä kerrallaan.
+    // Tï¿½mï¿½n avulla kontrolloidaan sitï¿½ kuinka monta single-data-loader threadia 
+    // voi olla kï¿½ynnissï¿½ kerrallaan.
     LocalCacheFutureWaitingSystem gLocalCacheFutureWaitingSystem;
-    // Käyttäjä voi lisätä työlistoja, millä nopeutetaan jonkin datan latauksen
-    // aloittamista esim, kun smartmetia käynnistetään tauon jälkeen ja on paljon 
-    // ladattavaa. Nämä työt siis ohittavat normityölistan ja annetuista datoista 
-    // luetaan vain viimeisimmät datat.
+    // Kï¿½yttï¿½jï¿½ voi lisï¿½tï¿½ tyï¿½listoja, millï¿½ nopeutetaan jonkin datan latauksen
+    // aloittamista esim, kun smartmetia kï¿½ynnistetï¿½ï¿½n tauon jï¿½lkeen ja on paljon 
+    // ladattavaa. Nï¿½mï¿½ tyï¿½t siis ohittavat normityï¿½listan ja annetuista datoista 
+    // luetaan vain viimeisimmï¿½t datat.
     std::list<std::string> gPrioritizedDataLoadWorkList;
-    // Vanhojen datojen lataus työlista
+    // Vanhojen datojen lataus tyï¿½lista
     std::list<std::string> gLoadOldDataWorkList;
-    // Tämä mutex on molemmille työlistoille
+    // Tï¿½mï¿½ mutex on molemmille tyï¿½listoille
     std::mutex gWorkDataLoadMutex;
-    // Lippu sille että uutta work listaa on tullut, eikä kannata odotella
-    // normityö-timerin kanssa kokonaista minuuttia odotusloopissa.
+    // Lippu sille ettï¿½ uutta work listaa on tullut, eikï¿½ kannata odotella
+    // normityï¿½-timerin kanssa kokonaista minuuttia odotusloopissa.
     bool gNewDataLoadingWorkReceived = false;
-    // Eri working-threadeille pitää saada uniikki nimi, jotta Smartmetin ledi-indikaattori systeemi
-    // osaisi raportoida kaikki erilliset käynnissä olevat jutut sen tooltipissa.
-    // Nyt on kolme erityyppistä datanhakua, ja niille on erilliset laskurit, joista
-    // tuotetaan lopuksi nimet tiettyjen sääntöjen mukaan.
+    // Eri working-threadeille pitï¿½ï¿½ saada uniikki nimi, jotta Smartmetin ledi-indikaattori systeemi
+    // osaisi raportoida kaikki erilliset kï¿½ynnissï¿½ olevat jutut sen tooltipissa.
+    // Nyt on kolme erityyppistï¿½ datanhakua, ja niille on erilliset laskurit, joista
+    // tuotetaan lopuksi nimet tiettyjen sï¿½ï¿½ntï¿½jen mukaan.
     size_t gThreadNameIndexForLatestData = 1;
     size_t gThreadNameIndexForPrioritizedData = 1;
     size_t gThreadNameIndexForOldData = 1;
 
     NFmiMilliSecondTimer gDoWorkTimer;
 
-    // Tämä heittää erikois poikkeuksen, jos käyttäjä on halunnut sulkea ohjelman.
+    // Tï¿½mï¿½ heittï¿½ï¿½ erikois poikkeuksen, jos kï¿½yttï¿½jï¿½ on halunnut sulkea ohjelman.
     void CheckIfProgramWantsToStop()
     {
         NFmiQueryDataUtil::CheckIfStopped(gStopFunctorPtr.get());
@@ -106,7 +106,7 @@ namespace
     {
         if(*firstTime)
         {
-            // Jos ollaan 1. kertaa loopissa, jatketaan heti ja nollataan siihen liittyvä firstTime flag
+            // Jos ollaan 1. kertaa loopissa, jatketaan heti ja nollataan siihen liittyvï¿½ firstTime flag
             *firstTime = false;
             return true;
         }
@@ -117,22 +117,22 @@ namespace
             return true;
         }
 
-        // Jos datan läpikäynnissä oli kopioitu mitään dataa, tehdään uusi kierros samantein
+        // Jos datan lï¿½pikï¿½ynnissï¿½ oli kopioitu mitï¿½ï¿½n dataa, tehdï¿½ï¿½n uusi kierros samantein
         if(status != kFmiNoCopyNeeded)
             return true;
 
-        // Tarkistetaan minuutin välein onko tullut uusia datoja palvelimelle kopioitavaksi
+        // Tarkistetaan minuutin vï¿½lein onko tullut uusia datoja palvelimelle kopioitavaksi
         return gDoWorkTimer.CurrentTimeDiffInMSeconds() > (60 * 1000);
     }
 
-    // Tehdään lokaali data cachen siivous halutulla väleillä (10 minuuttia)
+    // Tehdï¿½ï¿½n lokaali data cachen siivous halutulla vï¿½leillï¿½ (10 minuuttia)
     void DoPossibleLocalCacheCleaning(std::shared_ptr<NFmiHelpDataInfoSystem> theHelpDataInfoSystemPtr)
     {
         auto& usedHelpDataInfoSystem = *theHelpDataInfoSystemPtr;
         LocalCacheCleaning::DoPossibleLocalCacheCleaning(usedHelpDataInfoSystem);
     }
 
-    // Ei missään tilanteessa haluta ladata dataa serverilta lokaali cacheen, 
+    // Ei missï¿½ï¿½n tilanteessa haluta ladata dataa serverilta lokaali cacheen, 
     // jos se on disabloitu tai se on merkitty CaseStudy legacy dataksi.
     bool IsDataUsed(const NFmiHelpDataInfo& helpDataInfo)
     {
@@ -144,15 +144,15 @@ namespace
         std::lock_guard<std::mutex> lock(gWorkDataLoadMutex);
         do
         {
-            // Jos lista oli tyhjä, lopetetaan ikilooppi
+            // Jos lista oli tyhjï¿½, lopetetaan ikilooppi
             if(workList.empty())
                 return nullptr;
 
-            // Otetaan ensimmäinen filefiltteri listasta kokonaan pois
+            // Otetaan ensimmï¿½inen filefiltteri listasta kokonaan pois
             auto prioritizedFileFilter = workList.front();
             workList.pop_front();
 
-            // Jos filtteriä vastaava helpDataInfo löytyi, palautetaan se
+            // Jos filtteriï¿½ vastaava helpDataInfo lï¿½ytyi, palautetaan se
             auto* helpDataInfo = helpDataInfoSystem.FindHelpDataInfo(prioritizedFileFilter);
             if(helpDataInfo)
             {
@@ -163,7 +163,7 @@ namespace
                 }
                 if(oldDataCase && NFmiInfoData::IsModelRunBasedData(helpDataInfo->DataType()))
                 {
-                    // Old data tapauksessa, datan pitää olla malliajo tyyppistä
+                    // Old data tapauksessa, datan pitï¿½ï¿½ olla malliajo tyyppistï¿½
                     return helpDataInfo;
                 }
             }
@@ -192,14 +192,14 @@ namespace
         return workHelpDataInfo;
     }
 
-    // Palautetaan kopiointi työhön liittyvä HelpDataInfo ja tieto minkä tyyppisestä datan hausta on kyse
+    // Palautetaan kopiointi tyï¿½hï¿½n liittyvï¿½ HelpDataInfo ja tieto minkï¿½ tyyppisestï¿½ datan hausta on kyse
     std::pair<const NFmiHelpDataInfo*, ThreadDataType> GetNextDataWork(NFmiHelpDataInfoSystem& helpDataInfoSystem, size_t* helpInfoIndexInOut)
     {
         const auto* prioritizedHelpDataInfo = ::GetNextPossibleWorkWithLogging(helpDataInfoSystem, false, "Starting prioritized work with ");
         if(prioritizedHelpDataInfo)
         {
             // Huom: ei kasvateta helpInfoIndexInOut:ia!
-            gNewDataLoadingWorkReceived = false; // nollataan työsaatu lippu myös
+            gNewDataLoadingWorkReceived = false; // nollataan tyï¿½saatu lippu myï¿½s
             return std::make_pair(prioritizedHelpDataInfo, ThreadDataType::PrioritizedData);
         }
 
@@ -207,13 +207,13 @@ namespace
         if(loadOldDataHelpDataInfo)
         {
             // Huom: ei kasvateta helpInfoIndexInOut:ia!
-            gNewDataLoadingWorkReceived = false; // nollataan työsaatu lippu myös
+            gNewDataLoadingWorkReceived = false; // nollataan tyï¿½saatu lippu myï¿½s
             return std::make_pair(loadOldDataHelpDataInfo, ThreadDataType::OldData);
         }
 
-        // Muuten palautetaan normityö ja juoksutus indeksiä pitää kasvattaa
+        // Muuten palautetaan normityï¿½ ja juoksutus indeksiï¿½ pitï¿½ï¿½ kasvattaa
         auto usedHelpDataIndex = (*helpInfoIndexInOut)++;
-        // Tehdään vielä tarkistus ettei mennä DynamicHelpDataInfos vector:in rajojen yli mitenkään
+        // Tehdï¿½ï¿½n vielï¿½ tarkistus ettei mennï¿½ DynamicHelpDataInfos vector:in rajojen yli mitenkï¿½ï¿½n
         const auto& helpDataInfos = helpDataInfoSystem.DynamicHelpDataInfos();
         if(usedHelpDataIndex >= helpDataInfos.size())
             throw std::runtime_error("Error in QueryDataToLocalCacheLoaderThread - GetNextDataWork: Given helpInfoIndex was out of bounds, logical error in program");
@@ -221,20 +221,20 @@ namespace
         return std::make_pair(&helpDataInfos[usedHelpDataIndex], ThreadDataType::LatestData);
     }
 
-    // Käy läpi kaikki dynaamiset helpdatat ja tekee tarvittavat cache-kopioinnit.
-    // Jos ei löytynyt mitään kopioitavaa koko kierroksella, palauttaa kFmiNoCopyNeeded, joka tarkoittaa
-    // että worker-threadi voi pitää taukoa.
-    // Jos palauttaa kFmiCopyWentOk:n, tarkoittaa että jotain kopiointi on tapahtunut ja on 
-    // syytä tehdä uusi kierros saman tien.
+    // Kï¿½y lï¿½pi kaikki dynaamiset helpdatat ja tekee tarvittavat cache-kopioinnit.
+    // Jos ei lï¿½ytynyt mitï¿½ï¿½n kopioitavaa koko kierroksella, palauttaa kFmiNoCopyNeeded, joka tarkoittaa
+    // ettï¿½ worker-threadi voi pitï¿½ï¿½ taukoa.
+    // Jos palauttaa kFmiCopyWentOk:n, tarkoittaa ettï¿½ jotain kopiointi on tapahtunut ja on 
+    // syytï¿½ tehdï¿½ uusi kierros saman tien.
     CFmiCopyingStatus GoThroughAllHelpDataInfos(std::shared_ptr<NFmiHelpDataInfoSystem> theHelpDataInfoSystemPtr)
     {
-        // Tänne annettu shared_ptr on tarkoituksella kopio, ja siitä otetaan käytettävä referenssi ulos tässä.
+        // Tï¿½nne annettu shared_ptr on tarkoituksella kopio, ja siitï¿½ otetaan kï¿½ytettï¿½vï¿½ referenssi ulos tï¿½ssï¿½.
         NFmiHelpDataInfoSystem& usedHelpDataInfoSystem = *theHelpDataInfoSystemPtr;
         for(size_t helpInfoIndex = 0; helpInfoIndex < usedHelpDataInfoSystem.DynamicHelpDataInfos().size(); )
         {
             CheckIfProgramWantsToStop();
-            // Huom! helpInfoIndex:ia juoksutetaan GetNextDataWork funktiossa, joten sen kutsun jälkeen 
-            // siinä voi olla jo seuraavan kierroksen arvo.
+            // Huom! helpInfoIndex:ia juoksutetaan GetNextDataWork funktiossa, joten sen kutsun jï¿½lkeen 
+            // siinï¿½ voi olla jo seuraavan kierroksen arvo.
             auto helpDataInfoOldDataPair = ::GetNextDataWork(usedHelpDataInfoSystem, &helpInfoIndex);
             if(::IsDataUsed(*helpDataInfoOldDataPair.first))
             {
@@ -255,13 +255,13 @@ namespace
                 }
             }
 
-            // Pitää mahdollisesti odotella jos kaikki worker-threadit ovat jo käytössä
+            // Pitï¿½ï¿½ mahdollisesti odotella jos kaikki worker-threadit ovat jo kï¿½ytï¿½ssï¿½
             gLocalCacheFutureWaitingSystem.WaitForFuturesToExpire();
         }
 
-        // Tässä lopussa pitää odotella että kaikki työt tulevat tehdyiksi, eli tehdään
-        // yksi kokonainen kierros ja mahdolliset erilliset old-data/history-data työt 
-        // jämptisti loppuun, ennen kuin rynnätään seuraavalle kierrokselle.
+        // Tï¿½ssï¿½ lopussa pitï¿½ï¿½ odotella ettï¿½ kaikki tyï¿½t tulevat tehdyiksi, eli tehdï¿½ï¿½n
+        // yksi kokonainen kierros ja mahdolliset erilliset old-data/history-data tyï¿½t 
+        // jï¿½mptisti loppuun, ennen kuin rynnï¿½tï¿½ï¿½n seuraavalle kierrokselle.
         gLocalCacheFutureWaitingSystem.WaitForAllFuturesToExpire();
         gMissingDataOnServerReporterPtr->mainWorkerThreadCompletesCycle();
         return gLocalCacheFutureWaitingSystem.GetAndResetDataCycleStatus();
@@ -288,8 +288,8 @@ namespace
         CatLog::logMessage(logStr, logLevel, CatLog::Category::Data);
     }
 
-    // Ei tarvii tehdä mitään threadi turvallista std::call_once juttua, koska 
-    // pää-working-thread kutsuu tätä normiloopissa, eli static lippu riittää.
+    // Ei tarvii tehdï¿½ mitï¿½ï¿½n threadi turvallista std::call_once juttua, koska 
+    // pï¿½ï¿½-working-thread kutsuu tï¿½tï¿½ normiloopissa, eli static lippu riittï¿½ï¿½.
     void StartHistoryDataThreadOnce()
     {
         static bool hasRun = false;
@@ -298,7 +298,7 @@ namespace
             hasRun = true;
             if(LocalCacheCleaning::IsDataCopyingRoutinesOn())
             {
-                std::thread t(LocalCacheHistoryDataThread::DoHistoryThread, gStopFunctorPtr, gLocalCacheHelpDataSystem.GetHelpDataInfoSystemPtr());
+                std::thread t(LocalCacheHistoryDataThread::DoHistoryThread, std::ref(gStopFunctorPtr), gLocalCacheHelpDataSystem.GetHelpDataInfoSystemPtr());
                 t.detach(); // Detach the thread
             }
         }
@@ -340,8 +340,8 @@ namespace QueryDataToLocalCacheLoaderThread
         bool firstTime = true;
         gDoWorkTimer.StartTimer();
 
-        // Tässä on iki-looppi, jossa vahditaan onko tullut uusia datoja, jolloin tehdään yhdistelmä datoja SmartMetin luettavaksi.
-        // Lisäksi pitää tarkkailla, onko tullut lopetus käsky, joloin pitää siivota ja lopettaa.
+        // Tï¿½ssï¿½ on iki-looppi, jossa vahditaan onko tullut uusia datoja, jolloin tehdï¿½ï¿½n yhdistelmï¿½ datoja SmartMetin luettavaksi.
+        // Lisï¿½ksi pitï¿½ï¿½ tarkkailla, onko tullut lopetus kï¿½sky, joloin pitï¿½ï¿½ siivota ja lopettaa.
         CFmiCopyingStatus status = kFmiNoCopyNeeded;
         try
         {
@@ -365,11 +365,11 @@ namespace QueryDataToLocalCacheLoaderThread
                     }
                     catch(...)
                     {
-                        // Tämä oli joku 'tavallinen' virhe tilanne,
+                        // Tï¿½mï¿½ oli joku 'tavallinen' virhe tilanne,
                         // jatketaan vain loopitusta.
                     }
 
-                    // Tarkastellaan myös pitääkö lokaali cachehakemisto tyhjennellä
+                    // Tarkastellaan myï¿½s pitï¿½ï¿½kï¿½ lokaali cachehakemisto tyhjennellï¿½
                     ::DoPossibleLocalCacheCleaning(gLocalCacheHelpDataSystem.GetHelpDataInfoSystemPtr());
                     ::StartHistoryDataThreadOnce();
                     // Aloitetaan taas uuden kierroksen ajanlasku
@@ -378,13 +378,13 @@ namespace QueryDataToLocalCacheLoaderThread
 
 
                 CheckIfProgramWantsToStop();
-                // Nukutaan aina lyhyitä aikoja (0.5 s), että osataan tutkia usein, josko pääohjelma haluaa jo sulkea
-                Sleep(500); 
+                // Nukutaan aina lyhyitï¿½ aikoja (0.5 s), ettï¿½ osataan tutkia usein, josko pï¿½ï¿½ohjelma haluaa jo sulkea
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
             }
         }
         catch(...)
         {
-            // tämä oli luultavasti StopThreadException, lopetetaan joka tapauksessa
+            // tï¿½mï¿½ oli luultavasti StopThreadException, lopetetaan joka tapauksessa
         }
 
         ::LogGeneralMessage(gThreadName, "QueryDataToLocalCacheLoaderThread::DoThread with", "is now stopped as requested...", CatLog::Severity::Debug);
@@ -406,7 +406,7 @@ namespace QueryDataToLocalCacheLoaderThread
              return true; 
         }
 
-        // Jokin oli pielessä, ei voi mitään....
+        // Jokin oli pielessï¿½, ei voi mitï¿½ï¿½n....
         return false; 
     }
 

@@ -8,7 +8,9 @@
 #include "NFmiGriddingHelperInterface.h"
 #include "NFmiEditorControlPointManager.h"
 #include "FmiSmartMetEditingMode.h"
+#ifndef UNIX
 #include "NFmiApplicationWinRegistry.h"
+#endif
 #include "CombinedMapHandlerInterface.h"
 #include "GeneralDataDocGridding.h"
 #include "ApplicationInterface.h"
@@ -24,7 +26,7 @@ NFmiGenDocDataAdapter::~NFmiGenDocDataAdapter(void)
 
 bool NFmiGenDocDataAdapter::CheckValidationFromSettings(void)
 {
-	return true; // genDocin kanssa tehdään aina asetuksien mukaiset validaatiot, joten tämä palauttaa aina true:n!!
+	return true; // genDocin kanssa tehdï¿½ï¿½n aina asetuksien mukaiset validaatiot, joten tï¿½mï¿½ palauttaa aina true:n!!
 }
 
 boost::shared_ptr<NFmiFastQueryInfo> NFmiGenDocDataAdapter::EditedInfo(void)
@@ -341,6 +343,7 @@ void NFmiGenDocDataAdapter::SetMacroErrorText(const std::string &theErrorStr, bo
 	ApplicationInterface::GetApplicationInterfaceImplementation()->SetMacroErrorText(theErrorStr, triggerDrawParam);
 }
 
+#ifndef UNIX
 boost::shared_ptr<NFmiArea> NFmiGenDocDataAdapter::MapHandlerArea(bool fGetZoomedArea)
 {
 	auto* mapHandler = itsDoc->GetCombinedMapHandler()->getMapViewDescTop(0)->MapHandler();
@@ -349,6 +352,7 @@ boost::shared_ptr<NFmiArea> NFmiGenDocDataAdapter::MapHandlerArea(bool fGetZoome
 	else
 		return mapHandler->TotalArea();
 }
+#endif
 
 FmiLanguage NFmiGenDocDataAdapter::Language(void)
 {
@@ -400,7 +404,9 @@ void NFmiGenDocDataAdapter::LogAndWarnUser(const std::string &theMessageStr, con
     itsDoc->LogAndWarnUser(theMessageStr, theDialogTitleStr, severity, category, justLog, addAbortOption);
 }
 
+#ifndef UNIX
 boost::shared_ptr<NFmiArea> NFmiGenDocDataAdapter::GetUsedMapViewArea(int theMapViewDescTopIndex)
 {
 	return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->MapHandler()->Area();
 }
+#endif

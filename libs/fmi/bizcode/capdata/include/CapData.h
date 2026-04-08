@@ -33,12 +33,12 @@ namespace Warnings
         void getWarningAreas(std::string url, std::string ref, std::string category);
         bool getWarningsFromUrl(const std::string& url, std::string& theResultStr);
         void setWarningLocation(std::vector<std::shared_ptr<WarningMember>> &warnings);
-        double distance(double x, double y, NFmiPoint& loc);
-        double distance(NFmiPoint& a, NFmiPoint& b);
+        double distance(double x, double y, const NFmiPoint& loc);
+        double distance(const NFmiPoint& a, const NFmiPoint& b);
         std::vector<std::string> split(const std::string &s, char delim);
         void checkOverlappingWarnings(std::vector<std::shared_ptr<WarningMember>> &warnings);
         void moveIcons(std::shared_ptr<WarningMember> &w1, std::shared_ptr<WarningMember> &w2, double distanceToBeMoved);
-        boolean checkIfTimesOverlap(std::shared_ptr<WarningMember> &w1, std::shared_ptr<WarningMember> &w2);
+        bool checkIfTimesOverlap(std::shared_ptr<WarningMember> &w1, std::shared_ptr<WarningMember> &w2);
         
     };
 

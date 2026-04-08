@@ -17,7 +17,7 @@
 
 using namespace std;
 
-// decimals 0 eli ei desimaaleja ja muuten yhdellä desimaalilla
+// decimals 0 eli ei desimaaleja ja muuten yhdellï¿½ desimaalilla
 static NFmiString GetLonLatString(const NFmiPoint &thePoint, int decimals)
 {
 	NFmiString txt("(");
@@ -65,10 +65,10 @@ void NFmiCrossSectionManagerView::CalcDrawSizeFactors(void)
 		itsDrawSizeFactorX = itsLastScreenDrawPixelSizeInMM_x / (1./gInfo.itsPixelsPerMM_x);
 		itsDrawSizeFactorY =  itsLastScreenDrawPixelSizeInMM_y / (1./gInfo.itsPixelsPerMM_y);
 
-		// muuten ehkä pikselien suhteet voisi laskea näin, mutta kun näytönohjaimiin ei voi luottaa että ne antaisivat 
-		// näytön koon oikein millimetreissä. Tästä syystä joudun tekemään virityksen, jolla yritetään saada
-		// vielä yksi skaala kerroin peliin. Eli lasketaan itsDataRect:in ja itsIndexRectin suhteet ja korjataan skaala kertoimia
-		// iteratiivisesti (jos index-rect on siis yleensä olemassa).
+		// muuten ehkï¿½ pikselien suhteet voisi laskea nï¿½in, mutta kun nï¿½ytï¿½nohjaimiin ei voi luottaa ettï¿½ ne antaisivat 
+		// nï¿½ytï¿½n koon oikein millimetreissï¿½. Tï¿½stï¿½ syystï¿½ joudun tekemï¿½ï¿½n virityksen, jolla yritetï¿½ï¿½n saada
+		// vielï¿½ yksi skaala kerroin peliin. Eli lasketaan itsDataRect:in ja itsIndexRectin suhteet ja korjataan skaala kertoimia
+		// iteratiivisesti (jos index-rect on siis yleensï¿½ olemassa).
 		if(itsLastScreenDataRectPressureScaleRatio)
 		{
 			for(int i=0; i<3; i++)
@@ -93,7 +93,7 @@ void NFmiCrossSectionManagerView::CalcDrawSizeFactors(void)
 
 double NFmiCrossSectionManagerView::CalcDataRectPressureScaleRatio(void)
 {
-	// pyydetään ensimmäiseltä ali-näyttöluokalta tämä arvo, kunhan ensin on päivitetty sen drawFactorit
+	// pyydetï¿½ï¿½n ensimmï¿½iseltï¿½ ali-nï¿½yttï¿½luokalta tï¿½mï¿½ arvo, kunhan ensin on pï¿½ivitetty sen drawFactorit
 	if(itsViewList)
 	{
 		itsViewList->Reset(); 
@@ -112,7 +112,7 @@ double NFmiCrossSectionManagerView::CalcDataRectPressureScaleRatio(void)
 
 NFmiRect NFmiCrossSectionManagerView::CalcPressureScaleRect(void)
 {
-	// pyydetään ensimmäiseltä ali-näyttöluokalta paineasteikon laatikko, kunhan ensin on päivitetty sen drawFactorit
+	// pyydetï¿½ï¿½n ensimmï¿½iseltï¿½ ali-nï¿½yttï¿½luokalta paineasteikon laatikko, kunhan ensin on pï¿½ivitetty sen drawFactorit
 	if(itsViewList)
 	{
 		itsViewList->Reset(); 
@@ -136,7 +136,7 @@ NFmiCrossSectionManagerView::~NFmiCrossSectionManagerView(void)
 
 void NFmiCrossSectionManagerView::Update(void)
 {
-	// ikkunan koko tai rivien lukumäärä muuttunut, pitää päivittää rivien kokoja
+	// ikkunan koko tai rivien lukumï¿½ï¿½rï¿½ muuttunut, pitï¿½ï¿½ pï¿½ivittï¿½ï¿½ rivien kokoja
 	CalcDrawSizeFactors();
 	UpdateSize();
 	UpdateListViewFrames();
@@ -181,12 +181,12 @@ bool NFmiCrossSectionManagerView::LeftButtonUp(const NFmiPoint & thePlace, unsig
 {
 	ActivateCrossSectionView(thePlace);
 	bool status = false;
-    // Ensin on hanskattava parametrinäytön ja aikakontrolli-ikkunan raahaukset
+    // Ensin on hanskattava parametrinï¿½ytï¿½n ja aikakontrolli-ikkunan raahaukset
     if(itsViewList->IsMouseDraggingOn())
         status = itsViewList->LeftButtonUp(thePlace, theKey);
     else if(itsTimeControlView && itsTimeControlView->IsMouseCaptured())
         status = itsTimeControlView->LeftButtonUp(thePlace, theKey);
-    // Lopuksi normaalit hiiren napin päästöt samoille näytöille
+    // Lopuksi normaalit hiiren napin pï¿½ï¿½stï¿½t samoille nï¿½ytï¿½ille
     else if(itsViewListRect.IsInside(thePlace))
         status = itsViewList->LeftButtonUp(thePlace, theKey);
     else if(itsTimeControlView)
@@ -254,17 +254,17 @@ bool NFmiCrossSectionManagerView::MouseMove(const NFmiPoint& thePlace, unsigned 
 {
 	bool status = false;
 
-    // Jos itsViewList:in hiiren raahaus on päällä, pitää sille tehdä tarkastelut ensin
+    // Jos itsViewList:in hiiren raahaus on pï¿½ï¿½llï¿½, pitï¿½ï¿½ sille tehdï¿½ tarkastelut ensin
     if(itsViewList->IsMouseDraggingOn())
         status = itsViewList->MouseMove(thePlace, theKey);
-    else if(itsTimeControlView && itsTimeControlView->IsMouseCaptured()) // 2. Jos aikakontrolli-ikkuna on kaapannut hiiren tehdään sille tarkastelut
+    else if(itsTimeControlView && itsTimeControlView->IsMouseCaptured()) // 2. Jos aikakontrolli-ikkuna on kaapannut hiiren tehdï¿½ï¿½n sille tarkastelut
 	{
 		status = itsTimeControlView->MouseMove(thePlace, theKey);
 		NFmiTimeControlView::MouseStatusInfo mouseStatus = itsTimeControlView->GetMouseStatusInfo();
 		if(mouseStatus.NeedsUpdate())
 			status = true;
 	}
-    else if(itsViewListRect.IsInside(thePlace)) // 3. tehdään normaalit tarkastelut itsViewList:alle
+    else if(itsViewListRect.IsInside(thePlace)) // 3. tehdï¿½ï¿½n normaalit tarkastelut itsViewList:alle
     { 
         status = itsViewList->MouseMove(thePlace, theKey);
     }
@@ -304,7 +304,7 @@ void NFmiCrossSectionManagerView::DrawBackground(void)
 	DrawFrame(itsDrawingEnvironment);
 }
 
-// laskee alueen, joka on varattu kaikille listassa oleville näytöille yhteensä
+// laskee alueen, joka on varattu kaikille listassa oleville nï¿½ytï¿½ille yhteensï¿½
 NFmiRect NFmiCrossSectionManagerView::CalcViewListRect(void)
 {
 	NFmiRect rr(GetFrame());
@@ -313,13 +313,13 @@ NFmiRect NFmiCrossSectionManagerView::CalcViewListRect(void)
 	return rr;
 }
 
-// tälle alueelle piirretään kaikki yhteinen tieto ppoikkileikkaus datasta mm. mahd. aikakontrolli-näyttö
-// tämä lasketaan ensin näistä alueista!
+// tï¿½lle alueelle piirretï¿½ï¿½n kaikki yhteinen tieto ppoikkileikkaus datasta mm. mahd. aikakontrolli-nï¿½yttï¿½
+// tï¿½mï¿½ lasketaan ensin nï¿½istï¿½ alueista!
 NFmiRect NFmiCrossSectionManagerView::CalcFooterRect(void)
 {
 	NFmiRect rr(GetFrame());
-	// HUOM! Piirrettäessä kuvaa näytölle, tulee mukaan aikakontrolli ikkuna, mutta printatessa se jää pois, jos kyse normaalista moodista
-	double emptySpace = itsToolBox->SY(FmiRound(65 * itsDrawSizeFactorY)); // 60-pikseliä pitää olla tilaa alhaalla, teksti rivi + koordinaatit/aikakontrolli-ikkuna
+	// HUOM! Piirrettï¿½essï¿½ kuvaa nï¿½ytï¿½lle, tulee mukaan aikakontrolli ikkuna, mutta printatessa se jï¿½ï¿½ pois, jos kyse normaalista moodista
+	double emptySpace = itsToolBox->SY(FmiRound(65 * itsDrawSizeFactorY)); // 60-pikseliï¿½ pitï¿½ï¿½ olla tilaa alhaalla, teksti rivi + koordinaatit/aikakontrolli-ikkuna
 	if(itsCtrlViewDocumentInterface->Printing() && itsCrossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kNormal)
 	{
 		emptySpace = itsToolBox->SY(FmiRound(20 * itsDrawSizeFactorY));
@@ -328,7 +328,7 @@ NFmiRect NFmiCrossSectionManagerView::CalcFooterRect(void)
 	return rr;
 }
 
-// otsikkoon laitetaan yhteistä tietoa
+// otsikkoon laitetaan yhteistï¿½ tietoa
 NFmiRect NFmiCrossSectionManagerView::CalcHeaderRect(void)
 {
 	NFmiRect rr(GetFrame());
@@ -337,14 +337,14 @@ NFmiRect NFmiCrossSectionManagerView::CalcHeaderRect(void)
 	return rr;
 }
 
-// laskee itsViewList:issa olevan näytön alueen (riippuu annetusta indeksistä
-// ja näkyvien rivien määrästä ja aloitus rivistä)
+// laskee itsViewList:issa olevan nï¿½ytï¿½n alueen (riippuu annetusta indeksistï¿½
+// ja nï¿½kyvien rivien mï¿½ï¿½rï¿½stï¿½ ja aloitus rivistï¿½)
 NFmiRect NFmiCrossSectionManagerView::CalcListViewRect(int theIndex)
 {
 	if(!itsCrossSectionSystem->IsViewVisible(theIndex))
 		return NFmiRect(0, 0, 0, 0);
 
-	double emptySpace = 0; //itsToolBox->SY(3); // pitä olla 3-pikseliä väliä eri ikkunoiden ja yläosan välillä
+	double emptySpace = 0; //itsToolBox->SY(3); // pitï¿½ olla 3-pikseliï¿½ vï¿½liï¿½ eri ikkunoiden ja ylï¿½osan vï¿½lillï¿½
 	double rowCount = itsCrossSectionSystem->RowCount();
 	double oneViewHeight = (itsViewListRect.Height() / rowCount) - emptySpace;
 	int startRowIndex = itsCrossSectionSystem->StartRowIndex();
@@ -358,18 +358,18 @@ NFmiRect NFmiCrossSectionManagerView::CalcListViewRect(int theIndex)
 // aikakontrolli-ikkunan varaama alue, kuuluu osana footer-aluetta
 NFmiRect NFmiCrossSectionManagerView::CalcTimeControlViewRect(void)
 {
-	// leveys laskut on otettu crosssectionview-luokasta, missä dataalue on laskettu seuraavasti (ja aikakontrolliikkunan leveys pitää laskea sen mukaan)
+	// leveys laskut on otettu crosssectionview-luokasta, missï¿½ dataalue on laskettu seuraavasti (ja aikakontrolliikkunan leveys pitï¿½ï¿½ laskea sen mukaan)
 	// NFmiCrossSectionView::CalcPressureScaleRect -metodista
 	double leftPos = CalcPressureScaleRect().Right();
 
-	double spaceForText = itsToolBox->SY(FmiRound(15 * itsDrawSizeFactorY)); // pitää olla tilaa vielä yhdelle teksti riville footerissa
+	double spaceForText = itsToolBox->SY(FmiRound(15 * itsDrawSizeFactorY)); // pitï¿½ï¿½ olla tilaa vielï¿½ yhdelle teksti riville footerissa
 	NFmiRect frame(GetFrame());
 	NFmiRect resultRect(itsFooterRect.Left() + leftPos, itsFooterRect.Top() + spaceForText, frame.Right() - frame.Width() / 50., itsFooterRect.Bottom());
 	return resultRect;
 }
 
-// normaali käytössä alkupiste saadaan crosssection systemiltä,
-// mutta trajektori moodissa pitää pyytää alimman näkyvän rivin
+// normaali kï¿½ytï¿½ssï¿½ alkupiste saadaan crosssection systemiltï¿½,
+// mutta trajektori moodissa pitï¿½ï¿½ pyytï¿½ï¿½ alimman nï¿½kyvï¿½n rivin
 // trajektorilta pisteet
 NFmiPoint NFmiCrossSectionManagerView::GetStartLatLonPoint(void)
 {
@@ -422,13 +422,13 @@ NFmiPoint NFmiCrossSectionManagerView::GetMiddleLatLonPoint(void)
 		return itsCrossSectionSystem->MiddlePoint();
 }
 
-// kirjoittaa mm. pääpisteiden koordinaatit ruudun alareunaan pisteiden kohdalle.
+// kirjoittaa mm. pï¿½ï¿½pisteiden koordinaatit ruudun alareunaan pisteiden kohdalle.
 // Aluksi vain 1. ja viimeisen pisteen.
 void NFmiCrossSectionManagerView::DrawFooter(void)
 {
 	if(itsTimeControlView == 0 || itsCrossSectionSystem->TimeCrossSectionDirty())
 		CreateTimeControlView();
-	if(!itsCtrlViewDocumentInterface->Printing() || itsCrossSectionSystem->GetCrossMode() != NFmiCrossSectionSystem::kNormal) // ei piirretä printatessa!!!!
+	if(!itsCtrlViewDocumentInterface->Printing() || itsCrossSectionSystem->GetCrossMode() != NFmiCrossSectionSystem::kNormal) // ei piirretï¿½ printatessa!!!!
 	{
 		if(itsTimeControlView && itsTimeControlViewRect.Height() > 0.)
 			itsTimeControlView->Draw(itsToolBox);
@@ -443,14 +443,14 @@ void NFmiCrossSectionManagerView::DrawFooter(void)
 	itsDrawingEnvironment.SetFontSize(NFmiPoint(14 * itsDrawSizeFactorX, 14 * itsDrawSizeFactorY));
 	NFmiPoint textPoint(itsFooterRect.TopLeft());
 	int moveTextBy = FmiRound(2 * itsDrawSizeFactorY);
-	double moveDownward = itsToolBox->SY(moveTextBy); // siirretää vielä kuusi pikseliä alas
+	double moveDownward = itsToolBox->SY(moveTextBy); // siirretï¿½ï¿½ vielï¿½ kuusi pikseliï¿½ alas
 	textPoint.Y(textPoint.Y() + moveDownward);
 	FmiDirection oldAlignment = itsToolBox->GetTextAlignment();
 	itsToolBox->SetTextAlignment(kTopLeft);
 	NFmiText text(textPoint, txt, false, 0, &itsDrawingEnvironment);
 	itsToolBox->Convert(&text);
 
-	// StartPoint : piirretään vielä kartan väri pallot tänne helpottamaan tunnistusta
+	// StartPoint : piirretï¿½ï¿½n vielï¿½ kartan vï¿½ri pallot tï¿½nne helpottamaan tunnistusta
 	double circleY = textPoint.Y() - moveDownward * 1.;
 	NFmiPoint circlePoint(itsCrossSectionSystem->StartXYPoint());
 	circlePoint.Y(circleY);
@@ -461,7 +461,7 @@ void NFmiCrossSectionManagerView::DrawFooter(void)
 	double yWidth2 = itsToolBox->SY(FmiRound(12 * itsDrawSizeFactorY));
 	NFmiRect circleRect(0, 0, xWidth2, yWidth2);
 	circleRect.Center(circlePoint);
-	itsToolBox->DrawEllipse(circleRect, &itsDrawingEnvironment); // piirretään alkupisteen väripallo
+	itsToolBox->DrawEllipse(circleRect, &itsDrawingEnvironment); // piirretï¿½ï¿½n alkupisteen vï¿½ripallo
 
 	if(itsCrossSectionSystem->GetCrossMode() != NFmiCrossSectionSystem::kTime && itsCrossSectionSystem->GetCrossMode() != NFmiCrossSectionSystem::kObsAndFor)
 	{
@@ -472,11 +472,11 @@ void NFmiCrossSectionManagerView::DrawFooter(void)
 		if(itsCrossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kRoute)
 			txt2 += itsCrossSectionSystem->RouteTimes().operator [](itsCrossSectionSystem->RouteTimes().size()-1).ToStr(" HH:mm");
 		itsToolBox->SetTextAlignment(kTopRight);
-		textPoint.X(itsFooterRect.Right()); // TÄMÄ ON HUUHAATA!!!!
+		textPoint.X(itsFooterRect.Right()); // Tï¿½Mï¿½ ON HUUHAATA!!!!
 		NFmiText text2(textPoint, txt2, false, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&text2);
 
-		// EndPoint : piirretään vielä kartan väri pallot tänne helpottamaan tunnistusta
+		// EndPoint : piirretï¿½ï¿½n vielï¿½ kartan vï¿½ri pallot tï¿½nne helpottamaan tunnistusta
 		NFmiPoint circlePoint2(itsCrossSectionSystem->EndXYPoint());
 		circlePoint2.Y(circleY);
 		itsDrawingEnvironment.SetFillColor(itsCrossSectionSystem->EndPointFillColor());
@@ -484,7 +484,7 @@ void NFmiCrossSectionManagerView::DrawFooter(void)
 		itsDrawingEnvironment.EnableFill();
 		NFmiRect circleRect2(0, 0, xWidth2, yWidth2);
 		circleRect2.Center(circlePoint2);
-		itsToolBox->DrawEllipse(circleRect2, &itsDrawingEnvironment); // piirretään alkupisteen väripallo
+		itsToolBox->DrawEllipse(circleRect2, &itsDrawingEnvironment); // piirretï¿½ï¿½n alkupisteen vï¿½ripallo
 
 		if(itsCrossSectionSystem->CrossSectionMode() == NFmiCrossSectionSystem::k3Point)
 		{
@@ -494,11 +494,11 @@ void NFmiCrossSectionManagerView::DrawFooter(void)
 			if(itsCrossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kRoute)
 				txt3 += itsCrossSectionSystem->RouteTimes().operator [](static_cast<int>(itsCrossSectionSystem->RouteTimes().size()/2)).ToStr(" HH:mm");
 			itsToolBox->SetTextAlignment(kTopCenter);
-			textPoint.X(itsFooterRect.Center().X()); // TÄMÄ ON HUUHAATA!!!!
+			textPoint.X(itsFooterRect.Center().X()); // Tï¿½Mï¿½ ON HUUHAATA!!!!
 			NFmiText text3(textPoint, txt3, false, 0, &itsDrawingEnvironment);
 			itsToolBox->Convert(&text3);
 
-			// MiddlePoint : piirretään vielä kartan väri pallot tänne helpottamaan tunnistusta
+			// MiddlePoint : piirretï¿½ï¿½n vielï¿½ kartan vï¿½ri pallot tï¿½nne helpottamaan tunnistusta
 			NFmiPoint circlePoint3(itsCrossSectionSystem->MiddleXYPoint());
 			circlePoint3.Y(circleY);
 			itsDrawingEnvironment.SetFillColor(itsCrossSectionSystem->MiddlePointFillColor());
@@ -506,7 +506,7 @@ void NFmiCrossSectionManagerView::DrawFooter(void)
 			itsDrawingEnvironment.EnableFill();
 			NFmiRect circleRect3(0, 0, xWidth2, yWidth2);
 			circleRect3.Center(circlePoint3);
-			itsToolBox->DrawEllipse(circleRect3, &itsDrawingEnvironment); // piirretään alkupisteen väripallo
+			itsToolBox->DrawEllipse(circleRect3, &itsDrawingEnvironment); // piirretï¿½ï¿½n alkupisteen vï¿½ripallo
 		}
 
 		itsToolBox->SetTextAlignment(oldAlignment);
@@ -523,7 +523,7 @@ void NFmiCrossSectionManagerView::DrawActivatedMinorPoint(void)
 		int pointCount = static_cast<int>(itsCrossSectionSystem->MinorPoints().size());
 		double xCoordinate = itsTimeControlViewRect.Left() + index * itsFooterRect.Width() / (pointCount+1);
 
-		// piirretään sitten alareunaan aktiivisen pisteen koordinaatit
+		// piirretï¿½ï¿½n sitten alareunaan aktiivisen pisteen koordinaatit
 		itsDrawingEnvironment.SetFrameColor(NFmiColor(1,0,0)); // laitetaan teksti punaiseksi
 		NFmiString txt = GetLonLatString(itsCrossSectionSystem->ActivatedMinorPoint(), 2);
 		if(itsCrossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kRoute)
@@ -531,7 +531,7 @@ void NFmiCrossSectionManagerView::DrawActivatedMinorPoint(void)
 		itsDrawingEnvironment.SetFontSize(NFmiPoint(13 * itsDrawSizeFactorX, 13 * itsDrawSizeFactorY));
 		NFmiPoint textPoint(xCoordinate, itsFooterRect.Top());
 		int moveTextBy = FmiRound(-3 * itsDrawSizeFactorY);
-		double moveDownward = itsToolBox->SY(moveTextBy); // siirretää yksi pikseli alas
+		double moveDownward = itsToolBox->SY(moveTextBy); // siirretï¿½ï¿½ yksi pikseli alas
 		textPoint.Y(textPoint.Y() + moveDownward);
 		FmiDirection oldAlignment = itsToolBox->GetTextAlignment();
 		FmiDirection alignm = kTopCenter;
@@ -574,13 +574,14 @@ std::string NFmiCrossSectionManagerView::ComposeToolTipText(const NFmiPoint& the
 	return std::string();
 }
 
-// tällä luodaan kerralla kaikki itsViewList:issä olevat näyttö-luokat
-// Kutsutaan konstruktorissa, kaikki näytöt luodaan kerralla, vaikka niitä kaikkia ei näytetäkään.
+// tï¿½llï¿½ luodaan kerralla kaikki itsViewList:issï¿½ olevat nï¿½yttï¿½-luokat
+// Kutsutaan konstruktorissa, kaikki nï¿½ytï¿½t luodaan kerralla, vaikka niitï¿½ kaikkia ei nï¿½ytetï¿½kï¿½ï¿½n.
 void NFmiCrossSectionManagerView::CreateViewList(void)
 {
 	DestroyViewList();
+	boost::shared_ptr<NFmiDrawParam> emptyDrawParam;
 	itsViewList = new NFmiCtrlViewList(itsMapViewDescTopIndex, itsViewListRect, itsToolBox,
-										boost::shared_ptr<NFmiDrawParam>());
+										emptyDrawParam);
 	int maxSize = itsCrossSectionSystem->MaxViewRowSize();
 	NFmiCrossSectionView *tmpView = 0;
     // At the point there are no columns in cross section view, so column index is set to 1 for all sub views.
@@ -594,8 +595,8 @@ void NFmiCrossSectionManagerView::CreateViewList(void)
 	}
 }
 
-// kutsu tätä kun muutetaan näyttörivien lukumäärää tai vaihdetaan rivejä.
-// Laskee uudet frame-rectit itsViewList:issä oleville näytöille
+// kutsu tï¿½tï¿½ kun muutetaan nï¿½yttï¿½rivien lukumï¿½ï¿½rï¿½ï¿½ tai vaihdetaan rivejï¿½.
+// Laskee uudet frame-rectit itsViewList:issï¿½ oleville nï¿½ytï¿½ille
 void NFmiCrossSectionManagerView::UpdateListViewFrames(void)
 {
 	if(!itsViewList)
@@ -661,9 +662,9 @@ void NFmiCrossSectionManagerView::DrawHeader(void)
 	itsDrawingEnvironment.SetFontSize(NFmiPoint(15 * itsDrawSizeFactorX, 15 * itsDrawSizeFactorY));
 	itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
 	NFmiPoint textPoint(itsHeaderRect.TopLeft());
-	double moveDownward = itsToolBox->SY(FmiRound(1 * itsDrawSizeFactorY)); // siirretään vielä pikseli alas
+	double moveDownward = itsToolBox->SY(FmiRound(1 * itsDrawSizeFactorY)); // siirretï¿½ï¿½n vielï¿½ pikseli alas
 	textPoint.Y(textPoint.Y() + moveDownward);
-	textPoint.X(textPoint.X() + 2*moveDownward); // siirretään myös pari pikseliä oikeaan
+	textPoint.X(textPoint.X() + 2*moveDownward); // siirretï¿½ï¿½n myï¿½s pari pikseliï¿½ oikeaan
 	FmiDirection oldAlignment = itsToolBox->GetTextAlignment();
 	itsToolBox->SetTextAlignment(kTopLeft);
 	NFmiText text(textPoint, txt, false, 0, &itsDrawingEnvironment);
@@ -680,15 +681,16 @@ bool NFmiCrossSectionManagerView::CreateTimeControlView(void)
 	itsTimeControlView = 0;
 	if(itsCtrlViewDocumentInterface->DefaultEditedDrawParam())
 	{
+		auto defaultDrawParam = itsCtrlViewDocumentInterface->DefaultEditedDrawParam();
 		itsTimeControlView = new NFmiCrossSectionTimeControlView(itsMapViewDescTopIndex, itsTimeControlViewRect
 													,itsToolBox
-													, itsCtrlViewDocumentInterface->DefaultEditedDrawParam()
+													, defaultDrawParam
 													,false
 													,false
 													,true
 													,true
 													,0.);
-		itsTimeControlView->Initialize(true, true); // tämä on konstruktori virtuaali funktio ongelma fixi yritys
+		itsTimeControlView->Initialize(true, true); // tï¿½mï¿½ on konstruktori virtuaali funktio ongelma fixi yritys
 		itsTimeControlView->SetMouseStatusInfo(mouseStatusInfo);
         itsCrossSectionSystem->TimeCrossSectionDirty(false);
 		return true;

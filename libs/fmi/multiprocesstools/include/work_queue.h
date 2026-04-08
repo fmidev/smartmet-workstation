@@ -17,15 +17,15 @@
 #pragma warning (disable : 4503)
 #endif
 
-// Tällä versio stringillä erotellaan eri versioita käyttävät shared_memory:t (voi olla eri SmartMet versioita rinnan käytössä), 
-// eli jos task_structure, work_result_structure tai jokin merkittävä rakenne muuttuu, kasvata numeroa.
+// Tï¿½llï¿½ versio stringillï¿½ erotellaan eri versioita kï¿½yttï¿½vï¿½t shared_memory:t (voi olla eri SmartMet versioita rinnan kï¿½ytï¿½ssï¿½), 
+// eli jos task_structure, work_result_structure tai jokin merkittï¿½vï¿½ rakenne muuttuu, kasvata numeroa.
 const std::string work_queue_version_string = "ver1.0";
 
 const std::string work_queue_shared_name = std::string("Processpool_work-queue_") + work_queue_version_string;
 const std::string work_result_queue_shared_name = std::string("Processpool_work-result-queue_") + work_queue_version_string;
 const std::string worker_running_info_shared_base_name = std::string("Processpool_worker-running-info_") + work_queue_version_string;
 const std::string master_running_info_shared_base_name = std::string("Processpool_master-running-info_") + work_queue_version_string;
-const std::string killer_task_name = "CRASH#&@'N'BURN"; // tämän niminen tehtävä aiheuttaa workerin äkillisen kuoleman
+const std::string killer_task_name = "CRASH#&@'N'BURN"; // tï¿½mï¿½n niminen tehtï¿½vï¿½ aiheuttaa workerin ï¿½killisen kuoleman
 
 bool work_queue_verbose_logging(void);
 void work_queue_verbose_logging(bool newValue);
@@ -52,17 +52,17 @@ typedef boost::interprocess::vector<float, float_allocator_type> shared_memory_v
     ,smartmet_guid_(smartmet_guid.begin(), smartmet_guid.end(), char_allocator)
     {}
 
-    std::size_t job_index_; // smartmetin sisäinen työindeksi
+    std::size_t job_index_; // smartmetin sisï¿½inen tyï¿½indeksi
     std::size_t data_time_index_; // editoitavan datan aika-indeksi
-    std::size_t job_time_t_; // milloin työ on annettu, eli sekunteja kulunut sitten 1.1. 1970 (tämän avulla voidaan poistaa vanhentuneita roikkumaan jääneitä tuloksia, jos esim. työn antanut smartmet on kaatunut, tai lopettanut)
-    shared_memory_string relative_area_string_; // tuloshilan relatiivinen alue stringinä, muotoa: left,top,right,bottom
+    std::size_t job_time_t_; // milloin tyï¿½ on annettu, eli sekunteja kulunut sitten 1.1. 1970 (tï¿½mï¿½n avulla voidaan poistaa vanhentuneita roikkumaan jï¿½ï¿½neitï¿½ tuloksia, jos esim. tyï¿½n antanut smartmet on kaatunut, tai lopettanut)
+    shared_memory_string relative_area_string_; // tuloshilan relatiivinen alue stringinï¿½, muotoa: left,top,right,bottom
     std::size_t size_x_; // halutun tuloshilan koko x-suunnassa
     std::size_t size_y_; // halutun tuloshilan koko y-suunnassa
     int gridding_function_; // haluttu griddaus funktio
     shared_memory_vector x_values_; // hilattavien pisteiden relatiiviset x-sijainnit
     shared_memory_vector y_values_; // hilattavien pisteiden relatiiviset y-sijainnit
-    shared_memory_vector z_values_; // hilattavien pisteiden arvot eli ns. 'korkeuskenttä'
-    shared_memory_string smartmet_guid_; // työn antaneen smartmet instanssin guid
+    shared_memory_vector z_values_; // hilattavien pisteiden arvot eli ns. 'korkeuskenttï¿½'
+    shared_memory_string smartmet_guid_; // tyï¿½n antaneen smartmet instanssin guid
 };
 
 std::ostream& operator <<(std::ostream &out, const struct task_structure &object);
@@ -85,12 +85,12 @@ typedef boost::interprocess::vector<float, float_allocator_type> shared_memory_v
     ,values_(values.begin(), values.end(), float_allocator)
     {}
 
-    std::size_t job_index_; // smartmetin sisäinen työindeksi
+    std::size_t job_index_; // smartmetin sisï¿½inen tyï¿½indeksi
     std::size_t data_time_index_; // editoitavan datan aika-indeksi
-    std::size_t job_time_t_; // milloin työ on annettu, eli sekunteja kulunut sitten 1.1. 1970 (tämän avulla voidaan poistaa vanhentuneita roikkumaan jääneitä tuloksia, jos esim. työn antanut smartmet on kaatunut, tai lopettanut)
+    std::size_t job_time_t_; // milloin tyï¿½ on annettu, eli sekunteja kulunut sitten 1.1. 1970 (tï¿½mï¿½n avulla voidaan poistaa vanhentuneita roikkumaan jï¿½ï¿½neitï¿½ tuloksia, jos esim. tyï¿½n antanut smartmet on kaatunut, tai lopettanut)
     std::size_t size_x_; // halutun tuloshilan koko x-suunnassa
     std::size_t size_y_; // halutun tuloshilan koko y-suunnassa
-    shared_memory_string smartmet_guid_; // työn antaneen smartmet instanssin guid
+    shared_memory_string smartmet_guid_; // tyï¿½n antaneen smartmet instanssin guid
     shared_memory_vector values_; // hilauksen lopputulos vektorissa
 
 };
@@ -124,7 +124,7 @@ private:
     boost::interprocess::interprocess_condition& cond_;
 
 public:
-    // Master process käyttää tätä (open or create)
+    // Master process kï¿½yttï¿½ï¿½ tï¿½tï¿½ (open or create)
     work_queue(const std::string &base_shared_name, const boost::interprocess::open_or_create_t &creation_mode, size_t segment_size)
         : base_shared_name_(base_shared_name)
         , segment_(
@@ -147,7 +147,7 @@ public:
         )
     {}
 
-    // Worker processit käyttää tätä (open only)
+    // Worker processit kï¿½yttï¿½ï¿½ tï¿½tï¿½ (open only)
     work_queue(const std::string &base_shared_name, const boost::interprocess::open_only_t &creation_mode)
         : base_shared_name_(base_shared_name)
         , segment_(
@@ -239,12 +239,12 @@ private:
     std::string base_shared_name_;
     managed_shared_memory_t segment_;
 
-    int& command_; // Tämä tulee Masterilta workerille: 0=ei alustettu, 1=tee työtä, 2=lopeta prosessi
-    int& counter_; // Worker kasvattaa tätä counteria esim. sekunnin välein, jos luku muuttuu, tämä kertoo Masterille että worker on vielä elossa
-    int& task_counter_; // Worker kasvattaa tätä counteria kun se on saanut tehtävän, tämän avulla Master voi päätellä onko kukaan workereistä tehnyt mitään tiettyyn aikaan ja jos ei ole ollut tekemistä, se voi lopettaa kaiken toiminnan
+    int& command_; // Tï¿½mï¿½ tulee Masterilta workerille: 0=ei alustettu, 1=tee tyï¿½tï¿½, 2=lopeta prosessi
+    int& counter_; // Worker kasvattaa tï¿½tï¿½ counteria esim. sekunnin vï¿½lein, jos luku muuttuu, tï¿½mï¿½ kertoo Masterille ettï¿½ worker on vielï¿½ elossa
+    int& task_counter_; // Worker kasvattaa tï¿½tï¿½ counteria kun se on saanut tehtï¿½vï¿½n, tï¿½mï¿½n avulla Master voi pï¿½ï¿½tellï¿½ onko kukaan workereistï¿½ tehnyt mitï¿½ï¿½n tiettyyn aikaan ja jos ei ole ollut tekemistï¿½, se voi lopettaa kaiken toiminnan
 
 public:
-    // Master process käyttää tätä (open or create)
+    // Master process kï¿½yttï¿½ï¿½ tï¿½tï¿½ (open or create)
     worker_running_info(const std::string &base_shared_name, const boost::interprocess::open_or_create_t &creation_mode, size_t segment_size)
         : base_shared_name_(base_shared_name)
         , segment_(
@@ -266,7 +266,7 @@ public:
         )
     {}
 
-    // Worker processit käyttää tätä (open only)
+    // Worker processit kï¿½yttï¿½ï¿½ tï¿½tï¿½ (open only)
     worker_running_info(const std::string &base_shared_name, const boost::interprocess::open_only_t &creation_mode)
         : base_shared_name_(base_shared_name)
         , segment_(
@@ -335,9 +335,9 @@ typedef work_queue<task_structure> task_queue_t;
 typedef boost::shared_ptr<task_queue_t> task_queue_ptr_t;
 typedef work_queue<work_result_structure> result_queue_t;
 typedef boost::shared_ptr<result_queue_t> result_queue_ptr_t;
-typedef result_queue_ptr_t::element_type::task_type work_result_t;
-typedef result_queue_ptr_t::element_type::optional_holder_t result_holder_t;
-typedef task_queue_ptr_t::element_type::optional_holder_t task_holder_t;
+typedef work_result_structure work_result_t;
+typedef boost::optional<work_result_structure> result_holder_t;
+typedef boost::optional<task_structure> task_holder_t;
 typedef boost::shared_ptr<worker_running_info> worker_running_info_ptr_t;
 
 /*

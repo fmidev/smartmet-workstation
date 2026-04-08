@@ -1,3 +1,4 @@
+#ifndef UNIX
 
 #include "FmiCacheLoaderData.h"
 #include "afxmt.h"
@@ -15,3 +16,5 @@ CFmiCacheLoaderData::~CFmiCacheLoaderData(void)
 {
 	delete itsThreadRunning;
 }
+
+#endif // UNIX

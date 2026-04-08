@@ -44,7 +44,7 @@
 
 #include <cassert>
 
-#ifdef BOOST
+#if defined(BOOST) || defined(UNIX)
 // Finding files is implemented in Linux using boost filesystem & regex
 #include <boost/algorithm/string/predicate.hpp>  //Lasse
 #include <boost/filesystem/convenience.hpp>
@@ -110,7 +110,7 @@ static bool IsWinDir(const struct _finddata_t &fileinfo)
  */
 // ----------------------------------------------------------------------
 
-#ifdef BOOST
+#if defined(BOOST) || defined(UNIX)
 namespace Unix
 {
 // ----------------------------------------------------------------------
@@ -819,7 +819,7 @@ const std::list<std::string> PatternFiles(const std::string &thePattern)
 {
   list<string> out;
 
-#ifdef BOOST
+#if defined(BOOST) || defined(UNIX)
 
   namespace fs = boost::filesystem;
 
@@ -953,7 +953,7 @@ const std::list<std::string> Directories(const std::string &thePath)
 {
   list<string> out;
 
-#ifdef BOOST
+#if defined(BOOST) || defined(UNIX)
   namespace fs = boost::filesystem;
 
   // Safety checks
@@ -1020,7 +1020,7 @@ time_t FindFile(const string &theFileFilter,
                 bool fSearchNewest,
                 string *theFoundFileName /*RELATIVE, NO PATH!*/)
 {
-#ifdef BOOST
+#if defined(BOOST) || defined(UNIX)
   namespace fs = boost::filesystem;
 
   // Collect matches into a modification time sorted map
@@ -1502,7 +1502,7 @@ string FindQueryData(const string &thePath)
     const string &name = *f;
 
     if (!name.empty() && name[0] == '.') continue;
-#ifdef BOOST
+#if defined(BOOST) || defined(UNIX)
     bool ok = (boost::iends_with(name, ".sqd") || boost::iends_with(name, ".fqd"));
 #else
     bool ok = true;
@@ -1542,7 +1542,7 @@ string FindQueryData(const string &thePath)
 
 bool IsCompressed(const string &theName)
 {
-#ifdef BOOST
+#if defined(BOOST) || defined(UNIX)
   return (boost::iends_with(theName, ".gz") || boost::iends_with(theName, ".bz2"));
 #else
   return false;

@@ -5,15 +5,15 @@
 #include<checkvec.h>    // checked vector
 #include<iostream>
 
-// ********************* pientä käyttöohjetta **********************************
-// HUOM!! voit käyttää seuraavia notaatioita mm. sijoittaessa arvoa tai 
-// lukiessasia sitä:
+// ********************* pientï¿½ kï¿½yttï¿½ohjetta **********************************
+// HUOM!! voit kï¿½yttï¿½ï¿½ seuraavia notaatioita mm. sijoittaessa arvoa tai 
+// lukiessasia sitï¿½:
 
 // Matrix<float> matrix(rowCount, columnCount);
 // float arvo = matrix[rowInd][columnInd];
 // matrix[rowInd][columnInd] = arvo;
 // matrix.Resize(newRowCount, newColumnCount); // Huom! Resize isolla kirjaimella!
-// ********************* pientä käyttöohjetta **********************************
+// ********************* pientï¿½ kï¿½yttï¿½ohjetta **********************************
 
 
 //using namespace std;
@@ -22,10 +22,8 @@
 template<class T>
 class Matrix : public checkedVector<checkedVector<T> >
 {
-#ifdef _MSC_VER
 public:
      typedef typename checkedVector< checkedVector< T > >::size_type size_type;
-#endif
 
    protected:
      size_type rows,
@@ -80,9 +78,9 @@ public:
 
 	 void RemoveRow(size_type theRowIndex)
      {
-		iterator it = begin();
-		it += theRowIndex;
-		erase(it);
+		typename checkedVector<checkedVector<T>>::iterator it = this->begin();
+		it += static_cast<typename checkedVector<checkedVector<T>>::difference_type>(theRowIndex);
+		this->erase(it);
 		rows--;
      }
 
@@ -109,7 +107,7 @@ public:
 template<class T>
 inline std::ostream& operator<<(std::ostream& s, const Matrix<T>& m )
 {
-    typedef Matrix<T>::size_type size_type;
+    typedef typename Matrix<T>::size_type size_type;
 
     for (size_type i = 0; i < m.Rows(); i++)
     { 

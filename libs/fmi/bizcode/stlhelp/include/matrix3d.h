@@ -8,9 +8,7 @@
 template<class T>
 class Matrix3D : public checkedVector<Matrix<T> >
 {
-#ifdef _MSC_VER
-     typedef typename checkedVector< checkedVector< T > >::size_type size_type;
-#endif
+     typedef typename checkedVector< Matrix< T > >::size_type size_type;
   protected:
     size_type rows,
               columns,

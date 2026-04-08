@@ -12,9 +12,19 @@ set(CMAKE_CXX_EXTENSIONS ON)
 
 file( GLOB SOURCE_FILES newbase/* )
 
-add_library( 
+# On Linux, exclude NFmiGdalArea.cpp unless GDAL headers are available
+if(UNIX)
+    find_package(GDAL QUIET)
+    if(NOT GDAL_FOUND)
+        list(FILTER SOURCE_FILES EXCLUDE REGEX "NFmiGdalArea\\.cpp$")
+        message(STATUS "Newbase: GDAL not found, excluding NFmiGdalArea.cpp")
+        add_compile_definitions(DISABLE_GDAL)
+    endif()
+endif()
+
+add_library(
     ${PROJECT_NAME} STATIC
-    ${SOURCE_FILES} 
+    ${SOURCE_FILES}
     )
 
 target_include_directories( 

@@ -80,6 +80,8 @@
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/date_time/posix_time/ptime.hpp>
 #include <boost/utility.hpp>
+#include <list>
+#include <string>
 
 //! Undocumented
 class NFmiMultiQueryInfo : public NFmiFastQueryInfo, private boost::noncopyable

@@ -108,7 +108,9 @@
 #include "NFmiAreaFactory.h"
 
 #include "NFmiEquidistArea.h"
+#ifndef DISABLE_GDAL
 #include "NFmiGdalArea.h"
+#endif
 #include "NFmiGnomonicArea.h"
 #include "NFmiLambertEqualArea.h"
 #include "NFmiLatLonArea.h"
@@ -446,7 +448,7 @@ boost::shared_ptr<NFmiArea> Create(const std::string &theProjection)
       area.reset(
           new NFmiEquidistArea(bottomleft, topright, clon, corner1, corner2, clat, usePacificView));
     }
-#ifdef UNIX
+#if defined(UNIX) && !defined(DISABLE_GDAL)
     else
     {
       // Allow FMI: or WGS84: prefix to identify datum, default is WGS84
@@ -463,7 +465,7 @@ boost::shared_ptr<NFmiArea> Create(const std::string &theProjection)
       area.reset(
           new NFmiGdalArea(datum, proj, bottomleft, topright, corner1, corner2, usePacificView));
     }
-#endif  // UNIX
+#endif  // UNIX && !DISABLE_GDAL
 
     // recalculate corners if center coordinate was given
     // instead of corners
