@@ -22,16 +22,16 @@ list(
     )
 
 if(UNIX)
-    find_package(GDAL QUIET)
-    if(NOT GDAL_FOUND)
-        list(FILTER SOURCE_FILES EXCLUDE REGEX "PostGISDataSource\\.(cpp|h)$")
-        message(STATUS "Textgen: GDAL not found, excluding PostGISDataSource")
-    endif()
+    # PostGISDataSource uses deprecated OGR API (pre-GDAL 2.0) that is
+    # incompatible with current GDAL. Exclude it on Linux.
+    # The authoritative textgen is in a separate repository (~/hub/textgen).
+    list(FILTER SOURCE_FILES EXCLUDE REGEX "PostGISDataSource\\.(cpp|h)$")
+    message(STATUS "Textgen: excluding PostGISDataSource (uses deprecated OGR API)")
 endif()
 
-add_library( 
+add_library(
     ${PROJECT_NAME} STATIC
-    ${SOURCE_FILES} 
+    ${SOURCE_FILES}
     )
 
 target_link_libraries(
@@ -41,7 +41,7 @@ target_link_libraries(
     Calculator
     )
 
-target_include_directories( 
+target_include_directories(
     ${PROJECT_NAME}
     PUBLIC ${PROJECT_SOURCE_DIR}/textgen
     PUBLIC ${PROJECT_SOURCE_DIR}

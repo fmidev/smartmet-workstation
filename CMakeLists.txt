@@ -28,6 +28,14 @@ if(UNIX)
     set(DISABLE_CPPRESTSDK ON CACHE BOOL "Is CppRestSdk used in build" FORCE)
     set(DISABLE_EXTREME_TOOLKITPRO ON CACHE BOOL "Is Extreme ToolkitPro used in build" FORCE)
     set(DISABLE_UNIRAS_TOOLMASTER ON CACHE BOOL "Is Uniras Toolmaster used in build" FORCE)
+
+    # FMI packages install GDAL in versioned directories (e.g. /usr/gdal312/)
+    foreach(_gdal_ver 312 310)
+        if(EXISTS /usr/gdal${_gdal_ver}/include/gdal.h)
+            list(APPEND CMAKE_PREFIX_PATH /usr/gdal${_gdal_ver})
+            break()
+        endif()
+    endforeach()
 endif()
 
 # To disable/enable Cpprestsdk usage in SmartMet build, do following:

@@ -1,7 +1,7 @@
 #include "PostGISDataSource.h"
 
 #ifdef UNIX
-#include <gdal/ogrsf_frmts.h>
+#include <ogrsf_frmts.h>
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/foreach.hpp>

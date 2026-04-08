@@ -19,6 +19,8 @@ if(UNIX)
         list(FILTER SOURCE_FILES EXCLUDE REGEX "NFmiGdalArea\\.cpp$")
         message(STATUS "Newbase: GDAL not found, excluding NFmiGdalArea.cpp")
         add_compile_definitions(DISABLE_GDAL)
+    else()
+        message(STATUS "Newbase: GDAL ${GDAL_VERSION} found at ${GDAL_INCLUDE_DIRS}")
     endif()
 endif()
 
@@ -27,11 +29,16 @@ add_library(
     ${SOURCE_FILES}
     )
 
-target_include_directories( 
+target_include_directories(
     ${PROJECT_NAME}
     PUBLIC ${PROJECT_SOURCE_DIR}/newbase
-    PUBLIC ${BOOST_INCLUDE_DIR} 
+    PUBLIC ${BOOST_INCLUDE_DIR}
     )
+
+if(GDAL_FOUND)
+    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GDAL_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} ${GDAL_LIBRARIES})
+endif()
 
 set(
     ${PROJECT_NAME}_INCLUDE_DIRS
