@@ -94,5 +94,52 @@ namespace CtrlView
     void DrawImageButton(const CRect &theAbsRect, Gdiplus::Bitmap *theButtonImage, Gdiplus::Graphics *theGdiPlusGraphics, Gdiplus::REAL theAlpha, bool isPrinting);
     void DrawBitmap(Gdiplus::Bitmap &theBitmap, const NFmiRect &theSourcePixels, const Gdiplus::RectF &theDestPixels, Gdiplus::REAL theAlpha, Gdiplus::Graphics *theGdiPlusGraphics, bool isPrinting, bool fDoNearestInterpolation);
 }
-#else  // UNIX - Windows-only header; Linux implementation will use Qt
+#else  // UNIX - stub implementations for compilation; real UI will use Qt
+#include "linux_compat.h"
+#include "gdiplus_stub.h"
+#include "NFmiColor.h"
+#include "NFmiRect.h"
+#include "NFmiPoint.h"
+#include <string>
+#include <vector>
+#include <list>
+#include <boost/shared_ptr.hpp>
+
+class NFmiToolBox;
+class NFmiCtrlView;
+class GdiPlusLineInfo;
+class NFmiDrawParam;
+
+class NFmiImageAttributes
+{
+public:
+    NFmiImageAttributes() = default;
+    NFmiImageAttributes(Gdiplus::REAL) {}
+    NFmiImageAttributes(COLORREF) {}
+};
+
+namespace CtrlView
+{
+    inline Gdiplus::Color NFmiColor2GdiplusColor(const NFmiColor&) { return {}; }
+    inline double CalcBrightningFactor(int, int, int) { return 0; }
+    inline NFmiColor ColorRef2Color(COLORREF) { return NFmiColor(0, 0, 0); }
+    inline COLORREF Color2ColorRef(const NFmiColor&) { return 0; }
+    inline std::wstring StringToWString(const std::string& s)
+    {
+        return std::wstring(s.begin(), s.end());
+    }
+    inline std::string WStringToString(const std::wstring& s)
+    {
+        return std::string(s.begin(), s.end());
+    }
+    inline const Gdiplus::Rect Relative2GdiplusRect(NFmiToolBox*, const NFmiRect&) { return {}; }
+    inline const Gdiplus::RectF Relative2GdiplusRectF(NFmiToolBox*, const NFmiRect&) { return {}; }
+    inline const Gdiplus::PointF Relative2GdiplusPoint(NFmiToolBox*, const NFmiPoint&) { return {}; }
+    inline const Gdiplus::Point Relative2GdiplusPointInt(NFmiToolBox*, const NFmiPoint&) { return {}; }
+    inline void SetGdiplusAlignment(FmiDirection, Gdiplus::StringFormat&) {}
+    inline void DrawLine(Gdiplus::Graphics&, int, int, int, int, const NFmiColor&, float, Gdiplus::DashStyle = Gdiplus::DashStyleSolid) {}
+    inline void DrawRect(Gdiplus::Graphics&, const Gdiplus::Rect&, const NFmiColor&, const NFmiColor&, bool, bool, float, Gdiplus::DashStyle = Gdiplus::DashStyleSolid) {}
+    inline void DrawSimpleText(Gdiplus::Graphics&, const NFmiColor&, float, const std::string&, const NFmiPoint&, const std::wstring&, FmiDirection, Gdiplus::FontStyle = Gdiplus::FontStyleRegular, const NFmiColor* = nullptr) {}
+    inline NFmiPoint RelativeSizeToPixelSize(const NFmiPoint& relativeSize, NFmiToolBox&) { return relativeSize; }
+}
 #endif // UNIX

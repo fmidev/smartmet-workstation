@@ -17,6 +17,8 @@
 
 #include <afx.h>
 #include <afxwin.h>         // MFC core and standard components
+#else
+#include "linux_compat.h"
 #endif // UNIX
 
 

@@ -2,9 +2,12 @@
 
 #include "NFmiDataMatrix.h"
 #include "boost/shared_ptr.hpp"
+#ifdef UNIX
+#include "NFmiRect.h"
+using CRect = NFmiRect;
+#endif
 
 class CDC;
-class CRect;
 class NFmiDrawParam;
 class NFmiIsoLineData;
 class CWnd;

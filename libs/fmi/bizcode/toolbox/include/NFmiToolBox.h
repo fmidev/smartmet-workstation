@@ -45,8 +45,8 @@ class NFmiColor;
 class NFmiString;
 class NFmiSymbolBulkDrawData;
 
-// Yksinkertainen pisteen kääntö origon suhteen funktio.
-// Kulma annetaan asteina. 0 astetta on pohjoisessa ja kulma kiertää myötäpäivään.
+// Yksinkertainen pisteen kï¿½ï¿½ntï¿½ origon suhteen funktio.
+// Kulma annetaan asteina. 0 astetta on pohjoisessa ja kulma kiertï¿½ï¿½ myï¿½tï¿½pï¿½ivï¿½ï¿½n.
 inline const NFmiPoint RotatePoint(const NFmiPoint &thePoint, double alfa)
 {
 	double alfaInRadians = alfa * 2*kPii/360.;
@@ -93,7 +93,7 @@ public:
 
   // muutos pikseli-maailmasta toolboxin suhteelliseen maailmaan
   NFmiPoint ToViewPoint(long xPix, long yPix);
-  // muutos toolboxin suhteellisesta maailmasta näytön pikseli-maailmaan
+  // muutos toolboxin suhteellisesta maailmasta nï¿½ytï¿½n pikseli-maailmaan
   NFmiPoint ToScreenPoint(double x, double y);
 
   NFmiRect ToFmiRect(const CRect & MacRect);
@@ -113,7 +113,7 @@ public:
   { return pDC; }
   void SetDC(CDC * pmyDC, bool fReCalcClientRect = true);
   void GetPrintInfo(CPrintInfo * pPrintInfo);
-  // Koska asetus metodi on nimetty GetPrintInfo-nimiseksi, laitoin tämän itse palautus metodin nimeksi tälläisen.
+  // Koska asetus metodi on nimetty GetPrintInfo-nimiseksi, laitoin tï¿½mï¿½n itse palautus metodin nimeksi tï¿½llï¿½isen.
   CPrintInfo* ReturnPrintInfo(void){ return pItsPrintInfo; }
 
   double MeasureText(const NFmiString& theText);
@@ -152,7 +152,7 @@ public:
   void UseClipping(bool newState) {fUseClipping = newState;}
   void SetUpClipping();
   void EndClipping(void);
-  void SetClientRect(const CRect &theClientRect){mClientRect = theClientRect;} // älä käytä tätä jos et tiedä mitä teet!
+  void SetClientRect(const CRect &theClientRect){mClientRect = theClientRect;} // ï¿½lï¿½ kï¿½ytï¿½ tï¿½tï¿½ jos et tiedï¿½ mitï¿½ teet!
   const CRect& GetClientRect(void){return mClientRect;}
   void DoSymbolBulkDraw(const NFmiSymbolBulkDrawData &sbdData, bool doStationPlotOnly);
   static std::pair<float, float> GetWsAndWdFromWindVector(float windVector);
@@ -197,7 +197,7 @@ private:
   CDC * pDC;
   CPen * pItsPen;
   CPrintInfo * pItsPrintInfo;
-  CRgn itsClipRegion; // käytetään clippauksen yhteydessä
+  CRgn itsClipRegion; // kï¿½ytetï¿½ï¿½n clippauksen yhteydessï¿½
 
   short itsXDirection;
   short itsYDirection;
@@ -234,14 +234,24 @@ public:
 };
 
 #else // (defined) UNIX
-// Tehdään unix dummy toteutu, että saadaan käännettyä ja linkattua helper ja muut
-// helperistä riippuvat kirjastot.
+// Tehdï¿½ï¿½n unix dummy toteutu, ettï¿½ saadaan kï¿½ï¿½nnettyï¿½ ja linkattua helper ja muut
+// helperistï¿½ riippuvat kirjastot.
 
 
 
 #include "NFmiGlobals.h"
 #include "NFmiRect.h"
 #include "NFmiDrawingEnvironment.h"
+#include <cmath>
+#include <list>
+
+inline const NFmiPoint RotatePoint(const NFmiPoint &thePoint, double alfa)
+{
+    double alfaInRadians = alfa * 2*kPii/360.;
+    double X = thePoint.X() * ::cos(alfaInRadians) - thePoint.Y() * ::sin(alfaInRadians);
+    double Y = thePoint.X() * ::sin(alfaInRadians) + thePoint.Y() * ::cos(alfaInRadians);
+    return NFmiPoint(X, Y);
+}
 
 enum FmiCtrlKeys
 {
@@ -268,19 +278,13 @@ class NFmiVoidPtrList;
 class NFmiView;
 class NFmiColor;
 class NFmiString;
+class NFmiSymbolBulkDrawData;
 
 // unix dummy esittelyt joillekin Windows jutuille
-typedef unsigned int UINT;
-typedef int COLORREF;
-typedef const char * LPCSTR;
-typedef const char * PCSTR;
-typedef LPCSTR PCTSTR, LPCTSTR, PCUTSTR, LPCUTSTR;
-typedef NFmiRect CRect;
+#include "linux_compat.h"
+using CRect = NFmiRect;
 class CView;
-class CPoint;
 class CPrintInfo;
-class CBitmap;
-class CDC;
 
 class NFmiToolBox
 {
@@ -321,11 +325,25 @@ public:
   void GetPrintInfo(CPrintInfo * pPrintInfo){}
 
   double MeasureText(const NFmiString & theText){ return 0;}
+  NFmiPoint MeasureTextCorrect(const NFmiText &){ return NFmiPoint(); }
+  CRect GetClientRect() const { return CRect(); }
+  void DrawPolyline(const NFmiPolyline*, const NFmiPoint&, const NFmiPoint&, double = 0) {}
 
   long HX(double sX) const { return 0L; }
   long HY(double sY) const { return 0L; }
+  double HXs(double sX) const { return 0.0; }
+  double HYs(double sY) const { return 0.0; }
   double SX(long hX) const { return 0; }
   double SY(long hY) const { return 0; }
+  double SXs(double hX) const { return 0.0; }
+  double SYs(double hY) const { return 0.0; }
+
+  const NFmiRect& RelativeClipRect(void) const { return itsRelativeClipRect_; }
+  void RelativeClipRect(const NFmiRect& theRect, bool newState = true) {}
+  bool UseClipping(void) const { return false; }
+  void UseClipping(bool newState) {}
+  void SetUpClipping() {}
+  void EndClipping(void) {}
 
   void SetTextAlignment(FmiDirection theAlignment){}
   FmiDirection GetTextAlignment(void);
@@ -338,7 +356,10 @@ public:
   void DrawDC(CDC * theDC, const NFmiRect & theRelativeSize, const NFmiRect & theRelativeSourceStart){}
 
   void DrawEllipse(const NFmiRect & theRelativeSize, NFmiDrawingEnvironment * theEnvi){}
+  bool DrawMultiPolygon(std::list<NFmiPolyline*> &thePolyLineList, NFmiDrawingEnvironment * theEnvi, const NFmiPoint &theOffSet){ return true; }
+  void DoSymbolBulkDraw(const NFmiSymbolBulkDrawData&, bool) {}
   bool DrawValueLineList(NFmiValueLineList * theLineList, NFmiDrawingEnvironment * theEnvi, const NFmiRect & theRelativeSize){ return true; }
+  static std::pair<float, float> GetWsAndWdFromWindVector(float windVector) { return {0.f, 0.f}; }
 
 
 protected:
@@ -356,6 +377,7 @@ protected:
   void DeSelectEnvironment (NFmiDrawingItem * fromFmiDrawingItem){}
 
 private:
+  NFmiRect itsRelativeClipRect_;
 /*
   CView * itsEnclosure;
   NFmiDrawingEnvironment * itsBaseEnvironment;
@@ -380,7 +402,13 @@ private:
 
 };
 
-
+// Stub for TurnClippingOffHelper on Linux (no-op since no GDI clipping)
+class TurnClippingOffHelper
+{
+public:
+    TurnClippingOffHelper(NFmiToolBox*) {}
+    ~TurnClippingOffHelper() {}
+};
 
 #endif // WIN32
 
