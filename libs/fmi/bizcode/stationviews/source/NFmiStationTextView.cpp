@@ -1,4 +1,4 @@
-//© Ilmatieteenlaitos/Marko
+//ï¿½ Ilmatieteenlaitos/Marko
 //  Original 24.09.1998
 //
 //
@@ -10,7 +10,7 @@
 #include "NFmiToolBox.h"
 #include "NFmiDrawParam.h"
 #include "CtrlViewDocumentInterface.h"
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
 
 
 NFmiStationTextView::NFmiStationTextView (int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea

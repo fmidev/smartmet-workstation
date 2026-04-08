@@ -13,7 +13,7 @@
 #include "CtrlViewFunctions.h"
 #include "CtrlViewTimeConsumptionReporter.h"
 
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
 
 using namespace std;
 
@@ -53,7 +53,7 @@ void NFmiTrajectoryView::Draw(NFmiToolBox *theGTB)
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
     if(!theGTB)
 		return;
-	itsToolBox = theGTB; // vähän arvelluttaa tämä, koska toolboxien pitäisi olla jo samoja
+	itsToolBox = theGTB; // vï¿½hï¿½n arvelluttaa tï¿½mï¿½, koska toolboxien pitï¿½isi olla jo samoja
 
 	CalcRects();
 	DrawBackground();
@@ -94,7 +94,7 @@ void NFmiTrajectoryView::DrawLegend(void)
 	itsToolBox->UseClipping(false);
 }
 
-static std::string GetModelLocationString(NFmiProducerSystem &theProdSystem, NFmiLocation &theLocation, const NFmiProducer &theProducer, const NFmiMetTime &theOriginTime)
+static std::string GetModelLocationString(NFmiProducerSystem &theProdSystem, const NFmiLocation &theLocation, const NFmiProducer &theProducer, const NFmiMetTime &theOriginTime)
 {
 	std::string name;
 	// etsi mallin nimi
@@ -215,8 +215,8 @@ void NFmiTrajectoryView::ChangePAxisValue(FmiDirection theMouseButton, bool uppe
 	else
 	{
 		// **** MSVC 7.1 BUGI ************
-		// Ilman tuota stringi viritystä ei Trajektori-näytön paineasteikon
-		// alapään säätö vasemmalla hiiren klikkauksella ei toimi release-versiona.
+		// Ilman tuota stringi viritystï¿½ ei Trajektori-nï¿½ytï¿½n paineasteikon
+		// alapï¿½ï¿½n sï¿½ï¿½tï¿½ vasemmalla hiiren klikkauksella ei toimi release-versiona.
 		// Debug-versio toimii ilmankin.
 		std::string bs;
 		bs += "bs";
@@ -232,7 +232,7 @@ void NFmiTrajectoryView::ChangePAxisValue(FmiDirection theMouseButton, bool uppe
 static double CalcSelectedPressure(double pressure, unsigned long theKey)
 {
 	double step = 25;
-	if(theKey & kCtrlKey) // tehdään yhden mb:n tarkkuudella pyöristys
+	if(theKey & kCtrlKey) // tehdï¿½ï¿½n yhden mb:n tarkkuudella pyï¿½ristys
 		step = 1;
 	double newValue = round((pressure / step)) * step;
 	if(newValue < 1)
@@ -315,8 +315,8 @@ NFmiRect NFmiTrajectoryView::CalcStartPressureLevelMarkerRect(void)
 NFmiRect NFmiTrajectoryView::CalcPressureScaleRect(void)
 {
 	NFmiRect axisRect(GetFrame());
-	double emptySpaceTop = itsToolBox->SY(3); // vähän tilaa jätetään ylös
-	double emptySpaceBottom = itsToolBox->SY(54); // pitää olla tilaa aika ikkunalle
+	double emptySpaceTop = itsToolBox->SY(3); // vï¿½hï¿½n tilaa jï¿½tetï¿½ï¿½n ylï¿½s
+	double emptySpaceBottom = itsToolBox->SY(54); // pitï¿½ï¿½ olla tilaa aika ikkunalle
 	axisRect.Top(axisRect.Top() + emptySpaceTop); // at the top there is also the time axis (in the future not!)
 	axisRect.Bottom(axisRect.Bottom() - emptySpaceBottom);
 	axisRect.Right(axisRect.Left() + itsToolBox->SX(static_cast<long>(itsPressureScaleFontSize * 4 * 0.62))); // 4 on neli merkkinen paine arvo esim 1000
@@ -331,7 +331,7 @@ NFmiRect NFmiTrajectoryView::CalcDataRect(void)
 	return rec;
 }
 
-// suoran kaksi pistettä on annettu ja x:n arvo, laske y:n arvo
+// suoran kaksi pistettï¿½ on annettu ja x:n arvo, laske y:n arvo
 static double LaskeYSuoralla(double x, double x1, double x2, double y1, double y2)
 {
 	double k = (y2-y1)/(x2-x1);
@@ -348,12 +348,12 @@ static int CalcStretchTimeControlViewByPixels(const NFmiRect &theDataRect, NFmiT
 }
 
 // Aikakontrolli-ikkunan varaama alue.
-// Pitää laskea vasta kun itsDataRect on laskettu!!
+// Pitï¿½ï¿½ laskea vasta kun itsDataRect on laskettu!!
 NFmiRect NFmiTrajectoryView::CalcTimeControlViewRect(void)
 {
 	int usedStretchFactor = CalcStretchTimeControlViewByPixels(itsDataRect, itsToolBox);
-	double spaceX = itsToolBox->SX(usedStretchFactor); // ikkunaa pitää leventää hieman datarectiin nähden, koska itse aika-akseli ei men reunoille asti
-	double spaceY = itsToolBox->SY(4); // pieni väli datalaatikon ja aikaikkunan välillä
+	double spaceX = itsToolBox->SX(usedStretchFactor); // ikkunaa pitï¿½ï¿½ leventï¿½ï¿½ hieman datarectiin nï¿½hden, koska itse aika-akseli ei men reunoille asti
+	double spaceY = itsToolBox->SY(4); // pieni vï¿½li datalaatikon ja aikaikkunan vï¿½lillï¿½
 	NFmiRect frame(GetFrame());
 	NFmiRect resultRect(itsDataRect.Left() - spaceX, itsDataRect.Bottom() + spaceY, itsDataRect.Right() + spaceX, frame.Bottom());
 	return resultRect;
@@ -460,7 +460,7 @@ double NFmiTrajectoryView::TimeStepWidth(double timeStepInMinutes)
 
 double NFmiTrajectoryView::y2p(double y)
 {
-	const double errLimit = 0.001; // onko y framen sisällä pitää sallia pieni virhe raja
+	const double errLimit = 0.001; // onko y framen sisï¿½llï¿½ pitï¿½ï¿½ sallia pieni virhe raja
 	double p = kFloatMissing;
 	if(y <= itsDataRect.Bottom() + errLimit && y >= itsDataRect.Top() - errLimit)
 	{
@@ -507,7 +507,7 @@ void NFmiTrajectoryView::DrawPressureScale(void)
 				pressureOnBorder = true;
 			NFmiPoint p1(itsPressureScaleFrame.Right(), y);
 			p1.X(p1.X() - tickMarkLength);
-			NFmiPoint p2(pressureOnBorder ? itsDataRect.Left() : itsDataRect.Right(), y); // jos viiva on datalaatikon ala/ylä rajalla, piirretään vain tick mark, muuten koko ruudun ylittävä apuviiva
+			NFmiPoint p2(pressureOnBorder ? itsDataRect.Left() : itsDataRect.Right(), y); // jos viiva on datalaatikon ala/ylï¿½ rajalla, piirretï¿½ï¿½n vain tick mark, muuten koko ruudun ylittï¿½vï¿½ apuviiva
 			NFmiLine line1(p1, p2, 0, &envi);
 			itsToolBox->Convert(&line1);
 
@@ -525,30 +525,30 @@ void NFmiTrajectoryView::DrawPressureScale(void)
 void NFmiTrajectoryView::DrawTrajectories(void)
 {
 	itsToolBox->RelativeClipRect(itsDataRect, true);
-	// piirretään trajektorit kartalle
+	// piirretï¿½ï¿½n trajektorit kartalle
 	int index = 0;
     itsCtrlViewDocumentInterface->TrajectorySystem()->MakeSureThatTrajectoriesAreCalculated(); // optimointi koodia viewmakrojen takia....
 	const std::vector<boost::shared_ptr<NFmiTrajectory> >& trajectories = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectories();
 	std::vector<boost::shared_ptr<NFmiTrajectory> >::const_iterator it = trajectories.begin();
 	for( ; it != trajectories.end() ; ++it)
 	{
-		DrawTrajectory(*(*it).get(), itsCtrlViewDocumentInterface->GeneralColor(index)); // tässä vaiheessa otetaan vielä luotauksista väritykset
+		DrawTrajectory(*(*it).get(), itsCtrlViewDocumentInterface->GeneralColor(index)); // tï¿½ssï¿½ vaiheessa otetaan vielï¿½ luotauksista vï¿½ritykset
 		index++;
 	}
 	itsToolBox->UseClipping(false);
 }
 
-// väri otetaan väliaikaisesti ulkoa luotaus systeemistä
+// vï¿½ri otetaan vï¿½liaikaisesti ulkoa luotaus systeemistï¿½
 void NFmiTrajectoryView::DrawTrajectory(const NFmiTrajectory &theTrajectory, const NFmiColor &theColor)
 {
 	NFmiDrawingEnvironment envi;
 
-	// piirretään ensin mahdollinen pluumi
+	// piirretï¿½ï¿½n ensin mahdollinen pluumi
 	if(theTrajectory.PlumesUsed())
 	{
 		NFmiColor grayColor(0.9f, 0.9f, 0.9f);
 		NFmiColor fadeColor(theColor);
-		fadeColor.Mix(grayColor, 0.62f);  // haalennetaan väriä hiukan
+		fadeColor.Mix(grayColor, 0.62f);  // haalennetaan vï¿½riï¿½ hiukan
 		envi.SetFrameColor(fadeColor);
 		envi.SetPenSize(NFmiPoint(1, 1));
 
@@ -559,7 +559,7 @@ void NFmiTrajectoryView::DrawTrajectory(const NFmiTrajectory &theTrajectory, con
 	}
 
 
-	// piirretään sitten pää-trajektori
+	// piirretï¿½ï¿½n sitten pï¿½ï¿½-trajektori
 	envi.SetFrameColor(theColor);
 	envi.SetPenSize(NFmiPoint(3,3));
 	DrawSingleTrajector(theTrajectory.MainTrajector(), envi, theTrajectory.TimeStepInMinutes(), 7, 2, theTrajectory.Direction());
@@ -586,8 +586,8 @@ void NFmiTrajectoryView::DrawSingleTrajector(const NFmiSingleTrajector &theSingl
 	double pressure1 = theSingleTrajector.StartPressureLevel();
 	double pressure2 = kFloatMissing;
 	NFmiPoint p2;
-	NFmiPoint mapTimeP(kFloatMissing, kFloatMissing); // haetaan tähän se piste, missä trajektori oli menossa kun tämän kartan aika oli
-	NFmiMetTime currentTime(theSingleTrajector.StartTime()); // pidetään laskua currentin pisteen ajasta
+	NFmiPoint mapTimeP(kFloatMissing, kFloatMissing); // haetaan tï¿½hï¿½n se piste, missï¿½ trajektori oli menossa kun tï¿½mï¿½n kartan aika oli
+	NFmiMetTime currentTime(theSingleTrajector.StartTime()); // pidetï¿½ï¿½n laskua currentin pisteen ajasta
 	const std::vector<float> &pressures = theSingleTrajector.Pressures();
 	std::vector<float>::const_iterator it = pressures.begin();
 	bool showTrajectoryArrows = itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoryArrows();
@@ -601,7 +601,7 @@ void NFmiTrajectoryView::DrawSingleTrajector(const NFmiSingleTrajector &theSingl
 		NFmiPoint p1(x, y);
 		trajectorPolyLine.AddPoint(p1);
 		std::vector<float>::const_iterator endIt = pressures.end();
-		++it; // pitää juoksuttaa yhden pykälän verran eteenpäin
+		++it; // pitï¿½ï¿½ juoksuttaa yhden pykï¿½lï¿½n verran eteenpï¿½in
 		for( ; it != endIt; ++it )
 		{
 			x += stepX;
@@ -616,7 +616,7 @@ void NFmiTrajectoryView::DrawSingleTrajector(const NFmiSingleTrajector &theSingl
 
 			currentTime.ChangeByMinutes(forwardDir ? theTimeStepInMinutes : -theTimeStepInMinutes);
 
-			if(showTrajectoryArrows) // HUOM! looppia pitää kuitenkin käydä läpi vaikka ei piirretä, jos markerit piirretään
+			if(showTrajectoryArrows) // HUOM! looppia pitï¿½ï¿½ kuitenkin kï¿½ydï¿½ lï¿½pi vaikka ei piirretï¿½, jos markerit piirretï¿½ï¿½n
 			{
 				trajectorPolyLine.AddPoint(p2);
 			}
@@ -642,13 +642,13 @@ void NFmiTrajectoryView::DrawSingleTrajector(const NFmiSingleTrajector &theSingl
 				double y2 = p2y(pressures[pressures.size()-2]);
 				double deltaY = y - y2;
 				double vdirRad = ::atan2(deltaY, stepX);
-				double vdir1 = vdirRad * 360 / (2. * kPii); // ja siitä suunta viimeiseen paikkaan
+				double vdir1 = vdirRad * 360 / (2. * kPii); // ja siitï¿½ suunta viimeiseen paikkaan
 				vdir1 += 90;
 				if(forwardDir)
 					vdir1 = ::fmod(vdir1, 360);
 				else
-					vdir1 = ::fmod(vdir1+180, 360); // käännetään nuolen suunta 180 astetta jos takaperin trajektori
-				// piirrä etenemis nuolen kärki trajektorille
+					vdir1 = ::fmod(vdir1+180, 360); // kï¿½ï¿½nnetï¿½ï¿½n nuolen suunta 180 astetta jos takaperin trajektori
+				// piirrï¿½ etenemis nuolen kï¿½rki trajektorille
 				NFmiPolyline arrowPolyLine(itsRect, 0, &theEnvi);
 				arrowPolyLine.AddPoint(::RotatePoint(NFmiPoint(-0.7, 2), vdir1));
 				arrowPolyLine.AddPoint(::RotatePoint(NFmiPoint(0, 0), vdir1));

@@ -66,7 +66,7 @@ class NFmiSortedPtrList : public NFmiPtrList<Type>
         if ((theIter2.Current() < theIter1.Current() && fAscendingOrder) ||
             (theIter1.Current() < theIter2.Current() && !fAscendingOrder))
         {
-          Swap(theIter1, theIter2);
+          this->Swap(theIter1, theIter2);
         }
       }
     }

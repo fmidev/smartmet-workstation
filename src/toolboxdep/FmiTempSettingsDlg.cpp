@@ -10,7 +10,7 @@
 #include "FmiWin32Helpers.h"
 #include "FmiTempDlg.h"
 #include "CtrlViewWin32Functions.h"
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
 #include "CtrlViewGdiPlusFunctions.h"
 
 
@@ -181,7 +181,7 @@ static std::string MakeValueStr(const std::vector<double> &theValues)
 	for(size_t i = 0; i < ssize; i++)
 	{
 		str += NFmiStringTools::Convert<double>(theValues[i]);
-		if(i<ssize-1) // viimeisen perään ei laiteta pilkkua
+		if(i<ssize-1) // viimeisen perï¿½ï¿½n ei laiteta pilkkua
 			str += ",";
 	}
 	return str;
@@ -204,13 +204,13 @@ BOOL CFmiTempSettingsDlg::OnInitDialog()
 	itsTDegreeSlider.SetPos(static_cast<int>(itsTempSystem->SkewTDegree()));
 
 	double oldDegreeValue = itsTempSystem->SkewTDegree();
-	itsTempSystem->SkewTDegree(-1); // kikka, pitää asettaa negatiivinen luku, jotta saadaan sitä vastaavat alku ja loppu arvot ulos
+	itsTempSystem->SkewTDegree(-1); // kikka, pitï¿½ï¿½ asettaa negatiivinen luku, jotta saadaan sitï¿½ vastaavat alku ja loppu arvot ulos
 	itsTStart1 = itsTempSystem->TAxisStart();
 	itsTEnd1 = itsTempSystem->TAxisEnd();
-	itsTempSystem->SkewTDegree(0); // kikka, pitää asettaa negatiivinen luku, jotta saadaan sitä vastaavat alku ja loppu arvot ulos
+	itsTempSystem->SkewTDegree(0); // kikka, pitï¿½ï¿½ asettaa negatiivinen luku, jotta saadaan sitï¿½ vastaavat alku ja loppu arvot ulos
 	itsTStart2 = itsTempSystem->TAxisStart();
 	itsTEnd2 = itsTempSystem->TAxisEnd();
-	itsTempSystem->SkewTDegree(1); // kikka, pitää asettaa negatiivinen luku, jotta saadaan sitä vastaavat alku ja loppu arvot ulos
+	itsTempSystem->SkewTDegree(1); // kikka, pitï¿½ï¿½ asettaa negatiivinen luku, jotta saadaan sitï¿½ vastaavat alku ja loppu arvot ulos
 	itsTStart3 = itsTempSystem->TAxisStart();
 	itsTEnd3 = itsTempSystem->TAxisEnd();
 	itsTempSystem->SkewTDegree(oldDegreeValue); // lopuksi vanha arvo takaisin
@@ -245,7 +245,7 @@ BOOL CFmiTempSettingsDlg::OnInitDialog()
 	itsResetScalesSkewTStartT = itsTempSystem->ResetScalesSkewTStartT();
 	itsResetScalesSkewTEndT = itsTempSystem->ResetScalesSkewTEndT();
 
-	// huom indeksi SoundingColor-metodiin yhden pienempi kuin muuttuja nimissä!!
+	// huom indeksi SoundingColor-metodiin yhden pienempi kuin muuttuja nimissï¿½!!
 	CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsTempSystem->SoundingColor(0), itsColorRef1, &itsColorBitmap1, itsColorRect1, itsColorButtomTemp1));
     CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsTempSystem->SoundingColor(1), itsColorRef2, &itsColorBitmap2, itsColorRect2, itsColorButtomTemp2));
     CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsTempSystem->SoundingColor(2), itsColorRef3, &itsColorBitmap3, itsColorRect3, itsColorButtomTemp3));
@@ -273,7 +273,7 @@ void CFmiTempSettingsDlg::UpdateDegreeStr(void)
 	{
 		UpdateData(TRUE);
         CString strU_ = CA2T(NFmiStringTools::Convert<int>(itsTDegreeSlider.GetPos()).c_str());
-        strU_ += _TEXT("º");
+        strU_ += _TEXT("ï¿½");
         win->SetWindowText(strU_);
 		UpdateData(FALSE);
 	}
@@ -297,16 +297,16 @@ void CFmiTempSettingsDlg::OnOK()
 void CFmiTempSettingsDlg::GetSettingsFromDialog()
 {
 	UpdateData(TRUE);
-	// Kopioidaan mahd. muutokset takaisin alkuperäisiin
+	// Kopioidaan mahd. muutokset takaisin alkuperï¿½isiin
 	itsTempSystem->SkewTDegree(itsTDegreeSlider.GetPos());
 	double oldDegreeValue = itsTempSystem->SkewTDegree();
-	itsTempSystem->SkewTDegree(-1); // kikka, pitää asettaa negatiivinen luku, jotta saadaan sitä vastaavat alku ja loppu arvot ulos
+	itsTempSystem->SkewTDegree(-1); // kikka, pitï¿½ï¿½ asettaa negatiivinen luku, jotta saadaan sitï¿½ vastaavat alku ja loppu arvot ulos
 	itsTempSystem->TAxisStart(itsTStart1);
 	itsTempSystem->TAxisEnd(itsTEnd1);
-	itsTempSystem->SkewTDegree(0); // kikka, pitää asettaa negatiivinen luku, jotta saadaan sitä vastaavat alku ja loppu arvot ulos
+	itsTempSystem->SkewTDegree(0); // kikka, pitï¿½ï¿½ asettaa negatiivinen luku, jotta saadaan sitï¿½ vastaavat alku ja loppu arvot ulos
 	itsTempSystem->TAxisStart(itsTStart2);
 	itsTempSystem->TAxisEnd(itsTEnd2);
-	itsTempSystem->SkewTDegree(1); // kikka, pitää asettaa negatiivinen luku, jotta saadaan sitä vastaavat alku ja loppu arvot ulos
+	itsTempSystem->SkewTDegree(1); // kikka, pitï¿½ï¿½ asettaa negatiivinen luku, jotta saadaan sitï¿½ vastaavat alku ja loppu arvot ulos
 	itsTempSystem->TAxisStart(itsTStart3);
 	itsTempSystem->TAxisEnd(itsTEnd3);
 	itsTempSystem->SkewTDegree(oldDegreeValue); // lopuksi vanha arvo takaisin
@@ -352,7 +352,7 @@ void CFmiTempSettingsDlg::GetSettingsFromDialog()
 	itsTempSystem->ResetScalesSkewTStartT(itsResetScalesSkewTStartT);
 	itsTempSystem->ResetScalesSkewTEndT(itsResetScalesSkewTEndT);
 
-	// huom indeksi SoundingColor-metodiin yhden pienempi kuin muuttuja nimissä!!
+	// huom indeksi SoundingColor-metodiin yhden pienempi kuin muuttuja nimissï¿½!!
 	itsTempSystem->SoundingColor(0, ColorRef2Color(itsColorRef1));
 	itsTempSystem->SoundingColor(1, ColorRef2Color(itsColorRef2));
 	itsTempSystem->SoundingColor(2, ColorRef2Color(itsColorRef3));
@@ -456,26 +456,26 @@ void CFmiTempSettingsDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScroll
 
 void CFmiTempSettingsDlg::OnBnClickedButtonSetLineSettingsT()
 {
-	// label info on feikki, koska sitä ei voi kuitenkaan muokata
+	// label info on feikki, koska sitï¿½ ei voi kuitenkaan muokata
     DoLineSettingDialog(IDC_STATIC_SAMPLE_T, CString(CA2T(::GetDictionaryString("TempViewSettingDlgHelpLineTTitleStr").c_str())), false, false, &(itsTempSystem->TemperatureLineInfo()), &(itsTempSystem->PressureLabelInfo()));
 }
 
 void CFmiTempSettingsDlg::OnBnClickedButtonSetLineSettingsTd()
 {
-	// labelInfo on feikki, koska sitä ei voi kuitenkaan muokata
+	// labelInfo on feikki, koska sitï¿½ ei voi kuitenkaan muokata
     DoLineSettingDialog(IDC_STATIC_SAMPLE_TD, CString(CA2T(::GetDictionaryString("TempViewSettingDlgHelpLineTdTitleStr").c_str())), false, false, &(itsTempSystem->DewPointLineInfo()), &(itsTempSystem->PressureLabelInfo()));
 }
 
 void CFmiTempSettingsDlg::OnBnClickedButtonSetLineSettingsZ()
 {
-	// lineInfo on feikki, koska sitä ei voi kuitenkaan muokata
+	// lineInfo on feikki, koska sitï¿½ ei voi kuitenkaan muokata
 	// samoin id resurssi 0 on feikki
     DoLineSettingDialog(0, CString(CA2T(::GetDictionaryString("TempViewSettingDlgHelpLineZTitleStr").c_str())), false, true, &(itsTempSystem->DewPointLineInfo()), &(itsTempSystem->HeightValueLabelInfo()));
 }
 
 void CFmiTempSettingsDlg::OnBnClickedButtonSetHelpLineSettingsWindModificationArea()
 {
-	// labelInfo on feikki, koska sitä ei voi kuitenkaan muokata
+	// labelInfo on feikki, koska sitï¿½ ei voi kuitenkaan muokata
     DoLineSettingDialog(IDC_STATIC_SAMPLE_HELP_WIND_MODIFICATION_AREA, CString(CA2T(::GetDictionaryString("TempViewSettingDlgHelpLineWindModificationAreaTitleStr").c_str())), true, false, &(itsTempSystem->WindModificationAreaLineInfo()), &(itsTempSystem->PressureLabelInfo()));
 }
 
@@ -560,9 +560,9 @@ void CFmiTempSettingsDlg::DrawHelperLineSampleImages(CDC *dc, int imageHolderRes
 	{
 		CPen myPen;
 
-		// GDI ei osaa piirtää yhtä pikseliä paksumpia erikois viivoja (eli type muu kuin yhtenäinen
-		// joten jouduin virittämään vähän piirtoa ja näissä demo kuvissa pitää kanssa piirtää feikaten millaiset
-		// viivat oikeasti piirtyvät luotaus kuviin)
+		// GDI ei osaa piirtï¿½ï¿½ yhtï¿½ pikseliï¿½ paksumpia erikois viivoja (eli type muu kuin yhtenï¿½inen
+		// joten jouduin virittï¿½mï¿½ï¿½n vï¿½hï¿½n piirtoa ja nï¿½issï¿½ demo kuvissa pitï¿½ï¿½ kanssa piirtï¿½ï¿½ feikaten millaiset
+		// viivat oikeasti piirtyvï¿½t luotaus kuviin)
 		bool drawSpecialLine = (theLineInfo->LineType() != 0) && (theLineInfo->Thickness() > 1);
 		if(drawSpecialLine)
 			myPen.CreatePen(theLineInfo->LineType(), 1, CtrlView::Color2ColorRef(theLineInfo->Color()));
@@ -592,8 +592,8 @@ void CFmiTempSettingsDlg::DrawHelperLineSampleImages(CDC *dc, int imageHolderRes
 			dc->LineTo(winRect.right - 2, h);
 		}
 
-		dc->SelectObject(oldPen); // laitetaan vanha kynä takaisin
-		myPen.DeleteObject(); // resurssit pitää vapauttaa vielä
+		dc->SelectObject(oldPen); // laitetaan vanha kynï¿½ takaisin
+		myPen.DeleteObject(); // resurssit pitï¿½ï¿½ vapauttaa vielï¿½
 
 		if(theLabelInfo)
 		{
@@ -605,7 +605,7 @@ void CFmiTempSettingsDlg::DrawHelperLineSampleImages(CDC *dc, int imageHolderRes
 		myPen2.CreatePen(0, 2, RGB(255, 0, 0));
 		oldPen = dc->SelectObject(&myPen2);
 		if(!theLineInfo->DrawLine())
-		{ // vedetään ruksi koko jutun päälle, jos apu viivaa ei piirretä
+		{ // vedetï¿½ï¿½n ruksi koko jutun pï¿½ï¿½lle, jos apu viivaa ei piirretï¿½
 			dc->MoveTo(winRect.left, winRect.bottom);
 			dc->LineTo(winRect.right, winRect.top);
 			dc->MoveTo(winRect.left, winRect.top);
@@ -613,20 +613,20 @@ void CFmiTempSettingsDlg::DrawHelperLineSampleImages(CDC *dc, int imageHolderRes
 
 		}
 		else if(theLabelInfo && theLabelInfo->DrawLabelText() == false)
-		{ // tällöin piirretään ruksi vain demo labelin päälle, että sitä ei piirretä
+		{ // tï¿½llï¿½in piirretï¿½ï¿½n ruksi vain demo labelin pï¿½ï¿½lle, ettï¿½ sitï¿½ ei piirretï¿½
 			dc->MoveTo(winRect.left + 35, winRect.bottom - 2);
 			dc->LineTo(winRect.right - 5, winRect.top + 10);
 			dc->MoveTo(winRect.left + 35, winRect.top + 10);
 			dc->LineTo(winRect.right - 5, winRect.bottom - 2);
 		}
-		dc->SelectObject(oldPen); // laitetaan vanha kynä takaisin
+		dc->SelectObject(oldPen); // laitetaan vanha kynï¿½ takaisin
 		myPen2.DeleteObject();
 	}
 }
 
-// Tämä funktio alustaa kaikki dialogin tekstit editoriin valitulla kielellä.
-// Tämä on ikävä kyllä tehtävä erikseen dialogin muokkaus työkalusta, eli
-// tekijän pitää lisätä erikseen tänne kaikki dialogin osat, joihin
+// Tï¿½mï¿½ funktio alustaa kaikki dialogin tekstit editoriin valitulla kielellï¿½.
+// Tï¿½mï¿½ on ikï¿½vï¿½ kyllï¿½ tehtï¿½vï¿½ erikseen dialogin muokkaus tyï¿½kalusta, eli
+// tekijï¿½n pitï¿½ï¿½ lisï¿½tï¿½ erikseen tï¿½nne kaikki dialogin osat, joihin
 // kieli valinta voi vaikuttaa.
 void CFmiTempSettingsDlg::InitDialogTexts(void)
 {
@@ -701,7 +701,7 @@ void CFmiTempSettingsDlg::InitDialogTexts(void)
 
 void CFmiTempSettingsDlg::OnBnClickedButtonSetHelpLineSettingsWs()
 {
-    // labelInfo on feikki, koska sitä ei voi kuitenkaan muokata
+    // labelInfo on feikki, koska sitï¿½ ei voi kuitenkaan muokata
     NFmiTempLabelInfo *dummyLabelInfo = &itsTempSystem->PressureLabelInfo();
     DoLineSettingDialog(IDC_STATIC_SAMPLE_HELP_WS, CString(CA2T(::GetDictionaryString("WS line settings").c_str())), false, false, &(itsTempSystem->WSLineInfo()), dummyLabelInfo);
 }
@@ -709,7 +709,7 @@ void CFmiTempSettingsDlg::OnBnClickedButtonSetHelpLineSettingsWs()
 
 void CFmiTempSettingsDlg::OnBnClickedButtonSetHelpLineSettingsN()
 {
-    // labelInfo on feikki, koska sitä ei voi kuitenkaan muokata
+    // labelInfo on feikki, koska sitï¿½ ei voi kuitenkaan muokata
     NFmiTempLabelInfo *dummyLabelInfo = &itsTempSystem->PressureLabelInfo();
     DoLineSettingDialog(IDC_STATIC_SAMPLE_HELP_N, CString(CA2T(::GetDictionaryString("N line settings").c_str())), false, false, &(itsTempSystem->NLineInfo()), dummyLabelInfo);
 }
@@ -717,13 +717,13 @@ void CFmiTempSettingsDlg::OnBnClickedButtonSetHelpLineSettingsN()
 
 void CFmiTempSettingsDlg::OnBnClickedButtonSetHelpLineSettingsRh()
 {
-    // labelInfo on feikki, koska sitä ei voi kuitenkaan muokata
+    // labelInfo on feikki, koska sitï¿½ ei voi kuitenkaan muokata
     NFmiTempLabelInfo *dummyLabelInfo = &itsTempSystem->PressureLabelInfo();
     DoLineSettingDialog(IDC_STATIC_SAMPLE_HELP_RH, CString(CA2T(::GetDictionaryString("RH line settings").c_str())), false, false, &(itsTempSystem->RHLineInfo()), dummyLabelInfo);
 }
 
 
-// HUOM! En saanut luotausnäytön ruudunpäivitystä toimimaan, joten disabloin Refresh -nappulan ja laitoin sen näkymättömäksi.
+// HUOM! En saanut luotausnï¿½ytï¿½n ruudunpï¿½ivitystï¿½ toimimaan, joten disabloin Refresh -nappulan ja laitoin sen nï¿½kymï¿½ttï¿½mï¿½ksi.
 void CFmiTempSettingsDlg::OnBnClickedButtonRefrashSoundingView()
 {
     fRefreshPressed = true;

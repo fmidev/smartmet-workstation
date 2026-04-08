@@ -6,7 +6,7 @@
 
 #include "ToolMasterColorCube.h"
 
-#include <agx\agx.h>
+#include <agx/agx.h>
 
 namespace
 {
@@ -14,12 +14,12 @@ namespace
     const int gColorTableGreenSize = 8;
     const int gColorTableBlueSize = 8;
 
-    // tämä toolmasterin colortable on varattu editorin vakio käyttöön johon on varattu 8x8x8 väri kuutio
+    // tï¿½mï¿½ toolmasterin colortable on varattu editorin vakio kï¿½yttï¿½ï¿½n johon on varattu 8x8x8 vï¿½ri kuutio
     const int gUsedDefaultToolMasterColorTableIndex = 2;
-    // eli 3. väri on läpinäkyvä väri kuutiossa on väri COLORREF muodossa ja sen vastaava indeksi toolmaster tauluun
+    // eli 3. vï¿½ri on lï¿½pinï¿½kyvï¿½ vï¿½ri kuutiossa on vï¿½ri COLORREF muodossa ja sen vastaava indeksi toolmaster tauluun
     //static std::pair<int, COLORREF> gUsedColorsCube[gColorTableRedSize][gColorTableGreenSize][gColorTableBlueSize];
     const int gUsedDefaultToolMasterColorTableHollowColorIndex = 2;
-    // Tehdään alkuun kahden siirtymä fore- ja background colorien takia ja + 1 hollow color
+    // Tehdï¿½ï¿½n alkuun kahden siirtymï¿½ fore- ja background colorien takia ja + 1 hollow color
     const int gUsedDefaultToolMasterColorTableIndexStart = gUsedDefaultToolMasterColorTableHollowColorIndex + 1;
 
     Matrix3D<std::pair<int, COLORREF> > gUsedColorsCube(gColorTableRedSize, gColorTableGreenSize, gColorTableBlueSize);
@@ -84,7 +84,7 @@ namespace ToolMasterColorCube
 
     void SetupTransparentColor(bool setup1, bool setup2, bool setup3)
     {
-        // määritetään 3. väri läpinäkyväksi (hollow)
+        // mï¿½ï¿½ritetï¿½ï¿½n 3. vï¿½ri lï¿½pinï¿½kyvï¿½ksi (hollow)
         int hollowColorIndex = gUsedDefaultToolMasterColorTableHollowColorIndex;
         float rgb[3], dummy[5];
         rgb[0] = 255;
@@ -161,7 +161,7 @@ namespace ToolMasterColorCube
         }
     }
 
-    // yhdistä nämä RgbToColorIndex funktiot käyttämään samaa runkoa konversioiden avulla
+    // yhdistï¿½ nï¿½mï¿½ RgbToColorIndex funktiot kï¿½yttï¿½mï¿½ï¿½n samaa runkoa konversioiden avulla
 
     int RgbToColorIndex(float RGBcolors[3])
     {
@@ -196,7 +196,7 @@ namespace ToolMasterColorCube
     NFmiColor ColorIndexToRgb(int theColorIndex)
     {
         if(theColorIndex < gUsedDefaultToolMasterColorTableIndexStart)
-            return NFmiColor(0, 0, 0, 1); // en jaksa palauttaa foreground, background ja hollow värejä
+            return NFmiColor(0, 0, 0, 1); // en jaksa palauttaa foreground, background ja hollow vï¿½rejï¿½
 
         theColorIndex -= gUsedDefaultToolMasterColorTableIndexStart;
         float blue = (theColorIndex % gColorTableBlueSize) / (gColorTableBlueSize - 1.f);

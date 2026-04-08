@@ -8,7 +8,7 @@
 
 #include "NFmiMetTime.h"
 
-typedef std::chrono::time_point<std::chrono::steady_clock> profilePoint;
+typedef std::chrono::time_point<std::chrono::high_resolution_clock> profilePoint;
 
 class NFmiAnimationData;
 

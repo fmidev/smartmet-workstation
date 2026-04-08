@@ -145,7 +145,7 @@ void NFmiSmartToolCalculation::SetupSpecialMacroParamCalculations(
 //#define LOG_ALL_CALCULATIONS_VERY_HEAVY_AND_SLOW 1
 
 #ifdef LOG_ALL_CALCULATIONS_VERY_HEAVY_AND_SLOW
-#include <catlog\catlog.h>
+#include <catlog/catlog.h>
 
 static std::string MakeDebugInfoIndexString(boost::shared_ptr<NFmiFastQueryInfo> &resultInfo,
                                             const NFmiCalculationParams &theCalculationParams)

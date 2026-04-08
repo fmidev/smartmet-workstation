@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 class NFmiStationViewHandler;
 class NFmiArea;
 class GdiPlusLineInfo;

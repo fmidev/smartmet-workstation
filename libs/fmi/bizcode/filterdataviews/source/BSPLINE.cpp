@@ -8,7 +8,7 @@
 
 **********************************************************************/
 
-#include "bspline.h"
+#include "BSPLINE.h"
 
 void compute_intervals(int *u, int n, int t);
 double blend(int k, int t, int *u, double v);

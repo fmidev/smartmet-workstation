@@ -7,7 +7,7 @@
 #include "CtrlViewDocumentInterface.h"
 #include "GraphicalInfo.h"
 #include "NFmiToolBox.h"
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
 
 NFmiStationWindBarbView::NFmiStationWindBarbView
 								 (int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
@@ -48,9 +48,9 @@ bool NFmiStationWindBarbView::PrepareForStationDraw(void)
 	{
 		fUseMacroParamSpecialCalculations = true;
 		bool dummyBoolNotUsed = false;
-		CalcViewFloatValueMatrix(itsMacroParamSpecialCalculationsValues, 0, 0, 0, 0, dummyBoolNotUsed); // datahila pitää laskea jo tässä
-		status = true; // macroParam tapauksessa tämä menee false:ksi (NFmiStationView::PrepareForStationDraw),
-						// koska itsInfo:n aika-ayateemi rakennetaan vasta CalcViewFloatValueMatrix-metodin kutsun yhteydessä
+		CalcViewFloatValueMatrix(itsMacroParamSpecialCalculationsValues, 0, 0, 0, 0, dummyBoolNotUsed); // datahila pitï¿½ï¿½ laskea jo tï¿½ssï¿½
+		status = true; // macroParam tapauksessa tï¿½mï¿½ menee false:ksi (NFmiStationView::PrepareForStationDraw),
+						// koska itsInfo:n aika-ayateemi rakennetaan vasta CalcViewFloatValueMatrix-metodin kutsun yhteydessï¿½
 	}
 	return status;
 }
@@ -66,7 +66,7 @@ float NFmiStationWindBarbView::ViewFloatValue(bool doTooltipValue)
 		std::tie(ws, wd) = NFmiToolBox::GetWsAndWdFromWindVector(windVector);
 		if(!doTooltipValue)
 		{
-			// Tehdään pohjoissuunta korjaus tuuliviirin piirtoon, paitsi ei tooltip arvoa laskettaessa
+			// Tehdï¿½ï¿½n pohjoissuunta korjaus tuuliviirin piirtoon, paitsi ei tooltip arvoa laskettaessa
 			NFmiPoint latlon = CurrentLatLon();
 			NFmiAngle ang(itsArea->TrueNorthAzimuth(latlon));
 			wd += static_cast<float>(ang.Value());
@@ -76,14 +76,14 @@ float NFmiStationWindBarbView::ViewFloatValue(bool doTooltipValue)
 }
 
 // Huono nimi virtuaali metodilla GetSpaceOutFontFactor,
-// tuuli vektori ei ole fontti pohjainen symboli ja metodin pitäisi olla joku SymbolSizeFactor
+// tuuli vektori ei ole fontti pohjainen symboli ja metodin pitï¿½isi olla joku SymbolSizeFactor
 NFmiPoint NFmiStationWindBarbView::GetSpaceOutFontFactor(void)
 {
 	return NFmiPoint(2, 1);
 }
 
-// tämäkin on huono viritys, mutta harvennuskoodi ottaa tässä vaiheessa fontti koon huomioon kun
-// se laskee miten harvennetaan hila dataa. Nyt pitää siis laskea fontti koko täälläkin, vaikka
+// tï¿½mï¿½kin on huono viritys, mutta harvennuskoodi ottaa tï¿½ssï¿½ vaiheessa fontti koon huomioon kun
+// se laskee miten harvennetaan hila dataa. Nyt pitï¿½ï¿½ siis laskea fontti koko tï¿½ï¿½llï¿½kin, vaikka
 // tuuli vektori ei olekaan fontti pohjainen symboli.
 void NFmiStationWindBarbView::ModifyTextEnvironment(void)
 {

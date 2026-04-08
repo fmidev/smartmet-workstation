@@ -9,9 +9,9 @@
 
 #include "boost/lexical_cast.hpp"
 
-#include <agx\agx.h>
+#include <agx/agx.h>
 
-// käytetään avuksi least-squeare-metodin yhteydessä
+// kï¿½ytetï¿½ï¿½n avuksi least-squeare-metodin yhteydessï¿½
 struct MultiplyFunctor
 {
 	MultiplyFunctor(float theFactor):itsFactor(theFactor){}
@@ -83,7 +83,7 @@ bool do_gridding(size_t size_x, size_t size_y, const NFmiRect &relative_rect, st
 {
     gridding_values_out.resize(size_x * size_y, kFloatMissing);
     int arraySize = static_cast<int>(z_values.size());
-    // Tämä griddaus lasku osio on kopsattu ja muutettu NFmiDataParamControlPointModifier::DoDataGridding(std::vector<float> &xValues, .... ) -funktiosta,
+    // Tï¿½mï¿½ griddaus lasku osio on kopsattu ja muutettu NFmiDataParamControlPointModifier::DoDataGridding(std::vector<float> &xValues, .... ) -funktiosta,
     // smartmetbizcode\ModifyEditedData -kirjastosta.
 
     if(griddingProperties.function() == kFmiMarkoGriddingFunction)
@@ -109,7 +109,7 @@ bool do_gridding(size_t size_x, size_t size_y, const NFmiRect &relative_rect, st
         if(theObservationRadiusRelative != kFloatMissing)
             XuGriddingLocalFitRadius(theObservationRadiusRelative);
         else
-            XuGriddingLocalFitRadius(1.41); // Tämä on laskentaruudun (~ 0,0 - 1,1) kulmapisteiden diagonaalinen etäisyys, mikä on tämän radiuksen oletusarvo (= kaikkia pisteitä käytetään aina laskuissa)
+            XuGriddingLocalFitRadius(1.41); // Tï¿½mï¿½ on laskentaruudun (~ 0,0 - 1,1) kulmapisteiden diagonaalinen etï¿½isyys, mikï¿½ on tï¿½mï¿½n radiuksen oletusarvo (= kaikkia pisteitï¿½ kï¿½ytetï¿½ï¿½n aina laskuissa)
 
 		switch(griddingProperties.function())
 		{
@@ -122,21 +122,21 @@ bool do_gridding(size_t size_x, size_t size_y, const NFmiRect &relative_rect, st
 		case kFmiXuGriddingLocalFitCalc:
             XuGriddingLocalFitCalc(x_values.data(), y_values.data(), z_values.data(), arraySize, gridding_values_out.data(), static_cast<int>(size_y), static_cast<int>(size_x));
 			break;
-		case kFmiXuGriddingTriangulationCalc: // tämä ei oikein toimi (joskus teki rumaa mutta järkevää tulosta, nyt rikki)
+		case kFmiXuGriddingTriangulationCalc: // tï¿½mï¿½ ei oikein toimi (joskus teki rumaa mutta jï¿½rkevï¿½ï¿½ tulosta, nyt rikki)
 			{
-				// triangulaatio algoritmi vaatii paria työ taulukkoa
+				// triangulaatio algoritmi vaatii paria tyï¿½ taulukkoa
 				std::vector<int> int_array(31 * arraySize + (size_y * size_x) );
 				std::vector<float> float_array(5 * arraySize);
 				XuGriddingTriangulationCalc(x_values.data(), y_values.data(), z_values.data(), arraySize, gridding_values_out.data(), static_cast<int>(size_y), static_cast<int>(size_x), &int_array[0], &float_array[0]);
 				break;
 			}
-		case kFmiXuGriddingLeastSquaresCalc: // en saa tekemään järkevää tulosta
+		case kFmiXuGriddingLeastSquaresCalc: // en saa tekemï¿½ï¿½n jï¿½rkevï¿½ï¿½ tulosta
 			{
 				const double factor = 100.;
 				MultiplyFunctor mul(factor);
 				XuViewWorldLimits(0, factor, 0, factor, 0, 0);
-				int side_length = static_cast<int>(factor/2); // tämä menee luultavasti pieleen, pitää olla int, mutta asetin maailman 0,0 - 1,1:n kokoiseksi
-				int num_y_subgrid = 2;//itsGridYSize/10; // subgridin pitäisi kai olla jaollinen originaali gridin koosta
+				int side_length = static_cast<int>(factor/2); // tï¿½mï¿½ menee luultavasti pieleen, pitï¿½ï¿½ olla int, mutta asetin maailman 0,0 - 1,1:n kokoiseksi
+				int num_y_subgrid = 2;//itsGridYSize/10; // subgridin pitï¿½isi kai olla jaollinen originaali gridin koosta
 				int num_x_subgrid = 2;//itsGridXSize/10;
 				std::vector<float> tmpXValues(x_values.begin(), x_values.end());
 				std::transform(tmpXValues.begin(), tmpXValues.end(), tmpXValues.begin(), mul);
@@ -150,7 +150,7 @@ bool do_gridding(size_t size_x, size_t size_y, const NFmiRect &relative_rect, st
             error_string += boost::lexical_cast<std::string>(griddingProperties.function());
             error_string += ") used in do_gridding_work_with_toolmaster -function, putting empty result";
             log_message(error_string, logging::trivial::error);
-            gridding_values_out.clear(); // tyhjennetään arvo vektori virhetilanteissa, koska sitä saatetaan käyttää tyhjänä ulkona!
+            gridding_values_out.clear(); // tyhjennetï¿½ï¿½n arvo vektori virhetilanteissa, koska sitï¿½ saatetaan kï¿½yttï¿½ï¿½ tyhjï¿½nï¿½ ulkona!
 			return false;
 		}
     }

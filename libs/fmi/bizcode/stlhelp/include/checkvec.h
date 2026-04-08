@@ -31,16 +31,16 @@ class checkedVector : public std::vector<T>   // inherit from std::vector<T>
 
       reference operator[](difference_type index)
       {
-         assert(index >=0 
-             && index < static_cast<difference_type>(size()));
-         return vector<T>::operator[](index);
+         assert(index >=0
+             && index < static_cast<difference_type>(this->size()));
+         return std::vector<T>::operator[](index);
       }
 
       const_reference operator[](difference_type index) const
       {
-         assert(index >=0 
-             && index < static_cast<difference_type>(size()));
-         return vector<T>::operator[](index);
+         assert(index >=0
+             && index < static_cast<difference_type>(this->size()));
+         return std::vector<T>::operator[](index);
       }
 };
 

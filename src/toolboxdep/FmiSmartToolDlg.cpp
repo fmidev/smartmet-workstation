@@ -34,7 +34,7 @@
 #include <experimental/filesystem>
 
 #ifndef DISABLE_EXTREME_TOOLKITPRO
-#include <SyntaxEdit\XTPSyntaxEditBufferManager.h>
+#include <SyntaxEdit/XTPSyntaxEditBufferManager.h>
 #endif // DISABLE_EXTREME_TOOLKITPRO
 
 /*
@@ -72,7 +72,7 @@ CFmiSmartToolDlg::CFmiSmartToolDlg(SmartMetDocumentInterface *smartMetDocumentIn
 ,fShowTooltipsOnSmarttoolDialog(FALSE)
 #endif // DISABLE_EXTREME_TOOLKITPRO
 {
-	assert(itsSmartToolInfo); // tässä pitää olla jotain, koska myöhemmin ei tarkistuksia!
+	assert(itsSmartToolInfo); // tï¿½ssï¿½ pitï¿½ï¿½ olla jotain, koska myï¿½hemmin ei tarkistuksia!
 	//{{AFX_DATA_INIT(CFmiSmartToolDlg)
     itsMacroErrorTextU_ = _T("");
 	fModifyOnlySelectedLocations = FALSE;
@@ -160,7 +160,7 @@ END_MESSAGE_MAP()
 BOOL CFmiSmartToolDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-    DoResizerHooking(); // Tätä pitää kutsua ennen kuin dialogin talletettu koko otetaan Windows rekisteristä
+    DoResizerHooking(); // Tï¿½tï¿½ pitï¿½ï¿½ kutsua ennen kuin dialogin talletettu koko otetaan Windows rekisteristï¿½
 
 	std::string errorBaseStr("Error in CFmiSmartToolDlg::OnInitDialog while reading dialog size and position values");
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
@@ -242,9 +242,9 @@ void CFmiSmartToolDlg::InitTooltipControl()
 {
     m_tooltip.Create(this);
     m_tooltip.SetDelayTime(PPTOOLTIP_TIME_AUTOPOP, 30000); // kuinka kauan tooltippi viipyy, jos kursoria ei liikuteta [ms]
-    m_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 1200); // kuinka nopeasti tooltip ilmestyy näkyviin, jos kursoria ei liikuteta [ms]
+    m_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 1200); // kuinka nopeasti tooltip ilmestyy nï¿½kyviin, jos kursoria ei liikuteta [ms]
 
-    // Tässä erikseen jokainen kontrolli, jolle halutaan joku tooltip teksti
+    // Tï¿½ssï¿½ erikseen jokainen kontrolli, jolle halutaan joku tooltip teksti
     SetDialogControlTooltip(IDC_BUTTON_SMART_TOOL_SAVE, "Save current Macro text to selected smarttool file\n(if any is selected)");
     SetDialogControlTooltip(IDC_BUTTON_SMART_TOOL_SAVE_AS, "Save current Macro text to wanted smarttool file\n(opens file browser)");
     SetDialogControlTooltip(IDC_BUTTON_SMART_TOOL_LOAD, "Opens dialog to select smarttool to be loaded to Macro text");
@@ -423,7 +423,7 @@ void CFmiSmartToolDlg::InitializeSyntaxEditControl()
     {
         CString maxAutoCompliteText = _T("occurrence_betweeneq(par, radius_km, time_offset1, time_offset2, limit1, limit2)");
         auto textSizeInPixels = autoCompleteWindow->GetDC()->GetTextExtent(maxAutoCompliteText);
-        // Jostain syystä laskettu maksimi tekstin pituu on aivan liian pitkä, lyhennetään sitä hieman
+        // Jostain syystï¿½ laskettu maksimi tekstin pituu on aivan liian pitkï¿½, lyhennetï¿½ï¿½n sitï¿½ hieman
         int usedWidthInPixels = boost::math::iround(textSizeInPixels.cx * 0.85);
         autoCompleteWindow->SetWndWidth(usedWidthInPixels);
     }
@@ -439,7 +439,7 @@ std::string CFmiSmartToolDlg::MakeSyntaxEditConfigFilePath()
 
 void CFmiSmartToolDlg::AdjustSyntaxEditControlWindows()
 {
-    if(itsSyntaxEditControl) // Kun tullaan 1. kerran OnSize -metodiin, ei tätä kontrollia ole vielä luotu
+    if(itsSyntaxEditControl) // Kun tullaan 1. kerran OnSize -metodiin, ei tï¿½tï¿½ kontrollia ole vielï¿½ luotu
     {
         CWnd *controlPlaceHolderWin = GetDlgItem(IDC_STATIC_SYNTAX_EDIT_CONTROL_PLACER);
         if(controlPlaceHolderWin)
@@ -461,26 +461,26 @@ static int GetLastColumn(CXTPSyntaxEditCtrl &syntaxEditControl)
     return (int)_tcsclen(szLineText) + 1;
 }
 
-// Tekstin saaminen on hankalaa SyntaxEdit-kontrollista (siellä on taas CXTPSyntaxEditBufferManager).
-// Kontrolli itse käsittelee tekstiä Unicodena. Lisäksi teksti pitää hakea CMemeFile -otuksesta.
-// En voi tehdä luokan normaalia Serialize -talletusta, koska silloin tekstit menisivät Unicode tiedostoihin ja 
-// niitä ei voisi luka vanhemmilla SmartMet versioilla (teksteihin tulisi binääri mössöä sekaan).
+// Tekstin saaminen on hankalaa SyntaxEdit-kontrollista (siellï¿½ on taas CXTPSyntaxEditBufferManager).
+// Kontrolli itse kï¿½sittelee tekstiï¿½ Unicodena. Lisï¿½ksi teksti pitï¿½ï¿½ hakea CMemeFile -otuksesta.
+// En voi tehdï¿½ luokan normaalia Serialize -talletusta, koska silloin tekstit menisivï¿½t Unicode tiedostoihin ja 
+// niitï¿½ ei voisi luka vanhemmilla SmartMet versioilla (teksteihin tulisi binï¿½ï¿½ri mï¿½ssï¿½ï¿½ sekaan).
 std::string CFmiSmartToolDlg::GetMacroTextFromSyntaxEditor()
 {
     CXTPSyntaxEditBufferManager* pDataMan = itsSyntaxEditControl->GetEditBuffer();
     if(pDataMan)
     {
-        // 1. Luetaan koko kontrollin tekstisisältö CMemFile olioon.
+        // 1. Luetaan koko kontrollin tekstisisï¿½ltï¿½ CMemFile olioon.
         CMemFile memFile;
         pDataMan->GetBuffer(1, 1, pDataMan->GetRowCount(), ::GetLastColumn(*itsSyntaxEditControl), memFile, FALSE, TRUE);
         memFile.SeekToBegin(); // Aseta file-olio alkuun!
 
-                               // 2. Luetaan file olion sisältä CString:iin
+                               // 2. Luetaan file olion sisï¿½ltï¿½ CString:iin
         CString macroTextU_;
         UINT nBytes = (UINT)memFile.GetLength();
         int nChars = nBytes / sizeof(TCHAR);
         UINT nBytesRead = memFile.Read(macroTextU_.GetBuffer(nChars + 1), nBytes);
-        macroTextU_.ReleaseBuffer(nChars); // Tämä lisää stringin loppuun \0 -merkin ja ilmeisesti vapauttaa jotain dynaamisesti varattua juttua.
+        macroTextU_.ReleaseBuffer(nChars); // Tï¿½mï¿½ lisï¿½ï¿½ stringin loppuun \0 -merkin ja ilmeisesti vapauttaa jotain dynaamisesti varattua juttua.
 
                                            // 3. Konvertoidaan Unicode teksti ascii tekstiksi
         std::string macroText = CT2A(macroTextU_);
@@ -617,7 +617,7 @@ void CFmiSmartToolDlg::DisableActionButtomIfInViewMode(void)
 
 void CFmiSmartToolDlg::Update(void)
 {
-    if(IsWindowVisible() && !IsIconic()) // Näyttöä päivitetään vain jos se on näkyvissä ja se ei ole minimized tilassa
+    if(IsWindowVisible() && !IsIconic()) // Nï¿½yttï¿½ï¿½ pï¿½ivitetï¿½ï¿½n vain jos se on nï¿½kyvissï¿½ ja se ei ole minimized tilassa
     {
         auto macroParamSystemPtr = itsSmartMetDocumentInterface->MacroParamSystem();
         if(macroParamSystemPtr->UpdateMacroParamListView())
@@ -712,8 +712,8 @@ void CFmiSmartToolDlg::OnButtonAction()
 
 		// Update Window to cause View to redraw.
 		UpdateWindow();
-        // koska smarttool muokkaus menee nykyään omaan threadiin ja pääkarttanäyttö lukitaan Progress-cancelointi -dialogilla, 
-        // pitää tässä estää että ei voi painaa uudestaan Muokkaa-nappulaa. Napin normaali tila palautetaan kun lähetetään viesti ID_MESSAGE_SMARTTOOL_MODIFICATION_ENDED
+        // koska smarttool muokkaus menee nykyï¿½ï¿½n omaan threadiin ja pï¿½ï¿½karttanï¿½yttï¿½ lukitaan Progress-cancelointi -dialogilla, 
+        // pitï¿½ï¿½ tï¿½ssï¿½ estï¿½ï¿½ ettï¿½ ei voi painaa uudestaan Muokkaa-nappulaa. Napin normaali tila palautetaan kun lï¿½hetetï¿½ï¿½n viesti ID_MESSAGE_SMARTTOOL_MODIFICATION_ENDED
 		EnableDlgItem(IDC_BUTTON_ACTION, false); 
 
         auto relativePathMacroName = ::GetLastLoadedSmartToolRelativePathName(itsSmartMetDocumentInterface);
@@ -766,7 +766,7 @@ void CFmiSmartToolDlg::DoSmartToolLoad(const std::string &theSmartToolName, bool
     {
         CatLog::logMessage(string("Loaded smartTool: ") + theSmartToolName, CatLog::Severity::Info, CatLog::Category::Macro);
         LoadFormulaFromSmarttool();
-        itsMacroParamList.SetCurSel(LB_ERR); // laitetaan macroParamlista osoittamaan 'ei mitään'
+        itsMacroParamList.SetCurSel(LB_ERR); // laitetaan macroParamlista osoittamaan 'ei mitï¿½ï¿½n'
         itsMacroErrorTextU_ = "";
         UpdateData(FALSE);
     }
@@ -783,11 +783,11 @@ void CFmiSmartToolDlg::LoadFormulaFromMacroParam()
 }
 
 void CFmiSmartToolDlg::OnButtonSmartToolLoadDbChecker()
-{ // ladataan virallinen DBCheck-macro ruudulle esim. testi käyttöön
+{ // ladataan virallinen DBCheck-macro ruudulle esim. testi kï¿½yttï¿½ï¿½n
     LoadSmarttoolFormula(itsSmartToolInfo->DBCheckerFileName(), true);
-	itsSmartToolInfo->CurrentScript(itsSmartToolInfo->DBCheckerText()); // pitää päivittää myös currenttia skriptiä
+	itsSmartToolInfo->CurrentScript(itsSmartToolInfo->DBCheckerText()); // pitï¿½ï¿½ pï¿½ivittï¿½ï¿½ myï¿½s currenttia skriptiï¿½
 
-	itsMacroParamList.SetCurSel(LB_ERR); // laitetaan macroParamlista osoittamaan 'ei mitään'
+	itsMacroParamList.SetCurSel(LB_ERR); // laitetaan macroParamlista osoittamaan 'ei mitï¿½ï¿½n'
 	UpdateData(FALSE);
 }
 
@@ -799,9 +799,9 @@ static int StripExtraCarrigeReturns(CString &theString)
 }
 
 // rich_edit ja edit kontrollien kanssa on ihme ongelmia
-// rivinvaihtojen kanssa. Tässä poistetaan yksi ylimääräinen
-// cr (carriage return) joka näyttää tulevan aina teksteihin
-// joka rivin vaihdon yhteyteen. tämä tekee muutoksen
+// rivinvaihtojen kanssa. Tï¿½ssï¿½ poistetaan yksi ylimï¿½ï¿½rï¿½inen
+// cr (carriage return) joka nï¿½yttï¿½ï¿½ tulevan aina teksteihin
+// joka rivin vaihdon yhteyteen. tï¿½mï¿½ tekee muutoksen
 // <cr><cr><nl> -> <cr><nl>
 //std::string CFmiSmartToolDlg::GetWantedMacroString(void)
 //{
@@ -830,7 +830,7 @@ void CFmiSmartToolDlg::OnButtonSmartToolSaveAs()
     if(BetaProduct::GetFilePathFromUserTotal(g_SmarttoolFileFilter, initialPath, filePath, false, initialFilename, g_SmarttoolFileExtension, itsSmartToolInfo->RootLoadDirectory(), this))
     {
 
-        // pitää ensin tallettaa currenttiksi skriptiksi ja sitten tallettaa tiedostoon
+        // pitï¿½ï¿½ ensin tallettaa currenttiksi skriptiksi ja sitten tallettaa tiedostoon
         itsSmartToolInfo->CurrentScript(GetSmarttoolFormulaText());
         if(itsSmartToolInfo->SaveScript(filePath))
         {
@@ -862,7 +862,7 @@ void CFmiSmartToolDlg::OnBnClickedButtonSmartToolSave()
 
     if(SmarttoolCanBeSaved())
     {
-        // pitää ensin tallettaa currenttiksi skriptiksi ja sitten tallettaa tiedostoon
+        // pitï¿½ï¿½ ensin tallettaa currenttiksi skriptiksi ja sitten tallettaa tiedostoon
         itsSmartToolInfo->CurrentScript(GetSmarttoolFormulaText());
         auto totalSmarttoolFilePath = itsSmartToolInfo->GetFullScriptFileName(itsSmartToolInfo->CurrentScriptName());
         if(itsSmartToolInfo->SaveScript(totalSmarttoolFilePath))
@@ -1021,7 +1021,7 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSave()
                     auto realMacroParamDrawParamFileName = ::GetRealMacroParamDrawParamFileName(finalMacroParamPath);
                     std::vector<std::string> modifiedMacroParamPaths{ realMacroParamDrawParamFileName };
                     itsSmartMetDocumentInterface->MacroParamDataCache().clearMacroParamCache(modifiedMacroParamPaths);
-                    RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param save", false, finalMacroParamPath); // päivitetään varmuuden vuoksi ruutuja, jos karttanäytöllä olleen macroparametrin macroa on muutettu
+                    RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param save", false, finalMacroParamPath); // pï¿½ivitetï¿½ï¿½n varmuuden vuoksi ruutuja, jos karttanï¿½ytï¿½llï¿½ olleen macroparametrin macroa on muutettu
                     return;
                 }
                 else
@@ -1067,19 +1067,19 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSaveAs()
 
         boost::shared_ptr<NFmiMacroParam> macroParamPointer = ::CreateMacroParamPointer(std::string(fileString.Header()), GetSmarttoolFormulaText(), GetUsedMacroParamType());
 
-        bool updateViews = false; // kun talletetaan vanhan päälle, pitää päivittää ruutuja, koska macro-teksti on saattanut muuttua
+        bool updateViews = false; // kun talletetaan vanhan pï¿½ï¿½lle, pitï¿½ï¿½ pï¿½ivittï¿½ï¿½ ruutuja, koska macro-teksti on saattanut muuttua
         if(macroParamSystemPtr->SetCurrentToWantedMacroPath(filePath))
         {
-            boost::shared_ptr<NFmiMacroParam> currentMacroParam = macroParamSystemPtr->GetCurrentMacroParam(); // Otetaan talteen erilliseen muuttujaan, koska ilmeisesti CurrentMacroParam -pointteri voi 'korruptoitua', en tiedä miksi, mutta SmartMet voi kaatua kun ollaan "pitää ottaa talteen vanhat piirto-ominaisuudet" -rivillä jompaan kumpaan DrawParam() -kutsuun ja oletan että sen täytyy olla CurrentMacroParam() -kohdasta.
+            boost::shared_ptr<NFmiMacroParam> currentMacroParam = macroParamSystemPtr->GetCurrentMacroParam(); // Otetaan talteen erilliseen muuttujaan, koska ilmeisesti CurrentMacroParam -pointteri voi 'korruptoitua', en tiedï¿½ miksi, mutta SmartMet voi kaatua kun ollaan "pitï¿½ï¿½ ottaa talteen vanhat piirto-ominaisuudet" -rivillï¿½ jompaan kumpaan DrawParam() -kutsuun ja oletan ettï¿½ sen tï¿½ytyy olla CurrentMacroParam() -kohdasta.
             if(currentMacroParam)
             {
-                macroParamPointer->DrawParam(currentMacroParam->DrawParam()); // pitää ottaa talteen vanhat piirto-ominaisuudet!
-                updateViews = true; // nyt tiedetään, että pitää päivittää näyttöjä
+                macroParamPointer->DrawParam(currentMacroParam->DrawParam()); // pitï¿½ï¿½ ottaa talteen vanhat piirto-ominaisuudet!
+                updateViews = true; // nyt tiedetï¿½ï¿½n, ettï¿½ pitï¿½ï¿½ pï¿½ivittï¿½ï¿½ nï¿½yttï¿½jï¿½
             }
         }
         else if(!::IsInCurrentMacroParamDirectory(*macroParamSystemPtr, filePath))
         {
-            // Jos macroa ei löydy nyky hakemistosta, pitää hakemisto hakea globaalisti root-hakemiston alta
+            // Jos macroa ei lï¿½ydy nyky hakemistosta, pitï¿½ï¿½ hakemisto hakea globaalisti root-hakemiston alta
             macroParamSystemPtr->SetCurrentPathByAbsolutePath(filePath);
         }
         auto realMacroParamDrawParamFileName = ::GetRealMacroParamDrawParamFileName(filePath);
@@ -1096,7 +1096,7 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamSaveAs()
         {
             std::vector<std::string> modifiedMacroParamPaths{ realMacroParamDrawParamFileName };
             itsSmartMetDocumentInterface->MacroParamDataCache().clearMacroParamCache(modifiedMacroParamPaths);
-            RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param save", false, filePath); // päivitetään varmuuden vuoksi ruutuja, jos karttanäytöllä olleen macroparametrin macroa on muutettu
+            RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param save", false, filePath); // pï¿½ivitetï¿½ï¿½n varmuuden vuoksi ruutuja, jos karttanï¿½ytï¿½llï¿½ olleen macroparametrin macroa on muutettu
         }
     }
 }
@@ -1119,7 +1119,7 @@ void CFmiSmartToolDlg::UpdateMacroParamDisplayListAfterSpeedLoad()
     boost::shared_ptr<NFmiMacroParamFolder> currentFolder = macroParamSystemPtr->GetCurrentFolder();
     if(currentFolder)
     {
-        currentFolder->RefreshMacroParams(); // tässä päivitetään vain smartTool-dialogin käyttämä current-hakemisto, mutta ei esim. pop-up valikoiden käyttämää puu rakennetta
+        currentFolder->RefreshMacroParams(); // tï¿½ssï¿½ pï¿½ivitetï¿½ï¿½n vain smartTool-dialogin kï¿½yttï¿½mï¿½ current-hakemisto, mutta ei esim. pop-up valikoiden kï¿½yttï¿½mï¿½ï¿½ puu rakennetta
         std::vector<std::string> stringVector(currentFolder->GetDialogListStrings(this->fQ3Macro == TRUE));
         std::vector<std::string>::iterator it = stringVector.begin();
         for(; it != stringVector.end(); ++it)
@@ -1133,7 +1133,7 @@ void CFmiSmartToolDlg::UpdateMacroParamDisplayListAfterSpeedLoad()
         else
             itsMacroParamList.SetCurSel(selectedNameIndex);
 
-        // currentFolder->RefreshMacroParams operaation jälkeen palautetaan valittu macroParam taas oikeasti valituksi
+        // currentFolder->RefreshMacroParams operaation jï¿½lkeen palautetaan valittu macroParam taas oikeasti valituksi
         macroParamSystemPtr->FindMacroFromCurrentFolder(foundMacroParamName);
     }
 }
@@ -1146,7 +1146,7 @@ void CFmiSmartToolDlg::UpdateMacroParamDisplayList(bool fForceThreadUpdate)
 	boost::shared_ptr<NFmiMacroParamFolder> currentFolder = macroParamSystemPtr->GetCurrentFolder();
 	if(currentFolder)
 	{
-		currentFolder->RefreshMacroParams(); // tässä päivitetään vain smartTool-dialogin käyttämä current-hakemisto, mutta ei esim. pop-up valikoiden käyttämää puu rakennetta
+		currentFolder->RefreshMacroParams(); // tï¿½ssï¿½ pï¿½ivitetï¿½ï¿½n vain smartTool-dialogin kï¿½yttï¿½mï¿½ current-hakemisto, mutta ei esim. pop-up valikoiden kï¿½yttï¿½mï¿½ï¿½ puu rakennetta
 		std::vector<std::string> stringVector(currentFolder->GetDialogListStrings(this->fQ3Macro == TRUE));
 		std::vector<std::string>::iterator it = stringVector.begin();
 		for( ; it != stringVector.end(); ++it)
@@ -1156,13 +1156,13 @@ void CFmiSmartToolDlg::UpdateMacroParamDisplayList(bool fForceThreadUpdate)
 	itsMacroParamList.SetCurSel(usedSelectionIndex);
     if(macroParamSystemPtr->FindMacroFromCurrentFolder(GetSelectedMacroParamName()))
     {
-        // Ei päivitetä valitun macroParamin sisältöä, koska se 'resetoi' mahdolliset käyttäjän tekemät editoinnit
+        // Ei pï¿½ivitetï¿½ valitun macroParamin sisï¿½ltï¿½ï¿½, koska se 'resetoi' mahdolliset kï¿½yttï¿½jï¿½n tekemï¿½t editoinnit
 ////        LoadFormulaFromMacroParam();
     }
 
     if(fForceThreadUpdate)
     {
-		CFmiMacroParamUpdateThread::ForceUpdate(); // tämä pakottaa että myös pop-up valikoiden käyttämää puu rakennetta päivitetään
+		CFmiMacroParamUpdateThread::ForceUpdate(); // tï¿½mï¿½ pakottaa ettï¿½ myï¿½s pop-up valikoiden kï¿½yttï¿½mï¿½ï¿½ puu rakennetta pï¿½ivitetï¿½ï¿½n
         itsSmartMetDocumentInterface->UpdateParameterSelectionSystem();
     }
     ResetSpeedSearchResources(false, true);
@@ -1219,7 +1219,7 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamRemove()
 			}
 			else
 				itsMacroParamList.SetCurSel(LB_ERR);
-			RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param remove", false, "", false); // päivitetään varmuuden vuoksi ruutuja, jos poitettiin karttanäytöltä macroparametri
+			RefreshApplicationViewsAndDialogs("SmartToolDlg: macro-param remove", false, "", false); // pï¿½ivitetï¿½ï¿½n varmuuden vuoksi ruutuja, jos poitettiin karttanï¿½ytï¿½ltï¿½ macroparametri
 		}
 	}
 }
@@ -1302,7 +1302,7 @@ void CFmiSmartToolDlg::DoMacroParamLoad(const std::string& theMacroParamName, bo
         if(macroParamFound)
         {
             LoadFormulaFromMacroParam();
-            itsSmartToolInfo->CurrentScript(GetSmarttoolFormulaText()); // päivitetään myös currentiksi macro-tekstiksi
+            itsSmartToolInfo->CurrentScript(GetSmarttoolFormulaText()); // pï¿½ivitetï¿½ï¿½n myï¿½s currentiksi macro-tekstiksi
             itsMacroErrorTextU_ = "";
         }
     }
@@ -1311,14 +1311,14 @@ void CFmiSmartToolDlg::DoMacroParamLoad(const std::string& theMacroParamName, bo
 }
 
 void CFmiSmartToolDlg::OnLbnDblclkListParamMacros()
-{ // tässä on tarkoitus mennä alihakemistoihin, jos klikattu oli hakemisto
-	// ja ei tehdä mitään jos oli tavallinen macroParam
+{ // tï¿½ssï¿½ on tarkoitus mennï¿½ alihakemistoihin, jos klikattu oli hakemisto
+	// ja ei tehdï¿½ mitï¿½ï¿½n jos oli tavallinen macroParam
 
     auto macroParamName = GetSelectedMacroParamName();
     if(!macroParamName.empty())
     {
 		if(macroParamName[0] == '<')
-		{ // Jos hakemiston nimi, siirrytään sinne
+		{ // Jos hakemiston nimi, siirrytï¿½ï¿½n sinne
             itsSmartMetDocumentInterface->MacroParamSystem()->CurrentPath(macroParamName);
 			UpdateMacroParamDisplayList(false);
             UpdateLoadedMacroParamPathString();
@@ -1346,7 +1346,7 @@ void CFmiSmartToolDlg::OnBnClickedButtonSmartToolRemove()
 		if(status)
 		{
             LoadFormulaFromSmarttool();
-            itsMacroParamList.SetCurSel(LB_ERR); // laitetaan macroParamlista osoittamaan 'ei mitään'
+            itsMacroParamList.SetCurSel(LB_ERR); // laitetaan macroParamlista osoittamaan 'ei mitï¿½ï¿½n'
             UpdateData(FALSE);
 		}
 	}
@@ -1399,7 +1399,7 @@ void CFmiSmartToolDlg::OnBnClickedButtonRemoveAllFromRow5()
 void CFmiSmartToolDlg::OnBnClickedButtonMacroParamRefreshList()
 {
     auto macroParamSystemPtr = itsSmartMetDocumentInterface->MacroParamSystem();
-    // Varmistetaan että root kansio on alustettu tai että edes se on 'valittuna', jos tausta-threadissa 
+    // Varmistetaan ettï¿½ root kansio on alustettu tai ettï¿½ edes se on 'valittuna', jos tausta-threadissa 
     // tehty MacroParamSystem olion alustus on jotenkin estynyt tai mennyt pieleen.
     macroParamSystemPtr->EnsureRootFolderInitialized();
     boost::shared_ptr<NFmiMacroParamFolder> currentFolder = macroParamSystemPtr->GetCurrentFolder();
@@ -1413,9 +1413,9 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamRefreshList()
 	}
 }
 
-// Tämä funktio alustaa kaikki dialogin tekstit editoriin valitulla kielellä.
-// Tämä on ikävä kyllä tehtävä erikseen dialogin muokkaus työkalusta, eli
-// tekijän pitää lisätä erikseen tänne kaikki dialogin osat, joihin
+// Tï¿½mï¿½ funktio alustaa kaikki dialogin tekstit editoriin valitulla kielellï¿½.
+// Tï¿½mï¿½ on ikï¿½vï¿½ kyllï¿½ tehtï¿½vï¿½ erikseen dialogin muokkaus tyï¿½kalusta, eli
+// tekijï¿½n pitï¿½ï¿½ lisï¿½tï¿½ erikseen tï¿½nne kaikki dialogin osat, joihin
 // kieli valinta voi vaikuttaa.
 void CFmiSmartToolDlg::InitDialogTexts(void)
 {
@@ -1449,7 +1449,7 @@ void CFmiSmartToolDlg::OnBnClickedButtonMacroParamDataGridSizeUse()
 {
 	UpdateData(TRUE);
     itsSmartMetDocumentInterface->SetMacroParamDataGridSize(itsMacroParamDataGridSizeX, itsMacroParamDataGridSizeY);
-	NFmiPoint trueGridSize(itsSmartMetDocumentInterface->InfoOrganizer()->GetMacroParamDataGridSize()); // tässä haetaan tarkistetut koot takaisin
+	NFmiPoint trueGridSize(itsSmartMetDocumentInterface->InfoOrganizer()->GetMacroParamDataGridSize()); // tï¿½ssï¿½ haetaan tarkistetut koot takaisin
 	itsMacroParamDataGridSizeX = static_cast<int>(trueGridSize.X());
 	itsMacroParamDataGridSizeY = static_cast<int>(trueGridSize.Y());
 	UpdateData(FALSE);
@@ -1485,7 +1485,7 @@ void CFmiSmartToolDlg::OnBnClickedRadioViewmacroSelectedMap3()
 BOOL CFmiSmartToolDlg::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult)
 {
 	if(message == ID_MESSAGE_SMARTTOOL_MODIFICATION_ENDED)
-		EnableDlgItem(IDC_BUTTON_ACTION, true); // enabloidaan smarttool muokkausten jälkeen taas muokkaa-nappi
+		EnableDlgItem(IDC_BUTTON_ACTION, true); // enabloidaan smarttool muokkausten jï¿½lkeen taas muokkaa-nappi
 
 	return CDialog::OnWndMsg(message, wParam, lParam, pResult);
 }
@@ -1673,9 +1673,9 @@ void CFmiSmartToolDlg::InitSpeedSearchControls()
     ::InitSpeedSearchControl(itsSpeedSearchMacroParamControl, "Search macro-params...", fSearchOptionCaseSensitive, fSearchOptionMatchAnywhere);
 }
 
-// Tehdään ainakin 15 minuutin välein pikahaku listan päivitystä, jos tulee uusia smarttool-macroja synkronoinnin kautta
-// HUOM! Tehdään tämä päivitys yritys vain tietyistä toiminnoista, esim. smarttool-macron lataus ja pika-etsintä valinnan yhteydessä.
-// En halua että tätä kutsutaan kesken mahdollista pikahaun tekoa jolloin seurauksena aletaan resetoimaan jo tehtyä hakua.
+// Tehdï¿½ï¿½n ainakin 15 minuutin vï¿½lein pikahaku listan pï¿½ivitystï¿½, jos tulee uusia smarttool-macroja synkronoinnin kautta
+// HUOM! Tehdï¿½ï¿½n tï¿½mï¿½ pï¿½ivitys yritys vain tietyistï¿½ toiminnoista, esim. smarttool-macron lataus ja pika-etsintï¿½ valinnan yhteydessï¿½.
+// En halua ettï¿½ tï¿½tï¿½ kutsutaan kesken mahdollista pikahaun tekoa jolloin seurauksena aletaan resetoimaan jo tehtyï¿½ hakua.
 void CFmiSmartToolDlg::DoTimedResetSearchResource()
 {
     static NFmiMilliSecondTimer timer;
@@ -1683,7 +1683,7 @@ void CFmiSmartToolDlg::DoTimedResetSearchResource()
     if(timer.CurrentTimeDiffInMSeconds() > 15 * 60 * 1000)
     {
         ResetSpeedSearchResources(true, true);
-        timer.StartTimer(); // käynnistetään uusi laskuri
+        timer.StartTimer(); // kï¿½ynnistetï¿½ï¿½n uusi laskuri
     }
 }
 

@@ -16,7 +16,7 @@
 #include "NFmiApplicationWinRegistry.h"
 #include "Q2ServerInfo.h"
 #include "NFmiParameterInterpolationFixer.h"
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
 #include "XFolderDialog.h"
 
 #ifdef _DEBUG
@@ -285,14 +285,14 @@ void COptionsDlg::OnOK()
     NFmiValueString valueStr = CT2A(itsTimeStepStrU_);
     auto* mainMapViewDescTop = itsSmartMetDocumentInterface->MapViewDescTop(0);
 	float stepValue = float(valueStr);
-	if(stepValue <= 0.0001f) // 0.0001-raja hatusta tarkoittaisi alle sekunnin aika-askelta valuestring palauttaa roskalle epämääräisen arvon, joka on alle tämän rajan
+	if(stepValue <= 0.0001f) // 0.0001-raja hatusta tarkoittaisi alle sekunnin aika-askelta valuestring palauttaa roskalle epï¿½mï¿½ï¿½rï¿½isen arvon, joka on alle tï¿½mï¿½n rajan
         mainMapViewDescTop->TimeControlTimeStep(1.f);
 	else
         mainMapViewDescTop->TimeControlTimeStep(stepValue);
 
     auto &metEditorOptionsData = itsSmartMetDocumentInterface->MetEditorOptionsData();
     metEditorOptionsData.ShowToolTipsOnMapView(fShowToolTip == TRUE);
-    configurationRelatedWinRegistry.MapView(0)->SpacingOutFactor(fUseSpacingOut == TRUE ? 1 : 0); // nyt vain on/off säätö
+    configurationRelatedWinRegistry.MapView(0)->SpacingOutFactor(fUseSpacingOut == TRUE ? 1 : 0); // nyt vain on/off sï¿½ï¿½tï¿½
     applicationWinRegistry.KeepMapAspectRatio(fAutoZoom == TRUE);
     itsSmartMetDocumentInterface->SmartMetEditingMode(fUseViewMode ? CtrlViewUtils::kFmiEditingModeViewOnly : CtrlViewUtils::kFmiEditingModeNormal, true);
 
@@ -306,8 +306,8 @@ void COptionsDlg::OnOK()
 
 	if(itsSmartMetDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) 
 	{	
-        // Jos ollaan ns. edit-moodissa, tehdään undo/redo syvyys ja autosave asetuksia
-        // Muuten on vaara, että OnInit:issä nollattuja arvoja laitetaan takaisin oikeisiin asetuksiin
+        // Jos ollaan ns. edit-moodissa, tehdï¿½ï¿½n undo/redo syvyys ja autosave asetuksia
+        // Muuten on vaara, ettï¿½ OnInit:issï¿½ nollattuja arvoja laitetaan takaisin oikeisiin asetuksiin
         NFmiValueString autoSaveFreqStr = CT2A(itsAutoSaveFrequensInMinutesStrU_);
 		float autoSaveFreq = float(autoSaveFreqStr);
         metEditorOptionsData.AutoSaveFrequensInMinutes(static_cast<int>(autoSaveFreq));
@@ -356,7 +356,7 @@ void COptionsDlg::OnOK()
     applicationWinRegistry.IsolineMinLengthFactor(itsIsolineMinimumLengthFactor);
     applicationWinRegistry.GenerateTimeCombinationData(fGenerateTimeCombinationData == TRUE);
     itsSmartMetDocumentInterface->ParameterInterpolationFixer().doForcedParameterInterpolationChanges(fUseForcedLinearInterpolationOption == TRUE);
-    // HatchingToolmasterEpsilonFactor:in asetus pitää tehdä näin, koska arvo asetetaan tässä useampaan paikkaan.
+    // HatchingToolmasterEpsilonFactor:in asetus pitï¿½ï¿½ tehdï¿½ nï¿½in, koska arvo asetetaan tï¿½ssï¿½ useampaan paikkaan.
     itsSmartMetDocumentInterface->SetHatchingToolmasterEpsilonFactor(itsHatchingToolmasterEpsilonFactor);
     tmpStr = CT2A(itsLocalCacheDirectoryPath);
     itsSmartMetDocumentInterface->HelpDataInfoSystem()->SetLocalDataBaseDirectory(tmpStr);
@@ -380,9 +380,9 @@ void COptionsDlg::OnBnClickedCheckUseViewMode()
 	UpdateData(FALSE);
 }
 
-// Tämä funktio alustaa kaikki dialogin tekstit editoriin valitulla kielellä.
-// Tämä on ikävä kyllä tehtävä erikseen dialogin muokkaus työkalusta, eli
-// tekijän pitää lisätä erikseen tänne kaikki dialogin osat, joihin
+// Tï¿½mï¿½ funktio alustaa kaikki dialogin tekstit editoriin valitulla kielellï¿½.
+// Tï¿½mï¿½ on ikï¿½vï¿½ kyllï¿½ tehtï¿½vï¿½ erikseen dialogin muokkaus tyï¿½kalusta, eli
+// tekijï¿½n pitï¿½ï¿½ lisï¿½tï¿½ erikseen tï¿½nne kaikki dialogin osat, joihin
 // kieli valinta voi vaikuttaa.
 void COptionsDlg::InitDialogTexts(void)
 {

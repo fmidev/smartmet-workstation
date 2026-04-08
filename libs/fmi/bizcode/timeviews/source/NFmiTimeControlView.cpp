@@ -26,8 +26,12 @@
 #include "NFmiVirtualTimeData.h"
 
 
+#ifndef UNIX
 #include <gdiplus.h>
-#include "boost\math\special_functions\round.hpp"
+#else
+#include "gdiplus_stub.h"
+#endif
+#include "boost/math/special_functions/round.hpp"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -41,7 +45,8 @@ SmartMetViewId g_EditedDataTimeRangeChangedUpdateViewIdMask = SmartMetViewId::Al
 //_________________________________________________________ AnimationButtonImageHolder
 
 // initialisoinnissa luetaan bitmapit tiedostoista, kutsu vasta kun itsBitmapFolder-dataosa on asetettu
-// HUOM! heittää poikkeuksia epäonnistuessaan
+// HUOM! heittï¿½ï¿½ poikkeuksia epï¿½onnistuessaan
+#ifndef UNIX
 void AnimationButtonImageHolder::Initialize(void)
 {
 	fInitialized = true;
@@ -57,6 +62,7 @@ void AnimationButtonImageHolder::Initialize(void)
     itsVerticalTimeControlOffImage = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "vertical_time_control_delete.png");
     itsSetFullTimeRangeImage = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "full_time_range.png");
 }
+#endif // !UNIX
 
 
 
@@ -65,7 +71,7 @@ void AnimationButtonImageHolder::Initialize(void)
 
 NFmiTimeControlView::NFmiTimeControlView(int theMapViewDescTopIndex, const NFmiRect& theRect
 										,NFmiToolBox *theToolBox
-										,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+										,boost::shared_ptr<NFmiDrawParam> theDrawParam
 										,bool theShowResolutionChangerBox
 										,bool theDrawViewInMouseMove
 										,bool theShowEditTimeHandles
@@ -126,10 +132,11 @@ void NFmiTimeControlView::Clear(void)
 }
 
 // yritys korjata konstruktorissa olevaa virtuaalisuus ongelmaa
-// Konstruktori ei näemmä kutsu virtuaali funktioita niin kuin pitäisi,
-// kokeilen että joska erillinen funktio fixaisi ongelman.
+// Konstruktori ei nï¿½emmï¿½ kutsu virtuaali funktioita niin kuin pitï¿½isi,
+// kokeilen ettï¿½ joska erillinen funktio fixaisi ongelman.
 void NFmiTimeControlView::Initialize(bool theShowSelectedTimes, bool theUseActiveMapTime) 
 {
+#ifndef UNIX
 	if(statAnimationButtonImages.fInitialized == false)
 	{
 		try
@@ -144,6 +151,7 @@ void NFmiTimeControlView::Initialize(bool theShowSelectedTimes, bool theUseActiv
             itsCtrlViewDocumentInterface->LogAndWarnUser(errStr, "Error while trying to read animation button bitmaps", CatLog::Severity::Error, CatLog::Category::Configuration, false);
 		}
 	}
+#endif // !UNIX
 
 	Clear();
 
@@ -159,7 +167,7 @@ void NFmiTimeControlView::Initialize(bool theShowSelectedTimes, bool theUseActiv
 		itsTimeBag = new NFmiTimeBag(GetUsedTimeBag());
 		itsTimeAxis = new NFmiStepTimeScale(*itsTimeBag);
 
-		NFmiDrawingEnvironment theEnvironment; // tästä envistä en oikein tiedä, pitäisikö käyttää yleistä vai ei??
+		NFmiDrawingEnvironment theEnvironment; // tï¿½stï¿½ envistï¿½ en oikein tiedï¿½, pitï¿½isikï¿½ kï¿½yttï¿½ï¿½ yleistï¿½ vai ei??
 		NFmiColor color(0,1,0);
 		theEnvironment.SetFillColor(color);
 		theEnvironment.EnableFill();
@@ -202,7 +210,7 @@ void NFmiTimeControlView::Draw(NFmiToolBox * theGTB)
 			DrawTimeAxis();
 			DrawAnimationBox();
 			if(fDrawTimeFilterTimesInNormalDraw)
-				DrawTimeFilterTimes(); // tämä piirretään DrawOverBitmapThings-metodsissa kaiken päälle esim. karttanäytön yhteydessä
+				DrawTimeFilterTimes(); // tï¿½mï¿½ piirretï¿½ï¿½n DrawOverBitmapThings-metodsissa kaiken pï¿½ï¿½lle esim. karttanï¿½ytï¿½n yhteydessï¿½
 
 			((NFmiAdjustedTimeScaleView*)itsTimeView)->DrawSelectedTimes();
 			DrawResolutionChangerBox();
@@ -214,7 +222,7 @@ void NFmiTimeControlView::Draw(NFmiToolBox * theGTB)
 	catch(...)
 	{
 	}
-	CleanGdiplus(); // tätä pitää kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
+	CleanGdiplus(); // tï¿½tï¿½ pitï¿½ï¿½ kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
 }
 
 NFmiPoint NFmiTimeControlView::GetViewSizeInPixels(void)
@@ -222,6 +230,7 @@ NFmiPoint NFmiTimeControlView::GetViewSizeInPixels(void)
 	return itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex);
 }
 
+#ifndef UNIX
 static void DrawCenteredText(Gdiplus::Graphics *theGdiPlusGraphics, const NFmiColor &theColor, double theFontSizeInMM, const std::string &theStr, const NFmiPoint &thePlace, double pixelsPerMM, NFmiToolBox *theToolbox)
 {
 	Gdiplus::Color usedColor(CtrlView::NFmiColor2GdiplusColor(theColor));
@@ -236,6 +245,7 @@ static void DrawCenteredText(Gdiplus::Graphics *theGdiPlusGraphics, const NFmiCo
 	Gdiplus::PointF aPlace = CtrlView::Relative2GdiplusPoint(theToolbox, thePlace);
 	theGdiPlusGraphics->DrawString(wideStr.c_str(), static_cast<INT>(wideStr.size()), &aFont, aPlace, &stringFormat, &aBrush);
 }
+#endif // !UNIX
 
 bool NFmiTimeControlView::IsAnimationViewVisible() const
 {
@@ -243,8 +253,9 @@ bool NFmiTimeControlView::IsAnimationViewVisible() const
 }
 
 // Annetaan varmuuden vuoksi lokaalisti luotu gdiplus -piirto otus parametrina (theUsedGdiPlusGraphics).
-// Aikasäätimen full-range -nappula piirretään vain karttanäyttöjen aikakontrolli-ikkunoihin, minkä AllowAnimationBoxShown -metodi kertoo.
-// Kun animaatio ikkuna on näkyvissä, ei piirretä tätä nappulaa selkeyden vuoksi (päällekkäisyyksiä piirrossa ja hit-boksissa).
+// Aikasï¿½ï¿½timen full-range -nappula piirretï¿½ï¿½n vain karttanï¿½yttï¿½jen aikakontrolli-ikkunoihin, minkï¿½ AllowAnimationBoxShown -metodi kertoo.
+// Kun animaatio ikkuna on nï¿½kyvissï¿½, ei piirretï¿½ tï¿½tï¿½ nappulaa selkeyden vuoksi (pï¿½ï¿½llekkï¿½isyyksiï¿½ piirrossa ja hit-boksissa).
+#ifndef UNIX
 void NFmiTimeControlView::DrawFullTimeRangeButton(Gdiplus::Graphics *theUsedGdiPlusGraphics)
 {
     if(!IsAnimationViewVisible())
@@ -260,11 +271,11 @@ void NFmiTimeControlView::DrawAnimationBox(void)
 {
     if(IsAnimationViewVisible())
 	{
-		// sininen animaatio alue pitää klipata aikaskaala asteikkoon
+		// sininen animaatio alue pitï¿½ï¿½ klipata aikaskaala asteikkoon
 		NFmiRect timeScaleRect = ((NFmiAdjustedTimeScaleView*)itsTimeView)->CalcTotalTimeScaleArea();
 		itsGdiPlusGraphics->SetClip(CtrlView::Relative2GdiplusRect(itsToolBox, timeScaleRect));
 
-		// Piirretään animaatioaikaväli vaalean sinisellä läpinäkyvällä laatikolla
+		// Piirretï¿½ï¿½n animaatioaikavï¿½li vaalean sinisellï¿½ lï¿½pinï¿½kyvï¿½llï¿½ laatikolla
 		NFmiRect animRect(CalcAnimationBoxRect());
 		NFmiColor animBoxColor(0.f, 0.498f, 1.0f, 0.608f);
 		Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(animBoxColor));
@@ -272,32 +283,32 @@ void NFmiTimeControlView::DrawAnimationBox(void)
         CtrlView::MakePathFromRect(aPath, itsToolBox, animRect);
 		itsGdiPlusGraphics->FillPath(&aBrushBox, &aPath);
 
-		// kaikki nappulat ja muut pitää clipata animaatio boksin sisään
+		// kaikki nappulat ja muut pitï¿½ï¿½ clipata animaatio boksin sisï¿½ï¿½n
 		NFmiRect buttonClipRect = timeScaleRect;
 		buttonClipRect = buttonClipRect.Intersection(animRect);
 		itsGdiPlusGraphics->SetClip(CtrlView::Relative2GdiplusRect(itsToolBox, buttonClipRect));
-		// piirrä close-button
+		// piirrï¿½ close-button
         CtrlView::DrawAnimationButton(CalcAnimationCloseButtonRect(), statAnimationButtonImages.itsCloseButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f, true);
 
         NFmiAnimationData &animData = itsCtrlViewDocumentInterface->AnimationData(itsMapViewDescTopIndex);
 
-		// piirrä play/pause-button
+		// piirrï¿½ play/pause-button
 		Gdiplus::Bitmap *usedPlayButtonBitmap = statAnimationButtonImages.itsPlayButtonImage;
 		if(animData.AnimationOn() == true)
 			usedPlayButtonBitmap = statAnimationButtonImages.itsPauseButtonImage;
         CtrlView::DrawAnimationButton(CalcAnimationPlayButtonRect(), usedPlayButtonBitmap, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f, true);
 
-		// piirrä vertical control -button
+		// piirrï¿½ vertical control -button
 		Gdiplus::Bitmap *usedVerticalControlButtonBitmap = statAnimationButtonImages.itsVerticalTimeControlOnImage;
 		if(animData.ShowVerticalControl() == true)
 			usedVerticalControlButtonBitmap = statAnimationButtonImages.itsVerticalTimeControlOffImage;
         CtrlView::DrawAnimationButton(CalcAnimationVerticalControlButtonRect(), usedVerticalControlButtonBitmap, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.9f, true);
 
 		{
-			// piirrä (time)delay-button
+			// piirrï¿½ (time)delay-button
 			NFmiRect delayRect = CalcAnimationDelayButtonRect();
             CtrlView::DrawAnimationButton(delayRect, statAnimationButtonImages.itsDelayButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f, true);
-			// piirretään napin ylä puolelle käytetty delay aika sadasosa sekunneilla
+			// piirretï¿½ï¿½n napin ylï¿½ puolelle kï¿½ytetty delay aika sadasosa sekunneilla
 			NFmiColor textColor(0.f, 0.f, 0.0f);
 			std::string delayStr = NFmiValueString::GetStringWithMaxDecimalsSmartWay(animData.FrameDelayInMS()/10., 0);
 			NFmiPoint delayStrPlace = delayRect.Center();
@@ -305,10 +316,10 @@ void NFmiTimeControlView::DrawAnimationBox(void)
 			::DrawCenteredText(itsGdiPlusGraphics, textColor, itsButtonSizeInMM_y * 0.7, delayStr, delayStrPlace, GetGraphicalInfo().itsPixelsPerMM_y, itsToolBox);
 		}
 
-		// piirrä runmode-button
+		// piirrï¿½ runmode-button
         CtrlView::DrawAnimationButton(CalcAnimationRunModeButtonRect(), statAnimationButtonImages.itsRepeatButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f, true);
 
-		// piirrä lockmode-button
+		// piirrï¿½ lockmode-button
 		NFmiRect lockModeRect(CalcAnimationLockModeButtonRect());
 		Gdiplus::Bitmap *usedLockButtonBitmap = statAnimationButtonImages.itsAnimationLockButtonImage;
 		if(animData.LockMode() == NFmiAnimationData::kFollowEarliestLastObservation)
@@ -316,10 +327,10 @@ void NFmiTimeControlView::DrawAnimationBox(void)
         CtrlView::DrawAnimationButton(lockModeRect, usedLockButtonBitmap, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f, true);
 
 		{
-			// piirrä last frame delay factor-button
+			// piirrï¿½ last frame delay factor-button
 			NFmiRect lastFrameDelayRect = CalcLastFrameDelayFactorButtonRect();
             CtrlView::DrawAnimationButton(lastFrameDelayRect, statAnimationButtonImages.itsLastFrameDelayButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f, true);
-			// piirretään napin ylä puolelle käytetty delay kerroin
+			// piirretï¿½ï¿½n napin ylï¿½ puolelle kï¿½ytetty delay kerroin
 			NFmiColor textColor(0.f, 0.f, 0.0f);
 			std::string lasframeDelayStr = NFmiStringTools::Convert<double>(animData.LastFrameDelayFactor());
 			lasframeDelayStr += "x";
@@ -331,17 +342,17 @@ void NFmiTimeControlView::DrawAnimationBox(void)
 	}
 }
 
-// Jos ollaan virtual-time moodissa piirretään seuraavaa (purpppura värillä):
+// Jos ollaan virtual-time moodissa piirretï¿½ï¿½n seuraavaa (purpppura vï¿½rillï¿½):
 // 1. Vasempaan alakulmaaan laatikko, jossa tekstit: VT Www<br>MM.DD HH:mm
 // 2. Alaraunaa horisontaali palkki, jota voi klikata.
-// 3. Jos virtual-time näkyy aika-asteikolla, piirretään sen kohtaan pysty palkki tai merkki ja VT kirjaimet
+// 3. Jos virtual-time nï¿½kyy aika-asteikolla, piirretï¿½ï¿½n sen kohtaan pysty palkki tai merkki ja VT kirjaimet
 void NFmiTimeControlView::DrawVirtualTimeData()
 {
 	if(itsCtrlViewDocumentInterface->VirtualTimeUsed())
 	{
 		DrawVirtualTimeSlider();
 		DrawVirtualTimeDataBox();
-		// Close buttonin piirto pitää olla DrawVirtualTimeDataBox metodin kutsun perässä!
+		// Close buttonin piirto pitï¿½ï¿½ olla DrawVirtualTimeDataBox metodin kutsun perï¿½ssï¿½!
 		CtrlView::DrawAnimationButton(CalcVirtualTimeCloseButtonRect(), statAnimationButtonImages.itsCloseButtonImage, itsGdiPlusGraphics, *itsToolBox, itsCtrlViewDocumentInterface->Printing(), GetViewSizeInPixels(), 0.7f);
 	}
 }
@@ -385,7 +396,7 @@ void NFmiTimeControlView::DrawVirtualTimeDataBox()
 	Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(fillColor));
 	Gdiplus::GraphicsPath aPath;
 	Gdiplus::Rect gdiRect(static_cast<INT>(virtualTimeBox.Left()), static_cast<INT>(virtualTimeBox.Top()), static_cast<INT>(virtualTimeBox.Width()), static_cast<INT>(virtualTimeBox.Height()));
-	// Otetaan tässä vaiheessa talteen VT-laatikon suhteellinen rect
+	// Otetaan tï¿½ssï¿½ vaiheessa talteen VT-laatikon suhteellinen rect
 	itsVirtualTimeBoxRect = CtrlView::GdiplusRect2Relative(itsToolBox, gdiRect);
 	aPath.AddRectangle(gdiRect);
 	aPath.CloseFigure();
@@ -397,7 +408,7 @@ void NFmiTimeControlView::DrawVirtualTimeDataBox()
 	NFmiPoint center = virtualTimeBox.Center();
 	NFmiPoint topleft = virtualTimeBox.TopLeft();
 
-	Gdiplus::PointF timeString1OffSet(static_cast<Gdiplus::REAL>(center.X()), static_cast<Gdiplus::REAL>(topleft.Y())); // tämä offset on suhteellinen laskettuun aika-string boxiin
+	Gdiplus::PointF timeString1OffSet(static_cast<Gdiplus::REAL>(center.X()), static_cast<Gdiplus::REAL>(topleft.Y())); // tï¿½mï¿½ offset on suhteellinen laskettuun aika-string boxiin
 	Gdiplus::PointF timeString2OffSet(timeString1OffSet);
 	timeString2OffSet.Y += fontSize;
 
@@ -436,8 +447,8 @@ void NFmiTimeControlView::DrawVirtualTimeSlider()
 	DrawVirtualTimeMarker();
 }
 
-// Piirretään kärjellään seisova kolmio virtual-timen kohdalle,
-// slider-laatikon päälle.
+// Piirretï¿½ï¿½n kï¿½rjellï¿½ï¿½n seisova kolmio virtual-timen kohdalle,
+// slider-laatikon pï¿½ï¿½lle.
 void NFmiTimeControlView::DrawVirtualTimeMarker()
 {
 	auto& graphicalInfo = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex);
@@ -447,7 +458,7 @@ void NFmiTimeControlView::DrawVirtualTimeMarker()
 	const auto& baseColor = NFmiVirtualTimeData::virtualTimeBaseColor;
 	Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(baseColor));
 	auto timePointX = Time2Value(itsCtrlViewDocumentInterface->VirtualTime());
-	// p1 on kärki kolmion piste, joka on sliderin yläosassa
+	// p1 on kï¿½rki kolmion piste, joka on sliderin ylï¿½osassa
 	NFmiPoint p1(timePointX, itsVirtualTimeSliderRect.Top());
 	NFmiPoint p2(timePointX - (relativeHeight / 3.), itsVirtualTimeSliderRect.Top() - relativeHeight);
 	NFmiPoint p3(timePointX + (relativeHeight / 3.), itsVirtualTimeSliderRect.Top() - relativeHeight);
@@ -465,11 +476,12 @@ void NFmiTimeControlView::DrawVirtualTimeMarker()
 	Gdiplus::Pen penBox(CtrlView::NFmiColor2GdiplusColor(NFmiColor()), static_cast<Gdiplus::REAL>(penThicknessInPixels));
 	itsGdiPlusGraphics->DrawPath(&penBox, &aPath);
 }
+#endif // !UNIX
 
 bool NFmiTimeControlView::IsTimeFiltersDrawn(void)
 {
 	if(fShowEditTimeHandles)
-		if(itsCtrlViewDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal)  // jos ns. edit-moodi päällä, piiretään aikarajoitin viivat
+		if(itsCtrlViewDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal)  // jos ns. edit-moodi pï¿½ï¿½llï¿½, piiretï¿½ï¿½n aikarajoitin viivat
 			return true;
 	return false;
 }
@@ -540,8 +552,8 @@ void NFmiTimeControlView::EndTime(const NFmiMetTime &newValue)
     ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(g_EditedDataTimeRangeChangedUpdateViewIdMask);
 }
 
-// lasketaan pikseleissa annetusta fonttikoosta sellainen fontti koko, mikä jää annetun
-// fontin minimi ja maksimi kokojen väliin
+// lasketaan pikseleissa annetusta fonttikoosta sellainen fontti koko, mikï¿½ jï¿½ï¿½ annetun
+// fontin minimi ja maksimi kokojen vï¿½liin
 static double FixFontSize(double fontSize, double pixelSizeInMM, double minFontSizeInMM, double maxFontSizeInMM)
 {
 	double fontSizeInMM = fontSize * pixelSizeInMM;
@@ -550,10 +562,10 @@ static double FixFontSize(double fontSize, double pixelSizeInMM, double minFontS
 	return fontSizeInMM / pixelSizeInMM;
 }
 
-// funtio piirtää resoluutio stringin sille varattuun laatikkoon.
-// jos tilaa on, tehdään kirjaimista korkeintaan 5 mm korkeita.
-// Funktio laskee kuinka pitkä tekstistä tulisi ja jos tilaa on liian 
-// vähän, fontin kokoa pienennetään vastaavasti.
+// funtio piirtï¿½ï¿½ resoluutio stringin sille varattuun laatikkoon.
+// jos tilaa on, tehdï¿½ï¿½n kirjaimista korkeintaan 5 mm korkeita.
+// Funktio laskee kuinka pitkï¿½ tekstistï¿½ tulisi ja jos tilaa on liian 
+// vï¿½hï¿½n, fontin kokoa pienennetï¿½ï¿½n vastaavasti.
 void NFmiTimeControlView::DrawResolutionChangerBox(void)
 {
 	if(fShowResolutionChangerBox)
@@ -569,11 +581,11 @@ void NFmiTimeControlView::DrawResolutionChangerBox(void)
 		NFmiString resolutionStr = GetResolutionText();
 		unsigned long strLen = resolutionStr.GetLen();
 		double fontSizeInMM = 5.0;
-		double fontSizefactor = 1.0; // tätä käytetään normaali kokoiselle resoluutio tekstille eli 2 merkki pitkä (esim. 1h)
+		double fontSizefactor = 1.0; // tï¿½tï¿½ kï¿½ytetï¿½ï¿½n normaali kokoiselle resoluutio tekstille eli 2 merkki pitkï¿½ (esim. 1h)
 		int fontSize = static_cast<int>(fontSizeInMM * fontSizefactor * GetGraphicalInfo().itsPixelsPerMM_y * 1.88);
 
 		envi.SetFontSize(NFmiPoint(fontSize, fontSize));
-		NFmiText dummyText(NFmiPoint(-11111, -11111), "", false, 0, &envi); // printataan tyhjä kerran lasketulla fontilla, että voidaan laskea tekstin vaatima tila
+		NFmiText dummyText(NFmiPoint(-11111, -11111), "", false, 0, &envi); // printataan tyhjï¿½ kerran lasketulla fontilla, ettï¿½ voidaan laskea tekstin vaatima tila
 		itsToolBox->Convert(&dummyText);
 		double measure = itsToolBox->MeasureText(resolutionStr) * 2.2;
 		double fontSizeFixFactor = 1;
@@ -622,16 +634,16 @@ namespace
 		else if(currentResolution > timeResolutionLimitsInMinutes.back())
 			return timeResolutionLimitsInMinutes.back();
 
-		// lower_bound etsii joko etsityn arvon tai ensimmäisen sitä suuremman arvon paikan iteraattorin
+		// lower_bound etsii joko etsityn arvon tai ensimmï¿½isen sitï¿½ suuremman arvon paikan iteraattorin
 		auto iter = std::lower_bound(timeResolutionLimitsInMinutes.begin(), timeResolutionLimitsInMinutes.end(), currentResolution);
 		if(iter == timeResolutionLimitsInMinutes.end())
 		{
-			// Tähän ei pitäisi mennä, palautetaan vaikka pienin arvo
+			// Tï¿½hï¿½n ei pitï¿½isi mennï¿½, palautetaan vaikka pienin arvo
 			return timeResolutionLimitsInMinutes.front();
 		}
 
-		// Ei tarvitse tarkistaa että ollaanko jo alarajalla, koska se on jo otettu huomioon heti alussa.
-		// Otetaan yksi pykälä alas ja palautetaan se
+		// Ei tarvitse tarkistaa ettï¿½ ollaanko jo alarajalla, koska se on jo otettu huomioon heti alussa.
+		// Otetaan yksi pykï¿½lï¿½ alas ja palautetaan se
 		--iter;
 		return *iter;
 	}
@@ -643,11 +655,11 @@ namespace
 		else if(currentResolution >= timeResolutionLimitsInMinutes.back())
 			return timeResolutionLimitsInMinutes.back();
 
-		// upper_bound etsii ensimmäisen haettua arvoa suuremman arvon paikan iteraattorin
+		// upper_bound etsii ensimmï¿½isen haettua arvoa suuremman arvon paikan iteraattorin
 		auto iter = std::upper_bound(timeResolutionLimitsInMinutes.begin(), timeResolutionLimitsInMinutes.end(), currentResolution);
 		if(iter == timeResolutionLimitsInMinutes.end())
 		{
-			// Tähän ei pitäisi mennä, palautetaan vaikka suurin arvo
+			// Tï¿½hï¿½n ei pitï¿½isi mennï¿½, palautetaan vaikka suurin arvo
 			return timeResolutionLimitsInMinutes.back();
 		}
 
@@ -659,7 +671,7 @@ void NFmiTimeControlView::ChangeResolution(bool fLeftClicked, bool ctrlKeyDown)
 {
 	int usedTimeResolutionInMinutes = GetUsedTimeResolutionInMinutes();
 	const auto& usedTimeResolutionLimits = ctrlKeyDown ? gTimeResolutionExtendedLimitsInMinutes : gTimeResolutionLimitsInMinutes;
-	if(fLeftClicked) // pienennetään resoluutiota
+	if(fLeftClicked) // pienennetï¿½ï¿½n resoluutiota
 	{
 		usedTimeResolutionInMinutes = ::seekNextLowerLmit(usedTimeResolutionInMinutes, usedTimeResolutionLimits);
 	}
@@ -673,12 +685,12 @@ void NFmiTimeControlView::ChangeResolution(bool fLeftClicked, bool ctrlKeyDown)
     ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
     if(::IsMainMapViewDesctopIndex(itsMapViewDescTopIndex))
     {
-        // Pääkarttanäytön aika-stepin vaihto vaikuttaa myös warning ja sea-icing ikkunoiden tiloihin
+        // Pï¿½ï¿½karttanï¿½ytï¿½n aika-stepin vaihto vaikuttaa myï¿½s warning ja sea-icing ikkunoiden tiloihin
         ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::WarningCenterDlg);
     }
 }
 
-// tällä piirretään tavara, joka tulee myös bitmapin päälle
+// tï¿½llï¿½ piirretï¿½ï¿½n tavara, joka tulee myï¿½s bitmapin pï¿½ï¿½lle
 void NFmiTimeControlView::DrawOverBitmapThings(NFmiToolBox * theGTB, bool dummy, int dummy2, float dummy3, void* dummy4)
 {
 	itsToolBox = theGTB;
@@ -698,7 +710,7 @@ NFmiRect NFmiTimeControlView::CalcTimeFilterBoxRect(void)
 	double endPos = Time2Value(EndTime());
 
 	if(::fabs(startPos - endPos) < 0.001)
-	{ // jos alku ja loppu aika ovat samoja tai tarpeeksi lähellä toisiaan suht. maailmassa, venytä sitä x- ja y-suunnassa
+	{ // jos alku ja loppu aika ovat samoja tai tarpeeksi lï¿½hellï¿½ toisiaan suht. maailmassa, venytï¿½ sitï¿½ x- ja y-suunnassa
 		double relXSize = itsToolBox->SY(2);
 		return NFmiRect(startPos - relXSize, GetFrame().Top() + itsToolBox->SY(2), endPos + relXSize, GetFrame().Top() + relYSize * 3);
 	}
@@ -717,19 +729,20 @@ NFmiRect NFmiTimeControlView::CalcResolutionChangerBoxRect(void)
 	return rect;
 }
 
+#ifndef UNIX
 void NFmiTimeControlView::DrawTimeFilterTimes()
 {
 	if(IsTimeFiltersDrawn())
 	{
 		// HUOM!!!!!
-		// Jouduin käyttämään tässä kohtaa lokaali Gdiplus::Graphics -oliota, koska luokan oman instanssin 
-		// itsGdiPlusGraphics-instanssin käyttö kaatoi omituisesti ohjelman. Tämä on varoittava esimerkki
-		// siitä, että ehkä kannattaa käyttää lokaaleja Graphics-olioita. En tiedä miten raskas operaatio
-		// on luoda aina joka käyttöön oma instanssi piirto hommia varten.
-		// Luulen että ongelma on siinä että SmartMet luo jatkuvasti näyttöluokkia uudelleen ja uudelleen
-		// tästä ehkä seuraa se että joku piirto metodi saattaa aiheuttaa luokan uudelleen luonnin kesken 
-		// kaiken, jolloin myös GDI+ otus pitäisi luoda uudestaan. Korjaaminen voisi ehkä tapahtua siten 
-		// että luokkien luonti ja muu toiminta pitää laittaa uusiksi (= iso ja vaivaloinen työ).
+		// Jouduin kï¿½yttï¿½mï¿½ï¿½n tï¿½ssï¿½ kohtaa lokaali Gdiplus::Graphics -oliota, koska luokan oman instanssin 
+		// itsGdiPlusGraphics-instanssin kï¿½yttï¿½ kaatoi omituisesti ohjelman. Tï¿½mï¿½ on varoittava esimerkki
+		// siitï¿½, ettï¿½ ehkï¿½ kannattaa kï¿½yttï¿½ï¿½ lokaaleja Graphics-olioita. En tiedï¿½ miten raskas operaatio
+		// on luoda aina joka kï¿½yttï¿½ï¿½n oma instanssi piirto hommia varten.
+		// Luulen ettï¿½ ongelma on siinï¿½ ettï¿½ SmartMet luo jatkuvasti nï¿½yttï¿½luokkia uudelleen ja uudelleen
+		// tï¿½stï¿½ ehkï¿½ seuraa se ettï¿½ joku piirto metodi saattaa aiheuttaa luokan uudelleen luonnin kesken 
+		// kaiken, jolloin myï¿½s GDI+ otus pitï¿½isi luoda uudestaan. Korjaaminen voisi ehkï¿½ tapahtua siten 
+		// ettï¿½ luokkien luonti ja muu toiminta pitï¿½ï¿½ laittaa uusiksi (= iso ja vaivaloinen tyï¿½).
 		Gdiplus::Graphics *gdiPlusGraphics = Gdiplus::Graphics::FromHDC(itsToolBox->GetDC()->GetSafeHdc());
 		try
 		{
@@ -737,15 +750,15 @@ void NFmiTimeControlView::DrawTimeFilterTimes()
 				throw std::runtime_error("Error in NFmiTimeControlView::DrawTimeFilterTimes -method, unable to initialize Gdiplus::Graphics, application error.");
 
 			if(itsToolBox->GetDC()->IsPrinting())
-				gdiPlusGraphics->SetPageUnit(Gdiplus::UnitPixel); // tähän asti on pelattu printatessa aina pikseli maailmassa, joten gdiplus:in pitää laittaa siihen
+				gdiPlusGraphics->SetPageUnit(Gdiplus::UnitPixel); // tï¿½hï¿½n asti on pelattu printatessa aina pikseli maailmassa, joten gdiplus:in pitï¿½ï¿½ laittaa siihen
 
             DrawFullTimeRangeButton(gdiPlusGraphics);
 
-			// vaalean punainen time filtter jana pitää clipata aikaskaalaasteikkoon
+			// vaalean punainen time filtter jana pitï¿½ï¿½ clipata aikaskaalaasteikkoon
 			NFmiRect timeScaleRect = ((NFmiAdjustedTimeScaleView*)itsTimeView)->CalcTotalTimeScaleArea();
 			gdiPlusGraphics->SetClip(CtrlView::Relative2GdiplusRect(itsToolBox, timeScaleRect));
 
-			// Piirretään animaatioaikaväli vaalean sinisellä läpinäkyvällä laatikolla
+			// Piirretï¿½ï¿½n animaatioaikavï¿½li vaalean sinisellï¿½ lï¿½pinï¿½kyvï¿½llï¿½ laatikolla
 			NFmiRect timeFilterRect(CalcTimeFilterBoxRect());
 			NFmiColor timeFilterColor(1.f, 0.498f, 0.f, 0.608f);
 			Gdiplus::SolidBrush aBrushBox(CtrlView::NFmiColor2GdiplusColor(timeFilterColor));
@@ -772,6 +785,7 @@ void NFmiTimeControlView::DrawTimeFilterTimes()
 		}
 	}
 }
+#endif // !UNIX
 
 void NFmiTimeControlView::ClearAllMouseCaptureFlags(void)
 {
@@ -792,8 +806,9 @@ void NFmiTimeControlView::ClearAllMouseCaptureFlags(void)
 	fAnimationVerticalControlButtonPressed = false;
 }
 
-// theSizeFactorX -parametri on pika viritys, jotta saisin FullTimeRange-nappulan toimimaan, ja se on 2x leveämpi kuin normaalit nappulat (32 x 16 pikseliä)
-// theSizeFactorY -parametri on pika viritys, jotta saisin tehtyä nappuloista tuplakokoisia 
+#ifndef UNIX
+// theSizeFactorX -parametri on pika viritys, jotta saisin FullTimeRange-nappulan toimimaan, ja se on 2x leveï¿½mpi kuin normaalit nappulat (32 x 16 pikseliï¿½)
+// theSizeFactorY -parametri on pika viritys, jotta saisin tehtyï¿½ nappuloista tuplakokoisia
 NFmiPoint NFmiTimeControlView::CalcAnimationButtonRelativeSize(double theSizeFactorX, double theSizeFactorY)
 {
     double relativeWidth = itsToolBox->SX(boost::math::iround(theSizeFactorX * itsButtonSizeInMM_x * GetGraphicalInfo().itsPixelsPerMM_x));
@@ -812,6 +827,7 @@ NFmiPoint NFmiTimeControlView::CalcAnimationButtonRelativeSize(double theSizeFac
 	}
 	return NFmiPoint(relativeWidth, relativeHeight);
 }
+#endif // !UNIX
 
 NFmiPoint NFmiTimeControlView::CalcAnimationButtonRelativeEdgeOffset(const NFmiPoint &theButtonRelaviteSize)
 {
@@ -850,7 +866,7 @@ NFmiRect NFmiTimeControlView::CalcAnimationButtonTopLeftRect(const NFmiRect &bas
 {
 	NFmiPoint buttonRelativeSize = CalcAnimationButtonRelativeSize(2, 2);
 	NFmiPoint buttonRelativeEdgeOffset = CalcAnimationButtonRelativeEdgeOffset(buttonRelativeSize);
-	// Sijoitetaan close-nappi oikeaa ylä kulmaan hieman irti reunoista
+	// Sijoitetaan close-nappi oikeaa ylï¿½ kulmaan hieman irti reunoista
 	double leftSide = baseRect.Right() - buttonRelativeSize.X() - buttonRelativeEdgeOffset.X();
 	double rightside = baseRect.Right() - buttonRelativeEdgeOffset.X();
 	double topSide = baseRect.Top() + buttonRelativeEdgeOffset.Y();
@@ -861,7 +877,7 @@ NFmiRect NFmiTimeControlView::CalcAnimationButtonTopLeftRect(const NFmiRect &bas
 
 NFmiRect NFmiTimeControlView::CalcAnimationVerticalControlButtonRect(void)
 {
-	// sijoitetaan tämä nappi close -napin alle
+	// sijoitetaan tï¿½mï¿½ nappi close -napin alle
 	NFmiRect rect = CalcAnimationCloseButtonRect();
 	NFmiPoint buttonRelativeSize = CalcAnimationButtonRelativeSize(2, 2);
 	NFmiPoint buttonRelativeEdgeOffset = CalcAnimationButtonRelativeEdgeOffset(buttonRelativeSize);
@@ -872,14 +888,14 @@ NFmiRect NFmiTimeControlView::CalcAnimationVerticalControlButtonRect(void)
 }
 
 // Laskee vasempaan alariviin nappuloiden paikkoja indeksin perusteella.
-// theIndex alkaa 1:stä ja indeksin kasvaessa nappuloita sijoitetaan aina enemmän oikealle.
+// theIndex alkaa 1:stï¿½ ja indeksin kasvaessa nappuloita sijoitetaan aina enemmï¿½n oikealle.
 NFmiRect NFmiTimeControlView::CalcAnimationButtonRect(int theIndex)
 {
 	NFmiRect animRect = CalcAnimationBoxRect();
 	NFmiPoint buttonRelativeSize = CalcAnimationButtonRelativeSize(2, 2);
 	NFmiPoint buttonRelativeEdgeOffset = CalcAnimationButtonRelativeEdgeOffset(buttonRelativeSize);
 
-	// Sijoitetaan nämä nappulat vasemapaan ala kulmaan hieman irti reunoista.
+	// Sijoitetaan nï¿½mï¿½ nappulat vasemapaan ala kulmaan hieman irti reunoista.
 	double leftSide = animRect.Left() + ((theIndex-1)*buttonRelativeSize.X()) + (theIndex*buttonRelativeEdgeOffset.X());
 	double rightside = leftSide + buttonRelativeSize.X();
 	double topSide = animRect.Bottom() - buttonRelativeSize.Y() - buttonRelativeEdgeOffset.Y();
@@ -922,7 +938,7 @@ NFmiRect NFmiTimeControlView::CalcLastFrameDelayFactorButtonRect(void)
 bool NFmiTimeControlView::IsInsideAnyAnimationButton(const NFmiPoint &thePlace)
 {
 	if(CalcAnimationBoxRect().IsInside(thePlace))
-	{ // pitää olla animaatio boxin sisällä, ennen kuin tarkastellaan erillisiä nappeja!!
+	{ // pitï¿½ï¿½ olla animaatio boxin sisï¿½llï¿½, ennen kuin tarkastellaan erillisiï¿½ nappeja!!
 		if(CalcAnimationCloseButtonRect().IsInside(thePlace))
 			return true;
 		if(CalcAnimationPlayButtonRect().IsInside(thePlace))
@@ -942,7 +958,7 @@ bool NFmiTimeControlView::IsInsideAnyAnimationButton(const NFmiPoint &thePlace)
 }
 
 // Tarkastellaan onko joku animaatio nappi painettu alas.
-// Jos on, tarkastetaan onko hiiri vielä napin päällä kun se on päästetty irti, jolloin voidaan tehdä napin toiminta.
+// Jos on, tarkastetaan onko hiiri vielï¿½ napin pï¿½ï¿½llï¿½ kun se on pï¿½ï¿½stetty irti, jolloin voidaan tehdï¿½ napin toiminta.
 bool NFmiTimeControlView::AnimationButtonReleased(const NFmiPoint & thePlace,unsigned long theKey)
 {
 	if(IsAnimationButtonPressed() || IsInsideAnyAnimationButton(thePlace))
@@ -952,7 +968,7 @@ bool NFmiTimeControlView::AnimationButtonReleased(const NFmiPoint & thePlace,uns
 		if(fAnimationCloseButtonPressed && CalcAnimationCloseButtonRect().IsInside(thePlace))
 		{
 			animData.ShowTimesOnTimeControl(false);
-			animData.AnimationOn(false); // suljetaan myös animaatio samalla (että jos animointi ikkuna avataan myöhemmin, ei animaatio mene heti päälle)
+			animData.AnimationOn(false); // suljetaan myï¿½s animaatio samalla (ettï¿½ jos animointi ikkuna avataan myï¿½hemmin, ei animaatio mene heti pï¿½ï¿½lle)
 		}
 		else if(fAnimationPlayButtonPressed || CalcAnimationPlayButtonRect().IsInside(thePlace))
 			animData.AnimationOn(!animData.AnimationOn());
@@ -962,7 +978,7 @@ bool NFmiTimeControlView::AnimationButtonReleased(const NFmiPoint & thePlace,uns
 			currentDelayInMS -= 100;
 			if(currentDelayInMS < 0)
 				currentDelayInMS = 0;
-            currentDelayInMS = boost::math::iround(currentDelayInMS / 100.) * 100; // fiksataan vielä lähimpää 100 jaolliseen lukuun
+            currentDelayInMS = boost::math::iround(currentDelayInMS / 100.) * 100; // fiksataan vielï¿½ lï¿½himpï¿½ï¿½ 100 jaolliseen lukuun
 			animData.FrameDelayInMS(currentDelayInMS);
 		}
 		else if(fAnimationRunModeButtonPressed || CalcAnimationRunModeButtonRect().IsInside(thePlace))
@@ -973,14 +989,14 @@ bool NFmiTimeControlView::AnimationButtonReleased(const NFmiPoint & thePlace,uns
 			currentLastFrameDelay -= 0.5;
 			if(currentLastFrameDelay < 1)
 				currentLastFrameDelay = 1;
-			currentLastFrameDelay = ::round(currentLastFrameDelay/0.5)*0.5; // fiksataan vielä lähimpää 0.5 jaolliseen lukuun
+			currentLastFrameDelay = ::round(currentLastFrameDelay/0.5)*0.5; // fiksataan vielï¿½ lï¿½himpï¿½ï¿½ 0.5 jaolliseen lukuun
 			animData.LastFrameDelayFactor(currentLastFrameDelay);
 		}
 		else if(fAnimationLockModeButtonPressed || CalcAnimationLockModeButtonRect().IsInside(thePlace))
 		{
 			animData.ToggleLockMode();
 			if(animData.LockMode() != NFmiAnimationData::kNoLock)
-				itsCtrlViewDocumentInterface->CheckAnimationLockedModeTimeBags(itsMapViewDescTopIndex, false); // tämä päivittää timebagit kohdalleen ja likaa mahd. näyttö ruutuja cachesta
+				itsCtrlViewDocumentInterface->CheckAnimationLockedModeTimeBags(itsMapViewDescTopIndex, false); // tï¿½mï¿½ pï¿½ivittï¿½ï¿½ timebagit kohdalleen ja likaa mahd. nï¿½yttï¿½ ruutuja cachesta
 		}
 		else if(fAnimationVerticalControlButtonPressed || CalcAnimationVerticalControlButtonRect().IsInside(thePlace))
 		{
@@ -1017,8 +1033,8 @@ bool NFmiTimeControlView::HandlePossibleVirtualTimeBoxCloseButtonClick(const NFm
 	return true;
 }
 
-// Tiettyjä hiiren klikkauksia halutaan tehdä monessa kohtaa (4) NFmiTimeControlView::LeftButtonUp 
-// metodissa, siksi ne on niputettu tähän yhteen kutsuun.
+// Tiettyjï¿½ hiiren klikkauksia halutaan tehdï¿½ monessa kohtaa (4) NFmiTimeControlView::LeftButtonUp 
+// metodissa, siksi ne on niputettu tï¿½hï¿½n yhteen kutsuun.
 bool NFmiTimeControlView::DoPrimaryLeftButtonUpChecks(const NFmiPoint& thePlace, unsigned long theKey)
 {
 	if(HandlePossibleVirtualTimeSet(thePlace, theKey))
@@ -1044,19 +1060,19 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 {
 	bool status = false;
 	bool ctrlKeyDown = (theKey & kCtrlKey);
-	// Huomasin että Winkkarin hiiren käsittely rutiinissa on joskus 'vuotoja'.
-	// Eli LeftButtonDown-metodissa on tarkoitus merkitä, onko hiiri painettu alas aikakontrolli-ikkunassa.
-	// Mutta jos klikkailee hiiren vasenta nappia nopeasti peräkkäin, ei LeftButtonDown-metodia aina kutsutakaan.
-	// Tästä seurasi, että jos ei ole merkintää onko hiiri 'kaapattu', mutta hiiri on aikakontrolli-ikkunan päällä
-	// tehdään kuitenkin hyppy edelliseen aikaan. Muuten taaksepäin ajassa klikkailu ei toimi kuten
-	// ennen näitä Mirwasta otettuja aikakontrolli hiirenkäsittely uudistuksia.
+	// Huomasin ettï¿½ Winkkarin hiiren kï¿½sittely rutiinissa on joskus 'vuotoja'.
+	// Eli LeftButtonDown-metodissa on tarkoitus merkitï¿½, onko hiiri painettu alas aikakontrolli-ikkunassa.
+	// Mutta jos klikkailee hiiren vasenta nappia nopeasti perï¿½kkï¿½in, ei LeftButtonDown-metodia aina kutsutakaan.
+	// Tï¿½stï¿½ seurasi, ettï¿½ jos ei ole merkintï¿½ï¿½ onko hiiri 'kaapattu', mutta hiiri on aikakontrolli-ikkunan pï¿½ï¿½llï¿½
+	// tehdï¿½ï¿½n kuitenkin hyppy edelliseen aikaan. Muuten taaksepï¿½in ajassa klikkailu ei toimi kuten
+	// ennen nï¿½itï¿½ Mirwasta otettuja aikakontrolli hiirenkï¿½sittely uudistuksia.
 	auto isMouseCaptured = IsMouseCaptured();
 	auto isInsideFullTimeRangeButtonRect = CalcFullTimeRangeButtonRect().IsInside(thePlace);
     if(!isMouseCaptured && !isInsideFullTimeRangeButtonRect)
 	{
         if(IsIn(thePlace))
         {	
-			// eli jos hiiren napista on päästetty irti (vaikka sitä ei oltu otettu kiinni) ja kursori on aikaikkunan päällä, siirretään aikaa taaksepäin
+			// eli jos hiiren napista on pï¿½ï¿½stetty irti (vaikka sitï¿½ ei oltu otettu kiinni) ja kursori on aikaikkunan pï¿½ï¿½llï¿½, siirretï¿½ï¿½n aikaa taaksepï¿½in
             if((ctrlKeyDown) && (theKey & kShiftKey))
             {
                 if(itsTimeBag->FindNearestTime(itsTimeView->GetTime(thePlace), kCenter, itsTimeBag->Resolution()))
@@ -1078,11 +1094,11 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 			}
 		}
         else
-            status = false; // jos hiirtä ei oltu klikattu pohjaan aikaikkunassa, eikä olla aikakontrolliikkunassa, ei tehdä mitään
+            status = false; // jos hiirtï¿½ ei oltu klikattu pohjaan aikaikkunassa, eikï¿½ olla aikakontrolliikkunassa, ei tehdï¿½ mitï¿½ï¿½n
 	}
 	else
 	{
-        itsCtrlViewDocumentInterface->FilterDialogUpdateStatus(1); // 1 = filterdialogin aikakontrolli-ikkuna pitää päivittää
+        itsCtrlViewDocumentInterface->FilterDialogUpdateStatus(1); // 1 = filterdialogin aikakontrolli-ikkuna pitï¿½ï¿½ pï¿½ivittï¿½ï¿½
 
 		if(fMouseMovedWhenCaptured)
 		{
@@ -1092,9 +1108,9 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 				status = true;
 			}
 			else if(fMouseCapturedMoveTimeLine)
-			{ // lopetetaan aikakontrollin raahaus ja säädetään sen alku- ja loppupäät sopiviksi
+			{ // lopetetaan aikakontrollin raahaus ja sï¿½ï¿½detï¿½ï¿½n sen alku- ja loppupï¿½ï¿½t sopiviksi
 
-				// jos raahaus on ollut mitätön, siirretään valittua aikaa, eikä tehdä raahausta
+				// jos raahaus on ollut mitï¿½tï¿½n, siirretï¿½ï¿½n valittua aikaa, eikï¿½ tehdï¿½ raahausta
 				double xDiff = thePlace.X() - itsLeftButtonDownMousePosition.X();
 				if(::fabs(xDiff) < 0.001)
 				{
@@ -1118,7 +1134,7 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 				status = (SetTime(thePlace, true) == true);
 			else if(fMouseCapturedAnimationBox)
 			{
-				// jos raahaus on ollut mitätön, siirretään valittua aikaa, eikä tehdä raahausta
+				// jos raahaus on ollut mitï¿½tï¿½n, siirretï¿½ï¿½n valittua aikaa, eikï¿½ tehdï¿½ raahausta
 				double xDiff = thePlace.X() - itsLeftButtonDownMousePosition.X();
 				if(::fabs(xDiff) < 0.001)
 				{
@@ -1127,14 +1143,14 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 				else
 				{
 					NFmiAnimationData &animData = itsCtrlViewDocumentInterface->AnimationData(itsMapViewDescTopIndex);
-					animData.ShowTimebag(animData.Times()); // asetetaan lopuksi oikeat animaatio ajat myös show-times ajoiksi (tämä siis 'loksauttaa' animaatio ajat timestepin mukaisesti)
+					animData.ShowTimebag(animData.Times()); // asetetaan lopuksi oikeat animaatio ajat myï¿½s show-times ajoiksi (tï¿½mï¿½ siis 'loksauttaa' animaatio ajat timestepin mukaisesti)
 				}
 				status = true;
 			}
         }
 		if(status == false)
 		{
-			// jos hiirtä ei oltu raahattu, tehdään vain jotain seuraavista
+			// jos hiirtï¿½ ei oltu raahattu, tehdï¿½ï¿½n vain jotain seuraavista
             if(isInsideFullTimeRangeButtonRect)
             {
                 itsCtrlViewDocumentInterface->ResetTimeFilterTimes();
@@ -1146,16 +1162,16 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 				status = (SetTime(thePlace) == true);
 			}
 			else if(theKey & kShiftKey)
-			{ // tämäkin pitää hanskata, että hiiri ei liikkunut kun on klikattu hiirellä shift-nappi pohjassa
+			{ // tï¿½mï¿½kin pitï¿½ï¿½ hanskata, ettï¿½ hiiri ei liikkunut kun on klikattu hiirellï¿½ shift-nappi pohjassa
 				NFmiAnimationData &animData = itsCtrlViewDocumentInterface->AnimationData(itsMapViewDescTopIndex);
-				animData.ShowTimebag(animData.Times()); // asetetaan lopuksi oikeat animaatio ajat myös show-times ajoiksi (tämä siis 'loksauttaa' animaatio ajat timestepin mukaisesti)
+				animData.ShowTimebag(animData.Times()); // asetetaan lopuksi oikeat animaatio ajat myï¿½s show-times ajoiksi (tï¿½mï¿½ siis 'loksauttaa' animaatio ajat timestepin mukaisesti)
 				status = true;
 			}
 			else
 			{
 
 				if(fMouseCapturedAnimationBox && fMouseMovedWhenCaptured)
-				{ // jos klikkaus alas tapahtui animaatio boxissa, ja sitä on raahattu, eikä oltu painettu mitään nappulaa
+				{ // jos klikkaus alas tapahtui animaatio boxissa, ja sitï¿½ on raahattu, eikï¿½ oltu painettu mitï¿½ï¿½n nappulaa
 					status = true;
 				}
 				else if(DoPrimaryLeftButtonUpChecks(thePlace, theKey))
@@ -1168,8 +1184,8 @@ bool NFmiTimeControlView::LeftButtonUp(const NFmiPoint & thePlace,unsigned long 
 
     if(status)
     {
-        // Jos status on laitettu true:ksi, varmistetaan että tehdään ainakin kyseisen karttanäytön päivitys. 
-        // Optimointia, ettei kaikkia näyttöjä päivitetä. Jos halutaan että tehdään laajempia näyttöjen päivityksiä, pitää eri kohdissa laittaa enemmän näyttöjen päivityslippuja päälle
+        // Jos status on laitettu true:ksi, varmistetaan ettï¿½ tehdï¿½ï¿½n ainakin kyseisen karttanï¿½ytï¿½n pï¿½ivitys. 
+        // Optimointia, ettei kaikkia nï¿½yttï¿½jï¿½ pï¿½ivitetï¿½. Jos halutaan ettï¿½ tehdï¿½ï¿½n laajempia nï¿½yttï¿½jen pï¿½ivityksiï¿½, pitï¿½ï¿½ eri kohdissa laittaa enemmï¿½n nï¿½yttï¿½jen pï¿½ivityslippuja pï¿½ï¿½lle
         ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
     }
 
@@ -1190,7 +1206,7 @@ bool NFmiTimeControlView::AnimationLeftButtonDown(const NFmiPoint & thePlace, un
 {
 	NFmiRect animationTimesBox(CalcAnimationBoxRect());
 	if((theKey & kShiftKey) && animationTimesBox.IsInside(thePlace) == false)
-	{ // shift-nappi pohjassa synnytetään uusi animaatio-aika-boksi, jos ollaan nykyisen animaatio boksin ulkopuolella (tai sitä ei esim. ole näkyvissä)
+	{ // shift-nappi pohjassa synnytetï¿½ï¿½n uusi animaatio-aika-boksi, jos ollaan nykyisen animaatio boksin ulkopuolella (tai sitï¿½ ei esim. ole nï¿½kyvissï¿½)
 		fMouseCapturedAnimationBox = true;
 		itsAnimationDragDirection = kBase;
 		NFmiMetTime dragPointTime = GetTimeFromPosition(thePlace, 1);
@@ -1201,7 +1217,7 @@ bool NFmiTimeControlView::AnimationLeftButtonDown(const NFmiPoint & thePlace, un
 		return true;
 	}
 	else if(animationTimesBox.IsInside(thePlace))
-	{ // oltiin animaatio boksin sisällä, tarrataan siihen kiinni tai painetaan jotain paino-napeista
+	{ // oltiin animaatio boksin sisï¿½llï¿½, tarrataan siihen kiinni tai painetaan jotain paino-napeista
 		if(CalcAnimationCloseButtonRect().IsInside(thePlace))
 		{
 			fAnimationCloseButtonPressed = true;
@@ -1241,7 +1257,7 @@ bool NFmiTimeControlView::AnimationLeftButtonDown(const NFmiPoint & thePlace, un
 		{
 			fMouseCapturedAnimationBox = true;
 			itsAnimationDragDirection = kCenter;
-			double hotSpotWidthInMM = 4.; // animaatio-boxin päädyt ovat hot-spotteja, joihin tartuttaessa venytetään vasenta tai oikeaa reunaa
+			double hotSpotWidthInMM = 4.; // animaatio-boxin pï¿½ï¿½dyt ovat hot-spotteja, joihin tartuttaessa venytetï¿½ï¿½n vasenta tai oikeaa reunaa
             double hotSpotWidth = itsToolBox->SX(boost::math::iround(hotSpotWidthInMM * itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x));
 			if(animationTimesBox.Left() + hotSpotWidth > thePlace.X())
 				itsAnimationDragDirection = kLeft;
@@ -1258,21 +1274,21 @@ FmiDirection NFmiTimeControlView::TimeScaleOperationPosition(const NFmiPoint & t
     double hotSpotWidth = itsToolBox->SX(boost::math::iround(theHotSpotWidthInMM * itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x));
 
 	FmiDirection dragDirection = kCenter; // raahataan koko asteikkoa
-	NFmiRect timeScaleArea(itsTimeView->CalcScaleArea()); // tämä on siis itse asteikon alue, ei koko time kontrollin alue
+	NFmiRect timeScaleArea(itsTimeView->CalcScaleArea()); // tï¿½mï¿½ on siis itse asteikon alue, ei koko time kontrollin alue
 	if(timeScaleArea.Left() + hotSpotWidth > thePlace.X())
-		dragDirection = kLeft; // raahataan vain vasenta päätyä
+		dragDirection = kLeft; // raahataan vain vasenta pï¿½ï¿½tyï¿½
 	else if(timeScaleArea.Right() - hotSpotWidth < thePlace.X())
-		dragDirection = kRight; // raahataan vain oikean puoleista päätyä
+		dragDirection = kRight; // raahataan vain oikean puoleista pï¿½ï¿½tyï¿½
 	return dragDirection;
 }
 
 bool NFmiTimeControlView::TimeScaleLeftButtonDown(const NFmiPoint & thePlace, unsigned long theKey)
 {
-	// eli jos ollaan aika-kontrollissa, mutta ei osuttu alku/loppu aika säätö kahvoihin tai resoluutio boxiin
-	// tai animaatio boxiin, siirretään tarvittaessa koko aikajanaa tai sen reunaa
+	// eli jos ollaan aika-kontrollissa, mutta ei osuttu alku/loppu aika sï¿½ï¿½tï¿½ kahvoihin tai resoluutio boxiin
+	// tai animaatio boxiin, siirretï¿½ï¿½n tarvittaessa koko aikajanaa tai sen reunaa
 	fMouseCapturedMoveTimeLine = true;
 
-	double hotSpotWidthInMM = 10.; // animaatio-boxin päädyt ovat hot-spotteja, joihin tartuttaessa venytetään vasenta tai oikeaa reunaa
+	double hotSpotWidthInMM = 10.; // animaatio-boxin pï¿½ï¿½dyt ovat hot-spotteja, joihin tartuttaessa venytetï¿½ï¿½n vasenta tai oikeaa reunaa
 	itsTimeScaleDragDirection = TimeScaleOperationPosition(thePlace, hotSpotWidthInMM);
 
 	return true;
@@ -1291,10 +1307,10 @@ bool NFmiTimeControlView::LeftButtonDown (const NFmiPoint & thePlace, unsigned l
 		{
 			itsLastMousePosition = thePlace;
             if(CalcFullTimeRangeButtonRect().IsInside(thePlace))
-                return true; // Jos painettiin fulltimeRange -napin kohdalla, pitää loput tarkastelut ohittaa
+                return true; // Jos painettiin fulltimeRange -napin kohdalla, pitï¿½ï¿½ loput tarkastelut ohittaa
 			
 			if(CalcSelectedTimeArea(itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex)).IsInside(thePlace))
-			{ // aletaan raahaamaan pää karttanäytön ensimmäisen kartan aika-laatikkoa (se vihreä laatikko aikakontrolli ikkunassa)
+			{ // aletaan raahaamaan pï¿½ï¿½ karttanï¿½ytï¿½n ensimmï¿½isen kartan aika-laatikkoa (se vihreï¿½ laatikko aikakontrolli ikkunassa)
 				fMouseCapturedMoveSelectedTime = true;
                 itsCtrlViewDocumentInterface->MouseCaptured(true);
 				return true;
@@ -1309,7 +1325,7 @@ bool NFmiTimeControlView::LeftButtonDown (const NFmiPoint & thePlace, unsigned l
 					return true;
 				}
 				if((theKey & kCtrlKey) && (theKey & kShiftKey))
-				{ // kontrol + shift vasen säätää aikafiltterin alkuaikaa
+				{ // kontrol + shift vasen sï¿½ï¿½tï¿½ï¿½ aikafiltterin alkuaikaa
                     itsCtrlViewDocumentInterface->MouseCaptured(true);
 					return true;
 				}
@@ -1333,7 +1349,7 @@ bool NFmiTimeControlView::LeftButtonDown (const NFmiPoint & thePlace, unsigned l
 bool NFmiTimeControlView::RightButtonUp(const NFmiPoint& thePlace, unsigned long theKey)
 {
 	bool ctrlKeyDown = (theKey & kCtrlKey);
-	itsCtrlViewDocumentInterface->FilterDialogUpdateStatus(1); // 1 = filterdialogin aikakontrolli-ikkuna pitää päivittää
+	itsCtrlViewDocumentInterface->FilterDialogUpdateStatus(1); // 1 = filterdialogin aikakontrolli-ikkuna pitï¿½ï¿½ pï¿½ivittï¿½ï¿½
 	if(itsResolutionChangerBox.IsInside(thePlace))
 	{
 		ChangeResolution(false, ctrlKeyDown);
@@ -1360,7 +1376,7 @@ bool NFmiTimeControlView::RightButtonUp(const NFmiPoint& thePlace, unsigned long
 			currentDelayInMS += 100;
 			if(currentDelayInMS > 2000)
 				currentDelayInMS = 2000;
-            currentDelayInMS = boost::math::iround(currentDelayInMS / 100.) * 100; // fiksataan vielä lähimpää 10 jaolliseen lukuun
+            currentDelayInMS = boost::math::iround(currentDelayInMS / 100.) * 100; // fiksataan vielï¿½ lï¿½himpï¿½ï¿½ 10 jaolliseen lukuun
 			animData.FrameDelayInMS(currentDelayInMS);
             ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
             return true;
@@ -1372,7 +1388,7 @@ bool NFmiTimeControlView::RightButtonUp(const NFmiPoint& thePlace, unsigned long
 			currentLastFrameDelay += 0.5;
 			if(currentLastFrameDelay > 5)
 				currentLastFrameDelay = 5;
-			currentLastFrameDelay = ::round(currentLastFrameDelay/0.5)*0.5; // fiksataan vielä lähimpää 0.5 jaolliseen lukuun
+			currentLastFrameDelay = ::round(currentLastFrameDelay/0.5)*0.5; // fiksataan vielï¿½ lï¿½himpï¿½ï¿½ 0.5 jaolliseen lukuun
 			animData.LastFrameDelayFactor(currentLastFrameDelay);
             ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
             return true;
@@ -1401,9 +1417,9 @@ bool NFmiTimeControlView::MouseWheel(const NFmiPoint &thePlace, unsigned long th
 			ChangeResolution((theDelta > 0) ? false : true, ctrlKeyDown);
 		}
 		else if(itsTimeView->GetFrame().IsInside(thePlace) && (ctrlKeyDown))
-		{ // kontrolli pohjassa hiiren rullalla venytetään tai kutistetään aikajanaa, siten että
-			// aika ei liiku kursorin kohdalla. Suhteellinen ajan päiden liikutus nopeus on aikaresoluutio.
-			// Lisäksi jos ollaan ihan vasemmassa reunassa, liikutetaan vain vasenta reunaa ja jos
+		{ // kontrolli pohjassa hiiren rullalla venytetï¿½ï¿½n tai kutistetï¿½ï¿½n aikajanaa, siten ettï¿½
+			// aika ei liiku kursorin kohdalla. Suhteellinen ajan pï¿½iden liikutus nopeus on aikaresoluutio.
+			// Lisï¿½ksi jos ollaan ihan vasemmassa reunassa, liikutetaan vain vasenta reunaa ja jos
 			// ollaan aivan oikeassa reunassa, liikutetaan vain oikeaa reunaa.
 			// 1. Laske hiiren kursorin x-paikan suhde aikajanan alku ja loppu pisteisiin
 			FmiDirection mousePlaceInScale = TimeScaleOperationPosition(thePlace, 10);
@@ -1414,7 +1430,7 @@ bool NFmiTimeControlView::MouseWheel(const NFmiPoint &thePlace, unsigned long th
 			if(usedTimeChangeInMinutes < timeStepInMinutes*2)
 				usedTimeChangeInMinutes  = timeStepInMinutes*2;
 
-			// nämä on kCenter:issä laskettuja arvoja
+			// nï¿½mï¿½ on kCenter:issï¿½ laskettuja arvoja
 			double changeStartTimeInMinutes = xFac * usedTimeChangeInMinutes * (theDelta < 0 ? -1 : 1);
 			double changeEndTimeInMinutes = (1.-xFac) * usedTimeChangeInMinutes * (theDelta > 0 ? -1 : 1);
 
@@ -1439,7 +1455,7 @@ bool NFmiTimeControlView::MouseWheel(const NFmiPoint &thePlace, unsigned long th
 		}
 		else if(itsTimeView->GetFrame().IsInside(thePlace) && (theKey & kShiftKey))
 		{
-			// tähän aikajanan siirtokoodi
+			// tï¿½hï¿½n aikajanan siirtokoodi
 			NFmiTimeBag tmpTimeBag = GetUsedTimeBag();
 			int timeStepInMinutes = GetUsedTimeResolutionInMinutes();
 			if(timeStepInMinutes < 60)
@@ -1451,7 +1467,7 @@ bool NFmiTimeControlView::MouseWheel(const NFmiPoint &thePlace, unsigned long th
             timeStepInMinutes = boost::math::iround(timeStepInMinutes / 60.f) * 60;
 
 			tmpTimeBag.MoveByMinutes((theDelta > 0) ? timeStepInMinutes : -timeStepInMinutes);
-			NFmiTimeBag fixedTimeBag = CtrlViewUtils::GetAdjustedTimeBag(tmpTimeBag.FirstTime(), tmpTimeBag.LastTime(), timeStepInMinutes); // fixataan aikabagi ainakin lähimpään tuntiin
+			NFmiTimeBag fixedTimeBag = CtrlViewUtils::GetAdjustedTimeBag(tmpTimeBag.FirstTime(), tmpTimeBag.LastTime(), timeStepInMinutes); // fixataan aikabagi ainakin lï¿½himpï¿½ï¿½n tuntiin
 			SetUsedTimeBag(fixedTimeBag);
 		}
 		else if(CalcAnimationBoxRect().IsInside(thePlace) && CalcAnimationDelayButtonRect().IsInside(thePlace))
@@ -1501,7 +1517,7 @@ bool NFmiTimeControlView::MouseWheel(const NFmiPoint &thePlace, unsigned long th
 		}
 		else
 		{
-			// mousewheel up vie aikaa taakse- ja down eteenpäin
+			// mousewheel up vie aikaa taakse- ja down eteenpï¿½in
 			if(theDelta > 0)
                 itsCtrlViewDocumentInterface->SetDataToNextTime(itsMapViewDescTopIndex, true);
 			else
@@ -1524,29 +1540,29 @@ bool NFmiTimeControlView::AnimationMouseMove(const NFmiPoint& thePlace, unsigned
 	if(fMouseCapturedAnimationBox)
 	{
 		if(IsAnimationButtonPressed())
-			return true; // jos joku animaatio nappula oli painettu pohjaan, älä tee mitään, mutta palauta true
+			return true; // jos joku animaatio nappula oli painettu pohjaan, ï¿½lï¿½ tee mitï¿½ï¿½n, mutta palauta true
 
 		NFmiAnimationData &animData = itsCtrlViewDocumentInterface->AnimationData(itsMapViewDescTopIndex);
 		NFmiTimeBag currentShowTimes = animData.ShowTimebag();
 		NFmiTimeBag newShowTimes = currentShowTimes;
 		NFmiMetTime mousePointerTime = GetTimeFromPosition(thePlace, 1);
 		if(itsAnimationDragDirection == kBase)
-		{ // ollaan 'synnyttämässä' (shift-pohjassa) uutta animaatioaikaväliä
+		{ // ollaan 'synnyttï¿½mï¿½ssï¿½' (shift-pohjassa) uutta animaatioaikavï¿½liï¿½
 			if(mousePointerTime > animData.MouseDragStartTime())
 				newShowTimes = NFmiTimeBag(animData.MouseDragStartTime(), mousePointerTime, 1);
 			else
 				newShowTimes = NFmiTimeBag(mousePointerTime, animData.MouseDragStartTime(), 1);
 		}
 		else if(itsAnimationDragDirection == kLeft)
-		{ // venytetään animaatioaikavälin vasenta reunaa
+		{ // venytetï¿½ï¿½n animaatioaikavï¿½lin vasenta reunaa
 			newShowTimes = NFmiTimeBag(mousePointerTime, currentShowTimes.LastTime(), 1);
 		}
 		else if(itsAnimationDragDirection == kRight)
-		{ // venytetään animaatioaikavälin oikeaa reunaa
+		{ // venytetï¿½ï¿½n animaatioaikavï¿½lin oikeaa reunaa
 			newShowTimes = NFmiTimeBag(currentShowTimes.FirstTime(), mousePointerTime, 1);
 		}
 		else if(itsAnimationDragDirection == kCenter)
-		{ // raahataan koko animaatioaikaväliä
+		{ // raahataan koko animaatioaikavï¿½liï¿½
 			double xDiff = thePlace.X() - itsLastMousePosition.X();
 			long diffInMinutes = RelativeLength2Minutes(xDiff);
 			NFmiMetTime time1(newShowTimes.FirstTime());
@@ -1555,10 +1571,10 @@ bool NFmiTimeControlView::AnimationMouseMove(const NFmiPoint& thePlace, unsigned
 			NFmiMetTime time2(newShowTimes.LastTime());
 			time2.SetTimeStep(1);
 			time2.ChangeByMinutes(diffInMinutes);
-			// Pitää luodan uusi timebagi jossa jokainen komponentti on minuutti resoluutiolla ,timebagin MoveByMinutes-metodi ei toimi kunnolla tässä
+			// Pitï¿½ï¿½ luodan uusi timebagi jossa jokainen komponentti on minuutti resoluutiolla ,timebagin MoveByMinutes-metodi ei toimi kunnolla tï¿½ssï¿½
 			newShowTimes = NFmiTimeBag(time1, time2, 1);
 			if(currentShowTimes == newShowTimes)
-				fixLastPosition = false; // ei oteta talteen viime hiiren kursorin positiota, koska raahaus oli niin pieni että muutosta ei tapahtunut
+				fixLastPosition = false; // ei oteta talteen viime hiiren kursorin positiota, koska raahaus oli niin pieni ettï¿½ muutosta ei tapahtunut
 
 		}
 		animData.ShowTimebag(newShowTimes);
@@ -1571,36 +1587,36 @@ bool NFmiTimeControlView::TimeScaleMouseMove(const NFmiPoint& thePlace, unsigned
 {
 	if(fMouseCapturedMoveTimeLine)
 	{
-		// tähän aikajanan siirtokoodi
+		// tï¿½hï¿½n aikajanan siirtokoodi
 		double xDiff = thePlace.X() - itsLastMousePosition.X();
 		NFmiTimeBag tmpTimeBag = GetUsedTimeBag();
-		NFmiTimeBag oldTimeBag = tmpTimeBag; // tähän verrataan onko muutoksia tapahtunut
+		NFmiTimeBag oldTimeBag = tmpTimeBag; // tï¿½hï¿½n verrataan onko muutoksia tapahtunut
 		long diffInMinutes = RelativeLength2Minutes(xDiff);
 
 		if(itsTimeScaleDragDirection == kCenter)
 		{
-			tmpTimeBag.MoveByMinutes(-diffInMinutes); // huom pitää laittaa - merkki eteen, muuten raahataan väärään suuntaan
+			tmpTimeBag.MoveByMinutes(-diffInMinutes); // huom pitï¿½ï¿½ laittaa - merkki eteen, muuten raahataan vï¿½ï¿½rï¿½ï¿½n suuntaan
 		}
 		else if(itsTimeScaleDragDirection == kLeft)
-		{ // siirretään vasenta reunaa eli alkuaikaa
+		{ // siirretï¿½ï¿½n vasenta reunaa eli alkuaikaa
 			NFmiMetTime startTime = tmpTimeBag.FirstTime();
-			startTime.ChangeByMinutes(-diffInMinutes); // huom pitää laittaa - merkki eteen, muuten raahataan väärään suuntaan
+			startTime.ChangeByMinutes(-diffInMinutes); // huom pitï¿½ï¿½ laittaa - merkki eteen, muuten raahataan vï¿½ï¿½rï¿½ï¿½n suuntaan
 			tmpTimeBag = NFmiTimeBag(startTime, tmpTimeBag.LastTime(), tmpTimeBag.Resolution());
 		}
 		else if(itsTimeScaleDragDirection == kRight)
-		{ // siirretään oikeaa reunaa eli loppuaikaa
+		{ // siirretï¿½ï¿½n oikeaa reunaa eli loppuaikaa
 			NFmiMetTime endTime = tmpTimeBag.LastTime();
-			endTime.ChangeByMinutes(-diffInMinutes); // huom pitää laittaa - merkki eteen, muuten raahataan väärään suuntaan
+			endTime.ChangeByMinutes(-diffInMinutes); // huom pitï¿½ï¿½ laittaa - merkki eteen, muuten raahataan vï¿½ï¿½rï¿½ï¿½n suuntaan
 			tmpTimeBag = NFmiTimeBag(tmpTimeBag.FirstTime(), endTime, tmpTimeBag.Resolution());
 		}
 
-		NFmiTimeBag fixedTimeBag = CtrlViewUtils::GetAdjustedTimeBag(tmpTimeBag.FirstTime(), tmpTimeBag.LastTime(), 5); // fixataan aika bagi raahauksen yhteydessä lähimpään 5 minuuttiin
+		NFmiTimeBag fixedTimeBag = CtrlViewUtils::GetAdjustedTimeBag(tmpTimeBag.FirstTime(), tmpTimeBag.LastTime(), 5); // fixataan aika bagi raahauksen yhteydessï¿½ lï¿½himpï¿½ï¿½n 5 minuuttiin
 		if((oldTimeBag == fixedTimeBag) == false)
 		{
 			SetUsedTimeBag(fixedTimeBag);
 		}
 		else
-			fixLastPosition = false; // ei oteta talteen viime hiiren kursorin positiota, koska raahaus oli niin pieni että muutosta ei tapahtunut
+			fixLastPosition = false; // ei oteta talteen viime hiiren kursorin positiota, koska raahaus oli niin pieni ettï¿½ muutosta ei tapahtunut
 
 		return true;
 	}
@@ -1617,16 +1633,16 @@ int NFmiTimeControlView::RelativeLength2Minutes(double theLength)
 }
 
 bool NFmiTimeControlView::MouseMove(const NFmiPoint& thePlace, unsigned long theKey)
-{ // HUOM!! ei pidä tutkia onko hiiri ikkunan sisällä vaan onko hiiri kaapattu!
+{ // HUOM!! ei pidï¿½ tutkia onko hiiri ikkunan sisï¿½llï¿½ vaan onko hiiri kaapattu!
     bool fixLastPosition = true;
     if(itsCtrlViewDocumentInterface->MouseCaptured())
     {
         if(theKey & kCtrlKey)
         {
-            SetTime(thePlace); // kontrolli pohjassa siirretään aika hiiren kursorin kohdalle
+            SetTime(thePlace); // kontrolli pohjassa siirretï¿½ï¿½n aika hiiren kursorin kohdalle
         }
         else if(fMouseCaptured)// && mouseMoveIsOkNow)
-        { // tämä blokki on editoinntiin liittyvien alku/loppu aikajanan säätöä
+        { // tï¿½mï¿½ blokki on editoinntiin liittyvien alku/loppu aikajanan sï¿½ï¿½tï¿½ï¿½
             fMouseMovedWhenCaptured = true;
             NFmiMetTime timeStart = StartTime();
             NFmiMetTime timeEnd = EndTime();
@@ -1647,13 +1663,13 @@ bool NFmiTimeControlView::MouseMove(const NFmiPoint& thePlace, unsigned long the
         else if(fMouseCapturedMoveSelectedTime)
         {
             fMouseMovedWhenCaptured = true;
-            SetTime(thePlace, true); // kontrolli pohjassa siirretään aika hiiren kursorin kohdalle
+            SetTime(thePlace, true); // kontrolli pohjassa siirretï¿½ï¿½n aika hiiren kursorin kohdalle
         }
         else if(AnimationMouseMove(thePlace, theKey, fixLastPosition))
         {
             if(fixLastPosition == true)
                 fMouseMovedWhenCaptured = true; // asetetaan vain trueksi, jos hiiri on jossain vaiheessa liikkunut animaatio boksin raahauksen takia.
-                                                // näin vasen hiiren klikkaus pystyy tekemään aika-askel taaksepäin toiminnon, jos hiiri ei merkittävästi liiku
+                                                // nï¿½in vasen hiiren klikkaus pystyy tekemï¿½ï¿½n aika-askel taaksepï¿½in toiminnon, jos hiiri ei merkittï¿½vï¿½sti liiku
         }
 
         if(fixLastPosition)
@@ -1692,11 +1708,11 @@ NFmiRect NFmiTimeControlView::CalcTimeAxisRect()
 
 NFmiRect NFmiTimeControlView::CalcAnimationBoxRect(void)
 {
-	NFmiRect animBoxRect; // luodaan tyhjä boksi defaulttina
+	NFmiRect animBoxRect; // luodaan tyhjï¿½ boksi defaulttina
     if(IsAnimationViewVisible())
-	{ // jos boksi näytetään aikakontrolli-ikkunassa, lasketaan sen alue
+	{ // jos boksi nï¿½ytetï¿½ï¿½n aikakontrolli-ikkunassa, lasketaan sen alue
 		animBoxRect = GetFrame();
-		// HUOM! tässä pitää pyytää ns. showTimebag, joka saattaa poiketa käytetystä timebagistä esim. anim-boxin raahauksen tai venytyksen aikana
+		// HUOM! tï¿½ssï¿½ pitï¿½ï¿½ pyytï¿½ï¿½ ns. showTimebag, joka saattaa poiketa kï¿½ytetystï¿½ timebagistï¿½ esim. anim-boxin raahauksen tai venytyksen aikana
 		const NFmiTimeBag &animShowTimes = itsCtrlViewDocumentInterface->AnimationData(itsMapViewDescTopIndex).ShowTimebag();
 		animBoxRect.Left(Time2Value(animShowTimes.FirstTime()));
 		animBoxRect.Right(Time2Value(animShowTimes.LastTime()));
@@ -1706,7 +1722,7 @@ NFmiRect NFmiTimeControlView::CalcAnimationBoxRect(void)
 
 void NFmiTimeControlView::DrawBackground()
 {
-	// piirretään pohja harmaalla
+	// piirretï¿½ï¿½n pohja harmaalla
 	itsDrawingEnvironment.SetFrameColor(NFmiColor(0,0,0));
 	itsDrawingEnvironment.SetFillColor(NFmiColor(1.f,1.f,1.f));
 	itsDrawingEnvironment.EnableFill();
@@ -1767,7 +1783,7 @@ bool NFmiTimeControlView::SetTime(const NFmiPoint & thePlace, bool fStayInsideAn
 	}
 	catch(...)
 	{
-		// virhetilanteessa ei tehdä mitää, eli ei siirretä aikaakaan
+		// virhetilanteessa ei tehdï¿½ mitï¿½ï¿½, eli ei siirretï¿½ aikaakaan
 		return false;
 	}
 
@@ -1797,11 +1813,11 @@ std::string NFmiTimeControlView::ComposeToolTipText(const NFmiPoint& theRelative
 	{
 		std::string str;
 
-		// Kaikissa tapauksissa jos Virtual-Time moodi päällä, laitetaan tietoa siitä heti ensimmäiseksi
+		// Kaikissa tapauksissa jos Virtual-Time moodi pï¿½ï¿½llï¿½, laitetaan tietoa siitï¿½ heti ensimmï¿½iseksi
 		str += MakePossibleVirtualTimeTooltipText();
 
         if(CalcFullTimeRangeButtonRect().IsInside(theRelativePoint))
-        { // Animaatio ikkuna ei siis saa olla päällä ja jos ollaan FullTimeRange -napin sisällä
+        { // Animaatio ikkuna ei siis saa olla pï¿½ï¿½llï¿½ ja jos ollaan FullTimeRange -napin sisï¿½llï¿½
             str += "Set full editing time range for edited data";
         }
 		else if(IsInsideAnyAnimationButton(theRelativePoint))
@@ -1891,7 +1907,7 @@ std::string NFmiTimeControlView::ComposeToolTipText(const NFmiPoint& theRelative
 	}
 	catch(...)
 	{
-		// ei tehdä mitään 
+		// ei tehdï¿½ mitï¿½ï¿½n 
 	}
 	return std::string();
 }
@@ -1945,7 +1961,7 @@ void NFmiTimeControlView::SetMouseStatusInfo(const MouseStatusInfo &theMouseStat
 NFmiTimeSerialTimeControlView::NFmiTimeSerialTimeControlView(int theMapViewDescTopIndex,
 							 const NFmiRect & theRect
 							,NFmiToolBox * theToolBox
-							,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+							,boost::shared_ptr<NFmiDrawParam> theDrawParam
 							,bool theShowResolutionChangerBox
 							,bool theDrawViewInMouseMove
 							,bool theShowEditTimeHandles
@@ -2001,7 +2017,7 @@ void NFmiTimeSerialTimeControlView::SetUsedTimeBag(const NFmiTimeBag &newTimeBag
 
 NFmiTrajectoryTimeControlView::NFmiTrajectoryTimeControlView(int theMapViewDescTopIndex, const NFmiRect & theRect
 															,NFmiToolBox * theToolBox
-															,boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+															,boost::shared_ptr<NFmiDrawParam> theDrawParam)
 :NFmiTimeControlView(theMapViewDescTopIndex, theRect, theToolBox, theDrawParam, false, false, false, false, false)
 {
 }
@@ -2013,7 +2029,7 @@ NFmiTrajectoryTimeControlView::~NFmiTrajectoryTimeControlView(void)
 
 const NFmiTimeBag& NFmiTrajectoryTimeControlView::GetUsedTimeBag(void)
 {
-	// tähän pitää pyytää trajektori systeemiltä valittujen trajektorien 1. ja viimeisen ajan muodostama timebagi
+	// tï¿½hï¿½n pitï¿½ï¿½ pyytï¿½ï¿½ trajektori systeemiltï¿½ valittujen trajektorien 1. ja viimeisen ajan muodostama timebagi
 	return itsCtrlViewDocumentInterface->TrajectorySystem()->TrajectoryViewTimeBag();
 }
 

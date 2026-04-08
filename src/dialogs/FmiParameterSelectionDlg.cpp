@@ -10,7 +10,7 @@
 #include "NFmiDictionaryFunction.h"
 #include "NFmiMenuItem.h"
 #include "SpecialDesctopIndex.h"
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
 #include "FmiWin32Helpers.h"
 #include "NFmiFastQueryInfo.h"
 #include "NFmiInfoOrganizer.h"
@@ -644,9 +644,9 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForWmsDataCategoryType(const 
     AddParams::SingleRowItem possibleChildLeafNode;
     try
     {
-        // Katsotaan löytyykö seuraavalta riviltä currentin rivin, joka on vasta data-tasoa 
-        // eikä ole leaf-node, vastaava parametri-tason leaf-node olio.
-        // Huom! rowNumber alkaa 1:stä ja dialogRowData:n vector alkaa 0:sta, siksi seuraavan rivin indeksinä käytetään
+        // Katsotaan lï¿½ytyykï¿½ seuraavalta riviltï¿½ currentin rivin, joka on vasta data-tasoa 
+        // eikï¿½ ole leaf-node, vastaava parametri-tason leaf-node olio.
+        // Huom! rowNumber alkaa 1:stï¿½ ja dialogRowData:n vector alkaa 0:sta, siksi seuraavan rivin indeksinï¿½ kï¿½ytetï¿½ï¿½n
         // suoraan rowNumber:ia.
         possibleChildLeafNode = itsSmartMetDocumentInterface->ParameterSelectionSystem().dialogRowData().at(rowNumber);
     }
@@ -768,8 +768,8 @@ std::string NFmiParameterSelectionGridCtrl::ComposeToolTipText(const CPoint &poi
             {
                 return TooltipForCategoryType(singleRowItem, singleRowItemVector, rowNumber);
             }
-            // Pelkälle parametrille ei enä ätehdä tooltippiä, koska siinä ei ole enää mitään uutta tietoa (interpolaatio), 
-            // mutta tooltipin esille pomppaaminen häiritsee parametrin tupla-klik valintaa.
+            // Pelkï¿½lle parametrille ei enï¿½ ï¿½tehdï¿½ tooltippiï¿½, koska siinï¿½ ei ole enï¿½ï¿½ mitï¿½ï¿½n uutta tietoa (interpolaatio), 
+            // mutta tooltipin esille pomppaaminen hï¿½iritsee parametrin tupla-klik valintaa.
             //else if(IsParameterType(singleRowItem.rowType()))
             //{
             //    return TooltipForParameterType(singleRowItem);
@@ -833,7 +833,7 @@ void CFmiParameterSelectionDlg::SetDefaultValues(void)
 BOOL CFmiParameterSelectionDlg::OnInitDialog()
 {
     CDialogEx::OnInitDialog();
-    DoResizerHooking(); // Tätä pitää kutsua ennen kuin dialogin talletettu koko otetaan Windows rekisteristä
+    DoResizerHooking(); // Tï¿½tï¿½ pitï¿½ï¿½ kutsua ennen kuin dialogin talletettu koko otetaan Windows rekisteristï¿½
 
     fDialogInitialized = true;
     CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
@@ -841,7 +841,7 @@ BOOL CFmiParameterSelectionDlg::OnInitDialog()
     InitDialogTexts();
     InitHeaders();
 
-    // Tee paikan asetus vasta tooltipin alustuksen jälkeen, niin se toimii ilman OnSize-kutsua.
+    // Tee paikan asetus vasta tooltipin alustuksen jï¿½lkeen, niin se toimii ilman OnSize-kutsua.
     std::string errorBaseStr("Error in CFmiCaseStudyDlg::OnInitDialog while reading dialog size and position values");
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
     itsGridCtrl.SetDocument(itsSmartMetDocumentInterface);
@@ -852,7 +852,7 @@ BOOL CFmiParameterSelectionDlg::OnInitDialog()
     AdjustDialogControls();
     DoTimeSerialSideParametersCheckboxAdjustments();
 
-    // Aletaan tarkastelemaan kerran sekunnissa että mikä on aktiivinen näyttö ja aktiivinen rivi ja päivitetään tarvittaessa otsikon tekstiä vastaavasti
+    // Aletaan tarkastelemaan kerran sekunnissa ettï¿½ mikï¿½ on aktiivinen nï¿½yttï¿½ ja aktiivinen rivi ja pï¿½ivitetï¿½ï¿½n tarvittaessa otsikon tekstiï¿½ vastaavasti
     g_TitleTextUpdater = SetTimer(g_TitleTextUpdaterTimer, 1000, NULL);
 
     return TRUE;  // return TRUE unless you set the focus to a control
@@ -882,7 +882,7 @@ void CFmiParameterSelectionDlg::OnClose()
 
 void CFmiParameterSelectionDlg::DoWhenClosing(void)
 {
-    AfxGetMainWnd()->SetActiveWindow(); // aktivoidaan karttanäyttö eli mainframe
+    AfxGetMainWnd()->SetActiveWindow(); // aktivoidaan karttanï¿½yttï¿½ eli mainframe
 }
 
 void CFmiParameterSelectionDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
@@ -1147,7 +1147,7 @@ void CFmiParameterSelectionDlg::SetGridRow(int row, const AddParams::SingleRowIt
 
         if(column >= theFixedColumnCount)
         {
-            // Laita read-only -bitti päälle
+            // Laita read-only -bitti pï¿½ï¿½lle
             auto state = 128 | GVIS_READONLY;
             itsGridCtrl.SetItemState(row, column, state);
             //itsGridCtrl.SetItemState(row, column, itsGridCtrl.GetItemState(row, column) | GVIS_READONLY);
@@ -1269,17 +1269,17 @@ static bool IsCategoryMainLevelData(const AddParams::SingleRowItem& currentRowDa
         {
             if(previousRowData->rowType() == AddParams::RowType::kCategoryType)
             {
-                // jos kategorian jälkeen tulee heti data tason rivi, on se kategoria tason data
+                // jos kategorian jï¿½lkeen tulee heti data tason rivi, on se kategoria tason data
                 return true;
             }
             else if(previousRowData->rowType() == AddParams::RowType::kDataType && currentRowData.itemId() != previousRowData->itemId())
             {
-                // jos data-tyypin jälkeen tulee heti data tason rivi, ja niillä on eri id:t (eri tuottajat), on se kategoria tason data
+                // jos data-tyypin jï¿½lkeen tulee heti data tason rivi, ja niillï¿½ on eri id:t (eri tuottajat), on se kategoria tason data
                 return true;
             }
             else if(previousRowData->rowType() < AddParams::RowType::kDataType && currentRowData.itemId() != previousRowData->parentItemId())
             {
-                // jos param/level/subparam -tyypin jälkeen tulee heti data tason rivi, ja niillä on eri id:t (eri tuottajat), on se kategoria tason data, previous pitää katsoa parentId:sta!
+                // jos param/level/subparam -tyypin jï¿½lkeen tulee heti data tason rivi, ja niillï¿½ on eri id:t (eri tuottajat), on se kategoria tason data, previous pitï¿½ï¿½ katsoa parentId:sta!
                 return true;
             }
         }
@@ -1300,7 +1300,7 @@ void CFmiParameterSelectionDlg::CollapseAllButCategories()
         }
         else if(::IsCategoryMainLevelData(rowItem, previousRowData))
         { 
-            // erikoistapaukset pitää hoitaa näin, on olemassa päätason datoja, joilla ei ole producer tasoa
+            // erikoistapaukset pitï¿½ï¿½ hoitaa nï¿½in, on olemassa pï¿½ï¿½tason datoja, joilla ei ole producer tasoa
             itsTreeColumn.TreeDataCollapseAllSubLevels(currentRowCount);
         }
         currentRowCount++;
@@ -1480,10 +1480,10 @@ void CFmiParameterSelectionDlg::UpdateGridControlIfNeeded()
 {
 	if (itsParameterSelectionSystem->dialogDataNeedsUpdate())
 	{
-        // Huom! HasViewTypeChanged pitää kutsua ennen MakeTitleText kutsua, joka asettaa em. metodissa tarkasteltuja muuttujia
+        // Huom! HasViewTypeChanged pitï¿½ï¿½ kutsua ennen MakeTitleText kutsua, joka asettaa em. metodissa tarkasteltuja muuttujia
         bool viewDesktopIndexChangeRequiresDialogUpdate = HasViewTypeChanged();
 		SetWindowText(CA2T(MakeTitleText().c_str()));
-        // DoTimeSerialSideParametersCheckboxAdjustments metodia on kutsuttava vasta MakeTitleText metodi kutsun jälkeen
+        // DoTimeSerialSideParametersCheckboxAdjustments metodia on kutsuttava vasta MakeTitleText metodi kutsun jï¿½lkeen
         DoTimeSerialSideParametersCheckboxAdjustments();
         if(viewDesktopIndexChangeRequiresDialogUpdate)
         {
@@ -1496,7 +1496,7 @@ void CFmiParameterSelectionDlg::UpdateGridControlIfNeeded()
 	}
 }
 
-// Palautetaan true, jos molemmat annetut indeksit ovat karttanäyttö tyyppisiä
+// Palautetaan true, jos molemmat annetut indeksit ovat karttanï¿½yttï¿½ tyyppisiï¿½
 bool BothViewIndexWereMapViewType(unsigned int desktopIndex1, unsigned int desktopIndex2)
 {
     return (desktopIndex1 <= CtrlViewUtils::kFmiMaxMapDescTopIndex) && (desktopIndex2 <= CtrlViewUtils::kFmiMaxMapDescTopIndex);
@@ -1527,19 +1527,19 @@ void CFmiParameterSelectionDlg::UpdateAfterSearchText()
     Update();
 }
 
-// Kun dialogi avataan '+' -napista, kutsutaan tätä tehdään kyseisen näytön asetukset kuntoon,
-// jotta parametrit lisätään sen näytön aktiiviseen riviin.
+// Kun dialogi avataan '+' -napista, kutsutaan tï¿½tï¿½ tehdï¿½ï¿½n kyseisen nï¿½ytï¿½n asetukset kuntoon,
+// jotta parametrit lisï¿½tï¿½ï¿½n sen nï¿½ytï¿½n aktiiviseen riviin.
 void CFmiParameterSelectionDlg::SetIndexes(unsigned int theDesktopIndex)
 {
     int absoluteActiveRow = 1;
     if(theDesktopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
     {
-        // Karttanäytöillä on omat aktiivisten rivien muistit, joten käytetään niitä
+        // Karttanï¿½ytï¿½illï¿½ on omat aktiivisten rivien muistit, joten kï¿½ytetï¿½ï¿½n niitï¿½
         absoluteActiveRow = itsSmartMetDocumentInterface->MapViewDescTop(theDesktopIndex)->AbsoluteActiveViewRow();
     }
     else
     {
-        //  Muille näytöille ParameterSelectionSystem saa toimia aktiivisten rivien muistina
+        //  Muille nï¿½ytï¿½ille ParameterSelectionSystem saa toimia aktiivisten rivien muistina
         absoluteActiveRow = itsParameterSelectionSystem->GetLastActivatedRowIndexFromWantedDesktop(theDesktopIndex);
     }
     itsParameterSelectionSystem->SetLastActiveIndexes(theDesktopIndex, absoluteActiveRow);
@@ -1548,9 +1548,9 @@ void CFmiParameterSelectionDlg::SetIndexes(unsigned int theDesktopIndex)
 
 BOOL CFmiParameterSelectionDlg::PreTranslateMessage(MSG* pMsg)
 {
-    // Erikoiskäsittely, jos kyse RETURN napin painalluksesta (alas/ylös)
+    // Erikoiskï¿½sittely, jos kyse RETURN napin painalluksesta (alas/ylï¿½s)
     if(CtrlView::DoReturnKeyOperation(pMsg, [this](){this->UpdateAfterSearchText(); }))
-        return TRUE; // Palautetaan true, jotta tätä messagea ei käsitellä enää muualla
+        return TRUE; // Palautetaan true, jotta tï¿½tï¿½ messagea ei kï¿½sitellï¿½ enï¿½ï¿½ muualla
 
     return CDialogEx::PreTranslateMessage(pMsg);
 }

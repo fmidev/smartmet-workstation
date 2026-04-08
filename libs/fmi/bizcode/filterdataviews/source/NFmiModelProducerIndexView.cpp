@@ -7,7 +7,7 @@
 #include "NFmiAxis.h"
 #include "NFmiFastQueryInfo.h"
 
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
 
 NFmiModelProducerIndexView::NFmiModelProducerIndexView(NFmiToolBox * theToolBox
 													 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
@@ -127,13 +127,13 @@ bool NFmiModelProducerIndexView::SetProducerIndex(int theIndex)
 
 bool NFmiModelProducerIndexView::IndexInsideRange(const NFmiPoint& theRange, int theIndex)
 {
-	if(theRange.X() != -1) // jos range sisältää negatiivisia arvoja, on se invalidi, eikä indeksi ole sisällä
+	if(theRange.X() != -1) // jos range sisï¿½ltï¿½ï¿½ negatiivisia arvoja, on se invalidi, eikï¿½ indeksi ole sisï¿½llï¿½
 		if(theRange.X() <= theIndex && theRange.Y() >= theIndex)
 			return true;
 	return false;
 }
 
-// palauttaa hiirellä osoitetun paikan indeksin (producer väri laatikossa)
+// palauttaa hiirellï¿½ osoitetun paikan indeksin (producer vï¿½ri laatikossa)
 int NFmiModelProducerIndexView::GetPlaceIndexInProducerColorIndexView(const NFmiPoint& thePlace)
 {
 	if(itsProducerColorIndexViewRect.IsInside(thePlace))
@@ -174,14 +174,14 @@ void NFmiModelProducerIndexView::UpdateHelperData(void)
 	InitProducerIndexInTimeVector(); // tekee vain vektorin koon
 	CalcNonModifieableTimeRange();
 	CalcSourceDataExistLimits();
-	FillProducerIndexInTimeVector(); // täyttää vektorin indekseillä
+	FillProducerIndexInTimeVector(); // tï¿½yttï¿½ï¿½ vektorin indekseillï¿½
 }
 
 // vain luo vectorin
 void NFmiModelProducerIndexView::InitProducerIndexInTimeVector(void)
 {
 	itsProducerIndexInTimeVector.clear();
-	itsProducerIndexInTimeVector.resize(itsLoadedDataTimeBag.GetSize(), -1); // alustetaan vector -1:llä
+	itsProducerIndexInTimeVector.resize(itsLoadedDataTimeBag.GetSize(), -1); // alustetaan vector -1:llï¿½
 }
 
 void NFmiModelProducerIndexView::CalcNonModifieableTimeRange(void)
@@ -211,7 +211,7 @@ void NFmiModelProducerIndexView::CalcSourceDataExistLimits(void)
 	}
 }
 
-// täyttää taulukon prioriteetti listan mukaisesti
+// tï¿½yttï¿½ï¿½ taulukon prioriteetti listan mukaisesti
 void NFmiModelProducerIndexView::FillProducerIndexInTimeVector(void)
 {
 	if(fUseExtraShortRangeDataTimeBag)
@@ -259,7 +259,7 @@ void NFmiModelProducerIndexView::CutWithNonEditableRange(NFmiPoint* theRange)
 		theRange->X(itsNonModifieableTimeRange.Y() + 1);
 	if(theRange->Y() <= itsNonModifieableTimeRange.Y())
 		theRange->Y(itsNonModifieableTimeRange.Y() + 1);
-	if(theRange->X() == theRange->Y()) // jos X ja Y samoja, alkuperäinen alue on ollut ei editoitavalla alueella
+	if(theRange->X() == theRange->Y()) // jos X ja Y samoja, alkuperï¿½inen alue on ollut ei editoitavalla alueella
 		*theRange = NFmiPoint(-1, -1);
 }
 
@@ -329,7 +329,7 @@ void NFmiModelProducerIndexView::CreateTimeAxis(void)
 									,0
 									,true
 									,fontSize
-									,false); // false = ei piirretä niitä vihreitä laatikoita
+									,false); // false = ei piirretï¿½ niitï¿½ vihreitï¿½ laatikoita
 	int bull = 0;
 	itsTimeView->SetBorderWidth(bull);
 

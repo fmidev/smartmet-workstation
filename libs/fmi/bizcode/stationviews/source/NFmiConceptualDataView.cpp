@@ -33,7 +33,7 @@
 #include <gdiplus.h>
 #endif // UNIX
 #include <list>
-#include "boost\algorithm\string\predicate.hpp"
+#include "boost/algorithm/string/predicate.hpp"
 
 using namespace std;
 #ifndef UNIX
@@ -163,7 +163,7 @@ void ConceptualObjectData::InitializeFromWomlNode(LPXNode theNode)
     }
 	itsGmlPosStr = XmlHelper::ChildNodeValue(theNode, "gml:pos"); // lat-lon positio
 	itsWomlSymbolInfoStr = XmlHelper::ChildNodeValue(theNode, "gml:name");
-    itsReferenceStr = NFmiStringTools::LowerCase(XmlHelper::ChildNodeValue(theNode, "womlqty:reference"));
+    { auto tmp = XmlHelper::ChildNodeValue(theNode, "womlqty:reference"); itsReferenceStr = NFmiStringTools::LowerCase(tmp); }
     LPXNode childNode = XmlHelper::GetChildNode(theNode, 0);
     if(childNode)
     {
@@ -335,7 +335,7 @@ void ConceptualObjectData::CalcParameterValues(LPXNode theNode)
             throw std::runtime_error("Error in ConceptualObjectData::CalcParameterValues: reference string was ilformatted, should be Wind@XXX");
         else
         {
-            std::string windDirStr = NFmiStringTools::LowerCase(XmlHelper::ChildNodeValue(theNode, "gml:CompassPoint"));
+            std::string windDirStr = XmlHelper::ChildNodeValue(theNode, "gml:CompassPoint"); NFmiStringTools::LowerCase(windDirStr);
             itsParameterValue2 = ::GetWindDir(windDirStr); // tuulinuolien tapauksessa mahd. nopeus talletetaan itsParameterValue:seen ja suunta itsParameterValue2:seen
             std::string windArrowTypeStr = parts[1];
             if(windArrowTypeStr == "seaflowwind")
@@ -474,9 +474,12 @@ void ConceptualObjectData::SetDataFromObjectType(LPXNode theNode)
 		fPlainArea = true; // onko kyseess� alueesta (sadealue tms.)
 		itsLineWidthInMM = usedLineWidthInMM;
 		itsConceptualColor = NFmiColor(0.f, 0.7f, 0.f, 0.5f); // tehd��n vihre� kun ei ole tietoa v�rist� (ja 50 % alpha)
+#ifndef UNIX
         itsFillHatchPattern = HatchStyle30Percent;
+#endif // UNIX
 
-        std::string rainPhaseStr = NFmiStringTools::LowerCase(XmlHelper::ChildNodeValue(theNode, "womlswo:rainPhase"));
+        auto rainPhaseStr_ = XmlHelper::ChildNodeValue(theNode, "womlswo:rainPhase");
+        std::string rainPhaseStr = NFmiStringTools::LowerCase(rainPhaseStr_);
         itsSymbolCodeStr = ::GetRainPhaseSymbolKey(rainPhaseStr);
         if(!itsSymbolCodeStr.empty())
         {
@@ -672,7 +675,7 @@ static std::string GetWantedTimeConceptualURLStr(CtrlViewDocumentInterface *theC
 	wantedParams += "&user=";
 	wantedParams += theUserStr;
 	wantedParams += "&validtimelower=";
-	std::string validTimeStr = theValidTime.ToStr("YYYYMMDDHHmmSS");;
+	std::string validTimeStr = theValidTime.ToStr("YYYYMMDDHHmmSS").CharPtr();
 	wantedParams += validTimeStr;
 	wantedParams += "&validtimeupper=";
 	wantedParams += validTimeStr;
@@ -689,7 +692,7 @@ static std::string GetWantedTimeConceptualURLStr(CtrlViewDocumentInterface *theC
 		{
             CString sxmlU_(CA2T(resultStr.c_str()));
 			XNode xmlRoot;
-            if(xmlRoot.Load(sxmlU_) == false)
+            if(xmlRoot.Load(sxmlU_) == nullptr)
 				throw std::runtime_error(std::string("GetWantedTimeConceptualURLStr - xmlRoot.Load(sxml) failed for string: \n") + resultStr);
 
 			XNodes fileNodes = xmlRoot.GetChilds(_TEXT("file")); 
@@ -835,7 +838,7 @@ void NFmiConceptualDataView::GetConceptualsDataStrFromFile(const NFmiMetTime &th
 	// 1. hae file-filtterill� tiedosto lista
 	std::list<std::string> fileList = NFmiFileSystem::PatternFiles(itsCtrlViewDocumentInterface->ConceptualModelData().FileFilter());
 	// 2. tee halutun ajan timestamp-string (tiedoston time stamp on joko YYYYMMDDHHmm- tai YYYYMMDDHHmmSS -muodossa, joten tehd��n minuutin tarkkuudella oleva ja etsit��n sit�)
-	std::string timeStamp = theTime.ToStr(kYYYYMMDDHHMM);
+	std::string timeStamp = theTime.ToStr(kYYYYMMDDHHMM).CharPtr();
 	// 3. hae file-listasta tiedosto nimi, jossa on haluttu time-stamp
 	std::string wantedFileName;
 	for(std::list<std::string>::iterator it = fileList.begin(); it != fileList.end(); ++it)
@@ -864,7 +867,7 @@ void NFmiConceptualDataView::DecodeConceptualWomlDataFromStr(const std::string &
 	{
         CString sxmlU_(CA2T(theConceptualDataStr.c_str()));
 		XNode xmlRoot;
-        if(xmlRoot.Load(sxmlU_) == false)
+        if(xmlRoot.Load(sxmlU_) == nullptr)
 			throw std::runtime_error(std::string("NFmiStationViewHandler::DrawConceptuals - xmlRoot.Load(sxml) failed for string: \n") + theConceptualDataStr);
 
 		XNodes partNodes = xmlRoot.GetChilds(_TEXT("womlcore:member")); 
@@ -893,7 +896,7 @@ void NFmiConceptualDataView::DecodeConceptualPreWomlDataFromStr(const std::strin
 	{
         CString sxmlU_(CA2T(theConceptualDataStr.c_str()));
 		XNode xmlRoot;
-        if(xmlRoot.Load(sxmlU_) == false)
+        if(xmlRoot.Load(sxmlU_) == nullptr)
 			throw std::runtime_error(std::string("NFmiStationViewHandler::DrawConceptuals - xmlRoot.Load(sxml) failed for string: \n") + theConceptualDataStr);
 
 		XNodes partNodes = xmlRoot.GetChilds(_TEXT("part")); 

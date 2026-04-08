@@ -1,5 +1,5 @@
-#include "HakeMessage\JsonHakeParser.h"
-#include "HakeMessage\HakeMsg.h"
+#include "HakeMessage/JsonHakeParser.h"
+#include "HakeMessage/HakeMsg.h"
 
 #include "NFmiTime.h"
 #include "NFmiMetTime.h"

@@ -18,7 +18,7 @@
 #include "ColorStringFunctions.h"
 #include "MathHelper.h"
 
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
 
 // ********************************************************************
 // ***************  NFmiStationIndexTextView  *************************
@@ -64,7 +64,7 @@ void NFmiStationIndexTextView::SbdSetFontName()
 
 NFmiPoint NFmiStationIndexTextView::SbdCalcFixedSymbolSize() const
 {
-    // synop fontit pitää laittaa isommiksi kuin normaali teksti
+    // synop fontit pitï¿½ï¿½ laittaa isommiksi kuin normaali teksti
     return SbdBasicSymbolSizeCalculation(16, 72);
 }
 
@@ -86,7 +86,7 @@ float NFmiStationIndexTextView::ViewFloatValue(bool doTooltipValue)
 	{
 		if(fDoTimeInterpolation)
 		{
-			if(fUseWeatherAndCloudinessForInterpolation && itsInfo->Param().GetParamIdent() == kFmiWeatherAndCloudiness) // itsInfoa ei ole aina asetettu w&c parametriin, joten se pitää tarkistaa (ikävää koodia)
+			if(fUseWeatherAndCloudinessForInterpolation && itsInfo->Param().GetParamIdent() == kFmiWeatherAndCloudiness) // itsInfoa ei ole aina asetettu w&c parametriin, joten se pitï¿½ï¿½ tarkistaa (ikï¿½vï¿½ï¿½ koodia)
 			{
 				NFmiWeatherAndCloudiness weather(itsInfo->InterpolatedValue(itsTime, 360), kFmiPackedWeather, kFloatMissing, itsInfo->InfoVersion());
 				value = static_cast<float>(weather.SubValue(itsParamId));
@@ -115,7 +115,7 @@ NFmiPoint NFmiStationIndexTextView::GetSpaceOutFontFactor(void)
 {
     if(itsDrawingEnvironment.GetFontType() == kSynop)
     {
-        // Näillä mahdollisilla synop-font kertoimilla tehdään vielä erikoisviimeistely
+        // Nï¿½illï¿½ mahdollisilla synop-font kertoimilla tehdï¿½ï¿½n vielï¿½ erikoisviimeistely
         return NFmiPoint(0.4, 0.6);
     }
     return NFmiStationView::GetSpaceOutFontFactor();
@@ -124,11 +124,11 @@ NFmiPoint NFmiStationIndexTextView::GetSpaceOutFontFactor(void)
 void NFmiStationIndexTextView::Draw(NFmiToolBox *theGTB)
 {
     NFmiStationTextView::Draw(theGTB);
-    // Tarkistetaan myös itsInfo pointer, koska kaatumisraportit vihjaisivat että SmartMet on kaatunut itsInfo->Param(itsParamId) -kutsuun
-    // eli kyseessä on ilmeisesti ollut nullptr. itsInfo attribuutti kyllä nollataan tietyissä paikoin piirtokoodia, mutta en saanut 
-    // toistettua ongelmaa mitenkään.
+    // Tarkistetaan myï¿½s itsInfo pointer, koska kaatumisraportit vihjaisivat ettï¿½ SmartMet on kaatunut itsInfo->Param(itsParamId) -kutsuun
+    // eli kyseessï¿½ on ilmeisesti ollut nullptr. itsInfo attribuutti kyllï¿½ nollataan tietyissï¿½ paikoin piirtokoodia, mutta en saanut 
+    // toistettua ongelmaa mitenkï¿½ï¿½n.
     if(fDoTimeInterpolation && itsInfo)
-        itsInfo->Param(itsParamId); // Palautetaan jostain tuntemattomasta syystä originaali parametri
+        itsInfo->Param(itsParamId); // Palautetaan jostain tuntemattomasta syystï¿½ originaali parametri
 }
 
 bool NFmiStationIndexTextView::PrepareForStationDraw(void)
@@ -138,23 +138,23 @@ bool NFmiStationIndexTextView::PrepareForStationDraw(void)
     {
         FmiParameterName parId = static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent());
         fUseWeatherAndCloudinessForInterpolation = (parId == kFmiWeatherAndCloudiness) || (parId == kFmiWeatherSymbol1) || (parId == kFmiPrecipitationForm) || (parId == kFmiFogIntensity);
-        // jos tarvitaan aikainterpolaatiota, pitää tehdä jippo tässä ja asettaa weatherandcloudiness päälle
+        // jos tarvitaan aikainterpolaatiota, pitï¿½ï¿½ tehdï¿½ jippo tï¿½ssï¿½ ja asettaa weatherandcloudiness pï¿½ï¿½lle
         if(fUseWeatherAndCloudinessForInterpolation && itsInfo)
         {
-            if(!itsInfo->Param(kFmiWeatherAndCloudiness)) // yritetään laittaa totalwind parametri päälle jos pitää tehdä aikainterpolaatiota
+            if(!itsInfo->Param(kFmiWeatherAndCloudiness)) // yritetï¿½ï¿½n laittaa totalwind parametri pï¿½ï¿½lle jos pitï¿½ï¿½ tehdï¿½ aikainterpolaatiota
             {
                 fUseWeatherAndCloudinessForInterpolation = false;
-                itsInfo->Param(itsParamId); // jos datassa ei ole totalwindiä, paluta windvector päälle
+                itsInfo->Param(itsParamId); // jos datassa ei ole totalwindiï¿½, paluta windvector pï¿½ï¿½lle
             }
         }
     }
     return status;
 }
 
-// Html/Xml stringin leipätekstin tietyt merkit pitää muuttaa, että ne näkyvät html-viewerissa oikein (tooltip on tässä html-viewer).
-// Kun käytetään synop-fonttia ja siihen liittyviä symboleja, törmäsin ongelmaan Cl parametrin kanssa kun cloud type on 4, tällöin
-// tulos stringiin tulee '<'-merkki, joka on ongelma tooltipin html-visualisoinnille. Se korjataan muuttamalla leipäteksti osion stringit
-// html:n suhteen oikeaan muotoon tekemällä seuraavat korvaukset:
+// Html/Xml stringin leipï¿½tekstin tietyt merkit pitï¿½ï¿½ muuttaa, ettï¿½ ne nï¿½kyvï¿½t html-viewerissa oikein (tooltip on tï¿½ssï¿½ html-viewer).
+// Kun kï¿½ytetï¿½ï¿½n synop-fonttia ja siihen liittyviï¿½ symboleja, tï¿½rmï¿½sin ongelmaan Cl parametrin kanssa kun cloud type on 4, tï¿½llï¿½in
+// tulos stringiin tulee '<'-merkki, joka on ongelma tooltipin html-visualisoinnille. Se korjataan muuttamalla leipï¿½teksti osion stringit
+// html:n suhteen oikeaan muotoon tekemï¿½llï¿½ seuraavat korvaukset:
 //
 //    &amp; -> & (ampersand, U+0026)
 //    &lt; -> < (less-than sign, U+003C)
@@ -302,18 +302,18 @@ NFmiColor NFmiPrecipitationFormSymbolTextView::GetBasicParamRelatedSymbolColor(f
     switch(int(theValue))
     {
     case 6: // hail
-        return NFmiColor(0.5f, 0, 1); // violetit säät
+        return NFmiColor(0.5f, 0, 1); // violetit sï¿½ï¿½t
     case 0: // drizzle
     case 1: // rain
     case 2: // sleet
     case 3: // snow
-        return NFmiColor(0, 0.6f, 0.3f); // vihreät säät
-        //		return NFmiColor(0,0.5f,0); // tumman vihreät säät
+        return NFmiColor(0, 0.6f, 0.3f); // vihreï¿½t sï¿½ï¿½t
+        //		return NFmiColor(0,0.5f,0); // tumman vihreï¿½t sï¿½ï¿½t
     case 4: // freezing drizzle
     case 5: // freezing rain
-        return NFmiColor(1, 0, 0); // punaiset säät
+        return NFmiColor(1, 0, 0); // punaiset sï¿½ï¿½t
     default:
-        return NFmiColor(0, 0, 0); // mustat säät
+        return NFmiColor(0, 0, 0); // mustat sï¿½ï¿½t
     }
 }
 
@@ -468,38 +468,38 @@ NFmiString NFmiClCmChSymbolTextView::GetPrintedText(float theValue)
 // ********************************************************************
 
 static double CalcFontSizeFactor(float theValue)
-{ // Oletus: ei missin eikä 0 arvoja, ne on karsittu jo.
+{ // Oletus: ei missin eikï¿½ 0 arvoja, ne on karsittu jo.
 	int sizeValue = static_cast<int>(theValue) / 1000;
 	return sizeValue / 3.;
 }
 
 NFmiString NFmiCloudSymbolTextView::GetPrintedText(float theValue)
 {
-// tämä luokka ei käytä itsIndexedWordList kuten perinnän mukaan pitäisi, tuo lista on vain feikki
+// tï¿½mï¿½ luokka ei kï¿½ytï¿½ itsIndexedWordList kuten perinnï¿½n mukaan pitï¿½isi, tuo lista on vain feikki
 	if(theValue != kFloatMissing && theValue > 0)
 	{
 		int layer = (static_cast<int>(theValue) % 1000) / 100;
-		if(layer == 6) // läpi pilveä
+		if(layer == 6) // lï¿½pi pilveï¿½
 		{
-			char ch = -102; // tämä on se zig zag hässäkkä
+			char ch = -102; // tï¿½mï¿½ on se zig zag hï¿½ssï¿½kkï¿½
 			NFmiString str;
 			str += ch;
 			return str;
 		}
 		int type = static_cast<int>(theValue) % 100;
-		if(layer == 3) // ala pilveä
+		if(layer == 3) // ala pilveï¿½
 		{
 			NFmiString str;
 			str += ('8' + type);
 			return str;
 		}
-		if(layer == 4) // keski pilveä
+		if(layer == 4) // keski pilveï¿½
 		{
 			NFmiString str;
 			str += ('B' + type);
 			return str;
 		}
-		if(layer == 5) // ylä pilveä
+		if(layer == 5) // ylï¿½ pilveï¿½
 		{
 			NFmiString str;
 			str += ('L' + type);
@@ -573,35 +573,35 @@ NFmiPoint NFmiImageBasedSymbolView::SbdCalcFixedRelativeDrawObjectSize() const
 
 double NFmiImageBasedSymbolView::CalcSymbolSizeInMM() const
 {
-    double dataRectFactor = 0.85; // Symbolia pitää hieman pienentää suhteessa DataRect:iin
+    double dataRectFactor = 0.85; // Symbolia pitï¿½ï¿½ hieman pienentï¿½ï¿½ suhteessa DataRect:iin
     if(itsCtrlViewDocumentInterface->Printing())
-        dataRectFactor = 0.6; // Printatessa pitää pienentää vielä lisää
+        dataRectFactor = 0.6; // Printatessa pitï¿½ï¿½ pienentï¿½ï¿½ vielï¿½ lisï¿½ï¿½
     auto currentDataRect = CurrentDataRect();
     double relativeSymbolSize = dataRectFactor * (currentDataRect.Width() + currentDataRect.Height()) / 2.;
     auto& graphicalInfo = GetGraphicalInfo();
     double symbolSizeInMM = itsToolBox->HY(relativeSymbolSize) / graphicalInfo.itsPixelsPerMM_y;
     symbolSizeInMM *= ::CalcMMSizeFactor(static_cast<float>(graphicalInfo.itsViewHeightInMM), 1.1f);
 
-    // Tässä vielä viimeisiä epätoivoisia symboli koko säätöjä erilaisille karttaruudukko (columns x rows) tyypeille.
-    // Yritin tehdä pikkuisia hienosäätöjä että aiemmin tehdyt muutokset CurrentDataRect-laskuissa eivät olisi liian 
+    // Tï¿½ssï¿½ vielï¿½ viimeisiï¿½ epï¿½toivoisia symboli koko sï¿½ï¿½tï¿½jï¿½ erilaisille karttaruudukko (columns x rows) tyypeille.
+    // Yritin tehdï¿½ pikkuisia hienosï¿½ï¿½tï¿½jï¿½ ettï¿½ aiemmin tehdyt muutokset CurrentDataRect-laskuissa eivï¿½t olisi liian 
     // isoja ja muutokset olisivat oikean suuntaisia.
     auto viewGridSize = itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex);
     double xPerYRatio = viewGridSize.X() / viewGridSize.Y();
-    // Isonnetaan symbolia vähän normi 1x1/2x2 jne. tapauksissa
+    // Isonnetaan symbolia vï¿½hï¿½n normi 1x1/2x2 jne. tapauksissa
     double finalSymbolSizeFactor = 1.15;
     if(xPerYRatio == 1)
     {
-        // Jos sarakkeita sama kuin rivejä, halutaan sarake määrän mukaan kasvattaa enenmmän koko
+        // Jos sarakkeita sama kuin rivejï¿½, halutaan sarake mï¿½ï¿½rï¿½n mukaan kasvattaa enenmmï¿½n koko
         finalSymbolSizeFactor = MathHelper::InterpolateWithTwoPoints(viewGridSize.X(), 1, 4, finalSymbolSizeFactor, finalSymbolSizeFactor * 1.3, finalSymbolSizeFactor, finalSymbolSizeFactor * 1.3);
     }
     else if(xPerYRatio > 1)
     {
-        // Jos sarakkeita enemmän kuin rivejä, pienennetään hieman symboleja
+        // Jos sarakkeita enemmï¿½n kuin rivejï¿½, pienennetï¿½ï¿½n hieman symboleja
         finalSymbolSizeFactor = MathHelper::InterpolateWithTwoPoints(xPerYRatio, 2, 5, 0.97, 0.92, 0.9, 0.98);
     }
     else if(xPerYRatio < 1)
     {
-        // Jos sarakkeita vähemmän kuin rivejä, suurennetaan kohtalaisesti symboleja
+        // Jos sarakkeita vï¿½hemmï¿½n kuin rivejï¿½, suurennetaan kohtalaisesti symboleja
         finalSymbolSizeFactor = MathHelper::InterpolateWithTwoPoints(xPerYRatio, 0.3, 0.5, 1.4, 1.3, 1.27, 1.41);
     }
     symbolSizeInMM *= finalSymbolSizeFactor;
@@ -610,7 +610,7 @@ double NFmiImageBasedSymbolView::CalcSymbolSizeInMM() const
 
 NFmiPoint NFmiImageBasedSymbolView::SbdCalcFixedSymbolSize() const
 {
-    // Käytetään image symbolien bulk piirrossa symbolin haluttua [mm] kokoa.
+    // Kï¿½ytetï¿½ï¿½n image symbolien bulk piirrossa symbolin haluttua [mm] kokoa.
     auto symbolSizeInMM = CalcSymbolSizeInMM();
     return NFmiPoint(symbolSizeInMM, symbolSizeInMM);
 }
@@ -625,8 +625,8 @@ NFmiSymbolColorChangingType NFmiImageBasedSymbolView::SbdGetSymbolColorChangingT
     return NFmiSymbolColorChangingType::Never;
 }
 
-// tämäkin on huono viritys, mutta harvennuskoodi ottaa tässä vaiheessa fontti koon huomioon kun
-// se laskee miten harvennetaan hila dataa. Nyt pitää siis laskea fontti koko täälläkin, vaikka
+// tï¿½mï¿½kin on huono viritys, mutta harvennuskoodi ottaa tï¿½ssï¿½ vaiheessa fontti koon huomioon kun
+// se laskee miten harvennetaan hila dataa. Nyt pitï¿½ï¿½ siis laskea fontti koko tï¿½ï¿½llï¿½kin, vaikka
 // tuuli vektori ei olekaan fontti pohjainen symboli.
 void NFmiImageBasedSymbolView::ModifyTextEnvironment(void)
 {
@@ -665,7 +665,7 @@ NFmiSymbolBulkDrawType NFmiBetterWeatherSymbolView::SbdGetDrawType() const
     return NFmiSymbolBulkDrawType::BitmapSymbol1;
 }
 
-// HUOM! tätä pitää kutsua (GeneralDataDocissa) ennen kuin itse luokkaa saa käyttää!!!!
+// HUOM! tï¿½tï¿½ pitï¿½ï¿½ kutsua (GeneralDataDocissa) ennen kuin itse luokkaa saa kï¿½yttï¿½ï¿½!!!!
 void NFmiBetterWeatherSymbolView::InitBetterWeatherSymbolMap(const std::string &theWomlDirectory)
 {
     if(!NFmiBetterWeatherSymbolView::itsBetterWeatherSymbolMap.Initialized())
@@ -712,7 +712,7 @@ NFmiSymbolBulkDrawType NFmiSmartSymbolView::SbdGetDrawType() const
     return NFmiSymbolBulkDrawType::BitmapSymbol2;
 }
 
-// HUOM! tätä pitää kutsua (GeneralDataDocissa) ennen kuin itse luokkaa saa käyttää!!!!
+// HUOM! tï¿½tï¿½ pitï¿½ï¿½ kutsua (GeneralDataDocissa) ennen kuin itse luokkaa saa kï¿½yttï¿½ï¿½!!!!
 void NFmiSmartSymbolView::InitSmartSymbolMap(const std::string &theWomlDirectory)
 {
     if(!NFmiSmartSymbolView::itsSmartSymbolMap.Initialized())

@@ -23,17 +23,22 @@
 #include "NFmiFastInfoUtils.h"
 #include "NFmiFileString.h"
 #include "WmsSupportInterface.h"
-#include "wmssupport\ChangedLayers.h"
+#ifndef UNIX
+#include "wmssupport/ChangedLayers.h"
+#endif // UNIX
 
 #ifndef UNIX
 #include <gdiplus.h>
 #endif // UNIX
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
 
+#ifndef UNIX
 NFmiViewParamsView::ModelSelectorButtonImageHolder NFmiViewParamsView::statModelSelectorButtonImages;
+#endif // UNIX
 
 // initialisoinnissa luetaan bitmapit tiedostoista, kutsu vasta kun itsBitmapFolder-dataosa on asetettu
 // HUOM! heitt�� poikkeuksia ep�onnistuessaan
+#ifndef UNIX
 void NFmiViewParamsView::ModelSelectorButtonImageHolder::Initialize(void)
 {
 	fInitialized = true;
@@ -41,6 +46,7 @@ void NFmiViewParamsView::ModelSelectorButtonImageHolder::Initialize(void)
 	itsPreviousModelButtonImage = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "control_small_reverse_play.png");
 	itsFindNearestModelButtonImage = CtrlView::CreateBitmapFromFile(itsBitmapFolder, "control_small_pause.png"); // pause saa olla etsi l�hin sopiva malli ajo-nappula
 }
+#endif // UNIX
 
 //--------------------------------------------------------
 // Constructor/Destructor
@@ -54,6 +60,7 @@ NFmiViewParamsView::NFmiViewParamsView(int theMapViewDescTopIndex, const NFmiRec
 ,itsCurrentDragRowIndex(-1)
 ,fMouseDraggingAction(false)
 {
+#ifndef UNIX
 	if(statModelSelectorButtonImages.fInitialized == false)
 	{
 		try
@@ -68,6 +75,7 @@ NFmiViewParamsView::NFmiViewParamsView(int theMapViewDescTopIndex, const NFmiRec
 			itsCtrlViewDocumentInterface->LogAndWarnUser(errStr, "Error while trying to read animation button bitmaps", CatLog::Severity::Error, CatLog::Category::Visualization, false);
 		}
 	}
+#endif // UNIX
 }
 
 NFmiRect NFmiViewParamsView::CalcParameterDragRect(int theParamLineIndex, int leftMargin, int topMargin, int rightMargin, int bottomMargin)
@@ -239,6 +247,7 @@ void NFmiViewParamsView::DrawModelSelectorButtons(boost::shared_ptr<NFmiDrawPara
 
 // Laskee vasempaan alariviin nappuloiden paikkoja indeksin perusteella.
 // theIndex alkaa 1:st� ja indeksin kasvaessa nappuloita sijoitetaan aina enemm�n oikealle.
+#ifndef UNIX
 NFmiRect NFmiViewParamsView::CalcModelSelectorButtonRect(const NFmiRect& parameterRowRect, int theButtonIndex)
 {
 	NFmiPoint buttonRelativeSize = CalcModelSelectorButtonRelativeSize(statModelSelectorButtonImages.itsNextModelButtonImage);
@@ -260,8 +269,7 @@ NFmiRect NFmiViewParamsView::CalcModelSelectorButtonRect(const NFmiRect& paramet
 
 NFmiPoint NFmiViewParamsView::CalcModelSelectorButtonRelativeSize(Gdiplus::Bitmap *theImage)
 {
-#ifndef UNIX
-	double relativeWidth = itsToolBox->SX(boost::math::iround(itsButtonSizeInMM_x * itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x)); 
+	double relativeWidth = itsToolBox->SX(boost::math::iround(itsButtonSizeInMM_x * itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x));
     double relativeHeight = itsToolBox->SY(boost::math::iround(itsButtonSizeInMM_y * itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_y));
 	if(itsCtrlViewDocumentInterface->Printing() == false)
 	{
@@ -276,10 +284,8 @@ NFmiPoint NFmiViewParamsView::CalcModelSelectorButtonRelativeSize(Gdiplus::Bitma
 		relativeHeight = itsToolBox->SY(bitmapSizeY);
 	}
 	return NFmiPoint(relativeWidth, relativeHeight);
-#else
-    return NFmiPoint(16.0, 16.0); // TODO: implement on Linux
-#endif // UNIX
 }
+#endif // UNIX
 
 
 //--------------------------------------------------------
@@ -545,10 +551,12 @@ std::string NFmiViewParamsView::ComposeToolTipText(const NFmiPoint& thePlace)
 				{
 					return MakeMacroParamTooltipText(drawParam, paramStr);
 				}
+#ifndef DISABLE_CPPRESTSDK
 				else if(wmsParamCase)
 				{
 					return MakeWmsTooltipText(drawParam, paramStr);
 				}
+#endif
 				else
 				{
 					std::string str = paramStr;
@@ -602,6 +610,7 @@ bool NFmiViewParamsView::LeftClickOnModelSelectionButtons(const NFmiPoint &thePl
 
 	auto parameterRowRect = CalcParameterRowRect(theParameterRowIndex);
     auto usedRowIndex = GetUsedParamRowIndex();
+#ifndef UNIX
     if(CalcModelSelectorButtonRect(parameterRowRect, 2).IsInside(thePlace)) // t�ss� tutkitaan osuiko hiiren klikkaus previous-nappiin (2)
 	{
 		itsCtrlViewDocumentInterface->SetModelRunOffset(theDrawParam, -1, itsMapViewDescTopIndex, usedRowIndex);
@@ -618,6 +627,9 @@ bool NFmiViewParamsView::LeftClickOnModelSelectionButtons(const NFmiPoint &thePl
 		return true;
 	}
 	return false;
+#else
+	return false;
+#endif // UNIX
 }
 
 std::string NFmiViewParamsView::MakeMacroParamTooltipText(const boost::shared_ptr<NFmiDrawParam> &drawParam, const std::string& paramStr)
@@ -626,7 +638,7 @@ std::string NFmiViewParamsView::MakeMacroParamTooltipText(const boost::shared_pt
 	{
 		std::string macroParamTooltip = paramStr;
 		macroParamTooltip += "<br>File: ";
-		NFmiFileString macroParamFilename = drawParam->InitFileName();
+		NFmiFileString macroParamFilename(NFmiString(drawParam->InitFileName()));
 		macroParamFilename.Extension("st");
 		macroParamTooltip += macroParamFilename;
 		macroParamTooltip += "<br><hr color=red><br>"; // v�liviiva
@@ -639,6 +651,7 @@ std::string NFmiViewParamsView::MakeMacroParamTooltipText(const boost::shared_pt
 	return "";
 }
 
+#ifndef DISABLE_CPPRESTSDK
 std::string NFmiViewParamsView::MakeWmsTooltipText(const boost::shared_ptr<NFmiDrawParam>& drawParam, const std::string& paramStr)
 {
 	std::string str = paramStr;
@@ -664,3 +677,4 @@ std::string NFmiViewParamsView::MakeWmsTooltipText(const boost::shared_ptr<NFmiD
 	}
 	return str;
 }
+#endif

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "WmsSupport\Query.h"
+#include "WmsSupport/Query.h"
 
 #include "NFmiRect.h"
 

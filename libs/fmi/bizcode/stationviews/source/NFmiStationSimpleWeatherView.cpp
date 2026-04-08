@@ -1,4 +1,4 @@
-//© Ilmatieteenlaitos/Marko
+//ï¿½ Ilmatieteenlaitos/Marko
 //  Original 24.09.1998
 //
 //
@@ -15,7 +15,7 @@
 #include "CtrlViewDocumentInterface.h"
 #include "NFmiWeatherAndCloudiness.h"
 
-#include<boost\math\special_functions\round.hpp>
+#include<boost/math/special_functions/round.hpp>
 
 NFmiStationSimpleWeatherView::NFmiStationSimpleWeatherView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
 														  ,NFmiToolBox *theToolBox
@@ -52,9 +52,9 @@ bool NFmiStationSimpleWeatherView::PrepareForStationDraw(void)
 	bool status = NFmiStationView::PrepareForStationDraw();
 	if(fDoTimeInterpolation)
 	{ 
-		// jos tarvitaan aikainterpolaatiota, pitää tehdä jippo tässä ja asettaa totalwind päälle
-		if(!itsInfo->Param(kFmiWeatherAndCloudiness)) // yritetään laittaa WeatherAndCloudiness parametri päälle jos pitää tehdä aikainterpolaatiota
-			itsInfo->Param(itsParamId); // jos datassa ei ole totalwindiä, palauta originaali parametri takaisin
+		// jos tarvitaan aikainterpolaatiota, pitï¿½ï¿½ tehdï¿½ jippo tï¿½ssï¿½ ja asettaa totalwind pï¿½ï¿½lle
+		if(!itsInfo->Param(kFmiWeatherAndCloudiness)) // yritetï¿½ï¿½n laittaa WeatherAndCloudiness parametri pï¿½ï¿½lle jos pitï¿½ï¿½ tehdï¿½ aikainterpolaatiota
+			itsInfo->Param(itsParamId); // jos datassa ei ole totalwindiï¿½, palauta originaali parametri takaisin
 	}
 	return status;
 }
@@ -65,7 +65,7 @@ float NFmiStationSimpleWeatherView::ViewFloatValue(bool )
 	if(itsInfo)
 	{
 		if(fDoTimeInterpolation)
-		{ // tehdään itse aikainterpolaatio totalwindin avulla
+		{ // tehdï¿½ï¿½n itse aikainterpolaatio totalwindin avulla
             if(itsInfo->Param().GetParamIdent() == kFmiWeatherAndCloudiness)
             {
 			    NFmiWeatherAndCloudiness weather(itsInfo->InterpolatedValue(itsTime, 360), kFmiPackedWeather, kFloatMissing, itsInfo->InfoVersion());
@@ -81,7 +81,7 @@ float NFmiStationSimpleWeatherView::ViewFloatValue(bool )
 }
 
 // Huono nimi virtuaali metodilla GetSpaceOutFontFactor,
-// tuuli vektori ei ole fontti pohjainen symboli ja metodin pitäisi olla joku SymbolSizeFactor
+// tuuli vektori ei ole fontti pohjainen symboli ja metodin pitï¿½isi olla joku SymbolSizeFactor
 NFmiPoint NFmiStationSimpleWeatherView::GetSpaceOutFontFactor(void)
 {
 	return NFmiPoint(0.8, 1.2);
@@ -110,14 +110,14 @@ NFmiSymbolColorChangingType NFmiStationSimpleWeatherView::SbdGetSymbolColorChang
 NFmiPoint NFmiStationSimpleWeatherView::SbdCalcDrawObjectOffset() const
 {
 	NFmiPoint offset = CurrentDataRect().Center();
-	// CurrentDataRect:issa on mukana symbolipiirtoon liittyvät offsetit.
+	// CurrentDataRect:issa on mukana symbolipiirtoon liittyvï¿½t offsetit.
 	offset -= CurrentStationPosition();
 	return offset;
 }
 
 NFmiPoint NFmiStationSimpleWeatherView::SbdCalcFixedRelativeDrawObjectSize() const
 {
-	// Tämä korjaa erilaisten karttaruudukko asetelmien aiheuttamia vääristymiä, pahimpina
+	// Tï¿½mï¿½ korjaa erilaisten karttaruudukko asetelmien aiheuttamia vï¿½ï¿½ristymiï¿½, pahimpina
 	// ovat suuret erot x/y dimensioissa kuten 3x1 ja 2x4 tyyppiset ruudukot (3x1 on 3 saraketta ja 1 rivi)
 	return SbdCalcOldSchoolSymbolScaleFix(NFmiStationView::SbdCalcFixedRelativeDrawObjectSize());
 }

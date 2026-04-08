@@ -1,4 +1,4 @@
-//© Ilmatieteenlaitos/Marko
+//ï¿½ Ilmatieteenlaitos/Marko
 //  Original 27.06.2006
 //
 //
@@ -16,7 +16,7 @@
 #include "CtrlViewDocumentInterface.h"
 #include "GraphicalInfo.h"
 
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
 
 NFmiStationArrowView::NFmiStationArrowView 
 								 (int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
@@ -42,7 +42,7 @@ NFmiStationArrowView::~NFmiStationArrowView(void)
 {
 }
 
-double gSizeFactor = 0.6; // Muunnan kokoja ja offsetteja tällä kertoimella jotta symbolin koko olisi paremmin yhteensopiva muiden symbolien säätöjen kanssa
+double gSizeFactor = 0.6; // Muunnan kokoja ja offsetteja tï¿½llï¿½ kertoimella jotta symbolin koko olisi paremmin yhteensopiva muiden symbolien sï¿½ï¿½tï¿½jen kanssa
 NFmiPoint gSizeFactorPoint(gSizeFactor, gSizeFactor);
 
 float NFmiStationArrowView::ViewFloatValue(bool doTooltipValue)
@@ -52,12 +52,12 @@ float NFmiStationArrowView::ViewFloatValue(bool doTooltipValue)
 	{
 		if(!doTooltipValue)
 		{
-			// Tehdään pohjoissuunta korjaus tuuliviirin piirtoon, paitsi jos kyse tooltip arvosta
+			// Tehdï¿½ï¿½n pohjoissuunta korjaus tuuliviirin piirtoon, paitsi jos kyse tooltip arvosta
 			NFmiAngle ang(itsArea->TrueNorthAzimuth(CurrentLatLon()));
 			angle += static_cast<float>(ang.Value());
 			FmiParameterName parId = static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent());
-			// Tietyt parametrit pitää kääntää 180 astetta ja tietyt ei:
-			// Käännettäviin kuuluu tuulen suunta ja erilaiset aallon suunnat.
+			// Tietyt parametrit pitï¿½ï¿½ kï¿½ï¿½ntï¿½ï¿½ 180 astetta ja tietyt ei:
+			// Kï¿½ï¿½nnettï¿½viin kuuluu tuulen suunta ja erilaiset aallon suunnat.
 			bool flipArrowAngle = (parId == kFmiWindDirection || parId == kFmiWaveDirection || parId == kFmiWaveDirectionBandB || parId == kFmiWaveDirectionBandC || parId == kFmiWaveDirectionSwell0 || parId == kFmiWaveDirectionSwell1 || parId == kFmiWaveDirectionSwell2);
 			if(itsDrawParam->FlipArrowSymbol())
 			{
@@ -74,14 +74,14 @@ float NFmiStationArrowView::ViewFloatValue(bool doTooltipValue)
 }
 
 // Huono nimi virtuaali metodilla GetSpaceOutFontFactor,
-// tuuli vektori ei ole fontti pohjainen symboli ja metodin pitäisi olla joku SymbolSizeFactor
+// tuuli vektori ei ole fontti pohjainen symboli ja metodin pitï¿½isi olla joku SymbolSizeFactor
 NFmiPoint NFmiStationArrowView::GetSpaceOutFontFactor(void)
 {
 	return NFmiPoint(1., 1.);
 }
 
-// tämäkin on huono viritys, mutta harvennuskoodi ottaa tässä vaiheessa fontti koon huomioon kun
-// se laskee miten harvennetaan hila dataa. Nyt pitää siis laskea fontti koko täälläkin, vaikka
+// tï¿½mï¿½kin on huono viritys, mutta harvennuskoodi ottaa tï¿½ssï¿½ vaiheessa fontti koon huomioon kun
+// se laskee miten harvennetaan hila dataa. Nyt pitï¿½ï¿½ siis laskea fontti koko tï¿½ï¿½llï¿½kin, vaikka
 // tuuli vektori ei olekaan fontti pohjainen symboli.
 void NFmiStationArrowView::ModifyTextEnvironment(void)
 {
@@ -112,18 +112,18 @@ NFmiPoint NFmiStationArrowView::SbdCalcFixedSymbolSize() const
 	symbolSize *= gSizeFactorPoint;
 	NFmiPoint scale(rect.Size());
 	scale *= symbolSize;
-	// Originaali koodissa gSizeFactorPoint:illa skaalailtu kahdssa kohtaa koodia, pakko jättää toistaiseksi
+	// Originaali koodissa gSizeFactorPoint:illa skaalailtu kahdssa kohtaa koodia, pakko jï¿½ttï¿½ï¿½ toistaiseksi
 	scale *= gSizeFactorPoint;
-	// Tämä korjaa erilaisten karttaruudukko asetelmien aiheuttamia vääristymiä, pahimpina
+	// Tï¿½mï¿½ korjaa erilaisten karttaruudukko asetelmien aiheuttamia vï¿½ï¿½ristymiï¿½, pahimpina
 	// ovat suuret erot x/y dimensioissa kuten 3x1 ja 2x4 tyyppiset ruudukot (3x1 on 3 saraketta ja 1 rivi)
 	scale = SbdCalcOldSchoolSymbolScaleFix(scale);
-	// Fiksattu symbol size eli nuolen originaali piirrossa käytetty scale:n y komponentti.
+	// Fiksattu symbol size eli nuolen originaali piirrossa kï¿½ytetty scale:n y komponentti.
 	return scale;
 }
 
 int NFmiStationArrowView::SbdCalcFixedPenSize() const
 {
-	// otetaan käytetyn kynän paksuus isoviiva leveydestä!!!
+	// otetaan kï¿½ytetyn kynï¿½n paksuus isoviiva leveydestï¿½!!!
 	double wantedPenWidthInMM = itsDrawParam->SimpleIsoLineWidth();
 	double pixelsPerMM = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_y;
 	int penSize = FmiMax(1, boost::math::iround(wantedPenWidthInMM * pixelsPerMM));

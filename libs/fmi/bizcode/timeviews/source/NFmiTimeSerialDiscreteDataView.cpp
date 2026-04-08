@@ -39,7 +39,7 @@
 #include "CtrlViewFastInfoFunctions.h"
 #include "EditedInfoMaskHandler.h"
 
-#include <boost\math\special_functions\round.hpp>
+#include <boost/math/special_functions/round.hpp>
 
 //--------------------------------------------------------
 // Constructor/Destructor 
@@ -75,7 +75,7 @@ bool NFmiTimeSerialDiscreteDataView::LeftButtonUp (const NFmiPoint & thePlace, u
 	if(IsIn(thePlace))
 	{
 		itsCtrlViewDocumentInterface->TimeSerialViewDirty(true);
-		// kun monta alinäyttöä yhtäaikaa, pitää ensimmäisellä klikkauksella asettaa kyseinen näyttö 'editointitilaan'
+		// kun monta alinï¿½yttï¿½ï¿½ yhtï¿½aikaa, pitï¿½ï¿½ ensimmï¿½isellï¿½ klikkauksella asettaa kyseinen nï¿½yttï¿½ 'editointitilaan'
 		if(itsDrawParam && (!itsDrawParam->IsParamEdited()))
 		{
             itsCtrlViewDocumentInterface->TimeSerialViewDrawParamList()->DisableEditing();
@@ -83,7 +83,7 @@ bool NFmiTimeSerialDiscreteDataView::LeftButtonUp (const NFmiPoint & thePlace, u
 			return true;
 		}
 		{
-			// kuinka läheltä pitää aikaakselia klikata ennenkuin ohjelma suostuu 'löytämään' klikkauksen paikan
+			// kuinka lï¿½heltï¿½ pitï¿½ï¿½ aikaakselia klikata ennenkuin ohjelma suostuu 'lï¿½ytï¿½mï¿½ï¿½n' klikkauksen paikan
 			const double proximityFactor = 0.2; 
 			int index;
 			if(FindTimeIndex(thePlace.X(), proximityFactor, index))
@@ -91,14 +91,14 @@ bool NFmiTimeSerialDiscreteDataView::LeftButtonUp (const NFmiPoint & thePlace, u
 				auto value = Position2ModifyFactor(thePlace);
 				FixModifyFactorValue(value);
 
-				return ModifyFactorPointsSetValue(boost::math::iround(value), index) == true;	// Vain yksi tapa käsitellä aikasarjaa. M.K.
+				return ModifyFactorPointsSetValue(boost::math::iround(value), index) == true;	// Vain yksi tapa kï¿½sitellï¿½ aikasarjaa. M.K.
 			}
 		}
 	}
 	return false;
 }
 bool NFmiTimeSerialDiscreteDataView::LeftButtonDown(const NFmiPoint & thePlace, unsigned long theKey)
-{ // tämä pitää määrittää uusien hiiri ominaisuuksien takia tänne paaluttamaan falsea
+{ // tï¿½mï¿½ pitï¿½ï¿½ mï¿½ï¿½rittï¿½ï¿½ uusien hiiri ominaisuuksien takia tï¿½nne paaluttamaan falsea
 	return false;
 }
 
@@ -137,7 +137,7 @@ bool NFmiTimeSerialDiscreteDataView::RightButtonUp (const NFmiPoint & thePlace, 
 	if(IsIn(thePlace))
 	{
         itsCtrlViewDocumentInterface->TimeSerialViewDirty(true);
-		// kun monta alinäyttöä yhtäaikaa, pitää ensimmäisellä klikkauksella asettaa kyseinen näyttö 'editointitilaan'
+		// kun monta alinï¿½yttï¿½ï¿½ yhtï¿½aikaa, pitï¿½ï¿½ ensimmï¿½isellï¿½ klikkauksella asettaa kyseinen nï¿½yttï¿½ 'editointitilaan'
 		if(itsDrawParam && (!itsDrawParam->IsParamEdited()))
 		{
             itsCtrlViewDocumentInterface->TimeSerialViewDrawParamList()->DisableEditing();
@@ -184,7 +184,7 @@ void NFmiTimeSerialDiscreteDataView::CreateModifyFactorScaleView(bool /* fSetSca
 	float lowerLimit=0
 		, upperLimit=1;
 	GetLowAndHighLimits(itsDrawParam, lowerLimit, upperLimit);
-	NFmiStepScale scale(lowerLimit,upperLimit, 1./*,testScale.StepValue()*/);	// Askelväli 1. M.K. 10.5.99
+	NFmiStepScale scale(lowerLimit,upperLimit, 1./*,testScale.StepValue()*/);	// Askelvï¿½li 1. M.K. 10.5.99
 	itsModifyFactorAxis = new NFmiAxis(scale, NFmiTitle("Y"));
 
 	
@@ -226,7 +226,7 @@ void NFmiTimeSerialDiscreteDataView::DrawModifyFactorPoints(void)
 // ChangeTimeSeriesValues 
 //--------------------------------------------------------
 void NFmiTimeSerialDiscreteDataView::ChangeTimeSeriesValues(void)
-// HUOM! POIKKEAVATKO NÄMÄ VIRTUAALI FUNKTIOT TOISISTAAN
+// HUOM! POIKKEAVATKO Nï¿½Mï¿½ VIRTUAALI FUNKTIOT TOISISTAAN
 {
 	if(IsModifyFactorValuesNonZero())
 	{
@@ -339,7 +339,7 @@ void NFmiTimeSerialDiscreteDataView::CreateValueScaleView (void)
 	GetLowAndHighLimits(itsDrawParam, lowLimit, highLimit);
 
 
-	NFmiStepScale scale((float)lowLimit,(float)highLimit, 1.);	// Askelväli 1. 
+	NFmiStepScale scale((float)lowLimit,(float)highLimit, 1.);	// Askelvï¿½li 1. 
 	itsValueAxis = new NFmiAxis(scale, NFmiTitle("Y"));
 	itsValueView = new NFmiAxisView(CalcValueAxisRect()
                                     ,itsToolBox
@@ -510,8 +510,8 @@ void NFmiTimeSerialDiscreteDataView::DrawDataLine (const NFmiMetTime& theTime1, 
 // EvaluateValue 
 //--------------------------------------------------------
 
-//   Asettaa uuden arvon datalle muutoskäyrää 
-//   piirrettäessä. Esim. kok.pilv. 90 + 10 -> 
+//   Asettaa uuden arvon datalle muutoskï¿½yrï¿½ï¿½ 
+//   piirrettï¿½essï¿½. Esim. kok.pilv. 90 + 10 -> 
 //   100
 //   ja WD 350 + 20 -> 10, jne.
 void NFmiTimeSerialDiscreteDataView::EvaluateValue (double& theValue)

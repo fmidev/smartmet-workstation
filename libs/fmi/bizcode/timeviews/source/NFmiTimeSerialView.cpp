@@ -1,5 +1,5 @@
 #ifdef _MSC_VER
-#pragma warning(disable : 4786) // poistaa n kpl VC++ kääntäjän varoitusta
+#pragma warning(disable : 4786) // poistaa n kpl VC++ kï¿½ï¿½ntï¿½jï¿½n varoitusta
 #endif
 
 #include "NFmiTimeSerialView.h"
@@ -53,17 +53,17 @@
 #include "NFmiMacroParam.h"
 #include "TimeSerialModificationDataInterface.h"
 
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
 
-static boost::shared_ptr<NFmiAreaMaskList> classesEmptyParamMaskList(new NFmiAreaMaskList()); // jos käyttäjä ei ole halunnut käyttää maskeja laskuissaan, käytetään tätä listaa todellisen maskilistan sijasta
+static boost::shared_ptr<NFmiAreaMaskList> classesEmptyParamMaskList(new NFmiAreaMaskList()); // jos kï¿½yttï¿½jï¿½ ei ole halunnut kï¿½yttï¿½ï¿½ maskeja laskuissaan, kï¿½ytetï¿½ï¿½n tï¿½tï¿½ listaa todellisen maskilistan sijasta
 
-static int itsModifyingUnit; // ainakin väliaikaisesti staattisena täällä (optimointia change valueta laskettaessa)
+static int itsModifyingUnit; // ainakin vï¿½liaikaisesti staattisena tï¿½ï¿½llï¿½ (optimointia change valueta laskettaessa)
 
 bool fCPHelpColorsInitialized = false;
-std::vector<NFmiColor> gCPHelpColors; // kun piirretään muita kuin aktiivista CP:tä, käytetään näitä värejä
+std::vector<NFmiColor> gCPHelpColors; // kun piirretï¿½ï¿½n muita kuin aktiivista CP:tï¿½, kï¿½ytetï¿½ï¿½n nï¿½itï¿½ vï¿½rejï¿½
 const int gMaxHelpCPDrawed = 20;
 
-const double gDontDrawLineValue = -99999.9; // funktio DrawSimpleDataVectorInTimeSerial ei piirrä kyseisellä arvolla viivaa
+const double gDontDrawLineValue = -99999.9; // funktio DrawSimpleDataVectorInTimeSerial ei piirrï¿½ kyseisellï¿½ arvolla viivaa
 
 const NFmiColor g_OfficialDataColor(0.78f, 0.082f, 0.52f); // viinin punainen kepa-datasta
 
@@ -138,7 +138,7 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetWantedData(CtrlViewDocumentInterf
 
     if(!wantedInfo)
     {
-		if(usedType == NFmiInfoData::kViewable) // jos ei löytynyt kViewable-tyypillä, kokeillaan vielä kModelHelpData
+		if(usedType == NFmiInfoData::kViewable) // jos ei lï¿½ytynyt kViewable-tyypillï¿½, kokeillaan vielï¿½ kModelHelpData
 			wantedInfo = ::GetWantedData(theCtrlViewDocumentInterface, theViewedDrawParam, theWantedProducer, NFmiInfoData::kModelHelpData, possibleLatlonPtr);
     }
 
@@ -176,7 +176,7 @@ NFmiTimeSerialView::NFmiTimeSerialView(int theMapViewDescTopIndex, const NFmiRec
 :NFmiTimeView(theMapViewDescTopIndex, theRect
 			 ,theToolBox
 			 ,theDrawParam
-			 ,NFmiTimeDescriptor(NFmiMetTime(60), GetCtrlViewDocumentInterface()->TimeSerialViewTimeBag()) // tämä aika-alue annetaan aika-akselin tekoa varten
+			 ,NFmiTimeDescriptor(NFmiMetTime(60), GetCtrlViewDocumentInterface()->TimeSerialViewTimeBag()) // tï¿½mï¿½ aika-alue annetaan aika-akselin tekoa varten
              ,theRowIndex)
 ,itsNormalCurveEnvi(NormalStationDataCurveEnvironment())
 ,itsChangeCurveEnvi(ChangeStationDataCurveEnvironment())
@@ -260,8 +260,8 @@ void NFmiTimeSerialView::Draw(NFmiToolBox* theToolBox)
 		UpdateCachedParameterName();
 		bool editedDataDrawed = IsEditedData(itsInfo);
 
-		CreateModifyFactorScaleView(true, 7); // ei tarvitsisi tehdä aina piirrettäessä
-	// en keksinyt tälle parempaa paikkaa, mutta nyt akseli ja maksimi muutos vastaavat toisiaan
+		CreateModifyFactorScaleView(true, 7); // ei tarvitsisi tehdï¿½ aina piirrettï¿½essï¿½
+	// en keksinyt tï¿½lle parempaa paikkaa, mutta nyt akseli ja maksimi muutos vastaavat toisiaan
 		itsDrawParam->TimeSerialModifyingLimit(itsModifyFactorAxis->EndValue());
 
 		NFmiDrawingEnvironment envi;
@@ -282,7 +282,7 @@ void NFmiTimeSerialView::Draw(NFmiToolBox* theToolBox)
 			DrawModifyFactorAxis();
 		DrawParamName();
 		if(editedDataDrawed)
-			DrawModifyingUnit();	// Piirtää aikasarjaikkunaan muokkausakselin yksikön.
+			DrawModifyingUnit();	// Piirtï¿½ï¿½ aikasarjaikkunaan muokkausakselin yksikï¿½n.
 
 		NFmiDrawingEnvironment dataRectEnvi;
 		NFmiRectangle dataRectangle(itsDataRect, 0, &dataRectEnvi);
@@ -308,7 +308,7 @@ void NFmiTimeSerialView::DrawSideParametersDataLocationInTime(const NFmiPoint& t
 	auto viewRowSideParameters = itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().getTimeSerialViewSideParameters(itsViewGridRowNumber);
 	if(viewRowSideParameters && viewRowSideParameters->NumberOfItems() > 0)
 	{
-		// GeneralColor värit alkavat 0:sta, ja 1. side-parameter on tarkoitus piirtää 2. värillä, jonka indeksi on siis 1.
+		// GeneralColor vï¿½rit alkavat 0:sta, ja 1. side-parameter on tarkoitus piirtï¿½ï¿½ 2. vï¿½rillï¿½, jonka indeksi on siis 1.
 		int sideParameterColorIndex = 1; 
 		NFmiDrawingEnvironment envi;
 		envi.SetPenSize(NFmiPoint(2, 2));
@@ -327,7 +327,7 @@ void NFmiTimeSerialView::DrawSideParametersDataLocationInTime(const NFmiPoint& t
 						AddSideParameterNames(sideParamDrawParam, sideParamInfo);
 
 					sideParamInfo->ResetTime(); // varmuuden vuoksi asetan 1. aikaan
-					DrawSimpleDataInTimeSerial(GetViewLimitingTimes(), sideParamInfo, sideParamDrawParam, envi, theLatlon, NFmiPoint(6, 6)); // 0=ei siirretä aikasarjaa mihinkään suuntaa piirrossa
+					DrawSimpleDataInTimeSerial(GetViewLimitingTimes(), sideParamInfo, sideParamDrawParam, envi, theLatlon, NFmiPoint(6, 6)); // 0=ei siirretï¿½ aikasarjaa mihinkï¿½ï¿½n suuntaa piirrossa
 				}
 			}
 		}
@@ -336,7 +336,7 @@ void NFmiTimeSerialView::DrawSideParametersDataLocationInTime(const NFmiPoint& t
 
 void NFmiTimeSerialView::DrawHelperDataLocationInTime(const NFmiPoint &theLatlon)
 {
-    // Smartmet on kaatunut joskus mystisesti HESSAA symbolin kanssa, joten ei piirretä, kun on erikoisnäytöstä kyse
+    // Smartmet on kaatunut joskus mystisesti HESSAA symbolin kanssa, joten ei piirretï¿½, kun on erikoisnï¿½ytï¿½stï¿½ kyse
     if(!IsParamWeatherSymbol3())
     {
         if(itsCtrlViewDocumentInterface->IsOperationalModeOn())
@@ -378,7 +378,8 @@ void NFmiTimeSerialView::DrawHelperData3LocationInTime(const NFmiPoint &theLatlo
 {
     if(itsCtrlViewDocumentInterface->ShowHelperData3InTimeSerialView())
     {
-        DrawAnnualModelFractileDataLocationInTime1(static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent()), itsCtrlViewDocumentInterface->GetModelClimatologyData(itsDrawParam->Level()), theLatlon);
+        auto climateInfo = itsCtrlViewDocumentInterface->GetModelClimatologyData(itsDrawParam->Level());
+        DrawAnnualModelFractileDataLocationInTime1(static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent()), climateInfo, theLatlon);
     }
 }
 
@@ -386,7 +387,8 @@ void NFmiTimeSerialView::DrawHelperData4LocationInTime(const NFmiPoint &theLatlo
 {
     if(IsMosTemperatureMinAndMaxDisplayed(itsInfo))
     {
-        DrawTemperatureMinAndMaxFromHelperData(static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent()), itsCtrlViewDocumentInterface->GetMosTemperatureMinAndMaxData(), theLatlon);
+        auto helperDataInfo = itsCtrlViewDocumentInterface->GetMosTemperatureMinAndMaxData();
+        DrawTemperatureMinAndMaxFromHelperData(static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent()), helperDataInfo, theLatlon);
     }
 }
 
@@ -517,8 +519,8 @@ void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime1(FmiParameter
 			const auto& paramIds = paramMapIter->second.second;
 			if(::HasModelClimatologyDataAnyOfGivenParameters(climateInfo, paramIds))
 			{
-				// Tässä annetaan overrideEnvi -parametrille nullptr, koska haluamme piirtää tietyillä tyylillä (ominaisuudet 
-				// tulevat erilllisestä taulukosta) eri fraktiili parametrit.
+				// Tï¿½ssï¿½ annetaan overrideEnvi -parametrille nullptr, koska haluamme piirtï¿½ï¿½ tietyillï¿½ tyylillï¿½ (ominaisuudet 
+				// tulevat erilllisestï¿½ taulukosta) eri fraktiili parametrit.
 				DrawAnnualModelFractileDataLocationInTime2(climateInfo, theLatlon, paramIds, nullptr);
 			}
         }
@@ -534,18 +536,18 @@ void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime2(boost::share
     auto climateDataYear = climateInfo->TimeDescriptor().FirstTime().GetYear();
     auto startTime = ZoomedTimeDescriptor().FirstTime();
     int startYearDiff = startTime.GetYear() - climateDataYear;
-    // pitää laittaa etsintä aika climatologia datan vuoteen
+    // pitï¿½ï¿½ laittaa etsintï¿½ aika climatologia datan vuoteen
     startTime.SetYear(climateDataYear);
-    // etsitään lähin aika taaksepäin
+    // etsitï¿½ï¿½n lï¿½hin aika taaksepï¿½in
     if(climateInfo->FindNearestTime(startTime, kBackward))
     {
         auto startClimatologyDataTime = climateInfo->Time();
 
         auto endTime = ZoomedTimeDescriptor().LastTime();
         int endYearDiff = endTime.GetYear() - climateDataYear;
-        // pitää laittaa etsintä aika climatologia datan vuoteen
+        // pitï¿½ï¿½ laittaa etsintï¿½ aika climatologia datan vuoteen
         endTime.SetYear(climateDataYear);
-        // etsitään lähin aika eteenpäin
+        // etsitï¿½ï¿½n lï¿½hin aika eteenpï¿½in
         if(climateInfo->FindNearestTime(endTime, kForward))
         {
             auto endClimatologyDataTime = climateInfo->Time();
@@ -568,7 +570,7 @@ void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime2(boost::share
 
 void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime3(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, const NFmiMetTime &startTime, const NFmiMetTime &endTime, int climateDataYearDifference, NFmiDrawingEnvironment* overrideEnvi)
 {
-    NFmiTimeBag drawedTimes(startTime, endTime, 60); // resoluutiolla ei merkitystä
+    NFmiTimeBag drawedTimes(startTime, endTime, 60); // resoluutiolla ei merkitystï¿½
 	auto viewStartTime = startTime;
 	viewStartTime.SetYear(viewStartTime.GetYear() + climateDataYearDifference);
     int timeWhenDrawedInMinutes = viewStartTime.DifferenceInMinutes(startTime);
@@ -619,12 +621,12 @@ void NFmiTimeSerialView::DrawModelDataLegend(const std::vector<NFmiColor> &theUs
 	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 		return ;
 	itsToolBox->UseClipping(false);
-	if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode() == false) // ei piirretä CP legendaa ja model legendaa yhtä aikaa
+	if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode() == false) // ei piirretï¿½ CP legendaa ja model legendaa yhtï¿½ aikaa
 	{
 		NFmiDrawingEnvironment envi;
 		envi.SetPenSize(NFmiPoint(2, 2));
 		FmiDirection oldAligment = itsToolBox->GetTextAlignment();
-		itsToolBox->SetTextAlignment(kBaseRight); // piirretään teksti vasemmalle textPoint:ista ja viiva oikealle
+		itsToolBox->SetTextAlignment(kBaseRight); // piirretï¿½ï¿½n teksti vasemmalle textPoint:ista ja viiva oikealle
 
 		NFmiPoint fontSize(16,16);
 		envi.SetFontSize(fontSize);
@@ -652,7 +654,7 @@ void NFmiTimeSerialView::DrawModelDataLegend(const std::vector<NFmiColor> &theUs
 				textPoint.Y(textPoint.Y() + heightInc);
 			}
 
-			// laitetaan tarvittaessa myös help editor data legendä näkyviin
+			// laitetaan tarvittaessa myï¿½s help editor data legendï¿½ nï¿½kyviin
 			if(itsCtrlViewDocumentInterface->HelpEditorSystem().Use())
 			{
 				NFmiProducer prod(NFmiProducerSystem::gHelpEditorDataProdId, "helpdata");
@@ -685,28 +687,28 @@ void NFmiTimeSerialView::DrawExistingDataLegend(const NFmiProducer &producer, NF
 void NFmiTimeSerialView::DrawModelDataLocationInTime(NFmiDrawingEnvironment &envi, const NFmiPoint &theLatlon)
 {
 	if(itsDrawParam->DataType() == NFmiInfoData::kHybridData)
-		return ; // hybrid-datalle ei kannata piirtää apumallidatoja, koska hybrid-levelit eivät vastaa eri malleissa toisiaan...
+		return ; // hybrid-datalle ei kannata piirtï¿½ï¿½ apumallidatoja, koska hybrid-levelit eivï¿½t vastaa eri malleissa toisiaan...
 	envi.SetPenSize(NFmiPoint(1, 1));
 	std::vector<NFmiProducerInfo> &producers = itsCtrlViewDocumentInterface->ProducerSystem().Producers();
 	std::vector<string> foundProducerNames;
 	int foundDataCounter = 0;
-	for(unsigned int i=0; i < producers.size(); i++) // käydään läpi kaikki tuottajat, ja katsotaan kuinka moneen päädata osui (param + level ja tyyppi)
+	for(unsigned int i=0; i < producers.size(); i++) // kï¿½ydï¿½ï¿½n lï¿½pi kaikki tuottajat, ja katsotaan kuinka moneen pï¿½ï¿½data osui (param + level ja tyyppi)
 	{
 		envi.SetFrameColor(itsProducerModelDataColors[foundDataCounter]);
-        if(DrawModelDataLocationInTime(envi, theLatlon, producers[i].GetProducer())) // i+1 merkitsee että producersystemissä on 1:llä alkavat indeksit
+        if(DrawModelDataLocationInTime(envi, theLatlon, producers[i].GetProducer())) // i+1 merkitsee ettï¿½ producersystemissï¿½ on 1:llï¿½ alkavat indeksit
 		{
 			foundProducerNames.push_back(producers[i].Name());
 			foundDataCounter++;
 		}
 		if(foundProducerNames.size() >= itsProducerModelDataColors.size())
-			break; // ei piirretä enempää kuin on määritelty apuvärejä
+			break; // ei piirretï¿½ enempï¿½ï¿½ kuin on mï¿½ï¿½ritelty apuvï¿½rejï¿½
 	}
 	DrawModelDataLegend(itsProducerModelDataColors, foundProducerNames);
 
-	envi.SetPenSize(NFmiPoint(1, 1)); // laitetaan vielä varmuuden vuoksi ohut viiva takaisin
+	envi.SetPenSize(NFmiPoint(1, 1)); // laitetaan vielï¿½ varmuuden vuoksi ohut viiva takaisin
 }
 
-// Originaali parametria ei löytynyt, katsotaan löytyykö 'sijais' parametreja datasta
+// Originaali parametria ei lï¿½ytynyt, katsotaan lï¿½ytyykï¿½ 'sijais' parametreja datasta
 static bool DataHasComparisonParameter(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, FmiParameterName wantedParamId, CtrlViewDocumentInterface* ctrlViewDocumentInterface)
 {
     auto timeSerialParameters = ctrlViewDocumentInterface->GetTimeSerialParameters().getComparisonParameters(wantedParamId);
@@ -745,7 +747,7 @@ bool NFmiTimeSerialView::DrawModelDataLocationInTime(NFmiDrawingEnvironment &env
 	{
 		info->ResetTime(); // varmuuden vuoksi asetan 1. aikaan
 		{
-			if(::DataHasNeededParameters(info, itsDrawParam->Param().GetParamIdent(), itsCtrlViewDocumentInterface)) // parametrikin pitää asettaa
+			if(::DataHasNeededParameters(info, itsDrawParam->Param().GetParamIdent(), itsCtrlViewDocumentInterface)) // parametrikin pitï¿½ï¿½ asettaa
 			{
 				DrawSimpleDataInTimeSerial(GetViewLimitingTimes(), info, itsDrawParam, envi, theLatlon, NFmiPoint(6, 6));
 				return true;
@@ -782,7 +784,7 @@ static pair<int, double> FindClosestLocationWithData(std::vector<pair<int, doubl
                     if(theCheckedTimes.IsInside(theInfo->Time()))
 				    {
 					    if(theInfo->FloatValue() != kFloatMissing)
-						    return theNearestLocations[i]; // heti kun jostain löytyy jotain muuta kuin puuttuvaa, palautetaan kyseinen paikka
+						    return theNearestLocations[i]; // heti kun jostain lï¿½ytyy jotain muuta kuin puuttuvaa, palautetaan kyseinen paikka
 				    }
                     else
                         break;
@@ -795,10 +797,10 @@ static pair<int, double> FindClosestLocationWithData(std::vector<pair<int, doubl
 
 bool NFmiTimeSerialView::SetObsDataToNearestLocationWhereIsData(boost::shared_ptr<NFmiFastQueryInfo> &theObsInfo, const NFmiPoint &theLatlon, std::pair<int, double> &theLocationWithDataOut)
 {
-    NFmiTimeBag checkedTimes(GetViewLimitingTimes()); // kiinnostaa vain näkyvän aika-alueen datat
+    NFmiTimeBag checkedTimes(GetViewLimitingTimes()); // kiinnostaa vain nï¿½kyvï¿½n aika-alueen datat
 	std::vector<pair<int, double> > nearestLocations = theObsInfo->NearestLocations(theLatlon, 5);
 	theLocationWithDataOut = FindClosestLocationWithData(nearestLocations, theObsInfo, checkedTimes);
-	bool drawJustLegend = theLocationWithDataOut.first == -1; // jos ei löytynyt asemaa, jolle on dataa, otetaan vain lähin asema ja piirretään sen nimi
+	bool drawJustLegend = theLocationWithDataOut.first == -1; // jos ei lï¿½ytynyt asemaa, jolle on dataa, otetaan vain lï¿½hin asema ja piirretï¿½ï¿½n sen nimi
 	if(drawJustLegend)
 	{
 		if(nearestLocations.size() > 0)
@@ -844,12 +846,12 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetNonSynopObservation(
 void NFmiTimeSerialView::DrawObservationDataLocationInTime(NFmiDrawingEnvironment& envi, const NFmiPoint& theLatlon)
 {
 	if(itsDrawParam->Level().LevelValue() != kFloatMissing)
-		return; // havainto apu piirrot tehdään vain pintadatalle
+		return; // havainto apu piirrot tehdï¿½ï¿½n vain pintadatalle
 	boost::shared_ptr<NFmiFastQueryInfo> obsInfo = GetObservationInfo(*itsDrawParam->Param().GetParam(), theLatlon);
 	if(obsInfo)
 	{
 		obsInfo->FirstLevel(); // varmuuden vuoksi asetan 1. leveliin
-		if(::DataHasNeededParameters(obsInfo, itsDrawParam->Param().GetParamIdent(), itsCtrlViewDocumentInterface)) // parametrikin pitää asettaa
+		if(::DataHasNeededParameters(obsInfo, itsDrawParam->Param().GetParamIdent(), itsCtrlViewDocumentInterface)) // parametrikin pitï¿½ï¿½ asettaa
 		{
 			std::pair<int, double> locationWithData;
 			if(SetObsDataToNearestLocationWhereIsData(obsInfo, theLatlon, locationWithData))
@@ -857,21 +859,22 @@ void NFmiTimeSerialView::DrawObservationDataLocationInTime(NFmiDrawingEnvironmen
 				const NFmiLocation* loc = obsInfo->Location();
 				NFmiPoint place(CalcParamTextPosition());
 				NFmiPoint fontSize(CalcFontSize());
-				fontSize *= NFmiPoint(0.9, 0.9); // pienennetään fonttia hieman
+				fontSize *= NFmiPoint(0.9, 0.9); // pienennetï¿½ï¿½n fonttia hieman
 
-				// pitää laske kuinka monta pistettä on piirretty aikasarjaan. Huom! vähintään yksi on piirretty, jos ollaan täällä!
-				unsigned long displayCount = CtrlViewFastInfoFunctions::GetMaskedCount(itsCtrlViewDocumentInterface->EditedSmartInfo(), NFmiMetEditorTypes::kFmiDisplayedMask, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection());
+				// pitï¿½ï¿½ laske kuinka monta pistettï¿½ on piirretty aikasarjaan. Huom! vï¿½hintï¿½ï¿½n yksi on piirretty, jos ollaan tï¿½ï¿½llï¿½!
+				auto editedSmartInfo = itsCtrlViewDocumentInterface->EditedSmartInfo();
+				unsigned long displayCount = CtrlViewFastInfoFunctions::GetMaskedCount(editedSmartInfo, NFmiMetEditorTypes::kFmiDisplayedMask, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection());
 				if(displayCount == 0)
 					displayCount = 1;
 
-				// displayCount+1 pitää laittaa kertoimeksi, koska myös havainto asema on piirretty
+				// displayCount+1 pitï¿½ï¿½ laittaa kertoimeksi, koska myï¿½s havainto asema on piirretty
 				place.Y(place.Y() + 0.9 * (displayCount + 1) * itsToolBox->SY(static_cast<long>(fontSize.Y())));
 				NFmiString locString(::GetDictionaryString("TimeSerialViewObservationStation"));
 				locString += " ";
 				envi.SetFrameColor(NFmiColor(0, 0, 0));
 				DrawStationNameLegend(loc, envi, fontSize, place, locString, kTop, locationWithData.second);
 
-				envi.SetFrameColor(NFmiColor(0.956f, 0.282f, 0.05f)); // vihertävää havainto datasta
+				envi.SetFrameColor(NFmiColor(0.956f, 0.282f, 0.05f)); // vihertï¿½vï¿½ï¿½ havainto datasta
 				envi.SetPenSize(NFmiPoint(3, 3)); // paksunnetaan viivaa
 				DrawSimpleDataInTimeSerial(GetViewLimitingTimes(), obsInfo, itsDrawParam, envi, theLatlon, NFmiPoint(9, 9), true);
 				envi.SetPenSize(NFmiPoint(1, 1)); // ohut viiva takaisin
@@ -896,7 +899,7 @@ static bool CalcIntersection(const NFmiTimeBag & baseBag, const NFmiTimeDescript
 }
 
 
-static const double gMaxDistanceToFractileStation = 500*1000; // fraktiili asemat näytetään vain alle 500 km etäisyydeltä osoitetusta paikasta
+static const double gMaxDistanceToFractileStation = 500*1000; // fraktiili asemat nï¿½ytetï¿½ï¿½n vain alle 500 km etï¿½isyydeltï¿½ osoitetusta paikasta
 
 void NFmiTimeSerialView::DrawFraktiiliDataLocationInTime(NFmiDrawingEnvironment &envi, const NFmiPoint &theLatlon)
 {
@@ -904,8 +907,8 @@ void NFmiTimeSerialView::DrawFraktiiliDataLocationInTime(NFmiDrawingEnvironment 
 		return ; // havainto fraktiili datat skipataan scannauksessa
 
 	if(itsDrawParam->Level().LevelValue() != kFloatMissing)
-		return ; // havainto fraktiili apu piirrot tehdään vain pintadatalle
-	if(Info()->Param().GetParamIdent() == kFmiTemperature) // fraktiileja löytyy vain lämpötilalle!!!
+		return ; // havainto fraktiili apu piirrot tehdï¿½ï¿½n vain pintadatalle
+	if(Info()->Param().GetParamIdent() == kFmiTemperature) // fraktiileja lï¿½ytyy vain lï¿½mpï¿½tilalle!!!
 	{
 		boost::shared_ptr<NFmiFastQueryInfo> fraktiiliInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kClimatologyData);
 		if(fraktiiliInfo)
@@ -914,12 +917,12 @@ void NFmiTimeSerialView::DrawFraktiiliDataLocationInTime(NFmiDrawingEnvironment 
 			envi.SetPenSize(penSize);
 			fraktiiliInfo->FirstLevel(); // varmuuden vuoksi asetan 1. leveliin
 			NFmiTimeBag timesInView(itsCtrlViewDocumentInterface->TimeSerialViewTimeBag());
-			if(timesInView.FirstTime().GetYear() == timesInView.LastTime().GetYear()) // pitää mietti se erikseen, miten hoidetaan kun aikaikkunan alku ja loppu ovat eri vuosilla (esim. vuoden vaihteessa)
+			if(timesInView.FirstTime().GetYear() == timesInView.LastTime().GetYear()) // pitï¿½ï¿½ mietti se erikseen, miten hoidetaan kun aikaikkunan alku ja loppu ovat eri vuosilla (esim. vuoden vaihteessa)
 			{
 				auto firstViewTime = timesInView.FirstTime();
 				int viewYear = timesInView.FirstTime().GetYear();
 				NFmiTimeDescriptor fraktiiliTimes(fraktiiliInfo->TimeDescriptor());
-				int fraktiiliDataYear = fraktiiliTimes.FirstTime().GetYear(); // fraktiili data on jollekin vuodelle tehty pötkö, otetaan vuosi talteen, että voidaan rakentaa sopiva timebagi datan läpikäymiseen
+				int fraktiiliDataYear = fraktiiliTimes.FirstTime().GetYear(); // fraktiili data on jollekin vuodelle tehty pï¿½tkï¿½, otetaan vuosi talteen, ettï¿½ voidaan rakentaa sopiva timebagi datan lï¿½pikï¿½ymiseen
 				auto similarFractileTime = firstViewTime;
 				similarFractileTime.SetYear(fraktiiliDataYear);
 				NFmiMetTime startTime(timesInView.FirstTime());
@@ -927,40 +930,41 @@ void NFmiTimeSerialView::DrawFraktiiliDataLocationInTime(NFmiDrawingEnvironment 
 				NFmiMetTime endTime(timesInView.LastTime());
 				endTime.SetYear(fraktiiliDataYear);
 				NFmiTimeBag newTimesInView(startTime, endTime, timesInView.Resolution());
-				NFmiTimeBag drawedTimes; // nämä ajat sitten piirretään, kunhan otetaan selville ensin mitkä ne ovat
+				NFmiTimeBag drawedTimes; // nï¿½mï¿½ ajat sitten piirretï¿½ï¿½n, kunhan otetaan selville ensin mitkï¿½ ne ovat
 				bool status = ::CalcIntersection(newTimesInView, fraktiiliTimes, drawedTimes, true);
 				if(status)
 				{
-					// vielä pitää muokata timebagia, niin että tunnit menee 12:een
+					// vielï¿½ pitï¿½ï¿½ muokata timebagia, niin ettï¿½ tunnit menee 12:een
 					NFmiMetTime st2(drawedTimes.FirstTime());
 					fraktiiliInfo->TimeToNearestStep(st2, kCenter);
 					int fraktileHour = fraktiiliInfo->Time().GetHour();
-					st2.ChangeByDays(-1); // pitää viedä päivä eteen ja sitten nollata
+					st2.ChangeByDays(-1); // pitï¿½ï¿½ viedï¿½ pï¿½ivï¿½ eteen ja sitten nollata
 					st2.SetHour(fraktileHour);
 					NFmiMetTime et2(drawedTimes.LastTime());
-					et2.ChangeByDays(2); // pitää viedä kaksi päivää eteen ja sitten nollata
+					et2.ChangeByDays(2); // pitï¿½ï¿½ viedï¿½ kaksi pï¿½ivï¿½ï¿½ eteen ja sitten nollata
 					et2.SetHour(fraktileHour);
 					drawedTimes = NFmiTimeBag(st2, et2, drawedTimes.Resolution());
 
-					if(fraktiiliInfo->NearestPoint(theLatlon)) // asetetaan kepadata lähimpään pisteeseen (tässä kaupunkiin) piirtoa varten
+					if(fraktiiliInfo->NearestPoint(theLatlon)) // asetetaan kepadata lï¿½himpï¿½ï¿½n pisteeseen (tï¿½ssï¿½ kaupunkiin) piirtoa varten
 					{
 						int timeOffsetWhenDrawedInMinutes = firstViewTime.DifferenceInMinutes(similarFractileTime);
 						const NFmiLocation *loc = fraktiiliInfo->Location();
 						double distance = 999999999.;
 						if(loc)
 							distance = loc->Distance(theLatlon);
-						if(distance < gMaxDistanceToFractileStation) // fraktiili tiedot vain jos tarpeeksi läheltä löytyi asema
+						if(distance < gMaxDistanceToFractileStation) // fraktiili tiedot vain jos tarpeeksi lï¿½heltï¿½ lï¿½ytyi asema
 						{
 							NFmiPoint place(CalcParamTextPosition());
 							NFmiPoint fontSize(CalcFontSize());
-							fontSize *= NFmiPoint(0.9, 0.9); // pienennetään fonttia hieman
+							fontSize *= NFmiPoint(0.9, 0.9); // pienennetï¿½ï¿½n fonttia hieman
 
-							// pitää laske kuinka monta pistettä on piirretty aikasarjaan. Huom! vähintään yksi on piirretty, jos ollaan täällä!
-							unsigned long displayCount = CtrlViewFastInfoFunctions::GetMaskedCount(itsCtrlViewDocumentInterface->EditedSmartInfo(), NFmiMetEditorTypes::kFmiDisplayedMask, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection());
+							// pitï¿½ï¿½ laske kuinka monta pistettï¿½ on piirretty aikasarjaan. Huom! vï¿½hintï¿½ï¿½n yksi on piirretty, jos ollaan tï¿½ï¿½llï¿½!
+							auto editedSmartInfo = itsCtrlViewDocumentInterface->EditedSmartInfo();
+							unsigned long displayCount = CtrlViewFastInfoFunctions::GetMaskedCount(editedSmartInfo, NFmiMetEditorTypes::kFmiDisplayedMask, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection());
 							if(displayCount == 0)
 								displayCount = 1;
 
-							// displayCount+2 pitää laittaa kertoimeksi, koska myös havainto asema on piirretty
+							// displayCount+2 pitï¿½ï¿½ laittaa kertoimeksi, koska myï¿½s havainto asema on piirretty
 							place.Y(place.Y() + (0.9*(displayCount+2) * itsToolBox->SY(static_cast<long>(fontSize.Y()))));
 							std::string locString(::GetDictionaryString("TimeSerialViewClimatologyStation"));
 							locString += " ";
@@ -969,7 +973,7 @@ void NFmiTimeSerialView::DrawFraktiiliDataLocationInTime(NFmiDrawingEnvironment 
 
 							if(fraktiiliInfo->Param(kFmiNormalMinTemperatureF02))
 							{
-								envi.SetFrameColor(NFmiColor(0.541f,0.54f,0.95f)); // 'minimin minimi' arvo vaalen siniseksi (koska vähemmän kiinnostava)
+								envi.SetFrameColor(NFmiColor(0.541f,0.54f,0.95f)); // 'minimin minimi' arvo vaalen siniseksi (koska vï¿½hemmï¿½n kiinnostava)
 								DrawSimpleDataInTimeSerial(drawedTimes, fraktiiliInfo, itsDrawParam, envi, fraktiiliInfo->LatLon(), NFmiPoint(6, 6), false, timeOffsetWhenDrawedInMinutes);
 							}
 							if(fraktiiliInfo->Param(kFmiNormalMinTemperatureF50))
@@ -979,7 +983,7 @@ void NFmiTimeSerialView::DrawFraktiiliDataLocationInTime(NFmiDrawingEnvironment 
 							}
 							if(fraktiiliInfo->Param(kFmiNormalMeanTemperature))
 							{
-								envi.SetFrameColor(NFmiColor(0.1f,0.89f,0.15f)); // 'avg' arvo vihreäksi
+								envi.SetFrameColor(NFmiColor(0.1f,0.89f,0.15f)); // 'avg' arvo vihreï¿½ksi
 								DrawSimpleDataInTimeSerial(drawedTimes, fraktiiliInfo, itsDrawParam, envi, fraktiiliInfo->LatLon(), NFmiPoint(6, 6), false, timeOffsetWhenDrawedInMinutes);
 							}
 							if(fraktiiliInfo->Param(kFmiNormalMaxTemperatureF50))
@@ -989,7 +993,7 @@ void NFmiTimeSerialView::DrawFraktiiliDataLocationInTime(NFmiDrawingEnvironment 
 							}
 							if(fraktiiliInfo->Param(kFmiNormalMaxTemperatureF98))
 							{
-								envi.SetFrameColor(NFmiColor(0.95f,0.54f,0.54f)); // 'maksimin maksimi' arvo haalean punaiseksi, koska kiinnostaa vähemmän
+								envi.SetFrameColor(NFmiColor(0.95f,0.54f,0.54f)); // 'maksimin maksimi' arvo haalean punaiseksi, koska kiinnostaa vï¿½hemmï¿½n
 								DrawSimpleDataInTimeSerial(drawedTimes, fraktiiliInfo, itsDrawParam, envi, fraktiiliInfo->LatLon(), NFmiPoint(6, 6), false, timeOffsetWhenDrawedInMinutes);
 							}
 						}
@@ -1009,10 +1013,10 @@ void NFmiTimeSerialView::DrawParamInTime(boost::shared_ptr<NFmiFastQueryInfo> &t
 	}
 }
 
-// theParamIndexIncrement kertoo mihin suuntaan param-indeksiä juoksutetaan kun mennään F100:sta F0:aan.
-// Tämä siksi että kFmiTemperatureF100, kFmiTotalPrecipitationF100 ja kFmiTotalCloudCoverF100 -sarjat menevät F100:sta F0:aan,
-// theParamIndexIncrement -parametri on jäänne menneisyydestä, jolloin tuulen nopeus parametrit menivät toiseen suuntaan ja incrementiksi piti antaa -1,
-// nykyään kaikki parametri menevät F100 -> F0:aan.
+// theParamIndexIncrement kertoo mihin suuntaan param-indeksiï¿½ juoksutetaan kun mennï¿½ï¿½n F100:sta F0:aan.
+// Tï¿½mï¿½ siksi ettï¿½ kFmiTemperatureF100, kFmiTotalPrecipitationF100 ja kFmiTotalCloudCoverF100 -sarjat menevï¿½t F100:sta F0:aan,
+// theParamIndexIncrement -parametri on jï¿½ï¿½nne menneisyydestï¿½, jolloin tuulen nopeus parametrit menivï¿½t toiseen suuntaan ja incrementiksi piti antaa -1,
+// nykyï¿½ï¿½n kaikki parametri menevï¿½t F100 -> F0:aan.
 void NFmiTimeSerialView::DrawModelFractileDataLocationInTime(boost::shared_ptr<NFmiFastQueryInfo> &theFractileData, long theStartParamIndex, const NFmiPoint &theLatlon, long theParamIndexIncrement)
 {
 	NFmiDrawingEnvironment envi;
@@ -1050,8 +1054,8 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetSeaLevelPlumeData(co
     return itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kViewable, usedProducer, true);
 }
 
-// Jos on ollut ShowHelperData2InTimeSerialView päällä (= näytä EC:n lyhyitä fraktiileja pluumina)
-// Jos kyseessä on Sea-level parametri (id = 60), katsotaan löytyykö siihen liittyvää
+// Jos on ollut ShowHelperData2InTimeSerialView pï¿½ï¿½llï¿½ (= nï¿½ytï¿½ EC:n lyhyitï¿½ fraktiileja pluumina)
+// Jos kyseessï¿½ on Sea-level parametri (id = 60), katsotaan lï¿½ytyykï¿½ siihen liittyvï¿½ï¿½
 // Hansenin meri fraktiili dataa (*_waterlevel_hansen_EPS.sqd).
 void NFmiTimeSerialView::DrawPossibleSeaLevelPlumeDataLocationInTime(const NFmiPoint &theLatlon)
 {
@@ -1064,7 +1068,7 @@ void NFmiTimeSerialView::DrawPossibleSeaLevelPlumeDataLocationInTime(const NFmiP
             NFmiDrawingEnvironment envi;
             envi.SetFillPattern(FMI_DASHDOTDOT);
 
-            // Piirrä sea-level fraktiilit
+            // Piirrï¿½ sea-level fraktiilit
 			const auto& fractileParams = seaLevelPlumeData->fractileParams();
 			const auto& fractileParamColors = seaLevelPlumeData->fractileParamColors();
             for(size_t i = 0; i < fractileParams.size(); i++)
@@ -1078,10 +1082,10 @@ void NFmiTimeSerialView::DrawPossibleSeaLevelPlumeDataLocationInTime(const NFmiP
         DrawPossibleSeaLevelForecastProbLimitDataPlume(theLatlon);
 }
 
-// Toinen erikoistapaus merisääpalvelulle:
-// Jos käytössä jokin Hansenin meri fraktiili datan ProbLimit1-4 parametreista, piirretään ne kaikki 
-// parveen samoilla väreillä kuin DrawSeaLevelProbLines. Huom! kyse ei ole samojen vakia viivojen piirrosta, 
-// vaan eri limittien todennäköisyys arvoista.
+// Toinen erikoistapaus merisï¿½ï¿½palvelulle:
+// Jos kï¿½ytï¿½ssï¿½ jokin Hansenin meri fraktiili datan ProbLimit1-4 parametreista, piirretï¿½ï¿½n ne kaikki 
+// parveen samoilla vï¿½reillï¿½ kuin DrawSeaLevelProbLines. Huom! kyse ei ole samojen vakia viivojen piirrosta, 
+// vaan eri limittien todennï¿½kï¿½isyys arvoista.
 void NFmiTimeSerialView::DrawPossibleSeaLevelForecastProbLimitDataPlume(const NFmiPoint &theLatlon)
 {
 	const auto* seaLevelPlumeData = itsCtrlViewDocumentInterface->SeaLevelPlumeData().getSeaLevelPlumeData(itsDrawParam->Param().GetParamIdent());
@@ -1093,7 +1097,7 @@ void NFmiTimeSerialView::DrawPossibleSeaLevelForecastProbLimitDataPlume(const NF
             NFmiDrawingEnvironment envi;
             envi.SetPenSize(NFmiPoint(2, 2));
 
-            // Piirrä sea-level fraktiilit
+            // Piirrï¿½ sea-level fraktiilit
 			const auto& probLimitParams = seaLevelPlumeData->probLimitParams();
 			const auto& probabilityLineColors = seaLevelPlumeData->probabilityLineColors();
 			for(size_t i = 0; i < probLimitParams.size(); i++)
@@ -1104,12 +1108,12 @@ void NFmiTimeSerialView::DrawPossibleSeaLevelForecastProbLimitDataPlume(const NF
     }
 }
 
-// Oletus: Tätä kutsutaan vasta kun on piirretty fraktiili parvi DrawPossibleSeaLevelPlumeDataLocationInTime metodista, 
+// Oletus: Tï¿½tï¿½ kutsutaan vasta kun on piirretty fraktiili parvi DrawPossibleSeaLevelPlumeDataLocationInTime metodista, 
 // eli kaikki seaLevel fraktiili tarkastelut on jo tehty.
-// Oletus 2: piirrettävän datan pitää olla asemadataa, jotta voidaan etsiä hiiren kursorin lähimmän aseman id
-// 1. Katsotaan onko piirrettävän seaLevel datan lähin piste g_SeaLevelProbabilityMaxSearchRangeInMetres sisällä hiiren kursorista
-// 2. Katso löytyyko kyseinen asema g_SeaLevelProbabilityStationData listasta.
-// Jos löytyy, piirrä näytön yli vaakasuoraan eri prob viivat halutuilla väreillä.
+// Oletus 2: piirrettï¿½vï¿½n datan pitï¿½ï¿½ olla asemadataa, jotta voidaan etsiï¿½ hiiren kursorin lï¿½himmï¿½n aseman id
+// 1. Katsotaan onko piirrettï¿½vï¿½n seaLevel datan lï¿½hin piste g_SeaLevelProbabilityMaxSearchRangeInMetres sisï¿½llï¿½ hiiren kursorista
+// 2. Katso lï¿½ytyyko kyseinen asema g_SeaLevelProbabilityStationData listasta.
+// Jos lï¿½ytyy, piirrï¿½ nï¿½ytï¿½n yli vaakasuoraan eri prob viivat halutuilla vï¿½reillï¿½.
 void NFmiTimeSerialView::DrawSeaLevelProbLines(const NFmiPoint& theLatlon)
 {
 	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
@@ -1198,10 +1202,10 @@ static double GetTimeSerialValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, 
     }
 }
 
-// Tooltip arvoja haettaessa pitää ottaa huomioon seuraavia asioita:
+// Tooltip arvoja haettaessa pitï¿½ï¿½ ottaa huomioon seuraavia asioita:
 // 1. Hiladataa interpoloidaan ajan ja paikan suhteen
-// 2. Havaintodataa ei interpoloida, oletetaan että paikka ja aika on jo asennettu (tuli puuttuvaa tai ei)
-// 3. MetaWindParamUsage pitää tarkistaa, jos kyseessä on tuulen meta-parametri tapaus
+// 2. Havaintodataa ei interpoloida, oletetaan ettï¿½ paikka ja aika on jo asennettu (tuli puuttuvaa tai ei)
+// 3. MetaWindParamUsage pitï¿½ï¿½ tarkistaa, jos kyseessï¿½ on tuulen meta-parametri tapaus
 float NFmiTimeSerialView::GetTooltipValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, boost::shared_ptr<NFmiDrawParam>& theDrawParam)
 {
 	auto wantedParamId = theDrawParam->Param().GetParamIdent();
@@ -1257,9 +1261,9 @@ void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(const NFmiTimeBag &theDrawed
 		bool interpolateValues = theInfo->IsGrid();
 		NFmiLocation wantedLocation(theLatLonPoint);
 		if(interpolateValues == false && (theInfo->NearestLocation(wantedLocation, gMaxDistanceToFractileStation) == false))
-			return; // jos asema dataa ei löydy 500 km sisältä haluttua pistettä, ei käytetä sitä
+			return; // jos asema dataa ei lï¿½ydy 500 km sisï¿½ltï¿½ haluttua pistettï¿½, ei kï¿½ytetï¿½ sitï¿½
 		NFmiDrawingEnvironment blackLineEnvi;
-		theInfo->TimeIndex(timeLimits.startTimeIndex_); // pitää asettaa 1. aika päälle
+		theInfo->TimeIndex(timeLimits.startTimeIndex_); // pitï¿½ï¿½ asettaa 1. aika pï¿½ï¿½lle
 		NFmiPoint pointSize(1, 1);
 		double realValue1 = ::GetTimeSerialValue(theInfo, interpolateValues, theLatLonPoint, metaWindParamUsage, paramId)
 			  ,realValue2 = kFloatMissing;
@@ -1282,8 +1286,8 @@ void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(const NFmiTimeBag &theDrawed
 				realValue2 = ::GetTimeSerialValue(theInfo, interpolateValues, theLatLonPoint, metaWindParamUsage, paramId);
 				if(drawConnectingLines && realValue1 == kFloatMissing && realValue2 != kFloatMissing && lastNonMissingValue != kFloatMissing)
 				{
-					// piirretään ohut musta yhteysviivä katkonaisiin kohtiin, jos niin on säädetty
-					// ja piirretään se täpän alle, jokat tehdään kun on toinen arvoista on puuttuvaa.
+					// piirretï¿½ï¿½n ohut musta yhteysviivï¿½ katkonaisiin kohtiin, jos niin on sï¿½ï¿½detty
+					// ja piirretï¿½ï¿½n se tï¿½pï¿½n alle, jokat tehdï¿½ï¿½n kun on toinen arvoista on puuttuvaa.
 					DrawDataLine(lastNonMissingValueTime, time2, lastNonMissingValue, realValue2, blackLineEnvi, pointSize, theSinglePointSize, true);
 				}
 				DrawDataLine(time1, time2, realValue1, realValue2, theEnvi, pointSize, theSinglePointSize, true);
@@ -1301,7 +1305,7 @@ void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(const NFmiTimeBag &theDrawed
 
 void NFmiTimeSerialView::DrawSinglePointData(double value, const NFmiMetTime &time, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& theSinglePointSize)
 {
-    // Piirretään se ainoa datasta löytynyt aika kuitenkin aikasarjaan
+    // Piirretï¿½ï¿½n se ainoa datasta lï¿½ytynyt aika kuitenkin aikasarjaan
     NFmiPoint relativePoint = CalcRelativeValuePosition(time, value);
     double penSize = itsCtrlViewDocumentInterface->Printing() ? (theSinglePointSize.X() * 5.) : theSinglePointSize.X();
     auto oldPenSize = theEnvi.GetPenSize();
@@ -1320,22 +1324,22 @@ void NFmiTimeSerialView::CreateValueScale (void)
 //--------------------------------------------------------
 // DrawDataLine
 //--------------------------------------------------------
-// ottaa huomioon myös, jos viiva on leikattava kun toinen arvoista menee akselin yli
+// ottaa huomioon myï¿½s, jos viiva on leikattava kun toinen arvoista menee akselin yli
 void NFmiTimeSerialView::DrawDataLine (const NFmiMetTime& theTime1,  const NFmiMetTime& theTime2
 									  ,double value1, double value2, NFmiDrawingEnvironment & envi
 									  ,const NFmiPoint& thePointSize, const NFmiPoint& theSinglePointSize, bool fUseValueAxis)
 {
-	if(value1 == kFloatMissing && value2 == kFloatMissing) // kumpikaan ei ole piirrettävissä, ei piirretä sitten ollenkaan!
+	if(value1 == kFloatMissing && value2 == kFloatMissing) // kumpikaan ei ole piirrettï¿½vissï¿½, ei piirretï¿½ sitten ollenkaan!
 		return;
 
 	NFmiMetTime time1 = theTime1;
 	NFmiMetTime time2 = theTime2;
-	if(value1 == kFloatMissing) // vain 2. pisteellä on arvo, piirretään sitten piste!
+	if(value1 == kFloatMissing) // vain 2. pisteellï¿½ on arvo, piirretï¿½ï¿½n sitten piste!
 	{
 		value1 = value2;
 		time1 = time2;
 	}
-	if(value2 == kFloatMissing) // vain 1. pisteellä on arvo, piirretään sitten piste!
+	if(value2 == kFloatMissing) // vain 1. pisteellï¿½ on arvo, piirretï¿½ï¿½n sitten piste!
 	{
 		value2 = value1;
 		time2 = time1;
@@ -1366,7 +1370,7 @@ void NFmiTimeSerialView::DrawDataLine (const NFmiMetTime& theTime1,  const NFmiM
 void NFmiTimeSerialView::DrawLineInDataRect(NFmiPoint& relativeStartPoint, NFmiPoint& relativeEndPoint, NFmiDrawingEnvironment & envi)
 {
 	NFmiRect valueRect = CalcValueAxisRect();
-	valueRect.Size(NFmiPoint(1., valueRect.Size().Y())); // tämä ei ole oikea datarect x-suunnassa, mutta riittää tässä toistaiseksi
+	valueRect.Size(NFmiPoint(1., valueRect.Size().Y())); // tï¿½mï¿½ ei ole oikea datarect x-suunnassa, mutta riittï¿½ï¿½ tï¿½ssï¿½ toistaiseksi
 	bool isInAxis1 = valueRect.IsInside(relativeStartPoint)
 			  ,isInAxis2 = valueRect.IsInside(relativeEndPoint);
 	if(!(isInAxis1 && isInAxis2))
@@ -1376,7 +1380,7 @@ void NFmiTimeSerialView::DrawLineInDataRect(NFmiPoint& relativeStartPoint, NFmiP
 	}
 
 	if(relativeStartPoint == relativeEndPoint)
-		relativeEndPoint.X(relativeEndPoint.X() + itsToolBox->SY(4)); // jos piirretään vain piste, tehdään siitä 4 pikseliä pitkä
+		relativeEndPoint.X(relativeEndPoint.X() + itsToolBox->SY(4)); // jos piirretï¿½ï¿½n vain piste, tehdï¿½ï¿½n siitï¿½ 4 pikseliï¿½ pitkï¿½
 	NFmiLine line(relativeStartPoint, relativeEndPoint, 0, &envi);
 	itsToolBox->Convert(&line);
 }
@@ -1384,15 +1388,15 @@ void NFmiTimeSerialView::DrawLineInDataRect(NFmiPoint& relativeStartPoint, NFmiP
 //--------------------------------------------------------
 // CheckIsPointsDrawable
 //--------------------------------------------------------
-// tarkistaa voidaanko annetut pisteet mitenkään piirtää arvoasteikolle, jos voidaan, niitä muokataan tarvittavalla tavalla
-// muuten palauttaa false:n (HUOM: laskuissa käytetään jo valmiiksi laskettuja suhteellisia paikkoja (pisteitä)
-// sen sijaan että käytettäisiin parametrin todellisia arvoja ja kellonaikoja sen takia, että kellonajat voisivat tuottaa ongelmia
-// laskettaessa leikkaus pisteitä!?!)
+// tarkistaa voidaanko annetut pisteet mitenkï¿½ï¿½n piirtï¿½ï¿½ arvoasteikolle, jos voidaan, niitï¿½ muokataan tarvittavalla tavalla
+// muuten palauttaa false:n (HUOM: laskuissa kï¿½ytetï¿½ï¿½n jo valmiiksi laskettuja suhteellisia paikkoja (pisteitï¿½)
+// sen sijaan ettï¿½ kï¿½ytettï¿½isiin parametrin todellisia arvoja ja kellonaikoja sen takia, ettï¿½ kellonajat voisivat tuottaa ongelmia
+// laskettaessa leikkaus pisteitï¿½!?!)
 bool NFmiTimeSerialView::CheckIsPointsDrawable(NFmiPoint& point1, bool fPoint1In, NFmiPoint& point2, bool fPoint2In, bool fUseValueAxis)
 {
-// HUOM!!! kaikki Top vs. point.Y() vertailut vaikuttavat olevan väärinpäin, mutta rect alkaakin ylhäältä ja menee alas
+// HUOM!!! kaikki Top vs. point.Y() vertailut vaikuttavat olevan vï¿½ï¿½rinpï¿½in, mutta rect alkaakin ylhï¿½ï¿½ltï¿½ ja menee alas
 	NFmiRect valueRect = fUseValueAxis ? CalcValueAxisRect() : CalcModifyFactorAxisRect();
-	if(!fPoint1In && !fPoint2In) // molemmat pisteet asteikon ulkona, tarkistetaan, olivatko pisteet eri puolilla asteikkoa, jolloin ne voidaan osittain piirtää
+	if(!fPoint1In && !fPoint2In) // molemmat pisteet asteikon ulkona, tarkistetaan, olivatko pisteet eri puolilla asteikkoa, jolloin ne voidaan osittain piirtï¿½ï¿½
 	{
 		if(valueRect.Top() > point1.Y() && valueRect.Bottom() < point2.Y())
 		{ // point1 oli yli asteikon ja point2 oli sen ali
@@ -1406,9 +1410,9 @@ bool NFmiTimeSerialView::CheckIsPointsDrawable(NFmiPoint& point1, bool fPoint1In
 			CutLinePoint2YPlane(point2, point1, valueRect.Bottom());
 			return true;
 		}
-		// else pisteet ovat olleet ulkona samalla puolella asteikkoa ja viivaa ei piirretä
+		// else pisteet ovat olleet ulkona samalla puolella asteikkoa ja viivaa ei piirretï¿½
 	}
-	else // toinen piste asteikon sisällä ja toinen ulkona
+	else // toinen piste asteikon sisï¿½llï¿½ ja toinen ulkona
 	{
 		if(valueRect.Top() > point1.Y())
 		{ // point1 oli yli asteikon
@@ -1438,8 +1442,8 @@ bool NFmiTimeSerialView::CheckIsPointsDrawable(NFmiPoint& point1, bool fPoint1In
 // EvaluateValue
 //--------------------------------------------------------
 
-//   Asettaa uuden arvon datalle muutoskäyrää
-//   piirrettäessä. Esim. kok.pilv. 90 + 10 ->
+//   Asettaa uuden arvon datalle muutoskï¿½yrï¿½ï¿½
+//   piirrettï¿½essï¿½. Esim. kok.pilv. 90 + 10 ->
 //   100
 //   ja WD 350 + 20 -> 10, jne.
 void NFmiTimeSerialView::EvaluateChangedValue (double& theValue)
@@ -1468,20 +1472,21 @@ void NFmiTimeSerialView::DrawParamName(void)
 
 		if(itsDrawParam->DataType() == NFmiInfoData::kEditable)
 		{
-			int displayed = CtrlViewFastInfoFunctions::GetMaskedCount(Info(), NFmiMetEditorTypes::kFmiDisplayedMask, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection());
+			auto infoForMask = Info();
+			int displayed = CtrlViewFastInfoFunctions::GetMaskedCount(infoForMask, NFmiMetEditorTypes::kFmiDisplayedMask, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection());
 			str += " (";
 			if(displayed > 1)
 				str += "displayed locations";
 			else
 				str += ::GetDictionaryString("TimeSerialViewSelectedPoints");
 			str += " ";
-			int selected = CtrlViewFastInfoFunctions::GetMaskedCount(Info(), NFmiMetEditorTypes::kFmiSelectionMask, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection());
+			int selected = CtrlViewFastInfoFunctions::GetMaskedCount(infoForMask, NFmiMetEditorTypes::kFmiSelectionMask, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection());
 			NFmiValueString displayedCountStr(displayed, "%d");
 			NFmiValueString selectedCountStr(selected, "%d");
 			if(displayed > 1)
-				str += displayedCountStr;
+				str += displayedCountStr.CharPtr();
 			else
-				str += selectedCountStr;
+				str += selectedCountStr.CharPtr();
 			str += ")";
 		}
 
@@ -1511,14 +1516,14 @@ void NFmiTimeSerialView::DrawSideParameterNames(const NFmiString& mainParamStrin
 		auto usedMainParamString = mainParamString;
 		usedMainParamString += "   ";
 		::MoveTextPointByDrawnText(place, usedMainParamString, itsToolBox);
-		// Piirretään pääparametrin perään eri väreillä side-paramit
+		// Piirretï¿½ï¿½n pï¿½ï¿½parametrin perï¿½ï¿½n eri vï¿½reillï¿½ side-paramit
 		itsDrawingEnvironment.SetFrameColor(NFmiColor(0, 0, 0));
 		NFmiString drawnText = "Side-Params:  ";
 		NFmiText headerText(place, drawnText, true, 0, &itsDrawingEnvironment);
 		itsToolBox->Convert(&headerText);
 		::MoveTextPointByDrawnText(place, drawnText, itsToolBox);
 
-		// GeneralColor värit alkavat 0:sta, ja 1. side-parameter on tarkoitus piirtää 2. värillä, jonka indeksi on siis 1.
+		// GeneralColor vï¿½rit alkavat 0:sta, ja 1. side-parameter on tarkoitus piirtï¿½ï¿½ 2. vï¿½rillï¿½, jonka indeksi on siis 1.
 		int sideParameterColorIndex = 1;
 		for(const auto& sideParamName : itsSideParameterNames)
 		{
@@ -1536,7 +1541,7 @@ void NFmiTimeSerialView::DrawSideParameterNames(const NFmiString& mainParamStrin
 NFmiPoint NFmiTimeSerialView::CalcParamTextPosition(void)
 {
 	NFmiPoint place(GetFrame().TopLeft());
-	place.X(place.X() + itsToolBox->SX(5)); // siirretään 5 pikseliä oikealle reunasta
+	place.X(place.X() + itsToolBox->SX(5)); // siirretï¿½ï¿½n 5 pikseliï¿½ oikealle reunasta
 	return place;
 }
 
@@ -1546,7 +1551,7 @@ NFmiPoint NFmiTimeSerialView::CalcParamTextPosition(void)
 void NFmiTimeSerialView::DrawModifyingUnit(void)
 {
 	itsToolBox->UseClipping(false);
-	if(itsCtrlViewDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // jos ns. edit-moodi päällä, piiretään aikarajoitin viivat
+	if(itsCtrlViewDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // jos ns. edit-moodi pï¿½ï¿½llï¿½, piiretï¿½ï¿½n aikarajoitin viivat
 	{
 		itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f,0.f,0.f));
 
@@ -1581,8 +1586,8 @@ void NFmiTimeSerialView::DrawModifyingUnit(void)
 //--------------------------------------------------------
 NFmiPoint NFmiTimeSerialView::CalcFontSize(void)
 {
-	long x = itsToolBox->HX(CalcTimeAxisRect().Width()/30.);		// Tekstin koko riippuu aikasarjaeditorin leveydestä.
-	long y = itsToolBox->HY(CalcTimeAxisRect().Height()/5.);		// Tekstin koko riippuu aikasarjaeditorin leveydestä.
+	long x = itsToolBox->HX(CalcTimeAxisRect().Width()/30.);		// Tekstin koko riippuu aikasarjaeditorin leveydestï¿½.
+	long y = itsToolBox->HY(CalcTimeAxisRect().Height()/5.);		// Tekstin koko riippuu aikasarjaeditorin leveydestï¿½.
 	long fontSize = boost::math::iround((x + y)/2.2);
 	fontSize = FmiMin(18, FmiMax(16, static_cast<int>(fontSize)));
 	return NFmiPoint(fontSize, fontSize);
@@ -1596,7 +1601,7 @@ void NFmiTimeSerialView::DrawData(void)
 	itsToolBox->UseClipping(true);
 
 	FmiParameterName param = FmiParameterName(itsDrawParam->Param().GetParamIdent());
-	if(param == kFmiPrecipitation1h || param == kFmiPrecipitation3h || param == kFmiPrecipitation6h) // tähän pitää muuttaa incremental tarkistus!!!
+	if(param == kFmiPrecipitation1h || param == kFmiPrecipitation3h || param == kFmiPrecipitation6h) // tï¿½hï¿½n pitï¿½ï¿½ muuttaa incremental tarkistus!!!
 		DrawSelectedStationDataIncrementally();
 	DrawSelectedStationData();
 	if(itsDrawParam->DataType() == NFmiInfoData::kEditable)
@@ -1604,8 +1609,8 @@ void NFmiTimeSerialView::DrawData(void)
 	DrawTimeLine();
 }
 
-// piirtää selityksen ruudun yläreunaan ja piirtää datan kertyvänä
-// eli laskee kertymän datan arvoista
+// piirtï¿½ï¿½ selityksen ruudun ylï¿½reunaan ja piirtï¿½ï¿½ datan kertyvï¿½nï¿½
+// eli laskee kertymï¿½n datan arvoista
 void NFmiTimeSerialView::DrawSelectedStationDataIncrementally(void)
 {
 	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
@@ -1649,12 +1654,12 @@ void NFmiTimeSerialView::DrawLocationDataIncrementally(void)
 	paramMaskList->SyncronizeMaskTime(time1);
 	float maskFactor1 = (float)paramMaskList->MaskValue(Info()->LatLon()),
 		   maskFactor2 = 0;
-	realValue1 = value1 = value2 = Info()->FloatValue() * Info()->TimeResolution() / 60.f; // pitää kertoa tuntimäärällä, koska nykyään vain 1h sateita datassa
+	realValue1 = value1 = value2 = Info()->FloatValue() * Info()->TimeResolution() / 60.f; // pitï¿½ï¿½ kertoa tuntimï¿½ï¿½rï¿½llï¿½, koska nykyï¿½ï¿½n vain 1h sateita datassa
 	modifiedValue1 = modifiedValue2 = CalcModifiedValue(realValue1, 0, maskFactor1);
 	bool fDrawChangeLines2 = value1 != modifiedValue1;
 	NFmiPoint pointSize(4,4);
 	long timeCount = Info()->SizeTimes();
-	for(long i=1; i < timeCount; i++) // HUOM! ei piirrä jos vain yksi aika.
+	for(long i=1; i < timeCount; i++) // HUOM! ei piirrï¿½ jos vain yksi aika.
 	{
 		Info()->NextTime();
 		time2 = Info()->Time();
@@ -1662,8 +1667,8 @@ void NFmiTimeSerialView::DrawLocationDataIncrementally(void)
 		paramMaskList->SyncronizeMaskTime(time2);
 		maskFactor2 = (float)paramMaskList->MaskValue(Info()->LatLon());
 
-		value2 += Info()->FloatValue() * Info()->TimeResolution() / 60.f; // pitää kertoa tuntimäärällä, koska nykyään vain 1h sateita datassa
-		realValue2 = Info()->FloatValue() * Info()->TimeResolution() / 60.f; // pitää kertoa tuntimäärällä, koska nykyään vain 1h sateita datassa
+		value2 += Info()->FloatValue() * Info()->TimeResolution() / 60.f; // pitï¿½ï¿½ kertoa tuntimï¿½ï¿½rï¿½llï¿½, koska nykyï¿½ï¿½n vain 1h sateita datassa
+		realValue2 = Info()->FloatValue() * Info()->TimeResolution() / 60.f; // pitï¿½ï¿½ kertoa tuntimï¿½ï¿½rï¿½llï¿½, koska nykyï¿½ï¿½n vain 1h sateita datassa
 		float modValue = CalcModifiedValue(realValue2, i, maskFactor2);
 		if(modValue < 0.)
 			modValue = 0.;
@@ -1736,7 +1741,7 @@ void NFmiTimeSerialView::DrawStationDataStationNameLegend(boost::shared_ptr<NFmi
 		}
 		NFmiPoint place(CalcParamTextPosition());
 		NFmiPoint fontSize(CalcFontSize());
-		fontSize *= NFmiPoint(0.9, 0.9); // pienennetään fonttia hieman
+		fontSize *= NFmiPoint(0.9, 0.9); // pienennetï¿½ï¿½n fonttia hieman
 		place.Y(place.Y() + 0.9 * counter * itsToolBox->SY(static_cast<long>(fontSize.Y())));
 		NFmiString locString; //(::GetDictionaryString("TimeSerialViewObservationStation"));
 		DrawStationNameLegend(&loc, envi, fontSize, place, locString, kTop);
@@ -1747,15 +1752,15 @@ void NFmiTimeSerialView::DrawStationDataStationNameLegend(boost::shared_ptr<NFmi
 void NFmiTimeSerialView::DrawSelectedStationData(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, int &theDrawedLocationCounter)
 {
 	auto drawHelperData = DrawHelperData();
-	// vain 1. lokaatiolle piirretään helper-data ja side-parametrit
+	// vain 1. lokaatiolle piirretï¿½ï¿½n helper-data ja side-parametrit
 	if(theDrawedLocationCounter == 1)
 	{
-		// Piirretään ensin muut helper datat
+		// Piirretï¿½ï¿½n ensin muut helper datat
 		if(drawHelperData)
 		{
 			DrawHelperDataLocationInTime(theLatlon);
 		}
-		// Piirretään sitten mahdolliset side-parametrit
+		// Piirretï¿½ï¿½n sitten mahdolliset side-parametrit
 		DrawSideParametersDataLocationInTime(theLatlon);
 	}
 
@@ -1764,9 +1769,9 @@ void NFmiTimeSerialView::DrawSelectedStationData(boost::shared_ptr<NFmiFastQuery
 
     if(drawHelperData)
     {
-        if(theDrawedLocationCounter == 1) // vain 1. lokaatiolle piirretään havainto-data
+        if(theDrawedLocationCounter == 1) // vain 1. lokaatiolle piirretï¿½ï¿½n havainto-data
         {
-            // Piirretään mahdolliset apu havainnot viimeiseksi, jotta erilaiset parvet eivät peittäisi niitä (tästä tulee aina vain yksi käyrä, joten se ei peitä paljoa)
+            // Piirretï¿½ï¿½n mahdolliset apu havainnot viimeiseksi, jotta erilaiset parvet eivï¿½t peittï¿½isi niitï¿½ (tï¿½stï¿½ tulee aina vain yksi kï¿½yrï¿½, joten se ei peitï¿½ paljoa)
             DrawHelperObservationData(theLatlon);
         }
         DrawStationDataStationNameLegend(theViewedInfo, theLatlon, theDrawedLocationCounter++, itsNormalCurveEnvi);
@@ -1777,11 +1782,11 @@ void NFmiTimeSerialView::DrawHelperObservationData(const NFmiPoint &theLatlon)
 {
     if(itsCtrlViewDocumentInterface->IsOperationalModeOn() && itsCtrlViewDocumentInterface->ShowHelperData1InTimeSerialView())
     {
-        // Ei piirretä jos valittu data on havainto tyyppista ja synop tuottajalta, koska käyrä on jo piirrettynä valittuna datana edellä.
-        // Jos se piirretään uudestaan originaali (sininen) käyrä peittyisi nyt punaisella käyrällä
+        // Ei piirretï¿½ jos valittu data on havainto tyyppista ja synop tuottajalta, koska kï¿½yrï¿½ on jo piirrettynï¿½ valittuna datana edellï¿½.
+        // Jos se piirretï¿½ï¿½n uudestaan originaali (sininen) kï¿½yrï¿½ peittyisi nyt punaisella kï¿½yrï¿½llï¿½
         if(!IsSynopticObservationData())
         {
-            // Smartmet on kaatunut joskus mystisesti HESSAA symbolin kanssa, joten ei piirretä, kun on erikoisnäytöstä kyse
+            // Smartmet on kaatunut joskus mystisesti HESSAA symbolin kanssa, joten ei piirretï¿½, kun on erikoisnï¿½ytï¿½stï¿½ kyse
             if(!IsParamWeatherSymbol3())
             {
                 NFmiDrawingEnvironment envi;
@@ -1814,9 +1819,9 @@ bool NFmiTimeSerialView::IsAnalyzeRelatedToolUsed() const
 //--------------------------------------------------------
 // DrawSelectedStationData
 //--------------------------------------------------------
-// Jos vain vasemmalla hiiren näppäimellä on valittu asemia,
-// piirretään niistä yksi aikasarjaeditoriin, muuten piirretään
-// oikealla hiiren näppäimellä valitut asemat.
+// Jos vain vasemmalla hiiren nï¿½ppï¿½imellï¿½ on valittu asemia,
+// piirretï¿½ï¿½n niistï¿½ yksi aikasarjaeditoriin, muuten piirretï¿½ï¿½n
+// oikealla hiiren nï¿½ppï¿½imellï¿½ valitut asemat.
 void NFmiTimeSerialView::DrawSelectedStationData(void)
 {
 	boost::shared_ptr<NFmiFastQueryInfo> info = Info();
@@ -1833,7 +1838,7 @@ void NFmiTimeSerialView::DrawSelectedStationData(void)
 	else
 	{
 		if(DoControlPointModeDrawing())
-		{ // piirrä controlli pisteet vertailun vuoksi ruutuun
+		{ // piirrï¿½ controlli pisteet vertailun vuoksi ruutuun
 			DrawCPReferenceLines();
 		}
 		else
@@ -1847,7 +1852,7 @@ void NFmiTimeSerialView::DrawSelectedStationData(void)
 			{
 				DrawSelectedStationData(info, info->LatLon(), counter);
 				if(IsAnalyzeRelatedToolUsed())
-					DrawAnalyzeToolEndTimeLine(); // piirretään vain ensimmäisellä kerralla pystyviiva, joka kuvaa analyysityökalun lopetusajan kohdan
+					DrawAnalyzeToolEndTimeLine(); // piirretï¿½ï¿½n vain ensimmï¿½isellï¿½ kerralla pystyviiva, joka kuvaa analyysityï¿½kalun lopetusajan kohdan
 			}
 
             if(info->MaskType() == NFmiMetEditorTypes::kFmiDisplayedMask && itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection())
@@ -1858,7 +1863,7 @@ void NFmiTimeSerialView::DrawSelectedStationData(void)
 				}
 			}
 
-			// piirrretään vielä editoidun alueen ulkopuolelta mahd. valittu piste mutta vain jos muuta ei ole piirretty
+			// piirrretï¿½ï¿½n vielï¿½ editoidun alueen ulkopuolelta mahd. valittu piste mutta vain jos muuta ei ole piirretty
 			if(counter == 1)
 			{
 				auto& latlon = itsCtrlViewDocumentInterface->OutOfEditedAreaTimeSerialPoint();
@@ -1871,8 +1876,8 @@ void NFmiTimeSerialView::DrawSelectedStationData(void)
 	}
 }
 
-// hae oikeasti käytetty smartInfo ja aseta smartinfo osoittamaan lähintä asemaa.
-// tämä pitää tehdä näin koska synop-datoja voi olla useita ja oikea info pitää hakea aina paikka kohtaisesti.
+// hae oikeasti kï¿½ytetty smartInfo ja aseta smartinfo osoittamaan lï¿½hintï¿½ asemaa.
+// tï¿½mï¿½ pitï¿½ï¿½ tehdï¿½ nï¿½in koska synop-datoja voi olla useita ja oikea info pitï¿½ï¿½ hakea aina paikka kohtaisesti.
 static boost::shared_ptr<NFmiFastQueryInfo> GetUsedSmartInfo(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, const NFmiPoint &theLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theCurrentInfo, const NFmiMetTime &theTime, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
 	if(theCurrentInfo == 0)
@@ -1889,7 +1894,7 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetUsedSmartInfo(CtrlViewDocumentInt
 	return info;
 }
 
-// ei editoitu data piirretään vähän erilailla
+// ei editoitu data piirretï¿½ï¿½n vï¿½hï¿½n erilailla
 void NFmiTimeSerialView::DrawSelectedStationDataForNonEditedData(void)
 {
 	itsInfo = Info();
@@ -1923,11 +1928,11 @@ void NFmiTimeSerialView::DrawSelectedStationDataForNonEditedData(void)
     }
 }
 
-// Jos ollaan CP-moodissa ja ollaan myös Obs-blender moodissa ja kyse on editoidusta datasta.
-// Haaraantuu tänne DrawCPReferenceLines metodista.
+// Jos ollaan CP-moodissa ja ollaan myï¿½s Obs-blender moodissa ja kyse on editoidusta datasta.
+// Haaraantuu tï¿½nne DrawCPReferenceLines metodista.
 void NFmiTimeSerialView::DrawObservationBlenderDataInCpMode()
 {
-    DrawCPReferenceLines_DrawAllCps(false); // Ei piirretä CP muokkauskäyrää (false parametri)
+    DrawCPReferenceLines_DrawAllCps(false); // Ei piirretï¿½ CP muokkauskï¿½yrï¿½ï¿½ (false parametri)
     DrawAnalyzeToolEndTimeLine();
 }
 
@@ -1997,15 +2002,15 @@ bool NFmiTimeSerialView::IsThisFirstEditedParamRow()
         for(drawParamList->Reset(); drawParamList->Next(); )
         {
             auto drawParam = drawParamList->Current();
-            // Katsotaan mistä kohtaa löytyy 1. editoitava parametri
+            // Katsotaan mistï¿½ kohtaa lï¿½ytyy 1. editoitava parametri
             if(drawParam->DataType() == NFmiInfoData::kEditable)
             {
-                // Katsotaan onko listalla oleva DrawParam sama kuin tämän olion oma drawParam (suora pointer vertailu!)
+                // Katsotaan onko listalla oleva DrawParam sama kuin tï¿½mï¿½n olion oma drawParam (suora pointer vertailu!)
                 if(drawParam.get() == itsDrawParam.get())
                 {
                     return true;
                 }
-                break; // Jos löydetty tämän olion paikka listasta, mutta se ei ollut editable, lopetetaan
+                break; // Jos lï¿½ydetty tï¿½mï¿½n olion paikka listasta, mutta se ei ollut editable, lopetetaan
             }
         }
     }
@@ -2014,7 +2019,7 @@ bool NFmiTimeSerialView::IsThisFirstEditedParamRow()
 
 void NFmiTimeSerialView::DrawCPReferenceLines_DrawLegend(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager, CpDrawingOptions &cpDrawingOptions)
 {
-    // Laitetaan viivaväri legenda vain 1. editoitavan parametrin aikasarja ikkunaan!
+    // Laitetaan viivavï¿½ri legenda vain 1. editoitavan parametrin aikasarja ikkunaan!
     if(IsThisFirstEditedParamRow())
     {
         itsToolBox->UseClipping(false);
@@ -2033,16 +2038,16 @@ void NFmiTimeSerialView::DrawCPReferenceLines_DrawCpLocation(boost::shared_ptr<N
 {
     auto isActiveCp = cpManager->IsActivateCP();
     if(isActiveCp)
-        DrawHelperDataLocationInTime(cpManager->LatLon()); // piirretään aktiivisen CP-pisteen apu datat myös ruudulle (=kepa, obs ja clim datat)
+        DrawHelperDataLocationInTime(cpManager->LatLon()); // piirretï¿½ï¿½n aktiivisen CP-pisteen apu datat myï¿½s ruudulle (=kepa, obs ja clim datat)
     DrawLocationInTime(cpManager->LatLon(), cpDrawingOptions.currentDataEnvi, cpDrawingOptions.changeDataEnvi, drawModificationLines);
     if(isActiveCp)
     {
-        // Piirretään mahdolliset apu havainnot viimeiseksi, jotta erilaiset parvet eivät peittäisi niitä (tästä tulee aina vain yksi käyrä, joten se ei peitä paljoa)
+        // Piirretï¿½ï¿½n mahdolliset apu havainnot viimeiseksi, jotta erilaiset parvet eivï¿½t peittï¿½isi niitï¿½ (tï¿½stï¿½ tulee aina vain yksi kï¿½yrï¿½, joten se ei peitï¿½ paljoa)
         DrawHelperObservationData(cpManager->LatLon());
     }
 }
 
-// Piirtää yhteen CP-pisteeseen liittyvät jutut.
+// Piirtï¿½ï¿½ yhteen CP-pisteeseen liittyvï¿½t jutut.
 void NFmiTimeSerialView::DrawCPReferenceLines_ForCurrentCp(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager, boost::shared_ptr<NFmiFastQueryInfo> &info, CpDrawingOptions &cpDrawingOptions, bool drawModificationLines)
 {
     if(DrawCPReferenceLines_IsCpDrawn(cpManager))
@@ -2060,7 +2065,7 @@ void NFmiTimeSerialView::DrawCPReferenceLines_ForCurrentCp(boost::shared_ptr<NFm
 void NFmiTimeSerialView::DrawCPReferenceLines_DrawAllCps(bool drawModificationLines)
 {
     CpDrawingOptions cpDrawingOptions(MakeNormalCpLineDrawOptions(), MakeChangeCpLineDrawOptions(), GetFrame(), itsToolBox);
-    // piirretään teksti vasemmalle textPoint:ista ja viiva oikealle
+    // piirretï¿½ï¿½n teksti vasemmalle textPoint:ista ja viiva oikealle
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, kBaseRight, itsToolBox->UseClipping());
 
     boost::shared_ptr<NFmiEditorControlPointManager> CPMan = itsCtrlViewDocumentInterface->CPManager();
@@ -2070,7 +2075,7 @@ void NFmiTimeSerialView::DrawCPReferenceLines_DrawAllCps(bool drawModificationLi
         for(CPMan->ResetCP(); CPMan->NextCP();)
         {
             if(cpDrawingOptions.currentLineIndex >= gMaxHelpCPDrawed)
-                break; // ei piirretä enempää referenssi viivoja
+                break; // ei piirretï¿½ enempï¿½ï¿½ referenssi viivoja
 
             DrawCPReferenceLines_ForCurrentCp(CPMan, info, cpDrawingOptions, drawModificationLines);
         }
@@ -2169,7 +2174,7 @@ NFmiDrawingEnvironment NFmiTimeSerialView::ChangeIncrementalStationDataCurveEnvi
 // difference, then help line won't be drawn)
 bool NFmiTimeSerialView::IsModifiedValueLineDrawn(long theEndPointIndex)
 {
-	if(!IsAnalyzeRelatedToolUsed()) // analyysi modessa ei piirretä näitä muutoskäyriä!!!
+	if(!IsAnalyzeRelatedToolUsed()) // analyysi modessa ei piirretï¿½ nï¿½itï¿½ muutoskï¿½yriï¿½!!!
 	{
 		if(itsDrawParam->TimeSerialModifyingLimit())
 		{
@@ -2219,9 +2224,9 @@ void NFmiTimeSerialView::DrawModifyFactorPoints(void)
 	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 		return ;
 	itsToolBox->UseClipping(true);
-	if(itsCtrlViewDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // jos ns. edit-moodi päällä, piiretään aikarajoitin viivat
+	if(itsCtrlViewDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // jos ns. edit-moodi pï¿½ï¿½llï¿½, piiretï¿½ï¿½n aikarajoitin viivat
 	{
-		if(!IsAnalyzeRelatedToolUsed()) // muutos käyrät piirretään vain ei-analyysi tilassa
+		if(!IsAnalyzeRelatedToolUsed()) // muutos kï¿½yrï¿½t piirretï¿½ï¿½n vain ei-analyysi tilassa
 		{
 			DrawModifyFactorPointGrids();
 			if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
@@ -2310,7 +2315,7 @@ void NFmiTimeSerialView::DrawPoint(NFmiDrawingEnvironment& envi, const NFmiPoint
 void NFmiTimeSerialView::DrawPointInDataRect(NFmiDrawingEnvironment& envi, const NFmiPoint& theRelativePoint, const NFmiPoint& thePointSize)
 {
 	NFmiRect valueRect = CalcValueAxisRect();
-	valueRect.Size(NFmiPoint(1., valueRect.Size().Y())); // tämä ei ole oikea datarect x-suunnassa, mutta riittää tässä toistaiseksi
+	valueRect.Size(NFmiPoint(1., valueRect.Size().Y())); // tï¿½mï¿½ ei ole oikea datarect x-suunnassa, mutta riittï¿½ï¿½ tï¿½ssï¿½ toistaiseksi
 	bool isInDataRect = valueRect.IsInside(theRelativePoint);
 	if(isInDataRect)
 		DrawPoint(envi, theRelativePoint, thePointSize);
@@ -2345,7 +2350,7 @@ NFmiRect NFmiTimeSerialView::CalcValueAxisRect(void)
 //--------------------------------------------------------
 NFmiRect NFmiTimeSerialView::CalcModifyFactorAxisRect(void)
 {
-	NFmiRect axisRect(CalcValueAxisRect()); // tietää korkeuden ja leveyden, positio lasketaan uudelleen
+	NFmiRect axisRect(CalcValueAxisRect()); // tietï¿½ï¿½ korkeuden ja leveyden, positio lasketaan uudelleen
 	double width = GetFrame().Width();
 	axisRect.Left(axisRect.Left() + width - width/25.);
 	axisRect.Right(axisRect.Right() + width - width/20.);
@@ -2383,9 +2388,9 @@ void NFmiTimeSerialView::DrawValueAxis(void)
 void NFmiTimeSerialView::DrawModifyFactorAxis(void)
 {
 	itsToolBox->UseClipping(false);
-	if(itsCtrlViewDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // jos ns. edit-moodi päällä, piiretään aikarajoitin viivat
+	if(itsCtrlViewDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // jos ns. edit-moodi pï¿½ï¿½llï¿½, piiretï¿½ï¿½n aikarajoitin viivat
 	{
-		if(itsModifyFactorView && (!IsAnalyzeRelatedToolUsed())) // muutos asteikko piirretään vain ei-analyysi tilassa
+		if(itsModifyFactorView && (!IsAnalyzeRelatedToolUsed())) // muutos asteikko piirretï¿½ï¿½n vain ei-analyysi tilassa
 		{
 			NFmiDrawingEnvironment envi;
 			envi.SetFrameColor(NFmiColor(0.f,0.f,0.f));
@@ -2414,8 +2419,8 @@ bool NFmiTimeSerialView::IsEditedData(boost::shared_ptr<NFmiFastQueryInfo> &theI
 bool NFmiTimeSerialView::LeftButtonUp(const NFmiPoint &thePlace
 											   ,unsigned long theKey)
 {
-    bool tmpEditingMouseMotionsAllowed = fEditingMouseMotionsAllowed; // pitää ottaa talteen originaali arvo, jotta se voidaan asettaa heti 
-                                                                    // alkuun false tilaan, koska sitä ei voi asettaa lopuksi, koska metodissa on niin monta return -kohtaa.
+    bool tmpEditingMouseMotionsAllowed = fEditingMouseMotionsAllowed; // pitï¿½ï¿½ ottaa talteen originaali arvo, jotta se voidaan asettaa heti 
+                                                                    // alkuun false tilaan, koska sitï¿½ ei voi asettaa lopuksi, koska metodissa on niin monta return -kohtaa.
     fEditingMouseMotionsAllowed = false; // astetaan originaali muuttuja siis heti false tilaan
 
     itsCtrlViewDocumentInterface->MouseCapturedInTimeWindow(false);
@@ -2425,7 +2430,7 @@ bool NFmiTimeSerialView::LeftButtonUp(const NFmiPoint &thePlace
         itsCtrlViewDocumentInterface->TimeSerialViewDirty(true);
 		itsCtrlViewDocumentInterface->SetLastActiveDescTopAndViewRow(CtrlViewUtils::kFmiTimeSerialView, itsViewGridRowNumber);
 
-        // kun monta alinäyttöä yhtäaikaa, pitää ensimmäisellä klikkauksella asettaa kyseinen näyttö 'editointitilaan'
+        // kun monta alinï¿½yttï¿½ï¿½ yhtï¿½aikaa, pitï¿½ï¿½ ensimmï¿½isellï¿½ klikkauksella asettaa kyseinen nï¿½yttï¿½ 'editointitilaan'
 		if(itsDrawParam && (!itsDrawParam->IsParamEdited()))
 		{
 			itsCtrlViewDocumentInterface->TimeSerialViewDrawParamList()->DisableEditing();
@@ -2444,11 +2449,11 @@ bool NFmiTimeSerialView::LeftButtonUp(const NFmiPoint &thePlace
 		}
 		if(itsValueView && itsValueView->GetFrame().IsInside(thePlace))
 		{
-			// tämä seuraava tarkastus johtuu itsValueView:in 'oudosta' leveydestä
-			// näyttää että itsValueView:in pitää olla todella leveä,
-			// ennenkuin se suostuu piirtämään fontit tarpeeksi isolla
+			// tï¿½mï¿½ seuraava tarkastus johtuu itsValueView:in 'oudosta' leveydestï¿½
+			// nï¿½yttï¿½ï¿½ ettï¿½ itsValueView:in pitï¿½ï¿½ olla todella leveï¿½,
+			// ennenkuin se suostuu piirtï¿½mï¿½ï¿½n fontit tarpeeksi isolla
 			// nyt tarkistetaan ettei klikkaus mene itsTimeView:in alueelle,
-			// koska sen tarkastelu on tärkeämpää ja oikeampaa tässä tapauksessa
+			// koska sen tarkastelu on tï¿½rkeï¿½mpï¿½ï¿½ ja oikeampaa tï¿½ssï¿½ tapauksessa
 			if(thePlace.X() < itsTimeView->GetFrame().Left())
 			{
 				if(theKey & kCtrlKey)
@@ -2458,7 +2463,7 @@ bool NFmiTimeSerialView::LeftButtonUp(const NFmiPoint &thePlace
 				else
 				{
 					if(Position2ModifyFactor(thePlace) > 0.)
-						return ChangeValueView(-1., true); // true liikuttaa asteikon yläpäätä ja false alapäätä
+						return ChangeValueView(-1., true); // true liikuttaa asteikon ylï¿½pï¿½ï¿½tï¿½ ja false alapï¿½ï¿½tï¿½
 					else
 						return ChangeValueView(-1., false);
 				}
@@ -2468,7 +2473,7 @@ bool NFmiTimeSerialView::LeftButtonUp(const NFmiPoint &thePlace
         {
             if(tmpEditingMouseMotionsAllowed) // testataan tmp-muuttujaa, koska originaali on jo asetettu false:ksi
             {
-	            // kuinka läheltä pitää aika-akselia klikata ennenkuin ohjelma suostuu 'löytämään'
+	            // kuinka lï¿½heltï¿½ pitï¿½ï¿½ aika-akselia klikata ennenkuin ohjelma suostuu 'lï¿½ytï¿½mï¿½ï¿½n'
 	            // klikkauksen paikan (nyt lineaariselle laitetaan isommat 'reunat' hakua varten)
 			    if(!IsEditedData(itsInfo))
 				    return false;
@@ -2488,7 +2493,7 @@ bool NFmiTimeSerialView::LeftButtonUp(const NFmiPoint &thePlace
 						float value = kFloatMissing;
 					    if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
 					    { 
-							// 13.11.2002/Marko Muutos CP-työkalun käytökseen siten, että piirretään lopullista arvokäyrää haluttuun pisteeseen.
+							// 13.11.2002/Marko Muutos CP-tyï¿½kalun kï¿½ytï¿½kseen siten, ettï¿½ piirretï¿½ï¿½n lopullista arvokï¿½yrï¿½ï¿½ haluttuun pisteeseen.
 						    value = Position2Value(thePlace);
 					    }
 					    else
@@ -2565,7 +2570,7 @@ void NFmiTimeSerialView::DoScanningPhaseTimeSerialAdding(bool doCsvDataGeneratio
 		auto parameterAlreadyIncludedIter = std::find(itsCsvGenerationParameterNames.begin(), itsCsvGenerationParameterNames.end(), parameterNameString);
 		if(parameterAlreadyIncludedIter == itsCsvGenerationParameterNames.end())
 		{
-			// Estetään että sama parametri (prod+par+level) ei mene kahdesti dataan
+			// Estetï¿½ï¿½n ettï¿½ sama parametri (prod+par+level) ei mene kahdesti dataan
 			itsCsvGenerationParameterNames.push_back(parameterNameString);
 			itsCsvGenerationTimes.emplace_back(std::move(csvGenerationTimes));
 			itsCsvGenerationParameterValues.emplace_back(std::move(csvGenerationParameterValues));
@@ -2579,7 +2584,7 @@ void NFmiTimeSerialView::DoScanningPhaseValueAdding(bool doCsvDataGeneration, fl
 {
 	if(doCsvDataGeneration)
 	{
-		// Datasta saatu aika pitää vielä mahdollisesti siirtää aikasarjassa olevaan aikaan
+		// Datasta saatu aika pitï¿½ï¿½ vielï¿½ mahdollisesti siirtï¿½ï¿½ aikasarjassa olevaan aikaan
 		validTimeCopy.ChangeByMinutes(theTimeWhenDrawedInMinutes);
 		csvGenerationTimesOut.push_back(validTimeCopy);
 		csvGenerationParameterValuesOut.push_back(value);
@@ -2611,7 +2616,7 @@ std::vector<NFmiPoint> NFmiTimeSerialView::GetViewedLatlonPoints(void)
 				latlons.push_back(editedInfo->LatLon());
 		}
 	}
-	// piirrretään vielä editoidun alueen ulkopuolelta mahd. valittu piste mutta vain jos muuta ei ole piirretty
+	// piirrretï¿½ï¿½n vielï¿½ editoidun alueen ulkopuolelta mahd. valittu piste mutta vain jos muuta ei ole piirretty
 	if(counter == 1)
 	{
 		if(itsCtrlViewDocumentInterface->OutOfEditedAreaTimeSerialPoint() != NFmiPoint::gMissingLatlon)
@@ -2621,9 +2626,9 @@ std::vector<NFmiPoint> NFmiTimeSerialView::GetViewedLatlonPoints(void)
 }
 
 // Funktio joka etsii asteikon min ja max arvojen avulla
-// sopivimman stepin. Stepin pitää olla luku joka on 1, 2 tai 5.
+// sopivimman stepin. Stepin pitï¿½ï¿½ olla luku joka on 1, 2 tai 5.
 // Tai jokin niiden 10. potenssi eli esim. 0.2, 0.02, ... tai 20, 200, ...
-// oletus, max ja min eivät ole kFloatMissing
+// oletus, max ja min eivï¿½t ole kFloatMissing
 static float GetAxisStepValue(float theMinValue, float theMaxValue)
 {
 	if(theMinValue == kFloatMissing || theMaxValue == kFloatMissing)
@@ -2645,7 +2650,7 @@ static float GetAxisStepValue(float theMinValue, float theMaxValue)
 		step /= 10.f;
 		powMinus++;
 	}
-	// Nyt stepin pitäisi olla 1 ja 10 välillä
+	// Nyt stepin pitï¿½isi olla 1 ja 10 vï¿½lillï¿½
 	if(step < 1.5f)
 		step = 1.f;
 	else if(step < 3.5f)
@@ -2681,8 +2686,8 @@ static NFmiTimeBag GetScannedTimes(const NFmiTimeBag &theViewTimes)
 {
 	long stepInMinutes = theViewTimes.Resolution();
 	long lengthInMinutes = theViewTimes.LastTime().DifferenceInMinutes(theViewTimes.FirstTime());
-	float extensionLengthInMinutes = lengthInMinutes/2.f; // lisätään molempiin päihin ajallisesti puolet aikanäytön pituudesta
-	extensionLengthInMinutes = std::min(extensionLengthInMinutes, 2.f*24*60); // minimissään kuitenkin haarukkaan tulee kaksi päivää
+	float extensionLengthInMinutes = lengthInMinutes/2.f; // lisï¿½tï¿½ï¿½n molempiin pï¿½ihin ajallisesti puolet aikanï¿½ytï¿½n pituudesta
+	extensionLengthInMinutes = std::min(extensionLengthInMinutes, 2.f*24*60); // minimissï¿½ï¿½n kuitenkin haarukkaan tulee kaksi pï¿½ivï¿½ï¿½
 	extensionLengthInMinutes = std::max(extensionLengthInMinutes, 7.f*24*60); // maksimissaan haarukkaan tulee viikko
 	float roundedExtension = ::RoundValue(extensionLengthInMinutes, static_cast<float>(stepInMinutes));
 	NFmiMetTime newFirstTime(theViewTimes.FirstTime());
@@ -2699,7 +2704,7 @@ bool NFmiTimeSerialView::AutoAdjustValueScale(void)
 	itsScannedLatlonPoints = GetViewedLatlonPoints();
 	itsAutoAdjustScanTimes = ::GetScannedTimes(GetViewLimitingTimes());
 	itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, true);
-	DrawSelectedStationData(); // skannataan piirto-systeemi läpi ilman piirtoa etsien min/max arvoja eri datoista
+	DrawSelectedStationData(); // skannataan piirto-systeemi lï¿½pi ilman piirtoa etsien min/max arvoja eri datoista
 	itsToolBox->UseClipping(false);
 	itsDrawingEnvironment.EnableFill();
 	
@@ -2713,12 +2718,12 @@ bool NFmiTimeSerialView::AutoAdjustValueScale(void)
 
 		float oldAxisStartValue = static_cast<float>(itsDrawParam->TimeSeriesScaleMin());
 		float oldAxisEndValue = static_cast<float>(itsDrawParam->TimeSeriesScaleMax());
-	// 3. Jos min ja max arvot mahtivat vanhan akselin sisään ja niiden abs. ero akseleihin on tietyn rajan 
-	// sisällä esim. step * 3, ei akselia tarvitse säätää
+	// 3. Jos min ja max arvot mahtivat vanhan akselin sisï¿½ï¿½n ja niiden abs. ero akseleihin on tietyn rajan 
+	// sisï¿½llï¿½ esim. step * 3, ei akselia tarvitse sï¿½ï¿½tï¿½ï¿½
 		if(!((minValue >= oldAxisStartValue) && (maxValue <= oldAxisEndValue) && (::fabs(minValue - oldAxisStartValue) <= step*5) && (::fabs(maxValue - oldAxisEndValue) <= step*5)))
 		{
 
-	// 4. jos min ja max ovat ei-puuttuvia, laske sopiva pyöristys alas min-arvosta ja sopiva pyöristys ylös max-arvosta
+	// 4. jos min ja max ovat ei-puuttuvia, laske sopiva pyï¿½ristys alas min-arvosta ja sopiva pyï¿½ristys ylï¿½s max-arvosta
 			float newAxisStartValue = (::round(minValue/step) * step) - 3*step;
 			float newAxisEndValue = (::round(maxValue/step) * step) + 3*step;
 
@@ -2771,7 +2776,7 @@ bool NFmiTimeSerialView::MouseMove(const NFmiPoint &thePlace, unsigned long theK
 
             if(EditingMouseMotionsAllowed())
             {
-                // kuinka läheltä pitää aikaakselia klikata ennenkuin ohjelma suostuu 'löytämään'
+                // kuinka lï¿½heltï¿½ pitï¿½ï¿½ aikaakselia klikata ennenkuin ohjelma suostuu 'lï¿½ytï¿½mï¿½ï¿½n'
 	            // klikkauksen paikan (nyt lineaariselle laitetaan isommat 'reunat' hakua varten)
 			    double proximityFactor = CalcMouseClickProximityFactor();
 			    if(IsAnalyzeRelatedToolUsed())
@@ -2787,7 +2792,7 @@ bool NFmiTimeSerialView::MouseMove(const NFmiPoint &thePlace, unsigned long theK
 				    {
 						float value = kFloatMissing;
 					    if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
-					    { // 13.11.2002/Marko Muutos CP-työkalun käytökseen siten, että piirretään lopullista arvokäyrää haluttuun pisteeseen.
+					    { // 13.11.2002/Marko Muutos CP-tyï¿½kalun kï¿½ytï¿½kseen siten, ettï¿½ piirretï¿½ï¿½n lopullista arvokï¿½yrï¿½ï¿½ haluttuun pisteeseen.
 						    value = Position2Value(thePlace);
 					    }
 					    else
@@ -2815,14 +2820,14 @@ bool NFmiTimeSerialView::MouseMove(const NFmiPoint &thePlace, unsigned long theK
 
 double NFmiTimeSerialView::CalcMouseClickProximityFactor(void)
 {
-	// LAITA TÄMÄ UUSIKSI WCTR:n TAKIA!!!!!!!!
+	// LAITA Tï¿½Mï¿½ UUSIKSI WCTR:n TAKIA!!!!!!!!
 	double value = (itsTimeView->GetFrame().Width() / (ZoomedTimeDescriptor().Size()-1)) / 2.;
 	return value;
 }
 
 // Tarkistaa, ollaanko klikattu hiiren oikealla napilla otsikkoalueelta.
-// Jos on, avataan timeserialView-popup, jolla voidaan manipuloida suoraan kyseistä näyttöä.
-// otsikko alue on Frame:n Top:in alla ja itsValueView:in yllä.
+// Jos on, avataan timeserialView-popup, jolla voidaan manipuloida suoraan kyseistï¿½ nï¿½yttï¿½ï¿½.
+// otsikko alue on Frame:n Top:in alla ja itsValueView:in yllï¿½.
 bool NFmiTimeSerialView::OpenOverViewPopUp(const NFmiPoint &thePlace, unsigned long /* theKey */ )
 {
 	if(itsValueView && itsValueView->GetFrame().Top() > thePlace.Y() && GetFrame().Top() < thePlace.Y())
@@ -2842,7 +2847,7 @@ bool NFmiTimeSerialView::RightButtonUp(const NFmiPoint &thePlace
 	if(IsIn(thePlace))
 	{
 		itsCtrlViewDocumentInterface->TimeSerialViewDirty(true);
-		// kun monta alinäyttöä yhtäaikaa, pitää ensimmäisellä klikkauksella asettaa kyseinen näyttö 'editointitilaan'
+		// kun monta alinï¿½yttï¿½ï¿½ yhtï¿½aikaa, pitï¿½ï¿½ ensimmï¿½isellï¿½ klikkauksella asettaa kyseinen nï¿½yttï¿½ 'editointitilaan'
 		if(itsDrawParam && (!itsDrawParam->IsParamEdited()))
 		{
             itsCtrlViewDocumentInterface->TimeSerialViewDrawParamList()->DisableEditing();
@@ -2861,11 +2866,11 @@ bool NFmiTimeSerialView::RightButtonUp(const NFmiPoint &thePlace
 		}
 		if(itsValueView && itsValueView->GetFrame().IsInside(thePlace))
 		{
-			// tämä seuraava tarkastus johtuu itsValueView:in 'oudosta' leveydestä
-			// näyttää että itsValueView:in pitää olla todella leveä,
-			// ennenkuin se suostuu piirtämään fontit tarpeeksi isolla
+			// tï¿½mï¿½ seuraava tarkastus johtuu itsValueView:in 'oudosta' leveydestï¿½
+			// nï¿½yttï¿½ï¿½ ettï¿½ itsValueView:in pitï¿½ï¿½ olla todella leveï¿½,
+			// ennenkuin se suostuu piirtï¿½mï¿½ï¿½n fontit tarpeeksi isolla
 			// nyt tarkistetaan ettei klikkaus mene itsTimeView:in alueelle,
-			// koska sen tarkastelu on tärkeämpää ja oikeampaa tässä tapauksessa
+			// koska sen tarkastelu on tï¿½rkeï¿½mpï¿½ï¿½ ja oikeampaa tï¿½ssï¿½ tapauksessa
 			if(thePlace.X() < itsTimeView->GetFrame().Left())
 			{
 				if(theKey & kCtrlKey)
@@ -2875,13 +2880,13 @@ bool NFmiTimeSerialView::RightButtonUp(const NFmiPoint &thePlace
 				else
 				{
 					if(Position2ModifyFactor(thePlace) > 0.)
-						return ChangeValueView(1., true); // true liikuttaa asteikon yläpäätä ja false alapäätä
+						return ChangeValueView(1., true); // true liikuttaa asteikon ylï¿½pï¿½ï¿½tï¿½ ja false alapï¿½ï¿½tï¿½
 					else
 						return ChangeValueView(1., false);
 				}
 			}
 		}
-		return true; // jos näytön sisällä, palauttaa true (ainakin väliaikaisesti, muuten isäntä avaa väärän popupin)
+		return true; // jos nï¿½ytï¿½n sisï¿½llï¿½, palauttaa true (ainakin vï¿½liaikaisesti, muuten isï¿½ntï¿½ avaa vï¿½ï¿½rï¿½n popupin)
 	}
 	return false;
 }
@@ -2893,7 +2898,7 @@ bool NFmiTimeSerialView::ModifyFactorPointsManual(float theValue, int theIndex)
 {
     if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode())
 	{ 
-		// 13.11.2002/Marko Muutos CP-työkalun käytökseen siten, että piirretään lopullista arvokäyrää haluttuun pisteeseen.
+		// 13.11.2002/Marko Muutos CP-tyï¿½kalun kï¿½ytï¿½kseen siten, ettï¿½ piirretï¿½ï¿½n lopullista arvokï¿½yrï¿½ï¿½ haluttuun pisteeseen.
 		NFmiPoint latlon(itsCtrlViewDocumentInterface->CPManager()->ActiveCPLatLon());
 		Info()->TimeIndex(theIndex);
 		float value = Info()->InterpolatedValue(latlon);
@@ -2991,8 +2996,8 @@ void NFmiTimeSerialView::DrawShade(NFmiDrawingEnvironment &theEnvi, const NFmiMe
 	itsToolBox->Convert(&rect);
 }
 
-// piirtää yöhön 00-06 utc varjostuksen
-// piirtää myös 12 utc:n kohdalle viivan
+// piirtï¿½ï¿½ yï¿½hï¿½n 00-06 utc varjostuksen
+// piirtï¿½ï¿½ myï¿½s 12 utc:n kohdalle viivan
 void NFmiTimeSerialView::DrawNightShades(void)
 {
 	itsToolBox->RelativeClipRect(itsDataRect, true);
@@ -3012,11 +3017,11 @@ void NFmiTimeSerialView::DrawNightShades(void)
 		NFmiTimeBag timesInView(itsCtrlViewDocumentInterface->TimeSerialViewTimeBag());
 		NFmiMetTime startTime = timesInView.FirstTime();
 		startTime.SetTimeStep(usedTimeStep);
-		startTime.PreviousMetTime(); // laitetaan aloitus varmasti ennen näytön alkua
+		startTime.PreviousMetTime(); // laitetaan aloitus varmasti ennen nï¿½ytï¿½n alkua
 		
 		NFmiMetTime endTime = timesInView.LastTime();
 		endTime.SetTimeStep(usedTimeStep);
-		endTime.NextMetTime(); // laitetaan loppu aika varmasti ohi näytön lopun
+		endTime.NextMetTime(); // laitetaan loppu aika varmasti ohi nï¿½ytï¿½n lopun
 
 		NFmiTimeBag usedTimes(startTime, endTime, usedTimeStep);
 
@@ -3047,7 +3052,7 @@ void NFmiTimeSerialView::CreateValueScaleView(void)
 					  ,0				// start gap
 					  ,kForward			// scale direction
 					  ,false			// steps on borders (onko akselin reunat aina stepin kohdalla)
-					  ,6); // oletus on 5, 6:lla tehdään arvoja-ticksejä tiheämmin
+					  ,6); // oletus on 5, 6:lla tehdï¿½ï¿½n arvoja-ticksejï¿½ tiheï¿½mmin
 	itsValueAxis = new NFmiAxis(scale, NFmiTitle("Y"));
 	itsValueView = new NFmiAxisViewWithMinFontSize(CalcValueAxisRect()
 													,itsToolBox
@@ -3086,7 +3091,7 @@ void NFmiTimeSerialView::CreateModifyFactorScaleView(bool fSetScalesDirectlyWith
 														,true
 														,false
 														,0.1f);
-// en keksinyt tälle parempaa paikkaa, mutta nyt akseli ja maksimi muutos vastaavat toisiaan
+// en keksinyt tï¿½lle parempaa paikkaa, mutta nyt akseli ja maksimi muutos vastaavat toisiaan
 //	itsDrawParam->TimeSerialModifyingLimit(itsModifyFactorAxis->EndValue());
 }
 
@@ -3099,7 +3104,7 @@ double NFmiTimeSerialView::Value2AxisPosition(float theValue)
 	{
 		float value = itsValueAxis->Location(theValue);
 		NFmiRect rect(CalcValueAxisRect());
-		double finalValue = rect.Bottom() - value * rect.Height(); // HUOMM!! toimii vain jos value on y-akselilla ja alkaa alhaalta ylös!!!
+		double finalValue = rect.Bottom() - value * rect.Height(); // HUOMM!! toimii vain jos value on y-akselilla ja alkaa alhaalta ylï¿½s!!!
 		return finalValue;
 	}
 
@@ -3113,7 +3118,7 @@ double NFmiTimeSerialView::ModifyFactor2AxisPosition(float theValue)
 {
 	float value = itsModifyFactorAxis->Location(theValue);
 	NFmiRect rect(CalcModifyFactorAxisRect());
-	double finalValue = rect.Bottom() - value * rect.Height(); // HUOMM!! toimii vain jos value on y-akselilla ja alkaa alhaalta ylös!!!
+	double finalValue = rect.Bottom() - value * rect.Height(); // HUOMM!! toimii vain jos value on y-akselilla ja alkaa alhaalta ylï¿½s!!!
 	return finalValue;
 }
 
@@ -3150,24 +3155,24 @@ void NFmiTimeSerialView::DrawGrids(NFmiDrawingEnvironment& envi)
 	NFmiRect timeRect = CalcTimeAxisRect();
 	double lowTimeGridPos = 0;
 	double lineperunit = CalcLinePerUnitValue(&lowTimeGridPos);
-	if(lineperunit > 200.) // ei piirretä turhaa pipellystä!!!
+	if(lineperunit > 200.) // ei piirretï¿½ turhaa pipellystï¿½!!!
 		lineperunit = 200.;
 
 	double relativeFill = (1./300.)*lineperunit;
 	double oldRelativeFill = envi.GetRelativeFill();
 	envi.SetRelativeFill(relativeFill);
 	envi.SetSubLinePerUnit(lineperunit);
-	envi.SetFrameColor(NFmiColor(0.5f,0.5f,0.5f)); // time grid väri
+	envi.SetFrameColor(NFmiColor(0.5f,0.5f,0.5f)); // time grid vï¿½ri
 	envi.SetSubLinePerUnit(CalcValueLinePerUnitValue());
 	envi.SetRelativeFill(0.75);
-	envi.SetFrameColor(NFmiColor(0.2f, 0.45f, 0.9f)); // value grid väri
+	envi.SetFrameColor(NFmiColor(0.2f, 0.45f, 0.9f)); // value grid vï¿½ri
 	DrawValueGrids(envi,timeRect.Left(),timeRect.Right());
 	envi.SetRelativeFill(oldRelativeFill);
 }
 
 double NFmiTimeSerialView::CalcLinePerUnitValue(double *theLowTimeGridPos)
 {
-// ***** nämä laskut jakavat pysty viivat sopiviin väleihin arvoihin nähden, eli tekevat asteikon ******
+// ***** nï¿½mï¿½ laskut jakavat pysty viivat sopiviin vï¿½leihin arvoihin nï¿½hden, eli tekevat asteikon ******
 	double lowValue = 0; // arvo hatusta
 	double highValue = 10;// arvo hatusta
 	if(itsDrawParam)
@@ -3199,7 +3204,7 @@ double NFmiTimeSerialView::CalcLinePerUnitValue(double *theLowTimeGridPos)
 
 double NFmiTimeSerialView::CalcValueLinePerUnitValue(void)
 {
-// ***** nämä laskut jakavat vaaka-viivat sopiviin väleihin aika-askeleisiin nähden, eli tekevat asteikon ******
+// ***** nï¿½mï¿½ laskut jakavat vaaka-viivat sopiviin vï¿½leihin aika-askeleisiin nï¿½hden, eli tekevat asteikon ******
 	int timeCount = itsZoomedTimeDescriptor.Size();
 	double lowAxis = Time2Value(itsZoomedTimeDescriptor.FirstTime());
 	double highAxis = Time2Value(itsZoomedTimeDescriptor.LastTime());
@@ -3220,17 +3225,17 @@ double NFmiTimeSerialView::CalcValueLinePerUnitValue(void)
 //--------------------------------------------------------
 // DrawValueGrids
 //--------------------------------------------------------
-// Piirtää nykyään minor ja major tick markit tai apuviivat
+// Piirtï¿½ï¿½ nykyï¿½ï¿½n minor ja major tick markit tai apuviivat
 void NFmiTimeSerialView::DrawValueGrids(NFmiDrawingEnvironment& envi,double minPos,double maxPos)
 { // min- and maxpos are the other axis relative positions (timeaxis in this case)
 	if(itsValueAxis)
 	{
-		// piirretään ensin minor tickmarkit apu viivoiksi himmeällä
+		// piirretï¿½ï¿½n ensin minor tickmarkit apu viivoiksi himmeï¿½llï¿½
 		itsValueAxis->StepNumber();
 		double minValue = itsValueAxis->StartValue();
 		double maxValue = itsValueAxis->EndValue();
 		double majorTickStep = itsValueAxis->StepValue();
-		double minorTickStep = majorTickStep/5.; // 1, 5, 10, 50, jne. menee sopivasti viidellä, mutta 2, 20, 200 jne menee neljällä
+		double minorTickStep = majorTickStep/5.; // 1, 5, 10, 50, jne. menee sopivasti viidellï¿½, mutta 2, 20, 200 jne menee neljï¿½llï¿½
 		if(majorTickStep == 0.002 || majorTickStep == 0.02 || majorTickStep == 0.2 || majorTickStep == 2. || majorTickStep == 20. || majorTickStep == 200. || majorTickStep == 2000. || majorTickStep == 20000. || majorTickStep == 200000. || majorTickStep == 2000000.)
 			minorTickStep = majorTickStep/4.;
 		TFmiColor majorTickColor(envi.GetFrameColor());
@@ -3241,7 +3246,7 @@ void NFmiTimeSerialView::DrawValueGrids(NFmiDrawingEnvironment& envi,double minP
 		for( ; currentValue < maxValue; currentValue += minorTickStep)
 		{
 			yPos = Value2AxisPosition(static_cast<float>(currentValue));
-			NFmiLine line(NFmiPoint(minPos, yPos) // HUOM!! toimii vain jos arvoasteikko-viivat menevät vaakasuuntaan
+			NFmiLine line(NFmiPoint(minPos, yPos) // HUOM!! toimii vain jos arvoasteikko-viivat menevï¿½t vaakasuuntaan
 						 ,NFmiPoint(maxPos, yPos)
 						 ,0
 						 ,&envi);
@@ -3253,7 +3258,7 @@ void NFmiTimeSerialView::DrawValueGrids(NFmiDrawingEnvironment& envi,double minP
 		for(itsValueAxis->Reset(); itsValueAxis->Next(); )
 		{
 			yPos = Value2AxisPosition(itsValueAxis->Value());
-			NFmiLine line(NFmiPoint(minPos, yPos) // HUOM!! toimii vain jos arvoasteikko-viivat menevät vaakasuuntaan
+			NFmiLine line(NFmiPoint(minPos, yPos) // HUOM!! toimii vain jos arvoasteikko-viivat menevï¿½t vaakasuuntaan
 						 ,NFmiPoint(maxPos, yPos)
 						 ,0
 						 ,&envi);
@@ -3265,13 +3270,13 @@ void NFmiTimeSerialView::DrawValueGrids(NFmiDrawingEnvironment& envi,double minP
 //--------------------------------------------------------
 // ChangeTimeSeriesValues
 //--------------------------------------------------------
- // laskee aikasarjan muutokset ja päivittää infon arvot ja nollaa korjaus käyrän
+ // laskee aikasarjan muutokset ja pï¿½ivittï¿½ï¿½ infon arvot ja nollaa korjaus kï¿½yrï¿½n
 void NFmiTimeSerialView::ChangeTimeSeriesValues(void)
 {
 	if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode() || IsAnalyzeRelatedToolUsed() || IsModifyFactorValuesNonZero())
 	{
 		NFmiMetEditorTypes::Mask maskType = NFmiMetEditorTypes::kFmiSelectionMask;
-		if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode()) // kontrollipiste työkalulla muutokset tehdään aina kaikkiin pisteisiin, eli = nomask
+		if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode()) // kontrollipiste tyï¿½kalulla muutokset tehdï¿½ï¿½n aina kaikkiin pisteisiin, eli = nomask
 			maskType = NFmiMetEditorTypes::kFmiNoMask;
         bool status = itsCtrlViewDocumentInterface->DoTimeSeriesValuesModifying(itsDrawParam, maskType, itsEditedDataTimeDescriptor, itsModificationFactorCurvePoints, NFmiMetEditorTypes::kFmiTimeSerialModification, false);
 		if(!itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode() && status)
@@ -3304,7 +3309,7 @@ void NFmiTimeSerialView::ResetModifyFactorValues(void)
 bool NFmiTimeSerialView::ChangeModifyFactorView(double theChangeDirectionFactor)
 {
 	double originalLimit = itsDrawParam->TimeSerialModifyingLimit();
-	for(int i = 0; i < 50; i++)//50 = Ei tehdä ikiluuppia
+	for(int i = 0; i < 50; i++)//50 = Ei tehdï¿½ ikiluuppia
 	{
 		if(itsDrawParam)
 		{
@@ -3314,7 +3319,7 @@ bool NFmiTimeSerialView::ChangeModifyFactorView(double theChangeDirectionFactor)
 			{
 				double changeValue = step * theChangeDirectionFactor;
 				itsDrawParam->TimeSerialModifyingLimit(itsDrawParam->TimeSerialModifyingLimit() + changeValue);
-				// HUOM! tässä on parametrit outoja, koska toteutus on aikoinaan tehty aikasarjalle vinksalleen, mieti jos korjattaisiin koodia paremmaksi!!
+				// HUOM! tï¿½ssï¿½ on parametrit outoja, koska toteutus on aikoinaan tehty aikasarjalle vinksalleen, mieti jos korjattaisiin koodia paremmaksi!!
                 itsCtrlViewDocumentInterface->UpdateToModifiedDrawParam(CtrlViewUtils::kFmiTimeSerialView, itsDrawParam, CtrlViewUtils::kFmiTimeSerialView);
 			}
 			else
@@ -3335,10 +3340,10 @@ bool NFmiTimeSerialView::ChangeModifyFactorView(double theChangeDirectionFactor)
 	return false;
 }
 
-// Pyöristää luvun lähimpään 1, 2 tai 5 arvoon, tarkoittaen että theStep:in suuruus luokasta riippuen
-// luku pyöristetään esim. 1:een, 2:een tai 5:een (jos originaali theStep oli n. 0.8 - 8). 
-// Pyöristetään 0.1:een, 0.2:een tai 0.5:een (jos originaali theStep oli n. 0.08 - 0.8). 
-// Pyöristetään 10:een, 20:een tai 50:een (jos originaali theStep oli n. 8 - 80).  jne.
+// Pyï¿½ristï¿½ï¿½ luvun lï¿½himpï¿½ï¿½n 1, 2 tai 5 arvoon, tarkoittaen ettï¿½ theStep:in suuruus luokasta riippuen
+// luku pyï¿½ristetï¿½ï¿½n esim. 1:een, 2:een tai 5:een (jos originaali theStep oli n. 0.8 - 8). 
+// Pyï¿½ristetï¿½ï¿½n 0.1:een, 0.2:een tai 0.5:een (jos originaali theStep oli n. 0.08 - 0.8). 
+// Pyï¿½ristetï¿½ï¿½n 10:een, 20:een tai 50:een (jos originaali theStep oli n. 8 - 80).  jne.
 static double RoundToNearest_1_2_5(const double theStep)
 {
 	double step = ::fabs(theStep);
@@ -3360,7 +3365,7 @@ static double RoundToNearest_1_2_5(const double theStep)
 		}
 	}
 
-	// nyt stepin pitäisi olla 0.8:n ja 8:n välillä
+	// nyt stepin pitï¿½isi olla 0.8:n ja 8:n vï¿½lillï¿½
 	if(step < 1.5)
 		step = 1;
 	else if(step < 3.5)
@@ -3397,7 +3402,7 @@ bool NFmiTimeSerialView::ChangeValueView(double theChangeDirectionFactor, bool f
 {
 	if(itsValueAxis)
 	{
-		for(int i = 0; i < 50; i++)//50 = Ei tehdä ikiluuppia
+		for(int i = 0; i < 50; i++)//50 = Ei tehdï¿½ ikiluuppia
 		{
 			if(itsDrawParam)
 			{
@@ -3421,7 +3426,7 @@ bool NFmiTimeSerialView::ChangeValueView(double theChangeDirectionFactor, bool f
 			CreateValueScaleView();
 			if(ruunanPaa != itsValueAxis->StartValue() || ruunanHanta != itsValueAxis->EndValue())
 			{
-				// HUOM! tässä on parametrit outoja, koska toteutus on aikoinaan tehty aikasarjalle vinksalleen, mieti jos korjattaisiin koodia paremmaksi!!
+				// HUOM! tï¿½ssï¿½ on parametrit outoja, koska toteutus on aikoinaan tehty aikasarjalle vinksalleen, mieti jos korjattaisiin koodia paremmaksi!!
 				itsCtrlViewDocumentInterface->UpdateToModifiedDrawParam(CtrlViewUtils::kFmiTimeSerialView, itsDrawParam, CtrlViewUtils::kFmiTimeSerialView);
 				return true;
 			}
@@ -3506,7 +3511,7 @@ NFmiRect NFmiTimeSerialView::CalcModifyingUnitRect(void)
 	return rect;
 }
 
-// piirtää analyysi moodin lopetus ajan kohdalle pystyviivan merkiksi
+// piirtï¿½ï¿½ analyysi moodin lopetus ajan kohdalle pystyviivan merkiksi
 void NFmiTimeSerialView::DrawAnalyzeToolEndTimeLine(void)
 {
 	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
@@ -3533,8 +3538,8 @@ void NFmiTimeSerialView::DrawObsBlenderChangeLine(const NFmiPoint &theLatLonPoin
     {
         if(itsCtrlViewDocumentInterface->SetupObsBlenderData(theLatLonPoint, *itsDrawParam->Param().GetParam(), NFmiInfoData::kObservations, true, controlPointObservationBlendingData.SelectedProducer(), firstEditedTime, usedObsBlenderInfo, obsBlenderValue, messages))
         {
-            // 4. Mikä on lopetusaika(helppo)
-            // 5. Piirrä muutoskäppyrä(helppoa, kun kohdat 1 - 2 hoidettu)
+            // 4. Mikï¿½ on lopetusaika(helppo)
+            // 5. Piirrï¿½ muutoskï¿½ppyrï¿½(helppoa, kun kohdat 1 - 2 hoidettu)
             DrawAnalyzeToolRelatedChangeLineFinal(true, obsBlenderValue, theLatLonPoint, envi, editedInfo, usedObsBlenderInfo, firstEditedTime, messages);
         }
         else
@@ -3565,11 +3570,11 @@ static std::string GetMaskFactorEffectText(float maskFactor)
 
 void NFmiTimeSerialView::DrawAnalyzeToolRelatedChangeLineFinal(bool useObservationData, float usedAnalyzeValue, const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment &envi, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, boost::shared_ptr<NFmiFastQueryInfo> &usedToolInfo, const NFmiMetTime &startTime, std::vector<std::string> &messages)
 {
-    DrawAnalyzeToolDataLocationInTime(theLatLonPoint, envi, usedToolInfo); // piirretään ensin analyysi data ja sitten sen aiheuttama muutoskäyrä
+    DrawAnalyzeToolDataLocationInTime(theLatLonPoint, envi, usedToolInfo); // piirretï¿½ï¿½n ensin analyysi data ja sitten sen aiheuttama muutoskï¿½yrï¿½
     NFmiMetTime endTime(itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolEndTime());
     if(startTime < endTime)
     {
-        // Jos hila-analyysidatan aikaa ei löydy editoitavasta datasta, ei kannata jatkaa
+        // Jos hila-analyysidatan aikaa ei lï¿½ydy editoitavasta datasta, ei kannata jatkaa
         if(useObservationData ? editedInfo->FindNearestTime(startTime, kCenter, NFmiControlPointObservationBlendingData::ExpirationTimeInMinutes()) : editedInfo->Time(startTime))
         {
             auto firstEditDataValue = useObservationData ? editedInfo->InterpolatedValue(theLatLonPoint) : editedInfo->FloatValue();
@@ -3579,7 +3584,7 @@ void NFmiTimeSerialView::DrawAnalyzeToolRelatedChangeLineFinal(bool useObservati
                 auto maskList = NFmiAnalyzeToolData::GetUsedTimeSerialMaskList(itsCtrlViewDocumentInterface->GenDocDataAdapter());
                 bool useMask = maskList->UseMask();
                 auto changeValue = useObservationData ? usedAnalyzeValue : (firstEditDataValue - usedAnalyzeValue);
-                // Muutosarvo pitää kertoa -1:llä, jotta selittävään tekstiin saadaan oikean suuntainen muutosarvo, en tiedä miksi logiikka menee näin
+                // Muutosarvo pitï¿½ï¿½ kertoa -1:llï¿½, jotta selittï¿½vï¿½ï¿½n tekstiin saadaan oikean suuntainen muutosarvo, en tiedï¿½ miksi logiikka menee nï¿½in
                 auto helpText = "Selected point change value: "s + std::string(NFmiValueString::GetStringWithMaxDecimalsSmartWay(-changeValue, 2));
                 messages.push_back(helpText);
                 NFmiTimeBag times(startTime, endTime, editedInfo->TimeDescriptor().Resolution());
@@ -3626,8 +3631,8 @@ void NFmiTimeSerialView::DrawAnalyzeToolRelatedChangeLineFinal(bool useObservati
         messages.push_back("Start/end editing time range illegal"s);
 }
 
-// piirtää katkoviivalla käyrän, joka kuvaa valitun pisteen kohdalla tapahtuvaa muutosta.
-// HUOM!!! Piirtää myös analyysidatan ruutuun!!!!!
+// piirtï¿½ï¿½ katkoviivalla kï¿½yrï¿½n, joka kuvaa valitun pisteen kohdalla tapahtuvaa muutosta.
+// HUOM!!! Piirtï¿½ï¿½ myï¿½s analyysidatan ruutuun!!!!!
 void NFmiTimeSerialView::DrawAnalyzeToolChangeLine(const NFmiPoint &theLatLonPoint)
 {
     if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
@@ -3647,7 +3652,7 @@ void NFmiTimeSerialView::DrawAnalyzeToolChangeLine(const NFmiPoint &theLatLonPoi
     {
         analyzeDataInfo->FirstLevel(); // varmuuden vuoksi asetan 1. leveliin
         auto editedInfo = Info();
-        if(analyzeDataInfo->Param(*itsDrawParam->Param().GetParam())) // parametrikin pitää asettaa kohdalleen
+        if(analyzeDataInfo->Param(*itsDrawParam->Param().GetParam())) // parametrikin pitï¿½ï¿½ asettaa kohdalleen
         {
             analyzeDataInfo->LastTime();
             NFmiMetTime startTime = analyzeDataInfo->Time();
@@ -3664,7 +3669,7 @@ void NFmiTimeSerialView::DrawAnalyzeToolChangeLine(const NFmiPoint &theLatLonPoi
     DrawAnalyzeToolRelatedMessages(messages, envi);
 }
 
-// Piirtää tietyt analyysityökaluun liittyvät lyhyet sanomat keskelle (ja keskitetysti) näyttöriviä otsikko-osioon.
+// Piirtï¿½ï¿½ tietyt analyysityï¿½kaluun liittyvï¿½t lyhyet sanomat keskelle (ja keskitetysti) nï¿½yttï¿½riviï¿½ otsikko-osioon.
 void NFmiTimeSerialView::DrawAnalyzeToolRelatedMessages(const std::vector<std::string> &messages, NFmiDrawingEnvironment &envi)
 {
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, kCenter, false);
@@ -3691,7 +3696,7 @@ static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> GetInfosWithWantedParam
     std::copy_if(infoVectorIn.begin(), infoVectorIn.end(), std::back_inserter(infoVectorResult),
         [wantedParamId](const auto &info)
     {
-        // Datassa ei saa olla myöskään ship/buoy dataa (= moving station data)
+        // Datassa ei saa olla myï¿½skï¿½ï¿½n ship/buoy dataa (= moving station data)
         if(!info->HasLatlonInfoInData())
         {
             return info->Param(wantedParamId);
@@ -3713,17 +3718,17 @@ void NFmiTimeSerialView::DrawAnalyzeToolDataLocationInTime(const NFmiPoint &theL
 	if(analyzeDataInfo)
 	{
         analyzeDataInfo->FirstLevel(); // varmuuden vuoksi asetan 1. leveliin
-		if(::DataHasNeededParameters(analyzeDataInfo, itsDrawParam->Param().GetParamIdent(), itsCtrlViewDocumentInterface)) // parametrikin pitää asettaa kohdalleen
+		if(::DataHasNeededParameters(analyzeDataInfo, itsDrawParam->Param().GetParamIdent(), itsCtrlViewDocumentInterface)) // parametrikin pitï¿½ï¿½ asettaa kohdalleen
 		{
 			NFmiMetTime firstTime(Value2Time(NFmiPoint(0,0))); // haetaan aika, joka on ruudun alussa
             NFmiTimeDescriptor infoTimes(analyzeDataInfo->TimeDescriptor());
 			if(infoTimes.FindNearestTime(firstTime))
                 firstTime = infoTimes.Time();
 			NFmiMetTime lastTime(analyzeDataInfo->TimeDescriptor().LastTime());
-			NFmiTimeBag drawedTimes(firstTime, lastTime, analyzeDataInfo->TimeDescriptor().Resolution()); // nämä ajat sitten piirretään, kunhan otetaan selville ensin mitkä ne ovat
-			if(analyzeDataInfo->NearestPoint(theLatLonPoint)) // asetetaan osoittamaan lähimpään pisteeseen (pitäisi olla oikeasti sama hila molemmisssa datoissa)
+			NFmiTimeBag drawedTimes(firstTime, lastTime, analyzeDataInfo->TimeDescriptor().Resolution()); // nï¿½mï¿½ ajat sitten piirretï¿½ï¿½n, kunhan otetaan selville ensin mitkï¿½ ne ovat
+			if(analyzeDataInfo->NearestPoint(theLatLonPoint)) // asetetaan osoittamaan lï¿½himpï¿½ï¿½n pisteeseen (pitï¿½isi olla oikeasti sama hila molemmisssa datoissa)
 			{
-				envi.SetFrameColor(NFmiColor(0.f, 0.f, 0.f)); // musta analyysi käyrä
+				envi.SetFrameColor(NFmiColor(0.f, 0.f, 0.f)); // musta analyysi kï¿½yrï¿½
 				envi.SetPenSize(NFmiPoint(3, 3)); // paksunnetaan viivaa
 				DrawSimpleDataInTimeSerial(drawedTimes, analyzeDataInfo, itsDrawParam, envi, theLatLonPoint, NFmiPoint(9, 9));
 				envi.SetPenSize(NFmiPoint(1, 1)); // ohut viiva takaisin
@@ -3761,7 +3766,7 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::Info(void) const
 	return itsInfo;
 }
 
-// funktio piirtää annetun arvojoukon annettuina aikoina näyttöön halutuilla piirtooptioilla
+// funktio piirtï¿½ï¿½ annetun arvojoukon annettuina aikoina nï¿½yttï¿½ï¿½n halutuilla piirtooptioilla
 void NFmiTimeSerialView::PlotTimeSerialData(const std::vector<float> &theValues, const std::vector<NFmiMetTime> &theTimes, NFmiDrawingEnvironment &theEnvi, const NFmiPoint& thePointSize, const NFmiPoint& theSinglePointSize, bool fUseValueAxis, bool drawConnectingLines)
 {
 	int valuesSize = static_cast<int>(theValues.size());
@@ -3775,16 +3780,16 @@ void NFmiTimeSerialView::PlotTimeSerialData(const std::vector<float> &theValues,
 	{
 		NFmiDrawingEnvironment blackLineEnvi;
 		int lastNonMissingIndex = -1;
-		double realValue1 = kFloatMissing; // tämä on indeksillä i-1 saatava arvo
-		double realValue2 = kFloatMissing; // tämä on indeksillä i saatava arvo
-		for(int i=1; (i < valuesSize) && (i < timesSize); i++) // i < timesSize estää kaatumisen jos values ja times vectorit erikokoisia, esim. jos deletoidaan CP-piste, palautetaan default std::vector, jonka koko on 200!!!
+		double realValue1 = kFloatMissing; // tï¿½mï¿½ on indeksillï¿½ i-1 saatava arvo
+		double realValue2 = kFloatMissing; // tï¿½mï¿½ on indeksillï¿½ i saatava arvo
+		for(int i=1; (i < valuesSize) && (i < timesSize); i++) // i < timesSize estï¿½ï¿½ kaatumisen jos values ja times vectorit erikokoisia, esim. jos deletoidaan CP-piste, palautetaan default std::vector, jonka koko on 200!!!
 		{
 			realValue1 = theValues[i-1];
 			realValue2 = theValues[i];
 
 			if(drawConnectingLines && realValue1 == kFloatMissing && realValue2 != kFloatMissing && lastNonMissingIndex != -1)
-			{ // piirretään ohut musta yhteysviivä katkonaisiin kohtiin, jos niin on säädetty
-				// ja piirretään se täpän alle, jokat tehdään kun on toinen arvoista on puuttuvaa.
+			{ // piirretï¿½ï¿½n ohut musta yhteysviivï¿½ katkonaisiin kohtiin, jos niin on sï¿½ï¿½detty
+				// ja piirretï¿½ï¿½n se tï¿½pï¿½n alle, jokat tehdï¿½ï¿½n kun on toinen arvoista on puuttuvaa.
 				DrawDataLine(theTimes[lastNonMissingIndex], theTimes[i], theValues[lastNonMissingIndex], realValue2, blackLineEnvi, thePointSize, theSinglePointSize, true);
 			}
 			DrawDataLine(theTimes[i-1], theTimes[i], realValue1, realValue2, theEnvi, thePointSize, theSinglePointSize, fUseValueAxis);
@@ -3802,13 +3807,13 @@ NFmiTimeBag NFmiTimeSerialView::GetViewLimitingTimes(void)
 
 void NFmiTimeSerialView::FillTimeSerialDataFromInfo(boost::shared_ptr<NFmiFastQueryInfo> &theSourceInfo, const NFmiPoint &theLatLonPoint, std::vector<float> &theValues, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
 {
-	// Onko tämä oikein????, linitingtimesit otetaan sourceInfosta ja niillä rajoitetaan FillTimeSerialDataFromInfo-metodissa
+	// Onko tï¿½mï¿½ oikein????, linitingtimesit otetaan sourceInfosta ja niillï¿½ rajoitetaan FillTimeSerialDataFromInfo-metodissa
 	// taas sourceInfosta haettavia aikoja.
-	NFmiTimeBag limitingTimes(theSourceInfo->TimeDescriptor().FirstTime(), theSourceInfo->TimeDescriptor().LastTime(), 60); // resoluutiolla ei ole merkitystä, 60 vain heitetään siihen
+	NFmiTimeBag limitingTimes(theSourceInfo->TimeDescriptor().FirstTime(), theSourceInfo->TimeDescriptor().LastTime(), 60); // resoluutiolla ei ole merkitystï¿½, 60 vain heitetï¿½ï¿½n siihen
 	FillTimeSerialDataFromInfo(theSourceInfo, theLatLonPoint, limitingTimes, theValues, metaWindParamUsage, wantedParamId);
 }
 
-// HUOM! yrittää ottaa myös yhdet ajat ja arvot aikareunojen yli
+// HUOM! yrittï¿½ï¿½ ottaa myï¿½s yhdet ajat ja arvot aikareunojen yli
 void NFmiTimeSerialView::FillTimeSerialDataFromInfo(boost::shared_ptr<NFmiFastQueryInfo>& theSourceInfo, const NFmiPoint& theLatLonPoint, const NFmiTimeBag& theLimitTimes, std::vector<float>& theValues, const NFmiFastInfoUtils::MetaWindParamUsage& metaWindParamUsage, unsigned long wantedParamId)
 {
 	if(theSourceInfo->TimeToNearestStep(theLimitTimes.FirstTime(), kBackward))
@@ -3817,7 +3822,7 @@ void NFmiTimeSerialView::FillTimeSerialDataFromInfo(boost::shared_ptr<NFmiFastQu
 		NFmiLocation wantedLocation(theLatLonPoint);
 		if(interpolateValues == false && (theSourceInfo->NearestLocation(wantedLocation, gMaxDistanceToFractileStation) == false))
 		{
-			return; // jos asema dataa ei löydy 500 km sisältä haluttua pistettä, ei käytetä sitä
+			return; // jos asema dataa ei lï¿½ydy 500 km sisï¿½ltï¿½ haluttua pistettï¿½, ei kï¿½ytetï¿½ sitï¿½
 		}
 		float value = static_cast<float>(::GetTimeSerialValue(theSourceInfo, interpolateValues, theLatLonPoint, metaWindParamUsage, wantedParamId));
 		theValues.push_back(value);
@@ -3828,7 +3833,7 @@ void NFmiTimeSerialView::FillTimeSerialDataFromInfo(boost::shared_ptr<NFmiFastQu
 			theValues.push_back(value);
 			if(!theLimitTimes.IsInside(theSourceInfo->Time()))
 			{
-				break; // oletus, että ajat järjestyksessä ja loopitus voidaan lopettaa
+				break; // oletus, ettï¿½ ajat jï¿½rjestyksessï¿½ ja loopitus voidaan lopettaa
 			}
 		}
 	}
@@ -3836,7 +3841,7 @@ void NFmiTimeSerialView::FillTimeSerialDataFromInfo(boost::shared_ptr<NFmiFastQu
 
 void NFmiTimeSerialView::FillTimeSerialTimesFromInfo(NFmiFastQueryInfo &theSourceInfo, std::vector<NFmiMetTime> &theTimes)
 {
-	NFmiTimeBag limitingTimes(theSourceInfo.TimeDescriptor().FirstTime(), theSourceInfo.TimeDescriptor().LastTime(), 60); // resoluutiolla ei ole merkitystä, 60 vain heitetään siihen
+	NFmiTimeBag limitingTimes(theSourceInfo.TimeDescriptor().FirstTime(), theSourceInfo.TimeDescriptor().LastTime(), 60); // resoluutiolla ei ole merkitystï¿½, 60 vain heitetï¿½ï¿½n siihen
 	FillTimeSerialTimesFromInfo(theSourceInfo, limitingTimes, theTimes);
 }
 
@@ -3851,12 +3856,12 @@ void NFmiTimeSerialView::FillTimeSerialTimesFromInfo(NFmiFastQueryInfo &theSourc
 			currentInfoTime = theSourceInfo.Time();
 			theTimes.push_back(currentInfoTime);
 			if(!theLimitTimes.IsInside(currentInfoTime))
-				break; // oletus, että ajat järjestyksessä ja loopitus voidaan lopettaa
+				break; // oletus, ettï¿½ ajat jï¿½rjestyksessï¿½ ja loopitus voidaan lopettaa
 		}
 	}
 }
 
-// täyttää haluttuihin aikoihin maskien arvot (jos käytetään maskeja).
+// tï¿½yttï¿½ï¿½ haluttuihin aikoihin maskien arvot (jos kï¿½ytetï¿½ï¿½n maskeja).
 void NFmiTimeSerialView::FillTimeSerialMaskValues(const std::vector<NFmiMetTime> &theTimes, const NFmiPoint &theLatLonPoint, std::vector<float> &theMaskValues)
 {
 	boost::shared_ptr<NFmiAreaMaskList> paramMaskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
@@ -3877,7 +3882,7 @@ void NFmiTimeSerialView::FillTimeSerialMaskValues(const std::vector<NFmiMetTime>
 	}
 }
 
-// täyttää haluttuihin aikoihin muutos arvot, joilla piirretään muutos käyrä.
+// tï¿½yttï¿½ï¿½ haluttuihin aikoihin muutos arvot, joilla piirretï¿½ï¿½n muutos kï¿½yrï¿½.
 void NFmiTimeSerialView::FillTimeSerialChangedValues(const std::vector<float> &theValues, const std::vector<float> &theMaskValues, std::vector<float> &theChangedValues)
 {
 	int timeSize = static_cast<int>(theValues.size());
@@ -3904,8 +3909,8 @@ void NFmiTimeSerialView::DrawModelRunsPlume(const NFmiPoint &theLatLonPoint, NFm
 
 			for(int i = startIndex; i < origDrawParam.ModelRunIndex(); i++)
 			{
-				*itsDrawParam = origDrawParam; // joka kierroksella pitää palauttaa originaali optiot takaisin
-				double brightningFactor = CtrlView::CalcBrightningFactor(theDrawParam->ModelRunIndex(), wantedModelRunCount, i); // mitä isompi luku, sitä enemmän vaalenee (0-100), vanhemmat malliajot vaaleammalla
+				*itsDrawParam = origDrawParam; // joka kierroksella pitï¿½ï¿½ palauttaa originaali optiot takaisin
+				double brightningFactor = CtrlView::CalcBrightningFactor(theDrawParam->ModelRunIndex(), wantedModelRunCount, i); // mitï¿½ isompi luku, sitï¿½ enemmï¿½n vaalenee (0-100), vanhemmat malliajot vaaleammalla
 				NFmiColor modelRunColor = NFmiColorSpaces::GetBrighterColor(origColor, brightningFactor);
 				usedEnvi.SetFrameColor(modelRunColor);
 				std::vector<float> values;
@@ -3950,21 +3955,22 @@ static int CalcTimeOffsetInMinutes(boost::shared_ptr<NFmiFastQueryInfo>& info, c
 // DrawLocationInTime
 //--------------------------------------------------------
 
-// Toiminnat mitä tehdään DrawEditedDataLocationInTime metodin alussa.
-// Palauttaa true, jos on tarkoitus jatkaa normaali piirtoja vielä eteenpäin, 
+// Toiminnat mitï¿½ tehdï¿½ï¿½n DrawEditedDataLocationInTime metodin alussa.
+// Palauttaa true, jos on tarkoitus jatkaa normaali piirtoja vielï¿½ eteenpï¿½in, 
 // ja palauttaa false, jos lopetetaan.
 bool NFmiTimeSerialView::DrawEditedDataLocationInTime_PreliminaryActions(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle)
 {
     itsToolBox->UseClipping(true);
-    // piirretään edellisten malliajojen pluumi ensin eli alle (jos niitä edes piirretään)
+    // piirretï¿½ï¿½n edellisten malliajojen pluumi ensin eli alle (jos niitï¿½ edes piirretï¿½ï¿½n)
     DrawModelRunsPlume(theLatLonPoint, theCurrentDataLineStyle, itsDrawParam); 
 
     if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
     {
 		int timeWhenDrawedInMinutes = ::CalcTimeOffsetInMinutes(itsInfo, itsAutoAdjustScanTimes.FirstTime());
-        auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(Info());
+        auto info = Info();
+        auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(info);
         auto paramId = itsDrawParam->Param().GetParamIdent();
-        ScanDataForSpecialOperation(Info(), itsDrawParam, theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId, timeWhenDrawedInMinutes);
+        ScanDataForSpecialOperation(info, itsDrawParam, theLatLonPoint, itsAutoAdjustScanTimes, itsAutoAdjustMinMaxValues, metaWindParamUsage, paramId, timeWhenDrawedInMinutes);
         return false;
     }
 
@@ -3974,11 +3980,12 @@ bool NFmiTimeSerialView::DrawEditedDataLocationInTime_PreliminaryActions(const N
 bool NFmiTimeSerialView::IsModificationLineDrawn() const
 {
     // Jos kyse on editoidun datan piirrosta
-    if(IsEditedData(Info()))
+    auto info = Info();
+    if(IsEditedData(info))
     {
         // ja jos ollaan normaali editointi moodissa
         if(itsCtrlViewDocumentInterface->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal)
-            return true; // voidaan muutos käyrä piirtää
+            return true; // voidaan muutos kï¿½yrï¿½ piirtï¿½ï¿½
     }
     return false;
 }
@@ -4036,7 +4043,8 @@ void NFmiTimeSerialView::DrawEditedDataLocationInTime(const NFmiPoint& theLatLon
 void NFmiTimeSerialView::DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment& theCurrentDataLineStyle, NFmiDrawingEnvironment& theModifiedDataLineStyle, bool drawModificationLines)
 {
 	DrawEditedDataLocationInTime(theLatLonPoint, theCurrentDataLineStyle, theModifiedDataLineStyle, drawModificationLines);
-	if(IsEditedData(Info()))
+	auto info = Info();
+	if(IsEditedData(info))
 	{
 		if(IsAnalyzeRelatedToolUsed())
 			DrawAnalyzeToolChangeLine(theLatLonPoint);
@@ -4044,7 +4052,7 @@ void NFmiTimeSerialView::DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFm
 }
 
 // Katsoo onko kyseinen drawParamin data hybrid/painepinta tai muuta level dataa.
-// Jos on, yrittää vaihtaa leveliä hiiren rullauksen mukaan ylös/alas.
+// Jos on, yrittï¿½ï¿½ vaihtaa leveliï¿½ hiiren rullauksen mukaan ylï¿½s/alas.
 // Palauttaa true, jos level vaihtui.
 bool NFmiTimeSerialView::ChangeDataLevel(boost::shared_ptr<NFmiDrawParam> &theDrawParam, short theDelta)
 {
@@ -4062,7 +4070,7 @@ bool NFmiTimeSerialView::ChangeDataLevel(boost::shared_ptr<NFmiDrawParam> &theDr
 						theDrawParam->Level(*info->Level());
 						return true;
 					}
-					else // pyöräytetään levelit ympäri jos ollaan tultu loppuun
+					else // pyï¿½rï¿½ytetï¿½ï¿½n levelit ympï¿½ri jos ollaan tultu loppuun
 					{
 						info->FirstLevel();
 						theDrawParam->Level(*info->Level());
@@ -4076,7 +4084,7 @@ bool NFmiTimeSerialView::ChangeDataLevel(boost::shared_ptr<NFmiDrawParam> &theDr
 						theDrawParam->Level(*info->Level());
 						return true;
 					}
-					else // pyöräytetään levelit ympäri jos ollaan tultu alkuun
+					else // pyï¿½rï¿½ytetï¿½ï¿½n levelit ympï¿½ri jos ollaan tultu alkuun
 					{
 						info->LastLevel();
 						theDrawParam->Level(*info->Level());
@@ -4105,11 +4113,11 @@ bool NFmiTimeSerialView::MouseWheel(const NFmiPoint &thePlace, unsigned long the
 		}
 		else if(itsValueView && itsValueView->GetFrame().IsInside(thePlace))
 		{
-			// tämä seuraava tarkastus johtuu itsValueView:in 'oudosta' leveydestä
-			// näyttää että itsValueView:in pitää olla todella leveä,
-			// ennenkuin se suostuu piirtämään fontit tarpeeksi isolla
+			// tï¿½mï¿½ seuraava tarkastus johtuu itsValueView:in 'oudosta' leveydestï¿½
+			// nï¿½yttï¿½ï¿½ ettï¿½ itsValueView:in pitï¿½ï¿½ olla todella leveï¿½,
+			// ennenkuin se suostuu piirtï¿½mï¿½ï¿½n fontit tarpeeksi isolla
 			// nyt tarkistetaan ettei klikkaus mene itsTimeView:in alueelle,
-			// koska sen tarkastelu on tärkeämpää ja oikeampaa tässä tapauksessa
+			// koska sen tarkastelu on tï¿½rkeï¿½mpï¿½ï¿½ ja oikeampaa tï¿½ssï¿½ tapauksessa
 			if(thePlace.X() < itsTimeView->GetFrame().Left())
 			{
 				if(theKey & kCtrlKey)
@@ -4119,17 +4127,17 @@ bool NFmiTimeSerialView::MouseWheel(const NFmiPoint &thePlace, unsigned long the
 				else
 				{
 					if(Position2ModifyFactor(thePlace) > 0.)
-						status = ChangeValueView((theDelta < 0) ? -1. : 1., true); // true liikuttaa asteikon yläpäätä ja false alapäätä
+						status = ChangeValueView((theDelta < 0) ? -1. : 1., true); // true liikuttaa asteikon ylï¿½pï¿½ï¿½tï¿½ ja false alapï¿½ï¿½tï¿½
 					else
 						status = ChangeValueView((theDelta < 0) ? 1. : -1., false);
 				}
 			}
 		}
 		else if(theKey & kCtrlKey)
-		{ // Jos ollaan asteikkojen ulkopuolella ja rullaa liikutetaan CTRL-nappi pohjassa, vaihdetaan näytettävää parametria joko seuraavaan tai edelliseen
+		{ // Jos ollaan asteikkojen ulkopuolella ja rullaa liikutetaan CTRL-nappi pohjassa, vaihdetaan nï¿½ytettï¿½vï¿½ï¿½ parametria joko seuraavaan tai edelliseen
 			return itsCtrlViewDocumentInterface->ChangeActiveMapViewParam(CtrlViewUtils::kFmiTimeSerialView, itsViewGridRowNumber, itsViewGridRowNumber, theDelta > 0 ? true : false, false);
 		}
-		else if(theKey & kShiftKey) // jos shift-nappi pohjassa muutetaan hybrid/pressure -datojen leveliä ylös/alas
+		else if(theKey & kShiftKey) // jos shift-nappi pohjassa muutetaan hybrid/pressure -datojen leveliï¿½ ylï¿½s/alas
 		{
 			status = ChangeDataLevel(itsDrawParam, theDelta); // muuttaa mallipinta ja painepintaa
 		}
@@ -4159,7 +4167,7 @@ static void AddValueLineString(std::string &theStr, const std::string &theTitle,
 {
 	FmiInterpolationMethod interpMethod = theDrawParam->Param().GetParam()->InterpolationMethod();
 	FmiParamType parType = (FmiParamType)theDrawParam->Param().Type();
-	int digitCount = theDrawParam->IsoLineLabelDigitCount(); // tekstille pitäisi saada oma lukunsa ja isoviivoille oma
+	int digitCount = theDrawParam->IsoLineLabelDigitCount(); // tekstille pitï¿½isi saada oma lukunsa ja isoviivoille oma
 
 	theStr += "<font color=";
 	theStr += ColorString::Color2HtmlColorStr(theTitleColor);
@@ -4184,13 +4192,13 @@ static void AddProducerString(std::string &theStr, boost::shared_ptr<NFmiFastQue
 	{
 		theStr += " (";
 		theStr += theInfo->Producer()->GetName();
-		if(theDrawParam->Level().GetIdent() != 0) // jos ident on 0, on kyseessä 'pinta data' eli ei ilmoitetan level tietoja
+		if(theDrawParam->Level().GetIdent() != 0) // jos ident on 0, on kyseessï¿½ 'pinta data' eli ei ilmoitetan level tietoja
 		{
 			if(theDrawParam->Level().LevelType() == kFmiHybridLevel)
 				theStr += ", level ";
 			else
 				theStr += ", ";
-			theStr += NFmiValueString(static_cast<int>(theDrawParam->Level().LevelValue()), "%d");
+			theStr += NFmiValueString(static_cast<int>(theDrawParam->Level().LevelValue()), "%d").CharPtr();
 			if(theDrawParam->Level().LevelType() == kFmiPressureLevel)
 				theStr += " hPa";
 			else if(theDrawParam->Level().LevelType() == kFmiHeight)
@@ -4217,12 +4225,12 @@ std::string NFmiTimeSerialView::GetSideParametersToolTipText(const NFmiPoint& th
 		str += "<hr color=red><br>";
 		str += "Side Parameter(s):\n";
 
-		// GeneralColor värit alkavat 0:sta, ja 1. side-parameter on tarkoitus piirtää 2. värillä, jonka indeksi on siis 1.
+		// GeneralColor vï¿½rit alkavat 0:sta, ja 1. side-parameter on tarkoitus piirtï¿½ï¿½ 2. vï¿½rillï¿½, jonka indeksi on siis 1.
 		int sideParameterColorIndex = 1;
 		for(viewRowSideParameters->Reset(); viewRowSideParameters->Next(); sideParameterColorIndex++)
 		{
-			// Joskus esim. side-parameterin lisäys ei laukaise aikasarjaikkunan piirtoa, ja tällöin jos
-			// tooltip piirto tulee ensin, ei listasta löydy kaikkia parametri nimiä
+			// Joskus esim. side-parameterin lisï¿½ys ei laukaise aikasarjaikkunan piirtoa, ja tï¿½llï¿½in jos
+			// tooltip piirto tulee ensin, ei listasta lï¿½ydy kaikkia parametri nimiï¿½
 			auto usedSideParamNameIndex = sideParameterColorIndex - 1;
 			if(usedSideParamNameIndex < itsSideParameterNamesForTooltip.size())
 			{
@@ -4253,7 +4261,7 @@ std::string NFmiTimeSerialView::GetSideParametersToolTipText(const NFmiPoint& th
 std::string NFmiTimeSerialView::GetModelDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime)
 {
 	if(itsDrawParam->DataType() == NFmiInfoData::kHybridData)
-		return std::string(); // hybrid-datalle ei kannata piirtää apumallidatoja, koska hybrid-levelit eivät vastaa eri malleissa toisiaan...
+		return std::string(); // hybrid-datalle ei kannata piirtï¿½ï¿½ apumallidatoja, koska hybrid-levelit eivï¿½t vastaa eri malleissa toisiaan...
 
 	std::string str;
 	// Sitten kirjataan malli datojen arvot
@@ -4261,7 +4269,7 @@ std::string NFmiTimeSerialView::GetModelDataToolTipText(boost::shared_ptr<NFmiFa
 
 	std::vector<NFmiProducerInfo> &producers = itsCtrlViewDocumentInterface->ProducerSystem().Producers();
 	size_t foundDataCounter = 0;
-	for(unsigned int i=0; i < producers.size(); i++) // käydään läpi kaikki tuottajat, ja katsotaan kuinka moneen päädata osui (param + level ja tyyppi)
+	for(unsigned int i=0; i < producers.size(); i++) // kï¿½ydï¿½ï¿½n lï¿½pi kaikki tuottajat, ja katsotaan kuinka moneen pï¿½ï¿½data osui (param + level ja tyyppi)
 	{
 		boost::shared_ptr<NFmiFastQueryInfo> modelInfo = ::GetWantedData(itsCtrlViewDocumentInterface, itsDrawParam, producers[i].GetProducer(), NFmiInfoData::kViewable, &theLatlon);
 		if(modelInfo)
@@ -4287,7 +4295,7 @@ std::string NFmiTimeSerialView::GetModelDataToolTipText(boost::shared_ptr<NFmiFa
 	return str;
 }
 
-// Huom! Täällä ei tarvitse välittää tuulen meta parametreista, koska kyse on tietyistä fraktiili parametreista
+// Huom! Tï¿½ï¿½llï¿½ ei tarvitse vï¿½littï¿½ï¿½ tuulen meta parametreista, koska kyse on tietyistï¿½ fraktiili parametreista
 std::string NFmiTimeSerialView::GetEcFraktileParamToolTipText(boost::shared_ptr<NFmiFastQueryInfo>& theViewedInfo, long theStartParamIndex, const std::string &theParName, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor, long theParamIndexIncrement)
 {
 	std::string str;
@@ -4319,13 +4327,13 @@ std::string NFmiTimeSerialView::GetEcFraktileParamToolTipText(boost::shared_ptr<
 		modelFractileInfo->Param(static_cast<FmiParameterName>(currentParamId));
 		int usedTabCount = 1;
 		if(theParName.size() < 2)
-			usedTabCount = 2; // jos param nimi stringi on yhden merkin mittainen, pitää olla 2 tabulaattoria, mutta jos se on pidempi, pitää olla 1 tabulaattori
+			usedTabCount = 2; // jos param nimi stringi on yhden merkin mittainen, pitï¿½ï¿½ olla 2 tabulaattoria, mutta jos se on pidempi, pitï¿½ï¿½ olla 1 tabulaattori
 		::AddValueLineString(str, theParName + "-F0", theColor, modelFractileInfo->InterpolatedValue(theLatlon, theTime), itsDrawParam, true, usedTabCount);
 	}
 	return str;
 }
 
-// Huom! Täällä ei tarvitse välittää tuulen meta parametreista, koska kyse on tietyistä ERA interim erikoisparametreista
+// Huom! Tï¿½ï¿½llï¿½ ei tarvitse vï¿½littï¿½ï¿½ tuulen meta parametreista, koska kyse on tietyistï¿½ ERA interim erikoisparametreista
 std::string NFmiTimeSerialView::GetModelClimatologyParamToolTipText(const ModelClimatology::ParamMapItem &paramItem, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor)
 {
     std::string str;
@@ -4373,7 +4381,7 @@ std::string NFmiTimeSerialView::GetEcFraktileDataToolTipText(boost::shared_ptr<N
 	return str;
 }
 
-// Huom! Täällä ei tarvitse välittää tuulen meta parametreista, koska kyse on erikoisfraktiili parametreista
+// Huom! Tï¿½ï¿½llï¿½ ei tarvitse vï¿½littï¿½ï¿½ tuulen meta parametreista, koska kyse on erikoisfraktiili parametreista
 std::string NFmiTimeSerialView::GetSeaLevelPlumeDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo>& theViewedInfo, const NFmiPoint& theLatlon, const NFmiMetTime& theTime, const NFmiColor& theColor)
 {
 	std::string str;
@@ -4384,7 +4392,7 @@ std::string NFmiTimeSerialView::GetSeaLevelPlumeDataToolTipText(boost::shared_pt
 		if(itsCtrlViewDocumentInterface->ShowHelperData2InTimeSerialView() && seaLevelFractileData)
 		{
 			const auto& fractileParams = seaLevelPlumeData->fractileParams();
-			// Jos löytyy 1. parametreista ja lähin asema piste on g_SeaLevelProbabilityMaxSearchRangeInMetres rajan sisällä
+			// Jos lï¿½ytyy 1. parametreista ja lï¿½hin asema piste on g_SeaLevelProbabilityMaxSearchRangeInMetres rajan sisï¿½llï¿½
 			if(seaLevelFractileData->Param(fractileParams[0]) && seaLevelFractileData->NearestLocation(theLatlon, seaLevelPlumeData->probabilityMaxSearchRangeInMetres()))
 			{
 				std::string paramName = "SeaLevel";
@@ -4402,7 +4410,7 @@ std::string NFmiTimeSerialView::GetSeaLevelPlumeDataToolTipText(boost::shared_pt
 		else if(seaLevelPlumeData->IsSeaLevelProbLimitParam(itsDrawParam->Param()))
 		{
 			const auto& probLimitParams = seaLevelPlumeData->probLimitParams();
-			// Jos löytyy 1. parametreista ja lähin asema piste on g_SeaLevelProbabilityMaxSearchRangeInMetres rajan sisällä
+			// Jos lï¿½ytyy 1. parametreista ja lï¿½hin asema piste on g_SeaLevelProbabilityMaxSearchRangeInMetres rajan sisï¿½llï¿½
 			if(seaLevelFractileData->Param(probLimitParams[0]) && seaLevelFractileData->NearestLocation(theLatlon, seaLevelPlumeData->probabilityMaxSearchRangeInMetres()))
 			{
 				std::string paramName = "ProbLimit";
@@ -4439,7 +4447,7 @@ static std::string GetSeaLevelProbLocationName(boost::shared_ptr<NFmiFastQueryIn
 }
 
 // Oletus: Tietyt tarkastelut on jo tehty NFmiTimeSerialView::GetSeaLevelPlumeDataToolTipText metodissa
-// Huom! Täällä ei tarvitse välittää tuulen meta parametreista, koska kyse on erikoisfraktiili parametreista
+// Huom! Tï¿½ï¿½llï¿½ ei tarvitse vï¿½littï¿½ï¿½ tuulen meta parametreista, koska kyse on erikoisfraktiili parametreista
 std::string NFmiTimeSerialView::GetSeaLevelProbDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, boost::shared_ptr<NFmiFastQueryInfo> &theSeaLevelFractileData, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor)
 {
     std::string str;
@@ -4500,7 +4508,7 @@ bool NFmiTimeSerialView::IsMosTemperatureMinAndMaxDisplayed(boost::shared_ptr<NF
         return false;
 }
 
-// Huom! Täällä ei tarvitse välittää tuulen meta parametreista, koska kyse on tietyistä lämpötila parametreista
+// Huom! Tï¿½ï¿½llï¿½ ei tarvitse vï¿½littï¿½ï¿½ tuulen meta parametreista, koska kyse on tietyistï¿½ lï¿½mpï¿½tila parametreista
 std::string NFmiTimeSerialView::GetMosTemperatureMinAndMaxDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor)
 {
     std::string str;
@@ -4520,18 +4528,18 @@ std::string NFmiTimeSerialView::GetMosTemperatureMinAndMaxDataToolTipText(boost:
     return str;
 }
 
-// Huom! Täällä ei tarvitse välittää tuulen meta parametreista, koska kyse on tietyistä lämpötila parametreista
+// Huom! Tï¿½ï¿½llï¿½ ei tarvitse vï¿½littï¿½ï¿½ tuulen meta parametreista, koska kyse on tietyistï¿½ lï¿½mpï¿½tila parametreista
 std::string NFmiTimeSerialView::GetObsFraktileDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor)
 {
 	std::string str;
-	if(theViewedInfo->SizeLevels() == 1 && itsDrawParam->Param().GetParamIdent() == kFmiTemperature) // fraktiileja löytyy vain pinta lämpötilalle!!!
+	if(theViewedInfo->SizeLevels() == 1 && itsDrawParam->Param().GetParamIdent() == kFmiTemperature) // fraktiileja lï¿½ytyy vain pinta lï¿½mpï¿½tilalle!!!
 	{
 		boost::shared_ptr<NFmiFastQueryInfo> obsFractileInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kClimatologyData);
 		if(obsFractileInfo)
 		{
-			if(obsFractileInfo->NearestLocation(NFmiLocation(theLatlon), gMaxDistanceToFractileStation)) // asetetaan kepadata lähimpään pisteeseen (tässä kaupunkiin) piirtoa varten
+			if(obsFractileInfo->NearestLocation(NFmiLocation(theLatlon), gMaxDistanceToFractileStation)) // asetetaan kepadata lï¿½himpï¿½ï¿½n pisteeseen (tï¿½ssï¿½ kaupunkiin) piirtoa varten
 			{
-				NFmiMetTime fractileTime1(obsFractileInfo->TimeDescriptor().FirstTime()); // fraktile data on omassa vuosiluvussaan, kun etsitään osoitettua aikaa, pitää tehdä vuosiluku kikka
+				NFmiMetTime fractileTime1(obsFractileInfo->TimeDescriptor().FirstTime()); // fraktile data on omassa vuosiluvussaan, kun etsitï¿½ï¿½n osoitettua aikaa, pitï¿½ï¿½ tehdï¿½ vuosiluku kikka
 				NFmiMetTime fractileTime2(theTime);
 				fractileTime2.SetYear(fractileTime1.GetYear());
 				str += "<br><hr color=red><br>";
@@ -4565,7 +4573,7 @@ std::string NFmiTimeSerialView::GetObservationToolTipText(boost::shared_ptr<NFmi
 		if(obsInfo)
 		{
 			obsInfo->FirstLevel(); // varmuuden vuoksi asetan 1. leveliin
-			if(::DataHasNeededParameters(obsInfo, itsDrawParam->Param().GetParamIdent(), itsCtrlViewDocumentInterface)) // parametrikin pitää asettaa
+			if(::DataHasNeededParameters(obsInfo, itsDrawParam->Param().GetParamIdent(), itsCtrlViewDocumentInterface)) // parametrikin pitï¿½ï¿½ asettaa
 			{
 				std::pair<int, double> locationWithData;
 				if(SetObsDataToNearestLocationWhereIsData(obsInfo, theLatlon, locationWithData))
@@ -4593,7 +4601,7 @@ static std::string GetColoredLocationTooltipStr(CtrlViewDocumentInterface *theCt
 
 std::string NFmiTimeSerialView::MultiModelRunToolTip(boost::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiMetTime &theTime, const NFmiPoint &theLatlon)
 { 
-    // lisätään lyhyesti muut malliajo arvot eri riveille kayttäen vain [-1]  =    2.3  -tyyppistä notaatiota
+    // lisï¿½tï¿½ï¿½n lyhyesti muut malliajo arvot eri riveille kayttï¿½en vain [-1]  =    2.3  -tyyppistï¿½ notaatiota
 	boost::shared_ptr<NFmiDrawParam> tmpDrawParam(new NFmiDrawParam(*theDrawParam));
 	int endIndex = tmpDrawParam->ModelRunIndex() - tmpDrawParam->TimeSerialModelRunCount();
 	std::string str = "\n";
@@ -4637,13 +4645,13 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
         NFmiPoint primaryLocationLatlon(GetTooltipLatlon());
         NFmiMetTime aTime = Value2Time(theRelativePoint, true); // haetaan aluksi tarkka aika
 
-        // Tämä varmistaa että myös erikoistapaus eli synop-data menee oikein
+        // Tï¿½mï¿½ varmistaa ettï¿½ myï¿½s erikoistapaus eli synop-data menee oikein
         viewedInfo = ::GetUsedSmartInfo(itsCtrlViewDocumentInterface, primaryLocationLatlon, viewedInfo, aTime, itsDrawParam);
 
 		auto mainDataTimeResolution = static_cast<long>(viewedInfo->TimeResolution());
 		if(mainDataTimeResolution > 60)
 			mainDataTimeResolution = 60;
-		aTime.SetTimeStep(mainDataTimeResolution); // asetetaan tooltipin ajaksi joko päädatatan aikaresoluutio tai maksimissaan 60 minuuttia
+		aTime.SetTimeStep(mainDataTimeResolution); // asetetaan tooltipin ajaksi joko pï¿½ï¿½datatan aikaresoluutio tai maksimissaan 60 minuuttia
 
 	    NFmiString timeStr1 = aTime.ToStr("Nnnn DD. YYYY\nWwww HH:mm [UTC]", itsCtrlViewDocumentInterface->Language());
 	    str += timeStr1;
@@ -4651,8 +4659,8 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
 
 		str += MakePossibleVirtualTimeTooltipText();
 
-        viewedInfo->Param(static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent())); // parametri pitää asettaa
-		// näin saadaan selville 1. piirretty piste, ikävää koodia, mutta ei voi mitään...
+        viewedInfo->Param(static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent())); // parametri pitï¿½ï¿½ asettaa
+		// nï¿½in saadaan selville 1. piirretty piste, ikï¿½vï¿½ï¿½ koodia, mutta ei voi mitï¿½ï¿½n...
 		bool composeAllSelectedLocations = false;
         auto maskType = CtrlViewFastInfoFunctions::GetProperMaskTypeFromEditeInfo(editedInfo, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection());
         EditedInfoMaskHandler editedInfoMaskHandler(editedInfo, maskType);
@@ -4661,7 +4669,7 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
 			composeAllSelectedLocations = true;
 		}
 
-		bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-näppäin on pohjassa, laitetaan lisää infoa näkyville
+		bool showExtraInfo = CtrlView::IsKeyboardKeyDown(VK_CONTROL); // jos CTRL-nï¿½ppï¿½in on pohjassa, laitetaan lisï¿½ï¿½ infoa nï¿½kyville
 		string parNameStr = CtrlViewUtils::GetParamNameString(itsDrawParam, false, showExtraInfo, true, 0, true, true, true, nullptr);
 		parNameStr = DoBoldingParameterNameTooltipText(parNameStr);
 		auto fontColor = CtrlViewUtils::GetParamTextColor(itsDrawParam->DataType(), itsDrawParam->UseArchiveModelData());
@@ -4683,11 +4691,11 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
         if(!tmpLatestObsStr.empty())
             tmpLatestObsStr += "\n";
         str += tmpLatestObsStr;
-        // editoitu/viewable arvo loppuu tähän
+        // editoitu/viewable arvo loppuu tï¿½hï¿½n
 
 		if(composeAllSelectedLocations)
 		{
-			for( ; editedInfo->NextLocation(); ) // käydään läpi loput pisteet, jos oli moni paikka valinta
+			for( ; editedInfo->NextLocation(); ) // kï¿½ydï¿½ï¿½n lï¿½pi loput pisteet, jos oli moni paikka valinta
 			{
 				value = GetTooltipValue(viewedInfo, editedInfo->LatLon(), aTime, itsDrawParam);
 				str += GetColoredLocationTooltipStr(itsCtrlViewDocumentInterface, editedInfo->LatLon(), selectedLocationCounter);
@@ -4704,11 +4712,11 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
 
 			if(itsDrawParam->Level().LevelValue() == kFloatMissing) // kepa ja havainto laiteaan apudatoiksi vain pintadatoille!
 			{
-				// sitten laitetaan virallinen data jos se löytyy
+				// sitten laitetaan virallinen data jos se lï¿½ytyy
 				boost::shared_ptr<NFmiFastQueryInfo> kepaInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kKepaData);
 				if(kepaInfo)
 				{
-					if(::DataHasNeededParameters(kepaInfo, itsDrawParam->Param().GetParamIdent(), itsCtrlViewDocumentInterface)) // parametrikin pitää asettaa
+					if(::DataHasNeededParameters(kepaInfo, itsDrawParam->Param().GetParamIdent(), itsCtrlViewDocumentInterface)) // parametrikin pitï¿½ï¿½ asettaa
 					{
 						str += "\n";
 						::AddValueLineString(str, "Official edited ", normalTitleColor, GetTooltipValue(kepaInfo, primaryLocationLatlon, aTime, itsDrawParam), itsDrawParam, false);
@@ -4871,7 +4879,7 @@ static std::string MakeCsvParameterNameSectionString(const std::list<std::string
 static std::string MakeCsvValueLineString(const NFmiMetTime& time, const std::list<std::list<NFmiMetTime>>& csvGenerationTimes,
 	const std::list<std::list<float>>& csvGenerationParameterValues)
 {
-	std::string csvDataString = time.ToStr(gCsvTimeFormatString, kEnglish);
+	std::string csvDataString = time.ToStr(gCsvTimeFormatString, kEnglish).CharPtr();
 	csvDataString += ",";
 	auto paramValuesListIter = csvGenerationParameterValues.begin();
 	bool firstValueInLoop = true;
@@ -4912,12 +4920,12 @@ static std::string MakeCsvValueLineString(const NFmiMetTime& time, const std::li
 std::string NFmiTimeSerialView::MakeTimeSerialCsvString()
 {
 	std::string csvDataString;
-	// 1. Tarkista että näyttöriviltä tulee sama määrä aikalistoja, parametrilistoja ja parametrien nimiä
+	// 1. Tarkista ettï¿½ nï¿½yttï¿½riviltï¿½ tulee sama mï¿½ï¿½rï¿½ aikalistoja, parametrilistoja ja parametrien nimiï¿½
 	auto expectedSize = itsCsvGenerationTimes.size();
 	if(expectedSize == itsCsvGenerationParameterValues.size() && expectedSize == itsCsvGenerationParameterNames.size())
 	{
 		csvDataString += ::MakeCsvParameterNameSectionString(itsCsvGenerationParameterNames);
-		// 2. Tee aikalista, missä on mukana kaikkien aikalistojen kaikki eri ajat nousevassa järjestyksessä
+		// 2. Tee aikalista, missï¿½ on mukana kaikkien aikalistojen kaikki eri ajat nousevassa jï¿½rjestyksessï¿½
 		auto uniqueTimeSet = ::MakeUniqueAscendingTimeSet(itsCsvGenerationTimes);
 		for(const auto& time : uniqueTimeSet)
 		{
@@ -4943,18 +4951,18 @@ std::string NFmiTimeSerialView::MakeTimeSerialCsvHeaderString()
 	csvDataString += ",";
 	csvDataString += "start-time";
 	csvDataString += ",";
-	csvDataString += itsAutoAdjustScanTimes.FirstTime().ToStr(gCsvTimeFormatString, kEnglish);
+	csvDataString += itsAutoAdjustScanTimes.FirstTime().ToStr(gCsvTimeFormatString, kEnglish).CharPtr();
 	csvDataString += ",";
 	csvDataString += "end-time";
 	csvDataString += ",";
-	csvDataString += itsAutoAdjustScanTimes.LastTime().ToStr(gCsvTimeFormatString, kEnglish);
+	csvDataString += itsAutoAdjustScanTimes.LastTime().ToStr(gCsvTimeFormatString, kEnglish).CharPtr();
 	csvDataString += "\n";
 
 	return csvDataString;
 }
 
-// Tuottaja nimeä ei haluta mielellään datan tuottajasta, vaan lyhyt geneerinen nimi josatain producerSystem:ista.
-// Jos malli/havainto tuottajanimi systeemeistä ei sitten löydy sellaista, silloin otetaan datasta löytynyt nimi.
+// Tuottaja nimeï¿½ ei haluta mielellï¿½ï¿½n datan tuottajasta, vaan lyhyt geneerinen nimi josatain producerSystem:ista.
+// Jos malli/havainto tuottajanimi systeemeistï¿½ ei sitten lï¿½ydy sellaista, silloin otetaan datasta lï¿½ytynyt nimi.
 static std::string MakeCsvProducerName(NFmiProducerSystem& modelProducerSystem, NFmiProducerSystem& obsProducerSystem, boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
 {
 	auto dataType = theInfo->DataType();
@@ -4986,7 +4994,7 @@ static std::string MakeCsvParameterNameSectionString(boost::shared_ptr<NFmiFastQ
 	NFmiFastInfoUtils::QueryInfoParamStateRestorer restorer(*theInfo);
 	if(theInfo->Param(static_cast<FmiParameterName>(wantedParamId)))
 	{
-		// jos haluttu parametri löytyi datasta, palautetaan sen nimi
+		// jos haluttu parametri lï¿½ytyi datasta, palautetaan sen nimi
 		return std::string(theInfo->Param().GetParamName());
 	}
 
@@ -5027,7 +5035,7 @@ static std::string MakeCsvPossibleLevelSectionString(boost::shared_ptr<NFmiFastQ
 		}
 	}
 
-	// Ei ole level tietoa tai sillä ei ole väliä (= pinta dataa)
+	// Ei ole level tietoa tai sillï¿½ ei ole vï¿½liï¿½ (= pinta dataa)
 	return "";
 }
 
@@ -5071,14 +5079,14 @@ void NFmiTimeSerialView::FillTimeSerialMacroParamData(const NFmiPoint& latlon, s
 			return;
 
 		macroParamInfo->First(); // asetetaan varmuuden vuoksi First:iin
-		// laitetaan myös tämä matriisi aluksi puuttuvaksi, että sitä ei virhetilanteissa tarvitse erikseen säädellä
+		// laitetaan myï¿½s tï¿½mï¿½ matriisi aluksi puuttuvaksi, ettï¿½ sitï¿½ ei virhetilanteissa tarvitse erikseen sï¿½ï¿½dellï¿½
 		values = std::vector<float>(macroParamInfo->SizeLocations(), kFloatMissing);
-		// nollataan infossa ollut data missing-arvoilla, että saadaan puhdas kenttä laskuihin
+		// nollataan infossa ollut data missing-arvoilla, ettï¿½ saadaan puhdas kenttï¿½ laskuihin
 		for(macroParamInfo->ResetLocation(); macroParamInfo->NextLocation(); )
 		{
 			macroParamInfo->FloatValue(kFloatMissing);
 		}
-		macroParamInfo->First(); // asetetaan varmuuden vuoksi vielä First:iin
+		macroParamInfo->First(); // asetetaan varmuuden vuoksi vielï¿½ First:iin
 	}
 
 	auto macroParamSystemPtr = itsCtrlViewDocumentInterface->MacroParamSystem();
@@ -5125,8 +5133,8 @@ void NFmiTimeSerialView::FillTimeSerialMacroParamData(const NFmiPoint& latlon, s
 	}
 }
 
-// Tehdään aluksi macroParam laskuille lista aikoja, jotka menevät tunnin 
-// välein aikaikkunan alusta loppuun, oli ikkunen pituus kuinka pitkä hyvänsä.
+// Tehdï¿½ï¿½n aluksi macroParam laskuille lista aikoja, jotka menevï¿½t tunnin 
+// vï¿½lein aikaikkunan alusta loppuun, oli ikkunen pituus kuinka pitkï¿½ hyvï¿½nsï¿½.
 std::vector<NFmiMetTime> NFmiTimeSerialView::MakeMacroParamTimeVector()
 {
 	std::vector<NFmiMetTime> times;

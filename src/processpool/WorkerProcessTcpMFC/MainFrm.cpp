@@ -25,7 +25,7 @@
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include <agx\agx.h>
+#include <agx/agx.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -33,7 +33,7 @@
 
 namespace
 {
-	CSemaphore gWorkerLoopThreadRunning; // tämän avulla yritetään lopettaan jatkuvasti pyörivä worker thread 'siististi'
+	CSemaphore gWorkerLoopThreadRunning; // tï¿½mï¿½n avulla yritetï¿½ï¿½n lopettaan jatkuvasti pyï¿½rivï¿½ worker thread 'siististi'
     bool gProgramIsClosing = false;
     boost::thread gWorkerThread;
 }
@@ -91,7 +91,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	EnableDocking(CBRS_ALIGN_ANY);
 	DockControlBar(&m_wndToolBar);
 
-	itsCheckClosingTimer = static_cast<UINT>(SetTimer(kFmiCheckClosingTimer, 500, NULL)); // tarkistetaan pari kertaa sekunnissa että pitääkö ohjelma sulkea, käsky tulee threadista, joten se pitää tehdä näin timerin kautta
+	itsCheckClosingTimer = static_cast<UINT>(SetTimer(kFmiCheckClosingTimer, 500, NULL)); // tarkistetaan pari kertaa sekunnissa ettï¿½ pitï¿½ï¿½kï¿½ ohjelma sulkea, kï¿½sky tulee threadista, joten se pitï¿½ï¿½ tehdï¿½ nï¿½in timerin kautta
 
 	return 0;
 }
@@ -223,7 +223,7 @@ void CMainFrame::worker_loop_function(const tcp_tools::multi_process_tcp_pool_op
         return ;
     CSingleLock singleLock(&gWorkerLoopThreadRunning);
 	if(!singleLock.Lock(0))
-        return ; // tähän ei pitäisi mennä, ellei pääohjelma ole jo lopettamassa
+        return ; // tï¿½hï¿½n ei pitï¿½isi mennï¿½, ellei pï¿½ï¿½ohjelma ole jo lopettamassa
 
     try
     {
@@ -255,7 +255,7 @@ void CMainFrame::StartWorkerLoopThread(void)
     mpp_options.verbose_logging = options.verbose_log_;
 
     init_logger(mpp_options.worker_name, static_cast<logging::trivial::severity_level>(options.log_level_), options.log_file_path_);
-    work_queue_verbose_logging(mpp_options.verbose_logging); // laitetaan myös work_queue:n verbose-log tila päälle
+    work_queue_verbose_logging(mpp_options.verbose_logging); // laitetaan myï¿½s work_queue:n verbose-log tila pï¿½ï¿½lle
   
     std::string log_string("Started (ver.");
     log_string += GetFileVersionOfApplication(CA2T(options.exe_path_.c_str()));

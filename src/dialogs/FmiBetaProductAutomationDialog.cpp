@@ -8,7 +8,7 @@
 #include "NFmiFileSystem.h"
 #include "SmartMetDocumentInterface.h"
 #include "NFmiPathUtils.h"
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
 
 // ***************************************
 // NFmiBetaAutomationGridCtrl grid-control
@@ -166,7 +166,7 @@ static void SetHeaders(CGridCtrl &theGridCtrl, const std::vector<BetaAutomationH
     theGridCtrl.SetSingleRowSelection(TRUE);
 
     int currentRow = 0;
-    // 1. on otsikko rivi on parametrien nimiä varten
+    // 1. on otsikko rivi on parametrien nimiï¿½ varten
     for(int i = 0; i<columnCount; i++)
     {
         theGridCtrl.SetItemText(currentRow, i, CA2T(theHeaders[i].itsHeader.c_str()));
@@ -200,13 +200,13 @@ BOOL CFmiBetaProductAutomationDialog::OnInitDialog()
     // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-// Tämä funktio alustaa kaikki dialogin tekstit editoriin valitulla kielellä.
-// Tämä on ikävä kyllä tehtävä erikseen dialogin muokkaus työkalusta, eli
-// tekijän pitää lisätä erikseen tänne kaikki dialogin osat, joihin
+// Tï¿½mï¿½ funktio alustaa kaikki dialogin tekstit editoriin valitulla kielellï¿½.
+// Tï¿½mï¿½ on ikï¿½vï¿½ kyllï¿½ tehtï¿½vï¿½ erikseen dialogin muokkaus tyï¿½kalusta, eli
+// tekijï¿½n pitï¿½ï¿½ lisï¿½tï¿½ erikseen tï¿½nne kaikki dialogin osat, joihin
 // kieli valinta voi vaikuttaa.
 void CFmiBetaProductAutomationDialog::InitDialogTexts()
 {
-    SetWindowText(CA2T(::GetDictionaryString("Beta Product Automation").c_str())); // Tämä otsikko ei tule näkyviin koska tämä on oikeasti tabi-sivu
+    SetWindowText(CA2T(::GetDictionaryString("Beta Product Automation").c_str())); // Tï¿½mï¿½ otsikko ei tule nï¿½kyviin koska tï¿½mï¿½ on oikeasti tabi-sivu
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_AUTOMATION_GROUP_TEXT, "Automated Beta product");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_STATIC_AUTOMATION_LIST_GROUP_TEXT, "Beta product automation list");
     CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_AUTOMATIION_MODE_ON, "Automation mode on");
@@ -421,9 +421,9 @@ HBRUSH CFmiBetaProductAutomationDialog::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nC
 static void AbsolutePathOkActivation(CButton &theSaveButton, const std::string &thePath)
 {
     if(NFmiFileSystem::IsAbsolutePath(thePath))
-        theSaveButton.EnableWindow(TRUE); // Save -buttonia varten pitää olla käytössä absoluuttinen polku
+        theSaveButton.EnableWindow(TRUE); // Save -buttonia varten pitï¿½ï¿½ olla kï¿½ytï¿½ssï¿½ absoluuttinen polku
     else
-        theSaveButton.EnableWindow(FALSE); // jos ei ollut absoluuttista polkua, estetään napin käyttö
+        theSaveButton.EnableWindow(FALSE); // jos ei ollut absoluuttista polkua, estetï¿½ï¿½n napin kï¿½yttï¿½
 }
 
 void CFmiBetaProductAutomationDialog::EnableButtonAddEditedAutomation()
@@ -446,15 +446,15 @@ void CFmiBetaProductAutomationDialog::EnableButtonRemoveAutomationFromList()
         itsRemoveAutomationFromListButton.EnableWindow(FALSE);
 }
 
-// Tarkistetaan kaikkien Save ja Save as -nappuloiden tila, onko sallittua painaa sitä vai ei.
+// Tarkistetaan kaikkien Save ja Save as -nappuloiden tila, onko sallittua painaa sitï¿½ vai ei.
 void CFmiBetaProductAutomationDialog::CheckForSaveButtonEnablations()
 {
     if(!itsSmartMetDocumentInterface->BetaProductGenerationRunning())
     {
-        // Beta automaatioihin liittyvät napit
+        // Beta automaatioihin liittyvï¿½t napit
         if(itsBetaProductAutomation->InputWasGood())
         {
-            // Jos kaikki inputit olivat kunnossa, sallitaan Save as -buttonin käyttö
+            // Jos kaikki inputit olivat kunnossa, sallitaan Save as -buttonin kï¿½yttï¿½
             itsBetaAutomationSaveAsButton.EnableWindow(TRUE);
             if(HasAutomationChanged())
                 ::AbsolutePathOkActivation(itsBetaAutomationSaveButton, itsSelectedAutomationFullFilePath);
@@ -463,22 +463,22 @@ void CFmiBetaProductAutomationDialog::CheckForSaveButtonEnablations()
         }
         else
         {
-            // Jos inputissa vikaa, niin estetään Save -buttonien käyttö
+            // Jos inputissa vikaa, niin estetï¿½ï¿½n Save -buttonien kï¿½yttï¿½
             itsBetaAutomationSaveButton.EnableWindow(FALSE);
             itsBetaAutomationSaveAsButton.EnableWindow(FALSE);
         }
 
-        // Beta automaatiolistoihin liittyvät napit
+        // Beta automaatiolistoihin liittyvï¿½t napit
         const NFmiBetaProductAutomationList usedAutomationList = itsBetaProductionSystem->UsedAutomationList();
         if(usedAutomationList.IsOk())
         {
-            // Jos kaikki inputit olivat kunnossa, sallitaan Save as -buttonin käyttö
+            // Jos kaikki inputit olivat kunnossa, sallitaan Save as -buttonin kï¿½yttï¿½
             itsAutomationListSaveAsButton.EnableWindow(TRUE);
             ::AbsolutePathOkActivation(itsAutomationListSaveButton, itsBetaProductionSystem->UsedAutomationListPathString());
         }
         else
         {
-            // Jos inputissa vikaa, niin estetään Save -buttonien käyttö
+            // Jos inputissa vikaa, niin estetï¿½ï¿½n Save -buttonien kï¿½yttï¿½
             itsAutomationListSaveButton.EnableWindow(FALSE);
             itsAutomationListSaveAsButton.EnableWindow(FALSE);
         }
@@ -488,7 +488,7 @@ void CFmiBetaProductAutomationDialog::CheckForSaveButtonEnablations()
     }
     else
     {
-        // Jos kuvatuotanto käynnissä, niin estetään Save -buttonien käyttö
+        // Jos kuvatuotanto kï¿½ynnissï¿½, niin estetï¿½ï¿½n Save -buttonien kï¿½yttï¿½
         itsBetaAutomationSaveButton.EnableWindow(FALSE);
         itsBetaAutomationSaveAsButton.EnableWindow(FALSE);
         itsAutomationListSaveButton.EnableWindow(FALSE);
@@ -573,7 +573,7 @@ void CFmiBetaProductAutomationDialog::OnBnClickedRadioBetaAutomationEndTimeFromM
 // Talletus suoraan takaisin listalta valittun tai tiedostosta ladattun automaation osoittamaan tiedostoon
 void CFmiBetaProductAutomationDialog::OnBnClickedButtonBetaAutomationSave()
 {
-    StoreControlValuesToDocument(); // Ennen tallennusta talletetaan varmuuden vuoksi säädöt myös dokumenttiin
+    StoreControlValuesToDocument(); // Ennen tallennusta talletetaan varmuuden vuoksi sï¿½ï¿½dï¿½t myï¿½s dokumenttiin
 
     BetaProduct::SaveObjectToKnownFileInJsonFormat(*itsBetaProductAutomation, itsSelectedAutomationFullFilePath, "Beta-automation", false);
     MakeAutomationComparisonObject();
@@ -582,16 +582,16 @@ void CFmiBetaProductAutomationDialog::OnBnClickedButtonBetaAutomationSave()
 
 void CFmiBetaProductAutomationDialog::DoNextRuntimeUpdates()
 {
-    // Päivitetään automaatiolistan beta-automaatiot, jos niihin olisi tullut muutoksia
+    // Pï¿½ivitetï¿½ï¿½n automaatiolistan beta-automaatiot, jos niihin olisi tullut muutoksia
     itsBetaProductionSystem->UsedAutomationList().RefreshAutomationList();
     itsBetaProductionSystem->UsedAutomationList().DoFullChecks(itsBetaProductionSystem->AutomationModeOn());
-    UpdateAutomationList(); // Jos tehdyt muutokset vaikuttavat listassa oleviin automaatioihin, pitää listaa päivittää
+    UpdateAutomationList(); // Jos tehdyt muutokset vaikuttavat listassa oleviin automaatioihin, pitï¿½ï¿½ listaa pï¿½ivittï¿½ï¿½
 }
 
-// Talletetaan automaatio käyttäjän valitsemaan tiedostoon
+// Talletetaan automaatio kï¿½yttï¿½jï¿½n valitsemaan tiedostoon
 void CFmiBetaProductAutomationDialog::OnBnClickedButtonBetaAutomationSaveAs()
 {
-    StoreControlValuesToDocument(); // Ennen tallennusta talletetaan varmuuden vuoksi säädöt myös dokumenttiin
+    StoreControlValuesToDocument(); // Ennen tallennusta talletetaan varmuuden vuoksi sï¿½ï¿½dï¿½t myï¿½s dokumenttiin
 
     auto initialSavePath = itsBetaProductionSystem->BetaAutomationSaveInitialPath();
     if(BetaProduct::SaveObjectInJsonFormat(*itsBetaProductAutomation, initialSavePath, NFmiBetaProductionSystem::BetaAutomationFileFilter(), NFmiBetaProductionSystem::BetaAutomationFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(), "Beta-automation", "Betaautomation1", false, &itsSelectedAutomationFullFilePath, this))
@@ -648,7 +648,7 @@ void CFmiBetaProductAutomationDialog::Update()
 
 void CFmiBetaProductAutomationDialog::DeselectGridCell(const CCellID &theSelectedCell)
 {
-    // Grid-ctrl on deselectoinut itsensä, nyt on tarkoitus laittaa eri kontrollit oikeisiin tiloihin
+    // Grid-ctrl on deselectoinut itsensï¿½, nyt on tarkoitus laittaa eri kontrollit oikeisiin tiloihin
     CheckForSaveButtonEnablations();
 }
 
@@ -678,8 +678,8 @@ void CFmiBetaProductAutomationDialog::UpdateAutomationList()
 
 // Halutaan palauttaa HH:mm eli hours:minutes teksti annetulle ajalle.
 // Jos aika oli puuttuvaa, palautetaan --:--.
-// Viimeiselle Beta-automaation ajoaika halutaan kuitenkin merkitä S-kirjaimella (= started),
-// jos tuotetta ei ole ohjelman ajon aikan tehty vielä.
+// Viimeiselle Beta-automaation ajoaika halutaan kuitenkin merkitï¿½ S-kirjaimella (= started),
+// jos tuotetta ei ole ohjelman ajon aikan tehty vielï¿½.
 static std::string GetTimeTextHHmm(const NFmiMetTime &theTime, bool fJustStarted = false)
 {
     if(theTime == NFmiMetTime::gMissingTime)
@@ -734,7 +734,7 @@ void CFmiBetaProductAutomationDialog::SetGridRow(int row, const NFmiBetaProductA
         if(column >= itsGridCtrl.GetFixedColumnCount())
         {
             if(column != BetaAutomationHeaderParInfo::kEnable) // kaikki muut ovat read-only paitsi enable -checkbox
-                itsGridCtrl.SetItemState(row, column, itsGridCtrl.GetItemState(row, column) | GVIS_READONLY); // Laita read-only -bitti päälle
+                itsGridCtrl.SetItemState(row, column, itsGridCtrl.GetItemState(row, column) | GVIS_READONLY); // Laita read-only -bitti pï¿½ï¿½lle
 
             if(itemEnabled)
                 itsGridCtrl.SetItemBkColour(row, column, gEnabledBkColor);
@@ -762,7 +762,7 @@ void CFmiBetaProductAutomationDialog::HandleEnableAutomationCheckBoxClick(int co
     if(pCell)
     {
         bool newState = pCell->GetCheck() == TRUE;
-        int dataIndex = row - 1; // rivit alkavat 1:stä, mutta datat on vektorissa 0:sta alkaen
+        int dataIndex = row - 1; // rivit alkavat 1:stï¿½, mutta datat on vektorissa 0:sta alkaen
         NFmiBetaProductAutomationList::AutomationContainer &dataVector = itsBetaProductionSystem->UsedAutomationList().AutomationVector();
         if(dataIndex >= 0 && dataIndex < static_cast<int>(dataVector.size()))
         {
@@ -839,7 +839,7 @@ void CFmiBetaProductAutomationDialog::OnBnClickedButtonRemoveBetaAutomationFromL
 
 void CFmiBetaProductAutomationDialog::OnBnClickedButtonSaveAutomationList()
 {
-    StoreControlValuesToDocument(); // Ennen tallennusta talletetaan varmuuden vuoksi säädöt myös dokumenttiin
+    StoreControlValuesToDocument(); // Ennen tallennusta talletetaan varmuuden vuoksi sï¿½ï¿½dï¿½t myï¿½s dokumenttiin
 
     BetaProduct::SaveObjectToKnownFileInJsonFormat(itsBetaProductionSystem->UsedAutomationList(), itsBetaProductionSystem->UsedAutomationListPathString(), "Beta-automation-list", false);
 }
@@ -852,7 +852,7 @@ void CFmiBetaProductAutomationDialog::OnBnClickedButtonLoadAutomationList()
     if(BetaProduct::LoadObjectInJsonFormat(itsBetaProductionSystem->UsedAutomationList(), initialSavePath, NFmiBetaProductionSystem::BetaAutomationListFileFilter(), NFmiBetaProductionSystem::BetaAutomationListFileExtension(), itsBetaProductionSystem->GetBetaProductionBaseDirectory(), "Automation-list", false, &usedAbsoluteFilePath, this))
     {
         itsBetaProductionSystem->BetaAutomationListSaveInitialPath(initialSavePath);
-        itsBetaProductionSystem->UsedAutomationList().DoFullChecks(itsBetaProductionSystem->AutomationModeOn()); // Tehdään täydet tarkastelut vielä kun tiedetään missä moodissa ollaan
+        itsBetaProductionSystem->UsedAutomationList().DoFullChecks(itsBetaProductionSystem->AutomationModeOn()); // Tehdï¿½ï¿½n tï¿½ydet tarkastelut vielï¿½ kun tiedetï¿½ï¿½n missï¿½ moodissa ollaan
         itsBetaProductionSystem->UsedAutomationListPathString(usedAbsoluteFilePath);
         UpdateSelectedAutomationListName();
         UpdateAutomationList();
@@ -864,7 +864,7 @@ void CFmiBetaProductAutomationDialog::OnBnClickedButtonLoadAutomationList()
 
 void CFmiBetaProductAutomationDialog::OnBnClickedButtonSaveAsAutomationList()
 {
-    StoreControlValuesToDocument(); // Ennen tallennusta talletetaan varmuuden vuoksi säädöt myös dokumenttiin
+    StoreControlValuesToDocument(); // Ennen tallennusta talletetaan varmuuden vuoksi sï¿½ï¿½dï¿½t myï¿½s dokumenttiin
 
     auto initialSavePath = itsBetaProductionSystem->BetaAutomationListSaveInitialPath();
     std::string usedAbsoluteFilePath;

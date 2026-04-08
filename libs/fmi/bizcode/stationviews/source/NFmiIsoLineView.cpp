@@ -67,14 +67,16 @@
 #include "CtrlViewFunctions.h"
 #include "ForcedIsolineLogging.h"
 
-#include "datautilities\DataUtilitiesAdapter.h"
+#ifndef UNIX
+#include "datautilities/DataUtilitiesAdapter.h"
 #include "NFmiApplicationWinRegistry.h"
 #include "NFmiVisualizationSpaceoutSettings.h"
+#endif // UNIX
 #include "NFmiSmartToolModifier.h"
 
 #include <limits>
 
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
 
 // eli n. 30 x 30 (=900) hilasta yl�sp�in ei tehd� alikolmioita
 static const int gMaxGridPointsThatImagineWillSubTriangulate = 900;
@@ -276,19 +278,25 @@ NFmiIsoLineView::NFmiIsoLineView(int theMapViewDescTopIndex, boost::shared_ptr<N
         , viewGridColumnNumber)
 , fDataOk(false)
     , itsIsolineValues()
+#ifndef UNIX
     , itsTransparencyDrawBitmap(0)
     , itsTransparencyDrawOldBitmap(0)
     , itsTransparencyDrawDC(0)
     , itsTransparencyDrawBackupDC(0)
     , itsLastBitmapSize()
+#endif // UNIX
     , fDrawUsingTransparency(false)
 {
+#ifndef UNIX
     dataUtilitiesAdapter = make_unique<SmartMetDataUtilities::DataUtilitiesAdapter<>>();
+#endif // UNIX
 }
 
 NFmiIsoLineView::~NFmiIsoLineView(void)
 {
+#ifndef UNIX
     CtrlView::DestroyBitmap(&itsTransparencyDrawBitmap, DeleteTransparencyBitmap());
+#endif // UNIX
 }
 
 bool NFmiIsoLineView::IsToolMasterAvailable(void)
@@ -1830,6 +1838,7 @@ void NFmiIsoLineView::DrawIsoLines(void)
     {
         filefilter = itsInfo->DataFilePattern();
     }
+#ifndef UNIX
     SmartMetDataUtilities::Toolmaster toolmasterStatus = itsCtrlViewDocumentInterface->IsToolMasterAvailable()
         ? SmartMetDataUtilities::Toolmaster::Available
         : SmartMetDataUtilities::Toolmaster::NotAvailable;
@@ -1837,6 +1846,7 @@ void NFmiIsoLineView::DrawIsoLines(void)
     dataUtilitiesAdapter->setMapViewIndex(itsMapViewDescTopIndex);
     dataUtilitiesAdapter->setFileFilter(filefilter);
     dataUtilitiesAdapter->initializeDrawingData(*itsInfo, *itsArea);
+#endif // UNIX
     if(IsIsoLinesDrawnWithImagine())
     {
         //#ifdef NDEBUG // ei piirret� isoviivoja kuin release moodissa, koska degug-moodissa piirto on niin pirun hidasta
@@ -1863,8 +1873,10 @@ bool NFmiIsoLineView::IsIsoLinesDrawnWithImagine(void)
     if(IsQ2ServerUsed() && fGetCurrentDataFromQ2Server)
         return false;  // q2-data haetaan aina suoraan ruudulle, joten toolmasteria k�ytet��n
 
+#ifndef UNIX
     if(dataUtilitiesAdapter->isModifiedDataDrawingPossible())
         return false;
+#endif // UNIX
 
     boost::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
     return !NFmiQueryDataUtil::AreAreasSameKind(itsArea.get(), infoArea.get());
@@ -1874,7 +1886,9 @@ bool NFmiIsoLineView::FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect
 {
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, __FUNCTION__);
 
+#ifndef UNIX
     isoLineData.itsIsolineMinLengthFactor = itsCtrlViewDocumentInterface->ApplicationWinRegistry().IsolineMinLengthFactor();
+#endif // UNIX
 
     if(!FillGridRelatedData_IsDataVisible())
         return false;
@@ -1944,6 +1958,7 @@ void NFmiIsoLineView::FillGridRelatedData_NormalDataCase(NFmiIsoLineData& isoLin
 // Huom! On jo tarkastettu, n�kyyk� data kartta-alueella, joten sit� ei tavitse tarkastella en��.
 bool NFmiIsoLineView::FillGridRelatedData_VisualizationOptimizationChecks(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, bool& fillGridDataStatus)
 {
+#ifndef UNIX
     auto& visSettings = GetVisualizationSettings();
     auto mapArea = GetArea();
     NFmiGrid optimizedGrid;
@@ -1954,6 +1969,7 @@ bool NFmiIsoLineView::FillGridRelatedData_VisualizationOptimizationChecks(NFmiIs
         itsOptimizedGridPtr.reset(new NFmiGrid(optimizedGrid));
         return true;
     }
+#endif // UNIX
     return false;
 }
 
@@ -1967,7 +1983,8 @@ bool NFmiIsoLineView::FillGridRelatedData_ZoomingChecks(NFmiIsoLineData& isoLine
     int y1 = 0;
     int x2 = 0;
     int y2 = 0;
-    if(itsInfo->IsGrid() && IsZoomingPossible(itsInfo, GetArea(), zoomedAreaRect, x1, y1, x2, y2))
+    auto currentArea = GetArea();
+    if(itsInfo->IsGrid() && IsZoomingPossible(itsInfo, currentArea, zoomedAreaRect, x1, y1, x2, y2))
     {
         CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + ": zoomed grid used (faster)", this);
         isoLineData.itsInfo = itsInfo;
@@ -1988,6 +2005,7 @@ bool NFmiIsoLineView::FillGridRelatedData_ZoomingChecks(NFmiIsoLineData& isoLine
 bool NFmiIsoLineView::FillGridRelatedData_BetterVisualizationChecks(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, bool& fillGridDataStatus)
 {
     fillGridDataStatus = false;
+#ifndef UNIX
     if(!fGetCurrentDataFromQ2Server && dataUtilitiesAdapter->isModifiedDataDrawingPossible())
     {
         if(dataUtilitiesAdapter->isThereAnythingToDraw())
@@ -2013,6 +2031,7 @@ bool NFmiIsoLineView::FillGridRelatedData_BetterVisualizationChecks(NFmiIsoLineD
         }
         return true;
     }
+#endif // UNIX
     return false;
 }
 

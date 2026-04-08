@@ -194,7 +194,7 @@ std::string NFmiCapView::ComposeToolTipText(const NFmiPoint& theRelativePoint)
         {
             WarningMember &tmpWarning = *capData_.warnings()[i];
             //vector<NFmiPoint> &latlonVec = tmpWarning.getLatLonPoints();
-            std::vector<std::vector<NFmiPoint>> &latlonVectors = tmpWarning.getWarningAreaPolygons();
+            auto latlonVectors = tmpWarning.getWarningAreaPolygons();
             for(auto area : latlonVectors) {
                 if(insideArea(area, latlon) && (tmpWarning.getEffectiveFrom() <= itsTime && tmpWarning.getEffectiveUntil() >= itsTime))
                 {
@@ -214,11 +214,11 @@ std::string NFmiCapView::ComposeToolTipText(const NFmiPoint& theRelativePoint)
 }
 
 //Checks whether given location is inside polygon
-boolean NFmiCapView::insideArea(const std::vector<NFmiPoint> &latlonVec, const NFmiPoint &theLatlon)
+bool NFmiCapView::insideArea(const std::vector<NFmiPoint> &latlonVec, const NFmiPoint &theLatlon)
 {
     double minX = 180.0, maxX = -180.0, minY = 90.0, maxY = -90.0;
     size_t i, j;
-    boolean isInside = false;
+    bool isInside = false;
     for(auto loc : latlonVec)
     {
         minX = (loc.X() < minX) ? loc.X() : minX;

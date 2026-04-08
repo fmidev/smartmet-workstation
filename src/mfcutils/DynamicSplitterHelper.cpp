@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "DynamicSplitterHelper.h"
 
-#include "boost\math\special_functions.hpp"
+#include "boost/math/special_functions.hpp"
 
 CDynamicSplitterHelper::CDynamicSplitterHelper(CWnd *parentWnd, int horizontalCtrlId, int verticalCtrlId, double splitRatio, int useHorizontalSplitterCtrlId, int topOrLeftCtrlId, int bottomOrRightCtrlId, int totalSplitterAreaCtrlId)
     :itsParentWnd(parentWnd)
@@ -34,17 +34,17 @@ void CDynamicSplitterHelper::ShowHideSplitters()
     splitterVertical->ShowWindow(fUseHorizontalSplitter ? SW_HIDE : SW_SHOW);
 }
 
-// Splitter systeemille pitää antaa alkuarvot ennen kuin tehdään muita säätöjä.
+// Splitter systeemille pitï¿½ï¿½ antaa alkuarvot ennen kuin tehdï¿½ï¿½n muita sï¿½ï¿½tï¿½jï¿½.
 void CDynamicSplitterHelper::PreResizerHookingSetup()
 {
-    // IDC_BUTTON_SPLITTER_SMARTTOOL kontrolli määrää splitterin alkuasennon
-    // IDC_STATIC_SPLITTER_CONTROL kontrolli määrää koko hökötyksen originaali koon ja sijainnin 
-    // eli näiden avulla lasketaan koot ja sijainnit IDC_RICHEDIT_MACRO_TEXT- ja IDC_RICHEDIT_VIEW_ONLY_MACRO_TEXT -kontrolleille.
+    // IDC_BUTTON_SPLITTER_SMARTTOOL kontrolli mï¿½ï¿½rï¿½ï¿½ splitterin alkuasennon
+    // IDC_STATIC_SPLITTER_CONTROL kontrolli mï¿½ï¿½rï¿½ï¿½ koko hï¿½kï¿½tyksen originaali koon ja sijainnin 
+    // eli nï¿½iden avulla lasketaan koot ja sijainnit IDC_RICHEDIT_MACRO_TEXT- ja IDC_RICHEDIT_VIEW_ONLY_MACRO_TEXT -kontrolleille.
     CRect dividerRect(GetSplitterDividerRect());
     CRect totalSplitterRect(GetTotalSplitterRect());
 
-    // Lasketaan halutun ration mukainen splitter-nappulan paikka ja siirretään se siihen.
-    // Splitter-nappulalla on minimi korkeus/leveys, lasketaan keskipisteen suhteen siirtymät.
+    // Lasketaan halutun ration mukainen splitter-nappulan paikka ja siirretï¿½ï¿½n se siihen.
+    // Splitter-nappulalla on minimi korkeus/leveys, lasketaan keskipisteen suhteen siirtymï¿½t.
     if(fUseHorizontalSplitter)
     {
         int wantedDividerCenterYpos = boost::math::iround(itsSplitRatio * totalSplitterRect.Height() + totalSplitterRect.top);
@@ -87,7 +87,7 @@ void CDynamicSplitterHelper::PostResizerHookingSetup()
 {
     ShowHideSplitters();
 
-    // Pitää täyttää molemmat splitterit (horisontaali ja vertikaali), mutta vain toinen niistä näytetään
+    // Pitï¿½ï¿½ tï¿½yttï¿½ï¿½ molemmat splitterit (horisontaali ja vertikaali), mutta vain toinen niistï¿½ nï¿½ytetï¿½ï¿½n
     itsSplitterHorizontal.SetType(CControlSplitter::CS_HORZ);
     itsSplitterHorizontal.AddToTopOrLeftCtrls(itsTopOrLeftCtrlId);
     itsSplitterHorizontal.AddToBottomOrRightCtrls(itsBottomOrRightCtrlId);

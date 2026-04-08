@@ -1,5 +1,5 @@
-#include "HakeMessage\XmlHakeParser.h"
-#include "HakeMessage\HakeMsg.h"
+#include "HakeMessage/XmlHakeParser.h"
+#include "HakeMessage/HakeMsg.h"
 
 #include "NFmiMetTime.h"
 #include "NFmiPoint.h"
@@ -13,7 +13,7 @@ using namespace std;
 
 namespace
 {
-    // Tätä käytetään HAKE datopista saatujen koordinaattien konvertoimiseen newbase vastaaviksi
+    // Tï¿½tï¿½ kï¿½ytetï¿½ï¿½n HAKE datopista saatujen koordinaattien konvertoimiseen newbase vastaaviksi
     std::unique_ptr<NFmiArea> gYkjAreaCoordinateConverionPtr = std::make_unique<NFmiYKJArea>(NFmiPoint(19, 59), NFmiPoint(32, 70));
 }
 
@@ -114,7 +114,7 @@ namespace HakeMessage
 
         try
         {
-            // puretaan kategoorinen id numero ja suuruusluokka irti type-stringistä, joka on siis muotoa:
+            // puretaan kategoorinen id numero ja suuruusluokka irti type-stringistï¿½, joka on siis muotoa:
             // 461 vahingontorjunta: pieni
             std::string tmpStr(childNodeStr);
             NFmiStringTools::Trim(tmpStr);
@@ -126,10 +126,10 @@ namespace HakeMessage
                 xmlMessage.Category(NFmiStringTools::Convert<int>(categoryParts[0])); // categori on 1. osa
             }
             catch(...)
-            { // luultavasti category stringissä on merkki perässä kuten 403B, joka on yleinen juttu, yritetään irroittaa tälläisessä tapauksessa kategoria stringistä
+            { // luultavasti category stringissï¿½ on merkki perï¿½ssï¿½ kuten 403B, joka on yleinen juttu, yritetï¿½ï¿½n irroittaa tï¿½llï¿½isessï¿½ tapauksessa kategoria stringistï¿½
                 if(categoryParts[0].size() > 2)
                 {
-                    // rakennetaan uusi stringi, missä perästä on otettu pois viimeinen merkki, ja kokeillaan konversiota uudestaan
+                    // rakennetaan uusi stringi, missï¿½ perï¿½stï¿½ on otettu pois viimeinen merkki, ja kokeillaan konversiota uudestaan
                     std::string categoryTempStr(categoryParts[0].begin(), categoryParts[0].end() - 1);
                     xmlMessage.Category(NFmiStringTools::Convert<int>(categoryTempStr)); // categori on 1. osa
                 }
@@ -152,7 +152,7 @@ namespace HakeMessage
             xmlMessage.ReasonStr(childNodeStr);
         }
         catch(...)
-        { // ei löytynyt viestistä katu osoitetta, laitetaan ??? tilalle, koska tämä näyttää puuttuvan usein viesteistä
+        { // ei lï¿½ytynyt viestistï¿½ katu osoitetta, laitetaan ??? tilalle, koska tï¿½mï¿½ nï¿½yttï¿½ï¿½ puuttuvan usein viesteistï¿½
             xmlMessage.ReasonStr("???");
         }
 
@@ -161,7 +161,7 @@ namespace HakeMessage
             childNodeStr = GetXMLChildNodeString(xml, "Katu", xmlString);
         }
         catch(...)
-        { // ei löytynyt viestistä katu osoitetta, laitetaan ??? tilalle, koska tämä näyttää puuttuvan usein viesteistä
+        { // ei lï¿½ytynyt viestistï¿½ katu osoitetta, laitetaan ??? tilalle, koska tï¿½mï¿½ nï¿½yttï¿½ï¿½ puuttuvan usein viesteistï¿½
             childNodeStr = "???";
         }
         xmlMessage.Address(childNodeStr);
@@ -172,7 +172,7 @@ namespace HakeMessage
             double worldX = NFmiStringTools::Convert<double>(childNodeStr);
             childNodeStr = GetXMLChildNodeString(xml, "KoordY", xmlString);
             double worldY = NFmiStringTools::Convert<double>(childNodeStr);
-            // PITÄÄ TEHDÄ world xy muunnos YKJ-arean avulla latlon koordinaatistoon
+            // PITï¿½ï¿½ TEHDï¿½ world xy muunnos YKJ-arean avulla latlon koordinaatistoon
             xmlMessage.LatlonPoint(gYkjAreaCoordinateConverionPtr->WorldXYToLatLon(NFmiPoint(worldX, worldY)));
         }
         catch(const exception &)

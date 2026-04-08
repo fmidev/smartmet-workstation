@@ -5,7 +5,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #ifndef UNIX
-#pragma warning( disable : 4786 4996) // disable warning 4385. (liian pitkä luokan nimi)
+#pragma warning( disable : 4786 4996) // disable warning 4385. (liian pitkï¿½ luokan nimi)
 #endif
 
 #include "NFmiEditMapView.h"
@@ -39,7 +39,7 @@
 
 #include <vector>
 #include <ctime>	// tzset
-#include "boost\math\special_functions\round.hpp"
+#include "boost/math/special_functions/round.hpp"
 /*
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -111,10 +111,10 @@ void NFmiEditMapView::Draw(NFmiToolBox * theGTB)
     CtrlViewUtils::CtrlViewTimeConsumptionReporter reporter(this, std::string(__FUNCTION__) + ": starting to draw map-view-desktop");
     try
     {
-        // HUOM! jos GDI tulee laajempaan käyttöön, poista init+clean tästä ja siirrä ne Draw-metodiin!!!!!!!
+        // HUOM! jos GDI tulee laajempaan kï¿½yttï¿½ï¿½n, poista init+clean tï¿½stï¿½ ja siirrï¿½ ne Draw-metodiin!!!!!!!
         InitializeGdiplus(itsToolBox, &GetFrame());
 #ifndef UNIX
-        itsGdiPlusGraphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias); // Huom. antialiasointi saattaa hidastaa yllättävän paljon piirtoa
+        itsGdiPlusGraphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias); // Huom. antialiasointi saattaa hidastaa yllï¿½ttï¿½vï¿½n paljon piirtoa
 #endif // UNIX
 
         NFmiMilliSecondTimer timer;
@@ -154,7 +154,7 @@ void NFmiEditMapView::Draw(NFmiToolBox * theGTB)
     catch(...)
     {
     }
-    CleanGdiplus(); // tätä pitää kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
+    CleanGdiplus(); // tï¿½tï¿½ pitï¿½ï¿½ kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
 }
 
 static std::string MakeLastTimeText(const NFmiMetTime &theTime)
@@ -170,16 +170,16 @@ static NFmiColor GetTimeTextcolor(const NFmiMetTime &theTime, bool fIsLastEdited
     if(theTime == NFmiMetTime::gMissingTime)
         return NFmiColor(0.4f, 0.4f, 0.4f); // harmaa, jos aika oli puuttuvaa
     else if(fIsLastEditedDataSendHasComeBack)
-        return NFmiColor(0.129f, 0.568f, 0.005f); // vihreä, jos data on jo tullut takaisin
+        return NFmiColor(0.129f, 0.568f, 0.005f); // vihreï¿½, jos data on jo tullut takaisin
     else
-        return NFmiColor(0.99f, 0.64f, 0.f); // keltainen, jos data ei ole vielä tullut takaisin
+        return NFmiColor(0.99f, 0.64f, 0.f); // keltainen, jos data ei ole vielï¿½ tullut takaisin
 //    else
 //        return NFmiColor(0.75f, 0.f, 0.f); // punainen, jos on tullut korruptoitunut operatiivinen data takaisin viimeksi
 }
 
 void NFmiEditMapView::DrawLastEditedDataSendTime()
 {
-    itsLastSendTimeTextRect = NFmiRect(); // nollataan varmuuden vuoksi tämä laatikko aluksi
+    itsLastSendTimeTextRect = NFmiRect(); // nollataan varmuuden vuoksi tï¿½mï¿½ laatikko aluksi
     bool isMainMapView = itsMapViewDescTopIndex == 0;
     bool notPrinting = !itsCtrlViewDocumentInterface->Printing();
     bool notBetaGenerationRunning = !itsCtrlViewDocumentInterface->BetaProductGenerationRunning();
@@ -196,14 +196,14 @@ void NFmiEditMapView::DrawLastEditedDataSendTime()
         NFmiColor fillColor(1.f, 1.f, 1.f, 0.5f);
         FmiDirection textAlingment = kTopRight;
         std::wstring fontName = L"Courier New";
-        NFmiPoint textOriginPoint = itsViewGrid->GetFrame().TopRight(); // Tekstien piirto alkaa hilanäytön oikeasta yläkulmasta
+        NFmiPoint textOriginPoint = itsViewGrid->GetFrame().TopRight(); // Tekstien piirto alkaa hilanï¿½ytï¿½n oikeasta ylï¿½kulmasta
 #ifndef UNIX
         Gdiplus::PointF textOriginPointInPixel = CtrlView::Relative2GdiplusPoint(itsToolBox, textOriginPoint);
 
         Gdiplus::RectF textBoundingBox = CtrlView::GetStringBoundingBox(*itsGdiPlusGraphics, timeText, fontSizeInPixels, textOriginPointInPixel, fontName);
         textBoundingBox.Inflate(1.05f, 1.f);
         Gdiplus::Rect rectInPixels(
-            static_cast<int>(textOriginPointInPixel.X - textBoundingBox.Width), // laatikkoa siirretään vasemmalle oikeasta reunasta tässä
+            static_cast<int>(textOriginPointInPixel.X - textBoundingBox.Width), // laatikkoa siirretï¿½ï¿½n vasemmalle oikeasta reunasta tï¿½ssï¿½
             static_cast<int>(textOriginPointInPixel.Y),
             static_cast<int>(textBoundingBox.Width),
             static_cast<int>(textBoundingBox.Height)
@@ -220,7 +220,7 @@ void NFmiEditMapView::LogWarningForTooLongMapViewDrawTime(NFmiMilliSecondTimer &
 {
     theTimer.StopTimer();
     if(theTimer.TimeDiffInMSeconds() > 30 * 1000)
-    { // Jos karttanäytön piirto kestää yli määrätyn ajan, laitetaan lokiin varoitus
+    { // Jos karttanï¿½ytï¿½n piirto kestï¿½ï¿½ yli mï¿½ï¿½rï¿½tyn ajan, laitetaan lokiin varoitus
         std::string warningText("Map view #");
         warningText += NFmiStringTools::Convert(itsMapViewDescTopIndex + 1);
         warningText += " drawing lasted long time: ";
@@ -229,14 +229,14 @@ void NFmiEditMapView::LogWarningForTooLongMapViewDrawTime(NFmiMilliSecondTimer &
     }
 }
 
-// tällä piirretään tavara, joka tulee myös bitmapin päälle
+// tï¿½llï¿½ piirretï¿½ï¿½n tavara, joka tulee myï¿½s bitmapin pï¿½ï¿½lle
 void NFmiEditMapView::DrawOverBitmapThings(NFmiToolBox * theGTB, bool dummy, int dummy2, float dummy3, void* dummy4)
 {
-    // Ei jatketa, jos on käynnissä jonkun muun näytön printtaus,printatessa muiden ruutujen päivitys voi aiheuttaa ongelmia...
+    // Ei jatketa, jos on kï¿½ynnissï¿½ jonkun muun nï¿½ytï¿½n printtaus,printatessa muiden ruutujen pï¿½ivitys voi aiheuttaa ongelmia...
 	if(itsCtrlViewDocumentInterface->Printing() && !IsPrintedMapViewDesctop())
 		return ;
-	if(itsCtrlViewDocumentInterface->DataModificationInProgress()) // Uusien datan muokkaus rutiinien kanssa ruutujen päivitys voi aiheuttaa ongelmia 
-												// Multi-thread ja/tai progress/cancel (-> erillinen muokkaus threadi) systeemit menevät jotenkin sekaisin
+	if(itsCtrlViewDocumentInterface->DataModificationInProgress()) // Uusien datan muokkaus rutiinien kanssa ruutujen pï¿½ivitys voi aiheuttaa ongelmia 
+												// Multi-thread ja/tai progress/cancel (-> erillinen muokkaus threadi) systeemit menevï¿½t jotenkin sekaisin
 		return ;
 
 	if(itsViewGrid)
@@ -283,7 +283,7 @@ static long GetNextLongerTimeStep(long theTimeStep)
 static bool DoesLabelsFitOnMapVertically(double theMapAreaHeightInMMIn, size_t theLabelCountIn, double labelHeight, double labelGab)
 {
 	if(theLabelCountIn > 1)
-		return (theMapAreaHeightInMMIn / theLabelCountIn) > (labelHeight + labelGab - (labelGab/theLabelCountIn)); // huom1 labelGabeja on yksi vähemmän kuin labeleita
+		return (theMapAreaHeightInMMIn / theLabelCountIn) > (labelHeight + labelGab - (labelGab/theLabelCountIn)); // huom1 labelGabeja on yksi vï¿½hemmï¿½n kuin labeleita
 	else
 		return (theMapAreaHeightInMMIn / theLabelCountIn) > (labelHeight + labelGab);
 }
@@ -307,7 +307,7 @@ static void CalcLabelDimensions(double theMapAreaHeightInMMIn, size_t theLabelCo
 			labelGab -= 0.5;
 			labelHeight -= 0.5;
 			if(labelGab < gMinLabelGapInMM || labelHeight < gMinLabelHeightInMM)
-				break;  // tämä on virhe, tähän ei pitäisi mennä
+				break;  // tï¿½mï¿½ on virhe, tï¿½hï¿½n ei pitï¿½isi mennï¿½
 		}
 	}
 	theLabelWidthInMMOut = 20.;
@@ -370,11 +370,11 @@ void NFmiEditMapView::DrawVerticalAnimationControl(void)
         itsVerticalAnimationInfo.itsUsedTimes.Next();
     }
 
-    // piirretään lopuksi vielä Play-label
+    // piirretï¿½ï¿½n lopuksi vielï¿½ Play-label
     usedFillColor = fillColor;
     if(itsCtrlViewDocumentInterface->AnimationData(itsMapViewDescTopIndex).AnimationOn())
         usedFillColor = selectedFillColor;
-    CtrlView::DrawPath(*itsGdiPlusGraphics, labelPath, frameColor, usedFillColor, true, true, 1); // pitää kysyä Play statusta, että filli color saadaan oikein
+    CtrlView::DrawPath(*itsGdiPlusGraphics, labelPath, frameColor, usedFillColor, true, true, 1); // pitï¿½ï¿½ kysyï¿½ Play statusta, ettï¿½ filli color saadaan oikein
     std::string labelStr = "Play";
     CtrlView::DrawTextToRelativeLocation(*itsGdiPlusGraphics, strColor, fontSizeInMM, labelStr, singleLabelRect.Center(), graphInfo.itsPixelsPerMM_x, itsToolBox, fontNameStr, kCenter);
 #endif // UNIX
@@ -388,7 +388,7 @@ static double MMtoRelativeLength(double lengthInMM, NFmiToolBox &theToolBox, Ctr
 		double relLength = theToolBox.SXs(lengthInPixels);
 		return relLength;
 	}
-	else // tehdään sitten y sunnassa laskut
+	else // tehdï¿½ï¿½n sitten y sunnassa laskut
 	{
 		double lengthInPixels = theGraphicalInfo.itsPixelsPerMM_y * lengthInMM;
 		double relLength = theToolBox.SYs(lengthInPixels);
@@ -436,7 +436,7 @@ void NFmiEditMapView::DrawVerticalAnimationControlInit(void)
 		double maxLabelGapInMM = 2.5;
 		bool doesLabelsFitOnScreen = ::DoesLabelsFitOnScreen(mapAreaHeightInMM, usedLabelCount, minLabelHeightInMM, minLabelGapInMM);
 		if(doesLabelsFitOnScreen == false)
-		{ // pitää harventaa labeleiden lukumäärää, niin että ne pienimmillään voisivat mahtua karttaosioon
+		{ // pitï¿½ï¿½ harventaa labeleiden lukumï¿½ï¿½rï¿½ï¿½, niin ettï¿½ ne pienimmillï¿½ï¿½n voisivat mahtua karttaosioon
 			long usedStepInMinutes = times.Resolution();
 			long newStepInMinutes = 0;
 			size_t newLabelCount = 0;
@@ -444,12 +444,12 @@ void NFmiEditMapView::DrawVerticalAnimationControlInit(void)
 			do
 			{
 				newStepInMinutes = ::GetNextLongerTimeStep(usedStepInMinutes);
-				if(newStepInMinutes == usedStepInMinutes) // jos samat, ollaan jo päästy suurimpaan aika-askeleeseen
-					return ; // ei toimi, aikoja on liikaa piirrettäväksi jopa suurimmalla aika askeleella (2 vrk), lopetetaan, luultavasti virhetilanne
+				if(newStepInMinutes == usedStepInMinutes) // jos samat, ollaan jo pï¿½ï¿½sty suurimpaan aika-askeleeseen
+					return ; // ei toimi, aikoja on liikaa piirrettï¿½vï¿½ksi jopa suurimmalla aika askeleella (2 vrk), lopetetaan, luultavasti virhetilanne
                 newLabelCount = boost::math::iround(static_cast<double>(timeStretch) / newStepInMinutes) + 1;
 				usedStepInMinutes = newStepInMinutes;
 			}while(::DoesLabelsFitOnScreen(mapAreaHeightInMM, newLabelCount, minLabelHeightInMM, minLabelGapInMM) == false);
-			NFmiMetTime lastTime(times.FirstTime()); // uusi viimeinen aika pitää laskea
+			NFmiMetTime lastTime(times.FirstTime()); // uusi viimeinen aika pitï¿½ï¿½ laskea
 			lastTime.ChangeByMinutes(static_cast<long>(newStepInMinutes*(newLabelCount-2)));
 			times = NFmiTimeBag(times.FirstTime(), lastTime, newStepInMinutes);
 		}
@@ -476,9 +476,9 @@ void NFmiEditMapView::DrawVerticalAnimationControlInit(void)
 	}
 }
 
-// Jos tehdään operaatioita hiirellä karttanäytöllä ja
-// hiiri on tämän EditMapView:in alueella, aktivoidaan tämän 
-// karttanäytön indeksi ns. aktiiviseksi karttanäyttö aikaindeksiksi.
+// Jos tehdï¿½ï¿½n operaatioita hiirellï¿½ karttanï¿½ytï¿½llï¿½ ja
+// hiiri on tï¿½mï¿½n EditMapView:in alueella, aktivoidaan tï¿½mï¿½n 
+// karttanï¿½ytï¿½n indeksi ns. aktiiviseksi karttanï¿½yttï¿½ aikaindeksiksi.
 void NFmiEditMapView::ActivateMapView(const NFmiPoint & thePlace)
 {
     if(IsIn(thePlace))
@@ -491,7 +491,7 @@ bool NFmiEditMapView::LeftButtonUp(const NFmiPoint & thePlace, unsigned long the
 	itsCtrlViewDocumentInterface->TimeSerialViewDirty(true);
     bool status = false;
     if(itsCtrlViewDocumentInterface->MouseCaptured())
-    { // Hiiren kaappaus pitää tarkastella ensin
+    { // Hiiren kaappaus pitï¿½ï¿½ tarkastella ensin
         if(itsTimeControlView && itsTimeControlView->IsMouseCaptured())
             status = itsTimeControlView->LeftButtonUp(thePlace, theKey);
         else if(itsViewGrid->IsMouseDraggingOn() || itsViewGrid->IsIn(thePlace))
@@ -500,7 +500,7 @@ bool NFmiEditMapView::LeftButtonUp(const NFmiPoint & thePlace, unsigned long the
 
     if(!status)
     {
-        // muuten tehdään normaali tarkastelut 
+        // muuten tehdï¿½ï¿½n normaali tarkastelut 
         status = (itsTimeControlView == 0) ? false : itsTimeControlView->LeftButtonUp(thePlace, theKey);
         if(status == false)
             status = itsViewGrid->LeftButtonUp(thePlace, theKey);
@@ -535,7 +535,7 @@ bool NFmiEditMapView::MiddleButtonUp(const NFmiPoint & thePlace, unsigned long t
     return status;
 }
 
-bool NFmiEditMapView::LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey) // Marko lisäsi 14.12.2001
+bool NFmiEditMapView::LeftDoubleClick(const NFmiPoint &thePlace, unsigned long theKey) // Marko lisï¿½si 14.12.2001
 {
     ActivateMapView(thePlace);
 	if(itsViewGrid)
@@ -558,7 +558,7 @@ bool NFmiEditMapView::LeftButtonDown(const NFmiPoint & thePlace, unsigned long t
 	{
 		fMouseMovedInCapture = false;
 		if(itsTimeControlView && itsTimeControlView->LeftButtonDown(thePlace, theKey))
-			return false; // lopetetaan jos oli sisällä ja palautuu false (eli ei tarvetta päivittää ruutua jos hiiri on vasta painettu alas)
+			return false; // lopetetaan jos oli sisï¿½llï¿½ ja palautuu false (eli ei tarvetta pï¿½ivittï¿½ï¿½ ruutua jos hiiri on vasta painettu alas)
 		else
 			return itsViewGrid->LeftButtonDown(thePlace, theKey);
 	}
@@ -589,7 +589,7 @@ bool NFmiEditMapView::RightButtonDown(const NFmiPoint & thePlace, unsigned long 
 }
 
 bool NFmiEditMapView::MouseMove(const NFmiPoint& thePlace, unsigned long theKey)
-{ // HUOM!! ei pidä tutkia onko hiiri ikkunan sisällä vaan onko hiiri kaapattu!
+{ // HUOM!! ei pidï¿½ tutkia onko hiiri ikkunan sisï¿½llï¿½ vaan onko hiiri kaapattu!
     bool status = false;
     if(itsCtrlViewDocumentInterface->MouseCaptured())
     {
@@ -597,10 +597,10 @@ bool NFmiEditMapView::MouseMove(const NFmiPoint& thePlace, unsigned long theKey)
         {
             itsTimeControlView->MouseMove(thePlace, theKey);
             fMouseMovedInCapture = true;
-            return true; // tämä pakottaa ruudun päivityksen, kun aikaikkunaa raahataan
+            return true; // tï¿½mï¿½ pakottaa ruudun pï¿½ivityksen, kun aikaikkunaa raahataan
         }
         else if(itsViewGrid->IsMouseDraggingOn() || itsViewGrid->IsIn(thePlace))
-            status = itsViewGrid->MouseMove(thePlace, theKey); // otetaan status talteen, sitä käytetään myöhemmin
+            status = itsViewGrid->MouseMove(thePlace, theKey); // otetaan status talteen, sitï¿½ kï¿½ytetï¿½ï¿½n myï¿½hemmin
         if(status)
             fMouseMovedInCapture = true;
     }
@@ -613,17 +613,17 @@ bool NFmiEditMapView::MouseMove(const NFmiPoint& thePlace, unsigned long theKey)
         if(itsCtrlViewDocumentInterface->MouseCaptured())
         {
             if(status && itsCtrlViewDocumentInterface->MiddleMouseButtonDown() && itsCtrlViewDocumentInterface->MapMouseDragPanMode())
-                return true; // jos ollaan "mouse drag pan" -moodissa, pitää kartta näyttö päivittää
+                return true; // jos ollaan "mouse drag pan" -moodissa, pitï¿½ï¿½ kartta nï¿½yttï¿½ pï¿½ivittï¿½ï¿½
         }
         else if(doVerticalAnimationControl && itsVerticalAnimationInfo.itsControlRectOnMouseMove.IsInside(thePlace))
-        { // tehdään ajan säädöt
+        { // tehdï¿½ï¿½n ajan sï¿½ï¿½dï¿½t
             double placeYInRect = thePlace.Y() - itsVerticalAnimationInfo.itsControlRect.Top();
             int index = static_cast<int>(::floor((placeYInRect / itsVerticalAnimationInfo.itsControlRect.Height())* itsVerticalAnimationInfo.itsUsedLabelCount));
             if(index == itsVerticalAnimationInfo.itsUsedLabelCount - 1)
             {
                 animData.AnimationOn(true);
                 itsCtrlViewDocumentInterface->RefreshApplicationViewsAndDialogs("Map view: Mouse move hovering over Animation time labels 'animate' label", GetWantedMapViewIdFlag(itsMapViewDescTopIndex));
-                return false; // Palauta false, koska edellä tehtiin jo ruutujen päivitys oikeilla loki teksteillä
+                return false; // Palauta false, koska edellï¿½ tehtiin jo ruutujen pï¿½ivitys oikeilla loki teksteillï¿½
             }
             else if(itsVerticalAnimationInfo.itsUsedTimes.SetTime(index))
             {
@@ -632,10 +632,10 @@ bool NFmiEditMapView::MouseMove(const NFmiPoint& thePlace, unsigned long theKey)
                 NFmiMetTime oldTime = itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex);
                 if(newTime != oldTime)
                 {
-                    // Tämä laittaa optimoidun näyttöjen päivityksen päälle, joten seuraavan rivin RefreshApplicationViewsAndDialogs voi olla ilman näyttö maskia
+                    // Tï¿½mï¿½ laittaa optimoidun nï¿½yttï¿½jen pï¿½ivityksen pï¿½ï¿½lle, joten seuraavan rivin RefreshApplicationViewsAndDialogs voi olla ilman nï¿½yttï¿½ maskia
                     itsCtrlViewDocumentInterface->CurrentTime(itsMapViewDescTopIndex, newTime); 
                     itsCtrlViewDocumentInterface->RefreshApplicationViewsAndDialogs("Map view: Mouse move hovering over Animation time labels sigle valid time label");
-                    return false; // Palauta false, koska edellä tehtiin jo ruutujen päivitys oikeilla loki teksteillä
+                    return false; // Palauta false, koska edellï¿½ tehtiin jo ruutujen pï¿½ivitys oikeilla loki teksteillï¿½
                 }
             }
         }
@@ -668,7 +668,7 @@ bool NFmiEditMapView::RightButtonUp(const NFmiPoint& thePlace, unsigned long the
 		return itsViewGrid->RightButtonUp(thePlace, theKey);
 	}
 	else if(itsTimeControlView && itsTimeControlView->IsIn(thePlace))
-	{	// tee GetFrame():a käyttäen
+	{	// tee GetFrame():a kï¿½yttï¿½en
 		return itsTimeControlView->RightButtonUp(thePlace, theKey);
 	}
 	return false;
@@ -684,7 +684,7 @@ void NFmiEditMapView::Update()
 		NFmiRect mapRect = itsCtrlViewDocumentInterface->RelativeMapRect(itsMapViewDescTopIndex);
 		itsViewGrid->Update(mapRect, itsToolBox);
 		itsViewGrid->Update();
-		UpdateTimeControlView(); // drawparamlistin pitää olla 'likainen' ennen kuin updatetaan tätä!!!
+		UpdateTimeControlView(); // drawparamlistin pitï¿½ï¿½ olla 'likainen' ennen kuin updatetaan tï¿½tï¿½!!!
 	}
 }
 
@@ -707,14 +707,14 @@ void NFmiEditMapView::UpdateMap(void)
 }
 
 
-// TÄMÄ SIIRTYY POIS TÄÄLTÄ????
+// Tï¿½Mï¿½ SIIRTYY POIS Tï¿½ï¿½LTï¿½????
 void NFmiEditMapView::SetMapAreaAndRect(const boost::shared_ptr<NFmiArea> &theArea, const NFmiRect& theRect)
 {
 	if(theArea)
 	{
 		itsMapArea = theArea;
 		itsMapRect = theRect;
-		itsMapArea->SetXYArea(itsMapRect); // siirtää suhteellistä aluetta
+		itsMapArea->SetXYArea(itsMapRect); // siirtï¿½ï¿½ suhteellistï¿½ aluetta
 	}
 }
 
@@ -752,13 +752,13 @@ void NFmiEditMapView::PrintNoDataMessageOnTimeControlView(void)
 	}
 }
 
-// etsii 1. mahd. synop-plot -näytön
+// etsii 1. mahd. synop-plot -nï¿½ytï¿½n
 NFmiSynopPlotView* NFmiEditMapView::GetSynopPlotViewFromToolTipPos(bool fDrawSoundingPlot, bool fDrawMinMaxPlot, bool fDrawMetarPlot)
 {
 	NFmiDrawParamList *drawParamList = itsCtrlViewDocumentInterface->GetCombinedMapHandlerInterface().getDrawParamListWithRealRowNumber(itsMapViewDescTopIndex, itsCtrlViewDocumentInterface->ToolTipRealRowIndex());
 	if(drawParamList)
 	{
-		// ensin etsitään normaalia synop-plot paramia
+		// ensin etsitï¿½ï¿½n normaalia synop-plot paramia
 		NFmiInfoData::SpecialParameters usedSpecialParam = NFmiInfoData::kFmiSpSynoPlot;
 		if(fDrawSoundingPlot)
 			usedSpecialParam = NFmiInfoData::kFmiSpSoundingPlot;
@@ -812,7 +812,7 @@ NFmiString NFmiEditMapView::Value2String(float theValue, int theDigitCount, FmiI
 	NFmiString str;
 	if(theDigitCount == 0 && theInterpolationMethod != kLinearly && theParamType != kContinuousParam)
         str = NFmiValueString(boost::math::iround(theValue), "%d");
-	else if(theDigitCount == 0) // lisätään linear + 0-tapauksessa kuitenkin yksi desimaali
+	else if(theDigitCount == 0) // lisï¿½tï¿½ï¿½n linear + 0-tapauksessa kuitenkin yksi desimaali
 		str = NFmiValueString(theValue, "%0.1f");
 	else
 	{
@@ -824,7 +824,7 @@ NFmiString NFmiEditMapView::Value2String(float theValue, int theDigitCount, FmiI
 	return str;
 }
 
-// käy asettamassa kaikkiin mahdollisiin näyttöihin oikeat ajat
+// kï¿½y asettamassa kaikkiin mahdollisiin nï¿½yttï¿½ihin oikeat ajat
 void NFmiEditMapView::SetViewTimes(void)
 {
 	if(itsViewGrid)
@@ -855,11 +855,11 @@ std::string NFmiEditMapView::ComposeToolTipText(const NFmiPoint& theRelativePoin
     if(itsLastSendTimeTextRect.IsInside(theRelativePoint))
         return GetLastSendTimeTooltipText();
 
-	std::string str = GetToolTipText(); // täältä tulee tiettyjen työkalujen tooltip tekstit
+	std::string str = GetToolTipText().CharPtr(); // tï¿½ï¿½ltï¿½ tulee tiettyjen tyï¿½kalujen tooltip tekstit
 	if(str.empty() == false)
 		return str;
 
-	// jos noilta työkaluilta ei tullut mitään, kysytään muilta komponenteilta tekstiä
+	// jos noilta tyï¿½kaluilta ei tullut mitï¿½ï¿½n, kysytï¿½ï¿½n muilta komponenteilta tekstiï¿½
 	if(itsViewGrid && itsViewGrid->IsIn(theRelativePoint))
 		return itsViewGrid->ComposeToolTipText(theRelativePoint);
 	else if(itsTimeControlView && itsTimeControlView->IsIn(theRelativePoint))

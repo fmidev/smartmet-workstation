@@ -43,7 +43,7 @@ protected:
 
 private:
     NFmiColor getWarningColor(const std::shared_ptr<Warnings::WarningMember>& warning);
-    boolean insideArea(const std::vector<NFmiPoint> &latlonVec, const NFmiPoint &theLatlon);
+    bool insideArea(const std::vector<NFmiPoint> &latlonVec, const NFmiPoint &theLatlon);
     void drawSymbol(const std::shared_ptr<Warnings::WarningMember>& warning, double wantedSymbolSizeInMM);
     double distance(NFmiPoint& a, NFmiPoint& b);
     void drawArrow(const std::shared_ptr<Warnings::WarningMember>& warning, double wantedSymbolSizeInMM);

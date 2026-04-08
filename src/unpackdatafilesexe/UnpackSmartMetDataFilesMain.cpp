@@ -1,10 +1,10 @@
 // Ohjelma saa seuraavat argumentit:
-// 0. ohjelman nimi (ei välitetä tästä)
-// 1. pakatun lähdetiedoston polku
+// 0. ohjelman nimi (ei vï¿½litetï¿½ tï¿½stï¿½)
+// 1. pakatun lï¿½hdetiedoston polku
 // 2. kohdetiedoston lopullinen siirto polku
-// 3. deletoidaanko pakattu lähdetiedosto (1=deletoi, 0=ei deletoida)
-// 4. 7-zip ohjelman polku, komento (a = pakkaa), optioita (-y silent yes), jos tässä on arvoja, käytetään purkuun 7-zip ohjelmaa
-// 5. Optionaalinen lokitiedoston nimi, jota NFmiLogger käyttää, jos argumentti on "" (kaksi lainausmerkkiä), on annettu polku tyhjä, ja loggausta ei käytetä
+// 3. deletoidaanko pakattu lï¿½hdetiedosto (1=deletoi, 0=ei deletoida)
+// 4. 7-zip ohjelman polku, komento (a = pakkaa), optioita (-y silent yes), jos tï¿½ssï¿½ on arvoja, kï¿½ytetï¿½ï¿½n purkuun 7-zip ohjelmaa
+// 5. Optionaalinen lokitiedoston nimi, jota NFmiLogger kï¿½yttï¿½ï¿½, jos argumentti on "" (kaksi lainausmerkkiï¿½), on annettu polku tyhjï¿½, ja loggausta ei kï¿½ytetï¿½
 
 #include "stdafx.h"
 
@@ -70,7 +70,7 @@ static bool MoveFileToFinalDestination(const std::string &theUnPackedFilePath, c
 	else
 	{
         ::LogRenameFailure(theLogger, theUnPackedFilePath, theUnPackedFinalFilePath);
-		// jos rename epäonnistui, ei poisteta tmp-tiedostoa ainakaan vielä, että jää jotain näyttöä ongelmista
+		// jos rename epï¿½onnistui, ei poisteta tmp-tiedostoa ainakaan vielï¿½, ettï¿½ jï¿½ï¿½ jotain nï¿½yttï¿½ï¿½ ongelmista
         return false;
 	}
 }
@@ -81,8 +81,8 @@ static std::shared_ptr<NFmiLogger> MakeLogger(const std::string &theLogFilePath)
     if(!theLogFilePath.empty())
     {
         NFmiFileString logFilePathStr(theLogFilePath);
-        std::string logFilePath = logFilePathStr.Device() + logFilePathStr.Path();
-        std::string logFileBaseName = logFilePathStr.FileName();
+        std::string logFilePath = std::string(logFilePathStr.Device().CharPtr()) + logFilePathStr.Path().CharPtr();
+        std::string logFileBaseName = logFilePathStr.FileName().CharPtr();
         bool useBackUpSystem = true;
         bool cleanBackups = true;
         NFmiLogger::Period loggingPeriod = NFmiLogger::kDaily;
@@ -93,9 +93,9 @@ static std::shared_ptr<NFmiLogger> MakeLogger(const std::string &theLogFilePath)
 
 static std::string GetWorkingDirectory(const std::string &packedFilePath)
 {
-    NFmiFileString fileString = packedFilePath;
-    std::string workingDirectory = fileString.Device();
-    workingDirectory += fileString.Path();
+    NFmiFileString fileString(packedFilePath.c_str());
+    std::string workingDirectory = fileString.Device().CharPtr();
+    workingDirectory += fileString.Path().CharPtr();
     return workingDirectory;
 }
 
@@ -121,7 +121,7 @@ static std::string GetUnpackedTmpFilePath(const std::string& packedFilePath)
 int main(int argc, const char* argv[]) 
 {
     NFmiFileString exeFileNameStr(argv[0]);
-    std::string exeName = exeFileNameStr.FileName();
+    std::string exeName = exeFileNameStr.FileName().CharPtr();
     if(argc < 5)
     {
         std::cout << "Error when executing " << exeName << ", not enough arguments, 6 required (1 optional):" << std::endl;
@@ -148,7 +148,7 @@ int main(int argc, const char* argv[])
        	    NFmiMilliSecondTimer timer;
             // 7-zip arguments for unpacking (x is extraction command, -y is option for "silent yes" to all possible questions)
             std::string _7zipUtilExecutionString = "\"" + _7zipUtilBaseString + "\" x -y " + packedFilePath;
-            // Pitää selvittää working directory, jotta 7-zip osaa purkaa paketin sinne
+            // Pitï¿½ï¿½ selvittï¿½ï¿½ working directory, jotta 7-zip osaa purkaa paketin sinne
             std::string workingDirectory = ::GetWorkingDirectory(packedFilePath);
             std::string unpackedTmpFilePath = ::GetUnpackedTmpFilePath(packedFilePath);
 
@@ -159,7 +159,7 @@ int main(int argc, const char* argv[])
             if(status)
             { 
                 ::ReportSuccessfullUnpacking(logger, packedFilePath, unpackedTmpFilePath, timer);
-                // siirretään purettu tiedosto vielä lopulliseen paikkaan
+                // siirretï¿½ï¿½n purettu tiedosto vielï¿½ lopulliseen paikkaan
                 if(::MoveFileToFinalDestination(unpackedTmpFilePath, unPackedFinalFilePath, logger))
                     return 0; // onnistunut ulostulo
             }
@@ -232,7 +232,7 @@ static void FillCombinedData(NFmiFastQueryInfo& combinedInfo, NFmiFastQueryInfo&
     }
 }
 
-// Ohjelma yhdistää kaksi asemadata sqd tiedostoa yhdeksi.
+// Ohjelma yhdistï¿½ï¿½ kaksi asemadata sqd tiedostoa yhdeksi.
 // Oletuksia: asemadataa, ei level-dataa
 int main(int argc, const char* argv[])
 {
@@ -283,10 +283,10 @@ int main(int argc, const char* argv[])
 /*
 
 // Ohjelma joka vertaa kahta eri querydata tiedostoa arvotasolla:
-// 1) Tiedostojen datarakenteiden pitää olla samat, muuten ilmoitetaan vain rakenteiden erot
+// 1) Tiedostojen datarakenteiden pitï¿½ï¿½ olla samat, muuten ilmoitetaan vain rakenteiden erot
 // 2) Ilmoitetaan parametri ja aika-askel tasolla jos datojen arvoissa on eroja
 // 3) Ilmoitetaan kuinka monta arvoa total, eri arvoja, %, suurin ero, suurin ero x,y
-// 4) Tässä vaiheessa oletetaan että reportoivat datat ovat 1 levelisiä, eli käydään läpi vain 1. level
+// 4) Tï¿½ssï¿½ vaiheessa oletetaan ettï¿½ reportoivat datat ovat 1 levelisiï¿½, eli kï¿½ydï¿½ï¿½n lï¿½pi vain 1. level
 
 #include "NFmiQueryData.h"
 #include "NFmiFastQueryInfo.h"
@@ -587,7 +587,7 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
-    // Tehdään myös kokonais lukemat ja niiden tulostus
+    // Tehdï¿½ï¿½n myï¿½s kokonais lukemat ja niiden tulostus
     ValuesCheckResults totalCheckResults;
     std::set<unsigned long> diffParamIdList;
 
@@ -661,7 +661,7 @@ static NFmiVPlaceDescriptor MakeReversedVPlaceDescriptor(const NFmiVPlaceDescrip
 
 int main(int argc, const char* argv[])
 {
-    // Käännetään 1. parametrina annetun querydatan level-järjestys ja talletetaan
+    // Kï¿½ï¿½nnetï¿½ï¿½n 1. parametrina annetun querydatan level-jï¿½rjestys ja talletetaan
     // tulos uuteen 2. parametrina annettuun tiedostoon.
     try
     {
@@ -716,7 +716,7 @@ int main(int argc, const char* argv[])
 
 int main(int argc, const char* argv[])
 {
-    // Tulostetaan annetun 1. argumenttina annetun hakemiston drawParam tiedostoista, mikä
+    // Tulostetaan annetun 1. argumenttina annetun hakemiston drawParam tiedostoista, mikï¿½
     // on niiden itsStationSymbolColorShadeClassCount arvon jakauma.
     try
     {
@@ -845,7 +845,7 @@ int main(int argc, const char* argv[])
 #include "NFmiProducerName.h"
 #include <fstream>
 #include <thread>
-#include "boost\algorithm\string\replace.hpp"
+#include "boost/algorithm/string/replace.hpp"
 #include "boost/filesystem.hpp"
 
 static std::string MakeNextSubDirectoryPath(const std::string& currentDirectory, const std::string& subDirectoryName)
@@ -890,7 +890,7 @@ std::unique_ptr<NFmiQueryData> CreateChangedQueryData(NFmiFastQueryInfo& sourceF
     return newQueryData;
 }
 
-// Timestampissa pitää olla 12 numeroa peräkkäin, jotka on eroteltu muista nimen osista '_' merkillä.
+// Timestampissa pitï¿½ï¿½ olla 12 numeroa perï¿½kkï¿½in, jotka on eroteltu muista nimen osista '_' merkillï¿½.
 // Palautetaan pair, jossa korjattu polku string:ina ja uuden aikaleiman aika NFmiMetTime:na.
 static std::pair<std::string, NFmiStaticTime> MakeChangedTimeStampFilePath(std::string filePath, int changeTimesByDays)
 {
@@ -913,23 +913,23 @@ static std::pair<std::string, NFmiStaticTime> MakeChangedTimeStampFilePath(std::
             {
                 auto usedTimeMask = (fileNamePartSize == 12) ? kYYYYMMDDHHMM : kYYYYMMDDHHMMSS;
                 aTime.FromStr(fileNamePart, usedTimeMask);
-                // Valitettavasti ChangeByHours aina nolla sekunnit väkisin
+                // Valitettavasti ChangeByHours aina nolla sekunnit vï¿½kisin
                 auto currentSeconds = aTime.GetSec();
                 aTime.ChangeByDays(changeTimesByDays);
                 aTime.SetSec(currentSeconds);
                 std::string newTimeStamp = aTime.ToStr(usedTimeMask);
                 boost::replace_all(newFilePath, fileNamePart, newTimeStamp);
                 usedTime = aTime;
-                break; // lopetetaan kun on löytynyt 1. kunnon aikaleima tiedostonimestä
+                break; // lopetetaan kun on lï¿½ytynyt 1. kunnon aikaleima tiedostonimestï¿½
             }
             else if(fileNamePartSize == 8)
             {
-                // Oletus maski on muotoa DDHHmmSS (näin ainakin smartmet_roadmodel_skandinavia -tiedostoissa),
-                // valitettavasti se ei toimi oikein FromStr metodin kanssa ja tässä pitää tehdä erillistä kikkailua.
+                // Oletus maski on muotoa DDHHmmSS (nï¿½in ainakin smartmet_roadmodel_skandinavia -tiedostoissa),
+                // valitettavasti se ei toimi oikein FromStr metodin kanssa ja tï¿½ssï¿½ pitï¿½ï¿½ tehdï¿½ erillistï¿½ kikkailua.
                 auto YYYYMMstr = aTime.ToStr("YYYYMM");
                 auto totalTimeString = YYYYMMstr + fileNamePart;
                 aTime.FromStr(totalTimeString, kYYYYMMDDHHMMSS);
-                // Valitettavasti ChangeByHours aina nolla sekunnit väkisin
+                // Valitettavasti ChangeByHours aina nolla sekunnit vï¿½kisin
                 auto currentSeconds = aTime.GetSec();
                 aTime.ChangeByDays(changeTimesByDays);
                 aTime.SetSec(currentSeconds);
@@ -1000,7 +1000,7 @@ static void DoQueryDataWork(const std::string& queryDataFileName, const std::str
 
 static void DoFilesOnDirectory(const std::string& currentDirectory, const std::string& parallerDirectory, int changeTimesByDays)
 {
-    // Tiedostot tulevat aikajärjestyksessä vanhimmasta uusimpaan, johtuen tiedostonimissä olevista aikaleimoista.
+    // Tiedostot tulevat aikajï¿½rjestyksessï¿½ vanhimmasta uusimpaan, johtuen tiedostonimissï¿½ olevista aikaleimoista.
     auto files = NFmiFileSystem::DirectoryFiles(currentDirectory);
     for(const auto& queryDataFileName : files)
     {
@@ -1043,12 +1043,12 @@ static int CalculateRoundedDaysDifference(const NFmiMetTime& wallClockTime, cons
 }
 
 // Tutkitaan annetusta queryData hakemistosta local hakemistoa.
-// Käydään läpi sen kaikki qData tiedostot.
-// Tärkeimpiä ovat synop ja metar tiedostot, jos niitä löytyy, käytetään sen datasetin 'seinäkelloaikana'
-// minkä tahansa synop/metar datan viimeisintä validTimea. 
-// Jos tälläistä ei löydy, käytetään minkä tahansa hiladatan (oletetaan että on ennuste) myöhäisintä ensimmäistä validTimea.
-// Jos tälläistä ei löydy, käytetään minkä tahansa asemadatan (oletetaan että on havainto)  myöhäisintä viimeistä validTimea.
-// Löydetyn seinäkelloajan avulla lasketaan siirtymä päivissä, joka palautetaan.
+// Kï¿½ydï¿½ï¿½n lï¿½pi sen kaikki qData tiedostot.
+// Tï¿½rkeimpiï¿½ ovat synop ja metar tiedostot, jos niitï¿½ lï¿½ytyy, kï¿½ytetï¿½ï¿½n sen datasetin 'seinï¿½kelloaikana'
+// minkï¿½ tahansa synop/metar datan viimeisintï¿½ validTimea. 
+// Jos tï¿½llï¿½istï¿½ ei lï¿½ydy, kï¿½ytetï¿½ï¿½n minkï¿½ tahansa hiladatan (oletetaan ettï¿½ on ennuste) myï¿½hï¿½isintï¿½ ensimmï¿½istï¿½ validTimea.
+// Jos tï¿½llï¿½istï¿½ ei lï¿½ydy, kï¿½ytetï¿½ï¿½n minkï¿½ tahansa asemadatan (oletetaan ettï¿½ on havainto)  myï¿½hï¿½isintï¿½ viimeistï¿½ validTimea.
+// Lï¿½ydetyn seinï¿½kelloajan avulla lasketaan siirtymï¿½ pï¿½ivissï¿½, joka palautetaan.
 static int CalculateActualChangeTimesByDays(const std::string& pathToQueryDataFiles)
 {
     auto localDirectory = pathToQueryDataFiles;
@@ -1128,15 +1128,15 @@ static int CalculateActualChangeTimesByDays(const std::string& pathToQueryDataFi
 
 int main(int argc, const char* argv[])
 {
-    // Ohjelma käy rekursiivisesti läpi kaikki tiedostot ja hakemistot, jotka ovat
+    // Ohjelma kï¿½y rekursiivisesti lï¿½pi kaikki tiedostot ja hakemistot, jotka ovat
     // annetulla pathToQueryDataFiles -polulla ja ja tekee seuraavia asioita:
-    // 1) Luo uusi data muistiin, joissa on siirretty kaikkia datoja seinäkelloajan suhteen.
-    //    Siirrot tapahtuvat niin että tunnit ja minuutit säilyvät, ainoastaan päivämäärä
+    // 1) Luo uusi data muistiin, joissa on siirretty kaikkia datoja seinï¿½kelloajan suhteen.
+    //    Siirrot tapahtuvat niin ettï¿½ tunnit ja minuutit sï¿½ilyvï¿½t, ainoastaan pï¿½ivï¿½mï¿½ï¿½rï¿½
     //    tulee nykyhetkeen. 
-    // 2) Etsitään datoista uusin data ja siirrot tapahtuvat sen suhteessa, eli lasketaan
-    //    siirtymä päivissä. 
+    // 2) Etsitï¿½ï¿½n datoista uusin data ja siirrot tapahtuvat sen suhteessa, eli lasketaan
+    //    siirtymï¿½ pï¿½ivissï¿½. 
     // 3) Talleta uusi data rinnakkaiseen puurakenteeseen, joka alkaa newBasePath -polusta.
-    // 4) Uuden datan nimessa oleva aikaleima on myös muokattu samalla siirtymällä.
+    // 4) Uuden datan nimessa oleva aikaleima on myï¿½s muokattu samalla siirtymï¿½llï¿½.
     std::string pathToQueryDataFiles = argv[1];
     std::string newBasePath = argv[2];
     auto changeTimesByDays = ::CalculateActualChangeTimesByDays(pathToQueryDataFiles);
@@ -1317,9 +1317,9 @@ int main(int argc, const char* argv[])
 int main(int argc, const char* argv[])
 {
     NFmiNanoSecondTimer timer;
-    // Testi 1: luodaan samoja area olioita peräkkäin. 
-    // 1. olion luonti NFmiAreaFactory::Create funktiolla ja Clone kestää n. 0.05 s (n. 1000x hitaampaan kuin vanhalla versiolla).
-    // Sen jälkeen luonti + Clone kestää 'vain' n. 0.002 s (silti n. 100x hitaampaan kuin vanhalla versiolla).
+    // Testi 1: luodaan samoja area olioita perï¿½kkï¿½in. 
+    // 1. olion luonti NFmiAreaFactory::Create funktiolla ja Clone kestï¿½ï¿½ n. 0.05 s (n. 1000x hitaampaan kuin vanhalla versiolla).
+    // Sen jï¿½lkeen luonti + Clone kestï¿½ï¿½ 'vain' n. 0.002 s (silti n. 100x hitaampaan kuin vanhalla versiolla).
 
     std::string legacyAreaString = "stereographic,20,90,60:6,51.3,49,70.2";
     int totalSameAreaCreationCount = 33;
@@ -1334,16 +1334,16 @@ int main(int argc, const char* argv[])
         timer.restart();
     }
 
-    // Testi 2: Luodaan monia samoja area olioita peräkkäin monimutkaisemmassa ympäristössä. 
-    // Tässä käytetään smarttools kirjaston NFmiHelpDataInfoSystem luokkaa.
-    // Esim. kun luodaan cinesat:iin liittyviä olioita, niillä on kaikilla sama area, mutta niiden 
-    // luonti kestää aina n. 0.02 sekuntia ja jos niistä tehtäisiin kopio Clone:lla (nyt ei tehdä),
-    // kestäisi sekin aina n. 0.02 s. Eli jostain syystä tälläisellä asetelmalla toiminnot ovat 
+    // Testi 2: Luodaan monia samoja area olioita perï¿½kkï¿½in monimutkaisemmassa ympï¿½ristï¿½ssï¿½. 
+    // Tï¿½ssï¿½ kï¿½ytetï¿½ï¿½n smarttools kirjaston NFmiHelpDataInfoSystem luokkaa.
+    // Esim. kun luodaan cinesat:iin liittyviï¿½ olioita, niillï¿½ on kaikilla sama area, mutta niiden 
+    // luonti kestï¿½ï¿½ aina n. 0.02 sekuntia ja jos niistï¿½ tehtï¿½isiin kopio Clone:lla (nyt ei tehdï¿½),
+    // kestï¿½isi sekin aina n. 0.02 s. Eli jostain syystï¿½ tï¿½llï¿½isellï¿½ asetelmalla toiminnot ovat 
     // aina n. 1000x hitaampia kuin vanhalla newbase:lla.
 
     // Testiin liittyy 9 konffia, jotka laitetaan /editorConfs hakemistoon.
-    // Aikaa voi mitata lisäämällä joku ajan mittaus ja cout -tulostus NFmiHelpDataInfo::InitFromSettings 
-    // metodiin NFmiAreaFactory::Create funktio kutsun ympärille (ks. NFmiNanoSecondTimer:in käyttöä yllä).
+    // Aikaa voi mitata lisï¿½ï¿½mï¿½llï¿½ joku ajan mittaus ja cout -tulostus NFmiHelpDataInfo::InitFromSettings 
+    // metodiin NFmiAreaFactory::Create funktio kutsun ympï¿½rille (ks. NFmiNanoSecondTimer:in kï¿½yttï¿½ï¿½ yllï¿½).
 
     std::string baseControlPath = "/editorConfs/";
     NFmiSettings::Read(baseControlPath + "data_scand.conf");
@@ -1418,7 +1418,7 @@ int run(int argc, const char* argv[])
 
     string inputfile = cmdline.Parameter(1);
     string outputfile = cmdline.Parameter(2);
-    // Tässä queryData halutaan lukea ilman memory-mappausta (joka olisi read-only), koska dataan tehdään 
+    // Tï¿½ssï¿½ queryData halutaan lukea ilman memory-mappausta (joka olisi read-only), koska dataan tehdï¿½ï¿½n 
     // muutoksia ja se talletetaan lopuksi eri tiedostoon.
     NFmiQueryData qd(inputfile, false);
     if(NFmiWindFix::FixWinds(qd))
