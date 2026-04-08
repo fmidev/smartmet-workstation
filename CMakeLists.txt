@@ -253,9 +253,15 @@ add_subdirectory(
     modules/calculator
     )
 
-add_subdirectory(
-    modules/textgen
-    )
+if(UNIX)
+    # On Linux, use the system-installed smartmet-library-textgen package
+    add_library(Textgen SHARED IMPORTED)
+    set_target_properties(Textgen PROPERTIES IMPORTED_LOCATION /usr/lib64/libsmartmet-textgen.so)
+    target_include_directories(Textgen INTERFACE /usr/include/smartmet)
+    set(Textgen_INCLUDE_DIRS /usr/include/smartmet CACHE INTERNAL "Textgen: Include Directories" FORCE)
+else()
+    add_subdirectory(modules/textgen)
+endif()
 
 add_subdirectory(
     modules/smarttools
