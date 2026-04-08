@@ -391,7 +391,7 @@ void CFmiWarningCenterDlg::GetShownMessages()
     itsShownHakeMessages.clear();
     itsShownKaHaMessages.clear();
 
-    boost::shared_ptr<NFmiArea> zoomedArea = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapHandler()->Area();
+    std::shared_ptr<NFmiArea> zoomedArea = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapHandler()->Area();
     int timeStepForMessagesInMinutes = itsSmartMetDocumentInterface->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
     NFmiMetTime mapTime = itsSmartMetDocumentInterface->CurrentTime(itsMapViewDescTopIndex);
     NFmiMetTime startTime = HakeLegacySupport::HakeSystemConfigurations::MakeStartTimeForHakeMessages(mapTime, timeStepForMessagesInMinutes);

@@ -1325,10 +1325,10 @@ int main(int argc, const char* argv[])
     int totalSameAreaCreationCount = 33;
     for(int index = 0; index < totalSameAreaCreationCount; index++)
     {
-        boost::shared_ptr<NFmiArea> area = NFmiAreaFactory::Create(legacyAreaString);
+        std::shared_ptr<NFmiArea> area = NFmiAreaFactory::Create(legacyAreaString);
         if(area)
         {
-            boost::shared_ptr<NFmiArea> areaClone(area->Clone());
+            std::shared_ptr<NFmiArea> areaClone(area->Clone());
         }
         std::cerr << "Area #" << index << ": " << timer.elapsedTimeInSecondsString() << std::endl;
         timer.restart();

@@ -682,7 +682,7 @@ void CFmiBetaProductDialog::SetViewRowIndex(BetaProductViewIndex selectedViewRad
         itsSmartMetDocumentInterface->CrossSectionSystem()->StartRowIndex(rowIndex);
 }
 
-static boost::shared_ptr<NFmiFastQueryInfo> GetFirstModelsInfo(SmartMetDocumentInterface *smartMetDocumentInterface, unsigned int theDescTopIndex, int theRealRowIndex)
+static std::shared_ptr<NFmiFastQueryInfo> GetFirstModelsInfo(SmartMetDocumentInterface *smartMetDocumentInterface, unsigned int theDescTopIndex, int theRealRowIndex)
 {
     // 1. Haetaan näyttöön ja rivinumeroon perustuen drawParam-lista
     NFmiDrawParamList *drawParamList = smartMetDocumentInterface->DrawParamListWithRealRowNumber(theDescTopIndex, theRealRowIndex);
@@ -691,19 +691,19 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetFirstModelsInfo(SmartMetDocumentI
         // 2. Tutkitaan param listaa kunnes löytyy 1. malli data, ja otetaan siitä originTime talteen
         for(drawParamList->Reset(); drawParamList->Next();)
         {
-            boost::shared_ptr<NFmiDrawParam> drawParam = drawParamList->Current();
+            std::shared_ptr<NFmiDrawParam> drawParam = drawParamList->Current();
             if(drawParam->IsModelRunDataType())
             {
                 return smartMetDocumentInterface->InfoOrganizer()->Info(drawParam, false, false);
             }
         }
     }
-    return boost::shared_ptr<NFmiFastQueryInfo>();
+    return std::shared_ptr<NFmiFastQueryInfo>();
 }
 
 NFmiMetTime CFmiBetaProductDialog::GetFirstModelOrigTime(BetaProductViewIndex selectedViewRadioButtonIndex, int theRealRowIndex)
 {
-    boost::shared_ptr<NFmiFastQueryInfo> info = ::GetFirstModelsInfo(itsSmartMetDocumentInterface, ::ConvertBetaProductViewIndexToDescTopIndex(selectedViewRadioButtonIndex), theRealRowIndex);
+    std::shared_ptr<NFmiFastQueryInfo> info = ::GetFirstModelsInfo(itsSmartMetDocumentInterface, ::ConvertBetaProductViewIndexToDescTopIndex(selectedViewRadioButtonIndex), theRealRowIndex);
     if(info)
         return info->OriginTime();
     else
@@ -712,7 +712,7 @@ NFmiMetTime CFmiBetaProductDialog::GetFirstModelOrigTime(BetaProductViewIndex se
 
 NFmiTimeDescriptor CFmiBetaProductDialog::GetFirstModelsValidTimeDescriptor(unsigned int theDescTopIndex, int theRealRowIndex)
 {
-    boost::shared_ptr<NFmiFastQueryInfo> info = ::GetFirstModelsInfo(itsSmartMetDocumentInterface, theDescTopIndex, theRealRowIndex);
+    std::shared_ptr<NFmiFastQueryInfo> info = ::GetFirstModelsInfo(itsSmartMetDocumentInterface, theDescTopIndex, theRealRowIndex);
     if(info)
         return info->TimeDescriptor();
     else
@@ -1049,7 +1049,7 @@ static bool IsObservationQdDataType(NFmiInfoData::Type theDataType)
         return false;
 }
 
-static bool SatelImageExist(SmartMetDocumentInterface *smartMetDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiMetTime &theValidTime)
+static bool SatelImageExist(SmartMetDocumentInterface *smartMetDocumentInterface, std::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiMetTime &theValidTime)
 {
     const NFmiDataIdent &dataIdent = theDrawParam->Param();
     NFmiImageHolder imageHolder = smartMetDocumentInterface->SatelliteImageCacheSystem().FindImage(dataIdent, theValidTime, NFmiSatelView::ImagesOffsetInMinutes(dataIdent));
@@ -1059,10 +1059,10 @@ static bool SatelImageExist(SmartMetDocumentInterface *smartMetDocumentInterface
         return false;
 }
 
-static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> MakeDrawedInfoVector(SmartMetDocumentInterface *smartMetDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theDrawParam, unsigned int theUsedMapViewDesktopIndex)
+static std::vector<std::shared_ptr<NFmiFastQueryInfo>> MakeDrawedInfoVector(SmartMetDocumentInterface *smartMetDocumentInterface, std::shared_ptr<NFmiDrawParam> &theDrawParam, unsigned int theUsedMapViewDesktopIndex)
 {
-    boost::shared_ptr<NFmiArea> mapArea = smartMetDocumentInterface->MapViewDescTop(theUsedMapViewDesktopIndex)->MapHandler()->Area();
-    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector;
+    std::shared_ptr<NFmiArea> mapArea = smartMetDocumentInterface->MapViewDescTop(theUsedMapViewDesktopIndex)->MapHandler()->Area();
+    std::vector<std::shared_ptr<NFmiFastQueryInfo>> infoVector;
     smartMetDocumentInterface->MakeDrawedInfoVectorForMapView(infoVector, theDrawParam, mapArea);
     return infoVector;
 }
@@ -1075,7 +1075,7 @@ static bool HasObservations(SmartMetDocumentInterface *smartMetDocumentInterface
     {
         for(drawParamList->Reset(); drawParamList->Next();)
         {
-            boost::shared_ptr<NFmiDrawParam> drawParam = drawParamList->Current();
+            std::shared_ptr<NFmiDrawParam> drawParam = drawParamList->Current();
             //            if(!drawParam->IsParamHidden()) // Ei välitä onko parametri piilossa, koska tätä voidaan käyttää apuna, eli esim. näytöllä on macroParamissa kyseisiä piilossa olevia havaintoja
             {
                 if(::IsObservationQdDataType(drawParam->DataType()))

@@ -8,7 +8,7 @@ class NFmiFastQueryInfo;
 
 namespace CtrlViewFastInfoFunctions
 {
-    unsigned long GetMaskedCount(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiMetEditorTypes::Mask theMask, bool fAllowRightClickSelection);
+    unsigned long GetMaskedCount(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiMetEditorTypes::Mask theMask, bool fAllowRightClickSelection);
     bool IsObservationLockModeDataType(NFmiInfoData::Type theDataType);
-    NFmiMetEditorTypes::Mask GetProperMaskTypeFromEditeInfo(boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, bool allowRightClickDisplaySelection);
+    NFmiMetEditorTypes::Mask GetProperMaskTypeFromEditeInfo(std::shared_ptr<NFmiFastQueryInfo> &editedInfo, bool allowRightClickDisplaySelection);
 }

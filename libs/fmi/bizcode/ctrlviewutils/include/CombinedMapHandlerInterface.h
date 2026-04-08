@@ -96,7 +96,7 @@ public:
     virtual MapViewDescTopVector& getMapViewDescTops() = 0;
     virtual SmartMetViewId getUpdatedViewIdMaskForChangingTime() = 0;
     virtual NFmiMapViewDescTop* getMapViewDescTop(unsigned int mapViewDescTopIndex, bool allowNullptrReturn = false) const = 0;
-    virtual void setMapArea(unsigned int mapViewDescTopIndex, const boost::shared_ptr<NFmiArea>& newArea) = 0;
+    virtual void setMapArea(unsigned int mapViewDescTopIndex, const std::shared_ptr<NFmiArea>& newArea) = 0;
     virtual void storeMapViewSettingsToWinRegistry() = 0;
     virtual void centerTimeControlView(unsigned int mapviewDescTopIndex, const NFmiMetTime& wantedTime, bool updateSelectedTime) = 0;
     virtual const std::unique_ptr<NFmiFastDrawParamList>& getModifiedPropertiesDrawParamList() const = 0;
@@ -118,7 +118,7 @@ public:
     virtual void changeAllDataTypesInMapRow(const NFmiMenuItem& menuItem, int viewRowIndex, bool useCrossSectionParams) = 0;
     virtual void copyDrawParamOptions(const NFmiMenuItem& menuItem, int viewRowIndex, bool useCrossSectionParams) = 0;
     virtual void pasteDrawParamOptions(const NFmiMenuItem& menuItem, int viewRowIndex, bool useCrossSectionParams) = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> getUsedMapViewDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
+    virtual std::shared_ptr<NFmiDrawParam> getUsedMapViewDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void copyMapViewDescTopParams(unsigned int mapViewDescTopIndex) = 0;
     virtual void pasteMapViewDescTopParams(unsigned int mapViewDescTopIndex) = 0;
     virtual bool copyPasteDrawParamAvailableYet() const = 0;
@@ -132,12 +132,12 @@ public:
     virtual void toggleShowLegendState(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void swapViewRows(const NFmiMenuItem& menuItem) = 0;
     virtual void saveDrawParamSettings(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
-    virtual void saveDrawParamSettings(boost::shared_ptr<NFmiDrawParam>& drawParam) = 0;
+    virtual void saveDrawParamSettings(std::shared_ptr<NFmiDrawParam>& drawParam) = 0;
     virtual void forceStationViewRowUpdate(unsigned int theDescTopIndex, unsigned int theRealRowIndex) = 0;
     virtual void reloadDrawParamSettings(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void applyFixeDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void applyFixeDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex, const std::shared_ptr<NFmiDrawParam>& fixedDrawParam) = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> getCrosssectionDrawParamFromViewLists(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
+    virtual std::shared_ptr<NFmiDrawParam> getCrosssectionDrawParamFromViewLists(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void removeCrosssectionDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void hideView(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual void showView(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
@@ -145,18 +145,18 @@ public:
     virtual NFmiDrawParamList& getTimeSerialViewDrawParamList() = 0;
     virtual NFmiDrawParamList* getTimeSerialViewSideParameters(int viewRowIndex) = 0;
     virtual SideParametersContainer& getTimeSerialViewSideParameterList() = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> addTimeSerialViewSideParameter(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam) = 0;
+    virtual std::shared_ptr<NFmiDrawParam> addTimeSerialViewSideParameter(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam) = 0;
     virtual void removeTimeSerialViewSideParameter(const NFmiMenuItem& menuItem) = 0;
     virtual void removeAllTimeSerialViewSideParameters(int viewRowIndex) = 0;
     virtual void removeAllTimeSerialViews() = 0;
     virtual void showCrossSectionDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex, bool showParam) = 0;
     virtual bool modifyDrawParam(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> addTimeSerialView(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam) = 0;
+    virtual std::shared_ptr<NFmiDrawParam> addTimeSerialView(const NFmiMenuItem& menuItem, bool isViewMacroDrawParam) = 0;
     virtual void removeTimeSerialView(const NFmiMenuItem& menuItem) = 0;
     virtual void timeSerialViewModelRunCountSet(const NFmiMenuItem& menuItem) = 0;
     virtual unsigned long& getTimeSerialViewIndexReference() = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> activeDrawParamFromActiveRow(unsigned int theDescTopIndex) = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> activeDrawParamWithRealRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex) = 0;
+    virtual std::shared_ptr<NFmiDrawParam> activeDrawParamFromActiveRow(unsigned int theDescTopIndex) = 0;
+    virtual std::shared_ptr<NFmiDrawParam> activeDrawParamWithRealRowNumber(unsigned int mapViewDescTopIndex, int realRowIndex) = 0;
     virtual void changeMapType(unsigned int mapViewDescTopIndex, bool goForward) = 0;
     virtual bool scrollViewRow(unsigned int mapViewDescTopIndex, int scrollCount) = 0;
     virtual void timeControlTimeStep(unsigned int mapViewDescTopIndex, float timeStepInMinutes) = 0;
@@ -172,7 +172,7 @@ public:
     virtual void projectionCurvatureInfo(const NFmiProjectionCurvatureInfo& newValue) = 0;
     virtual NFmiPtrList<NFmiDrawParamList>* getDrawParamListVector(unsigned int mapViewDescTopIndex) = 0;
     virtual void clearDesctopsAllParams(unsigned int mapViewDescTopIndex) = 0;
-    virtual void makeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> >& infoVectorOut, boost::shared_ptr<NFmiDrawParam>& drawParam, const boost::shared_ptr<NFmiArea>& area) = 0;
+    virtual void makeDrawedInfoVectorForMapView(std::vector<std::shared_ptr<NFmiFastQueryInfo> >& infoVectorOut, std::shared_ptr<NFmiDrawParam>& drawParam, const std::shared_ptr<NFmiArea>& area) = 0;
     virtual void makeApplyViewMacroDirtyActions(double drawObjectScaleFactor) = 0;
     virtual void makeSwapBaseArea(unsigned int mapViewDescTopIndex) = 0;
     virtual void swapArea(unsigned int mapViewDescTopIndex) = 0;
@@ -180,7 +180,7 @@ public:
     virtual bool moveActiveMapViewParamInDrawingOrderList(unsigned int mapViewDescTopIndex, int viewRowIndex, bool raiseParam, bool useCrossSectionParams) = 0;
     virtual bool changeActiveMapViewParam(unsigned int mapViewDescTopIndex, int realRowIndex, int paramIndex, bool nextParam, bool useCrossSectionParams) = 0;
     virtual void makeMacroParamCacheUpdatesForWantedRow(int mapViewDescTopIndex, int viewRowIndex) = 0;
-    virtual void takeDrawParamInUseEveryWhere(boost::shared_ptr<NFmiDrawParam> & drawParam, bool useInMap, bool useInTimeSerial, bool useInCrossSection, bool useWithViewMacros) = 0;
+    virtual void takeDrawParamInUseEveryWhere(std::shared_ptr<NFmiDrawParam> & drawParam, bool useInMap, bool useInTimeSerial, bool useInCrossSection, bool useWithViewMacros) = 0;
     virtual void borrowParams(unsigned int mapViewDescTopIndex, int realViewRowIndex) = 0;
     virtual bool setMapViewGrid(unsigned int mapViewDescTopIndex, const NFmiPoint & newValue) = 0;
     virtual CtrlViewUtils::GraphicalInfo& getGraphicalInfo(unsigned int mapViewDescTopIndex) = 0;
@@ -207,7 +207,7 @@ public:
     virtual void onButtonDataArea(unsigned int mapViewDescTopIndex) = 0;
     virtual double drawObjectScaleFactor() = 0;
     virtual void drawObjectScaleFactor(double newValue) = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> getUsedDrawParamForEditedData(const NFmiDataIdent& dataIdent) = 0;
+    virtual std::shared_ptr<NFmiDrawParam> getUsedDrawParamForEditedData(const NFmiDataIdent& dataIdent) = 0;
     virtual std::string getCurrentMapLayerGuiName(int mapViewDescTopIndex, bool backgroundMap) = 0;
     virtual std::string getCurrentMapLayerGuiText(int mapViewDescTopIndex, bool backgroundMap) = 0;
     virtual bool useCombinedMapMode() const = 0;
@@ -217,8 +217,8 @@ public:
     virtual void checkAnimationLockedModeTimeBags(unsigned int mapViewDescTopIndex, bool ignoreSatelImages) = 0;
     virtual bool setDataToNextTime(unsigned int mapViewDescTopIndex, bool stayInsideAnimationTimes) = 0;
     virtual bool setDataToPreviousTime(unsigned int mapViewDescTopIndex, bool stayInsideAnimationTimes) = 0;
-    virtual void updateFromModifiedDrawParam(boost::shared_ptr<NFmiDrawParam>& drawParam, bool groundData) = 0;
-    virtual void updateToModifiedDrawParam(unsigned int mapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam>& drawParam, int viewRowIndex) = 0;
+    virtual void updateFromModifiedDrawParam(std::shared_ptr<NFmiDrawParam>& drawParam, bool groundData) = 0;
+    virtual void updateToModifiedDrawParam(unsigned int mapViewDescTopIndex, std::shared_ptr<NFmiDrawParam>& drawParam, int viewRowIndex) = 0;
     virtual unsigned int activeMapDescTopIndex() = 0;
     virtual void activeMapDescTopIndex(unsigned int mapViewDescTopIndex) = 0;
     virtual void doAutoZoom(unsigned int mapViewDescTopIndex) = 0;
@@ -230,7 +230,7 @@ public:
     virtual void checkForNewConceptualModelData() = 0;
     virtual int toggleShowTimeOnMapMode(unsigned int mapViewDescTopIndex) = 0;
     virtual void makeWholeDesctopDirtyActions(unsigned int mapViewDescTopIndex, NFmiPtrList<NFmiDrawParamList>* drawParamListVector) = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> getDrawParamFromViewLists(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
+    virtual std::shared_ptr<NFmiDrawParam> getDrawParamFromViewLists(const NFmiMenuItem& menuItem, int viewRowIndex) = 0;
     virtual bool useWmsMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) = 0;
     virtual bool useWmsOverlayMapDrawForThisDescTop(unsigned int mapViewDescTopIndex) = 0;
     virtual bool wmsSupportAvailable() const = 0;
@@ -251,17 +251,17 @@ public:
     virtual std::pair<std::string, std::string> getMacroReferenceNamesForViewMacro(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex) = 0;
     virtual void selectMapLayersByMacroReferenceNamesFromViewMacro(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, const std::string& backgroundMacroReferenceName, const std::string& overlayMacroReferenceName) = 0;
     virtual void selectCombinedMapModeIndices(unsigned int mapViewDescTopIndex, unsigned int mapAreaIndex, int usedCombinedModeMapIndex, int usedCombinedModeOverlayMapIndex) = 0;
-    virtual void clearMacroParamCache(unsigned long mapViewDescTopIndex, unsigned long realRowIndex, boost::shared_ptr<NFmiDrawParam>& drawParam) = 0;
+    virtual void clearMacroParamCache(unsigned long mapViewDescTopIndex, unsigned long realRowIndex, std::shared_ptr<NFmiDrawParam>& drawParam) = 0;
     virtual void clearAllMacroParamDataCacheDependentOfEditedDataAfterEditedDataChanges() = 0;
     virtual void startWmsSupportRenewalProcess(bool startedByUser) = 0;
     virtual bool waitWmsSupportToDie(const std::chrono::milliseconds &waitTime) = 0;
 
 
     // Staattiset perushelper-funktiot
-    static bool isDrawParamForecast(boost::shared_ptr<NFmiDrawParam>& drawParam);
-    static bool isDrawParamObservation(boost::shared_ptr<NFmiDrawParam>& drawParam);
+    static bool isDrawParamForecast(std::shared_ptr<NFmiDrawParam>& drawParam);
+    static bool isDrawParamObservation(std::shared_ptr<NFmiDrawParam>& drawParam);
     static std::string getSelectedParamInfoString(const NFmiDataIdent* dataIdent, const NFmiLevel* level);
-    static std::string getSelectedParamInfoString(boost::shared_ptr<NFmiFastQueryInfo>& fastInfo, bool ignoreLevel);
+    static std::string getSelectedParamInfoString(std::shared_ptr<NFmiFastQueryInfo>& fastInfo, bool ignoreLevel);
     static void verboseLogging(bool newValue);
     static bool verboseLogging();
     static void doVerboseFunctionStartingLogReporting(const std::string& functionName);

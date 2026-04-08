@@ -5,6 +5,7 @@
 #include "LocalCacheSingleFileLoaderThread.h"
 #include "NFmiCachedDataFileInfo.h"
 #include "catlog/catlog.h"
+#include "NFmiInfoDataCompat.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -16,10 +17,10 @@ namespace
 {
 	bool gThreadHasRun = false;
 	std::string gThreadName = "HistoryData-1";
-	// Kun ohjelma halutaan sulkea (käyttäjä), tähän tulee tieto asiasta
+	// Kun ohjelma halutaan sulkea (kï¿½yttï¿½jï¿½), tï¿½hï¿½n tulee tieto asiasta
 	std::shared_ptr<NFmiStopFunctor> gStopFunctorPtr;
 
-	// Tämä heittää erikois poikkeuksen, jos käyttäjä on halunnut sulkea ohjelman.
+	// Tï¿½mï¿½ heittï¿½ï¿½ erikois poikkeuksen, jos kï¿½yttï¿½jï¿½ on halunnut sulkea ohjelman.
 	void CheckIfProgramWantsToStop()
 	{
 		NFmiQueryDataUtil::CheckIfStopped(gStopFunctorPtr.get());
@@ -35,14 +36,14 @@ namespace
 		CatLog::logMessage(logStr, logLevel, CatLog::Category::Data);
 	}
 
-	// Ei missään tilanteessa haluta ladata dataa serverilta lokaali cacheen, 
+	// Ei missï¿½ï¿½n tilanteessa haluta ladata dataa serverilta lokaali cacheen, 
 	// jos se on disabloitu tai se on merkitty CaseStudy legacy dataksi.
 	bool IsDataUsed(const NFmiHelpDataInfo& helpDataInfo)
 	{
 		return helpDataInfo.IsEnabled() && !helpDataInfo.CaseStudyLegacyOnly();
 	}
 
-	// Kokeillaan eri pakkaus päätteitä prioriteetti järjestyksessä, heti kun löytyy jotain jollain päätteellä, etsintä loppuu.
+	// Kokeillaan eri pakkaus pï¿½ï¿½tteitï¿½ prioriteetti jï¿½rjestyksessï¿½, heti kun lï¿½ytyy jotain jollain pï¿½ï¿½tteellï¿½, etsintï¿½ loppuu.
 	std::list<std::string> TryToFindPackedFileNameListWithFileFilter(const std::string& theFileFilter)
 	{
 		const auto& zippedFileExtensions = LocalCacheSingleFileLoaderThread::GetZippedFileExtensions();
@@ -72,7 +73,7 @@ namespace
 	{
 		bool doCombineDataCase = !loadOldDataCase && theDataInfo.IsCombineData();
 		bool doOldDataCase = loadOldDataCase && NFmiInfoData::IsModelRunBasedData(theDataInfo.DataType());
-		// aluksi tehdään vain combine-datojen historiat
+		// aluksi tehdï¿½ï¿½n vain combine-datojen historiat
 		if(doCombineDataCase || doOldDataCase)
 		{
 			std::string debugStr = callingThreadName;
@@ -89,7 +90,7 @@ namespace
 			std::pair<std::list<std::string>, bool> fileInfoList = ::GetNewestFileInfoList(usedPattern);
 			std::list<std::string>& fileList = fileInfoList.first;
 			fileList.sort(); // sortataan
-			fileList.reverse(); // käännetään järjestys, jolloin jos käytetty YYYYMMDDHHmmss aikaleimaa tiedoston alussa, tulee uusimmat tiedostot alkuun
+			fileList.reverse(); // kï¿½ï¿½nnetï¿½ï¿½n jï¿½rjestys, jolloin jos kï¿½ytetty YYYYMMDDHHmmss aikaleimaa tiedoston alussa, tulee uusimmat tiedostot alkuun
 			size_t counter = 0;
 			for(std::list<std::string>::iterator it = fileList.begin(); it != fileList.end(); ++it)
 			{
@@ -128,7 +129,7 @@ namespace
 
 namespace LocalCacheHistoryDataThread
 {
-	// HUOM! helpDataInfoSystemPtr parametri on tarkoituksella shared_ptr kopio, älä muuta referenssiksi!
+	// HUOM! helpDataInfoSystemPtr parametri on tarkoituksella shared_ptr kopio, ï¿½lï¿½ muuta referenssiksi!
 	void DoHistoryThread(std::shared_ptr<NFmiStopFunctor>& stopFunctorPtr, std::shared_ptr<NFmiHelpDataInfoSystem> helpDataInfoSystemPtr)
 	{
 		if(gThreadHasRun)
@@ -144,7 +145,7 @@ namespace LocalCacheHistoryDataThread
 			gStopFunctorPtr = stopFunctorPtr;
 			::LogGeneralMessage(gThreadName, "DoHistoryThread with", "was started...", CatLog::Severity::Debug);
 
-			// Tämä historia-threadi käydään siis vain kerran läpi
+			// Tï¿½mï¿½ historia-threadi kï¿½ydï¿½ï¿½n siis vain kerran lï¿½pi
 			::CollectAllHistoryDatas(*helpDataInfoSystemPtr);
 		}
 		catch(...)
@@ -154,11 +155,11 @@ namespace LocalCacheHistoryDataThread
 		::LogGeneralMessage(gThreadName, "DoHistoryThread with", "is now stopped as requested...", CatLog::Severity::Debug);
 	}
 
-	// HUOM! helpDataInfoSystemPtr parametri on tarkoituksella shared_ptr kopio, älä laita referenssiksi!
+	// HUOM! helpDataInfoSystemPtr parametri on tarkoituksella shared_ptr kopio, ï¿½lï¿½ laita referenssiksi!
 	CFmiCopyingStatus CollectOldModelRunDataToCache(const NFmiHelpDataInfo& theDataInfo, std::shared_ptr<NFmiHelpDataInfoSystem> helpDataInfoSystemPtr, std::string callingThreadName)
 	{
 		::CollectHistoryDataToCache(theDataInfo, *helpDataInfoSystemPtr, true, callingThreadName);
-		// Tämän pitää palauttaa status vain future:a varten, muuta väliä sillä ei ole
+		// Tï¿½mï¿½n pitï¿½ï¿½ palauttaa status vain future:a varten, muuta vï¿½liï¿½ sillï¿½ ei ole
 		return kFmiCopyWentOk;
 	}
 

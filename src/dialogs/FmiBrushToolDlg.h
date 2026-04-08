@@ -71,7 +71,7 @@ protected:
 	bool EnableDlgItem(int theDlgId, bool fEnable);
 	void DoWhenClosing(void);
 	void InitDialogTexts(void);
-	boost::shared_ptr<NFmiDrawParam> GetActiveDrawParam();
+	std::shared_ptr<NFmiDrawParam> GetActiveDrawParam();
 
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 	int itsMapViewDescTopIndex;

@@ -65,9 +65,9 @@ NFmiLocationSelectionTool::NFmiLocationSelectionTool (void)
 //   Huom! jos halutaan tehdä single tai circle 
 //   selection, voidaan drawparamiksi antaa 0-pointteri, 
 //   koska sitä ei tarvita.
-bool NFmiLocationSelectionTool::SelectLocations(boost::shared_ptr<NFmiFastQueryInfo> &theInfo
+bool NFmiLocationSelectionTool::SelectLocations(std::shared_ptr<NFmiFastQueryInfo> &theInfo
 													  ,const NFmiPoint& theLatLon
-													  ,const boost::shared_ptr<NFmiArea> &theArea
+													  ,const std::shared_ptr<NFmiArea> &theArea
 													  ,FmiSelectionCombineFunction theFunction
 													  ,unsigned long theMask
 													  ,const NFmiPoint& theViewGridSize)
@@ -102,7 +102,7 @@ bool NFmiLocationSelectionTool::SelectLocations(boost::shared_ptr<NFmiFastQueryI
 //--------------------------------------------------------
 // ClearLocationSelection 
 //--------------------------------------------------------
-void NFmiLocationSelectionTool::ClearLocationSelection(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, unsigned long theMask)
+void NFmiLocationSelectionTool::ClearLocationSelection(std::shared_ptr<NFmiFastQueryInfo> &theInfo, unsigned long theMask)
 {
 	if(theInfo)
 		dynamic_cast<NFmiSmartInfo*>(theInfo.get())->MaskAllLocations(false, theMask);
@@ -110,7 +110,7 @@ void NFmiLocationSelectionTool::ClearLocationSelection(boost::shared_ptr<NFmiFas
 
 // Tätä pitäisi kutsua vain NFmiSmartInfo-luokan otuksilla, mutta tämä funktio kuitenkin tarkistaan että
 // olio on oikeasti mitä pitää olla ja vasta sitten kutsuu haluttua metodia.
-static void DoMaskLocation(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, bool theState, unsigned long theMask)
+static void DoMaskLocation(std::shared_ptr<NFmiFastQueryInfo> &theInfo, bool theState, unsigned long theMask)
 {
 	NFmiSmartInfo *info = dynamic_cast<NFmiSmartInfo*>(theInfo.get());
 	if(info)
@@ -120,9 +120,9 @@ static void DoMaskLocation(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, bool t
 //--------------------------------------------------------
 // SingleSelection 
 //--------------------------------------------------------
-void NFmiLocationSelectionTool::SingleSelection(boost::shared_ptr<NFmiFastQueryInfo> &theInfo
+void NFmiLocationSelectionTool::SingleSelection(std::shared_ptr<NFmiFastQueryInfo> &theInfo
 												,const NFmiPoint& theLatLon
-												,const boost::shared_ptr<NFmiArea> &theArea
+												,const std::shared_ptr<NFmiArea> &theArea
 												,FmiSelectionCombineFunction theFunction
 												,unsigned long theMask)
 {
@@ -142,9 +142,9 @@ void NFmiLocationSelectionTool::SingleSelection(boost::shared_ptr<NFmiFastQueryI
 //--------------------------------------------------------
 // CircleSelection 
 //--------------------------------------------------------
-void NFmiLocationSelectionTool::CircleSelection(boost::shared_ptr<NFmiFastQueryInfo> &theInfo
+void NFmiLocationSelectionTool::CircleSelection(std::shared_ptr<NFmiFastQueryInfo> &theInfo
 												,const NFmiPoint& theLatLon
-												,const boost::shared_ptr<NFmiArea> &theArea
+												,const std::shared_ptr<NFmiArea> &theArea
 												,FmiSelectionCombineFunction theFunction
 												,unsigned long theMask
 												,const NFmiPoint& theViewGridSize)
@@ -165,7 +165,7 @@ void NFmiLocationSelectionTool::CircleSelection(boost::shared_ptr<NFmiFastQueryI
 	}
 }
 
-void NFmiLocationSelectionTool::SetAllPoints(boost::shared_ptr<NFmiFastQueryInfo>& theInfo
+void NFmiLocationSelectionTool::SetAllPoints(std::shared_ptr<NFmiFastQueryInfo>& theInfo
 	, unsigned long theMask)
 {
 	static bool staticSetAllPointsState = false;

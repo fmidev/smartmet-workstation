@@ -38,7 +38,7 @@ public:
     //    return tmp;
     //}
     void InvalidateMainMapView(bool bErase = true) override;  // CSmartMetView
-    void SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam) override;  // CSmartMetView
+    void SetMacroErrorText(const std::string &theErrorStr, std::shared_ptr<NFmiDrawParam>& triggerDrawParam) override;  // CSmartMetView
     void CaseStudyLoadingActions(const NFmiMetTime &theUsedTime, const std::string &updateReasonText) override; // CSmartMetDoc
     void CaseStudyToNormalModeActions() override; // CSmartMetDoc
     void PutWarningFlagTimerOn() override;  // CSmartMetView
@@ -63,5 +63,5 @@ public:
     void SetAllMapViewTooltipDelays(bool doRestoreAction, int delayInMilliSeconds) override;
     void UpdateAllViewsAndDialogs(const std::string& reasonForUpdate, bool fUpdateOnlyMapViews = false) override;
     void OpenMacroParamInSmarttoolDialog(const std::string& absoluteMacroParamPath) override;
-    bool IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam) override;
+    bool IsCrossSectionMacroParamOk(std::shared_ptr<NFmiDrawParam>& theUsedDrawParam) override;
 };

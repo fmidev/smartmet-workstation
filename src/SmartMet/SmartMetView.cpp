@@ -494,12 +494,12 @@ std::string CSmartMetView::MakeActiveDataLocationIndexString(const NFmiPoint &th
 	std::string str;
 	NFmiEditMapGeneralDataDoc* genData = GetDocument()->GetData();
 	int cursorRealRowIndex = genData->ToolTipRealRowIndex();
-	boost::shared_ptr<NFmiDrawParam> activeDrawParam = genData->GetCombinedMapHandler()->activeDrawParamWithRealRowNumber(itsMapViewDescTopIndex, cursorRealRowIndex);
+	std::shared_ptr<NFmiDrawParam> activeDrawParam = genData->GetCombinedMapHandler()->activeDrawParamWithRealRowNumber(itsMapViewDescTopIndex, cursorRealRowIndex);
 	if(activeDrawParam)
 	{ 
 		// jos kursorilla osoitetulta karttariviltä löytyy aktiivinen data, jolla on info, laitetaan näkyviin myös
 	    // datassa olevan lähimmän hilapisteen tarkka sijainti
-		boost::shared_ptr<NFmiFastQueryInfo> info = genData->InfoOrganizer()->Info(activeDrawParam, false, true);
+		std::shared_ptr<NFmiFastQueryInfo> info = genData->InfoOrganizer()->Info(activeDrawParam, false, true);
 		if(info)
 		{
 			NFmiLocation loc(theLatlon);
@@ -571,16 +571,16 @@ void CSmartMetView::ForceOtherMapViewsDrawOverBitmapThings(unsigned int theOrigi
 
 // tämä on ikävä kopio CFmiSynopDataGridViewDlg-luokasta, tämä pitäisi laittaa
 // dokumenttiin, että saataisiin yhtenevä funktio molemmissa paikoissa
-boost::shared_ptr<NFmiFastQueryInfo> CSmartMetView::GetWantedInfo(int theProducerId)
+std::shared_ptr<NFmiFastQueryInfo> CSmartMetView::GetWantedInfo(int theProducerId)
 {
 	NFmiEditMapGeneralDataDoc* data = GetDocument()->GetData();
-	boost::shared_ptr<NFmiFastQueryInfo> info = data->InfoOrganizer()->FindInfo(NFmiInfoData::kObservations, NFmiProducer(theProducerId), true);
+	std::shared_ptr<NFmiFastQueryInfo> info = data->InfoOrganizer()->FindInfo(NFmiInfoData::kObservations, NFmiProducer(theProducerId), true);
 	if(info == 0)
 	{ // jos ei löytynyt havainnoista synop dataa, tarkastetaan editoitava data, onko se asema dataa
 		info = data->EditedSmartInfo();
 		if(info)
 			if(info->IsGrid())
-				info = boost::shared_ptr<NFmiFastQueryInfo>(); // ei haluta hila dataa
+				info = std::shared_ptr<NFmiFastQueryInfo>(); // ei haluta hila dataa
 	}
 	return info;
 }
@@ -1055,7 +1055,7 @@ void CSmartMetView::SetNotificationMessage(const std::string &theNotificationMsg
 		pFrame->SetNotificationMessage(theNotificationMsgStr, theNotificationTitle, theStyle, theTimeout, fNoSound);
 }
 
-void CSmartMetView::SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam)
+void CSmartMetView::SetMacroErrorText(const std::string &theErrorStr, std::shared_ptr<NFmiDrawParam>& triggerDrawParam)
 {
 	GetDocument()->SetMacroErrorText(theErrorStr, triggerDrawParam);
 }
@@ -1247,7 +1247,7 @@ void CSmartMetView::OnMouseMove_Implementation(UINT nFlags, CPoint point)
 			{// tehdään lähimpien havainto asemien seuranta vain CTRL pohjassa ja kun hiiri ei ole kaapattu
 				if(itsEditMapView->MapRect().IsInside(viewPoint))
 				{ // ja vain jos ollaan karttanäytön päällä, ei kun ollaan aikakontrolli ikkunan päällä
-					boost::shared_ptr<NFmiFastQueryInfo> obsInfo = genData->GetNearestSynopStationInfo(NFmiLocation(cursorLatlon), NFmiMetTime(), true, 0);
+					std::shared_ptr<NFmiFastQueryInfo> obsInfo = genData->GetNearestSynopStationInfo(NFmiLocation(cursorLatlon), NFmiMetTime(), true, 0);
 					if(obsInfo)
 					{
 						if(GetDocument()->SynopDataGridViewDlg())

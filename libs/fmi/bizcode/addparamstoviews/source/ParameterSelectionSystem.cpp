@@ -12,6 +12,7 @@
 #include "SpecialDesctopIndex.h"
 #include "NFmiHelpDataInfo.h"
 #include "NFmiFastInfoUtils.h"
+#include <memory>
 #ifndef DISABLE_CPPRESTSDK
 #include "WmsSupportInterface.h"
 #include "CapabilityTree.h"
@@ -33,7 +34,7 @@ namespace
         return AddParams::SingleRowItem(AddParams::kCategoryType, categoryData.categoryName(), 0, nodeCollapsed, uniqueId, NFmiInfoData::kNoDataType);
     }
 
-    boost::shared_ptr<NFmiFastQueryInfo> getFastInfo(NFmiInfoOrganizer& infoOrganizer, const std::string& uniqueDataId)
+    std::shared_ptr<NFmiFastQueryInfo> getFastInfo(NFmiInfoOrganizer& infoOrganizer, const std::string& uniqueDataId)
     {
         auto infoVector = infoOrganizer.GetInfos(uniqueDataId);
         if(!infoVector.empty())

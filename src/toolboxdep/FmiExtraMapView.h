@@ -127,7 +127,7 @@ private:
 	HBITMAP itsSynopPlotBitmapHandle;
 	NFmiEditMapView* itsEditMapView;
 	NFmiToolBox * itsToolBox;
-	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
+	std::shared_ptr<NFmiDrawParam> itsDrawParam;
 	int itsMapViewDescTopIndex;
 	bool fMouseCursorOnWnd;
 	CPPToolTip m_tooltip;

@@ -191,7 +191,7 @@ void NFmiCrossSectionSystem::SetMainPointsFromVector(const std::vector<NFmiPoint
 
 // laskee  v�lipisteet p��pisteiden avulla k�ytt�en
 // hyv�kseen annettua areaa (josta laskuissa k�ytet��n arean xy-maailmaa)
-void NFmiCrossSectionSystem::CalcMinorPoints(const boost::shared_ptr<NFmiArea> &theArea)
+void NFmiCrossSectionSystem::CalcMinorPoints(const std::shared_ptr<NFmiArea> &theArea)
 {
 	// alipisteit� on oltava v�h. saman verran kuin p��pisteit�
 	if(itsNumberOfMainPoints > static_cast<int>(itsWantedMinorPointCountWinReg))
@@ -316,7 +316,7 @@ const NFmiPoint& NFmiCrossSectionSystem::ActivatedMinorPoint(void)
 		return dummy; // dummy arvo, ennen t�m�n funktion kutsua pit�isi tarkistaa, l�ytyyk� aktivoitua pistett� ollenkaan
 }
 
-void NFmiCrossSectionSystem::CrossSectionDrawParam(boost::shared_ptr<NFmiDrawParam> &newValue)
+void NFmiCrossSectionSystem::CrossSectionDrawParam(std::shared_ptr<NFmiDrawParam> &newValue)
 {
 	itsCrossSectionDrawParam = newValue;
 }

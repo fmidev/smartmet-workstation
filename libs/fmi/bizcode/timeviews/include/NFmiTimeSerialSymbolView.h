@@ -16,7 +16,7 @@ class NFmiTimeSerialSymbolView : public NFmiTimeSerialView
 public:
 	NFmiTimeSerialSymbolView(int theMapViewDescTopIndex, const NFmiRect & theRect
 						    ,NFmiToolBox * theToolBox
-						    ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+						    ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 						    ,int theIndex);
 	virtual ~NFmiTimeSerialSymbolView();
 

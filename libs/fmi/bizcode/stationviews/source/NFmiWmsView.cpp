@@ -28,9 +28,9 @@ using namespace std;
 using namespace Gdiplus;
 #endif // UNIX
 
-NFmiWmsView::NFmiWmsView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+NFmiWmsView::NFmiWmsView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
     , NFmiToolBox *theToolBox
-    , boost::shared_ptr<NFmiDrawParam> &theDrawParam
+    , std::shared_ptr<NFmiDrawParam> &theDrawParam
     , FmiParameterName theParamId
     , int theRowIndex
     , int theColumnIndex)

@@ -36,7 +36,7 @@ namespace
         return levelName;
     }
 
-    std::string makeParameterName(boost::shared_ptr<NFmiDrawParam>& drawParam)
+    std::string makeParameterName(std::shared_ptr<NFmiDrawParam>& drawParam)
     {
         if(drawParam)
         {

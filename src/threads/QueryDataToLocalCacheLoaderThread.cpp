@@ -12,6 +12,7 @@
 #include "NFmiMilliSecondTimer.h"
 #include "LocalCacheFutureWaitingSystem.h"
 #include "LocalCacheHistoryDataThread.h"
+#include "NFmiInfoDataCompat.h"
 
 #include <thread>
 #include <mutex>

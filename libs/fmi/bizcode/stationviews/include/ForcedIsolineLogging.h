@@ -7,5 +7,5 @@ class NFmiIsoLineData;
 
 namespace ForcedLogging
 {
-    void IsolineDrawingInfo(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool stationData, bool toolMasterUsed, bool mapViewCase);
+    void IsolineDrawingInfo(std::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool stationData, bool toolMasterUsed, bool mapViewCase);
 }

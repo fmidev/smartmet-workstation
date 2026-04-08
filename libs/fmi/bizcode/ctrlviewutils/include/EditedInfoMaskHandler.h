@@ -9,8 +9,8 @@ class NFmiFastQueryInfo;
 class EditedInfoMaskHandler
 {
     unsigned long oldMask_ = 0;
-    boost::shared_ptr<NFmiFastQueryInfo> editedInfo_;
+    std::shared_ptr<NFmiFastQueryInfo> editedInfo_;
 public:
-    EditedInfoMaskHandler(const boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, unsigned long newMask);
+    EditedInfoMaskHandler(const std::shared_ptr<NFmiFastQueryInfo> &editedInfo, unsigned long newMask);
     ~EditedInfoMaskHandler();
 };

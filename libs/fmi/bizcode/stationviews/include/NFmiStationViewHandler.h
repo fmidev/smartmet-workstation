@@ -90,9 +90,9 @@ class NFmiStationViewHandler : public NFmiCtrlView
 {
 
  public:
-	NFmiStationViewHandler(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+	NFmiStationViewHandler(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 						   ,NFmiToolBox * theToolBox
-						   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+						   ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 						   ,int theRowIndex
 						   ,int theColumnIndex);
 	~NFmiStationViewHandler();
@@ -118,8 +118,8 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
 	NFmiCtrlView* GetView(const NFmiDataIdent &theDataIdent, bool fUseParamIdOnly);
 	void DrawParamView(NFmiToolBox * theGTB);
-	boost::shared_ptr<NFmiArea> GetArea() const override;
-	void SetArea(const boost::shared_ptr<NFmiArea>& theArea) override;
+	std::shared_ptr<NFmiArea> GetArea() const override;
+	void SetArea(const std::shared_ptr<NFmiArea>& theArea) override;
 	NFmiRect CalcParamHandlerViewRect();
 	void SetParamHandlerViewRect(const NFmiRect &newRect);
 
@@ -166,15 +166,15 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	void DrawSelectedSynopFromGridView(void);
 	bool ChangeHybridDataLevel(NFmiStationView* theView, short theDelta);
 	bool ChangeSatelDataChannel(NFmiStationView* theView, short theDelta);
-	void SelectLocations(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatLon, int theSelectionCombineFunction, unsigned long theMask, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd = false);
+	void SelectLocations(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatLon, int theSelectionCombineFunction, unsigned long theMask, bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd = false);
 	void DrawCrossSectionPoints(void);
 	NFmiPoint LatLonToViewPoint(const NFmiPoint& theLatLon) const override;
 	NFmiPoint ViewPointToLatLon(const NFmiPoint& theViewPoint) const override;
 	void DrawCurrentFrame(NFmiToolBox* theGTB);
 	void DrawSoundingPlaces(void);
-	void DrawSoundingSymbols(boost::shared_ptr<NFmiFastQueryInfo> &theSoundingInfo, int theUsedSymbol, double theSymbolSizeInMM);
+	void DrawSoundingSymbols(std::shared_ptr<NFmiFastQueryInfo> &theSoundingInfo, int theUsedSymbol, double theSymbolSizeInMM);
     bool IsSoundingMarkersDrawnOnThisMap(bool fDrawThisOnEveryRow);
-	void DrawMovingSoundingSymbols(boost::shared_ptr<NFmiFastQueryInfo> &theSoundingInfo, int theUsedSymbol, double theSymbolSizeInMM);
+	void DrawMovingSoundingSymbols(std::shared_ptr<NFmiFastQueryInfo> &theSoundingInfo, int theUsedSymbol, double theSymbolSizeInMM);
 	void DrawSelectedMTAModeSoundingPlaces(void);
 	void DrawHALYMessageMarkers(void);
 	void DrawSilamStationMarkers(void);
@@ -183,7 +183,7 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	void DrawSingleTrajector(const NFmiSingleTrajector &theSingleTrajector, NFmiDrawingEnvironment &theEnvi, int theTimeStepInMinutes, int theTimeMarkerPixelSize, int theTimeMarkerPixelPenSize, FmiDirection theDirection);
 	NFmiPoint MakeSoundingMarkerScale(NFmiToolBox *theToolBox, double theSymbolSizeInMM);
 	void DrawCPCropArea(void);
-	NFmiRect CalcCPCropAreasRelativeRect(const boost::shared_ptr<NFmiArea> &theArea);
+	NFmiRect CalcCPCropAreasRelativeRect(const std::shared_ptr<NFmiArea> &theArea);
     bool UseDrawingCache();
 
 	NFmiPoint CalcFontSize(double theWantedSizeInMM);
@@ -191,10 +191,10 @@ class NFmiStationViewHandler : public NFmiCtrlView
 	void DrawProjetionLines(NFmiToolBox * theGTB);
 	void DrawControlPointData(void);
 	void DrawControlPoints(void);
-	void DoBrushingUndoRituals(boost::shared_ptr<NFmiDrawParam> &theDrawParam);
+	void DoBrushingUndoRituals(std::shared_ptr<NFmiDrawParam> &theDrawParam);
 	void SetViewListArea(void);
-	NFmiStationView * CreateStationView(boost::shared_ptr<NFmiDrawParam> &theDrawParam);
-	void SetMapAreaAndRect(const boost::shared_ptr<NFmiArea> &theArea, const NFmiRect& theRect);
+	NFmiStationView * CreateStationView(std::shared_ptr<NFmiDrawParam> &theDrawParam);
+	void SetMapAreaAndRect(const std::shared_ptr<NFmiArea> &theArea, const NFmiRect& theRect);
 	void DrawMap(NFmiToolBox* theGTB, const NFmiRect& theRect);
 	void DrawOverMap(NFmiToolBox* theGTB, const NFmiRect& theRect);
 	void DrawData(NFmiToolBox* theGTB); // Piirt�� datan ruutuun
@@ -249,10 +249,10 @@ class NFmiStationViewHandler : public NFmiCtrlView
         return status;
     }
 
-    boost::shared_ptr<NFmiArea> itsMapArea;
+    std::shared_ptr<NFmiArea> itsMapArea;
 	NFmiRect itsMapRect;
 	NFmiCtrlViewList * itsViewList;
-	boost::shared_ptr<NFmiDrawParam> itsMapDrawParam; // t�m� on feikki, mik� annetaan ctrllist:alle
+	std::shared_ptr<NFmiDrawParam> itsMapDrawParam; // t�m� on feikki, mik� annetaan ctrllist:alle
 	NFmiPoint itsZoomDragDownPoint; // kun tehd��n middlemouse dragia eli vedet��n zoomi laatikkoa, t�ss� on sen alku ja loppu pisteet
 	NFmiPoint itsZoomDragUpPoint;
 	NFmiRect itsOldZoomRect; // t�ll� piirret��n vanha laatikko pois (k��nteis v�ri kikka)

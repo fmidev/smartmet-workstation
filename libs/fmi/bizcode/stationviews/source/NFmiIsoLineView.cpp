@@ -66,6 +66,9 @@
 #include "SpecialDesctopIndex.h"
 #include "CtrlViewFunctions.h"
 #include "ForcedIsolineLogging.h"
+#include "DataMatrixInterpolation.h"
+
+#include <gis/CoordinateMatrix.h>
 
 #ifndef UNIX
 #include "datautilities/DataUtilitiesAdapter.h"
@@ -77,6 +80,16 @@
 #include <limits>
 
 #include "boost/math/special_functions/round.hpp"
+
+// Convert Fmi::CoordinateMatrix to NFmiDataMatrix<NFmiPoint>
+static NFmiDataMatrix<NFmiPoint> FromCoordinateMatrix(const Fmi::CoordinateMatrix &cm)
+{
+    NFmiDataMatrix<NFmiPoint> result(cm.width(), cm.height());
+    for(std::size_t j = 0; j < cm.height(); j++)
+        for(std::size_t i = 0; i < cm.width(); i++)
+            result[i][j] = NFmiPoint(cm.x(i, j), cm.y(i, j));
+    return result;
+}
 
 // eli n. 30 x 30 (=900) hilasta yl�sp�in ei tehd� alikolmioita
 static const int gMaxGridPointsThatImagineWillSubTriangulate = 900;
@@ -104,7 +117,7 @@ LabelBox::LabelBox(void)
 {
 }
 
-LabelBox::LabelBox(float theFontHeight, float theIsoLineValue /*int theLabelLetterCount*/, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiToolBox *theToolBox, NFmiDrawingEnvironment &theEnviroment)
+LabelBox::LabelBox(float theFontHeight, float theIsoLineValue /*int theLabelLetterCount*/, std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiToolBox *theToolBox, NFmiDrawingEnvironment &theEnviroment)
 {
     Init(theFontHeight, theIsoLineValue, theDrawParam, theToolBox, theEnviroment);
 }
@@ -128,7 +141,7 @@ void LabelBox::Init(void)
     itsBoxStrokeOpacity = 1;
 }
 
-void LabelBox::Init(float theFontHeight, float theIsoLineValue, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiToolBox *theToolBox, NFmiDrawingEnvironment &theEnviroment)
+void LabelBox::Init(float theFontHeight, float theIsoLineValue, std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiToolBox *theToolBox, NFmiDrawingEnvironment &theEnviroment)
 {
     itsStrategy = 2; //EL: mist� t�� revitt�isiin?????????????????????
     itsFontSize = theFontHeight;  // [mm]
@@ -260,9 +273,9 @@ std::mutex NFmiIsoLineView::sToolMasterOperationMutex;
 // Constructor/Destructor
 //--------------------------------------------------------
 
-NFmiIsoLineView::NFmiIsoLineView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+NFmiIsoLineView::NFmiIsoLineView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
     , NFmiToolBox * theToolBox
-    , boost::shared_ptr<NFmiDrawParam> &theDrawParam
+    , std::shared_ptr<NFmiDrawParam> &theDrawParam
     , FmiParameterName theParamId
     , NFmiPoint theOffSet
     , NFmiPoint theSize
@@ -510,7 +523,7 @@ static double GetDifferenceDrawIsoLineGab(double theCurrentIsolineGap)
 }
 
 // n�it� on kutsuttava pareittain RestoreUpDifferenceDrawing-metodin kanssa
-void NFmiIsoLineView::SetUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam)
+void NFmiIsoLineView::SetUpDifferenceDrawing(std::shared_ptr<NFmiDrawParam> &theUsedDrawParam)
 {
     fDoDifferenceDrawSwitch = false;
     // piirret��n toistaiseksi erotus vanhalla tavalla
@@ -539,7 +552,7 @@ void NFmiIsoLineView::SetUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &t
 }
 
 // n�it� on kutsuttava pareittain SetUpDifferenceDrawing-metodin kanssa
-void NFmiIsoLineView::RestoreUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam) // n�it� on kutsuttava pareittain
+void NFmiIsoLineView::RestoreUpDifferenceDrawing(std::shared_ptr<NFmiDrawParam> &theUsedDrawParam) // n�it� on kutsuttava pareittain
 {
     if(fDoDifferenceDrawSwitch)
     {
@@ -589,7 +602,7 @@ static void AdjustZoomedAreaRect(NFmiRect &theZoomedAreaRect)
 // 1. Annettu data on hilamuotoista.
 // 2. Annettu area ja datan area ovat samaa tyyppi� (ja ne eiv�t ole 0-pointtereita!).
 // 3. Annettu data (theInfo) on olemassa.
-bool NFmiIsoLineView::IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, boost::shared_ptr<NFmiArea>& theMapArea, NFmiRect& theCroppedXyRectOut, int& x1, int& y1, int& x2, int& y2)
+bool NFmiIsoLineView::IsZoomingPossible(std::shared_ptr<NFmiFastQueryInfo>& theInfo, std::shared_ptr<NFmiArea>& theMapArea, NFmiRect& theCroppedXyRectOut, int& x1, int& y1, int& x2, int& y2)
 {
     if(IsQ2ServerUsed() && fGetCurrentDataFromQ2Server) // q2serverilt� haetaan aina vain karttan�yt�n t�ytt�v��n hilaan, eli zooming alueen rajoittamista ei saa k�ytt��
         return false;
@@ -607,7 +620,7 @@ bool NFmiIsoLineView::IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo>& th
 // Tutkit��n onko alue 1:n mik��n kulma piste alue 2:n sis�ll�.
 // Tarvittaessa tutkitaan viel� toisinp�in, eli onko alue 2:n
 // mik��n kulma piste alue 1:en sis�ll�.
-static bool IsDataInView(const boost::shared_ptr<NFmiArea> &theDataArea, const boost::shared_ptr<NFmiArea> &theViewArea)
+static bool IsDataInView(const std::shared_ptr<NFmiArea> &theDataArea, const std::shared_ptr<NFmiArea> &theViewArea)
 {
     if(theDataArea && theViewArea)
     {
@@ -662,7 +675,7 @@ static float WindAngleToToolMasterAngle(float windAngle)
     return toolmasterAngle;
 }
 
-bool NFmiIsoLineView::FillIsoLineVisualizationInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData)
+bool NFmiIsoLineView::FillIsoLineVisualizationInfo(std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData)
 {
     if(!(theDrawParam && theIsoLineData))
         return false;
@@ -694,7 +707,7 @@ bool NFmiIsoLineView::FillIsoLineVisualizationInfo(boost::shared_ptr<NFmiDrawPar
 }
 
 // Presumption: theDrawParam and theIsoLineData parameters are not nullptr's 
-void NFmiIsoLineView::FillHatchInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData)
+void NFmiIsoLineView::FillHatchInfo(std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData)
 {
     // Yhden karttaruudun korkeutta tarvitaan hatching laskuissa
     theIsoLineData->itsSingleSubMapViewHeightInMillimeters = itsCtrlViewDocumentInterface->SingleMapViewHeightInMilliMeters(itsMapViewDescTopIndex);
@@ -731,7 +744,7 @@ void NFmiIsoLineView::FillHatchInfo(boost::shared_ptr<NFmiDrawParam> &theDrawPar
     }
 }
 
-void NFmiIsoLineView::FillBaseColorContourInfo_new(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed)
+void NFmiIsoLineView::FillBaseColorContourInfo_new(std::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed)
 {
     theIsoLineData->fUseIsoLines = 0; // toistaiseksi viel� ilman isoviivoja!!!
     theIsoLineData->fUseColorContours = 1;
@@ -746,7 +759,7 @@ void NFmiIsoLineView::FillBaseColorContourInfo_new(boost::shared_ptr<NFmiDrawPar
         theIsoLineData->fDrawLabelsOverContours = true;
 }
 
-ContouringJobData NFmiIsoLineView::MakeContouringJobData(boost::shared_ptr<NFmiDrawParam>& theDrawParam)
+ContouringJobData NFmiIsoLineView::MakeContouringJobData(std::shared_ptr<NFmiDrawParam>& theDrawParam)
 {
     ContouringJobData contouringJobData;
     contouringJobData.dataIdent_ = theDrawParam->Param();
@@ -759,42 +772,42 @@ ContouringJobData NFmiIsoLineView::MakeContouringJobData(boost::shared_ptr<NFmiD
     return contouringJobData;
 }
 
-void NFmiIsoLineView::FillCustomColorContourInfo_new(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData)
+void NFmiIsoLineView::FillCustomColorContourInfo_new(std::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData)
 {
     auto contouringJobData = MakeContouringJobData(theDrawParam);
     theIsoLineData->itsColorContouringData.initialize(contouringJobData, theDrawParam);
 }
 
 // Presumption: theDrawParam and theIsoLineData parameters are not nullptr's 
-void NFmiIsoLineView::FillCustomColorContourInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed)
+void NFmiIsoLineView::FillCustomColorContourInfo(std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed)
 {
     FillBaseColorContourInfo_new(theDrawParam, theIsoLineData, fStationData, fToolMasterUsed);
     theIsoLineData->fUseCustomColorContoursClasses = true;
     FillCustomColorContourInfo_new(theDrawParam, theIsoLineData);
 }
 
-void NFmiIsoLineView::FillSimpleColorContourInfo_new(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData)
+void NFmiIsoLineView::FillSimpleColorContourInfo_new(std::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData)
 {
     auto contouringJobData = MakeContouringJobData(theDrawParam);
     theIsoLineData->itsColorContouringData.initialize(contouringJobData, theDrawParam);
 }
 
 // Presumption: theDrawParam and theIsoLineData parameters are not nullptr's 
-void NFmiIsoLineView::FillSimpleColorContourInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed)
+void NFmiIsoLineView::FillSimpleColorContourInfo(std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed)
 {
     FillBaseColorContourInfo_new(theDrawParam, theIsoLineData, fStationData, fToolMasterUsed);
     theIsoLineData->fUseCustomColorContoursClasses = false;
     FillSimpleColorContourInfo_new(theDrawParam, theIsoLineData);
 }
 
-void NFmiIsoLineView::FillIsoLineInfoSimple_new(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData)
+void NFmiIsoLineView::FillIsoLineInfoSimple_new(std::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData)
 {
     auto contouringJobData = MakeContouringJobData(theDrawParam);
     theIsoLineData->itsIsolineVizualizationData.initialize(contouringJobData, theDrawParam, theIsoLineData->itsDataMinValue, theIsoLineData->itsDataMaxValue, fStationData);
 }
 
 // Presumption: theDrawParam and theIsoLineData parameters are not nullptr's 
-void NFmiIsoLineView::FillIsoLineInfoSimple(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData)
+void NFmiIsoLineView::FillIsoLineInfoSimple(std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData)
 {
     ForcedLogging::IsolineDrawingInfo(theDrawParam, theIsoLineData, fStationData, fToolMasterUsed, IsMapViewCase());
 
@@ -804,7 +817,7 @@ void NFmiIsoLineView::FillIsoLineInfoSimple(boost::shared_ptr<NFmiDrawParam> &th
 }
 
 // Presumption: theDrawParam and theIsoLineData parameters are not nullptr's 
-void NFmiIsoLineView::FillIsoLineInfoCustom(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData)
+void NFmiIsoLineView::FillIsoLineInfoCustom(std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData)
 {
     ForcedLogging::IsolineDrawingInfo(theDrawParam, theIsoLineData, fStationData, fToolMasterUsed, IsMapViewCase());
 
@@ -1067,7 +1080,7 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
     if(itsInfo->IsGrid())
     {
         // huom. q2serverilta data voi olla minne tahansa, joten sen k�ytt� on poikkeus
-        boost::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
+        std::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
         if(IsQ2ServerUsed() == false && IsDataInView(infoArea, GetArea()) == false)
             return; // ei tarvitse piirt�� ollenkaan, koska data ei osu n�yt�n alueelle ollenkaan.
     }
@@ -1123,7 +1136,7 @@ void NFmiIsoLineView::DrawIsoLinesWithImagine(void)
     else if(itsInfo->Grid())
     { // jos ei l�ytynyt, lasketaan koordinaatit ja laitetaan ne cacheen talteen
         if(fGetCurrentDataFromQ2Server == false)
-            itsInfo->LocationsXY(coordData.itsPoints, *itsArea); // otetaan koordinaatit t�m�n ruudun arealla, jossa on XYRect kohdallaan
+            coordData.itsPoints = ::FromCoordinateMatrix(itsInfo->LocationsXY(*itsArea)); // otetaan koordinaatit t�m�n ruudun arealla, jossa on XYRect kohdallaan
         else
             ::LocationsXYForArchiveData(coordData.itsPoints, *itsArea, itsIsolineValues.NX(), itsIsolineValues.NY());
 
@@ -1173,9 +1186,19 @@ static void SetHatchEnvi(NFmiIsoLineData & /* theIsoLineData */, NFmiDrawingEnvi
     theEnvi.SetHatchPattern(theHatchSettings.itsHatchPattern);
 }
 
-static std::unordered_map<std::string, NFmiDataMatrix<NFmiPoint> > g_LatlonMatrixCache;
+static std::unordered_map<std::string, Fmi::CoordinateMatrix> g_LatlonMatrixCache;
 
-static Imagine::NFmiPath CalcContourPath(float theValue1, float theValue2, NFmiIsoLineData& theIsoLineData, NFmiDataMatrix<float> &theValues, NFmiDataMatrix<NFmiPoint> &theCoordinates, Imagine::NFmiDataHints &theHelper, const boost::shared_ptr<NFmiArea> &theMapArea, bool fLinesOnly)
+// Convert NFmiDataMatrix<NFmiPoint> to Fmi::CoordinateMatrix
+static Fmi::CoordinateMatrix ToCoordinateMatrix(const NFmiDataMatrix<NFmiPoint> &thePoints)
+{
+    Fmi::CoordinateMatrix cm(thePoints.NX(), thePoints.NY());
+    for(std::size_t j = 0; j < thePoints.NY(); j++)
+        for(std::size_t i = 0; i < thePoints.NX(); i++)
+            cm.set(i, j, thePoints[i][j].X(), thePoints[i][j].Y());
+    return cm;
+}
+
+static Imagine::NFmiPath CalcContourPath(float theValue1, float theValue2, NFmiIsoLineData& theIsoLineData, NFmiDataMatrix<float> &theValues, NFmiDataMatrix<NFmiPoint> &theCoordinates, Imagine::NFmiDataHints &theHelper, const std::shared_ptr<NFmiArea> &theMapArea, bool fLinesOnly)
 {
     Imagine::NFmiContourTree tree(theValue1, theValue2);
     tree.LinesOnly(fLinesOnly);
@@ -1187,18 +1210,21 @@ static Imagine::NFmiPath CalcContourPath(float theValue1, float theValue2, NFmiI
     NFmiArea *dataGridArea = theIsoLineData.itsInfo->Grid() ? theIsoLineData.itsInfo->Grid()->Area() : 0;
     if(NFmiIsoLineView::DifferentWorldViews(dataGridArea, theMapArea.get()))
     {
-        NFmiDataMatrix<NFmiPoint> *usedLatlonMatrix = nullptr;
+        const Fmi::CoordinateMatrix *usedLatlonMatrix = nullptr;
         size_t xSize = theIsoLineData.itsInfo->GridXNumber();
         size_t ySize = theIsoLineData.itsInfo->GridYNumber();
         std::string latlonMatrixKey = theIsoLineData.itsInfo->Area()->AreaStr() + "-" + NFmiStringTools::Convert(xSize) + "x" + NFmiStringTools::Convert(ySize);
         auto latlonCacheIter = g_LatlonMatrixCache.find(latlonMatrixKey);
         if(latlonCacheIter == g_LatlonMatrixCache.end())
         {
-            NFmiDataMatrix<NFmiPoint> latlonMatrix(xSize, ySize);
+            Fmi::CoordinateMatrix latlonMatrix(xSize, ySize);
             auto latlonCacheVector = theIsoLineData.itsInfo->RefQueryData()->LatLonCache();
             for(size_t i = 0; i < latlonCacheVector->size(); i++)
-                latlonMatrix[i % xSize][i / xSize] = latlonCacheVector->at(i);
-            auto insertIter = g_LatlonMatrixCache.insert(std::make_pair(latlonMatrixKey, latlonMatrix));
+            {
+                const auto& pt = latlonCacheVector->at(i);
+                latlonMatrix.set(i % xSize, i / xSize, pt.X(), pt.Y());
+            }
+            auto insertIter = g_LatlonMatrixCache.insert(std::make_pair(latlonMatrixKey, std::move(latlonMatrix)));
             if(insertIter.second)
                 usedLatlonMatrix = &insertIter.first->second;
         }
@@ -1216,7 +1242,8 @@ static Imagine::NFmiPath CalcContourPath(float theValue1, float theValue2, NFmiI
     }
     else
     {
-        tree.Contour(theCoordinates, theValues, theHelper, Imagine::NFmiContourTree::kFmiContourLinear);
+        Fmi::CoordinateMatrix coordMatrix = ::ToCoordinateMatrix(theCoordinates);
+        tree.Contour(coordMatrix, theValues, theHelper, Imagine::NFmiContourTree::kFmiContourLinear);
         return tree.Path();
     }
 
@@ -1878,7 +1905,7 @@ bool NFmiIsoLineView::IsIsoLinesDrawnWithImagine(void)
         return false;
 #endif // UNIX
 
-    boost::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
+    std::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
     return !NFmiQueryDataUtil::AreAreasSameKind(itsArea.get(), infoArea.get());
 }
 
@@ -1928,7 +1955,7 @@ void NFmiIsoLineView::FillGridRelatedData_NormalDataCase(NFmiIsoLineData& isoLin
         auto origDataArea = itsInfo->Area();
         if(DifferentWorldViews(origDataArea, mapArea.get()))
         { // tehd��n dataArea, joka on karttapohjan maailmassa
-            boost::shared_ptr<NFmiArea> origDataAreaClone(origDataArea->Clone());
+            std::shared_ptr<NFmiArea> origDataAreaClone(origDataArea->Clone());
             NFmiPoint blLatlon = origDataAreaClone->BottomLeftLatLon();
             NFmiPoint trLatlon = origDataAreaClone->TopRightLatLon();
             double origLongitudeDifference = trLatlon.X() - blLatlon.X();
@@ -1940,7 +1967,7 @@ void NFmiIsoLineView::FillGridRelatedData_NormalDataCase(NFmiIsoLineData& isoLin
             if(newLongitudeDifference < 0 || ::fabs(origLongitudeDifference - newLongitudeDifference) > 0.1)
                 trLatlon.X(blLatlon.X() + origLongitudeDifference);
             origDataAreaClone->PacificView(mapArea->PacificView());
-            boost::shared_ptr<NFmiArea> newArea(origDataAreaClone->NewArea(blLatlon, trLatlon));
+            std::shared_ptr<NFmiArea> newArea(origDataAreaClone->NewArea(blLatlon, trLatlon));
             zoomedAreaRect = newArea->XYArea(mapArea.get());
         }
         else
@@ -2040,7 +2067,7 @@ bool NFmiIsoLineView::FillGridRelatedData_IsDataVisible()
     if(itsInfo->IsGrid())
     {
         // huom. q2serverilta data voi olla minne tahansa, joten sen k�ytt� on poikkeus
-        boost::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
+        std::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
         if(IsQ2ServerUsed() == false && IsDataInView(infoArea, GetArea()) == false)
             return false; // ei tarvitse piirt�� ollenkaan, koska data ei osu n�yt�n alueelle ollenkaan.
     }
@@ -2098,7 +2125,7 @@ static void CalcDownSizedMatrix(const NFmiDataMatrix<float>& theOrigData, NFmiDa
                 pt.X(1.); // t�m� on varmistus, jos laskenta tarkkuus ongelmat vie rajan yli
             if(pt.Y() > 1.)
                 pt.Y(1.); // t�m� on varmistus, jos laskenta tarkkuus ongelmat vie rajan yli
-            theDownSizedData[i][j] = theOrigData.InterpolatedValue(pt, paramId, dontInvertY, interpolationMethod);
+            theDownSizedData[i][j] = DataMatrixInterpolation::InterpolatedValue(theOrigData, pt, paramId, dontInvertY, interpolationMethod);
         }
     }
 }

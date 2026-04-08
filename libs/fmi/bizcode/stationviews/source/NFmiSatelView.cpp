@@ -22,9 +22,9 @@
 using namespace std;
 
 
-NFmiSatelView::NFmiSatelView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+NFmiSatelView::NFmiSatelView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 								,NFmiToolBox *theToolBox
-								,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+								,std::shared_ptr<NFmiDrawParam> &theDrawParam
 								,FmiParameterName theParamId
 								,int theRowIndex
                                 ,int theColumnIndex)
@@ -84,7 +84,7 @@ void NFmiSatelView::Draw(NFmiToolBox *theGTB)
 		return;
 
     NFmiImageHolder imageHolder = GetImageFromCache();
-    boost::shared_ptr<NFmiArea> imageArea = itsCtrlViewDocumentInterface->SatelliteImageCacheSystem().ImageChannelArea(itsDrawParam->Param());
+    std::shared_ptr<NFmiArea> imageArea = itsCtrlViewDocumentInterface->SatelliteImageCacheSystem().ImageChannelArea(itsDrawParam->Param());
     if(imageHolder && imageArea && imageHolder->IsImageUsable())
 //    if(testBitmap)
     {
@@ -131,7 +131,7 @@ static Gdiplus::Color GetColor(Gdiplus::Bitmap &theImage, const NFmiPoint &theGr
    return theTransparentColor;
 }
 
-Gdiplus::Bitmap* CreateProjectedImage(Gdiplus::Bitmap &theSourceImage, const boost::shared_ptr<NFmiArea> &theSourceArea, const boost::shared_ptr<NFmiArea> &theDestArea, const NFmiPoint &theDestImageSize, const Gdiplus::Color &theTransparentColor)
+Gdiplus::Bitmap* CreateProjectedImage(Gdiplus::Bitmap &theSourceImage, const std::shared_ptr<NFmiArea> &theSourceArea, const std::shared_ptr<NFmiArea> &theDestArea, const NFmiPoint &theDestImageSize, const Gdiplus::Color &theTransparentColor)
 {
     NFmiGrid grid1(theSourceArea.get(), theSourceImage.GetWidth(), theSourceImage.GetHeight());
     NFmiGrid grid2(theDestArea.get(), static_cast<unsigned long>(theDestImageSize.X()), static_cast<unsigned long>(theDestImageSize.Y()));
@@ -156,7 +156,7 @@ Gdiplus::Bitmap* CreateProjectedImage(Gdiplus::Bitmap &theSourceImage, const boo
 // yritet��n piirt�� kuva erilaisen projektion p��lle kuin miss� alkuper�inen
 // kuva on. T�m� vaati kuvan konvertointia haluttuun projektioon.
 // Oletus: theImageArea ja theImageHolder on jo tarkistettu.
-void NFmiSatelView::DrawImageOnDifferentProjection(boost::shared_ptr<NFmiArea> &theImageArea, NFmiImageHolder &theImageHolder)
+void NFmiSatelView::DrawImageOnDifferentProjection(std::shared_ptr<NFmiArea> &theImageArea, NFmiImageHolder &theImageHolder)
 {
     CtrlViewUtils::CtrlViewTimeConsumptionReporter::makeSeparateTraceLogging(std::string(__FUNCTION__) + ": must project satel image to different map projection", this);
     Gdiplus::Color transColor(0, 1, 2, 5); // ((static_cast<Gdiplus::ARGB>(Gdiplus::Color::Purple));

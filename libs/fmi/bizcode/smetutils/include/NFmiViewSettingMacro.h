@@ -73,12 +73,12 @@ public:
 	{
 	public:
 		Param(void);
-		Param(const boost::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiLevel &theLevel, NFmiInfoData::Type theDataType, int theModelOrigTimeOffsetInHours);
+		Param(const std::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiLevel &theLevel, NFmiInfoData::Type theDataType, int theModelOrigTimeOffsetInHours);
 		Param(const NFmiDataIdent &theDataIdent, const NFmiLevel &theLevel, NFmiInfoData::Type theDataType, int theModelOrigTimeOffsetInHours);
 		~Param(void);
 
-		const boost::shared_ptr<NFmiDrawParam>& DrawParam(void) const {return itsDrawParam;}
-		void DrawParam(const boost::shared_ptr<NFmiDrawParam> &newValue);
+		const std::shared_ptr<NFmiDrawParam>& DrawParam(void) const {return itsDrawParam;}
+		void DrawParam(const std::shared_ptr<NFmiDrawParam> &newValue);
 		const NFmiDataIdent& DataIdent(void) const {return itsDataIdent;}
 		void DataIdent(const NFmiDataIdent& newValue) {itsDataIdent = newValue;}
 		const NFmiLevel& Level(void) const {return itsLevel;}
@@ -99,7 +99,7 @@ public:
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);
 	private:
-		boost::shared_ptr<NFmiDrawParam> itsDrawParam; // sis. mm. data identin // talletetaan koko drawparam, ett� voisi tehd� esim. eri v�risi�/erilaisia virityksi� samalle parametrille / eri tuottajalle
+		std::shared_ptr<NFmiDrawParam> itsDrawParam; // sis. mm. data identin // talletetaan koko drawparam, ett� voisi tehd� esim. eri v�risi�/erilaisia virityksi� samalle parametrille / eri tuottajalle
 		NFmiDataIdent itsDataIdent; // t�m� pit�� olla erikseen, koska drawparam ei talleta sen omaa dataidentti��n.
 		NFmiLevel itsLevel;
 		NFmiInfoData::Type itsDataType;

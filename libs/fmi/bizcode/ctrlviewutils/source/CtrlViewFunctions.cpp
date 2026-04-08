@@ -17,6 +17,7 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/round.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <filesystem>
 #include <regex>
 #include <numeric>
@@ -201,7 +202,7 @@ namespace CtrlViewUtils
 
     // Jos annettu positiivinen arvo thelongerProducerNameMaxCharCount -parametrille, 
     // t�ll�in haetaan pitemp�� nime� tuottajalta ja lopuksi se leikataan haluttuun maksimi pituuteen.
-    std::string GetProducerName(NFmiProducerSystem &theProducerSystem, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, bool fAddProdId, size_t theLongerProducerNameMaxCharCount)
+    std::string GetProducerName(NFmiProducerSystem &theProducerSystem, std::shared_ptr<NFmiDrawParam> &theDrawParam, std::shared_ptr<NFmiFastQueryInfo> &theInfo, bool fAddProdId, size_t theLongerProducerNameMaxCharCount)
     {
         bool betaProductCase = theLongerProducerNameMaxCharCount > 0;
         std::string prodNameStr = "X?"; // asetetaan aluksi nimeksi tuntematon tuottaja nimi, laitetaan siihen sitten my�hemmin parempaa, jos l�ytyy
@@ -229,7 +230,7 @@ namespace CtrlViewUtils
         return prodNameStr;
     }
 
-    bool IsConsideredAsNewData(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, int modelRunIndex, bool isMacroParam)
+    bool IsConsideredAsNewData(std::shared_ptr<NFmiFastQueryInfo>& theInfo, int modelRunIndex, bool isMacroParam)
     {
         if(isMacroParam)
         {
@@ -239,7 +240,7 @@ namespace CtrlViewUtils
         return (modelRunIndex == 0 && theInfo && theInfo->ElapsedTimeFromLoadInSeconds() < 5 * 60);
     }
 
-    std::string GetParamNameString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool fCrossSectionInfoWanted, bool fAddIdInfos, bool fMakeTooltipXmlEncode, size_t theLongerProducerNameMaxCharCount, bool fTimeSerialViewCase, bool doNewDataHighlight, bool fShowModelOriginTime, boost::shared_ptr<NFmiFastQueryInfo> possibleInfo)
+    std::string GetParamNameString(std::shared_ptr<NFmiDrawParam> &theDrawParam, bool fCrossSectionInfoWanted, bool fAddIdInfos, bool fMakeTooltipXmlEncode, size_t theLongerProducerNameMaxCharCount, bool fTimeSerialViewCase, bool doNewDataHighlight, bool fShowModelOriginTime, std::shared_ptr<NFmiFastQueryInfo> possibleInfo)
     {
         CtrlViewDocumentInterface* ctrlViewDocumentInterface = CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation();
         std::string normalOrigTimeFormat = ::GetDictionaryString("MapViewToolTipOrigTimeNormal");
@@ -248,7 +249,7 @@ namespace CtrlViewUtils
         NFmiInfoData::Type dataType = theDrawParam->DataType();
         bool isMacroParamCase = theDrawParam->IsMacroParamCase(true);
         std::string str;
-        boost::shared_ptr<NFmiFastQueryInfo> info = possibleInfo ? possibleInfo : ctrlViewDocumentInterface->InfoOrganizer()->Info(theDrawParam, fCrossSectionInfoWanted, true);
+        std::shared_ptr<NFmiFastQueryInfo> info = possibleInfo ? possibleInfo : ctrlViewDocumentInterface->InfoOrganizer()->Info(theDrawParam, fCrossSectionInfoWanted, true);
         if(doNewDataHighlight && IsConsideredAsNewData(info, theDrawParam->ModelRunIndex(), isMacroParamCase))
         {
             // Korostetaan uudet datat jollain merkill�
@@ -416,7 +417,7 @@ namespace CtrlViewUtils
         }
     }
 
-    std::string GetEditingDataString(const std::string &theNameStr, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiLanguage lang, const std::string &theOrigTimeFormat)
+    std::string GetEditingDataString(const std::string &theNameStr, std::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiLanguage lang, const std::string &theOrigTimeFormat)
     {
         std::string returnStr = theNameStr;
         if(theInfo)
@@ -441,7 +442,7 @@ namespace CtrlViewUtils
         str += GetFixedLatlonStr(theLatlon);
         str += "] Elevation: ";
         float elevation = kFloatMissing;
-        boost::shared_ptr<NFmiFastQueryInfo> topoInfo = theCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kStationary);
+        std::shared_ptr<NFmiFastQueryInfo> topoInfo = theCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kStationary);
         if(topoInfo)
         {
             if(topoInfo->Param(kFmiTopoGraf))
@@ -493,7 +494,7 @@ namespace CtrlViewUtils
         return NFmiPoint(x, y);
     }
 
-    boost::shared_ptr<NFmiFastQueryInfo> GetLatestLastTimeObservation(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, bool fCrossSectionInfoWanted)
+    std::shared_ptr<NFmiFastQueryInfo> GetLatestLastTimeObservation(std::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, bool fCrossSectionInfoWanted)
     {
         NFmiInfoData::Type dataType = theDrawParam->DataType();
         if(dataType == NFmiInfoData::kObservations || dataType == NFmiInfoData::kAnalyzeData || dataType == NFmiInfoData::kSingleStationRadarData || dataType == NFmiInfoData::kFlashData)
@@ -503,8 +504,8 @@ namespace CtrlViewUtils
                 return theCtrlViewDocumentInterface->InfoOrganizer()->Info(theDrawParam, fCrossSectionInfoWanted, true);
             else
             {
-                boost::shared_ptr<NFmiArea> dummyArea;
-                std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infos;
+                std::shared_ptr<NFmiArea> dummyArea;
+                std::vector<std::shared_ptr<NFmiFastQueryInfo>> infos;
                 theCtrlViewDocumentInterface->MakeDrawedInfoVectorForMapView(infos, theDrawParam, dummyArea);
                 if(infos.size())
                 {
@@ -522,13 +523,13 @@ namespace CtrlViewUtils
                 }
             }
         }
-        return boost::shared_ptr<NFmiFastQueryInfo>();
+        return std::shared_ptr<NFmiFastQueryInfo>();
     }
 
-    std::string GetLatestObservationTimeString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, const std::string &theTimeFormat, bool fCrossSectionInfoWanted)
+    std::string GetLatestObservationTimeString(std::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, const std::string &theTimeFormat, bool fCrossSectionInfoWanted)
     {
         std::string str;
-        boost::shared_ptr<NFmiFastQueryInfo> info = GetLatestLastTimeObservation(theDrawParam, theCtrlViewDocumentInterface, fCrossSectionInfoWanted);
+        std::shared_ptr<NFmiFastQueryInfo> info = GetLatestLastTimeObservation(theDrawParam, theCtrlViewDocumentInterface, fCrossSectionInfoWanted);
         if(info)
         {
             str += " (";
@@ -540,7 +541,7 @@ namespace CtrlViewUtils
         return str;
     }
 
-    std::string GetArchiveOrigTimeString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, bool fGetCurrentDataFromQ2Server, const std::string &theDictionaryTokenForOrigTimeFormat)
+    std::string GetArchiveOrigTimeString(std::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, std::shared_ptr<NFmiFastQueryInfo> &theInfo, bool fGetCurrentDataFromQ2Server, const std::string &theDictionaryTokenForOrigTimeFormat)
     {
         std::string str;
         if(theDrawParam->UseArchiveModelData())
@@ -701,7 +702,7 @@ namespace CtrlViewUtils
         }
     }
 
-    std::string GetMacroParamFormula(NFmiMacroParamSystem& macroParamSystem, const boost::shared_ptr<NFmiDrawParam>& theDrawParam)
+    std::string GetMacroParamFormula(NFmiMacroParamSystem& macroParamSystem, const std::shared_ptr<NFmiDrawParam>& theDrawParam)
     {
         auto macroParamPtr = macroParamSystem.GetWantedMacro(theDrawParam->InitFileName());
         if(macroParamPtr)
@@ -709,7 +710,7 @@ namespace CtrlViewUtils
         throw std::runtime_error(std::string(__FUNCTION__) + ": couldn't found macro parameter: " + theDrawParam->ParameterAbbreviation());
     }
 
-    std::string MakeMacroParamRelatedFinalErrorMessage(const std::string& baseMessage, const std::exception* exceptionPtr, boost::shared_ptr<NFmiDrawParam>& theDrawParam, const std::string& macroParamSystemRootPath)
+    std::string MakeMacroParamRelatedFinalErrorMessage(const std::string& baseMessage, const std::exception* exceptionPtr, std::shared_ptr<NFmiDrawParam>& theDrawParam, const std::string& macroParamSystemRootPath)
     {
         std::string errorMessage = baseMessage;
         if(exceptionPtr)
@@ -723,7 +724,7 @@ namespace CtrlViewUtils
         return errorMessage;
     }
 
-    void SetMacroParamErrorMessage(const std::string& errorText, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam, CtrlViewDocumentInterface& ctrlViewDocumentInterface, std::string* possibleTooltipErrorTextOut)
+    void SetMacroParamErrorMessage(const std::string& errorText, std::shared_ptr<NFmiDrawParam>& triggerDrawParam, CtrlViewDocumentInterface& ctrlViewDocumentInterface, std::string* possibleTooltipErrorTextOut)
     {
         // Lokitetaan virheviesti
         CatLog::logMessage(errorText, CatLog::Severity::Error, CatLog::Category::Macro, true);
@@ -739,7 +740,7 @@ namespace CtrlViewUtils
         ctrlViewDocumentInterface.SetMacroErrorText(dialogErrorString, triggerDrawParam);
     }
 
-    void ClearMacroParamErrorMessage(boost::shared_ptr<NFmiDrawParam>& triggerDrawParam, CtrlViewDocumentInterface& ctrlViewDocumentInterface)
+    void ClearMacroParamErrorMessage(std::shared_ptr<NFmiDrawParam>& triggerDrawParam, CtrlViewDocumentInterface& ctrlViewDocumentInterface)
     {
         ctrlViewDocumentInterface.SetMacroErrorText("", triggerDrawParam);
     }

@@ -46,13 +46,13 @@ public:
 	const std::string GetOverMapBitmapAbsoluteFileName();
 	bool Init(std::shared_ptr<NFmiMapConfiguration>& mapConfiguration);
 
-	void Area(const boost::shared_ptr<NFmiArea> &newArea);
+	void Area(const std::shared_ptr<NFmiArea> &newArea);
 	NFmiRect ZoomedAbsolutRect();
 	NFmiRect ZoomedAbsolutRectOverMap();
 	NFmiRect TotalAbsolutRect();
 	NFmiRect TotalAbsolutRectOverMap();
-	boost::shared_ptr<NFmiArea> TotalArea();
-	boost::shared_ptr<NFmiArea> Area();
+	std::shared_ptr<NFmiArea> TotalArea();
+	std::shared_ptr<NFmiArea> Area();
 	bool SetMaxArea();
 	bool SetHalfArea(); // asettaa zoomin puoleksi koko alueesta ja keskelle
 	// aspectratio muodossa x/y
@@ -96,7 +96,7 @@ public:
 
 private:
 	Gdiplus::Bitmap* CreateBitmapFromFile(const std::string &theFileName);
-	boost::shared_ptr<NFmiArea> ReadArea(const std::string& theAreaFileName);
+	std::shared_ptr<NFmiArea> ReadArea(const std::string& theAreaFileName);
 	void CalcZoomedAreaPosition();
 	void InitializeBitmapVectors();
 	void CreateOriginalArea(const std::string& theArea);
@@ -110,8 +110,8 @@ private:
 	// T�h�n l�pin�kyv��n 'karttaan' on laitettu eri paikkojen sijainteja ja niiden nimi�.
 	// T�m� Bitmap on tarkoitus haluttaessa piirt�� oikean kartan p��lle.
 	std::vector<Gdiplus::Bitmap*> itsOverMapBitmaps;
-	boost::shared_ptr<NFmiArea> itsOriginalArea;
-	boost::shared_ptr<NFmiArea> itsZoomedArea;
+	std::shared_ptr<NFmiArea> itsOriginalArea;
+	std::shared_ptr<NFmiArea> itsZoomedArea;
 	NFmiRect itsZoomedAreaPosition;
     // Pit��k� uusi karttapohja rakentaa syyst� tai toisesta
 	bool fMakeNewBackgroundBitmap;
@@ -131,8 +131,8 @@ private:
 	// taas takaisin swap-back areaan (joka otetaan talteen aina kun on tehty 1. swap-komento).
 	// CTRL+SPACE:lla talletetaan mik� tahansa zoomi swap-base:ksi. Mik� tahansa zoomi tuhoaa
 	// swap-back:in, koska kun zoomataan ja painetaan SPACE:a, siit� tulee uusi swap-back-area.
-	boost::shared_ptr<NFmiArea> itsSwapBaseArea; // defaulttina t�h�n otetaan itsOriginalArea, mutta t�t� voidaan p�ivitt�� milloin vain CTRL+SPACE:llea ja SwapBase-metodilla.
-	boost::shared_ptr<NFmiArea> itsSwapBackArea;
+	std::shared_ptr<NFmiArea> itsSwapBaseArea; // defaulttina t�h�n otetaan itsOriginalArea, mutta t�t� voidaan p�ivitt�� milloin vain CTRL+SPACE:llea ja SwapBase-metodilla.
+	std::shared_ptr<NFmiArea> itsSwapBackArea;
 	// SwapMode m��r�� mit� tehd��n seuraavksi, kun suoritetaan SwapArea-metodi.
 	// Arvolla 0 tehd��n perus swappi eli talletetaan nykyinen zoomi swap-back-areaan ja menn��n swap-base-areaan.
 	// Arvolla 1 palataan takaisin swap-base:sta swap-back:iin.

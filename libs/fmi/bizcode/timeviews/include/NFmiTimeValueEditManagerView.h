@@ -49,7 +49,7 @@ class NFmiTimeValueEditManagerView : public NFmiCtrlView
 	void DrawTimeAxisView(void);
 	NFmiRect CalcListViewRect(int theIndex);
 	void DrawBackground (void);
-	virtual NFmiTimeSerialView* CreateTimeSerialView(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int index);
+	virtual NFmiTimeSerialView* CreateTimeSerialView(std::shared_ptr<NFmiDrawParam> &theDrawParam, int index);
 	double CalcTimeAxisHeight(void);
 	int CalcRowIndex(const NFmiPoint& thePlace);
 	void DoNeededTimeSerialMacroParamInfoUpdates();
@@ -59,7 +59,7 @@ class NFmiTimeValueEditManagerView : public NFmiCtrlView
 	int itsViewCount; // ei tarvita välttämättä, koska luku saadaan drawparamlist:ilta
 
  private:
-	bool FindView(NFmiCtrlViewList* theViewList, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
+	bool FindView(NFmiCtrlViewList* theViewList, std::shared_ptr<NFmiDrawParam> &theDrawParam);
 
 
 	int itsSymbolViewCount;

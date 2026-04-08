@@ -579,7 +579,7 @@ std::string NFmiCrossSectionManagerView::ComposeToolTipText(const NFmiPoint& the
 void NFmiCrossSectionManagerView::CreateViewList(void)
 {
 	DestroyViewList();
-	boost::shared_ptr<NFmiDrawParam> emptyDrawParam;
+	std::shared_ptr<NFmiDrawParam> emptyDrawParam;
 	itsViewList = new NFmiCtrlViewList(itsMapViewDescTopIndex, itsViewListRect, itsToolBox,
 										emptyDrawParam);
 	int maxSize = itsCrossSectionSystem->MaxViewRowSize();
@@ -712,7 +712,7 @@ bool NFmiCrossSectionManagerView::MouseWheel(const NFmiPoint &thePlace, unsigned
 	return false;
 }
 
-bool NFmiCrossSectionManagerView::IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
+bool NFmiCrossSectionManagerView::IsCrossSectionMacroParamOk(std::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
 {
     auto view = static_cast<NFmiCrossSectionView*>(itsViewList->First());
 	if(!view)

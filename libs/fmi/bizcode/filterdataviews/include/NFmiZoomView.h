@@ -19,12 +19,12 @@ public:
    bool MouseMove (const NFmiPoint & thePlace, unsigned long theKey) override;
    void Draw (NFmiToolBox * theGTB) override;
     NFmiZoomView (int theMapViewDescTopIndex, NFmiToolBox * theToolBox
-				 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam);
+				 ,std::shared_ptr<NFmiDrawParam> &theDrawParam);
 	NFmiZoomView (int theMapViewDescTopIndex, NFmiToolBox *theToolBox
-				  ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+				  ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 				  ,const NFmiRect& theRect);
    ~NFmiZoomView ();
-   boost::shared_ptr<NFmiArea> ZoomedArea (void);
+   std::shared_ptr<NFmiArea> ZoomedArea (void);
    void Update(void) override;
 
 
@@ -45,6 +45,6 @@ private:
    void DrawZoomedAreaRect (const NFmiPoint & thePlace);
    void DrawZoomedAreaRect (const NFmiPoint & thePlace, FmiDirection theDragTarget);
    NFmiRect itsZoomedAreaRect;
-   boost::shared_ptr<NFmiArea> itsZoomedArea;
+   std::shared_ptr<NFmiArea> itsZoomedArea;
 };
 

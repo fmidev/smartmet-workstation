@@ -28,7 +28,7 @@ protected:
 // Attributes
 public:
 	CTimeEditValuesView(CWnd* theParent
-					   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+					   ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 					   , SmartMetDocumentInterface *smartMetDocumentInterface);
 	bool ChangeTimeSeriesValues(void);
 	void ResetAllModifyFactorValues(void);
@@ -115,7 +115,7 @@ private:
 	void MakeAllMapViewsUpdated(bool newValue);
 
 	NFmiTimeValueEditManagerView* itsManagerView;
-	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
+	std::shared_ptr<NFmiDrawParam> itsDrawParam;
 
 	CBitmap* itsMemoryBitmap;
 	CPPToolTip m_tooltip;

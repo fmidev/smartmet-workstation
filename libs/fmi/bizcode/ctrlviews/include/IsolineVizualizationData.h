@@ -50,7 +50,7 @@ class IsolineVizualizationData
 public:
     IsolineVizualizationData();
 
-    bool initialize(const ContouringJobData& isolineJobData, const boost::shared_ptr<NFmiDrawParam>& drawParam, float dataMin, float dataMax, bool stationData);
+    bool initialize(const ContouringJobData& isolineJobData, const std::shared_ptr<NFmiDrawParam>& drawParam, float dataMin, float dataMax, bool stationData);
     bool isCorrectlyInitialized() const { return isCorrectlyInitialized_; }
     const std::string& initializationErrorMessage() const { return initializationErrorMessage_; }
     const std::vector<float>& finalClassLimits() const { return finalClassLimits_; }
@@ -91,9 +91,9 @@ private:
     void calculateNonBlendingColors();
     void calculateBlendedColors();
     std::pair<int, NFmiColor> getBlendedColorValues(float limitValue);
-    void initFromDrawParam(const boost::shared_ptr<NFmiDrawParam>& drawParam);
-    std::pair<std::vector<float>, std::vector<NFmiColor>> getSimpleColors(const boost::shared_ptr<NFmiDrawParam>& drawParam);
-    std::pair<std::vector<float>, std::vector<int>> getCustomColors(const boost::shared_ptr<NFmiDrawParam>& drawParam);
+    void initFromDrawParam(const std::shared_ptr<NFmiDrawParam>& drawParam);
+    std::pair<std::vector<float>, std::vector<NFmiColor>> getSimpleColors(const std::shared_ptr<NFmiDrawParam>& drawParam);
+    std::pair<std::vector<float>, std::vector<int>> getCustomColors(const std::shared_ptr<NFmiDrawParam>& drawParam);
     void padCustomAttributes();
     void calcFixedToolmasterContourLimits();
 };

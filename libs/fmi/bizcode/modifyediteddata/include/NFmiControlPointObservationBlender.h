@@ -15,7 +15,7 @@ class NFmiTimeDescriptor;
 
 class NFmiControlPointObservationBlender : public NFmiDataParamControlPointModifier
 {
-    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> itsObservationInfos;
+    std::vector<std::shared_ptr<NFmiFastQueryInfo>> itsObservationInfos;
     NFmiMetTime itsActualFirstTime;
  public:
 
@@ -29,13 +29,13 @@ class NFmiControlPointObservationBlender : public NFmiDataParamControlPointModif
          NFmiLimitChecker limitChecker;
      };
 
-     NFmiControlPointObservationBlender(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
+     NFmiControlPointObservationBlender(std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::shared_ptr<NFmiDrawParam> &theDrawParam, std::shared_ptr<NFmiAreaMaskList> &theMaskList,
          unsigned long theAreaMask, boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager, const NFmiRect &theCPGridCropRect,
-         bool theUseGridCrop, const NFmiPoint &theCropMarginSize, std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, const NFmiMetTime &actualFirstTime, const NFmiGriddingProperties &griddingProperties);
+         bool theUseGridCrop, const NFmiPoint &theCropMarginSize, std::vector<std::shared_ptr<NFmiFastQueryInfo>> &observationInfos, const NFmiMetTime &actualFirstTime, const NFmiGriddingProperties &griddingProperties);
 
      bool ModifyTimeSeriesDataUsingMaskFactors(NFmiTimeDescriptor& theActiveTimes, NFmiThreadCallBacks *theThreadCallBacks);
-     static bool GetObservationsToChangeValueFields(boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, const NFmiTimeDescriptor &allowedTimeRange);
-     static bool SeekClosestObsBlenderData(const NFmiLocation &cpLocation, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, const NFmiTimeDescriptor &allowedTimeRange, float &zValueOut, boost::shared_ptr<NFmiFastQueryInfo> &closestObsBlenderInfoOut);
+     static bool GetObservationsToChangeValueFields(boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager, std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::vector<std::shared_ptr<NFmiFastQueryInfo>> &observationInfos, std::vector<float> &xValues, std::vector<float> &yValues, std::vector<float> &zValues, const NFmiTimeDescriptor &allowedTimeRange);
+     static bool SeekClosestObsBlenderData(const NFmiLocation &cpLocation, std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::vector<std::shared_ptr<NFmiFastQueryInfo>> &observationInfos, const NFmiTimeDescriptor &allowedTimeRange, float &zValueOut, std::shared_ptr<NFmiFastQueryInfo> &closestObsBlenderInfoOut);
      static NFmiTimeDescriptor CalcAllowedObsBlenderTimes(const NFmiMetTime &actualFirstTime, const NFmiMetTime &firstEditedTime, long expirationTimeInMinutes);
 
 protected:

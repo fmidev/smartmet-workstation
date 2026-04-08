@@ -29,12 +29,12 @@ bool NFmiGenDocDataAdapter::CheckValidationFromSettings(void)
 	return true; // genDocin kanssa tehd��n aina asetuksien mukaiset validaatiot, joten t�m� palauttaa aina true:n!!
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiGenDocDataAdapter::EditedInfo(void)
+std::shared_ptr<NFmiFastQueryInfo> NFmiGenDocDataAdapter::EditedInfo(void)
 {
 	return itsDoc->EditedSmartInfo();
 }
 
-boost::shared_ptr<NFmiAreaMaskList> NFmiGenDocDataAdapter::ParamMaskList(void)
+std::shared_ptr<NFmiAreaMaskList> NFmiGenDocDataAdapter::ParamMaskList(void)
 {
 	return itsDoc->ParamMaskListMT();
 }
@@ -74,7 +74,7 @@ void NFmiGenDocDataAdapter::WindTableSystemMustaUpdateTable(bool newState)
 	itsDoc->WindTableSystem().MustaUpdateTable(newState);
 }
 
-boost::shared_ptr<NFmiDrawParam> NFmiGenDocDataAdapter::GetUsedDrawParamForEditedData(const NFmiDataIdent &theDataIdent)
+std::shared_ptr<NFmiDrawParam> NFmiGenDocDataAdapter::GetUsedDrawParamForEditedData(const NFmiDataIdent &theDataIdent)
 {
 	return itsDoc->GetCombinedMapHandler()->getUsedDrawParamForEditedData(theDataIdent);
 }
@@ -109,7 +109,7 @@ void NFmiGenDocDataAdapter::FilteringParameterUsageState(int newValue)
 	itsDoc->FilteringParameterUsageState(newValue);
 }
 
-boost::shared_ptr<NFmiDrawParam> NFmiGenDocDataAdapter::ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex)
+std::shared_ptr<NFmiDrawParam> NFmiGenDocDataAdapter::ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex)
 {
 	return itsDoc->GetCombinedMapHandler()->activeDrawParamFromActiveRow(theDescTopIndex);
 }
@@ -141,7 +141,7 @@ void NFmiGenDocDataAdapter::RefreshMasks(void)
 }
 */
 
-boost::shared_ptr<NFmiTimeDescriptor> NFmiGenDocDataAdapter::CreateDataFilteringTimeDescriptor(boost::shared_ptr<NFmiFastQueryInfo>& theEditedData)
+boost::shared_ptr<NFmiTimeDescriptor> NFmiGenDocDataAdapter::CreateDataFilteringTimeDescriptor(std::shared_ptr<NFmiFastQueryInfo>& theEditedData)
 {
 	NFmiTimeDescriptor tmpTimeDesc(theEditedData->TimeDescriptor());
 	return boost::shared_ptr<NFmiTimeDescriptor>(new NFmiTimeDescriptor(tmpTimeDesc.GetIntersection(TimeFilterStartTime(), TimeFilterEndTime())));
@@ -238,7 +238,7 @@ NFmiHelpEditorSystem& NFmiGenDocDataAdapter::HelpEditorSystem(void)
 	return itsDoc->HelpEditorSystem();
 }
 
-bool NFmiGenDocDataAdapter::StoreData(const std::string& theFileName, boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, bool askForSave)
+bool NFmiGenDocDataAdapter::StoreData(const std::string& theFileName, std::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, bool askForSave)
 {
 	return itsDoc->StoreData(theFileName, theSmartInfo, askForSave);
 }
@@ -338,13 +338,13 @@ void NFmiGenDocDataAdapter::SetLatestMacroParamErrorText(const std::string& theE
 	itsDoc->SetLatestMacroParamErrorText(theErrorText);
 }
 
-void NFmiGenDocDataAdapter::SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam)
+void NFmiGenDocDataAdapter::SetMacroErrorText(const std::string &theErrorStr, std::shared_ptr<NFmiDrawParam>& triggerDrawParam)
 {
 	ApplicationInterface::GetApplicationInterfaceImplementation()->SetMacroErrorText(theErrorStr, triggerDrawParam);
 }
 
 #ifndef UNIX
-boost::shared_ptr<NFmiArea> NFmiGenDocDataAdapter::MapHandlerArea(bool fGetZoomedArea)
+std::shared_ptr<NFmiArea> NFmiGenDocDataAdapter::MapHandlerArea(bool fGetZoomedArea)
 {
 	auto* mapHandler = itsDoc->GetCombinedMapHandler()->getMapViewDescTop(0)->MapHandler();
 	if(fGetZoomedArea)
@@ -405,7 +405,7 @@ void NFmiGenDocDataAdapter::LogAndWarnUser(const std::string &theMessageStr, con
 }
 
 #ifndef UNIX
-boost::shared_ptr<NFmiArea> NFmiGenDocDataAdapter::GetUsedMapViewArea(int theMapViewDescTopIndex)
+std::shared_ptr<NFmiArea> NFmiGenDocDataAdapter::GetUsedMapViewArea(int theMapViewDescTopIndex)
 {
 	return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->MapHandler()->Area();
 }

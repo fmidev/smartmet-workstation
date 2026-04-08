@@ -687,7 +687,7 @@ static char THIS_FILE[] = __FILE__;
 // CFmiTMColorIndexDlg dialog
 
 
-CFmiTMColorIndexDlg::CFmiTMColorIndexDlg(CFmiModifyDrawParamDlg *theModifyDrawParamDlg, const std::string &theTitleStr, const std::string theHelpStr, Matrix3D<std::pair<int, COLORREF> >* theColorsCube, boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool doIsolineModifications, CWnd* pParent)
+CFmiTMColorIndexDlg::CFmiTMColorIndexDlg(CFmiModifyDrawParamDlg *theModifyDrawParamDlg, const std::string &theTitleStr, const std::string theHelpStr, Matrix3D<std::pair<int, COLORREF> >* theColorsCube, std::shared_ptr<NFmiDrawParam> &theDrawParam, bool doIsolineModifications, CWnd* pParent)
 : CDialog(CFmiTMColorIndexDlg::IDD, pParent)
 , itsUsedColorsCube(*theColorsCube)
 , itsTitleStr(theTitleStr)

@@ -53,7 +53,7 @@ static bool wasPreviousWordVerticalFuction(const std::string &previousActualWord
 
 static bool checkPossibleVariable(const std::string &possibleVariableWord, MacroParamDataInfo &macroParamDataInfo, const std::string &previousActualWord)
 {
-    boost::shared_ptr<NFmiAreaMaskInfo> maskInfo(new NFmiAreaMaskInfo());
+    std::shared_ptr<NFmiAreaMaskInfo> maskInfo(new NFmiAreaMaskInfo());
     if(NFmiSmartToolIntepreter::InterpretVariableForChecking(possibleVariableWord, maskInfo))
     {
         macroParamDataInfo.variableName_ = possibleVariableWord;

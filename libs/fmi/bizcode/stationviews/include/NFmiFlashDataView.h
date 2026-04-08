@@ -24,9 +24,9 @@ class NFmiFlashDataView : public NFmiStationView
 {
 
 public:
-   NFmiFlashDataView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+   NFmiFlashDataView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 				   ,NFmiToolBox * theToolBox
-				   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+				   ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 				   ,FmiParameterName theParamId
 				   ,NFmiPoint theOffSet
 				   ,NFmiPoint theSize
@@ -46,7 +46,7 @@ protected:
    void CreateFlashPolyLines(void);
    bool CalcFlashCount(int &theGroundFlashCountOut, int &theCloudFlashCountOut);
    bool PrepareForStationDraw(void) override;
-   void DrawFlashes(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+   void DrawFlashes(std::shared_ptr<NFmiFastQueryInfo> &theInfo);
 
    NFmiPolyline *itsNegativeFlashPolyLine;
    NFmiPolyline *itsPositiveFlashPolyLine;

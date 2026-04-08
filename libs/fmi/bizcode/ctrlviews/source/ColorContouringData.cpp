@@ -349,7 +349,7 @@ std::string ContouringJobData::makeJobDataString() const
 
 ColorContouringData::ColorContouringData() = default;
 
-bool ColorContouringData::initialize(const ContouringJobData& contouringJobData, const boost::shared_ptr<NFmiDrawParam>& drawParam)
+bool ColorContouringData::initialize(const ContouringJobData& contouringJobData, const std::shared_ptr<NFmiDrawParam>& drawParam)
 {
 	contouringJobData_ = contouringJobData;
 	if(drawParam->UseSimpleIsoLineDefinitions())
@@ -387,7 +387,7 @@ bool ColorContouringData::initialize(const ContouringJobData& contouringJobData,
 	return isCorrectlyInitialized_;
 }
 
-bool ColorContouringData::initializeForLegendCalculations(const boost::shared_ptr<NFmiDrawParam>& drawParam, int maxAllowedLimits)
+bool ColorContouringData::initializeForLegendCalculations(const std::shared_ptr<NFmiDrawParam>& drawParam, int maxAllowedLimits)
 {
 	// Legendoja varten pit�� rajoittaa laskettuja limittej� rankemmalla k�dell�
 	maximumAllowedLimitCount_ = maxAllowedLimits;

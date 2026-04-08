@@ -6,6 +6,7 @@
 #include "NFmiDataIdent.h"
 #include "NFmiMetTime.h"
 #include "NFmiInterpolation.h"
+#include "NFmiPoint.h"
 #include "matrix3d.h"
 #include "NFmiDataMatrix.h"
 #include "ColorContouringData.h"
@@ -32,12 +33,12 @@ public:
 const size_t s_DefRGBRowCapasity = 100;
 const size_t s_DefRGBColumnCapasity = 4;
 
-// NFmiContourUserDrawData luokka pitää sisällään contour-user-draw piirron dataa:
-// 1. matriisin koordinaateista (suhteelliset tms.), jotka eivät ole normi suorakulmaisen hilan pisteet. 
-// 2. Niihin liittyvät x- ja y-koordinaateille on vektorit, joihin em. matriisi on purettuna siten kuin Toolmaster x/y-koordinaatit haluaa XuContourUserDraw funktiolle.
-// 3. Em. koordinaatteihin liittyvä value matriisi, jota siis käytetään vain contour piirrrossa. 
-// Jos käytössä isoviiva+contour yhdistelmä, pitää isoviivoille olla oma suorakulmainen matriisi NFmiIsoLineData luokassa.
-// Lisäksi on UseUserDraw -metodi, jolla voidaan kysyä että onko user-draw datat käytössä vai ei.
+// NFmiContourUserDrawData luokka pitï¿½ï¿½ sisï¿½llï¿½ï¿½n contour-user-draw piirron dataa:
+// 1. matriisin koordinaateista (suhteelliset tms.), jotka eivï¿½t ole normi suorakulmaisen hilan pisteet. 
+// 2. Niihin liittyvï¿½t x- ja y-koordinaateille on vektorit, joihin em. matriisi on purettuna siten kuin Toolmaster x/y-koordinaatit haluaa XuContourUserDraw funktiolle.
+// 3. Em. koordinaatteihin liittyvï¿½ value matriisi, jota siis kï¿½ytetï¿½ï¿½n vain contour piirrrossa. 
+// Jos kï¿½ytï¿½ssï¿½ isoviiva+contour yhdistelmï¿½, pitï¿½ï¿½ isoviivoille olla oma suorakulmainen matriisi NFmiIsoLineData luokassa.
+// Lisï¿½ksi on UseUserDraw -metodi, jolla voidaan kysyï¿½ ettï¿½ onko user-draw datat kï¿½ytï¿½ssï¿½ vai ei.
 class NFmiContourUserDrawData
 {
 public:
@@ -52,7 +53,7 @@ public:
 
 	// value matriisi
 	NFmiDataMatrix<float> itsUserDrawValuesMatrix;
-	// Vektori johon on sijoitettu kaikki matriisin arvot siinä järjestyksessä kuin toolmaster userDraw funktio ne haluaa
+	// Vektori johon on sijoitettu kaikki matriisin arvot siinï¿½ jï¿½rjestyksessï¿½ kuin toolmaster userDraw funktio ne haluaa
 	std::vector<float> itsUserDrawValues; 
 
 	// UserDraw value matriisin min/max arvot
@@ -74,7 +75,7 @@ public:
 	void InitContourUserDrawData(const NFmiDataMatrix<float>& valueMatrix, const NFmiDataMatrix<NFmiPoint>& coordinateMatrix);
 	bool UseContourUserDraw() const;
 
-	// Data osiot on laitettu täällä julkisiksi
+	// Data osiot on laitettu tï¿½ï¿½llï¿½ julkisiksi
 	// ========================================
 	std::vector<float> itsVectorFloatGridData; // itsYNumber * itsXNumber float gridded data
 	int itsXNumber = 0;
@@ -84,40 +85,40 @@ public:
 	NFmiMetTime itsTime;
 	NFmiDataMatrix<float> itsIsolineData; // value matriisi
 
-	int fUseIsoLines = 0; // 0= ei isoviivojen piirtoa 1=piirretään
-	int fUseColorContours = false; // 0= ei väri sheidausta 1=piirretään väri sheidaus, 2=quickcontour!!!
-	int itsTrueIsoLineCount = 0; // pitää olla pienempi tai yhtäsuuri kuin kFmiIsoLineMaxNumber
-	int itsTrueColorContoursCount = 0; // pitää olla pienempi tai yhtäsuuri kuin kFmiIsoLineMaxNumber
+	int fUseIsoLines = 0; // 0= ei isoviivojen piirtoa 1=piirretï¿½ï¿½n
+	int fUseColorContours = false; // 0= ei vï¿½ri sheidausta 1=piirretï¿½ï¿½n vï¿½ri sheidaus, 2=quickcontour!!!
+	int itsTrueIsoLineCount = 0; // pitï¿½ï¿½ olla pienempi tai yhtï¿½suuri kuin kFmiIsoLineMaxNumber
+	int itsTrueColorContoursCount = 0; // pitï¿½ï¿½ olla pienempi tai yhtï¿½suuri kuin kFmiIsoLineMaxNumber
 
 	bool fUseLabelBox = false;
 	int itsIsoLineBoxFillColorIndex = 0;
-	bool fUseSingleColorsWithSimpleIsoLines = true; // jos true, yksiväriset 'simppelit' isoviivat, muuten käytetään luokka kohtaisia värejä
+	bool fUseSingleColorsWithSimpleIsoLines = true; // jos true, yksivï¿½riset 'simppelit' isoviivat, muuten kï¿½ytetï¿½ï¿½n luokka kohtaisia vï¿½rejï¿½
 	bool fUseIsoLineFeathering = false;
-	bool fUseCustomIsoLineClasses = false; // jos 1, käytetään käyttäjän määräämiä rajaarvoja, jos arvo 0, kättetään jotain tasa steppiä
-	bool fUseCustomColorContoursClasses = false; // jos 1, käytetään käyttäjän määräämiä rajaarvoja, jos arvo 0, kättetään jotain tasa steppiä
-	bool fUseSeparatorLinesBetweenColorContourClasses = false; // piirrä viivat arvo/väri luokkien välille
+	bool fUseCustomIsoLineClasses = false; // jos 1, kï¿½ytetï¿½ï¿½n kï¿½yttï¿½jï¿½n mï¿½ï¿½rï¿½ï¿½miï¿½ rajaarvoja, jos arvo 0, kï¿½ttetï¿½ï¿½n jotain tasa steppiï¿½
+	bool fUseCustomColorContoursClasses = false; // jos 1, kï¿½ytetï¿½ï¿½n kï¿½yttï¿½jï¿½n mï¿½ï¿½rï¿½ï¿½miï¿½ rajaarvoja, jos arvo 0, kï¿½ttetï¿½ï¿½n jotain tasa steppiï¿½
+	bool fUseSeparatorLinesBetweenColorContourClasses = false; // piirrï¿½ viivat arvo/vï¿½ri luokkien vï¿½lille
 	bool fUseIsoLineGabWithCustomContours = false;
-	bool fDrawLabelsOverContours = false; // tämä optio on vain imagine piirrolle, ToolMaster piirrossa tämä hoidetaan toisin. Tämä on siis true (imagine piirrossa), jos käytetään isoline+contour piirtoa
+	bool fDrawLabelsOverContours = false; // tï¿½mï¿½ optio on vain imagine piirrolle, ToolMaster piirrossa tï¿½mï¿½ hoidetaan toisin. Tï¿½mï¿½ on siis true (imagine piirrossa), jos kï¿½ytetï¿½ï¿½n isoline+contour piirtoa
 
 	// itsIsolineData matriisin min/max arvot
 	float itsDataMinValue = 3.4E+38f;
 	float itsDataMaxValue = -3.4E+38f;
-	// Varsinaisten käytettyjen isoline/contour rajojen min/max arvot
+	// Varsinaisten kï¿½ytettyjen isoline/contour rajojen min/max arvot
 	float itsClassMinValue = 0;
 	float itsClassMaxValue = 0;
 	double itsIsolineMinLengthFactor = 1;
 
-	boost::shared_ptr<NFmiFastQueryInfo> itsInfo;
+	std::shared_ptr<NFmiFastQueryInfo> itsInfo;
 
 	NFmiHatchingSettings itsHatch1;
 	NFmiHatchingSettings itsHatch2;
 
 	float itsDefRGB[s_DefRGBRowCapasity][s_DefRGBColumnCapasity];
-	size_t itsDefRGBRowSize = 0; // Tässä on todellinen väri taulu lukumäärä
+	size_t itsDefRGBRowSize = 0; // Tï¿½ssï¿½ on todellinen vï¿½ri taulu lukumï¿½ï¿½rï¿½
 	Matrix3D<std::pair<int, COLORREF> >* itsUsedColorsCube = nullptr; // ei omista, ei tuhoa
 	NFmiContourUserDrawData itsContourUserDrawData;
 
-	// Yhden karttaruudun korkeus millimetreissä, tarvitaan hatch laskuissa
+	// Yhden karttaruudun korkeus millimetreissï¿½, tarvitaan hatch laskuissa
 	double itsSingleSubMapViewHeightInMillimeters = 100.;
 	double itsDataGridToViewHeightRatio = 1.;
 	ColorContouringData itsColorContouringData;

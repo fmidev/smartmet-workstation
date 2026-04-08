@@ -8,6 +8,7 @@
 #include "NFmiDictionaryFunction.h"
 #include "NFmiMacroParamfunctions.h"
 #include "CtrlViewFunctions.h"
+#include <boost/algorithm/string/replace.hpp>
 #ifndef UNIX
 #include <afxdlgs.h>
 #endif

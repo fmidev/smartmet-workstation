@@ -729,7 +729,7 @@ void CFmiSmartToolDlg::OnButtonAction()
 	}
 }
 
-void CFmiSmartToolDlg::SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam> &triggerDrawParam)
+void CFmiSmartToolDlg::SetMacroErrorText(const std::string &theErrorStr, std::shared_ptr<NFmiDrawParam> &triggerDrawParam)
 {
     auto currentMacroParam = itsSmartMetDocumentInterface->MacroParamSystem()->GetCurrentMacroParam();
     if(!currentMacroParam)
@@ -903,9 +903,9 @@ void CFmiSmartToolDlg::OnBnClickedCheckModifyOnlySelectedLocations()
 	UpdateData(TRUE);
 }
 
-static boost::shared_ptr<NFmiDrawParam> CreateDefaultDrawParamPointer()
+static std::shared_ptr<NFmiDrawParam> CreateDefaultDrawParamPointer()
 {
-    return boost::shared_ptr<NFmiDrawParam>(new NFmiDrawParam());
+    return std::shared_ptr<NFmiDrawParam>(new NFmiDrawParam());
 }
 
 boost::shared_ptr<NFmiMacroParam> CreateMacroParamPointer(const std::string &macroParamName, const std::string &macroParamFormula, NFmiInfoData::Type macroType)

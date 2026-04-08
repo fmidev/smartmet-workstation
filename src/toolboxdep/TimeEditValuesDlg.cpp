@@ -195,7 +195,7 @@ void CTimeEditValuesDlg::UpdateCPManagerString(void)
 NFmiPoint CTimeEditValuesDlg::CalcEditedDataGriddingResolutionInKM(void)
 {
 	NFmiPoint resolution;
-	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = itsSmartMetDocumentInterface->EditedSmartInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedInfo = itsSmartMetDocumentInterface->EditedSmartInfo();
 	if(editedInfo && editedInfo->Grid())
 	{
 		unsigned long xSize = editedInfo->GridXNumber();
@@ -276,7 +276,7 @@ void CTimeEditValuesDlg::EnableButtons()
 {
 	if(itsSmartMetDocumentInterface)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->EditedSmartInfo();
+		std::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->EditedSmartInfo();
 		NFmiSmartInfo *smartInfo = dynamic_cast<NFmiSmartInfo*>(info.get());
 
 		CheckIfAnalyzeToolModePossibleAndUpdateControls();
@@ -767,7 +767,7 @@ void CTimeEditValuesDlg::UpdateAnalyseActionControl(void)
 	{
 		bool enableAnalyseTool = false;
         itsSmartMetDocumentInterface->TimeSerialViewDrawParamList()->Index(itsSmartMetDocumentInterface->TimeSerialViewDrawParamList()->FindEdited());
-		boost::shared_ptr<NFmiDrawParam> drawParam = itsSmartMetDocumentInterface->TimeSerialViewDrawParamList()->Current();
+		std::shared_ptr<NFmiDrawParam> drawParam = itsSmartMetDocumentInterface->TimeSerialViewDrawParamList()->Current();
 		if(drawParam)
 		{
 			bool noEditMode = (itsSmartMetDocumentInterface->SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal);

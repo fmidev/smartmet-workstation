@@ -97,13 +97,13 @@ NFmiMetTime NFmiSatelliteImageCacheSystem::GetLatestImageTime(const NFmiDataIden
         return NFmiMetTime::gMissingTime;
 }
 
-boost::shared_ptr<NFmiArea> NFmiSatelliteImageCacheSystem::ImageChannelArea(const NFmiDataIdent &wantedDataIdent)
+std::shared_ptr<NFmiArea> NFmiSatelliteImageCacheSystem::ImageChannelArea(const NFmiDataIdent &wantedDataIdent)
 {
     ChannelCacheItem &channelCache = FindChannelCache(wantedDataIdent);
     if(channelCache)
         return channelCache->ImageArea();
     else
-        return boost::shared_ptr<NFmiArea>();
+        return std::shared_ptr<NFmiArea>();
 }
 
 void NFmiSatelliteImageCacheSystem::DoCacheFileChecks()

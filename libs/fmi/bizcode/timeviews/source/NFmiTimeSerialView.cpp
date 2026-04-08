@@ -55,7 +55,7 @@
 
 #include "boost/math/special_functions/round.hpp"
 
-static boost::shared_ptr<NFmiAreaMaskList> classesEmptyParamMaskList(new NFmiAreaMaskList()); // jos k�ytt�j� ei ole halunnut k�ytt�� maskeja laskuissaan, k�ytet��n t�t� listaa todellisen maskilistan sijasta
+static std::shared_ptr<NFmiAreaMaskList> classesEmptyParamMaskList(new NFmiAreaMaskList()); // jos k�ytt�j� ei ole halunnut k�ytt�� maskeja laskuissaan, k�ytet��n t�t� listaa todellisen maskilistan sijasta
 
 static int itsModifyingUnit; // ainakin v�liaikaisesti staattisena t��ll� (optimointia change valueta laskettaessa)
 
@@ -78,7 +78,7 @@ public:
 		, endTimeIndex_(endTimeIndex)
 	{}
 
-	FastInfoTimeLimits(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiTimeBag& theLimitingTimes)
+	FastInfoTimeLimits(std::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiTimeBag& theLimitingTimes)
 		:FastInfoTimeLimits()
 	{
 		auto usedStartTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(theInfo, theLimitingTimes.FirstTime());
@@ -108,7 +108,7 @@ public:
 	unsigned long endTimeIndex_ = gMissingIndex;
 };
 
-static boost::shared_ptr<NFmiFastQueryInfo> GetWantedData(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theViewedDrawParam, const NFmiProducer &theWantedProducer, NFmiInfoData::Type theWantedType, const NFmiPoint* possibleLatlonPtr)
+static std::shared_ptr<NFmiFastQueryInfo> GetWantedData(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, std::shared_ptr<NFmiDrawParam> &theViewedDrawParam, const NFmiProducer &theWantedProducer, NFmiInfoData::Type theWantedType, const NFmiPoint* possibleLatlonPtr)
 {
 	bool useParamIdOnly = theWantedProducer.GetIdent() == 0;
 	NFmiDataIdent dataIdent(*(theViewedDrawParam->Param().GetParam()), theWantedProducer);
@@ -120,7 +120,7 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetWantedData(CtrlViewDocumentInterf
 		level = &theViewedDrawParam->Level();
     auto possibleComparisonParameters = theCtrlViewDocumentInterface->GetTimeSerialParameters().getComparisonParameters(static_cast<FmiParameterName>(dataIdent.GetParamIdent()));
 
-	boost::shared_ptr<NFmiFastQueryInfo> wantedInfo;
+	std::shared_ptr<NFmiFastQueryInfo> wantedInfo;
 	if(theWantedProducer.GetIdent() == kFmiSYNOP && possibleLatlonPtr)
 	{
 		NFmiMetTime dummyTime;
@@ -145,7 +145,7 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetWantedData(CtrlViewDocumentInterf
 	return wantedInfo;
 }
 
-static bool IsMosDataUsed(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo)
+static bool IsMosDataUsed(std::shared_ptr<NFmiFastQueryInfo> &theViewedInfo)
 {
     if(theViewedInfo->Param().GetParamIdent() == kFmiTemperature && theViewedInfo->SizeLevels() == 1)
         return true;
@@ -153,7 +153,7 @@ static bool IsMosDataUsed(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo)
         return false;
 }
 
-static bool HasModelClimatologyDataAnyOfGivenParameters(boost::shared_ptr<NFmiFastQueryInfo>& modelClimatologyInfo, const ModelClimatology::ParamIds& paramIds)
+static bool HasModelClimatologyDataAnyOfGivenParameters(std::shared_ptr<NFmiFastQueryInfo>& modelClimatologyInfo, const ModelClimatology::ParamIds& paramIds)
 {
 	if(modelClimatologyInfo)
 	{
@@ -171,7 +171,7 @@ static bool HasModelClimatologyDataAnyOfGivenParameters(boost::shared_ptr<NFmiFa
 //--------------------------------------------------------
 NFmiTimeSerialView::NFmiTimeSerialView(int theMapViewDescTopIndex, const NFmiRect &theRect
 						 ,NFmiToolBox *theToolBox
-						 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+						 ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 						 ,int theRowIndex)
 :NFmiTimeView(theMapViewDescTopIndex, theRect
 			 ,theToolBox
@@ -292,7 +292,7 @@ void NFmiTimeSerialView::Draw(NFmiToolBox* theToolBox)
 	{
 	}
 
-	itsInfo = boost::shared_ptr<NFmiFastQueryInfo>();
+	itsInfo = std::shared_ptr<NFmiFastQueryInfo>();
 }
 
 NFmiRect NFmiTimeSerialView::CalculateDataRect(void)
@@ -320,7 +320,7 @@ void NFmiTimeSerialView::DrawSideParametersDataLocationInTime(const NFmiPoint& t
 			{
 				auto &producer = *sideParamDrawParam->Param().GetProducer();
 				auto dataType = sideParamDrawParam->DataType();
-				boost::shared_ptr<NFmiFastQueryInfo> sideParamInfo = ::GetWantedData(itsCtrlViewDocumentInterface, sideParamDrawParam, producer, dataType, &theLatlon);
+				std::shared_ptr<NFmiFastQueryInfo> sideParamInfo = ::GetWantedData(itsCtrlViewDocumentInterface, sideParamDrawParam, producer, dataType, &theLatlon);
 				if(sideParamInfo)
 				{
 					if(itsOperationMode == TimeSerialOperationMode::NormalDrawMode)
@@ -507,7 +507,7 @@ namespace ModelClimatology
 	}
 }
 
-void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime1(FmiParameterName mainParameter, boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon)
+void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime1(FmiParameterName mainParameter, std::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon)
 {
     if(climateInfo)
     {
@@ -527,7 +527,7 @@ void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime1(FmiParameter
     }
 }
 
-void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime2(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, NFmiDrawingEnvironment* overrideEnvi)
+void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime2(std::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, NFmiDrawingEnvironment* overrideEnvi)
 {
     // Seek start and end time to be drawn so that year doesn't matter. climate data doesn't care about years.
     // There may be two separate time ranges that has to be handled. This happens when time range goes from one year 
@@ -568,7 +568,7 @@ void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime2(boost::share
     }
 }
 
-void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime3(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, const NFmiMetTime &startTime, const NFmiMetTime &endTime, int climateDataYearDifference, NFmiDrawingEnvironment* overrideEnvi)
+void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime3(std::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, const NFmiMetTime &startTime, const NFmiMetTime &endTime, int climateDataYearDifference, NFmiDrawingEnvironment* overrideEnvi)
 {
     NFmiTimeBag drawedTimes(startTime, endTime, 60); // resoluutiolla ei merkityst�
 	auto viewStartTime = startTime;
@@ -577,7 +577,7 @@ void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime3(boost::share
     DrawAnnualModelFractileDataLocationInTime4(climateInfo, theLatlon, paramIds, drawedTimes, timeWhenDrawedInMinutes, overrideEnvi);
 }
 
-void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime4(boost::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, const NFmiTimeBag &theDrawedTimes, int theTimeOffsetWhenDrawedInMinutes, NFmiDrawingEnvironment* overrideEnvi)
+void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime4(std::shared_ptr<NFmiFastQueryInfo> &climateInfo, const NFmiPoint &theLatlon, const ModelClimatology::ParamIds &paramIds, const NFmiTimeBag &theDrawedTimes, int theTimeOffsetWhenDrawedInMinutes, NFmiDrawingEnvironment* overrideEnvi)
 {
     NFmiDrawingEnvironment localEnvi;
 	localEnvi.SetFillPattern(FMI_DOT);
@@ -598,7 +598,7 @@ void NFmiTimeSerialView::DrawAnnualModelFractileDataLocationInTime4(boost::share
     }
 }
 
-void NFmiTimeSerialView::DrawTemperatureMinAndMaxFromHelperData(FmiParameterName mainParameter, boost::shared_ptr<NFmiFastQueryInfo>& helperDataInfo, const NFmiPoint& theLatlon)
+void NFmiTimeSerialView::DrawTemperatureMinAndMaxFromHelperData(FmiParameterName mainParameter, std::shared_ptr<NFmiFastQueryInfo>& helperDataInfo, const NFmiPoint& theLatlon)
 {
 	if(helperDataInfo)
 	{
@@ -631,7 +631,7 @@ void NFmiTimeSerialView::DrawModelDataLegend(const std::vector<NFmiColor> &theUs
 		NFmiPoint fontSize(16,16);
 		envi.SetFontSize(fontSize);
 
-		boost::shared_ptr<NFmiFastQueryInfo> info = Info();
+		std::shared_ptr<NFmiFastQueryInfo> info = Info();
 		if(info)
 		{
 			NFmiRect frame(GetFrame());
@@ -668,9 +668,9 @@ void NFmiTimeSerialView::DrawModelDataLegend(const std::vector<NFmiColor> &theUs
 	}
 }
 
-void NFmiTimeSerialView::DrawExistingDataLegend(const NFmiProducer &producer, NFmiInfoData::Type dataType, boost::shared_ptr<NFmiDrawParam> &drawParam, const NFmiColor &color, double heightIncrement, double endPointX, NFmiPoint &legendPlaceInOut, NFmiDrawingEnvironment &drawingEnvironmentInOut)
+void NFmiTimeSerialView::DrawExistingDataLegend(const NFmiProducer &producer, NFmiInfoData::Type dataType, std::shared_ptr<NFmiDrawParam> &drawParam, const NFmiColor &color, double heightIncrement, double endPointX, NFmiPoint &legendPlaceInOut, NFmiDrawingEnvironment &drawingEnvironmentInOut)
 {
-    boost::shared_ptr<NFmiFastQueryInfo> info = ::GetWantedData(itsCtrlViewDocumentInterface, drawParam, producer, dataType, nullptr);
+    std::shared_ptr<NFmiFastQueryInfo> info = ::GetWantedData(itsCtrlViewDocumentInterface, drawParam, producer, dataType, nullptr);
     if(info)
     {
         drawingEnvironmentInOut.SetFrameColor(color);
@@ -709,7 +709,7 @@ void NFmiTimeSerialView::DrawModelDataLocationInTime(NFmiDrawingEnvironment &env
 }
 
 // Originaali parametria ei l�ytynyt, katsotaan l�ytyyk� 'sijais' parametreja datasta
-static bool DataHasComparisonParameter(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, FmiParameterName wantedParamId, CtrlViewDocumentInterface* ctrlViewDocumentInterface)
+static bool DataHasComparisonParameter(std::shared_ptr<NFmiFastQueryInfo>& theInfo, FmiParameterName wantedParamId, CtrlViewDocumentInterface* ctrlViewDocumentInterface)
 {
     auto timeSerialParameters = ctrlViewDocumentInterface->GetTimeSerialParameters().getComparisonParameters(wantedParamId);
     if(timeSerialParameters)
@@ -724,7 +724,7 @@ static bool DataHasComparisonParameter(boost::shared_ptr<NFmiFastQueryInfo>& the
     return false;
 }
 
-static bool DataHasNeededParameters(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, unsigned long wantedParamId, CtrlViewDocumentInterface *ctrlViewDocumentInterface)
+static bool DataHasNeededParameters(std::shared_ptr<NFmiFastQueryInfo> &theInfo, unsigned long wantedParamId, CtrlViewDocumentInterface *ctrlViewDocumentInterface)
 {
     NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
     if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
@@ -742,7 +742,7 @@ static bool DataHasNeededParameters(boost::shared_ptr<NFmiFastQueryInfo> &theInf
 bool NFmiTimeSerialView::DrawModelDataLocationInTime(NFmiDrawingEnvironment &envi, const NFmiPoint &theLatlon, const NFmiProducer &theProducer, NFmiInfoData::Type theDataType)
 {
 	itsToolBox->UseClipping(true);
-    boost::shared_ptr<NFmiFastQueryInfo> info = ::GetWantedData(itsCtrlViewDocumentInterface, itsDrawParam, theProducer, theDataType, &theLatlon);
+    std::shared_ptr<NFmiFastQueryInfo> info = ::GetWantedData(itsCtrlViewDocumentInterface, itsDrawParam, theProducer, theDataType, &theLatlon);
 	if(info)
 	{
 		info->ResetTime(); // varmuuden vuoksi asetan 1. aikaan
@@ -760,7 +760,7 @@ bool NFmiTimeSerialView::DrawModelDataLocationInTime(NFmiDrawingEnvironment &env
 void NFmiTimeSerialView::DrawKepaDataLocationInTime(NFmiDrawingEnvironment &envi, const NFmiPoint &theLatlon)
 {
 	NFmiProducer prod(0, "none"); // 0 producer ignoorataan GetWantedData-funktiossa
-	boost::shared_ptr<NFmiFastQueryInfo> kepaInfo = ::GetWantedData(itsCtrlViewDocumentInterface, itsDrawParam, prod, NFmiInfoData::kKepaData, nullptr);
+	std::shared_ptr<NFmiFastQueryInfo> kepaInfo = ::GetWantedData(itsCtrlViewDocumentInterface, itsDrawParam, prod, NFmiInfoData::kKepaData, nullptr);
 	if(kepaInfo)
 	{
 		envi.SetFrameColor(g_OfficialDataColor);
@@ -770,7 +770,7 @@ void NFmiTimeSerialView::DrawKepaDataLocationInTime(NFmiDrawingEnvironment &envi
 	}
 }
 
-static pair<int, double> FindClosestLocationWithData(std::vector<pair<int, double> > &theNearestLocations, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiTimeBag& theCheckedTimes)
+static pair<int, double> FindClosestLocationWithData(std::vector<pair<int, double> > &theNearestLocations, std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiTimeBag& theCheckedTimes)
 {
 	int size = static_cast<int>(theNearestLocations.size());
 	for(int i=0; i<size; i++)
@@ -795,7 +795,7 @@ static pair<int, double> FindClosestLocationWithData(std::vector<pair<int, doubl
 	return make_pair(-1, kFloatMissing);
 }
 
-bool NFmiTimeSerialView::SetObsDataToNearestLocationWhereIsData(boost::shared_ptr<NFmiFastQueryInfo> &theObsInfo, const NFmiPoint &theLatlon, std::pair<int, double> &theLocationWithDataOut)
+bool NFmiTimeSerialView::SetObsDataToNearestLocationWhereIsData(std::shared_ptr<NFmiFastQueryInfo> &theObsInfo, const NFmiPoint &theLatlon, std::pair<int, double> &theLocationWithDataOut)
 {
     NFmiTimeBag checkedTimes(GetViewLimitingTimes()); // kiinnostaa vain n�kyv�n aika-alueen datat
 	std::vector<pair<int, double> > nearestLocations = theObsInfo->NearestLocations(theLatlon, 5);
@@ -813,15 +813,15 @@ bool NFmiTimeSerialView::SetObsDataToNearestLocationWhereIsData(boost::shared_pt
 	return true;
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetObservationInfo(const NFmiParam &theParam, const NFmiPoint &theLatlon)
+std::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetObservationInfo(const NFmiParam &theParam, const NFmiPoint &theLatlon)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> obsInfo = itsCtrlViewDocumentInterface->GetNearestSynopStationInfo(NFmiLocation(theLatlon), NFmiMetTime(), true, 0);
+	std::shared_ptr<NFmiFastQueryInfo> obsInfo = itsCtrlViewDocumentInterface->GetNearestSynopStationInfo(NFmiLocation(theLatlon), NFmiMetTime(), true, 0);
     if(!obsInfo || ::DataHasNeededParameters(obsInfo, theParam.GetIdent(), itsCtrlViewDocumentInterface) == false)
         obsInfo = GetNonSynopObservation(theParam);
     return obsInfo;
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetNonSynopObservation(const NFmiParam &theParam)
+std::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetNonSynopObservation(const NFmiParam &theParam)
 {
     std::set<long> excludedProducerIds;
     excludedProducerIds.insert(kFmiSYNOP);
@@ -829,10 +829,10 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetNonSynopObservation(
     excludedProducerIds.insert(kFmiSHIP);
     excludedProducerIds.insert(kFmiBUOY);
 
-    std::vector<boost::shared_ptr<NFmiFastQueryInfo> > obsInfos = itsCtrlViewDocumentInterface->InfoOrganizer()->GetInfos(NFmiInfoData::kObservations);
+    std::vector<std::shared_ptr<NFmiFastQueryInfo> > obsInfos = itsCtrlViewDocumentInterface->InfoOrganizer()->GetInfos(NFmiInfoData::kObservations);
     for(size_t i= 0; i < obsInfos.size(); i++)
     {
-        boost::shared_ptr<NFmiFastQueryInfo> &currentInfo = obsInfos[i];
+        std::shared_ptr<NFmiFastQueryInfo> &currentInfo = obsInfos[i];
         std::set<long>::iterator it = excludedProducerIds.find(currentInfo->Producer()->GetIdent());
         if(it == excludedProducerIds.end())
         {
@@ -840,14 +840,14 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetNonSynopObservation(
                 return currentInfo;
         }
     }
-    return boost::shared_ptr<NFmiFastQueryInfo>();
+    return std::shared_ptr<NFmiFastQueryInfo>();
 }
 
 void NFmiTimeSerialView::DrawObservationDataLocationInTime(NFmiDrawingEnvironment& envi, const NFmiPoint& theLatlon)
 {
 	if(itsDrawParam->Level().LevelValue() != kFloatMissing)
 		return; // havainto apu piirrot tehd��n vain pintadatalle
-	boost::shared_ptr<NFmiFastQueryInfo> obsInfo = GetObservationInfo(*itsDrawParam->Param().GetParam(), theLatlon);
+	std::shared_ptr<NFmiFastQueryInfo> obsInfo = GetObservationInfo(*itsDrawParam->Param().GetParam(), theLatlon);
 	if(obsInfo)
 	{
 		obsInfo->FirstLevel(); // varmuuden vuoksi asetan 1. leveliin
@@ -910,7 +910,7 @@ void NFmiTimeSerialView::DrawFraktiiliDataLocationInTime(NFmiDrawingEnvironment 
 		return ; // havainto fraktiili apu piirrot tehd��n vain pintadatalle
 	if(Info()->Param().GetParamIdent() == kFmiTemperature) // fraktiileja l�ytyy vain l�mp�tilalle!!!
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> fraktiiliInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kClimatologyData);
+		std::shared_ptr<NFmiFastQueryInfo> fraktiiliInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kClimatologyData);
 		if(fraktiiliInfo)
 		{
 			NFmiPoint penSize(2, 2);
@@ -1004,7 +1004,7 @@ void NFmiTimeSerialView::DrawFraktiiliDataLocationInTime(NFmiDrawingEnvironment 
 	}
 }
 
-void NFmiTimeSerialView::DrawParamInTime(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDrawingEnvironment &theEnvi, const NFmiPoint &theLatlon, FmiParameterName theParam, const NFmiColor &theColor, const NFmiPoint &theEmptyPointSize)
+void NFmiTimeSerialView::DrawParamInTime(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDrawingEnvironment &theEnvi, const NFmiPoint &theLatlon, FmiParameterName theParam, const NFmiColor &theColor, const NFmiPoint &theEmptyPointSize)
 {
 	if(::DataHasNeededParameters(theInfo, theParam, itsCtrlViewDocumentInterface))
 	{
@@ -1017,7 +1017,7 @@ void NFmiTimeSerialView::DrawParamInTime(boost::shared_ptr<NFmiFastQueryInfo> &t
 // T�m� siksi ett� kFmiTemperatureF100, kFmiTotalPrecipitationF100 ja kFmiTotalCloudCoverF100 -sarjat menev�t F100:sta F0:aan,
 // theParamIndexIncrement -parametri on j��nne menneisyydest�, jolloin tuulen nopeus parametrit meniv�t toiseen suuntaan ja incrementiksi piti antaa -1,
 // nyky��n kaikki parametri menev�t F100 -> F0:aan.
-void NFmiTimeSerialView::DrawModelFractileDataLocationInTime(boost::shared_ptr<NFmiFastQueryInfo> &theFractileData, long theStartParamIndex, const NFmiPoint &theLatlon, long theParamIndexIncrement)
+void NFmiTimeSerialView::DrawModelFractileDataLocationInTime(std::shared_ptr<NFmiFastQueryInfo> &theFractileData, long theStartParamIndex, const NFmiPoint &theLatlon, long theParamIndexIncrement)
 {
 	NFmiDrawingEnvironment envi;
 	envi.SetFillPattern(FMI_DASHDOTDOT);
@@ -1033,7 +1033,7 @@ void NFmiTimeSerialView::DrawModelFractileDataLocationInTime(boost::shared_ptr<N
 
 void NFmiTimeSerialView::DrawModelFractileDataLocationInTime(const NFmiPoint &theLatlon)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> fractileData = itsCtrlViewDocumentInterface->GetBestSuitableModelFractileData(itsInfo);
+	std::shared_ptr<NFmiFastQueryInfo> fractileData = itsCtrlViewDocumentInterface->GetBestSuitableModelFractileData(itsInfo);
 	if(fractileData)
 	{
 		if(Info()->Param().GetParamIdent() == kFmiTemperature && fractileData->Param(kFmiTemperatureF100)) 
@@ -1049,7 +1049,7 @@ void NFmiTimeSerialView::DrawModelFractileDataLocationInTime(const NFmiPoint &th
 	}
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetSeaLevelPlumeData(const NFmiProducer& usedProducer)
+std::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetSeaLevelPlumeData(const NFmiProducer& usedProducer)
 {
     return itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kViewable, usedProducer, true);
 }
@@ -1184,7 +1184,7 @@ void NFmiTimeSerialView::DrawStationNameLegend(const NFmiLocation* theLocation, 
 	}
 }
 
-static double GetTimeSerialValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, bool interpolateValues, const NFmiPoint &theLatlon, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
+static double GetTimeSerialValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, bool interpolateValues, const NFmiPoint &theLatlon, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
 {
     if(metaWindParamUsage.ParamNeedsMetaCalculations(wantedParamId))
     {
@@ -1206,7 +1206,7 @@ static double GetTimeSerialValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, 
 // 1. Hiladataa interpoloidaan ajan ja paikan suhteen
 // 2. Havaintodataa ei interpoloida, oletetaan ett� paikka ja aika on jo asennettu (tuli puuttuvaa tai ei)
 // 3. MetaWindParamUsage pit�� tarkistaa, jos kyseess� on tuulen meta-parametri tapaus
-float NFmiTimeSerialView::GetTooltipValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, boost::shared_ptr<NFmiDrawParam>& theDrawParam)
+float NFmiTimeSerialView::GetTooltipValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, std::shared_ptr<NFmiDrawParam>& theDrawParam)
 {
 	auto wantedParamId = theDrawParam->Param().GetParamIdent();
 	auto usedTime = NFmiFastInfoUtils::GetUsedTimeIfModelClimatologyData(theInfo, theTime);
@@ -1235,7 +1235,7 @@ float NFmiTimeSerialView::GetTooltipValue(boost::shared_ptr<NFmiFastQueryInfo> &
     }
 }
 
-void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(const NFmiTimeBag &theDrawedTimes, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiDrawingEnvironment &theEnvi, const NFmiPoint &theLatLonPoint, const NFmiPoint& theSinglePointSize, bool drawConnectingLines, int theTimeOffsetWhenDrawedInMinutes)
+void NFmiTimeSerialView::DrawSimpleDataInTimeSerial(const NFmiTimeBag &theDrawedTimes, std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiDrawingEnvironment &theEnvi, const NFmiPoint &theLatLonPoint, const NFmiPoint& theSinglePointSize, bool drawConnectingLines, int theTimeOffsetWhenDrawedInMinutes)
 {
     auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
     auto paramId = theDrawParam->Param().GetParamIdent();
@@ -1616,7 +1616,7 @@ void NFmiTimeSerialView::DrawSelectedStationDataIncrementally(void)
 	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 		return ;
 	DrawIncrementalDataLegend();
-	boost::shared_ptr<NFmiFastQueryInfo> info = Info();
+	std::shared_ptr<NFmiFastQueryInfo> info = Info();
     // Incremental draw can't be used witn non-edited data, because these drawing 
     // functions are using mask-system that are only usable with edited data.
 	if(!info || !IsEditedData(info))
@@ -1640,7 +1640,7 @@ void NFmiTimeSerialView::DrawLocationDataIncrementally(void)
 	float value1, value2, modifiedValue1,modifiedValue2, realValue1, realValue2;
 	NFmiMetTime time1, time2;
 
-	boost::shared_ptr<NFmiAreaMaskList> paramMaskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
+	std::shared_ptr<NFmiAreaMaskList> paramMaskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
 	if(!paramMaskList)
 		return ;
 	if(!itsCtrlViewDocumentInterface->IsMasksUsedInTimeSerialViews())
@@ -1722,7 +1722,7 @@ static std::string GetLatlonString(const NFmiPoint &theLatlon)
 	return str;
 }
 
-void NFmiTimeSerialView::DrawStationDataStationNameLegend(boost::shared_ptr<NFmiFastQueryInfo> &info, const NFmiPoint &theLatlon, int counter, NFmiDrawingEnvironment &envi)
+void NFmiTimeSerialView::DrawStationDataStationNameLegend(std::shared_ptr<NFmiFastQueryInfo> &info, const NFmiPoint &theLatlon, int counter, NFmiDrawingEnvironment &envi)
 {
 	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 		return ;
@@ -1749,7 +1749,7 @@ void NFmiTimeSerialView::DrawStationDataStationNameLegend(boost::shared_ptr<NFmi
 	}
 }
 
-void NFmiTimeSerialView::DrawSelectedStationData(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, int &theDrawedLocationCounter)
+void NFmiTimeSerialView::DrawSelectedStationData(std::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, int &theDrawedLocationCounter)
 {
 	auto drawHelperData = DrawHelperData();
 	// vain 1. lokaatiolle piirret��n helper-data ja side-parametrit
@@ -1824,7 +1824,7 @@ bool NFmiTimeSerialView::IsAnalyzeRelatedToolUsed() const
 // oikealla hiiren n�pp�imell� valitut asemat.
 void NFmiTimeSerialView::DrawSelectedStationData(void)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> info = Info();
+	std::shared_ptr<NFmiFastQueryInfo> info = Info();
 	if(!info)
 		return;
 
@@ -1878,12 +1878,12 @@ void NFmiTimeSerialView::DrawSelectedStationData(void)
 
 // hae oikeasti k�ytetty smartInfo ja aseta smartinfo osoittamaan l�hint� asemaa.
 // t�m� pit�� tehd� n�in koska synop-datoja voi olla useita ja oikea info pit�� hakea aina paikka kohtaisesti.
-static boost::shared_ptr<NFmiFastQueryInfo> GetUsedSmartInfo(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, const NFmiPoint &theLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theCurrentInfo, const NFmiMetTime &theTime, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+static std::shared_ptr<NFmiFastQueryInfo> GetUsedSmartInfo(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, const NFmiPoint &theLatlon, std::shared_ptr<NFmiFastQueryInfo> &theCurrentInfo, const NFmiMetTime &theTime, std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
 	if(theCurrentInfo == 0)
-		return boost::shared_ptr<NFmiFastQueryInfo>();
+		return std::shared_ptr<NFmiFastQueryInfo>();
 	FmiProducerName prodId = static_cast<FmiProducerName>(theCurrentInfo->Producer()->GetIdent());
-	boost::shared_ptr<NFmiFastQueryInfo> info = theCurrentInfo;
+	std::shared_ptr<NFmiFastQueryInfo> info = theCurrentInfo;
 	if(prodId == kFmiSYNOP || prodId == kFmiSHIP || prodId == kFmiBUOY || prodId == kFmiTestBed)
 		info = theCtrlViewDocumentInterface->GetNearestSynopStationInfo(theLatlon, theTime, true, 0);
 	else
@@ -1898,7 +1898,7 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetUsedSmartInfo(CtrlViewDocumentInt
 void NFmiTimeSerialView::DrawSelectedStationDataForNonEditedData(void)
 {
 	itsInfo = Info();
-	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = itsCtrlViewDocumentInterface->EditedSmartInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedInfo = itsCtrlViewDocumentInterface->EditedSmartInfo();
 	if(itsInfo == 0 || editedInfo == 0)
 		return;
     NFmiPoint primaryLatlon = GetTooltipLatlon();
@@ -2048,7 +2048,7 @@ void NFmiTimeSerialView::DrawCPReferenceLines_DrawCpLocation(boost::shared_ptr<N
 }
 
 // Piirt�� yhteen CP-pisteeseen liittyv�t jutut.
-void NFmiTimeSerialView::DrawCPReferenceLines_ForCurrentCp(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager, boost::shared_ptr<NFmiFastQueryInfo> &info, CpDrawingOptions &cpDrawingOptions, bool drawModificationLines)
+void NFmiTimeSerialView::DrawCPReferenceLines_ForCurrentCp(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager, std::shared_ptr<NFmiFastQueryInfo> &info, CpDrawingOptions &cpDrawingOptions, bool drawModificationLines)
 {
     if(DrawCPReferenceLines_IsCpDrawn(cpManager))
     {
@@ -2069,7 +2069,7 @@ void NFmiTimeSerialView::DrawCPReferenceLines_DrawAllCps(bool drawModificationLi
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, kBaseRight, itsToolBox->UseClipping());
 
     boost::shared_ptr<NFmiEditorControlPointManager> CPMan = itsCtrlViewDocumentInterface->CPManager();
-    boost::shared_ptr<NFmiFastQueryInfo> info = Info();
+    std::shared_ptr<NFmiFastQueryInfo> info = Info();
     if(CPMan && info)
     {
         for(CPMan->ResetCP(); CPMan->NextCP();)
@@ -2408,7 +2408,7 @@ void NFmiTimeSerialView::DrawModifyFactorAxis(void)
 	}
 }
 
-bool NFmiTimeSerialView::IsEditedData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo) const
+bool NFmiTimeSerialView::IsEditedData(std::shared_ptr<NFmiFastQueryInfo> &theInfo) const
 {
     return theInfo->DataType() == NFmiInfoData::kEditable;
 }
@@ -2518,7 +2518,7 @@ bool NFmiTimeSerialView::LeftButtonUp(const NFmiPoint &thePlace
 	return false;
 }
 
-void NFmiTimeSerialView::ScanDataForNacroParamCase(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, boost::shared_ptr<NFmiDrawParam>& theMacroParamDrawParam, const NFmiPoint& theLatlon, NFmiDataModifierMinMax& theAutoAdjustMinMaxValuesOut)
+void NFmiTimeSerialView::ScanDataForNacroParamCase(std::shared_ptr<NFmiFastQueryInfo>& theInfo, std::shared_ptr<NFmiDrawParam>& theMacroParamDrawParam, const NFmiPoint& theLatlon, NFmiDataModifierMinMax& theAutoAdjustMinMaxValuesOut)
 {
 	std::vector<NFmiMetTime> times = MakeMacroParamTimeVector();
 	std::vector<float> values(times.size(), kFloatMissing);
@@ -2534,7 +2534,7 @@ void NFmiTimeSerialView::ScanDataForNacroParamCase(boost::shared_ptr<NFmiFastQue
 	DoScanningPhaseTimeSerialAdding(doCsvDataGeneration, theInfo, theLatlon, csvGenerationTimes, csvGenerationParameterValues, theMacroParamDrawParam);
 }
 
-void NFmiTimeSerialView::ScanDataForSpecialOperation(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, boost::shared_ptr<NFmiDrawParam>& theDrawParam, const NFmiPoint& theLatlon, const NFmiTimeBag& theLimitingTimes, NFmiDataModifierMinMax& theAutoAdjustMinMaxValuesOut, const NFmiFastInfoUtils::MetaWindParamUsage& metaWindParamUsage, unsigned long wantedParamId, int theTimeWhenDrawedInMinutes)
+void NFmiTimeSerialView::ScanDataForSpecialOperation(std::shared_ptr<NFmiFastQueryInfo>& theInfo, std::shared_ptr<NFmiDrawParam>& theDrawParam, const NFmiPoint& theLatlon, const NFmiTimeBag& theLimitingTimes, NFmiDataModifierMinMax& theAutoAdjustMinMaxValuesOut, const NFmiFastInfoUtils::MetaWindParamUsage& metaWindParamUsage, unsigned long wantedParamId, int theTimeWhenDrawedInMinutes)
 {
 	if(theInfo && theInfo->DataType() == NFmiInfoData::kTimeSerialMacroParam)
 	{
@@ -2562,7 +2562,7 @@ void NFmiTimeSerialView::ScanDataForSpecialOperation(boost::shared_ptr<NFmiFastQ
 	}
 }
 
-void NFmiTimeSerialView::DoScanningPhaseTimeSerialAdding(bool doCsvDataGeneration, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiPoint& theLatlon, std::list<NFmiMetTime>& csvGenerationTimes, std::list<float>& csvGenerationParameterValues, boost::shared_ptr<NFmiDrawParam> possibleMacroParamDrawParam)
+void NFmiTimeSerialView::DoScanningPhaseTimeSerialAdding(bool doCsvDataGeneration, std::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiPoint& theLatlon, std::list<NFmiMetTime>& csvGenerationTimes, std::list<float>& csvGenerationParameterValues, std::shared_ptr<NFmiDrawParam> possibleMacroParamDrawParam)
 {
 	if(doCsvDataGeneration && !csvGenerationParameterValues.empty())
 	{
@@ -2601,7 +2601,7 @@ std::vector<NFmiPoint> NFmiTimeSerialView::GetViewedLatlonPoints(void)
 	std::vector<NFmiPoint> latlons;
 	int counter = 1;
 
-	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = itsCtrlViewDocumentInterface->EditedSmartInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedInfo = itsCtrlViewDocumentInterface->EditedSmartInfo();
 	if(editedInfo)
 	{
         EditedInfoMaskHandler editedInfoMaskHandler(editedInfo, CtrlViewFastInfoFunctions::GetProperMaskTypeFromEditeInfo(editedInfo, itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection()));
@@ -3386,7 +3386,7 @@ static double RoundToNearest_1_2_5(const double theStep)
 	return step;
 }
 
-static double GetSuitableValueScaleModifyingStep(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+static double GetSuitableValueScaleModifyingStep(std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
 	double scaleMax = theDrawParam->TimeSeriesScaleMax();
 	double scaleMin = theDrawParam->TimeSeriesScaleMin();
@@ -3530,7 +3530,7 @@ void NFmiTimeSerialView::DrawObsBlenderChangeLine(const NFmiPoint &theLatLonPoin
     NFmiDrawingEnvironment envi;
     std::vector<std::string> messages;
     auto editedInfo = Info();
-    boost::shared_ptr<NFmiFastQueryInfo> usedObsBlenderInfo;
+    std::shared_ptr<NFmiFastQueryInfo> usedObsBlenderInfo;
     auto &controlPointObservationBlendingData = itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData();
     NFmiMetTime firstEditedTime;
     float obsBlenderValue = kFloatMissing;
@@ -3568,7 +3568,7 @@ static std::string GetMaskFactorEffectText(float maskFactor)
         return " (full change)";
 }
 
-void NFmiTimeSerialView::DrawAnalyzeToolRelatedChangeLineFinal(bool useObservationData, float usedAnalyzeValue, const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment &envi, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, boost::shared_ptr<NFmiFastQueryInfo> &usedToolInfo, const NFmiMetTime &startTime, std::vector<std::string> &messages)
+void NFmiTimeSerialView::DrawAnalyzeToolRelatedChangeLineFinal(bool useObservationData, float usedAnalyzeValue, const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment &envi, std::shared_ptr<NFmiFastQueryInfo> &editedInfo, std::shared_ptr<NFmiFastQueryInfo> &usedToolInfo, const NFmiMetTime &startTime, std::vector<std::string> &messages)
 {
     DrawAnalyzeToolDataLocationInTime(theLatLonPoint, envi, usedToolInfo); // piirret��n ensin analyysi data ja sitten sen aiheuttama muutosk�yr�
     NFmiMetTime endTime(itsCtrlViewDocumentInterface->AnalyzeToolData().AnalyzeToolEndTime());
@@ -3605,7 +3605,7 @@ void NFmiTimeSerialView::DrawAnalyzeToolRelatedChangeLineFinal(bool useObservati
                         if(useMask)
                         {
                             maskList->SyncronizeMaskTime(editedInfo->Time());
-                            maskFactor = static_cast<float>(maskList->MaskValue(editedInfo->LatLonFast()));
+                            maskFactor = static_cast<float>(maskList->MaskValue(editedInfo->LatLon()));
                         }
                     }
                     if(timeIndex == 0)
@@ -3647,7 +3647,7 @@ void NFmiTimeSerialView::DrawAnalyzeToolChangeLine(const NFmiPoint &theLatLonPoi
     NFmiDrawingEnvironment envi;
 
     std::vector<std::string> messages;
-    boost::shared_ptr<NFmiFastQueryInfo> analyzeDataInfo = GetAnalyzeToolData();
+    std::shared_ptr<NFmiFastQueryInfo> analyzeDataInfo = GetAnalyzeToolData();
     if(analyzeDataInfo)
     {
         analyzeDataInfo->FirstLevel(); // varmuuden vuoksi asetan 1. leveliin
@@ -3685,14 +3685,14 @@ void NFmiTimeSerialView::DrawAnalyzeToolRelatedMessages(const std::vector<std::s
     }
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetAnalyzeToolData()
+std::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::GetAnalyzeToolData()
 {
     return itsCtrlViewDocumentInterface->InfoOrganizer()->Info(NFmiDataIdent(*(itsDrawParam->Param().GetParam()), itsCtrlViewDocumentInterface->AnalyzeToolData().SelectedProducer1()), 0, NFmiInfoData::kAnalyzeData);
 }
 
-static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> GetInfosWithWantedParam(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVectorIn, FmiParameterName wantedParamId)
+static std::vector<std::shared_ptr<NFmiFastQueryInfo>> GetInfosWithWantedParam(std::vector<std::shared_ptr<NFmiFastQueryInfo>> &infoVectorIn, FmiParameterName wantedParamId)
 {
-    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVectorResult;
+    std::vector<std::shared_ptr<NFmiFastQueryInfo>> infoVectorResult;
     std::copy_if(infoVectorIn.begin(), infoVectorIn.end(), std::back_inserter(infoVectorResult),
         [wantedParamId](const auto &info)
     {
@@ -3706,14 +3706,14 @@ static std::vector<boost::shared_ptr<NFmiFastQueryInfo>> GetInfosWithWantedParam
     return infoVectorResult;
 }
 
-std::vector<boost::shared_ptr<NFmiFastQueryInfo>> NFmiTimeSerialView::GetObsBlenderDataVector()
+std::vector<std::shared_ptr<NFmiFastQueryInfo>> NFmiTimeSerialView::GetObsBlenderDataVector()
 {
     auto selectedProducerId = itsCtrlViewDocumentInterface->AnalyzeToolData().ControlPointObservationBlendingData().SelectedProducer().GetIdent();
     auto infoVector = itsCtrlViewDocumentInterface->InfoOrganizer()->GetInfos(NFmiInfoData::kObservations, true, selectedProducerId);
     return ::GetInfosWithWantedParam(infoVector, static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent()));
 }
 
-void NFmiTimeSerialView::DrawAnalyzeToolDataLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment &envi, boost::shared_ptr<NFmiFastQueryInfo> &analyzeDataInfo)
+void NFmiTimeSerialView::DrawAnalyzeToolDataLocationInTime(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment &envi, std::shared_ptr<NFmiFastQueryInfo> &analyzeDataInfo)
 {
 	if(analyzeDataInfo)
 	{
@@ -3761,7 +3761,7 @@ bool NFmiTimeSerialView::IsActivated(void) const
 	return false;
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::Info(void) const
+std::shared_ptr<NFmiFastQueryInfo> NFmiTimeSerialView::Info(void) const
 {
 	return itsInfo;
 }
@@ -3805,7 +3805,7 @@ NFmiTimeBag NFmiTimeSerialView::GetViewLimitingTimes(void)
 	return itsCtrlViewDocumentInterface->TimeSerialViewTimeBag();
 }
 
-void NFmiTimeSerialView::FillTimeSerialDataFromInfo(boost::shared_ptr<NFmiFastQueryInfo> &theSourceInfo, const NFmiPoint &theLatLonPoint, std::vector<float> &theValues, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
+void NFmiTimeSerialView::FillTimeSerialDataFromInfo(std::shared_ptr<NFmiFastQueryInfo> &theSourceInfo, const NFmiPoint &theLatLonPoint, std::vector<float> &theValues, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long wantedParamId)
 {
 	// Onko t�m� oikein????, linitingtimesit otetaan sourceInfosta ja niill� rajoitetaan FillTimeSerialDataFromInfo-metodissa
 	// taas sourceInfosta haettavia aikoja.
@@ -3814,7 +3814,7 @@ void NFmiTimeSerialView::FillTimeSerialDataFromInfo(boost::shared_ptr<NFmiFastQu
 }
 
 // HUOM! yritt�� ottaa my�s yhdet ajat ja arvot aikareunojen yli
-void NFmiTimeSerialView::FillTimeSerialDataFromInfo(boost::shared_ptr<NFmiFastQueryInfo>& theSourceInfo, const NFmiPoint& theLatLonPoint, const NFmiTimeBag& theLimitTimes, std::vector<float>& theValues, const NFmiFastInfoUtils::MetaWindParamUsage& metaWindParamUsage, unsigned long wantedParamId)
+void NFmiTimeSerialView::FillTimeSerialDataFromInfo(std::shared_ptr<NFmiFastQueryInfo>& theSourceInfo, const NFmiPoint& theLatLonPoint, const NFmiTimeBag& theLimitTimes, std::vector<float>& theValues, const NFmiFastInfoUtils::MetaWindParamUsage& metaWindParamUsage, unsigned long wantedParamId)
 {
 	if(theSourceInfo->TimeToNearestStep(theLimitTimes.FirstTime(), kBackward))
 	{
@@ -3864,7 +3864,7 @@ void NFmiTimeSerialView::FillTimeSerialTimesFromInfo(NFmiFastQueryInfo &theSourc
 // t�ytt�� haluttuihin aikoihin maskien arvot (jos k�ytet��n maskeja).
 void NFmiTimeSerialView::FillTimeSerialMaskValues(const std::vector<NFmiMetTime> &theTimes, const NFmiPoint &theLatLonPoint, std::vector<float> &theMaskValues)
 {
-	boost::shared_ptr<NFmiAreaMaskList> paramMaskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
+	std::shared_ptr<NFmiAreaMaskList> paramMaskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
 	if(paramMaskList)
 	{
 		if(itsCtrlViewDocumentInterface->IsMasksUsedInTimeSerialViews())
@@ -3891,7 +3891,7 @@ void NFmiTimeSerialView::FillTimeSerialChangedValues(const std::vector<float> &t
 		theChangedValues.push_back(CalcModifiedValue(theValues[i], i, maskSize ? theMaskValues[i] : 1));
 }
 
-void NFmiTimeSerialView::DrawModelRunsPlume(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment &theCurrentDataLineStyle, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+void NFmiTimeSerialView::DrawModelRunsPlume(const NFmiPoint &theLatLonPoint, NFmiDrawingEnvironment &theCurrentDataLineStyle, std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
 	int wantedModelRunCount = theDrawParam->TimeSerialModelRunCount();
 	if(wantedModelRunCount)
@@ -3915,7 +3915,7 @@ void NFmiTimeSerialView::DrawModelRunsPlume(const NFmiPoint &theLatLonPoint, NFm
 				usedEnvi.SetFrameColor(modelRunColor);
 				std::vector<float> values;
 				itsDrawParam->ModelRunIndex(i);
-				boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, false);
+				std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, false);
 				if(info)
 				{
                     auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(info);
@@ -3939,7 +3939,7 @@ void NFmiTimeSerialView::DrawModelRunsPlume(const NFmiPoint &theLatLonPoint, NFm
 	}
 }
 
-static int CalcTimeOffsetInMinutes(boost::shared_ptr<NFmiFastQueryInfo>& info, const NFmiMetTime& viewStartTime)
+static int CalcTimeOffsetInMinutes(std::shared_ptr<NFmiFastQueryInfo>& info, const NFmiMetTime& viewStartTime)
 {
 	int timeOffsetInMinutes = 0;
 	if(NFmiFastInfoUtils::IsModelClimatologyData(info))
@@ -4054,11 +4054,11 @@ void NFmiTimeSerialView::DrawLocationInTime(const NFmiPoint &theLatLonPoint, NFm
 // Katsoo onko kyseinen drawParamin data hybrid/painepinta tai muuta level dataa.
 // Jos on, yritt�� vaihtaa leveli� hiiren rullauksen mukaan yl�s/alas.
 // Palauttaa true, jos level vaihtui.
-bool NFmiTimeSerialView::ChangeDataLevel(boost::shared_ptr<NFmiDrawParam> &theDrawParam, short theDelta)
+bool NFmiTimeSerialView::ChangeDataLevel(std::shared_ptr<NFmiDrawParam> &theDrawParam, short theDelta)
 {
 	if(theDrawParam)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(theDrawParam, false, true);
+		std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(theDrawParam, false, true);
 		if(info)
 		{
 			if(info->SizeLevels() > 1)
@@ -4163,7 +4163,7 @@ static std::string Value2ToolTipString(float theValue, int theDigitCount, FmiInt
 	}
 }
 
-static void AddValueLineString(std::string &theStr, const std::string &theTitle, const NFmiColor &theTitleColor, float theValue, boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool fAddEndl, int theTabulatorCount = 1)
+static void AddValueLineString(std::string &theStr, const std::string &theTitle, const NFmiColor &theTitleColor, float theValue, std::shared_ptr<NFmiDrawParam> &theDrawParam, bool fAddEndl, int theTabulatorCount = 1)
 {
 	FmiInterpolationMethod interpMethod = theDrawParam->Param().GetParam()->InterpolationMethod();
 	FmiParamType parType = (FmiParamType)theDrawParam->Param().Type();
@@ -4186,7 +4186,7 @@ static void AddValueLineString(std::string &theStr, const std::string &theTitle,
 		theStr += "\n";
 }
 
-static void AddProducerString(std::string &theStr, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool fAddEndl)
+static void AddProducerString(std::string &theStr, std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::shared_ptr<NFmiDrawParam> &theDrawParam, bool fAddEndl)
 {
 	if(!theDrawParam->IsMacroParamCase(true))
 	{
@@ -4241,7 +4241,7 @@ std::string NFmiTimeSerialView::GetSideParametersToolTipText(const NFmiPoint& th
 				{
 					auto& producer = *sideParamDrawParam->Param().GetProducer();
 					auto dataType = sideParamDrawParam->DataType();
-					boost::shared_ptr<NFmiFastQueryInfo> sideParamInfo = ::GetWantedData(itsCtrlViewDocumentInterface, sideParamDrawParam, producer, dataType, &theLatlon);
+					std::shared_ptr<NFmiFastQueryInfo> sideParamInfo = ::GetWantedData(itsCtrlViewDocumentInterface, sideParamDrawParam, producer, dataType, &theLatlon);
 					if(sideParamInfo)
 					{
 						float sideParameterValue = GetTooltipValue(sideParamInfo, theLatlon, theTime, sideParamDrawParam);
@@ -4258,7 +4258,7 @@ std::string NFmiTimeSerialView::GetSideParametersToolTipText(const NFmiPoint& th
 	return str;
 }
 
-std::string NFmiTimeSerialView::GetModelDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime)
+std::string NFmiTimeSerialView::GetModelDataToolTipText(std::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime)
 {
 	if(itsDrawParam->DataType() == NFmiInfoData::kHybridData)
 		return std::string(); // hybrid-datalle ei kannata piirt�� apumallidatoja, koska hybrid-levelit eiv�t vastaa eri malleissa toisiaan...
@@ -4271,7 +4271,7 @@ std::string NFmiTimeSerialView::GetModelDataToolTipText(boost::shared_ptr<NFmiFa
 	size_t foundDataCounter = 0;
 	for(unsigned int i=0; i < producers.size(); i++) // k�yd��n l�pi kaikki tuottajat, ja katsotaan kuinka moneen p��data osui (param + level ja tyyppi)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> modelInfo = ::GetWantedData(itsCtrlViewDocumentInterface, itsDrawParam, producers[i].GetProducer(), NFmiInfoData::kViewable, &theLatlon);
+		std::shared_ptr<NFmiFastQueryInfo> modelInfo = ::GetWantedData(itsCtrlViewDocumentInterface, itsDrawParam, producers[i].GetProducer(), NFmiInfoData::kViewable, &theLatlon);
 		if(modelInfo)
 		{
 			float modelValue = GetTooltipValue(modelInfo, theLatlon, theTime, itsDrawParam);
@@ -4296,10 +4296,10 @@ std::string NFmiTimeSerialView::GetModelDataToolTipText(boost::shared_ptr<NFmiFa
 }
 
 // Huom! T��ll� ei tarvitse v�litt�� tuulen meta parametreista, koska kyse on tietyist� fraktiili parametreista
-std::string NFmiTimeSerialView::GetEcFraktileParamToolTipText(boost::shared_ptr<NFmiFastQueryInfo>& theViewedInfo, long theStartParamIndex, const std::string &theParName, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor, long theParamIndexIncrement)
+std::string NFmiTimeSerialView::GetEcFraktileParamToolTipText(std::shared_ptr<NFmiFastQueryInfo>& theViewedInfo, long theStartParamIndex, const std::string &theParName, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor, long theParamIndexIncrement)
 {
 	std::string str;
-	boost::shared_ptr<NFmiFastQueryInfo> modelFractileInfo = itsCtrlViewDocumentInterface->GetBestSuitableModelFractileData(theViewedInfo);
+	std::shared_ptr<NFmiFastQueryInfo> modelFractileInfo = itsCtrlViewDocumentInterface->GetBestSuitableModelFractileData(theViewedInfo);
 	if(modelFractileInfo && modelFractileInfo->Param(static_cast<FmiParameterName>(theStartParamIndex)))
 	{
 		str += "<br><hr color=red><br>";
@@ -4337,7 +4337,7 @@ std::string NFmiTimeSerialView::GetEcFraktileParamToolTipText(boost::shared_ptr<
 std::string NFmiTimeSerialView::GetModelClimatologyParamToolTipText(const ModelClimatology::ParamMapItem &paramItem, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor)
 {
     std::string str;
-    boost::shared_ptr<NFmiFastQueryInfo> modelClimatologyInfo = itsCtrlViewDocumentInterface->GetModelClimatologyData(itsDrawParam->Level());
+    std::shared_ptr<NFmiFastQueryInfo> modelClimatologyInfo = itsCtrlViewDocumentInterface->GetModelClimatologyData(itsDrawParam->Level());
     if(::HasModelClimatologyDataAnyOfGivenParameters(modelClimatologyInfo, paramItem.second))
     {
         str += "<br><hr color=red><br>";
@@ -4360,7 +4360,7 @@ std::string NFmiTimeSerialView::GetModelClimatologyParamToolTipText(const ModelC
     return str;
 }
 
-std::string NFmiTimeSerialView::GetEcFraktileDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor)
+std::string NFmiTimeSerialView::GetEcFraktileDataToolTipText(std::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor)
 {
 	std::string str;
 	// nyt ec fraktiileja on vain 5 pintaparametrille (T, RR, N, WS ja WG)
@@ -4382,7 +4382,7 @@ std::string NFmiTimeSerialView::GetEcFraktileDataToolTipText(boost::shared_ptr<N
 }
 
 // Huom! T��ll� ei tarvitse v�litt�� tuulen meta parametreista, koska kyse on erikoisfraktiili parametreista
-std::string NFmiTimeSerialView::GetSeaLevelPlumeDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo>& theViewedInfo, const NFmiPoint& theLatlon, const NFmiMetTime& theTime, const NFmiColor& theColor)
+std::string NFmiTimeSerialView::GetSeaLevelPlumeDataToolTipText(std::shared_ptr<NFmiFastQueryInfo>& theViewedInfo, const NFmiPoint& theLatlon, const NFmiMetTime& theTime, const NFmiColor& theColor)
 {
 	std::string str;
 	const auto* seaLevelPlumeData = itsCtrlViewDocumentInterface->SeaLevelPlumeData().getSeaLevelPlumeData(itsDrawParam->Param().GetParamIdent());
@@ -4428,7 +4428,7 @@ std::string NFmiTimeSerialView::GetSeaLevelPlumeDataToolTipText(boost::shared_pt
 	return str;
 }
 
-static std::string GetSeaLevelProbLocationName(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static std::string GetSeaLevelProbLocationName(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
     auto location = theInfo->Location();
     if(location)
@@ -4448,7 +4448,7 @@ static std::string GetSeaLevelProbLocationName(boost::shared_ptr<NFmiFastQueryIn
 
 // Oletus: Tietyt tarkastelut on jo tehty NFmiTimeSerialView::GetSeaLevelPlumeDataToolTipText metodissa
 // Huom! T��ll� ei tarvitse v�litt�� tuulen meta parametreista, koska kyse on erikoisfraktiili parametreista
-std::string NFmiTimeSerialView::GetSeaLevelProbDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, boost::shared_ptr<NFmiFastQueryInfo> &theSeaLevelFractileData, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor)
+std::string NFmiTimeSerialView::GetSeaLevelProbDataToolTipText(std::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, std::shared_ptr<NFmiFastQueryInfo> &theSeaLevelFractileData, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor)
 {
     std::string str;
 	const auto* seaLevelPlumeData = itsCtrlViewDocumentInterface->SeaLevelPlumeData().getSeaLevelPlumeData(itsDrawParam->Param().GetParamIdent());
@@ -4489,7 +4489,7 @@ std::string NFmiTimeSerialView::GetSeaLevelProbDataToolTipText(boost::shared_ptr
     return str;
 }
 
-std::string NFmiTimeSerialView::GetModelClimatologyDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor)
+std::string NFmiTimeSerialView::GetModelClimatologyDataToolTipText(std::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor)
 {
     if(itsCtrlViewDocumentInterface->GetModelClimatologyData(itsDrawParam->Level()) && itsCtrlViewDocumentInterface->ShowHelperData3InTimeSerialView())
     {
@@ -4500,7 +4500,7 @@ std::string NFmiTimeSerialView::GetModelClimatologyDataToolTipText(boost::shared
     return "";
 }
 
-bool NFmiTimeSerialView::IsMosTemperatureMinAndMaxDisplayed(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo)
+bool NFmiTimeSerialView::IsMosTemperatureMinAndMaxDisplayed(std::shared_ptr<NFmiFastQueryInfo> &theViewedInfo)
 {
     if(itsCtrlViewDocumentInterface->ShowHelperData4InTimeSerialView() && ::IsMosDataUsed(theViewedInfo))
         return true;
@@ -4509,7 +4509,7 @@ bool NFmiTimeSerialView::IsMosTemperatureMinAndMaxDisplayed(boost::shared_ptr<NF
 }
 
 // Huom! T��ll� ei tarvitse v�litt�� tuulen meta parametreista, koska kyse on tietyist� l�mp�tila parametreista
-std::string NFmiTimeSerialView::GetMosTemperatureMinAndMaxDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor)
+std::string NFmiTimeSerialView::GetMosTemperatureMinAndMaxDataToolTipText(std::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor)
 {
     std::string str;
     if(IsMosTemperatureMinAndMaxDisplayed(theViewedInfo))
@@ -4529,12 +4529,12 @@ std::string NFmiTimeSerialView::GetMosTemperatureMinAndMaxDataToolTipText(boost:
 }
 
 // Huom! T��ll� ei tarvitse v�litt�� tuulen meta parametreista, koska kyse on tietyist� l�mp�tila parametreista
-std::string NFmiTimeSerialView::GetObsFraktileDataToolTipText(boost::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor)
+std::string NFmiTimeSerialView::GetObsFraktileDataToolTipText(std::shared_ptr<NFmiFastQueryInfo> &theViewedInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, const NFmiColor &theColor)
 {
 	std::string str;
 	if(theViewedInfo->SizeLevels() == 1 && itsDrawParam->Param().GetParamIdent() == kFmiTemperature) // fraktiileja l�ytyy vain pinta l�mp�tilalle!!!
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> obsFractileInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kClimatologyData);
+		std::shared_ptr<NFmiFastQueryInfo> obsFractileInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kClimatologyData);
 		if(obsFractileInfo)
 		{
 			if(obsFractileInfo->NearestLocation(NFmiLocation(theLatlon), gMaxDistanceToFractileStation)) // asetetaan kepadata l�himp��n pisteeseen (t�ss� kaupunkiin) piirtoa varten
@@ -4563,13 +4563,13 @@ std::string NFmiTimeSerialView::GetObsFraktileDataToolTipText(boost::shared_ptr<
 	return str;
 }
 
-std::string NFmiTimeSerialView::GetObservationToolTipText(boost::shared_ptr<NFmiFastQueryInfo>& theViewedInfo, const NFmiPoint& theLatlon, const NFmiMetTime& theTime, const NFmiColor& theColor)
+std::string NFmiTimeSerialView::GetObservationToolTipText(std::shared_ptr<NFmiFastQueryInfo>& theViewedInfo, const NFmiPoint& theLatlon, const NFmiMetTime& theTime, const NFmiColor& theColor)
 {
 	std::string str;
 	if(itsDrawParam->Level().LevelValue() == kFloatMissing) // kepa ja havainto laiteaan apudatoiksi vain pintadatoille!
 	{
 		// sitten havainto data
-		boost::shared_ptr<NFmiFastQueryInfo> obsInfo = GetObservationInfo(*itsDrawParam->Param().GetParam(), theLatlon);
+		std::shared_ptr<NFmiFastQueryInfo> obsInfo = GetObservationInfo(*itsDrawParam->Param().GetParam(), theLatlon);
 		if(obsInfo)
 		{
 			obsInfo->FirstLevel(); // varmuuden vuoksi asetan 1. leveliin
@@ -4599,10 +4599,10 @@ static std::string GetColoredLocationTooltipStr(CtrlViewDocumentInterface *theCt
 	return str;
 }
 
-std::string NFmiTimeSerialView::MultiModelRunToolTip(boost::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiMetTime &theTime, const NFmiPoint &theLatlon)
+std::string NFmiTimeSerialView::MultiModelRunToolTip(std::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiMetTime &theTime, const NFmiPoint &theLatlon)
 { 
     // lis�t��n lyhyesti muut malliajo arvot eri riveille kaytt�en vain [-1]  =    2.3  -tyyppist� notaatiota
-	boost::shared_ptr<NFmiDrawParam> tmpDrawParam(new NFmiDrawParam(*theDrawParam));
+	std::shared_ptr<NFmiDrawParam> tmpDrawParam(new NFmiDrawParam(*theDrawParam));
 	int endIndex = tmpDrawParam->ModelRunIndex() - tmpDrawParam->TimeSerialModelRunCount();
 	std::string str = "\n";
 	for(int i = theDrawParam->ModelRunIndex() - 1; i >= endIndex; i--)
@@ -4612,7 +4612,7 @@ std::string NFmiTimeSerialView::MultiModelRunToolTip(boost::shared_ptr<NFmiDrawP
 		str += "]\t\t\t";
 		str += "<b><font color=blue>";
 		tmpDrawParam->ModelRunIndex(i);
-		boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(tmpDrawParam, false, false);
+		std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(tmpDrawParam, false, false);
 		if(info)
 		{
             float value = GetTooltipValue(info, theLatlon, theTime, tmpDrawParam);
@@ -4638,8 +4638,8 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
 {
 	std::string str;
 
-	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = itsCtrlViewDocumentInterface->EditedSmartInfo();
-	boost::shared_ptr<NFmiFastQueryInfo> viewedInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, false);
+	std::shared_ptr<NFmiFastQueryInfo> editedInfo = itsCtrlViewDocumentInterface->EditedSmartInfo();
+	std::shared_ptr<NFmiFastQueryInfo> viewedInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, false);
 	if(editedInfo && viewedInfo)
 	{
         NFmiPoint primaryLocationLatlon(GetTooltipLatlon());
@@ -4713,7 +4713,7 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
 			if(itsDrawParam->Level().LevelValue() == kFloatMissing) // kepa ja havainto laiteaan apudatoiksi vain pintadatoille!
 			{
 				// sitten laitetaan virallinen data jos se l�ytyy
-				boost::shared_ptr<NFmiFastQueryInfo> kepaInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kKepaData);
+				std::shared_ptr<NFmiFastQueryInfo> kepaInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kKepaData);
 				if(kepaInfo)
 				{
 					if(::DataHasNeededParameters(kepaInfo, itsDrawParam->Param().GetParamIdent(), itsCtrlViewDocumentInterface)) // parametrikin pit�� asettaa
@@ -4746,7 +4746,7 @@ std::string NFmiTimeSerialView::ComposeToolTipText(const NFmiPoint& theRelativeP
 std::string NFmiTimeSerialView::MakeToolTipTextForData(const NFmiProducer &theProducer, NFmiInfoData::Type theDataType, const NFmiColor &theTitleColor, const NFmiPoint& theLatlon, const NFmiMetTime& theTime)
 {
 	std::string str;
-	boost::shared_ptr<NFmiFastQueryInfo> info = ::GetWantedData(itsCtrlViewDocumentInterface, itsDrawParam, theProducer, theDataType, &theLatlon);
+	std::shared_ptr<NFmiFastQueryInfo> info = ::GetWantedData(itsCtrlViewDocumentInterface, itsDrawParam, theProducer, theDataType, &theLatlon);
 	if(info)
 	{
 		str += "\n";
@@ -4787,7 +4787,7 @@ NFmiPoint NFmiTimeSerialView::GetTooltipLatlon() const
 
 NFmiPoint NFmiTimeSerialView::GetFirstSelectedLatlonFromEditedData() const
 {
-    boost::shared_ptr<NFmiFastQueryInfo> editedInfo = itsCtrlViewDocumentInterface->EditedSmartInfo();
+    std::shared_ptr<NFmiFastQueryInfo> editedInfo = itsCtrlViewDocumentInterface->EditedSmartInfo();
     if(editedInfo)
     {
         // Check if there is selected mask point to return
@@ -4811,7 +4811,7 @@ void NFmiTimeSerialView::UpdateCachedParameterName()
 	CachedParameterName(CtrlViewUtils::GetParamNameString(itsDrawParam, false, false, true, 0, true, true, true, itsInfo), true);
 }
 
-void NFmiTimeSerialView::AddSideParameterNames(boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& fastInfo)
+void NFmiTimeSerialView::AddSideParameterNames(std::shared_ptr<NFmiDrawParam>& drawParam, std::shared_ptr<NFmiFastQueryInfo>& fastInfo)
 {
 	itsSideParameterNames.push_back(CtrlViewUtils::GetParamNameString(drawParam, false, false, false, 0, true, true, true, fastInfo));
 	itsSideParameterNamesForTooltip.push_back(CtrlViewUtils::GetParamNameString(drawParam, false, false, true, 0, true, true, true, fastInfo));
@@ -4963,7 +4963,7 @@ std::string NFmiTimeSerialView::MakeTimeSerialCsvHeaderString()
 
 // Tuottaja nime� ei haluta mielell��n datan tuottajasta, vaan lyhyt geneerinen nimi josatain producerSystem:ista.
 // Jos malli/havainto tuottajanimi systeemeist� ei sitten l�ydy sellaista, silloin otetaan datasta l�ytynyt nimi.
-static std::string MakeCsvProducerName(NFmiProducerSystem& modelProducerSystem, NFmiProducerSystem& obsProducerSystem, boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
+static std::string MakeCsvProducerName(NFmiProducerSystem& modelProducerSystem, NFmiProducerSystem& obsProducerSystem, std::shared_ptr<NFmiFastQueryInfo>& theInfo)
 {
 	auto dataType = theInfo->DataType();
 	const auto& producer = *theInfo->Producer();
@@ -4989,7 +4989,7 @@ static std::string MakeCsvProducerName(NFmiProducerSystem& modelProducerSystem, 
 	return std::string(producer.GetName());
 }
 
-static std::string MakeCsvParameterNameSectionString(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, unsigned long wantedParamId)
+static std::string MakeCsvParameterNameSectionString(std::shared_ptr<NFmiFastQueryInfo>& theInfo, unsigned long wantedParamId)
 {
 	NFmiFastInfoUtils::QueryInfoParamStateRestorer restorer(*theInfo);
 	if(theInfo->Param(static_cast<FmiParameterName>(wantedParamId)))
@@ -5004,7 +5004,7 @@ static std::string MakeCsvParameterNameSectionString(boost::shared_ptr<NFmiFastQ
 	return paramNameStr;
 }
 
-static std::string MakeCsvPossibleLevelSectionString(boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
+static std::string MakeCsvPossibleLevelSectionString(std::shared_ptr<NFmiFastQueryInfo>& theInfo)
 {
 	const auto* level = theInfo->Level();
 	if(level && theInfo->SizeLevels() > 1)
@@ -5040,12 +5040,12 @@ static std::string MakeCsvPossibleLevelSectionString(boost::shared_ptr<NFmiFastQ
 }
 
 // Nimi tulee kolmesta mahdollisesta osiosta producer-parameter-level
-std::string NFmiTimeSerialView::MakeCsvFullParameterNameString(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, boost::shared_ptr<NFmiDrawParam> possibleMacroParamDrawParam) //, unsigned long wantedParamId)
+std::string NFmiTimeSerialView::MakeCsvFullParameterNameString(std::shared_ptr<NFmiFastQueryInfo>& theInfo, std::shared_ptr<NFmiDrawParam> possibleMacroParamDrawParam) //, unsigned long wantedParamId)
 {
 	CtrlViewDocumentInterface* ctrlViewDocumentInterface = CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation();
 	if(ctrlViewDocumentInterface && theInfo)
 	{
-		boost::shared_ptr<NFmiDrawParam> drawParam = possibleMacroParamDrawParam ? possibleMacroParamDrawParam : ctrlViewDocumentInterface->InfoOrganizer()->CreateDrawParam(theInfo->Param(), theInfo->Level(), theInfo->DataType());
+		std::shared_ptr<NFmiDrawParam> drawParam = possibleMacroParamDrawParam ? possibleMacroParamDrawParam : ctrlViewDocumentInterface->InfoOrganizer()->CreateDrawParam(theInfo->Param(), theInfo->Level(), theInfo->DataType());
 		if(drawParam)
 		{
 			auto parameterNameStr = CtrlViewUtils::GetParamNameString(drawParam, false, false, false, 0, true, false, true, nullptr);
@@ -5071,7 +5071,7 @@ std::string NFmiTimeSerialView::MakeCsvFullParameterNameString(boost::shared_ptr
 	return "Unknown_param_name";
 }
 
-void NFmiTimeSerialView::FillTimeSerialMacroParamData(const NFmiPoint& latlon, std::vector<float>& values, const std::vector<NFmiMetTime>& times, boost::shared_ptr<NFmiFastQueryInfo>& macroParamInfo, boost::shared_ptr<NFmiDrawParam>& theMacroParamDrawParam, TimeSerialTooltipData* possibleTooltipData, NFmiExtraMacroParamData* possibleExtraMacroParamData)
+void NFmiTimeSerialView::FillTimeSerialMacroParamData(const NFmiPoint& latlon, std::vector<float>& values, const std::vector<NFmiMetTime>& times, std::shared_ptr<NFmiFastQueryInfo>& macroParamInfo, std::shared_ptr<NFmiDrawParam>& theMacroParamDrawParam, TimeSerialTooltipData* possibleTooltipData, NFmiExtraMacroParamData* possibleExtraMacroParamData)
 {
 	if(!possibleTooltipData)
 	{
@@ -5146,7 +5146,7 @@ std::vector<NFmiMetTime> NFmiTimeSerialView::MakeMacroParamTimeVector()
 	return times;
 }
 
-void NFmiTimeSerialView::DrawTimeSerialMacroParam(boost::shared_ptr<NFmiFastQueryInfo>& macroParamInfo, boost::shared_ptr<NFmiDrawParam>& theMacroParamDrawParam, const NFmiPoint& latLonPoint, NFmiDrawingEnvironment& dataLineStyle)
+void NFmiTimeSerialView::DrawTimeSerialMacroParam(std::shared_ptr<NFmiFastQueryInfo>& macroParamInfo, std::shared_ptr<NFmiDrawParam>& theMacroParamDrawParam, const NFmiPoint& latLonPoint, NFmiDrawingEnvironment& dataLineStyle)
 {
 	std::vector<NFmiMetTime> times = MakeMacroParamTimeVector();
 	std::vector<float> values(times.size(), kFloatMissing);
@@ -5154,7 +5154,7 @@ void NFmiTimeSerialView::DrawTimeSerialMacroParam(boost::shared_ptr<NFmiFastQuer
 	PlotTimeSerialData(values, times, dataLineStyle, g_PointNormal, g_PointSingle, true);
 }
 
-float NFmiTimeSerialView::GetMacroParamTooltipValue(boost::shared_ptr<NFmiFastQueryInfo>& macroParamInfo, boost::shared_ptr<NFmiDrawParam>& theMacroParamDrawParam, const NFmiPoint& latlon, const NFmiMetTime& time)
+float NFmiTimeSerialView::GetMacroParamTooltipValue(std::shared_ptr<NFmiFastQueryInfo>& macroParamInfo, std::shared_ptr<NFmiDrawParam>& theMacroParamDrawParam, const NFmiPoint& latlon, const NFmiMetTime& time)
 {
 	vector<float> dummyValues{ kFloatMissing };
 	vector<NFmiMetTime> dummyTimes{ NFmiMetTime::gMissingTime };

@@ -19,9 +19,9 @@ class NFmiStationWindBarbView : public NFmiStationView
 {
 
 public:
-    NFmiStationWindBarbView (int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+    NFmiStationWindBarbView (int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 							,NFmiToolBox * theToolBox
-							,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+							,std::shared_ptr<NFmiDrawParam> &theDrawParam
 							,FmiParameterName theParamId
 							,NFmiPoint theOffSet
 							,NFmiPoint theSize
@@ -36,7 +36,7 @@ protected:
    NFmiPoint GetSpaceOutFontFactor(void) override;
    void ModifyTextEnvironment(void) override;
    int GetApproxmationOfDataTextLength(std::vector<float>* sampleValues = nullptr) override;
-   float InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, const NFmiPoint& theLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theInfo) override;
+   float InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, const NFmiPoint& theLatlon, std::shared_ptr<NFmiFastQueryInfo> &theInfo) override;
    NFmiPoint SbdCalcFixedSymbolSize() const override;
    NFmiSymbolBulkDrawType SbdGetDrawType() const override;
    NFmiPoint SbdCalcFixedRelativeDrawObjectSize() const override;

@@ -103,7 +103,7 @@ private:
     void HandleCpAccelerator(ControlPointAcceleratorActions action, const std::string &updateMessage);
 
     CTimeEditValuesView* itsTimeEditValuesView;
-	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
+	std::shared_ptr<NFmiDrawParam> itsDrawParam;
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 	HACCEL m_hAccel;
 	HBITMAP itsParameterSelectionButtonBitmap = nullptr;

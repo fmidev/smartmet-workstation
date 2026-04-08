@@ -9,11 +9,12 @@
 #include "NFmiMapConfigurationSystem.h"
 #include "NFmiPathUtils.h"
 
+#include <filesystem>
 #include <iostream>
 
 // ----------------------------------------------------------------------
 /*!
- *  syö spacet pois streamista ja palauttaa true:n jos ei olla lopussa
+ *  syï¿½ spacet pois streamista ja palauttaa true:n jos ei olla lopussa
  *
  * \param theInput The input stream
  * \return Undocumented
@@ -28,7 +29,7 @@ static bool EatWhiteSpaces(std::istream & theInput)
 	}
   while(isspace(ch));
   if(theInput.fail())
-	return false; // jos stremin lopussa, epäonnistuu
+	return false; // jos stremin lopussa, epï¿½onnistuu
   else
 	theInput.unget();
   return true;
@@ -43,7 +44,7 @@ NFmiMapConfiguration::~NFmiMapConfiguration() = default;
 
 void NFmiMapConfiguration::ReadFileNamesAndDrawStyles(std::istream & file, std::vector<std::string> &theFileNames, std::vector<int> &theDrawingStyles)
 {
-	const int maxBufferSize = 512; // kuinka pitkä tiedoston nimi voi olla polkuineen maksimissaan
+	const int maxBufferSize = 512; // kuinka pitkï¿½ tiedoston nimi voi olla polkuineen maksimissaan
 	int mapCount = 0;
 	file >> mapCount;
 	std::string buffer;
@@ -62,7 +63,7 @@ void NFmiMapConfiguration::ReadFileNamesAndDrawStyles(std::istream & file, std::
 }
 void NFmiMapConfiguration::ReadProjectionFileName(std::istream & file, std::string &theFileName)
 {
-	const int maxBufferSize = 512; // kuinka pitkä tiedoston nimi voi olla polkuineen maksimissaan
+	const int maxBufferSize = 512; // kuinka pitkï¿½ tiedoston nimi voi olla polkuineen maksimissaan
 	std::string buffer;
 	buffer.resize(maxBufferSize+1);
 	::EatWhiteSpaces(file);
@@ -74,7 +75,7 @@ static void InitializeFileNameBasedGuiNameVector(const std::vector<std::string>&
 {
 	guiNamesOut.clear();
 	for(const auto& fileName : fileNames)
-		guiNamesOut.push_back(PathUtils::getFilename(fileName, false));
+		guiNamesOut.push_back(std::filesystem::path(fileName).stem().string());
 }
 
 void NFmiMapConfiguration::InitializeFileNameBasedGuiNameVectors()
@@ -104,21 +105,21 @@ static const std::string& GetLayerTextFromVector(size_t layerIndex, const std::v
 	}
 }
 
-// Priorisointi kun tehdään map-layer nimejä Gui:lle:
+// Priorisointi kun tehdï¿½ï¿½n map-layer nimejï¿½ Gui:lle:
 // 1. Descriptive name
 // 2. Macro-reference name
-// 3. Väännetään sopiva nimi bitmapin tiedosto nimestä
+// 3. Vï¿½ï¿½nnetï¿½ï¿½n sopiva nimi bitmapin tiedosto nimestï¿½
 std::string NFmiMapConfiguration::GetBestGuiUsedMapLayerName(size_t layerIndex, bool backgroundMapCase) const
 {
-	// 1. Jos löytyy ei-puuttuva descriptiveName, käytetään sitä.
+	// 1. Jos lï¿½ytyy ei-puuttuva descriptiveName, kï¿½ytetï¿½ï¿½n sitï¿½.
 	std::string bestGuiUsedname = ::GetLayerTextFromVector(layerIndex, backgroundMapCase ? itsBackgroundMapDescriptiveNames : itsOverlayMapDescriptiveNames);
 	if(bestGuiUsedname.empty())
 	{
-		// 2. Jos löytyy ei-puuttuva macroReferenceName, käytetään sitä.
+		// 2. Jos lï¿½ytyy ei-puuttuva macroReferenceName, kï¿½ytetï¿½ï¿½n sitï¿½.
 		bestGuiUsedname = ::GetLayerTextFromVector(layerIndex, backgroundMapCase ? itsBackgroundMapMacroReferenceNames : itsOverlayMapMacroReferenceNames);
 		if(bestGuiUsedname.empty())
 		{
-			// 3. Muutoin tehdään nimi kuvan tiedostonimestä
+			// 3. Muutoin tehdï¿½ï¿½n nimi kuvan tiedostonimestï¿½
 			bestGuiUsedname = ::GetLayerTextFromVector(layerIndex, backgroundMapCase ? itsBackgroundMapFileNameBasedGuiNames : itsOverlayMapFileNameBasedGuiNames);
 		}
 	}

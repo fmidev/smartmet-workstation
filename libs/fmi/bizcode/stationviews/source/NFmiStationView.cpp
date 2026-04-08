@@ -75,11 +75,13 @@
 #include "NFmiSymbolTextMapping.h"
 #include "ColorStringFunctions.h"
 #include "NFmiSmartToolIntepreter.h"
+#include "DataMatrixInterpolation.h"
 
 #include <cmath>
 #include <stdexcept>
 #include <fstream>
 #include "boost/math/special_functions/round.hpp"
+#include <boost/algorithm/string/replace.hpp>
 
 using namespace std;
 
@@ -124,7 +126,7 @@ static bool NearestShipLocation(NFmiFastQueryInfo &theInfo, const NFmiLocation &
 	return theInfo.LocationIndex(minLocInd);
 }
 
-static boost::shared_ptr<NFmiFastQueryInfo> FindInfoWithNearestLocation(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, const NFmiPoint& theWantedLatLon)
+static std::shared_ptr<NFmiFastQueryInfo> FindInfoWithNearestLocation(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, const NFmiPoint& theWantedLatLon)
 {
 	NFmiLocation wantedLocation(theWantedLatLon);
 	if(theInfoVector.empty() == false)
@@ -136,7 +138,7 @@ static boost::shared_ptr<NFmiFastQueryInfo> FindInfoWithNearestLocation(std::vec
 		unsigned long minLocationIndex = static_cast<unsigned long>(-1);
 		for(size_t i = 0; i < theInfoVector.size(); i++)
 		{
-			boost::shared_ptr<NFmiFastQueryInfo> info = theInfoVector[i];
+			std::shared_ptr<NFmiFastQueryInfo> info = theInfoVector[i];
 			FmiProducerName prod = static_cast<FmiProducerName>(info->Producer()->GetIdent());
 			bool useLocationFromData = false;
 			if(prod == kFmiSHIP || prod == kFmiBUOY)
@@ -155,12 +157,12 @@ static boost::shared_ptr<NFmiFastQueryInfo> FindInfoWithNearestLocation(std::vec
 		}
 		if(wantedInfoIndex >=0)
 		{
-			boost::shared_ptr<NFmiFastQueryInfo> info = theInfoVector[wantedInfoIndex];
+			std::shared_ptr<NFmiFastQueryInfo> info = theInfoVector[wantedInfoIndex];
 			info->LocationIndex(minLocationIndex);
 			return info;
 		}
 	}
-	return boost::shared_ptr<NFmiFastQueryInfo>();
+	return std::shared_ptr<NFmiFastQueryInfo>();
 }
 
 bool NFmiStationView::IsQ2ServerUsed(void)
@@ -168,9 +170,9 @@ bool NFmiStationView::IsQ2ServerUsed(void)
 	return itsCtrlViewDocumentInterface->UseQ2Server();
 }
 
-NFmiStationView::NFmiStationView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+NFmiStationView::NFmiStationView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 								,NFmiToolBox *theToolBox
-								,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+								,std::shared_ptr<NFmiDrawParam> &theDrawParam
 								,FmiParameterName theParamId
 								,NFmiPoint theOffSet
 								,NFmiPoint theSize
@@ -230,7 +232,7 @@ NFmiRect NFmiStationView::CalcSymbolRelativeRect(const NFmiPoint &theLatlon, dou
 // K�ytet��nk� Q2-serveri� hakemaan synop-dataa karttan�yt�lle?
 // Jos prioriteetti 1. synop-datan (euro-synop) alkuaika on uudempi kuin 
 // itsTime, tehd��n Q2-haku, jos se on sallittu.
-bool NFmiStationView::UseQ2ForSynopData(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+bool NFmiStationView::UseQ2ForSynopData(std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
 	if(theDrawParam->Param().GetProducer()->GetIdent() == kFmiSYNOP && IsQ2ServerUsed())
 	{
@@ -390,7 +392,7 @@ void NFmiStationView::DrawCountryBordersToMapView()
 		NFmiCountryBorderDrawUtils::drawCountryBordersToMapView(this, itsToolBox, itsDrawParam.get());
 }
 
-void NFmiStationView::MakeDrawedInfoVector(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+void NFmiStationView::MakeDrawedInfoVector(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
 	itsCtrlViewDocumentInterface->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, GetArea());
 }
@@ -402,7 +404,7 @@ void NFmiStationView::MakeDrawedInfoVector(void)
 	if(itsInfoVector.empty() && itsDrawParam->ModelRunIndex() < 0)
 	{ // jos ei l�ytynyt dataa ja kyse on arkistodatahausta, koetetaan hakea viimeisin l�ytyv� data. Jos se l�ytyy, merkit��n ett� t�m� pit�� lopuksi hakea q2serverilt�.
 		// N�in saadaan itsInfoVector:iin datan er��nlainen kopio, jolle voidaan tehd� erilaisia tarkasteluja ennen itse piirtoa.
-		boost::shared_ptr<NFmiDrawParam> tmpDrawParam(new NFmiDrawParam(*itsDrawParam));
+		std::shared_ptr<NFmiDrawParam> tmpDrawParam(new NFmiDrawParam(*itsDrawParam));
 		tmpDrawParam->ModelRunIndex(0);
 		MakeDrawedInfoVector(itsInfoVector, tmpDrawParam);
 		if(itsInfoVector.empty() == false)
@@ -415,7 +417,7 @@ static int GetGridDataIndex(int xSize, int xInd, int yInd)
 	return (xSize * yInd) + xInd;
 }
 
-static std::vector<unsigned long> FillLocationIndexies(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static std::vector<unsigned long> FillLocationIndexies(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	if(theInfo->IsGrid())
 	{ // hiladatalle palautetaan seuraavat paikkaindeksit
@@ -636,7 +638,7 @@ void NFmiStationView::DoSymboldrawDensityAdjustments(double &xSizeFactorInOut, d
 	ySizeFactorInOut = ::AdjustSymbolSizeFactorWithDensity(ySizeFactorInOut, itsDrawParam->SymbolDrawDensityY());
 }
 
-static boost::shared_ptr<NFmiFastQueryInfo> GetUsedSpaceOutCalculationInfo(boost::shared_ptr<NFmiFastQueryInfo>& normalInfo, NFmiExtraMacroParamData& probingExtraMacroParamData)
+static std::shared_ptr<NFmiFastQueryInfo> GetUsedSpaceOutCalculationInfo(std::shared_ptr<NFmiFastQueryInfo>& normalInfo, NFmiExtraMacroParamData& probingExtraMacroParamData)
 {
 	if(probingExtraMacroParamData.IsFixedSpacedOutDataCase() && probingExtraMacroParamData.FixedBaseDataInfo())
 	{
@@ -988,7 +990,7 @@ NFmiPoint NFmiStationView::SbdCalcOldSchoolSymbolScaleFix(const NFmiPoint& symbo
 	}
 }
 
-static bool IsCurrentStationBlocked(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiIgnoreStationsData &ignoreStationData)
+static bool IsCurrentStationBlocked(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiIgnoreStationsData &ignoreStationData)
 {
     if(theInfo->IsGrid())
         return false;
@@ -1085,11 +1087,11 @@ bool NFmiStationView::CanToolmasterBeUsed(void)
 	if(itsCtrlViewDocumentInterface->IsToolMasterAvailable() == false)
 		return false;
 
-    boost::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
+    std::shared_ptr<NFmiArea> infoArea(itsInfo->Area()->Clone());
 	return NFmiQueryDataUtil::AreAreasSameKind(itsArea.get(), infoArea.get());
 }
 
-void NFmiStationView::DrawWithIsolineView(const NFmiDataMatrix<float> &theMatrix, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+void NFmiStationView::DrawWithIsolineView(const NFmiDataMatrix<float> &theMatrix, std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
 	// K�ytet��n hiladatan piirrossa isolineView-luokkaa
 	auto area = GetArea();
@@ -1264,7 +1266,7 @@ bool NFmiStationView::LeftButtonUp(const NFmiPoint& thePlace, unsigned long theK
 {
 	// Muutin koodia niin, ett� kartalle hiiren klikkaus vaikuttaa aina, vaikka kyseess� olisi ei editoitava data.
 	// Muutokset tehd��n aina editoitavaan dataan.
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
+	std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
 	if(info)
 	{
 		if(itsCtrlViewDocumentInterface->ModifyToolMode() != CtrlViewUtils::kFmiEditorModifyToolModeBrush && !itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode()) // siveltimen kanssa ei voi valita asemia???
@@ -1302,7 +1304,7 @@ bool NFmiStationView::RightButtonUp(const NFmiPoint& thePlace, unsigned long the
 {
 	// Muutin koodia niin, ett� kartalle hiiren klikkaus vaikuttaa aina, vaikka kyseess� olisi ei editoitava data.
 	// Muutokset tehd��n aina editoitavaan dataan.
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
+	std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
 	if(info)
 	{
 		if((theKey & kCtrlKey) && (theKey & kShiftKey))
@@ -1420,7 +1422,7 @@ NFmiPoint NFmiStationView::CurrentStationPosition() const
 	return xy;
 }
 
-float NFmiStationView::GetSynopValueFromQ2Archive(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+float NFmiStationView::GetSynopValueFromQ2Archive(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	if(theInfo)
 	{
@@ -1435,7 +1437,7 @@ float NFmiStationView::GetSynopValueFromQ2Archive(boost::shared_ptr<NFmiFastQuer
 
 // Oletus: theInfo ei ole nullptr
 // Oletus 2: annetun theInfo:n aikainterpolaatio arvot ovat samoja kuin NFmiStationView-luokan itsInfo:n vastaavat.
-float NFmiStationView::CalcTimeInterpolatedValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime)
+float NFmiStationView::CalcTimeInterpolatedValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime)
 {
     if(fDoTimeInterpolation && itsTimeInterpolationRangeInMinutes == 0)
         return kFloatMissing;
@@ -1529,7 +1531,7 @@ float NFmiStationView::ViewFloatValue(bool )
     }
     else if(fGetCurrentDataFromQ2Server)
     {
-        return itsQ2ServerDataValues.InterpolatedValue(LatLonToViewPoint(itsInfo->LatLon()), itsArea->XYArea(), itsParamId);
+        return DataMatrixInterpolation::InterpolatedValue(itsQ2ServerDataValues, LatLonToViewPoint(itsInfo->LatLon()), itsArea->XYArea(), itsParamId);
     }
     else if(fUseMacroParamSpecialCalculations)
     {
@@ -1564,7 +1566,7 @@ static bool AreMatricesEqual(const NFmiDataMatrix<float> & m1, const NFmiDataMat
 
 // Resoluutio datalla tarkoitetaan t�ss� joko FixedBaseData:a tai Resolution dataa.
 // FixedBaseDatalla on korkeampi prioriteetti.
-static boost::shared_ptr<NFmiFastQueryInfo> CalcPossibleResolutionInfoFromMacroParam(TimeSerialModificationDataInterface& theAdapter, boost::shared_ptr<NFmiDrawParam>& theDrawParam, int theMapViewDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo>& possibleSpacedOutMacroInfo, const NFmiPoint& spaceOutSkipFactors)
+static std::shared_ptr<NFmiFastQueryInfo> CalcPossibleResolutionInfoFromMacroParam(TimeSerialModificationDataInterface& theAdapter, std::shared_ptr<NFmiDrawParam>& theDrawParam, int theMapViewDescTopIndex, std::shared_ptr<NFmiFastQueryInfo>& possibleSpacedOutMacroInfo, const NFmiPoint& spaceOutSkipFactors)
 {
 	float value = kFloatMissing;
 	NFmiSmartToolModifier smartToolModifier(theAdapter.InfoOrganizer());
@@ -1606,7 +1608,7 @@ static void DoDataDownSizeLogging(NFmiCtrlView* view, const std::string& operati
 	}
 }
 
-static void SetupIsolineData(const boost::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfo, NFmiIsoLineData& theIsoLineDataOut)
+static void SetupIsolineData(const std::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfo, NFmiIsoLineData& theIsoLineDataOut)
 {
 	if(possibleMacroParamResolutionInfo)
 	{
@@ -1616,11 +1618,11 @@ static void SetupIsolineData(const boost::shared_ptr<NFmiFastQueryInfo>& possibl
 	}
 }
 
-bool NFmiStationView::IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut, boost::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfoOut)
+bool NFmiStationView::IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut, std::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfoOut)
 {
 	if(itsDrawParam)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> possibleSpaceOutInfoIsEmpty;
+		std::shared_ptr<NFmiFastQueryInfo> possibleSpaceOutInfoIsEmpty;
 		possibleMacroParamResolutionInfoOut = CalcPossibleResolutionInfoFromMacroParam(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsDrawParam, itsMapViewDescTopIndex, possibleSpaceOutInfoIsEmpty, CalcUsedSpaceOutFactors());
 		if(possibleMacroParamResolutionInfoOut)
 		{
@@ -1642,7 +1644,7 @@ bool NFmiStationView::IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut
 	return false;
 }
 
-bool NFmiStationView::IsMacroParamContourDataDownSized(const boost::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfo, NFmiPoint& newGridSizeOut)
+bool NFmiStationView::IsMacroParamContourDataDownSized(const std::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfo, NFmiPoint& newGridSizeOut)
 {
 	if(itsDrawParam && possibleMacroParamResolutionInfo)
 	{
@@ -1714,7 +1716,7 @@ NFmiPoint NFmiStationView::CalcPixelToGridRatio(NFmiIsoLineData& theIsoLineData,
 // 'Probing' macroParam data on alueeltaan hieman pienempi kuin kartan alue, t�ll�in reunoille ei toivottavasti tule mit��n erikoisia
 // arvoja kuten puuttuvaa tai 0:aa. Hilana on 4x4 eli 16 testipistett�, jolla saadaan aavistus, kuinka monta numeroa on luku 
 // tekstiss� keskim��rin. Sen avulla voidaan laskea lopullisen harvennetun datan symboli tiheys ruudulla.
-static boost::shared_ptr<NFmiFastQueryInfo> CreateProbingMacroParamData(boost::shared_ptr<NFmiArea> &mapArea)
+static std::shared_ptr<NFmiFastQueryInfo> CreateProbingMacroParamData(std::shared_ptr<NFmiArea> &mapArea)
 {
     // Lasketaan uudet kulmapisteet kolmanneksen p��h�n reunoista ja tehd��n siihen 4x4 hila.
     if(mapArea)
@@ -1726,14 +1728,14 @@ static boost::shared_ptr<NFmiFastQueryInfo> CreateProbingMacroParamData(boost::s
         auto yShift = (bottomLeftXyPoint.Y() - topRightXyPoint.Y()) / 5.;
         NFmiPoint newBottomLeftXy(bottomLeftXyPoint.X() + xShift, bottomLeftXyPoint.Y() - yShift);
         NFmiPoint newTopRightXy(topRightXyPoint.X() - xShift, topRightXyPoint.Y() + yShift);
-        boost::shared_ptr<NFmiArea> newArea(mapArea->CreateNewArea(NFmiRect(newBottomLeftXy, newTopRightXy)));
+        std::shared_ptr<NFmiArea> newArea(mapArea->CreateNewArea(NFmiRect(newBottomLeftXy, newTopRightXy)));
         return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(4, 4, NFmiInfoData::kMacroParam, newArea.get());
     }
 
-    return boost::shared_ptr<NFmiFastQueryInfo>();
+    return std::shared_ptr<NFmiFastQueryInfo>();
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreateNewResizedMacroParamData(const NFmiPoint &newGridSize, const NFmiArea* usedArea)
+std::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreateNewResizedMacroParamData(const NFmiPoint &newGridSize, const NFmiArea* usedArea)
 {
 	fUseAlReadySpacedOutData = true;
 	int gridSizeX = boost::math::iround(newGridSize.X());
@@ -1741,7 +1743,7 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreateNewResizedMacroParam
 	return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(gridSizeX, gridSizeY, NFmiInfoData::kMacroParam, usedArea);
 }
 
-static bool IsSymbolDrawing(boost::shared_ptr<NFmiDrawParam>& theDrawParam)
+static bool IsSymbolDrawing(std::shared_ptr<NFmiDrawParam>& theDrawParam)
 {
 	if(theDrawParam)
 	{
@@ -1783,7 +1785,7 @@ void NFmiStationView::UpdateOptimizedVisualizationMacroParamData()
 
 // T�h�n ei oteta mukaan VisualizationOptimization hilakokolaskuja, koska t�ss� lasketaan
 // jo harvennettuun laskentahilaan mahdollisen symbolipiirron takia.
-boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreatePossibleSpaceOutMacroParamData()
+std::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreatePossibleSpaceOutMacroParamData()
 {
 	// Huom! Tehd��n valitettava kaksoistoiminto, mutta p�ivitet��n aluksi my�s OptimizedVisualizationMacroParamData:n
 	// area ja koko, jota tarvitaan my�hemmin.
@@ -1808,14 +1810,14 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::CreatePossibleSpaceOutMacr
 
 
 	NFmiPoint possibleNewGridSize;
-	boost::shared_ptr<NFmiFastQueryInfo> possibleMacroParamResolutionInfo;
+	std::shared_ptr<NFmiFastQueryInfo> possibleMacroParamResolutionInfo;
 	if(IsMacroParamIsolineDataDownSized(possibleNewGridSize, possibleMacroParamResolutionInfo))
 		return CreateNewResizedMacroParamData(possibleNewGridSize, possibleMacroParamResolutionInfo->Area());
 
 	if(IsMacroParamContourDataDownSized(possibleMacroParamResolutionInfo, possibleNewGridSize))
 		return CreateNewResizedMacroParamData(possibleNewGridSize, possibleMacroParamResolutionInfo->Area());
 
-    return boost::shared_ptr<NFmiFastQueryInfo>();
+    return std::shared_ptr<NFmiFastQueryInfo>();
 }
 
 // Tekee m��r�tyn kokoisen macroParam matriisin laskut ja asettaa
@@ -1840,7 +1842,7 @@ bool NFmiStationView::DoMacroParamProbing()
 }
 
 
-static void TraceLogForMacroParamCalculationSize(boost::shared_ptr<NFmiFastQueryInfo> &macroParamInfo, NFmiCtrlView *view)
+static void TraceLogForMacroParamCalculationSize(std::shared_ptr<NFmiFastQueryInfo> &macroParamInfo, NFmiCtrlView *view)
 {
     if(macroParamInfo)
     {
@@ -1918,12 +1920,12 @@ float NFmiStationView::GetMacroParamValueFromCache(const NFmiExtraMacroParamData
 		{
 			auto xyPoint = grid.GridToXY(gridPoint);
 			// normi reaaliluku interpolaatio l�mp�tila parametri on vain dummy arvo tavalliselle reaaliluvulle
-			auto interpolatedValue = dataMatrix.InterpolatedValue(xyPoint, grid.Area()->XYArea(), kFmiTemperature);
+			auto interpolatedValue = DataMatrixInterpolation::InterpolatedValue(dataMatrix, xyPoint, grid.Area()->XYArea(), kFmiTemperature);
 			if(interpolatedValue != kFloatMissing)
 				return interpolatedValue;
 
 			// Monissa macroParameissa on paljon puuttuvia arvoja, ja normaali interpolaatio ei toimi, kokeillaan viel� saadaanko nearest menetelm�ll� arvoa
-			return dataMatrix.InterpolatedValue(xyPoint, grid.Area()->XYArea(), kFmiTemperature, false, kNearestPoint);
+			return DataMatrixInterpolation::InterpolatedValue(dataMatrix, xyPoint, grid.Area()->XYArea(), kFmiTemperature, false, kNearestPoint);
 		}
 	}
 
@@ -1933,7 +1935,7 @@ float NFmiStationView::GetMacroParamValueFromCache(const NFmiExtraMacroParamData
 // Tooltip laskuja varten tehd��n oma 'Probing' macroParam data on alueeltaan seuraava:
 // Tooltipin latlon piste tulee sen bottom-left-kulmaksi ja siit� koilliseen 100 metri� on top-right-kulma.
 // Laskentahilaksi 4x4, joihin ei oikeasti edes lasketa kuin yhteen pisteeseen.
-static boost::shared_ptr<NFmiFastQueryInfo> CreateTooltipProbingMacroParamData(boost::shared_ptr<NFmiArea>& mapArea, const NFmiPoint &tooltipLatlon)
+static std::shared_ptr<NFmiFastQueryInfo> CreateTooltipProbingMacroParamData(std::shared_ptr<NFmiArea>& mapArea, const NFmiPoint &tooltipLatlon)
 {
 	// Lasketaan uudet kulmapisteet suhteessa tooltip sijaintiin (=bottomLeft) ja tehd��n siihen 4x4 hila.
 	if(mapArea)
@@ -1941,15 +1943,15 @@ static boost::shared_ptr<NFmiFastQueryInfo> CreateTooltipProbingMacroParamData(b
 		NFmiLocation topRightLocation(tooltipLatlon);
 		// Siirryt��n tooltip kohdasta koilliseen (= 45 astetta kun 0 astetta on pohjoiseen) 100 metri�.
 		topRightLocation.SetLocation(45, 100, mapArea->PacificView());
-		boost::shared_ptr<NFmiArea> newArea(mapArea->CreateNewArea(tooltipLatlon, topRightLocation.GetLocation()));
+		std::shared_ptr<NFmiArea> newArea(mapArea->CreateNewArea(tooltipLatlon, topRightLocation.GetLocation()));
 		return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(4, 4, NFmiInfoData::kMacroParam, newArea.get());
 	}
 
-	return boost::shared_ptr<NFmiFastQueryInfo>();
+	return std::shared_ptr<NFmiFastQueryInfo>();
 }
 
 // Pelk�n tooltipin lasku macroParamista.
-float NFmiStationView::CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extraMacroParamData, boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
+float NFmiStationView::CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extraMacroParamData, std::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
 {
     NFmiPoint latlon = itsCtrlViewDocumentInterface->ToolTipLatLonPoint();
     NFmiMetTime usedTime = itsCtrlViewDocumentInterface->ToolTipTime();
@@ -1963,7 +1965,7 @@ float NFmiStationView::CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extra
 	return FmiModifyEditdData::CalcMacroParamMatrix(itsCtrlViewDocumentInterface->GenDocDataAdapter(), itsMapViewDescTopIndex, theUsedDrawParam, fakeMatrixValues, true, doMultiThread, usedTime, latlon, itsInfo, fUseCalculationPoints, true, CalcUsedSpaceOutFactors(), probeData, &extraMacroParamData);
 }
 
-float NFmiStationView::CalcMacroParamTooltipValue(NFmiExtraMacroParamData& extraMacroParamData, boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam, const NFmiPoint& latlon, const NFmiMetTime& usedTime, boost::shared_ptr<NFmiArea> &area, int descTopIndex, boost::shared_ptr<NFmiFastQueryInfo>& theUsedMacroInfoOut)
+float NFmiStationView::CalcMacroParamTooltipValue(NFmiExtraMacroParamData& extraMacroParamData, std::shared_ptr<NFmiDrawParam>& theUsedDrawParam, const NFmiPoint& latlon, const NFmiMetTime& usedTime, std::shared_ptr<NFmiArea> &area, int descTopIndex, std::shared_ptr<NFmiFastQueryInfo>& theUsedMacroInfoOut)
 {
 	NFmiDataMatrix<float> fakeMatrixValues;
 	// Ei ole hy�ty� k�ytt�� monta threadia kun lasketaan yht� tooltip arvoa
@@ -1978,12 +1980,12 @@ float NFmiStationView::CalcMacroParamTooltipValue(NFmiExtraMacroParamData& extra
 	return FmiModifyEditdData::CalcMacroParamMatrix(genDocDataAdapter, descTopIndex, theUsedDrawParam, fakeMatrixValues, true, doMultiThread, usedTime, latlon, theUsedMacroInfoOut, useCalculationPoints, true, spaceOutFactors, probeData, &extraMacroParamData);
 }
 
-static void MakeDrawedInfoVector(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+static void MakeDrawedInfoVector(NFmiGriddingHelperInterface *theGriddingHelper, const std::shared_ptr<NFmiArea> &theArea, std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
     theGriddingHelper->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
 }
 
-static void SetXYZValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiArea &theArea, float theValue, std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues)
+static void SetXYZValues(const std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiArea &theArea, float theValue, std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues)
 {
 	if(theValue != kFloatMissing)
 	{
@@ -1998,28 +2000,28 @@ static void SetXYZValues(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, co
 	}
 }
 
-static void DoFinalGridding(const NFmiGriddingProperties &griddingProperties, const boost::shared_ptr<NFmiArea> &theArea, std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues, NFmiDataMatrix<float> &theValues)
+static void DoFinalGridding(const NFmiGriddingProperties &griddingProperties, const std::shared_ptr<NFmiArea> &theArea, std::vector<float> &theXValues, std::vector<float> &theYValues, std::vector<float> &theZValues, NFmiDataMatrix<float> &theValues)
 {
     auto stationRadiusRelative = static_cast<float>(NFmiGriddingProperties::ConvertLengthInKmToRelative(griddingProperties.rangeLimitInKm(), theArea.get()));
     std::unique_ptr<NFmiObsDataGridding> obsDataGridding(new NFmiObsDataGridding());
 	NFmiDataParamControlPointModifier::DoDataGridding(theXValues, theYValues, theZValues, static_cast<int>(theZValues.size()), theValues, theArea->XYArea(), griddingProperties, obsDataGridding.get(), stationRadiusRelative);
 }
 
-void NFmiStationView::GridStationData(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, const NFmiGriddingProperties &griddingProperties)
+void NFmiStationView::GridStationData(NFmiGriddingHelperInterface *theGriddingHelper, const std::shared_ptr<NFmiArea> &theArea, std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, const NFmiGriddingProperties &griddingProperties)
 {
 	std::vector<float> xValues;
 	std::vector<float> yValues;
 	std::vector<float> zValues;
 
-	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
+	std::vector<std::shared_ptr<NFmiFastQueryInfo> > infoVector;
 	::MakeDrawedInfoVector(theGriddingHelper, theArea, infoVector, theDrawParam);
-	std::vector<boost::shared_ptr<NFmiFastQueryInfo> >::iterator iter = infoVector.begin();
+	std::vector<std::shared_ptr<NFmiFastQueryInfo> >::iterator iter = infoVector.begin();
 	if(iter != infoVector.end())
 	{
 		NFmiIgnoreStationsData &ignorestationdata = theGriddingHelper->IgnoreStationsData();
 		for( ; iter != infoVector.end(); ++iter)
 		{
-			boost::shared_ptr<NFmiFastQueryInfo> &info = *iter;
+			std::shared_ptr<NFmiFastQueryInfo> &info = *iter;
 			if(info->Time(theTime))
 			{
 				bool useShipLocations = NFmiFastInfoUtils::IsInfoShipTypeData(*info);
@@ -2053,7 +2055,7 @@ public:
         :itsCtrlViewDocumentInterface(theCtrlViewDocumentInterface)
     {}
 
-    void MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override
+    void MakeDrawedInfoVectorForMapView(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, std::shared_ptr<NFmiDrawParam> &theDrawParam, const std::shared_ptr<NFmiArea> &theArea) override
     {
         itsCtrlViewDocumentInterface->MakeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
     }
@@ -2091,9 +2093,9 @@ void NFmiStationView::GridStationDataFromQ2(NFmiDataMatrix<float> &theValues, co
 	std::vector<float> yValues;
 	std::vector<float> zValues;
 
-	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
+	std::vector<std::shared_ptr<NFmiFastQueryInfo> > infoVector;
 	MakeDrawedInfoVector(infoVector, itsDrawParam);
-	std::vector<boost::shared_ptr<NFmiFastQueryInfo> >::iterator iter = infoVector.begin();
+	std::vector<std::shared_ptr<NFmiFastQueryInfo> >::iterator iter = infoVector.begin();
 	if(iter != infoVector.end())
 	{
 		NFmiIgnoreStationsData &ignorestationdata = itsCtrlViewDocumentInterface->IgnoreStationsData();
@@ -2101,7 +2103,7 @@ void NFmiStationView::GridStationDataFromQ2(NFmiDataMatrix<float> &theValues, co
 			GetQ2SynopData();
 		if(fGetSynopDataFromQ2)
 		{ // jos haku onnistui jatketaan
-			boost::shared_ptr<NFmiFastQueryInfo> &info = *iter; // k�yd��n l�pi vain p�� eli 1. info
+			std::shared_ptr<NFmiFastQueryInfo> &info = *iter; // k�yd��n l�pi vain p�� eli 1. info
 			for(info->ResetLocation(); info->NextLocation(); )
 			{
 				if(ignorestationdata.IsStationBlocked(*(info->Location()), false) == false)
@@ -2121,7 +2123,7 @@ void NFmiStationView::GridStationDataFromQ2(NFmiDataMatrix<float> &theValues, co
     ::DoFinalGridding(ctrlViewGriddingInterface.GriddingProperties(false), itsArea, xValues, yValues, zValues, theValues);
 }
 
-static void FixDataWithMaskValues(const NFmiMetTime &theTime, NFmiDataMatrix<float> &theValues, const NFmiGrid &theGrid, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theParamMaskList)
+static void FixDataWithMaskValues(const NFmiMetTime &theTime, NFmiDataMatrix<float> &theValues, const NFmiGrid &theGrid, std::shared_ptr<NFmiDrawParam> &theDrawParam, std::shared_ptr<NFmiAreaMaskList> &theParamMaskList)
 {
     // theValues matrix migth be empty in certain kind of errors (e.g. macroParam couldn't be calculated at all)
 	// and the matrix and given grid objects must be the same size in both directions.
@@ -2150,7 +2152,7 @@ static void FixDataWithMaskValues(const NFmiMetTime &theTime, NFmiDataMatrix<flo
     }
 }
 
-static string GetQ2ParamString(boost::shared_ptr<NFmiDrawParam> &theDrawParam) 	
+static string GetQ2ParamString(std::shared_ptr<NFmiDrawParam> &theDrawParam) 	
 {
 	string str("paramId=");
 	str += NFmiStringTools::Convert<unsigned long>(theDrawParam->Param().GetParamIdent());
@@ -2169,14 +2171,14 @@ static string GetQ2ParamString(std::vector<FmiParameterName> &theWantedParamVect
 	return str;
 }
 
-static string GetQ2ProducerString(boost::shared_ptr<NFmiDrawParam> &theDrawParam) 	
+static string GetQ2ProducerString(std::shared_ptr<NFmiDrawParam> &theDrawParam) 	
 {
 	string str("&producerId=");
 	str += NFmiStringTools::Convert<unsigned long>(theDrawParam->Param().GetProducer()->GetIdent());
 	return str;
 }
 
-static string GetQ2DataTypeString(boost::shared_ptr<NFmiDrawParam> &theDrawParam) 	
+static string GetQ2DataTypeString(std::shared_ptr<NFmiDrawParam> &theDrawParam) 	
 {
 	string str("&dataType=");
 	str += NFmiStringTools::Convert<NFmiInfoData::Type>(theDrawParam->DataType());
@@ -2190,7 +2192,7 @@ static string GetQ2DecimalCountString(int theDecimalCount)
 	return str;
 }
 
-static string GetQ2LevelString(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+static string GetQ2LevelString(std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
 	string str;
 	// level dataa pyynt�� varten pit�� laittaa (HUOM! jos ident on 0, ei kyse ole level datasta)
@@ -2213,7 +2215,7 @@ static std::unique_ptr<NFmiArea> GetQ2ToolTipArea(CtrlViewDocumentInterface *the
 	return std::make_unique<NFmiLatLonArea>(bl, tr);
 }
 
-static NFmiGrid GetQ3ArchiveDataGrid(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiArea> &theArea, bool doToolTipCalculation, int viewGridSize)
+static NFmiGrid GetQ3ArchiveDataGrid(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, std::shared_ptr<NFmiArea> &theArea, bool doToolTipCalculation, int viewGridSize)
 {
 	if(doToolTipCalculation)
 	{
@@ -2234,7 +2236,7 @@ static NFmiGrid GetQ3ArchiveDataGrid(CtrlViewDocumentInterface *theCtrlViewDocum
 }
 
 
-static string GetQ2ProjectionString(const boost::shared_ptr<NFmiArea> &theFinalArea)
+static string GetQ2ProjectionString(const std::shared_ptr<NFmiArea> &theFinalArea)
 {
 	string str("&projection=");
 	str += theFinalArea->AreaStr();
@@ -2264,7 +2266,7 @@ static string GetQ2ValidTimeString(const NFmiMetTime &theTime)
 	return str;
 }
 
-static string GetQ2ModelOrigTimeString(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+static string GetQ2ModelOrigTimeString(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
 	string str("&");
 	str += theCtrlViewDocumentInterface->GetModelOrigTimeString(theDrawParam);
@@ -2361,7 +2363,7 @@ static std::string MakeQ3ErrorStr(std::exception *theException, FmiLanguage theL
     return errStr;
 }
 
-static string GetQ3ModelOrigTimeString(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+static string GetQ3ModelOrigTimeString(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
     return theCtrlViewDocumentInterface->GetModelOrigTimeString(theDrawParam);
 }
@@ -2377,7 +2379,7 @@ static string MakeQ3GridSizeStr(NFmiGrid &theUsedGrid)
 
 }
 
-static string GetQ3ProducerString(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+static string GetQ3ProducerString(std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
     long producer = theDrawParam->Param().GetProducer()->GetIdent();
     if(producer == kFmiMTAECMWF)
@@ -2388,7 +2390,7 @@ static string GetQ3ProducerString(boost::shared_ptr<NFmiDrawParam> &theDrawParam
     throw std::runtime_error(string("Unsupported producer (") + NFmiStringTools::Convert(producer) + ") wanted from q3 server archives, stopping data retrieval...");
 }
 
-static string GetQ3LevelString(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+static string GetQ3LevelString(std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
     string str;
     // level dataa pyynt�� varten pit�� laittaa (HUOM! jos ident on 0, ei kyse ole level datasta)
@@ -2409,7 +2411,7 @@ static string GetQ3LevelString(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 
 }
 
-static string GetQ3ParamString(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+static string GetQ3ParamString(std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
     return string("[\":") + NFmiStringTools::Convert(theDrawParam->Param().GetParamIdent()) + "\"]";
 }
@@ -2423,7 +2425,7 @@ static string GetQ3ParamString(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
 //
 // HIR[":4"], HIR{hpa=925}[":4"], HIR{hybrid=true}{hybrid=60}[":4"]
 
-static string MakeQ3WantedDataStr(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+static string MakeQ3WantedDataStr(std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
     string dataStr = ::GetQ3ProducerString(theDrawParam);
     dataStr += ::GetQ3LevelString(theDrawParam);
@@ -2431,7 +2433,7 @@ static string MakeQ3WantedDataStr(boost::shared_ptr<NFmiDrawParam> &theDrawParam
     return dataStr;
 }
 
-static string MakeQ3ArchiveModelDataCodeStr(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiMetTime &theValidTime, NFmiGrid &theUsedGrid)
+static string MakeQ3ArchiveModelDataCodeStr(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, std::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiMetTime &theValidTime, NFmiGrid &theUsedGrid)
 {
     std::string codeStrStart = "code="; // T�t� alkua ei saa encodata
 
@@ -2610,23 +2612,23 @@ float NFmiStationView::CalcUsedLegendSizeFactor(double singleMapViewHeightInMM, 
 	return sizeFactor;
 }
 
-NFmiHelpDataInfo* NFmiStationView::GetHelpDataInfo(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+NFmiHelpDataInfo* NFmiStationView::GetHelpDataInfo(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
     return GetCtrlViewDocumentInterface()->HelpDataInfoSystem()->FindHelpDataInfo(theInfo->DataFilePattern());
 }
 
-void NFmiStationView::FinalFillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid)
+void NFmiStationView::FinalFillDataMatrix(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid)
 {
 	if(optimizedDataGrid)
-		theInfo->GridValues(theValues, *optimizedDataGrid, usedTime, itsTimeInterpolationRangeInMinutes);
+		theValues = theInfo->GridValues(*optimizedDataGrid, usedTime);
 	else if(useCropping)
-        theInfo->CroppedValues(theValues, usedTime, x1, y1, x2, y2, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
+        theValues = theInfo->CroppedValues(usedTime, x1, y1, x2, y2, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
     else
-        theInfo->Values(theValues, usedTime, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
+        theValues = theInfo->Values(usedTime, itsTimeInterpolationRangeInMinutes, fAllowNearestTimeInterpolation);
 }
 
 // Kannattaako yritt�� piirt�� annetun datan annettua aikaa karttan�ytt��n?
-bool NFmiStationView::DataIsDrawable(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &usedTime)
+bool NFmiStationView::DataIsDrawable(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &usedTime)
 {
     // Jos annettu aika on datan aikarakenteen sis�ll�, yritet��n piirtoa
     if(itsInfo->TimeDescriptor().IsInside(usedTime))
@@ -2641,7 +2643,7 @@ bool NFmiStationView::DataIsDrawable(boost::shared_ptr<NFmiFastQueryInfo> &theIn
     return false;
 }
 
-void NFmiStationView::FinalFillWindMetaDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, unsigned long wantedParamId, NFmiGrid* optimizedDataGrid)
+void NFmiStationView::FinalFillWindMetaDataMatrix(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, unsigned long wantedParamId, NFmiGrid* optimizedDataGrid)
 {
     NFmiFastInfoUtils::QueryInfoParamStateRestorer restorer(*theInfo);
     if(metaWindParamUsage.HasWsAndWd())
@@ -2701,7 +2703,7 @@ void NFmiStationView::FinalFillWindMetaDataMatrix(boost::shared_ptr<NFmiFastQuer
     }
 }
 
-void NFmiStationView::FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid)
+void NFmiStationView::FillDataMatrix(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid)
 {
 	if(theInfo == 0)
 		theValues = kFloatMissing;
@@ -2728,7 +2730,7 @@ static void CalcDiffMatrix(NFmiDataMatrix<float> &theValuesInOut, const NFmiData
 		theValuesInOut = kFloatMissing;
 }
 
-static NFmiGrid GetUsedGrid(const NFmiGrid &theCurrentGrid, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, bool fUseCropping, int x1, int y1, int x2, int y2)
+static NFmiGrid GetUsedGrid(const NFmiGrid &theCurrentGrid, std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, bool fUseCropping, int x1, int y1, int x2, int y2)
 {
 	if(theCurrentGrid.Area() != 0)
 		return theCurrentGrid;
@@ -2850,12 +2852,12 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 					{
 						// GridValues metodista ei l�ydy kuin aikainterpolaatio menetelm�, joten pit�� pyyt�� eka aika datasta
 						const auto& firstTime = itsInfo->TimeDescriptor().FirstTime();
-						itsInfo->GridValues(theValues, *optimizedDataGrid, firstTime);
+						theValues = itsInfo->GridValues(*optimizedDataGrid, firstTime);
 					}
 					else if(useCropping)
-						itsInfo->CroppedValues(theValues, x1, y1, x2, y2); // stat data on jo ajallisesti kohdallaan
+						theValues = itsInfo->CroppedValues(x1, y1, x2, y2); // stat data on jo ajallisesti kohdallaan
 					else
-						itsInfo->Values(theValues); // stat data on jo ajallisesti kohdallaan
+						theValues = itsInfo->Values(); // stat data on jo ajallisesti kohdallaan
 				}
 			}
 
@@ -2878,14 +2880,14 @@ bool NFmiStationView::CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues,
 	return status;
 }
 
-void NFmiStationView::DoTimeInterpolationSettingChecks(boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
+void NFmiStationView::DoTimeInterpolationSettingChecks(std::shared_ptr<NFmiFastQueryInfo>& theInfo)
 {
 	itsTimeInterpolationRangeInMinutes = NFmiStationView::GetTimeInterpolationRangeInMinutes(GetHelpDataInfo(theInfo));
 	fAllowNearestTimeInterpolation = NFmiStationView::AllowNearestTimeInterpolation(itsTimeInterpolationRangeInMinutes);
 }
 
 // t�m� asettaa tarvittavat jutut optimointia varten
-void NFmiStationView::SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo)
+void NFmiStationView::SetMapViewSettings(std::shared_ptr<NFmiFastQueryInfo> &theUsedInfo)
 {
 	itsInfo = theUsedInfo;
 	if(itsInfo == 0)
@@ -2920,7 +2922,7 @@ void NFmiStationView::SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &t
 #undef min
 #endif
 
-static NFmiColor GetCustomClassColor(float value, const boost::shared_ptr<NFmiDrawParam> &drawParam)
+static NFmiColor GetCustomClassColor(float value, const std::shared_ptr<NFmiDrawParam> &drawParam)
 {
     const auto &classes = drawParam->SpecialIsoLineValues();
     const auto &colorIndices = drawParam->SpecialIsoLineColorIndexies();
@@ -2976,7 +2978,7 @@ NFmiColor NFmiStationView::GetColoredNumberColor(float theValue) const
 	return color;
 }
 
-static float GetSecondParameterColorValue(const boost::shared_ptr<NFmiFastQueryInfo> &primaryInfo, const boost::shared_ptr<NFmiFastQueryInfo>& colorValueInfo, const NFmiMetTime &theTime)
+static float GetSecondParameterColorValue(const std::shared_ptr<NFmiFastQueryInfo> &primaryInfo, const std::shared_ptr<NFmiFastQueryInfo>& colorValueInfo, const NFmiMetTime &theTime)
 {
 	if(NFmiFastInfoUtils::IsInfoShipTypeData(*colorValueInfo))
 	{
@@ -3105,22 +3107,22 @@ NFmiPoint NFmiStationView::CalcFontSize(int theMinSize, int theMaxSize, bool fPr
 	}
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiStationView::GetNearestQ2SynopStation(const NFmiLocation &theWantedLocation)
+std::shared_ptr<NFmiFastQueryInfo> NFmiStationView::GetNearestQ2SynopStation(const NFmiLocation &theWantedLocation)
 {
 	if(itsInfoVector.size() == 0)
 		MakeDrawedInfoVector(); // joskus pit�� varmistaa, ett� info vektor on rakennettu
 
 	// haetaan vain 2 ensimm�isest� datasta tooltip arvoja eli euro ja maailma datoista
-	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > tempInfoVec;
+	std::vector<std::shared_ptr<NFmiFastQueryInfo> > tempInfoVec;
 	if(itsInfoVector.size() >= 1)
 		tempInfoVec.push_back(*itsInfoVector.begin());
 	if(itsInfoVector.size() >= 2)
 		tempInfoVec.push_back(*(itsInfoVector.begin()+1));
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->GetNearestSynopStationInfo(theWantedLocation, itsTime, true, &tempInfoVec);
+	std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->GetNearestSynopStationInfo(theWantedLocation, itsTime, true, &tempInfoVec);
 	return info;
 }
 
-float NFmiStationView::ToolTipValue(const NFmiPoint& theRelativePoint, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+float NFmiStationView::ToolTipValue(const NFmiPoint& theRelativePoint, std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	if(fGetCurrentDataFromQ2Server)
 	{
@@ -3143,7 +3145,7 @@ float NFmiStationView::ToolTipValue(const NFmiPoint& theRelativePoint, boost::sh
 		NFmiLocation wantedLocation(ViewPointToLatLon(theRelativePoint));
 
 		FmiProducerName prodId = static_cast<FmiProducerName>(theInfo->Producer()->GetIdent());
-		boost::shared_ptr<NFmiFastQueryInfo> info = theInfo;
+		std::shared_ptr<NFmiFastQueryInfo> info = theInfo;
 		if(prodId == kFmiSYNOP || prodId == kFmiSHIP || prodId == kFmiBUOY || prodId == kFmiTestBed)
 		{
 			info = itsCtrlViewDocumentInterface->GetNearestSynopStationInfo(wantedLocation, itsTime, true, 0);
@@ -3196,7 +3198,7 @@ float NFmiStationView::GetTooltipValueForFlashTypeData(const NFmiLocation& theCu
 	return kFloatMissing;
 }
 
-bool NFmiStationView::FindNearestFlashTypeObservation(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiLocation& theCursorLocation, double& theCurrentMinDistInOut, unsigned long& theMinDistTimeIndexOut)
+bool NFmiStationView::FindNearestFlashTypeObservation(std::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiLocation& theCursorLocation, double& theCurrentMinDistInOut, unsigned long& theMinDistTimeIndexOut)
 {
 	bool status = false;
 	unsigned long timeIndex1 = 0;
@@ -3236,10 +3238,10 @@ bool NFmiStationView::IsEditedDataParamView(void)
 
 void NFmiStationView::DrawControlPointData(void)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, false);
+	std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, false);
 	if(info && IsActiveParam()) // onko n�yt�n parametri aktiivinen?
 	{
-		boost::shared_ptr<NFmiEditorControlPointManager> CPMan = itsCtrlViewDocumentInterface->CPManager();
+		auto CPMan = itsCtrlViewDocumentInterface->CPManager();
 		if(CPMan && CPMan->Time(itsTime) && CPMan->Param(itsDrawParam->Param()))
 		{
 			bool macroParamCase = itsDrawParam->IsMacroParamCase(true);
@@ -3259,7 +3261,7 @@ void NFmiStationView::DrawControlPointData(void)
 			itsDrawingEnvironment.SetFontSize(fontSize);
 			bool oldBoldStatus = itsDrawingEnvironment.BoldFont();
 			itsDrawingEnvironment.BoldFont(true);
-			boost::shared_ptr<NFmiArea> zoomedArea = GetMapHandlerInterface()->Area();
+			std::shared_ptr<NFmiArea> zoomedArea = GetMapHandlerInterface()->Area();
 
 			for(CPMan->ResetCP(); CPMan->NextCP();)
 			{
@@ -3336,7 +3338,7 @@ void NFmiStationView::DrawControlPointData(void)
 }
 
 
-bool NFmiStationView::SelectControlPointLocation(boost::shared_ptr<NFmiFastQueryInfo> &theInfo
+bool NFmiStationView::SelectControlPointLocation(std::shared_ptr<NFmiFastQueryInfo> &theInfo
 													 ,int theSelectionCombineFunction
 													 ,unsigned long theMask)
 {
@@ -3353,7 +3355,7 @@ bool NFmiStationView::SelectControlPointLocation(boost::shared_ptr<NFmiFastQuery
 	return true;
 }
 
-void NFmiStationView::SelectLocations(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatLon
+void NFmiStationView::SelectLocations(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatLon
 									 ,int theSelectionCombineFunction
 									 ,unsigned long theMask
 									 ,bool fMakeMTAModeAdd // vain tietyist� paikoista kun t�t� metodia kutsutaan, saa luotauksen lis�t� (left buttom up karttan�yt�ll� l�hinn�)
@@ -3384,7 +3386,7 @@ std::string NFmiStationView::Value2ToolTipString(float theValue, int theDigitCou
 	return std::string(str);
 }
 
-static void AddFilePathToTooltip(std::string &theTooltipStr, const boost::shared_ptr<NFmiFastQueryInfo> &theInfo, bool getCurrentDataFromQ2Server)
+static void AddFilePathToTooltip(std::string &theTooltipStr, const std::shared_ptr<NFmiFastQueryInfo> &theInfo, bool getCurrentDataFromQ2Server)
 {
     // Jos sek� CTRL- ett� SHIFT n�pp�imet on pohjassa, laitetaan tiedoston koko polku n�kyviin omalle rivilleen
     if(CtrlView::IsKeyboardKeyDown(VK_CONTROL) && CtrlView::IsKeyboardKeyDown(VK_SHIFT))
@@ -3440,7 +3442,7 @@ std::string NFmiStationView::MakeMacroParamDescriptionTooltipText(const NFmiExtr
 	return str;
 }
 
-std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const std::string &paramName)
+std::string NFmiStationView::MakeMacroParamTotalTooltipString(std::shared_ptr<NFmiFastQueryInfo> &usedInfo, const std::string &paramName)
 {
     NFmiExtraMacroParamData extraMacroParamData;
     itsInfo = usedInfo;
@@ -3471,7 +3473,7 @@ std::string NFmiStationView::MakeMacroParamTotalTooltipString(boost::shared_ptr<
 	}
 }
 
-static std::string MakeMapLayerTooltipText(CtrlViewDocumentInterface* ctrlViewDocumentInterface, const boost::shared_ptr<NFmiDrawParam>& drawParam)
+static std::string MakeMapLayerTooltipText(CtrlViewDocumentInterface* ctrlViewDocumentInterface, const std::shared_ptr<NFmiDrawParam>& drawParam)
 {
 	std::string str = "<b><font color=";
 	str += ColorString::Color2HtmlColorStr(CtrlViewUtils::GetParamTextColor(NFmiInfoData::kMapLayer, false));
@@ -3501,7 +3503,7 @@ std::string NFmiStationView::ComposeToolTipText(const NFmiPoint& theRelativePoin
 		str += parameterStr + tabStr;
 		NFmiLocation loc(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
 		MakeDrawedInfoVector();
-		boost::shared_ptr<NFmiFastQueryInfo> info = itsInfoVector.empty() ? boost::shared_ptr<NFmiFastQueryInfo>() : *itsInfoVector.begin();
+		std::shared_ptr<NFmiFastQueryInfo> info = itsInfoVector.empty() ? std::shared_ptr<NFmiFastQueryInfo>() : *itsInfoVector.begin();
 		if(info) // satelliitti kuvilla ei ole infoa
 		{
             if(fGetCurrentDataFromQ2Server || drawParamDataType == NFmiInfoData::kQ3MacroParam || info->NearestLocation(loc))
@@ -3592,7 +3594,7 @@ float NFmiStationView::GetMultiParamValue(const MultiParamData& multiParam)
 		if(multiParam.IsMacroParamCase())
 		{
 			NFmiExtraMacroParamData extraMacroParamData;
-			auto usedDrawParamPtr = boost::make_shared<NFmiDrawParam>();
+			auto usedDrawParamPtr = std::make_shared<NFmiDrawParam>();
 			usedDrawParamPtr->InitFileName(multiParam.possibleMacroParamFullPath());
 			return CalcMacroParamTooltipValue(extraMacroParamData, usedDrawParamPtr);
 		}
@@ -3662,7 +3664,7 @@ void NFmiStationView::AddLatestObsInfoToString(std::string &tooltipString)
     tooltipString += tmpLatestObsStr;
 }
 
-float NFmiStationView::InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, const NFmiPoint& theLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+float NFmiStationView::InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, const NFmiPoint& theLatlon, std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
     float interpolatedValue = kFloatMissing;
     if(!(fDoTimeInterpolation && itsTimeInterpolationRangeInMinutes == 0))
@@ -3676,7 +3678,7 @@ float NFmiStationView::InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, 
     return interpolatedValue;
 }
 
-std::string NFmiStationView::GetToolTipValueStr(float theValue, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+std::string NFmiStationView::GetToolTipValueStr(float theValue, std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
 	std::string str = "<b><font color=blue>";
 	if(theValue != kFloatMissing)
@@ -3859,15 +3861,15 @@ void NFmiStationView::DrawObsComparison(void)
 		const NFmiObsComparisonInfo::Param& tmpParam = obsComparisonInfo.GetParam(param);
 		if(tmpParam.itsId != kFmiBadParameter)
 		{
-			std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = itsCtrlViewDocumentInterface->GetSortedSynopInfoVector(kFmiSYNOP, kFmiTestBed, kFmiSHIP, kFmiBUOY);
+			std::vector<std::shared_ptr<NFmiFastQueryInfo> > infoVector = itsCtrlViewDocumentInterface->GetSortedSynopInfoVector(kFmiSYNOP, kFmiTestBed, kFmiSHIP, kFmiBUOY);
 			for(size_t i = 0; i<infoVector.size(); i++)
 			{
-				boost::shared_ptr<NFmiFastQueryInfo> &obsInfo = infoVector[i];
+				std::shared_ptr<NFmiFastQueryInfo> &obsInfo = infoVector[i];
 				FmiProducerName prod = static_cast<FmiProducerName>(obsInfo->Producer()->GetIdent());
 				bool useGetLocationFromData = false;
 				if(obsInfo->IsGrid() == false && (prod == kFmiSHIP || prod == kFmiBUOY))
 					useGetLocationFromData = true;
-				boost::shared_ptr<NFmiFastQueryInfo> info = itsInfo;
+				std::shared_ptr<NFmiFastQueryInfo> info = itsInfo;
 				if(info && info->IsGrid() && info->SizeLevels() == 1 && obsInfo) // SizeLevels == 1 eli on pinta kamaa
 				{
 					obsInfo->FirstLevel(); // varmuuden vuoksi asetan 1. leveliin
@@ -3941,7 +3943,7 @@ bool NFmiStationView::IsThisTimeExtrapolated(const NFmiMetTime &theMapTime, NFmi
 	return false;
 }
 
-std::string NFmiStationView::GetCompareObservationToolTipString(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+std::string NFmiStationView::GetCompareObservationToolTipString(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	NFmiObsComparisonInfo & obsComparisonInfo = itsCtrlViewDocumentInterface->ObsComparisonInfo();
 	string str;
@@ -3952,7 +3954,7 @@ std::string NFmiStationView::GetCompareObservationToolTipString(boost::shared_pt
 		if(tmpParam.itsId != kFmiBadParameter)
 		{
 			NFmiLocation wantedLocation(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
-			boost::shared_ptr<NFmiFastQueryInfo> obsInfo = itsCtrlViewDocumentInterface->GetNearestSynopStationInfo(wantedLocation, itsTime, false, 0);
+			std::shared_ptr<NFmiFastQueryInfo> obsInfo = itsCtrlViewDocumentInterface->GetNearestSynopStationInfo(wantedLocation, itsTime, false, 0);
 			if(theInfo && theInfo->IsGrid() && theInfo->SizeLevels() == 1  && obsInfo) // SizeLevels == 1 eli on pinta kamaa
 			{
 				obsInfo->FirstLevel(); // varmuuden vuoksi asetan 1. leveliin
@@ -4008,7 +4010,7 @@ const NFmiPoint NFmiStationView::CurrentLatLon() const
     return CurrentLatLon(itsInfo);
 }
 
-const NFmiPoint NFmiStationView::CurrentLatLon(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo) const
+const NFmiPoint NFmiStationView::CurrentLatLon(const std::shared_ptr<NFmiFastQueryInfo> &theInfo) const
 {
 	if(fDoMovingStationDataLocations)
         return theInfo->GetLatlonFromData();
@@ -4096,7 +4098,7 @@ NFmiMetTime NFmiStationView::CalcStartTimeOfTimeSpan() const
 }
 
 // Palauttaa aika ikkunalle: (curret-time - time-step) - current-time , ne aika-indeksit, jotka sopivat mainitulle v�lille
-bool NFmiStationView::GetTimeSpanIndexies(const boost::shared_ptr<NFmiFastQueryInfo>& theInfo, unsigned long& theStartIndexOut, unsigned long& theEndIndexOut)
+bool NFmiStationView::GetTimeSpanIndexies(const std::shared_ptr<NFmiFastQueryInfo>& theInfo, unsigned long& theStartIndexOut, unsigned long& theEndIndexOut)
 {
 	auto startTime = CalcStartTimeOfTimeSpan();
 	auto usedTimeStepInMinutes = itsCtrlViewDocumentInterface->TimeControlTimeStepInMinutes(itsMapViewDescTopIndex);
@@ -4252,7 +4254,7 @@ void NFmiStationView::SbdPeekSparseValue(int peekIndexX, int peekIndexY, const N
 	}
 }
 
-static NFmiPoint CalcGridPoint(boost::shared_ptr<NFmiFastQueryInfo>& fastInfo)
+static NFmiPoint CalcGridPoint(std::shared_ptr<NFmiFastQueryInfo>& fastInfo)
 {
 	auto locationIndex = fastInfo->LocationIndex();
 	if(fastInfo->IsGrid())
@@ -4508,13 +4510,13 @@ static bool IsIsolinesDrawn(const NFmiIsoLineData& theOrigIsoLineData)
 	return false;
 }
 
-static bool IsIsolinesDrawn(const boost::shared_ptr<NFmiDrawParam>& thePossibleDrawParam)
+static bool IsIsolinesDrawn(const std::shared_ptr<NFmiDrawParam>& thePossibleDrawParam)
 {
 	auto gridDataDrawStyle = thePossibleDrawParam->GridDataPresentationStyle();
 	return gridDataDrawStyle == NFmiMetEditorTypes::View::kFmiIsoLineView || gridDataDrawStyle == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView;
 }
 
-bool NFmiStationView::IsolineDataDownSizingNeeded(const NFmiIsoLineData& theIsoLineData, const NFmiPoint& thePixelToGridPointRatio, NFmiPoint& theDownSizeFactorOut, const boost::shared_ptr<NFmiDrawParam>& thePossibleDrawParam)
+bool NFmiStationView::IsolineDataDownSizingNeeded(const NFmiIsoLineData& theIsoLineData, const NFmiPoint& thePixelToGridPointRatio, NFmiPoint& theDownSizeFactorOut, const std::shared_ptr<NFmiDrawParam>& thePossibleDrawParam)
 {
 #ifndef UNIX
 	auto& visSettings = GetVisualizationSettings();
@@ -4568,7 +4570,7 @@ bool NFmiStationView::IsMacroParamCase()
 }
 
 // Haetaan colorValueInfoa viel� vain samasta datasta kuin its arvo data
-static boost::shared_ptr<NFmiFastQueryInfo> GetBestMatchingData(CtrlViewDocumentInterface& ctrlViewDocumentInterface, boost::shared_ptr<NFmiDrawParam>& baseDrawParam, FmiParameterName parameterName, boost::shared_ptr<NFmiFastQueryInfo> &valueInfo)
+static std::shared_ptr<NFmiFastQueryInfo> GetBestMatchingData(CtrlViewDocumentInterface& ctrlViewDocumentInterface, std::shared_ptr<NFmiDrawParam>& baseDrawParam, FmiParameterName parameterName, std::shared_ptr<NFmiFastQueryInfo> &valueInfo)
 {
 	if(baseDrawParam->Param().GetProducer()->GetIdent() == kFmiSYNOP)
 	{
@@ -4587,7 +4589,7 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetBestMatchingData(CtrlViewDocument
 	}
 	else
 	{
-		boost::shared_ptr<NFmiDrawParam> wantedDrawParamPtr(new NFmiDrawParam(*baseDrawParam));
+		std::shared_ptr<NFmiDrawParam> wantedDrawParamPtr(new NFmiDrawParam(*baseDrawParam));
 		wantedDrawParamPtr->Param().SetParam(NFmiParam(parameterName, "wantedParamName"));
 		return ctrlViewDocumentInterface.InfoOrganizer()->Info(wantedDrawParamPtr, false, true);
 	}

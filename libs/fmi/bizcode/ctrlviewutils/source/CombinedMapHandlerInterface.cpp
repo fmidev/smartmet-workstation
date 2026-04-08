@@ -63,7 +63,7 @@ std::string NFmiMapLayerRelatedInfo::stripWmsMacroReferencePrefix(std::string ma
 
 CombinedMapHandlerInterface::GetCombinedMapHandlerInterfaceImplementationCallBackType CombinedMapHandlerInterface::GetCombinedMapHandlerInterfaceImplementation;
 
-bool CombinedMapHandlerInterface::isDrawParamForecast(boost::shared_ptr<NFmiDrawParam>& drawParam)
+bool CombinedMapHandlerInterface::isDrawParamForecast(std::shared_ptr<NFmiDrawParam>& drawParam)
 {
 	if(drawParam)
 	{
@@ -87,7 +87,7 @@ bool CombinedMapHandlerInterface::isDrawParamForecast(boost::shared_ptr<NFmiDraw
 	return false;
 }
 
-bool CombinedMapHandlerInterface::isDrawParamObservation(boost::shared_ptr<NFmiDrawParam>& drawParam)
+bool CombinedMapHandlerInterface::isDrawParamObservation(std::shared_ptr<NFmiDrawParam>& drawParam)
 {
 	if(drawParam)
 	{
@@ -134,7 +134,7 @@ std::string CombinedMapHandlerInterface::getSelectedParamInfoString(const NFmiDa
 
 // Funktio, joka palauttaa annetusta drawparamista stringin ,joka kertoo:
 // Param: id (name) Prod: id (name) Level: id (name, value)
-std::string CombinedMapHandlerInterface::getSelectedParamInfoString(boost::shared_ptr<NFmiFastQueryInfo>& fastInfo, bool ignoreLevel)
+std::string CombinedMapHandlerInterface::getSelectedParamInfoString(std::shared_ptr<NFmiFastQueryInfo>& fastInfo, bool ignoreLevel)
 {
 	const NFmiDataIdent& dataIdent = fastInfo->Param();
 	const NFmiLevel* level = 0;

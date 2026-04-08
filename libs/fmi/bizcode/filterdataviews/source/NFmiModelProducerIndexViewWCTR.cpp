@@ -14,7 +14,7 @@
 #include "NFmiText.h"
 
 NFmiModelProducerIndexViewWCTR::NFmiModelProducerIndexViewWCTR(NFmiToolBox * theToolBox
-													 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+													 ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 													 ,const NFmiRect& theRect)
 :NFmiModelCombineStatusView(theToolBox, theDrawParam, theRect)
 ,itsQueryInfoVector()

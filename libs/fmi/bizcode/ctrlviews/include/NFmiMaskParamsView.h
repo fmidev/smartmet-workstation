@@ -33,10 +33,10 @@ class NFmiMaskParamsView : public NFmiParamCommandView
 {
 
  public:
-   NFmiMaskParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex);
+   NFmiMaskParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, std::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex);
    bool RightButtonUp(const NFmiPoint &thePlace, unsigned long theKey) override;
    bool LeftButtonUp(const NFmiPoint& thePlace, unsigned long theKey) override;
-   NFmiRect CalcSize(void); // koko saattaa muuttua, ja uutta kokoa pitää voida kysyä oliolta
+   NFmiRect CalcSize(void); // koko saattaa muuttua, ja uutta kokoa pitï¿½ï¿½ voida kysyï¿½ oliolta
 
  protected:
    void DrawData(void) override;

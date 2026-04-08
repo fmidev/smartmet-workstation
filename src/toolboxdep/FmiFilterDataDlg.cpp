@@ -232,7 +232,7 @@ void CFmiFilterDataDlg::EnableButtons()
     {
         if(itsSmartMetDocumentInterface)
         {
-            boost::shared_ptr<NFmiFastQueryInfo> editedInfo = itsSmartMetDocumentInterface->EditedSmartInfo();
+            std::shared_ptr<NFmiFastQueryInfo> editedInfo = itsSmartMetDocumentInterface->EditedSmartInfo();
             if(editedInfo)
             {
                 CWnd* window;
@@ -410,8 +410,8 @@ void CFmiFilterDataDlg::InitDialogFromDoc(void)
 void CFmiFilterDataDlg::UpdateEditedParamsString(void)
 {
 	itsSelectedParamsStrU_ = _TEXT("");
-	boost::shared_ptr<NFmiDrawParam> activeDrawParam;
-	boost::shared_ptr<NFmiFastQueryInfo> editedInfo;
+	std::shared_ptr<NFmiDrawParam> activeDrawParam;
+	std::shared_ptr<NFmiFastQueryInfo> editedInfo;
 
 	switch(itsParameterSelection)
 	{

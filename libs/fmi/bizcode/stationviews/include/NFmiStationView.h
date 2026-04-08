@@ -71,9 +71,9 @@ public:
 
    inline FmiParameterName ParameterName (void){ return itsParamId; } ;
    bool GetLocation (const NFmiPoint & thePoint, NFmiLocation & theLocation);
-   NFmiStationView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+   NFmiStationView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 				   ,NFmiToolBox * theToolBox
-				   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+				   ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 				   ,FmiParameterName theParamId
 				   ,NFmiPoint theOffSet
 				   ,NFmiPoint theSize
@@ -87,7 +87,7 @@ public:
    bool IsActiveParam(void);
    bool IsEditedDataParamView(void);
    void DrawControlPointData(void);
-   void SelectLocations(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatLon
+   void SelectLocations(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatLon
 									 ,int theSelectionCombineFunction
 									 ,unsigned long theMask
 									 ,bool fMakeMTAModeAdd
@@ -98,22 +98,22 @@ public:
    NFmiDataMatrix<float>& SpecialMatrixData(void) {return itsSpecialMatrixData;}
    void SpecialMatrixData(const NFmiDataMatrix<float> &theMatrix) {itsSpecialMatrixData = theMatrix;}
    // t�m� on asemadatan griddaus funktio, jota voidaan k�ytt�� nyt staattisena funktiona
-   static void GridStationData(NFmiGriddingHelperInterface *theGriddingHelper, const boost::shared_ptr<NFmiArea> &theArea, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, const NFmiGriddingProperties &griddingProperties);
+   static void GridStationData(NFmiGriddingHelperInterface *theGriddingHelper, const std::shared_ptr<NFmiArea> &theArea, std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, const NFmiGriddingProperties &griddingProperties);
    static long GetTimeInterpolationRangeInMinutes(const NFmiHelpDataInfo *theHelpDataInfo);
    static bool AllowNearestTimeInterpolation(long theTimeInterpolationRangeInMinutes);
    static float CalcUsedLegendSizeFactor(double singleMapViewHeightInMM, int visibleViewRowCount);
-   static float CalcMacroParamTooltipValue(NFmiExtraMacroParamData& extraMacroParamData, boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam, const NFmiPoint& latlon, const NFmiMetTime& usedTime, boost::shared_ptr<NFmiArea> &area, int descTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut);
+   static float CalcMacroParamTooltipValue(NFmiExtraMacroParamData& extraMacroParamData, std::shared_ptr<NFmiDrawParam>& theUsedDrawParam, const NFmiPoint& latlon, const NFmiMetTime& usedTime, std::shared_ptr<NFmiArea> &area, int descTopIndex, std::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut);
 
 protected:
    bool IsSpecialMatrixDataDraw(void) const;
-   std::string GetToolTipValueStr(float theValue, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
-   float GetSynopValueFromQ2Archive(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+   std::string GetToolTipValueStr(float theValue, std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::shared_ptr<NFmiDrawParam> &theDrawParam);
+   float GetSynopValueFromQ2Archive(std::shared_ptr<NFmiFastQueryInfo> &theInfo);
    bool GetQ3ScriptData(NFmiDataMatrix<float> &theValues, NFmiGrid &theUsedGrid, const std::string &theUsedBaseUrlStr);
    bool GetArchiveDataFromQ3Server(NFmiDataMatrix<float> &theValues, NFmiGrid &theUsedGridOut, bool doToolTipCalculation);
    bool IsQ2ServerUsed(void);
    bool IsThisTimeExtrapolated(const NFmiMetTime &theMapTime, NFmiFastQueryInfo & theObsInfo);
    void DrawObsComparison(void);
-   bool SelectControlPointLocation(boost::shared_ptr<NFmiFastQueryInfo> &theInfo
+   bool SelectControlPointLocation(std::shared_ptr<NFmiFastQueryInfo> &theInfo
 										 ,int theSelectionCombineFunction
 										 ,unsigned long theMask);
    NFmiRect CalcInvertStationRectSize(double theMinXSize, double theMinYSize, double theMaxXSize, double theMaxYSize, double sizeFactor);
@@ -122,8 +122,8 @@ protected:
    void CalculateGeneralStationRect(void);
    NFmiRect CurrentStationRect (double theSizeFactor);
    NFmiRect CurrentStationRect () const;
-   float ToolTipValue(const NFmiPoint& theRelativePoint, boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
-   void DrawWithIsolineView(const NFmiDataMatrix<float> &theMatrix, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
+   float ToolTipValue(const NFmiPoint& theRelativePoint, std::shared_ptr<NFmiFastQueryInfo> &theInfo);
+   void DrawWithIsolineView(const NFmiDataMatrix<float> &theMatrix, std::shared_ptr<NFmiDrawParam> &theDrawParam);
    bool CanToolmasterBeUsed(void);
 #ifndef UNIX
    void DrawMouseSelectionMarker(const NFmiPoint &theLatlon, bool fDrawBiggerMarker, CRect &theBiggerBaseMfcRect, CRect &theSmallerBaseMfcRect, CDC *theUsedDC);
@@ -132,18 +132,18 @@ protected:
    double MaximumFontSizeFactor() const;
    NFmiRect CalcSymbolRelativeRect(const NFmiPoint &theLatlon, double theSymbolSizeInMM) const;
    void AddLatestObsInfoToString(std::string &tooltipString);
-   std::string GetCompareObservationToolTipString(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+   std::string GetCompareObservationToolTipString(std::shared_ptr<NFmiFastQueryInfo> &theInfo);
    NFmiPoint CalcFontSize(int theMinSize, int theMaxSize, bool fPrinting) const;
 
    virtual bool PrepareForStationDraw(void);
    virtual void ModifyTextEnvironment(void);
    virtual NFmiString GetPrintedText(float theValue);
    NFmiRect CurrentDataRect () const;
-   virtual float InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, const NFmiPoint& theLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+   virtual float InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, const NFmiPoint& theLatlon, std::shared_ptr<NFmiFastQueryInfo> &theInfo);
    virtual std::string Value2ToolTipString(float theValue, int theDigitCount, FmiInterpolationMethod theInterpolationMethod, FmiParamType theParamType);
    // T�m� hakee n�ytett�v�n datan riippuen asetuksista
    virtual float ViewFloatValue(bool doTooltipValue); 
-   virtual void SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo); // tarvittavat jutut optimointia varten
+   virtual void SetMapViewSettings(std::shared_ptr<NFmiFastQueryInfo> &theUsedInfo); // tarvittavat jutut optimointia varten
    bool CalcViewFloatValueMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2, bool & useOriginalDataInPixelToGridRatioCalculations, NFmiGrid* optimizedDataGrid = nullptr);
    virtual int GetApproxmationOfDataTextLength(std::vector<float> *sampleValues = nullptr);
    virtual NFmiPoint GetSpaceOutFontFactor(void);
@@ -194,20 +194,20 @@ protected:
 
    // ******** Symbol-Bulk-Draw toimintojen loppu *********
 
-   boost::shared_ptr<NFmiFastQueryInfo> itsOriginalDataInfo; // ei omista, optimointia erotus piirtoon
+   std::shared_ptr<NFmiFastQueryInfo> itsOriginalDataInfo; // ei omista, optimointia erotus piirtoon
    NFmiPoint itsObjectOffSet;
    NFmiPoint itsObjectSize;
    bool fDrawText;
    NFmiPoint itsFontSize; // lasketaan vain kerran piiron yhteydess�!
 
 protected:
-   boost::shared_ptr<NFmiFastQueryInfo> GetNearestQ2SynopStation(const NFmiLocation &theWantedLocation);
-   bool UseQ2ForSynopData(boost::shared_ptr<NFmiDrawParam> &theDrawParam);
+   std::shared_ptr<NFmiFastQueryInfo> GetNearestQ2SynopStation(const NFmiLocation &theWantedLocation);
+   bool UseQ2ForSynopData(std::shared_ptr<NFmiDrawParam> &theDrawParam);
    bool GetQ2SynopData(unsigned long theStationId = 0, std::vector<FmiParameterName> theWantedParamVector = std::vector<FmiParameterName>());
    void MakeDrawedInfoVector(void);
-   void MakeDrawedInfoVector(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam);
+   void MakeDrawedInfoVector(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, std::shared_ptr<NFmiDrawParam> &theDrawParam);
    void CalcMacroParamMatrix(NFmiDataMatrix<float> &theValues, NFmiGrid *theUsedGridOut);
-   float CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extraMacroParamData, boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam);
+   float CalcMacroParamTooltipValue(NFmiExtraMacroParamData &extraMacroParamData, std::shared_ptr<NFmiDrawParam>& theUsedDrawParam);
    void GridStationDataToMatrix(NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime);
    void GridStationDataFromQ2(NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime);
    NFmiColor GetColoredNumberColor(float theValue) const;
@@ -222,23 +222,23 @@ protected:
    std::vector<float> GetSampleDataFrmoMacroParamForDataTextLengthApproxmation();
    NFmiPoint CurrentStationPosition () const;
    const NFmiPoint CurrentLatLon() const;
-   const NFmiPoint CurrentLatLon(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo) const;
+   const NFmiPoint CurrentLatLon(const std::shared_ptr<NFmiFastQueryInfo> &theInfo) const;
    bool IsStationDataMacroParam(void);
    NFmiColor GetSymbolColor(float theValue) const;
    std::string GetLocationTooltipString();
    bool IsAccessoryStationDataDrawn();
-   boost::shared_ptr<NFmiFastQueryInfo> CreatePossibleSpaceOutMacroParamData();
+   std::shared_ptr<NFmiFastQueryInfo> CreatePossibleSpaceOutMacroParamData();
    bool IsParamDrawn();
    bool IsSpaceOutDrawingUsed();
-   NFmiHelpDataInfo* GetHelpDataInfo(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
-   void FillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid = nullptr);
-   float CalcTimeInterpolatedValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime);
+   NFmiHelpDataInfo* GetHelpDataInfo(std::shared_ptr<NFmiFastQueryInfo> &theInfo);
+   void FillDataMatrix(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, bool fUseCropping, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid = nullptr);
+   float CalcTimeInterpolatedValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theTime);
    std::string GetPossibleMacroParamSymbolText(float value, const std::string& valueStr, const NFmiExtraMacroParamData &extraMacroParamData);
    std::string GetMacroParamMultiParamText(float multiParamValue1, const std::string & multiParamValue1Str, const NFmiExtraMacroParamData& extraMacroParamData);
    float GetMultiParamValue(const MultiParamData& multiParam);
    float GetMacroParamTooltipValueFromCache(const NFmiExtraMacroParamData& extraMacroParamData);
    float GetMacroParamValueFromCache(const NFmiExtraMacroParamData& extraMacroParamData, const NFmiPoint &latlon, const NFmiMetTime &aTime);
-   std::string MakeMacroParamTotalTooltipString(boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const std::string &paramName);
+   std::string MakeMacroParamTotalTooltipString(std::shared_ptr<NFmiFastQueryInfo> &usedInfo, const std::string &paramName);
    std::string MakeMacroParamErrorTooltipText(const std::string& macroParamErrorMessage);
    std::string MakeMacroParamDescriptionTooltipText(const NFmiExtraMacroParamData& extraMacroParamData);
    void SetupPossibleWindMetaParamData();
@@ -251,24 +251,24 @@ protected:
    bool IsStationDataGridded();
    void CalculateGriddedStationData(NFmiDataMatrix<float> &theValues, NFmiGrid &usedGrid);
    void CalculateDifferenceToOriginalDataMatrix(NFmiDataMatrix<float> &theValues, int x1, int y1, int x2, int y2, bool useCropping, NFmiGrid* optimizedDataGrid = nullptr);
-   void FinalFillDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid = nullptr);
-   void FinalFillWindMetaDataMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, unsigned long wantedParamId, NFmiGrid* optimizedDataGrid = nullptr);
-   bool DataIsDrawable(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &usedTime);
-   void DoTimeInterpolationSettingChecks(boost::shared_ptr<NFmiFastQueryInfo>& theInfo);
-   boost::shared_ptr<NFmiFastQueryInfo> CreateNewResizedMacroParamData(const NFmiPoint& newGridSize, const NFmiArea* usedArea);
-   bool IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut, boost::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfoOut);
-   bool IsMacroParamContourDataDownSized(const boost::shared_ptr<NFmiFastQueryInfo> & possibleMacroParamResolutionInfo, NFmiPoint& newGridSizeOut);
+   void FinalFillDataMatrix(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, NFmiGrid* optimizedDataGrid = nullptr);
+   void FinalFillWindMetaDataMatrix(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<float> &theValues, const NFmiMetTime &usedTime, bool useCropping, int x1, int y1, int x2, int y2, unsigned long wantedParamId, NFmiGrid* optimizedDataGrid = nullptr);
+   bool DataIsDrawable(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &usedTime);
+   void DoTimeInterpolationSettingChecks(std::shared_ptr<NFmiFastQueryInfo>& theInfo);
+   std::shared_ptr<NFmiFastQueryInfo> CreateNewResizedMacroParamData(const NFmiPoint& newGridSize, const NFmiArea* usedArea);
+   bool IsMacroParamIsolineDataDownSized(NFmiPoint& newGridSizeOut, std::shared_ptr<NFmiFastQueryInfo>& possibleMacroParamResolutionInfoOut);
+   bool IsMacroParamContourDataDownSized(const std::shared_ptr<NFmiFastQueryInfo> & possibleMacroParamResolutionInfo, NFmiPoint& newGridSizeOut);
    NFmiPoint CalcPixelToGridRatio(NFmiIsoLineData& theIsoLineData, const NFmiRect& zoomedAreaRect);
    void DrawCountryBordersToMapView();
    int CalcViewGridSize();
-   bool IsolineDataDownSizingNeeded(const NFmiIsoLineData& theIsoLineData, const NFmiPoint& thePixelToGridPointRatio, NFmiPoint& theDownSizeFactorOut, const boost::shared_ptr<NFmiDrawParam>& thePossibleDrawParam);
+   bool IsolineDataDownSizingNeeded(const NFmiIsoLineData& theIsoLineData, const NFmiPoint& thePixelToGridPointRatio, NFmiPoint& theDownSizeFactorOut, const std::shared_ptr<NFmiDrawParam>& thePossibleDrawParam);
    bool IsDownSizingNeeded(const NFmiPoint& thePixelToGridPointRatio, double usedPixelToGridPointRatio, NFmiPoint& theDownSizeFactorOut);
    void UpdateOptimizedGridValues(const NFmiRect& dataAreaXyRect, int gridSizeX, int gridSizeY);
    void UpdateOptimizedVisualizationMacroParamData();
    NFmiMetTime CalcStartTimeOfTimeSpan() const;
-   bool GetTimeSpanIndexies(const boost::shared_ptr<NFmiFastQueryInfo>& theInfo, unsigned long& theStartIndexOut, unsigned long& theEndIndexOut);
+   bool GetTimeSpanIndexies(const std::shared_ptr<NFmiFastQueryInfo>& theInfo, unsigned long& theStartIndexOut, unsigned long& theEndIndexOut);
    float GetTooltipValueForFlashTypeData(const NFmiLocation& theCursorLocation);
-   bool FindNearestFlashTypeObservation(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiLocation& theCursorLocation, double& theCurrentMinDistInOut, unsigned long& theMinDistTimeIndexOut);
+   bool FindNearestFlashTypeObservation(std::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiLocation& theCursorLocation, double& theCurrentMinDistInOut, unsigned long& theMinDistTimeIndexOut);
    bool IsMacroParamCase();
    bool DoMacroParamProbing();
    void SetupPossibleColorValueInfo();
@@ -276,11 +276,11 @@ protected:
    NFmiRect itsGeneralStationRect;
    FmiParameterName itsParamId;
    // T�m� info vektori k�yd��n l�pi kun piirret��n dataa (aluksi useita infoja vain synop-data tapauksessa)
-   std::vector<boost::shared_ptr<NFmiFastQueryInfo> > itsInfoVector; 
+   std::vector<std::shared_ptr<NFmiFastQueryInfo> > itsInfoVector; 
    // multi synop infojen takia pient� virityst�
    NFmiLocation itsNearestTooltipLocation; 
    // Laitetaan t�h�n talteen alkuper�iset asetukset, jos piirto tapahtuu erotuksena, voidaan palauttaa alkuper�inen t�st�
-   boost::shared_ptr<NFmiDrawParam> itsBackupDrawParamForDifferenceDrawing;  
+   std::shared_ptr<NFmiDrawParam> itsBackupDrawParamForDifferenceDrawing;  
    // T�h�n talletetaan tieto onko k�ytetty drawParam palautettava piirron j�lkeen 
    bool fDoDifferenceDrawSwitch; 
    // jos datalle voi tehd� aikainterpolaation piirrett�ess� kartalle esim. symboleja, 
@@ -352,7 +352,7 @@ protected:
    MacroParamPhase itsMacroParamPhase = MacroParamPhase::NoPhase;
    // Jos piirto-ominaisuuksissa sanottu ett� k�ytet��n toista parametria n�yt�ss� 
    // olevan parametrin symbolien v�rityksess�, niin t�h�n otetaan se talteen.
-   boost::shared_ptr<NFmiFastQueryInfo> itsPossibleColorValueInfo;
+   std::shared_ptr<NFmiFastQueryInfo> itsPossibleColorValueInfo;
    // Tooltip interpolaatioissa pit�� tiet�� ns. final-calculation-grid, jotta 
    // voidaan aina laskea oikein tooltip arvo cachesta.
    boost::shared_ptr<NFmiGrid> itsMacroParamCalculationGrid;

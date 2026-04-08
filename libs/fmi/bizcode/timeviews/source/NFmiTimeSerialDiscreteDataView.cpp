@@ -46,7 +46,7 @@
 //--------------------------------------------------------
 NFmiTimeSerialDiscreteDataView::NFmiTimeSerialDiscreteDataView (int theMapViewDescTopIndex, const NFmiRect & theRect
 															   ,NFmiToolBox * theToolBox
-															   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+															   ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 															   ,int theIndex)
 :NFmiTimeSerialView(theMapViewDescTopIndex, theRect
 				  ,theToolBox
@@ -158,7 +158,7 @@ void NFmiTimeSerialDiscreteDataView::ResetModifyFactorValues(void)
 	return;
 }
 
-void NFmiTimeSerialDiscreteDataView::GetLowAndHighLimits(boost::shared_ptr<NFmiDrawParam> &theDrawParam, float &theLowerLimit, float &theHigherLimit)
+void NFmiTimeSerialDiscreteDataView::GetLowAndHighLimits(std::shared_ptr<NFmiDrawParam> &theDrawParam, float &theLowerLimit, float &theHigherLimit)
 {
 	theLowerLimit = -1;
 	FmiParameterName parName = static_cast<FmiParameterName>(theDrawParam->Param().GetParamIdent());

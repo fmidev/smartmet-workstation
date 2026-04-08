@@ -76,7 +76,7 @@ public:
    void DrawOverBitmapThings(NFmiToolBox * theGTB, bool dummy, int dummy2, float dummy3, void* dummy4); // t‰ll‰ piirret‰‰n tavara, joka tulee myˆs bitmapin p‰‰lle
    NFmiEditMapView(int theMapViewDescTopIndex
 				   ,NFmiToolBox * theToolBox
-				   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam);
+				   ,std::shared_ptr<NFmiDrawParam> &theDrawParam);
    ~NFmiEditMapView ();
    const NFmiRect& MapRect(void){return itsMapRect;};
    std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
@@ -96,7 +96,7 @@ private:
    NFmiString GetToolTipText(void);
    void	PrintNoDataMessageOnTimeControlView(void);
    void UpdateTimeControlView(void);
-   void SetMapAreaAndRect (const boost::shared_ptr<NFmiArea> &theArea, const NFmiRect & theRect);
+   void SetMapAreaAndRect (const std::shared_ptr<NFmiArea> &theArea, const NFmiRect & theRect);
    void UpdateMap (void);
    void LogWarningForTooLongMapViewDrawTime(NFmiMilliSecondTimer &theTimer);
    void DrawLastEditedDataSendTime();
@@ -104,9 +104,9 @@ private:
 
    NFmiRect itsTimeControlViewRect;
    NFmiTimeControlView * itsTimeControlView;
-   boost::shared_ptr<NFmiArea> itsMapArea;
+   std::shared_ptr<NFmiArea> itsMapArea;
    NFmiRect itsMapRect;
-   boost::shared_ptr<NFmiDrawParam> itsMapDrawParam;
+   std::shared_ptr<NFmiDrawParam> itsMapDrawParam;
    NFmiTimeStationViewRowList* itsViewGrid;
    bool fMouseMovedInCapture; // t‰m‰n avulla voidaan tarkastaa mousebutton up -metodeissa mik‰ toiminto tehd‰‰n
    NFmiVerticalAnimationInfo itsVerticalAnimationInfo;

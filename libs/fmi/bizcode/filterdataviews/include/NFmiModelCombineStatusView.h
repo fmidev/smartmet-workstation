@@ -21,7 +21,7 @@ class NFmiModelCombineStatusView : public NFmiZoomView
 public:
    void Draw(NFmiToolBox * theGTB) override;
    NFmiModelCombineStatusView(NFmiToolBox * theToolBox
-							 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+							 ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 							 ,const NFmiRect& theRect);
 	~NFmiModelCombineStatusView();
 	void Update(void) override;
@@ -38,6 +38,6 @@ protected:
 	virtual NFmiColor CheckStatusBoxColor(int theTimeIndex);
 
 	int itsGridXSize; // kuinka monta laatikkoa on aikahilassa
-	boost::shared_ptr<NFmiFastQueryInfo> itsCheckedInfo;
+	std::shared_ptr<NFmiFastQueryInfo> itsCheckedInfo;
 };
 

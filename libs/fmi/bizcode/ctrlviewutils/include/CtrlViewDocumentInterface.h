@@ -14,6 +14,7 @@
 
 #include <functional>
 #include <list>
+#include <memory>
 #include <boost/shared_ptr.hpp>
 
 class NFmiAreaMaskList;
@@ -124,7 +125,7 @@ class CtrlViewDocumentInterface
 {
 public:
     using GetCtrlViewDocumentInterfaceImplementationCallBackType = std::function<CtrlViewDocumentInterface*(void)>;
-    // Tämä pitää asettaa johonkin konkreettiseen funktioon, jotta käyttäjä koodi saa käyttöönsä halutun interface toteutuksen
+    // Tï¿½mï¿½ pitï¿½ï¿½ asettaa johonkin konkreettiseen funktioon, jotta kï¿½yttï¿½jï¿½ koodi saa kï¿½yttï¿½ï¿½nsï¿½ halutun interface toteutuksen
     static GetCtrlViewDocumentInterfaceImplementationCallBackType GetCtrlViewDocumentInterfaceImplementation;
 
 	virtual ~CtrlViewDocumentInterface() = default;
@@ -134,7 +135,7 @@ public:
     virtual int MapRowStartingIndex(int theMapViewDescTopIndex) = 0;
     virtual CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(int theMapViewDescTopIndex) = 0;
     virtual bool CreateMaskSelectionPopup(int theRowIndex) = 0;
-    virtual boost::shared_ptr<NFmiAreaMaskList> ParamMaskListMT() = 0;
+    virtual std::shared_ptr<NFmiAreaMaskList> ParamMaskListMT() = 0;
     virtual bool CreateMaskParamsPopup(int theRowIndex, int theParamIndex) = 0;
     virtual bool CreateParamSelectionPopup(unsigned int theDescTopIndex, int theRowIndex) = 0;
     virtual void ActivateParamSelectionDlgAfterLeftDoubleClick(bool newValue) = 0;
@@ -164,17 +165,17 @@ public:
     virtual void CheckAnimationLockedModeTimeBags(unsigned int theDescTopIndex, bool ignoreSatelImages) = 0;
     virtual bool MouseCaptured(void) = 0;
     virtual void MouseCaptured(bool newValue) = 0;
-    virtual void SetModelRunOffset(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theMoveByValue, unsigned int theDescTopIndex, int theViewRowIndex) = 0;
-    virtual bool SetNearestBeforeModelOrigTimeRunoff(boost::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiMetTime &theTime, unsigned int theDescTopIndex, int theViewRowIndex) = 0;
+    virtual void SetModelRunOffset(std::shared_ptr<NFmiDrawParam> &theDrawParam, int theMoveByValue, unsigned int theDescTopIndex, int theViewRowIndex) = 0;
+    virtual bool SetNearestBeforeModelOrigTimeRunoff(std::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiMetTime &theTime, unsigned int theDescTopIndex, int theViewRowIndex) = 0;
     virtual const NFmiMetTime& CurrentTime(unsigned int theDescTopIndex) = 0;
     virtual bool CurrentTime(unsigned int theDescTopIndex, const NFmiMetTime& newCurrentTime, bool fStayInsideAnimationTimes = false) = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> DefaultEditedDrawParam(void) = 0;
+    virtual std::shared_ptr<NFmiDrawParam> DefaultEditedDrawParam(void) = 0;
     virtual NFmiAnimationData& AnimationData(int theMapViewDescTopIndex) = 0;
     virtual NFmiTrajectorySystem* TrajectorySystem(void) = 0;
     virtual const NFmiColor& GeneralColor(int theIndex) = 0;
     virtual const NFmiMetTime& ActiveMapTime(void) = 0;
-    virtual void MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) = 0;
-    virtual NFmiMetTime GetModelOrigTime(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theIndex = 0) = 0;
+    virtual void MakeDrawedInfoVectorForMapView(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, std::shared_ptr<NFmiDrawParam> &theDrawParam, const std::shared_ptr<NFmiArea> &theArea) = 0;
+    virtual NFmiMetTime GetModelOrigTime(std::shared_ptr<NFmiDrawParam> &theDrawParam, int theIndex = 0) = 0;
     virtual void UpdateCrossSectionMacroParamDataSize(void) = 0;
     virtual NFmiMTATempSystem& GetMTATempSystem(void) = 0;
     virtual int SoundingViewWindBarbSpaceOutFactor() = 0;
@@ -185,7 +186,7 @@ public:
     virtual void AreaFilterRangeLimits(const NFmiRect& theRect) = 0;
     virtual const NFmiRect& AreaFilterRange(int index) = 0;
     virtual void AreaFilterRange(int index, const NFmiRect& theRect) = 0;
-    virtual boost::shared_ptr<NFmiFastQueryInfo> EditedSmartInfo(void) = 0;
+    virtual std::shared_ptr<NFmiFastQueryInfo> EditedSmartInfo(void) = 0;
     virtual NFmiDataLoadingInfo& GetUsedDataLoadingInfo(void) = 0;
     virtual NFmiModelDataBlender& ModelDataBlender(void) = 0;
     virtual const NFmiPoint& TimeFilterLimits(void) = 0;
@@ -227,7 +228,7 @@ public:
     virtual NFmiHelpEditorSystem& HelpEditorSystem(void) = 0;
     virtual NFmiMetEditorOptionsData& MetEditorOptionsData(void) = 0;
     virtual boost::shared_ptr<NFmiEditorControlPointManager> CPManager(bool getOldSchoolCPManager = false) = 0;
-    virtual boost::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing) = 0;
+    virtual std::shared_ptr<NFmiFastQueryInfo> GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, std::vector<std::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters = 1000. * kFloatMissing) = 0;
     virtual bool IsMasksUsedInTimeSerialViews(void) = 0;
     virtual NFmiAnalyzeToolData& AnalyzeToolData(void) = 0;
     virtual const NFmiPoint& OutOfEditedAreaTimeSerialPoint(void) const = 0;
@@ -237,8 +238,8 @@ public:
     virtual void TimeSerialViewDirty(bool newValue) = 0;
     virtual bool CreateTimeSerialDialogPopup(int index) = 0;
     virtual bool CreateTimeSerialDialogOnViewPopup(int index) = 0;
-    virtual bool DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1) = 0;
-    virtual void UpdateToModifiedDrawParam(unsigned int mapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam>& drawParam, int viewRowIndex) = 0;
+    virtual bool DoTimeSeriesValuesModifying(std::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue = -1) = 0;
+    virtual void UpdateToModifiedDrawParam(unsigned int mapViewDescTopIndex, std::shared_ptr<NFmiDrawParam>& drawParam, int viewRowIndex) = 0;
     virtual bool UseTimeSerialAxisAutoAdjust(void) = 0;
     virtual bool UseQ2Server(void) = 0;
     virtual bool Registry_ShowLastSendTimeOnMapView() = 0;
@@ -252,8 +253,8 @@ public:
     virtual std::shared_ptr<NFmiMacroParamSystem> MacroParamSystem(void) = 0;
     virtual CtrlViewUtils::FmiEditorModifyToolMode ModifyToolMode(void) = 0;
     virtual size_t SelectedGridPointLimit(void) = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> GetDrawDifferenceDrawParam(void) = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> GetSelectedGridPointDrawParam(void) = 0;
+    virtual std::shared_ptr<NFmiDrawParam> GetDrawDifferenceDrawParam(void) = 0;
+    virtual std::shared_ptr<NFmiDrawParam> GetSelectedGridPointDrawParam(void) = 0;
     virtual bool DrawSelectionOnThisView(void) = 0;
     virtual void DrawSelectionOnThisView(bool newValue) = 0;
     virtual const NFmiPoint& ToolTipLatLonPoint(void) const = 0;
@@ -262,19 +263,19 @@ public:
     virtual const NFmiMetTime& ToolTipTime(void) = 0;
     virtual TimeSerialModificationDataInterface& GenDocDataAdapter(void) = 0;
     virtual bool UseMultithreaddingWithModifyingFunctions(void) = 0;
-    virtual std::string GetModelOrigTimeString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theIndex = 0) = 0;
+    virtual std::string GetModelOrigTimeString(std::shared_ptr<NFmiDrawParam> &theDrawParam, int theIndex = 0) = 0;
     virtual NFmiObsComparisonInfo& ObsComparisonInfo(void) = 0;
     virtual void GetDataFromQ2Server(const std::string &theURLStr, const std::string &theParamsStr, bool fUseBinaryData, 
         int theUsedCompression, NFmiDataMatrix<float> &theDataMatrixOut, std::string &theExtraInfoStrOut) = 0;
-    virtual void SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam) = 0;
+    virtual void SetMacroErrorText(const std::string &theErrorStr, std::shared_ptr<NFmiDrawParam>& triggerDrawParam) = 0;
     virtual const NFmiPoint& StationDataGridSize(void) = 0;
     virtual NFmiLocationSelectionTool* LocationSelectionTool2(void) = 0;
-    virtual void SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea,
+    virtual void SelectLocations(unsigned int theDescTopIndex, std::shared_ptr<NFmiFastQueryInfo> &theInfo, const std::shared_ptr<NFmiArea> &theMapArea,
         const NFmiPoint& theLatLon , const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
         , bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) = 0;
     virtual NFmiEditMapDataListHandler* DataLists(void) = 0;
     virtual bool ShowObsComparisonOnMap(int theDescTopIndex) = 0;
-    virtual std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) = 0;
+    virtual std::vector<std::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) = 0;
     virtual int AbsoluteActiveViewRow(unsigned int theDescTopIndex) = 0;
     virtual void AbsoluteActiveViewRow(unsigned int theDescTopIndex, int theAbsoluteActiveRowIndex) = 0;
     virtual NFmiSynopPlotSettings* SynopPlotSettings(void) = 0;
@@ -332,9 +333,9 @@ public:
     virtual void LastBrushedViewTime(const NFmiMetTime& newTime) = 0;
     virtual void LastBrushedViewRealRowIndex(int newRealRowIndex) = 0;
     virtual const NFmiTimeBag& EditedDataTimeBag(void) = 0;
-    virtual const boost::shared_ptr<NFmiArea> CPGridCropLatlonArea(void) = 0;
+    virtual const std::shared_ptr<NFmiArea> CPGridCropLatlonArea(void) = 0;
     virtual bool IsCPGridCropNotPlausible(void) = 0;
-    virtual boost::shared_ptr<NFmiArea> CPGridCropInnerLatlonArea(void) = 0;
+    virtual std::shared_ptr<NFmiArea> CPGridCropInnerLatlonArea(void) = 0;
     virtual NFmiWindTableSystem& WindTableSystem(void) = 0;
     virtual NFmiProjectionCurvatureInfo* ProjectionCurvatureInfo(void) = 0;
     virtual bool DrawLandBorders(int theDescTopIndex, NFmiDrawParam* separateBorderLayerDrawOptions) = 0;
@@ -353,7 +354,7 @@ public:
     virtual void DrawBorderPolyLineListGdiplus(int theDescTopIndex, const std::list<std::vector<NFmiPoint>> &newValue) = 0;
     virtual void DrawBorderPolyLineListGdiplus(int theDescTopIndex, std::list<std::vector<NFmiPoint>> &&newValue) = 0;
     virtual int DrawOverMapMode(int theDescTopIndex) = 0;
-    virtual void SnapShotData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiDataIdent &theDataIdent, const std::string &theModificationText
+    virtual void SnapShotData(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiDataIdent &theDataIdent, const std::string &theModificationText
         , const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime) = 0;
     virtual bool ShowWaitCursorWhileDrawingView(void) = 0;
     virtual NFmiAutoComplete& AutoComplete(void) = 0;
@@ -366,11 +367,11 @@ public:
     virtual const NFmiBetaProduct* GetCurrentGeneratedBetaProduct() = 0;
     virtual const NFmiMetTime& ActiveViewTime(void) = 0;
     virtual void ActiveViewTime(const NFmiMetTime& theTime) = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex) = 0;
+    virtual std::shared_ptr<NFmiDrawParam> ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex) = 0;
     virtual bool ViewBrushed(void) = 0;
     virtual void ViewBrushed(bool newState) = 0;
     virtual bool CheckAndValidateAfterModifications(NFmiMetEditorTypes::FmiUsedSmartMetTool theModifyingTool, bool fMakeDataSnapshotAction, unsigned int theLocationMask, FmiParameterName theParam = kFmiLastParameter) = 0;
-    virtual void ZoomMapInOrOut(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, double theZoomFactor) = 0;
+    virtual void ZoomMapInOrOut(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, double theZoomFactor) = 0;
     virtual bool UseMaskWithBrush(void) = 0;
     virtual int BrushToolLimitSetting(void) = 0;
     virtual float BrushToolLimitSettingValue(void) = 0;
@@ -381,20 +382,20 @@ public:
     virtual void MustDrawTimeSerialView(bool newValue) = 0;
     virtual bool ShowSelectedPointsOnMap(int theMapViewDescTopIndex) = 0;
     virtual bool ShowControlPointsOnMap(int theMapViewDescTopIndex) = 0;
-    virtual void ZoomMapWithRelativeRect(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiRect &theZoomedRect) = 0;
+    virtual void ZoomMapWithRelativeRect(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theMapArea, const NFmiRect &theZoomedRect) = 0;
     virtual FmiDirection ParamWindowViewPosition(int theMapViewDescTopIndex) = 0;
     virtual bool IsParamWindowViewVisible(int theMapViewDescTopIndex) = 0;
     virtual NFmiHelpDataInfoSystem* HelpDataInfoSystem(void) = 0;
     virtual bool CreateCPPopup() = 0;
-    virtual void PanMap(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, const NFmiPoint &theZoomDragUpPoint) = 0;
+    virtual void PanMap(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, const NFmiPoint &theZoomDragUpPoint) = 0;
     virtual void ActiveViewRect(const NFmiRect& theRect) = 0;
     virtual const NFmiPoint& BrushSize(void) = 0;
     virtual double BrushSpecialParamValue(void) = 0;
     virtual const NFmiVPlaceDescriptor& SoundingPlotLevels(void) = 0;
     virtual double BrushValue(void) = 0;
-    virtual boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData(const NFmiLevel& theLevel) = 0;
-    virtual boost::shared_ptr<NFmiFastQueryInfo> GetBestSuitableModelFractileData(boost::shared_ptr<NFmiFastQueryInfo>& usedOriginalInfo) = 0;
-    virtual boost::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData() = 0;
+    virtual std::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData(const NFmiLevel& theLevel) = 0;
+    virtual std::shared_ptr<NFmiFastQueryInfo> GetBestSuitableModelFractileData(std::shared_ptr<NFmiFastQueryInfo>& usedOriginalInfo) = 0;
+    virtual std::shared_ptr<NFmiFastQueryInfo> GetMosTemperatureMinAndMaxData() = 0;
     virtual bool UseCombinedMapMode() const = 0;
     virtual void UseCombinedMapMode(bool newValue) = 0;
     virtual NFmiBetaProductionSystem& BetaProductionSystem() = 0;
@@ -404,7 +405,7 @@ public:
     virtual Warnings::CapDataSystem& GetCapDataSystem() = 0;
     virtual int GetTimeRangeForWarningMessagesOnMapViewInMinutes() = 0;
     virtual NFmiMacroParamDataCache& MacroParamDataCache() = 0;
-    virtual bool SetupObsBlenderData(const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, boost::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut) = 0;
+    virtual bool SetupObsBlenderData(const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, std::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut) = 0;
     virtual TimeSerialParameters& GetTimeSerialParameters() = 0;
     virtual void UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(int theMapViewDescTopIndex) = 0;
     virtual NFmiColorContourLegendSettings& ColorContourLegendSettings() = 0;
@@ -412,7 +413,7 @@ public:
     virtual int GetPrintedDescTopIndex() = 0;
     virtual void ResetPrintedDescTopIndex() = 0;
     virtual unsigned int SelectedMapIndex(int mapViewDescTopIndex) = 0;
-    virtual void SetCPCropGridSettings(const boost::shared_ptr<NFmiArea>& newArea, unsigned int mapViewDescTopIndex) = 0;
+    virtual void SetCPCropGridSettings(const std::shared_ptr<NFmiArea>& newArea, unsigned int mapViewDescTopIndex) = 0;
     virtual NFmiFixedDrawParamSystem& FixedDrawParamSystem() = 0;
     virtual void ApplyFixeDrawParam(const NFmiMenuItem& theMenuItem, int theRowIndex, const std::shared_ptr<NFmiDrawParam>& theFixedDrawParam) = 0;
     virtual NFmiMacroPathSettings& MacroPathSettings() = 0;
@@ -434,7 +435,7 @@ public:
     virtual std::string GetVirtualTimeTooltipText() const = 0;
     virtual void UpdateMacroParamSystemContent(std::shared_ptr<NFmiMacroParamSystem> updatedMacroParamSystemPtr) = 0;
     virtual NFmiGriddingHelperInterface* GetGriddingHelper() = 0;
-    virtual bool IsMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam) const = 0;
+    virtual bool IsMacroParamOk(std::shared_ptr<NFmiDrawParam>& theUsedDrawParam) const = 0;
 
 #ifndef DISABLE_CPPRESTSDK
     virtual HakeMessage::Main& WarningCenterSystem(void) = 0;

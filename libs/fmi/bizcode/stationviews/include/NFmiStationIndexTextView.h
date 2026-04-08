@@ -22,9 +22,9 @@ class NFmiStationIndexTextView : public NFmiStationTextView
 {
 
 public:
-    NFmiStationIndexTextView (int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+    NFmiStationIndexTextView (int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 							 ,NFmiToolBox * theToolBox
-							 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+							 ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 							 ,FmiParameterName theParamIdent
 							 ,NFmiIndexMessageList * theIndexedWordList
 							 ,NFmiPoint theOffSet
@@ -58,9 +58,9 @@ class NFmiStationFogTextView : public NFmiStationIndexTextView
 {
 
 public:
-    NFmiStationFogTextView (int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+    NFmiStationFogTextView (int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 							 ,NFmiToolBox * theToolBox
-							 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+							 ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 							 ,FmiParameterName theParamIdent
 							 ,NFmiIndexMessageList * theIndexedWordList
 							 ,NFmiPoint theOffSet
@@ -90,9 +90,9 @@ class NFmiTotalCloudinessSymbolTextView : public NFmiStationIndexTextView
 {
 
 public:
-    NFmiTotalCloudinessSymbolTextView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+    NFmiTotalCloudinessSymbolTextView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 									,NFmiToolBox * theToolBox
-									,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+									,std::shared_ptr<NFmiDrawParam> &theDrawParam
 									,FmiParameterName theParamIdent
 									,NFmiIndexMessageList * theIndexedWordList
 									,NFmiPoint theOffSet
@@ -120,9 +120,9 @@ class NFmiPrecipitationFormSymbolTextView : public NFmiStationIndexTextView
 {
 
 public:
-    NFmiPrecipitationFormSymbolTextView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+    NFmiPrecipitationFormSymbolTextView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 										,NFmiToolBox * theToolBox
-										,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+										,std::shared_ptr<NFmiDrawParam> &theDrawParam
 										,FmiParameterName theParamIdent
 										,NFmiIndexMessageList * theIndexedWordList
 										,NFmiPoint theOffSet
@@ -150,9 +150,9 @@ class NFmiRawMirriFontSymbolTextView : public NFmiStationIndexTextView
 {
 
 public:
-    NFmiRawMirriFontSymbolTextView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+    NFmiRawMirriFontSymbolTextView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
         , NFmiToolBox * theToolBox
-        , boost::shared_ptr<NFmiDrawParam> &theDrawParam
+        , std::shared_ptr<NFmiDrawParam> &theDrawParam
         , FmiParameterName theParamIdent
         , NFmiIndexMessageList * theIndexedWordList
         , NFmiPoint theOffSet
@@ -175,9 +175,9 @@ class NFmiClCmChSymbolTextView : public NFmiTotalCloudinessSymbolTextView
 {
 
 public:
-    NFmiClCmChSymbolTextView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+    NFmiClCmChSymbolTextView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 							,NFmiToolBox * theToolBox
-							,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+							,std::shared_ptr<NFmiDrawParam> &theDrawParam
 							,FmiParameterName theParamIdent
 							,NFmiPoint theOffSet
 							,NFmiPoint theSize
@@ -202,9 +202,9 @@ class NFmiCloudSymbolTextView : public NFmiStationIndexTextView
 {
 
 public:
-    NFmiCloudSymbolTextView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+    NFmiCloudSymbolTextView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 							,NFmiToolBox * theToolBox
-							,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+							,std::shared_ptr<NFmiDrawParam> &theDrawParam
 							,FmiParameterName theParamIdent
 							,NFmiIndexMessageList * theIndexedWordList
 							,NFmiPoint theOffSet
@@ -238,9 +238,9 @@ class NFmiImageBasedSymbolView : public NFmiStationIndexTextView
 {
 
 public:
-    NFmiImageBasedSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea>& theArea
+    NFmiImageBasedSymbolView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea>& theArea
         , NFmiToolBox* theToolBox
-        , boost::shared_ptr<NFmiDrawParam>& theDrawParam
+        , std::shared_ptr<NFmiDrawParam>& theDrawParam
         , FmiParameterName theParamIdent
         , NFmiIndexMessageList* theIndexedWordList
         , NFmiPoint theOffSet
@@ -262,9 +262,9 @@ class NFmiBetterWeatherSymbolView : public NFmiImageBasedSymbolView
 {
 
 public:
-    NFmiBetterWeatherSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+    NFmiBetterWeatherSymbolView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
         , NFmiToolBox * theToolBox
-        , boost::shared_ptr<NFmiDrawParam> &theDrawParam
+        , std::shared_ptr<NFmiDrawParam> &theDrawParam
         , FmiParameterName theParamIdent
         , NFmiIndexMessageList * theIndexedWordList
         , NFmiPoint theOffSet
@@ -285,9 +285,9 @@ class NFmiSmartSymbolView : public NFmiImageBasedSymbolView
 {
 
 public:
-    NFmiSmartSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+    NFmiSmartSymbolView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
         , NFmiToolBox * theToolBox
-        , boost::shared_ptr<NFmiDrawParam> &theDrawParam
+        , std::shared_ptr<NFmiDrawParam> &theDrawParam
         , FmiParameterName theParamIdent
         , NFmiIndexMessageList * theIndexedWordList
         , NFmiPoint theOffSet
@@ -308,9 +308,9 @@ class NFmiCustomSymbolView : public NFmiImageBasedSymbolView
 {
 
 public:
-    NFmiCustomSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+    NFmiCustomSymbolView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
         , NFmiToolBox * theToolBox
-        , boost::shared_ptr<NFmiDrawParam> &theDrawParam
+        , std::shared_ptr<NFmiDrawParam> &theDrawParam
         , FmiParameterName theParamIdent
         , NFmiIndexMessageList * theIndexedWordList
         , NFmiPoint theOffSet

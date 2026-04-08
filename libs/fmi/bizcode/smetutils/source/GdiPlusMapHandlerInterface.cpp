@@ -5,7 +5,7 @@ GdiPlusMapHandlerInterface::GdiPlusMapHandlerInterface(NFmiGdiPlusImageMapHandle
     :itsMapHandler(theMapHandler)
 {}
 
-boost::shared_ptr<NFmiArea> GdiPlusMapHandlerInterface::Area()
+std::shared_ptr<NFmiArea> GdiPlusMapHandlerInterface::Area()
 {
     return itsMapHandler->Area();
 }
@@ -20,7 +20,7 @@ NFmiRect GdiPlusMapHandlerInterface::TotalAbsolutRect()
     return itsMapHandler->TotalAbsolutRect();
 }
 
-boost::shared_ptr<NFmiArea> GdiPlusMapHandlerInterface::TotalArea()
+std::shared_ptr<NFmiArea> GdiPlusMapHandlerInterface::TotalArea()
 {
     return itsMapHandler->TotalArea();
 }

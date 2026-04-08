@@ -5,7 +5,7 @@
 NFmiFastDrawParamList::NFmiFastDrawParamList() = default;
 NFmiFastDrawParamList::~NFmiFastDrawParamList() = default;
 
-bool NFmiFastDrawParamList::Find(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool fGroundData)
+bool NFmiFastDrawParamList::Find(std::shared_ptr<NFmiDrawParam> &theDrawParam, bool fGroundData)
 {
 	itsCurrentKey = "";
     FastContainer::key_type tmpKey = CalcKey(theDrawParam, fGroundData);
@@ -33,14 +33,14 @@ bool NFmiFastDrawParamList::Find(const NFmiDataIdent& theParam, const NFmiLevel*
 		return false;
 }
 
-void NFmiFastDrawParamList::Add(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool fGroundData)
+void NFmiFastDrawParamList::Add(std::shared_ptr<NFmiDrawParam> &theDrawParam, bool fGroundData)
 {
-	itsContainer.insert(FastContainer::value_type(CalcKey(theDrawParam, fGroundData), boost::shared_ptr<NFmiDrawParam>(theDrawParam)));
+	itsContainer.insert(FastContainer::value_type(CalcKey(theDrawParam, fGroundData), std::shared_ptr<NFmiDrawParam>(theDrawParam)));
 }
 
-boost::shared_ptr<NFmiDrawParam> NFmiFastDrawParamList::Current()
+std::shared_ptr<NFmiDrawParam> NFmiFastDrawParamList::Current()
 {
-	boost::shared_ptr<NFmiDrawParam> tmpDrawParam;
+	std::shared_ptr<NFmiDrawParam> tmpDrawParam;
 	try
 	{
 		tmpDrawParam = itsContainer.at(itsCurrentKey);
@@ -103,7 +103,7 @@ std::string NFmiFastDrawParamList::CalcKey(const NFmiDataIdent& theParam, const 
 
 // Tekee syhteellisen macroParamin suhteellisen polun alkuosion ilman tiedoston p‰‰tett‰ (.dpa) esim. 
 // "macroParm1" tai "MinunMakrot\macroParm1"
-std::string NFmiFastDrawParamList::MakeMacroParamRelativeFilePathStart(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+std::string NFmiFastDrawParamList::MakeMacroParamRelativeFilePathStart(std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
     std::string relativeFilePath;
     if(!theDrawParam->MacroParamRelativePath().empty())
@@ -115,7 +115,7 @@ std::string NFmiFastDrawParamList::MakeMacroParamRelativeFilePathStart(boost::sh
     return relativeFilePath;
 }
 
-std::string NFmiFastDrawParamList::CalcKey(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool fGroundData)
+std::string NFmiFastDrawParamList::CalcKey(std::shared_ptr<NFmiDrawParam> &theDrawParam, bool fGroundData)
 {
 	bool useParIdOnly = (theDrawParam->DataType() == NFmiInfoData::kEditable) || (theDrawParam->DataType() == NFmiInfoData::kCopyOfEdited);
 	return CalcKey(theDrawParam->Param(), fGroundData ? 0 : &theDrawParam->Level(), theDrawParam->DataType(), MakeMacroParamRelativeFilePathStart(theDrawParam), useParIdOnly);

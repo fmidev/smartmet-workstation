@@ -54,7 +54,7 @@ NFmiGdiPlusImageMapHandler::NFmiGdiPlusImageMapHandler()
 {
 }
 
-static NFmiArea* MakeNewAreaClone(const boost::shared_ptr<NFmiArea>& areaPtr)
+static NFmiArea* MakeNewAreaClone(const std::shared_ptr<NFmiArea>& areaPtr)
 {
 	if(areaPtr)
 		return areaPtr->Clone();
@@ -158,8 +158,8 @@ bool NFmiGdiPlusImageMapHandler::Init(std::shared_ptr<NFmiMapConfiguration>& map
 	itsMapConfiguration = mapConfiguration;
 	CreateMapAreaFromConfiguration();
 
-	itsZoomedArea = boost::shared_ptr<NFmiArea>(itsOriginalArea->Clone());
-	itsSwapBaseArea = boost::shared_ptr<NFmiArea>(itsOriginalArea->Clone());
+	itsZoomedArea = std::shared_ptr<NFmiArea>(itsOriginalArea->Clone());
+	itsSwapBaseArea = std::shared_ptr<NFmiArea>(itsOriginalArea->Clone());
 	InitializeBitmapVectors();
 
 	const auto& mapFileNames = itsMapConfiguration->MapFileNames();
@@ -190,7 +190,7 @@ void NFmiGdiPlusImageMapHandler::InitializeBitmapVectors()
 		itsOverMapBitmaps.push_back(nullptr);
 }
 
-boost::shared_ptr<NFmiArea> NFmiGdiPlusImageMapHandler::ReadArea(const string& theAreaFileName)
+std::shared_ptr<NFmiArea> NFmiGdiPlusImageMapHandler::ReadArea(const string& theAreaFileName)
 {
 	if(NFmiFileSystem::FileExists(theAreaFileName) == false)
 		throw runtime_error(std::string("Error: NFmiGdiPlusImageMapHandler::ReadArea - file does not exist:\n") + theAreaFileName);
@@ -215,7 +215,7 @@ void NFmiGdiPlusImageMapHandler::CreateOriginalArea(const std::string& theArea)
 	itsOriginalArea = NFmiAreaFactory::Create(theArea);
 }
 
-void NFmiGdiPlusImageMapHandler::Area(const boost::shared_ptr<NFmiArea> &newArea)
+void NFmiGdiPlusImageMapHandler::Area(const std::shared_ptr<NFmiArea> &newArea)
 {
 	if(newArea)
 	{
@@ -229,7 +229,7 @@ void NFmiGdiPlusImageMapHandler::Area(const boost::shared_ptr<NFmiArea> &newArea
 		}
 		if(NFmiQueryDataUtil::AreAreasSameKind(itsOriginalArea.get(), newArea.get()))
 		{
-			itsZoomedArea = boost::shared_ptr<NFmiArea>(newArea->Clone());
+			itsZoomedArea = std::shared_ptr<NFmiArea>(newArea->Clone());
 		}
 		else
 		{ // pitää luoda newArea kulmia käyttäen uusi zoomattu alue original areaa käyttäen (näin smartmetin karttanäyttö ei mene sekaisin ja piirto mahdollisesti hidastu jos on käytetty skandi näyttömakroa euro smartmetissa)
@@ -241,7 +241,7 @@ void NFmiGdiPlusImageMapHandler::Area(const boost::shared_ptr<NFmiArea> &newArea
 			{
 				string newZoomedAreaStr(origAreaStr.begin(), origAreaStr.begin()+pos1); // otetaan alkuosio (area-tyyppi) originaali areasta
 				newZoomedAreaStr += string(newAreaStr.begin()+pos2, newAreaStr.end()); // otetaan kulmapisteet uudesta alueesta
-				boost::shared_ptr<NFmiArea> tmpArea = NFmiAreaFactory::Create(newZoomedAreaStr);
+				std::shared_ptr<NFmiArea> tmpArea = NFmiAreaFactory::Create(newZoomedAreaStr);
 				if(tmpArea.get() == 0)
 					return ; // jokin meni pieleen, ei tehdä mitään
 				else
@@ -259,7 +259,7 @@ void NFmiGdiPlusImageMapHandler::Area(const boost::shared_ptr<NFmiArea> &newArea
 	}
 }
 
-static NFmiRect CalcZoomedAbsolutRect(Gdiplus::Bitmap *theCurrentBitmap, const boost::shared_ptr<NFmiArea> &theOriginalArea, const boost::shared_ptr<NFmiArea> &theZoomedArea)
+static NFmiRect CalcZoomedAbsolutRect(Gdiplus::Bitmap *theCurrentBitmap, const std::shared_ptr<NFmiArea> &theOriginalArea, const std::shared_ptr<NFmiArea> &theZoomedArea)
 {
 	if(theCurrentBitmap == 0)
 	{
@@ -291,15 +291,15 @@ void NFmiGdiPlusImageMapHandler::CalcZoomedAreaPosition()
 	}
 }
 
-boost::shared_ptr<NFmiArea> NFmiGdiPlusImageMapHandler::TotalArea()
+std::shared_ptr<NFmiArea> NFmiGdiPlusImageMapHandler::TotalArea()
 {return itsOriginalArea;}
 
-boost::shared_ptr<NFmiArea> NFmiGdiPlusImageMapHandler::Area()
+std::shared_ptr<NFmiArea> NFmiGdiPlusImageMapHandler::Area()
 {return itsZoomedArea;}
 
 bool NFmiGdiPlusImageMapHandler::SetMaxArea()
 {
-	itsZoomedArea = boost::shared_ptr<NFmiArea>(itsOriginalArea->Clone());
+	itsZoomedArea = std::shared_ptr<NFmiArea>(itsOriginalArea->Clone());
 	CalcZoomedAreaPosition();
     SetMakeNewBackgroundBitmap(true);
 	return true;
@@ -310,7 +310,7 @@ bool NFmiGdiPlusImageMapHandler::SetHalfArea()
 {
 	NFmiRect halfRect(0,0,0.5,0.5);
 	halfRect.Center(NFmiPoint(0.5,0.5));
-	boost::shared_ptr<NFmiArea> area(itsOriginalArea->CreateNewArea(halfRect));
+	std::shared_ptr<NFmiArea> area(itsOriginalArea->CreateNewArea(halfRect));
 	if(!area)
 		return false;
 	else
@@ -544,7 +544,7 @@ double NFmiGdiPlusImageMapHandler::BitmapAspectRatioOverMap()
 
 void NFmiGdiPlusImageMapHandler::MakeSwapBaseArea()
 {
-	itsSwapBaseArea = boost::shared_ptr<NFmiArea>(itsZoomedArea->Clone());
+	itsSwapBaseArea = std::shared_ptr<NFmiArea>(itsZoomedArea->Clone());
 	itsSwapMode = 0;
 }
 
@@ -552,7 +552,7 @@ void NFmiGdiPlusImageMapHandler::SwapArea()
 {
 	if(itsSwapMode == 0)
 	{
-		itsSwapBackArea = boost::shared_ptr<NFmiArea>(itsZoomedArea->Clone());
+		itsSwapBackArea = std::shared_ptr<NFmiArea>(itsZoomedArea->Clone());
 		Area(itsSwapBaseArea); // zoomataan swap-baseen
 		itsSwapMode = 1; // tämä pitää asettaa Area-metodin jälkeen
 	}

@@ -6,7 +6,7 @@
 #include "CtrlViewGdiPlusFunctions.h"
 
 
-NFmiSatelliteImageChannelCache::NFmiSatelliteImageChannelCache(const std::string &fileFilter, const boost::shared_ptr<NFmiArea> &imageArea, const NFmiDataIdent &imageDataIdent, int firstTimeUpdateDelayTimeInMS, int firstTimeLoadingWaitTimeMs, int imageLoadingFailedWaitTimeMs)
+NFmiSatelliteImageChannelCache::NFmiSatelliteImageChannelCache(const std::string &fileFilter, const std::shared_ptr<NFmiArea> &imageArea, const NFmiDataIdent &imageDataIdent, int firstTimeUpdateDelayTimeInMS, int firstTimeLoadingWaitTimeMs, int imageLoadingFailedWaitTimeMs)
 :mFileFilter(fileFilter)
 ,mImageDataIdent(imageDataIdent)
 ,mChannelShownOnView(false)
@@ -29,10 +29,10 @@ std::list<std::string> NFmiSatelliteImageChannelCache::GetFileList(const ImageCa
     return fileList;
 }
 
-// Lisätään annetun file-listan kuvat cacheen.
+// Lisï¿½tï¿½ï¿½n annetun file-listan kuvat cacheen.
 // Jos cachen koko muuttui eli cache on muuttunut, palautetaan true, muuten false;
-// Lista pitää sortata lopuksi.
-// HUOM! NoLock metodin nimessä viittaa siihen että mImageCacheSet:ia ei lukita täällä mutexin avulla, koska se on jo lukittuna tätä kutsuvassa funktiossa.
+// Lista pitï¿½ï¿½ sortata lopuksi.
+// HUOM! NoLock metodin nimessï¿½ viittaa siihen ettï¿½ mImageCacheSet:ia ei lukita tï¿½ï¿½llï¿½ mutexin avulla, koska se on jo lukittuna tï¿½tï¿½ kutsuvassa funktiossa.
 bool NFmiSatelliteImageChannelCache::InsertToImageCache_NoLock(const std::list<std::string> &fileListIn, ImageCacheUpdateData &updatedImagesOut)
 {
     size_t origsize = mImageCacheSortedList.size();
@@ -44,7 +44,7 @@ bool NFmiSatelliteImageChannelCache::InsertToImageCache_NoLock(const std::list<s
             updatedImagesOut.push_back(std::make_pair(mImageDataIdent, (*mImageCacheSortedList.rbegin())->ImageTime())); // NFmiSatelliteImageCache:n konstruktorissa laskettu aika otetaan update-dataan, HUOM! rbegin eli listan viimeinen itemi.
         }
         catch(...)
-        { // jos annetun tiedoston nimessä ei ollut oikeanlaista aikaleimaa, poikkeus lentää NFmiSatelliteImageCache -luokan konstruktorista
+        { // jos annetun tiedoston nimessï¿½ ei ollut oikeanlaista aikaleimaa, poikkeus lentï¿½ï¿½ NFmiSatelliteImageCache -luokan konstruktorista
         }
     }
 
@@ -53,8 +53,8 @@ bool NFmiSatelliteImageChannelCache::InsertToImageCache_NoLock(const std::list<s
 
 // Poistetaan annetun file-listan kuvat cachesta.
 // Jos cachen koko muuttui eli cache on muuttunut, palautetaan true, muuten false.
-// Lista pitää sortata lopuksi.
-// HUOM! NoLock metodin nimessä viittaa siihen että mImageCacheSet:ia ei lukita täällä mutexin avulla, koska se on jo lukittuna tätä kutsuvassa funktiossa.
+// Lista pitï¿½ï¿½ sortata lopuksi.
+// HUOM! NoLock metodin nimessï¿½ viittaa siihen ettï¿½ mImageCacheSet:ia ei lukita tï¿½ï¿½llï¿½ mutexin avulla, koska se on jo lukittuna tï¿½tï¿½ kutsuvassa funktiossa.
 bool NFmiSatelliteImageChannelCache::RemoveFromImageCache_NoLock(const std::list<std::string> &fileListIn, ImageCacheUpdateData &updatedImagesOut)
 {
     size_t origsize = mImageCacheSortedList.size();
@@ -71,7 +71,7 @@ bool NFmiSatelliteImageChannelCache::RemoveFromImageCache_NoLock(const std::list
     return origsize != mImageCacheSortedList.size();
 }
 
-// Hakee annetun fileFilterin avulla listan tiedostoja ja tekee niistä listan, missä
+// Hakee annetun fileFilterin avulla listan tiedostoja ja tekee niistï¿½ listan, missï¿½
 // on tiedostot polkuineen kaikkineen.
 std::list<std::string> NFmiSatelliteImageChannelCache::GetFileList(const std::string &fileFilter)
 {
@@ -83,49 +83,49 @@ std::list<std::string> NFmiSatelliteImageChannelCache::GetFileList(const std::st
     return filePathList;
 }
 
-// Tätä funktiota voidaan kutsua joko piirto säikeestä tai taustalla 
-// pyörivästä päivitys worker-threadista, siksi mImageCacheSet pitää synkronisoida.
-// Palauttaa true, jos on tullut uusia kuvia käyttöön, tai kuvia on poistunut.
-// Jos listoihin tulee muutoksia, niistä tehdään listaa updatedImagesOut -listaan, ja lista annetaan clientille, jotta osataan päivittää ruutuja oikein.
+// Tï¿½tï¿½ funktiota voidaan kutsua joko piirto sï¿½ikeestï¿½ tai taustalla 
+// pyï¿½rivï¿½stï¿½ pï¿½ivitys worker-threadista, siksi mImageCacheSet pitï¿½ï¿½ synkronisoida.
+// Palauttaa true, jos on tullut uusia kuvia kï¿½yttï¿½ï¿½n, tai kuvia on poistunut.
+// Jos listoihin tulee muutoksia, niistï¿½ tehdï¿½ï¿½n listaa updatedImagesOut -listaan, ja lista annetaan clientille, jotta osataan pï¿½ivittï¿½ï¿½ ruutuja oikein.
 ImageCacheUpdateData NFmiSatelliteImageChannelCache::UpdateCacheList(bool forceUpdate)
 {
     ImageCacheUpdateData updatedImages;
 
-    // 0. Ei tehdä tiedostolista päivitystä, ellei kyse ole pakotetusta päivityksestä, tai jos alustuksesta on kulunut tarpeeksi aikaa
-    // Tarkoituksena on estää liiallinen trafiikki esim. serverille heti SmartMetin käynnistyksen yhteydessä
+    // 0. Ei tehdï¿½ tiedostolista pï¿½ivitystï¿½, ellei kyse ole pakotetusta pï¿½ivityksestï¿½, tai jos alustuksesta on kulunut tarpeeksi aikaa
+    // Tarkoituksena on estï¿½ï¿½ liiallinen trafiikki esim. serverille heti SmartMetin kï¿½ynnistyksen yhteydessï¿½
     if(forceUpdate || mCacheInitialized || mFilesCheckedTimer.CurrentTimeDiffInMSeconds() >= mFirstTimeUpdateDelayTimeInMS)
     {
-        // 1. Hae tiedosto lista mFileFilter:illä (tässä voi kestää kauan, siksi laitoin sen mutex-lukon ulkopuolelle)
+        // 1. Hae tiedosto lista mFileFilter:illï¿½ (tï¿½ssï¿½ voi kestï¿½ï¿½ kauan, siksi laitoin sen mutex-lukon ulkopuolelle)
         std::list<std::string> fileListA = NFmiSatelliteImageChannelCache::GetFileList(mFileFilter);
-        fileListA.sort(); // pakko sortata, että std::set_difference ja vastaavat toimivat!!
+        fileListA.sort(); // pakko sortata, ettï¿½ std::set_difference ja vastaavat toimivat!!
 
         std::lock_guard<std::mutex> lock(mImageCacheSetMutex);
         try
         {
-            // 2. Listan avulla päivitä mImageCacheSet:ia (vain lisää uudet ja poista hävinneet tiedostot toiminnot)
+            // 2. Listan avulla pï¿½ivitï¿½ mImageCacheSet:ia (vain lisï¿½ï¿½ uudet ja poista hï¿½vinneet tiedostot toiminnot)
             if(fileListA.empty())
             {
-                // Jos kaikki image tiedostot ovat yhtäkkiä vain hävinneet, ei tyhjennetä cachea ainakaan vielä, eli ei tehdä nyt mitään.
-                // Kyse saattaa olla vaikka hetkellisestä yhteysongelmasta serveriin
+                // Jos kaikki image tiedostot ovat yhtï¿½kkiï¿½ vain hï¿½vinneet, ei tyhjennetï¿½ cachea ainakaan vielï¿½, eli ei tehdï¿½ nyt mitï¿½ï¿½n.
+                // Kyse saattaa olla vaikka hetkellisestï¿½ yhteysongelmasta serveriin
             }
             else if(!fileListA.empty() && mImageCacheSortedList.empty())
-                InsertToImageCache_NoLock(fileListA, updatedImages); // tiedostonimi-listassa oli jotain, mutta cache on tyhjä, täytä cache listan arvoilla
+                InsertToImageCache_NoLock(fileListA, updatedImages); // tiedostonimi-listassa oli jotain, mutta cache on tyhjï¿½, tï¿½ytï¿½ cache listan arvoilla
             else
             {
                 std::list<std::string> fileListB = NFmiSatelliteImageChannelCache::GetFileList(mImageCacheSortedList);
-                fileListB.sort(); // tämän olisi pitänyt olla jo järjestyksessä, mutta jostain syystä näin ei aina ole, en tiedä miksi, siksi pakko sortata
+                fileListB.sort(); // tï¿½mï¿½n olisi pitï¿½nyt olla jo jï¿½rjestyksessï¿½, mutta jostain syystï¿½ nï¿½in ei aina ole, en tiedï¿½ miksi, siksi pakko sortata
 
-                // Jos tiedostonnimi on A:ssa mutta ei B:ssä, lisää mImageCacheSet:iin
+                // Jos tiedostonnimi on A:ssa mutta ei B:ssï¿½, lisï¿½ï¿½ mImageCacheSet:iin
                 std::list<std::string> result_A_minus_B;
                 std::set_difference(fileListA.begin(), fileListA.end(), fileListB.begin(), fileListB.end(), std::inserter(result_A_minus_B, result_A_minus_B.begin()));
                 InsertToImageCache_NoLock(result_A_minus_B, updatedImages);
 
-                // Jos on B:ssä mutta ei A:ssa, poista mImageCacheSet:istä
+                // Jos on B:ssï¿½ mutta ei A:ssa, poista mImageCacheSet:istï¿½
                 std::list<std::string> result_B_minus_A;
                 std::set_difference(fileListB.begin(), fileListB.end(), fileListA.begin(), fileListA.end(), std::inserter(result_B_minus_A, result_B_minus_A.begin()));
                 RemoveFromImageCache_NoLock(result_B_minus_A, updatedImages);
 
-                // Jos on sekä A:ssa että B:ssä älä tee mitään
+                // Jos on sekï¿½ A:ssa ettï¿½ B:ssï¿½ ï¿½lï¿½ tee mitï¿½ï¿½n
             }
         }
         catch(...)
@@ -142,9 +142,9 @@ ImageCacheUpdateData NFmiSatelliteImageChannelCache::UpdateCacheList(bool forceU
     return updatedImages;
 }
 
-// Katsoo onko tällä channelilla yhtään imagea loading-tilassa. 
-// Jos on, tarkistaa tilanteen että onko jokin niistä valmistunut.
-// Jos joku loading on valmistunut, lisätään sen imagen tiedot loadedImages -listaan, joka palautetaan funktiosta.
+// Katsoo onko tï¿½llï¿½ channelilla yhtï¿½ï¿½n imagea loading-tilassa. 
+// Jos on, tarkistaa tilanteen ettï¿½ onko jokin niistï¿½ valmistunut.
+// Jos joku loading on valmistunut, lisï¿½tï¿½ï¿½n sen imagen tiedot loadedImages -listaan, joka palautetaan funktiosta.
 ImageCacheUpdateData NFmiSatelliteImageChannelCache::CheckOnCacheLoading()
 {
     ImageCacheUpdateData loadedImages;
@@ -161,19 +161,19 @@ ImageCacheUpdateData NFmiSatelliteImageChannelCache::CheckOnCacheLoading()
 void NFmiSatelliteImageChannelCache::DoPossibleForceUpdate()
 {
     if(!mCacheInitialized)
-        UpdateCacheList(true); // Jos ei ole kertaakaan alustettu cache-listaa, pitää se tehdä tässä. 
+        UpdateCacheList(true); // Jos ei ole kertaakaan alustettu cache-listaa, pitï¿½ï¿½ se tehdï¿½ tï¿½ssï¿½. 
 }
 
 NFmiSatelliteImageChannelCache::ImageCacheItem NFmiSatelliteImageChannelCache::FindImageCache(const NFmiMetTime &wantedTime, int maxOffSetInMinutes)
 {
-    DoPossibleForceUpdate(); // HUOM! Pitää olla ennen scoped_lock:ia, koska DoPossibleForceUpdate:n sisällä tapahtuu myös sama lukitus!!
+    DoPossibleForceUpdate(); // HUOM! Pitï¿½ï¿½ olla ennen scoped_lock:ia, koska DoPossibleForceUpdate:n sisï¿½llï¿½ tapahtuu myï¿½s sama lukitus!!
 
     std::lock_guard<std::mutex> lock(mImageCacheSetMutex);
     auto foundIter = std::find_if(mImageCacheSortedList.begin(), mImageCacheSortedList.end(), [&wantedTime](const ImageCacheSortedList::value_type &imageCache)->bool {return imageCache->ImageTime() == wantedTime; });
     if(foundIter != mImageCacheSortedList.end())
         return *foundIter;
     else
-    {   // Ei löytynyt tarkkaa aikaa, katsotaan vielä onko käytössä aikahaarukka ja etsitään tällöin lähintä aikaa
+    {   // Ei lï¿½ytynyt tarkkaa aikaa, katsotaan vielï¿½ onko kï¿½ytï¿½ssï¿½ aikahaarukka ja etsitï¿½ï¿½n tï¿½llï¿½in lï¿½hintï¿½ aikaa
         if(maxOffSetInMinutes > 0)
         {
             long minOffset = 999999999;
@@ -206,7 +206,7 @@ NFmiImageHolder NFmiSatelliteImageChannelCache::FindImage(const NFmiMetTime &wan
 
 NFmiMetTime NFmiSatelliteImageChannelCache::GetLatestImageTime()
 {
-    DoPossibleForceUpdate(); // HUOM! Pitää olla ennen scoped_lock:ia, koska DoPossibleForceUpdate:n sisällä tapahtuu myös sama lukitus!!
+    DoPossibleForceUpdate(); // HUOM! Pitï¿½ï¿½ olla ennen scoped_lock:ia, koska DoPossibleForceUpdate:n sisï¿½llï¿½ tapahtuu myï¿½s sama lukitus!!
 
     std::lock_guard<std::mutex> lock(mImageCacheSetMutex);
     if(mImageCacheSortedList.size())

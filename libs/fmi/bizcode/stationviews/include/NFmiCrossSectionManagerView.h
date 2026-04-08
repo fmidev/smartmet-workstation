@@ -59,7 +59,7 @@ class NFmiCrossSectionManagerView : public NFmiCtrlView
 	void UpdateSize(void);
 	std::string ComposeToolTipText(const NFmiPoint& theRelativePoint) override;
     void CalcDrawSizeFactors(void);
-	bool IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam);
+	bool IsCrossSectionMacroParamOk(std::shared_ptr<NFmiDrawParam>& theUsedDrawParam);
 
  private:
 	void Destroy(void);

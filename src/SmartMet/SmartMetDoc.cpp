@@ -655,7 +655,7 @@ void CSmartMetDoc::OnButtonLoadData()
 		{
 			// TÄMÄ pikaviritys palauttaa vain timebag/editormode sekoilut paikallee, jos on ollut
 			// normaalisti dataa ladattuna ja painaa Lataa-nappulaa ja painaa Peruuta-nappia
-			boost::shared_ptr<NFmiFastQueryInfo> smart = itsData->EditedSmartInfo();
+			std::shared_ptr<NFmiFastQueryInfo> smart = itsData->EditedSmartInfo();
 			if(smart)
 			{
 				string dataFileName(smart->DataFileName());
@@ -676,7 +676,7 @@ BOOL CSmartMetDoc::PrepareForLoadingDataFromFile(void)
 
 BOOL CSmartMetDoc::CheckEditedDataAndStoreIfNeeded(void)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> smart = itsData->EditedSmartInfo();
+	std::shared_ptr<NFmiFastQueryInfo> smart = itsData->EditedSmartInfo();
 	BOOL status = TRUE;
 	if(smart != 0 && dynamic_cast<NFmiSmartInfo*>(smart.get())->IsDirty()) //jos on dataa jo ladattuna ja sitä on muutettu, talletetaan ensin
 	{
@@ -687,7 +687,7 @@ BOOL CSmartMetDoc::CheckEditedDataAndStoreIfNeeded(void)
 
 BOOL CSmartMetDoc::StoreEditedData(void)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> smart = itsData->EditedSmartInfo();
+	std::shared_ptr<NFmiFastQueryInfo> smart = itsData->EditedSmartInfo();
 	BOOL status = TRUE;
 	if(smart)
 	{
@@ -705,7 +705,7 @@ void CSmartMetDoc::OnButtonStoreData()
 	StoreEditedData();
 }
 
-BOOL CSmartMetDoc::StoreWorkingData(boost::shared_ptr<NFmiFastQueryInfo> &smart, bool askForSave)
+BOOL CSmartMetDoc::StoreWorkingData(std::shared_ptr<NFmiFastQueryInfo> &smart, bool askForSave)
 {
 	NFmiDataLoadingInfo& info = itsData->GetUsedDataLoadingInfo();
 	info.InitFileNameLists();
@@ -718,7 +718,7 @@ void CSmartMetDoc::DoAutoSave(void)
 	itsData->DoAutoSaveData();
 }
 
-BOOL CSmartMetDoc::StoreDataBaseDataMarko(boost::shared_ptr<NFmiFastQueryInfo> &smart)
+BOOL CSmartMetDoc::StoreDataBaseDataMarko(std::shared_ptr<NFmiFastQueryInfo> &smart)
 {
 	((CFrameWnd*)AfxGetMainWnd())->SetMessageText(_TEXT("Sending data to database."));
 
@@ -741,7 +741,7 @@ BOOL CSmartMetDoc::StoreDataBaseDataMarko(boost::shared_ptr<NFmiFastQueryInfo> &
 
 BOOL CSmartMetDoc::StoreData(bool newFile, bool askForSave)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsData->EditedSmartInfo();
+	std::shared_ptr<NFmiFastQueryInfo> info = itsData->EditedSmartInfo();
 	if(info)
 	{
 		if(newFile)
@@ -760,7 +760,7 @@ BOOL CSmartMetDoc::StoreData(bool newFile, bool askForSave)
 }
 
 // HUOM!!! laita tämä kutsumaan NFmiDoc:in metodia!!!!!!
-BOOL CSmartMetDoc::StoreData(const NFmiString& theFileName, boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, bool askForSave)
+BOOL CSmartMetDoc::StoreData(const NFmiString& theFileName, std::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, bool askForSave)
 {
 	CSaveDataDlg dlg;
 	if(askForSave) // lisäsin askForSaven, että ei aina kysyttäisi talletetaanko
@@ -770,7 +770,7 @@ BOOL CSmartMetDoc::StoreData(const NFmiString& theFileName, boost::shared_ptr<NF
 	}
 	if(theSmartInfo && (theFileName != "")) // MITÄ JOS EI OLE NIMEÄ!!!!!!!
 	{
-		boost::shared_ptr<NFmiQueryData> data = theSmartInfo->DataReference();
+		std::shared_ptr<NFmiQueryData> data = theSmartInfo->DataReference();
 		bool status = StoreData(theFileName, data) == TRUE;
 		if(status)
 			dynamic_cast<NFmiSmartInfo*>(theSmartInfo.get())->Dirty(false);
@@ -780,7 +780,7 @@ BOOL CSmartMetDoc::StoreData(const NFmiString& theFileName, boost::shared_ptr<NF
 }
 
 // HUOM!!! Tämä funktio pitää poistaa ja siirtyä käyttämään NFmiDoc:in metodia!!!!/Marko
-BOOL CSmartMetDoc::StoreData(const NFmiString& theFileName, boost::shared_ptr<NFmiQueryData> &theData)
+BOOL CSmartMetDoc::StoreData(const NFmiString& theFileName, std::shared_ptr<NFmiQueryData> &theData)
 {
 	if(theData)
 	{
@@ -864,7 +864,7 @@ void CSmartMetDoc::OnButtonSelectionToolDlg()
 
 void CSmartMetDoc::OnMenuitemSaveAs()
 {
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsData->EditedSmartInfo();
+	std::shared_ptr<NFmiFastQueryInfo> info = itsData->EditedSmartInfo();
 	if(info)
 	{
 		CFileDialog dlg(FALSE, _TEXT("sqd")); //muutin sqd:ksi
@@ -1137,7 +1137,7 @@ void CSmartMetDoc::OnButtonGlobe()
 
 void CSmartMetDoc::OnButtonDataToDatabase()
 {
-	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = itsData->EditedSmartInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedInfo = itsData->EditedSmartInfo();
 	NFmiSmartInfo *smart = dynamic_cast<NFmiSmartInfo*>(editedInfo.get());
 	if(smart == 0)
 	{
@@ -1464,7 +1464,7 @@ void CSmartMetDoc::OnUpdateEditUndo(CCmdUI* pCmdUI)
 {
 	if(itsData->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // eli jos ollaan edit-moodissa, asetetaan nappulan tilaa
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> editedInfo = itsData->EditedSmartInfo();
+		std::shared_ptr<NFmiFastQueryInfo> editedInfo = itsData->EditedSmartInfo();
 		if(editedInfo)
 		{
 			pCmdUI->Enable(dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->Undo());
@@ -1480,7 +1480,7 @@ void CSmartMetDoc::OnUpdateEditRedo(CCmdUI* pCmdUI)
 {
 	if(itsData->SmartMetEditingMode() == CtrlViewUtils::kFmiEditingModeNormal) // eli jos ollaan edit-moodissa, asetetaan nappulan tilaa
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> editedInfo = itsData->EditedSmartInfo();
+		std::shared_ptr<NFmiFastQueryInfo> editedInfo = itsData->EditedSmartInfo();
 		if(editedInfo)
 		{
 			pCmdUI->Enable(dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->Redo());
@@ -3217,7 +3217,7 @@ void CSmartMetDoc::OnAcceleratorLocationFinderTool()
     OpenLocationFinderTool(ApplicationInterface::GetSmartMetView());
 }
 
-void CSmartMetDoc::SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam)
+void CSmartMetDoc::SetMacroErrorText(const std::string &theErrorStr, std::shared_ptr<NFmiDrawParam>& triggerDrawParam)
 {
 	if(itsSmartToolDlg)
 		itsSmartToolDlg->SetMacroErrorText(theErrorStr, triggerDrawParam);
@@ -3317,7 +3317,7 @@ double MetersToDegrees(double latitude, double meters)
 
 // Tekee mapserver url:in halutulla resoluutiolla, esim:
 // 60px/deg (2 km) resolution:   	&SRS=EPSG:4326&BBOX=-77.9276,12.7648,-58.0438,21.538&WIDTH=1193&HEIGHT=526
-static std::string MakeUrlStr(boost::shared_ptr<NFmiArea> &area, int pixelPerDegree, double pixelResolutionInKMAbout, unsigned long areaId)
+static std::string MakeUrlStr(std::shared_ptr<NFmiArea> &area, int pixelPerDegree, double pixelResolutionInKMAbout, unsigned long areaId)
 {
     const int desiredBaseStringLength = 30;
     std::string baseUrlStr;
@@ -3380,7 +3380,7 @@ std::string MapAreaInfo(NFmiMapViewDescTop *mapViewDecsTop)
 {
     if(mapViewDecsTop)
     {
-        boost::shared_ptr<NFmiArea> zoomedArea = mapViewDecsTop->MapHandler()->Area();
+        std::shared_ptr<NFmiArea> zoomedArea = mapViewDecsTop->MapHandler()->Area();
         if(zoomedArea)
         {
             const std::string usedEndLineStr = "\r\n";
@@ -3672,7 +3672,7 @@ static std::string CalculationPointInfo(NFmiMapViewDescTop *mapViewDecsTop, NFmi
                     if(zoomedArea)
                     {
                         std::string str;
-                        std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
+                        std::vector<std::shared_ptr<NFmiFastQueryInfo> > infoVector;
                         generalDataDoc->GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(infoVector, activeDrawParam, zoomedArea);
                         for(auto &info : infoVector)
                         {
@@ -3720,7 +3720,7 @@ static std::string ActiveRowDataFilePaths(NFmiMapViewDescTop *mapViewDecsTop, NF
                     auto zoomedArea = mapViewDecsTop->MapHandler()->Area();
                     if(zoomedArea)
                     {
-                        std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector;
+                        std::vector<std::shared_ptr<NFmiFastQueryInfo> > infoVector;
                         generalDataDoc->GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(infoVector, drawParam, zoomedArea);
                         for(auto &info : infoVector)
                         {
@@ -3923,7 +3923,7 @@ void CSmartMetDoc::OnEditReloadfixeddrawparams()
     itsData->ReloadFixedDrawParams();
 }
 
-bool CSmartMetDoc::IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
+bool CSmartMetDoc::IsCrossSectionMacroParamOk(std::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
 {
 	if(!itsCrossSectionDlg)
 	{return false;}

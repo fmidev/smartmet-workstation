@@ -43,9 +43,9 @@ class NFmiFastQueryInfo;
 class NFmiDataModifierTimeShifter : public NFmiDataModifier
 { 
  public:
-	NFmiDataModifierTimeShifter(boost::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy
+	NFmiDataModifierTimeShifter(std::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy
 								,const std::vector<double> &theTimeShiftFactorTable
-								,boost::shared_ptr<NFmiAreaMaskList> &theMaskList)
+								,std::shared_ptr<NFmiAreaMaskList> &theMaskList)
 								:itsLastTimeIndex(-1)
 								,itsMaskList(theMaskList)
 								,itsQueryInfoCopy(theQueryInfoCopy)
@@ -65,8 +65,8 @@ class NFmiDataModifierTimeShifter : public NFmiDataModifier
 	void SyncronizeMasks(void);
 
 	int itsLastTimeIndex; // k‰ytet‰‰n optimoinnissa
-	boost::shared_ptr<NFmiAreaMaskList> itsMaskList;
-	boost::shared_ptr<NFmiFastQueryInfo> itsQueryInfoCopy;
+	std::shared_ptr<NFmiAreaMaskList> itsMaskList;
+	std::shared_ptr<NFmiFastQueryInfo> itsQueryInfoCopy;
 	std::vector<double> itsTimeShiftFactorTable;// taulu, jossa on kaikille ajankohdille siirtoaika 
 									// datan aikaresoluutiossa (esim. arvo 1.5 voi olla 
 									// 1.5 tuntia tai 9 tuntia resoluutiosta riippuen)
@@ -77,10 +77,10 @@ class NFmiDataModifierTimeShifter : public NFmiDataModifier
 class NFmiDataModifierTimeShifterWithChangingRanges : public NFmiDataModifierTimeShifter
 { 
  public:
-	NFmiDataModifierTimeShifterWithChangingRanges(boost::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy
+	NFmiDataModifierTimeShifterWithChangingRanges(std::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy
 												,const std::vector<NFmiPoint> &theTimeRangeTable
 												,NFmiDataModifier* theDataModifier
-												,boost::shared_ptr<NFmiAreaMaskList> &theMaskList)
+												,std::shared_ptr<NFmiAreaMaskList> &theMaskList)
 												:NFmiDataModifierTimeShifter(theQueryInfoCopy, std::vector<double>(), theMaskList)
 								,itsNegRange(0)
 								,itsPosRange(0)
@@ -110,10 +110,10 @@ class NFmiDataModifierTimeShifterWithChangingRanges : public NFmiDataModifierTim
 class NFmiDataModifierTimeShifterWithChangingRangesUsingWAvg : public NFmiDataModifierTimeShifterWithChangingRanges
 { 
  public:
-	NFmiDataModifierTimeShifterWithChangingRangesUsingWAvg(boost::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy
+	NFmiDataModifierTimeShifterWithChangingRangesUsingWAvg(std::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy
 												,const std::vector<NFmiPoint> &theTimeRangeTable
 												,NFmiDataModifier* theDataModifier
-												,boost::shared_ptr<NFmiAreaMaskList> &theMaskList)
+												,std::shared_ptr<NFmiAreaMaskList> &theMaskList)
 								:NFmiDataModifierTimeShifterWithChangingRanges(theQueryInfoCopy, theTimeRangeTable, theDataModifier, theMaskList)
 								{}
 	NFmiDataModifierTimeShifterWithChangingRangesUsingWAvg(const NFmiDataModifierTimeShifterWithChangingRangesUsingWAvg &theOther);
@@ -130,9 +130,9 @@ class NFmiDataModifierTimeShifterWithChangingRangesUsingWAvg : public NFmiDataMo
 class NFmiDataModifierWithModifierWithMasks : public NFmiDataModifier
 { 
  public:
-	NFmiDataModifierWithModifierWithMasks(boost::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy,
+	NFmiDataModifierWithModifierWithMasks(std::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy,
 											NFmiDataModifier *theDataModifier
-											,boost::shared_ptr<NFmiAreaMaskList> &theMaskList
+											,std::shared_ptr<NFmiAreaMaskList> &theMaskList
 											,int theNegXRange, int theNegYRange
 											,int thePosXRange, int thePosYRange)
 											:itsLastTimeIndex(-1),
@@ -155,9 +155,9 @@ class NFmiDataModifierWithModifierWithMasks : public NFmiDataModifier
 	void InitLatlonCache(void);
  protected:
 	int itsLastTimeIndex; // k‰ytet‰‰n optimoinnissa
-	boost::shared_ptr<NFmiFastQueryInfo> itsQueryInfoCopy;
+	std::shared_ptr<NFmiFastQueryInfo> itsQueryInfoCopy;
 	NFmiDataModifier *itsModifier; // t‰m‰ tuhotaan destruktorissa!!
-	boost::shared_ptr<NFmiAreaMaskList> itsMaskList;
+	std::shared_ptr<NFmiAreaMaskList> itsMaskList;
 	int itsNegXRange, itsNegYRange, itsPosXRange, itsPosYRange;
 };
 //************** NFmiDataModifierWithModifierWithMasks ************************
@@ -166,9 +166,9 @@ class NFmiDataModifierWithModifierWithMasks : public NFmiDataModifier
 class NFmiDataModifierWithModifierWithMasksAndRangeShiftedWithTime : public NFmiDataModifierWithModifierWithMasks
 { 
  public:
-	 NFmiDataModifierWithModifierWithMasksAndRangeShiftedWithTime(boost::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy,
+	 NFmiDataModifierWithModifierWithMasksAndRangeShiftedWithTime(std::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy,
 		NFmiDataModifier *theDataModifier
-		,boost::shared_ptr<NFmiAreaMaskList> &theMaskList
+		,std::shared_ptr<NFmiAreaMaskList> &theMaskList
 		,const std::vector<NFmiRect> &theRangeArray)
 		:NFmiDataModifierWithModifierWithMasks(theQueryInfoCopy, theDataModifier, theMaskList,0,0,0,0)
 		,itsRangeArray(theRangeArray){};
@@ -187,9 +187,9 @@ class NFmiDataModifierTimeInterpolationWithAreaModifiers : public NFmiDataModifi
 { 
  public:
 	 NFmiDataModifierTimeInterpolationWithAreaModifiers(
-						boost::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy,
+						std::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy,
 						NFmiDataModifier *theDataModifier
-						,boost::shared_ptr<NFmiAreaMaskList> &theMaskList
+						,std::shared_ptr<NFmiAreaMaskList> &theMaskList
 						,const std::vector<NFmiRect> &theRangeArray
 						,const NFmiMetTime& theStartTime
 						,const NFmiMetTime& theEndTime
@@ -216,12 +216,12 @@ class NFmiDataModifierTimeInterpolationWithAreaModifiers : public NFmiDataModifi
 class NFmiDataModifierParamCombiner : public NFmiDataModifierWithModifierWithMasksAndRangeShiftedWithTime
 { 
  public:
-	 NFmiDataModifierParamCombiner(boost::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy,
+	 NFmiDataModifierParamCombiner(std::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy,
 		NFmiDataModifier *theDataModifier
-		,boost::shared_ptr<NFmiAreaMaskList> &theMaskList
+		,std::shared_ptr<NFmiAreaMaskList> &theMaskList
 		,const std::vector<NFmiRect> &theRangeArray
-		,boost::shared_ptr<NFmiFastQueryInfo> theFirstParamInfo
-		,boost::shared_ptr<NFmiFastQueryInfo> theSecondParamInfo
+		,std::shared_ptr<NFmiFastQueryInfo> theFirstParamInfo
+		,std::shared_ptr<NFmiFastQueryInfo> theSecondParamInfo
 		,const std::vector<float> &theCombineFactorArray
 		,float theFirstParamBase=0.f
 		,float theSecondParamBase=0.f
@@ -248,8 +248,8 @@ class NFmiDataModifierParamCombiner : public NFmiDataModifierWithModifierWithMas
 	 bool fFirstParamUsed; // ehk‰ parametria ei olekaan asetettu, jolloin ei sit‰ k‰ytet‰
 	 bool fSecondParamUsed; // ehk‰ parametria ei olekaan asetettu, jolloin ei sit‰ k‰ytet‰
 	 std::vector<float> itsCombineFactorArray;
-	 boost::shared_ptr<NFmiFastQueryInfo> itsFirstParamInfo; // omistaa (yhdistett‰ville parametreille omat infot, jotta niit‰ ei tarvitsisi asetella jatkuvasti osoittamaan haluttuun parametriin)
-	 boost::shared_ptr<NFmiFastQueryInfo> itsSecondParamInfo; // omistaa
+	 std::shared_ptr<NFmiFastQueryInfo> itsFirstParamInfo; // omistaa (yhdistett‰ville parametreille omat infot, jotta niit‰ ei tarvitsisi asetella jatkuvasti osoittamaan haluttuun parametriin)
+	 std::shared_ptr<NFmiFastQueryInfo> itsSecondParamInfo; // omistaa
 	 float itsFirstParamBase;
 	 float itsSecondParamBase;
 	 float itsFirstParamFactor; // jos halutaan skaalata eri parametreja, se tapahtuu n‰iden kertoimien avulla
@@ -263,12 +263,12 @@ class NFmiDataModifierParamCombiner : public NFmiDataModifierWithModifierWithMas
 class NFmiDataModelDataCombiner : public NFmiDataModifierWithModifierWithMasksAndRangeShiftedWithTime
 { 
  public:
-	 NFmiDataModelDataCombiner(boost::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy,
+	 NFmiDataModelDataCombiner(std::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy,
 		NFmiDataModifier *theDataModifier
-		,boost::shared_ptr<NFmiAreaMaskList> &theMaskList
+		,std::shared_ptr<NFmiAreaMaskList> &theMaskList
 		,const std::vector<NFmiRect> &theRangeArray
-		,boost::shared_ptr<NFmiFastQueryInfo> theFirstModelInfo
-		,boost::shared_ptr<NFmiFastQueryInfo> theSecondModelInfo
+		,std::shared_ptr<NFmiFastQueryInfo> theFirstModelInfo
+		,std::shared_ptr<NFmiFastQueryInfo> theSecondModelInfo
 		,const std::vector<float> &theCombineFactorArray);
 	NFmiDataModelDataCombiner(const NFmiDataModelDataCombiner &theOther);
 	NFmiDataModifier* Clone(void) const;
@@ -283,8 +283,8 @@ class NFmiDataModelDataCombiner : public NFmiDataModifierWithModifierWithMasksAn
 	 bool fFirstModelInfoHasSameTimeResolutionAsModifiedData;
 	 bool fSecondModelInfoHasSameTimeResolutionAsModifiedData;
 	 const std::vector<float> itsCombineFactorArray;
-	 boost::shared_ptr<NFmiFastQueryInfo> itsFirstModelInfo; // omistaa (yhdistett‰ville parametreille omat infot, jotta niit‰ ei tarvitsisi asetella jatkuvasti osoittamaan haluttuun parametriin)
-	 boost::shared_ptr<NFmiFastQueryInfo> itsSecondModelInfo; // omistaa
+	 std::shared_ptr<NFmiFastQueryInfo> itsFirstModelInfo; // omistaa (yhdistett‰ville parametreille omat infot, jotta niit‰ ei tarvitsisi asetella jatkuvasti osoittamaan haluttuun parametriin)
+	 std::shared_ptr<NFmiFastQueryInfo> itsSecondModelInfo; // omistaa
 	 NFmiMetTime itsCurrentTime; // k‰ytet‰‰n aikainterpolaatiossa
 	 int itsFirstModelTimeResolution;
 	 int itsSecondModelTimeResolution;
@@ -297,7 +297,7 @@ class NFmiDataModelDataCombiner : public NFmiDataModifierWithModifierWithMasksAn
 class NFmiDataModifierValidateData_PrForm_T : public NFmiDataModifier
 { 
  public:
-	NFmiDataModifierValidateData_PrForm_T(boost::shared_ptr<NFmiFastQueryInfo> theTemperatureInfo, float theSnowTemperatureLimit, float theRainTemperatureLimit);
+	NFmiDataModifierValidateData_PrForm_T(std::shared_ptr<NFmiFastQueryInfo> theTemperatureInfo, float theSnowTemperatureLimit, float theRainTemperatureLimit);
 	NFmiDataModifierValidateData_PrForm_T(const NFmiDataModifierValidateData_PrForm_T &theOther);
 	NFmiDataModifier* Clone(void) const;
 	virtual float FloatOperation(float theValue);
@@ -307,7 +307,7 @@ class NFmiDataModifierValidateData_PrForm_T : public NFmiDataModifier
 	void SetTimeIndex(unsigned long theIndex);
 	void InitLatlonCache(void);
  protected:
-	boost::shared_ptr<NFmiFastQueryInfo> itsTemperatureInfo;
+	std::shared_ptr<NFmiFastQueryInfo> itsTemperatureInfo;
 	float itsSnowTemperatureLimit;
 	float itsRainTemperatureLimit;
 };
@@ -318,7 +318,7 @@ class NFmiDataModifierValidateData_PrForm_T : public NFmiDataModifier
 class NFmiDataModifierValidateData_T_DP : public NFmiDataModifier
 { 
  public:
-	NFmiDataModifierValidateData_T_DP(boost::shared_ptr<NFmiFastQueryInfo> theTemperatureInfo, boost::shared_ptr<NFmiFastQueryInfo> theRHInfo)
+	NFmiDataModifierValidateData_T_DP(std::shared_ptr<NFmiFastQueryInfo> theTemperatureInfo, std::shared_ptr<NFmiFastQueryInfo> theRHInfo)
 										:NFmiDataModifier()
 										,itsTemperatureInfo(theTemperatureInfo)
 										,itsRHInfo(theRHInfo)
@@ -327,8 +327,8 @@ class NFmiDataModifierValidateData_T_DP : public NFmiDataModifier
 	virtual float FloatOperation(float theValue);
 
  protected:
-	boost::shared_ptr<NFmiFastQueryInfo> itsTemperatureInfo; // sama kuin kopio info muissa modifiereissa ja t‰t‰ juoksutetaan ajassa jo valmiiksi
-	boost::shared_ptr<NFmiFastQueryInfo> itsRHInfo;
+	std::shared_ptr<NFmiFastQueryInfo> itsTemperatureInfo; // sama kuin kopio info muissa modifiereissa ja t‰t‰ juoksutetaan ajassa jo valmiiksi
+	std::shared_ptr<NFmiFastQueryInfo> itsRHInfo;
 	int itsLastTimeIndex; // k‰ytet‰‰n optimoinnissa
 };
 //************** NFmiDataModifierValidateData_T_DP ************************
@@ -338,7 +338,7 @@ class NFmiDataModifierValidateData_T_DP : public NFmiDataModifier
 class NFmiDataModifierValidateData_T_DP_ver2 : public NFmiDataModifier
 { 
  public:
-	NFmiDataModifierValidateData_T_DP_ver2(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+	NFmiDataModifierValidateData_T_DP_ver2(const std::shared_ptr<NFmiFastQueryInfo> &theInfo);
 	NFmiDataModifierValidateData_T_DP_ver2(const NFmiDataModifierValidateData_T_DP_ver2 &theOther);
 	NFmiDataModifier* Clone(void) const;
 	float FloatOperation(float theValue);
@@ -348,7 +348,7 @@ class NFmiDataModifierValidateData_T_DP_ver2 : public NFmiDataModifier
 	void SetTimeIndex(unsigned long theIndex);
 	void InitLatlonCache(void);
 protected:
-	boost::shared_ptr<NFmiFastQueryInfo> itsInfo;
+	std::shared_ptr<NFmiFastQueryInfo> itsInfo;
 	unsigned long itsTIndex;
 	unsigned long itsRHIndex;
 };
@@ -358,9 +358,9 @@ protected:
 class NFmiDataModifierWithModifierWithMasksAndRangeShiftedWithTimeUsingWAvg : public NFmiDataModifierWithModifierWithMasksAndRangeShiftedWithTime
 { 
  public:
-	 NFmiDataModifierWithModifierWithMasksAndRangeShiftedWithTimeUsingWAvg(boost::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy,
+	 NFmiDataModifierWithModifierWithMasksAndRangeShiftedWithTimeUsingWAvg(std::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy,
 		NFmiDataModifier *theDataModifier
-		,boost::shared_ptr<NFmiAreaMaskList> theMaskList
+		,std::shared_ptr<NFmiAreaMaskList> theMaskList
 		,const std::vector<NFmiRect> &theRangeArray)
 		:NFmiDataModifierWithModifierWithMasksAndRangeShiftedWithTime(theQueryInfoCopy, theDataModifier, theMaskList,theRangeArray)
 		{};

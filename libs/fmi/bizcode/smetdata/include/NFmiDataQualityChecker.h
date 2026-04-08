@@ -11,6 +11,7 @@
 #include "NFmiDataMatrix.h"
 #include "NFmiMetTime.h"
 #include "NFmiParam.h"
+#include "NFmiPoint.h"
 
 class NFmiQueryData;
 class NFmiFastQueryInfo;
@@ -20,7 +21,7 @@ class NFmiThreadCallBacks;
 class NFmiGridValuesCheck
 {
 public:
-	static const NFmiPoint gMissingGridPoint; // Tätä missing grid-pistettä (-1, -1) voi käyttää, jos haluaa ilmaista että jokin grid-piste ei mahdollisesti ole initialisoitu
+	static const NFmiPoint gMissingGridPoint; // Tï¿½tï¿½ missing grid-pistettï¿½ (-1, -1) voi kï¿½yttï¿½ï¿½, jos haluaa ilmaista ettï¿½ jokin grid-piste ei mahdollisesti ole initialisoitu
 
 	NFmiGridValuesCheck(void);
 
@@ -58,27 +59,27 @@ public:
 private:
 	double CalculateProcent(size_t theHitCount, size_t theTotalCount);
 
-	NFmiMetTime itsMissTime; // näitä eri aikoja tarvitaan oikeastaan vasta kun statistiikkaa kumuloidaan
+	NFmiMetTime itsMissTime; // nï¿½itï¿½ eri aikoja tarvitaan oikeastaan vasta kun statistiikkaa kumuloidaan
 	NFmiMetTime itsMinTime;
 	NFmiMetTime itsMaxTime;
 	NFmiParam itsParam;
-	size_t itsLocationCheckingStep; // kuinka monen hilapisteen yli hypätään tarkastuksissa, jos 0, tarkastetaan kaikki (nopeuttaa, jos ei tarkasteta kaikkia pisteitä)
+	size_t itsLocationCheckingStep; // kuinka monen hilapisteen yli hypï¿½tï¿½ï¿½n tarkastuksissa, jos 0, tarkastetaan kaikki (nopeuttaa, jos ei tarkasteta kaikkia pisteitï¿½)
 	double itsMissingValueProsent;
 	size_t itsCheckedLocationCount;
 	size_t itsMissingValueCount;
 	float itsMinValue;
 	float itsMaxValue;
 	bool fChecksDone;
-	bool fParamFound; // löytyikö parametri tutkittavasta datasta
+	bool fParamFound; // lï¿½ytyikï¿½ parametri tutkittavasta datasta
 	NFmiPoint itsMinValueLatlon; 
-	NFmiPoint itsMinValueGridPoint; // hilan x, y koordinaatti, indeksit alkavat 0:sta ja vasen ala kulma on 0,0 ja oikea yläkulma on m-1, n-1
+	NFmiPoint itsMinValueGridPoint; // hilan x, y koordinaatti, indeksit alkavat 0:sta ja vasen ala kulma on 0,0 ja oikea ylï¿½kulma on m-1, n-1
 	NFmiPoint itsMaxValueLatlon;
 	NFmiPoint itsMaxValueGridPoint;
 	NFmiPoint itsMissingValueLatlon; // 1. puuttuvan arvo sijainti, muiden puuttuvien pisteiden paikkaa ei talleteta
 	NFmiPoint itsMissingValueGridPoint;
 };
 
-// tässä info luokassa on eri parametreille annettuja varoitus ja virhe rajoja
+// tï¿½ssï¿½ info luokassa on eri parametreille annettuja varoitus ja virhe rajoja
 class NFmiDataParamCheckingInfo
 {
 public:
@@ -143,12 +144,12 @@ private:
 	void CalcCombinedParamChecks(void);
 
 	std::vector<NFmiDataParamCheckingInfo> itsDataParamCheckingInfos;
-	NFmiDataMatrix<NFmiGridValuesCheck> itsValueCheckMatrix; // data on täällä param, time järjestyksessä x-indeksi siis parametri ja y-indeksi on aika
-	std::vector<NFmiGridValuesCheck> itsCombinedParamChecks; // tässä on koosteet jokaisesta parametrista (yli kaikkien aikojen)
-	std::unique_ptr<NFmiQueryData> itsDataPtr; // data välitetään tänne ja säilytetään unique_ptr:ssa, siksi että olisi varmaa että 
-											// tämä luokka omistaa annetun datan, eikä tule ongelmia eri threadien välillä.
-	bool fUse; // onko checker käytössä vai ei
-	bool fAutomatic; // toimiiko checker työ-threadissa automaattisesti, vaiko toimitaanko vai on-demandina eli nappia painamalla
+	NFmiDataMatrix<NFmiGridValuesCheck> itsValueCheckMatrix; // data on tï¿½ï¿½llï¿½ param, time jï¿½rjestyksessï¿½ x-indeksi siis parametri ja y-indeksi on aika
+	std::vector<NFmiGridValuesCheck> itsCombinedParamChecks; // tï¿½ssï¿½ on koosteet jokaisesta parametrista (yli kaikkien aikojen)
+	std::unique_ptr<NFmiQueryData> itsDataPtr; // data vï¿½litetï¿½ï¿½n tï¿½nne ja sï¿½ilytetï¿½ï¿½n unique_ptr:ssa, siksi ettï¿½ olisi varmaa ettï¿½ 
+											// tï¿½mï¿½ luokka omistaa annetun datan, eikï¿½ tule ongelmia eri threadien vï¿½lillï¿½.
+	bool fUse; // onko checker kï¿½ytï¿½ssï¿½ vai ei
+	bool fAutomatic; // toimiiko checker tyï¿½-threadissa automaattisesti, vaiko toimitaanko vai on-demandina eli nappia painamalla
 	bool fViewOn; // Onko dialogi avattuna vai ei
 	std::string itsBaseNameSpace;
 };

@@ -10,9 +10,9 @@
 #include "boost/math/special_functions/round.hpp"
 
 NFmiStationWindBarbView::NFmiStationWindBarbView
-								 (int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+								 (int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 								 ,NFmiToolBox * theToolBox
-								 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+								 ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 								 ,FmiParameterName theParamId
 								 ,NFmiPoint theOffSet
 								 ,NFmiPoint theSize
@@ -129,7 +129,7 @@ int NFmiStationWindBarbView::GetApproxmationOfDataTextLength(std::vector<float>*
 	return 1;
 }
 
-float NFmiStationWindBarbView::InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, const NFmiPoint& theLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+float NFmiStationWindBarbView::InterpolatedToolTipValue(const NFmiMetTime &theUsedTime, const NFmiPoint& theLatlon, std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
     if(metaWindParamUsage.MakeMetaWindVectorParam())
     {

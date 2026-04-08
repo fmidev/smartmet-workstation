@@ -24,6 +24,7 @@
 //**********************************************************
 #include "NFmiMaskParamsView.h"
 #include "NFmiString.h"
+#include <memory>
 #include "NFmiToolBox.h"
 #include "NFmiAreaMaskList.h"
 #include "NFmiAreaMask.h"
@@ -34,7 +35,7 @@
 //--------------------------------------------------------
 // Constructor/Destructor 
 //--------------------------------------------------------
-NFmiMaskParamsView::NFmiMaskParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex)
+NFmiMaskParamsView::NFmiMaskParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, std::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex)
 :NFmiParamCommandView(theMapViewDescTopIndex, theRect, theToolBox, theDrawParam, theRowIndex, theColumnIndex, false)
 {
 }
@@ -46,7 +47,7 @@ void NFmiMaskParamsView::DrawData(void)
 {
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, itsToolBox->GetTextAlignment(), true, &GetFrame());
 
-    boost::shared_ptr<NFmiAreaMaskList> maskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
+    auto maskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
     if(maskList)
     {
         itsDrawingEnvironment.SetFontSize(itsFontSize);
@@ -55,7 +56,7 @@ void NFmiMaskParamsView::DrawData(void)
 		for(maskList->Reset(); maskList->Next(); zeroBasedRowIndex++)
         {
             auto parameterRowRect = CalcParameterRowRect(zeroBasedRowIndex);
-            boost::shared_ptr<NFmiAreaMask> mask = maskList->Current();
+            std::shared_ptr<NFmiAreaMask> mask = maskList->Current();
             NFmiInfoData::Type dataType = mask->GetDataType();
             if(dataType == NFmiInfoData::kViewable || dataType == NFmiInfoData::kStationary)
                 itsDrawingEnvironment.SetFrameColor(NFmiColor(0.f, 0.5f, 0.f));
@@ -87,10 +88,10 @@ bool NFmiMaskParamsView::LeftButtonUp(const NFmiPoint& thePlace, unsigned long t
 	if(IsIn(thePlace))
 	{
         int index = CalcParameterRowIndex(thePlace);
-		boost::shared_ptr<NFmiAreaMaskList> maskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
+		auto maskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
 		if(maskList->Index(index))
 		{
-			boost::shared_ptr<NFmiAreaMask> mask = maskList->Current();
+			std::shared_ptr<NFmiAreaMask> mask = maskList->Current();
 			if(mask)
 			{
 				mask->Enable(!mask->IsEnabled());
@@ -109,11 +110,11 @@ NFmiRect NFmiMaskParamsView::CalcSize(void)
 {
     NFmiRect returnRect(GetFrame());
     int lineCount = 1; // minimi
-    boost::shared_ptr<NFmiAreaMaskList> maskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
+    auto maskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
     if(maskList && maskList->NumberOfItems())
         lineCount = maskList->NumberOfItems();
 
-    // ruudun korkeus on rivien määrä*rivinkorkeus + viidesosa rivin korkeudesta (vähän tilaa pohjalle)
+    // ruudun korkeus on rivien mï¿½ï¿½rï¿½*rivinkorkeus + viidesosa rivin korkeudesta (vï¿½hï¿½n tilaa pohjalle)
     double heigth = lineCount * itsLineHeight + 0.5 * itsLineHeight;
     returnRect.Bottom(returnRect.Top() + heigth);
     return returnRect;

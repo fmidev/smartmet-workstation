@@ -604,7 +604,7 @@ void CFmiTempDlg::UpdateProducerList(void)
 	// 2. käy lista läpi ja katso mille tuottajalle löytyy dataa
 	for(const auto possibleProducer : possibleProdList)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->InfoOrganizer()->FindSoundingInfo(possibleProducer, 0, NFmiInfoOrganizer::ParamCheckFlags(true));
+		std::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->InfoOrganizer()->FindSoundingInfo(possibleProducer, 0, NFmiInfoOrganizer::ParamCheckFlags(true));
 	// 3. laita ne tuottajat, joille löytyi dataa itsProducerListWithData-listaan, tai jos ne ovat serveriltä haettavaa dataa
 		if(info || possibleProducer.useServer() || ::FindProducer(selectionVec, possibleProducer.GetName())) // laitetaan sittenkin kaikki tuottajat aina listaan, että datojen reload ei tuhoa listaa (testi)
 			tmpProducerListWithData.push_back(possibleProducer);

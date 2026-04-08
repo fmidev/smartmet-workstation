@@ -50,6 +50,7 @@
 #include "TimeSerialModification.h"
 #include "ParamHandlerViewFunctions.h"
 #include "ColorStringFunctions.h"
+#include "DataMatrixInterpolation.h"
 
 #include <stdexcept>
 #include "boost/math/special_functions/round.hpp"
@@ -129,8 +130,8 @@ static void DrawLineWithToolBox(const NFmiPoint& theStartingPoint, const NFmiPoi
 // Constructor/Destructor
 //--------------------------------------------------------
 
-static boost::shared_ptr<NFmiArea> s_emptyArea;
-static boost::shared_ptr<NFmiDrawParam> s_emptyDrawParam;
+static std::shared_ptr<NFmiArea> s_emptyArea;
+static std::shared_ptr<NFmiDrawParam> s_emptyDrawParam;
 
 NFmiCrossSectionView::NFmiCrossSectionView(NFmiToolBox * theToolBox
                                  ,int viewGridRowNumber
@@ -288,7 +289,7 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 	itsArea = GetZoomedArea();
 
 	//************** QUICKFIX!!!!! *******************
-	boost::shared_ptr<NFmiDrawParam> oldDrawParam = itsDrawParam;
+	std::shared_ptr<NFmiDrawParam> oldDrawParam = itsDrawParam;
 	PreCalculateTrajectoryLatlonPoints();
     itsCtrlViewDocumentInterface->CrossSectionSystem()->CalcMinorPoints(itsArea); // p�ivitet��n poikkileikkaus pisteet
     itsCtrlViewDocumentInterface->CrossSectionSystem()->CalcRouteTimes(); // t�m�kin pit�� varmistaa
@@ -367,7 +368,7 @@ void NFmiCrossSectionView::Draw(NFmiToolBox *theGTB)
 	}
 	//************** QUICKFIX!!!!! *******************
 	itsDrawParam = oldDrawParam; // laitetaan mik� oli sitten ennen piirtoa drawParam takaisin
-	itsInfo = boost::shared_ptr<NFmiFastQueryInfo>();
+	itsInfo = std::shared_ptr<NFmiFastQueryInfo>();
 	//************** QUICKFIX!!!!! *******************
     CleanGdiplus();
 }
@@ -385,7 +386,7 @@ void NFmiCrossSectionView::DrawLegends()
 
         for(const auto& drawParam : *drawParamList)
         {
-            auto drawParamPtr = boost::make_shared<NFmiDrawParam>(*drawParam);
+            auto drawParamPtr = std::make_shared<NFmiDrawParam>(*drawParam);
             auto fastInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParamPtr, false, true);
             NFmiColorContourLegendValues colorContourLegendValues(drawParamPtr, fastInfo);
             if(colorContourLegendValues.useLegend())
@@ -692,7 +693,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 				for(dpList->Reset(); dpList->Next(); )
 				{
 					itsDrawParam = dpList->Current(); // asetetaan todella k�ytetty drawParam k�ytt��n
-					boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, true, true, fGetCurrentDataFromQ2Server);
+					std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, true, true, fGetCurrentDataFromQ2Server);
 					if(info == 0)
 						continue; // t�m� on virhe tilanne oikeasti!!!!
 					DoTimeInterpolationSettingChecks(info);
@@ -734,7 +735,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
                         // 1. On useita parametreja k�yt�ss� (koska vain viimeisen piirretyn layerin arvot j��v�t k�ytettyyn matriisiin)
                         // 2. Jos parametri on piilotettu (t�ll�in matriisiin ei lasketa arvoja ollenkaan)
 						NFmiPoint projectedPoint(itsDataViewFrame.Project(theRelativePoint));
-						value = itsIsolineValues.InterpolatedValue(projectedPoint, itsParamId);
+						value = DataMatrixInterpolation::InterpolatedValue(itsIsolineValues, projectedPoint, itsParamId);
 					}
 
 					str += paramNameString;
@@ -760,7 +761,7 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 	return str;
 }
 
-bool NFmiCrossSectionView::IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
+bool NFmiCrossSectionView::IsCrossSectionMacroParamOk(std::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
 {
 	NFmiExtraMacroParamData extraMacroParamData;
 	NFmiIsoLineData isoLineData;
@@ -773,7 +774,7 @@ bool NFmiCrossSectionView::IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDraw
 }
 
 // HUOM! T�m� ei tue tuulen meta parametreja, eli mm. tooltippiin ei saada oikeita arvoja niiss� tapauksissa.
-float NFmiCrossSectionView::GetLevelValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, bool doMetaParamCheck)
+float NFmiCrossSectionView::GetLevelValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, bool doMetaParamCheck)
 {
     if(theInfo)
     {
@@ -793,7 +794,7 @@ float NFmiCrossSectionView::GetLevelValue(boost::shared_ptr<NFmiFastQueryInfo> &
     return kFloatMissing;
 }
 
-float NFmiCrossSectionView::GetLevelValueForMetaParam(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime)
+float NFmiCrossSectionView::GetLevelValueForMetaParam(std::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime)
 {
     NFmiFastInfoUtils::QueryInfoParamStateRestorer fastInfoParamStateRestorer(*theInfo);
     auto paramId = itsDrawParam->Param().GetParamIdent();
@@ -888,7 +889,7 @@ int NFmiCrossSectionView::CalcHorizontalPointCount(void)
     auto crossSectionMode = itsCtrlViewDocumentInterface->CrossSectionSystem()->GetCrossMode();
     if(crossSectionMode == NFmiCrossSectionSystem::kTime || crossSectionMode == NFmiCrossSectionSystem::kObsAndFor)
 	{ // jos ollaan aika-leikkaus moodissa, pit�� katsoa kuinka monta aikaa leikkauksessa on
-		boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, true, true);
+		std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, true, true);
 		if(info)
 		{
 			NFmiTimeBag times = GetUsedTimeBagForDataCalculations();
@@ -1231,7 +1232,7 @@ void NFmiCrossSectionView::FillXYMatrix(NFmiIsoLineData &theIsoLineData, NFmiDat
 	}
 }
 
-boost::shared_ptr<NFmiArea> NFmiCrossSectionView::GetZoomedArea(void)
+std::shared_ptr<NFmiArea> NFmiCrossSectionView::GetZoomedArea(void)
 {
 	return itsCtrlViewDocumentInterface->GetMapHandlerInterface(0)->Area(); // tassa haetaan vain p��karttan�yt�n area
 }
@@ -1243,7 +1244,7 @@ void NFmiCrossSectionView::FillTrajectoryCrossSectionData(NFmiDataMatrix<float> 
 	FillRouteCrossSectionData(theValues, theIsoLineData, thePressures, points, times);
 }
 
-void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam, CrossSectionTooltipData *possibleTooltipData, NFmiExtraMacroParamData* possibleExtraMacroParamData)
+void NFmiCrossSectionView::FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, std::shared_ptr<NFmiDrawParam>& theUsedDrawParam, CrossSectionTooltipData *possibleTooltipData, NFmiExtraMacroParamData* possibleExtraMacroParamData)
 {
     if(!possibleTooltipData)
     {
@@ -1463,7 +1464,7 @@ static void InterpolateSoundingDatasInMatrix(NFmiDataMatrix<float> &theValues, v
 		throw runtime_error("Error in NFmiCrossSectionView - InterpolateSoundingDatasInMatrix : coudn't find any data times and that shouldn't be possible.");
 }
 
-static void FillCrossSectionMatrixWithSoundingData(NFmiDataMatrix<float> &theValues, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, std::vector<float> &thePressures, int theTimeIndex)
+static void FillCrossSectionMatrixWithSoundingData(NFmiDataMatrix<float> &theValues, std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::shared_ptr<NFmiDrawParam> &theDrawParam, std::vector<float> &thePressures, int theTimeIndex)
 {
 	FmiParameterName parId = static_cast<FmiParameterName>(theDrawParam->Param().GetParamIdent());
 	NFmiSoundingData soundingData;
@@ -1474,7 +1475,7 @@ static void FillCrossSectionMatrixWithSoundingData(NFmiDataMatrix<float> &theVal
 	}
 }
 
-static void FillBeforeStartTimeWithCrossSectionValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiTimeBag &theTimes, boost::shared_ptr<NFmiDrawParam> &theDrawParam, std::vector<float> &thePressures, int &theBeforeStartIndex, NFmiDataMatrix<float> &theBeforeStartValues)
+static void FillBeforeStartTimeWithCrossSectionValues(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiTimeBag &theTimes, std::shared_ptr<NFmiDrawParam> &theDrawParam, std::vector<float> &thePressures, int &theBeforeStartIndex, NFmiDataMatrix<float> &theBeforeStartValues)
 {
 	if(theInfo->FindNearestTime(theTimes.FirstTime(), kBackward, 360))
 	{
@@ -1490,7 +1491,7 @@ static void FillBeforeStartTimeWithCrossSectionValues(boost::shared_ptr<NFmiFast
 	}
 }
 
-static void FillCrossSectionMatrixWithObservedSoundings(NFmiDataMatrix<float> &theValues, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiTimeBag &theTimes, std::vector<float> &thePressures, int &theFirstForecastTimeIndex, std::vector<NFmiMetTime> &theObsForModeFoundObsTimes, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
+static void FillCrossSectionMatrixWithObservedSoundings(NFmiDataMatrix<float> &theValues, std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiTimeBag &theTimes, std::vector<float> &thePressures, int &theFirstForecastTimeIndex, std::vector<NFmiMetTime> &theObsForModeFoundObsTimes, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage)
 {
 	bool foundDataYet = false;
 	int firstDataIndex = -1;
@@ -1550,7 +1551,7 @@ int NFmiCrossSectionView::FillObsPartOfTimeCrossSectionData(NFmiDataMatrix<float
 	theValues.Resize(times.GetSize(), thePressures.size(), kFloatMissing);
 
 	int firstForecastTimeIndex = -1;
-	boost::shared_ptr<NFmiFastQueryInfo> soundingInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->GetPrioritizedSoundingInfo(NFmiInfoOrganizer::ParamCheckFlags(true));
+	std::shared_ptr<NFmiFastQueryInfo> soundingInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->GetPrioritizedSoundingInfo(NFmiInfoOrganizer::ParamCheckFlags(true));
 	if(soundingInfo && soundingInfo->NearestLocation(NFmiLocation(point), 500 * 1000))
 	{
 		crossSectionSystem->ObsForModeLocation(*soundingInfo->Location());
@@ -1584,12 +1585,12 @@ void NFmiCrossSectionView::FillObsAndForCrossSectionData(NFmiDataMatrix<float> &
     {
 		NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pit�� tehd� kopio
 		NFmiPoint point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. p��piste aikapoikkileikkauksen kohteeksi
-		theIsoLineData.itsInfo->TimeCrossSectionValuesLogP(theValues, thePressures, point, times, itsFirstForecastTimeIndex);
+		theValues = theIsoLineData.itsInfo->TimeCrossSectionValuesLogP(thePressures, point, times, itsFirstForecastTimeIndex);
     }
 }
 
 template<typename GetDataFunction>
-bool CalcCrossSectionMetaWindParamMatrix(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiDataMatrix<float> &theValues, std::vector<float> &thePressures, unsigned long wantedParamId, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, GetDataFunction getDataFunction)
+bool CalcCrossSectionMetaWindParamMatrix(const std::shared_ptr<NFmiFastQueryInfo> &info, NFmiDataMatrix<float> &theValues, std::vector<float> &thePressures, unsigned long wantedParamId, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, GetDataFunction getDataFunction)
 {
     if(metaWindParamUsage.HasWsAndWd())
     {
@@ -1656,7 +1657,7 @@ bool NFmiCrossSectionView::FillRouteCrossSectionDataForMetaWindParam(NFmiDataMat
 	if(doUserDrawData)
 		return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float>& valuesOut) { valuesOut = NFmiFastQueryInfo::CalcRouteCrossSectionLeveldata(*info, theLatlonPoints, thePointTimes); });
 	else
-		return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float> &valuesOut) {info->RouteCrossSectionValuesLogP(valuesOut, thePressures, theLatlonPoints, thePointTimes); });
+		return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float> &valuesOut) {valuesOut = info->RouteCrossSectionValuesLogP(thePressures, theLatlonPoints, thePointTimes); });
 }
 
 void NFmiCrossSectionView::FillRouteCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, std::vector<float>& thePressures)
@@ -1675,7 +1676,7 @@ void NFmiCrossSectionView::FillRouteCrossSectionData(NFmiDataMatrix<float> &theV
         FillRouteCrossSectionDataForMetaWindParam(theValues, theIsoLineData, thePressures, wantedParamId, false, theLatlonPoints, thePointTimes);
     else
     {
-        theIsoLineData.itsInfo->RouteCrossSectionValuesLogP(theValues, thePressures, theLatlonPoints, thePointTimes);
+        theValues = theIsoLineData.itsInfo->RouteCrossSectionValuesLogP(thePressures, theLatlonPoints, thePointTimes);
     }
 
 	FillRouteCrossSectionUserDrawData(theIsoLineData, theLatlonPoints, thePointTimes);
@@ -1689,7 +1690,7 @@ bool NFmiCrossSectionView::FillTimeCrossSectionDataForMetaWindParam(NFmiDataMatr
 	if(doUserDrawData)
 		return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float>& valuesOut) { valuesOut = NFmiFastQueryInfo::CalcTimeCrossSectionLeveldata(*info, point, times); });
 	else
-		return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float> &valuesOut) {info->TimeCrossSectionValuesLogP(valuesOut, thePressures, point, times, theStartTimeIndex); });
+		return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float> &valuesOut) {valuesOut = info->TimeCrossSectionValuesLogP(thePressures, point, times, theStartTimeIndex); });
 }
 
 void NFmiCrossSectionView::FillTimeCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures)
@@ -1703,7 +1704,7 @@ void NFmiCrossSectionView::FillTimeCrossSectionData(NFmiDataMatrix<float> &theVa
         // x-akseli t�ytet��n timebagist� tulevilla ajoilla
         NFmiTimeBag times(GetUsedTimeBagForDataCalculations()); // pit�� tehd� kopio
         NFmiPoint point = itsCtrlViewDocumentInterface->CrossSectionSystem()->StartPoint(); // otetaan 1. p��piste aikapoikkileikkauksen kohteeksi
-        theIsoLineData.itsInfo->TimeCrossSectionValuesLogP(theValues, thePressures, point, times);
+        theValues = theIsoLineData.itsInfo->TimeCrossSectionValuesLogP(thePressures, point, times);
     }
 
 	FillTimeCrossSectionUserDrawData(theIsoLineData);
@@ -1716,10 +1717,10 @@ bool NFmiCrossSectionView::FillCrossSectionDataForMetaWindParam(NFmiDataMatrix<f
 	if(doUserDrawData)
 		return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float>& valuesOut) { valuesOut = NFmiFastQueryInfo::CalcCrossSectionLeveldata(*info, points, theIsoLineData.itsTime); });
 	else
-		return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float> &valuesOut) {info->CrossSectionValuesLogP(valuesOut, theIsoLineData.itsTime, thePressures, points); });
+		return ::CalcCrossSectionMetaWindParamMatrix(info, theValues, thePressures, wantedParamId, metaWindParamUsage, [&](NFmiDataMatrix<float> &valuesOut) {valuesOut = info->CrossSectionValuesLogP(theIsoLineData.itsTime, thePressures, points); });
 }
 
-static bool IsContourDrawUsed(const boost::shared_ptr<NFmiDrawParam> &drawParam)
+static bool IsContourDrawUsed(const std::shared_ptr<NFmiDrawParam> &drawParam)
 {
 	auto drawStyle = drawParam->GridDataPresentationStyle();
 	return (drawStyle == NFmiMetEditorTypes::View::kFmiColorContourView) || (drawStyle == NFmiMetEditorTypes::View::kFmiColorContourIsoLineView) || (drawStyle == NFmiMetEditorTypes::View::kFmiQuickColorContourView);
@@ -1735,7 +1736,7 @@ void NFmiCrossSectionView::FillCrossSectionData(NFmiDataMatrix<float> &theValues
     else
     {
         const std::vector<NFmiPoint> &points = itsCtrlViewDocumentInterface->CrossSectionSystem()->MinorPoints();
-        theIsoLineData.itsInfo->CrossSectionValuesLogP(theValues, theIsoLineData.itsTime, thePressures, points);
+        theValues = theIsoLineData.itsInfo->CrossSectionValuesLogP(theIsoLineData.itsTime, thePressures, points);
     }
 
     FillCrossSectionUserDrawData(theIsoLineData);
@@ -1770,8 +1771,7 @@ NFmiDataMatrix<NFmiPoint> NFmiCrossSectionView::CalcRelativeCoordinatesFromPress
 static NFmiDataMatrix<float> MakePressureLevelBasedPressureMatrix(size_t xSize, NFmiFastQueryInfo &usedInfo)
 {
 	NFmiDataMatrix<float> pressureValues(xSize, usedInfo.SizeLevels(), kFloatMissing);
-	const auto& pressureLevelValues = usedInfo.PressureLevelDataPressures();
-	std::vector<float> pressureLevelValuesBS(pressureLevelValues.begin(), pressureLevelValues.end());
+	std::vector<float> pressureLevelValuesBS = usedInfo.CalcPressureLevelDataPressures();
 	for(size_t pressureColumnIndex = 0; pressureColumnIndex < pressureValues.NX(); pressureColumnIndex++)
 	{
 		auto& pressureColumn = pressureValues[pressureColumnIndex];
@@ -1996,7 +1996,7 @@ void NFmiCrossSectionView::FillRouteCrossSectionUserDrawData(NFmiIsoLineData& th
 	}
 }
 
-static bool DoTimeBagSpacingOut(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+static bool DoTimeBagSpacingOut(CtrlViewDocumentInterface *theCtrlViewDocumentInterface, std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
 	if(theDrawParam && theDrawParam->Param().GetParamIdent() == kFmiWindVectorMS)
 	{
@@ -2645,7 +2645,7 @@ void NFmiCrossSectionView::DrawHeightScale(void)
 	}
 }
 
-std::vector<float> NFmiCrossSectionView::CalcCurrentLevelPressures(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+std::vector<float> NFmiCrossSectionView::CalcCurrentLevelPressures(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	std::vector<float> values;
 	if(theInfo && theInfo->Param(kFmiPressure))
@@ -2686,25 +2686,25 @@ std::vector<float> NFmiCrossSectionView::CalcCurrentLevelPressures(boost::shared
 	return values;
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiCrossSectionView::GetFirstHybridInfo(void)
+std::shared_ptr<NFmiFastQueryInfo> NFmiCrossSectionView::GetFirstHybridInfo(void)
 {
 	NFmiDrawParamList *dpList = itsCtrlViewDocumentInterface->CrossSectionViewDrawParamList(itsViewGridRowNumber);
 	if(dpList)
 	{
 		for(dpList->Reset(); dpList->Next(); )
 		{
-			boost::shared_ptr<NFmiDrawParam> drawParam = dpList->Current();
-			boost::shared_ptr<NFmiFastQueryInfo> hybridInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParam, true, false);
+			std::shared_ptr<NFmiDrawParam> drawParam = dpList->Current();
+			std::shared_ptr<NFmiFastQueryInfo> hybridInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParam, true, false);
 			if(hybridInfo && hybridInfo->DataType() == NFmiInfoData::kHybridData)
 				return hybridInfo;
 		}
 	}
-	return boost::shared_ptr<NFmiFastQueryInfo>();
+	return std::shared_ptr<NFmiFastQueryInfo>();
 }
 
 void NFmiCrossSectionView::DrawHybridLevels(void)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> hybridInfo = GetFirstHybridInfo();
+	std::shared_ptr<NFmiFastQueryInfo> hybridInfo = GetFirstHybridInfo();
 	if(hybridInfo) // vain 1. mallipinta datan levelit piirret��n
 	{ // piirret��n hybridilevelit oikeille kohdilleen poikkileikkaukseen
 		if(itsCtrlViewDocumentInterface->CrossSectionSystem()->ShowHybridLevels())
@@ -2769,7 +2769,7 @@ static bool DrawBatymetria(NFmiDrawParamList &theDrawParamList, NFmiInfoOrganize
 	if(theDrawParamList.Index(1)) // etsit��n 1. drawParam
 	{
 		auto currentDrawParam = theDrawParamList.Current();
-		boost::shared_ptr<NFmiFastQueryInfo> firstDataInfo = theInfoOrganizer.Info(currentDrawParam, true, true);
+		std::shared_ptr<NFmiFastQueryInfo> firstDataInfo = theInfoOrganizer.Info(currentDrawParam, true, true);
 		if(firstDataInfo && firstDataInfo->SizeLevels() > 1) // datassa pit�� olla useita leveleit�
 		{
 			for(firstDataInfo->ResetLevel(); firstDataInfo->NextLevel(); )
@@ -2806,8 +2806,8 @@ void NFmiCrossSectionView::DrawGround(void)
 		{
 			for(dpList->Reset(); dpList->Next(); )
 			{
-				boost::shared_ptr<NFmiDrawParam> drawParam = dpList->Current();
-				boost::shared_ptr<NFmiFastQueryInfo> groundInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kViewable, *(drawParam->Param().GetProducer()), true);
+				std::shared_ptr<NFmiDrawParam> drawParam = dpList->Current();
+				std::shared_ptr<NFmiFastQueryInfo> groundInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kViewable, *(drawParam->Param().GetProducer()), true);
 				if(groundInfo && groundInfo->Param(kFmiPressureAtStationLevel))
 				{
 					if(DrawModelGroundLevel(groundInfo, envi, false))
@@ -2815,7 +2815,7 @@ void NFmiCrossSectionView::DrawGround(void)
 				}
 
 				// Haetaan paras verkikaali data, mik� mallista l�ytyy (1. hybrid-data, 2. pressure-data), ja jos se oli hybrid, piirret��n sen alin kerros
-				boost::shared_ptr<NFmiFastQueryInfo> hybridInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(*(drawParam->Param().GetProducer()));
+				std::shared_ptr<NFmiFastQueryInfo> hybridInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(*(drawParam->Param().GetProducer()));
 				if(hybridInfo && hybridInfo->DataType() == NFmiInfoData::kHybridData)
 				{
 					if(DrawModelGroundLevel(hybridInfo, envi, true))
@@ -2956,7 +2956,7 @@ static void ClearValueVectorIfOnlyMissingValues(std::vector<float>& values)
 
 // Piirret��n mallista saatu karkea maanpinta profiili n�ytt��n.
 // Palauttaa true, jos piirretty jotain, muuten false.
-bool NFmiCrossSectionView::DrawModelGroundLevel(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDrawingEnvironment &theEnvi, bool fUseHybridCalculations)
+bool NFmiCrossSectionView::DrawModelGroundLevel(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDrawingEnvironment &theEnvi, bool fUseHybridCalculations)
 {
 	if(theInfo)
 	{
@@ -3012,7 +3012,7 @@ void NFmiCrossSectionView::CalcRouteDistances(void)
 void NFmiCrossSectionView::CalcGroundHeights(void) //NFmiSmartInfo *theInfo)
 {
 	// lasketaan topo-datasta maanpinta
-	boost::shared_ptr<NFmiFastQueryInfo> topoInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kStationary);
+	std::shared_ptr<NFmiFastQueryInfo> topoInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kStationary);
 	if(topoInfo && topoInfo->Param(kFmiTopoGraf))
 	{
 		topoInfo->FirstLevel();
@@ -3049,7 +3049,7 @@ void NFmiCrossSectionView::CalcGroundHeights(void) //NFmiSmartInfo *theInfo)
 	}
 }
 
-void NFmiCrossSectionView::CalcModelGroundPressures(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+void NFmiCrossSectionView::CalcModelGroundPressures(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	itsModelGroundPressures.clear();
 	if(theInfo && theInfo->Param(kFmiPressure))
@@ -3094,7 +3094,7 @@ void NFmiCrossSectionView::CalcModelGroundPressures(boost::shared_ptr<NFmiFastQu
 	}
 }
 
-void NFmiCrossSectionView::CalcModelPressuresAtStation(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+void NFmiCrossSectionView::CalcModelPressuresAtStation(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	itsModelGroundPressures.clear();
 	if(theInfo && theInfo->Param(kFmiPressureAtStationLevel))

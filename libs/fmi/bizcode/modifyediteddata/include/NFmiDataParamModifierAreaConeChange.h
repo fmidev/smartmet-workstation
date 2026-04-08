@@ -37,11 +37,11 @@ class NFmiArea;
 class NFmiDataParamModifierAreaConeChange : public NFmiDataParamModifier
 {
  public:
-    NFmiDataParamModifierAreaConeChange (boost::shared_ptr<NFmiFastQueryInfo> theInfo
-										,boost::shared_ptr<NFmiDrawParam> &theDrawParam
-										,boost::shared_ptr<NFmiAreaMaskList> &theMaskList
-										,const boost::shared_ptr<NFmiArea> &theZoomedArea
-										,const boost::shared_ptr<NFmiArea> &theOriginalArea
+    NFmiDataParamModifierAreaConeChange (std::shared_ptr<NFmiFastQueryInfo> theInfo
+										,std::shared_ptr<NFmiDrawParam> &theDrawParam
+										,std::shared_ptr<NFmiAreaMaskList> &theMaskList
+										,const std::shared_ptr<NFmiArea> &theZoomedArea
+										,const std::shared_ptr<NFmiArea> &theOriginalArea
 										,const NFmiPoint& theLatLon
 										,double theRadius, double theFactor
 										,NFmiMetEditorTypes::Mask theAreaMask
@@ -60,8 +60,8 @@ class NFmiDataParamModifierAreaConeChange : public NFmiDataParamModifier
 	NFmiPoint itsModifyingCenterInXY;
 	double itsModificationRange;
 	double itsModifyFactor;
-	boost::shared_ptr<NFmiArea> itsZoomedArea;
-	boost::shared_ptr<NFmiArea> itsOriginalArea;
+	std::shared_ptr<NFmiArea> itsZoomedArea;
+	std::shared_ptr<NFmiArea> itsOriginalArea;
 	NFmiRect itsRelativeCheckRect; // k‰ytet‰‰n pikatarkastukseen onko currentti paikka mahdollisesti halutun ympyr‰n sis‰ll‰
 	int itsLimitingOption; // 0=ei rajoitusta, 1=ei alle, 2=ei yli ja 3=abs. arvon asetus
 	double itsLimitingValue; // yll‰ olevasta asetuksista riippuen t‰m‰ voi olla muokkausta rajoittava raja arvo
@@ -74,10 +74,10 @@ class NFmiDataParamModifierAreaConeChange : public NFmiDataParamModifier
 class NFmiDataParamModifierAreaCircleSetValue : public NFmiDataParamModifierAreaConeChange
 {
 public:
-	NFmiDataParamModifierAreaCircleSetValue(boost::shared_ptr<NFmiFastQueryInfo> theInfo
-		, boost::shared_ptr<NFmiDrawParam>& theDrawParam
-		, boost::shared_ptr<NFmiAreaMaskList>& theMaskList
-		, boost::shared_ptr<NFmiArea>& theArea
+	NFmiDataParamModifierAreaCircleSetValue(std::shared_ptr<NFmiFastQueryInfo> theInfo
+		, std::shared_ptr<NFmiDrawParam>& theDrawParam
+		, std::shared_ptr<NFmiAreaMaskList>& theMaskList
+		, std::shared_ptr<NFmiArea>& theArea
 		, const NFmiPoint& theLatLon
 		, double theRadius, double theValue
 		, NFmiMetEditorTypes::Mask theAreaMask = NFmiMetEditorTypes::kFmiNoMask);

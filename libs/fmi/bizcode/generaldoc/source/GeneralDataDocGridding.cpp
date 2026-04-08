@@ -7,7 +7,7 @@
 #include <stdexcept>
 #endif
 
-void GeneralDataDocGridding::MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea)
+void GeneralDataDocGridding::MakeDrawedInfoVectorForMapView(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, std::shared_ptr<NFmiDrawParam> &theDrawParam, const std::shared_ptr<NFmiArea> &theArea)
 {
     itsDoc->GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
 }

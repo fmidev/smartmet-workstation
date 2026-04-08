@@ -32,11 +32,11 @@
 //--------------------------------------------------------
 // Constructor/Destructor 
 //--------------------------------------------------------
-NFmiDataParamModifierAreaConeChange::NFmiDataParamModifierAreaConeChange(boost::shared_ptr<NFmiFastQueryInfo> theInfo
-																	,boost::shared_ptr<NFmiDrawParam> &theDrawParam
-																	,boost::shared_ptr<NFmiAreaMaskList> &theMaskList
-																	,const boost::shared_ptr<NFmiArea> &theZoomedArea
-																	,const boost::shared_ptr<NFmiArea> &theOriginalArea
+NFmiDataParamModifierAreaConeChange::NFmiDataParamModifierAreaConeChange(std::shared_ptr<NFmiFastQueryInfo> theInfo
+																	,std::shared_ptr<NFmiDrawParam> &theDrawParam
+																	,std::shared_ptr<NFmiAreaMaskList> &theMaskList
+																	,const std::shared_ptr<NFmiArea> &theZoomedArea
+																	,const std::shared_ptr<NFmiArea> &theOriginalArea
 																	,const NFmiPoint& theLatLon
 																	,double theRadius, double theFactor
 																	,NFmiMetEditorTypes::Mask theAreaMask
@@ -167,10 +167,10 @@ float NFmiDataParamModifierAreaConeChange::Calculate2(const float& theValue)
 // ***********************************************************************************
 
 NFmiDataParamModifierAreaCircleSetValue::NFmiDataParamModifierAreaCircleSetValue(
-											 boost::shared_ptr<NFmiFastQueryInfo> theInfo 
-											,boost::shared_ptr<NFmiDrawParam> &theDrawParam
-											,boost::shared_ptr<NFmiAreaMaskList> &theMaskList
-											,boost::shared_ptr<NFmiArea> &theArea
+											 std::shared_ptr<NFmiFastQueryInfo> theInfo 
+											,std::shared_ptr<NFmiDrawParam> &theDrawParam
+											,std::shared_ptr<NFmiAreaMaskList> &theMaskList
+											,std::shared_ptr<NFmiArea> &theArea
 											,const NFmiPoint& theLatLon
 											,double theRadius, double theValue
 											,NFmiMetEditorTypes::Mask theAreaMask)
@@ -178,7 +178,7 @@ NFmiDataParamModifierAreaCircleSetValue::NFmiDataParamModifierAreaCircleSetValue
 									,theDrawParam
 									,theMaskList
 									,theArea
-									,boost::shared_ptr<NFmiArea>()
+									,std::shared_ptr<NFmiArea>()
 									,theLatLon
 									,theRadius
 									,kFloatMissing

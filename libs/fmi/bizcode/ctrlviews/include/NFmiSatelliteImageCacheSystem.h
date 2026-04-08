@@ -7,13 +7,14 @@
 
 #include <list>
 #include <future>
+#include <memory>
 
 #include <boost/noncopyable.hpp>
 
 class NFmiHelpDataInfoSystem;
 class NFmiArea;
 
-// Luokka pitää kokonais cache kaikille eri satelliiteille ja niiden
+// Luokka pitï¿½ï¿½ kokonais cache kaikille eri satelliiteille ja niiden
 // kaikille kanaville (ja alueille jos on eri alueita).
 class NFmiSatelliteImageCacheSystem : public boost::noncopyable
 {
@@ -29,7 +30,7 @@ public:
     NFmiImageHolder FindImage(const NFmiDataIdent &wantedDataIdent, const NFmiMetTime &wantedTime, int maxOffSetInMinutes = 0);
     ChannelCacheItem& FindChannelCache(const NFmiDataIdent &wantedDataIdent);
     NFmiMetTime GetLatestImageTime(const NFmiDataIdent &wantedDataIdent);
-    boost::shared_ptr<NFmiArea> ImageChannelArea(const NFmiDataIdent &wantedDataIdent);
+    std::shared_ptr<NFmiArea> ImageChannelArea(const NFmiDataIdent &wantedDataIdent);
     void DoCacheFileChecks();
     void DoLoadingStatusChecks();
     void ResetImages();
@@ -42,7 +43,7 @@ public:
     static bool WaitUpdateThreadsToTakeABreak(int maxWaitTimeInMS);
     static void TellUpdateThreadsToStopTheBreak();
 private:
-    bool mInitialized; // ei sallita tupla initialisointia, heittää poikkeuksen ongelma tilanteissa
+    bool mInitialized; // ei sallita tupla initialisointia, heittï¿½ï¿½ poikkeuksen ongelma tilanteissa
     ChannelCacheList mSatelliteImageChannelCacheList;
     ImageUpdateCallbackFunction mUpdatedCacheCallback;
     ImageUpdateCallbackFunction mLoadedCacheCallback;

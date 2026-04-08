@@ -1,8 +1,8 @@
-//© Ilmatieteenlaitos/Marko.
+//ï¿½ Ilmatieteenlaitos/Marko.
 //Original 7.4.2004
 //
-// Luokka pitää huolta poikkileikkauksiin liittyvistä pää- ja alipisteistä.
-// pääpisteet Laitetaan Metkun editorin kartalle ja niiden avulla lasketaan
+// Luokka pitï¿½ï¿½ huolta poikkileikkauksiin liittyvistï¿½ pï¿½ï¿½- ja alipisteistï¿½.
+// pï¿½ï¿½pisteet Laitetaan Metkun editorin kartalle ja niiden avulla lasketaan
 // alipisteet, joista tulee poikkileikkaus-hilan sarakkeisto.
 //---------------------------------------------------------- NFmiCrossSectionSystem.h
 
@@ -15,6 +15,8 @@
 #include "GraphicalInfo.h"
 #include "NFmiColor.h"
 #include "TrueMapViewSizeInfo.h"
+
+#include <memory>
 
 class NFmiArea;
 class NFmiQueryData;
@@ -44,7 +46,7 @@ class NFmiCrossSectionSystem
 		kNormal = 1,
 		kTime = 2,
 		kRoute = 3,
-		kObsAndFor = 4 // lähinmmän luotausaseman ja ennusteen yhdistelmä aika moodissa
+		kObsAndFor = 4 // lï¿½hinmmï¿½n luotausaseman ja ennusteen yhdistelmï¿½ aika moodissa
 	};
 
 	class ExtraRowInfo
@@ -63,7 +65,7 @@ class NFmiCrossSectionSystem
         double itsLowerEndOfPressureAxis;
 	};
 
-    // Tässä structissa tuodaan alustus arvoja Windows rekisteristä ja viedään ne sinne takaisin.
+    // Tï¿½ssï¿½ structissa tuodaan alustus arvoja Windows rekisteristï¿½ ja viedï¿½ï¿½n ne sinne takaisin.
     class CrossSectionInitValuesWinReg
     {
     public:
@@ -98,7 +100,7 @@ class NFmiCrossSectionSystem
 	const NFmiPoint& EndXYPoint(void) const;
 	void EndXYPoint(const NFmiPoint &thePoint);
 
-	void CalcMinorPoints(const boost::shared_ptr<NFmiArea> &theArea); // laskee  välipisteet pääpisteiden avulla käyttäen hyväkseen annettua areaa (josta laskuissa käytetään arean xy-maailmaa)
+	void CalcMinorPoints(const std::shared_ptr<NFmiArea> &theArea); // laskee  vï¿½lipisteet pï¿½ï¿½pisteiden avulla kï¿½yttï¿½en hyvï¿½kseen annettua areaa (josta laskuissa kï¿½ytetï¿½ï¿½n arean xy-maailmaa)
 	void CalcRouteTimes(void);
 
 	const std::vector<NFmiPoint>& MinorPoints(void) const {return itsMinorPoints;};
@@ -118,10 +120,10 @@ class NFmiCrossSectionSystem
 	int ActivatedMinorPointIndex(void) const {return itsActivatedMinorPointIndex;}
 	bool UseTimeCrossSection(void)const {return fUseTimeCrossSection;}
 	void UseTimeCrossSection(bool newState){fUseTimeCrossSection = newState;}
-	boost::shared_ptr<NFmiDrawParam> CrossSectionDrawParam(void) const {return itsCrossSectionDrawParam;}
-	void CrossSectionDrawParam(boost::shared_ptr<NFmiDrawParam> &newValue);
+	std::shared_ptr<NFmiDrawParam> CrossSectionDrawParam(void) const {return itsCrossSectionDrawParam;}
+	void CrossSectionDrawParam(std::shared_ptr<NFmiDrawParam> &newValue);
 
-	int MaxViewRowSize(void) const {return itsMaxViewRowSize;} // ei tehdä asetus metodia, koska se vaatii jonkin verran logiikkaa
+	int MaxViewRowSize(void) const {return itsMaxViewRowSize;} // ei tehdï¿½ asetus metodia, koska se vaatii jonkin verran logiikkaa
     int StartRowIndex(void) const { return itsStartRowIndex; }
     void StartRowIndex(int newValue) { itsStartRowIndex = newValue; }
 	int RowCount(void) const {return itsRowCount;}
@@ -130,8 +132,8 @@ class NFmiCrossSectionSystem
 	void CrossSectionMode(Mode newMode) {itsCrossSectionMode = newMode;}
 	PressureMode StandardPressureLevelMode(void) const {return itsStandardPressureLevelMode;}
 	void StandardPressureLevelMode(PressureMode newMode) {itsStandardPressureLevelMode = newMode;}
-	bool ChangeStartRowIndex(bool fMoveUp); // paluu arvo kertoo tarvitaanko näytön päivitystä
-	bool RowCount(int newValue); // paluu arvo kertoo tarvitaanko näytön päivitystä
+	bool ChangeStartRowIndex(bool fMoveUp); // paluu arvo kertoo tarvitaanko nï¿½ytï¿½n pï¿½ivitystï¿½
+	bool RowCount(int newValue); // paluu arvo kertoo tarvitaanko nï¿½ytï¿½n pï¿½ivitystï¿½
 	void NextCrossSectionMode(void);
 	void NextStandardPressureLevelMode(void);
 	bool IsViewVisible(int theIndex);
@@ -162,7 +164,7 @@ class NFmiCrossSectionSystem
 	const NFmiLocation& ObsForModeLocation(void) const {return itsObsForModeLocation;}
 	void ObsForModeLocation(const NFmiLocation &newLocation) {itsObsForModeLocation = newLocation;}
 	const std::vector<ExtraRowInfo>& ExtraRowInfos(void) const {return itsExtraRowInfos;}
-	ExtraRowInfo& GetRowInfo(int theRowIndex); // tämä on muokkausta varten
+	ExtraRowInfo& GetRowInfo(int theRowIndex); // tï¿½mï¿½ on muokkausta varten
     CtrlViewUtils::GraphicalInfo& GetGraphicalInfo(){return itsGraphicalInfo;}
 	TrueMapViewSizeInfo& GetTrueMapViewSizeInfo() { return itsTrueMapViewSizeInfo; }
 
@@ -194,51 +196,51 @@ class NFmiCrossSectionSystem
 	void SetMainPointsFromVector(const std::vector<NFmiPoint> &theMainPointVector);
     static int itsNumberOfMainPoints;
 
-     // Seuraavat dataosiot talletetaan ja luetaan Windows rekistereistä, niiden perässä on WinReg -lisäosa sen merkiksi.
+     // Seuraavat dataosiot talletetaan ja luetaan Windows rekistereistï¿½, niiden perï¿½ssï¿½ on WinReg -lisï¿½osa sen merkiksi.
 	NFmiPoint itsStartPointWinReg; // alkupiste (latlon)
-	NFmiPoint itsMiddlePointWinReg; // keskipiste (latlon), käytössä kun ollaan 3-piste moodissa
+	NFmiPoint itsMiddlePointWinReg; // keskipiste (latlon), kï¿½ytï¿½ssï¿½ kun ollaan 3-piste moodissa
 	NFmiPoint itsEndPointWinReg; // loppupiste (latlon)
-	int itsWantedMinorPointCountWinReg; // tähän kokonais lukumäärään pyritään, kun lasketaan pääpisteiden avulla välipisteitä
-	int itsVerticalPointCountWinReg; // kuinka monta data pistettä lasketaan vertikaali suunnassa
-	ExtraRowInfo itsAxisValuesDefaultWinReg; // SmartMetin poikkileikkauksen [CTRL] + [SHIFT] + D säädöt tästä/tähän
-	ExtraRowInfo itsAxisValuesSpecialWinReg; // SmartMetin poikkileikkauksen [CTRL] + [SHIFT] + S säädöt tästä/tähän
+	int itsWantedMinorPointCountWinReg; // tï¿½hï¿½n kokonais lukumï¿½ï¿½rï¿½ï¿½n pyritï¿½ï¿½n, kun lasketaan pï¿½ï¿½pisteiden avulla vï¿½lipisteitï¿½
+	int itsVerticalPointCountWinReg; // kuinka monta data pistettï¿½ lasketaan vertikaali suunnassa
+	ExtraRowInfo itsAxisValuesDefaultWinReg; // SmartMetin poikkileikkauksen [CTRL] + [SHIFT] + D sï¿½ï¿½dï¿½t tï¿½stï¿½/tï¿½hï¿½n
+	ExtraRowInfo itsAxisValuesSpecialWinReg; // SmartMetin poikkileikkauksen [CTRL] + [SHIFT] + S sï¿½ï¿½dï¿½t tï¿½stï¿½/tï¿½hï¿½n
 
     // loppuja ei ole talletettu Windows rekistereihin
-	std::vector<NFmiPoint> itsMainXYPoints; // pää pisteiden xy pisteet, joiden avulla piirretään väri-pallot CrossSectionManagerView:in footeriin (viimeksi piirretty CrossSectionView päivittää pisteet)
-	std::vector<NFmiPoint> itsMinorPoints; // pääpisteiden avulla lasketut välipisteet
-	std::vector<NFmiMetTime> itsRouteTimes; // reitin alku ja loppu ajan ja paikkojen avulla lasketut välipiste ajat (minuutin tarkkuudella)
-	int itsActivatedMinorPointIndex; // aktiivisen välipisteen indeksi tai -1, jos mikään ei ole aktiivinen
+	std::vector<NFmiPoint> itsMainXYPoints; // pï¿½ï¿½ pisteiden xy pisteet, joiden avulla piirretï¿½ï¿½n vï¿½ri-pallot CrossSectionManagerView:in footeriin (viimeksi piirretty CrossSectionView pï¿½ivittï¿½ï¿½ pisteet)
+	std::vector<NFmiPoint> itsMinorPoints; // pï¿½ï¿½pisteiden avulla lasketut vï¿½lipisteet
+	std::vector<NFmiMetTime> itsRouteTimes; // reitin alku ja loppu ajan ja paikkojen avulla lasketut vï¿½lipiste ajat (minuutin tarkkuudella)
+	int itsActivatedMinorPointIndex; // aktiivisen vï¿½lipisteen indeksi tai -1, jos mikï¿½ï¿½n ei ole aktiivinen
 	bool fCrossSectionSystemActive; // ollaanko poikkileikkaus moodissa vai ei?
-	bool fCrossSectionViewNeedsUpdate; // jos ladataan uutta crosssection dataa, pitää näyttö ja sen data päivittää
-	bool fUseTimeCrossSection; // käytetäänkö poikkileikkauksessa yhden pisteen leikkausta ajan suhteen vai kahden/useamman paikan välistä alue leikkausta
-	bool fUseRouteCrossSection; // käytetäänkö poikkileikkauksessa ns. reitti poikkileikkausta, jolloin alku/loppu ajat ja alku ja loppu paikat. Tämä on voimakkaampi, jos aikapoikkileikkaus on myös päällä
-	bool fUseObsAndForCrossSection; // käytetäänkö poikkileikkauksessa ns. havainto+ennuste aika moodia
-	bool fTimeCrossSectionDirty; // jos poikkileikkaus 'timebagin' ajat muuttuneet, pitää luoda uusi aika-kontrolli
-	bool fCrossSectionViewOn; // onko poikkileikkausnäyttö päällä vai ei?
-	bool fShowHybridLevels; // näytä hybridi levelit poikkileikkauksessa jos mahdollista (samat ehdot kuin näytä maanpinta)
-	NFmiTimeBag itsCrossSectionTimeControlTimeBag; // aikakontrolliikkuna tehdään tämän bagin mukaan
-	boost::shared_ptr<NFmiDrawParam> itsCrossSectionDrawParam; // ei omista, ei tuhoa!!
+	bool fCrossSectionViewNeedsUpdate; // jos ladataan uutta crosssection dataa, pitï¿½ï¿½ nï¿½yttï¿½ ja sen data pï¿½ivittï¿½ï¿½
+	bool fUseTimeCrossSection; // kï¿½ytetï¿½ï¿½nkï¿½ poikkileikkauksessa yhden pisteen leikkausta ajan suhteen vai kahden/useamman paikan vï¿½listï¿½ alue leikkausta
+	bool fUseRouteCrossSection; // kï¿½ytetï¿½ï¿½nkï¿½ poikkileikkauksessa ns. reitti poikkileikkausta, jolloin alku/loppu ajat ja alku ja loppu paikat. Tï¿½mï¿½ on voimakkaampi, jos aikapoikkileikkaus on myï¿½s pï¿½ï¿½llï¿½
+	bool fUseObsAndForCrossSection; // kï¿½ytetï¿½ï¿½nkï¿½ poikkileikkauksessa ns. havainto+ennuste aika moodia
+	bool fTimeCrossSectionDirty; // jos poikkileikkaus 'timebagin' ajat muuttuneet, pitï¿½ï¿½ luoda uusi aika-kontrolli
+	bool fCrossSectionViewOn; // onko poikkileikkausnï¿½yttï¿½ pï¿½ï¿½llï¿½ vai ei?
+	bool fShowHybridLevels; // nï¿½ytï¿½ hybridi levelit poikkileikkauksessa jos mahdollista (samat ehdot kuin nï¿½ytï¿½ maanpinta)
+	NFmiTimeBag itsCrossSectionTimeControlTimeBag; // aikakontrolliikkuna tehdï¿½ï¿½n tï¿½mï¿½n bagin mukaan
+	std::shared_ptr<NFmiDrawParam> itsCrossSectionDrawParam; // ei omista, ei tuhoa!!
 
-	int itsMaxViewRowSize; // tämän enempää ei voi olla poikkileikkaus näytössä rivejä
-	int itsStartRowIndex; // mistä indeksistä poikkileikkausnäytön rivien indeksit alkavat (1-5)
-	int itsRowCount; // kuinka monta riviä on kerallaan näytössä nyt (maksimi tietenkin itsMaxViewRowSize)
+	int itsMaxViewRowSize; // tï¿½mï¿½n enempï¿½ï¿½ ei voi olla poikkileikkaus nï¿½ytï¿½ssï¿½ rivejï¿½
+	int itsStartRowIndex; // mistï¿½ indeksistï¿½ poikkileikkausnï¿½ytï¿½n rivien indeksit alkavat (1-5)
+	int itsRowCount; // kuinka monta riviï¿½ on kerallaan nï¿½ytï¿½ssï¿½ nyt (maksimi tietenkin itsMaxViewRowSize)
 	Mode itsCrossSectionMode; // 0 = 2-pisteinen moodi, 1 = 3-pisteinen moodi
-	PressureMode itsStandardPressureLevelMode; // miten peruspaine pinnat piirretään näyttöön
-									   // 0= i ollenkaan, 1= muun datan alle ja 2= kaiken päälle
-    CtrlViewDocumentInterface *itsCtrlViewDocumentInterface; // tarvitaan kun on muutettu poikkileikkaus näytön hilan kokoa ja pitää päivittää mm. infoorganizerin poikkileikkausmacroparamdata
+	PressureMode itsStandardPressureLevelMode; // miten peruspaine pinnat piirretï¿½ï¿½n nï¿½yttï¿½ï¿½n
+									   // 0= i ollenkaan, 1= muun datan alle ja 2= kaiken pï¿½ï¿½lle
+    CtrlViewDocumentInterface *itsCtrlViewDocumentInterface; // tarvitaan kun on muutettu poikkileikkaus nï¿½ytï¿½n hilan kokoa ja pitï¿½ï¿½ pï¿½ivittï¿½ï¿½ mm. infoorganizerin poikkileikkausmacroparamdata
 
-	NFmiPoint itsLastMousePosition; // NFmiStationViewHandlerin mousemove:ssa tarvitaan tätä laskemaan hiiren vetoa
+	NFmiPoint itsLastMousePosition; // NFmiStationViewHandlerin mousemove:ssa tarvitaan tï¿½tï¿½ laskemaan hiiren vetoa
 	NFmiLocation itsObsForModeLocation;
 	bool fDragWholeCrossSection; // jos tehty tietynlainen mouse drag kartalla, liikutetaan koko poikkileikkausjanaa kerrallaan
-	std::vector<ExtraRowInfo> itsExtraRowInfos; // tähä talletetaan ylimääräiset poikkileikkausrivi kohtaiset tiedot
+	std::vector<ExtraRowInfo> itsExtraRowInfos; // tï¿½hï¿½ talletetaan ylimï¿½ï¿½rï¿½iset poikkileikkausrivi kohtaiset tiedot
 	CtrlViewUtils::GraphicalInfo itsGraphicalInfo;
 	TrueMapViewSizeInfo itsTrueMapViewSizeInfo;
 	NFmiColor itsStartPointFillColor;
 	NFmiColor itsEndPointFillColor;
 	NFmiColor itsMiddlePointFillColor;
 	FmiDirection itsParamWindowViewPosition;
-	bool fShowTooltipOnCrossSectionView; // Erottelin poikkileikkaus tooltip on/off asetuksen pois karttanäyttöjen asetuksesta, 
-                                         // tätä ei talletetan mihinkään (ei näyttö makroon eikä rekistereihin eikä konffeihin), 
+	bool fShowTooltipOnCrossSectionView; // Erottelin poikkileikkaus tooltip on/off asetuksen pois karttanï¿½yttï¿½jen asetuksesta, 
+                                         // tï¿½tï¿½ ei talletetan mihinkï¿½ï¿½n (ei nï¿½yttï¿½ makroon eikï¿½ rekistereihin eikï¿½ konffeihin), 
                                          // oletuksena arvo on true.
 };
 

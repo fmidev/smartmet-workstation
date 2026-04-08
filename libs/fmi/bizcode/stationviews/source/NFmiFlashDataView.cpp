@@ -11,9 +11,9 @@
 
 //_________________________________________________________ NFmiFlashDataView
 
-NFmiFlashDataView::NFmiFlashDataView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+NFmiFlashDataView::NFmiFlashDataView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 									,NFmiToolBox * theToolBox
-									,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+									,std::shared_ptr<NFmiDrawParam> &theDrawParam
 									,FmiParameterName theParamId
 									,NFmiPoint theOffSet
 									,NFmiPoint theSize
@@ -68,7 +68,7 @@ void NFmiFlashDataView::Draw(NFmiToolBox * theGTB)
 
 		for(size_t j = 0; j < itsInfoVector.size(); j++)
 		{
-			boost::shared_ptr<NFmiFastQueryInfo>& info = itsInfoVector[j];
+			std::shared_ptr<NFmiFastQueryInfo>& info = itsInfoVector[j];
 			DrawFlashes(info);
 		}
 	}
@@ -76,7 +76,7 @@ void NFmiFlashDataView::Draw(NFmiToolBox * theGTB)
 	itsToolBox->EndClipping();
 }
 
-void NFmiFlashDataView::DrawFlashes(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+void NFmiFlashDataView::DrawFlashes(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	NFmiColor startColor(0.9f, 0.9f, 0.9f); // v‰ri, jolla v‰rj‰t‰‰n 'vanhat' salamat ruudussa
 	NFmiColor endColor(itsDrawParam->FillColor()); // v‰ri jolla v‰rj‰t‰‰n 'tuoreimmat' salamat ruudussa
@@ -310,7 +310,7 @@ bool NFmiFlashDataView::FindNearestFlashInMapTimeSection(const NFmiPoint &theRel
 
 		for(size_t j = 0; j < itsInfoVector.size(); j++)
 		{
-			boost::shared_ptr<NFmiFastQueryInfo> &info = itsInfoVector[j];
+			std::shared_ptr<NFmiFastQueryInfo> &info = itsInfoVector[j];
 			if(FindNearestFlashTypeObservation(info, cursorLoc, minDist, minDistTimeIndex))
 			{
 				if(minDist <= maxAllowedDist)
@@ -359,7 +359,7 @@ bool NFmiFlashDataView::CalcFlashCount(int &theGroundFlashCountOut, int &theClou
     MakeDrawedInfoVector();
 	for(size_t j = 0; j < itsInfoVector.size(); j++)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> &info = itsInfoVector[j];
+		std::shared_ptr<NFmiFastQueryInfo> &info = itsInfoVector[j];
 
 		float lat = 0;
 		float lon = 0;

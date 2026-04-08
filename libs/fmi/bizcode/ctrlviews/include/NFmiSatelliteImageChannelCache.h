@@ -3,26 +3,27 @@
 #include "NFmiMetTime.h"
 #include "NFmiMilliSecondTimer.h"
 #include "NFmiDataIdent.h"
+#include "NFmiArea.h"
 #include "NFmiSatelliteImageCacheHelpers.h"
 
 #include <list>
 #include <future>
-#include <mutex> 
+#include <memory>
+#include <mutex>
 
 #include <boost/noncopyable.hpp>
 
 class NFmiHelpDataInfoSystem;
-class NFmiArea;
 class NFmiSatelliteImageCache;
 
-// Tässä on yhden satelliitin yhden kanavan kuva cache.
+// Tï¿½ssï¿½ on yhden satelliitin yhden kanavan kuva cache.
 class NFmiSatelliteImageChannelCache : public boost::noncopyable
 {
 public:
     typedef std::shared_ptr<NFmiSatelliteImageCache> ImageCacheItem;
     typedef std::list<ImageCacheItem> ImageCacheSortedList;
 
-    NFmiSatelliteImageChannelCache(const std::string &fileFilter, const boost::shared_ptr<NFmiArea> &imageArea, const NFmiDataIdent &imageDataIdent, int firstTimeUpdateDelayTimeInMS, int firstTimeLoadingWaitTimeMs, int imageLoadingFailedWaitTimeMs);
+    NFmiSatelliteImageChannelCache(const std::string &fileFilter, const std::shared_ptr<NFmiArea> &imageArea, const NFmiDataIdent &imageDataIdent, int firstTimeUpdateDelayTimeInMS, int firstTimeLoadingWaitTimeMs, int imageLoadingFailedWaitTimeMs);
 
     ImageCacheUpdateData UpdateCacheList(bool forceUpdate);
     ImageCacheUpdateData CheckOnCacheLoading();
@@ -36,7 +37,7 @@ public:
     ImageCacheItem FindImageCache(const NFmiMetTime &wantedTime, int maxOffSetInMinutes = 0);
     NFmiImageHolder FindImage(const NFmiMetTime &wantedTime, int maxOffSetInMinutes = 0);
     NFmiMetTime GetLatestImageTime();
-    boost::shared_ptr<NFmiArea> ImageArea() { return mImageArea; }
+    std::shared_ptr<NFmiArea> ImageArea() { return mImageArea; }
     void ResetImages();
     void ResetFailedImages(ImageCacheUpdateData &resetedImagesOut);
     void Clear();
@@ -48,17 +49,17 @@ private:
     bool RemoveFromImageCache_NoLock(const std::list<std::string> &fileListIn, ImageCacheUpdateData &updatedImagesOut);
     void DoPossibleForceUpdate();
 
-	const std::string mFileFilter; // Näitä tiedostoja cachetetaan tässä oliossa (esim. P:\meteosat9\HRV\scandinavia_1008x1118\*_8bit-msg-scandinavia_HRV.png)
-    const NFmiDataIdent mImageDataIdent; // Tämä on avain, millä etsitään oikeaa kuva kanavaa DrawParamin param-asetuksen mukaan (par-id ja prod-id pari nimineen)
-    bool mChannelShownOnView; // Onko kyseinen satel-kanava valittuna jollekin karttanäytölle, jos on, tällöin tehdään cache-tiedosto päivityksiä (tausta säikeessä) useammin
-    NFmiMilliSecondTimer mFilesCheckedTimer; // Koska on viimeksi tehty tiedosto lista päivitys -timer
-    int mFirstTimeUpdateDelayTimeInMS; // Kun SmartMet käynnistetään, ei ole tarkoitus että jokaisen satelliitin jokaista kanavaa aletaan heti tutkimaan verkkolevyilta, jokaisella kanavalle annetaan jonkinlainen odottelu aika, ennen kuin päivitys rumba laitetaan käyntiin.
+	const std::string mFileFilter; // Nï¿½itï¿½ tiedostoja cachetetaan tï¿½ssï¿½ oliossa (esim. P:\meteosat9\HRV\scandinavia_1008x1118\*_8bit-msg-scandinavia_HRV.png)
+    const NFmiDataIdent mImageDataIdent; // Tï¿½mï¿½ on avain, millï¿½ etsitï¿½ï¿½n oikeaa kuva kanavaa DrawParamin param-asetuksen mukaan (par-id ja prod-id pari nimineen)
+    bool mChannelShownOnView; // Onko kyseinen satel-kanava valittuna jollekin karttanï¿½ytï¿½lle, jos on, tï¿½llï¿½in tehdï¿½ï¿½n cache-tiedosto pï¿½ivityksiï¿½ (tausta sï¿½ikeessï¿½) useammin
+    NFmiMilliSecondTimer mFilesCheckedTimer; // Koska on viimeksi tehty tiedosto lista pï¿½ivitys -timer
+    int mFirstTimeUpdateDelayTimeInMS; // Kun SmartMet kï¿½ynnistetï¿½ï¿½n, ei ole tarkoitus ettï¿½ jokaisen satelliitin jokaista kanavaa aletaan heti tutkimaan verkkolevyilta, jokaisella kanavalle annetaan jonkinlainen odottelu aika, ennen kuin pï¿½ivitys rumba laitetaan kï¿½yntiin.
 
-    ImageCacheSortedList mImageCacheSortedList; // Tässä on palvelimelta löytyvät satel-cache kuvat aikajärjestyksessä, tätä on pakko synkronoida mutexin avulla, koska tätä päivitetään ja käytetään eri säikeistä
+    ImageCacheSortedList mImageCacheSortedList; // Tï¿½ssï¿½ on palvelimelta lï¿½ytyvï¿½t satel-cache kuvat aikajï¿½rjestyksessï¿½, tï¿½tï¿½ on pakko synkronoida mutexin avulla, koska tï¿½tï¿½ pï¿½ivitetï¿½ï¿½n ja kï¿½ytetï¿½ï¿½n eri sï¿½ikeistï¿½
     mutable std::mutex mImageCacheSetMutex;
-    bool mCacheInitialized; // Onko cache käynyt tiedostolistan läpi ainakin kerran
-    int mFirstTimeLoadingWaitTimeMs; // Tämän kanavan kuville: Kun lataus käynnistetään 1. kerran, kuinka kauan odotetaan siinä paikassa valmistumista, enenen kuin palautetaan tyhjää
-    int mImageLoadingFailedWaitTimeMs; // Tämän kanavan kuville: Kuinka kauan yritetään ladata imagea maksimissaan, ennen kuin sen lataus todetaan lopullisesti virheelliseksi
-    boost::shared_ptr<NFmiArea> mImageArea; // Satel-kuvan konffeissa on määrätty alue, jonka kuvan alue peittää
+    bool mCacheInitialized; // Onko cache kï¿½ynyt tiedostolistan lï¿½pi ainakin kerran
+    int mFirstTimeLoadingWaitTimeMs; // Tï¿½mï¿½n kanavan kuville: Kun lataus kï¿½ynnistetï¿½ï¿½n 1. kerran, kuinka kauan odotetaan siinï¿½ paikassa valmistumista, enenen kuin palautetaan tyhjï¿½ï¿½
+    int mImageLoadingFailedWaitTimeMs; // Tï¿½mï¿½n kanavan kuville: Kuinka kauan yritetï¿½ï¿½n ladata imagea maksimissaan, ennen kuin sen lataus todetaan lopullisesti virheelliseksi
+    std::shared_ptr<NFmiArea> mImageArea; // Satel-kuvan konffeissa on mï¿½ï¿½rï¿½tty alue, jonka kuvan alue peittï¿½ï¿½
 };
 

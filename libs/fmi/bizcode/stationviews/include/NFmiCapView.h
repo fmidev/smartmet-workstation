@@ -24,9 +24,9 @@ class NFmiCapView : public NFmiStationView
     Warnings::CapData capData_;
 
 public:
-    NFmiCapView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+    NFmiCapView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
         , NFmiToolBox *theToolBox
-        , boost::shared_ptr<NFmiDrawParam> &theDrawParam
+        , std::shared_ptr<NFmiDrawParam> &theDrawParam
         , FmiParameterName theParamId
         , int theRowIndex
         , int theColumnIndex);

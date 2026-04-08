@@ -6,6 +6,7 @@
 #include <numeric>
 #include <vector>
 #include <list>
+#include <memory>
 #include <boost/shared_ptr.hpp>
 
 class NFmiColor;
@@ -53,22 +54,22 @@ namespace CtrlViewUtils
    NFmiTimeBag GetAdjustedTimeBag(const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime, int theTimeStepInMinutes);
 
    std::string GetIdString(unsigned long theId);
-   std::string GetProducerName(NFmiProducerSystem &theProducerSystem, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, bool fAddProdId, size_t theLongerProducerNameMaxCharCount);
-   std::string GetParamNameString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool fCrossSectionInfoWanted, bool fAddIdInfos, bool fMakeTooltipXmlEncode, size_t theLongerProducerNameMaxCharCount, bool fTimeSerialViewCase, bool doNewDataHighlight, bool fShowModelOriginTime, boost::shared_ptr<NFmiFastQueryInfo> possibleInfo);
+   std::string GetProducerName(NFmiProducerSystem &theProducerSystem, std::shared_ptr<NFmiDrawParam> &theDrawParam, std::shared_ptr<NFmiFastQueryInfo> &theInfo, bool fAddProdId, size_t theLongerProducerNameMaxCharCount);
+   std::string GetParamNameString(std::shared_ptr<NFmiDrawParam> &theDrawParam, bool fCrossSectionInfoWanted, bool fAddIdInfos, bool fMakeTooltipXmlEncode, size_t theLongerProducerNameMaxCharCount, bool fTimeSerialViewCase, bool doNewDataHighlight, bool fShowModelOriginTime, std::shared_ptr<NFmiFastQueryInfo> possibleInfo);
    NFmiColor GetParamTextColor(NFmiInfoData::Type dataType, bool useArchiveModelData);
-   std::string GetEditingDataString(const std::string &theNameStr, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiLanguage lang, const std::string &theOrigTimeFormat);
+   std::string GetEditingDataString(const std::string &theNameStr, std::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiLanguage lang, const std::string &theOrigTimeFormat);
    std::string GetTotalMapViewStatusBarStr(CtrlViewDocumentInterface* theCtrlViewDocumentInterface, const NFmiPoint& theLatlon);
    std::string GetFixedLatlonStr(const NFmiPoint &theLatlon);
    std::string Point2String(const NFmiPoint& p);
    NFmiPoint String2Point(const std::string& str);
 
-   boost::shared_ptr<NFmiFastQueryInfo> GetLatestLastTimeObservation(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, bool fCrossSectionInfoWanted);
-   std::string GetArchiveOrigTimeString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, bool fGetCurrentDataFromQ2Server, const std::string &theDictionaryTokenForOrigTimeFormat);
-   std::string GetLatestObservationTimeString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, const std::string &theTimeFormat, bool fCrossSectionInfoWanted);
+   std::shared_ptr<NFmiFastQueryInfo> GetLatestLastTimeObservation(std::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, bool fCrossSectionInfoWanted);
+   std::string GetArchiveOrigTimeString(std::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, std::shared_ptr<NFmiFastQueryInfo> &theInfo, bool fGetCurrentDataFromQ2Server, const std::string &theDictionaryTokenForOrigTimeFormat);
+   std::string GetLatestObservationTimeString(std::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface, const std::string &theTimeFormat, bool fCrossSectionInfoWanted);
    std::string XmlEncode(const std::string &src);
    FmiDirection CalcFollowingParamWindowViewPosition(FmiDirection currentPosition, bool forward);
    FmiDirection MoveTimeBoxPositionForward(FmiDirection currentPosition);
-   bool IsConsideredAsNewData(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, int modelRunIndex, bool isMacroParam);
+   bool IsConsideredAsNewData(std::shared_ptr<NFmiFastQueryInfo>& theInfo, int modelRunIndex, bool isMacroParam);
 
    template<typename T>
    bool IsEqualEnough(T value1, T value2, T usedEpsilon)
@@ -83,10 +84,10 @@ namespace CtrlViewUtils
    double CalcAngle(const NFmiPoint& point1, const NFmiPoint& point2);
    double CalcAngle(double x, double y);
    bool IsModularParameter(FmiParameterName theParam);
-   std::string GetMacroParamFormula(NFmiMacroParamSystem& macroParamSystem, const boost::shared_ptr<NFmiDrawParam>& theDrawParam);
-   std::string MakeMacroParamRelatedFinalErrorMessage(const std::string& baseMessage, const std::exception* exceptionPtr, boost::shared_ptr<NFmiDrawParam>& theDrawParam, const std::string& macroParamSystemRootPath);
-   void SetMacroParamErrorMessage(const std::string& errorText, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam, CtrlViewDocumentInterface& ctrlViewDocumentInterface, std::string* possibleTooltipErrorTextOut = nullptr);
-   void ClearMacroParamErrorMessage(boost::shared_ptr<NFmiDrawParam>& triggerDrawParam, CtrlViewDocumentInterface& ctrlViewDocumentInterface);
+   std::string GetMacroParamFormula(NFmiMacroParamSystem& macroParamSystem, const std::shared_ptr<NFmiDrawParam>& theDrawParam);
+   std::string MakeMacroParamRelatedFinalErrorMessage(const std::string& baseMessage, const std::exception* exceptionPtr, std::shared_ptr<NFmiDrawParam>& theDrawParam, const std::string& macroParamSystemRootPath);
+   void SetMacroParamErrorMessage(const std::string& errorText, std::shared_ptr<NFmiDrawParam>& triggerDrawParam, CtrlViewDocumentInterface& ctrlViewDocumentInterface, std::string* possibleTooltipErrorTextOut = nullptr);
+   void ClearMacroParamErrorMessage(std::shared_ptr<NFmiDrawParam>& triggerDrawParam, CtrlViewDocumentInterface& ctrlViewDocumentInterface);
    void DeleteFilesWithPattern(const std::string& directoryPath, const std::string& fileNamePattern, int keepMaxFiles = 0, std::list<std::string>* deletedFileNamesOut = nullptr);
    void DeleteFilesWithPattern(const std::string& filePathPattern, int keepMaxFiles = 0, std::list<std::string>* deletedFileNamesOut = nullptr);
    void DeleteFilesWithPatternAndLog(const std::string& filePathPattern, const std::string &logMessageStart, CatLog::Severity severity, CatLog::Category category, int keepMaxFiles = 0);

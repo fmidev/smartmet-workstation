@@ -26,6 +26,7 @@ using CachedRegBool = bool;
 
 #include "json_spirit_value.h"
 #include "boost/shared_ptr.hpp"
+#include <memory>
 
 class NFmiHelpDataInfo;
 class NFmiInfoOrganizer;
@@ -162,7 +163,7 @@ public:
 	const NFmiParam& ImageParam(void) const {return itsImageParam;}
 	void ImageParam(const NFmiParam &newValue) {itsImageParam = newValue;}
 	void ParseJsonValue(json_spirit::Value &theValue);
-	void AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem);
+	void AddDataToHelpDataInfoSystem(std::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem);
 
 	bool NotifyOnLoad(void) const {return fNotifyOnLoad;}
 	void NotifyOnLoad(bool newValue) {fNotifyOnLoad = newValue;}
@@ -238,7 +239,7 @@ public:
 	static json_spirit::Object MakeJsonObject(const NFmiCaseStudyProducerData &theData, bool fMakeFullStore);
 	void ParseJsonValue(json_spirit::Value &theValue);
 	void SetCategory(NFmiCaseStudyDataCategory theCategory);
-	void AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem);
+	void AddDataToHelpDataInfoSystem(std::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem);
 	void InitDataWithStoredSettings(NFmiCaseStudyProducerData &theOriginalProducerData);
 	long GetProducerIdent() const;
 
@@ -278,7 +279,7 @@ public:
 
 	NFmiCaseStudyDataFile& CategoryHeaderInfo(void) {return itsCategoryHeaderInfo;}
 	const NFmiCaseStudyDataFile& CategoryHeaderInfo(void) const {return itsCategoryHeaderInfo;}
-	void AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem);
+	void AddDataToHelpDataInfoSystem(std::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem);
 	void InitDataWithStoredSettings(NFmiCaseStudyCategoryData &theOriginalCategoryData);
 	NFmiCaseStudyProducerData* GetProducerData(unsigned long theProdId);
 	void PutNoneProducerDataToEndFix();
@@ -352,7 +353,7 @@ public:
 	bool ReadMetaData(const std::string &theFullPathFileName, CWnd *theParentWindow, bool showErrorMessageBox);
 	// Voi heitt�� CaseStudyOperationCanceledException -poikkeuksen!!!
 	bool MakeCaseStudyData(const std::string &theFullPathMetaDataFileName, CWnd *theParentWindow, CWnd *theCopyWindowPos, const std::string& theCropDataAreaString); 
-	boost::shared_ptr<NFmiHelpDataInfoSystem> MakeHelpDataInfoSystem(NFmiHelpDataInfoSystem &theOriginalHelpDataInfoSystem, const std::string &theBasePath);
+	std::shared_ptr<NFmiHelpDataInfoSystem> MakeHelpDataInfoSystem(NFmiHelpDataInfoSystem &theOriginalHelpDataInfoSystem, const std::string &theBasePath);
 	NFmiCaseStudyDataFile* FindCaseStudyDataFile(const std::string& theUniqueHelpDataInfoName);
 	void PutNoneProducerDataToEndFix();
 

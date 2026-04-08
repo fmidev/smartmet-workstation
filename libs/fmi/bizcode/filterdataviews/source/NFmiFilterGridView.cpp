@@ -9,7 +9,7 @@
 #include "CtrlViewDocumentInterface.h"
 
 NFmiFilterGridView::NFmiFilterGridView(NFmiToolBox * theToolBox
-					 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+					 ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 					 ,const NFmiRect& theRect
 					 ,int theIndex)
 :NFmiZoomView(0, theToolBox, theDrawParam, theRect)

@@ -193,7 +193,7 @@ std::string gridSizeInKm(const NFmiGrid *grid)
         return "-";
 }
 
-std::string timeSteps(const boost::shared_ptr<NFmiFastQueryInfo> &info)
+std::string timeSteps(const std::shared_ptr<NFmiFastQueryInfo> &info)
 {
     int timeSteps = 0;
 
@@ -336,7 +336,7 @@ std::string timeResolutionFromTimeList(NFmiTimeList& timeList)
     return resolution;
 }
 
-std::string timeResolution(const boost::shared_ptr<NFmiFastQueryInfo> &info)
+std::string timeResolution(const std::shared_ptr<NFmiFastQueryInfo> &info)
 {
     std::string resolution;
 
@@ -457,7 +457,7 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForDataType(const AddParams::
 {
     auto infoVector = itsSmartMetDocumentInterface->InfoOrganizer()->GetInfos(singleRowItem.uniqueDataId());
     NFmiHelpDataInfo *helpDataInfo;
-    boost::shared_ptr<NFmiFastQueryInfo> info;
+    std::shared_ptr<NFmiFastQueryInfo> info;
     std::string serverPath = "";
 
     if(singleRowItem.itemName() == "Editable data")
@@ -514,7 +514,7 @@ std::string NFmiParameterSelectionGridCtrl::TooltipForDataType(const AddParams::
     return str;
 }
 
-std::string NFmiParameterSelectionGridCtrl::TooltipForProducerType(const AddParams::SingleRowItem &singleRowItem, const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector, const NFmiProducerInfo &producerInfo)
+std::string NFmiParameterSelectionGridCtrl::TooltipForProducerType(const AddParams::SingleRowItem &singleRowItem, const std::vector<std::shared_ptr<NFmiFastQueryInfo>> &infoVector, const NFmiProducerInfo &producerInfo)
 {
     std::string shortName = (producerInfo.ShortNameCount() == 0) ? "" : producerInfo.ShortName();
 

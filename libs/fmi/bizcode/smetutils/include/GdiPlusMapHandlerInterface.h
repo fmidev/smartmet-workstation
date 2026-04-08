@@ -12,10 +12,10 @@ public:
     GdiPlusMapHandlerInterface(NFmiGdiPlusImageMapHandler *theMapHandler);
 	~GdiPlusMapHandlerInterface() = default;
 
-    boost::shared_ptr<NFmiArea> Area() override;
+    std::shared_ptr<NFmiArea> Area() override;
     Gdiplus::Bitmap* GetBitmap() override;
     NFmiRect TotalAbsolutRect() override;
-    boost::shared_ptr<NFmiArea> TotalArea() override;
+    std::shared_ptr<NFmiArea> TotalArea() override;
     bool SetMaxArea() override;
     void SetMakeNewBackgroundBitmap(bool newState) override;
     bool MakeNewBackgroundBitmap() override;

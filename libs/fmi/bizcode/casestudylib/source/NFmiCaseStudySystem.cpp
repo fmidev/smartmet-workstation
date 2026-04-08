@@ -20,7 +20,8 @@
 #include "NFmiQueryDataUtil.h"
 #include "catlog/catlog.h"
 
-#include "boost/shared_ptr.hpp"
+#include <memory>
+#include <filesystem>
 #include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
 #include "json_spirit_writer.h"
@@ -245,13 +246,13 @@ void NFmiCaseStudyDataFile::Reset(void)
 	*this = NFmiCaseStudyDataFile();
 }
 
-static boost::shared_ptr<NFmiFastQueryInfo> GetInfo(NFmiInfoOrganizer &theInfoOrganizer, const std::string &theFileNameFilter)
+static std::shared_ptr<NFmiFastQueryInfo> GetInfo(NFmiInfoOrganizer &theInfoOrganizer, const std::string &theFileNameFilter)
 {
 	auto infoVector = theInfoOrganizer.GetInfos(theFileNameFilter);
 	if(infoVector.size())
 		return infoVector[0];
 	else
-		return boost::shared_ptr<NFmiFastQueryInfo>();
+		return std::shared_ptr<NFmiFastQueryInfo>();
 }
 
 int NFmiCaseStudyDataFile::GetModelRunTimeGapInMinutes(NFmiQueryInfo *theInfo, NFmiInfoData::Type theType, NFmiHelpDataInfo *theHelpDataInfo)
@@ -309,7 +310,7 @@ static int GetImageGapInMinutes(const NFmiHelpDataInfo &theDataInfo)
 	return gapInMinutes;
 }
 
-static int GetModelRunTimeGapInMinutes(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiHelpDataInfo *theHelpDataInfo)
+static int GetModelRunTimeGapInMinutes(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiHelpDataInfo *theHelpDataInfo)
 {
 	if(theInfo)
 	{
@@ -442,7 +443,7 @@ bool NFmiCaseStudyDataFile::Init(NFmiHelpDataInfoSystem &theDataInfoSystem, cons
 
 void NFmiCaseStudyDataFile::UpdateWithInfo(NFmiInfoOrganizer & theInfoOrganizer, NFmiHelpDataInfoSystem &theDataInfoSystem)
 {
-    boost::shared_ptr<NFmiFastQueryInfo> info = ::GetInfo(theInfoOrganizer, itsFileFilter);
+    std::shared_ptr<NFmiFastQueryInfo> info = ::GetInfo(theInfoOrganizer, itsFileFilter);
     if(info)
     {
         itsProducer = *(info->Producer());
@@ -613,7 +614,7 @@ static void DoFinalSetupsFromOriginalHelpDataInfo(NFmiHelpDataInfo& currentHelpD
 	}
 }
 
-void NFmiCaseStudyDataFile::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem)
+void NFmiCaseStudyDataFile::AddDataToHelpDataInfoSystem(std::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem)
 {
 	NFmiHelpDataInfo helpDataInfo;
 	helpDataInfo.FileNameFilter(theBasePath + RelativeStoredFileFilter(), true); // true = fiksataan filefilter--polku
@@ -1010,7 +1011,7 @@ void NFmiCaseStudyProducerData::SetCategory(NFmiCaseStudyDataCategory theCategor
 		itsFilesData[i].Category(theCategory);
 }
 
-void NFmiCaseStudyProducerData::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem)
+void NFmiCaseStudyProducerData::AddDataToHelpDataInfoSystem(std::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem)
 {
 	for(size_t i = 0; i < itsFilesData.size(); i++)
 		itsFilesData[i].AddDataToHelpDataInfoSystem(theHelpDataInfoSystem, theBasePath, theOriginalHelpDataInfoSystem);
@@ -1358,7 +1359,7 @@ void NFmiCaseStudyCategoryData::ParseJsonPair(json_spirit::Pair &thePair)
 	}
 }
 
-void NFmiCaseStudyCategoryData::AddDataToHelpDataInfoSystem(boost::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem)
+void NFmiCaseStudyCategoryData::AddDataToHelpDataInfoSystem(std::shared_ptr<NFmiHelpDataInfoSystem> &theHelpDataInfoSystem, const std::string &theBasePath, NFmiHelpDataInfoSystem& theOriginalHelpDataInfoSystem)
 {
 	for(auto& producerData : itsProducersData)
 		producerData.AddDataToHelpDataInfoSystem(theHelpDataInfoSystem, theBasePath, theOriginalHelpDataInfoSystem);
@@ -1982,7 +1983,7 @@ bool NFmiCaseStudySystem::StoreMetaData(CWnd *theParentWindow, const std::string
 		return ::DoErrorActions(theParentWindow, errStr, captionStr, showErrorMessageBox);
 	}
 
-	CaseStudyName(PathUtils::getFilename(theMetaDataTotalFilePath, false));
+	CaseStudyName(std::filesystem::path(theMetaDataTotalFilePath).stem().string());
 	// Otetaan currentti aika CaseStudy-ajaksi.
 	itsTime = NFmiMetTime();
 	json_spirit::Object jsonObject = NFmiCaseStudySystem::MakeJsonObject(*this, false);
@@ -2127,7 +2128,7 @@ std::string NFmiCaseStudySystem::MakeBaseDataDirectory(const std::string& theMet
 {
 	std::string dataDir = PathUtils::fixPathSeparators(PathUtils::getPathSectionFromTotalFilePath(theMetaDataFilePath));
 	PathUtils::addDirectorySeparatorAtEnd(dataDir);
-	dataDir += PathUtils::getFilename(theMetaDataFilePath, false);
+	dataDir += std::filesystem::path(theMetaDataFilePath).stem().string();
 	dataDir += "_data";
 	return dataDir;
 }
@@ -2234,8 +2235,7 @@ static std::unique_ptr<NFmiQueryData> CreateCroppedQueryData(NFmiFastQueryInfo &
 			{
 				for(sourceFastInfo.ResetTime(), croppedFastInfo.ResetTime(); sourceFastInfo.NextTime() && croppedFastInfo.NextTime();)
 				{
-					NFmiDataMatrix<float> matrix;
-					sourceFastInfo.CroppedValues(matrix, x1, y1, x2, y2);
+					NFmiDataMatrix<float> matrix = sourceFastInfo.CroppedValues(x1, y1, x2, y2);
 					croppedFastInfo.SetValues(matrix);
 				}
 			}
@@ -2624,13 +2624,13 @@ bool NFmiCaseStudySystem::MakeCaseStudyData(const std::string &theFullPathMetaDa
 
 // Tekee nyt ladattuna olevasta caseStudy-datasta NFmiHelpDataInfoSystem -olion. Staattinen data-osio annetaan argumenttina, 
 // koska niit� ei talleteta CaseStudy-dataan.
-boost::shared_ptr<NFmiHelpDataInfoSystem> NFmiCaseStudySystem::MakeHelpDataInfoSystem(NFmiHelpDataInfoSystem &theOriginalHelpDataInfoSystem, const std::string &theBasePath)
+std::shared_ptr<NFmiHelpDataInfoSystem> NFmiCaseStudySystem::MakeHelpDataInfoSystem(NFmiHelpDataInfoSystem &theOriginalHelpDataInfoSystem, const std::string &theBasePath)
 {
-	boost::shared_ptr<NFmiHelpDataInfoSystem> helpDataInfoSystem;
+	std::shared_ptr<NFmiHelpDataInfoSystem> helpDataInfoSystem;
 	if(itsCategoriesData.size())
 	{
 		const auto &staticHelpDataInfos =  theOriginalHelpDataInfoSystem.StaticHelpDataInfos();
-		helpDataInfoSystem = boost::shared_ptr<NFmiHelpDataInfoSystem>(new NFmiHelpDataInfoSystem());
+		helpDataInfoSystem = std::shared_ptr<NFmiHelpDataInfoSystem>(new NFmiHelpDataInfoSystem());
 		for(size_t i = 0; i < staticHelpDataInfos.size(); i++)
 			helpDataInfoSystem->AddStatic(staticHelpDataInfos[i]);
 

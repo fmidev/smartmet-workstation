@@ -12,9 +12,9 @@
 
 //______________________________________________________________ NFmiAreaView
 
-NFmiAreaView :: NFmiAreaView(int theMapViewDescTopIndex, const boost::shared_ptr<NFmiArea> &theArea
+NFmiAreaView :: NFmiAreaView(int theMapViewDescTopIndex, const std::shared_ptr<NFmiArea> &theArea
 							, NFmiToolBox *theToolBox
-							, boost::shared_ptr<NFmiDrawParam> &theDrawParam
+							, std::shared_ptr<NFmiDrawParam> &theDrawParam
                             , int viewGridRowNumber
                             , int viewGridColumnNumber)
 :NFmiCtrlView(theMapViewDescTopIndex
@@ -40,12 +40,12 @@ NFmiAreaView::NFmiAreaView() = default;
 
 NFmiAreaView::~NFmiAreaView() = default;
 
-boost::shared_ptr<NFmiArea> NFmiAreaView::GetArea() const
+std::shared_ptr<NFmiArea> NFmiAreaView::GetArea() const
 {
 	return itsArea;
 }
 
-void NFmiAreaView::SetArea(const boost::shared_ptr<NFmiArea> &theArea)
+void NFmiAreaView::SetArea(const std::shared_ptr<NFmiArea> &theArea)
 {
 	if(theArea)
 	{

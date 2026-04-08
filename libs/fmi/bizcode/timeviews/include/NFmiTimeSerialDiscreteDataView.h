@@ -33,7 +33,7 @@ class NFmiTimeSerialDiscreteDataView : public NFmiTimeSerialView
  public:
     NFmiTimeSerialDiscreteDataView (int theMapViewDescTopIndex, const NFmiRect & theRect
 								   ,NFmiToolBox * theToolBox
-								   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+								   ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 								   ,int theIndex);
    virtual  ~NFmiTimeSerialDiscreteDataView (void);
 
@@ -49,7 +49,7 @@ class NFmiTimeSerialDiscreteDataView : public NFmiTimeSerialView
    void ChangeTimeSeriesValues(void) override;
 
  protected:
-	void GetLowAndHighLimits(boost::shared_ptr<NFmiDrawParam> &theDrawParam, float &theLowerLimit, float &theHigherLimit);
+	void GetLowAndHighLimits(std::shared_ptr<NFmiDrawParam> &theDrawParam, float &theLowerLimit, float &theHigherLimit);
 	virtual void CreateValueScaleArrays();
 	void DrawModifyingUnit(void) override;
 	bool ModifyFactorPointsSetValue(int theValue, int theIndex);

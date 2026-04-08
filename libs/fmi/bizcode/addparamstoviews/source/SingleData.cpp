@@ -22,7 +22,7 @@ namespace
     // t�ll�in ilman rajoituksia datalle tulisi aina rakennettua 8x8000 64000 rivi� turhaa rivi�, jota kukaan ei koskaa oikeasti k�ytt�isi.
     int g_maxLevelCountInMakingDialogRowData = 80;
 
-    bool isDataStructuresChanged(const boost::shared_ptr<NFmiFastQueryInfo>& newInfo, const std::unique_ptr<NFmiQueryInfo> &latestMetaData)
+    bool isDataStructuresChanged(const std::shared_ptr<NFmiFastQueryInfo>& newInfo, const std::unique_ptr<NFmiQueryInfo> &latestMetaData)
     {
         if(latestMetaData == nullptr)
             return true;
@@ -192,7 +192,7 @@ namespace AddParams
     }
 
     // Returns true, if data's param or level structure is changed
-    bool SingleData::updateData(const boost::shared_ptr<NFmiFastQueryInfo>& info, const NFmiHelpDataInfo *helpDataInfo)
+    bool SingleData::updateData(const std::shared_ptr<NFmiFastQueryInfo>& info, const NFmiHelpDataInfo *helpDataInfo)
     {
         bool dataStructuresChanged = false;
         // No need to do update, if the latest data from infoOrganizer is still the same (with same filename timestamps)
@@ -213,7 +213,7 @@ namespace AddParams
     }
 
     // Returns true, if data's param or level structure is changed
-    bool SingleData::updateOperationalData(const boost::shared_ptr<NFmiFastQueryInfo>& info, const NFmiHelpDataInfo *helpDataInfo)
+    bool SingleData::updateOperationalData(const std::shared_ptr<NFmiFastQueryInfo>& info, const NFmiHelpDataInfo *helpDataInfo)
     {
         bool dataStructuresChanged = ::isDataStructuresChanged(info, latestMetaData_);
         latestDataFilePath_ = info->DataFileName();

@@ -168,7 +168,7 @@ public:
 class StreamlineCalculationParameters
 {
 public:
-    StreamlineCalculationParameters(const boost::shared_ptr<NFmiDrawParam> &theDrawParam);
+    StreamlineCalculationParameters(const std::shared_ptr<NFmiDrawParam> &theDrawParam);
 
     int itsTimeStepInMinutes; // Kun streamlineja lasketaan, ilmapartikkelia liikuttaan tuulen mukana n‰in pitk‰‰n yhteen suuntaan, ennen kuin katsotaan uudessa kohtaa, mihin ja miten lujaa tuuli puhaltaa
     double itsMaxAreaLimit; // streamline polkujen simplifikaatio kerrointa m‰‰ritett‰ess‰ k‰ytet‰‰n t‰t‰ rajana (~0.002)
@@ -191,9 +191,9 @@ public:
 class NFmiStreamLineView : public NFmiStationView
 {
 public:
-	NFmiStreamLineView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+	NFmiStreamLineView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 							,NFmiToolBox * theToolBox
-							,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+							,std::shared_ptr<NFmiDrawParam> &theDrawParam
 							,FmiParameterName theParamId
 							,int theRowIndex
                             ,int theColumnIndex);
@@ -205,15 +205,15 @@ protected:
     void DrawStreamLineData(void);
     void DrawStreamLineData2(const StreamlineCalculationParameters &theCalcParams);
     std::vector<NFmiStreamlineData> CalcStreamLinePaths(const StreamlineCalculationParameters &theCalcParams);
-    void DoStartingPointCalcualtions(const StreamlineCalculationParameters &theCalcParams, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, std::vector<NFmiStreamlineData> &theLatlonPaths, int timeStepInMinutes, double theProximityLimit, NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, size_t xIndex, size_t yIndex, double theLengthLimitInKM);
-    std::vector<NFmiPoint> SearchPathOneDirection(const StreamlineCalculationParameters &theCalcParams, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theStartLatlonPoint, int timeStepInMinutes, double theProximityLimit, bool goForwardDir, double theAreaLimit);
+    void DoStartingPointCalcualtions(const StreamlineCalculationParameters &theCalcParams, std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::vector<NFmiStreamlineData> &theLatlonPaths, int timeStepInMinutes, double theProximityLimit, NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, size_t xIndex, size_t yIndex, double theLengthLimitInKM);
+    std::vector<NFmiPoint> SearchPathOneDirection(const StreamlineCalculationParameters &theCalcParams, std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theStartLatlonPoint, int timeStepInMinutes, double theProximityLimit, bool goForwardDir, double theAreaLimit);
     void CropOvelappings(NFmiStreamlineData &theCurrentPath, std::vector<NFmiStreamlineData> &theLatlonPaths, double theProximityLimit);
     void DrawStreamLinePaths(const StreamlineCalculationParameters &theCalcParams, const std::vector<NFmiStreamlineData> &theLatlonPaths);
     void DrawArroyHeads(const StreamlineCalculationParameters &theCalcParams, std::vector<Gdiplus::PointF> &theStreamLineGdiPoints, const GdiPlusLineInfo &theLineInfo, bool forwardDirection, float theLineWidthInMM);
     NFmiDataMatrix<NFmiPoint> CalcPotencialStartingPoints(const StreamlineCalculationParameters &theCalcParams);
-    NFmiDataMatrix<NFmiStartPointEliminationData> CalcStartingPointEliminationMatrix(const NFmiDataMatrix<NFmiPoint> &theStartingPointMatrix, boost::shared_ptr<NFmiArea> &theZoomedArea);
-    NFmiStreamlineData CalcSingleStreamLinePath(const StreamlineCalculationParameters &theCalcParams, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theStartLatlonPoint, const NFmiPoint &theStartPointIndex, int timeStepInMinutes, double theProximityLimit, bool edgeOfDataPoint, double theAreaLimit);
-    void CalcWindValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, float &WS, float &WD);
+    NFmiDataMatrix<NFmiStartPointEliminationData> CalcStartingPointEliminationMatrix(const NFmiDataMatrix<NFmiPoint> &theStartingPointMatrix, std::shared_ptr<NFmiArea> &theZoomedArea);
+    NFmiStreamlineData CalcSingleStreamLinePath(const StreamlineCalculationParameters &theCalcParams, std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theStartLatlonPoint, const NFmiPoint &theStartPointIndex, int timeStepInMinutes, double theProximityLimit, bool edgeOfDataPoint, double theAreaLimit);
+    void CalcWindValues(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, float &WS, float &WD);
     void DrawOneWayPath(const StreamlineCalculationParameters &theCalcParams, const std::vector<NFmiPoint> &theOneWayPath, const GdiPlusLineInfo &theLineInfo, bool forwardDirection, float theLineWidthInMM);
     void DrawOneWayPath(const StreamlineCalculationParameters &theCalcParams, std::vector<Gdiplus::PointF> &gdiPoints, const GdiPlusLineInfo &lineInfo, bool forwardDirection, float theLineWidthInMM);
     void DrawDebugRect(int sizeInPixels, const NFmiPoint &theLatlon, const NFmiColor &theColor);
@@ -222,8 +222,8 @@ protected:
     void DrawDebugString(double fontSizeInMM, const NFmiPoint &thePoint, const NFmiColor &theColor, const std::string &theText, bool pointInLatlon);
     void DrawDebugEliminationMatrixInfo(const NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix);
     void DrawDebugEliminationInfo(const NFmiStartPointEliminationData &theEliminatioInfo);
-    void DoSingleThreadCalculations(const StreamlineCalculationParameters &theCalcParams, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, int timeStepInMinutes, std::vector<NFmiStreamlineData> &theLatlonPathsOut, double theProximityLimit, double theLengthLimitInKM);
-    void DoMultiThreadCalculations(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, int timeStepInMinutes, std::vector<NFmiStreamlineData> &theLatlonPathsOut, double theProximityLimit, double theLengthLimitInKM);
+    void DoSingleThreadCalculations(const StreamlineCalculationParameters &theCalcParams, std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, int timeStepInMinutes, std::vector<NFmiStreamlineData> &theLatlonPathsOut, double theProximityLimit, double theLengthLimitInKM);
+    void DoMultiThreadCalculations(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, int timeStepInMinutes, std::vector<NFmiStreamlineData> &theLatlonPathsOut, double theProximityLimit, double theLengthLimitInKM);
     void LogStreamlineDebugInfo(const StreamlineCalculationParameters &theCalcParams);
 
 	double itsScreenPixelSizeInMM; // t‰h‰n pit‰‰ saada talteen pikselin koko mm:eiss‰ silloin kun ei olla printtaamassa, 

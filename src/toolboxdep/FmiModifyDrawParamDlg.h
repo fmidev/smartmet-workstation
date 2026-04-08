@@ -29,7 +29,7 @@ class CFmiModifyDrawParamDlg : public CDialog
 {
 // Construction
 public:
-	CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartMetDocumentInterface, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const std::string &theDrawParamPath, bool modifyMapViewParam, bool modifyCrossSectionViewParam, unsigned int theDescTopIndex, unsigned int theRealRowNumber, CWnd* pParent = NULL);
+	CFmiModifyDrawParamDlg(SmartMetDocumentInterface *smartMetDocumentInterface, std::shared_ptr<NFmiDrawParam> &theDrawParam, const std::string &theDrawParamPath, bool modifyMapViewParam, bool modifyCrossSectionViewParam, unsigned int theDescTopIndex, unsigned int theRealRowNumber, CWnd* pParent = NULL);
 	~CFmiModifyDrawParamDlg(void);
 
 	bool RefreshPressed(void) const {return fRefreshPressed;}
@@ -236,10 +236,10 @@ private:
 	void OnShowColorIndexDlg(bool doIsolineCase);
 
 	std::string itsDrawParamPath;
-	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
-	boost::shared_ptr<NFmiDrawParam> itsBackupDrawParam; // vielä yksi vara drawParam, jos joku haluaa katsoa muutoksia päivitys-napista, muttasitten painaa
+	std::shared_ptr<NFmiDrawParam> itsDrawParam;
+	std::shared_ptr<NFmiDrawParam> itsBackupDrawParam; // vielä yksi vara drawParam, jos joku haluaa katsoa muutoksia päivitys-napista, muttasitten painaa
 									  // lopuksi cancelia, tällöin täällä on originaali tallessa.
-	boost::shared_ptr<NFmiDrawParam> itsOrigDrawParam; // tämä on originaali data ja se on tallessa tallessa sitä varten että muutokset eivät
+	std::shared_ptr<NFmiDrawParam> itsOrigDrawParam; // tämä on originaali data ja se on tallessa tallessa sitä varten että muutokset eivät
 									 // voimaan muutoin kun OK-nappia painamalla, tai kun parametri talletetaan ja/tai otetaan käyttöön kaikkialla.
 	bool fRefreshPressed; // optimointia, tähän merkitään vain onko refreshiä painettu, jonka jälkeen jos cancelia painettu, pitää ruutu päivittää
 	bool fModifyMapViewParam;

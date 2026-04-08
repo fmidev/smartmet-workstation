@@ -17,9 +17,9 @@
 
 #include<boost/math/special_functions/round.hpp>
 
-NFmiStationSimpleWeatherView::NFmiStationSimpleWeatherView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+NFmiStationSimpleWeatherView::NFmiStationSimpleWeatherView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 														  ,NFmiToolBox *theToolBox
-														  ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+														  ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 														  ,FmiParameterName theParamId
 														  ,NFmiPoint theOffSet
 														  ,NFmiPoint theSize

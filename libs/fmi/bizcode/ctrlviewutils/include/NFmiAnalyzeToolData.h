@@ -12,6 +12,7 @@
 #include "NFmiMetTime.h"
 #include "NFmiHelpDataInfo.h"
 
+#include <memory>
 #include <boost/function.hpp>
 
 
@@ -25,26 +26,26 @@ class NFmiAreaMaskList;
 class NFmiControlPointObservationBlendingData
 {
     bool fUseBlendingTool = false;
-    // Tämä on valittu havainto tuottaja
+    // Tï¿½mï¿½ on valittu havainto tuottaja
     NFmiProducer itsSelectedProducer;  
-    // Tämä luetaan konffeista ja tämä pyritään saamaan valituksi myös itsSelectedProducer1
+    // Tï¿½mï¿½ luetaan konffeista ja tï¿½mï¿½ pyritï¿½ï¿½n saamaan valituksi myï¿½s itsSelectedProducer1
     // niin kauan kun fIsSelectionMadeYet on false.
     NFmiProducer itsLastSessionProducer; 
-    // Kun SmartMet käynnistetään, alkaa Aikasarja-työkalu potentiaalisesti pitämään
+    // Kun SmartMet kï¿½ynnistetï¿½ï¿½n, alkaa Aikasarja-tyï¿½kalu potentiaalisesti pitï¿½mï¿½ï¿½n
     // kirjaa valitusta parametrista. Jos SmartMet on ehtinyt esim. lukea vasta yhden analyysi datan
-    // mikä ei ollut valittuna viime seeiossa, valitaan se tuottajaksi. Mutta myöhemmin
-    // kun lisää dataa luetaan, tulee myös käyttöön viimeksi valittu, voidaan tämäbn muuttujan
-    // avulla säätää se käyttöön. Mutta jos joku on tehnyt valintoja jo, ei kosketa listojen valintaan.
+    // mikï¿½ ei ollut valittuna viime seeiossa, valitaan se tuottajaksi. Mutta myï¿½hemmin
+    // kun lisï¿½ï¿½ dataa luetaan, tulee myï¿½s kï¿½yttï¿½ï¿½n viimeksi valittu, voidaan tï¿½mï¿½bn muuttujan
+    // avulla sï¿½ï¿½tï¿½ï¿½ se kï¿½yttï¿½ï¿½n. Mutta jos joku on tehnyt valintoja jo, ei kosketa listojen valintaan.
     bool fIsSelectionMadeYet = false; 
     bool fOverrideSelection = false;
-    // Tähän kerätään käytössä olevat oikean tyyppiset observation tuottajat
+    // Tï¿½hï¿½n kerï¿½tï¿½ï¿½n kï¿½ytï¿½ssï¿½ olevat oikean tyyppiset observation tuottajat
     std::vector<NFmiProducer> itsProducers; 
     std::string itsBaseNameSpace;
     // Kuinka vanhoja havaintoja sallitaan mukaan suhteessa aloitusaikaan itsActualFirstTime
     static long itsExpirationTimeInMinutes;
-    // Mikä on maksimi sallittu etäisyys CP-pisteestä lähimpään havaintoasemaan
+    // Mikï¿½ on maksimi sallittu etï¿½isyys CP-pisteestï¿½ lï¿½himpï¿½ï¿½n havaintoasemaan
     static double itsMaxAllowedDistanceToStationInKm;
-    // Kun tarkastellaan mikä on viimeisin hyväksytty havaintoaika, jolta
+    // Kun tarkastellaan mikï¿½ on viimeisin hyvï¿½ksytty havaintoaika, jolta
     // ei saa puuttua liikaa havaintoja editointi- tai zoomatun -alueen asemista.
     static float itsNonMissingObservationValueRatioLimit;
 
@@ -60,7 +61,7 @@ public:
     bool IsSelectionMadeYet(void) const { return fIsSelectionMadeYet; }
     void SeekProducers(NFmiInfoOrganizer &theInfoOrganizer);
     const std::vector<NFmiProducer>& Producers() const { return itsProducers; }
-    static bool IsGoodObservationDataForCpPointConversion(boost::shared_ptr<NFmiFastQueryInfo> &info);
+    static bool IsGoodObservationDataForCpPointConversion(std::shared_ptr<NFmiFastQueryInfo> &info);
     bool OverrideSelection() const { return fOverrideSelection; }
     void OverrideSelection(bool newValue);
 
@@ -107,30 +108,30 @@ public:
 	bool EnableAnalyseTool(NFmiInfoOrganizer &theInfoOrganizer, const NFmiParam &theParam);
     NFmiControlPointObservationBlendingData& ControlPointObservationBlendingData() { return itsControlPointObservationBlendingData; }
 
-    static std::pair<NFmiMetTime, NFmiMetTime> GetLatestSuitableAnalyzeToolInfoTime(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, const boost::shared_ptr<NFmiArea> &checkedObservationArea, bool useObservationBlenderTool, const std::string &usedProducerName);
-    static boost::shared_ptr<NFmiArea> GetUsedAreaForAnalyzeTool(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo);
-    static boost::shared_ptr<NFmiAreaMaskList> GetUsedTimeSerialMaskList(TimeSerialModificationDataInterface &theAdapter);
+    static std::pair<NFmiMetTime, NFmiMetTime> GetLatestSuitableAnalyzeToolInfoTime(std::vector<std::shared_ptr<NFmiFastQueryInfo>> &infos, std::shared_ptr<NFmiFastQueryInfo> &editedInfo, const std::shared_ptr<NFmiArea> &checkedObservationArea, bool useObservationBlenderTool, const std::string &usedProducerName);
+    static std::shared_ptr<NFmiArea> GetUsedAreaForAnalyzeTool(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiFastQueryInfo> &editedInfo);
+    static std::shared_ptr<NFmiAreaMaskList> GetUsedTimeSerialMaskList(TimeSerialModificationDataInterface &theAdapter);
 
 private:
 	bool SelectProducerByName(const std::string &theProducerName, ProdSetter theSetter);
 
-	NFmiProducer itsSelectedProducer1;  // Tämä on nyt valittu tuottaja (niistä mitkä ovat juuri nyt käytössä).
-	NFmiProducer itsLastSessionProducer1; // Tämä luetaan konffeista ja tämä pyritään saamaan valituksi myös itsSelectedProducer1
+	NFmiProducer itsSelectedProducer1;  // Tï¿½mï¿½ on nyt valittu tuottaja (niistï¿½ mitkï¿½ ovat juuri nyt kï¿½ytï¿½ssï¿½).
+	NFmiProducer itsLastSessionProducer1; // Tï¿½mï¿½ luetaan konffeista ja tï¿½mï¿½ pyritï¿½ï¿½n saamaan valituksi myï¿½s itsSelectedProducer1
 										// niin kauan kun fIsSelectionsMadeYet on false.
-	NFmiProducer itsSelectedProducer2; // tätä käytetään vain jos fUseBothProducers on true
+	NFmiProducer itsSelectedProducer2; // tï¿½tï¿½ kï¿½ytetï¿½ï¿½n vain jos fUseBothProducers on true
 	NFmiProducer itsLastSessionProducer2;
-	NFmiMetTime itsAnalyzeToolEndTime; // tähän ajanhetkeen analyysi työkalu liu'uttaa analyysia ennusteeseen
-	bool fAnalyzeToolMode; // onko editori analyysi työkalu tilassa vai ei.
-	bool fUseBothProducers; // Käytetäänkö analyysi muokkauksessa kahta siten että primääri data valituille pisteille ja
-							// sekundääri data ei valituille pisteille.
-	bool fIsSelectionsMadeYet; // Kun SmartMet käynnistetään, alkaa Aikasarja-työkalu potentiaalisesti pitämään
+	NFmiMetTime itsAnalyzeToolEndTime; // tï¿½hï¿½n ajanhetkeen analyysi tyï¿½kalu liu'uttaa analyysia ennusteeseen
+	bool fAnalyzeToolMode; // onko editori analyysi tyï¿½kalu tilassa vai ei.
+	bool fUseBothProducers; // Kï¿½ytetï¿½ï¿½nkï¿½ analyysi muokkauksessa kahta siten ettï¿½ primï¿½ï¿½ri data valituille pisteille ja
+							// sekundï¿½ï¿½ri data ei valituille pisteille.
+	bool fIsSelectionsMadeYet; // Kun SmartMet kï¿½ynnistetï¿½ï¿½n, alkaa Aikasarja-tyï¿½kalu potentiaalisesti pitï¿½mï¿½ï¿½n
 								// kirjaa valitusta parametrista. Jos SmartMet on ehtinyt esim. lukea vasta yhden analyysi datan
-								// mikä ei ollut valittuna viime seeiossa, valitaan se tuottajaksi. Mutta myöhemmin
-								// kun lisää dataa luetaan, tulee myös käyttöön viimeksi valittu, voidaan tämäbn muuttujan
-								// avulla säätää se käyttöön. Mutta jos joku on tehnyt valintoja jo, ei kosketa listojen valintaan.
-	std::vector<NFmiProducer> itsProducers; // tähän kerätään filefilttereiden avullä ladatut ja siis käytössä olevat tuottajat
-	std::vector<std::string> itsPotentialProducersFileFilters; // tähän kerätään kaikki potentiaaliset tuottajat helpdata-info konffeista. Mutta koska konffeista ei saa tuottajaa
-																// joudumme käyttämää tunnisteenä fileFilteriä
+								// mikï¿½ ei ollut valittuna viime seeiossa, valitaan se tuottajaksi. Mutta myï¿½hemmin
+								// kun lisï¿½ï¿½ dataa luetaan, tulee myï¿½s kï¿½yttï¿½ï¿½n viimeksi valittu, voidaan tï¿½mï¿½bn muuttujan
+								// avulla sï¿½ï¿½tï¿½ï¿½ se kï¿½yttï¿½ï¿½n. Mutta jos joku on tehnyt valintoja jo, ei kosketa listojen valintaan.
+	std::vector<NFmiProducer> itsProducers; // tï¿½hï¿½n kerï¿½tï¿½ï¿½n filefilttereiden avullï¿½ ladatut ja siis kï¿½ytï¿½ssï¿½ olevat tuottajat
+	std::vector<std::string> itsPotentialProducersFileFilters; // tï¿½hï¿½n kerï¿½tï¿½ï¿½n kaikki potentiaaliset tuottajat helpdata-info konffeista. Mutta koska konffeista ei saa tuottajaa
+																// joudumme kï¿½yttï¿½mï¿½ï¿½ tunnisteenï¿½ fileFilteriï¿½
     NFmiControlPointObservationBlendingData itsControlPointObservationBlendingData;
 	std::string itsBaseNameSpace;
 };

@@ -79,7 +79,7 @@ END_MESSAGE_MAP()
 
 NFmiString CSaveToDataBaseDlg::TimeString()
 {
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->EditedSmartInfo();
+	std::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->EditedSmartInfo();
 	const NFmiTimeDescriptor &timeDesc = info->TimeDescriptor();
 
     auto language = itsSmartMetDocumentInterface->Language();
@@ -168,7 +168,7 @@ void CSaveToDataBaseDlg::CheckUserNameSelection()
 CString CSaveToDataBaseDlg::StartTimeWarningString(void)
 {
 	NFmiMetTime currentTime(60);
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->EditedSmartInfo();
+	std::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->EditedSmartInfo();
 	int hourLimitWarning = 4;
 	NFmiMetTime startTime(info->TimeDescriptor().FirstTime());
 	std::string tmpStr;

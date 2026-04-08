@@ -127,7 +127,7 @@ protected:
 	void InitHeaders(void);
 	void FillGridWithValues(bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount);
 	void UpdateProducerList(void);
-	boost::shared_ptr<NFmiFastQueryInfo> GetSelectedInfo(void);
+	std::shared_ptr<NFmiFastQueryInfo> GetSelectedInfo(void);
 	NFmiMetTime GetWantedStartTime(void);
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support

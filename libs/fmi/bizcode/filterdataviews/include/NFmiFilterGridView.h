@@ -17,7 +17,7 @@ public:
    bool MouseMove (const NFmiPoint & thePlace, unsigned long theKey) override;
    void Draw(NFmiToolBox * theGTB) override;
    NFmiFilterGridView(NFmiToolBox * theToolBox
-					 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+					 ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 					 ,const NFmiRect& theRect
 					 ,int theIndex);
    ~NFmiFilterGridView();

@@ -2,7 +2,7 @@
 
 #include "NFmiProducer.h"
 #include "SingleRowItem.h"
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include <vector>
 
 class NFmiHelpDataInfoSystem;
@@ -38,7 +38,7 @@ namespace AddParams
         ~ProducerData();
 
         bool updateData(NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem, NFmiInfoData::Type dataType = NFmiInfoData::kNoDataType);
-        bool updateOperationalData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiHelpDataInfoSystem &helpDataInfoSystem);
+        bool updateOperationalData(const std::shared_ptr<NFmiFastQueryInfo> &info, NFmiHelpDataInfoSystem &helpDataInfoSystem);
         bool updateMacroParamData(std::vector<NFmiMacroParamItem> &macroParamTree);
 		bool updateWmsData(const cppext::Node<Wms::Capability>& wmsLayerTree);
 		const NFmiProducer& producer() const { return producer_; }
@@ -48,9 +48,9 @@ namespace AddParams
         std::string makeUniqueProducerIdString() const;
         static void SetCaseStudyMode(bool newState);
     private:
-        bool updateData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem);
+        bool updateData(const std::shared_ptr<NFmiFastQueryInfo> &info, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem);
         bool updateSatelliteData(NFmiHelpDataInfoSystem &helpDataInfoSystem);
-        void addNewSingleData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiHelpDataInfoSystem &helpDataInfoSystem);
+        void addNewSingleData(const std::shared_ptr<NFmiFastQueryInfo> &info, NFmiHelpDataInfoSystem &helpDataInfoSystem);
         std::vector<SingleRowItem> makeDialogRowData(const std::vector<SingleRowItem> &dialogRowDataMemory, const std::vector<std::unique_ptr<SingleRowItem>> &thisDataVector) const;
         int macroParamsToVector(std::vector<std::unique_ptr<SingleRowItem>> &macroParamVector, const std::vector<NFmiMacroParamItem> &macroParamTree, int treeDepth);
 		int wmsDataToVector(std::vector<std::unique_ptr<SingleRowItem>>& wmsVector, const cppext::Node<Wms::Capability>& wmsLayerTree, int treeDepth);

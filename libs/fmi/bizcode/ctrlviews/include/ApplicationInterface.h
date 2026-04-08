@@ -69,7 +69,7 @@ public:
     virtual void ActivateZoomDialog(int theWantedDescTopIndex) = 0;
     virtual std::string GetToolTipString(unsigned int commandID, const std::string &theMagickWordU_) = 0;
     virtual void InvalidateMainMapView(bool bErase = true) = 0;
-    virtual void SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam) = 0;
+    virtual void SetMacroErrorText(const std::string &theErrorStr, std::shared_ptr<NFmiDrawParam>& triggerDrawParam) = 0;
     virtual void CaseStudyLoadingActions(const NFmiMetTime &theUsedTime, const std::string &updateReasonText) = 0;
     virtual void CaseStudyToNormalModeActions() = 0;
     virtual void PutWarningFlagTimerOn() = 0;
@@ -102,7 +102,7 @@ public:
     virtual void SetAllMapViewTooltipDelays(bool doRestoreAction, int delayInMilliSeconds) = 0;
     virtual void UpdateAllViewsAndDialogs(const std::string& reasonForUpdate, bool fUpdateOnlyMapViews = false) = 0;
     virtual void OpenMacroParamInSmarttoolDialog(const std::string& absoluteMacroParamPath) = 0;
-    virtual bool IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam) = 0;
+    virtual bool IsCrossSectionMacroParamOk(std::shared_ptr<NFmiDrawParam>& theUsedDrawParam) = 0;
 
 private:
     void AddToHatchingToolmasterEpsilonFactor(float addedValue);

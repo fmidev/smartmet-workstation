@@ -2,8 +2,8 @@
 #include "NFmiFastQueryInfo.h"
 #include "NFmiDataStoringHelpers.h"
 
-// laske currentilla arvoilla nousu/laskunopeus yksikössä hPa/s. Osaa tehdä päätelmiä eri luotaus pallon lennon
-// vaiheista ja osaa mm. siirtyä seuraavaan vaiheeseen.
+// laske currentilla arvoilla nousu/laskunopeus yksikï¿½ssï¿½ hPa/s. Osaa tehdï¿½ pï¿½ï¿½telmiï¿½ eri luotaus pallon lennon
+// vaiheista ja osaa mm. siirtyï¿½ seuraavaan vaiheeseen.
 double NFmiTempBalloonTrajectorSettings::CalcOmega(double Z, int theTimeStepInMinutes)
 {
     if(theTimeStepInMinutes <= 0 || Z == kFloatMissing)
@@ -12,14 +12,14 @@ double NFmiTempBalloonTrajectorSettings::CalcOmega(double Z, int theTimeStepInMi
     switch(itsState)
     {
     case kBase:
-        itsState = kUp; // HUOM! tästä on siis tarkoitus jatkaa suoraan kUp caseen!
+        itsState = kUp; // HUOM! tï¿½stï¿½ on siis tarkoitus jatkaa suoraan kUp caseen!
     case kUp:
         return CalcOmegaInPhase1(Z, theTimeStepInMinutes);
     case kTop:
         return CalcOmegaInPhase2(theTimeStepInMinutes);
     case kDown:
         return CalcOmegaInPhase3(Z, theTimeStepInMinutes);
-    case kNoDirection: // eli pallo on törmännyt jo maahan tai data on ollut puutteellista
+    case kNoDirection: // eli pallo on tï¿½rmï¿½nnyt jo maahan tai data on ollut puutteellista
         return kFloatMissing;
     default:
         itsState = kNoDirection;
@@ -27,7 +27,7 @@ double NFmiTempBalloonTrajectorSettings::CalcOmega(double Z, int theTimeStepInMi
     }
 }
 
-double NFmiTempBalloonTrajectorSettings::CalcDeltaP(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, double theCurrentPressure, unsigned long thePressureParamIndex, double Z, int theTimeStepInMinutes, unsigned long theGroundLevelIndex)
+double NFmiTempBalloonTrajectorSettings::CalcDeltaP(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, double theCurrentPressure, unsigned long thePressureParamIndex, double Z, int theTimeStepInMinutes, unsigned long theGroundLevelIndex)
 {
     if(theTimeStepInMinutes <= 0 || Z == kFloatMissing)
         itsState = kNoDirection;
@@ -35,14 +35,14 @@ double NFmiTempBalloonTrajectorSettings::CalcDeltaP(boost::shared_ptr<NFmiFastQu
     switch(itsState)
     {
     case kBase:
-        itsState = kUp; // HUOM! tästä on siis tarkoitus jatkaa suoraan kUp caseen!
+        itsState = kUp; // HUOM! tï¿½stï¿½ on siis tarkoitus jatkaa suoraan kUp caseen!
     case kUp:
         return CalcDeltaPInPhase1(theInfo, theLatlon, theTime, theCurrentPressure, thePressureParamIndex, Z, theTimeStepInMinutes);
     case kTop:
         return CalcDeltaPInPhase2(theTimeStepInMinutes);
     case kDown:
         return CalcDeltaPInPhase3(theInfo, theLatlon, theTime, theCurrentPressure, thePressureParamIndex, Z, theTimeStepInMinutes, theGroundLevelIndex);
-    case kNoDirection: // eli pallo on törmännyt jo maahan tai data on ollut puutteellista
+    case kNoDirection: // eli pallo on tï¿½rmï¿½nnyt jo maahan tai data on ollut puutteellista
         return kFloatMissing;
     default:
         itsState = kNoDirection;
@@ -50,7 +50,7 @@ double NFmiTempBalloonTrajectorSettings::CalcDeltaP(boost::shared_ptr<NFmiFastQu
     }
 }
 
-double NFmiTempBalloonTrajectorSettings::CalcDeltaPInPhase1(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, double theCurrentPressure, unsigned long thePressureParamIndex, double Z, int theTimeStepInMinutes)
+double NFmiTempBalloonTrajectorSettings::CalcDeltaPInPhase1(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, double theCurrentPressure, unsigned long thePressureParamIndex, double Z, int theTimeStepInMinutes)
 {
     // 1.a.1 Laske nousunopeus (w)
     double w = CalcRisingRate(Z);
@@ -76,7 +76,7 @@ double NFmiTempBalloonTrajectorSettings::CalcDeltaPInPhase1(boost::shared_ptr<NF
 
 double NFmiTempBalloonTrajectorSettings::CalcDeltaPInPhase2(int theTimeStepInMinutes)
 {
-    // 2.1 lisää aikasteppi kellutus aikaan
+    // 2.1 lisï¿½ï¿½ aikasteppi kellutus aikaan
     itsCurrentFloatTimeInMinutes += theTimeStepInMinutes;
     // 2.2 ollaanko jo kelluttu tarpeeksi
     // 2.3 jos kellutus lopussa, siirry seuraavaan vaiheeseen
@@ -87,7 +87,7 @@ double NFmiTempBalloonTrajectorSettings::CalcDeltaPInPhase2(int theTimeStepInMin
 }
 
 // phase3 eli pallon lasku/putoamis vaihe
-double NFmiTempBalloonTrajectorSettings::CalcDeltaPInPhase3(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, double theCurrentPressure, unsigned long thePressureParamIndex, double Z, int theTimeStepInMinutes, unsigned long theGroundLevelIndex)
+double NFmiTempBalloonTrajectorSettings::CalcDeltaPInPhase3(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, double theCurrentPressure, unsigned long thePressureParamIndex, double Z, int theTimeStepInMinutes, unsigned long theGroundLevelIndex)
 {
     // 3.1 Laske laskunopeus (w)
     double w = CalcFallingRate(Z);
@@ -107,35 +107,35 @@ double NFmiTempBalloonTrajectorSettings::CalcDeltaPInPhase3(boost::shared_ptr<NF
     }
     // 3.4.2 laske deltaP ja palauta se
     theInfo->ParamIndex(thePressureParamIndex);
-    // HUOM! jos ollaan jo pinnassa, pyydä pinta painetta, muuten painetta saadusta korkeudesta
+    // HUOM! jos ollaan jo pinnassa, pyydï¿½ pinta painetta, muuten painetta saadusta korkeudesta
     double newP = (itsState == kNoDirection) ? theInfo->InterpolatedValue(theLatlon, theTime) : theInfo->HeightValue(static_cast<float>(zNew), theLatlon, theTime);
     if(newP != kFloatMissing)
         return newP - theCurrentPressure;
     return kFloatMissing;
 }
 
-// Sodankylän observatoriosta saatu pallon 'vakio' nousunopeus kaava. Riippuvainen korkeudesta
+// Sodankylï¿½n observatoriosta saatu pallon 'vakio' nousunopeus kaava. Riippuvainen korkeudesta
 double NFmiTempBalloonTrajectorSettings::CalcRisingRate(double Z)
 {
     double w = ((1.19 * itsRisingSpeed) - 4.42) * 1. / 10000. * Z + 3.42;
     return w;
 }
 
-// Sodankylän observatoriosta saatu pallon 'vakio' lasku/putoamisnopeus kaava. Riippuvainen korkeudesta
+// Sodankylï¿½n observatoriosta saatu pallon 'vakio' lasku/putoamisnopeus kaava. Riippuvainen korkeudesta
 double NFmiTempBalloonTrajectorSettings::CalcFallingRate(double Z)
 {
     double w = (-3.44*1. / 100000000.*Z*Z) + (1.24*1. / 10000.*Z) - 5.17;
     return w;
 }
 
-// HUOM! Tämän pitäisi olla Z-riippuvainen (g ja roo muuttuvat korkeuden mukaan).
+// HUOM! Tï¿½mï¿½n pitï¿½isi olla Z-riippuvainen (g ja roo muuttuvat korkeuden mukaan).
 // Laskee paineen muutosnopeuden (omega [hPa/s]) vertikaalinopeuden (w) ja korkeuden (z)
 // avulla.
 static double CalcOmegaValue(double w, double  /* Z */)
 {
-    const double g = 9.81; // putoamis kiihtyvyys (pitäisi vaihtua korkeuden mukana)
-    const double rooAir = 1; // ilman tiheys rooAir (olisi pinnalla n. 1.2 ja pitäisi muuttua korkeuden mukaan)
-    double omega = -g*rooAir*w;  // käytetty kaavaa omega = -g*roo*w eli -kiihtyvyys*ilman tiheys*vertikaali nopeus
+    const double g = 9.81; // putoamis kiihtyvyys (pitï¿½isi vaihtua korkeuden mukana)
+    const double rooAir = 1; // ilman tiheys rooAir (olisi pinnalla n. 1.2 ja pitï¿½isi muuttua korkeuden mukaan)
+    double omega = -g*rooAir*w;  // kï¿½ytetty kaavaa omega = -g*roo*w eli -kiihtyvyys*ilman tiheys*vertikaali nopeus
     return omega;
 }
 
@@ -162,10 +162,10 @@ double NFmiTempBalloonTrajectorSettings::CalcOmegaInPhase1(double Z, int theTime
     return CalcOmegaValue(realW, Z);
 }
 
-// phase2 eli pallon kellutus vaihe (kelluu ylä rajalla)
+// phase2 eli pallon kellutus vaihe (kelluu ylï¿½ rajalla)
 double NFmiTempBalloonTrajectorSettings::CalcOmegaInPhase2(int theTimeStepInMinutes)
 {
-    // 2.1 lisää aikasteppi kellutus aikaan
+    // 2.1 lisï¿½ï¿½ aikasteppi kellutus aikaan
     itsCurrentFloatTimeInMinutes += theTimeStepInMinutes;
     // 2.2 ollaanko jo kelluttu tarpeeksi
     // 2.3 jos kellutus lopussa, siirry seuraavaan vaiheeseen
@@ -205,9 +205,9 @@ void NFmiTempBalloonTrajectorSettings::Write(std::ostream& os) const
     os << "// RisingSpeed + FallSpeed + TopHeightInKM + FloatingTimeInMinutes" << std::endl;
     os << itsRisingSpeed << " " << itsFallSpeed << " " << itsTopHeightInKM << " " << itsFloatingTimeInMinutes << std::endl;
 
-    NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
-                                                            // Kun tulee uusia muuttujia, tee tähän extradatan täyttöä, jotta se saadaan talteen tiedopstoon siten että
-                                                            // edelliset versiot eivät mene solmuun vaikka on tullut uutta dataa.
+    NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
+                                                            // Kun tulee uusia muuttujia, tee tï¿½hï¿½n extradatan tï¿½yttï¿½ï¿½, jotta se saadaan talteen tiedopstoon siten ettï¿½
+                                                            // edelliset versiot eivï¿½t mene solmuun vaikka on tullut uutta dataa.
     os << "// possible extra data" << std::endl;
     os << extraData;
 
@@ -224,10 +224,10 @@ void NFmiTempBalloonTrajectorSettings::Read(std::istream& is)
 
     if(is.fail())
         throw std::runtime_error("NFmiTempBalloonTrajectorSettings::Read failed");
-    NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielä mahdollinen extra data
+    NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi vielï¿½ mahdollinen extra data
     is >> extraData;
-    // Tässä sitten otetaaan extradatasta talteen uudet muuttujat, mitä on mahdollisesti tullut
-    // eli jos uusia muutujia tai arvoja, käsittele tässä.
+    // Tï¿½ssï¿½ sitten otetaaan extradatasta talteen uudet muuttujat, mitï¿½ on mahdollisesti tullut
+    // eli jos uusia muutujia tai arvoja, kï¿½sittele tï¿½ssï¿½.
 
     if(is.fail())
         throw std::runtime_error("NFmiTempBalloonTrajectorSettings::Read failed");

@@ -94,9 +94,9 @@ class NFmiConceptualDataView : public NFmiStationView
 {
 
 public:
-	NFmiConceptualDataView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+	NFmiConceptualDataView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 							,NFmiToolBox * theToolBox
-							,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+							,std::shared_ptr<NFmiDrawParam> &theDrawParam
 							,FmiParameterName theParamId
 							,int theRowIndex
                             ,int theColumnIndex);

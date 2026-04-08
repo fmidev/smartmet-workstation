@@ -20,8 +20,8 @@
 //  Description: 
 // 
 //  Change Log: 
-// Changed 1999.09.14/Marko Lisäsin itsRowIndex-attribuutin, jonka avulla voidaan
-//							luoda oikeita popup-menuja. Nämä näytöt sidotaan näyttöruudukon riveihin.
+// Changed 1999.09.14/Marko Lisï¿½sin itsRowIndex-attribuutin, jonka avulla voidaan
+//							luoda oikeita popup-menuja. Nï¿½mï¿½ nï¿½ytï¿½t sidotaan nï¿½yttï¿½ruudukon riveihin.
 // 
 //**********************************************************
 
@@ -33,9 +33,9 @@ class NFmiParamCommandView : public NFmiCtrlView
 {
 
  public:
-   NFmiParamCommandView (int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer);
+   NFmiParamCommandView (int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, std::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer);
    void Draw(NFmiToolBox* theGTB) override;
-   virtual NFmiRect CalcSize(void); // koko saattaa muuttua, ja uutta kokoa pitää voida kysyä oliolta
+   virtual NFmiRect CalcSize(void); // koko saattaa muuttua, ja uutta kokoa pitï¿½ï¿½ voida kysyï¿½ oliolta
    void UpdateTextData(const NFmiPoint& theFontSize, double theLineHeight, const NFmiPoint &theCheckBoxSize, const NFmiPoint &thePixelSize);
    bool ShowView(void){return fShowView;};
    void ShowView(bool newStatus){fShowView = newStatus;};
@@ -52,17 +52,17 @@ class NFmiParamCommandView : public NFmiCtrlView
    void DrawCheckBox(const NFmiRect& parameterRowRect, bool isChecked);
    double ConvertMilliMeterToRelative(double lengthInMilliMeter, bool isDirectionX) const;
 
-   void CalcTextData(void); // tämä tehdään aina kun ruudun kokoa muutetaan (Update) NFmiParamhandler:issa joka jakaa tiedon listassaan oleville view:lle
+   void CalcTextData(void); // tï¿½mï¿½ tehdï¿½ï¿½n aina kun ruudun kokoa muutetaan (Update) NFmiParamhandler:issa joka jakaa tiedon listassaan oleville view:lle
    void CalcFontSize(void);
    NFmiPoint itsFontSize;
    NFmiPoint itsCheckBoxSize;
-   NFmiPoint itsPixelSize; // pikselin koko relatiivisessa yksikössä
-   double itsLineHeight; // itsFontSize.Y()+jokin väli
+   NFmiPoint itsPixelSize; // pikselin koko relatiivisessa yksikï¿½ssï¿½
+   double itsLineHeight; // itsFontSize.Y()+jokin vï¿½li
    bool fShowView; // 1999.12.10/Marko
    bool fHasMapLayer = false;
-   // Jokaiselle riville lisätään tälläinen tuomaan hieman väljyyttä tekstiriveille
+   // Jokaiselle riville lisï¿½tï¿½ï¿½n tï¿½llï¿½inen tuomaan hieman vï¿½ljyyttï¿½ tekstiriveille
    static double itsParameterRowVerticalMarginInMM;
-   // Käytetään jotain väliä reunojen ja eri piirto olioiden välillä (reuna - checkbox - teksti)
+   // Kï¿½ytetï¿½ï¿½n jotain vï¿½liï¿½ reunojen ja eri piirto olioiden vï¿½lillï¿½ (reuna - checkbox - teksti)
    static double itsParameterRowHorizontalMarginInMM;
 };
 

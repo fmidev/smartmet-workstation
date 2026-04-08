@@ -13,7 +13,7 @@ namespace
         return value ? "true" : "false";
     }
 
-    std::string GetSimpleIsolineColorString(boost::shared_ptr<NFmiDrawParam>& theDrawParam)
+    std::string GetSimpleIsolineColorString(std::shared_ptr<NFmiDrawParam>& theDrawParam)
     {
         std::string colorStr;
         if(theDrawParam->UseSingleColorsWithSimpleIsoLines())
@@ -45,7 +45,7 @@ namespace
         return colorStr;
     }
 
-    std::string GetCommonIsolineSetup2String(boost::shared_ptr<NFmiDrawParam>& theDrawParam)
+    std::string GetCommonIsolineSetup2String(std::shared_ptr<NFmiDrawParam>& theDrawParam)
     {
         std::string commonSetupStr;
         commonSetupStr += ", showLabelBox=";
@@ -69,7 +69,7 @@ namespace
         return commonSetupStr;
     }
 
-    std::string GetCommonSimpleIsolineSetupString(boost::shared_ptr<NFmiDrawParam>& theDrawParam)
+    std::string GetCommonSimpleIsolineSetupString(std::shared_ptr<NFmiDrawParam>& theDrawParam)
     {
         std::string commonSetupStr;
         commonSetupStr += ", gab=";
@@ -85,7 +85,7 @@ namespace
         return commonSetupStr;
     }
 
-    std::string GetCommonIsolineSetupString(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool stationData, size_t totalCounterForIsolineDrawing, bool mapViewCase)
+    std::string GetCommonIsolineSetupString(std::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool stationData, size_t totalCounterForIsolineDrawing, bool mapViewCase)
     {
         std::string commonSetupStr;
         if(theDrawParam->UseSimpleIsoLineDefinitions())
@@ -205,7 +205,7 @@ namespace
 
 namespace ForcedLogging
 {
-    void IsolineDrawingInfo(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool stationData, bool toolMasterUsed, bool mapViewCase)
+    void IsolineDrawingInfo(std::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool stationData, bool toolMasterUsed, bool mapViewCase)
     {
         if(!toolMasterUsed)
             return;

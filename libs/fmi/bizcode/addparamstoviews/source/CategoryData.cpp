@@ -15,6 +15,7 @@
 #include "cppext/tree.h"
 
 #include <boost/algorithm/string.hpp>
+#include <memory>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -32,9 +33,9 @@ namespace
         return AddParams::SingleRowItem(AddParams::kProducerType, std::string(producer.GetName()), producer.GetIdent(), nodeCollapsed, uniqueId, NFmiInfoData::kNoDataType);
     }
 
-    std::map<std::string, boost::shared_ptr<NFmiFastQueryInfo>> operationalProducers(NFmiInfoOrganizer &infoOrganizer)
+    std::map<std::string, std::shared_ptr<NFmiFastQueryInfo>> operationalProducers(NFmiInfoOrganizer &infoOrganizer)
     {
-        std::map<std::string, boost::shared_ptr<NFmiFastQueryInfo>> operationalData;
+        std::map<std::string, std::shared_ptr<NFmiFastQueryInfo>> operationalData;
         operationalData.emplace(AddParams::CategoryData::GetEditableDataRowName(), infoOrganizer.FindInfo(NFmiInfoData::kEditable));
         //operationalData.emplace("Comparison data", infoOrganizer.FindInfo(NFmiInfoData::kCopyOfEdited));
         operationalData.emplace("Help editor data", infoOrganizer.FindInfo(NFmiInfoData::kEditingHelpData));
@@ -320,7 +321,7 @@ namespace AddParams
 		bool dataStructuresChanged = false;
 		if (staticDataAdded_) return false;
 
-		boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer.FindInfo(NFmiInfoData::kStationary);
+		std::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer.FindInfo(NFmiInfoData::kStationary);
 		if (!info) return false;
 
 		const auto &producer = *info->Producer();
@@ -395,7 +396,7 @@ namespace AddParams
         std::vector<SingleRowItem> customData;
         
         // *** Sounding and sounding plot ***
-        boost::shared_ptr<NFmiFastQueryInfo> soundingInfo = infoOrganizer.GetPrioritizedSoundingInfo(NFmiInfoOrganizer::ParamCheckFlags(true));
+        std::shared_ptr<NFmiFastQueryInfo> soundingInfo = infoOrganizer.GetPrioritizedSoundingInfo(NFmiInfoOrganizer::ParamCheckFlags(true));
         if(soundingInfo)
         {
             NFmiInfoData::Type soundingType = soundingInfo->DataType();

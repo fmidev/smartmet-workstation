@@ -207,7 +207,7 @@ void CFmiBrushToolDlg::Update(void)
 
 void CFmiBrushToolDlg::FillSpecialValueCombo(void)
 {
-	boost::shared_ptr<NFmiDrawParam> activeDrawParam = GetActiveDrawParam();
+	std::shared_ptr<NFmiDrawParam> activeDrawParam = GetActiveDrawParam();
 	if(activeDrawParam)
 	{
 		FmiParameterName paramId = FmiParameterName(activeDrawParam->Param().GetParam()->GetIdent());
@@ -294,14 +294,14 @@ void CFmiBrushToolDlg::OnSelchangeComboDiscreteValueSelectio()
 	UpdateData(FALSE);
 }
 
-boost::shared_ptr<NFmiDrawParam> CFmiBrushToolDlg::GetActiveDrawParam()
+std::shared_ptr<NFmiDrawParam> CFmiBrushToolDlg::GetActiveDrawParam()
 {
 	return itsSmartMetDocumentInterface->ActiveDrawParamFromActiveRow(itsMapViewDescTopIndex);
 }
 
 void CFmiBrushToolDlg::UpdateParamUnitString(void)
 {
-	boost::shared_ptr<NFmiDrawParam> activeDrawParam = GetActiveDrawParam();
+	std::shared_ptr<NFmiDrawParam> activeDrawParam = GetActiveDrawParam();
 	if(activeDrawParam)
 	{
 		NFmiString str(activeDrawParam->ParameterAbbreviation());
@@ -319,7 +319,7 @@ void CFmiBrushToolDlg::EnableButtons()
 {
     if(IsWindowVisible() && !IsIconic()) // Näyttöä päivitetään vain jos se on näkyvissä ja se ei ole minimized tilassa
     {
-        boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->EditedSmartInfo();
+        std::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->EditedSmartInfo();
         NFmiSmartInfo *smartInfo = dynamic_cast<NFmiSmartInfo*>(info.get());
         if(smartInfo)
         {

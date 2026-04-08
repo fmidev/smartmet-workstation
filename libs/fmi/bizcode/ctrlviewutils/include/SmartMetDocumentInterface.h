@@ -114,7 +114,7 @@ public:
     virtual const NFmiBetaProduct* GetCurrentGeneratedBetaProduct() = 0;
     virtual bool CurrentTime(unsigned int theDescTopIndex, const NFmiMetTime& newCurrentTime, bool fStayInsideAnimationTimes = false) = 0;
     virtual NFmiSatelliteImageCacheSystem& SatelliteImageCacheSystem() = 0;
-    virtual void MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) = 0;
+    virtual void MakeDrawedInfoVectorForMapView(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, std::shared_ptr<NFmiDrawParam> &theDrawParam, const std::shared_ptr<NFmiArea> &theArea) = 0;
     virtual NFmiApplicationWinRegistry& ApplicationWinRegistry() = 0;
     virtual const NFmiPoint& BrushSize() = 0;
     virtual void BrushSize(const NFmiPoint& theSize) = 0;
@@ -129,12 +129,12 @@ public:
     virtual void BrushToolLimitSetting(int newValue) = 0;
     virtual CtrlViewUtils::FmiEditorModifyToolMode ModifyToolMode() = 0;
     virtual void ModifyToolMode(CtrlViewUtils::FmiEditorModifyToolMode newState) = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex) = 0;
+    virtual std::shared_ptr<NFmiDrawParam> ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex) = 0;
     virtual int AbsoluteActiveViewRow(unsigned int theDescTopIndex) = 0;
     virtual void AbsoluteActiveViewRow(unsigned int theDescTopIndex, int theAbsoluteActiveRowIndex) = 0;
     virtual double BrushSpecialParamValue() = 0;
     virtual void BrushSpecialParamValue(double newValue) = 0;
-    virtual boost::shared_ptr<NFmiFastQueryInfo> EditedSmartInfo() = 0;
+    virtual std::shared_ptr<NFmiFastQueryInfo> EditedSmartInfo() = 0;
     virtual void OnButtonRedo() = 0;
     virtual void OnButtonUndo() = 0;
     virtual NFmiHelpDataInfoSystem* HelpDataInfoSystem() = 0;
@@ -161,7 +161,7 @@ public:
     virtual bool Printing() = 0;
     virtual void Printing(bool newStatus) = 0;
     virtual void Printing(unsigned int theMapViewDescTopIndex, bool newStatus) = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> DefaultEditedDrawParam() = 0;
+    virtual std::shared_ptr<NFmiDrawParam> DefaultEditedDrawParam() = 0;
     virtual double DrawObjectScaleFactor() = 0;
     virtual void DrawObjectScaleFactor(double newValue) = 0;
 #ifndef UNIX
@@ -238,8 +238,8 @@ public:
     virtual void PasteDrawParamsToMapViewRow(unsigned int theDescTopIndex) = 0;
     virtual void ToggleTimeControlAnimationView(unsigned int theDescTopIndex) = 0;
     virtual void OnAcceleratorSetHomeTime(int theMapViewDescTopIndex) = 0;
-    virtual void PanMap(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, const NFmiPoint &theZoomDragUpPoint) = 0;
-    virtual void ZoomMapInOrOut(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, double theZoomFactor) = 0;
+    virtual void PanMap(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, const NFmiPoint &theZoomDragUpPoint) = 0;
+    virtual void ZoomMapInOrOut(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, double theZoomFactor) = 0;
     virtual const NFmiTimeBag& EditedDataTimeBag() = 0;
     virtual int FilterDialogUpdateStatus() = 0;
     virtual void FilterDialogUpdateStatus(int newState) = 0;
@@ -298,12 +298,12 @@ public:
     virtual bool ShowHelperData4InTimeSerialView() = 0;
     virtual void ToggleShowHelperDatasInTimeView(int theCommand) = 0;
     virtual NFmiDrawParamList* TimeSerialViewDrawParamList() = 0;
-    virtual void SetMapArea(unsigned int theDescTopIndex, const boost::shared_ptr<NFmiArea> &newArea) = 0;
+    virtual void SetMapArea(unsigned int theDescTopIndex, const std::shared_ptr<NFmiArea> &newArea) = 0;
     virtual const NFmiMetTime& ActiveMapTime() = 0;
     virtual const std::string& FileDialogDirectoryMemory() = 0;
     virtual bool MakeAndStoreFileDialogDirectoryMemory(const std::string& thePathAndFileName) = 0;
     virtual NFmiFixedDrawParamSystem& FixedDrawParamSystem() = 0;
-    virtual void TakeDrawParamInUseEveryWhere(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool useInMap, bool useInTimeSerial, bool useInCrossSection, bool useWithViewMacros) = 0;
+    virtual void TakeDrawParamInUseEveryWhere(std::shared_ptr<NFmiDrawParam> &theDrawParam, bool useInMap, bool useInTimeSerial, bool useInCrossSection, bool useWithViewMacros) = 0;
     virtual NFmiSmartToolInfo* SmartToolInfo() = 0;
     virtual std::shared_ptr<NFmiMacroParamSystem> MacroParamSystem() = 0;
     virtual bool DoSmartToolEditing(const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly) = 0;
@@ -341,7 +341,7 @@ public:
     virtual void SetHighlightedSynopStation(const NFmiPoint &theLatlon, int theWmoId, bool fShowHighlight) = 0;
     virtual bool SynopDataGridViewOn() = 0;
     virtual void SynopDataGridViewOn(bool newState) = 0;
-    virtual std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) = 0;
+    virtual std::vector<std::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) = 0;
     virtual void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews) = 0;
     virtual NFmiLocationSelectionTool* LocationSelectionTool2() = 0;
     virtual NFmiParamBag& AllStaticParams() = 0;
@@ -362,7 +362,7 @@ public:
     virtual std::string GetRelativeViewMacroPath() = 0;
     virtual const std::vector<std::string>& ViewMacroFileNames(bool updateList) = 0;
     virtual NFmiWindTableSystem& WindTableSystem() = 0;
-    virtual void SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea,
+    virtual void SelectLocations(unsigned int theDescTopIndex, std::shared_ptr<NFmiFastQueryInfo> &theInfo, const std::shared_ptr<NFmiArea> &theMapArea,
         const NFmiPoint& theLatLon, const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
         , bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) = 0;
     virtual void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex) = 0;

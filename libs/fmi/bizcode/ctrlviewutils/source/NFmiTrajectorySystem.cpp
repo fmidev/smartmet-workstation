@@ -1,5 +1,6 @@
 #include "NFmiTrajectorySystem.h"
 #include "NFmiFastQueryInfo.h"
+#include <memory>
 #include "NFmiInfoOrganizer.h"
 #include "NFmiProducerName.h"
 #include "NFmiProducerSystem.h"
@@ -66,7 +67,7 @@ NFmiTrajectorySystem::~NFmiTrajectorySystem(void)
 }
 
 // T�m� funktio on j�tetty demo mieless� t�nne, ett� n�kee, miten trajektoreita voi laske itse.
-static void CalcMyTrajectory(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static void CalcMyTrajectory(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
     boost::shared_ptr<NFmiTrajectory> trajectory(new NFmiTrajectory());
     trajectory->Producer(NFmiProducer(kFmiMTAHIRLAM, "Hirlam")); // t�m� merkit��n esim. XML-outputin tietoihin
@@ -146,7 +147,7 @@ static double CalcRandStartPressureLevel(double theStartPressureLevel, double th
 	return value;
 }
 
-static bool IsPacificViewData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static bool IsPacificViewData(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
     if(theInfo)
     {
@@ -168,11 +169,11 @@ void NFmiTrajectorySystem::MakeSureThatTrajectoriesAreCalculated(void)
 
 void NFmiTrajectorySystem::CalculateTrajectory(boost::shared_ptr<NFmiTrajectory> &theTrajectory)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> info = GetWantedInfo(theTrajectory);
+	std::shared_ptr<NFmiFastQueryInfo> info = GetWantedInfo(theTrajectory);
 	CalculateTrajectory(theTrajectory, info);
 }
 
-void NFmiTrajectorySystem::CalculateTrajectory(boost::shared_ptr<NFmiTrajectory> &theTrajectory, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+void NFmiTrajectorySystem::CalculateTrajectory(boost::shared_ptr<NFmiTrajectory> &theTrajectory, std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
     // Datasta pit�� l�yty� joko WS+WD tai u+v komponentit
 	if(theInfo)
@@ -277,7 +278,7 @@ static double RandomizewValue(double w, double randFactor)
 }
 
 // Oletus: theInfo on jo tarkistettu.
-void NFmiTrajectorySystem::CalculateSingleTrajectory(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSingleTrajector &theTrajector, int theTimeStepInMinutes, int theTimeLengthInHours, double theRandFactor, int theRandStep, FmiDirection theDirection, bool fIsentropic, bool fCalcBalloonTrajectory, NFmiTempBalloonTrajectorSettings &theTempBalloonTrajectorSettings)
+void NFmiTrajectorySystem::CalculateSingleTrajectory(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSingleTrajector &theTrajector, int theTimeStepInMinutes, int theTimeLengthInHours, double theRandFactor, int theRandStep, FmiDirection theDirection, bool fIsentropic, bool fCalcBalloonTrajectory, NFmiTempBalloonTrajectorSettings &theTempBalloonTrajectorSettings)
 {
 	if(theInfo->SizeLevels() > 1)
 		CalculateSingle3DTrajectory(theInfo, theTrajector, theTimeStepInMinutes, theTimeLengthInHours, theRandFactor, theRandStep, theDirection, fIsentropic, fCalcBalloonTrajectory, theTempBalloonTrajectorSettings);
@@ -289,7 +290,7 @@ void NFmiTrajectorySystem::CalculateSingleTrajectory(boost::shared_ptr<NFmiFastQ
 	}
 }
 
-static bool IsInfoHybridData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static bool IsInfoHybridData(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
     if(theInfo->SizeLevels() > 1)
 	{
@@ -300,7 +301,7 @@ static bool IsInfoHybridData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 	return false;
 }
 
-static unsigned long GetInfoGroundLevelIndex(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, bool hybridData)
+static unsigned long GetInfoGroundLevelIndex(std::shared_ptr<NFmiFastQueryInfo> &theInfo, bool hybridData)
 {
 	unsigned long groundLevelIndex = static_cast<unsigned long>(-1);
 	if(hybridData)
@@ -326,7 +327,7 @@ static unsigned long GetInfoGroundLevelIndex(boost::shared_ptr<NFmiFastQueryInfo
 	return groundLevelIndex;
 }
 
-static unsigned long GetInfoTopLevelIndex(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, bool hybridData)
+static unsigned long GetInfoTopLevelIndex(std::shared_ptr<NFmiFastQueryInfo> &theInfo, bool hybridData)
 {
 	unsigned long topLevelIndex = static_cast<unsigned long>(-1);
 	if(hybridData)
@@ -352,7 +353,7 @@ static unsigned long GetInfoTopLevelIndex(boost::shared_ptr<NFmiFastQueryInfo> &
 	return topLevelIndex;
 }
 
-static FmiParameterName GetInfoUsedVerticalVelotityParam(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static FmiParameterName GetInfoUsedVerticalVelotityParam(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	FmiParameterName usedWParam = kFmiBadParameter;
 	if(theInfo->Param(kFmiVelocityPotential))
@@ -379,7 +380,7 @@ void NFmiTrajectorySystem::Make3DRandomizing(double &WS, double &WD, double &w, 
 	w += theTrajector.Randwdiff();
 }
 
-static void GetWsAndWsValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, double xInd, double yInd, double tInd, double pInd, double &WS_out, double &WD_out)
+static void GetWsAndWsValues(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, double xInd, double yInd, double tInd, double pInd, double &WS_out, double &WD_out)
 {
     if(metaWindParamUsage.HasWsAndWd())
     {
@@ -399,7 +400,7 @@ static void GetWsAndWsValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, cons
     }
 }
 
-static bool MakeGroundAdjustment(double &WS, double &WD, double &w, double &P, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, double xInd, double yInd, double tInd, unsigned long theLevelIndex, bool isHybridData, FmiParameterName theUsedWParam)
+static bool MakeGroundAdjustment(double &WS, double &WD, double &w, double &P, std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, double xInd, double yInd, double tInd, unsigned long theLevelIndex, bool isHybridData, FmiParameterName theUsedWParam)
 {
 	if(WS == kFloatMissing || WD == kFloatMissing || w == kFloatMissing)
 	{ // jos joku n�ist� puuttuvaa, voi olla ett� ollaan menty maan "sis��n" ja pit�� laskea pinta arvot
@@ -492,7 +493,7 @@ static float CalcOmega_hPa(float T_Celsius, float P_hPa, float verticalSpeed, Fm
 }
 
 
-static double CalcNewPressureLevel(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, double theCurrentPressure, double w, double xInd, double yInd, double tInd, unsigned long theGroundLevelIndex, bool isForwardDir, int theTimeStepInMinutes, bool hybridData, FmiParameterName usedWParam)
+static double CalcNewPressureLevel(std::shared_ptr<NFmiFastQueryInfo> &theInfo, double theCurrentPressure, double w, double xInd, double yInd, double tInd, unsigned long theGroundLevelIndex, bool isForwardDir, int theTimeStepInMinutes, bool hybridData, FmiParameterName usedWParam)
 {
     theInfo->Param(kFmiTemperature);
 	float T_Celsius = theInfo->FastPressureLevelValue(xInd, yInd, tInd, theGroundLevelIndex);
@@ -515,7 +516,7 @@ static double CalcNewPressureLevel(boost::shared_ptr<NFmiFastQueryInfo> &theInfo
 	return nextPressure;
 }
 
-static double CalcNewPressureLevelWithBalloon(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, double theCurrentPressure, unsigned long thePressureParamIndex, double xInd, double yInd, double tInd, double pInd, unsigned long theGroundLevelIndex, unsigned long /* theTopLevelIndex */ , bool isForwardDir, int theTimeStepInMinutes, bool hybridData, NFmiTempBalloonTrajectorSettings &theTempBalloonTrajectorSettings)
+static double CalcNewPressureLevelWithBalloon(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, double theCurrentPressure, unsigned long thePressureParamIndex, double xInd, double yInd, double tInd, double pInd, unsigned long theGroundLevelIndex, unsigned long /* theTopLevelIndex */ , bool isForwardDir, int theTimeStepInMinutes, bool hybridData, NFmiTempBalloonTrajectorSettings &theTempBalloonTrajectorSettings)
 {
 	theInfo->ParamIndex(theInfo->HeightParamIndex());
 	double Z = theInfo->FastPressureLevelValue(xInd, yInd, tInd, pInd);
@@ -563,7 +564,7 @@ static double CalcLogPFromLinearValues(double v1, double v2, double v, double p1
 }
 
 // palauttaa kurrenttiin leveliin paine arvon haluttuun kohtaan ja aikaan
-static double GetPressureValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, double xInd, double yInd, double tInd, double pInd, bool hybridData, unsigned long thePressureParamIndex)
+static double GetPressureValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, double xInd, double yInd, double tInd, double pInd, bool hybridData, unsigned long thePressureParamIndex)
 {
 	if(hybridData)
 	{
@@ -578,7 +579,7 @@ static double GetPressureValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, do
 }
 
 // Oletus: theWantedTpot ei voi olla puuttuva.
-static double CalcNewPressureLevelIsentropically(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiLocation &theLoc, const NFmiMetTime &theTime, double theWantedTpot, unsigned long theTpotParamIndex, unsigned long thePressureParamIndex, double theStartPSearchIndex, bool hybridData)
+static double CalcNewPressureLevelIsentropically(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiLocation &theLoc, const NFmiMetTime &theTime, double theWantedTpot, unsigned long theTpotParamIndex, unsigned long thePressureParamIndex, double theStartPSearchIndex, bool hybridData)
 {
 	double xInd = 0;
 	double yInd = 0;
@@ -678,7 +679,7 @@ static void CalcStartingPointGroundAdjustment(NFmiFastQueryInfo &theInfo, const 
 	}
 }
 
-static float GetHeightValueForNewPressure(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, double thePressure, unsigned long theGroundLevelIndex)
+static float GetHeightValueForNewPressure(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, double thePressure, unsigned long theGroundLevelIndex)
 {
 	theInfo->ParamIndex(theInfo->HeightParamIndex());
 	float heightValue = theInfo->PressureLevelValue(static_cast<float>(thePressure), theLatlon, theTime);
@@ -692,7 +693,7 @@ static float GetHeightValueForNewPressure(boost::shared_ptr<NFmiFastQueryInfo> &
 
 // Oletus: theInfo on jo tarkistettu.
 // theConstantW [m/s]
-void NFmiTrajectorySystem::CalculateSingle3DTrajectory(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSingleTrajector &theTrajector, int theTimeStepInMinutes, int theTimeLengthInHours, double theRandFactor, int theRandStep, FmiDirection theDirection, bool fIsentropic, bool fCalcBalloonTrajectory, NFmiTempBalloonTrajectorSettings &theTempBalloonTrajectorSettings)
+void NFmiTrajectorySystem::CalculateSingle3DTrajectory(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSingleTrajector &theTrajector, int theTimeStepInMinutes, int theTimeLengthInHours, double theRandFactor, int theRandStep, FmiDirection theDirection, bool fIsentropic, bool fCalcBalloonTrajectory, NFmiTempBalloonTrajectorSettings &theTempBalloonTrajectorSettings)
 {
 	// jos hybrid dataa, voidaan maanpinta laskea alimman painepinnan paineen avulla
 	// jos ei, eli painepinta dataa, pidet��n 1000 hPa:ta maanpintana
@@ -801,12 +802,12 @@ void NFmiTrajectorySystem::CalculateSingle3DTrajectory(boost::shared_ptr<NFmiFas
 	}
 }
 
-static void SetFastInfoToZero(boost::shared_ptr<NFmiFastQueryInfo> &theOwnerInfo)
+static void SetFastInfoToZero(std::shared_ptr<NFmiFastQueryInfo> &theOwnerInfo)
 {
-	theOwnerInfo = boost::shared_ptr<NFmiFastQueryInfo>(static_cast<NFmiFastQueryInfo*>(0));
+	theOwnerInfo = std::shared_ptr<NFmiFastQueryInfo>(static_cast<NFmiFastQueryInfo*>(0));
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> NFmiTrajectorySystem::GetWantedInfo(boost::shared_ptr<NFmiTrajectory> &theTrajectory)
+std::shared_ptr<NFmiFastQueryInfo> NFmiTrajectorySystem::GetWantedInfo(boost::shared_ptr<NFmiTrajectory> &theTrajectory)
 {
 	NFmiInfoData::Type dataType = NFmiInfoData::kViewable;
 	if(theTrajectory->DataType() == 2)
@@ -816,7 +817,7 @@ boost::shared_ptr<NFmiFastQueryInfo> NFmiTrajectorySystem::GetWantedInfo(boost::
 	bool useGroundData = false;
 	if(theTrajectory->DataType() == 0)
 		useGroundData = true;
-	boost::shared_ptr<NFmiFastQueryInfo> tmp = itsInfoOrganizer->FindInfo(dataType, theTrajectory->Producer(), useGroundData);
+	std::shared_ptr<NFmiFastQueryInfo> tmp = itsInfoOrganizer->FindInfo(dataType, theTrajectory->Producer(), useGroundData);
 	if(tmp == 0 && theTrajectory->Producer().GetIdent() == kFmiMETEOR)
 	{ // Jos ei l�ytynyt infoa ja jos editoitu oli valittu dataksi
 	  // pit�� etsi� editoitavasta datasta.

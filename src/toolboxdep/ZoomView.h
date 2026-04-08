@@ -27,7 +27,7 @@ public:
 // Operations
 public:
 	 CZoomView(CWnd* theParent, SmartMetDocumentInterface *smartMetDocumentInterface);
-	 boost::shared_ptr<NFmiArea> ZoomedArea(void); // suunta: view -> doc
+	 std::shared_ptr<NFmiArea> ZoomedArea(void); // suunta: view -> doc
 	 virtual void Update(void);
 	 void Update(int theSelectedMapViewIndex);
 // Overrides
@@ -62,7 +62,7 @@ protected:
 	virtual void CreateZoomView(void);
 	NFmiCtrlView* itsZoomView;
 	NFmiToolBox* itsToolBox;
-	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
+	std::shared_ptr<NFmiDrawParam> itsDrawParam;
     SmartMetDocumentInterface *itsSmartMetDocumentInterface;
 public:
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);

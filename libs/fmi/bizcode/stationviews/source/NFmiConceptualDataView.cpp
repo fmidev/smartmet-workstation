@@ -639,9 +639,9 @@ void ConceptualObjectData::InitDataFromRawStrings(void)
 
 NFmiImageMap NFmiConceptualDataView::itsMirwaSymbolMap;
 
-NFmiConceptualDataView::NFmiConceptualDataView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+NFmiConceptualDataView::NFmiConceptualDataView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 											,NFmiToolBox *theToolBox
-											,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+											,std::shared_ptr<NFmiDrawParam> &theDrawParam
 											,FmiParameterName theParamId
 											,int theRowIndex
                                             ,int theColumnIndex)
@@ -957,7 +957,7 @@ void NFmiConceptualDataView::DrawConseptualData(ConceptualObjectData &theData)
 		DrawSymbol(theData);
 }
 
-static double CalcAreaSizeFactor(const boost::shared_ptr<NFmiArea> &theArea)
+static double CalcAreaSizeFactor(const std::shared_ptr<NFmiArea> &theArea)
 {
 	// suomi kartan leveys metreiss� on 750 km
 	// skandi kartan leveys metreiss� on 2000 km

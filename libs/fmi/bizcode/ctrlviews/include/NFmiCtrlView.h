@@ -39,6 +39,7 @@
 #include "NFmiMetTime.h"
 #include "NFmiColor.h"
 #include "NFmiDrawingEnvironment.h"
+#include <memory>
 #include <boost/shared_ptr.hpp>
 
 class NFmiToolBox;
@@ -75,7 +76,7 @@ class NFmiCtrlView
    NFmiCtrlView (void); // aiheuttaa ongelmia tiettyjen operaatioiden kanssa, pit�isi poistaa?? Esim vertailuoperaattorit kaatuvat varmasti !!
    NFmiCtrlView (int theMapViewDescTopIndex, const NFmiRect & theRect
 				,NFmiToolBox * theToolBox
-				,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+				,std::shared_ptr<NFmiDrawParam> &theDrawParam
                 ,int viewGridRowNumber = -1
                 ,int viewGridColumnNumber = -1);
    NFmiCtrlView (int theMapViewDescTopIndex, const NFmiRect & theRect
@@ -102,9 +103,9 @@ class NFmiCtrlView
    inline virtual bool LeftDoubleClick(const NFmiPoint &, unsigned long){ return false; } ; // Marko lis�si 14.12.2001
    inline virtual bool RightDoubleClick(const NFmiPoint &, unsigned long){ return false; };
    inline virtual bool IsMouseDraggingOn(void){ return false; };
-   boost::shared_ptr<NFmiDrawParam> DrawParam(void){return itsDrawParam;};
-   virtual boost::shared_ptr<NFmiArea> GetArea() const { return nullptr; };
-   virtual void SetArea(const boost::shared_ptr<NFmiArea>& theArea) { /* Ei tehd� emoluokassa mit��n */ };
+   std::shared_ptr<NFmiDrawParam> DrawParam(void){return itsDrawParam;};
+   virtual std::shared_ptr<NFmiArea> GetArea() const { return nullptr; };
+   virtual void SetArea(const std::shared_ptr<NFmiArea>& theArea) { /* Ei tehd� emoluokassa mit��n */ };
 
    bool operator==(const NFmiCtrlView& theCtrlView) const;
    bool operator< (const NFmiCtrlView& theCtrlView) const;
@@ -155,7 +156,7 @@ class NFmiCtrlView
    virtual std::string MakeCsvDataString();
 
  protected:
-	NFmiRect CalcMaskRectSize(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+	NFmiRect CalcMaskRectSize(std::shared_ptr<NFmiFastQueryInfo> &theInfo);
 	void InitializeGdiplus(NFmiToolBox *theToolBox, const NFmiRect *theRelativeClipRect);
 	void CleanGdiplus(void);
 	int CalcRealRowIndex(int theRowIndex, int theColumnIndex) const;
@@ -164,8 +165,8 @@ class NFmiCtrlView
 	NFmiRect itsRect;
 	NFmiToolBox * itsToolBox;
 	NFmiDrawingEnvironment itsDrawingEnvironment;
-	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
-	boost::shared_ptr<NFmiFastQueryInfo> itsInfo;
+	std::shared_ptr<NFmiDrawParam> itsDrawParam;
+	std::shared_ptr<NFmiFastQueryInfo> itsInfo;
     // ei omista, ei tuhoa
     CtrlViewDocumentInterface* itsCtrlViewDocumentInterface;
     // ctrl-view:iss� on tieto mink� desctopin alla se on. T�m� ei koske muita kuin karttan�yt�ll� olevia viewt�, muilla t�m� indeksi on -1 joka on puuttuva arvo

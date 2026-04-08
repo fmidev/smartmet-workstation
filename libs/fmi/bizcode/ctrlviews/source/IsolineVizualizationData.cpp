@@ -45,7 +45,7 @@ namespace
 
 IsolineVizualizationData::IsolineVizualizationData() = default;
 
-bool IsolineVizualizationData::initialize(const ContouringJobData& isolineJobData, const boost::shared_ptr<NFmiDrawParam>& drawParam, float dataMin, float dataMax, bool stationData)
+bool IsolineVizualizationData::initialize(const ContouringJobData& isolineJobData, const std::shared_ptr<NFmiDrawParam>& drawParam, float dataMin, float dataMax, bool stationData)
 {
 	isolineJobData_ = isolineJobData;
 	initFromDrawParam(drawParam);
@@ -71,7 +71,7 @@ bool IsolineVizualizationData::initialize(const ContouringJobData& isolineJobDat
 	return isCorrectlyInitialized_;
 }
 
-std::pair<std::vector<float>, std::vector<NFmiColor>> IsolineVizualizationData::getSimpleColors(const boost::shared_ptr<NFmiDrawParam>& drawParam)
+std::pair<std::vector<float>, std::vector<NFmiColor>> IsolineVizualizationData::getSimpleColors(const std::shared_ptr<NFmiDrawParam>& drawParam)
 {
 	std::vector<float> classLimits;
 	std::vector<NFmiColor> colors;
@@ -103,7 +103,7 @@ std::pair<std::vector<float>, std::vector<NFmiColor>> IsolineVizualizationData::
 // Nämä samat custom värit ja luokkarajat talletettiin näyttömakroihin sekä isoviivan 
 // että contour arvojen kohdalle, joten taaksepäin yhteensopivuuden nimissä tällöin
 // isoviivaväri pitää korvata sillä yhdellä valitulla isoviivavärillä.
-static bool IsJointIsolineContourCase(const boost::shared_ptr<NFmiDrawParam>& drawParam)
+static bool IsJointIsolineContourCase(const std::shared_ptr<NFmiDrawParam>& drawParam)
 {
 	if(drawParam->SpecialIsoLineValues() != drawParam->SpecialContourValues())
 		return false;
@@ -112,7 +112,7 @@ static bool IsJointIsolineContourCase(const boost::shared_ptr<NFmiDrawParam>& dr
 	return true;
 }
 
-std::pair<std::vector<float>, std::vector<int>> IsolineVizualizationData::getCustomColors(const boost::shared_ptr<NFmiDrawParam>& drawParam)
+std::pair<std::vector<float>, std::vector<int>> IsolineVizualizationData::getCustomColors(const std::shared_ptr<NFmiDrawParam>& drawParam)
 {
 	const auto& classLimits = drawParam->SpecialIsoLineValues();
 	std::vector<int> colorIndexies = drawParam->SpecialIsoLineColorIndexies();
@@ -126,7 +126,7 @@ std::pair<std::vector<float>, std::vector<int>> IsolineVizualizationData::getCus
 	return std::make_pair(classLimits, colorIndexies);
 }
 
-void IsolineVizualizationData::initFromDrawParam(const boost::shared_ptr<NFmiDrawParam>& drawParam)
+void IsolineVizualizationData::initFromDrawParam(const std::shared_ptr<NFmiDrawParam>& drawParam)
 {
 	useSimpleDefinitions_ = drawParam->UseSimpleIsoLineDefinitions();
 	useSingleColor_ = drawParam->UseSingleColorsWithSimpleIsoLines();

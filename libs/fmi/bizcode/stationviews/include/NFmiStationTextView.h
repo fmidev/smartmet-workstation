@@ -11,9 +11,9 @@ class NFmiStationTextView : public NFmiStationView
 {
 
 public:
-    NFmiStationTextView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+    NFmiStationTextView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
         , NFmiToolBox * theToolBox
-        , boost::shared_ptr<NFmiDrawParam> &theDrawParam
+        , std::shared_ptr<NFmiDrawParam> &theDrawParam
         , FmiParameterName theParamId
         , NFmiPoint theOffSet
         , NFmiPoint theSize

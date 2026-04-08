@@ -130,6 +130,7 @@
 #include <list>
 #include <regex>
 #include "boost/math/special_functions/round.hpp"
+#include <boost/algorithm/string/replace.hpp>
 
 using namespace std;
 
@@ -137,9 +138,9 @@ using namespace std;
 //--------------------------------------------------------
 // Constructor/Destructor
 //--------------------------------------------------------
-NFmiStationViewHandler::NFmiStationViewHandler(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+NFmiStationViewHandler::NFmiStationViewHandler(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 											   ,NFmiToolBox * theToolBox
-											   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+											   ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 											   ,int theRowIndex
 											   ,int theColumnIndex)
 :NFmiCtrlView(theMapViewDescTopIndex, theArea->XYArea()
@@ -363,7 +364,7 @@ bool NFmiStationViewHandler::UseDrawingCache()
         return itsCtrlViewDocumentInterface->MapViewCache(itsMapViewDescTopIndex).IsCacheUsed();
 }
 
-NFmiRect NFmiStationViewHandler::CalcCPCropAreasRelativeRect(const boost::shared_ptr<NFmiArea> &theArea)
+NFmiRect NFmiStationViewHandler::CalcCPCropAreasRelativeRect(const std::shared_ptr<NFmiArea> &theArea)
 {
 	NFmiRect relativeRect;
 	if(theArea)
@@ -834,7 +835,7 @@ void NFmiStationViewHandler::DrawSoundingPlaces(void)
 	for(size_t i = 0; i<extraSoundingProds.size(); i++)
 	{
         const NFmiProducer &prod = extraSoundingProds[i];
-		boost::shared_ptr<NFmiFastQueryInfo> soundingInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(prod);
+		std::shared_ptr<NFmiFastQueryInfo> soundingInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(prod);
         if(prod.GetIdent() == kFmiMAST)
     		DrawSoundingSymbols(soundingInfo, 4, 1.3); // 4=piirr� kolmio v��rinp�in mastodatalle
         else
@@ -843,7 +844,7 @@ void NFmiStationViewHandler::DrawSoundingPlaces(void)
 
 	// Sitten piirret��n TEMP purusta saadut mahdolliset luotaus merkit kartalle
 	NFmiProducer TEMPProd(kFmiRAWTEMP); // TEMP purusta saadut luotaukset ovat t�ll� tuottajalla
-	boost::shared_ptr<NFmiFastQueryInfo> TEMPInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kTEMPCodeSoundingData, TEMPProd, false);
+	std::shared_ptr<NFmiFastQueryInfo> TEMPInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kTEMPCodeSoundingData, TEMPProd, false);
 	DrawSoundingSymbols(TEMPInfo, 2, 1.7); // 2=piirr� salmiakki
 
 	// lopuksi piirret�� muiden p��lle 'oikeat' luotaukset
@@ -900,7 +901,7 @@ NFmiPoint NFmiStationViewHandler::MakeSoundingMarkerScale(NFmiToolBox *theToolBo
 	return NFmiPoint(scaleValueX, scaleValueY);
 }
 
-void NFmiStationViewHandler::DrawMovingSoundingSymbols(boost::shared_ptr<NFmiFastQueryInfo> &theSoundingInfo, int theUsedSymbol, double theSymbolSizeInMM)
+void NFmiStationViewHandler::DrawMovingSoundingSymbols(std::shared_ptr<NFmiFastQueryInfo> &theSoundingInfo, int theUsedSymbol, double theSymbolSizeInMM)
 {
 	// merkit��n kartalle kaikki liikkuvien luotauksien +- 30 minuutin sis�ll� olevat 'luotaukset'
 	theSoundingInfo->FirstLocation();  // Liikkuvissa luotauksissa vain yksi dummy paikka, laitetaan se p��lle
@@ -985,7 +986,7 @@ void NFmiStationViewHandler::DrawMovingSoundingSymbols(boost::shared_ptr<NFmiFas
 	}
 }
 
-void NFmiStationViewHandler::DrawSoundingSymbols(boost::shared_ptr<NFmiFastQueryInfo> &theSoundingInfo, int theUsedSymbol, double theSymbolSizeInMM)
+void NFmiStationViewHandler::DrawSoundingSymbols(std::shared_ptr<NFmiFastQueryInfo> &theSoundingInfo, int theUsedSymbol, double theSymbolSizeInMM)
 {
 	if(theSoundingInfo == 0)
 		return ;
@@ -1355,7 +1356,7 @@ void NFmiStationViewHandler::GetShownMessages()
     itsShownHakeMessages.clear();
     itsShownKaHaMessages.clear();
 
-    boost::shared_ptr<NFmiArea> zoomedArea = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex)->Area();
+    std::shared_ptr<NFmiArea> zoomedArea = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex)->Area();
     int timeStepForMessagesInMinutes = itsCtrlViewDocumentInterface->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
     NFmiMetTime startTime = HakeLegacySupport::HakeSystemConfigurations::MakeStartTimeForHakeMessages(itsTime, timeStepForMessagesInMinutes);
 
@@ -1795,7 +1796,7 @@ void NFmiStationViewHandler::DrawLegends(NFmiToolBox* theGTB)
 			{
 				if(!drawParam->IsParamHidden() && drawParam->ShowContourLegendPotentially())
 				{
-					auto drawParamPtr = boost::make_shared<NFmiDrawParam>(*drawParam);
+					auto drawParamPtr = std::make_shared<NFmiDrawParam>(*drawParam);
 					auto fastInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParamPtr, false, true);
 					NFmiColorContourLegendValues colorContourLegendValues(drawParamPtr, fastInfo);
 					if(colorContourLegendValues.useLegend())
@@ -2002,7 +2003,7 @@ void NFmiStationViewHandler::DrawData(NFmiToolBox* theGTB)
     {
         if(itsViewGridRowNumber == 1) // piirret��n vain ylimm�iseen riviin maskit
         {
-            boost::shared_ptr<NFmiAreaMaskList> maskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
+            std::shared_ptr<NFmiAreaMaskList> maskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
             if(maskList)
                 maskList->SyncronizeMaskTime(itsTime); // en ole varma mihin t�m� pit�� laittaa
             DrawMasksOnMap(theGTB); // piirret��n maski kartan p��lle, mutta varsinaisen datan alle
@@ -2348,7 +2349,7 @@ void NFmiStationViewHandler::LeftButtonDownCrossSectionActions(const NFmiPoint& 
 }
 
 
-void NFmiStationViewHandler::SelectLocations(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatLon
+void NFmiStationViewHandler::SelectLocations(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatLon
 									 ,int theSelectionCombineFunction
 									 ,unsigned long theMask
 									 ,bool fMakeMTAModeAdd // vain tietyist� paikoista kun t�t� metodia kutsutaan, saa luotauksen lis�t� (left buttom up karttan�yt�ll� l�hinn�)
@@ -2375,7 +2376,7 @@ void NFmiStationViewHandler::DoTotalLocationSelection(const NFmiPoint & thePlace
 		{ // lis�sin koodin NFmiStationView-luokasta, ett� paikan valinnat onnistuisivat vaikka mit��n dataa ei ole
 		  // valittuna karttan�yt�lle. Nyt voidaan tyhj�� karttaa klikkailla ja valita pisteit� esim. luotaus-n�yt�lle.
 		  // HUOM! t��lt� ei saa valittuja pisteit� piirretty� karttan�ytt��n.
-			boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
+			std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
 			if(info)
 			{
 				if(itsCtrlViewDocumentInterface->ModifyToolMode() != CtrlViewUtils::kFmiEditorModifyToolModeBrush && !IsControlPointModeOn()) // siveltimen kanssa ei voi valita asemia???
@@ -2485,7 +2486,7 @@ bool NFmiStationViewHandler::LeftButtonUpCrossSectionActions(const NFmiPoint& th
             // t�ytyy my�s mahdollistaa pelk�n luotaus paikan valinta kun ollaan poikkileikkaus moodissa
             if(itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
             {
-                boost::shared_ptr<NFmiFastQueryInfo> emptyInfo;
+                std::shared_ptr<NFmiFastQueryInfo> emptyInfo;
                 SelectLocations(emptyInfo, latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiSelectionMask, true, true);
             }
 
@@ -2539,7 +2540,7 @@ bool NFmiStationViewHandler::IsControlPointModeOn()
 
 void NFmiStationViewHandler::LeftButtonUpBrushToolActions()
 {
-    boost::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->ActiveDrawParamFromActiveRow(itsMapViewDescTopIndex);
+    std::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->ActiveDrawParamFromActiveRow(itsMapViewDescTopIndex);
     if(drawParam)
     {
         itsCtrlViewDocumentInterface->CheckAndValidateAfterModifications(NFmiMetEditorTypes::kFmiBrush, false, NFmiMetEditorTypes::kFmiNoMask, FmiParameterName(drawParam->Param().GetParam()->GetIdent()));
@@ -2849,7 +2850,7 @@ bool NFmiStationViewHandler::ChangeSatelDataChannel(NFmiStationView* theView, sh
 {
 	if(theView)
 	{
-		boost::shared_ptr<NFmiDrawParam> drawParam = theView->DrawParam();
+		std::shared_ptr<NFmiDrawParam> drawParam = theView->DrawParam();
 		if(drawParam && drawParam->DataType() == NFmiInfoData::kSatelData)
 		{
 			if(theDelta < 0)
@@ -2870,10 +2871,10 @@ bool NFmiStationViewHandler::ChangeHybridDataLevel(NFmiStationView* theView, sho
 {
 	if(theView)
 	{
-		boost::shared_ptr<NFmiDrawParam> drawParam = theView->DrawParam();
+		std::shared_ptr<NFmiDrawParam> drawParam = theView->DrawParam();
 		if(drawParam)
 		{
-			boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParam, false, true);
+			std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParam, false, true);
 			if(info)
 			{
 				if(info->SizeLevels() > 1)
@@ -2985,7 +2986,7 @@ bool NFmiStationViewHandler::RightButtonUp(const NFmiPoint & thePlace, unsigned 
 		}
 		if(itsCtrlViewDocumentInterface->ModifyToolMode() == CtrlViewUtils::kFmiEditorModifyToolModeBrush && itsCtrlViewDocumentInterface->ViewBrushed())
 		{
-			boost::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->ActiveDrawParamFromActiveRow(itsMapViewDescTopIndex);
+			std::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->ActiveDrawParamFromActiveRow(itsMapViewDescTopIndex);
 			if(drawParam)
 			{
                 itsCtrlViewDocumentInterface->CheckAndValidateAfterModifications(NFmiMetEditorTypes::kFmiBrush, false, NFmiMetEditorTypes::kFmiNoMask, FmiParameterName(drawParam->Param().GetParam()->GetIdent()));
@@ -3000,7 +3001,7 @@ bool NFmiStationViewHandler::RightButtonUp(const NFmiPoint & thePlace, unsigned 
             // t�ytyy my�s mahdollistaa pelk�n luotaus paikan valinta kun ollaan poikkileikkaus moodissa
             if(itsCtrlViewDocumentInterface->GetMTATempSystem().TempViewOn())
             {
-                boost::shared_ptr<NFmiFastQueryInfo> emptyInfo;
+                std::shared_ptr<NFmiFastQueryInfo> emptyInfo;
                 SelectLocations(emptyInfo, latlon, kFmiSelectionCombineClearFirst, NFmiMetEditorTypes::kFmiDisplayedMask, true, true);
             }
 			ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::CrossSectionView);
@@ -3013,7 +3014,7 @@ bool NFmiStationViewHandler::RightButtonUp(const NFmiPoint & thePlace, unsigned 
 		{ // lis�sin koodin NFmiStationView-luokasta (vastaava metodi), ett� paikan valinnat onnistuisivat vaikka mit��n dataa ei ole
 		  // valittuna karttan�yt�lle. Nyt voidaan tyhj�� karttaa klikkailla ja valita pisteit� esim. luotaus-n�yt�lle.
 		  // HUOM! t��lt� ei saa valittuja pisteit� piirretty� karttan�ytt��n.
-			boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
+			std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
 			if(info)
 			{
 				if((theKey & kCtrlKey) && (theKey & kShiftKey))
@@ -3079,12 +3080,12 @@ bool NFmiStationViewHandler::MouseMoveBrushAction(const NFmiPoint &thePlace)
 {
 	if(itsCtrlViewDocumentInterface->MouseCaptured() && IsIn(thePlace)) // turha, on jo kysytty?
 	{
-		boost::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->ActiveDrawParamFromActiveRow(itsMapViewDescTopIndex);
+		std::shared_ptr<NFmiDrawParam> drawParam = itsCtrlViewDocumentInterface->ActiveDrawParamFromActiveRow(itsMapViewDescTopIndex);
 		if(drawParam && drawParam->DataType() == NFmiInfoData::kEditable && (!drawParam->IsParamHidden())) // parametri ei saa my�s olla piilossa jos sit� meinaa alkaa sutimaan!!
 		{
 			if(drawParam->Param().Type() == kSymbolicParam)
 				return false;
-			boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParam, false, false);
+			std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(drawParam, false, false);
 			if(info && info->Time(itsTime)) // else brushtool
 			{
 				if(IsThisActiveViewRow() && itsCtrlViewDocumentInterface->ActiveViewTime() == itsTime)
@@ -3105,8 +3106,8 @@ bool NFmiStationViewHandler::MouseMoveBrushAction(const NFmiPoint &thePlace)
                         itsCtrlViewDocumentInterface->ActiveViewRect(GetFrame());
 						double modifySizeX = (itsCtrlViewDocumentInterface->BrushSize().X()/100.)/ itsCtrlViewDocumentInterface->ViewGridSize(itsMapViewDescTopIndex).X();
 						NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
-						boost::shared_ptr<NFmiAreaMaskList> emptyMaskList(new NFmiAreaMaskList());
-						boost::shared_ptr<NFmiAreaMaskList> maskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
+						std::shared_ptr<NFmiAreaMaskList> emptyMaskList(new NFmiAreaMaskList());
+						std::shared_ptr<NFmiAreaMaskList> maskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
 						if(drawParam->Param().Type() != kContinuousParam)
 						{
 							NFmiDataParamModifierAreaCircleSetValue modifier(info, drawParam
@@ -3131,7 +3132,7 @@ bool NFmiStationViewHandler::MouseMoveBrushAction(const NFmiPoint &thePlace)
 						}
 						else//(drawParam->Param().Type() == kContinuousParam)
 						{
-                            boost::shared_ptr<NFmiArea> infoArea(info->Area()->Clone());
+                            std::shared_ptr<NFmiArea> infoArea(info->Area()->Clone());
 							NFmiDataParamModifierAreaConeChange modifier(info, drawParam
 											,itsCtrlViewDocumentInterface->UseMaskWithBrush() ? maskList : emptyMaskList
 																		,itsMapArea
@@ -3169,7 +3170,7 @@ bool NFmiStationViewHandler::MouseMoveBrushAction(const NFmiPoint &thePlace)
 bool NFmiStationViewHandler::MouseMoveControlPointAction(const NFmiPoint &thePlace)
 {
 	NFmiPoint latlon(itsMapArea->ToLatLon(thePlace));
-	boost::shared_ptr<NFmiEditorControlPointManager> CPMan = itsCtrlViewDocumentInterface->CPManager();
+	auto CPMan = itsCtrlViewDocumentInterface->CPManager();
 	if(CPMan && CPMan->IsNearestPointActivateCP(latlon))
 	{
 		if(!CPMan->MouseCaptured())
@@ -3335,7 +3336,7 @@ void NFmiStationViewHandler::DrawControlPoints(void)
 	if(itsCtrlViewDocumentInterface->ShowControlPointsOnMap(itsMapViewDescTopIndex) == false)
 		return ;
 
-	boost::shared_ptr<NFmiEditorControlPointManager> CPMan = itsCtrlViewDocumentInterface->CPManager();
+	auto CPMan = itsCtrlViewDocumentInterface->CPManager();
 	if(CPMan)
 	{
 		int pixels = 1 + 2*(itsToolBox->HY(sqrt(itsMapArea->Width() * itsMapArea->Height()))/55);
@@ -3348,7 +3349,7 @@ void NFmiStationViewHandler::DrawControlPoints(void)
 		NFmiPoint oldPenSize = itsDrawingEnvironment.GetPenSize();
 		NFmiPoint normalRectPenSize(2,2);
 		NFmiPoint activeRectPenSize(3,3);
-		boost::shared_ptr<NFmiArea> zoomedArea = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex)->Area();
+		std::shared_ptr<NFmiArea> zoomedArea = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex)->Area();
 
 		for(CPMan->ResetCP(); CPMan->NextCP();)
 		{
@@ -3401,9 +3402,9 @@ void NFmiStationViewHandler::DrawControlPointData(void)
 
 }
 
-static bool CheckIsTotalCloudinessUnitInProcents(boost::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface)
+static bool CheckIsTotalCloudinessUnitInProcents(std::shared_ptr<NFmiDrawParam> &theDrawParam, CtrlViewDocumentInterface *theCtrlViewDocumentInterface)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> info = theCtrlViewDocumentInterface->InfoOrganizer()->Info(theDrawParam, false, true);
+	std::shared_ptr<NFmiFastQueryInfo> info = theCtrlViewDocumentInterface->InfoOrganizer()->Info(theDrawParam, false, true);
 	if(info)
 	{
 		int nonMissingValues = 0;
@@ -3428,7 +3429,7 @@ static bool CheckIsTotalCloudinessUnitInProcents(boost::shared_ptr<NFmiDrawParam
 }
 
 // T�m� funktio toimii vain wind-arrow ja wind-vector tyyppien kanssa.
-static bool IsWantedWindViewType(boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& info, NFmiMetEditorTypes::View wantedViewType)
+static bool IsWantedWindViewType(std::shared_ptr<NFmiDrawParam>& drawParam, std::shared_ptr<NFmiFastQueryInfo>& info, NFmiMetEditorTypes::View wantedViewType)
 {
 	// Jos GridDataPresentationStyle on haluttua tyyppia, se riitt��, koska wind-vec ja arrow tyypit ovat erikoisuus
 	// ja se asetus on k�ytetty vaikka kyse olisi asemadatasta.
@@ -3446,12 +3447,12 @@ static bool IsWantedWindViewType(boost::shared_ptr<NFmiDrawParam>& drawParam, bo
 //--------------------------------------------------------
 // CreateStationView
 //--------------------------------------------------------
-NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+NFmiStationView * NFmiStationViewHandler::CreateStationView(std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
 	NFmiStationView *stationView = 0;
 	if(theDrawParam)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(theDrawParam, false, true);
+		std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(theDrawParam, false, true);
 		NFmiPoint dataOffSet(0,0);
 		NFmiPoint dataSize(20,20);
 		FmiParameterName param = FmiParameterName(theDrawParam->Param().GetParam()->GetIdent());
@@ -3792,11 +3793,11 @@ NFmiStationView * NFmiStationViewHandler::CreateStationView(boost::shared_ptr<NF
 //--------------------------------------------------------
 // SetMapAreaAndRect
 //--------------------------------------------------------
-void NFmiStationViewHandler::SetMapAreaAndRect(const boost::shared_ptr<NFmiArea> &theArea, const NFmiRect& theRect)
+void NFmiStationViewHandler::SetMapAreaAndRect(const std::shared_ptr<NFmiArea> &theArea, const NFmiRect& theRect)
 {
 	if(theArea)
 	{
-        itsMapArea = boost::shared_ptr<NFmiArea>(theArea->Clone());
+        itsMapArea = std::shared_ptr<NFmiArea>(theArea->Clone());
 		itsMapRect = theRect;
 		itsRect = theRect; // t�m� on emon dataa!!!!
 		itsMapArea->SetXYArea(itsMapRect); // siirt�� suhteellist� aluetta
@@ -3953,13 +3954,13 @@ void NFmiStationViewHandler::StoreToolTipDataInDoc(const NFmiPoint& theRelativeP
 	itsCtrlViewDocumentInterface->ToolTipMapViewDescTopIndex(itsMapViewDescTopIndex);
 }
 
-void NFmiStationViewHandler::DoBrushingUndoRituals(boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+void NFmiStationViewHandler::DoBrushingUndoRituals(std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
     if(itsCtrlViewDocumentInterface->HasActiveViewChanged())
     {
         if(theDrawParam)
         {
-            boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(theDrawParam, false, false);
+            std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(theDrawParam, false, false);
             if(info)
                 itsCtrlViewDocumentInterface->SnapShotData(info, theDrawParam->Param(), "Brush tool modification", itsTime, itsTime);
         }
@@ -4019,7 +4020,7 @@ void NFmiStationViewHandler::DrawMasksOnMap(NFmiToolBox* theGTB)
 	{
 		if(!theGTB)
 			return;
-		boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
+		std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
 		if(!info)
 			return ;
 		if(info->Grid() == 0) // editoitavalle asema datalle ei tehd� maskia
@@ -4031,7 +4032,7 @@ void NFmiStationViewHandler::DrawMasksOnMap(NFmiToolBox* theGTB)
 		NFmiRect maskRect(CalcMaskRectSize(info));
 		NFmiPoint xy;
 		NFmiPoint latLon;
-		boost::shared_ptr<NFmiAreaMaskList> maskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
+		std::shared_ptr<NFmiAreaMaskList> maskList = itsCtrlViewDocumentInterface->ParamMaskListMT();
 		if(maskList && maskList->CheckIfMaskUsed())
 		{
 			maskList->SyncronizeMaskTime(itsTime);
@@ -4565,7 +4566,7 @@ void NFmiStationViewHandler::DrawMarkerPoint(const NFmiPoint &theRelativePlace, 
 	itsToolBox->DrawEllipse(theMarkerCircleBase, &envi);
 }
 
-static bool IsPacificViewData(boost::shared_ptr<NFmiFastQueryInfo> &theEditedInfo)
+static bool IsPacificViewData(std::shared_ptr<NFmiFastQueryInfo> &theEditedInfo)
 {
     if(theEditedInfo)
     {
@@ -4956,12 +4957,12 @@ NFmiCtrlView* NFmiStationViewHandler::GetView(const NFmiDataIdent &theDataIdent,
 	return 0;
 }
 
-boost::shared_ptr<NFmiArea> NFmiStationViewHandler::GetArea() const 
+std::shared_ptr<NFmiArea> NFmiStationViewHandler::GetArea() const 
 { 
 	return itsMapArea; 
 }
 
-void NFmiStationViewHandler::SetArea(const boost::shared_ptr<NFmiArea>& theArea)
+void NFmiStationViewHandler::SetArea(const std::shared_ptr<NFmiArea>& theArea)
 {
 	throw std::runtime_error(std::string("Don't use this ") + __FUNCTION__ + " -function before real implementation is made...");
 }

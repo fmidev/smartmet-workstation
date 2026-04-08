@@ -53,8 +53,8 @@ public:
     virtual ~TimeSerialModificationDataInterface(void) = default;
 
     virtual bool CheckValidationFromSettings(void) = 0; // jos t‰m‰ on true, p‰‰tell‰‰n validaatioasetuksista, ett‰ tehd‰‰nkˆ validaatio vai ei. Jos t‰m‰ on false, ei tehd‰ validaatioita
-    virtual boost::shared_ptr<NFmiFastQueryInfo> EditedInfo(void) = 0;
-    virtual boost::shared_ptr<NFmiAreaMaskList> ParamMaskList(void) = 0;
+    virtual std::shared_ptr<NFmiFastQueryInfo> EditedInfo(void) = 0;
+    virtual std::shared_ptr<NFmiAreaMaskList> ParamMaskList(void) = 0;
     virtual bool UseMasksInTimeSerialViews(void) = 0;
     virtual NFmiAnalyzeToolData& AnalyzeToolData(void) = 0;
     virtual NFmiInfoOrganizer* InfoOrganizer(void) = 0;
@@ -62,19 +62,19 @@ public:
     virtual int DoMessageBox(const std::string & theMessage, const std::string & theTitle, unsigned int theMessageBoxType) = 0;
     virtual void MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers) = 0;
     virtual void WindTableSystemMustaUpdateTable(bool newState) = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> GetUsedDrawParamForEditedData(const NFmiDataIdent &theDataIdent) = 0;
+    virtual std::shared_ptr<NFmiDrawParam> GetUsedDrawParamForEditedData(const NFmiDataIdent &theDataIdent) = 0;
     virtual NFmiMetEditorOptionsData& MetEditorOptionsData(void) = 0;
     virtual boost::shared_ptr<NFmiEditorControlPointManager> CPManager(bool getOldSchoolCPManager = false) = 0;
     virtual CtrlViewUtils::FmiSmartMetEditingMode SmartMetEditingMode(void) = 0;
     virtual void SmartMetEditingMode(CtrlViewUtils::FmiSmartMetEditingMode newValue, bool modifySettings) = 0;
     virtual int FilteringParameterUsageState(void) = 0;
     virtual void FilteringParameterUsageState(int newValue) = 0;
-    virtual boost::shared_ptr<NFmiDrawParam> ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex) = 0;
+    virtual std::shared_ptr<NFmiDrawParam> ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex) = 0;
     virtual int AbsoluteActiveViewRow(unsigned int theDescTopIndex) = 0;
     virtual NFmiParamBag& FilteringParamBag(void) = 0;
     virtual const NFmiTimeDescriptor& EditedDataTimeDescriptor(void) = 0;
     virtual const NFmiMetTime& ActiveViewTime(void) = 0;
-    virtual boost::shared_ptr<NFmiTimeDescriptor> CreateDataFilteringTimeDescriptor(boost::shared_ptr<NFmiFastQueryInfo> &theEditedData) = 0;
+    virtual boost::shared_ptr<NFmiTimeDescriptor> CreateDataFilteringTimeDescriptor(std::shared_ptr<NFmiFastQueryInfo> &theEditedData) = 0;
     virtual NFmiSmartToolInfo* SmartToolInfo(void) = 0;
     virtual std::string& SmartToolEditingErrorText(void) = 0;
     virtual NFmiGriddingHelperInterface* GetGriddingHelper(void) = 0;
@@ -93,7 +93,7 @@ public:
     virtual int DataToDBCheckMethod(void) = 0;
     virtual NFmiDataLoadingInfo& GetUsedDataLoadingInfo(void) = 0;
     virtual NFmiHelpEditorSystem& HelpEditorSystem(void) = 0;
-    virtual bool StoreData(const std::string& theFileName, boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, bool askForSave) = 0;
+    virtual bool StoreData(const std::string& theFileName, std::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, bool askForSave) = 0;
     virtual bool StoreData(bool fDoSaveTmpRename, const std::string& theFileName, NFmiQueryData *theData) = 0;
     virtual NFmiHelpDataInfoSystem* HelpDataInfoSystem(void) = 0;
     virtual bool DataLoadingOK(bool noError) = 0;
@@ -113,8 +113,8 @@ public:
     virtual const std::string& GetCurrentSmartToolMacro(void) = 0;
     virtual std::shared_ptr<NFmiMacroParamSystem> MacroParamSystem(void) = 0;
     virtual void SetLatestMacroParamErrorText(const std::string& theErrorText) = 0;
-    virtual void SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam) = 0;
-    virtual boost::shared_ptr<NFmiArea> MapHandlerArea(bool fGetZoomedArea) = 0;
+    virtual void SetMacroErrorText(const std::string &theErrorStr, std::shared_ptr<NFmiDrawParam>& triggerDrawParam) = 0;
+    virtual std::shared_ptr<NFmiArea> MapHandlerArea(bool fGetZoomedArea) = 0;
     virtual FmiLanguage Language(void) = 0;
     virtual const NFmiRect& CPGridCropRect(void) = 0;
     virtual bool UseCPGridCrop(void) = 0;
@@ -125,5 +125,5 @@ public:
     virtual bool MakeSureToolMasterPoolIsRunning(void) = 0;
     virtual bool IsWorkingDataSaved() = 0;
     virtual void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false) = 0;
-    virtual boost::shared_ptr<NFmiArea> GetUsedMapViewArea(int theMapViewDescTopIndex) = 0;
+    virtual std::shared_ptr<NFmiArea> GetUsedMapViewArea(int theMapViewDescTopIndex) = 0;
 };

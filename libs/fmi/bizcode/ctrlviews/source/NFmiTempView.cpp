@@ -958,7 +958,7 @@ static std::string GetLonText(NFmiSoundingData &theData)
 	return str;
 }
 
-static std::string GetElevationText(NFmiSoundingData &theData, boost::shared_ptr<NFmiFastQueryInfo> theInfo)
+static std::string GetElevationText(NFmiSoundingData &theData, std::shared_ptr<NFmiFastQueryInfo> theInfo)
 {
 	std::string str("SELEV=");
 	if(theInfo && theInfo->Param(kFmiTopoGraf))
@@ -1300,7 +1300,7 @@ void NFmiTempView::DrawSoundingInTextFormat(TotalSoundingData & usedTotalData)
 	DrawNextLineToIndexView(lineH, text, str, p);
 
 	auto soundingDataLevelStrings = MakeSoundingDataLevelStrings(usedTotalData.itsSoundingData);
-	DrawWantedTextualSoundingDataLevels(text, p, soundingDataLevelStrings, lineH, usedTotalData.itsSoundingData.GroundLevelValue());
+	DrawWantedTextualSoundingDataLevels(text, p, soundingDataLevelStrings, lineH, usedTotalData.itsGroundLevelValue);
 }
 
 void NFmiTempView::DrawSimpleLineWithGdiplus(const NFmiTempLineInfo& lineInfo, const NFmiPoint& relativeP1, const NFmiPoint& relativeP2, bool fixEndPixelX, bool fixEndPixelY)
@@ -1967,7 +1967,7 @@ void NFmiTempView::DrawBackground(void)
 	DrawFrame(itsDrawingEnvironment, itsTempViewDataRects.getSoundingCurveDataRect());
 }
 
-static NFmiLocation GetSoundingLocation(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMTATempSystem::TempInfo &theTempInfo, NFmiProducerSystem &theProdSystem)
+static NFmiLocation GetSoundingLocation(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMTATempSystem::TempInfo &theTempInfo, NFmiProducerSystem &theProdSystem)
 {
 	bool movingSounding = NFmiFastInfoUtils::IsMovingSoundingData(theInfo);
 	NFmiLocation location(theTempInfo.Latlon());
@@ -1989,7 +1989,7 @@ static NFmiLocation GetSoundingLocation(boost::shared_ptr<NFmiFastQueryInfo> &th
 	return location;
 }
 
-static bool IsSurfaceDataCombiningAllowed(CtrlViewDocumentInterface* ctrlViewDocumentInterface, boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
+static bool IsSurfaceDataCombiningAllowed(CtrlViewDocumentInterface* ctrlViewDocumentInterface, std::shared_ptr<NFmiFastQueryInfo>& theInfo)
 {
 	if(ctrlViewDocumentInterface && theInfo)
 	{
@@ -2002,16 +2002,16 @@ static bool IsSurfaceDataCombiningAllowed(CtrlViewDocumentInterface* ctrlViewDoc
 	return false;
 }
 
-static boost::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(const NFmiProducer& theProducer, NFmiInfoOrganizer& theInfoOrganizer)
+static std::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(const NFmiProducer& theProducer, NFmiInfoOrganizer& theInfoOrganizer)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> groundDataInfo;
+	std::shared_ptr<NFmiFastQueryInfo> groundDataInfo;
 	// Jos tuottajalta l�ytyy pintadataa, miss� parametri kFmiPressureAtStationLevel, palautetaan se.
 	auto infoVec = theInfoOrganizer.GetInfos(theProducer.GetIdent());
 	if(infoVec.size())
 	{
 		for(size_t i = 0; i < infoVec.size(); i++)
 		{
-			boost::shared_ptr<NFmiFastQueryInfo> tmpInfo = infoVec[i];
+			std::shared_ptr<NFmiFastQueryInfo> tmpInfo = infoVec[i];
 			if(tmpInfo && tmpInfo->Param(kFmiPressureAtStationLevel))
 			{
 				groundDataInfo = tmpInfo; // l�ytyi data ja siit� tarvittava parametri, otetaan se k�ytt��n
@@ -2024,7 +2024,7 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(const NFmiProd
 
 
 // Haetaan painepinta datalle pinta-dataa, ett� luotauksia voidaan leikata maanpinnalle.
-static boost::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(CtrlViewDocumentInterface* ctrlViewDocumentInterface, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiProducer& theProducer)
+static std::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(CtrlViewDocumentInterface* ctrlViewDocumentInterface, std::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiProducer& theProducer)
 {
 	if(ctrlViewDocumentInterface && theInfo)
 	{
@@ -2046,7 +2046,7 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetPossibleGroundData(CtrlViewDocume
 	return nullptr;
 }
 
-NFmiGroundLevelValue NFmiTempView::GetPossibleGroundLevelValue(boost::shared_ptr<NFmiFastQueryInfo>& soundingInfo, const NFmiPoint& latlon, const NFmiMetTime& atime)
+NFmiGroundLevelValue NFmiTempView::GetPossibleGroundLevelValue(std::shared_ptr<NFmiFastQueryInfo>& soundingInfo, const NFmiPoint& latlon, const NFmiMetTime& atime)
 {
 	NFmiGroundLevelValue groundLevelValue;
 	if(soundingInfo)
@@ -2125,7 +2125,7 @@ bool NFmiTempView::IsSelectedProducerIndex(int theProducerIndex) const
 	return theProducerIndex == itsCtrlViewDocumentInterface->GetMTATempSystem().GetSelectedProducerIndex(true);
 }
 
-void NFmiTempView::ResetTextualScrollingIfSoundingDataChanged(const NFmiMTATempSystem::SoundingProducer& theProducer, const NFmiMTATempSystem::TempInfo& theTempInfo, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, int theProducerIndex)
+void NFmiTempView::ResetTextualScrollingIfSoundingDataChanged(const NFmiMTATempSystem::SoundingProducer& theProducer, const NFmiMTATempSystem::TempInfo& theTempInfo, std::shared_ptr<NFmiFastQueryInfo>& theInfo, int theProducerIndex)
 {
 	// Tarkastelut tehd��n vain valitulle sounding tuottaja datalle.
 	if(IsSelectedProducerIndex(theProducerIndex))
@@ -2140,7 +2140,7 @@ void NFmiTempView::ResetTextualScrollingIfSoundingDataChanged(const NFmiMTATempS
 	}
 }
 
-static bool IsNewData(boost::shared_ptr<NFmiFastQueryInfo> &info)
+static bool IsNewData(std::shared_ptr<NFmiFastQueryInfo> &info)
 {
 	return CtrlViewUtils::IsConsideredAsNewData(info, 0, false);
 }
@@ -2159,7 +2159,7 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 	int amdarDataStartOffsetInMinutes = (theProducer.GetIdent() == 1015) ? 30 : 0;
 	bool mainCurve = (theModelRunIndex == 0);
 
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, usedTempInfo.Time(), usedTempInfo.Latlon(), theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true), amdarDataStartOffsetInMinutes);
+	std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, usedTempInfo.Time(), usedTempInfo.Latlon(), theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true), amdarDataStartOffsetInMinutes);
 	if(theProducer.useServer() || info)
 	{
 		auto sounding = GetTotalsoundingData(info, usedTempInfo, theProducer, theProducerIndex);
@@ -2174,7 +2174,7 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 			usedColor = NFmiColorSpaces::GetBrighterColor(usedColor, theBrightningFactor);
 		itsDrawingEnvironment.SetFrameColor(usedColor);
         bool onSouthernHemiSphere = usedTempInfo.Latlon().Y() < 0;
-		sounding.itsSoundingData.GroundLevelValue(GetPossibleGroundLevelValue(info, usedTempInfo.Latlon(), usedTempInfo.Time()));
+		sounding.itsGroundLevelValue = GetPossibleGroundLevelValue(info, usedTempInfo.Latlon(), usedTempInfo.Time());
 		DrawSounding(sounding, theProducerIndex, usedColor, mainCurve, onSouthernHemiSphere, ::IsNewData(info));
         itsSoundingDataCacheForTooltips.insert(std::make_pair(NFmiMTATempSystem::SoundingDataCacheMapKey(usedTempInfo, theProducer, theModelRunIndex), sounding));
 	}
@@ -2188,7 +2188,7 @@ void NFmiTempView::DrawOneSounding(const NFmiMTATempSystem::SoundingProducer &th
 	}
 }
 
-TotalSoundingData NFmiTempView::GetTotalsoundingData(boost::shared_ptr<NFmiFastQueryInfo>& info, NFmiMTATempSystem::TempInfo& usedTempInfo, const NFmiMTATempSystem::SoundingProducer& theProducer, int theProducerIndex)
+TotalSoundingData NFmiTempView::GetTotalsoundingData(std::shared_ptr<NFmiFastQueryInfo>& info, NFmiMTATempSystem::TempInfo& usedTempInfo, const NFmiMTATempSystem::SoundingProducer& theProducer, int theProducerIndex)
 {
 	auto usedLocationWithName = ::GetSoundingLocation(info, usedTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());
 	usedTempInfo.Latlon(usedLocationWithName.GetLocation());
@@ -2209,7 +2209,7 @@ void NFmiTempView::DrawMainDataLegendInEmptyCase(bool mainCurve, const NFmiMTATe
 		emptySoundingData.Location(NFmiLocation(usedTempInfo.Latlon()));
 		emptySoundingData.Time(usedTempInfo.Time());
 		// Haetaan luotausdata ilman aika hakuehtoa, jottaa saataisiin mahdollinen originTime datasta
-		boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true));
+		std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(theProducer, theModelRunIndex, NFmiInfoOrganizer::ParamCheckFlags(true));
 		if(info)
 		{
 			emptySoundingData.OriginTime(info->OriginTime());
@@ -2235,7 +2235,7 @@ void NFmiTempView::ResetSelectedDataInEmptyCase(int theProducerIndex, int theMod
 	}
 }
 
-bool NFmiTempView::FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, TotalSoundingData &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, boost::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo, const NFmiMTATempSystem::SoundingProducer &theProducer)
+bool NFmiTempView::FillSoundingData(std::shared_ptr<NFmiFastQueryInfo> &theInfo, TotalSoundingData &theSoundingData, const NFmiMetTime &theTime, const NFmiLocation &theLocation, std::shared_ptr<NFmiFastQueryInfo> &theGroundDataInfo, const NFmiMTATempSystem::SoundingProducer &theProducer)
 {
 	bool status = false;
 	if(theProducer.useServer())
@@ -2259,7 +2259,7 @@ bool NFmiTempView::FillSoundingData(boost::shared_ptr<NFmiFastQueryInfo> &theInf
 	return status;
 }
 
-bool NFmiTempView::DoIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData)
+bool NFmiTempView::DoIntegrationSounding(std::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData)
 {
 	auto isModelData = theInfo->IsGrid();
 	auto doAreaIntegration = theSoundingData.itsIntegrationRangeInKm > 0;
@@ -2267,7 +2267,7 @@ bool NFmiTempView::DoIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& t
 	return isModelData && (doAreaIntegration || doTimeIntegration);
 }
 
-bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo)
+bool NFmiTempView::FillIntegrationSounding(std::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, std::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo)
 {
 	auto rangeInMeters = theSoundingData.itsIntegrationRangeInKm * 1000.;
 	bool singleLocation = (rangeInMeters == 0);
@@ -2302,7 +2302,7 @@ bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>&
 
 std::vector<FmiParameterName> gSoundingParametersWithNormalAvg{ kFmiTemperature,kFmiDewPoint,kFmiHumidity,kFmiPressure,kFmiGeopHeight,kFmiWindUMS,kFmiWindVMS,kFmiTotalCloudCover };
 
-static bool CalcAvgSoundingData(TotalSoundingData& theSoundingDataOut, std::vector<NFmiSoundingData>& soundingDataList, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo)
+static bool CalcAvgSoundingData(TotalSoundingData& theSoundingDataOut, std::vector<NFmiSoundingData>& soundingDataList, std::shared_ptr<NFmiFastQueryInfo>& theInfo, std::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo)
 {
 	if(!soundingDataList.empty())
 	{
@@ -2349,7 +2349,7 @@ static bool CalcAvgSoundingData(TotalSoundingData& theSoundingDataOut, std::vect
 	return false;
 }
 
-bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, boost::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo, unsigned long timeIndex1, unsigned long timeIndex2, const std::vector<unsigned long>& locationIndexes)
+bool NFmiTempView::FillIntegrationSounding(std::shared_ptr<NFmiFastQueryInfo>& theInfo, TotalSoundingData& theSoundingData, const NFmiMetTime& theTime, const NFmiLocation& theLocation, std::shared_ptr<NFmiFastQueryInfo>& theGroundDataInfo, unsigned long timeIndex1, unsigned long timeIndex2, const std::vector<unsigned long>& locationIndexes)
 {
 	std::vector<NFmiSoundingData> soundingDataList;
 	bool singleLocation = locationIndexes.empty();
@@ -2395,7 +2395,7 @@ bool NFmiTempView::FillIntegrationSounding(boost::shared_ptr<NFmiFastQueryInfo>&
 }
 
 // Oletus: theGridPoint sis�lt�� kokonaisluvut X ja Y arvoina
-static unsigned long CalcGridPointLocationIndex(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiPoint& theGridPoint)
+static unsigned long CalcGridPointLocationIndex(std::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiPoint& theGridPoint)
 {
 	if(theGridPoint.X() < 0 || theGridPoint.Y() < 0)
 		return gMissingIndex;
@@ -2413,7 +2413,7 @@ struct InsideGridRangeData
 	bool insideRange = false;
 };
 
-static InsideGridRangeData IsInsideGridAndRange(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiPoint& theCheckedGridPoint, const NFmiLocation& theLocationOrig, double theRangeInMeters)
+static InsideGridRangeData IsInsideGridAndRange(std::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiPoint& theCheckedGridPoint, const NFmiLocation& theLocationOrig, double theRangeInMeters)
 {
 	InsideGridRangeData resultData;
 	resultData.locationIndex = ::CalcGridPointLocationIndex(theInfo, theCheckedGridPoint);
@@ -2438,7 +2438,7 @@ static void AddPossibleMatches(bool &isAnyPointInsideRange, std::set<unsigned lo
 // Palauttaa parin jossa:
 // first:issa on tieto oliko yksik��n testattu hilapiste tarpeeksi l�hell� theLocation:ia (voi olla datan oman hilan ulkonakin)
 // second:issa on lista niist� datan hilapisteist�, jotka olivat s�teen sis�ll� originaalipisteest�
-static std::pair<bool, std::vector<unsigned long>> CalcMatchingGridPointRingLocationIndexes(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiPoint& theGridPointOrig, const NFmiLocation& theLocationOrig, double theRangeInMeters, int ringIndex)
+static std::pair<bool, std::vector<unsigned long>> CalcMatchingGridPointRingLocationIndexes(std::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiPoint& theGridPointOrig, const NFmiLocation& theLocationOrig, double theRangeInMeters, int ringIndex)
 {
 	if(ringIndex == 0)
 	{
@@ -2479,7 +2479,7 @@ static std::pair<bool, std::vector<unsigned long>> CalcMatchingGridPointRingLoca
 // mutta optimoi koodia niin ett� lasket ensin kilometreihin sopivan laatikon sijainnin 
 // datan maailmassa ja muuta ne x/y suuntaisiksi hilapiste lokaatioiksi 0-n, 0-m
 // Ja vasta t�lle pikkulaatikon alueella oleville pisteille tee lopullinen rangetarkistus.
-std::vector<unsigned long> NFmiTempView::CalcAreaIntegrationLocationIndexes(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiLocation& theLocation, double theRangeInMeters)
+std::vector<unsigned long> NFmiTempView::CalcAreaIntegrationLocationIndexes(std::shared_ptr<NFmiFastQueryInfo>& theInfo, const NFmiLocation& theLocation, double theRangeInMeters)
 {
 	std::vector<unsigned long> locationIndexes;
 	if(theInfo->IsGrid())
@@ -2516,7 +2516,7 @@ void NFmiTempView::FillInPossibleMissingPressureData(NFmiSoundingData& theSoundi
 		{
 			if(selectedProducer.GetIdent() != dataProducer.GetIdent())
 			{
-				boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(selectedProducer, theTime, theLocation.GetLocation(), 0, NFmiInfoOrganizer::ParamCheckFlags(true));
+				std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(selectedProducer, theTime, theLocation.GetLocation(), 0, NFmiInfoOrganizer::ParamCheckFlags(true));
 				if(info && info->IsGrid() && info->PressureDataAvailable() && info->TimeDescriptor().IsInside(theTime))
 				{
 					auto& pVector = theSoundingData.GetParamData(kFmiPressure);
@@ -3238,7 +3238,7 @@ void NFmiTempView::DrawSounding(TotalSoundingData &theUsedDataInOut, int theProd
 	envi.SetFrameColor(theUsedSoundingColor);
 	itsToolBox->UseClipping(true); // laitetaan clippaus taas p��lle (huonoa koodia, mutta voi voi)
 
-    DrawSecondaryData(theUsedDataInOut.itsSoundingData, theUsedSoundingColor, theUsedDataInOut.itsSoundingData.GroundLevelValue());
+    DrawSecondaryData(theUsedDataInOut.itsSoundingData, theUsedSoundingColor, theUsedDataInOut.itsGroundLevelValue);
 
     if(fMainCurve)
         DrawHodograf(theUsedDataInOut.itsSoundingData, theProducerIndex);
@@ -3257,24 +3257,24 @@ void NFmiTempView::DrawSounding(TotalSoundingData &theUsedDataInOut, int theProd
         NFmiTempLineInfo lineInfo = mtaTempSystem.DewPointLineInfo();
 		lineInfo.Color(theUsedSoundingColor);
 		lineInfo.Thickness(boost::math::iround(lineInfo.Thickness() * itsDrawSizeFactor.X() * ExtraPrintLineThicknesFactor(true)));
-		DrawTemperatures(theUsedDataInOut.itsSoundingData, kFmiDewPoint, lineInfo, theUsedDataInOut.itsSoundingData.GroundLevelValue());
+		DrawTemperatures(theUsedDataInOut.itsSoundingData, kFmiDewPoint, lineInfo, theUsedDataInOut.itsGroundLevelValue);
 	}
 
 	{
         NFmiTempLineInfo lineInfo = mtaTempSystem.TemperatureLineInfo();
 		lineInfo.Color(theUsedSoundingColor);
 		lineInfo.Thickness(boost::math::iround(lineInfo.Thickness() * itsDrawSizeFactor.X() * ExtraPrintLineThicknesFactor(true)));
-		DrawTemperatures(theUsedDataInOut.itsSoundingData, kFmiTemperature, lineInfo, theUsedDataInOut.itsSoundingData.GroundLevelValue());
+		DrawTemperatures(theUsedDataInOut.itsSoundingData, kFmiTemperature, lineInfo, theUsedDataInOut.itsGroundLevelValue);
 	}
 
 	// Draw height values
 	if(fMainCurve)
-		DrawHeightValues(theUsedDataInOut.itsSoundingData, theProducerIndex, theUsedDataInOut.itsSoundingData.GroundLevelValue());
+		DrawHeightValues(theUsedDataInOut.itsSoundingData, theProducerIndex, theUsedDataInOut.itsGroundLevelValue);
 
 	// laitetaan takaisin 'solid' kyn�
 	envi.SetFillPattern(FMI_SOLID);
 	envi.SetPenSize(NFmiPoint(1, 1));
-	DrawWind(theUsedDataInOut.itsSoundingData, theProducerIndex, onSouthernHemiSphere, theUsedDataInOut.itsSoundingData.GroundLevelValue());
+	DrawWind(theUsedDataInOut.itsSoundingData, theProducerIndex, onSouthernHemiSphere, theUsedDataInOut.itsGroundLevelValue);
 
 	if(fMainCurve)
 	{
@@ -4113,7 +4113,7 @@ bool NFmiTempView::MouseMove(const NFmiPoint &thePlace, unsigned long  theKey)
 	return false;
 }
 
-static float GetFinalTooltipValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theParId, float P, const NFmiPoint &theLatlon, const NFmiMetTime &usedTime)
+static float GetFinalTooltipValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theParId, float P, const NFmiPoint &theLatlon, const NFmiMetTime &usedTime)
 {
     NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
     if(metaWindParamUsage.ParamNeedsMetaCalculations(theParId))
@@ -4153,7 +4153,7 @@ static std::string GetTooltipValueStr(const std::string &theParStr, NFmiSounding
 	return str;
 }
 
-static std::string GetSoundingToolTipText(NFmiTempView::SoundingDataCacheMap &soundingDataCache, const NFmiMTATempSystem::ServerProducer &producer, const NFmiMTATempSystem::TempInfo &theTempInfo, int modelRunIndex, float P, int theZeroBasedIndex, bool doNormalString, const std::string &locationName, float heigthInMetersInStaAth, boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
+static std::string GetSoundingToolTipText(NFmiTempView::SoundingDataCacheMap &soundingDataCache, const NFmiMTATempSystem::ServerProducer &producer, const NFmiMTATempSystem::TempInfo &theTempInfo, int modelRunIndex, float P, int theZeroBasedIndex, bool doNormalString, const std::string &locationName, float heigthInMetersInStaAth, std::shared_ptr<NFmiFastQueryInfo>& theInfo)
 {
 	std::string str;
 	if(doNormalString)
@@ -4242,7 +4242,7 @@ std::string NFmiTempView::ComposeToolTipText(const NFmiPoint & theRelativePoint)
             {
 	            NFmiMTATempSystem::TempInfo usedTempInfo = constantLoopTempInfo;
                 usedTempInfo.Time(::GetUsedSoundingDataTime(itsCtrlViewDocumentInterface, usedTempInfo));
-                boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(selectedProducer, usedTempInfo.Time(), usedTempInfo.Latlon(), 0, NFmiInfoOrganizer::ParamCheckFlags(true));
+                std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->FindSoundingInfo(selectedProducer, usedTempInfo.Time(), usedTempInfo.Latlon(), 0, NFmiInfoOrganizer::ParamCheckFlags(true));
                 if(selectedProducer.useServer() || info)
                 {
                     auto usedLocationWithName = ::GetSoundingLocation(info, usedTempInfo, itsCtrlViewDocumentInterface->ProducerSystem());

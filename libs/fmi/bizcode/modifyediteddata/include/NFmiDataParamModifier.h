@@ -43,7 +43,7 @@ class MultiProcessClientData;
 class NFmiDataParamModifier
 {
  public:
-	NFmiDataParamModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
+	NFmiDataParamModifier(std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::shared_ptr<NFmiDrawParam> &theDrawParam, std::shared_ptr<NFmiAreaMaskList> &theMaskList,
 							unsigned long theAreaMask);
 	virtual ~NFmiDataParamModifier(void){};
 	bool ModifyData (void);
@@ -60,9 +60,9 @@ class NFmiDataParamModifier
 	virtual bool IsPossibleInside(const NFmiPoint& /* theRelativePlace */){return true;}; // 1999.11.17/Marko ModifyData2 k‰ytt‰‰
 	virtual float Calculate (const float& theValue);
 	virtual float Calculate2(const float& theValue){return theValue;}; // 1999.11.17/Marko ModifyData2 k‰ytt‰‰
-	boost::shared_ptr<NFmiFastQueryInfo> itsInfo;
-	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
-	boost::shared_ptr<NFmiAreaMaskList> itsParamMaskList;
+	std::shared_ptr<NFmiFastQueryInfo> itsInfo;
+	std::shared_ptr<NFmiDrawParam> itsDrawParam;
+	std::shared_ptr<NFmiAreaMaskList> itsParamMaskList;
 
 // private:
 
@@ -82,7 +82,7 @@ class NFmiObsDataGridding;
 class NFmiDataParamControlPointModifier : public NFmiDataParamModifier
 {
  public:
-	NFmiDataParamControlPointModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam, boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
+	NFmiDataParamControlPointModifier(std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::shared_ptr<NFmiDrawParam> &theDrawParam, std::shared_ptr<NFmiAreaMaskList> &theMaskList,
 													unsigned long theAreaMask, boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager, const NFmiRect &theCPGridCropRect,
 													bool theUseGridCrop, const NFmiPoint &theCropMarginSize, const NFmiGriddingProperties &griddingProperties);
 	virtual ~NFmiDataParamControlPointModifier(void);

@@ -437,7 +437,7 @@ const std::string gQueryDataFileExtension = ".sqd";
 // Jos kaikki on ok, palauttaa tyhj�n string:in.
 std::string NFmiMacroParamDataInfo::CheckDataStorageFileFilter(const std::string& dataStorageFileFilter)
 {
-    auto filename = PathUtils::getFilename(dataStorageFileFilter, false);
+    auto filename = std::filesystem::path(dataStorageFileFilter).stem().string();
     // 1. Tiedoston nimess� pit�� olla '*' merkki aikaleimaa varten.
     if(filename.find('*') == std::string::npos)
     {
@@ -677,7 +677,7 @@ std::string NFmiMacroParamDataAutomationListItem::AutomationName() const
 {
     try
     {
-        return PathUtils::getFilename(itsMacroParamDataAutomationPath, false);
+        return std::filesystem::path(itsMacroParamDataAutomationPath).stem().string();
     }
     catch(...)
     {
@@ -1199,7 +1199,7 @@ static NFmiParamDescriptor MakeWantedParamDescriptor(const NFmiMacroParamDataInf
     return NFmiParamDescriptor(paramListStringCheck.second);
 }
 
-static NFmiVPlaceDescriptor MakeCorrectVPlaceDescriptor(boost::shared_ptr<NFmiFastQueryInfo>& foundInfo)
+static NFmiVPlaceDescriptor MakeCorrectVPlaceDescriptor(std::shared_ptr<NFmiFastQueryInfo>& foundInfo)
 {
     if(foundInfo->SizeLevels() <= 1)
         return foundInfo->VPlaceDescriptor();
@@ -1209,7 +1209,7 @@ static NFmiVPlaceDescriptor MakeCorrectVPlaceDescriptor(boost::shared_ptr<NFmiFa
     return NFmiVPlaceDescriptor(levelBag);
 }
 
-static NFmiHPlaceDescriptor MakeScaledHPlaceDescriptor(boost::shared_ptr<NFmiFastQueryInfo>& foundInfo, const NFmiPoint& scale)
+static NFmiHPlaceDescriptor MakeScaledHPlaceDescriptor(std::shared_ptr<NFmiFastQueryInfo>& foundInfo, const NFmiPoint& scale)
 {
     if(scale == gDefaultBaseDataGridScaleValues)
         return foundInfo->HPlaceDescriptor();
@@ -1221,12 +1221,12 @@ static NFmiHPlaceDescriptor MakeScaledHPlaceDescriptor(boost::shared_ptr<NFmiFas
 }
 
 // Oletus: foundInfo on jo tarkistettu ettei se ole nullptr
-static boost::shared_ptr<NFmiQueryData> MakeWantedEmptyData(boost::shared_ptr<NFmiFastQueryInfo>& foundInfo, const NFmiParamDescriptor& wantedParamDescriptor, const NFmiPoint &scale)
+static std::shared_ptr<NFmiQueryData> MakeWantedEmptyData(std::shared_ptr<NFmiFastQueryInfo>& foundInfo, const NFmiParamDescriptor& wantedParamDescriptor, const NFmiPoint &scale)
 {
     auto correctVPlaceDescriptor = ::MakeCorrectVPlaceDescriptor(foundInfo);
     auto scaledHPlaceDescriptor = ::MakeScaledHPlaceDescriptor(foundInfo, scale);
     NFmiQueryInfo metaInfo(wantedParamDescriptor, foundInfo->TimeDescriptor(), scaledHPlaceDescriptor, correctVPlaceDescriptor);
-    return boost::shared_ptr<NFmiQueryData>(NFmiQueryDataUtil::CreateEmptyData(metaInfo));
+    return std::shared_ptr<NFmiQueryData>(NFmiQueryDataUtil::CreateEmptyData(metaInfo));
 }
 
 static NFmiInfoOrganizer* GetInfoOrganizer()
@@ -1275,7 +1275,7 @@ public:
 static std::string MakeTmpDataFilePath(const std::string& finalDataFilePath, const std::string& tmpDataDirectory)
 {
     auto tmpDataFilePath = tmpDataDirectory;
-    tmpDataFilePath += PathUtils::getFilename(finalDataFilePath, true);
+    tmpDataFilePath += std::filesystem::path(finalDataFilePath).filename().string();
     return tmpDataFilePath;
 }
 
@@ -1296,7 +1296,7 @@ static bool EnsureFilePathDirectoryExists(const std::string &totalFilePath, cons
 static void LogDataGenerationCompletes(const std::string& fullAutomationPath, const std::string& finalDataFilePath, const std::string& timeLasted)
 {
     std::string logStr = "Finished to generate '";
-    logStr += PathUtils::getFilename(fullAutomationPath, false);
+    logStr += std::filesystem::path(fullAutomationPath).stem().string();
     logStr += "' MacroParam-data (";
     logStr += timeLasted;
     logStr += "), saved to file '";
@@ -1310,7 +1310,7 @@ static void LogDataGenerationCompletes(const std::string& fullAutomationPath, co
 // T�t� funktiota ei keskeytet� (k�ytt�j�n pyynt�/ohjelman lopetus), koska tiedostojen 
 // j�lkien siivonta tekisi koodista sotkuista. T��ll� on vain yksi hidas toimenpide eli qdata->Write jota ei voi keskeytt��.
 // Tiedostojen kirjoitus on kuitenkin suht nopeaa (< 1 s useimmiten), varsinkin jos SSD k�yt�ss�.
-bool NFmiMacroParamDataGenerator::StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter, int keepMaxFiles, const std::string& fullAutomationPath, NFmiMilliSecondTimer &timer)
+bool NFmiMacroParamDataGenerator::StoreMacroParamData(std::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter, int keepMaxFiles, const std::string& fullAutomationPath, NFmiMilliSecondTimer &timer)
 {
     // CheckDataStorageFileFilter funktio palauttaa virheilmoituksen, jos filefilterissa jotain vikaa.
     auto checkStr = NFmiMacroParamDataInfo::CheckDataStorageFileFilter(dataStorageFileFilter);
@@ -1345,14 +1345,14 @@ bool NFmiMacroParamDataGenerator::StoreMacroParamData(boost::shared_ptr<NFmiQuer
     return true;
 }
 
-static void CalcMultiLevelSmarttoolData(NFmiSmartToolModifier& smartToolModifier, boost::shared_ptr<NFmiFastQueryInfo>& editedInfoCopy)
+static void CalcMultiLevelSmarttoolData(NFmiSmartToolModifier& smartToolModifier, std::shared_ptr<NFmiFastQueryInfo>& editedInfoCopy)
 {
     auto usedTimeDescriptor(editedInfoCopy->TimeDescriptor());
     for(editedInfoCopy->ResetLevel(); editedInfoCopy->NextLevel();)
     {
         // jos kyseess� on level-data, pit�� l�pik�yt�v� leveli ottaa talteen, 
         // ett� smartToolModifier osaa luoda siihen osoittavia fastInfoja.
-        boost::shared_ptr<NFmiLevel> theLevel(new NFmiLevel(*editedInfoCopy->Level()));
+        std::shared_ptr<NFmiLevel> theLevel(new NFmiLevel(*editedInfoCopy->Level()));
         smartToolModifier.ModifiedLevel(theLevel);
 
         smartToolModifier.ModifyData_ver2(&usedTimeDescriptor, false, false, nullptr);
@@ -1360,7 +1360,7 @@ static void CalcMultiLevelSmarttoolData(NFmiSmartToolModifier& smartToolModifier
 }
 
 // Oletus: wantedMacroParamInfoPtr on tarkistettu jo ulkopuolella ett� ei ole nullptr
-bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::vector<std::string>& smartToolContentList, NFmiThreadCallBacks* threadCallBacks)
+bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(std::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::vector<std::string>& smartToolContentList, NFmiThreadCallBacks* threadCallBacks)
 {
     itsSmarttoolCalculationLogStr.clear();
     if(smartToolContentList.size() != mUsedAbsoluteSmarttoolPathList.size())
@@ -1390,7 +1390,7 @@ bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(boost::shared_ptr<N
 }
 
 // Oletus: wantedMacroParamInfoPtr on tarkistettu jo ulkopuolella ett� ei ole nullptr
-bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::string& smartToolContent, const std::string& usedSmartToolPath, NFmiThreadCallBacks *threadCallBacks)
+bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(std::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::string& smartToolContent, const std::string& usedSmartToolPath, NFmiThreadCallBacks *threadCallBacks)
 {
     NFmiSmartToolModifier smartToolModifier(infoOrganizer);
     try // ensin tulkitaan macro
@@ -1398,8 +1398,10 @@ bool NFmiMacroParamDataGenerator::CalculateDataWithSmartTool(boost::shared_ptr<N
         smartToolModifier.SetGriddingHelper(CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->GetGriddingHelper());
         smartToolModifier.IncludeDirectory(mRootSmarttoolDirectory);
         smartToolModifier.InitSmartTool(smartToolContent);
+#ifndef UNIX
         smartToolModifier.SetFixedEditedData(wantedMacroParamInfoPtr);
         smartToolModifier.UsedCpuCapacityPercentageInCalculations(DialogCpuUsagePercentage());
+#endif
     }
     catch(std::exception& e)
     {
@@ -1614,7 +1616,11 @@ double NFmiMacroParamDataGenerator::DialogCpuUsagePercentage() const
 
 void NFmiMacroParamDataGenerator::DialogCpuUsagePercentage(double newValue) const
 {
+#ifndef UNIX
     *mDialogCpuUsagePercentage = NFmiSmartToolModifier::FixCpuCapacityPercentageInCalculations(newValue);
+#else
+    *mDialogCpuUsagePercentage = newValue;
+#endif
 }
 
 std::string NFmiMacroParamDataGenerator::GeneratedDataStorageInitialPath() const
@@ -1754,7 +1760,7 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(NFmiThreadCallBacks* th
 static void LogDataGenerationStarts(const std::string& fullAutomationPath)
 {
     std::string logStr = "Starting to generate '";
-    logStr += PathUtils::getFilename(fullAutomationPath, false);
+    logStr += std::filesystem::path(fullAutomationPath).stem().string();
     logStr += "' MacroParam-data from automation: ";
     logStr += fullAutomationPath;
     CatLog::logMessage(logStr, CatLog::Severity::Info, CatLog::Category::Operational);
@@ -1763,7 +1769,7 @@ static void LogDataGenerationStarts(const std::string& fullAutomationPath)
 static void ReportDataGenerationFailure(const std::string& fullAutomationPath)
 {
     std::string logStr = "Unable to generate '";
-    logStr += PathUtils::getFilename(fullAutomationPath, false);
+    logStr += std::filesystem::path(fullAutomationPath).stem().string();
     logStr += "' MacroParam-data (see error log(s) above) from automation: ";
     logStr += fullAutomationPath;
     CatLog::logMessage(logStr, CatLog::Severity::Error, CatLog::Category::Operational, true);
@@ -1811,7 +1817,7 @@ bool NFmiMacroParamDataGenerator::GenerateMacroParamData(const NFmiMacroParamDat
         {
             throw std::runtime_error("GenerateMacroParamData: Given base data wasn't a grid data, stopping MacroParam-data generation");
         }
-        boost::shared_ptr<NFmiFastQueryInfo> wantedMacroParamInfoPtr(new NFmiFastQueryInfo(wantedMacroParamDataPtr.get()));
+        std::shared_ptr<NFmiFastQueryInfo> wantedMacroParamInfoPtr(new NFmiFastQueryInfo(wantedMacroParamDataPtr.get()));
 
         auto smarttoolContentList = ReadSmarttoolContentsFromFiles(dataInfo.DataGeneratingSmarttoolPathListString());
         NFmiQueryDataUtil::CheckIfStopped(threadCallBacks);
@@ -1960,7 +1966,7 @@ bool NFmiMacroParamDataGenerator::MarkLastAutomationWorkAsDoneAndCheckIfMoreWork
 
     // Lokitetaan tilannetta
     std::string message = "Marking latest automation work as done (";
-    message += PathUtils::getFilename(fullAutomationPath, false);
+    message += std::filesystem::path(fullAutomationPath).stem().string();
     message += "), automations left in the work list " + std::to_string(mAutomationWorksLeftToProcessCounter.load()) + ", ";
     message += workLeft ? "keep on going with working thread" : "no more work to do, stop working thread";
     CatLog::logMessage(message, CatLog::Severity::Debug, CatLog::Category::Operational);

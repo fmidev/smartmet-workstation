@@ -525,7 +525,7 @@ void CFmiCrossSectionDlg::OnAcceleratorExtraMapToggleVirtualTimeMode()
 	CFmiWin32TemplateHelpers::OnAcceleratorToggleVirtualTimeMode(itsSmartMetDocumentInterface, viewName);
 }
 
-bool CFmiCrossSectionDlg::IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
+bool CFmiCrossSectionDlg::IsCrossSectionMacroParamOk(std::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
 {
     return itsView->IsCrossSectionMacroParamOk(theUsedDrawParam);
 }

@@ -157,7 +157,7 @@ class SynopDataGridViewUsedFileNames
     NFmiMetTime itsValidTime = NFmiMetTime::gMissingTime;
 public:
     SynopDataGridViewUsedFileNames() = default;
-    SynopDataGridViewUsedFileNames(const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const NFmiMetTime &validTime);
+    SynopDataGridViewUsedFileNames(const std::vector<std::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const std::shared_ptr<NFmiFastQueryInfo> &usedInfo, const NFmiMetTime &validTime);
     SynopDataGridViewUsedFileNames(const SynopDataGridViewUsedFileNames &other) = default;
 
     bool IsUpdateNeeded(const SynopDataGridViewUsedFileNames &other, bool modelDataCase, bool minMaxModeUsed) const;
@@ -167,7 +167,7 @@ public:
     std::string GetChangedFileNames(const SynopDataGridViewUsedFileNames &other, bool modelDataCase) const;
 private:
     void ClearNames();
-    void UpdateNames(const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo);
+    void UpdateNames(const std::vector<std::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const std::shared_ptr<NFmiFastQueryInfo> &usedInfo);
     std::string GetChangedFileNames(const std::vector<std::string> &otherObsDataFileNames) const;
 };
 
@@ -347,14 +347,14 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 private:
-	int GetMaxStationCount(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfos);
-	int GetMaxStationCount(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+	int GetMaxStationCount(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theInfos);
+	int GetMaxStationCount(std::shared_ptr<NFmiFastQueryInfo> &theInfo);
 	int FindStationRow(int theWmoId);
 	CRect CalcClientArea(void);
 	CRect CalcOtherArea(void);
 	void DoWhenClosing(void);
-	boost::shared_ptr<NFmiFastQueryInfo> GetWantedInfo(bool fGetObsStationData);
-	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetWantedSynopInfos(void);
+	std::shared_ptr<NFmiFastQueryInfo> GetWantedInfo(bool fGetObsStationData);
+	std::vector<std::shared_ptr<NFmiFastQueryInfo> > GetWantedSynopInfos(void);
 	void InitSynopHeaders(void);
 	void InitForecastSynopHeaders(void);
 	void InitMinMaxDataHeaders(void);
@@ -363,9 +363,9 @@ private:
 	void InitWmoIdFilterManager(void);
 	void WhenProducerRadioButtonClikked(void);
 	const std::string& GetProducerString(void) const;
-	void FillGridWithSynopData(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, const NFmiMetTime &theTime, boost::shared_ptr<NFmiFastQueryInfo> &theSadeInfo, int &theRealStationCount);
-	void FillGridWithForecastData(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, boost::shared_ptr<NFmiFastQueryInfo> &theForInfo, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, const NFmiMetTime &theTime, int &theRealStationCount);
-	void FillGridWithMinMaxData(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, boost::shared_ptr<NFmiFastQueryInfo> &theForInfo, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, boost::shared_ptr<NFmiFastQueryInfo> &theSadeInfo, int &theRealStationCount);
+	void FillGridWithSynopData(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, const NFmiMetTime &theTime, std::shared_ptr<NFmiFastQueryInfo> &theSadeInfo, int &theRealStationCount);
+	void FillGridWithForecastData(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, std::shared_ptr<NFmiFastQueryInfo> &theForInfo, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, const NFmiMetTime &theTime, int &theRealStationCount);
+	void FillGridWithMinMaxData(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, std::shared_ptr<NFmiFastQueryInfo> &theForInfo, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, std::shared_ptr<NFmiFastQueryInfo> &theSadeInfo, int &theRealStationCount);
 	void InitProducerSelector(void);
 	void EnableDisableControls(void);
 	void UpdateMinMaxRangeStartTime(void);
@@ -373,7 +373,7 @@ private:
 	bool IsSadeDataUsed(void);
 	void InitDialogTexts(void);
 	void SelectProducer(const NFmiProducer &theProducer);
-    bool GridControlNeedsUpdate(const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo);
+    bool GridControlNeedsUpdate(const std::vector<std::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const std::shared_ptr<NFmiFastQueryInfo> &usedInfo);
     bool IsSelectedProducerModelData() const;
     void ForcedUpdate();
     const NFmiMetTime& GetMainMapViewTime() const;

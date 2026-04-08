@@ -71,7 +71,7 @@ void AnimationButtonImageHolder::Initialize(void)
 
 NFmiTimeControlView::NFmiTimeControlView(int theMapViewDescTopIndex, const NFmiRect& theRect
 										,NFmiToolBox *theToolBox
-										,boost::shared_ptr<NFmiDrawParam> theDrawParam
+										,std::shared_ptr<NFmiDrawParam> theDrawParam
 										,bool theShowResolutionChangerBox
 										,bool theDrawViewInMouseMove
 										,bool theShowEditTimeHandles
@@ -1961,7 +1961,7 @@ void NFmiTimeControlView::SetMouseStatusInfo(const MouseStatusInfo &theMouseStat
 NFmiTimeSerialTimeControlView::NFmiTimeSerialTimeControlView(int theMapViewDescTopIndex,
 							 const NFmiRect & theRect
 							,NFmiToolBox * theToolBox
-							,boost::shared_ptr<NFmiDrawParam> theDrawParam
+							,std::shared_ptr<NFmiDrawParam> theDrawParam
 							,bool theShowResolutionChangerBox
 							,bool theDrawViewInMouseMove
 							,bool theShowEditTimeHandles
@@ -2017,7 +2017,7 @@ void NFmiTimeSerialTimeControlView::SetUsedTimeBag(const NFmiTimeBag &newTimeBag
 
 NFmiTrajectoryTimeControlView::NFmiTrajectoryTimeControlView(int theMapViewDescTopIndex, const NFmiRect & theRect
 															,NFmiToolBox * theToolBox
-															,boost::shared_ptr<NFmiDrawParam> theDrawParam)
+															,std::shared_ptr<NFmiDrawParam> theDrawParam)
 :NFmiTimeControlView(theMapViewDescTopIndex, theRect, theToolBox, theDrawParam, false, false, false, false, false)
 {
 }

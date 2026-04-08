@@ -103,10 +103,10 @@ class LabelBox
 public:
 
 		LabelBox(void);
-		LabelBox(float theFontHeight, float theIsoLineValue /*int theLabelLetterCount*/, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiToolBox *theToolBox, NFmiDrawingEnvironment &theEnviroment);
+		LabelBox(float theFontHeight, float theIsoLineValue /*int theLabelLetterCount*/, std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiToolBox *theToolBox, NFmiDrawingEnvironment &theEnviroment);
 
 		void Init(void);
-		void Init(float theFontHeight, float theIsoLineValue, /*int theLabelLetterCount*/ boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiToolBox *theToolBox, NFmiDrawingEnvironment &theEnviroment);
+		void Init(float theFontHeight, float theIsoLineValue, /*int theLabelLetterCount*/ std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiToolBox *theToolBox, NFmiDrawingEnvironment &theEnviroment);
 
 		const NFmiRect& LabelBoxRect(void) const;
 
@@ -161,9 +161,9 @@ class NFmiIsoLineView : public NFmiStationView
 {
 
  public:
-   NFmiIsoLineView (int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+   NFmiIsoLineView (int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 				   ,NFmiToolBox * theToolBox
-				   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+				   ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 				   ,FmiParameterName theParamId
 				   ,NFmiPoint theOffSet
 				   ,NFmiPoint theSize
@@ -184,16 +184,16 @@ class NFmiIsoLineView : public NFmiStationView
     virtual bool IsToolMasterAvailable(void);
 	virtual bool DeleteTransparencyBitmap();
 	virtual bool IsMapViewCase();
-	bool FillIsoLineVisualizationInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData);
-	void FillIsoLineInfoSimple(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData);
-	void FillIsoLineInfoSimple_new(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData);
-	void FillSimpleColorContourInfo(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed);
-	void FillSimpleColorContourInfo_new(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData);
-    void FillCustomColorContourInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed);
-	void FillCustomColorContourInfo_new(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData);
-	void FillBaseColorContourInfo_new(boost::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed);
-	void FillIsoLineInfoCustom(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData);
-    void FillHatchInfo(boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData);
+	bool FillIsoLineVisualizationInfo(std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData);
+	void FillIsoLineInfoSimple(std::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData);
+	void FillIsoLineInfoSimple_new(std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData);
+	void FillSimpleColorContourInfo(std::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed);
+	void FillSimpleColorContourInfo_new(std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData);
+    void FillCustomColorContourInfo(std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed);
+	void FillCustomColorContourInfo_new(std::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData);
+	void FillBaseColorContourInfo_new(std::shared_ptr<NFmiDrawParam>& theDrawParam, NFmiIsoLineData* theIsoLineData, bool fStationData, bool fToolMasterUsed);
+	void FillIsoLineInfoCustom(std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData, bool fToolMasterUsed, bool fStationData);
+    void FillHatchInfo(std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiIsoLineData* theIsoLineData);
 	void PrepareForTransparentDraw(void);
 	void EndTransparentDraw(void);
     bool FillGridRelatedData(NFmiIsoLineData &isoLineData, NFmiRect &zoomedAreaRect);
@@ -203,7 +203,7 @@ class NFmiIsoLineView : public NFmiStationView
 	bool FillGridRelatedData_ZoomingChecks(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, bool& fillGridDataStatus);
 	void FillGridRelatedData_NormalDataCase(NFmiIsoLineData& isoLineData, NFmiRect& zoomedAreaRect, bool &fillGridDataStatus);
     void DoGridRelatedVisualization(NFmiIsoLineData &isoLineData, NFmiRect &zoomedAreaRect);
-	ContouringJobData MakeContouringJobData(boost::shared_ptr<NFmiDrawParam>& theDrawParam);
+	ContouringJobData MakeContouringJobData(std::shared_ptr<NFmiDrawParam>& theDrawParam);
 	bool IsIsoLinesDrawnWithImagine(void);
 	bool FillIsoLineDataWithGridData(NFmiIsoLineData& theIsoLineData, int x1, int y1, int x2, int y2, NFmiGrid *optimizedDataGrid = nullptr);
 
@@ -215,14 +215,14 @@ class NFmiIsoLineView : public NFmiStationView
 	void DrawSimpleColorContourWithImagine(NFmiIsoLineData& theIsoLineData, NFmiDataMatrix<float> &theValues, NFmiDataMatrix<NFmiPoint> &theCoordinates, Imagine::NFmiDataHints &theHelper, const NFmiPoint &theOffSet);
 	void DrawCustomColorContourWithImagine(NFmiIsoLineData& theIsoLineData, NFmiDataMatrix<float> &theValues, NFmiDataMatrix<NFmiPoint> &theCoordinates, Imagine::NFmiDataHints &theHelper, const NFmiPoint &theOffSet);
 	void DrawHatchesWithImagine(NFmiIsoLineData& theIsoLineData, const NFmiHatchingSettings& theHatchSettings, NFmiDataMatrix<float> &theValues, NFmiDataMatrix<NFmiPoint> &theCoordinates, Imagine::NFmiDataHints &theHelper, const NFmiPoint &theOffSet);
-	void SetUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam); // n�it� on kutsuttava pareittain RestoreUpDifferenceDrawing-metodin kanssa
-	void RestoreUpDifferenceDrawing(boost::shared_ptr<NFmiDrawParam> &theUsedDrawParam); // n�it� on kutsuttava pareittain SetUpDifferenceDrawing-metodin kanssa
+	void SetUpDifferenceDrawing(std::shared_ptr<NFmiDrawParam> &theUsedDrawParam); // n�it� on kutsuttava pareittain RestoreUpDifferenceDrawing-metodin kanssa
+	void RestoreUpDifferenceDrawing(std::shared_ptr<NFmiDrawParam> &theUsedDrawParam); // n�it� on kutsuttava pareittain SetUpDifferenceDrawing-metodin kanssa
 #ifndef UNIX
     CRect GetTrueClientRect();
 #endif
 	void DoPossibleIsolineSafetyFeatureDownSizing(NFmiIsoLineData* theIsoLineDataInOut, const NFmiRect& zoomedAreaRect);
 private:
-	bool IsZoomingPossible(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theMapArea, NFmiRect & theCroppedXyRectOut, int &theLeftIndex, int &theRightIndex, int &theTopIndex, int &theBottomIndex);
+	bool IsZoomingPossible(std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::shared_ptr<NFmiArea> &theMapArea, NFmiRect & theCroppedXyRectOut, int &theLeftIndex, int &theRightIndex, int &theTopIndex, int &theBottomIndex);
 	void DrawIsoLinesWithToolMaster(void);
 	void DrawIsoLines(void);
 

@@ -41,7 +41,7 @@ NFmiCtrlViewList::NFmiCtrlViewList (void)
 //--------------------------------------------------------
 NFmiCtrlViewList::NFmiCtrlViewList(int theMapViewDescTopIndex, const NFmiRect& theRect
 								  ,NFmiToolBox* theToolBox
-								  ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+								  ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 								  ,bool fResponseToMouse)
 :NFmiCtrlView(theMapViewDescTopIndex, theRect
 			 ,theToolBox

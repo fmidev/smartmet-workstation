@@ -391,10 +391,10 @@ public:
     static const std::string& GeneratedDataFileFilter() { return itsGeneratedDataFileFilter; }
 
 private:
-    bool CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::vector<std::string>& smartToolContentList, NFmiThreadCallBacks* threadCallBacks);
-    bool CalculateDataWithSmartTool(boost::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::string& smartToolText, const std::string& usedSmartToolPath, NFmiThreadCallBacks *threadCallBacks);
+    bool CalculateDataWithSmartTool(std::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::vector<std::string>& smartToolContentList, NFmiThreadCallBacks* threadCallBacks);
+    bool CalculateDataWithSmartTool(std::shared_ptr<NFmiFastQueryInfo>& wantedMacroParamInfoPtr, NFmiInfoOrganizer* infoOrganizer, const std::string& smartToolText, const std::string& usedSmartToolPath, NFmiThreadCallBacks *threadCallBacks);
     std::vector<std::string> ReadSmarttoolContentsFromFiles(const std::string& filePathList);
-    bool StoreMacroParamData(boost::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter, int keepMaxFiles, const std::string& fullAutomationPath, NFmiMilliSecondTimer &timer);
+    bool StoreMacroParamData(std::shared_ptr<NFmiQueryData>& macroParamDataPtr, const std::string& dataStorageFileFilter, int keepMaxFiles, const std::string& fullAutomationPath, NFmiMilliSecondTimer &timer);
     bool GenerateMacroParamData(const NFmiMacroParamDataInfo &dataInfo, const std::string &fullAutomationPath, NFmiThreadCallBacks* threadCallBacks);
     bool LoadUsedAutomationList(const std::string& thePath);
     bool GenerateAutomationsData(const NFmiUserWorkAutomationContainer& automations, NFmiThreadCallBacks* threadCallBacks);

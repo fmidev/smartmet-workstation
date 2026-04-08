@@ -338,7 +338,7 @@ void NFmiTimeValueEditManagerView::Update(void)
         for(drawParamList->Reset(); drawParamList->Next(); )
         {
             index++;
-            boost::shared_ptr<NFmiDrawParam> drawParam = drawParamList->Current();
+            std::shared_ptr<NFmiDrawParam> drawParam = drawParamList->Current();
 
             //asetetaan prioriteetti 0:ksi, että saadaan oikea järjestys
             //seuraavaa täytyy muuttaa, jos pikkuikkunoita halutaan muistakin parametreista
@@ -370,7 +370,7 @@ void NFmiTimeValueEditManagerView::Update(void)
 //--------------------------------------------------------
 // funktion tarkoitus on kertoa, löytyykö annetusta viewlistasta sellaista viewtä, jolla on
 // annettu drawparam-pointteri
-bool NFmiTimeValueEditManagerView::FindView(NFmiCtrlViewList* theViewList, boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+bool NFmiTimeValueEditManagerView::FindView(NFmiCtrlViewList* theViewList, std::shared_ptr<NFmiDrawParam> &theDrawParam)
 {
 	for(theViewList->Reset(); theViewList->Next(); )
 		if(theDrawParam == theViewList->Current()->DrawParam()) // HUOM! pointteri vertailu
@@ -381,7 +381,7 @@ bool NFmiTimeValueEditManagerView::FindView(NFmiCtrlViewList* theViewList, boost
 //--------------------------------------------------------
 // CreateTimeSerialView
 //--------------------------------------------------------
-NFmiTimeSerialView* NFmiTimeValueEditManagerView::CreateTimeSerialView(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int index)
+NFmiTimeSerialView* NFmiTimeValueEditManagerView::CreateTimeSerialView(std::shared_ptr<NFmiDrawParam> &theDrawParam, int index)
 {
 	NFmiTimeSerialView* view = 0;
 	if(theDrawParam)

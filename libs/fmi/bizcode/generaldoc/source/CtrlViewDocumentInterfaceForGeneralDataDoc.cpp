@@ -45,7 +45,7 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::CreateMaskSelectionPopup(int th
     return itsDoc->CreateMaskSelectionPopup(theRowIndex);
 }
 
-boost::shared_ptr<NFmiAreaMaskList> CtrlViewDocumentInterfaceForGeneralDataDoc::ParamMaskListMT()
+std::shared_ptr<NFmiAreaMaskList> CtrlViewDocumentInterfaceForGeneralDataDoc::ParamMaskListMT()
 {
     return itsDoc->ParamMaskListMT();
 }
@@ -195,12 +195,12 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::MouseCaptured(bool newValue)
     itsDoc->MouseCaptured(newValue);
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::SetModelRunOffset(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theMoveByValue, unsigned int theDescTopIndex, int theViewRowIndex)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::SetModelRunOffset(std::shared_ptr<NFmiDrawParam> &theDrawParam, int theMoveByValue, unsigned int theDescTopIndex, int theViewRowIndex)
 {
     itsDoc->SetModelRunOffset(theDrawParam, theMoveByValue, theDescTopIndex, theViewRowIndex);
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::SetNearestBeforeModelOrigTimeRunoff(boost::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiMetTime &theTime, unsigned int theDescTopIndex, int theViewRowIndex)
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::SetNearestBeforeModelOrigTimeRunoff(std::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiMetTime &theTime, unsigned int theDescTopIndex, int theViewRowIndex)
 {
     return itsDoc->SetNearestBeforeModelOrigTimeRunoff(theDrawParam, theTime, theDescTopIndex, theViewRowIndex);
 }
@@ -215,7 +215,7 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::CurrentTime(unsigned int theDes
     return itsDoc->GetCombinedMapHandler()->currentTime(theDescTopIndex, newCurrentTime, fStayInsideAnimationTimes);
 }
 
-boost::shared_ptr<NFmiDrawParam> CtrlViewDocumentInterfaceForGeneralDataDoc::DefaultEditedDrawParam(void)
+std::shared_ptr<NFmiDrawParam> CtrlViewDocumentInterfaceForGeneralDataDoc::DefaultEditedDrawParam(void)
 {
     return itsDoc->DefaultEditedDrawParam();
 }
@@ -240,12 +240,12 @@ const NFmiMetTime& CtrlViewDocumentInterfaceForGeneralDataDoc::ActiveMapTime(voi
     return itsDoc->GetCombinedMapHandler()->activeMapTime();
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::MakeDrawedInfoVectorForMapView(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, std::shared_ptr<NFmiDrawParam> &theDrawParam, const std::shared_ptr<NFmiArea> &theArea)
 {
     itsDoc->GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
 }
 
-NFmiMetTime CtrlViewDocumentInterfaceForGeneralDataDoc::GetModelOrigTime(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theIndex)
+NFmiMetTime CtrlViewDocumentInterfaceForGeneralDataDoc::GetModelOrigTime(std::shared_ptr<NFmiDrawParam> &theDrawParam, int theIndex)
 {
     return itsDoc->GetModelOrigTime(theDrawParam, theIndex);
 }
@@ -304,7 +304,7 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::AreaFilterRange(int index, cons
     itsDoc->AreaFilterRange(index, theRect);
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::EditedSmartInfo(void)
+std::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::EditedSmartInfo(void)
 {
     return itsDoc->EditedSmartInfo();
 }
@@ -514,7 +514,7 @@ boost::shared_ptr<NFmiEditorControlPointManager> CtrlViewDocumentInterfaceForGen
     return itsDoc->CPManager(getOldSchoolCPManager);
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, std::vector<boost::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters)
+std::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetNearestSynopStationInfo(const NFmiLocation &theLocation, const NFmiMetTime &theTime, bool ignoreTime, std::vector<std::shared_ptr<NFmiFastQueryInfo> > *thePossibleInfoVector, double maxDistanceInMeters)
 {
     return itsDoc->GetNearestSynopStationInfo(theLocation, theTime, ignoreTime, thePossibleInfoVector, maxDistanceInMeters);
 }
@@ -564,12 +564,12 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::CreateTimeSerialDialogOnViewPop
     return itsDoc->CreateTimeSerialDialogOnViewPopup(index);
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::DoTimeSeriesValuesModifying(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue)
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::DoTimeSeriesValuesModifying(std::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, int theUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue)
 {
     return itsDoc->DoTimeSeriesValuesModifying(theModifiedDrawParam, theUsedMask, theTimeDescriptor, theModificationFactorCurvePoints, theEditorTool, fUseSetForDiscreteData, theUnchangedValue);
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::UpdateToModifiedDrawParam(unsigned int mapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam>& drawParam, int viewRowIndex)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::UpdateToModifiedDrawParam(unsigned int mapViewDescTopIndex, std::shared_ptr<NFmiDrawParam>& drawParam, int viewRowIndex)
 {
     itsDoc->GetCombinedMapHandler()->updateToModifiedDrawParam(mapViewDescTopIndex, drawParam, viewRowIndex);
 }
@@ -641,12 +641,12 @@ size_t CtrlViewDocumentInterfaceForGeneralDataDoc::SelectedGridPointLimit(void)
     return itsDoc->SelectedGridPointLimit();
 }
 
-boost::shared_ptr<NFmiDrawParam> CtrlViewDocumentInterfaceForGeneralDataDoc::GetDrawDifferenceDrawParam(void)
+std::shared_ptr<NFmiDrawParam> CtrlViewDocumentInterfaceForGeneralDataDoc::GetDrawDifferenceDrawParam(void)
 {
     return itsDoc->GetDrawDifferenceDrawParam();
 }
 
-boost::shared_ptr<NFmiDrawParam> CtrlViewDocumentInterfaceForGeneralDataDoc::GetSelectedGridPointDrawParam(void)
+std::shared_ptr<NFmiDrawParam> CtrlViewDocumentInterfaceForGeneralDataDoc::GetSelectedGridPointDrawParam(void)
 {
     return itsDoc->GetSelectedGridPointDrawParam();
 }
@@ -701,7 +701,7 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::UseMultithreaddingWithModifying
     return itsDoc->UseMultithreaddingWithModifyingFunctions();
 }
 
-std::string CtrlViewDocumentInterfaceForGeneralDataDoc::GetModelOrigTimeString(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theIndex)
+std::string CtrlViewDocumentInterfaceForGeneralDataDoc::GetModelOrigTimeString(std::shared_ptr<NFmiDrawParam> &theDrawParam, int theIndex)
 {
     return itsDoc->GetModelOrigTimeString(theDrawParam, theIndex);
 }
@@ -717,7 +717,7 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::GetDataFromQ2Server(const std::
     itsDoc->GetDataFromQ2Server(theURLStr, theParamsStr, fUseBinaryData, theUsedCompression, theDataMatrixOut, theExtraInfoStrOut);
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::SetMacroErrorText(const std::string &theErrorStr, std::shared_ptr<NFmiDrawParam>& triggerDrawParam)
 {
     ApplicationInterface::GetApplicationInterfaceImplementation()->SetMacroErrorText(theErrorStr, triggerDrawParam);
 }
@@ -732,7 +732,7 @@ NFmiLocationSelectionTool* CtrlViewDocumentInterfaceForGeneralDataDoc::LocationS
     return itsDoc->LocationSelectionTool2();
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea, 
+void CtrlViewDocumentInterfaceForGeneralDataDoc::SelectLocations(unsigned int theDescTopIndex, std::shared_ptr<NFmiFastQueryInfo> &theInfo, const std::shared_ptr<NFmiArea> &theMapArea, 
     const NFmiPoint& theLatLon, const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
     , bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd)
 {
@@ -750,7 +750,7 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::ShowObsComparisonOnMap(int theD
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->ShowObsComparisonOnMap();
 }
 
-std::vector<boost::shared_ptr<NFmiFastQueryInfo>> CtrlViewDocumentInterfaceForGeneralDataDoc::GetSortedSynopInfoVector(int theProducerId, int theProducerId2, int theProducerId3, int theProducerId4)
+std::vector<std::shared_ptr<NFmiFastQueryInfo>> CtrlViewDocumentInterfaceForGeneralDataDoc::GetSortedSynopInfoVector(int theProducerId, int theProducerId2, int theProducerId3, int theProducerId4)
 {
     return itsDoc->GetSortedSynopInfoVector(theProducerId, theProducerId2, theProducerId3, theProducerId4);
 }
@@ -1006,7 +1006,7 @@ const NFmiTimeBag& CtrlViewDocumentInterfaceForGeneralDataDoc::EditedDataTimeBag
     return itsDoc->EditedDataTimeBag();
 }
 
-const boost::shared_ptr<NFmiArea> CtrlViewDocumentInterfaceForGeneralDataDoc::CPGridCropLatlonArea(void)
+const std::shared_ptr<NFmiArea> CtrlViewDocumentInterfaceForGeneralDataDoc::CPGridCropLatlonArea(void)
 {
     return itsDoc->CPGridCropLatlonArea();
 }
@@ -1016,7 +1016,7 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsCPGridCropNotPlausible(void)
     return itsDoc->IsCPGridCropNotPlausible();
 }
 
-boost::shared_ptr<NFmiArea> CtrlViewDocumentInterfaceForGeneralDataDoc::CPGridCropInnerLatlonArea(void)
+std::shared_ptr<NFmiArea> CtrlViewDocumentInterfaceForGeneralDataDoc::CPGridCropInnerLatlonArea(void)
 {
     return itsDoc->CPGridCropInnerLatlonArea();
 }
@@ -1093,7 +1093,7 @@ int CtrlViewDocumentInterfaceForGeneralDataDoc::DrawOverMapMode(int theDescTopIn
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theDescTopIndex)->DrawOverMapMode();
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::SnapShotData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiDataIdent &theDataIdent, const std::string &theModificationText
+void CtrlViewDocumentInterfaceForGeneralDataDoc::SnapShotData(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiDataIdent &theDataIdent, const std::string &theModificationText
     , const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime)
 {
     itsDoc->SnapShotData(theInfo, theDataIdent, theModificationText, theStartTime, theEndTime);
@@ -1154,7 +1154,7 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::ActiveViewTime(const NFmiMetTim
     itsDoc->ActiveViewTime(theTime);
 }
 
-boost::shared_ptr<NFmiDrawParam> CtrlViewDocumentInterfaceForGeneralDataDoc::ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex)
+std::shared_ptr<NFmiDrawParam> CtrlViewDocumentInterfaceForGeneralDataDoc::ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex)
 {
     return itsDoc->GetCombinedMapHandler()->activeDrawParamFromActiveRow(theDescTopIndex);
 }
@@ -1174,7 +1174,7 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::CheckAndValidateAfterModificati
     return itsDoc->CheckAndValidateAfterModifications(theModifyingTool, fMakeDataSnapshotAction, theLocationMask, theParam);
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::ZoomMapInOrOut(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, double theZoomFactor)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::ZoomMapInOrOut(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, double theZoomFactor)
 {
     itsDoc->ZoomMapInOrOut(theMapViewDescTopIndex, theMapArea, theMousePoint, theZoomFactor);
 }
@@ -1229,7 +1229,7 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::ShowControlPointsOnMap(int theM
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->ShowControlPointsOnMap();
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::ZoomMapWithRelativeRect(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiRect &theZoomedRect)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::ZoomMapWithRelativeRect(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theMapArea, const NFmiRect &theZoomedRect)
 {
     itsDoc->ZoomMapWithRelativeRect(theMapViewDescTopIndex, theMapArea, theZoomedRect);
 }
@@ -1263,7 +1263,7 @@ bool CtrlViewDocumentInterfaceForGeneralDataDoc::CreateCPPopup()
     return itsDoc->CreateCPPopup();
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::PanMap(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, const NFmiPoint &theZoomDragUpPoint)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::PanMap(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, const NFmiPoint &theZoomDragUpPoint)
 {
     itsDoc->PanMap(theMapViewDescTopIndex, theMapArea, theMousePoint, theZoomDragUpPoint);
 }
@@ -1293,17 +1293,17 @@ double CtrlViewDocumentInterfaceForGeneralDataDoc::BrushValue(void)
     return itsDoc->BrushValue();
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetModelClimatologyData(const NFmiLevel& theLevel)
+std::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetModelClimatologyData(const NFmiLevel& theLevel)
 {
     return itsDoc->GetModelClimatologyData(theLevel);
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetBestSuitableModelFractileData(boost::shared_ptr<NFmiFastQueryInfo>& usedOriginalInfo)
+std::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetBestSuitableModelFractileData(std::shared_ptr<NFmiFastQueryInfo>& usedOriginalInfo)
 {
     return itsDoc->GetBestSuitableModelFractileData(usedOriginalInfo);
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetMosTemperatureMinAndMaxData()
+std::shared_ptr<NFmiFastQueryInfo> CtrlViewDocumentInterfaceForGeneralDataDoc::GetMosTemperatureMinAndMaxData()
 {
     return itsDoc->GetMosTemperatureMinAndMaxData();
 }
@@ -1355,7 +1355,7 @@ NFmiMacroParamDataCache& CtrlViewDocumentInterfaceForGeneralDataDoc::MacroParamD
     return itsDoc->MacroParamDataCache();
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::SetupObsBlenderData(const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, boost::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut)
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::SetupObsBlenderData(const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, std::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut)
 {
     return FmiModifyEditdData::SetupObsBlenderData(itsDoc->GenDocDataAdapter(), theLatlon, theParam, theDataType, fGroundData, theProducer, firstEditedTimeOut, usedObsBlenderInfoOut, analyzeValueOut, messagesOut);
 }
@@ -1395,7 +1395,7 @@ unsigned int CtrlViewDocumentInterfaceForGeneralDataDoc::SelectedMapIndex(int ma
     return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(mapViewDescTopIndex)->SelectedMapIndex();
 }
 
-void CtrlViewDocumentInterfaceForGeneralDataDoc::SetCPCropGridSettings(const boost::shared_ptr<NFmiArea>& newArea, unsigned int mapViewDescTopIndex)
+void CtrlViewDocumentInterfaceForGeneralDataDoc::SetCPCropGridSettings(const std::shared_ptr<NFmiArea>& newArea, unsigned int mapViewDescTopIndex)
 {
     itsDoc->SetCPCropGridSettings(newArea, mapViewDescTopIndex);
 }
@@ -1512,7 +1512,7 @@ NFmiGriddingHelperInterface* CtrlViewDocumentInterfaceForGeneralDataDoc::GetGrid
     return &generalDataDocGridding;
 }
 
-bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam) const
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::IsMacroParamOk(std::shared_ptr<NFmiDrawParam>& theUsedDrawParam) const
 {
     return itsDoc->IsMacroParamOk(theUsedDrawParam);
 }

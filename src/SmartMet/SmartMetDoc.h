@@ -58,7 +58,7 @@ protected: // create from serialization only
 // Operations
 public:
 	BOOL StoreData(bool newFile = false, bool askForSave=true);
-	BOOL StoreDataBaseDataMarko(boost::shared_ptr<NFmiFastQueryInfo> &smart);
+	BOOL StoreDataBaseDataMarko(std::shared_ptr<NFmiFastQueryInfo> &smart);
 	BOOL PrepareForLoadingDataFromFile(void);
 	BOOL CheckEditedDataAndStoreIfNeeded(void);
 	void LoadDataFromFileAndAdd(const std::string &theFileName, NFmiInfoData::Type theDatatype, bool useMemoryMapping);
@@ -120,7 +120,7 @@ public:
     CFmiExtraMapViewDlg* CreateExtraMapViewDlg(NFmiEditMapGeneralDataDoc *theDoc, unsigned int theMapViewDescTopIndex);
 	void StoreViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMacro);
 	void LoadViewMacroWindowsSettings(NFmiViewSettingMacro &theViewMacro);
-	void SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam);
+	void SetMacroErrorText(const std::string &theErrorStr, std::shared_ptr<NFmiDrawParam>& triggerDrawParam);
 	void CaseStudyLoadingActions(const NFmiMetTime &theUsedTime, const std::string &updateReasonText);
 	void CaseStudyToNormalModeActions(void);
 	void SetAllViewIconsDynamically(void);
@@ -137,7 +137,7 @@ public:
 	void OpenLogViewer();
 	void SetAllMapViewTooltipDelays(bool doRestoreAction, int delayInMilliSeconds);
 	void OpenMacroParamInSmarttoolDialog(const std::string& absoluteMacroParamPath);
-	bool IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam);
+	bool IsCrossSectionMacroParamOk(std::shared_ptr<NFmiDrawParam>& theUsedDrawParam);
 
 	NFmiEditMapGeneralDataDoc* GetData(void);
 	virtual ~CSmartMetDoc();
@@ -235,10 +235,10 @@ private:
 	void DoCrashTest(void);
 	BOOL LoadDataFromFile(const char* theFileName);
 	BOOL StoreEditedData(void);
-	BOOL StoreData(const NFmiString& theFileName, boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, bool askForSave=true); //laura lisäsi booleanin 10051999
-	BOOL StoreWorkingData(boost::shared_ptr<NFmiFastQueryInfo> &smart, bool askForSave = true);
+	BOOL StoreData(const NFmiString& theFileName, std::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, bool askForSave=true); //laura lisäsi booleanin 10051999
+	BOOL StoreWorkingData(std::shared_ptr<NFmiFastQueryInfo> &smart, bool askForSave = true);
 	BOOL SaveViewToFilePicture(const std::string &theCallingFunctionName, CBitmap* bm, const NFmiRect *theRelativeOutputArea);
-	BOOL StoreData(const NFmiString& theFileName, boost::shared_ptr<NFmiQueryData> &theData);
+	BOOL StoreData(const NFmiString& theFileName, std::shared_ptr<NFmiQueryData> &theData);
     bool IsMapSelected(int theMapIndex);
     void MakeVisualizationImages();
     void LoadViewMacroSettingsForWarningCenterView(NFmiViewSettingMacro &theViewMacro, int &theStartCornerCounter);

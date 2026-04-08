@@ -32,7 +32,7 @@ public:
     const NFmiBetaProduct* GetCurrentGeneratedBetaProduct() override;
     bool CurrentTime(unsigned int theDescTopIndex, const NFmiMetTime& newCurrentTime, bool fStayInsideAnimationTimes = false) override;
     NFmiSatelliteImageCacheSystem& SatelliteImageCacheSystem() override;
-    void MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea) override;
+    void MakeDrawedInfoVectorForMapView(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, std::shared_ptr<NFmiDrawParam> &theDrawParam, const std::shared_ptr<NFmiArea> &theArea) override;
     NFmiApplicationWinRegistry& ApplicationWinRegistry() override;
     const NFmiPoint& BrushSize() override;
     void BrushSize(const NFmiPoint& theSize) override;
@@ -47,12 +47,12 @@ public:
     void BrushToolLimitSetting(int newValue) override;
     CtrlViewUtils::FmiEditorModifyToolMode ModifyToolMode() override;
     void ModifyToolMode(CtrlViewUtils::FmiEditorModifyToolMode newState) override;
-    boost::shared_ptr<NFmiDrawParam> ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex) override;
+    std::shared_ptr<NFmiDrawParam> ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex) override;
     int AbsoluteActiveViewRow(unsigned int theDescTopIndex) override;
     void AbsoluteActiveViewRow(unsigned int theDescTopIndex, int theAbsoluteActiveRowIndex) override;
 	double BrushSpecialParamValue() override;
     void BrushSpecialParamValue(double newValue) override;
-    boost::shared_ptr<NFmiFastQueryInfo> EditedSmartInfo() override;
+    std::shared_ptr<NFmiFastQueryInfo> EditedSmartInfo() override;
     void OnButtonRedo() override;
     void OnButtonUndo() override;
     NFmiHelpDataInfoSystem* HelpDataInfoSystem() override;
@@ -79,7 +79,7 @@ public:
     bool Printing() override;
     void Printing(bool newStatus) override;
     void Printing(unsigned int theMapViewDescTopIndex, bool newStatus) override;
-    boost::shared_ptr<NFmiDrawParam> DefaultEditedDrawParam() override;
+    std::shared_ptr<NFmiDrawParam> DefaultEditedDrawParam() override;
     double DrawObjectScaleFactor() override;
     void DrawObjectScaleFactor(double newValue) override;
 #ifndef UNIX
@@ -156,8 +156,8 @@ public:
     void PasteDrawParamsToMapViewRow(unsigned int theDescTopIndex) override;
     void ToggleTimeControlAnimationView(unsigned int theDescTopIndex) override;
     void OnAcceleratorSetHomeTime(int theMapViewDescTopIndex) override;
-    void PanMap(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, const NFmiPoint &theZoomDragUpPoint) override;
-    void ZoomMapInOrOut(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, double theZoomFactor) override;
+    void PanMap(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, const NFmiPoint &theZoomDragUpPoint) override;
+    void ZoomMapInOrOut(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, double theZoomFactor) override;
     const NFmiTimeBag& EditedDataTimeBag() override;
     int FilterDialogUpdateStatus() override;
     void FilterDialogUpdateStatus(int newState) override;
@@ -216,12 +216,12 @@ public:
     bool ShowHelperData4InTimeSerialView() override;
     void ToggleShowHelperDatasInTimeView(int theCommand) override;
     NFmiDrawParamList* TimeSerialViewDrawParamList() override;
-    void SetMapArea(unsigned int theDescTopIndex, const boost::shared_ptr<NFmiArea> &newArea) override;
+    void SetMapArea(unsigned int theDescTopIndex, const std::shared_ptr<NFmiArea> &newArea) override;
     const NFmiMetTime& ActiveMapTime() override;
     const std::string& FileDialogDirectoryMemory() override;
     bool MakeAndStoreFileDialogDirectoryMemory(const std::string& thePathAndFileName) override;
     NFmiFixedDrawParamSystem& FixedDrawParamSystem() override;
-    void TakeDrawParamInUseEveryWhere(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool useInMap, bool useInTimeSerial, bool useInCrossSection, bool useWithViewMacros) override;
+    void TakeDrawParamInUseEveryWhere(std::shared_ptr<NFmiDrawParam> &theDrawParam, bool useInMap, bool useInTimeSerial, bool useInCrossSection, bool useWithViewMacros) override;
     NFmiSmartToolInfo* SmartToolInfo() override;
     std::shared_ptr<NFmiMacroParamSystem> MacroParamSystem() override;
     bool DoSmartToolEditing(const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly) override;
@@ -259,7 +259,7 @@ public:
     void SetHighlightedSynopStation(const NFmiPoint &theLatlon, int theWmoId, bool fShowHighlight) override;
     bool SynopDataGridViewOn() override;
     void SynopDataGridViewOn(bool newState) override;
-    std::vector<boost::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) override;
+    std::vector<std::shared_ptr<NFmiFastQueryInfo> > GetSortedSynopInfoVector(int theProducerId, int theProducerId2 = -1, int theProducerId3 = -1, int theProducerId4 = -1) override;
     void ForceDrawOverBitmapThings(unsigned int originalCallerDescTopIndex, bool doOriginalView, bool doAllOtherMapViews) override;
     NFmiLocationSelectionTool* LocationSelectionTool2() override;
     NFmiParamBag& AllStaticParams() override;
@@ -280,7 +280,7 @@ public:
     std::string GetRelativeViewMacroPath() override;
     const std::vector<std::string>& ViewMacroFileNames(bool updateList) override;
     NFmiWindTableSystem& WindTableSystem() override;
-    void SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea,
+    void SelectLocations(unsigned int theDescTopIndex, std::shared_ptr<NFmiFastQueryInfo> &theInfo, const std::shared_ptr<NFmiArea> &theMapArea,
         const NFmiPoint& theLatLon, const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
         , bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd) override;
     void UpdateRowInLockedDescTops(unsigned int theOrigDescTopIndex) override;

@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////
 
 NFmiZoomView::NFmiZoomView(int theMapViewDescTopIndex, NFmiToolBox *theToolBox
-    , boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+    , std::shared_ptr<NFmiDrawParam> &theDrawParam)
     :NFmiCtrlView(theMapViewDescTopIndex, CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->GetMapHandlerInterface(theMapViewDescTopIndex)->TotalArea()->XYArea()
         , theToolBox
         , theDrawParam)
@@ -26,7 +26,7 @@ NFmiZoomView::NFmiZoomView(int theMapViewDescTopIndex, NFmiToolBox *theToolBox
 }
 
 NFmiZoomView::NFmiZoomView(int theMapViewDescTopIndex, NFmiToolBox *theToolBox
-    , boost::shared_ptr<NFmiDrawParam> &theDrawParam
+    , std::shared_ptr<NFmiDrawParam> &theDrawParam
     , const NFmiRect& theRect)
     :NFmiCtrlView(theMapViewDescTopIndex, theRect
         , theToolBox
@@ -107,11 +107,11 @@ void NFmiZoomView::AdjustZoomedAreaRect(void)
     if(itsCtrlViewDocumentInterface->KeepMapAspectRatio())
 	{ // HUOM!! Onkohan tämä liian monimutkainen viritys?!?!?
 	  // Tarkoitus on pitaa 'zoom'-laatikon aspectratio karttanäytön aspectration mukaisena
-		boost::shared_ptr<NFmiArea> totalArea = GetMapHandlerInterface()->TotalArea();
-		boost::shared_ptr<NFmiArea> area(totalArea->CreateNewArea(itsZoomedAreaRect));
+		std::shared_ptr<NFmiArea> totalArea = GetMapHandlerInterface()->TotalArea();
+		std::shared_ptr<NFmiArea> area(totalArea->CreateNewArea(itsZoomedAreaRect));
 		if(area)
 		{
-			boost::shared_ptr<NFmiArea> area2(area->CreateNewArea(itsCtrlViewDocumentInterface->ClientViewXperYRatio(itsMapViewDescTopIndex), kTopLeft, true));
+			std::shared_ptr<NFmiArea> area2(area->CreateNewArea(itsCtrlViewDocumentInterface->ClientViewXperYRatio(itsMapViewDescTopIndex), kTopLeft, true));
 			if(area2)
                 itsZoomedAreaRect = totalArea->XYArea(area2.get());
 		}
@@ -135,10 +135,10 @@ void NFmiZoomView::CalcZoomedArea(void)
     // tässä estetään latlon maailma kartan 'ylivuotoa', joka kaataa MetEditorin eli ei anneta latlon area zoomin mennä yli reunojen
 	itsZoomedAreaRect = mapHandlerInterface->TotalArea()->XYArea().Intersection(itsZoomedAreaRect);
 
-	itsZoomedArea = boost::shared_ptr<NFmiArea>(mapHandlerInterface->TotalArea()->CreateNewArea(itsZoomedAreaRect));
+	itsZoomedArea = std::shared_ptr<NFmiArea>(mapHandlerInterface->TotalArea()->CreateNewArea(itsZoomedAreaRect));
 }
 
-boost::shared_ptr<NFmiArea> NFmiZoomView::ZoomedArea(void)
+std::shared_ptr<NFmiArea> NFmiZoomView::ZoomedArea(void)
 {
 	CalcZoomedArea(); // I couldn't make better place for this but this way area is supposed
 					  // to be calculated only when its needed

@@ -238,7 +238,7 @@ void ApplicationInterfaceForSmartMet::InvalidateMainMapView(bool bErase)
         view->Invalidate(bErase);
 }
 
-void ApplicationInterfaceForSmartMet::SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam)
+void ApplicationInterfaceForSmartMet::SetMacroErrorText(const std::string &theErrorStr, std::shared_ptr<NFmiDrawParam>& triggerDrawParam)
 {
     auto view = ApplicationInterface::GetSmartMetView();
     if(view)
@@ -393,7 +393,7 @@ void ApplicationInterfaceForSmartMet::OpenMacroParamInSmarttoolDialog(const std:
     GetDocument()->OpenMacroParamInSmarttoolDialog(absoluteMacroParamPath);
 }
 
-bool ApplicationInterfaceForSmartMet::IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
+bool ApplicationInterfaceForSmartMet::IsCrossSectionMacroParamOk(std::shared_ptr<NFmiDrawParam>& theUsedDrawParam)
 {
     return GetDocument()->IsCrossSectionMacroParamOk(theUsedDrawParam);
 }

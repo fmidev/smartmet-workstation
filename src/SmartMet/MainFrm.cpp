@@ -1639,7 +1639,7 @@ void CMainFrame::OnUpdateFrameTitle(BOOL bAddToTitle)
 	{
 		this->SetTitle(CA2T(itsDoc->GetApplicationTitle().c_str())); // t‰m‰ on v‰h‰n outo paikka s‰‰t‰‰ framen title‰, mutta OnCreate:ssa ei ole viel‰ dokumenttia saatavilla
 
-		boost::shared_ptr<NFmiFastQueryInfo> info = itsDoc->EditedSmartInfo();
+		std::shared_ptr<NFmiFastQueryInfo> info = itsDoc->EditedSmartInfo();
 		if(info && dynamic_cast<NFmiSmartInfo*>(info.get())->LoadedFromFile())
 		{
 			CFmiUsedFrameWndParent::OnUpdateFrameTitle(bAddToTitle);

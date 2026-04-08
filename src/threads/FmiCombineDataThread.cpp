@@ -576,7 +576,7 @@ static void	DoSoundingIndexDataWork()
 			debugTimer.StartTimer();
 			SoundingIndexOutpuFileNameMaker fileNameMaker(dataInfo);
 	// 2. tee sounding index data
-			boost::shared_ptr<NFmiQueryData> data;
+			std::shared_ptr<NFmiQueryData> data;
 			try
 			{
 				NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::QueryData, workingThreadName, ::MakeSoundingIndexDataWorkString(fileNameMaker.itsOutputFilePath));

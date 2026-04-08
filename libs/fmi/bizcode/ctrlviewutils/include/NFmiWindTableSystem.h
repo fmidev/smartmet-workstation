@@ -57,7 +57,7 @@ public:
 	void ControlDirectory(const std::string &theNewValue) {itsControlDirectory = theNewValue;}
 	void InitAreaMaskDatas(void);
 	std::vector<AreaMaskData>& AreaMaskDataList(void);
-	void InitializeAllAreaMasks(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+	void InitializeAllAreaMasks(std::shared_ptr<NFmiFastQueryInfo> &theInfo);
 	bool UseMapTime(void) const {return fUseMapTime;}
 	void UseMapTime(bool newValue) {fUseMapTime = newValue;}
 	int SelectedAreaMaskList(void) const {return itsSelectedAreaMaskList;}

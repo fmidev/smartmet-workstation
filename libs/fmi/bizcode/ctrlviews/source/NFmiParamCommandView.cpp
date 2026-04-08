@@ -34,7 +34,7 @@ double NFmiParamCommandView::itsParameterRowHorizontalMarginInMM = 0.5;
 //--------------------------------------------------------
 // ParamCommandView 
 //--------------------------------------------------------
-NFmiParamCommandView::NFmiParamCommandView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer)
+NFmiParamCommandView::NFmiParamCommandView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, std::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer)
 :NFmiCtrlView(theMapViewDescTopIndex, theRect, theToolBox, theDrawParam, theRowIndex, theColumnIndex)
 ,fShowView(true)
 ,fHasMapLayer(hasMapLayer)
@@ -104,7 +104,7 @@ double NFmiParamCommandView::ConvertMilliMeterToRelative(double lengthInMilliMet
 NFmiRect NFmiParamCommandView::CheckBoxRect(const NFmiRect& parameterRowRect)
 {
 	NFmiRect checkBoxRect(parameterRowRect);
-	// Siirretään laatikkoa pikkuisen oikealle ja alas
+	// Siirretï¿½ï¿½n laatikkoa pikkuisen oikealle ja alas
 	auto leftMargin = ConvertMilliMeterToRelative(itsParameterRowHorizontalMarginInMM + 0.1, true);
 	checkBoxRect.Place(NFmiPoint(parameterRowRect.Left() + leftMargin, parameterRowRect.Top() + (itsCheckBoxSize.Y() / 15.)));
 	checkBoxRect.Size(itsCheckBoxSize);
@@ -115,13 +115,13 @@ NFmiRect NFmiParamCommandView::CheckBoxRect(const NFmiRect& parameterRowRect)
 NFmiPoint NFmiParamCommandView::LineTextPlace(int zeroBasedRowIndex, const NFmiRect& parameterRowRect, bool checkBoxMove)
 {
 	NFmiPoint textPlace = parameterRowRect.TopLeft();
-	// Siirretään tekstin paikka vähän oikealle, jotta se ei olisi kiinni parametri laatikon left reunassa
+	// Siirretï¿½ï¿½n tekstin paikka vï¿½hï¿½n oikealle, jotta se ei olisi kiinni parametri laatikon left reunassa
 	auto leftMargin = ConvertMilliMeterToRelative(itsParameterRowHorizontalMarginInMM, true);
 	textPlace.X(textPlace.X() + leftMargin);
 	auto rowHasCheckBox = (checkBoxMove || !(fHasMapLayer && zeroBasedRowIndex == 0));
 	if(rowHasCheckBox)
 	{
-		// Jos rivillä on checkbox, laitetaan teksti sen oikeaan laitaan + margin
+		// Jos rivillï¿½ on checkbox, laitetaan teksti sen oikeaan laitaan + margin
 		auto checkboxRect = CheckBoxRect(parameterRowRect);
 		textPlace.X(checkboxRect.Right() + leftMargin);
 	}
@@ -136,8 +136,8 @@ void NFmiParamCommandView::DrawCheckBox(const NFmiRect &theRect, NFmiDrawingEnvi
 	itsToolBox->Convert(&rec);
 	if(fDrawCheck)
 	{
-		// Rastin tai ruksin piirto ei onnistunut, tuli rumaa jälkeä. Joten
-		// piirrän merkin checkboxin sisään fillatulla laatikolla.
+		// Rastin tai ruksin piirto ei onnistunut, tuli rumaa jï¿½lkeï¿½. Joten
+		// piirrï¿½n merkin checkboxin sisï¿½ï¿½n fillatulla laatikolla.
 		theEnvi.SetFrameColor(NFmiColor(0.5f,0.5f,0.5f));
 		theEnvi.SetPenSize(NFmiPoint(3,3));
 		NFmiRect rect2(theRect);
@@ -163,7 +163,7 @@ void NFmiParamCommandView::CalcTextData(void)
 	CalcFontSize();
 	itsLineHeight = this->itsToolBox->SY(static_cast<long>(itsFontSize.Y())) * .80;
 	auto rowMarginY = ConvertMilliMeterToRelative(itsParameterRowVerticalMarginInMM, false);
-	itsLineHeight += rowMarginY; // venytetään hieman rivin korkeutta
+	itsLineHeight += rowMarginY; // venytetï¿½ï¿½n hieman rivin korkeutta
 	double xSize = this->itsToolBox->SX(static_cast<long>(itsFontSize.Y())) * .80;
 	double x = itsLineHeight/10.;
 	double factor = 0.8;
@@ -172,8 +172,8 @@ void NFmiParamCommandView::CalcTextData(void)
 	itsPixelSize.Y(itsToolBox->SY(1));
 }
 
-// Parametri rivit alkavat 1:stä, paitsi jos fHasMapLayer = true, eli kyse on NFmiViewParamsView luokan oliosta
-// jolloin indeksit alkavat 0:sta (0 on aina tuo map layer, jota ei voi manipuloida mitenkään).
+// Parametri rivit alkavat 1:stï¿½, paitsi jos fHasMapLayer = true, eli kyse on NFmiViewParamsView luokan oliosta
+// jolloin indeksit alkavat 0:sta (0 on aina tuo map layer, jota ei voi manipuloida mitenkï¿½ï¿½n).
 int NFmiParamCommandView::CalcParameterRowIndex(const NFmiPoint& pointedPlace, double* indexRealValueOut) const
 {
 	auto startMargin = ConvertMilliMeterToRelative(itsParameterRowVerticalMarginInMM, false);

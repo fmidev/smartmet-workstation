@@ -129,7 +129,7 @@ NFmiViewSettingMacro::Param::Param(void)
 	itsDrawParam->ViewMacroDrawParam(true);
 }
 
-NFmiViewSettingMacro::Param::Param(const boost::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiLevel &theLevel, NFmiInfoData::Type theDataType, int theModelOrigTimeOffsetInHours)
+NFmiViewSettingMacro::Param::Param(const std::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiLevel &theLevel, NFmiInfoData::Type theDataType, int theModelOrigTimeOffsetInHours)
 :itsDrawParam(new NFmiDrawParam(*theDrawParam))
 ,itsDataIdent(const_cast<NFmiDrawParam*>(theDrawParam.get())->Param())
 ,itsLevel(theLevel)
@@ -159,9 +159,9 @@ NFmiViewSettingMacro::Param::~Param(void)
 {
 }
 
-void NFmiViewSettingMacro::Param::DrawParam(const boost::shared_ptr<NFmiDrawParam> &newValue)
+void NFmiViewSettingMacro::Param::DrawParam(const std::shared_ptr<NFmiDrawParam> &newValue)
 {
-	itsDrawParam = boost::shared_ptr<NFmiDrawParam>(new NFmiDrawParam(*newValue));
+	itsDrawParam = std::shared_ptr<NFmiDrawParam>(new NFmiDrawParam(*newValue));
 	itsDrawParam->ViewMacroDrawParam(true);
 }
 
@@ -334,7 +334,7 @@ void NFmiViewSettingMacro::MaskSettings::SetAllMasks(NFmiAreaMaskList &theMasks)
 	Clear();
 	for(theMasks.Reset(); theMasks.Next(); )
 	{
-		boost::shared_ptr<NFmiAreaMask> areaMask = theMasks.Current();
+		std::shared_ptr<NFmiAreaMask> areaMask = theMasks.Current();
 		NFmiViewSettingMacro::Param param;
 		if(areaMask->Level())
 			param = NFmiViewSettingMacro::Param(*areaMask->DataIdent(), *areaMask->Level(), areaMask->GetDataType(), 0);
@@ -563,7 +563,7 @@ static NFmiViewSettingMacro::MapRow MakeMapRow(NFmiDrawParamList *theDrawParamLi
 	NFmiViewSettingMacro::MapRow mapRow;
 	for(theDrawParamList->Reset(); theDrawParamList->Next(); )
 	{
-		boost::shared_ptr<NFmiDrawParam> drawParam = theDrawParamList->Current();
+		std::shared_ptr<NFmiDrawParam> drawParam = theDrawParamList->Current();
 		if(NFmiDrawParam::IsMacroParamCase(drawParam->DataType()))
 		{ 
             // t�m� on ik�v�� koodia, mutta en keksinyt t�h�n h�t��n parempaa. Eli pit�� saada viewMacrossa olevaan macroParamiin
@@ -757,7 +757,7 @@ void NFmiViewSettingMacro::TimeView::SetAllParams(NFmiDrawParamList *theDrawPara
 	Clear();
 	for(theDrawParamList->Reset(); theDrawParamList->Next(); )
 	{
-		boost::shared_ptr<NFmiDrawParam> drawParam = theDrawParamList->Current();
+		std::shared_ptr<NFmiDrawParam> drawParam = theDrawParamList->Current();
 		NFmiViewSettingMacro::Param param;
 		param = NFmiViewSettingMacro::Param(drawParam, drawParam->Level(), drawParam->DataType(), 0);
 		NFmiViewSettingMacro::TimeViewRow row(param);

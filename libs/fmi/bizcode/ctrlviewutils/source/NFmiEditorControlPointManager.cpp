@@ -307,7 +307,7 @@ bool NFmiEditorControlPointManager::Init(const NFmiEditorControlPointManager &th
 	return Init(theOther.TimeDescriptor(), theOther.ParamBag(), "", true, true);
 }
 
-bool NFmiEditorControlPointManager::SetZoomedAreaStationsAsControlPoints(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theInfos, boost::shared_ptr<NFmiArea> &theArea)
+bool NFmiEditorControlPointManager::SetZoomedAreaStationsAsControlPoints(std::vector<std::shared_ptr<NFmiFastQueryInfo>> &theInfos, std::shared_ptr<NFmiArea> &theArea)
 {
     std::vector<NFmiPoint> addedControlPoints;
     for(auto &fastInfo : theInfos)
@@ -317,20 +317,20 @@ bool NFmiEditorControlPointManager::SetZoomedAreaStationsAsControlPoints(std::ve
     return Init(addedControlPoints, false);
 }
 
-bool NFmiEditorControlPointManager::SetZoomedAreaStationsAsControlPoints(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea)
+bool NFmiEditorControlPointManager::SetZoomedAreaStationsAsControlPoints(std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::shared_ptr<NFmiArea> &theArea)
 {
     std::vector<NFmiPoint> addedControlPoints;
     AddZoomedAreaStationsToCPVector(theInfo, theArea, addedControlPoints);
     return Init(addedControlPoints, false);
 }
 
-void NFmiEditorControlPointManager::AddZoomedAreaStationsToCPVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea, std::vector<NFmiPoint> &theAddedControlPointsInOut)
+void NFmiEditorControlPointManager::AddZoomedAreaStationsToCPVector(std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::shared_ptr<NFmiArea> &theArea, std::vector<NFmiPoint> &theAddedControlPointsInOut)
 {
     if(!theInfo->IsGrid())
     {
         for(theInfo->ResetLocation(); theInfo->NextLocation(); )
         {
-            const auto &latlon = theInfo->LatLonFast();
+            const auto &latlon = theInfo->LatLon();
             if(theArea->IsInside(latlon))
             {
                 theAddedControlPointsInOut.push_back(latlon);

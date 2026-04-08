@@ -10,7 +10,7 @@
 #include "boost/math/special_functions/round.hpp"
 
 NFmiModelProducerIndexView::NFmiModelProducerIndexView(NFmiToolBox * theToolBox
-													 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+													 ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 													 ,const NFmiRect& theRect)
 :NFmiModelCombineStatusView(theToolBox, theDrawParam, theRect)
 ,itsQueryInfoVector()
@@ -148,7 +148,7 @@ int NFmiModelProducerIndexView::GetPlaceIndexInProducerColorIndexView(const NFmi
 }
 
 // tuli hieman mega-luokan interface
-void NFmiModelProducerIndexView::SetDataFromDialog(	 std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theQueryInfoVector
+void NFmiModelProducerIndexView::SetDataFromDialog(	 std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theQueryInfoVector
 													,const NFmiTimeBag& theLoadedDataTimeBag
 													,const NFmiTimeBag& theNonModifieableDataTimeBag
 													,const std::vector<int>& theSelectedProducerPriorityTable

@@ -24,9 +24,9 @@ class NFmiSatelView : public NFmiStationView
 {
 
 public:
-	NFmiSatelView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+	NFmiSatelView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 				,NFmiToolBox * theToolBox
-				,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+				,std::shared_ptr<NFmiDrawParam> &theDrawParam
 				,FmiParameterName theParamId
 				,int theRowIndex
                 ,int theColumnIndex);
@@ -36,7 +36,7 @@ public:
     static long ImagesOffsetInMinutes(const NFmiDataIdent &theDataIdent);
 
 protected:
-    void DrawImageOnDifferentProjection(boost::shared_ptr<NFmiArea> &theImageArea, NFmiImageHolder &theImageHolder);
+    void DrawImageOnDifferentProjection(std::shared_ptr<NFmiArea> &theImageArea, NFmiImageHolder &theImageHolder);
     NFmiImageHolder GetImageFromCache();
 
 	NFmiMetTime itsSatelImageTime; // otetaan talteen näytölle piirretyn kuvan aika

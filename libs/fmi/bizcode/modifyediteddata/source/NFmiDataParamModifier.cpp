@@ -57,8 +57,8 @@
 //--------------------------------------------------------
 // Constructor/Destructor
 //--------------------------------------------------------
-NFmiDataParamModifier::NFmiDataParamModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam,
-												boost::shared_ptr<NFmiAreaMaskList> &theMaskList,
+NFmiDataParamModifier::NFmiDataParamModifier(std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::shared_ptr<NFmiDrawParam> &theDrawParam,
+												std::shared_ptr<NFmiAreaMaskList> &theMaskList,
 												unsigned long theAreaMask)
 :itsInfo(theInfo)
 ,itsDrawParam(theDrawParam)
@@ -257,8 +257,8 @@ bool NFmiDataParamModifier::Param(const NFmiParam& theParam)
 // ****************************************************************************************************
 
 
-NFmiDataParamControlPointModifier::NFmiDataParamControlPointModifier(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiDrawParam> &theDrawParam
-																	,boost::shared_ptr<NFmiAreaMaskList> &theMaskList
+NFmiDataParamControlPointModifier::NFmiDataParamControlPointModifier(std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::shared_ptr<NFmiDrawParam> &theDrawParam
+																	,std::shared_ptr<NFmiAreaMaskList> &theMaskList
 																	,unsigned long theAreaMask
 																	,boost::shared_ptr<NFmiEditorControlPointManager> &theCPManager
 																	,const NFmiRect &theCPGridCropRect

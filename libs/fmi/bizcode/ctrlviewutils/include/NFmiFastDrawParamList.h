@@ -18,7 +18,7 @@ class NFmiLevel;
 // K‰ytet‰‰n containerin toteutuksena boost:in unordered_map -luokkaa.
 class NFmiFastDrawParamList
 {
-	using FastContainer = std::unordered_map<std::string, boost::shared_ptr<NFmiDrawParam>>;
+	using FastContainer = std::unordered_map<std::string, std::shared_ptr<NFmiDrawParam>>;
 
 	FastContainer itsContainer;
 	FastContainer::key_type itsCurrentKey; // findilla etsityn drawParamin avain (iteraattoria ei saa ottaa talteen koska se voi invalidoitua!!!!)
@@ -27,16 +27,16 @@ public:
 	NFmiFastDrawParamList();
 	~NFmiFastDrawParamList();
 
-	bool Find(boost::shared_ptr<NFmiDrawParam>& theDrawParam, bool fGroundData);
+	bool Find(std::shared_ptr<NFmiDrawParam>& theDrawParam, bool fGroundData);
 	bool Find(const NFmiDataIdent& theParam, const NFmiLevel* theLevel, NFmiInfoData::Type theDataType, const std::string& theMacroParamInitFile, bool fUseOnlyParamId);
-	void Add(boost::shared_ptr<NFmiDrawParam>& theDrawParam, bool fGroundData);
-	boost::shared_ptr<NFmiDrawParam> Current();
+	void Add(std::shared_ptr<NFmiDrawParam>& theDrawParam, bool fGroundData);
+	std::shared_ptr<NFmiDrawParam> Current();
 	size_t Size();
 	FastContainer::iterator Begin();
 	FastContainer::iterator End();
 
 private:
 	std::string CalcKey(const NFmiDataIdent& theParam, const NFmiLevel* theLevel, NFmiInfoData::Type theDataType, const std::string& theMacroParamInitFile, bool fUseOnlyParamId);
-	std::string MakeMacroParamRelativeFilePathStart(boost::shared_ptr<NFmiDrawParam>& theDrawParam);
-	std::string CalcKey(boost::shared_ptr<NFmiDrawParam>& theDrawParam, bool fGroundData);
+	std::string MakeMacroParamRelativeFilePathStart(std::shared_ptr<NFmiDrawParam>& theDrawParam);
+	std::string CalcKey(std::shared_ptr<NFmiDrawParam>& theDrawParam, bool fGroundData);
 };

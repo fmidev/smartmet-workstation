@@ -120,7 +120,7 @@ int CZoomView::OnMouseActivate(CWnd* pDesktopWnd, UINT nHitTest, UINT message)
 	return 1;
 }
 
-boost::shared_ptr<NFmiArea> CZoomView::ZoomedArea(void)
+std::shared_ptr<NFmiArea> CZoomView::ZoomedArea(void)
 {
 	// tämä menee herran haltuun
 	return ((NFmiZoomView*)itsZoomView)->ZoomedArea();

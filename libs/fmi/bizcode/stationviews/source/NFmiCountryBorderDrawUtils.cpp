@@ -186,7 +186,7 @@ namespace
         return relativePolyLineList;
     }
 
-    std::unique_ptr<NFmiArea> CreateFixedToOrigoMapArea(const boost::shared_ptr<NFmiArea>& mapArea)
+    std::unique_ptr<NFmiArea> CreateFixedToOrigoMapArea(const std::shared_ptr<NFmiArea>& mapArea)
     {
         std::unique_ptr<NFmiArea> fixedToOrigoMapArea(mapArea.get()->Clone());
         fixedToOrigoMapArea->Place(NFmiPoint(0, 0));

@@ -1148,7 +1148,7 @@ NFmiMetTime NFmiBetaProductAutomation::NFmiTriggerModeInfo::CalcNextDueTime(cons
     return NFmiMetTime::gMissingTime; // virhetilanne, palautetaan puuttuva aika
 }
 
-static bool CheckIfInfoWasOnTriggerList(boost::shared_ptr<NFmiFastQueryInfo> &info, const std::vector<std::string>& loadedDataTriggerList, const std::string &automationName, int dataTriggerWaitForMinutes, bool betaProductCase)
+static bool CheckIfInfoWasOnTriggerList(std::shared_ptr<NFmiFastQueryInfo> &info, const std::vector<std::string>& loadedDataTriggerList, const std::string &automationName, int dataTriggerWaitForMinutes, bool betaProductCase)
 {
     if(info)
     {

@@ -26,6 +26,7 @@
 #include "CtrlViewTimeConsumptionReporter.h"
 #include "NFmiFastInfoUtils.h"
 #include "NFmiQueryDataUtil.h"
+#include "DataMatrixInterpolation.h"
 
 #ifndef UNIX
 #include <gdiplus.h>
@@ -550,7 +551,7 @@ void NFmiStreamlineData::CropClosingPaths(std::vector<NFmiPoint> &theCheckedPath
     }
 }
 
-StreamlineCalculationParameters::StreamlineCalculationParameters(const boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+StreamlineCalculationParameters::StreamlineCalculationParameters(const std::shared_ptr<NFmiDrawParam> &theDrawParam)
 :itsTimeStepInMinutes(30)
 ,itsMaxAreaLimit(4./2000.)
 ,itsMaxLengthInKMLimit(6.*700.)
@@ -592,9 +593,9 @@ StreamlineCalculationParameters::StreamlineCalculationParameters(const boost::sh
 // ************* NFmiStreamLineView ******************
 // ***************************************************
 
-NFmiStreamLineView::NFmiStreamLineView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+NFmiStreamLineView::NFmiStreamLineView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 											,NFmiToolBox *theToolBox
-											,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+											,std::shared_ptr<NFmiDrawParam> &theDrawParam
 											,FmiParameterName theParamId
 											,int theRowIndex
                                             ,int theColumnIndex)
@@ -702,18 +703,16 @@ void NFmiStreamLineView::DrawStreamLineData(void)
         if(itsInfo->Param(kFmiWindUMS) && itsInfo->Param(kFmiWindVMS))
         {
             itsInfo->Param(kFmiWindUMS);
-            itsInfo->Values(itsWindUComponent, itsTime);
+            itsWindUComponent = itsInfo->Values(itsTime);
             itsInfo->Param(kFmiWindVMS);
-            itsInfo->Values(itsWindVComponent, itsTime);
+            itsWindVComponent = itsInfo->Values(itsTime);
         }
         else if(itsInfo->Param(kFmiWindSpeedMS) && itsInfo->Param(kFmiWindDirection))
         {
             itsInfo->Param(kFmiWindSpeedMS);
-            NFmiDataMatrix<float> ws;
-            itsInfo->Values(ws, itsTime);
+            NFmiDataMatrix<float> ws = itsInfo->Values(itsTime);
             itsInfo->Param(kFmiWindDirection);
-            NFmiDataMatrix<float> wd;
-            itsInfo->Values(wd, itsTime);
+            NFmiDataMatrix<float> wd = itsInfo->Values(itsTime);
             NFmiFastInfoUtils::CalcMatrixWindComponentsFromSpeedAndDirection(ws, wd, itsWindUComponent, itsWindVComponent);
         }
         else
@@ -756,17 +755,17 @@ static void UVcomponents2SpeedDir(float u, float v, float &WS, float &WD)
 static float InterpolateValueFromMatrix(const NFmiDataMatrix<float> &theMatrix, const NFmiPoint &theLatlonPoint, const NFmiArea *theDataArea)
 {
     NFmiPoint p = theDataArea->LatLonToWorldXY(theLatlonPoint);
-    return theMatrix.InterpolatedValue(p, theDataArea->WorldRect(), kFmiWindUMS, true);
+    return DataMatrixInterpolation::InterpolatedValue(theMatrix, p, theDataArea->WorldRect(), kFmiWindUMS, true);
 }
 
-void NFmiStreamLineView::CalcWindValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, float &WS, float &WD)
+void NFmiStreamLineView::CalcWindValues(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, float &WS, float &WD)
 {
     float u = ::InterpolateValueFromMatrix(itsWindUComponent, theLatlon, theInfo->Area());
     float v = ::InterpolateValueFromMatrix(itsWindVComponent, theLatlon, theInfo->Area());
     ::UVcomponents2SpeedDir(u, v, WS, WD);
 }
 
-static void UpdateWindValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &thetLatlonPoint, const NFmiMetTime &theTime, float &WS, float &WD)
+static void UpdateWindValues(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &thetLatlonPoint, const NFmiMetTime &theTime, float &WS, float &WD)
 {
     theInfo->Param(kFmiWindSpeedMS);
     WS = theInfo->InterpolatedValue(thetLatlonPoint, theTime);
@@ -975,7 +974,7 @@ static StartingPointMatrixHelper CalcSuitableStartMatrixSize(int theOrigSize, in
 // Etsit��n originaali hilasta sellainen alihila, johon annettu toivekoko saadaan mahtumaan tasa stepein.
 // Etsit��n sellainen iteroimalla. 
 // Lopuksi t�ytet��n matriisi latlon-pisteill�, jotka ovat niiss� originaalihilapisteiss�, joihin saadaan laskuissa viittaukset.
-static NFmiDataMatrix<NFmiPoint> MakeFinalStartingPointMatrix(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, double startPointCountInDataX, double startPointCountInDataY)
+static NFmiDataMatrix<NFmiPoint> MakeFinalStartingPointMatrix(std::shared_ptr<NFmiFastQueryInfo> &theInfo, double startPointCountInDataX, double startPointCountInDataY)
 {
     NFmiDataMatrix<NFmiPoint> startingPoints;
     int countInDataX = FmiRound(startPointCountInDataX);
@@ -1055,7 +1054,7 @@ static int CalcUsedTimeStep(int theOfficialTimeStepInMinutes, float WS, float th
 }
 
 // laskee infosta sen hetkisen hilapisteen kohdasta factoriin suhteutetun hilakoon metreiss�.
-static NFmiPoint CalcWantedTravelDistanceInMeters(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, double gridSizeFactor)
+static NFmiPoint CalcWantedTravelDistanceInMeters(std::shared_ptr<NFmiFastQueryInfo> &theInfo, double gridSizeFactor)
 {
     unsigned long originalLocationIndex = theInfo->LocationIndex();
     if(originalLocationIndex != gMissingIndex)
@@ -1108,7 +1107,7 @@ static double PointToRectangleDistance(const NFmiRect &rect, const NFmiPoint &po
     return ::sqrt(dx * dx + dy * dy);
 }
 
-static bool IsPointTooFarFromZoomedArea(boost::shared_ptr<NFmiArea> &theZoomedArea, const NFmiPoint &theLatlonPoint, double theMetricMarginFactor)
+static bool IsPointTooFarFromZoomedArea(std::shared_ptr<NFmiArea> &theZoomedArea, const NFmiPoint &theLatlonPoint, double theMetricMarginFactor)
 {
     if(theZoomedArea && theMetricMarginFactor)
     {
@@ -1124,7 +1123,7 @@ static bool IsPointTooFarFromZoomedArea(boost::shared_ptr<NFmiArea> &theZoomedAr
     return false;
 }
 
-std::vector<NFmiPoint> NFmiStreamLineView::SearchPathOneDirection(const StreamlineCalculationParameters &theCalcParams, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theStartLatlonPoint, int timeStepInMinutes, double theProximityLimit, bool goForwardDir, double theAreaLimit)
+std::vector<NFmiPoint> NFmiStreamLineView::SearchPathOneDirection(const StreamlineCalculationParameters &theCalcParams, std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theStartLatlonPoint, int timeStepInMinutes, double theProximityLimit, bool goForwardDir, double theAreaLimit)
 {
     const double usedAreaLimit = theAreaLimit / 2.; // t��ll� k�ytet��n hienompaa areaa kuin ulkopuolella
     const int maxAllowedPathSize = 500;
@@ -1178,7 +1177,7 @@ std::vector<NFmiPoint> NFmiStreamLineView::SearchPathOneDirection(const Streamli
     return path;
 }
 
-NFmiStreamlineData NFmiStreamLineView::CalcSingleStreamLinePath(const StreamlineCalculationParameters &theCalcParams, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theStartLatlonPoint, const NFmiPoint &theStartPointIndex, int timeStepInMinutes, double theProximityLimit, bool edgeOfDataPoint, double theAreaLimit)
+NFmiStreamlineData NFmiStreamLineView::CalcSingleStreamLinePath(const StreamlineCalculationParameters &theCalcParams, std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theStartLatlonPoint, const NFmiPoint &theStartPointIndex, int timeStepInMinutes, double theProximityLimit, bool edgeOfDataPoint, double theAreaLimit)
 {
     itsDebugCalculatedStartingPoints++;
     // 1. Etsit��n polkua ensin eteenp�in...
@@ -1240,7 +1239,7 @@ void NFmiStreamLineView::DrawDebugString(double fontSizeInMM, const NFmiPoint &t
 #endif // UNIX
 }
 
-static void EliminateOutOfZoomedAreaStartingPoints(NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, boost::shared_ptr<NFmiArea> &theZoomedArea, size_t &theDebugOutOfAreaStartingPoints)
+static void EliminateOutOfZoomedAreaStartingPoints(NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, std::shared_ptr<NFmiArea> &theZoomedArea, size_t &theDebugOutOfAreaStartingPoints)
 {
     for(size_t j=0; j < theStartingPointEliminatioMatrix.NY(); j++)
     {
@@ -1317,7 +1316,7 @@ static size_t GetMatrixMidIndex(const Matrix& matrix, bool xDimension)
         return actualSize / 2;
 }
 
-NFmiDataMatrix<NFmiStartPointEliminationData> NFmiStreamLineView::CalcStartingPointEliminationMatrix(const NFmiDataMatrix<NFmiPoint> &theStartingPointMatrix, boost::shared_ptr<NFmiArea> &theZoomedArea)
+NFmiDataMatrix<NFmiStartPointEliminationData> NFmiStreamLineView::CalcStartingPointEliminationMatrix(const NFmiDataMatrix<NFmiPoint> &theStartingPointMatrix, std::shared_ptr<NFmiArea> &theZoomedArea)
 {
     NFmiDataMatrix<NFmiPoint> relativeStartingPointMatrix = theStartingPointMatrix;
     for(size_t j=0; j <relativeStartingPointMatrix.NY(); j++)
@@ -1444,7 +1443,7 @@ static void EliminateStartingPoints(const NFmiStreamlineData &theCurrentPath, NF
 // theMaxAreaLimit on maksimi mit� k�ytet��n joka tapauksessa, jos ollaan vaikka maailman kartalla
 // theLenghtLimitInKM t�m� on sellaisen alueen leveys/korkeus, mit� pienemm�lle alueelle lasketaan jo 
 // tarkempaa eli pienemp�� alueen koko rajoitusta (= lasketaan tarkempaa polkua yksinkertaistuksessa).
-static double CalcSimplificationAreaLimit(boost::shared_ptr<NFmiArea> &theArea, double theMaxAreaLimit, double theLenghtLimitInKM)
+static double CalcSimplificationAreaLimit(std::shared_ptr<NFmiArea> &theArea, double theMaxAreaLimit, double theLenghtLimitInKM)
 {
     double widthInKM = theArea->WorldXYWidth() / 1000.;
     double heightInKM = theArea->WorldXYHeight() / 1000.;
@@ -1457,7 +1456,7 @@ static double CalcSimplificationAreaLimit(boost::shared_ptr<NFmiArea> &theArea, 
     }
 }
 
-void NFmiStreamLineView::DoStartingPointCalcualtions(const StreamlineCalculationParameters &theCalcParams, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, std::vector<NFmiStreamlineData> &theLatlonPaths, int timeStepInMinutes, double theProximityLimit, NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, size_t xIndex, size_t yIndex, double theLengthLimitInKM)
+void NFmiStreamLineView::DoStartingPointCalcualtions(const StreamlineCalculationParameters &theCalcParams, std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::vector<NFmiStreamlineData> &theLatlonPaths, int timeStepInMinutes, double theProximityLimit, NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, size_t xIndex, size_t yIndex, double theLengthLimitInKM)
 {
     // debuggaus koodia: est�� laskemasta muut kuin halutut ongelma pisteet
 //    if(!((xIndex == 4 && yIndex == 2) || (xIndex == 5 && yIndex == 5)))
@@ -1498,7 +1497,7 @@ void NFmiStreamLineView::DoStartingPointCalcualtions(const StreamlineCalculation
     }
 }
 
-static double CalcLengthLimitInKM(boost::shared_ptr<NFmiArea> &theArea)
+static double CalcLengthLimitInKM(std::shared_ptr<NFmiArea> &theArea)
 {
     double widthInKM = theArea->WorldXYWidth() / 1000.;
     double heightInKM = theArea->WorldXYHeight() / 1000.;
@@ -1521,7 +1520,7 @@ static size_t CountEliminatedPoints(NFmiDataMatrix<NFmiStartPointEliminationData
     return eliminatedCount;
 }
 
-static NFmiPoint GetCenterStartingPointFromZoomedArea(NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, boost::shared_ptr<NFmiArea> &theZoomedArea)
+static NFmiPoint GetCenterStartingPointFromZoomedArea(NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, std::shared_ptr<NFmiArea> &theZoomedArea)
 {
     NFmiPoint zoomedAreaCenterLatlon = theZoomedArea->ToLatLon(theZoomedArea->XYArea().Center());
     NFmiLocation zoomedAreaCenterLocation(zoomedAreaCenterLatlon);
@@ -1545,7 +1544,7 @@ static NFmiPoint GetCenterStartingPointFromZoomedArea(NFmiDataMatrix<NFmiStartPo
     return centerStartingPointIndexies;
 }
 
-void NFmiStreamLineView::DoSingleThreadCalculations(const StreamlineCalculationParameters &theCalcParams, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, int timeStepInMinutes, std::vector<NFmiStreamlineData> &theLatlonPathsOut, double theProximityLimit, double theLengthLimitInKM)
+void NFmiStreamLineView::DoSingleThreadCalculations(const StreamlineCalculationParameters &theCalcParams, std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, int timeStepInMinutes, std::vector<NFmiStreamlineData> &theLatlonPathsOut, double theProximityLimit, double theLengthLimitInKM)
 {
     // K�ytet��n aluksi aloitus pisteet aloitusPiste matriisin keski pysty ja vaaka janoilta, siten ett� 
     // aloitetaan kaskelta ja edet��n reinoja kohden, n�in toivottavasti saadaan aluksi edustavimmat polut, 
@@ -1598,7 +1597,7 @@ struct StreamlineMultiThreadCalculationData
     bool fEliminatedByHigherStreamline;
 };
 
-void NFmiStreamLineView::DoMultiThreadCalculations(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, int timeStepInMinutes, std::vector<NFmiStreamlineData> &theLatlonPathsOut, double theProximityLimit, double theLengthLimitInKM)
+void NFmiStreamLineView::DoMultiThreadCalculations(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDataMatrix<NFmiStartPointEliminationData> &theStartingPointEliminatioMatrix, int timeStepInMinutes, std::vector<NFmiStreamlineData> &theLatlonPathsOut, double theProximityLimit, double theLengthLimitInKM)
 {
     // Multi-thread laskuissa tehd��n enemm�n t�it�, mutta rinnakkain. 
     // Nyt ei voi eliminoida toisia aloituspisteit� laskujen aikana, vaan kaikki aloituspisteet lasketaan.
@@ -1611,9 +1610,9 @@ void NFmiStreamLineView::DoMultiThreadCalculations(boost::shared_ptr<NFmiFastQue
     NFmiPoint dummyPoint = itsInfo->LatLon(); // Varmistetaan ett� NFmiQueryDatan itsLatLonCache on alustettu!!
 
     // 1. Tee jokaiselle threadille kopio itsInfo:sta
-	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infos(usedThreadCount);
+	std::vector<std::shared_ptr<NFmiFastQueryInfo> > infos(usedThreadCount);
 	for(unsigned int i = 0; i < usedThreadCount; i++)
-        infos[i] = boost::shared_ptr<NFmiFastQueryInfo>(new NFmiFastQueryInfo(*itsInfo));
+        infos[i] = std::shared_ptr<NFmiFastQueryInfo>(new NFmiFastQueryInfo(*itsInfo));
 }
 
 std::vector<NFmiStreamlineData> NFmiStreamLineView::CalcStreamLinePaths(const StreamlineCalculationParameters &theCalcParams)
@@ -1902,7 +1901,7 @@ void NFmiStreamLineView::DrawArroyHeads(const StreamlineCalculationParameters &t
 }
 #endif // UNIX
 
-static float CalcTooltipValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long theParamId, const NFmiPoint &theLatLon, const NFmiMetTime &theTime)
+static float CalcTooltipValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiFastInfoUtils::MetaWindParamUsage &metaWindParamUsage, unsigned long theParamId, const NFmiPoint &theLatLon, const NFmiMetTime &theTime)
 {
     if(metaWindParamUsage.ParamNeedsMetaCalculations(theParamId))
     {

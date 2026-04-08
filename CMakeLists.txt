@@ -33,9 +33,43 @@ if(UNIX)
     foreach(_gdal_ver 312 310)
         if(EXISTS /usr/gdal${_gdal_ver}/include/gdal.h)
             list(APPEND CMAKE_PREFIX_PATH /usr/gdal${_gdal_ver})
+            set(_GDAL_INCLUDE_DIR /usr/gdal${_gdal_ver}/include)
             break()
         endif()
     endforeach()
+
+    # Use system-installed smartmet libraries instead of local module copies.
+    # Requires: smartmet-library-{macgyver,newbase,calculator,smarttools,imagine,textgen}-devel
+    macro(smartmet_system_library TARGET_NAME LIB_NAME INCLUDE_SUBDIR)
+        add_library(${TARGET_NAME} SHARED IMPORTED)
+        set_target_properties(${TARGET_NAME} PROPERTIES
+            IMPORTED_LOCATION /usr/lib64/libsmartmet-${LIB_NAME}.so
+            IMPORTED_NO_SONAME TRUE)
+        target_include_directories(${TARGET_NAME} INTERFACE /usr/include/smartmet)
+        set(${TARGET_NAME}_INCLUDE_DIRS /usr/include/smartmet/${INCLUDE_SUBDIR} /usr/include/smartmet
+            CACHE INTERNAL "${TARGET_NAME}: Include Directories" FORCE)
+    endmacro()
+
+    smartmet_system_library(MacGyver    macgyver    macgyver)
+    smartmet_system_library(Newbase     newbase     newbase)
+    smartmet_system_library(Calculator  calculator  calculator)
+    smartmet_system_library(SmartTools  smarttools  smarttools)
+    smartmet_system_library(Imagine     imagine     imagine)
+    smartmet_system_library(Textgen     textgen     textgen)
+
+    # GDAL headers are needed by system imagine (NFmiEsriShape.h includes ogr_spatialref.h)
+    if(_GDAL_INCLUDE_DIR)
+        target_include_directories(Imagine INTERFACE ${_GDAL_INCLUDE_DIR})
+        set(Imagine_INCLUDE_DIRS ${Imagine_INCLUDE_DIRS} ${_GDAL_INCLUDE_DIR}
+            CACHE INTERNAL "Imagine: Include Directories" FORCE)
+    endif()
+
+    # Declare transitive dependencies between system smartmet libraries
+    set_target_properties(Newbase    PROPERTIES INTERFACE_LINK_LIBRARIES "MacGyver")
+    set_target_properties(SmartTools PROPERTIES INTERFACE_LINK_LIBRARIES "Newbase;MacGyver")
+    set_target_properties(Calculator PROPERTIES INTERFACE_LINK_LIBRARIES "Newbase;MacGyver")
+    set_target_properties(Imagine    PROPERTIES INTERFACE_LINK_LIBRARIES "Newbase;MacGyver")
+    set_target_properties(Textgen    PROPERTIES INTERFACE_LINK_LIBRARIES "Calculator;Newbase;MacGyver")
 endif()
 
 # To disable/enable Cpprestsdk usage in SmartMet build, do following:
@@ -122,6 +156,9 @@ if(UNIX)
     endif()
     # Linux: add platform compatibility header to all targets
     include_directories(${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform)
+    # Workaround: system NFmiSortedPtrList.h has unqualified dependent name 'Swap'
+    # (bug in smartmet-library-smarttools package). -fpermissive allows it to compile.
+    add_compile_options(-fpermissive)
 endif()
 
 # ---- Linux: find system Boost ----
@@ -193,9 +230,11 @@ add_subdirectory(
     )
 endif()
 
+if(NOT UNIX)
 add_subdirectory(
     modules/newbase
     )
+endif()
 
 add_subdirectory(
     src/processes
@@ -241,6 +280,7 @@ add_subdirectory(
     libs/fmi/bizcode/q2clientlib
     )
 
+if(NOT UNIX)
 add_subdirectory(
     modules/imagine
     )
@@ -253,19 +293,14 @@ add_subdirectory(
     modules/calculator
     )
 
-if(UNIX)
-    # On Linux, use the system-installed smartmet-library-textgen package
-    add_library(Textgen SHARED IMPORTED)
-    set_target_properties(Textgen PROPERTIES IMPORTED_LOCATION /usr/lib64/libsmartmet-textgen.so)
-    target_include_directories(Textgen INTERFACE /usr/include/smartmet)
-    set(Textgen_INCLUDE_DIRS /usr/include/smartmet CACHE INTERNAL "Textgen: Include Directories" FORCE)
-else()
-    add_subdirectory(modules/textgen)
-endif()
+add_subdirectory(
+    modules/textgen
+    )
 
 add_subdirectory(
     modules/smarttools
     )
+endif()
 
 add_subdirectory(
     libs/fmi/bizcode/editingdatautils

@@ -29,7 +29,7 @@ public:
 	void InitFromCrossSectionSystem(void);
     static std::string MakeUsedWinRegistryKeyStr(unsigned int /* theMapViewDescTopIndex */) {return ViewPosRegistryInfo().WinRegistryKeyStr();}
     CFmiCrossSectionView* GetCrossSectionView() { return itsView; }
-	bool IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam);
+	bool IsCrossSectionMacroParamOk(std::shared_ptr<NFmiDrawParam>& theUsedDrawParam);
 
 
 // Dialog Data

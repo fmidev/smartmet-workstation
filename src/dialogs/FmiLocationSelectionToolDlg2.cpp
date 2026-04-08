@@ -135,7 +135,7 @@ void CFmiLocationSelectionToolDlg2::UpdateSearchRadiusString(void)
 
 void CFmiLocationSelectionToolDlg2::OnButtonSelectionRedo() 
 {
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->EditedSmartInfo();
+	std::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->EditedSmartInfo();
 	NFmiSmartInfo *editedInfo = dynamic_cast<NFmiSmartInfo*>(info.get());
 	if(editedInfo && editedInfo->LocationSelectionRedo())
 	{
@@ -146,7 +146,7 @@ void CFmiLocationSelectionToolDlg2::OnButtonSelectionRedo()
 
 void CFmiLocationSelectionToolDlg2::OnButtonSelectionUndo() 
 {
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->EditedSmartInfo();
+	std::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->EditedSmartInfo();
 	NFmiSmartInfo *editedInfo = dynamic_cast<NFmiSmartInfo*>(info.get());
 	if(editedInfo && editedInfo->LocationSelectionUndo())
 	{

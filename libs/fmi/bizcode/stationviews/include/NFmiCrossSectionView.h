@@ -88,15 +88,15 @@ class NFmiCrossSectionView : public NFmiIsoLineView
 	void SetParamHandlerViewRect(const NFmiRect& newRect);
 	const NFmiRect& GetFrameForParamBox(void) const override { return itsDataViewFrame; };
 	void UpdateCachedParameterName() override;
-	bool IsCrossSectionMacroParamOk(boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam);
+	bool IsCrossSectionMacroParamOk(std::shared_ptr<NFmiDrawParam>& theUsedDrawParam);
 
  protected:
    bool IsToolMasterAvailable(void) override;
    bool DeleteTransparencyBitmap() override;
    bool IsMapViewCase() override;
    NFmiTimeBag GetUsedTimeBagForDataCalculations(void);
-   float GetLevelValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, bool doMetaParamCheck = true);
-   float GetLevelValueForMetaParam(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime);
+   float GetLevelValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, bool doMetaParamCheck = true);
+   float GetLevelValueForMetaParam(std::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime);
    void DrawLegends();
    std::string ComposeTrajectoryToolTipText();
 private:
@@ -106,7 +106,7 @@ private:
 	void DrawParamView(NFmiToolBox *theGTB);
 	void InitParamHandlerView(void);
 	NFmiTimeBag CalcHelperLineTimeBag(void);
-	boost::shared_ptr<NFmiFastQueryInfo> GetFirstHybridInfo(void);
+	std::shared_ptr<NFmiFastQueryInfo> GetFirstHybridInfo(void);
     void StorePressureScaleLimits(void);
 	void GetStartAndEndTimes(NFmiMetTime &theStartTimeOut, NFmiMetTime &theEndTimeOut);
 	void DrawHelperTimeLines(void);
@@ -123,11 +123,11 @@ private:
 	std::string GetSelectedParamInfoString(NFmiFastQueryInfo *theInfo);
 	bool ChangePressureScale(FmiDirection theDir, bool fChangeUpperAxis, bool ctrlKeyDown);
 	void DrawActivatedMinorPointLine(void);
-	boost::shared_ptr<NFmiArea> GetZoomedArea(void);
+	std::shared_ptr<NFmiArea> GetZoomedArea(void);
 	void DrawCrossSection(void);
 	void DrawCrosssectionWithImagine(NFmiIsoLineData& theIsoLineData, NFmiDataMatrix<float> &theValues, Imagine::NFmiDataHints &theHelper, NFmiDataMatrix<NFmiPoint> &theCoordinates);
 	void DrawCrosssectionWithToolMaster(NFmiIsoLineData& theIsoLineData);
-	void FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, boost::shared_ptr<NFmiDrawParam>& theUsedDrawParam, CrossSectionTooltipData *possibleTooltipData = nullptr, NFmiExtraMacroParamData* possibleExtraMacroParamData = nullptr);
+	void FillCrossSectionMacroParamData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures, std::shared_ptr<NFmiDrawParam>& theUsedDrawParam, CrossSectionTooltipData *possibleTooltipData = nullptr, NFmiExtraMacroParamData* possibleExtraMacroParamData = nullptr);
 	void FillTrajectoryCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures);
 	void FillObsAndForCrossSectionData(NFmiDataMatrix<float> &theValues, NFmiIsoLineData &theIsoLineData, std::vector<float> &thePressures);
 	int FillObsPartOfTimeCrossSectionData(NFmiDataMatrix<float>& theValues, NFmiIsoLineData& theIsoLineData, std::vector<float>& thePressures);
@@ -169,13 +169,13 @@ private:
 	void DrawGround(void);
 	void DrawGroundLevel(NFmiDrawingEnvironment &theEnvi);
 	void DrawSeaLevel(void);
-	bool DrawModelGroundLevel(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDrawingEnvironment &theEnvi, bool fUseHybridCalculations);
-	void CalcModelGroundPressures(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
-	void CalcModelPressuresAtStation(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+	bool DrawModelGroundLevel(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiDrawingEnvironment &theEnvi, bool fUseHybridCalculations);
+	void CalcModelGroundPressures(std::shared_ptr<NFmiFastQueryInfo> &theInfo);
+	void CalcModelPressuresAtStation(std::shared_ptr<NFmiFastQueryInfo> &theInfo);
 	void CalcGroundHeights(void);
 	void CalcRouteDistances(void);
 	void DrawHybridLevels(void);
-	std::vector<float> CalcCurrentLevelPressures(boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+	std::vector<float> CalcCurrentLevelPressures(std::shared_ptr<NFmiFastQueryInfo> &theInfo);
 	int CalcHorizontalPointCount(void);
 	double Column2x(int theColumn);
 

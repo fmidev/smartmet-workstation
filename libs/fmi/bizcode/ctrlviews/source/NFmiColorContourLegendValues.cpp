@@ -25,12 +25,12 @@ namespace
     }
 }
 
-NFmiColorContourLegendValues::NFmiColorContourLegendValues(const boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& info)
+NFmiColorContourLegendValues::NFmiColorContourLegendValues(const std::shared_ptr<NFmiDrawParam>& drawParam, std::shared_ptr<NFmiFastQueryInfo>& info)
 {
     init(drawParam, info);
 }
 
-void NFmiColorContourLegendValues::init(const boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& info)
+void NFmiColorContourLegendValues::init(const std::shared_ptr<NFmiDrawParam>& drawParam, std::shared_ptr<NFmiFastQueryInfo>& info)
 {
     clear();
     if(drawParam && drawParam->ShowColorLegend())
@@ -58,7 +58,7 @@ void NFmiColorContourLegendValues::clear()
     name_.clear();
 }
 
-bool NFmiColorContourLegendValues::isStationDataType(const boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& info)
+bool NFmiColorContourLegendValues::isStationDataType(const std::shared_ptr<NFmiDrawParam>& drawParam, std::shared_ptr<NFmiFastQueryInfo>& info)
 {
     // MacroParamit ovat hiladatoja
     if(!drawParam->IsMacroParamCase(true))
@@ -71,7 +71,7 @@ bool NFmiColorContourLegendValues::isStationDataType(const boost::shared_ptr<NFm
     return false;
 }
 
-void NFmiColorContourLegendValues::FillColorContourValues(const boost::shared_ptr<NFmiDrawParam>& drawParam)
+void NFmiColorContourLegendValues::FillColorContourValues(const std::shared_ptr<NFmiDrawParam>& drawParam)
 {
     ColorContouringData colorContouringData;
     // Testeissä 40 on osoittautunut liian isoksi max-luvuksi

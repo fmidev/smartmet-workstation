@@ -24,9 +24,9 @@
 // ***************  NFmiStationIndexTextView  *************************
 // ********************************************************************
 
-NFmiStationIndexTextView::NFmiStationIndexTextView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+NFmiStationIndexTextView::NFmiStationIndexTextView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 												,NFmiToolBox *theToolBox
-												,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+												,std::shared_ptr<NFmiDrawParam> &theDrawParam
 												,FmiParameterName theParamId
 												,NFmiIndexMessageList* theIndexedWordList
 												,NFmiPoint theOffSet
@@ -321,9 +321,9 @@ NFmiColor NFmiPrecipitationFormSymbolTextView::GetBasicParamRelatedSymbolColor(f
 // ***********  NFmiRawMirriFontSymbolTextView  ***********************
 // ********************************************************************
 
-NFmiRawMirriFontSymbolTextView::NFmiRawMirriFontSymbolTextView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+NFmiRawMirriFontSymbolTextView::NFmiRawMirriFontSymbolTextView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
     , NFmiToolBox * theToolBox
-    , boost::shared_ptr<NFmiDrawParam> &theDrawParam
+    , std::shared_ptr<NFmiDrawParam> &theDrawParam
     , FmiParameterName theParamIdent
     , NFmiIndexMessageList * theIndexedWordList
     , NFmiPoint theOffSet
@@ -543,9 +543,9 @@ NFmiSymbolColorChangingType NFmiCloudSymbolTextView::SbdGetSymbolColorChangingTy
 // *************  NFmiImageBasedSymbolView  ***************************
 // ********************************************************************
 
-NFmiImageBasedSymbolView::NFmiImageBasedSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea>& theArea
+NFmiImageBasedSymbolView::NFmiImageBasedSymbolView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea>& theArea
     , NFmiToolBox* theToolBox
-    , boost::shared_ptr<NFmiDrawParam>& theDrawParam
+    , std::shared_ptr<NFmiDrawParam>& theDrawParam
     , FmiParameterName theParamIdent
     , NFmiIndexMessageList* theIndexedWordList
     , NFmiPoint theOffSet
@@ -639,9 +639,9 @@ void NFmiImageBasedSymbolView::ModifyTextEnvironment(void)
 
 NFmiImageMap NFmiBetterWeatherSymbolView::itsBetterWeatherSymbolMap;
 
-NFmiBetterWeatherSymbolView::NFmiBetterWeatherSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+NFmiBetterWeatherSymbolView::NFmiBetterWeatherSymbolView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
     , NFmiToolBox * theToolBox
-    , boost::shared_ptr<NFmiDrawParam> &theDrawParam
+    , std::shared_ptr<NFmiDrawParam> &theDrawParam
     , FmiParameterName theParamIdent
     , NFmiIndexMessageList * theIndexedWordList
     , NFmiPoint theOffSet
@@ -686,9 +686,9 @@ void NFmiBetterWeatherSymbolView::InitBetterWeatherSymbolMap(const std::string &
 
 NFmiImageMap NFmiSmartSymbolView::itsSmartSymbolMap;
 
-NFmiSmartSymbolView::NFmiSmartSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+NFmiSmartSymbolView::NFmiSmartSymbolView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
     , NFmiToolBox * theToolBox
-    , boost::shared_ptr<NFmiDrawParam> &theDrawParam
+    , std::shared_ptr<NFmiDrawParam> &theDrawParam
     , FmiParameterName theParamIdent
     , NFmiIndexMessageList * theIndexedWordList
     , NFmiPoint theOffSet
@@ -733,9 +733,9 @@ void NFmiSmartSymbolView::InitSmartSymbolMap(const std::string &theWomlDirectory
 
 NFmiImageMap NFmiCustomSymbolView::itsCustomSymbolMap;
 
-NFmiCustomSymbolView::NFmiCustomSymbolView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+NFmiCustomSymbolView::NFmiCustomSymbolView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
     , NFmiToolBox * theToolBox
-    , boost::shared_ptr<NFmiDrawParam> &theDrawParam
+    , std::shared_ptr<NFmiDrawParam> &theDrawParam
     , FmiParameterName theParamIdent
     , NFmiIndexMessageList * theIndexedWordList
     , NFmiPoint theOffSet

@@ -38,7 +38,7 @@ CTimeEditValuesView::CTimeEditValuesView()
 }
 
 CTimeEditValuesView::CTimeEditValuesView(CWnd* theParent
-										,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+										,std::shared_ptr<NFmiDrawParam> &theDrawParam
 										, SmartMetDocumentInterface *smartMetDocumentInterface)
 :CZoomView(theParent, smartMetDocumentInterface)
 ,itsDrawParam(theDrawParam)

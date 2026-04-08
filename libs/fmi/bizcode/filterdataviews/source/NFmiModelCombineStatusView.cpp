@@ -10,7 +10,7 @@
 #include "CtrlViewDocumentInterface.h"
 
 NFmiModelCombineStatusView::NFmiModelCombineStatusView(NFmiToolBox * theToolBox
-													 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+													 ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 													 ,const NFmiRect& theRect)
 :NFmiZoomView(0, theToolBox, theDrawParam, theRect)
 ,itsGridXSize(10)
@@ -24,7 +24,7 @@ NFmiModelCombineStatusView::~NFmiModelCombineStatusView()
 
 void NFmiModelCombineStatusView::Update(void)
 {
-    boost::shared_ptr<NFmiFastQueryInfo> editedInfo = itsCtrlViewDocumentInterface->EditedSmartInfo();
+    std::shared_ptr<NFmiFastQueryInfo> editedInfo = itsCtrlViewDocumentInterface->EditedSmartInfo();
     if(editedInfo)
         itsGridXSize = editedInfo->SizeTimes();
 }

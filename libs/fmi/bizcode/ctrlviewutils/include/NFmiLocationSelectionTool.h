@@ -64,9 +64,9 @@ class NFmiLocationSelectionTool : public NFmiInfoAreaMask
  public:
    ~NFmiLocationSelectionTool(void){}
    NFmiLocationSelectionTool(void);
-   bool SelectLocations(boost::shared_ptr<NFmiFastQueryInfo> &theInfo
+   bool SelectLocations(std::shared_ptr<NFmiFastQueryInfo> &theInfo
 							 ,const NFmiPoint& theLatLon
-							 ,const boost::shared_ptr<NFmiArea> &theArea
+							 ,const std::shared_ptr<NFmiArea> &theArea
 							 ,FmiSelectionCombineFunction theFunction
 							 ,unsigned long theMask
 							 ,const NFmiPoint& theViewGridSize);
@@ -76,16 +76,16 @@ class NFmiLocationSelectionTool : public NFmiInfoAreaMask
    inline void SearchRange(float newValue){itsSearchRange = newValue;};
 
  private:
-   void ClearLocationSelection(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, unsigned long theMask);
-   void SingleSelection(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatLon, const boost::shared_ptr<NFmiArea> &theArea
+   void ClearLocationSelection(std::shared_ptr<NFmiFastQueryInfo> &theInfo, unsigned long theMask);
+   void SingleSelection(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint& theLatLon, const std::shared_ptr<NFmiArea> &theArea
 					   ,FmiSelectionCombineFunction theFunction, unsigned long theMask);
-   void CircleSelection(boost::shared_ptr<NFmiFastQueryInfo> &theInfo
+   void CircleSelection(std::shared_ptr<NFmiFastQueryInfo> &theInfo
 					   ,const NFmiPoint& theLatLon
-					   ,const boost::shared_ptr<NFmiArea> &theArea
+					   ,const std::shared_ptr<NFmiArea> &theArea
 	                   ,FmiSelectionCombineFunction theFunction
 					   ,unsigned long theMask
 					   ,const NFmiPoint& theViewGridSize);
-   void SetAllPoints(boost::shared_ptr<NFmiFastQueryInfo>& theInfo
+   void SetAllPoints(std::shared_ptr<NFmiFastQueryInfo>& theInfo
 	   , unsigned long theMask);
 
    FmiLocationSearchTool itsSelectedTool;

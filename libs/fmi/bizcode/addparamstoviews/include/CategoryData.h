@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SingleRowItem.h"
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include <vector>
 #include "NFmiParamBag.h"
 #include "NFmiLevelBag.h"

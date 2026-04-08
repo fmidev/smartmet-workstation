@@ -41,7 +41,7 @@ public:
 	~CFmiSmartToolDlg(void);
 	void Update(void);
 	void UpdateMacroParamDisplayList(bool fForceThreadUpdate);
-	void SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam);
+	void SetMacroErrorText(const std::string &theErrorStr, std::shared_ptr<NFmiDrawParam>& triggerDrawParam);
     static std::string MakeUsedWinRegistryKeyStr(unsigned int /* theMapViewDescTopIndex */) {return ViewPosRegistryInfo().WinRegistryKeyStr();}
 	void SetDefaultValues(void);
     void OpenMacroParamForEditing(const std::string& absoluteMacroParamPath);

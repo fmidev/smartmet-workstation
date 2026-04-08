@@ -125,7 +125,7 @@ void WmoIdFilterManager::SetSelectedCountryAbbrStr(const std::string &theStr)
 }
 
 
-SynopDataGridViewUsedFileNames::SynopDataGridViewUsedFileNames(const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo, const NFmiMetTime &validTime)
+SynopDataGridViewUsedFileNames::SynopDataGridViewUsedFileNames(const std::vector<std::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const std::shared_ptr<NFmiFastQueryInfo> &usedInfo, const NFmiMetTime &validTime)
 :itsUsedDataFileName()
 ,itsObsDataFileNames()
 ,itsValidTime(validTime)
@@ -226,7 +226,7 @@ bool SynopDataGridViewUsedFileNames::Empty() const
         return false;
 }
 
-void SynopDataGridViewUsedFileNames::UpdateNames(const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo)
+void SynopDataGridViewUsedFileNames::UpdateNames(const std::vector<std::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const std::shared_ptr<NFmiFastQueryInfo> &usedInfo)
 {
     ClearNames();
     if(usedInfo)
@@ -943,7 +943,7 @@ static string GetStringValue(float value, int wantedDecimalCount, FmiParameterNa
 }
 
 // Oletus: ei löytynyt kastepistettä datasta, katsotaan voidaanko se laskea lämpötilan ja kosteuden avulla
-static float DoDewPointChecksFor(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime)
+static float DoDewPointChecksFor(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime)
 {
 	if(theInfo->Param(kFmiTemperature))
 	{
@@ -958,7 +958,7 @@ static float DoDewPointChecksFor(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, 
 }
 
 // Oletus: ei löytynyt kastepistettä datasta, katsotaan voidaanko se laskea lämpötilan ja kosteuden avulla
-static float DoDewPointChecksObs(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static float DoDewPointChecksObs(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	if(theInfo->Param(kFmiTemperature))
 	{
@@ -972,7 +972,7 @@ static float DoDewPointChecksObs(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 	return false;
 }
 
-static float GetFinalModelDataValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName parId, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, NFmiFastInfoUtils::MetaWindParamUsage *metaWindParamUsage)
+static float GetFinalModelDataValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName parId, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, NFmiFastInfoUtils::MetaWindParamUsage *metaWindParamUsage)
 {
     if(metaWindParamUsage && metaWindParamUsage->ParamNeedsMetaCalculations(parId))
     {
@@ -993,7 +993,7 @@ static float GetFinalModelDataValue(boost::shared_ptr<NFmiFastQueryInfo> &theInf
         return theInfo->InterpolatedValue(theLatlon, theTime);
 }
 
-static float GetParamValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName parId, const NFmiLocation *theLocation, const NFmiMetTime &theTime, bool useForecast, NFmiFastInfoUtils::MetaWindParamUsage *metaWindParamUsage)
+static float GetParamValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName parId, const NFmiLocation *theLocation, const NFmiMetTime &theTime, bool useForecast, NFmiFastInfoUtils::MetaWindParamUsage *metaWindParamUsage)
 {
 	float value = kFloatMissing;
 	if(useForecast)
@@ -1076,7 +1076,7 @@ static float GetParamValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiPar
 	return value;
 }
 
-static bool IsLatestGoodValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float value)
+static bool IsLatestGoodValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, float value)
 {
 	if(value == kFloatMissing)
 		return false;
@@ -1123,7 +1123,7 @@ static void DoSynopWeatherCellFixes(NFmiGridCtrl &theGridCtrl, FmiParameterName 
     }
 }
 
-static void SetGridSellValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiGridCtrl &theGridCtrl, FmiParameterName parId, int row, int column, const NFmiLocation *theLocation, const NFmiMetTime &theTime, bool useForecast, NFmiFastInfoUtils::MetaWindParamUsage *metaWindParamUsage)
+static void SetGridSellValues(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiGridCtrl &theGridCtrl, FmiParameterName parId, int row, int column, const NFmiLocation *theLocation, const NFmiMetTime &theTime, bool useForecast, NFmiFastInfoUtils::MetaWindParamUsage *metaWindParamUsage)
 {
 	float value = GetParamValue(theInfo, parId, theLocation, theTime, useForecast, metaWindParamUsage);
     ::DoSynopWeatherCellFixes(theGridCtrl, parId, row, column, &value);
@@ -1141,13 +1141,13 @@ static void SetGridSellValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFm
 		theGridCtrl.SetItemBkColour(row, column, gNormalSynopBkColor);
 }
 
-static void SetParamIndexGridSellValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiGridCtrl &theGridCtrl, unsigned long parIndex, int row, int column, FmiParameterName parId, const NFmiLocation *theLocation, const NFmiMetTime &theTime, bool useForecast)
+static void SetParamIndexGridSellValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiGridCtrl &theGridCtrl, unsigned long parIndex, int row, int column, FmiParameterName parId, const NFmiLocation *theLocation, const NFmiMetTime &theTime, bool useForecast)
 {
     // Jos parametri asetetaan pelkästään indeksin avulla (nopeaa), ei tarvitse tehdä tuulen metaparametri tarkasteluja
 	theInfo->ParamIndex(parIndex);
 	SetGridSellValues(theInfo, theGridCtrl, parId, row, column, theLocation, theTime, useForecast, nullptr);
 }
-static void SetParamIdGridSellValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiGridCtrl &theGridCtrl, FmiParameterName parId, int row, int column, const NFmiLocation *theLocation, const NFmiMetTime &theTime, bool useForecast, NFmiFastInfoUtils::MetaWindParamUsage *metaWindParamUsage)
+static void SetParamIdGridSellValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiGridCtrl &theGridCtrl, FmiParameterName parId, int row, int column, const NFmiLocation *theLocation, const NFmiMetTime &theTime, bool useForecast, NFmiFastInfoUtils::MetaWindParamUsage *metaWindParamUsage)
 {
 	theInfo->Param(parId);
 	SetGridSellValues(theInfo, theGridCtrl, parId, row, column, theLocation, theTime, useForecast, metaWindParamUsage);
@@ -1156,7 +1156,7 @@ static void SetParamIdGridSellValue(boost::shared_ptr<NFmiFastQueryInfo> &theInf
 class ValueSearcher
 {
 public:
-	virtual bool SearchValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, unsigned long theStartTimeIndex, unsigned long theEndTimeIndex, const NFmiLocation *theLocation, bool useForecast) = 0;
+	virtual bool SearchValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, unsigned long theStartTimeIndex, unsigned long theEndTimeIndex, const NFmiLocation *theLocation, bool useForecast) = 0;
 	virtual void Clear(void) = 0;
 	virtual float Value(void) = 0;
 	virtual unsigned long TimeIndex(void) = 0;
@@ -1172,7 +1172,7 @@ public:
 	{}
 	void Use1hRRCalculationFactor(bool newState){fUse1hRRCalculationFactor=newState;}
 
-	bool SearchValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, unsigned long theStartTimeIndex, unsigned long theEndTimeIndex, const NFmiLocation *theLocation, bool useForecast)
+	bool SearchValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, unsigned long theStartTimeIndex, unsigned long theEndTimeIndex, const NFmiLocation *theLocation, bool useForecast)
 	{
 		theInfo->TimeIndex(theStartTimeIndex);
 		do
@@ -1215,7 +1215,7 @@ public:
 	{
 	}
 
-	bool SearchValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, unsigned long theStartTimeIndex, unsigned long theEndTimeIndex, const NFmiLocation *theLocation, bool useForecast)
+	bool SearchValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, unsigned long theStartTimeIndex, unsigned long theEndTimeIndex, const NFmiLocation *theLocation, bool useForecast)
 	{
 		theInfo->TimeIndex(theStartTimeIndex);
 		do
@@ -1260,7 +1260,7 @@ public:
 	{
 	}
 
-	bool SearchValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, unsigned long theStartTimeIndex, unsigned long theEndTimeIndex, const NFmiLocation *theLocation, bool useForecast)
+	bool SearchValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, unsigned long theStartTimeIndex, unsigned long theEndTimeIndex, const NFmiLocation *theLocation, bool useForecast)
 	{
 		theInfo->TimeIndex(theStartTimeIndex);
 		do
@@ -1293,7 +1293,7 @@ private:
 };
 const float MaxValueSearcher::MaxStartValue = -3.4E+38f;
 
-static float GetMinMaxParamValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiLocation *theLocation, bool useForecast, unsigned long theStartTimeIndex, unsigned long theEndTimeIndex, const HeaderParInfo &theHeaderParInfo, map<unsigned long, string> &theTimeDateMap, string &theFoundDateString)
+static float GetMinMaxParamValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiLocation *theLocation, bool useForecast, unsigned long theStartTimeIndex, unsigned long theEndTimeIndex, const HeaderParInfo &theHeaderParInfo, map<unsigned long, string> &theTimeDateMap, string &theFoundDateString)
 {
 	static MinValueSearcher minValueSearcher;
 	static MaxValueSearcher maxValueSearcher;
@@ -1342,7 +1342,7 @@ static float GetMinMaxParamValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, 
 	return value;
 }
 
-static void SetMinMaxGridSellValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiGridCtrl &theGridCtrl, int row, int column, const NFmiLocation *theLocation, bool useForecast, unsigned long theStartTimeIndex, unsigned long theEndTimeIndex, const HeaderParInfo &theHeaderParInfo, int theDateColumn, map<unsigned long, string> &theTimeDateMap)
+static void SetMinMaxGridSellValues(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiGridCtrl &theGridCtrl, int row, int column, const NFmiLocation *theLocation, bool useForecast, unsigned long theStartTimeIndex, unsigned long theEndTimeIndex, const HeaderParInfo &theHeaderParInfo, int theDateColumn, map<unsigned long, string> &theTimeDateMap)
 {
 	string foundDateString;
 	float value = GetMinMaxParamValue(theInfo, theLocation, useForecast, theStartTimeIndex, theEndTimeIndex, theHeaderParInfo, theTimeDateMap, foundDateString);
@@ -1368,7 +1368,7 @@ static void SetMinMaxGridSellValues(boost::shared_ptr<NFmiFastQueryInfo> &theInf
 	}
 }
 
-static void SetMinMaxParamData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiGridCtrl &theGridCtrl, const HeaderParInfo &theHeaderParInfo, int row, int column, const NFmiLocation *theLocation, bool useForecast, unsigned long theStartTimeIndex, unsigned long theEndTimeIndex, map<unsigned long, string> &theTimeDateMap)
+static void SetMinMaxParamData(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiGridCtrl &theGridCtrl, const HeaderParInfo &theHeaderParInfo, int row, int column, const NFmiLocation *theLocation, bool useForecast, unsigned long theStartTimeIndex, unsigned long theEndTimeIndex, map<unsigned long, string> &theTimeDateMap)
 {
 	if(row < 0 || row >= theGridCtrl.GetRowCount())
 		return ; // tämä voisi laittaa heittämään poikkeuksen tai tekemään yhden kerran lokiin error-viestin
@@ -1420,7 +1420,7 @@ static void SetMinMaxParamData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NF
 	}
 }
 
-static void SetParamData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiGridCtrl &theGridCtrl, const HeaderParInfo &theHeaderParInfo, int row, int column, const NFmiLocation *theLocation, const NFmiMetTime &theTime, bool useForecast, NFmiFastInfoUtils::MetaWindParamUsage *metaWindParamUsage)
+static void SetParamData(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiGridCtrl &theGridCtrl, const HeaderParInfo &theHeaderParInfo, int row, int column, const NFmiLocation *theLocation, const NFmiMetTime &theTime, bool useForecast, NFmiFastInfoUtils::MetaWindParamUsage *metaWindParamUsage)
 {
 	if(row < 0 || row >= theGridCtrl.GetRowCount())
 		return ; // tämä voisi laittaa heittämään poikkeuksen tai tekemään yhden kerran lokiin error-viestin
@@ -1492,14 +1492,14 @@ static void SetHeaders(NFmiGridCtrl &theGridCtrl, const std::vector<HeaderParInf
 	fFirstTime = false;
 }
 
-std::vector<boost::shared_ptr<NFmiFastQueryInfo> > CFmiSynopDataGridViewDlg::GetWantedSynopInfos(void)
+std::vector<std::shared_ptr<NFmiFastQueryInfo> > CFmiSynopDataGridViewDlg::GetWantedSynopInfos(void)
 {
 	UpdateData(TRUE);
 
-	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVector = itsSmartMetDocumentInterface->GetSortedSynopInfoVector(kFmiSYNOP, kFmiTestBed, kFmiSHIP, kFmiBUOY);
+	std::vector<std::shared_ptr<NFmiFastQueryInfo> > infoVector = itsSmartMetDocumentInterface->GetSortedSynopInfoVector(kFmiSYNOP, kFmiTestBed, kFmiSHIP, kFmiBUOY);
 	if(infoVector.size() == 0)
 	{ // jos ei löytynyt havainnoista synop dataa, tarkastetaan editoitava data, onko se asema dataa
-		boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->EditedSmartInfo();
+		std::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->EditedSmartInfo();
 		if(info)
 			if(!info->IsGrid())
 				infoVector.push_back(info);
@@ -1507,7 +1507,7 @@ std::vector<boost::shared_ptr<NFmiFastQueryInfo> > CFmiSynopDataGridViewDlg::Get
 	return infoVector;
 }
 
-static int CalcSuitableParameters(boost::shared_ptr<NFmiFastQueryInfo> &info, const std::vector<FmiParameterName> &wantedParameters)
+static int CalcSuitableParameters(std::shared_ptr<NFmiFastQueryInfo> &info, const std::vector<FmiParameterName> &wantedParameters)
 {
     NFmiFastInfoUtils::QueryInfoParamStateRestorer restorer(*info);
     int suitableParametercounter = 0;
@@ -1519,10 +1519,10 @@ static int CalcSuitableParameters(boost::shared_ptr<NFmiFastQueryInfo> &info, co
     return suitableParametercounter;
 }
 
-static boost::shared_ptr<NFmiFastQueryInfo> GetBestSuitableData(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infos)
+static std::shared_ptr<NFmiFastQueryInfo> GetBestSuitableData(std::vector<std::shared_ptr<NFmiFastQueryInfo>> &infos)
 {
     if(infos.size() == 0)
-        return boost::shared_ptr<NFmiFastQueryInfo>();
+        return std::shared_ptr<NFmiFastQueryInfo>();
     else if(infos.size() == 1)
         return infos[0]; // palauta ainoa info listalta
     else
@@ -1530,7 +1530,7 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetBestSuitableData(std::vector<boos
         // palauta sopivin info listalta, missä niistä on eniten haluttuja parametreja
         std::vector<FmiParameterName> wantedParameters{ kFmiTemperature, kFmiDewPoint, kFmiWindDirection, kFmiWindSpeedMS, kFmiMaximumWind, kFmiPresentWeather, kFmiPrecipitationAmount, kFmiTotalCloudCover, kFmiCloudHeight, kFmiLowCloudCover, kFmiVisibility, kFmiSnowDepth, kFmiPressure, kFmiPressureTendency, kFmiPressureChange, kFmiMinimumTemperature, kFmiMaximumTemperature, kFmiGroundTemperature };
 
-        boost::shared_ptr<NFmiFastQueryInfo> bestSuitableInfo;
+        std::shared_ptr<NFmiFastQueryInfo> bestSuitableInfo;
         int mostSuitableParameters = 0;
         for(auto &info : infos)
         {
@@ -1547,26 +1547,26 @@ static boost::shared_ptr<NFmiFastQueryInfo> GetBestSuitableData(std::vector<boos
 
 // tämä on ikävä kopio CZeditmap2View-luokasta, tämä pitäisi laittaa
 // dokumenttiin, että saataisiin yhtenevä funktio molemmissa paikoissa
-boost::shared_ptr<NFmiFastQueryInfo> CFmiSynopDataGridViewDlg::GetWantedInfo(bool fGetObsStationData)
+std::shared_ptr<NFmiFastQueryInfo> CFmiSynopDataGridViewDlg::GetWantedInfo(bool fGetObsStationData)
 {
 	UpdateData(TRUE);
     auto *infoOrganizer = itsSmartMetDocumentInterface->InfoOrganizer();
 	if(fGetObsStationData)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer->FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiSYNOP), true);
+		std::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer->FindInfo(NFmiInfoData::kObservations, NFmiProducer(kFmiSYNOP), true);
 		if(info == 0)
 		{ // jos ei löytynyt havainnoista synop dataa, tarkastetaan editoitava data, onko se asema dataa
 			info = itsSmartMetDocumentInterface->EditedSmartInfo();
 			if(info)
 				if(info->IsGrid())
-					info = boost::shared_ptr<NFmiFastQueryInfo>(); // ei haluta hila dataa, laitetaan 0-pointteri tähän
+					info = std::shared_ptr<NFmiFastQueryInfo>(); // ei haluta hila dataa, laitetaan 0-pointteri tähän
 		}
 		return info;
 	}
 	else
 	{
 		int selProd = itsProducerSelector.GetCurSel();
-		std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infoVec = infoOrganizer->GetInfos(
+		std::vector<std::shared_ptr<NFmiFastQueryInfo> > infoVec = infoOrganizer->GetInfos(
 																						itsProducerList[selProd].itsDataType,
 																						itsProducerList[selProd].fGroundData,
 																						itsProducerList[selProd].itsProducerId);
@@ -1723,7 +1723,7 @@ const std::string& CFmiSynopDataGridViewDlg::GetProducerString(void) const
 	return itsProducerList[selProd].itsName;
 }
 
-int CFmiSynopDataGridViewDlg::GetMaxStationCount(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfos)
+int CFmiSynopDataGridViewDlg::GetMaxStationCount(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theInfos)
 {
 	int count = 0;
 	for(unsigned int i=0; i<theInfos.size(); i++)
@@ -1732,7 +1732,7 @@ int CFmiSynopDataGridViewDlg::GetMaxStationCount(std::vector<boost::shared_ptr<N
 	return count;
 }
 
-int CFmiSynopDataGridViewDlg::GetMaxStationCount(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+int CFmiSynopDataGridViewDlg::GetMaxStationCount(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	int count = 0;
 	if(theInfo)
@@ -1742,7 +1742,7 @@ int CFmiSynopDataGridViewDlg::GetMaxStationCount(boost::shared_ptr<NFmiFastQuery
 
 
 
-static bool IsForecastData(const struct NFmiProducerHelperInfo &theProdInfo, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static bool IsForecastData(const struct NFmiProducerHelperInfo &theProdInfo, std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	if(theInfo)
 	{
@@ -1761,7 +1761,7 @@ static bool IsForecastData(const struct NFmiProducerHelperInfo &theProdInfo, boo
 	return false;
 }
 
-static bool HasAnyMatchingTimes(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfos, const NFmiMetTime &theWantedTime)
+static bool HasAnyMatchingTimes(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theInfos, const NFmiMetTime &theWantedTime)
 {
 	for(unsigned int i = 0; i < theInfos.size(); i++)
 	{
@@ -1863,7 +1863,7 @@ static bool IsAnydataInWantedRange(const NFmiTimeDescriptor &theDataTimes, const
 	return false; // haluttu aikajakso on data aikojen ulkona kokonaan toisella puolella (takana tai edessä)
 }
 
-static bool IsDataInMinMaxRange(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime, unsigned long &theStartTimeIndex, unsigned long &theEndTimeIndex, bool fDoSadeDataFix = false)
+static bool IsDataInMinMaxRange(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime, unsigned long &theStartTimeIndex, unsigned long &theEndTimeIndex, bool fDoSadeDataFix = false)
 {
 	theStartTimeIndex = static_cast<unsigned long>(-1);
 	theEndTimeIndex = static_cast<unsigned long>(-1);
@@ -1883,12 +1883,12 @@ static bool IsDataInMinMaxRange(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, c
 }
 
 
-static int CalcUsedStationCount(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfos, const boost::shared_ptr<NFmiArea> &theZoomedArea, WmoIdFilterManager &theWmoIdFilterManager, const NFmiMetTime &theWantedTime, const NFmiMetTime &theEndTime, bool fDoForecast, bool fDoMinMax)
+static int CalcUsedStationCount(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theInfos, const std::shared_ptr<NFmiArea> &theZoomedArea, WmoIdFilterManager &theWmoIdFilterManager, const NFmiMetTime &theWantedTime, const NFmiMetTime &theEndTime, bool fDoForecast, bool fDoMinMax)
 {
 	int stationsFound = 0;
 	for(unsigned int x = 0; x < theInfos.size(); x++)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> info = theInfos[x];
+		std::shared_ptr<NFmiFastQueryInfo> info = theInfos[x];
 
 		if(fDoForecast || fDoMinMax || info->Time(theWantedTime))
 		{
@@ -1927,7 +1927,7 @@ bool CFmiSynopDataGridViewDlg::IsSelectedProducerModelData() const
     return itsProducerList[itsProducerSelector.GetCurSel()].itsProducerId != kFmiSYNOP;
 }
 
-bool CFmiSynopDataGridViewDlg::GridControlNeedsUpdate(const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const boost::shared_ptr<NFmiFastQueryInfo> &usedInfo)
+bool CFmiSynopDataGridViewDlg::GridControlNeedsUpdate(const std::vector<std::shared_ptr<NFmiFastQueryInfo>> &obsInfos, const std::shared_ptr<NFmiFastQueryInfo> &usedInfo)
 {
     const std::string baseFunctionNameForLogging = "Station-data-grid-view";
 
@@ -2020,10 +2020,10 @@ void CFmiSynopDataGridViewDlg::Update(void)
         int fixedRowCount = 1;
         int fixedColumnCount = 1;
 
-        std::vector<boost::shared_ptr<NFmiFastQueryInfo> > obsInfos = GetWantedSynopInfos();
-        boost::shared_ptr<NFmiFastQueryInfo> sadeInfo = itsSmartMetDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kObservations, NFmiProducer(10002), true);
+        std::vector<std::shared_ptr<NFmiFastQueryInfo> > obsInfos = GetWantedSynopInfos();
+        std::shared_ptr<NFmiFastQueryInfo> sadeInfo = itsSmartMetDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kObservations, NFmiProducer(10002), true);
         fUseSadeData = sadeInfo && IsSadeDataUsed(); // jos katsellaan synop-tuottajaa, silloin laitetaan myös sadedataa mukaan
-        boost::shared_ptr<NFmiFastQueryInfo> usedInfo = GetWantedInfo(false);
+        std::shared_ptr<NFmiFastQueryInfo> usedInfo = GetWantedInfo(false);
         if(!GridControlNeedsUpdate(obsInfos, usedInfo))
             return;
         // kuinka monta asemaa datassa on aktivoitu nykyiseen zoomattuun alueeseen
@@ -2124,7 +2124,7 @@ bool CFmiSynopDataGridViewDlg::IsSadeDataUsed(void)
 	return false;
 }
 
-void CFmiSynopDataGridViewDlg::FillGridWithMinMaxData(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, boost::shared_ptr<NFmiFastQueryInfo> &theSadeInfo, int &theRealStationCountInOut)
+void CFmiSynopDataGridViewDlg::FillGridWithMinMaxData(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, std::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, std::shared_ptr<NFmiFastQueryInfo> &theSadeInfo, int &theRealStationCountInOut)
 {
 	bool useObsData = theUsedInfo->Grid() == 0; // tämä vaikuttaa siihen mitä smartinfoa käytetään ja intepoloidaanko data havainto pisteeseen vai otetaanko arvo suoraan asema datan tapauksessa
 	TakeWantedHeadersInUse(useObsData ? kFmiSYNOP : kFmiHIRLAM);
@@ -2134,7 +2134,7 @@ void CFmiSynopDataGridViewDlg::FillGridWithMinMaxData(std::vector<boost::shared_
 	NFmiMetTime endTime(GetMinMaxEndTime(startTime, itsDayRangeValue));
 	itsGridCtrl.LastDataTime(startTime);
 
-	boost::shared_ptr<NFmiFastQueryInfo> reallyUsedDataInfo = useObsData ? theObsInfos[0] : theUsedInfo;
+	std::shared_ptr<NFmiFastQueryInfo> reallyUsedDataInfo = useObsData ? theObsInfos[0] : theUsedInfo;
 
 	unsigned long startTimeIndex;
 	unsigned long endTimeIndex;
@@ -2154,7 +2154,7 @@ void CFmiSynopDataGridViewDlg::FillGridWithMinMaxData(std::vector<boost::shared_
 
 	SetHeaders(itsGridCtrl, *itsUsedHeaders, theRealStationCountInOut + theFixedRowCount, fFirstTime, theFixedRowCount, theFixedColumnCount);
 
-	boost::shared_ptr<NFmiArea> zoomedArea = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapHandler()->Area();
+	std::shared_ptr<NFmiArea> zoomedArea = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapHandler()->Area();
 
 	map<unsigned long, string> timeDateMap; // tämä on optimointia, tähän talletetaan eri aikoja stringi muodossa aika indekseineen
 	int stationsFound = 0;
@@ -2227,7 +2227,7 @@ void CFmiSynopDataGridViewDlg::FillGridWithMinMaxData(std::vector<boost::shared_
 			{
 				for(unsigned int k=0; k<theObsInfos.size(); k++)
 				{
-					boost::shared_ptr<NFmiFastQueryInfo> obsInfo = theObsInfos[k];
+					std::shared_ptr<NFmiFastQueryInfo> obsInfo = theObsInfos[k];
 					bool doShipData = NFmiFastInfoUtils::IsInfoShipTypeData(*obsInfo);
 					if(doShipData)
 						continue; // liikkuville datoille on liian vaikeaa laittaa mukaan ennusteita
@@ -2279,17 +2279,17 @@ void CFmiSynopDataGridViewDlg::FillGridWithMinMaxData(std::vector<boost::shared_
     itsTimeStrU_ = CA2T(GetMinMaxTimeRangeAndStationString(itsSmartMetDocumentInterface->Language(), startTime, itsDayRangeValue, theRealStationCountInOut, itsWmoIdFilterManager, GetProducerString()).c_str());
 }
 
-void CFmiSynopDataGridViewDlg::FillGridWithSynopData(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, const NFmiMetTime &theTime, boost::shared_ptr<NFmiFastQueryInfo> &theSadeInfo, int &theRealStationCountInOut)
+void CFmiSynopDataGridViewDlg::FillGridWithSynopData(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, const NFmiMetTime &theTime, std::shared_ptr<NFmiFastQueryInfo> &theSadeInfo, int &theRealStationCountInOut)
 { // täytetään taulukko havainto datalla
 	static NFmiLocation shipDataLocation;
 	TakeWantedHeadersInUse(kFmiSYNOP);
 	SetHeaders(itsGridCtrl, (*itsUsedHeaders), theRealStationCountInOut + theFixedRowCount, fFirstTime, theFixedRowCount, theFixedColumnCount);
 	int stationsFound = 0;
 	int columnCount = static_cast<int>(itsUsedHeaders->size());
-	boost::shared_ptr<NFmiArea> zoomedArea = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapHandler()->Area();
+	std::shared_ptr<NFmiArea> zoomedArea = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapHandler()->Area();
 	for(unsigned int x = 0; x < theObsInfos.size(); x++)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> info = theObsInfos[x];
+		std::shared_ptr<NFmiFastQueryInfo> info = theObsInfos[x];
 		for(int i=0; i<columnCount; i++)
 		{
 			info->Param((*itsUsedHeaders)[i].itsParId);
@@ -2363,7 +2363,7 @@ void CFmiSynopDataGridViewDlg::FillGridWithSynopData(std::vector<boost::shared_p
 	itsGridCtrl.SetRowCount(stationsFound + theFixedRowCount); // asetetaan todellinen rivi määrä lopuksi
 }
 
-void CFmiSynopDataGridViewDlg::FillGridWithForecastData(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, boost::shared_ptr<NFmiFastQueryInfo> &theForInfo, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, const NFmiMetTime &theTime, int &theRealStationCountInOut)
+void CFmiSynopDataGridViewDlg::FillGridWithForecastData(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theObsInfos, std::shared_ptr<NFmiFastQueryInfo> &theForInfo, int rowCount, bool &fFirstTime, int theFixedRowCount, int theFixedColumnCount, const NFmiMetTime &theTime, int &theRealStationCountInOut)
 {
 	TakeWantedHeadersInUse(kFmiHIRLAM); // hilam-id on fixattu ennuste datoja varten yleensä
 	int columnCount = static_cast<int>(itsUsedHeaders->size());
@@ -2383,12 +2383,12 @@ void CFmiSynopDataGridViewDlg::FillGridWithForecastData(std::vector<boost::share
 	SetHeaders(itsGridCtrl, *itsUsedHeaders, theRealStationCountInOut + theFixedRowCount, fFirstTime, theFixedRowCount, theFixedColumnCount);
 
     NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theForInfo);
-    boost::shared_ptr<NFmiArea> zoomedArea = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapHandler()->Area();
+    std::shared_ptr<NFmiArea> zoomedArea = itsSmartMetDocumentInterface->MapViewDescTop(itsMapViewDescTopIndex)->MapHandler()->Area();
 	// Käydään läpi havainto datan asemat, mutta lasketaan niille ennuste datasta arvot
 	int stationsFound = 0;
 	for(unsigned int x = 0; x < theObsInfos.size(); x++)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> info = theObsInfos[x];
+		std::shared_ptr<NFmiFastQueryInfo> info = theObsInfos[x];
 
 		bool doShipData = NFmiFastInfoUtils::IsInfoShipTypeData(*info);
 		if(doShipData)

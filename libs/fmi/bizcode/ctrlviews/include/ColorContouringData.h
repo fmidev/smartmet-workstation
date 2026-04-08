@@ -50,8 +50,8 @@ class ColorContouringData
 public:
     ColorContouringData();
 
-    bool initialize(const ContouringJobData& contouringJobData, const boost::shared_ptr<NFmiDrawParam>& drawParam);
-    bool initializeForLegendCalculations(const boost::shared_ptr<NFmiDrawParam>& drawParam, int maxAllowedLimits);
+    bool initialize(const ContouringJobData& contouringJobData, const std::shared_ptr<NFmiDrawParam>& drawParam);
+    bool initializeForLegendCalculations(const std::shared_ptr<NFmiDrawParam>& drawParam, int maxAllowedLimits);
     bool isCorrectlyInitialized() const { return isCorrectlyInitialized_; }
     const std::string& initializationErrorMessage() const { return initializationErrorMessage_; }
     const std::vector<float>& finalClassLimits() const { return finalClassLimits_; }

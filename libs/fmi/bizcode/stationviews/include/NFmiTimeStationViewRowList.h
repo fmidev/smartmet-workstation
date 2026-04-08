@@ -40,9 +40,9 @@ class NFmiTimeStationViewRowList : public NFmiCtrlView
 {
 
  public:
-   NFmiTimeStationViewRowList(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+   NFmiTimeStationViewRowList(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 							   ,NFmiToolBox * theToolBox
-							   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam);
+							   ,std::shared_ptr<NFmiDrawParam> &theDrawParam);
    ~NFmiTimeStationViewRowList(void);
    void Draw(NFmiToolBox* theGTB) override;
    void Update(void) override;
@@ -75,7 +75,7 @@ class NFmiTimeStationViewRowList : public NFmiCtrlView
 //   T‰h‰n talletetaan NFmiTimeStationViewRow-olioita.
    NFmiCtrlViewList* itsViewList;
    int itsRowCount;
-   boost::shared_ptr<NFmiArea> itsMapArea; // k‰ytet‰‰n vain NFmiTimeStationViewRow:in konstruktorissa?!?! 
+   std::shared_ptr<NFmiArea> itsMapArea; // k‰ytet‰‰n vain NFmiTimeStationViewRow:in konstruktorissa?!?! 
 
 };
 

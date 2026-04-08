@@ -35,20 +35,20 @@ class NFmiAreaView : public NFmiCtrlView
 {
 
  public:
-	NFmiAreaView (int theMapViewDescTopIndex, const boost::shared_ptr<NFmiArea> &theArea 
+	NFmiAreaView (int theMapViewDescTopIndex, const std::shared_ptr<NFmiArea> &theArea 
 				 , NFmiToolBox* theToolBox
-				 , boost::shared_ptr<NFmiDrawParam> &theDrawParam
+				 , std::shared_ptr<NFmiDrawParam> &theDrawParam
                  , int viewGridRowNumber
                  , int viewGridColumnNumber);
 
 	NFmiAreaView (const NFmiAreaView & theView);
 	NFmiAreaView ();
 	~NFmiAreaView ();
-	boost::shared_ptr<NFmiArea> GetArea () const override; 
-	void SetArea(const boost::shared_ptr<NFmiArea> &theArea) override;
+	std::shared_ptr<NFmiArea> GetArea () const override; 
+	void SetArea(const std::shared_ptr<NFmiArea> &theArea) override;
 
  protected:
-	boost::shared_ptr<NFmiArea> itsArea;
+	std::shared_ptr<NFmiArea> itsArea;
 
 };
 

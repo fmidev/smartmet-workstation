@@ -31,8 +31,8 @@ class NFmiColorContourLegendValues
     bool isStationData_ = false;
 public:
     NFmiColorContourLegendValues() = default;
-    NFmiColorContourLegendValues(const boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& info);
-    void init(const boost::shared_ptr<NFmiDrawParam> &drawParam, boost::shared_ptr<NFmiFastQueryInfo> &info);
+    NFmiColorContourLegendValues(const std::shared_ptr<NFmiDrawParam>& drawParam, std::shared_ptr<NFmiFastQueryInfo>& info);
+    void init(const std::shared_ptr<NFmiDrawParam> &drawParam, std::shared_ptr<NFmiFastQueryInfo> &info);
     bool useLegend() const { return useLegend_; }
 
 
@@ -42,8 +42,8 @@ public:
     const std::string& name() const { return  name_; }
 private:
     void clear();
-    bool isStationDataType(const boost::shared_ptr<NFmiDrawParam>& drawParam, boost::shared_ptr<NFmiFastQueryInfo>& info);
-    void FillColorContourValues(const boost::shared_ptr<NFmiDrawParam>& drawParam);
+    bool isStationDataType(const std::shared_ptr<NFmiDrawParam>& drawParam, std::shared_ptr<NFmiFastQueryInfo>& info);
+    void FillColorContourValues(const std::shared_ptr<NFmiDrawParam>& drawParam);
     void FillClassLimitTextsVector();
     void FinalizeFillingValues(float layerAlphaProcent);
     void RemoveTransparentColorsFromEdges();

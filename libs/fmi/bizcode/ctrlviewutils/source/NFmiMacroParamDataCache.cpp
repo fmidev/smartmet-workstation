@@ -1,5 +1,6 @@
 #include "NFmiMacroParamDataCache.h"
 #include "NFmiDrawParamList.h"
+#include <memory>
 #include "NFmiInfoOrganizer.h"
 #include "NFmiFastQueryInfo.h"
 #include "catlog/catlog.h"
@@ -57,7 +58,7 @@ void NFmiMacroParamLayerCacheDataType::setCacheValues(const NFmiDataMatrix<float
     dataAreaPtr_.reset(dataArea ? dataArea->Clone() : nullptr);
 }
 
-static bool IsGridSizeSame(NFmiDataMatrix<float> &matrix, boost::shared_ptr<NFmiFastQueryInfo> &info)
+static bool IsGridSizeSame(NFmiDataMatrix<float> &matrix, std::shared_ptr<NFmiFastQueryInfo> &info)
 {
     if(info)
     {
@@ -67,20 +68,20 @@ static bool IsGridSizeSame(NFmiDataMatrix<float> &matrix, boost::shared_ptr<NFmi
     return false;
 }
 
-void NFmiMacroParamLayerCacheDataType::getCacheValues(NFmiDataMatrix<float> &dataMatrixOut, bool &useCalculationPointsOut, bool &useAlReadySpacedOutDataOut, boost::shared_ptr<NFmiFastQueryInfo> &usedInfoInOut)
+void NFmiMacroParamLayerCacheDataType::getCacheValues(NFmiDataMatrix<float> &dataMatrixOut, bool &useCalculationPointsOut, bool &useAlReadySpacedOutDataOut, std::shared_ptr<NFmiFastQueryInfo> &usedInfoInOut)
 {
     dataMatrixOut = dataMatrix_;
     useCalculationPointsOut = useCalculationPoints_;
     useAlReadySpacedOutDataOut = useAlReadySpacedOutData_;
     if(useAlReadySpacedOutDataOut || !::IsGridSizeSame(dataMatrixOut, usedInfoInOut))
     {
-        // Jos cacheen laskettu data oli jo harvennettua, pitää myös nyt käytetty info säätää takaisin kyseiseen oikeaan hilakokoon.
-        // Lisäksi pitää varmistaa että infossa on oikea datan alue.
+        // Jos cacheen laskettu data oli jo harvennettua, pitï¿½ï¿½ myï¿½s nyt kï¿½ytetty info sï¿½ï¿½tï¿½ï¿½ takaisin kyseiseen oikeaan hilakokoon.
+        // Lisï¿½ksi pitï¿½ï¿½ varmistaa ettï¿½ infossa on oikea datan alue.
         usedInfoInOut = NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(static_cast<int>(dataMatrixOut.NX()), static_cast<int>(dataMatrixOut.NY()), NFmiInfoData::kMacroParam, dataAreaPtr_.get());
     }
 }
 
-// Tämä tarkistaa, onko dataMatrix_ tyhjä vai ei.
+// Tï¿½mï¿½ tarkistaa, onko dataMatrix_ tyhjï¿½ vai ei.
 bool NFmiMacroParamLayerCacheDataType::isEmpty() const
 {
     if(dataMatrix_.NX() && dataMatrix_.NY())
@@ -105,7 +106,7 @@ void NFmiMacroParamDataCacheLayer::setCache(const NFmiMetTime &time, const std::
         auto iter = layerCache_.find(time);
         if(iter != layerCache_.end())
         {
-            // Päivitetään cache dataa jostain syystä, en tiedä mikä tapaus menisi tänne
+            // Pï¿½ivitetï¿½ï¿½n cache dataa jostain syystï¿½, en tiedï¿½ mikï¿½ tapaus menisi tï¿½nne
             iter->second = cacheData;
         }
         else
@@ -151,7 +152,7 @@ void NFmiMacroParamDataCacheLayer::clearLayerCache()
 
 // ***********************************************************************************************
 
-// Tyhjennetään vain kaikki layerit, joissa on kyseinen macroParamPath
+// Tyhjennetï¿½ï¿½n vain kaikki layerit, joissa on kyseinen macroParamPath
 void NFmiMacroParamDataCacheRow::clearMacroParamCache(const std::string &macroParamTotalPath)
 {
     for(auto &layer : layersCache_) 
@@ -178,7 +179,7 @@ void NFmiMacroParamDataCacheRow::setCache(unsigned long layerIndex, const NFmiMe
     }
     else
     {
-        // Pitää luoda uusi layer-cache, koska haettua layeriä ei löytynyt
+        // Pitï¿½ï¿½ luoda uusi layer-cache, koska haettua layeriï¿½ ei lï¿½ytynyt
         auto insertedIter = layersCache_.insert(std::make_pair(layerIndex, NFmiMacroParamDataCacheLayer(macroParamTotalPath)));
         if(insertedIter.second)
             insertedIter.first->second.setCache(time, macroParamTotalPath, cacheData);
@@ -213,12 +214,12 @@ bool NFmiMacroParamDataCacheRow::getTotalCache(unsigned long layerIndex, const s
     return false;
 }
 
-// Tehdään cachen näyttöriville päivitys. Jos esim. jotain on poistettu tai lisätty riviltä/riville.
-// Tässä siis tarvittaessa otetaan cachen data yhdeltä layer-indeksiltä talteen, sitten
-// luodaan uusi map olio ja siirretään cache-data tälle uudelle map-oliolle ja lopuksi originaali 
-// vielä poistetaan mapista.
-// Siirtyneiden macroParamien tunnistus tehdään käyttämällä macroParamTotalPath:ia.
-// Mitä jos samalla rivillä on kahdessa eri layerissa sama macroParam???? 
+// Tehdï¿½ï¿½n cachen nï¿½yttï¿½riville pï¿½ivitys. Jos esim. jotain on poistettu tai lisï¿½tty riviltï¿½/riville.
+// Tï¿½ssï¿½ siis tarvittaessa otetaan cachen data yhdeltï¿½ layer-indeksiltï¿½ talteen, sitten
+// luodaan uusi map olio ja siirretï¿½ï¿½n cache-data tï¿½lle uudelle map-oliolle ja lopuksi originaali 
+// vielï¿½ poistetaan mapista.
+// Siirtyneiden macroParamien tunnistus tehdï¿½ï¿½n kï¿½yttï¿½mï¿½llï¿½ macroParamTotalPath:ia.
+// Mitï¿½ jos samalla rivillï¿½ on kahdessa eri layerissa sama macroParam???? 
 bool NFmiMacroParamDataCacheRow::update(NFmiDrawParamList &drawParamList)
 {
     LayersCacheType newLayerCache;
@@ -229,7 +230,7 @@ bool NFmiMacroParamDataCacheRow::update(NFmiDrawParamList &drawParamList)
         {
             if(!tryToMoveExistingLayerCache(layerIndex, *drawParam, newLayerCache))
             {
-                // Jos ei löytynyt listasta valmista layerCachea, niin luodaan sitten uusi sellainen
+                // Jos ei lï¿½ytynyt listasta valmista layerCachea, niin luodaan sitten uusi sellainen
                 auto insertedIter = newLayerCache.insert(std::make_pair(layerIndex, NFmiMacroParamDataCacheLayer(drawParam->InitFileName())));
             }
         }
@@ -253,17 +254,17 @@ bool NFmiMacroParamDataCacheRow::tryToMoveExistingLayerCache(unsigned long layer
     auto layerIter = layersCache_.find(layerIndex);
     if(layerIter != layersCache_.end())
     {
-        // Katsotaan löytyikö sama macroParam samasta kohtaa layer-listasta
+        // Katsotaan lï¿½ytyikï¿½ sama macroParam samasta kohtaa layer-listasta
         if(layerIter->second.macroParamTotalPath() == drawParamTotalPath)
         {
-            // Jos löytyi, siirretään cache originaalista uuteen cacheen ja poistetaan se originaalista
+            // Jos lï¿½ytyi, siirretï¿½ï¿½n cache originaalista uuteen cacheen ja poistetaan se originaalista
             swapCacheDataFromOriginalToNew(layerIndex, layersCache_, layerIter, newLayersCacheInOut);
             return true;
         }
     }
 
-    // Etsitään 1. originaali listasta löytynyt oikealla macroParam tiedostopolulla oleva otus ja 
-    // siirretään se uuteen listaan.
+    // Etsitï¿½ï¿½n 1. originaali listasta lï¿½ytynyt oikealla macroParam tiedostopolulla oleva otus ja 
+    // siirretï¿½ï¿½n se uuteen listaan.
     auto samePathItemIter = std::find_if(layersCache_.begin(), layersCache_.end(), [&drawParamTotalPath](const auto &layerCache) {return layerCache.second.macroParamTotalPath() == drawParamTotalPath; });
     if(samePathItemIter != layersCache_.end())
     {
@@ -286,7 +287,7 @@ static void logRowIndexNotFoundWarning(const std::string &functionName, unsigned
 
 void NFmiMacroParamDataCacheForView::clearAllLayers()
 {
-    // Ei mennä näyttötasoa pidemmälle kun tehdään täysi tyhjennys
+    // Ei mennï¿½ nï¿½yttï¿½tasoa pidemmï¿½lle kun tehdï¿½ï¿½n tï¿½ysi tyhjennys
     rowsCache_.clear();
 }
 
@@ -332,7 +333,7 @@ void NFmiMacroParamDataCacheForView::setCache(unsigned long rowIndex, unsigned l
     }
     else
     {
-        // Pitää luoda uusi row-cache, koska haettua riviä ei löytynyt
+        // Pitï¿½ï¿½ luoda uusi row-cache, koska haettua riviï¿½ ei lï¿½ytynyt
         auto insertedIter = rowsCache_.insert(std::make_pair(rowIndex, NFmiMacroParamDataCacheRow()));
         if(insertedIter.second)
             insertedIter.first->second.setCache(layerIndex, time, macroParamTotalPath, cacheData);
@@ -403,7 +404,7 @@ bool NFmiMacroParamDataCache::init(const std::initializer_list<unsigned long> &v
     return false;
 }
 
-// Tätä kutsutaan kun mm. ladataan näyttömakroa ja kaikki macroParam cachet pitää ensin poistaa systeemistä
+// Tï¿½tï¿½ kutsutaan kun mm. ladataan nï¿½yttï¿½makroa ja kaikki macroParam cachet pitï¿½ï¿½ ensin poistaa systeemistï¿½
 void NFmiMacroParamDataCache::clearAllLayers()
 {
     for(auto &viewCache : viewsCache_)
@@ -420,7 +421,7 @@ static void logViewIndexNotFoundWarning(const std::string &functionName, unsigne
 
 void NFmiMacroParamDataCache::clearView(unsigned long viewIndex)
 {
-    // Näyttö-cacheja ei tyhjennetä ikinä, siksi halutun näytön pitää aina löytyä!
+    // Nï¿½yttï¿½-cacheja ei tyhjennetï¿½ ikinï¿½, siksi halutun nï¿½ytï¿½n pitï¿½ï¿½ aina lï¿½ytyï¿½!
     auto iter = viewsCache_.find(viewIndex);
     if(iter != viewsCache_.end())
     {
@@ -434,7 +435,7 @@ void NFmiMacroParamDataCache::clearView(unsigned long viewIndex)
 
 void NFmiMacroParamDataCache::clearMacroParamCacheRow(unsigned long viewIndex, unsigned long rowIndex)
 {
-    // Näyttö-cacheja ei tyhjennetä ikinä, siksi halutun näytön pitää aina löytyä!
+    // Nï¿½yttï¿½-cacheja ei tyhjennetï¿½ ikinï¿½, siksi halutun nï¿½ytï¿½n pitï¿½ï¿½ aina lï¿½ytyï¿½!
     auto iter = viewsCache_.find(viewIndex);
     if(iter != viewsCache_.end())
     {
@@ -448,7 +449,7 @@ void NFmiMacroParamDataCache::clearMacroParamCacheRow(unsigned long viewIndex, u
 
 void NFmiMacroParamDataCache::clearMacroParamCache(unsigned long viewIndex, unsigned long rowIndex, const std::string &macroParamTotalPath)
 {
-    // Näyttö-cacheja ei tyhjennetä ikinä, siksi halutun näytön pitää aina löytyä!
+    // Nï¿½yttï¿½-cacheja ei tyhjennetï¿½ ikinï¿½, siksi halutun nï¿½ytï¿½n pitï¿½ï¿½ aina lï¿½ytyï¿½!
     auto iter = viewsCache_.find(viewIndex);
     if(iter != viewsCache_.end())
     {
@@ -471,9 +472,9 @@ void NFmiMacroParamDataCache::clearMacroParamCache(const std::vector<std::string
 void NFmiMacroParamDataCache::setCache(unsigned long viewIndex, unsigned long rowIndex, unsigned long layerIndex, const NFmiMetTime &time, const std::string &macroParamTotalPath, const NFmiMacroParamLayerCacheDataType &cacheData)
 {
     if(cacheData.isEmpty())
-        return; // Ei viedä tyhjää dataa cacheen, siitä tulisi ongelmia
+        return; // Ei viedï¿½ tyhjï¿½ï¿½ dataa cacheen, siitï¿½ tulisi ongelmia
 
-    // Näyttö-cacheja ei tyhjennetä ikinä, siksi halutun näytön pitää aina löytyä!
+    // Nï¿½yttï¿½-cacheja ei tyhjennetï¿½ ikinï¿½, siksi halutun nï¿½ytï¿½n pitï¿½ï¿½ aina lï¿½ytyï¿½!
     auto iter = viewsCache_.find(viewIndex);
     if(iter != viewsCache_.end())
     {

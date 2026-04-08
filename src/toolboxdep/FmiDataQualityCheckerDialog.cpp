@@ -121,7 +121,7 @@ void CFmiDataQualityCheckerDialog::OnBnClickedButtonDoQualityCheck()
 {
 	UpdateData(TRUE);
 
-	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = itsSmartMetDocumentInterface->EditedSmartInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedInfo = itsSmartMetDocumentInterface->EditedSmartInfo();
 	if(editedInfo == 0)
 	{
 		// laita viesti‰, ett‰ ei ole mit‰‰n dataa tarkastettavaksi

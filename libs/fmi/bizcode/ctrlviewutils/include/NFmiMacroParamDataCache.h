@@ -4,14 +4,15 @@
 #include "NFmiMetTime.h"
 #include "NFmiPtrList.h"
 #include <map>
+#include <memory>
 
 class NFmiDrawParam;
 class NFmiDrawParamList;
 class NFmiFastQueryInfo;
 class NFmiArea;
 
-// Cacheen dataksi laitetaan itse laskettu data-matriisi, sekä tieto siitä,
-// onko smarttool laskuissa käytetty ns. CalculationPoint:eja.
+// Cacheen dataksi laitetaan itse laskettu data-matriisi, sekï¿½ tieto siitï¿½,
+// onko smarttool laskuissa kï¿½ytetty ns. CalculationPoint:eja.
 class NFmiMacroParamLayerCacheDataType
 {
     NFmiDataMatrix<float> dataMatrix_;
@@ -25,12 +26,12 @@ public:
 
     const NFmiDataMatrix<float>& getDataMatrix() const { return dataMatrix_; }
     void setCacheValues(const NFmiDataMatrix<float> &dataMatrix, bool useCalculationPoints, bool useAlReadySpacedOutData, const NFmiArea *dataArea);
-    void getCacheValues(NFmiDataMatrix<float> &dataMatrixOut, bool &useCalculationPointsOut, bool &useAlReadySpacedOutDataOut, boost::shared_ptr<NFmiFastQueryInfo> &usedInfoInOut);
+    void getCacheValues(NFmiDataMatrix<float> &dataMatrixOut, bool &useCalculationPointsOut, bool &useAlReadySpacedOutDataOut, std::shared_ptr<NFmiFastQueryInfo> &usedInfoInOut);
     bool isEmpty() const;
 };
 
 
-// Yhteen piirtolayeriin liittyvät yhden macroParamin datat (kaikki ajat)
+// Yhteen piirtolayeriin liittyvï¿½t yhden macroParamin datat (kaikki ajat)
 class NFmiMacroParamDataCacheLayer
 {
     using LayerCacheType = std::map<NFmiMetTime, NFmiMacroParamLayerCacheDataType>;
@@ -46,11 +47,11 @@ public:
     const LayerCacheType& layerCache() const { return layerCache_; }
 };
 
-// Yhden näyttörivin kaikki macroParameihin liittyvät piirtolayerit
+// Yhden nï¿½yttï¿½rivin kaikki macroParameihin liittyvï¿½t piirtolayerit
 class NFmiMacroParamDataCacheRow
 {
     using LayersCacheType = std::map<unsigned long, NFmiMacroParamDataCacheLayer>;
-    // Eri layerit on eroteltu piirtolayerin numerolla (layerin indeksit alkavat 1:stä)
+    // Eri layerit on eroteltu piirtolayerin numerolla (layerin indeksit alkavat 1:stï¿½)
     LayersCacheType layersCache_;
 public:
     NFmiMacroParamDataCacheRow() = default;
@@ -65,10 +66,10 @@ private:
     void swapCacheDataFromOriginalToNew(unsigned long layerIndex, LayersCacheType &originalLayersCache, LayersCacheType::iterator &iterToOriginal, LayersCacheType &newLayersCache);
 };
 
-// Yhden näytön kaikki macroParameihin liittyvät data cachet (kaikki sen rivit ja niiden piirtolayerit)
+// Yhden nï¿½ytï¿½n kaikki macroParameihin liittyvï¿½t data cachet (kaikki sen rivit ja niiden piirtolayerit)
 class NFmiMacroParamDataCacheForView
 {
-    // Näytön eri rivit on eroteltu rivin absoluuttisella indeksillä (rivien indeksit alkavat 1:stä)
+    // Nï¿½ytï¿½n eri rivit on eroteltu rivin absoluuttisella indeksillï¿½ (rivien indeksit alkavat 1:stï¿½)
     std::map<unsigned long, NFmiMacroParamDataCacheRow> rowsCache_;
 public:
     NFmiMacroParamDataCacheForView() = default;
@@ -83,10 +84,10 @@ public:
     void swapRows(unsigned long rowIndex1, unsigned long rowIndex2);
 };
 
-// Kokonais cache macroParamiin liittyviin datoihin SmartMetissa (käsittää kaikki kartta- ja poikkileikkausnäytöt)
+// Kokonais cache macroParamiin liittyviin datoihin SmartMetissa (kï¿½sittï¿½ï¿½ kaikki kartta- ja poikkileikkausnï¿½ytï¿½t)
 class NFmiMacroParamDataCache
 {
-    // Eri näytöt on eroteltu näyttöön liittyvällä indeksillä (karttanäytöt ovat nyt 0-2 ja poikkileikkausnäyttö on 98 kFmiCrossSectionView)
+    // Eri nï¿½ytï¿½t on eroteltu nï¿½yttï¿½ï¿½n liittyvï¿½llï¿½ indeksillï¿½ (karttanï¿½ytï¿½t ovat nyt 0-2 ja poikkileikkausnï¿½yttï¿½ on 98 kFmiCrossSectionView)
     std::map<unsigned long, NFmiMacroParamDataCacheForView> viewsCache_;
 public:
     NFmiMacroParamDataCache() = default;

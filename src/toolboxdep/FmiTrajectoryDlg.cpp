@@ -198,13 +198,13 @@ void CFmiTrajectoryDlg::UpdateProducerList(void)
 	{ // hae mitä tahansa dataa kyseiseltä tuottajalta
 		if(itsProducerList[i].itsProducerId == kFmiMETEOR)
 		{ // inhaa, GetInfos-metodi ei toimikaan editoitavalle datalle, jos kyseessä on hila-dataa, enkä nyt uskalla muuttaa metodin toimintaa
-            boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kEditable);
+            std::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->InfoOrganizer()->FindInfo(NFmiInfoData::kEditable);
             if(info && NFmiInfoOrganizer::HasGoodParamsForSoundingData(info, NFmiInfoOrganizer::ParamCheckFlags(false, true)))
 				itsProducerSelector.AddString(CA2T(itsProducerList[i].itsName.c_str()));
 		}
 		else
 		{
-            boost::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->InfoOrganizer()->FindSoundingInfo(NFmiProducer(itsProducerList[i].itsProducerId), 0, NFmiInfoOrganizer::ParamCheckFlags(false, true));
+            std::shared_ptr<NFmiFastQueryInfo> info = itsSmartMetDocumentInterface->InfoOrganizer()->FindSoundingInfo(NFmiProducer(itsProducerList[i].itsProducerId), 0, NFmiInfoOrganizer::ParamCheckFlags(false, true));
 			if(info && NFmiInfoOrganizer::HasGoodParamsForSoundingData(info, NFmiInfoOrganizer::ParamCheckFlags(false, true)))
 				itsProducerSelector.AddString(CA2T(itsProducerList[i].itsName.c_str()));
 		}

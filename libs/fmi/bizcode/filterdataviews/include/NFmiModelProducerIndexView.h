@@ -24,11 +24,11 @@ class NFmiModelProducerIndexView : public NFmiModelCombineStatusView
 public:
 	void Draw(NFmiToolBox * theGTB) override;
 	NFmiModelProducerIndexView(NFmiToolBox * theToolBox
-							 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+							 ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 							 ,const NFmiRect& theRect);
 	~NFmiModelProducerIndexView();
 	virtual void Update(void) override;
-	void SetDataFromDialog( std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theQueryInfoVector
+	void SetDataFromDialog( std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theQueryInfoVector
 							,const NFmiTimeBag& theLoadedDataTimeBag
 							,const NFmiTimeBag& theNonModifieableDataTimeBag
 							,const std::vector<int>& theSelectedProducerPriorityTable
@@ -71,7 +71,7 @@ private:
 	int GetPlaceIndexInProducerColorIndexView(const NFmiPoint& thePlace);
 	bool IndexInsideRange(const NFmiPoint& theRange, int theIndex);
 
-	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > itsQueryInfoVector; // t‰ss‰ on ladattavien datojen tietoja
+	std::vector<std::shared_ptr<NFmiFastQueryInfo> > itsQueryInfoVector; // t‰ss‰ on ladattavien datojen tietoja
 	std::vector<int> itsProducerIndexInTimeVector;
 	NFmiTimeBag itsLoadedDataTimeBag; // t‰m‰n mukaan elet‰‰n ja tehd‰‰n n‰yttˆ‰ (t‰lle ajalle ladataan dataa)
 	bool fUseNonModifieableDataTimeBag; // onko estoja datan editoinnille olemassa?

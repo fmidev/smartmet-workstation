@@ -77,7 +77,7 @@ public:
 	void MakePrintViewDirty(bool fViewDirty, bool fCacheDirty);
 	int CalcPrintingPageShiftInMinutes(void);
 	NFmiMetTime CalcPrintingStartTime(void);
-	void SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam);
+	void SetMacroErrorText(const std::string &theErrorStr, std::shared_ptr<NFmiDrawParam>& triggerDrawParam);
 	bool DoAllwaysLowMemoryPrint(void) const {return false;} // ks. CFmiWin32TemplateHelpers::OnPrintMapView -metodia.
 	bool IsMapView() const { return true; } // ks. esim. CFmiWin32TemplateHelpers::PrintMapViewWithFullResolution -funktiota.
 	int MapViewDescTopIndex(void) { return itsMapViewDescTopIndex; }
@@ -142,7 +142,7 @@ protected:
 private:
 
 // HUOM!! printtauksen yhteydessä kutsu ensin DC:n asetus ja sitten printinfon!!!
-	boost::shared_ptr<NFmiFastQueryInfo> GetWantedInfo(int theProducerId);
+	std::shared_ptr<NFmiFastQueryInfo> GetWantedInfo(int theProducerId);
 	void MouseEnter(void);
 	void MouseLeave(void);
 	void SetMapViewGridSize(const NFmiPoint &newSize);
@@ -161,7 +161,7 @@ private:
 	CBitmap* itsOverMapBitmap; // tähän tehdään yksi kartta bitmap, jota sitten 'lätkitään' oikeisiin kohtiin ruudukkonäytössä
 	NFmiEditMapView* itsEditMapView;
 	NFmiToolBox * itsToolBox;
-	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
+	std::shared_ptr<NFmiDrawParam> itsDrawParam;
 	int itsMapViewDescTopIndex;
 	bool fMouseCursorOnWnd;
 	bool fDoSpecialPrinting;

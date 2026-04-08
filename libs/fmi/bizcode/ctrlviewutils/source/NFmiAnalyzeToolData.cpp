@@ -7,6 +7,7 @@
 
 #include "NFmiAnalyzeToolData.h"
 #include "NFmiInfoOrganizer.h"
+#include <memory>
 #include "NFmiSettings.h"
 #include "NFmiHelpDataInfo.h"
 #include "NFmiFastQueryInfo.h"
@@ -24,8 +25,8 @@ float NFmiControlPointObservationBlendingData::itsNonMissingObservationValueRati
 void NFmiControlPointObservationBlendingData::SeekProducers(NFmiInfoOrganizer &theInfoOrganizer)
 {
     NFmiInfoData::Type usedInfoData = NFmiInfoData::kObservations;
-    // Kerätään lista producer-id arvoja nimineen, joista tehdään popup valikko
-    // Yhdeltä tuottajalta tulee vain yksi kohta (esim. synopilla voi olla jopa 3 eri tiedostoa)
+    // Kerï¿½tï¿½ï¿½n lista producer-id arvoja nimineen, joista tehdï¿½ï¿½n popup valikko
+    // Yhdeltï¿½ tuottajalta tulee vain yksi kohta (esim. synopilla voi olla jopa 3 eri tiedostoa)
     std::map<long, NFmiProducer> observationProducerList;
     auto observationInfos = theInfoOrganizer.GetInfos(usedInfoData);
     for(auto &info : observationInfos)
@@ -71,23 +72,23 @@ bool NFmiControlPointObservationBlendingData::UpdateProducerInfo(const NFmiProdu
 {
     itsSelectedProducer = producer;
     fIsSelectionMadeYet = true;
-    itsLastSessionProducer = itsSelectedProducer; // tätä pitää myös päivittää, koska se talletetaan sitten lopuksi konffeihin
+    itsLastSessionProducer = itsSelectedProducer; // tï¿½tï¿½ pitï¿½ï¿½ myï¿½s pï¿½ivittï¿½ï¿½, koska se talletetaan sitten lopuksi konffeihin
     return true;
 }
 
 void NFmiControlPointObservationBlendingData::OverrideSelection(bool newValue)
 { 
     fOverrideSelection = newValue; 
-    // Jos overide-moodi halutaan resetoida, pitää myös fIsSelectionMadeYet laittaa päälle
+    // Jos overide-moodi halutaan resetoida, pitï¿½ï¿½ myï¿½s fIsSelectionMadeYet laittaa pï¿½ï¿½lle
     if(!newValue)
         fIsSelectionMadeYet = true;
 }
 
-bool NFmiControlPointObservationBlendingData::IsGoodObservationDataForCpPointConversion(boost::shared_ptr<NFmiFastQueryInfo> &info)
+bool NFmiControlPointObservationBlendingData::IsGoodObservationDataForCpPointConversion(std::shared_ptr<NFmiFastQueryInfo> &info)
 {
     if(info)
     {
-        // Pitää olla asemadata
+        // Pitï¿½ï¿½ olla asemadata
         if(!info->IsGrid())
         {
             // Ei saa olla level dataa
@@ -96,7 +97,7 @@ bool NFmiControlPointObservationBlendingData::IsGoodObservationDataForCpPointCon
                 // Ei saa olla liikkuva asemadata
                 if(!info->HasLatlonInfoInData())
                 {
-                    // Asemia pitää olla kokonaisuudessaan vähintäin 10 kpl (ettei tule mukaan kaikenlaisia 'höpö' datoja)
+                    // Asemia pitï¿½ï¿½ olla kokonaisuudessaan vï¿½hintï¿½in 10 kpl (ettei tule mukaan kaikenlaisia 'hï¿½pï¿½' datoja)
                     if(info->SizeLocations() >= 10)
                     {
                         return true;
@@ -112,7 +113,7 @@ void NFmiControlPointObservationBlendingData::InitFromSettings(const std::string
 {
     itsBaseNameSpace = theBaseNameSpace;
 
-    // HUOM!! ei lueta eikä talleteta fAnalyzeToolMode-muuttujaa, koska oletusarvoisesti tämä arvo on SmartMetin käynnistyessä aina false
+    // HUOM!! ei lueta eikï¿½ talleteta fAnalyzeToolMode-muuttujaa, koska oletusarvoisesti tï¿½mï¿½ arvo on SmartMetin kï¿½ynnistyessï¿½ aina false
     unsigned long prodId = NFmiSettings::Optional<unsigned long>(std::string(itsBaseNameSpace + "::ProdId"), kFmiSYNOP);
     std::string prodName = NFmiSettings::Optional<std::string>(std::string(itsBaseNameSpace + "::ProdName"), "Synop"s);
     itsSelectedProducer = itsLastSessionProducer = NFmiProducer(prodId, prodName);
@@ -126,7 +127,7 @@ void NFmiControlPointObservationBlendingData::StoreToSettings(void)
 {
     if(itsBaseNameSpace.empty() == false)
     {
-        // tässä käytetään lastsession-versiota, koska jos tuottajaan ei ole koskettu käsin, niissä on oikeat tuottajat ja jos säädetty käsin niin myös
+        // tï¿½ssï¿½ kï¿½ytetï¿½ï¿½n lastsession-versiota, koska jos tuottajaan ei ole koskettu kï¿½sin, niissï¿½ on oikeat tuottajat ja jos sï¿½ï¿½detty kï¿½sin niin myï¿½s
         NFmiSettings::Set(std::string(itsBaseNameSpace + "::ProdId"), NFmiStringTools::Convert(itsLastSessionProducer.GetIdent()), true);
         NFmiSettings::Set(std::string(itsBaseNameSpace + "::ProdName"), itsLastSessionProducer.GetName().CharPtr(), true);
 
@@ -199,7 +200,7 @@ void NFmiAnalyzeToolData::InitFromSettings(const std::string &theBaseNameSpace)
 {
 	itsBaseNameSpace = theBaseNameSpace;
 
-	// HUOM!! ei lueta eikä talleteta fAnalyzeToolMode-muuttujaa, koska oletusarvoisesti tämä arvo on SmartMetin käynnistyessä aina false
+	// HUOM!! ei lueta eikï¿½ talleteta fAnalyzeToolMode-muuttujaa, koska oletusarvoisesti tï¿½mï¿½ arvo on SmartMetin kï¿½ynnistyessï¿½ aina false
 	unsigned long prodId1 = NFmiSettings::Require<unsigned long>(std::string(itsBaseNameSpace + "::ProdId1"));
 	std::string prodName1 = NFmiSettings::Require<std::string>(std::string(itsBaseNameSpace + "::ProdName1"));
 	itsSelectedProducer1 = itsLastSessionProducer1 = NFmiProducer(prodId1, prodName1);
@@ -215,7 +216,7 @@ void NFmiAnalyzeToolData::StoreToSettings(void)
 {
 	if(itsBaseNameSpace.empty() == false)
 	{
-		// tässä käytetään lastsession-versioita, koska jos tuottajiin ei ole koskettu käsin, niissä on oikeat tuottajat ja jos säädetty käsin niin myös
+		// tï¿½ssï¿½ kï¿½ytetï¿½ï¿½n lastsession-versioita, koska jos tuottajiin ei ole koskettu kï¿½sin, niissï¿½ on oikeat tuottajat ja jos sï¿½ï¿½detty kï¿½sin niin myï¿½s
 		NFmiSettings::Set(std::string(itsBaseNameSpace + "::ProdId1"), NFmiStringTools::Convert(itsLastSessionProducer1.GetIdent()), true);
 		NFmiSettings::Set(std::string(itsBaseNameSpace + "::ProdName1"), itsLastSessionProducer1.GetName().CharPtr(), true);
 		NFmiSettings::Set(std::string(itsBaseNameSpace + "::ProdId2"), NFmiStringTools::Convert(itsLastSessionProducer2.GetIdent()), true);
@@ -249,10 +250,10 @@ void NFmiAnalyzeToolData::SeekProducers(NFmiInfoOrganizer &theInfoOrganizer)
 	itsProducers.clear();
 	for(size_t i = 0; i < itsPotentialProducersFileFilters.size(); i++)
 	{
-		std::vector<boost::shared_ptr<NFmiFastQueryInfo> > infos = theInfoOrganizer.GetInfos(itsPotentialProducersFileFilters[i]);
+		std::vector<std::shared_ptr<NFmiFastQueryInfo> > infos = theInfoOrganizer.GetInfos(itsPotentialProducersFileFilters[i]);
 		if(infos.size() && infos[0]->Producer())
 		{
-			if(infos[0]->SizeLevels() == 1) // ainakin aluksi tähän hyväksytään vain ns. pintadatat
+			if(infos[0]->SizeLevels() == 1) // ainakin aluksi tï¿½hï¿½n hyvï¿½ksytï¿½ï¿½n vain ns. pintadatat
 				itsProducers.push_back(*(infos[0]->Producer()));
 		}
 	}
@@ -261,33 +262,33 @@ void NFmiAnalyzeToolData::SeekProducers(NFmiInfoOrganizer &theInfoOrganizer)
 void NFmiAnalyzeToolData::SelectedProducer1(const NFmiProducer &theProducer, bool handSelected)
 {
 	if(fIsSelectionsMadeYet && handSelected == false)
-		return ; //tälläistä tilannetta ei kai pitäisi tulla, mutta varaudutaan siihen kuitenkin
+		return ; //tï¿½llï¿½istï¿½ tilannetta ei kai pitï¿½isi tulla, mutta varaudutaan siihen kuitenkin
 
 	itsSelectedProducer1 = theProducer;
 	if(handSelected)
 	{
 		fIsSelectionsMadeYet = true;
-		itsLastSessionProducer1 = itsSelectedProducer1; // tätä pitää myös päivittää, koska se talletetaan sitten lopuksi konffeihin
+		itsLastSessionProducer1 = itsSelectedProducer1; // tï¿½tï¿½ pitï¿½ï¿½ myï¿½s pï¿½ivittï¿½ï¿½, koska se talletetaan sitten lopuksi konffeihin
 	}
 }
 
 void NFmiAnalyzeToolData::SelectedProducer2(const NFmiProducer &theProducer, bool handSelected)
 {
 	if(fIsSelectionsMadeYet && handSelected == false)
-		return ; //tälläistä tilannetta ei kai pitäisi tulla, mutta varaudutaan siihen kuitenkin
+		return ; //tï¿½llï¿½istï¿½ tilannetta ei kai pitï¿½isi tulla, mutta varaudutaan siihen kuitenkin
 
 	itsSelectedProducer2 = theProducer;
 	if(handSelected)
 	{
 		fIsSelectionsMadeYet = true;
-		itsLastSessionProducer2 = itsSelectedProducer2; // tätä pitää myös päivittää, koska se talletetaan sitten lopuksi konffeihin
+		itsLastSessionProducer2 = itsSelectedProducer2; // tï¿½tï¿½ pitï¿½ï¿½ myï¿½s pï¿½ivittï¿½ï¿½, koska se talletetaan sitten lopuksi konffeihin
 	}
 }
 
 bool NFmiAnalyzeToolData::SelectProducer1ByName(const std::string &theProducerName)
 {
-	// HUOM! tässä olen käyttänyt boost:in bind ja function templaatteja
-	// niin että voin antaa olion member-function:in parametrina luokan metodille.
+	// HUOM! tï¿½ssï¿½ olen kï¿½yttï¿½nyt boost:in bind ja function templaatteja
+	// niin ettï¿½ voin antaa olion member-function:in parametrina luokan metodille.
 	return SelectProducerByName(theProducerName, boost::bind(&NFmiAnalyzeToolData::SelectedProducer1, this, _1, _2));
 }
 
@@ -312,18 +313,18 @@ bool NFmiAnalyzeToolData::SelectProducerByName(const std::string &theProducerNam
 bool NFmiAnalyzeToolData::EnableAnalyseTool(NFmiInfoOrganizer &theInfoOrganizer, const NFmiParam &theParam)
 {
 	if(fAnalyzeToolMode == false)
-		return true; // jos analyysi työkalu ei ole käytössä, enabloi aina
+		return true; // jos analyysi tyï¿½kalu ei ole kï¿½ytï¿½ssï¿½, enabloi aina
 	else
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> analyzeDataInfo1 = theInfoOrganizer.Info(NFmiDataIdent(theParam, SelectedProducer1()), 0, NFmiInfoData::kAnalyzeData);
-		boost::shared_ptr<NFmiFastQueryInfo> editedInfo = theInfoOrganizer.FindInfo(NFmiInfoData::kEditable);
+		std::shared_ptr<NFmiFastQueryInfo> analyzeDataInfo1 = theInfoOrganizer.Info(NFmiDataIdent(theParam, SelectedProducer1()), 0, NFmiInfoData::kAnalyzeData);
+		std::shared_ptr<NFmiFastQueryInfo> editedInfo = theInfoOrganizer.FindInfo(NFmiInfoData::kEditable);
 		if(editedInfo && analyzeDataInfo1)
 		{
 			if(analyzeDataInfo1->TimeDescriptor().LastTime() >= editedInfo->TimeDescriptor().FirstTime())
 			{
 				if(fUseBothProducers)
 				{
-					boost::shared_ptr<NFmiFastQueryInfo> analyzeDataInfo2 = theInfoOrganizer.Info(NFmiDataIdent(theParam, SelectedProducer2()), 0, NFmiInfoData::kAnalyzeData);
+					std::shared_ptr<NFmiFastQueryInfo> analyzeDataInfo2 = theInfoOrganizer.Info(NFmiDataIdent(theParam, SelectedProducer2()), 0, NFmiInfoData::kAnalyzeData);
 					if(analyzeDataInfo2 && (analyzeDataInfo2->TimeDescriptor().LastTime() >= editedInfo->TimeDescriptor().FirstTime()))
 						return true;
 				}
@@ -335,16 +336,16 @@ bool NFmiAnalyzeToolData::EnableAnalyseTool(NFmiInfoOrganizer &theInfoOrganizer,
 	return false;
 }
 
-// Tarkista että valitulle ajalle ja parametrille löytyy riittävä määrä ei-puuttuvia havaintoja.
-// Jos havaintoja ei ole riittävästi, palauta false, muuten true.
+// Tarkista ettï¿½ valitulle ajalle ja parametrille lï¿½ytyy riittï¿½vï¿½ mï¿½ï¿½rï¿½ ei-puuttuvia havaintoja.
+// Jos havaintoja ei ole riittï¿½vï¿½sti, palauta false, muuten true.
 // Oletuksia: 1. info ei ole nullptr, 2. checkedObservationArea ei ole nullptr, 3. info:ssa on asemadataa
-static bool CheckForExistingObservationsOnUsedArea(boost::shared_ptr<NFmiFastQueryInfo> &info, const boost::shared_ptr<NFmiArea> &checkedObservationArea)
+static bool CheckForExistingObservationsOnUsedArea(std::shared_ptr<NFmiFastQueryInfo> &info, const std::shared_ptr<NFmiArea> &checkedObservationArea)
 {
     auto stationsOnAreaCount = 0.f;
     auto nonMissingObservationsOnAreaCount = 0.f;
     for(info->ResetLocation(); info->NextLocation(); )
     {
-        if(checkedObservationArea->IsInside(info->LatLonFast()))
+        if(checkedObservationArea->IsInside(info->LatLon()))
         {
             stationsOnAreaCount++;
             if(info->FloatValue() != kFloatMissing)
@@ -352,22 +353,22 @@ static bool CheckForExistingObservationsOnUsedArea(boost::shared_ptr<NFmiFastQue
         }
     }
     if(stationsOnAreaCount == 0)
-        return false; // Jos alueella ei ollut yhtään asemaa => false
+        return false; // Jos alueella ei ollut yhtï¿½ï¿½n asemaa => false
     auto nonMissingValueRatioOnArea = 100.f * nonMissingObservationsOnAreaCount / stationsOnAreaCount;
     return nonMissingValueRatioOnArea >= NFmiControlPointObservationBlendingData::NonMissingObservationValueRatioLimit();
 }
 
-// Haetaan datasta viimeisin aika, jolla on riittävästi havaintoja.
+// Haetaan datasta viimeisin aika, jolla on riittï¿½vï¿½sti havaintoja.
 // Jos kyse on hiladatasta, palautetaan vain viimeinen aika.
-static NFmiMetTime FindLatestAcceptableTime(boost::shared_ptr<NFmiFastQueryInfo> &info, const boost::shared_ptr<NFmiArea> &checkedObservationArea)
+static NFmiMetTime FindLatestAcceptableTime(std::shared_ptr<NFmiFastQueryInfo> &info, const std::shared_ptr<NFmiArea> &checkedObservationArea)
 {
     if(info)
     {
         if(checkedObservationArea && !info->IsGrid())
         {
-            // Aletaan käydä datan aikoja läpi lopusta taaksepäin
+            // Aletaan kï¿½ydï¿½ datan aikoja lï¿½pi lopusta taaksepï¿½in
             info->LastTime();
-            // Ei käydä läpi kuin maksimissan n kpl viimeistä aikaa
+            // Ei kï¿½ydï¿½ lï¿½pi kuin maksimissan n kpl viimeistï¿½ aikaa
             auto timeCounter = 0;
             const auto timeCounterLimit = 5;
             do
@@ -377,22 +378,22 @@ static NFmiMetTime FindLatestAcceptableTime(boost::shared_ptr<NFmiFastQueryInfo>
                 timeCounter++;
             } while(info->PreviousTime() && timeCounter <= timeCounterLimit);
 
-            // Sopivaa aikaa ei löytynyt datan lopusta, palautetaan puuttuva aika
+            // Sopivaa aikaa ei lï¿½ytynyt datan lopusta, palautetaan puuttuva aika
             return NFmiMetTime::gMissingTime;
         }
-        // Kyseessä oli hiladataa tai ei haluta tehdä area tarkasteluja, palauta viimeinen aika
+        // Kyseessï¿½ oli hiladataa tai ei haluta tehdï¿½ area tarkasteluja, palauta viimeinen aika
         return info->TimeDescriptor().LastTime();
     }
-    // Ei infoa, tähän ei pitäisi tulla
+    // Ei infoa, tï¿½hï¿½n ei pitï¿½isi tulla
     return NFmiMetTime::gMissingTime;
 }
 
-static NFmiMetTime GetLatestInfoTime(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, const boost::shared_ptr<NFmiArea> &checkedObservationArea)
+static NFmiMetTime GetLatestInfoTime(std::vector<std::shared_ptr<NFmiFastQueryInfo>> &infos, const std::shared_ptr<NFmiArea> &checkedObservationArea)
 {
     NFmiMetTime latestTime = NFmiMetTime::gMissingTime;
     for(auto &info : infos)
     {
-        // Ajan etsinnöissä käydään läpi kaikki asemat, mutta haluamme palauttaa tämän asetuksen lopuksi
+        // Ajan etsinnï¿½issï¿½ kï¿½ydï¿½ï¿½n lï¿½pi kaikki asemat, mutta haluamme palauttaa tï¿½mï¿½n asetuksen lopuksi
         auto oldLocationIndex = info->LocationIndex();
         const auto latestInfoTime = ::FindLatestAcceptableTime(info, checkedObservationArea);
         if(latestTime == NFmiMetTime::gMissingTime || latestInfoTime > latestTime)
@@ -421,22 +422,22 @@ static std::string MakeErrorTextForNotFindingSuitableAnalyzeToolTime(const std::
     return errorString;
 }
 
-static NFmiMetTime GetSuitableAnalyzeToolInfoTime(const NFmiMetTime &latestInfoTime, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, bool useObservationBlenderTool, const std::string &usedProducerName)
+static NFmiMetTime GetSuitableAnalyzeToolInfoTime(const NFmiMetTime &latestInfoTime, std::shared_ptr<NFmiFastQueryInfo> &editedInfo, bool useObservationBlenderTool, const std::string &usedProducerName)
 {
-    // 1. Jos latestInfoTime löytyy editedInfo:sta, palautetaan se
+    // 1. Jos latestInfoTime lï¿½ytyy editedInfo:sta, palautetaan se
     if(editedInfo->Time(latestInfoTime))
         return latestInfoTime;
     else
     {
-        // Jos aikaa ei ollut suoraan editoidussa datassa, katsotaan kelpaako lähin aika.
-        // Normaali analyysi laskennassa käytetään 1h haarukkaa, mutta obs-blenderin kanssa käytetään tarkempaa
-        // rqjaa, mikä löytyy 
+        // Jos aikaa ei ollut suoraan editoidussa datassa, katsotaan kelpaako lï¿½hin aika.
+        // Normaali analyysi laskennassa kï¿½ytetï¿½ï¿½n 1h haarukkaa, mutta obs-blenderin kanssa kï¿½ytetï¿½ï¿½n tarkempaa
+        // rqjaa, mikï¿½ lï¿½ytyy 
         long maxDifferenceInMinutes = useObservationBlenderTool ? NFmiControlPointObservationBlendingData::ExpirationTimeInMinutes() : 60;
         if(editedInfo->FindNearestTime(latestInfoTime, kCenter, maxDifferenceInMinutes))
             return editedInfo->Time();
         else
         {
-            // Ei löytynyt aikarajojen sisältä sopivaa aikaa editoidusta datasta, tee joku selittävä teksti lokiin molemmille työkaluille erikseen
+            // Ei lï¿½ytynyt aikarajojen sisï¿½ltï¿½ sopivaa aikaa editoidusta datasta, tee joku selittï¿½vï¿½ teksti lokiin molemmille tyï¿½kaluille erikseen
             if(useObservationBlenderTool)
             {
                 auto errorString = ::MakeErrorTextForNotFindingSuitableAnalyzeToolTime("Observation-blender"s, "observation"s, latestInfoTime, usedProducerName, maxDifferenceInMinutes);
@@ -451,8 +452,8 @@ static NFmiMetTime GetSuitableAnalyzeToolInfoTime(const NFmiMetTime &latestInfoT
     }
 }
 
-// Palauttaa sekä todellisen viimeisen ajan (esim. 10.20), että pyöristetyn editoituun datan sopivan ajan (esim. 10.00)
-std::pair<NFmiMetTime, NFmiMetTime> NFmiAnalyzeToolData::GetLatestSuitableAnalyzeToolInfoTime(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infos, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, const boost::shared_ptr<NFmiArea> &checkedObservationArea, bool useObservationBlenderTool, const std::string &usedProducerName)
+// Palauttaa sekï¿½ todellisen viimeisen ajan (esim. 10.20), ettï¿½ pyï¿½ristetyn editoituun datan sopivan ajan (esim. 10.00)
+std::pair<NFmiMetTime, NFmiMetTime> NFmiAnalyzeToolData::GetLatestSuitableAnalyzeToolInfoTime(std::vector<std::shared_ptr<NFmiFastQueryInfo>> &infos, std::shared_ptr<NFmiFastQueryInfo> &editedInfo, const std::shared_ptr<NFmiArea> &checkedObservationArea, bool useObservationBlenderTool, const std::string &usedProducerName)
 {
     if(infos.empty())
         throw std::runtime_error(std::string("Error in ") + __FUNCTION__ + ": given infos vector was empty, can't search latest analyze tool time");
@@ -464,33 +465,33 @@ std::pair<NFmiMetTime, NFmiMetTime> NFmiAnalyzeToolData::GetLatestSuitableAnalyz
     }
 }
 
-boost::shared_ptr<NFmiArea> NFmiAnalyzeToolData::GetUsedAreaForAnalyzeTool(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo)
+std::shared_ptr<NFmiArea> NFmiAnalyzeToolData::GetUsedAreaForAnalyzeTool(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiFastQueryInfo> &editedInfo)
 {
     if(editedInfo && editedInfo->IsGrid())
     {
         const auto &editAreaGrid = *editedInfo->Grid();
-        // 1. Jos "Zoomed CP" optio ei ole päällä tai zoomaus on niin vähäinen että ei tuota erillistä zoomattua aluetta, 
+        // 1. Jos "Zoomed CP" optio ei ole pï¿½ï¿½llï¿½ tai zoomaus on niin vï¿½hï¿½inen ettï¿½ ei tuota erillistï¿½ zoomattua aluetta,
         // palautetaan editoidun datan area.
         const auto &zoomedAreaGridPointRect = theAdapter.CPGridCropRect();
         const auto emptyRect = NFmiRect();
         auto useZoomedArea = theAdapter.UseCPGridCrop() && (zoomedAreaGridPointRect != emptyRect);
         if(!useZoomedArea)
-            return boost::shared_ptr<NFmiArea>(editAreaGrid.Area()->Clone());
+            return std::shared_ptr<NFmiArea>(editAreaGrid.Area()->Clone());
         else
         {
             // Luodaan uusi area zoomialueen hilapisteiden avulla
             auto bottomLeftLatlon = editAreaGrid.GridToLatLon(zoomedAreaGridPointRect.BottomLeft());
             auto topRightLatlon = editAreaGrid.GridToLatLon(zoomedAreaGridPointRect.TopRight());
-            return boost::shared_ptr<NFmiArea>(editAreaGrid.Area()->CreateNewArea(bottomLeftLatlon, topRightLatlon));
+            return std::shared_ptr<NFmiArea>(editAreaGrid.Area()->CreateNewArea(bottomLeftLatlon, topRightLatlon));
         }
     }
-    return boost::shared_ptr<NFmiArea>();
+    return std::shared_ptr<NFmiArea>();
 }
 
-boost::shared_ptr<NFmiAreaMaskList> NFmiAnalyzeToolData::GetUsedTimeSerialMaskList(TimeSerialModificationDataInterface &theAdapter)
+std::shared_ptr<NFmiAreaMaskList> NFmiAnalyzeToolData::GetUsedTimeSerialMaskList(TimeSerialModificationDataInterface &theAdapter)
 {
-    boost::shared_ptr<NFmiAreaMaskList> maskList = theAdapter.ParamMaskList();
-    boost::shared_ptr<NFmiAreaMaskList> emptyMaskList(new NFmiAreaMaskList());
+    std::shared_ptr<NFmiAreaMaskList> maskList = theAdapter.ParamMaskList();
+    std::shared_ptr<NFmiAreaMaskList> emptyMaskList(new NFmiAreaMaskList());
     if(!theAdapter.UseMasksInTimeSerialViews())
         maskList = emptyMaskList;
     maskList->CheckIfMaskUsed();

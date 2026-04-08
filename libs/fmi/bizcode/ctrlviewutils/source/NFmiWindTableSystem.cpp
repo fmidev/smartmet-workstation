@@ -193,7 +193,7 @@ void NFmiWindTableSystem::InitAreaMaskDatas(void)
 */
 }
 
-void NFmiWindTableSystem::InitializeAllAreaMasks(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+void NFmiWindTableSystem::InitializeAllAreaMasks(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	if(theInfo && theInfo->Grid())
 	{

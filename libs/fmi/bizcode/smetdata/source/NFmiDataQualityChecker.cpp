@@ -39,7 +39,7 @@ NFmiGridValuesCheck::NFmiGridValuesCheck(void)
 {
 }
 
-// theLatLonInfo-oliota käytetään vain että saataisiin latlon-pisteet talteen
+// theLatLonInfo-oliota kï¿½ytetï¿½ï¿½n vain ettï¿½ saataisiin latlon-pisteet talteen
 void NFmiGridValuesCheck::CheckGrid(const NFmiDataMatrix<float> &theValues, const NFmiMetTime &theTime, const NFmiParam &theParam, NFmiFastQueryInfo &theLatLonInfo)
 {
 	Clear();
@@ -48,7 +48,7 @@ void NFmiGridValuesCheck::CheckGrid(const NFmiDataMatrix<float> &theValues, cons
 	itsMaxTime = theTime;
 	itsParam = theParam;
 	fParamFound = true;
-	theLatLonInfo.FirstLocation(); // asetetaan info (0, 0) indeksiin, että voidaan tedä peeklatlon-kutsuja hila pisteiden avulla
+	theLatLonInfo.FirstLocation(); // asetetaan info (0, 0) indeksiin, ettï¿½ voidaan tedï¿½ peeklatlon-kutsuja hila pisteiden avulla
 
 	for(size_t j=0; j<theValues.NY(); j++)
 	{
@@ -66,7 +66,7 @@ void NFmiGridValuesCheck::CheckGrid(const NFmiDataMatrix<float> &theValues, cons
 				}
 			}
 			else
-			{ // oletus, nyt arvo ei voi olla enää puuttuva
+			{ // oletus, nyt arvo ei voi olla enï¿½ï¿½ puuttuva
 				if(itsMinValue == kFloatMissing || value < itsMinValue)
 				{
 					itsMinValue = value;
@@ -104,9 +104,9 @@ void NFmiGridValuesCheck::Clear(void)
 }
 
 // lasketaan this-olioon kahden NFmiGridValuesCheck-olion kumulatiinen tulos.
-// Lisäksi pitää ottaa talteen kolme aikaa.
+// Lisï¿½ksi pitï¿½ï¿½ ottaa talteen kolme aikaa.
 // 1. ei puuttuva missing-time.
-// pienemmän min-arvon aika
+// pienemmï¿½n min-arvon aika
 // suuremman max-arvon aika
 void NFmiGridValuesCheck::Add(const NFmiGridValuesCheck &theOther)
 {
@@ -123,8 +123,8 @@ void NFmiGridValuesCheck::Add(const NFmiGridValuesCheck &theOther)
 	{
 
 		// itsTime // aikaa ei lasketa
-		// itsParam // parametrin pitäisi olla molemmissa sama
-		// itsLocationCheckingStep // tällä ei ole väliä
+		// itsParam // parametrin pitï¿½isi olla molemmissa sama
+		// itsLocationCheckingStep // tï¿½llï¿½ ei ole vï¿½liï¿½
 		fParamFound = (fParamFound || theOther.fParamFound);
 
 		itsCheckedLocationCount += theOther.itsCheckedLocationCount;
@@ -132,7 +132,7 @@ void NFmiGridValuesCheck::Add(const NFmiGridValuesCheck &theOther)
 		itsMissingValueProsent = CalculateProcent(itsMissingValueCount, itsCheckedLocationCount);
 
 		if(itsMissingValueLatlon == NFmiPoint::gMissingLatlon)
-		{ // jos this-oliolta puuttuu ensimmäisenkään puuttuvan paikan sijainti, otetaan kylmästi arvot toisesta (oli ne puuttuvaa tai ei)
+		{ // jos this-oliolta puuttuu ensimmï¿½isenkï¿½ï¿½n puuttuvan paikan sijainti, otetaan kylmï¿½sti arvot toisesta (oli ne puuttuvaa tai ei)
 			itsMissingValueLatlon = theOther.itsMissingValueLatlon;
 			itsMissingValueGridPoint = theOther.itsMissingValueGridPoint;
 			itsMissTime = theOther.itsMissTime;
@@ -149,7 +149,7 @@ void NFmiGridValuesCheck::Add(const NFmiGridValuesCheck &theOther)
 			}
 		}
 		else if(theOther.itsMinValue != kFloatMissing)
-		{ // jos this;in min-arvo oli puuttuva ja otherin ei, pitää otherista siirtää kaikki min-arvot this:iin
+		{ // jos this;in min-arvo oli puuttuva ja otherin ei, pitï¿½ï¿½ otherista siirtï¿½ï¿½ kaikki min-arvot this:iin
 			itsMinTime = theOther.itsMinTime;
 			itsMinValue = theOther.itsMinValue;
 			itsMinValueLatlon = theOther.itsMinValueLatlon;
@@ -167,7 +167,7 @@ void NFmiGridValuesCheck::Add(const NFmiGridValuesCheck &theOther)
 			}
 		}
 		else if(theOther.itsMaxValue != kFloatMissing)
-		{ // jos this;in max-arvo oli puuttuva ja otherin ei, pitää otherista siirtää kaikki max-arvot this:iin
+		{ // jos this;in max-arvo oli puuttuva ja otherin ei, pitï¿½ï¿½ otherista siirtï¿½ï¿½ kaikki max-arvot this:iin
 			itsMaxTime = theOther.itsMaxTime;
 			itsMaxValue = theOther.itsMaxValue;
 			itsMaxValueLatlon = theOther.itsMaxValueLatlon;
@@ -254,7 +254,7 @@ void NFmiDataQualityChecker::InitFromSettings(const std::string & theBaseNameSpa
 
 	fUse = NFmiSettings::Require<bool>(std::string(itsBaseNameSpace + "::Use"));
 	fAutomatic = NFmiSettings::Require<bool>(std::string(itsBaseNameSpace + "::Automatic"));
-	// initialisoidaan vielä tarkastettavien parametrien tiedot
+	// initialisoidaan vielï¿½ tarkastettavien parametrien tiedot
 	std::string paramBaseKey = itsBaseNameSpace + "::Parameters";
 	std::vector<std::string> dataKeys = NFmiSettings::ListChildren(paramBaseKey);
 	std::vector<std::string>::iterator iter = dataKeys.begin();
@@ -293,7 +293,7 @@ static void DoStepIt(NFmiThreadCallBacks *theThreadCallBacks)
 static void CheckIfStopped(NFmiThreadCallBacks *theThreadCallBacks)
 {
 	if(theThreadCallBacks)
-		theThreadCallBacks->CheckIfStopped(); // heittää poikkeiksen jos halutaan lopettaa
+		theThreadCallBacks->CheckIfStopped(); // heittï¿½ï¿½ poikkeiksen jos halutaan lopettaa
 }
 
 void NFmiDataQualityChecker::CheckData(NFmiThreadCallBacks *theThreadCallBacks)
@@ -308,39 +308,39 @@ void NFmiDataQualityChecker::CheckData(NFmiThreadCallBacks *theThreadCallBacks)
 		if(theThreadCallBacks)
 			theThreadCallBacks->SetRange(0, static_cast<int>(itsValueCheckMatrix.NX()*itsValueCheckMatrix.NY()), 1);
 
-		for(size_t i=0; i<itsValueCheckMatrix.NX(); i++) // parametrit läpi
+		for(size_t i=0; i<itsValueCheckMatrix.NX(); i++) // parametrit lï¿½pi
 		{
-            // Ensin tarkistetaan erikois tilanne eli T>=Td tarkistus, datassa pitää tällöin myös olla T ja Td parametrit
+            // Ensin tarkistetaan erikois tilanne eli T>=Td tarkistus, datassa pitï¿½ï¿½ tï¿½llï¿½in myï¿½s olla T ja Td parametrit
             if(itsDataParamCheckingInfos[i].CheckedParam().GetIdent() == NFmiInfoData::kFmiSpTvsTdQualityCheckParam && fInfo.Param(kFmiTemperature) && fInfo.Param(kFmiDewPoint))
             {
-				for(size_t j=0; j<itsValueCheckMatrix.NY(); j++) // ajat läpi
+				for(size_t j=0; j<itsValueCheckMatrix.NY(); j++) // ajat lï¿½pi
 				{
 					::CheckIfStopped(theThreadCallBacks);
 					::DoStepIt(theThreadCallBacks);
 					fInfo.TimeIndex(static_cast<unsigned long>(j));
                     fInfo.Param(kFmiTemperature);
-					fInfo.Values(values);
+					values = fInfo.Values();
                     fInfo.Param(kFmiDewPoint);
-					fInfo.Values(values2);
+					values2 = fInfo.Values();
                     values -= values2;
 					itsValueCheckMatrix[i][j].CheckGrid(values, fInfo.Time(), *(fInfo.Param().GetParam()), fInfo);
 				}
             }
 			else if(fInfo.Param(itsDataParamCheckingInfos[i].CheckedParam()))
 			{
-				for(size_t j=0; j<itsValueCheckMatrix.NY(); j++) // ajat läpi
+				for(size_t j=0; j<itsValueCheckMatrix.NY(); j++) // ajat lï¿½pi
 				{
 					::CheckIfStopped(theThreadCallBacks);
 					::DoStepIt(theThreadCallBacks);
 					fInfo.TimeIndex(static_cast<unsigned long>(j));
-					fInfo.Values(values);
+					values = fInfo.Values();
 					itsValueCheckMatrix[i][j].CheckGrid(values, fInfo.Time(), *(fInfo.Param().GetParam()), fInfo);
 				}
 			}
 			else
-			{ // pitää laittaa tämän parametrin checkeihin joka aikaan että chekkaus-data on käyty läpi, mutta parametria ei vain löytynyt (se on jo oletus arvona)
+			{ // pitï¿½ï¿½ laittaa tï¿½mï¿½n parametrin checkeihin joka aikaan ettï¿½ chekkaus-data on kï¿½yty lï¿½pi, mutta parametria ei vain lï¿½ytynyt (se on jo oletus arvona)
 				::CheckIfStopped(theThreadCallBacks);
-				for(size_t j=0; j<itsValueCheckMatrix.NY(); j++) // ajat läpi
+				for(size_t j=0; j<itsValueCheckMatrix.NY(); j++) // ajat lï¿½pi
 				{
 					::DoStepIt(theThreadCallBacks);
 					itsValueCheckMatrix[i][j].ChecksDone(true);
@@ -353,9 +353,9 @@ void NFmiDataQualityChecker::CheckData(NFmiThreadCallBacks *theThreadCallBacks)
 
 void NFmiDataQualityChecker::CalcCombinedParamChecks(void)
 {
-	for(size_t i=0; i<itsValueCheckMatrix.NX(); i++) // parametrit läpi
+	for(size_t i=0; i<itsValueCheckMatrix.NX(); i++) // parametrit lï¿½pi
 	{
-		for(size_t j=0; j<itsValueCheckMatrix.NY(); j++) // ajat läpi
+		for(size_t j=0; j<itsValueCheckMatrix.NY(); j++) // ajat lï¿½pi
 		{
 			itsCombinedParamChecks[i].Add(itsValueCheckMatrix[i][j]);
 		}
@@ -364,12 +364,12 @@ void NFmiDataQualityChecker::CalcCombinedParamChecks(void)
 
 void NFmiDataQualityChecker::InitCheckMatrix(NFmiFastQueryInfo &theInfo)
 {
-	itsValueCheckMatrix = NFmiDataMatrix<NFmiGridValuesCheck>(); // tämä tekee totaali tyhjennyksen matriisiin
+	itsValueCheckMatrix = NFmiDataMatrix<NFmiGridValuesCheck>(); // tï¿½mï¿½ tekee totaali tyhjennyksen matriisiin
 	size_t timeSize = theInfo.SizeTimes();
 	size_t paramSize = itsDataParamCheckingInfos.size();
-	itsValueCheckMatrix.Resize(paramSize, timeSize); // tässä matriisi alustetaan 'puuttuvilla' arvoilla eli default kontruktorin muodostamilla olioilla
+	itsValueCheckMatrix.Resize(paramSize, timeSize); // tï¿½ssï¿½ matriisi alustetaan 'puuttuvilla' arvoilla eli default kontruktorin muodostamilla olioilla
 
-	itsCombinedParamChecks = std::vector<NFmiGridValuesCheck>(); // tämä tekee totaali tyhjennyksen vektoriin
+	itsCombinedParamChecks = std::vector<NFmiGridValuesCheck>(); // tï¿½mï¿½ tekee totaali tyhjennyksen vektoriin
 	itsCombinedParamChecks.resize(paramSize);
 }
 

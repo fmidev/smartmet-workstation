@@ -72,7 +72,7 @@ NFmiCtrlView::NFmiCtrlView (int theMapViewDescTopIndex, const NFmiRect & theRect
 
 NFmiCtrlView::NFmiCtrlView (int theMapViewDescTopIndex, const NFmiRect & theRect
 						   ,NFmiToolBox * theToolBox
-						   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+						   ,std::shared_ptr<NFmiDrawParam> &theDrawParam
                            ,int viewGridRowNumber
                            ,int viewGridColumnNumber)
 :itsRect(theRect)
@@ -274,7 +274,7 @@ void NFmiCtrlView::CleanGdiplus(void)
 #endif // UNIX
 }
 
-NFmiRect NFmiCtrlView::CalcMaskRectSize(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+NFmiRect NFmiCtrlView::CalcMaskRectSize(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	theInfo->FirstLocation(); // laitetaan 1. hilapiste eli vasen alanurkka kohdalle
 	NFmiPoint latlon1(theInfo->LatLon());

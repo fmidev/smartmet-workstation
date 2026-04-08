@@ -9,6 +9,9 @@
 #include "catlog/catlog.h"
 #include "CtrlViewFunctions.h"
 #include "SmartMetDocumentInterface.h"
+#include "NFmiInfoDataCompat.h"
+
+#include <boost/algorithm/string/replace.hpp>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

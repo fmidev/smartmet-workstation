@@ -51,7 +51,7 @@ void NFmiViewParamsView::ModelSelectorButtonImageHolder::Initialize(void)
 //--------------------------------------------------------
 // Constructor/Destructor
 //--------------------------------------------------------
-NFmiViewParamsView::NFmiViewParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer)
+NFmiViewParamsView::NFmiViewParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, std::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer)
 :NFmiParamCommandView(theMapViewDescTopIndex, theRect, theToolBox, theDrawParam, theRowIndex, theColumnIndex, hasMapLayer)
 ,itsButtonSizeInMM_x(3)
 ,itsButtonSizeInMM_y(3)
@@ -95,7 +95,7 @@ NFmiRect NFmiViewParamsView::CalcParameterDragRect(int theParamLineIndex, int le
 }
 
 // Parametrin aktivaation merkiksi piirret��n sen pohja vaaleammalla s�vyll�
-void NFmiViewParamsView::DrawActiveParamMarkers(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theParamLineIndex)
+void NFmiViewParamsView::DrawActiveParamMarkers(std::shared_ptr<NFmiDrawParam> &theDrawParam, int theParamLineIndex)
 {
     if(theDrawParam->IsActive())
     {
@@ -146,7 +146,7 @@ void NFmiViewParamsView::DrawData(void)
 			for(paramList->Reset(); paramList->Next(); zeroBasedRowIndex++)
 			{
 				parameterRowRect = CalcParameterRowRect(zeroBasedRowIndex);
-				boost::shared_ptr<NFmiDrawParam> drawParam = paramList->Current();
+				std::shared_ptr<NFmiDrawParam> drawParam = paramList->Current();
 				if(drawParam)
 				{
                     DrawActiveParamMarkers(drawParam, zeroBasedRowIndex);
@@ -231,7 +231,7 @@ NFmiPoint NFmiViewParamsView::GetViewSizeInPixels(void)
 		return itsCtrlViewDocumentInterface->MapViewSizeInPixels(itsMapViewDescTopIndex);
 }
 
-void NFmiViewParamsView::DrawModelSelectorButtons(boost::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiRect& parameterRowRect)
+void NFmiViewParamsView::DrawModelSelectorButtons(std::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiRect& parameterRowRect)
 {
 	if(theDrawParam->IsModelRunDataType()) // piirret��n tuottajan vaihto napit vain niille datoille, joille l�ytyy arkisto dataa
 	{ // toistaiseksi vain pinta/painepinta/mallipinta datat arkistoissa
@@ -338,7 +338,7 @@ bool NFmiViewParamsView::LeftDoubleClick(const NFmiPoint &thePlace, unsigned lon
 			int index = CalcParameterRowIndex(thePlace);
 			if(paramList->Index(index))
 			{
-				boost::shared_ptr<NFmiDrawParam> drawParam = paramList->Current();
+				std::shared_ptr<NFmiDrawParam> drawParam = paramList->Current();
 				if(drawParam)
 				{
 					if(drawParam->IsActive())
@@ -373,7 +373,7 @@ bool NFmiViewParamsView::LeftDoubleClick(const NFmiPoint &thePlace, unsigned lon
 	return false;
 }
 
-bool NFmiViewParamsView::ActivateParam(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theParamIndex)
+bool NFmiViewParamsView::ActivateParam(std::shared_ptr<NFmiDrawParam> &theDrawParam, int theParamIndex)
 {
     NFmiMenuItem menuItem(itsMapViewDescTopIndex, "xxx", theDrawParam->Param(), kFmiActivateView,
         NFmiMetEditorTypes::View::kFmiParamsDefaultView, &theDrawParam->Level(),
@@ -497,7 +497,7 @@ bool NFmiViewParamsView::LeftButtonUp(const NFmiPoint &thePlace, unsigned long t
 			int index = CalcParameterRowIndex(thePlace);
 			if(paramList->Index(index))
 			{
-				boost::shared_ptr<NFmiDrawParam> drawParam = paramList->Current();
+				std::shared_ptr<NFmiDrawParam> drawParam = paramList->Current();
 				if(drawParam)
 				{
 					if(theKey & kCtrlKey)
@@ -535,7 +535,7 @@ std::string NFmiViewParamsView::ComposeToolTipText(const NFmiPoint& thePlace)
 		int index = CalcParameterRowIndex(thePlace);
 		if(paramList->Index(index))
 		{
-			boost::shared_ptr<NFmiDrawParam> drawParam = paramList->Current();
+			std::shared_ptr<NFmiDrawParam> drawParam = paramList->Current();
 			if(drawParam)
 			{
 				auto dataType = drawParam->DataType();
@@ -569,7 +569,7 @@ std::string NFmiViewParamsView::ComposeToolTipText(const NFmiPoint& thePlace)
 
 					if(itsMapViewDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
 					{
-						std::vector<boost::shared_ptr<NFmiFastQueryInfo>> infoVector;
+						std::vector<std::shared_ptr<NFmiFastQueryInfo>> infoVector;
 						auto mapViewArea = itsCtrlViewDocumentInterface->GetMapHandlerInterface(itsMapViewDescTopIndex)->Area();
 						itsCtrlViewDocumentInterface->MakeDrawedInfoVectorForMapView(infoVector, drawParam, mapViewArea);
 						if(!infoVector.empty())
@@ -601,7 +601,7 @@ std::string NFmiViewParamsView::ComposeToolTipText(const NFmiPoint& thePlace)
 // HUOM! theRowIndex on parametrin rivi numero t�ll� karttan�ytt� rivill�. Sill� lasketaan painonappien paikat.
 // Dokumentin funktioille pit�� antaa taas itsRowNumber, joka on taas t�m�n n�yt�n sijainti riveiss� karttan�ytt� ruudukossa,
 // t�t� tietoa tarvitaan kun pit�� puhdistaa muutoksen takia karttarivi cachesta.
-bool NFmiViewParamsView::LeftClickOnModelSelectionButtons(const NFmiPoint &thePlace, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theParameterRowIndex)
+bool NFmiViewParamsView::LeftClickOnModelSelectionButtons(const NFmiPoint &thePlace, std::shared_ptr<NFmiDrawParam> &theDrawParam, int theParameterRowIndex)
 {
 	// Jos ollaan n�yt�ss�, jossa fHasMapLayer = false (esim. poikkileikkausn�ytt�),
 	// Pit�� indeksi� s��t��, jotta raahaus visualisoinnit menev�t oikein.
@@ -632,7 +632,7 @@ bool NFmiViewParamsView::LeftClickOnModelSelectionButtons(const NFmiPoint &thePl
 #endif // UNIX
 }
 
-std::string NFmiViewParamsView::MakeMacroParamTooltipText(const boost::shared_ptr<NFmiDrawParam> &drawParam, const std::string& paramStr)
+std::string NFmiViewParamsView::MakeMacroParamTooltipText(const std::shared_ptr<NFmiDrawParam> &drawParam, const std::string& paramStr)
 {
 	try
 	{
@@ -652,7 +652,7 @@ std::string NFmiViewParamsView::MakeMacroParamTooltipText(const boost::shared_pt
 }
 
 #ifndef DISABLE_CPPRESTSDK
-std::string NFmiViewParamsView::MakeWmsTooltipText(const boost::shared_ptr<NFmiDrawParam>& drawParam, const std::string& paramStr)
+std::string NFmiViewParamsView::MakeWmsTooltipText(const std::shared_ptr<NFmiDrawParam>& drawParam, const std::string& paramStr)
 {
 	std::string str = paramStr;
 	try

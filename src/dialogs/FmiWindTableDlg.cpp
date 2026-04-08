@@ -296,7 +296,7 @@ static NFmiPoint GetSelectedLatlon(SmartMetDocumentInterface *smartMetDocumentIn
 	NFmiPoint latlon(kFloatMissing, kFloatMissing);
 	if(smartMetDocumentInterface)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> editedInfo = smartMetDocumentInterface->EditedSmartInfo();
+		std::shared_ptr<NFmiFastQueryInfo> editedInfo = smartMetDocumentInterface->EditedSmartInfo();
 		if(editedInfo)
 		{
             EditedInfoMaskHandler editedInfoMaskHandler(editedInfo, CtrlViewFastInfoFunctions::GetProperMaskTypeFromEditeInfo(editedInfo, smartMetDocumentInterface->AllowRightClickDisplaySelection()));
@@ -311,19 +311,19 @@ static NFmiPoint GetSelectedLatlon(SmartMetDocumentInterface *smartMetDocumentIn
 
 std::vector<FmiParameterName> gWantedSurfaceParams{kFmiWindDirection, kFmiWindSpeedMS};
 
-static boost::shared_ptr<NFmiFastQueryInfo> GetSelectedData(SmartMetDocumentInterface *smartMetDocumentInterface, unsigned long producerId, NFmiInfoData::Type dataType, bool groundData)
+static std::shared_ptr<NFmiFastQueryInfo> GetSelectedData(SmartMetDocumentInterface *smartMetDocumentInterface, unsigned long producerId, NFmiInfoData::Type dataType, bool groundData)
 {
     // Eri malleilla voi olla lukuisia pintadatoja. Etsit‰‰n niist‰ se, miss‰ on eniten kiinnostavia parametreja
     auto infos = smartMetDocumentInterface->InfoOrganizer()->GetInfos(dataType, groundData, producerId);
     return NFmiInfoOrganizer::GetInfoWithMostWantedParams(infos, gWantedSurfaceParams);
 }
 
-static boost::shared_ptr<NFmiFastQueryInfo> GetSelectedData(SmartMetDocumentInterface *smartMetDocumentInterface, const NFmiProducerHelperInfo *prodInfo)
+static std::shared_ptr<NFmiFastQueryInfo> GetSelectedData(SmartMetDocumentInterface *smartMetDocumentInterface, const NFmiProducerHelperInfo *prodInfo)
 {
     if(prodInfo)
         return ::GetSelectedData(smartMetDocumentInterface, prodInfo->itsProducerId, prodInfo->itsDataType, prodInfo->fGroundData);
 	else
-		return boost::shared_ptr<NFmiFastQueryInfo>();
+		return std::shared_ptr<NFmiFastQueryInfo>();
 }
 
 static std::string GetSelectedProducerName(const CComboBox &theProducerSelector)
@@ -352,7 +352,7 @@ static void SetRowNumberToGrid(NFmiWindTableGridCtrl &theGridCtrl, int theRowCou
 	::SetGridCell(theGridCtrl, theRowCounter, 0, rowNumberStr);
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> CFmiWindTableDlg::GetSelectedInfo(void)
+std::shared_ptr<NFmiFastQueryInfo> CFmiWindTableDlg::GetSelectedInfo(void)
 {
 	std::string selectedProdName = ::GetSelectedProducerName(itsProducerSelector);
 	const NFmiProducerHelperInfo *prodInfo = ::GetProducerInfoByName(itsProducerList, selectedProdName);
@@ -389,7 +389,7 @@ void CFmiWindTableDlg::FillGridWithValues(bool &fFirstTime, int theFixedRowCount
 	NFmiMetTime wantedStartTime = GetWantedStartTime();
 	itsGridCtrl.LastDataTime(wantedStartTime);
 
-	boost::shared_ptr<NFmiFastQueryInfo> info = GetSelectedInfo();
+	std::shared_ptr<NFmiFastQueryInfo> info = GetSelectedInfo();
 	int currentRowCount = theFixedRowCount;
 	if(info && info->Grid())
 	{
@@ -618,7 +618,7 @@ void CFmiWindTableDlg::OnCbnSelchangeComboWindProducerSelector()
 	Update();
 }
 
-static bool FillProducerInfo(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiProducerHelperInfo &theProdInfo, const std::string &theProdName)
+static bool FillProducerInfo(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiProducerHelperInfo &theProdInfo, const std::string &theProdName)
 {
 	if(theInfo)
 	{
@@ -665,7 +665,7 @@ void CFmiWindTableDlg::UpdateProducerList(void)
 	int ssize = static_cast<int>(itsProducerList.size());
 	for(int i=0; i<ssize; i++)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> info = ::GetSelectedData(itsSmartMetDocumentInterface, itsProducerList[i].itsProducerId, itsProducerList[i].itsDataType, itsProducerList[i].fGroundData);
+		std::shared_ptr<NFmiFastQueryInfo> info = ::GetSelectedData(itsSmartMetDocumentInterface, itsProducerList[i].itsProducerId, itsProducerList[i].itsDataType, itsProducerList[i].fGroundData);
         // Datalla pit‰‰ olla haluttuja parametreja ennen kuin se valitaan listaan
 		if(NFmiInfoOrganizer::CalcWantedParameterCount(info, gWantedSurfaceParams))
             itsProducerSelector.AddString(CA2T(itsProducerList[i].itsName.c_str()));

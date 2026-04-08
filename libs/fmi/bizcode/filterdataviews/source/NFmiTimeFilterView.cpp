@@ -12,7 +12,7 @@
 #include "CtrlViewDocumentInterface.h"
 
 NFmiTimeFilterView::NFmiTimeFilterView(NFmiToolBox * theToolBox
-    , boost::shared_ptr<NFmiDrawParam> &theDrawParam
+    , std::shared_ptr<NFmiDrawParam> &theDrawParam
     , const NFmiRect& theRect
     , int theIndex)
     :NFmiZoomView(0, theToolBox, theDrawParam, theRect)
@@ -34,7 +34,7 @@ NFmiTimeFilterView::~NFmiTimeFilterView()
 void NFmiTimeFilterView::Update(void)
 {
     itsExtraHourTimeLineCount = 0; // 'resetoidaan' ensin
-    boost::shared_ptr<NFmiFastQueryInfo> editedInfo = itsCtrlViewDocumentInterface->EditedSmartInfo();
+    std::shared_ptr<NFmiFastQueryInfo> editedInfo = itsCtrlViewDocumentInterface->EditedSmartInfo();
     if(editedInfo)
     {
         editedInfo->FirstTime(); // Varmistetaan että ollaan 1. aika-askeleessa, jotta aikaresoluutio on aina sama samalle datalle (eikä satunnainen, jos vaihtuva resoluutioinen data ja aika-indeksi on joku muu kuin 0)
@@ -267,7 +267,7 @@ void NFmiTimeFilterView::DrawTimeTexts(void)
 	NFmiString timeStr(" ");
 	double startValue = itsCtrlViewDocumentInterface->TimeFilterRange(itsIndex).X();
 	double endValue = itsCtrlViewDocumentInterface->TimeFilterRange(itsIndex).Y();
-	boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
+	std::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->EditedSmartInfo();
 	if(info) // tiedetään resoluutio, ja voidaan ilmoittaa aika tunneissa ja minuuteissa
 	{
         info->FirstTime(); // asetetaan 1. aikaan, koska jos editoitu data on muuttuva aika-askelinen, tällöin on sattumanvaraista, minkä aika-askeleen resoluutio tulee tässä käyttöön

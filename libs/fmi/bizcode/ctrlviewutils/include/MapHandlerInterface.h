@@ -20,12 +20,12 @@ class MapHandlerInterface
 public:
 	virtual ~MapHandlerInterface();
 
-    virtual boost::shared_ptr<NFmiArea> Area() = 0;
+    virtual std::shared_ptr<NFmiArea> Area() = 0;
 #ifndef UNIX
     virtual Gdiplus::Bitmap* GetBitmap() = 0;
 #endif // UNIX
     virtual NFmiRect TotalAbsolutRect() = 0;
-    virtual boost::shared_ptr<NFmiArea> TotalArea() = 0;
+    virtual std::shared_ptr<NFmiArea> TotalArea() = 0;
     virtual bool SetMaxArea() = 0;
     virtual void SetMakeNewBackgroundBitmap(bool newState) = 0;
     virtual bool MakeNewBackgroundBitmap() = 0;

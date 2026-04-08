@@ -15,8 +15,8 @@ public:
 	~NFmiGenDocDataAdapter(void);
 
 	bool CheckValidationFromSettings(void) override;
-	boost::shared_ptr<NFmiFastQueryInfo> EditedInfo(void) override;
-	boost::shared_ptr<NFmiAreaMaskList> ParamMaskList(void) override;
+	std::shared_ptr<NFmiFastQueryInfo> EditedInfo(void) override;
+	std::shared_ptr<NFmiAreaMaskList> ParamMaskList(void) override;
 	bool UseMasksInTimeSerialViews(void) override;
 	NFmiAnalyzeToolData& AnalyzeToolData(void) override;
 	NFmiInfoOrganizer* InfoOrganizer(void) override;
@@ -24,19 +24,19 @@ public:
 	int DoMessageBox(const std::string & theMessage, const std::string &theTitle, unsigned int theMessageBoxType) override;
     void MapViewDirty(unsigned int theDescTopIndex, bool makeNewBackgroundBitmap, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool clearMacroParamDataCache, bool clearEditedDataDependentCaches, bool updateMapViewDrawingLayers) override;
     void WindTableSystemMustaUpdateTable(bool newState) override;
-	boost::shared_ptr<NFmiDrawParam> GetUsedDrawParamForEditedData(const NFmiDataIdent &theDataIdent) override;
+	std::shared_ptr<NFmiDrawParam> GetUsedDrawParamForEditedData(const NFmiDataIdent &theDataIdent) override;
 	NFmiMetEditorOptionsData& MetEditorOptionsData(void) override;
 	boost::shared_ptr<NFmiEditorControlPointManager> CPManager(bool getOldSchoolCPManager = false) override;
 	CtrlViewUtils::FmiSmartMetEditingMode SmartMetEditingMode(void) override;
 	void SmartMetEditingMode(CtrlViewUtils::FmiSmartMetEditingMode newValue, bool modifySettings) override;
 	int FilteringParameterUsageState(void) override;
 	void FilteringParameterUsageState(int newValue) override;
-	boost::shared_ptr<NFmiDrawParam> ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex) override;
+	std::shared_ptr<NFmiDrawParam> ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex) override;
 	int AbsoluteActiveViewRow(unsigned int theDescTopIndex) override;
 	NFmiParamBag& FilteringParamBag(void) override;
 	const NFmiTimeDescriptor& EditedDataTimeDescriptor(void) override;
 	const NFmiMetTime& ActiveViewTime(void) override;
-	boost::shared_ptr<NFmiTimeDescriptor> CreateDataFilteringTimeDescriptor(boost::shared_ptr<NFmiFastQueryInfo> &theEditedData) override;
+	boost::shared_ptr<NFmiTimeDescriptor> CreateDataFilteringTimeDescriptor(std::shared_ptr<NFmiFastQueryInfo> &theEditedData) override;
 	NFmiSmartToolInfo* SmartToolInfo(void) override;
 	std::string& SmartToolEditingErrorText(void) override;
     NFmiGriddingHelperInterface* GetGriddingHelper(void) override;
@@ -55,7 +55,7 @@ public:
 	int DataToDBCheckMethod(void) override; // 1=datavalidation, 2= niin kuin asetuksissa sanotaan
 	NFmiDataLoadingInfo& GetUsedDataLoadingInfo(void) override;
 	NFmiHelpEditorSystem& HelpEditorSystem(void) override;
-	bool StoreData(const std::string& theFileName, boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, bool askForSave) override;
+	bool StoreData(const std::string& theFileName, std::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, bool askForSave) override;
 	bool StoreData(bool fDoSaveTmpRename, const std::string& theFileName, NFmiQueryData *theData) override;
 	NFmiHelpDataInfoSystem* HelpDataInfoSystem(void) override;
 	bool DataLoadingOK(bool noError) override;
@@ -75,8 +75,8 @@ public:
 	const std::string& GetCurrentSmartToolMacro(void) override;
 	std::shared_ptr<NFmiMacroParamSystem> MacroParamSystem(void) override;
 	void SetLatestMacroParamErrorText(const std::string& theErrorText) override;
-	void SetMacroErrorText(const std::string &theErrorStr, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam) override;
-	boost::shared_ptr<NFmiArea> MapHandlerArea(bool fGetZoomedArea) override;
+	void SetMacroErrorText(const std::string &theErrorStr, std::shared_ptr<NFmiDrawParam>& triggerDrawParam) override;
+	std::shared_ptr<NFmiArea> MapHandlerArea(bool fGetZoomedArea) override;
 	FmiLanguage Language(void) override;
 	const NFmiRect& CPGridCropRect(void) override;
 	bool UseCPGridCrop(void) override;
@@ -87,7 +87,7 @@ public:
     bool MakeSureToolMasterPoolIsRunning(void) override;
     bool IsWorkingDataSaved() override;
     void LogAndWarnUser(const std::string &theMessageStr, const std::string &theDialogTitleStr, CatLog::Severity severity, CatLog::Category category, bool justLog, bool addAbortOption = false) override;
-	boost::shared_ptr<NFmiArea> GetUsedMapViewArea(int theMapViewDescTopIndex) override;
+	std::shared_ptr<NFmiArea> GetUsedMapViewArea(int theMapViewDescTopIndex) override;
 
 protected:
 	NFmiEditMapGeneralDataDoc *itsDoc; // ei omista, ei tuhoa

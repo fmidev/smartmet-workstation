@@ -43,9 +43,9 @@
 //--------------------------------------------------------
 // Constructor/Destructor
 //--------------------------------------------------------
-NFmiTimeStationViewRow::NFmiTimeStationViewRow(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+NFmiTimeStationViewRow::NFmiTimeStationViewRow(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 											   ,NFmiToolBox * theToolBox
-											   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+											   ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 											   ,int theIndex)
 :NFmiCtrlView(theMapViewDescTopIndex, theArea->XYArea()
 			 ,theToolBox

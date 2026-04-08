@@ -9,7 +9,7 @@
 // ---------------------------------------------------
 //  - GD Symbol Type    : CLD_Class 
 //  - GD Method         : UML ( 4.0 ) 
-//  - GD System Name    : editori virityksiä 2000 syksy 
+//  - GD System Name    : editori virityksiï¿½ 2000 syksy 
 //  - GD View Type      : Class Diagram 
 //  - GD View Name      : interpolation luokka 
 // ---------------------------------------------------  
@@ -17,13 +17,14 @@
 //  Creation Date  : Tues - Nov 7, 2000 
 // 
 //  Change Log     : 
-//	11.1.2002/Marko	Muutin luokan käyttämään Matrix-luokan sijasta NFmiDataMatrix-luokkaa (newbasessa).
+//	11.1.2002/Marko	Muutin luokan kï¿½yttï¿½mï¿½ï¿½n Matrix-luokan sijasta NFmiDataMatrix-luokkaa (newbasessa).
 // 
 //**********************************************************
 
 #pragma once
 
 #include <iosfwd>
+#include <memory>
 #include "NFmiTimeDescriptor.h"
 #include "NFmiParamBag.h"
 #include "NFmiPoint.h"
@@ -51,8 +52,8 @@ public:
    bool Init(const NFmiTimeDescriptor& theTimes, const NFmiParamBag& theParams, const std::string& theCPFileName, bool fKeepOldValues, bool fKeepOldCPs, int theMaxAllowedTimeCount = 200);
    bool Init(const std::vector<NFmiPoint> &newCPs, bool keepModificationsIfPossible);
    bool Init(const NFmiEditorControlPointManager &theOther);
-   bool SetZoomedAreaStationsAsControlPoints(std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &theInfos, boost::shared_ptr<NFmiArea> &theArea);
-   bool SetZoomedAreaStationsAsControlPoints(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea);
+   bool SetZoomedAreaStationsAsControlPoints(std::vector<std::shared_ptr<NFmiFastQueryInfo>> &theInfos, std::shared_ptr<NFmiArea> &theArea);
+   bool SetZoomedAreaStationsAsControlPoints(std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::shared_ptr<NFmiArea> &theArea);
    int Size (void) ;
    float ChangeValue (void);
    void ChangeValue (float newValue);
@@ -84,7 +85,7 @@ public:
    void CPMovingInTime(bool newState, int theIndex = -1);
    void ActivateAllCPs (bool newState) ;
    bool ChangeValues (std::vector<float>& xValues, std::vector<float>& yValues, std::vector<float>& zValues, int& theArraySize) ;
-   std::vector<float>& ActiveCPChangeValues(void); // tämä on hieman vaarallinen metodi, mutta optimointia varten tehty
+   std::vector<float>& ActiveCPChangeValues(void); // tï¿½mï¿½ on hieman vaarallinen metodi, mutta optimointia varten tehty
    std::vector<float>& CPChangeValues(void); // currentin CP:n muutos arvot
    bool ResetTime (void) ;
    bool NextTime (void) ;
@@ -104,7 +105,7 @@ public:
    bool MouseCaptured(void){return fMouseCaptured;};
    void MouseCaptured(bool newStatus){fMouseCaptured = newStatus;};
    const NFmiArea* Area(void) const {return itsArea;};
-   bool InitRelativeLocations(void); // laskee latlon pisteistä vastaavan relative point vektorin itsArean avulla
+   bool InitRelativeLocations(void); // laskee latlon pisteistï¿½ vastaavan relative point vektorin itsArean avulla
    void Area(const NFmiArea* newArea){itsArea = newArea;};
    bool FindNearestCP(const NFmiPoint& theLatLon, bool fChangeIndex = true);
    bool ReadCPs(std::istream& file);
@@ -136,52 +137,52 @@ private:
 	void ClearAllChangeValues(float newValue);
 	void ClearIndexedParamChangeValues(float newValue, int paramIndex);
 	void ClearIndexedParamIndexedCPChangeValues(float newValue, int paramIndex, int CPIndex);
-    void AddZoomedAreaStationsToCPVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea, std::vector<NFmiPoint> &theAddedControlPointsInOut);
+    void AddZoomedAreaStationsToCPVector(std::shared_ptr<NFmiFastQueryInfo> &theInfo, std::shared_ptr<NFmiArea> &theArea, std::vector<NFmiPoint> &theAddedControlPointsInOut);
     int GetActiveCpIndex() const;
     bool ActivateFirstCp();
     void ResetActivityVector();
 
-   // Kuinka monta controlpoint parametria on parambagissä.
+   // Kuinka monta controlpoint parametria on parambagissï¿½.
    int itsParamCount;
-   // Mihin parametriin osoitetaan tällä hetkellä. Nämä ei ole samoja indeksejä kuin
-   // Parambagissä koska kaikkia parametreja ei muokata controllipisteillä (esim. HASDE1).
+   // Mihin parametriin osoitetaan tï¿½llï¿½ hetkellï¿½. Nï¿½mï¿½ ei ole samoja indeksejï¿½ kuin
+   // Parambagissï¿½ koska kaikkia parametreja ei muokata controllipisteillï¿½ (esim. HASDE1).
    int itsParamIndex;
    NFmiTimeDescriptor itsTimeDescriptor;
-   // Muokattavan datan parametrit. Tämän avulla lasketaan paramcount ja
+   // Muokattavan datan parametrit. Tï¿½mï¿½n avulla lasketaan paramcount ja
    // lasketaan halutulle parametrille indeksi
    NFmiParamBag itsParamBag;
    // CP = EditorControlPoint
    int itsCPCount;
    int itsCPIndex;
-   // Tässä on kaikkien CP:en latlon pisteet.
-   // HUOM!! ei vielä pidä sisällään muuttuvaa paikkaa ajassa, 
-   // tällöin muuttuja pitää muuttaa Matrix tyyppiseksi 2D otukseksi.
+   // Tï¿½ssï¿½ on kaikkien CP:en latlon pisteet.
+   // HUOM!! ei vielï¿½ pidï¿½ sisï¿½llï¿½ï¿½n muuttuvaa paikkaa ajassa, 
+   // tï¿½llï¿½in muuttuja pitï¿½ï¿½ muuttaa Matrix tyyppiseksi 2D otukseksi.
    std::vector<NFmiPoint> itsCPLocationVector;
    std::vector<NFmiPoint> itsCPRelativeLocationVector;
-   // Onko CP aktiivinen vai ei (muokataanko pistettä mitenkään vai ei)?
+   // Onko CP aktiivinen vai ei (muokataanko pistettï¿½ mitenkï¿½ï¿½n vai ei)?
    std::vector<bool> itsCPActivityVector;
-   // Onko CP käytössä (enabloitu) vai ei (otetaanko piste mukaan laskuihin mitenkään vai ei)?
+   // Onko CP kï¿½ytï¿½ssï¿½ (enabloitu) vai ei (otetaanko piste mukaan laskuihin mitenkï¿½ï¿½n vai ei)?
    std::vector<bool> itsCPEnabledVector;
    // Muuttuuko kyseisen CP:n paikka ajassa vai onko CP paikallaan (eli 
-   // kun muutat yhdessä ajassa CP:n paikkaa, muut ajat muuttuvat vastaavasti)?
+   // kun muutat yhdessï¿½ ajassa CP:n paikkaa, muut ajat muuttuvat vastaavasti)?
    std::vector<bool> itsCPChangeInTimeVector;
    NFmiDataMatrix<NFmiPoint> itsCPChangeInTimeRelativeLocationMatrix;
    NFmiDataMatrix<NFmiPoint> itsCPChangeInTimeLatLonLocationMatrix;
-   // Kaksiulotteinen taulu Controlpointteja (n kpl CP:tä jokaiselle parametrille)
+   // Kaksiulotteinen taulu Controlpointteja (n kpl CP:tï¿½ jokaiselle parametrille)
    // parametri-lkm on 1. Resize parametri (param-lkm = x = rivi-lkm)
    // CP-lkm on 2. Resize parametri (CP-lkm = y = column-lkm)
    NFmiDataMatrix<NFmiEditorControlPoint> itsCPMatrix;
-   std::vector<float> itsDummyChangeValueVector; // tämä palautetaan, jos ei löydy aktiivista CP:tä ja kysytään aktiivisen CP muutostaulua
-   NFmiPoint itsDummyLatlon; // tämä palautetaan kun mikään CP ei ole aktiivinen ja pyydetään latlonia
+   std::vector<float> itsDummyChangeValueVector; // tï¿½mï¿½ palautetaan, jos ei lï¿½ydy aktiivista CP:tï¿½ ja kysytï¿½ï¿½n aktiivisen CP muutostaulua
+   NFmiPoint itsDummyLatlon; // tï¿½mï¿½ palautetaan kun mikï¿½ï¿½n CP ei ole aktiivinen ja pyydetï¿½ï¿½n latlonia
    NFmiEditorControlPoint itsDummyControlPoint;
    bool fMouseCaptured;
-   const NFmiArea* itsArea; //(HUOM! ei omista) tämän avulla lasketaan latloneista suhteelliset paikat
-   std::vector<ThreePoints> itsCPMovingInTimeHelpPoints; // CP-säätödialogi päivittää ja käyttää näitä
+   const NFmiArea* itsArea; //(HUOM! ei omista) tï¿½mï¿½n avulla lasketaan latloneista suhteelliset paikat
+   std::vector<ThreePoints> itsCPMovingInTimeHelpPoints; // CP-sï¿½ï¿½tï¿½dialogi pï¿½ivittï¿½ï¿½ ja kï¿½yttï¿½ï¿½ nï¿½itï¿½
 
    std::vector<bool> itsShowCPAllwaysOnTimeView;
 
-   std::string itsFilePath; // jos tämä ei ole tyhjä, on tämä CPManageri luettu tästä tiedostosta (polkuineen kaikkineen)
-   std::string itsName; // tämä otetaan suoraan tiedoston nimestä
+   std::string itsFilePath; // jos tï¿½mï¿½ ei ole tyhjï¿½, on tï¿½mï¿½ CPManageri luettu tï¿½stï¿½ tiedostosta (polkuineen kaikkineen)
+   std::string itsName; // tï¿½mï¿½ otetaan suoraan tiedoston nimestï¿½
 };
 
 std::ostream& operator<<(std::ostream& os, const NFmiEditorControlPointManager& item);

@@ -328,9 +328,9 @@ NFmiDataModifierWithModifierWithMasksAndRangeShiftedWithTime::~NFmiDataModifierW
 
 //************** NFmiDataModifierTimeInterpolationWithAreaModifiers ************************
 NFmiDataModifierTimeInterpolationWithAreaModifiers::NFmiDataModifierTimeInterpolationWithAreaModifiers(
-						boost::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy,
+						std::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy,
 						NFmiDataModifier *theDataModifier
-						,boost::shared_ptr<NFmiAreaMaskList> &theMaskList
+						,std::shared_ptr<NFmiAreaMaskList> &theMaskList
 						,const std::vector<NFmiRect> &theRangeArray
 						,const NFmiMetTime& theStartTime
 						,const NFmiMetTime& theEndTime
@@ -480,12 +480,12 @@ void NFmiDataModifierTimeInterpolationWithAreaModifiers::CheckIfWDParameter(void
 
 //************** NFmiDataModifierParamCombiner ************************
 NFmiDataModifierParamCombiner::NFmiDataModifierParamCombiner(
-								 boost::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy
+								 std::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy
 								,NFmiDataModifier *theDataModifier
-								,boost::shared_ptr<NFmiAreaMaskList> &theMaskList
+								,std::shared_ptr<NFmiAreaMaskList> &theMaskList
 								,const std::vector<NFmiRect> &theRangeArray
-								,boost::shared_ptr<NFmiFastQueryInfo> theFirstParamInfo
-								,boost::shared_ptr<NFmiFastQueryInfo> theSecondParamInfo
+								,std::shared_ptr<NFmiFastQueryInfo> theFirstParamInfo
+								,std::shared_ptr<NFmiFastQueryInfo> theSecondParamInfo
 								,const std::vector<float> &theCombineFactorArray
 								,float theFirstParamBase
 								,float theSecondParamBase
@@ -698,12 +698,12 @@ void NFmiDataModifierParamCombiner::InitLatlonCache(void)
 
 //************** NFmiDataModelDataCombiner ************************
 NFmiDataModelDataCombiner::NFmiDataModelDataCombiner(
-								 boost::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy
+								 std::shared_ptr<NFmiFastQueryInfo> theQueryInfoCopy
 								,NFmiDataModifier *theDataModifier
-								,boost::shared_ptr<NFmiAreaMaskList> &theMaskList
+								,std::shared_ptr<NFmiAreaMaskList> &theMaskList
 								,const std::vector<NFmiRect> &theRangeArray
-								,boost::shared_ptr<NFmiFastQueryInfo> theFirstModelInfo
-								,boost::shared_ptr<NFmiFastQueryInfo> theSecondModelInfo
+								,std::shared_ptr<NFmiFastQueryInfo> theFirstModelInfo
+								,std::shared_ptr<NFmiFastQueryInfo> theSecondModelInfo
 								,const std::vector<float> &theCombineFactorArray)
 :NFmiDataModifierWithModifierWithMasksAndRangeShiftedWithTime(theQueryInfoCopy, theDataModifier, theMaskList, theRangeArray)
 ,fFirstParamInfoIsSameGridAsModifiedData(false)
@@ -886,7 +886,7 @@ void NFmiDataModelDataCombiner::InitLatlonCache(void)
 
 //************** NFmiDataModifierValidateData_PrForm_T ************************
 
-NFmiDataModifierValidateData_PrForm_T::NFmiDataModifierValidateData_PrForm_T(boost::shared_ptr<NFmiFastQueryInfo> theTemperatureInfo, float theSnowTemperatureLimit, float theRainTemperatureLimit)
+NFmiDataModifierValidateData_PrForm_T::NFmiDataModifierValidateData_PrForm_T(std::shared_ptr<NFmiFastQueryInfo> theTemperatureInfo, float theSnowTemperatureLimit, float theRainTemperatureLimit)
 :NFmiDataModifier()
 ,itsTemperatureInfo(theTemperatureInfo)
 ,itsSnowTemperatureLimit(theSnowTemperatureLimit)
@@ -980,7 +980,7 @@ float NFmiDataModifierValidateData_T_DP::FloatOperation(float theValue)
 //************** NFmiDataModifierValidateData_T_DP ************************
 
 //************** NFmiDataModifierValidateData_T_DP_ver2 ************************
-NFmiDataModifierValidateData_T_DP_ver2::NFmiDataModifierValidateData_T_DP_ver2(const boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+NFmiDataModifierValidateData_T_DP_ver2::NFmiDataModifierValidateData_T_DP_ver2(const std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 :NFmiDataModifier()
 ,itsInfo(theInfo)
 ,itsTIndex(gMissingIndex)

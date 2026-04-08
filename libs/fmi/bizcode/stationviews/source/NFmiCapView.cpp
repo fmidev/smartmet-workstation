@@ -36,9 +36,9 @@ using namespace Warnings;
 
 NFmiImageMap NFmiCapView::itsCapSymbolMap;
 
-NFmiCapView::NFmiCapView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+NFmiCapView::NFmiCapView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
     , NFmiToolBox *theToolBox
-    , boost::shared_ptr<NFmiDrawParam> &theDrawParam
+    , std::shared_ptr<NFmiDrawParam> &theDrawParam
     , FmiParameterName theParamId
     , int theRowIndex
     , int theColumnIndex)

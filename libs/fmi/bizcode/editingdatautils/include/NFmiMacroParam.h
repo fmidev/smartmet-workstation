@@ -17,8 +17,8 @@ public:
 	void Name(const std::string &newValue) {itsName = newValue;}
 	const std::string& MacroText(void) const {return itsMacroText;}
 	void MacroText(const std::string &newValue) {itsMacroText = newValue;}
-	boost::shared_ptr<NFmiDrawParam> DrawParam(void) {return itsDrawParam;}
-	void DrawParam(boost::shared_ptr<NFmiDrawParam> &newValue) {itsDrawParam = newValue;}
+	std::shared_ptr<NFmiDrawParam> DrawParam(void) {return itsDrawParam;}
+	void DrawParam(std::shared_ptr<NFmiDrawParam> &newValue) {itsDrawParam = newValue;}
 	bool IsMacroParamDirectory(void) const {return fMacroParamDirectory;}
 	void SetMacroParamDirectory(bool newState) {fMacroParamDirectory = newState;}
 	const std::string& MacroParamDirectoryPath(void) const {return itsMacroParaDirectoryPath;}
@@ -32,7 +32,7 @@ private:
 
 	std::string itsName;
 	std::string itsMacroText; // smarttool skripti
-	boost::shared_ptr<NFmiDrawParam> itsDrawParam; // piirto-ominaisuudet
+	std::shared_ptr<NFmiDrawParam> itsDrawParam; // piirto-ominaisuudet
 	std::string itsMacroParaDirectoryPath; // jos kyseessä on hakemisto, laitetaan tähän talteen koko polku
 	bool fMacroParamDirectory; // jos tämä on true, valinta dialogissa toimitaan erilailla
 							  // lisäksi tälläistä makroa ei talleteta tiedostoon

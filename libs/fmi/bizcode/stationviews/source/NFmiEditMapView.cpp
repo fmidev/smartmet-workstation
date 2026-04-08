@@ -53,7 +53,7 @@ static char THIS_FILE[] = __FILE__;
 
 NFmiEditMapView::NFmiEditMapView(int theMapViewDescTopIndex
 								,NFmiToolBox *theToolBox
-								,boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+								,std::shared_ptr<NFmiDrawParam> &theDrawParam)
 :NFmiCtrlView(theMapViewDescTopIndex, GetCtrlViewDocumentInterface()->GetMapHandlerInterface(theMapViewDescTopIndex)->Area()->XYArea()
 			 ,theToolBox
 			 ,theDrawParam)
@@ -708,7 +708,7 @@ void NFmiEditMapView::UpdateMap(void)
 
 
 // T�M� SIIRTYY POIS T��LT�????
-void NFmiEditMapView::SetMapAreaAndRect(const boost::shared_ptr<NFmiArea> &theArea, const NFmiRect& theRect)
+void NFmiEditMapView::SetMapAreaAndRect(const std::shared_ptr<NFmiArea> &theArea, const NFmiRect& theRect)
 {
 	if(theArea)
 	{

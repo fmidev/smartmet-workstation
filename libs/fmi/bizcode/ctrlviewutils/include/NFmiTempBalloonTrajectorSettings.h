@@ -1,13 +1,14 @@
 #pragma once
 
 #include "NFmiGlobals.h"
+#include <memory>
 #include "boost/shared_ptr.hpp"
 
 class NFmiFastQueryInfo;
 class NFmiPoint;
 class NFmiMetTime;
 
-// luokka joka pitää sisällään luotauspallo trajektori asetukset
+// luokka joka pitï¿½ï¿½ sisï¿½llï¿½ï¿½n luotauspallo trajektori asetukset
 class NFmiTempBalloonTrajectorSettings
 {
 public:
@@ -24,20 +25,20 @@ public:
     FmiDirection State(void) const { return itsState; }
     void State(FmiDirection newState) { itsState = newState; }
     double CurrentFloatTimeInMinutes(void) const { return itsCurrentFloatTimeInMinutes; }
-    void CurrentFloatTimeInMinutes(double newValue) { itsCurrentFloatTimeInMinutes = newValue; } // tällä lähinnä nollataan kellunta aika
+    void CurrentFloatTimeInMinutes(double newValue) { itsCurrentFloatTimeInMinutes = newValue; } // tï¿½llï¿½ lï¿½hinnï¿½ nollataan kellunta aika
     void AddFloatTime(double theAddedTimeInMinutes) { itsCurrentFloatTimeInMinutes += theAddedTimeInMinutes; }
     void Reset(void) { itsCurrentFloatTimeInMinutes = 0.; itsState = kBase; }
-    // laske currentilla arvoilla nousu/laskunopeus yksikössä hPa/s. Osaa tehdä päätelmiä eri luotaus pallon lennon
-    // vaiheista ja osaa mm. siirtyä seuraavaan vaiheeseen.
+    // laske currentilla arvoilla nousu/laskunopeus yksikï¿½ssï¿½ hPa/s. Osaa tehdï¿½ pï¿½ï¿½telmiï¿½ eri luotaus pallon lennon
+    // vaiheista ja osaa mm. siirtyï¿½ seuraavaan vaiheeseen.
     double CalcOmega(double Z, int theTimeStepInMinutes);
-    double CalcDeltaP(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, double theCurrentPressure, unsigned long thePressureParamIndex, double Z, int theTimeStepInMinutes, unsigned long theGroundLevelIndex);
+    double CalcDeltaP(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, double theCurrentPressure, unsigned long thePressureParamIndex, double Z, int theTimeStepInMinutes, unsigned long theGroundLevelIndex);
 
     void Write(std::ostream& os) const;
     void Read(std::istream& is);
 private:
-    double CalcDeltaPInPhase1(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, double theCurrentPressure, unsigned long thePressureParamIndex, double Z, int theTimeStepInMinutes);
+    double CalcDeltaPInPhase1(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, double theCurrentPressure, unsigned long thePressureParamIndex, double Z, int theTimeStepInMinutes);
     double CalcDeltaPInPhase2(int theTimeStepInMinutes);
-    double CalcDeltaPInPhase3(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, double theCurrentPressure, unsigned long thePressureParamIndex, double Z, int theTimeStepInMinutes, unsigned long theGroundLevelIndex);
+    double CalcDeltaPInPhase3(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiPoint &theLatlon, const NFmiMetTime &theTime, double theCurrentPressure, unsigned long thePressureParamIndex, double Z, int theTimeStepInMinutes, unsigned long theGroundLevelIndex);
     double CalcOmegaInPhase1(double Z, int theTimeStepInMinutes);
     double CalcOmegaInPhase2(int theTimeStepInMinutes);
     double CalcOmegaInPhase3(double Z, int theTimeStepInMinutes);
@@ -54,7 +55,7 @@ private:
                            // 3. kellunta eli kTop
                            // 4. lasku eli kDown
                            // 5. loppu (osunut takaisin maahan) eli kNoDirection
-    double itsCurrentFloatTimeInMinutes; // jos 0, ei kellunta ole vielä alkanut, tämän avulla lasketaan milloin kellunta lopetetaan
+    double itsCurrentFloatTimeInMinutes; // jos 0, ei kellunta ole vielï¿½ alkanut, tï¿½mï¿½n avulla lasketaan milloin kellunta lopetetaan
 };
 
 inline std::ostream& operator<<(std::ostream& os, const NFmiTempBalloonTrajectorSettings& item) { item.Write(os); return os; }

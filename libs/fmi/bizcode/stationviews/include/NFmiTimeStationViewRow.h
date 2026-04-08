@@ -46,9 +46,9 @@ class NFmiTimeStationViewRow : public NFmiCtrlView
 {
 
  public:
-   NFmiTimeStationViewRow(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+   NFmiTimeStationViewRow(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 					   ,NFmiToolBox * theToolBox
-					   ,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+					   ,std::shared_ptr<NFmiDrawParam> &theDrawParam
 					   ,int theIndex);
    ~NFmiTimeStationViewRow();
    void Draw(NFmiToolBox* theGTB) override;
@@ -83,7 +83,7 @@ class NFmiTimeStationViewRow : public NFmiCtrlView
 
 //   T‰h‰n laitetaan NFmiStationViewHandler:it.
    NFmiCtrlViewList* itsViewList;
-   boost::shared_ptr<NFmiArea> itsMapArea; // k‰ytet‰‰n vain NFmiStationViewHandler:in konstruktorissa?!?! 
+   std::shared_ptr<NFmiArea> itsMapArea; // k‰ytet‰‰n vain NFmiStationViewHandler:in konstruktorissa?!?! 
 
 //    V‰liaikainen ratkaisu.
    int itsViewCount;

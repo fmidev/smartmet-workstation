@@ -115,7 +115,7 @@ NFmiSatelliteImageCacheSystem& SmartMetDocumentInterfaceForGeneralDataDoc::Satel
     return itsDoc->SatelliteImageCacheSystem();
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::MakeDrawedInfoVectorForMapView(std::vector<boost::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, boost::shared_ptr<NFmiDrawParam> &theDrawParam, const boost::shared_ptr<NFmiArea> &theArea)
+void SmartMetDocumentInterfaceForGeneralDataDoc::MakeDrawedInfoVectorForMapView(std::vector<std::shared_ptr<NFmiFastQueryInfo> > &theInfoVector, std::shared_ptr<NFmiDrawParam> &theDrawParam, const std::shared_ptr<NFmiArea> &theArea)
 {
     itsDoc->GetCombinedMapHandler()->makeDrawedInfoVectorForMapView(theInfoVector, theDrawParam, theArea);
 }
@@ -192,7 +192,7 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::ModifyToolMode(CtrlViewUtils::F
     itsDoc->ModifyToolMode(newState);
 }
 
-boost::shared_ptr<NFmiDrawParam> SmartMetDocumentInterfaceForGeneralDataDoc::ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex)
+std::shared_ptr<NFmiDrawParam> SmartMetDocumentInterfaceForGeneralDataDoc::ActiveDrawParamFromActiveRow(unsigned int theDescTopIndex)
 {
     return itsDoc->GetCombinedMapHandler()->activeDrawParamFromActiveRow(theDescTopIndex);
 }
@@ -217,7 +217,7 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::BrushSpecialParamValue(double n
     itsDoc->BrushSpecialParamValue(newValue);
 }
 
-boost::shared_ptr<NFmiFastQueryInfo> SmartMetDocumentInterfaceForGeneralDataDoc::EditedSmartInfo()
+std::shared_ptr<NFmiFastQueryInfo> SmartMetDocumentInterfaceForGeneralDataDoc::EditedSmartInfo()
 {
     return itsDoc->EditedSmartInfo();
 }
@@ -357,7 +357,7 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::Printing(unsigned int theMapVie
     }
 }
 
-boost::shared_ptr<NFmiDrawParam> SmartMetDocumentInterfaceForGeneralDataDoc::DefaultEditedDrawParam()
+std::shared_ptr<NFmiDrawParam> SmartMetDocumentInterfaceForGeneralDataDoc::DefaultEditedDrawParam()
 {
     return itsDoc->DefaultEditedDrawParam();
 }
@@ -737,12 +737,12 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::OnAcceleratorSetHomeTime(int th
     itsDoc->OnAcceleratorSetHomeTime(theMapViewDescTopIndex);
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::PanMap(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, const NFmiPoint &theZoomDragUpPoint)
+void SmartMetDocumentInterfaceForGeneralDataDoc::PanMap(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, const NFmiPoint &theZoomDragUpPoint)
 {
     itsDoc->PanMap(theMapViewDescTopIndex, theMapArea, theMousePoint, theZoomDragUpPoint);
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::ZoomMapInOrOut(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, double theZoomFactor)
+void SmartMetDocumentInterfaceForGeneralDataDoc::ZoomMapInOrOut(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theMapArea, const NFmiPoint &theMousePoint, double theZoomFactor)
 {
     itsDoc->ZoomMapInOrOut(theMapViewDescTopIndex, theMapArea, theMousePoint, theZoomFactor);
 }
@@ -1037,7 +1037,7 @@ NFmiDrawParamList* SmartMetDocumentInterfaceForGeneralDataDoc::TimeSerialViewDra
     return &itsDoc->GetCombinedMapHandler()->getTimeSerialViewDrawParamList();
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::SetMapArea(unsigned int theDescTopIndex, const boost::shared_ptr<NFmiArea> &newArea)
+void SmartMetDocumentInterfaceForGeneralDataDoc::SetMapArea(unsigned int theDescTopIndex, const std::shared_ptr<NFmiArea> &newArea)
 {
     itsDoc->GetCombinedMapHandler()->setMapArea(theDescTopIndex, newArea);
 }
@@ -1062,7 +1062,7 @@ NFmiFixedDrawParamSystem& SmartMetDocumentInterfaceForGeneralDataDoc::FixedDrawP
     return itsDoc->FixedDrawParamSystem();
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::TakeDrawParamInUseEveryWhere(boost::shared_ptr<NFmiDrawParam> &theDrawParam, bool useInMap, bool useInTimeSerial, bool useInCrossSection, bool useWithViewMacros)
+void SmartMetDocumentInterfaceForGeneralDataDoc::TakeDrawParamInUseEveryWhere(std::shared_ptr<NFmiDrawParam> &theDrawParam, bool useInMap, bool useInTimeSerial, bool useInCrossSection, bool useWithViewMacros)
 {
     return itsDoc->GetCombinedMapHandler()->takeDrawParamInUseEveryWhere(theDrawParam, useInMap, useInTimeSerial, useInCrossSection, useWithViewMacros);
 }
@@ -1252,7 +1252,7 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::SynopDataGridViewOn(bool newSta
     itsDoc->SynopDataGridViewOn(newState);
 }
 
-std::vector<boost::shared_ptr<NFmiFastQueryInfo>> SmartMetDocumentInterfaceForGeneralDataDoc::GetSortedSynopInfoVector(int theProducerId, int theProducerId2, int theProducerId3, int theProducerId4)
+std::vector<std::shared_ptr<NFmiFastQueryInfo>> SmartMetDocumentInterfaceForGeneralDataDoc::GetSortedSynopInfoVector(int theProducerId, int theProducerId2, int theProducerId3, int theProducerId4)
 {
     return itsDoc->GetSortedSynopInfoVector(theProducerId, theProducerId2, theProducerId3, theProducerId4);
 }
@@ -1357,7 +1357,7 @@ NFmiWindTableSystem& SmartMetDocumentInterfaceForGeneralDataDoc::WindTableSystem
     return itsDoc->WindTableSystem();
 }
 
-void SmartMetDocumentInterfaceForGeneralDataDoc::SelectLocations(unsigned int theDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const boost::shared_ptr<NFmiArea> &theMapArea,
+void SmartMetDocumentInterfaceForGeneralDataDoc::SelectLocations(unsigned int theDescTopIndex, std::shared_ptr<NFmiFastQueryInfo> &theInfo, const std::shared_ptr<NFmiArea> &theMapArea,
     const NFmiPoint& theLatLon, const NFmiMetTime &theTime, int theSelectionCombineFunction, unsigned long theMask
     , bool fMakeMTAModeAdd, bool fDoOnlyMTAModeAdd)
 {

@@ -66,7 +66,7 @@ class NFmiViewParamsView : public NFmiParamCommandView
 #endif // UNIX
 
 
-	NFmiViewParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer);
+	NFmiViewParamsView(int theMapViewDescTopIndex, const NFmiRect & theRect, NFmiToolBox * theToolBox, std::shared_ptr<NFmiDrawParam> &theDrawParam, int theRowIndex, int theColumnIndex, bool hasMapLayer);
     bool LeftButtonDown(const NFmiPoint & thePlace, unsigned long theKey) override;
     bool LeftButtonUp(const NFmiPoint &, unsigned long) override;
 	bool RightButtonUp(const NFmiPoint &, unsigned long) override;
@@ -80,28 +80,28 @@ class NFmiViewParamsView : public NFmiParamCommandView
 
  protected:
     int GetParamCount(void);
-	bool LeftClickOnModelSelectionButtons(const NFmiPoint &thePlace, boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theParameterRowIndex);
+	bool LeftClickOnModelSelectionButtons(const NFmiPoint &thePlace, std::shared_ptr<NFmiDrawParam> &theDrawParam, int theParameterRowIndex);
 #ifndef UNIX
 	static ModelSelectorButtonImageHolder statModelSelectorButtonImages; // t�m� on staattinen dataosa, koska n�it� timekontrol-instansseja luodaan lennossa jatkuvasti uudelleen ja uudelleen eli bitmapit luetaan vain kerran kaikkien k�ytt��n
 #endif // UNIX
 	void DrawData(void) override;
-	void DrawModelSelectorButtons(boost::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiRect& parameterRowRect);
+	void DrawModelSelectorButtons(std::shared_ptr<NFmiDrawParam> &theDrawParam, const NFmiRect& parameterRowRect);
 #ifndef UNIX
 	NFmiPoint CalcModelSelectorButtonRelativeSize(Gdiplus::Bitmap *theImage);
 	NFmiRect CalcModelSelectorButtonRect(const NFmiRect& parameterRowRect, int theButtonIndex);
 #endif // UNIX
 	NFmiPoint GetViewSizeInPixels(void);
     bool DoAfterParamModeModifications(NFmiDrawParamList *theParamList);
-    bool ActivateParam(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theParamIndex);
-    void DrawActiveParamMarkers(boost::shared_ptr<NFmiDrawParam> &theDrawParam, int theParamLineIndex);
+    bool ActivateParam(std::shared_ptr<NFmiDrawParam> &theDrawParam, int theParamIndex);
+    void DrawActiveParamMarkers(std::shared_ptr<NFmiDrawParam> &theDrawParam, int theParamLineIndex);
     NFmiRect CalcParameterDragRect(int theParamLineIndex, int leftMargin, int topMargin, int rightMargin, int bottomMargin);
     NFmiDrawParamList* GetDrawParamList();
     void DrawMouseDraggingAction();
     void DrawMouseDraggingBackground();
 	void DrawBackgroundMapLayerText(int &zeroBasedRowIndexInOut, const NFmiRect &parameterRowRect);
-	std::string MakeMacroParamTooltipText(const boost::shared_ptr<NFmiDrawParam>& drawParam, const std::string& paramStr);
+	std::string MakeMacroParamTooltipText(const std::shared_ptr<NFmiDrawParam>& drawParam, const std::string& paramStr);
 #ifndef DISABLE_CPPRESTSDK
-	std::string MakeWmsTooltipText(const boost::shared_ptr<NFmiDrawParam>& drawParam, const std::string &paramStr);
+	std::string MakeWmsTooltipText(const std::shared_ptr<NFmiDrawParam>& drawParam, const std::string &paramStr);
 #endif
 private:
    double itsButtonSizeInMM_x; // paino nappuloiden koko millimetreiss� x-suunnassa

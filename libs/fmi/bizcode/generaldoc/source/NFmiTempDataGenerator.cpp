@@ -347,7 +347,7 @@ namespace
             // Tuulidatan eri parametrit pit�� t�ytt�� seuraavaksi
             NFmiFastInfoUtils::MetaWindParamUsage metaWindParamUsage(false, false, true, false);
             soundingDataPtr->FillRestOfWindData(metaWindParamUsage);
-            boost::shared_ptr<NFmiFastQueryInfo> emptyDummyInfoPtr;
+            std::shared_ptr<NFmiFastQueryInfo> emptyDummyInfoPtr;
             soundingDataPtr->MakeFillDataPostChecks(emptyDummyInfoPtr);
             return soundingDataPtr;
         }

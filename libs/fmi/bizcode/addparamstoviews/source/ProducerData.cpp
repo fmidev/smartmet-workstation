@@ -15,6 +15,8 @@
 #include "cppext/tree.h"
 
 #include <boost/algorithm/string.hpp>
+#include <filesystem>
+#include <memory>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -30,7 +32,7 @@ namespace
     // koska talletetussa CaseStudydatapaketissa saattaa olla sellaisia viel� k�yt�ss�.
     bool gCaseStudyModeOn = false;
 
-    bool isDataOnlyOnOneLevel(const boost::shared_ptr<NFmiFastQueryInfo> &info)
+    bool isDataOnlyOnOneLevel(const std::shared_ptr<NFmiFastQueryInfo> &info)
     {
         if(info)
         {
@@ -49,7 +51,7 @@ namespace
     {
         if(rowItem.itemName().empty())
         {
-            rowItem.itemName(PathUtils::getFilename(rowItem.totalFilePath(), false));
+            rowItem.itemName(std::filesystem::path(rowItem.totalFilePath()).stem().string());
         }
     }
 
@@ -132,7 +134,7 @@ namespace AddParams
         return dataStructuresChanged;
     }
 
-    bool ProducerData::updateData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem)
+    bool ProducerData::updateData(const std::shared_ptr<NFmiFastQueryInfo> &info, NFmiInfoOrganizer &infoOrganizer, NFmiHelpDataInfoSystem &helpDataInfoSystem)
     {
         auto fileFilter = info->DataFilePattern();
         auto iter = std::find_if(dataVector_.begin(), dataVector_.end(),
@@ -169,7 +171,7 @@ namespace AddParams
         return !satelliteDataVector_.empty();
     }
 
-    bool ProducerData::updateOperationalData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiHelpDataInfoSystem &helpDataInfoSystem)
+    bool ProducerData::updateOperationalData(const std::shared_ptr<NFmiFastQueryInfo> &info, NFmiHelpDataInfoSystem &helpDataInfoSystem)
     {
         bool dataStructuresChanged = false;
         const auto &fileFilter = info->DataFilePattern();
@@ -314,7 +316,7 @@ namespace AddParams
 		return treeDepth;
 	}
 
-    void ProducerData::addNewSingleData(const boost::shared_ptr<NFmiFastQueryInfo> &info, NFmiHelpDataInfoSystem &helpDataInfoSystem)
+    void ProducerData::addNewSingleData(const std::shared_ptr<NFmiFastQueryInfo> &info, NFmiHelpDataInfoSystem &helpDataInfoSystem)
     {
         auto helpDataInfo = helpDataInfoSystem.FindHelpDataInfo(info->DataFilePattern());
         auto singleDataPtr = std::make_unique<SingleData>();

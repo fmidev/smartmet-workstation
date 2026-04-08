@@ -31,7 +31,7 @@ class CFmiTMColorIndexDlg : public CDialog
 // Construction
 public:
 	CFmiTMColorIndexDlg(CFmiModifyDrawParamDlg *theModifyDrawParamDlg, const std::string &theTitleStr,	const std::string theHelpStr,
-		                Matrix3D<std::pair<int, COLORREF> >* theColorsCube, boost::shared_ptr<NFmiDrawParam> &theDrawParam,
+		                Matrix3D<std::pair<int, COLORREF> >* theColorsCube, std::shared_ptr<NFmiDrawParam> &theDrawParam,
 						bool doIsolineModifications, CWnd* pParent = NULL);   // standard constructor
 	~CFmiTMColorIndexDlg(void);
 
@@ -83,7 +83,7 @@ protected:
 	std::vector<ColorRectInfo> itsSelectedColorsRectVector; // T‰h‰n laitetaan valitut v‰rit, eli uutena featurena
 															// v‰ridialogista rakennetaan valittujen v‰rien lista,
 															// jota voidaan k‰ytt‰‰ customContour-v‰rityksess‰.
-	boost::shared_ptr<NFmiDrawParam> itsDrawParam;
+	std::shared_ptr<NFmiDrawParam> itsDrawParam;
 	int itsSelectedColorIndex; // valituista v‰reist‰ valitun v‰rin indeksi, -1 jos ei mit‰‰n ole valittuna
 	int itsLastColorPaletteColorIndex; // mik‰ v‰ripaletin v‰reist‰ on viimeiseksi valittu.
 										// Jos klikkaa jotain v‰ripaletin v‰ri‰, t‰h‰n tulee sen indeksi.

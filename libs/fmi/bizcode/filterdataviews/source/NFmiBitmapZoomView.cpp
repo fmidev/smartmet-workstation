@@ -34,7 +34,7 @@ void NFmiBitmapZoomView::Draw(NFmiToolBox * theGTB)
 }
 
 NFmiBitmapZoomView::NFmiBitmapZoomView(NFmiToolBox * theToolBox
-						 ,boost::shared_ptr<NFmiDrawParam> &theDrawParam)
+						 ,std::shared_ptr<NFmiDrawParam> &theDrawParam)
 :NFmiZoomView(0, theToolBox, theDrawParam)
 {
 }

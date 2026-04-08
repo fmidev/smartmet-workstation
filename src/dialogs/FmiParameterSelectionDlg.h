@@ -74,7 +74,7 @@ private:
     std::string TooltipForWmsDataCategoryType(const AddParams::SingleRowItem &singleRowItem, const std::vector<AddParams::SingleRowItem> &singleRowItemVector, int rowNumber);
     std::string TooltipForParameterType(const AddParams::SingleRowItem &rowItem);
     std::string TooltipForDataType(const AddParams::SingleRowItem &singleRowItem);
-    std::string TooltipForProducerType(const AddParams::SingleRowItem &singleRowItem, const std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &infoVector, const NFmiProducerInfo &producerInfo);
+    std::string TooltipForProducerType(const AddParams::SingleRowItem &singleRowItem, const std::vector<std::shared_ptr<NFmiFastQueryInfo>> &infoVector, const NFmiProducerInfo &producerInfo);
     std::string DataTypeString(NFmiInfoData::Type dataType);
 public:
     DECLARE_MESSAGE_MAP()

@@ -83,19 +83,19 @@ static void LogMessage(TimeSerialModificationDataInterface &theAdapter, const st
 // siirt‰nyt n. 5-10 luokkaa smarttool-kirjastosta newbase:en.
 // ***** Koodia kopsattu NFmiQueryInfo-luokasta *******
 
-static boost::shared_ptr<NFmiFastQueryInfo> DoDynamicShallowCopy(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static std::shared_ptr<NFmiFastQueryInfo> DoDynamicShallowCopy(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	if(theInfo)
 	{
 		NFmiSmartInfo *smartInfo = dynamic_cast<NFmiSmartInfo *>(theInfo.get());
 		if(smartInfo)
-			return boost::shared_ptr<NFmiFastQueryInfo>(new NFmiSmartInfo(*smartInfo)); // smartinfo kopio tarvitaan ett‰ editoidun datan locationMaskit tulevat otettua huomioon
+			return std::shared_ptr<NFmiFastQueryInfo>(new NFmiSmartInfo(*smartInfo)); // smartinfo kopio tarvitaan ett‰ editoidun datan locationMaskit tulevat otettua huomioon
 
 		// HUOM! en kokeile/tee NFmiOwnerInfo-kopiota, koska siit‰ ei ole toiminnallista hyˆty‰
 
-		return boost::shared_ptr<NFmiFastQueryInfo>(new NFmiFastQueryInfo(*theInfo)); // jos ei saatu smartinfoa, palautetaan fastInfo:n kopio
+		return std::shared_ptr<NFmiFastQueryInfo>(new NFmiFastQueryInfo(*theInfo)); // jos ei saatu smartinfoa, palautetaan fastInfo:n kopio
 	}
-	return boost::shared_ptr<NFmiFastQueryInfo>();
+	return std::shared_ptr<NFmiFastQueryInfo>();
 }
 
 class TimeToModifyCalculator
@@ -164,7 +164,7 @@ static void ModifySingleTimeGridInThread(NFmiFastQueryInfo& theModifiedInfo,
     }
 }
 
-static void ModifyTimesLocationData_FullMT(boost::shared_ptr<NFmiFastQueryInfo> &theModifiedData, NFmiDataModifier * theModifier, NFmiTimeDescriptor & theTimeDescriptor)
+static void ModifyTimesLocationData_FullMT(std::shared_ptr<NFmiFastQueryInfo> &theModifiedData, NFmiDataModifier * theModifier, NFmiTimeDescriptor & theTimeDescriptor)
 {
 	unsigned int usedThreadCount = NFmiQueryDataUtil::GetReasonableWorkingThreadCount(75);
 	unsigned long timeCount = theTimeDescriptor.Size();
@@ -173,7 +173,7 @@ static void ModifyTimesLocationData_FullMT(boost::shared_ptr<NFmiFastQueryInfo> 
 
 	theModifiedData->LatLon(); // multi-thread koodin varmistus, ett‰ latlon-cachet on alustettu
 	theModifier->InitLatlonCache();
-	std::vector<boost::shared_ptr<NFmiFastQueryInfo> > modifiedInfoVector(usedThreadCount);
+	std::vector<std::shared_ptr<NFmiFastQueryInfo> > modifiedInfoVector(usedThreadCount);
 	std::vector<boost::shared_ptr<NFmiDataModifier> > dataModifierVector(usedThreadCount);
 	for(unsigned int i = 0; i < usedThreadCount; i++)
 	{
@@ -212,7 +212,7 @@ static void PreventEditingIfProblemWithEditedData(TimeSerialModificationDataInte
 
 // t‰ss‰ tehd‰‰n yhteiset perus toiminnot kaikille snapShot-funktioille
 // Heitt‰‰ poikkeuksen, jos on tehty varoitus
-static void SnapShotDataBaseAction(TimeSerialModificationDataInterface& theAdapter, boost::shared_ptr<NFmiFastQueryInfo>& theInfo, const std::string& theModificationText
+static void SnapShotDataBaseAction(TimeSerialModificationDataInterface& theAdapter, std::shared_ptr<NFmiFastQueryInfo>& theInfo, const std::string& theModificationText
 	, const NFmiMetTime& theStartTime, const NFmiMetTime& theEndTime)
 {
 	::PreventEditingIfProblemWithEditedData(theAdapter);
@@ -232,7 +232,7 @@ static void SnapShotDataBaseAction(TimeSerialModificationDataInterface& theAdapt
 // 2. asettaa editoidun (theInfo) datan likaiseksi,
 // 5. asettaa editoitavan datan halutun parametrin likaiseksi
 // Heitt‰‰ poikkeuksen, jos on tehty varoitus
-static void SnapShotData(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const std::string &theModificationText
+static void SnapShotData(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiFastQueryInfo> &theInfo, const std::string &theModificationText
 				 , const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime)
 {
 	::SnapShotDataBaseAction(theAdapter, theInfo, theModificationText, theStartTime, theEndTime);
@@ -243,7 +243,7 @@ static void SnapShotData(TimeSerialModificationDataInterface &theAdapter, boost:
 // 2. asettaa editoidun (theInfo) datan likaiseksi,
 // 5. asettaa editoitavan datan halutun parametrin likaiseksi
 // Heitt‰‰ poikkeuksen, jos on tehty varoitus
-static void SnapShotData(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiParamBag &theParams, const std::string &theModificationText
+static void SnapShotData(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiParamBag &theParams, const std::string &theModificationText
 				 , const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime)
 {
 	::SnapShotDataBaseAction(theAdapter, theInfo, theModificationText, theStartTime, theEndTime);
@@ -254,19 +254,19 @@ static void SnapShotData(TimeSerialModificationDataInterface &theAdapter, boost:
 // 2. asettaa editoidun (theInfo) datan likaiseksi,
 // 5. asettaa editoitavan datan halutun parametrin likaiseksi
 // Heitt‰‰ poikkeuksen, jos on tehty varoitus
-static void SnapShotData(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiDataIdent &theDataIdent, const std::string &theModificationText
+static void SnapShotData(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiDataIdent &theDataIdent, const std::string &theModificationText
 				 , const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime)
 {
 	::SnapShotDataBaseAction(theAdapter, theInfo, theModificationText, theStartTime, theEndTime);
 }
 
-static bool DoAnalyzeModificationsForParam(TimeSerialModificationDataInterface &theAdapter, const NFmiParam & theParam, boost::shared_ptr<NFmiFastQueryInfo> &theAnalyzeData, boost::shared_ptr<NFmiFastQueryInfo> &theModifiedData, NFmiTimeDescriptor& theTimes, boost::shared_ptr<NFmiAreaMaskList> &theMaskList)
+static bool DoAnalyzeModificationsForParam(TimeSerialModificationDataInterface &theAdapter, const NFmiParam & theParam, std::shared_ptr<NFmiFastQueryInfo> &theAnalyzeData, std::shared_ptr<NFmiFastQueryInfo> &theModifiedData, NFmiTimeDescriptor& theTimes, std::shared_ptr<NFmiAreaMaskList> &theMaskList)
 {
     if(theParam.InterpolationMethod() != kLinearly)
         return false; // Tehd‰‰n vain lineaarisille parametreille muokkaus, en osaa muille laskea muutoksia oikein
 
 	NFmiDataIdent dataIdent(theParam);
-	boost::shared_ptr<NFmiDrawParam> drawParamForLimits = theAdapter.GetUsedDrawParamForEditedData(dataIdent);
+	std::shared_ptr<NFmiDrawParam> drawParamForLimits = theAdapter.GetUsedDrawParamForEditedData(dataIdent);
 
 	if(drawParamForLimits)
 	{
@@ -341,16 +341,16 @@ static bool DoAnalyzeModificationsForParam(TimeSerialModificationDataInterface &
 	return false;
 }
 
-static bool DoAnalyseModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &theEditedInfo, boost::shared_ptr<NFmiFastQueryInfo> &theAnalyzeDataInfo, boost::shared_ptr<NFmiAreaMaskList> &theUsedMaskList, NFmiTimeDescriptor &theTimes, NFmiParam &theParam)
+static bool DoAnalyseModifications(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiFastQueryInfo> &theEditedInfo, std::shared_ptr<NFmiFastQueryInfo> &theAnalyzeDataInfo, std::shared_ptr<NFmiAreaMaskList> &theUsedMaskList, NFmiTimeDescriptor &theTimes, NFmiParam &theParam)
 {
 	return ::DoAnalyzeModificationsForParam(theAdapter, theParam, theAnalyzeDataInfo, theEditedInfo, theTimes, theUsedMaskList);
 }
 
-std::vector<boost::shared_ptr<NFmiFastQueryInfo>> FmiModifyEditdData::GetAnalyzeToolInfos(NFmiInfoOrganizer &infoOrganizer, const NFmiParam &theParam, NFmiInfoData::Type theType,
+std::vector<std::shared_ptr<NFmiFastQueryInfo>> FmiModifyEditdData::GetAnalyzeToolInfos(NFmiInfoOrganizer &infoOrganizer, const NFmiParam &theParam, NFmiInfoData::Type theType,
     bool fGroundData, int theProducerId, int theProducerId2)
 {
     auto infoVector = infoOrganizer.GetInfos(theType, fGroundData, theProducerId, theProducerId2);
-    std::vector<boost::shared_ptr<NFmiFastQueryInfo>> finalInfos;
+    std::vector<std::shared_ptr<NFmiFastQueryInfo>> finalInfos;
     for(const auto &info : infoVector)
     {
         if(info->Param(theParam))
@@ -359,19 +359,19 @@ std::vector<boost::shared_ptr<NFmiFastQueryInfo>> FmiModifyEditdData::GetAnalyze
     return finalInfos;
 }
 
-static NFmiTimeDescriptor GetAnalyzeToolModificationTimes(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, const NFmiMetTime &firstTime)
+static NFmiTimeDescriptor GetAnalyzeToolModificationTimes(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiFastQueryInfo> &editedInfo, const NFmiMetTime &firstTime)
 {
     NFmiTimeDescriptor times = editedInfo->TimeDescriptor();
     times = times.GetIntersection(firstTime, theAdapter.AnalyzeToolData().AnalyzeToolEndTime());
     return times;
 }
 
-static bool DoFinalAnalyzeToolModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, boost::shared_ptr<NFmiFastQueryInfo> &analyzeInfo1, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, boost::shared_ptr<NFmiAreaMaskList> &maskList, NFmiTimeDescriptor &analyzeToolTimes, NFmiInfoData::Type dataType)
+static bool DoFinalAnalyzeToolModifications(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiFastQueryInfo> &editedInfo, std::shared_ptr<NFmiFastQueryInfo> &analyzeInfo1, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, std::shared_ptr<NFmiAreaMaskList> &maskList, NFmiTimeDescriptor &analyzeToolTimes, NFmiInfoData::Type dataType)
 {
     bool status = ::DoAnalyseModifications(theAdapter, editedInfo, analyzeInfo1, maskList, analyzeToolTimes, theParam);
     if(theAdapter.AnalyzeToolData().UseBothProducers())
     {
-        boost::shared_ptr<NFmiFastQueryInfo> analyzeInfo2 = theAdapter.InfoOrganizer()->Info(NFmiDataIdent(theParam, theAdapter.AnalyzeToolData().SelectedProducer2()), 0, dataType);
+        std::shared_ptr<NFmiFastQueryInfo> analyzeInfo2 = theAdapter.InfoOrganizer()->Info(NFmiDataIdent(theParam, theAdapter.AnalyzeToolData().SelectedProducer2()), 0, dataType);
         if(analyzeInfo2)
         {
             dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->InverseMask(fUsedMask);
@@ -382,7 +382,7 @@ static bool DoFinalAnalyzeToolModifications(TimeSerialModificationDataInterface 
     return status;
 }
 
-static bool DoFinalObservationBlenderToolModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &editedInfo, std::vector<boost::shared_ptr<NFmiFastQueryInfo>> &observationInfos, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, boost::shared_ptr<NFmiAreaMaskList> &maskList, NFmiTimeDescriptor &analyzeToolTimes, NFmiInfoData::Type dataType, const NFmiMetTime &actualFirstTime)
+static bool DoFinalObservationBlenderToolModifications(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiFastQueryInfo> &editedInfo, std::vector<std::shared_ptr<NFmiFastQueryInfo>> &observationInfos, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, std::shared_ptr<NFmiAreaMaskList> &maskList, NFmiTimeDescriptor &analyzeToolTimes, NFmiInfoData::Type dataType, const NFmiMetTime &actualFirstTime)
 {
     auto drawParam = theAdapter.GetUsedDrawParamForEditedData(editedInfo->Param());
     NFmiControlPointObservationBlender dataModifier(editedInfo, drawParam, maskList, fUsedMask,
@@ -395,7 +395,7 @@ static bool DoFinalObservationBlenderToolModifications(TimeSerialModificationDat
 // 1. Mik‰ on editoidun datan 1. muokkausaika
 // 2. Hae CP - pisteeseen sopivimmasta datasta sopivimpaan aikaan oleva arvo
 // 3. Mik‰ on k‰ytetyn datan k‰ytetty location, jotta voidaan piirt‰‰ kyseinen k‰yr‰ sellaisenaan aikasarjaan
-bool FmiModifyEditdData::SetupObsBlenderData(TimeSerialModificationDataInterface &theAdapter, const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, boost::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut)
+bool FmiModifyEditdData::SetupObsBlenderData(TimeSerialModificationDataInterface &theAdapter, const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, std::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut)
 {
     auto infoOrganizer = theAdapter.InfoOrganizer();
     if(infoOrganizer)
@@ -429,7 +429,7 @@ bool FmiModifyEditdData::SetupObsBlenderData(TimeSerialModificationDataInterface
 
 static bool DoAnalyzeToolRelatedModifications(bool useObservationBlenderTool, TimeSerialModificationDataInterface &theAdapter, NFmiParam &theParam, NFmiMetEditorTypes::Mask fUsedMask, const std::string &normalLogMessage, const NFmiProducer &producer, NFmiInfoData::Type dataType)
 {
-    boost::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
+    std::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
     if(editedInfo)
     {
         if(editedInfo->Param(theParam))
@@ -480,7 +480,7 @@ static bool DoAnalyzeToolRelatedModifications(bool useObservationBlenderTool, Ti
     return false;
 }
 
-static void DoTimeSeriesValuesModifyingWithCPs(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, NFmiThreadCallBacks *theThreadCallBacks)
+static void DoTimeSeriesValuesModifyingWithCPs(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::shared_ptr<NFmiAreaMaskList> &theMaskList, NFmiThreadCallBacks *theThreadCallBacks)
 {
 	// HUOM!! muokkaukset pit‰‰ tehd‰ kaikille pisteille!!!
 	if(theModifiedDrawParam)
@@ -488,8 +488,8 @@ static void DoTimeSeriesValuesModifyingWithCPs(TimeSerialModificationDataInterfa
 		NFmiInfoOrganizer *infoOrganizer = theAdapter.InfoOrganizer();
 		if(infoOrganizer)
 		{
-			boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer->Info(theModifiedDrawParam, false, false);
-			boost::shared_ptr<NFmiFastQueryInfo> fastInfo = NFmiAreaMask::DoShallowCopy(info);
+			std::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer->Info(theModifiedDrawParam, false, false);
+			std::shared_ptr<NFmiFastQueryInfo> fastInfo = NFmiAreaMask::DoShallowCopy(info);
 			if(fastInfo)
 			{
 				theAdapter.CPManager()->Param(theModifiedDrawParam->Param());
@@ -589,17 +589,17 @@ static bool MakeDataValiditation_PrForm_T(TimeSerialModificationDataInterface &t
 {
 	if(theAdapter.MetEditorOptionsData().SnowTemperatureLimit() != kFloatMissing && theAdapter.MetEditorOptionsData().RainTemperatureLimit() != kFloatMissing)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
+		std::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
 		if(editedData)
 		{
-			boost::shared_ptr<NFmiFastQueryInfo> prFormInfo(new NFmiFastQueryInfo(*editedData));
+			std::shared_ptr<NFmiFastQueryInfo> prFormInfo(new NFmiFastQueryInfo(*editedData));
 #ifdef USE_POTENTIAL_VALUES_IN_EDITING
             if(!prFormInfo->Param(kFmiPotentialPrecipitationForm))
 #else
             if(!prFormInfo->Param(kFmiPrecipitationForm))
 #endif
 				return false;
-			boost::shared_ptr<NFmiFastQueryInfo> temperatureInfo(new NFmiFastQueryInfo(*editedData));
+			std::shared_ptr<NFmiFastQueryInfo> temperatureInfo(new NFmiFastQueryInfo(*editedData));
 			if(!temperatureInfo->Param(kFmiTemperature))
 				return false;
 			prFormInfo->MaskType(theLocationMask);
@@ -618,13 +618,13 @@ static bool MakeDataValiditation_PrForm_T(TimeSerialModificationDataInterface &t
 
 static bool MakeDataValiditation_T_DP(TimeSerialModificationDataInterface &theAdapter, NFmiTimeDescriptor* theTimeDescriptor, unsigned int theLocationMask, bool fDoMultiThread)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
 	if(editedData)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> DPInfo(new NFmiFastQueryInfo(*editedData));
+		std::shared_ptr<NFmiFastQueryInfo> DPInfo(new NFmiFastQueryInfo(*editedData));
 		if(!DPInfo->Param(kFmiDewPoint))
 			return false;
-		boost::shared_ptr<NFmiFastQueryInfo> temperatureInfo(new NFmiFastQueryInfo(*editedData));
+		std::shared_ptr<NFmiFastQueryInfo> temperatureInfo(new NFmiFastQueryInfo(*editedData));
 		if(!temperatureInfo->Param(kFmiTemperature))
 			return false;
 		DPInfo->MaskType(theLocationMask);
@@ -642,7 +642,7 @@ static bool MakeDataValiditation_T_DP(TimeSerialModificationDataInterface &theAd
 
 static bool MakeDataValiditation(TimeSerialModificationDataInterface &theAdapter, NFmiTimeDescriptor* theTimeDescriptor, bool fMakeDataSnapshotAction, unsigned int theLocationMask, bool fDoMultiThread)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
 	if(editedData)
 	{
 		if(fMakeDataSnapshotAction)
@@ -678,7 +678,7 @@ static void MakeBasicViewUpdatePreparationsAfterDataModifications(TimeSerialModi
 
 static bool MakeDataValiditation(TimeSerialModificationDataInterface &theAdapter, bool fDoMultiThread)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
 	if(editedData)
 	{
         ::MakeBasicViewUpdatePreparationsAfterDataModifications(theAdapter);
@@ -699,7 +699,7 @@ static bool CheckAndValidateAfterModifications(TimeSerialModificationDataInterfa
 	if(theAdapter.SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ns. view-moodi p‰‰ll‰, ei tehd‰ mit‰‰n
 		return false;
 
-	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
 	if(editedInfo)
 	{
 		if(theAdapter.MetEditorOptionsData().MakeDataValiditationAutomatic())
@@ -713,7 +713,7 @@ static bool CheckAndValidateAfterModifications(TimeSerialModificationDataInterfa
 					{
 					case 0: // 0=tehd‰‰n operaatio vain aktiiviselle parametrille
 						{
-							boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0); // HUOM! muokkausta voi tehd‰ vain 1. (eli indeksi 0) desctopist‰
+							std::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0); // HUOM! muokkausta voi tehd‰ vain 1. (eli indeksi 0) desctopist‰
 							if(drawParam)
 								paramStatus = ::MustMakeValidationCheckAfterModifyingThisParam(theAdapter, FmiParameterName(drawParam->Param().GetParam()->GetIdent()));
 						}
@@ -774,14 +774,14 @@ static bool CheckAndValidateAfterModifications(TimeSerialModificationDataInterfa
 	return false;
 }
 
-std::string TimeSeriesModifiedParamForLog(boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam)
+std::string TimeSeriesModifiedParamForLog(std::shared_ptr<NFmiDrawParam> &theModifiedDrawParam)
 {
     //std::string paramName = theModifiedDrawParam->Param().GetParamName();
     std::string paramName = theModifiedDrawParam->ParameterAbbreviation();
     return "[" + paramName + "]";
 }
 
-static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue, bool fDoMultiThread, NFmiThreadCallBacks *theThreadCallBacks)
+static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue, bool fDoMultiThread, NFmiThreadCallBacks *theThreadCallBacks)
 {
 	if(theModifiedDrawParam && theModifiedDrawParam->IsParamEdited())
 	{
@@ -796,7 +796,7 @@ static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &the
             std::string paramName = modifiedParam.GetName();
 			if(infoOrganizer)
 			{
-				boost::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer->Info(theModifiedDrawParam, false, false);
+				std::shared_ptr<NFmiFastQueryInfo> info = infoOrganizer->Info(theModifiedDrawParam, false, false);
 				if(!info)
 				{
                     ::LogMessage(theAdapter, "Trying to do Time Serial modifications, but there is no edited data.", CatLog::Severity::Warning, CatLog::Category::Editing);
@@ -841,7 +841,7 @@ static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &the
 
 std::string ModifiedTimesForLog(TimeSerialModificationDataInterface &theAdapter)
 {
-    boost::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
+    std::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
     boost::shared_ptr<NFmiTimeDescriptor> modifiedTimes = theAdapter.CreateDataFilteringTimeDescriptor(editedData);
     auto firstTime = modifiedTimes->FirstTime().ToStr("DD.MM. HH:mm");
     auto lastTime = modifiedTimes->LastTime().ToStr("DD.MM. HH:mm");
@@ -882,7 +882,7 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
                         bool showLoadedSmartTool = false)
 {
 	theAdapter.SmartToolEditingErrorText().clear();
-	boost::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
 	if(editedData)
 	{
 		// HUOM! SmartToolin kanssa ei aseteta meteorologisia,
@@ -982,7 +982,7 @@ static const std::string& GetUsedSmarttoolIncludeDirectory(TimeSerialModificatio
 static bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const std::string &theSmartToolText, const std::string &theRelativePathMacroName, bool fSelectedLocationsOnly, bool fDoMultiThread, NFmiThreadCallBacks *theThreadCallBacks)
 {
 	bool status = false;
-	boost::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
 	if(editedData)
 	{
 		boost::shared_ptr<NFmiTimeDescriptor> times = theAdapter.CreateDataFilteringTimeDescriptor(editedData);
@@ -1001,14 +1001,14 @@ static bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, 
 }
 
 // T‰m‰ luo SmartInfosta pinta kopioin, eli vain ns. iteraattori (info osuus) kopioituu, data pysyy alkuper‰isen kanssa jaettuna.
-static boost::shared_ptr<NFmiFastQueryInfo> CreateShallowInfoCopy(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiDataIdent& theDataIdent, const NFmiLevel* theLevel, NFmiInfoData::Type theType)
+static std::shared_ptr<NFmiFastQueryInfo> CreateShallowInfoCopy(std::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiDataIdent& theDataIdent, const NFmiLevel* theLevel, NFmiInfoData::Type theType)
 {
 	if(theUsedInfo && theUsedInfo->DataType() == theType && theUsedInfo->Param(*theDataIdent.GetParam()) && (!theLevel || (theLevel && theUsedInfo->Level(*theLevel))))
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> copyOfInfo(new NFmiFastQueryInfo(*theUsedInfo));
+		std::shared_ptr<NFmiFastQueryInfo> copyOfInfo(new NFmiFastQueryInfo(*theUsedInfo));
 		return copyOfInfo;
 	}
-	return boost::shared_ptr<NFmiFastQueryInfo>();
+	return std::shared_ptr<NFmiFastQueryInfo>();
 }
 
 // K‰yttˆesimerkki: Halutaan aluemuokkauksen yhteydess‰ k‰ytt‰‰ maskeja, mutta
@@ -1019,21 +1019,21 @@ static boost::shared_ptr<NFmiFastQueryInfo> CreateShallowInfoCopy(boost::shared_
 // maski k‰ytt‰‰ editoitavaa dataa, korvataan kopiomaskiin dataksi parametrina annettu
 // kopio datasta. (ongelma esiintyy esim. jos haluan tasoittaa kokonaispilvisyytt‰
 // mutta en halua levitt‰‰ pilvialuetta, joten k‰yt‰n kokonaispilvisyytt‰ maskina.)
-static boost::shared_ptr<NFmiAreaMaskList> CreateNewParamMaskListWithReplacedEditedInfo(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theOriginalMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theUsedEditInfo)
+static std::shared_ptr<NFmiAreaMaskList> CreateNewParamMaskListWithReplacedEditedInfo(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiAreaMaskList> &theOriginalMaskList, std::shared_ptr<NFmiFastQueryInfo> &theUsedEditInfo)
 {
 	if(theOriginalMaskList && theUsedEditInfo)
 	{
-		boost::shared_ptr<NFmiAreaMaskList> newMaskList(new NFmiAreaMaskList());
+		std::shared_ptr<NFmiAreaMaskList> newMaskList(new NFmiAreaMaskList());
 		for(theOriginalMaskList->Reset(); theOriginalMaskList->Next();)
 		{
-			boost::shared_ptr<NFmiAreaMask> mask = theOriginalMaskList->Current();
+			std::shared_ptr<NFmiAreaMask> mask = theOriginalMaskList->Current();
 			if(!mask)
 				continue; // virhetilanne!!!! pit‰isi olla assert
-			boost::shared_ptr<NFmiFastQueryInfo> info;
+			std::shared_ptr<NFmiFastQueryInfo> info;
 			NFmiInfoData::Type type = mask->GetDataType();
 			if(type == NFmiInfoData::kCalculatedValue)
 			{
-				boost::shared_ptr<NFmiAreaMask> cloneMask(mask->Clone());
+				std::shared_ptr<NFmiAreaMask> cloneMask(mask->Clone());
 				newMaskList->Add(cloneMask);
 			}
 			else
@@ -1042,12 +1042,12 @@ static boost::shared_ptr<NFmiAreaMaskList> CreateNewParamMaskListWithReplacedEdi
 					info = ::CreateShallowInfoCopy(theUsedEditInfo, *mask->DataIdent(), mask->Level(), mask->GetDataType());
 				else
 				{
-					boost::shared_ptr<NFmiFastQueryInfo> tmpInfo = theAdapter.InfoOrganizer()->Info(*mask->DataIdent()
+					std::shared_ptr<NFmiFastQueryInfo> tmpInfo = theAdapter.InfoOrganizer()->Info(*mask->DataIdent()
 																		,mask->Level()
 																		,mask->GetDataType());
 					info = ::CreateShallowInfoCopy(tmpInfo, *mask->DataIdent(), mask->Level(), mask->GetDataType());
 				}
-				boost::shared_ptr<NFmiAreaMask> newMask(new NFmiInfoAreaMask(mask->Condition()
+				std::shared_ptr<NFmiAreaMask> newMask(new NFmiInfoAreaMask(mask->Condition()
 															,mask->MaskType()
 															,mask->GetDataType()
 															,info
@@ -1058,25 +1058,25 @@ static boost::shared_ptr<NFmiAreaMaskList> CreateNewParamMaskListWithReplacedEdi
 		}
 		return newMaskList;
 	}
-	return boost::shared_ptr<NFmiAreaMaskList>();
+	return std::shared_ptr<NFmiAreaMaskList>();
 }
 
-static boost::shared_ptr<NFmiAreaMaskList> CreateFilteringMaskList(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData)
+static std::shared_ptr<NFmiAreaMaskList> CreateFilteringMaskList(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData)
 {
-	boost::shared_ptr<NFmiAreaMaskList> maskList;
+	std::shared_ptr<NFmiAreaMaskList> maskList;
 	if(theAdapter.UseMasksWithFilterTool())
 	{
-		boost::shared_ptr<NFmiAreaMaskList> tmpMaskList(theAdapter.ParamMaskList());
+		std::shared_ptr<NFmiAreaMaskList> tmpMaskList(theAdapter.ParamMaskList());
 		maskList = ::CreateNewParamMaskListWithReplacedEditedInfo(theAdapter, tmpMaskList, theCopyOfEditedData);
 	}
 	if(maskList == 0)
-		maskList = boost::shared_ptr<NFmiAreaMaskList>(new NFmiAreaMaskList()); // luodaan aina tyhj‰ lista, vaikka maskeja ei olisi k‰ytˆss‰
+		maskList = std::shared_ptr<NFmiAreaMaskList>(new NFmiAreaMaskList()); // luodaan aina tyhj‰ lista, vaikka maskeja ei olisi k‰ytˆss‰
 	if(maskList)
 		maskList->CheckIfMaskUsed();
 	return maskList;
 }
 
-static NFmiDataModifier* CreateFilteringHelperModifier(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData)
+static NFmiDataModifier* CreateFilteringHelperModifier(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData)
 {
 	NFmiDataModifier *helpModifier = 0;
 	if(theCopyOfEditedData)
@@ -1111,7 +1111,7 @@ static NFmiDataModifier* CreateFilteringHelperModifier(TimeSerialModificationDat
 static std::vector<NFmiRect> CreateAreaFilterRangeArray(TimeSerialModificationDataInterface &theAdapter)
 {
 	std::vector<NFmiRect> returnRectArray;
-	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
 
 	if(editedInfo && editedInfo->TimeToNearestStep(theAdapter.TimeFilterStartTime(), kCenter))
 	{
@@ -1150,7 +1150,7 @@ static std::vector<NFmiRect> CreateAreaFilterRangeArray(TimeSerialModificationDa
 	return returnRectArray;
 
 }
-static boost::shared_ptr<NFmiDataModifier> CreateAreaFilteringModifier(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData)
+static boost::shared_ptr<NFmiDataModifier> CreateAreaFilteringModifier(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiAreaMaskList> &theMaskList, std::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData)
 {
 	NFmiDataModifier *helpModifier = ::CreateFilteringHelperModifier(theAdapter, theCopyOfEditedData);
 	boost::shared_ptr<NFmiDataModifier> areaModifier;
@@ -1167,9 +1167,9 @@ static boost::shared_ptr<NFmiDataModifier> CreateAreaFilteringModifier(TimeSeria
 	return areaModifier;
 }
 
-static bool ModifyLocationData(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fSetParamToActiveParam, bool fDoMultiThread)
+static bool ModifyLocationData(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiAreaMaskList> &theMaskList, std::shared_ptr<NFmiFastQueryInfo> &theEditedData, std::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fSetParamToActiveParam, bool fDoMultiThread)
 {
-	boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0); // n‰m‰ moukkaustyˆkalulla (filtteri tyˆkalu) tehdyt muokkaukset tehd‰‰n aina p‰‰karttaikkunan aktiiviselle datalle
+	std::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0); // n‰m‰ moukkaustyˆkalulla (filtteri tyˆkalu) tehdyt muokkaukset tehd‰‰n aina p‰‰karttaikkunan aktiiviselle datalle
 	auto& param = *drawParam->Param().GetParam();
 	if(!fSetParamToActiveParam || (drawParam && drawParam->DataType() == NFmiInfoData::kEditable && theEditedData->Param(param)))
 	{
@@ -1194,7 +1194,7 @@ static bool ModifyLocationData(TimeSerialModificationDataInterface &theAdapter, 
 	return false;
 }
 
-static bool DoAreaFilteringToAllParams(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fDoMultiThread)
+static bool DoAreaFilteringToAllParams(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiAreaMaskList> &theMaskList, std::shared_ptr<NFmiFastQueryInfo> &theEditedData, std::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fDoMultiThread)
 {
 	if(theEditedData && theCopyOfEditedData)
 	{
@@ -1232,7 +1232,7 @@ static bool DoAreaFilteringToAllParams(TimeSerialModificationDataInterface &theA
 	return false;
 }
 
-static bool DoAreaFilteringToSelectedParams(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fDoMultiThread)
+static bool DoAreaFilteringToSelectedParams(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiAreaMaskList> &theMaskList, std::shared_ptr<NFmiFastQueryInfo> &theEditedData, std::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fDoMultiThread)
 {
 	if(theCopyOfEditedData && theEditedData)
 	{
@@ -1280,7 +1280,7 @@ static bool DoAreaFilteringToSelectedParams(TimeSerialModificationDataInterface 
 	return false;
 }
 
-static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fDoMultiThread)
+static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiAreaMaskList> &theMaskList, std::shared_ptr<NFmiFastQueryInfo> &theEditedData, std::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fDoMultiThread)
 {
 	switch(theAdapter.FilteringParameterUsageState())
 	{
@@ -1302,7 +1302,7 @@ static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, boo
 
 static bool UndoData(TimeSerialModificationDataInterface &theAdapter)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> info = theAdapter.EditedInfo();
+	std::shared_ptr<NFmiFastQueryInfo> info = theAdapter.EditedInfo();
 	if(info)
 	{
 		NFmiSmartInfo *smartInfo = dynamic_cast<NFmiSmartInfo*>(info.get()); // pakko tehd‰ down-casti editoitavalle datalle toistaiseksi n‰in, smartInfo-pointteri on k‰ytett‰viss‰ info -shared_ptr on olemassa
@@ -1322,7 +1322,7 @@ static bool UndoData(TimeSerialModificationDataInterface &theAdapter)
 
 static bool RedoData(TimeSerialModificationDataInterface &theAdapter)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> info = theAdapter.EditedInfo();
+	std::shared_ptr<NFmiFastQueryInfo> info = theAdapter.EditedInfo();
 	if(info)
 	{
 		NFmiSmartInfo *smartInfo = dynamic_cast<NFmiSmartInfo*>(info.get()); // pakko tehd‰ down-casti editoitavalle datalle toistaiseksi n‰in, smartInfo-pointteri on k‰ytett‰viss‰ info -shared_ptr on olemassa
@@ -1349,7 +1349,7 @@ void LogDataFilterToolsModifications(TimeSerialModificationDataInterface &theAda
 
 static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, bool fDoMultiThread)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
 	if(editedData)
 	{
         NFmiMetTime time = editedData->Time();
@@ -1365,13 +1365,13 @@ static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, boo
 				return false;
 			}
 
-			boost::shared_ptr<NFmiFastQueryInfo> copyOfEditedData = boost::shared_ptr<NFmiFastQueryInfo>(dynamic_cast<NFmiFastQueryInfo*>(editedData->Clone()));
+			std::shared_ptr<NFmiFastQueryInfo> copyOfEditedData = std::shared_ptr<NFmiFastQueryInfo>(dynamic_cast<NFmiFastQueryInfo*>(editedData->Clone()));
             auto usedMaskType = theAdapter.TestFilterUsedMask();
             EditedInfoMaskHandler editedInfoMaskHandler(editedData, usedMaskType);
 			bool status = false;
 			if(copyOfEditedData)
 			{
-				boost::shared_ptr<NFmiAreaMaskList> maskList = ::CreateFilteringMaskList(theAdapter, copyOfEditedData);
+				std::shared_ptr<NFmiAreaMaskList> maskList = ::CreateFilteringMaskList(theAdapter, copyOfEditedData);
 				copyOfEditedData->MaskType(usedMaskType);
 				status = ::DoAreaFiltering(theAdapter, maskList, editedData, copyOfEditedData, times, fDoMultiThread);
 				if(!status)
@@ -1394,7 +1394,7 @@ static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, boo
 std::vector<double> CreateTimeFilterShiftArrayWCTR(TimeSerialModificationDataInterface &theAdapter)
 {
 	std::vector<double> returnFactors;
-	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
 
 	if(editedInfo && editedInfo->TimeToNearestStep(theAdapter.TimeFilterStartTime(), kCenter))
 	{
@@ -1431,7 +1431,7 @@ static std::vector<double> CreateTimeFilterShiftArray(TimeSerialModificationData
 static std::vector<NFmiPoint> CreateTimeFilterRangeArrayWCTR(TimeSerialModificationDataInterface &theAdapter)
 {
 	std::vector<NFmiPoint> returnPointArray;
-	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
 
 	if(editedInfo && editedInfo->TimeToNearestStep(theAdapter.TimeFilterStartTime(), kCenter))
 	{
@@ -1465,7 +1465,7 @@ static std::vector<NFmiPoint> CreateTimeFilterRangeArray(TimeSerialModificationD
 	return ::CreateTimeFilterRangeArrayWCTR(theAdapter);
 }
 
-static boost::shared_ptr<NFmiDataModifier> CreateTimeFilteringModifier(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData)
+static boost::shared_ptr<NFmiDataModifier> CreateTimeFilteringModifier(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiAreaMaskList> &theMaskList, std::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData)
 {
 // HUOM!! Maskilistaa ei viel‰ k‰ytet‰.
 	boost::shared_ptr<NFmiDataModifier> timeModifier;
@@ -1489,11 +1489,11 @@ static boost::shared_ptr<NFmiDataModifier> CreateTimeFilteringModifier(TimeSeria
 	return timeModifier;
 }
 
-static bool ModifyTimesLocationData(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fSetParamToActiveParam, bool fDoMultiThread)
+static bool ModifyTimesLocationData(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiAreaMaskList> &theMaskList, std::shared_ptr<NFmiFastQueryInfo> &theEditedData, std::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fSetParamToActiveParam, bool fDoMultiThread)
 {
 	if(theEditedData && theCopyOfEditedData)
 	{
-		boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0);  // n‰m‰ moukkaustyˆkalulla (filtteri tyˆkalu) tehdyt muokkaukset tehd‰‰n aina p‰‰karttaikkunan aktiiviselle datalle
+		std::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0);  // n‰m‰ moukkaustyˆkalulla (filtteri tyˆkalu) tehdyt muokkaukset tehd‰‰n aina p‰‰karttaikkunan aktiiviselle datalle
 		if(drawParam)
 		{
 			auto& editedParam = *drawParam->Param().GetParam();
@@ -1520,7 +1520,7 @@ static bool ModifyTimesLocationData(TimeSerialModificationDataInterface &theAdap
 	return false;
 }
 
-static bool DoTimeFilteringToAllParams(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fDoMultiThread)
+static bool DoTimeFilteringToAllParams(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiAreaMaskList> &theMaskList, std::shared_ptr<NFmiFastQueryInfo> &theEditedData, std::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fDoMultiThread)
 {
 	if(theEditedData && theCopyOfEditedData)
 	{
@@ -1558,7 +1558,7 @@ static bool DoTimeFilteringToAllParams(TimeSerialModificationDataInterface &theA
 	return false;
 }
 
-static bool DoTimeFilteringToSelectedParams(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fDoMultiThread)
+static bool DoTimeFilteringToSelectedParams(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiAreaMaskList> &theMaskList, std::shared_ptr<NFmiFastQueryInfo> &theEditedData, std::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fDoMultiThread)
 {
 	if(theEditedData && theCopyOfEditedData)
 	{
@@ -1606,7 +1606,7 @@ static bool DoTimeFilteringToSelectedParams(TimeSerialModificationDataInterface 
 	return false;
 }
 
-static bool DoTimeFiltering(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fDoMultiThread)
+static bool DoTimeFiltering(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiAreaMaskList> &theMaskList, std::shared_ptr<NFmiFastQueryInfo> &theEditedData, std::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fDoMultiThread)
 {
 	bool status = true;
 	switch(theAdapter.FilteringParameterUsageState())
@@ -1632,7 +1632,7 @@ static bool DoTimeFiltering(TimeSerialModificationDataInterface &theAdapter, boo
 
 static bool DoTimeFiltering(TimeSerialModificationDataInterface &theAdapter, bool fDoMultiThread)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
 	if(editedData)
 	{
 		NFmiMetTime time = editedData->Time();
@@ -1647,11 +1647,11 @@ static bool DoTimeFiltering(TimeSerialModificationDataInterface &theAdapter, boo
 			return false;
 		}
 
-		boost::shared_ptr<NFmiFastQueryInfo> copyOfEditedData = boost::shared_ptr<NFmiFastQueryInfo>(dynamic_cast<NFmiFastQueryInfo*>(editedData->Clone()));
+		std::shared_ptr<NFmiFastQueryInfo> copyOfEditedData = std::shared_ptr<NFmiFastQueryInfo>(dynamic_cast<NFmiFastQueryInfo*>(editedData->Clone()));
 		if(!copyOfEditedData)
 			return false;
 
-		boost::shared_ptr<NFmiAreaMaskList> maskList = ::CreateFilteringMaskList(theAdapter, copyOfEditedData);
+		std::shared_ptr<NFmiAreaMaskList> maskList = ::CreateFilteringMaskList(theAdapter, copyOfEditedData);
         auto usedMaskType = theAdapter.TestFilterUsedMask();
         EditedInfoMaskHandler editedInfoMaskHandler(editedData, usedMaskType);
 		copyOfEditedData->MaskType(usedMaskType);
@@ -1677,7 +1677,7 @@ std::vector<float> CreateFilteringCombineFactorTable(TimeSerialModificationDataI
 	float filteringCombineFactorStart = 0.f;
 	float filteringCombineFactorEnd = 1.f;
 	std::vector<float> factorArray;
-	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
 
 	if(editedInfo && editedInfo->TimeToNearestStep(theAdapter.TimeFilterStartTime(), kCenter))
 	{
@@ -1705,10 +1705,10 @@ std::vector<float> CreateFilteringCombineFactorTable(TimeSerialModificationDataI
 	return factorArray;
 }
 
-static boost::shared_ptr<NFmiDataModifier> CreateKlapseCombiningModifier(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData)
+static boost::shared_ptr<NFmiDataModifier> CreateKlapseCombiningModifier(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiAreaMaskList> &theMaskList, std::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData)
 {
 	std::vector<NFmiRect> areaFilterArray = ::CreateAreaFilterRangeArray(theAdapter);
-	boost::shared_ptr<NFmiFastQueryInfo> precipitationParamInfo(new NFmiFastQueryInfo(*theCopyOfEditedData));
+	std::shared_ptr<NFmiFastQueryInfo> precipitationParamInfo(new NFmiFastQueryInfo(*theCopyOfEditedData));
 	if(!precipitationParamInfo)
 		return boost::shared_ptr<NFmiDataModifier>();
 	precipitationParamInfo->SetDescriptors(theCopyOfEditedData.get());
@@ -1717,10 +1717,10 @@ static boost::shared_ptr<NFmiDataModifier> CreateKlapseCombiningModifier(TimeSer
 	NFmiProducer producer(1014, "NRD");
 	NFmiDataIdent klapseParam(param, producer);
 
-	boost::shared_ptr<NFmiFastQueryInfo> tempInfo = theAdapter.InfoOrganizer()->Info(klapseParam, 0, NFmiInfoData::kViewable, false, false);
+	std::shared_ptr<NFmiFastQueryInfo> tempInfo = theAdapter.InfoOrganizer()->Info(klapseParam, 0, NFmiInfoData::kViewable, false, false);
 	if(tempInfo == 0)
 		return boost::shared_ptr<NFmiDataModifier>();
-	boost::shared_ptr<NFmiFastQueryInfo> klapseParamInfo(new NFmiFastQueryInfo(*tempInfo));
+	std::shared_ptr<NFmiFastQueryInfo> klapseParamInfo(new NFmiFastQueryInfo(*tempInfo));
 	klapseParamInfo->First();
 
 	float firstParamBase = 0;
@@ -1749,7 +1749,7 @@ static boost::shared_ptr<NFmiDataModifier> CreateKlapseCombiningModifier(TimeSer
 	return modifier;
 }
 
-static bool DoCombineModelAndKlapse(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiAreaMaskList> &theMaskList, boost::shared_ptr<NFmiFastQueryInfo> &theEditedData, boost::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fDoMultiThread)
+static bool DoCombineModelAndKlapse(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiAreaMaskList> &theMaskList, std::shared_ptr<NFmiFastQueryInfo> &theEditedData, std::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fDoMultiThread)
 {
 	if(theEditedData && theEditedData->DataType() == NFmiInfoData::kEditable && theEditedData->Param(kFmiPrecipitation1h))
 	{
@@ -1775,7 +1775,7 @@ static bool DoCombineModelAndKlapse(TimeSerialModificationDataInterface &theAdap
 
 static bool DoCombineModelAndKlapse(TimeSerialModificationDataInterface &theAdapter, bool fDoMultiThread)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedData = theAdapter.EditedInfo();
 	if(editedData)
 	{
         ::LogMessage(theAdapter, "Radar-prediction to model-precipitation combination.", CatLog::Severity::Info, CatLog::Category::Editing);
@@ -1791,11 +1791,11 @@ static bool DoCombineModelAndKlapse(TimeSerialModificationDataInterface &theAdap
 			// heitetty poikkeus eli halutaan lopettaa toiminto
 			return false;
 		}
-		boost::shared_ptr<NFmiFastQueryInfo> copyOfEditedData = boost::shared_ptr<NFmiFastQueryInfo>(dynamic_cast<NFmiFastQueryInfo*>(editedData->Clone()));
+		std::shared_ptr<NFmiFastQueryInfo> copyOfEditedData = std::shared_ptr<NFmiFastQueryInfo>(dynamic_cast<NFmiFastQueryInfo*>(editedData->Clone()));
 		if(!copyOfEditedData)
 			return false;
 
-		boost::shared_ptr<NFmiAreaMaskList> maskList = ::CreateFilteringMaskList(theAdapter, copyOfEditedData);
+		std::shared_ptr<NFmiAreaMaskList> maskList = ::CreateFilteringMaskList(theAdapter, copyOfEditedData);
         auto usedMaskType = theAdapter.TestFilterUsedMask();
         EditedInfoMaskHandler editedInfoMaskHandler(editedData, usedMaskType);
 		copyOfEditedData->MaskType(usedMaskType);
@@ -1874,14 +1874,14 @@ static std::string CreateHelpEditorFileNameWithPath(TimeSerialModificationDataIn
 
 // jos timebag pointteri on 0, otetaan timebagi smartista ja resoluutio annetusta parametrista,
 // mutta jos timebag pointteri osoittaa johonkin, otetaan se suoraan k‰yttˆˆn.
-static boost::shared_ptr<NFmiFastQueryInfo> CreateSimilarSmartInfoWithTimeInterpolation(boost::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, long theResolutionInMinutes, NFmiTimeBag* theWantedTimeBag)
+static std::shared_ptr<NFmiFastQueryInfo> CreateSimilarSmartInfoWithTimeInterpolation(std::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, long theResolutionInMinutes, NFmiTimeBag* theWantedTimeBag)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> newSmartInfo;
+	std::shared_ptr<NFmiFastQueryInfo> newSmartInfo;
 	if(theSmartInfo && theSmartInfo->RefQueryData())
 	{
 		NFmiQueryData *data = const_cast<NFmiQueryData *>(theSmartInfo->RefQueryData());
 		NFmiQueryData* newData = NFmiQueryDataUtil::InterpolateTimes(data, theResolutionInMinutes, theResolutionInMinutes, theWantedTimeBag, 360, kLagrange);
-		newSmartInfo = boost::shared_ptr<NFmiFastQueryInfo>(new NFmiSmartInfo(newData, theSmartInfo->DataType(), "", ""));
+		newSmartInfo = std::shared_ptr<NFmiFastQueryInfo>(new NFmiSmartInfo(newData, theSmartInfo->DataType(), "", ""));
 		NFmiProducerIdLister prodIdsLister(*theSmartInfo);
 		if(!prodIdsLister.IsEmpty())
 		{
@@ -1892,7 +1892,7 @@ static boost::shared_ptr<NFmiFastQueryInfo> CreateSimilarSmartInfoWithTimeInterp
 	return newSmartInfo;
 }
 
-static void AddKeyValueToData(boost::shared_ptr<NFmiFastQueryInfo> &data, const std::string &key, const std::string &value)
+static void AddKeyValueToData(std::shared_ptr<NFmiFastQueryInfo> &data, const std::string &key, const std::string &value)
 {
     data->RemoveAllKeys(key); // putsataan ensin pois mahd. vanhat avain arvot
     if(!value.empty()) // jos value ei ollut tyhj‰, laitetaan sen arvo annettuun key:hin
@@ -1903,7 +1903,7 @@ static bool StoreDataToDataBase(TimeSerialModificationDataInterface &theAdapter,
 {
     bool status = true;
     ::LogMessage(theAdapter, "Sending data to server...", CatLog::Severity::Info, CatLog::Category::Editing);
-    boost::shared_ptr<NFmiFastQueryInfo> storableSmart = theAdapter.EditedInfo();
+    std::shared_ptr<NFmiFastQueryInfo> storableSmart = theAdapter.EditedInfo();
     if(storableSmart == 0)
     {
         ::LogMessage(theAdapter, "There were no data to be sent to server.", CatLog::Severity::Warning, CatLog::Category::Editing);
@@ -2025,7 +2025,7 @@ void RemoveThunders(NFmiQueryData* theData, bool fDoMultiThread)
 {
 	if(theData)
 	{
-		boost::shared_ptr<NFmiFastQueryInfo> fastInfo(new NFmiFastQueryInfo(theData));
+		std::shared_ptr<NFmiFastQueryInfo> fastInfo(new NFmiFastQueryInfo(theData));
 		NFmiTimeDescriptor times = fastInfo->TimeDescriptor();
 		if(fastInfo->Param(kFmiProbabilityThunderstorm))
 		{
@@ -2596,7 +2596,7 @@ static bool LoadData(TimeSerialModificationDataInterface &theAdapter, bool fRemo
 }
 
 // Pit‰‰ tehd‰ alustuksia laskuissa k‰ytetyn fastInfon ja datamatriisin v‰lill‰.
-static void InitializeMacroParamData(const NFmiTimeDescriptor &theTimes, boost::shared_ptr<NFmiFastQueryInfo> &theMacroInfo, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue)
+static void InitializeMacroParamData(const NFmiTimeDescriptor &theTimes, std::shared_ptr<NFmiFastQueryInfo> &theMacroInfo, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue)
 {
     if(!fCalcTooltipValue)
     {
@@ -2614,7 +2614,7 @@ static void InitializeMacroParamData(const NFmiTimeDescriptor &theTimes, boost::
 
 typedef std::pair<int, int> GridPoint;
 
-static bool GetGridPoint(boost::shared_ptr<NFmiFastQueryInfo> &theMacroInfo, GridPoint &theGridPoint)
+static bool GetGridPoint(std::shared_ptr<NFmiFastQueryInfo> &theMacroInfo, GridPoint &theGridPoint)
 {
     if(theMacroInfo->LocationIndex() != gMissingIndex)
     {
@@ -2626,7 +2626,7 @@ static bool GetGridPoint(boost::shared_ptr<NFmiFastQueryInfo> &theMacroInfo, Gri
     return false;
 }
 
-void FmiModifyEditdData::InitializeSmartToolModifierForMacroParam(NFmiSmartToolModifier &theSmartToolModifier, TimeSerialModificationDataInterface& theAdapter, boost::shared_ptr<NFmiDrawParam>& theDrawParam, int theMapViewDescTopIndex, boost::shared_ptr<NFmiFastQueryInfo>& possibleSpacedOutMacroInfo, bool doProbing, const NFmiPoint& spaceOutSkipFactors)
+void FmiModifyEditdData::InitializeSmartToolModifierForMacroParam(NFmiSmartToolModifier &theSmartToolModifier, TimeSerialModificationDataInterface& theAdapter, std::shared_ptr<NFmiDrawParam>& theDrawParam, int theMapViewDescTopIndex, std::shared_ptr<NFmiFastQueryInfo>& possibleSpacedOutMacroInfo, bool doProbing, const NFmiPoint& spaceOutSkipFactors)
 {
 	theSmartToolModifier.SetGriddingHelper(theAdapter.GetGriddingHelper());
 	auto macroParamSystemPtr = theAdapter.MacroParamSystem();
@@ -2636,7 +2636,7 @@ void FmiModifyEditdData::InitializeSmartToolModifierForMacroParam(NFmiSmartToolM
 	theSmartToolModifier.InitSmartToolForMacroParam(macroParamStr, possibleSpacedOutMacroInfo, theAdapter.GetUsedMapViewArea(theMapViewDescTopIndex), doProbing, spaceOutSkipFactors);
 }
 
-static void SetMacroParamErrorMessage(const std::string &theErrorText, TimeSerialModificationDataInterface& theAdapter, NFmiExtraMacroParamData* possibleExtraMacroParamData, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam)
+static void SetMacroParamErrorMessage(const std::string &theErrorText, TimeSerialModificationDataInterface& theAdapter, NFmiExtraMacroParamData* possibleExtraMacroParamData, std::shared_ptr<NFmiDrawParam>& triggerDrawParam)
 {
 	// Lokitetaan virheviesti
 	::LogMessage(theAdapter, theErrorText, CatLog::Severity::Error, CatLog::Category::Macro);
@@ -2652,7 +2652,7 @@ static void SetMacroParamErrorMessage(const std::string &theErrorText, TimeSeria
 	theAdapter.SetMacroErrorText(dialogErrorString, triggerDrawParam);
 }
 
-static void ClearMacroParamErrorMessage(TimeSerialModificationDataInterface& theAdapter, boost::shared_ptr<NFmiDrawParam>& triggerDrawParam)
+static void ClearMacroParamErrorMessage(TimeSerialModificationDataInterface& theAdapter, std::shared_ptr<NFmiDrawParam>& triggerDrawParam)
 {
 	theAdapter.SetMacroErrorText("", triggerDrawParam);
 }
@@ -2665,7 +2665,7 @@ static void SetupPossibleextraMacroParamData(NFmiExtraMacroParamData* possibleEx
 	}
 }
 
-static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, int theMapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, boost::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo, NFmiExtraMacroParamData *possibleExtraMacroParamData, bool doProbing, const NFmiPoint& spaceOutSkipFactors)
+static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, int theMapViewDescTopIndex, std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, std::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, std::shared_ptr<NFmiFastQueryInfo> &possibleSpacedOutMacroInfo, NFmiExtraMacroParamData *possibleExtraMacroParamData, bool doProbing, const NFmiPoint& spaceOutSkipFactors)
 {
 	float value = kFloatMissing;
 	NFmiSmartToolModifier smartToolModifier(theAdapter.InfoOrganizer());
@@ -2732,21 +2732,21 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 	return value;
 }
 
-float FmiModifyEditdData::CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, int theMapViewDescTopIndex, boost::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, boost::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, bool doProbing, const NFmiPoint& spaceOutSkipFactors, boost::shared_ptr<NFmiFastQueryInfo> possibleSpacedOutMacroInfo, NFmiExtraMacroParamData *possibleExtraMacroParamData)
+float FmiModifyEditdData::CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapter, int theMapViewDescTopIndex, std::shared_ptr<NFmiDrawParam> &theDrawParam, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue, bool fDoMultiThread, const NFmiMetTime &theTime, const NFmiPoint &theTooltipLatlon, std::shared_ptr<NFmiFastQueryInfo> &theUsedMacroInfoOut, bool &theUseCalculationPoints, bool doProbing, const NFmiPoint& spaceOutSkipFactors, std::shared_ptr<NFmiFastQueryInfo> possibleSpacedOutMacroInfo, NFmiExtraMacroParamData *possibleExtraMacroParamData)
 {
     return ::CalcMacroParamMatrix(theAdapter, theMapViewDescTopIndex, theDrawParam, theValues, fCalcTooltipValue, fDoMultiThread, theTime, theTooltipLatlon, theUsedMacroInfoOut, theUseCalculationPoints, possibleSpacedOutMacroInfo, possibleExtraMacroParamData, doProbing, spaceOutSkipFactors);
 }
 
 static void SetForInfiniteValueCheck(TimeSerialModificationDataInterface &theAdapter)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
 	if(editedInfo)
 		editedInfo->HasNonFiniteValueSet(false); // asetetaan t‰m‰ aina editointien aluksi false:ksi ett‰ editoinnin j‰lkeen tied‰mme onko kyseinen editointi yritt‰nyt laittaa inf/nan arvoja editoitavaan dataan
 }
 
 static void ReportError_InfiniteValueCheck(TimeSerialModificationDataInterface &theAdapter, const std::string &theFunctionNameStr)
 {
-	boost::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
+	std::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
 	if(editedInfo)
 	{
 		if(editedInfo->HasNonFiniteValueSet())
@@ -2797,7 +2797,7 @@ static bool IsDataModificationInProgress(TimeSerialModificationDataInterface &th
 		return false;
 }
 
-bool FmiModifyEditdData::DoTimeSerialModifications(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue, bool fDoMultiThread, NFmiThreadCallBacks *theThreadCallBacks)
+bool FmiModifyEditdData::DoTimeSerialModifications(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::vector<float> &theModificationFactorCurvePoints, NFmiMetEditorTypes::FmiUsedSmartMetTool theEditorTool, bool fUseSetForDiscreteData, int theUnchangedValue, bool fDoMultiThread, NFmiThreadCallBacks *theThreadCallBacks)
 {
     auto status = false;
     try
@@ -2961,7 +2961,7 @@ bool FmiModifyEditdData::MakeDataValiditation(TimeSerialModificationDataInterfac
 	return status;
 }
 
-void FmiModifyEditdData::SnapShotData(TimeSerialModificationDataInterface &theAdapter, boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiDataIdent &theDataIdent, const std::string &theModificationText
+void FmiModifyEditdData::SnapShotData(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiDataIdent &theDataIdent, const std::string &theModificationText
 									, const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime)
 {
 	if(::IsDataModificationInProgress(theAdapter, __FUNCTION__))
@@ -3010,7 +3010,7 @@ std::string FmiModifyEditdData::DataFilterToolsParamsForLog(TimeSerialModificati
     {
         case 0: // Only active parameter
         {
-            boost::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0);
+            std::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0);
             if(drawParam)
             {
                 desc = drawParam->ParameterAbbreviation();

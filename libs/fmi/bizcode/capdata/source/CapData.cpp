@@ -326,7 +326,8 @@ namespace Warnings
                     std::vector<std::vector<NFmiPoint>> allCoordinates;
                     for(auto j = 0; j < childs.size(); j++)
                     {
-                        coordinates = (NFmiStringTools::TrimAll(XmlHelper::GetChildNodeText(childs[j], "gml:posList"), true));
+                        coordinates = XmlHelper::GetChildNodeText(childs[j], "gml:posList");
+                    NFmiStringTools::TrimAll(coordinates, true);
                         allCoordinates.push_back(coordinatesFromStringWithoutConversion(coordinates));
                     }
                     data.emplace(area, allCoordinates);

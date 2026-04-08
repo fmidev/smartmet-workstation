@@ -1,7 +1,7 @@
-//© Ilmatieteenlaitos/Marko.
+//ï¿½ Ilmatieteenlaitos/Marko.
 //Original 12.8.2005
 //
-// Luokka pitää huolta trajektoreihin liittyvistä asioista.
+// Luokka pitï¿½ï¿½ huolta trajektoreihin liittyvistï¿½ asioista.
 //---------------------------------------------------------- NFmiTrajectorySystem.h
 
 #pragma once
@@ -11,6 +11,7 @@
 #include "NFmiProducer.h"
 #include "NFmiRawTempStationInfoSystem.h"
 #include "NFmiTempBalloonTrajectorSettings.h"
+#include <memory>
 #include "boost/shared_ptr.hpp"
 
 class NFmiInfoOrganizer;
@@ -85,7 +86,7 @@ class NFmiTrajectorySystem
 	NFmiTempBalloonTrajectorSettings& TempBalloonTrajectorSettings(void) {return itsTempBalloonTrajectorSettings;}
 	bool CalcTempBalloonTrajectors(void) const {return fCalcTempBalloonTrajectors;}
 	void CalcTempBalloonTrajectors(bool newValue) {fCalcTempBalloonTrajectors = newValue;}
-	boost::shared_ptr<NFmiFastQueryInfo> GetWantedInfo(boost::shared_ptr<NFmiTrajectory> &theTrajectory);
+	std::shared_ptr<NFmiFastQueryInfo> GetWantedInfo(boost::shared_ptr<NFmiTrajectory> &theTrajectory);
 	bool TrajectorySaveEnabled(void) const {return fTrajectorySaveEnabled;}
 	void TrajectorySaveEnabled(bool newValue) {fTrajectorySaveEnabled = newValue;}
 	const std::string& TrajectorySavePath(void) const {return itsTrajectorySavePath;}
@@ -97,10 +98,10 @@ class NFmiTrajectorySystem
 	std::string MakeCurrentTrajectorySaveFileName(void);
 	NFmiSilamStationList& NuclearPlants(void) {return itsNuclearPlants;}
 	NFmiSilamStationList& OtherPlaces(void) {return itsOtherPlaces;}
-	void MakeSureThatTrajectoriesAreCalculated(void); // tämä on viewmakro optimointia varten tehty varmistus funktio. Tätä kutsutaan trajektoryView-luokassa ennen varsinaista trajektorien piirtoa
+	void MakeSureThatTrajectoriesAreCalculated(void); // tï¿½mï¿½ on viewmakro optimointia varten tehty varmistus funktio. Tï¿½tï¿½ kutsutaan trajektoryView-luokassa ennen varsinaista trajektorien piirtoa
 	void SetCaseStudyTimes(const NFmiMetTime &theCaseStudyTime);
 	void CalculateTrajectory(boost::shared_ptr<NFmiTrajectory> &theTrajectory);
-	static void CalculateTrajectory(boost::shared_ptr<NFmiTrajectory> &theTrajectory, boost::shared_ptr<NFmiFastQueryInfo> &theInfo);
+	static void CalculateTrajectory(boost::shared_ptr<NFmiTrajectory> &theTrajectory, std::shared_ptr<NFmiFastQueryInfo> &theInfo);
 
 	void Write(std::ostream& os) const;
 	void Read(std::istream& is);
@@ -108,10 +109,10 @@ private:
 	static void Make3DRandomizing(double &WS, double &WD, double &w, int theRandStep, int theCounter, double theRandomFactor, NFmiSingleTrajector &theTrajector);
 	void CalculateTrajectoryViewTimeBag(void);
 	void SetSelectedValuesToTrajectory(boost::shared_ptr<NFmiTrajectory> &theTrajectory, bool fInitialize, bool fKeepLevelSettings);
-	static void CalculateSingleTrajectory(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSingleTrajector &theTrajector, int theTimeStepInMinutes, int theTimeLengthInHours, double theRandFactor, int theRandStep, FmiDirection theDirection, bool fIsentropic, bool fCalcBalloonTrajectory, NFmiTempBalloonTrajectorSettings &theTempBalloonTrajectorSettings);
-	static void CalculateSingle3DTrajectory(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSingleTrajector &theTrajector, int theTimeStepInMinutes, int theTimeLengthInHours, double theRandFactor, int theRandStep, FmiDirection theDirection, bool fIsentropic, bool fCalcBalloonTrajectory, NFmiTempBalloonTrajectorSettings &theTempBalloonTrajectorSettings);
+	static void CalculateSingleTrajectory(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSingleTrajector &theTrajector, int theTimeStepInMinutes, int theTimeLengthInHours, double theRandFactor, int theRandStep, FmiDirection theDirection, bool fIsentropic, bool fCalcBalloonTrajectory, NFmiTempBalloonTrajectorSettings &theTempBalloonTrajectorSettings);
+	static void CalculateSingle3DTrajectory(std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiSingleTrajector &theTrajector, int theTimeStepInMinutes, int theTimeLengthInHours, double theRandFactor, int theRandStep, FmiDirection theDirection, bool fIsentropic, bool fCalcBalloonTrajectory, NFmiTempBalloonTrajectorSettings &theTempBalloonTrajectorSettings);
 
-	NFmiInfoOrganizer *itsInfoOrganizer; // täältä saadaan data, ei omista/tuhoa!
+	NFmiInfoOrganizer *itsInfoOrganizer; // tï¿½ï¿½ltï¿½ saadaan data, ei omista/tuhoa!
 	NFmiProducerSystem *itsProducerSystem;
 	NFmiSilamStationList itsNuclearPlants;
 	NFmiSilamStationList itsOtherPlaces;
@@ -129,8 +130,8 @@ private:
 	double itsSelectedStartPressureLevelRange; // yks. hPa
 	FmiDirection itsSelectedDirection;
 	int itsSelectedStartTimeRangeInMinutes;
-	NFmiTimeBag itsTrajectoryViewTimeBag; // laske tähän kaikkien trajektorien yli 1. ja viimeinen aika
-	bool fTrajectoryViewTimeBagDirty; // pitääkö timebagi laskea uudestaan
+	NFmiTimeBag itsTrajectoryViewTimeBag; // laske tï¿½hï¿½n kaikkien trajektorien yli 1. ja viimeinen aika
+	bool fTrajectoryViewTimeBagDirty; // pitï¿½ï¿½kï¿½ timebagi laskea uudestaan
 
 	bool fPlumesUsed;
 	bool fTrajectoryViewOn;
@@ -143,12 +144,12 @@ private:
 	bool fCalcTempBalloonTrajectors;
 
 	// Trajektorien talletukseen liittyvia muuttujia
-	// HUOM nämä luetaan settingeistä, mutta niitä ei vielä talleteta takaisin.
-	// HUOM2 Näitä ei ole tarkoituskaan viedä viewMakroihin mitenkään.
-	bool fTrajectorySaveEnabled; // onko talletus systeemi käytössä vai ei
-	std::string itsTrajectorySavePath; // vain polku, ei file filtteriä
-	std::string itsTrajectorySaveFilePattern; // pelkkä lopullisen nimen patterni, missä aikaleiman kohdalla esim. "traj_stuk_YYYYMMDDHHmm.txt"
-	std::string itsLastTrajectoryLegendStr; // talletetaan aina viimeisin legenda talteen, että sitä ei tarvitse alusta lähtien keksiä
+	// HUOM nï¿½mï¿½ luetaan settingeistï¿½, mutta niitï¿½ ei vielï¿½ talleteta takaisin.
+	// HUOM2 Nï¿½itï¿½ ei ole tarkoituskaan viedï¿½ viewMakroihin mitenkï¿½ï¿½n.
+	bool fTrajectorySaveEnabled; // onko talletus systeemi kï¿½ytï¿½ssï¿½ vai ei
+	std::string itsTrajectorySavePath; // vain polku, ei file filtteriï¿½
+	std::string itsTrajectorySaveFilePattern; // pelkkï¿½ lopullisen nimen patterni, missï¿½ aikaleiman kohdalla esim. "traj_stuk_YYYYMMDDHHmm.txt"
+	std::string itsLastTrajectoryLegendStr; // talletetaan aina viimeisin legenda talteen, ettï¿½ sitï¿½ ei tarvitse alusta lï¿½htien keksiï¿½
 };
 
 inline std::ostream& operator<<(std::ostream& os, const NFmiTrajectorySystem& item){item.Write(os); return os;}

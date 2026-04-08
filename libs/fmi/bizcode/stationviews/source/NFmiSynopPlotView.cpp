@@ -35,9 +35,9 @@ static NFmiPoint GetRelativeLocationFromRect(const NFmiRect &theRect, const NFmi
 	return NFmiPoint(x, y);
 }
 
-NFmiSynopPlotView::NFmiSynopPlotView(int theMapViewDescTopIndex, boost::shared_ptr<NFmiArea> &theArea
+NFmiSynopPlotView::NFmiSynopPlotView(int theMapViewDescTopIndex, std::shared_ptr<NFmiArea> &theArea
 									,NFmiToolBox * theToolBox
-									,boost::shared_ptr<NFmiDrawParam> &theDrawParam
+									,std::shared_ptr<NFmiDrawParam> &theDrawParam
 									,FmiParameterName theParamId
 									,int theRowIndex
                                     ,int theColumnIndex)
@@ -115,7 +115,7 @@ static const float gPressureLevelEpsilon = std::numeric_limits<float>::epsilon()
 
 // synop-dataa ei tarvitsee asettaa mihink‰‰n, mutta
 // luotaus plotin yhteydess‰ pit‰‰ etsi‰ oikea korkeus/level
-static void SetLevel(boost::shared_ptr<NFmiDrawParam> &drawParam, NFmiFastQueryInfo &info)
+static void SetLevel(std::shared_ptr<NFmiDrawParam> &drawParam, NFmiFastQueryInfo &info)
 {
 	if(drawParam->Param().GetParamIdent() == NFmiInfoData::kFmiSpSoundingPlot)
 	{ // sounding plotin yhteydess‰ pit‰‰ asettaa level haluttuun korkeuteen
@@ -140,7 +140,7 @@ NFmiRect NFmiSynopPlotView::CalcBaseEmptySoundingMarker(void)
 	return NFmiRect(0, 0, xWidth, yWidth);
 }
 
-void NFmiSynopPlotView::SetMapViewSettings(boost::shared_ptr<NFmiFastQueryInfo> &theUsedInfo)
+void NFmiSynopPlotView::SetMapViewSettings(std::shared_ptr<NFmiFastQueryInfo> &theUsedInfo)
 {
     NFmiStationView::SetMapViewSettings(theUsedInfo);
     SetupPossibleWindMetaParamData();
@@ -299,7 +299,7 @@ void NFmiSynopPlotView::DrawSynopPlot(NFmiToolBox * theGTB, const NFmiLocation &
 	try
 	{
 		itsToolBox = theGTB;
-		boost::shared_ptr<NFmiFastQueryInfo> info;
+		std::shared_ptr<NFmiFastQueryInfo> info;
 		this->fMinMaxPlotDraw = fDrawMinMaxPlot;
 		if(fDrawSoundingPlot)
 		{
@@ -367,7 +367,7 @@ void NFmiSynopPlotView::DrawSynopPlot(NFmiToolBox * theGTB, const NFmiLocation &
 	synopSettings.FontSize(oldFontSize);
 }
 
-void NFmiSynopPlotView::GetWindValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float &theWindSpeed, float &theWindDir)
+void NFmiSynopPlotView::GetWindValues(std::shared_ptr<NFmiFastQueryInfo> &theInfo, float &theWindSpeed, float &theWindDir)
 {
 	float windVector = GetSynopPlotValue(theInfo, kFmiWindVectorMS);
 	if(windVector != kFloatMissing)
@@ -381,7 +381,7 @@ void NFmiSynopPlotView::GetWindValues(boost::shared_ptr<NFmiFastQueryInfo> &theI
 	theWindDir = GetSynopPlotValue(theInfo, kFmiWindDirection);
 }
 
-NFmiString NFmiSynopPlotView::GetLowCloudCoverStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+NFmiString NFmiSynopPlotView::GetLowCloudCoverStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	float value = GetSynopPlotValue(theInfo, kFmiLowCloudCover);
 	if(value == kFloatMissing)
@@ -394,7 +394,7 @@ NFmiString NFmiSynopPlotView::GetLowCloudCoverStr(boost::shared_ptr<NFmiFastQuer
 	}
 }
 
-NFmiString NFmiSynopPlotView::GetCloudHeightStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+NFmiString NFmiSynopPlotView::GetCloudHeightStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	float value = GetSynopPlotValue(theInfo, kFmiCloudHeight);
 	if(value == kFloatMissing)
@@ -432,7 +432,7 @@ NFmiString NFmiSynopPlotView::GetCloudHeightStr(boost::shared_ptr<NFmiFastQueryI
 	}
 }
 
-NFmiString NFmiSynopPlotView::Get12or24HourRainAmountStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theWantedParameter)
+NFmiString NFmiSynopPlotView::Get12or24HourRainAmountStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theWantedParameter)
 {
 	// t‰ss‰ pit‰‰ tarkistaa myˆs mik‰ on sade jakso. Jos joku muu kuin 12/24, palautetaan tyhj‰‰
 	float period = GetSynopPlotValue(theInfo, kFmiPrecipitationPeriod);
@@ -459,7 +459,7 @@ NFmiString NFmiSynopPlotView::Get12or24HourRainAmountStr(boost::shared_ptr<NFmiF
 	}
 }
 
-NFmiString NFmiSynopPlotView::GetSnowDepthStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theWantedParameter)
+NFmiString NFmiSynopPlotView::GetSnowDepthStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theWantedParameter)
 {
 	float value = GetSynopPlotValue(theInfo, theWantedParameter);
 	if(value == kFloatMissing)
@@ -471,7 +471,7 @@ NFmiString NFmiSynopPlotView::GetSnowDepthStr(boost::shared_ptr<NFmiFastQueryInf
 	}
 }
 
-NFmiString NFmiSynopPlotView::GetVisibilityStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+NFmiString NFmiSynopPlotView::GetVisibilityStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	float value = GetSynopPlotValue(theInfo, kFmiVisibility);
 	if(value == kFloatMissing)
@@ -492,7 +492,7 @@ NFmiString NFmiSynopPlotView::GetVisibilityStr(boost::shared_ptr<NFmiFastQueryIn
 	}
 }
 
-NFmiString NFmiSynopPlotView::GetAviVisStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+NFmiString NFmiSynopPlotView::GetAviVisStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	float value = GetSynopPlotValue(theInfo, kFmiAviationVisibility);
 	if(value == kFloatMissing)
@@ -507,7 +507,7 @@ NFmiString NFmiSynopPlotView::GetAviVisStr(boost::shared_ptr<NFmiFastQueryInfo> 
 	}
 }
 
-NFmiString NFmiSynopPlotView::GetPresentWeatherStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+NFmiString NFmiSynopPlotView::GetPresentWeatherStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	float value = GetSynopPlotValue(theInfo, kFmiPresentWeather);
 	value = ::ConvertPossible_WaWa_2_WW(value);
@@ -527,7 +527,7 @@ NFmiString NFmiSynopPlotView::GetPresentWeatherStr(boost::shared_ptr<NFmiFastQue
 	}
 }
 
-NFmiString NFmiSynopPlotView::GetWindGustStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+NFmiString NFmiSynopPlotView::GetWindGustStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	float value = GetSynopPlotValue(theInfo, kFmiHourlyMaximumGust);
 	if(value == kFloatMissing)
@@ -662,7 +662,7 @@ static float Meters2FeetsWithRounding(float theValueInMeters)
 	}
 }
 
-static float GetCloudBaseInFeets(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static float GetCloudBaseInFeets(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	float cloudBaseInFeets = kFloatMissing;
 
@@ -688,13 +688,13 @@ static float GetCloudBaseInFeets(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 	return cloudBaseInFeets;
 }
 
-static float GetAviVisibility(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static float GetAviVisibility(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	theInfo->Param(kFmiAviationVisibility);
 	return theInfo->FloatValue();
 }
 
-static bool ParameterHasNonMissingValue(boost::shared_ptr<NFmiFastQueryInfo>& theInfo, FmiParameterName parameter)
+static bool ParameterHasNonMissingValue(std::shared_ptr<NFmiFastQueryInfo>& theInfo, FmiParameterName parameter)
 {
 	if(theInfo->Param(parameter))
 	{
@@ -705,7 +705,7 @@ static bool ParameterHasNonMissingValue(boost::shared_ptr<NFmiFastQueryInfo>& th
 		return false;
 }
 
-static bool HasAnySignificantCloudTypes(boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
+static bool HasAnySignificantCloudTypes(std::shared_ptr<NFmiFastQueryInfo>& theInfo)
 {
 	if(::ParameterHasNonMissingValue(theInfo, kFmi1CloudType))
 		return true;
@@ -719,7 +719,7 @@ static bool HasAnySignificantCloudTypes(boost::shared_ptr<NFmiFastQueryInfo>& th
 	return false;
 }
 
-static bool HasAnySignificantWeather(boost::shared_ptr<NFmiFastQueryInfo>& theInfo)
+static bool HasAnySignificantWeather(std::shared_ptr<NFmiFastQueryInfo>& theInfo)
 {
 	if(::ParameterHasNonMissingValue(theInfo, kFmiAviationWeather1))
 		return true;
@@ -731,7 +731,7 @@ static bool HasAnySignificantWeather(boost::shared_ptr<NFmiFastQueryInfo>& theIn
 	return false;
 }
 
-static bool IsCavok(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static bool IsCavok(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	// 1. Jos on n‰kyvyys on 9999 tai yli
 	float visibilityInMeters = ::GetAviVisibility(theInfo);
@@ -759,7 +759,7 @@ static bool IsCavok(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 	return false;
 }
 
-static bool IsSkc(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static bool IsSkc(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	theInfo->Param(kFmi1CloudType);
 	float cloudtype1 = theInfo->FloatValue();
@@ -768,7 +768,7 @@ static bool IsSkc(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 	return false;
 }
 
-static bool HasParamValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theParam)
+static bool HasParamValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theParam)
 {
 	theInfo->Param(theParam);
 	float value = theInfo->FloatValue();
@@ -801,7 +801,7 @@ static std::string MetarCloudCoverCode2String(float theCoverValue)
 	}
 }
 
-static std::string GetAviationCloudStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theBaseHeightPar, FmiParameterName theCloudCoverPar, FmiParameterName theCloudTypePar)
+static std::string GetAviationCloudStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theBaseHeightPar, FmiParameterName theCloudCoverPar, FmiParameterName theCloudTypePar)
 {
 	std::string str;
 	theInfo->Param(theBaseHeightPar);
@@ -828,7 +828,7 @@ static std::string GetAviationCloudStr(boost::shared_ptr<NFmiFastQueryInfo> &the
 }
 
 
-static NFmiString GetAviationCloudsStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static NFmiString GetAviationCloudsStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	std::string str;
 
@@ -886,7 +886,7 @@ static NFmiString GetAviationCloudsStr(boost::shared_ptr<NFmiFastQueryInfo> &the
 	return NFmiString(str);
 }
 
-static NFmiString GetAviationStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static NFmiString GetAviationStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 { // tulostetaan mahd. kaikki kolme s‰‰ kentt‰‰ metarista teksti muodossa
 	theInfo->Param(kFmiAviationWeather1);
 	float value1 = theInfo->FloatValue();
@@ -911,7 +911,7 @@ static NFmiString GetAviationStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 	}
 }
 
-NFmiString NFmiSynopPlotView::GetPressureTendencyStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+NFmiString NFmiSynopPlotView::GetPressureTendencyStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	float value = GetSynopPlotValue(theInfo, kFmiPressureTendency);
 	if(value == kFloatMissing)
@@ -931,7 +931,7 @@ NFmiString NFmiSynopPlotView::GetPressureTendencyStr(boost::shared_ptr<NFmiFastQ
 }
 
 // olettaa ett‰ pilvisyys tulee oktina
-NFmiString NFmiSynopPlotView::GetTotalCloudinessStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+NFmiString NFmiSynopPlotView::GetTotalCloudinessStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	float value = GetSynopPlotValue(theInfo, kFmiTotalCloudCover);
 	if(value == kFloatMissing)
@@ -950,7 +950,7 @@ NFmiString NFmiSynopPlotView::GetTotalCloudinessStr(boost::shared_ptr<NFmiFastQu
 	}
 }
 
-NFmiString NFmiSynopPlotView::GetClStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+NFmiString NFmiSynopPlotView::GetClStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	float value = GetSynopPlotValue(theInfo, kFmiLowCloudType);
 	if(value == kFloatMissing)
@@ -969,7 +969,7 @@ NFmiString NFmiSynopPlotView::GetClStr(boost::shared_ptr<NFmiFastQueryInfo> &the
 	}
 }
 
-NFmiString NFmiSynopPlotView::GetCmStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+NFmiString NFmiSynopPlotView::GetCmStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	float value = GetSynopPlotValue(theInfo, kFmiMiddleCloudType);
 	if(value == kFloatMissing)
@@ -988,7 +988,7 @@ NFmiString NFmiSynopPlotView::GetCmStr(boost::shared_ptr<NFmiFastQueryInfo> &the
 	}
 }
 
-NFmiString NFmiSynopPlotView::GetStateOfGroundStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theWantedParameter)
+NFmiString NFmiSynopPlotView::GetStateOfGroundStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theWantedParameter)
 {
 	float value = GetSynopPlotValue(theInfo, theWantedParameter);
 	if(value == kFloatMissing)
@@ -1011,7 +1011,7 @@ NFmiString NFmiSynopPlotView::GetStateOfGroundStr(boost::shared_ptr<NFmiFastQuer
 	}
 }
 
-NFmiString NFmiSynopPlotView::GetChStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+NFmiString NFmiSynopPlotView::GetChStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	float value = GetSynopPlotValue(theInfo, kFmiHighCloudType);
 	if(value == kFloatMissing)
@@ -1030,7 +1030,7 @@ NFmiString NFmiSynopPlotView::GetChStr(boost::shared_ptr<NFmiFastQueryInfo> &the
 	}
 }
 
-NFmiString NFmiSynopPlotView::GetPastWeatherStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theWantedParameter)
+NFmiString NFmiSynopPlotView::GetPastWeatherStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theWantedParameter)
 {
 	float value = GetSynopPlotValue(theInfo, theWantedParameter);
 	if(value == kFloatMissing)
@@ -1049,7 +1049,7 @@ NFmiString NFmiSynopPlotView::GetPastWeatherStr(boost::shared_ptr<NFmiFastQueryI
 	}
 }
 
-NFmiString NFmiSynopPlotView::GetPressureStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theWantedParameter, bool fDoMetarPlotString)
+NFmiString NFmiSynopPlotView::GetPressureStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theWantedParameter, bool fDoMetarPlotString)
 {
 	float value = GetSynopPlotValue(theInfo, theWantedParameter);
 	if(value == kFloatMissing)
@@ -1090,7 +1090,7 @@ NFmiString NFmiSynopPlotView::GetPressureStr(boost::shared_ptr<NFmiFastQueryInfo
 	}
 }
 
-float NFmiSynopPlotView::GetPressureChangeValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+float NFmiSynopPlotView::GetPressureChangeValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	float valuePPP = GetSynopPlotValue(theInfo, kFmiPressureChange); // kokeillaan ensin lˆytyykˆ paineen muutos suoraan
 	if(valuePPP != kFloatMissing)
@@ -1105,7 +1105,7 @@ float NFmiSynopPlotView::GetPressureChangeValue(boost::shared_ptr<NFmiFastQueryI
 	return value;
 }
 
-NFmiString NFmiSynopPlotView::GetPressureChangeStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theWantedParameter)
+NFmiString NFmiSynopPlotView::GetPressureChangeStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theWantedParameter)
 {
 	float value = GetPressureChangeValue(theInfo);
 	if(value == kFloatMissing)
@@ -1140,7 +1140,7 @@ NFmiString NFmiSynopPlotView::GetPressureChangeStr(boost::shared_ptr<NFmiFastQue
 
 // palauttaa halutun parametrin arvon siten ett‰ luku
 // on leikattu maksimissaan kahteen lukuun ja siit‰ on poistettu desimaalit
-NFmiString NFmiSynopPlotView::GetTemperatureStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theWantedParameter, bool fDoMetarPlotString)
+NFmiString NFmiSynopPlotView::GetTemperatureStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theWantedParameter, bool fDoMetarPlotString)
 {
 	float value = GetSynopPlotValue(theInfo, theWantedParameter);
 	if(value == kFloatMissing)
@@ -1168,7 +1168,7 @@ NFmiString NFmiSynopPlotView::GetTemperatureStr(boost::shared_ptr<NFmiFastQueryI
 	}
 }
 
-NFmiString NFmiSynopPlotView::GetHeightStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+NFmiString NFmiSynopPlotView::GetHeightStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	float value = GetSynopPlotValue(theInfo, kFmiGeomHeight);
 	if(value == kFloatMissing)
@@ -1190,7 +1190,7 @@ NFmiString NFmiSynopPlotView::GetHeightStr(boost::shared_ptr<NFmiFastQueryInfo> 
 	}
 }
 
-NFmiString NFmiSynopPlotView::GetMinMaxTStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theParam)
+NFmiString NFmiSynopPlotView::GetMinMaxTStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theParam)
 {
 	float value = GetSynopPlotValue(theInfo, theParam);
 	if(value == kFloatMissing)
@@ -1199,7 +1199,7 @@ NFmiString NFmiSynopPlotView::GetMinMaxTStr(boost::shared_ptr<NFmiFastQueryInfo>
 		return NFmiValueString(value, "%0.1f");
 }
 
-static NFmiString GetTminusTdSoundingStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static NFmiString GetTminusTdSoundingStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	theInfo->Param(kFmiTemperature);
 	float T = theInfo->FloatValue();
@@ -1221,7 +1221,7 @@ static NFmiString GetTminusTdSoundingStr(boost::shared_ptr<NFmiFastQueryInfo> &t
 	}
 }
 
-NFmiString NFmiSynopPlotView::GetPrecipitationAmountStr(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+NFmiString NFmiSynopPlotView::GetPrecipitationAmountStr(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	float value = GetSynopPlotValue(theInfo, kFmiPrecipitationAmount);
 	if(value == kFloatMissing)
@@ -1237,7 +1237,7 @@ NFmiString NFmiSynopPlotView::GetPrecipitationAmountStr(boost::shared_ptr<NFmiFa
 	}
 }
 
-void NFmiSynopPlotView::SetPressureChangeColor(NFmiDrawingEnvironment & theDrawingEnvi, boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+void NFmiSynopPlotView::SetPressureChangeColor(NFmiDrawingEnvironment & theDrawingEnvi, std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	float value = GetPressureChangeValue(theInfo);
 	if(value != kFloatMissing)
@@ -1257,7 +1257,7 @@ bool NFmiSynopPlotView::GetDataFromLocalInfo() const
         return true;
 }
 
-float NFmiSynopPlotView::GetSynopPlotValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theParam)
+float NFmiSynopPlotView::GetSynopPlotValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, FmiParameterName theParam)
 {
 	if(fGetSynopDataFromQ2)
 	{
@@ -1284,7 +1284,7 @@ float NFmiSynopPlotView::GetSynopPlotValue(boost::shared_ptr<NFmiFastQueryInfo> 
 	}
 }
 
-bool NFmiSynopPlotView::PrintParameterValue(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theSynopRect, const NFmiPoint &theRelLocation, FmiParameterName theWantedParameter, bool fDoMetarPlotString)
+bool NFmiSynopPlotView::PrintParameterValue(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theSynopRect, const NFmiPoint &theRelLocation, FmiParameterName theWantedParameter, bool fDoMetarPlotString)
 {
 	NFmiPoint viewLocation(GetRelativeLocationFromRect(theSynopRect, theRelLocation));
 	NFmiString str;
@@ -1389,7 +1389,7 @@ bool NFmiSynopPlotView::PrintParameterValue(boost::shared_ptr<NFmiFastQueryInfo>
 }
 
 // Jos palautetun pair:in second arvo on false, ei piirret‰ statusta ollenkaan
-static std::pair<NFmiColor, bool> GetMetarPlotStatusColor(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static std::pair<NFmiColor, bool> GetMetarPlotStatusColor(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	const float bigCloudBaseValue = 5000; // t‰m‰ on helpottamassa puuttuvien arvojen tarkastelua
 	const float bigAviVisValue = 10000; // t‰m‰ on helpottamassa puuttuvien arvojen tarkastelua
@@ -1421,7 +1421,7 @@ static std::pair<NFmiColor, bool> GetMetarPlotStatusColor(boost::shared_ptr<NFmi
 	return std::make_pair(statusColor, true);;
 }
 
-static bool HasAnyMetarPlotData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static bool HasAnyMetarPlotData(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	if(::HasParamValue(theInfo, kFmiWindSpeedMS))
 		return true;
@@ -1436,7 +1436,7 @@ static bool HasAnyMetarPlotData(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 	return false;
 }
 
-static bool DrawAviVis(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
+static bool DrawAviVis(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
 {
 	// jos on CAVOK tai SKC tilanne, ei piirret‰ AviVis:ia
 	if(::IsCavok(theInfo) || ::IsSkc(theInfo))
@@ -1444,7 +1444,7 @@ static bool DrawAviVis(boost::shared_ptr<NFmiFastQueryInfo> &theInfo)
 	return true;
 }
 
-bool NFmiSynopPlotView::DrawMetarPlot(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theDrawRect)
+bool NFmiSynopPlotView::DrawMetarPlot(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theDrawRect)
 {
 	if(::HasAnyMetarPlotData(theInfo) == false)
 		return false;
@@ -1553,7 +1553,7 @@ bool NFmiSynopPlotView::DrawMetarPlot(boost::shared_ptr<NFmiFastQueryInfo> &theI
 	return anythingDrawed;
 }
 
-bool NFmiSynopPlotView::DrawMinMaxPlot(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theDrawRect)
+bool NFmiSynopPlotView::DrawMinMaxPlot(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theDrawRect)
 {
 	bool anythingDrawed = false;
 	FmiFontType oldFont = itsDrawingEnvironment.GetFontType();
@@ -1621,7 +1621,7 @@ bool NFmiSynopPlotView::DrawMinMaxPlot(boost::shared_ptr<NFmiFastQueryInfo> &the
 	return anythingDrawed;
 }
 
-bool NFmiSynopPlotView::DrawNormalFontValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theRect)
+bool NFmiSynopPlotView::DrawNormalFontValues(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theRect)
 {
 	bool anythingDrawed = false;
 	FmiFontType oldFont = itsDrawingEnvironment.GetFontType();
@@ -1734,7 +1734,7 @@ bool NFmiSynopPlotView::DrawNormalFontValues(boost::shared_ptr<NFmiFastQueryInfo
 }
 
 
-bool NFmiSynopPlotView::DrawSynopFontValues(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theRect, bool fWindDrawed)
+bool NFmiSynopPlotView::DrawSynopFontValues(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theRect, bool fWindDrawed)
 {
 	bool anythingDrawed = false;
 	if(fSoundingPlotDraw)
@@ -1866,7 +1866,7 @@ static double CalcLineValue(double y, double x1, double y1, double x2, double y2
 }
 
 // paluu arvo kertoo onko mit‰‰n piirretty
-bool NFmiSynopPlotView::DrawWindVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theRect, bool &fWindDrawed, bool metarCase)
+bool NFmiSynopPlotView::DrawWindVector(std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiRect &theRect, bool &fWindDrawed, bool metarCase)
 {
 	fWindDrawed = false;
 	NFmiSynopPlotSettings& synopSettings = *itsCtrlViewDocumentInterface->SynopPlotSettings();
@@ -1990,7 +1990,7 @@ std::string NFmiSynopPlotView::ComposeToolTipText(const NFmiPoint & /* theRelati
 		str += paramNameStr;
 		str += " ";
 		NFmiLocation loc(itsCtrlViewDocumentInterface->ToolTipLatLonPoint());
-		boost::shared_ptr<NFmiFastQueryInfo> info;
+		std::shared_ptr<NFmiFastQueryInfo> info;
 		if(isSoundingPlot)
 		{
 			itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, false); // t‰m‰kin pit‰‰ viel‰ jostain syyst‰ asettaa
