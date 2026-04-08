@@ -148,9 +148,11 @@ add_subdirectory(
 set(SPDLOG_BUILD_TESTING OFF CACHE BOOL "Do not build spdlog tests" FORCE)
 
 if(UNIX)
-add_subdirectory(
-    modules/3rd/spdlog114
-    )
+    # Use system spdlog on Linux (install spdlog-devel)
+    find_package(spdlog REQUIRED)
+    # Expose include dirs via cache variable (matches pattern used by other modules)
+    get_target_property(_spdlog_inc spdlog::spdlog INTERFACE_INCLUDE_DIRECTORIES)
+    set(spdlog_INCLUDE_DIRS ${_spdlog_inc} CACHE INTERNAL "spdlog: Include Directories" FORCE)
 else()
 add_subdirectory(
     modules/3rd/spdlog
