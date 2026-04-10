@@ -316,7 +316,7 @@ add_subdirectory(
     libs/fmi/bizcode/tm_utils
     )
 
-if(NOT DISABLE_CPPRESTSDK)
+if(NOT DISABLE_CPPRESTSDK OR UNIX)
 add_subdirectory(
     libs/fmi/webclient
     )
