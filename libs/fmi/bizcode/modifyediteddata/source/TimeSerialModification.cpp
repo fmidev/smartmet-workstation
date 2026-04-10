@@ -48,12 +48,12 @@
 
 
 #ifdef _MSC_VER
-#pragma warning (disable : 4244 4267 4512) // boost:in thread kirjastosta tulee ikävästi 4244 varoituksia
+#pragma warning (disable : 4244 4267 4512) // boost:in thread kirjastosta tulee ikï¿½vï¿½sti 4244 varoituksia
 #endif
 #include <boost/thread.hpp>
 #include "boost/math/special_functions/round.hpp"
 #ifdef _MSC_VER
-#pragma warning (default : 4244 4267 4512) // laitetaan 4244 takaisin päälle, koska se on tärkeä (esim. double -> int auto castaus varoitus)
+#pragma warning (default : 4244 4267 4512) // laitetaan 4244 takaisin pï¿½ï¿½lle, koska se on tï¿½rkeï¿½ (esim. double -> int auto castaus varoitus)
 #endif
 
 #ifdef _MSC_VER
@@ -70,17 +70,17 @@ static void LogMessage(TimeSerialModificationDataInterface &theAdapter, const st
     theAdapter.LogAndWarnUser(theMessage, "", severity, category, true);
 }
 
-// piti tehdä winkkarista irralliset messagebox button/toiminto definet (HUOM! FMI-etuliite)
+// piti tehdï¿½ winkkarista irralliset messagebox button/toiminto definet (HUOM! FMI-etuliite)
 #define FMI_MB_OK			0x00000000L
 #define FMI_MB_ICONERROR	0x00000010L
 
 
 // ***** Koodia kopsattu NFmiQueryInfo-luokasta *******
-// Kopsasin koodia NFmiQueryInfo-luokasta, koska tavitsen syvemmän kopion NFmiFastInfo-luokasta.
-// Eli jos kyseessä on NFmiSmartInfo-luokka, tavitsen siitä shallow-kopion (vain iteraattori osio ja 
+// Kopsasin koodia NFmiQueryInfo-luokasta, koska tavitsen syvemmï¿½n kopion NFmiFastInfo-luokasta.
+// Eli jos kyseessï¿½ on NFmiSmartInfo-luokka, tavitsen siitï¿½ shallow-kopion (vain iteraattori osio ja 
 // mm. erilaset maskit, mutta ei itse dataa, joka tulisi Clone-metodilla). Koska NFmiQueryInfo on 
-// newbase-kirjastossa ja NFmiSmartInfo on smarttools-kirjastossa, kopsasin koodit tänne kuin että olisin
-// siirtänyt n. 5-10 luokkaa smarttool-kirjastosta newbase:en.
+// newbase-kirjastossa ja NFmiSmartInfo on smarttools-kirjastossa, kopsasin koodit tï¿½nne kuin ettï¿½ olisin
+// siirtï¿½nyt n. 5-10 luokkaa smarttool-kirjastosta newbase:en.
 // ***** Koodia kopsattu NFmiQueryInfo-luokasta *******
 
 static std::shared_ptr<NFmiFastQueryInfo> DoDynamicShallowCopy(std::shared_ptr<NFmiFastQueryInfo> &theInfo)
@@ -89,9 +89,9 @@ static std::shared_ptr<NFmiFastQueryInfo> DoDynamicShallowCopy(std::shared_ptr<N
 	{
 		NFmiSmartInfo *smartInfo = dynamic_cast<NFmiSmartInfo *>(theInfo.get());
 		if(smartInfo)
-			return std::shared_ptr<NFmiFastQueryInfo>(new NFmiSmartInfo(*smartInfo)); // smartinfo kopio tarvitaan että editoidun datan locationMaskit tulevat otettua huomioon
+			return std::shared_ptr<NFmiFastQueryInfo>(new NFmiSmartInfo(*smartInfo)); // smartinfo kopio tarvitaan ettï¿½ editoidun datan locationMaskit tulevat otettua huomioon
 
-		// HUOM! en kokeile/tee NFmiOwnerInfo-kopiota, koska siitä ei ole toiminnallista hyötyä
+		// HUOM! en kokeile/tee NFmiOwnerInfo-kopiota, koska siitï¿½ ei ole toiminnallista hyï¿½tyï¿½
 
 		return std::shared_ptr<NFmiFastQueryInfo>(new NFmiFastQueryInfo(*theInfo)); // jos ei saatu smartinfoa, palautetaan fastInfo:n kopio
 	}
@@ -102,7 +102,7 @@ class TimeToModifyCalculator
 {
 public:
 	typedef boost::shared_mutex MutexType;
-	typedef boost::shared_lock<MutexType> ReadLock; // Read-lockia ei oikeasti tarvita, mutta laitan sen tähän, jos joskus tarvitaankin
+	typedef boost::shared_lock<MutexType> ReadLock; // Read-lockia ei oikeasti tarvita, mutta laitan sen tï¿½hï¿½n, jos joskus tarvitaankin
 	typedef boost::unique_lock<MutexType> WriteLock;
 
 	TimeToModifyCalculator(const NFmiTimeDescriptor &theTimeDescriptor)
@@ -113,7 +113,7 @@ public:
 	}
 
 #ifdef GetCurrentTime
-#undef GetCurrentTime // tälläinen Windows macro pitää poistaa, muuten koodi ei käänny
+#undef GetCurrentTime // tï¿½llï¿½inen Windows macro pitï¿½ï¿½ poistaa, muuten koodi ei kï¿½ï¿½nny
 #endif
 
 	bool GetCurrentTime(NFmiMetTime &theTime)
@@ -171,13 +171,13 @@ static void ModifyTimesLocationData_FullMT(std::shared_ptr<NFmiFastQueryInfo> &t
 	if(usedThreadCount > timeCount)
 		usedThreadCount = timeCount;
 
-	theModifiedData->LatLon(); // multi-thread koodin varmistus, että latlon-cachet on alustettu
+	theModifiedData->LatLon(); // multi-thread koodin varmistus, ettï¿½ latlon-cachet on alustettu
 	theModifier->InitLatlonCache();
 	std::vector<std::shared_ptr<NFmiFastQueryInfo> > modifiedInfoVector(usedThreadCount);
 	std::vector<boost::shared_ptr<NFmiDataModifier> > dataModifierVector(usedThreadCount);
 	for(unsigned int i = 0; i < usedThreadCount; i++)
 	{
-		// HUOM! pakko tehdä fastQueryInfo copioita, että ei menetetä nopeutta, eikä saa tehdä Clone:ja, koska tällöin kopioituu myös data-osio!!!
+		// HUOM! pakko tehdï¿½ fastQueryInfo copioita, ettï¿½ ei menetetï¿½ nopeutta, eikï¿½ saa tehdï¿½ Clone:ja, koska tï¿½llï¿½in kopioituu myï¿½s data-osio!!!
 		modifiedInfoVector[i] = ::DoDynamicShallowCopy(theModifiedData);
 		dataModifierVector[i] = boost::shared_ptr<NFmiDataModifier>(theModifier->Clone());
 	}
@@ -187,7 +187,7 @@ static void ModifyTimesLocationData_FullMT(std::shared_ptr<NFmiFastQueryInfo> &t
 	boost::thread_group calcParts;
 	for(unsigned int i = 0; i < usedThreadCount; i++)
 		calcParts.add_thread(new boost::thread(::ModifySingleTimeGridInThread, boost::ref(*modifiedInfoVector[i]), boost::ref(timeIndexCalculator), dataModifierVector[i].get()));
-	calcParts.join_all(); // odotetaan että threadit lopettavat
+	calcParts.join_all(); // odotetaan ettï¿½ threadit lopettavat
 }
 
 // ****************************************************
@@ -196,7 +196,7 @@ static void ModifyTimesLocationData_FullMT(std::shared_ptr<NFmiFastQueryInfo> &t
 
 
 
-// Heittää poikkeuksen, jos on tehty varoitus
+// Heittï¿½ï¿½ poikkeuksen, jos on tehty varoitus
 static void PreventEditingIfProblemWithEditedData(TimeSerialModificationDataInterface &theAdapter)
 {
 	if(theAdapter.IsEditedDataInReadOnlyMode())
@@ -210,8 +210,8 @@ static void PreventEditingIfProblemWithEditedData(TimeSerialModificationDataInte
 	}
 }
 
-// tässä tehdään yhteiset perus toiminnot kaikille snapShot-funktioille
-// Heittää poikkeuksen, jos on tehty varoitus
+// tï¿½ssï¿½ tehdï¿½ï¿½n yhteiset perus toiminnot kaikille snapShot-funktioille
+// Heittï¿½ï¿½ poikkeuksen, jos on tehty varoitus
 static void SnapShotDataBaseAction(TimeSerialModificationDataInterface& theAdapter, std::shared_ptr<NFmiFastQueryInfo>& theInfo, const std::string& theModificationText
 	, const NFmiMetTime& theStartTime, const NFmiMetTime& theEndTime)
 {
@@ -231,7 +231,7 @@ static void SnapShotDataBaseAction(TimeSerialModificationDataInterface& theAdapt
 // 1. ottaa valokuvan datan nykytilasta undo/redo toimintoja varten
 // 2. asettaa editoidun (theInfo) datan likaiseksi,
 // 5. asettaa editoitavan datan halutun parametrin likaiseksi
-// Heittää poikkeuksen, jos on tehty varoitus
+// Heittï¿½ï¿½ poikkeuksen, jos on tehty varoitus
 static void SnapShotData(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiFastQueryInfo> &theInfo, const std::string &theModificationText
 				 , const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime)
 {
@@ -242,7 +242,7 @@ static void SnapShotData(TimeSerialModificationDataInterface &theAdapter, std::s
 // 1. ottaa valokuvan datan nykytilasta undo/redo toimintoja varten
 // 2. asettaa editoidun (theInfo) datan likaiseksi,
 // 5. asettaa editoitavan datan halutun parametrin likaiseksi
-// Heittää poikkeuksen, jos on tehty varoitus
+// Heittï¿½ï¿½ poikkeuksen, jos on tehty varoitus
 static void SnapShotData(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiFastQueryInfo> &theInfo, NFmiParamBag &theParams, const std::string &theModificationText
 				 , const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime)
 {
@@ -253,7 +253,7 @@ static void SnapShotData(TimeSerialModificationDataInterface &theAdapter, std::s
 // 1. ottaa valokuvan datan nykytilasta undo/redo toimintoja varten
 // 2. asettaa editoidun (theInfo) datan likaiseksi,
 // 5. asettaa editoitavan datan halutun parametrin likaiseksi
-// Heittää poikkeuksen, jos on tehty varoitus
+// Heittï¿½ï¿½ poikkeuksen, jos on tehty varoitus
 static void SnapShotData(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiFastQueryInfo> &theInfo, const NFmiDataIdent &theDataIdent, const std::string &theModificationText
 				 , const NFmiMetTime &theStartTime, const NFmiMetTime &theEndTime)
 {
@@ -263,7 +263,7 @@ static void SnapShotData(TimeSerialModificationDataInterface &theAdapter, std::s
 static bool DoAnalyzeModificationsForParam(TimeSerialModificationDataInterface &theAdapter, const NFmiParam & theParam, std::shared_ptr<NFmiFastQueryInfo> &theAnalyzeData, std::shared_ptr<NFmiFastQueryInfo> &theModifiedData, NFmiTimeDescriptor& theTimes, std::shared_ptr<NFmiAreaMaskList> &theMaskList)
 {
     if(theParam.InterpolationMethod() != kLinearly)
-        return false; // Tehdään vain lineaarisille parametreille muokkaus, en osaa muille laskea muutoksia oikein
+        return false; // Tehdï¿½ï¿½n vain lineaarisille parametreille muokkaus, en osaa muille laskea muutoksia oikein
 
 	NFmiDataIdent dataIdent(theParam);
 	std::shared_ptr<NFmiDrawParam> drawParamForLimits = theAdapter.GetUsedDrawParamForEditedData(dataIdent);
@@ -273,7 +273,7 @@ static bool DoAnalyzeModificationsForParam(TimeSerialModificationDataInterface &
         auto useMask = theMaskList->UseMask();
 		NFmiLimitChecker limitChecker(static_cast<float>(drawParamForLimits->AbsoluteMinValue()), static_cast<float>(drawParamForLimits->AbsoluteMaxValue()), static_cast<FmiParameterName>(theParam.GetIdent()));
 		auto timeSize = theTimes.Size();
-		theAnalyzeData->LastTime(); // vain viimeinen aika kiinnostaa analyysistä
+		theAnalyzeData->LastTime(); // vain viimeinen aika kiinnostaa analyysistï¿½
 		if(theAnalyzeData->Param(theParam) && theModifiedData->Param(theParam))
 		{
             for(theAnalyzeData->ResetLevel(), theModifiedData->ResetLevel(); theAnalyzeData->NextLevel() && theModifiedData->NextLevel(); )
@@ -291,7 +291,7 @@ static bool DoAnalyzeModificationsForParam(TimeSerialModificationDataInterface &
                             auto timeIndex = 0;
                             for(theTimes.Reset(); theTimes.Next(); timeIndex++)
                             {
-                                if(theModifiedData->Time(theTimes.Time())) // vain editoitavaa dataa juoksutetaan ajassa (ajan pitäisi löytyä!)
+                                if(theModifiedData->Time(theTimes.Time())) // vain editoitavaa dataa juoksutetaan ajassa (ajan pitï¿½isi lï¿½ytyï¿½!)
                                 {
                                     theMaskList->SyncronizeMaskTime(theTimes.Time());
                                     float maskFactor = 1.f;
@@ -312,7 +312,7 @@ static bool DoAnalyzeModificationsForParam(TimeSerialModificationDataInterface &
                     }
                 }
             }
-			// kopioidaan vielä analyysi datan alku editoitavan datan alkuun, että tulee jatkuvaa dataa (ei hyppyä mallista analyysiin ja sitten liuku analyysista malliin)
+			// kopioidaan vielï¿½ analyysi datan alku editoitavan datan alkuun, ettï¿½ tulee jatkuvaa dataa (ei hyppyï¿½ mallista analyysiin ja sitten liuku analyysista malliin)
             for( ; theAnalyzeData->PreviousTime(); )
 			{
 				if(theModifiedData->Time(theAnalyzeData->Time()))
@@ -376,7 +376,7 @@ static bool DoFinalAnalyzeToolModifications(TimeSerialModificationDataInterface 
         {
             dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->InverseMask(fUsedMask);
             status = ::DoAnalyseModifications(theAdapter, editedInfo, analyzeInfo2, maskList, analyzeToolTimes, theParam);
-            dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->InverseMask(fUsedMask); // lopuksi pitää palauttaa alkuperäinen maski (hoituu uudella inverse:llä)
+            dynamic_cast<NFmiSmartInfo*>(editedInfo.get())->InverseMask(fUsedMask); // lopuksi pitï¿½ï¿½ palauttaa alkuperï¿½inen maski (hoituu uudella inverse:llï¿½)
         }
     }
     return status;
@@ -392,9 +392,9 @@ static bool DoFinalObservationBlenderToolModifications(TimeSerialModificationDat
     return dataModifier.ModifyTimeSeriesDataUsingMaskFactors(analyzeToolTimes, nullptr);
 }
 
-// 1. Mikä on editoidun datan 1. muokkausaika
+// 1. Mikï¿½ on editoidun datan 1. muokkausaika
 // 2. Hae CP - pisteeseen sopivimmasta datasta sopivimpaan aikaan oleva arvo
-// 3. Mikä on käytetyn datan käytetty location, jotta voidaan piirtää kyseinen käyrä sellaisenaan aikasarjaan
+// 3. Mikï¿½ on kï¿½ytetyn datan kï¿½ytetty location, jotta voidaan piirtï¿½ï¿½ kyseinen kï¿½yrï¿½ sellaisenaan aikasarjaan
 bool FmiModifyEditdData::SetupObsBlenderData(TimeSerialModificationDataInterface &theAdapter, const NFmiPoint &theLatlon, const NFmiParam &theParam, NFmiInfoData::Type theDataType, bool fGroundData, const NFmiProducer &theProducer, NFmiMetTime &firstEditedTimeOut, std::shared_ptr<NFmiFastQueryInfo> &usedObsBlenderInfoOut, float &analyzeValueOut, std::vector<std::string> &messagesOut)
 {
     auto infoOrganizer = theAdapter.InfoOrganizer();
@@ -482,7 +482,7 @@ static bool DoAnalyzeToolRelatedModifications(bool useObservationBlenderTool, Ti
 
 static void DoTimeSeriesValuesModifyingWithCPs(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiDrawParam> &theModifiedDrawParam, NFmiMetEditorTypes::Mask fUsedMask, NFmiTimeDescriptor& theTimeDescriptor, std::shared_ptr<NFmiAreaMaskList> &theMaskList, NFmiThreadCallBacks *theThreadCallBacks)
 {
-	// HUOM!! muokkaukset pitää tehdä kaikille pisteille!!!
+	// HUOM!! muokkaukset pitï¿½ï¿½ tehdï¿½ kaikille pisteille!!!
 	if(theModifiedDrawParam)
 	{
 		NFmiInfoOrganizer *infoOrganizer = theAdapter.InfoOrganizer();
@@ -566,7 +566,7 @@ static bool MustMakeValidationCheckAfterModifyingTheseParams(TimeSerialModificat
 					return true;
 			}
 		}
-		else // käydään aliparametritkin läpi
+		else // kï¿½ydï¿½ï¿½n aliparametritkin lï¿½pi
 		{
 			NFmiParamBag subParamBag(*theParams.Current()->GetDataParams());
 			for(subParamBag.Reset(); subParamBag.Next(); )
@@ -670,9 +670,9 @@ static bool MakeDataValiditation(TimeSerialModificationDataInterface &theAdapter
 
 static void MakeBasicViewUpdatePreparationsAfterDataModifications(TimeSerialModificationDataInterface& theAdapter, bool clearEditedDataRelatedCaches = true)
 {
-    // 1. Kaikkien karttanäyttöjen image cachet tyhjiksi, pakotetaan piirto ja editoituun dataan riippuvaisten cachejen (macroParam) tyhjennys
+    // 1. Kaikkien karttanï¿½yttï¿½jen image cachet tyhjiksi, pakotetaan piirto ja editoituun dataan riippuvaisten cachejen (macroParam) tyhjennys
     theAdapter.MapViewDirty(CtrlViewUtils::kDoAllMapViewDescTopIndex, false, true, true, false, clearEditedDataRelatedCaches, false);
-    // 2. Optimoidaan smartmetin näyttöjen päivitystä, vain ne näytöt pitää päivittää, jotka voivat käyttää editoitua dataa
+    // 2. Optimoidaan smartmetin nï¿½yttï¿½jen pï¿½ivitystï¿½, vain ne nï¿½ytï¿½t pitï¿½ï¿½ pï¿½ivittï¿½ï¿½, jotka voivat kï¿½yttï¿½ï¿½ editoitua dataa
     ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(::GetUpdatedViewIdMaskForEditingData());
 }
 
@@ -688,15 +688,15 @@ static bool MakeDataValiditation(TimeSerialModificationDataInterface &theAdapter
 	return false;
 }
 
-// tätä metodia voidaan käyttää aina kaikkialla kun tehdään muokkauksia dataan
+// tï¿½tï¿½ metodia voidaan kï¿½yttï¿½ï¿½ aina kaikkialla kun tehdï¿½ï¿½n muokkauksia dataan
 // theModifyingTool 1 = muokkausdialogi, 2 = pensseli ja 3 = aikasarjaeditori
-// kun työkalu on 2 tai 3, annetaan mukana myös editoitava parametri
+// kun tyï¿½kalu on 2 tai 3, annetaan mukana myï¿½s editoitava parametri
 static bool CheckAndValidateAfterModifications(TimeSerialModificationDataInterface &theAdapter, NFmiMetEditorTypes::FmiUsedSmartMetTool theModifyingTool, bool fMakeDataSnapshotAction, unsigned int theLocationMask, FmiParameterName theParam, bool fDoMultiThread, NFmiParamBag *theModifiedParamBag = 0)
 {
 	if(theAdapter.CheckValidationFromSettings() == false)
 		return false;
 
-	if(theAdapter.SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ns. view-moodi päällä, ei tehdä mitään
+	if(theAdapter.SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ns. view-moodi pï¿½ï¿½llï¿½, ei tehdï¿½ mitï¿½ï¿½n
 		return false;
 
 	std::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
@@ -708,36 +708,36 @@ static bool CheckAndValidateAfterModifications(TimeSerialModificationDataInterfa
 			switch (theModifyingTool)
 			{
             case NFmiMetEditorTypes::kFmiDataModificationTool:
-				{ // muokkaustyökalulla on kolme moodia, missä voidaan tehdä muutoksia joko aktiiviseen parametriin, valittuun joukkoon parametreista tai kaikkiin parametreihen kerrallaan
+				{ // muokkaustyï¿½kalulla on kolme moodia, missï¿½ voidaan tehdï¿½ muutoksia joko aktiiviseen parametriin, valittuun joukkoon parametreista tai kaikkiin parametreihen kerrallaan
 					switch(theAdapter.FilteringParameterUsageState())
 					{
-					case 0: // 0=tehdään operaatio vain aktiiviselle parametrille
+					case 0: // 0=tehdï¿½ï¿½n operaatio vain aktiiviselle parametrille
 						{
-							std::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0); // HUOM! muokkausta voi tehdä vain 1. (eli indeksi 0) desctopistä
+							std::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0); // HUOM! muokkausta voi tehdï¿½ vain 1. (eli indeksi 0) desctopistï¿½
 							if(drawParam)
 								paramStatus = ::MustMakeValidationCheckAfterModifyingThisParam(theAdapter, FmiParameterName(drawParam->Param().GetParam()->GetIdent()));
 						}
 						break;
-					case 1: // 1=tehdään operaatio kaikille parametreille
+					case 1: // 1=tehdï¿½ï¿½n operaatio kaikille parametreille
 						paramStatus = ::MustMakeValidationCheckAfterModifyingTheseParams(theAdapter, theAdapter.FilteringParamBag(), false);
 						break;
-					case 2: // 2=tehdään operaatio valituille parametreille
+					case 2: // 2=tehdï¿½ï¿½n operaatio valituille parametreille
 						paramStatus = ::MustMakeValidationCheckAfterModifyingTheseParams(theAdapter, theAdapter.FilteringParamBag(), true);
 						break;
 					}
 				}
 				break;
-                // Näillä työkaluilla tehdään muutoksia vain yhdelle parametrille kerrallaan
+                // Nï¿½illï¿½ tyï¿½kaluilla tehdï¿½ï¿½n muutoksia vain yhdelle parametrille kerrallaan
             case NFmiMetEditorTypes::kFmiBrush:
             case NFmiMetEditorTypes::kFmiTimeSerialModification:
 				paramStatus = ::MustMakeValidationCheckAfterModifyingThisParam(theAdapter, theParam);
 				break;
-                // Smarttoolilla voidaan tehdä muutoksia kaikille parametreille yhdellä kertaa
+                // Smarttoolilla voidaan tehdï¿½ muutoksia kaikille parametreille yhdellï¿½ kertaa
             case NFmiMetEditorTypes::kFmiSmarttool:
-                if(theModifiedParamBag) // pitäisi kait heittää poikkeus jos nullptr
+                if(theModifiedParamBag) // pitï¿½isi kait heittï¿½ï¿½ poikkeus jos nullptr
     				paramStatus = ::MustMakeValidationCheckAfterModifyingTheseParams(theAdapter, *theModifiedParamBag, false);
 				break;
-                // Datan lataus tekee muutoksia kaikille parametreille yhdellä kertaa
+                // Datan lataus tekee muutoksia kaikille parametreille yhdellï¿½ kertaa
             case NFmiMetEditorTypes::kFmiDataLoading:
 				paramStatus = ::MustMakeValidationCheckAfterModifyingTheseParams(theAdapter, theAdapter.FilteringParamBag(), false);
 				break;
@@ -786,9 +786,9 @@ static bool DoTimeSeriesValuesModifying(TimeSerialModificationDataInterface &the
 	if(theModifiedDrawParam && theModifiedDrawParam->IsParamEdited())
 	{
 		auto& modifiedParam = *theModifiedDrawParam->Param().GetParam();
-        if(theAdapter.AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool()) // haaraudutaan, jos on observation-blender työkalu käytössä!
+        if(theAdapter.AnalyzeToolData().ControlPointObservationBlendingData().UseBlendingTool()) // haaraudutaan, jos on observation-blender tyï¿½kalu kï¿½ytï¿½ssï¿½!
             ::DoAnalyzeToolRelatedModifications(true, theAdapter, modifiedParam, fUsedMask, "Using Observation-blender tool to modify edited data.", theAdapter.AnalyzeToolData().ControlPointObservationBlendingData().SelectedProducer(), NFmiInfoData::kObservations);
-        else if(theAdapter.AnalyzeToolData().AnalyzeToolMode()) // haaraudutaan, jos on analyysi työkalu käytössä!
+        else if(theAdapter.AnalyzeToolData().AnalyzeToolMode()) // haaraudutaan, jos on analyysi tyï¿½kalu kï¿½ytï¿½ssï¿½!
 			::DoAnalyzeToolRelatedModifications(false, theAdapter, modifiedParam, fUsedMask, "Using Analyze tool to modify edited data.", theAdapter.AnalyzeToolData().SelectedProducer1(), NFmiInfoData::kAnalyzeData);
 		else
 		{
@@ -886,7 +886,7 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
 	if(editedData)
 	{
 		// HUOM! SmartToolin kanssa ei aseteta meteorologisia,
-		// koska ne sisältävät meteorologiset maskit itse.
+		// koska ne sisï¿½ltï¿½vï¿½t meteorologiset maskit itse.
 
 		NFmiSmartToolModifier smartToolModifier(theAdapter.InfoOrganizer());
 		try // ensin tulkitaan macro
@@ -906,13 +906,13 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
 			return false;
 		}
 
-		// Metkun editorin SmartTool-dialogissa jos painaa "Suorita makro"-nappia, tehdään
-		// ruudulla olevan skriptin mukaiset muutokset dataan. MUTTA jos kyseessä on
-		// ns. macroParam eli skriptissä on lausekkeitä jossa sijoitetaan RETURN muuttujaan,
-		// tällöin ei haluta ajaa makro muutoksia, koska tarkoitus on vain katsella
-		// macroParam:ia karttanäytöllä.
-		// Tänne asti tullaan että saadaan virhe ilmoitus tulkinta vaiheessa talteen.
-		// Mutta suoritus vaiheen virheet menevät tällä hetkellä vain loki tiedostoon.
+		// Metkun editorin SmartTool-dialogissa jos painaa "Suorita makro"-nappia, tehdï¿½ï¿½n
+		// ruudulla olevan skriptin mukaiset muutokset dataan. MUTTA jos kyseessï¿½ on
+		// ns. macroParam eli skriptissï¿½ on lausekkeitï¿½ jossa sijoitetaan RETURN muuttujaan,
+		// tï¿½llï¿½in ei haluta ajaa makro muutoksia, koska tarkoitus on vain katsella
+		// macroParam:ia karttanï¿½ytï¿½llï¿½.
+		// Tï¿½nne asti tullaan ettï¿½ saadaan virhe ilmoitus tulkinta vaiheessa talteen.
+		// Mutta suoritus vaiheen virheet menevï¿½t tï¿½llï¿½ hetkellï¿½ vain loki tiedostoon.
 		if(smartToolModifier.IsInterpretedSkriptMacroParam())
 		{
             ::MakeBasicViewUpdatePreparationsAfterDataModifications(theAdapter, false);
@@ -958,7 +958,7 @@ bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, const s
 
 		if(fDoDataValidations)
 		{
-			// tehdään järkevyystarkastelu operaatio kaikille parametreille
+			// tehdï¿½ï¿½n jï¿½rkevyystarkastelu operaatio kaikille parametreille
             ::CheckAndValidateAfterModifications(theAdapter, NFmiMetEditorTypes::kFmiSmarttool, false, fSelectedLocationsOnly ? NFmiMetEditorTypes::kFmiSelectionMask : NFmiMetEditorTypes::kFmiNoMask, kFmiLastParameter, fDoMultiThread, &modifiedParams);
 		}
 
@@ -1000,7 +1000,7 @@ static bool DoSmartToolEditing(TimeSerialModificationDataInterface &theAdapter, 
 	return status;
 }
 
-// Tämä luo SmartInfosta pinta kopioin, eli vain ns. iteraattori (info osuus) kopioituu, data pysyy alkuperäisen kanssa jaettuna.
+// Tï¿½mï¿½ luo SmartInfosta pinta kopioin, eli vain ns. iteraattori (info osuus) kopioituu, data pysyy alkuperï¿½isen kanssa jaettuna.
 static std::shared_ptr<NFmiFastQueryInfo> CreateShallowInfoCopy(std::shared_ptr<NFmiFastQueryInfo> &theUsedInfo, const NFmiDataIdent& theDataIdent, const NFmiLevel* theLevel, NFmiInfoData::Type theType)
 {
 	if(theUsedInfo && theUsedInfo->DataType() == theType && theUsedInfo->Param(*theDataIdent.GetParam()) && (!theLevel || (theLevel && theUsedInfo->Level(*theLevel))))
@@ -1011,14 +1011,14 @@ static std::shared_ptr<NFmiFastQueryInfo> CreateShallowInfoCopy(std::shared_ptr<
 	return std::shared_ptr<NFmiFastQueryInfo>();
 }
 
-// Käyttöesimerkki: Halutaan aluemuokkauksen yhteydessä käyttää maskeja, mutta
-// koska editoitava data saattaa muuttua muokkauksen yhteydessa, pitää maskien
-// laskuissa käyttää kopiota alkuperäisestä datasta. Parametrina annetaan
-// haluttu maskilista ja kopio editoitavasta datasta. Metodi käy läpi annetun listan
+// Kï¿½yttï¿½esimerkki: Halutaan aluemuokkauksen yhteydessï¿½ kï¿½yttï¿½ï¿½ maskeja, mutta
+// koska editoitava data saattaa muuttua muokkauksen yhteydessa, pitï¿½ï¿½ maskien
+// laskuissa kï¿½yttï¿½ï¿½ kopiota alkuperï¿½isestï¿½ datasta. Parametrina annetaan
+// haluttu maskilista ja kopio editoitavasta datasta. Metodi kï¿½y lï¿½pi annetun listan
 // ja tekee kopiot maskeista ja laittaa ne uuteen luotavaan maskilistaan ja jos
-// maski käyttää editoitavaa dataa, korvataan kopiomaskiin dataksi parametrina annettu
-// kopio datasta. (ongelma esiintyy esim. jos haluan tasoittaa kokonaispilvisyyttä
-// mutta en halua levittää pilvialuetta, joten käytän kokonaispilvisyyttä maskina.)
+// maski kï¿½yttï¿½ï¿½ editoitavaa dataa, korvataan kopiomaskiin dataksi parametrina annettu
+// kopio datasta. (ongelma esiintyy esim. jos haluan tasoittaa kokonaispilvisyyttï¿½
+// mutta en halua levittï¿½ï¿½ pilvialuetta, joten kï¿½ytï¿½n kokonaispilvisyyttï¿½ maskina.)
 static std::shared_ptr<NFmiAreaMaskList> CreateNewParamMaskListWithReplacedEditedInfo(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiAreaMaskList> &theOriginalMaskList, std::shared_ptr<NFmiFastQueryInfo> &theUsedEditInfo)
 {
 	if(theOriginalMaskList && theUsedEditInfo)
@@ -1028,7 +1028,7 @@ static std::shared_ptr<NFmiAreaMaskList> CreateNewParamMaskListWithReplacedEdite
 		{
 			std::shared_ptr<NFmiAreaMask> mask = theOriginalMaskList->Current();
 			if(!mask)
-				continue; // virhetilanne!!!! pitäisi olla assert
+				continue; // virhetilanne!!!! pitï¿½isi olla assert
 			std::shared_ptr<NFmiFastQueryInfo> info;
 			NFmiInfoData::Type type = mask->GetDataType();
 			if(type == NFmiInfoData::kCalculatedValue)
@@ -1070,7 +1070,7 @@ static std::shared_ptr<NFmiAreaMaskList> CreateFilteringMaskList(TimeSerialModif
 		maskList = ::CreateNewParamMaskListWithReplacedEditedInfo(theAdapter, tmpMaskList, theCopyOfEditedData);
 	}
 	if(maskList == 0)
-		maskList = std::shared_ptr<NFmiAreaMaskList>(new NFmiAreaMaskList()); // luodaan aina tyhjä lista, vaikka maskeja ei olisi käytössä
+		maskList = std::shared_ptr<NFmiAreaMaskList>(new NFmiAreaMaskList()); // luodaan aina tyhjï¿½ lista, vaikka maskeja ei olisi kï¿½ytï¿½ssï¿½
 	if(maskList)
 		maskList->CheckIfMaskUsed();
 	return maskList;
@@ -1085,9 +1085,9 @@ static NFmiDataModifier* CreateFilteringHelperModifier(TimeSerialModificationDat
 		switch(theAdapter.FilterFunction())
 		{
 		case 0:
-		case 3: // tämä on painotettu keskiarvo, mutta se lasketaan sen ulomman modifierin avulla käyttäen normaaleja avg-laskuja!
+		case 3: // tï¿½mï¿½ on painotettu keskiarvo, mutta se lasketaan sen ulomman modifierin avulla kï¿½yttï¿½en normaaleja avg-laskuja!
 			if(interp == kByCombinedParam || interp == kNearestPoint)
-				helpModifier = new NFmiDataModifierMode(); // epäjatkuville lasketaankin moodi!!!
+				helpModifier = new NFmiDataModifierMode(); // epï¿½jatkuville lasketaankin moodi!!!
 			else
 				helpModifier = new NFmiDataModifierAvg();
 			break;
@@ -1100,7 +1100,7 @@ static NFmiDataModifier* CreateFilteringHelperModifier(TimeSerialModificationDat
 		case 4:
 			helpModifier = new NFmiDataModifierMedian();
 			break;
-		default: // pitäisi olla 2!!!
+		default: // pitï¿½isi olla 2!!!
 			helpModifier = new NFmiDataModifierMin();
 			break;
 		}
@@ -1121,7 +1121,7 @@ static std::vector<NFmiRect> CreateAreaFilterRangeArray(TimeSerialModificationDa
 		int filledArraySize = 0;
 		if(editedInfo->TimeToNearestStep(theAdapter.TimeFilterEndTime(), kCenter))
 			filledArraySize = editedInfo->TimeIndex() - startIndex + 1;
-		if(filledArraySize + startIndex <= static_cast<int>(editedInfo->SizeTimes())) // periaatteessa tämä on turha tarkistus, mutta eipä pitäisi tulla taulukon yli kirjoitusta millään
+		if(filledArraySize + startIndex <= static_cast<int>(editedInfo->SizeTimes())) // periaatteessa tï¿½mï¿½ on turha tarkistus, mutta eipï¿½ pitï¿½isi tulla taulukon yli kirjoitusta millï¿½ï¿½n
 		{
 			NFmiRect areaFilterRangeStart = theAdapter.AreaFilterRange(1);
 			NFmiRect areaFilterRangeEnd = theAdapter.AreaFilterRange(2);
@@ -1161,7 +1161,7 @@ static boost::shared_ptr<NFmiDataModifier> CreateAreaFilteringModifier(TimeSeria
 			areaModifier = boost::shared_ptr<NFmiDataModifier>(new NFmiDataModifierTimeInterpolationWithAreaModifiers(theCopyOfEditedData, helpModifier, theMaskList, areaFilterArray, theAdapter.TimeFilterStartTime(), theAdapter.TimeFilterEndTime(), theCopyOfEditedData->TimeResolution()));
 		else if(theAdapter.FilterFunction() != 3)
 			areaModifier = boost::shared_ptr<NFmiDataModifier>(new NFmiDataModifierWithModifierWithMasksAndRangeShiftedWithTime(theCopyOfEditedData, helpModifier, theMaskList, areaFilterArray));
-		else // tehdään painotetulle keskiarvolle oma olio
+		else // tehdï¿½ï¿½n painotetulle keskiarvolle oma olio
 			areaModifier = boost::shared_ptr<NFmiDataModifier>(new NFmiDataModifierWithModifierWithMasksAndRangeShiftedWithTimeUsingWAvg(theCopyOfEditedData, helpModifier, theMaskList, areaFilterArray));
 	}
 	return areaModifier;
@@ -1169,11 +1169,11 @@ static boost::shared_ptr<NFmiDataModifier> CreateAreaFilteringModifier(TimeSeria
 
 static bool ModifyLocationData(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiAreaMaskList> &theMaskList, std::shared_ptr<NFmiFastQueryInfo> &theEditedData, std::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData, boost::shared_ptr<NFmiTimeDescriptor> &theTimes, bool fSetParamToActiveParam, bool fDoMultiThread)
 {
-	std::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0); // nämä moukkaustyökalulla (filtteri työkalu) tehdyt muokkaukset tehdään aina pääkarttaikkunan aktiiviselle datalle
+	std::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0); // nï¿½mï¿½ moukkaustyï¿½kalulla (filtteri tyï¿½kalu) tehdyt muokkaukset tehdï¿½ï¿½n aina pï¿½ï¿½karttaikkunan aktiiviselle datalle
 	auto& param = *drawParam->Param().GetParam();
 	if(!fSetParamToActiveParam || (drawParam && drawParam->DataType() == NFmiInfoData::kEditable && theEditedData->Param(param)))
 	{
-		if(drawParam && drawParam->Param().Type() == kSymbolicParam) // turha tehdä symbolisille parametreille
+		if(drawParam && drawParam->Param().Type() == kSymbolicParam) // turha tehdï¿½ symbolisille parametreille
 			return false;
 		if(fSetParamToActiveParam && drawParam)
 			if(!theCopyOfEditedData->Param(param))
@@ -1207,7 +1207,7 @@ static bool DoAreaFilteringToAllParams(TimeSerialModificationDataInterface &theA
 					::ModifyLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, false, fDoMultiThread);
 				}
 			}
-			else // käydään aliparametritkin läpi
+			else // kï¿½ydï¿½ï¿½n aliparametritkin lï¿½pi
 			{
 				NFmiParamBag subParamBag(*theEditedData->Param().GetDataParams());
 				for(subParamBag.Reset(); subParamBag.Next(); )
@@ -1241,7 +1241,7 @@ static bool DoAreaFilteringToSelectedParams(TimeSerialModificationDataInterface 
 		{
 			if(!filteringParamBag.Current()->HasDataParams())
 			{
-				if(filteringParamBag.Current()->IsActive()) // vain aktiiviset käydään läpi
+				if(filteringParamBag.Current()->IsActive()) // vain aktiiviset kï¿½ydï¿½ï¿½n lï¿½pi
 				{
 					auto& filteringParam = *filteringParamBag.Current()->GetParam();
 					if(theEditedData->Param(filteringParam))
@@ -1253,12 +1253,12 @@ static bool DoAreaFilteringToSelectedParams(TimeSerialModificationDataInterface 
 					}
 				}
 			}
-			else // käydään aliparametritkin läpi
+			else // kï¿½ydï¿½ï¿½n aliparametritkin lï¿½pi
 			{
 				NFmiParamBag subParamBag(*filteringParamBag.Current()->GetDataParams());
 				for(subParamBag.Reset(); subParamBag.Next(); )
 				{
-					if(subParamBag.Current()->IsActive()) // vain aktiiviset käydään läpi
+					if(subParamBag.Current()->IsActive()) // vain aktiiviset kï¿½ydï¿½ï¿½n lï¿½pi
 					{
 						if(subParamBag.Current()->Type() != kSymbolicParam)
 						{
@@ -1284,15 +1284,15 @@ static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, std
 {
 	switch(theAdapter.FilteringParameterUsageState())
 	{
-	case 0: // 0=tehdään operaatio vain aktiiviselle parametrille
+	case 0: // 0=tehdï¿½ï¿½n operaatio vain aktiiviselle parametrille
 		{
 			return ::ModifyLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, true, fDoMultiThread);
 		}
-	case 1: // 1=tehdään operaatio kaikille parametreille
+	case 1: // 1=tehdï¿½ï¿½n operaatio kaikille parametreille
 		{
 		return ::DoAreaFilteringToAllParams(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, fDoMultiThread);
 		}
-	case 2: // 2=tehdään operaatio valituille parametreille
+	case 2: // 2=tehdï¿½ï¿½n operaatio valituille parametreille
 		{
 		return ::DoAreaFilteringToSelectedParams(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, fDoMultiThread);
 		}
@@ -1305,8 +1305,8 @@ static bool UndoData(TimeSerialModificationDataInterface &theAdapter)
 	std::shared_ptr<NFmiFastQueryInfo> info = theAdapter.EditedInfo();
 	if(info)
 	{
-		NFmiSmartInfo *smartInfo = dynamic_cast<NFmiSmartInfo*>(info.get()); // pakko tehdä down-casti editoitavalle datalle toistaiseksi näin, smartInfo-pointteri on käytettävissä info -shared_ptr on olemassa
-		theAdapter.LastBrushedViewRealRowIndex(-1); // sivellintä varten pitää 'nollata' tämä
+		NFmiSmartInfo *smartInfo = dynamic_cast<NFmiSmartInfo*>(info.get()); // pakko tehdï¿½ down-casti editoitavalle datalle toistaiseksi nï¿½in, smartInfo-pointteri on kï¿½ytettï¿½vissï¿½ info -shared_ptr on olemassa
+		theAdapter.LastBrushedViewRealRowIndex(-1); // sivellintï¿½ varten pitï¿½ï¿½ 'nollata' tï¿½mï¿½
         std::string modificationDescription = "";
 		bool status = smartInfo->UndoData(modificationDescription);
 		if(status)
@@ -1325,8 +1325,8 @@ static bool RedoData(TimeSerialModificationDataInterface &theAdapter)
 	std::shared_ptr<NFmiFastQueryInfo> info = theAdapter.EditedInfo();
 	if(info)
 	{
-		NFmiSmartInfo *smartInfo = dynamic_cast<NFmiSmartInfo*>(info.get()); // pakko tehdä down-casti editoitavalle datalle toistaiseksi näin, smartInfo-pointteri on käytettävissä info -shared_ptr on olemassa
-		theAdapter.LastBrushedViewRealRowIndex(-1); // sivellintä varten pitää 'nollata' tämä
+		NFmiSmartInfo *smartInfo = dynamic_cast<NFmiSmartInfo*>(info.get()); // pakko tehdï¿½ down-casti editoitavalle datalle toistaiseksi nï¿½in, smartInfo-pointteri on kï¿½ytettï¿½vissï¿½ info -shared_ptr on olemassa
+		theAdapter.LastBrushedViewRealRowIndex(-1); // sivellintï¿½ varten pitï¿½ï¿½ 'nollata' tï¿½mï¿½
         std::string modificationDescription = "";
 		bool status = smartInfo->RedoData(modificationDescription);
 		if(status)
@@ -1390,7 +1390,7 @@ static bool DoAreaFiltering(TimeSerialModificationDataInterface &theAdapter, boo
 	return false;
 }
 
-// huom tämä ei ota huomioon vaihtuvia aika-askelia, vaan laskee haluttuja juttuja niistä välittämättä
+// huom tï¿½mï¿½ ei ota huomioon vaihtuvia aika-askelia, vaan laskee haluttuja juttuja niistï¿½ vï¿½littï¿½mï¿½ttï¿½
 std::vector<double> CreateTimeFilterShiftArrayWCTR(TimeSerialModificationDataInterface &theAdapter)
 {
 	std::vector<double> returnFactors;
@@ -1404,7 +1404,7 @@ std::vector<double> CreateTimeFilterShiftArrayWCTR(TimeSerialModificationDataInt
 		int filledArraySize = 0;
 		if(editedInfo->TimeToNearestStep(theAdapter.TimeFilterEndTime(), kCenter))
 			filledArraySize = editedInfo->TimeIndex() - startIndex + 1;
-		if(filledArraySize + startIndex <= static_cast<int>(editedInfo->SizeTimes())) // periaatteessa tämä on turha tarkistus, mutta eipä pitäisi tulla taulukon yli kirjoitusta millään
+		if(filledArraySize + startIndex <= static_cast<int>(editedInfo->SizeTimes())) // periaatteessa tï¿½mï¿½ on turha tarkistus, mutta eipï¿½ pitï¿½isi tulla taulukon yli kirjoitusta millï¿½ï¿½n
 		{
 			if(filledArraySize == 1)
 				returnFactors[startIndex] = theAdapter.TimeFilterRangeStart().X();
@@ -1427,7 +1427,7 @@ static std::vector<double> CreateTimeFilterShiftArray(TimeSerialModificationData
 	return ::CreateTimeFilterShiftArrayWCTR(theAdapter);
 }
 
-// huom tämä ei ota huomioon vaihtuvia aika-askelia, vaan laskee haluttuja juttuja niistä välittämättä
+// huom tï¿½mï¿½ ei ota huomioon vaihtuvia aika-askelia, vaan laskee haluttuja juttuja niistï¿½ vï¿½littï¿½mï¿½ttï¿½
 static std::vector<NFmiPoint> CreateTimeFilterRangeArrayWCTR(TimeSerialModificationDataInterface &theAdapter)
 {
 	std::vector<NFmiPoint> returnPointArray;
@@ -1441,7 +1441,7 @@ static std::vector<NFmiPoint> CreateTimeFilterRangeArrayWCTR(TimeSerialModificat
 		int filledArraySize = 0;
 		if(editedInfo->TimeToNearestStep(theAdapter.TimeFilterEndTime(), kCenter))
 			filledArraySize = editedInfo->TimeIndex() - startIndex + 1;
-		if(filledArraySize + startIndex <= static_cast<int>(editedInfo->SizeTimes())) // periaatteessa tämä on turha tarkistus, mutta eipä pitäisi tulla taulukon yli kirjoitusta millään
+		if(filledArraySize + startIndex <= static_cast<int>(editedInfo->SizeTimes())) // periaatteessa tï¿½mï¿½ on turha tarkistus, mutta eipï¿½ pitï¿½isi tulla taulukon yli kirjoitusta millï¿½ï¿½n
 		{
 			if(filledArraySize == 1)
 				returnPointArray[startIndex] = theAdapter.TimeFilterRangeStart();
@@ -1467,7 +1467,7 @@ static std::vector<NFmiPoint> CreateTimeFilterRangeArray(TimeSerialModificationD
 
 static boost::shared_ptr<NFmiDataModifier> CreateTimeFilteringModifier(TimeSerialModificationDataInterface &theAdapter, std::shared_ptr<NFmiAreaMaskList> &theMaskList, std::shared_ptr<NFmiFastQueryInfo> &theCopyOfEditedData)
 {
-// HUOM!! Maskilistaa ei vielä käytetä.
+// HUOM!! Maskilistaa ei vielï¿½ kï¿½ytetï¿½.
 	boost::shared_ptr<NFmiDataModifier> timeModifier;
 	if(theMaskList && theCopyOfEditedData)
 	{
@@ -1493,7 +1493,7 @@ static bool ModifyTimesLocationData(TimeSerialModificationDataInterface &theAdap
 {
 	if(theEditedData && theCopyOfEditedData)
 	{
-		std::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0);  // nämä moukkaustyökalulla (filtteri työkalu) tehdyt muokkaukset tehdään aina pääkarttaikkunan aktiiviselle datalle
+		std::shared_ptr<NFmiDrawParam> drawParam = theAdapter.ActiveDrawParamFromActiveRow(0);  // nï¿½mï¿½ moukkaustyï¿½kalulla (filtteri tyï¿½kalu) tehdyt muokkaukset tehdï¿½ï¿½n aina pï¿½ï¿½karttaikkunan aktiiviselle datalle
 		if(drawParam)
 		{
 			auto& editedParam = *drawParam->Param().GetParam();
@@ -1533,7 +1533,7 @@ static bool DoTimeFilteringToAllParams(TimeSerialModificationDataInterface &theA
 					::ModifyTimesLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, false, fDoMultiThread);
 				}
 			}
-			else // käydään aliparametritkin läpi
+			else // kï¿½ydï¿½ï¿½n aliparametritkin lï¿½pi
 			{
 				NFmiParamBag subParamBag(*theEditedData->Param().GetDataParams());
 				for(subParamBag.Reset(); subParamBag.Next(); )
@@ -1567,7 +1567,7 @@ static bool DoTimeFilteringToSelectedParams(TimeSerialModificationDataInterface 
 		{
 			if(!filteringParamBag.Current()->HasDataParams())
 			{
-				if(filteringParamBag.Current()->IsActive()) // vain aktiiviset käydään läpi
+				if(filteringParamBag.Current()->IsActive()) // vain aktiiviset kï¿½ydï¿½ï¿½n lï¿½pi
 				{
 					auto& filterinParam = *filteringParamBag.Current()->GetParam();
 					if(theEditedData->Param(filterinParam))
@@ -1579,12 +1579,12 @@ static bool DoTimeFilteringToSelectedParams(TimeSerialModificationDataInterface 
 					}
 				}
 			}
-			else // käydään aliparametritkin läpi
+			else // kï¿½ydï¿½ï¿½n aliparametritkin lï¿½pi
 			{
 				NFmiParamBag subParamBag(*filteringParamBag.Current()->GetDataParams());
 				for(subParamBag.Reset(); subParamBag.Next(); )
 				{
-					if(subParamBag.Current()->IsActive()) // vain aktiiviset käydään läpi
+					if(subParamBag.Current()->IsActive()) // vain aktiiviset kï¿½ydï¿½ï¿½n lï¿½pi
 					{
 						if(subParamBag.Current()->Type() != kSymbolicParam)
 						{
@@ -1611,17 +1611,17 @@ static bool DoTimeFiltering(TimeSerialModificationDataInterface &theAdapter, std
 	bool status = true;
 	switch(theAdapter.FilteringParameterUsageState())
 	{
-	case 0: // 0=tehdään operaatio vain aktiiviselle parametrille
+	case 0: // 0=tehdï¿½ï¿½n operaatio vain aktiiviselle parametrille
 		{
 		status = ::ModifyTimesLocationData(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, true, fDoMultiThread);
 		break;
 		}
-	case 1: // 1=tehdään operaatio kaikille parametreille
+	case 1: // 1=tehdï¿½ï¿½n operaatio kaikille parametreille
 		{
 		status = ::DoTimeFilteringToAllParams(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, fDoMultiThread);
 		break;
 		}
-	case 2: // 2=tehdään operaatio valituille parametreille
+	case 2: // 2=tehdï¿½ï¿½n operaatio valituille parametreille
 		{
 		status = ::DoTimeFilteringToSelectedParams(theAdapter, theMaskList, theEditedData, theCopyOfEditedData, theTimes, fDoMultiThread);
 		break;
@@ -1687,7 +1687,7 @@ std::vector<float> CreateFilteringCombineFactorTable(TimeSerialModificationDataI
 		int filledArraySize = 0;
 		if(editedInfo->TimeToNearestStep(theAdapter.TimeFilterEndTime(), kCenter))
 			filledArraySize = editedInfo->TimeIndex() - startIndex + 1;
-		if(filledArraySize + startIndex <= static_cast<int>(editedInfo->SizeTimes())) // periaatteessa tämä on turha tarkistus, mutta eipä pitäisi tulla taulukon yli kirjoitusta millään
+		if(filledArraySize + startIndex <= static_cast<int>(editedInfo->SizeTimes())) // periaatteessa tï¿½mï¿½ on turha tarkistus, mutta eipï¿½ pitï¿½isi tulla taulukon yli kirjoitusta millï¿½ï¿½n
 		{
 			if(filledArraySize == 1)
 				factorArray[startIndex] = filteringCombineFactorStart;
@@ -1864,7 +1864,7 @@ static bool MakeDBCheckerDataValiditation(TimeSerialModificationDataInterface &t
 static std::string CreateHelpEditorFileNameWithPath(TimeSerialModificationDataInterface &theAdapter)
 {
 	std::string fileName(theAdapter.HelpEditorSystem().DataPath());
-	fileName += "\\"; // varmuudeksi laitetaan polku deliminator perään
+	fileName += "\\"; // varmuudeksi laitetaan polku deliminator perï¿½ï¿½n
 	NFmiMetTime aTime(1); // currentti aika aikaleimaa varten
 	fileName += aTime.ToStr(kYYYYMMDDHHMM);
 	fileName += "_";
@@ -1873,7 +1873,7 @@ static std::string CreateHelpEditorFileNameWithPath(TimeSerialModificationDataIn
 }
 
 // jos timebag pointteri on 0, otetaan timebagi smartista ja resoluutio annetusta parametrista,
-// mutta jos timebag pointteri osoittaa johonkin, otetaan se suoraan käyttöön.
+// mutta jos timebag pointteri osoittaa johonkin, otetaan se suoraan kï¿½yttï¿½ï¿½n.
 static std::shared_ptr<NFmiFastQueryInfo> CreateSimilarSmartInfoWithTimeInterpolation(std::shared_ptr<NFmiFastQueryInfo> &theSmartInfo, long theResolutionInMinutes, NFmiTimeBag* theWantedTimeBag)
 {
 	std::shared_ptr<NFmiFastQueryInfo> newSmartInfo;
@@ -1895,7 +1895,7 @@ static std::shared_ptr<NFmiFastQueryInfo> CreateSimilarSmartInfoWithTimeInterpol
 static void AddKeyValueToData(std::shared_ptr<NFmiFastQueryInfo> &data, const std::string &key, const std::string &value)
 {
     data->RemoveAllKeys(key); // putsataan ensin pois mahd. vanhat avain arvot
-    if(!value.empty()) // jos value ei ollut tyhjä, laitetaan sen arvo annettuun key:hin
+    if(!value.empty()) // jos value ei ollut tyhjï¿½, laitetaan sen arvo annettuun key:hin
         data->AddKey(key, value);
 }
 
@@ -1910,7 +1910,7 @@ static bool StoreDataToDataBase(TimeSerialModificationDataInterface &theAdapter,
         return false;
     }
 
-    // en ollut varma, mihin väliin tämä datan validointi tietokantaan viennin yhteydessä pitäisi laittaa (Marko)
+    // en ollut varma, mihin vï¿½liin tï¿½mï¿½ datan validointi tietokantaan viennin yhteydessï¿½ pitï¿½isi laittaa (Marko)
     if(theAdapter.DataToDBCheckMethod() == 1 || (theAdapter.DataToDBCheckMethod() == 2 && theAdapter.MetEditorOptionsData().MakeDataValiditationAtSendingToDB()))
     {
         ::LogMessage(theAdapter, "Data validations before sending data to server.", CatLog::Severity::Info, CatLog::Category::Editing);
@@ -1930,7 +1930,7 @@ static bool StoreDataToDataBase(TimeSerialModificationDataInterface &theAdapter,
     std::string dataBaseFileName(theAdapter.HelpEditorSystem().UsedHelpEditorStatus() ? ::CreateHelpEditorFileNameWithPath(theAdapter) : dataLoadingInfo.CreateDataBaseOutFileName(version).CharPtr());
 
     ::AddKeyValueToData(storableSmart, FmiModifyEditdData::ForecasterIDKey, theForecasterId);
-    if(!theForecasterId.empty()) // Lisätään helper editoijan id vain jos varsinaisen editoijan id ei ole puuttuvaa
+    if(!theForecasterId.empty()) // Lisï¿½tï¿½ï¿½n helper editoijan id vain jos varsinaisen editoijan id ei ole puuttuvaa
         ::AddKeyValueToData(storableSmart, FmiModifyEditdData::HelperForecasterIDKey, theHelperForecasterId);
     status = theAdapter.StoreData(dataBaseFileName, storableSmart, false);
     if(status)
@@ -2001,7 +2001,7 @@ static NFmiQueryData* ReadDataFromFile(TimeSerialModificationDataInterface &theA
 	{
 		if(fileName.empty() == false && NFmiFileSystem::FileExists(fileName) && NFmiFileSystem::FileEmpty(fileName) == false)
 		{
-			data = new NFmiQueryData(fileName, true); // tämä laittaa memorymappauksen päälle
+			data = new NFmiQueryData(fileName, true); // tï¿½mï¿½ laittaa memorymappauksen pï¿½ï¿½lle
 		}
 	}
 
@@ -2042,7 +2042,7 @@ static bool UseLoadedDataAndLoadAccessoryData(TimeSerialModificationDataInterfac
 {
 	if(theDataLoadingInfo && theAdapter.DataLoadingOK(theLoadedQueryData != nullptr))
 	{
-		//talletetaan ja ladataan uusi data, jos annettu startup latauksen yhteydestä oikea ladattu read-only datan tiedostopolku, käytetään sitä
+		//talletetaan ja ladataan uusi data, jos annettu startup latauksen yhteydestï¿½ oikea ladattu read-only datan tiedostopolku, kï¿½ytetï¿½ï¿½n sitï¿½
 		std::string newFileName = possibleReadOnlyFileName ? *possibleReadOnlyFileName : theDataLoadingInfo->NewFileName();
 		theLoadedQueryData->First();
 		if(fRemoveThundersOnLoad)
@@ -2094,13 +2094,13 @@ static bool ContinueCreatingLoadedData(TimeSerialModificationDataInterface &theA
 	return status;
 }
 
-// jos ollaan viewMode tai startupload moodeissa, käytetään tätä lataamaan data nopeasti ja huomaamattomasti
+// jos ollaan viewMode tai startupload moodeissa, kï¿½ytetï¿½ï¿½n tï¿½tï¿½ lataamaan data nopeasti ja huomaamattomasti
 static bool SpeedLoadModeDataLoading(TimeSerialModificationDataInterface &theAdapter, int theProducer, NFmiDataLoadingInfo* theLoadingInfo, bool fDoMultiThread)
 {
 	bool status = false;
 	std::string speedLoadFile(::GetViewModeSpeedLoadFile(theAdapter, theProducer, theLoadingInfo));
 
-//	if(CheckIfSpeedLoadFileHasSimilaGridAsWanted(speedLoadFile)) // ei oikeastaan kiinnosta tässä tilassa onko hila mikä hyvänsä
+//	if(CheckIfSpeedLoadFileHasSimilaGridAsWanted(speedLoadFile)) // ei oikeastaan kiinnosta tï¿½ssï¿½ tilassa onko hila mikï¿½ hyvï¿½nsï¿½
 	{
 		NFmiQueryData* data = 0;
 		try
@@ -2108,13 +2108,13 @@ static bool SpeedLoadModeDataLoading(TimeSerialModificationDataInterface &theAda
 			data = ::ReadDataFromFile(theAdapter, speedLoadFile);
 		}
 		catch(...)
-		{ // ei tehdä vielä mitään, tähän voisi lisätä lokitusta, tai messagebox-varoitus tms
+		{ // ei tehdï¿½ vielï¿½ mitï¿½ï¿½n, tï¿½hï¿½n voisi lisï¿½tï¿½ lokitusta, tai messagebox-varoitus tms
 		}
 
 		if(data)
 		{
 			// Jos ladattu suoraan tiedosto read-onlyna, ei poisteta ukkosia, ja annetaan speedLoadFile parametrina, 
-			// jotta oikeaa tiedostopolkua käytetään, kun data laitetaan sisäiseen qdata-tietokantaan.
+			// jotta oikeaa tiedostopolkua kï¿½ytetï¿½ï¿½n, kun data laitetaan sisï¿½iseen qdata-tietokantaan.
 			status = ::ContinueCreatingLoadedData(theAdapter, data, theLoadingInfo, false, fDoMultiThread, false, &speedLoadFile);
 		}
 	}
@@ -2124,7 +2124,7 @@ static bool SpeedLoadModeDataLoading(TimeSerialModificationDataInterface &theAda
 static bool CheckIfSpeedLoadFileHasSimilaGridAsWanted(TimeSerialModificationDataInterface &theAdapter, const std::string &theLoadedFileName)
 {
 	if(theAdapter.PossibleUsedDataLoadingGrid() == 0)
-		return true; // jos ei ollut määritelty haluttua hilaa+projektiota, palauta true
+		return true; // jos ei ollut mï¿½ï¿½ritelty haluttua hilaa+projektiota, palauta true
 	else
 	{
 		if(!theLoadedFileName.empty())
@@ -2148,10 +2148,10 @@ static bool SpeedLoadDBDataOnlyIfPossible(TimeSerialModificationDataInterface &t
 	if(theAdapter.SmartMetEditingMode() != CtrlViewUtils::kFmiEditingModeNormal) // jos ollaan ns. view-moodissa TAI startUp-loading moodissa, voidaan lataus tehda helpommin
 	{ // View-moodissa ei valiteta mistaan vaan ladataan primaari data sellaisenaan
 		// koska view-moodissa ei lataus-dialogia avattu, pitaa ladattavan datan tiedoston nimi hakea toista kautta
-		// vaihe 1: yritetään ladata primääri dataa
+		// vaihe 1: yritetï¿½ï¿½n ladata primï¿½ï¿½ri dataa
 		status = ::SpeedLoadModeDataLoading(theAdapter, thePrimaryProducer, theLoadingInfo, fDoMultiThread);
 		if(status == false)
-		{ // ei mennyt läpi primääri datan latauksella, kokeillaan sitten läpi eri datat järjestyksessä 3:sta 0:een (ei ole väliä, vaikka yritetään lukea primääri dataa uudestaan)
+		{ // ei mennyt lï¿½pi primï¿½ï¿½ri datan latauksella, kokeillaan sitten lï¿½pi eri datat jï¿½rjestyksessï¿½ 3:sta 0:een (ei ole vï¿½liï¿½, vaikka yritetï¿½ï¿½n lukea primï¿½ï¿½ri dataa uudestaan)
 			for(int producerNro = 3; producerNro >= 0; producerNro--)
 			{
 				status = ::SpeedLoadModeDataLoading(theAdapter, producerNro, theLoadingInfo, fDoMultiThread);
@@ -2162,8 +2162,8 @@ static bool SpeedLoadDBDataOnlyIfPossible(TimeSerialModificationDataInterface &t
 		return status;
 	}
 
-	// etsitään 1. primäärituottajasta poikkeava, jos eri suuri kuin end, löytyi muitakin tuottajia ja pika latausta ei voida suorittaa
-	if(thePrimaryProducer == 2 || thePrimaryProducer == 3) // 2 == oma työdata ja 3 == virallinen db data
+	// etsitï¿½ï¿½n 1. primï¿½ï¿½rituottajasta poikkeava, jos eri suuri kuin end, lï¿½ytyi muitakin tuottajia ja pika latausta ei voida suorittaa
+	if(thePrimaryProducer == 2 || thePrimaryProducer == 3) // 2 == oma tyï¿½data ja 3 == virallinen db data
 	{
         std::vector<int>::iterator pos = std::find_if(theModelIndexVector.begin(), theModelIndexVector.end(), [=](auto modelIndex) { return modelIndex != thePrimaryProducer; });
 		if(pos == theModelIndexVector.end())
@@ -2176,14 +2176,14 @@ static bool SpeedLoadDBDataOnlyIfPossible(TimeSerialModificationDataInterface &t
 					data = ::ReadDataFromFile(theAdapter, theLoadedFile);
 				}
 				catch(...)
-				{ // ei tehdä vielä mitään, tähän voisi lisätä lokitusta, tai messagebox-varoitus tms
+				{ // ei tehdï¿½ vielï¿½ mitï¿½ï¿½n, tï¿½hï¿½n voisi lisï¿½tï¿½ lokitusta, tai messagebox-varoitus tms
 				}
 				if(data)
 				{
 					if(!theAdapter.UseEditedDataParamDescriptor() || theAdapter.EditedDataParamDescriptor() == data->Info()->ParamDescriptor())
 					{
 						NFmiTimeDescriptor timeDescriptor(theLoadingInfo->MetEditorModeDataWCTR()->TimeDescriptor());
-						if(timeDescriptor == data->Info()->TimeDescriptor()) // jos vielä ladattavat ajat ovat samat kuin ladattavassa datassa, ei tarvitse kuin ottaa data käyttöön
+						if(timeDescriptor == data->Info()->TimeDescriptor()) // jos vielï¿½ ladattavat ajat ovat samat kuin ladattavassa datassa, ei tarvitse kuin ottaa data kï¿½yttï¿½ï¿½n
 						{
 							// producer id:t tulevat tiedostosta ladatstusta datasta sellaisenaan
 							status = ::ContinueCreatingLoadedData(theAdapter, data, theLoadingInfo, fRemoveThundersOnLoad, fDoMultiThread, false);
@@ -2193,7 +2193,7 @@ static bool SpeedLoadDBDataOnlyIfPossible(TimeSerialModificationDataInterface &t
 						{
 							NFmiTimeDescriptor dataTimeDesc(data->Info()->TimeDescriptor());
 							NFmiTimeDescriptor testTimeDesc(dataTimeDesc.GetIntersection(timeDescriptor.FirstTime(), timeDescriptor.LastTime()));
-							if(timeDescriptor == testTimeDesc) // jos vielä ladattavat ajat ovat riittävän samat kuin ladattavassa datassa, voidaan pikalataus data rakentaa
+							if(timeDescriptor == testTimeDesc) // jos vielï¿½ ladattavat ajat ovat riittï¿½vï¿½n samat kuin ladattavassa datassa, voidaan pikalataus data rakentaa
 							{
 								NFmiQueryData *data2 = NFmiQueryDataUtil::ExtractTimes(data, testTimeDesc);
 								if(data2) // ExtractTimes hoiti samalla myos producer id:t
@@ -2216,7 +2216,7 @@ static bool TryAutoStartUpLoad(TimeSerialModificationDataInterface &theAdapter, 
 	bool status = false;
     ::LogMessage(theAdapter, "TryAutoStartUpLoad checking for data...", CatLog::Severity::Debug, CatLog::Category::Editing);
     CtrlViewUtils::FmiSmartMetEditingMode oldMode = theAdapter.SmartMetEditingMode();
-	theAdapter.SmartMetEditingMode(CtrlViewUtils::kFmiEditingModeStartUpLoading, false); // ei muutetä asetusta setting:eihin asti (false), koska tämä on vain väliaikainen muutos, lopussa palautetaan arvo takaisin
+	theAdapter.SmartMetEditingMode(CtrlViewUtils::kFmiEditingModeStartUpLoading, false); // ei muutetï¿½ asetusta setting:eihin asti (false), koska tï¿½mï¿½ on vain vï¿½liaikainen muutos, lopussa palautetaan arvo takaisin
 	try
 	{
 		bool fRemoveThundersOnLoad = false; // auto start-upissa ei poistella turhaan ukkosia...
@@ -2257,13 +2257,13 @@ static QueryDataVector LoadAndCreateSelectedQueryData(TimeSerialModificationData
 		catch(std::exception &e)
 		{
             ::LogMessage(theAdapter, std::string("Coudn't load data file '") + fileName + "' when building edited data.\n" + e.what(), CatLog::Severity::Error, CatLog::Category::Editing);
-			// Pakko laittaa tyhjä listaan, jatko olettaa että sellainen löytyy
+			// Pakko laittaa tyhjï¿½ listaan, jatko olettaa ettï¿½ sellainen lï¿½ytyy
 			dataVector.push_back(nullptr);
 		}
 		catch(...)
 		{
             ::LogMessage(theAdapter, std::string("Coudn't load data file '") + fileName + "' when building edited data.", CatLog::Severity::Error, CatLog::Category::Editing);
-			// Pakko laittaa tyhjä listaan, jatko olettaa että sellainen löytyy
+			// Pakko laittaa tyhjï¿½ listaan, jatko olettaa ettï¿½ sellainen lï¿½ytyy
 			dataVector.push_back(nullptr);
 		}
 	}
@@ -2290,7 +2290,7 @@ static bool FillDataWithSourceDataWCTR(FastInfoVector & theSourceInfos, std::vec
 {
 	if(theModelIndexVector.size() && theDestData)
 	{
-		// Katso yhtenäisiä tuottaja pätkiä theModelIndexVector:ista, ota pätkistä aina alku ja loppu indeksi.
+		// Katso yhtenï¿½isiï¿½ tuottaja pï¿½tkiï¿½ theModelIndexVector:ista, ota pï¿½tkistï¿½ aina alku ja loppu indeksi.
 		unsigned long startTimeIndex = 0; //gMissingIndex;
 		unsigned long endTimeIndex = gMissingIndex;
 		int currentProducerIndex = theModelIndexVector[0];
@@ -2377,10 +2377,10 @@ float BlendValues(float value1, float value2, float factor, FmiParameterName par
 	}
 }
 
-// Täällä siis blendataan kaksi mallia (primääri ja secundääri) halutulla aikavälillä.
-// Blendiä ei tehdä, jos primääri ja sekundääri ovat samoja, tai jos kaikilla aika-askelilla
-// theModelIndexVector:issä on sama arvo ja jos kaikilla paitsi viimeisellä aika-askeleella on
-// sama arvo. Näillä tarkistuksilla yritetään estää tahaton blendaus.
+// Tï¿½ï¿½llï¿½ siis blendataan kaksi mallia (primï¿½ï¿½ri ja secundï¿½ï¿½ri) halutulla aikavï¿½lillï¿½.
+// Blendiï¿½ ei tehdï¿½, jos primï¿½ï¿½ri ja sekundï¿½ï¿½ri ovat samoja, tai jos kaikilla aika-askelilla
+// theModelIndexVector:issï¿½ on sama arvo ja jos kaikilla paitsi viimeisellï¿½ aika-askeleella on
+// sama arvo. Nï¿½illï¿½ tarkistuksilla yritetï¿½ï¿½n estï¿½ï¿½ tahaton blendaus.
 void DoDataLoadingBlending(TimeSerialModificationDataInterface &theAdapter, FastInfoVector & theSourceInfos, std::vector<int> & theModelIndexVector, NFmiQueryData* theDestData, NFmiDataLoadingInfo* theLoadingInfo)
 {
 	if(theAdapter.ModelDataBlender().Use() == false)
@@ -2395,12 +2395,12 @@ void DoDataLoadingBlending(TimeSerialModificationDataInterface &theAdapter, Fast
 		if(firstModelIndex != theModelIndexVector[k])
 			break;
 	}
-	if(k >= theModelIndexVector.size()-1) // jos siis mentiin looppi läpi ilman break:ia eli kaikki oli samaa mallia (paitsi viimeinen aika-askel)
+	if(k >= theModelIndexVector.size()-1) // jos siis mentiin looppi lï¿½pi ilman break:ia eli kaikki oli samaa mallia (paitsi viimeinen aika-askel)
 		return  ; // niin lopetetaan...
 
 	auto &info1 = theSourceInfos[theLoadingInfo->PrimaryProducerSetting()];
 	auto& info2 = theSourceInfos[theLoadingInfo->SecondaryProducerSetting()];
-	if(info1 && info2) // niin ja primaarui ja sekondääri datat pitää löytyä, muuten ei blendiä
+	if(info1 && info2) // niin ja primaarui ja sekondï¿½ï¿½ri datat pitï¿½ï¿½ lï¿½ytyï¿½, muuten ei blendiï¿½
 	{
 		info1->First();
 		info2->First();
@@ -2408,9 +2408,9 @@ void DoDataLoadingBlending(TimeSerialModificationDataInterface &theAdapter, Fast
 		double infoVersion = destInfo.InfoVersion();
 		NFmiModelDataBlender &modelDataBlender = theAdapter.ModelDataBlender();
 		for(size_t i = modelDataBlender.GetStarTimeIndex(); i <= modelDataBlender.GetEndTimeIndex(); i++)
-		{ // käydään blendaus ajat läpi
+		{ // kï¿½ydï¿½ï¿½n blendaus ajat lï¿½pi
 			destInfo.TimeIndex(static_cast<unsigned long>(i));
-//			for(level)  // HUOM! oletus vielä nyt että ei käydä leveleitä läpi!!!! Nyt levelit osoittavat kaikissa infoissa ensimmäiseen.
+//			for(level)  // HUOM! oletus vielï¿½ nyt ettï¿½ ei kï¿½ydï¿½ leveleitï¿½ lï¿½pi!!!! Nyt levelit osoittavat kaikissa infoissa ensimmï¿½iseen.
 			for(destInfo.ResetParam(); destInfo.NextParam(); )
 			{
 				FmiParameterName parId = static_cast<FmiParameterName>(destInfo.Param().GetParamIdent());
@@ -2418,7 +2418,7 @@ void DoDataLoadingBlending(TimeSerialModificationDataInterface &theAdapter, Fast
 				info2->Param(parId);
 				for(destInfo.ResetLocation(); destInfo.NextLocation(); )
 				{
-					// tehdään vielä ilman optimointia eli aika ja paikka interpolointi aina
+					// tehdï¿½ï¿½n vielï¿½ ilman optimointia eli aika ja paikka interpolointi aina
 					NFmiPoint latlon = destInfo.LatLon();
 					float value1 = info1->InterpolatedValue(latlon, destInfo.Time(), 360);
 					float value2 = info2->InterpolatedValue(latlon, destInfo.Time(), 360);
@@ -2500,7 +2500,7 @@ static bool CreateLoadedData(TimeSerialModificationDataInterface &theAdapter, Fa
 	int size = static_cast<int>(theInfos.size());
 	int firstIndex = -1;
 	for(int i=0; i<size; i++)
-		if(theInfos[i] != 0 && firstIndex == -1) // jos edes 1 info löytyy, jatketaan
+		if(theInfos[i] != 0 && firstIndex == -1) // jos edes 1 info lï¿½ytyy, jatketaan
 		{
 			dataExist = true;
 			firstIndex = i;
@@ -2536,7 +2536,7 @@ static bool CreateLoadedData(TimeSerialModificationDataInterface &theAdapter, Fa
 		return false;
 	}
 
-	// Tähän väliin tehdään blendaus operaatio, jos tarpeen
+	// Tï¿½hï¿½n vï¿½liin tehdï¿½ï¿½n blendaus operaatio, jos tarpeen
 	::DoDataLoadingBlending(theAdapter, theInfos, theModelIndexVector, newData, theLoadingInfo);
 
 	::PutProducerIdListInDataHeader(theAdapter, newData, theInfos, theModelIndexVector);
@@ -2595,20 +2595,20 @@ static bool LoadData(TimeSerialModificationDataInterface &theAdapter, bool fRemo
 	return status;
 }
 
-// Pitää tehdä alustuksia laskuissa käytetyn fastInfon ja datamatriisin välillä.
+// Pitï¿½ï¿½ tehdï¿½ alustuksia laskuissa kï¿½ytetyn fastInfon ja datamatriisin vï¿½lillï¿½.
 static void InitializeMacroParamData(const NFmiTimeDescriptor &theTimes, std::shared_ptr<NFmiFastQueryInfo> &theMacroInfo, NFmiDataMatrix<float> &theValues, bool fCalcTooltipValue)
 {
     if(!fCalcTooltipValue)
     {
-        // laitetaan myös tämä matriisi aluksi puuttuvaksi, että sitä ei virhetilanteissa tarvitse erikseen säädellä
+        // laitetaan myï¿½s tï¿½mï¿½ matriisi aluksi puuttuvaksi, ettï¿½ sitï¿½ ei virhetilanteissa tarvitse erikseen sï¿½ï¿½dellï¿½
         NFmiExtraMacroParamData::AdjustValueMatrixToMissing(theMacroInfo, theValues);
     }
 
 	if(theMacroInfo)
 	{
 		theMacroInfo->First(); // asetetaan varmuuden vuoksi First:iin
-		theMacroInfo->SetValues(theValues); // nollataan infossa ollut data missing-arvoilla, että saadaan puhdas kenttä laskuihin
-		theMacroInfo->SetTimeDescriptor(theTimes); // asetetaan makroData-infon aikasysteemi currentin kartan kohtaan (feikki datassa vain yksi aika ja se pitää säätää kohdalleen, että laskut onnistuvat)
+		theMacroInfo->SetValues(theValues); // nollataan infossa ollut data missing-arvoilla, ettï¿½ saadaan puhdas kenttï¿½ laskuihin
+		theMacroInfo->SetTimeDescriptor(theTimes); // asetetaan makroData-infon aikasysteemi currentin kartan kohtaan (feikki datassa vain yksi aika ja se pitï¿½ï¿½ sï¿½ï¿½tï¿½ï¿½ kohdalleen, ettï¿½ laskut onnistuvat)
 	}
 }
 
@@ -2644,7 +2644,7 @@ static void SetMacroParamErrorMessage(const std::string &theErrorText, TimeSeria
 	if(possibleExtraMacroParamData)
 		possibleExtraMacroParamData->MacroParamErrorMessage(theErrorText);
 
-	// talletetaan virheteksti aikaleimalla, että käyttäjä voi tarkastella sitä sitten smarttool dialogissa
+	// talletetaan virheteksti aikaleimalla, ettï¿½ kï¿½yttï¿½jï¿½ voi tarkastella sitï¿½ sitten smarttool dialogissa
 	NFmiTime aTime;
 	std::string timeString = aTime.ToStr("YYYY.MM.DD HH:mm:SS\n");
 	auto dialogErrorString = timeString + theErrorText;
@@ -2691,20 +2691,20 @@ static float CalcMacroParamMatrix(TimeSerialModificationDataInterface &theAdapte
 	try // suoritetaan macro sitten
 	{
 		NFmiTimeBag validTimes(theTime, theTime, 60);
-		NFmiTimeDescriptor times(theTime, validTimes); // luodaan 'feikki' timedescriptor juuri tälle kartan ajalle, joka lasketaan smarttool-systeemissä
+		NFmiTimeDescriptor times(theTime, validTimes); // luodaan 'feikki' timedescriptor juuri tï¿½lle kartan ajalle, joka lasketaan smarttool-systeemissï¿½
         theUsedMacroInfoOut = smartToolModifier.UsedMacroParamData();
         ::InitializeMacroParamData(times, theUsedMacroInfoOut, theValues, fCalcTooltipValue);
 		if(fCalcTooltipValue)
-			value = smartToolModifier.CalcSmartToolValue(theTime, theTooltipLatlon); // false tarkoittaa että laskut tehdään kaikkiin pisteisiin eikä vain valittuihin pisteisiin
+			value = smartToolModifier.CalcSmartToolValue(theTime, theTooltipLatlon); // false tarkoittaa ettï¿½ laskut tehdï¿½ï¿½n kaikkiin pisteisiin eikï¿½ vain valittuihin pisteisiin
 		else
 		{
 			if(fDoMultiThread)
 			{
-				smartToolModifier.ModifyData_ver2(&times, false, true, 0); // false tarkoittaa että laskut tehdään kaikkiin pisteisiin eikä vain valittuihin pisteisiin
+				smartToolModifier.ModifyData_ver2(&times, false, true, 0); // false tarkoittaa ettï¿½ laskut tehdï¿½ï¿½n kaikkiin pisteisiin eikï¿½ vain valittuihin pisteisiin
 			}
 			else
 			{
-				smartToolModifier.ModifyData(&times, false, true, 0); // false tarkoittaa että laskut tehdään kaikkiin pisteisiin eikä vain valittuihin pisteisiin
+				smartToolModifier.ModifyData(&times, false, true, 0); // false tarkoittaa ettï¿½ laskut tehdï¿½ï¿½n kaikkiin pisteisiin eikï¿½ vain valittuihin pisteisiin
 			}
 			TraceLogUsedSmartToolThreadCount(theAdapter, smartToolModifier.UsedThreadCounts());
 		}
@@ -2741,7 +2741,7 @@ static void SetForInfiniteValueCheck(TimeSerialModificationDataInterface &theAda
 {
 	std::shared_ptr<NFmiFastQueryInfo> editedInfo = theAdapter.EditedInfo();
 	if(editedInfo)
-		editedInfo->HasNonFiniteValueSet(false); // asetetaan tämä aina editointien aluksi false:ksi että editoinnin jälkeen tiedämme onko kyseinen editointi yrittänyt laittaa inf/nan arvoja editoitavaan dataan
+		editedInfo->HasNonFiniteValueSet(false); // asetetaan tï¿½mï¿½ aina editointien aluksi false:ksi ettï¿½ editoinnin jï¿½lkeen tiedï¿½mme onko kyseinen editointi yrittï¿½nyt laittaa inf/nan arvoja editoitavaan dataan
 }
 
 static void ReportError_InfiniteValueCheck(TimeSerialModificationDataInterface &theAdapter, const std::string &theFunctionNameStr)
@@ -2765,7 +2765,7 @@ static void PrepareForProgressDialogAction(FmiModifyEditdData::ModifyFunctionPar
 	theModifyFunctionParamHolder.itsAdapter.DataModificationInProgress(true);
 	if(theModifyFunctionParamHolder.itsThreadCallBacks)
 	{
-		// threadien kanssa pitää kikkailla. tällä on odotettava että pää-threadissa saadaan alustettuaprogress-cancel 
+		// threadien kanssa pitï¿½ï¿½ kikkailla. tï¿½llï¿½ on odotettava ettï¿½ pï¿½ï¿½-threadissa saadaan alustettuaprogress-cancel 
 		// dialogi, muuten liian aikaisista funktio kutsuista voi tulla fataaleja
 		theModifyFunctionParamHolder.itsThreadCallBacks->WaitUntilInitialized();
 	}
@@ -2775,13 +2775,13 @@ static void PostProcessForProgressDialogAction(FmiModifyEditdData::ModifyFunctio
 {
 	theModifyFunctionParamHolder.fReturnValue = theStatus;
 	if(theModifyFunctionParamHolder.itsThreadCallBacks)
-		theModifyFunctionParamHolder.itsThreadCallBacks->DoPostMessage(theMessage); // tämä sulkee mahdollisen progress-dialogin
+		theModifyFunctionParamHolder.itsThreadCallBacks->DoPostMessage(theMessage); // tï¿½mï¿½ sulkee mahdollisen progress-dialogin
 	if(fSetModificationInProogressStatus)
 		theModifyFunctionParamHolder.itsAdapter.DataModificationInProgress(false);
 }
 
-// Tämä tarkistaa onko käynnissä datan modifikaatiota erillisessä säikeessä (mm. kontrollipiste-muokkaus ja smarttool-muokkaus).
-// Jos on, raportoi asiasta loggeriin ja palauttaa false:n (tällöin tätä kutsuvan funktion pitäisi lopettaa, eikä edetä datan muokkaukseen), 
+// Tï¿½mï¿½ tarkistaa onko kï¿½ynnissï¿½ datan modifikaatiota erillisessï¿½ sï¿½ikeessï¿½ (mm. kontrollipiste-muokkaus ja smarttool-muokkaus).
+// Jos on, raportoi asiasta loggeriin ja palauttaa false:n (tï¿½llï¿½in tï¿½tï¿½ kutsuvan funktion pitï¿½isi lopettaa, eikï¿½ edetï¿½ datan muokkaukseen), 
 // muuten palauttaa true:n.
 static bool IsDataModificationInProgress(TimeSerialModificationDataInterface &theAdapter, const std::string &theCallingFunctionName)
 {
@@ -2817,7 +2817,7 @@ bool FmiModifyEditdData::DoTimeSerialModifications(TimeSerialModificationDataInt
 	return status;
 }
 
-// Nämä on oikeasti määritelty SmartMet\SmartMetToolboxDep\SmartMetToolboxDep_resource.h -tiedostossa, mutta en halua täällä riippuvuutta sinne
+// Nï¿½mï¿½ on oikeasti mï¿½ï¿½ritelty SmartMet\SmartMetToolboxDep\SmartMetToolboxDep_resource.h -tiedostossa, mutta en halua tï¿½ï¿½llï¿½ riippuvuutta sinne
 #define ID_MESSAGE_WORKING_THREAD_COMPLETED 33088
 #define ID_MESSAGE_WORKING_THREAD_CANCELED 33089
 
@@ -2839,7 +2839,7 @@ void FmiModifyEditdData::DoTimeSerialModifications2(ModifyFunctionParamHolder &t
 		::PostProcessForProgressDialogAction(theModifyFunctionParamHolder, status, ID_MESSAGE_WORKING_THREAD_COMPLETED);
 		::ReportError_InfiniteValueCheck(theModifyFunctionParamHolder.itsAdapter, __FUNCTION__);
 		return ;
-		// HUOM! ei saa mennä onnistuneessa ajossa tästä ohi, pitää olla return edellä!
+		// HUOM! ei saa mennï¿½ onnistuneessa ajossa tï¿½stï¿½ ohi, pitï¿½ï¿½ olla return edellï¿½!
 	}
 	catch(std::exception &e)
 	{
@@ -2848,7 +2848,7 @@ void FmiModifyEditdData::DoTimeSerialModifications2(ModifyFunctionParamHolder &t
 	catch(...)
 	{
 	}
-	::UndoData(theModifyFunctionParamHolder.itsAdapter); // toiminto on luultavasti keskeytetty käyttäjän toimesta, joten pitää tehdä undo-toiminto tässä ja sitten palauttaa false
+	::UndoData(theModifyFunctionParamHolder.itsAdapter); // toiminto on luultavasti keskeytetty kï¿½yttï¿½jï¿½n toimesta, joten pitï¿½ï¿½ tehdï¿½ undo-toiminto tï¿½ssï¿½ ja sitten palauttaa false
 	::PostProcessForProgressDialogAction(theModifyFunctionParamHolder, false, ID_MESSAGE_WORKING_THREAD_CANCELED);
 	::ReportError_InfiniteValueCheck(theModifyFunctionParamHolder.itsAdapter, std::string(__FUNCTION__) + " - canceled");
 }
@@ -2868,7 +2868,7 @@ void FmiModifyEditdData::DoSmartToolEditing2(ModifyFunctionParamHolder &theModif
 		::PostProcessForProgressDialogAction(theModifyFunctionParamHolder, status, ID_MESSAGE_WORKING_THREAD_COMPLETED);
 		::ReportError_InfiniteValueCheck(theModifyFunctionParamHolder.itsAdapter, __FUNCTION__);
 		return ;
-		// HUOM! ei saa mennä onnistuneessa ajossa tästä ohi, pitää olla return edellä!
+		// HUOM! ei saa mennï¿½ onnistuneessa ajossa tï¿½stï¿½ ohi, pitï¿½ï¿½ olla return edellï¿½!
 	}
 	catch(NFmiStopThreadException & )
 	{
@@ -2876,7 +2876,7 @@ void FmiModifyEditdData::DoSmartToolEditing2(ModifyFunctionParamHolder &theModif
 	catch(...)
 	{
 	}
-	::UndoData(theModifyFunctionParamHolder.itsAdapter); // toiminto on luultavasti keskeytetty käyttäjän toimesta, joten pitää tehdä undo-toiminto tässä ja sitten palauttaa false
+	::UndoData(theModifyFunctionParamHolder.itsAdapter); // toiminto on luultavasti keskeytetty kï¿½yttï¿½jï¿½n toimesta, joten pitï¿½ï¿½ tehdï¿½ undo-toiminto tï¿½ssï¿½ ja sitten palauttaa false
 	::PostProcessForProgressDialogAction(theModifyFunctionParamHolder, false, ID_MESSAGE_WORKING_THREAD_CANCELED);
 	::ReportError_InfiniteValueCheck(theModifyFunctionParamHolder.itsAdapter, std::string(__FUNCTION__) + " - canceled");
 }

@@ -9746,7 +9746,13 @@ void AddToCrossSectionPopupMenu(NFmiMenuItemList *thePopupMenu, NFmiDrawParamLis
 	{
 		auto editedData = EditedInfo();
 		if(editedData)
+		{
+#ifndef UNIX
 			return editedData->RefRawData()->IsReadOnly();
+#else
+			return false;
+#endif
+		}
 		// Jos editoitua dataa ei ole, palautetaan arvo ett� se on read-only moodissa
 		return true;
 	}
@@ -12790,6 +12796,10 @@ void NFmiEditMapGeneralDataDoc::OnShowMasksOnMap(unsigned int theDescTopIndex)
 {
 	pimpl->OnShowMasksOnMap(theDescTopIndex);
 }
+#else
+void NFmiEditMapGeneralDataDoc::OnShowMasksOnMap(unsigned int /*theDescTopIndex*/)
+{
+}
 #endif
 
 void NFmiEditMapGeneralDataDoc::OnShowProjectionLines(void)
@@ -13421,6 +13431,10 @@ void NFmiEditMapGeneralDataDoc::UpdateEnableDataChangesToWinReg(void)
 {
         pimpl->UpdateEnableDataChangesToWinReg();
 }
+#else
+void NFmiEditMapGeneralDataDoc::UpdateEnableDataChangesToWinReg(void)
+{
+}
 #endif
 
 MultiProcessClientData& NFmiEditMapGeneralDataDoc::GetMultiProcessClientData(void)
@@ -13706,6 +13720,11 @@ int NFmiEditMapGeneralDataDoc::GetTimeRangeForWarningMessagesOnMapViewInMinutes(
 {
     return pimpl->GetTimeRangeForWarningMessagesOnMapViewInMinutes();
 }
+#else
+int NFmiEditMapGeneralDataDoc::GetTimeRangeForWarningMessagesOnMapViewInMinutes()
+{
+    return 60;
+}
 #endif
 
 bool NFmiEditMapGeneralDataDoc::MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action, const std::string &updateMessage)
@@ -13781,6 +13800,10 @@ NFmiParameterInterpolationFixer& NFmiEditMapGeneralDataDoc::ParameterInterpolati
 void NFmiEditMapGeneralDataDoc::UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged()
 {
 	pimpl->UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged();
+}
+#else
+void NFmiEditMapGeneralDataDoc::UpdateMacroParamDataGridSizeAfterVisualizationOptimizationsChanged()
+{
 }
 #endif
 

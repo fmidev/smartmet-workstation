@@ -3,9 +3,7 @@
 #include "NFmiMapViewDescTop.h"
 #include "ApplicationInterface.h"
 #include "CombinedMapHandlerInterface.h"
-#ifndef UNIX
 #include "NFmiApplicationWinRegistry.h"
-#endif
 #include "SpecialDesctopIndex.h"
 #include "NFmiCrossSectionSystem.h"
 
@@ -124,6 +122,12 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::MakeDrawedInfoVectorForMapView(
 NFmiApplicationWinRegistry& SmartMetDocumentInterfaceForGeneralDataDoc::ApplicationWinRegistry()
 {
     return itsDoc->ApplicationWinRegistry();
+}
+#else
+NFmiApplicationWinRegistry& SmartMetDocumentInterfaceForGeneralDataDoc::ApplicationWinRegistry()
+{
+    static NFmiApplicationWinRegistry dummy;
+    return dummy;
 }
 #endif
 
@@ -1411,6 +1415,10 @@ void SmartMetDocumentInterfaceForGeneralDataDoc::SetHatchingToolmasterEpsilonFac
     ApplicationWinRegistry().HatchingToolmasterEpsilonFactor(newEpsilonFactor);
     if(ApplicationInterface::GetApplicationInterfaceImplementation)
         ApplicationInterface::GetApplicationInterfaceImplementation()->SetHatchingToolmasterEpsilonFactor(newEpsilonFactor);
+}
+#else
+void SmartMetDocumentInterfaceForGeneralDataDoc::SetHatchingToolmasterEpsilonFactor(float /*newEpsilonFactor*/)
+{
 }
 #endif
 

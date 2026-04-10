@@ -191,4 +191,38 @@ Gdiplus::Bitmap* NFmiImageMap::GetRightSizeImage(double drawedSymbolSizeInPixels
     // Kokeillaan l�ytyyk� isompaa kuvaa true parametrilla
     return GetSymbolImage(theSymbolCode, true);
 }
+#else
+std::pair<std::string, NFmiImageMap::ImagesHolder> NFmiImageMap::GetImageHolderInfo(const std::string &theConfFileLine, const std::string &theConfFileName)
+{
+    std::string line(theConfFileLine);
+    NFmiStringTools::TrimAll(line);
+    if(!line.empty())
+    {
+        if(line.size() > 0 && line[0] == '#')
+            return std::pair<std::string, ImagesHolder>();
+        if(line.size() > 1 && line[0] == '/' && line[1] == '/')
+            return std::pair<std::string, ImagesHolder>();
+
+        std::vector<std::string> parts = NFmiStringTools::Split(line, ";");
+        if(parts.size() == 3)
+        {
+            std::string file1 = parts[1];
+            file1 = NFmiFileSystem::MakeAbsolutePath(file1, itsImageBaseFolder);
+            std::string file2 = parts[2];
+            file2 = NFmiFileSystem::MakeAbsolutePath(file2, itsImageBaseFolder);
+            return std::make_pair(parts[0], ImagesHolder(file1, file2));
+        }
+        else if(parts.size() == 2 || parts.size() > 3)
+        {
+            std::string errStr("Error in MirwaSymbolMap::GetImageHolderInfo - malformatted line:\n");
+            errStr += theConfFileLine;
+            errStr += "\nIn configuration file: ";
+            errStr += theConfFileName;
+            errStr += "\nThere should be three string values separated by two semicolons (;)";
+            errStr += "\nLike following: codeword;imagefile1;imagefile2";
+            throw std::runtime_error(errStr);
+        }
+    }
+    return std::pair<std::string, ImagesHolder>();
+}
 #endif // UNIX

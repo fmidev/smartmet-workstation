@@ -1945,6 +1945,10 @@ void NFmiConceptualDataView::DrawFrontDecorations(ConceptualObjectData &theData,
 		}
 	}
 }
+#else
+void NFmiConceptualDataView::DrawConseptualObject(ConceptualObjectData& /*theData*/)
+{
+}
 #endif // UNIX
 
 // HUOM! t�t� pit�� kutsua ennen kuin itse luokkaa saa k�ytt��!!!!

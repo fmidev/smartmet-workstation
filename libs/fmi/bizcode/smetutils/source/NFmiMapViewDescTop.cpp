@@ -506,6 +506,11 @@ boost::shared_ptr<Imagine::NFmiPath> NFmiMapViewDescTop::LandBorderPath(void)
 {
     return MapHandler()->LandBorderPath();
 }
+#else
+boost::shared_ptr<Imagine::NFmiPath> NFmiMapViewDescTop::LandBorderPath(void)
+{
+    return {};
+}
 #endif // !UNIX
 
 #ifndef UNIX
@@ -793,6 +798,15 @@ void NFmiMapViewDescTop::MapViewDirty(bool makeNewBackgroundBitmap, bool clearMa
         }
     }
 }
+#else
+void NFmiMapViewDescTop::MapViewDirty(bool /*makeNewBackgroundBitmap*/, bool clearMapViewBitmapCacheRows, bool redrawMapView, bool /*updateMapViewDrawingLayers*/)
+{
+    SetRedrawMapView(redrawMapView);
+    if(clearMapViewBitmapCacheRows)
+    {
+        MapViewCache().MakeDirty();
+    }
+}
 #endif // UNIX
 
 // t�lle funktiolle annetaan client view:ss� 'kartastolle' k�ytetty alue pikselein�
@@ -905,6 +919,31 @@ int NFmiMapViewDescTop::ToggleShowTimeOnMapMode(void)
 	RecalculateMapViewSizeInPixels(CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->ApplicationWinRegistry().DrawObjectScaleFactor());
 	return itsShowTimeOnMapMode;
 }
+#else
+int NFmiMapViewDescTop::ToggleShowTimeOnMapMode(void)
+{
+	itsShowTimeOnMapMode++;
+	if(itsShowTimeOnMapMode > 3)
+		itsShowTimeOnMapMode = 0;
+	if(itsShowTimeOnMapMode < 0)
+		itsShowTimeOnMapMode = 0;
+	switch(itsShowTimeOnMapMode)
+	{
+	case 0:
+		fShowTimeString = true;
+		break;
+	case 1:
+		fShowTimeString = false;
+		break;
+	case 2:
+		fShowTimeString = false;
+		break;
+	case 3:
+		fShowTimeString = true;
+		break;
+	}
+	return itsShowTimeOnMapMode;
+}
 #endif // UNIX
 
 #ifndef UNIX
@@ -912,6 +951,12 @@ void NFmiMapViewDescTop::ShowTimeOnMapMode(int newValue)
 {
 	// k�ytet��n hyv�ksi ToggleShowTimeOnMapMode-metodin
 	// tekemi� tarkastuksia ja asetuksia.
+	itsShowTimeOnMapMode = newValue-1;
+	ToggleShowTimeOnMapMode();
+}
+#else
+void NFmiMapViewDescTop::ShowTimeOnMapMode(int newValue)
+{
 	itsShowTimeOnMapMode = newValue-1;
 	ToggleShowTimeOnMapMode();
 }
@@ -988,7 +1033,24 @@ bool NFmiMapViewDescTop::BorderDrawPolylinesGdiplusDirty() const
 {
 	return MapHandler()->BorderDrawPolylinesGdiplusDirty();
 }
+#else
+bool NFmiMapViewDescTop::BorderDrawBitmapDirty(NFmiDrawParam* /*separateBorderLayerDrawOptions*/) const
+{
+	return true;
+}
 
+bool NFmiMapViewDescTop::BorderDrawPolylinesDirty() const
+{
+	return true;
+}
+
+bool NFmiMapViewDescTop::BorderDrawPolylinesGdiplusDirty() const
+{
+	return true;
+}
+#endif // UNIX
+
+#ifndef UNIX
 Gdiplus::Bitmap* NFmiMapViewDescTop::LandBorderMapBitmap(NFmiDrawParam* separateBorderLayerDrawOptions) const
 { 
 	if(separateBorderLayerDrawOptions)
@@ -1176,6 +1238,14 @@ void NFmiMapViewDescTop::StoreHandlerSelectedMapsToSettings(NFmiGdiPlusImageMapH
 	int overlayIndex = theGdiPlusImageMapHandler.OverMapBitmapIndex();
 	NFmiSettings::Set(usedOverlayIndexKey.c_str(), NFmiStringTools::Convert<int>(overlayIndex).c_str(), true);
 }
+#else
+void NFmiMapViewDescTop::SetSelectedMapsFromSettings(void)
+{
+}
+
+void NFmiMapViewDescTop::StoreHandlerSelectedMapsToSettings(void)
+{
+}
 #endif // !UNIX
 
 
@@ -1263,6 +1333,59 @@ void NFmiMapViewDescTop::InitForViewMacro(const NFmiMapViewDescTop& theOther, NF
 	fShowWarningMarkersOnMap = theOther.fShowWarningMarkersOnMap;
 
 	if(theOther.itsTimeControlViewTimes.Size() > 1) // vanhoista makroista t�h�n tulee tyhj� aikabagi, joka pit�� ignoorata
+		itsTimeControlViewTimes = theOther.itsTimeControlViewTimes;
+	itsAnimationData = theOther.itsAnimationData;
+}
+#else
+void NFmiMapViewDescTop::ToggleMapViewDisplayMode(void)
+{
+    if(itsMapViewDisplayMode == CtrlViewUtils::MapViewMode::kNormal)
+        itsMapViewDisplayMode = CtrlViewUtils::MapViewMode::kOneTime;
+    else if(itsMapViewDisplayMode == CtrlViewUtils::MapViewMode::kOneTime)
+        itsMapViewDisplayMode = CtrlViewUtils::MapViewMode::kRunningTime;
+    else
+        itsMapViewDisplayMode = CtrlViewUtils::MapViewMode::kNormal;
+
+	MapViewDirty(false, true, true, false);
+	ViewGridSize(itsViewGridSizeVM, nullptr);
+}
+
+void NFmiMapViewDescTop::InitForViewMacro(const NFmiMapViewDescTop& theOther, NFmiMapViewWinRegistry& /*theMapViewWinRegistry*/, bool /*getFromRegisty*/, bool disableWindowManipulations)
+{
+	itsLandBorderColorIndex = theOther.itsLandBorderColorIndex;
+	itsParamWindowViewPosition = theOther.itsParamWindowViewPosition;
+	itsLandBorderPenSize = theOther.itsLandBorderPenSize;
+	RelativeMapRect(theOther.itsRelativeMapRect);
+	itsDrawOverMapMode = theOther.itsDrawOverMapMode;
+	itsMapRowStartingIndex = theOther.itsMapRowStartingIndex;
+	itsShowTimeOnMapMode = theOther.itsShowTimeOnMapMode;
+	fShowTimeString = theOther.fShowTimeString;
+	itsCurrentTime = theOther.itsCurrentTime;
+	itsStationPointColorIndex = theOther.itsStationPointColorIndex;
+	itsStationPointSize = theOther.itsStationPointSize;
+	fShowMasksOnMapVM = theOther.fShowMasksOnMapVM;
+	itsSpacingOutFactorVM = theOther.itsSpacingOutFactorVM;
+	SelectedMapIndex(theOther.itsSelectedMapIndexVM);
+	fShowStationPlotVM = theOther.fShowStationPlotVM;
+	itsViewGridSizeVM = theOther.itsViewGridSizeVM;
+	TimeBoxLocation(theOther.itsTimeBoxLocationVM);
+	TimeBoxTextSizeFactor(theOther.itsTimeBoxTextSizeFactorVM);
+	TimeBoxFillColor(theOther.itsTimeBoxFillColorVM);
+	itsTimeControlTimeStep = theOther.itsTimeControlTimeStep;
+	itsMapViewDisplayMode = theOther.itsMapViewDisplayMode;
+	itsAbsoluteActiveViewRow = theOther.itsAbsoluteActiveViewRow;
+	if(!disableWindowManipulations)
+		fDescTopOn = theOther.fDescTopOn;
+	fLockToMainMapViewTime = theOther.fLockToMainMapViewTime;
+	fLockToMainMapViewRow = theOther.fLockToMainMapViewRow;
+	fShowTrajectorsOnMap = theOther.fShowTrajectorsOnMap;
+	fShowSoundingMarkersOnMap = theOther.fShowSoundingMarkersOnMap;
+	fShowCrossSectionMarkersOnMap = theOther.fShowCrossSectionMarkersOnMap;
+	fShowSelectedPointsOnMap = theOther.fShowSelectedPointsOnMap;
+	fShowControlPointsOnMap = theOther.fShowControlPointsOnMap;
+	fShowObsComparisonOnMap = theOther.fShowObsComparisonOnMap;
+	fShowWarningMarkersOnMap = theOther.fShowWarningMarkersOnMap;
+	if(theOther.itsTimeControlViewTimes.Size() > 1)
 		itsTimeControlViewTimes = theOther.itsTimeControlViewTimes;
 	itsAnimationData = theOther.itsAnimationData;
 }
@@ -1616,6 +1739,60 @@ void NFmiMapViewDescTop::InsertSeparateBorderLayerCacheBitmap(const std::string&
 std::string NFmiMapViewDescTop::GetCurrentGuiMapLayerText(bool backgroundMap)
 {
 	return MapHandler()->GetCurrentGuiMapLayerText(backgroundMap);
+}
+#else
+std::list<NFmiPolyline*>& NFmiMapViewDescTop::DrawBorderPolyLineList()
+{
+	static std::list<NFmiPolyline*> dummy;
+	return dummy;
+}
+
+void NFmiMapViewDescTop::DrawBorderPolyLineList(std::list<NFmiPolyline*>& /*newPolyline*/)
+{
+}
+
+const std::list<std::vector<NFmiPoint>>& NFmiMapViewDescTop::DrawBorderPolyLineListGdiplus()
+{
+	static std::list<std::vector<NFmiPoint>> dummy;
+	return dummy;
+}
+
+void NFmiMapViewDescTop::DrawBorderPolyLineListGdiplus(const std::list<std::vector<NFmiPoint>>& /*newPolylines*/)
+{
+}
+
+void NFmiMapViewDescTop::DrawBorderPolyLineListGdiplus(std::list<std::vector<NFmiPoint>>&& /*newPolylines*/)
+{
+}
+
+void NFmiMapViewDescTop::SetBorderDrawDirtyState(CountryBorderDrawDirtyState /*newState*/, NFmiDrawParam* /*separateBorderLayerDrawOptions*/)
+{
+}
+
+void NFmiMapViewDescTop::SetBorderDrawDirtyState(CountryBorderDrawDirtyState /*newState*/, const std::string& /*cacheKey*/)
+{
+}
+
+std::string NFmiMapViewDescTop::GetCurrentGuiMapLayerText(bool /*backgroundMap*/)
+{
+	return {};
+}
+
+bool NFmiMapViewDescTop::SetMapViewGrid(const NFmiPoint &newValue, NFmiMapViewWinRegistry *theMapViewWinRegistry)
+{
+	NFmiPoint oldSize(itsViewGridSizeVM);
+	ViewGridSize(newValue, theMapViewWinRegistry);
+	MapRowStartingIndex(MapRowStartingIndex());
+	if(oldSize != itsViewGridSizeVM)
+	{
+		MapViewDirty(true, true, true, false);
+		return true;
+	}
+	return false;
+}
+
+void NFmiMapViewDescTop::RecalculateMapViewSizeInPixels(double /*theDrawObjectScaleFactor*/)
+{
 }
 #endif // !UNIX
 

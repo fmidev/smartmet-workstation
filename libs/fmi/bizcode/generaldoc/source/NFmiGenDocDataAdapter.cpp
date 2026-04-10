@@ -352,6 +352,11 @@ std::shared_ptr<NFmiArea> NFmiGenDocDataAdapter::MapHandlerArea(bool fGetZoomedA
 	else
 		return mapHandler->TotalArea();
 }
+#else
+std::shared_ptr<NFmiArea> NFmiGenDocDataAdapter::MapHandlerArea(bool /*fGetZoomedArea*/)
+{
+	return {};
+}
 #endif
 
 FmiLanguage NFmiGenDocDataAdapter::Language(void)
@@ -408,5 +413,10 @@ void NFmiGenDocDataAdapter::LogAndWarnUser(const std::string &theMessageStr, con
 std::shared_ptr<NFmiArea> NFmiGenDocDataAdapter::GetUsedMapViewArea(int theMapViewDescTopIndex)
 {
 	return itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->MapHandler()->Area();
+}
+#else
+std::shared_ptr<NFmiArea> NFmiGenDocDataAdapter::GetUsedMapViewArea(int /*theMapViewDescTopIndex*/)
+{
+	return {};
 }
 #endif

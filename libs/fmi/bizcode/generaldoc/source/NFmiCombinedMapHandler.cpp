@@ -4876,3 +4876,155 @@ void NFmiCombinedMapHandler::clearMacroParamCache(unsigned long mapViewDescTopIn
 {
 	::getMacroParamDataCache().clearMacroParamCache(mapViewDescTopIndex, realRowIndex, drawParam->InitFileName());
 }
+
+// ========================================================================
+// UNIX stub implementations for functions guarded by #ifndef UNIX
+// ========================================================================
+#ifdef UNIX
+
+void NFmiCombinedMapHandler::initMapViewDescTops()
+{
+}
+
+void NFmiCombinedMapHandler::initCombinedMapStates()
+{
+}
+
+void NFmiCombinedMapHandler::storeCombinedMapStates()
+{
+}
+
+void NFmiCombinedMapHandler::doCutBorderDrawInitialization()
+{
+}
+
+bool NFmiCombinedMapHandler::findLastObservation(unsigned long /*mapViewDescTopIndex*/, int /*timeStepInMinutes*/, NFmiMetTime& /*newLastTime*/, bool /*ignoreSatelImages*/)
+{
+	return false;
+}
+
+bool NFmiCombinedMapHandler::findEarliestLastObservation(unsigned long /*mapViewDescTopIndex*/, int /*timeStepInMinutes*/, NFmiMetTime& /*newLastTime*/, bool /*ignoreSatelImages*/)
+{
+	return false;
+}
+
+void NFmiCombinedMapHandler::setSelectedMap(unsigned int /*mapViewDescTopIndex*/, int /*newMapIndex*/)
+{
+}
+
+void NFmiCombinedMapHandler::setSelectedMapHandler(unsigned int /*mapViewDescTopIndex*/, unsigned int /*newMapIndex*/)
+{
+}
+
+void NFmiCombinedMapHandler::setMapArea(unsigned int /*mapViewDescTopIndex*/, const std::shared_ptr<NFmiArea>& /*newArea*/)
+{
+}
+
+void NFmiCombinedMapHandler::doAutoZoom(unsigned int /*mapViewDescTopIndex*/)
+{
+}
+
+void NFmiCombinedMapHandler::maskChangedDirtyActions()
+{
+}
+
+void NFmiCombinedMapHandler::setMapViewCacheSize(double /*theNewSizeInMB*/)
+{
+}
+
+void NFmiCombinedMapHandler::storeMapViewSettingsToWinRegistry()
+{
+}
+
+void NFmiCombinedMapHandler::modifyCrossSectionDrawParam(const NFmiMenuItem& /*menuItem*/, int /*viewRowIndex*/)
+{
+}
+
+bool NFmiCombinedMapHandler::modifyDrawParam(const NFmiMenuItem& /*menuItem*/, int /*viewRowIndex*/)
+{
+	return false;
+}
+
+void NFmiCombinedMapHandler::setWantedLayerIndex(const NFmiCombinedMapModeState& /*combinedMapModeState*/, unsigned int /*mapViewDescTopIndex*/, bool /*backgroundCase*/)
+{
+}
+
+void NFmiCombinedMapHandler::setWantedLayerIndex(const NFmiCombinedMapModeState& /*combinedMapModeState*/, unsigned int /*mapViewDescTopIndex*/, unsigned int /*mapAreaIndex*/, bool /*backgroundCase*/)
+{
+}
+
+void NFmiCombinedMapHandler::makeApplyViewMacroDirtyActions(double /*drawObjectScaleFactor*/)
+{
+}
+
+void NFmiCombinedMapHandler::makeSwapBaseArea(unsigned int /*mapViewDescTopIndex*/)
+{
+}
+
+void NFmiCombinedMapHandler::swapArea(unsigned int /*mapViewDescTopIndex*/)
+{
+}
+
+bool NFmiCombinedMapHandler::setMapViewGrid(unsigned int /*mapViewDescTopIndex*/, const NFmiPoint& /*newValue*/)
+{
+	return false;
+}
+
+void NFmiCombinedMapHandler::onShowGridPoints(unsigned int /*mapViewDescTopIndex*/)
+{
+}
+
+void NFmiCombinedMapHandler::onEditSpaceOut(unsigned int /*mapViewDescTopIndex*/)
+{
+}
+
+void NFmiCombinedMapHandler::setTimeBoxValuesToWinRegistry(unsigned int /*mapViewDescTopIndex*/)
+{
+}
+
+std::shared_ptr<WmsSupportInterface> NFmiCombinedMapHandler::getWmsSupport() const
+{
+	return {};
+}
+
+void NFmiCombinedMapHandler::onAcceleratorToggleKeepMapRatio()
+{
+}
+
+void NFmiCombinedMapHandler::onButtonDataArea(unsigned int /*mapViewDescTopIndex*/)
+{
+}
+
+double NFmiCombinedMapHandler::drawObjectScaleFactor()
+{
+	return 1.0;
+}
+
+void NFmiCombinedMapHandler::drawObjectScaleFactor(double /*newValue*/)
+{
+}
+
+bool NFmiCombinedMapHandler::useCombinedMapMode() const
+{
+	return false;
+}
+
+void NFmiCombinedMapHandler::useCombinedMapMode(bool /*newValue*/)
+{
+}
+
+bool NFmiCombinedMapHandler::localOnlyMapModeUsed() const
+{
+	return true;
+}
+
+void NFmiCombinedMapHandler::startWmsSupportRenewalProcess(bool /*startedByUser*/)
+{
+}
+
+bool NFmiCombinedMapHandler::waitWmsSupportToDie(const std::chrono::milliseconds& /*waitTime*/)
+{
+	return true;
+}
+
+#endif // UNIX

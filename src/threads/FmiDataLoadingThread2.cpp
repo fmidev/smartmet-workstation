@@ -407,4 +407,16 @@ void CFmiDataLoadingThread2::SetCaseStudyMode(bool isInCaseStudyMode)
 	gIsInCaseStudyMode = isInCaseStudyMode;
 }
 
+#else // UNIX - stub implementations
+
+#include "FmiDataLoadingThread2.h"
+
+void CFmiDataLoadingThread2::ResetFirstTimeGoingThroughState()
+{
+}
+
+void CFmiDataLoadingThread2::SetCaseStudyMode(bool /*isInCaseStudyMode*/)
+{
+}
+
 #endif // UNIX

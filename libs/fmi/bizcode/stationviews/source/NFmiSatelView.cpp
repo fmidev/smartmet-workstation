@@ -176,6 +176,10 @@ void NFmiSatelView::DrawImageOnDifferentProjection(std::shared_ptr<NFmiArea> &th
         delete projectedBitmap; // t�m� kuva pit�� tuhota, mutta ei satelImagea
     }
 }
+#else
+void NFmiSatelView::DrawImageOnDifferentProjection(std::shared_ptr<NFmiArea>& /*theImageArea*/, NFmiImageHolder& /*theImageHolder*/)
+{
+}
 #endif // UNIX
 
 std::string NFmiSatelView::ComposeToolTipText(const NFmiPoint& /* theRelativePoint */ )

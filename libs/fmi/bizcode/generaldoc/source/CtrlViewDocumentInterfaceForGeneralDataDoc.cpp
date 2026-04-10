@@ -5,8 +5,9 @@
 #include "GraphicalInfo.h"
 #ifndef UNIX
 #include "GdiPlusMapHandlerInterface.h"
-#include "NFmiApplicationWinRegistry.h"
 #endif
+#include "NFmiApplicationWinRegistry.h"
+#include "MapHandlerInterface.h"
 #include "TimeSerialModification.h"
 #include "ApplicationInterface.h"
 #include "CombinedMapHandlerInterface.h"
@@ -270,12 +271,22 @@ std::unique_ptr<MapHandlerInterface> CtrlViewDocumentInterfaceForGeneralDataDoc:
 {
     return std::make_unique<GdiPlusMapHandlerInterface>(itsDoc->GetCombinedMapHandler()->getMapViewDescTop(theMapViewDescTopIndex)->MapHandler());
 }
+#else
+std::unique_ptr<MapHandlerInterface> CtrlViewDocumentInterfaceForGeneralDataDoc::GetMapHandlerInterface(int /*theMapViewDescTopIndex*/)
+{
+    return nullptr;
+}
 #endif
 
 #ifndef UNIX
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::KeepMapAspectRatio()
 {
     return itsDoc->ApplicationWinRegistry().KeepMapAspectRatio();
+}
+#else
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::KeepMapAspectRatio()
+{
+    return true;
 }
 #endif
 
@@ -608,6 +619,31 @@ int CtrlViewDocumentInterfaceForGeneralDataDoc::Registry_SpacingOutFactor(int th
 bool CtrlViewDocumentInterfaceForGeneralDataDoc::Registry_ShowMasksOnMap(int theMapViewDescTopIndex)
 {
     return itsDoc->ApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(theMapViewDescTopIndex)->ShowMasksOnMap();
+}
+#else
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::Registry_ShowLastSendTimeOnMapView()
+{
+    return false;
+}
+
+double CtrlViewDocumentInterfaceForGeneralDataDoc::Registry_MaximumFontSizeFactor()
+{
+    return 1.0;
+}
+
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::Registry_ShowStationPlot(int /*theMapViewDescTopIndex*/)
+{
+    return false;
+}
+
+int CtrlViewDocumentInterfaceForGeneralDataDoc::Registry_SpacingOutFactor(int /*theMapViewDescTopIndex*/)
+{
+    return 0;
+}
+
+bool CtrlViewDocumentInterfaceForGeneralDataDoc::Registry_ShowMasksOnMap(int /*theMapViewDescTopIndex*/)
+{
+    return false;
 }
 #endif
 
@@ -1332,6 +1368,12 @@ void CtrlViewDocumentInterfaceForGeneralDataDoc::SetLastActiveDescTopAndViewRow(
 NFmiApplicationWinRegistry& CtrlViewDocumentInterfaceForGeneralDataDoc::ApplicationWinRegistry()
 {
     return itsDoc->ApplicationWinRegistry();
+}
+#else
+NFmiApplicationWinRegistry& CtrlViewDocumentInterfaceForGeneralDataDoc::ApplicationWinRegistry()
+{
+    static NFmiApplicationWinRegistry dummy;
+    return dummy;
 }
 #endif
 
