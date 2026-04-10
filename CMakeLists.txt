@@ -162,15 +162,22 @@ if(UNIX)
 
     # Qt6: build the SmartMetQt platform library (backing-store window, QPainter wrappers)
     if(Qt6_FOUND)
+        find_package(PkgConfig REQUIRED)
+        pkg_check_modules(CAIRO REQUIRED cairo)
+
         set(CMAKE_AUTOMOC ON)
         add_library(SmartMetQt STATIC
             ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform/qt_main_window.cpp
             ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform/qt_main_window.h
+            ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform/weather_renderer.cpp
+            ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform/weather_renderer.h
         )
         target_include_directories(SmartMetQt
             PUBLIC ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform
+            PUBLIC /usr/include/smartmet
+            PUBLIC ${CAIRO_INCLUDE_DIRS}
         )
-        target_link_libraries(SmartMetQt PUBLIC Qt6::Widgets Qt6::Gui)
+        target_link_libraries(SmartMetQt PUBLIC Qt6::Widgets Qt6::Gui ${CAIRO_LIBRARIES})
         set(SmartMetQt_INCLUDE_DIRS
             ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform
             CACHE INTERNAL "SmartMetQt: Include Directories" FORCE)

@@ -10,6 +10,7 @@
 #endif
 #include "NFmiBetaProductHelperFunctions.h"
 #include "NFmiPathUtils.h"
+#include <boost/math/special_functions/round.hpp>
 
 #ifndef UNIX
 #include <direct.h> // working directory juttuja varten

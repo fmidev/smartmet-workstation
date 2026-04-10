@@ -234,16 +234,31 @@ public:
 };
 
 #else // (defined) UNIX
-// Tehd��n unix dummy toteutu, ett� saadaan k��nnetty� ja linkattua helper ja muut
-// helperist� riippuvat kirjastot.
-
-
+// Linux implementation: when HAVE_QT6 is defined, the Build* methods draw via
+// the QPainter wrapped inside a Gdiplus::Graphics object. Without Qt6, they are no-ops.
 
 #include "NFmiGlobals.h"
 #include "NFmiRect.h"
 #include "NFmiDrawingEnvironment.h"
 #include <cmath>
 #include <list>
+#include <vector>
+
+#ifdef HAVE_QT6
+#include "gdiplus_stub.h"          // Gdiplus::Graphics wraps QPainter
+#include "NFmiLine.h"
+#include "NFmiText.h"
+#include "NFmiRectangle.h"
+#include "NFmiPolyline.h"
+#include "NFmiBitmap.h"
+#include "NFmiString.h"
+#include <QPainter>
+#include <QPen>
+#include <QBrush>
+#include <QFont>
+#include <QColor>
+#include <QPolygon>
+#endif
 
 inline const NFmiPoint RotatePoint(const NFmiPoint &thePoint, double alfa)
 {
@@ -307,11 +322,50 @@ public:
   void ConvertRect(const NFmiRect & relativeRect, CRect & absoluteRect){}
   void UpdateClientRect(void){}
 
-  bool Convert(NFmiDrawingItem * fmiItem) { return true; }
-  bool ConvertShape(NFmiShape * fmiShape) { return true; }
+  // ---- Convert: main drawing dispatch ----
+  bool Convert(NFmiDrawingItem * fmiItem)
+  {
+#ifdef HAVE_QT6
+    if(!fmiItem) return false;
+    switch(fmiItem->GetIdentifier())
+    {
+      case kLineShape:      return BuildLine(static_cast<NFmiLine*>(fmiItem));
+      case kPolylineShape:  return BuildPolyline(static_cast<const NFmiPolyline*>(fmiItem));
+      case kRectangleShape: return BuildRectangle(static_cast<const NFmiRectangle*>(fmiItem));
+      case kTextShape:      return BuildText(static_cast<const NFmiText*>(fmiItem));
+      case kBitmap:         return BuildBitmap(static_cast<const NFmiBitmap*>(fmiItem));
+      default: break;
+    }
+#endif
+    return true;
+  }
 
-  void  ConvertEnvironment(const NFmiDrawingEnvironment * fmiEnvironment){}
-  COLORREF ConvertColor(const FmiRGBColor & fromFmiColor){return COLORREF();}
+  bool ConvertShape(NFmiShape * fmiShape) { return Convert(static_cast<NFmiDrawingItem*>(fmiShape)); }
+
+  // ---- ConvertEnvironment: extract pen/brush state from drawing environment ----
+  void ConvertEnvironment(const NFmiDrawingEnvironment * fmiEnvironment)
+  {
+#ifdef HAVE_QT6
+    if(!fmiEnvironment) return;
+    itsFrameColor_ = ConvertColor(fmiEnvironment->GetFrameColor());
+    itsFillColor_  = ConvertColor(fmiEnvironment->GetFillColor());
+    fFramed_ = fmiEnvironment->IsFramed();
+    fFilled_ = fmiEnvironment->IsFilled();
+    fInvert_ = fmiEnvironment->IsInverted();
+    itsPenWidth_ = static_cast<int>(fmiEnvironment->GetPenSize().X());
+    if(itsPenWidth_ < 1) itsPenWidth_ = 1;
+    itsPenStyle_ = static_cast<int>(fmiEnvironment->GetLineStyle());
+#endif
+  }
+
+  // ---- ConvertColor: FmiRGBColor (0-1 floats) to COLORREF ----
+  COLORREF ConvertColor(const FmiRGBColor & c)
+  {
+    return RGB(static_cast<int>(c.red * 255),
+               static_cast<int>(c.green * 255),
+               static_cast<int>(c.blue * 255));
+  }
+
   unsigned short ConvertPointList(NFmiVoidPtrList * fmiPointList, CPoint ** MFCPoints){return 0;}
 
   NFmiPoint ToViewPoint(long xPix, long yPix){ return NFmiPoint(SX(xPix), SY(yPix)); }
@@ -330,6 +384,12 @@ public:
   CDC * GetDC (void) const{ return 0;}
   void SetDC(CDC * pmyDC){}
   void GetPrintInfo(CPrintInfo * pPrintInfo){}
+
+#ifdef HAVE_QT6
+  // Set the Gdiplus::Graphics wrapper (which holds the QPainter*)
+  void SetGraphics(Gdiplus::Graphics* g) { graphics_ = g; }
+  Gdiplus::Graphics* GetGraphics() const { return graphics_; }
+#endif
 
   double MeasureText(const NFmiString & theText){ return 0;}
   NFmiPoint MeasureTextCorrect(const NFmiText &){ return NFmiPoint(); }
@@ -370,7 +430,29 @@ public:
   void DrawDC(CDC * theDC, const NFmiRect & theRelativeSize){}
   void DrawDC(CDC * theDC, const NFmiRect & theRelativeSize, const NFmiRect & theRelativeSourceStart){}
 
-  void DrawEllipse(const NFmiRect & theRelativeSize, NFmiDrawingEnvironment * theEnvi){}
+  // ---- DrawEllipse: draw/fill an ellipse within theRelativeSize ----
+  void DrawEllipse(const NFmiRect & theRelativeSize, NFmiDrawingEnvironment * theEnvi)
+  {
+#ifdef HAVE_QT6
+    if(!graphics_ || !graphics_->painter()) return;
+    QPainter* p = graphics_->painter();
+    ConvertEnvironment(theEnvi);
+    int x = HX(theRelativeSize.Left());
+    int y = HY(theRelativeSize.Top());
+    int w = HX(theRelativeSize.Width());
+    int h = HY(theRelativeSize.Height());
+    if(fFilled_)
+      p->setBrush(QBrush(colorrefToQColor(itsFillColor_)));
+    else
+      p->setBrush(Qt::NoBrush);
+    if(fFramed_)
+      p->setPen(QPen(colorrefToQColor(itsFrameColor_), itsPenWidth_));
+    else
+      p->setPen(Qt::NoPen);
+    p->drawEllipse(x, y, w, h);
+#endif
+  }
+
   bool DrawMultiPolygon(std::list<NFmiPolyline*> &thePolyLineList, NFmiDrawingEnvironment * theEnvi, const NFmiPoint &theOffSet){ return true; }
   void DoSymbolBulkDraw(const NFmiSymbolBulkDrawData&, bool) {}
   bool DrawValueLineList(NFmiValueLineList * theLineList, NFmiDrawingEnvironment * theEnvi, const NFmiRect & theRelativeSize){ return true; }
@@ -380,22 +462,148 @@ public:
 protected:
   void SetFont(const NFmiDrawingEnvironment * theEnvironment){}
   LPCTSTR ConvertFont(FmiFontType theFont){return LPCTSTR();}
-  bool BuildLine(NFmiLine * fmiShape){ return true; }
+
+  // ---- BuildLine: draw a line from start to end point ----
+  bool BuildLine(NFmiLine * fmiShape)
+  {
+#ifdef HAVE_QT6
+    if(!graphics_ || !graphics_->painter() || !fmiShape) return false;
+    QPainter* p = graphics_->painter();
+    SelectEnvironment(fmiShape);
+    NFmiPoint sp = fmiShape->GetStartingPoint();
+    NFmiPoint ep = fmiShape->GetEndingPoint();
+    int x1 = HX(sp.X()), y1 = HY(sp.Y());
+    int x2 = HX(ep.X()), y2 = HY(ep.Y());
+    p->setPen(QPen(colorrefToQColor(itsFrameColor_), itsPenWidth_));
+    p->drawLine(x1, y1, x2, y2);
+    DeSelectEnvironment(fmiShape);
+#endif
+    return true;
+  }
+
   bool BuildBitmap(const NFmiBitmap * fmiShape){ return true; }
-  bool BuildPolyline(const NFmiPolyline * fmiShape){ return true; }
-  bool BuildRectangle(const NFmiRectangle * fmiShape){ return true; }
+
+  // ---- BuildPolyline: draw/fill a polyline ----
+  bool BuildPolyline(const NFmiPolyline * fmiShape)
+  {
+#ifdef HAVE_QT6
+    if(!graphics_ || !graphics_->painter() || !fmiShape) return false;
+    QPainter* p = graphics_->painter();
+    SelectEnvironment(const_cast<NFmiDrawingItem*>(static_cast<const NFmiDrawingItem*>(fmiShape)));
+    const auto& pts = fmiShape->GetPoints();
+    if(pts.size() < 2) { DeSelectEnvironment(const_cast<NFmiDrawingItem*>(static_cast<const NFmiDrawingItem*>(fmiShape))); return true; }
+    QPolygon poly(static_cast<int>(pts.size()));
+    for(int i = 0; i < static_cast<int>(pts.size()); ++i)
+      poly.setPoint(i, HX(pts[i].X()), HY(pts[i].Y()));
+    if(fFilled_)
+    {
+      p->setPen(Qt::NoPen);
+      p->setBrush(QBrush(colorrefToQColor(itsFillColor_)));
+      p->drawPolygon(poly);
+    }
+    if(fFramed_)
+    {
+      p->setBrush(Qt::NoBrush);
+      p->setPen(QPen(colorrefToQColor(itsFrameColor_), itsPenWidth_));
+      p->drawPolyline(poly);
+    }
+    DeSelectEnvironment(const_cast<NFmiDrawingItem*>(static_cast<const NFmiDrawingItem*>(fmiShape)));
+#endif
+    return true;
+  }
+
+  // ---- BuildRectangle: draw/fill a rectangle ----
+  bool BuildRectangle(const NFmiRectangle * fmiShape)
+  {
+#ifdef HAVE_QT6
+    if(!graphics_ || !graphics_->painter() || !fmiShape) return false;
+    QPainter* p = graphics_->painter();
+    SelectEnvironment(const_cast<NFmiDrawingItem*>(static_cast<const NFmiDrawingItem*>(fmiShape)));
+    const NFmiRect& fr = fmiShape->GetFrame();
+    int x = HX(fr.Left()), y = HY(fr.Top());
+    int w = HX(fr.Width()), h = HY(fr.Height());
+    if(fFilled_)
+    {
+      p->setPen(Qt::NoPen);
+      p->setBrush(QBrush(colorrefToQColor(itsFillColor_)));
+      p->drawRect(x, y, w, h);
+    }
+    if(fFramed_)
+    {
+      p->setBrush(Qt::NoBrush);
+      p->setPen(QPen(colorrefToQColor(itsFrameColor_), itsPenWidth_));
+      p->drawRect(x, y, w, h);
+    }
+    DeSelectEnvironment(const_cast<NFmiDrawingItem*>(static_cast<const NFmiDrawingItem*>(fmiShape)));
+#endif
+    return true;
+  }
+
   bool BuildInvertRectangle(const NFmiRectangle * fmiShape){ return true; }
-  bool BuildText(const NFmiText * fmiShape){ return true; }
+
+  // ---- BuildText: draw text at the shape's top-left position ----
+  bool BuildText(const NFmiText * fmiShape)
+  {
+#ifdef HAVE_QT6
+    if(!graphics_ || !graphics_->painter() || !fmiShape) return false;
+    QPainter* p = graphics_->painter();
+    SelectEnvironment(const_cast<NFmiDrawingItem*>(static_cast<const NFmiDrawingItem*>(fmiShape)));
+    NFmiPoint tl = fmiShape->GetFrame().TopLeft();
+    int x = HX(tl.X()), y = HY(tl.Y());
+    // Set font from environment
+    auto* env = fmiShape->GetEnvironment();
+    if(env)
+    {
+      int fh = env->GetFontHeight();
+      if(fh < 1) fh = 12;
+      QFont qf;
+      qf.setPixelSize(fh);
+      qf.setBold(env->BoldFont());
+      p->setFont(qf);
+    }
+    p->setPen(QPen(colorrefToQColor(itsFrameColor_)));
+    const char* text = fmiShape->GetText();
+    if(text)
+      p->drawText(x, y, QString::fromUtf8(text));
+    DeSelectEnvironment(const_cast<NFmiDrawingItem*>(static_cast<const NFmiDrawingItem*>(fmiShape)));
+#endif
+    return true;
+  }
+
   void BuildShapeList(const NFmiVoidPtrList * fmiShapeList){}
   bool BuildDrawingItem(const NFmiDrawingItem * fromFmiDrawingItem){ return true; }
-  void SelectEnvironment (NFmiDrawingItem * fromFmiDrawingItem){}
-  void DeSelectEnvironment (NFmiDrawingItem * fromFmiDrawingItem){}
+
+  void SelectEnvironment(NFmiDrawingItem * fromFmiDrawingItem)
+  {
+    if(fromFmiDrawingItem && fromFmiDrawingItem->GetEnvironment())
+      ConvertEnvironment(fromFmiDrawingItem->GetEnvironment());
+  }
+  void DeSelectEnvironment(NFmiDrawingItem * fromFmiDrawingItem){}
 
 private:
   NFmiRect mClientRect_;  // Pixel dimensions (width/height stored as NFmiRect)
   NFmiRect itsRelativeClipRect_;
   bool fUseClipping_ = false;
 
+#ifdef HAVE_QT6
+  Gdiplus::Graphics* graphics_ = nullptr;
+  // Drawing state extracted from NFmiDrawingEnvironment
+  COLORREF itsFrameColor_ = 0;
+  COLORREF itsFillColor_ = 0;
+  bool fFramed_ = false;
+  bool fFilled_ = false;
+  bool fInvert_ = false;
+  int itsPenWidth_ = 1;
+  int itsPenStyle_ = 0;
+
+  // Helper: COLORREF (0x00BBGGRR) to QColor
+  static QColor colorrefToQColor(COLORREF c)
+  {
+    return QColor(static_cast<int>(c & 0xFF),
+                  static_cast<int>((c >> 8) & 0xFF),
+                  static_cast<int>((c >> 16) & 0xFF));
+  }
+#endif
 };
 
 // Stub for TurnClippingOffHelper on Linux (no-op since no GDI clipping)
