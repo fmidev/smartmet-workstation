@@ -144,13 +144,22 @@ bool NFmiBasicSmartMetConfigurations::Init(const std::string &avsToolMasterVersi
 	chdir(itsWorkingDirectory.c_str());
 #endif
     LogBasicPaths();
+#ifdef UNIX
+	std::cerr << "Init: controlPath=" << itsControlPath << std::endl;
+	std::cerr << "Init: baseConfigPath=" << itsBaseConfigurationFilePath << std::endl;
+	std::cerr << "Init: workingDir=" << itsWorkingDirectory << std::endl;
+#endif
 	// Read all configurations compatible NFmiSettings
 	if(!ReadConfigurations())
 		return false;
 
 	try
 	{
+#ifdef UNIX
+        itsHelpDataPath = NFmiSettings::Optional<std::string>("SmartMet::HelpDataPath", itsControlPath + "help_data");
+#else
         itsHelpDataPath = NFmiSettings::Optional<std::string>("SmartMet::HelpDataPath", itsControlPath + "\\help_data");
+#endif
         itsHelpDataPath = PathUtils::makeFixedAbsolutePath(itsHelpDataPath, itsControlPath);
 
 #ifndef UNIX
@@ -170,6 +179,10 @@ bool NFmiBasicSmartMetConfigurations::Init(const std::string &avsToolMasterVersi
         {
             std::string errorStr("Problems while trying to read dictionary file from:\n");
             errorStr += dictionaryFilePath;
+#ifdef UNIX
+            fprintf(stderr, "Dictionary read failed: %s\n", dictionaryFilePath.c_str());
+            fflush(stderr);
+#endif
             DoInitializationAbortMessageBox(errorStr, "Cannot read dictionary file", false);
             return false;
         }
@@ -355,9 +368,19 @@ bool NFmiBasicSmartMetConfigurations::ReadConfigurationFileFromAbsolutePath(cons
 
 void NFmiBasicSmartMetConfigurations::ReadConfigurationFile(const std::string &theConfigurationFilePath)
 {
-    bool status = ReadConfigurationFileFromAbsolutePath(PathUtils::getAbsoluteFilePath(theConfigurationFilePath, itsControlPath));
+    auto absolutePath = PathUtils::getAbsoluteFilePath(theConfigurationFilePath, itsControlPath);
+    bool status = ReadConfigurationFileFromAbsolutePath(absolutePath);
     if(status == false)
+    {
+#ifdef UNIX
+        // On Linux, warn but don't abort - some config files may not exist yet
+        fprintf(stderr, "Warning: cannot read config file: %s (resolved: %s)\n",
+            theConfigurationFilePath.c_str(), absolutePath.c_str());
+        fflush(stderr);
+#else
         throw std::runtime_error(std::string("Error when reading configuration files: can't open file:\n") + theConfigurationFilePath);
+#endif
+    }
 }
 
 bool NFmiBasicSmartMetConfigurations::ReadConfigurations()
@@ -366,10 +389,25 @@ bool NFmiBasicSmartMetConfigurations::ReadConfigurations()
     try
 	{
         // Use an umbrella config file, which contains the names of other config files
+#ifdef UNIX
+        fprintf(stderr, "Reading base config: %s\n", itsBaseConfigurationFilePath.c_str());
+        fflush(stderr);
+#endif
         NFmiSettings::Read(itsBaseConfigurationFilePath);
+#ifdef UNIX
+        fprintf(stderr, "Base config read OK\n"); fflush(stderr);
+#endif
 
         if(!ReadPreConfigurationSettings())
+        {
+#ifdef UNIX
+            fprintf(stderr, "ReadPreConfigurationSettings returned false\n"); fflush(stderr);
+#endif
             return false;
+        }
+#ifdef UNIX
+        fprintf(stderr, "PreConfig OK\n"); fflush(stderr);
+#endif
         InitFactorySettingFiles();
 
 		std::string confFileListStr = NFmiSettings::Require<std::string>("SmartMet::ConfigurationFiles");
@@ -402,7 +440,19 @@ bool NFmiBasicSmartMetConfigurations::ReadConfigurations()
         std::string errorWithFilePath = e.what();
         errorWithFilePath += "\nIn file: ";
         errorWithFilePath += fileName;
+#ifdef UNIX
+        fprintf(stderr, "ReadConfigurations exception: %s\n", errorWithFilePath.c_str());
+        fflush(stderr);
+#endif
         DoInitializationAbortMessageBox(errorWithFilePath, "Problems with Settings", false);
+		return false;
+	}
+	catch(...)
+	{
+#ifdef UNIX
+        fprintf(stderr, "ReadConfigurations: unknown exception\n");
+        fflush(stderr);
+#endif
 		return false;
 	}
 
@@ -427,6 +477,10 @@ bool NFmiBasicSmartMetConfigurations::ReadPreConfigurationSettings()
     }
     catch(std::exception &e)
     {
+#ifdef UNIX
+        fprintf(stderr, "PreConfiguration failed: %s\n", e.what());
+        fflush(stderr);
+#endif
         DoInitializationAbortMessageBox(e.what(), "Problems with PreConfigurationSettings", false);
         return false;
     }

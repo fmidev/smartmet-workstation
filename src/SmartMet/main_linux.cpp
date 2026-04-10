@@ -49,8 +49,15 @@ namespace
     {
         if(!explicitPath.empty())
             return explicitPath;
-        if(std::filesystem::exists("control_scand_edit_local_conf"))
-            return "control_scand_edit_local_conf";
+        // Search for control directories in common locations
+        for(const auto& path : {
+            "control_linux",
+            "../control_linux",
+            "control_scand_edit_local_conf"})
+        {
+            if(std::filesystem::exists(path))
+                return path;
+        }
         return "";
     }
 
@@ -478,14 +485,24 @@ int main(int argc, char* argv[])
     if(!controlPath.empty())
         gBasicSmartMetConfigurations.SetControlPath(controlPath);
 
-    try
+    if(!controlPath.empty())
     {
-        configOk = gBasicSmartMetConfigurations.Init(Toolmaster::MakeAvsToolmasterVersionString());
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << "SmartMet: configuration init failed: " << e.what() << std::endl;
-        std::cerr << "Running in demo mode (no weather data)" << std::endl;
+        try
+        {
+            configOk = gBasicSmartMetConfigurations.Init(Toolmaster::MakeAvsToolmasterVersionString());
+            if(configOk)
+                std::cerr << "Configuration loaded from: " << controlPath << std::endl;
+            else
+                std::cerr << "Configuration init returned false for: " << controlPath << std::endl;
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << "Configuration init exception: " << e.what() << std::endl;
+        }
+        catch(...)
+        {
+            std::cerr << "Configuration init: unknown exception" << std::endl;
+        }
     }
 
     if(parser.isSet("verbose"))
