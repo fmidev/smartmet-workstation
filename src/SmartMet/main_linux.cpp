@@ -167,6 +167,48 @@ namespace
         }
     }
 
+    // Refresh gGridData from current gQueryInfo position.
+    // Call after changing param/time/level.
+    bool refreshGridData()
+    {
+        if(!gQueryInfo) return false;
+        try
+        {
+            gGridWidth = static_cast<int>(gQueryInfo->GridXNumber());
+            gGridHeight = static_cast<int>(gQueryInfo->GridYNumber());
+            gParamName = std::string(gQueryInfo->Param().GetParamName().CharPtr());
+            gTimeStr = std::string(gQueryInfo->Time().ToStr(NFmiString("YYYY.MM.DD HH:mm")).CharPtr());
+
+            NFmiDataMatrix<float> matrix = gQueryInfo->Values();
+            gGridData.resize(gGridWidth * gGridHeight);
+            gDataMin = std::numeric_limits<float>::max();
+            gDataMax = std::numeric_limits<float>::lowest();
+
+            for(int y = 0; y < gGridHeight; ++y)
+                for(int x = 0; x < gGridWidth; ++x)
+                {
+                    float val = matrix[x][y];
+                    if(val == kFloatMissing || val >= 32000.0f)
+                        gGridData[y * gGridWidth + x] = std::numeric_limits<float>::quiet_NaN();
+                    else
+                    {
+                        gGridData[y * gGridWidth + x] = val;
+                        gDataMin = std::min(gDataMin, val);
+                        gDataMax = std::max(gDataMax, val);
+                    }
+                }
+            return gDataMin <= gDataMax;
+        }
+        catch(...) { return false; }
+    }
+
+    bool nextTime()     { return gQueryInfo && gQueryInfo->NextTime() && refreshGridData(); }
+    bool prevTime()     { return gQueryInfo && gQueryInfo->PreviousTime() && refreshGridData(); }
+    bool nextParam()    { return gQueryInfo && gQueryInfo->NextParam() && refreshGridData(); }
+    bool prevParam()    { return gQueryInfo && gQueryInfo->PreviousParam() && refreshGridData(); }
+    bool nextLevel()    { return gQueryInfo && gQueryInfo->NextLevel() && refreshGridData(); }
+    bool prevLevel()    { return gQueryInfo && gQueryInfo->PreviousLevel() && refreshGridData(); }
+
     // Generate sample temperature grid data for demonstration (fallback)
     std::vector<float> generateSampleGrid(int width, int height)
     {
@@ -325,13 +367,16 @@ namespace
                     QString::number(static_cast<double>(val), 'f', 1));
             }
 
-            // Grid info
-            painter->drawText(20, h - 20,
+            // Grid info + controls help
+            painter->drawText(20, h - 35,
                 QString("Grid: %1x%2 | Image: %3x%4 | Range: [%5, %6] | Interval: %7")
                     .arg(gGridWidth).arg(gGridHeight).arg(w).arg(h)
                     .arg(static_cast<double>(gDataMin), 0, 'f', 1)
                     .arg(static_cast<double>(gDataMax), 0, 'f', 1)
                     .arg(interval, 0, 'f', 1));
+            painter->setPen(QColor(100, 100, 100));
+            painter->drawText(20, h - 15,
+                QString::fromUtf8("\u2190\u2192 Time | \u2191\u2193 Parameter | PgUp/PgDn Level"));
         }
         window.endDrawing();
     }
@@ -485,6 +530,37 @@ int main(int argc, char* argv[])
     };
 
     QObject::connect(&mainWindow, &SmartMetMainWindow::resized, doRender);
+
+    // Keyboard navigation for querydata
+    auto updateTitle = [&mainWindow]()
+    {
+        mainWindow.setWindowTitle(
+            QString("SmartMet - %1 [%2]")
+                .arg(QString::fromStdString(gParamName))
+                .arg(QString::fromStdString(gTimeStr)));
+    };
+
+    QObject::connect(&mainWindow, &SmartMetMainWindow::keyPressed,
+        [&mainWindow, &doRender, &updateTitle, dataLoaded](int key, int modifiers)
+        {
+            if(!dataLoaded) return;
+            bool changed = false;
+            switch(key)
+            {
+                case Qt::Key_Right: changed = nextTime(); break;
+                case Qt::Key_Left:  changed = prevTime(); break;
+                case Qt::Key_Up:    changed = nextParam(); break;
+                case Qt::Key_Down:  changed = prevParam(); break;
+                case Qt::Key_PageUp:   changed = nextLevel(); break;
+                case Qt::Key_PageDown: changed = prevLevel(); break;
+                default: break;
+            }
+            if(changed)
+            {
+                updateTitle();
+                doRender();
+            }
+        });
 
     mainWindow.show();
 

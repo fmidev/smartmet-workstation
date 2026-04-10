@@ -9,6 +9,7 @@
 #include <QPainter>
 #include <QResizeEvent>
 #include <QPaintEvent>
+#include <QKeyEvent>
 
 class SmartMetMainWindow : public QWidget
 {
@@ -33,10 +34,12 @@ public:
 
 signals:
     void resized(int width, int height);
+    void keyPressed(int key, int modifiers);
 
 protected:
     void paintEvent(QPaintEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
+    void keyPressEvent(QKeyEvent* event) override;
 
 private:
     void recreateBackingImage(int width, int height);

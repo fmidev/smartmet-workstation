@@ -48,6 +48,12 @@ void SmartMetMainWindow::paintEvent(QPaintEvent* /*event*/)
     widgetPainter.drawImage(0, 0, backingImage_);
 }
 
+void SmartMetMainWindow::keyPressEvent(QKeyEvent* event)
+{
+    emit keyPressed(event->key(), static_cast<int>(event->modifiers()));
+    QWidget::keyPressEvent(event);
+}
+
 void SmartMetMainWindow::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
