@@ -27,6 +27,13 @@ target_link_libraries(
     Win32Utils
     )
 endif()
+if(UNIX AND Qt6_FOUND)
+target_link_libraries(
+    ${PROJECT_NAME}
+    Qt6::Widgets
+    Qt6::Gui
+    )
+endif()
 
 target_include_directories(
     ${PROJECT_NAME}

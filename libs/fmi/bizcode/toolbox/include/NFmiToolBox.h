@@ -291,11 +291,15 @@ class NFmiToolBox
 
 public:
 
-  NFmiToolBox (CView * theEnclosure, bool isScrollView = false){};
-  NFmiToolBox(const CRect & clientRect){};
-  ~NFmiToolBox(void){};
+  NFmiToolBox (CView * theEnclosure, bool isScrollView = false)
+    : mClientRect_(NFmiPoint(0,0), NFmiPoint(800, 600)) {}
+  NFmiToolBox(const CRect & clientRect)
+    : mClientRect_(clientRect) {}
+  NFmiToolBox(int width, int height)
+    : mClientRect_(NFmiPoint(0,0), NFmiPoint(width, height)) {}
+  ~NFmiToolBox(void){}
 
-  void Draw(NFmiMetaFileView * theView){};
+  void Draw(NFmiMetaFileView * theView){}
 
   unsigned long ConvertCtrlKey (UINT theHardCtrl) const{return 0;}
   void ConvertPoint(const NFmiPoint & relativePoint, CPoint & absolutePoint){}
@@ -310,10 +314,13 @@ public:
   COLORREF ConvertColor(const FmiRGBColor & fromFmiColor){return COLORREF();}
   unsigned short ConvertPointList(NFmiVoidPtrList * fmiPointList, CPoint ** MFCPoints){return 0;}
 
-  NFmiPoint ToViewPoint(long xPix, long yPix){ return NFmiPoint(); }
+  NFmiPoint ToViewPoint(long xPix, long yPix){ return NFmiPoint(SX(xPix), SY(yPix)); }
 
   NFmiRect ToFmiRect(const CRect & MacRect){return NFmiRect();}
-  double WidthPerHeight(void) const { return 0; }
+  double WidthPerHeight(void) const
+  {
+    return mClientRect_.Height() != 0 ? mClientRect_.Width() / mClientRect_.Height() : 0;
+  }
 
   NFmiRect BuildFrame(const NFmiView * viewToFrame,
 					  const NFmiColor & theFrameColor,
@@ -326,22 +333,30 @@ public:
 
   double MeasureText(const NFmiString & theText){ return 0;}
   NFmiPoint MeasureTextCorrect(const NFmiText &){ return NFmiPoint(); }
-  CRect GetClientRect() const { return CRect(); }
   void DrawPolyline(const NFmiPolyline*, const NFmiPoint&, const NFmiPoint&, double = 0) {}
 
-  long HX(double sX) const { return 0L; }
-  long HY(double sY) const { return 0L; }
-  double HXs(double sX) const { return 0.0; }
-  double HYs(double sY) const { return 0.0; }
-  double SX(long hX) const { return 0; }
-  double SY(long hY) const { return 0; }
-  double SXs(double hX) const { return 0.0; }
-  double SYs(double hY) const { return 0.0; }
+  // Relative-to-pixel coordinate conversions (match Windows CRect-based version)
+  long HX(double sX) const { return static_cast<long>(sX * mClientRect_.Width()); }
+  long HY(double sY) const { return static_cast<long>(sY * mClientRect_.Height()); }
+  double HXs(double sX) const { return sX * mClientRect_.Width(); }
+  double HYs(double sY) const { return sY * mClientRect_.Height(); }
+  // Pixel-to-relative coordinate conversions
+  double SX(long hX) const { return mClientRect_.Width() ? static_cast<double>(hX) / mClientRect_.Width() : 0; }
+  double SY(long hY) const { return mClientRect_.Height() ? static_cast<double>(hY) / mClientRect_.Height() : 0; }
+  double SXs(double hX) const { return mClientRect_.Width() ? hX / mClientRect_.Width() : 0; }
+  double SYs(double hY) const { return mClientRect_.Height() ? hY / mClientRect_.Height() : 0; }
+
+  void SetClientRect(const CRect &theClientRect){ mClientRect_ = theClientRect; }
+  const CRect& GetClientRect() const { return mClientRect_; }
 
   const NFmiRect& RelativeClipRect(void) const { return itsRelativeClipRect_; }
-  void RelativeClipRect(const NFmiRect& theRect, bool newState = true) {}
-  bool UseClipping(void) const { return false; }
-  void UseClipping(bool newState) {}
+  void RelativeClipRect(const NFmiRect& theRect, bool newState = true)
+  {
+    itsRelativeClipRect_ = theRect;
+    fUseClipping_ = newState;
+  }
+  bool UseClipping(void) const { return fUseClipping_; }
+  void UseClipping(bool newState) { fUseClipping_ = newState; }
   void SetUpClipping() {}
   void EndClipping(void) {}
 
@@ -350,7 +365,7 @@ public:
 
   bool SetXDirection(FmiDirection newDirection){ return true; }
   bool SetYDirection(FmiDirection newDirection){ return true; }
-  CRect GetDravingRect(){ return CRect();}
+  CRect GetDravingRect(){ return mClientRect_; }
   void DrawBitmap(CBitmap * theBitmap, const NFmiRect & theDrawedBitmapPortion,const NFmiRect & theRelativeSize){}
   void DrawDC(CDC * theDC, const NFmiRect & theRelativeSize){}
   void DrawDC(CDC * theDC, const NFmiRect & theRelativeSize, const NFmiRect & theRelativeSourceStart){}
@@ -377,28 +392,9 @@ protected:
   void DeSelectEnvironment (NFmiDrawingItem * fromFmiDrawingItem){}
 
 private:
+  NFmiRect mClientRect_;  // Pixel dimensions (width/height stored as NFmiRect)
   NFmiRect itsRelativeClipRect_;
-/*
-  CView * itsEnclosure;
-  NFmiDrawingEnvironment * itsBaseEnvironment;
-  bool fFilled;
-  bool fFramed;
-  bool fInvert; // draws with inverted colors (works only with NFmiRectangle)
-  COLORREF itsFrameColor;
-  COLORREF itsFillColor;
-  CBrush * pItsFillPattern;
-  CSize itsPenSize;
-  CRect mClientRect;
-  CDC * pDC;
-  CPen * pItsPen;
-  CPrintInfo * pItsPrintInfo;
-  short itsXDirection;
-  short itsYDirection;
-  bool fIsScrollView;
-
-  CBitmap itsMemBitmap;
-  CDC itsdcMem;
-*/
+  bool fUseClipping_ = false;
 
 };
 

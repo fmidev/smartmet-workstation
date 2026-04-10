@@ -159,6 +159,22 @@ if(UNIX)
     # Workaround: system NFmiSortedPtrList.h has unqualified dependent name 'Swap'
     # (bug in smartmet-library-smarttools package). -fpermissive allows it to compile.
     add_compile_options(-fpermissive)
+
+    # Qt6: build the SmartMetQt platform library (backing-store window, QPainter wrappers)
+    if(Qt6_FOUND)
+        set(CMAKE_AUTOMOC ON)
+        add_library(SmartMetQt STATIC
+            ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform/qt_main_window.cpp
+            ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform/qt_main_window.h
+        )
+        target_include_directories(SmartMetQt
+            PUBLIC ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform
+        )
+        target_link_libraries(SmartMetQt PUBLIC Qt6::Widgets Qt6::Gui)
+        set(SmartMetQt_INCLUDE_DIRS
+            ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform
+            CACHE INTERNAL "SmartMetQt: Include Directories" FORCE)
+    endif()
 endif()
 
 # ---- Linux: find system Boost ----
