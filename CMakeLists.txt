@@ -264,11 +264,9 @@ add_subdirectory(
     libs/fmi/bizcode/json_spirit
     )
 
-if(NOT UNIX)
 add_subdirectory(
     libs/fmi/bizcode/winregistryutils
     )
-endif()
 
 if(NOT UNIX)
 add_subdirectory(

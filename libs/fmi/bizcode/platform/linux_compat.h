@@ -17,11 +17,14 @@
 using BOOL      = int;
 using COLORREF  = unsigned long;
 
-// Stub registry value types (normally from NFmiCachedRegistryValue.h on Windows)
+// Stub registry value types -- used by files that don't include NFmiCachedRegistryValue.h.
+// When the real CachedReg types are available (via registry_value_linux.h), these are skipped.
+#ifndef SMARTMET_REGISTRY_VALUE_LINUX_H
 using CachedRegInt    = int;
 using CachedRegString = std::string;
 using CachedRegBool   = bool;
 using CachedRegDouble = double;
+#endif
 using UINT      = unsigned int;
 using DWORD     = unsigned long;
 using LONG      = long;
@@ -187,6 +190,10 @@ class CSize;
 #define VK_CONTROL 0x11
 #define VK_MENU    0x12
 #endif
+
+// Win32 RECT and POINT structs (used by registry binary values and MFC compat)
+struct RECT { long left = 0, top = 0, right = 0, bottom = 0; };
+struct POINT { long x = 0, y = 0; };
 
 // GetAsyncKeyState stub — always returns "not pressed" on Linux
 inline short GetAsyncKeyState(int) { return 0; }

@@ -1,11 +1,16 @@
 #pragma once
 
-// Nämä ovat Windows rekisterin tallettavia ja lukevia apuluokkia.
+#ifdef UNIX
+// On Linux, use NFmiSettings-backed implementation instead of Windows Registry
+#include "registry_value_linux.h"
+#else
+
+// Nï¿½mï¿½ ovat Windows rekisterin tallettavia ja lukevia apuluokkia.
 // registry_value ja sen lapsiluokat hanskaavat tietyt perus datatyypit kuten integer, string ja binary talletusmuodot.
 // Teen kaikki talletukset rekisteriin Ansi/Ascii muodossa.
-// En tiedä miten Unicode talletus pitäisi oikeasti hanskata (regedit.exe:llä näkyi talletuksen jälkeen vain teksti mössöä), enkä halua
-// ainakaan tässä vaiheessa että SmartMetien eri versiot sotkevat toistensa asetuksia. Enkä halua tehdä vielä versiosta 5.10 
-// talletuksia eri paikkaan, koska regeditillä näkyi vain mössöä.
+// En tiedï¿½ miten Unicode talletus pitï¿½isi oikeasti hanskata (regedit.exe:llï¿½ nï¿½kyi talletuksen jï¿½lkeen vain teksti mï¿½ssï¿½ï¿½), enkï¿½ halua
+// ainakaan tï¿½ssï¿½ vaiheessa ettï¿½ SmartMetien eri versiot sotkevat toistensa asetuksia. Enkï¿½ halua tehdï¿½ vielï¿½ versiosta 5.10 
+// talletuksia eri paikkaan, koska regeditillï¿½ nï¿½kyi vain mï¿½ssï¿½ï¿½.
 
 #include "stdafx.h"
 #include <string>
@@ -167,8 +172,8 @@ template<>
 class registry_string<std::string> : public registry_value
 {
 	public:
-        // VC++ 2012 kääntäjässä ei voi käyttää typename:a ei-templaatti -luokassa (tämä on siis specialisoitu, ei template luokka).
-        // Tämä ehkä korjaantuu VC++2013:sta, koska C++11 standardiin kuuluu typename:n käyttö ei template luokissa.
+        // VC++ 2012 kï¿½ï¿½ntï¿½jï¿½ssï¿½ ei voi kï¿½yttï¿½ï¿½ typename:a ei-templaatti -luokassa (tï¿½mï¿½ on siis specialisoitu, ei template luokka).
+        // Tï¿½mï¿½ ehkï¿½ korjaantuu VC++2013:sta, koska C++11 standardiin kuuluu typename:n kï¿½yttï¿½ ei template luokissa.
         typedef /* typename */ std::string value_type;
 
 		registry_string(const std::string & name, HKEY base) : registry_value(name, base)
@@ -253,8 +258,8 @@ class registry_int : public registry_value
 		}
 };
 
-// Tehdään specialization bool tyypille, koska muuten normaali template koodi 
-// tekee todella pitkiä VC++ 2015 kääntäjä varoituksia DWORD => bool casteista.
+// Tehdï¿½ï¿½n specialization bool tyypille, koska muuten normaali template koodi 
+// tekee todella pitkiï¿½ VC++ 2015 kï¿½ï¿½ntï¿½jï¿½ varoituksia DWORD => bool casteista.
 template<>
 class registry_int<bool> : public registry_value
 {
@@ -267,7 +272,7 @@ public:
 
     operator bool()
     {
-        // Pakko käyttää bool:in kanssa pohjana DWORD:ia, koska Win-rekisterin kanssa jutellaan niiden kautta.
+        // Pakko kï¿½yttï¿½ï¿½ bool:in kanssa pohjana DWORD:ia, koska Win-rekisterin kanssa jutellaan niiden kautta.
         DWORD returnval = DWORD();
 
         if(open(false) == true)
@@ -337,4 +342,6 @@ class registry_binary : public registry_value
             return *this;
 		}
 };
+
+#endif // UNIX (Windows registry implementation)
 

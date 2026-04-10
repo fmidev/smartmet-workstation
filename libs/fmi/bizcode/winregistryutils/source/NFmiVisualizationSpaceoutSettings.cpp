@@ -35,7 +35,7 @@ bool NFmiVisualizationSpaceoutSettings::Init(const std::string & baseRegistryPat
 }
 
 template<typename RegistryValue, typename CheckFunction>
-static bool IsRegistryValueChangedInUpdate(RegistryValue & registryValue, CheckFunction & checkFunction)
+static bool IsRegistryValueChangedInUpdate(RegistryValue & registryValue, CheckFunction checkFunction)
 {
     // 1. Otetaan vanha arvo talteen
     auto originalValue = *registryValue;

@@ -3,7 +3,7 @@
 // NFmiDataNotificationSettingsWinRegistry-luokan toteutus.
 
 #ifdef _MSC_VER
-#pragma warning( disable : 4800 ) // tämä estää pitkän varoituksen joka tulee kun käytetään CachedRegBool -> registry_int<bool> -tyyppistä dataa, siellä operator T -metodissa DWORD muuttuu bool:iksi
+#pragma warning( disable : 4800 ) // tï¿½mï¿½ estï¿½ï¿½ pitkï¿½n varoituksen joka tulee kun kï¿½ytetï¿½ï¿½n CachedRegBool -> registry_int<bool> -tyyppistï¿½ dataa, siellï¿½ operator T -metodissa DWORD muuttuu bool:iksi
 #endif
 
 #include "NFmiDataNotificationSettingsWinRegistry.h"
@@ -11,7 +11,7 @@
 #include <boost/regex.hpp>
 
 NFmiDataNotificationSettingsWinRegistry::NFmiDataNotificationSettingsWinRegistry(void)
-:mUse(false)
+:mUse()
 ,mTimeOutInSeconds()
 ,mOriginTimeFormat()
 ,mCurrentTimeFormat()
@@ -32,7 +32,7 @@ static void FixVersionNumber(boost::shared_ptr<CachedRegString> &cachedValue, co
     try
     {
         std::string origString = *cachedValue; 
-        boost::regex re("[\\d+\\.]+[\\d+]{1}"); // versio numero, jossa on väh. x.x, missä x voi sisältää useita numeroita esim. 2.12
+        boost::regex re("[\\d+\\.]+[\\d+]{1}"); // versio numero, jossa on vï¿½h. x.x, missï¿½ x voi sisï¿½ltï¿½ï¿½ useita numeroita esim. 2.12
         std::string fixedStr = boost::regex_replace(origString, re, fullAppVer);
         *cachedValue = fixedStr;
     }
@@ -62,8 +62,8 @@ bool NFmiDataNotificationSettingsWinRegistry::Init(const std::string &baseRegist
     mToolTipUseTitle = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, mSectionName, "\\ToolTipUseTitle", usedKey, true, "SmartMet::DataNotification::SystemTrayIcon::ToolTipUseTitle");
     mShowIcon = ::CreateRegValue<CachedRegBool>(mBaseRegistryPath, mSectionName, "\\ShowIcon", usedKey, true, "SmartMet::DataNotification::SystemTrayIcon::Show");
 
-    // Kahdelle seuraavalle arvolle pitää tehdä vielä versio numeron korvaus:
-    // Jos arvosta löytyy versio numero joka on muotoa x.x.x.x tai "${SmartMetVersion}", korvaa se nykyisellä versionumerolla
+    // Kahdelle seuraavalle arvolle pitï¿½ï¿½ tehdï¿½ vielï¿½ versio numeron korvaus:
+    // Jos arvosta lï¿½ytyy versio numero joka on muotoa x.x.x.x tai "${SmartMetVersion}", korvaa se nykyisellï¿½ versionumerolla
     mToolTip = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, mSectionName, "\\ToolTip", usedKey, "SmartMet 5.9.3.0 System Tray Icon", "SmartMet::DataNotification::SystemTrayIcon::ToolTip");
     ::FixVersionNumber(mToolTip, fullAppVer);
     mBalloonHeader = ::CreateRegValue<CachedRegString>(mBaseRegistryPath, mSectionName, "\\BalloonHeader", usedKey, "SmartMet 5.9.3.0 data loaded", "SmartMet::DataNotification::SystemTrayIcon::BalloonHeader");

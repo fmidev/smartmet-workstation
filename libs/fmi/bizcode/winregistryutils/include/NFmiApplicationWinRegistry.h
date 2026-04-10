@@ -14,8 +14,12 @@ class NFmiHelpDataInfoSystem;
 class SoundingViewSettingsFromWindowsRegisty;
 class NFmiCategoryHeaderInitData;
 
-// En osaa laittaa tälläistä muuttujaa luokan muuttujaksi, koska siinä on tyhjä taulukko ja kääntäjä tekee erinäisiä valituksia sellaisen käytöstä luokan dataosana.
+// En osaa laittaa tï¿½llï¿½istï¿½ muuttujaa luokan muuttujaksi, koska siinï¿½ on tyhjï¿½ taulukko ja kï¿½ï¿½ntï¿½jï¿½ tekee erinï¿½isiï¿½ valituksia sellaisen kï¿½ytï¿½stï¿½ luokan dataosana.
+#ifndef UNIX
 const TCHAR BASED_CODE g_SaveImageFileFilter[] = _TEXT("PNG (*.png)|*.png|JPEG (*.jpg)|*.jpg|BMP (*.bmp)|*.bmp|TIFF (*.tiff)|*.tiff|GIF (*.gif)|*.gif|");
+#else
+const char g_SaveImageFileFilter[] = "PNG (*.png)|*.png|JPEG (*.jpg)|*.jpg|BMP (*.bmp)|*.bmp|TIFF (*.tiff)|*.tiff|GIF (*.gif)|*.gif|";
+#endif
 
 class NFmiMapViewRangeMeterWinRegistry
 {
@@ -29,7 +33,7 @@ class NFmiMapViewRangeMeterWinRegistry
     NFmiPoint mDragStartLatlonPoint = NFmiPoint::gMissingLatlon;
     NFmiPoint mDragEndLatlonPoint = NFmiPoint::gMissingLatlon;
     bool mMouseDragOn = false;
-    // Jos lukitus moodi on päällä, ei tehdä muutoksia start/end-point asetuksiin eikä MouseDragOn asetukseen
+    // Jos lukitus moodi on pï¿½ï¿½llï¿½, ei tehdï¿½ muutoksia start/end-point asetuksiin eikï¿½ MouseDragOn asetukseen
     bool mLockModeOn = false;
 public:
     static const int TooltipDelayInMS = 1500;
@@ -70,7 +74,7 @@ private:
 
     bool mInitialized; // ei sallita tupla initialisointia
     std::string mBaseRegistryPath;
-    std::string mSectionName; // tässä on GriddingProperties
+    std::string mSectionName; // tï¿½ssï¿½ on GriddingProperties
 
     // HKEY_CURRENT_USER -keys
     boost::shared_ptr<CachedRegInt> mFunction;
@@ -81,13 +85,13 @@ private:
     boost::shared_ptr<CachedRegDouble> mLocalFitFilterRadius;
     boost::shared_ptr<CachedRegDouble> mLocalFitFilterFactor;
 
-    // Tätä yksinkertaistettua kokooma luokkaa käytetään varsinaisesti SmartMetin griddauskoodeissa
+    // Tï¿½tï¿½ yksinkertaistettua kokooma luokkaa kï¿½ytetï¿½ï¿½n varsinaisesti SmartMetin griddauskoodeissa
     NFmiGriddingProperties mGriddingProperties;
 };
 
 using CaseStudyBoolMap = std::map<std::string, boost::shared_ptr<CachedRegBool>>;
 
-// NFmiHelpDataInfoSystem:issä olevien kaikkien dynaamisten datojen enable-asetukset Windows rekisterissä
+// NFmiHelpDataInfoSystem:issï¿½ olevien kaikkien dynaamisten datojen enable-asetukset Windows rekisterissï¿½
 class NFmiHelpDataEnableWinRegistry
 {
 public:
@@ -97,29 +101,29 @@ public:
 
 private:
     bool mInitialized; // ei sallita tupla initialisointia
-    std::string mBaseRegistryPath; // TÄMÄN pitää olla ennen muidat dataosia, että se alustetaan ensin konstruktorissa!!!!
-    std::string mSectionName; // tässä on EnableData
+    std::string mBaseRegistryPath; // Tï¿½Mï¿½N pitï¿½ï¿½ olla ennen muidat dataosia, ettï¿½ se alustetaan ensin konstruktorissa!!!!
+    std::string mSectionName; // tï¿½ssï¿½ on EnableData
 
     // HKEY_CURRENT_USER -keys
 
     CaseStudyBoolMap mHelpDataEnableMap;
 };
 
-// Talletetaan jokaista uniikkia datanimeä kohden pari, jossa on datan tyyppi ja lukumäärä int arvona.
+// Talletetaan jokaista uniikkia datanimeï¿½ kohden pari, jossa on datan tyyppi ja lukumï¿½ï¿½rï¿½ int arvona.
 using CaseStudyCountMap = std::map<std::string, std::pair<NFmiInfoData::Type, boost::shared_ptr<CachedRegInt>>>;
 using ModelDataOffsetRangeInHours = std::pair<int, int>;
 const ModelDataOffsetRangeInHours gMissingOffsetRangeInHours = std::make_pair(-1, -1);
 const ModelDataOffsetRangeInHours gLatestDataOnlyRangeInHours = std::make_pair(0, 0);
 const ModelDataOffsetRangeInHours gDefaultModelDataOffsetRangeInHours = std::make_pair(24, 0);
 
-// CaseStudy dialogiin liittyvien asetuksien asetukset Windows rekisterissä:
-// 1) Kuinka monta viimeistä dataa säilytetään lokaali cachessa
-//    - Jos kyse mallidatasta, kuin monta viimeistä malliajoa
+// CaseStudy dialogiin liittyvien asetuksien asetukset Windows rekisterissï¿½:
+// 1) Kuinka monta viimeistï¿½ dataa sï¿½ilytetï¿½ï¿½n lokaali cachessa
+//    - Jos kyse mallidatasta, kuin monta viimeistï¿½ malliajoa
 //    - Jos kyse havainto/analyysi datoista, numero on aina vakio 1
-//    - Jos kyse on satel-kuvista, numero on aina vakio 0, koska niitä ei säilytetä lokaalissa cachessa
-// 2) Kuinka monta viimeistä dataa talletetaan tehtävään CaseStudy dataan 
-//    - Samat perus säädöt kuin 1:ssäkin
-//    - Satel kuville tosin on nyt säätö, toisin kuin local-cache-countissa
+//    - Jos kyse on satel-kuvista, numero on aina vakio 0, koska niitï¿½ ei sï¿½ilytetï¿½ lokaalissa cachessa
+// 2) Kuinka monta viimeistï¿½ dataa talletetaan tehtï¿½vï¿½ï¿½n CaseStudy dataan 
+//    - Samat perus sï¿½ï¿½dï¿½t kuin 1:ssï¿½kin
+//    - Satel kuville tosin on nyt sï¿½ï¿½tï¿½, toisin kuin local-cache-countissa
 // 3) Store data optio jokaiseen dataan liittyen (talletetaanko data talletettavaan case-study dataan vai ei)
 class NFmiCaseStudySettingsWinRegistry
 {
@@ -145,10 +149,10 @@ private:
     void InitHelpDataRelatedWinRegValues(const std::string& uniqueDataName, NFmiInfoData::Type dataType);
 
     std::string mBaseRegistryPath;
-    std::string mSectionNameLocalCacheCount; // tässä on LocalCacheCount
-    std::string mSectionNameCaseStudyOffset1; // tässä on CaseStudyOffset1
-    std::string mSectionNameCaseStudyOffset2; // tässä on CaseStudyOffset2
-    std::string mSectionNameStoreData; // tässä on StoreData
+    std::string mSectionNameLocalCacheCount; // tï¿½ssï¿½ on LocalCacheCount
+    std::string mSectionNameCaseStudyOffset1; // tï¿½ssï¿½ on CaseStudyOffset1
+    std::string mSectionNameCaseStudyOffset2; // tï¿½ssï¿½ on CaseStudyOffset2
+    std::string mSectionNameStoreData; // tï¿½ssï¿½ on StoreData
 
     // Kaikkien queryData konffien EnableData -osio
     NFmiHelpDataEnableWinRegistry mHelpDataEnableWinRegistry;
@@ -156,21 +160,21 @@ private:
     // HKEY_CURRENT_USER -keys
 
     CaseStudyCountMap mHelpDataLocalCacheCountMap;
-    // Muutetaan talletettavien datojen lukumäärä kahdeksi indeksiksi, joiden väliin jäävät malliajot talletetaan.
-    // CaseStudy-dialogissa molemmat luvut annetaan yhdestä grid-controllin cell:ista.
-    // Jos cell:in string arvo on vain yksi luku (esim. "3"), tällöin talletetaan kaikki malliajot 3-1 (3. tuoreimmasta 1. tuoreimpaan).
-    // Muuten cell:in string arvossa on kaksi lukua eroteltuna '-' merkillä ,esim. "4-3". Tällöin talletetaan 4. tuorein ja 3. tuorein, mutta ei 2. ja 1. tuoreimpia.
-    // Näin voi tallettaa CaseStudyn jälkikäteen vaikka eilisen datoilla niin että uusimpia datoja ei tarvitse sulloa väkisin datapakettiin.
+    // Muutetaan talletettavien datojen lukumï¿½ï¿½rï¿½ kahdeksi indeksiksi, joiden vï¿½liin jï¿½ï¿½vï¿½t malliajot talletetaan.
+    // CaseStudy-dialogissa molemmat luvut annetaan yhdestï¿½ grid-controllin cell:ista.
+    // Jos cell:in string arvo on vain yksi luku (esim. "3"), tï¿½llï¿½in talletetaan kaikki malliajot 3-1 (3. tuoreimmasta 1. tuoreimpaan).
+    // Muuten cell:in string arvossa on kaksi lukua eroteltuna '-' merkillï¿½ ,esim. "4-3". Tï¿½llï¿½in talletetaan 4. tuorein ja 3. tuorein, mutta ei 2. ja 1. tuoreimpia.
+    // Nï¿½in voi tallettaa CaseStudyn jï¿½lkikï¿½teen vaikka eilisen datoilla niin ettï¿½ uusimpia datoja ei tarvitse sulloa vï¿½kisin datapakettiin.
 
-    // Tässä on siis aloitus offset, joka kertoo talletusikkunan alkuhetken offsetin seinäkelloajasta.
+    // Tï¿½ssï¿½ on siis aloitus offset, joka kertoo talletusikkunan alkuhetken offsetin seinï¿½kelloajasta.
     CaseStudyCountMap mHelpDataCaseStudyOffset1Map;
-    // Tässä on siis lopetus offset, joka kertoo talletusikkunan loppuhetken offsetin seinäkelloajasta.
+    // Tï¿½ssï¿½ on siis lopetus offset, joka kertoo talletusikkunan loppuhetken offsetin seinï¿½kelloajasta.
     CaseStudyCountMap mHelpDataCaseStudyOffset2Map;
     CaseStudyBoolMap mCaseStudyStoreDataMap;
     bool mInitialized = false; // ei sallita tupla initialisointia
 };
 
-// Yksittäisten karttanäyttöjen asetuksia Windows rekisterissä
+// Yksittï¿½isten karttanï¿½yttï¿½jen asetuksia Windows rekisterissï¿½
 class NFmiMapViewWinRegistry
 {
 public:
@@ -201,23 +205,23 @@ public:
 
 private:
     bool mInitialized; // ei sallita tupla initialisointia
-    std::string mBaseRegistryPath; // TÄMÄN pitää olla ennen muidat dataosia, että se alustetaan ensin konstruktorissa!!!!
-    std::string mSectionName; // tässä on  MapView + index, esim. MapView0 (pääikkuna)
+    std::string mBaseRegistryPath; // Tï¿½Mï¿½N pitï¿½ï¿½ olla ennen muidat dataosia, ettï¿½ se alustetaan ensin konstruktorissa!!!!
+    std::string mSectionName; // tï¿½ssï¿½ on  MapView + index, esim. MapView0 (pï¿½ï¿½ikkuna)
     int mMapIndex;
 
     // HKEY_CURRENT_USER -keys
 
     boost::shared_ptr<CachedRegBool> mShowMasksOnMap;
-    // 0=ei harvennusta, 1=harvenna jonkin verran, 2=harvenna enemmän
+    // 0=ei harvennusta, 1=harvenna jonkin verran, 2=harvenna enemmï¿½n
     boost::shared_ptr<CachedRegInt> mSpacingOutFactor; 
     // 0 = kartta1 (esim. suomi), 1 = kartta2 (esim. skandinavia), 2 = kartta3 (esim. eurooppa), 3 = kartta4 (esim. maailma)
     boost::shared_ptr<CachedRegInt> mSelectedMapIndex; 
-    // näytetäänkö se typerä asema piste vai ei?
+    // nï¿½ytetï¿½ï¿½nkï¿½ se typerï¿½ asema piste vai ei?
 	boost::shared_ptr<CachedRegBool> mShowStationPlot; 
-    // karttanäyttöruudukon koko (esim. 3 riviä, joissa 5 aikaa == NFmiPoint(5,3))
+    // karttanï¿½yttï¿½ruudukon koko (esim. 3 riviï¿½, joissa 5 aikaa == NFmiPoint(5,3))
     boost::shared_ptr<CachedRegString> mViewGridSizeStr; 
-    // Lokaali+wms karttojen yhdistelmä moodiin liittyvät valitut taustakarttaindeksit kaikille eri kartta-alueille (suomi,skandi,euro,maailma).
-    // Teksti on seuraavaa muotoa (tämä luokka ei tosin parseroi tai tee muuta kuin säilyttää stringin): 
+    // Lokaali+wms karttojen yhdistelmï¿½ moodiin liittyvï¿½t valitut taustakarttaindeksit kaikille eri kartta-alueille (suomi,skandi,euro,maailma).
+    // Teksti on seuraavaa muotoa (tï¿½mï¿½ luokka ei tosin parseroi tai tee muuta kuin sï¿½ilyttï¿½ï¿½ stringin): 
     // mapAreaCount:area1Index,area1Index,area1Index,area1Index     (esim. 4:2,1,4,3)
     boost::shared_ptr<CachedRegString> mCombinedMapModeSelectedBackgroundIndicesStr; 
     // Vastaava teksti overlay kartta-alueiden indekseille
@@ -226,11 +230,11 @@ private:
     boost::shared_ptr<CachedRegInt> mTimeBoxLocation;
     // Time-boxin tekstien yhteiskokokerroin
     boost::shared_ptr<CachedRegDouble> mTimeBoxTextSizeFactor;
-    // Time-boxin pohjaväri alpha-kertoimen kera
+    // Time-boxin pohjavï¿½ri alpha-kertoimen kera
     boost::shared_ptr<CachedRegString> mTimeBoxFillColorStr;
 };
 
-// Poikkileikkausnäyttöjen asetuksia Windows rekisterissä, SmartMet konffi kohtaisia
+// Poikkileikkausnï¿½yttï¿½jen asetuksia Windows rekisterissï¿½, SmartMet konffi kohtaisia
 class NFmiCrossSectionViewWinRegistry
 {
 public:
@@ -259,7 +263,7 @@ public:
 private:
     bool mInitialized; // ei sallita tupla initialisointia
     std::string mBaseRegistryPath;
-    std::string mSectionName; // tässä on  CrossSection
+    std::string mSectionName; // tï¿½ssï¿½ on  CrossSection
 
     // HKEY_CURRENT_USER -keys
 
@@ -268,13 +272,13 @@ private:
     boost::shared_ptr<CachedRegString> mEndPointStr; // loppupisteen latlon
     boost::shared_ptr<CachedRegInt> mHorizontalPointCount;
     boost::shared_ptr<CachedRegInt> mVerticalPointCount;
-    boost::shared_ptr<CachedRegDouble> mAxisValuesDefaultLowerEndValue; // ns. default paineakselin maanpintaa lähempi akseli arvo
-    boost::shared_ptr<CachedRegDouble> mAxisValuesDefaultUpperEndValue; // ns. default paineakselin korkeammassa päässä oleva akseli arvo
-    boost::shared_ptr<CachedRegDouble> mAxisValuesSpecialLowerEndValue; // ns. erikois paineakselin maanpintaa lähempi akseli arvo
-    boost::shared_ptr<CachedRegDouble> mAxisValuesSpecialUpperEndValue; // ns. erikois paineakselin korkeammassa päässä oleva akseli arvo
+    boost::shared_ptr<CachedRegDouble> mAxisValuesDefaultLowerEndValue; // ns. default paineakselin maanpintaa lï¿½hempi akseli arvo
+    boost::shared_ptr<CachedRegDouble> mAxisValuesDefaultUpperEndValue; // ns. default paineakselin korkeammassa pï¿½ï¿½ssï¿½ oleva akseli arvo
+    boost::shared_ptr<CachedRegDouble> mAxisValuesSpecialLowerEndValue; // ns. erikois paineakselin maanpintaa lï¿½hempi akseli arvo
+    boost::shared_ptr<CachedRegDouble> mAxisValuesSpecialUpperEndValue; // ns. erikois paineakselin korkeammassa pï¿½ï¿½ssï¿½ oleva akseli arvo
 };
 
-// Eri näyttöjen sijainnit ja koot Windows rekisterissä
+// Eri nï¿½yttï¿½jen sijainnit ja koot Windows rekisterissï¿½
 class NFmiViewPositionsWinRegistry
 {
 public:
@@ -290,15 +294,15 @@ public:
 
 private:
     bool mInitialized; // ei sallita tupla initialisointia
-    std::string mBaseRegistryPath; // TÄMÄN pitää olla ennen muidat dataosia, että se alustetaan ensin konstruktorissa!!!!
-    std::string mSectionName; // tässä on  ViewPositions
+    std::string mBaseRegistryPath; // Tï¿½Mï¿½N pitï¿½ï¿½ olla ennen muidat dataosia, ettï¿½ se alustetaan ensin konstruktorissa!!!!
+    std::string mSectionName; // tï¿½ssï¿½ on  ViewPositions
 
     // HKEY_CURRENT_USER -keys
 
     WindowRectStringMap mWindowRectStringMap;
 };
 
-// Konfiguraatio kohtaiset asetukset Windows rekisterissä
+// Konfiguraatio kohtaiset asetukset Windows rekisterissï¿½
 class NFmiConfigurationRelatedWinRegistry
 {
 public:
@@ -343,30 +347,30 @@ private:
 
     // HKEY_CURRENT_USER -keys
 
-    // Karttänäyttöihin liittyvät asetukset
+    // Karttï¿½nï¿½yttï¿½ihin liittyvï¿½t asetukset
     std::vector<boost::shared_ptr<NFmiMapViewWinRegistry> > mMapViewVector;
     NFmiViewPositionsWinRegistry mMapViewPositionsWinRegistry;
 
-    // Poikkileikkausnäyttöön liittyviä juttuja
+    // Poikkileikkausnï¿½yttï¿½ï¿½n liittyviï¿½ juttuja
     NFmiCrossSectionViewWinRegistry mCrossSectionViewWinRegistry;
 
     // Konffikohtaiset General-section asetukset
-    boost::shared_ptr<CachedRegBool> mLoadDataAtStartUp; // Alkaako Smartmet lukemaan datoja käynnistyksessä automaattisesti
+    boost::shared_ptr<CachedRegBool> mLoadDataAtStartUp; // Alkaako Smartmet lukemaan datoja kï¿½ynnistyksessï¿½ automaattisesti
     boost::shared_ptr<CachedRegBool> mAutoLoadNewCacheData; // Lukeeko SmartMet automaattisesti uutta dataa lokaaliin cacheen ja siivoaako samalla vanhoja datoja pois.
-    boost::shared_ptr<CachedRegBool> mShowLastSendTimeOnMapView; // Editoinnissa halutaan joskus nähdä milloin on viimeksi lähetetty editoitua dataa ja onko se tullut takaisin käyttöön. Tämä määrää näytetäänkö kyseisiä tietoja karttanäytöllä.
-    boost::shared_ptr<CachedRegBool> mAddHelpDataIdAtSendindDataToDatabase; // Lisätäänkö editoituun dataan myös help-datan tunnus
-    boost::shared_ptr<CachedRegInt> mMacroParamGridSizeX; // Makroparam laskuissa käytetyn perushilan x-koko
-    boost::shared_ptr<CachedRegInt> mMacroParamGridSizeY; // Makroparam laskuissa käytetyn perushilan y-koko
+    boost::shared_ptr<CachedRegBool> mShowLastSendTimeOnMapView; // Editoinnissa halutaan joskus nï¿½hdï¿½ milloin on viimeksi lï¿½hetetty editoitua dataa ja onko se tullut takaisin kï¿½yttï¿½ï¿½n. Tï¿½mï¿½ mï¿½ï¿½rï¿½ï¿½ nï¿½ytetï¿½ï¿½nkï¿½ kyseisiï¿½ tietoja karttanï¿½ytï¿½llï¿½.
+    boost::shared_ptr<CachedRegBool> mAddHelpDataIdAtSendindDataToDatabase; // Lisï¿½tï¿½ï¿½nkï¿½ editoituun dataan myï¿½s help-datan tunnus
+    boost::shared_ptr<CachedRegInt> mMacroParamGridSizeX; // Makroparam laskuissa kï¿½ytetyn perushilan x-koko
+    boost::shared_ptr<CachedRegInt> mMacroParamGridSizeY; // Makroparam laskuissa kï¿½ytetyn perushilan y-koko
     boost::shared_ptr<CachedRegInt> mLogLevel; // CatLog Severity taso
-    boost::shared_ptr<CachedRegInt> mLogViewerLogLevel; // CFmiLogViever dialogissa näytetty Severity taso
-    boost::shared_ptr<CachedRegInt> mLogViewerCategory; // CFmiLogViever dialogissa näytetty categoria
-    boost::shared_ptr<CachedRegBool> mDroppedDataEditable; // Pääkarttanäytölle pudotettua sqd tiedostoa voidaan editoida, tällöin tiedostot on hidas tiputtaa, koska data luetaan muistiin ja siitä tehdään monia kopioita
-    boost::shared_ptr<CachedRegBool> mUseCombinedMapMode; // Käytetäänkö karttojen kanssa lokaaleja bitmappeja ja WMS palveluja yhdessä.
+    boost::shared_ptr<CachedRegInt> mLogViewerLogLevel; // CFmiLogViever dialogissa nï¿½ytetty Severity taso
+    boost::shared_ptr<CachedRegInt> mLogViewerCategory; // CFmiLogViever dialogissa nï¿½ytetty categoria
+    boost::shared_ptr<CachedRegBool> mDroppedDataEditable; // Pï¿½ï¿½karttanï¿½ytï¿½lle pudotettua sqd tiedostoa voidaan editoida, tï¿½llï¿½in tiedostot on hidas tiputtaa, koska data luetaan muistiin ja siitï¿½ tehdï¿½ï¿½n monia kopioita
+    boost::shared_ptr<CachedRegBool> mUseCombinedMapMode; // Kï¿½ytetï¿½ï¿½nkï¿½ karttojen kanssa lokaaleja bitmappeja ja WMS palveluja yhdessï¿½.
     NFmiMapViewRangeMeterWinRegistry mMapViewRangeMeter;
 };
 
 
-// Tässä luokassa on kaikki SmartMetin Windows rekistereihin tallettamat tiedot
+// Tï¿½ssï¿½ luokassa on kaikki SmartMetin Windows rekistereihin tallettamat tiedot
 class NFmiApplicationWinRegistry
 {
 public:
@@ -458,8 +462,8 @@ private:
     bool mInitialized; // ei sallita tupla initialisointia
     std::string mBaseRegistryPath;
     std::string mBaseRegistryWithVersionPath;
-    std::string mBaseConfigurationRegistryPath; // Karttanäyttöjen asetukset laitetaan konfiguraatio kohtaisiin asetuksiin
-    std::string mConfigurationName; // esim. control_scand_saa2_edit_conf, huom! jos on annettu absoluuttinen polku konffiin, erotellaan siitä vain viimeinen osio talteen
+    std::string mBaseConfigurationRegistryPath; // Karttanï¿½yttï¿½jen asetukset laitetaan konfiguraatio kohtaisiin asetuksiin
+    std::string mConfigurationName; // esim. control_scand_saa2_edit_conf, huom! jos on annettu absoluuttinen polku konffiin, erotellaan siitï¿½ vain viimeinen osio talteen
 
     // HKEY_CURRENT_USER -keys
 
@@ -470,71 +474,71 @@ private:
     NFmiViewPositionsWinRegistry mOtherViewPositionsWinRegistry;
     // Kaikkien konffien DataNotifications -osio
     NFmiDataNotificationSettingsWinRegistry mDataNotificationSettingsWinRegistry;
-    // Eri queryDatoihin liittyvät lukumäärä arvot (local-cache + case-study)
+    // Eri queryDatoihin liittyvï¿½t lukumï¿½ï¿½rï¿½ arvot (local-cache + case-study)
     NFmiCaseStudySettingsWinRegistry mCaseStudySettingsWinRegistry;
     // Kaikkien konffien General -osio
-    boost::shared_ptr<CachedRegBool> mUseTimeSerialAxisAutoAdjust; // käytetäänkö 'vihattua' auto-adjust säätöä aikasarjaikkunassa (laskee min ja max arvoja ja päättelee siitä sopivan arvoasteikon automaattisesti)
-    boost::shared_ptr<CachedRegBool> mSoundingTextUpward; // Luotausnäytössä olevan tekstiosion voi nyt laittaa menemään yläreunasta alkaen joko alhaalta ylös tai päinvastoin (ennen oli vain alhaalta ylös eli nurinpäin suhteessä luotaus käyriin)
-    boost::shared_ptr<CachedRegBool> mSoundingTimeLockWithMapView; // Luotausnäytössä voi olla nyt aikalukko päällä, jolloin luotausten ajat sidotaan pääkarttanäyttöön, eli niitä säädetään jos karttanäytöllä vaihdetaan aikaa
-    boost::shared_ptr<CachedRegBool> mShowStabilityIndexSideView; // Onko Luotausnäytössä stabiilisuusindeksi sivunäyttö auki vai ei
-    boost::shared_ptr<CachedRegBool> mShowTextualSoundingDataSideView; // Onko Luotausnäytössä tekstimuotoinen luotausdata sivunäyttö auki vai ei
-    boost::shared_ptr<CachedRegBool> mKeepMapAspectRatio; // Pitääkö smartmet karttanäytöissä aspect-ratio -lukkoa päälä vai ei
+    boost::shared_ptr<CachedRegBool> mUseTimeSerialAxisAutoAdjust; // kï¿½ytetï¿½ï¿½nkï¿½ 'vihattua' auto-adjust sï¿½ï¿½tï¿½ï¿½ aikasarjaikkunassa (laskee min ja max arvoja ja pï¿½ï¿½ttelee siitï¿½ sopivan arvoasteikon automaattisesti)
+    boost::shared_ptr<CachedRegBool> mSoundingTextUpward; // Luotausnï¿½ytï¿½ssï¿½ olevan tekstiosion voi nyt laittaa menemï¿½ï¿½n ylï¿½reunasta alkaen joko alhaalta ylï¿½s tai pï¿½invastoin (ennen oli vain alhaalta ylï¿½s eli nurinpï¿½in suhteessï¿½ luotaus kï¿½yriin)
+    boost::shared_ptr<CachedRegBool> mSoundingTimeLockWithMapView; // Luotausnï¿½ytï¿½ssï¿½ voi olla nyt aikalukko pï¿½ï¿½llï¿½, jolloin luotausten ajat sidotaan pï¿½ï¿½karttanï¿½yttï¿½ï¿½n, eli niitï¿½ sï¿½ï¿½detï¿½ï¿½n jos karttanï¿½ytï¿½llï¿½ vaihdetaan aikaa
+    boost::shared_ptr<CachedRegBool> mShowStabilityIndexSideView; // Onko Luotausnï¿½ytï¿½ssï¿½ stabiilisuusindeksi sivunï¿½yttï¿½ auki vai ei
+    boost::shared_ptr<CachedRegBool> mShowTextualSoundingDataSideView; // Onko Luotausnï¿½ytï¿½ssï¿½ tekstimuotoinen luotausdata sivunï¿½yttï¿½ auki vai ei
+    boost::shared_ptr<CachedRegBool> mKeepMapAspectRatio; // Pitï¿½ï¿½kï¿½ smartmet karttanï¿½ytï¿½issï¿½ aspect-ratio -lukkoa pï¿½ï¿½lï¿½ vai ei
 
-    boost::shared_ptr<CachedRegBool> mUseMultiProcessCpCalc; // käytetäänkö kontrollipistetyökalun yhteydessä multi-process-worker -poolia vai ei
-    boost::shared_ptr<CachedRegBool> mAllowRightClickDisplaySelection; // Sallitaanko käyttäjän valita hiiren oikealla napilla asemia kartalta vai ei.
-    std::string mFixedDrawParamsPath; // Ns. tehdasasetus piirto-ominaisuus asetuksien polku (oli aiemmin Windows rekisterissä, mutta poistin sieltä, koska asetus pitää saada ehdottomasti konfiguraatioista)
-    boost::shared_ptr<CachedRegInt> mLocationFinderThreadTimeOutInMS; // Kuinka kauan maksimissaan odotetaan että Location Finder (Autocomplete toiminto SmartMetissa, x näppäin karttanäytössä) haku valmistuu, ennenkuin lopetetaan (ettei jää jumiin pitkäksi aikaa)
+    boost::shared_ptr<CachedRegBool> mUseMultiProcessCpCalc; // kï¿½ytetï¿½ï¿½nkï¿½ kontrollipistetyï¿½kalun yhteydessï¿½ multi-process-worker -poolia vai ei
+    boost::shared_ptr<CachedRegBool> mAllowRightClickDisplaySelection; // Sallitaanko kï¿½yttï¿½jï¿½n valita hiiren oikealla napilla asemia kartalta vai ei.
+    std::string mFixedDrawParamsPath; // Ns. tehdasasetus piirto-ominaisuus asetuksien polku (oli aiemmin Windows rekisterissï¿½, mutta poistin sieltï¿½, koska asetus pitï¿½ï¿½ saada ehdottomasti konfiguraatioista)
+    boost::shared_ptr<CachedRegInt> mLocationFinderThreadTimeOutInMS; // Kuinka kauan maksimissaan odotetaan ettï¿½ Location Finder (Autocomplete toiminto SmartMetissa, x nï¿½ppï¿½in karttanï¿½ytï¿½ssï¿½) haku valmistuu, ennenkuin lopetetaan (ettei jï¿½ï¿½ jumiin pitkï¿½ksi aikaa)
 
-    boost::shared_ptr<CachedRegBool> mShowHakeMessages; // Näytetäänkö Warnings dialogin kautta Hake sanomia? (Hälytys keskus)
-    boost::shared_ptr<CachedRegBool> mShowKaHaMessages; // Näytetäänkö Warnings dialogin kautta KaHa sanomia? (Kansalais havaintoja)
-    // Tällä voidaan säätää mikä on minimi aikaväli, mitä käytetään karttanäytöillä kun
-    // siellä näytetään joko Hake tai KaHa sanomia. Jos tämä on <= 0, käytetään karttanäytön time-steppiä.
-    // Jos tämä on > 0, käytetään tämän ja karttanäytön time-stepin maksimia.
+    boost::shared_ptr<CachedRegBool> mShowHakeMessages; // Nï¿½ytetï¿½ï¿½nkï¿½ Warnings dialogin kautta Hake sanomia? (Hï¿½lytys keskus)
+    boost::shared_ptr<CachedRegBool> mShowKaHaMessages; // Nï¿½ytetï¿½ï¿½nkï¿½ Warnings dialogin kautta KaHa sanomia? (Kansalais havaintoja)
+    // Tï¿½llï¿½ voidaan sï¿½ï¿½tï¿½ï¿½ mikï¿½ on minimi aikavï¿½li, mitï¿½ kï¿½ytetï¿½ï¿½n karttanï¿½ytï¿½illï¿½ kun
+    // siellï¿½ nï¿½ytetï¿½ï¿½n joko Hake tai KaHa sanomia. Jos tï¿½mï¿½ on <= 0, kï¿½ytetï¿½ï¿½n karttanï¿½ytï¿½n time-steppiï¿½.
+    // Jos tï¿½mï¿½ on > 0, kï¿½ytetï¿½ï¿½n tï¿½mï¿½n ja karttanï¿½ytï¿½n time-stepin maksimia.
     boost::shared_ptr<CachedRegInt> mMinimumTimeRangeForWarningsOnMapViewsInMinutes;
 
-    // Tällä mDrawObjectScaleFactor:illa skaalataan erilaisten (vektori, ei bitmap) piirto-objektien piirto kokoa. Koska ei voi kysyä järjestelmältä 
-    // kuinka iso monitori fyysisesti (useat näytön ohjaimet 'valehtelevat' koon karkeasti) on ja niimuodoin ei voi laskea oikeaa pixel/mm suhdetta.
-    // Jos arvo 0 (oletus), SmartMet laskee pixel/mm suhteen koneesta saatavilla arvoilla. Lisäksi voidaan tehdä pikä säätö, missä kaiken piirto kokoa 
-    // voidaan vaikka väliaikaisesti vaikka suurentaa/pienentää (kuten web-selaimissa) (EI VOIKAAN, SITÄ VARTEN PITÄÄ TEHDÄ OMA KERROIN, koska kaikkea 
+    // Tï¿½llï¿½ mDrawObjectScaleFactor:illa skaalataan erilaisten (vektori, ei bitmap) piirto-objektien piirto kokoa. Koska ei voi kysyï¿½ jï¿½rjestelmï¿½ltï¿½ 
+    // kuinka iso monitori fyysisesti (useat nï¿½ytï¿½n ohjaimet 'valehtelevat' koon karkeasti) on ja niimuodoin ei voi laskea oikeaa pixel/mm suhdetta.
+    // Jos arvo 0 (oletus), SmartMet laskee pixel/mm suhteen koneesta saatavilla arvoilla. Lisï¿½ksi voidaan tehdï¿½ pikï¿½ sï¿½ï¿½tï¿½, missï¿½ kaiken piirto kokoa 
+    // voidaan vaikka vï¿½liaikaisesti vaikka suurentaa/pienentï¿½ï¿½ (kuten web-selaimissa) (EI VOIKAAN, SITï¿½ VARTEN PITï¿½ï¿½ TEHDï¿½ OMA KERROIN, koska kaikkea 
     // ei luultavasti haluta isontaa esim. param-boxia ihan lennossa).
     boost::shared_ptr<CachedRegDouble> mDrawObjectScaleFactor; 
-    // Tämän avulla skaalataan maksimi fontti kokoa (ei laiteta vielä rekisteriin, koska sitä ei ole mahdollista muokata)
+    // Tï¿½mï¿½n avulla skaalataan maksimi fontti kokoa (ei laiteta vielï¿½ rekisteriin, koska sitï¿½ ei ole mahdollista muokata)
     double itsMaximumFontSizeFactor; 
-    // Tällä voidaan säätää piirrettävien yksittäisten isoviivojen minimipituutta, jos ei haluta 
-    // piirtää kaikkea pientä söherrystä jollain tiheällä datalla.
-    // Tämä on globaali kerroin kaikelle isoviiva piirrolle.
-    // Jos arvo on 0, rajoitin on pois päältä.
-    // Jos arvo on 1, rajoitetaan n. 4 mm pituisten isoviivojen piirtoa n. 20 cm korkealla näytöllä (tämä elää dynaamisesti käytettyjen näyttöjen mukaan).
+    // Tï¿½llï¿½ voidaan sï¿½ï¿½tï¿½ï¿½ piirrettï¿½vien yksittï¿½isten isoviivojen minimipituutta, jos ei haluta 
+    // piirtï¿½ï¿½ kaikkea pientï¿½ sï¿½herrystï¿½ jollain tiheï¿½llï¿½ datalla.
+    // Tï¿½mï¿½ on globaali kerroin kaikelle isoviiva piirrolle.
+    // Jos arvo on 0, rajoitin on pois pï¿½ï¿½ltï¿½.
+    // Jos arvo on 1, rajoitetaan n. 4 mm pituisten isoviivojen piirtoa n. 20 cm korkealla nï¿½ytï¿½llï¿½ (tï¿½mï¿½ elï¿½ï¿½ dynaamisesti kï¿½ytettyjen nï¿½yttï¿½jen mukaan).
     // Jos arvo < 0, minimi pituus on pienempi kuin tuo 4 mm ja jos se on > 1, min pituus on suurempi.
-    // Tälle voidaan antaa arvo välillä 0-100.
+    // Tï¿½lle voidaan antaa arvo vï¿½lillï¿½ 0-100.
     boost::shared_ptr<CachedRegDouble> mIsolineMinLengthFactor;
-    // Tämän avulla säädetään rakennetaanko, mahdollisesti konffattuja aikakombinaatio datoja. Näihin
+    // Tï¿½mï¿½n avulla sï¿½ï¿½detï¿½ï¿½n rakennetaanko, mahdollisesti konffattuja aikakombinaatio datoja. Nï¿½ihin
     // datoihin kuuluu mm. analyysi- ja tutkadatat, joihin siis tippuu yksi aika-askel dataa kerrallaan ja 
-    // joista palasista rakennetaan halutun pituinen aikajakso yhdistelmä.
-    // On osoittautunut että näiden datojen rakentaminen ja/tai ottaminen SmartMetin käyttöön voi aiheuttaa 
-    // toistaiseksi mystisiä kaatoja. Tällä siis yritetään estää kaadot ja mahdollisesti kartoittaa ongelmaa.
+    // joista palasista rakennetaan halutun pituinen aikajakso yhdistelmï¿½.
+    // On osoittautunut ettï¿½ nï¿½iden datojen rakentaminen ja/tai ottaminen SmartMetin kï¿½yttï¿½ï¿½n voi aiheuttaa 
+    // toistaiseksi mystisiï¿½ kaatoja. Tï¿½llï¿½ siis yritetï¿½ï¿½n estï¿½ï¿½ kaadot ja mahdollisesti kartoittaa ongelmaa.
     boost::shared_ptr<CachedRegBool> mGenerateTimeCombinationData;
 
 
     // General Printing options
-	boost::shared_ptr<CachedRegBool> mFitToPagePrint; // mahdutetaanko kuva aina väkisin koko paperin alueelle, vaiko säilytetäänkö kuvan mitta suhteet
-	boost::shared_ptr<CachedRegBool> mSmartOrientationPrint; // lasketaanko ja käännetäänkö paperi kuvan mukaan automaattisesti vai ei
-	boost::shared_ptr<CachedRegBool> mLowMemoryPrint; // printataanko valmis bitmap kuva (karkea kuva, mutta jos printterissä vähän muistia, tämä auttaa) vai piirretäänkö kuva käyttäen paperin resoluutio tasoa
+	boost::shared_ptr<CachedRegBool> mFitToPagePrint; // mahdutetaanko kuva aina vï¿½kisin koko paperin alueelle, vaiko sï¿½ilytetï¿½ï¿½nkï¿½ kuvan mitta suhteet
+	boost::shared_ptr<CachedRegBool> mSmartOrientationPrint; // lasketaanko ja kï¿½ï¿½nnetï¿½ï¿½nkï¿½ paperi kuvan mukaan automaattisesti vai ei
+	boost::shared_ptr<CachedRegBool> mLowMemoryPrint; // printataanko valmis bitmap kuva (karkea kuva, mutta jos printterissï¿½ vï¿½hï¿½n muistia, tï¿½mï¿½ auttaa) vai piirretï¿½ï¿½nkï¿½ kuva kï¿½yttï¿½en paperin resoluutio tasoa
 	boost::shared_ptr<CachedRegInt> mMaxRangeInPrint; // kuinka monta sivua on mahdollista printata maksimissaan range optiolla
 
-    // Pelkästään editointityökaluihin (CP-työkalu ja Obs-blender) liittyvät (täydet) griddaus säädöt (käyttäjä voi muokata)
+    // Pelkï¿½stï¿½ï¿½n editointityï¿½kaluihin (CP-tyï¿½kalu ja Obs-blender) liittyvï¿½t (tï¿½ydet) griddaus sï¿½ï¿½dï¿½t (kï¿½yttï¿½jï¿½ voi muokata)
     NFmiGriddingPropertiesWinRegistry mEditingToolsGriddingProperties;
-    // Visualisointiin (mm. havaintojen hilaus visualisointi) ja macroParam laskuihin littyvät griddaus säädöt (käyttäjä ei voi muokata ainakaan vielä)
+    // Visualisointiin (mm. havaintojen hilaus visualisointi) ja macroParam laskuihin littyvï¿½t griddaus sï¿½ï¿½dï¿½t (kï¿½yttï¿½jï¿½ ei voi muokata ainakaan vielï¿½)
     NFmiGriddingProperties mVisualizationGriddingProperties;
 
-    // Kun kuvia talletetaan png/jpg/bmp/tiff/gif formaatissa, laitetaan käytetty filtteri talteen rekisteriin.
-    // Indeksi alkaa 1:stä.
+    // Kun kuvia talletetaan png/jpg/bmp/tiff/gif formaatissa, laitetaan kï¿½ytetty filtteri talteen rekisteriin.
+    // Indeksi alkaa 1:stï¿½.
     boost::shared_ptr<CachedRegInt> mSaveImageExtensionFilterIndex; 
-    // mSaveImageFileFilterExtensions vektorin ja g_SaveImageFileFilter:in sisällöt pitää asettaa kohdilleen, jos meinaa muuttaa filtterien listaa tai niiden järjestystä!
+    // mSaveImageFileFilterExtensions vektorin ja g_SaveImageFileFilter:in sisï¿½llï¿½t pitï¿½ï¿½ asettaa kohdilleen, jos meinaa muuttaa filtterien listaa tai niiden jï¿½rjestystï¿½!
     const std::vector<std::string> mSaveImageFileFilterExtensions = { "png", "jpg", "bmp", "tiff", "gif" };
 
-    // Näytön cachena käytettyjen bitmappien max koko megatavuina, tarkoittaa siis aina yhden näytön
-    // cachea kerrallaan, eli kolme näyttöä ottaa mahdollisesti kaikkiaan 3x tämä koon.
+    // Nï¿½ytï¿½n cachena kï¿½ytettyjen bitmappien max koko megatavuina, tarkoittaa siis aina yhden nï¿½ytï¿½n
+    // cachea kerrallaan, eli kolme nï¿½yttï¿½ï¿½ ottaa mahdollisesti kaikkiaan 3x tï¿½mï¿½ koon.
     boost::shared_ptr<CachedRegDouble> mMapViewCacheMaxSizeInMB;
     boost::shared_ptr<CachedRegBool> mShowTooltipOnSmarttoolDialog;
 
@@ -543,6 +547,6 @@ private:
     NFmiVisualizationSpaceoutSettings mVisualizationSpaceoutSettings;
     boost::shared_ptr<CachedRegBool> mUseLedLightStatusSystem;
 
-    // HKEY_LOCAL_MACHINE -keys // HUOM! tämä vaatii ohjelmalta admin oikeuksia!!!!
+    // HKEY_LOCAL_MACHINE -keys // HUOM! tï¿½mï¿½ vaatii ohjelmalta admin oikeuksia!!!!
 
 };
