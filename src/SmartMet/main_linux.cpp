@@ -1,5 +1,6 @@
 // Linux entry point for SmartMet workstation.
 // Replaces the MFC CSmartMetApp with a Qt6-based application.
+// Supports loading real FMI querydata (.sqd) files via --data option.
 
 #ifdef UNIX
 
@@ -10,6 +11,11 @@
 #include "ToolMasterHelperFunctions.h"
 #include "catlog/catlog.h"
 
+#include <newbase/NFmiQueryData.h>
+#include <newbase/NFmiFastQueryInfo.h>
+#include <newbase/NFmiDataMatrix.h>
+#include <newbase/NFmiGlobals.h>
+
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QPainter>
@@ -19,10 +25,25 @@
 #include <filesystem>
 #include <string>
 #include <cmath>
+#include <memory>
+#include <algorithm>
 
 namespace
 {
     NFmiBasicSmartMetConfigurations gBasicSmartMetConfigurations;
+
+    // Loaded querydata (persists for the lifetime of the application)
+    std::unique_ptr<NFmiQueryData> gQueryData;
+    std::unique_ptr<NFmiFastQueryInfo> gQueryInfo;
+
+    // Cached grid data extracted from querydata
+    std::vector<float> gGridData;
+    int gGridWidth = 0;
+    int gGridHeight = 0;
+    std::string gParamName;
+    std::string gTimeStr;
+    float gDataMin = 0;
+    float gDataMax = 0;
 
     std::string findControlPath(const std::string& explicitPath)
     {
@@ -49,7 +70,104 @@ namespace
         }
     }
 
-    // Generate sample temperature grid data for demonstration
+    // Load querydata from a .sqd file and extract the first parameter at first time step.
+    // Returns true on success.
+    bool loadQueryData(const std::string& dataFilePath)
+    {
+        if(!std::filesystem::exists(dataFilePath))
+        {
+            std::cerr << "Data file not found: " << dataFilePath << std::endl;
+            return false;
+        }
+
+        std::cerr << "Loading querydata: " << dataFilePath << std::endl;
+
+        try
+        {
+            gQueryData = std::make_unique<NFmiQueryData>(dataFilePath);
+            gQueryInfo = std::make_unique<NFmiFastQueryInfo>(gQueryData.get());
+
+            // Position to first parameter, first level, first time
+            gQueryInfo->FirstParam();
+            gQueryInfo->FirstLevel();
+            gQueryInfo->FirstTime();
+
+            // Get grid dimensions
+            gGridWidth = static_cast<int>(gQueryInfo->GridXNumber());
+            gGridHeight = static_cast<int>(gQueryInfo->GridYNumber());
+
+            if(gGridWidth <= 0 || gGridHeight <= 0)
+            {
+                std::cerr << "Invalid grid dimensions: " << gGridWidth << "x" << gGridHeight << std::endl;
+                return false;
+            }
+
+            // Get parameter name and time
+            gParamName = std::string(gQueryInfo->Param().GetParamName().CharPtr());
+            gTimeStr = std::string(gQueryInfo->Time().ToStr(NFmiString("YYYY.MM.DD HH:mm")).CharPtr());
+
+            std::cerr << "Parameter: " << gParamName << std::endl;
+            std::cerr << "Time: " << gTimeStr << std::endl;
+            std::cerr << "Grid: " << gGridWidth << "x" << gGridHeight << std::endl;
+
+            // Extract grid values using Values() -> NFmiDataMatrix<float>
+            // NFmiDataMatrix is indexed as [x][y] with NX() columns and NY() rows
+            NFmiDataMatrix<float> matrix = gQueryInfo->Values();
+
+            std::cerr << "Matrix dimensions: NX=" << matrix.NX() << " NY=" << matrix.NY() << std::endl;
+
+            // Flatten the matrix to a row-major vector for the renderer.
+            // The renderer expects grid[y * width + x] layout.
+            gGridData.resize(gGridWidth * gGridHeight);
+            gDataMin = std::numeric_limits<float>::max();
+            gDataMax = std::numeric_limits<float>::lowest();
+            int validCount = 0;
+
+            for(int y = 0; y < gGridHeight; ++y)
+            {
+                for(int x = 0; x < gGridWidth; ++x)
+                {
+                    float val = matrix[x][y];
+                    // Replace missing values with NaN so the renderer skips them
+                    if(val == kFloatMissing || val >= 32000.0f)
+                    {
+                        gGridData[y * gGridWidth + x] = std::numeric_limits<float>::quiet_NaN();
+                    }
+                    else
+                    {
+                        gGridData[y * gGridWidth + x] = val;
+                        gDataMin = std::min(gDataMin, val);
+                        gDataMax = std::max(gDataMax, val);
+                        ++validCount;
+                    }
+                }
+            }
+
+            std::cerr << "Data range: [" << gDataMin << ", " << gDataMax << "] (" << validCount << " valid values)" << std::endl;
+
+            if(validCount == 0)
+            {
+                std::cerr << "Warning: no valid data values found" << std::endl;
+                return false;
+            }
+
+            // Report area info if available
+            const NFmiArea* area = gQueryInfo->Area();
+            if(area)
+            {
+                std::cerr << "Area class: " << area->ClassName() << std::endl;
+            }
+
+            return true;
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << "Failed to load querydata: " << e.what() << std::endl;
+            return false;
+        }
+    }
+
+    // Generate sample temperature grid data for demonstration (fallback)
     std::vector<float> generateSampleGrid(int width, int height)
     {
         std::vector<float> grid(width * height);
@@ -71,11 +189,17 @@ namespace
         return grid;
     }
 
-    // Color function for temperature: blue (cold) -> white (0) -> red (hot)
-    unsigned int temperatureColor(float value)
+    // Adaptive color function: maps data values to blue->white->red gradient
+    // using the actual data range
+    unsigned int adaptiveColor(float value, float dataMin, float dataMax)
     {
-        float t = std::clamp(value, -20.0f, 30.0f);
-        float normalized = (t + 20.0f) / 50.0f; // 0..1
+        if(!std::isfinite(value))
+            return 0x00000000; // transparent for missing
+
+        float range = dataMax - dataMin;
+        if(range < 0.001f) range = 1.0f;
+        float normalized = (value - dataMin) / range; // 0..1
+        normalized = std::clamp(normalized, 0.0f, 1.0f);
 
         int r, g, b;
         if(normalized < 0.5f)
@@ -93,6 +217,123 @@ namespace
             b = static_cast<int>((1.0f - f) * 255);
         }
         return 0xC0000000u | (r << 16) | (g << 8) | b; // semi-transparent
+    }
+
+    // Fixed color function for demo mode: blue (cold) -> white (0) -> red (hot)
+    unsigned int temperatureColor(float value)
+    {
+        return adaptiveColor(value, -20.0f, 30.0f);
+    }
+
+    // Compute nice isoline interval based on data range
+    double niceIsolineInterval(float dataMin, float dataMax)
+    {
+        double range = dataMax - dataMin;
+        if(range <= 0) return 1.0;
+
+        // Aim for approximately 10 isolines
+        double rawInterval = range / 10.0;
+
+        // Round to a "nice" number: 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, ...
+        double magnitude = std::pow(10.0, std::floor(std::log10(rawInterval)));
+        double residual = rawInterval / magnitude;
+        double niceResidual;
+        if(residual <= 1.5)
+            niceResidual = 1.0;
+        else if(residual <= 3.5)
+            niceResidual = 2.0;
+        else if(residual <= 7.5)
+            niceResidual = 5.0;
+        else
+            niceResidual = 10.0;
+
+        return niceResidual * magnitude;
+    }
+
+    void renderDataView(SmartMetMainWindow& window)
+    {
+        int w = window.width();
+        int h = window.height();
+        if(w < 10 || h < 10) return;
+
+        // Use the actual data min/max for color mapping
+        float dMin = gDataMin;
+        float dMax = gDataMax;
+        auto colorFunc = [dMin, dMax](float v) -> unsigned int { return adaptiveColor(v, dMin, dMax); };
+
+        // Render color-mapped field
+        auto colorLayer = WeatherRenderer::renderColorGrid(
+            gGridData, gGridWidth, gGridHeight, w, h, colorFunc);
+
+        // Compute isoline values based on data range
+        double interval = niceIsolineInterval(gDataMin, gDataMax);
+        double firstIso = std::ceil(gDataMin / interval) * interval;
+        std::vector<double> isoValues;
+        for(double v = firstIso; v <= gDataMax; v += interval)
+            isoValues.push_back(v);
+
+        auto isolineLayer = WeatherRenderer::renderIsolines(
+            gGridData, gGridWidth, gGridHeight, w, h, isoValues,
+            0xFF000000, 1.5);  // black lines, 1.5px
+
+        // Find a "round" reference value for a thicker highlight isoline
+        double midValue = (gDataMin + gDataMax) / 2.0;
+        double refValue = std::round(midValue / interval) * interval;
+        auto refLine = WeatherRenderer::renderIsolines(
+            gGridData, gGridWidth, gGridHeight, w, h, {refValue},
+            0xFF0000FF, 3.0);  // blue, 3px
+
+        // Composite all layers
+        auto result = WeatherRenderer::compositeLayers(w, h,
+            {colorLayer, isolineLayer, refLine});
+
+        // Draw to window via QPainter overlay (GUI elements)
+        QPainter* painter = window.beginDrawing();
+        if(painter)
+        {
+            // Background
+            painter->fillRect(0, 0, w, h, QColor(240, 240, 245));
+
+            // Weather data layers
+            painter->drawImage(0, 0, result);
+
+            // GUI overlay: title with parameter name and time
+            painter->setPen(QPen(Qt::black, 1));
+            QFont titleFont("Sans", 16, QFont::Bold);
+            painter->setFont(titleFont);
+            QString title = QString("SmartMet Linux - %1 [%2]")
+                .arg(QString::fromStdString(gParamName))
+                .arg(QString::fromStdString(gTimeStr));
+            painter->drawText(20, 30, title);
+
+            // Legend
+            QFont legendFont("Sans", 10);
+            painter->setFont(legendFont);
+            int legendX = w - 170, legendY = 40;
+            int legendEntries = 10;
+            int legendHeight = 40 + legendEntries * 16;
+            painter->fillRect(legendX - 10, legendY - 15, 160, legendHeight, QColor(255, 255, 255, 200));
+            painter->drawRect(legendX - 10, legendY - 15, 160, legendHeight);
+            painter->drawText(legendX, legendY, QString::fromStdString(gParamName));
+            for(int i = 0; i <= legendEntries; ++i)
+            {
+                float val = gDataMin + i * (gDataMax - gDataMin) / legendEntries;
+                unsigned int c = adaptiveColor(val, gDataMin, gDataMax);
+                QColor qc((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF);
+                painter->fillRect(legendX, legendY + 15 + i * 16, 20, 14, qc);
+                painter->drawText(legendX + 25, legendY + 27 + i * 16,
+                    QString::number(static_cast<double>(val), 'f', 1));
+            }
+
+            // Grid info
+            painter->drawText(20, h - 20,
+                QString("Grid: %1x%2 | Image: %3x%4 | Range: [%5, %6] | Interval: %7")
+                    .arg(gGridWidth).arg(gGridHeight).arg(w).arg(h)
+                    .arg(static_cast<double>(gDataMin), 0, 'f', 1)
+                    .arg(static_cast<double>(gDataMax), 0, 'f', 1)
+                    .arg(interval, 0, 'f', 1));
+        }
+        window.endDrawing();
     }
 
     void renderDemoView(SmartMetMainWindow& window)
@@ -179,6 +420,7 @@ int main(int argc, char* argv[])
     parser.setApplicationDescription("SmartMet Weather Editor");
     parser.addHelpOption();
     parser.addOption({{"p", "control-path"}, "Control directory path", "path"});
+    parser.addOption({{"d", "data"}, "Path to a .sqd querydata file to load", "file"});
     parser.addOption({{"v", "verbose"}, "Enable verbose logging"});
     parser.process(app);
 
@@ -204,15 +446,43 @@ int main(int argc, char* argv[])
     if(parser.isSet("verbose"))
         gBasicSmartMetConfigurations.Verbose(true);
 
-    std::cerr << "SmartMet Linux starting" << (configOk ? "" : " (demo mode)") << std::endl;
+    // Try to load real querydata if --data was specified
+    bool dataLoaded = false;
+    std::string dataPath = parser.value("data").toStdString();
+    if(!dataPath.empty())
+    {
+        dataLoaded = loadQueryData(dataPath);
+        if(!dataLoaded)
+            std::cerr << "Falling back to demo mode" << std::endl;
+    }
+
+    std::cerr << "SmartMet Linux starting"
+              << (dataLoaded ? " (real data)" : (configOk ? "" : " (demo mode)"))
+              << std::endl;
 
     // Create main window
     SmartMetMainWindow mainWindow;
-    mainWindow.setWindowTitle("SmartMet");
+    if(dataLoaded)
+    {
+        mainWindow.setWindowTitle(
+            QString("SmartMet - %1 [%2]")
+                .arg(QString::fromStdString(gParamName))
+                .arg(QString::fromStdString(gTimeStr)));
+    }
+    else
+    {
+        mainWindow.setWindowTitle("SmartMet (demo)");
+    }
     mainWindow.resize(1200, 800);
 
-    // Render demo on show and resize
-    auto doRender = [&mainWindow]() { renderDemoView(mainWindow); };
+    // Choose render function based on whether real data was loaded
+    auto doRender = [&mainWindow, dataLoaded]()
+    {
+        if(dataLoaded)
+            renderDataView(mainWindow);
+        else
+            renderDemoView(mainWindow);
+    };
 
     QObject::connect(&mainWindow, &SmartMetMainWindow::resized, doRender);
 
@@ -224,6 +494,10 @@ int main(int argc, char* argv[])
     CatLog::logMessage("SmartMet Linux main window shown", CatLog::Severity::Info, CatLog::Category::Configuration, true);
 
     int result = app.exec();
+
+    // Clean up querydata before static destructors
+    gQueryInfo.reset();
+    gQueryData.reset();
 
     // Save settings on exit
     NFmiSettings::Save();
