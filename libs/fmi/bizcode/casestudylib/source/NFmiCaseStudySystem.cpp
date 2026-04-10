@@ -18,6 +18,7 @@
 #include "NFmiPathUtils.h"
 #include "NFmiQueryData.h"
 #include "NFmiQueryDataUtil.h"
+#include <sys/stat.h>
 #include "catlog/catlog.h"
 
 #include <memory>
@@ -803,8 +804,16 @@ static CaseStudyMatchingFiles GetModelDataMatchingFiles(const NFmiCaseStudyDataF
 CaseStudyMatchingFiles NFmiCaseStudyDataFile::GetTimeOffsetMatchingFileList(const NFmiCaseStudyDataFile& theDataFile, const NFmiMetTime& usedWallClockTime, bool getFilesInAnyCase)
 {
 	// Haetaan kaikki tiedostot mit� FileFilter:ill� l�ytyy (annettu aikaraja 1 on 1970.01.01 00:00:01)
-	time_t earliestTimeLimit = 1;
-	auto filesWithTimes = NFmiFileSystem::PatternFiles(theDataFile.FileFilter(), earliestTimeLimit);
+	auto fileList = NFmiFileSystem::PatternFiles(theDataFile.FileFilter());
+	// Convert to list of pairs with modification times (the 2-arg PatternFiles overload
+	// was removed from system newbase; replicate the filtering here)
+	std::list<std::pair<std::string, std::time_t>> filesWithTimes;
+	for(const auto& f : fileList)
+	{
+		struct stat st;
+		if(::stat(f.c_str(), &st) == 0)
+			filesWithTimes.emplace_back(f, st.st_mtime);
+	}
 	// Yleens� datojen kanssa j�rjestet��n tiedostot ajan suhteen laskevassa j�rjestyksess�, jolloin uusimmat ovat listan k�rjess�
 	auto timeSortedFiles = CtrlViewUtils::TimeSortFiles(filesWithTimes, true);
 	const auto& dataFileWinRegValues = theDataFile.DataFileWinRegValues();

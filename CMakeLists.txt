@@ -447,11 +447,11 @@ add_subdirectory(
     src/processpool/WorkerProcessTcpMFC
     )
 # ---- Master and Worker process projects ends --------------
+endif()
 
 add_subdirectory(
     src/SmartMet
     )
-endif()
 
 #add_subdirectory(
 #test

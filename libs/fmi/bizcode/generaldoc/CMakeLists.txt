@@ -38,8 +38,6 @@ set(TARGET_LINK_LIBRARIES_LIST
     CaseStudyLib
     ToolboxViews
     Processes
-    ToolboxDep
-    Dialogs
     StationViews
     AddParamsToViews
     CatLog
@@ -51,6 +49,8 @@ if(NOT UNIX)
         WinRegistryUtils
         MfcUtils
         HakeMessage
+        ToolboxDep
+        Dialogs
     )
 endif()
 if(NOT DISABLE_CPPRESTSDK)

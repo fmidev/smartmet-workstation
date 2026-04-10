@@ -361,7 +361,7 @@ public:
   void EndClipping(void) {}
 
   void SetTextAlignment(FmiDirection theAlignment){}
-  FmiDirection GetTextAlignment(void);
+  FmiDirection GetTextAlignment(void) { return kCenter; }
 
   bool SetXDirection(FmiDirection newDirection){ return true; }
   bool SetYDirection(FmiDirection newDirection){ return true; }

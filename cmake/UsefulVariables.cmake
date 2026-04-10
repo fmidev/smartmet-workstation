@@ -22,68 +22,19 @@ set(
     CACHE INTERNAL "" FORCE
     )
 
-# **** Linux library paths ****
+# **** Linux library paths (use system-installed packages) ****
 if(UNIX)
 
-set(
-    TRAX_INCLUDE_DIR
-    /home/mheiskan/hub/trax
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    TRAX_LIB
-    /home/mheiskan/hub/trax/libsmartmet-trax.so
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    GIZA_INCLUDE_DIR
-    /home/mheiskan/hub/giza
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    GIZA_LIB
-    /home/mheiskan/hub/giza/libsmartmet-giza.so
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    IMAGINE2_INCLUDE_DIR
-    /home/mheiskan/hub/imagine2
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    IMAGINE2_LIB
-    /home/mheiskan/hub/imagine2/libsmartmet-imagine2.so
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    GIS_INCLUDE_DIR
-    /home/mheiskan/hub/gis
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    GIS_LIB
-    /home/mheiskan/hub/gis/libsmartmet-gis.so
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    NEWBASE_INCLUDE_DIR
-    /home/mheiskan/hub/newbase/newbase
-    CACHE INTERNAL "" FORCE
-    )
-
-set(
-    NEWBASE_LIB
-    /home/mheiskan/hub/newbase/libsmartmet-newbase.so
-    CACHE INTERNAL "" FORCE
-    )
+set(TRAX_INCLUDE_DIR /usr/include/smartmet CACHE INTERNAL "" FORCE)
+set(TRAX_LIB /usr/lib64/libsmartmet-trax.so CACHE INTERNAL "" FORCE)
+set(GIZA_INCLUDE_DIR /usr/include/smartmet CACHE INTERNAL "" FORCE)
+set(GIZA_LIB /usr/lib64/libsmartmet-giza.so CACHE INTERNAL "" FORCE)
+set(IMAGINE2_INCLUDE_DIR /usr/include/smartmet CACHE INTERNAL "" FORCE)
+set(IMAGINE2_LIB /usr/lib64/libsmartmet-imagine2.so CACHE INTERNAL "" FORCE)
+set(GIS_INCLUDE_DIR /usr/include/smartmet CACHE INTERNAL "" FORCE)
+set(GIS_LIB /usr/lib64/libsmartmet-gis.so CACHE INTERNAL "" FORCE)
+set(NEWBASE_INCLUDE_DIR /usr/include/smartmet/newbase CACHE INTERNAL "" FORCE)
+set(NEWBASE_LIB /usr/lib64/libsmartmet-newbase.so CACHE INTERNAL "" FORCE)
 
 endif() # UNIX
 
