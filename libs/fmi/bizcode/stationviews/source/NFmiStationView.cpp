@@ -1689,22 +1689,24 @@ NFmiPoint NFmiStationView::CalcPixelToGridRatio(NFmiIsoLineData& theIsoLineData,
 }
 
 // 'Probing' macroParam data on alueeltaan hieman pienempi kuin kartan alue, tällöin reunoille ei toivottavasti tule mitään erikoisia
-// arvoja kuten puuttuvaa tai 0:aa. Hilana on 5x5 eli 25 testipistettä, jolla saadaan aavistus, kuinka monta numeroa on luku 
+// arvoja kuten puuttuvaa tai 0:aa. Tehdään haluttu määrä testipistettä, jolla saadaan aavistus, kuinka monta numeroa on luku 
 // tekstissä keskimäärin. Sen avulla voidaan laskea lopullisen harvennetun datan symboli tiheys ruudulla.
 static boost::shared_ptr<NFmiFastQueryInfo> CreateProbingMacroParamData(boost::shared_ptr<NFmiArea> &mapArea)
 {
-    // Lasketaan uudet kulmapisteet kolmanneksen päähän reunoista ja tehdään siihen 4x4 hila.
+	// Lasketaan uudet kulmapisteet 1/divider päähän reunoista ja tehdään siihen (testGridSize x testGridSize) hila.
+	const double divider = 15.;
+	const int testGridSize = 11;
     if(mapArea)
     {
         auto bottomLeftXyPoint = mapArea->BottomLeft();
         auto topRightXyPoint = mapArea->TopRight();
-        auto xShift = (topRightXyPoint.X() - bottomLeftXyPoint.X()) / 6.;
+        auto xShift = (topRightXyPoint.X() - bottomLeftXyPoint.X()) / divider;
         // Huom! xy-maailma on y-suunnassa käännetty eli origo on karttanäytön yläosassa ja kasvaa alaspäin.
-        auto yShift = (bottomLeftXyPoint.Y() - topRightXyPoint.Y()) / 6.;
+        auto yShift = (bottomLeftXyPoint.Y() - topRightXyPoint.Y()) / divider;
         NFmiPoint newBottomLeftXy(bottomLeftXyPoint.X() + xShift, bottomLeftXyPoint.Y() - yShift);
         NFmiPoint newTopRightXy(topRightXyPoint.X() - xShift, topRightXyPoint.Y() + yShift);
         boost::shared_ptr<NFmiArea> newArea(mapArea->CreateNewArea(NFmiRect(newBottomLeftXy, newTopRightXy)));
-        return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(5, 5, NFmiInfoData::kMacroParam, newArea.get());
+        return NFmiInfoOrganizer::CreateNewMacroParamData_checkedInput(testGridSize, testGridSize, NFmiInfoData::kMacroParam, newArea.get());
     }
 
     return boost::shared_ptr<NFmiFastQueryInfo>();
