@@ -244,10 +244,14 @@ void CFmiModifyDrawParamDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_PARAM, itsParamNameStrU_);
 	DDX_Text(pDX, IDC_PRODUCER, itsProducerStrU_);
 	DDX_Radio(pDX, IDC_RADIO_GRID_DATA_DRAW_STYLE, itsGridDataDrawStyle);
-	DDX_Text(pDX, IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_START_VALUE, itsSimpleIsoLineColorLowValue);
-	DDX_Text(pDX, IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_MIDDLE_VALUE_NEW, itsSimpleIsoLineColorMidValue);
-	DDX_Text(pDX, IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_HIGH_VALUE, itsSimpleIsoLineColorHighValue);
-	DDX_Text(pDX, IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_HIGH2_VALUE, itsSimpleIsoLineColorHigh2Value);
+	// HUOM! N√§m√§ simple-isoline-v√§ri rajat sidotaan CString-muuttujiin (...StringU_) eik√§ suoraan
+	// float-muuttujiin, jotta MFC:n float-DDX_Text ei n√§ytt√§isi "Please enter a number" -messageboxia
+	// kun kentt√§ on tyhj√§ tai ei-numeerinen. String parsitaan floatiksi k√§sin EN_CHANGE-k√§sittelij√∂iss√§
+	// (kuten simple-color-contour rajoilla tehd√§√§n).
+	DDX_Text(pDX, IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_START_VALUE, itsSimpleIsoLineColorLowValueStringU_);
+	DDX_Text(pDX, IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_MIDDLE_VALUE_NEW, itsSimpleIsoLineColorMidValueStringU_);
+	DDX_Text(pDX, IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_HIGH_VALUE, itsSimpleIsoLineColorHighValueStringU_);
+	DDX_Text(pDX, IDC_SHOW_SIMPLE_ISOLINE_WITH_COLORS_HIGH2_VALUE, itsSimpleIsoLineColorHigh2ValueStringU_);
 	DDX_Text(pDX, IDC_SHOW_SYMBOL_WITH_COLORS_CLASS_COUNT, itsSymbolsWithColorsClassCount);
 	DDX_Text(pDX, IDC_SHOW_SYMBOL_WITH_COLORS_END_VALUE, itsSymbolsWithColorsEndValue);
 	DDX_Text(pDX, IDC_SHOW_SYMBOL_WITH_COLORS_MIDDLE_VALUE, itsSymbolsWithColorsMiddleValue);
@@ -372,7 +376,7 @@ BOOL CFmiModifyDrawParamDlg::OnInitDialog()
 	CFmiWin32Helpers::SetUsedWindowIconDynamically(this);
 	InitDialogFromDrawParam();
 
-    if(IsMacroParamCase()) // jos macroParam kyseess‰, ei lyhennett‰ voi antaa editoida, koska se on tunniste Metkun editorille
+    if(IsMacroParamCase()) // jos macroParam kyseess√§, ei lyhennett√§ voi antaa editoida, koska se on tunniste Metkun editorille
 	{
 		CWnd *win = GetDlgItem(IDC_PARAM_ABBREVIATION);
 		if(win)
@@ -447,7 +451,7 @@ static std::string GetFileName(const std::string &theFilePath)
 
 void CFmiModifyDrawParamDlg::AddFixedDrawParamFolderToSelector(int theTreeIndex, const NFmiFixedDrawParamFolder &theFolder, CWzComboBox &theFixedDrawParamSelector)
 {
-    // Laitetaan ensin dropdown-puulistaan t‰m‰n hakemiston alihakemistot (rekursiivisesti)
+    // Laitetaan ensin dropdown-puulistaan t√§m√§n hakemiston alihakemistot (rekursiivisesti)
     const std::vector<NFmiFixedDrawParamFolder> &subFolders = theFolder.SubFolders();
     for(auto subFolder : subFolders)
     {
@@ -455,7 +459,7 @@ void CFmiModifyDrawParamDlg::AddFixedDrawParamFolderToSelector(int theTreeIndex,
         AddFixedDrawParamFolderToSelector(subTreeIndex, subFolder, theFixedDrawParamSelector);
     }
 
-    // Laitetaan lopuksi dropdown-puulistaan t‰m‰n hakemiston drawParamit
+    // Laitetaan lopuksi dropdown-puulistaan t√§m√§n hakemiston drawParamit
     const std::vector<std::shared_ptr<NFmiDrawParam>> &drawParams = theFolder.DrawParams();
     for(auto drawParam : drawParams)
     {
@@ -464,10 +468,10 @@ void CFmiModifyDrawParamDlg::AddFixedDrawParamFolderToSelector(int theTreeIndex,
     }
 }
 
-// HUOM! N‰m‰ ikoni id:t on m‰‰ritelty oikeasti SmartMet projektin recource.h:ssa. 
-// Halusin irroittaa ToolBoxDep kirjaston riippuvuuden sinne, ja yritin lis‰t‰ ikonit t‰h‰n kirjastoon
-// ja ladata ikoneja t‰‰lt‰ k‰sin. T‰m‰ ei onnistunut, joten minun pit‰‰ ladata ikonit SmartMet ohjelmasta
-// sen projektin oikeilla id:ll‰.
+// HUOM! N√§m√§ ikoni id:t on m√§√§ritelty oikeasti SmartMet projektin recource.h:ssa. 
+// Halusin irroittaa ToolBoxDep kirjaston riippuvuuden sinne, ja yritin lis√§t√§ ikonit t√§h√§n kirjastoon
+// ja ladata ikoneja t√§√§lt√§ k√§sin. T√§m√§ ei onnistunut, joten minun pit√§√§ ladata ikonit SmartMet ohjelmasta
+// sen projektin oikeilla id:ll√§.
 #define IDI_ICON_FOLDER_OPEN_in_smartmet_project            2024
 #define IDI_ICON_FILE_CHART_in_smartmet_project             2025
 
@@ -530,10 +534,10 @@ void CFmiModifyDrawParamDlg::InitColors(void)
     CtrlView::InitialButtonColorUpdate(NFmiColorButtonDrawingData(this, itsDrawParam->IsoLineHatchColor2(), itsHatch2ColorRef, &itsHatch2Bitmap, itsHatch2ColorRect, itsHatch2Color));
 }
 
-// itsStationDataViewSelector -combobox on t‰ytetty legacy syist‰ seuraavasti:
+// itsStationDataViewSelector -combobox on t√§ytetty legacy syist√§ seuraavasti:
 // 1. ComboBoxin indeksit alkavat 0:sta
-// 2. ComboBoxin indeksit 0-6 ovat NFmiMetEditorTypes::View:in arvot 1-7, t‰st‰ johtuen niihin joko lis‰t‰‰n tai v‰hennet‰‰n 1 kun muunnoksia tehd‰‰n (riippuen muunnos suunasta).
-// 3. ComboBoxin indeksit 7-n ovat NFmiMetEditorTypes::View:in arvot 11-m, t‰st‰ johtuen niihin joko lis‰t‰‰n tai v‰hennet‰‰n 4 kun muunnoksia tehd‰‰n.
+// 2. ComboBoxin indeksit 0-6 ovat NFmiMetEditorTypes::View:in arvot 1-7, t√§st√§ johtuen niihin joko lis√§t√§√§n tai v√§hennet√§√§n 1 kun muunnoksia tehd√§√§n (riippuen muunnos suunasta).
+// 3. ComboBoxin indeksit 7-n ovat NFmiMetEditorTypes::View:in arvot 11-m, t√§st√§ johtuen niihin joko lis√§t√§√§n tai v√§hennet√§√§n 4 kun muunnoksia tehd√§√§n.
 const int g_ViewTypeOffset1 = 1;
 const int g_ViewTypeOffset2 = 4;
 static int GetStationDataViewSelectorIndex(NFmiMetEditorTypes::View theViewType)
@@ -561,19 +565,19 @@ static NFmiMetEditorTypes::View GetSelectedStationDataViewType(CComboBox &theSta
 void CFmiModifyDrawParamDlg::FillStationDataViewSelector(void)
 {
 	itsStationDataViewSelector.ResetContent();
-	itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("IDC_RADIO_GRID_DATA_DRAW_STYLE").c_str())); // n‰iden 7 ensimm‰isen arvot menev‰t 1-7, joten niille tehd‰‰n -1 ja +1 operaatiot
+	itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("IDC_RADIO_GRID_DATA_DRAW_STYLE").c_str())); // n√§iden 7 ensimm√§isen arvot menev√§t 1-7, joten niille tehd√§√§n -1 ja +1 operaatiot
     itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("IDC_RADIO_GRID_DATA_DRAW_STYLE2").c_str()));
     itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("IDC_RADIO_GRID_DATA_DRAW_STYLE3").c_str()));
     itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("IDC_RADIO_GRID_DATA_DRAW_STYLE4").c_str()));
     itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("IDC_RADIO_GRID_DATA_DRAW_STYLE5").c_str()));
     itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("IDC_RADIO_GRID_DATA_DRAW_STYLE6").c_str()));
     itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("IDC_RADIO_GRID_DATA_DRAW_STYLE7").c_str()));
-    itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("Precipitation Form").c_str())); // Huom! t‰m‰n arvo on oikeasti 11, joten pit‰‰ tehd‰ virityksi‰
-    itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("Synop weather symbol").c_str())); // Huom! t‰m‰n arvo on oikeasti 12, joten pit‰‰ tehd‰ virityksi‰
-    itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("Raw Mirri font symbol").c_str())); // Huom! t‰m‰n arvo on oikeasti 13, joten pit‰‰ tehd‰ virityksi‰
-    itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("Better weather symbol").c_str())); // Huom! t‰m‰n arvo on oikeasti 14, joten pit‰‰ tehd‰ virityksi‰
-    itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("SmartSymbol").c_str())); // Huom! t‰m‰n arvo on oikeasti 15, joten pit‰‰ tehd‰ virityksi‰
-    itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("CustomSymbol").c_str())); // Huom! t‰m‰n arvo on oikeasti 16, joten pit‰‰ tehd‰ virityksi‰
+    itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("Precipitation Form").c_str())); // Huom! t√§m√§n arvo on oikeasti 11, joten pit√§√§ tehd√§ virityksi√§
+    itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("Synop weather symbol").c_str())); // Huom! t√§m√§n arvo on oikeasti 12, joten pit√§√§ tehd√§ virityksi√§
+    itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("Raw Mirri font symbol").c_str())); // Huom! t√§m√§n arvo on oikeasti 13, joten pit√§√§ tehd√§ virityksi√§
+    itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("Better weather symbol").c_str())); // Huom! t√§m√§n arvo on oikeasti 14, joten pit√§√§ tehd√§ virityksi√§
+    itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("SmartSymbol").c_str())); // Huom! t√§m√§n arvo on oikeasti 15, joten pit√§√§ tehd√§ virityksi√§
+    itsStationDataViewSelector.AddString(CA2T(::GetDictionaryString("CustomSymbol").c_str())); // Huom! t√§m√§n arvo on oikeasti 16, joten pit√§√§ tehd√§ virityksi√§
     itsStationDataViewSelector.SetCurSel(::GetStationDataViewSelectorIndex(itsDrawParam->StationDataViewType()));
 
 	for(int viewType = 0; viewType < 18; viewType++)
@@ -642,7 +646,7 @@ void CFmiModifyDrawParamDlg::InitRestOfVersion2Data(void)
 	itsHatch2EndValue = itsDrawParam->IsoLineHatchHighValue2();
 	itsHatch2StartValue = itsDrawParam->IsoLineHatchLowValue2();
 	// Luokan dataosan fUseColorBlendingWithCustomContours nimi on oikea 
-	// k‰yttˆtarkoitus kyseiselle asetukselle (EI DrawParamin UseIsoLineGabWithCustomContours)
+	// k√§ytt√∂tarkoitus kyseiselle asetukselle (EI DrawParamin UseIsoLineGabWithCustomContours)
 	fUseColorBlendingWithCustomContours = itsDrawParam->UseIsoLineGabWithCustomContours();
     fUseTransparentLabelBoxFillColor = itsDrawParam->UseTransparentFillColor();
     fDoSparseDataSymbolVisualization = itsDrawParam->DoSparseSymbolVisualization();
@@ -683,11 +687,11 @@ void CFmiModifyDrawParamDlg::InitSymbolDrawDensitySliders()
 
 static std::string GetPrettyLimitValue(float limitValue)
 {
-	// to_string laittaa vimmatusti desimaaleja '0':ia stringin per‰‰n
+	// to_string laittaa vimmatusti desimaaleja '0':ia stringin per√§√§n
 	auto limitString = std::to_string(limitValue);
 	// Poistetaan lopusta kaikki turhat 0:t pois
 	boost::trim_right_if(limitString, [](auto character) {return character == '0'; });
-	// Poistetaan viel‰ mahdollinen lopun turha desimaalipiste
+	// Poistetaan viel√§ mahdollinen lopun turha desimaalipiste
 	if(limitString.back() == '.')
 		limitString.pop_back();
 	return limitString;
@@ -729,7 +733,7 @@ static std::string MakeCommaSeparatedValuesString(const Container& values, int u
 
 void CFmiModifyDrawParamDlg::InitSpecialClassesData(void)
 {
-	// Isoviivojen asetuksiin liittyv‰t jutut
+	// Isoviivojen asetuksiin liittyv√§t jutut
 	const auto &specialIsoLineValues = itsDrawParam->SpecialIsoLineValues();
 	itsSpecialIsolineClassCount = static_cast<int>(specialIsoLineValues.size());
 	auto str = ::MakeCommaSeparatedValuesString(specialIsoLineValues, 4);
@@ -747,7 +751,7 @@ void CFmiModifyDrawParamDlg::InitSpecialClassesData(void)
 	str = ::MakeCommaSeparatedValuesString(itsDrawParam->SpecialIsoLineLabelHeight(), 4);
     itsSpecialClassLabelHeightsStrU_ = CA2T(str.c_str());
 
-	// Contour asetuksiin liittyv‰t jutut
+	// Contour asetuksiin liittyv√§t jutut
 	std::vector<float> specialContourValues = itsDrawParam->SpecialContourValues();
 	itsSpecialContourClassCount = static_cast<int>(specialContourValues.size());
 	str = ::MakeCommaSeparatedValuesString(specialContourValues, 4);
@@ -775,7 +779,7 @@ void CFmiModifyDrawParamDlg::ReadRestOfVersion2Data(void)
 	itsDrawParam->IsoLineHatchLowValue1(static_cast<float>(itsHatch1StartValue));
 	itsDrawParam->IsoLineGab(itsIsoLineGap);
 	itsDrawParam->Alpha(itsAlpha);
-	if(fSkipReadingSpecialClassColorIndices == false) // n‰m‰ on siis jo p‰ivitetty TMColorIndex-disalogissa, ei saa p‰ivitt‰‰ niit‰ arvoja p‰‰lle
+	if(fSkipReadingSpecialClassColorIndices == false) // n√§m√§ on siis jo p√§ivitetty TMColorIndex-disalogissa, ei saa p√§ivitt√§√§ niit√§ arvoja p√§√§lle
 	{
 		itsDrawParam->ContourGab(itsContourGap);
 	}
@@ -809,10 +813,10 @@ void CFmiModifyDrawParamDlg::ReadRestOfVersion2Data(void)
 	itsDrawParam->IsoLineHatchType2(::ClampHatchType(itsHatch2Type));
 	itsDrawParam->IsoLineHatchHighValue2(static_cast<float>(itsHatch2EndValue));
 	itsDrawParam->IsoLineHatchLowValue2(static_cast<float>(itsHatch2StartValue));
-	if(fSkipReadingSpecialClassColorIndices == false) // n‰m‰ on siis jo p‰ivitetty TMColorIndex-dialogissa, ei saa p‰ivitt‰‰ niit‰ arvoja p‰‰lle
+	if(fSkipReadingSpecialClassColorIndices == false) // n√§m√§ on siis jo p√§ivitetty TMColorIndex-dialogissa, ei saa p√§ivitt√§√§ niit√§ arvoja p√§√§lle
 	{
 		// Luokan dataosan fUseColorBlendingWithCustomContours nimi on oikea 
-		// k‰yttˆtarkoitus kyseiselle asetukselle (EI DrawParamin UseIsoLineGabWithCustomContours)
+		// k√§ytt√∂tarkoitus kyseiselle asetukselle (EI DrawParamin UseIsoLineGabWithCustomContours)
 		itsDrawParam->UseIsoLineGabWithCustomContours(fUseColorBlendingWithCustomContours == TRUE);
 	}
 	itsDrawParam->StationDataViewType(::GetSelectedStationDataViewType(itsStationDataViewSelector));
@@ -836,7 +840,7 @@ void CFmiModifyDrawParamDlg::ReadSpecialClassesData(void)
 	std::string currentValueStr;
 	try
 	{
-		if(fSkipReadingSpecialClassColorIndices == false) // n‰m‰ on siis jo p‰ivitetty TMColorIndex-disalogissa, ei saa p‰ivitt‰‰ niit‰ arvoja p‰‰lle
+		if(fSkipReadingSpecialClassColorIndices == false) // n√§m√§ on siis jo p√§ivitetty TMColorIndex-disalogissa, ei saa p√§ivitt√§√§ niit√§ arvoja p√§√§lle
 		{
 			problemVariableStr = "Problem with SpecialIsolineClassValues string\n";
 			currentValueStr = CT2A(itsSpecialIsolineClassValuesStrU_);
@@ -1019,7 +1023,7 @@ void CFmiModifyDrawParamDlg::OnOK()
 {
 	UpdateData(TRUE);
 	GetSelectedDrawParamSetUp();
-	TakeDrawParamModificationInUse(); // vain onok:ssa initialisoidaan takaisin originaali drawparamiin. cancel ei siirr‰ muutoksia
+	TakeDrawParamModificationInUse(); // vain onok:ssa initialisoidaan takaisin originaali drawparamiin. cancel ei siirr√§ muutoksia
 
 	CDialog::OnOK();
 }
@@ -1041,8 +1045,8 @@ void CFmiModifyDrawParamDlg::GetSelectedDrawParamSetUp(void)
 
 void CFmiModifyDrawParamDlg::DoOnCancel()
 {
-    itsOrigDrawParam->Init(itsBackupDrawParam); // t‰ss‰ palautetaan originaali asetukset takaisin.
-    // T‰m‰ on tarpeen jos on k‰ytetty refreshi‰ ja sitten perutaan cancelista muutokset.
+    itsOrigDrawParam->Init(itsBackupDrawParam); // t√§ss√§ palautetaan originaali asetukset takaisin.
+    // T√§m√§ on tarpeen jos on k√§ytetty refreshia ja sitten perutaan cancelista muutokset.
 
     ForceStationViewUpdate();
 }
@@ -1051,7 +1055,7 @@ bool CFmiModifyDrawParamDlg::IsMacroParamSymbolDrawCase()
 {
 	if(IsMacroParamCase())
 	{
-		// Jos macroParam tapaus, silloin myˆs hiladatasta kyse
+		// Jos macroParam tapaus, silloin my√∂s hiladatasta kyse
 		auto viewType = itsDrawParam->GetViewType(false);
 		if(!NFmiDrawParam::IsColorContourType(viewType) && !NFmiDrawParam::IsIsolineType(viewType))
 			return true;
@@ -1063,11 +1067,11 @@ void CFmiModifyDrawParamDlg::ForceStationViewUpdate()
 {
     if(itsDescTopIndex <= CtrlViewUtils::kFmiMaxMapDescTopIndex)
     {
-        // Liataan myˆs maphandler, jotta k‰ytˆss‰ karttan‰ytˆss‰ ollut stationView vaihtuu tarvittaessa jos esim. isoline piirto vaihtuu teksti esitykseen.
+        // Liataan my√∂s maphandler, jotta k√§yt√∂ss√§ karttan√§yt√∂ss√§ ollut stationView vaihtuu tarvittaessa jos esim. isoline piirto vaihtuu teksti esitykseen.
         itsSmartMetDocumentInterface->MapViewDescTop(itsDescTopIndex)->MapHandler()->SetUpdateMapViewDrawingLayers(true);
 		if(IsMacroParamSymbolDrawCase())
 		{
-			// Pit‰‰ tyhjent‰‰ macroParam tapauksissa ja niiden symbolipiirto tapauksissa tarkastetulta rivilt‰ macroParamCache
+			// Pit√§√§ tyhjent√§√§ macroParam tapauksissa ja niiden symbolipiirto tapauksissa tarkastetulta rivilt√§ macroParamCache
 			itsSmartMetDocumentInterface->GetCombinedMapHandlerInterface().clearMacroParamCache(itsDescTopIndex, itsRealRowNumber, itsDrawParam);
 		}
     }
@@ -1118,9 +1122,9 @@ void CFmiModifyDrawParamDlg::OnBnClickedDrawParamLoadFrom()
 void CFmiModifyDrawParamDlg::OnSaveButton()
 {
 	UpdateData(TRUE);
-	OnBnClickedModifyDrwParamRefresh(); // otetaan muutokset myˆs heti k‰yttˆˆn, koska ne tulevat k‰yttˆˆn joka tapauksessa
-	TakeDrawParamModificationInUse(); // vain onok:ssa (ja kun asetukset otetaan kaikkialle k‰yttˆˆn ja save-nappia painettaessa)
-									  // initialisoidaan takaisin originaali drawparamiin. cancel ei siirr‰ muutoksia
+	OnBnClickedModifyDrwParamRefresh(); // otetaan muutokset my√∂s heti k√§ytt√∂√∂n, koska ne tulevat k√§ytt√∂√∂n joka tapauksessa
+	TakeDrawParamModificationInUse(); // vain onok:ssa (ja kun asetukset otetaan kaikkialle k√§ytt√∂√∂n ja save-nappia painettaessa)
+									  // initialisoidaan takaisin originaali drawparamiin. cancel ei siirr√§ muutoksia
 	if(itsDrawParam->StoreData(itsDrawParam->InitFileName()) == false)
 	{
 		std::string errMsgTitle("Cannot save drawParam");
@@ -1231,7 +1235,7 @@ void CFmiModifyDrawParamDlg::ReadAllButtonColors(void)
 	SetColorrefToColor(itsIsoLineLabelColorRef, tmpColor);
 	itsDrawParam->IsolineTextColor(tmpColor);
 
-	// Vaihtuvat isoviivav‰rit (5 kpl)
+	// Vaihtuvat isoviivav√§rit (5 kpl)
 	SetColorrefToColor(itsSimpleIsoLineLowColorRef, tmpColor);
 	itsDrawParam->SimpleIsoLineColorShadeLowValueColor(tmpColor);
 
@@ -1247,14 +1251,14 @@ void CFmiModifyDrawParamDlg::ReadAllButtonColors(void)
 	SetColorrefToColor(itsSimpleIsoLineHigh3ColorRef, tmpColor);
 	itsDrawParam->SimpleIsoLineColorShadeHigh3ValueColor(tmpColor);
 
-	// Hatch v‰rit (2 kpl)
+	// Hatch v√§rit (2 kpl)
 	SetColorrefToColor(itsHatch1ColorRef, tmpColor);
 	itsDrawParam->IsoLineHatchColor1(tmpColor);
 
 	SetColorrefToColor(itsHatch2ColorRef, tmpColor);
 	itsDrawParam->IsoLineHatchColor2(tmpColor);
 
-	// Vaihtuvat symboli v‰rit (3 kpl)
+	// Vaihtuvat symboli v√§rit (3 kpl)
 	SetColorrefToColor(itsSymbolLowColorRef, tmpColor);
 	itsDrawParam->StationSymbolColorShadeLowValueColor(tmpColor);
 
@@ -1264,7 +1268,7 @@ void CFmiModifyDrawParamDlg::ReadAllButtonColors(void)
 	SetColorrefToColor(itsSymbolHighColorRef, tmpColor);
 	itsDrawParam->StationSymbolColorShadeHighValueColor(tmpColor);
 
-	// Simple color contour v‰rit (5 kpl)
+	// Simple color contour v√§rit (5 kpl)
 	SetColorrefToColor(itsSimpleColorContourLowColorRef, tmpColor);
 	itsDrawParam->ColorContouringColorShadeLowValueColor(tmpColor);
 
@@ -1297,10 +1301,10 @@ void CFmiModifyDrawParamDlg::OnShowColorIndexDlg(bool doIsolineCase)
         ToolMasterColorCube::UsedColorsCube(), itsDrawParam, doIsolineCase, this);
 	if(dlg.DoModal() == IDOK)
 	{
-		InitSpecialClassesData(); // valitut special v‰rit pit‰‰ alustaa uudestaan
+		InitSpecialClassesData(); // valitut special v√§rit pit√§√§ alustaa uudestaan
 		itsContourGap = itsDrawParam->ContourGab();
 		// Luokan dataosan fUseColorBlendingWithCustomContours nimi on oikea 
-		// k‰yttˆtarkoitus kyseiselle asetukselle (EI DrawParamin UseIsoLineGabWithCustomContours)
+		// k√§ytt√∂tarkoitus kyseiselle asetukselle (EI DrawParamin UseIsoLineGabWithCustomContours)
 		fUseColorBlendingWithCustomContours = itsDrawParam->UseIsoLineGabWithCustomContours();
 		UpdateData(FALSE);
 	}
@@ -1321,11 +1325,11 @@ void CFmiModifyDrawParamDlg::OnButtonHatch2Color()
     CtrlView::ColorButtonPressed(NFmiColorButtonDrawingData(this, itsHatch2ColorRef, &itsHatch2Bitmap, itsHatch2ColorRect, itsHatch2Color));
 }
 
-// T‰m‰n funktion tarkoitus on yritt‰‰ yksinkertaistaa koodia, kun k‰sitell‰‰n simple-contour
-// v‰rinappuloiden kasittely‰.
-// colorIndex alkaa 1:st‰, joka myˆs k‰sitell‰‰n default arvona, jos indeksi on muuten pieless‰.
+// T√§m√§n funktion tarkoitus on yritt√§√§ yksinkertaistaa koodia, kun k√§sitell√§√§n simple-contour
+// v√§rinappuloiden kasittely√§.
+// colorIndex alkaa 1:st√§, joka my√∂s k√§sitell√§√§n default arvona, jos indeksi on muuten pieless√§.
 // Huom! fSimpleContourTransparency# ja itsSimpleColorContourLimit#Value dataosilla on eri indeksit,
-// koska transparencyja on yksi enemm‰n.
+// koska transparencyja on yksi enemm√§n.
 std::pair<bool, bool> CFmiModifyDrawParamDlg::GetSimpleContourTransparencyAndDisabledOptions(int colorIndex) const
 {
 	auto colorIsTransparent = false;
@@ -1359,7 +1363,7 @@ std::pair<bool, bool> CFmiModifyDrawParamDlg::GetSimpleContourTransparencyAndDis
 	default:
 	{
 		colorIsTransparent = fSimpleContourTransparency1 == TRUE;
-		colorIsDisabled = false; // HUOM! 1. v‰ri‰ ei voi disabloida (myˆs oletus indeksi k‰sittely)
+		colorIsDisabled = false; // HUOM! 1. v√§ri√§ ei voi disabloida (my√∂s oletus indeksi k√§sittely)
 		break;
 	}
 	}
@@ -1367,10 +1371,10 @@ std::pair<bool, bool> CFmiModifyDrawParamDlg::GetSimpleContourTransparencyAndDis
 	return std::make_pair(colorIsTransparent, colorIsDisabled);
 }
 
-// T‰m‰n funktion tarkoitus on yritt‰‰ yksinkertaistaa koodia, kun k‰sitell‰‰n simple-isoline
-// v‰rinappuloiden kasittely‰.
-// colorIndex alkaa 1:st‰, joka myˆs k‰sitell‰‰n default arvona, jos indeksi on muuten pieless‰.
-// Huom! Ainakaan toistaiseksi isoline jutuilla ei ole transparencya, koska siin‰ ei ole mit‰‰n j‰rke‰.
+// T√§m√§n funktion tarkoitus on yritt√§√§ yksinkertaistaa koodia, kun k√§sitell√§√§n simple-isoline
+// v√§rinappuloiden kasittely√§.
+// colorIndex alkaa 1:sta, joka my√∂s k√§sitell√§√§n default arvona, jos indeksi on muuten pieless√§.
+// Huom! Ainakaan toistaiseksi isoline jutuilla ei ole transparencya, koska siin√§ ei ole mit√§√§n j√§rke√§.
 std::pair<bool, bool> CFmiModifyDrawParamDlg::GetSimpleIsolineTransparencyAndDisabledOptions(int colorIndex) const
 {
 	auto colorIsTransparent = false; // kaikissa tapauksissa
@@ -1499,47 +1503,47 @@ void CFmiModifyDrawParamDlg::OnButtonColorShowSimpleColorcontourHigh3()
 void CFmiModifyDrawParamDlg::OnBnClickedCheckSimpleContourTransparency1()
 {
 	UpdateData(TRUE);
-	// Simple-contour v‰rin transparency on muuttunut, pit‰‰ piirt‰‰ siihen liittyv‰ v‰rinappula uudestaan
+	// Simple-contour v√§rin transparency on muuttunut, pit√§√§ piirt√§√§ siihen liittyv√§ v√§rinappula uudestaan
 	CtrlView::ColorButtonDraw(GetSimpleContourColorButtonData(1, false));
 }
 
 void CFmiModifyDrawParamDlg::OnBnClickedCheckSimpleContourTransparency2()
 {
 	UpdateData(TRUE);
-	// Simple-contour v‰rin transparency on muuttunut, pit‰‰ piirt‰‰ siihen liittyv‰ v‰rinappula uudestaan
+	// Simple-contour v√§rin transparency on muuttunut, pit√§√§ piirt√§√§ siihen liittyv√§ v√§rinappula uudestaan
 	CtrlView::ColorButtonDraw(GetSimpleContourColorButtonData(2, false));
 }
 
 void CFmiModifyDrawParamDlg::OnBnClickedCheckSimpleContourTransparency3()
 {
 	UpdateData(TRUE);
-	// Simple-contour v‰rin transparency on muuttunut, pit‰‰ piirt‰‰ siihen liittyv‰ v‰rinappula uudestaan
+	// Simple-contour v√§rin transparency on muuttunut, pit√§√§ piirt√§√§ siihen liittyv√§ v√§rinappula uudestaan
 	CtrlView::ColorButtonDraw(GetSimpleContourColorButtonData(3, false));
 }
 
 void CFmiModifyDrawParamDlg::OnBnClickedCheckSimpleContourTransparency4()
 {
 	UpdateData(TRUE);
-	// Simple-contour v‰rin transparency on muuttunut, pit‰‰ piirt‰‰ siihen liittyv‰ v‰rinappula uudestaan
+	// Simple-contour v√§rin transparency on muuttunut, pit√§√§ piirt√§√§ siihen liittyv√§ v√§rinappula uudestaan
 	CtrlView::ColorButtonDraw(GetSimpleContourColorButtonData(4, false));
 }
 
 void CFmiModifyDrawParamDlg::OnBnClickedCheckSimpleContourTransparency5()
 {
 	UpdateData(TRUE);
-	// Simple-contour v‰rin transparency on muuttunut, pit‰‰ piirt‰‰ siihen liittyv‰ v‰rinappula uudestaan
+	// Simple-contour v√§rin transparency on muuttunut, pit√§√§ piirt√§√§ siihen liittyv√§ v√§rinappula uudestaan
 	CtrlView::ColorButtonDraw(GetSimpleContourColorButtonData(5, false));
 }
 
 void CFmiModifyDrawParamDlg::OnEnChangeShowSimpleColorcontourLimitValue(ColorType colorType, int colorIndex, CString& limitStringU_, float& limitValue)
 {
-	// Pit‰‰ tutkia muuttuuko v‰rinappulan disable tilanne, kun rajaa muutetaan
+	// Pit√§√§ tutkia muuttuuko v√§rinappulan disable tilanne, kun rajaa muutetaan
 	bool doContourCase = (colorType == ColorType::SimpleContour);
 	auto originalColorOptions = doContourCase ? GetSimpleContourTransparencyAndDisabledOptions(colorIndex) : GetSimpleIsolineTransparencyAndDisabledOptions(colorIndex);
 	UpdateData(TRUE);
 	// Annetaan originaali tekstin olla sellaisenaan, ja otetaan stringi erilliseen muuttujaan
 	CString editText = limitStringU_;
-	// Siivotaan tekstist‰ pois alku ja loppu whitespacet
+	// Siivotaan tekstist√§ pois alku ja loppu whitespacet
 	editText.Trim();
 	std::string valueInStdString = CT2A(editText);
 	limitValue = kFloatMissing;
@@ -1549,10 +1553,10 @@ void CFmiModifyDrawParamDlg::OnEnChangeShowSimpleColorcontourLimitValue(ColorTyp
 		auto tmpLimitValue = std::stof(valueInStdString, &firstCharacterPositionAfterFloatValue);
 		if(firstCharacterPositionAfterFloatValue == valueInStdString.size())
 		{
-			// std::stof (funktioperhe) hyv‰ksyy kaikki stringit, jos alussa on hyv‰ksytt‰v‰ luku,
-			// mutta sit‰ seuraa teksti‰ tai esim. toinen luku, t‰llˆin tulkinta lopetetaan ja 
-			// std::stof funktion 2. parametriin talletetaan 1. ei lukuun liittyv‰n merkin sijainti.
-			// Nyt siis hyv‰ksyt‰‰n vain sellaiset luvu-stringit, mink‰ per‰ss‰ ei ole en‰‰ mit‰‰n muuta.
+			// std::stof (funktioperhe) hyv√§ksyy kaikki stringit, jos alussa on hyv√§ksytt√§v√§ luku,
+			// mutta sit√§ seuraa teksti√§ tai esim. toinen luku, t√§ll√∂in tulkinta lopetetaan ja 
+			// std::stof funktion 2. parametriin talletetaan 1. ei lukuun liittyv√§n merkin sijainti.
+			// Nyt siis hyv√§ksyt√§√§n vain sellaiset luvu-stringit, mink√§ per√§ss√§ ei ole en√§√§ mit√§√§n muuta.
 			limitValue = tmpLimitValue;
 		}
 	}
@@ -1593,7 +1597,7 @@ void CFmiModifyDrawParamDlg::OnEnChangeShowSimpleIsolineWithColorsStartValue()
 
 void CFmiModifyDrawParamDlg::OnEnChangeShowSimpleIsolineWithColorsMiddleValue()
 {
-	OnEnChangeShowSimpleColorcontourLimitValue(ColorType::SimpleIsoline, 2, itsSimpleIsoLineColorLowValueStringU_, itsSimpleIsoLineColorLowValue);
+	OnEnChangeShowSimpleColorcontourLimitValue(ColorType::SimpleIsoline, 2, itsSimpleIsoLineColorMidValueStringU_, itsSimpleIsoLineColorMidValue);
 }
 
 void CFmiModifyDrawParamDlg::OnEnChangeShowSimpleIsolineWithColorsEndValue()
@@ -1618,7 +1622,7 @@ void CFmiModifyDrawParamDlg::OnButtonResetDrawParam()
 void CFmiModifyDrawParamDlg::MakeViewMacroAdjustments(void)
 {
 	if(itsDrawParam->ViewMacroDrawParam())
-	{ // jos viewmacro drawParam, estet‰‰n talletus mahdollisuus ja laitetaan varoitus n‰kyviin punaisella
+	{ // jos viewmacro drawParam, estet√§√§n talletus mahdollisuus ja laitetaan varoitus n√§kyviin punaisella
 		CWnd* win = GetDlgItem(IDC_STATIC_VIEW_MACRO_DRAW_PARAM_WARNING);
 		if(win)
 			win->ShowWindow(SW_SHOW);
@@ -1647,13 +1651,13 @@ HBRUSH CFmiModifyDrawParamDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
 	HBRUSH hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
 
-	if(pWnd->GetDlgCtrlID() == IDC_STATIC_VIEW_MACRO_DRAW_PARAM_WARNING) // v‰rj‰t‰‰n viewmacro-drawparam varoitus teksti punaisella
+	if(pWnd->GetDlgCtrlID() == IDC_STATIC_VIEW_MACRO_DRAW_PARAM_WARNING) // v√§rj√§t√§√§n viewmacro-drawparam varoitus teksti punaisella
 		pDC->SetTextColor(RGB(255, 0, 0));
 
 	if(pWnd->GetDlgCtrlID() == IDC_STATIC_SPECIAL_ISOLINE_CLASSES_STR)
 	{
 		if(this->fSpecialIsolineClassesHaveInvalidValues)
-			pDC->SetTextColor(RGB(255, 0, 0)); // virhetilanteissa erikois luokka edit boxin labeli v‰ritet‰‰n punaiseksi
+			pDC->SetTextColor(RGB(255, 0, 0)); // virhetilanteissa erikois luokka edit boxin labeli v√§ritet√§√§n punaiseksi
 		else
 			pDC->SetTextColor(RGB(0, 0, 0));
 	}
@@ -1661,7 +1665,7 @@ HBRUSH CFmiModifyDrawParamDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 	if(pWnd->GetDlgCtrlID() == IDC_STATIC_SPECIAL_CONTOUR_CLASSES_STR)
 	{
 		if(this->fSpecialContourClassesHaveInvalidValues)
-			pDC->SetTextColor(RGB(255, 0, 0)); // virhetilanteissa erikois luokka edit boxin labeli v‰ritet‰‰n punaiseksi
+			pDC->SetTextColor(RGB(255, 0, 0)); // virhetilanteissa erikois luokka edit boxin labeli v√§ritet√§√§n punaiseksi
 		else
 			pDC->SetTextColor(RGB(0, 0, 0));
 	}
@@ -1669,7 +1673,7 @@ HBRUSH CFmiModifyDrawParamDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 	if(pWnd->GetDlgCtrlID() == IDC_STATIC_DRAW_PARAM_COLOR_PARAM_TEXT)
 	{
 		if(!fPossibleColorParameterOk)
-			pDC->SetTextColor(RGB(255, 0, 0)); // virhetilanteissa labeli v‰ritet‰‰n punaiseksi
+			pDC->SetTextColor(RGB(255, 0, 0)); // virhetilanteissa labeli v√§ritet√§√§n punaiseksi
 		else
 			pDC->SetTextColor(RGB(0, 0, 0));
 	}
@@ -1712,9 +1716,9 @@ const std::string gFlipArrowText = "Flip arrow";
 const std::string gTransparencyText = "tra";
 const std::string gReloadFixedDrawParams = "Reload Fixed DrawParams";
 
-// T‰m‰ funktio alustaa kaikki dialogin tekstit editoriin valitulla kielell‰.
-// T‰m‰ on ik‰v‰ kyll‰ teht‰v‰ erikseen dialogin muokkaus tyˆkalusta, eli
-// tekij‰n pit‰‰ lis‰t‰ erikseen t‰nne kaikki dialogin osat, joihin
+// T√§m√§ funktio alustaa kaikki dialogin tekstit editoriin valitulla kielell√§.
+// T√§m√§ on ik√§v√§ kyll√§ teht√§v√§ erikseen dialogin muokkaus ty√∂kalusta, eli
+// tekij√§n pit√§√§ lis√§t√§ erikseen t√§nne kaikki dialogin osat, joihin
 // kieli valinta voi vaikuttaa.
 void CFmiModifyDrawParamDlg::InitDialogTexts(void)
 {
@@ -1826,7 +1830,7 @@ void CFmiModifyDrawParamDlg::OnBnClickedModifyDrwParamRefresh()
 {
 	UpdateData(TRUE);
 	GetSelectedDrawParamSetUp();
-	itsOrigDrawParam->Init(itsDrawParam); // otetaan muuutokset ainakin hetkellisesti k‰yttˆˆn, cancel peruu muutokset!!!
+	itsOrigDrawParam->Init(itsDrawParam); // otetaan muuutokset ainakin hetkellisesti k√§ytt√∂√∂n, cancel peruu muutokset!!!
 	fRefreshPressed = true;
     ForceStationViewUpdate();
 
@@ -1838,15 +1842,15 @@ void CFmiModifyDrawParamDlg::TakeDrawParamModificationInUse(void)
 {
 	itsOrigDrawParam->Init(itsDrawParam);
 	itsBackupDrawParam->Init(itsDrawParam);
-	fRefreshPressed = false; // t‰m‰ voidaan nollata, koska nyt muutokset on otettu k‰yttˆˆn
+	fRefreshPressed = false; // t√§m√§ voidaan nollata, koska nyt muutokset on otettu k√§ytt√∂√∂n
 }
 
 void CFmiModifyDrawParamDlg::OnBnClickedModifyDrwParamUseWithAll()
 {
 	UpdateData(TRUE);
-	OnBnClickedModifyDrwParamRefresh(); // otetaan muutokset myˆs heti k‰yttˆˆn, koska ne tulevat k‰yttˆˆn joka tapauksessa
-	TakeDrawParamModificationInUse(); // vain onok:ssa (ja kun asetukset otetaan kaikkialle k‰yttˆˆn)
-									  // initialisoidaan takaisin originaali drawparamiin. cancel ei siirr‰ muutoksia
+	OnBnClickedModifyDrwParamRefresh(); // otetaan muutokset my√∂s heti k√§ytt√∂√∂n, koska ne tulevat k√§ytt√∂√∂n joka tapauksessa
+	TakeDrawParamModificationInUse(); // vain onok:ssa (ja kun asetukset otetaan kaikkialle k√§ytt√∂√∂n)
+									  // initialisoidaan takaisin originaali drawparamiin. cancel ei siirr√§ muutoksia
     itsSmartMetDocumentInterface->TakeDrawParamInUseEveryWhere(itsDrawParam, fModifyMapViewParam, fModifyMapViewParam, fModifyCrossSectionViewParam, fModifyMapViewParam);
     ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::AllMapViews | SmartMetViewId::CrossSectionView);
     itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ModifyDrawParamDlg: Using these setting for all similar parameters button pressed", TRUE, TRUE);
@@ -1868,10 +1872,10 @@ void CFmiModifyDrawParamDlg::OnEnChangeSpecialIsolineClassesValues()
 	}
 	catch(...)
 	{
-		fSpecialIsolineClassesHaveInvalidValues = true; // vain asetetaan t‰m‰ lippu p‰‰lle jos tulee mit‰‰n ongelmia
+		fSpecialIsolineClassesHaveInvalidValues = true; // vain asetetaan t√§m√§ lippu p√§√§lle jos tulee mit√§√§n ongelmia
 	}
 
-	// IDC_STATIC_SPECIAL_ISOLINE_CLASSES_STR kontrolli v‰rj‰t‰‰n punaiseksi, jos inputissa on vikaa
+	// IDC_STATIC_SPECIAL_ISOLINE_CLASSES_STR kontrolli v√§rj√§t√§√§n punaiseksi, jos inputissa on vikaa
 	CWnd *win = GetDlgItem(IDC_STATIC_SPECIAL_ISOLINE_CLASSES_STR);
 	if(win)
 		win->Invalidate(FALSE);
@@ -1893,7 +1897,7 @@ void CFmiModifyDrawParamDlg::OnEnChangeSpecialContourClassesValues()
 	}
 	catch(...)
 	{
-		fSpecialContourClassesHaveInvalidValues = true; // vain asetetaan t‰m‰ lippu p‰‰lle jos tulee mit‰‰n ongelmia
+		fSpecialContourClassesHaveInvalidValues = true; // vain asetetaan t√§m√§ lippu p√§√§lle jos tulee mit√§√§n ongelmia
 	}
 	CWnd* win = GetDlgItem(IDC_STATIC_SPECIAL_CONTOUR_CLASSES_STR);
 	if(win)
@@ -1906,7 +1910,7 @@ std::string CFmiModifyDrawParamDlg::GetSelectedFixedDrawParamPath()
 
     int currentIndex = itsFixedDrawParamSelector.GetCurSel();
     LPITEMDATA currentData = (LPITEMDATA)itsFixedDrawParamSelector.GetItemData(currentIndex);
-    if(currentData->cType != itsIconTypeFolderId) // Jos cType ei ole kansio, voidaan tehd‰ piirtoasetus s‰‰tˆj‰
+    if(currentData->cType != itsIconTypeFolderId) // Jos cType ei ole kansio, voidaan tehd√§ piirtoasetus s√§√§t√∂j√§
     {
         CString drawParamFileName;
         itsFixedDrawParamSelector.GetLBText(currentIndex, drawParamFileName);
@@ -1945,7 +1949,7 @@ void CFmiModifyDrawParamDlg::OnCbnSelchangeComboFixedDrawParamSelector()
     {
         itsDrawParam->Init(selectedDrawParam.get(), true);
         InitDialogFromDrawParam(); // alustetaan dialogin arvot 
-        itsOrigDrawParam->Init(itsDrawParam); // otetaan muuutokset ainakin hetkellisesti k‰yttˆˆn, cancel peruu muutokset!!!
+        itsOrigDrawParam->Init(itsDrawParam); // otetaan muuutokset ainakin hetkellisesti k√§ytt√∂√∂n, cancel peruu muutokset!!!
         UpdateData(FALSE);
 		DoPostInitializationChecks();
 //        if(fApplyFixedDrawParamSettingsAtOnce)
@@ -1953,21 +1957,21 @@ void CFmiModifyDrawParamDlg::OnCbnSelchangeComboFixedDrawParamSelector()
             fRefreshPressed = true;
             ForceStationViewUpdate();
             ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(::GetWantedMapViewIdFlag(itsDescTopIndex));
-            itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ModifyDrawParamDlg: Fixed draw param selected", TRUE, TRUE, itsDescTopIndex); // p‰ivitet‰‰n n‰yttˆj‰
+            itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ModifyDrawParamDlg: Fixed draw param selected", TRUE, TRUE, itsDescTopIndex); // p√§ivitet√§√§n n√§ytt√∂j√§
         }
     }
 }
 
 void CFmiModifyDrawParamDlg::OnBnClickedButtonReloadOriginal()
 {
-    DoOnCancel(); // otetaan originaali asetukset k‰yttˆˆn, liataan n‰yttˆj‰
-    itsDrawParam->Init(itsOrigDrawParam); // DoCancel laitta originaalit itsOrigDrawParam:iin, josta ne laitetaan t‰ss‰ itsDrawParam
+    DoOnCancel(); // otetaan originaali asetukset k√§ytt√∂√∂n, liataan n√§ytt√∂j√§
+    itsDrawParam->Init(itsOrigDrawParam); // DoCancel laitta originaalit itsOrigDrawParam:iin, josta ne laitetaan t√§ss√§ itsDrawParam
     InitDialogFromDrawParam(); // alustetaan dialogin arvot itsDrawParam:in arvoilla
     UpdateData(FALSE);
 	DoPostInitializationChecks();
 
     ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(::GetWantedMapViewIdFlag(itsDescTopIndex));
-    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ModifyDrawParamDlg: Reload original draw param settings", TRUE, TRUE, itsDescTopIndex); // p‰ivitet‰‰n n‰yttˆj‰
+    itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs("ModifyDrawParamDlg: Reload original draw param settings", TRUE, TRUE, itsDescTopIndex); // p√§ivitet√§√§n n√§ytt√∂j√§
 }
 
 std::pair<double, double> CFmiModifyDrawParamDlg::GetSymbolDrawDensityValuesFromSlider()
@@ -2018,9 +2022,9 @@ bool CFmiModifyDrawParamDlg::IsPossibleColorParameterStrOk(const CString& colorP
 		try
 		{
 			auto variableData = NFmiSmartToolIntepreter::CheckForVariableDataType(originalVariableStr);
-			// Meit‰ kiinnostaa t‰ss‰ vaiheessa vain editoitu data, eli pelkk‰ parametri
+			// Meit√§ kiinnostaa t√§ss√§ vaiheessa vain editoitu data, eli pelkk√§ parametri
 			auto editedDataOnly = variableData.second.IsEditedData();
-			// Lis‰ksi editoitu data ei voi sis‰lt‰‰ level-tietoa, koska emme halua vaihtaa sellaista viel‰
+			// Lis√§ksi editoitu data ei voi sis√§lt√∂√§ level-tietoa, koska emme halua vaihtaa sellaista viel√§
 			auto noLevelInfo = variableData.second.UsedLevel() == nullptr;
 			return variableData.first && editedDataOnly && noLevelInfo;
 		}
@@ -2029,12 +2033,12 @@ bool CFmiModifyDrawParamDlg::IsPossibleColorParameterStrOk(const CString& colorP
 		return false;
 	}
 
-	// Esim. tyhj‰ parametri on ok, koska silloin ei haluta k‰ytt‰‰ erillist‰ v‰ritysparametria
+	// Esim. tyhj√§ parametri on ok, koska silloin ei haluta k√§ytt√∂√§ erillist√§ v√§ritysparametria
 	return true;
 }
 
-// Kun dialogi on alustettu tavalla tai toisella drawParam oliosta, t‰t‰ 
-// tarkastelufunktiota voidaan kutsua, sen j‰lkeen kun UpdateData(FALSE) on kutsuttu.
+// Kun dialogi on alustettu tavalla tai toisella drawParam oliosta, t√§t√§ 
+// tarkastelufunktiota voidaan kutsua, sen j√§lkeen kun UpdateData(FALSE) on kutsuttu.
 void CFmiModifyDrawParamDlg::DoPostInitializationChecks()
 {
 	fPossibleColorParameterOk = IsPossibleColorParameterStrOk(itsPossibleColorParameterStr);
@@ -2450,20 +2454,20 @@ static std::string MakeTransparencyTooltip(const std::string& titleStr, const st
 	return str;
 }
 
-// HUOM! Outouksia miten tooltipit eri kontrolleissa toimivat t‰ss‰ dialogissa:
-// Syy outouksiin on tuntematon, mutta varmaan liittyy siihen ett‰ dialogi on tungettu t‰yteen erilaisia kontrolleja.
-// Joskus static-teksti-kontrollit voivat saada tooltipin toimimaan, mutta varsinkin viime aikoina lis‰tyt kontrollit eiv‰t.
-// Lˆysin keinon mill‰ toiminta voidaan 'pakottaa' static-teksti-kontrolliin: Laita Notify optio true:ksi, niin rupee pelitt‰m‰‰n.
-// Ei ole tietoa onko t‰st‰ asetuksesta haittaa, koska silloin kontolli rupeaa l‰hett‰m‰‰n notifikaatioita, kun sit‰ klikataan jne.
-// Pikaisten testien valossa t‰st‰ viestien l‰hettelyst‰ ei ole haittaa.
-// N‰ytt‰‰ silt‰ ett‰ toimivat/aktiiviset kontrollit voivat aina saada tooltipin.
+// HUOM! Outouksia miten tooltipit eri kontrolleissa toimivat t√§ss√§ dialogissa:
+// Syy outouksiin on tuntematon, mutta varmaan liittyy siihen ett√§ dialogi on tungettu t√§yteen erilaisia kontrolleja.
+// Joskus static-teksti-kontrollit voivat saada tooltipin toimimaan, mutta varsinkin viime aikoina lis√§tyt kontrollit eiv√§t.
+// L√∂ysin keinon mill√§ toiminta voidaan 'pakottaa' static-teksti-kontrolliin: Laita Notify optio true:ksi, niin rupee pelitt√§m√§√§n.
+// Ei ole tietoa onko t√§st√§ asetuksesta haittaa, koska silloin kontolli rupeaa l√§hett√§m√§√§n notifikaatioita, kun sit√§ klikataan jne.
+// Pikaisten testien valossa t√§st√§ viestien l√§hettelyst√§ ei ole haittaa.
+// N√§ytt√∂√§ silt√§ ett√§ toimivat/aktiiviset kontrollit voivat aina saada tooltipin.
 void CFmiModifyDrawParamDlg::InitTooltipControl()
 {
 	m_tooltip.Create(this);
 	m_tooltip.SetDelayTime(PPTOOLTIP_TIME_AUTOPOP, 30000); // kuinka kauan tooltippi viipyy, jos kursoria ei liikuteta [ms]
-	m_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 500); // kuinka nopeasti tooltip ilmestyy n‰kyviin, jos kursoria ei liikuteta [ms]
+	m_tooltip.SetDelayTime(PPTOOLTIP_TIME_INITIAL, 500); // kuinka nopeasti tooltip ilmestyy n√§kyviin, jos kursoria ei liikuteta [ms]
 
-	// T‰ss‰ erikseen jokainen kontrolli, jolle halutaan joku tooltip teksti
+	// T√§ss√§ erikseen jokainen kontrolli, jolle halutaan joku tooltip teksti
 	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_COLOR_PARAM_TEXT, ::MakeColorParamCtrlTooltip(gColorParameterText));
 //	SetDialogControlTooltip(IDC_EDIT_DRAW_PARAM_COLOR_PARAM_STR, ::MakeColorParamCtrlTooltip());
 	SetDialogControlTooltip(IDC_BUTTON_RELOAD_ORIGINAL, ::MakeReloadOriginalButtonTooltip(gReloadOriginalButtonText));
@@ -2486,7 +2490,7 @@ void CFmiModifyDrawParamDlg::InitTooltipControl()
 	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_ISOLINE_COLORS_STR, ::MakeIsolineColorsTooltip(gIsolineColorsText));
 	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_COLOR_CONTOUR_COLORS_STR, ::MakeContourColorsTooltip(gContourColorsText));
 	SetDialogControlTooltip(IDC_CHECK_USE_SPECIAL_CLASSES, ::MakeUseSpecialClassesTooltip(gUseSpecialClassesStr));
-	// Ei pysty antamaan tooltip juttua t‰ll‰iselle group-box tekstille
+	// Ei pysty antamaan tooltip juttua t√§ll√§iselle group-box tekstille
 	//SetDialogControlTooltip(IDC_STATIC_SPECIAL_CLASSES_SETTINGS_STR, ::MakeUseSpecialClassesTooltip(gSpecialClassesSettingsStr));
 	SetDialogControlTooltip(IDC_STATIC_SPECIAL_ISOLINE_CLASSES_STR, ::MakeSpecialIsolineClassesLimitTooltip(gIsolineClassesText, true));
 	SetDialogControlTooltip(IDC_STATIC_DRAW_PARAM_SPECIAL_WIDTHS_STR, ::MakeSpecialClassesLineWidthTooltip(gIsolineWidthsText));
