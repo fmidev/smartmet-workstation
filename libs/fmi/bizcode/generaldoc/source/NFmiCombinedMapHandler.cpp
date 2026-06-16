@@ -2267,6 +2267,18 @@ void NFmiCombinedMapHandler::setSelectedMapHandler(unsigned int mapViewDescTopIn
 	ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(GetWantedMapViewIdFlag(mapViewDescTopIndex));
 }
 
+// Pääkarttanäytön (index 0) aluemuutos vaatii myös asemadata-taulukon ja wind-taulun
+// päivityksen, koska ne suodattavat näytettävät asemat pääkarttanäytön zoomatun alueen
+// mukaan. Tämä on keskitetty tähän, jotta kaikki pääkarttanäytön alueenvaihtopolut
+// (mm. hiirizoomaus/setMapArea, space-näppäimen swapArea, data-area-nappi, projektion
+// vaihto) päivittävät nämä näytöt. Apukartoille (index 1/2) ei tehdä mitään, koska
+// nämä näytöt on sidottu pääkarttanäyttöön.
+void NFmiCombinedMapHandler::applyMainMapAreaDependentViewUpdates(unsigned int mapViewDescTopIndex)
+{
+	if(mapViewDescTopIndex == 0)
+		ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::StationDataTableView | SmartMetViewId::WindTableDlg);
+}
+
 void NFmiCombinedMapHandler::setMapArea(unsigned int mapViewDescTopIndex, const boost::shared_ptr<NFmiArea>& newArea)
 {
 	if(newArea)
@@ -2309,6 +2321,7 @@ void NFmiCombinedMapHandler::setMapArea(unsigned int mapViewDescTopIndex, const 
 		// laitetaan viela kaikki ajat likaisiksi cachesta
 		mapViewDirty(mapViewDescTopIndex, true, true, true, true, false, false);
 		mapDescTop->GridPointCache().Clear();
+		applyMainMapAreaDependentViewUpdates(mapViewDescTopIndex);
 		if(mapDescTop->MapHandler()->MapReallyChanged() && CatLog::doTraceLevelLogging())
 		{
 			std::string areaChangedString = "Map view ";
@@ -4166,6 +4179,7 @@ void NFmiCombinedMapHandler::swapArea(unsigned int mapViewDescTopIndex)
 	mapViewDirty(mapViewDescTopIndex, true, true, true, true, false, false); // laitetaan viela kaikki ajat likaisiksi cachesta
 	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
 	mapDescTop->GridPointCache().Clear();
+	applyMainMapAreaDependentViewUpdates(mapViewDescTopIndex);
 }
 
 void NFmiCombinedMapHandler::removeMacroParamFromDrawParamLists(const std::string& macroParamName)

@@ -35,67 +35,67 @@ namespace Imagine
 // This has local bitmaps and interface to wms-server clients as well.
 class NFmiCombinedMapHandler : public CombinedMapHandlerInterface
 {
-    // T‰h‰n talletetaan yhden karttan‰ytˆn kartta-alueiden 1-4 combined-mode tilat
+    // T√§h√§n talletetaan yhden karttan√§yt√∂n kartta-alueiden 1-4 combined-mode tilat
     using MapViewCombinedMapModeState = std::map<unsigned int, NFmiCombinedMapModeState>;
-    // T‰h‰n talletetaan kaikkien karttan‰yttˆjen (1-3) kaikkien kartta-alueiden combined-mode tilat
+    // T√§h√§n talletetaan kaikkien karttan√§ytt√∂jen (1-3) kaikkien kartta-alueiden combined-mode tilat
     using TotalMapViewCombinedMapModeState = std::map<unsigned int, MapViewCombinedMapModeState>;
 
     std::string absoluteControlPath_;
-    // T‰h‰n tulee kaikkien eri mapview (1-3) desctoppien tiedot
+    // T√§h√§n tulee kaikkien eri mapview (1-3) desctoppien tiedot
     MapViewDescTopVector mapViewDescTops_;
     std::unique_ptr<NFmiMapConfigurationSystem> mapConfigurationSystem_;
-    // T‰m‰ tiet‰‰ miten piirret‰‰n lat-lon viivat eri projektioihin
+    // T√§m√§ tiet√§√§ miten piirret√§√§n lat-lon viivat eri projektioihin
     std::unique_ptr<NFmiProjectionCurvatureInfo> projectionCurvatureInfo_; 
-    // T‰t‰ lippua k‰ytet‰‰n aikasarja ikkunan kaksoispuskuroinnisssa
+    // T√§t√§ lippua k√§ytet√§√§n aikasarja ikkunan kaksoispuskuroinnisssa
     bool timeSerialViewDirty_ = true;
-    // T‰h‰n talletetaan sen karttan‰ytˆn indeksi, mink‰ oletetaan olevan aktiivinen, oletus on 0
+    // T√§h√§n talletetaan sen karttan√§yt√∂n indeksi, mink√§ oletetaan olevan aktiivinen, oletus on 0
     unsigned int activeMapDescTopIndex_ = 0; 
     std::unique_ptr<NFmiFastDrawParamList> modifiedPropertiesDrawParamList_;
-    // Poikkileikkausn‰yttˆ-ruudukon drawparamit
+    // Poikkileikkausn√§ytt√∂-ruudukon drawparamit
     std::unique_ptr<NFmiPtrList<NFmiDrawParamList>> crossSectionDrawParamListVector_; 
     // Knows all the parameters that has to be drawn on timeserial-view
     std::unique_ptr<NFmiDrawParamList> timeSerialViewDrawParamList_;
     // All the side-parameters on each timeserial-view row.
     // Each row's main-parameter can have 0-n number of side-parameters, that will be shown on view with different colors.
     SideParametersContainer timeSerialViewSideParameters_;
-    // Hiiren oikean klikkauksen rivinumero talletetaan t‰h‰n
+    // Hiiren oikean klikkauksen rivinumero talletetaan t√§h√§n
     unsigned long timeSerialViewIndex_ = 0; 
 
     // ********** Country border draw path related data *****************
-    std::string landBorderShapeFile_; // mist‰ filest‰ shape luetaan
-    boost::shared_ptr<Imagine::NFmiGeoShape> landBorderGeoShape_; // t‰h‰n luetaan alkuper‰inen shape-file, josta sitten tehd‰‰n sopivia path-olioita
-    boost::shared_ptr<Imagine::NFmiPath> landBorderPath_; // t‰h‰n lasketaan normaali maailman path kerran
-    boost::shared_ptr<Imagine::NFmiPath> pacificLandBorderPath_; // t‰h‰n lasketaan pacific maailman path kerran
-    std::vector<boost::shared_ptr<Imagine::NFmiPath> > cutLandBorderPaths_; // t‰h‰n lasketaan jokaiseen eri karttapohjaan (kartat 1-4) leikatut rajaviivat. N‰ill‰ voidaan optimoida zoomaukseen k‰ytettyj‰ rajaviiva laskuja.
+    std::string landBorderShapeFile_; // mist√§ filesta shape luetaan
+    boost::shared_ptr<Imagine::NFmiGeoShape> landBorderGeoShape_; // t√§h√§n luetaan alkuper√§inen shape-file, josta sitten tehd√§√§n sopivia path-olioita
+    boost::shared_ptr<Imagine::NFmiPath> landBorderPath_; // t√§h√§n lasketaan normaali maailman path kerran
+    boost::shared_ptr<Imagine::NFmiPath> pacificLandBorderPath_; // t√§h√§n lasketaan pacific maailman path kerran
+    std::vector<boost::shared_ptr<Imagine::NFmiPath> > cutLandBorderPaths_; // t√§h√§n lasketaan jokaiseen eri karttapohjaan (kartat 1-4) leikatut rajaviivat. N√§ill√§ voidaan optimoida zoomaukseen k√§ytettyj√§ rajaviiva laskuja.
 
-    // ******** Piirto-ominaisuuksien copy-paste toimintoihin liittyv‰t datat ****************
-    // T‰t‰ k‰ytet‰‰n yhden parametrin piirto-ominaisuuksien copy/paste komennon talletuspaikkana
+    // ******** Piirto-ominaisuuksien copy-paste toimintoihin liittyv√§t datat ****************
+    // T√§t√§ k√§ytet√§√§n yhden parametrin piirto-ominaisuuksien copy/paste komennon talletuspaikkana
     std::unique_ptr<NFmiDrawParam> copyPasteDrawParam_;
-    // Onko yht‰‰n piirto-ominaisuus oliota kopioitu viel‰ t‰h‰n?
+    // Onko yht√§√§n piirto-ominaisuus oliota kopioitu viel√§ t√§h√§n?
     bool copyPasteDrawParamAvailableYet_ = false; 
-    // T‰t‰ k‰ytet‰‰n kopioimaan ja pasteamaan yhden karttan‰yttˆrivin parametrit asetuksineen
+    // T√§t√§ k√§ytet√§√§n kopioimaan ja pasteamaan yhden karttan√§ytt√∂rivin parametrit asetuksineen
     std::unique_ptr<NFmiDrawParamList> copyPasteDrawParamList_;
-    // Onko yht‰‰n copy komentoa tehty viel‰, vaikuttaa siihen ilmestyykˆ pop-up valikkoon paste
+    // Onko yht√§√§n copy komentoa tehty viel√§, vaikuttaa siihen ilmestyyk√∂ pop-up valikkoon paste
     bool copyPasteDrawParamListUsedYet_ = false;
-    // T‰t‰ k‰ytet‰‰n copy-paste toimintoon poikkileikkausn‰yttˆrivien drawParameita
+    // T√§t√§ k√§ytet√§√§n copy-paste toimintoon poikkileikkausn√§ytt√∂rivien drawParameita
     std::unique_ptr<NFmiDrawParamList> copyPasteCrossSectionDrawParamList_;
-    // Onko yht‰‰n copy komentoa tehty viel‰, vaikuttaa siihen ilmestyykˆ pop-up valikkoon paste
+    // Onko yht√§√§n copy komentoa tehty viel√§, vaikuttaa siihen ilmestyyk√∂ pop-up valikkoon paste
     bool copyPasteCrossSectionDrawParamListUsedYet_ = false;
-    // T‰t‰ k‰ytet‰‰n kopioimaan ja pasteamaan koko karttan‰ytˆn kaikkien rivien kaikki parametrit
+    // T√§t√§ k√§ytet√§√§n kopioimaan ja pasteamaan koko karttan√§yt√∂n kaikkien rivien kaikki parametrit
     std::unique_ptr<NFmiPtrList<NFmiDrawParamList>> copyPasteDrawParamListVector_;
-    // Onko yht‰‰n copy komentoa tehty viel‰, vaikuttaa siihen ilmestyykˆ pop-up valikkoon paste
+    // Onko yht√§√§n copy komentoa tehty viel√§, vaikuttaa siihen ilmestyyk√∂ pop-up valikkoon paste
     bool copyPasteDrawParamListVectorUsedYet_ = false;
 
-    // ******* Itse combined map moodiin liittyvi‰ muuttujia *****************
+    // ******* Itse combined map moodiin liittyvi√§ muuttujia *****************
     TotalMapViewCombinedMapModeState combinedBackgroundMapModeStates_;
     TotalMapViewCombinedMapModeState combinedOverlayMapModeStates_;
 
-    // Gui:hin liittyv‰‰ map-layer tietoa (n‰iden avulla tehd‰‰n ainakin select-map-layer popup valikot).
-    // staticxxx viittaa siihen ett‰ kyse on staattisista bitmapeista tiedostoissa, niit‰
+    // Gui:hin liittyv√§√§ map-layer tietoa (n√§iden avulla tehd√§√§n ainakin select-map-layer popup valikot).
+    // staticxxx viittaa siihen ett√§ kyse on staattisista bitmapeista tiedostoissa, niit√§
     // voi olla erilaiset setit jokaiselle erilaiselle kartta-alueelle.
     std::vector<MapAreaMapLayerRelatedInfo> staticBackgroundMapLayerRelatedInfos_;
     std::vector<MapAreaMapLayerRelatedInfo> staticOverlayMapLayerRelatedInfos_;
-    // wmsxxx viittaa dynaamisiin Wms server layereihin, niit‰ on sama setti kaikille 
+    // wmsxxx viittaa dynaamisiin Wms server layereihin, niit√§ on sama setti kaikille 
     // kartta-alueille, siksi niille yksinkertainen vector rakenne.
     MapAreaMapLayerRelatedInfo wmsBackgroundMapLayerRelatedInfos_;
     MapAreaMapLayerRelatedInfo wmsOverlayMapLayerRelatedInfos_;
@@ -281,6 +281,7 @@ public:
     bool waitWmsSupportToDie(const std::chrono::milliseconds& waitTime) override;
 
 private:
+    void applyMainMapAreaDependentViewUpdates(unsigned int mapViewDescTopIndex);
     unsigned int getMapViewCount() const;
     unsigned int getMapAreaCount() const;
     unsigned int getCurrentMapAreaIndex(unsigned int mapViewDescTopIndex) const;
