@@ -4362,7 +4362,7 @@ void NFmiCombinedMapHandler::onEditSpaceOut(unsigned int mapViewDescTopIndex)
 {
 	::getApplicationWinRegistry().ConfigurationRelatedWinRegistry().MapView(mapViewDescTopIndex)->ToggleSpacingOutFactor();
 	// MacroParamDataCache ongelma (MAPADACA): Kun harvennusta muutetaan, pitää liata sellaiset macroParamit, jotka piirretään symboleilla
-	mapViewDirty(mapViewDescTopIndex, false, true, true, false, false, false);
+	mapViewDirty(mapViewDescTopIndex, false, true, true, true, false, false);
 	CtrlViewDocumentInterface::GetCtrlViewDocumentInterfaceImplementation()->UpdateOnlyGivenMapViewAtNextGeneralViewUpdate(mapViewDescTopIndex);
 	ApplicationInterface::GetApplicationInterfaceImplementation()->RefreshApplicationViewsAndDialogs("Toggle spacing out factor");
 }
