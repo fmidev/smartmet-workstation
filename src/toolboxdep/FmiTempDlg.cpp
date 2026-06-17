@@ -409,6 +409,17 @@ void CFmiTempDlg::OnBnClickedButtonResetScales()
 	Invalidate(FALSE);
 }
 
+static void SetDialogItemFinalText(CWnd* theDlg, int theDlgItemId, const CString &finalText)
+{
+	if(theDlg)
+	{
+		CWnd* win = theDlg->GetDlgItem(theDlgItemId);
+		if(win)
+			win->SetWindowText(finalText);
+	}
+}
+
+
 // Tämä funktio alustaa kaikki dialogin tekstit editoriin valitulla kielellä.
 // Tämä on ikävä kyllä tehtävä erikseen dialogin muokkaus työkalusta, eli
 // tekijän pitää lisätä erikseen tänne kaikki dialogin osat, joihin
@@ -419,7 +430,8 @@ void CFmiTempDlg::InitDialogTexts(void)
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_PRINT, "Print");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_SETTINGS, "Sett.");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_BUTTON_RESET_SCALES, "<>");
-	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_TEMP_SKEWT_MODE, u8"45\xB0");
+	// This is tricky to do without directly using final unicode string, because degree symbol and ascii won't work in foreign places.
+	::SetDialogItemFinalText(this, IDC_CHECK_TEMP_SKEWT_MODE, _T("45\u00B0"));
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_STABILITY_INDEXIES_SIDE_VIEW, "Stab.-ind");
 	CFmiWin32Helpers::SetDialogItemText(this, IDC_CHECK_SHOW_HODOGRAF, "Hodograph");
 

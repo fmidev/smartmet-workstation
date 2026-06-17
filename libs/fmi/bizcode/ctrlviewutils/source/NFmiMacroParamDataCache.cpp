@@ -207,8 +207,13 @@ bool NFmiMacroParamDataCacheRow::getTotalCache(unsigned long layerIndex, const s
     auto iter = layersCache_.find(layerIndex);
     if(iter != layersCache_.end())
     {
-        cacheDataOut = iter->second;
-        return true;
+        if(iter->second.macroParamTotalPath() == macroParamTotalPath)
+        {
+            cacheDataOut = iter->second;
+            return true;
+        }
+        else
+            ::logMacroParamTotalPathWasInCorrectWarning(__FUNCTION__, macroParamTotalPath, iter->second.macroParamTotalPath());
     }
     return false;
 }
