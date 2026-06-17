@@ -2864,14 +2864,14 @@ void CFmiSynopDataGridViewDlg::InitWmoIdFilterManager(void)
 	itsWmoIdFilterManager.AddCountryFilter(cFilter);
 	SetCountryFilterValues(cFilter, "ZW", "ZIMBABWE", false, 67755, 67789, 67843, 67899, 67951, 67991);
 	itsWmoIdFilterManager.AddCountryFilter(cFilter);
-	SetCountryFilterValues(cFilter, "NM", "NAMIBIA", false, 31195, 31216, 65934, 65941, 68004, 68018, 68098, 68116, 68212, 68214, 68300, 68312, 80493, 80498);
+	SetCountryFilterValues(cFilter, "NM", "NAMIBIA", false, 31195, 31216, 65934, 65941, 68004, 68018, 68098, 68116, 68212, 68214, 68300, 68312);
 	AddSingleCountryFilterIdValues(cFilter, 52121, 64243, 64533, 67135, 68030, 74229, 74714, 75823);
 	itsWmoIdFilterManager.AddCountryFilter(cFilter);
 	SetCountryFilterValues(cFilter, "BC", "BOTSWANA", false, 68024, 68088, 68140, 68151, 68218, 68240, 68325, 68328);
 	AddSingleCountryFilterIdValues(cFilter, 68244, 68320);
 	itsWmoIdFilterManager.AddCountryFilter(cFilter);
 	SetCountryFilterValues(cFilter, "ZA", "SOUTH AFRICA", false, 68155, 68196, 68241, 68242, 68253, 68297, 68329, 68754, 68811, 68858, 68911, 68939, 68994, 68999);
-	AddSingleCountryFilterIdValues(cFilter, 68322, 89004);
+	AddSingleCountryFilterIdValues(cFilter, 68322);
 	itsWmoIdFilterManager.AddCountryFilter(cFilter);
 	SetCountryFilterValues(cFilter, "LS", "LESOTHO", false, 68450, 68459);
 	itsWmoIdFilterManager.AddCountryFilter(cFilter);
