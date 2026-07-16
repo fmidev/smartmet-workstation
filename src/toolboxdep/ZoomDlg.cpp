@@ -1,7 +1,7 @@
 // ZoomDlg.cpp : implementation file
 //
 #ifdef _MSC_VER
-#pragma warning(disable : 4786) // poistaa n kpl VC++ k‰‰nt‰j‰n varoitusta (liian pitk‰ nimi >255 merkki‰ joka johtuu 'puretuista' STL-template nimist‰)
+#pragma warning(disable : 4786) // poistaa n kpl VC++ k√§√§nt√§j√§n varoitusta (liian pitk√§ nimi >255 merkki√§ joka johtuu 'puretuista' STL-template nimist√§)
 #endif
 
 #include "stdafx.h"
@@ -80,7 +80,7 @@ BOOL CZoomDlg::OnInitDialog()
 	std::string errorBaseStr("Error in CZoomDlg::OnInitDialog while reading dialog size and position values");
     CFmiWin32TemplateHelpers::DoWindowSizeSettingsFromWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), this, false, errorBaseStr, 0);
 
-// t‰m‰ asettaa FMI tunnuksen (IL -pallukka joka on talletettu IDR_MAINFRAME2 -nimiseksi ikoniksi resursseihim)
+// t√§m√§ asettaa FMI tunnuksen (IL -pallukka joka on talletettu IDR_MAINFRAME2 -nimiseksi ikoniksi resursseihim)
 //	HICON hIcon = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME2));
 //	this->SetIcon(hIcon, FALSE);
 
@@ -90,7 +90,7 @@ BOOL CZoomDlg::OnInitDialog()
 	mapRect.InflateRect(-1,-1,-1,-1);
 	itsClientView = new CZoomView(this, itsSmartMetDocumentInterface);
 	itsClientView->Create(NULL,NULL, WS_VISIBLE | WS_CHILD, mapRect, this, NULL);
-	itsClientView->OnInitialUpdate(); // pit‰‰ kutsua erikseen, koska formvieta ei ole sidottu dokumenttiin
+	itsClientView->OnInitialUpdate(); // pit√§√§ kutsua erikseen, koska formvieta ei ole sidottu dokumenttiin
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
@@ -103,8 +103,8 @@ void CZoomDlg::OnSize(UINT nType, int cx, int cy)
 	
 	// TODO: Add your message handler code here
 
-// laitoin t‰m‰n toistaiseksi OnSize()-metodiin
-	if(!firstTime) // ei suoriteta t‰t‰ osaa ennen OnInitialDialog-Metodia
+// laitoin t√§m√§n toistaiseksi OnSize()-metodiin
+	if(!firstTime) // ei suoriteta t√§t√§ osaa ennen OnInitialDialog-Metodia
 	{
 		MoveMapArea();
 	}
@@ -186,7 +186,7 @@ CZoomDlg::~CZoomDlg()
 
 void CZoomDlg::Update(void)
 {
-    if(IsWindowVisible() && !IsIconic()) // N‰yttˆ‰ p‰ivitet‰‰n vain jos se on n‰kyviss‰ ja se ei ole minimized tilassa
+    if(IsWindowVisible() && !IsIconic()) // N√§ytt√∂√§ p√§ivitet√§√§n vain jos se on n√§kyviss√§ ja se ei ole minimized tilassa
     {
         UpdateData(TRUE);
 		auto selectedMapViewIndex = GetFirstSelectedMapViewIndex();
@@ -210,7 +210,15 @@ void CZoomDlg::Zoom(void)
 	Zoom(0, fMapView1Enabled);
 	Zoom(1, fMapView2Enabled);
 	Zoom(2, fMapView3Enabled);
-	itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__);
+	// NOTE! Use the flag overload that forces a full view update (all views).
+	// This used to be the single-argument RefreshApplicationViewsAndDialogs, which only
+	// did a full update when itsUpdatedViewsFlag was empty (NoViews). Nowadays SetMapArea
+	// sets the StationDataTableView|WindTableDlg flags when the main map view (index 0) area
+	// changes (applyMainMapAreaDependentViewUpdates), which silently downgraded the full
+	// update to a partial one, so the map views no longer refreshed after zooming. AllViews
+	// restores the original full update while still keeping the station-data and wind table
+	// updates.
+	itsSmartMetDocumentInterface->RefreshApplicationViewsAndDialogs(__FUNCTION__, SmartMetViewId::AllViews);
 }
 
 bool CZoomDlg::CheckIfMapAreaZoomIsAllowed(unsigned int selectedMapViewIndex)
@@ -223,7 +231,7 @@ bool CZoomDlg::CheckIfMapAreaZoomIsAllowed(unsigned int selectedMapViewIndex)
 	auto selectedMapAreaIndex = itsSmartMetDocumentInterface->MapViewDescTop(selectedMapViewIndex)->SelectedMapIndex();
 	if(fAllowMixedMapAreaZoom)
 	{
-		// Sallittu, jos zoomaus kartan peruskartta-alue on zoomatun peruskartta-alueen sis‰ll‰
+		// Sallittu, jos zoomaus kartan peruskartta-alue on zoomatun peruskartta-alueen sis√§ll√§
 		auto zoomingBaseMapArea = itsSmartMetDocumentInterface->GetMapHandlerInterface(mapViewIndexUsedInZooming)->TotalArea();
 		auto selectedMapBaseMapArea = itsSmartMetDocumentInterface->GetMapHandlerInterface(selectedMapViewIndex)->TotalArea();
 		bool zoomingAllowed = selectedMapBaseMapArea->IsInside(*zoomingBaseMapArea);
@@ -239,7 +247,7 @@ bool CZoomDlg::CheckIfMapAreaZoomIsAllowed(unsigned int selectedMapViewIndex)
 		return zoomingAllowed;
 	}
 
-	// Sallittua vain jos eri kartoilla on samat peruskartta-alueet k‰ytˆss‰
+	// Sallittua vain jos eri kartoilla on samat peruskartta-alueet k√§yt√∂ss√§
 	bool zoomingAllowed = (zoomingMapAreaIndex == selectedMapAreaIndex);
 	if(!zoomingAllowed)
 	{
@@ -276,9 +284,9 @@ void CZoomDlg::SetDefaultValues(void)
     Persist2::WriteWindowRectToWinRegistry(itsSmartMetDocumentInterface->ApplicationWinRegistry(), MakeUsedWinRegistryKeyStr(0), this);
 }
 
-// T‰m‰ funktio alustaa kaikki dialogin tekstit editoriin valitulla kielell‰.
-// T‰m‰ on ik‰v‰ kyll‰ teht‰v‰ erikseen dialogin muokkaus tyˆkalusta, eli
-// tekij‰n pit‰‰ lis‰t‰ erikseen t‰nne kaikki dialogin osat, joihin 
+// T√§m√§ funktio alustaa kaikki dialogin tekstit editoriin valitulla kielell√§.
+// T√§m√§ on ik√§v√§ kyll√§ teht√§v√§ erikseen dialogin muokkaus ty√∂kalusta, eli
+// tekij√§n pit√§√§ lis√§t√§ erikseen t√§nne kaikki dialogin osat, joihin 
 // kieli valinta voi vaikuttaa.
 void CZoomDlg::InitDialogTexts(void)
 {
