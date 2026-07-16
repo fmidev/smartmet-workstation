@@ -77,7 +77,7 @@ namespace
         return params;
     }
 
-    // TotalWind parametrin wind-vector pit‰‰ aina korjata lineaariseksi ja ilman mit‰‰n lokituksia.
+    // The wind-vector of the TotalWind parameter must always be corrected to linear and without any logging.
     bool fixTotalWindSubparamWindVector(NFmiParamDescriptor& paramDescriptor)
     {
         if(paramDescriptor.Param(kFmiTotalWindMS))
@@ -137,10 +137,10 @@ void NFmiParameterInterpolationFixer::init()
     // HKEY_CURRENT_USER -keys
     HKEY usedKey = HKEY_CURRENT_USER;
 
-    // Laitetaan oletus arvo true:ksi, jotta sit‰ ei tarvitse erikseen s‰‰t‰ p‰‰lle kaikissa koneissa
+    // Set the default value to true, so that it does not need to be separately turned on on every machine
     doForcedParameterInterpolationChanges_ = ::CreateRegValue<CachedRegBool>(baseRegistryPath, sectionName, "\\DoForcedParameterInterpolationChanges", usedKey, true);
-    // Itse oletus checkedParameters_ -lista on taas tyhj‰, kun sit‰ asetetaan makeCheckedParametersFromConfigurations 
-    // funktiossa, joten se pit‰‰ laittaa konfiguraatioista aina erikseen k‰yttˆˆn
+    // The default checkedParameters_ list, on the other hand, is empty, since it is set in the makeCheckedParametersFromConfigurations
+    // function, so it must always be separately taken into use from the configurations
     checkedParameters_ = makeCheckedParametersFromConfigurations(makeConfigurationKey());
     doFinalChecksForCheckedParameters();
 }
@@ -173,7 +173,7 @@ void NFmiParameterInterpolationFixer::doFinalChecksForCheckedParameters() const
         {
             if(!parameterList.empty())
             {
-                // Lis‰t‰‰n 1. j‰lkeen aina pilkku erotin
+                // After the 1st, always add a comma separator
                 parameterList += ", ";
             }
             parameterList += ::makeParameterLogName(param);
@@ -195,20 +195,20 @@ void NFmiParameterInterpolationFixer::doForcedParameterInterpolationChanges(bool
 
 void NFmiParameterInterpolationFixer::fixCheckedParametersInterpolation(NFmiQueryData* data, const std::string& dataFileName)
 {
-    // Huom! asema/havainto dataa ei muuteta mitenk‰‰n, data->IsGrid() pit‰‰ olla true.
+    // Note! station/observation data is not changed in any way, data->IsGrid() must be true.
     if(data && data->IsGrid() && !checkedParameters_.empty())
     {
         auto paramDescriptor = data->Info()->ParamDescriptor();
         auto totalWindSubparamWindVectorrFixed = ::fixTotalWindSubparamWindVector(paramDescriptor);
 
-        // Tutkitaan kaikki checkedParameters_ listalla olevat parametrit. Jos niit‰ lˆytyy annetusta 
-        // datasta, tehd‰‰n seuraavaa:
-        // 1. Jos doForcedParameterInterpolationChanges_ optio on pois p‰‰lt‰, tehd‰‰n seuraavaa:
-        // 1.1. Tehd‰‰n varoitus viesti ett‰ kyseisen datan tarkastettavalla parametrilla oli ei-lineaarinen 
-        //      interpolaatio k‰ytˆss‰
-        // 2. Jos doForcedParameterInterpolationChanges_ optio on p‰‰ll‰, tehd‰‰n seuraavaa:
-        // 2.1. Muutetaan parametrin interpolaatio lineaariseksi
-        // 2.2. Lokitetaan ett‰ kyseinen muutos on tehty parametreille debug tasolla
+        // Examine all parameters in the checkedParameters_ list. If they are found in the given
+        // data, do the following:
+        // 1. If the doForcedParameterInterpolationChanges_ option is off, do the following:
+        // 1.1. Produce a warning message that the checked parameter of the given data had non-linear
+        //      interpolation in use
+        // 2. If the doForcedParameterInterpolationChanges_ option is on, do the following:
+        // 2.1. Change the parameter's interpolation to linear
+        // 2.2. Log that the given change has been made to the parameters, at debug level
         bool parameterModified = false;
         std::string forceFixedParameterNames;
         for(const auto& param : checkedParameters_)
@@ -221,7 +221,7 @@ void NFmiParameterInterpolationFixer::fixCheckedParametersInterpolation(NFmiQuer
                     parameterModified = true;
                     if(!forceFixedParameterNames.empty())
                     {
-                        // Lis‰t‰‰n 1. j‰lkeen aina pilkku erotin
+                        // After the 1st, always add a comma separator
                         forceFixedParameterNames += ", ";
                     }
                     forceFixedParameterNames += ::makeParameterLogName(*checkedParam.GetParam());

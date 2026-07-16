@@ -6,7 +6,8 @@ class NFmiGdiPlusImageMapHandler;
 
 class GdiPlusMapHandlerInterface : public MapHandlerInterface
 {
-    NFmiGdiPlusImageMapHandler *itsMapHandler; // ei omista, ei tuhoa
+    // Does not own, does not destroy
+    NFmiGdiPlusImageMapHandler *itsMapHandler;
 public:
     GdiPlusMapHandlerInterface(NFmiGdiPlusImageMapHandler *theMapHandler);
 	~GdiPlusMapHandlerInterface() = default;

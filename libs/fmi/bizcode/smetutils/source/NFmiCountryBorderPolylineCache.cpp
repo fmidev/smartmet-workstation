@@ -29,9 +29,9 @@ NFmiCountryBorderPolylineCache& NFmiCountryBorderPolylineCache::operator=(const 
 {
     if(this != &other)
     {
-        // Kopioinnissa pitää vain nollata cachet.
+        // When copying, the caches just need to be reset.
         clearCache();
-        // offset pointeja on myös turha kopioida tai nollata
+        // There is also no point in copying or resetting the offset points
     }
     return *this;
 }
@@ -56,12 +56,12 @@ void NFmiCountryBorderPolylineCache::clearDrawBorderPolyLineList()
 
 void NFmiCountryBorderPolylineCache::drawBorderPolyLineList(std::list<NFmiPolyline*>& newPolyLineList)
 {
-    // tuhotaan ensin vanhan listan sisältö
+    // First destroy the content of the old list
     std::for_each(drawBorderPolyLineList_.begin(), drawBorderPolyLineList_.end(), PointerDestroyer());
     drawBorderPolyLineList_.clear();
-    // otetaan uuden listan sisältö omistukseen swap:illa
+    // Take ownership of the new list's content with a swap
     drawBorderPolyLineList_.swap(newPolyLineList);
-    // Merkitään polyline lista taas 'puhtaaksi' eli käyttövalmiiksi
+    // Mark the polyline list as 'clean' again, i.e. ready for use
     drawBorderPolyLineListDirty_ = false;
 }
 
@@ -77,13 +77,13 @@ void NFmiCountryBorderPolylineCache::drawBorderPolyLineListGdiplus(std::list<std
     drawBorderPolyLineListGdiplusDirty_ = false;
 }
 
-// Uusi border-draw-dirty systeemi ei laita lippuja päälle, vaan tyhjentää tarvittavat cachet
-// jotta seuraavalla piirto kerralla on pakko tehdä töitä.
+// The new border-draw-dirty system does not set flags on, but clears the necessary caches
+// so that on the next drawing round work has to be done.
 void NFmiCountryBorderPolylineCache::setBorderDrawDirtyState(CountryBorderDrawDirtyState newState)
 {
     if(newState == CountryBorderDrawDirtyState::Geometry)
     {
-        // Kosmeettiset muutokset eivät laita polylineja uusiksi, mutta kaikki geometriset muutokset kyllä
+        // Cosmetic changes do not rebuild the polylines, but all geometric changes do
         clearDrawBorderPolyLineList();
         clearDrawBorderPolyLineListGdiplus();
     }

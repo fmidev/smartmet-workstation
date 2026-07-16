@@ -2,11 +2,11 @@
 
 #include <functional>
 
-// T‰m‰ luokka tiet‰‰ eri moodien (lokaalit ja wms) karttojen lukum‰‰r‰t.
-// Voidaan menn‰ seuraavaan tai edelliseen karttaan ottaen huomioon yhteinen karttojen lukum‰‰r‰.
-// Voidaan asettaa suoraan haluttu yhteisindeksi.
-// Voidaan kysy‰ osoittaako nykyhetken indeksi lokaali vai wms karttaan (isLocalMapInUse).
-// Voidaan kysy‰ nykyhetken osoittaman kokonaisindeksin moodikohtainen (lokaali/wms) indeksi (currentMapSectionIndex metodi).
+// This class knows the map counts of the different modes (local and wms).
+// You can move to the next or previous map, taking the combined map count into account.
+// You can directly set the wanted combined index.
+// You can ask whether the current index points to a local or a wms map (isLocalMapInUse).
+// You can ask the mode-specific (local/wms) index of the current combined index (currentMapSectionIndex method).
 class NFmiCombinedMapModeState
 {
     using LocalOnlyMapModeUsedFunction = std::function<bool()>;
@@ -14,15 +14,15 @@ class NFmiCombinedMapModeState
     int localMapSize_ = 0;
     int wmsMapSize_ = 0;
     int totalMapSize_ = 0;
-    // Nollasta alkava indeksi, joka osoittaa johonkin totalMapSize_ koon rajoittamaan karttaan.
+    // Zero-based index that points to some map limited by the totalMapSize_ size.
     int combinedModeMapIndex_ = 0;
-    // Nollasta alkava indeksi, joka osoittaa johonkin localMapSize_ koon rajoittamaan karttaan.
-    // T‰t‰ on tarkoitus p‰ivitt‰‰ (combinedModeMapIndex_:in ohessa) aina kun ollaan vain lokaali moodissa ja kun combinedModeMapIndex_ 
-    // on lokaalien indeksien rajoissa. T‰m‰n tarkoitus on olla lyhyt indeksi muisti, kun k‰ytt‰j‰ esim. hyppii local modesta combine moodiin ja takaisin.
+    // Zero-based index that points to some map limited by the localMapSize_ size.
+    // This is meant to be updated (alongside combinedModeMapIndex_) whenever we are in local-only mode and combinedModeMapIndex_
+    // is within the range of local indices. Its purpose is to be a short index memory, e.g. when the user jumps from local mode to combined mode and back.
     int lastUsedLocalModeMapIndex_ = 0;
-    // T‰m‰n avulla kysyt‰‰n ollaanko lokaali vai combined-map moodissa.
+    // This is used to ask whether we are in local or combined-map mode.
     LocalOnlyMapModeUsedFunction localOnlyMapModeUsedFunction_;
-    // Ollaanko background vai overlay tilassa. Overlay tilassa on myˆs indeksi -1, jolloin ei piirret‰ mit‰‰n.
+    // Whether we are in background or overlay state. In overlay state the index can also be -1, in which case nothing is drawn.
     bool backgroundCase_ = true;
 public:
     NFmiCombinedMapModeState();

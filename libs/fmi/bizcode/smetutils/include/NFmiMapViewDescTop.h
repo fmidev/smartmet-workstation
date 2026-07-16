@@ -53,14 +53,14 @@ public:
 	public:
 		ViewMacroDipMapHelper();
 
-		// HUOM!! T‰m‰ laittaa kommentteja mukaan!
+		// NOTE!! This includes comments!
 		void Write(std::ostream& os) const;
-		// HUOM!! ennen kuin t‰m‰ luokka luetaan sis‰‰n tiedostosta, poista kommentit
-		// NFmiCommentStripper-luokalla, koska kirjoitettaessa kommentteja laitetaan
-		// sekaan. Eli ‰l‰ k‰yt‰ suoraan t‰t‰ metodia, vaan Init(filename)-metodia!!!!
+		// NOTE!! before this class is read in from a file, remove the comments
+		// with the NFmiCommentStripper class, because comments are inserted
+		// when writing. So do not use this method directly, but the Init(filename) method!!!!
 		void Read(std::istream& is);
 
-		// dipmaphandler osio pit‰‰ ottaa t‰h‰n erikois k‰sittelyyn
+		// The dipmaphandler section must be given special handling here
 		int itsUsedMapIndex = 0;
 		int itsUsedOverMapDibIndex = -1;
 		int itsUsedCombinedModeMapIndex = 0;
@@ -140,10 +140,10 @@ public:
     boost::shared_ptr<Imagine::NFmiPath> LandBorderPath(void);
 	void ToggleLandBorderColor(void);
 
-	// N‰m‰ border layer piirtoon liittyv‰t metodit jotka ottavat separateBorderLayerDrawOptions parametrin
-	// toimivat seuraavalla periaatteella:
-	// Jos k‰ytt‰j‰ haluaa tietoja yleisest‰ border-draw asetuksista, on em. parametri nullptr.
-	// Jos se on nullptr:st‰ poikkeava, kyse on erillinen border-layer, jonka tiedot haetaan erikseen.
+	// These border layer drawing methods that take the separateBorderLayerDrawOptions parameter
+	// work on the following principle:
+	// If the user wants information about the general border-draw settings, that parameter is nullptr.
+	// If it differs from nullptr, it concerns a separate border-layer whose information is fetched separately.
 	const NFmiColor& LandBorderColor(NFmiDrawParam* separateBorderLayerDrawOptions);
 	bool DrawLandBorders(NFmiDrawParam* separateBorderLayerDrawOptions);
 	int LandBorderPenSize(NFmiDrawParam* separateBorderLayerDrawOptions);
@@ -229,11 +229,11 @@ public:
 	static const FmiDirection TimeBoxLocationDefault;
 	static const float TimeBoxTextSizeFactorDefault;
 
-	// HUOM!! T‰m‰ laittaa kommentteja mukaan!
+	// NOTE!! This includes comments!
 	void Write(std::ostream& os) const;
-	// HUOM!! ennen kuin t‰m‰ luokka luetaan sis‰‰n tiedostosta, poista kommentit
-	// NFmiCommentStripper-luokalla, koska kirjoitettaessa kommentteja laitetaan
-	// sekaan. Eli ‰l‰ k‰yt‰ suoraan t‰t‰ metodia, vaan Init(filename)-metodia!!!!
+	// NOTE!! before this class is read in from a file, remove the comments
+	// with the NFmiCommentStripper class, because comments are inserted
+	// when writing. So do not use this method directly, but the Init(filename) method!!!!
 	void Read(std::istream& is);
 private:
 	void Clear(void);
@@ -254,73 +254,73 @@ private:
 	void InsertSeparateBorderLayerCacheBitmap(const std::string& cacheKeyString, std::unique_ptr<Gdiplus::Bitmap>&& cacheBitmap);
 	void ClearBaseLandBorderMapBitmap();
 
-	// t‰ll‰ aloitus pohjalla luetaan conffi fileist‰ tarvittavat alustukset (esim. "MapViewDescTop::map1")
-	std::string itsSettingsBaseName; 
-	// Joskus luokan pit‰‰ tiet‰‰ mik‰ descTop itse on
-	int itsMapViewDescTopIndex; 
-	// t‰m‰ on dokumentin omistuksessa
-	NFmiMapConfigurationSystem *itsMapConfigurationSystem = nullptr; 
-	// t‰m‰ on dokumentin omistuksessa
+	// With this base name the required initializations are read from the config files (e.g. "MapViewDescTop::map1")
+	std::string itsSettingsBaseName;
+	// Sometimes the class needs to know which descTop it itself is
+	int itsMapViewDescTopIndex;
+	// This is owned by the document
+	NFmiMapConfigurationSystem *itsMapConfigurationSystem = nullptr;
+	// This is owned by the document
 	NFmiProjectionCurvatureInfo* itsProjectionCurvatureInfo = nullptr;
-	// SmartMetin kontrollipolku (annetaan -p optiolla), t‰m‰n avulla luetaan kartta kuvia ja area-tietoja.
-	// OLI aiemmin editorin tyˆhakemisto, mutta se ei toiminut oikein, varsinkin kun kyseess‰ 
-	// oli PV-projekti jossa dropbox-konffit ja sit‰ k‰ytettiin VC++ debuggerista.
-	std::string itsControlPath; 
-	// jokaisella desctopilla pit‰‰ olla oma 'map-serverins‰'
-	std::vector<NFmiGdiPlusImageMapHandler*> itsGdiPlusImageMapHandlerList; 
-	// luokka joka pitaa huolta karttanayton cachesta
-	NFmiMapViewCache itsMapViewCache; 
+	// SmartMet's control path (given with the -p option), used to read map images and area information.
+	// It USED to be the editor's working directory, but that did not work correctly, especially when
+	// dealing with a PV project that had dropbox configs and was run from the VC++ debugger.
+	std::string itsControlPath;
+	// Each desctop must have its own 'map-server'
+	std::vector<NFmiGdiPlusImageMapHandler*> itsGdiPlusImageMapHandlerList;
+	// Class that takes care of the map view cache
+	NFmiMapViewCache itsMapViewCache;
 	bool fRedrawMapView;
-	// t‰h‰n talletetaan raja viivan piirron v‰ri vaihtoehdot
-	std::vector<NFmiColor> itsLandBorderColors; 
-	// valitun v‰rin indeksi on tallessa t‰ss‰, jos indeksi on negatiivinen, ei piirret‰ rajaviivoja
-	int itsLandBorderColorIndex; 
+	// The color options for drawing the border line are stored here
+	std::vector<NFmiColor> itsLandBorderColors;
+	// The index of the selected color is stored here; if the index is negative, border lines are not drawn
+	int itsLandBorderColorIndex;
 	NFmiPoint itsLandBorderPenSize;
 	NFmiTimeDescriptor itsTimeControlViewTimes;
-	// t‰t‰ k‰ytet‰‰n mm. zoomausdialogin rajoittimena(k‰ytetyn karttan‰ytˆn x/y suhde, riippuu k‰ytetyst‰ ruudukosta ja ikkunan 'fyysisest‰' koosta)
-	double itsClientViewXperYRatio;	
-	// mink‰ suhteellisen osan ottaa 'kartasto' clientn‰ytˆlle varatusta osasta
-	NFmiRect itsRelativeMapRect; 
-	// p‰ivitet‰‰n CView:in OnSize()-metodissa, k‰ytet‰‰n datan harvennus laskuissa.
-	NFmiPoint itsMapViewSizeInPixels; 
-	// Parametrilaatikon paikkaa halutaan vaihdella. Se voi nyt saada seuraavat arvot:
-	// 1. kTopLeft, 2. kTopRight, 3. kBottomRight, 4. kBottomLeft, 5. kNoDirection (piilossa)
+	// This is used e.g. as a limiter for the zoom dialog (the x/y ratio of the used map view, depends on the used grid and the 'physical' size of the window)
+	double itsClientViewXperYRatio;
+	// What relative portion the 'atlas' takes of the portion reserved for the client view
+	NFmiRect itsRelativeMapRect;
+	// Updated in CView's OnSize() method, used in the data thinning calculations.
+	NFmiPoint itsMapViewSizeInPixels;
+	// The position of the parameter box can be varied. It can now take the following values:
+	// 1. kTopLeft, 2. kTopRight, 3. kBottomRight, 4. kBottomLeft, 5. kNoDirection (hidden)
 	FmiDirection itsParamWindowViewPosition;
-	// lista drawparam-listoja (n‰yttˆruudukossa eri rivit laitetaan
-	// omaan drawparamlist:iin, jotka sijoitetaan t‰h‰n listojen listaan)
+	// List of drawparam lists (in the view grid the different rows are put
+	// into their own drawparamlist, which are placed in this list of lists)
 	NFmiPtrList<NFmiDrawParamList> *itsDrawParamListVector = nullptr;
-	// t‰h‰n talletetaan CView:ssa tehty DC, johon on talletettu bitmap, mik‰ sitten 
-	// blitataan jokaiseen n‰yttˆruudun kohtaan erikseen (toivottavasti vain v‰liaikainen viritys)
+	// Here is stored the DC made in CView, into which a bitmap has been stored, which is then
+	// blitted separately to each position of the view grid (hopefully only a temporary hack)
 	CDC* itsMapBlitDC = nullptr;
-	// jos 0, piirret‰‰n l‰pin‰kyv‰ kartta ns. background karttaan, jos 1, piirret‰‰n se ns. foreground karttaan 
-	// eli datan p‰‰lle jos siis yleens‰ piirret‰‰n t‰t‰ osaa kartasta
-	int itsDrawOverMapMode; 
-	// n‰ytˆn rivej‰ voi skrollata ylˆs ja alas ja t‰ss‰ on sen rivin indeksi, mik‰ n‰ytet‰‰n editorin 1. rivill‰ (alkaa 1:st‰)
-	int itsMapRowStartingIndex; 
-	// t‰m‰ annetaan CView: OnDraw:ssa ja t‰t‰ k‰ytet‰‰n NFmiStationViewHandler:in Draw:ssa tekem‰‰n n‰ytˆst‰ bitmap kopioita
+	// If 0, the transparent map is drawn into the so-called background map; if 1, it is drawn into the so-called foreground map
+	// i.e. on top of the data if this part of the map is generally drawn
+	int itsDrawOverMapMode;
+	// The view rows can be scrolled up and down, and here is the index of the row that is shown on the editor's 1st row (starts from 1)
+	int itsMapRowStartingIndex;
+	// This is given in CView OnDraw and is used in NFmiStationViewHandler's Draw to make bitmap copies of the view
 	CDC *itsCopyCDC = nullptr;
-	// nelj‰ tilaa: 0 = n‰yt‰ aikakontrolliikkuna+teksti 1=vain aik.kont.ikkuna, 2=‰l‰ n‰yt‰ kumpaakaan ja 3= n‰yt‰ vain teksti
-	int itsShowTimeOnMapMode; 
+	// Four states: 0 = show time control window+text, 1 = only time control window, 2 = show neither, and 3 = show only text
+	int itsShowTimeOnMapMode;
 	bool fShowTimeString;
-	// ensimm‰isen sarakkeen aika
-	NFmiMetTime itsCurrentTime; 
-	// karttan‰yttˆruudukon koko maksimissaan (pit‰‰ olla 5 x 10(?) eli ainakin 5 rivi‰ on must)
-	NFmiPoint itsViewGridSizeMax; 
-	// valitun v‰rin indeksi on tallessa t‰ss‰
-	int itsStationPointColorIndex; 
+	// The time of the first column
+	NFmiMetTime itsCurrentTime;
+	// The maximum size of the map view grid (must be 5 x 10(?), i.e. at least 5 rows is a must)
+	NFmiPoint itsViewGridSizeMax;
+	// The index of the selected color is stored here
+	int itsStationPointColorIndex;
 	NFmiPoint itsStationPointSize;
-	// kertoo, kuinka paljon aikaa siirret‰‰n kun klikataan hiirell‰ aikakontrolli ikkunaa
-	// kokonaisosa tunteja varten ja desimaalit minuutteja (0.5 = 30 minuuttia jne.)
-	float itsTimeControlTimeStep; 
+	// Tells how much time is shifted when the time control window is clicked with the mouse
+	// the integer part for hours and the decimals for minutes (0.5 = 30 minutes etc.)
+	float itsTimeControlTimeStep;
     CtrlViewUtils::MapViewMode itsMapViewDisplayMode;
-	// Kun n‰yttˆruudukkoa klikataan hiirell‰, yksi ruuduista muuttuu aktiiviseksi. 
-	// Sen ruudun absoluuttinen rivinumero (1-50) talletetaan t‰h‰n (eli ei suhteellinen n‰kyviss‰ olevista riveist‰).
+	// When the view grid is clicked with the mouse, one of the cells becomes active.
+	// That cell's absolute row number (1-50) is stored here (i.e. not relative to the visible rows).
 	int itsAbsoluteActiveViewRow = 1;
-	// onko t‰m‰ desctop n‰yttˆ n‰kyviss‰ vai ei
-	bool fDescTopOn; 
-	// Piiret‰‰nkˆ karttan‰ytˆlle vain bitmap uudestaan (t‰ll‰ saadaan pyyhitty‰ piirretty tooltippi pois)
-	bool fMapViewBitmapDirty; 
-	// t‰ss‰ on karttan‰ytˆn pointteri
+	// Whether this desctop view is visible or not
+	bool fDescTopOn;
+	// Whether only the bitmap is redrawn to the map view (this is used to wipe away a drawn tooltip)
+	bool fMapViewBitmapDirty;
+	// Here is the pointer to the map view
 	CWnd *itsMapView = nullptr;
     CtrlViewUtils::GraphicalInfo itsGraphicalInfo;
 	NFmiGridPointCache itsGridPointCache;
@@ -336,45 +336,45 @@ private:
 	bool fShowObsComparisonOnMap;
 	bool fShowWarningMarkersOnMap;
 
-    // N‰it‰ asetuksia k‰ytet‰‰n en‰‰ vain viewMakroja teht‰ess‰ tai luettaessa, n‰iden todelliset 
-    // asetukset tehd‰‰n nyky‰‰n Windows rekistereihin NFmiMapViewWinRegistry-luokan kautta.
-    // VM nimen lopussa viittaa ViewMacroon.
+    // These settings are only used anymore when creating or reading viewMacros; their actual
+    // settings are nowadays made into the Windows registry via the NFmiMapViewWinRegistry class.
+    // The VM at the end of the name refers to ViewMacro.
 
-	// n‰ytet‰‰nkˆ aktiivisen rivin kartoilla maski v‰rein‰?
-	bool fShowMasksOnMapVM; 
-	// 0=ei harvennusta, 1=harvenna jonkin verran, 2=harvenna enemm‰n
-	int itsSpacingOutFactorVM; 
-	// 0 = kartta1 (esim. suomi), 1 = kartta2 (esim. skandinavia), 2 = kartta3 (esim. eurooppa), 3 = kartta4 (esim. maailma)
-	// HUOM! t‰lle pit‰‰ olla erillinen asetus funktio, koska t‰t‰ k‰ytet‰‰n luokan sis‰ll‰, eli muutokset p‰ivitet‰‰n sek‰ t‰nne ett‰ Win-rekistereihin
-	unsigned int itsSelectedMapIndexVM; 
-	// n‰ytet‰‰nkˆ se typer‰ asema piste vai ei?
-    bool fShowStationPlotVM; 
+	// Whether masks are shown as colors on the active row's maps?
+	bool fShowMasksOnMapVM;
+	// 0=no thinning, 1=thin somewhat, 2=thin more
+	int itsSpacingOutFactorVM;
+	// 0 = map1 (e.g. finland), 1 = map2 (e.g. scandinavia), 2 = map3 (e.g. europe), 3 = map4 (e.g. world)
+	// NOTE! this needs a separate setter function, because it is used inside the class, i.e. changes are updated both here and to the Win registry
+	unsigned int itsSelectedMapIndexVM;
+	// Whether that silly station point is shown or not?
+    bool fShowStationPlotVM;
 
-    // karttan‰yttˆruudukon koko (esim. 3 rivi‰, joissa 5 aikaa == NFmiPoint(5,3))
-    // HUOM! t‰lle pit‰‰ olla asetus ja palautus funktiot, koska win-rekisteriss‰ talletetaan t‰m‰ pointti stringin‰
-    // HUOM2 T‰t‰ p‰ivitet‰‰n ajon aikana vain t‰nne eik‰ Win-rekistereihin, 
-    // joten t‰m‰ on laitettava Win-rekisteriin StoreToMapViewWinRegistry-kutsussa!!!
+    // The size of the map view grid (e.g. 3 rows with 5 times == NFmiPoint(5,3))
+    // NOTE! this needs setter and getter functions, because in the win registry this point is stored as a string
+    // NOTE2 During runtime this is updated only here and not to the Win registry,
+    // so it must be put into the Win registry in the StoreToMapViewWinRegistry call!!!
     NFmiPoint itsViewGridSizeVM;
 
-    // T‰h‰n tehd‰‰n yksi maiden rajat kartalla bitmap, jota sitten 'l‰tkit‰‰n' oikeisiin kohtiin ruudukkon‰ytˆss‰.
-    // Huom! pakko tehd‰ gdiplus bitmap, jotta saadaan mukaan l‰pin‰kyv‰ v‰ri
+    // Here one country-borders-on-map bitmap is made, which is then 'stamped' onto the correct positions in the grid view.
+    // Note! a gdiplus bitmap must be used, in order to include a transparent color
     Gdiplus::Bitmap *itsLandBorderMapBitmap = nullptr;
-	// T‰ss‰ on erillisin‰ piirtolayereina olevien maiden rajaviivojen bitmap ja polyline datat.
-	// Uudet erillism‰‰ritellyt border-layerit voivat olla eri piirtos‰‰dˆill‰ ja niit‰ voi olla jokaisella karttarivill‰ omansa.
+	// Here are the bitmap and polyline data of the country border lines that are separate draw layers.
+	// New separately defined border-layers can have different draw settings, and each map row can have its own.
 	NFmiCountryBorderBitmapCache itsSeparateCountryBorderBitmapCache;
 	TrueMapViewSizeInfo itsTrueMapViewSizeInfo;
-	// Kun karttan‰yttˆ‰ printataan, laitetaan t‰m‰ p‰‰lle, jotta kartta-alue saadaan aina maksimiksi eli (0,0-1,1).
-	// Kun tullaan pois printtauksesta, pit‰‰ t‰m‰ taas laittaa false:ksi!
-	// T‰t‰ ei talleteta minnek‰‰n, eik‰ arvoa kopioida mitenk‰‰n.
+	// When the map view is printed, this is turned on so that the map area is always maximized, i.e. (0,0-1,1).
+	// When coming out of printing, this must be set back to false!
+	// This is not stored anywhere, and the value is not copied in any way.
 	bool fPrintingModeOn = false;
-	// Mihin kohtaan kartan aikalegenda piirret‰‰n (bottom-left/center/right tai top-left/center/right)
+	// Where the map's time legend is drawn (bottom-left/center/right or top-left/center/right)
 	FmiDirection itsTimeBoxLocationVM = TimeBoxLocationDefault;
-	// Aikatekstill‰ on konffattu kaksi eri teksti‰ ja niille s‰‰det‰‰n koot erikseen konffeissa.
-	// Tekstikokoja voidaan s‰‰t‰‰ t‰m‰n avulla pienemmiksi (arvo < 1) ja isommiksi (arvo > 1).
-	// Rajat t‰lle s‰‰dˆlle on laitettu 0.5 - 2.5.
+	// The time text has two different texts configured, and their sizes are adjusted separately in the configs.
+	// The text sizes can be adjusted with this to be smaller (value < 1) and larger (value > 1).
+	// The limits for this adjustment have been set to 0.5 - 2.5.
 	float itsTimeBoxTextSizeFactorVM = TimeBoxTextSizeFactorDefault;
 	static const std::vector<float> itsTimeBoxTextSizeAllowedFactors;
-	// Aikatekstin laatikon pohjav‰ri ja sen alpha on tallessa t‰ss‰
+	// The background color of the time text box and its alpha are stored here
 	NFmiColor itsTimeBoxFillColorVM = TimeBoxFillColorDefault;
 };
 

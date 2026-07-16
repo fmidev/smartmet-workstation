@@ -27,8 +27,8 @@ class NFmiAreaMaskList;
 class NFmiMacroParamSystem;
 class NFmiMapViewWinRegistry;
 
-// Tähän luetaan vain viewmacron nimi (tiedosto nimestä) ja description.
-// Alustus on nopeaa ja näiden avulla päivitetään viewMacro-dialogin listaa.
+// Only the view macro's name (from the file name) and description are read here.
+// Initialization is fast, and these are used to update the viewMacro dialog's list.
 class NFmiLightWeightViewSettingMacro
 {
 public:
@@ -44,7 +44,8 @@ public:
     std::string itsDescription;
     std::string itsInitFilePath;
     bool fIsViewMacroDirectory;
-    bool fViewMacroOk; // Jos erityisesti havaitaan että näyttömakro tiedostossa on jotain vikaa, laitetaan tämä false tilaan.
+    // If something is specifically detected to be wrong in the view macro file, this is set to false.
+    bool fViewMacroOk;
     NFmiTime itsFileModificationTime;
 
     void Read(std::istream& is);
@@ -52,8 +53,10 @@ public:
 
 class MfcViewStatus
 {
-    unsigned int itsShowCommand = 0; // minimized/maximized, ei muita tietoja
-    bool fShowWindow = false; // onko ikkuna auki vai ei
+    // Minimized/maximized, no other information
+    unsigned int itsShowCommand = 0;
+    // Whether the window is open or not
+    bool fShowWindow = false;
 public:
     unsigned int ShowCommand() const { return itsShowCommand; }
     void ShowCommand(unsigned int newValue) { itsShowCommand = newValue; }
@@ -97,18 +100,24 @@ public:
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);
 	private:
-		boost::shared_ptr<NFmiDrawParam> itsDrawParam; // sis. mm. data identin // talletetaan koko drawparam, että voisi tehdä esim. eri värisiä/erilaisia virityksiä samalle parametrille / eri tuottajalle
-		NFmiDataIdent itsDataIdent; // tämä pitää olla erikseen, koska drawparam ei talleta sen omaa dataidenttiään.
+		// Contains e.g. the data ident // the whole drawparam is stored so that one could make e.g. different colored/different tunings for the same parameter / different producer
+		boost::shared_ptr<NFmiDrawParam> itsDrawParam;
+		// This must be separate, because drawparam does not store its own dataident.
+		NFmiDataIdent itsDataIdent;
 		NFmiLevel itsLevel;
 		NFmiInfoData::Type itsDataType;
-		int itsModelOrigTimeOffsetInHours; // tämä kertoo mahdollisen ed. hirlam vai sitä edellinen esim. -6h tai -12h
+		// This tells the possible previous hirlam or the one before that, e.g. -6h or -12h
+		int itsModelOrigTimeOffsetInHours;
 
 		// ***********************************************************************************************************
-		// Nämä ovat DrawParamin ominaisuuksia, mutta koska niitä ei talleteta tiedostoon, talletan ne tähän
-		// koska en halua juuri nyt muuttaa drawparamin talletus versiota.
-		bool fHidden;	// näyttö voidaan piiloittaa tämän mukaisesti
-		bool fActive;	// onko kyseinen parametri näytön aktiivinen parametri (jokaisella näyttörivillä aina yksi aktivoitunut parametri)
-		bool fShowDifferenceToOriginalData; // ero originaaliin dataan karttanäytössä
+		// These are properties of DrawParam, but since they are not stored in the file, I store them here
+		// because I don't want to change the drawparam storage version right now.
+		// The view can be hidden according to this
+		bool fHidden;
+		// Whether the given parameter is the active parameter of the view (each view row always has one activated parameter)
+		bool fActive;
+		// Difference to the original data on the map view
+		bool fShowDifferenceToOriginalData;
 		// ***********************************************************************************************************
 
 	};
@@ -135,7 +144,7 @@ public:
 		bool fMaskEnabled;
 	};
 
-	// sisältää maski listan ja yleiset asetukset maskeille
+	// Contains the mask list and the general settings for masks
 	class MaskSettings
 	{
 	public:
@@ -222,8 +231,10 @@ public:
 		void Read(std::istream& is);
 	private:
 
-		NFmiProjectionCurvatureInfo itsProjectionCurvatureInfo; // kartan päälle piirrettävät lat-lon apuviivasto asetukset
-		std::vector<NFmiPoint> itsCPLocationVector; // controllipisteet talteen (latlon pisteet)
+		// Settings for the lat-lon helper grid drawn on top of the map
+		NFmiProjectionCurvatureInfo itsProjectionCurvatureInfo;
+		// Control points stored (latlon points)
+		std::vector<NFmiPoint> itsCPLocationVector;
 	};
 
 	class TimeView
@@ -267,18 +278,29 @@ public:
 		void Clear(void);
 		void Add(const TimeViewRow &theTimeViewRow);
 
-		std::vector<TimeViewRow> itsRows; //  kaikkien karttanäyttörivien asetukset
-		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
+		// Settings of all map view rows
+		std::vector<TimeViewRow> itsRows;
+		// View size and position in pixels
+		NFmiRect itsAbsolutRect;
         MfcViewStatus itsViewStatus;
-        bool fShowHelpData; // näytetäänkö malli+havainto+klimatologiset data operatiivisessä käytössä aikasarjassa editoidun datan ohella
-        bool fShowHelpData2; // näytetäänkö lyhyt fraktiili mallidata aikasarjanäytössä
-        bool fShowHelpData3; // näytetäänkö mallidatasta lasketun klimatologia data aikasarjanäytössä
-        bool fShowHelpData4; // näytetäänkö jostain apudatasta T-min ja T-max lämpötilakäyriä apuna aikasarjanäytössä
-		int itsStartTimeOffset; // jos aikaikkunaa on zoomattu ajallisesti, tässä offsetti editoitavan datan alkuaikaan
-		int itsEndTimeOffset; // jos aikaikkunaa on zoomattu ajallisesti, tässä offsetti editoitavan datan loppuaikaan
-		NFmiTimeBag itsTimeBag; // tässä on aikasarjassa käytetty timebag (talletetaan siirtymänä kellonajasta)
-		bool fTimeBagUpdated; // jos timebagi on luettu, asetetaan tähän true
-		NFmiPoint itsPreciseTimeSerialLatlonPoint = NFmiPoint::gMissingLatlon; // Kartalta aikakasarjaan valittu piste talteen
+        // Whether model+observation+climatological data is shown in operational use in the time series alongside the edited data
+        bool fShowHelpData;
+        // Whether short fractile model data is shown in the time series view
+        bool fShowHelpData2;
+        // Whether climatology data computed from model data is shown in the time series view
+        bool fShowHelpData3;
+        // Whether T-min and T-max temperature curves from some helper data are shown as an aid in the time series view
+        bool fShowHelpData4;
+		// If the time window has been zoomed in time, this holds the offset to the start time of the edited data
+		int itsStartTimeOffset;
+		// If the time window has been zoomed in time, this holds the offset to the end time of the edited data
+		int itsEndTimeOffset;
+		// This is the timebag used in the time series (stored as an offset from the clock time)
+		NFmiTimeBag itsTimeBag;
+		// If the timebag has been read, this is set to true
+		bool fTimeBagUpdated;
+		// The point selected from the map to the time series stored here
+		NFmiPoint itsPreciseTimeSerialLatlonPoint = NFmiPoint::gMissingLatlon;
 	};
 
 	class TempView
@@ -305,15 +327,20 @@ public:
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);
 	private:
-		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
+		// View size and position in pixels
+		NFmiRect itsAbsolutRect;
         MfcViewStatus itsViewStatus;
 
-		bool fShowHirlam; // onko hirlam näyttö ruksi päällä vai ei
-		bool fShowEcmwf; // onko ecmwf näyttö ruksi päällä vai ei
-		bool fShowRealSounding; // Tulevaisuudessa: onko havainto näyttö ruksi päällä vai ei
+		// Whether the hirlam view checkbox is on or not
+		bool fShowHirlam;
+		// Whether the ecmwf view checkbox is on or not
+		bool fShowEcmwf;
+		// In the future: whether the observation view checkbox is on or not
+		bool fShowRealSounding;
 
 		NFmiMTATempSystem itsMTATempSystem;
-		double itsCurrentVersionNumber; // tämä ei ole talletettuna TempView dataosiossa tiedostossa vaan tämä annetaan NFmiViewSettingMacro:lta tänne käyttöön
+		// This is not stored in the TempView data section of the file; instead it is provided here for use by NFmiViewSettingMacro
+		double itsCurrentVersionNumber;
 	};
 
 	class TrajectoryView
@@ -334,11 +361,13 @@ public:
 		void Write(std::ostream& os) const;
 		void Read(std::istream& is);
 	private:
-		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
+		// View size and position in pixels
+		NFmiRect itsAbsolutRect;
         MfcViewStatus itsViewStatus;
 
 		NFmiTrajectorySystem itsTrajectorySystem;
-		double itsCurrentVersionNumber; // tämä ei ole talletettuna TempView dataosiossa tiedostossa vaan tämä annetaan NFmiViewSettingMacro:lta tänne käyttöön
+		// This is not stored in the TempView data section of the file; instead it is provided here for use by NFmiViewSettingMacro
+		double itsCurrentVersionNumber;
 	};
 
 	class CrossSectionView
@@ -366,9 +395,11 @@ public:
 		void Clear(void);
 		void Add(const MapRow &theMapRow);
 
-		std::vector<MapRow> itsMapRowSettings; //  kaikkien karttanäyttörivien asetukset
+		// Settings of all map view rows
+		std::vector<MapRow> itsMapRowSettings;
 		NFmiCrossSectionSystem itsCrossSectionSystem;
-		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
+		// View size and position in pixels
+		NFmiRect itsAbsolutRect;
         MfcViewStatus itsViewStatus;
     };
 
@@ -400,12 +431,14 @@ public:
 		void Clear(std::vector<MapRow> &theMapRowSettings);
 		void Add(std::vector<MapRow> &theMapRowSettings, const MapRow &theMapRow);
 
-		std::vector<MapRow> itsMapRowSettings; //  kaikkien karttanäyttörivien asetukset
+		// Settings of all map view rows
+		std::vector<MapRow> itsMapRowSettings;
 		NFmiMapViewDescTop itsMapViewDescTop;
-		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
+		// View size and position in pixels
+		NFmiRect itsAbsolutRect;
         MfcViewStatus itsViewStatus;
 
-		// dipmaphandler osio pitää ottaa tähän erikois käsittelyyn
+		// The dipmaphandler section must be given special handling here
 		std::vector<NFmiMapViewDescTop::ViewMacroDipMapHelper> itsDipMapHelperList;
 	};
 
@@ -436,12 +469,16 @@ public:
 
 	private:
         HakeLegacySupport::HakeSystemConfigurations itsWarningCenterSystem;
-		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
+		// View size and position in pixels
+		NFmiRect itsAbsolutRect;
         MfcViewStatus itsViewStatus;
         std::vector<int> itsHeaderColumnWidthsInPixels;
-        bool fShowHakeMessages; // HAKE sanomien checkbox asetus dialogissa
-        bool fShowKaHaMessages; // KaHa sanomien checkbox asetus dialogissa
-        int itsMinimumTimeRangeForWarningsOnMapViewsInMinutes; // Ks. NFmiApplicationWinRegistry.h:sta vastaavan member-datan selitys.
+        // Checkbox setting for HAKE messages in the dialog
+        bool fShowHakeMessages;
+        // Checkbox setting for KaHa messages in the dialog
+        bool fShowKaHaMessages;
+        // See the explanation of the corresponding member data in NFmiApplicationWinRegistry.h.
+        int itsMinimumTimeRangeForWarningsOnMapViewsInMinutes;
 	};
 
 	class SynopDataGridView
@@ -475,17 +512,20 @@ public:
 		void Read(std::istream& is);
 
 	private:
-		NFmiRect itsAbsolutRect; // näytön koko ja sijainti pixeleissä
+		// View size and position in pixels
+		NFmiRect itsAbsolutRect;
         MfcViewStatus itsViewStatus;
 
 		NFmiProducer itsSelectedProducer;
-		NFmiMetTime itsMinMaxRangeStartTime; // tätä  säädetään aika ja kalenteri kontrollien avulla
+		// This is adjusted using the time and calendar controls
+		NFmiMetTime itsMinMaxRangeStartTime;
 		bool fMinMaxModeOn;
 		double itsDayRangeValue;
 
-		// maafiltteri osio
+		// Country filter section
 		bool fAllCountriesSelected;
-		std::string itsSelectedCountryAbbrStr; // lista valituista maista maan lyhenne stringien mukaan pilkuilla erotettuna
+		// List of selected countries by country abbreviation strings, separated by commas
+		std::string itsSelectedCountryAbbrStr;
 		std::vector<int> itsHeaderColumnWidthsInPixels;
 
 	};
@@ -533,14 +573,19 @@ public:
 	const std::string& InitFileName(void) const {return itsInitFileName;}
 	void InitFileName(const std::string &theFileName) {itsInitFileName = theFileName;}
 
-	GeneralDoc& GetGeneralDoc(void) {return itsGeneralDoc;} // arvojen asetus tätä kautta
-	TimeView& GetTimeView(void) {return itsTimeView;} // arvojen asetus tätä kautta
-	TempView& GetTempView(void) {return itsTempView;} // arvojen asetus tätä kautta
-	TrajectoryView& GetTrajectoryView(void) {return itsTrajectoryView;} // arvojen asetus tätä kautta
+	// Values are set through this
+	GeneralDoc& GetGeneralDoc(void) {return itsGeneralDoc;}
+	// Values are set through this
+	TimeView& GetTimeView(void) {return itsTimeView;}
+	// Values are set through this
+	TempView& GetTempView(void) {return itsTempView;}
+	// Values are set through this
+	TrajectoryView& GetTrajectoryView(void) {return itsTrajectoryView;}
 	CrossSectionView& GetCrossSectionView(void) {return itsCrossSectionView;}
 	SynopPlotSettings& GetSynopPlotSettings(void) {return itsSynopPlotSettings;}
 	ObsComparisonInfo& GetObsComparisonInfo(void) {return itsObsComparisonInfo;}
-	MaskSettings& GetMaskSettings(void) {return itsMaskSettings;} // arvojen asetus tätä kautta
+	// Values are set through this
+	MaskSettings& GetMaskSettings(void) {return itsMaskSettings;}
 	WarningCenterView& GetWarningCenterView(void) {return itsWarningCenterView;}
 	SynopDataGridView& GetSynopDataGridView(void) {return itsSynopDataGridView;}
 	std::vector<MapViewDescTop>& ExtraMapViewDescTops(void) {return itsExtraMapViewDescTops;}
@@ -571,43 +616,53 @@ public:
 	bool ViewMacroWasCorrupted(void) const {return fViewMacroWasCorrupted;}
 	void ViewMacroWasCorrupted(bool newValue) {fViewMacroWasCorrupted = newValue;}
 
-	// HUOM!! Tämä laittaa kommentteja mukaan!
+	// NOTE!! This includes comments!
 	void Write(std::ostream& os) const;
-	// HUOM!! ennen kuin tämä luokka luetaan sisään tiedostosta, poista kommentit
-	// NFmiCommentStripper-luokalla, koska kirjoitettaessa kommentteja laitetaan
-	// sekaan.
+	// NOTE!! before this class is read in from a file, remove the comments
+	// with the NFmiCommentStripper class, because comments are inserted
+	// when writing.
 	void Read(std::istream& is);
 private:
 
-	// talletan nämä NFmiString:einä, että luku ja kirjoitus menevät ok vaikka olisi white spaceja
-	mutable std::string itsName; // macron nimi -> tiedoston nimi kun lisätään polku ja tyyppi
-	mutable std::string itsDescription; // macron pidempi kuvaus
-	std::string itsInitFileName; // kun makro ladataan, laitetaan tähän tiedoston nimi polun kanssa, että makro voidaan tarvittaessa ladata uudestaan
+	// I store these as NFmiStrings so that reading and writing work ok even if there are white spaces
+	// Macro's name -> file name when path and type are added
+	mutable std::string itsName;
+	// Macro's longer description
+	mutable std::string itsDescription;
+	// When the macro is loaded, the file name with its path is stored here, so that the macro can be reloaded if needed
+	std::string itsInitFileName;
 
 	GeneralDoc itsGeneralDoc;
 	TimeView itsTimeView;
 	TempView itsTempView;
-	MaskSettings itsMaskSettings; //  kaikkien maskien asetukset
+	// Settings of all masks
+	MaskSettings itsMaskSettings;
 	bool fIsPrinterPortrait;
 
-	bool fViewMacroDirectory; // jos tämä on true, valinta dialogissa toimitaan erilailla
-							  // lisäksi tälläistä makroa ei talleteta tiedostoon
-							  // Tämän avulla on tarkoitus laittaa kansio systeemi näyttömakroihin
+	// If this is true, the selection dialog behaves differently
+	// additionally such a macro is not stored to a file
+	// This is meant to be used to add a folder system to the view macros
+	bool fViewMacroDirectory;
 
-	bool fViewMacroWasCorrupted; // jos tiedoston luku epäonnistui, on se merkittävä korruptoituneeksi
-	// mitkä työkalut ovat päällä
+	// If reading the file failed, it must be marked as corrupted
+	bool fViewMacroWasCorrupted;
+	// Which tools are on
 	bool fUseBrushTool;
 	bool fUseAnalyzeTool;
 	bool fUseControlPoinTool;
 	bool fUseAnimationTool;
     bool fKeepMapAspectRatio;
-	// animaatio asetukset
-	int itsAnimationStartPosition; // kuinka monennestako framesta editoitavaa dataa aloitetaan
-	int itsAnimationEndPosition; // kuinka monennestako framesta editoitavaa dataa lopetetaan
-	int itsAnimationDelayInMS; // viiva animaatiossa millisekunneissa
+	// Animation settings
+	// From which frame of the edited data the animation starts
+	int itsAnimationStartPosition;
+	// At which frame of the edited data the animation ends
+	int itsAnimationEndPosition;
+	// Delay in the animation in milliseconds
+	int itsAnimationDelayInMS;
 
-	double itsOriginalLoadVersionNumber; // kun viewMacro ladattiin, tämä oli sen alkuperäinen versio
-	// versio 2 osasia
+	// When the viewMacro was loaded, this was its original version
+	double itsOriginalLoadVersionNumber;
+	// Version 2 parts
 	TrajectoryView itsTrajectoryView;
 	CrossSectionView itsCrossSectionView;
 	SynopPlotSettings itsSynopPlotSettings;

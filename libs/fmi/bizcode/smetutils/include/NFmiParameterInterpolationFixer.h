@@ -1,10 +1,10 @@
 #pragma once
 
-// T‰m‰ luokka tekee haluttujen parametrien interpolaatio muutokset SmartMetin lukemiin
-// datoihin. Jos doForcedParameterInterpolationChanges_ on p‰‰ll‰, tehd‰‰n muutokset ja
-// lokitetaan muuttuneet parametrit. Jos em. optio ei ole p‰‰ll‰, lokitetaan vain varoitusviesti.
-// Lis‰ksi jos datassa on kFmiWindVectorMS aliparametri kFmiTotalWindMS yhdistelm‰ parametrissa,
-// tehd‰‰n siihen aina automaattisesti lineaarisuus korjaus. T‰st‰ ei tehd‰ mit‰‰n lokitusta.
+// This class makes the interpolation changes for the wanted parameters to the data that
+// SmartMet reads. If doForcedParameterInterpolationChanges_ is on, the changes are made and
+// the changed parameters are logged. If that option is not on, only a warning message is logged.
+// In addition, if the data has the kFmiWindVectorMS subparameter within the kFmiTotalWindMS combined parameter,
+// a linearity correction is always applied to it automatically. Nothing is logged about this.
 
 #include "NFmiParam.h"
 #include "NFmiCachedRegistryValue.h"
@@ -17,7 +17,7 @@ class NFmiParameterInterpolationFixer
 	std::string originalCheckedParametersConfigurationValue_;
 	std::vector<NFmiParam> checkedParameters_;
     boost::shared_ptr<CachedRegBool> doForcedParameterInterpolationChanges_;
-	// Ei sallita tupla initialisointia
+	// Double initialization is not allowed
 	bool initialized_ = false;
 public:
 	NFmiParameterInterpolationFixer();

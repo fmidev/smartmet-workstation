@@ -7,20 +7,20 @@
 
 class NFmiPolyline;
 
-// Luokka pit‰‰ sis‰ll‰‰n maiden rajaviivan piirtoon liittyvi‰ polkuja ja hanskaa niiden cachetusta.
+// This class holds the paths related to drawing country border lines and handles their caching.
 class NFmiCountryBorderPolylineCache
 {
-    // Optimointia: kun stationviewhandler on tehnyt piirtolistan valmiiksi, se talletetaan dokumenttiin ja sen piirto on nopeaa kun kaikki konversiot on valmikksi tehty	
+    // Optimization: once the stationviewhandler has finished building the draw list, it is stored in the document and its drawing is fast because all conversions are already done
     std::list<NFmiPolyline*> drawBorderPolyLineList_;
-    // Miss‰ kohtaa suhteellista n‰yttˆ‰ 'originaali' drawBorderPolyLineList_ on piirretty,
-    // t‰m‰n avulla piirto voidaan kohdentaa tulos bitmappiin, oli se miss‰ kohtaa tahansa karttan‰ytˆll‰.
+    // At which position of the relative view the 'original' drawBorderPolyLineList_ has been drawn;
+    // with this the drawing can be targeted onto the result bitmap, wherever it is on the map view.
     NFmiPoint relativeDrawingOffset_;
-    // Kun kysyt‰‰n ett‰ BorderDrawPolylinesDirty(), tarkistetaan onko itsDrawBorderPolyLineList tyhj‰ vai ei.
-    // Mutta jos laskettu polyline onkin tyhj‰, pit‰‰ olla mekanismi, jolla voidaan tarkistaa ett‰ vaikka polyline-lista onkin tyhj‰,
-    // mutta silti listaa ei tarvitse laskea uudestaan t‰m‰ lipun avulla.
+    // When BorderDrawPolylinesDirty() is queried, it checks whether itsDrawBorderPolyLineList is empty or not.
+    // But if the computed polyline happens to be empty, there must be a mechanism to check that even though the polyline list is empty,
+    // the list still does not need to be recomputed - this flag serves that purpose.
     bool drawBorderPolyLineListDirty_ = true;
     std::list<std::vector<NFmiPoint>> drawBorderPolyLineListGdiplus_;
-    // Sama selitys kuin fDrawBorderPolyLineListSet:in kanssa edell‰, mutta koskien itsDrawBorderPolyLineListGdiplus -listan likaisuutta.
+    // Same explanation as with fDrawBorderPolyLineListSet above, but concerning the dirtiness of the itsDrawBorderPolyLineListGdiplus list.
     bool drawBorderPolyLineListGdiplusDirty_ = true;
 public:
     NFmiCountryBorderPolylineCache();

@@ -17,7 +17,7 @@ NFmiCountryBorderBitmapCache& NFmiCountryBorderBitmapCache::operator=(const NFmi
 {
     if(this != &other)
     {
-        // cachea ei saa kopioida, se pit‰‰ vain tyhjent‰‰
+        // The cache must not be copied, it must only be cleared
         bitmapCacheMap_.clear();
     }
     return *this;
@@ -36,7 +36,7 @@ Gdiplus::Bitmap* NFmiCountryBorderBitmapCache::getCacheBitmap(const std::string&
 
 void NFmiCountryBorderBitmapCache::insertCacheBitmap(const std::string& keyString, std::unique_ptr<Gdiplus::Bitmap>&& cacheBitmap)
 {
-    // Joko lis‰‰ uudella avaimella bitmapin tai sitten korvaa jo talletetulla avaimella olevan bitmapin t‰ll‰.
+    // Either adds the bitmap with a new key, or replaces the bitmap already stored under that key with this one.
     bitmapCacheMap_[keyString] = std::move(cacheBitmap);
 }
 
@@ -45,9 +45,9 @@ void NFmiCountryBorderBitmapCache::clearCache()
     bitmapCacheMap_.clear();
 }
 
-// S‰‰dett‰v‰ cachen likaus funktio: 
-// 1. Jos newState = Geometry, kaikki cachet menee sile‰ksi.
-// 2. Jos cosmetic, pit‰‰ keyString pointterissa olla jokin arvo, ja sill‰ avaimella oleva kuva pyyhit‰‰n pois.
+// Adjustable cache dirtying function:
+// 1. If newState = Geometry, all caches are wiped clean.
+// 2. If cosmetic, the keyString must have some value, and the image under that key is wiped away.
 void NFmiCountryBorderBitmapCache::setBorderDrawDirtyState(CountryBorderDrawDirtyState newState, const std::string& keyString)
 {
     if(newState == CountryBorderDrawDirtyState::Geometry)
